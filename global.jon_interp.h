@@ -355,7 +355,7 @@
 extern int mnewt(int ntrial, int mintrial, FTYPE x[], int n, FTYPE tolx, FTYPE tolf, FTYPE tolxallowed, FTYPE tolfallowed, FTYPE tolxreport, FTYPE tolfreport, FTYPE *parms, int (*usrfun)(int n, FTYPE *, FTYPE *, FTYPE *, FTYPE **, FTYPE*));
 
 extern void fdjac(int n, FTYPE parms[], FTYPE x[], FTYPE fvec[], FTYPE **df,
-		  void (*vecfunc)(int n, FTYPE parms[], FTYPE v[], FTYPE f[]));
+                  void (*vecfunc)(int n, FTYPE parms[], FTYPE v[], FTYPE f[]));
 
 
 #include "coord.funcdeclare.h"

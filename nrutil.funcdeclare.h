@@ -8,7 +8,7 @@ extern FTYPE ranc(int initialize, int seed);
 extern int ludcmp(FTYPE **a, int n, int *indx, FTYPE *d);
 extern void lubksb(FTYPE **a, int n, int *indx, FTYPE *d);
 //extern FTYPE zbrent(FTYPE (*func) (FTYPE), FTYPE v1, FTYPE v2,
-//		     FTYPE tol);
+//       FTYPE tol);
 
 
 /* NR routines from nrutil.h */
@@ -18,11 +18,11 @@ extern FTYPE *dvector(long nl, long nh);
 extern void free_dvector(FTYPE *v, long nl, long nh);
 extern FTYPE **dmatrix(long nrl, long nrh, long ncl, long nch);
 extern void free_dmatrix(FTYPE **m, long nrl, long nrh, long ncl,
-			 long nch);
+                         long nch);
 extern FTYPE ***dtensor(long nrl, long nrh, long ncl, long nch,
-			 long ndl, long ndh);
+                        long ndl, long ndh);
 extern void free_dtensor(FTYPE ***t, long nrl, long nrh, long ncl,
-			 long nch, long ndl, long ndh);
+                         long nch, long ndl, long ndh);
 extern void nrerror(char error_text[]);
 
 
@@ -75,24 +75,24 @@ extern FTYPE nrfmin(FTYPE parms[], FTYPE x[]);
 
 
 extern void newt(int useanalyticjac
-		 ,FTYPE parms[]
-		 ,FTYPE x[], int n, int *check
-		 ,void (*vecfunc)(int n, FTYPE *parms, FTYPE v[], FTYPE f[])
-		 ,int (*usrfun)(int n, FTYPE *parms, FTYPE *Xguess, FTYPE *spc_diff, FTYPE **alpha)
-		 );
+                 ,FTYPE parms[]
+                 ,FTYPE x[], int n, int *check
+                 ,void (*vecfunc)(int n, FTYPE *parms, FTYPE v[], FTYPE f[])
+                 ,int (*usrfun)(int n, FTYPE *parms, FTYPE *Xguess, FTYPE *spc_diff, FTYPE **alpha)
+                 );
 extern void broydn(int useanalyticjac
-		   ,FTYPE parms[]
-		   ,FTYPE x[], int n, int *check
-		   ,void (*vecfunc)(int n, FTYPE parms[], FTYPE v[], FTYPE f[])
-		   ,int (*usrfun)(int n, FTYPE *parms, FTYPE *Xguess, FTYPE *spc_diff, FTYPE **alpha)
-		   );
+                   ,FTYPE parms[]
+                   ,FTYPE x[], int n, int *check
+                   ,void (*vecfunc)(int n, FTYPE parms[], FTYPE v[], FTYPE f[])
+                   ,int (*usrfun)(int n, FTYPE *parms, FTYPE *Xguess, FTYPE *spc_diff, FTYPE **alpha)
+                   );
 
 
 
 extern void bcucof(FTYPE y[], FTYPE y1[], FTYPE y2[], FTYPE y12[], FTYPE d1, FTYPE d2, FTYPE **c);
 
 extern void bcuint(FTYPE y[], FTYPE y1[], FTYPE y2[], FTYPE y12[], FTYPE x1l,
-        FTYPE x1u, FTYPE x2l, FTYPE x2u, FTYPE x1, FTYPE x2, FTYPE *ansy,
-	    FTYPE *ansy1, FTYPE *ansy2);
+                   FTYPE x1u, FTYPE x2l, FTYPE x2u, FTYPE x1, FTYPE x2, FTYPE *ansy,
+                   FTYPE *ansy1, FTYPE *ansy2);
 
 extern FTYPE rtbis(FTYPE (*func)(FTYPE,FTYPE*), FTYPE *parms, FTYPE x1, FTYPE x2, FTYPE xacc);

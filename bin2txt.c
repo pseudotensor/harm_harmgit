@@ -224,18 +224,18 @@ int main(
     fprintf(stderr,"0 1 0 1 0 1\n");
     fprintf(stderr,"e.g. for fieldline file with 11 columns:\n");
     fprintf(stderr,"density 1E-4 1\n"
-	    "ug 1E-4 1\n"
-	    "negudt 1E-4 1\n"
-	    "mu 1E-4 1\n"
-	    "uut 1E-4 1\n"
-	    "vr 1E-4 1\n"
-	    "vh 1E-4 1\n"
-	    "vph 1E-4 1\n"
-	    "Br 1E-4 1\n"
-	    "Bh 1E-4 1\n"
-	    "Bp 1E-4 1\n"
-	    "0 1 0 1 0 1\n"
-	    );
+            "ug 1E-4 1\n"
+            "negudt 1E-4 1\n"
+            "mu 1E-4 1\n"
+            "uut 1E-4 1\n"
+            "vr 1E-4 1\n"
+            "vh 1E-4 1\n"
+            "vph 1E-4 1\n"
+            "Br 1E-4 1\n"
+            "Bh 1E-4 1\n"
+            "Bp 1E-4 1\n"
+            "0 1 0 1 0 1\n"
+            );
     fprintf(stderr,"vis5d e.g.: ./bin2txt 0 5 0 3 64 64 64 1 vis5d.image.head imx0-0-0-s1-0000.dat.r8.gz imx0-0-0-s1-0000.dat.v5d b 1\n");
 
     fprintf(stderr,"\n");
@@ -518,8 +518,8 @@ int main(
     if((dest==5 && source!=5) || (input4dblock==0)&&(dest==0 || dest==1 || dest==2 || dest==3 || dest==4)){ // otherwise 1 file
       fprintf(stderr,"Opening %s\n",INPUTLIST_NAME);
       if( (inputfilenamelist=fopen(INPUTLIST_NAME,"rt"))==NULL){
-	fprintf(stderr,"can't open input filenamelist header file %s\n",INPUTLIST_NAME);
-	exit(1);
+        fprintf(stderr,"can't open input filenamelist header file %s\n",INPUTLIST_NAME);
+        exit(1);
       }
       inputlist=1;
       outputlist=0;
@@ -527,8 +527,8 @@ int main(
     else if((dest!=5 && source==5) || (input4dblock==1)&&(source==0 || source==1 || source==2)){ // otherwise 1 file (can't source 4D from HDF yet)
       fprintf(stderr,"Opening %s\n",OUTPUTLIST_NAME);
       if( (outputfilenamelist=fopen(OUTPUTLIST_NAME,"rt"))==NULL){
-	fprintf(stderr,"can't open output filenamelist header file %s\n",OUTPUTLIST_NAME);
-	exit(1);
+        fprintf(stderr,"can't open output filenamelist header file %s\n",OUTPUTLIST_NAME);
+        exit(1);
       }
       inputlist=0;
       outputlist=1;
@@ -677,39 +677,39 @@ int main(
       // length of the entire unmodified input file name
       lname=strlen(INPUT_NAME);
       if( (INPUT_NAME[lname-1]=='z')&&(INPUT_NAME[lname-2]=='g')&&(INPUT_NAME[lname-3]=='.') ){
-	inputtype=1;
-	printf("input flagged as gzip\n");
+        inputtype=1;
+        printf("input flagged as gzip\n");
       }
       else{
-	inputtype=0;
+        inputtype=0;
       }
       
       if(inputtype==0){
-	if( !(input=fopen(INPUT_NAME,"rb"))){
-	  fprintf(stderr,"trouble opening input file: %s\n",INPUT_NAME);
-	  exit(1);
-	}
+        if( !(input=fopen(INPUT_NAME,"rb"))){
+          fprintf(stderr,"trouble opening input file: %s\n",INPUT_NAME);
+          exit(1);
+        }
       }
       if(inputtype==1){
-	sprintf(incommand,"gzip -d < %s",INPUT_NAME);
-	if( !(input=popen(incommand,"r"))){
-	  fprintf(stderr,"trouble opening input file: %s %s\n",INPUT_NAME,incommand);
-	  exit(1);
-	}
+        sprintf(incommand,"gzip -d < %s",INPUT_NAME);
+        if( !(input=popen(incommand,"r"))){
+          fprintf(stderr,"trouble opening input file: %s %s\n",INPUT_NAME,incommand);
+          exit(1);
+        }
       }
       // assume header info provided and # lines of header provided (unlike in r8toras.c and block2tile.c)
       
     }
     else if(source==1){
       if( (input=fopen(INPUT_NAME,"rb"))==NULL){
-	fprintf(stderr,"cannot open %s\n",INPUT_NAME);
-	exit(1);
+        fprintf(stderr,"cannot open %s\n",INPUT_NAME);
+        exit(1);
       }
     }
     else if(source==2){
       if( (input=fopen(INPUT_NAME,"rt"))==NULL){
-	fprintf(stderr,"cannot open %s\n",INPUT_NAME);
-	exit(1);
+        fprintf(stderr,"cannot open %s\n",INPUT_NAME);
+        exit(1);
       }
     }
 #if(HDF)
@@ -742,127 +742,127 @@ int main(
       // code pulled from v5dstats.c
 
       if (!v5dOpenFile( INPUT_NAME, &v )) {
-	printf("Error: couldn't open %s for reading\n", INPUT_NAME );
-	exit(0);
+        printf("Error: couldn't open %s for reading\n", INPUT_NAME );
+        exit(0);
       }
 
       if(v.NumTimes>1){
-	fprintf(stderr,"Not quite setup for multi-timed inputs since need to increase size of array to have time dimension\n");
-	fflush(stderr);
-	exit(1);
+        fprintf(stderr,"Not quite setup for multi-timed inputs since need to increase size of array to have time dimension\n");
+        fflush(stderr);
+        exit(1);
       }
 
       // assume same size for all times and variables
       int sizeproblem=0;
       for (time=0; time<v.NumTimes; time++) {
-	for (var=0; var<v.NumVars; var++) {
-	  // v5d data size
-	  int nrncnl;
-	  nrncnl = v.Nr * v.Nc * v.Nl[var];
-	  
-	  if(nrncnl!=N1*N2*N3){
-	    fprintf(stderr,"Memory created was per-time per-variable of size %d while v5d file had %d\n",N1*N2*N3,nrncnl);
-	    fflush(stderr);
-	    sizeproblem++;
-	  }
-	  else{
-	    // debug:
-	    //	    fprintf(stderr,"time=%d var=%d size=%d\n",time,var,nrncnl); fflush(stderr);
+        for (var=0; var<v.NumVars; var++) {
+          // v5d data size
+          int nrncnl;
+          nrncnl = v.Nr * v.Nc * v.Nl[var];
+   
+          if(nrncnl!=N1*N2*N3){
+            fprintf(stderr,"Memory created was per-time per-variable of size %d while v5d file had %d\n",N1*N2*N3,nrncnl);
+            fflush(stderr);
+            sizeproblem++;
+          }
+          else{
+            // debug:
+            //     fprintf(stderr,"time=%d var=%d size=%d\n",time,var,nrncnl); fflush(stderr);
 
-	    // read data into array
-	    //	    data = (float *) malloc( nrncnl * sizeof(float) );
-	    data=arrayvisoutput;
+            // read data into array
+            //     data = (float *) malloc( nrncnl * sizeof(float) );
+            data=arrayvisoutput;
 
-	    if (!v5dReadGrid( &v, time, var, data )) {
-	      printf("Error while reading grid (time=%d,var=%s)\n", time+1, v.VarName[var] );
-	      exit(0);
-	    }
+            if (!v5dReadGrid( &v, time, var, data )) {
+              printf("Error while reading grid (time=%d,var=%s)\n", time+1, v.VarName[var] );
+              exit(0);
+            }
 
-	    //	    min = MISSING;
-	    //	    max = -MISSING;
-	    //	    missing = 0;
-	    //	    good = 0;
-	    //	    sum = 0.0;
-	    //	    sumsum = 0.0;
-	    //
-	    //	    for (i=0;i<nrncnl;i++) {
-	    //	      /*
-	    //		if (data[i]!=data[i]) {
-	    //		printf("bad: %g\n", data[i]);
-	    //		}
-	    //	      */
-	    //	      if ( IS_MISSING(data[i]) ) {
-	    //		missing++;
-	    //	      }
-	    //	      else {
-	    //		good++;
-	    //		if (data[i]<min) {
-	    //                  min = data[i];
-	    //		}
-	    //		if (data[i]>max) {
-	    //                  max = data[i];
-	    //		}
-	    //		sum += data[i];
-	    //		sumsum += data[i]*data[i];
-	    //	      }
-	    //	    }
-
-
-	    if(dest==0){ // then use min/max conversion for decent legend (at least for fixed scaled data)
-	      // also assumes linear legend!
-	      a=minmax[0][var];
-	      b=minmax[1][var];
-	    }
-	    else{ // to cancel change
-	      a=0.0;
-	      b=255.0;
-	    }
-
-	    // loop over spatial dimensions // 	    for (i=0;i<nrncnl;i++)
-	    for(k=0;k<N3;k++) for(j=0;j<N2;j++) for(i=0;i<N1;i++){
-		  ijkjon=(i+(j+k*N2)*N1)*(v.NumVars) + var;  // so var (columns) is fastest
-		  ijkvis5d=(N3-1-k) + ((j) + (i) * N2) * N3;
-		  
-		  arrayvisf[ijkjon] = (arrayvisoutput[ijkvis5d]-a)*255.0/(b-a);
-		  //		  fprintf(stderr,"k=%d j=%d i=%d : var=%d : ijkjon=%d\n",k,j,i,var,ijkjon);
-
-		}
-
-	    //	    free( data );
-
-	    //	    if (good==0) {
-	    //	      /* all missing */
-	    //	      printf("%4d  %-8s %-5s  all missing values\n",
-	    //		     time+1, v.VarName[var], v.Units[var] );
-	    //	    }
-	    //	    else {
-	    //	      float mean = sum / good;
-	    //	      float tmp = (sumsum - sum*sum/good) / (good-1);
-	    //	      float sd;
-	    //	      if (tmp<0.0) {
-	    //		sd = 0.0;
-	    //	      }
-	    //	      else {
-	    //		sd = sqrt( tmp );
-	    //	      }
-	    //	      printf("%4d  %-8s %-5s %13g%13g%13g%13g  %4d\n",
-	    //		     time+1, v.VarName[var], v.Units[var],
-	    //		     min,  max,  mean, sd,  missing );
-	    //	    }
+            //     min = MISSING;
+            //     max = -MISSING;
+            //     missing = 0;
+            //     good = 0;
+            //     sum = 0.0;
+            //     sumsum = 0.0;
+            //
+            //     for (i=0;i<nrncnl;i++) {
+            //       /*
+            //  if (data[i]!=data[i]) {
+            //  printf("bad: %g\n", data[i]);
+            //  }
+            //       */
+            //       if ( IS_MISSING(data[i]) ) {
+            //  missing++;
+            //       }
+            //       else {
+            //  good++;
+            //  if (data[i]<min) {
+            //                  min = data[i];
+            //  }
+            //  if (data[i]>max) {
+            //                  max = data[i];
+            //  }
+            //  sum += data[i];
+            //  sumsum += data[i]*data[i];
+            //       }
+            //     }
 
 
+            if(dest==0){ // then use min/max conversion for decent legend (at least for fixed scaled data)
+              // also assumes linear legend!
+              a=minmax[0][var];
+              b=minmax[1][var];
+            }
+            else{ // to cancel change
+              a=0.0;
+              b=255.0;
+            }
 
-	  }// end else if ok to read i,j,k block of data
-	}// end loop over reading variables
+            // loop over spatial dimensions //      for (i=0;i<nrncnl;i++)
+            for(k=0;k<N3;k++) for(j=0;j<N2;j++) for(i=0;i<N1;i++){
+                  ijkjon=(i+(j+k*N2)*N1)*(v.NumVars) + var;  // so var (columns) is fastest
+                  ijkvis5d=(N3-1-k) + ((j) + (i) * N2) * N3;
+    
+                  arrayvisf[ijkjon] = (arrayvisoutput[ijkvis5d]-a)*255.0/(b-a);
+                  //    fprintf(stderr,"k=%d j=%d i=%d : var=%d : ijkjon=%d\n",k,j,i,var,ijkjon);
+
+                }
+
+            //     free( data );
+
+            //     if (good==0) {
+            //       /* all missing */
+            //       printf("%4d  %-8s %-5s  all missing values\n",
+            //       time+1, v.VarName[var], v.Units[var] );
+            //     }
+            //     else {
+            //       float mean = sum / good;
+            //       float tmp = (sumsum - sum*sum/good) / (good-1);
+            //       float sd;
+            //       if (tmp<0.0) {
+            //  sd = 0.0;
+            //       }
+            //       else {
+            //  sd = sqrt( tmp );
+            //       }
+            //       printf("%4d  %-8s %-5s %13g%13g%13g%13g  %4d\n",
+            //       time+1, v.VarName[var], v.Units[var],
+            //       min,  max,  mean, sd,  missing );
+            //     }
+
+
+
+          }// end else if ok to read i,j,k block of data
+        }// end loop over reading variables
       }// end loop over reading times
 
 
 
 
       if(sizeproblem!=0){
-	fprintf(stderr,"Size problem: %d\n",sizeproblem);
-	fflush(stderr);
-	exit(1);
+        fprintf(stderr,"Size problem: %d\n",sizeproblem);
+        fflush(stderr);
+        exit(1);
       }
 
 
@@ -885,8 +885,8 @@ int main(
     //////////////////////
     if(it==0 && (it==0 && outputlist==0 && inputlist==1 || outputlist==0 && inputlist==0)){
       if( !(output=fopen(OUTPUT_NAME,"wt"))){
-	fprintf(stderr,"trouble opening output file: %s\n",OUTPUT_NAME);
-	exit(1);
+        fprintf(stderr,"trouble opening output file: %s\n",OUTPUT_NAME);
+        exit(1);
       }
       fclose(output);
     }
@@ -902,16 +902,16 @@ int main(
     //
     if(pipeheader && (it==0 && outputlist==0 && inputlist==1 || outputlist==0 && inputlist==0)){
       if( !(output=fopen(OUTPUT_NAME,"wt"))){
-	fprintf(stderr,"trouble opening output file: %s\n",OUTPUT_NAME);
-	exit(1);
+        fprintf(stderr,"trouble opening output file: %s\n",OUTPUT_NAME);
+        exit(1);
       }
     }
 
     for(i=0;i<realnumheader;i++){
       //printf("headerline: %i\n",i);
       while((ch=fgetc(input))!='\n'){
-	if(pipeheader) fputc(ch,output);
-	//printf("%c",ch);
+        if(pipeheader) fputc(ch,output);
+        //printf("%c",ch);
       }
     }
 
@@ -938,40 +938,40 @@ int main(
 
       lname=strlen(OUTPUT_NAME);
       if( (OUTPUT_NAME[lname-1]=='z')&&(OUTPUT_NAME[lname-2]=='g')&&(OUTPUT_NAME[lname-3]=='.') ){
-	outputtype=1;
-	printf("output flagged as gzip\n");
+        outputtype=1;
+        printf("output flagged as gzip\n");
       }
       else{
-	outputtype=0;
+        outputtype=0;
       }
       
       // open output file
       if(outputtype==0){
-	if( !(output=fopen(OUTPUT_NAME,"ab"))){
-	  fprintf(stderr,"trouble opening output file: %s\n",OUTPUT_NAME);
-	  exit(1);
-	}
+        if( !(output=fopen(OUTPUT_NAME,"ab"))){
+          fprintf(stderr,"trouble opening output file: %s\n",OUTPUT_NAME);
+          exit(1);
+        }
       }
       if(outputtype==1){
-	sprintf(outcommand,"gzip > %s",OUTPUT_NAME);
-	if( !(output=popen(outcommand,"w"))){
-	  fprintf(stderr,"trouble opening output file: %s %s\n",OUTPUT_NAME,outcommand);
-	  exit(1);
-	}
+        sprintf(outcommand,"gzip > %s",OUTPUT_NAME);
+        if( !(output=popen(outcommand,"w"))){
+          fprintf(stderr,"trouble opening output file: %s %s\n",OUTPUT_NAME,outcommand);
+          exit(1);
+        }
       }
     }
     else if(dest==1 && ( (it==0 && outputlist==0 && inputlist==1 || outputlist==0 && inputlist==0) || outputlist==1) ){
       fprintf(stderr,"Open dest=%d\n",dest);
 
       if( (output=fopen(OUTPUT_NAME,"at"))==NULL){
-	fprintf(stderr,"cannot open %s\n",OUTPUT_NAME);
-	exit(1);
+        fprintf(stderr,"cannot open %s\n",OUTPUT_NAME);
+        exit(1);
       }
     }
     else if(dest==2 && ( (it==0 && outputlist==0 && inputlist==1 || outputlist==0 && inputlist==0) || outputlist==1) ){
       if( (output=fopen(OUTPUT_NAME,"at"))==NULL){
-	fprintf(stderr,"cannot open %s\n",OUTPUT_NAME);
-	exit(1);
+        fprintf(stderr,"cannot open %s\n",OUTPUT_NAME);
+        exit(1);
       }
     }
 #if(HDF)
@@ -1001,17 +1001,17 @@ int main(
 
 
       if(CompressMode<4){
-	fprintf(stderr,"WARNING: using CompressMode=%d\n",CompressMode);
-	fprintf(stderr,"Compression is per lev, but can make it difficult to measure small values if just happens to be large value somewhere on that lev.  For example, tracing vectors\n");
+        fprintf(stderr,"WARNING: using CompressMode=%d\n",CompressMode);
+        fprintf(stderr,"Compression is per lev, but can make it difficult to measure small values if just happens to be large value somewhere on that lev.  For example, tracing vectors\n");
       }
 
       /* use the v5dCreate call to create the v5d file and write the header */
       if (!v5dCreate( OUTPUT_NAME, NumTimes, NumVars, Nr, Nc, Nl,
-		      (const char (*)[MAXVARNAME]) VarName,
-		      TimeStamp, DateStamp, CompressMode,
-		      Projection, ProjArgs, Vertical, VertArgs )) {
-	printf("Error: couldn't create %s\n", OUTPUT_NAME );
-	exit(1);
+                      (const char (*)[MAXVARNAME]) VarName,
+                      TimeStamp, DateStamp, CompressMode,
+                      Projection, ProjArgs, Vertical, VertArgs )) {
+        printf("Error: couldn't create %s\n", OUTPUT_NAME );
+        exit(1);
       }
     }
 #endif
@@ -1039,107 +1039,107 @@ int main(
     
       for(j=0;j<numterms;j++){ // over rows and each group
 #if(DEBUG)
-	fprintf(stderr,"termnumber: %d of %d\n",j,numterms-1); fflush(stderr);
+        fprintf(stderr,"termnumber: %d of %d\n",j,numterms-1); fflush(stderr);
 #endif
       
-	for(k=0;k<group[j];k++){ // over a group of same kind
+        for(k=0;k<group[j];k++){ // over a group of same kind
 #if(DEBUG)
-	  fprintf(stderr,"groupelements: %d of %d : precision: %c s: %d d: %d\n",k,group[j]-1,precision[j],source,dest); fflush(stderr);
+          fprintf(stderr,"groupelements: %d of %d : precision: %c s: %d d: %d\n",k,group[j]-1,precision[j],source,dest); fflush(stderr);
 #endif
 
 
-	  //////////////
-	  // SOURCE
-	  //////////////
-	  switch(source){	 
-	  case 0:
-	    fread(&dumb,bytesize,1,input); precision[j]='b'; //forced
-	    break;
-	  case 1:
-	    if(precision[j]=='b')	            fread(&dumb,bytesize,1,input);
-	    if(precision[j]=='i')	            fread(&dumi,intsize,1,input);
-	    if(precision[j]=='f')             fread(&dumf,floatsize,1,input);
-	    if(precision[j]=='d')             fread(&dumlf,doublesize,1,input);
-	    break;
-	  case 2:
-	    if(precision[j]=='b'){
-	      fscanf(input,"%hu",&shortfordumb);
-	      dumb=shortfordumb; // convert short to byte
-	    }
-	  
-	    if(precision[j]=='i')	            fscanf(input,"%d",&dumi);
-	    if(precision[j]=='f')             fscanf(input,"%f",&dumf);
-	    if(precision[j]=='d')             fscanf(input,"%lf",&dumlf);
-	    break;
+          //////////////
+          // SOURCE
+          //////////////
+          switch(source){  
+          case 0:
+            fread(&dumb,bytesize,1,input); precision[j]='b'; //forced
+            break;
+          case 1:
+            if(precision[j]=='b')             fread(&dumb,bytesize,1,input);
+            if(precision[j]=='i')             fread(&dumi,intsize,1,input);
+            if(precision[j]=='f')             fread(&dumf,floatsize,1,input);
+            if(precision[j]=='d')             fread(&dumlf,doublesize,1,input);
+            break;
+          case 2:
+            if(precision[j]=='b'){
+              fscanf(input,"%hu",&shortfordumb);
+              dumb=shortfordumb; // convert short to byte
+            }
+   
+            if(precision[j]=='i')             fscanf(input,"%d",&dumi);
+            if(precision[j]=='f')             fscanf(input,"%f",&dumf);
+            if(precision[j]=='d')             fscanf(input,"%lf",&dumlf);
+            break;
 #if(HDF)
-	  case 3:
-	  case 4:
-	    if(precision[j]=='b') dumb=arrayb[nextbuf++];
-	    if(precision[j]=='i') dumi=arrayi[nextbuf++];
-	    if(precision[j]=='f') dumf=arrayf[nextbuf++];
-	    if(precision[j]=='d') dumlf=arrayd[nextbuf++];
-	    break;
+          case 3:
+          case 4:
+            if(precision[j]=='b') dumb=arrayb[nextbuf++];
+            if(precision[j]=='i') dumi=arrayi[nextbuf++];
+            if(precision[j]=='f') dumf=arrayf[nextbuf++];
+            if(precision[j]=='d') dumlf=arrayd[nextbuf++];
+            break;
 #endif
 #if(V5D)
-	  case 5:
-	    // source is always float
-	    // nextbuf++ just iterates over fastest index, which is columns then i then j then k as normal for HARM
-	    //	    fprintf(stderr,"nextbuf=%d\n",nextbuf); fflush(stderr);
-	    dumf=arrayvisf[nextbuf++]; precision[j]='f'; // forced
-	    break;
+          case 5:
+            // source is always float
+            // nextbuf++ just iterates over fastest index, which is columns then i then j then k as normal for HARM
+            //     fprintf(stderr,"nextbuf=%d\n",nextbuf); fflush(stderr);
+            dumf=arrayvisf[nextbuf++]; precision[j]='f'; // forced
+            break;
 #endif
-	  default:
-	    break;
-	  }
+          default:
+            break;
+          }
 
-	  //////////////
-	  // DEST
-	  //////////////
-	  switch(dest){
-	  case 0:
-	    // always byte size output
-	    if(precision[j]=='b'){dumb=dumb;  fwrite(&dumb,bytesize,1,output);}
-	    if(precision[j]=='i'){dumb=dumi;  fwrite(&dumb,bytesize,1,output);}
-	    if(precision[j]=='f'){dumb=dumf;  fwrite(&dumb,bytesize,1,output);}
-	    if(precision[j]=='d'){dumb=dumlf; fwrite(&dumb,bytesize,1,output);}
-	    break;
-	  case 1:
-	    if(precision[j]=='b')		  fwrite(&dumb,bytesize,1,output);
-	    if(precision[j]=='i'){if(ble){ SWAP_LONG(dumi);}     fwrite(&dumi,intsize,1,output);}
-	    if(precision[j]=='f'){if(ble){ SWAP_FLOAT(dumf);}   fwrite(&dumf,floatsize,1,output);}
-	    if(precision[j]=='d'){if(ble){ SWAP_DOUBLE(dumlf);} fwrite(&dumlf,doublesize,1,output);}
-	    break;
-	  case 2:
-	    if(precision[j]=='b'){
-	      if(source==0 || source==1) fprintf(output,"%d ",dumb);
-	      else fprintf(output,"%c ",dumb);
-	    }
-	    if(precision[j]=='i'){if(ble){SWAP_LONG(dumi);}     fprintf(output,"%d ",dumi);}
-	    if(precision[j]=='f'){if(ble){SWAP_FLOAT(dumf);}   fprintf(output,"%17.10g ",dumf);}
-	    if(precision[j]=='d'){if(ble){SWAP_DOUBLE(dumlf);} fprintf(output,"%26.20g ",dumlf);}
-	    break;
+          //////////////
+          // DEST
+          //////////////
+          switch(dest){
+          case 0:
+            // always byte size output
+            if(precision[j]=='b'){dumb=dumb;  fwrite(&dumb,bytesize,1,output);}
+            if(precision[j]=='i'){dumb=dumi;  fwrite(&dumb,bytesize,1,output);}
+            if(precision[j]=='f'){dumb=dumf;  fwrite(&dumb,bytesize,1,output);}
+            if(precision[j]=='d'){dumb=dumlf; fwrite(&dumb,bytesize,1,output);}
+            break;
+          case 1:
+            if(precision[j]=='b')    fwrite(&dumb,bytesize,1,output);
+            if(precision[j]=='i'){if(ble){ SWAP_LONG(dumi);}     fwrite(&dumi,intsize,1,output);}
+            if(precision[j]=='f'){if(ble){ SWAP_FLOAT(dumf);}   fwrite(&dumf,floatsize,1,output);}
+            if(precision[j]=='d'){if(ble){ SWAP_DOUBLE(dumlf);} fwrite(&dumlf,doublesize,1,output);}
+            break;
+          case 2:
+            if(precision[j]=='b'){
+              if(source==0 || source==1) fprintf(output,"%d ",dumb);
+              else fprintf(output,"%c ",dumb);
+            }
+            if(precision[j]=='i'){if(ble){SWAP_LONG(dumi);}     fprintf(output,"%d ",dumi);}
+            if(precision[j]=='f'){if(ble){SWAP_FLOAT(dumf);}   fprintf(output,"%17.10g ",dumf);}
+            if(precision[j]=='d'){if(ble){SWAP_DOUBLE(dumlf);} fprintf(output,"%26.20g ",dumlf);}
+            break;
 #if(HDF)
-	  case 3:
-	  case 4:
-	    if(precision[j]=='b') arrayb[nextbuf++]=dumb;
-	    if(precision[j]=='i'){if(ble){SWAP_LONG(dumi);}     arrayi[nextbuf++]=dumi;}
-	    if(precision[j]=='f'){if(ble){SWAP_FLOAT(dumf);}   arrayf[nextbuf++]=dumf;}
-	    if(precision[j]=='d'){if(ble){SWAP_DOUBLE(dumlf);} arrayd[nextbuf++]=dumlf;}
-	    break;
+          case 3:
+          case 4:
+            if(precision[j]=='b') arrayb[nextbuf++]=dumb;
+            if(precision[j]=='i'){if(ble){SWAP_LONG(dumi);}     arrayi[nextbuf++]=dumi;}
+            if(precision[j]=='f'){if(ble){SWAP_FLOAT(dumf);}   arrayf[nextbuf++]=dumf;}
+            if(precision[j]=='d'){if(ble){SWAP_DOUBLE(dumlf);} arrayd[nextbuf++]=dumlf;}
+            break;
 #endif
 #if(V5D)
-	  case 5:
-	    // same array, must be float
-	    if(precision[j]=='b') arrayvisf[nextbuf++]=dumb;
-	    if(precision[j]=='i'){if(ble){SWAP_LONG(dumi);}      arrayvisf[nextbuf++]=dumi;}
-	    if(precision[j]=='f'){if(ble){SWAP_FLOAT(dumf);}    arrayvisf[nextbuf++]=dumf;}
-	    if(precision[j]=='d'){if(ble){SWAP_DOUBLE(dumlf);}  arrayvisf[nextbuf++]=dumlf;}
-	    break;
+          case 5:
+            // same array, must be float
+            if(precision[j]=='b') arrayvisf[nextbuf++]=dumb;
+            if(precision[j]=='i'){if(ble){SWAP_LONG(dumi);}      arrayvisf[nextbuf++]=dumi;}
+            if(precision[j]=='f'){if(ble){SWAP_FLOAT(dumf);}    arrayvisf[nextbuf++]=dumf;}
+            if(precision[j]=='d'){if(ble){SWAP_DOUBLE(dumlf);}  arrayvisf[nextbuf++]=dumlf;}
+            break;
 #endif
-	  default:
-	    break;
-	  }
-	}//end over group
+          default:
+            break;
+          }
+        }//end over group
       }// end over terms
       // skip terms till carraige return (allows parsing out certain extra columns on end)
       if(source==2){ while(fgetc(input)!='\n'); }
@@ -1165,42 +1165,42 @@ int main(
 
       for(iv=0;iv<NumVars;iv++){
 
-	/**
-	 ** Read your 3-D grid data for timestep it and variable
-	 ** iv into the array g here.
-	 ** To help with 3-D array indexing we've defined a macro G.
-	 ** G(0,0,0) is the north-west-bottom corner, G(Nr-1,Nc-1,Nl-1) is
-	 ** the south-east-top corner.  If you want a value to be considered
-	 ** missing, assign it equal to the constant MISSING.  For example:
-	 ** G(ir,ic,il) = MISSING;
-	 **/
-	//#define G(ROW, COLUMN, LEVEL)   g[ (ROW) + ((COLUMN) + (LEVEL) * Nc) * Nr ]
+        /**
+         ** Read your 3-D grid data for timestep it and variable
+         ** iv into the array g here.
+         ** To help with 3-D array indexing we've defined a macro G.
+         ** G(0,0,0) is the north-west-bottom corner, G(Nr-1,Nc-1,Nl-1) is
+         ** the south-east-top corner.  If you want a value to be considered
+         ** missing, assign it equal to the constant MISSING.  For example:
+         ** G(ir,ic,il) = MISSING;
+         **/
+        //#define G(ROW, COLUMN, LEVEL)   g[ (ROW) + ((COLUMN) + (LEVEL) * Nc) * Nr ]
       
       
-	if(source==0){ // then use min/max conversion for decent legend (at least for fixed scaled data)
-	  // also assumes linear legend!
-	  a=minmax[0][iv];
-	  b=minmax[1][iv];
-	}
-	else{ // to cancel change
-	  a=0.0;
-	  b=255.0;
-	}
-	// convert my format to vis5d format
-	for(k=0;k<N3;k++) for(j=0;j<N2;j++) for(i=0;i<N1;i++){
-	      ijkjon=(i+(j+k*N2)*N1)*NumVars+iv;
-	      ijkvis5d=(N3-1-k) + ((j) + (i) * N2) * N3;
-	      arrayvisoutput[ijkvis5d]=(arrayvisf[ijkjon]/255.0)*(b-a)+a;
+        if(source==0){ // then use min/max conversion for decent legend (at least for fixed scaled data)
+          // also assumes linear legend!
+          a=minmax[0][iv];
+          b=minmax[1][iv];
+        }
+        else{ // to cancel change
+          a=0.0;
+          b=255.0;
+        }
+        // convert my format to vis5d format
+        for(k=0;k<N3;k++) for(j=0;j<N2;j++) for(i=0;i<N1;i++){
+              ijkjon=(i+(j+k*N2)*N1)*NumVars+iv;
+              ijkvis5d=(N3-1-k) + ((j) + (i) * N2) * N3;
+              arrayvisoutput[ijkvis5d]=(arrayvisf[ijkjon]/255.0)*(b-a)+a;
 
-	      // DEBUG:
-	      //	fprintf(stderr,"i=%d j=%d k=%d iv=%d ijkvis5d=%d a=%g b=%g value=%g\n",i,j,k,iv,ijkvis5d,a,b,arrayvisoutput[ijkvis5d]);
-	    }
+              // DEBUG:
+              // fprintf(stderr,"i=%d j=%d k=%d iv=%d ijkvis5d=%d a=%g b=%g value=%g\n",i,j,k,iv,ijkvis5d,a,b,arrayvisoutput[ijkvis5d]);
+            }
       
-	/* Write data to v5d file. */
-	if (!v5dWrite( it+1, iv+1, arrayvisoutput )) {
-	  printf("Error while writing grid.  Disk full?\n");
-	  exit(1);
-	}
+        /* Write data to v5d file. */
+        if (!v5dWrite( it+1, iv+1, arrayvisoutput )) {
+          printf("Error while writing grid.  Disk full?\n");
+          exit(1);
+        }
       }
     }
 #endif
@@ -1215,8 +1215,8 @@ int main(
     if(it==TS-1 && outputlist==0 && inputlist==1 || outputlist==1){
       if((dest==1)||(dest==2)) fclose(output);
       else if(dest==0){
-	if(outputtype==0) fclose(output);
-	else if(outputtype==1) pclose(output);
+        if(outputtype==0) fclose(output);
+        else if(outputtype==1) pclose(output);
       }
     }
 
@@ -1245,8 +1245,8 @@ int main(
     if(it==TS-1 && outputlist==1 && inputlist==0 || inputlist==1){
       if((source==1)||(source==2)) fclose(input);
       else if(source==0){
-	if(inputtype==0) fclose(input);
-	else if(inputtype==1) pclose(input);
+        if(inputtype==0) fclose(input);
+        else if(inputtype==1) pclose(input);
       }
     }
 
@@ -1311,29 +1311,29 @@ void swap(BYTE *x, BYTE size)
   unsigned long l;
 
   switch (size)
-  {
-      case 1: /* don't do anything */
-	  break;
-      case 2: /* swap two bytes */
-	  c = *x;
-	  *x = *(x+1);
-	  *(x+1) = c;
-	  break;
-      case 4: /* swap two shorts (2-byte words) */
-	  s = *(unsigned short *)x;
-	  *(unsigned short *)x = *((unsigned short *)x + 1);
-	  *((unsigned short *)x + 1) = s;
-	  swap ((BYTE *)x, 2);
-	  swap ((BYTE *)((unsigned short *)x+1), 2);
-	  break;
-      case 8: /* swap two longs (4-bytes words) */
-	  l = *(unsigned long *)x;
-	  *(unsigned long *)x = *((unsigned long *)x + 1);
-	  *((unsigned long *)x + 1) = l;
-	  swap ((BYTE *)x, 4);
-	  swap ((BYTE *)((unsigned long *)x+1), 4);
-	  break;
-  }
+    {
+    case 1: /* don't do anything */
+      break;
+    case 2: /* swap two bytes */
+      c = *x;
+      *x = *(x+1);
+      *(x+1) = c;
+      break;
+    case 4: /* swap two shorts (2-byte words) */
+      s = *(unsigned short *)x;
+      *(unsigned short *)x = *((unsigned short *)x + 1);
+      *((unsigned short *)x + 1) = s;
+      swap ((BYTE *)x, 2);
+      swap ((BYTE *)((unsigned short *)x+1), 2);
+      break;
+    case 8: /* swap two longs (4-bytes words) */
+      l = *(unsigned long *)x;
+      *(unsigned long *)x = *((unsigned long *)x + 1);
+      *((unsigned long *)x + 1) = l;
+      swap ((BYTE *)x, 4);
+      swap ((BYTE *)((unsigned long *)x+1), 4);
+      break;
+    }
 }
 
 
@@ -1341,19 +1341,19 @@ void swap(BYTE *x, BYTE size)
 
 int machineEndianness(void)
 {
-   int i = 1;
-   char *p = (char *) &i;
-   if (p[0] == 1){
-     // Lowest address contains the least significant byte
-     //     fprintf(stderr,"little\n");
-     return LITTLE_ENDIAN_USER;
-   }
-   else{
-     //     fprintf(stderr,"big\n");
-     return BIG_ENDIAN_USER;
-   }
+  int i = 1;
+  char *p = (char *) &i;
+  if (p[0] == 1){
+    // Lowest address contains the least significant byte
+    //     fprintf(stderr,"little\n");
+    return LITTLE_ENDIAN_USER;
+  }
+  else{
+    //     fprintf(stderr,"big\n");
+    return BIG_ENDIAN_USER;
+  }
 
-   //   return(0); // not reachable
+  //   return(0); // not reachable
 }
 
 
@@ -1367,7 +1367,7 @@ int machineEndianness(void)
 static long _TestEndian=1;
 
 int IsLittleEndian(void) {
-	return *(char*)&_TestEndian;
+  return *(char*)&_TestEndian;
 }
 
 
@@ -1381,47 +1381,47 @@ int IsLittleEndian(void) {
 ******************************************************************************/
 
 void *SwapEndian(void* Addr, const int Nb) {
-	static char Swapped[16];
-	switch (Nb) {
-		case 2:	Swapped[0]=*((char*)Addr+1);
-				Swapped[1]=*((char*)Addr  );
-				break;
-		case 3:	// As far as I know, 3 is used only with RGB images
-				Swapped[0]=*((char*)Addr+2);
-				Swapped[1]=*((char*)Addr+1);
-				Swapped[2]=*((char*)Addr  );
-				break;
-		case 4:	Swapped[0]=*((char*)Addr+3);
-				Swapped[1]=*((char*)Addr+2);
-				Swapped[2]=*((char*)Addr+1);
-				Swapped[3]=*((char*)Addr  );
-				break;
-		case 8:	Swapped[0]=*((char*)Addr+7);
-				Swapped[1]=*((char*)Addr+6);
-				Swapped[2]=*((char*)Addr+5);
-				Swapped[3]=*((char*)Addr+4);
-				Swapped[4]=*((char*)Addr+3);
-				Swapped[5]=*((char*)Addr+2);
-				Swapped[6]=*((char*)Addr+1);
-				Swapped[7]=*((char*)Addr  );
-				break;
-		case 16:Swapped[0]=*((char*)Addr+15);
-				Swapped[1]=*((char*)Addr+14);
-				Swapped[2]=*((char*)Addr+13);
-				Swapped[3]=*((char*)Addr+12);
-				Swapped[4]=*((char*)Addr+11);
-				Swapped[5]=*((char*)Addr+10);
-				Swapped[6]=*((char*)Addr+9);
-				Swapped[7]=*((char*)Addr+8);
-				Swapped[8]=*((char*)Addr+7);
-				Swapped[9]=*((char*)Addr+6);
-				Swapped[10]=*((char*)Addr+5);
-				Swapped[11]=*((char*)Addr+4);
-				Swapped[12]=*((char*)Addr+3);
-				Swapped[13]=*((char*)Addr+2);
-				Swapped[14]=*((char*)Addr+1);
-				Swapped[15]=*((char*)Addr  );
-				break;
-	}
-	return (void*)Swapped;
+  static char Swapped[16];
+  switch (Nb) {
+  case 2: Swapped[0]=*((char*)Addr+1);
+    Swapped[1]=*((char*)Addr  );
+    break;
+  case 3: // As far as I know, 3 is used only with RGB images
+    Swapped[0]=*((char*)Addr+2);
+    Swapped[1]=*((char*)Addr+1);
+    Swapped[2]=*((char*)Addr  );
+    break;
+  case 4: Swapped[0]=*((char*)Addr+3);
+    Swapped[1]=*((char*)Addr+2);
+    Swapped[2]=*((char*)Addr+1);
+    Swapped[3]=*((char*)Addr  );
+    break;
+  case 8: Swapped[0]=*((char*)Addr+7);
+    Swapped[1]=*((char*)Addr+6);
+    Swapped[2]=*((char*)Addr+5);
+    Swapped[3]=*((char*)Addr+4);
+    Swapped[4]=*((char*)Addr+3);
+    Swapped[5]=*((char*)Addr+2);
+    Swapped[6]=*((char*)Addr+1);
+    Swapped[7]=*((char*)Addr  );
+    break;
+  case 16:Swapped[0]=*((char*)Addr+15);
+    Swapped[1]=*((char*)Addr+14);
+    Swapped[2]=*((char*)Addr+13);
+    Swapped[3]=*((char*)Addr+12);
+    Swapped[4]=*((char*)Addr+11);
+    Swapped[5]=*((char*)Addr+10);
+    Swapped[6]=*((char*)Addr+9);
+    Swapped[7]=*((char*)Addr+8);
+    Swapped[8]=*((char*)Addr+7);
+    Swapped[9]=*((char*)Addr+6);
+    Swapped[10]=*((char*)Addr+5);
+    Swapped[11]=*((char*)Addr+4);
+    Swapped[12]=*((char*)Addr+3);
+    Swapped[13]=*((char*)Addr+2);
+    Swapped[14]=*((char*)Addr+1);
+    Swapped[15]=*((char*)Addr  );
+    break;
+  }
+  return (void*)Swapped;
 }

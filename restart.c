@@ -244,7 +244,7 @@ int rdump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
     if(dnumcolumns[VPOTDUMPTYPE]>0){
       int jj;
       for(jj=0;jj<dnumcolumns[VPOTDUMPTYPE];jj++){
-	myset(datatype,&GLOBALMACP1A0(vpotarraydump,jj,i,j,k),0,1,writebuf); // 1 each
+        myset(datatype,&GLOBALMACP1A0(vpotarraydump,jj,i,j,k),0,1,writebuf); // 1 each
       }
     }
   }
@@ -337,7 +337,7 @@ int rdump_read_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf
     if(dnumcolumns[VPOTDUMPTYPE]>0){
       int jj;
       for(jj=0;jj<dnumcolumns[VPOTDUMPTYPE];jj++){
-	myget(datatype,&GLOBALMACP1A0(vpotarraydump,jj,i,j,k),0,1,writebuf); // 1 each
+        myget(datatype,&GLOBALMACP1A0(vpotarraydump,jj,i,j,k),0,1,writebuf); // 1 each
       }
     }
   }
@@ -420,10 +420,10 @@ int restartupperpole_read(long dump_cnt)
     jshifted=j+SHIFT2;
     LOOPF1 LOOPF3{
       PLOOP(pliter,pl){
-	//	if(pl==B1 || pl==B2 || pl==B3){
-	if(pl==B2){
-	  GLOBALMACP0A1(unewglobal,i,jshifted-SHIFT2,k,pl)=GLOBALMACP0A1(unewglobal,i,jshifted,k,pl);
-	}
+        // if(pl==B1 || pl==B2 || pl==B3){
+        if(pl==B2){
+          GLOBALMACP0A1(unewglobal,i,jshifted-SHIFT2,k,pl)=GLOBALMACP0A1(unewglobal,i,jshifted,k,pl);
+        }
       }
     }
   }
@@ -453,13 +453,13 @@ static int restartupperpole_set(void)
       GLOBALMACP0A1(unewglobal,i,jshifted,k,B2)=0.0;
 
       if(EVOLVEWITHVPOT||TRACKVPOT){
-	if(dnumcolumns[VPOTDUMPTYPE]>0){
-	  int jj;
-	  for(jj=0;jj<dnumcolumns[VPOTDUMPTYPE];jj++){
-	    if(jj==2) continue; // skip A_2 that is not on pole, so not needed
-	    GLOBALMACP1A0(vpotarraydump,jj,i,jshifted,k)=0.0;
-	  }
-	}
+        if(dnumcolumns[VPOTDUMPTYPE]>0){
+          int jj;
+          for(jj=0;jj<dnumcolumns[VPOTDUMPTYPE];jj++){
+            if(jj==2) continue; // skip A_2 that is not on pole, so not needed
+            GLOBALMACP1A0(vpotarraydump,jj,i,jshifted,k)=0.0;
+          }
+        }
       }
     }// end FULLLOOP
   }// end if true upper pole
@@ -516,8 +516,8 @@ int rupperpoledump_read_content(int i, int j, int k, MPI_Datatype datatype,void 
     if(dnumcolumns[VPOTDUMPTYPE]>0){
       int jj;
       for(jj=0;jj<dnumcolumns[VPOTDUMPTYPE];jj++){
-	if(jj==2) continue; // skip A_2 that is not on pole, so not needed
-	myget(datatype,&GLOBALMACP1A0(vpotarraydump,jj,i,jshifted,k),0,1,writebuf); // 1 each
+        if(jj==2) continue; // skip A_2 that is not on pole, so not needed
+        myget(datatype,&GLOBALMACP1A0(vpotarraydump,jj,i,jshifted,k),0,1,writebuf); // 1 each
       }
     }
   }
@@ -614,8 +614,8 @@ int rupperpoledump_content(int i, int j, int k, MPI_Datatype datatype,void *writ
     if(dnumcolumns[VPOTDUMPTYPE]>0){
       int jj;
       for(jj=0;jj<dnumcolumns[VPOTDUMPTYPE];jj++){
-	if(jj==2) continue; // skip A_2 that is not on pole, so not needed
-	myset(datatype,&GLOBALMACP1A0(vpotarraydump,jj,i,jshifted,k),0,1,writebuf); // 1 each
+        if(jj==2) continue; // skip A_2 that is not on pole, so not needed
+        myset(datatype,&GLOBALMACP1A0(vpotarraydump,jj,i,jshifted,k),0,1,writebuf); // 1 each
       }
     }
   }
@@ -703,39 +703,39 @@ int rmetricdump_content(int i, int j, int k, MPI_Datatype datatype,void *writebu
     
 #if(NEWMETRICSTORAGE)
 
-      tempcompgeom = &GLOBALMETMACP1A0(compgeomlast,gridpos,i,j,k);
+    tempcompgeom = &GLOBALMETMACP1A0(compgeomlast,gridpos,i,j,k);
 
 
-      DLOOP(jj,kk){
-	generalmatrixlower[jj][kk]=tempcompgeom->gcov[GIND(jj,kk)];
-	generalmatrixupper[jj][kk]=tempcompgeom->gcon[GIND(jj,kk)];
-      }
+    DLOOP(jj,kk){
+      generalmatrixlower[jj][kk]=tempcompgeom->gcov[GIND(jj,kk)];
+      generalmatrixupper[jj][kk]=tempcompgeom->gcon[GIND(jj,kk)];
+    }
 
-      myset(datatype,generalmatrixlower,0,NDIM*NDIM,writebuf);
-      myset(datatype,generalmatrixupper,0,NDIM*NDIM,writebuf);
-      myset(datatype,tempcompgeom->gcovpert,0,NDIM,writebuf);
-      myset(datatype,&(tempcompgeom->gdet),0,1,writebuf);
+    myset(datatype,generalmatrixlower,0,NDIM*NDIM,writebuf);
+    myset(datatype,generalmatrixupper,0,NDIM*NDIM,writebuf);
+    myset(datatype,tempcompgeom->gcovpert,0,NDIM,writebuf);
+    myset(datatype,&(tempcompgeom->gdet),0,1,writebuf);
 #if(WHICHEOM!=WITHGDET)
-      myset(datatype,&(tempcompgeom->EOMFUNCMAC(0)),0,NPR,writebuf);
-      myset(datatype,&(tempcompgeom->IEOMFUNCNOSINGMAC(0)),0,NPR,writebuf);
+    myset(datatype,&(tempcompgeom->EOMFUNCMAC(0)),0,NPR,writebuf);
+    myset(datatype,&(tempcompgeom->IEOMFUNCNOSINGMAC(0)),0,NPR,writebuf);
 #endif
 #if(GDETVOLDIFF)
-      myset(datatype,&(tempcompgeom->gdetvol),0,1,writebuf);
+    myset(datatype,&(tempcompgeom->gdetvol),0,1,writebuf);
 #endif
-      myset(datatype,&(tempcompgeom->igdetnosing),0,1,writebuf);
-      myset(datatype,&(tempcompgeom->alphalapse),0,1,writebuf);
-      myset(datatype,&(tempcompgeom->betasqoalphasq),0,1,writebuf);
-      myset(datatype,&(tempcompgeom->beta),0,NDIM,writebuf);
+    myset(datatype,&(tempcompgeom->igdetnosing),0,1,writebuf);
+    myset(datatype,&(tempcompgeom->alphalapse),0,1,writebuf);
+    myset(datatype,&(tempcompgeom->betasqoalphasq),0,1,writebuf);
+    myset(datatype,&(tempcompgeom->beta),0,NDIM,writebuf);
 
 #else
 
-      DLOOP(jj,kk){
-	generalmatrixlower[jj][kk]=GLOBALMETMACP1A1(gcovlast,gridpos,i,j,k,GIND(jj,kk));
-      }
+    DLOOP(jj,kk){
+      generalmatrixlower[jj][kk]=GLOBALMETMACP1A1(gcovlast,gridpos,i,j,k,GIND(jj,kk));
+    }
       
-      myset(datatype,generalmatrixlower,0,NDIM*NDIM,writebuf);
-      myset(datatype,GLOBALMETMACP1A0(gcovpertlast,gridpos,i,j,k),0,NDIM,writebuf);
-      myset(datatype,&(GLOBALMETMACP1A0(alphalapselast,gridpos,i,j,k)),0,1,writebuf);
+    myset(datatype,generalmatrixlower,0,NDIM*NDIM,writebuf);
+    myset(datatype,GLOBALMETMACP1A0(gcovpertlast,gridpos,i,j,k),0,NDIM,writebuf);
+    myset(datatype,&(GLOBALMETMACP1A0(alphalapselast,gridpos,i,j,k)),0,1,writebuf);
 
 #endif
 
@@ -1099,8 +1099,8 @@ int readwrite_restart_header(int readwrite, int bintxt, int bcasthead, FILE*head
     int l5,inputl5=NUMDUMPTYPES-2;
     for(l5=NUMDUMPTYPES-1;l5>=0;l5--){
       if(l5!=RESTARTUPPERPOLEDUMPTYPE){
-	DOCOLSPLIT[l5]=DOCOLSPLIT[inputl5];
-	inputl5--;
+        DOCOLSPLIT[l5]=DOCOLSPLIT[inputl5];
+        inputl5--;
       }
     }
   }
@@ -1135,8 +1135,8 @@ int readwrite_restart_header(int readwrite, int bintxt, int bcasthead, FILE*head
     int l5,inputl5=NUMDUMPTYPES-2;
     for(l5=NUMDUMPTYPES-1;l5>=0;l5--){
       if(l5!=RESTARTUPPERPOLEDUMPTYPE){
-	DTdumpgen[l5]=DTdumpgen[inputl5];
-	inputl5--;
+        DTdumpgen[l5]=DTdumpgen[inputl5];
+        inputl5--;
       }
     }
   }
@@ -1147,8 +1147,8 @@ int readwrite_restart_header(int readwrite, int bintxt, int bcasthead, FILE*head
     int l5,inputl5=NUMDUMPTYPES-2;
     for(l5=NUMDUMPTYPES-1;l5>=0;l5--){
       if(l5!=RESTARTUPPERPOLEDUMPTYPE){
-	dumpcntgen[l5]=dumpcntgen[inputl5];
-	inputl5--;
+        dumpcntgen[l5]=dumpcntgen[inputl5];
+        inputl5--;
       }
     }
   }
@@ -1231,10 +1231,10 @@ int readwrite_restart_header(int readwrite, int bintxt, int bcasthead, FILE*head
   // BELOW moved to dump_gen
   // now read of tail is controlled by dump_gen()
   //  if(bintxt==TEXTOUTPUT){
-    // flush to just after the header line in case binary read of data
-    //    if(readwrite==READHEAD) while(fgetc(headerptr)!='\n');
+  // flush to just after the header line in case binary read of data
+  //    if(readwrite==READHEAD) while(fgetc(headerptr)!='\n');
   // if(readwrite==READHEAD){
-      // do nothing
+  // do nothing
   // }
   // else if(readwrite==WRITEHEAD) fprintf(headerptr,"\n");
   // }
@@ -1338,13 +1338,13 @@ int restart_read_defs_new(void)
 
     if(DODEBUG){
       FAILFLOORLOOP(indexfinalstep,tscale,floor){
-	failfloorcountlocal[indexfinalstep][tscale][floor]=failfloorcountlocal_tot[indexfinalstep][tscale][floor];
-	// failfloorcountlocal overwritten by counttotal by integratel in dump_ener.c, so also put in spatial spot.  Need this if not tracking counters spatially.  Or shouldn't reset failfloorcountlocal to zero in counttotal in dump_ener.c and reset counters to zero elsewhere at start of simulation.
-	// So just stick it somewhere we can easily track down later on this myid==0 core.
-	int i=-1;
-	int j=-1;
-	int k=-1;
-	GLOBALMACP0A3(failfloorcount,i,j,k,indexfinalstep,tscale,floor) = failfloorcountlocal[indexfinalstep][tscale][floor];
+        failfloorcountlocal[indexfinalstep][tscale][floor]=failfloorcountlocal_tot[indexfinalstep][tscale][floor];
+        // failfloorcountlocal overwritten by counttotal by integratel in dump_ener.c, so also put in spatial spot.  Need this if not tracking counters spatially.  Or shouldn't reset failfloorcountlocal to zero in counttotal in dump_ener.c and reset counters to zero elsewhere at start of simulation.
+        // So just stick it somewhere we can easily track down later on this myid==0 core.
+        int i=-1;
+        int j=-1;
+        int k=-1;
+        GLOBALMACP0A3(failfloorcount,i,j,k,indexfinalstep,tscale,floor) = failfloorcountlocal[indexfinalstep][tscale][floor];
       }
     }
 

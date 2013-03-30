@@ -94,9 +94,9 @@
 
 
 //#if( TESTNUMBER == 153 && N2 == 1 && N3 == 1 )
-//	static FTYPE a_ucons_bondi[NBIGM][NPR];
-//	//shift the array index so that it starts at (-NBIGBND)
-//	static FTYPE (*ucons_bondi)[NPR] = (FTYPE (*)[NPR]) (&(a_ucons_bondi[NPR][NBIGBND]));
+// static FTYPE a_ucons_bondi[NBIGM][NPR];
+// //shift the array index so that it starts at (-NBIGBND)
+// static FTYPE (*ucons_bondi)[NPR] = (FTYPE (*)[NPR]) (&(a_ucons_bondi[NPR][NBIGBND]));
 //#endif
 
 
@@ -116,15 +116,15 @@
 
 
 int eno_line_a2c( int whichquantity, int do_weight_or_recon, weno_weights_t *stencil_weights_array, int whichreduce, int preforder, int pl, int bs, int ps, int pf, int bf, int *minorderit, int *maxorderit, int *shiftit, 
-		  FTYPE *shockindicator, FTYPE (*df)[NBIGM], FTYPE (*dP)[NBIGM], FTYPE (*monoindicator)[NBIGM], 
-		  FTYPE *P, FTYPE *yin,  FTYPE *yout, struct of_trueijkp *trueijkp) 
+                  FTYPE *shockindicator, FTYPE (*df)[NBIGM], FTYPE (*dP)[NBIGM], FTYPE (*monoindicator)[NBIGM], 
+                  FTYPE *P, FTYPE *yin,  FTYPE *yout, struct of_trueijkp *trueijkp) 
 //wrapper function that calls a more general conversion function, eno_line_a2c_c2a
 {
   int i;
   int res;
   weno_weights_t one_sided_stencil_weight;
   int weight_no;
-	
+ 
 
 #if( DO_AVG2CEN == 0 )
   for( i = ps; i <= pf; i++ ) {
@@ -144,21 +144,21 @@ int eno_line_a2c( int whichquantity, int do_weight_or_recon, weno_weights_t *ste
 #endif
 
   //#if( TESTNUMBER == 153 && N2 == 1 && N3 == 1 )
-  //	//for Bondi problem, modify the average values of conserved quantities for X1UP boundary zones to be equal to those at t = 0; this assumes 1d case
-  //	if( mycpupos[1] == ncpux1 - 1 ) {
-  //		for( i = N1; i <= pf; i++ ) {
-  //			yin[i] = ucons_bondi[pl][i];
-  //		}
-  //	}
+  // //for Bondi problem, modify the average values of conserved quantities for X1UP boundary zones to be equal to those at t = 0; this assumes 1d case
+  // if( mycpupos[1] == ncpux1 - 1 ) {
+  //  for( i = N1; i <= pf; i++ ) {
+  //   yin[i] = ucons_bondi[pl][i];
+  //  }
+  // }
   //#endif
 
   res = eno_line_reconstruct( whichquantity, do_weight_or_recon, stencil_weights_array, CVT_A2C, whichreduce, 
-			      preforder, pl, bs, ps, pf, bf, 
-			      minorderit, 
-			      maxorderit, 
-			      shiftit, 
-			      shockindicator,
-			      df, dP, monoindicator, P, yin, yout, NULL, NULL,trueijkp ); 
+                              preforder, pl, bs, ps, pf, bf, 
+                              minorderit, 
+                              maxorderit, 
+                              shiftit, 
+                              shockindicator,
+                              df, dP, monoindicator, P, yin, yout, NULL, NULL,trueijkp ); 
 
 
 #if(0) // deprecated with no iterglobal anymore
@@ -211,7 +211,7 @@ int eno_line_a2c( int whichquantity, int do_weight_or_recon, weno_weights_t *ste
   //
   ////////////////////
 #endif
-		
+  
   return res;
 
 #endif
@@ -226,8 +226,8 @@ int eno_line_a2c( int whichquantity, int do_weight_or_recon, weno_weights_t *ste
 
 
 int eno_line_c2a( int whichquantity, int do_weight_or_recon, weno_weights_t *stencil_weights_array, int whichreduce, int preforder, int pl, int bs, int ps, int pf, int bf, int *minorderit, int *maxorderit, int *shiftit, 
-		  FTYPE *shockindicator, FTYPE (*df)[NBIGM], FTYPE (*dP)[NBIGM], FTYPE (*monoindicator)[NBIGM], 
-		  FTYPE *P, FTYPE *yin,  FTYPE *yout, struct of_trueijkp *trueijkp) 
+                  FTYPE *shockindicator, FTYPE (*df)[NBIGM], FTYPE (*dP)[NBIGM], FTYPE (*monoindicator)[NBIGM], 
+                  FTYPE *P, FTYPE *yin,  FTYPE *yout, struct of_trueijkp *trueijkp) 
 //wrapper function that calls a more general conversion function, eno_line_reconstruct
 {
   int i;
@@ -243,12 +243,12 @@ int eno_line_c2a( int whichquantity, int do_weight_or_recon, weno_weights_t *ste
   res = eno_line_reconstruct( whichquantity, do_weight_or_recon, stencil_weights_array, CVT_C2A, whichreduce, preforder, pl, bs, ps, pf, bf, minorderit, maxorderit, shiftit, shockindicator,  df, dP, monoindicator, P, yin, yout, NULL, NULL,trueijkp ); 
 
   //#if( TESTNUMBER == 153 && N2 == 1 && N3 == 1 )
-  //	//for Bondi problem, save the average values of conserved quantities at t = 0; this assumes 1d case
-  //	if( is_pi2Uavg ) {
-  //		for( i = ps; i <= pf; i++ ) {
-  //			ucons_bondi[pl][i] = yout[i];
-  //		}
-  //	}
+  // //for Bondi problem, save the average values of conserved quantities at t = 0; this assumes 1d case
+  // if( is_pi2Uavg ) {
+  //  for( i = ps; i <= pf; i++ ) {
+  //   ucons_bondi[pl][i] = yout[i];
+  //  }
+  // }
   //#endif
 
   return res;
@@ -262,9 +262,9 @@ int eno_line_c2a( int whichquantity, int do_weight_or_recon, weno_weights_t *ste
 
 
 int eno_line_c2e( int whichquantity, int dir, int do_weight_or_recon, weno_weights_t *stencil_weights_array, int whichreduce, int preforder, int pl, int bs, int ps, int pf, int bf, int *minorderit, int *maxorderit, int *shiftit, 
-		  FTYPE *shockindicator, FTYPE *stiffindicator, FTYPE *V, FTYPE *P,
-		  FTYPE (*df)[NBIGM], FTYPE (*dP)[NBIGM], FTYPE *etai, FTYPE (*monoindicator)[NBIGM], 
-		  FTYPE *Pindicator, FTYPE *yin, FTYPE *yout_left, FTYPE *yout_right, FTYPE (*youtpolycoef)[NBIGM], struct of_trueijkp *trueijkp ) 
+                  FTYPE *shockindicator, FTYPE *stiffindicator, FTYPE *V, FTYPE *P,
+                  FTYPE (*df)[NBIGM], FTYPE (*dP)[NBIGM], FTYPE *etai, FTYPE (*monoindicator)[NBIGM], 
+                  FTYPE *Pindicator, FTYPE *yin, FTYPE *yout_left, FTYPE *yout_right, FTYPE (*youtpolycoef)[NBIGM], struct of_trueijkp *trueijkp ) 
 {
 
 #if( DO_CENT2EDGE == 0 )
@@ -331,21 +331,21 @@ int eno_line_c2e( int whichquantity, int dir, int do_weight_or_recon, weno_weigh
 /// \param[out] yout_left  array of interpolated quantities (used for all types of reconstructions)
 /// \param[out] yout_right  array of interpolated quantities (used only for those reconstructions that have two outputs, e.g. center to edge reconstruction)
 int eno_line_reconstruct(int whichquantity, int do_weight_or_recon, weno_weights_t *stencil_weights_array, int cvt_type, int whichreduce, int preforder, int pl, 
-			 int bs, int ps, int pf, int bf, 
-			 int *minorderit, int *maxorderit, int *shiftit, 
-			 FTYPE *shockindicator, 
-			 FTYPE (*df)[NBIGM],
-			 FTYPE (*dP)[NBIGM],
-			 FTYPE (*monoindicator)[NBIGM],
-			 FTYPE *P, 
-			 FTYPE *yin,  FTYPE *yout_left, FTYPE *yout_right, FTYPE (*youtpolycoef)[NBIGM], struct of_trueijkp *trueijkp)
+                         int bs, int ps, int pf, int bf, 
+                         int *minorderit, int *maxorderit, int *shiftit, 
+                         FTYPE *shockindicator, 
+                         FTYPE (*df)[NBIGM],
+                         FTYPE (*dP)[NBIGM],
+                         FTYPE (*monoindicator)[NBIGM],
+                         FTYPE *P, 
+                         FTYPE *yin,  FTYPE *yout_left, FTYPE *yout_right, FTYPE (*youtpolycoef)[NBIGM], struct of_trueijkp *trueijkp)
 {
   
 
   int i;
   FTYPE simpleweight;
   int counter;
-  int weights_start;	//the first point where the weights can be computed
+  int weights_start; //the first point where the weights can be computed
   int weights_finish; //the last point where the weights can be computed
   int maxorder;
   int minorder;
@@ -453,15 +453,15 @@ int eno_line_reconstruct(int whichquantity, int do_weight_or_recon, weno_weights
       mono_adjust_unoptimized_weights( &monoindicator[MONOYIN][i], &stencil_weights_array[i] );
 #endif 
       //if( monoindicator[MONOYIN][i] != monoindicator[MONOYIN][N1 - 1 - i] ) {
-      //	dualfprintf( fail_file, "Asymmetry in monoindicator: monoindicator[MONOYIN][%d] = %21.15g, monoindicator[MONOYIN][%d] = %21.15g\n",
-      //			i, monoindicator[MONOYIN][i], N1 - 1 - i, monoindicator[MONOYIN][N1 - 1 - i]);
+      // dualfprintf( fail_file, "Asymmetry in monoindicator: monoindicator[MONOYIN][%d] = %21.15g, monoindicator[MONOYIN][%d] = %21.15g\n",
+      //   i, monoindicator[MONOYIN][i], N1 - 1 - i, monoindicator[MONOYIN][N1 - 1 - i]);
       //}
     } 
 
 #if(0)
     for( i =0; i < N1; i++ ) {
       if((pl==RHO||pl==U1)&&(steppart==0))
-	dualfprintf(fail_file,"%d %d %ld %d %21.15g %21.15g %21.15g %21.15g\n",pl,i,nstep,steppart,stencil_weights_array[i].weights[2],stencil_weights_array[i].weights[1],stencil_weights_array[i].weights[0],yin[i]);
+        dualfprintf(fail_file,"%d %d %ld %d %21.15g %21.15g %21.15g %21.15g\n",pl,i,nstep,steppart,stencil_weights_array[i].weights[2],stencil_weights_array[i].weights[1],stencil_weights_array[i].weights[0],yin[i]);
     }
 #endif
 
@@ -470,11 +470,11 @@ int eno_line_reconstruct(int whichquantity, int do_weight_or_recon, weno_weights
       //comutes the weights ratios as well as the lower order fractions for every point based on these ratios
       //note that P[i] contains the value of the lorentz factor (termporary use this array for storing it since no need for pressure)
       if(GAMCHECK(i) &&  cvt_type == CVT_C2E) {
-	//use CVT_A2C so that reduction proceeds as the OR reduction
-	compute_weights_ratios( CVT_A2C, bs - i, bf - i, &yin[i], &stencil_weights_array[i] ); 
+        //use CVT_A2C so that reduction proceeds as the OR reduction
+        compute_weights_ratios( CVT_A2C, bs - i, bf - i, &yin[i], &stencil_weights_array[i] ); 
       }
       else {
-	compute_weights_ratios( cvt_type, bs - i, bf - i, &yin[i], &stencil_weights_array[i] ); 
+        compute_weights_ratios( cvt_type, bs - i, bf - i, &yin[i], &stencil_weights_array[i] ); 
       }
     }
     
@@ -482,7 +482,7 @@ int eno_line_reconstruct(int whichquantity, int do_weight_or_recon, weno_weights
       //modify the lower order fraction by applying extra reduction:
       //dp/p reduction, etc. to the weno5 weights and update the lower order values
       apply_additional_reduction_to_weights( cvt_type, whichreduce, maxorder, minorder, i, pl, bs, bf, shockindicator, 
-					     dP, monoindicator[MONOYIN], P, yin, stencil_weights_array,trueijkp );
+                                             dP, monoindicator[MONOYIN], P, yin, stencil_weights_array,trueijkp );
 
       //JCM
       // stencil_weights_array[i].lower_order_fraction;
@@ -493,54 +493,54 @@ int eno_line_reconstruct(int whichquantity, int do_weight_or_recon, weno_weights
       //SASMARKx: bad idea to use for the interpolation of conserved quantities because gamma is at a previous time step
       if( pl == VSQ && cvt_type == CVT_C2E ) {  
 
-	//if( iterglobal == 2 && stencil_weights_array[i].lower_order_fraction != 0 ) {
-	//	trifprintf( "gamma reduced, dir = 2, lo_ord_fr = %lg, nstep = %d, steppart = %d, i = %d, j = %d (symj = %d)\n", 
-	//		stencil_weights_array[i].lower_order_fraction, nstep, steppart, trueijkp->i, i, N2 - 1 - i );
-	//}
+        //if( iterglobal == 2 && stencil_weights_array[i].lower_order_fraction != 0 ) {
+        // trifprintf( "gamma reduced, dir = 2, lo_ord_fr = %lg, nstep = %d, steppart = %d, i = %d, j = %d (symj = %d)\n", 
+        //  stencil_weights_array[i].lower_order_fraction, nstep, steppart, trueijkp->i, i, N2 - 1 - i );
+        //}
 
-	//do this only for gamma, which is the last, NPR (nprend)-th, primitive; STORE_GAMMA_PRIM_REDUCTION_FRACTION == 1 means that gamma actually exists and is being interpolated
-	//store the largest value of lower_order_fraction for the current point globally
-	//MACP1A0(weno_prim_lower_order_fraction,dirglobal,trueijkp->i + i*di,trueijkp->j + i*dj,trueijkp->k + i*dk) = 
-	//			MAX( stencil_weights_array[i].lower_order_fraction,
-	//						MACP1A0(weno_prim_lower_order_fraction,dirglobal,trueijkp->i + i*di,trueijkp->j + i*dj,trueijkp->k + i*dk) );  
+        //do this only for gamma, which is the last, NPR (nprend)-th, primitive; STORE_GAMMA_PRIM_REDUCTION_FRACTION == 1 means that gamma actually exists and is being interpolated
+        //store the largest value of lower_order_fraction for the current point globally
+        //MACP1A0(weno_prim_lower_order_fraction,dirglobal,trueijkp->i + i*di,trueijkp->j + i*dj,trueijkp->k + i*dk) = 
+        //   MAX( stencil_weights_array[i].lower_order_fraction,
+        //      MACP1A0(weno_prim_lower_order_fraction,dirglobal,trueijkp->i + i*di,trueijkp->j + i*dj,trueijkp->k + i*dk) );  
 
-	//SUPERSASMARK: put in the check for cusp into the lower_order_fraction
-	if( monoindicator[MONOYIN][i] == 0 && (monoindicator[LEFTYOUT][i] == 1 || monoindicator[RIGHTYOUT][i] == 1) ) {
-	  if( fabs(yin[i]-yin[i-1]) + fabs(yin[i+1]-yin[i]) > 0.01 * yin[i] ) {
-	    MACP1A0(weno_prim_lower_order_fraction,dirglobal,trueijkp->i + i*di,trueijkp->j + i*dj,trueijkp->k + i*dk) = 1.0;
-	  }
-	}
+        //SUPERSASMARK: put in the check for cusp into the lower_order_fraction
+        if( monoindicator[MONOYIN][i] == 0 && (monoindicator[LEFTYOUT][i] == 1 || monoindicator[RIGHTYOUT][i] == 1) ) {
+          if( fabs(yin[i]-yin[i-1]) + fabs(yin[i+1]-yin[i]) > 0.01 * yin[i] ) {
+            MACP1A0(weno_prim_lower_order_fraction,dirglobal,trueijkp->i + i*di,trueijkp->j + i*dj,trueijkp->k + i*dk) = 1.0;
+          }
+        }
       }
       else if( cvt_type == CVT_A2C ) {  //deaveraging of conserved quantities; use the lower order fractions
-	//reduce for a2c if reduced for the gamma
-	//stencil_weights_array[i].lower_order_fraction = 
-	//	MAX( stencil_weights_array[i].lower_order_fraction,
-	//					MACP1A0(weno_prim_lower_order_fraction,dirglobal,trueijkp->i + i*di,trueijkp->j + i*dj,trueijkp->k + i*dk) );
+        //reduce for a2c if reduced for the gamma
+        //stencil_weights_array[i].lower_order_fraction = 
+        // MAX( stencil_weights_array[i].lower_order_fraction,
+        //     MACP1A0(weno_prim_lower_order_fraction,dirglobal,trueijkp->i + i*di,trueijkp->j + i*dj,trueijkp->k + i*dk) );
       }
       else if( cvt_type == CVT_C2A ) { 
-	if( whichquantity == ENOFLUX ) {
-	  //averaging of fluxes
-						
-	  //reduce for c2a if reduced for interpolation of gamma ...
-	  //... for the cell to the right of the interface reduced  (no need to convert the indices)
-	  stencil_weights_array[i].lower_order_fraction = 
-	    MAX( stencil_weights_array[i].lower_order_fraction,
-		 MACP1A0(weno_prim_lower_order_fraction,dirglobal,trueijkp->i + i*di,trueijkp->j + i*dj,trueijkp->k + i*dk) );
-	  //... for the cell to the left of the interface reduced  (go left in the direction of dirglobal)
-	  stencil_weights_array[i].lower_order_fraction = 
-	    MAX( stencil_weights_array[i].lower_order_fraction,
-		 MACP1A0(weno_prim_lower_order_fraction,dirglobal,trueijkp->i + i*di - (dirglobal==1),trueijkp->j + i*dj - (dirglobal==2),trueijkp->k + i*dk - (dirglobal==3)) );
-	}
-	//else { //averaging or primitive quantities or source terms
-	//	//reduce for c2a if reduced for the gamma
-	//	stencil_weights_array[i].lower_order_fraction = 
-	//		MAX( stencil_weights_array[i].lower_order_fraction,
-	//						MACP1A0(weno_prim_lower_order_fraction,dirglobal,trueijkp->i + i*di,trueijkp->j + i*dj,trueijkp->k + i*dk) );
-	//}
+        if( whichquantity == ENOFLUX ) {
+          //averaging of fluxes
+      
+          //reduce for c2a if reduced for interpolation of gamma ...
+          //... for the cell to the right of the interface reduced  (no need to convert the indices)
+          stencil_weights_array[i].lower_order_fraction = 
+            MAX( stencil_weights_array[i].lower_order_fraction,
+                 MACP1A0(weno_prim_lower_order_fraction,dirglobal,trueijkp->i + i*di,trueijkp->j + i*dj,trueijkp->k + i*dk) );
+          //... for the cell to the left of the interface reduced  (go left in the direction of dirglobal)
+          stencil_weights_array[i].lower_order_fraction = 
+            MAX( stencil_weights_array[i].lower_order_fraction,
+                 MACP1A0(weno_prim_lower_order_fraction,dirglobal,trueijkp->i + i*di - (dirglobal==1),trueijkp->j + i*dj - (dirglobal==2),trueijkp->k + i*dk - (dirglobal==3)) );
+        }
+        //else { //averaging or primitive quantities or source terms
+        // //reduce for c2a if reduced for the gamma
+        // stencil_weights_array[i].lower_order_fraction = 
+        //  MAX( stencil_weights_array[i].lower_order_fraction,
+        //      MACP1A0(weno_prim_lower_order_fraction,dirglobal,trueijkp->i + i*di,trueijkp->j + i*dj,trueijkp->k + i*dk) );
+        //}
       }
       else if( cvt_type != CVT_C2E ) {
-	dualfprintf( fail_file, "Unknown reconstruction type\n" );
-	myexit(1);
+        dualfprintf( fail_file, "Unknown reconstruction type\n" );
+        myexit(1);
       }
 #endif
     }
@@ -580,8 +580,8 @@ int eno_line_reconstruct(int whichquantity, int do_weight_or_recon, weno_weights
       num_orders = 1;
       p_stencil_weights_array_to_be_used = &stencil_weights_array[i];
 #endif
-			
-			
+   
+   
       for( weno_output_count = 0; weno_output_count < weno_outputs[cvt_type].len; weno_output_count++ ) {
         //init output val with zero if SMONO is not used <-- SASMARK don't need this if yout is well-defined 
         //(not nan's, infitinities, etc. so that 0 * yout[c][i] = 0)
@@ -618,11 +618,11 @@ int eno_line_reconstruct(int whichquantity, int do_weight_or_recon, weno_weights
           //loop over the reconstructions whose linear combination we will be given as the answer
           for( counter = 0; counter < num_orders; counter++ ) {  
             //if( pl < U2 ) dualfprintf( fail_file, "pl = %d, nstep = %ld, steppart = %d, i = %d, order = %d, w0 = %g, w1 = %g, w2 = %g\n",
-            //	pl, nstep, steppart, i,
-            //	p_stencil_weights_array_to_be_used[counter].order, 
-            //	p_stencil_weights_array_to_be_used[counter].weights[0+p_stencil_weights_array_to_be_used[counter].order], 
-            //	p_stencil_weights_array_to_be_used[counter].weights[1+p_stencil_weights_array_to_be_used[counter].order], 
-            //	p_stencil_weights_array_to_be_used[counter].weights[2+p_stencil_weights_array_to_be_used[counter].order] );
+            // pl, nstep, steppart, i,
+            // p_stencil_weights_array_to_be_used[counter].order, 
+            // p_stencil_weights_array_to_be_used[counter].weights[0+p_stencil_weights_array_to_be_used[counter].order], 
+            // p_stencil_weights_array_to_be_used[counter].weights[1+p_stencil_weights_array_to_be_used[counter].order], 
+            // p_stencil_weights_array_to_be_used[counter].weights[2+p_stencil_weights_array_to_be_used[counter].order] );
             eno_cvt( weno_outputs[cvt_type].type[weno_output_count], bs - i, bf - i, &p_stencil_weights_array_to_be_used[counter], &yin[i], &yout_delta );
             output_val += yout_delta;
 #if( DOENODEBUG )
@@ -630,13 +630,13 @@ int eno_line_reconstruct(int whichquantity, int do_weight_or_recon, weno_weights
             //
             // WENO3:
             if(  dirglobal<=2 && pl <=U2 && 
-		 p_stencil_weights_array_to_be_used[counter].order == 2 && get_sum_of_elements(2, p_stencil_weights_array_to_be_used[counter].weights) > 0.01 ) {
-	      MACP0A4(enodebugarray,trueijkp->i + i*di,trueijkp->j + i*dj,trueijkp->k + i*dk,dirglobal-1,interporfluxglobal,pl,ENODEBUGPARAM_WENO3)++;
+                 p_stencil_weights_array_to_be_used[counter].order == 2 && get_sum_of_elements(2, p_stencil_weights_array_to_be_used[counter].weights) > 0.01 ) {
+              MACP0A4(enodebugarray,trueijkp->i + i*di,trueijkp->j + i*dj,trueijkp->k + i*dk,dirglobal-1,interporfluxglobal,pl,ENODEBUGPARAM_WENO3)++;
             }
             // WENO5:
             else if( dirglobal<=2 && pl <=U2 && 
-		     p_stencil_weights_array_to_be_used[counter].order == 3 && get_sum_of_elements(3, p_stencil_weights_array_to_be_used[counter].weights) > 0.01 ) {
-	      MACP0A4(enodebugarray,trueijkp->i + i*di,trueijkp->j + i*dj,trueijkp->k + i*dk,dirglobal-1,interporfluxglobal,pl,ENODEBUGPARAM_WENO5)++;
+                     p_stencil_weights_array_to_be_used[counter].order == 3 && get_sum_of_elements(3, p_stencil_weights_array_to_be_used[counter].weights) > 0.01 ) {
+              MACP0A4(enodebugarray,trueijkp->i + i*di,trueijkp->j + i*dj,trueijkp->k + i*dk,dirglobal-1,interporfluxglobal,pl,ENODEBUGPARAM_WENO5)++;
             }
 #endif
           }
@@ -645,7 +645,7 @@ int eno_line_reconstruct(int whichquantity, int do_weight_or_recon, weno_weights
           // don't assign value if already assigned before entering here (works for dual or single output)
           //
           //yout[weno_output_count][i] = ( 1.0 - monoindicator[LEFTYOUT+weno_output_count][i] ) * output_val 
-          //														 			+ monoindicator[LEFTYOUT+weno_output_count][i] * yout[weno_output_count][i];
+          //                  + monoindicator[LEFTYOUT+weno_output_count][i] * yout[weno_output_count][i];
           ////////
 
           yout[weno_output_count][i] = ( 1.0 - monoindicator[MONOYIN][i] ) * output_val 
@@ -668,12 +668,12 @@ int eno_line_reconstruct(int whichquantity, int do_weight_or_recon, weno_weights
       for( derorder = 1; derorder <= 4; derorder++ ) {
         dertype = CVT_C2DER1 + derorder - 1;
         eno_line_reconstruct( whichquantity, RECON_CALC, stencil_weights_array, dertype, whichreduce, 
-			      preforder, pl, bs, ps, pf, bf, 
-			      minorderit, 
-			      maxorderit, 
-			      shiftit, 
-			      shockindicator,
-			      df, dP, monoindicator, P, yin, youtpolycoef[derorder], NULL, NULL,trueijkp ); 
+                              preforder, pl, bs, ps, pf, bf, 
+                              minorderit, 
+                              maxorderit, 
+                              shiftit, 
+                              shockindicator,
+                              df, dP, monoindicator, P, yin, youtpolycoef[derorder], NULL, NULL,trueijkp ); 
       }
     }
 #endif
@@ -793,8 +793,8 @@ FTYPE rescale_weight( FTYPE order, FTYPE weight )
 
 
 void apply_additional_reduction_to_weights( int cvt_type, int whichreduce, int max_order, int min_order, int i0, int pl, int bs, int bf, FTYPE *shockindicator, FTYPE (*dP)[NBIGM],
-					    FTYPE *monoindicator, FTYPE *P, FTYPE *uin, 
-					    weno_weights_t *stencil_weights_array, struct of_trueijkp *trueijkp ) 
+                                            FTYPE *monoindicator, FTYPE *P, FTYPE *uin, 
+                                            weno_weights_t *stencil_weights_array, struct of_trueijkp *trueijkp ) 
 {
   FTYPE dPi;
   int counter;
@@ -809,7 +809,7 @@ void apply_additional_reduction_to_weights( int cvt_type, int whichreduce, int m
   //  ITERGLOBALDEF  //define values of di, dj, dk, etc.
   di = (trueijkp->iter==1); dj = (trueijkp->iter==2); dk = (trueijkp->iter==3);
 
-    lower_order_fraction = stencil_weights_array[i0].lower_order_fraction;
+  lower_order_fraction = stencil_weights_array[i0].lower_order_fraction;
 
 #if( DO_REDUCE_POST_SHOCK || DO_REDUCE_PRE_SHOCK )
   //Reduce in/against the direction of the pressure growth
@@ -891,7 +891,7 @@ int eno_cvt( int cvt_type, int min_index, int max_index, weno_weights_t *stencil
   int order;
   FTYPE interpolated_value = 0.0;
   FTYPE *stencil_weights;
-	
+ 
   FTYPE weno_stencil_recs[MAX_CVT_ORDER]; //SASMARK for storing updates due to each stencil
   FTYPE a2cupdate, this_order_weight;
   FTYPE weno_point_updates[MAX_CVT_ORDER];    //atch symmetrize
@@ -937,7 +937,7 @@ int eno_cvt( int cvt_type, int min_index, int max_index, weno_weights_t *stencil
     //loop through all possible stencils
     //compute the updates due to each point in the stencil
     for( j = 0; j < order; j++ ) {
-      //cvt_matrix[shift * order + j]	effectively gives cvt_matrix[shift][j]
+      //cvt_matrix[shift * order + j] effectively gives cvt_matrix[shift][j]
       weno_point_updates[j] = MATRIX_ROW_COL(cvtmatrix, shift, j, order) * uin[j - shift]; //see (2.11) from Shu Report (1997)
     }
 
@@ -964,7 +964,7 @@ int eno_cvt( int cvt_type, int min_index, int max_index, weno_weights_t *stencil
       this_order_weight = get_sum_of_elements( order, stencil_weights );
       a2cupdate = interpolated_value - uin[0] * this_order_weight;
       for( shift = 0; shift < order; shift++ ){
-	a2cupdate = MINMOD( a2cupdate, (weno_stencil_recs[shift] - uin[0]) * this_order_weight ); //chooses the smallest update possible out of all possible parabolae and the full weno-5
+        a2cupdate = MINMOD( a2cupdate, (weno_stencil_recs[shift] - uin[0]) * this_order_weight ); //chooses the smallest update possible out of all possible parabolae and the full weno-5
       }
       //assign the interpolated value to the output variable
       uout[0] = uin[0] * this_order_weight + a2cupdate ;
@@ -1054,7 +1054,7 @@ void simple_eno(int full_order, int cvt_type, FTYPE *yin, FTYPE *pout)
 
   //initialize the variable to which you add up
   res = 0.0;
-	
+ 
   // set up the start and end inidices for convolution
   is_conv = - full_order / 2;
   if_conv = is_conv + full_order - 1;
@@ -1107,7 +1107,7 @@ FTYPE *get_cvt_vec( int cvt_type, int full_order )
   FTYPE *cvt_matrix;
   FTYPE *cvt_vec;
   int shift;
-	
+ 
   ///////
   // Pick a matrix for the conversion order that corresponds to the full stencil
   cvt_matrix = cvt_matrices[cvt_type][full_order]; 
@@ -1115,7 +1115,7 @@ FTYPE *get_cvt_vec( int cvt_type, int full_order )
 
   ///////
   //Pick the central stencil out of that matrix
-	
+ 
   //compute the index of the central stencil
   shift = full_order / 2;
 
@@ -1123,7 +1123,7 @@ FTYPE *get_cvt_vec( int cvt_type, int full_order )
   cvt_vec = &MATRIX_ROW_COL(cvt_matrix, shift, 0, full_order );
   ///////
 
-  return( cvt_vec );	
+  return( cvt_vec ); 
 }
 
 
@@ -1268,18 +1268,18 @@ void compute_monotonicity_indicator(int order, int minindex, int maxindex, weno_
       *monoindicator=0;
       // Sasha claims this should never occur, print out if does
       // Sasha wrong, does reach here alot.
-      //		  dualfprintf(fail_file,"NONMONO @ t=%21.15g\n",t);
+      //    dualfprintf(fail_file,"NONMONO @ t=%21.15g\n",t);
     }
 
   }
   else *monoindicator=0;
 
 #if(DEBUGMONO||1)
-  //	dualfprintf(fail_file,"t=%21.15g mi=%g\n",t,*monoindicator);
+  // dualfprintf(fail_file,"t=%21.15g mi=%g\n",t,*monoindicator);
 #endif
 
 #if(DEBUGMONO)
-  //	*monoindicator=0;
+  // *monoindicator=0;
 #endif
 
 }
@@ -1459,7 +1459,7 @@ int compute_ac_ca_stencil_weights( int cvt_type, int pl, int order, int min_inde
 
 
 
-  if( order == 1 ){	 //DONOR -- weights are not actually used
+  if( order == 1 ){  //DONOR -- weights are not actually used
     stencil_weights[0] = stencil_weights[1] = 1.;
     return 0;
   }
@@ -1570,7 +1570,7 @@ int compute_ac_ca_stencil_weights( int cvt_type, int pl, int order, int min_inde
 
   //normalize weights
   normalize_array( order, 0, stencil_weights );
-#endif		
+#endif  
 
 #if( DESENSITISE_STENCIL_REDUCTION )
   //add a constant to smoothness indicators which effectively makes them less sensitive; note: indicators are not normalized after this
@@ -1623,7 +1623,7 @@ int compute_optimized_ac_ca_stencil_weights( int cvt_type, int pl, int order, in
   // otherwise have to compute optimized weights
   //////////////////////////////////////////
 
-  if( order == 1 ){	 //DONOR -- weights are not actually used
+  if( order == 1 ){  //DONOR -- weights are not actually used
     return 0;
   }
 
@@ -1666,7 +1666,7 @@ int compute_optimized_ac_ca_stencil_weights( int cvt_type, int pl, int order, in
     //where \sigma^{\pm} = \sum \gamma_j^{\pm}, 
     //\omega_i^{\pm} = \tilde \omega_i^{\pm}/ \sum_j  \tilde \omega_j^{\pm} -- normalized weights for positive (+) and negative (-) groups,
     //\tilde\omega_i^{\pm} = \gamma_i^{\pm}/(\beta_i+\epsilon)^2 -- unnormalized weights
-		
+  
     //optimized weights
     stencil_weights[shift + order] = normdpos * stencil_pos_weights[shift] - normdneg * stencil_neg_weights[shift];
   }
@@ -1801,7 +1801,7 @@ int compute_cf_stencil_weights( int cvt_type, int pl, int order, int min_index, 
   if( 3 == order ) {
     //note: these are derivatives to an accuracy of a constant factor
     u = &uin[0]; //central value
-		
+  
     first_der_arr[0] = - (3 * u[0] + u[2]) + 4 * u[1];  //atch symmetrize
     first_der_arr[1] = u[1] - u[-1];                //atch symmetrize
     first_der_arr[2] = (3 * u[0] + u[-2]) - 4 * u[-1];//atch symmetrize
@@ -1811,7 +1811,7 @@ int compute_cf_stencil_weights( int cvt_type, int pl, int order, int min_index, 
 
     for( shift = 0; shift <= order - 1; shift++ ) {//cycle through all possible stencils
       smoothness_indicators[shift] = 13. / 12. * second_der_arr[shift] * second_der_arr[shift]  //SASMARK
-	+ 1. / 4.  * first_der_arr[shift]* first_der_arr[shift]; //this is a smoothness indicator, \beta_r
+        + 1. / 4.  * first_der_arr[shift]* first_der_arr[shift]; //this is a smoothness indicator, \beta_r
     }
   }
   else if( 5 == order ) {
@@ -1821,25 +1821,25 @@ int compute_cf_stencil_weights( int cvt_type, int pl, int order, int min_index, 
     //dualfprintf( fail_file, "Test2\n" );
  
     smoothness_indicators[0] = (1337954*u[0]*u[0] + 12627689*u[1]*u[1] + 18768339*u[2]*u[2] + 5951369*u[3]*u[3] + 
-				279134*u[4]*u[4] - 21022356*u[2]*u[3] + u[1]*(-30442116*u[2] + 16810942*u[3] - 3568693*u[4]) + 
-				4503117*u[2]*u[4] - 2569471*u[3]*u[4] + u[0]*(-8055511*u[1] + 9424677*u[2] - 5121853*u[3] + 1076779*u[4])) /60480.;
+                                279134*u[4]*u[4] - 21022356*u[2]*u[3] + u[1]*(-30442116*u[2] + 16810942*u[3] - 3568693*u[4]) + 
+                                4503117*u[2]*u[4] - 2569471*u[3]*u[4] + u[0]*(-8055511*u[1] + 9424677*u[2] - 5121853*u[3] + 1076779*u[4])) /60480.;
     u--;
     smoothness_indicators[1] = (279134*u[0]*u[0] + 2932409*u[1]*u[1] + 4854159*u[2]*u[2] + 1650569*u[3]*u[3] + 82364*u[4]*u[4] - 
-				5550816*u[2]*u[3] + u[1]*(-7357656*u[2] + 4054702*u[3] - 847303*u[4]) + 1186167*u[2]*u[4] - 
-				725461*u[3]*u[4] + u[0]*(-1714561*u[1] + 2013987*u[2] - 1079563*u[3] + 221869*u[4]))/60480.;
+                                5550816*u[2]*u[3] + u[1]*(-7357656*u[2] + 4054702*u[3] - 847303*u[4]) + 1186167*u[2]*u[4] - 
+                                725461*u[3]*u[4] + u[0]*(-1714561*u[1] + 2013987*u[2] - 1079563*u[3] + 221869*u[4]))/60480.;
     u--;
     smoothness_indicators[2] = (82364*u[0]*u[0] + 1228889*u[1]*u[1] + 2695779*u[2]*u[2] + 1228889*u[3]*u[3] + 82364*u[4]*u[4] - 
-				3495756*u[2]*u[3] + u[1]*(-3495756*u[2] + 2100862*u[3] - 461113*u[4]) + 799977*u[2]*u[4] - 
-				601771*u[3]*u[4] + u[0]*(-601771*u[1] + 799977*u[2] - 461113*u[3] + 98179*u[4]))/60480.;
+                                3495756*u[2]*u[3] + u[1]*(-3495756*u[2] + 2100862*u[3] - 461113*u[4]) + 799977*u[2]*u[4] - 
+                                601771*u[3]*u[4] + u[0]*(-601771*u[1] + 799977*u[2] - 461113*u[3] + 98179*u[4]))/60480.;
     u--;
     smoothness_indicators[3] = (82364*u[0]*u[0] + 1650569*u[1]*u[1] + 4854159*u[2]*u[2] + 2932409*u[3]*u[3] + 279134*u[4]*u[4] - 
-				7357656*u[2]*u[3] + u[1]*(-5550816*u[2] + 4054702*u[3] - 1079563*u[4]) + 2013987*u[2]*u[4] - 
-				1714561*u[3]*u[4] + u[0]*(-725461*u[1] + 1186167*u[2] - 847303*u[3] + 221869*u[4]))/60480.;
+                                7357656*u[2]*u[3] + u[1]*(-5550816*u[2] + 4054702*u[3] - 1079563*u[4]) + 2013987*u[2]*u[4] - 
+                                1714561*u[3]*u[4] + u[0]*(-725461*u[1] + 1186167*u[2] - 847303*u[3] + 221869*u[4]))/60480.;
 
     u--;
     smoothness_indicators[4] = (279134*u[0]*u[0] + 5951369*u[1]*u[1] + 18768339*u[2]*u[2] + 12627689*u[3]*u[3] + 
-				1337954*u[4]*u[4] - 30442116*u[2]*u[3] + u[1]*(-21022356*u[2] + 16810942*u[3] - 5121853*u[4]) + 
-				9424677*u[2]*u[4] - 8055511*u[3]*u[4] + u[0]*(-2569471*u[1] + 4503117*u[2] - 3568693*u[3] + 1076779*u[4]))/60480.;
+                                1337954*u[4]*u[4] - 30442116*u[2]*u[3] + u[1]*(-21022356*u[2] + 16810942*u[3] - 5121853*u[4]) + 
+                                9424677*u[2]*u[4] - 8055511*u[3]*u[4] + u[0]*(-2569471*u[1] + 4503117*u[2] - 3568693*u[3] + 1076779*u[4]))/60480.;
 
     //dualfprintf( fail_file, "Test3\n" );
     u = &uin[0];
@@ -1894,7 +1894,7 @@ int compute_cf_stencil_weights( int cvt_type, int pl, int order, int min_index, 
       stencil_weights[shift] = 0.0;
     }
   }
-	
+ 
 
   //normalize roughness weights
   sum_weights = normalize_array( order, 0, stencil_weights );
@@ -1912,7 +1912,7 @@ int compute_cf_stencil_weights( int cvt_type, int pl, int order, int min_index, 
 
   normalize_array( order, 0, stencil_weights );
   //unoptimized weights are now sitting in stencil_weights[0..order-1]; optimized weights are to be computed elsewhere
-#endif		
+#endif  
 
   return( 0 );
 }
@@ -2049,7 +2049,7 @@ FTYPE apply_weno5_high_order_central_weight( int order, FTYPE *u, FTYPE *stencil
   sm2[0] = squareit(-u[-1] + u[1])/4. + (13*squareit(u[-1] - 2*u[0] + u[1]))/12.;
   sm2[1] = squareit(-u[0] + u[2])/4. + (13*squareit(u[0] - 2*u[1] + u[2]))/12.;
 
-  //		//note: between sm5[-1] and sm5[1] there is difference in order of the terms; otherwise they are symmetric; see reconstr_para_si3.nb
+  //  //note: between sm5[-1] and sm5[1] there is difference in order of the terms; otherwise they are symmetric; see reconstr_para_si3.nb
   sm5[-1] =   //(-1)-centered stencil
     squareit(-u[-2] + u[0])/16. + (21*squareit(u[-2] - 2*u[-1] + u[0]))/40. + 
     (67*squareit(11*u[-2] - 20*u[-1] + 6*u[0] + 4*u[1] - u[2]))/17280. + 
@@ -2076,9 +2076,9 @@ FTYPE apply_weno5_high_order_central_weight( int order, FTYPE *u, FTYPE *stencil
     sm5[counter] *= sm5[counter];
     high_order_central_weight = 
       MIN(
-	  100. * (sm2[counter] / (sm2[counter] + sm5[counter] + WENO_EPSILON ) - 0.5), 
-	  high_order_central_weight
-	  );
+          100. * (sm2[counter] / (sm2[counter] + sm5[counter] + WENO_EPSILON ) - 0.5), 
+          high_order_central_weight
+          );
   }
 
   high_order_central_weight = MAX( high_order_central_weight, 0. );
@@ -2125,26 +2125,26 @@ int do_reduce_near_cusps( int min_index, int max_index, FTYPE *u )
     second_der_arr[2] = (u[0] + u[-2]) - 2 * u[-1];
 
     if( second_der_arr[2] * ( u[0] - u[-1] ) > -epsilon &&
-	second_der_arr[1] * ( u[0] - u[-1] ) < epsilon)
+        second_der_arr[1] * ( u[0] - u[-1] ) < epsilon)
       {
-	if( ( u[2] - u[1] ) * ( u[0] - u[-1] ) < epsilon  ) {
-	  do_reduce |= 2;  //to 2nd order  //atch correct reduction
-	}
-	else if(  ( u[1] - u[0] ) * ( u[0] - u[-1] ) < epsilon ) {
-	  do_reduce |= 1;  //to 1st order  //atch correct reduction
-	}
+        if( ( u[2] - u[1] ) * ( u[0] - u[-1] ) < epsilon  ) {
+          do_reduce |= 2;  //to 2nd order  //atch correct reduction
+        }
+        else if(  ( u[1] - u[0] ) * ( u[0] - u[-1] ) < epsilon ) {
+          do_reduce |= 1;  //to 1st order  //atch correct reduction
+        }
       }
 
     if( second_der_arr[0] * ( u[0] - u[1] ) > -epsilon &&
-	second_der_arr[1] * ( u[0] - u[1] ) < epsilon
-	)
+        second_der_arr[1] * ( u[0] - u[1] ) < epsilon
+        )
       {
-	if( ( u[-2] - u[-1] ) * ( u[0] - u[1] ) < epsilon ) {
-	  do_reduce |= 2;  //to 2nd order  //atch correct reduction
-	}
-	else if( ( u[-1] - u[0] ) * ( u[0] - u[1] ) < epsilon ) {
-	  do_reduce |= 1;  //to 1st order  //atch correct reduction
-	}
+        if( ( u[-2] - u[-1] ) * ( u[0] - u[1] ) < epsilon ) {
+          do_reduce |= 2;  //to 2nd order  //atch correct reduction
+        }
+        else if( ( u[-1] - u[0] ) * ( u[0] - u[1] ) < epsilon ) {
+          do_reduce |= 1;  //to 1st order  //atch correct reduction
+        }
       }
   }
 
@@ -2187,7 +2187,7 @@ int do_reduce_near_cusps_jon_version_still_fails_even_though_ok_in_monointerp_fi
        (sign(df[-1])==-sign(df[1]))
        )
       {
-	do_reduce |= 2;  //to 2nd order  //atch correct reduction
+        do_reduce |= 2;  //to 2nd order  //atch correct reduction
       }
 
     //do_reduce|=2;
@@ -2223,13 +2223,13 @@ void compute_weights_from_smoothness_indicators( int pl, int order, FTYPE epsilo
   ////does not work for interpolatin of fluxes (they are rougly conserved quantities times velocity, and
   ////the velocity bring in one more factor of timescalefactor)
   //if( pl >= U1 && pl <= U3 ) {
-  //	correctionfactor = timescalefactor * timescalefactor;
+  // correctionfactor = timescalefactor * timescalefactor;
   //}
   //else if( pl == UU ) {
-  //	correctionfactor = timescalefactor * timescalefactor * timescalefactor * timescalefactor;
+  // correctionfactor = timescalefactor * timescalefactor * timescalefactor * timescalefactor;
   //}
   //else {
-  //	correctionfactor = 1.;
+  // correctionfactor = 1.;
   //}
 
   assert( 0 == USE_NORMU || 0 == DO_NORMALIZE_SMOOTHNESS_INDICATORS, "The epsilon used in WENO reconstruction maybe inconsistently large/small.\n" );
@@ -2252,7 +2252,7 @@ void compute_weights_from_smoothness_indicators( int pl, int order, FTYPE epsilo
 
 
 
-																		    
+                      
 
 /// \return the sum of elements in #array_to_sum_up evaluated in a symmetric fashion.  If the order of elements in the array were reversed, the result given by this function
 /// would be the same.
@@ -2293,7 +2293,7 @@ FTYPE normalize_array( int number_of_elements, FTYPE epsilon, FTYPE *array_to_no
 {
   FTYPE sum;
   int i;
-	
+ 
   sum = get_sum_of_elements( number_of_elements, array_to_normalize );
 
   for( i = 0; i < number_of_elements; i++ ) { ///Loop through array elements and divide each one by the sum of elements
@@ -2344,7 +2344,7 @@ int compute_weights_ratios(  int cvt_type, int bs, int bf, FTYPE *uin, weno_weig
 
 #if( DO_OR_STENCIL_REDUCTION == 1 )
   w_ratio_left = w_ratio_right = w_ratio = 0.0; //set it to some number so that does not cause reduction near the boundary
-#elif(  DO_OR_STENCIL_REDUCTION == -1 )	 //combined version of reduction
+#elif(  DO_OR_STENCIL_REDUCTION == -1 )  //combined version of reduction
   w_ratio_left = w_ratio_right = w_ratio = w_ratio_combined = 0.0; //set it to some number so that does not cause reduction near the boundary
 #else
   w_ratio_left = w_ratio_right = w_ratio = BIG; //set it to some number so that does not cause reduction near the boundary //atch correct
@@ -2361,7 +2361,7 @@ int compute_weights_ratios(  int cvt_type, int bs, int bf, FTYPE *uin, weno_weig
   il = i0 - (order - 1);
   ir = i0 + (order - 1);
 
-  //the leftmost stencil for the i0 point ends at	i = il
+  //the leftmost stencil for the i0 point ends at i = il
   if( il >= bs + order - 1 && il <= bf - (order - 1) ) {  //GODMARK: currently, the stencil at the edge will never get reduced; need to clear (order - 1)'s in this line for that to happen
     w_current = p_stencil_weights_array[CENTER_POINT]->weights[LEFT_WEIGHT];
 
@@ -2369,9 +2369,9 @@ int compute_weights_ratios(  int cvt_type, int bs, int bf, FTYPE *uin, weno_weig
     w_neighbour = p_stencil_weights_array[LEFT_POINT]->weights[RIGHT_WEIGHT];
     w_ratio_left = ( w_current + WENO_EPSILON ) / ( w_neighbour + WENO_EPSILON );
   }
-  //	else {
-  //		dualfprintf( fail_file, "Not enough boundary zones for reduction\n" );
-  //	}
+  // else {
+  //  dualfprintf( fail_file, "Not enough boundary zones for reduction\n" );
+  // }
 
   //the rightmost stencil for the i0 point ends at i = ir
   if( ir >= bs + order - 1 && ir <= bf - (order - 1) ) {  //GODMARK: currently, the stencil at the edge will never get reduced; need to clear (order - 1)'s in this line for that to happen
@@ -2381,20 +2381,20 @@ int compute_weights_ratios(  int cvt_type, int bs, int bf, FTYPE *uin, weno_weig
     w_neighbour = p_stencil_weights_array[RIGHT_POINT]->weights[LEFT_WEIGHT];
     w_ratio_right = (w_current + WENO_EPSILON) / ( w_neighbour + WENO_EPSILON );
   }
-  //	else {
-  //		dualfprintf( fail_file, "Not enough boundary zones for reduction\n" );
-  //	}
+  // else {
+  //  dualfprintf( fail_file, "Not enough boundary zones for reduction\n" );
+  // }
 
 
   stencil_weights_out->w_ratio_min = MIN( w_ratio_left, w_ratio_right );
   stencil_weights_out->w_ratio_max = MAX( w_ratio_left, w_ratio_right );
   stencil_weights_out->w_ratio_left = w_ratio_left;
   stencil_weights_out->w_ratio_right = w_ratio_right;
-	
+ 
   //for "(AND+OR)/2" stencil reduction: takes a combination of the weights ratios to the left and to the right; NOTE hard-cored factor of (10.)... <-- SASMARK
   stencil_weights_out->w_ratio_combined = MAX( 
-					      MIN(w_ratio_left, WENO_REDUCE_COMBINED_FACTOR / (p_stencil_weights_array[LEFT_POINT]->weights[RIGHT_WEIGHT] + WENO_EPSILON)), 
-					      MIN( WENO_REDUCE_COMBINED_FACTOR / (p_stencil_weights_array[RIGHT_POINT]->weights[LEFT_WEIGHT] + WENO_EPSILON), w_ratio_right) );
+                                              MIN(w_ratio_left, WENO_REDUCE_COMBINED_FACTOR / (p_stencil_weights_array[LEFT_POINT]->weights[RIGHT_WEIGHT] + WENO_EPSILON)), 
+                                              MIN( WENO_REDUCE_COMBINED_FACTOR / (p_stencil_weights_array[RIGHT_POINT]->weights[LEFT_WEIGHT] + WENO_EPSILON), w_ratio_right) );
 
 
   if( DO_OR_STENCIL_REDUCTION == 1 || cvt_type == CVT_C2A || cvt_type == CVT_A2C ) {
@@ -2440,9 +2440,9 @@ int compute_weights_ratios(  int cvt_type, int bs, int bf, FTYPE *uin, weno_weig
 //currently, the stencil is not reduced for the cells sufficiently close to the boundaries: with i = bs, ..., bs + 2 * order - 3, bf - 2 * order + 3, ..., bf.
 //GODMARK: this function is an exact copy of choose_ac_ca_weno_order() with the call to compute_ac_stencil_weights being replaced by compute_cf_stencil_weights()
 int choose_weno_order( int cvt_type, int whichreduce, int max_order, int min_order, int i0, int pl, int bs, int bf, FTYPE *shockindicator, FTYPE (*dP)[NBIGM],
-		       FTYPE *monoindicator0, FTYPE *monoindicator1, FTYPE *P, FTYPE *uin, 
-		       weno_weights_t *stencil_weights_array, 
-		       weno_weights_t **pp_stencil_weights_to_be_used, struct of_trueijkp *trueijkp ) 
+                       FTYPE *monoindicator0, FTYPE *monoindicator1, FTYPE *P, FTYPE *uin, 
+                       weno_weights_t *stencil_weights_array, 
+                       weno_weights_t **pp_stencil_weights_to_be_used, struct of_trueijkp *trueijkp ) 
 {
 #define NUM_POINTS 3  //the number of points at which weights are required by the stencil reduction algorithm
 
@@ -2468,15 +2468,15 @@ int choose_weno_order( int cvt_type, int whichreduce, int max_order, int min_ord
   //  ITERGLOBALDEF  //define values of di, dj, dk, etc.
   di = (trueijkp->iter==1); dj = (trueijkp->iter==2); dk = (trueijkp->iter==3);
 
-    //recompute the weights and store them locally in static arrays and
-    //re-direct the pointers to point to these local arrays so that they are used
-    //GODMARK: this is the only line different from choose_ac_weno_order()
+  //recompute the weights and store them locally in static arrays and
+  //re-direct the pointers to point to these local arrays so that they are used
+  //GODMARK: this is the only line different from choose_ac_weno_order()
 
-    for( counter = 0; counter < NUM_POINTS; counter++ ) {
-      //point the pointers to the arrays with precomputed weights
-      //GODMARK: should not get memory violation
-      p_stencil_weights_array_other[counter] = &stencil_weights_array[i0 + (counter - 1) * (max_order - 1)];  //initially assign the p_stencil_weights_array_other to point to precomputed weights
-    }
+  for( counter = 0; counter < NUM_POINTS; counter++ ) {
+    //point the pointers to the arrays with precomputed weights
+    //GODMARK: should not get memory violation
+    p_stencil_weights_array_other[counter] = &stencil_weights_array[i0 + (counter - 1) * (max_order - 1)];  //initially assign the p_stencil_weights_array_other to point to precomputed weights
+  }
 
 #if( WENO_C2E_REDUCE_NEAR_CUSPS || WENO_AC_REDUCE_NEAR_CUSPS)
   if( (stencil_weights_array[i0].do_reduce & 1) != 0) {
@@ -2524,7 +2524,7 @@ int choose_weno_order( int cvt_type, int whichreduce, int max_order, int min_ord
 
     //check for a memory leak
     assert( CENTER_POINT + 1 >= NUM_POINTS,  
-	    "choose_weno_order: internal error: CENTER_POINT + 1 >= NUM_POINTS, we assumed that there is additional memory space beyond CENTER_POINT.\n" );
+            "choose_weno_order: internal error: CENTER_POINT + 1 >= NUM_POINTS, we assumed that there is additional memory space beyond CENTER_POINT.\n" );
 
     //compute lower-order weights and place them in the next array element after the weights of current order
     compute_stencil_weights( cvt_type, pl, lower_order, bs - i0, bf - i0, &monoindicator0[i0], &monoindicator1[i0], &uin[i0], &stencil_weights_array_static_other[CENTER_POINT+1] );
@@ -2548,7 +2548,7 @@ int choose_weno_order( int cvt_type, int whichreduce, int max_order, int min_ord
 #endif
 
   lower_order_fraction = stencil_weights_array[i0].lower_order_fraction;
-	
+ 
   for( order = max_order; order > min_order; order-- ) {
     
 #if( WENO_C2E_REDUCE_NEAR_CUSPS == 1 || WENO_AC_REDUCE_NEAR_CUSPS == 1)
@@ -2559,7 +2559,7 @@ int choose_weno_order( int cvt_type, int whichreduce, int max_order, int min_ord
 
     if( 0.0 < lower_order_fraction ) {   //atch modified to always have two orders
       //the lower order will have the following weight, it is always between 0 and 1:
-			
+   
       //copy the data over to local static storage for manipulation
       //BE CAREFUL:  make sure this is the first write operation so as not to lose the values of weights for the current order
       //(p_stencil_weights_array_other[CENTER_POINT] may point to the same memory space as stencil_weights_array_static_other[1])
@@ -2569,7 +2569,7 @@ int choose_weno_order( int cvt_type, int whichreduce, int max_order, int min_ord
       //start from counter = order so that we rescale only the optimized weights; we do not have to rescale the unoptimized weights since
       //they are not used in getting the reconstructed values
       for( counter = order; counter < stencil_weights_array[i0].len; counter++ ) {
-	stencil_weights_array_static_other[CENTER_POINT].weights[counter] *= ( 1. - lower_order_fraction );
+        stencil_weights_array_static_other[CENTER_POINT].weights[counter] *= ( 1. - lower_order_fraction );
       }
 
       //set the right order
@@ -2581,7 +2581,7 @@ int choose_weno_order( int cvt_type, int whichreduce, int max_order, int min_ord
 
       //check for a memory leak
       assert( CENTER_POINT + 1 >= NUM_POINTS,  
-	      "choose_weno_order: internal error: CENTER_POINT + 1 >= NUM_POINTS, we assumed that there is additional memory space beyond CENTER_POINT.\n" );
+              "choose_weno_order: internal error: CENTER_POINT + 1 >= NUM_POINTS, we assumed that there is additional memory space beyond CENTER_POINT.\n" );
 
       //NO NEED TO DO COMPUTE WEIGHTS: WEIGHTS HAVE ALREADY BEEN COMPUTED.  INSTEAD, PULL THEM OUT OF EXISTING STRUCTURE (SASMARK)
       //-KILLED-compute lower-order weights and place them in the next array element after the weights of current order
@@ -2595,7 +2595,7 @@ int choose_weno_order( int cvt_type, int whichreduce, int max_order, int min_ord
 
       //rescale lower-order weights so that weights of current order and lower order now add up to unity
       for( counter = 0; counter < stencil_weights_array_static_other[CENTER_POINT+1].len; counter++ ) {
-	stencil_weights_array_static_other[CENTER_POINT+1].weights[counter] *= lower_order_fraction;
+        stencil_weights_array_static_other[CENTER_POINT+1].weights[counter] *= lower_order_fraction;
       }
 
       //set the pointer to weight arrays: structures that hold weights of two orders follow each other in memory
@@ -2604,7 +2604,7 @@ int choose_weno_order( int cvt_type, int whichreduce, int max_order, int min_ord
       //the number of sets of weights that is output
       num_weights = 2;  //different from the default value
 
-    }	
+    } 
 
     //if reached here, do not reduce the stencil
     break;
@@ -2633,7 +2633,7 @@ FTYPE compute_lower_order_fraction( FTYPE w_ratio_left, FTYPE w_ratio_right )
   //geometrical mean -- smooth replacement for the w_ratio = MIN( w_ratio_left, w_ratio_right )
   //w_ratio = w_ratio_left * w_ratio_right / ( w_ratio_left + w_ratio_right );
   w_ratio = MIN( w_ratio_left, w_ratio_right );
-	
+ 
   if( w_ratio <= w_ratio_min ) {
     lower_order_fraction = 0.0;
   }
@@ -2673,8 +2673,8 @@ void pass_1d_line_weno(int whichquantity, int dir, int do_weight_or_recon, int r
   stencil_weights_array = NULL;
 
   pass_1d_line_weno_withweights( whichquantity, dir, do_weight_or_recon, stencil_weights_array, recontype, whichreduce, preforder, 
-				 pl, bs, ps, pe, be, minorder, maxorder, shift, shockindicator, stiffindicator, V, P, df, dP, etai, monoindicator, yprim, ystencilvar, 
-				 yin, yout,youtpolycoef,trueijkp);
+                                 pl, bs, ps, pe, be, minorder, maxorder, shift, shockindicator, stiffindicator, V, P, df, dP, etai, monoindicator, yprim, ystencilvar, 
+                                 yin, yout,youtpolycoef,trueijkp);
 
 }
 
@@ -2737,7 +2737,7 @@ void pass_1d_line_weno_withweights(int whichquantity, int dir, int do_weight_or_
     //eno_line_c2e(whichreduce,maxorder,minorder,bs,ps,pe,be,shift,ysend[0], yout[0], yout[1],trueijkp);  
 
     //GODMARK: pass maxorder and minorder as arrays for each point of interest
-    //		eno_line_c2e( whichquantity, do_weight_or_recon, whichreduce, preforder, pl, bs, ps, pe, be, minorder, maxorder, shift,  shockindicator, df, dP, etai, monoindicator, yprim[UU][0], ysend[0], yout[0], yout[1],trueijkp);  
+    //  eno_line_c2e( whichquantity, do_weight_or_recon, whichreduce, preforder, pl, bs, ps, pe, be, minorder, maxorder, shift,  shockindicator, df, dP, etai, monoindicator, yprim[UU][0], ysend[0], yout[0], yout[1],trueijkp);  
     if(PARAMODWENO==0){
       eno_line_c2e( whichquantity, dir, do_weight_or_recon, stencil_weights_array, whichreduce, preforder, pl, bs, ps, pe, be, minorder, maxorder, shift,  shockindicator, stiffindicator, V, P, df, dP, etai, monoindicator, yprim[VSQ][0], ysend[0], yout[0], yout[1], youtpolycoef,trueijkp );
     }
@@ -2747,7 +2747,7 @@ void pass_1d_line_weno_withweights(int whichquantity, int dir, int do_weight_or_
   }
   else if(recontype==CVT_A2C){
     // yout filled correctly as 1 quantity "deconstructed" to 1 quantity
-    //	 eno_line_a2c(whichreduce,maxorder,minorder,bs,ps,pe,be,shift,ysend[0],yout[0],trueijkp);
+    //  eno_line_a2c(whichreduce,maxorder,minorder,bs,ps,pe,be,shift,ysend[0],yout[0],trueijkp);
     // for ENOFLUXRECONTPE: assume previously bounded fluxes, then returns fluxes from 0 .. N (not just N-1) ( i.e. F(0..N) as defined below)
     // for ENOAVG2CENTTYPE: assume previously bounded average U's from 0-order/2 .. N-1+order/2, then return U's from 0 .. N-1
     //////////////////////////////////////
@@ -2771,17 +2771,17 @@ void pass_1d_line_weno_withweights(int whichquantity, int dir, int do_weight_or_
     //      yiniter=bs;
     //      SUPERGENLOOP(i2,j2,k2,is2,ie2,js2,je2,ks2,ke2,di2,dj2,dk2){
     //
-    //	yout[0][yiniter]=yin[0][yiniter];
-    //	yiniter++;
+    // yout[0][yiniter]=yin[0][yiniter];
+    // yiniter++;
     //      }
 #endif
-    //		eno_line_a2c( whichquantity, do_weight_or_recon, whichreduce, preforder, pl, bs, ps, pe, be, minorder, maxorder, shift, shockindicator, df, dP, monoindicator, yprim[UU][0], ysend[0], yout[0],trueijkp ); 
+    //  eno_line_a2c( whichquantity, do_weight_or_recon, whichreduce, preforder, pl, bs, ps, pe, be, minorder, maxorder, shift, shockindicator, df, dP, monoindicator, yprim[UU][0], ysend[0], yout[0],trueijkp ); 
     eno_line_a2c( whichquantity, do_weight_or_recon, stencil_weights_array, whichreduce, preforder, pl, bs, ps, pe, be, minorder, maxorder, shift, shockindicator, df, dP, monoindicator, yprim[VSQ][0], ysend[0], yout[0],trueijkp ); 
   }
   // if(interporflux==ENOFLUXSPLITTYPE){
   // yout filled as each left/right prepared quantity is interpolated as an average to the left/right edges
-  //	eno_line_a2em(1,preforder,bs,ps,pe,be,minorder,maxorder,shift,ysend[0],yout[0],trueijkp);
-  //	eno_line_a2ep(1,preforder,bs,ps,pe,be,minorder,maxorder,shift,ysend[1],yout[1],trueijkp);
+  // eno_line_a2em(1,preforder,bs,ps,pe,be,minorder,maxorder,shift,ysend[0],yout[0],trueijkp);
+  // eno_line_a2ep(1,preforder,bs,ps,pe,be,minorder,maxorder,shift,ysend[1],yout[1],trueijkp);
   // GODMARK: should return left fluxes from 0 .. N and right fluxes from -1 .. N-1
   // i.e. Fleft(0..N) and Fright(-1..N-1) as defined below
   // so inclusive on Fleft/right need -1..N
@@ -2805,7 +2805,7 @@ void pass_1d_line_weno_withweights(int whichquantity, int dir, int do_weight_or_
   //  }
   else if(recontype==CVT_C2A){
     // yout filled as each left/right prepared quantity is interpolated as an average to the left/right edges
-    //	eno_line_c2a(1,preforder,bs,ps,pe,be,minorder,maxorder,shift,ysend[0],yout[0],trueijkp);
+    // eno_line_c2a(1,preforder,bs,ps,pe,be,minorder,maxorder,shift,ysend[0],yout[0],trueijkp);
     // For F1:
     // INPUT  : Inputs fluxes from j=-N2BND .. N2-1+N2BND inclusive for F1(i,j) for a single i
     // OUTPUT : Returns fluxes from j=0 .. N2-1 for F1(i,j) for a single i (i.e. F1(i,j=0..N2-1)
@@ -2826,7 +2826,7 @@ void pass_1d_line_weno_withweights(int whichquantity, int dir, int do_weight_or_
     //
     //
     //////////////////////////////////////
-    //		eno_line_c2a( whichquantity, do_weight_or_recon, whichreduce, preforder, pl, bs, ps, pe, be, minorder, maxorder, shift, shockindicator, df, dP, monoindicator, yprim[UU][0], ysend[0], yout[0],trueijkp );   //atch correct
+    //  eno_line_c2a( whichquantity, do_weight_or_recon, whichreduce, preforder, pl, bs, ps, pe, be, minorder, maxorder, shift, shockindicator, df, dP, monoindicator, yprim[UU][0], ysend[0], yout[0],trueijkp );   //atch correct
     eno_line_c2a( whichquantity, do_weight_or_recon, stencil_weights_array, whichreduce, preforder, pl, bs, ps, pe, be, minorder, maxorder, shift, shockindicator, df, dP, monoindicator, yprim[VSQ][0], ysend[0], yout[0],trueijkp);   //atch correct
   }
 
@@ -2888,8 +2888,8 @@ void pass_1d_line_multipl_weno(int MULTIPLTYPE, int whichquantity, int dir, int 
   int domultipl;
   int i;
   extern void compute_polycoef_line(
-				    int preforder, int pl, int bs, int ps, int pe, int be, 
-				    FTYPE *yin, FTYPE (*youtpolycoef)[NBIGM]);
+                                    int preforder, int pl, int bs, int ps, int pe, int be, 
+                                    FTYPE *yin, FTYPE (*youtpolycoef)[NBIGM]);
   // OPENMPMARK: Can't leave as static
   weno_weights_t a_stencil_weights_array_allpl[MAXNPR][NBIGM];  //for storing the weights for a one-dimensional array of values; used by stencil reduction
   weno_weights_t (*stencil_weights_array_allpl)[NBIGM] = (weno_weights_t (*)[NBIGM]) (&(a_stencil_weights_array_allpl[0][NBIGBND])); //GODMARK:  what should I use NBIGBND or sth else?
@@ -2962,24 +2962,24 @@ void pass_1d_line_multipl_weno(int MULTIPLTYPE, int whichquantity, int dir, int 
 
     // test weno
     pass_1d_line_weno_withweights( whichquantity, 
-				   dir, ALL_CALC, 
-				   stencil_weights_array_allpl[pl], 
-				   recontype, whichreduce, preforder, pl, bs, ps, pe, be, 
-				   minorder, maxorder, shift, shockindicator, 
-				   stiffindicator, Vline, Pline, df[pl], 
-				   dP, etai[WHICHETAIPL], 
-				   monoindicator[pl], 
-				   yprim, 
-				   ystencilvar[pl], 
-				   yin[pl], 
-				   yout[pl],
-				   youtpolycoef[pl],trueijkp);
+                                   dir, ALL_CALC, 
+                                   stencil_weights_array_allpl[pl], 
+                                   recontype, whichreduce, preforder, pl, bs, ps, pe, be, 
+                                   minorder, maxorder, shift, shockindicator, 
+                                   stiffindicator, Vline, Pline, df[pl], 
+                                   dP, etai[WHICHETAIPL], 
+                                   monoindicator[pl], 
+                                   yprim, 
+                                   ystencilvar[pl], 
+                                   yin[pl], 
+                                   yout[pl],
+                                   youtpolycoef[pl],trueijkp);
     
     // compare youtpolycoef[0][0..4][0] against 1
 
     //recompute the same coefficients using simple weno
     compute_polycoef_line( 5, pl, bs, ps, pe, be, 
-			   yin[0][pl], youtpolycoef[pl] );
+                           yin[0][pl], youtpolycoef[pl] );
 
     // compare youtpolycoef[0][0..4][0] against 1
 #endif
@@ -3015,7 +3015,7 @@ void pass_1d_line_multipl_weno(int MULTIPLTYPE, int whichquantity, int dir, int 
 static void limit_weight( int order, FTYPE old_weight, FTYPE *new_weight ) 
 {
   FTYPE w0, w1, w2, w3, avg_weight, w4;
-	
+ 
   avg_weight = 1. / order;
   w0 = 0.0;
   w1 = 0.2 * avg_weight;
@@ -3068,11 +3068,11 @@ FTYPE limit_ac_correction( int order, int pl, int bs, int bf, FTYPE max_frac_dif
   
   //relative correction is defined to be non-negative and normalized by max_frac_difference
   relative_correction = fabs(ac_correction) / ( max_frac_difference * norm );
-		
+  
   //continuous triangular-shaped depenendence, maximal (=1) at relative_correction = 0.5; minimal (=0) at relative_correction <= 0 & >= 1.
   fraction_point_value =   MAX( MIN(2. - 2. * relative_correction, 1.0), 0. );   
 
-		    
+      
   // apply correction
   yout[0] = yin[0] + ac_correction * fraction_point_value;
 

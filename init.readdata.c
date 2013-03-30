@@ -428,7 +428,7 @@ void get_stellar_data(void)
 #elif(STELLARTYPE==1)
     dualfprintf(fail_file,"No such STELLARTYPE==%d\n",STELLARTYPE);
     myexit(266);
-#endif	
+#endif 
     
     
     
@@ -460,11 +460,11 @@ void get_stellar_data(void)
 
 
     // from SM macro "outputmodel" in grbmodel.m
-    //		print $filename '%d %21.15g %21.15g %21.15g\n' {numlines MBH0 aBH0 QBH0}
-    //		#
-    //		#
-    //		print + $filename '%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n' \
-      //           {r rho utot vr temp ye Ynu Ynu0 hcm nucleons helium carbon oxygen neon magnesium si iron j omega inertia}
+    //  print $filename '%d %21.15g %21.15g %21.15g\n' {numlines MBH0 aBH0 QBH0}
+    //  #
+    //  #
+    //  print + $filename '%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n' \
+    //           {r rho utot vr temp ye Ynu Ynu0 hcm nucleons helium carbon oxygen neon magnesium si iron j omega inertia}
 
     
     // report parameters

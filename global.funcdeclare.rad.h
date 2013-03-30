@@ -42,7 +42,7 @@ extern int u2p_rad(int showmessages, int allowlocalfailurefixandnoreport, FTYPE 
 extern int get_state_uradconuradcovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
 
 extern int vchar_rad(FTYPE *pr, struct of_state *q, int dir,
-		 struct of_geom *geom, FTYPE *cmax, FTYPE *cmin, FTYPE *cmax2, FTYPE *cmin2,int *ignorecourant);
+                     struct of_geom *geom, FTYPE *cmax, FTYPE *cmin, FTYPE *cmax2, FTYPE *cmin2,int *ignorecourant);
 
 
 extern void calc_kappa(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappa);

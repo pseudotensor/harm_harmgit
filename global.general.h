@@ -8,7 +8,7 @@
 #include "gslincludes.h"
 
 #ifdef _OPENMP
-  #include <omp.h>
+#include <omp.h>
 #endif /* _OPENMP */
 
 #include "SwapEndian.h"

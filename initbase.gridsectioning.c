@@ -69,16 +69,16 @@ int init_gridsectioning(void)
       doprintout = 1;
       badglobal_sectiondef=0;
       DIMENLOOP(dimen){
-	if(global_enerregiondef[ACTIVEREGION][POINTDOWN][dimen] < - MAXBND || global_enerregiondef[ACTIVEREGION][POINTUP][dimen] > totalsize[dimen] + MAXBND-1 || global_enerregiondef[ACTIVEREGION][POINTDOWN][dimen] >= global_enerregiondef[ACTIVEREGION][POINTUP][dimen]){
-	  badglobal_sectiondef=1;
-	}
+        if(global_enerregiondef[ACTIVEREGION][POINTDOWN][dimen] < - MAXBND || global_enerregiondef[ACTIVEREGION][POINTUP][dimen] > totalsize[dimen] + MAXBND-1 || global_enerregiondef[ACTIVEREGION][POINTDOWN][dimen] >= global_enerregiondef[ACTIVEREGION][POINTUP][dimen]){
+          badglobal_sectiondef=1;
+        }
       }
       if(badglobal_sectiondef){
-	trifprintf( "Sectioning info mangled; regenerating it for current time t = %21.15g\n", t );
-	findandsetactivesection(1,faketimeorder,fakenumtimeorders,nstep, t );
+        trifprintf( "Sectioning info mangled; regenerating it for current time t = %21.15g\n", t );
+        findandsetactivesection(1,faketimeorder,fakenumtimeorders,nstep, t );
       }
       else {
-	setactivesection( global_enerregiondef[ACTIVEREGION], doprintout );
+        setactivesection( global_enerregiondef[ACTIVEREGION], doprintout );
       }
     }
     trifprintf("Initializing grid sectioning: END\n");
@@ -147,27 +147,27 @@ int bound_gridsectioning(int primtype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTY
     if(primtype==STAGGEREDPRIM){
       // Never reach here since only 1 version of pstag=pstagglobal for all RK substeps
       FULLLOOP{
-	if(!WITHINACTIVESTAGWITHBNDSECTIONX1(i,j,k)){
-	  pl=B1; MACP0A1(primdest,i,j,k,pl) = MACP0A1(primsource,i,j,k,pl);  //SASMARK SECTIONING
-	}
-	if(!WITHINACTIVESTAGWITHBNDSECTIONX2(i,j,k)){
-	  pl=B2; MACP0A1(primdest,i,j,k,pl) = MACP0A1(primsource,i,j,k,pl);  //SASMARK SECTIONING
-	}
-	if(!WITHINACTIVESTAGWITHBNDSECTIONX3(i,j,k)){
-	  pl=B3; MACP0A1(primdest,i,j,k,pl) = MACP0A1(primsource,i,j,k,pl);  //SASMARK SECTIONING
-	}
-	if(!WITHINACTIVEWITHBNDSECTION(i,j,k)){
-	  PLOOP(pliter,pl){
-	    if(pl!=B1 && pl!=B2 && pl!=B3) MACP0A1(primdest,i,j,k,pl) = MACP0A1(primsource,i,j,k,pl);  //SASMARK SECTIONING
-	  }
-	}
+        if(!WITHINACTIVESTAGWITHBNDSECTIONX1(i,j,k)){
+          pl=B1; MACP0A1(primdest,i,j,k,pl) = MACP0A1(primsource,i,j,k,pl);  //SASMARK SECTIONING
+        }
+        if(!WITHINACTIVESTAGWITHBNDSECTIONX2(i,j,k)){
+          pl=B2; MACP0A1(primdest,i,j,k,pl) = MACP0A1(primsource,i,j,k,pl);  //SASMARK SECTIONING
+        }
+        if(!WITHINACTIVESTAGWITHBNDSECTIONX3(i,j,k)){
+          pl=B3; MACP0A1(primdest,i,j,k,pl) = MACP0A1(primsource,i,j,k,pl);  //SASMARK SECTIONING
+        }
+        if(!WITHINACTIVEWITHBNDSECTION(i,j,k)){
+          PLOOP(pliter,pl){
+            if(pl!=B1 && pl!=B2 && pl!=B3) MACP0A1(primdest,i,j,k,pl) = MACP0A1(primsource,i,j,k,pl);  //SASMARK SECTIONING
+          }
+        }
       }
     }
     else{
       FULLLOOP{
-	if(!WITHINACTIVEWITHBNDSECTION(i,j,k)){
-	  PLOOP(pliter,pl) MACP0A1(primdest,i,j,k,pl) = MACP0A1(primsource,i,j,k,pl);  //SASMARK SECTIONING
-	}
+        if(!WITHINACTIVEWITHBNDSECTION(i,j,k)){
+          PLOOP(pliter,pl) MACP0A1(primdest,i,j,k,pl) = MACP0A1(primsource,i,j,k,pl);  //SASMARK SECTIONING
+        }
       }
     }
   }
@@ -185,52 +185,52 @@ int bound_gridsectioning(int primtype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTY
 
       if(FLUXB==FLUXCTSTAG && primtype==STAGGEREDPRIM){
 
-	FULLLOOP{
-	  if(!WITHINACTIVESTAGWITHBNDSECTIONX1(i,j,k)){
-	    dimen=1;
-	    get_geometry(i, j, k, FACE1-1+dimen, ptrgeom);
-	    pl=B1-1+dimen;
-	    MACP0A1(ucons,i,j,k,pl) = MACP0A1(primsource,i,j,k,pl)*(ptrgeom->EOMFUNCMAC(pl)); // UEVOLVE
-	  }
-	  if(!WITHINACTIVESTAGWITHBNDSECTIONX2(i,j,k)){
-	    dimen=2;
-	    get_geometry(i, j, k, FACE1-1+dimen, ptrgeom);
-	    pl=B1-1+dimen;
-	    MACP0A1(ucons,i,j,k,pl) = MACP0A1(primsource,i,j,k,pl)*(ptrgeom->EOMFUNCMAC(pl)); // UEVOLVE
-	  }
-	  if(!WITHINACTIVESTAGWITHBNDSECTIONX3(i,j,k)){
-	    dimen=3;
-	    get_geometry(i, j, k, FACE1-1+dimen, ptrgeom);
-	    pl=B1-1+dimen;
-	    MACP0A1(ucons,i,j,k,pl) = MACP0A1(primsource,i,j,k,pl)*(ptrgeom->EOMFUNCMAC(pl)); // UEVOLVE
-	  }
-	  // no need to fill ucons[!=B1,B2,B3]
-	}
+        FULLLOOP{
+          if(!WITHINACTIVESTAGWITHBNDSECTIONX1(i,j,k)){
+            dimen=1;
+            get_geometry(i, j, k, FACE1-1+dimen, ptrgeom);
+            pl=B1-1+dimen;
+            MACP0A1(ucons,i,j,k,pl) = MACP0A1(primsource,i,j,k,pl)*(ptrgeom->EOMFUNCMAC(pl)); // UEVOLVE
+          }
+          if(!WITHINACTIVESTAGWITHBNDSECTIONX2(i,j,k)){
+            dimen=2;
+            get_geometry(i, j, k, FACE1-1+dimen, ptrgeom);
+            pl=B1-1+dimen;
+            MACP0A1(ucons,i,j,k,pl) = MACP0A1(primsource,i,j,k,pl)*(ptrgeom->EOMFUNCMAC(pl)); // UEVOLVE
+          }
+          if(!WITHINACTIVESTAGWITHBNDSECTIONX3(i,j,k)){
+            dimen=3;
+            get_geometry(i, j, k, FACE1-1+dimen, ptrgeom);
+            pl=B1-1+dimen;
+            MACP0A1(ucons,i,j,k,pl) = MACP0A1(primsource,i,j,k,pl)*(ptrgeom->EOMFUNCMAC(pl)); // UEVOLVE
+          }
+          // no need to fill ucons[!=B1,B2,B3]
+        }
       }// end if prim was staggered
 
       if(FLUXB==FLUXCTSTAG && primtype==CENTEREDPRIM){
-	// unew for field is not set
-	FULLLOOP{
-	  if(!WITHINACTIVEWITHBNDSECTION(i,j,k)){
-	    get_geometry(i, j, k, CENT, ptrgeom);
-	    MYFUN(get_state(MAC(primsource,i,j,k), ptrgeom, &q),"step_ch.c:advance()", "get_state()", 1);
-	    MYFUN(primtoU(UEVOLVE,MAC(primsource,i,j,k), &q, ptrgeom, Unew),"initbase.gridsectioning.c:bound_gridsectioning()", "primtoU()", 1);
-	    PLOOPNOB1(pl) MACP0A1(ucons,i,j,k,pl)=Unew[pl];
-	    PLOOPNOB2(pl) MACP0A1(ucons,i,j,k,pl)=Unew[pl];
-	  }
-	}
+        // unew for field is not set
+        FULLLOOP{
+          if(!WITHINACTIVEWITHBNDSECTION(i,j,k)){
+            get_geometry(i, j, k, CENT, ptrgeom);
+            MYFUN(get_state(MAC(primsource,i,j,k), ptrgeom, &q),"step_ch.c:advance()", "get_state()", 1);
+            MYFUN(primtoU(UEVOLVE,MAC(primsource,i,j,k), &q, ptrgeom, Unew),"initbase.gridsectioning.c:bound_gridsectioning()", "primtoU()", 1);
+            PLOOPNOB1(pl) MACP0A1(ucons,i,j,k,pl)=Unew[pl];
+            PLOOPNOB2(pl) MACP0A1(ucons,i,j,k,pl)=Unew[pl];
+          }
+        }
       }// end if prim was centered
 
       if(FLUXB!=FLUXCTSTAG && primtype==CENTEREDPRIM){
-	// unew for field is set
-	FULLLOOP{
-	  if(!WITHINACTIVEWITHBNDSECTION(i,j,k)){
-	    get_geometry(i, j, k, CENT, ptrgeom);
-	    MYFUN(get_state(MAC(primsource,i,j,k), ptrgeom, &q),"step_ch.c:advance()", "get_state()", 1);
-	    MYFUN(primtoU(UEVOLVE,MAC(primsource,i,j,k), &q, ptrgeom, Unew),"initbase.gridsectioning.c:bound_gridsectioning()", "primtoU()", 1);
-	    PLOOP(pliter,pl) MACP0A1(ucons,i,j,k,pl)=Unew[pl];
-	  }
-	}
+        // unew for field is set
+        FULLLOOP{
+          if(!WITHINACTIVEWITHBNDSECTION(i,j,k)){
+            get_geometry(i, j, k, CENT, ptrgeom);
+            MYFUN(get_state(MAC(primsource,i,j,k), ptrgeom, &q),"step_ch.c:advance()", "get_state()", 1);
+            MYFUN(primtoU(UEVOLVE,MAC(primsource,i,j,k), &q, ptrgeom, Unew),"initbase.gridsectioning.c:bound_gridsectioning()", "primtoU()", 1);
+            PLOOP(pliter,pl) MACP0A1(ucons,i,j,k,pl)=Unew[pl];
+          }
+        }
       }// end if prim was centered
 
     }
@@ -277,18 +277,18 @@ int findindexfromradius(FTYPE xr, int *xcpupos1, int *xi)
   for (ii = numprocs - 1; ii >= 0; ii--) { // should get done by first row
     if (ii == myid) {
       for (i = N1-1; i >= 0; i--) {
-	if( BCtype[X2UP] == POLARAXIS ) {
-	  j = totalsize[2]-1-startpos[2]; //on the polar axis
-	  k = totalsize[3]-1-startpos[3]; //on the polar axis
-	}
-	else if( BCtype[X2DN] == POLARAXIS ) {
-	  j = 0-startpos[2]; //on the polar axis
-	  k = 0-startpos[3]; //on the polar axis
-	}
-	else {
-	  j = N2 / 2;             // doesn't matter (spherical polar assumed)
-	  k = N3 / 2;             // doesn't matter (spherical polar assumed)
-	}
+        if( BCtype[X2UP] == POLARAXIS ) {
+          j = totalsize[2]-1-startpos[2]; //on the polar axis
+          k = totalsize[3]-1-startpos[3]; //on the polar axis
+        }
+        else if( BCtype[X2DN] == POLARAXIS ) {
+          j = 0-startpos[2]; //on the polar axis
+          k = 0-startpos[3]; //on the polar axis
+        }
+        else {
+          j = N2 / 2;             // doesn't matter (spherical polar assumed)
+          k = N3 / 2;             // doesn't matter (spherical polar assumed)
+        }
         coord(i, j, k, FACE1, X);
         bl_coord(X, V);
         r1=V[1];
@@ -313,7 +313,7 @@ int findindexfromradius(FTYPE xr, int *xcpupos1, int *xi)
           if(xr>=r2){ 
             // then radius off grid or right on edge, but still ok
             // treat as if horizon is off grid if right on edge
-	    //            *xi = N1-1;
+            //            *xi = N1-1;
             *xi = N1; // Become N1 so that code knows off grid from FACE
             *xcpupos1=mycpupos[1];
             break;
@@ -1037,19 +1037,19 @@ int jet_set_myid(void)
     int ranki,rankj,rankk,origid,newid;
     for(rankk=0;rankk<ncpux3;rankk++){
       for(rankj=0;rankj<ncpux2;rankj++){
-	for(ranki=0;ranki<ncpux1;ranki++){
-	  origid=ranki + rankj*ncpux1 + rankk*ncpux1*ncpux2;
-	  if(ranki<ncpux1/2){
-	    newid=ranki + rankj*(ncpux1/2) + rankk*(ncpux1/2)*ncpux2;
-	    // converts 0,1,2,3,4,... -> 0,2,4,6,8,...
-	    MPIid[origid]=newid*2;
-	  }
-	  else if(ranki>=ncpux1/2){
-	    newid=(ranki-ncpux1/2) + rankj*(ncpux1/2) + rankk*(ncpux1/2)*ncpux2;
-	    // converts 0,1,2,3,4,... -> 1,3,5,7,9,...
-	    MPIid[origid]=newid*2+1;
-	  }
-	}
+        for(ranki=0;ranki<ncpux1;ranki++){
+          origid=ranki + rankj*ncpux1 + rankk*ncpux1*ncpux2;
+          if(ranki<ncpux1/2){
+            newid=ranki + rankj*(ncpux1/2) + rankk*(ncpux1/2)*ncpux2;
+            // converts 0,1,2,3,4,... -> 0,2,4,6,8,...
+            MPIid[origid]=newid*2;
+          }
+          else if(ranki>=ncpux1/2){
+            newid=(ranki-ncpux1/2) + rankj*(ncpux1/2) + rankk*(ncpux1/2)*ncpux2;
+            // converts 0,1,2,3,4,... -> 1,3,5,7,9,...
+            MPIid[origid]=newid*2+1;
+          }
+        }
       }
     }// end over rankk
 

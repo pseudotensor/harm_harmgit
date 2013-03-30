@@ -59,7 +59,7 @@ static FTYPE torusrmax;   // AKMARK: torus pressure max
 
 static int read_data(FTYPE (*panalytic)[NSTORE2][NSTORE3][NPR]);
 
-#define SLOWFAC 1.0		/* reduce u_phi by this amount */
+#define SLOWFAC 1.0  /* reduce u_phi by this amount */
 
 #include "init.torus.h"
 
@@ -168,49 +168,49 @@ int init_consts(void)
 
 /*
 
-Models to run:
+  Models to run:
 
-Constant parameters:
+  Constant parameters:
 
-1) Rout=1E3 and run for tf=1E4 (so will take 5X longer than compared to Orange run at 128x128x32)
+  1) Rout=1E3 and run for tf=1E4 (so will take 5X longer than compared to Orange run at 128x128x32)
 
-2) BSQORHOLIMIT=1E3, etc.
+  2) BSQORHOLIMIT=1E3, etc.
 
-3) PARALINE, FLUXCTSTAG, TO=4
+  3) PARALINE, FLUXCTSTAG, TO=4
 
-4) Form of A_\phi fixed
+  4) Form of A_\phi fixed
 
-Field parameter studies in 2D axisymmetry at 256^2:
+  Field parameter studies in 2D axisymmetry at 256^2:
 
-1) H/R=0.3, a=0.9: LS quadrapole,  LS dipole, SS quadrapole, SS dipole
-
- 
-
-Spin parameter study in 2D axisymmetry at 256^2:
+  1) H/R=0.3, a=0.9: LS quadrapole,  LS dipole, SS quadrapole, SS dipole
 
  
 
-1) H/R=0.3, LS quadrapole: a=-.999,-.99,-.9,-.5,-0.2,0,.2,.5,.9,.99,.999
+  Spin parameter study in 2D axisymmetry at 256^2:
 
-H/R parameter study in 2D axisymmetry at 256^2:
+ 
 
-1) a=0.9 LS quadrapole with H/R=0.1,0.3,0.9,1.5
+  1) H/R=0.3, LS quadrapole: a=-.999,-.99,-.9,-.5,-0.2,0,.2,.5,.9,.99,.999
 
-2D Fiducial Models:
+  H/R parameter study in 2D axisymmetry at 256^2:
 
-1) Using a=0.9, H/R=0.3, LS quad and LS dipole, do two 2D fudicial models at: 1024^2
+  1) a=0.9 LS quadrapole with H/R=0.1,0.3,0.9,1.5
 
-3D Fiducial Models:
+  2D Fiducial Models:
 
-1) Using a=0.9, H/R=0.3, LS quadrapole and LS dipole, do two 3D fiducial models at 2 different resolutions: 128x128x32 and 256x256x64
+  1) Using a=0.9, H/R=0.3, LS quad and LS dipole, do two 2D fudicial models at: 1024^2
 
-Questions for Roger:
+  3D Fiducial Models:
 
-1) Choice for disk thickness?
-2) Choice for field shape -- specifically?
-3) Choice for flux threading disk vs. BH initially?
-4) Ask about BZ77 and residual A_\phi at pole
-5) 
+  1) Using a=0.9, H/R=0.3, LS quadrapole and LS dipole, do two 3D fiducial models at 2 different resolutions: 128x128x32 and 256x256x64
+
+  Questions for Roger:
+
+  1) Choice for disk thickness?
+  2) Choice for field shape -- specifically?
+  3) Choice for flux threading disk vs. BH initially?
+  4) Ask about BZ77 and residual A_\phi at pole
+  5) 
 
 */
 
@@ -243,7 +243,7 @@ int init_grid(void)
   // metric stuff first
 
 
-// AKMARK: spin
+  // AKMARK: spin
 #if(WHICHPROBLEM==THINDISKFROMMATHEMATICA)
   a = 0.;
 #elif(WHICHPROBLEM==THINTORUS)
@@ -262,7 +262,7 @@ int init_grid(void)
   //hslope = 1.04*pow(h_over_r,2.0/3.0);
 
 
-// AKMARK: inner (Rin) and outer (Rout) radii of simulation domain, R0
+  // AKMARK: inner (Rin) and outer (Rout) radii of simulation domain, R0
 #if(WHICHPROBLEM==NORMALTORUS || WHICHPROBLEM==KEPDISK)
   // make changes to primary coordinate parameters R0, Rin, Rout, hslope
   Rin = 0.8 * Rhor;  //to be chosen manually so that there are 5.5 cells inside horizon to guarantee stability
@@ -284,8 +284,8 @@ int init_grid(void)
   R0 = 0.;
   Rout = 5.e4;
 #elif(WHICHPROBLEM==GRBJET)
-	setRin_withchecks(&Rin);
-	R0 = -3.0;
+  setRin_withchecks(&Rin);
+  R0 = -3.0;
   Rout = 1E5;
 #endif
 
@@ -341,10 +341,10 @@ int init_grid(void)
   
   global_x10 = 3.3;  //radial distance in MCOORD until which the innermost angular cell is cylinrdical
   global_x20 = -1. + 1./totalsize[2];     //This restricts grid cylindrification to the one 
-    //single grid closest to the pole (other cells virtually unaffeced, so there evolution is accurate).  
-    //This trick minimizes the resulting pole deresolution and relaxes the time step.
-    //The innermost grid cell is evolved inaccurately whether you resolve it or not, and it will be fixed
-    //by POLEDEATH (see bounds.tools.c).
+  //single grid closest to the pole (other cells virtually unaffeced, so there evolution is accurate).  
+  //This trick minimizes the resulting pole deresolution and relaxes the time step.
+  //The innermost grid cell is evolved inaccurately whether you resolve it or not, and it will be fixed
+  //by POLEDEATH (see bounds.tools.c).
 
   return(0);
 }
@@ -369,7 +369,7 @@ int init_global(void)
   lim[1] = lim[2] = lim[3] = PARALINE; //sas: it's already set in init.tools.c but reset it here just to make sure
   //also need to ensure that in para_and_paraenohybrid.h JONPARASMOOTH is set to 0 (resolves disk best) or 1 (resolves jet best)
 
-// AKMARK: cooling
+  // AKMARK: cooling
 #if(  WHICHPROBLEM==THINDISKFROMMATHEMATICA )
   cooling = COOLREBECCATHINDISK; //do Rebecca-type cooling; make sure enk0 is set to the same value as p/rho^\Gamma in the initial conditions (as found in dump0000).
 #elif( WHICHPROBLEM==THINTORUS )
@@ -383,7 +383,7 @@ int init_global(void)
   //FLUXB = FLUXCTTOTH;
   FLUXB = FLUXCTSTAG;
 
-// AKMARK: floors
+  // AKMARK: floors
 #if(WHICHPROBLEM==NORMALTORUS || WHICHPROBLEM==KEPDISK || WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM==THICKDISKFROMMATHEMATICA || WHICHPROBLEM == THINTORUS)
   BCtype[X1UP]=OUTFLOW;
   BCtype[X1DN]=FREEOUTFLOW;
@@ -410,7 +410,7 @@ int init_global(void)
 
 
 
-// AKMARK: dumping frequencies, final time
+  // AKMARK: dumping frequencies, final time
 #if(WHICHPROBLEM==NORMALTORUS || WHICHPROBLEM==KEPDISK)
   /* output choices */
   tf = 1e4;
@@ -577,7 +577,7 @@ int init_dsandvels(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr
   int init_dsandvels_thindiskfrommathematica(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr, FTYPE *pstag);
   int init_dsandvels_thintorus(int *whichvel, int*whichcoord, int ti, int tj, int tk, FTYPE *pr, FTYPE *pstag);
 
-// AKMARK: check which function is called for your WHICHPROBLEM, and change parameters in it below
+  // AKMARK: check which function is called for your WHICHPROBLEM, and change parameters in it below
 #if(WHICHPROBLEM==NORMALTORUS)
   return(init_dsandvels_torus(whichvel, whichcoord,  i,  j,  k, pr, pstag));
 #elif(WHICHPROBLEM==KEPDISK)
@@ -642,7 +642,7 @@ int init_vpot_user(int *whichcoord, int l, int i, int j, int k, int loc, FTYPE (
     
     if((FIELDTYPE==DISKFIELD)||(FIELDTYPE==DISKVERT)){
 
-// AKMARK: magnetic loop radial wavelength
+      // AKMARK: magnetic loop radial wavelength
 #if( WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM == THINTORUS ) 
 #define STARTFIELD (1.1*rin)
       fieldhor=0.194;
@@ -654,20 +654,20 @@ int init_vpot_user(int *whichcoord, int l, int i, int j, int k, int loc, FTYPE (
       // since init_vpot() is called for all i,j,k, can't use
       // non-existence values, so limit averaging:
       if((i==-N1BND)&&(j==-N2BND)){
-	rho_av = MACP0A1(prim,i,j,k,RHO);
+        rho_av = MACP0A1(prim,i,j,k,RHO);
         u_av = MACP0A1(prim,i,j,k,UU);
       }
       else if(i==-N1BND){
-	rho_av = AVGN_2(prim,i,j,k,RHO);
+        rho_av = AVGN_2(prim,i,j,k,RHO);
         u_av = AVGN_2(prim,i,j,k,UU);
       }
       else if(j==-N2BND){
-	rho_av = AVGN_1(prim,i,j,k,RHO);
+        rho_av = AVGN_1(prim,i,j,k,RHO);
         u_av = AVGN_1(prim,i,j,k,UU);
       }
       else{ // normal cells
-	rho_av = AVGN_for3(prim,i,j,k,RHO);
-	u_av=AVGN_for3(prim,i,j,k,UU);
+        rho_av = AVGN_for3(prim,i,j,k,RHO);
+        u_av=AVGN_for3(prim,i,j,k,UU);
       }
 
 #if( WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM==THICKDISKFROMMATHEMATICA || WHICHPROBLEM == THINTORUS ) 
@@ -677,8 +677,8 @@ int init_vpot_user(int *whichcoord, int l, int i, int j, int k, int loc, FTYPE (
       //trifprintf("rhoav=%g q=%g\n", rho_av, q);
 
       if(q > 0.){
-	//       vpot += q*q*sin(log(r/STARTFIELD)/fieldhor)* (1. + 0.02 * (ranc(0,0) - 0.5))  ;
-	vpot += q*q; //*sin(log(r/STARTFIELD)/fieldhor) ;
+        //       vpot += q*q*sin(log(r/STARTFIELD)/fieldhor)* (1. + 0.02 * (ranc(0,0) - 0.5))  ;
+        vpot += q*q; //*sin(log(r/STARTFIELD)/fieldhor) ;
       }
 #else
       q = rho_av / rhomax - 0.2;
@@ -708,14 +708,14 @@ int init_vpot2field_user(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NS
 {
   int getmax_densities(FTYPE (*prim)[NSTORE2][NSTORE3][NPR],SFTYPE *rhomax, SFTYPE *umax);
   int normalize_field_local_nodivb(FTYPE targbeta, FTYPE rhomax, FTYPE amax, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], 
-				   FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], 
-				   FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], 
-				   FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR]);
+                                   FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], 
+                                   FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], 
+                                   FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR]);
   FTYPE get_maxval(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], int dir );
   int compute_vpot_from_gdetB1( FTYPE (*prim)[NSTORE2][NSTORE3][NPR], 
-			       FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], 
-			       FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], 
-			       FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR]);
+                                FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], 
+                                FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], 
+                                FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR]);
   
   int funreturn;
   int fieldfrompotential[NDIM];
@@ -740,7 +740,7 @@ int init_vpot2field_user(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NS
   
   //3) re-compute vector potential by integrating up ucons (requires playing with MPI)
   compute_vpot_from_gdetB1( prim, pstag, ucons, A, Bhat );
-			  
+     
   //4) call user1_init_vpot2field_user() again to recompute the fields
   //convert A to staggered pstag, centered prim and ucons, unsure about Bhat  
   funreturn=user1_init_vpot2field_user(fieldfrompotential, A, prim, pstag, ucons, Bhat);
@@ -754,9 +754,9 @@ int init_vpot2field_user(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NS
 
 //compute vector potential for midplane and axial symmetry configuration
 int compute_vpot_from_gdetB1( FTYPE (*prim)[NSTORE2][NSTORE3][NPR], 
-				 FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], 
-				 FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], 
-				 FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR])
+                              FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], 
+                              FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], 
+                              FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR])
 {
   int i, j, k;
   int jj;
@@ -781,33 +781,33 @@ int compute_vpot_from_gdetB1( FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
     //1-cpu version
     for (i=0; i<N1+1; i++) {
       for (k=0; k<N3; k++) {
-	//zero out starting element of vpot
-	NOAVGCORN_1(A[3],i,0,k) = 0.0;
-	//integrate vpot along the theta line
-	for (j=0; j<N2/2; j++) {
-	  dir=1;
-	  get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgeomf[dir]);
-	  set_igdetsimple(ptrgeomf[dir]);
-	  igdetgnosing[dir] = ptrgeomf[dir]->igdetnosing;
-	  gdetnosing = 1.0/igdetgnosing[dir];
-	  //take a loop along j-line at a fixed i,k and integrate up vpot
-	  NOAVGCORN_1(A[3],i,jp1mac(j),k) = NOAVGCORN_1(A[3],i,j,k) + MACP0A1(pstag,i,j,k,B1)*gdetnosing*dx[2];
-	  NOAVGCORN_1(A[1],i,j,k) = 0;
-	  NOAVGCORN_1(A[2],i,j,k) = 0;
-	}
-	NOAVGCORN_1(A[3],i,N2,k) = 0.0;
-	//integrate vpot along the theta line
-	for (j=N2; j>N2/2; j--) {
-	  dir=1;
-	  get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgeomf[dir]);
-	  set_igdetsimple(ptrgeomf[dir]);
-	  igdetgnosing[dir] = ptrgeomf[dir]->igdetnosing;
-	  gdetnosing = 1.0/igdetgnosing[dir];
-	  //take a loop along j-line at a fixed i,k and integrate up vpot
-	  NOAVGCORN_1(A[3],i,jm1mac(j),k) = NOAVGCORN_1(A[3],i,j,k) - MACP0A1(pstag,i,jm1mac(j),k,B1)*gdetnosing*dx[2];
-	  NOAVGCORN_1(A[1],i,j,k) = 0;
-	  NOAVGCORN_1(A[2],i,j,k) = 0;
-	}
+        //zero out starting element of vpot
+        NOAVGCORN_1(A[3],i,0,k) = 0.0;
+        //integrate vpot along the theta line
+        for (j=0; j<N2/2; j++) {
+          dir=1;
+          get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgeomf[dir]);
+          set_igdetsimple(ptrgeomf[dir]);
+          igdetgnosing[dir] = ptrgeomf[dir]->igdetnosing;
+          gdetnosing = 1.0/igdetgnosing[dir];
+          //take a loop along j-line at a fixed i,k and integrate up vpot
+          NOAVGCORN_1(A[3],i,jp1mac(j),k) = NOAVGCORN_1(A[3],i,j,k) + MACP0A1(pstag,i,j,k,B1)*gdetnosing*dx[2];
+          NOAVGCORN_1(A[1],i,j,k) = 0;
+          NOAVGCORN_1(A[2],i,j,k) = 0;
+        }
+        NOAVGCORN_1(A[3],i,N2,k) = 0.0;
+        //integrate vpot along the theta line
+        for (j=N2; j>N2/2; j--) {
+          dir=1;
+          get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgeomf[dir]);
+          set_igdetsimple(ptrgeomf[dir]);
+          igdetgnosing[dir] = ptrgeomf[dir]->igdetnosing;
+          gdetnosing = 1.0/igdetgnosing[dir];
+          //take a loop along j-line at a fixed i,k and integrate up vpot
+          NOAVGCORN_1(A[3],i,jm1mac(j),k) = NOAVGCORN_1(A[3],i,j,k) - MACP0A1(pstag,i,jm1mac(j),k,B1)*gdetnosing*dx[2];
+          NOAVGCORN_1(A[1],i,j,k) = 0;
+          NOAVGCORN_1(A[2],i,j,k) = 0;
+        }
       }
     }
   }
@@ -816,37 +816,37 @@ int compute_vpot_from_gdetB1( FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
     //2-cpu version
     for (i=0; i<N1+1; i++) {
       for (k=0; k<N3; k++) {
-	if( mycpupos[2] == 0 ) {
-	  //zero out starting element of vpot
-	  NOAVGCORN_1(A[3],i,0,k) = 0.0;
-	  //integrate vpot along the theta line
-	  for (j=0; j<N2; j++) {
-	    dir=1;
-	    get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgeomf[dir]);
-	    set_igdetsimple(ptrgeomf[dir]);
-	    igdetgnosing[dir] = ptrgeomf[dir]->igdetnosing;
-	    gdetnosing = 1.0/igdetgnosing[dir];
-	    //take a loop along j-line at a fixed i,k and integrate up vpot
-	    NOAVGCORN_1(A[3],i,jp1mac(j),k) = NOAVGCORN_1(A[3],i,j,k) + MACP0A1(pstag,i,j,k,B1)*gdetnosing*dx[2];
-	    NOAVGCORN_1(A[1],i,j,k) = 0;
-	    NOAVGCORN_1(A[2],i,j,k) = 0;
-	  }
-	}
-	else {
-	  NOAVGCORN_1(A[3],i,N2,k) = 0.0;
-	  //integrate vpot along the theta line
-	  for (j=N2; j>0; j--) {
-	    dir=1;
-	    get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgeomf[dir]);
-	    set_igdetsimple(ptrgeomf[dir]);
-	    igdetgnosing[dir] = ptrgeomf[dir]->igdetnosing;
-	    gdetnosing = 1.0/igdetgnosing[dir];
-	    //take a loop along j-line at a fixed i,k and integrate up vpot
-	    NOAVGCORN_1(A[3],i,jm1mac(j),k) = NOAVGCORN_1(A[3],i,j,k) - MACP0A1(pstag,i,jm1mac(j),k,B1)*gdetnosing*dx[2];
-	    NOAVGCORN_1(A[1],i,j,k) = 0;
-	    NOAVGCORN_1(A[2],i,j,k) = 0;
-	  }
-	}
+        if( mycpupos[2] == 0 ) {
+          //zero out starting element of vpot
+          NOAVGCORN_1(A[3],i,0,k) = 0.0;
+          //integrate vpot along the theta line
+          for (j=0; j<N2; j++) {
+            dir=1;
+            get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgeomf[dir]);
+            set_igdetsimple(ptrgeomf[dir]);
+            igdetgnosing[dir] = ptrgeomf[dir]->igdetnosing;
+            gdetnosing = 1.0/igdetgnosing[dir];
+            //take a loop along j-line at a fixed i,k and integrate up vpot
+            NOAVGCORN_1(A[3],i,jp1mac(j),k) = NOAVGCORN_1(A[3],i,j,k) + MACP0A1(pstag,i,j,k,B1)*gdetnosing*dx[2];
+            NOAVGCORN_1(A[1],i,j,k) = 0;
+            NOAVGCORN_1(A[2],i,j,k) = 0;
+          }
+        }
+        else {
+          NOAVGCORN_1(A[3],i,N2,k) = 0.0;
+          //integrate vpot along the theta line
+          for (j=N2; j>0; j--) {
+            dir=1;
+            get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgeomf[dir]);
+            set_igdetsimple(ptrgeomf[dir]);
+            igdetgnosing[dir] = ptrgeomf[dir]->igdetnosing;
+            gdetnosing = 1.0/igdetgnosing[dir];
+            //take a loop along j-line at a fixed i,k and integrate up vpot
+            NOAVGCORN_1(A[3],i,jm1mac(j),k) = NOAVGCORN_1(A[3],i,j,k) - MACP0A1(pstag,i,jm1mac(j),k,B1)*gdetnosing*dx[2];
+            NOAVGCORN_1(A[1],i,j,k) = 0;
+            NOAVGCORN_1(A[2],i,j,k) = 0;
+          }
+        }
       }
     }
   }
@@ -854,54 +854,54 @@ int compute_vpot_from_gdetB1( FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
 #if( USEMPI )
     for( cj = 0; cj < ncpux2/2; cj++ ) {
       if( mycpupos[2] == cj ){ 
-	dj = +1;
-	js = 0;
-	jsb = 0;
-	je = N2;
-	jeb = N2 - 1;
-	dointegration = 1;
+        dj = +1;
+        js = 0;
+        jsb = 0;
+        je = N2;
+        jeb = N2 - 1;
+        dointegration = 1;
       }
       else if( ncpux2 - mycpupos[2] - 1 == cj ){ 
-	dj = -1;
-	js = N2;
-	jsb = N2-1;
-	je = 0;
-	jeb = 0;
-	dointegration = 1;
+        dj = -1;
+        js = N2;
+        jsb = N2-1;
+        je = 0;
+        jeb = 0;
+        dointegration = 1;
       }
       else {
-	dointegration = 0;  //skip directly to bounding
+        dointegration = 0;  //skip directly to bounding
       }
       
       if( 1 == dointegration ) {
-	//then it's the turn of the current row of CPUs to pick up where the previous row has left it off
-	//since pstag is bounded unlike A, use pstag[B3] as temporary space to trasnfer values of A[3] between CPUs
-	//initialize lowest row of A[3]
-	for (i=0; i<N1+1; i++) {
-	  for (k=0; k<N3; k++) {
-	    //zero out or copy starting element of vpot
-	    if( 0 == cj ) {
-	      //if CPU is at physical boundary, initialize (zero out) A[3]
-	      NOAVGCORN_1(A[3],i,js,k) = 0.0;
-	    }
-	    else {
-	      //else copy B[3] (which was bounded below) -> A[3]
-	      NOAVGCORN_1(A[3],i,js,k) = MACP0A1(pstag,i,jsb-dj,k,B3);
-	    }
-	    //integrate vpot along the theta line
-	    for (j=js; j!=je; j+=dj) {
-	      dir=1;
-	      get_geometry_gdetonly(i, j-js+jsb, k, FACE1-1+dir, ptrgeomf[dir]);
-	      set_igdetsimple(ptrgeomf[dir]);
-	      igdetgnosing[dir] = ptrgeomf[dir]->igdetnosing;
-	      gdetnosing = 1.0/igdetgnosing[dir];
-	      //take a loop along j-line at a fixed i,k and integrate up vpot
-	      NOAVGCORN_1(A[3],i,j+dj,k) = NOAVGCORN_1(A[3],i,j,k) + dj * MACP0A1(pstag,i,j-js+jsb,k,B1)*gdetnosing*dx[2];
-	    }
-	    //copy A[3] -> B[3] before bounding
-	    MACP0A1(pstag,i,jeb,k,B3) = NOAVGCORN_1(A[3],i,je,k);
-	  }
-	}
+        //then it's the turn of the current row of CPUs to pick up where the previous row has left it off
+        //since pstag is bounded unlike A, use pstag[B3] as temporary space to trasnfer values of A[3] between CPUs
+        //initialize lowest row of A[3]
+        for (i=0; i<N1+1; i++) {
+          for (k=0; k<N3; k++) {
+            //zero out or copy starting element of vpot
+            if( 0 == cj ) {
+              //if CPU is at physical boundary, initialize (zero out) A[3]
+              NOAVGCORN_1(A[3],i,js,k) = 0.0;
+            }
+            else {
+              //else copy B[3] (which was bounded below) -> A[3]
+              NOAVGCORN_1(A[3],i,js,k) = MACP0A1(pstag,i,jsb-dj,k,B3);
+            }
+            //integrate vpot along the theta line
+            for (j=js; j!=je; j+=dj) {
+              dir=1;
+              get_geometry_gdetonly(i, j-js+jsb, k, FACE1-1+dir, ptrgeomf[dir]);
+              set_igdetsimple(ptrgeomf[dir]);
+              igdetgnosing[dir] = ptrgeomf[dir]->igdetnosing;
+              gdetnosing = 1.0/igdetgnosing[dir];
+              //take a loop along j-line at a fixed i,k and integrate up vpot
+              NOAVGCORN_1(A[3],i,j+dj,k) = NOAVGCORN_1(A[3],i,j,k) + dj * MACP0A1(pstag,i,j-js+jsb,k,B1)*gdetnosing*dx[2];
+            }
+            //copy A[3] -> B[3] before bounding
+            MACP0A1(pstag,i,jeb,k,B3) = NOAVGCORN_1(A[3],i,je,k);
+          }
+        }
       }
       //just in case, wait until all CPUs get here
       MPI_Barrier(MPI_COMM_GRMHD);
@@ -911,9 +911,9 @@ int compute_vpot_from_gdetB1( FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
     //ensure consistency of vpot across the midplane
     if( mycpupos[2] == ncpux2/2 ) {
       for (i=0; i<N1+1; i++) {
-	for (k=0; k<N3; k++) {
-	  NOAVGCORN_1(A[3],i,0,k) = MACP0A1(pstag,i,-1,k,B3);
-	}
+        for (k=0; k<N3; k++) {
+          NOAVGCORN_1(A[3],i,0,k) = MACP0A1(pstag,i,-1,k,B3);
+        }
       }
     }
 #endif
@@ -928,21 +928,21 @@ int compute_vpot_from_gdetB1( FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
 }
 
 int normalize_field_local_nodivb(FTYPE targbeta, FTYPE rhomax, FTYPE amax, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], 
-				 FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], 
-				 FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], 
-				 FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR])
+                                 FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], 
+                                 FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], 
+                                 FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR])
 {
   FTYPE compute_rat(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], 
-		    FTYPE rhomax, FTYPE amax, FTYPE targbeta, int loc, int i, int j, int k);
+                    FTYPE rhomax, FTYPE amax, FTYPE targbeta, int loc, int i, int j, int k);
   int i,j,k;
   FTYPE ratc_ij, ratc_im1j, ratc_ijm1;
   FTYPE ratf1_ij, ratf2_ij;
   
   //FULLLOOP{
-    //THIS CHANGES IC's!
-    //firstly, decrease B2 by 2x -- this leads to a more uniform final beta distribution
-    //MACP0A1(prim,i,j,k,B2) *= 0.5;
-    //only need to do so on centered fields that bsq depends on
+  //THIS CHANGES IC's!
+  //firstly, decrease B2 by 2x -- this leads to a more uniform final beta distribution
+  //MACP0A1(prim,i,j,k,B2) *= 0.5;
+  //only need to do so on centered fields that bsq depends on
   //}
   
   bound_allprim(STAGEM1,t,prim,pstag,ucons, 1, USEMPI);
@@ -957,7 +957,7 @@ int normalize_field_local_nodivb(FTYPE targbeta, FTYPE rhomax, FTYPE amax, FTYPE
     //and in two neighboring cells
     ratc_im1j = compute_rat(prim, A, rhomax, amax, targbeta, CENT, im1mac(i), j, k);
     ratc_ijm1 = compute_rat(prim, A, rhomax, amax, targbeta, CENT, i, jm1mac(j), k);
-	
+ 
     //ratios centered at FACE1 and FACE2, respectively:
     ratf1_ij = 0.5*(ratc_im1j + ratc_ij);
     ratf2_ij = 0.5*(ratc_ijm1 + ratc_ij);
@@ -976,8 +976,8 @@ int normalize_field_local_nodivb(FTYPE targbeta, FTYPE rhomax, FTYPE amax, FTYPE
     // normalize staggered field primitive
     if(FLUXB==FLUXCTSTAG){
       MACP0A1(pstag,i,j,k,B1) *= ratf1_ij;
-    //  MACP0A1(pstag,i,j,k,B2) *= 0*ratf2_ij;
-    //  MACP0A1(pstag,i,j,k,B3) *= 0*ratc_ij;  //since assuming axisymmetry, ratc_ij is good enough
+      //  MACP0A1(pstag,i,j,k,B2) *= 0*ratf2_ij;
+      //  MACP0A1(pstag,i,j,k,B3) *= 0*ratc_ij;  //since assuming axisymmetry, ratc_ij is good enough
     }
     
     // normalize higher-order field
@@ -998,7 +998,7 @@ int normalize_field_local_nodivb(FTYPE targbeta, FTYPE rhomax, FTYPE amax, FTYPE
 //Returns: factor to multiply field components by to get the desired
 //value of beta: targbeta = p_g/p_mag
 FTYPE compute_rat(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
-		  FTYPE rhomax, FTYPE amax, FTYPE targbeta, int loc, int i, int j, int k)
+                  FTYPE rhomax, FTYPE amax, FTYPE targbeta, int loc, int i, int j, int k)
 {
   FTYPE bsq_ij,pg_ij,beta_ij,rat_ij;
   struct of_geom geomdontuse;

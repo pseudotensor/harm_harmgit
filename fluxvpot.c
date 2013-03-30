@@ -113,12 +113,12 @@ int get_numdirs_fluxasemforvpot(int *numdirs, int *fieldloc)
     if(extrazones4emf==0){
 
       if(DOENOFLUX==ENOFLUXRECON && dofluxreconevolvepointfield==1){
-	// for this method we use F1/F2/F3 but location is same corner
-	*numdirs=2;
+        // for this method we use F1/F2/F3 but location is same corner
+        *numdirs=2;
       }
       else{
-	// unless emfextrazones4emf==0 and fluxrecon and doing point field, then don't need both directions
-	*numdirs=1;
+        // unless emfextrazones4emf==0 and fluxrecon and doing point field, then don't need both directions
+        *numdirs=1;
       }
     }
     else{
@@ -423,7 +423,7 @@ int get_vpot_fluxctstag_primecoords(SFTYPE time, int i, int j, int k, FTYPE (*pr
     
     
     bl_coord_ijk_2(i, j, k, loc, X, V); // face[odir2] and flux[odir2]
-    //	dxdxprim_ijk(i, j, k, loc, dxdxp);
+    // dxdxprim_ijk(i, j, k, loc, dxdxp);
     
     // get user vpot in user coordinates (assume same coordinates for all A_{userdir}
     DLOOPA(userdir){
@@ -524,39 +524,39 @@ int init_vpot_justAcov(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE 
       // loop over A_l's
       DIMENLOOP(dir){
 
-	// these quantities are associated with a single choice for relationship between A_i and F_j[B_k]
-	//      fluxdir=fluxdirlist[dir];
-	//      pldir=pldirlist[dir];
-	//      plforflux=plforfluxlist[dir];
-	//      signforflux=signforfluxlist[dir];
+        // these quantities are associated with a single choice for relationship between A_i and F_j[B_k]
+        //      fluxdir=fluxdirlist[dir];
+        //      pldir=pldirlist[dir];
+        //      plforflux=plforfluxlist[dir];
+        //      signforflux=signforfluxlist[dir];
 
 
-	// loop over positions to get vector potential
-	for(otherdir=1;otherdir<=numdirs;otherdir++){
-	
-	  if(otherdir==1){
-	    loc=locvpot[dir][odir1[dir]];
-	  }
-	  else if(otherdir==2){
-	    loc=locvpot[dir][odir2[dir]];
-	  }
+        // loop over positions to get vector potential
+        for(otherdir=1;otherdir<=numdirs;otherdir++){
+ 
+          if(otherdir==1){
+            loc=locvpot[dir][odir1[dir]];
+          }
+          else if(otherdir==2){
+            loc=locvpot[dir][odir2[dir]];
+          }
 
-	  bl_coord_ijk_2(i, j, k, loc, X, V); // face[odir2] and flux[odir2]
-	  //	dxdxprim_ijk(i, j, k, loc, dxdxp);
+          bl_coord_ijk_2(i, j, k, loc, X, V); // face[odir2] and flux[odir2]
+          // dxdxprim_ijk(i, j, k, loc, dxdxp);
 
 
-	  // get user vpot in user coordinates (assume same coordinates for all A_{userdir}
-	  DLOOPA(userdir){
-	    init_vpot_user(&whichcoord, userdir, time, i,j,k, loc, prim, V, &vpotuser[userdir]);
-	  }
+          // get user vpot in user coordinates (assume same coordinates for all A_{userdir}
+          DLOOPA(userdir){
+            init_vpot_user(&whichcoord, userdir, time, i,j,k, loc, prim, V, &vpotuser[userdir]);
+          }
 
-	  // convert from user coordinate to PRIMECOORDS
-	  ucov_whichcoord2primecoords(whichcoord, i, j, k, loc, vpotuser);
+          // convert from user coordinate to PRIMECOORDS
+          ucov_whichcoord2primecoords(whichcoord, i, j, k, loc, vpotuser);
 
-	  // for numdirs=anything (used for input for 2Flux and for 2Flux required if doing TRACKVPOT
-	  MACP1A0(A,dir,i,j,k) = vpotuser[dir];
+          // for numdirs=anything (used for input for 2Flux and for 2Flux required if doing TRACKVPOT
+          MACP1A0(A,dir,i,j,k) = vpotuser[dir];
 
-	}// end for loop over otherdirs
+        }// end for loop over otherdirs
       }// end over A_i
 
 
@@ -612,7 +612,7 @@ int init_vpot_toF(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+S
     trifprintf("Initialize field from vector potential (really flux)\n");
     DIMENLOOP(dir){
       if(Nvec[dir]>1){
-	init_3dnpr_fullloop(0.0,fluxvec[dir]);
+        init_3dnpr_fullloop(0.0,fluxvec[dir]);
       }
     }
 
@@ -657,40 +657,40 @@ int init_vpot_toF(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+S
       // loop over A_l's
       DIMENLOOP(dir){
 
-	// these quantities are associated with a single choice for relationship between A_i and F_j[B_k]
-	//      fluxdir=fluxdirlist[dir];
-	//      pldir=pldirlist[dir];
-	//      plforflux=plforfluxlist[dir];
-	//      signforflux=signforfluxlist[dir];
+        // these quantities are associated with a single choice for relationship between A_i and F_j[B_k]
+        //      fluxdir=fluxdirlist[dir];
+        //      pldir=pldirlist[dir];
+        //      plforflux=plforfluxlist[dir];
+        //      signforflux=signforfluxlist[dir];
 
 
-	// loop over positions to get vector potential
-	for(otherdir=1;otherdir<=numdirs;otherdir++){
-	
-	  if(otherdir==1){
-	    loc=locvpot[dir][odir1[dir]];
-	  }
-	  else if(otherdir==2){
-	    loc=locvpot[dir][odir2[dir]];
-	  }
+        // loop over positions to get vector potential
+        for(otherdir=1;otherdir<=numdirs;otherdir++){
+ 
+          if(otherdir==1){
+            loc=locvpot[dir][odir1[dir]];
+          }
+          else if(otherdir==2){
+            loc=locvpot[dir][odir2[dir]];
+          }
 
 
-	  // normal ordering is A[dir] = fluxvec[fluxdir][plforflux] with fluxdir=odir1 and plforflux from odir2
-	
-	  if(numdirs==2){
-	    // then using F1/F2/F3
-	    // Notice that fluxvec here has no \detg in it, as consistent with taking B = curlA ($\detg B^i = d_j A_k \epsilon^{ijk}$) when used
-	    // Notice that both fluxes are assigned a value in some cases, as required
-	    // e.g. F1[B2]=A3 and F2[B1]=-A3
-	    if(otherdir==1 && Nvec[odir1[dir]]>1) MACP1A1(fluxvec,odir1[dir],i,j,k,B1-1+odir2[dir])=MACP1A0(A,dir,i,j,k);
-	    if(otherdir==2 && Nvec[odir2[dir]]>1) MACP1A1(fluxvec,odir2[dir],i,j,k,B1-1+odir1[dir])=-MACP1A0(A,dir,i,j,k); // opposite ordering
+          // normal ordering is A[dir] = fluxvec[fluxdir][plforflux] with fluxdir=odir1 and plforflux from odir2
+ 
+          if(numdirs==2){
+            // then using F1/F2/F3
+            // Notice that fluxvec here has no \detg in it, as consistent with taking B = curlA ($\detg B^i = d_j A_k \epsilon^{ijk}$) when used
+            // Notice that both fluxes are assigned a value in some cases, as required
+            // e.g. F1[B2]=A3 and F2[B1]=-A3
+            if(otherdir==1 && Nvec[odir1[dir]]>1) MACP1A1(fluxvec,odir1[dir],i,j,k,B1-1+odir2[dir])=MACP1A0(A,dir,i,j,k);
+            if(otherdir==2 && Nvec[odir2[dir]]>1) MACP1A1(fluxvec,odir2[dir],i,j,k,B1-1+odir1[dir])=-MACP1A0(A,dir,i,j,k); // opposite ordering
 
 
-	  }
-	  else{
-	    // then already assigned to A
-	  }
-	}// end for loop over otherdirs
+          }
+          else{
+            // then already assigned to A
+          }
+        }// end for loop over otherdirs
       }// end over A_i
 
 
@@ -752,7 +752,7 @@ int copy_vpot2flux(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+
     // 0-out flux (F1/F2/F3)
     DIMENLOOP(dir){
       if(Nvec[dir]>1){
-	init_3dnpr_fullloop(0.0,fluxvec[dir]);
+        init_3dnpr_fullloop(0.0,fluxvec[dir]);
       }
     }
 
@@ -769,21 +769,21 @@ int copy_vpot2flux(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+
 
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
       OPENMP3DLOOPBLOCK{
-	OPENMP3DLOOPBLOCK2IJK(i,j,k);
+        OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
-	DIMENLOOP(dir){
+        DIMENLOOP(dir){
 
-	  // loop over positions to get vector potential
-	  for(otherdir=1;otherdir<=numdirs;otherdir++){
-	
-	    // then using F1/F2/F3
-	    // Notice that fluxvec here has no \detg in it, as consistent with taking B = curlA ($\detg B^i = d_j A_k \epsilon^{ijk}$) when used
-	    // Notice that both fluxes are assigned a value in some cases, as required
-	    if(otherdir==1 && Nvec[odir1[dir]]>1) MACP1A1(fluxvec,odir1[dir],i,j,k,B1-1+odir2[dir])=MACP1A0(A,dir,i,j,k);
-	    if(otherdir==2 && Nvec[odir2[dir]]>1) MACP1A1(fluxvec,odir2[dir],i,j,k,B1-1+odir1[dir])=-MACP1A0(A,dir,i,j,k); // opposite ordering
+          // loop over positions to get vector potential
+          for(otherdir=1;otherdir<=numdirs;otherdir++){
+ 
+            // then using F1/F2/F3
+            // Notice that fluxvec here has no \detg in it, as consistent with taking B = curlA ($\detg B^i = d_j A_k \epsilon^{ijk}$) when used
+            // Notice that both fluxes are assigned a value in some cases, as required
+            if(otherdir==1 && Nvec[odir1[dir]]>1) MACP1A1(fluxvec,odir1[dir],i,j,k,B1-1+odir2[dir])=MACP1A0(A,dir,i,j,k);
+            if(otherdir==2 && Nvec[odir2[dir]]>1) MACP1A1(fluxvec,odir2[dir],i,j,k,B1-1+odir1[dir])=-MACP1A0(A,dir,i,j,k); // opposite ordering
 
-	  }// end for loop over otherdirs
-	}// end over A_i
+          }// end for loop over otherdirs
+        }// end over A_i
 
 
       }// end over i,j,k
@@ -878,13 +878,13 @@ void setfdivb(FTYPE *divb, FTYPE (*p)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NST
     }
     else{
       if(DOENOFLUX==NOENOFLUX){
-	// then can use pstag itself that is always bounded properly
-	SETFDIVBFLUXCTSTAGPRIM((*divb),pstag,i,j,k);
+        // then can use pstag itself that is always bounded properly
+        SETFDIVBFLUXCTSTAGPRIM((*divb),pstag,i,j,k);
       }
       else{
-	// then must use higher-order version
-	// for diagnostics in MPI can bound U before dumping, but should only bound MPI since no treatment of U for real boundaries
-	SETFDIVBFLUXCTSTAG((*divb),U,i,j,k);
+        // then must use higher-order version
+        // for diagnostics in MPI can bound U before dumping, but should only bound MPI since no treatment of U for real boundaries
+        SETFDIVBFLUXCTSTAG((*divb),U,i,j,k);
       }
     }
 
@@ -970,23 +970,23 @@ int vpot2field_useflux(int *fieldloc,FTYPE (*pfield)[NSTORE2][NSTORE3][NPR],FTYP
       ////////      COMPFULLLOOP{ // COMPFULLLOOP allows since A_i exists atCOMPFULLLOOPP1 and so always accessing valid A_i
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) nowait // no wait allowed as in fluxct.c
       OPENMP3DLOOPBLOCK{
-	OPENMP3DLOOPBLOCK2IJK(i,j,k);
+        OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
-	// ufield doesn't require geometry
+        // ufield doesn't require geometry
 
-	//    myA[3]=-F2[B1]
-	//    myA[2]=F3[B1];
-	MACP0A1(ufield,i,j,k,B1)  = 0.0;
+        //    myA[3]=-F2[B1]
+        //    myA[2]=F3[B1];
+        MACP0A1(ufield,i,j,k,B1)  = 0.0;
 #if(N2>1)
-	MACP0A1(ufield,i,j,k,B1) += -(MACP0A1(F2,i,jp1mac(j),k,B1)-MACP0A1(F2,i,j,k,B1))/(dx[2]);
+        MACP0A1(ufield,i,j,k,B1) += -(MACP0A1(F2,i,jp1mac(j),k,B1)-MACP0A1(F2,i,j,k,B1))/(dx[2]);
 #endif
 #if(N3>1)
-	MACP0A1(ufield,i,j,k,B1) += -(MACP0A1(F3,i,j,kp1mac(k),B1)-MACP0A1(F3,i,j,k,B1))/(dx[3]);
+        MACP0A1(ufield,i,j,k,B1) += -(MACP0A1(F3,i,j,kp1mac(k),B1)-MACP0A1(F3,i,j,k,B1))/(dx[3]);
 #endif
 
-	get_geometry(i, j, k, fieldloc[dir], ptrgeomf[dir]);
-	igdetgnosing[dir] = sign(ptrgeomf[dir]->gdet)/(fabs(ptrgeomf[dir]->gdet)+SMALL); // avoids 0.0 for any sign of ptrgeom->gdet
-	MACP0A1(pfield,i,j,k,B1-1+dir)  = MACP0A1(ufield,i,j,k,B1-1+dir)*igdetgnosing[dir];
+        get_geometry(i, j, k, fieldloc[dir], ptrgeomf[dir]);
+        igdetgnosing[dir] = sign(ptrgeomf[dir]->gdet)/(fabs(ptrgeomf[dir]->gdet)+SMALL); // avoids 0.0 for any sign of ptrgeom->gdet
+        MACP0A1(pfield,i,j,k,B1-1+dir)  = MACP0A1(ufield,i,j,k,B1-1+dir)*igdetgnosing[dir];
       }// end 3D LOOP
     }// end if doing A1
 
@@ -1002,22 +1002,22 @@ int vpot2field_useflux(int *fieldloc,FTYPE (*pfield)[NSTORE2][NSTORE3][NPR],FTYP
       ///////COMPFULLLOOP{
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) nowait // no wait allowed as in fluxct.c
       OPENMP3DLOOPBLOCK{
-	OPENMP3DLOOPBLOCK2IJK(i,j,k);
+        OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
-	//    myA[1]=-F3[B2];
-	//    myA[3]=F1[B2];
+        //    myA[1]=-F3[B2];
+        //    myA[3]=F1[B2];
       
-	MACP0A1(ufield,i,j,k,B2)  = 0.0;
+        MACP0A1(ufield,i,j,k,B2)  = 0.0;
 #if(N3>1)
-	MACP0A1(ufield,i,j,k,B2) += -(MACP0A1(F3,i,j,kp1mac(k),B2)-MACP0A1(F3,i,j,k,B2))/(dx[3]);
+        MACP0A1(ufield,i,j,k,B2) += -(MACP0A1(F3,i,j,kp1mac(k),B2)-MACP0A1(F3,i,j,k,B2))/(dx[3]);
 #endif
 #if(N1>1)
-	MACP0A1(ufield,i,j,k,B2) += -(MACP0A1(F1,ip1mac(i),j,k,B2)-MACP0A1(F1,i,j,k,B2))/(dx[1]);
+        MACP0A1(ufield,i,j,k,B2) += -(MACP0A1(F1,ip1mac(i),j,k,B2)-MACP0A1(F1,i,j,k,B2))/(dx[1]);
 #endif
 
-	get_geometry(i, j, k, fieldloc[dir], ptrgeomf[dir]);
-	igdetgnosing[dir] = sign(ptrgeomf[dir]->gdet)/(fabs(ptrgeomf[dir]->gdet)+SMALL); // avoids 0.0 for any sign of ptrgeom->gdet
-	MACP0A1(pfield,i,j,k,B1-1+dir)  = MACP0A1(ufield,i,j,k,B1-1+dir)*igdetgnosing[dir];
+        get_geometry(i, j, k, fieldloc[dir], ptrgeomf[dir]);
+        igdetgnosing[dir] = sign(ptrgeomf[dir]->gdet)/(fabs(ptrgeomf[dir]->gdet)+SMALL); // avoids 0.0 for any sign of ptrgeom->gdet
+        MACP0A1(pfield,i,j,k,B1-1+dir)  = MACP0A1(ufield,i,j,k,B1-1+dir)*igdetgnosing[dir];
       }
     }
 
@@ -1033,22 +1033,22 @@ int vpot2field_useflux(int *fieldloc,FTYPE (*pfield)[NSTORE2][NSTORE3][NPR],FTYP
       ////////COMPFULLLOOP{
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) nowait // no wait allowed as in fluxct.c
       OPENMP3DLOOPBLOCK{
-	OPENMP3DLOOPBLOCK2IJK(i,j,k);
+        OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
-	//    myA[2]=-F1[B3];
-	//    myA[1]=F2[B3];
+        //    myA[2]=-F1[B3];
+        //    myA[1]=F2[B3];
       
-	MACP0A1(ufield,i,j,k,B3)  = 0.0;
+        MACP0A1(ufield,i,j,k,B3)  = 0.0;
 #if(N1>1)
-	MACP0A1(ufield,i,j,k,B3) += -(MACP0A1(F1,ip1mac(i),j,k,B3)-MACP0A1(F1,i,j,k,B3))/(dx[1]);
+        MACP0A1(ufield,i,j,k,B3) += -(MACP0A1(F1,ip1mac(i),j,k,B3)-MACP0A1(F1,i,j,k,B3))/(dx[1]);
 #endif
 #if(N2>1)
-	MACP0A1(ufield,i,j,k,B3) += -(MACP0A1(F2,i,jp1mac(j),k,B3)-MACP0A1(F2,i,j,k,B3))/(dx[2]);
+        MACP0A1(ufield,i,j,k,B3) += -(MACP0A1(F2,i,jp1mac(j),k,B3)-MACP0A1(F2,i,j,k,B3))/(dx[2]);
 #endif
 
-	get_geometry(i, j, k, fieldloc[dir], ptrgeomf[dir]);
-	igdetgnosing[dir] = sign(ptrgeomf[dir]->gdet)/(fabs(ptrgeomf[dir]->gdet)+SMALL); // avoids 0.0 for any sign of ptrgeom->gdet
-	MACP0A1(pfield,i,j,k,B1-1+dir)  = MACP0A1(ufield,i,j,k,B1-1+dir)*igdetgnosing[dir];
+        get_geometry(i, j, k, fieldloc[dir], ptrgeomf[dir]);
+        igdetgnosing[dir] = sign(ptrgeomf[dir]->gdet)/(fabs(ptrgeomf[dir]->gdet)+SMALL); // avoids 0.0 for any sign of ptrgeom->gdet
+        MACP0A1(pfield,i,j,k,B1-1+dir)  = MACP0A1(ufield,i,j,k,B1-1+dir)*igdetgnosing[dir];
       }
     }
 
@@ -1069,12 +1069,12 @@ int vpot2field_useflux(int *fieldloc,FTYPE (*pfield)[NSTORE2][NSTORE3][NPR],FTYP
     // this accounts for final flux
     FULLLOOP{
       DIMENLOOP(dir){
-	if(Nvec[dir]>1){
-	  PLOOP(pliter,pl) GLOBALMACP0A1(fluxdump,i,j,k,4*NPR + (dir-1)*NPR*5 + NPR*0 + pl)=MACP1A1(fluxvec,dir,i,j,k,pl);
-	}
-	else{
-	  PLOOP(pliter,pl) GLOBALMACP0A1(fluxdump,i,j,k,4*NPR + (dir-1)*NPR*5 + NPR*0 + pl)=0.0L;
-	}
+        if(Nvec[dir]>1){
+          PLOOP(pliter,pl) GLOBALMACP0A1(fluxdump,i,j,k,4*NPR + (dir-1)*NPR*5 + NPR*0 + pl)=MACP1A1(fluxvec,dir,i,j,k,pl);
+        }
+        else{
+          PLOOP(pliter,pl) GLOBALMACP0A1(fluxdump,i,j,k,4*NPR + (dir-1)*NPR*5 + NPR*0 + pl)=0.0L;
+        }
       }
     }
   }
@@ -1115,14 +1115,14 @@ int vpot2field_useflux(int *fieldloc,FTYPE (*pfield)[NSTORE2][NSTORE3][NPR],FTYP
 
 // SUPERGODMARK: Note: By relying upon A_i, one eventually cumulates catastrophic cancellation as (e.g.) dA_2+=EMF_2 dt such that after double precision (10^{14} or so) steps the calculation is totally corrupted.  Long before this, machine errors become larger and larger.
 int evolve_vpotgeneral(int whichmethod, int stage,
-		       int initialstep, int finalstep,
-		       FTYPE (*pr)[NSTORE2][NSTORE3][NPR],
-		       int *Nvec,
-		       FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR],
-		       FTYPE (*emf)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
-		       FTYPE *CUf, FTYPE *CUnew, SFTYPE fluxdt, SFTYPE fluxtime,
-		       FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3]
-		       )
+                       int initialstep, int finalstep,
+                       FTYPE (*pr)[NSTORE2][NSTORE3][NPR],
+                       int *Nvec,
+                       FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR],
+                       FTYPE (*emf)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
+                       FTYPE *CUf, FTYPE *CUnew, SFTYPE fluxdt, SFTYPE fluxtime,
+                       FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3]
+                       )
 {
   int dimen;
   FTYPE (*vpot0)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3];
@@ -1162,11 +1162,11 @@ int evolve_vpotgeneral(int whichmethod, int stage,
     if(initialstep==1){
       // For all current TIMEORDERs, Ui is always from pi so always from last ucum or vpotcum
       for(dimen=0;dimen<NDIM;dimen++){
-	// copy over vpotcum -> vpot0
-	copy_3dvpot_fullloopp1(vpot[dimen],vpot0[dimen]); // really copying vpotcum -> vpot0 since already copied vpotcum->vpot (below in this function, or at t=0 vpot is correct to use)
-	// must first set 0->{vpotlast,vpotcum} if first step (i.e. vpotcum (like ucum) will add vpot0 as required, so starts at 0, not vpot0, here)
-	init_3dvpot_fullloopp1(0.0,vpotlast[dimen]);
-	init_3dvpot_fullloopp1(0.0,vpotcum[dimen]);
+        // copy over vpotcum -> vpot0
+        copy_3dvpot_fullloopp1(vpot[dimen],vpot0[dimen]); // really copying vpotcum -> vpot0 since already copied vpotcum->vpot (below in this function, or at t=0 vpot is correct to use)
+        // must first set 0->{vpotlast,vpotcum} if first step (i.e. vpotcum (like ucum) will add vpot0 as required, so starts at 0, not vpot0, here)
+        init_3dvpot_fullloopp1(0.0,vpotlast[dimen]);
+        init_3dvpot_fullloopp1(0.0,vpotcum[dimen]);
       }
     }
     else{
@@ -1372,74 +1372,74 @@ int update_vpot(int whichmethod, int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], 
 
 
       if(Nvec[fluxdir]>1){
-	
-	// \partial_t A_i = -\detg E_i = EMF
-	// e.g. A_1 += -\detg E_1
-	// GODMARK: vpot exists atCOMPFULLLOOPP1, but fluxvec does not
+ 
+        // \partial_t A_i = -\detg E_i = EMF
+        // e.g. A_1 += -\detg E_1
+        // GODMARK: vpot exists atCOMPFULLLOOPP1, but fluxvec does not
 
-	//      if(dir==3){
-	//      }
+        //      if(dir==3){
+        //      }
 
 
-	///#if((SIMULBCCALC==2)&&(TYPE2==1))
-	///      COMPFZLOOP(is,js,ks)
-	///#else
-	//#endif
-	///////      COMPZSLOOP( is, ie, js, je, ks, ke ){ // slightly expanded compared to normal flux calculation due to needing emf that is for 2 different fluxes
+        ///#if((SIMULBCCALC==2)&&(TYPE2==1))
+        ///      COMPFZLOOP(is,js,ks)
+        ///#else
+        //#endif
+        ///////      COMPZSLOOP( is, ie, js, je, ks, ke ){ // slightly expanded compared to normal flux calculation due to needing emf that is for 2 different fluxes
       
-	OPENMP3DLOOPSETUP( is, ie, js, je, ks, ke );
+        OPENMP3DLOOPSETUP( is, ie, js, je, ks, ke );
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) nowait // Can use "nowait" since each vpot[dir] setting is independent from prior loops
-	OPENMP3DLOOPBLOCK{
-	  OPENMP3DLOOPBLOCK2IJK(i,j,k);
+        OPENMP3DLOOPBLOCK{
+          OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
 
-	  // GODMARK: Assume doesn't matter what order odir1/odir2 come in here
-	  //	get_geometry(i, j, k, locvpot[dir][odir2[dir]], ptrgeom); // get geometry at CORN[dir] where emf is located
-	  // which field ptrgeom->e doesn't matter (see fluxctstag.c)
-	  //	igdetvpot=sign(ptrgeom->e[B1-1+odir1[dir]])/(fabs(ptrgeom->e[B1-1+odir1[dir]])+SMALL); // avoids 0.0 for any sign of ptrgeom->gdet
+          // GODMARK: Assume doesn't matter what order odir1/odir2 come in here
+          // get_geometry(i, j, k, locvpot[dir][odir2[dir]], ptrgeom); // get geometry at CORN[dir] where emf is located
+          // which field ptrgeom->e doesn't matter (see fluxctstag.c)
+          // igdetvpot=sign(ptrgeom->e[B1-1+odir1[dir]])/(fabs(ptrgeom->e[B1-1+odir1[dir]])+SMALL); // avoids 0.0 for any sign of ptrgeom->gdet
 
-	  // \partial_t A_i = EMF = -\detg E_i where E_i=flux/\detg
-	  // Note that fluxvec as created in flux.c (etc.) has \detg in front of EMF, so remove for A_i as required
-	  // Note sign depends upon conventions of how associated flux in either direction with single EMF = -\detg E = dA/dt (hence + sign for cyclic indices)
-	  //	MACP1A0(vpot,dir,i,j,k) += fluxdt*MACP1A1(fluxvec,fluxdir,i,j,k,plforflux)*igdetvpot;
+          // \partial_t A_i = EMF = -\detg E_i where E_i=flux/\detg
+          // Note that fluxvec as created in flux.c (etc.) has \detg in front of EMF, so remove for A_i as required
+          // Note sign depends upon conventions of how associated flux in either direction with single EMF = -\detg E = dA/dt (hence + sign for cyclic indices)
+          // MACP1A0(vpot,dir,i,j,k) += fluxdt*MACP1A1(fluxvec,fluxdir,i,j,k,plforflux)*igdetvpot;
 
-	  // e.g. from get_fluxpldirs:
-	  // dA_1 += dt F3[B2] if N3>1 else dA_1 += dt F2[B3] if N2>1 else don't do
+          // e.g. from get_fluxpldirs:
+          // dA_1 += dt F3[B2] if N3>1 else dA_1 += dt F2[B3] if N2>1 else don't do
 
 
-	  if((whichmethod==FLUXCTTOTH)||(whichmethod==ATHENA2)||(whichmethod==ATHENA1)||(whichmethod==FLUXCD)){
- 	    // then need to use EMF not fluxes since only EMF is filled -- to update A_i
-	    // loop setup over fluxes so only reach this once (not twice) so only use EMF once as required
-	    //	    MACP1A0(vpot,dir,i,j,k) += fluxdt*MACP1A0(emf,dir,i,j,k);
-	    myemf=MACP1A0(emf,dir,i,j,k);
-	  }
-	  else{
-	    // then use fluxes directly to update A_i
-	    // note that only reach this once (not twice) so only use one flux, not its redundant partner
-	    //	    MACP1A0(vpot,dir,i,j,k) += signforflux*fluxdt*MACP1A1(fluxvec,fluxdir,i,j,k,plforflux);
-	    myemf=signforflux*MACP1A1(fluxvec,fluxdir,i,j,k,plforflux);
-	  }
+          if((whichmethod==FLUXCTTOTH)||(whichmethod==ATHENA2)||(whichmethod==ATHENA1)||(whichmethod==FLUXCD)){
+            // then need to use EMF not fluxes since only EMF is filled -- to update A_i
+            // loop setup over fluxes so only reach this once (not twice) so only use EMF once as required
+            //     MACP1A0(vpot,dir,i,j,k) += fluxdt*MACP1A0(emf,dir,i,j,k);
+            myemf=MACP1A0(emf,dir,i,j,k);
+          }
+          else{
+            // then use fluxes directly to update A_i
+            // note that only reach this once (not twice) so only use one flux, not its redundant partner
+            //     MACP1A0(vpot,dir,i,j,k) += signforflux*fluxdt*MACP1A1(fluxvec,fluxdir,i,j,k,plforflux);
+            myemf=signforflux*MACP1A1(fluxvec,fluxdir,i,j,k,plforflux);
+          }
 
-	  // update like in advance using flux2dUavg() & dUtoU().  But only 1 flux position rather than difference of fluxes.
-	  if(vpot!=NULL) MACP1A0(vpot,dir,i,j,k)        = UFSET      (CUf  ,dt,MACP1A0(vpot0,dir,i,j,k),MACP1A0(vpotlast,dir,i,j,k),myemf,0.0); // notice vpotlast[] used here not vpot
-	  if(vpotcum!=NULL) MACP1A0(vpotcum,dir,i,j,k) += UCUMUPDATE(CUnew,dt,MACP1A0(vpot0,dir,i,j,k),MACP1A0(vpot,dir,i,j,k)    ,myemf,0.0); // notice vpot[] used here, just like in dUtoU()
+          // update like in advance using flux2dUavg() & dUtoU().  But only 1 flux position rather than difference of fluxes.
+          if(vpot!=NULL) MACP1A0(vpot,dir,i,j,k)        = UFSET      (CUf  ,dt,MACP1A0(vpot0,dir,i,j,k),MACP1A0(vpotlast,dir,i,j,k),myemf,0.0); // notice vpotlast[] used here not vpot
+          if(vpotcum!=NULL) MACP1A0(vpotcum,dir,i,j,k) += UCUMUPDATE(CUnew,dt,MACP1A0(vpot0,dir,i,j,k),MACP1A0(vpot,dir,i,j,k)    ,myemf,0.0); // notice vpot[] used here, just like in dUtoU()
 
 
 #if(DEBUGNSBH)
-	  if(dir==2 && i==26 && j==40){
-	    dualfprintf(fail_file,"inside update_vpot: %21.15g (%21.15g %21.15g %21.15g) dt=%21.15g vpot0=%21.15g vpotlast=%21.15g myemf=%21.15g\n",MACP1A0(vpot,dir,i,j,k),CUf[0],CUf[1],CUf[2],dt,MACP1A0(vpot0,dir,i,j,k),MACP1A0(vpotlast,dir,i,j,k),myemf);
-	  }
+          if(dir==2 && i==26 && j==40){
+            dualfprintf(fail_file,"inside update_vpot: %21.15g (%21.15g %21.15g %21.15g) dt=%21.15g vpot0=%21.15g vpotlast=%21.15g myemf=%21.15g\n",MACP1A0(vpot,dir,i,j,k),CUf[0],CUf[1],CUf[2],dt,MACP1A0(vpot0,dir,i,j,k),MACP1A0(vpotlast,dir,i,j,k),myemf);
+          }
 #endif
 
 
-	  //	if(dir==3){
-	  //	  dualfprintf(fail_file,"i=%d j=%d k=%d fluxdt=%21.15g vpot=%21.15g fluxvec=%21.15g geomvpot=%21.15g\n",i,j,k,fluxdt,MACP1A0(vpot,dir,i,j,k),MACP1A1(fluxvec,fluxdir,i,j,k,plforflux),geomvpot);
-	  //	}
+          // if(dir==3){
+          //   dualfprintf(fail_file,"i=%d j=%d k=%d fluxdt=%21.15g vpot=%21.15g fluxvec=%21.15g geomvpot=%21.15g\n",i,j,k,fluxdt,MACP1A0(vpot,dir,i,j,k),MACP1A1(fluxvec,fluxdir,i,j,k,plforflux),geomvpot);
+          // }
 
-	  // after each full step (for example) could compute magnetic field from vpot so no roundoff error progression and not wasteful for higher-order timestepping
+          // after each full step (for example) could compute magnetic field from vpot so no roundoff error progression and not wasteful for higher-order timestepping
 
 
-	}// end 3D LOOP
+        }// end 3D LOOP
       }// end if fluxdir exists
     }// end over dirs
   }// end over parallel region (and implied barrier)
@@ -1521,39 +1521,39 @@ int set_emfflux(int whichmethod, int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], 
 
 
       if(Nvec[fluxdir]>1){
-	
+ 
       
-	OPENMP3DLOOPSETUP( is, ie, js, je, ks, ke );
+        OPENMP3DLOOPSETUP( is, ie, js, je, ks, ke );
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) nowait // Can use "nowait" since each vpot[dir] setting is independent from prior loops
-	OPENMP3DLOOPBLOCK{
-	  OPENMP3DLOOPBLOCK2IJK(i,j,k);
+        OPENMP3DLOOPBLOCK{
+          OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
 
-	  // \partial_t A_i = EMF = -\detg E_i where E_i=flux/\detg
-	  // e.g. from get_fluxpldirs:
-	  // dA_1 += dt F3[B2] if N3>1 else dA_1 += dt F2[B3] if N2>1 else don't do
+          // \partial_t A_i = EMF = -\detg E_i where E_i=flux/\detg
+          // e.g. from get_fluxpldirs:
+          // dA_1 += dt F3[B2] if N3>1 else dA_1 += dt F2[B3] if N2>1 else don't do
 
 
-	  myemf = dUfromUFSET(CUf,dt,MACP1A0(vpot0,dir,i,j,k),MACP1A0(vpotlast,dir,i,j,k),MACP1A0(vpot,dir,i,j,k));
-	  
+          myemf = dUfromUFSET(CUf,dt,MACP1A0(vpot0,dir,i,j,k),MACP1A0(vpotlast,dir,i,j,k),MACP1A0(vpot,dir,i,j,k));
+   
 
-	  if((whichmethod==FLUXCTTOTH)||(whichmethod==ATHENA2)||(whichmethod==ATHENA1)||(whichmethod==FLUXCD)){
-	    // then need to fill EMF since final flux is non-trivial
-	    MACP1A0(emf,dir,i,j,k)=myemf;
-	  }
-	  else{
-	    // So just invert from update_vpot(): roughly: dA =  Anew - Aold = dt F
-	    // below memory flux is always there -- how chosen
-	    MACP1A1(fluxvec,fluxdir,i,j,k,plforflux)=myemf/signforflux;
-	    // below memory is not always there, so must check
-	    if(Nvec[plforflux-B1+1]>1){
-	      MACP1A1(fluxvec,plforflux-B1+1,i,j,k,B1+fluxdir-1)=-MACP1A1(fluxvec,fluxdir,i,j,k,plforflux);
-	    }
-	    
-	  }
+          if((whichmethod==FLUXCTTOTH)||(whichmethod==ATHENA2)||(whichmethod==ATHENA1)||(whichmethod==FLUXCD)){
+            // then need to fill EMF since final flux is non-trivial
+            MACP1A0(emf,dir,i,j,k)=myemf;
+          }
+          else{
+            // So just invert from update_vpot(): roughly: dA =  Anew - Aold = dt F
+            // below memory flux is always there -- how chosen
+            MACP1A1(fluxvec,fluxdir,i,j,k,plforflux)=myemf/signforflux;
+            // below memory is not always there, so must check
+            if(Nvec[plforflux-B1+1]>1){
+              MACP1A1(fluxvec,plforflux-B1+1,i,j,k,B1+fluxdir-1)=-MACP1A1(fluxvec,fluxdir,i,j,k,plforflux);
+            }
+     
+          }
 
 
-	}// end 3D LOOP
+        }// end 3D LOOP
       }// end if fluxdir exists
     }// end over dirs
   }// end over parallel region (and implied barrier)
@@ -1601,16 +1601,16 @@ int normalize_field_withnorm(FTYPE norm, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], F
 
       // normalize staggered field primitive
       if(FLUXB==FLUXCTSTAG){
-	MACP0A1(pstag,i,j,k,B1) *= norm;
-	MACP0A1(pstag,i,j,k,B2) *= norm;
-	MACP0A1(pstag,i,j,k,B3) *= norm;
+        MACP0A1(pstag,i,j,k,B1) *= norm;
+        MACP0A1(pstag,i,j,k,B2) *= norm;
+        MACP0A1(pstag,i,j,k,B3) *= norm;
       }
 
       // normalize higher-order field
       if(HIGHERORDERMEM){
-	MACP0A1(Bhat,i,j,k,B1) *= norm;
-	MACP0A1(Bhat,i,j,k,B2) *= norm;
-	MACP0A1(Bhat,i,j,k,B3) *= norm;      
+        MACP0A1(Bhat,i,j,k,B1) *= norm;
+        MACP0A1(Bhat,i,j,k,B2) *= norm;
+        MACP0A1(Bhat,i,j,k,B3) *= norm;      
       }
     }// end 3D LOOP
 
@@ -1623,11 +1623,11 @@ int normalize_field_withnorm(FTYPE norm, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], F
       OPENMP3DLOOPSETUPFULLP1;
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) nowait // next vpot assignment is independent
       OPENMP3DLOOPBLOCK{
-	OPENMP3DLOOPBLOCK2IJK(i,j,k);
-	
-	MACP1A0(vpot,1,i,j,k) *= norm;
-	MACP1A0(vpot,2,i,j,k) *= norm;
-	MACP1A0(vpot,3,i,j,k) *= norm;
+        OPENMP3DLOOPBLOCK2IJK(i,j,k);
+ 
+        MACP1A0(vpot,1,i,j,k) *= norm;
+        MACP1A0(vpot,2,i,j,k) *= norm;
+        MACP1A0(vpot,3,i,j,k) *= norm;
       }// end 3D LOOP
     } 
 
@@ -1650,7 +1650,7 @@ int assign_fieldconservatives_pointvalues(FTYPE (*prim)[NSTORE2][NSTORE3][NPR],F
 
 
   //////  COMPFULLLOOP{
-    ////////////  COMPLOOPF{
+  ////////////  COMPLOOPF{
 #pragma omp parallel
   {
     int i,j,k,pl,pliter;
@@ -1665,18 +1665,18 @@ int assign_fieldconservatives_pointvalues(FTYPE (*prim)[NSTORE2][NSTORE3][NPR],F
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
       if(FLUXB==FLUXCTSTAG){
-	PLOOPBONLY(pl){
-	  // get point value
-	  get_geometry(i, j, k, FACE1+(pl-B1), ptrgeomf);
-	  MACP0A1(ucons,i,j,k,pl)=MACP0A1(pstag,i,j,k,pl)*(ptrgeomf->gdet);
-	}
+        PLOOPBONLY(pl){
+          // get point value
+          get_geometry(i, j, k, FACE1+(pl-B1), ptrgeomf);
+          MACP0A1(ucons,i,j,k,pl)=MACP0A1(pstag,i,j,k,pl)*(ptrgeomf->gdet);
+        }
       }
       else{
-	PLOOPBONLY(pl){
-	  // assume field is centered
-	  get_geometry(i, j, k, CENT, ptrgeom);
-	  MACP0A1(ucons,i,j,k,pl)=MACP0A1(prim,i,j,k,pl)*(ptrgeom->gdet);
-	}
+        PLOOPBONLY(pl){
+          // assume field is centered
+          get_geometry(i, j, k, CENT, ptrgeom);
+          MACP0A1(ucons,i,j,k,pl)=MACP0A1(prim,i,j,k,pl)*(ptrgeom->gdet);
+        }
       }
     }
   }// end parallel region
@@ -1771,7 +1771,7 @@ int init_zero_field(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2
 
 
 
-    ////////////  COMPLOOPF{
+  ////////////  COMPLOOPF{
 #pragma omp parallel
   {
     int i,j,k;
@@ -1785,10 +1785,10 @@ int init_zero_field(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2
       MACP0A1(prim,i,j,k,B1)=MACP0A1(prim,i,j,k,B2)=MACP0A1(prim,i,j,k,B3)=0.0;
       MACP0A1(ucons,i,j,k,B1)=MACP0A1(ucons,i,j,k,B2)=MACP0A1(ucons,i,j,k,B3)=0.0;
       if(HIGHERORDERMEM){
-	MACP0A1(Bhat,i,j,k,B1)=MACP0A1(Bhat,i,j,k,B2)=MACP0A1(Bhat,i,j,k,B3)=0.0;      
+        MACP0A1(Bhat,i,j,k,B1)=MACP0A1(Bhat,i,j,k,B2)=MACP0A1(Bhat,i,j,k,B3)=0.0;      
       }
       if(FLUXB==FLUXCTSTAG){
-	MACP0A1(pstag,i,j,k,B1)=MACP0A1(pstag,i,j,k,B2)=MACP0A1(pstag,i,j,k,B3)=0.0;
+        MACP0A1(pstag,i,j,k,B1)=MACP0A1(pstag,i,j,k,B2)=MACP0A1(pstag,i,j,k,B3)=0.0;
       }
     }
   }// end parallel region
@@ -1803,9 +1803,9 @@ int init_zero_field(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2
       OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUPFULLP1;
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
       OPENMP3DLOOPBLOCK{
-	OPENMP3DLOOPBLOCK2IJK(i,j,k);
+        OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
-	DLOOPA(jj) MACP1A0(vpot,jj,i,j,k) = 0.0;
+        DLOOPA(jj) MACP1A0(vpot,jj,i,j,k) = 0.0;
       }
     } 
   }// end parallel region

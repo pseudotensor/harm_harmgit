@@ -24,23 +24,23 @@
 
 /* Follow these steps to create a new dump file
 
-1) defs.???.h: create the storage variable if needed
+   1) defs.???.h: create the storage variable if needed
 
-2) set_array???.c : shift variable if necessary (follow examples)
+   2) set_array???.c : shift variable if necessary (follow examples)
 
-3) global.nondepmnemonics.h : change NUMDUMPTYPES and add label and add to MYDUMPNAMELIST
+   3) global.nondepmnemonics.h : change NUMDUMPTYPES and add label and add to MYDUMPNAMELIST
 
-4) global.???.h change NUMDUMPTYPES and add another entry if want separate timing of output
+   4) global.???.h change NUMDUMPTYPES and add another entry if want separate timing of output
 
-5) dump.c : add dnumcolumns[LABEL]=NUMCOLUMNS where NUMCOLUMNS is number of entries in dump file
+   5) dump.c : add dnumcolumns[LABEL]=NUMCOLUMNS where NUMCOLUMNS is number of entries in dump file
 
-6) dump.c : follow examples from here (dump() uses dump_header() and dump_content()).  One must define the header and content function and the wrapper (3 functions) or use an existing header function
+   6) dump.c : follow examples from here (dump() uses dump_header() and dump_content()).  One must define the header and content function and the wrapper (3 functions) or use an existing header function
 
-7) diag.c : follow example of "dump", dumpc, tlastdump, etc.
+   7) diag.c : follow example of "dump", dumpc, tlastdump, etc.
 
-8) init.c : DTdumpgen, dumpcntgen, and other things.
+   8) init.c : DTdumpgen, dumpcntgen, and other things.
 
-9) global.dump.h : add global prototypes
+   9) global.dump.h : add global prototypes
 
 */
 
@@ -283,9 +283,9 @@ int dump(long dump_cnt)
   
   if(dump_gen(WRITEFILE,dump_cnt,binaryoutput,whichdump,datatype,fileprefix,fileformat,filesuffix,dump_header,dump_content)>=1) return(1);
 
-	/////// output the symmetry information to the fail file
-	//writesyminfo();
-	///////
+  /////// output the symmetry information to the fail file
+  //writesyminfo();
+  ///////
 
   trifprintf("end dumping dump# %ld ... ",dump_cnt);
 
@@ -299,10 +299,10 @@ int dump(long dump_cnt)
 /////// output the symmetry information to the fail file; symmetrizes w.r.t. i == j
 void writesyminfo( void )
 {
-	int i, j;
+  int i, j;
 
-	for( i = 0; i < N1; i++ ) {
-	}
+  for( i = 0; i < N1; i++ ) {
+  }
 
 }
 
@@ -415,7 +415,7 @@ int dump_header_general(int whichdump, int whichdumpversion, int numcolumns, lon
   }
   fflush(headerptr);
   return(0);
-}	
+} 
 
 
 
@@ -427,10 +427,10 @@ void set_dump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
   // always NPRDUMP
   if(GAMMIEDUMP)  *numcolumns=2*3 + NPRDUMP+NPR + 3 + 1 + 4 * NDIM + 6 + 1
 #if(CALCFARADAYANDCURRENTS)
-		    + NDIM*2
-		    + 2*6
+                    + NDIM*2
+                    + 2*6
 #endif
-		    ;
+                    ;
   else{
     *numcolumns=3*3 + NPRDUMP + 3 + (nprend+1) + 1 + 4 * NDIM + 6 + 1  //replace NPR -> (nprend+1) since nprend, not NPR, controls dumping.  Fixes: DOEXTRAINTERP=1 case
 #if(CALCFARADAYANDCURRENTS)
@@ -509,13 +509,13 @@ int dump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
     whocalleducon=1; // force no failure mode, just return like failure, and don't return if failure, just set to 0 and continue
     if (get_state(GLOBALMAC(pdump,i,j,k), ptrgeom, qptr) >= 1){
       for (pl = 0; pl < NDIM; pl++)
-	qptr->ucon[pl]=0;
+        qptr->ucon[pl]=0;
       for (pl = 0; pl < NDIM; pl++)
-	qptr->ucov[pl]=0;
+        qptr->ucov[pl]=0;
       for (pl = 0; pl < NDIM; pl++)
-	qptr->bcon[pl]=0;
+        qptr->bcon[pl]=0;
       for (pl = 0; pl < NDIM; pl++)
-	qptr->bcov[pl]=0;
+        qptr->bcov[pl]=0;
     }
     if (vchar_all(GLOBALMAC(pdump,i,j,k), qptr, 1, ptrgeom, &vmax[1], &vmin[1],&ignorecourant) >= 1){
       vmax[1]=vmin[1]=0;
@@ -768,7 +768,7 @@ int eno_dump_header(int whichdump, int whichdumpversion, int numcolumns, int bin
   retval=dump_header_general(whichdump, whichdumpversion, numcolumns, realnstep,dt, bintxt, headerptr);
 
   return(retval);
-}	
+} 
 
 
 
@@ -784,7 +784,7 @@ int avgdump(long dump_cnt)
   char fileprefix[MAXFILENAME];
   char filesuffix[MAXFILENAME];
   char fileformat[MAXFILENAME];
-	
+ 
 
 
   trifprintf("begin dumping avgdump# %ld ... ",dump_cnt);
@@ -986,7 +986,7 @@ int gdump(long dump_cnt)
   char fileprefix[MAXFILENAME];
   char filesuffix[MAXFILENAME];
   char fileformat[MAXFILENAME];
-	
+ 
 
   trifprintf("begin dumping gdump# %ld ... ",dump_cnt);
 
@@ -1112,7 +1112,7 @@ int fieldlinedump(long dump_cnt)
   char fileprefix[MAXFILENAME];
   char filesuffix[MAXFILENAME];
   char fileformat[MAXFILENAME];
-	
+ 
 
 
   trifprintf("begin dumping fieldlinedump# %ld ... ",dump_cnt);
@@ -1181,8 +1181,8 @@ int fieldline_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
       for (pl = 0; pl < NDIM; pl++) q.bcov[pl]=0;
 
       if(EOMRADTYPE!=EOMRADNONE){
-	for (pl = 0; pl < NDIM; pl++) q.uradcon[pl]=0;
-	for (pl = 0; pl < NDIM; pl++) q.uradcov[pl]=0;
+        for (pl = 0; pl < NDIM; pl++) q.uradcon[pl]=0;
+        for (pl = 0; pl < NDIM; pl++) q.uradcov[pl]=0;
       }
     }
     whocalleducon=0; // return to normal state
@@ -1389,9 +1389,9 @@ int dumpother(long dump_cnt)
   
   if(dump_gen(WRITEFILE,dump_cnt,binaryoutput,whichdump,datatype,fileprefix,fileformat,filesuffix,dump_header,dumpother_content)>=1) return(1);
 
-	/////// output the symmetry information to the fail file
-	//writesyminfo();
-	///////
+  /////// output the symmetry information to the fail file
+  //writesyminfo();
+  ///////
 
   trifprintf("end dumping dumpother# %ld ... ",dump_cnt);
 
@@ -1511,9 +1511,9 @@ int eosdump(long dump_cnt)
   
   if(dump_gen(WRITEFILE,dump_cnt,binaryoutput,whichdump,datatype,fileprefix,fileformat,filesuffix,dump_header,eosdump_content)>=1) return(1);
 
-	/////// output the symmetry information to the fail file
-	//writesyminfo();
-	///////
+  /////// output the symmetry information to the fail file
+  //writesyminfo();
+  ///////
 
   trifprintf("end dumping eosdump# %ld ... ",dump_cnt);
 
@@ -1776,5 +1776,5 @@ int fakedump_header(int whichdump, int whichdumpversion, int numcolumns,int bint
   }
   fflush(headerptr);
   return(0);
-}	
+} 
 

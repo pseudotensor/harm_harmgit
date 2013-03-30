@@ -16,15 +16,15 @@ extern int assignmetricstorage_oldlast(int loc, int i, int j, int k, FTYPE **loc
 #define GETLASTLOCALMETRIC(loc,i,j,k) assignmetricstorage_oldlast(loc, i, j, k, &localgcov, &localgcon, &localgcovpert, &localgdet, &localgdetvol, &localalphalapse, &localbetasqoalphasq, &localbeta, &localeomfunc)
 #endif
 
-//  FTYPE (*localgcov)[NDIM];			\
-//  FTYPE (*localgcon)[NDIM];			\
+//  FTYPE (*localgcov)[NDIM];   \
+//  FTYPE (*localgcon)[NDIM];   \
 
-#define LOCALMETRICTEMPVARS \
-  FTYPE *localgcov; \
-  FTYPE *localgcon;\
-  FTYPE *localgcovpert;\
-  FTYPE *localgdet,*localgdetvol;\
-  FTYPE *localalphalapse;\
-  FTYPE *localbetasqoalphasq;\
-  FTYPE *localbeta;\
+#define LOCALMETRICTEMPVARS                     \
+  FTYPE *localgcov;                             \
+  FTYPE *localgcon;                             \
+  FTYPE *localgcovpert;                         \
+  FTYPE *localgdet,*localgdetvol;               \
+  FTYPE *localalphalapse;                       \
+  FTYPE *localbetasqoalphasq;                   \
+  FTYPE *localbeta;                             \
   FTYPE *localeomfunc;

@@ -11,7 +11,7 @@
 #include "decs.h"
 
 
-#define SLOWFAC 1.0		/* reduce u_phi by this amount */
+#define SLOWFAC 1.0  /* reduce u_phi by this amount */
 #define MAXPASSPARMS 10
 
 
@@ -127,49 +127,49 @@ int init_consts(void)
 
 /*
 
-Models to run:
+  Models to run:
 
-Constant parameters:
+  Constant parameters:
 
-1) Rout=1E3 and run for tf=1E4 (so will take 5X longer than compared to Orange run at 128x128x32)
+  1) Rout=1E3 and run for tf=1E4 (so will take 5X longer than compared to Orange run at 128x128x32)
 
-2) BSQORHOLIMIT=1E3, etc.
+  2) BSQORHOLIMIT=1E3, etc.
 
-3) PARALINE, FLUXCTSTAG, TO=4
+  3) PARALINE, FLUXCTSTAG, TO=4
 
-4) Form of A_\phi fixed
+  4) Form of A_\phi fixed
 
-Field parameter studies in 2D axisymmetry at 256^2:
+  Field parameter studies in 2D axisymmetry at 256^2:
 
-1) H/R=0.3, a=0.9: LS quadrapole,  LS dipole, SS quadrapole, SS dipole
-
- 
-
-Spin parameter study in 2D axisymmetry at 256^2:
+  1) H/R=0.3, a=0.9: LS quadrapole,  LS dipole, SS quadrapole, SS dipole
 
  
 
-1) H/R=0.3, LS quadrapole: a=-.999,-.99,-.9,-.5,-0.2,0,.2,.5,.9,.99,.999
+  Spin parameter study in 2D axisymmetry at 256^2:
 
-H/R parameter study in 2D axisymmetry at 256^2:
+ 
 
-1) a=0.9 LS quadrapole with H/R=0.1,0.3,0.9,1.5
+  1) H/R=0.3, LS quadrapole: a=-.999,-.99,-.9,-.5,-0.2,0,.2,.5,.9,.99,.999
 
-2D Fiducial Models:
+  H/R parameter study in 2D axisymmetry at 256^2:
 
-1) Using a=0.9, H/R=0.3, LS quad and LS dipole, do two 2D fudicial models at: 1024^2
+  1) a=0.9 LS quadrapole with H/R=0.1,0.3,0.9,1.5
 
-3D Fiducial Models:
+  2D Fiducial Models:
 
-1) Using a=0.9, H/R=0.3, LS quadrapole and LS dipole, do two 3D fiducial models at 2 different resolutions: 128x128x32 and 256x256x64
+  1) Using a=0.9, H/R=0.3, LS quad and LS dipole, do two 2D fudicial models at: 1024^2
 
-Questions for Roger:
+  3D Fiducial Models:
 
-1) Choice for disk thickness?
-2) Choice for field shape -- specifically?
-3) Choice for flux threading disk vs. BH initially?
-4) Ask about BZ77 and residual A_\phi at pole
-5) 
+  1) Using a=0.9, H/R=0.3, LS quadrapole and LS dipole, do two 3D fiducial models at 2 different resolutions: 128x128x32 and 256x256x64
+
+  Questions for Roger:
+
+  1) Choice for disk thickness?
+  2) Choice for field shape -- specifically?
+  3) Choice for flux threading disk vs. BH initially?
+  4) Ask about BZ77 and residual A_\phi at pole
+  5) 
 
 */
 
@@ -487,24 +487,24 @@ int init_dsandvels_torus(int *whichvel, int*whichcoord, int i, int j, int k, FTY
   
   if (r >= rin) {
     lnh = 0.5 * log((1. + sqrt(1. + 4. * (l * l * SS * SS) * DD /
-			       (AA * sth * AA * sth))) / (SS * DD /
-							  AA))
+                               (AA * sth * AA * sth))) / (SS * DD /
+                                                          AA))
       - 0.5 * sqrt(1. +
-		   4. * (l * l * SS * SS) * DD / (AA * AA * sth *
-						  sth))
+                   4. * (l * l * SS * SS) * DD / (AA * AA * sth *
+                                                  sth))
       - 2. * a * r * l / AA -
       (0.5 *
        log((1. +
-	    sqrt(1. +
-		 4. * (l * l * SSin * SSin) * DDin / (AAin * AAin *
-						      sthin *
-						      sthin))) /
-	   (SSin * DDin / AAin))
+            sqrt(1. +
+                 4. * (l * l * SSin * SSin) * DDin / (AAin * AAin *
+                                                      sthin *
+                                                      sthin))) /
+           (SSin * DDin / AAin))
        - 0.5 * sqrt(1. +
-		    4. * (l * l * SSin * SSin) * DDin / (AAin *
-							 AAin *
-							 sthin *
-							 sthin))
+                    4. * (l * l * SSin * SSin) * DDin / (AAin *
+                                                         AAin *
+                                                         sthin *
+                                                         sthin))
        - 2. * a * rin * l / AAin);
   } else
     lnh = 1.;
@@ -832,16 +832,16 @@ int init_vpot_user(int *whichcoord, int l, int i, int j, int k, int loc, FTYPE (
       // since init_vpot() is called for all i,j,k, can't use
       // non-existence values, so limit averaging:
       if((i==-N1BND)&&(j==-N2BND)){
-	rho_av = MACP0A1(prim,i,j,k,RHO);
+        rho_av = MACP0A1(prim,i,j,k,RHO);
       }
       else if(i==-N1BND){
-	rho_av = AVGN_2(prim,i,j,k,RHO);
+        rho_av = AVGN_2(prim,i,j,k,RHO);
       }
       else if(j==-N2BND){
-	rho_av = AVGN_1(prim,i,j,k,RHO);
+        rho_av = AVGN_1(prim,i,j,k,RHO);
       }
       else{ // normal cells
-	rho_av = AVGN_for3(prim,i,j,k,RHO);
+        rho_av = AVGN_for3(prim,i,j,k,RHO);
       }
 
       q = rho_av / rhomax - 0.2;
@@ -952,24 +952,24 @@ int normalize_field(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2
 SFTYPE lfish_calc(SFTYPE r)
 {
   return (((pow(a, 2) - 2. * a * sqrt(r) + pow(r, 2)) *
-	   ((-2. * a * r * (pow(a, 2) - 2. * a * sqrt(r) + pow(r, 2))) /
-	    sqrt(2. * a * sqrt(r) + (-3. + r) * r) +
-	    ((a + (-2. + r) * sqrt(r)) * (pow(r, 3) +
-					  pow(a,
-					      2) * (2. + r))) / sqrt(1 +
-								     (2.
-								      *
-								      a)
-								     /
-								     pow(r,
-								      1.5)
-								     -
-								     3.
-								     /
-								     r)))
-	  / (pow(r, 3) * sqrt(2. * a * sqrt(r) + (-3. + r) * r) *
-	     (pow(a, 2) + (-2. + r) * r))
-	  );
+           ((-2. * a * r * (pow(a, 2) - 2. * a * sqrt(r) + pow(r, 2))) /
+            sqrt(2. * a * sqrt(r) + (-3. + r) * r) +
+            ((a + (-2. + r) * sqrt(r)) * (pow(r, 3) +
+                                          pow(a,
+                                              2) * (2. + r))) / sqrt(1 +
+                                                                     (2.
+                                                                      *
+                                                                      a)
+                                                                     /
+                                                                     pow(r,
+                                                                         1.5)
+                                                                     -
+                                                                     3.
+                                                                     /
+                                                                     r)))
+          / (pow(r, 3) * sqrt(2. * a * sqrt(r) + (-3. + r) * r) *
+             (pow(a, 2) + (-2. + r) * r))
+          );
 }
 
 
@@ -1018,18 +1018,18 @@ int set_atmosphere(int whichcond, int whichvel, struct of_geom *ptrgeom, FTYPE *
     if((EOMTYPE==EOMGRMHD)||(EOMTYPE==EOMCOLDGRMHD)){
       // Bondi-like atmosphere
       if(rescaletype==4){
-	if(atmospheretype==1){
-	  // couple rescaletype to atmosphere type
-	  prlocal[RHO] = RHOMIN*pow(r,-2.0);
-	}
-	else if(atmospheretype==2){
-	  // couple rescaletype to atmosphere type
-	  if(r>40.0) prlocal[RHO] = RHOMIN*pow(r,-2.0);
-	  else prlocal[RHO] = RHOMIN*pow(40.0,-2.0);
-	}
+        if(atmospheretype==1){
+          // couple rescaletype to atmosphere type
+          prlocal[RHO] = RHOMIN*pow(r,-2.0);
+        }
+        else if(atmospheretype==2){
+          // couple rescaletype to atmosphere type
+          if(r>40.0) prlocal[RHO] = RHOMIN*pow(r,-2.0);
+          else prlocal[RHO] = RHOMIN*pow(40.0,-2.0);
+        }
       }
       else{
-	prlocal[RHO] = RHOMIN*pow(r,-1.5);
+        prlocal[RHO] = RHOMIN*pow(r,-1.5);
       }
     }
     else{
@@ -1077,8 +1077,8 @@ int set_atmosphere(int whichcond, int whichvel, struct of_geom *ptrgeom, FTYPE *
 
     if(whichcond==1){
       if(100.0*dt>TAUADJUSTATM){
-	dualfprintf(fail_file,"dt=%21.15g and TAUADJUSTATM=%21.15g\n",dt,TAUADJUSTATM);
-	myexit(1);
+        dualfprintf(fail_file,"dt=%21.15g and TAUADJUSTATM=%21.15g\n",dt,TAUADJUSTATM);
+        myexit(1);
       }
       // TAUADJUSTATM must be >> dt always in order for this to make sense (i.e. critical damping to fixed solution)
       PLOOP(pliter,pl) pr[pl] = pr[pl]+(prlocal[pl]-pr[pl])*dt/TAUADJUSTATM;
@@ -1122,11 +1122,11 @@ int set_density_floors(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *prfloor)
 static FTYPE nz_func(FTYPE R)
 {
   return(
-	 sqrt(
-	      (3.*a*a - 4.*a*sqrt(R) + R*R)/
-	      pow(R*(a + pow(R,1.5)),2)
-	      )
-	 ) ;
+         sqrt(
+              (3.*a*a - 4.*a*sqrt(R) + R*R)/
+              pow(R*(a + pow(R,1.5)),2)
+              )
+         ) ;
 
 
 }

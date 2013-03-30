@@ -86,7 +86,7 @@
 #define WHICHLIMITERTOUSEFORLR 0  // default: 0
 
 // Noticed with MCSTEEP that allowing extremum causes catastrophic problems with torus problem with field
- // assume monocheck on, or else results in crazy behavior
+// assume monocheck on, or else results in crazy behavior
 // Even with PARA this (monotonic condition check) causes problems (e.g. horizon failures and polar blow-ups)
 // With PARAFLAT or PARALINE, enough ddq's (second derivatives) to ensure really a parabola at extrema
 #define PARAGENDQALLOWEXTREMUM 0  // default: 0 // bit too speculative in general -- and with new JONPARASMOOTH==1 not necessary really
@@ -138,7 +138,7 @@
 //
 //////////////////////////
 
- // 0 == steepend only density   1 == steepend density and cross-fields (i.e. current sheets)
+// 0 == steepend only density   1 == steepend density and cross-fields (i.e. current sheets)
 #define DOPPMSTEEPVARTYPE 0   // default: 0
 
 

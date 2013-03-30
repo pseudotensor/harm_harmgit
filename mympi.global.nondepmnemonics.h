@@ -94,4 +94,4 @@
 #define CPUTXT ".%04d"
 
 
-#define MYOUT stderr		// normally stderr
+#define MYOUT stderr  // normally stderr

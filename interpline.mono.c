@@ -8,10 +8,10 @@
 // yout[0][i] is the left interface value for c2e (centered value for a2c & c2a) for grid cell i
 // yout[1][i] is the right interface value for c2e for grid cell i, does not make sense for a2c & c2a
 void compute_monotonicity_line(
-			       int recontype, int whichreduce, int preforder, int pl, int bs, int ps, int pe, int be, 
-			       int *minorder, int *maxorder, int *shift,   
-			       FTYPE *shockindicator, FTYPE (*df)[NBIGM], 
-			       FTYPE (*monoindicator)[NBIGM], FTYPE *yin,  FTYPE (*yout)[NBIGM], FTYPE (*youtpolycoef)[NBIGM] )
+                               int recontype, int whichreduce, int preforder, int pl, int bs, int ps, int pe, int be, 
+                               int *minorder, int *maxorder, int *shift,   
+                               FTYPE *shockindicator, FTYPE (*df)[NBIGM], 
+                               FTYPE (*monoindicator)[NBIGM], FTYPE *yin,  FTYPE (*yout)[NBIGM], FTYPE (*youtpolycoef)[NBIGM] )
 { 
 
   int i,jj; 
@@ -52,16 +52,16 @@ void compute_monotonicity_line(
 
 #if( DOMONOINTERP == JMONOINTERP ) 
   compute_jmonotonicity_line(
-			     recontype, whichreduce, preforder, pl, bs, ps, pe, be, 
-			     minorder, maxorder, shift,   
-			     shockindicator, df, 
-			     monoindicator, yin,  yout, youtpolycoef );
+                             recontype, whichreduce, preforder, pl, bs, ps, pe, be, 
+                             minorder, maxorder, shift,   
+                             shockindicator, df, 
+                             monoindicator, yin,  yout, youtpolycoef );
 #elif( DOMONOINTERP == SMONOINTERP ) 
   compute_smonotonicity_line(
-			     recontype, whichreduce, preforder, pl, bs, ps, pe, be, 
-			     minorder, maxorder, shift,   
-			     shockindicator, df, 
-			     monoindicator, yin,  yout, youtpolycoef );
+                             recontype, whichreduce, preforder, pl, bs, ps, pe, be, 
+                             minorder, maxorder, shift,   
+                             shockindicator, df, 
+                             monoindicator, yin,  yout, youtpolycoef );
 #elif( DOMONOINTERP == NOMONOINTERP )
   // no monointerp used; so set the monotonicity indicators to zero
   // nothing to do since already initialized indicators
@@ -75,10 +75,10 @@ void compute_monotonicity_line(
 
 
 void compute_monotonicity_line_indicatoronly(
-			       int recontype, int whichreduce, int preforder, int pl, int bs, int ps, int pe, int be, 
-			       int *minorder, int *maxorder, int *shift,   
-			       FTYPE *shockindicator, FTYPE (*df)[NBIGM], 
-			       FTYPE (*monoindicator)[NBIGM], FTYPE *yin,  FTYPE (*yout)[NBIGM], FTYPE (*youtpolycoef)[NBIGM] )
+                                             int recontype, int whichreduce, int preforder, int pl, int bs, int ps, int pe, int be, 
+                                             int *minorder, int *maxorder, int *shift,   
+                                             FTYPE *shockindicator, FTYPE (*df)[NBIGM], 
+                                             FTYPE (*monoindicator)[NBIGM], FTYPE *yin,  FTYPE (*yout)[NBIGM], FTYPE (*youtpolycoef)[NBIGM] )
 { 
 
   int i; 
@@ -111,10 +111,10 @@ void compute_monotonicity_line_indicatoronly(
 
 #elif( DOMONOINTERP == SMONOINTERP ) 
   compute_smonotonicity_line_split(1,0,
-			     recontype, whichreduce, preforder, pl, bs, ps, pe, be, 
-			     minorder, maxorder, shift,   
-			     shockindicator, df, 
-			     monoindicator, yin,  yout, youtpolycoef );
+                                   recontype, whichreduce, preforder, pl, bs, ps, pe, be, 
+                                   minorder, maxorder, shift,   
+                                   shockindicator, df, 
+                                   monoindicator, yin,  yout, youtpolycoef );
 #elif( DOMONOINTERP == NOMONOINTERP )
   // no monointerp used; so set the monotonicity indicators to zero
   // do nothing since already set to 0
@@ -128,10 +128,10 @@ void compute_monotonicity_line_indicatoronly(
 
 
 void compute_monotonicity_line_valueonly(
-			       int recontype, int whichreduce, int preforder, int pl, int bs, int ps, int pe, int be, 
-			       int *minorder, int *maxorder, int *shift,   
-			       FTYPE *shockindicator, FTYPE (*df)[NBIGM], 
-			       FTYPE (*monoindicator)[NBIGM], FTYPE *yin,  FTYPE (*yout)[NBIGM], FTYPE (*youtpolycoef)[NBIGM] )
+                                         int recontype, int whichreduce, int preforder, int pl, int bs, int ps, int pe, int be, 
+                                         int *minorder, int *maxorder, int *shift,   
+                                         FTYPE *shockindicator, FTYPE (*df)[NBIGM], 
+                                         FTYPE (*monoindicator)[NBIGM], FTYPE *yin,  FTYPE (*yout)[NBIGM], FTYPE (*youtpolycoef)[NBIGM] )
 { 
 
   int i,jj; 
@@ -160,10 +160,10 @@ void compute_monotonicity_line_valueonly(
 
 #elif( DOMONOINTERP == SMONOINTERP ) 
   compute_smonotonicity_line_split(0,1,
-			     recontype, whichreduce, preforder, pl, bs, ps, pe, be, 
-			     minorder, maxorder, shift,   
-			     shockindicator, df, 
-			     monoindicator, yin,  yout, youtpolycoef );
+                                   recontype, whichreduce, preforder, pl, bs, ps, pe, be, 
+                                   minorder, maxorder, shift,   
+                                   shockindicator, df, 
+                                   monoindicator, yin,  yout, youtpolycoef );
 #elif( DOMONOINTERP == NOMONOINTERP )
   // nothing to do
 #else
@@ -262,7 +262,7 @@ void compute_monotonicity_line_multipl(int stencilvarisnull, int MULTIPLTYPE, in
     // set stencil variable
     if(stencilvarisnull) monostencilvar=yin[pl][0];
     else monostencilvar=ystencilvar[pl][0];
-	  
+   
     //////////////////////////////////////
     //
     // get "weight" for SINGLE "pl" for mono
@@ -471,32 +471,32 @@ void monotonicity_minimize_massenergymomentum_weights(int plstart, int MULTIPLTY
 
     NUMPRIMLOOP(pliter,pl){
       if(VELTERMSMINIMIZE(pl) || ORTHOVEL1TERMSMINIMIZE(pl) || ORTHOVEL2TERMSMINIMIZE(pl) || PRESSUREMINIMIZE(pl)){// then minimize across all these
-	monoindicator[pl][MONOINDTYPE][i]=MIN(monoindicator[pl][MONOINDTYPE][i],monoindicator[plstart][MONOINDTYPE][i]);
-	monoindicator[pl][MONOLEFTSET][i]=MIN(monoindicator[pl][MONOLEFTSET][i],monoindicator[plstart][MONOLEFTSET][i]);
-	monoindicator[pl][MONORIGHTSET][i]=MIN(monoindicator[pl][MONORIGHTSET][i],monoindicator[plstart][MONORIGHTSET][i]);
-	// get current global minimized mono weights
-	monoall[MONOINDTYPE]=monoindicator[pl][MONOINDTYPE][i];
-	monoall[MONOLEFTSET]=monoindicator[pl][MONOLEFTSET][i];
-	monoall[MONORIGHTSET]=monoindicator[pl][MONORIGHTSET][i];
+        monoindicator[pl][MONOINDTYPE][i]=MIN(monoindicator[pl][MONOINDTYPE][i],monoindicator[plstart][MONOINDTYPE][i]);
+        monoindicator[pl][MONOLEFTSET][i]=MIN(monoindicator[pl][MONOLEFTSET][i],monoindicator[plstart][MONOLEFTSET][i]);
+        monoindicator[pl][MONORIGHTSET][i]=MIN(monoindicator[pl][MONORIGHTSET][i],monoindicator[plstart][MONORIGHTSET][i]);
+        // get current global minimized mono weights
+        monoall[MONOINDTYPE]=monoindicator[pl][MONOINDTYPE][i];
+        monoall[MONOLEFTSET]=monoindicator[pl][MONOLEFTSET][i];
+        monoall[MONORIGHTSET]=monoindicator[pl][MONORIGHTSET][i];
       }
     }
 
     if(emffixedstencil){
       // if not splitting MA and EM, then assume only EMF is treated specially if point method
       NUMPRIMLOOP(pliter,pl){
-	if(EMFTERMS(pl)){// copy equal weights
-	  monoindicator[pl][MONOINDTYPE][i]=1.0;
-	  monoindicator[pl][MONOLEFTSET][i]=1.0;
-	  monoindicator[pl][MONORIGHTSET][i]=1.0;
-	}
+        if(EMFTERMS(pl)){// copy equal weights
+          monoindicator[pl][MONOINDTYPE][i]=1.0;
+          monoindicator[pl][MONOLEFTSET][i]=1.0;
+          monoindicator[pl][MONORIGHTSET][i]=1.0;
+        }
       }
     }
 
     NUMPRIMLOOP(pliter,pl){
       if(ALLOTHERSMINIMIZE(pl)){// then minimize across all these
-	monoindicator[pl][MONOINDTYPE][i]=MIN(monoindicator[pl][MONOINDTYPE][i],monoall[MONOINDTYPE]);
-	monoindicator[pl][MONOLEFTSET][i]=MIN(monoindicator[pl][MONOLEFTSET][i],monoall[MONOLEFTSET]);
-	monoindicator[pl][MONORIGHTSET][i]=MIN(monoindicator[pl][MONORIGHTSET][i],monoall[MONORIGHTSET]);
+        monoindicator[pl][MONOINDTYPE][i]=MIN(monoindicator[pl][MONOINDTYPE][i],monoall[MONOINDTYPE]);
+        monoindicator[pl][MONOLEFTSET][i]=MIN(monoindicator[pl][MONOLEFTSET][i],monoall[MONOLEFTSET]);
+        monoindicator[pl][MONORIGHTSET][i]=MIN(monoindicator[pl][MONORIGHTSET][i],monoall[MONORIGHTSET]);
       }
     }
 

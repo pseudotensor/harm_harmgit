@@ -32,28 +32,28 @@ int isenoughfreespace(unsigned long long need)
     if(waititer>0){
       
       if (numprocs > 1) {
-	errorsend = result;
+        errorsend = result;
 #if(USEMPI)
-	MPI_Allreduce(&errorsend, &result, 1, MPI_INT, MPI_MAX,MPI_COMM_GRMHD);
+        MPI_Allreduce(&errorsend, &result, 1, MPI_INT, MPI_MAX,MPI_COMM_GRMHD);
 #endif
       }
       if(result>0){
-	dualfprintf(fail_file,"Ran out of hard drive space -- waiting 60 seconds , waititer=%ld\n",waititer);
-	if(myid==0 && !MPIAVOIDFORK){
-	  if(MAILFROMREMOTE){
-	    sprintf(mysys,"resulthdspace=`echo \"\\`pwd\\` ran out of HD space\"` ; ssh %s@%s \"echo $resulthdspace | mail %s\"",REMOTEUSER,REMOTEHOST,EMAILADDRESS);
-	    stderrfprintf("system call: %s\n",mysys);
-	    system(mysys);
-	  }
-	  else{
-	    sprintf(mysys,"echo \"`pwd` ran out of HD space | mail %s\"",EMAILADDRESS);
-	    stderrfprintf("system call: %s\n",mysys);
-	    system(mysys);
-	  }
-	}
-	// 2nd time here, so no space, so sleep before checking space again
-	sleep(60); // wait a minute
-	// man 3 sleep
+        dualfprintf(fail_file,"Ran out of hard drive space -- waiting 60 seconds , waititer=%ld\n",waititer);
+        if(myid==0 && !MPIAVOIDFORK){
+          if(MAILFROMREMOTE){
+            sprintf(mysys,"resulthdspace=`echo \"\\`pwd\\` ran out of HD space\"` ; ssh %s@%s \"echo $resulthdspace | mail %s\"",REMOTEUSER,REMOTEHOST,EMAILADDRESS);
+            stderrfprintf("system call: %s\n",mysys);
+            system(mysys);
+          }
+          else{
+            sprintf(mysys,"echo \"`pwd` ran out of HD space | mail %s\"",EMAILADDRESS);
+            stderrfprintf("system call: %s\n",mysys);
+            system(mysys);
+          }
+        }
+        // 2nd time here, so no space, so sleep before checking space again
+        sleep(60); // wait a minute
+        // man 3 sleep
       }
     }
     // find free space on local disk
@@ -71,7 +71,7 @@ int isenoughfreespace(unsigned long long need)
 #else
 int isenoughfreespace(unsigned long long need)
 {
-	return(0);
+  return(0);
 }
 
 #endif

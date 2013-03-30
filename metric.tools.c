@@ -72,7 +72,7 @@ int dfridr(FTYPE (*func)(struct of_geom *, FTYPE*,int,int), struct of_geom *ptrg
 
   trytollocal=NUMEPSILONPOW23;
   //  minhlocal=NUMEPSILONPOW23;
-	
+ 
   // allocate memory
   a=dmatrix(1,NTAB,1,NTAB);
 
@@ -160,24 +160,24 @@ int dfridr(FTYPE (*func)(struct of_geom *, FTYPE*,int,int), struct of_geom *ptrg
       // compute Neville table for each smaller step size
       // Contains extrapolation to dx->0 for each possible order of extrapolation
       for (j=2;j<=i;j++) {
-	// extrapolate for dx->0
-	a[j][i]=(a[j-1][i]*fac-a[j-1][i-1])/(fac-1.0);
-	fac=truecon2*fac;
-	//unnormalized error
-	//	errt=MAX(fabs(a[j][i]-a[j-1][i]),fabs(a[j][i]-a[j-1][i-1]));
-	//normalized error
-	//	errt=MAX(fabs(a[j][i]-a[j-1][i]),fabs(a[j][i]-a[j-1][i-1]))/((*func)(ptrgeom,X,ii,jj)+SMALL);
-	// normalized error
-	errt=MAX(fabs(a[j][i]-a[j-1][i]),fabs(a[j][i]-a[j-1][i-1]));
-	errt/=MAX(MAX(MAX(fabs(a[j][i]),fabs(a[j-1][i])),MAX(fabs(a[j][i]),fabs(a[j-1][i-1]))),SMALL);
+        // extrapolate for dx->0
+        a[j][i]=(a[j-1][i]*fac-a[j-1][i-1])/(fac-1.0);
+        fac=truecon2*fac;
+        //unnormalized error
+        // errt=MAX(fabs(a[j][i]-a[j-1][i]),fabs(a[j][i]-a[j-1][i-1]));
+        //normalized error
+        // errt=MAX(fabs(a[j][i]-a[j-1][i]),fabs(a[j][i]-a[j-1][i-1]))/((*func)(ptrgeom,X,ii,jj)+SMALL);
+        // normalized error
+        errt=MAX(fabs(a[j][i]-a[j-1][i]),fabs(a[j][i]-a[j-1][i-1]));
+        errt/=MAX(MAX(MAX(fabs(a[j][i]),fabs(a[j-1][i])),MAX(fabs(a[j][i]),fabs(a[j-1][i-1]))),SMALL);
 
-	if (errt <= err) {
-	  err=errt;
-	  ans=a[j][i];
-	  goodj=j;
-	  goodi=i;
-	  goodhh=hh;
-	}
+        if (errt <= err) {
+          err=errt;
+          ans=a[j][i];
+          goodj=j;
+          goodi=i;
+          goodhh=hh;
+        }
       }// end over j derivatives
 
       // unnormalize error
@@ -187,14 +187,14 @@ int dfridr(FTYPE (*func)(struct of_geom *, FTYPE*,int,int), struct of_geom *ptrg
       //      if (fabs((a[i][i]-a[i-1][i-1]))/(fabs(ans)+SMALL) >= SAFE*(err)) break;
       // normalized error
       if (fabs((a[i][i]-a[i-1][i-1]))/MAX(SMALL,MAX(fabs(a[i][i]),fabs(a[i-1][i-1]))) >= SAFE*(err)){
-	nrlasti=i;
-	nrerr=err;
-	nrans=ans;
-	nrgoodj=goodj;
-	nrgoodi=goodi;
-	nrgoodhh=goodhh;
+        nrlasti=i;
+        nrerr=err;
+        nrans=ans;
+        nrgoodj=goodj;
+        nrgoodi=goodi;
+        nrgoodhh=goodhh;
 #if(0) // NR breaks a bit early -- found solution can sometimes be better if wait -- so just do whole NTAB
-	break;
+        break;
 #endif
       }// end NR early termination check
 
@@ -220,22 +220,22 @@ int dfridr(FTYPE (*func)(struct of_geom *, FTYPE*,int,int), struct of_geom *ptrg
     for(i=1;i<=lasti;i++){
       dualfprintf(fail_file,"hh=%21.15g ",hstart/pow(truecon,i-1));
       for(j=1;j<=lasti;j++){
-	if(j<=i){
-	  if(i==goodi && j==goodj){
-	    dualfprintf(fail_file,"*%21.15g*",a[j][i]);
-	  }
-	  else if(i==nrgoodi && j==nrgoodj){
-	    dualfprintf(fail_file,"?%21.15g?",a[j][i]);
-	  }
-	  else{
-	    dualfprintf(fail_file," %21.15g ",a[j][i]);
-	  }
-	}
-	else{
-	  dualfprintf(fail_file,"%21s"," ");
-	}
-	if(j==lasti) dualfprintf(fail_file,"\n");
-	else dualfprintf(fail_file," ");
+        if(j<=i){
+          if(i==goodi && j==goodj){
+            dualfprintf(fail_file,"*%21.15g*",a[j][i]);
+          }
+          else if(i==nrgoodi && j==nrgoodj){
+            dualfprintf(fail_file,"?%21.15g?",a[j][i]);
+          }
+          else{
+            dualfprintf(fail_file," %21.15g ",a[j][i]);
+          }
+        }
+        else{
+          dualfprintf(fail_file,"%21s"," ");
+        }
+        if(j==lasti) dualfprintf(fail_file,"\n");
+        else dualfprintf(fail_file," ");
       }
       if(i==lasti) dualfprintf(fail_file,"\n");
     }
@@ -261,7 +261,7 @@ int dfridr(FTYPE (*func)(struct of_geom *, FTYPE*,int,int), struct of_geom *ptrg
     ///////////
 
     //////////////////////
-    //	  
+    //   
     // now check error is not crazy with the starting large h, decrease h if crazy until not crazy and get good error
     //
     //////////////////////
@@ -274,23 +274,23 @@ int dfridr(FTYPE (*func)(struct of_geom *, FTYPE*,int,int), struct of_geom *ptrg
     if(err>TRYTOL){ // TRYTOL is error we are attempting to reach
 
       if(errlist[iter]<minerror){
-	// store min error event
-	minerror=errlist[iter];
-	minerrorhstart=hhlist[iter];
-	miniter=iter;
-	minans=ans;
+        // store min error event
+        minerror=errlist[iter];
+        minerrorhstart=hhlist[iter];
+        miniter=iter;
+        minans=ans;
 #if(DEBUGDF)
-	dualfprintf(fail_file,"minerr=%21.15g minhstart=%21.15g miniter=%d minans=%21.15g\n",minerror,minerrorhstart,miniter,minans);
+        dualfprintf(fail_file,"minerr=%21.15g minhstart=%21.15g miniter=%d minans=%21.15g\n",minerror,minerrorhstart,miniter,minans);
 #endif
       }
       else{
-	// if did no better through bisecting hhgood, then probably done
-	ans=minans;
+        // if did no better through bisecting hhgood, then probably done
+        ans=minans;
 #if(DEBUGDF)
-	if(iter==1) dualfprintf(fail_file,"Done with no better error (iter=%d)\n",iter);
-	else dualfprintf(fail_file,"Did better on multiple iterations (iter=%d)\n",iter);
+        if(iter==1) dualfprintf(fail_file,"Done with no better error (iter=%d)\n",iter);
+        else dualfprintf(fail_file,"Did better on multiple iterations (iter=%d)\n",iter);
 #endif
-	break;
+        break;
       }
 
       // if here, then not done yet with bisecting on hh
@@ -310,8 +310,8 @@ int dfridr(FTYPE (*func)(struct of_geom *, FTYPE*,int,int), struct of_geom *ptrg
 #endif
 
       if(truecon==1.0){
-	ans=minans;
-	break; // can't do any better
+        ans=minans;
+        break; // can't do any better
       }
 
     }// end if err > TRYTOL
@@ -324,25 +324,25 @@ int dfridr(FTYPE (*func)(struct of_geom *, FTYPE*,int,int), struct of_geom *ptrg
     if(iter>=MAXITER){
       if(err<OKTOL) break;
       else{ // then maybe problems
-	ans=minans;
+        ans=minans;
 
-	if((minerror<OKTOL || err<OKTOL)){
-	  break;	      // then accept as answer
-	}
-	else{
-	  // then must fail
-	  dualfprintf(fail_file,"iter=%d>=MAXITER=%d: never found error below %21.15g: err=%21.15g : ii=%d jj=%d kk=%d\n",iter,MAXITER,OKTOL,err,ii,jj,kk);
-	  dualfprintf(fail_file,"gi=%d gj=%d gk=%d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
-	  dualfprintf(fail_file,"ti=%d tj=%d tk=%d\n",startpos[1]+ptrgeom->i,startpos[2]+ptrgeom->j,startpos[3]+ptrgeom->k);
-	  dualfprintf(fail_file,"miniter=%d errlist[miniter]=%21.15g hhlist[miniter]=%21.15g\n",miniter,errlist[miniter],hhlist[miniter]);
-	  dualfprintf(fail_file,"minerror=%21.15g minans=%21.15g\n",minerror,minans);
-	  for(iterdebug=0;iterdebug<iter;iterdebug++){
-	    dualfprintf(fail_file,"h[%d]=%21.15g err[%d]=%21.15g ans[%d]=%21.15g\n",iterdebug,hhlist[iterdebug],iterdebug,errlist[iterdebug],iterdebug,anslist[iterdebug]);
-	  }
+        if((minerror<OKTOL || err<OKTOL)){
+          break;       // then accept as answer
+        }
+        else{
+          // then must fail
+          dualfprintf(fail_file,"iter=%d>=MAXITER=%d: never found error below %21.15g: err=%21.15g : ii=%d jj=%d kk=%d\n",iter,MAXITER,OKTOL,err,ii,jj,kk);
+          dualfprintf(fail_file,"gi=%d gj=%d gk=%d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
+          dualfprintf(fail_file,"ti=%d tj=%d tk=%d\n",startpos[1]+ptrgeom->i,startpos[2]+ptrgeom->j,startpos[3]+ptrgeom->k);
+          dualfprintf(fail_file,"miniter=%d errlist[miniter]=%21.15g hhlist[miniter]=%21.15g\n",miniter,errlist[miniter],hhlist[miniter]);
+          dualfprintf(fail_file,"minerror=%21.15g minans=%21.15g\n",minerror,minans);
+          for(iterdebug=0;iterdebug<iter;iterdebug++){
+            dualfprintf(fail_file,"h[%d]=%21.15g err[%d]=%21.15g ans[%d]=%21.15g\n",iterdebug,hhlist[iterdebug],iterdebug,errlist[iterdebug],iterdebug,anslist[iterdebug]);
+          }
 
-	  iterfailed=1;
-	  break;
-	}//end if not OKTOL
+          iterfailed=1;
+          break;
+        }//end if not OKTOL
       }// end if not OKTOL for only err
     }// end if iter>=MAXITER
 #endif // end JCM addition
@@ -575,53 +575,53 @@ int find_horizon(int fromwhere)
       for (i = N1-1; i >= 0; i--) {
 
 
-	j = N2 / 2;             // doesn't matter (spherical polar assumed)
-	k = N3 / 2;             // doesn't matter (spherical polar assumed)
-	coord_ijk(i, j, k, FACE1, X);
-	bl_coord_ijk(i, j, k, FACE1, V);
-	r1=V[1];
-	coord_ijk(ip1mac(i), j, k, FACE1, X);
-	bl_coord_ijk(ip1mac(i), j, k, FACE1, V);
-	r2=V[1];
-	// looking between FACE1's r value and upper FACE1's r value, so loop is from i=N1-1..i=0
+        j = N2 / 2;             // doesn't matter (spherical polar assumed)
+        k = N3 / 2;             // doesn't matter (spherical polar assumed)
+        coord_ijk(i, j, k, FACE1, X);
+        bl_coord_ijk(i, j, k, FACE1, V);
+        r1=V[1];
+        coord_ijk(ip1mac(i), j, k, FACE1, X);
+        bl_coord_ijk(ip1mac(i), j, k, FACE1, V);
+        r2=V[1];
+        // looking between FACE1's r value and upper FACE1's r value, so loop is from i=N1-1..i=0
 
-	if(ii==myid && myid==0 && i==0){
-	  // special check in case horizon inside inner-most radial grid
-	  if(horizonvalue<=r1 || horizonvalue<SMALL){ // GODMARK: this means horizon can't be chosen to <SMALL and mean there is a black hole there
-	    // then horizon off grid or right on edge, but still ok
-	    // treat as if horizon is off grid if right on edge
-	    horizoni = 0;
-	    horizoncpupos1=mycpupos[1];
-	    break;
-	  }
-	}
+        if(ii==myid && myid==0 && i==0){
+          // special check in case horizon inside inner-most radial grid
+          if(horizonvalue<=r1 || horizonvalue<SMALL){ // GODMARK: this means horizon can't be chosen to <SMALL and mean there is a black hole there
+            // then horizon off grid or right on edge, but still ok
+            // treat as if horizon is off grid if right on edge
+            horizoni = 0;
+            horizoncpupos1=mycpupos[1];
+            break;
+          }
+        }
 
 
-	//        if (fabs(r1 - horizonvalue) <= (r2 - r1)) {     // find horizon
-	if (fromwhere!=2){
-	  if(horizonvalue >= r1 && horizonvalue < r2){ // note that if strictly on r2, then next CPU should pick it up
-	    horizoni = i;
-	    horizoncpupos1 = mycpupos[1];
-	    break;
-	  }
-	}
-	else if (fromwhere==2){
-	  if(horizonvalue >= r1 && horizonvalue < r2){
-	    horizoni = ip1mac(i);
-	    horizoncpupos1 = mycpupos[1];
-	    if(horizoni>=N1){
-	      horizoni=0;
-	      horizoncpupos1++;
-	    }
-	    else{
-	      // then on original CPU
-	      horizoncpupos1 = mycpupos[1];
-	    }
-	    //dualfprintf(fail_file,"horizon: %d %d\n",horizoni,horizoncpupos1);
-	    break;
-	  }
-	  //	  dualfprintf(fail_file,"horizonnot: %d %d :: %21.15g %21.15g %21.15g\n",horizoni,horizoncpupos1,r1,Rhor,r2);
-	}
+        //        if (fabs(r1 - horizonvalue) <= (r2 - r1)) {     // find horizon
+        if (fromwhere!=2){
+          if(horizonvalue >= r1 && horizonvalue < r2){ // note that if strictly on r2, then next CPU should pick it up
+            horizoni = i;
+            horizoncpupos1 = mycpupos[1];
+            break;
+          }
+        }
+        else if (fromwhere==2){
+          if(horizonvalue >= r1 && horizonvalue < r2){
+            horizoni = ip1mac(i);
+            horizoncpupos1 = mycpupos[1];
+            if(horizoni>=N1){
+              horizoni=0;
+              horizoncpupos1++;
+            }
+            else{
+              // then on original CPU
+              horizoncpupos1 = mycpupos[1];
+            }
+            //dualfprintf(fail_file,"horizon: %d %d\n",horizoni,horizoncpupos1);
+            break;
+          }
+          //   dualfprintf(fail_file,"horizonnot: %d %d :: %21.15g %21.15g %21.15g\n",horizoni,horizoncpupos1,r1,Rhor,r2);
+        }
       }
     }
 
@@ -1455,9 +1455,9 @@ void gcov2gcovprim(struct of_geom *ptrgeom, FTYPE *X, FTYPE *V, FTYPE *gcov, FTY
   DLOOP(j,k){
     tmpgcov[GIND(j,k)] = 0.;
     for(l=0;l<NDIM;l++) for(m=0;m<NDIM;m++){
-	// g_{mup nup} = g_{mu nu} T^mu_mup T^nu_nup
-	// where T^mu_mup == dx^mu[BL]/dx^mup[KSP uni grid]
-	tmpgcov[GIND(j,k)] += GINDASSIGNFACTOR(j,k)*gcov[GIND(l,m)] * dxdxp[l][j] * dxdxp[m][k];
+        // g_{mup nup} = g_{mu nu} T^mu_mup T^nu_nup
+        // where T^mu_mup == dx^mu[BL]/dx^mup[KSP uni grid]
+        tmpgcov[GIND(j,k)] += GINDASSIGNFACTOR(j,k)*gcov[GIND(l,m)] * dxdxp[l][j] * dxdxp[m][k];
       }
 
   }
@@ -1518,7 +1518,7 @@ void get_gcovpert(FTYPE *gcovprim, FTYPE *gcovpert, FTYPE *gcovpertprim)
     // now add 15 other terms
     ftemp2 = 0.;
     for(l=0;l<NDIM;l++) for(m=0;m<NDIM;m++){
-	if((l!=q)&&(m!=q)) ftemp2+= gcov[GIND(l,m)] * dxdxp[l][q] * dxdxp[m][q];
+        if((l!=q)&&(m!=q)) ftemp2+= gcov[GIND(l,m)] * dxdxp[l][q] * dxdxp[m][q];
       }
     // add other 15 terms to answer for total of 16 terms
     gcovpertprim[q]+=ftemp2;
@@ -1552,9 +1552,9 @@ void transgcov_old(FTYPE *gcov, FTYPE (*dxdxp)[NDIM], FTYPE *gcovprim)
   DLOOP(j,k){ // OPTMARK: In places where deal with symmetric metric that's using GIND(), could introduce new DLOOPMET(j,k) that only goes over required elements.  Only works for assignment to LHS, not RHS since need factors of two that arrive naturally in sum on RHS.
     tmpgcov[GIND(j,k)] = 0.;
     for(l=0;l<NDIM;l++) for(m=0;m<NDIM;m++){
-	// g_{mup nup} = g_{mu nu} T^mu_mup T^nu_nup
-	// where T^mu_mup == dx^mu[BL]/dx^mup[KSP uni grid]
-	tmpgcov[GIND(j,k)] += gcov[GIND(l,m)] * dxdxp[l][j] * dxdxp[m][k]; // GINDASSIGNFACTOR(j,k) not needed because tmpgcov not += to itself.  RHS is summed over as if entire metric there, as wanted.
+        // g_{mup nup} = g_{mu nu} T^mu_mup T^nu_nup
+        // where T^mu_mup == dx^mu[BL]/dx^mup[KSP uni grid]
+        tmpgcov[GIND(j,k)] += gcov[GIND(l,m)] * dxdxp[l][j] * dxdxp[m][k]; // GINDASSIGNFACTOR(j,k) not needed because tmpgcov not += to itself.  RHS is summed over as if entire metric there, as wanted.
       }
   }
   DLOOP(j,k){
@@ -1624,11 +1624,11 @@ void transgcov(FTYPE *gcov, FTYPE (*trans)[NDIM], FTYPE *gcovprim)
 
 
   // 4 along diagonal and 6 off-diagonal with 6 other identical values
-#define GCOV_DOT_TRANS_DOT_TRANS(a,b)					\
-  gcov[GIND(0,0)] * trans[0][a]* trans[0][b]				\
-    +     gcov[GIND(1,1)] * trans[1][a]* trans[1][b]			\
-    +     gcov[GIND(2,2)] * trans[2][a]* trans[2][b]			\
-    +     gcov[GIND(3,3)] * trans[3][a]* trans[3][b]			\
+#define GCOV_DOT_TRANS_DOT_TRANS(a,b)                                   \
+  gcov[GIND(0,0)] * trans[0][a]* trans[0][b]                            \
+    +     gcov[GIND(1,1)] * trans[1][a]* trans[1][b]                    \
+    +     gcov[GIND(2,2)] * trans[2][a]* trans[2][b]                    \
+    +     gcov[GIND(3,3)] * trans[3][a]* trans[3][b]                    \
     +     gcov[GIND(0,1)] * (trans[0][a]* trans[1][b] + trans[1][a]* trans[0][b]) \
     +     gcov[GIND(0,2)] * (trans[0][a]* trans[2][b] + trans[2][a]* trans[0][b]) \
     +     gcov[GIND(0,3)] * (trans[0][a]* trans[3][b] + trans[3][a]* trans[0][b]) \
@@ -1680,7 +1680,7 @@ void gcon2gconprim(struct of_geom *ptrgeom, FTYPE *X, FTYPE *V, FTYPE *gcon,FTYP
   DLOOP(j,k){
     for(l=0;l<NDIM;l++){
       for(m=0;m<NDIM;m++){
-	tmpgcon[GIND(j,k)] += GINDASSIGNFACTOR(j,k)*idxdxp[j][l] * idxdxp[k][m] * gcon[GIND(l,m)] ;
+        tmpgcon[GIND(j,k)] += GINDASSIGNFACTOR(j,k)*idxdxp[j][l] * idxdxp[k][m] * gcon[GIND(l,m)] ;
       }
     }
   }
@@ -1751,18 +1751,18 @@ void setup_delta(int whichfun,int whichdifftype, FTYPE defaultdelta, struct of_g
 
 
       DLOOPA(jj){
-	((*localptrgeoml)[jj]).p=((*localptrgeomh)[jj]).p=CENT + jj*(N[jj]!=1); // jj=0 -> CENT , jj=1 -> FACE1 , jj=2 -> FACE2 , jj=3 -> FACE3
-	
-	((*localptrgeoml)[jj]).i=(geom->i);
-	((*localptrgeoml)[jj]).j=(geom->j);
-	((*localptrgeoml)[jj]).k=(geom->k);
-	
-	// GODMARK: Note that infinitesimal version obtains correct connection even in reduced dimensions, while the finite version just reduces to no connection if reduced dimension (so this assumes something about the position or may not even be right in general)
-	((*localptrgeomh)[jj]).i=(geom->i) + (jj==1 ? SHIFT1 : 0);
-	((*localptrgeomh)[jj]).j=(geom->j) + (jj==2 ? SHIFT2 : 0);
-	((*localptrgeomh)[jj]).k=(geom->k) + (jj==3 ? SHIFT3 : 0);
-	
-	truedelta[jj]=dx[jj];
+        ((*localptrgeoml)[jj]).p=((*localptrgeomh)[jj]).p=CENT + jj*(N[jj]!=1); // jj=0 -> CENT , jj=1 -> FACE1 , jj=2 -> FACE2 , jj=3 -> FACE3
+ 
+        ((*localptrgeoml)[jj]).i=(geom->i);
+        ((*localptrgeoml)[jj]).j=(geom->j);
+        ((*localptrgeoml)[jj]).k=(geom->k);
+ 
+        // GODMARK: Note that infinitesimal version obtains correct connection even in reduced dimensions, while the finite version just reduces to no connection if reduced dimension (so this assumes something about the position or may not even be right in general)
+        ((*localptrgeomh)[jj]).i=(geom->i) + (jj==1 ? SHIFT1 : 0);
+        ((*localptrgeomh)[jj]).j=(geom->j) + (jj==2 ? SHIFT2 : 0);
+        ((*localptrgeomh)[jj]).k=(geom->k) + (jj==3 ? SHIFT3 : 0);
+ 
+        truedelta[jj]=dx[jj];
       }
     }
     else{
@@ -1878,7 +1878,7 @@ void setup_delta(int whichfun,int whichdifftype, FTYPE defaultdelta, struct of_g
 /* NOTE: parameter hides global variable */
 // note that inputted geom is used not only for i,j,k but for actual CENT gcon, etc.
 void conn_func_numerical1(FTYPE DELTA, FTYPE *X, struct of_geom *geom,
-			  FTYPE (*conn)[NDIM][NDIM],FTYPE *conn2)
+                          FTYPE (*conn)[NDIM][NDIM],FTYPE *conn2)
 {
   int i, j, k, l;
   int kk,jj;
@@ -1922,10 +1922,10 @@ void conn_func_numerical1(FTYPE DELTA, FTYPE *X, struct of_geom *geom,
   int doingmachinebody;
   int setup_XlXh(FTYPE *X,FTYPE *truedelta, FTYPE (*Xlgen)[NDIM],FTYPE (*Xhgen)[NDIM],FTYPE *signdXgen);
   int compute_metricquantities_midlh(int donormal, int domachinebody
-				     ,struct of_geom *geom, FTYPE *X, FTYPE *gmid, FTYPE *gcovpertmid,FTYPE *gdetmid,FTYPE *gdetlgen,FTYPE *gdethgen
-				     ,struct of_geom (*localptrgeoml)[NDIM],struct of_geom (*localptrgeomh)[NDIM],FTYPE (*Xlgen)[NDIM],FTYPE (*Xhgen)[NDIM]
-				     ,FTYPE *lngdetlgen, FTYPE *lngdethgen, FTYPE (*glgen)[SYMMATRIXNDIM], FTYPE (*ghgen)[SYMMATRIXNDIM], FTYPE (*gcovpertlgen)[NDIM], FTYPE (*gcovperthgen)[NDIM]
-				     );
+                                     ,struct of_geom *geom, FTYPE *X, FTYPE *gmid, FTYPE *gcovpertmid,FTYPE *gdetmid,FTYPE *gdetlgen,FTYPE *gdethgen
+                                     ,struct of_geom (*localptrgeoml)[NDIM],struct of_geom (*localptrgeomh)[NDIM],FTYPE (*Xlgen)[NDIM],FTYPE (*Xhgen)[NDIM]
+                                     ,FTYPE *lngdetlgen, FTYPE *lngdethgen, FTYPE (*glgen)[SYMMATRIXNDIM], FTYPE (*ghgen)[SYMMATRIXNDIM], FTYPE (*gcovpertlgen)[NDIM], FTYPE (*gcovperthgen)[NDIM]
+                                     );
   int failreturn;
   int conndertypelocal;
   FTYPE value;
@@ -1980,10 +1980,10 @@ void conn_func_numerical1(FTYPE DELTA, FTYPE *X, struct of_geom *geom,
 
     // get metric quantities
     compute_metricquantities_midlh(1,doingmachinebody
-				   ,geom, X, gmid, gcovpertmid,&gdetmid,gdetlgen,gdethgen
-				   ,localptrgeoml,localptrgeomh,Xlgen,Xhgen
-				   ,lngdetlgen, lngdethgen, glgen, ghgen, gcovpertlgen, gcovperthgen
-				   );
+                                   ,geom, X, gmid, gcovpertmid,&gdetmid,gdetlgen,gdethgen
+                                   ,localptrgeoml,localptrgeomh,Xlgen,Xhgen
+                                   ,lngdetlgen, lngdethgen, glgen, ghgen, gcovpertlgen, gcovperthgen
+                                   );
 
     // resetup Xl and Xh and signdX since above "compute" function will have overwritten X positions for non-existent dimensions
     // if do this, must set truedelta correctly consistent in setup_delta()
@@ -2000,27 +2000,27 @@ void conn_func_numerical1(FTYPE DELTA, FTYPE *X, struct of_geom *geom,
       
       
       if(WHICHEOM!=WITHGDET){
-	//$$
-	//d_\mu (f T^\mu_\nu) = f[ T^\lambda_\kappa \Gamma^\kappa_{\nu\lambda} - d_\mu ln (\detg/f) T^\mu_\nu]
-	//$$
-	conn2[k]= signdXgen[k]*(lngdethgen[k] - lngdetlgen[k]) / (Xhgen[k][k] - Xlgen[k][k]);
+        //$$
+        //d_\mu (f T^\mu_\nu) = f[ T^\lambda_\kappa \Gamma^\kappa_{\nu\lambda} - d_\mu ln (\detg/f) T^\mu_\nu]
+        //$$
+        conn2[k]= signdXgen[k]*(lngdethgen[k] - lngdetlgen[k]) / (Xhgen[k][k] - Xlgen[k][k]);
       }
       else{
-	conn2[k]=0.0; // no 2nd connection then
+        conn2[k]=0.0; // no 2nd connection then
       }
 
 
       // answer is symmetric on i,j since uses g_{ij}, so only do part of work
       for (i = 0; i < NDIM; i++){
-	for (j = 0; j <=i; j++){
-	  // d(1+g_{tt}) -> dg_{tt}, so can use 1+g_{tt} for accurate non-relativistic gravity
-	  //if(i==j) conn[i][j][k] = (gcovperth[i] - gcovpertl[i]) / (Xh[k] - Xl[k]);
-	  // else 
-	  conn[i][j][k] = signdXgen[k]*(ghgen[k][GIND(i,j)] - glgen[k][GIND(i,j)]) / (Xhgen[k][k] - Xlgen[k][k]);
+        for (j = 0; j <=i; j++){
+          // d(1+g_{tt}) -> dg_{tt}, so can use 1+g_{tt} for accurate non-relativistic gravity
+          //if(i==j) conn[i][j][k] = (gcovperth[i] - gcovpertl[i]) / (Xh[k] - Xl[k]);
+          // else 
+          conn[i][j][k] = signdXgen[k]*(ghgen[k][GIND(i,j)] - glgen[k][GIND(i,j)]) / (Xhgen[k][k] - Xlgen[k][k]);
 
-	  //	  dualfprintf(fail_file,"ii=%d jj=%d kk=%d :: i=%d j=%d k=%d c=%21.15g gh=%21.15g gl=%21.15g Xh=%21.15g Xl=%21.15g\n",localptrgeom->i,localptrgeom->j,localptrgeom->k,i,j,k,conn[i][j][k],ghgen[k][GIND(i,j)],glgen[k][GIND(i,j)],Xhgen[k][k],Xlgen[k][k]);
+          //   dualfprintf(fail_file,"ii=%d jj=%d kk=%d :: i=%d j=%d k=%d c=%21.15g gh=%21.15g gl=%21.15g Xh=%21.15g Xl=%21.15g\n",localptrgeom->i,localptrgeom->j,localptrgeom->k,i,j,k,conn[i][j][k],ghgen[k][GIND(i,j)],glgen[k][GIND(i,j)],Xhgen[k][k],Xlgen[k][k]);
 
-	}
+        }
       }
       
     }// end over k
@@ -2057,17 +2057,17 @@ void conn_func_numerical1(FTYPE DELTA, FTYPE *X, struct of_geom *geom,
 
       
       if(WHICHEOM!=WITHGDET){
-	failreturn = dfridr(lngdet_func_mcoord,localptrgeom,X,0,0,k,&value); // 0,0 not used
-	if(failreturn==0) conn2[k]=value; // else leave as default
+        failreturn = dfridr(lngdet_func_mcoord,localptrgeom,X,0,0,k,&value); // 0,0 not used
+        if(failreturn==0) conn2[k]=value; // else leave as default
       }
       else conn2[k]=0.0; // then no 2nd connection
 
       // answer is symmetric on i,j since uses g_{ij}, so only do part of work
       for (i = 0; i < NDIM; i++){
-	for (j = 0; j <=i; j++){
-	  failreturn = dfridr(gcov_func_mcoord,localptrgeom,X,i,j,k,&value);
-	  if(failreturn==0) conn[i][j][k]=value; // else leave as default
-	}
+        for (j = 0; j <=i; j++){
+          failreturn = dfridr(gcov_func_mcoord,localptrgeom,X,i,j,k,&value);
+          if(failreturn==0) conn[i][j][k]=value; // else leave as default
+        }
       }
 
     }// end over k
@@ -2089,7 +2089,7 @@ void conn_func_numerical1(FTYPE DELTA, FTYPE *X, struct of_geom *geom,
   for (k = 0; k < NDIM; k++) {
     for (i = 0; i < NDIM; i++){
       for (j = i+1; j <NDIM; j++){
-	conn[i][j][k] = conn[j][i][k]; 
+        conn[i][j][k] = conn[j][i][k]; 
       }
     }
   }
@@ -2103,8 +2103,8 @@ void conn_func_numerical1(FTYPE DELTA, FTYPE *X, struct of_geom *geom,
   for (i = 0; i < NDIM; i++)
     for (j = 0; j < NDIM; j++)
       for (k = 0; k < NDIM; k++)
-	tmp[i][j][k] =
-	  0.5 * (conn[j][i][k] + conn[k][i][j] - conn[k][j][i]);
+        tmp[i][j][k] =
+          0.5 * (conn[j][i][k] + conn[k][i][j] - conn[k][j][i]);
 
 
   ////////////////////////////////////////////////////
@@ -2115,10 +2115,10 @@ void conn_func_numerical1(FTYPE DELTA, FTYPE *X, struct of_geom *geom,
   for (i = 0; i < NDIM; i++)
     for (j = 0; j < NDIM; j++)
       for (k = 0; k < NDIM; k++) {
-	conn[i][j][k] = 0.;
-	for (l = 0; l < NDIM; l++){
-	  conn[i][j][k] += geom->gcon[GIND(i,l)] * tmp[l][j][k];
-	}
+        conn[i][j][k] = 0.;
+        for (l = 0; l < NDIM; l++){
+          conn[i][j][k] += geom->gcon[GIND(i,l)] * tmp[l][j][k];
+        }
       }
 
 
@@ -2170,10 +2170,10 @@ void conn_func_numerical1(FTYPE DELTA, FTYPE *X, struct of_geom *geom,
 
       // 0 means not normal calculations      
       compute_metricquantities_midlh(0,doingmachinebody
-				     ,geom, X, gmid, gcovpertmid,&gdetmid,gdetlgen,gdethgen
-				     ,localptrgeoml,localptrgeomh,Xlgen,Xhgen
-				     ,lngdetlgen, lngdethgen, glgen, ghgen, gcovpertlgen, gcovperthgen
-				     );
+                                     ,geom, X, gmid, gcovpertmid,&gdetmid,gdetlgen,gdethgen
+                                     ,localptrgeoml,localptrgeomh,Xlgen,Xhgen
+                                     ,lngdetlgen, lngdethgen, glgen, ghgen, gcovpertlgen, gcovperthgen
+                                     );
      
       // resetup Xl and Xh and signdX since above "compute" function will have overwritten X positions for non-existent dimensions
       // if do this, must set truedelta correctly consistent in setup_delta()
@@ -2212,17 +2212,17 @@ void conn_func_numerical1(FTYPE DELTA, FTYPE *X, struct of_geom *geom,
     FTYPE ftemp;
     for (i = 0; i < NDIM; i++){
       for (j = 0; j < NDIM; j++){
-	if(fabs(conndiag2[j])==0.0) ftemp=1.0;
-	else ftemp=(fabs(conndiag2[j])+SMALL)/(fabs(conndiag[j])+SMALL);
-	// Note, there is difficulty when sum passes through zero.  Won't matter for pressure term, but each individual term in connection may be far from zero and simply different terms cancel.
-	if(fabs(ftemp-1.0)>0.5){
-	  dualfprintf(fail_file,"WARNING: Large correction for machinebody: i=%d j=%d :: i=%d j=%d ftemp=%21.15g :: %21.15g %21.15g :: %21.15g\n",geom->i,geom->j,i,j,ftemp,conndiag[j],conndiag2[j],gdetmid);
-	}
-	else{
-	  // otherwise do correction
-	  conn[i][j][i] *= ftemp;
-	  //	  if(i==0) dualfprintf(fail_file,"machinebody: i=%d j=%d :: j=%d ftemp=%21.15g :: %21.15g %21.15g :: %21.15g\n",geom->i,geom->j,j,ftemp,conndiag[j],conndiag2[j],gdetmid);
-	}
+        if(fabs(conndiag2[j])==0.0) ftemp=1.0;
+        else ftemp=(fabs(conndiag2[j])+SMALL)/(fabs(conndiag[j])+SMALL);
+        // Note, there is difficulty when sum passes through zero.  Won't matter for pressure term, but each individual term in connection may be far from zero and simply different terms cancel.
+        if(fabs(ftemp-1.0)>0.5){
+          dualfprintf(fail_file,"WARNING: Large correction for machinebody: i=%d j=%d :: i=%d j=%d ftemp=%21.15g :: %21.15g %21.15g :: %21.15g\n",geom->i,geom->j,i,j,ftemp,conndiag[j],conndiag2[j],gdetmid);
+        }
+        else{
+          // otherwise do correction
+          conn[i][j][i] *= ftemp;
+          //   if(i==0) dualfprintf(fail_file,"machinebody: i=%d j=%d :: j=%d ftemp=%21.15g :: %21.15g %21.15g :: %21.15g\n",geom->i,geom->j,j,ftemp,conndiag[j],conndiag2[j],gdetmid);
+        }
       }
     }
 #else
@@ -2236,12 +2236,12 @@ void conn_func_numerical1(FTYPE DELTA, FTYPE *X, struct of_geom *geom,
     FTYPE dS,weight;
     for (i = 0; i < NDIM; i++){ // over traced terms
       for (j = 0; j < NDIM; j++){ // over each j
-	// correction to sum of trace:
-	dS=conndiag2[j]-conndiag[j];
-	// weight for this connection term
-	weight=fabs(conn[i][j][i])/sumabsconn[j];
-	// weighted correction
-	conn[i][j][i] += dS*weight;
+        // correction to sum of trace:
+        dS=conndiag2[j]-conndiag[j];
+        // weight for this connection term
+        weight=fabs(conn[i][j][i])/sumabsconn[j];
+        // weighted correction
+        conn[i][j][i] += dS*weight;
       }
     }
 #endif
@@ -2255,12 +2255,12 @@ void conn_func_numerical1(FTYPE DELTA, FTYPE *X, struct of_geom *geom,
 #if(0) // DEBUG
   if(geom->i==0 || geom->i==-1){
     for (i = 0; i < NDIM; i++) for (l = 0; l < NDIM; l++){
-      dualfprintf(fail_file,"i=%d gcon[%d][%d]=%21.15g\n",geom->i,i,l,geom->gcon[GIND(i,l)]);
-    }
+        dualfprintf(fail_file,"i=%d gcon[%d][%d]=%21.15g\n",geom->i,i,l,geom->gcon[GIND(i,l)]);
+      }
     dualfprintf(fail_file,"i=%d conn[0][0][0]=%21.15g\n",geom->i,conn[0][0][0]);
   }
 #endif
-	
+ 
   /* done! */
 }
 
@@ -2270,48 +2270,48 @@ int setup_XlXh(FTYPE *X,FTYPE *truedelta, FTYPE (*Xlgen)[NDIM],FTYPE (*Xhgen)[ND
 {
   int k,l;
 
-    ////////////
-    // first form high and low positions for function locations
-    ////////////
-    for (k = 0; k < NDIM; k++) {
+  ////////////
+  // first form high and low positions for function locations
+  ////////////
+  for (k = 0; k < NDIM; k++) {
 
-      for (l = 0; l < NDIM; l++){
-	Xhgen[k][l] = X[l];
-	Xlgen[k][l] = X[l];
-      }
+    for (l = 0; l < NDIM; l++){
+      Xhgen[k][l] = X[l];
+      Xlgen[k][l] = X[l];
+    }
 
-      // normal case
-      Xhgen[k][k] += MYDELTAh(truedelta[k],k);
-      Xlgen[k][k] += MYDELTAl(truedelta[k],k);
-      signdXgen[k]=1.0;
+    // normal case
+    Xhgen[k][k] += MYDELTAh(truedelta[k],k);
+    Xlgen[k][k] += MYDELTAl(truedelta[k],k);
+    signdXgen[k]=1.0;
 
 #if(0)// debug
-      if(k==TT){
-	if(Xlgen[k][k]>X[k]){
-	  dualfprintf(fail_file,"Xl in future! Xl=%21.15g Xh=%21.15g\n",Xlgen[k][k],Xhgen[k][k]);
-	}
+    if(k==TT){
+      if(Xlgen[k][k]>X[k]){
+        dualfprintf(fail_file,"Xl in future! Xl=%21.15g Xh=%21.15g\n",Xlgen[k][k],Xhgen[k][k]);
       }
+    }
 #endif
 
 
 #if(0)
-      // not really wanted since want "force" to be in same "radial" direction so sign SHOULD flip
-      if(k==1 && ISSPCMCOORD(MCOORD)){
-	// then check if r<0 and invert Xh and Xl if so
-	bl_coord(X, V);
-	if(V[k]<0.0){
-	  signdXgen[k]=-1.0;
-	}
+    // not really wanted since want "force" to be in same "radial" direction so sign SHOULD flip
+    if(k==1 && ISSPCMCOORD(MCOORD)){
+      // then check if r<0 and invert Xh and Xl if so
+      bl_coord(X, V);
+      if(V[k]<0.0){
+        signdXgen[k]=-1.0;
       }
-#endif
-      //      if(k==TT) dualfprintf(fail_file,"k=%d DELTAl=%21.15g DELTAh=%21.15g : true=%21.15g\n",k,MYDELTAl(truedelta[k],k),MYDELTAh(truedelta[k],k),truedelta[k]);
-      // DEBUG
-      //Xhgen[k][k] += DELTA;
-      //			Xlgen[k][k] -= DELTA;
-
     }
+#endif
+    //      if(k==TT) dualfprintf(fail_file,"k=%d DELTAl=%21.15g DELTAh=%21.15g : true=%21.15g\n",k,MYDELTAl(truedelta[k],k),MYDELTAh(truedelta[k],k),truedelta[k]);
+    // DEBUG
+    //Xhgen[k][k] += DELTA;
+    //   Xlgen[k][k] -= DELTA;
 
-    return(0);
+  }
+
+  return(0);
 
 }
 
@@ -2319,17 +2319,17 @@ int setup_XlXh(FTYPE *X,FTYPE *truedelta, FTYPE (*Xlgen)[NDIM],FTYPE (*Xhgen)[ND
 
 // compute low/high metric quantities
 int compute_metricquantities_midlh(int donormal, int domachinebody
-				   ,struct of_geom *geom, FTYPE *X, FTYPE *gmid, FTYPE *gcovpertmid,FTYPE *gdetmid,FTYPE *gdetlgen,FTYPE *gdethgen
-				   ,struct of_geom (*localptrgeoml)[NDIM],struct of_geom (*localptrgeomh)[NDIM],FTYPE (*Xlgen)[NDIM],FTYPE (*Xhgen)[NDIM]
-				   ,FTYPE *lngdetlgen, FTYPE *lngdethgen, FTYPE (*glgen)[SYMMATRIXNDIM], FTYPE (*ghgen)[SYMMATRIXNDIM], FTYPE (*gcovpertlgen)[NDIM], FTYPE (*gcovperthgen)[NDIM]
-				   )
+                                   ,struct of_geom *geom, FTYPE *X, FTYPE *gmid, FTYPE *gcovpertmid,FTYPE *gdetmid,FTYPE *gdetlgen,FTYPE *gdethgen
+                                   ,struct of_geom (*localptrgeoml)[NDIM],struct of_geom (*localptrgeomh)[NDIM],FTYPE (*Xlgen)[NDIM],FTYPE (*Xhgen)[NDIM]
+                                   ,FTYPE *lngdetlgen, FTYPE *lngdethgen, FTYPE (*glgen)[SYMMATRIXNDIM], FTYPE (*ghgen)[SYMMATRIXNDIM], FTYPE (*gcovpertlgen)[NDIM], FTYPE (*gcovperthgen)[NDIM]
+                                   )
 {
   int k;
   FTYPE gcov_func_mcoord(struct of_geom *ptrgeom, FTYPE* X, int i, int j);
   FTYPE lngdet_func_mcoord(struct of_geom *ptrgeom, FTYPE* X, int i, int j);
   FTYPE gdet_func_mcoord_usegcov(FTYPE *gcovmcoord, struct of_geom *ptrgeom, FTYPE* X, int i, int j);
 
-    // get gdet in cell center
+  // get gdet in cell center
   if(domachinebody){
     gcov_func(geom,1,MCOORD,X, gmid,gcovpertmid);
     *gdetmid=gdet_func_mcoord_usegcov(gmid, geom, X, 0,0);
@@ -2340,8 +2340,8 @@ int compute_metricquantities_midlh(int donormal, int domachinebody
 
     if(donormal){
       if(WHICHEOM!=WITHGDET){
-	lngdethgen[k]=lngdet_func_mcoord(&((*localptrgeomh)[k]),Xhgen[k],0,0); // doesn't use 0,0
-	lngdetlgen[k]=lngdet_func_mcoord(&((*localptrgeoml)[k]),Xlgen[k],0,0); // doesn't use 0,0
+        lngdethgen[k]=lngdet_func_mcoord(&((*localptrgeomh)[k]),Xhgen[k],0,0); // doesn't use 0,0
+        lngdetlgen[k]=lngdet_func_mcoord(&((*localptrgeoml)[k]),Xlgen[k],0,0); // doesn't use 0,0
       }
     }
     if(donormal || domachinebody){
@@ -2493,15 +2493,15 @@ int metric_checks(struct of_geom *ptrgeom)
 
     if(PRODUCTION==0){
       if(fabs(delta[jj][kk]-delta(jj,kk))>NUMEPSILON*100.0){
-	if(ISSPCMCOORD(MCOORD)==0 || (ISSPCMCOORD(MCOORD)==1 && j!=totalsize[2] && j!=0 && loc!=FACE2 && loc!=CORN1 && loc!=CORN3 && loc!=CORNT) ){
-	  dualfprintf(fail_file,"Problem with metric at i=%d j=%d k=%d loc=%d delta[%d][%d]=%21.15g should be %21.15g\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p,jj,kk,delta[jj][kk],delta(jj,kk));
-	}
+        if(ISSPCMCOORD(MCOORD)==0 || (ISSPCMCOORD(MCOORD)==1 && j!=totalsize[2] && j!=0 && loc!=FACE2 && loc!=CORN1 && loc!=CORN3 && loc!=CORNT) ){
+          dualfprintf(fail_file,"Problem with metric at i=%d j=%d k=%d loc=%d delta[%d][%d]=%21.15g should be %21.15g\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p,jj,kk,delta[jj][kk],delta(jj,kk));
+        }
       }
     }
 
     if(fabs(delta[jj][kk]-delta(jj,kk))>NUMEPSILON*1000.0){
       if(ISSPCMCOORD(MCOORD)==0 || (ISSPCMCOORD(MCOORD)==1 && j!=totalsize[2] && j!=0 && loc!=FACE2 && loc!=CORN1 && loc!=CORN3 && loc!=CORNT) ){
-	dualfprintf(fail_file,"MAJOR Problem with metric at i=%d j=%d k=%d loc=%d delta[%d][%d]=%21.15g should be %21.15g\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p,jj,kk,delta[jj][kk],delta(jj,kk));
+        dualfprintf(fail_file,"MAJOR Problem with metric at i=%d j=%d k=%d loc=%d delta[%d][%d]=%21.15g should be %21.15g\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p,jj,kk,delta[jj][kk],delta(jj,kk));
       }
     }
   }

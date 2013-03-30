@@ -667,10 +667,10 @@ void init_placeongrid_griddecomposition(void)
     if(N1>1){
       // figure out left/right send/recv
       if (mycpupos[1] > 0) {
-        dirgenset[bti][X1DN][DIRIF] = 1;		// do -x1 dir
+        dirgenset[bti][X1DN][DIRIF] = 1;  // do -x1 dir
       }
       if (mycpupos[1] < ncpux1 - 1) {
-        dirgenset[bti][X1UP][DIRIF] = 1;		// do +x1 dir
+        dirgenset[bti][X1UP][DIRIF] = 1;  // do +x1 dir
       }
       
       // only do periodic mpi if 
@@ -690,10 +690,10 @@ void init_placeongrid_griddecomposition(void)
     // figure out up/down send/recv
     if(N2>1){
       if (mycpupos[2] > 0) {
-        dirgenset[bti][X2DN][DIRIF] = 1;		// -x2 dir
+        dirgenset[bti][X2DN][DIRIF] = 1;  // -x2 dir
       }
       if (mycpupos[2] < ncpux2 - 1) {
-        dirgenset[bti][X2UP][DIRIF] = 1;		// towards and from +x2 dir
+        dirgenset[bti][X2UP][DIRIF] = 1;  // towards and from +x2 dir
       }
 
       // can't have both periodicx2 and SPC periodicx3      
@@ -718,10 +718,10 @@ void init_placeongrid_griddecomposition(void)
     // figure out out/in send/recv
     if(N3>1){
       if (mycpupos[3] > 0) {
-        dirgenset[bti][X3DN][DIRIF] = 1;		// -x3 dir
+        dirgenset[bti][X3DN][DIRIF] = 1;  // -x3 dir
       }
       if (mycpupos[3] < ncpux3 - 1) {
-        dirgenset[bti][X3UP][DIRIF] = 1;		// towards and from +x3 dir
+        dirgenset[bti][X3UP][DIRIF] = 1;  // towards and from +x3 dir
       }
       
       if(periodicx3&&(ncpux3>1)){
@@ -940,15 +940,15 @@ void init_placeongrid_griddecomposition(void)
         }
         // GODMARK: Why was I doing the below?
         //      else if(
-        //	      ){
-        //	// sets size of transfer for fluxes
-        //	// (different for "left" and "right") for flux-types
-        //	if(dir==X1UP) dirgenset[bti][dir][DIRSIZE]=numbnd[1]*surfa[1]*numnpr;
-        //	else if(dir==X1DN) dirgenset[bti][dir][DIRSIZE]=(numbnd[1]-1)*surfa[1]*numnpr;
-        //	else if(dir==X2UP) dirgenset[bti][dir][DIRSIZE]=numbnd[2]*surfa[2]*numnpr;
-        //	else if(dir==X2DN) dirgenset[bti][dir][DIRSIZE]=(numbnd[2]-1)*surfa[2]*numnpr;
-        //	else if(dir==X3UP) dirgenset[bti][dir][DIRSIZE]=numbnd[3]*surfa[3]*numnpr;
-        //	else if(dir==X3DN) dirgenset[bti][dir][DIRSIZE]=(numbnd[3]-1)*surfa[3]*numnpr;
+        //       ){
+        // // sets size of transfer for fluxes
+        // // (different for "left" and "right") for flux-types
+        // if(dir==X1UP) dirgenset[bti][dir][DIRSIZE]=numbnd[1]*surfa[1]*numnpr;
+        // else if(dir==X1DN) dirgenset[bti][dir][DIRSIZE]=(numbnd[1]-1)*surfa[1]*numnpr;
+        // else if(dir==X2UP) dirgenset[bti][dir][DIRSIZE]=numbnd[2]*surfa[2]*numnpr;
+        // else if(dir==X2DN) dirgenset[bti][dir][DIRSIZE]=(numbnd[2]-1)*surfa[2]*numnpr;
+        // else if(dir==X3UP) dirgenset[bti][dir][DIRSIZE]=numbnd[3]*surfa[3]*numnpr;
+        // else if(dir==X3DN) dirgenset[bti][dir][DIRSIZE]=(numbnd[3]-1)*surfa[3]*numnpr;
         //      }
         else{
           dualfprintf(fail_file,"No such bti=%d setup in set transfer size in mpi_init.c\n",bti);
@@ -1880,12 +1880,12 @@ void init_MPIgroup(void)
 
 
 // To enable OpenMP:
-// Compiler 	Flag
+// Compiler  Flag
 ///------------------------
-// IBM         	-qsmp=omp
-// Intel 	-openmp
-// PathScale 	-mp
-// PGI 	        -mp
+// IBM          -qsmp=omp
+// Intel  -openmp
+// PathScale  -mp
+// PGI          -mp
 // GNU          -fopenmp
 
 

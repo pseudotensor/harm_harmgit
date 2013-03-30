@@ -124,16 +124,16 @@ int vpot2field_staggeredfield(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE
       //////////      COMPFULLLOOP{ // COMPFULLLOOP allows since A_i exists at COMPFULLLOOPP1 and so always accessing valid A_i
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) nowait
       OPENMP3DLOOPBLOCK{
-	OPENMP3DLOOPBLOCK2IJK(i,j,k);
+        OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
-	// ufield doesn't require geometry
-	MACP0A1(ufield,i,j,k,B1)  = +(NOAVGCORN_1(A[3],i,jp1mac(j),k)-NOAVGCORN_1(A[3],i,j,k))/(dx[2]);
-	MACP0A1(ufield,i,j,k,B1) += -(NOAVGCORN_1(A[2],i,j,kp1mac(k))-NOAVGCORN_1(A[2],i,j,k))/(dx[3]);
+        // ufield doesn't require geometry
+        MACP0A1(ufield,i,j,k,B1)  = +(NOAVGCORN_1(A[3],i,jp1mac(j),k)-NOAVGCORN_1(A[3],i,j,k))/(dx[2]);
+        MACP0A1(ufield,i,j,k,B1) += -(NOAVGCORN_1(A[2],i,j,kp1mac(k))-NOAVGCORN_1(A[2],i,j,k))/(dx[3]);
 
-	get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgeomf[dir]);
-	set_igdetsimple(ptrgeomf[dir]);
-	igdetgnosing[dir] = ptrgeomf[dir]->igdetnosing;
-	MACP0A1(pfield,i,j,k,B1-1+dir)  = MACP0A1(ufield,i,j,k,B1-1+dir)*igdetgnosing[dir];
+        get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgeomf[dir]);
+        set_igdetsimple(ptrgeomf[dir]);
+        igdetgnosing[dir] = ptrgeomf[dir]->igdetnosing;
+        MACP0A1(pfield,i,j,k,B1-1+dir)  = MACP0A1(ufield,i,j,k,B1-1+dir)*igdetgnosing[dir];
 
       }/// end 3D LOOP
     }// end if
@@ -144,15 +144,15 @@ int vpot2field_staggeredfield(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE
       ///////COMPFULLLOOP{
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) nowait
       OPENMP3DLOOPBLOCK{
-	OPENMP3DLOOPBLOCK2IJK(i,j,k);
+        OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
-	MACP0A1(ufield,i,j,k,B2)  = +(NOAVGCORN_2(A[1],i,j,kp1mac(k))-NOAVGCORN_2(A[1],i,j,k))/(dx[3]);
-	MACP0A1(ufield,i,j,k,B2) += -(NOAVGCORN_2(A[3],ip1mac(i),j,k)-NOAVGCORN_2(A[3],i,j,k))/(dx[1]);
+        MACP0A1(ufield,i,j,k,B2)  = +(NOAVGCORN_2(A[1],i,j,kp1mac(k))-NOAVGCORN_2(A[1],i,j,k))/(dx[3]);
+        MACP0A1(ufield,i,j,k,B2) += -(NOAVGCORN_2(A[3],ip1mac(i),j,k)-NOAVGCORN_2(A[3],i,j,k))/(dx[1]);
 
-	get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgeomf[dir]);
-	set_igdetsimple(ptrgeomf[dir]);
-	igdetgnosing[dir] = ptrgeomf[dir]->igdetnosing;
-	MACP0A1(pfield,i,j,k,B1-1+dir)  = MACP0A1(ufield,i,j,k,B1-1+dir)*igdetgnosing[dir];
+        get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgeomf[dir]);
+        set_igdetsimple(ptrgeomf[dir]);
+        igdetgnosing[dir] = ptrgeomf[dir]->igdetnosing;
+        MACP0A1(pfield,i,j,k,B1-1+dir)  = MACP0A1(ufield,i,j,k,B1-1+dir)*igdetgnosing[dir];
 
       }
     }
@@ -163,15 +163,15 @@ int vpot2field_staggeredfield(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE
       //////////      COMPFULLLOOP{
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) nowait
       OPENMP3DLOOPBLOCK{
-	OPENMP3DLOOPBLOCK2IJK(i,j,k);
+        OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
-	MACP0A1(ufield,i,j,k,B3)  = +(NOAVGCORN_3(A[2],ip1mac(i),j,k)-NOAVGCORN_3(A[2],i,j,k))/(dx[1]);
-	MACP0A1(ufield,i,j,k,B3) += -(NOAVGCORN_3(A[1],i,jp1mac(j),k)-NOAVGCORN_3(A[1],i,j,k))/(dx[2]);
+        MACP0A1(ufield,i,j,k,B3)  = +(NOAVGCORN_3(A[2],ip1mac(i),j,k)-NOAVGCORN_3(A[2],i,j,k))/(dx[1]);
+        MACP0A1(ufield,i,j,k,B3) += -(NOAVGCORN_3(A[1],i,jp1mac(j),k)-NOAVGCORN_3(A[1],i,j,k))/(dx[2]);
 
-	get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgeomf[dir]);
-	set_igdetsimple(ptrgeomf[dir]);
-	igdetgnosing[dir] = ptrgeomf[dir]->igdetnosing;
-	MACP0A1(pfield,i,j,k,B1-1+dir)  = MACP0A1(ufield,i,j,k,B1-1+dir)*igdetgnosing[dir];
+        get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgeomf[dir]);
+        set_igdetsimple(ptrgeomf[dir]);
+        igdetgnosing[dir] = ptrgeomf[dir]->igdetnosing;
+        MACP0A1(pfield,i,j,k,B1-1+dir)  = MACP0A1(ufield,i,j,k,B1-1+dir)*igdetgnosing[dir];
 
       }
     }
@@ -201,37 +201,37 @@ int vpot2field_staggeredfield(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE
 // 2) loop over dimensions setting field flux dimension-by-dimension using multi-D interpolated CORN quantities
 // At present, original flux as emf is computed like normal flux even if overwritten here, and shouldn't be much more expensive doing that there since primary cost is interpolation whose results are required and used here
 int fluxcalc_fluxctstag(int stage,
-			int initialstep, int finalstep,
-			FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],
-			//			FTYPE (*pbcorn)[COMPDIM][NUMCS][NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
-			FTYPE (*pvbcorn)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3][COMPDIM][NUMCS+1][NUMCS],
-			FTYPE (*wspeed)[COMPDIM][NUMCS][NSTORE1][NSTORE2][NSTORE3],
-			FTYPE (*prc)[NSTORE2][NSTORE3][NPR2INTERP],
-			FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP],
-			FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP],
-			struct of_state (*fluxstatecent)[NSTORE2][NSTORE3],
-			struct of_state (*fluxstate)[NSTORE1][NSTORE2][NSTORE3][NUMLEFTRIGHT],
-			FTYPE (*geomcorn)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
-			int *Nvec, FTYPE (*dqvec[NDIM])[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR],
-			FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
-			FTYPE *CUf, FTYPE *CUnew, SFTYPE fluxdt, SFTYPE fluxtime, struct of_loop *cent2faceloop, struct of_loop (*face2cornloop)[NDIM][NDIM]
-			)
+                        int initialstep, int finalstep,
+                        FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],
+                        //   FTYPE (*pbcorn)[COMPDIM][NUMCS][NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
+                        FTYPE (*pvbcorn)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3][COMPDIM][NUMCS+1][NUMCS],
+                        FTYPE (*wspeed)[COMPDIM][NUMCS][NSTORE1][NSTORE2][NSTORE3],
+                        FTYPE (*prc)[NSTORE2][NSTORE3][NPR2INTERP],
+                        FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP],
+                        FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP],
+                        struct of_state (*fluxstatecent)[NSTORE2][NSTORE3],
+                        struct of_state (*fluxstate)[NSTORE1][NSTORE2][NSTORE3][NUMLEFTRIGHT],
+                        FTYPE (*geomcorn)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
+                        int *Nvec, FTYPE (*dqvec[NDIM])[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR],
+                        FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
+                        FTYPE *CUf, FTYPE *CUnew, SFTYPE fluxdt, SFTYPE fluxtime, struct of_loop *cent2faceloop, struct of_loop (*face2cornloop)[NDIM][NDIM]
+                        )
 {
   int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primface_l)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*primface_r)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],
-				 //				 FTYPE (*pbcorn)[COMPDIM][NUMCS][NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
-				 FTYPE (*pvbcorn)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3][COMPDIM][NUMCS+1][NUMCS],
-				 struct of_loop *cent2faceloop, struct of_loop (*face2cornloop)[NDIM][NDIM],
-				 FTYPE (*prc)[NSTORE2][NSTORE3][NPR2INTERP],
-				 FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP],
-				 FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP],
-				 int *Nvec, FTYPE (*dqvec[NDIM])[NSTORE2][NSTORE3][NPR2INTERP]);
+                                 //     FTYPE (*pbcorn)[COMPDIM][NUMCS][NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
+                                 FTYPE (*pvbcorn)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3][COMPDIM][NUMCS+1][NUMCS],
+                                 struct of_loop *cent2faceloop, struct of_loop (*face2cornloop)[NDIM][NDIM],
+                                 FTYPE (*prc)[NSTORE2][NSTORE3][NPR2INTERP],
+                                 FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP],
+                                 FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP],
+                                 int *Nvec, FTYPE (*dqvec[NDIM])[NSTORE2][NSTORE3][NPR2INTERP]);
   int dir;
   int idel, jdel, kdel, face;
   int is, ie, js, je, ks, ke;
   int fluxcalc_fluxctstag_emf_1d(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], int dir, int odir1, int odir2, int is, int ie, int js, int je, int ks, int ke, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR], FTYPE CUf, struct of_loop (*face2cornloop)[NDIM],
-				 //				 FTYPE (*pbcorn)[COMPDIM][NUMCS][NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
-				 FTYPE (*pvbcorn)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3][COMPDIM][NUMCS+1][NUMCS],
-				 FTYPE (*wspeed)[COMPDIM][NUMCS][NSTORE1][NSTORE2][NSTORE3]);
+                                 //     FTYPE (*pbcorn)[COMPDIM][NUMCS][NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
+                                 FTYPE (*pvbcorn)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3][COMPDIM][NUMCS+1][NUMCS],
+                                 FTYPE (*wspeed)[COMPDIM][NUMCS][NSTORE1][NSTORE2][NSTORE3]);
   int edgedir, odir1,odir2;
   //  static int firsttime=1;
   int i,j,k;
@@ -277,12 +277,12 @@ int fluxcalc_fluxctstag(int stage,
     // assumes set to 0 and if set to 0 once then always 0 (assume set to 0 in 
     if(Nvec[odir1]==1 && Nvec[odir2]==1){
       //      if(firsttime){
-	// then ensure that really 0 and should remain 0 for entire evolution
-	// don't need to set this except once assuming no other code sets to non-zero
-	// No!  If those directions are 0 then flux isn't defined nor used
-	//COMPZSLOOP( -N1BND, N1-1+N1BND, -N2BND, N2-1+N2BND, -N3BND, N3-1+N3BND ){
-	//	  MACP1A1(fluxvec,odir1,i,j,k,B1-1+odir2)=MACP1A1(fluxvec,odir2,i,j,k,B1-1+odir1)=MACP1A1(fluxvec,dir,i,j,k,B1-1+dir)=0.0;
-	//	}
+      // then ensure that really 0 and should remain 0 for entire evolution
+      // don't need to set this except once assuming no other code sets to non-zero
+      // No!  If those directions are 0 then flux isn't defined nor used
+      //COMPZSLOOP( -N1BND, N1-1+N1BND, -N2BND, N2-1+N2BND, -N3BND, N3-1+N3BND ){
+      //   MACP1A1(fluxvec,odir1,i,j,k,B1-1+odir2)=MACP1A1(fluxvec,odir2,i,j,k,B1-1+odir1)=MACP1A1(fluxvec,dir,i,j,k,B1-1+dir)=0.0;
+      // }
       //      }
       continue;
     }
@@ -396,9 +396,9 @@ int fluxcalc_fluxctstag(int stage,
 
 
 int fluxcalc_fluxctstag_emf_1d(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], int dir, int odir1, int odir2, int is, int ie, int js, int je, int ks, int ke, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR], FTYPE CUf, struct of_loop (*face2cornloop)[NDIM],
-			       //			       FTYPE (*pbcorn)[COMPDIM][NUMCS][NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
-			       FTYPE (*pvbcorn)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3][COMPDIM][NUMCS+1][NUMCS],
-			       FTYPE (*wspeed)[COMPDIM][NUMCS][NSTORE1][NSTORE2][NSTORE3])
+                               //          FTYPE (*pbcorn)[COMPDIM][NUMCS][NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
+                               FTYPE (*pvbcorn)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3][COMPDIM][NUMCS+1][NUMCS],
+                               FTYPE (*wspeed)[COMPDIM][NUMCS][NSTORE1][NSTORE2][NSTORE3])
 {
   int idel1,jdel1,kdel1;
   int idel2,jdel2,kdel2;
@@ -480,28 +480,28 @@ int fluxcalc_fluxctstag_emf_1d(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], in
       // i,j,k should already be taken into account (i.e. no offsets to add)
       // emf in dir direction
       for(m=0;m<NUMCS;m++) for(l=0;l<NUMCS;l++){
-	  // emf[+- in odir1][+- in odir2]
-	  // velocity in same positions as emf
-	  // for example, emf3[+-x][+-y] = By[+-x]*vx[+-x][+-y] - Bx[+-y]*vy[+-x][+-y]
-	  // below requires velocity to be lab-frame 3-velocity consistent with lab-frame 3-field primitive
+          // emf[+- in odir1][+- in odir2]
+          // velocity in same positions as emf
+          // for example, emf3[+-x][+-y] = By[+-x]*vx[+-x][+-y] - Bx[+-y]*vy[+-x][+-y]
+          // below requires velocity to be lab-frame 3-velocity consistent with lab-frame 3-field primitive
 
-	  // see fluxct.c for signature definition of EMF and flux
+          // see fluxct.c for signature definition of EMF and flux
 
-	  // m%3+1 gives next 1->2,2->3,3->1
-	  // 3-(4-m)%3 = (dir+1)%3+1 gives previous 1->3,2->1,3->2
-	  // so odir1 is forward cyclic
-	  // so odir2 is backward cyclic
-	  // notice that the emf in total uses 4 fields and 4*2 velocities for 12 total quantities
-	  // not all pbcorn[][?] positions are used (have 3 only need 2 per dir)
-	  // pvcorn[which corner][which component in pl form][+-odir1][+-odir2]
-	  // pbcorn[which corner][which component in pl form][+-remaining direction that is not corn nor pl-dir]
+          // m%3+1 gives next 1->2,2->3,3->1
+          // 3-(4-m)%3 = (dir+1)%3+1 gives previous 1->3,2->1,3->2
+          // so odir1 is forward cyclic
+          // so odir2 is backward cyclic
+          // notice that the emf in total uses 4 fields and 4*2 velocities for 12 total quantities
+          // not all pbcorn[][?] positions are used (have 3 only need 2 per dir)
+          // pvcorn[which corner][which component in pl form][+-odir1][+-odir2]
+          // pbcorn[which corner][which component in pl form][+-remaining direction that is not corn nor pl-dir]
 
-	  emf2d[m][l] = 
-	    //	    + MACP3A0(pbcorn,dir,B1-1+odir2,m,i,j,k)*MACP4A0(pvcorn,dir,U1-1+odir1,m,l,i,j,k) 
-	    //	    - MACP3A0(pbcorn,dir,B1-1+odir1,l,i,j,k)*MACP4A0(pvcorn,dir,U1-1+odir2,m,l,i,j,k);
-	    + MACP1A3(pvbcorn,dir,i,j,k,odir2,NUMCS,m)*MACP1A3(pvbcorn,dir,i,j,k,odir1,m,l) 
-	    - MACP1A3(pvbcorn,dir,i,j,k,odir1,NUMCS,l)*MACP1A3(pvbcorn,dir,i,j,k,odir2,m,l);
-	}
+          emf2d[m][l] = 
+            //     + MACP3A0(pbcorn,dir,B1-1+odir2,m,i,j,k)*MACP4A0(pvcorn,dir,U1-1+odir1,m,l,i,j,k) 
+            //     - MACP3A0(pbcorn,dir,B1-1+odir1,l,i,j,k)*MACP4A0(pvcorn,dir,U1-1+odir2,m,l,i,j,k);
+            + MACP1A3(pvbcorn,dir,i,j,k,odir2,NUMCS,m)*MACP1A3(pvbcorn,dir,i,j,k,odir1,m,l) 
+            - MACP1A3(pvbcorn,dir,i,j,k,odir1,NUMCS,l)*MACP1A3(pvbcorn,dir,i,j,k,odir2,m,l);
+        }
 
       
       ///////////////////////////
@@ -517,20 +517,20 @@ int fluxcalc_fluxctstag_emf_1d(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], in
         c2d[CMAX][0] = fabs(MAX(0.,MAX(+MACP3A0(wspeed,EOMSETMHD,odir1,CMAX,i,j,k),+MACP3A0(wspeed,EOMSETMHD,odir1,CMAX,i-idel2,j-jdel2,k-kdel2))));
       }
       else{
-	// GODMARK: shoud just set the offending wavespeed (associated with non-existing dimensional direction) to 1.0 so don't have this conditional
-	// then speed doesn't matter, not set, so scale-out
-	c2d[CMIN][0] = 1.0;
-	c2d[CMAX][0] = 1.0;
+        // GODMARK: shoud just set the offending wavespeed (associated with non-existing dimensional direction) to 1.0 so don't have this conditional
+        // then speed doesn't matter, not set, so scale-out
+        c2d[CMIN][0] = 1.0;
+        c2d[CMAX][0] = 1.0;
       }
       
       if(Nvec[odir2]>1){
-	c2d[CMIN][1] = fabs(MAX(0.,MAX(+MACP3A0(wspeed,EOMSETMHD,odir2,CMIN,i,j,k),+MACP3A0(wspeed,EOMSETMHD,odir2,CMIN,i-idel1,j-jdel1,k-kdel1))));
-	c2d[CMAX][1] = fabs(MAX(0.,MAX(+MACP3A0(wspeed,EOMSETMHD,odir2,CMAX,i,j,k),+MACP3A0(wspeed,EOMSETMHD,odir2,CMAX,i-idel1,j-jdel1,k-kdel1))));
+        c2d[CMIN][1] = fabs(MAX(0.,MAX(+MACP3A0(wspeed,EOMSETMHD,odir2,CMIN,i,j,k),+MACP3A0(wspeed,EOMSETMHD,odir2,CMIN,i-idel1,j-jdel1,k-kdel1))));
+        c2d[CMAX][1] = fabs(MAX(0.,MAX(+MACP3A0(wspeed,EOMSETMHD,odir2,CMAX,i,j,k),+MACP3A0(wspeed,EOMSETMHD,odir2,CMAX,i-idel1,j-jdel1,k-kdel1))));
       }
       else{
-	// then speed doesn't matter, not set, so scale-out
-	c2d[CMIN][1] = 1.0;
-	c2d[CMAX][1] = 1.0;
+        // then speed doesn't matter, not set, so scale-out
+        c2d[CMIN][1] = 1.0;
+        c2d[CMAX][1] = 1.0;
       }
 
       ctop[0]    = MAX(c2d[CMIN][0],c2d[CMAX][0]);
@@ -584,35 +584,35 @@ int fluxcalc_fluxctstag_emf_1d(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], in
 
       if( (fluxmethod==HLLFLUX) && (topwave[0]>SMALL) && (topwave[1]>SMALL) ){
 
-	bottomwave[0]=1.0/topwave[0];
-	bottomwave[1]=1.0/topwave[1];
+        bottomwave[0]=1.0/topwave[0];
+        bottomwave[1]=1.0/topwave[1];
 
-	// HLL
-	emffinal = 
-	  // non-dissipative term
-	  + (
-	     +c2d[CMAX][0]*c2d[CMAX][1]*emf2d[0][0]  // emf has -odir1 -odir2, so wavespeed has +odir1 +odir2
-	     +c2d[CMAX][0]*c2d[CMIN][1]*emf2d[0][1]  // emf has -odir1 +odir2, so wavespeed has +odir1 -odir2
-	     +c2d[CMIN][0]*c2d[CMAX][1]*emf2d[1][0]  // emf has +odir1 -odir2, so wavespeed has -odir1 +odir2
-	     +c2d[CMIN][0]*c2d[CMIN][1]*emf2d[1][1]  // emf has +odir1 +odir2, so wavespeed has -odir1 -odir2
-	     )*bottomwave[0]*bottomwave[1]
-	  // dissipative terms
-	  - (
-	     // dB has d(B[odir2]) so wavespeed has +-odir1  (note d(B[odir1]) for +-odir1 is 0 due to divb=0) (i.e. otherwise would be 4 dissipation terms for 2D Riemann problem)
-	     c2d[CMIN][0]*c2d[CMAX][0]*bottomwave[0]*dB[1]
-	     )
-	  + (
-	     // dB has d(B[odir1]) so wavespeed has +-odir2  (note d(B[odir2]) for +-odir2 is 0 due to divb=0) (i.e. otherwise would be 4 dissipation terms for 2D Riemann problem)
-	     c2d[CMIN][1]*c2d[CMAX][1]*bottomwave[1]*dB[0]
-	     )
-	  ;
+        // HLL
+        emffinal = 
+          // non-dissipative term
+          + (
+             +c2d[CMAX][0]*c2d[CMAX][1]*emf2d[0][0]  // emf has -odir1 -odir2, so wavespeed has +odir1 +odir2
+             +c2d[CMAX][0]*c2d[CMIN][1]*emf2d[0][1]  // emf has -odir1 +odir2, so wavespeed has +odir1 -odir2
+             +c2d[CMIN][0]*c2d[CMAX][1]*emf2d[1][0]  // emf has +odir1 -odir2, so wavespeed has -odir1 +odir2
+             +c2d[CMIN][0]*c2d[CMIN][1]*emf2d[1][1]  // emf has +odir1 +odir2, so wavespeed has -odir1 -odir2
+             )*bottomwave[0]*bottomwave[1]
+          // dissipative terms
+          - (
+             // dB has d(B[odir2]) so wavespeed has +-odir1  (note d(B[odir1]) for +-odir1 is 0 due to divb=0) (i.e. otherwise would be 4 dissipation terms for 2D Riemann problem)
+             c2d[CMIN][0]*c2d[CMAX][0]*bottomwave[0]*dB[1]
+             )
+          + (
+             // dB has d(B[odir1]) so wavespeed has +-odir2  (note d(B[odir2]) for +-odir2 is 0 due to divb=0) (i.e. otherwise would be 4 dissipation terms for 2D Riemann problem)
+             c2d[CMIN][1]*c2d[CMAX][1]*bottomwave[1]*dB[0]
+             )
+          ;
       }
       else{ // assume if not HLL then LAXF since only 2 methods for this routine
-	// LAXF
-	// dB and ctop flip odir's due to divb=0(i.e. otherwise would be 4 dissipation terms for 2D Riemann problem)
-	emffinal =
-	  + 0.25*(emf2d[0][0]+emf2d[0][1]+emf2d[1][0]+emf2d[1][1])
-	  - 0.50*(ctop[0]*dB[1] - ctop[1]*dB[0]);
+        // LAXF
+        // dB and ctop flip odir's due to divb=0(i.e. otherwise would be 4 dissipation terms for 2D Riemann problem)
+        emffinal =
+          + 0.25*(emf2d[0][0]+emf2d[0][1]+emf2d[1][0]+emf2d[1][1])
+          - 0.50*(ctop[0]*dB[1] - ctop[1]*dB[0]);
       }
 
 
@@ -645,10 +645,10 @@ int fluxcalc_fluxctstag_emf_1d(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], in
 
 
 #if(0) // DEBUG:
-    if(i==26 && j==40 && k==0){
-      dualfprintf(fail_file,"ORIG: emf2d[1][1]=%21.15g emf2d[1][0]=%21.15g emf2d[0][1]=%21.15g emf2d[0][0]=%21.15g ctop[0]=%21.15g  ctop[1]=%21.15g dB[0]=%21.15g  dB[1]=%21.15g emffinal=%21.15g gdetcorn3=%21.15g\n",emf2d[1][1],emf2d[1][0],emf2d[0][1],emf2d[0][0],ctop[0],ctop[1],dB[0],dB[1],emffinal,ptrgdetgeom->gdet);
-      dualfprintf(fail_file,"ORIG: c2d[CMIN][0]=%21.15g c2d[CMAX][0]=%21.15g c2d[CMIN][1]=%21.15g c2d[CMAX][1]=%21.15g\n",c2d[CMIN][0],c2d[CMAX][0],c2d[CMIN][1],c2d[CMAX][1]);
-    }
+      if(i==26 && j==40 && k==0){
+        dualfprintf(fail_file,"ORIG: emf2d[1][1]=%21.15g emf2d[1][0]=%21.15g emf2d[0][1]=%21.15g emf2d[0][0]=%21.15g ctop[0]=%21.15g  ctop[1]=%21.15g dB[0]=%21.15g  dB[1]=%21.15g emffinal=%21.15g gdetcorn3=%21.15g\n",emf2d[1][1],emf2d[1][0],emf2d[0][1],emf2d[0][0],ctop[0],ctop[1],dB[0],dB[1],emffinal,ptrgdetgeom->gdet);
+        dualfprintf(fail_file,"ORIG: c2d[CMIN][0]=%21.15g c2d[CMAX][0]=%21.15g c2d[CMIN][1]=%21.15g c2d[CMAX][1]=%21.15g\n",c2d[CMIN][0],c2d[CMAX][0],c2d[CMIN][1],c2d[CMAX][1]);
+      }
 #endif
 
     
@@ -893,13 +893,13 @@ int ustagpoint2pstag(FTYPE (*ustag)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTOR
       /////////    COMPFULLLOOP{
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) nowait // "nowait" ok because each pstag[B1,B2,B3] set independently
       OPENMP3DLOOPBLOCK{
-	OPENMP3DLOOPBLOCK2IJK(i,j,k);
+        OPENMP3DLOOPBLOCK2IJK(i,j,k);
       
-	// get geometry for face pre-interpolated values
-	get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgdetgeomf[dir]); // FACE1,FACE2,FACE3 each
-	set_igdetsimple(ptrgdetgeomf[dir]);
-	igdetgnosing = ptrgdetgeomf[dir]->igdetnosing;      
-	MACP0A1(pstag,i,j,k,pl)  = MACP0A1(ustag,i,j,k,pl)*igdetgnosing;
+        // get geometry for face pre-interpolated values
+        get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgdetgeomf[dir]); // FACE1,FACE2,FACE3 each
+        set_igdetsimple(ptrgdetgeomf[dir]);
+        igdetgnosing = ptrgdetgeomf[dir]->igdetnosing;      
+        MACP0A1(pstag,i,j,k,pl)  = MACP0A1(ustag,i,j,k,pl)*igdetgnosing;
       }
     }
 
@@ -1068,23 +1068,23 @@ static void rescale_calc_stagfield_full(int *Nvec, FTYPE (*pstag)[NSTORE2][NSTOR
 
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) // NO, rescale() may set arbitrary p2interp's //nowait // p2interp[B1,B2,B3] set independently
       OPENMP3DLOOPBLOCK{
-	OPENMP3DLOOPBLOCK2IJK(i,j,k);
+        OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
 
 #if(RESCALEINTERPFLUXCTSTAG && RESCALEINTERP)
-	// get geometry for face pre-interpolated values
-	get_geometry(i, j, k, FACE1-1+dir, ptrgeomf[dir]); // FACE1,FACE2,FACE3 each
-	rescale(1,dir,MAC(pstag,i,j,k),ptrgeomf[dir],MAC(p2interp,i,j,k));
+        // get geometry for face pre-interpolated values
+        get_geometry(i, j, k, FACE1-1+dir, ptrgeomf[dir]); // FACE1,FACE2,FACE3 each
+        rescale(1,dir,MAC(pstag,i,j,k),ptrgeomf[dir],MAC(p2interp,i,j,k));
 #else
-	MACP0A1(p2interp,i,j,k,pl) = MACP0A1(pstag,i,j,k,pl);
+        MACP0A1(p2interp,i,j,k,pl) = MACP0A1(pstag,i,j,k,pl);
 
-	if(IFNOTRESCALETHENUSEGDETswitch(dir)){
-	  // get geometry for face pre-interpolated values
-	  get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgdetgeomf[dir]); // FACE1,FACE2,FACE3 each
-	  MACP0A1(p2interp,i,j,k,pl) *= (ptrgdetgeomf[dir]->gdet);
-	}	  
+        if(IFNOTRESCALETHENUSEGDETswitch(dir)){
+          // get geometry for face pre-interpolated values
+          get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgdetgeomf[dir]); // FACE1,FACE2,FACE3 each
+          MACP0A1(p2interp,i,j,k,pl) *= (ptrgdetgeomf[dir]->gdet);
+        }   
 #endif
-	
+ 
       }// end COMPFULLLOOP
     }// end over dirs
   }// end parallel region (with implicit barrier)
@@ -1260,28 +1260,28 @@ int interpolate_pfield_face2cent(FTYPE (*preal)[NSTORE2][NSTORE3][NPR], FTYPE (*
       if(Nvec[dir]==1){
 
 
-	//////////////////////////
-	//
-	// Copy if no such dimension or such dimension but other dimensions don't exist so field must be constant
-	// copy over those things not interpolating (and hence not rescalig either)
-	// unlike FACE_to_EDGE, these degenerate cases result in a trivial copy from the fake FACE to CENT
-	// what's constant is \detg B^i, not B^i, so need geometry if field along 1D dir with no other dimensions
-	// no idel,jdel,kdel for simplicity
-	OPENMP3DLOOPSETUPFULL;
+        //////////////////////////
+        //
+        // Copy if no such dimension or such dimension but other dimensions don't exist so field must be constant
+        // copy over those things not interpolating (and hence not rescalig either)
+        // unlike FACE_to_EDGE, these degenerate cases result in a trivial copy from the fake FACE to CENT
+        // what's constant is \detg B^i, not B^i, so need geometry if field along 1D dir with no other dimensions
+        // no idel,jdel,kdel for simplicity
+        OPENMP3DLOOPSETUPFULL;
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) nowait // don't wait for each dir since independent and all memory written to (and used in later loops) is independent for each dir.
-	OPENMP3DLOOPBLOCK{
-	  OPENMP3DLOOPBLOCK2IJK(i,j,k);
+        OPENMP3DLOOPBLOCK{
+          OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
-	  MACP0A1(pcent,i,j,k,pl)=MACP0A1(pstag,i,j,k,pl);
+          MACP0A1(pcent,i,j,k,pl)=MACP0A1(pstag,i,j,k,pl);
 
-	  // get ucent if required
-	  if(ucent!=NULL){// OPTMARK: Is this expensive?
-	    // Note: If WHICHEOM==WITHNOGDET and turned off \detg for fields, then staggered method doesn't work, so ok to assume gdet below and assume standard primitive field such that \detg B^i = conserved quantity
-	    get_geometry_gdetonly(i, j, k, CENT, ptrgdetgeomc); // final quantity is at CENT
-	    MACP0A1(ucent,i,j,k,pl)  = MACP0A1(pcent,i,j,k,pl)*(ptrgdetgeomc->gdet); // exactly correct (even for ENO/FV)
-	  }// end if ucent!=NULL
+          // get ucent if required
+          if(ucent!=NULL){// OPTMARK: Is this expensive?
+            // Note: If WHICHEOM==WITHNOGDET and turned off \detg for fields, then staggered method doesn't work, so ok to assume gdet below and assume standard primitive field such that \detg B^i = conserved quantity
+            get_geometry_gdetonly(i, j, k, CENT, ptrgdetgeomc); // final quantity is at CENT
+            MACP0A1(ucent,i,j,k,pl)  = MACP0A1(pcent,i,j,k,pl)*(ptrgdetgeomc->gdet); // exactly correct (even for ENO/FV)
+          }// end if ucent!=NULL
 
-	}// end 3D LOOP
+        }// end 3D LOOP
 
 
 
@@ -1291,115 +1291,115 @@ int interpolate_pfield_face2cent(FTYPE (*preal)[NSTORE2][NSTORE3][NPR], FTYPE (*
 
 
    
-	// get loop details
-	idel = fluxloop[dir][FIDEL];
-	jdel = fluxloop[dir][FJDEL];
-	kdel = fluxloop[dir][FKDEL];
+        // get loop details
+        idel = fluxloop[dir][FIDEL];
+        jdel = fluxloop[dir][FJDEL];
+        kdel = fluxloop[dir][FKDEL];
 
-	//////////////////////
-	// interpolate    
-	//////////////////////
-	realisinterp=0; // since only dealing with fields
-	slope_lim_continuous_e2z(realisinterp, dir, idel, jdel, kdel, preal, p2interp, dqvec[dir], pleft, pright, &(face2centloop[dir]));
+        //////////////////////
+        // interpolate    
+        //////////////////////
+        realisinterp=0; // since only dealing with fields
+        slope_lim_continuous_e2z(realisinterp, dir, idel, jdel, kdel, preal, p2interp, dqvec[dir], pleft, pright, &(face2centloop[dir]));
 
   
-	///////////////////
-	// get p_l p_r
-	//////////////////////////////////////
-	//
-	// interpolate primitive using slope (dq) or directly from pleft and pright
-	// For FV: p_left, p_right (indexed by grid cell #) -> p2interp_l, p2interp_r (indexed by interface #) -- atch comment
-	//
-	// always do since p2interp is good and dq/pleft/pright should have stored quantities or just-computed quantities
-	/////////////////////////////////////
+        ///////////////////
+        // get p_l p_r
+        //////////////////////////////////////
+        //
+        // interpolate primitive using slope (dq) or directly from pleft and pright
+        // For FV: p_left, p_right (indexed by grid cell #) -> p2interp_l, p2interp_r (indexed by interface #) -- atch comment
+        //
+        // always do since p2interp is good and dq/pleft/pright should have stored quantities or just-computed quantities
+        /////////////////////////////////////
 
-	// Assume for now that limiter is not per i,j,k but only per dir (unlike normal interpolation)
-	// no HORIZONSUPERFAST here
-	locallim=choose_limiter(dir, 0,0,0,pl);
-	usedq = (locallim<PARA)&&(LIMADJUST==0);
+        // Assume for now that limiter is not per i,j,k but only per dir (unlike normal interpolation)
+        // no HORIZONSUPERFAST here
+        locallim=choose_limiter(dir, 0,0,0,pl);
+        usedq = (locallim<PARA)&&(LIMADJUST==0);
     
-	// using COMPZSLOOP since final CENT quantity is used wherever centered primitive is needed for flux (which is sometimes transverse direction)
-	// do maximal loop but avoid going out of bounds when accessing dqvec,pleft,pright
-	// NOW do constrained loop
-	get_inversion_startendindices(Uconsevolveloop,&is,&ie,&js,&je,&ks,&ke);
-	////////      COMPZSLOOP(is,ie,js,je,ks,ke){
-	OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
+        // using COMPZSLOOP since final CENT quantity is used wherever centered primitive is needed for flux (which is sometimes transverse direction)
+        // do maximal loop but avoid going out of bounds when accessing dqvec,pleft,pright
+        // NOW do constrained loop
+        get_inversion_startendindices(Uconsevolveloop,&is,&ie,&js,&je,&ks,&ke);
+        ////////      COMPZSLOOP(is,ie,js,je,ks,ke){
+        OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) ///nowait // don't wait since each dir is independent (NO: pleft,pright not functions of dir, so each dir not independent)
-	OPENMP3DLOOPBLOCK{
-	  OPENMP3DLOOPBLOCK2IJK(i,j,k);
+        OPENMP3DLOOPBLOCK{
+          OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
 
 
-	  // note that interpolation from FACE_to_CENT is different than from FACE_to_EDGE or CENT_to_FACE
-	  // if not rescaling or auto-gdet rescaling, then p2interp_? is already really p_?, otherwise p2interp_? is separate memory from p_?
-	  if(usedq){
-	    p2interp_l[pl] = MACP0A1(p2interp,i,j,k,pl) + 0.5 * MACP1A1(dqvec,dir,i,j,k,pl);
-	    p2interp_r[pl] = MACP0A1(p2interp,i + idel,j + jdel,k + kdel,pl) - 0.5 * MACP1A1(dqvec,dir,i + idel,j + jdel,k + kdel,pl);
-	  }
-	  else{
-	    p2interp_l[pl] = MACP0A1(pright,i,j,k,pl);
-	    p2interp_r[pl] = MACP0A1(pleft,i+idel,j+jdel,k+kdel,pl);
-	  }
+          // note that interpolation from FACE_to_CENT is different than from FACE_to_EDGE or CENT_to_FACE
+          // if not rescaling or auto-gdet rescaling, then p2interp_? is already really p_?, otherwise p2interp_? is separate memory from p_?
+          if(usedq){
+            p2interp_l[pl] = MACP0A1(p2interp,i,j,k,pl) + 0.5 * MACP1A1(dqvec,dir,i,j,k,pl);
+            p2interp_r[pl] = MACP0A1(p2interp,i + idel,j + jdel,k + kdel,pl) - 0.5 * MACP1A1(dqvec,dir,i + idel,j + jdel,k + kdel,pl);
+          }
+          else{
+            p2interp_l[pl] = MACP0A1(pright,i,j,k,pl);
+            p2interp_r[pl] = MACP0A1(pleft,i+idel,j+jdel,k+kdel,pl);
+          }
 
 
-	
+ 
 
 
-	  /////////////////////////////////////
-	  //
-	  // after interpolation, unrescale from p2interp to normal primitive 
-	  //
-	  /////////////////////////////////////
+          /////////////////////////////////////
+          //
+          // after interpolation, unrescale from p2interp to normal primitive 
+          //
+          /////////////////////////////////////
 #if(RESCALEINTERPFLUXCTSTAG && RESCALEINTERP)
-	  get_geometry(i, j, k, CENT, ptrgeomc); // final quantity is at CENT
-	  rescale(-1,dir,p_l,ptrgeomc,p2interp_l);
-	  rescale(-1,dir,p_r,ptrgeomc,p2interp_r);
+          get_geometry(i, j, k, CENT, ptrgeomc); // final quantity is at CENT
+          rescale(-1,dir,p_l,ptrgeomc,p2interp_l);
+          rescale(-1,dir,p_r,ptrgeomc,p2interp_r);
 
-	  if(ucent!=NULL) MACP0A1(ucent,i,j,k,pl)  = 0.5*(p_l[pl]+p_r[pl])*(ptrgeomc->gdet); // exactly correct (even for ENO/FV)
+          if(ucent!=NULL) MACP0A1(ucent,i,j,k,pl)  = 0.5*(p_l[pl]+p_r[pl])*(ptrgeomc->gdet); // exactly correct (even for ENO/FV)
 
 #elif(IFNOTRESCALETHENUSEGDET)
-	  get_geometry_gdetonly(i, j, k, CENT, ptrgdetgeomc); // final quantity is at CENT
+          get_geometry_gdetonly(i, j, k, CENT, ptrgdetgeomc); // final quantity is at CENT
 
-	  
-	  if(IFNOTRESCALETHENUSEGDETswitch(dir)){
-	    set_igdetsimple(ptrgdetgeomc);
-	    igdetgnosing=ptrgdetgeomc->igdetnosing;
-	    ucentgdet=1.0;
-	  }
-	  else{
-	    igdetgnosing=1.0;
-	    ucentgdet=(ptrgdetgeomc->gdet);
-	  }
+   
+          if(IFNOTRESCALETHENUSEGDETswitch(dir)){
+            set_igdetsimple(ptrgdetgeomc);
+            igdetgnosing=ptrgdetgeomc->igdetnosing;
+            ucentgdet=1.0;
+          }
+          else{
+            igdetgnosing=1.0;
+            ucentgdet=(ptrgdetgeomc->gdet);
+          }
 
-	  // Assign \detg B^i (must come before p_{lr} mod since p2interp_{lr} pointer = p_{lr} pointer
-	  if(ucent!=NULL) MACP0A1(ucent,i,j,k,pl)=0.5*(p2interp_l[pl]+p2interp_r[pl])*ucentgdet; // go ahead and assign ucent if this method
+          // Assign \detg B^i (must come before p_{lr} mod since p2interp_{lr} pointer = p_{lr} pointer
+          if(ucent!=NULL) MACP0A1(ucent,i,j,k,pl)=0.5*(p2interp_l[pl]+p2interp_r[pl])*ucentgdet; // go ahead and assign ucent if this method
 
-	  // now get B^i from \detg B^i
-	  // remove \detg used during interpolation
-	  p_l[pl] = p2interp_l[pl]*igdetgnosing;
-	  p_r[pl] = p2interp_r[pl]*igdetgnosing;
+          // now get B^i from \detg B^i
+          // remove \detg used during interpolation
+          p_l[pl] = p2interp_l[pl]*igdetgnosing;
+          p_r[pl] = p2interp_r[pl]*igdetgnosing;
 
 
 #else
-	  // otherwise p2interp_{l,r} are really just pointing to p_l and p_r
-	  if(ucent!=NULL){
-	    get_geometry_gdetonly(i, j, k, CENT, ptrgdetgeomc); // final quantity is at CENT
-	    // Note: If WHICHEOM==WITHNOGDET and turned off \detg for fields, then staggered method doesn't work, so ok to assume gdet below and assume standard primitive field such that \detg B^i = conserved quantity
-	    MACP0A1(ucent,i,j,k,pl)  = 0.5*(p2interp_l[pl]+p2interp_r[pl])*(ptrgdetgeomc->gdet); // exactly correct (even for ENO/FV)
-	  }
-	  
+          // otherwise p2interp_{l,r} are really just pointing to p_l and p_r
+          if(ucent!=NULL){
+            get_geometry_gdetonly(i, j, k, CENT, ptrgdetgeomc); // final quantity is at CENT
+            // Note: If WHICHEOM==WITHNOGDET and turned off \detg for fields, then staggered method doesn't work, so ok to assume gdet below and assume standard primitive field such that \detg B^i = conserved quantity
+            MACP0A1(ucent,i,j,k,pl)  = 0.5*(p2interp_l[pl]+p2interp_r[pl])*(ptrgdetgeomc->gdet); // exactly correct (even for ENO/FV)
+          }
+   
 #endif
 
 
       
-	  // now set pcent -- GODMARK -- should interpolate such that only 1 continuous value
-	  // Must preserve divb in 1D Riemann problem, so B^{dir} must be continuous
-	  // Yes, should use larger stencil and interpolate such that constant. Essentially choose
-	  // large stencil and effectively choosing which points we trust (not necessarily local points)
-	  MACP0A1(pcent,i,j,k,pl)=0.5*(p_l[pl]+p_r[pl]);
+          // now set pcent -- GODMARK -- should interpolate such that only 1 continuous value
+          // Must preserve divb in 1D Riemann problem, so B^{dir} must be continuous
+          // Yes, should use larger stencil and interpolate such that constant. Essentially choose
+          // large stencil and effectively choosing which points we trust (not necessarily local points)
+          MACP0A1(pcent,i,j,k,pl)=0.5*(p_l[pl]+p_r[pl]);
 
 
-	}// endCOMPZSLOOP
+        }// endCOMPZSLOOP
 
       }// end if N>1
 
@@ -1545,9 +1545,9 @@ void slope_lim_face2corn(int realisinterp, int dir, int idel, int jdel, int kdel
 // 3-(4-m)%3 = (dir+1)%3+1 gives previous 1->3,2->1,3->2
 // so odir1 is forward cyclic
 // so odir2 is backward cyclic
-//	  emf2d[m][l] = 
-//	    + MACP1A3(pvbcorn,dir,i,j,k,odir2,NUMCS,m)*MACP1A3(pvbcorn,dir,i,j,k,odir1,m,l) 
-//	    - MACP1A3(pvbcorn,dir,i,j,k,odir1,NUMCS,l)*MACP1A3(pvbcorn,dir,i,j,k,odir2,m,l);
+//   emf2d[m][l] = 
+//     + MACP1A3(pvbcorn,dir,i,j,k,odir2,NUMCS,m)*MACP1A3(pvbcorn,dir,i,j,k,odir1,m,l) 
+//     - MACP1A3(pvbcorn,dir,i,j,k,odir1,NUMCS,l)*MACP1A3(pvbcorn,dir,i,j,k,odir2,m,l);
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //
 // pvcorn and pbcorn are defined to be used like below initializaiton in set_arrays.c
@@ -1612,13 +1612,13 @@ void slope_lim_face2corn(int realisinterp, int dir, int idel, int jdel, int kdel
 // Note: wavespeeds already stored, so don't worry about wspeedtmp being only 1 dir at a time.  Further, don't use wavespeeds here, only used directly in EMF calculation
 //
 int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primface_l)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*primface_r)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],
-			       //FTYPE (*pbcorn)[COMPDIM][NUMCS][NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
-			       FTYPE (*pvbcorn)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3][COMPDIM][NUMCS+1][NUMCS],
-			       struct of_loop *cent2faceloop, struct of_loop (*face2cornloop)[NDIM][NDIM],
-			       FTYPE (*prc)[NSTORE2][NSTORE3][NPR2INTERP],
-			       FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP],
-			       FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP],
-				 int *Nvec, FTYPE (*dqvec[NDIM])[NSTORE2][NSTORE3][NPR2INTERP])
+                               //FTYPE (*pbcorn)[COMPDIM][NUMCS][NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
+                               FTYPE (*pvbcorn)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3][COMPDIM][NUMCS+1][NUMCS],
+                               struct of_loop *cent2faceloop, struct of_loop (*face2cornloop)[NDIM][NDIM],
+                               FTYPE (*prc)[NSTORE2][NSTORE3][NPR2INTERP],
+                               FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP],
+                               FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP],
+                               int *Nvec, FTYPE (*dqvec[NDIM])[NSTORE2][NSTORE3][NPR2INTERP])
 {
   FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP];
   int nprlocalstart,nprlocalend;
@@ -1849,76 +1849,76 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
       OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) ///nowait // can't use "nowait" when using p2interp for each dir in next loop
       OPENMP3DLOOPBLOCK{
-	OPENMP3DLOOPBLOCK2IJK(i,j,k);
+        OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
 
-	// setup which primeface_l and primeface_r to use
-	// if Nvec[dir]==1, handled specially later
-	prface_l=MACP1A0(primface_l,dir,i,j,k);
-	prface_r=MACP1A0(primface_r,dir,i,j,k);
+        // setup which primeface_l and primeface_r to use
+        // if Nvec[dir]==1, handled specially later
+        prface_l=MACP1A0(primface_l,dir,i,j,k);
+        prface_r=MACP1A0(primface_r,dir,i,j,k);
 
-	
-	// get geometry for face pre-interpolated values
+ 
+        // get geometry for face pre-interpolated values
 
-	
+ 
 #if(STOREFLUXSTATE==0)
-	get_geometry(i, j, k, FACE1-1+dir, ptrgeomf); // at face[dir]
+        get_geometry(i, j, k, FACE1-1+dir, ptrgeomf); // at face[dir]
 
-	// VELs: note don't use velocity in "dir" direction
-	// LEFTVEL: compute and store v^i at face (input to ucon_calc() is primitive list as correct in primface_l,r)
-	MYFUN(ucon_calc(prface_l, ptrgeomf, ptrql->ucon, ptrql->others) ,"flux.c:interpolate_face2corn()", "ucon_calc()", 1);
-	// RIGHTVEL: compute and store v^i at face
-	MYFUN(ucon_calc(prface_r, ptrgeomf, ptrqr->ucon, ptrqr->others) ,"flux.c:interpolate_face2corn()", "ucon_calc()", 2);
+        // VELs: note don't use velocity in "dir" direction
+        // LEFTVEL: compute and store v^i at face (input to ucon_calc() is primitive list as correct in primface_l,r)
+        MYFUN(ucon_calc(prface_l, ptrgeomf, ptrql->ucon, ptrql->others) ,"flux.c:interpolate_face2corn()", "ucon_calc()", 1);
+        // RIGHTVEL: compute and store v^i at face
+        MYFUN(ucon_calc(prface_r, ptrgeomf, ptrqr->ucon, ptrqr->others) ,"flux.c:interpolate_face2corn()", "ucon_calc()", 2);
 
 #else
 
-	// really only need i,j,k in geomf for get_stateforfluxcalc(), unless doing INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD!=0
-	ptrgeomf->i=i;
-	ptrgeomf->j=j;
-	ptrgeomf->k=k;
-	ptrgeomf->p=FACE1-1+dir; // "p" not used by get_stteforfluxcalc(), but ISLEFT/ISRIGHT is w.r.t. just offset from face but located at the position of the face
+        // really only need i,j,k in geomf for get_stateforfluxcalc(), unless doing INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD!=0
+        ptrgeomf->i=i;
+        ptrgeomf->j=j;
+        ptrgeomf->k=k;
+        ptrgeomf->p=FACE1-1+dir; // "p" not used by get_stteforfluxcalc(), but ISLEFT/ISRIGHT is w.r.t. just offset from face but located at the position of the face
 
-	get_stateforfluxcalc(dir, ISLEFT, prface_l, ptrgeomf, &ptrql);
-	get_stateforfluxcalc(dir, ISRIGHT, prface_r, ptrgeomf, &ptrqr);
+        get_stateforfluxcalc(dir, ISLEFT, prface_l, ptrgeomf, &ptrql);
+        get_stateforfluxcalc(dir, ISRIGHT, prface_r, ptrgeomf, &ptrqr);
 
-	// Just always do to avoid complicated conditional
-	get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgdetgeomf); // at face[dir]
+        // Just always do to avoid complicated conditional
+        get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgdetgeomf); // at face[dir]
 
 
 #endif
 
 
-	MACP0A1(p2interp,i,j,k,BFACEINTERPODIR2) = MACP0A1(p2interp,i,j,k,BFACEINTERPODIR1) = prface_l[B1-1+dir]; // note that prface_l[dir]=prface_r[dir] at face[dir]
-	// p2interp located at face[dir] before interpolation, so gdet should be there
-	// BFACE: compute and store \detg B^i and prepare for 2-way interpolation of that single field (notice that primface_l,r same for face field
-	// note that since interpolating \detg B^i, don't have to unrescale because can just use this to obtain EMF w/ gdet
-	// odir1 and odir2 here refer to possible choices for interpdir, which is always different than [and transverse to] dir.
-	if(INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELDswitchuniboth(dir,odir1)){
-	  MACP0A1(p2interp,i,j,k,BFACEINTERPODIR1) *= (ptrgdetgeomf->gdet);
-	}
-	if(INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELDswitchuniboth(dir,odir2)){
-	  MACP0A1(p2interp,i,j,k,BFACEINTERPODIR2) *= (ptrgdetgeomf->gdet);
-	}
+        MACP0A1(p2interp,i,j,k,BFACEINTERPODIR2) = MACP0A1(p2interp,i,j,k,BFACEINTERPODIR1) = prface_l[B1-1+dir]; // note that prface_l[dir]=prface_r[dir] at face[dir]
+        // p2interp located at face[dir] before interpolation, so gdet should be there
+        // BFACE: compute and store \detg B^i and prepare for 2-way interpolation of that single field (notice that primface_l,r same for face field
+        // note that since interpolating \detg B^i, don't have to unrescale because can just use this to obtain EMF w/ gdet
+        // odir1 and odir2 here refer to possible choices for interpdir, which is always different than [and transverse to] dir.
+        if(INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELDswitchuniboth(dir,odir1)){
+          MACP0A1(p2interp,i,j,k,BFACEINTERPODIR1) *= (ptrgdetgeomf->gdet);
+        }
+        if(INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELDswitchuniboth(dir,odir2)){
+          MACP0A1(p2interp,i,j,k,BFACEINTERPODIR2) *= (ptrgdetgeomf->gdet);
+        }
 
 
-	// VELs: note don't use velocity in "dir" direction
-	// GODMARK: Could/Should allow application of rescale on v^i, such as gdet.  This would allow (e.g.) SPC to handle uu3 and B3 the same with gdet, so that interpolation doesn't operate on divergent quantity and operates consistently on these so EMF1 is correctly cancels terms.
-	// LEFTVEL: compute and store v^i at face (input to ucon_calc() is primitive list as correct in primface_l,r)
-	MACP0A1(p2interp,i,j,k,VLODIR1INTERP) = (ptrql->ucon[odir1])/(ptrql->ucon[TT]);
-	MACP0A1(p2interp,i,j,k,VLODIR2INTERP) = (ptrql->ucon[odir2])/(ptrql->ucon[TT]);
-	// RIGHTVEL: compute and store v^i at face
-	MACP0A1(p2interp,i,j,k,VRODIR1INTERP) = (ptrqr->ucon[odir1])/(ptrqr->ucon[TT]);
-	MACP0A1(p2interp,i,j,k,VRODIR2INTERP) = (ptrqr->ucon[odir2])/(ptrqr->ucon[TT]);
+        // VELs: note don't use velocity in "dir" direction
+        // GODMARK: Could/Should allow application of rescale on v^i, such as gdet.  This would allow (e.g.) SPC to handle uu3 and B3 the same with gdet, so that interpolation doesn't operate on divergent quantity and operates consistently on these so EMF1 is correctly cancels terms.
+        // LEFTVEL: compute and store v^i at face (input to ucon_calc() is primitive list as correct in primface_l,r)
+        MACP0A1(p2interp,i,j,k,VLODIR1INTERP) = (ptrql->ucon[odir1])/(ptrql->ucon[TT]);
+        MACP0A1(p2interp,i,j,k,VLODIR2INTERP) = (ptrql->ucon[odir2])/(ptrql->ucon[TT]);
+        // RIGHTVEL: compute and store v^i at face
+        MACP0A1(p2interp,i,j,k,VRODIR1INTERP) = (ptrqr->ucon[odir1])/(ptrqr->ucon[TT]);
+        MACP0A1(p2interp,i,j,k,VRODIR2INTERP) = (ptrqr->ucon[odir2])/(ptrqr->ucon[TT]);
 
-	// See comments related to switch prior to this whole function
-	if(INCLUDEGDETINTRANSVERSEINTERPLATIONOFVELOCITYswitchuniboth(dir,odir1)){
-	  MACP0A1(p2interp,i,j,k,VLODIR1INTERP) *= (ptrgdetgeomf->gdet);
-	  MACP0A1(p2interp,i,j,k,VRODIR1INTERP) *= (ptrgdetgeomf->gdet);
-	}
-	if(INCLUDEGDETINTRANSVERSEINTERPLATIONOFVELOCITYswitchuniboth(dir,odir2)){
-	  MACP0A1(p2interp,i,j,k,VLODIR2INTERP) *= (ptrgdetgeomf->gdet);
-	  MACP0A1(p2interp,i,j,k,VRODIR2INTERP) *= (ptrgdetgeomf->gdet);
-	}
+        // See comments related to switch prior to this whole function
+        if(INCLUDEGDETINTRANSVERSEINTERPLATIONOFVELOCITYswitchuniboth(dir,odir1)){
+          MACP0A1(p2interp,i,j,k,VLODIR1INTERP) *= (ptrgdetgeomf->gdet);
+          MACP0A1(p2interp,i,j,k,VRODIR1INTERP) *= (ptrgdetgeomf->gdet);
+        }
+        if(INCLUDEGDETINTRANSVERSEINTERPLATIONOFVELOCITYswitchuniboth(dir,odir2)){
+          MACP0A1(p2interp,i,j,k,VLODIR2INTERP) *= (ptrgdetgeomf->gdet);
+          MACP0A1(p2interp,i,j,k,VRODIR2INTERP) *= (ptrgdetgeomf->gdet);
+        }
       
 
 
@@ -1981,330 +1981,330 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
 
       for(whichodir=0;whichodir<=1;whichodir++){
 
-	if(whichodir==0){ // whichodir==0 arbitrarily corresponds to interpdir=odir1
-	  ///////////////////////////
-	  // interpolate in odir1 direction (places quantities at edge/emf/corner odir2)
+        if(whichodir==0){ // whichodir==0 arbitrarily corresponds to interpdir=odir1
+          ///////////////////////////
+          // interpolate in odir1 direction (places quantities at edge/emf/corner odir2)
 
-	  npr2interpstart=0;
-	  npr2interpend=2; // 3 things
-	  npr2interplist[0]=BFACEINTERPODIR1; // always interpdir field
-	  BFACEINTERPCURRENT=npr2interplist[0];
-	  // ODIR? should be same as interpdir
-	  npr2interplist[1]=VLODIR1INTERP; // hence [1] is for previous p_l
-	  npr2interplist[2]=VRODIR1INTERP; // hence [2] is for previous p_r
+          npr2interpstart=0;
+          npr2interpend=2; // 3 things
+          npr2interplist[0]=BFACEINTERPODIR1; // always interpdir field
+          BFACEINTERPCURRENT=npr2interplist[0];
+          // ODIR? should be same as interpdir
+          npr2interplist[1]=VLODIR1INTERP; // hence [1] is for previous p_l
+          npr2interplist[2]=VRODIR1INTERP; // hence [2] is for previous p_r
 
-	  // face is dir, and interpolation direction and edge direction are orthogonal to that
-	  interpdir=odir1;
-	  edgedir=odir2;
+          // face is dir, and interpolation direction and edge direction are orthogonal to that
+          interpdir=odir1;
+          edgedir=odir2;
 
-	  // del's associated with interpolation direction
-	  idel=idel1;
-	  jdel=jdel1;
-	  kdel=kdel1;
-	}
-	else{
+          // del's associated with interpolation direction
+          idel=idel1;
+          jdel=jdel1;
+          kdel=kdel1;
+        }
+        else{
 
-	  ///////////////////////////
-	  // interpolate in odir2 direction (places quantities at edge/emf/corner odir1)
+          ///////////////////////////
+          // interpolate in odir2 direction (places quantities at edge/emf/corner odir1)
 
-	  npr2interpstart=0;
-	  npr2interpend=2; // 3 things
-	  npr2interplist[0]=BFACEINTERPODIR2; // always interpdir field
-	  BFACEINTERPCURRENT=npr2interplist[0];
-	  // ODIR? should be same as interpdir
-	  npr2interplist[1]=VLODIR2INTERP; // hence [1] is for previous p_l
-	  npr2interplist[2]=VRODIR2INTERP; // hence [2] is for previous p_r
+          npr2interpstart=0;
+          npr2interpend=2; // 3 things
+          npr2interplist[0]=BFACEINTERPODIR2; // always interpdir field
+          BFACEINTERPCURRENT=npr2interplist[0];
+          // ODIR? should be same as interpdir
+          npr2interplist[1]=VLODIR2INTERP; // hence [1] is for previous p_l
+          npr2interplist[2]=VRODIR2INTERP; // hence [2] is for previous p_r
 
-	  interpdir=odir2;
-	  edgedir=odir1;
+          interpdir=odir2;
+          edgedir=odir1;
 
-	  // del's associated with interpolation direction
-	  idel=idel2;
-	  jdel=jdel2;
-	  kdel=kdel2;
-	}
-
-
-
-	//////////////////////
-	//
-	// set EMFodir's
-	//
-	//////////////////////
-	get_odirs(edgedir,&EMFodir1,&EMFodir2);
+          // del's associated with interpolation direction
+          idel=idel2;
+          jdel=jdel2;
+          kdel=kdel2;
+        }
 
 
 
-	//////////////////////
-	//
-	//    Setup access to emf-like quantities that have 3-dimensions and going to 2-dimensions
-	//
-	//////////////////////
-
-	if(EMFodir1==interpdir){
-	  // then first entry should contain 0/1 for *current* interpolation
-	  // then EMFodir1 is interpdir corresponding to direction for current interpolation
-	  // then EMFodir2 is face-dir corresponding to direction for previous interpolation
-	  Aodir1=0; Aodir2=0;
-	  Bodir1=1; Bodir2=0;
-	  Codir1=0; Codir2=1;
-	  Dodir1=1; Dodir2=1;
-	}
-	else{
-	  // then first entry should contain 0/1 for *previous* interpolation
-	  // then EMFodir1 is face-dir corresponding to direction for previous interpolation
-	  // then EMFodir2 is interpdir corresponding to direction for current interpolation
-	  Aodir1=0; Aodir2=0;
-	  Bodir1=0; Bodir2=1;
-	  Codir1=1; Codir2=0;
-	  Dodir1=1; Dodir2=1;
-	}
+        //////////////////////
+        //
+        // set EMFodir's
+        //
+        //////////////////////
+        get_odirs(edgedir,&EMFodir1,&EMFodir2);
 
 
 
+        //////////////////////
+        //
+        //    Setup access to emf-like quantities that have 3-dimensions and going to 2-dimensions
+        //
+        //////////////////////
 
-	//////////////////////
-	// interpolate    
-	//
-	// GODMARK: Note put primface_l[dir] (yes, face-dir) into slope_lim as a "good primitive" to be used for shock or other indicators -- should really use average of primface_l and primface_r for symmetry considerations -- otherwise not used -- ENOMARK
-	//
-	// only really do interpolation if dimension exists ...
-	//////////////////////
-	//	 (Nvec[interpdir]>1 && (! (Nvec[edgedir]==1 && Nvec[dir]==1) ))      // ... or even if dimension exists but orthogonal dimensions do not then just copy over result -- need to modify more things to do this
-	//      if(Nvec[interpdir]>1){
+        if(EMFodir1==interpdir){
+          // then first entry should contain 0/1 for *current* interpolation
+          // then EMFodir1 is interpdir corresponding to direction for current interpolation
+          // then EMFodir2 is face-dir corresponding to direction for previous interpolation
+          Aodir1=0; Aodir2=0;
+          Bodir1=1; Bodir2=0;
+          Codir1=0; Codir2=1;
+          Dodir1=1; Dodir2=1;
+        }
+        else{
+          // then first entry should contain 0/1 for *previous* interpolation
+          // then EMFodir1 is face-dir corresponding to direction for previous interpolation
+          // then EMFodir2 is interpdir corresponding to direction for current interpolation
+          Aodir1=0; Aodir2=0;
+          Bodir1=0; Bodir2=1;
+          Codir1=1; Codir2=0;
+          Dodir1=1; Dodir2=1;
+        }
 
-	// if Nvec[dir]==1, then that face quantity is really a centered quantity in some CORN plane.  See below for how assignment is done.
 
-	if(!(Nvec[interpdir]==1 || Nvec[dir]==1&&Nvec[interpdir]!=1   )){
-	  realisinterp=0; // since only ever limited set of quantities
-	  slope_lim_face2corn(realisinterp, interpdir,idel,jdel,kdel,pr,p2interp,dqvec[interpdir],pleft,pright, &(face2cornloop[edgedir][EMFodir1][EMFodir2]));
-	}
+
+
+        //////////////////////
+        // interpolate    
+        //
+        // GODMARK: Note put primface_l[dir] (yes, face-dir) into slope_lim as a "good primitive" to be used for shock or other indicators -- should really use average of primface_l and primface_r for symmetry considerations -- otherwise not used -- ENOMARK
+        //
+        // only really do interpolation if dimension exists ...
+        //////////////////////
+        //  (Nvec[interpdir]>1 && (! (Nvec[edgedir]==1 && Nvec[dir]==1) ))      // ... or even if dimension exists but orthogonal dimensions do not then just copy over result -- need to modify more things to do this
+        //      if(Nvec[interpdir]>1){
+
+        // if Nvec[dir]==1, then that face quantity is really a centered quantity in some CORN plane.  See below for how assignment is done.
+
+        if(!(Nvec[interpdir]==1 || Nvec[dir]==1&&Nvec[interpdir]!=1   )){
+          realisinterp=0; // since only ever limited set of quantities
+          slope_lim_face2corn(realisinterp, interpdir,idel,jdel,kdel,pr,p2interp,dqvec[interpdir],pleft,pright, &(face2cornloop[edgedir][EMFodir1][EMFodir2]));
+        }
 
 
 
   
 
-	///////////////////
-	// get p_l p_r
-	//////////////////////////////////////
-	//
-	// interpolate primitive using slope (dq) or directly from pleft and pright
-	//
-	/////////////////////////////////////
-	
-	// Assume for now that limiter is not per i,j,k but only per dir (unlike normal interpolation) (also no pl dependence)
-	// no HORIZONSUPERFAST here
-	locallim=choose_limiter(interpdir, 0,0,0,B1);
-	usedq=(locallim<PARA)&&(LIMADJUST==0);
+        ///////////////////
+        // get p_l p_r
+        //////////////////////////////////////
+        //
+        // interpolate primitive using slope (dq) or directly from pleft and pright
+        //
+        /////////////////////////////////////
+ 
+        // Assume for now that limiter is not per i,j,k but only per dir (unlike normal interpolation) (also no pl dependence)
+        // no HORIZONSUPERFAST here
+        locallim=choose_limiter(interpdir, 0,0,0,B1);
+        usedq=(locallim<PARA)&&(LIMADJUST==0);
 
 
-	// face2corn is at effective-CENT relative to edgedir
-	// loop below will be at effective-FACEs, so extended in interpdir direction
-	// One shifts up in interpdir direction because interpolated -1 extra "CENT" cell and N "CENT" cell to get corner at 0 and N.
-	if(!(Nvec[interpdir]==1|| Nvec[dir]==1&&Nvec[interpdir]!=1  )){
-	  is=face2cornloop[edgedir][EMFodir1][EMFodir2].is + SHIFT1*(interpdir==1);
-	  ie=face2cornloop[edgedir][EMFodir1][EMFodir2].ie;
-	  js=face2cornloop[edgedir][EMFodir1][EMFodir2].js + SHIFT2*(interpdir==2);
-	  je=face2cornloop[edgedir][EMFodir1][EMFodir2].je;
-	  ks=face2cornloop[edgedir][EMFodir1][EMFodir2].ks + SHIFT3*(interpdir==3);
-	  ke=face2cornloop[edgedir][EMFodir1][EMFodir2].ke;
-	}
-	else{
-	  // since just copying, revert to locations where interpolated CENT -> FACE
-	  // Note that +SHIFT term just translates pleft/pright type locations to p_l/p_r type locations
-	  is=cent2faceloop[interpdir].is + SHIFT1*(interpdir==1);
-	  ie=cent2faceloop[interpdir].ie;
-	  js=cent2faceloop[interpdir].js + SHIFT2*(interpdir==2);
-	  je=cent2faceloop[interpdir].je;
-	  ks=cent2faceloop[interpdir].ks + SHIFT3*(interpdir==3);
-	  ke=cent2faceloop[interpdir].ke;
-	  //	  is=-N1BND+idel;
-	  //	  ie=N1-1+N1BND;
-	  //	  js=-N2BND+jdel;
-	  //	  je=N2-1+N2BND;
-	  //	  ks=-N3BND+kdel;
-	  //	  ke=N3-1+N3BND;
-	}
+        // face2corn is at effective-CENT relative to edgedir
+        // loop below will be at effective-FACEs, so extended in interpdir direction
+        // One shifts up in interpdir direction because interpolated -1 extra "CENT" cell and N "CENT" cell to get corner at 0 and N.
+        if(!(Nvec[interpdir]==1|| Nvec[dir]==1&&Nvec[interpdir]!=1  )){
+          is=face2cornloop[edgedir][EMFodir1][EMFodir2].is + SHIFT1*(interpdir==1);
+          ie=face2cornloop[edgedir][EMFodir1][EMFodir2].ie;
+          js=face2cornloop[edgedir][EMFodir1][EMFodir2].js + SHIFT2*(interpdir==2);
+          je=face2cornloop[edgedir][EMFodir1][EMFodir2].je;
+          ks=face2cornloop[edgedir][EMFodir1][EMFodir2].ks + SHIFT3*(interpdir==3);
+          ke=face2cornloop[edgedir][EMFodir1][EMFodir2].ke;
+        }
+        else{
+          // since just copying, revert to locations where interpolated CENT -> FACE
+          // Note that +SHIFT term just translates pleft/pright type locations to p_l/p_r type locations
+          is=cent2faceloop[interpdir].is + SHIFT1*(interpdir==1);
+          ie=cent2faceloop[interpdir].ie;
+          js=cent2faceloop[interpdir].js + SHIFT2*(interpdir==2);
+          je=cent2faceloop[interpdir].je;
+          ks=cent2faceloop[interpdir].ks + SHIFT3*(interpdir==3);
+          ke=cent2faceloop[interpdir].ke;
+          //   is=-N1BND+idel;
+          //   ie=N1-1+N1BND;
+          //   js=-N2BND+jdel;
+          //   je=N2-1+N2BND;
+          //   ks=-N3BND+kdel;
+          //   ke=N3-1+N3BND;
+        }
 
-	//	dualfprintf(fail_file,"edgedir=%d EMFodir1=%d EMFodir2=%d :: is=%d ie=%d js=%d je=%d ks=%d ke=%d\n",edgedir,EMFodir1,EMFodir2,is,ie,js,je,ks,ke);
-	
-	///////	COMPZSLOOP( -N1BND+idel, N1-1+N1BND, -N2BND+jdel, N2-1+N2BND, -N3BND+kdel, N3-1+N3BND ){
-	//	OPENMP3DLOOPSETUP( -N1BND+idel, N1-1+N1BND, -N2BND+jdel, N2-1+N2BND, -N3BND+kdel, N3-1+N3BND );
-	OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
+        // dualfprintf(fail_file,"edgedir=%d EMFodir1=%d EMFodir2=%d :: is=%d ie=%d js=%d je=%d ks=%d ke=%d\n",edgedir,EMFodir1,EMFodir2,is,ie,js,je,ks,ke);
+ 
+        /////// COMPZSLOOP( -N1BND+idel, N1-1+N1BND, -N2BND+jdel, N2-1+N2BND, -N3BND+kdel, N3-1+N3BND ){
+        // OPENMP3DLOOPSETUP( -N1BND+idel, N1-1+N1BND, -N2BND+jdel, N2-1+N2BND, -N3BND+kdel, N3-1+N3BND );
+        OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) //nowait // Don't wait since each direction is independent // NO: use of pleft, pright, and some use of p2interp (that depend on each dir) from loop above makes not possible to use "nowait"
-	OPENMP3DLOOPBLOCK{
-	  OPENMP3DLOOPBLOCK2IJK(i,j,k);
+        OPENMP3DLOOPBLOCK{
+          OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
-	  
-	  //	if(Nvec[interpdir]>1 && (! (Nvec[edgedir]==1 && Nvec[dir]==1) ))
-	  //	if(Nvec[interpdir]>1){
-	  if(!(Nvec[interpdir]==1|| Nvec[dir]==1&&Nvec[interpdir]!=1  )){
+   
+          // if(Nvec[interpdir]>1 && (! (Nvec[edgedir]==1 && Nvec[dir]==1) ))
+          // if(Nvec[interpdir]>1){
+          if(!(Nvec[interpdir]==1|| Nvec[dir]==1&&Nvec[interpdir]!=1  )){
 
-	    if(usedq){
-	      PINTERPLOOP(pliter,pl){
-		// FACE_to_CORN interpolation is same as if doing CENT_to_EDGE from point of view of indicies to use and pleft,pright assignments
-		p2interp_l[pl] = MACP0A1(p2interp,i - idel,j - jdel,k - kdel,pl) + 0.5 * MACP1A1(dqvec,interpdir,i - idel,j - jdel,k - kdel,pl);
-		p2interp_r[pl] = MACP0A1(p2interp,i,j,k,pl) - 0.5 * MACP1A1(dqvec,interpdir,i,j,k,pl);
-	      }
-	    }
-	    else{
-	      PINTERPLOOP(pliter,pl){
-		p2interp_l[pl] = MACP0A1(pright,i-idel,j-jdel,k-kdel,pl);
-		p2interp_r[pl] = MACP0A1(pleft,i,j,k,pl);
-	      }
-	    }
+            if(usedq){
+              PINTERPLOOP(pliter,pl){
+                // FACE_to_CORN interpolation is same as if doing CENT_to_EDGE from point of view of indicies to use and pleft,pright assignments
+                p2interp_l[pl] = MACP0A1(p2interp,i - idel,j - jdel,k - kdel,pl) + 0.5 * MACP1A1(dqvec,interpdir,i - idel,j - jdel,k - kdel,pl);
+                p2interp_r[pl] = MACP0A1(p2interp,i,j,k,pl) - 0.5 * MACP1A1(dqvec,interpdir,i,j,k,pl);
+              }
+            }
+            else{
+              PINTERPLOOP(pliter,pl){
+                p2interp_l[pl] = MACP0A1(pright,i-idel,j-jdel,k-kdel,pl);
+                p2interp_r[pl] = MACP0A1(pleft,i,j,k,pl);
+              }
+            }
 
-	  }
-	  else if(Nvec[interpdir]==1){
+          }
+          else if(Nvec[interpdir]==1){
 
-	    // if no interpolation, just copy result from pre-interpolated p2interp[] avoiding,bypassing dq,pleft,pright
-	    PINTERPLOOP(pliter,pl){
-	      p2interp_r[pl] = p2interp_l[pl] = MACP0A1(p2interp,i,j,k,pl);
-	    }
-
-
-
-	  }
-	  else if(Nvec[dir]==1&&Nvec[interpdir]!=1){
-
-	    // if interpolation already done, just copy over left-right values from cent2face operation
-	    // E.g. If N1==1 and dir==1, then B1,v2 are already interpolated with interpdir==2 to CORN3=FACE2 *and* B1,v3 are already interpolated with interpdir==3 to CORN2=FACE3.
-	    // E.g. If N2==1 and dir==2, then B2,v1 are already interpolated with interpdir==1 to CORN3=FACE1 *and* B2,v3 are already interpolated with interpdir==3 to CORN1=FACE3.
-	    // E.g. If N3==1 and dir==3, then B3,v1 are already interpolated with interpdir==1 to CORN2=FACE1 *and* B3,v2 are already interpolated with interpdir==2 to CORN1=FACE2.
-	    // 
-	    // Since face is the corner we want, so same ptrgeomf is good.  That is, FACE1-1+dir = desired CORN.
-	    // But needed to change l/r dir from "dir" to "interpdir"
-
-	    // Have to compute v^i=u^i/u^t here since didn't know interpdir in earlier part of this whole function
-	    prface_l=MACP1A0(primface_l,interpdir,i,j,k);
-	    prface_r=MACP1A0(primface_r,interpdir,i,j,k);
+            // if no interpolation, just copy result from pre-interpolated p2interp[] avoiding,bypassing dq,pleft,pright
+            PINTERPLOOP(pliter,pl){
+              p2interp_r[pl] = p2interp_l[pl] = MACP0A1(p2interp,i,j,k,pl);
+            }
 
 
-	    // get geometry for face pre-interpolated values
+
+          }
+          else if(Nvec[dir]==1&&Nvec[interpdir]!=1){
+
+            // if interpolation already done, just copy over left-right values from cent2face operation
+            // E.g. If N1==1 and dir==1, then B1,v2 are already interpolated with interpdir==2 to CORN3=FACE2 *and* B1,v3 are already interpolated with interpdir==3 to CORN2=FACE3.
+            // E.g. If N2==1 and dir==2, then B2,v1 are already interpolated with interpdir==1 to CORN3=FACE1 *and* B2,v3 are already interpolated with interpdir==3 to CORN1=FACE3.
+            // E.g. If N3==1 and dir==3, then B3,v1 are already interpolated with interpdir==1 to CORN2=FACE1 *and* B3,v2 are already interpolated with interpdir==2 to CORN1=FACE2.
+            // 
+            // Since face is the corner we want, so same ptrgeomf is good.  That is, FACE1-1+dir = desired CORN.
+            // But needed to change l/r dir from "dir" to "interpdir"
+
+            // Have to compute v^i=u^i/u^t here since didn't know interpdir in earlier part of this whole function
+            prface_l=MACP1A0(primface_l,interpdir,i,j,k);
+            prface_r=MACP1A0(primface_r,interpdir,i,j,k);
+
+
+            // get geometry for face pre-interpolated values
 #if(STOREFLUXSTATE==0)
-	    get_geometry(i, j, k, FACE1-1+dir, ptrgeomf); // at face[dir]=CORN(perp to dir and interpdir)
-	    MYFUN(ucon_calc(prface_l, ptrgeomf, ptrql->ucon, ptrql->others) ,"flux.c:interpolate_face2corn()", "ucon_calc()", 1);
-	    MYFUN(ucon_calc(prface_r, ptrgeomf, ptrqr->ucon, ptrqr->others) ,"flux.c:interpolate_face2corn()", "ucon_calc()", 2);
+            get_geometry(i, j, k, FACE1-1+dir, ptrgeomf); // at face[dir]=CORN(perp to dir and interpdir)
+            MYFUN(ucon_calc(prface_l, ptrgeomf, ptrql->ucon, ptrql->others) ,"flux.c:interpolate_face2corn()", "ucon_calc()", 1);
+            MYFUN(ucon_calc(prface_r, ptrgeomf, ptrqr->ucon, ptrqr->others) ,"flux.c:interpolate_face2corn()", "ucon_calc()", 2);
 #else
 
-	    ptrgeomf->i=i;
-	    ptrgeomf->j=j;
-	    ptrgeomf->k=k;
-	    ptrgeomf->p=FACE1-1+dir; // "p" not used by get_stateforfluxcalc()
+            ptrgeomf->i=i;
+            ptrgeomf->j=j;
+            ptrgeomf->k=k;
+            ptrgeomf->p=FACE1-1+dir; // "p" not used by get_stateforfluxcalc()
 
-	    get_stateforfluxcalc(interpdir, ISLEFT, prface_l, ptrgeomf, &ptrql);
-	    get_stateforfluxcalc(interpdir, ISRIGHT, prface_r, ptrgeomf, &ptrqr);
+            get_stateforfluxcalc(interpdir, ISLEFT, prface_l, ptrgeomf, &ptrql);
+            get_stateforfluxcalc(interpdir, ISRIGHT, prface_r, ptrgeomf, &ptrqr);
 
-	    // Just always do to avoid complicated conditional
-	    // as when storing, still at original face locations already interpolated/computed during normal flux calculation
-	    get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgdetgeomf); // at face[dir]
+            // Just always do to avoid complicated conditional
+            // as when storing, still at original face locations already interpolated/computed during normal flux calculation
+            get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgdetgeomf); // at face[dir]
 
 
 #endif
 
-	    // now copy over values
-	    p2interp_l[BFACEINTERPCURRENT] = prface_l[B1-1+dir];
-	    p2interp_r[BFACEINTERPCURRENT] = prface_r[B1-1+dir];
-	    // applying gdet if just copying result so same application of factors as when setting up p2interp[]
-	    if(INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELDswitchuniboth(dir,interpdir)){
-	      p2interp_l[BFACEINTERPCURRENT] *= (ptrgdetgeomf->gdet);
-	      p2interp_r[BFACEINTERPCURRENT] *= (ptrgdetgeomf->gdet);
-	    }
+            // now copy over values
+            p2interp_l[BFACEINTERPCURRENT] = prface_l[B1-1+dir];
+            p2interp_r[BFACEINTERPCURRENT] = prface_r[B1-1+dir];
+            // applying gdet if just copying result so same application of factors as when setting up p2interp[]
+            if(INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELDswitchuniboth(dir,interpdir)){
+              p2interp_l[BFACEINTERPCURRENT] *= (ptrgdetgeomf->gdet);
+              p2interp_r[BFACEINTERPCURRENT] *= (ptrgdetgeomf->gdet);
+            }
 
-	    // [1,2] are from previous (i.e. face) interpolation.  But if Nvec[dir=facedir]=1, then those are same values
-	    // as above setup has, always dealing with v^{interpdir}
-	    // here, the l,r indicate across interpdir (not dir as otherwise when requiring interpolation)
-	    p2interp_l[npr2interplist[1]] = p2interp_l[npr2interplist[2]] = (ptrql->ucon[interpdir])/(ptrql->ucon[TT]);
-	    p2interp_r[npr2interplist[1]] = p2interp_r[npr2interplist[2]] = (ptrqr->ucon[interpdir])/(ptrqr->ucon[TT]);
-	    // applying gdet if just copying result so same application of factors as when setting up p2interp[]
-	    if(INCLUDEGDETINTRANSVERSEINTERPLATIONOFVELOCITYswitchuniboth(dir,odir1) && npr2interplist[1]==VLODIR1INTERP || INCLUDEGDETINTRANSVERSEINTERPLATIONOFVELOCITYswitchuniboth(dir,odir2) && npr2interplist[1]==VLODIR2INTERP){
-	      p2interp_l[npr2interplist[1]] *= (ptrgdetgeomf->gdet);
-	      p2interp_l[npr2interplist[2]] *= (ptrgdetgeomf->gdet);
-	      p2interp_r[npr2interplist[1]] *= (ptrgdetgeomf->gdet);
-	      p2interp_r[npr2interplist[2]] *= (ptrgdetgeomf->gdet);
-	    }
-	  }
-	  else{
-	    dualfprintf(fail_file,"Shouldn't reach here in fluxctstag.c\n");
-	    myexit(837434873);
-	  }
-
-
-
-	  //////////////////////////////////////
-	  // DONE with interpolations or copies
-	  //////////////////////////////////////
+            // [1,2] are from previous (i.e. face) interpolation.  But if Nvec[dir=facedir]=1, then those are same values
+            // as above setup has, always dealing with v^{interpdir}
+            // here, the l,r indicate across interpdir (not dir as otherwise when requiring interpolation)
+            p2interp_l[npr2interplist[1]] = p2interp_l[npr2interplist[2]] = (ptrql->ucon[interpdir])/(ptrql->ucon[TT]);
+            p2interp_r[npr2interplist[1]] = p2interp_r[npr2interplist[2]] = (ptrqr->ucon[interpdir])/(ptrqr->ucon[TT]);
+            // applying gdet if just copying result so same application of factors as when setting up p2interp[]
+            if(INCLUDEGDETINTRANSVERSEINTERPLATIONOFVELOCITYswitchuniboth(dir,odir1) && npr2interplist[1]==VLODIR1INTERP || INCLUDEGDETINTRANSVERSEINTERPLATIONOFVELOCITYswitchuniboth(dir,odir2) && npr2interplist[1]==VLODIR2INTERP){
+              p2interp_l[npr2interplist[1]] *= (ptrgdetgeomf->gdet);
+              p2interp_l[npr2interplist[2]] *= (ptrgdetgeomf->gdet);
+              p2interp_r[npr2interplist[1]] *= (ptrgdetgeomf->gdet);
+              p2interp_r[npr2interplist[2]] *= (ptrgdetgeomf->gdet);
+            }
+          }
+          else{
+            dualfprintf(fail_file,"Shouldn't reach here in fluxctstag.c\n");
+            myexit(837434873);
+          }
 
 
 
-	  ////////////////////
-	  //
-	  // Set lab-frame 3-magnetic field at CORN
-	  //
-	  // MACP1A3(pbcorn,corner/emf/edge dir,i,j,k,which field,+-present interpdir)
-
-	  int didsetigdet;
-	  didsetigdet=0;
-	  if(INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELDswitchuniboth(dir,interpdir)==1 && CORNGDETVERSION==1){	    
-	    get_geometry_gdetonly(i, j, k, CORN1-1+edgedir, ptrgdetgeomcorn); // at CORN[dir]
-	    // then unrescale field since will multiply geometry once have final EMF (avoids line currents)
-	    set_igdetsimple(ptrgdetgeomcorn);
-	    igdetgnosing = ptrgdetgeomcorn->igdetnosing;
-	    didsetigdet=1;
-	  }
-	  else if(INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELDswitchuniboth(dir,interpdir)==0 && CORNGDETVERSION==0){
-	    get_geometry_gdetonly(i, j, k, CORN1-1+edgedir, ptrgdetgeomcorn); // at CORN[dir]
-	    // then add gdet now since will not multiply geometry once have final EMF
-	    igdetgnosing = ptrgdetgeomcorn->gdet; // here igdet really is just geom
-	  }
-	  else{
-	    // nothing to do
-	    igdetgnosing = 1.0;
-	  }
-
-
-	  //	  MACP3A0(pbcorn,edgedir,B1-1+dir,0,i,j,k) = p2interp_l[npr2interplist[0]]*igdetgnosing;
-	  //	  MACP3A0(pbcorn,edgedir,B1-1+dir,1,i,j,k) = p2interp_r[npr2interplist[0]]*igdetgnosing;
-	  MACP1A3(pvbcorn,edgedir,i,j,k,dir,NUMCS,0) = p2interp_l[npr2interplist[0]]*igdetgnosing;
-	  MACP1A3(pvbcorn,edgedir,i,j,k,dir,NUMCS,1) = p2interp_r[npr2interplist[0]]*igdetgnosing;
+          //////////////////////////////////////
+          // DONE with interpolations or copies
+          //////////////////////////////////////
 
 
 
+          ////////////////////
+          //
+          // Set lab-frame 3-magnetic field at CORN
+          //
+          // MACP1A3(pbcorn,corner/emf/edge dir,i,j,k,which field,+-present interpdir)
 
-	  ////////////////////
-	  //
-	  // Set lab-frame 3-velocity at CORN
-	  //
-	  //      pvcorn[EMFdir][i][j][k][whichvel][l/r in EMFodir1][u/d in EMFodir2]
-	  //
-	  // for example:
-	  // edgedir=1: EMFodir1=2 EMFodir2=3 then emf[0][0] is emf[left for EMFodir1][left for EMFodir2]
-	  // so if interpolated in 2-dir and EMFodir1==2, then emf[0/1 filled with current p_l and p_r][0/1 filled with previous p_l p_r]
-
-
-	  // de-applying any gdet factor
-	  if(INCLUDEGDETINTRANSVERSEINTERPLATIONOFVELOCITYswitchuniboth(dir,odir1) && npr2interplist[1]==VLODIR1INTERP || INCLUDEGDETINTRANSVERSEINTERPLATIONOFVELOCITYswitchuniboth(dir,odir2) && npr2interplist[1]==VLODIR2INTERP){
-	    if(didsetigdet){
-	      igdetgnosingvel=igdetgnosing;
-	    }
-	    else{
-	      get_geometry_gdetonly(i, j, k, CORN1-1+edgedir, ptrgdetgeomcorn); // at CORN[dir]
-	      set_igdetsimple(ptrgdetgeomcorn);
-	      igdetgnosingvel = ptrgdetgeomcorn->igdetnosing;
-	    }
-	  }
-	  else igdetgnosingvel=1.0;
-
-
-	  // npr2interplist[1,2] constains [u,d for velocity in interpdir direction]	
-	  MACP1A3(pvbcorn,edgedir,i,j,k,interpdir,Aodir1,Aodir2) = p2interp_l[npr2interplist[1]] *= igdetgnosingvel; // current p_l for previous p_l 
-	  MACP1A3(pvbcorn,edgedir,i,j,k,interpdir,Bodir1,Bodir2) = p2interp_r[npr2interplist[1]] *= igdetgnosingvel; // current p_r for previous p_l
-	  MACP1A3(pvbcorn,edgedir,i,j,k,interpdir,Codir1,Codir2) = p2interp_l[npr2interplist[2]] *= igdetgnosingvel; // current p_l for previous p_r
-	  MACP1A3(pvbcorn,edgedir,i,j,k,interpdir,Dodir1,Dodir2) = p2interp_r[npr2interplist[2]] *= igdetgnosingvel; // current p_r for previous p_r
+          int didsetigdet;
+          didsetigdet=0;
+          if(INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELDswitchuniboth(dir,interpdir)==1 && CORNGDETVERSION==1){     
+            get_geometry_gdetonly(i, j, k, CORN1-1+edgedir, ptrgdetgeomcorn); // at CORN[dir]
+            // then unrescale field since will multiply geometry once have final EMF (avoids line currents)
+            set_igdetsimple(ptrgdetgeomcorn);
+            igdetgnosing = ptrgdetgeomcorn->igdetnosing;
+            didsetigdet=1;
+          }
+          else if(INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELDswitchuniboth(dir,interpdir)==0 && CORNGDETVERSION==0){
+            get_geometry_gdetonly(i, j, k, CORN1-1+edgedir, ptrgdetgeomcorn); // at CORN[dir]
+            // then add gdet now since will not multiply geometry once have final EMF
+            igdetgnosing = ptrgdetgeomcorn->gdet; // here igdet really is just geom
+          }
+          else{
+            // nothing to do
+            igdetgnosing = 1.0;
+          }
 
 
+          //   MACP3A0(pbcorn,edgedir,B1-1+dir,0,i,j,k) = p2interp_l[npr2interplist[0]]*igdetgnosing;
+          //   MACP3A0(pbcorn,edgedir,B1-1+dir,1,i,j,k) = p2interp_r[npr2interplist[0]]*igdetgnosing;
+          MACP1A3(pvbcorn,edgedir,i,j,k,dir,NUMCS,0) = p2interp_l[npr2interplist[0]]*igdetgnosing;
+          MACP1A3(pvbcorn,edgedir,i,j,k,dir,NUMCS,1) = p2interp_r[npr2interplist[0]]*igdetgnosing;
 
-	}// endCOMPZSLOOP
+
+
+
+          ////////////////////
+          //
+          // Set lab-frame 3-velocity at CORN
+          //
+          //      pvcorn[EMFdir][i][j][k][whichvel][l/r in EMFodir1][u/d in EMFodir2]
+          //
+          // for example:
+          // edgedir=1: EMFodir1=2 EMFodir2=3 then emf[0][0] is emf[left for EMFodir1][left for EMFodir2]
+          // so if interpolated in 2-dir and EMFodir1==2, then emf[0/1 filled with current p_l and p_r][0/1 filled with previous p_l p_r]
+
+
+          // de-applying any gdet factor
+          if(INCLUDEGDETINTRANSVERSEINTERPLATIONOFVELOCITYswitchuniboth(dir,odir1) && npr2interplist[1]==VLODIR1INTERP || INCLUDEGDETINTRANSVERSEINTERPLATIONOFVELOCITYswitchuniboth(dir,odir2) && npr2interplist[1]==VLODIR2INTERP){
+            if(didsetigdet){
+              igdetgnosingvel=igdetgnosing;
+            }
+            else{
+              get_geometry_gdetonly(i, j, k, CORN1-1+edgedir, ptrgdetgeomcorn); // at CORN[dir]
+              set_igdetsimple(ptrgdetgeomcorn);
+              igdetgnosingvel = ptrgdetgeomcorn->igdetnosing;
+            }
+          }
+          else igdetgnosingvel=1.0;
+
+
+          // npr2interplist[1,2] constains [u,d for velocity in interpdir direction] 
+          MACP1A3(pvbcorn,edgedir,i,j,k,interpdir,Aodir1,Aodir2) = p2interp_l[npr2interplist[1]] *= igdetgnosingvel; // current p_l for previous p_l 
+          MACP1A3(pvbcorn,edgedir,i,j,k,interpdir,Bodir1,Bodir2) = p2interp_r[npr2interplist[1]] *= igdetgnosingvel; // current p_r for previous p_l
+          MACP1A3(pvbcorn,edgedir,i,j,k,interpdir,Codir1,Codir2) = p2interp_l[npr2interplist[2]] *= igdetgnosingvel; // current p_l for previous p_r
+          MACP1A3(pvbcorn,edgedir,i,j,k,interpdir,Dodir1,Dodir2) = p2interp_r[npr2interplist[2]] *= igdetgnosingvel; // current p_r for previous p_r
+
+
+
+        }// endCOMPZSLOOP
   
       }// end loop over (whichodir) other directions // at end of loop, have pbcorn,pvcorn for this 1 face interpolated to 2 corners
       
@@ -2410,30 +2410,30 @@ int interpolate_ustag2fieldcent_donor
     PLOOPBONLY(pl){
       get_geometry(i, j, k, FACE1+pl-B1, ptrgeomf);
       if(pl==B1){
-	ii=ip1mac(i);
-	jj=j;
-	kk=k;
+        ii=ip1mac(i);
+        jj=j;
+        kk=k;
       }
       else if(pl==B2){
-	ii=i;
-	jj=jp1mac(j);
-	kk=k;
+        ii=i;
+        jj=jp1mac(j);
+        kk=k;
       }
       else if(pl==B3){
-	ii=i;
-	jj=j;
-	kk=kp1mac(k);
+        ii=i;
+        jj=j;
+        kk=kp1mac(k);
       }
 
       if(ii==i && jj==j && kk==k){
-	// then just copy
-	MACP0A1(pcent,i,j,k,pl)=MACP0A1(pstag,i,j,k,pl);
+        // then just copy
+        MACP0A1(pcent,i,j,k,pl)=MACP0A1(pstag,i,j,k,pl);
       }
       else{
-	// now "interpolate" pstag -> pcent
-	get_geometry(ii, jj, kk, FACE1+pl-B1, ptrgeomfu);
-	// below consistent with interpolate_ustag2fieldcent(), but can try different way 
-	MACP0A1(pcent,i,j,k,pl)=0.5*( MACP0A1(pstag,i,j,k,pl)*(ptrgeomf->gdet/ptrgeomc->gdet) + MACP0A1(pstag,ii,jj,kk,pl)*(ptrgeomfu->gdet/ptrgeomc->gdet));
+        // now "interpolate" pstag -> pcent
+        get_geometry(ii, jj, kk, FACE1+pl-B1, ptrgeomfu);
+        // below consistent with interpolate_ustag2fieldcent(), but can try different way 
+        MACP0A1(pcent,i,j,k,pl)=0.5*( MACP0A1(pstag,i,j,k,pl)*(ptrgeomf->gdet/ptrgeomc->gdet) + MACP0A1(pstag,ii,jj,kk,pl)*(ptrgeomfu->gdet/ptrgeomc->gdet));
       }
 
       // finally get conserved quantity at CENT for inversion

@@ -71,25 +71,25 @@ int bound_flux_user(int boundstage, int finalstep, SFTYPE boundtime, int boundva
 
       LOOPX1dir{
 
-	// copy from upper side to lower boundary zones
-	ri=riout;
-	rj=j;
-	rk=k;
-	LOOPBOUND1IN PBOUNDLOOP(pliter,pl) MACP0A1(F1,i,j,k,pl) = MACP0A1(F1,ri+1+i,rj,rk,pl); // for i=0 -> i=N1
-	if(FLUXB==FLUXCTSTAG){
-	  if(N2>1) LOOPBOUND1IN PBOUNDLOOP(pliter,pl) MACP0A1(F2,i,j,k,pl) = MACP0A1(F2,ri+1+i,rj,rk,pl);
-	  if(N3>1) LOOPBOUND1IN PBOUNDLOOP(pliter,pl) MACP0A1(F3,i,j,k,pl) = MACP0A1(F3,ri+1+i,rj,rk,pl);
-	}
+        // copy from upper side to lower boundary zones
+        ri=riout;
+        rj=j;
+        rk=k;
+        LOOPBOUND1IN PBOUNDLOOP(pliter,pl) MACP0A1(F1,i,j,k,pl) = MACP0A1(F1,ri+1+i,rj,rk,pl); // for i=0 -> i=N1
+        if(FLUXB==FLUXCTSTAG){
+          if(N2>1) LOOPBOUND1IN PBOUNDLOOP(pliter,pl) MACP0A1(F2,i,j,k,pl) = MACP0A1(F2,ri+1+i,rj,rk,pl);
+          if(N3>1) LOOPBOUND1IN PBOUNDLOOP(pliter,pl) MACP0A1(F3,i,j,k,pl) = MACP0A1(F3,ri+1+i,rj,rk,pl);
+        }
 
-	// copy from lower side to upper boundary zones
-	ri=riin;
-	rj=j;
-	rk=k;
-	LOOPBOUND1OUT PBOUNDLOOP(pliter,pl) MACP0A1(F1,i,j,k,pl) = MACP0A1(F1,ri+(i-N1),rj,rk,pl); // for i=N1 -> i=0
-	if(FLUXB==FLUXCTSTAG){
-	  if(N2>1) LOOPBOUND1OUT PBOUNDLOOP(pliter,pl) MACP0A1(F2,i,j,k,pl) = MACP0A1(F2,ri+(i-N1),rj,rk,pl); // for i=N1 -> i=0
-	  if(N3>1) LOOPBOUND1OUT PBOUNDLOOP(pliter,pl) MACP0A1(F3,i,j,k,pl) = MACP0A1(F3,ri+(i-N1),rj,rk,pl); // for i=N1 -> i=0
-	}
+        // copy from lower side to upper boundary zones
+        ri=riin;
+        rj=j;
+        rk=k;
+        LOOPBOUND1OUT PBOUNDLOOP(pliter,pl) MACP0A1(F1,i,j,k,pl) = MACP0A1(F1,ri+(i-N1),rj,rk,pl); // for i=N1 -> i=0
+        if(FLUXB==FLUXCTSTAG){
+          if(N2>1) LOOPBOUND1OUT PBOUNDLOOP(pliter,pl) MACP0A1(F2,i,j,k,pl) = MACP0A1(F2,ri+(i-N1),rj,rk,pl); // for i=N1 -> i=0
+          if(N3>1) LOOPBOUND1OUT PBOUNDLOOP(pliter,pl) MACP0A1(F3,i,j,k,pl) = MACP0A1(F3,ri+(i-N1),rj,rk,pl); // for i=N1 -> i=0
+        }
       }
     }
   }
@@ -102,25 +102,25 @@ int bound_flux_user(int boundstage, int finalstep, SFTYPE boundtime, int boundva
 
       LOOPX2dir{
 
-	// copy from upper side to lower boundary zones
-	ri=i;
-	rj=rjout;
-	rk=k;
-	LOOPBOUND2IN PBOUNDLOOP(pliter,pl) MACP0A1(F2,i,j,k,pl) = MACP0A1(F2,ri,rj+1+j,rk,pl); // for j=0 -> j=N2
-	if(FLUXB==FLUXCTSTAG){
-	  if(N1>1) LOOPBOUND2IN PBOUNDLOOP(pliter,pl) MACP0A1(F1,i,j,k,pl) = MACP0A1(F1,ri,rj+1+j,rk,pl); // for j=0 -> j=N2
-	  if(N3>1) LOOPBOUND2IN PBOUNDLOOP(pliter,pl) MACP0A1(F3,i,j,k,pl) = MACP0A1(F3,ri,rj+1+j,rk,pl); // for j=0 -> j=N2
-	}
+        // copy from upper side to lower boundary zones
+        ri=i;
+        rj=rjout;
+        rk=k;
+        LOOPBOUND2IN PBOUNDLOOP(pliter,pl) MACP0A1(F2,i,j,k,pl) = MACP0A1(F2,ri,rj+1+j,rk,pl); // for j=0 -> j=N2
+        if(FLUXB==FLUXCTSTAG){
+          if(N1>1) LOOPBOUND2IN PBOUNDLOOP(pliter,pl) MACP0A1(F1,i,j,k,pl) = MACP0A1(F1,ri,rj+1+j,rk,pl); // for j=0 -> j=N2
+          if(N3>1) LOOPBOUND2IN PBOUNDLOOP(pliter,pl) MACP0A1(F3,i,j,k,pl) = MACP0A1(F3,ri,rj+1+j,rk,pl); // for j=0 -> j=N2
+        }
 
-	// copy from lower side to upper boundary zones
-	ri=i;
-	rj=rjin;
-	rk=k;
-	LOOPBOUND2OUT PBOUNDLOOP(pliter,pl) MACP0A1(F2,i,j,k,pl) = MACP0A1(F2,ri,rj+(j-N2),rk,pl); // for j=N2 -> j=0
-	if(FLUXB==FLUXCTSTAG){
-	  if(N1>1) LOOPBOUND2OUT PBOUNDLOOP(pliter,pl) MACP0A1(F1,i,j,k,pl) = MACP0A1(F1,ri,rj+(j-N2),rk,pl); // for j=N2 -> j=0
-	  if(N3>1) LOOPBOUND2OUT PBOUNDLOOP(pliter,pl) MACP0A1(F3,i,j,k,pl) = MACP0A1(F3,ri,rj+(j-N2),rk,pl); // for j=N2 -> j=0
-	}
+        // copy from lower side to upper boundary zones
+        ri=i;
+        rj=rjin;
+        rk=k;
+        LOOPBOUND2OUT PBOUNDLOOP(pliter,pl) MACP0A1(F2,i,j,k,pl) = MACP0A1(F2,ri,rj+(j-N2),rk,pl); // for j=N2 -> j=0
+        if(FLUXB==FLUXCTSTAG){
+          if(N1>1) LOOPBOUND2OUT PBOUNDLOOP(pliter,pl) MACP0A1(F1,i,j,k,pl) = MACP0A1(F1,ri,rj+(j-N2),rk,pl); // for j=N2 -> j=0
+          if(N3>1) LOOPBOUND2OUT PBOUNDLOOP(pliter,pl) MACP0A1(F3,i,j,k,pl) = MACP0A1(F3,ri,rj+(j-N2),rk,pl); // for j=N2 -> j=0
+        }
       }
     }
   }
@@ -133,25 +133,25 @@ int bound_flux_user(int boundstage, int finalstep, SFTYPE boundtime, int boundva
 
       LOOPF_12{
 
-	// copy from upper side to lower boundary zones
-	ri=i;
-	rj=j;
-	rk=rkout;
-	LOOPBOUND3IN PBOUNDLOOP(pliter,pl) MACP0A1(F3,i,j,k,pl) = MACP0A1(F3,ri,rj,rk+1+k,pl); // for k=0 -> k=N3
-	if(FLUXB==FLUXCTSTAG){
-	  if(N1>1) LOOPBOUND3IN PBOUNDLOOP(pliter,pl) MACP0A1(F1,i,j,k,pl) = MACP0A1(F1,ri,rj,rk+1+k,pl); // for k=0 -> k=N3
-	  if(N2>1) LOOPBOUND3IN PBOUNDLOOP(pliter,pl) MACP0A1(F2,i,j,k,pl) = MACP0A1(F2,ri,rj,rk+1+k,pl); // for k=0 -> k=N3
-	}
+        // copy from upper side to lower boundary zones
+        ri=i;
+        rj=j;
+        rk=rkout;
+        LOOPBOUND3IN PBOUNDLOOP(pliter,pl) MACP0A1(F3,i,j,k,pl) = MACP0A1(F3,ri,rj,rk+1+k,pl); // for k=0 -> k=N3
+        if(FLUXB==FLUXCTSTAG){
+          if(N1>1) LOOPBOUND3IN PBOUNDLOOP(pliter,pl) MACP0A1(F1,i,j,k,pl) = MACP0A1(F1,ri,rj,rk+1+k,pl); // for k=0 -> k=N3
+          if(N2>1) LOOPBOUND3IN PBOUNDLOOP(pliter,pl) MACP0A1(F2,i,j,k,pl) = MACP0A1(F2,ri,rj,rk+1+k,pl); // for k=0 -> k=N3
+        }
 
-	// copy from lower side to upper boundary zones
-	ri=i;
-	rj=j;
-	rk=rkin;
-	LOOPBOUND3OUT PBOUNDLOOP(pliter,pl) MACP0A1(F3,i,j,k,pl) = MACP0A1(F3,ri,rj,rk+(k-N3),pl); // for k=N3 -> k=0
-	if(FLUXB==FLUXCTSTAG){
-	  if(N1>1) LOOPBOUND3OUT PBOUNDLOOP(pliter,pl) MACP0A1(F1,i,j,k,pl) = MACP0A1(F1,ri,rj,rk+(k-N3),pl); // for k=N3 -> k=0
-	  if(N2>1) LOOPBOUND3OUT PBOUNDLOOP(pliter,pl) MACP0A1(F2,i,j,k,pl) = MACP0A1(F2,ri,rj,rk+(k-N3),pl); // for k=N3 -> k=0
-	}
+        // copy from lower side to upper boundary zones
+        ri=i;
+        rj=j;
+        rk=rkin;
+        LOOPBOUND3OUT PBOUNDLOOP(pliter,pl) MACP0A1(F3,i,j,k,pl) = MACP0A1(F3,ri,rj,rk+(k-N3),pl); // for k=N3 -> k=0
+        if(FLUXB==FLUXCTSTAG){
+          if(N1>1) LOOPBOUND3OUT PBOUNDLOOP(pliter,pl) MACP0A1(F1,i,j,k,pl) = MACP0A1(F1,ri,rj,rk+(k-N3),pl); // for k=N3 -> k=0
+          if(N2>1) LOOPBOUND3OUT PBOUNDLOOP(pliter,pl) MACP0A1(F2,i,j,k,pl) = MACP0A1(F2,ri,rj,rk+(k-N3),pl); // for k=N3 -> k=0
+        }
       }
     }
   }
@@ -173,44 +173,44 @@ int bound_flux_user(int boundstage, int finalstep, SFTYPE boundtime, int boundva
     if(((BCtype[X1DN]==OUTFLOW || BCtype[X1DN]==HORIZONOUTFLOW))||(BCtype[X1DN]==FIXEDOUTFLOW)||(BCtype[X1DN]==FIXED)){  //SASMARK: FIXED is not supposed to be here but need to assign sth to fluxes
       /* inner r boundary condition: u, just copy */
       LOOPX1dir{
-	ri=riin;
-	rj=j;
-	rk=k;
-	LOOPBOUND1IN PBOUNDLOOP(pliter,pl){
+        ri=riin;
+        rj=j;
+        rk=k;
+        LOOPBOUND1IN PBOUNDLOOP(pliter,pl){
 #if(EXTRAP==0)
-	  // zeroth orde extrap
-	  MACP0A1(F1,i,j,k,pl) = MACP0A1(F1,ri,rj,rk,pl);
+          // zeroth orde extrap
+          MACP0A1(F1,i,j,k,pl) = MACP0A1(F1,ri,rj,rk,pl);
 #else
-	  // linear extrap
-	  MACP0A1(F1,i,j,k,pl) = MACP0A1(F1,ri,rj,rk,pl)+(MACP0A1(F1,ri+1,rj,rk,pl)-MACP0A1(F1,ri,rj,rk,pl))*(FTYPE)(i-ri);
+          // linear extrap
+          MACP0A1(F1,i,j,k,pl) = MACP0A1(F1,ri,rj,rk,pl)+(MACP0A1(F1,ri+1,rj,rk,pl)-MACP0A1(F1,ri,rj,rk,pl))*(FTYPE)(i-ri);
 #endif
-	  // if OUTFLOW, then disallow extrapolation if flux is from ghost to active zones
-	  if((pl==RHO)&&((BCtype[X1DN]==OUTFLOW || BCtype[X1DN]==HORIZONOUTFLOW))){ // only for RHO is it obvious what to do without primitives
-	    if(MACP0A1(F1,i,j,k,pl)>0.0) MACP0A1(F1,i,j,k,pl)=0.0; // GODMARK: hope this is enough to shut-down inflow (what about energy flux?)
-	  }
-	}// end pl and face loop
+          // if OUTFLOW, then disallow extrapolation if flux is from ghost to active zones
+          if((pl==RHO)&&((BCtype[X1DN]==OUTFLOW || BCtype[X1DN]==HORIZONOUTFLOW))){ // only for RHO is it obvious what to do without primitives
+            if(MACP0A1(F1,i,j,k,pl)>0.0) MACP0A1(F1,i,j,k,pl)=0.0; // GODMARK: hope this is enough to shut-down inflow (what about energy flux?)
+          }
+        }// end pl and face loop
       }// end 2 3
     }// end if correct bound type
     else if(BCtype[X1DN]== ASYMM) {  //atch: added this; however unsure if any symmetry exists for fluxes
       LOOPX1dir {
-	LOOPBOUND1IN PBOUNDLOOP(pliter,pl)  {
-	  MACP0A1(F1,i,j,k,pl) = - MACP0A1(F1,-i,j,k,pl);
-	  if( U1 == pl || B1 == pl ) MACP0A1(F1,i,j,k,pl) *= -1.0;  //resymm them
-	}
+        LOOPBOUND1IN PBOUNDLOOP(pliter,pl)  {
+          MACP0A1(F1,i,j,k,pl) = - MACP0A1(F1,-i,j,k,pl);
+          if( U1 == pl || B1 == pl ) MACP0A1(F1,i,j,k,pl) *= -1.0;  //resymm them
+        }
       }
     }
     else if(BCtype[X1DN]== BCEXTRAP_VEL3 || BCtype[X1DN] == BCEXTRAP) { 
       //extrapolates fluxes with 6th order
       LOOPX1dir{
-	LOOPBOUND1IN PBOUNDLOOP(pliter,pl) {
-	  //	    MACP0A1(F1,i,j,k,pl) = interpn( 6, i,  
-	  //				       0, MACP0A1(F1,0,j,k,pl), 
-	  //				       1, MACP0A1(F1,1,j,k,pl), 
-	  //				       2, MACP0A1(F1,2,j,k,pl), 
-	  //				       3, MACP0A1(F1,3,j,k,pl),
-	  //				       4, MACP0A1(F1,4,j,k,pl), 
-	  //				       5, MACP0A1(F1,5,j,k,pl)	);
-	}
+        LOOPBOUND1IN PBOUNDLOOP(pliter,pl) {
+          //     MACP0A1(F1,i,j,k,pl) = interpn( 6, i,  
+          //           0, MACP0A1(F1,0,j,k,pl), 
+          //           1, MACP0A1(F1,1,j,k,pl), 
+          //           2, MACP0A1(F1,2,j,k,pl), 
+          //           3, MACP0A1(F1,3,j,k,pl),
+          //           4, MACP0A1(F1,4,j,k,pl), 
+          //           5, MACP0A1(F1,5,j,k,pl) );
+        }
       }
     }
   }// end if mycpupos[1]==0
@@ -229,44 +229,44 @@ int bound_flux_user(int boundstage, int finalstep, SFTYPE boundtime, int boundva
       /* outer r BC: outflow */
 
       LOOPX1dir{
-	ri=riout;
-	rj=j;
-	rk=k;
-	LOOPBOUND1OUT PBOUNDLOOP(pliter,pl){
+        ri=riout;
+        rj=j;
+        rk=k;
+        LOOPBOUND1OUT PBOUNDLOOP(pliter,pl){
 #if(EXTRAP==0)
-	  // zeroth orde extrap
-	  MACP0A1(F1,i,j,k,pl) = MACP0A1(F1,ri,rj,rk,pl);
+          // zeroth orde extrap
+          MACP0A1(F1,i,j,k,pl) = MACP0A1(F1,ri,rj,rk,pl);
 #else
-	  // linear extrap
-	  MACP0A1(F1,i,j,k,pl) = MACP0A1(F1,ri,rj,rk,pl)+(MACP0A1(F1,ri,rj,rk,pl)-MACP0A1(F1,ri-1,rj,rk,pl))*(FTYPE)(i-ri);
+          // linear extrap
+          MACP0A1(F1,i,j,k,pl) = MACP0A1(F1,ri,rj,rk,pl)+(MACP0A1(F1,ri,rj,rk,pl)-MACP0A1(F1,ri-1,rj,rk,pl))*(FTYPE)(i-ri);
 #endif
-	  // if OUTFLOW, then disallow extrapolation if flux is from ghost to active zones
-	  if((pl==RHO)&&(BCtype[X1UP]==FIXEDOUTFLOW)){  //SASMARK:  changed OUTFLOW to FIXEDOUTFLOW here
-	    if(MACP0A1(F1,i,j,k,pl)<0.0) MACP0A1(F1,i,j,k,pl)=0.0;  //SASMARK:  can be a problem for e.g. Noh problem where there is OUTFLOW BC and the matter actually inflows
-	  }
-	}// end pl and face loop
+          // if OUTFLOW, then disallow extrapolation if flux is from ghost to active zones
+          if((pl==RHO)&&(BCtype[X1UP]==FIXEDOUTFLOW)){  //SASMARK:  changed OUTFLOW to FIXEDOUTFLOW here
+            if(MACP0A1(F1,i,j,k,pl)<0.0) MACP0A1(F1,i,j,k,pl)=0.0;  //SASMARK:  can be a problem for e.g. Noh problem where there is OUTFLOW BC and the matter actually inflows
+          }
+        }// end pl and face loop
       }// end 2 3
     }// end if correct bound type
     else if(BCtype[X1UP]== ASYMM) {   //atch: added this; however unsure if any symmetry exists for fluxes
       LOOPX1dir {
-	LOOPBOUND1OUT PBOUNDLOOP(pliter,pl)  {
-	  MACP0A1(F1,i,j,k,pl) = - MACP0A1(F1,N1 + N1 - i,j,k,pl);
-	  if( U1 == pl || B1 == pl ) MACP0A1(F1,i,j,k,pl) *= -1.0;  //resymm them
-	}
+        LOOPBOUND1OUT PBOUNDLOOP(pliter,pl)  {
+          MACP0A1(F1,i,j,k,pl) = - MACP0A1(F1,N1 + N1 - i,j,k,pl);
+          if( U1 == pl || B1 == pl ) MACP0A1(F1,i,j,k,pl) *= -1.0;  //resymm them
+        }
       }
     }
     else if(BCtype[X1UP]== BCEXTRAP_VEL3 || BCtype[X1UP] == BCEXTRAP) { 
       //extrapolates fluxes with 6th order
       LOOPX1dir{
-	LOOPBOUND1OUT PBOUNDLOOP(pliter,pl) {
-	  //	    MACP0A1(F1,i,j,k,pl) = interpn( 6, i, 
-	  //				       N1,   MACP0A1(F1,N1,j,k,pl), 
-	  //				       N1-1, MACP0A1(F1,N1-1,j,k,pl), 
-	  //				       N1-2, MACP0A1(F1,N1-2,j,k,pl), 
-	  //				       N1-3, MACP0A1(F1,N1-3,j,k,pl),
-	  //				       N1-4, MACP0A1(F1,N1-4,j,k,pl), 
-	  //				       N1-5, MACP0A1(F1,N1-5,j,k,pl)	);
-	}
+        LOOPBOUND1OUT PBOUNDLOOP(pliter,pl) {
+          //     MACP0A1(F1,i,j,k,pl) = interpn( 6, i, 
+          //           N1,   MACP0A1(F1,N1,j,k,pl), 
+          //           N1-1, MACP0A1(F1,N1-1,j,k,pl), 
+          //           N1-2, MACP0A1(F1,N1-2,j,k,pl), 
+          //           N1-3, MACP0A1(F1,N1-3,j,k,pl),
+          //           N1-4, MACP0A1(F1,N1-4,j,k,pl), 
+          //           N1-5, MACP0A1(F1,N1-5,j,k,pl) );
+        }
       }
     }
   }// end if mycpu is correct
@@ -284,30 +284,30 @@ int bound_flux_user(int boundstage, int finalstep, SFTYPE boundtime, int boundva
       /* inner 2 BC: outflow */
 
       LOOPX2dir{
-	ri=i; // correct for flux
-	rj=rjin;
-	rk=k;
-	LOOPBOUND2IN PBOUNDLOOP(pliter,pl){
+        ri=i; // correct for flux
+        rj=rjin;
+        rk=k;
+        LOOPBOUND2IN PBOUNDLOOP(pliter,pl){
 #if(EXTRAP==0)
-	  // zeroth orde extrap
-	  MACP0A1(F2,i,j,k,pl) = MACP0A1(F2,ri,rj,rk,pl);
+          // zeroth orde extrap
+          MACP0A1(F2,i,j,k,pl) = MACP0A1(F2,ri,rj,rk,pl);
 #else
-	  // linear extrap
-	  MACP0A1(F2,i,j,k,pl) = MACP0A1(F2,ri,rj,rk,pl)+(MACP0A1(F2,ri,rj,rk,pl)-MACP0A1(F2,ri,rj-l,rk,pl))*(FTYPE)(j-rj);
+          // linear extrap
+          MACP0A1(F2,i,j,k,pl) = MACP0A1(F2,ri,rj,rk,pl)+(MACP0A1(F2,ri,rj,rk,pl)-MACP0A1(F2,ri,rj-l,rk,pl))*(FTYPE)(j-rj);
 #endif
-	  // if OUTFLOW, then disallow extrapolation if flux is from ghost to active zones
-	  if((pl==RHO)&&(BCtype[X2DN]==FIXEDOUTFLOW)){  //SASMARK:  changed OUTFLOW to FIXEDOUTFLOW here
-	    if(MACP0A1(F2,i,j,k,pl)<0.0) MACP0A1(F2,i,j,k,pl)=0.0;  //SASMARK:  can be a problem for e.g. Noh problem where there is OUTFLOW BC and the matter actually inflows
-	  }
-	}// end pl and face loop
+          // if OUTFLOW, then disallow extrapolation if flux is from ghost to active zones
+          if((pl==RHO)&&(BCtype[X2DN]==FIXEDOUTFLOW)){  //SASMARK:  changed OUTFLOW to FIXEDOUTFLOW here
+            if(MACP0A1(F2,i,j,k,pl)<0.0) MACP0A1(F2,i,j,k,pl)=0.0;  //SASMARK:  can be a problem for e.g. Noh problem where there is OUTFLOW BC and the matter actually inflows
+          }
+        }// end pl and face loop
       }// end 2 3
     }// end if correct bound type
     else if((BCtype[X2DN]==POLARAXIS)||(BCtype[X2DN]==SYMM)||(BCtype[X2DN]==ASYMM) ){
       LOOPX2dir{
-	ri=i;
-	rj=rjin;
-	rk=k;
-	LOOPBOUND2IN PBOUNDLOOP(pliter,pl)  MACP0A1(F2,i,j,k,pl) = MACP0A1(F2,ri,rj+(rj-j),rk,pl); // self-assigns for j=0
+        ri=i;
+        rj=rjin;
+        rk=k;
+        LOOPBOUND2IN PBOUNDLOOP(pliter,pl)  MACP0A1(F2,i,j,k,pl) = MACP0A1(F2,ri,rj+(rj-j),rk,pl); // self-assigns for j=0
       }
     }
     // F2 of U2/B2 is symmetric, so no need to antisymmetrize
@@ -317,17 +317,17 @@ int bound_flux_user(int boundstage, int finalstep, SFTYPE boundtime, int boundva
 
       /* make sure b and u are antisymmetric at the poles   (preserves u^t rho and u) */
       LOOPX2dir{
-	LOOPBOUND2IN {
-	  //if(POSDEFMETRIC==0){  //SASMARK need to asymmetrize the fluxes; don't understand why should not asymm. the fluxes if POSDEFMETRIC is 0
-	  //	// u^t must be symmetric across pole, which is functions of u2 and u3 as well as their squares and othe products.  u2 in KS happens to be independent of sign, but in general is could be for some other metric.
-	  //	// for now, assume KS-like metric where u2 is antisymmetric and u^t dep only on u2^2, not u2
-	  //}
-	  //else{
-	  PLOOP(pliter,pl) MACP0A1(F2,i,j,k,pl)*=-1; // anti-sym all
-	  MACP0A1(F2,i,j,k,U2)*=-1; // re-sym U2
-	  MACP0A1(F2,i,j,k,B2)*=-1; // re-sym B2
-	  //}
-	}
+        LOOPBOUND2IN {
+          //if(POSDEFMETRIC==0){  //SASMARK need to asymmetrize the fluxes; don't understand why should not asymm. the fluxes if POSDEFMETRIC is 0
+          // // u^t must be symmetric across pole, which is functions of u2 and u3 as well as their squares and othe products.  u2 in KS happens to be independent of sign, but in general is could be for some other metric.
+          // // for now, assume KS-like metric where u2 is antisymmetric and u^t dep only on u2^2, not u2
+          //}
+          //else{
+          PLOOP(pliter,pl) MACP0A1(F2,i,j,k,pl)*=-1; // anti-sym all
+          MACP0A1(F2,i,j,k,U2)*=-1; // re-sym U2
+          MACP0A1(F2,i,j,k,B2)*=-1; // re-sym B2
+          //}
+        }
       }// end loop 13
     } // end if POLARXIS or ASYMM
   }// end if mycpupos[2]==0
@@ -345,30 +345,30 @@ int bound_flux_user(int boundstage, int finalstep, SFTYPE boundtime, int boundva
       /* outer 2 BC: outflow */
 
       LOOPX2dir{
-	ri=i; // correct for flux
-	rj=rjout;
-	rk=k;
-	LOOPBOUND2OUT PBOUNDLOOP(pliter,pl){
+        ri=i; // correct for flux
+        rj=rjout;
+        rk=k;
+        LOOPBOUND2OUT PBOUNDLOOP(pliter,pl){
 #if(EXTRAP==0)
-	  // zeroth orde extrap
-	  MACP0A1(F2,i,j,k,pl) = MACP0A1(F2,ri,rj,rk,pl);
+          // zeroth orde extrap
+          MACP0A1(F2,i,j,k,pl) = MACP0A1(F2,ri,rj,rk,pl);
 #else
-	  // linear extrap
-	  MACP0A1(F2,i,j,k,pl) = MACP0A1(F2,ri,rj,rk,pl)+(MACP0A1(F2,ri,rj,rk,pl)-MACP0A1(F2,ri,rj-l,rk,pl))*(FTYPE)(j-rj);
+          // linear extrap
+          MACP0A1(F2,i,j,k,pl) = MACP0A1(F2,ri,rj,rk,pl)+(MACP0A1(F2,ri,rj,rk,pl)-MACP0A1(F2,ri,rj-l,rk,pl))*(FTYPE)(j-rj);
 #endif
-	  // if OUTFLOW, then disallow extrapolation if flux is from ghost to active zones
-	  if((pl==RHO)&&(BCtype[X2UP]==FIXEDOUTFLOW)){  //SASMARK:  changed OUTFLOW to FIXEDOUTFLOW here
-	    if(MACP0A1(F2,i,j,k,pl)>0.0) MACP0A1(F2,i,j,k,pl)=0.0;  //SASMARK:  can be a problem for e.g. Noh problem where there is OUTFLOW BC and the matter actually inflows
-	  }
-	}// end pl and face loop
+          // if OUTFLOW, then disallow extrapolation if flux is from ghost to active zones
+          if((pl==RHO)&&(BCtype[X2UP]==FIXEDOUTFLOW)){  //SASMARK:  changed OUTFLOW to FIXEDOUTFLOW here
+            if(MACP0A1(F2,i,j,k,pl)>0.0) MACP0A1(F2,i,j,k,pl)=0.0;  //SASMARK:  can be a problem for e.g. Noh problem where there is OUTFLOW BC and the matter actually inflows
+          }
+        }// end pl and face loop
       }// end 2 3
     }// end if correct bound type
     else if((BCtype[X2UP]==POLARAXIS)||(BCtype[X2UP]==SYMM)||(BCtype[X2UP]==ASYMM) ){
       LOOPX2dir{
-	ri=i;
-	rj=rjout;
-	rk=k;
-	LOOPBOUND2OUT PBOUNDLOOP(pliter,pl)  MACP0A1(F2,i,j,k,pl) = MACP0A1(F2,ri,rj+(rj-j+2),rk,pl); // self-assigns for j=N
+        ri=i;
+        rj=rjout;
+        rk=k;
+        LOOPBOUND2OUT PBOUNDLOOP(pliter,pl)  MACP0A1(F2,i,j,k,pl) = MACP0A1(F2,ri,rj+(rj-j+2),rk,pl); // self-assigns for j=N
       }
     }
 
@@ -376,17 +376,17 @@ int bound_flux_user(int boundstage, int finalstep, SFTYPE boundtime, int boundva
 
       /* make sure b and u are antisymmetric at the poles   (preserves u^t rho and u) */
       LOOPX2dir{
-	LOOPBOUND2OUT {
-	  //if(POSDEFMETRIC==0){  //SASMARK need to asymmetrize the fluxes; don't understand why should not asymm. the fluxes if POSDEFMETRIC is 0
-	  //	// u^t must be symmetric across pole, which is functions of u2 and u3 as well as their squares and othe products.  u2 in KS happens to be independent of sign, but in general is could be for some other metric.
-	  //	// for now, assume KS-like metric where u2 is antisymmetric and u^t dep only on u2^2, not u2
-	  //}
-	  //else{
-	  PLOOP(pliter,pl) MACP0A1(F2,i,j,k,pl)*=-1; // anti-sym all
-	  MACP0A1(F2,i,j,k,U2)*=-1; // re-sym U2
-	  MACP0A1(F2,i,j,k,B2)*=-1; // re-sym B2
-	  //}
-	}
+        LOOPBOUND2OUT {
+          //if(POSDEFMETRIC==0){  //SASMARK need to asymmetrize the fluxes; don't understand why should not asymm. the fluxes if POSDEFMETRIC is 0
+          // // u^t must be symmetric across pole, which is functions of u2 and u3 as well as their squares and othe products.  u2 in KS happens to be independent of sign, but in general is could be for some other metric.
+          // // for now, assume KS-like metric where u2 is antisymmetric and u^t dep only on u2^2, not u2
+          //}
+          //else{
+          PLOOP(pliter,pl) MACP0A1(F2,i,j,k,pl)*=-1; // anti-sym all
+          MACP0A1(F2,i,j,k,U2)*=-1; // re-sym U2
+          MACP0A1(F2,i,j,k,B2)*=-1; // re-sym B2
+          //}
+        }
       }// end loop 13
     } // end if POLARXIS or ASYMM
   }// end if mycpupos[2]==ncpux2-1
@@ -399,22 +399,22 @@ int bound_flux_user(int boundstage, int finalstep, SFTYPE boundtime, int boundva
       /* inner 3 BC: outflow */
 
       LOOPX3dir{
-	ri=i; // correct for flux
-	rj=j;
-	rk=rkin;
-	LOOPBOUND3IN PBOUNDLOOP(pliter,pl){
+        ri=i; // correct for flux
+        rj=j;
+        rk=rkin;
+        LOOPBOUND3IN PBOUNDLOOP(pliter,pl){
 #if(EXTRAP==0)
-	  // zeroth orde extrap
-	  MACP0A1(F3,i,j,k,pl) = MACP0A1(F3,ri,rj,rk,pl);
+          // zeroth orde extrap
+          MACP0A1(F3,i,j,k,pl) = MACP0A1(F3,ri,rj,rk,pl);
 #else
-	  // linear extrap
-	  MACP0A1(F3,i,j,k,pl) = MACP0A1(F3,ri,rj,rk,pl)+(MACP0A1(F3,ri,rj,rk,pl)-MACP0A1(F3,ri,rj,rk-l,pl))*(FTYPE)(k-rk);
+          // linear extrap
+          MACP0A1(F3,i,j,k,pl) = MACP0A1(F3,ri,rj,rk,pl)+(MACP0A1(F3,ri,rj,rk,pl)-MACP0A1(F3,ri,rj,rk-l,pl))*(FTYPE)(k-rk);
 #endif
-	  // if OUTFLOW, then disallow extrapolation if flux is from ghost to active zones
-	  if((pl==RHO)&&(BCtype[X3DN]==FIXEDOUTFLOW)){  //SASMARK:  changed OUTFLOW to FIXEDOUTFLOW here
-	    if(MACP0A1(F3,i,j,k,pl)<0.0) MACP0A1(F3,i,j,k,pl)=0.0;  //SASMARK:  can be a problem for e.g. Noh problem where there is OUTFLOW BC and the matter actually inflows
-	  }
-	}// end pl and face loop
+          // if OUTFLOW, then disallow extrapolation if flux is from ghost to active zones
+          if((pl==RHO)&&(BCtype[X3DN]==FIXEDOUTFLOW)){  //SASMARK:  changed OUTFLOW to FIXEDOUTFLOW here
+            if(MACP0A1(F3,i,j,k,pl)<0.0) MACP0A1(F3,i,j,k,pl)=0.0;  //SASMARK:  can be a problem for e.g. Noh problem where there is OUTFLOW BC and the matter actually inflows
+          }
+        }// end pl and face loop
       }// end 2 3
     }// end if correct bound type
   }
@@ -425,22 +425,22 @@ int bound_flux_user(int boundstage, int finalstep, SFTYPE boundtime, int boundva
       /* outer 3 BC: outflow */
 
       LOOPX3dir{
-	ri=i; // correct for flux
-	rj=j;
-	rk=rkout;
-	LOOPBOUND3OUT PBOUNDLOOP(pliter,pl){
+        ri=i; // correct for flux
+        rj=j;
+        rk=rkout;
+        LOOPBOUND3OUT PBOUNDLOOP(pliter,pl){
 #if(EXTRAP==0)
-	  // zeroth orde extrap
-	  MACP0A1(F3,i,j,k,pl) = MACP0A1(F3,ri,rj,rk,pl);
+          // zeroth orde extrap
+          MACP0A1(F3,i,j,k,pl) = MACP0A1(F3,ri,rj,rk,pl);
 #else
-	  // linear extrap
-	  MACP0A1(F3,i,j,k,pl) = MACP0A1(F3,ri,rj,rk,pl)+(MACP0A1(F3,ri,rj,rk,pl)-MACP0A1(F3,ri,rj,rk-l,pl))*(FTYPE)(k-rk);
+          // linear extrap
+          MACP0A1(F3,i,j,k,pl) = MACP0A1(F3,ri,rj,rk,pl)+(MACP0A1(F3,ri,rj,rk,pl)-MACP0A1(F3,ri,rj,rk-l,pl))*(FTYPE)(k-rk);
 #endif
-	  // if OUTFLOW, then disallow extrapolation if flux is from ghost to active zones
-	  if((pl==RHO)&&(BCtype[X3UP]==FIXEDOUTFLOW)){  //SASMARK:  changed OUTFLOW to FIXEDOUTFLOW here
-	    if(MACP0A1(F3,i,j,k,pl)>0.0) MACP0A1(F3,i,j,k,pl)=0.0;  //SASMARK:  can be a problem for e.g. Noh problem where there is OUTFLOW BC and the matter actually inflows
-	  }
-	}// end pl and face loop
+          // if OUTFLOW, then disallow extrapolation if flux is from ghost to active zones
+          if((pl==RHO)&&(BCtype[X3UP]==FIXEDOUTFLOW)){  //SASMARK:  changed OUTFLOW to FIXEDOUTFLOW here
+            if(MACP0A1(F3,i,j,k,pl)>0.0) MACP0A1(F3,i,j,k,pl)=0.0;  //SASMARK:  can be a problem for e.g. Noh problem where there is OUTFLOW BC and the matter actually inflows
+          }
+        }// end pl and face loop
       }// end 2 3
     }// end if correct bound type
   }

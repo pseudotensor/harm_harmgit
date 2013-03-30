@@ -181,8 +181,8 @@ void x1_star(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 
 
   if( BCtype[X1DN] != NSSURFACE ) {
-      dualfprintf( fail_file, "Unknown BCtype[X1DN] = %d\n", BCtype[X1DN] );
-      myexit(1);
+    dualfprintf( fail_file, "Unknown BCtype[X1DN] = %d\n", BCtype[X1DN] );
+    myexit(1);
   }
 
   if( mycpupos[1] == 0 ){ 
@@ -210,12 +210,12 @@ void x1_star(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
       // loop over ghost zones at inner edge (star)
       LOOPBOUND1IN{
 
-	get_geometry( i, j, k, CENT, &geom );
+        get_geometry( i, j, k, CENT, &geom );
         coord( i, j, k, CENT, X );
         bl_coord( X, V );
 
 
-	// outflow densities
+        // outflow densities
         pl = RHO; MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
         pl = UU; MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
 
@@ -223,22 +223,22 @@ void x1_star(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
         pl = B1; MACP0A1(prim,i,j,k,pl) = MACP0A1(panalytic,i,j,k,pl);
 
 
-	if(DISKDIR==X2DN && (startpos[2]+j==totalsize[2]-1 || startpos[2]+j==totalsize[2]-2 )){
-	  pl = B2; MACP0A1(prim,i,j,k,pl) = 0.0;
-	}
-	else if(DISKDIR==X2UP && (startpos[2]+j==0 || startpos[2]+j==1 )){
-	  pl = B2; MACP0A1(prim,i,j,k,pl) = 0.0;
-	}
-	else{
-	  // outflow \detg B^2
-	  pl = B2; MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl)*(rgeom.g)/(geom.g);
-	}
+        if(DISKDIR==X2DN && (startpos[2]+j==totalsize[2]-1 || startpos[2]+j==totalsize[2]-2 )){
+          pl = B2; MACP0A1(prim,i,j,k,pl) = 0.0;
+        }
+        else if(DISKDIR==X2UP && (startpos[2]+j==0 || startpos[2]+j==1 )){
+          pl = B2; MACP0A1(prim,i,j,k,pl) = 0.0;
+        }
+        else{
+          // outflow \detg B^2
+          pl = B2; MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl)*(rgeom.g)/(geom.g);
+        }
 
-	// outflow B_\phi
+        // outflow B_\phi
         pl = B3; MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl)*(rgeom.gcov[GIND(3,3)])/(geom.gcov[GIND(3,3)]);
 
         //reset velocities to stationary ones
-	set_vel_stataxi(&geom,GLOBALMACP1A0(pother,OMEGAFCENT,i,j,k),GLOBALMACP1A0(pother,VPARCENT,i,j,k),MAC(prim,i,j,k));
+        set_vel_stataxi(&geom,GLOBALMACP1A0(pother,OMEGAFCENT,i,j,k),GLOBALMACP1A0(pother,VPARCENT,i,j,k),MAC(prim,i,j,k));
 
 
       }
@@ -359,7 +359,7 @@ void outflow_face1dn(int i, int j, int k, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], 
 
     // outflow as copy
     //    if(sign(rprim[B3])==sign(-prface[B1]*GLOBALMACP1A0(pother,OMEGAFFACE1,i,j,k))){
-    //      // then normal situation so can extrapolate	
+    //      // then normal situation so can extrapolate 
     //      prface[B3] = rprim[B3]*pow(Vc[1]/Vf[1],3);
     //    }
     //    else{ // then assume out of equilibrium so don't extrapolate
@@ -442,10 +442,10 @@ void set_plpr(int dir, int i, int j, int k, FTYPE (*prim)[NSTORE2][NSTORE3][NPR]
       if(setnsflux[pl]){
         if( 0 && pl == U1 ) {
           dualfprintf(fail_file,"n = %ld sp = %d j = %d pl=%d p_l=%21.15g p_r=%21.15g pother=%21.15g dp/p = %21.15g, dplpr/p = %21.15g\n",
-            nstep,steppart,startpos[2]+j,pl,p_l[pl],p_r[pl],GLOBALMACP1A0(pother,RHOFACE1+pl,i,j,k), 
-            fabs((p_l[pl]-GLOBALMACP1A0(pother,RHOFACE1+pl,i,j,k))/GLOBALMACP1A0(pother,RHOFACE1+pl,i,j,k)),
-            2*fabs((p_l[pl]-p_r[pl])/(p_r[pl]+p_l[pl])) 
-            );	
+                      nstep,steppart,startpos[2]+j,pl,p_l[pl],p_r[pl],GLOBALMACP1A0(pother,RHOFACE1+pl,i,j,k), 
+                      fabs((p_l[pl]-GLOBALMACP1A0(pother,RHOFACE1+pl,i,j,k))/GLOBALMACP1A0(pother,RHOFACE1+pl,i,j,k)),
+                      2*fabs((p_l[pl]-p_r[pl])/(p_r[pl]+p_l[pl])) 
+                      ); 
         }
 
         p_l[pl]=p_r[pl]=prface[pl];
@@ -538,7 +538,7 @@ int set_vel_stataxi(struct of_geom *geom, FTYPE omegaf, FTYPE vpar, FTYPE *pr)
 
 #if(0) // what would be done in force-free with no parallel velocity
 
-  //	  dualfprintf(fail_file,"Omegastar=%21.15g dxdxp[3][3]=%21.15g B1=%21.15g B2=%21.15g B3=%21.15g\n",Omegastar,dxdxp[3][3],Bcon[1],Bcon[2],Bcon[3]);
+  //   dualfprintf(fail_file,"Omegastar=%21.15g dxdxp[3][3]=%21.15g B1=%21.15g B2=%21.15g B3=%21.15g\n",Omegastar,dxdxp[3][3],Bcon[1],Bcon[2],Bcon[3]);
 
   ///////////////////////////////
   //
@@ -555,7 +555,7 @@ int set_vel_stataxi(struct of_geom *geom, FTYPE omegaf, FTYPE vpar, FTYPE *pr)
   pr[U2]=prnew[U2];
   pr[U3]=prnew[U3];
 
-  //	  if(t>1.9 && t<2.1){
+  //   if(t>1.9 && t<2.1){
   //dualfprintf(fail_file,"t=%21.15g i=%d j=%d\n",t,i,j);
   //  dualfprintf(fail_file,"newus: %21.15g %21.15g %21.15g\n",prnew[U1],prnew[U2],prnew[U3]);
   //  dualfprintf(fail_file,"Omegastar'=%21.15g Bcon1=%21.15g Bcon2=%21.15g Bcon3=%21.15g\n",Omegastar/dxdxp[3][3],Bcon[1],Bcon[2],Bcon[3]);
@@ -564,7 +564,7 @@ int set_vel_stataxi(struct of_geom *geom, FTYPE omegaf, FTYPE vpar, FTYPE *pr)
 #endif
 
 #if(0)
-  // set  	    ucon[TT,etc.]
+  // set       ucon[TT,etc.]
   vcon[RR]=0; // surface that completely dissipates normal direction momentum
   vcon[TH]=0; // "" for this component
   // below assumes no phi mixing with other directions in grid
@@ -733,7 +733,7 @@ void x2_disk(int dir, FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
   if( BCtype[dir] != DISKSURFACE ) {
     dualfprintf( fail_file, "Unknown BCtype[%d] = %d\n", dir,BCtype[dir] );
     myexit(1);
-    }
+  }
 
   
   dobounds=0;
@@ -777,22 +777,22 @@ void x2_disk(int dir, FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
       // loop over ghost zones inside disk
       for(j=sj;j<=ej;j++){
 
-	get_geometry( i, j, k, CENT, &geom );
+        get_geometry( i, j, k, CENT, &geom );
         coord( i, j, k, CENT, X );
         bl_coord( X, V );
 
 
-	// set densities analytically
+        // set densities analytically
         pl = RHO; MACP0A1(prim,i,j,k,pl) = MACP0A1(panalytic,i,j,k,pl);
         pl = UU; MACP0A1(prim,i,j,k,pl) = MACP0A1(panalytic,i,j,k,pl);
 
-	// outflow \detg B^1
+        // outflow \detg B^1
         pl = B1; MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl)*(rgeom.g)/(geom.g);
 
         // set the normal magnetic field to the initial value
         pl = B2; MACP0A1(prim,i,j,k,pl) = MACP0A1(panalytic,i,j,k,pl);
 
-	// outflow B_\phi
+        // outflow B_\phi
         pl = B3; MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl)*(rgeom.gcov[GIND(3,3)])/(geom.gcov[GIND(3,3)]);
 
         //reset velocities to stationary ones (VPAR analytical)
@@ -962,24 +962,24 @@ void x1_outer(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
       // loop over ghost zones at outer edge
       LOOPBOUND1OUT{
 
-	get_geometry( i, j, k, CENT, &geom );
+        get_geometry( i, j, k, CENT, &geom );
         coord( i, j, k, CENT, X );
         bl_coord( X, V );
 
-	// outflow densities
+        // outflow densities
         pl = RHO; MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
         pl = UU; MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
 
-	// outflow B^1
+        // outflow B^1
         pl = B1; MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
 
-	// outflow \detg B^2
+        // outflow \detg B^2
         pl = B2; MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl)*(rgeom.g)/(geom.g);
 
-	// outflow B_\phi
+        // outflow B_\phi
         pl = B3; MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl)*(rgeom.gcov[GIND(3,3)])/(geom.gcov[GIND(3,3)]);
 
-	// outflow velocities (copy)
+        // outflow velocities (copy)
         pl = U1; MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
         pl = U2; MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
         pl = U3; MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
@@ -1007,10 +1007,10 @@ void x2_outer_polar(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
   if (mycpupos[2] == ncpux2-1) {
     if((BCtype[X2UP]==POLARAXIS)||(BCtype[X2UP]==SYMM)||(BCtype[X2UP]==ASYMM) ){
       LOOPF1 LOOPN3{
-	ri=i;
-	rj=N2-1;
-	rk=k;
-	LOOPBOUND2OUT PBOUNDLOOP(pliter,pl)  MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj+(rj-j+1),rk,pl);
+        ri=i;
+        rj=N2-1;
+        rk=k;
+        LOOPBOUND2OUT PBOUNDLOOP(pliter,pl)  MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj+(rj-j+1),rk,pl);
       }
     }
 
@@ -1018,39 +1018,39 @@ void x2_outer_polar(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 
       /* make sure b and u are antisymmetric at the poles   (preserves u^t rho and u) */
       LOOPF1 LOOPF3{
-	LOOPBOUND2OUT {
-	  if(POSDEFMETRIC==0){
-	    // u^t must be symmetric across pole, which is functions of u2 and u3 as well as their squares and othe products.  u2 in KS happens to be independent of sign, but in general is could be for some other metric.
-	    // for now, assume KS-like metric where u2 is antisymmetric and u^t dep only on u2^2, not u2
-	    MACP0A1(prim,i,j,k,U2) *= -1.;
-	    MACP0A1(prim,i,j,k,U3) *= 1.;
-	    MACP0A1(prim,i,j,k,B2) *= -1.;
-	    MACP0A1(prim,i,j,k,B3) *= 1.;
-	  }
-	  else{
-	    MACP0A1(prim,i,j,k,U2) *= -1.;
-	    MACP0A1(prim,i,j,k,U3) *= 1.;
-	    MACP0A1(prim,i,j,k,B2) *= -1.;
-	    MACP0A1(prim,i,j,k,B3) *= 1.;
-	  }
-	}
+        LOOPBOUND2OUT {
+          if(POSDEFMETRIC==0){
+            // u^t must be symmetric across pole, which is functions of u2 and u3 as well as their squares and othe products.  u2 in KS happens to be independent of sign, but in general is could be for some other metric.
+            // for now, assume KS-like metric where u2 is antisymmetric and u^t dep only on u2^2, not u2
+            MACP0A1(prim,i,j,k,U2) *= -1.;
+            MACP0A1(prim,i,j,k,U3) *= 1.;
+            MACP0A1(prim,i,j,k,B2) *= -1.;
+            MACP0A1(prim,i,j,k,B3) *= 1.;
+          }
+          else{
+            MACP0A1(prim,i,j,k,U2) *= -1.;
+            MACP0A1(prim,i,j,k,U3) *= 1.;
+            MACP0A1(prim,i,j,k,B2) *= -1.;
+            MACP0A1(prim,i,j,k,B3) *= 1.;
+          }
+        }
       }// end loop 13
 
 #if(POLEDEATH)
       // fixup
       LOOPF1 LOOPF3 {
-	for (j = N2-1+1-POLEDEATH; j <= N2-1+POLEDEATH; j++) {
-	  if(POSDEFMETRIC==0){
-	    // u^t must be symmetric across pole, which is functions of u2 and u3 as well as their squares and othe products.  u2 in KS happens to be independent of sign, but in general is could be for some other metric.
-	    // for now, assume KS-like metric where u2 is antisymmetric and u^t dep only on u2^2, not u2
-	    MACP0A1(prim,i,j,k,U2) *= 0;
-	    MACP0A1(prim,i,j,k,B2) *= 0.;
-	  }
-	  else{
-	    MACP0A1(prim,i,j,k,U2) *= 0.;
-	    MACP0A1(prim,i,j,k,B2) *= 0.;
-	  }
-	}
+        for (j = N2-1+1-POLEDEATH; j <= N2-1+POLEDEATH; j++) {
+          if(POSDEFMETRIC==0){
+            // u^t must be symmetric across pole, which is functions of u2 and u3 as well as their squares and othe products.  u2 in KS happens to be independent of sign, but in general is could be for some other metric.
+            // for now, assume KS-like metric where u2 is antisymmetric and u^t dep only on u2^2, not u2
+            MACP0A1(prim,i,j,k,U2) *= 0;
+            MACP0A1(prim,i,j,k,B2) *= 0.;
+          }
+          else{
+            MACP0A1(prim,i,j,k,U2) *= 0.;
+            MACP0A1(prim,i,j,k,B2) *= 0.;
+          }
+        }
       }// end loop 13
 #endif
 
@@ -1076,17 +1076,17 @@ void x3_periodic(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 
       LOOPF1 LOOPF2{
 
-	// copy from upper side to lower boundary zones
-	ri=i;
-	rj=j;
-	rk=N3;
-	LOOPBOUND3IN PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk+k,pl);
+        // copy from upper side to lower boundary zones
+        ri=i;
+        rj=j;
+        rk=N3;
+        LOOPBOUND3IN PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk+k,pl);
 
-	// copy from lower side to upper boundary zones
-	ri=i;
-	rj=j;
-	rk=0;
-	LOOPBOUND3OUT PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk+(k-N3),pl);
+        // copy from lower side to upper boundary zones
+        ri=i;
+        rj=j;
+        rk=0;
+        LOOPBOUND3OUT PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk+(k-N3),pl);
       }
     }
   }
@@ -1128,16 +1128,16 @@ int flip_y(int iterglobal, int recontype, int bs, int be, FTYPE (*y)[2][NBIGM])
   if( iterglobal == WENO_DIR_FLIP_CONS_SIGN_DN && (recontype == CVT_C2A || recontype == CVT_A2C) && mycpupos[iterglobal] == 0 ) { 
     PLOOP(pliter,pl) 
       for( myi = bs; myi < 0; myi++ ) {
-	y[pl][0][myi] = - y[pl][0][myi];
+        y[pl][0][myi] = - y[pl][0][myi];
       }
   }
 #endif
-	
+ 
 #if( WENO_DIR_FLIP_CONS_SIGN_UP )  //flip the sign of the consrved quantities at the cylindrical axis so that they do not have a kink due to multiplication by gdet = |R|
   if( iterglobal == WENO_DIR_FLIP_CONS_SIGN_UP && (recontype == CVT_C2A || recontype == CVT_A2C)  && mycpupos[iterglobal] == numbercpu[iterglobal] - 1 ) { 
     PLOOP(pliter,pl) 
       for( myi = N1*(iterglobal==1) + N2*(iterglobal==2) + N3*(iterglobal==3); myi <= be; myi++ ) {
-	y[pl][0][myi] = - y[pl][0][myi];
+        y[pl][0][myi] = - y[pl][0][myi];
       }
   }
 #endif
@@ -1177,8 +1177,8 @@ void bl_coord_2d(FTYPE *X, FTYPE *V1, FTYPE *V2)
 // |              |pleft(i)   pright(i)|
 
 void remapdq( int dir, int idel, int jdel, int kdel, int i, int j, int k, FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP], 
-             FTYPE (*dq)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP], 
-             FTYPE *p2interp_l, FTYPE *p2interp_r )
+              FTYPE (*dq)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP], 
+              FTYPE *p2interp_l, FTYPE *p2interp_r )
 {
   extern int choose_limiter(int dir, int i, int j, int k, int pl);
 
@@ -1227,9 +1227,9 @@ void remapdq( int dir, int idel, int jdel, int kdel, int i, int j, int k, FTYPE 
 // |         pl(i)|pr(i)    i          |
 // |              |pleft(i)   pright(i)|
 void remapplpr( int dir, int idel, int jdel, int kdel, int i, int j, int k, 
-               FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*dq)[NSTORE2][NSTORE3][NPR2INTERP], 
-               FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP], 
-               FTYPE *p2interp_l, FTYPE *p2interp_r )
+                FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*dq)[NSTORE2][NSTORE3][NPR2INTERP], 
+                FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP], 
+                FTYPE *p2interp_l, FTYPE *p2interp_r )
 {
   extern int choose_limiter(int dir, int i, int j, int k, int pl);
 

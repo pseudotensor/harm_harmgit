@@ -55,7 +55,7 @@ static int restart_init_point_check_pglobal(int which, int i, int j, int k)
   PDUMPLOOP(pliter,pl){
     if(!finite(GLOBALMACP0A1(pglobal,i,j,k,pl)) ){
       dualfprintf(fail_file,"restart_init(%d): restart data has NaN at i=%d j=%d k=%d ti=%d tj=%d tk=%d :: pl=%d : pglobal=%21.15g\n",which,i,j,k,startpos[1]+i,startpos[2]+j,startpos[3]+k,pl,GLOBALMACP0A1(pglobal,i,j,k,pl));
-      //	myexit(24968346);
+      // myexit(24968346);
       gotnan++;
     }
   }
@@ -76,9 +76,9 @@ static int restart_init_point_check_unewglobal(int which, int i, int j, int k)
   PDUMPLOOP(pliter,pl){
     if(DOENOFLUX != NOENOFLUX || (FLUXB==FLUXCTSTAG &&(pl==B1 && i>=-N1BND+SHIFT1 || pl==B2 && j>=-N2BND+SHIFT2 || pl==B3 && k>=-N3BND+SHIFT3)) ){
       if(!finite(GLOBALMACP0A1(unewglobal,i,j,k,pl)) ){
-	dualfprintf(fail_file,"restart_init(%d): restart data has NaN at i=%d j=%d k=%d ti=%d tj=%d tk=%d :: pl=%d : unewglobal=%21.15g\n",which,i,j,k,startpos[1]+i,startpos[2]+j,startpos[3]+k,pl,GLOBALMACP0A1(unewglobal,i,j,k,pl));
-	//	myexit(24968346);
-	gotnan++;
+        dualfprintf(fail_file,"restart_init(%d): restart data has NaN at i=%d j=%d k=%d ti=%d tj=%d tk=%d :: pl=%d : unewglobal=%21.15g\n",which,i,j,k,startpos[1]+i,startpos[2]+j,startpos[3]+k,pl,GLOBALMACP0A1(unewglobal,i,j,k,pl));
+        // myexit(24968346);
+        gotnan++;
       }
     }
   }
@@ -100,11 +100,11 @@ static int restart_init_point_check_pstagglobal(int which, int i, int j, int k)
   if(FLUXB==FLUXCTSTAG){
     PDUMPLOOP(pliter,pl){
       if(pl==B1 && i>=-N1BND+SHIFT1 || pl==B2 && j>=-N2BND+SHIFT2 || pl==B3 && k>=-N3BND+SHIFT3){
-	if(!finite(GLOBALMACP0A1(pstagglobal,i,j,k,pl)) ){
-	  dualfprintf(fail_file,"restart_init(%d): restart data has NaN at i=%d j=%d k=%d ti=%d tj=%d tk=%d :: pl=%d : pstagglobal=%21.15g\n",which,i,j,k,startpos[1]+i,startpos[2]+j,startpos[3]+k,pl,GLOBALMACP0A1(pstagglobal,i,j,k,pl));
-	  //	myexit(24968346);
-	  gotnan++;
-	}
+        if(!finite(GLOBALMACP0A1(pstagglobal,i,j,k,pl)) ){
+          dualfprintf(fail_file,"restart_init(%d): restart data has NaN at i=%d j=%d k=%d ti=%d tj=%d tk=%d :: pl=%d : pstagglobal=%21.15g\n",which,i,j,k,startpos[1]+i,startpos[2]+j,startpos[3]+k,pl,GLOBALMACP0A1(pstagglobal,i,j,k,pl));
+          // myexit(24968346);
+          gotnan++;
+        }
       }
     }
   }
@@ -159,9 +159,9 @@ int restart_init_checks(int which, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (
   LOOP{// OPENMPOPTMARK: Don't optimize since critical region
     PDUMPLOOP(pliter,pl){
       if(!finite(MACP0A1(prim,i,j,k,pl))){
-	dualfprintf(fail_file,"before fixup & bound: restart data has NaN at i=%d j=%d k=%d ti=%d tj=%d tk=%d :: pl=%d\n",i,j,k,startpos[1]+i,startpos[2]+j,startpos[3]+k,pl);
-	//	myexit(24968346);
-	gotnan=1;
+        dualfprintf(fail_file,"before fixup & bound: restart data has NaN at i=%d j=%d k=%d ti=%d tj=%d tk=%d :: pl=%d\n",i,j,k,startpos[1]+i,startpos[2]+j,startpos[3]+k,pl);
+        // myexit(24968346);
+        gotnan=1;
       }
     }
   }
@@ -180,14 +180,14 @@ int restart_init_checks(int which, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (
   ZLOOP{
     if(STEPOVERNEGRHO!=NEGDENSITY_NEVERFIXUP){
       if(MACP0A1(prim,i,j,k,RHO)<=0.0){
-	dualfprintf(fail_file,"restart data has negative mass density at i=%d j=%d k=%d\n",startpos[1]+i,startpos[2]+j,startpos[3]+k);
-	failflag++;
+        dualfprintf(fail_file,"restart data has negative mass density at i=%d j=%d k=%d\n",startpos[1]+i,startpos[2]+j,startpos[3]+k);
+        failflag++;
       }
     }
     if(STEPOVERNEGU!=NEGDENSITY_NEVERFIXUP){
       if(MACP0A1(prim,i,j,k,UU)<=0.0){
-	dualfprintf(fail_file,"restart data has negative ie density at i=%d j=%d k=%d\n",startpos[1]+i,startpos[2]+j,startpos[3]+k);
-	failflag++;
+        dualfprintf(fail_file,"restart data has negative ie density at i=%d j=%d k=%d\n",startpos[1]+i,startpos[2]+j,startpos[3]+k);
+        failflag++;
       }
     }
 
@@ -197,14 +197,14 @@ int restart_init_checks(int which, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (
       get_geometry(i,j,k,CENT,ptrgeom);
       failreturn=check_pr(MAC(prim,i,j,k),MAC(prim,i,j,k),MAC(ucons,i,j,k), ptrgeom,-2,-1);
       if(failreturn){
-	dualfprintf(fail_file,"restart data has large or imaginary u^t=%21.15g at i=%d j=%d k=%d.  I will attempt to correct.\n",1.0/sqrt(uttdiscr),startpos[1]+i,startpos[2]+j,startpos[3]+k);
+        dualfprintf(fail_file,"restart data has large or imaginary u^t=%21.15g at i=%d j=%d k=%d.  I will attempt to correct.\n",1.0/sqrt(uttdiscr),startpos[1]+i,startpos[2]+j,startpos[3]+k);
       }
       if(1.0/sqrt(uttdiscr)>utmax) utmax=1.0/sqrt(uttdiscr);
       // need to settle over limit u^t's
       failreturn=check_pr(MAC(prim,i,j,k),MAC(prim,i,j,k),MAC(ucons,i,j,k), ptrgeom,-1,-1);
       if(failreturn){
-	dualfprintf(fail_file,"restart data has imaginary u^t at i=%d j=%d k=%d.  Unable to correct.\n",startpos[1]+i,startpos[2]+j,startpos[3]+k);
-	return(1);
+        dualfprintf(fail_file,"restart data has imaginary u^t at i=%d j=%d k=%d.  Unable to correct.\n",startpos[1]+i,startpos[2]+j,startpos[3]+k);
+        return(1);
       }
     }
 #endif    
@@ -249,9 +249,9 @@ int restart_init_checks(int which, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (
   LOOP{// OPENMPOPTMARK: Don't optimize since critical region
     PDUMPLOOP(pliter,pl){
       if(!finite(MACP0A1(prim,i,j,k,pl))){
-	dualfprintf(fail_file,"after fixup & before bound: restart data has NaN at i=%d j=%d k=%d ti=%d tj=%d tk=%d :: pl=%d\n",i,j,k,startpos[1]+i,startpos[2]+j,startpos[3]+k,pl);
-	//	myexit(24968346);
-	gotnan=1;
+        dualfprintf(fail_file,"after fixup & before bound: restart data has NaN at i=%d j=%d k=%d ti=%d tj=%d tk=%d :: pl=%d\n",i,j,k,startpos[1]+i,startpos[2]+j,startpos[3]+k,pl);
+        // myexit(24968346);
+        gotnan=1;
       }
     }
   }
@@ -284,9 +284,9 @@ int restart_init_checks(int which, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (
   FULLLOOP{// OPENMPOPTMARK: Don't optimize since critical region
     PDUMPLOOP(pliter,pl){
       if(!finite(MACP0A1(prim,i,j,k,pl))){
-	dualfprintf(fail_file,"after fixup & bound: restart data has NaN at i=%d j=%d k=%d ti=%d tj=%d tk=%d :: pl=%d\n",i,j,k,startpos[1]+i,startpos[2]+j,startpos[3]+k,pl);
-	//	myexit(24968346);
-	gotnan=1;
+        dualfprintf(fail_file,"after fixup & bound: restart data has NaN at i=%d j=%d k=%d ti=%d tj=%d tk=%d :: pl=%d\n",i,j,k,startpos[1]+i,startpos[2]+j,startpos[3]+k,pl);
+        // myexit(24968346);
+        gotnan=1;
       }
     }
   }
@@ -314,9 +314,9 @@ int restart_init_checks(int which, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (
   if(STEPOVERNEGRHO!=NEGDENSITY_NEVERFIXUP){
     FULLLOOP{
       if(MACP0A1(prim,i,j,k,RHO)<=0.0){
-	dualfprintf(fail_file,"restart data has negative mass density at i=%d j=%d k=%d : %21.15g\n",startpos[1]+i,startpos[2]+j,startpos[3]+k,MACP0A1(prim,i,j,k,RHO));
-	//	return(1);
-	failflag++;
+        dualfprintf(fail_file,"restart data has negative mass density at i=%d j=%d k=%d : %21.15g\n",startpos[1]+i,startpos[2]+j,startpos[3]+k,MACP0A1(prim,i,j,k,RHO));
+        // return(1);
+        failflag++;
       }
     }// end fullloop
   }// end negrho check
@@ -324,9 +324,9 @@ int restart_init_checks(int which, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (
   if(STEPOVERNEGU!=NEGDENSITY_NEVERFIXUP){
     FULLLOOP{
       if(MACP0A1(prim,i,j,k,UU)<=0.0){
-	dualfprintf(fail_file,"restart data has negative ie density at i=%d j=%d k=%d : %21.15g\n",startpos[1]+i,startpos[2]+j,startpos[3]+k,MACP0A1(prim,i,j,k,UU));
-	//	return(1);
-	failflag++;
+        dualfprintf(fail_file,"restart data has negative ie density at i=%d j=%d k=%d : %21.15g\n",startpos[1]+i,startpos[2]+j,startpos[3]+k,MACP0A1(prim,i,j,k,UU));
+        // return(1);
+        failflag++;
       }
     }// end fullloop
   }

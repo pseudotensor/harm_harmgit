@@ -64,75 +64,75 @@ static int deconvolve_flux_ma(int dir, int odir1, int odir2, FTYPE *EOSextra, st
 static int deconvolve_flux_em(int dir, int odir1, int odir2, FTYPE *EOSextra, struct of_state *stateleft, struct of_state *statecent, struct of_state *stateright, FTYPE *Fleft, FTYPE *Fright);
 
 static int onetermdeconvolution(
-				FTYPE rhol, FTYPE rhoc, FTYPE rhor
-				,FTYPE *Fleft, FTYPE *Fright
-				);
+                                FTYPE rhol, FTYPE rhoc, FTYPE rhor
+                                ,FTYPE *Fleft, FTYPE *Fright
+                                );
 
 static int twotermdeconvolution(
-				FTYPE rhol, FTYPE rhoc, FTYPE rhor
-				,FTYPE udirl, FTYPE udirc, FTYPE udirr
-				,FTYPE *Fleft, FTYPE *Fright
-				);
+                                FTYPE rhol, FTYPE rhoc, FTYPE rhor
+                                ,FTYPE udirl, FTYPE udirc, FTYPE udirr
+                                ,FTYPE *Fleft, FTYPE *Fright
+                                );
 
 static int threetermdeconvolution(
-				 FTYPE gdetl, FTYPE gdetc, FTYPE gdetr
-				 ,FTYPE rhol, FTYPE rhoc, FTYPE rhor
-				 ,FTYPE udirl, FTYPE udirc, FTYPE udirr
-				 ,FTYPE *Fleft, FTYPE *Fright
-				  );
+                                  FTYPE gdetl, FTYPE gdetc, FTYPE gdetr
+                                  ,FTYPE rhol, FTYPE rhoc, FTYPE rhor
+                                  ,FTYPE udirl, FTYPE udirc, FTYPE udirr
+                                  ,FTYPE *Fleft, FTYPE *Fright
+                                  );
 
 static int fourtermdeconvolution(
-				 FTYPE gdetl, FTYPE gdetc, FTYPE gdetr
-				 ,FTYPE rhol, FTYPE rhoc, FTYPE rhor
-				 ,FTYPE udirl, FTYPE udirc, FTYPE udirr
-				 ,FTYPE udnul, FTYPE udnuc, FTYPE udnur
-				 ,FTYPE *Fleft, FTYPE *Fright
-				 );
+                                 FTYPE gdetl, FTYPE gdetc, FTYPE gdetr
+                                 ,FTYPE rhol, FTYPE rhoc, FTYPE rhor
+                                 ,FTYPE udirl, FTYPE udirc, FTYPE udirr
+                                 ,FTYPE udnul, FTYPE udnuc, FTYPE udnur
+                                 ,FTYPE *Fleft, FTYPE *Fright
+                                 );
 
 static int fivetermdeconvolution(
-				 FTYPE gdetl, FTYPE gdetc, FTYPE gdetr
-				 ,FTYPE Bconl, FTYPE Bconc, FTYPE Bconr
-				 ,FTYPE Bcovl, FTYPE Bcovc, FTYPE Bcovr
-				 ,FTYPE uu0l, FTYPE uu0c, FTYPE uu0r
-				 ,FTYPE ud0l, FTYPE ud0c, FTYPE ud0r
-				 ,FTYPE *Fleft, FTYPE *Fright
-				 );
+                                 FTYPE gdetl, FTYPE gdetc, FTYPE gdetr
+                                 ,FTYPE Bconl, FTYPE Bconc, FTYPE Bconr
+                                 ,FTYPE Bcovl, FTYPE Bcovc, FTYPE Bcovr
+                                 ,FTYPE uu0l, FTYPE uu0c, FTYPE uu0r
+                                 ,FTYPE ud0l, FTYPE ud0c, FTYPE ud0r
+                                 ,FTYPE *Fleft, FTYPE *Fright
+                                 );
 
 static int sixtermdeconvolution(
-				 FTYPE gdetl, FTYPE gdetc, FTYPE gdetr
-				 ,FTYPE Bconl, FTYPE Bconc, FTYPE Bconr
-				 ,FTYPE Bcovl, FTYPE Bcovc, FTYPE Bcovr
-				 ,FTYPE uu0l, FTYPE uu0c, FTYPE uu0r
-				 ,FTYPE ud0l, FTYPE ud0c, FTYPE ud0r
-				 ,FTYPE udnul, FTYPE udnuc, FTYPE udnur
-				 ,FTYPE *Fleft, FTYPE *Fright
-				);
+                                FTYPE gdetl, FTYPE gdetc, FTYPE gdetr
+                                ,FTYPE Bconl, FTYPE Bconc, FTYPE Bconr
+                                ,FTYPE Bcovl, FTYPE Bcovc, FTYPE Bcovr
+                                ,FTYPE uu0l, FTYPE uu0c, FTYPE uu0r
+                                ,FTYPE ud0l, FTYPE ud0c, FTYPE ud0r
+                                ,FTYPE udnul, FTYPE udnuc, FTYPE udnur
+                                ,FTYPE *Fleft, FTYPE *Fright
+                                );
 
 
 static int seventermdeconvolution(
-				 FTYPE gdetl, FTYPE gdetc, FTYPE gdetr
-				 ,FTYPE Bconl, FTYPE Bconc, FTYPE Bconr
-				 ,FTYPE Bcovl, FTYPE Bcovc, FTYPE Bcovr
-				 ,FTYPE uu0l, FTYPE uu0c, FTYPE uu0r
-				 ,FTYPE ud0l, FTYPE ud0c, FTYPE ud0r
-				 ,FTYPE udnul, FTYPE udnuc, FTYPE udnur
-				 ,FTYPE uunul, FTYPE uunuc, FTYPE uunur
-				 ,FTYPE *Fleft, FTYPE *Fright
-				  );
+                                  FTYPE gdetl, FTYPE gdetc, FTYPE gdetr
+                                  ,FTYPE Bconl, FTYPE Bconc, FTYPE Bconr
+                                  ,FTYPE Bcovl, FTYPE Bcovc, FTYPE Bcovr
+                                  ,FTYPE uu0l, FTYPE uu0c, FTYPE uu0r
+                                  ,FTYPE ud0l, FTYPE ud0c, FTYPE ud0r
+                                  ,FTYPE udnul, FTYPE udnuc, FTYPE udnur
+                                  ,FTYPE uunul, FTYPE uunuc, FTYPE uunur
+                                  ,FTYPE *Fleft, FTYPE *Fright
+                                  );
 
 static int twoterm2Ddeconvolution(
-				  FTYPE Bconc,FTYPE Bconld, FTYPE Bconrd, FTYPE Bconlu, FTYPE Bconru, FTYPE Bconl, FTYPE Bconr, FTYPE Bcond, FTYPE Bconu
-				  ,FTYPE vconc,FTYPE vconld, FTYPE vconrd, FTYPE vconlu, FTYPE vconru, FTYPE vconl, FTYPE vconr, FTYPE vcond, FTYPE vconu
-				  ,FTYPE *Fld, FTYPE *Frd, FTYPE *Flu, FTYPE *Fru
-				  );
+                                  FTYPE Bconc,FTYPE Bconld, FTYPE Bconrd, FTYPE Bconlu, FTYPE Bconru, FTYPE Bconl, FTYPE Bconr, FTYPE Bcond, FTYPE Bconu
+                                  ,FTYPE vconc,FTYPE vconld, FTYPE vconrd, FTYPE vconlu, FTYPE vconru, FTYPE vconl, FTYPE vconr, FTYPE vcond, FTYPE vconu
+                                  ,FTYPE *Fld, FTYPE *Frd, FTYPE *Flu, FTYPE *Fru
+                                  );
 
 
 static int threeterm2Ddeconvolution(
-					   FTYPE gdetc,FTYPE gdetld, FTYPE gdetrd, FTYPE gdetlu, FTYPE gdetru, FTYPE gdetl, FTYPE gdetr, FTYPE gdetd, FTYPE gdetu
-					   ,FTYPE Bconc,FTYPE Bconld, FTYPE Bconrd, FTYPE Bconlu, FTYPE Bconru, FTYPE Bconl, FTYPE Bconr, FTYPE Bcond, FTYPE Bconu
-					   ,FTYPE vconc,FTYPE vconld, FTYPE vconrd, FTYPE vconlu, FTYPE vconru, FTYPE vconl, FTYPE vconr, FTYPE vcond, FTYPE vconu
-					   ,FTYPE *Fld, FTYPE *Frd, FTYPE *Flu, FTYPE *Fru
-					   );
+                                    FTYPE gdetc,FTYPE gdetld, FTYPE gdetrd, FTYPE gdetlu, FTYPE gdetru, FTYPE gdetl, FTYPE gdetr, FTYPE gdetd, FTYPE gdetu
+                                    ,FTYPE Bconc,FTYPE Bconld, FTYPE Bconrd, FTYPE Bconlu, FTYPE Bconru, FTYPE Bconl, FTYPE Bconr, FTYPE Bcond, FTYPE Bconu
+                                    ,FTYPE vconc,FTYPE vconld, FTYPE vconrd, FTYPE vconlu, FTYPE vconru, FTYPE vconl, FTYPE vconr, FTYPE vcond, FTYPE vconu
+                                    ,FTYPE *Fld, FTYPE *Frd, FTYPE *Flu, FTYPE *Fru
+                                    );
 
 
 
@@ -218,14 +218,14 @@ void store_geomcorn(int corner, int odir1, int odir2,FTYPE (*geomcorn)[NSTORE1+S
 // NEWMARK: Need to work out signature issues
 //
 int setup_9value_vB(int corner, int odir1, int odir2, int *Nvec, int *NNOT1vec, int i, int j, int k,
-		    //		    FTYPE (*pbcorn)[COMPDIM][NUMCS][NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
-		    FTYPE (*pvbcorn)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3][COMPDIM][NUMCS+1][NUMCS],
-		    struct of_state (*fluxstatecent)[NSTORE2][NSTORE3],
-		    struct of_state (*fluxstate)[NSTORE1][NSTORE2][NSTORE3][NUMLEFTRIGHT],
-		    FTYPE (*geomcorn)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
-		    FTYPE (*vcon)[NUMCS+1][NUMCS+1],
-		    FTYPE (*gdetBcon)[NUMCS+1][NUMCS+1]
-		    )
+                    //      FTYPE (*pbcorn)[COMPDIM][NUMCS][NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
+                    FTYPE (*pvbcorn)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3][COMPDIM][NUMCS+1][NUMCS],
+                    struct of_state (*fluxstatecent)[NSTORE2][NSTORE3],
+                    struct of_state (*fluxstate)[NSTORE1][NSTORE2][NSTORE3][NUMLEFTRIGHT],
+                    FTYPE (*geomcorn)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
+                    FTYPE (*vcon)[NUMCS+1][NUMCS+1],
+                    FTYPE (*gdetBcon)[NUMCS+1][NUMCS+1]
+                    )
 {
   int ileft, jleft, kleft;
   int irightodir1, jrightodir1, krightodir1;
@@ -451,24 +451,24 @@ int setup_9value_vB(int corner, int odir1, int odir2, int *Nvec, int *NNOT1vec, 
 // used to obtain 1-D line in case where EMF only varies in one transverse direction rather than 2 transverse directions
 // OPTMARK: for now don't optimize, just get full 9 value and return along needed line
 int setup_3value_vB(int corner, int odir1, int odir2, int *Nvec, int *NNOT1vec, int i, int j, int k,
-		    //		    FTYPE (*pbcorn)[COMPDIM][NUMCS][NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
-		    FTYPE (*pvbcorn)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3][COMPDIM][NUMCS+1][NUMCS],
-		    struct of_state (*fluxstatecent)[NSTORE2][NSTORE3],
-		    struct of_state (*fluxstate)[NSTORE1][NSTORE2][NSTORE3][NUMLEFTRIGHT],
-		    FTYPE (*geomcorn)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
-		    FTYPE (*vcon)[NUMCS+1],
-		    FTYPE (*gdetBcon)[NUMCS+1]
-		    )
+                    //      FTYPE (*pbcorn)[COMPDIM][NUMCS][NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
+                    FTYPE (*pvbcorn)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3][COMPDIM][NUMCS+1][NUMCS],
+                    struct of_state (*fluxstatecent)[NSTORE2][NSTORE3],
+                    struct of_state (*fluxstate)[NSTORE1][NSTORE2][NSTORE3][NUMLEFTRIGHT],
+                    FTYPE (*geomcorn)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
+                    FTYPE (*vcon)[NUMCS+1],
+                    FTYPE (*gdetBcon)[NUMCS+1]
+                    )
 {
   int setup_9value_vB(int corner, int odir1, int odir2, int *Nvec, int *NNOT1vec, int i, int j, int k,
-		      //		      FTYPE (*pbcorn)[COMPDIM][NUMCS][NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
-		      FTYPE (*pvbcorn)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3][COMPDIM][NUMCS+1][NUMCS],
-		      struct of_state (*fluxstatecent)[NSTORE2][NSTORE3],
-		      struct of_state (*fluxstate)[NSTORE1][NSTORE2][NSTORE3][NUMLEFTRIGHT],
-		      FTYPE (*geomcorn)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
-		      FTYPE (*vcon)[NUMCS+1][NUMCS+1],
-		      FTYPE (*gdetBcon)[NUMCS+1][NUMCS+1]
-		      );
+                      //        FTYPE (*pbcorn)[COMPDIM][NUMCS][NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
+                      FTYPE (*pvbcorn)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3][COMPDIM][NUMCS+1][NUMCS],
+                      struct of_state (*fluxstatecent)[NSTORE2][NSTORE3],
+                      struct of_state (*fluxstate)[NSTORE1][NSTORE2][NSTORE3][NUMLEFTRIGHT],
+                      FTYPE (*geomcorn)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
+                      FTYPE (*vcon)[NUMCS+1][NUMCS+1],
+                      FTYPE (*gdetBcon)[NUMCS+1][NUMCS+1]
+                      );
   FTYPE vcon9[NDIM][NUMCS+1][NUMCS+1];
   FTYPE gdetBcon9[NDIM][NUMCS+1][NUMCS+1];
   int jj;
@@ -478,7 +478,7 @@ int setup_3value_vB(int corner, int odir1, int odir2, int *Nvec, int *NNOT1vec, 
 
 
   setup_9value_vB(corner, odir1, odir2 , Nvec, NNOT1vec, i,j,k, pvbcorn,fluxstatecent,fluxstate,geomcorn, vcon9 ,gdetBcon9 );
-		      
+        
   // choose starting position for positer loop
   //  This chooses relevant odir direction for positer loop below
   // use of CENT4EMF as opposed to other positions is not relevant if using setup_9value_vB()
@@ -557,51 +557,51 @@ void mergedc2ea2cmethod_compute(int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTOR
       // loop over all i,j,k
       COMPZSLOOP(is,ie,js,je,ks,ke){
 
-	// initialize Fleft and Fright updates
-	PLOOP(pliter,pl){
-	  Fleft[pl]=Fright[pl]=0.0;
-	}
-	
-	// left-flux position
-	ileft=i;
-	jleft=j;
-	kleft=k;
+        // initialize Fleft and Fright updates
+        PLOOP(pliter,pl){
+          Fleft[pl]=Fright[pl]=0.0;
+        }
+ 
+        // left-flux position
+        ileft=i;
+        jleft=j;
+        kleft=k;
   
-	// right-flux position
-	iright=i+(1==dimen)*N1NOT1;
-	jright=j+(2==dimen)*N2NOT1;
-	kright=k+(3==dimen)*N3NOT1;
+        // right-flux position
+        iright=i+(1==dimen)*N1NOT1;
+        jright=j+(2==dimen)*N2NOT1;
+        kright=k+(3==dimen)*N3NOT1;
 
 
 
-	// deconvolve flux
-	// Note meaning of Fleft and Fright is not same as F_l and F_r:
-	//
-	// |                   F_l|F_r                                |
-	// |         fs[ISLEFT][i]|fs[ISRIGHT][i]      fs[ISLEFT][i+1]|
-	// |                      |                i                  |
-	// |                      |                                   |
-	// |                      |Fleft                        Fright|
-	// |                      |fluxvec                            |
+        // deconvolve flux
+        // Note meaning of Fleft and Fright is not same as F_l and F_r:
+        //
+        // |                   F_l|F_r                                |
+        // |         fs[ISLEFT][i]|fs[ISRIGHT][i]      fs[ISLEFT][i+1]|
+        // |                      |                i                  |
+        // |                      |                                   |
+        // |                      |Fleft                        Fright|
+        // |                      |fluxvec                            |
         // |                      |              EOSextra             |
-	//
-	// Assume EOSextra can be DONOR accurate
-	// And note that F_l=fluxstate[ISLEFT] and F_r=fluxstate[ISRIGHT]
-	// so single cell needs Fleft=state[ISRIGHT][i] and Fright=state[ISLEFT][i+1]
-	// And note that fluxvec is single-valued at face and so naturally identified by [i] for cell [i]
-	// So Fleft modifies fluxvec[i] and Fright modifies fluxvec[i+1]
-	//
-	deconvolve_flux(dimen, odimen1, odimen2, GLOBALMAC(EOSextraglobal,i,j,k), &GLOBALMACP1A1(fluxstate,dimen,ileft,jleft,kleft,ISRIGHT), &GLOBALMAC(fluxstatecent,i,j,k), &GLOBALMACP1A1(fluxstate,dimen,iright,jright,kright,ISLEFT), Fleft, Fright);
+        //
+        // Assume EOSextra can be DONOR accurate
+        // And note that F_l=fluxstate[ISLEFT] and F_r=fluxstate[ISRIGHT]
+        // so single cell needs Fleft=state[ISRIGHT][i] and Fright=state[ISLEFT][i+1]
+        // And note that fluxvec is single-valued at face and so naturally identified by [i] for cell [i]
+        // So Fleft modifies fluxvec[i] and Fright modifies fluxvec[i+1]
+        //
+        deconvolve_flux(dimen, odimen1, odimen2, GLOBALMAC(EOSextraglobal,i,j,k), &GLOBALMACP1A1(fluxstate,dimen,ileft,jleft,kleft,ISRIGHT), &GLOBALMAC(fluxstatecent,i,j,k), &GLOBALMACP1A1(fluxstate,dimen,iright,jright,kright,ISLEFT), Fleft, Fright);
 
-	// Now realize that at faces each correction is applied ultimately as average of 2 fluxes for non-EMF terms
-	// ultimately if smooth, then is actually full correction since both sides of face will contribute same correction
-	// Note that using interpolation loop means apply correction beyond where needed, but this is ok as long as 2 boundary condition cells (for upper edge) and 1 for lower edge
+        // Now realize that at faces each correction is applied ultimately as average of 2 fluxes for non-EMF terms
+        // ultimately if smooth, then is actually full correction since both sides of face will contribute same correction
+        // Note that using interpolation loop means apply correction beyond where needed, but this is ok as long as 2 boundary condition cells (for upper edge) and 1 for lower edge
 
-	// correct flux on left part of cell
-	PLOOP(pliter,pl) MACP1A1(fluxvec,dimen,ileft,jleft,kleft,pl) += 0.5*Fleft[pl];
+        // correct flux on left part of cell
+        PLOOP(pliter,pl) MACP1A1(fluxvec,dimen,ileft,jleft,kleft,pl) += 0.5*Fleft[pl];
 
-	// correct flux on right part of cell
-	PLOOP(pliter,pl) MACP1A1(fluxvec,dimen,iright,jright,kright,pl) += 0.5*Fright[pl];
+        // correct flux on right part of cell
+        PLOOP(pliter,pl) MACP1A1(fluxvec,dimen,iright,jright,kright,pl) += 0.5*Fright[pl];
 
       }// end over i,j,k
     }// end if dimension exists
@@ -628,41 +628,41 @@ void mergedc2ea2cmethod_compute(int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTOR
 
       get_odirs(corner,&odir1,&odir2);
       if(!(Nvec[odir1]==1 && Nvec[odir2]==1)){
-	// only here if doing correction with non-zero (non-cancelling) EMF
+        // only here if doing correction with non-zero (non-cancelling) EMF
 
 
-	if(CORNGDETVERSION==1){
-	  // need to get corner geometry over all domain before processing EMF
-	  // OPTMARK: if metric is changing, then need to do this every time, else could avoid
-	  store_geomcorn(corner,odir1,odir2,GLOBALPOINT(geomcornglobal));
-	}
+        if(CORNGDETVERSION==1){
+          // need to get corner geometry over all domain before processing EMF
+          // OPTMARK: if metric is changing, then need to do this every time, else could avoid
+          store_geomcorn(corner,odir1,odir2,GLOBALPOINT(geomcornglobal));
+        }
 
-	// set range of positions interpolated to (di,dj,dk useless)
-	// loop range should be over all cell centers that have a final flux on one face (upper or lower) that needs to be corrected
-	set_interppoint_loop_ranges_2D_EMF_formerged(ENOINTERPTYPE, corner, odir1, odir2, &is, &ie, &js, &je, &ks, &ke, &di, &dj, &dk);
+        // set range of positions interpolated to (di,dj,dk useless)
+        // loop range should be over all cell centers that have a final flux on one face (upper or lower) that needs to be corrected
+        set_interppoint_loop_ranges_2D_EMF_formerged(ENOINTERPTYPE, corner, odir1, odir2, &is, &ie, &js, &je, &ks, &ke, &di, &dj, &dk);
 
   
 
-	// deconvolve flux
-	if(Nvec[odir1]==1 || Nvec[odir2]==1){
-	  // then only need to do 1D deconvolution in odir2 direction
-	  // e.g. if corner=CORN2, then odir1=3 and odir2=1 and in 2D(N1>1 and N2>1 and N3==1), then correction of E2 in odir2=1 needs to be done.
-	  // e.g. cont. In this limit, deconvolution is 1D and takes place using values at FACE1(i), CENT(i), FACE1(i+1) since no offset in odir1=3 direction as would be true if N3>1
-	  //
-	  // loop over all i,j,k
-	  COMPZSLOOP(is,ie,js,je,ks,ke){
-	    deconvolve_emf_1d(corner, odir1, odir2, Nvec, NNOT1vec, i,j,k, fluxvec);
-	  }
-	}
-	else{
-	  // full 2D deconvolution
-	  // correction done inside
-	  // loop over all i,j,k
-	  COMPZSLOOP(is,ie,js,je,ks,ke){
-	    deconvolve_emf_2d(corner, odir1, odir2, Nvec, NNOT1vec, i,j,k, fluxvec);
-	  }
-	}
-	
+        // deconvolve flux
+        if(Nvec[odir1]==1 || Nvec[odir2]==1){
+          // then only need to do 1D deconvolution in odir2 direction
+          // e.g. if corner=CORN2, then odir1=3 and odir2=1 and in 2D(N1>1 and N2>1 and N3==1), then correction of E2 in odir2=1 needs to be done.
+          // e.g. cont. In this limit, deconvolution is 1D and takes place using values at FACE1(i), CENT(i), FACE1(i+1) since no offset in odir1=3 direction as would be true if N3>1
+          //
+          // loop over all i,j,k
+          COMPZSLOOP(is,ie,js,je,ks,ke){
+            deconvolve_emf_1d(corner, odir1, odir2, Nvec, NNOT1vec, i,j,k, fluxvec);
+          }
+        }
+        else{
+          // full 2D deconvolution
+          // correction done inside
+          // loop over all i,j,k
+          COMPZSLOOP(is,ie,js,je,ks,ke){
+            deconvolve_emf_2d(corner, odir1, odir2, Nvec, NNOT1vec, i,j,k, fluxvec);
+          }
+        }
+ 
       }// end if emf has transverse direction to correct
     }// end over corners
   }
@@ -1230,31 +1230,31 @@ static int deconvolve_flux_em(int dir, int odir1, int odir2, FTYPE *EOSextra, st
     //        t[1 ]=+(-gdet*Bu[dir])*(Bd[jj])*(1/uu[TT])*(1/uu[TT]);
     fourtermdeconvolution(-gdetl*Bul[dir],-gdetc*Buc[dir],-gdetr*Bur[dir],  Bdl[jj],Bdc[jj],Bdr[jj],  overutl,overutc,overutr,   overutl,overutc,overutr, &Flefttemp, &Frighttemp);   Fleft[UU+jj] += Flefttemp; Fright[UU+jj] += Frighttemp;
 
-    //	t[2 ]=+(-gdet*Bu[dir])*(Bu[odir1])*(ud[jj]/uu[TT])*(ud[odir1]/uu[TT]);
+    // t[2 ]=+(-gdet*Bu[dir])*(Bu[odir1])*(ud[jj]/uu[TT])*(ud[odir1]/uu[TT]);
     fourtermdeconvolution(-gdetl*Bul[dir],-gdetc*Buc[dir],-gdetr*Bur[dir],  Bul[odir1],Buc[odir1],Bur[odir1],  udl[jj]*overutl,udc[jj]*overutc,udr[jj]*overutr,   udl[odir1]*overutl,udc[odir1]*overutc,udr[odir1]*overutr, &Flefttemp, &Frighttemp);   Fleft[UU+jj] += Flefttemp; Fright[UU+jj] += Frighttemp;
 
-    //	t[3 ]=+(-gdet*Bu[dir])*(Bu[odir2])*(ud[jj]/uu[TT])*(ud[odir2]/uu[TT]);
+    // t[3 ]=+(-gdet*Bu[dir])*(Bu[odir2])*(ud[jj]/uu[TT])*(ud[odir2]/uu[TT]);
     fourtermdeconvolution(-gdetl*Bul[dir],-gdetc*Buc[dir],-gdetr*Bur[dir],  Bul[odir2],Buc[odir2],Bur[odir2],  udl[jj]*overutl,udc[jj]*overutc,udr[jj]*overutr,   udl[odir2]*overutl,udc[odir2]*overutc,udr[odir2]*overutr, &Flefttemp, &Frighttemp);   Fleft[UU+jj] += Flefttemp; Fright[UU+jj] += Frighttemp;
 
-    //	t[4 ]=+(gdet*Bu[dir])*(Bd[dir])*(uu[dir]/uu[TT])*(ud[jj]/uu[TT]);
+    // t[4 ]=+(gdet*Bu[dir])*(Bd[dir])*(uu[dir]/uu[TT])*(ud[jj]/uu[TT]);
     fourtermdeconvolution(gdetl*Bul[dir],gdetc*Buc[dir],gdetr*Bur[dir],  Bdl[dir],Bdc[dir],Bdr[dir],  uul[dir]*overutl,uuc[dir]*overutc,uur[dir]*overutr,   udl[jj]*overutl,udc[jj]*overutc,udr[jj]*overutr, &Flefttemp, &Frighttemp);   Fleft[UU+jj] += Flefttemp; Fright[UU+jj] += Frighttemp;
 
-    //	t[5 ]=+(gdet)*(Bu[odir1])*(Bd[odir1])*(uu[dir]/uu[TT])*(ud[jj]/uu[TT]);
+    // t[5 ]=+(gdet)*(Bu[odir1])*(Bd[odir1])*(uu[dir]/uu[TT])*(ud[jj]/uu[TT]);
     fivetermdeconvolution(gdetl,gdetc,gdetr,   Bul[odir1],Buc[odir1],Bur[odir1],   Bdl[odir1],Bdc[odir1],Bdr[odir1],  uul[dir]*overutl,uuc[dir]*overutc,uur[dir]*overutr,   udl[jj]*overutl,udc[jj]*overutc,udr[jj]*overutr, &Flefttemp, &Frighttemp);   Fleft[UU+jj] += Flefttemp; Fright[UU+jj] += Frighttemp;
 
-    //	t[6 ]=+(gdet)*(Bu[odir2])*(Bd[odir2])*(uu[dir]/uu[TT])*(ud[jj]/uu[TT]);
+    // t[6 ]=+(gdet)*(Bu[odir2])*(Bd[odir2])*(uu[dir]/uu[TT])*(ud[jj]/uu[TT]);
     fivetermdeconvolution(gdetl,gdetc,gdetr,   Bul[odir2],Buc[odir2],Bur[odir2],   Bdl[odir2],Bdc[odir2],Bdr[odir2],  uul[dir]*overutl,uuc[dir]*overutc,uur[dir]*overutr,   udl[jj]*overutl,udc[jj]*overutc,udr[jj]*overutr, &Flefttemp, &Frighttemp);   Fleft[UU+jj] += Flefttemp; Fright[UU+jj] += Frighttemp;
 
-    //	t[7 ]=+(-gdet*Bu[dir])*(Bd[jj])*(uu[dir]/uu[TT])*(ud[dir]/uu[TT]);
+    // t[7 ]=+(-gdet*Bu[dir])*(Bd[jj])*(uu[dir]/uu[TT])*(ud[dir]/uu[TT]);
     fourtermdeconvolution(-gdetl*Bul[dir],-gdetc*Buc[dir],-gdetr*Bur[dir],  Bdl[jj],Bdc[jj],Bdr[jj],  uul[dir]*overutl,uuc[dir]*overutc,uur[dir]*overutr,   udl[dir]*overutl,udc[dir]*overutc,udr[dir]*overutr, &Flefttemp, &Frighttemp);   Fleft[UU+jj] += Flefttemp; Fright[UU+jj] += Frighttemp;
 
-    //	t[8 ]=+(-gdet)*(Bu[odir1])*(Bd[jj])*(uu[dir]/uu[TT])*(ud[odir1]/uu[TT]);
+    // t[8 ]=+(-gdet)*(Bu[odir1])*(Bd[jj])*(uu[dir]/uu[TT])*(ud[odir1]/uu[TT]);
     fivetermdeconvolution(-gdetl,-gdetc,-gdetr,   Bul[odir1],Buc[odir1],Bur[odir1],   Bdl[jj],Bdc[jj],Bdr[jj],  uul[dir]*overutl,uuc[dir]*overutc,uur[dir]*overutr,   udl[odir1]*overutl,udc[odir1]*overutc,udr[odir1]*overutr, &Flefttemp, &Frighttemp);   Fleft[UU+jj] += Flefttemp; Fright[UU+jj] += Frighttemp;
 
-    //	t[9 ]=+(-gdet)*(Bu[odir2])*(Bd[jj])*(uu[dir]/uu[TT])*(ud[odir2]/uu[TT]);
+    // t[9 ]=+(-gdet)*(Bu[odir2])*(Bd[jj])*(uu[dir]/uu[TT])*(ud[odir2]/uu[TT]);
     fivetermdeconvolution(-gdetl,-gdetc,-gdetr,   Bul[odir2],Buc[odir2],Bur[odir2],   Bdl[jj],Bdc[jj],Bdr[jj],  uul[dir]*overutl,uuc[dir]*overutc,uur[dir]*overutr,   udl[odir2]*overutl,udc[odir2]*overutc,udr[odir2]*overutr, &Flefttemp, &Frighttemp);   Fleft[UU+jj] += Flefttemp; Fright[UU+jj] += Frighttemp;
 
-    //	t[10]=+(-gdet*Bu[dir])*(Bu[dir])*(ud[jj]/uu[TT])*(ud[dir]/uu[TT]);
+    // t[10]=+(-gdet*Bu[dir])*(Bu[dir])*(ud[jj]/uu[TT])*(ud[dir]/uu[TT]);
     fourtermdeconvolution(-gdetl*Bul[dir],-gdetc*Buc[dir],-gdetr*Bur[dir],  Bul[dir],Buc[dir],Bur[dir],  udl[jj]*overutl,udc[jj]*overutc,udr[jj]*overutr,   udl[dir]*overutl,udc[dir]*overutc,udr[dir]*overutr, &Flefttemp, &Frighttemp);   Fleft[UU+jj] += Flefttemp; Fright[UU+jj] += Frighttemp;
 #endif
 
@@ -1282,42 +1282,42 @@ static int deconvolve_flux_em(int dir, int odir1, int odir2, FTYPE *EOSextra, st
   Fright[UU+jj] = 0.0;
 
 #if(0&&MCOORD==CARTMINKMETRIC)
-    //
-    // GODMARK: Not setup yet, using full \detg method
-    //
+  //
+  // GODMARK: Not setup yet, using full \detg method
+  //
 #else
   // diagonal spatial terms
-  //	t[1 ]=+(-0.5*gdet*Bu[dir])*(Bd[dir])*(1/uu[TT])*(1/uu[TT]);
+  // t[1 ]=+(-0.5*gdet*Bu[dir])*(Bd[dir])*(1/uu[TT])*(1/uu[TT]);
   fourtermdeconvolution(-0.5*gdetl*Bul[dir],-0.5*gdetc*Buc[dir],-0.5*gdetr*Bur[dir],  Bdl[dir],Bdc[dir],Bdr[dir],  overutl,overutc,overutr,   overutl,overutc,overutr, &Flefttemp, &Frighttemp);   Fleft[UU+jj] += Flefttemp; Fright[UU+jj] += Frighttemp;
 
-  //	t[2 ]=+(0.5*gdet)*(Bu[odir1])*(Bd[odir1])*(1/uu[TT])*(1/uu[TT]);
+  // t[2 ]=+(0.5*gdet)*(Bu[odir1])*(Bd[odir1])*(1/uu[TT])*(1/uu[TT]);
   fivetermdeconvolution(0.5*gdetl,0.5*gdetc,0.5*gdetr,  Bul[odir1],Buc[odir1],Bur[odir1],  Bdl[odir1],Bdc[odir1],Bdr[odir1],  overutl,overutc,overutr,   overutl,overutc,overutr, &Flefttemp, &Frighttemp);   Fleft[UU+jj] += Flefttemp; Fright[UU+jj] += Frighttemp;
 
-  //	t[3 ]=+(0.5*gdet)*(Bu[odir2])*(Bd[odir2])*(1/uu[TT])*(1/uu[TT]);
+  // t[3 ]=+(0.5*gdet)*(Bu[odir2])*(Bd[odir2])*(1/uu[TT])*(1/uu[TT]);
   fivetermdeconvolution(0.5*gdetl,0.5*gdetc,0.5*gdetr,  Bul[odir2],Buc[odir2],Bur[odir2],  Bdl[odir2],Bdc[odir2],Bdr[odir2],  overutl,overutc,overutr,   overutl,overutc,overutr, &Flefttemp, &Frighttemp);   Fleft[UU+jj] += Flefttemp; Fright[UU+jj] += Frighttemp;
 
-  //	t[4 ]=+(gdet)*(Bu[odir1])*(Bu[odir2])*(ud[odir1]/uu[TT])*(ud[odir2]/uu[TT]);
+  // t[4 ]=+(gdet)*(Bu[odir1])*(Bu[odir2])*(ud[odir1]/uu[TT])*(ud[odir2]/uu[TT]);
   fivetermdeconvolution(gdetl,gdetc,gdetr,   Bul[odir1],Buc[odir1],Bur[odir1],   Bul[odir2],Buc[odir2],Bur[odir2],  udl[odir1]*overutl,udc[odir1]*overutc,udr[odir1]*overutr,   udl[odir2]*overutl,udc[odir2]*overutc,udr[odir2]*overutr, &Flefttemp, &Frighttemp);   Fleft[UU+jj] += Flefttemp; Fright[UU+jj] += Frighttemp;
 
-  //	t[5 ]=+(-gdet)*(Bu[odir1])*(Bd[dir])*(uu[dir]/uu[TT])*(ud[odir1]/uu[TT]);
+  // t[5 ]=+(-gdet)*(Bu[odir1])*(Bd[dir])*(uu[dir]/uu[TT])*(ud[odir1]/uu[TT]);
   fivetermdeconvolution(-gdetl,-gdetc,-gdetr,   Bul[odir1],Buc[odir1],Bur[odir1],   Bdl[dir],Bdc[dir],Bdr[dir],  uul[dir]*overutl,uuc[dir]*overutc,uur[dir]*overutr,   udl[odir1]*overutl,udc[odir1]*overutc,udr[odir1]*overutr, &Flefttemp, &Frighttemp);   Fleft[UU+jj] += Flefttemp; Fright[UU+jj] += Frighttemp;
 
-  //	t[6 ]=+(-gdet)*(Bu[odir2])*(Bd[dir])*(uu[dir]/uu[TT])*(ud[odir2]/uu[TT]);
+  // t[6 ]=+(-gdet)*(Bu[odir2])*(Bd[dir])*(uu[dir]/uu[TT])*(ud[odir2]/uu[TT]);
   fivetermdeconvolution(-gdetl,-gdetc,-gdetr,   Bul[odir2],Buc[odir2],Bur[odir2],   Bdl[dir],Bdc[dir],Bdr[dir],  uul[dir]*overutl,uuc[dir]*overutc,uur[dir]*overutr,   udl[odir2]*overutl,udc[odir2]*overutc,udr[odir2]*overutr, &Flefttemp, &Frighttemp);   Fleft[UU+jj] += Flefttemp; Fright[UU+jj] += Frighttemp;
 
-  //	t[7 ]=+(gdet)*(Bu[odir1])*(Bd[odir1])*(uu[dir]/uu[TT])*(ud[dir]/uu[TT]);
+  // t[7 ]=+(gdet)*(Bu[odir1])*(Bd[odir1])*(uu[dir]/uu[TT])*(ud[dir]/uu[TT]);
   fivetermdeconvolution(gdetl,gdetc,gdetr,   Bul[odir1],Buc[odir1],Bur[odir1],   Bdl[odir1],Bdc[odir1],Bdr[odir1],  uul[dir]*overutl,uuc[dir]*overutc,uur[dir]*overutr,   udl[dir]*overutl,udc[dir]*overutc,udr[dir]*overutr, &Flefttemp, &Frighttemp);   Fleft[UU+jj] += Flefttemp; Fright[UU+jj] += Frighttemp;
 
-  //	t[8 ]=+(gdet)*(Bu[odir2])*(Bd[odir2])*(uu[dir]/uu[TT])*(ud[dir]/uu[TT]);
+  // t[8 ]=+(gdet)*(Bu[odir2])*(Bd[odir2])*(uu[dir]/uu[TT])*(ud[dir]/uu[TT]);
   fivetermdeconvolution(gdetl,gdetc,gdetr,   Bul[odir2],Buc[odir2],Bur[odir2],   Bdl[odir2],Bdc[odir2],Bdr[odir2],  uul[dir]*overutl,uuc[dir]*overutc,uur[dir]*overutr,   udl[dir]*overutl,udc[dir]*overutc,udr[dir]*overutr, &Flefttemp, &Frighttemp);   Fleft[UU+jj] += Flefttemp; Fright[UU+jj] += Frighttemp;
 
-  //	t[9 ]=+(-0.5*gdet*Bu[dir])*(Bu[dir])*(ud[dir]/uu[TT])*(ud[dir]/uu[TT]);
+  // t[9 ]=+(-0.5*gdet*Bu[dir])*(Bu[dir])*(ud[dir]/uu[TT])*(ud[dir]/uu[TT]);
   fourtermdeconvolution(-0.5*gdetl*Bul[dir],-0.5*gdetc*Buc[dir],-0.5*gdetr*Bur[dir],  Bul[dir],Buc[dir],Bur[dir],  udl[dir]*overutl,udc[dir]*overutc,udr[dir]*overutr,   udl[dir]*overutl,udc[dir]*overutc,udr[dir]*overutr,  &Flefttemp, &Frighttemp);   Fleft[UU+jj] += Flefttemp; Fright[UU+jj] += Frighttemp;
 
-  //	t[10]=+(0.5*gdet)*(Bu[odir1])*(Bu[odir1])*(ud[odir1]/uu[TT])*(ud[odir1]/uu[TT]);
+  // t[10]=+(0.5*gdet)*(Bu[odir1])*(Bu[odir1])*(ud[odir1]/uu[TT])*(ud[odir1]/uu[TT]);
   fivetermdeconvolution(0.5*gdetl,0.5*gdetc,0.5*gdetr,   Bul[odir1],Buc[odir1],Bur[odir1],   Bul[odir1],Buc[odir1],Bur[odir1],  udl[odir1]*overutl,udc[odir1]*overutc,udr[odir1]*overutr,   udl[odir1]*overutl,udc[odir1]*overutc,udr[odir1]*overutr,  &Flefttemp, &Frighttemp);   Fleft[UU+jj] += Flefttemp; Fright[UU+jj] += Frighttemp;
 
-  //	t[11]=+(0.5*gdet)*(Bu[odir2])*(Bu[odir2])*(ud[odir2]/uu[TT])*(ud[odir2]/uu[TT]);
+  // t[11]=+(0.5*gdet)*(Bu[odir2])*(Bu[odir2])*(ud[odir2]/uu[TT])*(ud[odir2]/uu[TT]);
   fivetermdeconvolution(0.5*gdetl,0.5*gdetc,0.5*gdetr,   Bul[odir2],Buc[odir2],Bur[odir2],   Bul[odir2],Buc[odir2],Bur[odir2],  udl[odir2]*overutl,udc[odir2]*overutc,udr[odir2]*overutr,   udl[odir2]*overutl,udc[odir2]*overutc,udr[odir2]*overutr,  &Flefttemp, &Frighttemp);   Fleft[UU+jj] += Flefttemp; Fright[UU+jj] += Frighttemp;
 #endif
 
@@ -1359,22 +1359,22 @@ static int deconvolve_flux_em(int dir, int odir1, int odir2, FTYPE *EOSextra, st
       // get corrections for both terms in EMF
       for(otherdiriter=0;otherdiriter<=1;otherdiriter++){
 
-	// choose sign: otherdiriter==0 has positive sign
-	fluxsign=otherdiriter*(-1.0) + (1-otherdiriter)*(1.0);
+        // choose sign: otherdiriter==0 has positive sign
+        fluxsign=otherdiriter*(-1.0) + (1-otherdiriter)*(1.0);
 
-	// these odir choices are not directions of interpolation, but instead of components of vectors
-	// choose which odir is first
-	firstodir=jj*(1-otherdiriter) + dir*otherdiriter;
-	// second is always other odir
-	secondodir=dir*(1-otherdiriter) + jj*otherdiriter;
+        // these odir choices are not directions of interpolation, but instead of components of vectors
+        // choose which odir is first
+        firstodir=jj*(1-otherdiriter) + dir*otherdiriter;
+        // second is always other odir
+        secondodir=dir*(1-otherdiriter) + jj*otherdiriter;
 
-	// NEWMARK: Signature!
-	// EMF[corner with odir1=dir and odir2=jj] = +\detg B^{jj} v^{dir} -\detg B^{dir} v^{jj}
-	threetermdeconvolution(gdetl, gdetc, gdetr,   Bul[firstodir], Buc[firstodir], Bur[firstodir]   ,uul[secondodir]*overutl, uuc[secondodir]*overutc, uur[secondodir]*overutr   ,&Flefttemp, &Frighttemp);
-	//  note that unlike FLUXCTSTAG or FLUXCTTOTH, FLUXCTHLL has different fluxes for (e.g.) F2[B1] and F1[B2] rather than just sign change since at different locations
-	// 0.5 is since 2 flux corrections will be made for each face, and assumes LAXF or limit of HLL fluxmethod
-	Fleft[B1-1+jj]  += 0.5*fluxsign*Flefttemp;
-	Fright[B1-1+jj] += 0.5*fluxsign*Frighttemp;
+        // NEWMARK: Signature!
+        // EMF[corner with odir1=dir and odir2=jj] = +\detg B^{jj} v^{dir} -\detg B^{dir} v^{jj}
+        threetermdeconvolution(gdetl, gdetc, gdetr,   Bul[firstodir], Buc[firstodir], Bur[firstodir]   ,uul[secondodir]*overutl, uuc[secondodir]*overutc, uur[secondodir]*overutr   ,&Flefttemp, &Frighttemp);
+        //  note that unlike FLUXCTSTAG or FLUXCTTOTH, FLUXCTHLL has different fluxes for (e.g.) F2[B1] and F1[B2] rather than just sign change since at different locations
+        // 0.5 is since 2 flux corrections will be made for each face, and assumes LAXF or limit of HLL fluxmethod
+        Fleft[B1-1+jj]  += 0.5*fluxsign*Flefttemp;
+        Fright[B1-1+jj] += 0.5*fluxsign*Frighttemp;
       }
     }// end over flux directions (not corners)
 
@@ -1415,9 +1415,9 @@ static int deconvolve_emf_2d(int corner, int odir1, int odir2, int *Nvec, int *N
 
     // NEWMARK: signature!  (normally sign flips between each, but right now don't know which is negative or positive
     twoterm2Ddeconvolution(
-			   gdetBcon[firstodir][CENT4EMF][CENT4EMF],gdetBcon[firstodir][LEFT4EMF][LEFT4EMF],gdetBcon[firstodir][RIGHT4EMF][LEFT4EMF],gdetBcon[firstodir][LEFT4EMF][RIGHT4EMF],gdetBcon[firstodir][RIGHT4EMF][RIGHT4EMF],gdetBcon[firstodir][LEFT4EMF][CENT4EMF],gdetBcon[firstodir][RIGHT4EMF][CENT4EMF],gdetBcon[firstodir][CENT4EMF][LEFT4EMF],gdetBcon[firstodir][CENT4EMF][RIGHT4EMF]
-			   ,vcon[secondodir][CENT4EMF][CENT4EMF],vcon[secondodir][LEFT4EMF][LEFT4EMF],vcon[secondodir][RIGHT4EMF][LEFT4EMF],vcon[secondodir][LEFT4EMF][RIGHT4EMF],vcon[secondodir][RIGHT4EMF][RIGHT4EMF],vcon[secondodir][LEFT4EMF][CENT4EMF],vcon[secondodir][RIGHT4EMF][CENT4EMF],vcon[secondodir][CENT4EMF][LEFT4EMF],vcon[secondodir][CENT4EMF][RIGHT4EMF]
-			   ,&Fld, &Frd, &Flu, &Fru);
+                           gdetBcon[firstodir][CENT4EMF][CENT4EMF],gdetBcon[firstodir][LEFT4EMF][LEFT4EMF],gdetBcon[firstodir][RIGHT4EMF][LEFT4EMF],gdetBcon[firstodir][LEFT4EMF][RIGHT4EMF],gdetBcon[firstodir][RIGHT4EMF][RIGHT4EMF],gdetBcon[firstodir][LEFT4EMF][CENT4EMF],gdetBcon[firstodir][RIGHT4EMF][CENT4EMF],gdetBcon[firstodir][CENT4EMF][LEFT4EMF],gdetBcon[firstodir][CENT4EMF][RIGHT4EMF]
+                           ,vcon[secondodir][CENT4EMF][CENT4EMF],vcon[secondodir][LEFT4EMF][LEFT4EMF],vcon[secondodir][RIGHT4EMF][LEFT4EMF],vcon[secondodir][LEFT4EMF][RIGHT4EMF],vcon[secondodir][RIGHT4EMF][RIGHT4EMF],vcon[secondodir][LEFT4EMF][CENT4EMF],vcon[secondodir][RIGHT4EMF][CENT4EMF],vcon[secondodir][CENT4EMF][LEFT4EMF],vcon[secondodir][CENT4EMF][RIGHT4EMF]
+                           ,&Fld, &Frd, &Flu, &Fru);
 
     // correct left-down corner
     // e.g., if corner==3, then odir1=1 and odir2=2, then EMF at left-down CORN3 at i,j
@@ -1554,9 +1554,9 @@ static int a2cflux_from_prim(int dir, FTYPE (*prim_coef_list)[MAXSPACEORDER])
 
 // 1-term trivial deconvolution
 static int onetermdeconvolution(
-				FTYPE rhol, FTYPE rhoc, FTYPE rhor
-				,FTYPE *Fleft, FTYPE *Fright
-				 )
+                                FTYPE rhol, FTYPE rhoc, FTYPE rhor
+                                ,FTYPE *Fleft, FTYPE *Fright
+                                )
 {
 
   //LEFT:
@@ -1574,10 +1574,10 @@ static int onetermdeconvolution(
 // inputs are named after \rho_0 u^i (without \detg) as could be useful when \detg is constant
 // See: a2confluxes_eom1_restmassflux.nb
 static int twotermdeconvolution(
-				FTYPE rhol, FTYPE rhoc, FTYPE rhor
-				,FTYPE udirl, FTYPE udirc, FTYPE udirr
-				,FTYPE *Fleft, FTYPE *Fright
-				 )
+                                FTYPE rhol, FTYPE rhoc, FTYPE rhor
+                                ,FTYPE udirl, FTYPE udirc, FTYPE udirr
+                                ,FTYPE *Fleft, FTYPE *Fright
+                                )
 {
 
   //Left:
@@ -1595,11 +1595,11 @@ static int twotermdeconvolution(
 // inputs are named after rest-mass flux term; \detg \rho_0 u^i, but can be used for any 3-term multiplication
 // See: a2confluxes_eom1_restmassflux.nb
 static int threetermdeconvolution(
-				 FTYPE gdetl, FTYPE gdetc, FTYPE gdetr
-				 ,FTYPE rhol, FTYPE rhoc, FTYPE rhor
-				 ,FTYPE udirl, FTYPE udirc, FTYPE udirr
-				 ,FTYPE *Fleft, FTYPE *Fright
-				 )
+                                  FTYPE gdetl, FTYPE gdetc, FTYPE gdetr
+                                  ,FTYPE rhol, FTYPE rhoc, FTYPE rhor
+                                  ,FTYPE udirl, FTYPE udirc, FTYPE udirr
+                                  ,FTYPE *Fleft, FTYPE *Fright
+                                  )
 {
   FTYPE t[42]; // 46 total temp vars (42 in t[] for left, and 23 in t[] for right)
 
@@ -1708,12 +1708,12 @@ static int threetermdeconvolution(
 // inputs are named after T^i_\nu term; \detg \rho_0 u^i u_\nu, but can be used for any 4-term multiplication
 // See: a2confluxes_eom2_5_energymomentumflux_MAtermsonly.nb
 static int fourtermdeconvolution(
-				 FTYPE gdetl, FTYPE gdetc, FTYPE gdetr
-				 ,FTYPE rhol, FTYPE rhoc, FTYPE rhor
-				 ,FTYPE udirl, FTYPE udirc, FTYPE udirr
-				 ,FTYPE udnul, FTYPE udnuc, FTYPE udnur
-				 ,FTYPE *Fleft, FTYPE *Fright
-				 )
+                                 FTYPE gdetl, FTYPE gdetc, FTYPE gdetr
+                                 ,FTYPE rhol, FTYPE rhoc, FTYPE rhor
+                                 ,FTYPE udirl, FTYPE udirc, FTYPE udirr
+                                 ,FTYPE udnul, FTYPE udnuc, FTYPE udnur
+                                 ,FTYPE *Fleft, FTYPE *Fright
+                                 )
 {
   FTYPE t[49]; // 92 total temp vars, 49 in t[].
 
@@ -1926,13 +1926,13 @@ static int fourtermdeconvolution(
 // 5-terms multiplying deconvolution
 // See: a2confluxes_5terms.nb
 static int fivetermdeconvolution(
-				 FTYPE gdetl, FTYPE gdetc, FTYPE gdetr
-				 ,FTYPE Bconl, FTYPE Bconc, FTYPE Bconr
-				 ,FTYPE Bcovl, FTYPE Bcovc, FTYPE Bcovr
-				 ,FTYPE uu0l, FTYPE uu0c, FTYPE uu0r
-				 ,FTYPE ud0l, FTYPE ud0c, FTYPE ud0r
-				 ,FTYPE *Fleft, FTYPE *Fright
-				 )
+                                 FTYPE gdetl, FTYPE gdetc, FTYPE gdetr
+                                 ,FTYPE Bconl, FTYPE Bconc, FTYPE Bconr
+                                 ,FTYPE Bcovl, FTYPE Bcovc, FTYPE Bcovr
+                                 ,FTYPE uu0l, FTYPE uu0c, FTYPE uu0r
+                                 ,FTYPE ud0l, FTYPE ud0c, FTYPE ud0r
+                                 ,FTYPE *Fleft, FTYPE *Fright
+                                 )
 {
   FTYPE t[124]; // 229 total temp variables, 124 t[]'s.  True for both left and right.
 
@@ -2411,19 +2411,19 @@ static int fivetermdeconvolution(
 // 6-terms multiplying deconvolution
 // See: a2confluxes_6terms.nb
 static int sixtermdeconvolution(
-				 FTYPE gdetl, FTYPE gdetc, FTYPE gdetr
-				 ,FTYPE Bconl, FTYPE Bconc, FTYPE Bconr
-				 ,FTYPE Bcovl, FTYPE Bcovc, FTYPE Bcovr
-				 ,FTYPE uu0l, FTYPE uu0c, FTYPE uu0r
-				 ,FTYPE ud0l, FTYPE ud0c, FTYPE ud0r
-				 ,FTYPE udnul, FTYPE udnuc, FTYPE udnur
-				 ,FTYPE *Fleft, FTYPE *Fright
-				 )
+                                FTYPE gdetl, FTYPE gdetc, FTYPE gdetr
+                                ,FTYPE Bconl, FTYPE Bconc, FTYPE Bconr
+                                ,FTYPE Bcovl, FTYPE Bcovc, FTYPE Bcovr
+                                ,FTYPE uu0l, FTYPE uu0c, FTYPE uu0r
+                                ,FTYPE ud0l, FTYPE ud0c, FTYPE ud0r
+                                ,FTYPE udnul, FTYPE udnuc, FTYPE udnur
+                                ,FTYPE *Fleft, FTYPE *Fright
+                                )
 {
   FTYPE t[159]; // 381 total temps vars, 159 t[]'s for both left/right
 
 
-	
+ 
   FTYPE vartemp6857=-405594.*uu0c;
   FTYPE vartemp6858=202797.*uu0l;
   FTYPE vartemp6859=172715.*uu0r;
@@ -3206,20 +3206,20 @@ static int sixtermdeconvolution(
 // 7-terms multiplying deconvolution
 // See: a2confluxes_7terms.nb
 static int seventermdeconvolution(
-				 FTYPE gdetl, FTYPE gdetc, FTYPE gdetr
-				 ,FTYPE Bconl, FTYPE Bconc, FTYPE Bconr
-				 ,FTYPE Bcovl, FTYPE Bcovc, FTYPE Bcovr
-				 ,FTYPE uu0l, FTYPE uu0c, FTYPE uu0r
-				 ,FTYPE ud0l, FTYPE ud0c, FTYPE ud0r
-				 ,FTYPE udnul, FTYPE udnuc, FTYPE udnur
-				 ,FTYPE uunul, FTYPE uunuc, FTYPE uunur
-				 ,FTYPE *Fleft, FTYPE *Fright
-				 )
+                                  FTYPE gdetl, FTYPE gdetc, FTYPE gdetr
+                                  ,FTYPE Bconl, FTYPE Bconc, FTYPE Bconr
+                                  ,FTYPE Bcovl, FTYPE Bcovc, FTYPE Bcovr
+                                  ,FTYPE uu0l, FTYPE uu0c, FTYPE uu0r
+                                  ,FTYPE ud0l, FTYPE ud0c, FTYPE ud0r
+                                  ,FTYPE udnul, FTYPE udnuc, FTYPE udnur
+                                  ,FTYPE uunul, FTYPE uunuc, FTYPE uunur
+                                  ,FTYPE *Fleft, FTYPE *Fright
+                                  )
 {
   FTYPE t[191]; // 628 total, 191 t[]
 
 
-		
+  
 
   FTYPE vartemp26178=5.810922e6*uunuc;
   FTYPE vartemp26179=-3.311055e6*uunul;
@@ -4482,7 +4482,7 @@ static int seventermdeconvolution(
   *Fright=0.000033300033300033300033300033300033*t[190];
 
 
-	
+ 
 
 
 
@@ -4510,10 +4510,10 @@ static int seventermdeconvolution(
 // 2-terms multiplying 2D deconvolution
 // See: a2confluxes_bi3terms_2productonly.nb
 static int twoterm2Ddeconvolution(
-				  FTYPE Bconc,FTYPE Bconld, FTYPE Bconrd, FTYPE Bconlu, FTYPE Bconru, FTYPE Bconl, FTYPE Bconr, FTYPE Bcond, FTYPE Bconu
-				  ,FTYPE vconc,FTYPE vconld, FTYPE vconrd, FTYPE vconlu, FTYPE vconru, FTYPE vconl, FTYPE vconr, FTYPE vcond, FTYPE vconu
-				  ,FTYPE *Fld, FTYPE *Frd, FTYPE *Flu, FTYPE *Fru
-				)
+                                  FTYPE Bconc,FTYPE Bconld, FTYPE Bconrd, FTYPE Bconlu, FTYPE Bconru, FTYPE Bconl, FTYPE Bconr, FTYPE Bcond, FTYPE Bconu
+                                  ,FTYPE vconc,FTYPE vconld, FTYPE vconrd, FTYPE vconlu, FTYPE vconru, FTYPE vconl, FTYPE vconr, FTYPE vcond, FTYPE vconu
+                                  ,FTYPE *Fld, FTYPE *Frd, FTYPE *Flu, FTYPE *Fru
+                                  )
 {
   FTYPE t[114]; // 114 total in t[]
 
@@ -4998,11 +4998,11 @@ static int twoterm2Ddeconvolution(
 // 3-terms multiplying 2D deconvolution
 // See: a2confluxes_bi3terms.nb
 static int threeterm2Ddeconvolution(
-				    FTYPE gdetc,FTYPE gdetld, FTYPE gdetrd, FTYPE gdetlu, FTYPE gdetru, FTYPE gdetl, FTYPE gdetr, FTYPE gdetd, FTYPE gdetu
-				    ,FTYPE Bconc,FTYPE Bconld, FTYPE Bconrd, FTYPE Bconlu, FTYPE Bconru, FTYPE Bconl, FTYPE Bconr, FTYPE Bcond, FTYPE Bconu
-				    ,FTYPE vconc,FTYPE vconld, FTYPE vconrd, FTYPE vconlu, FTYPE vconru, FTYPE vconl, FTYPE vconr, FTYPE vcond, FTYPE vconu
-				    ,FTYPE *Fld, FTYPE *Frd, FTYPE *Flu, FTYPE *Fru
-				    )
+                                    FTYPE gdetc,FTYPE gdetld, FTYPE gdetrd, FTYPE gdetlu, FTYPE gdetru, FTYPE gdetl, FTYPE gdetr, FTYPE gdetd, FTYPE gdetu
+                                    ,FTYPE Bconc,FTYPE Bconld, FTYPE Bconrd, FTYPE Bconlu, FTYPE Bconru, FTYPE Bconl, FTYPE Bconr, FTYPE Bcond, FTYPE Bconu
+                                    ,FTYPE vconc,FTYPE vconld, FTYPE vconrd, FTYPE vconlu, FTYPE vconru, FTYPE vconl, FTYPE vconr, FTYPE vcond, FTYPE vconu
+                                    ,FTYPE *Fld, FTYPE *Frd, FTYPE *Flu, FTYPE *Fru
+                                    )
 {
   FTYPE t[1078]; // 1078+12 total and 1078 in t[] and 12 in vartemp
 

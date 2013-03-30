@@ -182,9 +182,9 @@ int bound_prim_user(int boundstage, FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
   x2_outer_polar(prim);
 
 #if(CLEANBH)
-      clean_btheta_x1outer(prim);
+  clean_btheta_x1outer(prim);
 #endif
-      // polar bound after B^\theta adjusted
+  // polar bound after B^\theta adjusted
   x2_inner_polar(prim);
   x2_outer_polar(prim);
 
@@ -276,245 +276,245 @@ void bound_field_outflow(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 
 
       LOOPF2 LOOPF3{
-	ri=0;
-	rj=j;
-	rk=k;
+        ri=0;
+        rj=j;
+        rk=k;
 
-	// get reference grid parameters
-	get_geometry(ri, rj, rk, CENT, &rgeom);
+        // get reference grid parameters
+        get_geometry(ri, rj, rk, CENT, &rgeom);
 
 
 #if(1) // usually need face values -- don't HAVE to use them
-	get_geometry(ri, rj, rk, FACE1, &fgeom);
-	coord(ri, rj, rk, FACE1, fX);
-	bl_coord( fX, fV );
-	dxdxprim(fX, fV, fdxdxp);
+        get_geometry(ri, rj, rk, FACE1, &fgeom);
+        coord(ri, rj, rk, FACE1, fX);
+        bl_coord( fX, fV );
+        dxdxprim(fX, fV, fdxdxp);
 
-	// get analytical solution at NS surface
-	set_face1(ri,rj,rk,prim,prface);
+        // get analytical solution at NS surface
+        set_face1(ri,rj,rk,prim,prface);
 
-	//PLOOP(pliter,pl) dualfprintf(fail_file,"ri=%d rj=%d rk=%d pl=%d prface=%21.15g\n",ri,rj,rk,pl,prface[pl]);
+        //PLOOP(pliter,pl) dualfprintf(fail_file,"ri=%d rj=%d rk=%d pl=%d prface=%21.15g\n",ri,rj,rk,pl,prface[pl]);
 #endif
 
 
 
 
-	// loop over ghost zones inside star
-	LOOPBOUND1IN{
+        // loop over ghost zones inside star
+        LOOPBOUND1IN{
 
 
-	  // reference geometry
-	  coord(ri, rj, rk, CENT, rX);
-	  bl_coord( rX, rV );
-	  dxdxprim(rX, rV, rdxdxp);
-	  get_geometry(ri, rj, rk, CENT, &rgeom);
+          // reference geometry
+          coord(ri, rj, rk, CENT, rX);
+          bl_coord( rX, rV );
+          dxdxprim(rX, rV, rdxdxp);
+          get_geometry(ri, rj, rk, CENT, &rgeom);
 
-	  // ghost cell geometry
-	  coord(i, j, k, CENT, X);
-	  bl_coord( X, V );
-	  dxdxprim(X, V, dxdxp);
-	  get_geometry(i, j, k, CENT, &geom);
-
-
+          // ghost cell geometry
+          coord(i, j, k, CENT, X);
+          bl_coord( X, V );
+          dxdxprim(X, V, dxdxp);
+          get_geometry(i, j, k, CENT, &geom);
 
 
 
-	  // below not used yet
-	  ///	  pl=UU; MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
-	  pl=UU; MACP0A1(prim,i,j,k,pl) = 0.0;
 
 
-	  // outflow field, NS field completely reconnects through surface
-	  //	  for(pl=B1;pl<=B3;pl++)  MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,k,pl);
+          // below not used yet
+          ///   pl=UU; MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
+          pl=UU; MACP0A1(prim,i,j,k,pl) = 0.0;
 
-	  // outflow B^\theta B^\phi
-	  // SUPERGODMARK : removed B2 -- worried about divb ... probably just normalization is crazy
-	  //	  MACP0A1(prim,i,j,k,B2) = GLOBALMACP0A1(panalytic,i,j,k,B2);
 
-	  //	  for(pl=B2;pl<=B3;pl++){
-	  //  MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * GLOBALMACP1A0(gdet,CENT,ri,rj,rk)/GLOBALMACP1A0(gdet,CENT,i,j,k) ;
-	  // }
-	  //pl = B2;
-	  // for dipole, constant is B^\theta \propto 1/(\detg r^2)
-	  // below seems best
-	  //	  MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * GLOBALMACP1A0(gdet,CENT,ri,rj,rk)*rV[1]*rV[1]/(GLOBALMACP1A0(gdet,CENT,i,j,k)*V[1]*V[1]) ;
-	  // seems to do ok
-	  //	  MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * GLOBALMACP1A0(gdet,CENT,ri,rj,rk)/(GLOBALMACP1A0(gdet,CENT,i,j,k)) ;
-	  // does worst as for polar artifacts
-	  //	  MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) ;
+          // outflow field, NS field completely reconnects through surface
+          //   for(pl=B1;pl<=B3;pl++)  MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,k,pl);
+
+          // outflow B^\theta B^\phi
+          // SUPERGODMARK : removed B2 -- worried about divb ... probably just normalization is crazy
+          //   MACP0A1(prim,i,j,k,B2) = GLOBALMACP0A1(panalytic,i,j,k,B2);
+
+          //   for(pl=B2;pl<=B3;pl++){
+          //  MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * GLOBALMACP1A0(gdet,CENT,ri,rj,rk)/GLOBALMACP1A0(gdet,CENT,i,j,k) ;
+          // }
+          //pl = B2;
+          // for dipole, constant is B^\theta \propto 1/(\detg r^2)
+          // below seems best
+          //   MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * GLOBALMACP1A0(gdet,CENT,ri,rj,rk)*rV[1]*rV[1]/(GLOBALMACP1A0(gdet,CENT,i,j,k)*V[1]*V[1]) ;
+          // seems to do ok
+          //   MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * GLOBALMACP1A0(gdet,CENT,ri,rj,rk)/(GLOBALMACP1A0(gdet,CENT,i,j,k)) ;
+          // does worst as for polar artifacts
+          //   MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) ;
 
 #if(0)
 
 
-	  // reference field
-	  Bcon[0]=0;
-	  Bcon[1]=MACP0A1(prim,ri,rj,rk,B1);
-	  Bcon[2]=MACP0A1(prim,ri,rj,rk,B2);
-	  Bcon[3]=MACP0A1(prim,ri,rj,rk,B3);
+          // reference field
+          Bcon[0]=0;
+          Bcon[1]=MACP0A1(prim,ri,rj,rk,B1);
+          Bcon[2]=MACP0A1(prim,ri,rj,rk,B2);
+          Bcon[3]=MACP0A1(prim,ri,rj,rk,B3);
 
-	  getnewucon(Bcon, rV, &rgeom, rdxdxp, V, &geom, dxdxp, Bconnew);
+          getnewucon(Bcon, rV, &rgeom, rdxdxp, V, &geom, dxdxp, Bconnew);
 
-	  MACP0A1(prim,i,j,k,B2)=Bconnew[TH];
-	  MACP0A1(prim,i,j,k,B3)=Bconnew[PH];
+          MACP0A1(prim,i,j,k,B2)=Bconnew[TH];
+          MACP0A1(prim,i,j,k,B3)=Bconnew[PH];
 #endif
 #if(0)
-	  pl = B3;
-	  MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * GLOBALMACP1A0(gdet,CENT,ri,rj,rk)/(GLOBALMACP1A0(gdet,CENT,i,j,k)) ;
+          pl = B3;
+          MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * GLOBALMACP1A0(gdet,CENT,ri,rj,rk)/(GLOBALMACP1A0(gdet,CENT,i,j,k)) ;
 
-	  pl=B2;
-	  MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * GLOBALMACP1A0(gdet,CENT,ri,rj,rk)/GLOBALMACP1A0(gdet,CENT,i,j,k) ;
+          pl=B2;
+          MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * GLOBALMACP1A0(gdet,CENT,ri,rj,rk)/GLOBALMACP1A0(gdet,CENT,i,j,k) ;
 
-	  //pl=B3;
-	  //MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * GLOBALMACP1A0(gdet,CENT,ri,rj,rk)/GLOBALMACP1A0(gdet,CENT,i,j,k) ;
+          //pl=B3;
+          //MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * GLOBALMACP1A0(gdet,CENT,ri,rj,rk)/GLOBALMACP1A0(gdet,CENT,i,j,k) ;
 
 
-	  //	  for(pl=B2;pl<=B3;pl++)  MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
+          //   for(pl=B2;pl<=B3;pl++)  MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
 #endif
 #if(1)
-	  // extrapolation must be consistent with face method
+          // extrapolation must be consistent with face method
 
 
-	  // MOST ROBUST (choice for B2 doesn't matter if using cleaning and using FLIPGDETAXIS 0
-	  pl = B3;
-	  MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
+          // MOST ROBUST (choice for B2 doesn't matter if using cleaning and using FLIPGDETAXIS 0
+          pl = B3;
+          MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
 
-	  pl=B2;
-	  MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * GLOBALMACP1A0(gdet,CENT,ri,rj,rk)/GLOBALMACP1A0(gdet,CENT,i,j,k) ;
-	  //MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
-	  // try supressing rise near pole/star of B^\theta (odd that makes one side (pi-pole) large + and then - value with cleaning?
-	  //      MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * GLOBALMACP1A0(gdet,CENT,ri,rj,rk)/GLOBALMACP1A0(gdet,CENT,i,j,k)*fabs(sin(V[2])) ;
-	  //	  MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl); // if cleaning, doesn't matter what this is except the startingn value that is solvable if FLIPGDETAXIS=0 and not otherwise
-	  // below only matters if FLIPGDETAXIS==1 since otherwise one solves for these values in the end anyways
-	  //	  if(startpos[2]+j==0) MACP0A1(prim,i,j,k,pl)=0.0; // crushing regularization
-	  //	  if(startpos[2]+j==totalsize[2]-1) MACP0A1(prim,i,j,k,pl)=0.0; // crushing regularization
+          pl=B2;
+          MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * GLOBALMACP1A0(gdet,CENT,ri,rj,rk)/GLOBALMACP1A0(gdet,CENT,i,j,k) ;
+          //MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
+          // try supressing rise near pole/star of B^\theta (odd that makes one side (pi-pole) large + and then - value with cleaning?
+          //      MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * GLOBALMACP1A0(gdet,CENT,ri,rj,rk)/GLOBALMACP1A0(gdet,CENT,i,j,k)*fabs(sin(V[2])) ;
+          //   MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl); // if cleaning, doesn't matter what this is except the startingn value that is solvable if FLIPGDETAXIS=0 and not otherwise
+          // below only matters if FLIPGDETAXIS==1 since otherwise one solves for these values in the end anyways
+          //   if(startpos[2]+j==0) MACP0A1(prim,i,j,k,pl)=0.0; // crushing regularization
+          //   if(startpos[2]+j==totalsize[2]-1) MACP0A1(prim,i,j,k,pl)=0.0; // crushing regularization
 
 #endif
 #if(0)
 
-    if(sign(MACP0A1(prim,ri,rj,rk,B3))==sign(-prface[B1]*GLOBALMACP1A0(pother,OMEGAFFACE1,ri,rj,rk))){
-      // then normal situation so can extrapolate	
-      MACP0A1(prim,i,j,k,B3) = MACP0A1(prim,ri,rj,rk,B3)*pow(rV[1]/V[1],3);
-    }
-    else{ // then assume out of equilibrium so don't extrapolate
-      MACP0A1(prim,i,j,k,B3) = MACP0A1(prim,ri,rj,rk,B3);
-    }
+          if(sign(MACP0A1(prim,ri,rj,rk,B3))==sign(-prface[B1]*GLOBALMACP1A0(pother,OMEGAFFACE1,ri,rj,rk))){
+            // then normal situation so can extrapolate 
+            MACP0A1(prim,i,j,k,B3) = MACP0A1(prim,ri,rj,rk,B3)*pow(rV[1]/V[1],3);
+          }
+          else{ // then assume out of equilibrium so don't extrapolate
+            MACP0A1(prim,i,j,k,B3) = MACP0A1(prim,ri,rj,rk,B3);
+          }
 
-    pl=B2;
-    //    MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
-    // pretty good
-    //    MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * GLOBALMACP1A0(gdet,CENT,ri,rj,rk)/GLOBALMACP1A0(gdet,CENT,i,j,k) ;
-    MACP0A1(prim,i,j,k,pl) = prface[pl] * (fgeom.g)/(geom.g);
-    // for dipole mostly constant
+          pl=B2;
+          //    MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
+          // pretty good
+          //    MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * GLOBALMACP1A0(gdet,CENT,ri,rj,rk)/GLOBALMACP1A0(gdet,CENT,i,j,k) ;
+          MACP0A1(prim,i,j,k,pl) = prface[pl] * (fgeom.g)/(geom.g);
+          // for dipole mostly constant
 
-    if(VARTOINTERPFIELD==PULSARFIELD2){
-      MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * dxdxp[2][2]*pow(V[1],4)/(rdxdxp[2][2]*pow(rV[1],4));
-    }
-    else if(VARTOINTERPFIELD==PULSARFIELD3){
-      MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl)*(sqrt(fabs(geom.gcov[GIND(2,2)]))*pow(V[1],3.0))/(sqrt(fabs(rgeom.gcov[GIND(2,2)]))*pow(rV[1],3.0));
-    }
+          if(VARTOINTERPFIELD==PULSARFIELD2){
+            MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * dxdxp[2][2]*pow(V[1],4)/(rdxdxp[2][2]*pow(rV[1],4));
+          }
+          else if(VARTOINTERPFIELD==PULSARFIELD3){
+            MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl)*(sqrt(fabs(geom.gcov[GIND(2,2)]))*pow(V[1],3.0))/(sqrt(fabs(rgeom.gcov[GIND(2,2)]))*pow(rV[1],3.0));
+          }
 
 
 #endif
 
 
-    ////////////////////
-    // fix quantities within entire surface to analytical values
-    for(pl=UU;pl<=UU;pl++)  MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
-    //	  for(pl=UU;pl<=UU;pl++)  MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
+          ////////////////////
+          // fix quantities within entire surface to analytical values
+          for(pl=UU;pl<=UU;pl++)  MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
+          //   for(pl=UU;pl<=UU;pl++)  MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
     
 
 
 
-	  ///////////////////////////////////////
-	  //
-	  // set B^r
-	  //
-	  ///////////////////////////////////////
+          ///////////////////////////////////////
+          //
+          // set B^r
+          //
+          ///////////////////////////////////////
 
 
 #if(SETGHOSTB1==1)
-	  ///////////////////////////////////////////////////////////////////
-	  //
-	  /////////////// FIX SOME QUANTITIES to analytic solution
-	  //
-	  //////////////////////////////////////////////////////////////////
-	  // fix B^r
-	  // "analytical" value from FLUXCT
-	  //MACP0A1(prim,i,j,k,B1) = GLOBALMACP0A1(panalytic,i,j,k,B1);
-	  // analytical value from perfect differencing
-	  MACP0A1(prim,i,j,k,B1) = GLOBALMACP1A0(pother,B1CENT,i,j,k); // SUPERGODMARK
-	  //MACP0A1(prim,i,j,k,B1) = GLOBALMACP1A0(pother,B1FACE1,i,j,k); // SUPERGODMARK
+          ///////////////////////////////////////////////////////////////////
+          //
+          /////////////// FIX SOME QUANTITIES to analytic solution
+          //
+          //////////////////////////////////////////////////////////////////
+          // fix B^r
+          // "analytical" value from FLUXCT
+          //MACP0A1(prim,i,j,k,B1) = GLOBALMACP0A1(panalytic,i,j,k,B1);
+          // analytical value from perfect differencing
+          MACP0A1(prim,i,j,k,B1) = GLOBALMACP1A0(pother,B1CENT,i,j,k); // SUPERGODMARK
+          //MACP0A1(prim,i,j,k,B1) = GLOBALMACP1A0(pother,B1FACE1,i,j,k); // SUPERGODMARK
 
 #elif(SETGHOSTB1==0)
 
-	  //////////////////////////////
-	  //
-	  // extrapolate through surface analytical value
-	  //
-	  ////////////////////////////////
+          //////////////////////////////
+          //
+          // extrapolate through surface analytical value
+          //
+          ////////////////////////////////
 
 
-	  // choose to extrapolate the same as in interpolation routines (flux.c) or something close
+          // choose to extrapolate the same as in interpolation routines (flux.c) or something close
 
 
-	  // B1
-	  // should really be fixing orthonormal B^r and not B1 !  Otherwise problem changes when changing grid/resolution
-	  // if going to use other components, then really need to do this after B^\theta B^\phi are done changing (i.e. after B^\theta (B2?) cleaned)
-	  // or perhaps that's not so important and can clean B^\theta anyways and use origianl B2 as estimate to constrain B1 from B^r estimated B\theta
+          // B1
+          // should really be fixing orthonormal B^r and not B1 !  Otherwise problem changes when changing grid/resolution
+          // if going to use other components, then really need to do this after B^\theta B^\phi are done changing (i.e. after B^\theta (B2?) cleaned)
+          // or perhaps that's not so important and can clean B^\theta anyways and use origianl B2 as estimate to constrain B1 from B^r estimated B\theta
 #if(0)
-	  v1=prface[B1]*sqrt(fabs(fgeom.gcov[GIND(1,1)]))*pow(fV[1],3); // close to constant for dipole
-	  v2=MACP0A1(prim,ri,rj,rk,B1)*sqrt(fabs(rgeom.gcov[GIND(1,1)]))*pow(rV[1],3);
-	  slope=(v2-v1)/(rV[1]-fV[1]);
+          v1=prface[B1]*sqrt(fabs(fgeom.gcov[GIND(1,1)]))*pow(fV[1],3); // close to constant for dipole
+          v2=MACP0A1(prim,ri,rj,rk,B1)*sqrt(fabs(rgeom.gcov[GIND(1,1)]))*pow(rV[1],3);
+          slope=(v2-v1)/(rV[1]-fV[1]);
 
-	  newv=slope*(V[1]-fV[1])+v1;
-	  MACP0A1(prim,i,j,k,B1) = newv/(sqrt(fabs(geom.gcov[GIND(1,1)]))*pow(V[1],3));
+          newv=slope*(V[1]-fV[1])+v1;
+          MACP0A1(prim,i,j,k,B1) = newv/(sqrt(fabs(geom.gcov[GIND(1,1)]))*pow(V[1],3));
 #elif(1)
-	  v1=prface[B1];
-	  v2=MACP0A1(prim,ri,rj,rk,B1);
-	  slope=(v2-v1)/(rV[1]-fV[1]);
+          v1=prface[B1];
+          v2=MACP0A1(prim,ri,rj,rk,B1);
+          slope=(v2-v1)/(rV[1]-fV[1]);
 
-	  newv=slope*(V[1]-fV[1])+v1;
-	  MACP0A1(prim,i,j,k,B1) = newv;
-#elif(0)	  
-  	  MACP0A1(prim,i,j,k,B1) = prface[B1];
+          newv=slope*(V[1]-fV[1])+v1;
+          MACP0A1(prim,i,j,k,B1) = newv;
+#elif(0)   
+          MACP0A1(prim,i,j,k,B1) = prface[B1];
 #elif(0)
-	  // preserves flux if face has preserved flux
-	  // causes uu0>>1 on entire surface
-  	  MACP0A1(prim,i,j,k,B1) = prface[B1]*(fgeom.g)/(geom.g);
-#elif(0)
-
-	  // second reference geometry
-	  coord(ri+1, rj, rk, CENT, rrX);
-	  bl_coord( rrX, rrV );
-	  dxdxprim(rrX, rrV, rrdxdxp);
-	  get_geometry(ri+1, rj, rk, CENT, &rrgeom);
-
-	  v1=prface[B1]*sqrt(fabs(fgeom.gcov[GIND(1,1)]))*pow(fV[1],3); // close to constant for dipole
-	  v2=MACP0A1(prim,ri,rj,rk,B1)*sqrt(fabs(rgeom.gcov[GIND(1,1)]))*pow(rV[1],3);
-	  v3=MACP0A1(prim,ri+1,rj,rk,B1)*sqrt(fabs(rrgeom.gcov[GIND(1,1)]))*pow(rrV[1],3);
-
-	  myA=( (v1-v3)/(fV[1]-rrV[1]) + (v3-v2)/(rV[1]-rrV[1]) )/(fV[1]-rV[1]);
-	  myB=(v1-v2)/(fV[1]-rV[1]) + (v1-v3)/(fV[1]-rrV[1]) + (v3-v2)/(rV[1]-rrV[1]) ;
-
-	  newv=v1+myA*(V[1]-fV[1])*(V[1]-fV[1]) + myB*(V[1]-fV[1]);
-	  MACP0A1(prim,i,j,k,B1) = newv/(sqrt(fabs(geom.gcov[GIND(1,1)]))*pow(V[1],3));
+          // preserves flux if face has preserved flux
+          // causes uu0>>1 on entire surface
+          MACP0A1(prim,i,j,k,B1) = prface[B1]*(fgeom.g)/(geom.g);
 #elif(0)
 
-	  // second reference geometry
-	  coord(ri+1, rj, rk, CENT, rrX);
-	  bl_coord( rrX, rrV );
-	  dxdxprim(rrX, rrV, rrdxdxp);
-	  get_geometry(ri+1, rj, rk, CENT, &rrgeom);
+          // second reference geometry
+          coord(ri+1, rj, rk, CENT, rrX);
+          bl_coord( rrX, rrV );
+          dxdxprim(rrX, rrV, rrdxdxp);
+          get_geometry(ri+1, rj, rk, CENT, &rrgeom);
 
-	  v1=prface[B1];
-	  v2=MACP0A1(prim,ri,rj,rk,B1);
-	  v3=MACP0A1(prim,ri+1,rj,rk,B1);
+          v1=prface[B1]*sqrt(fabs(fgeom.gcov[GIND(1,1)]))*pow(fV[1],3); // close to constant for dipole
+          v2=MACP0A1(prim,ri,rj,rk,B1)*sqrt(fabs(rgeom.gcov[GIND(1,1)]))*pow(rV[1],3);
+          v3=MACP0A1(prim,ri+1,rj,rk,B1)*sqrt(fabs(rrgeom.gcov[GIND(1,1)]))*pow(rrV[1],3);
 
-	  myA=( (v1-v3)/(fV[1]-rrV[1]) + (v3-v2)/(rV[1]-rrV[1]) )/(fV[1]-rV[1]);
-	  myB=(v1-v2)/(fV[1]-rV[1]) + (v1-v3)/(fV[1]-rrV[1]) + (v3-v2)/(rV[1]-rrV[1]) ;
+          myA=( (v1-v3)/(fV[1]-rrV[1]) + (v3-v2)/(rV[1]-rrV[1]) )/(fV[1]-rV[1]);
+          myB=(v1-v2)/(fV[1]-rV[1]) + (v1-v3)/(fV[1]-rrV[1]) + (v3-v2)/(rV[1]-rrV[1]) ;
 
-	  newv=v1+myA*(V[1]-fV[1])*(V[1]-fV[1]) + myB*(V[1]-fV[1]);
-	  MACP0A1(prim,i,j,k,B1) = newv;
+          newv=v1+myA*(V[1]-fV[1])*(V[1]-fV[1]) + myB*(V[1]-fV[1]);
+          MACP0A1(prim,i,j,k,B1) = newv/(sqrt(fabs(geom.gcov[GIND(1,1)]))*pow(V[1],3));
+#elif(0)
+
+          // second reference geometry
+          coord(ri+1, rj, rk, CENT, rrX);
+          bl_coord( rrX, rrV );
+          dxdxprim(rrX, rrV, rrdxdxp);
+          get_geometry(ri+1, rj, rk, CENT, &rrgeom);
+
+          v1=prface[B1];
+          v2=MACP0A1(prim,ri,rj,rk,B1);
+          v3=MACP0A1(prim,ri+1,rj,rk,B1);
+
+          myA=( (v1-v3)/(fV[1]-rrV[1]) + (v3-v2)/(rV[1]-rrV[1]) )/(fV[1]-rV[1]);
+          myB=(v1-v2)/(fV[1]-rV[1]) + (v1-v3)/(fV[1]-rrV[1]) + (v3-v2)/(rV[1]-rrV[1]) ;
+
+          newv=v1+myA*(V[1]-fV[1])*(V[1]-fV[1]) + myB*(V[1]-fV[1]);
+          MACP0A1(prim,i,j,k,B1) = newv;
 #endif
 
 
@@ -524,98 +524,98 @@ void bound_field_outflow(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 
 
 
-	  ///////////////////////////////////////
-	  //
-	  // set velocity (field should be set by now)
-	  //
-	  ///////////////////////////////////////
+          ///////////////////////////////////////
+          //
+          // set velocity (field should be set by now)
+          //
+          ///////////////////////////////////////
 
 
 
 #if(SETGHOSTV==1)// set via stationary conditions
 
-	  // assume vparface1 is same as vparcent
-  set_vel_stataxi(&geom, GLOBALMACP1A0(pother,OMEGAFCENT,i,j,k),GLOBALMACP1A0(pother,VPARFACE1,i,j,k),MAC(prim,i,j,k));
+          // assume vparface1 is same as vparcent
+          set_vel_stataxi(&geom, GLOBALMACP1A0(pother,OMEGAFCENT,i,j,k),GLOBALMACP1A0(pother,VPARFACE1,i,j,k),MAC(prim,i,j,k));
 
 #elif(SETGHOSTV==0)// otherwise will set via stationarity conditions
 
-	  //	  for(pl=U1;pl<=B3;pl++) dualfprintf(fail_file,"i=%d j=%d pl=%d prface=%21.15g :: %21.15g\n",i,j,pl,prface[pl],GLOBALMACP1A0(pother,VPARFACE1,i,j,k));
+          //   for(pl=U1;pl<=B3;pl++) dualfprintf(fail_file,"i=%d j=%d pl=%d prface=%21.15g :: %21.15g\n",i,j,pl,prface[pl],GLOBALMACP1A0(pother,VPARFACE1,i,j,k));
 
-	  // now can interpolate through primitive velocities and then RESET boundary values to satisfy stationary/axisymmetric conditions
+          // now can interpolate through primitive velocities and then RESET boundary values to satisfy stationary/axisymmetric conditions
 
-	  ///////////////////////////////
-	  // NEW: Don't worry about proxy values inside star being stationary.  Just make sure boundary velocity is stationary where flux is set
-	  // compare with setting velocity via field, omegaf, and vpar in standard vel-set function
-	  // \tilde{u}^{jj}
+          ///////////////////////////////
+          // NEW: Don't worry about proxy values inside star being stationary.  Just make sure boundary velocity is stationary where flux is set
+          // compare with setting velocity via field, omegaf, and vpar in standard vel-set function
+          // \tilde{u}^{jj}
 #if(0)
-	  SLOOPA(jj){
-	    v1=prface[U1+jj-1];
-	    v2=MACP0A1(prim,ri,rj,rk,U1+jj-1);
-	    slope=(v2-v1)/(rV[1]-fV[1]);
-	    newv=slope*(V[1]-fV[1])+v1;
-	    MACP0A1(prim,i,j,k,U1+jj-1) = newv;
-	  }
+          SLOOPA(jj){
+            v1=prface[U1+jj-1];
+            v2=MACP0A1(prim,ri,rj,rk,U1+jj-1);
+            slope=(v2-v1)/(rV[1]-fV[1]);
+            newv=slope*(V[1]-fV[1])+v1;
+            MACP0A1(prim,i,j,k,U1+jj-1) = newv;
+          }
 #elif(1)
-	  SLOOPA(jj){
-	    MACP0A1(prim,i,j,k,U1+jj-1) = prface[U1+jj-1];
-	  }
+          SLOOPA(jj){
+            MACP0A1(prim,i,j,k,U1+jj-1) = prface[U1+jj-1];
+          }
 #endif
-	  //	  PLOOP(pliter,pl) dualfprintf(fail_file,"i=%d j=%d pl=%d pother=%21.15g\n",i,j,pl,GLOBALMACP1A0(pother,RHOFACE1+pl,ri,rj,rk));
+          //   PLOOP(pliter,pl) dualfprintf(fail_file,"i=%d j=%d pl=%d pother=%21.15g\n",i,j,pl,GLOBALMACP1A0(pother,RHOFACE1+pl,ri,rj,rk));
 
 #endif
 
 
 
 
-	  ///////////////////////////////////////
-	  //
-	  // set density
-	  //
-	  ///////////////////////////////////////
+          ///////////////////////////////////////
+          //
+          // set density
+          //
+          ///////////////////////////////////////
 
 
 
 #if(SETGHOSTRHO==1)
-	  
-	  // fix \rho_0
-	  MACP0A1(prim,i,j,k,RHO) = GLOBALMACP0A1(panalytic,i,j,k,RHO);
+   
+          // fix \rho_0
+          MACP0A1(prim,i,j,k,RHO) = GLOBALMACP0A1(panalytic,i,j,k,RHO);
 
 #elif(SETGHOSTRHO==0)
 
-	  // rho
+          // rho
 #if(0)
-	  v1=prface[RHO]*pow(fV[1],2); // assume density goes like 1/r^2
-	  v2=MACP0A1(prim,ri,rj,rk,RHO)*pow(rV[1],2);
-	  slope=(v2-v1)/(rV[1]-fV[1]);
+          v1=prface[RHO]*pow(fV[1],2); // assume density goes like 1/r^2
+          v2=MACP0A1(prim,ri,rj,rk,RHO)*pow(rV[1],2);
+          slope=(v2-v1)/(rV[1]-fV[1]);
 
-	  newv=slope*(V[1]-fV[1])+v1;
-	  MACP0A1(prim,i,j,k,RHO) = newv/(pow(V[1],2));
+          newv=slope*(V[1]-fV[1])+v1;
+          MACP0A1(prim,i,j,k,RHO) = newv/(pow(V[1],2));
 #elif(0)
-	  v1=prface[RHO];
-	  v2=MACP0A1(prim,ri,rj,rk,RHO);
-	  slope=(v2-v1)/(rV[1]-fV[1]);
+          v1=prface[RHO];
+          v2=MACP0A1(prim,ri,rj,rk,RHO);
+          slope=(v2-v1)/(rV[1]-fV[1]);
 
-	  newv=slope*(V[1]-fV[1])+v1;
-	  MACP0A1(prim,i,j,k,RHO) = newv;
+          newv=slope*(V[1]-fV[1])+v1;
+          MACP0A1(prim,i,j,k,RHO) = newv;
 #elif(1)
-	  MACP0A1(prim,i,j,k,RHO) = prface[RHO];
+          MACP0A1(prim,i,j,k,RHO) = prface[RHO];
 #elif(0)
 
-	  // second reference geometry
-	  coord(ri+1, rj, rk, CENT, rrX);
-	  bl_coord( rrX, rrV );
-	  dxdxprim(rrX, rrV, rrdxdxp);
-	  get_geometry(ri+1, rj, rk, CENT, &rrgeom);
+          // second reference geometry
+          coord(ri+1, rj, rk, CENT, rrX);
+          bl_coord( rrX, rrV );
+          dxdxprim(rrX, rrV, rrdxdxp);
+          get_geometry(ri+1, rj, rk, CENT, &rrgeom);
 
-	  v1=prface[RHO];
-	  v2=MACP0A1(prim,ri,rj,rk,RHO);
-	  v3=MACP0A1(prim,ri+1,rj,rk,RHO);
+          v1=prface[RHO];
+          v2=MACP0A1(prim,ri,rj,rk,RHO);
+          v3=MACP0A1(prim,ri+1,rj,rk,RHO);
 
-	  myA=( (v1-v3)/(fV[1]-rrV[1]) + (v3-v2)/(rV[1]-rrV[1]) )/(fV[1]-rV[1]);
-	  myB=(v1-v2)/(fV[1]-rV[1]) + (v1-v3)/(fV[1]-rrV[1]) + (v3-v2)/(rV[1]-rrV[1]) ;
+          myA=( (v1-v3)/(fV[1]-rrV[1]) + (v3-v2)/(rV[1]-rrV[1]) )/(fV[1]-rV[1]);
+          myB=(v1-v2)/(fV[1]-rV[1]) + (v1-v3)/(fV[1]-rrV[1]) + (v3-v2)/(rV[1]-rrV[1]) ;
 
-	  newv=v1+myA*(V[1]-fV[1])*(V[1]-fV[1]) + myB*(V[1]-fV[1]);
-	  MACP0A1(prim,i,j,k,RHO) = newv;
+          newv=v1+myA*(V[1]-fV[1])*(V[1]-fV[1]) + myB*(V[1]-fV[1]);
+          MACP0A1(prim,i,j,k,RHO) = newv;
 #endif
 
 
@@ -623,53 +623,53 @@ void bound_field_outflow(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 
 #elif(SETGHOSTRHO==2)
 
-	  // rho
+          // rho
 #if(1) // donor using stationary/axisymmetric conditions for density
 
-	  up2face=0.0;
-	  SLOOP(jj,kk){
-	    up2face+=prface[U1+jj-1]*prface[U1+kk-1]*fgeom.gcov[GIND(jj,kk)];
-	    //	    dualfprintf(fail_file,"prface[%d]=%21.15g\n",jj,prface[U1+jj-1]);
-	  }
-	  Bp2face=0.0;
-	  SLOOP(jj,kk){
-	    Bp2face+=prface[B1+jj-1]*prface[B1+kk-1]*fgeom.gcov[GIND(jj,kk)];
-	    //	    dualfprintf(fail_file,"prface[%d]=%21.15g\n",jj,prface[B1+jj-1]);
-	  }
+          up2face=0.0;
+          SLOOP(jj,kk){
+            up2face+=prface[U1+jj-1]*prface[U1+kk-1]*fgeom.gcov[GIND(jj,kk)];
+            //     dualfprintf(fail_file,"prface[%d]=%21.15g\n",jj,prface[U1+jj-1]);
+          }
+          Bp2face=0.0;
+          SLOOP(jj,kk){
+            Bp2face+=prface[B1+jj-1]*prface[B1+kk-1]*fgeom.gcov[GIND(jj,kk)];
+            //     dualfprintf(fail_file,"prface[%d]=%21.15g\n",jj,prface[B1+jj-1]);
+          }
 
-	  up2cent=0.0;
-	  SLOOP(jj,kk){
-	    up2cent+=MACP0A1(prim,i,j,k,U1+jj-1)*MACP0A1(prim,i,j,k,U1+kk-1)*geom.gcov[GIND(jj,kk)];
-	  }
-	  Bp2cent=0.0;
-	  SLOOP(jj,kk){
-	    Bp2cent+=MACP0A1(prim,i,j,k,B1+jj-1)*MACP0A1(prim,i,j,k,B1+kk-1)*geom.gcov[GIND(jj,kk)];
-	  }
-	  
-	  myA=sqrt(fabs(up2face)/fabs(Bp2face));
-	  myB=sqrt(fabs(up2cent)/fabs(Bp2cent));
-	  if(myB!=0.0 && Bp2face!=0.0 && Bp2cent!=0.0){
-	    MACP0A1(prim,i,j,k,RHO) = prface[RHO]*myA/myB;
-	  }
-	  else MACP0A1(prim,i,j,k,RHO)=prface[RHO];
+          up2cent=0.0;
+          SLOOP(jj,kk){
+            up2cent+=MACP0A1(prim,i,j,k,U1+jj-1)*MACP0A1(prim,i,j,k,U1+kk-1)*geom.gcov[GIND(jj,kk)];
+          }
+          Bp2cent=0.0;
+          SLOOP(jj,kk){
+            Bp2cent+=MACP0A1(prim,i,j,k,B1+jj-1)*MACP0A1(prim,i,j,k,B1+kk-1)*geom.gcov[GIND(jj,kk)];
+          }
+   
+          myA=sqrt(fabs(up2face)/fabs(Bp2face));
+          myB=sqrt(fabs(up2cent)/fabs(Bp2cent));
+          if(myB!=0.0 && Bp2face!=0.0 && Bp2cent!=0.0){
+            MACP0A1(prim,i,j,k,RHO) = prface[RHO]*myA/myB;
+          }
+          else MACP0A1(prim,i,j,k,RHO)=prface[RHO];
 
-	  //	  dualfprintf(fail_file,"i=%d j=%d myA=%21.15g myB=%21.15g up2face=%21.15g Bp2face=%21.15g up2cent=%21.51g Bp2cent=%21.15g\n",i,j,myA,myB,up2face,Bp2face,up2cent,Bp2cent);
-
-#endif
-
-
-
+          //   dualfprintf(fail_file,"i=%d j=%d myA=%21.15g myB=%21.15g up2face=%21.15g Bp2face=%21.15g up2cent=%21.51g Bp2cent=%21.15g\n",i,j,myA,myB,up2face,Bp2face,up2cent,Bp2cent);
 
 #endif
 
 
 
 
+#endif
 
 
 
 
-	}
+
+
+
+
+        }
       }
       // now RHO, B^r, B^\theta, B^\phi, and U1 are set according to boundary conditions at surface
       // now can set v^i [other than v^r] and clean B^\theta if desired
@@ -770,7 +770,7 @@ void set_face1(int i, int j, int k, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE 
 
     // outflow as copy
     if(sign(MACP0A1(prim,i,j,k,B3))==sign(-prface[B1]*GLOBALMACP1A0(pother,OMEGAFFACE1,i,j,k))){
-      // then normal situation so can extrapolate	
+      // then normal situation so can extrapolate 
       prface[B3] = MACP0A1(prim,i,j,k,B3)*pow(Vc[1]/Vf[1],3);
     }
     else{ // then assume out of equilibrium so don't extrapolate
@@ -813,18 +813,18 @@ void set_plpr(int dir, int i, int j, int k, FTYPE (*prim)[NSTORE2][NSTORE3][NPR]
     PLOOP(pliter,pl){
  
       if(setnsflux[pl]){
-	if( 0 && pl == U1 ) {
-	  dualfprintf(fail_file,"n = %ld sp = %d j = %d pl=%d p_l=%21.15g p_r=%21.15g pother=%21.15g dp/p = %21.15g, dplpr/p = %21.15g\n",
-		      nstep,steppart,startpos[2]+j,pl,p_l[pl],p_r[pl],GLOBALMACP1A0(pother,RHOFACE1+pl,i,j,k), 
-		      fabs((p_l[pl]-GLOBALMACP1A0(pother,RHOFACE1+pl,i,j,k))/GLOBALMACP1A0(pother,RHOFACE1+pl,i,j,k)),
-		      2*fabs((p_l[pl]-p_r[pl])/(p_r[pl]+p_l[pl])) 
-		      );	
-	}
+        if( 0 && pl == U1 ) {
+          dualfprintf(fail_file,"n = %ld sp = %d j = %d pl=%d p_l=%21.15g p_r=%21.15g pother=%21.15g dp/p = %21.15g, dplpr/p = %21.15g\n",
+                      nstep,steppart,startpos[2]+j,pl,p_l[pl],p_r[pl],GLOBALMACP1A0(pother,RHOFACE1+pl,i,j,k), 
+                      fabs((p_l[pl]-GLOBALMACP1A0(pother,RHOFACE1+pl,i,j,k))/GLOBALMACP1A0(pother,RHOFACE1+pl,i,j,k)),
+                      2*fabs((p_l[pl]-p_r[pl])/(p_r[pl]+p_l[pl])) 
+                      ); 
+        }
 
-	p_l[pl]=p_r[pl]=GLOBALMACP1A0(pother,RHOFACE1+pl,i,j,k); // pl=0..NPR-1  (assumes ordering of pother[RHOFACE1->B3FACE1] as for standard primitives)
-	
-	//p_l[pl]=p_r[pl]; // pl=0..NPR-1  (assumes ordering of pother[RHOFACE1->B3FACE1] as for standard primitives)
-	//p_r[pl]=p_l[pl];
+        p_l[pl]=p_r[pl]=GLOBALMACP1A0(pother,RHOFACE1+pl,i,j,k); // pl=0..NPR-1  (assumes ordering of pother[RHOFACE1->B3FACE1] as for standard primitives)
+ 
+        //p_l[pl]=p_r[pl]; // pl=0..NPR-1  (assumes ordering of pother[RHOFACE1->B3FACE1] as for standard primitives)
+        //p_r[pl]=p_l[pl];
       }
 
     }
@@ -849,96 +849,96 @@ void clean_btheta_x1inner(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
   k=0;
   for(i=-1;i>=-N1BND;i--) for(j=0;j<=OUTM2;j++){ // going from down to up
 
-    if(startpos[2]+j>=totalsize[2]/2){
-    }
-    else if(startpos[2]+j == 0 && FLIPGDETAXIS==0){
-      // if FLIPGDETAXIS, then can't solve for near-axial value of B2
-      // if FLIPGDETAXIS=0, then can solve but must solve such that near-axial values are same instead of just original polar boundary value
-      // here pair is MACP0A1(prim,im,jp,k,B2) and MACP0A1(prim,im,jm,k,B2)
-      // and other pair is MACP0A1(prim,ip,jp,k,B2) and MACP0A1(prim,ip,jm,k,B2) (must treat as pair since iterating and haven't yet updated polar boundary values
+      if(startpos[2]+j>=totalsize[2]/2){
+      }
+      else if(startpos[2]+j == 0 && FLIPGDETAXIS==0){
+        // if FLIPGDETAXIS, then can't solve for near-axial value of B2
+        // if FLIPGDETAXIS=0, then can solve but must solve such that near-axial values are same instead of just original polar boundary value
+        // here pair is MACP0A1(prim,im,jp,k,B2) and MACP0A1(prim,im,jm,k,B2)
+        // and other pair is MACP0A1(prim,ip,jp,k,B2) and MACP0A1(prim,ip,jm,k,B2) (must treat as pair since iterating and haven't yet updated polar boundary values
 
-      // then on lower \theta
-      ip=ip1;
-      im=i;
-      jp=j; // otherwise similar to above section
-      jm=jm1; // otherwise similar to above section
+        // then on lower \theta
+        ip=ip1;
+        im=i;
+        jp=j; // otherwise similar to above section
+        jm=jm1; // otherwise similar to above section
 
-      get_geometry(im, jp, k, CENT, &geommp); // local point
-      get_geometry(ip, jp, k, CENT, &geompp);
-      get_geometry(ip, jm, k, CENT, &geompm);
-      get_geometry(im, jm, k, CENT, &geommm); // anti-sym to local point
+        get_geometry(im, jp, k, CENT, &geommp); // local point
+        get_geometry(ip, jp, k, CENT, &geompp);
+        get_geometry(ip, jm, k, CENT, &geompm);
+        get_geometry(im, jm, k, CENT, &geommm); // anti-sym to local point
 
-      divbr = ( (geompp.g * MACP0A1(prim,ip,jp,k,B1)+ geompm.g*MACP0A1(prim,ip,jm,k,B1)) - (geommp.g*MACP0A1(prim,im,jp,k,B1)+geommm.g*MACP0A1(prim,im,jm,k,B1)))/(2.0*dx[1]) ;
-      MACP0A1(prim,im,jp,k,B2) = (-geompp.g*MACP0A1(prim,ip,jp,k,B2)*2.0 - 2.0*dx[2]*divbr)/(2.0*geommp.g);
-    }
-    else if(startpos[2]+j == 0 && FLIPGDETAXIS){
-    }
-    else if(startpos[2]+j<=totalsize[2]/2-1){
-      // then on lower \theta
-      ip=ip1;
-      im=i;
-      jp=j; // otherwise similar to above section
-      jm=jm1; // otherwise similar to above section
+        divbr = ( (geompp.g * MACP0A1(prim,ip,jp,k,B1)+ geompm.g*MACP0A1(prim,ip,jm,k,B1)) - (geommp.g*MACP0A1(prim,im,jp,k,B1)+geommm.g*MACP0A1(prim,im,jm,k,B1)))/(2.0*dx[1]) ;
+        MACP0A1(prim,im,jp,k,B2) = (-geompp.g*MACP0A1(prim,ip,jp,k,B2)*2.0 - 2.0*dx[2]*divbr)/(2.0*geommp.g);
+      }
+      else if(startpos[2]+j == 0 && FLIPGDETAXIS){
+      }
+      else if(startpos[2]+j<=totalsize[2]/2-1){
+        // then on lower \theta
+        ip=ip1;
+        im=i;
+        jp=j; // otherwise similar to above section
+        jm=jm1; // otherwise similar to above section
 
-      get_geometry(im, jp, k, CENT, &geommp); // local point
-      get_geometry(ip, jp, k, CENT, &geompp);
-      get_geometry(ip, jm, k, CENT, &geompm);
-      get_geometry(im, jm, k, CENT, &geommm);
+        get_geometry(im, jp, k, CENT, &geommp); // local point
+        get_geometry(ip, jp, k, CENT, &geompp);
+        get_geometry(ip, jm, k, CENT, &geompm);
+        get_geometry(im, jm, k, CENT, &geommm);
 
-      divbr = ( (geompp.g * MACP0A1(prim,ip,jp,k,B1)+ geompm.g*MACP0A1(prim,ip,jm,k,B1)) - (geommp.g*MACP0A1(prim,im,jp,k,B1)+geommm.g*MACP0A1(prim,im,jm,k,B1)))/(2.0*dx[1]) ;
-      MACP0A1(prim,im,jp,k,B2) = (-geompp.g*MACP0A1(prim,ip,jp,k,B2)+geompm.g*MACP0A1(prim,ip,jm,k,B2)+geommm.g*MACP0A1(prim,im,jm,k,B2) - 2.0*dx[2]*divbr)/(geommp.g);
-    }
-    else{
-      dualfprintf(fail_file,"problem 117\n");
-      myexit(117);
-    }
+        divbr = ( (geompp.g * MACP0A1(prim,ip,jp,k,B1)+ geompm.g*MACP0A1(prim,ip,jm,k,B1)) - (geommp.g*MACP0A1(prim,im,jp,k,B1)+geommm.g*MACP0A1(prim,im,jm,k,B1)))/(2.0*dx[1]) ;
+        MACP0A1(prim,im,jp,k,B2) = (-geompp.g*MACP0A1(prim,ip,jp,k,B2)+geompm.g*MACP0A1(prim,ip,jm,k,B2)+geommm.g*MACP0A1(prim,im,jm,k,B2) - 2.0*dx[2]*divbr)/(geommp.g);
+      }
+      else{
+        dualfprintf(fail_file,"problem 117\n");
+        myexit(117);
+      }
 
-  }  
+    }  
 
   k=0;
   for(i=-1;i>=-N1BND;i--) for(j=OUTM2;j>=0;j--){ // then going from up to down
 
-    if(startpos[2]+j<=totalsize[2]/2-1){
-    }
-    else if(startpos[2]+j == totalsize[2]-1 && FLIPGDETAXIS){
-    }
-    else if(startpos[2]+j == totalsize[2]-1 && FLIPGDETAXIS==0){
-      // pairs are MACP0A1(prim,im,jm,k,B2) and MACP0A1(prim,im,jp,k,B2)
-      // then on upper \theta
-      ip=ip1;
-      im=i;
-      jp=jp1;
-      jm=j;
+      if(startpos[2]+j<=totalsize[2]/2-1){
+      }
+      else if(startpos[2]+j == totalsize[2]-1 && FLIPGDETAXIS){
+      }
+      else if(startpos[2]+j == totalsize[2]-1 && FLIPGDETAXIS==0){
+        // pairs are MACP0A1(prim,im,jm,k,B2) and MACP0A1(prim,im,jp,k,B2)
+        // then on upper \theta
+        ip=ip1;
+        im=i;
+        jp=jp1;
+        jm=j;
 
-      get_geometry(im, jp, k, CENT, &geommp);
-      get_geometry(ip, jp, k, CENT, &geompp);
-      get_geometry(ip, jm, k, CENT, &geompm);
-      get_geometry(im, jm, k, CENT, &geommm); // local point
+        get_geometry(im, jp, k, CENT, &geommp);
+        get_geometry(ip, jp, k, CENT, &geompp);
+        get_geometry(ip, jm, k, CENT, &geompm);
+        get_geometry(im, jm, k, CENT, &geommm); // local point
 
-      divbr = ( (geompp.g * MACP0A1(prim,ip,jp,k,B1)+ geompm.g*MACP0A1(prim,ip,jm,k,B1)) - (geommp.g*MACP0A1(prim,im,jp,k,B1)+geommm.g*MACP0A1(prim,im,jm,k,B1)))/(2.0*dx[1]) ;
-      MACP0A1(prim,im,jm,k,B2) = (-geompm.g*MACP0A1(prim,ip,jm,k,B2)*2.0 + 2.0*dx[2]*divbr)/(2.0*geommm.g);
-    }
-    else  if(startpos[2]+j>=totalsize[2]/2){
-      // then on upper \theta
-      ip=ip1;
-      im=i;
-      jp=jp1;
-      jm=j;
+        divbr = ( (geompp.g * MACP0A1(prim,ip,jp,k,B1)+ geompm.g*MACP0A1(prim,ip,jm,k,B1)) - (geommp.g*MACP0A1(prim,im,jp,k,B1)+geommm.g*MACP0A1(prim,im,jm,k,B1)))/(2.0*dx[1]) ;
+        MACP0A1(prim,im,jm,k,B2) = (-geompm.g*MACP0A1(prim,ip,jm,k,B2)*2.0 + 2.0*dx[2]*divbr)/(2.0*geommm.g);
+      }
+      else  if(startpos[2]+j>=totalsize[2]/2){
+        // then on upper \theta
+        ip=ip1;
+        im=i;
+        jp=jp1;
+        jm=j;
 
-      get_geometry(im, jp, k, CENT, &geommp);
-      get_geometry(ip, jp, k, CENT, &geompp);
-      get_geometry(ip, jm, k, CENT, &geompm);
-      get_geometry(im, jm, k, CENT, &geommm); // local point
+        get_geometry(im, jp, k, CENT, &geommp);
+        get_geometry(ip, jp, k, CENT, &geompp);
+        get_geometry(ip, jm, k, CENT, &geompm);
+        get_geometry(im, jm, k, CENT, &geommm); // local point
 
-      divbr = ( (geompp.g * MACP0A1(prim,ip,jp,k,B1)+ geompm.g*MACP0A1(prim,ip,jm,k,B1)) - (geommp.g*MACP0A1(prim,im,jp,k,B1)+geommm.g*MACP0A1(prim,im,jm,k,B1)))/(2.0*dx[1]) ;
-      MACP0A1(prim,im,jm,k,B2) = (geommp.g*MACP0A1(prim,im,jp,k,B2)-geompm.g*MACP0A1(prim,ip,jm,k,B2)+geompp.g*MACP0A1(prim,ip,jp,k,B2) + 2.0*dx[2]*divbr)/(geommm.g);
-    }
-    else{
-      dualfprintf(fail_file,"problem 117\n");
-      myexit(117);
-    }
+        divbr = ( (geompp.g * MACP0A1(prim,ip,jp,k,B1)+ geompm.g*MACP0A1(prim,ip,jm,k,B1)) - (geommp.g*MACP0A1(prim,im,jp,k,B1)+geommm.g*MACP0A1(prim,im,jm,k,B1)))/(2.0*dx[1]) ;
+        MACP0A1(prim,im,jm,k,B2) = (geommp.g*MACP0A1(prim,im,jp,k,B2)-geompm.g*MACP0A1(prim,ip,jm,k,B2)+geompp.g*MACP0A1(prim,ip,jp,k,B2) + 2.0*dx[2]*divbr)/(geommm.g);
+      }
+      else{
+        dualfprintf(fail_file,"problem 117\n");
+        myexit(117);
+      }
 
-  }  
+    }  
 
 
 
@@ -956,91 +956,91 @@ void clean_btheta_x1inner_old(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 
   k=0;
   for(i=-N1BND;i<0;i++) for(j=0;j<=OUTM2;j++){
-  //for(i=-N1BND;i<0;i++) for(j=-1;j<=OUTM2+1;j++){
+      //for(i=-N1BND;i<0;i++) for(j=-1;j<=OUTM2+1;j++){
 
-    if(startpos[2]+j == totalsize[2]/2 ) {
-      // then leave as outflow but symmetrize
-      MACP0A1(prim,i,j,k,B2) = 0.5*(MACP0A1(prim,i,j-1,k,B2)+MACP0A1(prim,i,j,k,B2));
+      if(startpos[2]+j == totalsize[2]/2 ) {
+        // then leave as outflow but symmetrize
+        MACP0A1(prim,i,j,k,B2) = 0.5*(MACP0A1(prim,i,j-1,k,B2)+MACP0A1(prim,i,j,k,B2));
+      }
+      else if(startpos[2]+j == totalsize[2]/2-1){
+        // then leave as outflow but symmetrize
+        MACP0A1(prim,i,j,k,B2) = 0.5*(MACP0A1(prim,i,j,k,B2)+MACP0A1(prim,i,j+1,k,B2));
+      }
+      else if(startpos[2]+j<totalsize[2]/2-1){
+      }
+      else  if(startpos[2]+j>totalsize[2]/2){
+      }
+      else{
+        dualfprintf(fail_file,"problem 117\n");
+        myexit(117);
+      }
     }
-    else if(startpos[2]+j == totalsize[2]/2-1){
-      // then leave as outflow but symmetrize
-      MACP0A1(prim,i,j,k,B2) = 0.5*(MACP0A1(prim,i,j,k,B2)+MACP0A1(prim,i,j+1,k,B2));
-    }
-    else if(startpos[2]+j<totalsize[2]/2-1){
-    }
-    else  if(startpos[2]+j>totalsize[2]/2){
-    }
-    else{
-      dualfprintf(fail_file,"problem 117\n");
-      myexit(117);
-    }
-  }
 
 
 
   k=0;
   for(i=-1;i>=-N1BND;i--) for(j=0;j<=OUTM2;j++){ // going from down to up
-  //for(i=-1;i>=-N1BND;i--) for(j=-1;j<=OUTM2+1;j++){ // going from down to up
+      //for(i=-1;i>=-N1BND;i--) for(j=-1;j<=OUTM2+1;j++){ // going from down to up
 
-    if(startpos[2]+j == totalsize[2]/2 ) {
-    }
-    else if(startpos[2]+j == totalsize[2]/2-1){
-    }
-    else if(startpos[2]+j<totalsize[2]/2-1){
-    }
-    else  if(startpos[2]+j>totalsize[2]/2){
-      // then on upper \theta
-      ip=ip1;
-      im=i;
-      jp=j; // otherwise similar to above section
-      jm=jm1; // otherwise similar to above section
+      if(startpos[2]+j == totalsize[2]/2 ) {
+      }
+      else if(startpos[2]+j == totalsize[2]/2-1){
+      }
+      else if(startpos[2]+j<totalsize[2]/2-1){
+      }
+      else  if(startpos[2]+j>totalsize[2]/2){
+        // then on upper \theta
+        ip=ip1;
+        im=i;
+        jp=j; // otherwise similar to above section
+        jm=jm1; // otherwise similar to above section
 
-      get_geometry(im, jp, k, CENT, &geommp); // local point
-      get_geometry(ip, jp, k, CENT, &geompp);
-      get_geometry(ip, jm, k, CENT, &geompm);
-      get_geometry(im, jm, k, CENT, &geommm);
+        get_geometry(im, jp, k, CENT, &geommp); // local point
+        get_geometry(ip, jp, k, CENT, &geompp);
+        get_geometry(ip, jm, k, CENT, &geompm);
+        get_geometry(im, jm, k, CENT, &geommm);
 
-      divbr = ( (geompp.g * MACP0A1(prim,ip,jp,k,B1)+ geompm.g*MACP0A1(prim,ip,jm,k,B1)) - (geommp.g*MACP0A1(prim,im,jp,k,B1)+geommm.g*MACP0A1(prim,im,jm,k,B1)))/(2.0*dx[1]) ;
-      MACP0A1(prim,im,jp,k,B2) = (-geompp.g*MACP0A1(prim,ip,jp,k,B2)+geompm.g*MACP0A1(prim,ip,jm,k,B2)+geommm.g*MACP0A1(prim,im,jm,k,B2) - 2.0*dx[2]*divbr)/(geommp.g);
-    }
-    else{
-      dualfprintf(fail_file,"problem 117\n");
-      myexit(117);
-    }
+        divbr = ( (geompp.g * MACP0A1(prim,ip,jp,k,B1)+ geompm.g*MACP0A1(prim,ip,jm,k,B1)) - (geommp.g*MACP0A1(prim,im,jp,k,B1)+geommm.g*MACP0A1(prim,im,jm,k,B1)))/(2.0*dx[1]) ;
+        MACP0A1(prim,im,jp,k,B2) = (-geompp.g*MACP0A1(prim,ip,jp,k,B2)+geompm.g*MACP0A1(prim,ip,jm,k,B2)+geommm.g*MACP0A1(prim,im,jm,k,B2) - 2.0*dx[2]*divbr)/(geommp.g);
+      }
+      else{
+        dualfprintf(fail_file,"problem 117\n");
+        myexit(117);
+      }
 
-  }  
+    }  
 
   k=0;
   for(i=-1;i>=-N1BND;i--) for(j=OUTM2;j>=0;j--){ // then going from up to down
-  //for(i=-1;i>=-N1BND;i--) for(j=OUTM2+1;j>=-1;j--){ // then going from up to down
+      //for(i=-1;i>=-N1BND;i--) for(j=OUTM2+1;j>=-1;j--){ // then going from up to down
 
-    if(startpos[2]+j == totalsize[2]/2 ) {
-    }
-    else if(startpos[2]+j == totalsize[2]/2-1){
-    }
-    else if(startpos[2]+j<totalsize[2]/2-1){
-      // then on lower \theta
-      ip=ip1;
-      im=i;
-      jp=jp1;
-      jm=j;
+      if(startpos[2]+j == totalsize[2]/2 ) {
+      }
+      else if(startpos[2]+j == totalsize[2]/2-1){
+      }
+      else if(startpos[2]+j<totalsize[2]/2-1){
+        // then on lower \theta
+        ip=ip1;
+        im=i;
+        jp=jp1;
+        jm=j;
 
-      get_geometry(im, jp, k, CENT, &geommp);
-      get_geometry(ip, jp, k, CENT, &geompp);
-      get_geometry(ip, jm, k, CENT, &geompm);
-      get_geometry(im, jm, k, CENT, &geommm); // local point
+        get_geometry(im, jp, k, CENT, &geommp);
+        get_geometry(ip, jp, k, CENT, &geompp);
+        get_geometry(ip, jm, k, CENT, &geompm);
+        get_geometry(im, jm, k, CENT, &geommm); // local point
 
-      divbr = ( (geompp.g * MACP0A1(prim,ip,jp,k,B1)+ geompm.g*MACP0A1(prim,ip,jm,k,B1)) - (geommp.g*MACP0A1(prim,im,jp,k,B1)+geommm.g*MACP0A1(prim,im,jm,k,B1)))/(2.0*dx[1]) ;
-      MACP0A1(prim,im,jm,k,B2) = (geommp.g*MACP0A1(prim,im,jp,k,B2)-geompm.g*MACP0A1(prim,ip,jm,k,B2)+geompp.g*MACP0A1(prim,ip,jp,k,B2) + 2.0*dx[2]*divbr)/(geommm.g);
-    }
-    else  if(startpos[2]+j>totalsize[2]/2){
-    }
-    else{
-      dualfprintf(fail_file,"problem 117\n");
-      myexit(117);
-    }
+        divbr = ( (geompp.g * MACP0A1(prim,ip,jp,k,B1)+ geompm.g*MACP0A1(prim,ip,jm,k,B1)) - (geommp.g*MACP0A1(prim,im,jp,k,B1)+geommm.g*MACP0A1(prim,im,jm,k,B1)))/(2.0*dx[1]) ;
+        MACP0A1(prim,im,jm,k,B2) = (geommp.g*MACP0A1(prim,im,jp,k,B2)-geompm.g*MACP0A1(prim,ip,jm,k,B2)+geompp.g*MACP0A1(prim,ip,jp,k,B2) + 2.0*dx[2]*divbr)/(geommm.g);
+      }
+      else  if(startpos[2]+j>totalsize[2]/2){
+      }
+      else{
+        dualfprintf(fail_file,"problem 117\n");
+        myexit(117);
+      }
 
-  }  
+    }  
 
 
 
@@ -1061,95 +1061,95 @@ void clean_btheta_x1outer(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
   k=0;
   for(i=N1;i<=N1+N1BND-1;i++) for(j=0;j<=OUTM2;j++){ // going from down to up
 
-    if(startpos[2]+j>=totalsize[2]/2){
-    }
-    else if(startpos[2]+j == 0 && FLIPGDETAXIS==0){
-      // pairs are MACP0A1(prim,ip,jp,k,B2) and MACP0A1(prim,ip,jm,k,B2)
-      // then on lower \theta
-      ip=i;
-      im=im1;
-      jp=j; // otherwise similar to above section
-      jm=jm1; // otherwise similar to above section
+      if(startpos[2]+j>=totalsize[2]/2){
+      }
+      else if(startpos[2]+j == 0 && FLIPGDETAXIS==0){
+        // pairs are MACP0A1(prim,ip,jp,k,B2) and MACP0A1(prim,ip,jm,k,B2)
+        // then on lower \theta
+        ip=i;
+        im=im1;
+        jp=j; // otherwise similar to above section
+        jm=jm1; // otherwise similar to above section
 
-      get_geometry(im, jp, k, CENT, &geommp);
-      get_geometry(ip, jp, k, CENT, &geompp); // local point
-      get_geometry(ip, jm, k, CENT, &geompm);
-      get_geometry(im, jm, k, CENT, &geommm);
+        get_geometry(im, jp, k, CENT, &geommp);
+        get_geometry(ip, jp, k, CENT, &geompp); // local point
+        get_geometry(ip, jm, k, CENT, &geompm);
+        get_geometry(im, jm, k, CENT, &geommm);
 
-      divbr = ( (geompp.g * MACP0A1(prim,ip,jp,k,B1)+ geompm.g*MACP0A1(prim,ip,jm,k,B1)) - (geommp.g*MACP0A1(prim,im,jp,k,B1)+geommm.g*MACP0A1(prim,im,jm,k,B1)))/(2.0*dx[1]) ;
-      MACP0A1(prim,ip,jp,k,B2) = (-geommp.g*MACP0A1(prim,im,jp,k,B2)*2.0 - 2.0*dx[2]*divbr)/(2.0*geompp.g);
-    }
-    else if(startpos[2]+j == 0 && FLIPGDETAXIS){
-    }
-    else if(startpos[2]+j<=totalsize[2]/2-1){
-      // then on lower \theta
-      ip=i;
-      im=im1;
-      jp=j; // otherwise similar to above section
-      jm=jm1; // otherwise similar to above section
+        divbr = ( (geompp.g * MACP0A1(prim,ip,jp,k,B1)+ geompm.g*MACP0A1(prim,ip,jm,k,B1)) - (geommp.g*MACP0A1(prim,im,jp,k,B1)+geommm.g*MACP0A1(prim,im,jm,k,B1)))/(2.0*dx[1]) ;
+        MACP0A1(prim,ip,jp,k,B2) = (-geommp.g*MACP0A1(prim,im,jp,k,B2)*2.0 - 2.0*dx[2]*divbr)/(2.0*geompp.g);
+      }
+      else if(startpos[2]+j == 0 && FLIPGDETAXIS){
+      }
+      else if(startpos[2]+j<=totalsize[2]/2-1){
+        // then on lower \theta
+        ip=i;
+        im=im1;
+        jp=j; // otherwise similar to above section
+        jm=jm1; // otherwise similar to above section
 
-      get_geometry(im, jp, k, CENT, &geommp);
-      get_geometry(ip, jp, k, CENT, &geompp); // local point
-      get_geometry(ip, jm, k, CENT, &geompm);
-      get_geometry(im, jm, k, CENT, &geommm);
+        get_geometry(im, jp, k, CENT, &geommp);
+        get_geometry(ip, jp, k, CENT, &geompp); // local point
+        get_geometry(ip, jm, k, CENT, &geompm);
+        get_geometry(im, jm, k, CENT, &geommm);
 
-      divbr = ( (geompp.g * MACP0A1(prim,ip,jp,k,B1)+ geompm.g*MACP0A1(prim,ip,jm,k,B1)) - (geommp.g*MACP0A1(prim,im,jp,k,B1)+geommm.g*MACP0A1(prim,im,jm,k,B1)))/(2.0*dx[1]) ;
-      MACP0A1(prim,ip,jp,k,B2) = (-geommp.g*MACP0A1(prim,im,jp,k,B2)+geompm.g*MACP0A1(prim,ip,jm,k,B2)+geommm.g*MACP0A1(prim,im,jm,k,B2) - 2.0*dx[2]*divbr)/(geompp.g);
+        divbr = ( (geompp.g * MACP0A1(prim,ip,jp,k,B1)+ geompm.g*MACP0A1(prim,ip,jm,k,B1)) - (geommp.g*MACP0A1(prim,im,jp,k,B1)+geommm.g*MACP0A1(prim,im,jm,k,B1)))/(2.0*dx[1]) ;
+        MACP0A1(prim,ip,jp,k,B2) = (-geommp.g*MACP0A1(prim,im,jp,k,B2)+geompm.g*MACP0A1(prim,ip,jm,k,B2)+geommm.g*MACP0A1(prim,im,jm,k,B2) - 2.0*dx[2]*divbr)/(geompp.g);
 
-    }
-    else{
-      dualfprintf(fail_file,"problem 117\n");
-      myexit(117);
-    }
+      }
+      else{
+        dualfprintf(fail_file,"problem 117\n");
+        myexit(117);
+      }
 
-  }  
+    }  
 
   k=0;
   for(i=N1;i<=N1+N1BND-1;i++) for(j=OUTM2;j>=0;j--){ // then going from up to down
 
-    if(startpos[2]+j<=totalsize[2]/2-1){
-    }
-    else if(startpos[2]+j ==totalsize[2]-1 && FLIPGDETAXIS){
-    }
-    else if(startpos[2]+j ==totalsize[2]-1 && FLIPGDETAXIS==0){
-      // pairs are MACP0A1(prim,ip,jm,k,B2) and MACP0A1(prim,ip,jp,k,B2)
-      // then on upper \theta
-      ip=i;
-      im=im1;
-      jp=jp1;
-      jm=j;
+      if(startpos[2]+j<=totalsize[2]/2-1){
+      }
+      else if(startpos[2]+j ==totalsize[2]-1 && FLIPGDETAXIS){
+      }
+      else if(startpos[2]+j ==totalsize[2]-1 && FLIPGDETAXIS==0){
+        // pairs are MACP0A1(prim,ip,jm,k,B2) and MACP0A1(prim,ip,jp,k,B2)
+        // then on upper \theta
+        ip=i;
+        im=im1;
+        jp=jp1;
+        jm=j;
 
-      get_geometry(im, jp, k, CENT, &geommp);
-      get_geometry(ip, jp, k, CENT, &geompp);
-      get_geometry(ip, jm, k, CENT, &geompm); // local point
-      get_geometry(im, jm, k, CENT, &geommm);
+        get_geometry(im, jp, k, CENT, &geommp);
+        get_geometry(ip, jp, k, CENT, &geompp);
+        get_geometry(ip, jm, k, CENT, &geompm); // local point
+        get_geometry(im, jm, k, CENT, &geommm);
 
-      divbr = ( (geompp.g * MACP0A1(prim,ip,jp,k,B1)+ geompm.g*MACP0A1(prim,ip,jm,k,B1)) - (geommp.g*MACP0A1(prim,im,jp,k,B1)+geommm.g*MACP0A1(prim,im,jm,k,B1)))/(2.0*dx[1]) ;
-      MACP0A1(prim,ip,jm,k,B2) = (-geommm.g*MACP0A1(prim,im,jm,k,B2)*2.0 + 2.0*dx[2]*divbr)/(2.0*geompm.g);
-    }
-    else  if(startpos[2]+j>=totalsize[2]/2) {
-      // then on upper \theta
-      ip=i;
-      im=im1;
-      jp=jp1;
-      jm=j;
+        divbr = ( (geompp.g * MACP0A1(prim,ip,jp,k,B1)+ geompm.g*MACP0A1(prim,ip,jm,k,B1)) - (geommp.g*MACP0A1(prim,im,jp,k,B1)+geommm.g*MACP0A1(prim,im,jm,k,B1)))/(2.0*dx[1]) ;
+        MACP0A1(prim,ip,jm,k,B2) = (-geommm.g*MACP0A1(prim,im,jm,k,B2)*2.0 + 2.0*dx[2]*divbr)/(2.0*geompm.g);
+      }
+      else  if(startpos[2]+j>=totalsize[2]/2) {
+        // then on upper \theta
+        ip=i;
+        im=im1;
+        jp=jp1;
+        jm=j;
 
-      get_geometry(im, jp, k, CENT, &geommp);
-      get_geometry(ip, jp, k, CENT, &geompp);
-      get_geometry(ip, jm, k, CENT, &geompm); // local point
-      get_geometry(im, jm, k, CENT, &geommm);
+        get_geometry(im, jp, k, CENT, &geommp);
+        get_geometry(ip, jp, k, CENT, &geompp);
+        get_geometry(ip, jm, k, CENT, &geompm); // local point
+        get_geometry(im, jm, k, CENT, &geommm);
 
-      divbr = ( (geompp.g * MACP0A1(prim,ip,jp,k,B1)+ geompm.g*MACP0A1(prim,ip,jm,k,B1)) - (geommp.g*MACP0A1(prim,im,jp,k,B1)+geommm.g*MACP0A1(prim,im,jm,k,B1)))/(2.0*dx[1]) ;
-      MACP0A1(prim,ip,jm,k,B2) = (geompp.g*MACP0A1(prim,ip,jp,k,B2)+geommp.g*MACP0A1(prim,im,jp,k,B2)-geommm.g*MACP0A1(prim,im,jm,k,B2) + 2.0*dx[2]*divbr)/(geompm.g);
+        divbr = ( (geompp.g * MACP0A1(prim,ip,jp,k,B1)+ geompm.g*MACP0A1(prim,ip,jm,k,B1)) - (geommp.g*MACP0A1(prim,im,jp,k,B1)+geommm.g*MACP0A1(prim,im,jm,k,B1)))/(2.0*dx[1]) ;
+        MACP0A1(prim,ip,jm,k,B2) = (geompp.g*MACP0A1(prim,ip,jp,k,B2)+geommp.g*MACP0A1(prim,im,jp,k,B2)-geommm.g*MACP0A1(prim,im,jm,k,B2) + 2.0*dx[2]*divbr)/(geompm.g);
 
 
-    }
-    else{
-      dualfprintf(fail_file,"problem 117\n");
-      myexit(117);
-    }
+      }
+      else{
+        dualfprintf(fail_file,"problem 117\n");
+        myexit(117);
+      }
 
-  }  
+    }  
 
 
 
@@ -1185,29 +1185,29 @@ void compute_aphi_fromoutflow(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*aphi
   for(i=-N1BND;i<=0;i++) for(j=0;j<=OUTM2;j++) for(k=0;k<=OUTM3;k++){
 
 
-	MACP0A0(aphifromoutflow,i,j,k)=MAC(aphicorn,i,j,k);
-    for(ii=-N1NOT1;ii>=i;ii--){  // from -1 down to i
+        MACP0A0(aphifromoutflow,i,j,k)=MAC(aphicorn,i,j,k);
+        for(ii=-N1NOT1;ii>=i;ii--){  // from -1 down to i
 
-      //      dualfprintf(fail_file,"i=%d j=%d ii=%d\n",i,j,ii);
-      get_geometry(ii, j, k, FACE2, &geom);
-      //      coord(ii, j, k, FACE2, X);
-      //      bl_coord( X, V );
-      //      dxdxprim(X, V, dxdxp);
+          //      dualfprintf(fail_file,"i=%d j=%d ii=%d\n",i,j,ii);
+          get_geometry(ii, j, k, FACE2, &geom);
+          //      coord(ii, j, k, FACE2, X);
+          //      bl_coord( X, V );
+          //      dxdxprim(X, V, dxdxp);
 
-      // FLUXCT Toth centered method
-      get_geometry(ii, j  , k, CENT, &geom1);
-      get_geometry(ii, j-1, k, CENT, &geom2);
-      B2face2=0.5*(geom1.g*MACP0A1(prim,ii,j,k,B2)+geom2.g*MACP0A1(prim,ii,j-1,k,B2))/(geom.g);
+          // FLUXCT Toth centered method
+          get_geometry(ii, j  , k, CENT, &geom1);
+          get_geometry(ii, j-1, k, CENT, &geom2);
+          B2face2=0.5*(geom1.g*MACP0A1(prim,ii,j,k,B2)+geom2.g*MACP0A1(prim,ii,j-1,k,B2))/(geom.g);
 
-      //      B2face2=0.5*(MACP0A1(prim,ii,j,k,B2)+MACP0A1(prim,ii,j-1,k,B2));
+          //      B2face2=0.5*(MACP0A1(prim,ii,j,k,B2)+MACP0A1(prim,ii,j-1,k,B2));
 
-      MACP0A0(aphifromoutflow,i,j,k)-= (geom.g) * B2face2 * dx[1]; // centered integral
-      // gives aphi from corner to corner
-    }
+          MACP0A0(aphifromoutflow,i,j,k)-= (geom.g) * B2face2 * dx[1]; // centered integral
+          // gives aphi from corner to corner
+        }
 
-    //    dualfprintf(fail_file,"aphifromoutflow[%d][%d][%d]=%21.15g %21.15g %21.15g\n",i,j,k,MACP0A0(aphifromoutflow,i,j,k),B2face2,MAC(aphicorn,i,j,k));
-	  
-  }
+        //    dualfprintf(fail_file,"aphifromoutflow[%d][%d][%d]=%21.15g %21.15g %21.15g\n",i,j,k,MACP0A0(aphifromoutflow,i,j,k),B2face2,MAC(aphicorn,i,j,k));
+   
+      }
 }
 
 
@@ -1286,18 +1286,18 @@ int bound_vel_from_field(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 
 
       LOOPN2 LOOPN3{
-	LOOPBOUND1IN{
+        LOOPBOUND1IN{
 
-	  get_geometry(i, j, k, CENT, &geom);
-	  //	  coord(i, j, k, CENT, X);
-	  //bl_coord( X, V );
-	  //dxdxprim(X, V, dxdxp);
+          get_geometry(i, j, k, CENT, &geom);
+          //   coord(i, j, k, CENT, X);
+          //bl_coord( X, V );
+          //dxdxprim(X, V, dxdxp);
 
-	  
-	  set_vel_stataxi(&geom, GLOBALMACP1A0(pother,OMEGAFCENT,i,j,k), GLOBALMACP1A0(pother,VPARFACE1,i,j,k), MAC(prim,i,j,k));
+   
+          set_vel_stataxi(&geom, GLOBALMACP1A0(pother,OMEGAFCENT,i,j,k), GLOBALMACP1A0(pother,VPARFACE1,i,j,k), MAC(prim,i,j,k));
 
 
-	}
+        }
       }
     }
   }
@@ -1338,7 +1338,7 @@ int set_vel_stataxi(struct of_geom *geom, FTYPE omegaf, FTYPE vpar, FTYPE *pr)
 
 #if(0) // what would be done in force-free with no parallel velocity
 
-  //	  dualfprintf(fail_file,"Omegastar=%21.15g dxdxp[3][3]=%21.15g B1=%21.15g B2=%21.15g B3=%21.15g\n",Omegastar,dxdxp[3][3],Bcon[1],Bcon[2],Bcon[3]);
+  //   dualfprintf(fail_file,"Omegastar=%21.15g dxdxp[3][3]=%21.15g B1=%21.15g B2=%21.15g B3=%21.15g\n",Omegastar,dxdxp[3][3],Bcon[1],Bcon[2],Bcon[3]);
 
   ///////////////////////////////
   //
@@ -1355,7 +1355,7 @@ int set_vel_stataxi(struct of_geom *geom, FTYPE omegaf, FTYPE vpar, FTYPE *pr)
   pr[U2]=prnew[U2];
   pr[U3]=prnew[U3];
 
-  //	  if(t>1.9 && t<2.1){
+  //   if(t>1.9 && t<2.1){
   //dualfprintf(fail_file,"t=%21.15g i=%d j=%d\n",t,i,j);
   //  dualfprintf(fail_file,"newus: %21.15g %21.15g %21.15g\n",prnew[U1],prnew[U2],prnew[U3]);
   //  dualfprintf(fail_file,"Omegastar'=%21.15g Bcon1=%21.15g Bcon2=%21.15g Bcon3=%21.15g\n",Omegastar/dxdxp[3][3],Bcon[1],Bcon[2],Bcon[3]);
@@ -1364,7 +1364,7 @@ int set_vel_stataxi(struct of_geom *geom, FTYPE omegaf, FTYPE vpar, FTYPE *pr)
 #endif
 
 #if(0)
-  // set  	    ucon[TT,etc.]
+  // set       ucon[TT,etc.]
   vcon[RR]=0; // surface that completely dissipates normal direction momentum
   vcon[TH]=0; // "" for this component
   // below assumes no phi mixing with other directions in grid
@@ -1431,13 +1431,13 @@ void x2_inner_polar(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
   if (mycpupos[2] == 0) {
     if((BCtype[X2DN]==POLARAXIS)||(BCtype[X2DN]==SYMM)||(BCtype[X2DN]==ASYMM) ){
       LOOPF1 LOOPF3{
-	ri=i;
-	rj=0;
-	rk=k;
-	LOOPBOUND2IN{
-	  PBOUNDLOOP(pliter,pl)  MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj+(rj-j-1),rk,pl);
-	  // dualfprintf(fail_file,"i=%d j=%d ri=%d rj=%d  :: rj+(rj-j-1)=%d\n",i,j,ri,rj,rj+(rj-j-1));
-	}
+        ri=i;
+        rj=0;
+        rk=k;
+        LOOPBOUND2IN{
+          PBOUNDLOOP(pliter,pl)  MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj+(rj-j-1),rk,pl);
+          // dualfprintf(fail_file,"i=%d j=%d ri=%d rj=%d  :: rj+(rj-j-1)=%d\n",i,j,ri,rj,rj+(rj-j-1));
+        }
       }
     }
 
@@ -1445,39 +1445,39 @@ void x2_inner_polar(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 
       /* make sure b and u are antisymmetric at the poles   (preserves u^t rho and u) */
       LOOPF1 LOOPF3{
-	LOOPBOUND2IN {
-	  if(POSDEFMETRIC==0){
-	    // u^t must be symmetric across pole, which is functions of u2 and u3 as well as their squares and othe products.  u2 in KS happens to be independent of sign, but in general is could be for some other metric.
-	    // for now, assume KS-like metric where u2 is antisymmetric and u^t dep only on u2^2, not u2
-	    MACP0A1(prim,i,j,k,U2) *= -1.;
-	    MACP0A1(prim,i,j,k,U3) *= -1.;
-	    MACP0A1(prim,i,j,k,B2) *= -1.;
-	    MACP0A1(prim,i,j,k,B3) *= -1.;
-	  }
-	  else{
-	    MACP0A1(prim,i,j,k,U2) *= -1.;
-	    MACP0A1(prim,i,j,k,U3) *= -1.;
-	    MACP0A1(prim,i,j,k,B2) *= -1.;
-	    MACP0A1(prim,i,j,k,B3) *= -1.;
-	  }
-	}
+        LOOPBOUND2IN {
+          if(POSDEFMETRIC==0){
+            // u^t must be symmetric across pole, which is functions of u2 and u3 as well as their squares and othe products.  u2 in KS happens to be independent of sign, but in general is could be for some other metric.
+            // for now, assume KS-like metric where u2 is antisymmetric and u^t dep only on u2^2, not u2
+            MACP0A1(prim,i,j,k,U2) *= -1.;
+            MACP0A1(prim,i,j,k,U3) *= -1.;
+            MACP0A1(prim,i,j,k,B2) *= -1.;
+            MACP0A1(prim,i,j,k,B3) *= -1.;
+          }
+          else{
+            MACP0A1(prim,i,j,k,U2) *= -1.;
+            MACP0A1(prim,i,j,k,U3) *= -1.;
+            MACP0A1(prim,i,j,k,B2) *= -1.;
+            MACP0A1(prim,i,j,k,B3) *= -1.;
+          }
+        }
       }// end loop 13
 
 #if(POLEDEATH)
       // fixup
       LOOPF1 LOOPF3 {
-	for (j = 0-POLEDEATH; j < 0+POLEDEATH; j++) {
-	  if(POSDEFMETRIC==0){
-	    // u^t must be symmetric across pole, which is functions of u2 and u3 as well as their squares and othe products.  u2 in KS happens to be independent of sign, but in general is could be for some other metric.
-	    // for now, assume KS-like metric where u2 is antisymmetric and u^t dep only on u2^2, not u2
-	    MACP0A1(prim,i,j,k,U2) *= 0;
-	    MACP0A1(prim,i,j,k,B2) *= 0.;
-	  }
-	  else{
-	    MACP0A1(prim,i,j,k,U2) *= 0.;
-	    MACP0A1(prim,i,j,k,B2) *= 0.;
-	  }
-	}
+        for (j = 0-POLEDEATH; j < 0+POLEDEATH; j++) {
+          if(POSDEFMETRIC==0){
+            // u^t must be symmetric across pole, which is functions of u2 and u3 as well as their squares and othe products.  u2 in KS happens to be independent of sign, but in general is could be for some other metric.
+            // for now, assume KS-like metric where u2 is antisymmetric and u^t dep only on u2^2, not u2
+            MACP0A1(prim,i,j,k,U2) *= 0;
+            MACP0A1(prim,i,j,k,B2) *= 0.;
+          }
+          else{
+            MACP0A1(prim,i,j,k,U2) *= 0.;
+            MACP0A1(prim,i,j,k,B2) *= 0.;
+          }
+        }
       }// end loop 13
 #endif
 
@@ -1505,10 +1505,10 @@ void x2_outer_polar(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
   if (mycpupos[2] == ncpux2-1) {
     if((BCtype[X2UP]==POLARAXIS)||(BCtype[X2UP]==SYMM)||(BCtype[X2UP]==ASYMM) ){
       LOOPF1 LOOPN3{
-	ri=i;
-	rj=N2-1;
-	rk=k;
-	LOOPBOUND2OUT PBOUNDLOOP(pliter,pl)  MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj+(rj-j+1),rk,pl);
+        ri=i;
+        rj=N2-1;
+        rk=k;
+        LOOPBOUND2OUT PBOUNDLOOP(pliter,pl)  MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj+(rj-j+1),rk,pl);
       }
     }
 
@@ -1516,39 +1516,39 @@ void x2_outer_polar(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 
       /* make sure b and u are antisymmetric at the poles   (preserves u^t rho and u) */
       LOOPF1 LOOPF3{
-	LOOPBOUND2OUT {
-	  if(POSDEFMETRIC==0){
-	    // u^t must be symmetric across pole, which is functions of u2 and u3 as well as their squares and othe products.  u2 in KS happens to be independent of sign, but in general is could be for some other metric.
-	    // for now, assume KS-like metric where u2 is antisymmetric and u^t dep only on u2^2, not u2
-	    MACP0A1(prim,i,j,k,U2) *= -1.;
-	    MACP0A1(prim,i,j,k,U3) *= -1.;
-	    MACP0A1(prim,i,j,k,B2) *= -1.;
-	    MACP0A1(prim,i,j,k,B3) *= -1.;
-	  }
-	  else{
-	    MACP0A1(prim,i,j,k,U2) *= -1.;
-	    MACP0A1(prim,i,j,k,U3) *= -1.;
-	    MACP0A1(prim,i,j,k,B2) *= -1.;
-	    MACP0A1(prim,i,j,k,B3) *= -1.;
-	  }
-	}
+        LOOPBOUND2OUT {
+          if(POSDEFMETRIC==0){
+            // u^t must be symmetric across pole, which is functions of u2 and u3 as well as their squares and othe products.  u2 in KS happens to be independent of sign, but in general is could be for some other metric.
+            // for now, assume KS-like metric where u2 is antisymmetric and u^t dep only on u2^2, not u2
+            MACP0A1(prim,i,j,k,U2) *= -1.;
+            MACP0A1(prim,i,j,k,U3) *= -1.;
+            MACP0A1(prim,i,j,k,B2) *= -1.;
+            MACP0A1(prim,i,j,k,B3) *= -1.;
+          }
+          else{
+            MACP0A1(prim,i,j,k,U2) *= -1.;
+            MACP0A1(prim,i,j,k,U3) *= -1.;
+            MACP0A1(prim,i,j,k,B2) *= -1.;
+            MACP0A1(prim,i,j,k,B3) *= -1.;
+          }
+        }
       }// end loop 13
 
 #if(POLEDEATH)
       // fixup
       LOOPF1 LOOPF3 {
-	for (j = N2-1+1-POLEDEATH; j <= N2-1+POLEDEATH; j++) {
-	  if(POSDEFMETRIC==0){
-	    // u^t must be symmetric across pole, which is functions of u2 and u3 as well as their squares and othe products.  u2 in KS happens to be independent of sign, but in general is could be for some other metric.
-	    // for now, assume KS-like metric where u2 is antisymmetric and u^t dep only on u2^2, not u2
-	    MACP0A1(prim,i,j,k,U2) *= 0;
-	    MACP0A1(prim,i,j,k,B2) *= 0.;
-	  }
-	  else{
-	    MACP0A1(prim,i,j,k,U2) *= 0.;
-	    MACP0A1(prim,i,j,k,B2) *= 0.;
-	  }
-	}
+        for (j = N2-1+1-POLEDEATH; j <= N2-1+POLEDEATH; j++) {
+          if(POSDEFMETRIC==0){
+            // u^t must be symmetric across pole, which is functions of u2 and u3 as well as their squares and othe products.  u2 in KS happens to be independent of sign, but in general is could be for some other metric.
+            // for now, assume KS-like metric where u2 is antisymmetric and u^t dep only on u2^2, not u2
+            MACP0A1(prim,i,j,k,U2) *= 0;
+            MACP0A1(prim,i,j,k,B2) *= 0.;
+          }
+          else{
+            MACP0A1(prim,i,j,k,U2) *= 0.;
+            MACP0A1(prim,i,j,k,B2) *= 0.;
+          }
+        }
       }// end loop 13
 #endif
 
@@ -1586,68 +1586,68 @@ int bound_x1_outer(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 
       LOOPN2 LOOPN3{
 #if(EXTRAP==0)
-	ri=N1-1;
-	rj=j;
-	rk=k;
-	LOOPBOUND1OUT PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
+        ri=N1-1;
+        rj=j;
+        rk=k;
+        LOOPBOUND1OUT PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
 #elif(EXTRAP==1)
-	ri=N1-1;
-	rj=j;
-	rk=k;
-	LOOPBOUND1OUT{
-	  for(pl=RHO;pl<=UU;pl++){
-	    MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * GLOBALMACP1A0(gdet,CENT,ri,rj,rk)/GLOBALMACP1A0(gdet,CENT,i,j,k) ;
-	  }
-	  pl=U1; // treat U1 as special
-	  MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * (1. - 2*(i-ri)*dx[1]) ;
-	  for(pl=U2;pl<=U3;pl++){
-	    MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * (1. - (i-ri)*dx[1]) ;
-	  }
-	  pl=B1; // treat B1 special
-	  MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * GLOBALMACP1A0(gdet,CENT,ri,rj,rk)/GLOBALMACP1A0(gdet,CENT,i,j,k) ;
-	  for(pl=B2;pl<=B3;pl++){
-	    MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * (1. - (i-ri)*dx[1]) ;
-	  }
-	}
+        ri=N1-1;
+        rj=j;
+        rk=k;
+        LOOPBOUND1OUT{
+          for(pl=RHO;pl<=UU;pl++){
+            MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * GLOBALMACP1A0(gdet,CENT,ri,rj,rk)/GLOBALMACP1A0(gdet,CENT,i,j,k) ;
+          }
+          pl=U1; // treat U1 as special
+          MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * (1. - 2*(i-ri)*dx[1]) ;
+          for(pl=U2;pl<=U3;pl++){
+            MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * (1. - (i-ri)*dx[1]) ;
+          }
+          pl=B1; // treat B1 special
+          MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * GLOBALMACP1A0(gdet,CENT,ri,rj,rk)/GLOBALMACP1A0(gdet,CENT,i,j,k) ;
+          for(pl=B2;pl<=B3;pl++){
+            MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * (1. - (i-ri)*dx[1]) ;
+          }
+        }
 #elif(EXTRAP==2)
-	ri=N1-1;
-	rj=j;
-	rk=k;
-	get_geometry(ri, rj, rk, CENT, &rgeom);
-	rescale(1,1,MAC(prim,ri,rj,rk),&rgeom,prescale);
-	LOOPBOUND1OUT{
-	  // set guess
-	  PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl)=MACP0A1(prim,ri,rj,rk,pl);
-	  get_geometry(i, j, k, CENT, &geom);
-	  rescale(-1,1,MAC(prim,i,j,k),&geom,prescale);
-	}
+        ri=N1-1;
+        rj=j;
+        rk=k;
+        get_geometry(ri, rj, rk, CENT, &rgeom);
+        rescale(1,1,MAC(prim,ri,rj,rk),&rgeom,prescale);
+        LOOPBOUND1OUT{
+          // set guess
+          PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl)=MACP0A1(prim,ri,rj,rk,pl);
+          get_geometry(i, j, k, CENT, &geom);
+          rescale(-1,1,MAC(prim,i,j,k),&geom,prescale);
+        }
 #endif
 
-	LOOPBOUND1OUT{
+        LOOPBOUND1OUT{
 #if(WHICHVEL==VEL4)
-	  get_geometry(i, j, k, CENT, &geom);
-	  inflow_check_4vel(1,MAC(prim,i,j,k),&geom,0) ;
+          get_geometry(i, j, k, CENT, &geom);
+          inflow_check_4vel(1,MAC(prim,i,j,k),&geom,0) ;
 #elif(WHICHVEL==VEL3)
-	  get_geometry(i, j, k, CENT, &geom);
-	  inflow_check_3vel(1,MAC(prim,i,j,k),&geom,0) ;
-	  // projection may not preserve u^t to be real and rho>rhoscal u>uuscal
+          get_geometry(i, j, k, CENT, &geom);
+          inflow_check_3vel(1,MAC(prim,i,j,k),&geom,0) ;
+          // projection may not preserve u^t to be real and rho>rhoscal u>uuscal
 #if(JONCHECKS)
-	  if(jonchecks){
-	    //fixup1zone(MAC(prim,i,j,k),&geom,0);
-	    failreturn=check_pr(MAC(prim,i,j,k),MAC(prim,i,j,k),&geom,-3);
-	    if(failreturn){
-	      dualfprintf(fail_file,"Bad boundary zone, couldn't fix: i=%d j=%d k=%d\n",startpos[1]+i,startpos[2]+j,startpos[3]+k);
-	      if (fail(i,j,k,FAIL_BCFIX) >= 1) return (1);
-	    }
-	  }
+          if(jonchecks){
+            //fixup1zone(MAC(prim,i,j,k),&geom,0);
+            failreturn=check_pr(MAC(prim,i,j,k),MAC(prim,i,j,k),&geom,-3);
+            if(failreturn){
+              dualfprintf(fail_file,"Bad boundary zone, couldn't fix: i=%d j=%d k=%d\n",startpos[1]+i,startpos[2]+j,startpos[3]+k);
+              if (fail(i,j,k,FAIL_BCFIX) >= 1) return (1);
+            }
+          }
 #endif
 #elif(WHICHVEL==VELREL4)
-	  get_geometry(i,j,k,CENT,&geom) ;
-	  inflow_check_rel4vel(1,MAC(prim,i,j,k),&geom,0) ;
-	  if(limit_gamma(GAMMAMAX,MAC(prim,i,j,k),&geom, 0)>=1)
-	    FAILSTATEMENT("bounds.c:bound_prim()", "limit_gamma()", 2);
-#endif	
-	}
+          get_geometry(i,j,k,CENT,&geom) ;
+          inflow_check_rel4vel(1,MAC(prim,i,j,k),&geom,0) ;
+          if(limit_gamma(GAMMAMAX,MAC(prim,i,j,k),&geom, 0)>=1)
+            FAILSTATEMENT("bounds.c:bound_prim()", "limit_gamma()", 2);
+#endif 
+        }
       }// end 2 3
     }// end if correct bound type
   }// end if mycpu is correct
@@ -1673,17 +1673,17 @@ void x3_periodic(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 
       LOOPF1 LOOPF2{
 
-	// copy from upper side to lower boundary zones
-	ri=i;
-	rj=j;
-	rk=N3;
-	LOOPBOUND3IN PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk+k,pl);
+        // copy from upper side to lower boundary zones
+        ri=i;
+        rj=j;
+        rk=N3;
+        LOOPBOUND3IN PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk+k,pl);
 
-	// copy from lower side to upper boundary zones
-	ri=i;
-	rj=j;
-	rk=0;
-	LOOPBOUND3OUT PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk+(k-N3),pl);
+        // copy from lower side to upper boundary zones
+        ri=i;
+        rj=j;
+        rk=0;
+        LOOPBOUND3OUT PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk+(k-N3),pl);
       }
     }
   }
@@ -1725,16 +1725,16 @@ int flip_y(int iterglobal, int recontype, int bs, int be, FTYPE (*y)[2][NBIGM])
   if( iterglobal == WENO_DIR_FLIP_CONS_SIGN_DN && (recontype == CVT_C2A || recontype == CVT_A2C) && mycpupos[iterglobal] == 0 ) { 
     PLOOP(pliter,pl) 
       for( myi = bs; myi < 0; myi++ ) {
-	y[pl][0][myi] = - y[pl][0][myi];
+        y[pl][0][myi] = - y[pl][0][myi];
       }
   }
 #endif
-	
+ 
 #if( WENO_DIR_FLIP_CONS_SIGN_UP )  //flip the sign of the consrved quantities at the cylindrical axis so that they do not have a kink due to multiplication by gdet = |R|
   if( iterglobal == WENO_DIR_FLIP_CONS_SIGN_UP && (recontype == CVT_C2A || recontype == CVT_A2C)  && mycpupos[iterglobal] == numbercpu[iterglobal] - 1 ) { 
     PLOOP(pliter,pl) 
       for( myi = N1*(iterglobal==1) + N2*(iterglobal==2) + N3*(iterglobal==3); myi <= be; myi++ ) {
-	y[pl][0][myi] = - y[pl][0][myi];
+        y[pl][0][myi] = - y[pl][0][myi];
       }
   }
 #endif
@@ -1754,8 +1754,8 @@ int bound_prim_user_after_mpi(int boundstage, FTYPE (*prim)[NSTORE2][NSTORE3][NP
 
 
 void remapdq( int dir, int idel, int jdel, int kdel, int i, int j, int k, FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP], 
-	      FTYPE (*dq)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP], 
-	      FTYPE *p2interp_l, FTYPE *p2interp_r )
+              FTYPE (*dq)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP], 
+              FTYPE *p2interp_l, FTYPE *p2interp_r )
 {
 
 }
@@ -1763,8 +1763,8 @@ void remapdq( int dir, int idel, int jdel, int kdel, int i, int j, int k, FTYPE 
 
 
 void remapplpr( int dir, int idel, int jdel, int kdel, int i, int j, int k, 
-		FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*dq)[NSTORE2][NSTORE3][NPR2INTERP], 
-		FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP], 
-		FTYPE *p2interp_l, FTYPE *p2interp_r )
+                FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*dq)[NSTORE2][NSTORE3][NPR2INTERP], 
+                FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP], 
+                FTYPE *p2interp_l, FTYPE *p2interp_r )
 {
 }

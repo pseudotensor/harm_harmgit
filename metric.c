@@ -73,17 +73,17 @@ void gcov_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, F
       myexit(5523);
 #endif
       if(ptrgeom->p==NOWHERE){
-	dualfprintf(fail_file,"Not capable of obtaining past metric that wasn't stored\n");
-	myexit(2356);
-	// for example, can't just interpolate metric since then won't necessarily satisfy divg=0
-	// although probably not big error for anything requiring this interpolation
-	// that is, Connection and most evolution things will use metric at known location
-	// so could infact interpolate if this is needed -- wait and see
+        dualfprintf(fail_file,"Not capable of obtaining past metric that wasn't stored\n");
+        myexit(2356);
+        // for example, can't just interpolate metric since then won't necessarily satisfy divg=0
+        // although probably not big error for anything requiring this interpolation
+        // that is, Connection and most evolution things will use metric at known location
+        // so could infact interpolate if this is needed -- wait and see
       }
       if(getprim==0){
-	// not designed to feed back anything not in PRIMECOORDS when asking for past metric
-	dualfprintf(fail_file,"getprim==0 is not compatible with wanting past metric\n");
-	myexit(6246);
+        // not designed to feed back anything not in PRIMECOORDS when asking for past metric
+        dualfprintf(fail_file,"getprim==0 is not compatible with wanting past metric\n");
+        myexit(6246);
       }
     }
   }
@@ -107,10 +107,10 @@ void gcov_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, F
       GETLOCALMETRIC(ptrgeom->p,ptrgeom->i,ptrgeom->j,ptrgeom->k);
 
       DLOOP(j,k){
-	gcovinfunc[GIND(j,k)]=localgcov[GIND(j,k)];
+        gcovinfunc[GIND(j,k)]=localgcov[GIND(j,k)];
       }
       DLOOPA(j){
-	gcovpertinfunc[j]=localgcovpert[j];
+        gcovpertinfunc[j]=localgcovpert[j];
       }
       
     }
@@ -141,53 +141,53 @@ void gcov_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, F
       //
       ////////////////////////////
       if(whichcoord>=0){
-	if(whichcoord==BLCOORDS){
-	  set_gcov_blmetric(Vmetric, gcovinfunc, gcovpertinfunc);
-	}
-	else if(whichcoord==KSCOORDS){
-	  set_gcov_ksmetric(Vmetric, gcovinfunc, gcovpertinfunc);
-	}
-	else if(whichcoord==KS_JP1_COORDS){
-	  set_gcov_ks_jp1_metric(Vmetric, gcovinfunc, gcovpertinfunc);
-	}
-	else if(whichcoord==KS_BH_TOV_COORDS){
-	  set_gcov_ks_bh_tov_metric(Xmetric, Vmetric, gcovinfunc, gcovpertinfunc);
-	}
-	else if(whichcoord==KS_TOV_COORDS){
-	  set_gcov_ks_tov_metric(Xmetric, Vmetric, gcovinfunc, gcovpertinfunc);
-	}
-	else if(whichcoord==BL_TOV_COORDS){
-	  set_gcov_bl_tov_metric(Xmetric, Vmetric, gcovinfunc, gcovpertinfunc);
-	}
-	else if(whichcoord==HTMETRIC){
-	  set_gcov_htmetric(Vmetric, gcovinfunc, gcovpertinfunc);
-	}
-	else if(whichcoord==HTMETRICACCURATE){
-	  set_gcov_htmetric_accurate(Vmetric, gcovinfunc, gcovpertinfunc);
-	}
-	else if(whichcoord==CARTMINKMETRIC || whichcoord==CARTMINKMETRIC2){
-	  set_gcov_cartminkmetric(Vmetric, gcovinfunc, gcovpertinfunc);
-	}
-	else if(whichcoord==UNIGRAVITY){
-	  set_gcov_unigravity(Vmetric, gcovinfunc, gcovpertinfunc);
-	}
-	else if(whichcoord==CYLMINKMETRIC){
-	  set_gcov_cylminkmetric(Vmetric, gcovinfunc, gcovpertinfunc);
-	}
-	else if(whichcoord==SPCMINKMETRIC){
-	  set_gcov_spcminkmetric(Vmetric, gcovinfunc, gcovpertinfunc);
-	}
-	else{
-	  dualfprintf(fail_file,"gcov_func(): no such whichcoord=%d\n",whichcoord);
-	  myexit(12626);
-	}
+        if(whichcoord==BLCOORDS){
+          set_gcov_blmetric(Vmetric, gcovinfunc, gcovpertinfunc);
+        }
+        else if(whichcoord==KSCOORDS){
+          set_gcov_ksmetric(Vmetric, gcovinfunc, gcovpertinfunc);
+        }
+        else if(whichcoord==KS_JP1_COORDS){
+          set_gcov_ks_jp1_metric(Vmetric, gcovinfunc, gcovpertinfunc);
+        }
+        else if(whichcoord==KS_BH_TOV_COORDS){
+          set_gcov_ks_bh_tov_metric(Xmetric, Vmetric, gcovinfunc, gcovpertinfunc);
+        }
+        else if(whichcoord==KS_TOV_COORDS){
+          set_gcov_ks_tov_metric(Xmetric, Vmetric, gcovinfunc, gcovpertinfunc);
+        }
+        else if(whichcoord==BL_TOV_COORDS){
+          set_gcov_bl_tov_metric(Xmetric, Vmetric, gcovinfunc, gcovpertinfunc);
+        }
+        else if(whichcoord==HTMETRIC){
+          set_gcov_htmetric(Vmetric, gcovinfunc, gcovpertinfunc);
+        }
+        else if(whichcoord==HTMETRICACCURATE){
+          set_gcov_htmetric_accurate(Vmetric, gcovinfunc, gcovpertinfunc);
+        }
+        else if(whichcoord==CARTMINKMETRIC || whichcoord==CARTMINKMETRIC2){
+          set_gcov_cartminkmetric(Vmetric, gcovinfunc, gcovpertinfunc);
+        }
+        else if(whichcoord==UNIGRAVITY){
+          set_gcov_unigravity(Vmetric, gcovinfunc, gcovpertinfunc);
+        }
+        else if(whichcoord==CYLMINKMETRIC){
+          set_gcov_cylminkmetric(Vmetric, gcovinfunc, gcovpertinfunc);
+        }
+        else if(whichcoord==SPCMINKMETRIC){
+          set_gcov_spcminkmetric(Vmetric, gcovinfunc, gcovpertinfunc);
+        }
+        else{
+          dualfprintf(fail_file,"gcov_func(): no such whichcoord=%d\n",whichcoord);
+          myexit(12626);
+        }
 
-	//      dualfprintf(fail_file,"blcoordcalled2: i=%d j=%d k=%d p=%d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p);
+        //      dualfprintf(fail_file,"blcoordcalled2: i=%d j=%d k=%d p=%d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p);
 
       }
       else{
-	dualfprintf(fail_file,"your request makes no sense (i.e. can't get prim gcov from prim gcov): getprim=%d whichcoord=%d\n",getprim,whichcoord);
-	myexit(26632);
+        dualfprintf(fail_file,"your request makes no sense (i.e. can't get prim gcov from prim gcov): getprim=%d whichcoord=%d\n",getprim,whichcoord);
+        myexit(26632);
       }
 
       /////////////////////////
@@ -197,78 +197,78 @@ void gcov_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, F
       /////////////////////////
 #if(DOSELFGRAVVSR)
       if(
-	 whichcoord==BLCOORDS ||
-	 whichcoord==KSCOORDS ||
-	 whichcoord==KS_JP1_COORDS ||
-	 whichcoord==HTMETRIC ||
-	 whichcoord==HTMETRICACCURATE ||
-	 whichcoord==SPCMINKMETRIC
-	 ){
-	// then using spherical polar coordinates and can do self-gravity as designed
-	set_gcov_selfspcmetric(Xmetric,Vmetric,gcovselfpert);
+         whichcoord==BLCOORDS ||
+         whichcoord==KSCOORDS ||
+         whichcoord==KS_JP1_COORDS ||
+         whichcoord==HTMETRIC ||
+         whichcoord==HTMETRICACCURATE ||
+         whichcoord==SPCMINKMETRIC
+         ){
+        // then using spherical polar coordinates and can do self-gravity as designed
+        set_gcov_selfspcmetric(Xmetric,Vmetric,gcovselfpert);
 
-	// OLD DEBUG
-	//    phi = -0.1/Vmetric[1];
-	//gcovinfunc[GIND(TT,TT)] += GINDASSIGNFACTOR(TT,TT)*(-2.0*phi);
-	//      gcovpertinfunc[TT] += -2.0*phi;
-	//      gcovinfunc[GIND(RR,RR)] += GINDASSIGNFACTOR(RR,RR)*(-2.0*phi);
-	//      gcovpertinfunc[RR] += -2.0*phi;
+        // OLD DEBUG
+        //    phi = -0.1/Vmetric[1];
+        //gcovinfunc[GIND(TT,TT)] += GINDASSIGNFACTOR(TT,TT)*(-2.0*phi);
+        //      gcovpertinfunc[TT] += -2.0*phi;
+        //      gcovinfunc[GIND(RR,RR)] += GINDASSIGNFACTOR(RR,RR)*(-2.0*phi);
+        //      gcovpertinfunc[RR] += -2.0*phi;
 
-	//    gcovinfunc[GIND(TT,TT)] += GINDASSIGNFACTOR(TT,TT)*gcovselfpert[TT];
-	//    gcovpertinfunc[TT] += gcovselfpert[RR];
-	//    gcovinfunc[GIND(RR,RR)] += GINDASSIGNFACTOR(RR,RR)*gcovselfpert[TH];
-	//    gcovpertinfunc[RR] += gcovselfpert[PH];
+        //    gcovinfunc[GIND(TT,TT)] += GINDASSIGNFACTOR(TT,TT)*gcovselfpert[TT];
+        //    gcovpertinfunc[TT] += gcovselfpert[RR];
+        //    gcovinfunc[GIND(RR,RR)] += GINDASSIGNFACTOR(RR,RR)*gcovselfpert[TH];
+        //    gcovpertinfunc[RR] += gcovselfpert[PH];
 
-	//    if(gcovselfpert[TT]+2.0*phi>0.01){
-	//	dualfprintf(fail_file,"got TT difference: %21.15g %21.15g\n",gcovselfpert[TT],-2.0*phi);
-	//    }
+        //    if(gcovselfpert[TT]+2.0*phi>0.01){
+        // dualfprintf(fail_file,"got TT difference: %21.15g %21.15g\n",gcovselfpert[TT],-2.0*phi);
+        //    }
 
-	//    if(gcovselfpert[RR]+2.0*phi>0.01){
-	//	dualfprintf(fail_file,"got RR difference: %21.15g %21.15g\n",gcovselfpert[RR],-2.0*phi);
-	//    }
+        //    if(gcovselfpert[RR]+2.0*phi>0.01){
+        // dualfprintf(fail_file,"got RR difference: %21.15g %21.15g\n",gcovselfpert[RR],-2.0*phi);
+        //    }
 
-	//    if(gcovselfpert[TH]>0.01){
-	//	dualfprintf(fail_file,"got TH difference: %21.15g %21.15g\n",gcovselfpert[TH],0.0);
-	//    }
+        //    if(gcovselfpert[TH]>0.01){
+        // dualfprintf(fail_file,"got TH difference: %21.15g %21.15g\n",gcovselfpert[TH],0.0);
+        //    }
 
-	//    if(gcovselfpert[PH]>0.01){
-	//	dualfprintf(fail_file,"got PH difference: %21.15g %21.15g\n",gcovselfpert[PH],0.0);
-	//    }
-
-
-	//      DLOOPA(j){
-	//	dualfprintf(fail_file,"t=%21.15g %ld %d :: X1=%21.15g :: postgcov[%d][%d]=%21.15g :: gcovselfpert[%d]=%21.15g mypert=%2.15g\n",t,steppart,nstep,Xmetric[1],j,j,gcovinfunc[GIND(j,j)],j,gcovselfpert[j],-2.0*phi);
-	//      }
-
-	//	DLOOPA(j){
-	//	  dualfprintf(fail_file,"t=%21.15g %ld %d :: X1=%21.15g :: gcovselfpert[%d]=%21.15g\n",t,steppart,nstep,Xmetric[1],j,gcovselfpert[j]);
-	//	}
+        //    if(gcovselfpert[PH]>0.01){
+        // dualfprintf(fail_file,"got PH difference: %21.15g %21.15g\n",gcovselfpert[PH],0.0);
+        //    }
 
 
-	////////////
-	//
-	// add self-gravity perturbation to metric
-	//
-	////////////
-	DLOOPA(j){
-	  gcovinfunc[GIND(j,j)] += GINDASSIGNFACTOR(j,j)*gcovselfpert[j];
-	  gcovpertinfunc[j]+=gcovselfpert[j]; // in this way the perturbation part is always resolved
-	  //	dualfprintf(fail_file,"gcovselfpert[%d]=%21.15g\n",j,gcovselfpert[j]);
-	}
-	if(whichcoord==KSCOORDS || whichcoord==KS_JP1_COORDS){
-	  // KS-form has these terms
-	  gcovinfunc[GIND(TT,RR)] += GINDASSIGNFACTOR(TT,RR)*gcovselfpert[TT];
-	  gcovinfunc[GIND(RR,TT)] = gcovinfunc[GIND(TT,RR)];
-	}
+        //      DLOOPA(j){
+        // dualfprintf(fail_file,"t=%21.15g %ld %d :: X1=%21.15g :: postgcov[%d][%d]=%21.15g :: gcovselfpert[%d]=%21.15g mypert=%2.15g\n",t,steppart,nstep,Xmetric[1],j,j,gcovinfunc[GIND(j,j)],j,gcovselfpert[j],-2.0*phi);
+        //      }
+
+        // DLOOPA(j){
+        //   dualfprintf(fail_file,"t=%21.15g %ld %d :: X1=%21.15g :: gcovselfpert[%d]=%21.15g\n",t,steppart,nstep,Xmetric[1],j,gcovselfpert[j]);
+        // }
+
+
+        ////////////
+        //
+        // add self-gravity perturbation to metric
+        //
+        ////////////
+        DLOOPA(j){
+          gcovinfunc[GIND(j,j)] += GINDASSIGNFACTOR(j,j)*gcovselfpert[j];
+          gcovpertinfunc[j]+=gcovselfpert[j]; // in this way the perturbation part is always resolved
+          // dualfprintf(fail_file,"gcovselfpert[%d]=%21.15g\n",j,gcovselfpert[j]);
+        }
+        if(whichcoord==KSCOORDS || whichcoord==KS_JP1_COORDS){
+          // KS-form has these terms
+          gcovinfunc[GIND(TT,RR)] += GINDASSIGNFACTOR(TT,RR)*gcovselfpert[TT];
+          gcovinfunc[GIND(RR,TT)] = gcovinfunc[GIND(TT,RR)];
+        }
       }
       else if(whichcoord==KS_BH_TOV_COORDS || whichcoord==KS_TOV_COORDS || whichcoord==BL_TOV_COORDS){
-	// then doing full TOV-like solution that doesn't just come in as a perturbation
+        // then doing full TOV-like solution that doesn't just come in as a perturbation
       
       }
       else{
-	// then not setup for these coordinates
-	dualfprintf(fail_file,"DOSELFGRAVVSR=1 will not work with this whichcoord=%d\n",whichcoord);
-	myexit(145);
+        // then not setup for these coordinates
+        dualfprintf(fail_file,"DOSELFGRAVVSR=1 will not work with this whichcoord=%d\n",whichcoord);
+        myexit(145);
       }
 #endif
 
@@ -293,8 +293,8 @@ void gcov_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, F
       //
       ///////////
       if(getprim==1){
-	// all the above are analytic, so have to convert to prim coords.
-	gcov2gcovprim(ptrgeom, Xmetric, Vmetric, gcovinfunc,gcovpertinfunc, gcovinfunc, gcovpertinfunc);
+        // all the above are analytic, so have to convert to prim coords.
+        gcov2gcovprim(ptrgeom, Xmetric, Vmetric, gcovinfunc,gcovpertinfunc, gcovinfunc, gcovpertinfunc);
       }
       //  DLOOP(j,k) { stderrfprintf("2gcov[%d][%d]=%21.15g\n",j,k,gcovinfunc[GIND(j,k)]); fflush(stderr);}
 
@@ -320,14 +320,14 @@ void gcov_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, F
       GETLASTLOCALMETRIC(ptrgeom->p,ptrgeom->i,ptrgeom->j,ptrgeom->k);
 
       DLOOP(j,k){
-	gcovinfunc[GIND(j,k)]=localgcov[GIND(j,k)];
+        gcovinfunc[GIND(j,k)]=localgcov[GIND(j,k)];
       }
       DLOOPA(j){
-	gcovpertinfunc[j]=localgcovpert[j];
+        gcovpertinfunc[j]=localgcovpert[j];
       }
 
       //      if(ptrgeom->i==7 && nstep==1084){
-      //	DLOOP(j,k) dualfprintf(fail_file,"past time: gcov[%d][%d]=%21.15g\n",j,k,gcovinfunc[GIND(j,k)]);
+      // DLOOP(j,k) dualfprintf(fail_file,"past time: gcov[%d][%d]=%21.15g\n",j,k,gcovinfunc[GIND(j,k)]);
       //      }
     }
     else{
@@ -379,7 +379,7 @@ int rotate_VtoVmetric(int whichcoord, FTYPE *V, FTYPE *Vmetric)
   if(THETAROT!=0.0 && ALLOWMETRICROT && ISSPCMCOORD(whichcoord)){
     // see metricrot.nb.  
     FTYPE tnew,rnew,hnew,phnew; // true V used in bl_coord() to map to X
-	
+ 
     tnew=V[0];
     rnew=V[1];
     hnew=V[2];
@@ -486,7 +486,7 @@ int rotate_Vmetric2V(int whichcoord, FTYPE *Vmetric, FTYPE *V)
   if(THETAROT!=0.0 && ALLOWMETRICROT && ISSPCMCOORD(whichcoord)){
     // see metricrot.nb.  Note that mathematica's Arctan[x,y] = C's atan2(y,x) (i.e. args are flipped in order)
     FTYPE t,r,h,ph;
-	
+ 
     t=Vmetric[0];
     r=Vmetric[1];
     h=Vmetric[2];
@@ -687,9 +687,9 @@ void gcon_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, F
     if(whichcoord==BLCOORDS){
       //dualfprintf(fail_file,"mi in BLCOORDS\n");
       if(ANALYTICGCON){
-	bl_coord(X, V);
-	set_gcon_blmetric(V, gcon);
-	if(getprim) gcon2gconprim(ptrgeom, X, V, gcon,gcon);
+        bl_coord(X, V);
+        set_gcon_blmetric(V, gcon);
+        if(getprim) gcon2gconprim(ptrgeom, X, V, gcon,gcon);
       }
       // since don't have gcon and want to keep things simple by only having to specify gcov 
       else matrix_inverse_metric(whichcoord,gcov,gcon);
@@ -705,9 +705,9 @@ void gcon_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, F
 
 
       if(ANALYTICGCON){
-	bl_coord(X, V);
-	set_gcon_ksmetric(V,gcon);
-	if(getprim) gcon2gconprim(ptrgeom, X, V,gcon,gcon);
+        bl_coord(X, V);
+        set_gcon_ksmetric(V,gcon);
+        if(getprim) gcon2gconprim(ptrgeom, X, V,gcon,gcon);
       }
       // since don't have gcon and want to keep things simple by only having to specify gcov 
       else matrix_inverse_metric(whichcoord,gcov,gcon);
@@ -740,16 +740,16 @@ void gcon_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, F
 
 // connection not simply transformed -- so compute directly from final metric (primcoords)
 void conn_func(int whichcoord, FTYPE *X, struct of_geom *geom,
-	       FTYPE (*conn)[NDIM][NDIM],FTYPE *conn2)
+               FTYPE (*conn)[NDIM][NDIM],FTYPE *conn2)
 {
   void set_conn_general(FTYPE *X, struct of_geom *geom,
-			FTYPE (*conn)[NDIM][NDIM],FTYPE *conn2);
+                        FTYPE (*conn)[NDIM][NDIM],FTYPE *conn2);
   void set_conn_ksmetric(FTYPE *X, struct of_geom *geom,
-			 FTYPE (*conn)[NDIM][NDIM],FTYPE *conn2);
+                         FTYPE (*conn)[NDIM][NDIM],FTYPE *conn2);
   void set_conn_cylminkmetric(FTYPE *X, struct of_geom *geom,
-			      FTYPE (*conn)[NDIM][NDIM],FTYPE *conn2);
+                              FTYPE (*conn)[NDIM][NDIM],FTYPE *conn2);
   void set_conn_cartminkmetric(FTYPE *X, struct of_geom *geom,
-			       FTYPE (*conn)[NDIM][NDIM],FTYPE *conn2);
+                               FTYPE (*conn)[NDIM][NDIM],FTYPE *conn2);
   
 
   if(whichcoord==KS_JP1_COORDS || whichcoord==BLCOORDS || whichcoord==KS_BH_TOV_COORDS || whichcoord==KS_TOV_COORDS || whichcoord==BL_TOV_COORDS || whichcoord==HTMETRIC || whichcoord==HTMETRICACCURATE || whichcoord==UNIGRAVITY || whichcoord==SPCMINKMETRIC){
@@ -985,7 +985,7 @@ void set_gcov_htmetric(FTYPE *V, FTYPE *gcov, FTYPE *gcovpert)
   gcov[GIND(PH,TH)] = gcov[GIND(TH,PH)] ;
 
   
-								     
+             
 
 
 
@@ -1111,7 +1111,7 @@ void set_gcov_htmetric_accurate(FTYPE *V, FTYPE *gcov, FTYPE *gcovpert)
   gcovpert[PH] = gcov[GIND(PH,PH)]-1.0;
 
   
-								     
+             
 
 
 
@@ -1962,10 +1962,10 @@ void set_gcon_blmetric(FTYPE *V, FTYPE *gcon)
 
 
 void set_conn_general(FTYPE *X, struct of_geom *geom,
-			 FTYPE (*conn)[NDIM][NDIM],FTYPE *conn2)
+                      FTYPE (*conn)[NDIM][NDIM],FTYPE *conn2)
 {
   void conn_func_numerical1(FTYPE DELTA,FTYPE *X, struct of_geom *geom,
-			    FTYPE (*conn)[NDIM][NDIM],FTYPE *conn2);
+                            FTYPE (*conn)[NDIM][NDIM],FTYPE *conn2);
 
   conn_func_numerical1(CONNDELTA,X, geom, conn, conn2);
 }
@@ -1973,10 +1973,10 @@ void set_conn_general(FTYPE *X, struct of_geom *geom,
 
 
 void set_conn_cylminkmetric(FTYPE *X, struct of_geom *geom,
-			    FTYPE (*conn)[NDIM][NDIM],FTYPE *conn2)
+                            FTYPE (*conn)[NDIM][NDIM],FTYPE *conn2)
 {
   void conn_func_numerical1(FTYPE DELTA,FTYPE *X, struct of_geom *geom,
-			    FTYPE (*conn)[NDIM][NDIM],FTYPE *conn2);
+                            FTYPE (*conn)[NDIM][NDIM],FTYPE *conn2);
   void gcov_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, FTYPE *gcov, FTYPE *gcovpert);
   int i,j,k;
   FTYPE gcovmid[SYMMATRIXNDIM];
@@ -2008,9 +2008,9 @@ void set_conn_cylminkmetric(FTYPE *X, struct of_geom *geom,
 
     for (i = 0; i < NDIM; i++)
       for (j = 0; j < NDIM; j++)
-	for (k = 0; k < NDIM; k++) {
-	  conn[i][j][k] = 0.;
-	}
+        for (k = 0; k < NDIM; k++) {
+          conn[i][j][k] = 0.;
+        }
     conn[PH][RR][PH]=1.0 / X[1]; //1.0/gdetmid; //apparently, wrong because should not care about the 2nd dimension  SUPERSASMARK
     conn[PH][PH][RR]=1.0 / X[1]; //1.0/gdetmid; //apparently, wrong because should not care about the 2nd dimension  SUPERSASMARK
     conn[RR][PH][PH]= - X[1] * dxdxp[3][3] * dxdxp[3][3]; //-gdetmid;
@@ -2025,10 +2025,10 @@ void set_conn_cylminkmetric(FTYPE *X, struct of_geom *geom,
 
 // only works for X1=R and X2=z
 void set_conn_cartminkmetric(FTYPE *X, struct of_geom *geom,
-			     FTYPE (*conn)[NDIM][NDIM],FTYPE *conn2)
+                             FTYPE (*conn)[NDIM][NDIM],FTYPE *conn2)
 {
   void conn_func_numerical1(FTYPE DELTA,FTYPE *X, struct of_geom *geom,
-			    FTYPE (*conn)[NDIM][NDIM],FTYPE *conn2);
+                            FTYPE (*conn)[NDIM][NDIM],FTYPE *conn2);
 
   int i,j,k;
 
@@ -2037,9 +2037,9 @@ void set_conn_cartminkmetric(FTYPE *X, struct of_geom *geom,
     
     for (i = 0; i < NDIM; i++)
       for (j = 0; j < NDIM; j++)
-	for (k = 0; k < NDIM; k++) {
-	  conn[i][j][k] = 0.;
-	}
+        for (k = 0; k < NDIM; k++) {
+          conn[i][j][k] = 0.;
+        }
   }
   else{
     conn_func_numerical1(CONNDELTA,X, geom, conn, conn2);
@@ -2050,12 +2050,12 @@ void set_conn_cartminkmetric(FTYPE *X, struct of_geom *geom,
 
 
 void set_conn_ksmetric(FTYPE *X, struct of_geom *geom,
-		       FTYPE (*conn)[NDIM][NDIM],FTYPE *conn2)
+                       FTYPE (*conn)[NDIM][NDIM],FTYPE *conn2)
 {
   void conn_func_numerical1(FTYPE DELTA,FTYPE *X, struct of_geom *geom,
-			    FTYPE (*conn)[NDIM][NDIM],FTYPE *conn2);
+                            FTYPE (*conn)[NDIM][NDIM],FTYPE *conn2);
   void mks_conn_func(FTYPE *X, struct of_geom *geom,
-		     FTYPE (*lconn)[NDIM][NDIM],FTYPE *conn2);
+                     FTYPE (*lconn)[NDIM][NDIM],FTYPE *conn2);
 
   //  FTYPE DELTA; // for debug below
 
@@ -2138,7 +2138,7 @@ void set_conn_ksmetric(FTYPE *X, struct of_geom *geom,
 // jon's MKS connection (and conn2)
 // only applies to defcoord==LOGRSINTH
 void mks_conn_func(FTYPE *X, struct of_geom *ptrgeom,
-		   FTYPE (*conn)[NDIM][NDIM],FTYPE *conn2)
+                   FTYPE (*conn)[NDIM][NDIM],FTYPE *conn2)
 {
   int i, j, k, l;
   FTYPE V[NDIM];
@@ -2236,8 +2236,8 @@ void mks_conn_func(FTYPE *X, struct of_geom *ptrgeom,
   conn[1][1][2]=-1.*dxdxp[2]*cos(th)*pow(a,2.)*pow(sigma,-1.)*sin(th)
     ;
   conn[1][1][3]=0.5*a*(pow(a,2.)*(sigma - 2.*pow(r,2.)) + 
-		       cos(2.*th)*pow(a,2.)*(-1.*sigma + 2.*pow(r,2.)) + 
-		       2.*r*((-2. + sigma)*sigma + 4.*pow(r,2.)))*pow(sigma,-3.)*
+                       cos(2.*th)*pow(a,2.)*(-1.*sigma + 2.*pow(r,2.)) + 
+                       2.*r*((-2. + sigma)*sigma + 4.*pow(r,2.)))*pow(sigma,-3.)*
     pow(sin(th),2.);
   conn[1][2][0]=0.;
   conn[1][2][1]=-1.*dxdxp[2]*cos(th)*pow(a,2.)*pow(sigma,-1.)*sin(th)
@@ -2249,8 +2249,8 @@ void mks_conn_func(FTYPE *X, struct of_geom *ptrgeom,
     (4.*r - 2.*sigma - 1.*pow(a,2.) + cos(2.*th)*pow(a,2.))*
     (-1.*sigma + 2.*pow(r,2.))*pow(sigma,-3.)*pow(sin(th),2.);
   conn[1][3][1]=0.5*a*(pow(a,2.)*(sigma - 2.*pow(r,2.)) + 
-		       cos(2.*th)*pow(a,2.)*(-1.*sigma + 2.*pow(r,2.)) + 
-		       2.*r*((-2. + sigma)*sigma + 4.*pow(r,2.)))*pow(sigma,-3.)*
+                       cos(2.*th)*pow(a,2.)*(-1.*sigma + 2.*pow(r,2.)) + 
+                       2.*r*((-2. + sigma)*sigma + 4.*pow(r,2.)))*pow(sigma,-3.)*
     pow(sin(th),2.);
   conn[1][3][2]=0.;
   conn[1][3][3]=-1.*pow(dxdxp[1],-1.)*pow(sigma,-3.)*pow(sin(th),2.)*
@@ -2315,7 +2315,7 @@ void mks_conn_func(FTYPE *X, struct of_geom *ptrgeom,
      pow(a,3.)*(-1.*sigma + 2.*pow(r,2.))*pow(sin(th),4.));
   conn2[0]=0.;
   conn2[1]=-1.*pow(sigma,-1.)*(2.*dxdxp[1]*r + pow(r,2.) + 
-			       pow(a,2.)*pow(cos(th),2.));
+                               pow(a,2.)*pow(cos(th),2.));
   conn2[2]=-1.*dxdxp[2]*cot(th) + 
     4.*(-1.*M_PI*X[2] + th)*pow(dxdxp[2],-1.)*pow(M_PI,2.) + 
     dxdxp[2]*pow(a,2.)*pow(sigma,-1.)*sin(2.*th);
@@ -2403,8 +2403,8 @@ void mks_conn_func_general(FTYPE *X, struct of_geom *geom, FTYPE (*conn)[NDIM][N
   // GODMARK
   // need to set second derivative analytically
   for(i=0;i<NDIM;i++)  for(j=0;j<NDIM;j++)  for(k=0;k<NDIM;k++){
-    dxdxp_dxp[i][j][k]=0.0;
-  }
+        dxdxp_dxp[i][j][k]=0.0;
+      }
 
 
   //  t1 = rf(X1,X2);
@@ -2467,7 +2467,7 @@ void mks_conn_func_general(FTYPE *X, struct of_geom *geom, FTYPE (*conn)[NDIM][N
   t102 = t22*t29;
   t104 = t64*t102;
   conn[0][1][1] = -2.0*(t83*t84-t21*t86-t25*t86+(2.0*t89*t91+2.0*t83*t21*t12+
-						 t34*t97+(t83*t10*t38+t38*t86+2.0*t104*t30)*t11)*t11)*M*t17;
+                                                 t34*t97+(t83*t10*t38+t38*t86+2.0*t104*t30)*t11)*t11)*M*t17;
   t114 = t22*t52;
   t116 = t30*t56;
   t119 = t24*t52;
@@ -2478,8 +2478,8 @@ void mks_conn_func_general(FTYPE *X, struct of_geom *geom, FTYPE (*conn)[NDIM][N
   t130 = t129*t30;
   t132 = t10*t38;
   conn[0][1][2] = -2.0*(-t25*t114+t116*t84-t23*t52+(t119*t91+t34*t121+2.0*
-						    t116*t123+t89*t126
-						    +(t39*t52+t64*t130+t116*t132+t104*t56)*t11)*t11)*M*t17;
+                                                    t116*t123+t89*t126
+                                                    +(t39*t52+t64*t130+t116*t132+t104*t56)*t11)*t11)*M*t17;
   t148 = 2.0*t28*t30;
   t149 = t102*t12;
   t152 = t41*t24;
@@ -2499,8 +2499,8 @@ void mks_conn_func_general(FTYPE *X, struct of_geom *geom, FTYPE (*conn)[NDIM][N
   t177 = t1*t12;
   t185 = t52*t41;
   conn[0][2][2] = -2.0*(-t172*t24-t171*t21+t175*t84+(t172*t177+2.0*t119*t126+
-						     2.0*t175*t21*t12
-						     +(t171*t38+2.0*t185*t40*t56+t175*t10*t38)*t11)*t11)*M*t17;
+                                                     2.0*t175*t21*t12
+                                                     +(t171*t38+2.0*t185*t40*t56+t175*t10*t38)*t11)*t11)*M*t17;
   t203 = 2.0*t152*t56;
   t204 = t129*t12;
   t208 = 2.0*t28*t56;
@@ -2592,11 +2592,11 @@ void mks_conn_func_general(FTYPE *X, struct of_geom *geom, FTYPE (*conn)[NDIM][N
   t385 = t38*t12;
   t387 = t328*t380;
   conn[1][1][1] = -(-t300*t84-2.0*t303+t305*t306-t310+(-t243*t86+t313-2.0*t314*t86*M)*M
-		    +(-2.0*t320*t3*t280-4.0*t325-t327+t330-3.0*t300*t123+3.0*t243*t333
-		      -t338+(t340+t344-t246*t97+t346*t10+2.0*t210*t97*M)*M
-		      +(-4.0*t320*t41*t289-3.0*t300*t132+3.0*t246*t358-2.0*t363-t366-t368+t372
-			+(-t346*t12+t375+2.0*t346*t38)*M
-			+(-2.0*t320*t381-t384-t300*t385+t387+t56*t306*t385)*t11)*t11)*t11)*t260*t17;
+                    +(-2.0*t320*t3*t280-4.0*t325-t327+t330-3.0*t300*t123+3.0*t243*t333
+                      -t338+(t340+t344-t246*t97+t346*t10+2.0*t210*t97*M)*M
+                      +(-4.0*t320*t41*t289-3.0*t300*t132+3.0*t246*t358-2.0*t363-t366-t368+t372
+                        +(-t346*t12+t375+2.0*t346*t38)*M
+                        +(-2.0*t320*t381-t384-t300*t385+t387+t56*t306*t385)*t11)*t11)*t11)*t260*t17;
   //  t399 = diff(diff(thf(X1,X2),X1),X2);
   t399 = dxdxp_dxp[TH][1][2]; 
   t400 = t52*t399;
@@ -2629,11 +2629,11 @@ void mks_conn_func_general(FTYPE *X, struct of_geom *geom, FTYPE (*conn)[NDIM][N
   t467 = t404*t227;
   t469 = t431*t380;
   conn[1][1][2] = (t400*t84-t305*t402+t405+t406*t221+t409+(-t411+t412*t23+2.0*t114*t241)*M
-		   +(-3.0*t243*t418+t421+3.0*t400*t123+2.0*t425+t428+2.0*t406*t222+
-		     t432+(t412*t434-t437-t440-t412*t433-2.0*t121*t442)*M
-		     +(t448+t406*t227+t451+t453-3.0*t246*t454+3.0*t400*t132+t459
-		       +(t114*t251-t462-2.0*t114*t264)*M+(t467+t400*t385+t469
-							  -t56*t402*t385)*t11)*t11)*t11)*t260*t17;
+                   +(-3.0*t243*t418+t421+3.0*t400*t123+2.0*t425+t428+2.0*t406*t222+
+                     t432+(t412*t434-t437-t440-t412*t433-2.0*t121*t442)*M
+                     +(t448+t406*t227+t451+t453-3.0*t246*t454+3.0*t400*t132+t459
+                       +(t114*t251-t462-2.0*t114*t264)*M+(t467+t400*t385+t469
+                                                          -t56*t402*t385)*t11)*t11)*t11)*t260*t17;
   t480 = t286*t21;
   t481 = t57*t221;
   t486 = 2.0*t185*t10;
@@ -2659,12 +2659,12 @@ void mks_conn_func_general(FTYPE *X, struct of_geom *geom, FTYPE (*conn)[NDIM][N
   t553 = t510*t38;
   t556 = t512*t24;
   conn[1][2][2] = -(-2.0*t504*t221-t508*t84+t305*t510-t512*t309
-		    +(2.0*t512*t84-t504*t21-2.0*t504*t25)*M
-		    +(-2.0*t521*t12-3.0*t508*t123-4.0*t504*t222-t521-t528*t329+3.0*t243*t530
-		      +(-t504*t224+t504*t10+2.0*t342*t171*t52+4.0*t512*t21*t12+2.0*t12*t171*t442)*M
-		      +(-3.0*t508*t132-2.0*t504*t227-2.0*t528*t370+3.0*t246*t553-2.0*t556*t12-t556*t38
-			+(2.0*t512*t10*t38-t504*t12+2.0*t504*t38)*M
-			+(-t528*t380-t512*t1*t38-t508*t385+t56*t510*t385)*t11)*t11)*t11)*t260*t17;
+                    +(2.0*t512*t84-t504*t21-2.0*t504*t25)*M
+                    +(-2.0*t521*t12-3.0*t508*t123-4.0*t504*t222-t521-t528*t329+3.0*t243*t530
+                      +(-t504*t224+t504*t10+2.0*t342*t171*t52+4.0*t512*t21*t12+2.0*t12*t171*t442)*M
+                      +(-3.0*t508*t132-2.0*t504*t227-2.0*t528*t370+3.0*t246*t553-2.0*t556*t12-t556*t38
+                        +(2.0*t512*t10*t38-t504*t12+2.0*t504*t38)*M
+                        +(-t528*t380-t512*t1*t38-t508*t385+t56*t510*t385)*t11)*t11)*t11)*t260*t17;
   conn[1][2][3] = t501*t52*t297;
   conn[1][3][0] = conn[1][0][3];
   conn[1][3][1] = conn[1][1][3];
@@ -2672,10 +2672,10 @@ void mks_conn_func_general(FTYPE *X, struct of_geom *geom, FTYPE (*conn)[NDIM][N
   t588 = t84*t29;
   t607 = t29*t38;
   conn[1][3][3] = -(-t56*t309*t29+t286*t84+2.0*t240*t588
-		    +(-t481-2.0*t408*t284+t480+2.0*t185*t21+(-4.0*t185*t24+t280+3.0*t243*t284+4.0*t278
-							     +(-2.0*t314*t29+2.0*t487)*M)*M
-		      +(t492*t10+t486-t314*t607-t488+(-2.0*t492*t1+t289+t288-2.0*t285+3.0*t246*t607
-						      +(-2.0*t491+2.0*t210*t284)*M)*M+t498)*t11)*t11)*t29*t261;
+                    +(-t481-2.0*t408*t284+t480+2.0*t185*t21+(-4.0*t185*t24+t280+3.0*t243*t284+4.0*t278
+                                                             +(-2.0*t314*t29+2.0*t487)*M)*M
+                      +(t492*t10+t486-t314*t607-t488+(-2.0*t492*t1+t289+t288-2.0*t285+3.0*t246*t607
+                                                      +(-2.0*t491+2.0*t210*t284)*M)*M+t498)*t11)*t11)*t29*t261;
   t627 = t30*t21;
   t628 = t30*M;
   t630 = 2.0*t628*t24;
@@ -2705,19 +2705,19 @@ void mks_conn_func_general(FTYPE *X, struct of_geom *geom, FTYPE (*conn)[NDIM][N
   t689 = t83*t22;
   t712 = t677*t24;
   conn[2][1][1] = -(2.0*t670*t221-t673*t306+t675*t84+t677*t309+(-2.0*t677*t84+t627*t86+2.0*t670*t25)*M
-		    +(2.0*t686*t12+t689*t329-3.0*t627*t333+t686+4.0*t670*t222+3.0*t675*t123
-		      +(-2.0*t86*t22*t1*t90+t631*t97-t670*t10-4.0*t677*t21*t12-2.0*t637*t86*t34)*M
-		      +(2.0*t712*t12+t712*t38+2.0*t670*t227+3.0*t675*t132-3.0*t631*t358+2.0*t689*t370
-			+(t670*t12-2.0*t677*t10*t38-2.0*t670*t38)*M
-			+(t675*t385-t30*t306*t385+t689*t380+t677*t1*t38)*t11)*t11)*t11)*t260*t17;
+                    +(2.0*t686*t12+t689*t329-3.0*t627*t333+t686+4.0*t670*t222+3.0*t675*t123
+                      +(-2.0*t86*t22*t1*t90+t631*t97-t670*t10-4.0*t677*t21*t12-2.0*t637*t86*t34)*M
+                      +(2.0*t712*t12+t712*t38+2.0*t670*t227+3.0*t675*t132-3.0*t631*t358+2.0*t689*t370
+                        +(t670*t12-2.0*t677*t10*t38-2.0*t670*t38)*M
+                        +(t675*t385-t30*t306*t385+t689*t380+t677*t1*t38)*t11)*t11)*t11)*t260*t17;
   t748 = t22*t399;
   conn[2][1][2] = -(t303+t310-t673*t402+t748*t84+t346*t221
-		    +(-t313+t258*t23+2.0*t258*t26)*M
-		    +(t327+t330+2.0*t325-3.0*t627*t418+2.0*t346*t222+3.0*t748*t123+t338
-		      +(-t340-t258*t433-t344+t258*t434-2.0*t60*t30*t361*M)*M
-		      +(t346*t227+t372+t363+t366+t368-3.0*t631*t454+3.0*t748*t132
-			+(t258*t35-t375-2.0*t258*t39)*M+(t387+t748*t385+t384
-							 -t30*t402*t385)*t11)*t11)*t11)*t260*t17;
+                    +(-t313+t258*t23+2.0*t258*t26)*M
+                    +(t327+t330+2.0*t325-3.0*t627*t418+2.0*t346*t222+3.0*t748*t123+t338
+                      +(-t340-t258*t433-t344+t258*t434-2.0*t60*t30*t361*M)*M
+                      +(t346*t227+t372+t363+t366+t368-3.0*t631*t454+3.0*t748*t132
+                        +(t258*t35-t375-2.0*t258*t39)*M+(t387+t748*t385+t384
+                                                         -t30*t402*t385)*t11)*t11)*t11)*t260*t17;
   t793 = t31*t221;
   t794 = t3*t22;
   t795 = t794*t21;
@@ -2736,21 +2736,21 @@ void mks_conn_func_general(FTYPE *X, struct of_geom *geom, FTYPE (*conn)[NDIM][N
   t831 = t3*t56;
   t845 = t41*t56;
   conn[2][2][2] = -(-t673*t510+2.0*t409+t405+t822*t84+(t406*t21-t411+2.0*t406*t25)*M
-		    +(-3.0*t627*t530+t421-t432+2.0*t130*t831*t21+t428+3.0*t822*t123+4.0*t425
-		      +(t406*t224-t406*t10-t440-t437-2.0*t406*t177*M)*M
-		      +(4.0*t130*t845*t10+2.0*t451+3.0*t822*t132+t453+t459-t448-3.0*t631*t553
-			+(t406*t12-t462-2.0*t406*t38)*M+(2.0*t258*t381+t822*t385-t30*t510*t385
-							 +t467-t469)*t11)*t11)*t11)*t260*t17;
+                    +(-3.0*t627*t530+t421-t432+2.0*t130*t831*t21+t428+3.0*t822*t123+4.0*t425
+                      +(t406*t224-t406*t10-t440-t437-2.0*t406*t177*M)*M
+                      +(4.0*t130*t845*t10+2.0*t451+3.0*t822*t132+t453+t459-t448-3.0*t631*t553
+                        +(t406*t12-t462-2.0*t406*t38)*M+(2.0*t258*t381+t822*t385-t30*t510*t385
+                                                         +t467-t469)*t11)*t11)*t11)*t260*t17;
   conn[2][2][3] = -t816*t52*t297;
   conn[2][3][0] = conn[2][0][3];
   conn[2][3][1] = conn[2][1][3];
   conn[2][3][2] = conn[2][2][3];
   t891 = t30*t24;
   conn[2][3][3] = (t794*t84+2.0*t628*t588-t30*t309*t29
-		   +(t795-t793-2.0*t30*t221*t284+2.0*t801*t21
-		     +(3.0*t627*t284+t656-4.0*t801*t24+4.0*t654+(-2.0*t891*t29+2.0*t799)*M)*M
-		     +(t807*t10+t803-t891*t607-t800+(3.0*t631*t607-2.0*t807*t1+t661-2.0*t657+t662
-						     +(2.0*t158*t284-2.0*t806)*M)*M+t813)*t11)*t11)*t29*t261;
+                   +(t795-t793-2.0*t30*t221*t284+2.0*t801*t21
+                     +(3.0*t627*t284+t656-4.0*t801*t24+4.0*t654+(-2.0*t891*t29+2.0*t799)*M)*M
+                     +(t807*t10+t803-t891*t607-t800+(3.0*t631*t607-2.0*t807*t1+t661-2.0*t657+t662
+                                                     +(2.0*t158*t284-2.0*t806)*M)*M+t813)*t11)*t11)*t29*t261;
   t917 = a*M;
   conn[3][0][0] = -t7*t917*t17;
   t920 = t102*t10;
@@ -2765,30 +2765,30 @@ void mks_conn_func_general(FTYPE *X, struct of_geom *geom, FTYPE (*conn)[NDIM][N
   t946 = t86*t29;
   t968 = t916;
   conn[3][1][1] = -(t940*t221+2.0*t794*t627+(4.0*t794*t891-t946*t10)*M
-		    +(4.0*t801*t631+2.0*t940*t222+(4.0*t361*t42+t946*t12)*M+(t940*t227+2.0*t807*t30)*t11)
-		    *t11)*a*t968;
+                    +(4.0*t801*t631+2.0*t940*t222+(4.0*t361*t42+t946*t12)*M+(t940*t227+2.0*t807*t30)*t11)
+                    *t11)*a*t968;
   t970 = t29*t221;
   t991 = t52*t1;
   conn[3][1][2] = -(t116*t970+t286*t627+t794*t243
-		    +(2.0*t286*t891-t102*t52*t10+2.0*t794*t314)*M
-		    +(2.0*t185*t631+2.0*t801*t246+2.0*t116*t275*t12+(2.0*t361*t845+2.0*t991*t42+t102*t60)*M
-		      +(t116*t40*t38+t492*t30+t807*t56)*t11)*t11)*a*t968;
+                    +(2.0*t286*t891-t102*t52*t10+2.0*t794*t314)*M
+                    +(2.0*t185*t631+2.0*t801*t246+2.0*t116*t275*t12+(2.0*t361*t845+2.0*t991*t42+t102*t60)*M
+                      +(t116*t40*t38+t492*t30+t807*t56)*t11)*t11)*a*t968;
   t1024 = t38*t41;
   conn[3][1][3] = (t3*t30*t84+t970*t22+(3.0*t42*t21+2.0*t275*t35
-					+(t102*t224+t148-t154-t920)*M
-					+(t40*t39+3.0*t159*t30*t10+(t156-t161+t149-t157)*M
-					  +t1024*t30*t11)*t11)*t11)*t924*t17;
+                                        +(t102*t224+t148-t154-t920)*M
+                                        +(t40*t39+3.0*t159*t30*t10+(t156-t161+t149-t157)*M
+                                          +t1024*t30*t11)*t11)*t11)*t924*t17;
   conn[3][2][0] = conn[3][0][2];
   conn[3][2][1] = conn[3][1][2];
   t1035 = t175*t29;
   t1037 = t171*t29;
   conn[3][2][2] = -(2.0*t286*t243+t1035*t221+(-t1037*t10+4.0*t286*t314)*M
-		    +(4.0*t185*t246+2.0*t1035*t222+(t1037*t12+4.0*t991*t845)*M
-		      +(t1035*t227+2.0*t492*t56)*t11)*t11)*a*t968;
+                    +(4.0*t185*t246+2.0*t1035*t222+(t1037*t12+4.0*t991*t845)*M
+                      +(t1035*t227+2.0*t492*t56)*t11)*t11)*a*t968;
   conn[3][2][3] = -(-t970*t52-t831*t84+(-2.0*t275*t60-3.0*t845*t21
-					+(t203-t208-t129*t224+t928)*M
-					+(-t40*t63-3.0*t159*t56*t10+(t209+t212-t204-t214)*M
-					  -t1024*t56*t11)*t11)*t11)*t924*t17;
+                                        +(t203-t208-t129*t224+t928)*M
+                                        +(-t40*t63-3.0*t159*t56*t10+(t209+t212-t204-t214)*M
+                                          -t1024*t56*t11)*t11)*t11)*t924*t17;
   conn[3][3][0] = conn[3][0][3];
   conn[3][3][1] = conn[3][1][3];
   conn[3][3][2] = conn[3][2][3];
@@ -2885,23 +2885,23 @@ void mks_source_conn(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q,FTYP
     // see grmhd-fullsource-simplify.nb
 
     dU[UU]+=pow(sigma,-1.)*(-1.*(-1. - 2.*dxdxp[1]*r*pow(sigma,-1.))*
-			    (b[RR]*(-1.*b[TT]*pow(a,2.)*pow(cos(th),2.) + 
-				    r*(2.*b[TT] + 2.*b[RR]*dxdxp[1] - 1.*b[TT]*r - 
-				       2.*b[PH]*a*pow(sin(th),2.))) + 
-			     u[RR]*(bsq + en*gam + rho)*
-			     (u[TT]*pow(a,2.)*pow(cos(th),2.) + 
-			      r*(-2.*dxdxp[1]*u[RR] - 2.*u[TT] + dxdxp[1]*u[TT] + 
-				 u[TT]*R0 + 2.*u[PH]*a*pow(sin(th),2.)))) + 
-			    (b[TH]*(b[TT]*pow(a,2.)*pow(cos(th),2.) + 
-				    r*(-2.*b[TT] - 2.*b[RR]*dxdxp[1] + b[TT]*r + 
-				       2.*b[PH]*a*pow(sin(th),2.))) - 
-			     1.*u[TH]*(bsq + en*gam + rho)*
-			     (u[TT]*pow(a,2.)*pow(cos(th),2.) + 
-			      r*(-2.*dxdxp[1]*u[RR] - 2.*u[TT] + dxdxp[1]*u[TT] + 
-				 u[TT]*R0 + 2.*u[PH]*a*pow(sin(th),2.))))*
-			    (-1.*dxdxp[2]*cot(th) + 
-			     4.*(-1.*M_PI*X[2] + th)*pow(dxdxp[2],-1.)*pow(M_PI,2.) + 
-			     dxdxp[2]*pow(a,2.)*pow(sigma,-1.)*sin(2.*th)));
+                            (b[RR]*(-1.*b[TT]*pow(a,2.)*pow(cos(th),2.) + 
+                                    r*(2.*b[TT] + 2.*b[RR]*dxdxp[1] - 1.*b[TT]*r - 
+                                       2.*b[PH]*a*pow(sin(th),2.))) + 
+                             u[RR]*(bsq + en*gam + rho)*
+                             (u[TT]*pow(a,2.)*pow(cos(th),2.) + 
+                              r*(-2.*dxdxp[1]*u[RR] - 2.*u[TT] + dxdxp[1]*u[TT] + 
+                                 u[TT]*R0 + 2.*u[PH]*a*pow(sin(th),2.)))) + 
+                            (b[TH]*(b[TT]*pow(a,2.)*pow(cos(th),2.) + 
+                                    r*(-2.*b[TT] - 2.*b[RR]*dxdxp[1] + b[TT]*r + 
+                                       2.*b[PH]*a*pow(sin(th),2.))) - 
+                             1.*u[TH]*(bsq + en*gam + rho)*
+                             (u[TT]*pow(a,2.)*pow(cos(th),2.) + 
+                              r*(-2.*dxdxp[1]*u[RR] - 2.*u[TT] + dxdxp[1]*u[TT] + 
+                                 u[TT]*R0 + 2.*u[PH]*a*pow(sin(th),2.))))*
+                            (-1.*dxdxp[2]*cot(th) + 
+                             4.*(-1.*M_PI*X[2] + th)*pow(dxdxp[2],-1.)*pow(M_PI,2.) + 
+                             dxdxp[2]*pow(a,2.)*pow(sigma,-1.)*sin(2.*th)));
 
   }
   // else nothing to add then
@@ -2912,341 +2912,341 @@ void mks_source_conn(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q,FTYP
     // see grmhd-ksksp-mhd.nb and the other source*simplify*.nb files
 
     dU[U1]+=0.0625*(16.*dxdxp[1]*r*
-		    (0.5*bsq + en*(-1. + gam) - 
-		     1.*sigma*pow(b[TH],2.)*pow(dxdxp[2],2.) + 
-		     (bsq + en*gam + rho)*sigma*pow(dxdxp[2],2.)*pow(u[TH],2.))*
-		    pow(sigma,-1.) + 2.*(-1. - 2.*dxdxp[1]*r*pow(sigma,-1.))*
-		    (4.*bsq + 8.*en*(-1. + gam) - 
-		     1.*b[RR]*dxdxp[1]*(16.*b[TT]*r + 16.*b[RR]*dxdxp[1]*r - 
-					8.*b[PH]*a*r + 4.*a*(b[RR]*dxdxp[1]*a + b[PH]*r*(2. + r))*
-					cos(2.*th) + 4.*b[RR]*dxdxp[1]*pow(a,2.) - 
-					1.*b[PH]*pow(a,3.) + b[PH]*cos(4.*th)*pow(a,3.) + 
-					8.*b[RR]*dxdxp[1]*pow(r,2.) - 4.*b[PH]*a*pow(r,2.))*
-		     pow(sigma,-1.) + dxdxp[1]*u[RR]*(bsq + en*gam + rho)*
-		     (16.*dxdxp[1]*u[RR]*r + 16.*u[TT]*r - 8.*u[PH]*a*r + 
-		      4.*a*(dxdxp[1]*u[RR]*a + u[PH]*r*(2. + r))*cos(2.*th) + 
-		      4.*dxdxp[1]*u[RR]*pow(a,2.) - 1.*u[PH]*pow(a,3.) + 
-		      u[PH]*cos(4.*th)*pow(a,3.) + 8.*dxdxp[1]*u[RR]*pow(r,2.) - 
-		      4.*u[PH]*a*pow(r,2.))*pow(sigma,-1.)) - 
-		    1.*dxdxp[1]*(4.*r - 1.*pow(a,2.) + cos(2.*th)*pow(a,2.))*
-		    (-1.*b[TT]*(16.*b[TT]*r + 16.*b[RR]*dxdxp[1]*r - 
-				8.*b[PH]*a*r + 4.*a*(b[RR]*dxdxp[1]*a + b[PH]*r*(2. + r))*
-				cos(2.*th) + 4.*b[RR]*dxdxp[1]*pow(a,2.) - 
-				1.*b[PH]*pow(a,3.) + b[PH]*cos(4.*th)*pow(a,3.) + 
-				8.*b[RR]*dxdxp[1]*pow(r,2.) - 4.*b[PH]*a*pow(r,2.)) + 
-		     u[TT]*(bsq + en*gam + rho)*
-		     (16.*dxdxp[1]*u[RR]*r + 16.*u[TT]*r - 8.*u[PH]*a*r + 
-		      4.*a*(dxdxp[1]*u[RR]*a + u[PH]*r*(2. + r))*cos(2.*th) + 
-		      4.*dxdxp[1]*u[RR]*pow(a,2.) - 1.*u[PH]*pow(a,3.) + 
-		      u[PH]*cos(4.*th)*pow(a,3.) + 8.*dxdxp[1]*u[RR]*pow(r,2.) - 
-		      4.*u[PH]*a*pow(r,2.)))*pow(sigma,-4.)*
-		    (pow(r,2.) - 1.*pow(a,2.)*pow(cos(th),2.)) + 
-		    8.*a*pow(dxdxp[1],2.)*(-1.*b[RR]*
-					   (-2.*a*r*(2.*b[TT] + b[RR]*dxdxp[1]*(2. + r)) + 
-					    b[PH]*r*(2. + 3.*r)*pow(a,2.) + 
-					    cos(2.*th)*pow(a,2.)*
-					    (-1.*b[RR]*dxdxp[1]*a + b[PH]*(-2. + r)*r + 
-					     b[PH]*pow(a,2.)) - 1.*b[RR]*dxdxp[1]*pow(a,3.) + 
-					    b[PH]*pow(a,4.) + 2.*b[PH]*pow(r,4.)) + 
-					   u[RR]*(bsq + en*gam + rho)*
-					   (-2.*a*r*(2.*(dxdxp[1]*u[RR] + u[TT]) + 
-						     dxdxp[1]*u[RR]*r) + u[PH]*r*(2. + 3.*r)*pow(a,2.) + 
-					    cos(2.*th)*pow(a,2.)*
-					    (-1.*dxdxp[1]*u[RR]*a + u[PH]*(-2. + r)*r + 
-					     u[PH]*pow(a,2.)) - 1.*dxdxp[1]*u[RR]*pow(a,3.) + 
-					    u[PH]*pow(a,4.) + 2.*u[PH]*pow(r,4.)))*pow(sigma,-4.)*
-		    (pow(r,2.) - 1.*pow(a,2.)*pow(cos(th),2.))*pow(sin(th),2.) + 
-		    8.*dxdxp[1]*a*(-1.*b[TT]*
-				   (-2.*a*r*(2.*b[TT] + b[RR]*dxdxp[1]*(2. + r)) + 
-				    b[PH]*r*(2. + 3.*r)*pow(a,2.) + 
-				    cos(2.*th)*pow(a,2.)*
-				    (-1.*b[RR]*dxdxp[1]*a + b[PH]*(-2. + r)*r + 
-				     b[PH]*pow(a,2.)) - 1.*b[RR]*dxdxp[1]*pow(a,3.) + 
-				    b[PH]*pow(a,4.) + 2.*b[PH]*pow(r,4.)) + 
-				   u[TT]*(bsq + en*gam + rho)*
-				   (-2.*a*r*(2.*(dxdxp[1]*u[RR] + u[TT]) + 
-					     dxdxp[1]*u[RR]*r) + u[PH]*r*(2. + 3.*r)*pow(a,2.) + 
-				    cos(2.*th)*pow(a,2.)*
-				    (-1.*dxdxp[1]*u[RR]*a + u[PH]*(-2. + r)*r + 
-				     u[PH]*pow(a,2.)) - 1.*dxdxp[1]*u[RR]*pow(a,3.) + 
-				    u[PH]*pow(a,4.) + 2.*u[PH]*pow(r,4.)))*pow(sigma,-4.)*
-		    (pow(r,2.) - 1.*pow(a,2.)*pow(cos(th),2.))*pow(sin(th),2.) + 
-		    dxdxp[1]*a*(-1.*b[PH]*
-				(16.*b[TT]*r + 16.*b[RR]*dxdxp[1]*r - 8.*b[PH]*a*r + 
-				 4.*a*(b[RR]*dxdxp[1]*a + b[PH]*r*(2. + r))*cos(2.*th) + 
-				 4.*b[RR]*dxdxp[1]*pow(a,2.) - 1.*b[PH]*pow(a,3.) + 
-				 b[PH]*cos(4.*th)*pow(a,3.) + 8.*b[RR]*dxdxp[1]*pow(r,2.) - 
-				 4.*b[PH]*a*pow(r,2.)) + 
-				u[PH]*(bsq + en*gam + rho)*
-				(16.*dxdxp[1]*u[RR]*r + 16.*u[TT]*r - 8.*u[PH]*a*r + 
-				 4.*a*(dxdxp[1]*u[RR]*a + u[PH]*r*(2. + r))*cos(2.*th) + 
-				 4.*dxdxp[1]*u[RR]*pow(a,2.) - 1.*u[PH]*pow(a,3.) + 
-				 u[PH]*cos(4.*th)*pow(a,3.) + 8.*dxdxp[1]*u[RR]*pow(r,2.) - 
-				 4.*u[PH]*a*pow(r,2.)))*pow(sigma,-4.)*
-		    (pow(a,2.)*(sigma - 2.*pow(r,2.)) + 
-		     2.*r*(pow(1.,2.)*(-2.*sigma + 4.*pow(r,2.)) + pow(sigma,2.)) + 
-		     cos(2.*th)*pow(a,2.)*(pow(r,2.) - 1.*pow(a,2.)*pow(cos(th),2.)))*
-		    pow(sin(th),2.) + 8.*dxdxp[1]*pow(sigma,-3.)*
-		    (bsq + 2.*en*(-1. + gam) - 
-		     1.*b[PH]*(-2.*a*r*(2.*b[TT] + b[RR]*dxdxp[1]*(2. + r)) + 
-			       b[PH]*r*(2. + 3.*r)*pow(a,2.) + 
-			       cos(2.*th)*pow(a,2.)*
-			       (-1.*b[RR]*dxdxp[1]*a + b[PH]*(-2. + r)*r + 
-				b[PH]*pow(a,2.)) - 1.*b[RR]*dxdxp[1]*pow(a,3.) + 
-			       b[PH]*pow(a,4.) + 2.*b[PH]*pow(r,4.))*pow(sigma,-1.)*
-		     pow(sin(th),2.) + u[PH]*(bsq + en*gam + rho)*
-		     (-2.*a*r*(2.*(dxdxp[1]*u[RR] + u[TT]) + 
-			       dxdxp[1]*u[RR]*r) + u[PH]*r*(2. + 3.*r)*pow(a,2.) + 
-		      cos(2.*th)*pow(a,2.)*
-		      (-1.*dxdxp[1]*u[RR]*a + u[PH]*(-2. + r)*r + 
-		       u[PH]*pow(a,2.)) - 1.*dxdxp[1]*u[RR]*pow(a,3.) + 
-		      u[PH]*pow(a,4.) + 2.*u[PH]*pow(r,4.))*pow(sigma,-1.)*
-		     pow(sin(th),2.))*(r*pow(sigma,2.) + 
-				       pow(a,2.)*(-1.*pow(r,2.) + pow(a,2.)*pow(cos(th),2.))*pow(sin(th),2.)
-				       ) + 2.*pow(sigma,-3.)*(4.*bsq + 8.*en*(-1. + gam) - 
-							      1.*b[RR]*dxdxp[1]*(16.*b[TT]*r + 16.*b[RR]*dxdxp[1]*r - 
-										 8.*b[PH]*a*r + 4.*a*(b[RR]*dxdxp[1]*a + b[PH]*r*(2. + r))*
-										 cos(2.*th) + 4.*b[RR]*dxdxp[1]*pow(a,2.) - 
-										 1.*b[PH]*pow(a,3.) + b[PH]*cos(4.*th)*pow(a,3.) + 
-										 8.*b[RR]*dxdxp[1]*pow(r,2.) - 4.*b[PH]*a*pow(r,2.))*
-							      pow(sigma,-1.) + dxdxp[1]*u[RR]*(bsq + en*gam + rho)*
-							      (16.*dxdxp[1]*u[RR]*r + 16.*u[TT]*r - 8.*u[PH]*a*r + 
-							       4.*a*(dxdxp[1]*u[RR]*a + u[PH]*r*(2. + r))*cos(2.*th) + 
-							       4.*dxdxp[1]*u[RR]*pow(a,2.) - 1.*u[PH]*pow(a,3.) + 
-							       u[PH]*cos(4.*th)*pow(a,3.) + 8.*dxdxp[1]*u[RR]*pow(r,2.) - 
-							       4.*u[PH]*a*pow(r,2.))*pow(sigma,-1.))*
-		    (-1.*dxdxp[1]*(2. + r)*pow(r,3.) + pow(sigma,3.) + 
-		     dxdxp[1]*pow(a,2.)*(2.*r*pow(cos(th),2.) + 
-					 pow(a,2.)*pow(cos(th),4.) + 
-					 (pow(r,2.) - 1.*pow(a,2.)*pow(cos(th),2.))*pow(sin(th),2.))) + 
-		    16.*dxdxp[1]*a*pow(sigma,-4.)*
-		    (r*(2. + r) + pow(a,2.)*pow(cos(th),2.))*
-		    (-1.*pow(r,2.) + pow(a,2.)*pow(cos(th),2.))*pow(sin(th),2.)*
-		    (b[PH]*(b[TT]*pow(a,2.)*pow(cos(th),2.) + 
-			    r*(-2.*b[TT] - 2.*b[RR]*dxdxp[1] + b[TT]*r + 
-			       2.*b[PH]*a*pow(sin(th),2.))) - 
-		     1.*u[PH]*(bsq + en*gam + rho)*
-		     (u[TT]*pow(a,2.)*pow(cos(th),2.) + 
-		      r*(-2.*dxdxp[1]*u[RR] - 2.*u[TT] + dxdxp[1]*u[TT] + 
-			 u[TT]*R0 + 2.*u[PH]*a*pow(sin(th),2.)))) - 
-		    32.*pow(dxdxp[1],2.)*pow(sigma,-4.)*
-		    (pow(r,2.) - 1.*pow(a,2.)*pow(cos(th),2.))*
-		    (r*(1. + r) + pow(a,2.)*pow(cos(th),2.))*
-		    (b[RR]*(-1.*b[TT]*pow(a,2.)*pow(cos(th),2.) + 
-			    r*(2.*b[TT] + 2.*b[RR]*dxdxp[1] - 1.*b[TT]*r - 
-			       2.*b[PH]*a*pow(sin(th),2.))) + 
-		     u[RR]*(bsq + en*gam + rho)*
-		     (u[TT]*pow(a,2.)*pow(cos(th),2.) + 
-		      r*(-2.*dxdxp[1]*u[RR] - 2.*u[TT] + dxdxp[1]*u[TT] + 
-			 u[TT]*R0 + 2.*u[PH]*a*pow(sin(th),2.)))) + 
-		    16.*dxdxp[1]*pow(sigma,-3.)*
-		    (pow(r,2.) - 1.*pow(a,2.)*pow(cos(th),2.))*
-		    (r*(2. + r) + pow(a,2.)*pow(cos(th),2.))*
-		    (0.5*bsq + en*(-1. + gam) + 
-		     b[TT]*pow(sigma,-1.)*
-		     (b[TT]*pow(a,2.)*pow(cos(th),2.) + 
-		      r*(-2.*b[TT] - 2.*b[RR]*dxdxp[1] + b[TT]*r + 
-			 2.*b[PH]*a*pow(sin(th),2.))) - 
-		     1.*u[TT]*(bsq + en*gam + rho)*pow(sigma,-1.)*
-		     (u[TT]*pow(a,2.)*pow(cos(th),2.) + 
-		      r*(-2.*dxdxp[1]*u[RR] - 2.*u[TT] + dxdxp[1]*u[TT] + 
-			 u[TT]*R0 + 2.*u[PH]*a*pow(sin(th),2.)))) - 
-		    2.*dxdxp[1]*dxdxp[2]*cos(th)*pow(a,2.)*
-		    (-1.*b[TH]*(16.*b[TT]*r + 16.*b[RR]*dxdxp[1]*r - 
-				8.*b[PH]*a*r + 4.*a*(b[RR]*dxdxp[1]*a + b[PH]*r*(2. + r))*
-				cos(2.*th) + 4.*b[RR]*dxdxp[1]*pow(a,2.) - 
-				1.*b[PH]*pow(a,3.) + b[PH]*cos(4.*th)*pow(a,3.) + 
-				8.*b[RR]*dxdxp[1]*pow(r,2.) - 4.*b[PH]*a*pow(r,2.)) + 
-		     u[TH]*(bsq + en*gam + rho)*
-		     (16.*dxdxp[1]*u[RR]*r + 16.*u[TT]*r - 8.*u[PH]*a*r + 
-		      4.*a*(dxdxp[1]*u[RR]*a + u[PH]*r*(2. + r))*cos(2.*th) + 
-		      4.*dxdxp[1]*u[RR]*pow(a,2.) - 1.*u[PH]*pow(a,3.) + 
-		      u[PH]*cos(4.*th)*pow(a,3.) + 8.*dxdxp[1]*u[RR]*pow(r,2.) - 
-		      4.*u[PH]*a*pow(r,2.)))*pow(sigma,-2.)*sin(th) - 
-		    8.*dxdxp[1]*dxdxp[2]*a*cos(th)*
-		    (-1.*b[TH]*(-2.*a*r*(2.*b[TT] + b[RR]*dxdxp[1]*(2. + r)) + 
-				b[PH]*r*(2. + 3.*r)*pow(a,2.) + 
-				cos(2.*th)*pow(a,2.)*
-				(-1.*b[RR]*dxdxp[1]*a + b[PH]*(-2. + r)*r + 
-				 b[PH]*pow(a,2.)) - 1.*b[RR]*dxdxp[1]*pow(a,3.) + 
-				b[PH]*pow(a,4.) + 2.*b[PH]*pow(r,4.)) + 
-		     u[TH]*(bsq + en*gam + rho)*
-		     (-2.*a*r*(2.*(dxdxp[1]*u[RR] + u[TT]) + 
-			       dxdxp[1]*u[RR]*r) + u[PH]*r*(2. + 3.*r)*pow(a,2.) + 
-		      cos(2.*th)*pow(a,2.)*
-		      (-1.*dxdxp[1]*u[RR]*a + u[PH]*(-2. + r)*r + 
-		       u[PH]*pow(a,2.)) - 1.*dxdxp[1]*u[RR]*pow(a,3.) + 
-		      u[PH]*pow(a,4.) + 2.*u[PH]*pow(r,4.)))*pow(sigma,-3.)*
-		    (r*(2. + r) + pow(a,2.)*pow(cos(th),2.))*sin(th) + 
-		    16.*dxdxp[1]*dxdxp[2]*r*
-		    (b[TH]*b[TT] - 1.*u[TH]*u[TT]*(bsq + en*gam + rho))*pow(a,2.)*
-		    pow(sigma,-2.)*sin(2.*th) + 
-		    16.*dxdxp[2]*r*(b[RR]*b[TH] - 
-				    1.*u[RR]*u[TH]*(bsq + en*gam + rho))*pow(dxdxp[1],2.)*pow(a,2.)*
-		    pow(sigma,-2.)*sin(2.*th) - 
-		    16.*dxdxp[1]*dxdxp[2]*r*pow(a,2.)*pow(sigma,-3.)*
-		    (b[TH]*(b[TT]*pow(a,2.)*pow(cos(th),2.) + 
-			    r*(-2.*b[TT] - 2.*b[RR]*dxdxp[1] + b[TT]*r + 
-			       2.*b[PH]*a*pow(sin(th),2.))) - 
-		     1.*u[TH]*(bsq + en*gam + rho)*
-		     (u[TT]*pow(a,2.)*pow(cos(th),2.) + 
-		      r*(-2.*dxdxp[1]*u[RR] - 2.*u[TT] + dxdxp[1]*u[TT] + 
-			 u[TT]*R0 + 2.*u[PH]*a*pow(sin(th),2.))))*sin(2.*th) + 
-		    2.*dxdxp[1]*(-1.*b[TH]*
-				 (16.*b[TT]*r + 16.*b[RR]*dxdxp[1]*r - 8.*b[PH]*a*r + 
-				  4.*a*(b[RR]*dxdxp[1]*a + b[PH]*r*(2. + r))*cos(2.*th) + 
-				  4.*b[RR]*dxdxp[1]*pow(a,2.) - 1.*b[PH]*pow(a,3.) + 
-				  b[PH]*cos(4.*th)*pow(a,3.) + 8.*b[RR]*dxdxp[1]*pow(r,2.) - 
-				  4.*b[PH]*a*pow(r,2.)) + 
-				 u[TH]*(bsq + en*gam + rho)*
-				 (16.*dxdxp[1]*u[RR]*r + 16.*u[TT]*r - 8.*u[PH]*a*r + 
-				  4.*a*(dxdxp[1]*u[RR]*a + u[PH]*r*(2. + r))*cos(2.*th) + 
-				  4.*dxdxp[1]*u[RR]*pow(a,2.) - 1.*u[PH]*pow(a,3.) + 
-				  u[PH]*cos(4.*th)*pow(a,3.) + 8.*dxdxp[1]*u[RR]*pow(r,2.) - 
-				  4.*u[PH]*a*pow(r,2.)))*pow(sigma,-1.)*
-		    (-1.*dxdxp[2]*cot(th) + 
-		     4.*(-1.*M_PI*X[2] + th)*pow(dxdxp[2],-1.)*pow(M_PI,2.) + 
-		     dxdxp[2]*pow(a,2.)*pow(sigma,-1.)*sin(2.*th)) - 
-		    16.*dxdxp[1]*dxdxp[2]*a*
-		    (b[PH]*b[TH] - 1.*u[PH]*u[TH]*(bsq + en*gam + rho))*
-		    pow(sigma,-2.)*sin(th)*(r*(2. + r)*sigma*cos(th) + 
-					    sigma*pow(a,2.)*pow(cos(th),3.) + r*pow(a,2.)*sin(th)*sin(2.*th)));
+                    (0.5*bsq + en*(-1. + gam) - 
+                     1.*sigma*pow(b[TH],2.)*pow(dxdxp[2],2.) + 
+                     (bsq + en*gam + rho)*sigma*pow(dxdxp[2],2.)*pow(u[TH],2.))*
+                    pow(sigma,-1.) + 2.*(-1. - 2.*dxdxp[1]*r*pow(sigma,-1.))*
+                    (4.*bsq + 8.*en*(-1. + gam) - 
+                     1.*b[RR]*dxdxp[1]*(16.*b[TT]*r + 16.*b[RR]*dxdxp[1]*r - 
+                                        8.*b[PH]*a*r + 4.*a*(b[RR]*dxdxp[1]*a + b[PH]*r*(2. + r))*
+                                        cos(2.*th) + 4.*b[RR]*dxdxp[1]*pow(a,2.) - 
+                                        1.*b[PH]*pow(a,3.) + b[PH]*cos(4.*th)*pow(a,3.) + 
+                                        8.*b[RR]*dxdxp[1]*pow(r,2.) - 4.*b[PH]*a*pow(r,2.))*
+                     pow(sigma,-1.) + dxdxp[1]*u[RR]*(bsq + en*gam + rho)*
+                     (16.*dxdxp[1]*u[RR]*r + 16.*u[TT]*r - 8.*u[PH]*a*r + 
+                      4.*a*(dxdxp[1]*u[RR]*a + u[PH]*r*(2. + r))*cos(2.*th) + 
+                      4.*dxdxp[1]*u[RR]*pow(a,2.) - 1.*u[PH]*pow(a,3.) + 
+                      u[PH]*cos(4.*th)*pow(a,3.) + 8.*dxdxp[1]*u[RR]*pow(r,2.) - 
+                      4.*u[PH]*a*pow(r,2.))*pow(sigma,-1.)) - 
+                    1.*dxdxp[1]*(4.*r - 1.*pow(a,2.) + cos(2.*th)*pow(a,2.))*
+                    (-1.*b[TT]*(16.*b[TT]*r + 16.*b[RR]*dxdxp[1]*r - 
+                                8.*b[PH]*a*r + 4.*a*(b[RR]*dxdxp[1]*a + b[PH]*r*(2. + r))*
+                                cos(2.*th) + 4.*b[RR]*dxdxp[1]*pow(a,2.) - 
+                                1.*b[PH]*pow(a,3.) + b[PH]*cos(4.*th)*pow(a,3.) + 
+                                8.*b[RR]*dxdxp[1]*pow(r,2.) - 4.*b[PH]*a*pow(r,2.)) + 
+                     u[TT]*(bsq + en*gam + rho)*
+                     (16.*dxdxp[1]*u[RR]*r + 16.*u[TT]*r - 8.*u[PH]*a*r + 
+                      4.*a*(dxdxp[1]*u[RR]*a + u[PH]*r*(2. + r))*cos(2.*th) + 
+                      4.*dxdxp[1]*u[RR]*pow(a,2.) - 1.*u[PH]*pow(a,3.) + 
+                      u[PH]*cos(4.*th)*pow(a,3.) + 8.*dxdxp[1]*u[RR]*pow(r,2.) - 
+                      4.*u[PH]*a*pow(r,2.)))*pow(sigma,-4.)*
+                    (pow(r,2.) - 1.*pow(a,2.)*pow(cos(th),2.)) + 
+                    8.*a*pow(dxdxp[1],2.)*(-1.*b[RR]*
+                                           (-2.*a*r*(2.*b[TT] + b[RR]*dxdxp[1]*(2. + r)) + 
+                                            b[PH]*r*(2. + 3.*r)*pow(a,2.) + 
+                                            cos(2.*th)*pow(a,2.)*
+                                            (-1.*b[RR]*dxdxp[1]*a + b[PH]*(-2. + r)*r + 
+                                             b[PH]*pow(a,2.)) - 1.*b[RR]*dxdxp[1]*pow(a,3.) + 
+                                            b[PH]*pow(a,4.) + 2.*b[PH]*pow(r,4.)) + 
+                                           u[RR]*(bsq + en*gam + rho)*
+                                           (-2.*a*r*(2.*(dxdxp[1]*u[RR] + u[TT]) + 
+                                                     dxdxp[1]*u[RR]*r) + u[PH]*r*(2. + 3.*r)*pow(a,2.) + 
+                                            cos(2.*th)*pow(a,2.)*
+                                            (-1.*dxdxp[1]*u[RR]*a + u[PH]*(-2. + r)*r + 
+                                             u[PH]*pow(a,2.)) - 1.*dxdxp[1]*u[RR]*pow(a,3.) + 
+                                            u[PH]*pow(a,4.) + 2.*u[PH]*pow(r,4.)))*pow(sigma,-4.)*
+                    (pow(r,2.) - 1.*pow(a,2.)*pow(cos(th),2.))*pow(sin(th),2.) + 
+                    8.*dxdxp[1]*a*(-1.*b[TT]*
+                                   (-2.*a*r*(2.*b[TT] + b[RR]*dxdxp[1]*(2. + r)) + 
+                                    b[PH]*r*(2. + 3.*r)*pow(a,2.) + 
+                                    cos(2.*th)*pow(a,2.)*
+                                    (-1.*b[RR]*dxdxp[1]*a + b[PH]*(-2. + r)*r + 
+                                     b[PH]*pow(a,2.)) - 1.*b[RR]*dxdxp[1]*pow(a,3.) + 
+                                    b[PH]*pow(a,4.) + 2.*b[PH]*pow(r,4.)) + 
+                                   u[TT]*(bsq + en*gam + rho)*
+                                   (-2.*a*r*(2.*(dxdxp[1]*u[RR] + u[TT]) + 
+                                             dxdxp[1]*u[RR]*r) + u[PH]*r*(2. + 3.*r)*pow(a,2.) + 
+                                    cos(2.*th)*pow(a,2.)*
+                                    (-1.*dxdxp[1]*u[RR]*a + u[PH]*(-2. + r)*r + 
+                                     u[PH]*pow(a,2.)) - 1.*dxdxp[1]*u[RR]*pow(a,3.) + 
+                                    u[PH]*pow(a,4.) + 2.*u[PH]*pow(r,4.)))*pow(sigma,-4.)*
+                    (pow(r,2.) - 1.*pow(a,2.)*pow(cos(th),2.))*pow(sin(th),2.) + 
+                    dxdxp[1]*a*(-1.*b[PH]*
+                                (16.*b[TT]*r + 16.*b[RR]*dxdxp[1]*r - 8.*b[PH]*a*r + 
+                                 4.*a*(b[RR]*dxdxp[1]*a + b[PH]*r*(2. + r))*cos(2.*th) + 
+                                 4.*b[RR]*dxdxp[1]*pow(a,2.) - 1.*b[PH]*pow(a,3.) + 
+                                 b[PH]*cos(4.*th)*pow(a,3.) + 8.*b[RR]*dxdxp[1]*pow(r,2.) - 
+                                 4.*b[PH]*a*pow(r,2.)) + 
+                                u[PH]*(bsq + en*gam + rho)*
+                                (16.*dxdxp[1]*u[RR]*r + 16.*u[TT]*r - 8.*u[PH]*a*r + 
+                                 4.*a*(dxdxp[1]*u[RR]*a + u[PH]*r*(2. + r))*cos(2.*th) + 
+                                 4.*dxdxp[1]*u[RR]*pow(a,2.) - 1.*u[PH]*pow(a,3.) + 
+                                 u[PH]*cos(4.*th)*pow(a,3.) + 8.*dxdxp[1]*u[RR]*pow(r,2.) - 
+                                 4.*u[PH]*a*pow(r,2.)))*pow(sigma,-4.)*
+                    (pow(a,2.)*(sigma - 2.*pow(r,2.)) + 
+                     2.*r*(pow(1.,2.)*(-2.*sigma + 4.*pow(r,2.)) + pow(sigma,2.)) + 
+                     cos(2.*th)*pow(a,2.)*(pow(r,2.) - 1.*pow(a,2.)*pow(cos(th),2.)))*
+                    pow(sin(th),2.) + 8.*dxdxp[1]*pow(sigma,-3.)*
+                    (bsq + 2.*en*(-1. + gam) - 
+                     1.*b[PH]*(-2.*a*r*(2.*b[TT] + b[RR]*dxdxp[1]*(2. + r)) + 
+                               b[PH]*r*(2. + 3.*r)*pow(a,2.) + 
+                               cos(2.*th)*pow(a,2.)*
+                               (-1.*b[RR]*dxdxp[1]*a + b[PH]*(-2. + r)*r + 
+                                b[PH]*pow(a,2.)) - 1.*b[RR]*dxdxp[1]*pow(a,3.) + 
+                               b[PH]*pow(a,4.) + 2.*b[PH]*pow(r,4.))*pow(sigma,-1.)*
+                     pow(sin(th),2.) + u[PH]*(bsq + en*gam + rho)*
+                     (-2.*a*r*(2.*(dxdxp[1]*u[RR] + u[TT]) + 
+                               dxdxp[1]*u[RR]*r) + u[PH]*r*(2. + 3.*r)*pow(a,2.) + 
+                      cos(2.*th)*pow(a,2.)*
+                      (-1.*dxdxp[1]*u[RR]*a + u[PH]*(-2. + r)*r + 
+                       u[PH]*pow(a,2.)) - 1.*dxdxp[1]*u[RR]*pow(a,3.) + 
+                      u[PH]*pow(a,4.) + 2.*u[PH]*pow(r,4.))*pow(sigma,-1.)*
+                     pow(sin(th),2.))*(r*pow(sigma,2.) + 
+                                       pow(a,2.)*(-1.*pow(r,2.) + pow(a,2.)*pow(cos(th),2.))*pow(sin(th),2.)
+                                       ) + 2.*pow(sigma,-3.)*(4.*bsq + 8.*en*(-1. + gam) - 
+                                                              1.*b[RR]*dxdxp[1]*(16.*b[TT]*r + 16.*b[RR]*dxdxp[1]*r - 
+                                                                                 8.*b[PH]*a*r + 4.*a*(b[RR]*dxdxp[1]*a + b[PH]*r*(2. + r))*
+                                                                                 cos(2.*th) + 4.*b[RR]*dxdxp[1]*pow(a,2.) - 
+                                                                                 1.*b[PH]*pow(a,3.) + b[PH]*cos(4.*th)*pow(a,3.) + 
+                                                                                 8.*b[RR]*dxdxp[1]*pow(r,2.) - 4.*b[PH]*a*pow(r,2.))*
+                                                              pow(sigma,-1.) + dxdxp[1]*u[RR]*(bsq + en*gam + rho)*
+                                                              (16.*dxdxp[1]*u[RR]*r + 16.*u[TT]*r - 8.*u[PH]*a*r + 
+                                                               4.*a*(dxdxp[1]*u[RR]*a + u[PH]*r*(2. + r))*cos(2.*th) + 
+                                                               4.*dxdxp[1]*u[RR]*pow(a,2.) - 1.*u[PH]*pow(a,3.) + 
+                                                               u[PH]*cos(4.*th)*pow(a,3.) + 8.*dxdxp[1]*u[RR]*pow(r,2.) - 
+                                                               4.*u[PH]*a*pow(r,2.))*pow(sigma,-1.))*
+                    (-1.*dxdxp[1]*(2. + r)*pow(r,3.) + pow(sigma,3.) + 
+                     dxdxp[1]*pow(a,2.)*(2.*r*pow(cos(th),2.) + 
+                                         pow(a,2.)*pow(cos(th),4.) + 
+                                         (pow(r,2.) - 1.*pow(a,2.)*pow(cos(th),2.))*pow(sin(th),2.))) + 
+                    16.*dxdxp[1]*a*pow(sigma,-4.)*
+                    (r*(2. + r) + pow(a,2.)*pow(cos(th),2.))*
+                    (-1.*pow(r,2.) + pow(a,2.)*pow(cos(th),2.))*pow(sin(th),2.)*
+                    (b[PH]*(b[TT]*pow(a,2.)*pow(cos(th),2.) + 
+                            r*(-2.*b[TT] - 2.*b[RR]*dxdxp[1] + b[TT]*r + 
+                               2.*b[PH]*a*pow(sin(th),2.))) - 
+                     1.*u[PH]*(bsq + en*gam + rho)*
+                     (u[TT]*pow(a,2.)*pow(cos(th),2.) + 
+                      r*(-2.*dxdxp[1]*u[RR] - 2.*u[TT] + dxdxp[1]*u[TT] + 
+                         u[TT]*R0 + 2.*u[PH]*a*pow(sin(th),2.)))) - 
+                    32.*pow(dxdxp[1],2.)*pow(sigma,-4.)*
+                    (pow(r,2.) - 1.*pow(a,2.)*pow(cos(th),2.))*
+                    (r*(1. + r) + pow(a,2.)*pow(cos(th),2.))*
+                    (b[RR]*(-1.*b[TT]*pow(a,2.)*pow(cos(th),2.) + 
+                            r*(2.*b[TT] + 2.*b[RR]*dxdxp[1] - 1.*b[TT]*r - 
+                               2.*b[PH]*a*pow(sin(th),2.))) + 
+                     u[RR]*(bsq + en*gam + rho)*
+                     (u[TT]*pow(a,2.)*pow(cos(th),2.) + 
+                      r*(-2.*dxdxp[1]*u[RR] - 2.*u[TT] + dxdxp[1]*u[TT] + 
+                         u[TT]*R0 + 2.*u[PH]*a*pow(sin(th),2.)))) + 
+                    16.*dxdxp[1]*pow(sigma,-3.)*
+                    (pow(r,2.) - 1.*pow(a,2.)*pow(cos(th),2.))*
+                    (r*(2. + r) + pow(a,2.)*pow(cos(th),2.))*
+                    (0.5*bsq + en*(-1. + gam) + 
+                     b[TT]*pow(sigma,-1.)*
+                     (b[TT]*pow(a,2.)*pow(cos(th),2.) + 
+                      r*(-2.*b[TT] - 2.*b[RR]*dxdxp[1] + b[TT]*r + 
+                         2.*b[PH]*a*pow(sin(th),2.))) - 
+                     1.*u[TT]*(bsq + en*gam + rho)*pow(sigma,-1.)*
+                     (u[TT]*pow(a,2.)*pow(cos(th),2.) + 
+                      r*(-2.*dxdxp[1]*u[RR] - 2.*u[TT] + dxdxp[1]*u[TT] + 
+                         u[TT]*R0 + 2.*u[PH]*a*pow(sin(th),2.)))) - 
+                    2.*dxdxp[1]*dxdxp[2]*cos(th)*pow(a,2.)*
+                    (-1.*b[TH]*(16.*b[TT]*r + 16.*b[RR]*dxdxp[1]*r - 
+                                8.*b[PH]*a*r + 4.*a*(b[RR]*dxdxp[1]*a + b[PH]*r*(2. + r))*
+                                cos(2.*th) + 4.*b[RR]*dxdxp[1]*pow(a,2.) - 
+                                1.*b[PH]*pow(a,3.) + b[PH]*cos(4.*th)*pow(a,3.) + 
+                                8.*b[RR]*dxdxp[1]*pow(r,2.) - 4.*b[PH]*a*pow(r,2.)) + 
+                     u[TH]*(bsq + en*gam + rho)*
+                     (16.*dxdxp[1]*u[RR]*r + 16.*u[TT]*r - 8.*u[PH]*a*r + 
+                      4.*a*(dxdxp[1]*u[RR]*a + u[PH]*r*(2. + r))*cos(2.*th) + 
+                      4.*dxdxp[1]*u[RR]*pow(a,2.) - 1.*u[PH]*pow(a,3.) + 
+                      u[PH]*cos(4.*th)*pow(a,3.) + 8.*dxdxp[1]*u[RR]*pow(r,2.) - 
+                      4.*u[PH]*a*pow(r,2.)))*pow(sigma,-2.)*sin(th) - 
+                    8.*dxdxp[1]*dxdxp[2]*a*cos(th)*
+                    (-1.*b[TH]*(-2.*a*r*(2.*b[TT] + b[RR]*dxdxp[1]*(2. + r)) + 
+                                b[PH]*r*(2. + 3.*r)*pow(a,2.) + 
+                                cos(2.*th)*pow(a,2.)*
+                                (-1.*b[RR]*dxdxp[1]*a + b[PH]*(-2. + r)*r + 
+                                 b[PH]*pow(a,2.)) - 1.*b[RR]*dxdxp[1]*pow(a,3.) + 
+                                b[PH]*pow(a,4.) + 2.*b[PH]*pow(r,4.)) + 
+                     u[TH]*(bsq + en*gam + rho)*
+                     (-2.*a*r*(2.*(dxdxp[1]*u[RR] + u[TT]) + 
+                               dxdxp[1]*u[RR]*r) + u[PH]*r*(2. + 3.*r)*pow(a,2.) + 
+                      cos(2.*th)*pow(a,2.)*
+                      (-1.*dxdxp[1]*u[RR]*a + u[PH]*(-2. + r)*r + 
+                       u[PH]*pow(a,2.)) - 1.*dxdxp[1]*u[RR]*pow(a,3.) + 
+                      u[PH]*pow(a,4.) + 2.*u[PH]*pow(r,4.)))*pow(sigma,-3.)*
+                    (r*(2. + r) + pow(a,2.)*pow(cos(th),2.))*sin(th) + 
+                    16.*dxdxp[1]*dxdxp[2]*r*
+                    (b[TH]*b[TT] - 1.*u[TH]*u[TT]*(bsq + en*gam + rho))*pow(a,2.)*
+                    pow(sigma,-2.)*sin(2.*th) + 
+                    16.*dxdxp[2]*r*(b[RR]*b[TH] - 
+                                    1.*u[RR]*u[TH]*(bsq + en*gam + rho))*pow(dxdxp[1],2.)*pow(a,2.)*
+                    pow(sigma,-2.)*sin(2.*th) - 
+                    16.*dxdxp[1]*dxdxp[2]*r*pow(a,2.)*pow(sigma,-3.)*
+                    (b[TH]*(b[TT]*pow(a,2.)*pow(cos(th),2.) + 
+                            r*(-2.*b[TT] - 2.*b[RR]*dxdxp[1] + b[TT]*r + 
+                               2.*b[PH]*a*pow(sin(th),2.))) - 
+                     1.*u[TH]*(bsq + en*gam + rho)*
+                     (u[TT]*pow(a,2.)*pow(cos(th),2.) + 
+                      r*(-2.*dxdxp[1]*u[RR] - 2.*u[TT] + dxdxp[1]*u[TT] + 
+                         u[TT]*R0 + 2.*u[PH]*a*pow(sin(th),2.))))*sin(2.*th) + 
+                    2.*dxdxp[1]*(-1.*b[TH]*
+                                 (16.*b[TT]*r + 16.*b[RR]*dxdxp[1]*r - 8.*b[PH]*a*r + 
+                                  4.*a*(b[RR]*dxdxp[1]*a + b[PH]*r*(2. + r))*cos(2.*th) + 
+                                  4.*b[RR]*dxdxp[1]*pow(a,2.) - 1.*b[PH]*pow(a,3.) + 
+                                  b[PH]*cos(4.*th)*pow(a,3.) + 8.*b[RR]*dxdxp[1]*pow(r,2.) - 
+                                  4.*b[PH]*a*pow(r,2.)) + 
+                                 u[TH]*(bsq + en*gam + rho)*
+                                 (16.*dxdxp[1]*u[RR]*r + 16.*u[TT]*r - 8.*u[PH]*a*r + 
+                                  4.*a*(dxdxp[1]*u[RR]*a + u[PH]*r*(2. + r))*cos(2.*th) + 
+                                  4.*dxdxp[1]*u[RR]*pow(a,2.) - 1.*u[PH]*pow(a,3.) + 
+                                  u[PH]*cos(4.*th)*pow(a,3.) + 8.*dxdxp[1]*u[RR]*pow(r,2.) - 
+                                  4.*u[PH]*a*pow(r,2.)))*pow(sigma,-1.)*
+                    (-1.*dxdxp[2]*cot(th) + 
+                     4.*(-1.*M_PI*X[2] + th)*pow(dxdxp[2],-1.)*pow(M_PI,2.) + 
+                     dxdxp[2]*pow(a,2.)*pow(sigma,-1.)*sin(2.*th)) - 
+                    16.*dxdxp[1]*dxdxp[2]*a*
+                    (b[PH]*b[TH] - 1.*u[PH]*u[TH]*(bsq + en*gam + rho))*
+                    pow(sigma,-2.)*sin(th)*(r*(2. + r)*sigma*cos(th) + 
+                                            sigma*pow(a,2.)*pow(cos(th),3.) + r*pow(a,2.)*sin(th)*sin(2.*th)));
 
   }
   else{
 
     dU[U1]+=0.5*dxdxp[1]*pow(sigma,-5.)*
       (r*pow(sigma,4.)*(bsq - 2.*en + 2.*en*gam - 
-			2.*sigma*pow(dxdxp[2],2.)*pow(b[TH],2.) + 
-			(bsq + en*gam + rho)*pow(dxdxp[2],2.)*
-			(pow(a,2.) + cos(2.*th)*pow(a,2.) + 2.*pow(r,2.))*pow(u[TH],2.)) + 
+                        2.*sigma*pow(dxdxp[2],2.)*pow(b[TH],2.) + 
+                        (bsq + en*gam + rho)*pow(dxdxp[2],2.)*
+                        (pow(a,2.) + cos(2.*th)*pow(a,2.) + 2.*pow(r,2.))*pow(u[TH],2.)) + 
        a*(pow(r,2.) - 1.*pow(a,2.)*pow(cos(th),2.))*
        (-1.*sigma*(b[TT]*b[PH] - 1.*(bsq + en*gam + rho)*u[TT]*u[PH])*
-	(r*(2. + 3.*r)*pow(a,2.) + 
-	 cos(2.*th)*pow(a,2.)*((-2. + r)*r + pow(a,2.)) + pow(a,4.) + 
-	 2.*pow(r,4.)) - 2.*a*
-	((bsq + 2.*en*(-1. + gam))*r - 1.*dxdxp[1]*sigma*b[TT]*b[RR] + 
-	 0.5*dxdxp[1]*(bsq + en*gam + rho)*u[TT]*u[RR]*
-	 (pow(a,2.) + cos(2.*th)*pow(a,2.) + 2.*pow(r,2.)))*
-	(r*(2. + r) + pow(a,2.)*pow(cos(th),2.)) - 
-	4.*a*r*sigma*(-0.5*(bsq + 2.*en*(-1. + gam))*pow(sigma,-1.)*
-		      (r*(2. + r) + pow(a,2.)*pow(cos(th),2.)) - 1.*pow(b[TT],2.) + 
-		      (bsq + en*gam + rho)*pow(u[TT],2.)))*pow(sin(th),2.) + 
+        (r*(2. + 3.*r)*pow(a,2.) + 
+         cos(2.*th)*pow(a,2.)*((-2. + r)*r + pow(a,2.)) + pow(a,4.) + 
+         2.*pow(r,4.)) - 2.*a*
+        ((bsq + 2.*en*(-1. + gam))*r - 1.*dxdxp[1]*sigma*b[TT]*b[RR] + 
+         0.5*dxdxp[1]*(bsq + en*gam + rho)*u[TT]*u[RR]*
+         (pow(a,2.) + cos(2.*th)*pow(a,2.) + 2.*pow(r,2.)))*
+        (r*(2. + r) + pow(a,2.)*pow(cos(th),2.)) - 
+        4.*a*r*sigma*(-0.5*(bsq + 2.*en*(-1. + gam))*pow(sigma,-1.)*
+                      (r*(2. + r) + pow(a,2.)*pow(cos(th),2.)) - 1.*pow(b[TT],2.) + 
+                      (bsq + en*gam + rho)*pow(u[TT],2.)))*pow(sin(th),2.) + 
        dxdxp[1]*a*(pow(r,2.) - 1.*pow(a,2.)*pow(cos(th),2.))*
        (-4.*a*r*((bsq + 2.*en*(-1. + gam))*r - 1.*dxdxp[1]*sigma*b[TT]*b[RR] + 
-		 dxdxp[1]*(bsq + en*gam + rho)*sigma*u[TT]*u[RR])*
-	pow(dxdxp[1],-1.) + 
-	sigma*(r*(2. + 3.*r)*pow(a,2.) + 
-	       cos(2.*th)*pow(a,2.)*((-2. + r)*r + pow(a,2.)) + pow(a,4.) + 
-	       2.*pow(r,4.))*(-1.*b[RR]*b[PH] + (bsq + en*gam + rho)*u[RR]*u[PH] + 
-			      0.5*a*(bsq + 2.*en*(-1. + gam))*pow(dxdxp[1],-1.)*pow(sigma,-1.))
-	- 1.*a*pow(dxdxp[1],-1.)*
-	(r*(2. + r) + pow(a,2.)*pow(cos(th),2.))*
-	((bsq + 2.*en*(-1. + gam))*((-2. + r)*r + pow(a,2.)) - 
-	 2.*sigma*pow(dxdxp[1],2.)*pow(b[RR],2.) + 
-	 (bsq + en*gam + rho)*pow(dxdxp[1],2.)*
-	 (pow(a,2.) + cos(2.*th)*pow(a,2.) + 2.*pow(r,2.))*pow(u[RR],2.)))*
+                 dxdxp[1]*(bsq + en*gam + rho)*sigma*u[TT]*u[RR])*
+        pow(dxdxp[1],-1.) + 
+        sigma*(r*(2. + 3.*r)*pow(a,2.) + 
+               cos(2.*th)*pow(a,2.)*((-2. + r)*r + pow(a,2.)) + pow(a,4.) + 
+               2.*pow(r,4.))*(-1.*b[RR]*b[PH] + (bsq + en*gam + rho)*u[RR]*u[PH] + 
+                              0.5*a*(bsq + 2.*en*(-1. + gam))*pow(dxdxp[1],-1.)*pow(sigma,-1.))
+        - 1.*a*pow(dxdxp[1],-1.)*
+        (r*(2. + r) + pow(a,2.)*pow(cos(th),2.))*
+        ((bsq + 2.*en*(-1. + gam))*((-2. + r)*r + pow(a,2.)) - 
+         2.*sigma*pow(dxdxp[1],2.)*pow(b[RR],2.) + 
+         (bsq + en*gam + rho)*pow(dxdxp[1],2.)*
+         (pow(a,2.) + cos(2.*th)*pow(a,2.) + 2.*pow(r,2.))*pow(u[RR],2.)))*
        pow(sin(th),2.) - 1.*sigma*
        (4.*r - 1.*pow(a,2.) + cos(2.*th)*pow(a,2.))*
        (pow(r,2.) - 1.*pow(a,2.)*pow(cos(th),2.))*
        (((bsq + 2.*en*(-1. + gam))*r - 1.*dxdxp[1]*sigma*b[TT]*b[RR] + 
-	 dxdxp[1]*(bsq + en*gam + rho)*sigma*u[TT]*u[RR])*pow(sigma,-1.)*
-	(r*(2. + r) + pow(a,2.)*pow(cos(th),2.)) + 
-	2.*r*(-0.5*(bsq + 2.*en*(-1. + gam))*pow(sigma,-1.)*
-	      (r*(2. + r) + pow(a,2.)*pow(cos(th),2.)) - 1.*pow(b[TT],2.) + 
-	      (bsq + en*gam + rho)*pow(u[TT],2.)) - 
-	1.*a*(-1.*b[TT]*b[PH] + (bsq + en*gam + rho)*u[TT]*u[PH])*
-	(r*(2. + r) + pow(a,2.)*pow(cos(th),2.))*pow(sin(th),2.)) + 
+         dxdxp[1]*(bsq + en*gam + rho)*sigma*u[TT]*u[RR])*pow(sigma,-1.)*
+        (r*(2. + r) + pow(a,2.)*pow(cos(th),2.)) + 
+        2.*r*(-0.5*(bsq + 2.*en*(-1. + gam))*pow(sigma,-1.)*
+              (r*(2. + r) + pow(a,2.)*pow(cos(th),2.)) - 1.*pow(b[TT],2.) + 
+              (bsq + en*gam + rho)*pow(u[TT],2.)) - 
+        1.*a*(-1.*b[TT]*b[PH] + (bsq + en*gam + rho)*u[TT]*u[PH])*
+        (r*(2. + r) + pow(a,2.)*pow(cos(th),2.))*pow(sin(th),2.)) + 
        (4.*a*r*sigma*(b[TT]*b[PH] - 1.*(bsq + en*gam + rho)*u[TT]*u[PH]) - 
-	1.*a*(a*(bsq + 2.*en*(-1. + gam)) - 
-	      1.*dxdxp[1]*b[RR]*b[PH]*
-	      (pow(a,2.) + cos(2.*th)*pow(a,2.) + 2.*pow(r,2.)) + 
-	      dxdxp[1]*(bsq + en*gam + rho)*u[RR]*u[PH]*
-	      (pow(a,2.) + cos(2.*th)*pow(a,2.) + 2.*pow(r,2.)))*
-	(r*(2. + r) + pow(a,2.)*pow(cos(th),2.)) + 
-	0.5*(r*(2. + 3.*r)*pow(a,2.) + 
-	     cos(2.*th)*pow(a,2.)*((-2. + r)*r + pow(a,2.)) + pow(a,4.) + 
-	     2.*pow(r,4.))*((bsq + 2.*en*(-1. + gam))*pow(csc(th),2.) - 
-			    2.*sigma*pow(b[PH],2.) + 2.*(bsq + en*gam + rho)*sigma*pow(u[PH],2.))
-	)*pow(sin(th),2.)*(r*pow(sigma,2.) + 
-			   pow(a,2.)*(-1.*pow(r,2.) + pow(a,2.)*pow(cos(th),2.))*pow(sin(th),2.)
-			   ) + 2.*a*sigma*(r*(2. + r) + pow(a,2.)*pow(cos(th),2.))*
+        1.*a*(a*(bsq + 2.*en*(-1. + gam)) - 
+              1.*dxdxp[1]*b[RR]*b[PH]*
+              (pow(a,2.) + cos(2.*th)*pow(a,2.) + 2.*pow(r,2.)) + 
+              dxdxp[1]*(bsq + en*gam + rho)*u[RR]*u[PH]*
+              (pow(a,2.) + cos(2.*th)*pow(a,2.) + 2.*pow(r,2.)))*
+        (r*(2. + r) + pow(a,2.)*pow(cos(th),2.)) + 
+        0.5*(r*(2. + 3.*r)*pow(a,2.) + 
+             cos(2.*th)*pow(a,2.)*((-2. + r)*r + pow(a,2.)) + pow(a,4.) + 
+             2.*pow(r,4.))*((bsq + 2.*en*(-1. + gam))*pow(csc(th),2.) - 
+                            2.*sigma*pow(b[PH],2.) + 2.*(bsq + en*gam + rho)*sigma*pow(u[PH],2.))
+        )*pow(sin(th),2.)*(r*pow(sigma,2.) + 
+                           pow(a,2.)*(-1.*pow(r,2.) + pow(a,2.)*pow(cos(th),2.))*pow(sin(th),2.)
+                           ) + 2.*a*sigma*(r*(2. + r) + pow(a,2.)*pow(cos(th),2.))*
        (-1.*pow(r,2.) + pow(a,2.)*pow(cos(th),2.))*pow(sin(th),2.)*
        (r*(a*(bsq + 2.*en*(-1. + gam)) - 2.*dxdxp[1]*sigma*b[RR]*b[PH] + 
-	   2.*dxdxp[1]*(bsq + en*gam + rho)*sigma*u[RR]*u[PH])*pow(sigma,-1.)\
-	- 1.*(b[TT]*b[PH] - 1.*(bsq + en*gam + rho)*u[TT]*u[PH])*
-	((2. - 1.*r)*r - 1.*pow(a,2.)*pow(cos(th),2.)) - 
-	2.*a*r*(0.5*(bsq + 2.*en*(-1. + gam))*pow(sigma,-1.)*
-		pow(csc(th),2.) - 1.*pow(b[PH],2.) + 
-		(bsq + en*gam + rho)*pow(u[PH],2.))*pow(sin(th),2.)) + 
+           2.*dxdxp[1]*(bsq + en*gam + rho)*sigma*u[RR]*u[PH])*pow(sigma,-1.)\
+        - 1.*(b[TT]*b[PH] - 1.*(bsq + en*gam + rho)*u[TT]*u[PH])*
+        ((2. - 1.*r)*r - 1.*pow(a,2.)*pow(cos(th),2.)) - 
+        2.*a*r*(0.5*(bsq + 2.*en*(-1. + gam))*pow(sigma,-1.)*
+                pow(csc(th),2.) - 1.*pow(b[PH],2.) + 
+                (bsq + en*gam + rho)*pow(u[PH],2.))*pow(sin(th),2.)) + 
        a*sigma*(pow(a,2.)*(sigma - 2.*pow(r,2.)) + 
-		2.*r*(pow(1.,2.)*(-2.*sigma + 4.*pow(r,2.)) + pow(sigma,2.)) + 
-		cos(2.*th)*pow(a,2.)*(pow(r,2.) - 1.*pow(a,2.)*pow(cos(th),2.)))*
+                2.*r*(pow(1.,2.)*(-2.*sigma + 4.*pow(r,2.)) + pow(sigma,2.)) + 
+                cos(2.*th)*pow(a,2.)*(pow(r,2.) - 1.*pow(a,2.)*pow(cos(th),2.)))*
        pow(sin(th),2.)*(2.*r*(-1.*b[TT]*b[PH] + 
-			      (bsq + en*gam + rho)*u[TT]*u[PH]) + 
-			dxdxp[1]*(-1.*b[RR]*b[PH] + (bsq + en*gam + rho)*u[RR]*u[PH] + 
-				  0.5*a*(bsq + 2.*en*(-1. + gam))*pow(dxdxp[1],-1.)*pow(sigma,-1.))
-			*(r*(2. + r) + pow(a,2.)*pow(cos(th),2.)) - 
-			1.*a*(r*(2. + r) + pow(a,2.)*pow(cos(th),2.))*
-			(0.5*(bsq + 2.*en*(-1. + gam))*pow(sigma,-1.)*pow(csc(th),2.) - 
-			 1.*pow(b[PH],2.) + (bsq + en*gam + rho)*pow(u[PH],2.))*
-			pow(sin(th),2.)) + sigma*(pow(r,2.) - 1.*pow(a,2.)*pow(cos(th),2.))*
+                              (bsq + en*gam + rho)*u[TT]*u[PH]) + 
+                        dxdxp[1]*(-1.*b[RR]*b[PH] + (bsq + en*gam + rho)*u[RR]*u[PH] + 
+                                  0.5*a*(bsq + 2.*en*(-1. + gam))*pow(dxdxp[1],-1.)*pow(sigma,-1.))
+                        *(r*(2. + r) + pow(a,2.)*pow(cos(th),2.)) - 
+                        1.*a*(r*(2. + r) + pow(a,2.)*pow(cos(th),2.))*
+                        (0.5*(bsq + 2.*en*(-1. + gam))*pow(sigma,-1.)*pow(csc(th),2.) - 
+                         1.*pow(b[PH],2.) + (bsq + en*gam + rho)*pow(u[PH],2.))*
+                        pow(sin(th),2.)) + sigma*(pow(r,2.) - 1.*pow(a,2.)*pow(cos(th),2.))*
        (r*(2. + r) + pow(a,2.)*pow(cos(th),2.))*
        ((bsq + 2.*en*(-1. + gam))*sigma + 
-	2.*((-2. + r)*r + pow(a,2.)*pow(cos(th),2.))*pow(b[TT],2.) - 
-	1.*(bsq + en*gam + rho)*
-	(2.*(-2. + r)*r + pow(a,2.) + cos(2.*th)*pow(a,2.))*pow(u[TT],2.) + 
-	4.*r*b[TT]*(-1.*dxdxp[1]*b[RR] + a*b[PH]*pow(sin(th),2.)) + 
-	4.*r*(bsq + en*gam + rho)*u[TT]*
-	(dxdxp[1]*u[RR] - 1.*a*u[PH]*pow(sin(th),2.))) + 
+        2.*((-2. + r)*r + pow(a,2.)*pow(cos(th),2.))*pow(b[TT],2.) - 
+        1.*(bsq + en*gam + rho)*
+        (2.*(-2. + r)*r + pow(a,2.) + cos(2.*th)*pow(a,2.))*pow(u[TT],2.) + 
+        4.*r*b[TT]*(-1.*dxdxp[1]*b[RR] + a*b[PH]*pow(sin(th),2.)) + 
+        4.*r*(bsq + en*gam + rho)*u[TT]*
+        (dxdxp[1]*u[RR] - 1.*a*u[PH]*pow(sin(th),2.))) + 
        2.*sigma*(2.*r*(-1.*b[TT]*b[RR] + (bsq + en*gam + rho)*u[TT]*u[RR] + 
-		       (bsq + 2.*en*(-1. + gam))*r*pow(dxdxp[1],-1.)*pow(sigma,-1.)) + 
-		 dxdxp[1]*(r*(2. + r) + pow(a,2.)*pow(cos(th),2.))*
-		 (0.5*(bsq + 2.*en*(-1. + gam))*pow(dxdxp[1],-2.)*
-		  ((-2. + r)*r + pow(a,2.))*pow(sigma,-1.) - 1.*pow(b[RR],2.) + 
-		  (bsq + en*gam + rho)*pow(u[RR],2.)) - 
-		 1.*a*(-1.*b[RR]*b[PH] + (bsq + en*gam + rho)*u[RR]*u[PH] + 
-		       0.5*a*(bsq + 2.*en*(-1. + gam))*pow(dxdxp[1],-1.)*pow(sigma,-1.))
-		 *(r*(2. + r) + pow(a,2.)*pow(cos(th),2.))*pow(sin(th),2.))*
+                       (bsq + 2.*en*(-1. + gam))*r*pow(dxdxp[1],-1.)*pow(sigma,-1.)) + 
+                 dxdxp[1]*(r*(2. + r) + pow(a,2.)*pow(cos(th),2.))*
+                 (0.5*(bsq + 2.*en*(-1. + gam))*pow(dxdxp[1],-2.)*
+                  ((-2. + r)*r + pow(a,2.))*pow(sigma,-1.) - 1.*pow(b[RR],2.) + 
+                  (bsq + en*gam + rho)*pow(u[RR],2.)) - 
+                 1.*a*(-1.*b[RR]*b[PH] + (bsq + en*gam + rho)*u[RR]*u[PH] + 
+                       0.5*a*(bsq + 2.*en*(-1. + gam))*pow(dxdxp[1],-1.)*pow(sigma,-1.))
+                 *(r*(2. + r) + pow(a,2.)*pow(cos(th),2.))*pow(sin(th),2.))*
        (-1.*dxdxp[1]*(2. + r)*pow(r,3.) + pow(sigma,3.) + 
-	dxdxp[1]*pow(a,2.)*(2.*r*pow(cos(th),2.) + 
-			    pow(a,2.)*pow(cos(th),4.) + 
-			    (pow(r,2.) - 1.*pow(a,2.)*pow(cos(th),2.))*pow(sin(th),2.))) + 
+        dxdxp[1]*pow(a,2.)*(2.*r*pow(cos(th),2.) + 
+                            pow(a,2.)*pow(cos(th),4.) + 
+                            (pow(r,2.) - 1.*pow(a,2.)*pow(cos(th),2.))*pow(sin(th),2.))) + 
        4.*dxdxp[1]*sigma*(pow(r,2.) - 1.*pow(a,2.)*pow(cos(th),2.))*
        (r*(1. + r) + pow(a,2.)*pow(cos(th),2.))*
        (b[TT]*b[RR]*((-2. + r)*r + pow(a,2.)*pow(cos(th),2.)) - 
-	2.*dxdxp[1]*r*pow(b[RR],2.) + 2.*a*r*b[RR]*b[PH]*pow(sin(th),2.) + 
-	0.5*(bsq + en*gam + rho)*u[RR]*
-	(-1.*u[TT]*(2.*(-2. + r)*r + pow(a,2.) + cos(2.*th)*pow(a,2.)) + 
-	 4.*r*(dxdxp[1]*u[RR] - 1.*a*u[PH]*pow(sin(th),2.)))) - 
+        2.*dxdxp[1]*r*pow(b[RR],2.) + 2.*a*r*b[RR]*b[PH]*pow(sin(th),2.) + 
+        0.5*(bsq + en*gam + rho)*u[RR]*
+        (-1.*u[TT]*(2.*(-2. + r)*r + pow(a,2.) + cos(2.*th)*pow(a,2.)) + 
+         4.*r*(dxdxp[1]*u[RR] - 1.*a*u[PH]*pow(sin(th),2.)))) - 
        1.*dxdxp[2]*a*cos(th)*pow(sigma,2.)*
        (r*(2. + r) + pow(a,2.)*pow(cos(th),2.))*
        (4.*a*r*(b[TT]*b[TH] - 1.*(bsq + en*gam + rho)*u[TT]*u[TH]) - 
-	1.*(b[TH]*b[PH] - 1.*(bsq + en*gam + rho)*u[TH]*u[PH])*
-	(r*(2. + 3.*r)*pow(a,2.) + 
-	 cos(2.*th)*pow(a,2.)*((-2. + r)*r + pow(a,2.)) + pow(a,4.) + 
-	 2.*pow(r,4.)) + 2.*dxdxp[1]*a*
-	(b[RR]*b[TH] - 1.*(bsq + en*gam + rho)*u[RR]*u[TH])*
-	(r*(2. + r) + pow(a,2.)*pow(cos(th),2.)))*sin(th) - 
+        1.*(b[TH]*b[PH] - 1.*(bsq + en*gam + rho)*u[TH]*u[PH])*
+        (r*(2. + 3.*r)*pow(a,2.) + 
+         cos(2.*th)*pow(a,2.)*((-2. + r)*r + pow(a,2.)) + pow(a,4.) + 
+         2.*pow(r,4.)) + 2.*dxdxp[1]*a*
+        (b[RR]*b[TH] - 1.*(bsq + en*gam + rho)*u[RR]*u[TH])*
+        (r*(2. + r) + pow(a,2.)*pow(cos(th),2.)))*sin(th) - 
        2.*dxdxp[2]*cos(th)*pow(a,2.)*pow(sigma,3.)*
        (2.*r*(-1.*b[TT]*b[TH] + (bsq + en*gam + rho)*u[TT]*u[TH]) + 
-	dxdxp[1]*(-1.*b[RR]*b[TH] + (bsq + en*gam + rho)*u[RR]*u[TH])*
-	(r*(2. + r) + pow(a,2.)*pow(cos(th),2.)) - 
-	1.*a*(-1.*b[TH]*b[PH] + (bsq + en*gam + rho)*u[TH]*u[PH])*
-	(r*(2. + r) + pow(a,2.)*pow(cos(th),2.))*pow(sin(th),2.))*sin(th) + 
+        dxdxp[1]*(-1.*b[RR]*b[TH] + (bsq + en*gam + rho)*u[RR]*u[TH])*
+        (r*(2. + r) + pow(a,2.)*pow(cos(th),2.)) - 
+        1.*a*(-1.*b[TH]*b[PH] + (bsq + en*gam + rho)*u[TH]*u[PH])*
+        (r*(2. + r) + pow(a,2.)*pow(cos(th),2.))*pow(sin(th),2.))*sin(th) + 
        2.*dxdxp[2]*r*(b[TT]*b[TH] - 1.*(bsq + en*gam + rho)*u[TT]*u[TH])*
        pow(a,2.)*pow(sigma,3.)*sin(2.*th) + 
        2.*dxdxp[1]*dxdxp[2]*r*
        (b[RR]*b[TH] - 1.*(bsq + en*gam + rho)*u[RR]*u[TH])*pow(a,2.)*pow(sigma,3.)*
        sin(2.*th) - 2.*dxdxp[2]*r*pow(a,2.)*pow(sigma,2.)*
        (-2.*dxdxp[1]*r*(b[RR]*b[TH] - 1.*(bsq + en*gam + rho)*u[RR]*u[TH]) - 
-	1.*(b[TT]*b[TH] - 1.*(bsq + en*gam + rho)*u[TT]*u[TH])*
-	((2. - 1.*r)*r - 1.*pow(a,2.)*pow(cos(th),2.)) + 
-	2.*a*r*(b[TH]*b[PH] - 1.*(bsq + en*gam + rho)*u[TH]*u[PH])*pow(sin(th),2.)
-	)*sin(2.*th) - 2.*dxdxp[2]*a*
+        1.*(b[TT]*b[TH] - 1.*(bsq + en*gam + rho)*u[TT]*u[TH])*
+        ((2. - 1.*r)*r - 1.*pow(a,2.)*pow(cos(th),2.)) + 
+        2.*a*r*(b[TH]*b[PH] - 1.*(bsq + en*gam + rho)*u[TH]*u[PH])*pow(sin(th),2.)
+        )*sin(2.*th) - 2.*dxdxp[2]*a*
        (b[TH]*b[PH] - 1.*(bsq + en*gam + rho)*u[TH]*u[PH])*pow(sigma,3.)*sin(th)*
        (r*(2. + r)*sigma*cos(th) + sigma*pow(a,2.)*pow(cos(th),3.) + 
-	r*pow(a,2.)*sin(th)*sin(2.*th)));
+        r*pow(a,2.)*sin(th)*sin(2.*th)));
   }
 
 
@@ -3254,92 +3254,92 @@ void mks_source_conn(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q,FTYP
   if((WHICHEOM==WITHNOGDET)&&(NOGDETU2==1)){
 
     dU[U2]+=dxdxp[1]*r*(-1.*b[RR]*b[TH] + 
-			u[RR]*u[TH]*(bsq + en*gam + rho))*pow(dxdxp[2],2.) - 
+                        u[RR]*u[TH]*(bsq + en*gam + rho))*pow(dxdxp[2],2.) - 
       1.*(-1.*b[RR]*b[TH] + u[RR]*u[TH]*(bsq + en*gam + rho))*
       (2.*dxdxp[1]*r + sigma)*pow(dxdxp[2],2.) - 
       0.125*r*pow(dxdxp[2],2.)*((-2. + r)*r + pow(a,2.))*
       (-1.*b[TH]*(16.*b[TT]*r + 16.*b[RR]*dxdxp[1]*r - 
-		  8.*b[PH]*a*r + 4.*a*(b[RR]*dxdxp[1]*a + b[PH]*r*(2. + r))*
-		  cos(2.*th) + 4.*b[RR]*dxdxp[1]*pow(a,2.) - 
-		  1.*b[PH]*pow(a,3.) + b[PH]*cos(4.*th)*pow(a,3.) + 
-		  8.*b[RR]*dxdxp[1]*pow(r,2.) - 4.*b[PH]*a*pow(r,2.)) + 
+                  8.*b[PH]*a*r + 4.*a*(b[RR]*dxdxp[1]*a + b[PH]*r*(2. + r))*
+                  cos(2.*th) + 4.*b[RR]*dxdxp[1]*pow(a,2.) - 
+                  1.*b[PH]*pow(a,3.) + b[PH]*cos(4.*th)*pow(a,3.) + 
+                  8.*b[RR]*dxdxp[1]*pow(r,2.) - 4.*b[PH]*a*pow(r,2.)) + 
        u[TH]*(bsq + en*gam + rho)*
        (16.*dxdxp[1]*u[RR]*r + 16.*u[TT]*r - 8.*u[PH]*a*r + 
-	4.*a*(dxdxp[1]*u[RR]*a + u[PH]*r*(2. + r))*cos(2.*th) + 
-	4.*dxdxp[1]*u[RR]*pow(a,2.) - 1.*u[PH]*pow(a,3.) + 
-	u[PH]*cos(4.*th)*pow(a,3.) + 8.*dxdxp[1]*u[RR]*pow(r,2.) - 
-	4.*u[PH]*a*pow(r,2.)))*pow(sigma,-2.) - 
+        4.*a*(dxdxp[1]*u[RR]*a + u[PH]*r*(2. + r))*cos(2.*th) + 
+        4.*dxdxp[1]*u[RR]*pow(a,2.) - 1.*u[PH]*pow(a,3.) + 
+        u[PH]*cos(4.*th)*pow(a,3.) + 8.*dxdxp[1]*u[RR]*pow(r,2.) - 
+        4.*u[PH]*a*pow(r,2.)))*pow(sigma,-2.) - 
       0.5*a*r*pow(dxdxp[2],2.)*(-1.*b[TH]*
-				(-2.*a*r*(2.*b[TT] + b[RR]*dxdxp[1]*(2. + r)) + 
-				 b[PH]*r*(2. + 3.*r)*pow(a,2.) + 
-				 cos(2.*th)*pow(a,2.)*(-1.*b[RR]*dxdxp[1]*a + 
-						       b[PH]*(-2. + r)*r + b[PH]*pow(a,2.)) - 
-				 1.*b[RR]*dxdxp[1]*pow(a,3.) + b[PH]*pow(a,4.) + 
-				 2.*b[PH]*pow(r,4.)) + 
-				u[TH]*(bsq + en*gam + rho)*
-				(-2.*a*r*(2.*(dxdxp[1]*u[RR] + u[TT]) + dxdxp[1]*u[RR]*r) + 
-				 u[PH]*r*(2. + 3.*r)*pow(a,2.) + 
-				 cos(2.*th)*pow(a,2.)*(-1.*dxdxp[1]*u[RR]*a + 
-						       u[PH]*(-2. + r)*r + u[PH]*pow(a,2.)) - 
-				 1.*dxdxp[1]*u[RR]*pow(a,3.) + u[PH]*pow(a,4.) + 
-				 2.*u[PH]*pow(r,4.)))*pow(sigma,-2.)*pow(sin(th),2.) - 
+                                (-2.*a*r*(2.*b[TT] + b[RR]*dxdxp[1]*(2. + r)) + 
+                                 b[PH]*r*(2. + 3.*r)*pow(a,2.) + 
+                                 cos(2.*th)*pow(a,2.)*(-1.*b[RR]*dxdxp[1]*a + 
+                                                       b[PH]*(-2. + r)*r + b[PH]*pow(a,2.)) - 
+                                 1.*b[RR]*dxdxp[1]*pow(a,3.) + b[PH]*pow(a,4.) + 
+                                 2.*b[PH]*pow(r,4.)) + 
+                                u[TH]*(bsq + en*gam + rho)*
+                                (-2.*a*r*(2.*(dxdxp[1]*u[RR] + u[TT]) + dxdxp[1]*u[RR]*r) + 
+                                 u[PH]*r*(2. + 3.*r)*pow(a,2.) + 
+                                 cos(2.*th)*pow(a,2.)*(-1.*dxdxp[1]*u[RR]*a + 
+                                                       u[PH]*(-2. + r)*r + u[PH]*pow(a,2.)) - 
+                                 1.*dxdxp[1]*u[RR]*pow(a,3.) + u[PH]*pow(a,4.) + 
+                                 2.*u[PH]*pow(r,4.)))*pow(sigma,-2.)*pow(sin(th),2.) - 
       2.*pow(dxdxp[2],2.)*pow(r,2.)*pow(sigma,-2.)*
       (b[TH]*(b[TT]*pow(a,2.)*pow(cos(th),2.) + 
-	      r*(-2.*b[TT] - 2.*b[RR]*dxdxp[1] + b[TT]*r + 
-		 2.*b[PH]*a*pow(sin(th),2.))) - 
+              r*(-2.*b[TT] - 2.*b[RR]*dxdxp[1] + b[TT]*r + 
+                 2.*b[PH]*a*pow(sin(th),2.))) - 
        1.*u[TH]*(bsq + en*gam + rho)*
        (u[TT]*pow(a,2.)*pow(cos(th),2.) + 
-	r*(-2.*dxdxp[1]*u[RR] - 2.*u[TT] + dxdxp[1]*u[TT] + 
-	   u[TT]*R0 + 2.*u[PH]*a*pow(sin(th),2.)))) + 
+        r*(-2.*dxdxp[1]*u[RR] - 2.*u[TT] + dxdxp[1]*u[TT] + 
+           u[TT]*R0 + 2.*u[PH]*a*pow(sin(th),2.)))) + 
       2.*dxdxp[2]*r*cos(th)*pow(a,3.)*pow(sigma,-3.)*
       (b[PH]*(b[TT]*pow(a,2.)*pow(cos(th),2.) + 
-	      r*(-2.*b[TT] - 2.*b[RR]*dxdxp[1] + b[TT]*r + 
-		 2.*b[PH]*a*pow(sin(th),2.))) - 
+              r*(-2.*b[TT] - 2.*b[RR]*dxdxp[1] + b[TT]*r + 
+                 2.*b[PH]*a*pow(sin(th),2.))) - 
        1.*u[PH]*(bsq + en*gam + rho)*
        (u[TT]*pow(a,2.)*pow(cos(th),2.) + 
-	r*(-2.*dxdxp[1]*u[RR] - 2.*u[TT] + dxdxp[1]*u[TT] + 
-	   u[TT]*R0 + 2.*u[PH]*a*pow(sin(th),2.))))*pow(sin(th),3.) - 
+        r*(-2.*dxdxp[1]*u[RR] - 2.*u[TT] + dxdxp[1]*u[TT] + 
+           u[TT]*R0 + 2.*u[PH]*a*pow(sin(th),2.))))*pow(sin(th),3.) - 
       1.*dxdxp[2]*a*r*cos(th)*(-1.*b[TT]*
-			       (-2.*a*r*(2.*b[TT] + b[RR]*dxdxp[1]*(2. + r)) + 
-				b[PH]*r*(2. + 3.*r)*pow(a,2.) + 
-				cos(2.*th)*pow(a,2.)*(-1.*b[RR]*dxdxp[1]*a + 
-						      b[PH]*(-2. + r)*r + b[PH]*pow(a,2.)) - 
-				1.*b[RR]*dxdxp[1]*pow(a,3.) + b[PH]*pow(a,4.) + 
-				2.*b[PH]*pow(r,4.)) + 
-			       u[TT]*(bsq + en*gam + rho)*
-			       (-2.*a*r*(2.*(dxdxp[1]*u[RR] + u[TT]) + dxdxp[1]*u[RR]*r) + 
-				u[PH]*r*(2. + 3.*r)*pow(a,2.) + 
-				cos(2.*th)*pow(a,2.)*(-1.*dxdxp[1]*u[RR]*a + 
-						      u[PH]*(-2. + r)*r + u[PH]*pow(a,2.)) - 
-				1.*dxdxp[1]*u[RR]*pow(a,3.) + u[PH]*pow(a,4.) + 
-				2.*u[PH]*pow(r,4.)))*pow(sigma,-3.)*sin(th) - 
+                               (-2.*a*r*(2.*b[TT] + b[RR]*dxdxp[1]*(2. + r)) + 
+                                b[PH]*r*(2. + 3.*r)*pow(a,2.) + 
+                                cos(2.*th)*pow(a,2.)*(-1.*b[RR]*dxdxp[1]*a + 
+                                                      b[PH]*(-2. + r)*r + b[PH]*pow(a,2.)) - 
+                                1.*b[RR]*dxdxp[1]*pow(a,3.) + b[PH]*pow(a,4.) + 
+                                2.*b[PH]*pow(r,4.)) + 
+                               u[TT]*(bsq + en*gam + rho)*
+                               (-2.*a*r*(2.*(dxdxp[1]*u[RR] + u[TT]) + dxdxp[1]*u[RR]*r) + 
+                                u[PH]*r*(2. + 3.*r)*pow(a,2.) + 
+                                cos(2.*th)*pow(a,2.)*(-1.*dxdxp[1]*u[RR]*a + 
+                                                      u[PH]*(-2. + r)*r + u[PH]*pow(a,2.)) - 
+                                1.*dxdxp[1]*u[RR]*pow(a,3.) + u[PH]*pow(a,4.) + 
+                                2.*u[PH]*pow(r,4.)))*pow(sigma,-3.)*sin(th) - 
       0.125*dxdxp[2]*cos(th)*pow(a,2.)*pow(sigma,-1.)*
       (4.*bsq + 8.*en*(-1. + gam) - 
        1.*b[RR]*dxdxp[1]*(16.*b[TT]*r + 16.*b[RR]*dxdxp[1]*r - 
-			  8.*b[PH]*a*r + 4.*a*(b[RR]*dxdxp[1]*a + b[PH]*r*(2. + r))*
-			  cos(2.*th) + 4.*b[RR]*dxdxp[1]*pow(a,2.) - 
-			  1.*b[PH]*pow(a,3.) + b[PH]*cos(4.*th)*pow(a,3.) + 
-			  8.*b[RR]*dxdxp[1]*pow(r,2.) - 4.*b[PH]*a*pow(r,2.))*
+                          8.*b[PH]*a*r + 4.*a*(b[RR]*dxdxp[1]*a + b[PH]*r*(2. + r))*
+                          cos(2.*th) + 4.*b[RR]*dxdxp[1]*pow(a,2.) - 
+                          1.*b[PH]*pow(a,3.) + b[PH]*cos(4.*th)*pow(a,3.) + 
+                          8.*b[RR]*dxdxp[1]*pow(r,2.) - 4.*b[PH]*a*pow(r,2.))*
        pow(sigma,-1.) + dxdxp[1]*u[RR]*(bsq + en*gam + rho)*
        (16.*dxdxp[1]*u[RR]*r + 16.*u[TT]*r - 8.*u[PH]*a*r + 
-	4.*a*(dxdxp[1]*u[RR]*a + u[PH]*r*(2. + r))*cos(2.*th) + 
-	4.*dxdxp[1]*u[RR]*pow(a,2.) - 1.*u[PH]*pow(a,3.) + 
-	u[PH]*cos(4.*th)*pow(a,3.) + 8.*dxdxp[1]*u[RR]*pow(r,2.) - 
-	4.*u[PH]*a*pow(r,2.))*pow(sigma,-1.))*sin(th) - 
+        4.*a*(dxdxp[1]*u[RR]*a + u[PH]*r*(2. + r))*cos(2.*th) + 
+        4.*dxdxp[1]*u[RR]*pow(a,2.) - 1.*u[PH]*pow(a,3.) + 
+        u[PH]*cos(4.*th)*pow(a,3.) + 8.*dxdxp[1]*u[RR]*pow(r,2.) - 
+        4.*u[PH]*a*pow(r,2.))*pow(sigma,-1.))*sin(th) - 
       0.5*dxdxp[1]*dxdxp[2]*a*cos(th)*
       (-1.*b[RR]*(-2.*a*r*(2.*b[TT] + b[RR]*dxdxp[1]*(2. + r)) + 
-		  b[PH]*r*(2. + 3.*r)*pow(a,2.) + 
-		  cos(2.*th)*pow(a,2.)*(-1.*b[RR]*dxdxp[1]*a + 
-					b[PH]*(-2. + r)*r + b[PH]*pow(a,2.)) - 
-		  1.*b[RR]*dxdxp[1]*pow(a,3.) + b[PH]*pow(a,4.) + 
-		  2.*b[PH]*pow(r,4.)) + 
+                  b[PH]*r*(2. + 3.*r)*pow(a,2.) + 
+                  cos(2.*th)*pow(a,2.)*(-1.*b[RR]*dxdxp[1]*a + 
+                                        b[PH]*(-2. + r)*r + b[PH]*pow(a,2.)) - 
+                  1.*b[RR]*dxdxp[1]*pow(a,3.) + b[PH]*pow(a,4.) + 
+                  2.*b[PH]*pow(r,4.)) + 
        u[RR]*(bsq + en*gam + rho)*
        (-2.*a*r*(2.*(dxdxp[1]*u[RR] + u[TT]) + dxdxp[1]*u[RR]*r) + 
-	u[PH]*r*(2. + 3.*r)*pow(a,2.) + 
-	cos(2.*th)*pow(a,2.)*(-1.*dxdxp[1]*u[RR]*a + 
-			      u[PH]*(-2. + r)*r + u[PH]*pow(a,2.)) - 
-	1.*dxdxp[1]*u[RR]*pow(a,3.) + u[PH]*pow(a,4.) + 
-	2.*u[PH]*pow(r,4.)))*pow(sigma,-3.)*
+        u[PH]*r*(2. + 3.*r)*pow(a,2.) + 
+        cos(2.*th)*pow(a,2.)*(-1.*dxdxp[1]*u[RR]*a + 
+                              u[PH]*(-2. + r)*r + u[PH]*pow(a,2.)) - 
+        1.*dxdxp[1]*u[RR]*pow(a,3.) + u[PH]*pow(a,4.) + 
+        2.*u[PH]*pow(r,4.)))*pow(sigma,-3.)*
       (r*(2. + r) + pow(a,2.)*pow(cos(th),2.))*sin(th) + 
       (0.5*bsq + en*(-1. + gam) - 1.*sigma*pow(b[TH],2.)*pow(dxdxp[2],2.) + 
        (bsq + en*gam + rho)*sigma*pow(dxdxp[2],2.)*pow(u[TH],2.))*
@@ -3347,35 +3347,35 @@ void mks_source_conn(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q,FTYP
        1.*dxdxp[2]*cos(th)*pow(a,2.)*pow(sigma,-1.)*sin(th)) + 
       dxdxp[1]*dxdxp[2]*r*pow(a,2.)*pow(sigma,-3.)*
       (b[RR]*(-1.*b[TT]*pow(a,2.)*pow(cos(th),2.) + 
-	      r*(2.*b[TT] + 2.*b[RR]*dxdxp[1] - 1.*b[TT]*r - 
-		 2.*b[PH]*a*pow(sin(th),2.))) + 
+              r*(2.*b[TT] + 2.*b[RR]*dxdxp[1] - 1.*b[TT]*r - 
+                 2.*b[PH]*a*pow(sin(th),2.))) + 
        u[RR]*(bsq + en*gam + rho)*
        (u[TT]*pow(a,2.)*pow(cos(th),2.) + 
-	r*(-2.*dxdxp[1]*u[RR] - 2.*u[TT] + dxdxp[1]*u[TT] + 
-	   u[TT]*R0 + 2.*u[PH]*a*pow(sin(th),2.))))*sin(2.*th) - 
+        r*(-2.*dxdxp[1]*u[RR] - 2.*u[TT] + dxdxp[1]*u[TT] + 
+           u[TT]*R0 + 2.*u[PH]*a*pow(sin(th),2.))))*sin(2.*th) - 
       1.*dxdxp[2]*r*pow(a,2.)*pow(sigma,-2.)*
       (0.5*bsq + en*(-1. + gam) + 
        b[TT]*pow(sigma,-1.)*(b[TT]*pow(a,2.)*pow(cos(th),2.) + 
-			     r*(-2.*b[TT] - 2.*b[RR]*dxdxp[1] + b[TT]*r + 
-				2.*b[PH]*a*pow(sin(th),2.))) - 
+                             r*(-2.*b[TT] - 2.*b[RR]*dxdxp[1] + b[TT]*r + 
+                                2.*b[PH]*a*pow(sin(th),2.))) - 
        1.*u[TT]*(bsq + en*gam + rho)*pow(sigma,-1.)*
        (u[TT]*pow(a,2.)*pow(cos(th),2.) + 
-	r*(-2.*dxdxp[1]*u[RR] - 2.*u[TT] + dxdxp[1]*u[TT] + 
-	   u[TT]*R0 + 2.*u[PH]*a*pow(sin(th),2.))))*sin(2.*th) + 
+        r*(-2.*dxdxp[1]*u[RR] - 2.*u[TT] + dxdxp[1]*u[TT] + 
+           u[TT]*R0 + 2.*u[PH]*a*pow(sin(th),2.))))*sin(2.*th) + 
       0.5*dxdxp[2]*(bsq + 2.*en*(-1. + gam) - 
-		    1.*b[PH]*(-2.*a*r*(2.*b[TT] + b[RR]*dxdxp[1]*(2. + r)) + 
-			      b[PH]*r*(2. + 3.*r)*pow(a,2.) + 
-			      cos(2.*th)*pow(a,2.)*(-1.*b[RR]*dxdxp[1]*a + 
-						    b[PH]*(-2. + r)*r + b[PH]*pow(a,2.)) - 
-			      1.*b[RR]*dxdxp[1]*pow(a,3.) + b[PH]*pow(a,4.) + 
-			      2.*b[PH]*pow(r,4.))*pow(sigma,-1.)*pow(sin(th),2.) + 
-		    u[PH]*(bsq + en*gam + rho)*
-		    (-2.*a*r*(2.*(dxdxp[1]*u[RR] + u[TT]) + dxdxp[1]*u[RR]*r) + 
-		     u[PH]*r*(2. + 3.*r)*pow(a,2.) + 
-		     cos(2.*th)*pow(a,2.)*(-1.*dxdxp[1]*u[RR]*a + 
-					   u[PH]*(-2. + r)*r + u[PH]*pow(a,2.)) - 
-		     1.*dxdxp[1]*u[RR]*pow(a,3.) + u[PH]*pow(a,4.) + 
-		     2.*u[PH]*pow(r,4.))*pow(sigma,-1.)*pow(sin(th),2.))*
+                    1.*b[PH]*(-2.*a*r*(2.*b[TT] + b[RR]*dxdxp[1]*(2. + r)) + 
+                              b[PH]*r*(2. + 3.*r)*pow(a,2.) + 
+                              cos(2.*th)*pow(a,2.)*(-1.*b[RR]*dxdxp[1]*a + 
+                                                    b[PH]*(-2. + r)*r + b[PH]*pow(a,2.)) - 
+                              1.*b[RR]*dxdxp[1]*pow(a,3.) + b[PH]*pow(a,4.) + 
+                              2.*b[PH]*pow(r,4.))*pow(sigma,-1.)*pow(sin(th),2.) + 
+                    u[PH]*(bsq + en*gam + rho)*
+                    (-2.*a*r*(2.*(dxdxp[1]*u[RR] + u[TT]) + dxdxp[1]*u[RR]*r) + 
+                     u[PH]*r*(2. + 3.*r)*pow(a,2.) + 
+                     cos(2.*th)*pow(a,2.)*(-1.*dxdxp[1]*u[RR]*a + 
+                                           u[PH]*(-2. + r)*r + u[PH]*pow(a,2.)) - 
+                     1.*dxdxp[1]*u[RR]*pow(a,3.) + u[PH]*pow(a,4.) + 
+                     2.*u[PH]*pow(r,4.))*pow(sigma,-1.)*pow(sin(th),2.))*
       (cot(th) + r*pow(a,2.)*pow(sigma,-2.)*sin(2.*th)) + 
       (0.5*bsq + en*(-1. + gam) - 1.*sigma*pow(b[TH],2.)*pow(dxdxp[2],2.) + 
        (bsq + en*gam + rho)*sigma*pow(dxdxp[2],2.)*pow(u[TH],2.))*
@@ -3387,103 +3387,103 @@ void mks_source_conn(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q,FTYP
 
 
     dU[U2]+=0.5*(-2.*dxdxp[1]*r*
-		 (b[RR]*b[TH] - 1.*(bsq + en*gam + rho)*u[RR]*u[TH])*pow(dxdxp[2],2.) - 
-		 1.*a*r*pow(dxdxp[2],2.)*pow(sigma,-2.)*
-		 (4.*a*r*(b[TT]*b[TH] - 1.*(bsq + en*gam + rho)*u[TT]*u[TH]) - 
-		  1.*(b[TH]*b[PH] - 1.*(bsq + en*gam + rho)*u[TH]*u[PH])*
-		  (r*(2. + 3.*r)*pow(a,2.) + 
-		   cos(2.*th)*pow(a,2.)*((-2. + r)*r + pow(a,2.)) + pow(a,4.) + 
-		   2.*pow(r,4.)) + 2.*dxdxp[1]*a*
-		  (b[RR]*b[TH] - 1.*(bsq + en*gam + rho)*u[RR]*u[TH])*
-		  (r*(2. + r) + pow(a,2.)*pow(cos(th),2.)))*pow(sin(th),2.) - 
-		 4.*pow(dxdxp[2],2.)*pow(r,2.)*pow(sigma,-2.)*
-		 (-2.*dxdxp[1]*r*(b[RR]*b[TH] - 1.*(bsq + en*gam + rho)*u[RR]*u[TH]) - 
-		  1.*(b[TT]*b[TH] - 1.*(bsq + en*gam + rho)*u[TT]*u[TH])*
-		  ((2. - 1.*r)*r - 1.*pow(a,2.)*pow(cos(th),2.)) + 
-		  2.*a*r*(b[TH]*b[PH] - 1.*(bsq + en*gam + rho)*u[TH]*u[PH])*pow(sin(th),2.)
-		  ) - 2.*r*pow(dxdxp[2],2.)*((-2. + r)*r + pow(a,2.))*pow(sigma,-2.)*
-		 (2.*r*(-1.*b[TT]*b[TH] + (bsq + en*gam + rho)*u[TT]*u[TH]) + 
-		  dxdxp[1]*(-1.*b[RR]*b[TH] + (bsq + en*gam + rho)*u[RR]*u[TH])*
-		  (r*(2. + r) + pow(a,2.)*pow(cos(th),2.)) - 
-		  1.*a*(-1.*b[TH]*b[PH] + (bsq + en*gam + rho)*u[TH]*u[PH])*
-		  (r*(2. + r) + pow(a,2.)*pow(cos(th),2.))*pow(sin(th),2.)) + 
-		 4.*dxdxp[2]*r*cos(th)*pow(a,3.)*pow(sigma,-3.)*
-		 (r*(a*(bsq + 2.*en*(-1. + gam)) - 2.*dxdxp[1]*sigma*b[RR]*b[PH] + 
-		     2.*dxdxp[1]*(bsq + en*gam + rho)*sigma*u[RR]*u[PH])*pow(sigma,-1.)\
-		  - 1.*(b[TT]*b[PH] - 1.*(bsq + en*gam + rho)*u[TT]*u[PH])*
-		  ((2. - 1.*r)*r - 1.*pow(a,2.)*pow(cos(th),2.)) - 
-		  2.*a*r*(0.5*(bsq + 2.*en*(-1. + gam))*pow(sigma,-1.)*
-			  pow(csc(th),2.) - 1.*pow(b[PH],2.) + 
-			  (bsq + en*gam + rho)*pow(u[PH],2.))*pow(sin(th),2.))*pow(sin(th),3.)
-		 - 2.*dxdxp[2]*a*r*cos(th)*pow(sigma,-4.)*
-		 (-1.*sigma*(b[TT]*b[PH] - 1.*(bsq + en*gam + rho)*u[TT]*u[PH])*
-		  (r*(2. + 3.*r)*pow(a,2.) + 
-		   cos(2.*th)*pow(a,2.)*((-2. + r)*r + pow(a,2.)) + pow(a,4.) + 
-		   2.*pow(r,4.)) - 2.*a*
-		  ((bsq + 2.*en*(-1. + gam))*r - 1.*dxdxp[1]*sigma*b[TT]*b[RR] + 
-		   0.5*dxdxp[1]*(bsq + en*gam + rho)*u[TT]*u[RR]*
-		   (pow(a,2.) + cos(2.*th)*pow(a,2.) + 2.*pow(r,2.)))*
-		  (r*(2. + r) + pow(a,2.)*pow(cos(th),2.)) - 
-		  4.*a*r*sigma*(-0.5*(bsq + 2.*en*(-1. + gam))*pow(sigma,-1.)*
-				(r*(2. + r) + pow(a,2.)*pow(cos(th),2.)) - 1.*pow(b[TT],2.) + 
-				(bsq + en*gam + rho)*pow(u[TT],2.)))*sin(th) - 
-		 1.*dxdxp[1]*dxdxp[2]*a*cos(th)*pow(sigma,-4.)*
-		 (r*(2. + r) + pow(a,2.)*pow(cos(th),2.))*
-		 (-4.*a*r*((bsq + 2.*en*(-1. + gam))*r - 1.*dxdxp[1]*sigma*b[TT]*b[RR] + 
-			   dxdxp[1]*(bsq + en*gam + rho)*sigma*u[TT]*u[RR])*
-		  pow(dxdxp[1],-1.) + 
-		  sigma*(r*(2. + 3.*r)*pow(a,2.) + 
-			 cos(2.*th)*pow(a,2.)*((-2. + r)*r + pow(a,2.)) + pow(a,4.) + 
-			 2.*pow(r,4.))*(-1.*b[RR]*b[PH] + (bsq + en*gam + rho)*u[RR]*u[PH] + 
-					0.5*a*(bsq + 2.*en*(-1. + gam))*pow(dxdxp[1],-1.)*pow(sigma,-1.))
-		  - 1.*a*pow(dxdxp[1],-1.)*
-		  (r*(2. + r) + pow(a,2.)*pow(cos(th),2.))*
-		  ((bsq + 2.*en*(-1. + gam))*((-2. + r)*r + pow(a,2.)) - 
-		   2.*sigma*pow(dxdxp[1],2.)*pow(b[RR],2.) + 
-		   (bsq + en*gam + rho)*pow(dxdxp[1],2.)*
-		   (pow(a,2.) + cos(2.*th)*pow(a,2.) + 2.*pow(r,2.))*pow(u[RR],2.)))*
-		 sin(th) - 2.*dxdxp[1]*dxdxp[2]*cos(th)*pow(a,2.)*pow(sigma,-2.)*
-		 (2.*r*(-1.*b[TT]*b[RR] + (bsq + en*gam + rho)*u[TT]*u[RR] + 
-			(bsq + 2.*en*(-1. + gam))*r*pow(dxdxp[1],-1.)*pow(sigma,-1.)) + 
-		  dxdxp[1]*(r*(2. + r) + pow(a,2.)*pow(cos(th),2.))*
-		  (0.5*(bsq + 2.*en*(-1. + gam))*pow(dxdxp[1],-2.)*
-		   ((-2. + r)*r + pow(a,2.))*pow(sigma,-1.) - 1.*pow(b[RR],2.) + 
-		   (bsq + en*gam + rho)*pow(u[RR],2.)) - 
-		  1.*a*(-1.*b[RR]*b[PH] + (bsq + en*gam + rho)*u[RR]*u[PH] + 
-			0.5*a*(bsq + 2.*en*(-1. + gam))*pow(dxdxp[1],-1.)*pow(sigma,-1.))
-		  *(r*(2. + r) + pow(a,2.)*pow(cos(th),2.))*pow(sin(th),2.))*sin(th)\
-		 + (bsq - 2.*en + 2.*en*gam - 2.*sigma*pow(dxdxp[2],2.)*pow(b[TH],2.) + 
-		    (bsq + en*gam + rho)*pow(dxdxp[2],2.)*
-		    (pow(a,2.) + cos(2.*th)*pow(a,2.) + 2.*pow(r,2.))*pow(u[TH],2.))*
-		 (4.*(M_PI*X[2] - 1.*th)*pow(dxdxp[2],-1.)*pow(M_PI,2.) - 
-		  1.*dxdxp[2]*cos(th)*pow(a,2.)*pow(sigma,-1.)*sin(th)) - 
-		 1.*dxdxp[2]*r*pow(a,2.)*pow(sigma,-3.)*
-		 ((bsq + 2.*en*(-1. + gam))*sigma + 
-		  2.*((-2. + r)*r + pow(a,2.)*pow(cos(th),2.))*pow(b[TT],2.) - 
-		  1.*(bsq + en*gam + rho)*
-		  (2.*(-2. + r)*r + pow(a,2.) + cos(2.*th)*pow(a,2.))*pow(u[TT],2.) + 
-		  4.*r*b[TT]*(-1.*dxdxp[1]*b[RR] + a*b[PH]*pow(sin(th),2.)) + 
-		  4.*r*(bsq + en*gam + rho)*u[TT]*
-		  (dxdxp[1]*u[RR] - 1.*a*u[PH]*pow(sin(th),2.)))*sin(2.*th) - 
-		 2.*dxdxp[1]*dxdxp[2]*r*pow(a,2.)*pow(sigma,-3.)*
-		 (b[TT]*b[RR]*((-2. + r)*r + pow(a,2.)*pow(cos(th),2.)) - 
-		  2.*dxdxp[1]*r*pow(b[RR],2.) + 2.*a*r*b[RR]*b[PH]*pow(sin(th),2.) + 
-		  0.5*(bsq + en*gam + rho)*u[RR]*
-		  (-1.*u[TT]*(2.*(-2. + r)*r + pow(a,2.) + cos(2.*th)*pow(a,2.)) + 
-		   4.*r*(dxdxp[1]*u[RR] - 1.*a*u[PH]*pow(sin(th),2.))))*sin(2.*th) + 
-		 dxdxp[2]*pow(sigma,-2.)*
-		 (4.*a*r*sigma*(b[TT]*b[PH] - 1.*(bsq + en*gam + rho)*u[TT]*u[PH]) - 
-		  1.*a*(a*(bsq + 2.*en*(-1. + gam)) - 
-			1.*dxdxp[1]*b[RR]*b[PH]*
-			(pow(a,2.) + cos(2.*th)*pow(a,2.) + 2.*pow(r,2.)) + 
-			dxdxp[1]*(bsq + en*gam + rho)*u[RR]*u[PH]*
-			(pow(a,2.) + cos(2.*th)*pow(a,2.) + 2.*pow(r,2.)))*
-		  (r*(2. + r) + pow(a,2.)*pow(cos(th),2.)) + 
-		  0.5*(r*(2. + 3.*r)*pow(a,2.) + 
-		       cos(2.*th)*pow(a,2.)*((-2. + r)*r + pow(a,2.)) + pow(a,4.) + 
-		       2.*pow(r,4.))*((bsq + 2.*en*(-1. + gam))*pow(csc(th),2.) - 
-				      2.*sigma*pow(b[PH],2.) + 2.*(bsq + en*gam + rho)*sigma*pow(u[PH],2.))
-		  )*pow(sin(th),2.)*(cot(th) + r*pow(a,2.)*pow(sigma,-2.)*sin(2.*th)))\
+                 (b[RR]*b[TH] - 1.*(bsq + en*gam + rho)*u[RR]*u[TH])*pow(dxdxp[2],2.) - 
+                 1.*a*r*pow(dxdxp[2],2.)*pow(sigma,-2.)*
+                 (4.*a*r*(b[TT]*b[TH] - 1.*(bsq + en*gam + rho)*u[TT]*u[TH]) - 
+                  1.*(b[TH]*b[PH] - 1.*(bsq + en*gam + rho)*u[TH]*u[PH])*
+                  (r*(2. + 3.*r)*pow(a,2.) + 
+                   cos(2.*th)*pow(a,2.)*((-2. + r)*r + pow(a,2.)) + pow(a,4.) + 
+                   2.*pow(r,4.)) + 2.*dxdxp[1]*a*
+                  (b[RR]*b[TH] - 1.*(bsq + en*gam + rho)*u[RR]*u[TH])*
+                  (r*(2. + r) + pow(a,2.)*pow(cos(th),2.)))*pow(sin(th),2.) - 
+                 4.*pow(dxdxp[2],2.)*pow(r,2.)*pow(sigma,-2.)*
+                 (-2.*dxdxp[1]*r*(b[RR]*b[TH] - 1.*(bsq + en*gam + rho)*u[RR]*u[TH]) - 
+                  1.*(b[TT]*b[TH] - 1.*(bsq + en*gam + rho)*u[TT]*u[TH])*
+                  ((2. - 1.*r)*r - 1.*pow(a,2.)*pow(cos(th),2.)) + 
+                  2.*a*r*(b[TH]*b[PH] - 1.*(bsq + en*gam + rho)*u[TH]*u[PH])*pow(sin(th),2.)
+                  ) - 2.*r*pow(dxdxp[2],2.)*((-2. + r)*r + pow(a,2.))*pow(sigma,-2.)*
+                 (2.*r*(-1.*b[TT]*b[TH] + (bsq + en*gam + rho)*u[TT]*u[TH]) + 
+                  dxdxp[1]*(-1.*b[RR]*b[TH] + (bsq + en*gam + rho)*u[RR]*u[TH])*
+                  (r*(2. + r) + pow(a,2.)*pow(cos(th),2.)) - 
+                  1.*a*(-1.*b[TH]*b[PH] + (bsq + en*gam + rho)*u[TH]*u[PH])*
+                  (r*(2. + r) + pow(a,2.)*pow(cos(th),2.))*pow(sin(th),2.)) + 
+                 4.*dxdxp[2]*r*cos(th)*pow(a,3.)*pow(sigma,-3.)*
+                 (r*(a*(bsq + 2.*en*(-1. + gam)) - 2.*dxdxp[1]*sigma*b[RR]*b[PH] + 
+                     2.*dxdxp[1]*(bsq + en*gam + rho)*sigma*u[RR]*u[PH])*pow(sigma,-1.)\
+                  - 1.*(b[TT]*b[PH] - 1.*(bsq + en*gam + rho)*u[TT]*u[PH])*
+                  ((2. - 1.*r)*r - 1.*pow(a,2.)*pow(cos(th),2.)) - 
+                  2.*a*r*(0.5*(bsq + 2.*en*(-1. + gam))*pow(sigma,-1.)*
+                          pow(csc(th),2.) - 1.*pow(b[PH],2.) + 
+                          (bsq + en*gam + rho)*pow(u[PH],2.))*pow(sin(th),2.))*pow(sin(th),3.)
+                 - 2.*dxdxp[2]*a*r*cos(th)*pow(sigma,-4.)*
+                 (-1.*sigma*(b[TT]*b[PH] - 1.*(bsq + en*gam + rho)*u[TT]*u[PH])*
+                  (r*(2. + 3.*r)*pow(a,2.) + 
+                   cos(2.*th)*pow(a,2.)*((-2. + r)*r + pow(a,2.)) + pow(a,4.) + 
+                   2.*pow(r,4.)) - 2.*a*
+                  ((bsq + 2.*en*(-1. + gam))*r - 1.*dxdxp[1]*sigma*b[TT]*b[RR] + 
+                   0.5*dxdxp[1]*(bsq + en*gam + rho)*u[TT]*u[RR]*
+                   (pow(a,2.) + cos(2.*th)*pow(a,2.) + 2.*pow(r,2.)))*
+                  (r*(2. + r) + pow(a,2.)*pow(cos(th),2.)) - 
+                  4.*a*r*sigma*(-0.5*(bsq + 2.*en*(-1. + gam))*pow(sigma,-1.)*
+                                (r*(2. + r) + pow(a,2.)*pow(cos(th),2.)) - 1.*pow(b[TT],2.) + 
+                                (bsq + en*gam + rho)*pow(u[TT],2.)))*sin(th) - 
+                 1.*dxdxp[1]*dxdxp[2]*a*cos(th)*pow(sigma,-4.)*
+                 (r*(2. + r) + pow(a,2.)*pow(cos(th),2.))*
+                 (-4.*a*r*((bsq + 2.*en*(-1. + gam))*r - 1.*dxdxp[1]*sigma*b[TT]*b[RR] + 
+                           dxdxp[1]*(bsq + en*gam + rho)*sigma*u[TT]*u[RR])*
+                  pow(dxdxp[1],-1.) + 
+                  sigma*(r*(2. + 3.*r)*pow(a,2.) + 
+                         cos(2.*th)*pow(a,2.)*((-2. + r)*r + pow(a,2.)) + pow(a,4.) + 
+                         2.*pow(r,4.))*(-1.*b[RR]*b[PH] + (bsq + en*gam + rho)*u[RR]*u[PH] + 
+                                        0.5*a*(bsq + 2.*en*(-1. + gam))*pow(dxdxp[1],-1.)*pow(sigma,-1.))
+                  - 1.*a*pow(dxdxp[1],-1.)*
+                  (r*(2. + r) + pow(a,2.)*pow(cos(th),2.))*
+                  ((bsq + 2.*en*(-1. + gam))*((-2. + r)*r + pow(a,2.)) - 
+                   2.*sigma*pow(dxdxp[1],2.)*pow(b[RR],2.) + 
+                   (bsq + en*gam + rho)*pow(dxdxp[1],2.)*
+                   (pow(a,2.) + cos(2.*th)*pow(a,2.) + 2.*pow(r,2.))*pow(u[RR],2.)))*
+                 sin(th) - 2.*dxdxp[1]*dxdxp[2]*cos(th)*pow(a,2.)*pow(sigma,-2.)*
+                 (2.*r*(-1.*b[TT]*b[RR] + (bsq + en*gam + rho)*u[TT]*u[RR] + 
+                        (bsq + 2.*en*(-1. + gam))*r*pow(dxdxp[1],-1.)*pow(sigma,-1.)) + 
+                  dxdxp[1]*(r*(2. + r) + pow(a,2.)*pow(cos(th),2.))*
+                  (0.5*(bsq + 2.*en*(-1. + gam))*pow(dxdxp[1],-2.)*
+                   ((-2. + r)*r + pow(a,2.))*pow(sigma,-1.) - 1.*pow(b[RR],2.) + 
+                   (bsq + en*gam + rho)*pow(u[RR],2.)) - 
+                  1.*a*(-1.*b[RR]*b[PH] + (bsq + en*gam + rho)*u[RR]*u[PH] + 
+                        0.5*a*(bsq + 2.*en*(-1. + gam))*pow(dxdxp[1],-1.)*pow(sigma,-1.))
+                  *(r*(2. + r) + pow(a,2.)*pow(cos(th),2.))*pow(sin(th),2.))*sin(th)\
+                 + (bsq - 2.*en + 2.*en*gam - 2.*sigma*pow(dxdxp[2],2.)*pow(b[TH],2.) + 
+                    (bsq + en*gam + rho)*pow(dxdxp[2],2.)*
+                    (pow(a,2.) + cos(2.*th)*pow(a,2.) + 2.*pow(r,2.))*pow(u[TH],2.))*
+                 (4.*(M_PI*X[2] - 1.*th)*pow(dxdxp[2],-1.)*pow(M_PI,2.) - 
+                  1.*dxdxp[2]*cos(th)*pow(a,2.)*pow(sigma,-1.)*sin(th)) - 
+                 1.*dxdxp[2]*r*pow(a,2.)*pow(sigma,-3.)*
+                 ((bsq + 2.*en*(-1. + gam))*sigma + 
+                  2.*((-2. + r)*r + pow(a,2.)*pow(cos(th),2.))*pow(b[TT],2.) - 
+                  1.*(bsq + en*gam + rho)*
+                  (2.*(-2. + r)*r + pow(a,2.) + cos(2.*th)*pow(a,2.))*pow(u[TT],2.) + 
+                  4.*r*b[TT]*(-1.*dxdxp[1]*b[RR] + a*b[PH]*pow(sin(th),2.)) + 
+                  4.*r*(bsq + en*gam + rho)*u[TT]*
+                  (dxdxp[1]*u[RR] - 1.*a*u[PH]*pow(sin(th),2.)))*sin(2.*th) - 
+                 2.*dxdxp[1]*dxdxp[2]*r*pow(a,2.)*pow(sigma,-3.)*
+                 (b[TT]*b[RR]*((-2. + r)*r + pow(a,2.)*pow(cos(th),2.)) - 
+                  2.*dxdxp[1]*r*pow(b[RR],2.) + 2.*a*r*b[RR]*b[PH]*pow(sin(th),2.) + 
+                  0.5*(bsq + en*gam + rho)*u[RR]*
+                  (-1.*u[TT]*(2.*(-2. + r)*r + pow(a,2.) + cos(2.*th)*pow(a,2.)) + 
+                   4.*r*(dxdxp[1]*u[RR] - 1.*a*u[PH]*pow(sin(th),2.))))*sin(2.*th) + 
+                 dxdxp[2]*pow(sigma,-2.)*
+                 (4.*a*r*sigma*(b[TT]*b[PH] - 1.*(bsq + en*gam + rho)*u[TT]*u[PH]) - 
+                  1.*a*(a*(bsq + 2.*en*(-1. + gam)) - 
+                        1.*dxdxp[1]*b[RR]*b[PH]*
+                        (pow(a,2.) + cos(2.*th)*pow(a,2.) + 2.*pow(r,2.)) + 
+                        dxdxp[1]*(bsq + en*gam + rho)*u[RR]*u[PH]*
+                        (pow(a,2.) + cos(2.*th)*pow(a,2.) + 2.*pow(r,2.)))*
+                  (r*(2. + r) + pow(a,2.)*pow(cos(th),2.)) + 
+                  0.5*(r*(2. + 3.*r)*pow(a,2.) + 
+                       cos(2.*th)*pow(a,2.)*((-2. + r)*r + pow(a,2.)) + pow(a,4.) + 
+                       2.*pow(r,4.))*((bsq + 2.*en*(-1. + gam))*pow(csc(th),2.) - 
+                                      2.*sigma*pow(b[PH],2.) + 2.*(bsq + en*gam + rho)*sigma*pow(u[PH],2.))
+                  )*pow(sin(th),2.)*(cot(th) + r*pow(a,2.)*pow(sigma,-2.)*sin(2.*th)))\
       ;
   }
 
@@ -3493,35 +3493,35 @@ void mks_source_conn(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q,FTYP
 
     dU[U3]+=0.5*pow(sigma,-1.)*pow(sin(th),2.)*
       ((-1.*b[RR]*(-2.*a*r*(2.*b[TT] + b[RR]*dxdxp[1]*(2. + r)) + 
-		   b[PH]*r*(2. + 3.*r)*pow(a,2.) + 
-		   cos(2.*th)*pow(a,2.)*
-		   (-1.*b[RR]*dxdxp[1]*a + b[PH]*(-2. + r)*r + 
-		    b[PH]*pow(a,2.)) - 1.*b[RR]*dxdxp[1]*pow(a,3.) + 
-		   b[PH]*pow(a,4.) + 2.*b[PH]*pow(r,4.)) + 
-	u[RR]*(bsq + en*gam + rho)*
-	(-2.*a*r*(2.*(dxdxp[1]*u[RR] + u[TT]) + 
-		  dxdxp[1]*u[RR]*r) + u[PH]*r*(2. + 3.*r)*pow(a,2.) + 
-	 cos(2.*th)*pow(a,2.)*
-	 (-1.*dxdxp[1]*u[RR]*a + u[PH]*(-2. + r)*r + 
-	  u[PH]*pow(a,2.)) - 1.*dxdxp[1]*u[RR]*pow(a,3.) + 
-	 u[PH]*pow(a,4.) + 2.*u[PH]*pow(r,4.)))*
+                   b[PH]*r*(2. + 3.*r)*pow(a,2.) + 
+                   cos(2.*th)*pow(a,2.)*
+                   (-1.*b[RR]*dxdxp[1]*a + b[PH]*(-2. + r)*r + 
+                    b[PH]*pow(a,2.)) - 1.*b[RR]*dxdxp[1]*pow(a,3.) + 
+                   b[PH]*pow(a,4.) + 2.*b[PH]*pow(r,4.)) + 
+        u[RR]*(bsq + en*gam + rho)*
+        (-2.*a*r*(2.*(dxdxp[1]*u[RR] + u[TT]) + 
+                  dxdxp[1]*u[RR]*r) + u[PH]*r*(2. + 3.*r)*pow(a,2.) + 
+         cos(2.*th)*pow(a,2.)*
+         (-1.*dxdxp[1]*u[RR]*a + u[PH]*(-2. + r)*r + 
+          u[PH]*pow(a,2.)) - 1.*dxdxp[1]*u[RR]*pow(a,3.) + 
+         u[PH]*pow(a,4.) + 2.*u[PH]*pow(r,4.)))*
        (-1. - 2.*dxdxp[1]*r*pow(sigma,-1.)) + 
        (-1.*b[TH]*(-2.*a*r*(2.*b[TT] + b[RR]*dxdxp[1]*(2. + r)) + 
-		   b[PH]*r*(2. + 3.*r)*pow(a,2.) + 
-		   cos(2.*th)*pow(a,2.)*
-		   (-1.*b[RR]*dxdxp[1]*a + b[PH]*(-2. + r)*r + 
-		    b[PH]*pow(a,2.)) - 1.*b[RR]*dxdxp[1]*pow(a,3.) + 
-		   b[PH]*pow(a,4.) + 2.*b[PH]*pow(r,4.)) + 
-	u[TH]*(bsq + en*gam + rho)*
-	(-2.*a*r*(2.*(dxdxp[1]*u[RR] + u[TT]) + 
-		  dxdxp[1]*u[RR]*r) + u[PH]*r*(2. + 3.*r)*pow(a,2.) + 
-	 cos(2.*th)*pow(a,2.)*
-	 (-1.*dxdxp[1]*u[RR]*a + u[PH]*(-2. + r)*r + 
-	  u[PH]*pow(a,2.)) - 1.*dxdxp[1]*u[RR]*pow(a,3.) + 
-	 u[PH]*pow(a,4.) + 2.*u[PH]*pow(r,4.)))*
+                   b[PH]*r*(2. + 3.*r)*pow(a,2.) + 
+                   cos(2.*th)*pow(a,2.)*
+                   (-1.*b[RR]*dxdxp[1]*a + b[PH]*(-2. + r)*r + 
+                    b[PH]*pow(a,2.)) - 1.*b[RR]*dxdxp[1]*pow(a,3.) + 
+                   b[PH]*pow(a,4.) + 2.*b[PH]*pow(r,4.)) + 
+        u[TH]*(bsq + en*gam + rho)*
+        (-2.*a*r*(2.*(dxdxp[1]*u[RR] + u[TT]) + 
+                  dxdxp[1]*u[RR]*r) + u[PH]*r*(2. + 3.*r)*pow(a,2.) + 
+         cos(2.*th)*pow(a,2.)*
+         (-1.*dxdxp[1]*u[RR]*a + u[PH]*(-2. + r)*r + 
+          u[PH]*pow(a,2.)) - 1.*dxdxp[1]*u[RR]*pow(a,3.) + 
+         u[PH]*pow(a,4.) + 2.*u[PH]*pow(r,4.)))*
        (-1.*dxdxp[2]*cot(th) + 
-	4.*(-1.*M_PI*X[2] + th)*pow(dxdxp[2],-1.)*pow(M_PI,2.) + 
-	dxdxp[2]*pow(a,2.)*pow(sigma,-1.)*sin(2.*th)));
+        4.*(-1.*M_PI*X[2] + th)*pow(dxdxp[2],-1.)*pow(M_PI,2.) + 
+        dxdxp[2]*pow(a,2.)*pow(sigma,-1.)*sin(2.*th)));
 
   }
   // else nothing to add then
@@ -3565,31 +3565,31 @@ void mks_unitheta_idxvol_func(int i, int j, int k, FTYPE *idxvol)
   /* comment out for now until adjust everything
 
 
-  if(MBH!=1.0){
-  dualfprintf(fail_file,"mks_unitheta_idxvold_func not setup for MBH!=1.0\n");
-  myexit(13);
-  }
+     if(MBH!=1.0){
+     dualfprintf(fail_file,"mks_unitheta_idxvold_func not setup for MBH!=1.0\n");
+     myexit(13);
+     }
 
 
-  // this is not exactly right, since derivative of metric is derivative of absolute values, but shouldn't/doesn't seem to matter much
-  // follows gcov_func()
-  if(POSDEFMETRIC){
-  if(th<0.0){ th=-th;}
-  if(th>M_PI) { th=M_PI-th; }
-  }
-  else{
-  }
-  // avoid singularity at polar axis
-  #if(COORDSINGFIX)
-  if(fabs(th)<SINGSMALL){
-  if(th>=0) th=SINGSMALL;
-  if(th<0) th=-SINGSMALL;
-  }
-  if(fabs(M_PI-th)<SINGSMALL){
-  if(th>=M_PI) th=M_PI+SINGSMALL;
-  if(th<M_PI) th=M_PI-SINGSMALL;
-  }
-  #endif
+     // this is not exactly right, since derivative of metric is derivative of absolute values, but shouldn't/doesn't seem to matter much
+     // follows gcov_func()
+     if(POSDEFMETRIC){
+     if(th<0.0){ th=-th;}
+     if(th>M_PI) { th=M_PI-th; }
+     }
+     else{
+     }
+     // avoid singularity at polar axis
+     #if(COORDSINGFIX)
+     if(fabs(th)<SINGSMALL){
+     if(th>=0) th=SINGSMALL;
+     if(th<0) th=-SINGSMALL;
+     }
+     if(fabs(M_PI-th)<SINGSMALL){
+     if(th>=M_PI) th=M_PI+SINGSMALL;
+     if(th<M_PI) th=M_PI-SINGSMALL;
+     }
+     #endif
   */
 
 #define IDXR(a,R0,r,th,rl,rh) ((pow(a,2) + 2.*pow(r,2) + pow(a,2)*cos(2.*th))/((rh - 1.*rl)*(2.*R0 + rh + rl) + (pow(a,2) + 2.*pow(R0,2))*(log(-1.*R0 + rh) - 1.*log(-1.*R0 + rl)) + pow(a,2)*cos(2.*th)*(log(-1.*R0 + rh) - 1.*log(-1.*R0 + rl))))
@@ -3607,15 +3607,15 @@ void mks_unitheta_idxvol_func(int i, int j, int k, FTYPE *idxvol)
 
   /*
 
-  idxvol[TT]=1.0; // really 1/dt, but changes in time
-  // comment out non-volume regularization
-  //  idxvol[RR]=1.0/dx[1];
-  //idxvol[TH]=1.0/dx[2];
-  idxvol[RR]=IDXR(a,R0,r,th,r1[0],r1[1]);
-  idxvol[TH]=IDXTH(a,R0,r,th,th2[0],th2[1]);
-  idxvol[PH]=1.0/dx[3];
+    idxvol[TT]=1.0; // really 1/dt, but changes in time
+    // comment out non-volume regularization
+    //  idxvol[RR]=1.0/dx[1];
+    //idxvol[TH]=1.0/dx[2];
+    idxvol[RR]=IDXR(a,R0,r,th,r1[0],r1[1]);
+    idxvol[TH]=IDXTH(a,R0,r,th,th2[0],th2[1]);
+    idxvol[PH]=1.0/dx[3];
 
-  dualfprintf(fail_file,"%d %d %21.15g %21.15g\n",i,j,idxvol[RR]*dx[1],idxvol[TH]*dx[2]);
+    dualfprintf(fail_file,"%d %d %21.15g %21.15g\n",i,j,idxvol[RR]*dx[1],idxvol[TH]*dx[2]);
   
   */
 

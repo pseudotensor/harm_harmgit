@@ -18,7 +18,7 @@
 #include "decs.h"
 
 
-#define SLOWFAC 1.0		/* reduce u_phi by this amount */
+#define SLOWFAC 1.0  /* reduce u_phi by this amount */
 #define MAXPASSPARMS 10
 
 //#define THETAROTMETRIC (0.5*0.7)
@@ -51,49 +51,49 @@
 
 /*
 
-Models to run:
+  Models to run:
 
-Constant parameters:
+  Constant parameters:
 
-1) Rout=1E3 and run for tf=1E4 (so will take 5X longer than compared to Orange run at 128x128x32)
+  1) Rout=1E3 and run for tf=1E4 (so will take 5X longer than compared to Orange run at 128x128x32)
 
-2) BSQORHOLIMIT=1E3, etc.
+  2) BSQORHOLIMIT=1E3, etc.
 
-3) PARALINE, FLUXCTSTAG, TO=4
+  3) PARALINE, FLUXCTSTAG, TO=4
 
-4) Form of A_\phi fixed
+  4) Form of A_\phi fixed
 
-Field parameter studies in 2D axisymmetry at 256^2:
+  Field parameter studies in 2D axisymmetry at 256^2:
 
-1) H/R=0.3, a=0.9: LS quadrapole,  LS dipole, SS quadrapole, SS dipole
-
- 
-
-Spin parameter study in 2D axisymmetry at 256^2:
+  1) H/R=0.3, a=0.9: LS quadrapole,  LS dipole, SS quadrapole, SS dipole
 
  
 
-1) H/R=0.3, LS quadrapole: a=-.999,-.99,-.9,-.5,-0.2,0,.2,.5,.9,.99,.999
+  Spin parameter study in 2D axisymmetry at 256^2:
 
-H/R parameter study in 2D axisymmetry at 256^2:
+ 
 
-1) a=0.9 LS quadrapole with H/R=0.1,0.3,0.9,1.5
+  1) H/R=0.3, LS quadrapole: a=-.999,-.99,-.9,-.5,-0.2,0,.2,.5,.9,.99,.999
 
-2D Fiducial Models:
+  H/R parameter study in 2D axisymmetry at 256^2:
 
-1) Using a=0.9, H/R=0.3, LS quad and LS dipole, do two 2D fudicial models at: 1024^2
+  1) a=0.9 LS quadrapole with H/R=0.1,0.3,0.9,1.5
 
-3D Fiducial Models:
+  2D Fiducial Models:
 
-1) Using a=0.9, H/R=0.3, LS quadrapole and LS dipole, do two 3D fiducial models at 2 different resolutions: 128x128x32 and 256x256x64
+  1) Using a=0.9, H/R=0.3, LS quad and LS dipole, do two 2D fudicial models at: 1024^2
 
-Questions for Roger:
+  3D Fiducial Models:
 
-1) Choice for disk thickness?
-2) Choice for field shape -- specifically?
-3) Choice for flux threading disk vs. BH initially?
-4) Ask about BZ77 and residual A_\phi at pole
-5) 
+  1) Using a=0.9, H/R=0.3, LS quadrapole and LS dipole, do two 3D fiducial models at 2 different resolutions: 128x128x32 and 256x256x64
+
+  Questions for Roger:
+
+  1) Choice for disk thickness?
+  2) Choice for field shape -- specifically?
+  3) Choice for flux threading disk vs. BH initially?
+  4) Ask about BZ77 and residual A_\phi at pole
+  5) 
 
 */
 
@@ -343,7 +343,7 @@ int init_global(void)
 
 
 #if(WHICHPROBLEM==NORMALTORUS || WHICHPROBLEM==KEPDISK)
-/* output choices */
+  /* output choices */
   tf = 2000.0;
 #elif(WHICHPROBLEM==THICKDISK)
   /* output choices */
@@ -425,32 +425,32 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
     
 
     /*
-(gdb) bt
-#0  transform_primitive_pstag (whichvel=0, whichcoord=1, i=-1534771426, j=-4, k=11,
-    p=0x130b79f0, pstag=0x130ba300) at fluxvpot.c:1196
-#1  0x0000000000408989 in transform_primitive_vB (whichvel=0, whichcoord=1, i=-1534771426,
-    j=-4, k=11, p=0x130b79f0, pstag=0x130ba300) at initbase.c:2718
-#2  0x0000000000405826 in user1_init_primitives (prim=0x0, pstag=0x1,
-    ucons=0x3f385eb2a4853f1e, vpot=0xfffffffffffffffc, Bhat=0xb, panalytic=0x130b79f0,
-    pstaganalytic=0x130ba300, vpotanalytic=0x0, Bhatanalytic=0x0, F1=0x12af5968,
-    F2=0x1b22a28, F3=0x1fe8028, Atemp=0x797e380) at init.tools.c:340
-#3  0x000000000040466e in init_grid_post_set_grid (prim=0x0, pstag=0x1,
-    ucons=0x3f385eb2a4853f1e, vpot=0xfffffffffffffffc, Bhat=0xb, panalytic=0x130b79f0,
-    pstaganalytic=0x130ba300, vpotanalytic=0x0, Bhatanalytic=0x0, F1=0x12af5968,
-    F2=0x1b22a28, F3=0x1fe8028, Atemp=0x797e380) at init.c:367
-#4  0x000000000040b8bd in init (argc=0x0, argv=0x1) at initbase.c:143
-#5  0x00000000004bd96a in main (argc=6, argv=0x7fffd5b2ec08) at main.c:30
-(gdb) print myid
-$4 = 1380
-(gdb) print startpos
-$5 = {0, 136, 64, 112}
-(gdb) print mycpux1
-No symbol "mycpux1" in current context.
-(gdb) print numprocs
-$6 = 1536
+      (gdb) bt
+      #0  transform_primitive_pstag (whichvel=0, whichcoord=1, i=-1534771426, j=-4, k=11,
+      p=0x130b79f0, pstag=0x130ba300) at fluxvpot.c:1196
+      #1  0x0000000000408989 in transform_primitive_vB (whichvel=0, whichcoord=1, i=-1534771426,
+      j=-4, k=11, p=0x130b79f0, pstag=0x130ba300) at initbase.c:2718
+      #2  0x0000000000405826 in user1_init_primitives (prim=0x0, pstag=0x1,
+      ucons=0x3f385eb2a4853f1e, vpot=0xfffffffffffffffc, Bhat=0xb, panalytic=0x130b79f0,
+      pstaganalytic=0x130ba300, vpotanalytic=0x0, Bhatanalytic=0x0, F1=0x12af5968,
+      F2=0x1b22a28, F3=0x1fe8028, Atemp=0x797e380) at init.tools.c:340
+      #3  0x000000000040466e in init_grid_post_set_grid (prim=0x0, pstag=0x1,
+      ucons=0x3f385eb2a4853f1e, vpot=0xfffffffffffffffc, Bhat=0xb, panalytic=0x130b79f0,
+      pstaganalytic=0x130ba300, vpotanalytic=0x0, Bhatanalytic=0x0, F1=0x12af5968,
+      F2=0x1b22a28, F3=0x1fe8028, Atemp=0x797e380) at init.c:367
+      #4  0x000000000040b8bd in init (argc=0x0, argv=0x1) at initbase.c:143
+      #5  0x00000000004bd96a in main (argc=6, argv=0x7fffd5b2ec08) at main.c:30
+      (gdb) print myid
+      $4 = 1380
+      (gdb) print startpos
+      $5 = {0, 136, 64, 112}
+      (gdb) print mycpux1
+      No symbol "mycpux1" in current context.
+      (gdb) print numprocs
+      $6 = 1536
 
 
-     */
+    */
 
   }
 
@@ -585,24 +585,24 @@ int init_dsandvels_torus(int *whichvel, int*whichcoord, int i, int j, int k, FTY
   
   if (r >= rin) {
     lnh = 0.5 * log((1. + sqrt(1. + 4. * (l * l * SS * SS) * DD /
-			       (AA * sth * AA * sth))) / (SS * DD /
-							  AA))
+                               (AA * sth * AA * sth))) / (SS * DD /
+                                                          AA))
       - 0.5 * sqrt(1. +
-		   4. * (l * l * SS * SS) * DD / (AA * AA * sth *
-						  sth))
+                   4. * (l * l * SS * SS) * DD / (AA * AA * sth *
+                                                  sth))
       - 2. * a * r * l / AA -
       (0.5 *
        log((1. +
-	    sqrt(1. +
-		 4. * (l * l * SSin * SSin) * DDin / (AAin * AAin *
-						      sthin *
-						      sthin))) /
-	   (SSin * DDin / AAin))
+            sqrt(1. +
+                 4. * (l * l * SSin * SSin) * DDin / (AAin * AAin *
+                                                      sthin *
+                                                      sthin))) /
+           (SSin * DDin / AAin))
        - 0.5 * sqrt(1. +
-		    4. * (l * l * SSin * SSin) * DDin / (AAin *
-							 AAin *
-							 sthin *
-							 sthin))
+                    4. * (l * l * SSin * SSin) * DDin / (AAin *
+                                                         AAin *
+                                                         sthin *
+                                                         sthin))
        - 2. * a * rin * l / AAin);
   } else
     lnh = 1.;
@@ -830,7 +830,7 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
 
 
 #define FRACAPHICUT 0.2
-      //#define FRACAPHICUT 0.1
+  //#define FRACAPHICUT 0.1
 
 
 
@@ -948,7 +948,7 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
 #define POWERNU (2.0)
       //#define POWERNU (4.0)
 
-	//      if (q > 0.)      vpot += q*q*pow(r*fabs(sin(th)),POWERNU);
+      //      if (q > 0.)      vpot += q*q*pow(r*fabs(sin(th)),POWERNU);
       FTYPE fact1,fact2,SSS,TTT;
       fact1=pow(fabs(q),QPOWER)*pow(r*fabs(sin(th)),POWERNU);
       SSS=rin*0.5;
@@ -1072,24 +1072,24 @@ int normalize_field(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2
 SFTYPE lfish_calc(SFTYPE r)
 {
   return (((pow(a, 2) - 2. * a * sqrt(r) + pow(r, 2)) *
-	   ((-2. * a * r * (pow(a, 2) - 2. * a * sqrt(r) + pow(r, 2))) /
-	    sqrt(2. * a * sqrt(r) + (-3. + r) * r) +
-	    ((a + (-2. + r) * sqrt(r)) * (pow(r, 3) +
-					  pow(a,
-					      2) * (2. + r))) / sqrt(1 +
-								     (2.
-								      *
-								      a)
-								     /
-								     pow(r,
-								      1.5)
-								     -
-								     3.
-								     /
-								     r)))
-	  / (pow(r, 3) * sqrt(2. * a * sqrt(r) + (-3. + r) * r) *
-	     (pow(a, 2) + (-2. + r) * r))
-	  );
+           ((-2. * a * r * (pow(a, 2) - 2. * a * sqrt(r) + pow(r, 2))) /
+            sqrt(2. * a * sqrt(r) + (-3. + r) * r) +
+            ((a + (-2. + r) * sqrt(r)) * (pow(r, 3) +
+                                          pow(a,
+                                              2) * (2. + r))) / sqrt(1 +
+                                                                     (2.
+                                                                      *
+                                                                      a)
+                                                                     /
+                                                                     pow(r,
+                                                                         1.5)
+                                                                     -
+                                                                     3.
+                                                                     /
+                                                                     r)))
+          / (pow(r, 3) * sqrt(2. * a * sqrt(r) + (-3. + r) * r) *
+             (pow(a, 2) + (-2. + r) * r))
+          );
 }
 
 // UUMIN/RHOMIN used for atmosphere
@@ -1140,11 +1140,11 @@ int set_density_floors(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *prfloor)
 static FTYPE nz_func(FTYPE R)
 {
   return(
-	 sqrt(
-	      (3.*a*a - 4.*a*sqrt(R) + R*R)/
-	      pow(R*(a + pow(R,1.5)),2)
-	      )
-	 ) ;
+         sqrt(
+              (3.*a*a - 4.*a*sqrt(R) + R*R)/
+              pow(R*(a + pow(R,1.5)),2)
+              )
+         ) ;
 
 
 }

@@ -14,49 +14,49 @@ FTYPE interpn( int order, FTYPE x_eval,  FTYPE x1, FTYPE f1, FTYPE x2, FTYPE f2,
 //evaluates it at the point x.
 //Interpolation is performed using the standard Lagrange method.
 {
-	int i, j; //iterator through the abscissa points
+  int i, j; //iterator through the abscissa points
 #define max_interp_order  6 //should be equal to the number of points input to the function; degree of interpolation is only limited by the number of arguments to the function --
-	//so increase that number if require a higher order; also, modify the definitions of x[] and f[] to include the added arguments
+  //so increase that number if require a higher order; also, modify the definitions of x[] and f[] to include the added arguments
 
-	FTYPE f_eval = 0.0; //interpolated value to be returned
-	FTYPE x[] = { x1, x2, x3, x4, x5, x6};
-	FTYPE f[] = { f1, f2, f3, f4, f5, f6};
-	FTYPE x_a, x_b; //temporary variables
-	FTYPE delta_f_eval;
+  FTYPE f_eval = 0.0; //interpolated value to be returned
+  FTYPE x[] = { x1, x2, x3, x4, x5, x6};
+  FTYPE f[] = { f1, f2, f3, f4, f5, f6};
+  FTYPE x_a, x_b; //temporary variables
+  FTYPE delta_f_eval;
 
-	if( order < 1 || order > max_interp_order) {
-		trifprintf( "interpn: requested order of interpolation non-positive or too high.\n" );
-		myexit( 1 );
-	}
+  if( order < 1 || order > max_interp_order) {
+    trifprintf( "interpn: requested order of interpolation non-positive or too high.\n" );
+    myexit( 1 );
+  }
 
-	//test if the supplied x-values are valid: there should be no identical values
+  //test if the supplied x-values are valid: there should be no identical values
 #if(DO_ASSERTS)
-	for( i = 1; i < order; i++ ) {
-		for( j = 0; j < i; j++ ) {
-			if( x[i] - x[j] == 0.0 ) {
-				fprintf( stderr, "interpn: abscissas of values to be interpolated are to be all different\n" );
-				return 0.;
-			}
-		}
-	}
+  for( i = 1; i < order; i++ ) {
+    for( j = 0; j < i; j++ ) {
+      if( x[i] - x[j] == 0.0 ) {
+        fprintf( stderr, "interpn: abscissas of values to be interpolated are to be all different\n" );
+        return 0.;
+      }
+    }
+  }
 #endif
 
-	for( i = 0; i < order; i++ ) {
-		//construct a polynomial that would be equal to f[i] at x[i] and equal to 0 at other x-points ( x[(i + j) % order], j = 1..order )
-		x_a = x[i];  
-		delta_f_eval = f[i];
+  for( i = 0; i < order; i++ ) {
+    //construct a polynomial that would be equal to f[i] at x[i] and equal to 0 at other x-points ( x[(i + j) % order], j = 1..order )
+    x_a = x[i];  
+    delta_f_eval = f[i];
 
-		for( j = 1; j < order; j++ ) {
-			x_b = x[(i + j) % order];
-			delta_f_eval *= (x_eval - x_b) / (x_a - x_b);
-		}
+    for( j = 1; j < order; j++ ) {
+      x_b = x[(i + j) % order];
+      delta_f_eval *= (x_eval - x_b) / (x_a - x_b);
+    }
 
-		//add up the value of this polynomial at x = x_eval to the final result
-		f_eval += delta_f_eval;
+    //add up the value of this polynomial at x = x_eval to the final result
+    f_eval += delta_f_eval;
 
-	}
+  }
 
-	return f_eval;
+  return f_eval;
 }
 
 
@@ -67,17 +67,17 @@ FTYPE interpn( int order, FTYPE x_eval,  FTYPE x1, FTYPE f1, FTYPE x2, FTYPE f2,
 // round to a certain precision in base 10 to avoid round off errors
 FTYPE roundprecision(FTYPE value, int precision)
 {
-	FTYPE fraction,
-		   temp;
+  FTYPE fraction,
+    temp;
  
  
-	value = value*pow(10, precision);
+  value = value*pow(10, precision);
  
-	fraction = modf(value, &temp);
-	if(fraction>=0.5) temp+=1.0;
-	if(fraction<=-0.5) temp-=1.0;
+  fraction = modf(value, &temp);
+  if(fraction>=0.5) temp+=1.0;
+  if(fraction<=-0.5) temp-=1.0;
  
-	return temp*pow(0.1, precision);
+  return temp*pow(0.1, precision);
 }
 
 
@@ -108,7 +108,7 @@ void interpfun(int interptype, int numpoints, int i, FTYPE pos, FTYPE *xfun, FTY
       f0=fun[i-1];
       f1=fun[i];
       x0=xfun[i-1];
-      x1=xfun[i];	
+      x1=xfun[i]; 
     }
     else{
       f0=fun[i-1];
@@ -126,7 +126,7 @@ void interpfun(int interptype, int numpoints, int i, FTYPE pos, FTYPE *xfun, FTY
       f2=fun[i+2];
       x0=xfun[i];
       x1=xfun[i+1];
-      x2=xfun[i+2];	
+      x2=xfun[i+2]; 
     }
     else if(i+1>=numpoints){
       f0=fun[i-2];
@@ -134,7 +134,7 @@ void interpfun(int interptype, int numpoints, int i, FTYPE pos, FTYPE *xfun, FTY
       f2=fun[i];
       x0=xfun[i-2];
       x1=xfun[i-1];
-      x2=xfun[i];	
+      x2=xfun[i]; 
     }
     else{
       f0=fun[i-1];
@@ -178,27 +178,27 @@ void interpfun(int interptype, int numpoints, int i, FTYPE pos, FTYPE *xfun, FTY
     if(linslope1*linslope2<0.0){
 #if(0)
       if(pos<=x0){
-	*answer=f0;
+        *answer=f0;
       }
       else if(pos>=x0 && pos<=x1){
-	if(fabs(pos-x0)<fabs(pos-x1)) *answer=f0;
-	else *answer=f1;
+        if(fabs(pos-x0)<fabs(pos-x1)) *answer=f0;
+        else *answer=f1;
       }
       else if(pos>=x1 && pos<=x2){
-	if(fabs(pos-x1)<fabs(pos-x2)) *answer=f1;
-	else *answer=f2;
+        if(fabs(pos-x1)<fabs(pos-x2)) *answer=f1;
+        else *answer=f2;
       }
       else *answer=f2;
 #elif(1)
       if(fabs(linslope1)<fabs(linslope2)){
-	slope = (f1-f0)/(x1-x0);
-	intercept = f0;
-	*answer = slope*(pos-x0) + intercept;
+        slope = (f1-f0)/(x1-x0);
+        intercept = f0;
+        *answer = slope*(pos-x0) + intercept;
       }
       else{
-	slope = (f2-f1)/(x2-x1);
-	intercept = f1;
-	*answer = slope*(pos-x1) + intercept;
+        slope = (f2-f1)/(x2-x1);
+        intercept = f1;
+        *answer = slope*(pos-x1) + intercept;
       }
 #elif(0)
       *answer=f1;
@@ -213,24 +213,24 @@ void interpfun(int interptype, int numpoints, int i, FTYPE pos, FTYPE *xfun, FTY
     // limit to original values' ranges
     if(*answer>f0 && *answer>f1 && *answer>f2){
       if(f0>f1 && f0>f2){
-	*answer=f0;
+        *answer=f0;
       }
       else if(f1>f0 && f1>f2){
-	*answer=f1;
+        *answer=f1;
       }
       else if(f2>f0 && f2>f1){
-	*answer=f2;
+        *answer=f2;
       }
     }
     else if(*answer<f0 && *answer<f1 && *answer<f2){
       if(f0<f1 && f0<f2){
-	*answer=f0;
+        *answer=f0;
       }
       else if(f1<f0 && f1<f2){
-	*answer=f1;
+        *answer=f1;
       }
       else if(f2<f0 && f2<f1){
-	*answer=f2;
+        *answer=f2;
       }
     }
 #endif

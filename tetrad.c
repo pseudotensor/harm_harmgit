@@ -3,16 +3,16 @@
 
 // Charles had wrong function call!
 //extern int dsyev_(char *jobz, char *uplo, int *n, double *a, int *lda,
-//		  double *w, double *work, int *lwork, int *iwork,
-//		  int *liwork, int *info);
+//    double *w, double *work, int *lwork, int *iwork,
+//    int *liwork, int *info);
 extern int dsyev_(char *jobz, char *uplo, int *n, double *a, int *lda,
-		  double *w, double *work, int *lwork, int *info);
+                  double *w, double *work, int *lwork, int *info);
 extern int dsyevr_(char *jobz, char *range, char *uplo, int *n, double *a, int *lda,
-		   double *vl, double *vu, int *il, int *iu, double *abstol, int *M,
-		   double *w,
-		   double *z, int *ldz, int *isuppz,
-		   double *work, int *lwork, int *iwork,
-		   int *liwork, int *info);
+                   double *vl, double *vu, int *il, int *iu, double *abstol, int *M,
+                   double *w,
+                   double *z, int *ldz, int *isuppz,
+                   double *work, int *lwork, int *iwork,
+                   int *liwork, int *info);
 //extern double dlamch_(char *);
 
 // declarations
@@ -33,19 +33,19 @@ int tetr_func_frommetric(int primcoord, FTYPE (*dxdxp)[NDIM], FTYPE *gcov, FTYPE
   int info;
 
   if(primcoord){
-	// get MCOORD metric from PRIMECOORD metric
-	idxdxprim(dxdxp, idxdxp);
+    // get MCOORD metric from PRIMECOORD metric
+    idxdxprim(dxdxp, idxdxp);
 
-	DLOOP(jj,kk){
-	  newgcov[GIND(jj,kk)]=0.0;
-	  DLOOP(ll,pp) {
-		newgcov[GIND(jj,kk)] += GINDASSIGNFACTOR(jj,kk)*gcov[GIND(ll,pp)]*idxdxp[ll][jj]*idxdxp[pp][kk];
-	  }
-	}
+    DLOOP(jj,kk){
+      newgcov[GIND(jj,kk)]=0.0;
+      DLOOP(ll,pp) {
+        newgcov[GIND(jj,kk)] += GINDASSIGNFACTOR(jj,kk)*gcov[GIND(ll,pp)]*idxdxp[ll][jj]*idxdxp[pp][kk];
+      }
+    }
   }
   else{
-	// then just copy
-	DLOOP(jj,kk) newgcov[GIND(jj,kk)]=gcov[GIND(jj,kk)];
+    // then just copy
+    DLOOP(jj,kk) newgcov[GIND(jj,kk)]=gcov[GIND(jj,kk)];
   }
 
 
@@ -141,23 +141,23 @@ static int tetlapack_func(FTYPE (*metr)[NDIM], FTYPE (*tetr)[NDIM], FTYPE eigenv
   DLOOP(j,k) a[j][k] = metr[j][k] ;
 
   chk = dsyev_(
-	       &jobz, 		/* job: 'V' -> compute eigenvectors too */
-	       &uplo,		/* which part of a is stored, 'U' -> upper */
-	       &n,		/* order of matrix a */
-	       (double *)a,	/* matrix (row major order) */
-	       &lda,		/* leading dimension of a */
-	       w,		/* eigenvalues, ascending order */
-	       work,		/* workspace */
-	       &lwork,		/* size of workspace */
-	       &info		/* successful? */
-	       ) ;
+               &jobz,   /* job: 'V' -> compute eigenvectors too */
+               &uplo,  /* which part of a is stored, 'U' -> upper */
+               &n,  /* order of matrix a */
+               (double *)a, /* matrix (row major order) */
+               &lda,  /* leading dimension of a */
+               w,  /* eigenvalues, ascending order */
+               work,  /* workspace */
+               &lwork,  /* size of workspace */
+               &info  /* successful? */
+               ) ;
 
 
   if(info>0 && 0){
     // doesn't seem to work (gives wrong results)
     // gives right eigenvalues but not right eigenvectors
     int liwork,iwork[LIWORKSIZE] ;
-	  
+   
     liwork = LIWORKSIZE ;
     // then dsyev failed for some reason, try another algorithm
 
@@ -165,7 +165,7 @@ static int tetlapack_func(FTYPE (*metr)[NDIM], FTYPE (*tetr)[NDIM], FTYPE eigenv
     // http://www.gfd-dennou.org/arch/ruby/products/ruby-lapack/doc/dsy.html
     // http://www.netlib.org/lapack/double/dsyevr.f
     DLOOP(j,k) a[j][k] = metr[j][k] ;
-	  
+   
     char range = 'A';
     double vl=0;
     double vu=1E30;
@@ -179,22 +179,22 @@ static int tetlapack_func(FTYPE (*metr)[NDIM], FTYPE (*tetr)[NDIM], FTYPE eigenv
     int ldz=NDIM;
     int isuppz[2*NDIM]; // output
     chk = dsyevr_(
-		  &jobz, 		/* job: 'V' -> compute eigenvectors too */
-		  &range,
-		  &uplo,		/* which part of a is stored, 'U' -> upper */
-		  &n,		/* order of matrix a */
-		  (double *)a,	/* matrix (row major order) */
-		  &lda,		/* leading dimension of a */
-		  &vl,&vu,&il,&iu,&abstol,&M,
-		  w,		/* eigenvalues, ascending order */
-		  (double *)z,&ldz,isuppz,
-		  work,		/* workspace */
-		  &lwork,		/* size of workspace */
-		  iwork,		/* size of iwork */
-		  &liwork,	/* working array for optimal liwork */
-		  &info		/* successful? */
-		  ) ;
-	  
+                  &jobz,   /* job: 'V' -> compute eigenvectors too */
+                  &range,
+                  &uplo,  /* which part of a is stored, 'U' -> upper */
+                  &n,  /* order of matrix a */
+                  (double *)a, /* matrix (row major order) */
+                  &lda,  /* leading dimension of a */
+                  &vl,&vu,&il,&iu,&abstol,&M,
+                  w,  /* eigenvalues, ascending order */
+                  (double *)z,&ldz,isuppz,
+                  work,  /* workspace */
+                  &lwork,  /* size of workspace */
+                  iwork,  /* size of iwork */
+                  &liwork, /* working array for optimal liwork */
+                  &info  /* successful? */
+                  ) ;
+   
   }
 
 
@@ -314,10 +314,10 @@ static int compute_tetrcon_frommetric(FTYPE (*generalmatrix)[NDIM], FTYPE (*tetr
     FTYPE minerror=BIG;
     DLOOP(jj,kk){
       if(fabs(errorlist[jj][kk])<minerror && newlist[kk]==-1){ // only use minimum if minimum AND not already on list (forces result to be unique)
-	minerror=fabs(errorlist[jj][kk]);
-	minjj=jj;
-	minkk=kk;
-	signerror=sign(errorlist[jj][kk]);
+        minerror=fabs(errorlist[jj][kk]);
+        minjj=jj;
+        minkk=kk;
+        signerror=sign(errorlist[jj][kk]);
       }
     }
     if(minjj==-1 || minkk==-1){
@@ -353,19 +353,19 @@ static int compute_tetrcon_frommetric(FTYPE (*generalmatrix)[NDIM], FTYPE (*tetr
 #if(DEBUGLAPACK==2)
   // real debug
   if(1){
-      //  if(tiglobal[1]==200 && tiglobal[2]==10 && tiglobal[3]==0){
-      dualfprintf(fail_file,"\ninfo=%d\n",info);
-      DLOOPA(jj){
-	dualfprintf(fail_file,"jj=%d eigenorig=%21.15g eigen=%21.15g old=%21.15g\n",jj,tempeigenvalues[jj],eigenvalues[jj],eigenvaluesother[jj]);
-      }
-      DLOOP(jj,kk){
-	dualfprintf(fail_file,"jj=%d kk=%d lapack=%21.15g old=%21.15g\n",jj,kk,tetrcon[jj][kk],tetrconother[jj][kk]);
-      }
-      dualfprintf(fail_file,"\n");
-    
-      fflush(fail_file);
-      myexit(0);
+    //  if(tiglobal[1]==200 && tiglobal[2]==10 && tiglobal[3]==0){
+    dualfprintf(fail_file,"\ninfo=%d\n",info);
+    DLOOPA(jj){
+      dualfprintf(fail_file,"jj=%d eigenorig=%21.15g eigen=%21.15g old=%21.15g\n",jj,tempeigenvalues[jj],eigenvalues[jj],eigenvaluesother[jj]);
     }
+    DLOOP(jj,kk){
+      dualfprintf(fail_file,"jj=%d kk=%d lapack=%21.15g old=%21.15g\n",jj,kk,tetrcon[jj][kk],tetrconother[jj][kk]);
+    }
+    dualfprintf(fail_file,"\n");
+    
+    fflush(fail_file);
+    myexit(0);
+  }
 #endif
 
 
@@ -429,19 +429,19 @@ static int compute_tetrcon_frommetric_mathematica(FTYPE (*generalmatrix)[NDIM], 
 
   // get orthonormal basis transformation
   tetrcon[0][0]=-(sqrt(grr + sqrt(4.0*((grt)*(grt)) + ((grr - gtt)*(grr - gtt))) - gtt)/
-		  pow((4.0*((grt)*(grt)) + ((grr - gtt)*(grr - gtt)))*blob1sq,0.25));
+                  pow((4.0*((grt)*(grt)) + ((grr - gtt)*(grr - gtt)))*blob1sq,0.25));
   
   tetrcon[0][1] =  (2.0*grt)/(sqrt(4.0*((grt)*(grt)) + (grr - gtt)*(grr + sqrt(4.0*((grt)*(grt)) + ((grr - gtt)*(grr - gtt))) - gtt))*
-			      sqrt(fabs(grr - sqrt(4.0*((grt)*(grt)) + ((grr - gtt)*(grr - gtt))) + gtt)));
+                              sqrt(fabs(grr - sqrt(4.0*((grt)*(grt)) + ((grr - gtt)*(grr - gtt))) + gtt)));
 
   tetrcon[0][2] = 0.0;
   tetrcon[0][3] = 0.0;
 
   tetrcon[1][0] = (2.0*grt)/sqrt((4.0*((grt)*(grt)) + (grr - gtt)*(grr + sqrt(4.0*((grt)*(grt)) + ((grr - gtt)*(grr - gtt))) - gtt))*
-				 (grr + sqrt(4.0*((grt)*(grt)) + ((grr - gtt)*(grr - gtt))) + gtt));
+                                 (grr + sqrt(4.0*((grt)*(grt)) + ((grr - gtt)*(grr - gtt))) + gtt));
 
   tetrcon[1][1] = sqrt((grr + sqrt(4.0*((grt)*(grt)) + ((grr - gtt)*(grr - gtt))) - gtt)/
-		       (sqrt(4.0*((grt)*(grt)) + ((grr - gtt)*(grr - gtt)))*(grr + sqrt(4.0*((grt)*(grt)) + ((grr - gtt)*(grr - gtt))) + gtt)));
+                       (sqrt(4.0*((grt)*(grt)) + ((grr - gtt)*(grr - gtt)))*(grr + sqrt(4.0*((grt)*(grt)) + ((grr - gtt)*(grr - gtt))) + gtt)));
 
   tetrcon[1][2] = 0.0;
   tetrcon[1][3] = 0.0;
@@ -496,14 +496,14 @@ int calc_ORTHOes(int primcoord, struct of_geom *ptrgeom, FTYPE tmuup[][NDIM], FT
 
 
   if(primcoord){
-	// get dxdxp
-	dxdxprim_ijk(ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p,dxdxp);
-	idxdxprim(dxdxp, idxdxp);
+    // get dxdxp
+    dxdxprim_ijk(ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p,dxdxp);
+    idxdxprim(dxdxp, idxdxp);
   }
   else{
-	// then won't use dxdxp, so can just leave unset, but set it to diag(1,1,1,1) for santiy in case used.
-	DLOOP(jj,kk) dxdxp[jj][kk]=idxdxp[jj][kk]=0.0;
-	DLOOPA(jj)  dxdxp[jj][jj]=idxdxp[jj][jj]=1.0;
+    // then won't use dxdxp, so can just leave unset, but set it to diag(1,1,1,1) for santiy in case used.
+    DLOOP(jj,kk) dxdxp[jj][kk]=idxdxp[jj][kk]=0.0;
+    DLOOPA(jj)  dxdxp[jj][jj]=idxdxp[jj][jj]=1.0;
   }
 
   // get tetrad (uses dxdxp so that tetrcon and tetrcon and eigenvalues are using V metric not X metric
@@ -511,33 +511,33 @@ int calc_ORTHOes(int primcoord, struct of_geom *ptrgeom, FTYPE tmuup[][NDIM], FT
 
 
   if(primcoord){
-	// now convert back to X metric for general internal code use
+    // now convert back to X metric for general internal code use
 
-	// \LambdaXcov^jj[ortho]_kk[labX] = \LambdaVcov^jj[ortho]_ll[labV] idxdxp^ll[labX]_kk[labV]
-	DLOOP(jj,kk){
-	  tetrcovX[jj][kk]=0.0;
-	  DLOOPA(ll) {
-		tetrcovX[jj][kk] += tetrcovV[jj][ll]*idxdxp[kk][ll];
-	  }
-	}
+    // \LambdaXcov^jj[ortho]_kk[labX] = \LambdaVcov^jj[ortho]_ll[labV] idxdxp^ll[labX]_kk[labV]
+    DLOOP(jj,kk){
+      tetrcovX[jj][kk]=0.0;
+      DLOOPA(ll) {
+        tetrcovX[jj][kk] += tetrcovV[jj][ll]*idxdxp[kk][ll];
+      }
+    }
 
-	// \LambdaXcon_jj[ortho]^kk[labX] = \LambdaVcon_jj[ortho]^ll[labV] dxdxp^ll[labV]_kk[labX]
-	DLOOP(jj,kk){
-	  tetrconX[jj][kk]=0.0;
-	  DLOOPA(ll) {
-		tetrconX[jj][kk] += tetrconV[jj][ll]*dxdxp[ll][kk];
-	  }
-	}
+    // \LambdaXcon_jj[ortho]^kk[labX] = \LambdaVcon_jj[ortho]^ll[labV] dxdxp^ll[labV]_kk[labX]
+    DLOOP(jj,kk){
+      tetrconX[jj][kk]=0.0;
+      DLOOPA(ll) {
+        tetrconX[jj][kk] += tetrconV[jj][ll]*dxdxp[ll][kk];
+      }
+    }
 
-	// map to tmuup and tmudn
-	DLOOP(jj,kk) tmuup[jj][kk]=tetrcovX[jj][kk]; // \Lambda^jj[ortho]_kk[labX] = tmuup = "LAB2ORTHO" = tetrcovX
-	DLOOP(jj,kk) tmudn[jj][kk]=tetrconX[jj][kk]; // \Lambda_jj[ortho]^kk[labX] = tmudn = "ORTHO2LAB" = tetrconX
+    // map to tmuup and tmudn
+    DLOOP(jj,kk) tmuup[jj][kk]=tetrcovX[jj][kk]; // \Lambda^jj[ortho]_kk[labX] = tmuup = "LAB2ORTHO" = tetrcovX
+    DLOOP(jj,kk) tmudn[jj][kk]=tetrconX[jj][kk]; // \Lambda_jj[ortho]^kk[labX] = tmudn = "ORTHO2LAB" = tetrconX
 
   }
   else{
-	// map to tmuup and tmudn
-	DLOOP(jj,kk) tmuup[jj][kk]=tetrcovV[jj][kk]; // \Lambda^jj[ortho]_kk[labV] = tmuup = "LAB2ORTHO" = tetrcovV
-	DLOOP(jj,kk) tmudn[jj][kk]=tetrconV[jj][kk]; // \Lambda_jj[ortho]^kk[labV] = tmudn = "ORTHO2LAB" = tetrconV
+    // map to tmuup and tmudn
+    DLOOP(jj,kk) tmuup[jj][kk]=tetrcovV[jj][kk]; // \Lambda^jj[ortho]_kk[labV] = tmuup = "LAB2ORTHO" = tetrcovV
+    DLOOP(jj,kk) tmudn[jj][kk]=tetrconV[jj][kk]; // \Lambda_jj[ortho]^kk[labV] = tmudn = "ORTHO2LAB" = tetrconV
   }
 
 
@@ -619,8 +619,8 @@ int calc_ZAMOes_old(struct of_geom *ptrgeom, FTYPE emuup[][NDIM], FTYPE emudn[][
   for(i=0;i<4;i++)
     for(j=0;j<4;j++)
       {
-	emuup[i][j]=0.;
-	emudn[i][j]=0.;
+        emuup[i][j]=0.;
+        emudn[i][j]=0.;
       }
 
   emuup[0][0]=sqrt(e2nu);
@@ -966,7 +966,7 @@ int tensor_lab2orthofluidorback(int primcoord, int lab2orthofluid, struct of_geo
   }
   else if(uconcovtype==TYPEUCOV){ // then uconcov is covariant u_\mu of fluid frame
     // ucon
-	raise_vec(uconcov,ptrgeom,ucon);
+    raise_vec(uconcov,ptrgeom,ucon);
   }
   else{
     dualfprintf(fail_file,"No such uconcovtype=%d\n",uconcovtype);
@@ -989,15 +989,15 @@ int tensor_lab2orthofluidorback(int primcoord, int lab2orthofluid, struct of_geo
     }
     else{
       // t^{\mu aa} = tfl^{\nu bb} TBup_\nu^\mu TBup_bb^aa
-	  //DLOOP(mu,aa){
-	  //	DLOOP(nu,bb){
-	  DLOOP(mu,nu){
-		DLOOP(aa,bb){
-		  tensor4out[mu][aa] += tensor4in[nu][bb]*transboostup[nu][mu]*transboostup[bb][aa]; // application on con con
-		  //		  dualfprintf(fail_file,"mu=%d aa=%d nu=%d bb=%d adding=%g from %g*%g*%g\n",mu,aa,nu,bb,tensor4in[nu][bb]*transboostup[nu][mu]*transboostup[bb][aa],tensor4in[nu][bb],transboostup[nu][mu],transboostup[bb][aa]);
-		}
-	  }
-	  //	  dualfprintf(fail_file,"final00=%26.20g final10=%26.20g final01=%26.20g\n",tensor4out[0][0],tensor4out[0][1],tensor4out[1][0]);
+      //DLOOP(mu,aa){
+      // DLOOP(nu,bb){
+      DLOOP(mu,nu){
+        DLOOP(aa,bb){
+          tensor4out[mu][aa] += tensor4in[nu][bb]*transboostup[nu][mu]*transboostup[bb][aa]; // application on con con
+          //    dualfprintf(fail_file,"mu=%d aa=%d nu=%d bb=%d adding=%g from %g*%g*%g\n",mu,aa,nu,bb,tensor4in[nu][bb]*transboostup[nu][mu]*transboostup[bb][aa],tensor4in[nu][bb],transboostup[nu][mu],transboostup[bb][aa]);
+        }
+      }
+      //   dualfprintf(fail_file,"final00=%26.20g final10=%26.20g final01=%26.20g\n",tensor4out[0][0],tensor4out[0][1],tensor4out[1][0]);
     }
   }
   else if(tconcovtypeA==TYPEUCON && tconcovtypeB==TYPEUCOV){
@@ -1079,12 +1079,12 @@ void vecX2vecVortho(int concovtype, struct of_geom *ptrgeom, FTYPE *veclab, FTYP
   // NOTEMARK: here (unlike in jon_interp_computepreprocess.c) tetrcon and tetrcov convert directly from X coords to V-based orthonormal basis
   if(concovtype==TYPEUCON){
     // transform to orthonormal basis for contravariant vector in X coordinates
-	// u^kk[ortho] = tetrcov^kk[ortho]_jj[lab] u^jj[lab]
+    // u^kk[ortho] = tetrcov^kk[ortho]_jj[lab] u^jj[lab]
     DLOOP(jj,kk) tempcomp[kk] += tetrcov[kk][jj]*finalvec[jj];
   }
   else if(concovtype==TYPEUCOV){
     // transform to orthonormal basis for covariant vector in X coordinates
-	// u_kk[ortho] = tetrcon_kk[ortho]^jj[lab] u_jj[lab]
+    // u_kk[ortho] = tetrcon_kk[ortho]^jj[lab] u_jj[lab]
     DLOOP(jj,kk) tempcomp[kk] += tetrcon[kk][jj]*finalvec[jj];
   }
   else{

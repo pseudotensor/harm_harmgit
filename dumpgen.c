@@ -46,14 +46,14 @@ int dump_gen(int readwrite, long dump_cnt, int bintxt, int whichdump, MPI_Dataty
   ////////////
 
   if(readwrite==READFILE){
-	strcpy(filerw,"rb");  //atch
-	//if(bintxt==BINARYOUTPUT)
+    strcpy(filerw,"rb");  //atch
+    //if(bintxt==BINARYOUTPUT)
     //else strcpy(filerw,"rt");
   }
   else if(readwrite==WRITEFILE){
-	strcpy(filerw,"wb");  //atch
+    strcpy(filerw,"wb");  //atch
     //if(bintxt==BINARYOUTPUT) strcpy(filerw,"w");
-	//else strcpy(filerw,"wt");
+    //else strcpy(filerw,"wt");
   }
 
   if(bintxt==BINARYOUTPUT) headerbintxt=dumpbintxt=BINARYOUTPUT;
@@ -188,14 +188,14 @@ int dump_gen(int readwrite, long dump_cnt, int bintxt, int whichdump, MPI_Dataty
     // setup each file corresponding to each column
     COLLOOP(coliter){
       if(docolsplit&&(numfiles>1)){
-	sprintf(dfnamreal,"%s-col%04d",dfnam,coliter);
+        sprintf(dfnamreal,"%s-col%04d",dfnam,coliter);
       }
       else strcpy(dfnamreal,dfnam);
       
       if ((fpp[coliter] = fopen(dfnamreal, filerw)) == NULL) {
-	dualfprintf(fail_file, "error opening %s %s (fullname=%s) file\n",fileprefix,filesuffix,dfnamreal);
-	dualfprintf(fail_file, "Check if disk full or have correct permissions\n");
-	problemloadingfile=1;
+        dualfprintf(fail_file, "error opening %s %s (fullname=%s) file\n",fileprefix,filesuffix,dfnamreal);
+        dualfprintf(fail_file, "Check if disk full or have correct permissions\n");
+        problemloadingfile=1;
       }
     }// end COLLOOP
   }// end if myid or mpicombine==0 (split the loop so that can check for file existence first)
@@ -223,7 +223,7 @@ int dump_gen(int readwrite, long dump_cnt, int bintxt, int whichdump, MPI_Dataty
       //
       ///////////////////////////////////
       if(headerfun!=NULL){
-	headerfun(whichdump,whichdumpversion,numcolumns,headerbintxt,fpp[coliter]); // outputs header to each column file (or just one file, or all CPU files, etc.)
+        headerfun(whichdump,whichdumpversion,numcolumns,headerbintxt,fpp[coliter]); // outputs header to each column file (or just one file, or all CPU files, etc.)
       }
 
       ////////////////////////////
@@ -233,17 +233,17 @@ int dump_gen(int readwrite, long dump_cnt, int bintxt, int whichdump, MPI_Dataty
       //
       ////////////////////////////
       if(readwrite==READFILE){
-	checkstatus=check_fileformat(readwrite, bintxt, whichdump, numcolumns, docolsplit, mpicombine, sizeofdatatype, fpp[coliter]);
+        checkstatus=check_fileformat(readwrite, bintxt, whichdump, numcolumns, docolsplit, mpicombine, sizeofdatatype, fpp[coliter]);
       }
 
       // deal with transition between header and data
       if(readwrite==READFILE){
-	if(bintxt==TEXTOUTPUT || bintxt==MIXEDOUTPUT){
-	  if(headerfun!=NULL){
-	    // now move past \n
-	    if(gopastlinebreak(fpp[coliter])) checkstatus=1;
-	  }
-	}
+        if(bintxt==TEXTOUTPUT || bintxt==MIXEDOUTPUT){
+          if(headerfun!=NULL){
+            // now move past \n
+            if(gopastlinebreak(fpp[coliter])) checkstatus=1;
+          }
+        }
       }
       // get position that would start real data
       uptodatabytesize=ftell(fpp[coliter]);
@@ -307,7 +307,7 @@ int dump_gen(int readwrite, long dump_cnt, int bintxt, int whichdump, MPI_Dataty
       
       if (mpicombine == 1) {
 #if(USEMPI)
-	mpiio_seperate(binaryoutput,sortedoutput, STAGE1, numcolumns, datatype, fpp, jonio, writebuf);
+        mpiio_seperate(binaryoutput,sortedoutput, STAGE1, numcolumns, datatype, fpp, jonio, writebuf);
 #endif
       }
     }
@@ -325,36 +325,36 @@ int dump_gen(int readwrite, long dump_cnt, int bintxt, int whichdump, MPI_Dataty
     if(readwrite==READFILE){
       BUFFERINIT0;
       DUMPGENLOOP { // diagnostic loop
-	// buffer init starts the parallel index
-	BUFFERINIT;
-	// initialize to 0th column
-	COLINIT;
+        // buffer init starts the parallel index
+        BUFFERINIT;
+        // initialize to 0th column
+        COLINIT;
 
-	///////////////////////////////////////
-	//
-	// READFILE
-	//
-	//////////////////////
-	if((mpicombine)&&(truempicombinetype==MPICOMBINEMINMEM)) mpiio_minmem(READFILE,whichdump,i,j,k,dumpbintxt,sortedoutput,numcolumns,datatype, fpp,jonio,writebuf);
+        ///////////////////////////////////////
+        //
+        // READFILE
+        //
+        //////////////////////
+        if((mpicombine)&&(truempicombinetype==MPICOMBINEMINMEM)) mpiio_minmem(READFILE,whichdump,i,j,k,dumpbintxt,sortedoutput,numcolumns,datatype, fpp,jonio,writebuf);
 
-	
-	// read all at once
-	myfread(dumpbintxt,datatype,setbuf,0,numcolumns,i,j,k,fpp,writebuf);
-	
-	// check
-	if(nextbuf!=numcolumns){
-	  dualfprintf(fail_file,"Number of columns (numcolumns=%d) isn't equal to number of columns/buffers attempted (nextbuf=%lld)\n",numcolumns,nextbuf);
-	  myexit(932736466);
-	}
-	
-	// get the content of 1 row
-	setgetcontent(i,j,k,datatype,setbuf);
-	
-	// check
-	if(nextcol!=numcolumns){
-	  dualfprintf(fail_file,"Number of columns (numcolumns=%d) isn't equal to number of columns attempted (nextcol=%d)\n",numcolumns,nextcol);
-	  myexit(836745613);
-	}
+ 
+        // read all at once
+        myfread(dumpbintxt,datatype,setbuf,0,numcolumns,i,j,k,fpp,writebuf);
+ 
+        // check
+        if(nextbuf!=numcolumns){
+          dualfprintf(fail_file,"Number of columns (numcolumns=%d) isn't equal to number of columns/buffers attempted (nextbuf=%lld)\n",numcolumns,nextbuf);
+          myexit(932736466);
+        }
+ 
+        // get the content of 1 row
+        setgetcontent(i,j,k,datatype,setbuf);
+ 
+        // check
+        if(nextcol!=numcolumns){
+          dualfprintf(fail_file,"Number of columns (numcolumns=%d) isn't equal to number of columns attempted (nextcol=%d)\n",numcolumns,nextcol);
+          myexit(836745613);
+        }
       }// end DUMPGENLOOP
     }// end readwrite==READFILE
     else if(readwrite==WRITEFILE){
@@ -363,39 +363,39 @@ int dump_gen(int readwrite, long dump_cnt, int bintxt, int whichdump, MPI_Dataty
 
 
 
-	// buffer init starts the parallel index
-	BUFFERINIT;
-	// initialize to 0th column
-	COLINIT;
-	///////////////////////////////////////
-	//
-	// WRITEFILE
-	//
-	//////////////////////
+        // buffer init starts the parallel index
+        BUFFERINIT;
+        // initialize to 0th column
+        COLINIT;
+        ///////////////////////////////////////
+        //
+        // WRITEFILE
+        //
+        //////////////////////
 
-	// set the content of 1 row
-	setgetcontent(i,j,k,datatype,setbuf);
+        // set the content of 1 row
+        setgetcontent(i,j,k,datatype,setbuf);
 
-	// check
-	if(nextcol!=numcolumns){
-	  dualfprintf(fail_file,"Number of columns (numcolumns=%d) isn't equal to number of columns attempted (nextcol=%d)\n",numcolumns,nextcol);
-	  myexit(19785566);
-	}
+        // check
+        if(nextcol!=numcolumns){
+          dualfprintf(fail_file,"Number of columns (numcolumns=%d) isn't equal to number of columns attempted (nextcol=%d)\n",numcolumns,nextcol);
+          myexit(19785566);
+        }
 
-	// write all at once
-	myfwrite(dumpbintxt,datatype,setbuf,0,numcolumns,i,j,k,fpp,writebuf);
+        // write all at once
+        myfwrite(dumpbintxt,datatype,setbuf,0,numcolumns,i,j,k,fpp,writebuf);
 
-	
-	// check
-	if(nextbuf!=numcolumns){
-	  dualfprintf(fail_file,"Number of columns (numcolumns=%d) isn't equal to number of columns/buffers attempted (nextbuf=%d)\n",numcolumns,nextbuf);
-	  myexit(94675455);
-	}
+ 
+        // check
+        if(nextbuf!=numcolumns){
+          dualfprintf(fail_file,"Number of columns (numcolumns=%d) isn't equal to number of columns/buffers attempted (nextbuf=%d)\n",numcolumns,nextbuf);
+          myexit(94675455);
+        }
 
 
-	// finish up this row
-	if((mpicombine==0)&&(dumpbintxt==TEXTOUTPUT)) COLLOOP(coliter) fprintf(fpp[coliter],"\n");
-	if((mpicombine)&&(truempicombinetype==MPICOMBINEMINMEM)) mpiio_minmem(WRITEFILE,whichdump,i,j,k,dumpbintxt,sortedoutput,numcolumns,datatype, fpp, jonio,writebuf);
+        // finish up this row
+        if((mpicombine==0)&&(dumpbintxt==TEXTOUTPUT)) COLLOOP(coliter) fprintf(fpp[coliter],"\n");
+        if((mpicombine)&&(truempicombinetype==MPICOMBINEMINMEM)) mpiio_minmem(WRITEFILE,whichdump,i,j,k,dumpbintxt,sortedoutput,numcolumns,datatype, fpp, jonio,writebuf);
 
 
 
@@ -551,29 +551,29 @@ int header1_gen(int accessmemory, int readwrite, int bintxt, int bcasthead, void
     if(bintxt==BINARYOUTPUT){
       if(accessmemory) fread(ptrlocal,size,nmemb,stream);
       else{
-	for(ii=0;ii<nmemb;ii++){
-	  fread(ptrlocal,size,1,stream); // just repeatedly fill same dummy space
-	}
+        for(ii=0;ii<nmemb;ii++){
+          fread(ptrlocal,size,1,stream); // just repeatedly fill same dummy space
+        }
       }
     }
     else if(bintxt==TEXTOUTPUT || bintxt==MIXEDOUTPUT){
 
       for(ii=0;ii<nmemb;ii++){
 
-	if(accessmemory) jj=ii;
-	else jj=0; // repeatedly read into same dummy space
+        if(accessmemory) jj=ii;
+        else jj=0; // repeatedly read into same dummy space
 
-	if (datatype == MPI_UNSIGNED_CHAR) fscanf(stream,format,&ptr1[jj]);
-	else if (datatype == MPI_FLOAT) fscanf(stream,format,&ptr4[jj]);
-	else if (datatype == MPI_DOUBLE) fscanf(stream,format,&ptr8[jj]);
-	else if (datatype == MPI_LONG_DOUBLE) fscanf(stream,format,&ptr16[jj]);
-	else if (datatype == MPI_INT) fscanf(stream,format,&ptr4i[jj]);
-	else if (datatype == MPI_LONG) fscanf(stream,format,&ptr4l[jj]);
-	else if (datatype == MPI_LONG_LONG_INT) fscanf(stream,format,&ptr8i[jj]);
-	else{
-	  dualfprintf(fail_file,"No such datatype=%d\n",datatype);
-	  myexit(40968321);
-	}
+        if (datatype == MPI_UNSIGNED_CHAR) fscanf(stream,format,&ptr1[jj]);
+        else if (datatype == MPI_FLOAT) fscanf(stream,format,&ptr4[jj]);
+        else if (datatype == MPI_DOUBLE) fscanf(stream,format,&ptr8[jj]);
+        else if (datatype == MPI_LONG_DOUBLE) fscanf(stream,format,&ptr16[jj]);
+        else if (datatype == MPI_INT) fscanf(stream,format,&ptr4i[jj]);
+        else if (datatype == MPI_LONG) fscanf(stream,format,&ptr4l[jj]);
+        else if (datatype == MPI_LONG_LONG_INT) fscanf(stream,format,&ptr8i[jj]);
+        else{
+          dualfprintf(fail_file,"No such datatype=%d\n",datatype);
+          myexit(40968321);
+        }
       }
     }
     else{
@@ -587,9 +587,9 @@ int header1_gen(int accessmemory, int readwrite, int bintxt, int bcasthead, void
     if(bintxt==BINARYOUTPUT){
       if(accessmemory) fwrite(ptrlocal,size,nmemb,stream);
       else{
-	for(ii=0;ii<nmemb;ii++){
-	  fwrite(ptrlocal,size,1,stream); // repeatedly write from same dummy space (value=0)
-	}
+        for(ii=0;ii<nmemb;ii++){
+          fwrite(ptrlocal,size,1,stream); // repeatedly write from same dummy space (value=0)
+        }
       }
     }
     else if(bintxt==TEXTOUTPUT || bintxt==MIXEDOUTPUT){
@@ -597,20 +597,20 @@ int header1_gen(int accessmemory, int readwrite, int bintxt, int bcasthead, void
       
       for(ii=0;ii<nmemb;ii++){
 
-	if(accessmemory) jj=ii;
-	else jj=0; // repeatedly read into same dummy space
+        if(accessmemory) jj=ii;
+        else jj=0; // repeatedly read into same dummy space
 
-	if (datatype == MPI_UNSIGNED_CHAR) fprintf(stream,formatwithspace,ptr1[jj]);
-	else if (datatype == MPI_FLOAT) fprintf(stream,formatwithspace,ptr4[jj]);
-	else if (datatype == MPI_DOUBLE) fprintf(stream,formatwithspace,ptr8[jj]);
-	else if (datatype == MPI_LONG_DOUBLE) fprintf(stream,formatwithspace,ptr16[jj]);
-	else if (datatype == MPI_INT) fprintf(stream,formatwithspace,ptr4i[jj]);
-	else if (datatype == MPI_LONG) fprintf(stream,formatwithspace,ptr4l[jj]);
-	else if (datatype == MPI_LONG_LONG_INT) fprintf(stream,formatwithspace,ptr8i[jj]);
-	else{
-	  dualfprintf(fail_file,"No such datatype=%d\n",datatype);
-	  myexit(98346834);
-	}
+        if (datatype == MPI_UNSIGNED_CHAR) fprintf(stream,formatwithspace,ptr1[jj]);
+        else if (datatype == MPI_FLOAT) fprintf(stream,formatwithspace,ptr4[jj]);
+        else if (datatype == MPI_DOUBLE) fprintf(stream,formatwithspace,ptr8[jj]);
+        else if (datatype == MPI_LONG_DOUBLE) fprintf(stream,formatwithspace,ptr16[jj]);
+        else if (datatype == MPI_INT) fprintf(stream,formatwithspace,ptr4i[jj]);
+        else if (datatype == MPI_LONG) fprintf(stream,formatwithspace,ptr4l[jj]);
+        else if (datatype == MPI_LONG_LONG_INT) fprintf(stream,formatwithspace,ptr8i[jj]);
+        else{
+          dualfprintf(fail_file,"No such datatype=%d\n",datatype);
+          myexit(98346834);
+        }
       }
     }
     else{
@@ -762,8 +762,8 @@ int check_fileformat(int readwrite, int bintxt, int whichdump, int numcolumns, i
       get_word_count(withintransitionbytesize, &badwordtotal, stream);
 
       if(badwordtotal>0){
-	dualfprintf(fail_file,"restart read found extra words (badwordtotal=%lld) in header or could be that reading of header passed into data section\n",badwordtotal);
-	return(1);
+        dualfprintf(fail_file,"restart read found extra words (badwordtotal=%lld) in header or could be that reading of header passed into data section\n",badwordtotal);
+        return(1);
       }
 
     }
@@ -783,8 +783,8 @@ int check_fileformat(int readwrite, int bintxt, int whichdump, int numcolumns, i
       // this is easier since data section has a single data type unlike header
       // header has to be right size for this to work out
       if(databytesize != totaldatasize){
-	dualfprintf(fail_file,"restart read binary header/data found databytesize=%d and totaldatasize=%d\n",databytesize,totaldatasize);
-	return(1);
+        dualfprintf(fail_file,"restart read binary header/data found databytesize=%d and totaldatasize=%d\n",databytesize,totaldatasize);
+        return(1);
       }
       
 
@@ -808,9 +808,9 @@ int check_fileformat(int readwrite, int bintxt, int whichdump, int numcolumns, i
 
 
       if(wordtotal!=datawordnumber){
-	dualfprintf(fail_file,"restart read text data found wordtotal=%lld while datawordnumber=%lld\n",wordtotal,datawordnumber);
-	dualfprintf(fail_file,"onlyheaderbytesize=%lld ,totalbytesize=%lld,databytesize=%lld,truenumcolumns=%lld,datawordnumber=%lld,totaldatasize=%lld\n",onlyheaderbytesize,totalbytesize,databytesize,truenumcolumns,datawordnumber,totaldatasize);
-	return(1);
+        dualfprintf(fail_file,"restart read text data found wordtotal=%lld while datawordnumber=%lld\n",wordtotal,datawordnumber);
+        dualfprintf(fail_file,"onlyheaderbytesize=%lld ,totalbytesize=%lld,databytesize=%lld,truenumcolumns=%lld,datawordnumber=%lld,totaldatasize=%lld\n",onlyheaderbytesize,totalbytesize,databytesize,truenumcolumns,datawordnumber,totaldatasize);
+        return(1);
       }
 
 
@@ -901,7 +901,7 @@ int get_word_count(long long int databytesize, long long int *wordtotal, FILE *s
       // reset spacechar
       spacechar=0;
     }
-	
+ 
     // reset wordchar if within space region
     if(spacechar>0){
       wordchar=0;

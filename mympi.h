@@ -10,7 +10,7 @@
    Note: cannot have any cpu write to same file or pipe to same file
    without parallel I/O or blocking through each CPU
 
- */
+*/
 
 
 // TO GET MPI GOING

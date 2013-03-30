@@ -10,17 +10,17 @@
 /* C language definitions for use with Mathematica output */
 
 
-#define Power(x, y)	(pow((x), (y)))
-#define Sqrt(x)		(sqrt((x)))
+#define Power(x, y) (pow((x), (y)))
+#define Sqrt(x)  (sqrt((x)))
 
-#define Abs(x)		(fabs((x)))
+#define Abs(x)  (fabs((x)))
 
-#define Exp(x)		(exp((x)))
-#define Log(x)		(log((x)))
+#define Exp(x)  (exp((x)))
+#define Log(x)  (log((x)))
 
-#define Sin(x)		(sin((x)))
-#define Cos(x)		(cos((x)))
-#define Tan(x)		(tan((x)))
+#define Sin(x)  (sin((x)))
+#define Cos(x)  (cos((x)))
+#define Tan(x)  (tan((x)))
 
 #define ArcSin(x)       (asin((x)))
 #define ArcCos(x)       (acos((x)))

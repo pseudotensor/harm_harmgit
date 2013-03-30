@@ -64,8 +64,8 @@ int faildebug1(int numnormterms, int whichcons, FTYPE *U_target, FTYPE *EOSextra
   for (j = 0; j < INVERTNPR ; j++){
     for (k = 0; k < INVERTNPR ; k++){
       if(alpha[j + 1][k + 1]>NUMEPSILON){
-	norm+=fabs(alpha[j + 1][k + 1]);
-	numnormterms++;
+        norm+=fabs(alpha[j + 1][k + 1]);
+        numnormterms++;
       }
     }
   }
@@ -165,8 +165,8 @@ int faildebug1(int numnormterms, int whichcons, FTYPE *U_target, FTYPE *EOSextra
     for(j=0;j<NDIM;j++){
       dualfprintf(fail_file,"{");
       for(k=0;k<NDIM;k++){
-	dualfprintf(fail_file, "%21.15g``20 ",GLOBALMETMACP0A3(conn,myii,myjj,mykk,i,j,k));
-	if(k<NDIM-1)       dualfprintf(fail_file,", ");
+        dualfprintf(fail_file, "%21.15g``20 ",GLOBALMETMACP0A3(conn,myii,myjj,mykk,i,j,k));
+        if(k<NDIM-1)       dualfprintf(fail_file,", ");
       }
       dualfprintf(fail_file,"}\n"); // \n breaks line so can copy easily to mathematica
       if(j<NDIM-1)       dualfprintf(fail_file,", ");
@@ -269,8 +269,8 @@ int faildebug2(int numnormterms, int whichcons, FTYPE *U_target, FTYPE *EOSextra
   for (j = 0; j < INVERTNPR; j++){
     for (k = 0; k < INVERTNPR; k++){
       if(alpha[j + 1][k + 1]>NUMEPSILON){
-	norm+=fabs(alpha[j + 1][k + 1]);
-	numnormterms++;
+        norm+=fabs(alpha[j + 1][k + 1]);
+        numnormterms++;
       }
     }
   }
@@ -345,7 +345,7 @@ int faildebug2(int numnormterms, int whichcons, FTYPE *U_target, FTYPE *EOSextra
   for(i=0;i<NDIM;i++){
     for(j=0;j<NDIM;j++){
       for(k=0;k<NDIM;k++){
-	fprintf(out, "%21.15g ",GLOBALMETMACP0A3(conn,myii,myjj,mykk,i,j,k));
+        fprintf(out, "%21.15g ",GLOBALMETMACP0A3(conn,myii,myjj,mykk,i,j,k));
       }
       fprintf(out,"\n");
     }

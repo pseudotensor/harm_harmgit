@@ -12,10 +12,10 @@
 /* want dump output to be ordered in radius first!! */
 // consistent with MPI's use of BUFFERMAP to create buffer for *all* disk writing methods
 // This order should not change for any ORDERSTORAGE, but presumes i,j,k is standard indices for (i.e.) r(i), theta(j), phi(k)
-#define DUMPLOOP(istart,istop,jstart,jstop,kstart,kstop) \
-	for(k=kstart;k<=kstop;k++)\
-	for(j=jstart;j<=jstop;j++)\
-	for(i=istart;i<=istop;i++)
+#define DUMPLOOP(istart,istop,jstart,jstop,kstart,kstop)        \
+  for(k=kstart;k<=kstop;k++)                                    \
+    for(j=jstart;j<=jstop;j++)                                  \
+      for(i=istart;i<=istop;i++)
 
 #if(FULLOUTPUT==0)
 #define EXTRADUMP1 0
@@ -47,7 +47,7 @@
 
 
 
-//#define IMAGELOOP(istart,istop,jstart,jstop,kstart,kstop)	for(k=kstart;k<=kstop;k++)	for(j=jstart;j<=jstop;j++)	for(i=istart;i<=istop;i++)
+//#define IMAGELOOP(istart,istop,jstart,jstop,kstart,kstop) for(k=kstart;k<=kstop;k++) for(j=jstart;j<=jstop;j++) for(i=istart;i<=istop;i++)
 
 //#define OLDIMAGELOOP for(j=N2-1;j>=0;j--) for(i=0;i<N1;i++)
 // nasty 

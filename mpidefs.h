@@ -31,17 +31,17 @@ long long int rtotalzones;
 long long int itotalzones;
 long long int totalsize[COMPDIM + 1];
 long long int itotalsize[COMPDIM + 1];
-int mycpupos[COMPDIM + 1];		// my position amongst the cpus
+int mycpupos[COMPDIM + 1];  // my position amongst the cpus
 int primgridpos[NUMBOUNDTYPES][COMPDIM*2][MAXNPR];
 // NUMPACKUNPACK+1 because start at 1
 FTYPE primfactor[NUMBOUNDTYPES][COMPDIM*2][NUMPRIMGRIDPOS][1+NUMPACKUNPACK][MAXNPR];
 int dirgenset[NUMBOUNDTYPES][COMPDIM*2][DIRGENNUMVARS];
 int dirloopset[NUMBOUNDTYPES][COMPDIM*2][NUMPRIMGRIDPOS][DIRLOOPNUMVARS];
-int srdir[3*2];			// which direction this cpu
-				// sends/receives normal interior data
+int srdir[3*2];   // which direction this cpu
+// sends/receives normal interior data
 int startpos[COMPDIM + 1];
-int endpos[COMPDIM + 1];		// startj and endj are where this CPU
-				// located on full grid 
+int endpos[COMPDIM + 1];  // startj and endj are where this CPU
+// located on full grid 
 int *startpos0[COMPDIM+1];
 int *endpos0[COMPDIM+1];
 int *mycpupos0[COMPDIM+1];

@@ -69,7 +69,7 @@
 
 
 
-#define SLOWFAC 1.0		/* reduce u_phi by this amount */
+#define SLOWFAC 1.0  /* reduce u_phi by this amount */
 #define MAXPASSPARMS 10
 
 
@@ -169,49 +169,49 @@ int inittypeglobal; // for bounds to communicate detail of what doing
 
 /*
 
-Models to run:
+  Models to run:
 
-Constant parameters:
+  Constant parameters:
 
-1) Rout=1E3 and run for tf=1E4 (so will take 5X longer than compared to Orange run at 128x128x32)
+  1) Rout=1E3 and run for tf=1E4 (so will take 5X longer than compared to Orange run at 128x128x32)
 
-2) BSQORHOLIMIT=1E3, etc.
+  2) BSQORHOLIMIT=1E3, etc.
 
-3) PARALINE, FLUXCTSTAG, TO=4
+  3) PARALINE, FLUXCTSTAG, TO=4
 
-4) Form of A_\phi fixed
+  4) Form of A_\phi fixed
 
-Field parameter studies in 2D axisymmetry at 256^2:
+  Field parameter studies in 2D axisymmetry at 256^2:
 
-1) H/R=0.3, a=0.9: LS quadrapole,  LS dipole, SS quadrapole, SS dipole
-
- 
-
-Spin parameter study in 2D axisymmetry at 256^2:
+  1) H/R=0.3, a=0.9: LS quadrapole,  LS dipole, SS quadrapole, SS dipole
 
  
 
-1) H/R=0.3, LS quadrapole: a=-.999,-.99,-.9,-.5,-0.2,0,.2,.5,.9,.99,.999
+  Spin parameter study in 2D axisymmetry at 256^2:
 
-H/R parameter study in 2D axisymmetry at 256^2:
+ 
 
-1) a=0.9 LS quadrapole with H/R=0.1,0.3,0.9,1.5
+  1) H/R=0.3, LS quadrapole: a=-.999,-.99,-.9,-.5,-0.2,0,.2,.5,.9,.99,.999
 
-2D Fiducial Models:
+  H/R parameter study in 2D axisymmetry at 256^2:
 
-1) Using a=0.9, H/R=0.3, LS quad and LS dipole, do two 2D fudicial models at: 1024^2
+  1) a=0.9 LS quadrapole with H/R=0.1,0.3,0.9,1.5
 
-3D Fiducial Models:
+  2D Fiducial Models:
 
-1) Using a=0.9, H/R=0.3, LS quadrapole and LS dipole, do two 3D fiducial models at 2 different resolutions: 128x128x32 and 256x256x64
+  1) Using a=0.9, H/R=0.3, LS quad and LS dipole, do two 2D fudicial models at: 1024^2
 
-Questions for Roger:
+  3D Fiducial Models:
 
-1) Choice for disk thickness?
-2) Choice for field shape -- specifically?
-3) Choice for flux threading disk vs. BH initially?
-4) Ask about BZ77 and residual A_\phi at pole
-5) 
+  1) Using a=0.9, H/R=0.3, LS quadrapole and LS dipole, do two 3D fiducial models at 2 different resolutions: 128x128x32 and 256x256x64
+
+  Questions for Roger:
+
+  1) Choice for disk thickness?
+  2) Choice for field shape -- specifically?
+  3) Choice for flux threading disk vs. BH initially?
+  4) Ask about BZ77 and residual A_\phi at pole
+  5) 
 
 */
 
@@ -696,24 +696,24 @@ int init_dsandvels_torus(int *whichvel, int*whichcoord, int i, int j, int k, FTY
   
   if (r >= rin) {
     lnh = 0.5 * log((1. + sqrt(1. + 4. * (l * l * SS * SS) * DD /
-			       (AA * sth * AA * sth))) / (SS * DD /
-							  AA))
+                               (AA * sth * AA * sth))) / (SS * DD /
+                                                          AA))
       - 0.5 * sqrt(1. +
-		   4. * (l * l * SS * SS) * DD / (AA * AA * sth *
-						  sth))
+                   4. * (l * l * SS * SS) * DD / (AA * AA * sth *
+                                                  sth))
       - 2. * a * r * l / AA -
       (0.5 *
        log((1. +
-	    sqrt(1. +
-		 4. * (l * l * SSin * SSin) * DDin / (AAin * AAin *
-						      sthin *
-						      sthin))) /
-	   (SSin * DDin / AAin))
+            sqrt(1. +
+                 4. * (l * l * SSin * SSin) * DDin / (AAin * AAin *
+                                                      sthin *
+                                                      sthin))) /
+           (SSin * DDin / AAin))
        - 0.5 * sqrt(1. +
-		    4. * (l * l * SSin * SSin) * DDin / (AAin *
-							 AAin *
-							 sthin *
-							 sthin))
+                    4. * (l * l * SSin * SSin) * DDin / (AAin *
+                                                         AAin *
+                                                         sthin *
+                                                         sthin))
        - 2. * a * rin * l / AAin);
   } else
     lnh = 1.;
@@ -1254,14 +1254,14 @@ int is_pos_insideNS(int pos,int i, int j, int k, int *hasmask, int *hasinside, i
     int ii,jj,kk;
     for(ii=i-N1NOT1*(odir1==1)-N1NOT1*(odir2==1);ii<=i;ii++){
       for(jj=j-N2NOT1*(odir1==2)-N2NOT1*(odir2==2);jj<=j;jj++){
-	for(kk=k-N3NOT1*(odir1==3)-N3NOT1*(odir2==3);kk<=k;kk++){
-	  if(*hasinside==0 && *hasmask==1 &&
-	     (GLOBALMACP0A1(nsmask,ii-(dir==1)*N1NOT1                  ,jj-(dir==2)*N2NOT1                  ,kk-(dir==3)*N3NOT1,NSMASKINSIDE)==1)
-	     //             || (GLOBALMACP0A1(nsmask,ii+(dir==1)*N1NOT1                  ,jj+(dir==2)*N2NOT1                  ,kk+(dir==3)*N3NOT1,NSMASKINSIDE)==1)
-	     ){
-	    *hasinside=1;
-	  }
-	}
+        for(kk=k-N3NOT1*(odir1==3)-N3NOT1*(odir2==3);kk<=k;kk++){
+          if(*hasinside==0 && *hasmask==1 &&
+             (GLOBALMACP0A1(nsmask,ii-(dir==1)*N1NOT1                  ,jj-(dir==2)*N2NOT1                  ,kk-(dir==3)*N3NOT1,NSMASKINSIDE)==1)
+             //             || (GLOBALMACP0A1(nsmask,ii+(dir==1)*N1NOT1                  ,jj+(dir==2)*N2NOT1                  ,kk+(dir==3)*N3NOT1,NSMASKINSIDE)==1)
+             ){
+            *hasinside=1;
+          }
+        }
       }
     }
 
@@ -1313,7 +1313,7 @@ int is_dir_insideNS(int dir,int i, int j, int k, int *hasmask, int *hasinside, i
     // get odir's
     get_odirs(dir,&odir1,&odir2);
 
-	
+ 
     // Only bound if A_i is such that a boundary cell, which occurs if *all* cells directly *touching* A_i are boundary cells.  Otherwise, should be set as surface value.
     isinside=0;
     if(
@@ -1332,21 +1332,21 @@ int is_dir_insideNS(int dir,int i, int j, int k, int *hasmask, int *hasinside, i
     if(
        (i>=-N1BND+N1NOT1 && j>=-N2BND+N2NOT1 && k>=-N3BND+N3NOT1)         && // avoid out of bounds
        (
-	(GLOBALMACP0A1(nsmask,i                                    ,j                                    ,k,NSMASKSHELL)==1)                                     ||
-	(GLOBALMACP0A1(nsmask,i-(odir1==1)*N1NOT1                  ,j-(odir1==2)*N2NOT1                  ,k-(odir1==3)*N3NOT1,NSMASKSHELL)==1)                   || 
-	(GLOBALMACP0A1(nsmask,i-(odir2==1)*N1NOT1                  ,j-(odir2==2)*N2NOT1                  ,k-(odir2==3)*N3NOT1,NSMASKSHELL)==1)                   || 
-	(GLOBALMACP0A1(nsmask,i-(odir1==1)*N1NOT1-(odir2==1)*N1NOT1,j-(odir1==2)*N2NOT1-(odir2==2)*N2NOT1,k-(odir2==3)*N3NOT1-(odir1==3)*N3NOT1,NSMASKSHELL)==1)
-	)
+        (GLOBALMACP0A1(nsmask,i                                    ,j                                    ,k,NSMASKSHELL)==1)                                     ||
+        (GLOBALMACP0A1(nsmask,i-(odir1==1)*N1NOT1                  ,j-(odir1==2)*N2NOT1                  ,k-(odir1==3)*N3NOT1,NSMASKSHELL)==1)                   || 
+        (GLOBALMACP0A1(nsmask,i-(odir2==1)*N1NOT1                  ,j-(odir2==2)*N2NOT1                  ,k-(odir2==3)*N3NOT1,NSMASKSHELL)==1)                   || 
+        (GLOBALMACP0A1(nsmask,i-(odir1==1)*N1NOT1-(odir2==1)*N1NOT1,j-(odir1==2)*N2NOT1-(odir2==2)*N2NOT1,k-(odir2==3)*N3NOT1-(odir1==3)*N3NOT1,NSMASKSHELL)==1)
+        )
        ){
       *hasmask=1;
 
       // DEBUG:
       //      dualfprintf(fail_file,"GOTHASMASK: dir=%d : %d %d %d %d\n",dir,
-      //		  (GLOBALMACP0A1(nsmask,i                                    ,j                                    ,k,NSMASKSHELL)==1),                                     
-      //		  (GLOBALMACP0A1(nsmask,i-(odir1==1)*N1NOT1                  ,j-(odir1==2)*N2NOT1                  ,k-(odir1==3)*N3NOT1,NSMASKSHELL)==1)                   ,
-      //		  (GLOBALMACP0A1(nsmask,i-(odir2==1)*N1NOT1                  ,j-(odir2==2)*N2NOT1                  ,k-(odir2==3)*N3NOT1,NSMASKSHELL)==1)                   ,
-      //		  (GLOBALMACP0A1(nsmask,i-(odir1==1)*N1NOT1-(odir2==1)*N1NOT1,j-(odir1==2)*N2NOT1-(odir2==2)*N2NOT1,k-(odir2==3)*N3NOT1-(odir1==3)*N3NOT1,NSMASKSHELL)==1)
-      //		  );
+      //    (GLOBALMACP0A1(nsmask,i                                    ,j                                    ,k,NSMASKSHELL)==1),                                     
+      //    (GLOBALMACP0A1(nsmask,i-(odir1==1)*N1NOT1                  ,j-(odir1==2)*N2NOT1                  ,k-(odir1==3)*N3NOT1,NSMASKSHELL)==1)                   ,
+      //    (GLOBALMACP0A1(nsmask,i-(odir2==1)*N1NOT1                  ,j-(odir2==2)*N2NOT1                  ,k-(odir2==3)*N3NOT1,NSMASKSHELL)==1)                   ,
+      //    (GLOBALMACP0A1(nsmask,i-(odir1==1)*N1NOT1-(odir2==1)*N1NOT1,j-(odir1==2)*N2NOT1-(odir2==2)*N2NOT1,k-(odir2==3)*N3NOT1-(odir1==3)*N3NOT1,NSMASKSHELL)==1)
+      //    );
 
     }
 
@@ -1357,21 +1357,21 @@ int is_dir_insideNS(int dir,int i, int j, int k, int *hasmask, int *hasinside, i
     if(
        (i>=-N1BND+N1NOT1 && j>=-N2BND+N2NOT1 && k>=-N3BND+N3NOT1)         && // avoid out of bounds
        (
-	(GLOBALMACP0A1(nsmask,i                                    ,j                                    ,k,NSMASKINSIDE)==1)                                     ||
-	(GLOBALMACP0A1(nsmask,i-(odir1==1)*N1NOT1                  ,j-(odir1==2)*N2NOT1                  ,k-(odir1==3)*N3NOT1,NSMASKINSIDE)==1)                   || 
-	(GLOBALMACP0A1(nsmask,i-(odir2==1)*N1NOT1                  ,j-(odir2==2)*N2NOT1                  ,k-(odir2==3)*N3NOT1,NSMASKINSIDE)==1)                   || 
-	(GLOBALMACP0A1(nsmask,i-(odir1==1)*N1NOT1-(odir2==1)*N1NOT1,j-(odir1==2)*N2NOT1-(odir2==2)*N2NOT1,k-(odir2==3)*N3NOT1-(odir1==3)*N3NOT1,NSMASKINSIDE)==1)
-	)
+        (GLOBALMACP0A1(nsmask,i                                    ,j                                    ,k,NSMASKINSIDE)==1)                                     ||
+        (GLOBALMACP0A1(nsmask,i-(odir1==1)*N1NOT1                  ,j-(odir1==2)*N2NOT1                  ,k-(odir1==3)*N3NOT1,NSMASKINSIDE)==1)                   || 
+        (GLOBALMACP0A1(nsmask,i-(odir2==1)*N1NOT1                  ,j-(odir2==2)*N2NOT1                  ,k-(odir2==3)*N3NOT1,NSMASKINSIDE)==1)                   || 
+        (GLOBALMACP0A1(nsmask,i-(odir1==1)*N1NOT1-(odir2==1)*N1NOT1,j-(odir1==2)*N2NOT1-(odir2==2)*N2NOT1,k-(odir2==3)*N3NOT1-(odir1==3)*N3NOT1,NSMASKINSIDE)==1)
+        )
        ){
       *hasinside=1;
 
       // DEBUG:
       //      dualfprintf(fail_file,"GOTHASINSIDE: dir=%d : %d %d %d %d\n",dir,
-      //		  (GLOBALMACP0A1(nsmask,i                                    ,j                                    ,k,NSMASKINSIDE)==1)                                     ,
-      //		  (GLOBALMACP0A1(nsmask,i-(odir1==1)*N1NOT1                  ,j-(odir1==2)*N2NOT1                  ,k-(odir1==3)*N3NOT1,NSMASKINSIDE)==1)                   ,
-      //		  (GLOBALMACP0A1(nsmask,i-(odir2==1)*N1NOT1                  ,j-(odir2==2)*N2NOT1                  ,k-(odir2==3)*N3NOT1,NSMASKINSIDE)==1)                   ,
-      //		  (GLOBALMACP0A1(nsmask,i-(odir1==1)*N1NOT1-(odir2==1)*N1NOT1,j-(odir1==2)*N2NOT1-(odir2==2)*N2NOT1,k-(odir2==3)*N3NOT1-(odir1==3)*N3NOT1,NSMASKINSIDE)==1)
-      //		  );
+      //    (GLOBALMACP0A1(nsmask,i                                    ,j                                    ,k,NSMASKINSIDE)==1)                                     ,
+      //    (GLOBALMACP0A1(nsmask,i-(odir1==1)*N1NOT1                  ,j-(odir1==2)*N2NOT1                  ,k-(odir1==3)*N3NOT1,NSMASKINSIDE)==1)                   ,
+      //    (GLOBALMACP0A1(nsmask,i-(odir2==1)*N1NOT1                  ,j-(odir2==2)*N2NOT1                  ,k-(odir2==3)*N3NOT1,NSMASKINSIDE)==1)                   ,
+      //    (GLOBALMACP0A1(nsmask,i-(odir1==1)*N1NOT1-(odir2==1)*N1NOT1,j-(odir1==2)*N2NOT1-(odir2==2)*N2NOT1,k-(odir2==3)*N3NOT1-(odir1==3)*N3NOT1,NSMASKINSIDE)==1)
+      //    );
 
 
     }
@@ -1388,14 +1388,14 @@ int is_dir_insideNS(int dir,int i, int j, int k, int *hasmask, int *hasinside, i
     int ii,jj,kk;
     for(ii=i-N1NOT1*(odir1==1)-N1NOT1*(odir2==1);ii<=i;ii++){
       for(jj=j-N2NOT1*(odir1==2)-N2NOT1*(odir2==2);jj<=j;jj++){
-	for(kk=k-N3NOT1*(odir1==3)-N3NOT1*(odir2==3);kk<=k;kk++){
-	  if(*hasinside==0 && *hasmask==1 &&
-	     (GLOBALMACP0A1(nsmask,ii-(dir==1)*N1NOT1                  ,jj-(dir==2)*N2NOT1                  ,kk-(dir==3)*N3NOT1,NSMASKINSIDE)==1)                   || 
-	     (GLOBALMACP0A1(nsmask,ii+(dir==1)*N1NOT1                  ,jj+(dir==2)*N2NOT1                  ,kk+(dir==3)*N3NOT1,NSMASKINSIDE)==1)
-	     ){
-	    *hasinside=1;
-	  }
-	}
+        for(kk=k-N3NOT1*(odir1==3)-N3NOT1*(odir2==3);kk<=k;kk++){
+          if(*hasinside==0 && *hasmask==1 &&
+             (GLOBALMACP0A1(nsmask,ii-(dir==1)*N1NOT1                  ,jj-(dir==2)*N2NOT1                  ,kk-(dir==3)*N3NOT1,NSMASKINSIDE)==1)                   || 
+             (GLOBALMACP0A1(nsmask,ii+(dir==1)*N1NOT1                  ,jj+(dir==2)*N2NOT1                  ,kk+(dir==3)*N3NOT1,NSMASKINSIDE)==1)
+             ){
+            *hasinside=1;
+          }
+        }
       }
     }
        
@@ -1420,14 +1420,14 @@ int is_dir_insideNS(int dir,int i, int j, int k, int *hasmask, int *hasinside, i
     // TEST
     if(dir==3){
       if(
-	 (i==36 && j==23 || i==37 && j==23 || i==38 & j==24 || i==39 && j==25 || i==40 && j==26 || i==40 && j==27)
-	 || (i==36 && j==41 || i==37 && j==41 || i==38 & j==40 || i==39 && j==39 || i==40 && j==38 || i==40 && j==37)
-	 ){
-	isinside=1;
-	*hasmask=1;
-	*hasinside=1;
-	*reallyonsurface=0;
-	*cancopyfrom=0;
+         (i==36 && j==23 || i==37 && j==23 || i==38 & j==24 || i==39 && j==25 || i==40 && j==26 || i==40 && j==27)
+         || (i==36 && j==41 || i==37 && j==41 || i==38 & j==40 || i==39 && j==39 || i==40 && j==38 || i==40 && j==37)
+         ){
+        isinside=1;
+        *hasmask=1;
+        *hasinside=1;
+        *reallyonsurface=0;
+        *cancopyfrom=0;
       }
     }
     
@@ -1468,7 +1468,7 @@ int get_fixedvalues(int dir, int i, int j, int k, int ii, int jj, int kk)
     isinsidelocal[1]=is_dir_insideNS(dir, ii, jj, kk, &hasmasklocal[1], &hasinsidelocal[1], &reallyonsurfacelocal[1], &cancopyfromlocal[1]);
     fixedvalue[1]=reallyonsurfacelocal[1];  //(isinsidelocal[1]==0 && hasmasklocal[1]==1 && hasinsidelocal[1]==1);
 
-		  
+    
     // get iii,jjj,kkk result
     int iii,jjj,kkk;
     iii=ii+dellocal[1];
@@ -1571,25 +1571,25 @@ int check_nsdepth(SFTYPE time)
       countinsidezones++;
 
       for(kk=k-N3NOT1;kk<=k+N3NOT1;kk++){ // TODO: avoid boundary cells?  No need, since setting and extrapolation process can operate inside boundary cells just fine.  Assumes MPI is always last to bound so no machine inconsistencies creep in.
-	for(jj=j-N2NOT1;jj<=j+N2NOT1;jj++){
-	  for(ii=i-N1NOT1;ii<=i+N1NOT1;ii++){
+        for(jj=j-N2NOT1;jj<=j+N2NOT1;jj++){
+          for(ii=i-N1NOT1;ii<=i+N1NOT1;ii++){
 
-	    bl_coord_ijk(ii,jj,kk,pos,VV);
-    	    isinside2=get_insideNS(time,ii, jj, kk, VV, NULL, NULL, NULL);
-	    
+            bl_coord_ijk(ii,jj,kk,pos,VV);
+            isinside2=get_insideNS(time,ii, jj, kk, VV, NULL, NULL, NULL);
+     
 
-	    // if original cell inside, but shifting 1 away is not, then that's the shell bounding the inside region!
-	    if(isinside2==0){
-	      ishellptr[ii]=1;
-	      jshellptr[jj]=1;
-	      kshellptr[kk]=1;
+            // if original cell inside, but shifting 1 away is not, then that's the shell bounding the inside region!
+            if(isinside2==0){
+              ishellptr[ii]=1;
+              jshellptr[jj]=1;
+              kshellptr[kk]=1;
 
-	      GLOBALMACP0A1(nsmask,ii,jj,kk,NSMASKSHELL)=1;
-	      // can't count "countshellzones" here since will have duplicate offset cells
+              GLOBALMACP0A1(nsmask,ii,jj,kk,NSMASKSHELL)=1;
+              // can't count "countshellzones" here since will have duplicate offset cells
 
-	    }
-	  } // end over ii
-	} // end over jj
+            }
+          } // end over ii
+        } // end over jj
       }// end over kk
 
     } // end if inside
@@ -1726,17 +1726,17 @@ int check_nsdepth(SFTYPE time)
       // GODMARK: Why do above nested curly braces not set initial assignment?
       // Seems I have to do it myself for mindist at least
       for(dir=0;dir<=3;dir++){
-	numneigh[dir]=0;
-	int neighiter;
-	for(neighiter=0;neighiter<MAXNEIGH;neighiter++){
-	  mindist[dir][neighiter]=BIG;
-	  count[dir][neighiter]=0;
+        numneigh[dir]=0;
+        int neighiter;
+        for(neighiter=0;neighiter<MAXNEIGH;neighiter++){
+          mindist[dir][neighiter]=BIG;
+          count[dir][neighiter]=0;
 
-	  int spaceiter;
-	  DLOOPA(spaceiter) lastneigh[dir][neighiter][spaceiter]=-100;
-	  lastfixed[dir][neighiter]=NBIGM;
-	  lastcount[dir][neighiter]=0;
-	}
+          int spaceiter;
+          DLOOPA(spaceiter) lastneigh[dir][neighiter][spaceiter]=-100;
+          lastfixed[dir][neighiter]=NBIGM;
+          lastcount[dir][neighiter]=0;
+        }
       }
 
       // http://publib.boulder.ibm.com/infocenter/comphelp/v8v101/index.jsp?topic=%2Fcom.ibm.xlcpp8a.doc%2Flanguage%2Fref%2Faryin.htm
@@ -1749,133 +1749,133 @@ int check_nsdepth(SFTYPE time)
       ///////////////////
       COMPLOOPNiijjkk(ii,jj,kk){
  
-	// CENT and CORN_dir (GODMARK: TODO: This code has become very expensive in bound if doing 3D, so maybe ignore maxdist and just use whatever find?)
-	for(dir=0;dir<=3;dir++){ // loop over dir's
+        // CENT and CORN_dir (GODMARK: TODO: This code has become very expensive in bound if doing 3D, so maybe ignore maxdist and just use whatever find?)
+        for(dir=0;dir<=3;dir++){ // loop over dir's
 
-	  if(localisinside[dir]==1){ // only do this if inside NS in relevant sense
-	    isinside=is_dir_insideNS(dir, ii, jj, kk, &hasmask, &hasinside, &reallyonsurface, &cancopyfrom);
+          if(localisinside[dir]==1){ // only do this if inside NS in relevant sense
+            isinside=is_dir_insideNS(dir, ii, jj, kk, &hasmask, &hasinside, &reallyonsurface, &cancopyfrom);
 
     
-	    //	    if(isinside==0 && hasmask==1 && hasinside==1){ // if get inside here, then ii,jj,kk for dir should be cell that can be copied FROM and is as close as possible to surface for such a source of data
-	    if(cancopyfrom){ // if get inside here, then ii,jj,kk for dir should be cell that can be copied FROM and is as close as possible to surface for such a source of data
+            //     if(isinside==0 && hasmask==1 && hasinside==1){ // if get inside here, then ii,jj,kk for dir should be cell that can be copied FROM and is as close as possible to surface for such a source of data
+            if(cancopyfrom){ // if get inside here, then ii,jj,kk for dir should be cell that can be copied FROM and is as close as possible to surface for such a source of data
 
-	      // DEBUG:
-	      //	      dualfprintf(fail_file,"WTF: dir=%d ijk=%d %d %d : ijk2=%d %d %d : mindist=%21.15g\n",dir,i,j,k,ii,jj,kk,mindist[dir][0]);
-
-
-	      // get dist for this ii,jj,kk
-	      dist=sqrt( (ii-i)*(ii-i) + (jj-j)*(jj-j) + (kk-k)*(kk-k) );
-
-	      // get fixed values count
-	      newfixed[dir]=get_fixedvalues(dir, i, j, k, ii, jj, kk);
-
-	      // DEBUG:
-	      //	      if(dir==3 && i==36 && j==24){
-	      //		dualfprintf(fail_file,"FU: dir=%d ijk=%d %d %d : ijk2=%d %d %d : dist=%21.15g : numneigh=%d mindist=%21.15g\n",dir,i,j,k,ii,jj,kk,dist,numneigh[dir],mindist[dir][0]);
-	      //	      }
+              // DEBUG:
+              //       dualfprintf(fail_file,"WTF: dir=%d ijk=%d %d %d : ijk2=%d %d %d : mindist=%21.15g\n",dir,i,j,k,ii,jj,kk,mindist[dir][0]);
 
 
-	      int founddup=0;
-	      // first loop over any existing neighbors and see if dist is similar to their dist that was chosen as some prior mindist
-	      {
-		int neighiter;
-		for(neighiter=0;neighiter<MIN(MAXNEIGH,numneigh[dir]);neighiter++){ // only up to numneigh[dir] (unless larger than MAXNEIGH) since DUPs only exist if array filled-in already
+              // get dist for this ii,jj,kk
+              dist=sqrt( (ii-i)*(ii-i) + (jj-j)*(jj-j) + (kk-k)*(kk-k) );
 
-		  if(newfixed[dir]==lastfixed[dir][neighiter] && fabs(dist-mindist[dir][neighiter])<1E-3){ // if within same cell distance and fixed interpolation count, then treat as duplicate since can't distinguish
-		    // DEBUG:
-		    dualfprintf(fail_file,"DUP: count=%d : dir=%d ijk=%d %d %d : ijk2=%d %d %d : dist=%21.15g fixed=%d : lorig123=%d %d %d\n",count[dir][neighiter],dir,i,j,k,ii,jj,kk,dist,newfixed[dir],i+lastneigh[dir][neighiter][1],j+lastneigh[dir][neighiter][2],k+lastneigh[dir][neighiter][3]);
+              // get fixed values count
+              newfixed[dir]=get_fixedvalues(dir, i, j, k, ii, jj, kk);
 
-		    // then just keep adding to same neighbor
-		    count[dir][neighiter]++;
-		    // accumulate ii,jj,kk as vector sum
-		    lastneigh[dir][neighiter][1]+=(ii-i);
-		    lastneigh[dir][neighiter][2]+=(jj-j);
-		    lastneigh[dir][neighiter][3]+=(kk-k);
-		    // add up number of fixed points
-		    //		    lastfixed[dir][neighiter]+=newfixed[dir]; // note we are summing number of fixed, so in the end question is to obtain lowest total or equally number of fixed per duplicate
-		    lastfixed[dir][neighiter]=newfixed[dir]; // same fixed, but ok to assign again
-		    mindist[dir][neighiter]=dist; // same if dup, but ok to assign again
-
-		    founddup=1; // indicate that found duplicate
-
-		    // DEBUG:
-		    dualfprintf(fail_file,"DUP2: count=%d : dir=%d ijk=%d %d %d : ijk2=%d %d %d : dist=%21.15g fixed=%d : l123=%d %d %d\n",count[dir][neighiter],dir,i,j,k,ii,jj,kk,dist,newfixed[dir],i+lastneigh[dir][neighiter][1],j+lastneigh[dir][neighiter][2],k+lastneigh[dir][neighiter][3]);
+              // DEBUG:
+              //       if(dir==3 && i==36 && j==24){
+              //  dualfprintf(fail_file,"FU: dir=%d ijk=%d %d %d : ijk2=%d %d %d : dist=%21.15g : numneigh=%d mindist=%21.15g\n",dir,i,j,k,ii,jj,kk,dist,numneigh[dir],mindist[dir][0]);
+              //       }
 
 
-		  }
-		}
-	      }
+              int founddup=0;
+              // first loop over any existing neighbors and see if dist is similar to their dist that was chosen as some prior mindist
+              {
+                int neighiter;
+                for(neighiter=0;neighiter<MIN(MAXNEIGH,numneigh[dir]);neighiter++){ // only up to numneigh[dir] (unless larger than MAXNEIGH) since DUPs only exist if array filled-in already
 
-	      int gotmin=0;
-	      int whichmin=0;
-	      if(founddup==0){
-		{
-		  // second, loop over and see if really closer or fewer fixed points than any others
-		  int neighiter;
+                  if(newfixed[dir]==lastfixed[dir][neighiter] && fabs(dist-mindist[dir][neighiter])<1E-3){ // if within same cell distance and fixed interpolation count, then treat as duplicate since can't distinguish
+                    // DEBUG:
+                    dualfprintf(fail_file,"DUP: count=%d : dir=%d ijk=%d %d %d : ijk2=%d %d %d : dist=%21.15g fixed=%d : lorig123=%d %d %d\n",count[dir][neighiter],dir,i,j,k,ii,jj,kk,dist,newfixed[dir],i+lastneigh[dir][neighiter][1],j+lastneigh[dir][neighiter][2],k+lastneigh[dir][neighiter][3]);
 
-		  // then really smaller distance (used to avoid machine precision issues) or a lower fixed count
-		  //		  if(dist<mindist[dir][neighiter]-1E-3){ // then really smaller distance (used to avoid machine precision issues)
-		  // (newfixed[dir]==lastfixed[dir][neighiter] && dist<mindist[dir][neighiter]-1E-3)
-		  // (dist<mindist[dir][neighiter]-1E-3) || (newfixed[dir]<=lastfixed[dir][neighiter] && fabs(dist-mindist[dir][neighiter])<1E-3)
+                    // then just keep adding to same neighbor
+                    count[dir][neighiter]++;
+                    // accumulate ii,jj,kk as vector sum
+                    lastneigh[dir][neighiter][1]+=(ii-i);
+                    lastneigh[dir][neighiter][2]+=(jj-j);
+                    lastneigh[dir][neighiter][3]+=(kk-k);
+                    // add up number of fixed points
+                    //      lastfixed[dir][neighiter]+=newfixed[dir]; // note we are summing number of fixed, so in the end question is to obtain lowest total or equally number of fixed per duplicate
+                    lastfixed[dir][neighiter]=newfixed[dir]; // same fixed, but ok to assign again
+                    mindist[dir][neighiter]=dist; // same if dup, but ok to assign again
 
+                    founddup=1; // indicate that found duplicate
 
-		  // gotmin=0: same or smaller distance and same or fewer fixed points (most preferred to trigger on)
-		  // this should be good since if ever both were same (so undetermined duplicate), above duplicate check should merge the points already
-		  for(neighiter=0;neighiter<MAXNEIGH;neighiter++){ // not up to numneigh[dir] because it's 0 at first -- and in general want to trigger on being smaller than existing large values if filling-in new point
-		    if( newfixed[dir]<=lastfixed[dir][neighiter] && (dist<mindist[dir][neighiter]-1E-3 || fabs(dist-mindist[dir][neighiter])<1E-3) ){
-		      gotmin=1;
-		      whichmin=neighiter;
-		      break; // will use whichmin to insert this data into storage arrays
-		    }
-		  }
-
-
-		  if(gotmin==0){
-		    dualfprintf(fail_file,"Still gotmin==0 (This is ok, but check that really wanted to ignore this point): dir=%d ijk=%d %d %d iijjkk=%d %d %d : dist=%21.15g\n",dir,i,j,k,ii,jj,kk,dist);
-		  }
-
-		}
-	      }
-
-	      // DEBUG:
-	      //	      if(dir==3 && i==36 && j==24){
-	      //		dualfprintf(fail_file,"FU2: dir=%d ijk=%d %d %d : ijk2=%d %d %d : gotmin=%d (%21.15g %21.15g)\n",dir,i,j,k,ii,jj,kk,gotmin,dist,mindist[dir][whichmin]);
-	      //	      }
+                    // DEBUG:
+                    dualfprintf(fail_file,"DUP2: count=%d : dir=%d ijk=%d %d %d : ijk2=%d %d %d : dist=%21.15g fixed=%d : l123=%d %d %d\n",count[dir][neighiter],dir,i,j,k,ii,jj,kk,dist,newfixed[dir],i+lastneigh[dir][neighiter][1],j+lastneigh[dir][neighiter][2],k+lastneigh[dir][neighiter][3]);
 
 
-	      // see if min over all existing stored neighbors
-	      //if(gotmin>=MIN(MAXNEIGH,numneigh[dir])){ // note that this gets triggered if never any other neighbors yet, as required.
-	      if(gotmin!=0){ // note that this gets triggered if never any other neighbors yet, as required.
-		// DEBUG:
-		dualfprintf(fail_file,"NOTDUP : gotmin=%d count=%d : dir=%d ijk=%d %d %d : ijk2=%d %d %d : dist: %21.15g mindist: %21.15g fixed=%d\n",gotmin,count[dir][neighbase],dir,i,j,k,ii,jj,kk,dist,mindist[dir][neighbase],newfixed[dir]);
-		// then got closer neighbor, so shift neighbor list and assign
-		
-		// shift neighbors (lose neighbors if there are more than MAXNEIGH neighbors, which is fine since don't expect too many equally valid neighbors)
-		int neighiter;
-		for(neighiter=MAXNEIGH-1;neighiter>=whichmin+1;neighiter--){// only down to whichmin+1, since [whichmin] is old point for which new point is just closer. So [whichmin] is moved up to [whichmin+1] to make room for new point at [whichmin].  This sorts by distance, else could lose good small distance out the right side of array!
-		  count[dir][neighiter]=count[dir][neighiter-1];
-		  int siter; SLOOPA(siter) lastneigh[dir][neighiter][siter]=lastneigh[dir][neighiter-1][siter];
-		  lastfixed[dir][neighiter]=lastfixed[dir][neighiter-1];
-		  mindist[dir][neighiter]=mindist[dir][neighiter-1];
-		}
-		
-		// now assign values for (not add values to) new neighbor
-		numneigh[dir]++; // really new neighbor at new distance
-		 // new values for new neighbor
-		count[dir][whichmin]=1; // sets as not duplicate count
-		lastneigh[dir][whichmin][1]=(ii-i);
-		lastneigh[dir][whichmin][2]=(jj-j);
-		lastneigh[dir][whichmin][3]=(kk-k);
-		lastfixed[dir][whichmin]=newfixed[dir];
-		mindist[dir][whichmin]=dist;
+                  }
+                }
+              }
 
-		dualfprintf(fail_file,"NOTDUP2 : whichmin=%d count=%d : dir=%d ijk=%d %d %d : ijk2=%d %d %d : dist: %21.15g mindist: %21.15g fixed=%d l123=%d %d %d\n",whichmin,count[dir][whichmin],dir,i,j,k,ii,jj,kk,dist,mindist[dir][whichmin],newfixed[dir],i+lastneigh[dir][whichmin][1],j+lastneigh[dir][whichmin][2],k+lastneigh[dir][whichmin][3]);
+              int gotmin=0;
+              int whichmin=0;
+              if(founddup==0){
+                {
+                  // second, loop over and see if really closer or fewer fixed points than any others
+                  int neighiter;
 
-	      }// end if really got new min over all prior neighbors
+                  // then really smaller distance (used to avoid machine precision issues) or a lower fixed count
+                  //    if(dist<mindist[dir][neighiter]-1E-3){ // then really smaller distance (used to avoid machine precision issues)
+                  // (newfixed[dir]==lastfixed[dir][neighiter] && dist<mindist[dir][neighiter]-1E-3)
+                  // (dist<mindist[dir][neighiter]-1E-3) || (newfixed[dir]<=lastfixed[dir][neighiter] && fabs(dist-mindist[dir][neighiter])<1E-3)
 
-	    }// end if not inside (and if A_i then has mask)
-	  }
-	}// over dir
+
+                  // gotmin=0: same or smaller distance and same or fewer fixed points (most preferred to trigger on)
+                  // this should be good since if ever both were same (so undetermined duplicate), above duplicate check should merge the points already
+                  for(neighiter=0;neighiter<MAXNEIGH;neighiter++){ // not up to numneigh[dir] because it's 0 at first -- and in general want to trigger on being smaller than existing large values if filling-in new point
+                    if( newfixed[dir]<=lastfixed[dir][neighiter] && (dist<mindist[dir][neighiter]-1E-3 || fabs(dist-mindist[dir][neighiter])<1E-3) ){
+                      gotmin=1;
+                      whichmin=neighiter;
+                      break; // will use whichmin to insert this data into storage arrays
+                    }
+                  }
+
+
+                  if(gotmin==0){
+                    dualfprintf(fail_file,"Still gotmin==0 (This is ok, but check that really wanted to ignore this point): dir=%d ijk=%d %d %d iijjkk=%d %d %d : dist=%21.15g\n",dir,i,j,k,ii,jj,kk,dist);
+                  }
+
+                }
+              }
+
+              // DEBUG:
+              //       if(dir==3 && i==36 && j==24){
+              //  dualfprintf(fail_file,"FU2: dir=%d ijk=%d %d %d : ijk2=%d %d %d : gotmin=%d (%21.15g %21.15g)\n",dir,i,j,k,ii,jj,kk,gotmin,dist,mindist[dir][whichmin]);
+              //       }
+
+
+              // see if min over all existing stored neighbors
+              //if(gotmin>=MIN(MAXNEIGH,numneigh[dir])){ // note that this gets triggered if never any other neighbors yet, as required.
+              if(gotmin!=0){ // note that this gets triggered if never any other neighbors yet, as required.
+                // DEBUG:
+                dualfprintf(fail_file,"NOTDUP : gotmin=%d count=%d : dir=%d ijk=%d %d %d : ijk2=%d %d %d : dist: %21.15g mindist: %21.15g fixed=%d\n",gotmin,count[dir][neighbase],dir,i,j,k,ii,jj,kk,dist,mindist[dir][neighbase],newfixed[dir]);
+                // then got closer neighbor, so shift neighbor list and assign
+  
+                // shift neighbors (lose neighbors if there are more than MAXNEIGH neighbors, which is fine since don't expect too many equally valid neighbors)
+                int neighiter;
+                for(neighiter=MAXNEIGH-1;neighiter>=whichmin+1;neighiter--){// only down to whichmin+1, since [whichmin] is old point for which new point is just closer. So [whichmin] is moved up to [whichmin+1] to make room for new point at [whichmin].  This sorts by distance, else could lose good small distance out the right side of array!
+                  count[dir][neighiter]=count[dir][neighiter-1];
+                  int siter; SLOOPA(siter) lastneigh[dir][neighiter][siter]=lastneigh[dir][neighiter-1][siter];
+                  lastfixed[dir][neighiter]=lastfixed[dir][neighiter-1];
+                  mindist[dir][neighiter]=mindist[dir][neighiter-1];
+                }
+  
+                // now assign values for (not add values to) new neighbor
+                numneigh[dir]++; // really new neighbor at new distance
+                // new values for new neighbor
+                count[dir][whichmin]=1; // sets as not duplicate count
+                lastneigh[dir][whichmin][1]=(ii-i);
+                lastneigh[dir][whichmin][2]=(jj-j);
+                lastneigh[dir][whichmin][3]=(kk-k);
+                lastfixed[dir][whichmin]=newfixed[dir];
+                mindist[dir][whichmin]=dist;
+
+                dualfprintf(fail_file,"NOTDUP2 : whichmin=%d count=%d : dir=%d ijk=%d %d %d : ijk2=%d %d %d : dist: %21.15g mindist: %21.15g fixed=%d l123=%d %d %d\n",whichmin,count[dir][whichmin],dir,i,j,k,ii,jj,kk,dist,mindist[dir][whichmin],newfixed[dir],i+lastneigh[dir][whichmin][1],j+lastneigh[dir][whichmin][2],k+lastneigh[dir][whichmin][3]);
+
+              }// end if really got new min over all prior neighbors
+
+            }// end if not inside (and if A_i then has mask)
+          }
+        }// over dir
       
       }// over ii,jj,kk
 
@@ -1887,34 +1887,34 @@ int check_nsdepth(SFTYPE time)
 
       // check if i,j,k==ii,jj,kk and shift over such that removes such a useless point
       if(DOSTUCKFIX){
-	for(dir=0;dir<=3;dir++){
+        for(dir=0;dir<=3;dir++){
 
-	  numneigh[dir]=MIN(numneigh[dir],MAXNEIGH); // set number of neighbors as real possible upper limit since may reduce below MAXNEIGH now
-	  for(int neighiter=0;neighiter<MIN(numneigh[dir],MAXNEIGH);neighiter++){
+          numneigh[dir]=MIN(numneigh[dir],MAXNEIGH); // set number of neighbors as real possible upper limit since may reduce below MAXNEIGH now
+          for(int neighiter=0;neighiter<MIN(numneigh[dir],MAXNEIGH);neighiter++){
 
-	    if(lastneigh[dir][neighiter][1]==0 && lastneigh[dir][neighiter][2]==0 && lastneigh[dir][neighiter][3]==0){
-	      // then shift on top of this useless point (even if formed from duplicates, since couldn't choose among them unless one would break symmetry (or find another indicator))
+            if(lastneigh[dir][neighiter][1]==0 && lastneigh[dir][neighiter][2]==0 && lastneigh[dir][neighiter][3]==0){
+              // then shift on top of this useless point (even if formed from duplicates, since couldn't choose among them unless one would break symmetry (or find another indicator))
 
-	      for(int neighiter2=neighiter;neighiter2<MIN(numneigh[dir],MAXNEIGH)-1;neighiter2++){ // -1 since lost data from removal
-		count[dir][neighiter2]=count[dir][neighiter2+1];
-		int siter; SLOOPA(siter) lastneigh[dir][neighiter2][siter]=lastneigh[dir][neighiter2+1][siter];
-		lastfixed[dir][neighiter2]=lastfixed[dir][neighiter2+1];
-		mindist[dir][neighiter2]=mindist[dir][neighiter2+1];
-	      }
-
-
-	      // reduce count (will go below MAXNEIGH now so don't show (in debug) the upper-end that was used to copy to lower end)
-	      numneigh[dir]--;
-	      // and need to drop back one, since will next be doing neighiter++ and want to evaluate the same neighiter as here because it's actually new data not checked yet
-	      neighiter--;
-
- 	      // DEBUG:
-	      dualfprintf(fail_file,"DOSTUCKFIX: dir=%d ijk=%d %d %d : (new)neighiter=%d (new)numneigh=%d\n",dir,i,j,k,neighiter,numneigh[dir]);
+              for(int neighiter2=neighiter;neighiter2<MIN(numneigh[dir],MAXNEIGH)-1;neighiter2++){ // -1 since lost data from removal
+                count[dir][neighiter2]=count[dir][neighiter2+1];
+                int siter; SLOOPA(siter) lastneigh[dir][neighiter2][siter]=lastneigh[dir][neighiter2+1][siter];
+                lastfixed[dir][neighiter2]=lastfixed[dir][neighiter2+1];
+                mindist[dir][neighiter2]=mindist[dir][neighiter2+1];
+              }
 
 
-	    }// end if stuck point
-	  }// end over neighiter
-	}// end over dir
+              // reduce count (will go below MAXNEIGH now so don't show (in debug) the upper-end that was used to copy to lower end)
+              numneigh[dir]--;
+              // and need to drop back one, since will next be doing neighiter++ and want to evaluate the same neighiter as here because it's actually new data not checked yet
+              neighiter--;
+
+              // DEBUG:
+              dualfprintf(fail_file,"DOSTUCKFIX: dir=%d ijk=%d %d %d : (new)neighiter=%d (new)numneigh=%d\n",dir,i,j,k,neighiter,numneigh[dir]);
+
+
+            }// end if stuck point
+          }// end over neighiter
+        }// end over dir
       }// end if fixing stuck points
 
 
@@ -1933,36 +1933,36 @@ int check_nsdepth(SFTYPE time)
       
       // choose neighbor that has lowest number of fixed values used for extrapolation.  This gives extrapolation more freedom/flexibility for field moving on surface to avoid kinks through the surface.
       if(DONEIGHBORFIX){
-	for(dir=0;dir<=3;dir++){ // only A_i (dir=1,2,3) could have multiple fixed points, but no harm in keeping this general
+        for(dir=0;dir<=3;dir++){ // only A_i (dir=1,2,3) could have multiple fixed points, but no harm in keeping this general
 
-	  // count[dir][neighbase] contains final count of dups for final ii,jj,kk
-	  //	  if(count[dir][neighbase]==1){ // GODMARK TODO OPTMARK: for now only do for count==1 since count>1 has to be modified to be a closer neighbor (DODUPFIX) and count>1 (expensively) handled in interpolation code so already can reduce to lower fixedvalues.  If also dealt with count>1, would make interpolations less expensive
+          // count[dir][neighbase] contains final count of dups for final ii,jj,kk
+          //   if(count[dir][neighbase]==1){ // GODMARK TODO OPTMARK: for now only do for count==1 since count>1 has to be modified to be a closer neighbor (DODUPFIX) and count>1 (expensively) handled in interpolation code so already can reduce to lower fixedvalues.  If also dealt with count>1, would make interpolations less expensive
 
-	  // loop over neighbors in order from latest to oldest:  in general because last ones would have lower dist[] values and so closer as desirable.
-	  int neighiter;
-	  //	  FTYPE lowestfixed=(FTYPE)lastfixed[dir][neighbase]/((FTYPE)count[dir][neighbase]); // start with existing neighbor's fixed point count per duplicate
-	  FTYPE lowestfixed=(FTYPE)lastfixed[dir][neighbase]; // now grouping by fixed counts too and not adding-up fixed counts for dups, so only look at fixed count itself
-	  for(neighiter=1;neighiter<MIN(numneigh[dir],MAXNEIGH);neighiter++){ // only iterate for existing number of neighbors actually stored up to maximum number stored.
-	    //	    FTYPE otherfixed=(FTYPE)lastfixed[dir][neighiter]/((FTYPE)(count[dir][neighiter]));
-	    FTYPE otherfixed=(FTYPE)lastfixed[dir][neighiter];
-	    if(otherfixed<lowestfixed-1E-3){ // only choose if strictly lower, not just equal, since if only equal then might as well use closer neighbor.  1E-3 avoids machine precision issues so really must be actually lower, not just lower by machine error
+          // loop over neighbors in order from latest to oldest:  in general because last ones would have lower dist[] values and so closer as desirable.
+          int neighiter;
+          //   FTYPE lowestfixed=(FTYPE)lastfixed[dir][neighbase]/((FTYPE)count[dir][neighbase]); // start with existing neighbor's fixed point count per duplicate
+          FTYPE lowestfixed=(FTYPE)lastfixed[dir][neighbase]; // now grouping by fixed counts too and not adding-up fixed counts for dups, so only look at fixed count itself
+          for(neighiter=1;neighiter<MIN(numneigh[dir],MAXNEIGH);neighiter++){ // only iterate for existing number of neighbors actually stored up to maximum number stored.
+            //     FTYPE otherfixed=(FTYPE)lastfixed[dir][neighiter]/((FTYPE)(count[dir][neighiter]));
+            FTYPE otherfixed=(FTYPE)lastfixed[dir][neighiter];
+            if(otherfixed<lowestfixed-1E-3){ // only choose if strictly lower, not just equal, since if only equal then might as well use closer neighbor.  1E-3 avoids machine precision issues so really must be actually lower, not just lower by machine error
 
-	      // DEBUG:
-	      dualfprintf(fail_file,"CHOSENEWNEIGHBOR: dir=%d ijk=%d %d %d oldijk2=%d %d %d newijk2=%d %d %d : oldfixed=%21.15g otherfixed=%21.15g : oldcount=%d newcount=%d : oldmindist=%21.15g newmindist=%21.15g\n",dir,i,j,k,lastneigh[dir][neighbase][1],lastneigh[dir][neighbase][2],lastneigh[dir][neighbase][3],lastneigh[dir][neighiter][1],lastneigh[dir][neighiter][2],lastneigh[dir][neighiter][3],lowestfixed,otherfixed,count[dir][neighbase],count[dir][neighiter],mindist[dir][neighbase],mindist[dir][neighiter]);
+              // DEBUG:
+              dualfprintf(fail_file,"CHOSENEWNEIGHBOR: dir=%d ijk=%d %d %d oldijk2=%d %d %d newijk2=%d %d %d : oldfixed=%21.15g otherfixed=%21.15g : oldcount=%d newcount=%d : oldmindist=%21.15g newmindist=%21.15g\n",dir,i,j,k,lastneigh[dir][neighbase][1],lastneigh[dir][neighbase][2],lastneigh[dir][neighbase][3],lastneigh[dir][neighiter][1],lastneigh[dir][neighiter][2],lastneigh[dir][neighiter][3],lowestfixed,otherfixed,count[dir][neighbase],count[dir][neighiter],mindist[dir][neighbase],mindist[dir][neighiter]);
 
-	      lowestfixed=otherfixed;
-	      // overwrite [neighbase] with this version
-	      count[dir][neighbase]=count[dir][neighiter];
-	      lastneigh[dir][neighbase][1]=lastneigh[dir][neighiter][1];
-	      lastneigh[dir][neighbase][2]=lastneigh[dir][neighiter][2];
-	      lastneigh[dir][neighbase][3]=lastneigh[dir][neighiter][3];
-	      lastfixed[dir][neighbase]=lastfixed[dir][neighiter];
-	      mindist[dir][neighbase]=mindist[dir][neighiter];
-	      
-	    }// end if strictly lower fixed count
-	  }// end over neighiter
-	  //}// end if final ii,jj,kk was not a duplicate
-	}// end over dir
+              lowestfixed=otherfixed;
+              // overwrite [neighbase] with this version
+              count[dir][neighbase]=count[dir][neighiter];
+              lastneigh[dir][neighbase][1]=lastneigh[dir][neighiter][1];
+              lastneigh[dir][neighbase][2]=lastneigh[dir][neighiter][2];
+              lastneigh[dir][neighbase][3]=lastneigh[dir][neighiter][3];
+              lastfixed[dir][neighbase]=lastfixed[dir][neighiter];
+              mindist[dir][neighbase]=mindist[dir][neighiter];
+       
+            }// end if strictly lower fixed count
+          }// end over neighiter
+          //}// end if final ii,jj,kk was not a duplicate
+        }// end over dir
 
       }// end if fixing neighbors
 
@@ -1971,9 +1971,9 @@ int check_nsdepth(SFTYPE time)
       
       // DEBUG:
       for(dir=0;dir<=3;dir++){ // only A_i (dir=1,2,3) could have multiple fixed points, but no harm in keeping this general
-	for(int neighiter=0;neighiter<MIN(numneigh[dir],MAXNEIGH);neighiter++){
-	  dualfprintf(fail_file,"REPORTBEFOREDUPFIX: dir=%d ijk=%d %d %d : neighiter=%d :: count=%d initial iijjkk=%d %d %d fixed=%d mindist=%21.15g\n",dir,i,j,k,neighiter,count[dir][neighiter],i+lastneigh[dir][neighiter][1],j+lastneigh[dir][neighiter][2],k+lastneigh[dir][neighiter][3],lastfixed[dir][neighiter],mindist[dir][neighiter]);
-	}
+        for(int neighiter=0;neighiter<MIN(numneigh[dir],MAXNEIGH);neighiter++){
+          dualfprintf(fail_file,"REPORTBEFOREDUPFIX: dir=%d ijk=%d %d %d : neighiter=%d :: count=%d initial iijjkk=%d %d %d fixed=%d mindist=%21.15g\n",dir,i,j,k,neighiter,count[dir][neighiter],i+lastneigh[dir][neighiter][1],j+lastneigh[dir][neighiter][2],k+lastneigh[dir][neighiter][3],lastfixed[dir][neighiter],mindist[dir][neighiter]);
+        }
       }
 
 
@@ -1986,182 +1986,182 @@ int check_nsdepth(SFTYPE time)
 
 
       if(DODUPFIX){
-	///////////////////
-	//
-	// divide out counts for multiple same-distance neighbors if exist
-	//
-	///////////////////
-	int interpproblem;
-	int delsuperorig[4],delorig[4],del[4];
-	int cancopyfromold;
-	int whilecheckiter;
-	int isongrid;
-	int trialshift;
-	for(dir=0;dir<=3;dir++){
-	  if(localisinside[dir]==1){ // only do this if inside NS in relevant sense
+        ///////////////////
+        //
+        // divide out counts for multiple same-distance neighbors if exist
+        //
+        ///////////////////
+        int interpproblem;
+        int delsuperorig[4],delorig[4],del[4];
+        int cancopyfromold;
+        int whilecheckiter;
+        int isongrid;
+        int trialshift;
+        for(dir=0;dir<=3;dir++){
+          if(localisinside[dir]==1){ // only do this if inside NS in relevant sense
 
-	    if(count[dir][neighbase]==0){
-	      dualfprintf(fail_file,"Never found nearest neighbor! dir=%d : %d %d %d\n",dir,i,j,k);
-	    }
-	    else if(count[dir][neighbase]==1){
-	      // then nothing else to do except worry that too many fixed values may be used in the interpolation if along grid lines when dealing with A_i that can be on surface of NS)
-	    }
-	    else if(count[dir][neighbase]>1){
-	      // if multiple cases, then iterate back towards i,j,k until find more closest neighbor along that path.
-
-
-	      // set initial ii,jj,kk
-	      ii=i+lastneigh[dir][neighbase][1];
-	      jj=j+lastneigh[dir][neighbase][2];
-	      kk=k+lastneigh[dir][neighbase][3];
+            if(count[dir][neighbase]==0){
+              dualfprintf(fail_file,"Never found nearest neighbor! dir=%d : %d %d %d\n",dir,i,j,k);
+            }
+            else if(count[dir][neighbase]==1){
+              // then nothing else to do except worry that too many fixed values may be used in the interpolation if along grid lines when dealing with A_i that can be on surface of NS)
+            }
+            else if(count[dir][neighbase]>1){
+              // if multiple cases, then iterate back towards i,j,k until find more closest neighbor along that path.
 
 
-	      // DEBUG:
-	      dualfprintf(fail_file,"COUNT: dir=%d ijk=%d %d %d : count=%d initial iijjkk=%d %d %d\n",dir,i,j,k,count[dir][neighbase],ii,jj,kk);
+              // set initial ii,jj,kk
+              ii=i+lastneigh[dir][neighbase][1];
+              jj=j+lastneigh[dir][neighbase][2];
+              kk=k+lastneigh[dir][neighbase][3];
 
 
-	      if(i==ii && j==jj & k==kk){
-		dualfprintf(fail_file,"DUP got ijk==ijk2: %d %d %d : %d %d %d\n",i,j,k,ii,jj,kk);
-		myexit(18492352);
-	      }
-
-	      // check if already a mask cell
-	      isongrid=(ii>=-N1BND && ii<=N1M-1 &&  jj>=-N2BND && jj<=N2M-1 &&  kk>=-N3BND && kk<=N3M-1);
-	      if(isongrid==0){ isinside=hasmask=hasinside=reallyonsurface=cancopyfrom=0; }
-	      else isinside=is_dir_insideNS(dir, ii, jj, kk, &hasmask, &hasinside, &reallyonsurface, &cancopyfrom);
+              // DEBUG:
+              dualfprintf(fail_file,"COUNT: dir=%d ijk=%d %d %d : count=%d initial iijjkk=%d %d %d\n",dir,i,j,k,count[dir][neighbase],ii,jj,kk);
 
 
-	      //	      if(! (hasmask==1 && hasinside==1 )){ // only need to do something if not already on boundary (boundary that is values that can copy from)
-	      if(cancopyfrom==0){ // only need to do something if not already on boundary (boundary that is values that can copy from)
+              if(i==ii && j==jj & k==kk){
+                dualfprintf(fail_file,"DUP got ijk==ijk2: %d %d %d : %d %d %d\n",i,j,k,ii,jj,kk);
+                myexit(18492352);
+              }
 
-		// DEBUG:
-		dualfprintf(fail_file,"INITIALDUPFIX: dir=%d count=%d : %d %d %d : %d %d %d : ihhrc=%d %d %d %d %d\n",dir,count[dir][neighbase],i,j,k,ii,jj,kk, isinside, hasmask, hasinside, reallyonsurface, cancopyfrom);
-
-		// get delsuperorig
-		interpproblem=get_del(i,j,k,ii,jj,kk,delsuperorig,del);
-
-
-		whilecheckiter=0;
-		trialshift=0;
-		int ii0,jj0,kk0;
-		int ii0true,jj0true,kk0true;
-		while(1){
-		  // get lowest order offset for each ii,jj,kk that is tried
-		  interpproblem=get_del(i,j,k,ii,jj,kk,delorig,del);
-
-		  // original ii,jj,kk before changed for test, so is always outside NS
-		  ii0=ii;
-		  jj0=jj;
-		  kk0=kk;
-
-		  // in some rare cases, may still be inside NS even if dup, so then need to move out instead of in.
-		  int signdir=(isinside==1 ? 1 : -1);
-
-		  if(trialshift==0){
-
-		    // original using actual path
-		    ii0true=ii;
-		    jj0true=jj;
-		    kk0true=kk;
-
-		    // shift ii,jj,kk back to i,j,k
-		    ii=ii+signdir*del[1];
-		    jj=jj+signdir*del[2];
-		    kk=kk+signdir*del[3];
-		  }
-		  else if(trialshift>0){
-		    // shift by direction with largest absolute offset and then only by 1 unit each step in that direction, unless that direction has no offset to begin with
-		    ii=ii+signdir*ROUND2INT(sign(del[1])) * MIN(1,abs(del[1])) * (abs(del[1])>=abs(del[2]) && abs(del[1])>=abs(del[3]));
-		    jj=jj+signdir*ROUND2INT(sign(del[2])) * MIN(1,abs(del[2])) * (abs(del[2])>=abs(del[1]) && abs(del[2])>=abs(del[3]));
-		    kk=kk+signdir*ROUND2INT(sign(del[3])) * MIN(1,abs(del[3])) * (abs(del[3])>=abs(del[1]) && abs(del[3])>=abs(del[2]));
-
-		    trialshift++;
-
-		    // DEBUG:
-		    dualfprintf(fail_file,"2Doing trialshift: dir=%d : %d %d %d : %d %d %d\n",dir,i,j,k,ii,jj,kk);
-		  }
+              // check if already a mask cell
+              isongrid=(ii>=-N1BND && ii<=N1M-1 &&  jj>=-N2BND && jj<=N2M-1 &&  kk>=-N3BND && kk<=N3M-1);
+              if(isongrid==0){ isinside=hasmask=hasinside=reallyonsurface=cancopyfrom=0; }
+              else isinside=is_dir_insideNS(dir, ii, jj, kk, &hasmask, &hasinside, &reallyonsurface, &cancopyfrom);
 
 
-		  // check if external to NS (or on shell)
-		  // only check if on the grid
-		  isongrid=(ii>=-N1BND && ii<=N1M-1 &&  jj>=-N2BND && jj<=N2M-1 &&  kk>=-N3BND && kk<=N3M-1);
-		  if(isongrid==0){ isinside=hasmask=hasinside=reallyonsurface=cancopyfrom=0; }
-		  else isinside=is_dir_insideNS(dir, ii, jj, kk, &hasmask, &hasinside, &reallyonsurface, &cancopyfrom);
+              //       if(! (hasmask==1 && hasinside==1 )){ // only need to do something if not already on boundary (boundary that is values that can copy from)
+              if(cancopyfrom==0){ // only need to do something if not already on boundary (boundary that is values that can copy from)
 
-		  // DEBUG:
-		  dualfprintf(fail_file,"DUPFIXING: dir=%d count=%d : %d %d %d : %d %d %d : %d %d %d %d %d\n",dir,count[dir][neighbase],i,j,k,ii,jj,kk,isinside,hasmask,hasinside,reallyonsurface,&cancopyfrom);
-		  int delloop;
-		  SLOOPA(delloop) dualfprintf(fail_file,"DUPFIXING2: del=%d : %d %d %d\n",delloop,del[delloop],delorig[delloop],delsuperorig[delloop]);
+                // DEBUG:
+                dualfprintf(fail_file,"INITIALDUPFIX: dir=%d count=%d : %d %d %d : %d %d %d : ihhrc=%d %d %d %d %d\n",dir,count[dir][neighbase],i,j,k,ii,jj,kk, isinside, hasmask, hasinside, reallyonsurface, cancopyfrom);
+
+                // get delsuperorig
+                interpproblem=get_del(i,j,k,ii,jj,kk,delsuperorig,del);
 
 
-		  if(interpproblem==0 && isongrid==1 && cancopyfrom==1){
-		    // then this ii,jj,kk the one we want to keep
-		    break;
-		  }
+                whilecheckiter=0;
+                trialshift=0;
+                int ii0,jj0,kk0;
+                int ii0true,jj0true,kk0true;
+                while(1){
+                  // get lowest order offset for each ii,jj,kk that is tried
+                  interpproblem=get_del(i,j,k,ii,jj,kk,delorig,del);
 
-		  if(interpproblem==0 && isongrid==1 && isinside==1){// then inside (went too far)
-		
-		    // then went too far, so back to original before inside
-		    ii=ii0;
-		    jj=jj0;
-		    kk=kk0;
+                  // original ii,jj,kk before changed for test, so is always outside NS
+                  ii0=ii;
+                  jj0=jj;
+                  kk0=kk;
 
-		    if(cancopyfromold==1){
-		      // then done!  back-up cell is a mask cell, so that's good
-		      break;
-		    }
-		    else{
-		      // try shifting by 1 unit (trying to get a mask cell)
+                  // in some rare cases, may still be inside NS even if dup, so then need to move out instead of in.
+                  int signdir=(isinside==1 ? 1 : -1);
 
-		      // DEBUG:
-		      dualfprintf(fail_file,"Doing trialshift: dir=%d : ijk=%d %d %d : ts=%d : ijk2=%d %d %d\n",dir,i,j,k,trialshift,ii,jj,kk);
+                  if(trialshift==0){
 
-		      trialshift++;
-		    }
-		  }// end if inside NS
+                    // original using actual path
+                    ii0true=ii;
+                    jj0true=jj;
+                    kk0true=kk;
 
+                    // shift ii,jj,kk back to i,j,k
+                    ii=ii+signdir*del[1];
+                    jj=jj+signdir*del[2];
+                    kk=kk+signdir*del[3];
+                  }
+                  else if(trialshift>0){
+                    // shift by direction with largest absolute offset and then only by 1 unit each step in that direction, unless that direction has no offset to begin with
+                    ii=ii+signdir*ROUND2INT(sign(del[1])) * MIN(1,abs(del[1])) * (abs(del[1])>=abs(del[2]) && abs(del[1])>=abs(del[3]));
+                    jj=jj+signdir*ROUND2INT(sign(del[2])) * MIN(1,abs(del[2])) * (abs(del[2])>=abs(del[1]) && abs(del[2])>=abs(del[3]));
+                    kk=kk+signdir*ROUND2INT(sign(del[3])) * MIN(1,abs(del[3])) * (abs(del[3])>=abs(del[1]) && abs(del[3])>=abs(del[2]));
 
-		  // check how trial shift is going
-		  if(trialshift>MAX(3,MAX( MAX( abs(delsuperorig[1]),abs(delsuperorig[2]) ) , abs(delsuperorig[3]) )  ) ){
-		    // then never found mask cell when back shifting, so revert to latest cell that's outside NS
-		    // can't trust odd path, so revert to true original
-		    ii=ii0true;
-		    jj=jj0true;
-		    kk=kk0true;
+                    trialshift++;
 
-		    dualfprintf(fail_file,"Got duplicate, found external that's close, but it's not a mask value: dir=%d : ijk=%d %d %d : ts=%d : ijk2=%d %d %d\n",dir,i,j,k,trialshift,ii,jj,kk);
-		    dualfprintf(fail_file,"count [dir=%d]=%d\n",dir,count[dir]);
-		    int testtest;
-		    for(testtest=1;testtest<=3;testtest++) dualfprintf(fail_file,"dir=%d delorig=%d del=%d\n",testtest,delorig[testtest],del[testtest]);
-
-		    break;
-		  }
-
-		  // if here, then still going
-		  cancopyfromold=cancopyfrom;
-
-		  if(whilecheckiter<100) whilecheckiter++;
-		  else{
-		    dualfprintf(fail_file,"whilecheckiter=%d caught at dir=%d : %d %d %d : %d %d %d\n",whilecheckiter,dir,i,j,k,ii,jj,kk);
-		  }
-		}// end while loop
-
-	    
-		// DEBUG:
-		dualfprintf(fail_file,"DUPDONE: dir=%d count=%d : %d %d %d : %d %d %d\n",dir,count[dir][neighbase],i,j,k,ii,jj,kk);
+                    // DEBUG:
+                    dualfprintf(fail_file,"2Doing trialshift: dir=%d : %d %d %d : %d %d %d\n",dir,i,j,k,ii,jj,kk);
+                  }
 
 
-		// get final modified ii,jj,kk
-		lastneigh[dir][neighbase][1]=(ii-i);
-		lastneigh[dir][neighbase][2]=(jj-j);
-		lastneigh[dir][neighbase][3]=(kk-k);
-		
-	      }// end if original ii,jj,kk is not a mask cell already
-	    }// end if multiple counts for this dir
-	  }// end if inside NS in relevant sense
-	    
-	}// over all dirs=0,1,2,3
-	
+                  // check if external to NS (or on shell)
+                  // only check if on the grid
+                  isongrid=(ii>=-N1BND && ii<=N1M-1 &&  jj>=-N2BND && jj<=N2M-1 &&  kk>=-N3BND && kk<=N3M-1);
+                  if(isongrid==0){ isinside=hasmask=hasinside=reallyonsurface=cancopyfrom=0; }
+                  else isinside=is_dir_insideNS(dir, ii, jj, kk, &hasmask, &hasinside, &reallyonsurface, &cancopyfrom);
+
+                  // DEBUG:
+                  dualfprintf(fail_file,"DUPFIXING: dir=%d count=%d : %d %d %d : %d %d %d : %d %d %d %d %d\n",dir,count[dir][neighbase],i,j,k,ii,jj,kk,isinside,hasmask,hasinside,reallyonsurface,&cancopyfrom);
+                  int delloop;
+                  SLOOPA(delloop) dualfprintf(fail_file,"DUPFIXING2: del=%d : %d %d %d\n",delloop,del[delloop],delorig[delloop],delsuperorig[delloop]);
+
+
+                  if(interpproblem==0 && isongrid==1 && cancopyfrom==1){
+                    // then this ii,jj,kk the one we want to keep
+                    break;
+                  }
+
+                  if(interpproblem==0 && isongrid==1 && isinside==1){// then inside (went too far)
+  
+                    // then went too far, so back to original before inside
+                    ii=ii0;
+                    jj=jj0;
+                    kk=kk0;
+
+                    if(cancopyfromold==1){
+                      // then done!  back-up cell is a mask cell, so that's good
+                      break;
+                    }
+                    else{
+                      // try shifting by 1 unit (trying to get a mask cell)
+
+                      // DEBUG:
+                      dualfprintf(fail_file,"Doing trialshift: dir=%d : ijk=%d %d %d : ts=%d : ijk2=%d %d %d\n",dir,i,j,k,trialshift,ii,jj,kk);
+
+                      trialshift++;
+                    }
+                  }// end if inside NS
+
+
+                  // check how trial shift is going
+                  if(trialshift>MAX(3,MAX( MAX( abs(delsuperorig[1]),abs(delsuperorig[2]) ) , abs(delsuperorig[3]) )  ) ){
+                    // then never found mask cell when back shifting, so revert to latest cell that's outside NS
+                    // can't trust odd path, so revert to true original
+                    ii=ii0true;
+                    jj=jj0true;
+                    kk=kk0true;
+
+                    dualfprintf(fail_file,"Got duplicate, found external that's close, but it's not a mask value: dir=%d : ijk=%d %d %d : ts=%d : ijk2=%d %d %d\n",dir,i,j,k,trialshift,ii,jj,kk);
+                    dualfprintf(fail_file,"count [dir=%d]=%d\n",dir,count[dir]);
+                    int testtest;
+                    for(testtest=1;testtest<=3;testtest++) dualfprintf(fail_file,"dir=%d delorig=%d del=%d\n",testtest,delorig[testtest],del[testtest]);
+
+                    break;
+                  }
+
+                  // if here, then still going
+                  cancopyfromold=cancopyfrom;
+
+                  if(whilecheckiter<100) whilecheckiter++;
+                  else{
+                    dualfprintf(fail_file,"whilecheckiter=%d caught at dir=%d : %d %d %d : %d %d %d\n",whilecheckiter,dir,i,j,k,ii,jj,kk);
+                  }
+                }// end while loop
+
+     
+                // DEBUG:
+                dualfprintf(fail_file,"DUPDONE: dir=%d count=%d : %d %d %d : %d %d %d\n",dir,count[dir][neighbase],i,j,k,ii,jj,kk);
+
+
+                // get final modified ii,jj,kk
+                lastneigh[dir][neighbase][1]=(ii-i);
+                lastneigh[dir][neighbase][2]=(jj-j);
+                lastneigh[dir][neighbase][3]=(kk-k);
+  
+              }// end if original ii,jj,kk is not a mask cell already
+            }// end if multiple counts for this dir
+          }// end if inside NS in relevant sense
+     
+        }// over all dirs=0,1,2,3
+ 
       }// end if DUPFIX
 
       
@@ -2172,24 +2172,24 @@ int check_nsdepth(SFTYPE time)
       //
       ////////////////
       for(dir=0;dir<=3;dir++){
-	if(localisinside[dir]==1){ // only do this if inside NS in relevant sense
-	  
-	  // store ii,jj,kk that is nearest neighbor to i,j,k 
-	  // uses [neighbase] as reference
-	  GLOBALMACP0A1(nsmask,i,j,k,NSMASKCLOSEICORN1 + 3*(dir-1) + 0)=lastneigh[dir][neighbase][1];
-	  GLOBALMACP0A1(nsmask,i,j,k,NSMASKCLOSEICORN1 + 3*(dir-1) + 1)=lastneigh[dir][neighbase][2];
-	  GLOBALMACP0A1(nsmask,i,j,k,NSMASKCLOSEICORN1 + 3*(dir-1) + 2)=lastneigh[dir][neighbase][3];
-		
-	  // force lowest min to be 1.01
-	  // assume never itself (i.e. 0 distance) or would use that fact
-	  if(mindist[dir][neighbase]<MINDISTLOCAL){
-	    mindist[dir][neighbase]=MINDISTLOCAL; // if i,j,k is not on shell, and found shell, then must be 1 cell away, so avoid (int)(0.9999)->0 and set as 1.01 so (int)1.01 -> 1
-	  }
+        if(localisinside[dir]==1){ // only do this if inside NS in relevant sense
+   
+          // store ii,jj,kk that is nearest neighbor to i,j,k 
+          // uses [neighbase] as reference
+          GLOBALMACP0A1(nsmask,i,j,k,NSMASKCLOSEICORN1 + 3*(dir-1) + 0)=lastneigh[dir][neighbase][1];
+          GLOBALMACP0A1(nsmask,i,j,k,NSMASKCLOSEICORN1 + 3*(dir-1) + 1)=lastneigh[dir][neighbase][2];
+          GLOBALMACP0A1(nsmask,i,j,k,NSMASKCLOSEICORN1 + 3*(dir-1) + 2)=lastneigh[dir][neighbase][3];
+  
+          // force lowest min to be 1.01
+          // assume never itself (i.e. 0 distance) or would use that fact
+          if(mindist[dir][neighbase]<MINDISTLOCAL){
+            mindist[dir][neighbase]=MINDISTLOCAL; // if i,j,k is not on shell, and found shell, then must be 1 cell away, so avoid (int)(0.9999)->0 and set as 1.01 so (int)1.01 -> 1
+          }
 
-	  // now have mindist for this i,j,k
-	  GLOBALMACP0A1(nsmask,i,j,k,NSMASKDISTTOSHELL+dir)=(int)mindist[dir][neighbase];
+          // now have mindist for this i,j,k
+          GLOBALMACP0A1(nsmask,i,j,k,NSMASKDISTTOSHELL+dir)=(int)mindist[dir][neighbase];
 
-	}// end if inside NS in relevant sense
+        }// end if inside NS in relevant sense
       }// over all dirs=0,1,2,3
 
     }// end if cell is inside NS in sense needed for BCs
@@ -2218,7 +2218,7 @@ int check_nsdepth(SFTYPE time)
     COMPLOOPN{
       fprintf(nscheck,"%d %d %d",i,j,k);
       for(maski=0;maski<NUMMASKFLAGS;maski++){
-	fprintf(nscheck," %d",GLOBALMACP0A1(nsmask,i,j,k,maski));
+        fprintf(nscheck," %d",GLOBALMACP0A1(nsmask,i,j,k,maski));
       }
       fprintf(nscheck,"\n");
     }
@@ -2230,49 +2230,49 @@ int check_nsdepth(SFTYPE time)
 
 
       if(1){
-	// just plot all types separately and merge manually by shifting graphic or paper
-	// in Konsole shell, can use smaller font, print to file as .ps (all 4 dirplots), open in photoshop, overlay all 4 appropriately, save, flatten, copy section, paste into new image, set size as 8.5x?" size, and print.
-	int dirplot,dira;
-	for(dirplot=0;dirplot<=4;dirplot++){
-	  dualfprintf(fail_file,"dirplot=%d\n",dirplot);
-	  k=0;
-	  COMPLOOPN2{
-	    COMPLOOPN1{
-	      int isinsideplot[NDIM],hasmaskplot[NDIM],hasinsideplot[NDIM],reallyonsurfaceplot[NDIM],cancopyfromplot[NDIM];
-	      int isonsurfaceplot[NDIM];
-	   
-	      if(dirplot<4) dira=dirplot;
-	      else if(dirplot==4) dira=0;
+        // just plot all types separately and merge manually by shifting graphic or paper
+        // in Konsole shell, can use smaller font, print to file as .ps (all 4 dirplots), open in photoshop, overlay all 4 appropriately, save, flatten, copy section, paste into new image, set size as 8.5x?" size, and print.
+        int dirplot,dira;
+        for(dirplot=0;dirplot<=4;dirplot++){
+          dualfprintf(fail_file,"dirplot=%d\n",dirplot);
+          k=0;
+          COMPLOOPN2{
+            COMPLOOPN1{
+              int isinsideplot[NDIM],hasmaskplot[NDIM],hasinsideplot[NDIM],reallyonsurfaceplot[NDIM],cancopyfromplot[NDIM];
+              int isonsurfaceplot[NDIM];
+    
+              if(dirplot<4) dira=dirplot;
+              else if(dirplot==4) dira=0;
  
-	      isinsideplot[dira]=is_dir_insideNS(dira, i, j, k, &hasmaskplot[dira], &hasinsideplot[dira], &reallyonsurfaceplot[dira], &cancopyfromplot[dira]);
-	      isonsurfaceplot[dira]=cancopyfromplot[dira]; //(isinsideplot[dira]==0 && hasmaskplot[dira]==1 && hasinsideplot[dira]==1);
+              isinsideplot[dira]=is_dir_insideNS(dira, i, j, k, &hasmaskplot[dira], &hasinsideplot[dira], &reallyonsurfaceplot[dira], &cancopyfromplot[dira]);
+              isonsurfaceplot[dira]=cancopyfromplot[dira]; //(isinsideplot[dira]==0 && hasmaskplot[dira]==1 && hasinsideplot[dira]==1);
    
-	      if(dira==0){ // CENT
-		if(dirplot==0){
-		  if(isinsideplot[dira]) dualfprintf(fail_file,"I");
-		  else  dualfprintf(fail_file,"O");
-		}
-		else if(dirplot==4){
-		  if(GLOBALMACP0A1(nsmask,i,j,k,NSMASKSHELL)) dualfprintf(fail_file,"S");
-		  else  dualfprintf(fail_file," ");
-		}		
-	      }
-	      else if(dira==1){ // CORN1==FACE2
-		if(isonsurfaceplot[dira]) dualfprintf(fail_file,"-");
-		else  dualfprintf(fail_file," ");
-	      }
-	      else if(dira==2){ // CORN2==FACE1
-		if(isonsurfaceplot[dira]) dualfprintf(fail_file,"|");
-		else  dualfprintf(fail_file," ");
-	      }
-	      else if(dira==3){ // CORN3
-		if(isonsurfaceplot[dira]) dualfprintf(fail_file,".");
-		else  dualfprintf(fail_file," ");
-	      }
-	    }// end COMPLOOPN1
-	    dualfprintf(fail_file,"\n");
-	  }// end COMPLOOPN2
-	}// end over dirs
+              if(dira==0){ // CENT
+                if(dirplot==0){
+                  if(isinsideplot[dira]) dualfprintf(fail_file,"I");
+                  else  dualfprintf(fail_file,"O");
+                }
+                else if(dirplot==4){
+                  if(GLOBALMACP0A1(nsmask,i,j,k,NSMASKSHELL)) dualfprintf(fail_file,"S");
+                  else  dualfprintf(fail_file," ");
+                }  
+              }
+              else if(dira==1){ // CORN1==FACE2
+                if(isonsurfaceplot[dira]) dualfprintf(fail_file,"-");
+                else  dualfprintf(fail_file," ");
+              }
+              else if(dira==2){ // CORN2==FACE1
+                if(isonsurfaceplot[dira]) dualfprintf(fail_file,"|");
+                else  dualfprintf(fail_file," ");
+              }
+              else if(dira==3){ // CORN3
+                if(isonsurfaceplot[dira]) dualfprintf(fail_file,".");
+                else  dualfprintf(fail_file," ");
+              }
+            }// end COMPLOOPN1
+            dualfprintf(fail_file,"\n");
+          }// end COMPLOOPN2
+        }// end over dirs
       }
 
 
@@ -2344,7 +2344,7 @@ int rescale_Bconp_and_Bcovphi_to_Bconphi(FTYPE *pr, struct of_geom *ptrgeom, FTY
   gcov03=ptrgeom->gcov[GIND(0,3)];
   gcov13=ptrgeom->gcov[GIND(1,3)];
   gcov23=ptrgeom->gcov[GIND(2,3)];
-	  
+   
   // Bd3fromBu.nb (just moved signs)
   myBd3=Bd3; // + dqBd3*(i-ri);
   ftemp=(1.0 - gcon03*gcov03 - gcon13*gcov13 - gcon23*gcov23);
@@ -2352,7 +2352,7 @@ int rescale_Bconp_and_Bcovphi_to_Bconphi(FTYPE *pr, struct of_geom *ptrgeom, FTY
   pl=B3; pr[pl] = (myBd3*gcon33 + Bu1*gcon03*gcov01 + Bu2*gcon03*gcov02 + Bu1*gcon13*gcov11 + Bu2*gcon13*gcov12 + Bu1*gcon23*gcov21 + Bu2*gcon23*gcov22)*iftempnosing;
 
   // old B_\phi imprecise copy (need to avoid singularity anywways)
-  //	  pl=B3; MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl)*fabs((ptrrgeom[pl]->gcov[GIND(3,3)])/(ptrgeom[pl]->gcov[GIND(3,3)]));
+  //   pl=B3; MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl)*fabs((ptrrgeom[pl]->gcov[GIND(3,3)])/(ptrgeom[pl]->gcov[GIND(3,3)]));
 
   return(0);
 
@@ -2446,73 +2446,73 @@ int checkmono4(int firstpos, int lastpos, FTYPE *xpos, FTYPE y0, FTYPE y1, FTYPE
   // /home/jon/testing_nsbh.nb
 
   xextreme[0]=0.16666666666666666*pow(x1*(x1 - 1.*x4)*x4*(y2 - 1.*y3) + 
-     (-1.*x4*y1 - 1.*x1*y3 + x4*y3 + x3*(y1 - 1.*y4) + x1*y4)*pow(x2,2.) + 
-     (x4*y1 + x1*y2 - 1.*x4*y2 - 1.*x1*y4)*pow(x3,2.) + 
-     x3*((-1.*y2 + y4)*pow(x1,2.) + (-1.*y1 + y2)*pow(x4,2.)) + 
-     x2*((y3 - 1.*y4)*pow(x1,2.) + (-1.*y1 + y4)*pow(x3,2.) + (y1 - 1.*y3)*pow(x4,2.)),
-    -1.)*(2.*(x1*(x1 - 1.*x4)*x4*(x1 + x4)*(y2 - 1.*y3) + 
-        (-1.*x4*y1 - 1.*x1*y3 + x4*y3 + x3*(y1 - 1.*y4) + x1*y4)*pow(x2,3.) + 
-        (x4*y1 + x1*y2 - 1.*x4*y2 - 1.*x1*y4)*pow(x3,3.) + 
-        x3*((-1.*y2 + y4)*pow(x1,3.) + (-1.*y1 + y2)*pow(x4,3.)) + 
-        x2*((y3 - 1.*y4)*pow(x1,3.) + (-1.*y1 + y4)*pow(x3,3.) + 
-           (y1 - 1.*y3)*pow(x4,3.))) - 
-     1.*pow(-12.*(x1*(x1 - 1.*x4)*x4*(y2 - 1.*y3) + 
-           (-1.*x4*y1 - 1.*x1*y3 + x4*y3 + x3*(y1 - 1.*y4) + x1*y4)*pow(x2,2.) + 
-           (x4*y1 + x1*y2 - 1.*x4*y2 - 1.*x1*y4)*pow(x3,2.) + 
-           x3*((-1.*y2 + y4)*pow(x1,2.) + (-1.*y1 + y2)*pow(x4,2.)) + 
-           x2*((y3 - 1.*y4)*pow(x1,2.) + (-1.*y1 + y4)*pow(x3,2.) + 
-              (y1 - 1.*y3)*pow(x4,2.)))*
-         ((x1 - 1.*x3)*y4*pow(x1,2.)*pow(x3,2.) - 1.*y2*pow(x1,3.)*pow(x3,2.) + 
-           y2*pow(x1,2.)*pow(x3,3.) + y2*pow(x1,3.)*pow(x4,2.) - 
-           1.*y3*pow(x1,3.)*pow(x4,2.) + y1*pow(x3,3.)*pow(x4,2.) - 
-           1.*y2*pow(x3,3.)*pow(x4,2.) + 
-           pow(x2,3.)*((-1.*y3 + y4)*pow(x1,2.) + (y1 - 1.*y4)*pow(x3,2.) + 
-              (-1.*y1 + y3)*pow(x4,2.)) - 1.*y2*pow(x1,2.)*pow(x4,3.) + 
-           y3*pow(x1,2.)*pow(x4,3.) - 1.*y1*pow(x3,2.)*pow(x4,3.) + 
-           y2*pow(x3,2.)*pow(x4,3.) + 
-           pow(x2,2.)*((y3 - 1.*y4)*pow(x1,3.) + (-1.*y1 + y4)*pow(x3,3.) + 
-              (y1 - 1.*y3)*pow(x4,3.))) + 
-        4.*pow(x1*(x1 - 1.*x4)*x4*(x1 + x4)*(y2 - 1.*y3) + 
-           (-1.*x4*y1 - 1.*x1*y3 + x4*y3 + x3*(y1 - 1.*y4) + x1*y4)*pow(x2,3.) + 
-           (x4*y1 + x1*y2 - 1.*x4*y2 - 1.*x1*y4)*pow(x3,3.) + 
-           x3*((-1.*y2 + y4)*pow(x1,3.) + (-1.*y1 + y2)*pow(x4,3.)) + 
-           x2*((y3 - 1.*y4)*pow(x1,3.) + (-1.*y1 + y4)*pow(x3,3.) + 
-	       (y1 - 1.*y3)*pow(x4,3.)),2.),0.5));
+                                      (-1.*x4*y1 - 1.*x1*y3 + x4*y3 + x3*(y1 - 1.*y4) + x1*y4)*pow(x2,2.) + 
+                                      (x4*y1 + x1*y2 - 1.*x4*y2 - 1.*x1*y4)*pow(x3,2.) + 
+                                      x3*((-1.*y2 + y4)*pow(x1,2.) + (-1.*y1 + y2)*pow(x4,2.)) + 
+                                      x2*((y3 - 1.*y4)*pow(x1,2.) + (-1.*y1 + y4)*pow(x3,2.) + (y1 - 1.*y3)*pow(x4,2.)),
+                                      -1.)*(2.*(x1*(x1 - 1.*x4)*x4*(x1 + x4)*(y2 - 1.*y3) + 
+                                                (-1.*x4*y1 - 1.*x1*y3 + x4*y3 + x3*(y1 - 1.*y4) + x1*y4)*pow(x2,3.) + 
+                                                (x4*y1 + x1*y2 - 1.*x4*y2 - 1.*x1*y4)*pow(x3,3.) + 
+                                                x3*((-1.*y2 + y4)*pow(x1,3.) + (-1.*y1 + y2)*pow(x4,3.)) + 
+                                                x2*((y3 - 1.*y4)*pow(x1,3.) + (-1.*y1 + y4)*pow(x3,3.) + 
+                                                    (y1 - 1.*y3)*pow(x4,3.))) - 
+                                            1.*pow(-12.*(x1*(x1 - 1.*x4)*x4*(y2 - 1.*y3) + 
+                                                         (-1.*x4*y1 - 1.*x1*y3 + x4*y3 + x3*(y1 - 1.*y4) + x1*y4)*pow(x2,2.) + 
+                                                         (x4*y1 + x1*y2 - 1.*x4*y2 - 1.*x1*y4)*pow(x3,2.) + 
+                                                         x3*((-1.*y2 + y4)*pow(x1,2.) + (-1.*y1 + y2)*pow(x4,2.)) + 
+                                                         x2*((y3 - 1.*y4)*pow(x1,2.) + (-1.*y1 + y4)*pow(x3,2.) + 
+                                                             (y1 - 1.*y3)*pow(x4,2.)))*
+                                                   ((x1 - 1.*x3)*y4*pow(x1,2.)*pow(x3,2.) - 1.*y2*pow(x1,3.)*pow(x3,2.) + 
+                                                    y2*pow(x1,2.)*pow(x3,3.) + y2*pow(x1,3.)*pow(x4,2.) - 
+                                                    1.*y3*pow(x1,3.)*pow(x4,2.) + y1*pow(x3,3.)*pow(x4,2.) - 
+                                                    1.*y2*pow(x3,3.)*pow(x4,2.) + 
+                                                    pow(x2,3.)*((-1.*y3 + y4)*pow(x1,2.) + (y1 - 1.*y4)*pow(x3,2.) + 
+                                                                (-1.*y1 + y3)*pow(x4,2.)) - 1.*y2*pow(x1,2.)*pow(x4,3.) + 
+                                                    y3*pow(x1,2.)*pow(x4,3.) - 1.*y1*pow(x3,2.)*pow(x4,3.) + 
+                                                    y2*pow(x3,2.)*pow(x4,3.) + 
+                                                    pow(x2,2.)*((y3 - 1.*y4)*pow(x1,3.) + (-1.*y1 + y4)*pow(x3,3.) + 
+                                                                (y1 - 1.*y3)*pow(x4,3.))) + 
+                                                   4.*pow(x1*(x1 - 1.*x4)*x4*(x1 + x4)*(y2 - 1.*y3) + 
+                                                          (-1.*x4*y1 - 1.*x1*y3 + x4*y3 + x3*(y1 - 1.*y4) + x1*y4)*pow(x2,3.) + 
+                                                          (x4*y1 + x1*y2 - 1.*x4*y2 - 1.*x1*y4)*pow(x3,3.) + 
+                                                          x3*((-1.*y2 + y4)*pow(x1,3.) + (-1.*y1 + y2)*pow(x4,3.)) + 
+                                                          x2*((y3 - 1.*y4)*pow(x1,3.) + (-1.*y1 + y4)*pow(x3,3.) + 
+                                                              (y1 - 1.*y3)*pow(x4,3.)),2.),0.5));
 
 
   xextreme[1]=0.16666666666666666*pow(x1*(x1 - 1.*x4)*x4*(y2 - 1.*y3) + 
-     (-1.*x4*y1 - 1.*x1*y3 + x4*y3 + x3*(y1 - 1.*y4) + x1*y4)*pow(x2,2.) + 
-     (x4*y1 + x1*y2 - 1.*x4*y2 - 1.*x1*y4)*pow(x3,2.) + 
-     x3*((-1.*y2 + y4)*pow(x1,2.) + (-1.*y1 + y2)*pow(x4,2.)) + 
-     x2*((y3 - 1.*y4)*pow(x1,2.) + (-1.*y1 + y4)*pow(x3,2.) + (y1 - 1.*y3)*pow(x4,2.)),
-    -1.)*(2.*(x1*(x1 - 1.*x4)*x4*(x1 + x4)*(y2 - 1.*y3) + 
-        (-1.*x4*y1 - 1.*x1*y3 + x4*y3 + x3*(y1 - 1.*y4) + x1*y4)*pow(x2,3.) + 
-        (x4*y1 + x1*y2 - 1.*x4*y2 - 1.*x1*y4)*pow(x3,3.) + 
-        x3*((-1.*y2 + y4)*pow(x1,3.) + (-1.*y1 + y2)*pow(x4,3.)) + 
-        x2*((y3 - 1.*y4)*pow(x1,3.) + (-1.*y1 + y4)*pow(x3,3.) + 
-           (y1 - 1.*y3)*pow(x4,3.))) + 
-     pow(-12.*(x1*(x1 - 1.*x4)*x4*(y2 - 1.*y3) + 
-          (-1.*x4*y1 - 1.*x1*y3 + x4*y3 + x3*(y1 - 1.*y4) + x1*y4)*pow(x2,2.) + 
-          (x4*y1 + x1*y2 - 1.*x4*y2 - 1.*x1*y4)*pow(x3,2.) + 
-          x3*((-1.*y2 + y4)*pow(x1,2.) + (-1.*y1 + y2)*pow(x4,2.)) + 
-          x2*((y3 - 1.*y4)*pow(x1,2.) + (-1.*y1 + y4)*pow(x3,2.) + 
-             (y1 - 1.*y3)*pow(x4,2.)))*
-        ((x1 - 1.*x3)*y4*pow(x1,2.)*pow(x3,2.) - 1.*y2*pow(x1,3.)*pow(x3,2.) + 
-          y2*pow(x1,2.)*pow(x3,3.) + y2*pow(x1,3.)*pow(x4,2.) - 
-          1.*y3*pow(x1,3.)*pow(x4,2.) + y1*pow(x3,3.)*pow(x4,2.) - 
-          1.*y2*pow(x3,3.)*pow(x4,2.) + 
-          pow(x2,3.)*((-1.*y3 + y4)*pow(x1,2.) + (y1 - 1.*y4)*pow(x3,2.) + 
-             (-1.*y1 + y3)*pow(x4,2.)) - 1.*y2*pow(x1,2.)*pow(x4,3.) + 
-          y3*pow(x1,2.)*pow(x4,3.) - 1.*y1*pow(x3,2.)*pow(x4,3.) + 
-          y2*pow(x3,2.)*pow(x4,3.) + 
-          pow(x2,2.)*((y3 - 1.*y4)*pow(x1,3.) + (-1.*y1 + y4)*pow(x3,3.) + 
-             (y1 - 1.*y3)*pow(x4,3.))) + 
-       4.*pow(x1*(x1 - 1.*x4)*x4*(x1 + x4)*(y2 - 1.*y3) + 
-          (-1.*x4*y1 - 1.*x1*y3 + x4*y3 + x3*(y1 - 1.*y4) + x1*y4)*pow(x2,3.) + 
-          (x4*y1 + x1*y2 - 1.*x4*y2 - 1.*x1*y4)*pow(x3,3.) + 
-          x3*((-1.*y2 + y4)*pow(x1,3.) + (-1.*y1 + y2)*pow(x4,3.)) + 
-          x2*((y3 - 1.*y4)*pow(x1,3.) + (-1.*y1 + y4)*pow(x3,3.) + 
-	      (y1 - 1.*y3)*pow(x4,3.)),2.),0.5));
+                                      (-1.*x4*y1 - 1.*x1*y3 + x4*y3 + x3*(y1 - 1.*y4) + x1*y4)*pow(x2,2.) + 
+                                      (x4*y1 + x1*y2 - 1.*x4*y2 - 1.*x1*y4)*pow(x3,2.) + 
+                                      x3*((-1.*y2 + y4)*pow(x1,2.) + (-1.*y1 + y2)*pow(x4,2.)) + 
+                                      x2*((y3 - 1.*y4)*pow(x1,2.) + (-1.*y1 + y4)*pow(x3,2.) + (y1 - 1.*y3)*pow(x4,2.)),
+                                      -1.)*(2.*(x1*(x1 - 1.*x4)*x4*(x1 + x4)*(y2 - 1.*y3) + 
+                                                (-1.*x4*y1 - 1.*x1*y3 + x4*y3 + x3*(y1 - 1.*y4) + x1*y4)*pow(x2,3.) + 
+                                                (x4*y1 + x1*y2 - 1.*x4*y2 - 1.*x1*y4)*pow(x3,3.) + 
+                                                x3*((-1.*y2 + y4)*pow(x1,3.) + (-1.*y1 + y2)*pow(x4,3.)) + 
+                                                x2*((y3 - 1.*y4)*pow(x1,3.) + (-1.*y1 + y4)*pow(x3,3.) + 
+                                                    (y1 - 1.*y3)*pow(x4,3.))) + 
+                                            pow(-12.*(x1*(x1 - 1.*x4)*x4*(y2 - 1.*y3) + 
+                                                      (-1.*x4*y1 - 1.*x1*y3 + x4*y3 + x3*(y1 - 1.*y4) + x1*y4)*pow(x2,2.) + 
+                                                      (x4*y1 + x1*y2 - 1.*x4*y2 - 1.*x1*y4)*pow(x3,2.) + 
+                                                      x3*((-1.*y2 + y4)*pow(x1,2.) + (-1.*y1 + y2)*pow(x4,2.)) + 
+                                                      x2*((y3 - 1.*y4)*pow(x1,2.) + (-1.*y1 + y4)*pow(x3,2.) + 
+                                                          (y1 - 1.*y3)*pow(x4,2.)))*
+                                                ((x1 - 1.*x3)*y4*pow(x1,2.)*pow(x3,2.) - 1.*y2*pow(x1,3.)*pow(x3,2.) + 
+                                                 y2*pow(x1,2.)*pow(x3,3.) + y2*pow(x1,3.)*pow(x4,2.) - 
+                                                 1.*y3*pow(x1,3.)*pow(x4,2.) + y1*pow(x3,3.)*pow(x4,2.) - 
+                                                 1.*y2*pow(x3,3.)*pow(x4,2.) + 
+                                                 pow(x2,3.)*((-1.*y3 + y4)*pow(x1,2.) + (y1 - 1.*y4)*pow(x3,2.) + 
+                                                             (-1.*y1 + y3)*pow(x4,2.)) - 1.*y2*pow(x1,2.)*pow(x4,3.) + 
+                                                 y3*pow(x1,2.)*pow(x4,3.) - 1.*y1*pow(x3,2.)*pow(x4,3.) + 
+                                                 y2*pow(x3,2.)*pow(x4,3.) + 
+                                                 pow(x2,2.)*((y3 - 1.*y4)*pow(x1,3.) + (-1.*y1 + y4)*pow(x3,3.) + 
+                                                             (y1 - 1.*y3)*pow(x4,3.))) + 
+                                                4.*pow(x1*(x1 - 1.*x4)*x4*(x1 + x4)*(y2 - 1.*y3) + 
+                                                       (-1.*x4*y1 - 1.*x1*y3 + x4*y3 + x3*(y1 - 1.*y4) + x1*y4)*pow(x2,3.) + 
+                                                       (x4*y1 + x1*y2 - 1.*x4*y2 - 1.*x1*y4)*pow(x3,3.) + 
+                                                       x3*((-1.*y2 + y4)*pow(x1,3.) + (-1.*y1 + y2)*pow(x4,3.)) + 
+                                                       x2*((y3 - 1.*y4)*pow(x1,3.) + (-1.*y1 + y4)*pow(x3,3.) + 
+                                                           (y1 - 1.*y3)*pow(x4,3.)),2.),0.5));
 
 
   // ensure extremum is outside the range of the values used for interpolation
@@ -2546,11 +2546,11 @@ int checkmono3(int firstpos, int lastpos, FTYPE *xpos, FTYPE y0, FTYPE y1, FTYPE
   // /home/jon/testing_nsbh.nb
 
   xextreme=0.5*(x1 - 1.*x2)*(x1 - 1.*x3)*(x2 - 1.*x3)*
-   (-1.*(y2 - 1.*y3)*pow(x1,2.)*pow(x1 - 1.*x2,-1.)*pow(x1 - 1.*x3,-1.)*
-      pow(x2 - 1.*x3,-1.) - 1.*(-1.*y1 + y3)*pow(x1 - 1.*x2,-1.)*pow(x2,2.)*
-      pow(x1 - 1.*x3,-1.)*pow(x2 - 1.*x3,-1.) - 
+    (-1.*(y2 - 1.*y3)*pow(x1,2.)*pow(x1 - 1.*x2,-1.)*pow(x1 - 1.*x3,-1.)*
+     pow(x2 - 1.*x3,-1.) - 1.*(-1.*y1 + y3)*pow(x1 - 1.*x2,-1.)*pow(x2,2.)*
+     pow(x1 - 1.*x3,-1.)*pow(x2 - 1.*x3,-1.) - 
      1.*(y1 - 1.*y2)*pow(x1 - 1.*x2,-1.)*pow(x1 - 1.*x3,-1.)*pow(x2 - 1.*x3,-1.)*
-    pow(x3,2.))*pow(-1.*x3*y1 - 1.*x1*y2 + x3*y2 + x2*(y1 - 1.*y3) + x1*y3,-1.);
+     pow(x3,2.))*pow(-1.*x3*y1 - 1.*x1*y2 + x3*y2 + x2*(y1 - 1.*y3) + x1*y3,-1.);
 
   
   // ensure extremum is outside the range of the values used for interpolation
@@ -2729,360 +2729,360 @@ void bound_gen_deeppara(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *
       // loop over dirs.  dir=0 for CENT and dir=1,2,3 for CORN's.
       for(dir=dirstart;dir<=dirend;dir++){
 
-	// get odir's
-	get_odirs(dir,&odir1,&odir2);
+        // get odir's
+        get_odirs(dir,&odir1,&odir2);
 
-	// set pos for computing geometry and primitive
-	if(dir==0) pos=CENT;
-	else if(dir==1) pos=CORN1;
-	else if(dir==2) pos=CORN2;
-	else if(dir==3) pos=CORN3;
-
-
-	
-	// Only bound if A_i  is such that a boundary cell, which occurs if *all* cells directly *touching* A_i are boundary cells.  Otherwise, should be set as surface value.
-	isinsideNSijk=is_dir_insideNS(dir,i,j,k, &hasmaskijk, &hasinsideijk, &reallyonsurfaceijk, &cancopyfromijk);
-	//	isinsideNSijk=GLOBALMACP0A1(nsmask,i,j,k,NSMASKINSIDE);
-	// if inside NS, then use shell values to form average (distance weighted) answer for boundary values
-
-	if(isinsideNSijk){
-
-	  int interpproblem;
-	  int delorig[5];
-	  int del[5];
-	  int pliter,pl;
-	  int countonsurface[NDIM]={0};
-	  int countinsidesurface[NDIM]={0};
-	  int countiter;
+        // set pos for computing geometry and primitive
+        if(dir==0) pos=CENT;
+        else if(dir==1) pos=CORN1;
+        else if(dir==2) pos=CORN2;
+        else if(dir==3) pos=CORN3;
 
 
-	  // get nearest neighbor for this dir=0 (CENT) or A_{dir}
-	  ii=i+GLOBALMACP0A1(nsmask,i,j,k,NSMASKCLOSEICORN1 + 3*(dir-1) + 0);
-	  jj=j+GLOBALMACP0A1(nsmask,i,j,k,NSMASKCLOSEICORN1 + 3*(dir-1) + 1);
-	  kk=k+GLOBALMACP0A1(nsmask,i,j,k,NSMASKCLOSEICORN1 + 3*(dir-1) + 2);
+ 
+        // Only bound if A_i  is such that a boundary cell, which occurs if *all* cells directly *touching* A_i are boundary cells.  Otherwise, should be set as surface value.
+        isinsideNSijk=is_dir_insideNS(dir,i,j,k, &hasmaskijk, &hasinsideijk, &reallyonsurfaceijk, &cancopyfromijk);
+        // isinsideNSijk=GLOBALMACP0A1(nsmask,i,j,k,NSMASKINSIDE);
+        // if inside NS, then use shell values to form average (distance weighted) answer for boundary values
+
+        if(isinsideNSijk){
+
+          int interpproblem;
+          int delorig[5];
+          int del[5];
+          int pliter,pl;
+          int countonsurface[NDIM]={0};
+          int countinsidesurface[NDIM]={0};
+          int countiter;
 
 
-	  interpproblem=0;
-	  // get lowest order offsets in each dimension
-	  interpproblem+=get_del(i,j,k,ii,jj,kk,delorig,del);
+          // get nearest neighbor for this dir=0 (CENT) or A_{dir}
+          ii=i+GLOBALMACP0A1(nsmask,i,j,k,NSMASKCLOSEICORN1 + 3*(dir-1) + 0);
+          jj=j+GLOBALMACP0A1(nsmask,i,j,k,NSMASKCLOSEICORN1 + 3*(dir-1) + 1);
+          kk=k+GLOBALMACP0A1(nsmask,i,j,k,NSMASKCLOSEICORN1 + 3*(dir-1) + 2);
 
 
-	  // DEBUG:
-	  int spaceiter;
-	  SLOOPA(spaceiter) dualfprintf(fail_file,"PDFC2b: siter=%d : delorig=%d del=%d\n",spaceiter,delorig[spaceiter],del[spaceiter]);
+          interpproblem=0;
+          // get lowest order offsets in each dimension
+          interpproblem+=get_del(i,j,k,ii,jj,kk,delorig,del);
 
 
-	  // now have offset for each cell to grab from starting ii,jj,kk position
-	  if(interpproblem==0){
-
-	    ///////////////
-	    //
-	    // get compactvalue corresponding to perpendicular interpolation across nearest points to i,j,k
-	    //
-	    ///////////////
-	    int usecompact,usecompactpl[NPR];
-	    FTYPE compactvalue[NPR];
- 	    PLOOP(pliter,pl) compactvalue[pl]=dumbinf;
-	    FTYPE iref,jref,kref;
-	    int poscorn,icorn,jcorn,kcorn;
-	    usecompact=get_compactvalue(time, prim, Nvec, vpot,  dir,  pos, i,  j,  k,  ii,  jj,  kk, del, usecompactpl, compactvalue,&iref,&jref,&kref,&poscorn,&icorn,&jcorn,&kcorn);
+          // DEBUG:
+          int spaceiter;
+          SLOOPA(spaceiter) dualfprintf(fail_file,"PDFC2b: siter=%d : delorig=%d del=%d\n",spaceiter,delorig[spaceiter],del[spaceiter]);
 
 
-	    dualfprintf(fail_file,"BEFORE PRFULLDEL\n");
+          // now have offset for each cell to grab from starting ii,jj,kk position
+          if(interpproblem==0){
+
+            ///////////////
+            //
+            // get compactvalue corresponding to perpendicular interpolation across nearest points to i,j,k
+            //
+            ///////////////
+            int usecompact,usecompactpl[NPR];
+            FTYPE compactvalue[NPR];
+            PLOOP(pliter,pl) compactvalue[pl]=dumbinf;
+            FTYPE iref,jref,kref;
+            int poscorn,icorn,jcorn,kcorn;
+            usecompact=get_compactvalue(time, prim, Nvec, vpot,  dir,  pos, i,  j,  k,  ii,  jj,  kk, del, usecompactpl, compactvalue,&iref,&jref,&kref,&poscorn,&icorn,&jcorn,&kcorn);
 
 
-	    ///////////////
-	    //
-	    // get interpolation along full del[1,2,3] direction
-	    // assumes optimal to interpolate along diagonal.  Sometimes, however, leads to kink along grid directions and code notices the kinks and dissipation is inevitable.
-	    //
-	    ///////////////
-	    int gotvaluedel[NDIM];
-	    int numpointsuseddel[NDIM];
-	    int gotfullvalue;
-	    FTYPE prfulldel[2][NPR];
- 	    for(int rediter=0;rediter<2;rediter++) PLOOP(pliter,pl) prfulldel[rediter][pl]=dumbinf;
-	    int isongridfull[5],isinsidefull[5],hasmaskfull[5],hasinsidefull[5],reallyonsurfacefull[5],cancopyfromfull[5];
-	    FTYPE xposfull[5];
-	    int numpointsusedfulldel;
-	    int compactpointfull;
+            dualfprintf(fail_file,"BEFORE PRFULLDEL\n");
+
+
+            ///////////////
+            //
+            // get interpolation along full del[1,2,3] direction
+            // assumes optimal to interpolate along diagonal.  Sometimes, however, leads to kink along grid directions and code notices the kinks and dissipation is inevitable.
+            //
+            ///////////////
+            int gotvaluedel[NDIM];
+            int numpointsuseddel[NDIM];
+            int gotfullvalue;
+            FTYPE prfulldel[2][NPR];
+            for(int rediter=0;rediter<2;rediter++) PLOOP(pliter,pl) prfulldel[rediter][pl]=dumbinf;
+            int isongridfull[5],isinsidefull[5],hasmaskfull[5],hasinsidefull[5],reallyonsurfacefull[5],cancopyfromfull[5];
+            FTYPE xposfull[5];
+            int numpointsusedfulldel;
+            int compactpointfull;
   
-	    gotvaluedel[0]=gotfullvalue=!get_fulldel_interpolation(time, prim, Nvec, vpot, dir, pos, i, j, k, ii, jj, kk, iref, jref, kref, poscorn, icorn, jcorn, kcorn, del, usecompact, compactvalue, isongridfull, isinsidefull, hasmaskfull, hasinsidefull, reallyonsurfacefull, cancopyfromfull, &numpointsusedfulldel, xposfull, &compactpointfull, prfulldel[0], prfulldel[1]);
-	    numpointsuseddel[0]=numpointsusedfulldel; // for later
+            gotvaluedel[0]=gotfullvalue=!get_fulldel_interpolation(time, prim, Nvec, vpot, dir, pos, i, j, k, ii, jj, kk, iref, jref, kref, poscorn, icorn, jcorn, kcorn, del, usecompact, compactvalue, isongridfull, isinsidefull, hasmaskfull, hasinsidefull, reallyonsurfacefull, cancopyfromfull, &numpointsusedfulldel, xposfull, &compactpointfull, prfulldel[0], prfulldel[1]);
+            numpointsuseddel[0]=numpointsusedfulldel; // for later
 
-	    for(countiter=1;countiter<=numpointsusedfulldel;countiter++){// avoid 0 since that's i,j,k itself, and go to =numpoints since that's 1,2,3,...numpoints all used to get value at i,j,k
-	      //	      if(isongridfull[countiter]==1 && isinsidefull[countiter]==0 && hasmaskfull[countiter]==1 && hasinsidefull[countiter]==1) countonsurface[0]++;
-	      if(isongridfull[countiter]==1 && reallyonsurfacefull[countiter]==1) countonsurface[0]++; // actually only restrict if really on the surface where value is fixed, else still flexible point.
-	      if(isinsidefull[countiter]==1) countinsidesurface[0]++; // gotvaluedel==0 if any points inside surface, so not needed yet
-	    }
+            for(countiter=1;countiter<=numpointsusedfulldel;countiter++){// avoid 0 since that's i,j,k itself, and go to =numpoints since that's 1,2,3,...numpoints all used to get value at i,j,k
+              //       if(isongridfull[countiter]==1 && isinsidefull[countiter]==0 && hasmaskfull[countiter]==1 && hasinsidefull[countiter]==1) countonsurface[0]++;
+              if(isongridfull[countiter]==1 && reallyonsurfacefull[countiter]==1) countonsurface[0]++; // actually only restrict if really on the surface where value is fixed, else still flexible point.
+              if(isinsidefull[countiter]==1) countinsidesurface[0]++; // gotvaluedel==0 if any points inside surface, so not needed yet
+            }
 
 
-	    
-	    dualfprintf(fail_file,"BEFORE PRDEL123\n");
-	    
-	    ////////////////
-	    //
-	    // get interpolation along individual del directions if del!=0
-	    //
-	    ////////////////
-	    FTYPE prdel[2][NDIM][NPR];
-	    int isongriddel[NDIM][5],isinsidedel[NDIM][5],hasmaskdel[NDIM][5],hasinsidedel[NDIM][5],reallyonsurfacedel[NDIM][5],cancopyfromdel[NDIM][5];
-	    FTYPE xposdel[NDIM][5];
-	    int compactpointdel[NDIM];
+     
+            dualfprintf(fail_file,"BEFORE PRDEL123\n");
+     
+            ////////////////
+            //
+            // get interpolation along individual del directions if del!=0
+            //
+            ////////////////
+            FTYPE prdel[2][NDIM][NPR];
+            int isongriddel[NDIM][5],isinsidedel[NDIM][5],hasmaskdel[NDIM][5],hasinsidedel[NDIM][5],reallyonsurfacedel[NDIM][5],cancopyfromdel[NDIM][5];
+            FTYPE xposdel[NDIM][5];
+            int compactpointdel[NDIM];
 
-	    for(int rediter=0;rediter<2;rediter++) SLOOPA(deliter) PLOOP(pliter,pl) prdel[rediter][deliter][pl]=dumbinf;
-	    
+            for(int rediter=0;rediter<2;rediter++) SLOOPA(deliter) PLOOP(pliter,pl) prdel[rediter][deliter][pl]=dumbinf;
+     
 
-	    int countdeldimen=0;
+            int countdeldimen=0;
 
-	    int ijk[NDIM]; ijk[1]=i; ijk[2]=j; ijk[3]=k;
-	    
-	    SLOOPA(deliter){ if(del[deliter]!=0) countdeldimen++; }
-	    if(countdeldimen>=2){ // only relevant (different than get_fulldel_interpolation() above that obtained prfulldel) if at least two del's are non-zero
+            int ijk[NDIM]; ijk[1]=i; ijk[2]=j; ijk[3]=k;
+     
+            SLOOPA(deliter){ if(del[deliter]!=0) countdeldimen++; }
+            if(countdeldimen>=2){ // only relevant (different than get_fulldel_interpolation() above that obtained prfulldel) if at least two del's are non-zero
 
-	      int delalt[NDIM][NDIM];
-	      int iijjkkalt[NDIM][NDIM];
+              int delalt[NDIM][NDIM];
+              int iijjkkalt[NDIM][NDIM];
 
-	      SLOOPA(deliter){// over grid-aligned directions (deliter refers to directions 1,2, or 3)
+              SLOOPA(deliter){// over grid-aligned directions (deliter refers to directions 1,2, or 3)
 
-		// no need to do interpolation if no del in that direction
-		if(del[deliter]==0) continue;
+                // no need to do interpolation if no del in that direction
+                if(del[deliter]==0) continue;
 
-		// get odir's
-		int odir1del,odir2del;
-		get_odirs(deliter,&odir1del,&odir2del);
+                // get odir's
+                int odir1del,odir2del;
+                get_odirs(deliter,&odir1del,&odir2del);
 
-		
-		delalt[deliter][deliter]=del[deliter]; // delalt[which direction][amount of del1,del2,del3 (1,2,3) for that direction] = [del along del-direction]
-		delalt[deliter][odir1del]=delalt[deliter][odir2del]=0; // del=0 for orthogonal directions for interpolation along del-direction 
+  
+                delalt[deliter][deliter]=del[deliter]; // delalt[which direction][amount of del1,del2,del3 (1,2,3) for that direction] = [del along del-direction]
+                delalt[deliter][odir1del]=delalt[deliter][odir2del]=0; // del=0 for orthogonal directions for interpolation along del-direction 
 
-		// Any del's added will only be farther from NS, so always outside -- because NS has regular constant closed curvature.
-		// iref,jref,kref,poscorn,icorn,jcorn,kcorn won't be used since usecompact=0
-		int localusecompact=0; // compactvalue won't be used
-		int iidel,jjdel,kkdel;
-		int isinsidetemp,hasmasktemp,hasinsidetemp,reallyonsurfacetemp,cancopyfromtemp;
+                // Any del's added will only be farther from NS, so always outside -- because NS has regular constant closed curvature.
+                // iref,jref,kref,poscorn,icorn,jcorn,kcorn won't be used since usecompact=0
+                int localusecompact=0; // compactvalue won't be used
+                int iidel,jjdel,kkdel;
+                int isinsidetemp,hasmasktemp,hasinsidetemp,reallyonsurfacetemp,cancopyfromtemp;
 
-		// starting guess for iijjkkdel
-		iidel = i + (ii-i)*(deliter==1);
-		jjdel = j + (jj-j)*(deliter==2);
-		kkdel = k + (kk-k)*(deliter==3);
+                // starting guess for iijjkkdel
+                iidel = i + (ii-i)*(deliter==1);
+                jjdel = j + (jj-j)*(deliter==2);
+                kkdel = k + (kk-k)*(deliter==3);
 
-		// new reference point for nearest neighbor, which if here, should be on surface or outside NS.  Since using single index ii or jj or kk generally won't be far enough along grid lines, search for valid point
-		int numtries=0;
+                // new reference point for nearest neighbor, which if here, should be on surface or outside NS.  Since using single index ii or jj or kk generally won't be far enough along grid lines, search for valid point
+                int numtries=0;
 #define MAXNUMTRIES (Nvec[deliter])
-		while(1){
-		  isinsidetemp=is_dir_insideNS(dir, iidel, jjdel, kkdel, &hasmasktemp, &hasinsidetemp, &reallyonsurfacetemp, &cancopyfromtemp);
-		  if(isinsidetemp==1){
-		    iidel += (deliter==1)*(delalt[deliter][1]>=1 ? 1 : (delalt[deliter][1]<=-1 ? -1 : 0));
-		    jjdel += (deliter==2)*(delalt[deliter][2]>=1 ? 1 : (delalt[deliter][2]<=-1 ? -1 : 0));
-		    kkdel += (deliter==3)*(delalt[deliter][3]>=1 ? 1 : (delalt[deliter][3]<=-1 ? -1 : 0));
-		  }
-		  else{
-		    // then done finding near-surface (strictly outside) point
-		    break;
-		  }
-		  numtries++;
-		  if(numtries>MAXNUMTRIES){
-		    dualfprintf(fail_file,"Reached numtries=%d for dir=%d ijk=%d %d %d : iijjkkdel=%d %d %d\n",numtries,dir,i,j,k,iidel,jjdel,kkdel);
-		    myexit(633254236);
-		  }
-		}
+                while(1){
+                  isinsidetemp=is_dir_insideNS(dir, iidel, jjdel, kkdel, &hasmasktemp, &hasinsidetemp, &reallyonsurfacetemp, &cancopyfromtemp);
+                  if(isinsidetemp==1){
+                    iidel += (deliter==1)*(delalt[deliter][1]>=1 ? 1 : (delalt[deliter][1]<=-1 ? -1 : 0));
+                    jjdel += (deliter==2)*(delalt[deliter][2]>=1 ? 1 : (delalt[deliter][2]<=-1 ? -1 : 0));
+                    kkdel += (deliter==3)*(delalt[deliter][3]>=1 ? 1 : (delalt[deliter][3]<=-1 ? -1 : 0));
+                  }
+                  else{
+                    // then done finding near-surface (strictly outside) point
+                    break;
+                  }
+                  numtries++;
+                  if(numtries>MAXNUMTRIES){
+                    dualfprintf(fail_file,"Reached numtries=%d for dir=%d ijk=%d %d %d : iijjkkdel=%d %d %d\n",numtries,dir,i,j,k,iidel,jjdel,kkdel);
+                    myexit(633254236);
+                  }
+                }
 
-		// DEBUG:
-		dualfprintf(fail_file,"dir=%d ijk=%d %d %d : deliter=%d odir12del=%d %d iijjkkdel=%d %d %d\n",dir,i,j,k,deliter,odir1del,odir2del,iidel,jjdel,kkdel);
+                // DEBUG:
+                dualfprintf(fail_file,"dir=%d ijk=%d %d %d : deliter=%d odir12del=%d %d iijjkkdel=%d %d %d\n",dir,i,j,k,deliter,odir1del,odir2del,iidel,jjdel,kkdel);
 
-		
-		gotvaluedel[deliter]=!get_fulldel_interpolation(time, prim, Nvec, vpot, dir, pos, i, j, k, iidel, jjdel, kkdel, iref, jref, kref, poscorn, icorn, jcorn, kcorn, delalt[deliter], localusecompact, compactvalue, isongriddel[deliter], isinsidedel[deliter], hasmaskdel[deliter], hasinsidedel[deliter], reallyonsurfacedel[deliter], cancopyfromdel[deliter], &numpointsuseddel[deliter],  xposdel[deliter], &compactpointdel[deliter], prdel[0][deliter],prdel[1][deliter]);
+  
+                gotvaluedel[deliter]=!get_fulldel_interpolation(time, prim, Nvec, vpot, dir, pos, i, j, k, iidel, jjdel, kkdel, iref, jref, kref, poscorn, icorn, jcorn, kcorn, delalt[deliter], localusecompact, compactvalue, isongriddel[deliter], isinsidedel[deliter], hasmaskdel[deliter], hasinsidedel[deliter], reallyonsurfacedel[deliter], cancopyfromdel[deliter], &numpointsuseddel[deliter],  xposdel[deliter], &compactpointdel[deliter], prdel[0][deliter],prdel[1][deliter]);
 
-		// iterate if other points used are actually on surface (only occurs for A_i)
-		for(countiter=1;countiter<=numpointsuseddel[deliter];countiter++){ // avoid 0 point that is i,j,k itself, and go out to =numpoints since includes one of points to get value at i,j,k
-		  //		  if(isongriddel[deliter][countiter]==1 && isinsidedel[deliter][countiter]==0 && hasmaskdel[deliter][countiter]==1 && hasinsidedel[deliter][countiter]==1) countonsurface[deliter]++;
-		  if(isongriddel[deliter][countiter]==1 && reallyonsurfacedel[deliter][countiter]==1) countonsurface[deliter]++; // only count of really on surface; trying to avoid fixed values
-		  if(isinsidedel[deliter][countiter]==1) countinsidesurface[deliter]++; // gotvaluedel==0 if any points inside surface, so not needed yet
-		}
-	      }
-
-
-	      // DEBUG:
-	      // compare various versions
-	      PLOOP(pliter,pl){
-		if(vpot!=NULL) pl=0;
-
-		dualfprintf(fail_file,"dir=%d ijk=%d %d %d : pl=%d : prfulldel=%21.15g prdel1=%21.15g prdel2=%21.15g prdel3=%21.15g\n",dir,i,j,k,pl,prfulldel[0][pl],prdel[0][1][pl],prdel[0][2][pl],prdel[0][3][pl]);
-		dualfprintf(fail_file,"dir=%d ijk=%d %d %d : pl=%d : prfulldelreduced=%21.15g prdelreduced1=%21.15g prdelreduced2=%21.15g prdelreduced3=%21.15g\n",dir,i,j,k,pl,prfulldel[1][pl],prdel[1][1][pl],prdel[1][2][pl],prdel[1][3][pl]);
-
-		if(vpot!=NULL) pliter=nprend+1;
-	      }
+                // iterate if other points used are actually on surface (only occurs for A_i)
+                for(countiter=1;countiter<=numpointsuseddel[deliter];countiter++){ // avoid 0 point that is i,j,k itself, and go out to =numpoints since includes one of points to get value at i,j,k
+                  //    if(isongriddel[deliter][countiter]==1 && isinsidedel[deliter][countiter]==0 && hasmaskdel[deliter][countiter]==1 && hasinsidedel[deliter][countiter]==1) countonsurface[deliter]++;
+                  if(isongriddel[deliter][countiter]==1 && reallyonsurfacedel[deliter][countiter]==1) countonsurface[deliter]++; // only count of really on surface; trying to avoid fixed values
+                  if(isinsidedel[deliter][countiter]==1) countinsidesurface[deliter]++; // gotvaluedel==0 if any points inside surface, so not needed yet
+                }
+              }
 
 
-	    }// end if at least 2 dimensions have del	  
+              // DEBUG:
+              // compare various versions
+              PLOOP(pliter,pl){
+                if(vpot!=NULL) pl=0;
+
+                dualfprintf(fail_file,"dir=%d ijk=%d %d %d : pl=%d : prfulldel=%21.15g prdel1=%21.15g prdel2=%21.15g prdel3=%21.15g\n",dir,i,j,k,pl,prfulldel[0][pl],prdel[0][1][pl],prdel[0][2][pl],prdel[0][3][pl]);
+                dualfprintf(fail_file,"dir=%d ijk=%d %d %d : pl=%d : prfulldelreduced=%21.15g prdelreduced1=%21.15g prdelreduced2=%21.15g prdelreduced3=%21.15g\n",dir,i,j,k,pl,prfulldel[1][pl],prdel[1][1][pl],prdel[1][2][pl],prdel[1][3][pl]);
+
+                if(vpot!=NULL) pliter=nprend+1;
+              }
 
 
-	    dualfprintf(fail_file,"AFTER PRDEL123\n");
+            }// end if at least 2 dimensions have del   
 
 
+            dualfprintf(fail_file,"AFTER PRDEL123\n");
 
 
 
 
-	    ///////////////////////
-	    //
-	    // Determine which path to use for extrapolation
-	    //
-	    ///////////////////////	    
-	    
-	    
-	    FTYPE prnew[2][NPR];
-
-	    // default
-	    PLOOP(pliter,pl) prnew[FULLINTERP][pl]=prfulldel[FULLINTERP][pl];
 
 
+            ///////////////////////
+            //
+            // Determine which path to use for extrapolation
+            //
+            ///////////////////////     
+     
+     
+            FTYPE prnew[2][NPR];
 
-	    if(countdeldimen>=2){
+            // default
+            PLOOP(pliter,pl) prnew[FULLINTERP][pl]=prfulldel[FULLINTERP][pl];
+
+
+
+            if(countdeldimen>=2){
 #if(0)
-	      // just average all versions (prfulldel, and any prdel's that are valid)
-	      PLOOP(pliter,pl) prnew[0][pl]=prfulldel[pl];
-	      if(del[1]!=0) PLOOP(pliter,pl) prnew[0][pl]+=prdel[1][pl];
-	      if(del[2]!=0) PLOOP(pliter,pl) prnew[0][pl]+=prdel[2][pl];
-	      if(del[3]!=0) PLOOP(pliter,pl) prnew[0][pl]+=prdel[3][pl];
-	      // normalize
-	      PLOOP(pliter,pl) prnew[0][pl]/=(1.0+(FTYPE)countdeldimen);
+              // just average all versions (prfulldel, and any prdel's that are valid)
+              PLOOP(pliter,pl) prnew[0][pl]=prfulldel[pl];
+              if(del[1]!=0) PLOOP(pliter,pl) prnew[0][pl]+=prdel[1][pl];
+              if(del[2]!=0) PLOOP(pliter,pl) prnew[0][pl]+=prdel[2][pl];
+              if(del[3]!=0) PLOOP(pliter,pl) prnew[0][pl]+=prdel[3][pl];
+              // normalize
+              PLOOP(pliter,pl) prnew[0][pl]/=(1.0+(FTYPE)countdeldimen);
 
 #elif(1)
-	      // give preference to those cases that have fewest fixed values
-	      for(int rediter=0;rediter<2;rediter++) PLOOP(pliter,pl) prnew[rediter][pl]=0.0;
+              // give preference to those cases that have fewest fixed values
+              for(int rediter=0;rediter<2;rediter++) PLOOP(pliter,pl) prnew[rediter][pl]=0.0;
 
-	      FTYPE totalweight[2]={0.0,0.0};
-	      int ignore[NDIM],ignoreiter;
-	      /////////////////////
-	      //
-	      // translate some prfull results into del[0] form for simplicity of routines below
-	      //
-	      /////////////////////
-	      if(usecompact==1){
-		xposdel[0][0]=xposfull[0];
-		xposdel[0][1]=xposfull[compactpointfull];
-		xposdel[0][2]=xposfull[1];
-		xposdel[0][3]=xposfull[2];
-	      }
-	      else{
-		xposdel[0][0]=xposfull[0];
-		xposdel[0][1]=xposfull[1];
-		xposdel[0][2]=xposfull[2];
-		xposdel[0][3]=xposfull[3];
-	      }
-	      ignore[0]=(gotvaluedel[0]==0);
-	      SLOOPA(ignoreiter) ignore[ignoreiter]=(del[ignoreiter]==0 || gotvaluedel[ignoreiter]==0);
-	      for(int rediter=0;rediter<2;rediter++) PLOOP(pliter,pl) prdel[rediter][0][pl]=prfulldel[rediter][pl];
+              FTYPE totalweight[2]={0.0,0.0};
+              int ignore[NDIM],ignoreiter;
+              /////////////////////
+              //
+              // translate some prfull results into del[0] form for simplicity of routines below
+              //
+              /////////////////////
+              if(usecompact==1){
+                xposdel[0][0]=xposfull[0];
+                xposdel[0][1]=xposfull[compactpointfull];
+                xposdel[0][2]=xposfull[1];
+                xposdel[0][3]=xposfull[2];
+              }
+              else{
+                xposdel[0][0]=xposfull[0];
+                xposdel[0][1]=xposfull[1];
+                xposdel[0][2]=xposfull[2];
+                xposdel[0][3]=xposfull[3];
+              }
+              ignore[0]=(gotvaluedel[0]==0);
+              SLOOPA(ignoreiter) ignore[ignoreiter]=(del[ignoreiter]==0 || gotvaluedel[ignoreiter]==0);
+              for(int rediter=0;rediter<2;rediter++) PLOOP(pliter,pl) prdel[rediter][0][pl]=prfulldel[rediter][pl];
 
 
-	      /////////////////////////////
-	      //
-	      // Get conditional averaged value of both rediter's
-	      //
-	      /////////////////////////////
-	      for(int rediter=0;rediter<2;rediter++){ // over normal and reduced value
+              /////////////////////////////
+              //
+              // Get conditional averaged value of both rediter's
+              //
+              /////////////////////////////
+              for(int rediter=0;rediter<2;rediter++){ // over normal and reduced value
 
-		// also weight by distance to first point, so closer points are used if all equal counts for number of points used that are on surface (i.e. countonsurface)
-		if(gotvaluedel[0]==1 && (countonsurface[0]<=countonsurface[1] || ignore[1]) && (countonsurface[0]<=countonsurface[2] || ignore[2]) && (countonsurface[0]<=countonsurface[3] || ignore[3])){
-		  totalweight[rediter]+=1.0/(xposdel[0][1]*xposdel[0][1]);
-		  PLOOP(pliter,pl) prnew[rediter][pl]+=prdel[rediter][0][pl]/(xposdel[0][1]*xposdel[0][1]);
-		}
-		if(gotvaluedel[1]==1 && del[1]!=0 && (countonsurface[1]<=countonsurface[0] || ignore[0]) && (countonsurface[1]<=countonsurface[2] || ignore[2]) && (countonsurface[1]<=countonsurface[3] || ignore[3])){
-		  totalweight[rediter]+=1.0/(xposdel[1][1]*xposdel[1][1]);
-		  PLOOP(pliter,pl) prnew[rediter][pl]+=prdel[rediter][1][pl]/(xposdel[1][1]*xposdel[1][1]);
-		}
-		if(gotvaluedel[2]==1 && del[2]!=0 && (countonsurface[2]<=countonsurface[0] || ignore[0]) && (countonsurface[2]<=countonsurface[1] || ignore[1]) && (countonsurface[2]<=countonsurface[3] || ignore[3])){
-		  totalweight[rediter]+=1.0/(xposdel[2][1]*xposdel[2][1]);
-		  PLOOP(pliter,pl) prnew[rediter][pl]+=prdel[rediter][2][pl]/(xposdel[2][1]*xposdel[2][1]);
-		}
-		if(gotvaluedel[3]==1 && del[3]!=0 && (countonsurface[3]<=countonsurface[0] || ignore[0]) && (countonsurface[3]<=countonsurface[1] || ignore[1]) && (countonsurface[3]<=countonsurface[2] || ignore[2])){
-		  totalweight[rediter]+=1.0/(xposdel[3][1]*xposdel[3][1]);
-		  PLOOP(pliter,pl) prnew[rediter][pl]+=prdel[rediter][3][pl]/(xposdel[3][1]*xposdel[3][1]);
-		}
+                // also weight by distance to first point, so closer points are used if all equal counts for number of points used that are on surface (i.e. countonsurface)
+                if(gotvaluedel[0]==1 && (countonsurface[0]<=countonsurface[1] || ignore[1]) && (countonsurface[0]<=countonsurface[2] || ignore[2]) && (countonsurface[0]<=countonsurface[3] || ignore[3])){
+                  totalweight[rediter]+=1.0/(xposdel[0][1]*xposdel[0][1]);
+                  PLOOP(pliter,pl) prnew[rediter][pl]+=prdel[rediter][0][pl]/(xposdel[0][1]*xposdel[0][1]);
+                }
+                if(gotvaluedel[1]==1 && del[1]!=0 && (countonsurface[1]<=countonsurface[0] || ignore[0]) && (countonsurface[1]<=countonsurface[2] || ignore[2]) && (countonsurface[1]<=countonsurface[3] || ignore[3])){
+                  totalweight[rediter]+=1.0/(xposdel[1][1]*xposdel[1][1]);
+                  PLOOP(pliter,pl) prnew[rediter][pl]+=prdel[rediter][1][pl]/(xposdel[1][1]*xposdel[1][1]);
+                }
+                if(gotvaluedel[2]==1 && del[2]!=0 && (countonsurface[2]<=countonsurface[0] || ignore[0]) && (countonsurface[2]<=countonsurface[1] || ignore[1]) && (countonsurface[2]<=countonsurface[3] || ignore[3])){
+                  totalweight[rediter]+=1.0/(xposdel[2][1]*xposdel[2][1]);
+                  PLOOP(pliter,pl) prnew[rediter][pl]+=prdel[rediter][2][pl]/(xposdel[2][1]*xposdel[2][1]);
+                }
+                if(gotvaluedel[3]==1 && del[3]!=0 && (countonsurface[3]<=countonsurface[0] || ignore[0]) && (countonsurface[3]<=countonsurface[1] || ignore[1]) && (countonsurface[3]<=countonsurface[2] || ignore[2])){
+                  totalweight[rediter]+=1.0/(xposdel[3][1]*xposdel[3][1]);
+                  PLOOP(pliter,pl) prnew[rediter][pl]+=prdel[rediter][3][pl]/(xposdel[3][1]*xposdel[3][1]);
+                }
  
-	      
-		if(totalweight[rediter]!=0.0) PLOOP(pliter,pl) prnew[rediter][pl]/=totalweight[rediter];
-		else{
-		  dualfprintf(fail_file,"Never got preference for countonsurface.  Shouldn't happen: counts=%d %d %d %d : gots=%d %d %d %d\n",countonsurface[0],countonsurface[1],countonsurface[2],countonsurface[3],gotfullvalue,gotvaluedel[1],gotvaluedel[2],gotvaluedel[3]);
-		  myexit(48225252);
-		}
+       
+                if(totalweight[rediter]!=0.0) PLOOP(pliter,pl) prnew[rediter][pl]/=totalweight[rediter];
+                else{
+                  dualfprintf(fail_file,"Never got preference for countonsurface.  Shouldn't happen: counts=%d %d %d %d : gots=%d %d %d %d\n",countonsurface[0],countonsurface[1],countonsurface[2],countonsurface[3],gotfullvalue,gotvaluedel[1],gotvaluedel[2],gotvaluedel[3]);
+                  myexit(48225252);
+                }
 
 
 
-		//  DEBUG:
-		DLOOPA(deliter){
-		  if(deliter==0 || del[deliter]!=0){
-		    dualfprintf(fail_file,"rediter=%d deliter=%d countonsurface=%d ignore=%d gotvaluedel=%d totalweight=%21.15g\n",rediter,deliter,countonsurface[deliter],ignore[deliter],gotvaluedel[deliter],totalweight[rediter]);
-		    for(spaceiter=0;spaceiter<=numpointsuseddel[deliter];spaceiter++) dualfprintf(fail_file,"point=%d xpos=%21.15g\n",spaceiter,xposdel[deliter][spaceiter]);
-		  }
-		}
-	      
-	      }
+                //  DEBUG:
+                DLOOPA(deliter){
+                  if(deliter==0 || del[deliter]!=0){
+                    dualfprintf(fail_file,"rediter=%d deliter=%d countonsurface=%d ignore=%d gotvaluedel=%d totalweight=%21.15g\n",rediter,deliter,countonsurface[deliter],ignore[deliter],gotvaluedel[deliter],totalweight[rediter]);
+                    for(spaceiter=0;spaceiter<=numpointsuseddel[deliter];spaceiter++) dualfprintf(fail_file,"point=%d xpos=%21.15g\n",spaceiter,xposdel[deliter][spaceiter]);
+                  }
+                }
+       
+              }
 
 
 
-	      if(1){
-		//////////////
-		//
-		// Try to avoid kinks along all paths to i,j,k by manipulating result at i,j,k
-		//
-		///////////////
+              if(1){
+                //////////////
+                //
+                // Try to avoid kinks along all paths to i,j,k by manipulating result at i,j,k
+                //
+                ///////////////
 
-		// Try using value that is closest to the conditional weighted averaged linear interpolation
-		// the reduced average is the most conservative value, but least accurate if higher-order terms are required
+                // Try using value that is closest to the conditional weighted averaged linear interpolation
+                // the reduced average is the most conservative value, but least accurate if higher-order terms are required
 
-		FTYPE error[NDIM][NPR];
-		DLOOPA(deliter){
-		  PLOOP(pliter,pl){
-		    if(vpot!=NULL) pl=0;
+                FTYPE error[NDIM][NPR];
+                DLOOPA(deliter){
+                  PLOOP(pliter,pl){
+                    if(vpot!=NULL) pl=0;
 
-		    if(deliter==0 || del[deliter]!=0) error[deliter][pl]=fabs(prdel[FULLINTERP][deliter][pl]-prnew[REDUCEDINTERP][pl]); // compare individual fully interpolated value with conditional weighted averaged linear interpolation value
-		    else error[deliter][pl]=BIG;
+                    if(deliter==0 || del[deliter]!=0) error[deliter][pl]=fabs(prdel[FULLINTERP][deliter][pl]-prnew[REDUCEDINTERP][pl]); // compare individual fully interpolated value with conditional weighted averaged linear interpolation value
+                    else error[deliter][pl]=BIG;
 
-		    // DEBUG:
-		    dualfprintf(fail_file,"dir=%d ijk=%d %d %d : pl=%d deliter=%d error=%21.15g\n",dir,i,j,k,pl,deliter,error[deliter][pl]);
+                    // DEBUG:
+                    dualfprintf(fail_file,"dir=%d ijk=%d %d %d : pl=%d deliter=%d error=%21.15g\n",dir,i,j,k,pl,deliter,error[deliter][pl]);
 
-		    if(vpot!=NULL) pliter=nprend+1;
-		  }
-		}
-		
-		// now overwrite prnew[0] that is the fully interpolated value with value closest to "conditional weighted averaged linear" value
-		int choose=0;
-		PLOOP(pliter,pl){
-		  if(vpot!=NULL) pl=0;
+                    if(vpot!=NULL) pliter=nprend+1;
+                  }
+                }
+  
+                // now overwrite prnew[0] that is the fully interpolated value with value closest to "conditional weighted averaged linear" value
+                int choose=0;
+                PLOOP(pliter,pl){
+                  if(vpot!=NULL) pl=0;
 
-		  if(error[0][pl]<=error[1][pl] && error[0][pl]<=error[2][pl] && error[0][pl]<=error[3][pl]){ // <= so catches case when all errors are zero when reduced case used as full case
-		    choose=0;
-		  }
-		  else if(error[1][pl]<=error[0][pl] && error[1][pl]<=error[2][pl] && error[1][pl]<=error[3][pl]){
-		    choose=1;
-		  }
-		  else if(error[2][pl]<=error[0][pl] && error[2][pl]<=error[1][pl] && error[2][pl]<=error[3][pl]){
-		    choose=2;
-		  }
-		  else if(error[3][pl]<=error[0][pl] && error[3][pl]<=error[1][pl] && error[3][pl]<=error[2][pl]){
-		    choose=3;
-		  }
-		  else{
-		    dualfprintf(fail_file,"Never got small error: dir=%d ijk=%d %d %d\n",dir,i,j,k);
-		    myexit(34765634);
-		  }
+                  if(error[0][pl]<=error[1][pl] && error[0][pl]<=error[2][pl] && error[0][pl]<=error[3][pl]){ // <= so catches case when all errors are zero when reduced case used as full case
+                    choose=0;
+                  }
+                  else if(error[1][pl]<=error[0][pl] && error[1][pl]<=error[2][pl] && error[1][pl]<=error[3][pl]){
+                    choose=1;
+                  }
+                  else if(error[2][pl]<=error[0][pl] && error[2][pl]<=error[1][pl] && error[2][pl]<=error[3][pl]){
+                    choose=2;
+                  }
+                  else if(error[3][pl]<=error[0][pl] && error[3][pl]<=error[1][pl] && error[3][pl]<=error[2][pl]){
+                    choose=3;
+                  }
+                  else{
+                    dualfprintf(fail_file,"Never got small error: dir=%d ijk=%d %d %d\n",dir,i,j,k);
+                    myexit(34765634);
+                  }
 
-		  prnew[FULLINTERP][pl]=prdel[FULLINTERP][choose][pl];
+                  prnew[FULLINTERP][pl]=prdel[FULLINTERP][choose][pl];
 
-		  // DEBUG:
-		  dualfprintf(fail_file,"dir=%d ijk=%d %d %d : pl=%d choose=%d\n",dir,i,j,k,pl,choose);
+                  // DEBUG:
+                  dualfprintf(fail_file,"dir=%d ijk=%d %d %d : pl=%d choose=%d\n",dir,i,j,k,pl,choose);
 
-		  if(vpot!=NULL) pliter=nprend+1;
-		}// end over pl
-	      }		
+                  if(vpot!=NULL) pliter=nprend+1;
+                }// end over pl
+              }  
 
 
 #endif
 
-	    }
+            }
 
 
 
@@ -3090,67 +3090,67 @@ void bound_gen_deeppara(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *
 
 
 
-	    //////////////
-	    //
-	    // store old values and assign final vpot/prim
-	    //
-	    /////////////
-	    FTYPE prold[NPR];
-	    if(vpot!=NULL){
-	      prold[0]=MACP1A0(vpot,dir,i,j,k);
-	      MACP1A0(vpot,dir,i,j,k) = prnew[FULLINTERP][0];
-	    }
-	    else{
-	      PLOOP(pliter,pl){
-		prold[pl]=MACP0A1(prim,i,j,k,pl);
-		MACP0A1(prim,i,j,k,pl) = prnew[FULLINTERP][pl];
-	      }
-	    }
+            //////////////
+            //
+            // store old values and assign final vpot/prim
+            //
+            /////////////
+            FTYPE prold[NPR];
+            if(vpot!=NULL){
+              prold[0]=MACP1A0(vpot,dir,i,j,k);
+              MACP1A0(vpot,dir,i,j,k) = prnew[FULLINTERP][0];
+            }
+            else{
+              PLOOP(pliter,pl){
+                prold[pl]=MACP0A1(prim,i,j,k,pl);
+                MACP0A1(prim,i,j,k,pl) = prnew[FULLINTERP][pl];
+              }
+            }
 
 
-	    // DEBUG:
-	    if(vpot!=NULL){
-	      dualfprintf(fail_file,"dir=%d ijk=%d %d %d prold=%21.15g prnew=%21.5g\n",dir,i,j,k,prold[0],prnew[FULLINTERP][0]);
-	    }
-	    else{
-	      PLOOP(pliter,pl){
-		dualfprintf(fail_file,"dir=%d ijk=%d %d %d pl=%d : prold=%21.15g prnew=%21.5g\n",dir,i,j,k,pl,prold[pl],prnew[FULLINTERP][pl]);
-	      }
-	    }
+            // DEBUG:
+            if(vpot!=NULL){
+              dualfprintf(fail_file,"dir=%d ijk=%d %d %d prold=%21.15g prnew=%21.5g\n",dir,i,j,k,prold[0],prnew[FULLINTERP][0]);
+            }
+            else{
+              PLOOP(pliter,pl){
+                dualfprintf(fail_file,"dir=%d ijk=%d %d %d pl=%d : prold=%21.15g prnew=%21.5g\n",dir,i,j,k,pl,prold[pl],prnew[FULLINTERP][pl]);
+              }
+            }
 
-	  
+   
 
-	  }// end if interpproblem==0 from get_del()
-	  else{
+          }// end if interpproblem==0 from get_del()
+          else{
 
-	    dualfprintf(fail_file,"Never found shell to use for: %d %d %d.  Means inside NS, but no nearby shell (can occur for MPI).  Assume if so, then value doesn't matter (not used), so revert to fixed initial value for NS.\n",i,j,k);
+            dualfprintf(fail_file,"Never found shell to use for: %d %d %d.  Means inside NS, but no nearby shell (can occur for MPI).  Assume if so, then value doesn't matter (not used), so revert to fixed initial value for NS.\n",i,j,k);
 
 
-	    if(vpot!=NULL){
-	      FTYPE vpotlocal[NDIM];
-	      get_vpot_fluxctstag_primecoords(time,i,j,k,prim,vpotlocal);
-	      MACP1A0(vpot,dir,i,j,k)=vpotlocal[dir];
-	    }
-	    else{
-	   
-	      int inittype;
-	      int initreturn;
+            if(vpot!=NULL){
+              FTYPE vpotlocal[NDIM];
+              get_vpot_fluxctstag_primecoords(time,i,j,k,prim,vpotlocal);
+              MACP1A0(vpot,dir,i,j,k)=vpotlocal[dir];
+            }
+            else{
+    
+              int inittype;
+              int initreturn;
 
-	      // evolve type (don't set inittypeglobal, set by init_primitives)
-	      inittype=0;
+              // evolve type (don't set inittypeglobal, set by init_primitives)
+              inittype=0;
 
-	      initreturn=init_dsandvels(inittype, CENT, &whichvel, &whichcoord,time,i,j,k,MAC(prim,i,j,k),NULL);
+              initreturn=init_dsandvels(inittype, CENT, &whichvel, &whichcoord,time,i,j,k,MAC(prim,i,j,k),NULL);
 
-	      if(initreturn>0){
-		FAILSTATEMENT("init.c:init_primitives()", "init_dsandvels()", 1);
-	      }
-	      else if(initreturn==0) MYFUN(transform_primitive_vB(whichvel, whichcoord, i,j,k, prim, NULL),"init.c:init_primitives","transform_primitive_vB()",0);
-	    }
+              if(initreturn>0){
+                FAILSTATEMENT("init.c:init_primitives()", "init_dsandvels()", 1);
+              }
+              else if(initreturn==0) MYFUN(transform_primitive_vB(whichvel, whichcoord, i,j,k, prim, NULL),"init.c:init_primitives","transform_primitive_vB()",0);
+            }
 
-	  }//end if interpproblem==1
+          }//end if interpproblem==1
 
-	
-	}// end if inside NS
+ 
+        }// end if inside NS
       }// end over dirs
     }// end loop block
   }// end parallel region
@@ -3272,33 +3272,33 @@ int get_compactvalue(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nve
     // seems all dir's are same for ijkalt since formed from differences
 #define FUNCI(tj) (ROUND2INT(iref - ((jj-jref)/(ii-iref))*(tj-jref)) ) // rotated around iref,jref
 #define FUNCJ(ti) (ROUND2INT(jref - ((ii-iref)/(jj-jref))*(ti-iref)) ) // rotated around iref,jref
-	
+ 
     jalt[0]=jref-0.5-1.0 + 0;
     jalt[1]=jref-0.5-1.0 + 1;
     jalt[2]=jref-0.5-1.0 + 2;
     jalt[3]=jref-0.5-1.0 + 3;
-	      
+       
     ialt[0]=FUNCI(jalt[0]);
     ialt[1]=FUNCI(jalt[1]);
     ialt[2]=FUNCI(jalt[2]);
     ialt[3]=FUNCI(jalt[3]);
-	    
+     
     kalt[0]=kalt[1]=kalt[2]=kalt[3]=k;
 
 
     // DEBUG:
     dualfprintf(fail_file,"ijk=%d %d %d : iijjkk=%d %d %d : ijkref=%21.15g %21.15g %21.15g : ijkcorn=%d %d %d poscorn=%d ijkalt0=%d %d %d ijkalt1=%d %d %d ijkalt2=%d %d %d ijkalt3=%d %d %d\n",i,j,k,ii,jj,kk,iref,jref,kref,icorn,jcorn,kcorn,poscorn,ialt[0],jalt[0],kalt[0],ialt[1],jalt[1],kalt[1],ialt[2],jalt[2],kalt[2],ialt[3],jalt[3],kalt[3]);
 
-	    
+     
 
     // ensure points are on grid while not inside NS
     // Since dealing with A_i before bounded, must avoid edges of grid where there can be nan's at this point
-	      
+       
     isongridall=isinsideall=0; // init
     for(yyy=0;yyy<=3;yyy++){
       isongrid[yyy+1]=is_dir_onactivegrid(dir,ialt[yyy],jalt[yyy],kalt[yyy]);
       isinside[yyy+1]=is_dir_insideNS(dir,ialt[yyy],jalt[yyy],kalt[yyy], &hasmask[yyy+1],&hasinside[yyy+1],&reallyonsurface[yyy+1],&cancopyfrom[yyy+1]);
-		
+  
       isongridall+=isongrid[yyy+1]; // should add up to 4
       isinsideall+=isinside[yyy+1]; // should stay 0
     }
@@ -3330,7 +3330,7 @@ int get_compactvalue(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nve
       cando3right=1;
     }
     if(isongridall==4 && isinsideall==0){// then all points are good to use
-		
+  
       // below yyystart,yyyend overrides smaller stencils above
       yyystart=0;
       yyyend=3;
@@ -3367,50 +3367,50 @@ int get_compactvalue(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nve
     ////////////////////////
     if(donecompact==0 && cando4==1){
       PLOOP(pliter,pl){
-		  
-	if(vpot!=NULL) pl=0;
-		  
-	// check if multiple points are constrained (fixed in time) to surface values, which will restrict the freedom of the field lines too much and require non-monotonic fit
-	if(vpot!=NULL){
-	  constrained=0;
-	  //	  if(isinside[1]==0 && hasmask[1]==1 && hasinside[1]==1) constrained++;
-	  //	  if(isinside[2]==0 && hasmask[2]==1 && hasinside[2]==1) constrained++;
-	  //	  if(isinside[3]==0 && hasmask[3]==1 && hasinside[3]==1) constrained++;
-	  //	  if(isinside[4]==0 && hasmask[4]==1 && hasinside[4]==1) constrained++;
-	  if(reallyonsurface[1]==1) constrained++;
-	  if(reallyonsurface[2]==1) constrained++;
-	  if(reallyonsurface[3]==1) constrained++;
-	  if(reallyonsurface[4]==1) constrained++;
-	}
-	else constrained=0; // ignore constraint question for non-field
+    
+        if(vpot!=NULL) pl=0;
+    
+        // check if multiple points are constrained (fixed in time) to surface values, which will restrict the freedom of the field lines too much and require non-monotonic fit
+        if(vpot!=NULL){
+          constrained=0;
+          //   if(isinside[1]==0 && hasmask[1]==1 && hasinside[1]==1) constrained++;
+          //   if(isinside[2]==0 && hasmask[2]==1 && hasinside[2]==1) constrained++;
+          //   if(isinside[3]==0 && hasmask[3]==1 && hasinside[3]==1) constrained++;
+          //   if(isinside[4]==0 && hasmask[4]==1 && hasinside[4]==1) constrained++;
+          if(reallyonsurface[1]==1) constrained++;
+          if(reallyonsurface[2]==1) constrained++;
+          if(reallyonsurface[3]==1) constrained++;
+          if(reallyonsurface[4]==1) constrained++;
+        }
+        else constrained=0; // ignore constraint question for non-field
 
-	if(constrained>=2) mono4[pl]=1; // avoid overconstraint for field
-	else{
-	  // check for monotonicity of using 4 points
-	  // [0] is in middle, so order is really 1,2,0,3,4.  And only need to be monotonic between 2 & 3 since other points can actually be correctly non-monotonic.  Just don't want to introduce extra non-monotonicity between points
-	  firstpos=2; lastpos=3; // 0 is really at "2.5"
-	  mono4[pl]=checkmono4(firstpos,lastpos,xpos,localsingle[0][pl],localsingle[1][pl],localsingle[2][pl],localsingle[3][pl],localsingle[4][pl]);
-	}
+        if(constrained>=2) mono4[pl]=1; // avoid overconstraint for field
+        else{
+          // check for monotonicity of using 4 points
+          // [0] is in middle, so order is really 1,2,0,3,4.  And only need to be monotonic between 2 & 3 since other points can actually be correctly non-monotonic.  Just don't want to introduce extra non-monotonicity between points
+          firstpos=2; lastpos=3; // 0 is really at "2.5"
+          mono4[pl]=checkmono4(firstpos,lastpos,xpos,localsingle[0][pl],localsingle[1][pl],localsingle[2][pl],localsingle[3][pl],localsingle[4][pl]);
+        }
 
-	if(mono4[pl]==1){
+        if(mono4[pl]==1){
 
-	  // perform interpolation for these points if monotonic using 4 points
-	  localsingle[0][pl] =
-	    +localsingle[1][pl]*(xpos[0]-xpos[2])*(xpos[0]-xpos[3])*(xpos[0]-xpos[4])/((xpos[1]-xpos[2])*(xpos[1]-xpos[3])*(xpos[1]-xpos[4]))
-	    +localsingle[2][pl]*(xpos[0]-xpos[1])*(xpos[0]-xpos[3])*(xpos[0]-xpos[4])/((xpos[2]-xpos[1])*(xpos[2]-xpos[3])*(xpos[2]-xpos[4]))
-	    +localsingle[3][pl]*(xpos[0]-xpos[1])*(xpos[0]-xpos[2])*(xpos[0]-xpos[4])/((xpos[3]-xpos[1])*(xpos[3]-xpos[2])*(xpos[3]-xpos[4]))
-	    +localsingle[4][pl]*(xpos[0]-xpos[1])*(xpos[0]-xpos[2])*(xpos[0]-xpos[3])/((xpos[4]-xpos[1])*(xpos[4]-xpos[2])*(xpos[4]-xpos[3]))
-	    ;
-		    
-	  usecompactpl[pl]=1; // says compact value is good to go
-	  donecompact=1; // says no attempt any other weaker interpolations
-	}// end if monotonic
+          // perform interpolation for these points if monotonic using 4 points
+          localsingle[0][pl] =
+            +localsingle[1][pl]*(xpos[0]-xpos[2])*(xpos[0]-xpos[3])*(xpos[0]-xpos[4])/((xpos[1]-xpos[2])*(xpos[1]-xpos[3])*(xpos[1]-xpos[4]))
+            +localsingle[2][pl]*(xpos[0]-xpos[1])*(xpos[0]-xpos[3])*(xpos[0]-xpos[4])/((xpos[2]-xpos[1])*(xpos[2]-xpos[3])*(xpos[2]-xpos[4]))
+            +localsingle[3][pl]*(xpos[0]-xpos[1])*(xpos[0]-xpos[2])*(xpos[0]-xpos[4])/((xpos[3]-xpos[1])*(xpos[3]-xpos[2])*(xpos[3]-xpos[4]))
+            +localsingle[4][pl]*(xpos[0]-xpos[1])*(xpos[0]-xpos[2])*(xpos[0]-xpos[3])/((xpos[4]-xpos[1])*(xpos[4]-xpos[2])*(xpos[4]-xpos[3]))
+            ;
+      
+          usecompactpl[pl]=1; // says compact value is good to go
+          donecompact=1; // says no attempt any other weaker interpolations
+        }// end if monotonic
 
 
-	if(vpot!=NULL) pliter=nprend+1;
+        if(vpot!=NULL) pliter=nprend+1;
 
       }// end pl
-			
+   
     }
     else{
       PLOOP(pliter,pl) mono4[pl]=0; // so diags appear reasonable looking
@@ -3426,90 +3426,90 @@ int get_compactvalue(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nve
       FTYPE xposnew[5],yfun[5];
 
       PLOOP(pliter,pl){
-		  
-	if(vpot!=NULL) pl=0;
-		  
-	// check for monotonicity of using 3 points
-	if(cando3left==1){
-	  xposnew[0]=xpos[0]; yfun[0]=localsingle[0][pl]; // yfun[0] not used
-	  xposnew[1]=xpos[1]; yfun[1]=localsingle[1][pl];
-	  xposnew[2]=xpos[2]; yfun[2]=localsingle[2][pl];
-	  xposnew[3]=xpos[3]; yfun[3]=localsingle[3][pl];
-	  // check if multiple points are constrained (fixed in time) to surface values, which will restrict the freedom of the field lines too much and require non-monotonic fit
-	  if(vpot!=NULL){
-	    constrained=0;
-	    //	    if(isinside[1]==0 && hasmask[1]==1 && hasinside[1]==1) constrained++;
-	    //	    if(isinside[2]==0 && hasmask[2]==1 && hasinside[2]==1) constrained++;
-	    //	    if(isinside[3]==0 && hasmask[3]==1 && hasinside[3]==1) constrained++;
-	    if(reallyonsurface[1]==1) constrained++;
-	    if(reallyonsurface[2]==1) constrained++;
-	    if(reallyonsurface[3]==1) constrained++;
-	  }
-	  else constrained=0; // ignore constraint question for non-field
+    
+        if(vpot!=NULL) pl=0;
+    
+        // check for monotonicity of using 3 points
+        if(cando3left==1){
+          xposnew[0]=xpos[0]; yfun[0]=localsingle[0][pl]; // yfun[0] not used
+          xposnew[1]=xpos[1]; yfun[1]=localsingle[1][pl];
+          xposnew[2]=xpos[2]; yfun[2]=localsingle[2][pl];
+          xposnew[3]=xpos[3]; yfun[3]=localsingle[3][pl];
+          // check if multiple points are constrained (fixed in time) to surface values, which will restrict the freedom of the field lines too much and require non-monotonic fit
+          if(vpot!=NULL){
+            constrained=0;
+            //     if(isinside[1]==0 && hasmask[1]==1 && hasinside[1]==1) constrained++;
+            //     if(isinside[2]==0 && hasmask[2]==1 && hasinside[2]==1) constrained++;
+            //     if(isinside[3]==0 && hasmask[3]==1 && hasinside[3]==1) constrained++;
+            if(reallyonsurface[1]==1) constrained++;
+            if(reallyonsurface[2]==1) constrained++;
+            if(reallyonsurface[3]==1) constrained++;
+          }
+          else constrained=0; // ignore constraint question for non-field
 
-	  if(constrained>=2) mono3left[pl]=1; // avoid overconstraint for field
-	  else{
-	    // xpos[0] in middle.  Points are: 1,2,0,3 so check between 2 and 3
-	    firstpos=2; lastpos=3;
-	    if(dir==0) mono3left[pl]=checkmono3(firstpos,lastpos,xposnew,yfun[0],yfun[1],yfun[2],yfun[3]);
-	    else mono3left[pl]=1; // assume want field to always use mono (never any discontinuities)
-	  }
-	}
-	else mono3left[pl]=0;
+          if(constrained>=2) mono3left[pl]=1; // avoid overconstraint for field
+          else{
+            // xpos[0] in middle.  Points are: 1,2,0,3 so check between 2 and 3
+            firstpos=2; lastpos=3;
+            if(dir==0) mono3left[pl]=checkmono3(firstpos,lastpos,xposnew,yfun[0],yfun[1],yfun[2],yfun[3]);
+            else mono3left[pl]=1; // assume want field to always use mono (never any discontinuities)
+          }
+        }
+        else mono3left[pl]=0;
 
-	if(cando3right==1){
-	  xposnew[0]=xpos[0]; yfun[0]=localsingle[0][pl]; // yfun[0] not used
-	  xposnew[1]=xpos[2]; yfun[1]=localsingle[2][pl];
-	  xposnew[2]=xpos[3]; yfun[2]=localsingle[3][pl];
-	  xposnew[3]=xpos[4]; yfun[3]=localsingle[4][pl];
-	  // check if multiple points are constrained (fixed in time) to surface values, which will restrict the freedom of the field lines too much and require non-monotonic fit
-	  if(vpot!=NULL){
-	    constrained=0;
-	    //	    if(isinside[2]==0 && hasmask[2]==1 && hasinside[2]==1) constrained++;
-	    //	    if(isinside[3]==0 && hasmask[3]==1 && hasinside[3]==1) constrained++;
-	    //	    if(isinside[4]==0 && hasmask[4]==1 && hasinside[4]==1) constrained++;
-	    if(reallyonsurface[2]==1) constrained++;
-	    if(reallyonsurface[3]==1) constrained++;
-	    if(reallyonsurface[4]==1) constrained++;
-	  }
-	  else constrained=0; // ignore constraint question for non-field
+        if(cando3right==1){
+          xposnew[0]=xpos[0]; yfun[0]=localsingle[0][pl]; // yfun[0] not used
+          xposnew[1]=xpos[2]; yfun[1]=localsingle[2][pl];
+          xposnew[2]=xpos[3]; yfun[2]=localsingle[3][pl];
+          xposnew[3]=xpos[4]; yfun[3]=localsingle[4][pl];
+          // check if multiple points are constrained (fixed in time) to surface values, which will restrict the freedom of the field lines too much and require non-monotonic fit
+          if(vpot!=NULL){
+            constrained=0;
+            //     if(isinside[2]==0 && hasmask[2]==1 && hasinside[2]==1) constrained++;
+            //     if(isinside[3]==0 && hasmask[3]==1 && hasinside[3]==1) constrained++;
+            //     if(isinside[4]==0 && hasmask[4]==1 && hasinside[4]==1) constrained++;
+            if(reallyonsurface[2]==1) constrained++;
+            if(reallyonsurface[3]==1) constrained++;
+            if(reallyonsurface[4]==1) constrained++;
+          }
+          else constrained=0; // ignore constraint question for non-field
 
-	  if(constrained>=2) mono3right[pl]=1; // avoid overconstraint for field
-	  else{
-	    // xpos[0] in middle.  Points are: 2,0,3,4 so check between 2 and 3
-	    firstpos=1; lastpos=3;
-	    if(dir==0) mono3right[pl]=checkmono3(firstpos,lastpos,xposnew,yfun[0],yfun[1],yfun[2],yfun[3]);
-	    else mono3right[pl]=1; // assume want field to always use mono (never any discontinuities)
-	  }
-	}
-	else mono3right[pl]=0;
+          if(constrained>=2) mono3right[pl]=1; // avoid overconstraint for field
+          else{
+            // xpos[0] in middle.  Points are: 2,0,3,4 so check between 2 and 3
+            firstpos=1; lastpos=3;
+            if(dir==0) mono3right[pl]=checkmono3(firstpos,lastpos,xposnew,yfun[0],yfun[1],yfun[2],yfun[3]);
+            else mono3right[pl]=1; // assume want field to always use mono (never any discontinuities)
+          }
+        }
+        else mono3right[pl]=0;
 
-	if(mono3left[pl]==1 || mono3right[pl]==1){
+        if(mono3left[pl]==1 || mono3right[pl]==1){
 
-	  // perform interpolation for these points if monotonic using 3 points
-	  localsingle[0][pl] =
-	    +yfun[1]*(xposnew[0]-xposnew[2])*(xposnew[0]-xposnew[3])/((xposnew[1]-xposnew[2])*(xposnew[1]-xposnew[3]))
-	    +yfun[2]*(xposnew[0]-xposnew[1])*(xposnew[0]-xposnew[3])/((xposnew[2]-xposnew[1])*(xposnew[2]-xposnew[3]))
-	    +yfun[3]*(xposnew[0]-xposnew[1])*(xposnew[0]-xposnew[2])/((xposnew[3]-xposnew[1])*(xposnew[3]-xposnew[2]))
-	    ;
+          // perform interpolation for these points if monotonic using 3 points
+          localsingle[0][pl] =
+            +yfun[1]*(xposnew[0]-xposnew[2])*(xposnew[0]-xposnew[3])/((xposnew[1]-xposnew[2])*(xposnew[1]-xposnew[3]))
+            +yfun[2]*(xposnew[0]-xposnew[1])*(xposnew[0]-xposnew[3])/((xposnew[2]-xposnew[1])*(xposnew[2]-xposnew[3]))
+            +yfun[3]*(xposnew[0]-xposnew[1])*(xposnew[0]-xposnew[2])/((xposnew[3]-xposnew[1])*(xposnew[3]-xposnew[2]))
+            ;
 
-	  usecompactpl[pl]=1; // says compact value is good to go
-	  donecompact=1; // says no attempt any other weaker interpolations
-	}// end if monotonic
+          usecompactpl[pl]=1; // says compact value is good to go
+          donecompact=1; // says no attempt any other weaker interpolations
+        }// end if monotonic
 
 
-	if(vpot!=NULL) pliter=nprend+1;
+        if(vpot!=NULL) pliter=nprend+1;
 
       }// end pl
-			
+   
     }
     else{
       PLOOP(pliter,pl){
-	mono3left[pl]=0; // so diags appear reasonable looking
-	mono3right[pl]=0; // so diags appear reasonable looking
+        mono3left[pl]=0; // so diags appear reasonable looking
+        mono3right[pl]=0; // so diags appear reasonable looking
       }
     }
-	      
+       
 
 
     ////////////////////////
@@ -3522,23 +3522,23 @@ int get_compactvalue(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nve
       // perform (linear) interpolation for these points (only yyy=1,2 corresponding to localsingle[2,3] and xpos[2,3])
       PLOOP(pliter,pl){
 
-	if(vpot!=NULL) pl=0;
+        if(vpot!=NULL) pl=0;
 
-	localsingle[0][pl] =
-	  +localsingle[2][pl]*(xpos[0]-xpos[3])/((xpos[2]-xpos[3]))
-	  +localsingle[3][pl]*(xpos[0]-xpos[2])/((xpos[3]-xpos[2]))
-	  ;
-		  
-	usecompactpl[pl]=1;
-	donecompact=1;
-		  
-	if(vpot!=NULL) pliter=nprend+1;
+        localsingle[0][pl] =
+          +localsingle[2][pl]*(xpos[0]-xpos[3])/((xpos[2]-xpos[3]))
+          +localsingle[3][pl]*(xpos[0]-xpos[2])/((xpos[3]-xpos[2]))
+          ;
+    
+        usecompactpl[pl]=1;
+        donecompact=1;
+    
+        if(vpot!=NULL) pliter=nprend+1;
 
       }// end pl
-		
+  
     }// end for cando2
 
-	    
+     
 
     // check if ever did compact interpolation
     if(donecompact==0){
@@ -3555,11 +3555,11 @@ int get_compactvalue(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nve
 
 
       PLOOP(pliter,pl){
-	if(vpot!=NULL) pl=0;
+        if(vpot!=NULL) pl=0;
 
-	if(usecompactpl[pl]==0) usecompact=0; // disable usecompact if couldn't do it for some reason for any pl
+        if(usecompactpl[pl]==0) usecompact=0; // disable usecompact if couldn't do it for some reason for any pl
 
-	if(vpot!=NULL) pliter=nprend+1;
+        if(vpot!=NULL) pliter=nprend+1;
 
       }
     }
@@ -3584,13 +3584,13 @@ int get_compactvalue(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nve
 
       int spaceiter;
       for(spaceiter=yyystart+1;spaceiter<=yyyend+1;spaceiter++){
-	dualfprintf(fail_file,"COMPACTPDF2C: siter=%d : ison=%d isins=%d los[pl=%d]=%21.15g %21.15g\n",spaceiter,isongrid[spaceiter],isinside[spaceiter],pl,localsingle[spaceiter][pl],xpos[spaceiter]);
+        dualfprintf(fail_file,"COMPACTPDF2C: siter=%d : ison=%d isins=%d los[pl=%d]=%21.15g %21.15g\n",spaceiter,isongrid[spaceiter],isinside[spaceiter],pl,localsingle[spaceiter][pl],xpos[spaceiter]);
       }
       dualfprintf(fail_file,"COMPACTPDF3C: %ld %21.15g : pl=%d : los0=%21.15g : compactvalue=%21.15g : mono4=%d : mono3left=%d mono3right=%d :  usecompact=%d\n",nstep,t,pl,localsingle[0][pl],compactvalue[pl],mono4[pl],mono3left[pl],mono3right[pl],usecompactpl[pl]);
 
       if(vpot!=NULL) pliter=nprend+1;
     }
-	    
+     
 
 
 
@@ -3647,7 +3647,7 @@ int get_fulldel_interpolation(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
 
   // get geometry for i,j,k so can unrescale below
   get_geometry(i, j, k, pos, ptrgeom[0]);
-	
+ 
 
   iii=ii+del[1];
   jjj=jj+del[2];
@@ -3659,7 +3659,7 @@ int get_fulldel_interpolation(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
 
 
   // DEBUG:
-  //	    dualfprintf(fail_file,"iiijjjkkk=%d %d %d i4=%d %d %d\n",iii,jjj,kkk,iiii,jjjj,kkkk);
+  //     dualfprintf(fail_file,"iiijjjkkk=%d %d %d i4=%d %d %d\n",iii,jjj,kkk,iiii,jjjj,kkkk);
 
 
   // compactpoint tells (upon return) which point was used for the compact value (xpos, etc.)
@@ -3686,16 +3686,16 @@ int get_fulldel_interpolation(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
 
 
   if(isongrid[1]==1 && isongrid[2]==1 && isongrid[3]==1 && isinside[1]==0 && isinside[2]==0 && isinside[3]==0){
-	      
-	      
+       
+       
     // position along special path
     xpos[0]=0.0;
     xpos[1]=sqrt((i-ii)*(i-ii) + (j-jj)*(j-jj) + (k-kk)*(k-kk));
     xpos[2]=sqrt((i-iii)*(i-iii) + (j-jjj)*(j-jjj) + (k-kkk)*(k-kkk));
     if(usecompact==0) xpos[3]=sqrt((i-iiii)*(i-iiii) + (j-jjjj)*(j-jjjj) + (k-kkkk)*(k-kkkk));
     else xpos[3]=sqrt((i-iref)*(i-iref) + (j-jref)*(j-jref) + (k-kref)*(k-kref));
-	      
-	      
+       
+       
     // get geometry for ii,jj,kk
     get_geometry(ii, jj, kk, pos, ptrgeom[1]);
     // get geometry for iii,jjj,kkk
@@ -3729,8 +3729,8 @@ int get_fulldel_interpolation(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
     else rescale_pl(time,dir,ptrgeom[3], compactvalue,localsingle[3]); // using compactvalue[pl] at ijkcorn and poscorn
 
 
-	      
-	      
+       
+       
     FTYPE reducedcase[NPR];
     int numpointsreduced;
     FTYPE error;
@@ -3741,40 +3741,40 @@ int get_fulldel_interpolation(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
 
       // check if multiple points are constrained (fixed in time) to surface values, which will restrict the freedom of the field lines too much and require non-monotonic fit
       if(vpot!=NULL){
-	constrained=0;
-	//	if(isinside[1]==0 && hasmask[1]==1 && hasinside[1]==1) constrained++;
-	//	if(isinside[2]==0 && hasmask[2]==1 && hasinside[2]==1) constrained++;
-	//	if(isinside[3]==0 && hasmask[3]==1 && hasinside[3]==1) constrained++;
-	if(reallyonsurface[1]==1) constrained++;
-	if(reallyonsurface[2]==1) constrained++;
-	if(reallyonsurface[3]==1) constrained++;
+        constrained=0;
+        // if(isinside[1]==0 && hasmask[1]==1 && hasinside[1]==1) constrained++;
+        // if(isinside[2]==0 && hasmask[2]==1 && hasinside[2]==1) constrained++;
+        // if(isinside[3]==0 && hasmask[3]==1 && hasinside[3]==1) constrained++;
+        if(reallyonsurface[1]==1) constrained++;
+        if(reallyonsurface[2]==1) constrained++;
+        if(reallyonsurface[3]==1) constrained++;
       }
       else constrained=0; // ignore constraint question for non-field
 
       if(constrained>=2){
-	// constrained==1 would be normal extrapolation through 1 NS surface value for field or 1
-	// then force assumption that mono3=1 so even if checkmono3 would give mono3=0, we allow for some non-monotonicity to allow freedom in field to avoid it being overconstrained and generating kinks
-	mono3[pl]=1;
+        // constrained==1 would be normal extrapolation through 1 NS surface value for field or 1
+        // then force assumption that mono3=1 so even if checkmono3 would give mono3=0, we allow for some non-monotonicity to allow freedom in field to avoid it being overconstrained and generating kinks
+        mono3[pl]=1;
       }
       else{
-	// check for monotonicity of using 3 point *extrapolation*
-	// points must be in order
-	// only need to avoid adding non-monotonicity in extrapolation region (so range from 0 -> 1 for usecompact==0 and 0->3 (really compact point) for usecompact==1)
-	if(usecompact==0){ firstpos=0; lastpos=1; } // points are 0,1,2,3 so check between 0 and 1
-	else { firstpos=0; lastpos=3; } // points are 0,3,1,2 so check between 0 and 3
-	if(dir==0) mono3[pl]=checkmono3(firstpos,lastpos,xpos,localsingle[0][pl],localsingle[1][pl],localsingle[2][pl],localsingle[3][pl]);
-	else mono3[pl]=1; // assume want field to always use mono (never any discontinuities)
+        // check for monotonicity of using 3 point *extrapolation*
+        // points must be in order
+        // only need to avoid adding non-monotonicity in extrapolation region (so range from 0 -> 1 for usecompact==0 and 0->3 (really compact point) for usecompact==1)
+        if(usecompact==0){ firstpos=0; lastpos=1; } // points are 0,1,2,3 so check between 0 and 1
+        else { firstpos=0; lastpos=3; } // points are 0,3,1,2 so check between 0 and 3
+        if(dir==0) mono3[pl]=checkmono3(firstpos,lastpos,xpos,localsingle[0][pl],localsingle[1][pl],localsingle[2][pl],localsingle[3][pl]);
+        else mono3[pl]=1; // assume want field to always use mono (never any discontinuities)
       }
 
 
       if(mono3[pl]==1){
-	*numpointsused=MAX(*numpointsused,3);
+        *numpointsused=MAX(*numpointsused,3);
 
-	localsingle[0][pl] =
-	  +localsingle[1][pl]*(xpos[0]-xpos[2])*(xpos[0]-xpos[3])/((xpos[1]-xpos[2])*(xpos[1]-xpos[3]))
-	  +localsingle[2][pl]*(xpos[0]-xpos[1])*(xpos[0]-xpos[3])/((xpos[2]-xpos[1])*(xpos[2]-xpos[3]))
-	  +localsingle[3][pl]*(xpos[0]-xpos[1])*(xpos[0]-xpos[2])/((xpos[3]-xpos[1])*(xpos[3]-xpos[2]))
-	  ;
+        localsingle[0][pl] =
+          +localsingle[1][pl]*(xpos[0]-xpos[2])*(xpos[0]-xpos[3])/((xpos[1]-xpos[2])*(xpos[1]-xpos[3]))
+          +localsingle[2][pl]*(xpos[0]-xpos[1])*(xpos[0]-xpos[3])/((xpos[2]-xpos[1])*(xpos[2]-xpos[3]))
+          +localsingle[3][pl]*(xpos[0]-xpos[1])*(xpos[0]-xpos[2])/((xpos[3]-xpos[1])*(xpos[3]-xpos[2]))
+          ;
 
       }// end if mono
 
@@ -3782,49 +3782,49 @@ int get_fulldel_interpolation(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
 
 
       {// get linear and constant versions
-	// GODMARK TODO: won't be continuous when mono switches!
-	int other1,other2;
-	if(usecompact==0) { other1=1; other2=2; }
-	else { other1=3; other2=1; }
+        // GODMARK TODO: won't be continuous when mono switches!
+        int other1,other2;
+        if(usecompact==0) { other1=1; other2=2; }
+        else { other1=3; other2=1; }
 
-	// For interpolation of A_i in a dir\neq i, constant value is fine and may even be preferred
-	if(
-	   ((dir==1 &&(!(del[2]==0&&del[3]==0)))&&(vpot!=NULL) ||
-	    (dir==2 &&(!(del[1]==0&&del[3]==0)))&&(vpot!=NULL) ||
-	    (dir==3 &&(!(del[1]==0&&del[2]==0)))&&(vpot!=NULL)) ||
-	   (vpot==NULL)
-	   )
-	  error=fabs(localsingle[other1][pl]-localsingle[other2][pl])/(fabs(localsingle[other1][pl])+fabs(localsingle[other2][pl]));
-	else{
-	  error=0;
-	}
+        // For interpolation of A_i in a dir\neq i, constant value is fine and may even be preferred
+        if(
+           ((dir==1 &&(!(del[2]==0&&del[3]==0)))&&(vpot!=NULL) ||
+            (dir==2 &&(!(del[1]==0&&del[3]==0)))&&(vpot!=NULL) ||
+            (dir==3 &&(!(del[1]==0&&del[2]==0)))&&(vpot!=NULL)) ||
+           (vpot==NULL)
+           )
+          error=fabs(localsingle[other1][pl]-localsingle[other2][pl])/(fabs(localsingle[other1][pl])+fabs(localsingle[other2][pl]));
+        else{
+          error=0;
+        }
 
 
 
-	FTYPE caseA,caseB;
-		  
-	// linear extrapolation
-	caseA=
-	  +localsingle[other1][pl]*(xpos[0]-xpos[other2])/((xpos[other1]-xpos[other2]))
-	  +localsingle[other2][pl]*(xpos[0]-xpos[other1])/((xpos[other2]-xpos[other1]))
-	  ;
-		  
-	caseB= +localsingle[other1][pl]; // nearest neighbor extrapolation
-		  
-		  
-	// GODMARK TODO: free parameters.
-	FTYPE switcherror = switcht(error,0.5,0.8);
+        FTYPE caseA,caseB;
+    
+        // linear extrapolation
+        caseA=
+          +localsingle[other1][pl]*(xpos[0]-xpos[other2])/((xpos[other1]-xpos[other2]))
+          +localsingle[other2][pl]*(xpos[0]-xpos[other1])/((xpos[other2]-xpos[other1]))
+          ;
+    
+        caseB= +localsingle[other1][pl]; // nearest neighbor extrapolation
+    
+    
+        // GODMARK TODO: free parameters.
+        FTYPE switcherror = switcht(error,0.5,0.8);
 
-	reducedcase[pl]=caseB*switcherror + (1.0-switcherror)*caseA;
-	numpointsreduced=ROUND2INT(1*switcherror + (1.0-switcherror)*2); // estimate
+        reducedcase[pl]=caseB*switcherror + (1.0-switcherror)*caseA;
+        numpointsreduced=ROUND2INT(1*switcherror + (1.0-switcherror)*2); // estimate
 
       }// end getting linear and constant versions
 
 
       
       if(mono3[pl]==0){// then revert to using 2 points and so must be mono
-	localsingle[0][pl]=reducedcase[pl];
-	*numpointsused=MAX(*numpointsused,numpointsreduced);
+        localsingle[0][pl]=reducedcase[pl];
+        *numpointsused=MAX(*numpointsused,numpointsreduced);
       }
 
 
@@ -3852,7 +3852,7 @@ int get_fulldel_interpolation(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
     unrescale_pl(time,dir,ptrgeom[0],reducedcase, prfulldelreduced);
 
 
-	      
+       
   }// end if ongrid and is not inside NS
   else{
     dualfprintf(fail_file,"UNEXPECTED: near boundary: dir=%d : ijk=%d %d %d : ijk2=%d %d %d ijk3=%d %d %d ijk4=%d %d %d\n",dir,i,j,k,ii,jj,kk,iii,jjj,kkk,iiii,jjjj,kkkk);
@@ -3861,8 +3861,8 @@ int get_fulldel_interpolation(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
   }
 
 
-	    
-	    
+     
+     
   // DEBUG:
   dualfprintf(fail_file,"PDFC: dir=%d ijk=%d %d %d : ijk2=%d %d %d : ijk3=%d %d %d ijk4=%d %d %d\n",dir,i,j,k,ii,jj,kk,iii,jjj,kkk,iiii,jjjj,kkkk);
   SLOOPA(spaceiter) dualfprintf(fail_file,"PDFC2: siter=%d : ison=%d isins=%d xpos=%21.15g\n",spaceiter,isongrid[spaceiter],isinside[spaceiter],xpos[spaceiter]);
@@ -3913,17 +3913,17 @@ int checkucon_modifyuu(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *N
   else{
     FTYPE ucontemp1[NDIM],ucontemp2[NDIM];
     FTYPE otherstemp1[NUMOTHERSTATERESULTS],otherstemp2[NUMOTHERSTATERESULTS];
-		  
+    
     ucon_calc(MAC(prim,i,j,k),ptrgeom4ucon[0],ucontemp1,otherstemp1);
     ucon_calc(MAC(prim,ii,jj,kk),ptrgeom4ucon[1],ucontemp1,otherstemp2);
     int jjiter;
     DLOOPA(jjiter) ucon[3][jjiter]=0.5*(ucontemp1[jjiter]+ucontemp2[jjiter]); // only need ucon[TT] below, so assume rest are only roughly accurate (if use others, would be bad near BH where u^\mu interpolations can lead to undefined velocities
     for(jjiter=0;jjiter<NUMOTHERSTATERESULTS;jjiter++) others[3][jjiter]=0.5*(otherstemp1[jjiter]+otherstemp2[jjiter]);
-		  
+    
   }
 
   //////////
-  //	    
+  //     
   // only use point (localsingle[0]) if not out of wack when doing FFDE (or lower GAMMAMAX if doing MHD)
   //
   // NOTE: If usecompact==1, then ucon[3][TT] is actually nearest to i,j,k.  So should treat ucon[1,2,3] as if could be at any position.  So 2^3=8 choices.
@@ -3937,10 +3937,10 @@ int checkucon_modifyuu(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *N
 
     PLOOP(pliter,pl){
       if(pl>=U1 || pl<=U3){
-	localsingle[0][pl] =
-	  +localsingle[1][pl]*(xpos[0]-xpos[2])/((xpos[1]-xpos[2]))
-	  +localsingle[2][pl]*(xpos[0]-xpos[1])/((xpos[2]-xpos[1]))
-	  ;
+        localsingle[0][pl] =
+          +localsingle[1][pl]*(xpos[0]-xpos[2])/((xpos[1]-xpos[2]))
+          +localsingle[2][pl]*(xpos[0]-xpos[1])/((xpos[2]-xpos[1]))
+          ;
       }
     }
   }
@@ -3948,9 +3948,9 @@ int checkucon_modifyuu(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *N
 
     PLOOP(pliter,pl){
       if(pl>=U1 || pl<=U3){
-	localsingle[0][pl] =
-	  +localsingle[1][pl];
-	;
+        localsingle[0][pl] =
+          +localsingle[1][pl];
+        ;
       }
     }
   }
@@ -3958,10 +3958,10 @@ int checkucon_modifyuu(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *N
 
     PLOOP(pliter,pl){
       if(pl>=U1 || pl<=U3){
-	localsingle[0][pl] =
-	  +localsingle[1][pl]*(xpos[0]-xpos[1])/((xpos[3]-xpos[1]))
-	  +localsingle[3][pl]*(xpos[0]-xpos[3])/((xpos[1]-xpos[3]))
-	  ;
+        localsingle[0][pl] =
+          +localsingle[1][pl]*(xpos[0]-xpos[1])/((xpos[3]-xpos[1]))
+          +localsingle[3][pl]*(xpos[0]-xpos[3])/((xpos[1]-xpos[3]))
+          ;
       }
     }
   }
@@ -3969,10 +3969,10 @@ int checkucon_modifyuu(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *N
 
     PLOOP(pliter,pl){
       if(pl>=U1 || pl<=U3){
-	localsingle[0][pl] =
-	  +localsingle[2][pl]*(xpos[0]-xpos[2])/((xpos[3]-xpos[2]))
-	  +localsingle[3][pl]*(xpos[0]-xpos[3])/((xpos[2]-xpos[3]))
-	  ;
+        localsingle[0][pl] =
+          +localsingle[2][pl]*(xpos[0]-xpos[2])/((xpos[3]-xpos[2]))
+          +localsingle[3][pl]*(xpos[0]-xpos[3])/((xpos[2]-xpos[3]))
+          ;
       }
     }
   }
@@ -3980,9 +3980,9 @@ int checkucon_modifyuu(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *N
 
     PLOOP(pliter,pl){
       if(pl>=U1 || pl<=U3){
-	localsingle[0][pl] =
-	  +localsingle[2][pl];
-	;
+        localsingle[0][pl] =
+          +localsingle[2][pl];
+        ;
       }
     }
   }
@@ -3990,9 +3990,9 @@ int checkucon_modifyuu(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *N
 
     PLOOP(pliter,pl){
       if(pl>=U1 || pl<=U3){
-	localsingle[0][pl] =
-	  +localsingle[3][pl];
-	;
+        localsingle[0][pl] =
+          +localsingle[3][pl];
+        ;
       }
     }
   }
@@ -4255,32 +4255,32 @@ void adjust_fluxctstag_vpot(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR
   
 
 
-/*   else{ */
-/*     // NOT REALLY CORRECT since should avoid surface A_i ! */
+  /*   else{ */
+  /*     // NOT REALLY CORRECT since should avoid surface A_i ! */
 
-/*     if(DOSETFIX){ */
-/*       adjust_fluxctstag_vpot_dosetfix(fluxtime,prim,Nvec,vpot); */
-/*     } */
-
-
-/*     //  if(DOSETEXTRAPDIRECT && t>SWITCHT1){// hard switch in time */
-/*     if(DOSETEXTRAPDIRECT){ */
-/*       adjust_fluxctstag_vpot_dosetextrapdirect(fluxtime,prim,Nvec,vpot); */
-/*     } */
+  /*     if(DOSETFIX){ */
+  /*       adjust_fluxctstag_vpot_dosetfix(fluxtime,prim,Nvec,vpot); */
+  /*     } */
 
 
+  /*     //  if(DOSETEXTRAPDIRECT && t>SWITCHT1){// hard switch in time */
+  /*     if(DOSETEXTRAPDIRECT){ */
+  /*       adjust_fluxctstag_vpot_dosetextrapdirect(fluxtime,prim,Nvec,vpot); */
+  /*     } */
 
 
 
-/*     if(DOSETEXTRAP && t>SWITCHT1){// hard switch in time */
-/*       //if(DOSETEXTRAP){ */
-/*       adjust_fluxctstag_vpot_dosetextrap(fluxtime,prim,Nvec,vpot); */
-/*     } */
-/*     if(DOSETFINALFORCE && t>SWITCHT1){// hard switch in time */
-/*       //  if(DOSETFINALFORCE){ */
-/*       adjust_fluxctstag_vpot_dosetfinalforce(fluxtime,prim,Nvec,vpot); */
-/*     } */
-/*   } */
+
+
+  /*     if(DOSETEXTRAP && t>SWITCHT1){// hard switch in time */
+  /*       //if(DOSETEXTRAP){ */
+  /*       adjust_fluxctstag_vpot_dosetextrap(fluxtime,prim,Nvec,vpot); */
+  /*     } */
+  /*     if(DOSETFINALFORCE && t>SWITCHT1){// hard switch in time */
+  /*       //  if(DOSETFINALFORCE){ */
+  /*       adjust_fluxctstag_vpot_dosetfinalforce(fluxtime,prim,Nvec,vpot); */
+  /*     } */
+  /*   } */
 
 
   return;
@@ -4309,9 +4309,9 @@ void adjust_fluxctstag_vpot_dosetfix_newest(SFTYPE fluxtime, FTYPE (*prim)[NSTOR
     for(int dir=1;dir<=3;dir++){
 
       if(Nvec[dir]==1){ // only directly fix to constant in time from t=0 if that dimension doesn't exist.  Otherwise, generally have to assume EMF_i determimes evolution (e.g. can then be stationary in time, but not fixed in time)
-	// get i,j,k data
-	isinsidelocal[dir]=is_dir_insideNS(dir, i, j, k, &hasmasklocal[dir], &hasinsidelocal[dir], &reallyonsurfacelocal[dir], &cancopyfromlocal[dir]);
-	fixedvalue[dir]=reallyonsurfacelocal[dir];  //(isinsidelocal[dir]==0 && hasmasklocal[dir]==1 && hasinsidelocal[dir]==1);
+        // get i,j,k data
+        isinsidelocal[dir]=is_dir_insideNS(dir, i, j, k, &hasmasklocal[dir], &hasinsidelocal[dir], &reallyonsurfacelocal[dir], &cancopyfromlocal[dir]);
+        fixedvalue[dir]=reallyonsurfacelocal[dir];  //(isinsidelocal[dir]==0 && hasmasklocal[dir]==1 && hasinsidelocal[dir]==1);
       }
     }
 
@@ -4321,8 +4321,8 @@ void adjust_fluxctstag_vpot_dosetfix_newest(SFTYPE fluxtime, FTYPE (*prim)[NSTOR
       get_vpot_fluxctstag_primecoords(fluxtime,i,j,k,prim,vpotlocal);
 
       for(int dir=1;dir<=3;dir++){ // at least one Nvec[dir] will be not 1
-	// only fix if really on surface and dimension is ignorable so can fix A_i for all time to constant value
-	if(Nvec[dir]==1 && reallyonsurfacelocal[dir]==1)   MACP1A0(vpot,dir,i,j,k)       =vpotlocal[dir];
+        // only fix if really on surface and dimension is ignorable so can fix A_i for all time to constant value
+        if(Nvec[dir]==1 && reallyonsurfacelocal[dir]==1)   MACP1A0(vpot,dir,i,j,k)       =vpotlocal[dir];
       }
     }
 
@@ -4367,17 +4367,17 @@ FTYPE rescale_A(SFTYPE time, int dir, int i, int j, int k)
   FTYPE xns,yns,zns;
   FTYPE Vns[NDIM],Vcartns[NDIM];
   // Cartesian position
-  //	  x = r*cos(ph)*sin(th);
-  //	  y = r*sin(ph)*sin(th);
-  //	  z = r*cos(th);
+  //   x = r*cos(ph)*sin(th);
+  //   y = r*sin(ph)*sin(th);
+  //   z = r*cos(th);
 
 
   // get NS position
   FTYPE absrdiff;
   pos_NS(time, V, Vns, Vcartns, &absrdiff);
-  //	  xns=Vcartns[1];
-  //	  yns=Vcartns[2];
-  //	  zns=Vcartns[3];
+  //   xns=Vcartns[1];
+  //   yns=Vcartns[2];
+  //   zns=Vcartns[3];
 
 
 
@@ -4641,386 +4641,386 @@ void adjust_fluxctstag_emfs(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR
       if(localreallyonsurface==1){
 
 
-	// get whether inside NS surrounding CORN_{dir} position
-	localin=   GLOBALMACP0A1(nsmask,i,j,k,NSMASKINSIDE);
-	odir1left= GLOBALMACP0A1(nsmask,i-(odir1==1)*N1NOT1,j-(odir1==2)*N2NOT1,k-(odir1==3)*N3NOT1,NSMASKINSIDE);
-	odir2left= GLOBALMACP0A1(nsmask,i-(odir2==1)*N1NOT1,j-(odir2==2)*N2NOT1,k-(odir2==3)*N3NOT1,NSMASKINSIDE);
-	odir12left=GLOBALMACP0A1(nsmask,i-(odir1==1)*N1NOT1-(odir2==1)*N1NOT1,j-(odir1==2)*N2NOT1-(odir2==2)*N2NOT1,k-(odir1==3)*N3NOT1-(odir2==3)*N3NOT1,NSMASKINSIDE);
+        // get whether inside NS surrounding CORN_{dir} position
+        localin=   GLOBALMACP0A1(nsmask,i,j,k,NSMASKINSIDE);
+        odir1left= GLOBALMACP0A1(nsmask,i-(odir1==1)*N1NOT1,j-(odir1==2)*N2NOT1,k-(odir1==3)*N3NOT1,NSMASKINSIDE);
+        odir2left= GLOBALMACP0A1(nsmask,i-(odir2==1)*N1NOT1,j-(odir2==2)*N2NOT1,k-(odir2==3)*N3NOT1,NSMASKINSIDE);
+        odir12left=GLOBALMACP0A1(nsmask,i-(odir1==1)*N1NOT1-(odir2==1)*N1NOT1,j-(odir1==2)*N2NOT1-(odir2==2)*N2NOT1,k-(odir1==3)*N3NOT1-(odir2==3)*N3NOT1,NSMASKINSIDE);
 
 
 
-	////////////////////////
-	//
-	// Setup guess for primitive at CORN_{dir}
-	//
-	// prim contains pb for *CENT* value of primitive, which is a poor guess in terms of preserving symmetry.  But it'll be overwritten by init_dsandvels() below
-	// But will be different B[dir] than from PLPR that uses directly interpolated value that is exactly in right place if one of odir's is zero.
-	//
-	////////////////////////
-	PLOOP(pliter,pl) pr[pl]=MACP0A1(prim,i,j,k,pl);
+        ////////////////////////
+        //
+        // Setup guess for primitive at CORN_{dir}
+        //
+        // prim contains pb for *CENT* value of primitive, which is a poor guess in terms of preserving symmetry.  But it'll be overwritten by init_dsandvels() below
+        // But will be different B[dir] than from PLPR that uses directly interpolated value that is exactly in right place if one of odir's is zero.
+        //
+        ////////////////////////
+        PLOOP(pliter,pl) pr[pl]=MACP0A1(prim,i,j,k,pl);
 
-	// defaults
-	Bcontouse[dir]=pr[B1+dir-1];
-	Bcontouse[odir1]=pr[B1+odir1-1];
-	Bcontouse[odir2]=pr[B1+odir2-1];
+        // defaults
+        Bcontouse[dir]=pr[B1+dir-1];
+        Bcontouse[odir1]=pr[B1+odir1-1];
+        Bcontouse[odir2]=pr[B1+odir2-1];
 
 
-	////////////////////////
-	//
-	// Now get B and v from actual interpolations
-	//
-	////////////////////////
+        ////////////////////////
+        //
+        // Now get B and v from actual interpolations
+        //
+        ////////////////////////
       
 
-	////////////////////////////////
-	//
-	// use actual field that was interpolated to CORN_i
-	// Would have just computed these if doing evolution, which is only time EMF modified as in this function
-	// don't worry about VEL since is forced within NS and on surface -- i.e. it's fixed while only originally have field at FACEs.
-	// See fluxctstag.c for how pvbcorn accessed:
-	// pvbcorninterp[dir = EMF_dir][i,j,k][which v or B component: odir1 or odir2][0,1 for v +- in odir1, NUMCS for B][0,1 for v +- in odir2 or B jump that is perp to both dir and component chosen);
-	// 
+        ////////////////////////////////
+        //
+        // use actual field that was interpolated to CORN_i
+        // Would have just computed these if doing evolution, which is only time EMF modified as in this function
+        // don't worry about VEL since is forced within NS and on surface -- i.e. it's fixed while only originally have field at FACEs.
+        // See fluxctstag.c for how pvbcorn accessed:
+        // pvbcorninterp[dir = EMF_dir][i,j,k][which v or B component: odir1 or odir2][0,1 for v +- in odir1, NUMCS for B][0,1 for v +- in odir2 or B jump that is perp to both dir and component chosen);
+        // 
 
-	Bconl[odir1]=GLOBALMACP1A3(pvbcorninterp,dir,i,j,k,odir1,NUMCS,0); // jump in odir2
-	Bconr[odir1]=GLOBALMACP1A3(pvbcorninterp,dir,i,j,k,odir1,NUMCS,1); // jump in odir2
-	Bconl[odir2]=GLOBALMACP1A3(pvbcorninterp,dir,i,j,k,odir2,NUMCS,0); // jump in odir1
-	Bconr[odir2]=GLOBALMACP1A3(pvbcorninterp,dir,i,j,k,odir2,NUMCS,1); // jump in odir1
+        Bconl[odir1]=GLOBALMACP1A3(pvbcorninterp,dir,i,j,k,odir1,NUMCS,0); // jump in odir2
+        Bconr[odir1]=GLOBALMACP1A3(pvbcorninterp,dir,i,j,k,odir1,NUMCS,1); // jump in odir2
+        Bconl[odir2]=GLOBALMACP1A3(pvbcorninterp,dir,i,j,k,odir2,NUMCS,0); // jump in odir1
+        Bconr[odir2]=GLOBALMACP1A3(pvbcorninterp,dir,i,j,k,odir2,NUMCS,1); // jump in odir1
 
-	
-	// pvcorn[which corner][which component in pl form][+-odir1][+-odir2]
-	//		GLOBALMACP1A3(pvbcorninterp,dir,i,j,k,odir2,m,l); // vel for jump in 
-	//		GLOBALMACP1A3(pvbcorninterp,dir,i,j,k,odir1,m,l); // vel
-	// v^{odir2}  with jump in +-odir1 and +-odir2
-	// v^{odir1}  with jump in +-odir1 and +-odir2
-	//	  pr[U1-1+odir2]=0.25*(GLOBALMACP1A3(pvbcorninterp,dir,i,j,k,odir2,m,l);
-	//	  pr[U1-1+odir1]=GLOBALMACP1A3(pvbcorninterp,dir,i,j,k,odir1,m,l);
-	
+ 
+        // pvcorn[which corner][which component in pl form][+-odir1][+-odir2]
+        //  GLOBALMACP1A3(pvbcorninterp,dir,i,j,k,odir2,m,l); // vel for jump in 
+        //  GLOBALMACP1A3(pvbcorninterp,dir,i,j,k,odir1,m,l); // vel
+        // v^{odir2}  with jump in +-odir1 and +-odir2
+        // v^{odir1}  with jump in +-odir1 and +-odir2
+        //   pr[U1-1+odir2]=0.25*(GLOBALMACP1A3(pvbcorninterp,dir,i,j,k,odir2,m,l);
+        //   pr[U1-1+odir1]=GLOBALMACP1A3(pvbcorninterp,dir,i,j,k,odir1,m,l);
+ 
 
-	// Also deal with field that doesn't directly come into EMF, but indirectly can through velocity chosen.
-	// Instead of defaulting to init_dsandvels_nsbh averaged B[dir]:
-	// Better to use p_l and p_r from flux interpolation.  So will be consistent with flux interpolation for EMF.
-	// CORN2 uses dir=FACE=1 and averages (or selects) in 3 (k,k-1) and averages (or selects) in 1 (l/r)
-	// So in general, B[dir] is *from* CENT with respect to odir1,odir2 coordinates, but *located* at FACE[odir1,odir2,lr]
-	// Determination of which B[dir] to use for averaging or selecting (of 8 choices or 4 l/r pairs)
-
-
-	// TODO: Could compute normal field analytically at CORN_i and use that -- most correct.
-	// GODMARK DEBUG: 
-	if(0){
-	  Bcontouse[odir1]=0.5*(Bconl[odir1]+Bconr[odir1]);
-	  Bcontouse[odir2]=0.5*(Bconl[odir2]+Bconr[odir2]);
-	  
-	  for(m=0;m<NUMCS;m++){
-	    for(l=0;l<NUMCS;l++){
-	      pr[U1-1+odir2]+=0.25*GLOBALMACP1A3(pvbcorninterp,dir,i,j,k,odir2,m,l);
-	      pr[U1-1+odir1]+=0.25*GLOBALMACP1A3(pvbcorninterp,dir,i,j,k,odir1,m,l);
-	    }
-	  }
-
-	  // recall pl/pr are located at same location (same i,j,k) for a given interface.
-	  Bcontouse[dir]=(1.0/8.0)*(
-				    +GLOBALMACP1A1(gp_l,odir1,i,j,k,B1+dir-1)+GLOBALMACP1A1(gp_r,odir1,i,j,k,B1+dir-1)
-				    +GLOBALMACP1A1(gp_l,odir2,i,j,k,B1+dir-1)+GLOBALMACP1A1(gp_r,odir2,i,j,k,B1+dir-1)
-				    +GLOBALMACP1A1(gp_l,odir1,i-N1NOT1*(odir2==1),j-N2NOT1*(odir2==2),k-N3NOT1*(odir2==3),B1+dir-1)+GLOBALMACP1A1(gp_r,odir1,i-N1NOT1*(odir2==1),j-N2NOT1*(odir2==2),k-N3NOT1*(odir2==3),B1+dir-1)
-				    +GLOBALMACP1A1(gp_l,odir2,i-N1NOT1*(odir1==1),j-N2NOT1*(odir1==2),k-N3NOT1*(odir1==3),B1+dir-1)+GLOBALMACP1A1(gp_r,odir2,i-N1NOT1*(odir1==1),j-N2NOT1*(odir1==2),k-N3NOT1*(odir1==3),B1+dir-1)
-				    );
-
-	}
-	else{
-
-	  // Decide which corner is more inside NS (so more representative of desired surface field).  Might be better (more stable) than just averaging.
-	  // For field, want to choose surface value if possible.  If not possible, then must choose completely external field.  This defines what must be copied from exterior.  Average if more than one.
-	  // For velocity, interpolation comes from CENT, which will be overwritten by init_dsandvels().
-
-	  // one case can be analytically overridden, but other two cases really does mix internal and external A_{dir}
-	  // For A_i, always some mixture of l+r unless override with analytical solution in some cases
-	  // But when dealing with Bperp1 and Bperp2, copying from exterior makes sense since those B^i have no fixed values from surface of NS.
-	  // That is, could imagine A_dir from exterior and A_dir at surface and forming derivative at surface to get B^i, but ultimately the value of B^i is free and not fixed by NS.
-	  // 2^4-2=14 cases for each odir(1,2)
-	  // can't be 1 1 1 1 or 0 0 0 0 -- at least one cell has to inside and at least one has to be not inside
+        // Also deal with field that doesn't directly come into EMF, but indirectly can through velocity chosen.
+        // Instead of defaulting to init_dsandvels_nsbh averaged B[dir]:
+        // Better to use p_l and p_r from flux interpolation.  So will be consistent with flux interpolation for EMF.
+        // CORN2 uses dir=FACE=1 and averages (or selects) in 3 (k,k-1) and averages (or selects) in 1 (l/r)
+        // So in general, B[dir] is *from* CENT with respect to odir1,odir2 coordinates, but *located* at FACE[odir1,odir2,lr]
+        // Determination of which B[dir] to use for averaging or selecting (of 8 choices or 4 l/r pairs)
 
 
-	  // skip 1 1 1 1
-	  FTYPE totalweight;
-	  if     (localin==1 && odir1left==1 && odir2left==1 && odir12left==0){
-	    Bcontouse[odir1]=Bconl[odir1]; // one inside NS, choose surface one
-	    Bcontouse[odir2]=Bconl[odir2]; // one inside NS, choose surface one
-	    // B[dir] is from CENT (on odir1-odir2 plane that is CORNdir), so not naturally at pos, so must come from external since not directly settable on surface
-	    // This will then behave like PLPR for setting flux when doing field-corrected fix for using prext[]
-	    Bcontouse[dir]=0.0;  totalweight=0.0;
-	    if(Nvec[odir1]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_l,odir1,i-N1NOT1*(odir2==1),j-N2NOT1*(odir2==2),k-N3NOT1*(odir2==3),B1+dir-1); }
-	    if(Nvec[odir2]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_l,odir2,i-N1NOT1*(odir1==1),j-N2NOT1*(odir1==2),k-N3NOT1*(odir1==3),B1+dir-1); }
-	    if(totalweight!=0.0) Bcontouse[dir]/=totalweight;
-	  }
-	  else if(localin==1 && odir1left==1 && odir2left==0 && odir12left==1){
-	    Bcontouse[odir1]=Bconl[odir1]; // one inside NS, choose surface one
-	    Bcontouse[odir2]=Bconr[odir2]; // one inside
-	    // B[dir] is from CENT (on odir1-odir2 plane that is CORNdir), so not naturally at pos, so must come from external since not directly settable on surface
-	    Bcontouse[dir]=0.0;  totalweight=0.0;
-	    if(Nvec[odir1]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_r,odir1,i-N1NOT1*(odir2==1),j-N2NOT1*(odir2==2),k-N3NOT1*(odir2==3),B1+dir-1); }
-	    if(Nvec[odir2]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_l,odir2,i,j,k,B1+dir-1); }
-	    if(totalweight!=0.0) Bcontouse[dir]/=totalweight;
-	  }
-	  else if(localin==1 && odir1left==1 && odir2left==0 && odir12left==0){
-	    Bcontouse[odir1]=Bconl[odir1]; // can't obtain from surface alone, so use exterior
-	    Bcontouse[odir2]=0.5*(Bconl[odir2]+Bconr[odir2]); // both are on surface -- could choose analytical solution, but just average surface solution
-	    // B[dir] is from CENT (on odir1-odir2 plane that is CORNdir), so not naturally at pos, so must come from external since not directly settable on surface
-	    Bcontouse[dir]=0.0;  totalweight=0.0;
-	    if(Nvec[odir2]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_l,odir2,i-N1NOT1*(odir1==1),j-N2NOT1*(odir1==2),k-N3NOT1*(odir1==3),B1+dir-1); }
-	    if(Nvec[odir2]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_l,odir2,i,j,k,B1+dir-1); }
-	    if(totalweight!=0.0) Bcontouse[dir]/=totalweight;
-	  }
-	  else if(localin==1 && odir1left==0 && odir2left==1 && odir12left==1){
-	    Bcontouse[odir1]=Bconr[odir1]; // one is inside NS, so then choose surface one
-	    Bcontouse[odir2]=Bconl[odir2]; // one is inside NS, so then choose surface one
-	    // B[dir] is from CENT (on odir1-odir2 plane that is CORNdir), so not naturally at pos, so must come from external since not directly settable on surface
-	    Bcontouse[dir]=0.0;  totalweight=0.0;
-	    if(Nvec[odir1]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_l,odir1,i,j,k,B1+dir-1); }
-	    if(Nvec[odir2]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_r,odir2,i-N1NOT1*(odir1==1),j-N2NOT1*(odir1==2),k-N3NOT1*(odir1==3),B1+dir-1); }
-	    if(totalweight!=0.0) Bcontouse[dir]/=totalweight;
-	  }
-	  else if(localin==1 && odir1left==0 && odir2left==1 && odir12left==0){
-	    Bcontouse[odir1]=0.5*(Bconl[odir1]+Bconr[odir1]);
-	    Bcontouse[odir2]=Bconl[odir2]; // can't obtain from surface alone, so use exterior
-	    // B[dir] is from CENT (on odir1-odir2 plane that is CORNdir), so not naturally at pos, so must come from external since not directly settable on surface
-	    Bcontouse[dir]=0.0;  totalweight=0.0;
-	    if(Nvec[odir1]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_l,odir1,i,j,k,B1+dir-1); }
-	    if(Nvec[odir2]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_l,odir2,i-N1NOT1*(odir2==1),j-N2NOT1*(odir2==2),k-N3NOT1*(odir2==3),B1+dir-1); }
-	    if(totalweight!=0.0) Bcontouse[dir]/=totalweight;
-	  }
-	  else if(localin==1 && odir1left==0 && odir2left==0 && odir12left==1){
-	    Bcontouse[odir1]=0.5*(Bconl[odir1]+Bconr[odir1]);
-	    Bcontouse[odir2]=0.5*(Bconl[odir2]+Bconr[odir2]);
-	    // B[dir] is from CENT (on odir1-odir2 plane that is CORNdir), so not naturally at pos, so must come from external since not directly settable on surface
-	    Bcontouse[dir]=0.0;  totalweight=0.0;
-	    if(Nvec[odir1]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_l,odir1,i,j,k,B1+dir-1); }
-	    if(Nvec[odir2]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_r,odir2,i-N1NOT1*(odir1==1),j-N2NOT1*(odir1==2),k-N3NOT1*(odir1==3),B1+dir-1); }
-	    if(Nvec[odir1]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_r,odir1,i-N1NOT1*(odir2==1),j-N2NOT1*(odir2==2),k-N3NOT1*(odir2==3),B1+dir-1); }
-	    if(Nvec[odir2]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_l,odir2,i,j,k,B1+dir-1); }
-	    if(totalweight!=0.0) Bcontouse[dir]/=totalweight;
-	  }
-	  else if(localin==1 && odir1left==0 && odir2left==0 && odir12left==0){
-	    Bcontouse[odir1]=Bconr[odir1]; // on one surface
-	    Bcontouse[odir2]=Bconr[odir2]; // on one surface
-	    // B[dir] is from CENT (on odir1-odir2 plane that is CORNdir), so not naturally at pos, so must come from external since not directly settable on surface
-	    Bcontouse[dir]=0.0;  totalweight=0.0;
-	    if(Nvec[odir1]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_l,odir1,i,j,k,B1+dir-1); }
-	    if(Nvec[odir2]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_l,odir2,i,j,k,B1+dir-1); }
-	    if(totalweight!=0.0) Bcontouse[dir]/=totalweight;
-	  }
-	  // recover 0 1 1 1
-	  else if     (localin==0 && odir1left==1 && odir2left==1 && odir12left==1){
-	    Bcontouse[odir1]=Bconr[odir1];
-	    Bcontouse[odir2]=Bconr[odir2];
-	    // B[dir] is from CENT (on odir1-odir2 plane that is CORNdir), so not naturally at pos, so must come from external since not directly settable on surface
-	    Bcontouse[dir]=0.0;  totalweight=0.0;
-	    if(Nvec[odir1]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_r,odir1,i,j,k,B1+dir-1); }
-	    if(Nvec[odir2]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_r,odir2,i,j,k,B1+dir-1); }
-	    if(totalweight!=0.0) Bcontouse[dir]/=totalweight;
-	  }
-	  else if     (localin==0 && odir1left==1 && odir2left==1 && odir12left==0){
-	    Bcontouse[odir1]=0.5*(Bconl[odir1]+Bconr[odir1]);
-	    Bcontouse[odir2]=0.5*(Bconl[odir2]+Bconr[odir2]);
-	    // B[dir] is from CENT (on odir1-odir2 plane that is CORNdir), so not naturally at pos, so must come from external since not directly settable on surface
-	    Bcontouse[dir]=0.0;  totalweight=0.0;
-	    if(Nvec[odir1]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_r,odir1,i,j,k,B1+dir-1); }
-	    if(Nvec[odir2]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_l,odir2,i-N1NOT1*(odir1==1),j-N2NOT1*(odir1==2),k-N3NOT1*(odir1==3),B1+dir-1); }
-	    if(Nvec[odir1]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_l,odir1,i-N1NOT1*(odir2==1),j-N2NOT1*(odir2==2),k-N3NOT1*(odir2==3),B1+dir-1); }
-	    if(Nvec[odir2]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_r,odir2,i,j,k,B1+dir-1); }
-	    if(totalweight!=0.0) Bcontouse[dir]/=totalweight;
-	  }
-	  else if(localin==0 && odir1left==1 && odir2left==0 && odir12left==1){
-	    Bcontouse[odir1]=0.5*(Bconl[odir1]+Bconr[odir1]);
-	    Bcontouse[odir2]=Bconr[odir2]; // one inside, so use exterior one
-	    // B[dir] is from CENT (on odir1-odir2 plane that is CORNdir), so not naturally at pos, so must come from external since not directly settable on surface
-	    Bcontouse[dir]=0.0;  totalweight=0.0;
-	    if(Nvec[odir1]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_r,odir1,i,j,k,B1+dir-1); }
-	    if(Nvec[odir1]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_r,odir1,i-N1NOT1*(odir2==1),j-N2NOT1*(odir2==2),k-N3NOT1*(odir2==3),B1+dir-1); }
-	    if(totalweight!=0.0) Bcontouse[dir]/=totalweight;
-	  }
-	  else if(localin==0 && odir1left==1 && odir2left==0 && odir12left==0){
-	    Bcontouse[odir1]=Bconr[odir1]; // can get from one surface
-	    Bcontouse[odir2]=Bconl[odir2]; // can get from one surface
-	    // B[dir] is from CENT (on odir1-odir2 plane that is CORNdir), so not naturally at pos, so must come from external since not directly settable on surface
-	    Bcontouse[dir]=0.0;  totalweight=0.0;
-	    if(Nvec[odir1]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_r,odir1,i,j,k,B1+dir-1); }
-	    if(Nvec[odir2]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_l,odir2,i-N1NOT1*(odir1==1),j-N2NOT1*(odir1==2),k-N3NOT1*(odir1==3),B1+dir-1); }
-	    if(totalweight!=0.0) Bcontouse[dir]/=totalweight;
-	  }
-	  else if(localin==0 && odir1left==0 && odir2left==1 && odir12left==1){
-	    Bcontouse[odir1]=Bconr[odir1]; // can't get from surface, so use exterior
-	    Bcontouse[odir2]=0.5*(Bconl[odir2]+Bconr[odir2]);
-	    // B[dir] is from CENT (on odir1-odir2 plane that is CORNdir), so not naturally at pos, so must come from external since not directly settable on surface
-	    Bcontouse[dir]=0.0;  totalweight=0.0;
-	    if(Nvec[odir2]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_r,odir2,i,j,k,B1+dir-1); }
-	    if(Nvec[odir2]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_r,odir2,i-N1NOT1*(odir1==1),j-N2NOT1*(odir1==2),k-N3NOT1*(odir1==3),B1+dir-1); }
-	    if(totalweight!=0.0) Bcontouse[dir]/=totalweight;
-	  }
-	  else if(localin==0 && odir1left==0 && odir2left==1 && odir12left==0){
-	    Bcontouse[odir1]=Bconl[odir1];
-	    Bcontouse[odir2]=Bconr[odir2];
-	    // B[dir] is from CENT (on odir1-odir2 plane that is CORNdir), so not naturally at pos, so must come from external since not directly settable on surface
-	    Bcontouse[dir]=0.0;  totalweight=0.0;
-	    if(Nvec[odir1]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_l,odir1,i-N1NOT1*(odir2==1),j-N2NOT1*(odir2==2),k-N3NOT1*(odir2==3),B1+dir-1); }
-	    if(Nvec[odir2]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_r,odir2,i,j,k,B1+dir-1); }
-	    if(totalweight!=0.0) Bcontouse[dir]/=totalweight;
-	  }
-	  else if(localin==0 && odir1left==0 && odir2left==0 && odir12left==1){
-	    Bcontouse[odir1]=Bconl[odir1];
-	    Bcontouse[odir2]=Bconl[odir2];
-	    // B[dir] is from CENT (on odir1-odir2 plane that is CORNdir), so not naturally at pos, so must come from external since not directly settable on surface
-	    Bcontouse[dir]=0.0;  totalweight=0.0;
-	    if(Nvec[odir1]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_r,odir1,i-N1NOT1*(odir2==1),j-N2NOT1*(odir2==2),k-N3NOT1*(odir2==3),B1+dir-1); }
-	    if(Nvec[odir2]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_r,odir2,i-N1NOT1*(odir1==1),j-N2NOT1*(odir1==2),k-N3NOT1*(odir1==3),B1+dir-1); }
-	    if(totalweight!=0.0) Bcontouse[dir]/=totalweight;
-	  }
-	  else{
-	    dualfprintf(fail_file,"bad set: dir=%d ijk=%d %d %d : %d %d %d %d\n",dir,i,j,k,localin,odir1left,odir2left,odir12left);
-	    dualfprintf(fail_file,"bad set2: %d %d %d %d %d\n",localisinside,localhasmask,localhasinside,localreallyonsurface,localcancopyfrom);
-	    myexit(198352546);
-	  }
-	}// end else 1
+        // TODO: Could compute normal field analytically at CORN_i and use that -- most correct.
+        // GODMARK DEBUG: 
+        if(0){
+          Bcontouse[odir1]=0.5*(Bconl[odir1]+Bconr[odir1]);
+          Bcontouse[odir2]=0.5*(Bconl[odir2]+Bconr[odir2]);
+   
+          for(m=0;m<NUMCS;m++){
+            for(l=0;l<NUMCS;l++){
+              pr[U1-1+odir2]+=0.25*GLOBALMACP1A3(pvbcorninterp,dir,i,j,k,odir2,m,l);
+              pr[U1-1+odir1]+=0.25*GLOBALMACP1A3(pvbcorninterp,dir,i,j,k,odir1,m,l);
+            }
+          }
 
-	////////////////////////////////
-	//
-	// NOTE: Bcontouse[dir] from face interpolation already striped of gdet
-	//
-	// Bcontouse[odir1/odir2] from corner interpolation may have gdet or not
-	//
+          // recall pl/pr are located at same location (same i,j,k) for a given interface.
+          Bcontouse[dir]=(1.0/8.0)*(
+                                    +GLOBALMACP1A1(gp_l,odir1,i,j,k,B1+dir-1)+GLOBALMACP1A1(gp_r,odir1,i,j,k,B1+dir-1)
+                                    +GLOBALMACP1A1(gp_l,odir2,i,j,k,B1+dir-1)+GLOBALMACP1A1(gp_r,odir2,i,j,k,B1+dir-1)
+                                    +GLOBALMACP1A1(gp_l,odir1,i-N1NOT1*(odir2==1),j-N2NOT1*(odir2==2),k-N3NOT1*(odir2==3),B1+dir-1)+GLOBALMACP1A1(gp_r,odir1,i-N1NOT1*(odir2==1),j-N2NOT1*(odir2==2),k-N3NOT1*(odir2==3),B1+dir-1)
+                                    +GLOBALMACP1A1(gp_l,odir2,i-N1NOT1*(odir1==1),j-N2NOT1*(odir1==2),k-N3NOT1*(odir1==3),B1+dir-1)+GLOBALMACP1A1(gp_r,odir2,i-N1NOT1*(odir1==1),j-N2NOT1*(odir1==2),k-N3NOT1*(odir1==3),B1+dir-1)
+                                    );
 
-	// get "gdet" factor (really, whatever factor also used in fluxctstag.c:fluxcalc_fluxctstag_emf_1d() )
-	// used to get true B^i since needed, and used later to get flux from emf
-	get_geometry_geomeonly(i, j, k, pos, ptrgdetgeom); // get geometry at CORN[dir] where emf is located
-	gdet=ptrgdetgeom->EOMFUNCMAC(B1-1+odir1); // which field ptrgeom->e doesn't matter as mentioned below
+        }
+        else{
+
+          // Decide which corner is more inside NS (so more representative of desired surface field).  Might be better (more stable) than just averaging.
+          // For field, want to choose surface value if possible.  If not possible, then must choose completely external field.  This defines what must be copied from exterior.  Average if more than one.
+          // For velocity, interpolation comes from CENT, which will be overwritten by init_dsandvels().
+
+          // one case can be analytically overridden, but other two cases really does mix internal and external A_{dir}
+          // For A_i, always some mixture of l+r unless override with analytical solution in some cases
+          // But when dealing with Bperp1 and Bperp2, copying from exterior makes sense since those B^i have no fixed values from surface of NS.
+          // That is, could imagine A_dir from exterior and A_dir at surface and forming derivative at surface to get B^i, but ultimately the value of B^i is free and not fixed by NS.
+          // 2^4-2=14 cases for each odir(1,2)
+          // can't be 1 1 1 1 or 0 0 0 0 -- at least one cell has to inside and at least one has to be not inside
+
+
+          // skip 1 1 1 1
+          FTYPE totalweight;
+          if     (localin==1 && odir1left==1 && odir2left==1 && odir12left==0){
+            Bcontouse[odir1]=Bconl[odir1]; // one inside NS, choose surface one
+            Bcontouse[odir2]=Bconl[odir2]; // one inside NS, choose surface one
+            // B[dir] is from CENT (on odir1-odir2 plane that is CORNdir), so not naturally at pos, so must come from external since not directly settable on surface
+            // This will then behave like PLPR for setting flux when doing field-corrected fix for using prext[]
+            Bcontouse[dir]=0.0;  totalweight=0.0;
+            if(Nvec[odir1]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_l,odir1,i-N1NOT1*(odir2==1),j-N2NOT1*(odir2==2),k-N3NOT1*(odir2==3),B1+dir-1); }
+            if(Nvec[odir2]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_l,odir2,i-N1NOT1*(odir1==1),j-N2NOT1*(odir1==2),k-N3NOT1*(odir1==3),B1+dir-1); }
+            if(totalweight!=0.0) Bcontouse[dir]/=totalweight;
+          }
+          else if(localin==1 && odir1left==1 && odir2left==0 && odir12left==1){
+            Bcontouse[odir1]=Bconl[odir1]; // one inside NS, choose surface one
+            Bcontouse[odir2]=Bconr[odir2]; // one inside
+            // B[dir] is from CENT (on odir1-odir2 plane that is CORNdir), so not naturally at pos, so must come from external since not directly settable on surface
+            Bcontouse[dir]=0.0;  totalweight=0.0;
+            if(Nvec[odir1]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_r,odir1,i-N1NOT1*(odir2==1),j-N2NOT1*(odir2==2),k-N3NOT1*(odir2==3),B1+dir-1); }
+            if(Nvec[odir2]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_l,odir2,i,j,k,B1+dir-1); }
+            if(totalweight!=0.0) Bcontouse[dir]/=totalweight;
+          }
+          else if(localin==1 && odir1left==1 && odir2left==0 && odir12left==0){
+            Bcontouse[odir1]=Bconl[odir1]; // can't obtain from surface alone, so use exterior
+            Bcontouse[odir2]=0.5*(Bconl[odir2]+Bconr[odir2]); // both are on surface -- could choose analytical solution, but just average surface solution
+            // B[dir] is from CENT (on odir1-odir2 plane that is CORNdir), so not naturally at pos, so must come from external since not directly settable on surface
+            Bcontouse[dir]=0.0;  totalweight=0.0;
+            if(Nvec[odir2]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_l,odir2,i-N1NOT1*(odir1==1),j-N2NOT1*(odir1==2),k-N3NOT1*(odir1==3),B1+dir-1); }
+            if(Nvec[odir2]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_l,odir2,i,j,k,B1+dir-1); }
+            if(totalweight!=0.0) Bcontouse[dir]/=totalweight;
+          }
+          else if(localin==1 && odir1left==0 && odir2left==1 && odir12left==1){
+            Bcontouse[odir1]=Bconr[odir1]; // one is inside NS, so then choose surface one
+            Bcontouse[odir2]=Bconl[odir2]; // one is inside NS, so then choose surface one
+            // B[dir] is from CENT (on odir1-odir2 plane that is CORNdir), so not naturally at pos, so must come from external since not directly settable on surface
+            Bcontouse[dir]=0.0;  totalweight=0.0;
+            if(Nvec[odir1]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_l,odir1,i,j,k,B1+dir-1); }
+            if(Nvec[odir2]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_r,odir2,i-N1NOT1*(odir1==1),j-N2NOT1*(odir1==2),k-N3NOT1*(odir1==3),B1+dir-1); }
+            if(totalweight!=0.0) Bcontouse[dir]/=totalweight;
+          }
+          else if(localin==1 && odir1left==0 && odir2left==1 && odir12left==0){
+            Bcontouse[odir1]=0.5*(Bconl[odir1]+Bconr[odir1]);
+            Bcontouse[odir2]=Bconl[odir2]; // can't obtain from surface alone, so use exterior
+            // B[dir] is from CENT (on odir1-odir2 plane that is CORNdir), so not naturally at pos, so must come from external since not directly settable on surface
+            Bcontouse[dir]=0.0;  totalweight=0.0;
+            if(Nvec[odir1]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_l,odir1,i,j,k,B1+dir-1); }
+            if(Nvec[odir2]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_l,odir2,i-N1NOT1*(odir2==1),j-N2NOT1*(odir2==2),k-N3NOT1*(odir2==3),B1+dir-1); }
+            if(totalweight!=0.0) Bcontouse[dir]/=totalweight;
+          }
+          else if(localin==1 && odir1left==0 && odir2left==0 && odir12left==1){
+            Bcontouse[odir1]=0.5*(Bconl[odir1]+Bconr[odir1]);
+            Bcontouse[odir2]=0.5*(Bconl[odir2]+Bconr[odir2]);
+            // B[dir] is from CENT (on odir1-odir2 plane that is CORNdir), so not naturally at pos, so must come from external since not directly settable on surface
+            Bcontouse[dir]=0.0;  totalweight=0.0;
+            if(Nvec[odir1]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_l,odir1,i,j,k,B1+dir-1); }
+            if(Nvec[odir2]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_r,odir2,i-N1NOT1*(odir1==1),j-N2NOT1*(odir1==2),k-N3NOT1*(odir1==3),B1+dir-1); }
+            if(Nvec[odir1]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_r,odir1,i-N1NOT1*(odir2==1),j-N2NOT1*(odir2==2),k-N3NOT1*(odir2==3),B1+dir-1); }
+            if(Nvec[odir2]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_l,odir2,i,j,k,B1+dir-1); }
+            if(totalweight!=0.0) Bcontouse[dir]/=totalweight;
+          }
+          else if(localin==1 && odir1left==0 && odir2left==0 && odir12left==0){
+            Bcontouse[odir1]=Bconr[odir1]; // on one surface
+            Bcontouse[odir2]=Bconr[odir2]; // on one surface
+            // B[dir] is from CENT (on odir1-odir2 plane that is CORNdir), so not naturally at pos, so must come from external since not directly settable on surface
+            Bcontouse[dir]=0.0;  totalweight=0.0;
+            if(Nvec[odir1]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_l,odir1,i,j,k,B1+dir-1); }
+            if(Nvec[odir2]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_l,odir2,i,j,k,B1+dir-1); }
+            if(totalweight!=0.0) Bcontouse[dir]/=totalweight;
+          }
+          // recover 0 1 1 1
+          else if     (localin==0 && odir1left==1 && odir2left==1 && odir12left==1){
+            Bcontouse[odir1]=Bconr[odir1];
+            Bcontouse[odir2]=Bconr[odir2];
+            // B[dir] is from CENT (on odir1-odir2 plane that is CORNdir), so not naturally at pos, so must come from external since not directly settable on surface
+            Bcontouse[dir]=0.0;  totalweight=0.0;
+            if(Nvec[odir1]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_r,odir1,i,j,k,B1+dir-1); }
+            if(Nvec[odir2]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_r,odir2,i,j,k,B1+dir-1); }
+            if(totalweight!=0.0) Bcontouse[dir]/=totalweight;
+          }
+          else if     (localin==0 && odir1left==1 && odir2left==1 && odir12left==0){
+            Bcontouse[odir1]=0.5*(Bconl[odir1]+Bconr[odir1]);
+            Bcontouse[odir2]=0.5*(Bconl[odir2]+Bconr[odir2]);
+            // B[dir] is from CENT (on odir1-odir2 plane that is CORNdir), so not naturally at pos, so must come from external since not directly settable on surface
+            Bcontouse[dir]=0.0;  totalweight=0.0;
+            if(Nvec[odir1]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_r,odir1,i,j,k,B1+dir-1); }
+            if(Nvec[odir2]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_l,odir2,i-N1NOT1*(odir1==1),j-N2NOT1*(odir1==2),k-N3NOT1*(odir1==3),B1+dir-1); }
+            if(Nvec[odir1]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_l,odir1,i-N1NOT1*(odir2==1),j-N2NOT1*(odir2==2),k-N3NOT1*(odir2==3),B1+dir-1); }
+            if(Nvec[odir2]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_r,odir2,i,j,k,B1+dir-1); }
+            if(totalweight!=0.0) Bcontouse[dir]/=totalweight;
+          }
+          else if(localin==0 && odir1left==1 && odir2left==0 && odir12left==1){
+            Bcontouse[odir1]=0.5*(Bconl[odir1]+Bconr[odir1]);
+            Bcontouse[odir2]=Bconr[odir2]; // one inside, so use exterior one
+            // B[dir] is from CENT (on odir1-odir2 plane that is CORNdir), so not naturally at pos, so must come from external since not directly settable on surface
+            Bcontouse[dir]=0.0;  totalweight=0.0;
+            if(Nvec[odir1]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_r,odir1,i,j,k,B1+dir-1); }
+            if(Nvec[odir1]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_r,odir1,i-N1NOT1*(odir2==1),j-N2NOT1*(odir2==2),k-N3NOT1*(odir2==3),B1+dir-1); }
+            if(totalweight!=0.0) Bcontouse[dir]/=totalweight;
+          }
+          else if(localin==0 && odir1left==1 && odir2left==0 && odir12left==0){
+            Bcontouse[odir1]=Bconr[odir1]; // can get from one surface
+            Bcontouse[odir2]=Bconl[odir2]; // can get from one surface
+            // B[dir] is from CENT (on odir1-odir2 plane that is CORNdir), so not naturally at pos, so must come from external since not directly settable on surface
+            Bcontouse[dir]=0.0;  totalweight=0.0;
+            if(Nvec[odir1]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_r,odir1,i,j,k,B1+dir-1); }
+            if(Nvec[odir2]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_l,odir2,i-N1NOT1*(odir1==1),j-N2NOT1*(odir1==2),k-N3NOT1*(odir1==3),B1+dir-1); }
+            if(totalweight!=0.0) Bcontouse[dir]/=totalweight;
+          }
+          else if(localin==0 && odir1left==0 && odir2left==1 && odir12left==1){
+            Bcontouse[odir1]=Bconr[odir1]; // can't get from surface, so use exterior
+            Bcontouse[odir2]=0.5*(Bconl[odir2]+Bconr[odir2]);
+            // B[dir] is from CENT (on odir1-odir2 plane that is CORNdir), so not naturally at pos, so must come from external since not directly settable on surface
+            Bcontouse[dir]=0.0;  totalweight=0.0;
+            if(Nvec[odir2]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_r,odir2,i,j,k,B1+dir-1); }
+            if(Nvec[odir2]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_r,odir2,i-N1NOT1*(odir1==1),j-N2NOT1*(odir1==2),k-N3NOT1*(odir1==3),B1+dir-1); }
+            if(totalweight!=0.0) Bcontouse[dir]/=totalweight;
+          }
+          else if(localin==0 && odir1left==0 && odir2left==1 && odir12left==0){
+            Bcontouse[odir1]=Bconl[odir1];
+            Bcontouse[odir2]=Bconr[odir2];
+            // B[dir] is from CENT (on odir1-odir2 plane that is CORNdir), so not naturally at pos, so must come from external since not directly settable on surface
+            Bcontouse[dir]=0.0;  totalweight=0.0;
+            if(Nvec[odir1]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_l,odir1,i-N1NOT1*(odir2==1),j-N2NOT1*(odir2==2),k-N3NOT1*(odir2==3),B1+dir-1); }
+            if(Nvec[odir2]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_r,odir2,i,j,k,B1+dir-1); }
+            if(totalweight!=0.0) Bcontouse[dir]/=totalweight;
+          }
+          else if(localin==0 && odir1left==0 && odir2left==0 && odir12left==1){
+            Bcontouse[odir1]=Bconl[odir1];
+            Bcontouse[odir2]=Bconl[odir2];
+            // B[dir] is from CENT (on odir1-odir2 plane that is CORNdir), so not naturally at pos, so must come from external since not directly settable on surface
+            Bcontouse[dir]=0.0;  totalweight=0.0;
+            if(Nvec[odir1]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_r,odir1,i-N1NOT1*(odir2==1),j-N2NOT1*(odir2==2),k-N3NOT1*(odir2==3),B1+dir-1); }
+            if(Nvec[odir2]>1){ totalweight+=1.0; Bcontouse[dir]+=GLOBALMACP1A1(gp_r,odir2,i-N1NOT1*(odir1==1),j-N2NOT1*(odir1==2),k-N3NOT1*(odir1==3),B1+dir-1); }
+            if(totalweight!=0.0) Bcontouse[dir]/=totalweight;
+          }
+          else{
+            dualfprintf(fail_file,"bad set: dir=%d ijk=%d %d %d : %d %d %d %d\n",dir,i,j,k,localin,odir1left,odir2left,odir12left);
+            dualfprintf(fail_file,"bad set2: %d %d %d %d %d\n",localisinside,localhasmask,localhasinside,localreallyonsurface,localcancopyfrom);
+            myexit(198352546);
+          }
+        }// end else 1
+
+        ////////////////////////////////
+        //
+        // NOTE: Bcontouse[dir] from face interpolation already striped of gdet
+        //
+        // Bcontouse[odir1/odir2] from corner interpolation may have gdet or not
+        //
+
+        // get "gdet" factor (really, whatever factor also used in fluxctstag.c:fluxcalc_fluxctstag_emf_1d() )
+        // used to get true B^i since needed, and used later to get flux from emf
+        get_geometry_geomeonly(i, j, k, pos, ptrgdetgeom); // get geometry at CORN[dir] where emf is located
+        gdet=ptrgdetgeom->EOMFUNCMAC(B1-1+odir1); // which field ptrgeom->e doesn't matter as mentioned below
 
 
 #if(CORNGDETVERSION==1)
-	// then pvbcorninterp does *not* contain any extra gdet factors, just B^i
-	pr[B1+odir1-1]=Bcontouse[odir1];
-	pr[B1+odir2-1]=Bcontouse[odir2];
+        // then pvbcorninterp does *not* contain any extra gdet factors, just B^i
+        pr[B1+odir1-1]=Bcontouse[odir1];
+        pr[B1+odir2-1]=Bcontouse[odir2];
 #else
-	// then pvbcorninterp contains gdet factor, so \detg B^i  needs to be converted to B^i
-	FTYPE igdetnosing=sign(gdet)/(fabs(gdet)+SMALL);
-	pr[B1+odir1-1]=Bcontouse[odir1]*igdetnosing;
-	pr[B1+odir2-1]=Bcontouse[odir2]*igdetnosing;
+        // then pvbcorninterp contains gdet factor, so \detg B^i  needs to be converted to B^i
+        FTYPE igdetnosing=sign(gdet)/(fabs(gdet)+SMALL);
+        pr[B1+odir1-1]=Bcontouse[odir1]*igdetnosing;
+        pr[B1+odir2-1]=Bcontouse[odir2]*igdetnosing;
 #endif
-	// still need to get pr[B1+dir-1], which will be from interpolation in init_dsandvels_nsbh()		
+        // still need to get pr[B1+dir-1], which will be from interpolation in init_dsandvels_nsbh()  
 
 
-	dualfprintf(fail_file,"EMFCOMPARE1: dir=%d ijk=%d %d %d : %d %d %d %d\n",dir,i,j,k,localin,odir1left,odir2left,odir12left);
-	dualfprintf(fail_file,"EMFCOMPARE2: %d %d %d %d %d\n",localisinside,localhasmask,localhasinside,localreallyonsurface,localcancopyfrom);
-	PLOOP(pl,pliter) dualfprintf(fail_file,"EMFCOMPARE3: pl=%d prim=%21.15g\n",pl,pr[pl]);
+        dualfprintf(fail_file,"EMFCOMPARE1: dir=%d ijk=%d %d %d : %d %d %d %d\n",dir,i,j,k,localin,odir1left,odir2left,odir12left);
+        dualfprintf(fail_file,"EMFCOMPARE2: %d %d %d %d %d\n",localisinside,localhasmask,localhasinside,localreallyonsurface,localcancopyfrom);
+        PLOOP(pl,pliter) dualfprintf(fail_file,"EMFCOMPARE3: pl=%d prim=%21.15g\n",pl,pr[pl]);
 
-		  
-	///////////////////////
-	//
-	// now constrain velocity (and possibly also field)
-	//
-	// get raw primitive in whichvel/whichcoord coordinates
-	// Note: Don't need inputted (to function) prim[] since fixing values
-	// prim is default field if interpolation-extrapolation to loc=pos fails to be contained entirely within NS
-	// ok that don't fill "pstag" entry with pext[] type quantity, since not setting densities here and don't care about v||B
-	///////////////////////
-	initreturn=init_dsandvels(inittype, pos, &whichvel, &whichcoord, fluxtime, i, j, k, pr, NULL);
+    
+        ///////////////////////
+        //
+        // now constrain velocity (and possibly also field)
+        //
+        // get raw primitive in whichvel/whichcoord coordinates
+        // Note: Don't need inputted (to function) prim[] since fixing values
+        // prim is default field if interpolation-extrapolation to loc=pos fails to be contained entirely within NS
+        // ok that don't fill "pstag" entry with pext[] type quantity, since not setting densities here and don't care about v||B
+        ///////////////////////
+        initreturn=init_dsandvels(inittype, pos, &whichvel, &whichcoord, fluxtime, i, j, k, pr, NULL);
 
-	// if successfully got raw primitive, then transform raw primitive to WHICHVEL/PRIMECOORD primitive and compute EMF
-	if(initreturn>0){
-	  FAILSTATEMENT("init.c:set_plpr_nsbh()", "init_dsandvels()", 1);
-	}
-	else if(initreturn==0){	  
-	  // general location transformation for v and B from whichvel/whichcoord to WHICHVEL/(MCOORD->PRIMECOORDS)
-	  bl2met2metp2v_genloc(whichvel, whichcoord, pr, i, j, k, pos);
-
-
-	  // DEBUG:
-	  PLOOP(pliter,pl){
-	    dualfprintf(fail_file,"COMPAREEMF: dir=%d : ijk=%d %d %d : pl=%d pr=%21.15g\n",dir,i,j,k,pl,pr[pl]);
-	  }
+        // if successfully got raw primitive, then transform raw primitive to WHICHVEL/PRIMECOORD primitive and compute EMF
+        if(initreturn>0){
+          FAILSTATEMENT("init.c:set_plpr_nsbh()", "init_dsandvels()", 1);
+        }
+        else if(initreturn==0){   
+          // general location transformation for v and B from whichvel/whichcoord to WHICHVEL/(MCOORD->PRIMECOORDS)
+          bl2met2metp2v_genloc(whichvel, whichcoord, pr, i, j, k, pos);
 
 
-	  // set B^\mu
-  	  Bcon[TT]=0.0;
-	  SLOOPA(lll) Bcon[lll] = pr[B1+lll-1];
+          // DEBUG:
+          PLOOP(pliter,pl){
+            dualfprintf(fail_file,"COMPAREEMF: dir=%d : ijk=%d %d %d : pl=%d pr=%21.15g\n",dir,i,j,k,pl,pr[pl]);
+          }
+
+
+          // set B^\mu
+          Bcon[TT]=0.0;
+          SLOOPA(lll) Bcon[lll] = pr[B1+lll-1];
 
 
 #if(0)
-	  // get u^\mu
-	  get_geometry(i, j, k, pos, ptrgeom);
-	  ucon_calc(pr, ptrgeom, ucon, others);
+          // get u^\mu
+          get_geometry(i, j, k, pos, ptrgeom);
+          ucon_calc(pr, ptrgeom, ucon, others);
 
-	  // set v^i
-	  vcon[TT]=0.0;
-	  SLOOPA(lll) vcon[lll] = ucon[lll]/ucon[TT];
+          // set v^i
+          vcon[TT]=0.0;
+          SLOOPA(lll) vcon[lll] = ucon[lll]/ucon[TT];
 
 
-	  // now set EMF_i
-	  // see fluxct.c for signature of emf[v,B] as related to fluxes
-	  //
-	  // so:
-	  // emf_1 = B^3 v^2 - B^2 v^3 = F2[B3] or -F3[B2]
-	  // emf_2 = B^1 v^3 - B^3 v^1 = F3[B1] or -F1[B3]
-	  // emf_3 = B^2 v^1 - B^1 v^2 = F1[B2] or -F2[B1]
-	  //
-	  // get_odirs(): dir=3 gives odir1=1 and odir2=2
-	  // so cyclic in: dir,odir1,odir2
-	  emf = Bcon[odir2] * vcon[odir1] - Bcon[odir1] * vcon[odir2];
+          // now set EMF_i
+          // see fluxct.c for signature of emf[v,B] as related to fluxes
+          //
+          // so:
+          // emf_1 = B^3 v^2 - B^2 v^3 = F2[B3] or -F3[B2]
+          // emf_2 = B^1 v^3 - B^3 v^1 = F3[B1] or -F1[B3]
+          // emf_3 = B^2 v^1 - B^1 v^2 = F1[B2] or -F2[B1]
+          //
+          // get_odirs(): dir=3 gives odir1=1 and odir2=2
+          // so cyclic in: dir,odir1,odir2
+          emf = Bcon[odir2] * vcon[odir1] - Bcon[odir1] * vcon[odir2];
 #else
 
-	  // bit excessive for flux since only need 1 of them not all 3 or whole matrix that's computed internally
-	  FTYPE flux[NPR];
-	  struct of_state q;
-	  get_geometry(i, j, k, pos, ptrgeom);
-	  get_state(pr, ptrgeom, &q) ;
-	  dualfprintf(fail_file,"gdet=%21.15g : B1=%21.15g B2=%21.15g B3=%21.15g uu0=%21.15g uu1=%21.15g uu2=%21.15g uu3=%21.15g\n",gdet,pr[B1],pr[B2],pr[B3],q.ucon[TT],q.ucon[1],q.ucon[2],q.ucon[3]);
-	  if(Nvec[odir1]>1){
-	    dualfaradayspatial_calc(pr,odir1,&q,&flux[B1]); // fills B1->B3
-	    emf=flux[B1+odir2-1];
-	  }
-	  else{
-	    dualfaradayspatial_calc(pr,odir2,&q,&flux[B1]); // fills B1->B3
-	    emf=-flux[B1+odir1-1];
-	  }
-	      
+          // bit excessive for flux since only need 1 of them not all 3 or whole matrix that's computed internally
+          FTYPE flux[NPR];
+          struct of_state q;
+          get_geometry(i, j, k, pos, ptrgeom);
+          get_state(pr, ptrgeom, &q) ;
+          dualfprintf(fail_file,"gdet=%21.15g : B1=%21.15g B2=%21.15g B3=%21.15g uu0=%21.15g uu1=%21.15g uu2=%21.15g uu3=%21.15g\n",gdet,pr[B1],pr[B2],pr[B3],q.ucon[TT],q.ucon[1],q.ucon[2],q.ucon[3]);
+          if(Nvec[odir1]>1){
+            dualfaradayspatial_calc(pr,odir1,&q,&flux[B1]); // fills B1->B3
+            emf=flux[B1+odir2-1];
+          }
+          else{
+            dualfaradayspatial_calc(pr,odir2,&q,&flux[B1]); // fills B1->B3
+            emf=-flux[B1+odir1-1];
+          }
+       
 #endif
 
 
-	  // DEBUG:
-	  if(Nvec[odir1]>1) dualfprintf(fail_file,"1EMF(%d): ijk=%d %d %d : old: %21.15g  new: %21.15g\n",dir,i,j,k,MACP1A1(fluxvec,odir1,i,j,k,B1-1+odir2)/gdet,emf);
-	  if(Nvec[odir2]>1) dualfprintf(fail_file,"2EMF(%d): ijk=%d %d %d : old: %21.15g  new: %21.15g\n",dir,i,j,k,MACP1A1(fluxvec,odir2,i,j,k,B1-1+odir1)/gdet,-emf);
+          // DEBUG:
+          if(Nvec[odir1]>1) dualfprintf(fail_file,"1EMF(%d): ijk=%d %d %d : old: %21.15g  new: %21.15g\n",dir,i,j,k,MACP1A1(fluxvec,odir1,i,j,k,B1-1+odir2)/gdet,emf);
+          if(Nvec[odir2]>1) dualfprintf(fail_file,"2EMF(%d): ijk=%d %d %d : old: %21.15g  new: %21.15g\n",dir,i,j,k,MACP1A1(fluxvec,odir2,i,j,k,B1-1+odir1)/gdet,-emf);
 
 
 #if(1)
-	  if(dir==1 || dir==2){
-	    // DEBUG: CHECK that \Omega_F is as expected
-	    // get NS parameters
-	    FTYPE rns,omegak,omegaf,Rns,Rsoft,v0;
-	    setNSparms(fluxtime, &rns, &omegak, &omegaf,  &Rns, &Rsoft, &v0);
+          if(dir==1 || dir==2){
+            // DEBUG: CHECK that \Omega_F is as expected
+            // get NS parameters
+            FTYPE rns,omegak,omegaf,Rns,Rsoft,v0;
+            setNSparms(fluxtime, &rns, &omegak, &omegaf,  &Rns, &Rsoft, &v0);
 
-	    FTYPE dxdxp[NDIM][NDIM];
-	    dxdxprim_ijk(i,j,k,pos,dxdxp);
+            FTYPE dxdxp[NDIM][NDIM];
+            dxdxprim_ijk(i,j,k,pos,dxdxp);
 
-	    FTYPE omegaftest;
-	    if(dir==1){
-	      omegaftest=(-emf/Bcon[2])*dxdxp[PH][PH];
-	    }
-	    if(dir==2){
-	      omegaftest=(emf/Bcon[1])*dxdxp[PH][PH];
-	    }
+            FTYPE omegaftest;
+            if(dir==1){
+              omegaftest=(-emf/Bcon[2])*dxdxp[PH][PH];
+            }
+            if(dir==2){
+              omegaftest=(emf/Bcon[1])*dxdxp[PH][PH];
+            }
 
-	    dualfprintf(fail_file,"OMEGA: %d %d %d : %21.15g : %21.15g =?= %21.15g\n",i,j,k,omegak,omegaf,omegaftest);
-	    if(fabs(omegaftest-omegaf)>1E-5){
-	      dualfprintf(fail_file,"OMEGADIFF: %d %d %d : %21.15g : %21.15g =?= %21.15g\n",i,j,k,omegak,omegaf,omegaftest);
-	    }
-	  }
+            dualfprintf(fail_file,"OMEGA: %d %d %d : %21.15g : %21.15g =?= %21.15g\n",i,j,k,omegak,omegaf,omegaftest);
+            if(fabs(omegaftest-omegaf)>1E-5){
+              dualfprintf(fail_file,"OMEGADIFF: %d %d %d : %21.15g : %21.15g =?= %21.15g\n",i,j,k,omegak,omegaf,omegaftest);
+            }
+          }
 #endif
 
-		  
-	  // assign
-	  if(Nvec[odir1]>1) MACP1A1(fluxvec,odir1,i,j,k,B1-1+odir2) = + emf*gdet;
-	  if(Nvec[odir2]>1) MACP1A1(fluxvec,odir2,i,j,k,B1-1+odir1) = - emf*gdet;
-	  if(Nvec[dir]>1) MACP1A1(fluxvec,dir,i,j,k,B1-1+dir)     =   0.0;
-	}//end if initreturn==0
-	// else initreturn<0 then no change (i.e. nothing to set for boundary condition)
+    
+          // assign
+          if(Nvec[odir1]>1) MACP1A1(fluxvec,odir1,i,j,k,B1-1+odir2) = + emf*gdet;
+          if(Nvec[odir2]>1) MACP1A1(fluxvec,odir2,i,j,k,B1-1+odir1) = - emf*gdet;
+          if(Nvec[dir]>1) MACP1A1(fluxvec,dir,i,j,k,B1-1+dir)     =   0.0;
+        }//end if initreturn==0
+        // else initreturn<0 then no change (i.e. nothing to set for boundary condition)
       }// end if EMF_{dir} is on inside of NS or its surface
     }// end over dir
   }// end i,j,k LOOP
@@ -5040,9 +5040,9 @@ void adjust_fluxctstag_emfs(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR
 // special NS boundary code for modifying/remapping primitives at flux interfaces
 // Note that this remap or setting of p2interp_l and p2interp_r assumes RESCAPEINTERP==0 *or* that are setting rescaled quantities directly.
 void remapplpr_nsbh( int dir, int idel, int jdel, int kdel, int i, int j, int k, 
-               FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*dq)[NSTORE2][NSTORE3][NPR2INTERP], 
-               FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP], 
-               FTYPE *p2interp_l, FTYPE *p2interp_r )
+                     FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*dq)[NSTORE2][NSTORE3][NPR2INTERP], 
+                     FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP], 
+                     FTYPE *p2interp_l, FTYPE *p2interp_r )
 {
 
 
@@ -5110,22 +5110,22 @@ void set_plpr_nsbh(int dir, SFTYPE fluxtime, int i, int j, int k, FTYPE (*prim)[
       PLOOP(pliter,pl) prext[pl]=pr[pl]=MACP0A1(prim,i,j,k,pl);
       // used code's one-sided interpolation
       if(faceinside){
-	PLOOP(pliter,pl){
-	  pr[pl]=p_r[pl]; // assume want values inside NS for fixed quantities
-	  prext[pl]=p_l[pl]; // assume want values outside NS for outflow quantities
-	}
+        PLOOP(pliter,pl){
+          pr[pl]=p_r[pl]; // assume want values inside NS for fixed quantities
+          prext[pl]=p_l[pl]; // assume want values outside NS for outflow quantities
+        }
       }
       if(faceshell){
-	PLOOP(pliter,pl){
-	  pr[pl]=p_l[pl]; // assume want values inside NS
-	  prext[pl]=p_r[pl];
-	}
+        PLOOP(pliter,pl){
+          pr[pl]=p_l[pl]; // assume want values inside NS
+          prext[pl]=p_r[pl];
+        }
       }
       if(faceboth){
-	PLOOP(pliter,pl){
-	  pr[pl]=0.5*(p_l[pl]+p_r[pl]);
-	  prext[pl]=pr[pl]; // force prext as same as pr
-	}
+        PLOOP(pliter,pl){
+          pr[pl]=0.5*(p_l[pl]+p_r[pl]);
+          prext[pl]=pr[pl]; // force prext as same as pr
+        }
       }
 
 
@@ -5134,29 +5134,29 @@ void set_plpr_nsbh(int dir, SFTYPE fluxtime, int i, int j, int k, FTYPE (*prim)[
       // Actually, more generally, Bperp1 and Bperp2 come from mixter of values from the surface and exterior for A_i, so this may be overdoing it.
       // But seems ok, since (at least B3) has no fixed value and comes from derivatives in A_i.  So when dealing with B^i (not A_i), this copying from exterior alone seems reasonable.
       if(1){
-	// This seems required to have stable (albeit inaccurate) omegaf.  Probably related to B3 and dir==1 and dir==2.
-	// But still not correct value of omegaf -- jumps at surface.  B3 has jump?
-	// Note, I wasn't doing this before with old1 bound and oscillated as well.  Maybe oscillations related to para for B3 but old bound fixes B3 bit more so doesn't oscillate when use those CENT values here.
+        // This seems required to have stable (albeit inaccurate) omegaf.  Probably related to B3 and dir==1 and dir==2.
+        // But still not correct value of omegaf -- jumps at surface.  B3 has jump?
+        // Note, I wasn't doing this before with old1 bound and oscillated as well.  Maybe oscillations related to para for B3 but old bound fixes B3 bit more so doesn't oscillate when use those CENT values here.
 
-	// So don't have to do this inside init_dsandvels_nsbh() for DONSBOUNDPLPR>=2 below
-	if(dir==1){
-	  pr[B2]=prext[B2];
-	  pr[B3]=prext[B3];
-	}
-	else if(dir==2){
-	  pr[B1]=prext[B1];
-	  pr[B3]=prext[B3];
-	}
-	else if(dir==3){
-	  pr[B1]=prext[B1];
-	  pr[B2]=prext[B2];
-	}
+        // So don't have to do this inside init_dsandvels_nsbh() for DONSBOUNDPLPR>=2 below
+        if(dir==1){
+          pr[B2]=prext[B2];
+          pr[B3]=prext[B3];
+        }
+        else if(dir==2){
+          pr[B1]=prext[B1];
+          pr[B3]=prext[B3];
+        }
+        else if(dir==3){
+          pr[B1]=prext[B1];
+          pr[B2]=prext[B2];
+        }
       }
 
 
       // DEBUG:
       PLOOP(pliter,pl){
-	dualfprintf(fail_file,"COMPAREPLPR: dir=%d : ijk=%d %d %d : fff=%d %d %d : pl=%d prim=%21.15g pr=%21.15g prext=%21.15g (p_l=%21.15g p_r=%21.15g)\n",dir,i,j,k,faceinside,faceshell,faceboth,pl,MACP0A1(prim,i,j,k,pl),pr[pl],prext[pl],p_l[pl],p_r[pl]);
+        dualfprintf(fail_file,"COMPAREPLPR: dir=%d : ijk=%d %d %d : fff=%d %d %d : pl=%d prim=%21.15g pr=%21.15g prext=%21.15g (p_l=%21.15g p_r=%21.15g)\n",dir,i,j,k,faceinside,faceshell,faceboth,pl,MACP0A1(prim,i,j,k,pl),pr[pl],prext[pl],p_l[pl],p_r[pl]);
       }
 
 
@@ -5180,15 +5180,15 @@ void set_plpr_nsbh(int dir, SFTYPE fluxtime, int i, int j, int k, FTYPE (*prim)[
       initreturn=init_dsandvels(inittype, pos, &whichvel, &whichcoord, fluxtime, i, j, k, prother, prext); // only time really input prext, to be used as value that is external to NS if required. -- so far not required.
 
       if(initreturn>0){
-	FAILSTATEMENT("init.c:set_plpr_nsbh()", "init_dsandvels()", 1);
+        FAILSTATEMENT("init.c:set_plpr_nsbh()", "init_dsandvels()", 1);
       }
       else if(initreturn==0){
 
-	// DEBUG:
-	PLOOP(pliter,pl) dualfprintf(fail_file,"COMPAREPLPR2.0[%d]=%21.15g\n",pl,prother[pl]);
+        // DEBUG:
+        PLOOP(pliter,pl) dualfprintf(fail_file,"COMPAREPLPR2.0[%d]=%21.15g\n",pl,prother[pl]);
 
-	// general location transformation for v and B from whichvel/whichcoord to WHICHVEL/(MCOORD->PRIMECOORDS)
-	bl2met2metp2v_genloc(whichvel, whichcoord, prother, i, j, k, pos);
+        // general location transformation for v and B from whichvel/whichcoord to WHICHVEL/(MCOORD->PRIMECOORDS)
+        bl2met2metp2v_genloc(whichvel, whichcoord, prother, i, j, k, pos);
 
       }
 
@@ -5410,66 +5410,66 @@ int init_dsandvels_nsbh(int inittype, int pos, int *whichvel, int*whichcoord, SF
     else if(pos==FACE1){
 
       if(inittype==-2){
-	// then localpr[B1,B2,B3] are already interpolated well by code as given by pr[B1,B2,B3] and already copied
-	// But for B2,B3 assume already filled pr (and so localpr) with values external to NS
+        // then localpr[B1,B2,B3] are already interpolated well by code as given by pr[B1,B2,B3] and already copied
+        // But for B2,B3 assume already filled pr (and so localpr) with values external to NS
 
-	// DEBUG:
-	//	dualfprintf(fail_file,"Got 0: %21.15g %21.15g %21.15g\n",localpr[B1],localpr[B2],localpr[B3]);
+        // DEBUG:
+        // dualfprintf(fail_file,"Got 0: %21.15g %21.15g %21.15g\n",localpr[B1],localpr[B2],localpr[B3]);
       }
       else{
-	localpr[B1]=GLOBALMACP0A1(pstagglobal,i,j,k,B1);
+        localpr[B1]=GLOBALMACP0A1(pstagglobal,i,j,k,B1);
 
-	// average B2 center to get FACE1
-	// average B3 center to get FACE1
-	if(i<=N1M-1-N1NOT1){
-	  totalweight=0.0;    
-	  weight=(GLOBALMACP0A1(nsmask,i,j,k,NSMASKINSIDE)==1);
-	  totalweight+=weight;
-	  interppr[B2]+=GLOBALMACP0A1(pglobal,i,j,k,B2)*weight;
-	  interppr[B3]+=GLOBALMACP0A1(pglobal,i,j,k,B3)*weight;
+        // average B2 center to get FACE1
+        // average B3 center to get FACE1
+        if(i<=N1M-1-N1NOT1){
+          totalweight=0.0;    
+          weight=(GLOBALMACP0A1(nsmask,i,j,k,NSMASKINSIDE)==1);
+          totalweight+=weight;
+          interppr[B2]+=GLOBALMACP0A1(pglobal,i,j,k,B2)*weight;
+          interppr[B3]+=GLOBALMACP0A1(pglobal,i,j,k,B3)*weight;
 
 
-	  weight=(GLOBALMACP0A1(nsmask,i-N1NOT1,j,k,NSMASKINSIDE)==1);
-	  totalweight+=weight;
-	  interppr[B2]+=GLOBALMACP0A1(pglobal,i-N1NOT1,j,k,B2)*weight;
-	  interppr[B3]+=GLOBALMACP0A1(pglobal,i-N1NOT1,j,k,B3)*weight;
+          weight=(GLOBALMACP0A1(nsmask,i-N1NOT1,j,k,NSMASKINSIDE)==1);
+          totalweight+=weight;
+          interppr[B2]+=GLOBALMACP0A1(pglobal,i-N1NOT1,j,k,B2)*weight;
+          interppr[B3]+=GLOBALMACP0A1(pglobal,i-N1NOT1,j,k,B3)*weight;
 
-	  if(totalweight>=0.5){
-	    localpr[B2]=interppr[B2]/totalweight;
-	    localpr[B3]=interppr[B3]/totalweight;
-	  }
-	}
+          if(totalweight>=0.5){
+            localpr[B2]=interppr[B2]/totalweight;
+            localpr[B3]=interppr[B3]/totalweight;
+          }
+        }
       }// done if inittype!=-2
     }
     else if(pos==FACE2){
 
       if(inittype==-2){
-	// then interppr[B1,B2,B3] are already interpolated well by code
-	// But for B1,B3 assume already filled pr (and so localpr) with values external to NS
+        // then interppr[B1,B2,B3] are already interpolated well by code
+        // But for B1,B3 assume already filled pr (and so localpr) with values external to NS
       }
       else{
-	localpr[B2]=GLOBALMACP0A1(pstagglobal,i,j,k,B2);
+        localpr[B2]=GLOBALMACP0A1(pstagglobal,i,j,k,B2);
 
-	// average B1 center to get FACE2
-	// average B3 center to get FACE2
-	if(j<=N2M-1-N2NOT1){
-	  totalweight=0.0;    
-	  weight=(GLOBALMACP0A1(nsmask,i,j,k,NSMASKINSIDE)==1);
-	  totalweight+=weight;
-	  interppr[B1]+=GLOBALMACP0A1(pglobal,i,j,k,B1)*weight;
-	  interppr[B3]+=GLOBALMACP0A1(pglobal,i,j,k,B3)*weight;
+        // average B1 center to get FACE2
+        // average B3 center to get FACE2
+        if(j<=N2M-1-N2NOT1){
+          totalweight=0.0;    
+          weight=(GLOBALMACP0A1(nsmask,i,j,k,NSMASKINSIDE)==1);
+          totalweight+=weight;
+          interppr[B1]+=GLOBALMACP0A1(pglobal,i,j,k,B1)*weight;
+          interppr[B3]+=GLOBALMACP0A1(pglobal,i,j,k,B3)*weight;
 
 
-	  weight=(GLOBALMACP0A1(nsmask,i,j-N2NOT1,k,NSMASKINSIDE)==1);
-	  totalweight+=weight;
-	  interppr[B1]+=GLOBALMACP0A1(pglobal,i,j-N2NOT1,k,B1)*weight;
-	  interppr[B3]+=GLOBALMACP0A1(pglobal,i,j-N2NOT1,k,B3)*weight;
+          weight=(GLOBALMACP0A1(nsmask,i,j-N2NOT1,k,NSMASKINSIDE)==1);
+          totalweight+=weight;
+          interppr[B1]+=GLOBALMACP0A1(pglobal,i,j-N2NOT1,k,B1)*weight;
+          interppr[B3]+=GLOBALMACP0A1(pglobal,i,j-N2NOT1,k,B3)*weight;
 
-	  if(totalweight>=0.5){
-	    localpr[B1]=interppr[B1]/totalweight;
-	    localpr[B3]=interppr[B3]/totalweight;
-	  }
-	}
+          if(totalweight>=0.5){
+            localpr[B1]=interppr[B1]/totalweight;
+            localpr[B3]=interppr[B3]/totalweight;
+          }
+        }
       }// done if inittype!=-2
 
 
@@ -5478,32 +5478,32 @@ int init_dsandvels_nsbh(int inittype, int pos, int *whichvel, int*whichcoord, SF
     else if(pos==FACE3){
 
       if(inittype==-2){
-	// then interppr[B1,B2,B3] are already interpolated well by code
-	// But for B1,B2 assume already filled pr (and so localpr) with values external to NS
+        // then interppr[B1,B2,B3] are already interpolated well by code
+        // But for B1,B2 assume already filled pr (and so localpr) with values external to NS
       }
       else{
-	localpr[B3]=GLOBALMACP0A1(pstagglobal,i,j,k,B3);
+        localpr[B3]=GLOBALMACP0A1(pstagglobal,i,j,k,B3);
 
-	// average B1 center to get FACE3
-	// average B2 center to get FACE3
-	if(k<=N3M-1-N3NOT1){
-	  totalweight=0.0;    
-	  weight=(GLOBALMACP0A1(nsmask,i,j,k,NSMASKINSIDE)==1);
-	  totalweight+=weight;
-	  interppr[B1]+=GLOBALMACP0A1(pglobal,i,j,k,B1)*weight;
-	  interppr[B2]+=GLOBALMACP0A1(pglobal,i,j,k,B2)*weight;
+        // average B1 center to get FACE3
+        // average B2 center to get FACE3
+        if(k<=N3M-1-N3NOT1){
+          totalweight=0.0;    
+          weight=(GLOBALMACP0A1(nsmask,i,j,k,NSMASKINSIDE)==1);
+          totalweight+=weight;
+          interppr[B1]+=GLOBALMACP0A1(pglobal,i,j,k,B1)*weight;
+          interppr[B2]+=GLOBALMACP0A1(pglobal,i,j,k,B2)*weight;
 
 
-	  weight=(GLOBALMACP0A1(nsmask,i,j,k-N3NOT1,NSMASKINSIDE)==1);
-	  totalweight+=weight;
-	  interppr[B1]+=GLOBALMACP0A1(pglobal,i,j,k-N3NOT1,B1)*weight;
-	  interppr[B2]+=GLOBALMACP0A1(pglobal,i,j,k-N3NOT1,B2)*weight;
+          weight=(GLOBALMACP0A1(nsmask,i,j,k-N3NOT1,NSMASKINSIDE)==1);
+          totalweight+=weight;
+          interppr[B1]+=GLOBALMACP0A1(pglobal,i,j,k-N3NOT1,B1)*weight;
+          interppr[B2]+=GLOBALMACP0A1(pglobal,i,j,k-N3NOT1,B2)*weight;
 
-	  if(totalweight>=0.5){
-	    localpr[B1]=interppr[B1]/totalweight;
-	    localpr[B2]=interppr[B2]/totalweight;
-	  }
-	}
+          if(totalweight>=0.5){
+            localpr[B1]=interppr[B1]/totalweight;
+            localpr[B2]=interppr[B2]/totalweight;
+          }
+        }
       }// done if inittype!=-2
 
     }
@@ -5512,68 +5512,68 @@ int init_dsandvels_nsbh(int inittype, int pos, int *whichvel, int*whichcoord, SF
       // if inittype==-3, B1,B2,B3 are already set properly by _emf function (B1 using averaging unless Nvec[1]==1)
 
       if(inittype==-2 || inittype==-3){
-	// then interppr[B1,B2,B3] are already interpolated well by code
+        // then interppr[B1,B2,B3] are already interpolated well by code
       }
       else{
 
-	// average B1 center to get CORN1
-	if(k>=-N3BND+N3NOT1 && j>=-N2BND+N2NOT1){
-	  totalweight=0.0;    
-	  weight=(GLOBALMACP0A1(nsmask,i,j,k,NSMASKINSIDE)==1);
-	  totalweight+=weight;
-	  interppr[B1]+=GLOBALMACP0A1(pglobal,i,j,k,B1)*weight;
-	  weight=(GLOBALMACP0A1(nsmask,i,j,k-N3NOT1,NSMASKINSIDE)==1);
-	  totalweight+=weight;
-	  interppr[B1]+=GLOBALMACP0A1(pglobal,i,j,k-N3NOT1,B1)*weight;
-	  weight=(GLOBALMACP0A1(nsmask,i,j-N2NOT1,k,NSMASKINSIDE)==1);
-	  totalweight+=weight;
-	  interppr[B1]+=GLOBALMACP0A1(pglobal,i,j-N2NOT1,k,B1)*weight;
-	  weight=(GLOBALMACP0A1(nsmask,i,j-N2NOT1,k-N3NOT1,NSMASKINSIDE)==1);
-	  totalweight+=weight;
-	  interppr[B1]+=GLOBALMACP0A1(pglobal,i,j-N2NOT1,k-N3NOT1,B1)*weight;
-	  
-	  if(totalweight>=0.5) localpr[B1]=interppr[B1]/totalweight;
-	}
+        // average B1 center to get CORN1
+        if(k>=-N3BND+N3NOT1 && j>=-N2BND+N2NOT1){
+          totalweight=0.0;    
+          weight=(GLOBALMACP0A1(nsmask,i,j,k,NSMASKINSIDE)==1);
+          totalweight+=weight;
+          interppr[B1]+=GLOBALMACP0A1(pglobal,i,j,k,B1)*weight;
+          weight=(GLOBALMACP0A1(nsmask,i,j,k-N3NOT1,NSMASKINSIDE)==1);
+          totalweight+=weight;
+          interppr[B1]+=GLOBALMACP0A1(pglobal,i,j,k-N3NOT1,B1)*weight;
+          weight=(GLOBALMACP0A1(nsmask,i,j-N2NOT1,k,NSMASKINSIDE)==1);
+          totalweight+=weight;
+          interppr[B1]+=GLOBALMACP0A1(pglobal,i,j-N2NOT1,k,B1)*weight;
+          weight=(GLOBALMACP0A1(nsmask,i,j-N2NOT1,k-N3NOT1,NSMASKINSIDE)==1);
+          totalweight+=weight;
+          interppr[B1]+=GLOBALMACP0A1(pglobal,i,j-N2NOT1,k-N3NOT1,B1)*weight;
+   
+          if(totalweight>=0.5) localpr[B1]=interppr[B1]/totalweight;
+        }
 
-	// average B2 face2 in interpdir=3 to get CORN1
-	if(k>=-N3BND+N3NOT1){
-	  totalweight=0.0;    
-	  weight=(GLOBALMACP0A1(nsmask,i,j,k,NSMASKINSIDE)==1);
-	  totalweight+=weight;
-	  interppr[B2]+=GLOBALMACP0A1(pstagglobal,i,j,k,B2)*weight;
-	  weight=(GLOBALMACP0A1(nsmask,i,j,k-N3NOT1,NSMASKINSIDE)==1);
-	  totalweight+=weight;
-	  interppr[B2]+=GLOBALMACP0A1(pstagglobal,i,j,k-N3NOT1,B2)*weight;
-	  
-	  if(totalweight>=0.5){
-	    interppr[B2]/=totalweight;
-	    localpr[B2]=interppr[B2];
-	  }
-	}
-	// average B3 face3 in interpdir=2 to get CORN1
-	if(j>=-N2BND+N2NOT1 && inittype!=-3){
-	  totalweight=0.0;    
-	  weight=(GLOBALMACP0A1(nsmask,i,j,k,NSMASKINSIDE)==1);
-	  totalweight+=weight;
-	  interppr[B3]+=GLOBALMACP0A1(pstagglobal,i,j,k,B3)*weight;
-	  weight=(GLOBALMACP0A1(nsmask,i,j-N2NOT1,k,NSMASKINSIDE)==1);
-	  totalweight+=weight;
-	  interppr[B3]+=GLOBALMACP0A1(pstagglobal,i,j-N2NOT1,k,B3)*weight;
+        // average B2 face2 in interpdir=3 to get CORN1
+        if(k>=-N3BND+N3NOT1){
+          totalweight=0.0;    
+          weight=(GLOBALMACP0A1(nsmask,i,j,k,NSMASKINSIDE)==1);
+          totalweight+=weight;
+          interppr[B2]+=GLOBALMACP0A1(pstagglobal,i,j,k,B2)*weight;
+          weight=(GLOBALMACP0A1(nsmask,i,j,k-N3NOT1,NSMASKINSIDE)==1);
+          totalweight+=weight;
+          interppr[B2]+=GLOBALMACP0A1(pstagglobal,i,j,k-N3NOT1,B2)*weight;
+   
+          if(totalweight>=0.5){
+            interppr[B2]/=totalweight;
+            localpr[B2]=interppr[B2];
+          }
+        }
+        // average B3 face3 in interpdir=2 to get CORN1
+        if(j>=-N2BND+N2NOT1 && inittype!=-3){
+          totalweight=0.0;    
+          weight=(GLOBALMACP0A1(nsmask,i,j,k,NSMASKINSIDE)==1);
+          totalweight+=weight;
+          interppr[B3]+=GLOBALMACP0A1(pstagglobal,i,j,k,B3)*weight;
+          weight=(GLOBALMACP0A1(nsmask,i,j-N2NOT1,k,NSMASKINSIDE)==1);
+          totalweight+=weight;
+          interppr[B3]+=GLOBALMACP0A1(pstagglobal,i,j-N2NOT1,k,B3)*weight;
 
-	  if(totalweight>=0.5){
-	    interppr[B3]/=totalweight;
-	    localpr[B3]=interppr[B3];
-	  }
-	}
+          if(totalweight>=0.5){
+            interppr[B3]/=totalweight;
+            localpr[B3]=interppr[B3];
+          }
+        }
       
 
-	// DEBUG:
-	if(fabs(pr[B2]-localpr[B2])/(fabs(pr[B2])+fabs(localpr[B2]))>1E-1){
-	  dualfprintf(fail_file,"CORN1DIFFB2: %d %d %d : %21.15g %21.15g\n",i,j,k,pr[B2],localpr[B2]);
-	}
-	if(fabs(pr[B3]-localpr[B3])/(fabs(pr[B3])+fabs(localpr[B3]))>1E-1){
-	  dualfprintf(fail_file,"CORN1DIFFB3: %d %d %d : %21.15g %21.15g\n",i,j,k,pr[B3],localpr[B3]);
-	}
+        // DEBUG:
+        if(fabs(pr[B2]-localpr[B2])/(fabs(pr[B2])+fabs(localpr[B2]))>1E-1){
+          dualfprintf(fail_file,"CORN1DIFFB2: %d %d %d : %21.15g %21.15g\n",i,j,k,pr[B2],localpr[B2]);
+        }
+        if(fabs(pr[B3]-localpr[B3])/(fabs(pr[B3])+fabs(localpr[B3]))>1E-1){
+          dualfprintf(fail_file,"CORN1DIFFB3: %d %d %d : %21.15g %21.15g\n",i,j,k,pr[B3],localpr[B3]);
+        }
 
       }// end if interptype!=-2 && !=-3
 
@@ -5581,136 +5581,136 @@ int init_dsandvels_nsbh(int inittype, int pos, int *whichvel, int*whichcoord, SF
     else if(pos==CORN2){
 
       if(inittype==-2 || inittype==-3){
-	// then interppr[B1,B2,B3] are already interpolated well by code (or as best possible)
+        // then interppr[B1,B2,B3] are already interpolated well by code (or as best possible)
       }
       else{
 
-	// average B2 center to get CORN2
-	if(k>=-N3BND+N3NOT1 && i>=-N1BND+N1NOT1){
-	  totalweight=0.0;    
-	  weight=(GLOBALMACP0A1(nsmask,i,j,k,NSMASKINSIDE)==1);
-	  totalweight+=weight;
-	  interppr[B2]+=GLOBALMACP0A1(pglobal,i,j,k,B2)*weight;
-	  weight=(GLOBALMACP0A1(nsmask,i,j,k-N3NOT1,NSMASKINSIDE)==1);
-	  totalweight+=weight;
-	  interppr[B2]+=GLOBALMACP0A1(pglobal,i,j,k-N3NOT1,B2)*weight;
-	  weight=(GLOBALMACP0A1(nsmask,i-N1NOT1,j,k,NSMASKINSIDE)==1);
-	  totalweight+=weight;
-	  interppr[B2]+=GLOBALMACP0A1(pglobal,i-N1NOT1,j,k,B2)*weight;
-	  weight=(GLOBALMACP0A1(nsmask,i-N1NOT1,j,k-N3NOT1,NSMASKINSIDE)==1);
-	  totalweight+=weight;
-	  interppr[B2]+=GLOBALMACP0A1(pglobal,i-N1NOT1,j,k-N3NOT1,B2)*weight;
-	  
-	  if(totalweight>=0.5) localpr[B2]=interppr[B2]/totalweight;
-	}
+        // average B2 center to get CORN2
+        if(k>=-N3BND+N3NOT1 && i>=-N1BND+N1NOT1){
+          totalweight=0.0;    
+          weight=(GLOBALMACP0A1(nsmask,i,j,k,NSMASKINSIDE)==1);
+          totalweight+=weight;
+          interppr[B2]+=GLOBALMACP0A1(pglobal,i,j,k,B2)*weight;
+          weight=(GLOBALMACP0A1(nsmask,i,j,k-N3NOT1,NSMASKINSIDE)==1);
+          totalweight+=weight;
+          interppr[B2]+=GLOBALMACP0A1(pglobal,i,j,k-N3NOT1,B2)*weight;
+          weight=(GLOBALMACP0A1(nsmask,i-N1NOT1,j,k,NSMASKINSIDE)==1);
+          totalweight+=weight;
+          interppr[B2]+=GLOBALMACP0A1(pglobal,i-N1NOT1,j,k,B2)*weight;
+          weight=(GLOBALMACP0A1(nsmask,i-N1NOT1,j,k-N3NOT1,NSMASKINSIDE)==1);
+          totalweight+=weight;
+          interppr[B2]+=GLOBALMACP0A1(pglobal,i-N1NOT1,j,k-N3NOT1,B2)*weight;
+   
+          if(totalweight>=0.5) localpr[B2]=interppr[B2]/totalweight;
+        }
 
-	// average B1 face1 in interpdir=3 to get CORN2
-	if(k>=-N3BND+N3NOT1){
-	  totalweight=0.0;    
-	  weight=(GLOBALMACP0A1(nsmask,i,j,k,NSMASKINSIDE)==1);
-	  totalweight+=weight;
-	  interppr[B1]+=GLOBALMACP0A1(pstagglobal,i,j,k,B1)*weight;
-	  weight=(GLOBALMACP0A1(nsmask,i,j,k-N3NOT1,NSMASKINSIDE)==1);
-	  totalweight+=weight;
-	  interppr[B1]+=GLOBALMACP0A1(pstagglobal,i,j,k-N3NOT1,B1)*weight;
+        // average B1 face1 in interpdir=3 to get CORN2
+        if(k>=-N3BND+N3NOT1){
+          totalweight=0.0;    
+          weight=(GLOBALMACP0A1(nsmask,i,j,k,NSMASKINSIDE)==1);
+          totalweight+=weight;
+          interppr[B1]+=GLOBALMACP0A1(pstagglobal,i,j,k,B1)*weight;
+          weight=(GLOBALMACP0A1(nsmask,i,j,k-N3NOT1,NSMASKINSIDE)==1);
+          totalweight+=weight;
+          interppr[B1]+=GLOBALMACP0A1(pstagglobal,i,j,k-N3NOT1,B1)*weight;
 
-	  if(totalweight>=0.5){
-	    interppr[B1]/=totalweight;
-	    localpr[B1]=interppr[B1];
-	  }
-	}
-	// average B3 face3 in interpdir=1 to get CORN2
-	if(i>=-N1BND+N1NOT1){
-	  totalweight=0.0;    
-	  weight=(GLOBALMACP0A1(nsmask,i,j,k,NSMASKINSIDE)==1);
-	  totalweight+=weight;
-	  interppr[B3]+=GLOBALMACP0A1(pstagglobal,i,j,k,B3)*weight;
-	  weight=(GLOBALMACP0A1(nsmask,i-N1NOT1,j,k,NSMASKINSIDE)==1);
-	  totalweight+=weight;
-	  interppr[B3]+=GLOBALMACP0A1(pstagglobal,i-N1NOT1,j,k,B3)*weight;
+          if(totalweight>=0.5){
+            interppr[B1]/=totalweight;
+            localpr[B1]=interppr[B1];
+          }
+        }
+        // average B3 face3 in interpdir=1 to get CORN2
+        if(i>=-N1BND+N1NOT1){
+          totalweight=0.0;    
+          weight=(GLOBALMACP0A1(nsmask,i,j,k,NSMASKINSIDE)==1);
+          totalweight+=weight;
+          interppr[B3]+=GLOBALMACP0A1(pstagglobal,i,j,k,B3)*weight;
+          weight=(GLOBALMACP0A1(nsmask,i-N1NOT1,j,k,NSMASKINSIDE)==1);
+          totalweight+=weight;
+          interppr[B3]+=GLOBALMACP0A1(pstagglobal,i-N1NOT1,j,k,B3)*weight;
 
-	  if(totalweight>=0.5){
-	    interppr[B3]/=totalweight;
-	    localpr[B3]=interppr[B3];
-	  }
-	}
+          if(totalweight>=0.5){
+            interppr[B3]/=totalweight;
+            localpr[B3]=interppr[B3];
+          }
+        }
 
 
-	// DEBUG:
-	if(fabs(pr[B1]-localpr[B1])/(fabs(pr[B1])+fabs(localpr[B1]))>1E-1){
-	  dualfprintf(fail_file,"CORN2DIFFB1: %d %d %d : %21.15g %21.15g\n",i,j,k,pr[B1],localpr[B1]);
-	}
-	if(fabs(pr[B3]-localpr[B3])/(fabs(pr[B3])+fabs(localpr[B3]))>1E-1){
-	  dualfprintf(fail_file,"CORN2DIFFB3: %d %d %d : %21.15g %21.15g\n",i,j,k,pr[B3],localpr[B3]);
-	}
-	
+        // DEBUG:
+        if(fabs(pr[B1]-localpr[B1])/(fabs(pr[B1])+fabs(localpr[B1]))>1E-1){
+          dualfprintf(fail_file,"CORN2DIFFB1: %d %d %d : %21.15g %21.15g\n",i,j,k,pr[B1],localpr[B1]);
+        }
+        if(fabs(pr[B3]-localpr[B3])/(fabs(pr[B3])+fabs(localpr[B3]))>1E-1){
+          dualfprintf(fail_file,"CORN2DIFFB3: %d %d %d : %21.15g %21.15g\n",i,j,k,pr[B3],localpr[B3]);
+        }
+ 
       }// end if interptype!=-2 && !=-3
 
     }
     else if(pos==CORN3){
 
       if(inittype==-2 || inittype==-3){
-	// then interppr[B1,B2,B3] are already interpolated well by code
+        // then interppr[B1,B2,B3] are already interpolated well by code
       }
       else{
 
-	// average B3 center to get CORN3
-	if(j>=-N2BND+N2NOT1 && i>=-N1BND+N1NOT1){
-	  totalweight=0.0;    
-	  weight=(GLOBALMACP0A1(nsmask,i,j,k,NSMASKINSIDE)==1);
-	  totalweight+=weight;
-	  interppr[B3]+=GLOBALMACP0A1(pglobal,i,j,k,B3)*weight;
-	  weight=(GLOBALMACP0A1(nsmask,i,j-N2NOT1,k,NSMASKINSIDE)==1);
-	  totalweight+=weight;
-	  interppr[B3]+=GLOBALMACP0A1(pglobal,i,j-N2NOT1,k,B3)*weight;
-	  weight=(GLOBALMACP0A1(nsmask,i-N1NOT1,j,k,NSMASKINSIDE)==1);
-	  totalweight+=weight;
-	  interppr[B3]+=GLOBALMACP0A1(pglobal,i-N1NOT1,j,k,B3)*weight;
-	  weight=(GLOBALMACP0A1(nsmask,i-N1NOT1,j-N2NOT1,k,NSMASKINSIDE)==1);
-	  totalweight+=weight;
-	  interppr[B3]+=GLOBALMACP0A1(pglobal,i-N1NOT1,j-N2NOT1,k,B3)*weight;
-	  
-	  if(totalweight>=0.5) localpr[B3]=interppr[B3]/totalweight;
-	}
+        // average B3 center to get CORN3
+        if(j>=-N2BND+N2NOT1 && i>=-N1BND+N1NOT1){
+          totalweight=0.0;    
+          weight=(GLOBALMACP0A1(nsmask,i,j,k,NSMASKINSIDE)==1);
+          totalweight+=weight;
+          interppr[B3]+=GLOBALMACP0A1(pglobal,i,j,k,B3)*weight;
+          weight=(GLOBALMACP0A1(nsmask,i,j-N2NOT1,k,NSMASKINSIDE)==1);
+          totalweight+=weight;
+          interppr[B3]+=GLOBALMACP0A1(pglobal,i,j-N2NOT1,k,B3)*weight;
+          weight=(GLOBALMACP0A1(nsmask,i-N1NOT1,j,k,NSMASKINSIDE)==1);
+          totalweight+=weight;
+          interppr[B3]+=GLOBALMACP0A1(pglobal,i-N1NOT1,j,k,B3)*weight;
+          weight=(GLOBALMACP0A1(nsmask,i-N1NOT1,j-N2NOT1,k,NSMASKINSIDE)==1);
+          totalweight+=weight;
+          interppr[B3]+=GLOBALMACP0A1(pglobal,i-N1NOT1,j-N2NOT1,k,B3)*weight;
+   
+          if(totalweight>=0.5) localpr[B3]=interppr[B3]/totalweight;
+        }
 
-	// average B1 face1 in interpdir=2 to get CORN3
-	if(j>=-N2BND+N2NOT1){
-	  totalweight=0.0;    
-	  weight=(GLOBALMACP0A1(nsmask,i,j,k,NSMASKINSIDE)==1);
-	  totalweight+=weight;
-	  interppr[B1]+=GLOBALMACP0A1(pstagglobal,i,j,k,B1)*weight;
-	  weight=(GLOBALMACP0A1(nsmask,i,j-N2NOT1,k,NSMASKINSIDE)==1);
-	  totalweight+=weight;
-	  interppr[B1]+=GLOBALMACP0A1(pstagglobal,i,j-N2NOT1,k,B1)*weight;
+        // average B1 face1 in interpdir=2 to get CORN3
+        if(j>=-N2BND+N2NOT1){
+          totalweight=0.0;    
+          weight=(GLOBALMACP0A1(nsmask,i,j,k,NSMASKINSIDE)==1);
+          totalweight+=weight;
+          interppr[B1]+=GLOBALMACP0A1(pstagglobal,i,j,k,B1)*weight;
+          weight=(GLOBALMACP0A1(nsmask,i,j-N2NOT1,k,NSMASKINSIDE)==1);
+          totalweight+=weight;
+          interppr[B1]+=GLOBALMACP0A1(pstagglobal,i,j-N2NOT1,k,B1)*weight;
 
-	  if(totalweight>=0.5){
-	    interppr[B1]/=totalweight;
-	    localpr[B1]=interppr[B1];
-	  }
-	}
-	// average B2 face2 in interpdir=1 to get CORN3
-	if(i>=-N1BND+N1NOT1){
-	  totalweight=0.0;    
-	  weight=(GLOBALMACP0A1(nsmask,i,j,k,NSMASKINSIDE)==1);
-	  totalweight+=weight;
-	  interppr[B2]+=GLOBALMACP0A1(pstagglobal,i,j,k,B2)*weight;
-	  weight=(GLOBALMACP0A1(nsmask,i-N1NOT1,j,k,NSMASKINSIDE)==1);
-	  totalweight+=weight;
-	  interppr[B2]+=GLOBALMACP0A1(pstagglobal,i-N1NOT1,j,k,B2)*weight;
-	  
-	  if(totalweight>=0.5){
-	    interppr[B2]/=totalweight;
-	    localpr[B2]=interppr[B2];
-	  }
-	}
+          if(totalweight>=0.5){
+            interppr[B1]/=totalweight;
+            localpr[B1]=interppr[B1];
+          }
+        }
+        // average B2 face2 in interpdir=1 to get CORN3
+        if(i>=-N1BND+N1NOT1){
+          totalweight=0.0;    
+          weight=(GLOBALMACP0A1(nsmask,i,j,k,NSMASKINSIDE)==1);
+          totalweight+=weight;
+          interppr[B2]+=GLOBALMACP0A1(pstagglobal,i,j,k,B2)*weight;
+          weight=(GLOBALMACP0A1(nsmask,i-N1NOT1,j,k,NSMASKINSIDE)==1);
+          totalweight+=weight;
+          interppr[B2]+=GLOBALMACP0A1(pstagglobal,i-N1NOT1,j,k,B2)*weight;
+   
+          if(totalweight>=0.5){
+            interppr[B2]/=totalweight;
+            localpr[B2]=interppr[B2];
+          }
+        }
 
-	// DEBUG:
-	if(fabs(pr[B1]-localpr[B1])/(fabs(pr[B1])+fabs(localpr[B1]))>1E-1){
-	  dualfprintf(fail_file,"CORN3DIFFB1: %d %d %d : %21.15g %21.15g\n",i,j,k,pr[B1],localpr[B1]);
-	}
-	if(fabs(pr[B2]-localpr[B2])/(fabs(pr[B2])+fabs(localpr[B2]))>1E-1){
-	    dualfprintf(fail_file,"CORN3DIFFB2: %d %d %d : %21.15g %21.15g\n",i,j,k,pr[B2],localpr[B2]);
-	}
+        // DEBUG:
+        if(fabs(pr[B1]-localpr[B1])/(fabs(pr[B1])+fabs(localpr[B1]))>1E-1){
+          dualfprintf(fail_file,"CORN3DIFFB1: %d %d %d : %21.15g %21.15g\n",i,j,k,pr[B1],localpr[B1]);
+        }
+        if(fabs(pr[B2]-localpr[B2])/(fabs(pr[B2])+fabs(localpr[B2]))>1E-1){
+          dualfprintf(fail_file,"CORN3DIFFB2: %d %d %d : %21.15g %21.15g\n",i,j,k,pr[B2],localpr[B2]);
+        }
 
 
       }// end if interptype!=-2 && !=-3
@@ -5719,18 +5719,18 @@ int init_dsandvels_nsbh(int inittype, int pos, int *whichvel, int*whichcoord, SF
     else if(pos==CORNT){ // GODMARK: not controlled with mask yet, but not needed yet
 
       if(inittype==-2){
-	// then interppr[B1,B2,B3] are already interpolated well by code
+        // then interppr[B1,B2,B3] are already interpolated well by code
       }
       else{
-	if(k>=-N3BND+N3NOT1 && j>=-N2BND+N2NOT1){
-	  interppr[B1]=0.25*(GLOBALMACP0A1(pstagglobal,i,j,k,B1)+GLOBALMACP0A1(pstagglobal,i,j-N2NOT1,k,B1)+GLOBALMACP0A1(pstagglobal,i,j,k-N3NOT1,B1)+GLOBALMACP0A1(pstagglobal,i,j-N2NOT1,k-N3NOT1,B1)); // average B1 face1 to get CORNT
-	}
-	if(i>=-N1BND+N1NOT1 && k>=-N3BND+N3NOT1){
-	  interppr[B2]=0.25*(GLOBALMACP0A1(pstagglobal,i,j,k,B2)+GLOBALMACP0A1(pstagglobal,i-N1NOT1,j,k,B2)+GLOBALMACP0A1(pstagglobal,i,j,k-N3NOT1,B2)+GLOBALMACP0A1(pstagglobal,i-N1NOT1,j,k-N3NOT1,B2)); // average B2 face2 to get CORNT
-	}
-	if(i>=-N1BND+N1NOT1 && j>=-N2BND+N2NOT1){
-	  interppr[B3]=0.25*(GLOBALMACP0A1(pstagglobal,i,j,k,B3)+GLOBALMACP0A1(pstagglobal,i,j-N2NOT1,k,B3)+GLOBALMACP0A1(pstagglobal,i-N1NOT1,j,k,B3)+GLOBALMACP0A1(pstagglobal,i-N1NOT1,j-N2NOT1,k,B3)); // average B3 face3 to get CORNT
-	}
+        if(k>=-N3BND+N3NOT1 && j>=-N2BND+N2NOT1){
+          interppr[B1]=0.25*(GLOBALMACP0A1(pstagglobal,i,j,k,B1)+GLOBALMACP0A1(pstagglobal,i,j-N2NOT1,k,B1)+GLOBALMACP0A1(pstagglobal,i,j,k-N3NOT1,B1)+GLOBALMACP0A1(pstagglobal,i,j-N2NOT1,k-N3NOT1,B1)); // average B1 face1 to get CORNT
+        }
+        if(i>=-N1BND+N1NOT1 && k>=-N3BND+N3NOT1){
+          interppr[B2]=0.25*(GLOBALMACP0A1(pstagglobal,i,j,k,B2)+GLOBALMACP0A1(pstagglobal,i-N1NOT1,j,k,B2)+GLOBALMACP0A1(pstagglobal,i,j,k-N3NOT1,B2)+GLOBALMACP0A1(pstagglobal,i-N1NOT1,j,k-N3NOT1,B2)); // average B2 face2 to get CORNT
+        }
+        if(i>=-N1BND+N1NOT1 && j>=-N2BND+N2NOT1){
+          interppr[B3]=0.25*(GLOBALMACP0A1(pstagglobal,i,j,k,B3)+GLOBALMACP0A1(pstagglobal,i,j-N2NOT1,k,B3)+GLOBALMACP0A1(pstagglobal,i-N1NOT1,j,k,B3)+GLOBALMACP0A1(pstagglobal,i-N1NOT1,j-N2NOT1,k,B3)); // average B3 face3 to get CORNT
+        }
       }
     }
 
@@ -5795,20 +5795,20 @@ int init_dsandvels_nsbh(int inittype, int pos, int *whichvel, int*whichcoord, SF
 
       if(EOMTYPE!=EOMFFDE){
 #if(0)
-	// if external sigma is low/high, feed in less/more material so environment enters an equilibrium
-	if(sigma_ext<sigma_int){
-	  pr[RHO]*=modinflow;
-	  // still won't be stationary until infinite density beyond NS
-	}
+        // if external sigma is low/high, feed in less/more material so environment enters an equilibrium
+        if(sigma_ext<sigma_int){
+          pr[RHO]*=modinflow;
+          // still won't be stationary until infinite density beyond NS
+        }
 #else
-	// instead, mod v0
-	// force no injection of mass from NS if sigma low enough exterior to NS
-	// drop down v0 if exterior sigma is much lower than desired
-	v0touse=v0*switcht(modinflow,0.2,1.0);
+        // instead, mod v0
+        // force no injection of mass from NS if sigma low enough exterior to NS
+        // drop down v0 if exterior sigma is much lower than desired
+        v0touse=v0*switcht(modinflow,0.2,1.0);
 #endif
       }
       else{
-	v0touse=0.0;
+        v0touse=0.0;
       }
 
 
@@ -6270,18 +6270,18 @@ FTYPE setnsoffset1(int l, SFTYPE time, FTYPE *V)
       aphidipole=normglobal*A3sign*0.5*BPOLE*Rns*Rns*Rns*(rns-R)*pow(fabs(rns-R),1.0)/pow(absrdiff+Rsoft,3.0) ;
 
       if(1){ // too out of balance at t=0
-	// Damp potential near R=0 since otherwise (in axisymmetry) the field must have a monopole if B^\theta finite near \theta=0
-	// That is, if field points into pole, it also points into pole on other side of pole.  But then don't just have kink in B, have monopole.
-	
-	// So aphi->0 on order of Rin or as \theta->0
-	//	aphidipole*=1.0/(1.0+1.0/(R/Rns));
+        // Damp potential near R=0 since otherwise (in axisymmetry) the field must have a monopole if B^\theta finite near \theta=0
+        // That is, if field points into pole, it also points into pole on other side of pole.  But then don't just have kink in B, have monopole.
+ 
+        // So aphi->0 on order of Rin or as \theta->0
+        // aphidipole*=1.0/(1.0+1.0/(R/Rns));
 
-	// So aphi->0 on order of rns or as \theta->0
-	aphidipole*=1.0/(1.0+1.0/(R/rns));
+        // So aphi->0 on order of rns or as \theta->0
+        aphidipole*=1.0/(1.0+1.0/(R/rns));
       }
       if(0){ // makes no sense in axisymmetry
-	// force current sheet at pole so kink in field is not a monopole
-	if(th<0 || th>M_PI) aphidipole*=-1.0;
+        // force current sheet at pole so kink in field is not a monopole
+        if(th<0 || th>M_PI) aphidipole*=-1.0;
       }
 
       aphi += aphidipole;
@@ -6326,7 +6326,7 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
 
 
 #define FRACAPHICUT 0.2
-      //#define FRACAPHICUT 0.1
+  //#define FRACAPHICUT 0.1
 
 
 
@@ -6418,7 +6418,7 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
 #define POWERNU (2.0)
       //#define POWERNU (4.0)
 
-	//      if (q > 0.)      vpot += q*q*pow(r*fabs(sin(th)),POWERNU);
+      //      if (q > 0.)      vpot += q*q*pow(r*fabs(sin(th)),POWERNU);
       FTYPE fact1,fact2,SSS,TTT;
       fact1=pow(fabs(q),QPOWER)*pow(r*fabs(sin(th)),POWERNU);
       SSS=rin*0.5;
@@ -6685,24 +6685,24 @@ int normalize_densities_postnormalizefield(SFTYPE time, FTYPE (*prim)[NSTORE2][N
       sigma_ij=bsq_ij/(2.0*fabs(MACP0A1(prim,i,j,k,RHO)+SMALL));
 
       if(sigma_ij>BSQORHOLIMIT*0.5){
-	dualfprintf(fail_file,"RENORMDEN1: %d %d %d %21.15g %21.15g\n",i,j,k,sigma_ij,MACP0A1(prim,i,j,k,RHO));
-	MACP0A1(prim,i,j,k,RHO)*=sigma_ij/(BSQORHOLIMIT*0.5);
+        dualfprintf(fail_file,"RENORMDEN1: %d %d %d %21.15g %21.15g\n",i,j,k,sigma_ij,MACP0A1(prim,i,j,k,RHO));
+        MACP0A1(prim,i,j,k,RHO)*=sigma_ij/(BSQORHOLIMIT*0.5);
       }
 
       // \sigma \sim \mu \sim b^2/(2u)
       sigmahot_ij=bsq_ij/(2.0*fabs(MACP0A1(prim,i,j,k,UU))+SMALL);
-					   
+        
       if(sigmahot_ij>BSQOULIMIT*0.5){
-	dualfprintf(fail_file,"RENORMDEN2: %d %d %d %21.15g %21.15g\n",i,j,k,sigmahot_ij,MACP0A1(prim,i,j,k,UU));
-	MACP0A1(prim,i,j,k,UU)*=sigmahot_ij/(BSQOULIMIT*0.5);
+        dualfprintf(fail_file,"RENORMDEN2: %d %d %d %21.15g %21.15g\n",i,j,k,sigmahot_ij,MACP0A1(prim,i,j,k,UU));
+        MACP0A1(prim,i,j,k,UU)*=sigmahot_ij/(BSQOULIMIT*0.5);
       }
 
       // u/\rho_0
       uorho=MACP0A1(prim,i,j,k,UU)/(fabs(MACP0A1(prim,i,j,k,RHO))+SMALL);
 
       if(uorho>UORHOLIMIT){
-	dualfprintf(fail_file,"RENORMDEN3: %d %d %d %21.15g %21.15g %21.15g\n",i,j,k,uorho,MACP0A1(prim,i,j,k,RHO),MACP0A1(prim,i,j,k,UU));
-	MACP0A1(prim,i,j,k,RHO)*=uorho/UORHOLIMIT;
+        dualfprintf(fail_file,"RENORMDEN3: %d %d %d %21.15g %21.15g %21.15g\n",i,j,k,uorho,MACP0A1(prim,i,j,k,RHO),MACP0A1(prim,i,j,k,UU));
+        MACP0A1(prim,i,j,k,RHO)*=uorho/UORHOLIMIT;
       }
 
       // old, stupid, maybe:
@@ -6797,12 +6797,12 @@ int get_sigmabsq_atpole(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE
     dualfprintf(fail_file,"Never found place to normalize field for NS\n");
     if(N2==1 && N3==1){
       ZLOOP {
-	bl_coord_ijk_2(i, j, k, loc, X, V);
-	dxdxprim_ijk(i, j, k, loc, dxdxp);
-	r=V[1];
-	th=V[2];
+        bl_coord_ijk_2(i, j, k, loc, X, V);
+        dxdxprim_ijk(i, j, k, loc, dxdxp);
+        r=V[1];
+        th=V[2];
 
-	dualfprintf(fail_file,"i=%d j=%d k=%d V[1]=%21.15g dxdxp[1][1]*dx[1]=%21.15g dx[1]=%21.15g\n",i,j,k,V[1],dxdxp[1][1]*dx[1],dx[1]);
+        dualfprintf(fail_file,"i=%d j=%d k=%d V[1]=%21.15g dxdxp[1][1]*dx[1]=%21.15g dx[1]=%21.15g\n",i,j,k,V[1],dxdxp[1][1]*dx[1],dx[1]);
       }
     }
     myexit(111);
@@ -6827,24 +6827,24 @@ int get_sigmabsq_atpole(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE
 SFTYPE lfish_calc(SFTYPE r)
 {
   return (((pow(a, 2) - 2. * a * sqrt(r) + pow(r, 2)) *
-	   ((-2. * a * r * (pow(a, 2) - 2. * a * sqrt(r) + pow(r, 2))) /
-	    sqrt(2. * a * sqrt(r) + (-3. + r) * r) +
-	    ((a + (-2. + r) * sqrt(r)) * (pow(r, 3) +
-					  pow(a,
-					      2) * (2. + r))) / sqrt(1 +
-								     (2.
-								      *
-								      a)
-								     /
-								     pow(r,
-								      1.5)
-								     -
-								     3.
-								     /
-								     r)))
-	  / (pow(r, 3) * sqrt(2. * a * sqrt(r) + (-3. + r) * r) *
-	     (pow(a, 2) + (-2. + r) * r))
-	  );
+           ((-2. * a * r * (pow(a, 2) - 2. * a * sqrt(r) + pow(r, 2))) /
+            sqrt(2. * a * sqrt(r) + (-3. + r) * r) +
+            ((a + (-2. + r) * sqrt(r)) * (pow(r, 3) +
+                                          pow(a,
+                                              2) * (2. + r))) / sqrt(1 +
+                                                                     (2.
+                                                                      *
+                                                                      a)
+                                                                     /
+                                                                     pow(r,
+                                                                         1.5)
+                                                                     -
+                                                                     3.
+                                                                     /
+                                                                     r)))
+          / (pow(r, 3) * sqrt(2. * a * sqrt(r) + (-3. + r) * r) *
+             (pow(a, 2) + (-2. + r) * r))
+          );
 }
 
 // UUMIN/RHOMIN used for atmosphere
@@ -6895,11 +6895,11 @@ int set_density_floors(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *prfloor)
 static FTYPE nz_func(FTYPE R)
 {
   return(
-	 sqrt(
-	      (3.*a*a - 4.*a*sqrt(R) + R*R)/
-	      pow(R*(a + pow(R,1.5)),2)
-	      )
-	 ) ;
+         sqrt(
+              (3.*a*a - 4.*a*sqrt(R) + R*R)/
+              pow(R*(a + pow(R,1.5)),2)
+              )
+         ) ;
 
 
 }

@@ -8,17 +8,17 @@
 
 
 static int get_dodumps(int call_code, int firsttime, SFTYPE localt, long localnstep, long localrealnstep, FTYPE *tdumpgen, FTYPE *tlastgen, FTYPE tlastareamap
-		       ,long long int nlastrestart, long long int nrestart
-		       ,long long int nlastfake, long long int nfake
-		       ,int *doareamap, int *dodumpgen);
+                       ,long long int nlastrestart, long long int nrestart
+                       ,long long int nlastfake, long long int nfake
+                       ,int *doareamap, int *dodumpgen);
 static int pre_dump(int whichDT, FTYPE t, FTYPE localt, FTYPE *DTdumpgen, long int *dumpcntgen, long long int *dumpcgen, FTYPE *tdumpgen, FILE **dumpcnt_filegen, FTYPE *tlastgen
-		    ,int whichrestart, long long int restartc, long long int localrealnstep, long long int nrestart,long DTr, long long int nlastrestart
-		    ,int whichfake, long long int fakec, long long int nfake,long DTfake, long long int nlastfake
-		    );
+                    ,int whichrestart, long long int restartc, long long int localrealnstep, long long int nrestart,long DTr, long long int nlastrestart
+                    ,int whichfake, long long int fakec, long long int nfake,long DTfake, long long int nlastfake
+                    );
 static int post_dump(int whichDT, FTYPE localt, FTYPE *DTdumpgen, long int *dumpcntgen, long long int *dumpcgen, FTYPE *tdumpgen, FILE **dumpcnt_filegen, FTYPE *tlastgen
-		     ,long *restartsteps, int *whichrestart, long long int *restartc, long localrealnstep,long long int *nrestart, long DTr, long long int *nlastrestart
-		     ,long *fakesteps, int *whichfake, long long int *fakec, long long int *nfake, long DTfake, long long int *nlastfake
-		     );
+                     ,long *restartsteps, int *whichrestart, long long int *restartc, long localrealnstep,long long int *nrestart, long DTr, long long int *nlastrestart
+                     ,long *fakesteps, int *whichfake, long long int *fakec, long long int *nfake, long DTfake, long long int *nlastfake
+                     );
 
 
 
@@ -132,7 +132,7 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
     if (RESTARTMODE == 0) {
 
       for(dtloop=0;dtloop<NUMDUMPTYPES;dtloop++){
-	tdumpgen[dtloop]=localt;
+        tdumpgen[dtloop]=localt;
       }
 
 
@@ -143,7 +143,7 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
 
 
       for(dtloop=0;dtloop<NUMDUMPTYPES;dtloop++){
-	dumpcntgen[dtloop]=0;
+        dumpcntgen[dtloop]=0;
       }
 
       appendold = 0;
@@ -159,7 +159,7 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
       nfake = (long)(DTfake*(SFTYPE)((localrealnstep/DTfake)+1));
 
       for(dtloop=0;dtloop<NUMDUMPTYPES;dtloop++){
-	tdumpgen[dtloop]=DTdumpgen[dtloop]*(SFTYPE)((long long int)(localt/DTdumpgen[dtloop])+1);
+        tdumpgen[dtloop]=DTdumpgen[dtloop]*(SFTYPE)((long long int)(localt/DTdumpgen[dtloop])+1);
       }
 
       DIAGREPORT;
@@ -338,14 +338,14 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
     if(dodumpgen[dumptypeiter]&&dumpfuncgen[dumptypeiter]!=NULL){
       // pre_dump:
       pre_dump(dumptypeiter,t,localt,DTdumpgen,dumpcntgen,dumpcgen,tdumpgen,dumpcnt_filegen,tlastgen
-	       ,whichrestart,restartc,localrealnstep,nrestart,DTr,nlastrestart
-	       ,whichfake,fakec,nfake,DTfake,nlastfake
-	       );
+               ,whichrestart,restartc,localrealnstep,nrestart,DTr,nlastrestart
+               ,whichfake,fakec,nfake,DTfake,nlastfake
+               );
       
 
       if((*(dumpfuncgen[dumptypeiter]))(dumpcntgen[dumptypeiter]) >= 1){
-	dualfprintf(fail_file,"unable to print %s file\n",dumpnamelist[dumptypeiter]);
-	return (1);
+        dualfprintf(fail_file,"unable to print %s file\n",dumpnamelist[dumptypeiter]);
+        return (1);
       }
 
       // get main dump count for additional types below
@@ -353,9 +353,9 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
       
       // post_dump:
       post_dump(dumptypeiter,localt,DTdumpgen,dumpcntgen,dumpcgen,tdumpgen,dumpcnt_filegen,tlastgen
-		,restartsteps, &whichrestart, &restartc, localrealnstep, &nrestart, DTr, &nlastrestart
-		,fakesteps, &whichfake, &fakec, &nfake, DTfake, &nlastfake
-		);
+                ,restartsteps, &whichrestart, &restartc, localrealnstep, &nrestart, DTr, &nlastrestart
+                ,fakesteps, &whichfake, &fakec, &nfake, DTfake, &nlastfake
+                );
     }
   }
 
@@ -371,7 +371,7 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
     // Also, if run out of disk space then normal rdump's can be corrupted
     
     // avoid upperpole restart file since this is called inside restart_write() itself, since always want these to be in synch
-    //	if(FLUXB==FLUXCTSTAG && special3dspc==1) restartupperpole_write(-(long)dumpcntgen[dumptypeiter]-1);
+    // if(FLUXB==FLUXCTSTAG && special3dspc==1) restartupperpole_write(-(long)dumpcntgen[dumptypeiter]-1);
     // NOTEMARK: This maindump-type-restart file is done after all other dump types are done so the dump type file numbers are fully updated for this dumping time.
     restart_write(-(long)dumpcntmain-1);
     if(DOEVOLVEMETRIC) restartmetric_write(-(long)dumpcntmain-1);
@@ -425,34 +425,34 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
       OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUPZLOOP;  // constant loop parameters for entire region, so can be shared
 
       if(dodumpgen[ENERDUMPTYPE]){
-	// cleanse the ener time scale for the failure diag
+        // cleanse the ener time scale for the failure diag
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) nowait
-	OPENMP3DLOOPBLOCK{
-	  OPENMP3DLOOPBLOCK2IJK(i,j,k);
-	  ////      ZLOOP{
-	  FINALSTEPLOOP(indexfinalstep) FLOORLOOP(floor) GLOBALMACP0A3(failfloorcount,i,j,k,indexfinalstep,ENERTS,floor) =0;
-	}// end 3D loop
+        OPENMP3DLOOPBLOCK{
+          OPENMP3DLOOPBLOCK2IJK(i,j,k);
+          ////      ZLOOP{
+          FINALSTEPLOOP(indexfinalstep) FLOORLOOP(floor) GLOBALMACP0A3(failfloorcount,i,j,k,indexfinalstep,ENERTS,floor) =0;
+        }// end 3D loop
       }// end if
     
 
       if(dodumpgen[DEBUGDUMPTYPE]){
-	// clense failure diag
-	////ZLOOP
+        // clense failure diag
+        ////ZLOOP
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) nowait
-	OPENMP3DLOOPBLOCK{
-	  OPENMP3DLOOPBLOCK2IJK(i,j,k);
-	  FINALSTEPLOOP(indexfinalstep) FLOORLOOP(floor) GLOBALMACP0A3(failfloorcount,i,j,k,indexfinalstep,DEBUGTS,floor) =0;
-	}// end 3D loop
+        OPENMP3DLOOPBLOCK{
+          OPENMP3DLOOPBLOCK2IJK(i,j,k);
+          FINALSTEPLOOP(indexfinalstep) FLOORLOOP(floor) GLOBALMACP0A3(failfloorcount,i,j,k,indexfinalstep,DEBUGTS,floor) =0;
+        }// end 3D loop
       }// end if
 
       if(dodumpgen[IMAGEDUMPTYPE]){
-	// clense the failure counts for this time scale
-	/////ZLOOP
+        // clense the failure counts for this time scale
+        /////ZLOOP
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) nowait
-	OPENMP3DLOOPBLOCK{
-	  OPENMP3DLOOPBLOCK2IJK(i,j,k);
-	  FINALSTEPLOOP(indexfinalstep) FLOORLOOP(floor) GLOBALMACP0A3(failfloorcount,i,j,k,indexfinalstep,IMAGETS,floor) =0;
-	}// end 3D loop
+        OPENMP3DLOOPBLOCK{
+          OPENMP3DLOOPBLOCK2IJK(i,j,k);
+          FINALSTEPLOOP(indexfinalstep) FLOORLOOP(floor) GLOBALMACP0A3(failfloorcount,i,j,k,indexfinalstep,IMAGETS,floor) =0;
+        }// end 3D loop
       }// end if
     }// end parallel region (and implied barrier)
   }// end if DODEBUG
@@ -463,9 +463,9 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
     if(dodumpgen[DEBUGDUMPTYPE]){
       int i,j,k;
       FULLLOOP DIMENLOOP(dir) INTERPENOTYPELOOP(interpi) PDIAGLOOP(pl) ENODEBUGLOOP(enodebugi){
-	if(dir<=2 && pl<=U2){
-	  GLOBALMACP0A4(enodebugarray,i,j,k,dir-1,interpi,pl,enodebugi)=0;
-	}
+        if(dir<=2 && pl<=U2){
+          GLOBALMACP0A4(enodebugarray,i,j,k,dir-1,interpi,pl,enodebugi)=0;
+        }
       }
     }
   }
@@ -476,56 +476,56 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
     if(dodumpgen[MAINDUMPTYPE]){
       int i,j,k;
       FULLLOOP{
-	for(dissloop=0;dissloop<NUMDISSVERSIONS;dissloop++){
-	  // clear failures too
-	  GLOBALMACP0A1(dissfunpos,i,j,k,dissloop)=0.0;
-	}
+        for(dissloop=0;dissloop<NUMDISSVERSIONS;dissloop++){
+          // clear failures too
+          GLOBALMACP0A1(dissfunpos,i,j,k,dissloop)=0.0;
+        }
       }
     }
   }
 
 
-/*	//symmetry check
-	j = 0;
-	k = 0;
-	PDIAGLOOP(pl) maxasym[pl] = 0.0;
+  /* //symmetry check
+     j = 0;
+     k = 0;
+     PDIAGLOOP(pl) maxasym[pl] = 0.0;
 
-	PDIAGLOOP(pl) {
-		if( pl >= U1 && pl <= U3 ) {
-			norm[pl] = coordparams.timescalefactor;
-		}
-		else if( pl == UU ) {
-			norm[pl] = coordparams.timescalefactor * coordparams.timescalefactor;
-		}
-		else {
-			norm[pl] = 1.;
-		}
+     PDIAGLOOP(pl) {
+     if( pl >= U1 && pl <= U3 ) {
+     norm[pl] = coordparams.timescalefactor;
+     }
+     else if( pl == UU ) {
+     norm[pl] = coordparams.timescalefactor * coordparams.timescalefactor;
+     }
+     else {
+     norm[pl] = 1.;
+     }
 
-		norm[pl] = 1 / norm[pl];
-	}
-	
-	for( i = 0; i < N1; i++ ) {
-		PDIAGLOOP( pl ) {
-			if( pl == U1 ) {
-				asym[pl] = fabs( MACP0A1(p,i,j,k,pl) +MACP0A1(p,N1 - 1 - i,j,k,pl) );
-			}
-			else {
-				asym[pl] = fabs(MACP0A1(p,i,j,k,pl) -MACP0A1(p,N1 - 1 - i,j,k,pl) );
-			}
+     norm[pl] = 1 / norm[pl];
+     }
+ 
+     for( i = 0; i < N1; i++ ) {
+     PDIAGLOOP( pl ) {
+     if( pl == U1 ) {
+     asym[pl] = fabs( MACP0A1(p,i,j,k,pl) +MACP0A1(p,N1 - 1 - i,j,k,pl) );
+     }
+     else {
+     asym[pl] = fabs(MACP0A1(p,i,j,k,pl) -MACP0A1(p,N1 - 1 - i,j,k,pl) );
+     }
 
 
-			asym[pl] /= norm[pl];
+     asym[pl] /= norm[pl];
 
-			maxasym[pl] = MAX( asym[pl], maxasym[pl] );
-		}
-	}
+     maxasym[pl] = MAX( asym[pl], maxasym[pl] );
+     }
+     }
 
-	dualfprintf( fail_file, "asym %ld ", localrealnstep );
-		
-	PDIAGLOOP(pl) if( pl <= U1 ) dualfprintf( fail_file, " %22.16g", maxasym[pl] );
+     dualfprintf( fail_file, "asym %ld ", localrealnstep );
+  
+     PDIAGLOOP(pl) if( pl <= U1 ) dualfprintf( fail_file, " %22.16g", maxasym[pl] );
 
-	dualfprintf( fail_file, "\n" );
-*/
+     dualfprintf( fail_file, "\n" );
+  */
   firsttime = 0;
   return (0);
 }
@@ -535,10 +535,10 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
 
 
 static int pre_dump(
-int whichDT, FTYPE t, FTYPE localt, FTYPE *DTdumpgen, long int *dumpcntgen, long long int *dumpcgen, FTYPE *tdumpgen, FILE **dumpcnt_filegen, FTYPE *tlastgen
-,int whichrestart, long long int restartc, long long int localrealnstep, long long int nrestart,long DTr, long long int nlastrestart
-,int whichfake, long long int fakec, long long int nfake,long DTfake, long long int nlastfake
-)
+                    int whichDT, FTYPE t, FTYPE localt, FTYPE *DTdumpgen, long int *dumpcntgen, long long int *dumpcgen, FTYPE *tdumpgen, FILE **dumpcnt_filegen, FTYPE *tlastgen
+                    ,int whichrestart, long long int restartc, long long int localrealnstep, long long int nrestart,long DTr, long long int nlastrestart
+                    ,int whichfake, long long int fakec, long long int nfake,long DTfake, long long int nlastfake
+                    )
 {
 
   DIAGREPORT;
@@ -555,10 +555,10 @@ int whichDT, FTYPE t, FTYPE localt, FTYPE *DTdumpgen, long int *dumpcntgen, long
 
 
 static int post_dump(
-int whichDT, FTYPE localt, FTYPE *DTdumpgen, long int *dumpcntgen, long long int *dumpcgen, FTYPE *tdumpgen, FILE **dumpcnt_filegen, FTYPE *tlastgen
-,long *restartsteps, int *whichrestart, long long int *restartc, long localrealnstep,long long int *nrestart, long DTr, long long int *nlastrestart
-,long *fakesteps, int *whichfake, long long int *fakec, long long int *nfake, long DTfake, long long int *nlastfake
-)
+                     int whichDT, FTYPE localt, FTYPE *DTdumpgen, long int *dumpcntgen, long long int *dumpcgen, FTYPE *tdumpgen, FILE **dumpcnt_filegen, FTYPE *tlastgen
+                     ,long *restartsteps, int *whichrestart, long long int *restartc, long localrealnstep,long long int *nrestart, long DTr, long long int *nlastrestart
+                     ,long *fakesteps, int *whichfake, long long int *fakec, long long int *nfake, long DTfake, long long int *nlastfake
+                     )
 {
   char temps[MAXFILENAME];
   char temps2[MAXFILENAME];
@@ -644,7 +644,7 @@ static int get_dodumps(int call_code, int firsttime, SFTYPE localt, long localns
   //    dodumpgen[RESTARTUPPERPOLEDUMPTYPE]=1;
   //  }
   //  else dodumpgen[RESTARTUPPERPOLEDUMPTYPE]=0;
- dodumpgen[RESTARTUPPERPOLEDUMPTYPE]=0;
+  dodumpgen[RESTARTUPPERPOLEDUMPTYPE]=0;
 
 
   // RESTARTDUMPTYPE
@@ -815,7 +815,7 @@ int asym_compute_1(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
   int pl,pliter;
 
 #if(0)
-// for implosion problem
+  // for implosion problem
   FULLLOOP{
 
     if(MACP0A1(prim,i,j,k,RHO)!=MACP0A1(prim,j,i,k,RHO)){
@@ -838,12 +838,12 @@ int asym_compute_1(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
   FULLLOOP{
     if(i<N1/2 && j<N2/2 && k<N3/2){
       PLOOP(pliter,pl){
-	if(MACP0A1(prim,i,j,k,pl)!=MACP0A1(prim,i+N1,j,k,pl)){
-	  dualfprintf(fail_file,"ASYM nstep=%ld steppart=%d in pl=%d dir=1 :: %d %d %d : %23.16g %23.16g\n",nstep,steppart,pl,i,j,k,MACP0A1(prim,i,j,k,pl),MACP0A1(prim,i+N1,j,k,pl));
-	}
-	if(MACP0A1(prim,i,j,k,pl)!=MACP0A1(prim,i,j+N2,k,pl)){
-	  dualfprintf(fail_file,"ASYM nstep=%ld steppart=%d in pl=%d dir=2 :: %d %d %d : %23.16g %23.16g\n",nstep,steppart,pl,i,j,k,MACP0A1(prim,i,j,k,pl),MACP0A1(prim,i,j+N2,k,pl));
-	}
+        if(MACP0A1(prim,i,j,k,pl)!=MACP0A1(prim,i+N1,j,k,pl)){
+          dualfprintf(fail_file,"ASYM nstep=%ld steppart=%d in pl=%d dir=1 :: %d %d %d : %23.16g %23.16g\n",nstep,steppart,pl,i,j,k,MACP0A1(prim,i,j,k,pl),MACP0A1(prim,i+N1,j,k,pl));
+        }
+        if(MACP0A1(prim,i,j,k,pl)!=MACP0A1(prim,i,j+N2,k,pl)){
+          dualfprintf(fail_file,"ASYM nstep=%ld steppart=%d in pl=%d dir=2 :: %d %d %d : %23.16g %23.16g\n",nstep,steppart,pl,i,j,k,MACP0A1(prim,i,j,k,pl),MACP0A1(prim,i,j+N2,k,pl));
+        }
       }
     }
   }
@@ -852,12 +852,12 @@ int asym_compute_1(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
   FULLLOOP{
     if(i<N1/2 && j<N2/2 && k<N3/2){
       PLOOP(pliter,pl){
-	if(GLOBALMACP0A1(udump,i,j,k,pl)!=GLOBALMACP0A1(udump,i+N1,j,k,pl)){
-	  dualfprintf(fail_file,"ASYMUDUMP nstep=%ld steppart=%d in pl=%d dir=1 :: %d %d %d : %23.16g %23.16g\n",nstep,steppart,pl,i,j,k,GLOBALMACP0A1(udump,i,j,k,pl),GLOBALMACP0A1(udump,i+N1,j,k,pl));
-	}
-	if(GLOBALMACP0A1(udump,i,j,k,pl)!=GLOBALMACP0A1(udump,i,j+N2,k,pl)){
-	  dualfprintf(fail_file,"ASYMUDUMP nstep=%ld steppart=%d in pl=%d dir=2 :: %d %d %d : %23.16g %23.16g\n",nstep,steppart,pl,i,j,k,GLOBALMACP0A1(udump,i,j,k,pl),GLOBALMACP0A1(udump,i,j+N2,k,pl));
-	}
+        if(GLOBALMACP0A1(udump,i,j,k,pl)!=GLOBALMACP0A1(udump,i+N1,j,k,pl)){
+          dualfprintf(fail_file,"ASYMUDUMP nstep=%ld steppart=%d in pl=%d dir=1 :: %d %d %d : %23.16g %23.16g\n",nstep,steppart,pl,i,j,k,GLOBALMACP0A1(udump,i,j,k,pl),GLOBALMACP0A1(udump,i+N1,j,k,pl));
+        }
+        if(GLOBALMACP0A1(udump,i,j,k,pl)!=GLOBALMACP0A1(udump,i,j+N2,k,pl)){
+          dualfprintf(fail_file,"ASYMUDUMP nstep=%ld steppart=%d in pl=%d dir=2 :: %d %d %d : %23.16g %23.16g\n",nstep,steppart,pl,i,j,k,GLOBALMACP0A1(udump,i,j,k,pl),GLOBALMACP0A1(udump,i,j+N2,k,pl));
+        }
       }
     }
   }
@@ -898,12 +898,12 @@ int asym_compute_2(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
   ZLOOP{
     if(i<N1/2 && j<N2/2 && k<N3/2){
       PLOOP(pliter,pl){
-	if(MACP0A1(prim,i,j,k,pl)!=MACP0A1(prim,i+N1,j,k,pl)){
-	  dualfprintf(fail_file,"ASYM nstep=%ld steppart=%d in pl=%d dir=1 :: %d %d %d : %23.16g %23.16g\n",nstep,steppart,pl,i,j,k,MACP0A1(prim,i,j,k,pl),MACP0A1(prim,i+N1,j,k,pl));
-	}
-	if(MACP0A1(prim,i,j,k,pl)!=MACP0A1(prim,i,j+N2,k,pl)){
-	  dualfprintf(fail_file,"ASYM nstep=%ld steppart=%d in pl=%d dir=2 :: %d %d %d : %23.16g %23.16g\n",nstep,steppart,pl,i,j,k,MACP0A1(prim,i,j,k,pl),MACP0A1(prim,i,j+N2,k,pl));
-	}
+        if(MACP0A1(prim,i,j,k,pl)!=MACP0A1(prim,i+N1,j,k,pl)){
+          dualfprintf(fail_file,"ASYM nstep=%ld steppart=%d in pl=%d dir=1 :: %d %d %d : %23.16g %23.16g\n",nstep,steppart,pl,i,j,k,MACP0A1(prim,i,j,k,pl),MACP0A1(prim,i+N1,j,k,pl));
+        }
+        if(MACP0A1(prim,i,j,k,pl)!=MACP0A1(prim,i,j+N2,k,pl)){
+          dualfprintf(fail_file,"ASYM nstep=%ld steppart=%d in pl=%d dir=2 :: %d %d %d : %23.16g %23.16g\n",nstep,steppart,pl,i,j,k,MACP0A1(prim,i,j,k,pl),MACP0A1(prim,i,j+N2,k,pl));
+        }
       }
     }
   }
@@ -968,8 +968,8 @@ int area_map(int call_code, int type, int size, int i, int j, int k, FTYPE (*pri
   if(firsttime){
     if((type==TIMESERIESAREAMAP)&&(dofailmap)){
       if((fileptr=fopen("areamap","wt"))==NULL){
-	dualfprintf(fail_file,"Cannot open ./areamap on proc=%d\n",myid);
-	domap=0;
+        dualfprintf(fail_file,"Cannot open ./areamap on proc=%d\n",myid);
+        domap=0;
       }
       else domap=1;
     }
@@ -995,18 +995,18 @@ int area_map(int call_code, int type, int size, int i, int j, int k, FTYPE (*pri
       // ONLY 2D map for now      
       dualfprintf(fail_file, "i = \t ");
       for(l=i-lowersizex1;l<=i+uppersizex1;l++){
-	ll=l+startpos[1];
-	dualfprintf(fail_file, "%21d", ll);
+        ll=l+startpos[1];
+        dualfprintf(fail_file, "%21d", ll);
       }
       dualfprintf(fail_file, "\n");
       for(m=j-lowersizex2;m<=j+uppersizex2;m++){
-	mm=m+startpos[2];
-	dualfprintf(fail_file, "j = %d \t ",mm);
-	for(l=i-lowersizex1;l<=i+uppersizex1;l++){
-	  ll=l+startpos[1];
-	  dualfprintf(fail_file, "%21.15g ",MACP0A1(prim,l,m,k,pl));
-	}
-	dualfprintf(fail_file, "\n");
+        mm=m+startpos[2];
+        dualfprintf(fail_file, "j = %d \t ",mm);
+        for(l=i-lowersizex1;l<=i+uppersizex1;l++){
+          ll=l+startpos[1];
+          dualfprintf(fail_file, "%21.15g ",MACP0A1(prim,l,m,k,pl));
+        }
+        dualfprintf(fail_file, "\n");
       }
     }
   }
@@ -1014,66 +1014,66 @@ int area_map(int call_code, int type, int size, int i, int j, int k, FTYPE (*pri
     if(firsttime){
       // GODMARK: 2D only, not outputting z-related stuff so function remains consistent with SM macro
       fprintf(fileptr,"%21.15g %lld %lld %lld %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %d %d %d %d %d %d %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",
-	      t,totalsize[1],totalsize[2],totalsize[3],startx[1],startx[2],startx[3],dx[1],dx[2],dx[3],lowersizex1,uppersizex1,lowersizex2,uppersizex2,startpos[1]+i,startpos[2]+j,gam,a,R0,Rin,Rout,hslope);
+              t,totalsize[1],totalsize[2],totalsize[3],startx[1],startx[2],startx[3],dx[1],dx[2],dx[3],lowersizex1,uppersizex1,lowersizex2,uppersizex2,startpos[1]+i,startpos[2]+j,gam,a,R0,Rin,Rout,hslope);
       fflush(fileptr);
     }
     for(m=j-size/2;m<=j+size/2;m++){
       if((m<-N2BND)||(m>N2-1+N2BND)) continue;
       mm=m+startpos[2];
       for(l=i-size/2;l<=i+size/2;l++){
-	if((l<-N1BND)||(l>N1-1+N1BND)) continue;
-	ll=l+startpos[1];
-	
-	
-	bl_coord_ijk_2(l, m, k, loc, X,V);
-	get_geometry(l, m, k, loc, ptrgeom);
-	if (!failed) {
-	  if (get_state(MAC(prim,l,m,k), ptrgeom, &q) >= 1)
-	    FAILSTATEMENT("diag.c:areamap()", "get_state() dir=0", 1);
-	  if (vchar_all(MAC(prim,l,m,k), &q, 1, ptrgeom, &vmax1, &vmin1,&ignorecourant) >= 1)
-	    FAILSTATEMENT("diag.c:areamap()", "vchar_all() dir=1or2", 1);
-	  if (vchar_all(MAC(prim,l,m,k), &q, 2, ptrgeom, &vmax2, &vmin2,&ignorecourant) >= 1)
-	    FAILSTATEMENT("diag.c:areamap()", "vchar_all() dir=1or2", 2);
-	  // GODMARK: no 3-direction char.
-	}
-	
-	// GODMARK: use of globals
-	if((l>=-1)&&(l<=N1+1)&&(m>=-1)&&(m<=N2+1)&&(k>=-1)&&(k<=N3+1) ){ setfdivb(&divb, prim, GLOBALPOINT(pstagdump), GLOBALPOINT(udump), GLOBALPOINT(Bhatdump), l, m, k);} // GLOBALPOINT(udump) here must be set externally GODMARK
-	else divb=0.0;
+        if((l<-N1BND)||(l>N1-1+N1BND)) continue;
+        ll=l+startpos[1];
+ 
+ 
+        bl_coord_ijk_2(l, m, k, loc, X,V);
+        get_geometry(l, m, k, loc, ptrgeom);
+        if (!failed) {
+          if (get_state(MAC(prim,l,m,k), ptrgeom, &q) >= 1)
+            FAILSTATEMENT("diag.c:areamap()", "get_state() dir=0", 1);
+          if (vchar_all(MAC(prim,l,m,k), &q, 1, ptrgeom, &vmax1, &vmin1,&ignorecourant) >= 1)
+            FAILSTATEMENT("diag.c:areamap()", "vchar_all() dir=1or2", 1);
+          if (vchar_all(MAC(prim,l,m,k), &q, 2, ptrgeom, &vmax2, &vmin2,&ignorecourant) >= 1)
+            FAILSTATEMENT("diag.c:areamap()", "vchar_all() dir=1or2", 2);
+          // GODMARK: no 3-direction char.
+        }
+ 
+        // GODMARK: use of globals
+        if((l>=-1)&&(l<=N1+1)&&(m>=-1)&&(m<=N2+1)&&(k>=-1)&&(k<=N3+1) ){ setfdivb(&divb, prim, GLOBALPOINT(pstagdump), GLOBALPOINT(udump), GLOBALPOINT(Bhatdump), l, m, k);} // GLOBALPOINT(udump) here must be set externally GODMARK
+        else divb=0.0;
 
-	// same order as dump.c for first columns (easy sm read)
-	fprintf(fileptr,
-		"%d %d "
-		"%21.15g %21.15g "
-		"%21.15g %21.15g "
-		"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g "
-		"%21.15g "
-		"%21.15g %21.15g %21.15g %21.15g "
-		"%21.15g %21.15g %21.15g %21.15g "
-		"%21.15g %21.15g %21.15g %21.15g "
-		"%21.15g %21.15g %21.15g %21.15g "
-		"%21.15g %21.15g %21.15g %21.15g "
-		"%21.15g "
-		"%21.15g %ld\n",
-		ll,mm,
-		X[1],X[2],
-		V[1],V[2],
-		MACP0A1(prim,l,m,k,0),
-		MACP0A1(prim,l,m,k,1),
-		MACP0A1(prim,l,m,k,2),
-		MACP0A1(prim,l,m,k,3),
-		MACP0A1(prim,l,m,k,4),
-		MACP0A1(prim,l,m,k,5),
-		MACP0A1(prim,l,m,k,6),
-		MACP0A1(prim,l,m,k,7),
-		divb,
-		q.ucon[0],q.ucon[1],q.ucon[2],q.ucon[3],
-		q.ucov[0],q.ucov[1],q.ucov[2],q.ucov[3],
-		q.bcon[0],q.bcon[1],q.bcon[2],q.bcon[3],
-		q.bcov[0],q.bcov[1],q.bcov[2],q.bcov[3],
-		vmin1,vmax1,vmin2,vmax2,
-		ptrgeom->gdet,
-		t,realnstep);
+        // same order as dump.c for first columns (easy sm read)
+        fprintf(fileptr,
+                "%d %d "
+                "%21.15g %21.15g "
+                "%21.15g %21.15g "
+                "%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g "
+                "%21.15g "
+                "%21.15g %21.15g %21.15g %21.15g "
+                "%21.15g %21.15g %21.15g %21.15g "
+                "%21.15g %21.15g %21.15g %21.15g "
+                "%21.15g %21.15g %21.15g %21.15g "
+                "%21.15g %21.15g %21.15g %21.15g "
+                "%21.15g "
+                "%21.15g %ld\n",
+                ll,mm,
+                X[1],X[2],
+                V[1],V[2],
+                MACP0A1(prim,l,m,k,0),
+                MACP0A1(prim,l,m,k,1),
+                MACP0A1(prim,l,m,k,2),
+                MACP0A1(prim,l,m,k,3),
+                MACP0A1(prim,l,m,k,4),
+                MACP0A1(prim,l,m,k,5),
+                MACP0A1(prim,l,m,k,6),
+                MACP0A1(prim,l,m,k,7),
+                divb,
+                q.ucon[0],q.ucon[1],q.ucon[2],q.ucon[3],
+                q.ucov[0],q.ucov[1],q.ucov[2],q.ucov[3],
+                q.bcon[0],q.bcon[1],q.bcon[2],q.bcon[3],
+                q.bcov[0],q.bcov[1],q.bcov[2],q.bcov[3],
+                vmin1,vmax1,vmin2,vmax2,
+                ptrgeom->gdet,
+                t,realnstep);
       }
     }
     fflush(fileptr);
@@ -1147,140 +1147,140 @@ int diag_flux_pureflux(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2
     // true outer boundary surface fluxes (per direction, per conserved variable)
     DIRLOOP(dir) {
       if (localdoflux[dir] >= 0) {// then this cpu is involved in flux BOUNDARY calculation
-	// otherwise don't add to it
+        // otherwise don't add to it
 
 
-	///////
-	// assumes rectangular region
-	//
-	if((dir==X1UP)||(dir==X1DN)){
+        ///////
+        // assumes rectangular region
+        //
+        if((dir==X1UP)||(dir==X1DN)){
 
-	  surface = dx[2]*dx[3];
+          surface = dx[2]*dx[3];
 
-	  start1=stop1=localdoflux[dir];
+          start1=stop1=localdoflux[dir];
 
-	  start2=localenerpos[X2DN];
-	  stop2=localenerpos[X2UP];
+          start2=localenerpos[X2DN];
+          stop2=localenerpos[X2UP];
 
-	  start3=localenerpos[X3DN];
-	  stop3=localenerpos[X3UP];
+          start3=localenerpos[X3DN];
+          stop3=localenerpos[X3UP];
 
-	  flux=F1;
-	  gpos=FACE1;
-	  fluxdir=1;
-	}
-	else if((dir==X2UP)||(dir==X2DN)){
+          flux=F1;
+          gpos=FACE1;
+          fluxdir=1;
+        }
+        else if((dir==X2UP)||(dir==X2DN)){
 
-	  surface = dx[1]*dx[3];
+          surface = dx[1]*dx[3];
 
-	  start2=stop2=localdoflux[dir];
+          start2=stop2=localdoflux[dir];
 
-	  start1=localenerpos[X1DN];
-	  stop1=localenerpos[X1UP];
+          start1=localenerpos[X1DN];
+          stop1=localenerpos[X1UP];
 
-	  start3=localenerpos[X3DN];
-	  stop3=localenerpos[X3UP];
+          start3=localenerpos[X3DN];
+          stop3=localenerpos[X3UP];
 
-	  flux=F2;
-	  gpos=FACE2;
-	  fluxdir=2;
-	}
-	else if((dir==X3UP)||(dir==X3DN)){
+          flux=F2;
+          gpos=FACE2;
+          fluxdir=2;
+        }
+        else if((dir==X3UP)||(dir==X3DN)){
 
-	  surface = dx[1]*dx[2];
+          surface = dx[1]*dx[2];
 
-	  start3=stop3=localdoflux[dir];
+          start3=stop3=localdoflux[dir];
 
-	  start1=localenerpos[X1DN];
-	  stop1=localenerpos[X1UP];
+          start1=localenerpos[X1DN];
+          stop1=localenerpos[X1UP];
 
-	  start2=localenerpos[X2DN];
-	  stop2=localenerpos[X2UP];
+          start2=localenerpos[X2DN];
+          stop2=localenerpos[X2UP];
 
-	  flux=F3;
-	  gpos=FACE3;
-	  fluxdir=3;
-	}
-	else{
-	  dualfprintf(fail_file,"no such direction: %d\n",dir);
-	  myexit(1);
-	}
+          flux=F3;
+          gpos=FACE3;
+          fluxdir=3;
+        }
+        else{
+          dualfprintf(fail_file,"no such direction: %d\n",dir);
+          myexit(1);
+        }
 
-	// zero out summation quantities
-	PDIAGLOOP(pl){
-	  localpdot[dir][pl]=0;
-	}
-	// GENLOOP set by enerregion so set correctly for GRID SECTION
-	GENLOOP(i,j,k,start1,stop1,start2,stop2,start3,stop3){ // OPENMPOPTMARK: Could parallelize this, but not too expensive since only surface values
-	  // now add up all zones for each conserved quantity (PDIAGLOOP)
-
-
-
-	  ////////////
-	  //
-	  // GET STATE
-	  //
-	  ////////////
+        // zero out summation quantities
+        PDIAGLOOP(pl){
+          localpdot[dir][pl]=0;
+        }
+        // GENLOOP set by enerregion so set correctly for GRID SECTION
+        GENLOOP(i,j,k,start1,stop1,start2,stop2,start3,stop3){ // OPENMPOPTMARK: Could parallelize this, but not too expensive since only surface values
+          // now add up all zones for each conserved quantity (PDIAGLOOP)
 
 
 
-	  ////////////
-	  get_geometry(i, j, k, loc, ptrgeom);
-	  PDIAGLOOP(pl) pr[pl]=MACP0A1(prim,i,j,k,pl);
-
-
-	  // modify effective position of integral in case adding energy/angular momentum to horizon
-	  // apparently not correct
-	  if(0 && enerregion==OUTSIDEHORIZONENERREGION){
-	    mysurface = surface /(q.ucov[TT]);
-	  }
-	  else mysurface = surface;
+          ////////////
+          //
+          // GET STATE
+          //
+          ////////////
 
 
 
+          ////////////
+          get_geometry(i, j, k, loc, ptrgeom);
+          PDIAGLOOP(pl) pr[pl]=MACP0A1(prim,i,j,k,pl);
 
-	  ////////////
-	  //
-	  // do standard flux for accounting
-	  //
-	  ////////////
 
-	  get_geometry(i, j, k, gpos, ptrgeom);
-	  PDIAGLOOP(pl) Ftemp[pl]=MACP0A1(flux,i,j,k,pl)*mysurface; // in UEVOLVE form
-	  // GODMARK: for finite volume method, below doesn't change the result if eomfunc=gdet.
-	  // Otherwise flux would have to be completely recomputed for gdet case JUST for diagnostic to be consistent at higher order
-	  UtoU_evolve2diag(UEVOLVE,UDIAG,ptrgeom,Ftemp,Ftempdiag); // convert to diag form
-	  PDIAGLOOP(pl){
+          // modify effective position of integral in case adding energy/angular momentum to horizon
+          // apparently not correct
+          if(0 && enerregion==OUTSIDEHORIZONENERREGION){
+            mysurface = surface /(q.ucov[TT]);
+          }
+          else mysurface = surface;
+
+
+
+
+          ////////////
+          //
+          // do standard flux for accounting
+          //
+          ////////////
+
+          get_geometry(i, j, k, gpos, ptrgeom);
+          PDIAGLOOP(pl) Ftemp[pl]=MACP0A1(flux,i,j,k,pl)*mysurface; // in UEVOLVE form
+          // GODMARK: for finite volume method, below doesn't change the result if eomfunc=gdet.
+          // Otherwise flux would have to be completely recomputed for gdet case JUST for diagnostic to be consistent at higher order
+          UtoU_evolve2diag(UEVOLVE,UDIAG,ptrgeom,Ftemp,Ftempdiag); // convert to diag form
+          PDIAGLOOP(pl){
 #if(PRODUCTION>0)
-	    // assume if nan that just box is beyond where flux defined
-	    if(!isfinite(Ftempdiag[pl])){
-	      Ftempdiag[pl]=0.0;
-	    }
+            // assume if nan that just box is beyond where flux defined
+            if(!isfinite(Ftempdiag[pl])){
+              Ftempdiag[pl]=0.0;
+            }
 #endif
-	    localpdot[dir][pl]  += Ftempdiag[pl];
-	  }
-	  if(REMOVERESTMASSFROMUU==2){
-	    //	    localpdot[dir][UU] += -Ftempdiag[RHO]; // add rest-mass back in (GODMARK: Problem is that non-relativistic problems will have energy term swamped by mass term)
-	  }
-	  else{
-	    // then already correct
-	    // so fix this instead!
-	    localpdot[dir][UU] += Ftempdiag[RHO]; // remove rest-mass term.
-	  }
+            localpdot[dir][pl]  += Ftempdiag[pl];
+          }
+          if(REMOVERESTMASSFROMUU==2){
+            //     localpdot[dir][UU] += -Ftempdiag[RHO]; // add rest-mass back in (GODMARK: Problem is that non-relativistic problems will have energy term swamped by mass term)
+          }
+          else{
+            // then already correct
+            // so fix this instead!
+            localpdot[dir][UU] += Ftempdiag[RHO]; // remove rest-mass term.
+          }
 
-	  /*
-	  // DEBUG
-	  PDIAGLOOP(pl) if(!finite(localpdot[dir][pl])){
-	  dualfprintf(fail_file,"not finite: i=%d j=%d k=%d :: dir=%d pl=%d %g : %g : %g %g :: %g %g\n",i,j,k,dir,pl,localpdot[dir][pl],MACP0A1(flux,i,j,k,pl),ptrgeom->gdet,mysurface,Ftemp[pl],Ftempdiag[pl]);
-	  }
-	  */
+          /*
+          // DEBUG
+          PDIAGLOOP(pl) if(!finite(localpdot[dir][pl])){
+          dualfprintf(fail_file,"not finite: i=%d j=%d k=%d :: dir=%d pl=%d %g : %g : %g %g :: %g %g\n",i,j,k,dir,pl,localpdot[dir][pl],MACP0A1(flux,i,j,k,pl),ptrgeom->gdet,mysurface,Ftemp[pl],Ftempdiag[pl]);
+          }
+          */
 
-	
-	}// end GENLOOP
+ 
+        }// end GENLOOP
 
-	// cumulative only based upon localpdot
-	// localpdot contains entire sum over grid of relevant surface integral value for this direction and ener-region.
-	PDIAGLOOP(pl) localpcum[dir][pl]+=localpdot[dir][pl]*Dt; // localpdot is already corrected for REMOVERESTMASSFROMUU
+        // cumulative only based upon localpdot
+        // localpdot contains entire sum over grid of relevant surface integral value for this direction and ener-region.
+        PDIAGLOOP(pl) localpcum[dir][pl]+=localpdot[dir][pl]*Dt; // localpdot is already corrected for REMOVERESTMASSFROMUU
 
       }// end if localdoflux
     }// end DIRLOOP
@@ -1294,22 +1294,22 @@ int diag_flux_pureflux(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2
     PDIAGLOOP(pl) frdot[i][pl]=0;
 
     for(j=0;j<N2;j++) for(k=0;k<N3;k++){
-      get_geometry(i, j, k, FACE1, ptrgeom);
-      PDIAGLOOP(pl) Ftemp[pl]=MACP0A1(flux,i,j,k,pl)*surface; // UEVOLVE form
-      // GODMARK: for finite volume method, below doesn't change the result if eomfunc=gdet.
-      // Otherwise flux would have to be completely recomputed for gdet case JUST for diagnostic to be consistent at higher order
-      UtoU_evolve2diag(UEVOLVE,UDIAG,ptrgeom,Ftemp,Ftempdiag); // convert to diag form
-      PDIAGLOOP(pl) frdot[i][pl]+=Ftempdiag[pl];
-      if(REMOVERESTMASSFROMUU==2){
-	//	frdot[i][UU]+= -Ftempdiag[RHO]; // GODMARK: Problem is rest-mass term will dominate and destroy ability to recover energy flux
-      }
-      else{
-	// already correct
-	// so fix this instead!
-	frdot[i][UU] += Ftempdiag[RHO]; // remove rest-mass term.
+        get_geometry(i, j, k, FACE1, ptrgeom);
+        PDIAGLOOP(pl) Ftemp[pl]=MACP0A1(flux,i,j,k,pl)*surface; // UEVOLVE form
+        // GODMARK: for finite volume method, below doesn't change the result if eomfunc=gdet.
+        // Otherwise flux would have to be completely recomputed for gdet case JUST for diagnostic to be consistent at higher order
+        UtoU_evolve2diag(UEVOLVE,UDIAG,ptrgeom,Ftemp,Ftempdiag); // convert to diag form
+        PDIAGLOOP(pl) frdot[i][pl]+=Ftempdiag[pl];
+        if(REMOVERESTMASSFROMUU==2){
+          // frdot[i][UU]+= -Ftempdiag[RHO]; // GODMARK: Problem is rest-mass term will dominate and destroy ability to recover energy flux
+        }
+        else{
+          // already correct
+          // so fix this instead!
+          frdot[i][UU] += Ftempdiag[RHO]; // remove rest-mass term.
 
+        }
       }
-    }
 
   }
 #endif
@@ -1372,243 +1372,243 @@ int diag_flux_general(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], SFTYPE Dt)
     // true outer boundary surface fluxes (per direction, per conserved variable)
     DIRLOOP(dir) {
       if (localdoflux[dir] >= 0) {// then this cpu is involved in flux BOUNDARY calculation
-	// otherwise don't add to it
+        // otherwise don't add to it
 
 
-	///////
-	// assumes rectangular region
-	//
-	if((dir==X1UP)||(dir==X1DN)){
+        ///////
+        // assumes rectangular region
+        //
+        if((dir==X1UP)||(dir==X1DN)){
 
-	  surface = dx[2]*dx[3];
+          surface = dx[2]*dx[3];
 
-	  start1=stop1=localdoflux[dir];
+          start1=stop1=localdoflux[dir];
 
-	  start2=localenerpos[X2DN];
-	  stop2=localenerpos[X2UP];
+          start2=localenerpos[X2DN];
+          stop2=localenerpos[X2UP];
 
-	  start3=localenerpos[X3DN];
-	  stop3=localenerpos[X3UP];
+          start3=localenerpos[X3DN];
+          stop3=localenerpos[X3UP];
 
-	  gpos=FACE1;
-	  fluxdir=1;
-	}
-	else if((dir==X2UP)||(dir==X2DN)){
+          gpos=FACE1;
+          fluxdir=1;
+        }
+        else if((dir==X2UP)||(dir==X2DN)){
 
-	  surface = dx[1]*dx[3];
+          surface = dx[1]*dx[3];
 
-	  start2=stop2=localdoflux[dir];
+          start2=stop2=localdoflux[dir];
 
-	  start1=localenerpos[X1DN];
-	  stop1=localenerpos[X1UP];
+          start1=localenerpos[X1DN];
+          stop1=localenerpos[X1UP];
 
-	  start3=localenerpos[X3DN];
-	  stop3=localenerpos[X3UP];
+          start3=localenerpos[X3DN];
+          stop3=localenerpos[X3UP];
 
-	  gpos=FACE2;
-	  fluxdir=2;
-	}
-	else if((dir==X3UP)||(dir==X3DN)){
+          gpos=FACE2;
+          fluxdir=2;
+        }
+        else if((dir==X3UP)||(dir==X3DN)){
 
-	  surface = dx[1]*dx[2];
+          surface = dx[1]*dx[2];
 
-	  start3=stop3=localdoflux[dir];
+          start3=stop3=localdoflux[dir];
 
-	  start1=localenerpos[X1DN];
-	  stop1=localenerpos[X1UP];
+          start1=localenerpos[X1DN];
+          stop1=localenerpos[X1UP];
 
-	  start2=localenerpos[X2DN];
-	  stop2=localenerpos[X2UP];
+          start2=localenerpos[X2DN];
+          stop2=localenerpos[X2UP];
 
-	  gpos=FACE3;
-	  fluxdir=3;
-	}
-	else{
-	  dualfprintf(fail_file,"no such direction: %d\n",dir);
-	  myexit(1);
-	}
+          gpos=FACE3;
+          fluxdir=3;
+        }
+        else{
+          dualfprintf(fail_file,"no such direction: %d\n",dir);
+          myexit(1);
+        }
 
-	// zero out summation quantities
-	PDIAGLOOP(pl){
-	  FLLOOP(fl) localpdotterms[dir][fl][pl]=0;
-	  if(enerregion==0) FLLOOP(fl) pdottermsjet2[dir][fl][pl]=0;
-	}
-	// GENLOOP set by enerregion so set correctly for GRID SECTION
-	GENLOOP(i,j,k,start1,stop1,start2,stop2,start3,stop3){ // OPENMPOPTMARK: Could parallelize this, but not too expensive since only surface values
-	  // OPENMPSUPERMARK: If parallelize this, must make whocalleducon threadprivate again!
-	  // now add up all zones for each conserved quantity (PDIAGLOOP)
-
-
-
-	  ////////////
-	  //
-	  // GET STATE
-	  //
-	  ////////////
+        // zero out summation quantities
+        PDIAGLOOP(pl){
+          FLLOOP(fl) localpdotterms[dir][fl][pl]=0;
+          if(enerregion==0) FLLOOP(fl) pdottermsjet2[dir][fl][pl]=0;
+        }
+        // GENLOOP set by enerregion so set correctly for GRID SECTION
+        GENLOOP(i,j,k,start1,stop1,start2,stop2,start3,stop3){ // OPENMPOPTMARK: Could parallelize this, but not too expensive since only surface values
+          // OPENMPSUPERMARK: If parallelize this, must make whocalleducon threadprivate again!
+          // now add up all zones for each conserved quantity (PDIAGLOOP)
 
 
 
-	  ////////////
-	  get_geometry(i, j, k, loc, ptrgeom);
-	  PDIAGLOOP(pl) pr[pl]=MACP0A1(prim,i,j,k,pl);
-
-	  //bl_coord_ijk_2(i, j, k, loc, X,V);
-	    // if failed, then data output for below invalid, but columns still must exist    
-	    // loc since p at center
-	  if (!failed) {
-	    // OPTMARK: Should avoid non-fundamental flux cumulation except (e.g.) every full timestep since not important to be very accurate.
-	    // OPTMARK: Also, when doing get_state(), use existing STOREFLUXSTATE if created.
-	    if (get_state(pr, ptrgeom, &q) >= 1) FAILSTATEMENT("diag.c:diag_flux()", "get_state() dir=0", 1);
-	  }
-	  else {// do a per zone check, otherwise set to 0
-	    whocalleducon=1; // force no failure mode, just return like failure, and don't return if failure, just set to 0 and continue
-	    if (get_state(pr, ptrgeom, &q) >= 1){
-	      for (l = 0; l < NDIM; l++)
-		q.ucon[l]=0;
-	      for (l = 0; l < NDIM; l++)
-		q.ucov[l]=0;
-	      for (l = 0; l < NDIM; l++)
-		q.bcon[l]=0;
-	      for (l = 0; l < NDIM; l++)
-		q.bcov[l]=0;
-	    }
-	    whocalleducon=0; // return to normal state
-	  }
-	  
-	  // somewhat like function which averages stress terms
-	  pgas = pressure_rho0_u_simple(i,j,k,loc,pr[RHO],pr[UU]);
-	  bsq=0; for(l=0;l<NDIM;l++) bsq+=(q.bcon[l])*(q.bcov[l]);
+          ////////////
+          //
+          // GET STATE
+          //
+          ////////////
 
 
 
+          ////////////
+          get_geometry(i, j, k, loc, ptrgeom);
+          PDIAGLOOP(pl) pr[pl]=MACP0A1(prim,i,j,k,pl);
 
-	  // modify effective position of integral in case adding energy/angular momentum to horizon
-	  // apparently not correct
-	  if(0 && enerregion==OUTSIDEHORIZONENERREGION){
-	    mysurface = surface /(q.ucov[TT]);
-	  }
-	  else mysurface = surface;
+          //bl_coord_ijk_2(i, j, k, loc, X,V);
+          // if failed, then data output for below invalid, but columns still must exist    
+          // loc since p at center
+          if (!failed) {
+            // OPTMARK: Should avoid non-fundamental flux cumulation except (e.g.) every full timestep since not important to be very accurate.
+            // OPTMARK: Also, when doing get_state(), use existing STOREFLUXSTATE if created.
+            if (get_state(pr, ptrgeom, &q) >= 1) FAILSTATEMENT("diag.c:diag_flux()", "get_state() dir=0", 1);
+          }
+          else {// do a per zone check, otherwise set to 0
+            whocalleducon=1; // force no failure mode, just return like failure, and don't return if failure, just set to 0 and continue
+            if (get_state(pr, ptrgeom, &q) >= 1){
+              for (l = 0; l < NDIM; l++)
+                q.ucon[l]=0;
+              for (l = 0; l < NDIM; l++)
+                q.ucov[l]=0;
+              for (l = 0; l < NDIM; l++)
+                q.bcon[l]=0;
+              for (l = 0; l < NDIM; l++)
+                q.bcov[l]=0;
+            }
+            whocalleducon=0; // return to normal state
+          }
+   
+          // somewhat like function which averages stress terms
+          pgas = pressure_rho0_u_simple(i,j,k,loc,pr[RHO],pr[UU]);
+          bsq=0; for(l=0;l<NDIM;l++) bsq+=(q.bcon[l])*(q.bcov[l]);
 
 
 
 
-
-	  ////////////
-	  //
-	  // do term-by-term flux for physics accounting
-	  // somewhat like dumps and somewhat like avg of terms
-	  // GODMARK: For finite volume method this does not differentiate between point and average values!
-	  //
+          // modify effective position of integral in case adding energy/angular momentum to horizon
+          // apparently not correct
+          if(0 && enerregion==OUTSIDEHORIZONENERREGION){
+            mysurface = surface /(q.ucov[TT]);
+          }
+          else mysurface = surface;
 
 
 
 
 
+          ////////////
+          //
+          // do term-by-term flux for physics accounting
+          // somewhat like dumps and somewhat like avg of terms
+          // GODMARK: For finite volume method this does not differentiate between point and average values!
+          //
 
 
-	  if(enerregion==0){
-	    bsqorho=bsq/pr[RHO]; // b^2/\rho
-	    // we assume user will check if this condition makes sense for a particular simulation.
-	    // condition answer for recording for jet2 region
-	    //
-	    // a real analysis would trace a field line from the horizon to the outer edge in the funnel-type region and only include the region inside, where eventually we have at the outer edge (or will have) unbound/outbound flow.
-	    if(dir==X1DN){
-	      condjet2=(bsqorho>JETBSQORHO); // assumes that plunging region never develops such large values.  Can occur, but generally not so.  Can raise if problems.
-	    }
-	    else if(dir==X1UP){ // assumes in jet2 region, but non-jet2 region could have this property.
-	      condjet2=((q.ucon[1]>0.0)&&(-q.ucov[0]-1.0>0.0)); // outgoing and unbound at outer edge
-	    }
-	    else{
-	      condjet2=0;
-	    }
-	  }
-	  else condjet2=0; // never touches pdottermsjet2 then
-	  
-	  
-	  surgdet=(ptrgeom->gdet)*mysurface;
-
-	  // loop and if's since some calculations are redundantly simple for similar pl
-	  PDIAGLOOP(pl){
-	    if(pl==RHO){
-	      ftemp0=pr[pl]*(q.ucon[fluxdir])*surgdet;
-	      localpdotterms[dir][0][pl]+=ftemp0; // only one part
-	      if(condjet2) pdottermsjet2[dir][0][pl]+=ftemp0; // only one part
-	      //	  localpdot[dir][pl]  += ftemp0 * surgdet;
-	    }
-	    // part0-6
-	    else if((pl>=UU)&&(pl<=U3)){
-	      l=pl-UU;
-	      // we currently DO NOT add flux[RHO] to flux[UU], just assume reader knows this is from the native stress
-	      ftemp0=pgas*(q.ucon[fluxdir])*(q.ucov[l])*surgdet;
-	      localpdotterms[dir][0][pl]+=ftemp0;
-	      if(condjet2)	    pdottermsjet2[dir][0][pl]+=ftemp0;
-
-	      ftemp1=MACP0A1(prim,i,j,k,RHO)*(q.ucon[fluxdir])*(q.ucov[l])*surgdet;
-	      localpdotterms[dir][1][pl]+=ftemp1;
-	      if(condjet2)	    pdottermsjet2[dir][1][pl]+=ftemp1;
 
 
-	      ftemp2=MACP0A1(prim,i,j,k,UU)*(q.ucon[fluxdir])*(q.ucov[l])*surgdet;
-	      localpdotterms[dir][2][pl]+=ftemp2;
-	      if(condjet2)	    pdottermsjet2[dir][2][pl]+=ftemp2;
 
 
-	      ftemp3=bsq*(q.ucon[fluxdir])*(q.ucov[l])*surgdet;
-	      localpdotterms[dir][3][pl]+=ftemp3;
-	      if(condjet2)	    pdottermsjet2[dir][3][pl]+=ftemp3;
+
+          if(enerregion==0){
+            bsqorho=bsq/pr[RHO]; // b^2/\rho
+            // we assume user will check if this condition makes sense for a particular simulation.
+            // condition answer for recording for jet2 region
+            //
+            // a real analysis would trace a field line from the horizon to the outer edge in the funnel-type region and only include the region inside, where eventually we have at the outer edge (or will have) unbound/outbound flow.
+            if(dir==X1DN){
+              condjet2=(bsqorho>JETBSQORHO); // assumes that plunging region never develops such large values.  Can occur, but generally not so.  Can raise if problems.
+            }
+            else if(dir==X1UP){ // assumes in jet2 region, but non-jet2 region could have this property.
+              condjet2=((q.ucon[1]>0.0)&&(-q.ucov[0]-1.0>0.0)); // outgoing and unbound at outer edge
+            }
+            else{
+              condjet2=0;
+            }
+          }
+          else condjet2=0; // never touches pdottermsjet2 then
+   
+   
+          surgdet=(ptrgeom->gdet)*mysurface;
+
+          // loop and if's since some calculations are redundantly simple for similar pl
+          PDIAGLOOP(pl){
+            if(pl==RHO){
+              ftemp0=pr[pl]*(q.ucon[fluxdir])*surgdet;
+              localpdotterms[dir][0][pl]+=ftemp0; // only one part
+              if(condjet2) pdottermsjet2[dir][0][pl]+=ftemp0; // only one part
+              //   localpdot[dir][pl]  += ftemp0 * surgdet;
+            }
+            // part0-6
+            else if((pl>=UU)&&(pl<=U3)){
+              l=pl-UU;
+              // we currently DO NOT add flux[RHO] to flux[UU], just assume reader knows this is from the native stress
+              ftemp0=pgas*(q.ucon[fluxdir])*(q.ucov[l])*surgdet;
+              localpdotterms[dir][0][pl]+=ftemp0;
+              if(condjet2)     pdottermsjet2[dir][0][pl]+=ftemp0;
+
+              ftemp1=MACP0A1(prim,i,j,k,RHO)*(q.ucon[fluxdir])*(q.ucov[l])*surgdet;
+              localpdotterms[dir][1][pl]+=ftemp1;
+              if(condjet2)     pdottermsjet2[dir][1][pl]+=ftemp1;
 
 
-	      ftemp4=pgas*delta(fluxdir,pl-UU)*surgdet;
-	      localpdotterms[dir][4][pl]+=ftemp4;
-	      if(condjet2)	    pdottermsjet2[dir][4][pl]+=ftemp4;
+              ftemp2=MACP0A1(prim,i,j,k,UU)*(q.ucon[fluxdir])*(q.ucov[l])*surgdet;
+              localpdotterms[dir][2][pl]+=ftemp2;
+              if(condjet2)     pdottermsjet2[dir][2][pl]+=ftemp2;
 
 
-	      ftemp5=0.5*bsq*delta(fluxdir,pl-UU)*surgdet;
-	      localpdotterms[dir][5][pl]+=ftemp5;
-	      if(condjet2)	    pdottermsjet2[dir][5][pl]+=ftemp5;
+              ftemp3=bsq*(q.ucon[fluxdir])*(q.ucov[l])*surgdet;
+              localpdotterms[dir][3][pl]+=ftemp3;
+              if(condjet2)     pdottermsjet2[dir][3][pl]+=ftemp3;
 
 
-	      ftemp6=-(q.bcon[fluxdir])*(q.bcov[l])*surgdet;
-	      localpdotterms[dir][6][pl]+=ftemp6;
-	      if(condjet2)	    pdottermsjet2[dir][6][pl]+=ftemp6;
-
-	    }
-	    else if(pl==B1){
-	      ftemp0=(q.bcon[1])*(q.ucon[fluxdir])*surgdet; // flux_b1 term1
-	      localpdotterms[dir][0][pl]+=ftemp0;
-	      if(condjet2)	    pdottermsjet2[dir][0][pl]+=ftemp0;
+              ftemp4=pgas*delta(fluxdir,pl-UU)*surgdet;
+              localpdotterms[dir][4][pl]+=ftemp4;
+              if(condjet2)     pdottermsjet2[dir][4][pl]+=ftemp4;
 
 
-	      ftemp1=-(q.bcon[fluxdir])*(q.ucon[1])*surgdet; // flux_b1 term2
-	      localpdotterms[dir][1][pl]+=ftemp1;
-	      if(condjet2)	    pdottermsjet2[dir][1][pl]+=ftemp1;
+              ftemp5=0.5*bsq*delta(fluxdir,pl-UU)*surgdet;
+              localpdotterms[dir][5][pl]+=ftemp5;
+              if(condjet2)     pdottermsjet2[dir][5][pl]+=ftemp5;
 
-	    }
-	    else if(pl==B2){
-	      ftemp0=(q.bcon[2])*(q.ucon[fluxdir])*surgdet; // flux_b2 term1
-	      localpdotterms[dir][0][pl]+=ftemp0;
-	      if(condjet2)	    pdottermsjet2[dir][0][pl]+=ftemp0;
 
-	    
-	      ftemp1=-(q.bcon[fluxdir])*(q.ucon[2])*surgdet; // flux_b2 term2
-	      localpdotterms[dir][1][pl]+=ftemp1;
-	      if(condjet2)	    pdottermsjet2[dir][1][pl]+=ftemp1;
+              ftemp6=-(q.bcon[fluxdir])*(q.bcov[l])*surgdet;
+              localpdotterms[dir][6][pl]+=ftemp6;
+              if(condjet2)     pdottermsjet2[dir][6][pl]+=ftemp6;
 
-	    }
-	    else if(pl==B3){
-	      ftemp0=(q.bcon[3])*(q.ucon[fluxdir])*surgdet; // flux_b3 term1
-	      localpdotterms[dir][0][pl]+=ftemp0;
-	      if(condjet2)	    pdottermsjet2[dir][0][pl]+=ftemp0;
+            }
+            else if(pl==B1){
+              ftemp0=(q.bcon[1])*(q.ucon[fluxdir])*surgdet; // flux_b1 term1
+              localpdotterms[dir][0][pl]+=ftemp0;
+              if(condjet2)     pdottermsjet2[dir][0][pl]+=ftemp0;
 
-	      ftemp1=-(q.bcon[fluxdir])*(q.ucon[3])*surgdet; // flux_b3 term2
-	      localpdotterms[dir][1][pl]+=ftemp1;
-	      if(condjet2)	    pdottermsjet2[dir][1][pl]+=ftemp1;
 
-	    }
+              ftemp1=-(q.bcon[fluxdir])*(q.ucon[1])*surgdet; // flux_b1 term2
+              localpdotterms[dir][1][pl]+=ftemp1;
+              if(condjet2)     pdottermsjet2[dir][1][pl]+=ftemp1;
 
-	  }// end PDIAGLOOP over term-by-term fluxes
+            }
+            else if(pl==B2){
+              ftemp0=(q.bcon[2])*(q.ucon[fluxdir])*surgdet; // flux_b2 term1
+              localpdotterms[dir][0][pl]+=ftemp0;
+              if(condjet2)     pdottermsjet2[dir][0][pl]+=ftemp0;
 
-	}// end GENLOOP
+     
+              ftemp1=-(q.bcon[fluxdir])*(q.ucon[2])*surgdet; // flux_b2 term2
+              localpdotterms[dir][1][pl]+=ftemp1;
+              if(condjet2)     pdottermsjet2[dir][1][pl]+=ftemp1;
+
+            }
+            else if(pl==B3){
+              ftemp0=(q.bcon[3])*(q.ucon[fluxdir])*surgdet; // flux_b3 term1
+              localpdotterms[dir][0][pl]+=ftemp0;
+              if(condjet2)     pdottermsjet2[dir][0][pl]+=ftemp0;
+
+              ftemp1=-(q.bcon[fluxdir])*(q.ucon[3])*surgdet; // flux_b3 term2
+              localpdotterms[dir][1][pl]+=ftemp1;
+              if(condjet2)     pdottermsjet2[dir][1][pl]+=ftemp1;
+
+            }
+
+          }// end PDIAGLOOP over term-by-term fluxes
+
+        }// end GENLOOP
 
       }// end if localdoflux
     }// end DIRLOOP
@@ -1646,34 +1646,34 @@ void frdotout(void)
     if(myid==0){
       frtot=(SFTYPE*) malloc(sizeof(SFTYPE)*totalsize[1]*NPR);
       if(frtot==NULL){
-	dualfprintf(fail_file,"Cannot get frtot memory\n");
-	myexit(1);
+        dualfprintf(fail_file,"Cannot get frtot memory\n");
+        myexit(1);
       }
       else{
-	for(i=0;i<totalsize[1];i++) PDIAGLOOP(pl){
-	  frtot[i*NPR+pl]=0;
-	}
+        for(i=0;i<totalsize[1];i++) PDIAGLOOP(pl){
+            frtot[i*NPR+pl]=0;
+          }
       }
       for(l=0;l<numprocs;l++){ // just go over all cpus and assume only added to frdot per cpu for correct cpus.
-	ospos1=(l%ncpux1)*N1;
-	if(l==0){ // assumes cpu=0 is main cpu and is on horizon
-	  for(i=0;i<N1;i++) PDIAGLOOP(pl){
-	    frdottemp[i][pl]=frdot[i][pl];
-	  }
-	}
-	else{
-	  MPI_Irecv(frdottemp,N1*NPR,MPI_SFTYPE,MPIid[l], TAGSTARTFRDOT + l, MPI_COMM_GRMHD,&rrequest);
-	  MPI_Wait(&rrequest,&mpichstatus);
-	}
-	for(i=0;i<N1;i++) PDIAGLOOP(pl){
-	  frtot[(ospos1+i)*NPR+pl]+=frdottemp[i][pl];
+        ospos1=(l%ncpux1)*N1;
+        if(l==0){ // assumes cpu=0 is main cpu and is on horizon
+          for(i=0;i<N1;i++) PDIAGLOOP(pl){
+              frdottemp[i][pl]=frdot[i][pl];
+            }
+        }
+        else{
+          MPI_Irecv(frdottemp,N1*NPR,MPI_SFTYPE,MPIid[l], TAGSTARTFRDOT + l, MPI_COMM_GRMHD,&rrequest);
+          MPI_Wait(&rrequest,&mpichstatus);
+        }
+        for(i=0;i<N1;i++) PDIAGLOOP(pl){
+            frtot[(ospos1+i)*NPR+pl]+=frdottemp[i][pl];
 #if(DEBUGFRLOOP)
-	  if((ospos1+i)*NPR+pl>=totalsize[1]*NPR){
-	    dualfprintf(fail_file,"outside bounds: %d\n",(ospos1+i)*NPR+pl);
-	    myexit(1);
-	  }
+            if((ospos1+i)*NPR+pl>=totalsize[1]*NPR){
+              dualfprintf(fail_file,"outside bounds: %d\n",(ospos1+i)*NPR+pl);
+              myexit(1);
+            }
 #endif
-	}
+          }
       }
     }
     else{
@@ -1692,14 +1692,14 @@ void frdotout(void)
     }
     if(firsttime){
       fprintf(frout,"%21.15g %ld %lld %lld %lld %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",
-	      t,realnstep,totalsize[1],totalsize[2],totalsize[3],startx[1],startx[2],startx[3],dx[1],dx[2],dx[3]);
+              t,realnstep,totalsize[1],totalsize[2],totalsize[3],startx[1],startx[2],startx[3],dx[1],dx[2],dx[3]);
       fflush(frout);
     }
 
     for(i=0;i<totalsize[1];i++){
       fprintf(frout,"%21.15g %d ",t,i);
       PDUMPLOOP(pliter,pl){// dump only dump prims
-	fprintf(frout,"%21.15g ",frtot[i*NPR+pl]);
+        fprintf(frout,"%21.15g ",frtot[i*NPR+pl]);
       }
       fprintf(frout,"\n");
     }
@@ -1722,34 +1722,34 @@ void init_varstavg(void)
 
   ZLOOP{ // OPENMPOPTMARK: Could parallelize this if used
     for(ii=0;ii<NUMNORMDUMP;ii++){
-     GLOBALMACP0A1(normalvarstavg,i,j,k,ii)=0.0;
-     GLOBALMACP0A1(anormalvarstavg,i,j,k,ii)=0.0;
+      GLOBALMACP0A1(normalvarstavg,i,j,k,ii)=0.0;
+      GLOBALMACP0A1(anormalvarstavg,i,j,k,ii)=0.0;
     }      
     for(ii=0;ii<NDIM;ii++){
 #if(CALCFARADAYANDCURRENTS)
-     GLOBALMACP0A1(jcontavg,i,j,k,ii)=0.0;
-     GLOBALMACP0A1(jcovtavg,i,j,k,ii)=0.0;
-     GLOBALMACP0A1(ajcontavg,i,j,k,ii)=0.0;
-     GLOBALMACP0A1(ajcovtavg,i,j,k,ii)=0.0;
+      GLOBALMACP0A1(jcontavg,i,j,k,ii)=0.0;
+      GLOBALMACP0A1(jcovtavg,i,j,k,ii)=0.0;
+      GLOBALMACP0A1(ajcontavg,i,j,k,ii)=0.0;
+      GLOBALMACP0A1(ajcovtavg,i,j,k,ii)=0.0;
 #endif
-     GLOBALMACP0A1(massfluxtavg,i,j,k,ii)=0.0;
-     GLOBALMACP0A1(amassfluxtavg,i,j,k,ii)=0.0;
+      GLOBALMACP0A1(massfluxtavg,i,j,k,ii)=0.0;
+      GLOBALMACP0A1(amassfluxtavg,i,j,k,ii)=0.0;
     }
     for(ii=0;ii<NUMOTHER;ii++){
-     GLOBALMACP0A1(othertavg,i,j,k,ii)=0.0;      
-     GLOBALMACP0A1(aothertavg,i,j,k,ii)=0.0;      
+      GLOBALMACP0A1(othertavg,i,j,k,ii)=0.0;      
+      GLOBALMACP0A1(aothertavg,i,j,k,ii)=0.0;      
     }
 #if(CALCFARADAYANDCURRENTS)
     for(ii=0;ii<NUMFARADAY;ii++){
-     GLOBALMACP0A1(fcontavg,i,j,k,ii)=0.0;
-     GLOBALMACP0A1(fcovtavg,i,j,k,ii)=0.0;
-     GLOBALMACP0A1(afcontavg,i,j,k,ii)=0.0;
-     GLOBALMACP0A1(afcovtavg,i,j,k,ii)=0.0;
+      GLOBALMACP0A1(fcontavg,i,j,k,ii)=0.0;
+      GLOBALMACP0A1(fcovtavg,i,j,k,ii)=0.0;
+      GLOBALMACP0A1(afcontavg,i,j,k,ii)=0.0;
+      GLOBALMACP0A1(afcovtavg,i,j,k,ii)=0.0;
     }
 #endif
     for(ii=0;ii<NUMSTRESSTERMS;ii++){
-     GLOBALMACP0A1(tudtavg,i,j,k,ii)=0.0;
-     GLOBALMACP0A1(atudtavg,i,j,k,ii)=0.0;
+      GLOBALMACP0A1(tudtavg,i,j,k,ii)=0.0;
+      GLOBALMACP0A1(atudtavg,i,j,k,ii)=0.0;
     }      
     
   }
@@ -1761,8 +1761,8 @@ void final_varstavg(FTYPE IDT)
 
   ZLOOP{ // OPENMPOPTMARK: Could parallelize this if used
     for(ii=0;ii<NUMNORMDUMP;ii++){
-     GLOBALMACP0A1(normalvarstavg,i,j,k,ii)=GLOBALMACP0A1(normalvarstavg,i,j,k,ii)*IDT;
-     GLOBALMACP0A1(anormalvarstavg,i,j,k,ii)=GLOBALMACP0A1(anormalvarstavg,i,j,k,ii)*IDT;
+      GLOBALMACP0A1(normalvarstavg,i,j,k,ii)=GLOBALMACP0A1(normalvarstavg,i,j,k,ii)*IDT;
+      GLOBALMACP0A1(anormalvarstavg,i,j,k,ii)=GLOBALMACP0A1(anormalvarstavg,i,j,k,ii)*IDT;
     }      
     for(ii=0;ii<NDIM;ii++){
 #if(CALCFARADAYANDCURRENTS)
@@ -1826,37 +1826,37 @@ int set_varstavg(FTYPE tfrac)
     get_geometry(i, j, k, loc, ptrgeom);
     if (!failed) {
       if (get_state(GLOBALMAC(pdump,i,j,k), ptrgeom, &q) >= 1)
-	FAILSTATEMENT("diag.c:set_varstavg()", "get_state() dir=0", 1);
+        FAILSTATEMENT("diag.c:set_varstavg()", "get_state() dir=0", 1);
 
       if (vchar_all(GLOBALMAC(pdump,i,j,k), &q, 1, ptrgeom, &vmax[1], &vmin[1],&ignorecourant) >= 1)
-	FAILSTATEMENT("diag.c:set_varstavg()", "vchar_all() dir=1or2or3", 1);
+        FAILSTATEMENT("diag.c:set_varstavg()", "vchar_all() dir=1or2or3", 1);
       if (vchar_all(GLOBALMAC(pdump,i,j,k), &q, 2, ptrgeom, &vmax[2], &vmin[2],&ignorecourant) >= 1)
-	FAILSTATEMENT("diag.c:set_varstavg()", "vchar_all() dir=1or2or3", 2);
+        FAILSTATEMENT("diag.c:set_varstavg()", "vchar_all() dir=1or2or3", 2);
       if (vchar_all(GLOBALMAC(pdump,i,j,k), &q, 3, ptrgeom, &vmax[3], &vmin[3],&ignorecourant) >= 1)
-	FAILSTATEMENT("diag.c:set_varstavg()", "vchar_all() dir=1or2or3", 3);
+        FAILSTATEMENT("diag.c:set_varstavg()", "vchar_all() dir=1or2or3", 3);
     }
     else {// do a per zone check, otherwise set to 0
       whocalleducon=1; // force no failure mode, just return like failure, and don't return if failure, just set to 0 and continue
       if (get_state(GLOBALMAC(pdump,i,j,k), ptrgeom, &q) >= 1){
-	for (iii = 0; iii < NDIM; iii++)
-	  q.ucon[iii]=0;
-	for (iii = 0; iii < NDIM; iii++)
-	  q.ucov[iii]=0;
-	for (iii = 0; iii < NDIM; iii++)
-	  q.bcon[iii]=0;
-	for (iii = 0; iii < NDIM; iii++)
-	  q.bcov[iii]=0;
+        for (iii = 0; iii < NDIM; iii++)
+          q.ucon[iii]=0;
+        for (iii = 0; iii < NDIM; iii++)
+          q.ucov[iii]=0;
+        for (iii = 0; iii < NDIM; iii++)
+          q.bcon[iii]=0;
+        for (iii = 0; iii < NDIM; iii++)
+          q.bcov[iii]=0;
       }
       if (vchar_all(GLOBALMAC(pdump,i,j,k), &q, 1, ptrgeom, &vmax[1], &vmin[1],&ignorecourant) >= 1){
-	vmax[1]=vmin[1]=0;
+        vmax[1]=vmin[1]=0;
       }
-	
+ 
       if (vchar_all(GLOBALMAC(pdump,i,j,k), &q, 2, ptrgeom, &vmax[2], &vmin[2],&ignorecourant) >= 1){
-	vmax[2]=vmin[2]=0;
+        vmax[2]=vmin[2]=0;
       }
 
       if (vchar_all(GLOBALMAC(pdump,i,j,k), &q, 2, ptrgeom, &vmax[3], &vmin[3],&ignorecourant) >= 1){
-	vmax[3]=vmin[3]=0;
+        vmax[3]=vmin[3]=0;
       }
 
 
@@ -1947,53 +1947,53 @@ int set_varstavg(FTYPE tfrac)
     // part0
     ii=0;
     for(iii=0;iii<NDIM;iii++) for(l=0;l<NDIM;l++){
-      ftemp0=pgas*(q.ucon[iii])*(q.ucov[l]);
-      GLOBALMACP0A1(tudtavg,i,j,k,ii)+=ftemp0*tfrac;
-      GLOBALMACP0A1(atudtavg,i,j,k,ii)+=fabs(ftemp0)*tfrac;
-      ii++;
-    }
+        ftemp0=pgas*(q.ucon[iii])*(q.ucov[l]);
+        GLOBALMACP0A1(tudtavg,i,j,k,ii)+=ftemp0*tfrac;
+        GLOBALMACP0A1(atudtavg,i,j,k,ii)+=fabs(ftemp0)*tfrac;
+        ii++;
+      }
     // part1
     for(iii=0;iii<NDIM;iii++) for(l=0;l<NDIM;l++){
-      ftemp1=GLOBALMACP0A1(pdump,i,j,k,RHO)*(q.ucon[iii])*(q.ucov[l]);
-      GLOBALMACP0A1(tudtavg,i,j,k,ii)+=ftemp1*tfrac;
-      GLOBALMACP0A1(atudtavg,i,j,k,ii)+=fabs(ftemp1)*tfrac;
-      ii++;
-    }
+        ftemp1=GLOBALMACP0A1(pdump,i,j,k,RHO)*(q.ucon[iii])*(q.ucov[l]);
+        GLOBALMACP0A1(tudtavg,i,j,k,ii)+=ftemp1*tfrac;
+        GLOBALMACP0A1(atudtavg,i,j,k,ii)+=fabs(ftemp1)*tfrac;
+        ii++;
+      }
     // part2
     for(iii=0;iii<NDIM;iii++) for(l=0;l<NDIM;l++){
-      ftemp2=GLOBALMACP0A1(pdump,i,j,k,UU)*(q.ucon[iii])*(q.ucov[l]);
-      GLOBALMACP0A1(tudtavg,i,j,k,ii)+=ftemp2*tfrac;
-      GLOBALMACP0A1(atudtavg,i,j,k,ii)+=fabs(ftemp2)*tfrac;
-      ii++;
-    }
+        ftemp2=GLOBALMACP0A1(pdump,i,j,k,UU)*(q.ucon[iii])*(q.ucov[l]);
+        GLOBALMACP0A1(tudtavg,i,j,k,ii)+=ftemp2*tfrac;
+        GLOBALMACP0A1(atudtavg,i,j,k,ii)+=fabs(ftemp2)*tfrac;
+        ii++;
+      }
     // part3
     for(iii=0;iii<NDIM;iii++) for(l=0;l<NDIM;l++){
-      ftemp3=bsq*(q.ucon[iii])*(q.ucov[l]);
-      GLOBALMACP0A1(tudtavg,i,j,k,ii)+=ftemp3*tfrac;
-      GLOBALMACP0A1(atudtavg,i,j,k,ii)+=fabs(ftemp3)*tfrac;
-      ii++;
-    }
+        ftemp3=bsq*(q.ucon[iii])*(q.ucov[l]);
+        GLOBALMACP0A1(tudtavg,i,j,k,ii)+=ftemp3*tfrac;
+        GLOBALMACP0A1(atudtavg,i,j,k,ii)+=fabs(ftemp3)*tfrac;
+        ii++;
+      }
     // part4
     for(iii=0;iii<NDIM;iii++) for(l=0;l<NDIM;l++){
-      ftemp4=pgas*delta(iii,l);
-      GLOBALMACP0A1(tudtavg,i,j,k,ii)+=ftemp4*tfrac;
-      GLOBALMACP0A1(atudtavg,i,j,k,ii)+=fabs(ftemp4)*tfrac;
-      ii++;
-    }
+        ftemp4=pgas*delta(iii,l);
+        GLOBALMACP0A1(tudtavg,i,j,k,ii)+=ftemp4*tfrac;
+        GLOBALMACP0A1(atudtavg,i,j,k,ii)+=fabs(ftemp4)*tfrac;
+        ii++;
+      }
     // part5
     for(iii=0;iii<NDIM;iii++) for(l=0;l<NDIM;l++){
-      ftemp5=0.5*bsq*delta(iii,l);
-      GLOBALMACP0A1(tudtavg,i,j,k,ii)+=ftemp5*tfrac;
-      GLOBALMACP0A1(atudtavg,i,j,k,ii)+=fabs(ftemp5)*tfrac;
-      ii++;
-    }
+        ftemp5=0.5*bsq*delta(iii,l);
+        GLOBALMACP0A1(tudtavg,i,j,k,ii)+=ftemp5*tfrac;
+        GLOBALMACP0A1(atudtavg,i,j,k,ii)+=fabs(ftemp5)*tfrac;
+        ii++;
+      }
     // part6
     for(iii=0;iii<NDIM;iii++) for(l=0;l<NDIM;l++){
-      ftemp6=-(q.bcon[iii])*(q.bcov[l]);
-      GLOBALMACP0A1(tudtavg,i,j,k,ii)+=ftemp6*tfrac;
-      GLOBALMACP0A1(atudtavg,i,j,k,ii)+=fabs(ftemp6)*tfrac;
-      ii++;
-    }
+        ftemp6=-(q.bcon[iii])*(q.bcov[l]);
+        GLOBALMACP0A1(tudtavg,i,j,k,ii)+=ftemp6*tfrac;
+        GLOBALMACP0A1(atudtavg,i,j,k,ii)+=fabs(ftemp6)*tfrac;
+        ii++;
+      }
 
   }
 
@@ -2061,15 +2061,15 @@ void diag_source_all(struct of_geom *ptrgeom, FTYPE *dU,SFTYPE Dt)
       localsourceadd=sourceaddreg[enerregion];
 
       if(WITHINENERREGION(localenerpos,ptrgeom->i,ptrgeom->j,ptrgeom->k)){
-	PDIAGLOOP(pl) ftemp[pl]=Dt*dVF*dU[pl]; // in UEVOLVE form
-	// GODMARK: for finite volume method, below doesn't change the result if eomfunc=gdet.
-	// Otherwise source would have to be completely recomputed for gdet case JUST for diagnostic to be consistent at higher order
-	UtoU_evolve2diag(UEVOLVE,UDIAG,ptrgeom,ftemp,ftempdiag); // convert to diag form
+        PDIAGLOOP(pl) ftemp[pl]=Dt*dVF*dU[pl]; // in UEVOLVE form
+        // GODMARK: for finite volume method, below doesn't change the result if eomfunc=gdet.
+        // Otherwise source would have to be completely recomputed for gdet case JUST for diagnostic to be consistent at higher order
+        UtoU_evolve2diag(UEVOLVE,UDIAG,ptrgeom,ftemp,ftempdiag); // convert to diag form
 
-	// now assign diagnostic form of source
-	PDIAGLOOP(pl){
-	  localsourceadd[pl]+=ftempdiag[pl];
-	} // end PDIAGLOOP on diag
+        // now assign diagnostic form of source
+        PDIAGLOOP(pl){
+          localsourceadd[pl]+=ftempdiag[pl];
+        } // end PDIAGLOOP on diag
       }
     }
   }
@@ -2100,24 +2100,24 @@ void diag_source_comp(struct of_geom *ptrgeom, FTYPE (*dUcomp)[NPR],SFTYPE Dt)
       localsourceadd=sourceaddreg[enerregion];
 
       if(WITHINENERREGION(localenerpos,ptrgeom->i,ptrgeom->j,ptrgeom->k)){
-	SCLOOP(sc){
-	  PDIAGLOOP(pl) ftemp[pl]=Dt*dVF*dUcomp[sc][pl]; // in UEVOLVE form
-	  // GODMARK: for finite volume method, below doesn't change the result if eomfunc=gdet.
-	  // Otherwise source would have to be completely recomputed for gdet case JUST for diagnostic to be consistent at higher order
-	  UtoU_evolve2diag(UEVOLVE,UDIAG,ptrgeom,ftemp,ftempdiag); // convert to diag form
+        SCLOOP(sc){
+          PDIAGLOOP(pl) ftemp[pl]=Dt*dVF*dUcomp[sc][pl]; // in UEVOLVE form
+          // GODMARK: for finite volume method, below doesn't change the result if eomfunc=gdet.
+          // Otherwise source would have to be completely recomputed for gdet case JUST for diagnostic to be consistent at higher order
+          UtoU_evolve2diag(UEVOLVE,UDIAG,ptrgeom,ftemp,ftempdiag); // convert to diag form
 
-	  // now assign diagnostic form of source
-	  PDIAGLOOP(pl){
-	    localsourceaddterms[sc][pl]+=ftempdiag[pl];
+          // now assign diagnostic form of source
+          PDIAGLOOP(pl){
+            localsourceaddterms[sc][pl]+=ftempdiag[pl];
 #if(DOLUMVSR)
-	    // GODMARK: only correct for diagonal coordinate Jacobian in which each i is same radius for all j
-	    // Do NOT account for geometry changes in energy -- only account for non-geometrical changes in U[UU]
-	    // Only for enerregion==0
-	    if(pl==UU && sc!=GEOMSOURCE && enerregion==0) lumvsr[startpos[1]+ptrgeom->i]+=ftempdiag[pl];
+            // GODMARK: only correct for diagonal coordinate Jacobian in which each i is same radius for all j
+            // Do NOT account for geometry changes in energy -- only account for non-geometrical changes in U[UU]
+            // Only for enerregion==0
+            if(pl==UU && sc!=GEOMSOURCE && enerregion==0) lumvsr[startpos[1]+ptrgeom->i]+=ftempdiag[pl];
 #endif
 
-	  } // end PDIAGLOOP on diag
-	} // end SCLOOP
+          } // end PDIAGLOOP on diag
+        } // end SCLOOP
       }
     }
   }
@@ -2127,39 +2127,39 @@ void diag_source_comp(struct of_geom *ptrgeom, FTYPE (*dUcomp)[NPR],SFTYPE Dt)
 
 /*
 
-		print {Si Sf Sgen Sgendissco Sgendissconomax Sgendisslab1  Sgendisslab1nomax Sgendisslab2 Sgendisslab2nomax}
-		#
-		# for Sod shock (test=51, N1=150) I get:
-		# -143.6      -143.2      0.3631      0.3908
-		# which is close
-		#
-		# at N1=300 I get:
-		# -134.4        -134      0.3546      0.3789
-		#
-		# at N1=600 I get:
-		# -129.8      -129.4      0.3502      0.3733
-		#
-		# where totals are changing just because included
-		# boundary zones that go out to different distances
-		#
-		# Seems results converge, but dissipation version
-		# doesn't converge to expected value from
-		# energy evolution and discrete change in entropy
-		#
-		# Residual offset is likely due to error
-		# in evolving forward with energy but
-		# trying to use entropy evolution to estimate entropy
-		# generation -- wasn't expected to be exact
-		#
-		# Residual error may be related to why
-		# non-conservative schemes don't obtain entropy
-		# jump correctly even with dissipation
-		#
-		# I noticed that ratio of errors was related to
-		# how much shock spreads at head and tail of shock
-		# spreads by a couple extra zones, and this leakage
-		# seems to account for error in entropy generation
-		# Could just be coincidence
+  print {Si Sf Sgen Sgendissco Sgendissconomax Sgendisslab1  Sgendisslab1nomax Sgendisslab2 Sgendisslab2nomax}
+  #
+  # for Sod shock (test=51, N1=150) I get:
+  # -143.6      -143.2      0.3631      0.3908
+  # which is close
+  #
+  # at N1=300 I get:
+  # -134.4        -134      0.3546      0.3789
+  #
+  # at N1=600 I get:
+  # -129.8      -129.4      0.3502      0.3733
+  #
+  # where totals are changing just because included
+  # boundary zones that go out to different distances
+  #
+  # Seems results converge, but dissipation version
+  # doesn't converge to expected value from
+  # energy evolution and discrete change in entropy
+  #
+  # Residual offset is likely due to error
+  # in evolving forward with energy but
+  # trying to use entropy evolution to estimate entropy
+  # generation -- wasn't expected to be exact
+  #
+  # Residual error may be related to why
+  # non-conservative schemes don't obtain entropy
+  # jump correctly even with dissipation
+  #
+  # I noticed that ratio of errors was related to
+  # how much shock spreads at head and tail of shock
+  # spreads by a couple extra zones, and this leakage
+  # seems to account for error in entropy generation
+  # Could just be coincidence
 */
 
 
@@ -2361,7 +2361,7 @@ int diss_compute(int evolvetype, int inputtype, FTYPE *U, struct of_geom *ptrgeo
 
       // report failure to invert
       if(DODISS){
-	if(IFUTOPRIMFAIL(otherfail)) GLOBALMACP0A1(dissfunpos,ptrgeom->i,ptrgeom->j,ptrgeom->k,DISSFAILUREINV)+=1.0;
+        if(IFUTOPRIMFAIL(otherfail)) GLOBALMACP0A1(dissfunpos,ptrgeom->i,ptrgeom->j,ptrgeom->k,DISSFAILUREINV)+=1.0;
       }
 
 
@@ -2373,160 +2373,160 @@ int diss_compute(int evolvetype, int inputtype, FTYPE *U, struct of_geom *ptrgeo
       for(loopinv=0;loopinv<NUMDISSVERSIONS;loopinv++){
 
 
-	///////////////
-	//
-	// Choose which prother[] to use
-	//
-	// only use if inversion succeeded (otherwise assume entropy evolution wanted negative internal energy and so not a good solution)
-	//
-	//////////////
-	if(
-	   loopinv==DISSSIMPLEINVCO || loopinv==DISSSIMPLEINVCONOMAX 
-	   || loopinv==DISSSIMPLEINVLAB1 || loopinv==DISSSIMPLEINVLAB1NOMAX
-	   || loopinv==DISSSIMPLEINVLAB2 || loopinv==DISSSIMPLEINVLAB2NOMAX
-	   || loopinv==DISSENTROPYCO || loopinv==DISSENTROPYCONOMAX
-	   || loopinv==DISSENTROPYLAB1 || loopinv==DISSENTROPYLAB1NOMAX
-	   || loopinv==DISSENTROPYLAB2 || loopinv==DISSENTROPYLAB2NOMAX
-	   ){
-	  choseninv=DISSSIMPLEINVCO;
-	}
-	else if(
-		loopinv==DISSFULLINVCO || loopinv==DISSFULLINVCONOMAX
-		|| loopinv==DISSFULLINVLAB1 || loopinv==DISSFULLINVLAB1NOMAX
-		|| loopinv==DISSFULLINVLAB2 || loopinv==DISSFULLINVLAB2NOMAX
-		){
-	  if(IFUTOPRIMNOFAILORFIXED(otherfail)) choseninv=DISSFULLINVCO;
-	  else choseninv=DISSSIMPLEINVCO; // still want some result
-	}
-	else{
-	  dualfprintf(fail_file,"In setting up choseninv: No such loopinv=%d\n",loopinv);
-	  myexit(72698626);
-	}
+        ///////////////
+        //
+        // Choose which prother[] to use
+        //
+        // only use if inversion succeeded (otherwise assume entropy evolution wanted negative internal energy and so not a good solution)
+        //
+        //////////////
+        if(
+           loopinv==DISSSIMPLEINVCO || loopinv==DISSSIMPLEINVCONOMAX 
+           || loopinv==DISSSIMPLEINVLAB1 || loopinv==DISSSIMPLEINVLAB1NOMAX
+           || loopinv==DISSSIMPLEINVLAB2 || loopinv==DISSSIMPLEINVLAB2NOMAX
+           || loopinv==DISSENTROPYCO || loopinv==DISSENTROPYCONOMAX
+           || loopinv==DISSENTROPYLAB1 || loopinv==DISSENTROPYLAB1NOMAX
+           || loopinv==DISSENTROPYLAB2 || loopinv==DISSENTROPYLAB2NOMAX
+           ){
+          choseninv=DISSSIMPLEINVCO;
+        }
+        else if(
+                loopinv==DISSFULLINVCO || loopinv==DISSFULLINVCONOMAX
+                || loopinv==DISSFULLINVLAB1 || loopinv==DISSFULLINVLAB1NOMAX
+                || loopinv==DISSFULLINVLAB2 || loopinv==DISSFULLINVLAB2NOMAX
+                ){
+          if(IFUTOPRIMNOFAILORFIXED(otherfail)) choseninv=DISSFULLINVCO;
+          else choseninv=DISSSIMPLEINVCO; // still want some result
+        }
+        else{
+          dualfprintf(fail_file,"In setting up choseninv: No such loopinv=%d\n",loopinv);
+          myexit(72698626);
+        }
 
 
-	if(! (choseninv==DISSSIMPLEINVCO||choseninv==DISSFULLINVCO)){
-	  dualfprintf(fail_file,"In setting up choseninv: Chose bad choseninv=%d\n",choseninv);
-	  myexit(1865728326);
-	}
+        if(! (choseninv==DISSSIMPLEINVCO||choseninv==DISSFULLINVCO)){
+          dualfprintf(fail_file,"In setting up choseninv: Chose bad choseninv=%d\n",choseninv);
+          myexit(1865728326);
+        }
 
 
-	////////////////
-	//
-	// Compute dissipation energy density over timestep
-	// So final energy dissipated is found by multiplying by $\detg dV$ done after the below calculation
-	//
-	// GODMARK: The DISSVSR is only correct for diagonal coordinate Jacobian in which each i is same radius for all j                         
-	//
-	////////////////
+        ////////////////
+        //
+        // Compute dissipation energy density over timestep
+        // So final energy dissipated is found by multiplying by $\detg dV$ done after the below calculation
+        //
+        // GODMARK: The DISSVSR is only correct for diagonal coordinate Jacobian in which each i is same radius for all j                         
+        //
+        ////////////////
 
-	if(
-	   loopinv==DISSSIMPLEINVCO || loopinv==DISSFULLINVCO || loopinv==DISSSIMPLEINVLAB1 || loopinv==DISSFULLINVLAB1
-	   || loopinv==DISSSIMPLEINVCONOMAX || loopinv==DISSFULLINVCONOMAX || loopinv==DISSSIMPLEINVLAB1NOMAX || loopinv==DISSFULLINVLAB1NOMAX
-	   ){
-	  // dissipated energy is difference between entropy version of internal energy and energy version of internal energy
-	  // so a shock has this as positive
-	  // Notice Sod shock has negative dissipation sometimes at shock front
-	  // So use MAX to NOT ALLOW negative dissipation (assume dissipation is really 0 and assume error in entropy calculation)
-	  dissenergy[loopinv]=pr[UU]-prother[choseninv][UU];
+        if(
+           loopinv==DISSSIMPLEINVCO || loopinv==DISSFULLINVCO || loopinv==DISSSIMPLEINVLAB1 || loopinv==DISSFULLINVLAB1
+           || loopinv==DISSSIMPLEINVCONOMAX || loopinv==DISSFULLINVCONOMAX || loopinv==DISSSIMPLEINVLAB1NOMAX || loopinv==DISSFULLINVLAB1NOMAX
+           ){
+          // dissipated energy is difference between entropy version of internal energy and energy version of internal energy
+          // so a shock has this as positive
+          // Notice Sod shock has negative dissipation sometimes at shock front
+          // So use MAX to NOT ALLOW negative dissipation (assume dissipation is really 0 and assume error in entropy calculation)
+          dissenergy[loopinv]=pr[UU]-prother[choseninv][UU];
 
-	  // MAX versions:
-	  if(loopinv==DISSSIMPLEINVCO || loopinv==DISSFULLINVCO || loopinv==DISSSIMPLEINVLAB1 || loopinv==DISSFULLINVLAB1){
-	    dissenergy[loopinv]=MAX(dissenergy[loopinv],0.0);
-	  }
+          // MAX versions:
+          if(loopinv==DISSSIMPLEINVCO || loopinv==DISSFULLINVCO || loopinv==DISSSIMPLEINVLAB1 || loopinv==DISSFULLINVLAB1){
+            dissenergy[loopinv]=MAX(dissenergy[loopinv],0.0);
+          }
 
- 	  // LAB1 multiplications:
-	  if(loopinv==DISSSIMPLEINVLAB1 || loopinv==DISSSIMPLEINVLAB1NOMAX){
-	    // negative sign on u_t because dU/d\tau opposite sign compared to T^t_t
-	    // here we use fluid velocity from simple evolution, which is same fluid velocity as from energy evolution
-	    dissenergy[loopinv]*=(-qsimple.ucov[TT]);
-	  }
-	  else if(loopinv==DISSFULLINVLAB1 || loopinv==DISSFULLINVLAB1NOMAX ){
-	    // here we use fluid velocity from entropy evolution as consistent with the meaning of "full" throughout
-	    dissenergy[loopinv]*=(-qfull.ucov[TT]);
-	  }
+          // LAB1 multiplications:
+          if(loopinv==DISSSIMPLEINVLAB1 || loopinv==DISSSIMPLEINVLAB1NOMAX){
+            // negative sign on u_t because dU/d\tau opposite sign compared to T^t_t
+            // here we use fluid velocity from simple evolution, which is same fluid velocity as from energy evolution
+            dissenergy[loopinv]*=(-qsimple.ucov[TT]);
+          }
+          else if(loopinv==DISSFULLINVLAB1 || loopinv==DISSFULLINVLAB1NOMAX ){
+            // here we use fluid velocity from entropy evolution as consistent with the meaning of "full" throughout
+            dissenergy[loopinv]*=(-qfull.ucov[TT]);
+          }
 
-	}
-	else if(loopinv==DISSENTROPYCO || loopinv==DISSENTROPYCONOMAX){
-	  // assume rest are entropy generation quantities
-	  // assume entropy must increase
-	  dissenergy[loopinv]= entropydiss-entropy;
+        }
+        else if(loopinv==DISSENTROPYCO || loopinv==DISSENTROPYCONOMAX){
+          // assume rest are entropy generation quantities
+          // assume entropy must increase
+          dissenergy[loopinv]= entropydiss-entropy;
 
-	  if(loopinv==DISSENTROPYCO){
-	    dissenergy[loopinv]=MAX(dissenergy[loopinv],0.0);
-	  }
-	}
-	else if(loopinv==DISSENTROPYLAB1 || loopinv==DISSENTROPYLAB1NOMAX){
-	  // assume rest are entropy generation quantities
-	  // assume entropy must increase
-	  dissenergy[loopinv]= entropydiss-entropy; // same as comoving version as source term of entropy equation w.r.t. comparing fluid elements (not different times) That is, I set the d\rho_0/dt term to zero. GODMARK?
+          if(loopinv==DISSENTROPYCO){
+            dissenergy[loopinv]=MAX(dissenergy[loopinv],0.0);
+          }
+        }
+        else if(loopinv==DISSENTROPYLAB1 || loopinv==DISSENTROPYLAB1NOMAX){
+          // assume rest are entropy generation quantities
+          // assume entropy must increase
+          dissenergy[loopinv]= entropydiss-entropy; // same as comoving version as source term of entropy equation w.r.t. comparing fluid elements (not different times) That is, I set the d\rho_0/dt term to zero. GODMARK?
 
-	  if(loopinv==DISSENTROPYLAB1){
-	    dissenergy[loopinv]=MAX(dissenergy[loopinv],0.0);
-	  }
+          if(loopinv==DISSENTROPYLAB1){
+            dissenergy[loopinv]=MAX(dissenergy[loopinv],0.0);
+          }
 
-	}
-	else if(loopinv==DISSSIMPLEINVLAB2 || loopinv==DISSSIMPLEINVLAB2NOMAX){
-	  // negative sign is because -T^t_t>0 for energy>0
-	  // otherwise order of U's are so dissipation is positive
-	  dissenergy[loopinv] = -(Uenergy[UU] - Uother[DISSSIMPLEINVLAB2][UU]); // could have used Ugeomfree[UU] too
+        }
+        else if(loopinv==DISSSIMPLEINVLAB2 || loopinv==DISSSIMPLEINVLAB2NOMAX){
+          // negative sign is because -T^t_t>0 for energy>0
+          // otherwise order of U's are so dissipation is positive
+          dissenergy[loopinv] = -(Uenergy[UU] - Uother[DISSSIMPLEINVLAB2][UU]); // could have used Ugeomfree[UU] too
 
-	  if(loopinv==DISSSIMPLEINVLAB2){
-	    dissenergy[loopinv]=MAX(dissenergy[loopinv],0.0);
-	  }
-	}
-	else if(loopinv==DISSFULLINVLAB2 || loopinv==DISSFULLINVLAB2NOMAX){
-	  // negative sign is because -T^t_t>0 for energy>0
-	  // otherwise order of U's are so dissipation is positive
-	  // leave-off MAX
-	  // note stored U in Uother for SIMPLEINV for simplicity
-	  dissenergy[loopinv] = -(Uenergy[UU] - Uother[DISSFULLINVLAB2][UU]); // could have used Ugeomfree[UU] too
+          if(loopinv==DISSSIMPLEINVLAB2){
+            dissenergy[loopinv]=MAX(dissenergy[loopinv],0.0);
+          }
+        }
+        else if(loopinv==DISSFULLINVLAB2 || loopinv==DISSFULLINVLAB2NOMAX){
+          // negative sign is because -T^t_t>0 for energy>0
+          // otherwise order of U's are so dissipation is positive
+          // leave-off MAX
+          // note stored U in Uother for SIMPLEINV for simplicity
+          dissenergy[loopinv] = -(Uenergy[UU] - Uother[DISSFULLINVLAB2][UU]); // could have used Ugeomfree[UU] too
 
-	  if(loopinv==DISSFULLINVLAB2){
-	    dissenergy[loopinv]=MAX(dissenergy[loopinv],0.0);
-	  }
-	}
-	else if(loopinv==DISSENTROPYLAB2 || loopinv==DISSENTROPYLAB2NOMAX){
-	  // computing S from U and S from Uother and taking difference
-	  // order of U's are so dissipation is positive
-	  // leave-off MAX
-	  // using SIMPLEINV here like used SIMPLEINV to obtain entropy comoving version of dissipation
-	  // Here Uenergy[ENTROPY] is conserved entropy as computed from energy-evolved pr's
-	  dissenergy[loopinv] = (Uenergy[ENTROPY] - Uother[DISSSIMPLEINVLAB2][ENTROPY]);
+          if(loopinv==DISSFULLINVLAB2){
+            dissenergy[loopinv]=MAX(dissenergy[loopinv],0.0);
+          }
+        }
+        else if(loopinv==DISSENTROPYLAB2 || loopinv==DISSENTROPYLAB2NOMAX){
+          // computing S from U and S from Uother and taking difference
+          // order of U's are so dissipation is positive
+          // leave-off MAX
+          // using SIMPLEINV here like used SIMPLEINV to obtain entropy comoving version of dissipation
+          // Here Uenergy[ENTROPY] is conserved entropy as computed from energy-evolved pr's
+          dissenergy[loopinv] = (Uenergy[ENTROPY] - Uother[DISSSIMPLEINVLAB2][ENTROPY]);
 
-	  if(loopinv==DISSENTROPYLAB2){
-	    dissenergy[loopinv]=MAX(dissenergy[loopinv],0.0);
-	  }
+          if(loopinv==DISSENTROPYLAB2){
+            dissenergy[loopinv]=MAX(dissenergy[loopinv],0.0);
+          }
 
-	}
-	else{
-	  dualfprintf(fail_file,"In computing dissenergy: No such loopinv=%d\n",loopinv);
-	  myexit(72698627);	  
-	}
-
-
-	  
-	// only for enerregion==0
-	if(DODISSVSR) dissvsr[loopinv][startpos[1]+ptrgeom->i]+=dissenergy[loopinv]*ptrgeom->gdet * dVF;
-	  
-	if(DODISS){
-	  // local integral
-	  ENERREGIONLOOP(enerregion){
-	    diss=dissreg[enerregion];
-	    if( WITHINENERREGION(enerpos,ptrgeom->i,ptrgeom->j,ptrgeom->k) ){
-	      diss[loopinv]+=dissenergy[loopinv]*ptrgeom->gdet * dVF; // actual energy
-	    }
-	  }
-	    
-	  // function over all space to be written as dump file
-	  // energy density, which can be integrated in SM since grid is given
-	  // multiply by gdet*dV since gdet may change in time!
-	  GLOBALMACP0A1(dissfunpos,ptrgeom->i,ptrgeom->j,ptrgeom->k,loopinv)+=dissenergy[loopinv]*ptrgeom->gdet * dVF;
-	}
+        }
+        else{
+          dualfprintf(fail_file,"In computing dissenergy: No such loopinv=%d\n",loopinv);
+          myexit(72698627);   
+        }
 
 
-	// DEBUG:
-	//	dualfprintf(fail_file,"dissenergy[%d][%d][%d][%d]=%21.15g :: simple=%21.15g full=%21.15g energy=%21.15g\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,loopinv,GLOBALMACP0A1(dissfunpos,ptrgeom->i,ptrgeom->j,ptrgeom->k,loopinv),prother[DISSSIMPLEINVCO][ENTROPY],prother[DISSFULLINVCO][ENTROPY],pr[UU]);
-	  
+   
+        // only for enerregion==0
+        if(DODISSVSR) dissvsr[loopinv][startpos[1]+ptrgeom->i]+=dissenergy[loopinv]*ptrgeom->gdet * dVF;
+   
+        if(DODISS){
+          // local integral
+          ENERREGIONLOOP(enerregion){
+            diss=dissreg[enerregion];
+            if( WITHINENERREGION(enerpos,ptrgeom->i,ptrgeom->j,ptrgeom->k) ){
+              diss[loopinv]+=dissenergy[loopinv]*ptrgeom->gdet * dVF; // actual energy
+            }
+          }
+     
+          // function over all space to be written as dump file
+          // energy density, which can be integrated in SM since grid is given
+          // multiply by gdet*dV since gdet may change in time!
+          GLOBALMACP0A1(dissfunpos,ptrgeom->i,ptrgeom->j,ptrgeom->k,loopinv)+=dissenergy[loopinv]*ptrgeom->gdet * dVF;
+        }
+
+
+        // DEBUG:
+        // dualfprintf(fail_file,"dissenergy[%d][%d][%d][%d]=%21.15g :: simple=%21.15g full=%21.15g energy=%21.15g\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,loopinv,GLOBALMACP0A1(dissfunpos,ptrgeom->i,ptrgeom->j,ptrgeom->k,loopinv),prother[DISSSIMPLEINVCO][ENTROPY],prother[DISSFULLINVCO][ENTROPY],pr[UU]);
+   
 
   
       }// end loop over versions

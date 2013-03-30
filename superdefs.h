@@ -3,21 +3,21 @@
 
 /*
 
-to add a new variable:
+  to add a new variable:
 
-0) global.h: If macro type (before/after variable relative to 3D array indices), then setup macro to turn on/off memory (BASEMAC??(name)) to be used below.
+  0) global.h: If macro type (before/after variable relative to 3D array indices), then setup macro to turn on/off memory (BASEMAC??(name)) to be used below.
 
-1) Add a variable called BASEMAC???(name) that is the *definition* of the memory space
+  1) Add a variable called BASEMAC???(name) that is the *definition* of the memory space
 
-2) superdefs.pointers.h: Define a pointer of the same type.
+  2) superdefs.pointers.h: Define a pointer of the same type.
 
-3) set_arrays.c or set_arrays_multidimen.c: add pointer shifting
+  3) set_arrays.c or set_arrays_multidimen.c: add pointer shifting
 
-4) set_arrays.c or set_arrays_multidimen.c: assign to 0 or valueinit
+  4) set_arrays.c or set_arrays_multidimen.c: assign to 0 or valueinit
 
-5) set_array.c or set_arrays_multidimen.c: use global.h macro to avoid assignments to memory if turned off
+  5) set_array.c or set_arrays_multidimen.c: use global.h macro to avoid assignments to memory if turned off
 
-6) Use it!
+  6) Use it!
 
 */
 
@@ -50,7 +50,7 @@ to add a new variable:
 
 
 // below is always used -- never use as temp
-FTYPE BASEMACP0A1(pglobal,N1M,N2M,N3M,NPR);	/* space for primitive vars */
+FTYPE BASEMACP0A1(pglobal,N1M,N2M,N3M,NPR); /* space for primitive vars */
 
 // below is always used -- never use as temp
 #if(ANALYTICMEMORY)
@@ -62,7 +62,7 @@ FTYPE BASEMACP0A1(pstaganalytic,N1M,N2M,N3M,NPR);       /* space for primitive v
 
 // below is always used -- never use as temp
 #if(NUMPOTHER>0)
-FTYPE BASEMACP1A0(pother,NUMPOTHER,N1M,N2M,N3M);	/* space for primitive vars */
+FTYPE BASEMACP1A0(pother,NUMPOTHER,N1M,N2M,N3M); /* space for primitive vars */
 #endif
 
 // arbitrary temporary storage array
@@ -77,7 +77,7 @@ FTYPE BASEMACP0A1(ucumformetric,N1M,N2M,N3M,NPR);
 
 
 // emf has extra zone on upper end since corner quantity and some components exist that are needed for cell centered quantities
-FTYPE BASEMACP1A0(emf,NDIM,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3);	/* space for emf */
+FTYPE BASEMACP1A0(emf,NDIM,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3); /* space for emf */
 
 #if(STOREFLUXSTATE)
 struct of_state BASEMACP1A1(fluxstate,COMPDIM,N1M,N2M,N3M,NUMLEFTRIGHT);
@@ -87,7 +87,7 @@ struct of_state BASEMACP0A0(fluxstatecent,N1M,N2M,N3M); // pb-like (not pi-like)
 #if(FIELDTOTHMEM)
 // emf and vconemf assumed not used across substeps so can use as temp var
 // below was [COMPDIM] but wanted to use emf as simple temp space for 4D
-FTYPE BASEMACP0A1(vconemf,N1M,N2M,N3M,NDIM-1);	/* used for Athena EMFs */
+FTYPE BASEMACP0A1(vconemf,N1M,N2M,N3M,NDIM-1); /* used for Athena EMFs */
 #endif
 
 #if(MODIFYEMFORVPOT==MODIFYVPOT || TRACKVPOT>0 || EVOLVEWITHVPOT>0)
@@ -127,7 +127,7 @@ FTYPE BASEMACP1A0(shockindicatorarray,NUMSHOCKPLS,N1M,N2M,N3M);
 ////////////////////////////////////////////////
 
 // below is used within substeps AND across substeps but not across full timesteps
-FTYPE BASEMACP1A1(pk,MAXDTSTAGES,N1M,N2M,N3M,NPR);	/* next-step primitives */
+FTYPE BASEMACP1A1(pk,MAXDTSTAGES,N1M,N2M,N3M,NPR); /* next-step primitives */
 // for higher order RK time stepping integrations
 FTYPE BASEMACP0A1(unewglobal,N1M,N2M,N3M,NPR); // used across substeps and across full time steps
 FTYPE BASEMACP0A1(ulastglobal,N1M,N2M,N3M,NPR); // used across substeps but not across full time steps
@@ -152,29 +152,29 @@ FTYPE BASEMACP0A1(upointglobal,N1M,N2M,N3M,NPR);
 // For FLUXCTTOTH, need space at bottom, while for FLUXCD need space at top.  So add 2 extra spaces.
 #if(N1>1)
 // below is used within substeps but not across if doing ACCURATEDIAG
-FTYPE BASEMACP0A1(F1,SHIFT1+N1M+SHIFT1,SHIFT2+N2M+SHIFT2,SHIFT3+N3M+SHIFT3,NPR);	/* fluxes */
+FTYPE BASEMACP0A1(F1,SHIFT1+N1M+SHIFT1,SHIFT2+N2M+SHIFT2,SHIFT3+N3M+SHIFT3,NPR); /* fluxes */
 #endif
 #if(N2>1)
 // below is used within substeps but not across if doing ACCURATEDIAG
-FTYPE BASEMACP0A1(F2,SHIFT1+N1M+SHIFT1,SHIFT2+N2M+SHIFT2,SHIFT3+N3M+SHIFT3,NPR);	/* fluxes */
+FTYPE BASEMACP0A1(F2,SHIFT1+N1M+SHIFT1,SHIFT2+N2M+SHIFT2,SHIFT3+N3M+SHIFT3,NPR); /* fluxes */
 #endif
 #if(N3>1)
 // below is used within substeps but not across if doing ACCURATEDIAG
-FTYPE BASEMACP0A1(F3,SHIFT1+N1M+SHIFT1,SHIFT2+N2M+SHIFT2,SHIFT3+N3M+SHIFT3,NPR);	/* fluxes */
+FTYPE BASEMACP0A1(F3,SHIFT1+N1M+SHIFT1,SHIFT2+N2M+SHIFT2,SHIFT3+N3M+SHIFT3,NPR); /* fluxes */
 #endif
 
 #if(SPLITMAEMMEM)
 #if(N1>1)
 // below is used within substeps but not across if doing ACCURATEDIAG
-FTYPE BASEMACP0A1(F1EM,SHIFT1+N1M+SHIFT1,SHIFT2+N2M+SHIFT2,SHIFT3+N3M+SHIFT3,NPR);	/* fluxes */
+FTYPE BASEMACP0A1(F1EM,SHIFT1+N1M+SHIFT1,SHIFT2+N2M+SHIFT2,SHIFT3+N3M+SHIFT3,NPR); /* fluxes */
 #endif
 #if(N2>1)
 // below is used within substeps but not across if doing ACCURATEDIAG
-FTYPE BASEMACP0A1(F2EM,SHIFT1+N1M+SHIFT1,SHIFT2+N2M+SHIFT2,SHIFT3+N3M+SHIFT3,NPR);	/* fluxes */
+FTYPE BASEMACP0A1(F2EM,SHIFT1+N1M+SHIFT1,SHIFT2+N2M+SHIFT2,SHIFT3+N3M+SHIFT3,NPR); /* fluxes */
 #endif
 #if(N3>1)
 // below is used within substeps but not across if doing ACCURATEDIAG
-FTYPE BASEMACP0A1(F3EM,SHIFT1+N1M+SHIFT1,SHIFT2+N2M+SHIFT2,SHIFT3+N3M+SHIFT3,NPR);	/* fluxes */
+FTYPE BASEMACP0A1(F3EM,SHIFT1+N1M+SHIFT1,SHIFT2+N2M+SHIFT2,SHIFT3+N3M+SHIFT3,NPR); /* fluxes */
 #endif
 #endif
 
@@ -188,7 +188,7 @@ FTYPE BASEMACP1A1(gp_r,NDIM-1,N1M,N2M,N3M,NPR2INTERP);
 FTYPE BASEMACP0A1(pleft,N1M,N2M,N3M,NPR2INTERP); /* for parabolic interpolation */
 FTYPE BASEMACP0A1(pright,N1M,N2M,N3M,NPR2INTERP); /* for parabolic interpolation */
 // below is used within substeps but not across
-FTYPE BASEMACP0A1(prc,N1M,N2M,N3M,NPR2INTERP);	/* rescaled primitives, also used for temporary storage in fixup_utoprim() */
+FTYPE BASEMACP0A1(prc,N1M,N2M,N3M,NPR2INTERP); /* rescaled primitives, also used for temporary storage in fixup_utoprim() */
 
 
 
@@ -233,15 +233,15 @@ FTYPE BASEMACP0A1(Bhatanalytic,N1M,N2M,N3M,NPR);
 #if(DODQMEMORY)
 #if(N1>1)
 // below is used within substeps but not across
-FTYPE BASEMACP0A1(dq1,N1M,N2M,N3M,NPR2INTERP);	/* slopes */
+FTYPE BASEMACP0A1(dq1,N1M,N2M,N3M,NPR2INTERP); /* slopes */
 #endif
 #if(N2>1)
 // below is used within substeps but not across
-FTYPE BASEMACP0A1(dq2,N1M,N2M,N3M,NPR2INTERP);	/* slopes */
+FTYPE BASEMACP0A1(dq2,N1M,N2M,N3M,NPR2INTERP); /* slopes */
 #endif
 #if(N3>1)
 // below is used within substeps but not across
-FTYPE BASEMACP0A1(dq3,N1M,N2M,N3M,NPR2INTERP);	/* slopes */
+FTYPE BASEMACP0A1(dq3,N1M,N2M,N3M,NPR2INTERP); /* slopes */
 #endif
 #endif
 
@@ -258,8 +258,8 @@ FTYPE BASEMACP0A1(dq3,N1M,N2M,N3M,NPR2INTERP);	/* slopes */
 // termporary storage for flux
 FTYPE BASEMACP0A1(fluxvectemp,N1M,N2M,N3M,NPR);
 
-FTYPE BASEMACP0A1(Fa,N1M,N2M,N3M,NPR);	/* fluxes */
-FTYPE BASEMACP0A1(Fb,N1M,N2M,N3M,NPR);	/* fluxes */
+FTYPE BASEMACP0A1(Fa,N1M,N2M,N3M,NPR); /* fluxes */
+FTYPE BASEMACP0A1(Fb,N1M,N2M,N3M,NPR); /* fluxes */
 
 FTYPE BASEMACP0A1(stencilvartemp,N1M,N2M,N3M,NPR);
 
@@ -301,9 +301,9 @@ FTYPE BASEMACP0A1(fluxdump,N1M,N2M,N3M,NUMFLUXDUMP);
 //
 ////////////////////////////////////////////////
 
-PFTYPE BASEMACP0A1(pflag,N1M,N2M,N3M,NUMPFLAGS);	/* space for flag */
+PFTYPE BASEMACP0A1(pflag,N1M,N2M,N3M,NUMPFLAGS); /* space for flag */
 
-PFTYPE BASEMACP0A1(pflagfailorig,N1M,N2M,N3M,NUMFAILPFLAGS);	/* used to keep original pflag so don't induce order-dependence when doing fixup_utoprim() and changing pflag */
+PFTYPE BASEMACP0A1(pflagfailorig,N1M,N2M,N3M,NUMFAILPFLAGS); /* used to keep original pflag so don't induce order-dependence when doing fixup_utoprim() and changing pflag */
 
 /* for debug */
 #if(DODEBUG)

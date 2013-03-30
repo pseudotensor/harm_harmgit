@@ -4,7 +4,7 @@ extern int sourcephysics(FTYPE *ph, struct of_geom *geom, struct of_state *q, FT
 
 extern void postdt(void);
 extern int primtoU(int returntype, FTYPE *p, struct of_state *q, struct of_geom *geom,
-		   FTYPE *U);
+                   FTYPE *U);
 
 extern int ucon_calc_3vel(FTYPE *pr, struct of_geom *geom, FTYPE *ucon, FTYPE *others);
 extern int ucon_calc_rel4vel(FTYPE *pr, struct of_geom *geom, FTYPE *ucon, FTYPE *others);
@@ -151,7 +151,7 @@ extern void compute_and_store_fluxstatecent(FTYPE (*pr)[NSTORE2][NSTORE3][NPR]);
 
 
 extern int primtoflux(int returntype, FTYPE *pa, struct of_state *q, int dir,
-	       struct of_geom *geom, FTYPE *fl);
+                      struct of_geom *geom, FTYPE *fl);
 extern int primtoflux_splitmaem(int returntype, FTYPE *pa, struct of_state *q, int fluxdir, int fundir, struct of_geom *geom, FTYPE *flma, FTYPE *flem);
 
 
@@ -159,9 +159,9 @@ extern int flux_compute_general(int i, int j, int k, int dir, struct of_geom *ge
 extern int flux_compute_splitmaem(int i, int j, int k, int dir, struct of_geom *geom, FTYPE CUf, FTYPE *p_c, FTYPE *p_l, FTYPE *p_r, FTYPE *F, FTYPE *FEM, FTYPE *ctopall);
 
 extern void mks_source_conn(FTYPE *ph, struct of_geom *ptrgeom,
-		     struct of_state *q,FTYPE *dU);
+                            struct of_state *q,FTYPE *dU);
 extern int source(FTYPE *pa, struct of_geom *geom, struct of_state *q, FTYPE *Ui, FTYPE *Uf, FTYPE *CUf, FTYPE *dUriemann,
-		  FTYPE (*Uacomp)[NPR], FTYPE *Ua);
+                  FTYPE (*Uacomp)[NPR], FTYPE *Ua);
 
 extern FTYPE taper_func(FTYPE R,FTYPE rin) ;
 

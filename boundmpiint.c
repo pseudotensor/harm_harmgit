@@ -29,10 +29,10 @@ int bound_mpi_int_dir(int boundstage, int finalstep, int whichdir, int boundvart
   if(whichdir==-1 || whichdir==-2 || whichdir==-3){
     if((boundstage==STAGEM1)||(boundstage==STAGE0)){
       for(dir=dirstart;dir<=dirfinish;dir++){
-	if(dirgenset[boundvartype][dir][DIRIF]){
-	  recvonly_int(dir,boundvartype,workbc_int,requests);
-	  didpostrecvs[dir]=1;
-	}
+        if(dirgenset[boundvartype][dir][DIRIF]){
+          recvonly_int(dir,boundvartype,workbc_int,requests);
+          didpostrecvs[dir]=1;
+        }
       }
     }
   }
@@ -52,21 +52,21 @@ int bound_mpi_int_dir(int boundstage, int finalstep, int whichdir, int boundvart
     /////////////////
     if((boundstage==STAGEM1)||(boundstage==STAGE0&&whichdir==1 || boundstage==STAGE2&&whichdir==2 || boundstage==STAGE4&&whichdir==3)){
       for(dir=dirstart;dir<=dirfinish;dir++){
-	if(dirgenset[boundvartype][dir][DIRIF]){
-	  if(didpostrecvs[dir]==0){
-	    dualfprintf(fail_file,"Did not post recv and tried to already pack: dir=%d\n",dir);
-	    myexit(234525155);
-	  }
-	  pack_int(dir,boundvartype,prim,workbc_int);
-	}
+        if(dirgenset[boundvartype][dir][DIRIF]){
+          if(didpostrecvs[dir]==0){
+            dualfprintf(fail_file,"Did not post recv and tried to already pack: dir=%d\n",dir);
+            myexit(234525155);
+          }
+          pack_int(dir,boundvartype,prim,workbc_int);
+        }
       }
       for(dir=dirstart;dir<=dirfinish;dir++) if(dirgenset[boundvartype][dir][DIRIF]) sendonly_int(dir,boundvartype,workbc_int,requests);
     }
     if((boundstage==STAGEM1)||(boundstage==STAGE1&&whichdir==1 || boundstage==STAGE3&&whichdir==2 || boundstage==STAGE5&&whichdir==3)){
       for(dir=dirstart;dir<=dirfinish;dir++) if(dirgenset[boundvartype][dir][DIRIF]){
-	  recvwait(dir,requests);
-	  didpostrecvs[dir]=0; // done with recv's
-	}
+          recvwait(dir,requests);
+          didpostrecvs[dir]=0; // done with recv's
+        }
       for(dir=dirstart;dir<=dirfinish;dir++) if(dirgenset[boundvartype][dir][DIRIF]) unpack_int(dir,boundvartype,workbc_int,prim);
       for(dir=dirstart;dir<=dirfinish;dir++) if(dirgenset[boundvartype][dir][DIRIF]) sendwait(dir,requests);
     }
@@ -84,7 +84,7 @@ int bound_mpi_int_dir(int boundstage, int finalstep, int whichdir, int boundvart
 
   return(0);
 
-}	
+} 
 // end function
 
 
@@ -101,21 +101,21 @@ void pack_int(int dir, int boundvartype,PFTYPE (*prim)[NSTORE2][NSTORE3][NUMPFLA
 
   bci=0;
   PACKLOOP_INT(i,j,k
-	   ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pl]][DIRPSTART1]
-	   ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pl]][DIRPSTOP1]
-	   ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pl]][DIRPSTART2]
-	   ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pl]][DIRPSTOP2]
-	   ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pl]][DIRPSTART3]
-	   ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pl]][DIRPSTOP3]
-	   ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pl]][DIRPDIR1]
-	   ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pl]][DIRPDIR2]
-	   ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pl]][DIRPDIR3]
-	       ){
+               ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pl]][DIRPSTART1]
+               ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pl]][DIRPSTOP1]
+               ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pl]][DIRPSTART2]
+               ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pl]][DIRPSTOP2]
+               ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pl]][DIRPSTART3]
+               ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pl]][DIRPSTOP3]
+               ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pl]][DIRPDIR1]
+               ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pl]][DIRPDIR2]
+               ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pl]][DIRPDIR3]
+               ){
     /*
-    if(bci>=dirgenset[boundvartype][dir][DIRSIZE]){
+      if(bci>=dirgenset[boundvartype][dir][DIRSIZE]){
       dualfprintf(fail_file,"pack memory leak: bci: %d dirgenset[%d][DIRSIZE]: %d\n",bci,dirgenset[boundvartype][dir][DIRSIZE]);
       myexit(10);
-    }
+      }
     */
     workbc_int[PACK][dir][bci++] = MACP0A1(prim,i,j,k,pl);
   }
@@ -125,12 +125,12 @@ void pack_int(int dir, int boundvartype,PFTYPE (*prim)[NSTORE2][NSTORE3][NUMPFLA
 void recvonly_int(int dir, int boundvartype,PFTYPE (*workbc_int)[COMPDIM * 2][NUMPFLAGSBOUND * NBIGBND * NBIGSM],MPI_Request *requests)
 {
   MPI_Irecv(workbc_int[UNPACK][dir],
-	    dirgenset[boundvartype][dir][DIRSIZE],
-	    MPI_PFTYPE,
-	    MPIid[dirgenset[boundvartype][dir][DIROTHER]],
-	    TAGSTARTBOUNDMPIINT + dirgenset[boundvartype][dir][DIRTAGR],
-	    MPI_COMM_GRMHD,
-	    &requests[dir*2+REQRECV]);
+            dirgenset[boundvartype][dir][DIRSIZE],
+            MPI_PFTYPE,
+            MPIid[dirgenset[boundvartype][dir][DIROTHER]],
+            TAGSTARTBOUNDMPIINT + dirgenset[boundvartype][dir][DIRTAGR],
+            MPI_COMM_GRMHD,
+            &requests[dir*2+REQRECV]);
 
 
 }
@@ -140,32 +140,32 @@ void sendonly_int(int dir, int boundvartype,PFTYPE (*workbc_int)[COMPDIM * 2][NU
 {
 
 
- if(MPIFLOWCONTROL==1){
+  if(MPIFLOWCONTROL==1){
     int nothingsend=0;
     int nothingrecv=0;
     int maxtag = numprocs*COMPDIM*2;
     
     MPI_Sendrecv(
-		 &nothingsend,0,MPI_INT,
-		 MPIid[dirgenset[boundvartype][dir][DIROTHER]],
-		 TAGSTARTBOUNDMPIINT + maxtag + dirgenset[boundvartype][dir][DIRTAGS],
+                 &nothingsend,0,MPI_INT,
+                 MPIid[dirgenset[boundvartype][dir][DIROTHER]],
+                 TAGSTARTBOUNDMPIINT + maxtag + dirgenset[boundvartype][dir][DIRTAGS],
 
-		 &nothingrecv,0,MPI_INT,
-		 MPIid[dirgenset[boundvartype][dir][DIROTHER]],
-		 TAGSTARTBOUNDMPIINT + maxtag + dirgenset[boundvartype][dir][DIRTAGR],
-	       
-		 MPI_COMM_GRMHD,MPI_STATUS_IGNORE);
+                 &nothingrecv,0,MPI_INT,
+                 MPIid[dirgenset[boundvartype][dir][DIROTHER]],
+                 TAGSTARTBOUNDMPIINT + maxtag + dirgenset[boundvartype][dir][DIRTAGR],
+        
+                 MPI_COMM_GRMHD,MPI_STATUS_IGNORE);
   } // end if doing FLOWCONTROL
 
 
 
   MPI_Isend(workbc_int[PACK][dir],
-	    dirgenset[boundvartype][dir][DIRSIZE],
-	    MPI_PFTYPE,
-	    MPIid[dirgenset[boundvartype][dir][DIROTHER]],
-	    TAGSTARTBOUNDMPIINT + dirgenset[boundvartype][dir][DIRTAGS],
-	    MPI_COMM_GRMHD,
-	    &requests[dir*2+REQSEND]);
+            dirgenset[boundvartype][dir][DIRSIZE],
+            MPI_PFTYPE,
+            MPIid[dirgenset[boundvartype][dir][DIROTHER]],
+            TAGSTARTBOUNDMPIINT + dirgenset[boundvartype][dir][DIRTAGS],
+            MPI_COMM_GRMHD,
+            &requests[dir*2+REQSEND]);
 
 }
 
@@ -179,16 +179,16 @@ void unpack_int(int dir, int boundvartype,PFTYPE (*workbc_int)[COMPDIM * 2][NUMP
 
   bci=0;
   PACKLOOP_INT(i,j,k
-	   ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pl]][DIRUSTART1]
-	   ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pl]][DIRUSTOP1]
-	   ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pl]][DIRUSTART2]
-	   ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pl]][DIRUSTOP2]
-	   ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pl]][DIRUSTART3]
-	   ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pl]][DIRUSTOP3]
-	   ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pl]][DIRUDIR1]
-	   ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pl]][DIRUDIR2]
-	   ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pl]][DIRUDIR3]
-	       ){
+               ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pl]][DIRUSTART1]
+               ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pl]][DIRUSTOP1]
+               ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pl]][DIRUSTART2]
+               ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pl]][DIRUSTOP2]
+               ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pl]][DIRUSTART3]
+               ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pl]][DIRUSTOP3]
+               ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pl]][DIRUDIR1]
+               ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pl]][DIRUDIR2]
+               ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pl]][DIRUDIR3]
+               ){
     MACP0A1(prim,i,j,k,pl)=workbc_int[UNPACK][dir][bci++];
   }
 }
@@ -219,7 +219,7 @@ int bound_mpi_int_fakeutoprimmpiinconsisent(int boundstage, int finalstep, int f
   
   return(0);
 
-}	
+} 
 
 
 // fake unpack routine that just fills-in MPI boundary cells with fakevalue
@@ -232,16 +232,16 @@ void unpack_int_fakeutoprimmpiinconsisent(int dir, int boundvartype,PFTYPE (*wor
 
   bci=0;
   PACKLOOP_INT(i,j,k
-	   ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pl]][DIRUSTART1]
-	   ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pl]][DIRUSTOP1]
-	   ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pl]][DIRUSTART2]
-	   ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pl]][DIRUSTOP2]
-	   ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pl]][DIRUSTART3]
-	   ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pl]][DIRUSTOP3]
-	   ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pl]][DIRUDIR1]
-	   ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pl]][DIRUDIR2]
-	   ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pl]][DIRUDIR3]
-	       ){
+               ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pl]][DIRUSTART1]
+               ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pl]][DIRUSTOP1]
+               ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pl]][DIRUSTART2]
+               ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pl]][DIRUSTOP2]
+               ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pl]][DIRUSTART3]
+               ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pl]][DIRUSTOP3]
+               ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pl]][DIRUDIR1]
+               ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pl]][DIRUDIR2]
+               ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pl]][DIRUDIR3]
+               ){
     MACP0A1(prim,i,j,k,pl)=fakevalue;
   }
 }

@@ -162,26 +162,26 @@ int setgeneral_enerregion(int (*enerregiondef)[NDIM], int doprintout, int whichr
       // see if anything actually changed
       totaldiff=0;
       DIMENLOOP(dimen){
-	for(updowniter=0;updowniter<NUMUPDOWN;updowniter++){
-	  // GLOBALMARK
-	  totaldiff += abs(global_enerregiondef[enerregion][updowniter][dimen] - enerregiondef[updowniter][dimen]);
-	}
+        for(updowniter=0;updowniter<NUMUPDOWN;updowniter++){
+          // GLOBALMARK
+          totaldiff += abs(global_enerregiondef[enerregion][updowniter][dimen] - enerregiondef[updowniter][dimen]);
+        }
       }
 
       if(totaldiff>0){
-	// check if exposing more than N?BND cells
-	DIMENLOOP(dimen){
-	  updowniter=POINTDOWN;
-	  if(global_enerregiondef[enerregion][updowniter][dimen] - enerregiondef[updowniter][dimen]>Nbndvec[dimen]){
-	    // then exposing and too large an exposure for normal bound call
-	    dualfprintf(fail_file,"SUPERWARNING!!! : Exposing more cells than bounded on inner boundary: enerregion=%d updowniter=%d dimen=%d\n",enerregion,updowniter,dimen);
-	  }
-	  updowniter=POINTUP;
-	  if(enerregiondef[updowniter][dimen]-global_enerregiondef[enerregion][updowniter][dimen]>Nbndvec[dimen]){
-	    // then exposing and too large an exposure for normal bound call
-	    dualfprintf(fail_file,"SUPERWARNING!!! : Exposing more cells than bounded on outer boundary: enerregion=%d updowniter=%d dimen=%d\n",enerregion,updowniter,dimen);
-	  }
-	}// dimen loop
+        // check if exposing more than N?BND cells
+        DIMENLOOP(dimen){
+          updowniter=POINTDOWN;
+          if(global_enerregiondef[enerregion][updowniter][dimen] - enerregiondef[updowniter][dimen]>Nbndvec[dimen]){
+            // then exposing and too large an exposure for normal bound call
+            dualfprintf(fail_file,"SUPERWARNING!!! : Exposing more cells than bounded on inner boundary: enerregion=%d updowniter=%d dimen=%d\n",enerregion,updowniter,dimen);
+          }
+          updowniter=POINTUP;
+          if(enerregiondef[updowniter][dimen]-global_enerregiondef[enerregion][updowniter][dimen]>Nbndvec[dimen]){
+            // then exposing and too large an exposure for normal bound call
+            dualfprintf(fail_file,"SUPERWARNING!!! : Exposing more cells than bounded on outer boundary: enerregion=%d updowniter=%d dimen=%d\n",enerregion,updowniter,dimen);
+          }
+        }// dimen loop
       }
 
     }// if previously set global_enerregiondef[][][]
@@ -193,8 +193,8 @@ int setgeneral_enerregion(int (*enerregiondef)[NDIM], int doprintout, int whichr
     // now that checks are complete, set global section definition for restart purposes and future check purposes
     DIMENLOOP(dimen){
       for(updowniter=0;updowniter<NUMUPDOWN;updowniter++){
-	// GLOBALMARK
-	global_enerregiondef[enerregion][updowniter][dimen] = enerregiondef[updowniter][dimen];
+        // GLOBALMARK
+        global_enerregiondef[enerregion][updowniter][dimen] = enerregiondef[updowniter][dimen];
       }
     }
 
@@ -275,8 +275,8 @@ int setgeneral_enerregion(int (*enerregiondef)[NDIM], int doprintout, int whichr
       //active section interacts with the current processor
       rind=localenerpos[DIRFROMDIMEN(dimen,dirsign)] = MAX( 0, local_enerregiondef[POINTDOWN][dimen] );
       if( Nvec[dimen]>1 && rind >= 0 && rind < Nvec[dimen] ){
-	localdoflux[DIRFROMDIMEN(dimen,dirsign)]=rind;
-	if(doprintout) trifprintf("proc: %d doing enerregion=%d flux %d rind=%d\n",myid,enerregion,DIRFROMDIMEN(dimen,dirsign),rind);
+        localdoflux[DIRFROMDIMEN(dimen,dirsign)]=rind;
+        if(doprintout) trifprintf("proc: %d doing enerregion=%d flux %d rind=%d\n",myid,enerregion,DIRFROMDIMEN(dimen,dirsign),rind);
       }
       else localdoflux[DIRFROMDIMEN(dimen,dirsign)]=FLUXNOTONGRID;
     }
@@ -285,8 +285,8 @@ int setgeneral_enerregion(int (*enerregiondef)[NDIM], int doprintout, int whichr
     if(whichbndregion!=NULLENERREGIONS){
       rindglobal=localenerposglobal[DIRFROMDIMEN(dimen,dirsign)] = MAX( -Nbndvec[dimen], local_enerregiondef[POINTDOWN][dimen]-Nbndvec[dimen] );
       if( Nvec[dimen]>1 && rindglobal >= -Nbndvec[dimen] && rindglobal < Nvec[dimen]+Nbndvec[dimen] ){
-	localdofluxglobal[DIRFROMDIMEN(dimen,dirsign)]=rindglobal;
-	if(doprintout) trifprintf("proc: %d doing enerregion=%d sectionflux %d rindglobal=%d\n",myid,enerregionglobal,DIRFROMDIMEN(dimen,dirsign),rindglobal);
+        localdofluxglobal[DIRFROMDIMEN(dimen,dirsign)]=rindglobal;
+        if(doprintout) trifprintf("proc: %d doing enerregion=%d sectionflux %d rindglobal=%d\n",myid,enerregionglobal,DIRFROMDIMEN(dimen,dirsign),rindglobal);
       }
       else localdofluxglobal[DIRFROMDIMEN(dimen,dirsign)]=FLUXNOTONGRID;
     }
@@ -297,8 +297,8 @@ int setgeneral_enerregion(int (*enerregiondef)[NDIM], int doprintout, int whichr
       rind = localenerpos[DIRFROMDIMEN(dimen,dirsign)] = MIN( Nvec[dimen]-1, local_enerregiondef[POINTUP][dimen] );
       //(local_enerregiondef[POINTUP][dimen]+1) is the location of face index
       if( Nvec[dimen]>1 && rind >= 0 && rind < Nvec[dimen] ){
-	localdoflux[DIRFROMDIMEN(dimen,dirsign)]=rind + SHIFTdimen[dimen];  //need to add 1 to get upper edge index for the face given rind is cell center index
-	if(doprintout) trifprintf("proc: %d doing enerregion=%d flux %d rind=%d\n",myid,enerregion,DIRFROMDIMEN(dimen,dirsign),rind);
+        localdoflux[DIRFROMDIMEN(dimen,dirsign)]=rind + SHIFTdimen[dimen];  //need to add 1 to get upper edge index for the face given rind is cell center index
+        if(doprintout) trifprintf("proc: %d doing enerregion=%d flux %d rind=%d\n",myid,enerregion,DIRFROMDIMEN(dimen,dirsign),rind);
       }
       else localdoflux[DIRFROMDIMEN(dimen,dirsign)]=FLUXNOTONGRID;
     }
@@ -306,9 +306,9 @@ int setgeneral_enerregion(int (*enerregiondef)[NDIM], int doprintout, int whichr
     if(whichbndregion!=NULLENERREGIONS){
       rindglobal = localenerposglobal[DIRFROMDIMEN(dimen,dirsign)] = MIN( Nvec[dimen]-1+Nbndvec[dimen], local_enerregiondef[POINTUP][dimen]+Nbndvec[dimen] );
       if( Nvec[dimen]>1 && rindglobal >= -Nbndvec[dimen] && rindglobal < Nvec[dimen]+Nbndvec[dimen] ){
-	//	localdofluxglobal[DIRFROMDIMEN(dimen,dirsign)]=rindglobal + SHIFTdimen[dimen];  //need to add 1 to get upper edge index for the face given rindglobal is cell center index
-	localdofluxglobal[DIRFROMDIMEN(dimen,dirsign)]=rindglobal; // +1 value isn't set generally by BC's.  flux for this type of quantity not useful once beyond box anyways
-	if(doprintout) trifprintf("proc: %d doing enerregion=%d flux %d\n",myid,enerregionglobal,DIRFROMDIMEN(dimen,dirsign));
+        // localdofluxglobal[DIRFROMDIMEN(dimen,dirsign)]=rindglobal + SHIFTdimen[dimen];  //need to add 1 to get upper edge index for the face given rindglobal is cell center index
+        localdofluxglobal[DIRFROMDIMEN(dimen,dirsign)]=rindglobal; // +1 value isn't set generally by BC's.  flux for this type of quantity not useful once beyond box anyways
+        if(doprintout) trifprintf("proc: %d doing enerregion=%d flux %d\n",myid,enerregionglobal,DIRFROMDIMEN(dimen,dirsign));
       }
       else localdofluxglobal[DIRFROMDIMEN(dimen,dirsign)]=FLUXNOTONGRID;
     }
@@ -328,10 +328,10 @@ int setgeneral_enerregion(int (*enerregiondef)[NDIM], int doprintout, int whichr
     // fluxes are on edges of zone, so 0 and N are on edge fluxes
     if(!specialstep){
       if(whichregion!=NULLENERREGIONS){
-	DIRLOOP(dir) trifprintf("proc: %d enerregion=%d: doflux[%d]=%d enerpos[%d]=%d\n",myid,enerregion,dir,localdoflux[dir],dir,localenerpos[dir]);
+        DIRLOOP(dir) trifprintf("proc: %d enerregion=%d: doflux[%d]=%d enerpos[%d]=%d\n",myid,enerregion,dir,localdoflux[dir],dir,localenerpos[dir]);
       }
       if(whichbndregion!=NULLENERREGIONS){
-	DIRLOOP(dir) trifprintf("proc: %d enerregion=%d: doflux[%d]=%d enerpos[%d]=%d\n",myid,enerregionglobal,dir,localdofluxglobal[dir],dir,localenerposglobal[dir]);
+        DIRLOOP(dir) trifprintf("proc: %d enerregion=%d: doflux[%d]=%d enerpos[%d]=%d\n",myid,enerregionglobal,dir,localdofluxglobal[dir],dir,localenerposglobal[dir]);
       }
     }
   }
@@ -348,14 +348,14 @@ int setgeneral_enerregion(int (*enerregiondef)[NDIM], int doprintout, int whichr
       
       // full 3D cube outputted (2^3=8 3D points)
       for(updowniteri=NUMUPDOWN-1;updowniteri>=0;updowniteri--) for(updowniterj=NUMUPDOWN-1;updowniterj>=0;updowniterj--) for(updowniterk=NUMUPDOWN-1;updowniterk>=0;updowniterk--){
-	    ti=enerregiondef[updowniteri][1] + (updowniteri==POINTUP);
-	    tj=enerregiondef[updowniterj][2] + (updowniterj==POINTUP);
-	    tk=enerregiondef[updowniterk][3] + (updowniterk==POINTUP);
-	    // Can't use bl_coord_ijk() or bl_coord_ijk2() below since generally know that i,j,k requested can be beyond stored grid
-	    bl_coord_coord( ti, tj, tk, CORNT, X, V );
-	    trifprintf( "t = %21.15g, ud_{i,j,k} = %d %d %d :: CORNT_enerregiondef_{i,j,k} = %d %d %d :: V_{1,2,3} = %21.15g %21.15g %21.15g \n", t, updowniteri, updowniterj, updowniterk, ti, tj, tk, V[1], V[2], V[3] );
-	    
-	  }
+            ti=enerregiondef[updowniteri][1] + (updowniteri==POINTUP);
+            tj=enerregiondef[updowniterj][2] + (updowniterj==POINTUP);
+            tk=enerregiondef[updowniterk][3] + (updowniterk==POINTUP);
+            // Can't use bl_coord_ijk() or bl_coord_ijk2() below since generally know that i,j,k requested can be beyond stored grid
+            bl_coord_coord( ti, tj, tk, CORNT, X, V );
+            trifprintf( "t = %21.15g, ud_{i,j,k} = %d %d %d :: CORNT_enerregiondef_{i,j,k} = %d %d %d :: V_{1,2,3} = %21.15g %21.15g %21.15g \n", t, updowniteri, updowniterj, updowniterk, ti, tj, tk, V[1], V[2], V[3] );
+     
+          }
     }
   }
 
@@ -592,9 +592,9 @@ int setjetflux(int initialcall, int timeorder, int numtimeorders, long int thens
       th=V[2];
       // look for switch from below to above thetajet at inner theta jet edge
       if(th>thetajet){
-	enerpos[X2UP]=jm1mac(j);
-	jetedge[INNERJET]=j;
-	break;
+        enerpos[X2UP]=jm1mac(j);
+        jetedge[INNERJET]=j;
+        break;
       }
     }
     enerpos[X3DN]=0;
@@ -698,9 +698,9 @@ int setjetflux(int initialcall, int timeorder, int numtimeorders, long int thens
       th=V[2];
       // look for switch from below to above thetajet at inner theta jet edge
       if(th>M_PI-thetajet){
-	enerpos[X2DN]=jm1mac(j);
-	jetedge[OUTERJET]=jm1mac(j);
-	break;
+        enerpos[X2DN]=jm1mac(j);
+        jetedge[OUTERJET]=jm1mac(j);
+        break;
       }
     }
     enerpos[X2UP]=N2-1;

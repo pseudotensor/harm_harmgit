@@ -49,7 +49,7 @@ int dudp_calc_3vel(int whicheos, int whichcons, FTYPE *EOSextra, FTYPE *pr, stru
   for (i = 0; i < NDIM; i++)
     for (j = 1; j < NDIM; j++)
       ducon_dv[i][j] =
-	  q->ucon[TT] * (q->ucon[i] * q->ucov[j] + delta(i, j));
+        q->ucon[TT] * (q->ucon[i] * q->ucov[j] + delta(i, j));
 
   /* set ducov_dv */
   for (i = 0; i < NDIM; i++)
@@ -58,18 +58,18 @@ int dudp_calc_3vel(int whicheos, int whichcons, FTYPE *EOSextra, FTYPE *pr, stru
   for (i = 0; i < NDIM; i++)
     for (j = 1; j < NDIM; j++)
       for (k = 0; k < NDIM; k++)
-	ducov_dv[i][j] += ptrgeom->gcov[GIND(i,k)] * ducon_dv[k][j];
+        ducov_dv[i][j] += ptrgeom->gcov[GIND(i,k)] * ducon_dv[k][j];
 
   /* set dbcon_dv */
   for (i = 1; i < NDIM; i++)
     dbcon_dv[TT][i] = pr[B1] * ducov_dv[1][i]
-	+ pr[B2] * ducov_dv[2][i]
-	+ pr[B3] * ducov_dv[3][i];
+      + pr[B2] * ducov_dv[2][i]
+      + pr[B3] * ducov_dv[3][i];
   for (i = 1; i < NDIM; i++)
     for (j = 1; j < NDIM; j++)
       dbcon_dv[i][j] = -q->bcon[i] * ducon_dv[TT][j] / q->ucon[TT]
-	  + ducon_dv[i][j] * q->bcon[TT] / q->ucon[TT]
-	  + q->ucon[i] * dbcon_dv[TT][j] / q->ucon[TT];
+        + ducon_dv[i][j] * q->bcon[TT] / q->ucon[TT]
+        + q->ucon[i] * dbcon_dv[TT][j] / q->ucon[TT];
 
   /* set dbcov_dv */
   for (i = 0; i < NDIM; i++)
@@ -78,7 +78,7 @@ int dudp_calc_3vel(int whicheos, int whichcons, FTYPE *EOSextra, FTYPE *pr, stru
   for (i = 0; i < NDIM; i++)
     for (j = 1; j < NDIM; j++)
       for (k = 0; k < NDIM; k++)
-	dbcov_dv[i][j] += ptrgeom->gcov[GIND(i,k)] * dbcon_dv[k][j];
+        dbcov_dv[i][j] += ptrgeom->gcov[GIND(i,k)] * dbcon_dv[k][j];
 
   /* set dbsq_dv[i] */
   for (i = 1; i < NDIM; i++)
@@ -95,7 +95,7 @@ int dudp_calc_3vel(int whicheos, int whichcons, FTYPE *EOSextra, FTYPE *pr, stru
   for (i = 1; i < NDIM; i++)
     dptot_dv[i] = 0.5 * dbsq_dv[i];
 
-	/** set alpha matrix **/
+  /** set alpha matrix **/
   // alpha is dU^i/dp^j = alpha[i][j]
   alpha[RHO + 1][RHO + 1] = q->ucon[TT];
   alpha[RHO + 1][UU + 1] = 0.;
@@ -116,12 +116,12 @@ int dudp_calc_3vel(int whicheos, int whichcons, FTYPE *EOSextra, FTYPE *pr, stru
   for (i = 0; i < NDIM; i++)
     for (j = 1; j < NDIM; j++)
       alpha[UU + i + 1][UU + 1 + j] =
-	  dw_dv[j] * q->ucon[TT] * q->ucov[i]
-	  + w * ducon_dv[TT][j] * q->ucov[i]
-	  + w * q->ucon[TT] * ducov_dv[i][j]
-	  + dptot_dv[j] * delta(TT, i)
-	  - dbcon_dv[TT][j] * q->bcov[i]
-	  - q->bcon[TT] * dbcov_dv[i][j];
+        dw_dv[j] * q->ucon[TT] * q->ucov[i]
+        + w * ducon_dv[TT][j] * q->ucov[i]
+        + w * q->ucon[TT] * ducov_dv[i][j]
+        + dptot_dv[j] * delta(TT, i)
+        - dbcon_dv[TT][j] * q->bcov[i]
+        - q->bcon[TT] * dbcov_dv[i][j];
 
   /* this bit of legacy code can be uncommented if the rest-mass flux
      is subtracted out from the energy flux, which may be numerically
@@ -134,24 +134,24 @@ int dudp_calc_3vel(int whicheos, int whichcons, FTYPE *EOSextra, FTYPE *pr, stru
   //      alpha[j][k] += alpha[1][k];
   //  }
 
-	  
-	// alpha is dU^i/dp^j = alpha[i][j]
+   
+  // alpha is dU^i/dp^j = alpha[i][j]
 
-  //	if(WHICHEOM==WITHGDET){
-	  /* N.B.: all the conserved variables contain a factor of \sqrt{det(g_{\mu\nu})} */
-  //	  for(j=1;j<=5;j++)
-  //	    for(k=1;k<=5;k++) alpha[j][k] *= ptrgeom->g ;
-  //	}
-  //	else if(WHICHEOM==WITHNOGDET){
-	  // only the U^t (dU^2/dp^j) and U^\phi (dU^5/dp^j) contain gdet
-  //	  for(j=1;j<=5;j++){
-  //	    if(j==1) for(k=1;k<=5;k++) alpha[j][k] *= ptrgeom->g ;
-  //	    else if((j==2)&&(NOGDET0==0)) for(k=1;k<=5;k++) alpha[j][k] *= ptrgeom->g ;
-  //	    else if((j==3)&&(NOGDET1==0)) for(k=1;k<=5;k++) alpha[j][k] *= ptrgeom->g ;
-  //	    else if((j==4)&&(NOGDET2==0)) for(k=1;k<=5;k++) alpha[j][k] *= ptrgeom->g ;
-  //	    else if((j==5)&&(NOGDET3==0)) for(k=1;k<=5;k++) alpha[j][k] *= ptrgeom->g ;
-  //	  }
-  //	}
+  // if(WHICHEOM==WITHGDET){
+  /* N.B.: all the conserved variables contain a factor of \sqrt{det(g_{\mu\nu})} */
+  //   for(j=1;j<=5;j++)
+  //     for(k=1;k<=5;k++) alpha[j][k] *= ptrgeom->g ;
+  // }
+  // else if(WHICHEOM==WITHNOGDET){
+  // only the U^t (dU^2/dp^j) and U^\phi (dU^5/dp^j) contain gdet
+  //   for(j=1;j<=5;j++){
+  //     if(j==1) for(k=1;k<=5;k++) alpha[j][k] *= ptrgeom->g ;
+  //     else if((j==2)&&(NOGDET0==0)) for(k=1;k<=5;k++) alpha[j][k] *= ptrgeom->g ;
+  //     else if((j==3)&&(NOGDET1==0)) for(k=1;k<=5;k++) alpha[j][k] *= ptrgeom->g ;
+  //     else if((j==4)&&(NOGDET2==0)) for(k=1;k<=5;k++) alpha[j][k] *= ptrgeom->g ;
+  //     else if((j==5)&&(NOGDET3==0)) for(k=1;k<=5;k++) alpha[j][k] *= ptrgeom->g ;
+  //   }
+  // }
 
   return (0);
 }

@@ -41,25 +41,25 @@ static int compute_optimized_ac_ca_stencil_weights( int cvt_type, int pl, int or
 static int compute_optimized_cf_stencil_weights( int cvt_type, int pl, int order, int min_index, int max_index, FTYPE *monoindicator, FTYPE *uin, weno_weights_t *stencil_weights_out );
 
 static void apply_additional_reduction_to_weights( int cvt_type, int whichreduce, int max_order, int min_order, int i0, int pl, int bs, int bf, FTYPE *shockindicator, FTYPE (*dP)[NBIGM],
-						   FTYPE *monoindicator, FTYPE *P, FTYPE *uin, 
-						   weno_weights_t *stencil_weights_array, struct of_trueijkp *trueijkp );
+                                                   FTYPE *monoindicator, FTYPE *P, FTYPE *uin, 
+                                                   weno_weights_t *stencil_weights_array, struct of_trueijkp *trueijkp );
 static int choose_weno_order( int cvt_type, int whichreduce, int max_order, int min_order, int i0, int pl, int bs, int bf, FTYPE *shockindicator, FTYPE (*dP)[NBIGM],
-			      FTYPE *monoindicator0, FTYPE *monoindicator1, 
-			      FTYPE *P, FTYPE *uin, 
-			      weno_weights_t *stencil_weights_array, 
-			      weno_weights_t **pp_stencil_weights_to_be_used, struct of_trueijkp *trueijkp  );
+                              FTYPE *monoindicator0, FTYPE *monoindicator1, 
+                              FTYPE *P, FTYPE *uin, 
+                              weno_weights_t *stencil_weights_array, 
+                              weno_weights_t **pp_stencil_weights_to_be_used, struct of_trueijkp *trueijkp  );
 
 static void desensitise_smoothness_indicators( int order, FTYPE epsilon, FTYPE *uin, FTYPE *smoothness_indicators);
 
 
 static int eno_line_reconstruct( int whichquantity, int do_weight_or_recon, weno_weights_t *stencil_weights_array, int cvt_type, int whichreduce, int preforder, int pl, int bs, int ps, int pf, int bf, 
-				 int *minorderit, int *maxorderit, int *shiftit, 
-				 FTYPE *shockindicator, 
-				 FTYPE (*df)[NBIGM],
-				 FTYPE (*dP)[NBIGM],
-				 FTYPE (*monoindicator)[NBIGM],
-				 FTYPE *P, 
-				 FTYPE *yin,  FTYPE *yout_left, FTYPE *yout_right, FTYPE (*youtpolycoef)[NBIGM], struct of_trueijkp *trueijkp);
+                                 int *minorderit, int *maxorderit, int *shiftit, 
+                                 FTYPE *shockindicator, 
+                                 FTYPE (*df)[NBIGM],
+                                 FTYPE (*dP)[NBIGM],
+                                 FTYPE (*monoindicator)[NBIGM],
+                                 FTYPE *P, 
+                                 FTYPE *yin,  FTYPE *yout_left, FTYPE *yout_right, FTYPE (*youtpolycoef)[NBIGM], struct of_trueijkp *trueijkp);
 
 
 
@@ -101,9 +101,9 @@ typedef struct weno_output_s  {
 static const int weno_weights_shifts_array[] = 
   {
     1,   //CVT_A2C
-    1,	 //CVT_C2A
-    1,	 //CVT_C2L
-    2,	 //CVT_C2R
+    1,  //CVT_C2A
+    1,  //CVT_C2L
+    2,  //CVT_C2R
     1,   //CVT_C2DER1
     1,   //CVT_C2DER2
     1,   //CVT_C2DER3
@@ -114,16 +114,16 @@ static const int weno_weights_shifts_array[] =
 
 static weno_outputs_t weno_outputs[8] = {
   {1, {CVT_A2C, -1}},   //CVT_A2C  //only centered value
-  {1, {CVT_C2A, -1}},	 //CVT_C2A  //only centered value
-  {2, {CVT_C2L, CVT_C2R}},	 //CVT_C2L  //two values: left and right
-  {2, {CVT_C2L, CVT_C2R}}, 	 //CVT_C2R  //two values: left and right
+  {1, {CVT_C2A, -1}},  //CVT_C2A  //only centered value
+  {2, {CVT_C2L, CVT_C2R}},  //CVT_C2L  //two values: left and right
+  {2, {CVT_C2L, CVT_C2R}},   //CVT_C2R  //two values: left and right
   //below for MERGEDA2CMETHOD
   {1, {CVT_C2DER1, -1}},   
   {1, {CVT_C2DER2, -1}},  
   {1, {CVT_C2DER3, -1}},  
   {1, {CVT_C2DER4, -1}}   
 };
-	
+ 
 
 //Using the Shi, Hu, Shu (2002) "A Technique of Treating Negative Weights in WENO Schemes"
 //####optimal weights; neeed to rename it to sth more sensible
@@ -179,7 +179,7 @@ static const FTYPE dneg_array[8][2][3] = //d[order-2][shift]
     { //CVT_C2A
       {1./2., 1./2., 0.0},
       {17./120., 137./120., 17./120.}
-    },  	//end of CVT_C2A == 1
+    },   //end of CVT_C2A == 1
     {  //CVT_C2L
       {0, 0, 0},
       {0, 0, 0},
@@ -210,7 +210,7 @@ static const FTYPE dneg_array[8][2][3] = //d[order-2][shift]
     }
   };
 
-		
+  
 static const FTYPE c2e_optimal_weights_leftface[4][5] = //c2e_optimal_weights_leftface[order-2][shift] -- left face optimal weights (a rectangular matrix where unused values are zeroes)
   {{1./4., 3./4, 0.0, 0.0, 0.0},
    { 1./16., 5./8., 5./16., 0.0, 0.0 },
@@ -249,7 +249,7 @@ static const FTYPE a2c_array3[3][3] =
 static const FTYPE c2a_array3[3][3] =
   {{1.0416666666666667,-0.08333333333333333,
     0.041666666666666664},{0.041666666666666664,
-			   0.9166666666666666,0.041666666666666664},
+                           0.9166666666666666,0.041666666666666664},
    {0.041666666666666664,-0.08333333333333333,
     1.0416666666666667}};
 
@@ -271,66 +271,66 @@ static const FTYPE a2c_array7[7][7] =
   {{88069./107520., 36961./53760., -122141./107520., 
     28991./26880., -22327./35840., 
     2173./10752., -3043./107520.}, {-3043./107520., 
-				    10937./10752., 10019./107520., -1303./8960., 
-				    3153./35840., -513./17920., 
-				    143./35840.}, {143./35840., -3023./53760., 
-						   118379./107520., -1249./26880., -207./35840., 
-						   15./3584., -5./7168.}, {-5./7168., 
-									   159./17920., -7621./107520., 30251./26880., -7621./107520., 
-									   159./17920., -5./7168.}, {-5./7168., 
-												     15./3584., -207./35840., -1249./26880., 
-												     118379./107520., -3023./53760., 
-												     143./35840.}, {143./35840., -513./17920., 
-														    3153./35840., -1303./8960., 10019./107520., 
-														    10937./10752., -3043./107520.}, {-3043./107520., 
-																		     2173./10752., -22327./35840., 
-																		     28991./26880., -122141./107520., 36961./53760., 88069./107520.}};
+                                    10937./10752., 10019./107520., -1303./8960., 
+                                    3153./35840., -513./17920., 
+                                    143./35840.}, {143./35840., -3023./53760., 
+                                                   118379./107520., -1249./26880., -207./35840., 
+                                                   15./3584., -5./7168.}, {-5./7168., 
+                                                                           159./17920., -7621./107520., 30251./26880., -7621./107520., 
+                                                                           159./17920., -5./7168.}, {-5./7168., 
+                                                                                                     15./3584., -207./35840., -1249./26880., 
+                                                                                                     118379./107520., -3023./53760., 
+                                                                                                     143./35840.}, {143./35840., -513./17920., 
+                                                                                                                    3153./35840., -1303./8960., 10019./107520., 
+                                                                                                                    10937./10752., -3043./107520.}, {-3043./107520., 
+                                                                                                                                                     2173./10752., -22327./35840., 
+                                                                                                                                                     28991./26880., -122141./107520., 36961./53760., 88069./107520.}};
 
 static const FTYPE c2a_array7[7][7] =
   {{1152511./967680., -7969./10752., 
     134881./107520., -294659./241920., 
     76921./107520., -12629./53760., 32119./967680.}, {32119./967680., 
-						      154613./161280., -14237./322560., 
-						      22441./241920., -18157./322560., 
-						      593./32256., -2489./967680.}, {-2489./967680., 
-										     8257./161280., 291803./322560., 11101./241920., 
-										     883./322560., -367./161280., 
-										     367./967680.}, {367./967680., -281./53760., 6361./107520., 
-												     215641./241920., 6361./107520., -281./53760., 
-												     367./967680.}, {367./967680., -367./161280., 883./322560., 
-														     11101./241920., 291803./322560., 
-														     8257./161280., -2489./967680.}, {-2489./967680., 
-																		      593./32256., -18157./322560., 
-																		      22441./241920., -14237./322560., 154613./161280., 
-																		      32119./967680.}, {32119./967680., -12629./53760., 
-																					76921./107520., -294659./241920., 
-																					134881./107520., -7969./10752., 1152511./967680.}};
+                                                      154613./161280., -14237./322560., 
+                                                      22441./241920., -18157./322560., 
+                                                      593./32256., -2489./967680.}, {-2489./967680., 
+                                                                                     8257./161280., 291803./322560., 11101./241920., 
+                                                                                     883./322560., -367./161280., 
+                                                                                     367./967680.}, {367./967680., -281./53760., 6361./107520., 
+                                                                                                     215641./241920., 6361./107520., -281./53760., 
+                                                                                                     367./967680.}, {367./967680., -367./161280., 883./322560., 
+                                                                                                                     11101./241920., 291803./322560., 
+                                                                                                                     8257./161280., -2489./967680.}, {-2489./967680., 
+                                                                                                                                                      593./32256., -18157./322560., 
+                                                                                                                                                      22441./241920., -14237./322560., 154613./161280., 
+                                                                                                                                                      32119./967680.}, {32119./967680., -12629./53760., 
+                                                                                                                                                                        76921./107520., -294659./241920., 
+                                                                                                                                                                        134881./107520., -7969./10752., 1152511./967680.}};
 
 static const FTYPE c2l_array4[4][4] = 
   {{35./16., -35./16., 21./16., -5./16.}, {
       5./16., 15./16., -5./16., 1./16.}, {-1./16.,
-					  9./16., 9./16., -1./16.}, {1./16., -5./16., 15./16., 5./16.}};
+                                          9./16., 9./16., -1./16.}, {1./16., -5./16., 15./16., 5./16.}};
 
 
 static const FTYPE c2r_array4[4][4] = 
   {{5./16., 15./16., -5./16., 1./16.}, {-1./16., 9./16., 
-					9./16., -1./16.}, {1./16., -5./16., 15./16.,
-							   5./16.}, {-5./16., 21./16., -35./16., 35./16.}};
+                                        9./16., -1./16.}, {1./16., -5./16., 15./16.,
+                                                           5./16.}, {-5./16., 21./16., -35./16., 35./16.}};
 
 
 static const FTYPE c2l_array5[5][5] = {{315./128., -105./32., 189./64., -45./32., 
-				  35./128.}, {35./128., 35./32., -35./64., 
-					      7./32., -5./128.}, {-5./128., 15./32., 
-								  45./64., -5./32., 3./128.}, {3./128., -5./32., 45./64., 
-											       15./32., -5./128.}, {-5./128., 7./32., -35./64., 
-														    35./32., 35./128.}};
+                                        35./128.}, {35./128., 35./32., -35./64., 
+                                                    7./32., -5./128.}, {-5./128., 15./32., 
+                                                                        45./64., -5./32., 3./128.}, {3./128., -5./32., 45./64., 
+                                                                                                     15./32., -5./128.}, {-5./128., 7./32., -35./64., 
+                                                                                                                          35./32., 35./128.}};
 
 static const FTYPE c2r_array5[5][5] = {{35./128., 35./32., -35./64., 
-				  7./32., -5./128.}, {-5./128., 15./32., 
-						      45./64., -5./32., 3./128.}, {3./128., -5./32., 45./64., 
-										   15./32., -5./128.}, {-5./128., 7./32., -35./64., 
-													35./32., 35./128.}, {35./128., -45./32., 189./64., -105./32., 
-															     315./128.}};
+                                        7./32., -5./128.}, {-5./128., 15./32., 
+                                                            45./64., -5./32., 3./128.}, {3./128., -5./32., 45./64., 
+                                                                                         15./32., -5./128.}, {-5./128., 7./32., -35./64., 
+                                                                                                              35./32., 35./128.}, {35./128., -45./32., 189./64., -105./32., 
+                                                                                                                                   315./128.}};
 
 static const FTYPE c2l_array3[3][3] =  //center to left face
   {{15./8., -5./4., 3./8.}, 

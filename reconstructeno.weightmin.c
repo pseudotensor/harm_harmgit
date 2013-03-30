@@ -171,12 +171,12 @@ void compute_multipl_weno(int MULTIPLTYPE, int whichquantity, int dir, int do_we
     NUMPRIMLOOP(pliter,pl){
       if(VELTERMSMINIMIZE(pl)){// then minimize across all these
 
-	pass_1d_line_weno_withweights( whichquantity, dir, WEIGHT_CALC, stencil_weights_array_pl[pl], recontype, whichreduce, preforder, pl, bs, ps, pe, be, minorder, maxorder, shift, shockindicator, stiffindicator, Vline, Pline, df[pl], dP, etai[pl], monoindicator[pl], yprim, ystencilvar[pl], yin[pl], yout[pl], youtpolycoef[pl],trueijkp);
+        pass_1d_line_weno_withweights( whichquantity, dir, WEIGHT_CALC, stencil_weights_array_pl[pl], recontype, whichreduce, preforder, pl, bs, ps, pe, be, minorder, maxorder, shift, shockindicator, stiffindicator, Vline, Pline, df[pl], dP, etai[pl], monoindicator[pl], yprim, ystencilvar[pl], yin[pl], yout[pl], youtpolycoef[pl],trueijkp);
 
-	//	  dualfprintf(fail_file,"pl=%d\n",pl);
-	//	  print_weno5_weights( preforder, stencil_weights_array_allpl[pl] ); // CHANGINGMARK
+        //   dualfprintf(fail_file,"pl=%d\n",pl);
+        //   print_weno5_weights( preforder, stencil_weights_array_allpl[pl] ); // CHANGINGMARK
 
-	minimize_weno5_weights( preforder, 1, WEIGHTFACTORMINIMIZE, stencil_weights_array_pl[pl], weights_array_minimal, weights_array_minimal );
+        minimize_weno5_weights( preforder, 1, WEIGHTFACTORMINIMIZE, stencil_weights_array_pl[pl], weights_array_minimal, weights_array_minimal );
       }
     }
 
@@ -190,7 +190,7 @@ void compute_multipl_weno(int MULTIPLTYPE, int whichquantity, int dir, int do_we
     // copy to all terms
     NUMPRIMLOOP(pliter,pl){
       if(VELTERMSMINIMIZE(pl)){// then minimize across all these
-	copy_weno5_weights( preforder, weights_array_minimal, stencil_weights_array_pl[pl]);
+        copy_weno5_weights( preforder, weights_array_minimal, stencil_weights_array_pl[pl]);
       }
     }
 
@@ -209,12 +209,12 @@ void compute_multipl_weno(int MULTIPLTYPE, int whichquantity, int dir, int do_we
     NUMPRIMLOOP(pliter,pl){
       if(ORTHOVEL1TERMSMINIMIZE(pl)){// then minimize across all these
 
-	pass_1d_line_weno_withweights( whichquantity, dir, WEIGHT_CALC, stencil_weights_array_pl[pl], recontype, whichreduce, preforder, pl, bs, ps, pe, be, minorder, maxorder, shift, shockindicator, stiffindicator, Vline, Pline, df[pl], dP, etai[pl], monoindicator[pl], yprim, ystencilvar[pl], yin[pl], yout[pl], youtpolycoef[pl],trueijkp);
+        pass_1d_line_weno_withweights( whichquantity, dir, WEIGHT_CALC, stencil_weights_array_pl[pl], recontype, whichreduce, preforder, pl, bs, ps, pe, be, minorder, maxorder, shift, shockindicator, stiffindicator, Vline, Pline, df[pl], dP, etai[pl], monoindicator[pl], yprim, ystencilvar[pl], yin[pl], yout[pl], youtpolycoef[pl],trueijkp);
 
-	//	  dualfprintf(fail_file,"pl=%d\n",pl);
-	//	  print_weno5_weights( preforder, stencil_weights_array ); // CHANGINGMARK
+        //   dualfprintf(fail_file,"pl=%d\n",pl);
+        //   print_weno5_weights( preforder, stencil_weights_array ); // CHANGINGMARK
 
-	minimize_weno5_weights( preforder, 1, WEIGHTFACTORMINIMIZE, stencil_weights_array_pl[pl], weights_array_minimal, weights_array_minimal );
+        minimize_weno5_weights( preforder, 1, WEIGHTFACTORMINIMIZE, stencil_weights_array_pl[pl], weights_array_minimal, weights_array_minimal );
       }
     }
 
@@ -228,7 +228,7 @@ void compute_multipl_weno(int MULTIPLTYPE, int whichquantity, int dir, int do_we
     // copy to all terms
     NUMPRIMLOOP(pliter,pl){
       if(ORTHOVEL1TERMSMINIMIZE(pl)){// then minimize across all these
-	copy_weno5_weights( preforder, weights_array_minimal, stencil_weights_array_pl[pl]);
+        copy_weno5_weights( preforder, weights_array_minimal, stencil_weights_array_pl[pl]);
       }
     }
 
@@ -246,12 +246,12 @@ void compute_multipl_weno(int MULTIPLTYPE, int whichquantity, int dir, int do_we
     NUMPRIMLOOP(pliter,pl){
       if(ORTHOVEL2TERMSMINIMIZE(pl)){// then minimize across all these
 
-	pass_1d_line_weno_withweights( whichquantity, dir, WEIGHT_CALC, stencil_weights_array_pl[pl], recontype, whichreduce, preforder, pl, bs, ps, pe, be, minorder, maxorder, shift, shockindicator, stiffindicator, Vline, Pline, df[pl], dP, etai[pl], monoindicator[pl], yprim, ystencilvar[pl], yin[pl], yout[pl], youtpolycoef[pl],trueijkp);
+        pass_1d_line_weno_withweights( whichquantity, dir, WEIGHT_CALC, stencil_weights_array_pl[pl], recontype, whichreduce, preforder, pl, bs, ps, pe, be, minorder, maxorder, shift, shockindicator, stiffindicator, Vline, Pline, df[pl], dP, etai[pl], monoindicator[pl], yprim, ystencilvar[pl], yin[pl], yout[pl], youtpolycoef[pl],trueijkp);
 
-	//	  dualfprintf(fail_file,"pl=%d\n",pl);
-	//	  print_weno5_weights( preforder, stencil_weights_array ); // CHANGINGMARK
+        //   dualfprintf(fail_file,"pl=%d\n",pl);
+        //   print_weno5_weights( preforder, stencil_weights_array ); // CHANGINGMARK
 
-	minimize_weno5_weights( preforder, 1, WEIGHTFACTORMINIMIZE, stencil_weights_array_pl[pl], weights_array_minimal, weights_array_minimal );
+        minimize_weno5_weights( preforder, 1, WEIGHTFACTORMINIMIZE, stencil_weights_array_pl[pl], weights_array_minimal, weights_array_minimal );
       }
     }
 
@@ -265,7 +265,7 @@ void compute_multipl_weno(int MULTIPLTYPE, int whichquantity, int dir, int do_we
     // copy to all terms
     NUMPRIMLOOP(pliter,pl){
       if(ORTHOVEL2TERMSMINIMIZE(pl)){// then minimize across all these
-	copy_weno5_weights( preforder, weights_array_minimal, stencil_weights_array_pl[pl]);
+        copy_weno5_weights( preforder, weights_array_minimal, stencil_weights_array_pl[pl]);
       }
     }
 
@@ -285,12 +285,12 @@ void compute_multipl_weno(int MULTIPLTYPE, int whichquantity, int dir, int do_we
     NUMPRIMLOOP(pliter,pl){
       if(PRESSUREMINIMIZE(pl)){// then minimize across all these
 
-	pass_1d_line_weno_withweights( whichquantity, dir, WEIGHT_CALC, stencil_weights_array_pl[pl], recontype, whichreduce, preforder, pl, bs, ps, pe, be, minorder, maxorder, shift, shockindicator, stiffindicator, Vline, Pline, df[pl], dP, etai[pl], monoindicator[pl], yprim, ystencilvar[pl], yin[pl], yout[pl], youtpolycoef[pl],trueijkp);
+        pass_1d_line_weno_withweights( whichquantity, dir, WEIGHT_CALC, stencil_weights_array_pl[pl], recontype, whichreduce, preforder, pl, bs, ps, pe, be, minorder, maxorder, shift, shockindicator, stiffindicator, Vline, Pline, df[pl], dP, etai[pl], monoindicator[pl], yprim, ystencilvar[pl], yin[pl], yout[pl], youtpolycoef[pl],trueijkp);
 
-	//	  dualfprintf(fail_file,"pl=%d\n",pl);
-	//	  print_weno5_weights( preforder, stencil_weights_array ); // CHANGINGMARK
+        //   dualfprintf(fail_file,"pl=%d\n",pl);
+        //   print_weno5_weights( preforder, stencil_weights_array ); // CHANGINGMARK
 
-	minimize_weno5_weights( preforder, 1, WEIGHTFACTORMINIMIZE, stencil_weights_array_pl[pl], weights_array_minimal, weights_array_minimal );
+        minimize_weno5_weights( preforder, 1, WEIGHTFACTORMINIMIZE, stencil_weights_array_pl[pl], weights_array_minimal, weights_array_minimal );
       }
     }
 
@@ -301,7 +301,7 @@ void compute_multipl_weno(int MULTIPLTYPE, int whichquantity, int dir, int do_we
     // linearly interpolate between the independent weight and the minimal weight
     // No need to compute 0,10.0 version of minimal weight -- just switch between totally independent and fully coupled using stiffness parameter
     // stencil_weights_array_storemin vs. stencil_weights_array
-    //	  interpolate_stiffness(preforder, stiffindicator, stencil_weights_array_storemin, stencil_weights_array);
+    //   interpolate_stiffness(preforder, stiffindicator, stencil_weights_array_storemin, stencil_weights_array);
 #endif
 
 
@@ -311,7 +311,7 @@ void compute_multipl_weno(int MULTIPLTYPE, int whichquantity, int dir, int do_we
     // copy to all terms
     NUMPRIMLOOP(pliter,pl){
       if(PRESSUREMINIMIZE(pl)){// then minimize across all these
-	copy_weno5_weights( preforder, weights_array_minimal, stencil_weights_array_pl[pl]);
+        copy_weno5_weights( preforder, weights_array_minimal, stencil_weights_array_pl[pl]);
       }
     }
 
@@ -325,9 +325,9 @@ void compute_multipl_weno(int MULTIPLTYPE, int whichquantity, int dir, int do_we
       reset_equal_weno5_weights( preforder, weights_array_minimal);
       
       NUMPRIMLOOP(pliter,pl){
-	if(EMFTERMS(pl)){// copy equal weights
-	  copy_weno5_weights( preforder, weights_array_minimal, stencil_weights_array_pl[pl]);
-	}
+        if(EMFTERMS(pl)){// copy equal weights
+          copy_weno5_weights( preforder, weights_array_minimal, stencil_weights_array_pl[pl]);
+        }
       }
       
     }
@@ -345,12 +345,12 @@ void compute_multipl_weno(int MULTIPLTYPE, int whichquantity, int dir, int do_we
     NUMPRIMLOOP(pliter,pl){
       if(ALLOTHERSMINIMIZE(pl)){// then minimize across all these
 
-	pass_1d_line_weno_withweights( whichquantity, dir, WEIGHT_CALC, stencil_weights_array_pl[pl], recontype, whichreduce, preforder, pl, bs, ps, pe, be, minorder, maxorder, shift, shockindicator, stiffindicator, Vline, Pline, df[pl], dP, etai[pl], monoindicator[pl], yprim, ystencilvar[pl], yin[pl], yout[pl], youtpolycoef[pl],trueijkp);
+        pass_1d_line_weno_withweights( whichquantity, dir, WEIGHT_CALC, stencil_weights_array_pl[pl], recontype, whichreduce, preforder, pl, bs, ps, pe, be, minorder, maxorder, shift, shockindicator, stiffindicator, Vline, Pline, df[pl], dP, etai[pl], monoindicator[pl], yprim, ystencilvar[pl], yin[pl], yout[pl], youtpolycoef[pl],trueijkp);
 
-	//	  dualfprintf(fail_file,"pl=%d\n",pl);
-	//	  print_weno5_weights( preforder, stencil_weights_array ); // CHANGINGMARK
+        //   dualfprintf(fail_file,"pl=%d\n",pl);
+        //   print_weno5_weights( preforder, stencil_weights_array ); // CHANGINGMARK
 
-	minimize_weno5_weights( preforder, 1, WEIGHTFACTORMINIMIZE, stencil_weights_array_pl[pl], weights_array_minimal, weights_array_minimal );
+        minimize_weno5_weights( preforder, 1, WEIGHTFACTORMINIMIZE, stencil_weights_array_pl[pl], weights_array_minimal, weights_array_minimal );
       }
     }
 
@@ -363,7 +363,7 @@ void compute_multipl_weno(int MULTIPLTYPE, int whichquantity, int dir, int do_we
     // copy to all terms
     NUMPRIMLOOP(pliter,pl){
       if(ALLOTHERSMINIMIZE(pl)){// then minimize across all these
-	copy_weno5_weights( preforder, weights_array_minimal, stencil_weights_array_pl[pl]);
+        copy_weno5_weights( preforder, weights_array_minimal, stencil_weights_array_pl[pl]);
       }
     }
 
@@ -445,12 +445,12 @@ void compute_multipl_weno(int MULTIPLTYPE, int whichquantity, int dir, int do_we
 
       if(WHICHPLTOMINIMIZE1(pl)){// then minimize across all these
 
-	pass_1d_line_weno_withweights( whichquantity, dir, WEIGHT_CALC, stencil_weights_array_allpl[pl], recontype, whichreduce, preforder, pl, bs, ps, pe, be, minorder, maxorder, shift, shockindicator, stiffindicator, Vline, Pline, df[pl], dP, etai[pl], monoindicator[pl], yprim, ystencilvar[pl], yin[pl], yout[pl], youtpolycoef[pl],trueijkp);
+        pass_1d_line_weno_withweights( whichquantity, dir, WEIGHT_CALC, stencil_weights_array_allpl[pl], recontype, whichreduce, preforder, pl, bs, ps, pe, be, minorder, maxorder, shift, shockindicator, stiffindicator, Vline, Pline, df[pl], dP, etai[pl], monoindicator[pl], yprim, ystencilvar[pl], yin[pl], yout[pl], youtpolycoef[pl],trueijkp);
 
-	//	  dualfprintf(fail_file,"pl=%d\n",pl);
-	//	  print_weno5_weights( preforder, stencil_weights_array ); // CHANGINGMARK
+        //   dualfprintf(fail_file,"pl=%d\n",pl);
+        //   print_weno5_weights( preforder, stencil_weights_array ); // CHANGINGMARK
 
-	minimize_weno5_weights( preforder, 1, WEIGHTFACTORMINIMIZE, stencil_weights_array_allpl[pl], stencil_weights_array_group1, stencil_weights_array_group1 );
+        minimize_weno5_weights( preforder, 1, WEIGHTFACTORMINIMIZE, stencil_weights_array_allpl[pl], stencil_weights_array_group1, stencil_weights_array_group1 );
       }
     }
 
@@ -479,20 +479,20 @@ void compute_multipl_weno(int MULTIPLTYPE, int whichquantity, int dir, int do_we
     // now get weights for this group
     NUMPRIMLOOP(pliter,pl){
       if(WHICHPLTOMINIMIZE3(pl)){
-	pass_1d_line_weno_withweights( whichquantity, dir, WEIGHT_CALC, stencil_weights_array_allpl[pl], recontype, whichreduce, preforder, pl, bs, ps, pe, be, minorder, maxorder, shift, shockindicator, stiffindicator, Vline, Pline, df[pl], dP, etai[pl], monoindicator[pl], yprim, ystencilvar[pl], yin[pl], yout[pl], youtpolycoef[pl],trueijkp);
+        pass_1d_line_weno_withweights( whichquantity, dir, WEIGHT_CALC, stencil_weights_array_allpl[pl], recontype, whichreduce, preforder, pl, bs, ps, pe, be, minorder, maxorder, shift, shockindicator, stiffindicator, Vline, Pline, df[pl], dP, etai[pl], monoindicator[pl], yprim, ystencilvar[pl], yin[pl], yout[pl], youtpolycoef[pl],trueijkp);
 
-	// minimize weights
-	minimize_weno5_weights( preforder, 1, WEIGHTFACTORMINIMIZE, stencil_weights_array_allpl[pl], stencil_weights_array_group3, stencil_weights_array_group3);
+        // minimize weights
+        minimize_weno5_weights( preforder, 1, WEIGHTFACTORMINIMIZE, stencil_weights_array_allpl[pl], stencil_weights_array_group3, stencil_weights_array_group3);
 
 
-	// spread these independent weights before interpolating between weights using stiffness
-	//	  spread_weno5_weights(preforder, stencil_weights_array,stencil_weights_array); // CHANGINGMARK
+        // spread these independent weights before interpolating between weights using stiffness
+        //   spread_weno5_weights(preforder, stencil_weights_array,stencil_weights_array); // CHANGINGMARK
 
 #if(1)
-	// linearly interpolate between the independent weight and the minimal weight
-	// No need to compute 0,10.0 version of minimal weight -- just switch between totally independent and fully coupled using stiffness parameter
-	// stencil_weights_array_storemin vs. stencil_weights_array
-	interpolate_stiffness(preforder, stiffindicator, stencil_weights_array_storemin, stencil_weights_array);
+        // linearly interpolate between the independent weight and the minimal weight
+        // No need to compute 0,10.0 version of minimal weight -- just switch between totally independent and fully coupled using stiffness parameter
+        // stencil_weights_array_storemin vs. stencil_weights_array
+        interpolate_stiffness(preforder, stiffindicator, stencil_weights_array_storemin, stencil_weights_array);
 #endif
       }
     }
@@ -532,7 +532,7 @@ void compute_multipl_weno(int MULTIPLTYPE, int whichquantity, int dir, int do_we
       copy_weno5_weights( preforder, stencil_weights_array_storemin, stencil_weights_array_allpl[pl] );
 
       if(WHICHPLTOMINIMIZE1(pl)){
-	pass_1d_line_weno_withweights( whichquantity, dir, RECON_CALC, stencil_weights_array_allpl[pl], recontype, whichreduce, preforder, pl, bs, ps, pe, be, minorder, maxorder, shift, shockindicator, stiffindicator, Vline, Pline, df[pl], dP, etai[pl], monoindicator[pl], yprim, ystencilvar[pl], yin[pl], yout[pl], youtpolycoef[pl],trueijkp);
+        pass_1d_line_weno_withweights( whichquantity, dir, RECON_CALC, stencil_weights_array_allpl[pl], recontype, whichreduce, preforder, pl, bs, ps, pe, be, minorder, maxorder, shift, shockindicator, stiffindicator, Vline, Pline, df[pl], dP, etai[pl], monoindicator[pl], yprim, ystencilvar[pl], yin[pl], yout[pl], youtpolycoef[pl],trueijkp);
       }
     }
 
@@ -550,7 +550,7 @@ void compute_multipl_weno(int MULTIPLTYPE, int whichquantity, int dir, int do_we
       copy_weno5_weights( preforder, stencil_weights_array_storemin, stencil_weights_array_allpl[pl] );
 
       if(WHICHPLTOMINIMIZE3(pl)){
-	pass_1d_line_weno_withweights( whichquantity, dir, RECON_CALC, stencil_weights_array_allpl[pl], recontype, whichreduce, preforder, pl, bs, ps, pe, be, minorder, maxorder, shift, shockindicator, stiffindicator, Vline, Pline, df[pl], dP, etai[pl], monoindicator[pl], yprim, ystencilvar[pl], yin[pl], yout[pl], youtpolycoef[pl],trueijkp);
+        pass_1d_line_weno_withweights( whichquantity, dir, RECON_CALC, stencil_weights_array_allpl[pl], recontype, whichreduce, preforder, pl, bs, ps, pe, be, minorder, maxorder, shift, shockindicator, stiffindicator, Vline, Pline, df[pl], dP, etai[pl], monoindicator[pl], yprim, ystencilvar[pl], yin[pl], yout[pl], youtpolycoef[pl],trueijkp);
       }
     }
 
@@ -565,17 +565,17 @@ void compute_multipl_weno(int MULTIPLTYPE, int whichquantity, int dir, int do_we
 
     NUMPRIMLOOP(pliter,pl) {
       if(WHICHPLTOMINIMIZE2(pl)){
-	pass_1d_line_weno_withweights( whichquantity, dir, WEIGHT_CALC, stencil_weights_array_allpl[pl], recontype, whichreduce, preforder, pl, bs, ps, pe, be, minorder, maxorder, shift, shockindicator, stiffindicator, Vline, Pline, df[pl], dP, etai[pl], monoindicator[pl], yprim, ystencilvar[pl], yin[pl], yout[pl], youtpolycoef[pl],trueijkp);
-	//otherwise, the common weights have already been precomputed, so modify the current weights to be smallest of the two:  the energy weights and twice the current weights
-	minimize_weno5_weights( preforder, 0, 9.0, stencil_weights_array_allpl[pl], stencil_weights_array_storemin, stencil_weights_array_allpl[pl] );
+        pass_1d_line_weno_withweights( whichquantity, dir, WEIGHT_CALC, stencil_weights_array_allpl[pl], recontype, whichreduce, preforder, pl, bs, ps, pe, be, minorder, maxorder, shift, shockindicator, stiffindicator, Vline, Pline, df[pl], dP, etai[pl], monoindicator[pl], yprim, ystencilvar[pl], yin[pl], yout[pl], youtpolycoef[pl],trueijkp);
+        //otherwise, the common weights have already been precomputed, so modify the current weights to be smallest of the two:  the energy weights and twice the current weights
+        minimize_weno5_weights( preforder, 0, 9.0, stencil_weights_array_allpl[pl], stencil_weights_array_storemin, stencil_weights_array_allpl[pl] );
 
-	//spread_weno5_weights(preforder, stencil_weights_array,stencil_weights_array);
+        //spread_weno5_weights(preforder, stencil_weights_array,stencil_weights_array);
 
-	//synchronise the lower_order_fraction with the normalization of the resulting weights
-	compute_lower_order_fraction_weno5_weights( preforder, stencil_weights_array_allpl[pl] );
-	// otherwise do not recompute weights and just use single consistent weight
+        //synchronise the lower_order_fraction with the normalization of the resulting weights
+        compute_lower_order_fraction_weno5_weights( preforder, stencil_weights_array_allpl[pl] );
+        // otherwise do not recompute weights and just use single consistent weight
 
-	pass_1d_line_weno_withweights( whichquantity, dir, RECON_CALC, stencil_weights_array_allpl[pl], recontype, whichreduce, preforder, pl, bs, ps, pe, be, minorder, maxorder, shift, shockindicator, stiffindicator, Vline, Pline, df[pl], dP, etai[pl], monoindicator[pl], yprim, ystencilvar[pl], yin[pl], yout[pl], youtpolycoef[pl],trueijkp);
+        pass_1d_line_weno_withweights( whichquantity, dir, RECON_CALC, stencil_weights_array_allpl[pl], recontype, whichreduce, preforder, pl, bs, ps, pe, be, minorder, maxorder, shift, shockindicator, stiffindicator, Vline, Pline, df[pl], dP, etai[pl], monoindicator[pl], yprim, ystencilvar[pl], yin[pl], yout[pl], youtpolycoef[pl],trueijkp);
       }
     }
 
@@ -588,17 +588,17 @@ void compute_multipl_weno(int MULTIPLTYPE, int whichquantity, int dir, int do_we
 
     NUMPRIMLOOP(pliter,pl) {
       if(WHICHPLTOMINIMIZE4(pl)){
-	pass_1d_line_weno_withweights( whichquantity, dir, WEIGHT_CALC, stencil_weights_array_allpl[pl], recontype, whichreduce, preforder, pl, bs, ps, pe, be, minorder, maxorder, shift, shockindicator, stiffindicator, Vline, Pline, df[pl], dP, etai[pl], monoindicator[pl], yprim, ystencilvar[pl], yin[pl], yout[pl], youtpolycoef[pl],trueijkp);
-	//otherwise, the common weights have already been precomputed, so modify the current weights to be smallest of the two:  the energy weights and twice the current weights
-	minimize_weno5_weights( preforder, 0, 9.0, stencil_weights_array_allpl[pl], stencil_weights_array_storemin, stencil_weights_array_allpl[pl] );
+        pass_1d_line_weno_withweights( whichquantity, dir, WEIGHT_CALC, stencil_weights_array_allpl[pl], recontype, whichreduce, preforder, pl, bs, ps, pe, be, minorder, maxorder, shift, shockindicator, stiffindicator, Vline, Pline, df[pl], dP, etai[pl], monoindicator[pl], yprim, ystencilvar[pl], yin[pl], yout[pl], youtpolycoef[pl],trueijkp);
+        //otherwise, the common weights have already been precomputed, so modify the current weights to be smallest of the two:  the energy weights and twice the current weights
+        minimize_weno5_weights( preforder, 0, 9.0, stencil_weights_array_allpl[pl], stencil_weights_array_storemin, stencil_weights_array_allpl[pl] );
 
-	//	  spread_weno5_weights(preforder, stencil_weights_array,stencil_weights_array);
+        //   spread_weno5_weights(preforder, stencil_weights_array,stencil_weights_array);
 
-	//synchronise the lower_order_fraction with the normalization of the resulting weights
-	compute_lower_order_fraction_weno5_weights( preforder, stencil_weights_array_allpl[pl] );
-	// otherwise do not recompute weights and just use single consistent weight
+        //synchronise the lower_order_fraction with the normalization of the resulting weights
+        compute_lower_order_fraction_weno5_weights( preforder, stencil_weights_array_allpl[pl] );
+        // otherwise do not recompute weights and just use single consistent weight
 
-	pass_1d_line_weno_withweights( whichquantity, dir, RECON_CALC, stencil_weights_array_allpl[pl], recontype, whichreduce, preforder, pl, bs, ps, pe, be, minorder, maxorder, shift, shockindicator, stiffindicator, Vline, Pline, df[pl], dP, etai[pl], monoindicator[pl], yprim, ystencilvar[pl], yin[pl], yout[pl], youtpolycoef[pl],trueijkp);
+        pass_1d_line_weno_withweights( whichquantity, dir, RECON_CALC, stencil_weights_array_allpl[pl], recontype, whichreduce, preforder, pl, bs, ps, pe, be, minorder, maxorder, shift, shockindicator, stiffindicator, Vline, Pline, df[pl], dP, etai[pl], monoindicator[pl], yprim, ystencilvar[pl], yin[pl], yout[pl], youtpolycoef[pl],trueijkp);
       }
     }
 
@@ -630,29 +630,29 @@ void compute_multipl_weno(int MULTIPLTYPE, int whichquantity, int dir, int do_we
       if(pl==plstart) continue;
 
       // CHANGINGMARK (makes difference on ki-rh42 at least!!)
-      //	if(pl==B1) continue;
-      //	if(pl>=B1) continue;
+      // if(pl==B1) continue;
+      // if(pl>=B1) continue;
 
 
       //      dualfprintf(fail_file,"RECONSTRUCT: pl=%d\n",pl);
 
       if(  MULTIPLTYPE == ENERGY_CONTROLS_ALL_WEIGHTS ) {
-	pass_1d_line_weno_withweights( whichquantity, dir, WEIGHT_CALC, stencil_weights_array_allpl[pl], recontype, whichreduce, preforder, pl, bs, ps, pe, be, minorder, maxorder, shift, shockindicator, stiffindicator, Vline, Pline, df[pl], dP, etai[pl], monoindicator[pl], yprim, ystencilvar[pl], yin[pl], yout[pl], youtpolycoef[pl],trueijkp);
-	//otherwise, the common weights have already been precomputed, so modify the current weights to be smallest of the two:  the energy weights and twice the current weights
-	minimize_weno5_weights_old( preforder, 0, 9.0, stencil_weights_array_allpl[pl], weights_array_minimal, stencil_weights_array_allpl[pl] );
-	//synchronise the lower_order_fraction with the normalization of the resulting weights
-	compute_lower_order_fraction_weno5_weights( preforder, stencil_weights_array_allpl[pl] );
+        pass_1d_line_weno_withweights( whichquantity, dir, WEIGHT_CALC, stencil_weights_array_allpl[pl], recontype, whichreduce, preforder, pl, bs, ps, pe, be, minorder, maxorder, shift, shockindicator, stiffindicator, Vline, Pline, df[pl], dP, etai[pl], monoindicator[pl], yprim, ystencilvar[pl], yin[pl], yout[pl], youtpolycoef[pl],trueijkp);
+        //otherwise, the common weights have already been precomputed, so modify the current weights to be smallest of the two:  the energy weights and twice the current weights
+        minimize_weno5_weights_old( preforder, 0, 9.0, stencil_weights_array_allpl[pl], weights_array_minimal, stencil_weights_array_allpl[pl] );
+        //synchronise the lower_order_fraction with the normalization of the resulting weights
+        compute_lower_order_fraction_weno5_weights( preforder, stencil_weights_array_allpl[pl] );
       }
       // otherwise do not recompute weights and just use single consistent weight
 
       pass_1d_line_weno_withweights( whichquantity, dir, RECON_CALC, stencil_weights_array_allpl[pl], recontype, whichreduce, preforder, pl, bs, ps, pe, be, minorder, maxorder, shift, shockindicator, stiffindicator, Vline, Pline, df[pl], dP, etai[pl], monoindicator[pl], yprim, ystencilvar[pl], yin[pl], yout[pl], youtpolycoef[pl],trueijkp);
 
-      //	if(pl==B1){
-      //	  for( i = bs; i <= be; i++ ) {
-      //	    dualfprintf(fail_file,"ps=%d pe=%d :: i=%d yin=%21.15g %21.15g :: yout=%21.15g %21.15g\n",ps,pe,i,yin[pl][0][i],yin[pl][1][i],yout[pl][0][i],yout[pl][1][i]);
-      //	    yout[pl][0][i]=yout[pl][1][i]=0.0;
-      //	  }
-      //    	}
+      // if(pl==B1){
+      //   for( i = bs; i <= be; i++ ) {
+      //     dualfprintf(fail_file,"ps=%d pe=%d :: i=%d yin=%21.15g %21.15g :: yout=%21.15g %21.15g\n",ps,pe,i,yin[pl][0][i],yin[pl][1][i],yout[pl][0][i],yout[pl][1][i]);
+      //     yout[pl][0][i]=yout[pl][1][i]=0.0;
+      //   }
+      //     }
 
     }
     //SUPERSASMARK : insert a2c/c2a limiting code here
@@ -799,7 +799,7 @@ static void print_weno5_weights_allpl( int preforder, int whichquantity, weno_we
     NUMPRIMLOOP(pliter,pl){
       dualfprintf(fail_file,"lof[pl=%d]=%21.15g ",pl,weno_weights[pl][i].lower_order_fraction);
       for( weight_count = 0; weight_count < order; weight_count++ ) {
-	dualfprintf(fail_file,"w[pl=%d][%d]=%21.15g ",pl,weight_count,weno_weights[pl][i].weights[weight_count]);
+        dualfprintf(fail_file,"w[pl=%d][%d]=%21.15g ",pl,weight_count,weno_weights[pl][i].weights[weight_count]);
       }
       dualfprintf(fail_file,"\n");
     }
@@ -964,53 +964,53 @@ static void interpolate_diffweighted_weights(int preforder, int whichquantity, i
       for( weight_count = 0; weight_count < order; weight_count++ ) {
 
 
-	// get other term and sum term
-	otherterm = 0.0;
-	maxterm = -BIG; //0.0;  -- SASMARKXXX correction
-	myterm = 0.0;
-	dFsum = 0.0;
-	NUMPRIMLOOP(pllocalother,plother){
+        // get other term and sum term
+        otherterm = 0.0;
+        maxterm = -BIG; //0.0;  -- SASMARKXXX correction
+        myterm = 0.0;
+        dFsum = 0.0;
+        NUMPRIMLOOP(pllocalother,plother){
 
-	  if(
-	     (minversion==1 && (VELTERMSMINIMIZE(plother) || ORTHOVEL1TERMSMINIMIZE(plother) || ORTHOVEL2TERMSMINIMIZE(plother) || PRESSUREMINIMIZE(plother)))
-	     ||
-	     (minversion==2 && (ALLOTHERSMINIMIZE(plother) || (VELTERMSMINIMIZE(plother) || ORTHOVEL1TERMSMINIMIZE(plother) || ORTHOVEL2TERMSMINIMIZE(plother) || PRESSUREMINIMIZE(plother)) ) )
-	     ){
+          if(
+             (minversion==1 && (VELTERMSMINIMIZE(plother) || ORTHOVEL1TERMSMINIMIZE(plother) || ORTHOVEL2TERMSMINIMIZE(plother) || PRESSUREMINIMIZE(plother)))
+             ||
+             (minversion==2 && (ALLOTHERSMINIMIZE(plother) || (VELTERMSMINIMIZE(plother) || ORTHOVEL1TERMSMINIMIZE(plother) || ORTHOVEL2TERMSMINIMIZE(plother) || PRESSUREMINIMIZE(plother)) ) )
+             ){
 
-	    // get W_i (\delta Fhat)^2
-	    ftemp = (stencil_weights_array_pl[plother][i].weights[weight_count])*normalystencilvar[plother][i];
+            // get W_i (\delta Fhat)^2
+            ftemp = (stencil_weights_array_pl[plother][i].weights[weight_count])*normalystencilvar[plother][i];
 
-	    if(normalystencilvar[plother][i]>=maxterm){
-	      maxterm=normalystencilvar[plother][i];
-	      maxpl=plother;
-	    }
+            if(normalystencilvar[plother][i]>=maxterm){
+              maxterm=normalystencilvar[plother][i];
+              maxpl=plother;
+            }
 
-	    if(plother!=pl){
-	      otherterm += WEIGHTCOEF*ftemp;
-	      dFsum += WEIGHTCOEF*normalystencilvar[plother][i]; // over all
-	    }
-	    else{
-	      // then plother==pl
-	      myterm += ftemp;
-	      dFsum += normalystencilvar[plother][i]; // over all
-	    }
-	  }
-	}
-	// now interpolate the weight:
-	// W_i = [W_i[old] (\delta Fhat_i)^2 + WEIGHTCOEF\Sum_{all others} W_{other} (\delta Fhat_{other})^2]/[\Sum_{all} (\delta F)^2]
-	//
-	//	stencil_weights_array_pl[pl][i].weights[weight_count] = (myterm + otherterm)/(dFsum+SMALL);
+            if(plother!=pl){
+              otherterm += WEIGHTCOEF*ftemp;
+              dFsum += WEIGHTCOEF*normalystencilvar[plother][i]; // over all
+            }
+            else{
+              // then plother==pl
+              myterm += ftemp;
+              dFsum += normalystencilvar[plother][i]; // over all
+            }
+          }
+        }
+        // now interpolate the weight:
+        // W_i = [W_i[old] (\delta Fhat_i)^2 + WEIGHTCOEF\Sum_{all others} W_{other} (\delta Fhat_{other})^2]/[\Sum_{all} (\delta F)^2]
+        //
+        // stencil_weights_array_pl[pl][i].weights[weight_count] = (myterm + otherterm)/(dFsum+SMALL);
 
-	//	stencil_weights_array_pl[pl][i].weights[weight_count]
-	//	  = MIN(10.0*stencil_weights_array_pl[pl][i].weights[weight_count],stencil_weights_array_pl[maxpl][i].weights[weight_count]);
-	if(normalystencilvar[UU+dir][i]>0.5*normalystencilvar[maxpl][i]){
-	  // quasi-energy is boss or energy is all-weights
-	  maxpl=UU+dir; // override if close enough
-	}
+        // stencil_weights_array_pl[pl][i].weights[weight_count]
+        //   = MIN(10.0*stencil_weights_array_pl[pl][i].weights[weight_count],stencil_weights_array_pl[maxpl][i].weights[weight_count]);
+        if(normalystencilvar[UU+dir][i]>0.5*normalystencilvar[maxpl][i]){
+          // quasi-energy is boss or energy is all-weights
+          maxpl=UU+dir; // override if close enough
+        }
 
-	//	maxpl=UU+dir; DEBUG
+        // maxpl=UU+dir; DEBUG
 
-	stencil_weights_array_pl[pl][i].weights[weight_count] = stencil_weights_array_pl[maxpl][i].weights[weight_count]; // most conservative
+        stencil_weights_array_pl[pl][i].weights[weight_count] = stencil_weights_array_pl[maxpl][i].weights[weight_count]; // most conservative
 
       }
     }
@@ -1115,8 +1115,8 @@ static void minimize_weno5_weights( int preforder, int usecurrentlowerorder, FTY
     //keep track of the *unoptimized* minimal weights and put them into the destination
     for( weight_count = 0; weight_count < order; weight_count++ ) {
       weno_weights_minimal_out[i].weights[weight_count] = MIN( 
-							      weno_weights_current[i].weights[weight_count] * finalreductionfactor, //rescale the weights by the weno5 fraction
-							      weno_weights_minimal[i].weights[weight_count] );
+                                                              weno_weights_current[i].weights[weight_count] * finalreductionfactor, //rescale the weights by the weno5 fraction
+                                                              weno_weights_minimal[i].weights[weight_count] );
     }
   }
 }
@@ -1140,8 +1140,8 @@ static void minimize_weno5_weights_old( int preforder, int usecurrentlowerorder,
     //keep track of the *unoptimized* minimal weights and put them into the destination
     for( weight_count = 0; weight_count < order; weight_count++ ) {
       weno_weights_minimal_out[i].weights[weight_count] = MIN( 
-							      weno_weights_current[i].weights[weight_count] * ( 1.0 - weno_weights_current[i].lower_order_fraction ), //rescale the weights by the weno5 fraction
-							      weno_weights_minimal[i].weights[weight_count] );
+                                                              weno_weights_current[i].weights[weight_count] * ( 1.0 - weno_weights_current[i].lower_order_fraction ), //rescale the weights by the weno5 fraction
+                                                              weno_weights_minimal[i].weights[weight_count] );
     }
   }
 }

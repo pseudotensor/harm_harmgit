@@ -107,15 +107,15 @@ int vpot2field_centeredfield(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2
 
 #pragma omp for schedule(OPENMPFULLNOVARYSCHEDULE()) nowait // nowait valid because each next loop writes to independent memory regions (or to local temporary variables like igdetgnosing that is overwritten for each iteration and so doesn't matter).  And also don't require result of one loop for next loop (this is often not true!)
       OPENMP3DLOOPBLOCK{
-	OPENMP3DLOOPBLOCK2IJK(i,j,k);
+        OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
-	// ufield doesn't require geometry
-	MACP0A1(ufield,i,j,k,B1)  = +(AVGCORN_1(A[3],i,jp1mac(j),k)-AVGCORN_1(A[3],i,j,k))/(dx[2]);
-	MACP0A1(ufield,i,j,k,B1) += -(AVGCORN_1(A[2],i,j,kp1mac(k))-AVGCORN_1(A[2],i,j,k))/(dx[3]);
+        // ufield doesn't require geometry
+        MACP0A1(ufield,i,j,k,B1)  = +(AVGCORN_1(A[3],i,jp1mac(j),k)-AVGCORN_1(A[3],i,j,k))/(dx[2]);
+        MACP0A1(ufield,i,j,k,B1) += -(AVGCORN_1(A[2],i,j,kp1mac(k))-AVGCORN_1(A[2],i,j,k))/(dx[3]);
 
-	get_geometry(i, j, k, CENT, ptrgeom);
-	igdetgnosing = sign(ptrgeom->gdet)/(fabs(ptrgeom->gdet)+SMALL); // avoids 0.0 for any sign of ptrgeom->gdet
-	MACP0A1(pfield,i,j,k,B1-1+dir)  = MACP0A1(ufield,i,j,k,B1-1+dir)*igdetgnosing;
+        get_geometry(i, j, k, CENT, ptrgeom);
+        igdetgnosing = sign(ptrgeom->gdet)/(fabs(ptrgeom->gdet)+SMALL); // avoids 0.0 for any sign of ptrgeom->gdet
+        MACP0A1(pfield,i,j,k,B1-1+dir)  = MACP0A1(ufield,i,j,k,B1-1+dir)*igdetgnosing;
       }
     }// end if doing this dir
 
@@ -133,14 +133,14 @@ int vpot2field_centeredfield(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2
 
 #pragma omp for schedule(OPENMPFULLNOVARYSCHEDULE()) nowait
       OPENMP3DLOOPBLOCK{
-	OPENMP3DLOOPBLOCK2IJK(i,j,k);
+        OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
-	MACP0A1(ufield,i,j,k,B2)  = +(AVGCORN_2(A[1],i,j,kp1mac(k))-AVGCORN_2(A[1],i,j,k))/(dx[3]);
-	MACP0A1(ufield,i,j,k,B2) += -(AVGCORN_2(A[3],ip1mac(i),j,k)-AVGCORN_2(A[3],i,j,k))/(dx[1]);
+        MACP0A1(ufield,i,j,k,B2)  = +(AVGCORN_2(A[1],i,j,kp1mac(k))-AVGCORN_2(A[1],i,j,k))/(dx[3]);
+        MACP0A1(ufield,i,j,k,B2) += -(AVGCORN_2(A[3],ip1mac(i),j,k)-AVGCORN_2(A[3],i,j,k))/(dx[1]);
 
-	get_geometry(i, j, k, CENT, ptrgeom);
-	igdetgnosing = sign(ptrgeom->gdet)/(fabs(ptrgeom->gdet)+SMALL); // avoids 0.0 for any sign of ptrgeom->gdet
-	MACP0A1(pfield,i,j,k,B1-1+dir)  = MACP0A1(ufield,i,j,k,B1-1+dir)*igdetgnosing;
+        get_geometry(i, j, k, CENT, ptrgeom);
+        igdetgnosing = sign(ptrgeom->gdet)/(fabs(ptrgeom->gdet)+SMALL); // avoids 0.0 for any sign of ptrgeom->gdet
+        MACP0A1(pfield,i,j,k,B1-1+dir)  = MACP0A1(ufield,i,j,k,B1-1+dir)*igdetgnosing;
       }
     } // end if dir
   
@@ -158,14 +158,14 @@ int vpot2field_centeredfield(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2
 
 #pragma omp for schedule(OPENMPFULLNOVARYSCHEDULE()) nowait
       OPENMP3DLOOPBLOCK{
-	OPENMP3DLOOPBLOCK2IJK(i,j,k);
+        OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
-	MACP0A1(ufield,i,j,k,B3)  = +(AVGCORN_3(A[2],ip1mac(i),j,k)-AVGCORN_3(A[2],i,j,k))/(dx[1]);
-	MACP0A1(ufield,i,j,k,B3) += -(AVGCORN_3(A[1],i,jp1mac(j),k)-AVGCORN_3(A[1],i,j,k))/(dx[2]);
+        MACP0A1(ufield,i,j,k,B3)  = +(AVGCORN_3(A[2],ip1mac(i),j,k)-AVGCORN_3(A[2],i,j,k))/(dx[1]);
+        MACP0A1(ufield,i,j,k,B3) += -(AVGCORN_3(A[1],i,jp1mac(j),k)-AVGCORN_3(A[1],i,j,k))/(dx[2]);
 
-	get_geometry(i, j, k, CENT, ptrgeom);
-	igdetgnosing = sign(ptrgeom->gdet)/(fabs(ptrgeom->gdet)+SMALL); // avoids 0.0 for any sign of ptrgeom->gdet
-	MACP0A1(pfield,i,j,k,B1-1+dir)  = MACP0A1(ufield,i,j,k,B1-1+dir)*igdetgnosing;
+        get_geometry(i, j, k, CENT, ptrgeom);
+        igdetgnosing = sign(ptrgeom->gdet)/(fabs(ptrgeom->gdet)+SMALL); // avoids 0.0 for any sign of ptrgeom->gdet
+        MACP0A1(pfield,i,j,k,B1-1+dir)  = MACP0A1(ufield,i,j,k,B1-1+dir)*igdetgnosing;
       }
     }// end if dir
   
@@ -186,8 +186,8 @@ int vpot2field_centeredfield(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2
 
 // compute flux for FLUXCTTOTH method
 int flux_ct(int stage,
-	    int initialstep, int finalstep,
-	    FTYPE (*pb)[NSTORE2][NSTORE3][NPR], FTYPE (*emf)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*vconemf)[NSTORE2][NSTORE3][NDIM-1], FTYPE (*dq1)[NSTORE2][NSTORE3][NPR], FTYPE (*dq2)[NSTORE2][NSTORE3][NPR], FTYPE (*dq3)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR],FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], int *Nvec, FTYPE *CUf, FTYPE *CUnew, SFTYPE fluxdt, SFTYPE fluxtime)
+            int initialstep, int finalstep,
+            FTYPE (*pb)[NSTORE2][NSTORE3][NPR], FTYPE (*emf)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*vconemf)[NSTORE2][NSTORE3][NDIM-1], FTYPE (*dq1)[NSTORE2][NSTORE3][NPR], FTYPE (*dq2)[NSTORE2][NSTORE3][NPR], FTYPE (*dq3)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR],FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], int *Nvec, FTYPE *CUf, FTYPE *CUnew, SFTYPE fluxdt, SFTYPE fluxtime)
 {
   int flux_ct_computeemf(int stage, FTYPE (*pb)[NSTORE2][NSTORE3][NPR], FTYPE (*emf)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*vconemf)[NSTORE2][NSTORE3][NDIM-1], FTYPE (*dq1)[NSTORE2][NSTORE3][NPR], FTYPE (*dq2)[NSTORE2][NSTORE3][NPR], FTYPE (*dq3)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR]);
   int flux_ct_diffusivecorrections(int stage, FTYPE (*pb)[NSTORE2][NSTORE3][NPR], FTYPE (*emf)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*vconemf)[NSTORE2][NSTORE3][NDIM-1], FTYPE (*dq1)[NSTORE2][NSTORE3][NPR], FTYPE (*dq2)[NSTORE2][NSTORE3][NPR], FTYPE (*dq3)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR]);
@@ -285,19 +285,19 @@ int flux_ct_computeemf(int stage, FTYPE (*pb)[NSTORE2][NSTORE3][NPR], FTYPE (*em
 
 #pragma omp for schedule(OPENMPFULLNOVARYSCHEDULE())
       OPENMP3DLOOPBLOCK{
-	OPENMP3DLOOPBLOCK2IJK(i,j,k);
+        OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
 
-	// EMF below is based upon averaging of zone-centered quantities, so use CENT here (i.e. not CORN)
-	get_geometry(i, j, k, CENT, ptrgeomcfull);
-	MYFUN(ucon_calc(MAC(pb,i,j,k), ptrgeomcfull, ucon, others),"fluxct.c:flux_ct()", "ucon_calc() dir=0", 1);
+        // EMF below is based upon averaging of zone-centered quantities, so use CENT here (i.e. not CORN)
+        get_geometry(i, j, k, CENT, ptrgeomcfull);
+        MYFUN(ucon_calc(MAC(pb,i,j,k), ptrgeomcfull, ucon, others),"fluxct.c:flux_ct()", "ucon_calc() dir=0", 1);
 
 
-	// ptrgeom->gdet is \detg for EMF flux (ptrgeom->e is EOM factor for flux equation)
+        // ptrgeom->gdet is \detg for EMF flux (ptrgeom->e is EOM factor for flux equation)
 #if(CORNGDETVERSION)
-	for(l=U1;l<=U3;l++) MACP0A1(vconemf,i,j,k,l)=(ucon[l-U1+1]/ucon[TT]); // put in at end
+        for(l=U1;l<=U3;l++) MACP0A1(vconemf,i,j,k,l)=(ucon[l-U1+1]/ucon[TT]); // put in at end
 #else
-	for(l=U1;l<=U3;l++) MACP0A1(vconemf,i,j,k,l)=(ucon[l-U1+1]/ucon[TT])*(ptrgeomcfull->EOMFUNCMAC(l));
+        for(l=U1;l<=U3;l++) MACP0A1(vconemf,i,j,k,l)=(ucon[l-U1+1]/ucon[TT])*(ptrgeomcfull->EOMFUNCMAC(l));
 #endif
       }// end 3D LOOP
     }// end parallel region
@@ -334,37 +334,37 @@ int flux_ct_computeemf(int stage, FTYPE (*pb)[NSTORE2][NSTORE3][NPR], FTYPE (*em
 
 #pragma omp for schedule(OPENMPFULLNOVARYSCHEDULE())
       OPENMP3DLOOPBLOCK{
-	OPENMP3DLOOPBLOCK2IJK(i,j,k);
+        OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
 
-	////////////////////
-	// F1
-	////////////////////
+        ////////////////////
+        // F1
+        ////////////////////
 #if(N1>1)
-	get_geometry_gdetmix(i,j,k,FACE1,ptrgeomf1);
-	MACP0A1(F1,i,j,k,B1)*=(ptrgeomf1->IEOMFUNCNOSINGMAC(B1));
-	MACP0A1(F1,i,j,k,B2)*=(ptrgeomf1->IEOMFUNCNOSINGMAC(B2));
-	MACP0A1(F1,i,j,k,B3)*=(ptrgeomf1->IEOMFUNCNOSINGMAC(B3));
+        get_geometry_gdetmix(i,j,k,FACE1,ptrgeomf1);
+        MACP0A1(F1,i,j,k,B1)*=(ptrgeomf1->IEOMFUNCNOSINGMAC(B1));
+        MACP0A1(F1,i,j,k,B2)*=(ptrgeomf1->IEOMFUNCNOSINGMAC(B2));
+        MACP0A1(F1,i,j,k,B3)*=(ptrgeomf1->IEOMFUNCNOSINGMAC(B3));
 #endif
 
-	////////////////////
-	// F2
-	////////////////////
+        ////////////////////
+        // F2
+        ////////////////////
 #if(N2>1)
-	get_geometry_gdetmix(i,j,k,FACE2,ptrgeomf2);
-	MACP0A1(F2,i,j,k,B1)*=(ptrgeomf2->IEOMFUNCNOSINGMAC(B1));
-	MACP0A1(F2,i,j,k,B2)*=(ptrgeomf2->IEOMFUNCNOSINGMAC(B2));
-	MACP0A1(F2,i,j,k,B3)*=(ptrgeomf2->IEOMFUNCNOSINGMAC(B3));
+        get_geometry_gdetmix(i,j,k,FACE2,ptrgeomf2);
+        MACP0A1(F2,i,j,k,B1)*=(ptrgeomf2->IEOMFUNCNOSINGMAC(B1));
+        MACP0A1(F2,i,j,k,B2)*=(ptrgeomf2->IEOMFUNCNOSINGMAC(B2));
+        MACP0A1(F2,i,j,k,B3)*=(ptrgeomf2->IEOMFUNCNOSINGMAC(B3));
 #endif
     
-	////////////////////
-	// F3
-	////////////////////
+        ////////////////////
+        // F3
+        ////////////////////
 #if(N3>1)
-	get_geometry_gdetmix(i,j,k,FACE3,ptrgeomf3);
-	MACP0A1(F3,i,j,k,B1)*=(ptrgeomf3->IEOMFUNCNOSINGMAC(B1));
-	MACP0A1(F3,i,j,k,B2)*=(ptrgeomf3->IEOMFUNCNOSINGMAC(B2));
-	MACP0A1(F3,i,j,k,B3)*=(ptrgeomf3->IEOMFUNCNOSINGMAC(B3));
+        get_geometry_gdetmix(i,j,k,FACE3,ptrgeomf3);
+        MACP0A1(F3,i,j,k,B1)*=(ptrgeomf3->IEOMFUNCNOSINGMAC(B1));
+        MACP0A1(F3,i,j,k,B2)*=(ptrgeomf3->IEOMFUNCNOSINGMAC(B2));
+        MACP0A1(F3,i,j,k,B3)*=(ptrgeomf3->IEOMFUNCNOSINGMAC(B3));
 #endif
       }// end 3D loop
     }// end parallel region
@@ -426,81 +426,81 @@ int flux_ct_computeemf(int stage, FTYPE (*pb)[NSTORE2][NSTORE3][NPR], FTYPE (*em
       OPENMP3DLOOPSETUPFULL;
 #pragma omp for schedule(OPENMPFULLNOVARYSCHEDULE()) ///nowait // Can use "nowait" because each emf[{1,2,3}] set independently in each successive loop
       OPENMP3DLOOPBLOCK{
-	OPENMP3DLOOPBLOCK2IJK(i,j,k);
-	
+        OPENMP3DLOOPBLOCK2IJK(i,j,k);
+ 
 
-	////////////////////
-	// EMF1
-	////////////////////
+        ////////////////////
+        // EMF1
+        ////////////////////
 #if((N2>1)||(N3>1))
-	MACP1A0(emf,1,i,j,k) =
-	  coefemf[1] * (
+        MACP1A0(emf,1,i,j,k) =
+          coefemf[1] * (
 #if(N2>1)
-			+ MACP0A1(F2,i,j,k,B3) + MACP0A1(F2,i,j,km1mac(k),B3)
+                        + MACP0A1(F2,i,j,k,B3) + MACP0A1(F2,i,j,km1mac(k),B3)
 #endif
 #if(N3>1)
-			- MACP0A1(F3,i,j,k,B2) - MACP0A1(F3,i,jm1mac(j),k,B2)
+                        - MACP0A1(F3,i,j,k,B2) - MACP0A1(F3,i,jm1mac(j),k,B2)
 #endif
-			);
+                        );
 #else // end if doing EMF1
-	MACP1A0(emf,1,i,j,k)=0.0; // not really 0, but differences in emf will be 0, and that's all that matters
+        MACP1A0(emf,1,i,j,k)=0.0; // not really 0, but differences in emf will be 0, and that's all that matters
 #endif // end if not doing EMF1
 
 #if(CORNGDETVERSION)// then tack on geometry
-	get_geometry_gdetmix(i,j,k,CORN1,ptrgeomf1);
-	// obviously ptrgeom->EOMFUNCMAC(B2) has to be equal to ptrgeom->EOMFUNCMAC(B3) for this method
-	MACP1A0(emf,1,i,j,k) *= (ptrgeomf1->EOMFUNCMAC(B2));
+        get_geometry_gdetmix(i,j,k,CORN1,ptrgeomf1);
+        // obviously ptrgeom->EOMFUNCMAC(B2) has to be equal to ptrgeom->EOMFUNCMAC(B3) for this method
+        MACP1A0(emf,1,i,j,k) *= (ptrgeomf1->EOMFUNCMAC(B2));
 #endif // end if CORNGDETVERSION
 
 
 
-	////////////////////
-	// EMF2
-	////////////////////
+        ////////////////////
+        // EMF2
+        ////////////////////
 #if((N1>1)||(N3>1))
-	MACP1A0(emf,2,i,j,k) =
-	  coefemf[2] * (
+        MACP1A0(emf,2,i,j,k) =
+          coefemf[2] * (
 #if(N3>1)
-			+ MACP0A1(F3,i,j,k,B1) + MACP0A1(F3,im1mac(i),j,k,B1)
+                        + MACP0A1(F3,i,j,k,B1) + MACP0A1(F3,im1mac(i),j,k,B1)
 #endif
 #if(N1>1)
-			- MACP0A1(F1,i,j,k,B3) - MACP0A1(F1,i,j,km1mac(k),B3)
+                        - MACP0A1(F1,i,j,k,B3) - MACP0A1(F1,i,j,km1mac(k),B3)
 #endif
-			);
+                        );
 #else // end if doing EMF2
-	MACP1A0(emf,2,i,j,k)=0.0; // not really 0, but differences in emf will be 0, and that's all that matters
+        MACP1A0(emf,2,i,j,k)=0.0; // not really 0, but differences in emf will be 0, and that's all that matters
 #endif // end if not doing EMF2
 
 #if(CORNGDETVERSION)// then tack on geometry
-	get_geometry_gdetmix(i,j,k,CORN2,ptrgeomf2);
-	// obviously ptrgeom->EOMFUNCMAC(B1) has to be equal to ptrgeom->EOMFUNCMAC(B2) for this method
-	MACP1A0(emf,2,i,j,k) *=(ptrgeomf2->EOMFUNCMAC(B1));
+        get_geometry_gdetmix(i,j,k,CORN2,ptrgeomf2);
+        // obviously ptrgeom->EOMFUNCMAC(B1) has to be equal to ptrgeom->EOMFUNCMAC(B2) for this method
+        MACP1A0(emf,2,i,j,k) *=(ptrgeomf2->EOMFUNCMAC(B1));
 #endif // end if CORNGDETVERSION
 
 
 
 
-	////////////////////
-	// EMF3
-	////////////////////
+        ////////////////////
+        // EMF3
+        ////////////////////
 #if((N1>1)||(N2>1))
-	MACP1A0(emf,3,i,j,k) =
-	  coefemf[3] * (
+        MACP1A0(emf,3,i,j,k) =
+          coefemf[3] * (
 #if(N1>1)
-			+ MACP0A1(F1,i,j,k,B2) + MACP0A1(F1,i,jm1mac(j),k,B2)
+                        + MACP0A1(F1,i,j,k,B2) + MACP0A1(F1,i,jm1mac(j),k,B2)
 #endif
 #if(N2>1)
-			- MACP0A1(F2,i,j,k,B1) - MACP0A1(F2,im1mac(i),j,k,B1)
+                        - MACP0A1(F2,i,j,k,B1) - MACP0A1(F2,im1mac(i),j,k,B1)
 #endif
-			);
+                        );
 #else // end if doing EMF3
-	MACP1A0(emf,3,i,j,k)=0.0; // not really 0, but differences in emf will be 0, and that's all that matters
+        MACP1A0(emf,3,i,j,k)=0.0; // not really 0, but differences in emf will be 0, and that's all that matters
 #endif // end if not doing EMF3
 
 #if(CORNGDETVERSION)// then tack on geometry
-	get_geometry_gdetmix(i,j,k,CORN3,ptrgeomf3);
-	// obviously ptrgeom->EOMFUNCMAC(B1) has to be equal to ptrgeom->EOMFUNCMAC(B2) for this method
-	MACP1A0(emf,3,i,j,k) *=(ptrgeomf3->EOMFUNCMAC(B1));
+        get_geometry_gdetmix(i,j,k,CORN3,ptrgeomf3);
+        // obviously ptrgeom->EOMFUNCMAC(B1) has to be equal to ptrgeom->EOMFUNCMAC(B2) for this method
+        MACP1A0(emf,3,i,j,k) *=(ptrgeomf3->EOMFUNCMAC(B1));
 #endif // end if CORNGDETVERSION
 
       }// end 3D LOOP
@@ -553,64 +553,64 @@ int flux_ct_computeemf(int stage, FTYPE (*pb)[NSTORE2][NSTORE3][NPR], FTYPE (*em
       OPENMP3DLOOPSETUPFULL;
 #pragma omp for schedule(OPENMPFULLNOVARYSCHEDULE()) /////nowait // Can use "nowait" since each emf[{1,2,3}] set independently in each successive loop
       OPENMP3DLOOPBLOCK{
-	OPENMP3DLOOPBLOCK2IJK(i,j,k);
+        OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
 
-      ////////////////////
-      // EMF1
-      ////////////////////
+        ////////////////////
+        // EMF1
+        ////////////////////
 #if((N2>1)||(N3>1))
-	MACP1A0(emf,1,i,j,k) =
-	  0.125 * (
-		   + MACP0A1(F2,i,j,k,B3) + MACP0A1(F2,i,jp1mac(j),k,B3)
-		   - MACP0A1(F3,i,j,k,B2) - MACP0A1(F3,i,j,kp1mac(k),B2)
-		   );
+        MACP1A0(emf,1,i,j,k) =
+          0.125 * (
+                   + MACP0A1(F2,i,j,k,B3) + MACP0A1(F2,i,jp1mac(j),k,B3)
+                   - MACP0A1(F3,i,j,k,B2) - MACP0A1(F3,i,j,kp1mac(k),B2)
+                   );
 
 #if(CORNGDETVERSION)// then tack on geometry
-	get_geometry_gdetmix(i,j,k,CENT,ptrgeomc);
-	// obviously ptrgeom->EOMFUNCMAC(B2) has to be equal to ptrgeom->EOMFUNCMAC(B3) for this method
-	MACP1A0(emf,1,i,j,k) *=(ptrgeomc->EOMFUNCMAC(B2));
+        get_geometry_gdetmix(i,j,k,CENT,ptrgeomc);
+        // obviously ptrgeom->EOMFUNCMAC(B2) has to be equal to ptrgeom->EOMFUNCMAC(B3) for this method
+        MACP1A0(emf,1,i,j,k) *=(ptrgeomc->EOMFUNCMAC(B2));
 #endif // end if CORNGDETVERSION
-	
+ 
 #endif // end if doing EMF1
 
 
 
-      ////////////////////
-      // EMF2
-      ////////////////////
+        ////////////////////
+        // EMF2
+        ////////////////////
 #if((N1>1)||(N3>1))
 
-	MACP1A0(emf,2,i,j,k) =
-	  0.125 * (
-		   + MACP0A1(F3,i,j,k,B1) + MACP0A1(F3,i,j,kp1mac(k),B1)
-		   - MACP0A1(F1,i,j,k,B3) - MACP0A1(F1,ip1mac(i),j,k,B3)
-		   );
+        MACP1A0(emf,2,i,j,k) =
+          0.125 * (
+                   + MACP0A1(F3,i,j,k,B1) + MACP0A1(F3,i,j,kp1mac(k),B1)
+                   - MACP0A1(F1,i,j,k,B3) - MACP0A1(F1,ip1mac(i),j,k,B3)
+                   );
 
 #if(CORNGDETVERSION)// then tack on geometry
-	get_geometry_gdetmix(i,j,k,CENT,ptrgeomc);
-	// obviously ptrgeom->EOMFUNCMAC(B1) has to be equal to ptrgeom->EOMFUNCMAC(B2) for this method
-	MACP1A0(emf,2,i,j,k) *=(ptrgeomc->EOMFUNCMAC(B1));
+        get_geometry_gdetmix(i,j,k,CENT,ptrgeomc);
+        // obviously ptrgeom->EOMFUNCMAC(B1) has to be equal to ptrgeom->EOMFUNCMAC(B2) for this method
+        MACP1A0(emf,2,i,j,k) *=(ptrgeomc->EOMFUNCMAC(B1));
 #endif // end if CORNGDETVERSION
 
 #endif // end if doing EMF2
 
 
 
-      ////////////////////
-      // EMF3
-      ////////////////////
+        ////////////////////
+        // EMF3
+        ////////////////////
 #if((N1>1)||(N2>1))
-	MACP1A0(emf,3,i,j,k) =
-	  0.125 * (
-		   + MACP0A1(F1,i,j,k,B2) + MACP0A1(F1,ip1mac(i),j,k,B2)
-		   - MACP0A1(F2,i,j,k,B1) - MACP0A1(F2,i,jp1mac(j),k,B1)
-		   );
+        MACP1A0(emf,3,i,j,k) =
+          0.125 * (
+                   + MACP0A1(F1,i,j,k,B2) + MACP0A1(F1,ip1mac(i),j,k,B2)
+                   - MACP0A1(F2,i,j,k,B1) - MACP0A1(F2,i,jp1mac(j),k,B1)
+                   );
 
 #if(CORNGDETVERSION)// then tack on geometry
-	get_geometry_gdetmix(i,j,k,CENT,ptrgeomc);
-	// obviously ptrgeom->EOMFUNCMAC(B1) has to be equal to ptrgeom->EOMFUNCMAC(B2) for this method
-	MACP1A0(emf,3,i,j,k) *=(ptrgeomc->EOMFUNCMAC(B1));
+        get_geometry_gdetmix(i,j,k,CENT,ptrgeomc);
+        // obviously ptrgeom->EOMFUNCMAC(B1) has to be equal to ptrgeom->EOMFUNCMAC(B2) for this method
+        MACP1A0(emf,3,i,j,k) *=(ptrgeomc->EOMFUNCMAC(B1));
 #endif // end if CORNGDETVERSION
 
 #endif // end if doing EMF3
@@ -701,89 +701,89 @@ int flux_ct_diffusivecorrections(int stage, FTYPE (*pb)[NSTORE2][NSTORE3][NPR], 
 
 #pragma omp for schedule(OPENMPFULLNOVARYSCHEDULE())
       OPENMP3DLOOPBLOCK{
-	OPENMP3DLOOPBLOCK2IJK(i,j,k);
+        OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
-	// {emf}_i=-\epsilon_{ijk} v^i B^k
+        // {emf}_i=-\epsilon_{ijk} v^i B^k
 
 
-	// average of the below results in averaged emf located at corner (CORN)
-	// same sign as F's (B^2 v^1 - B^1 v^2) with gdet built into vconemf
+        // average of the below results in averaged emf located at corner (CORN)
+        // same sign as F's (B^2 v^1 - B^1 v^2) with gdet built into vconemf
 
-	// could remove gdet from vconemf and F1/F2 and put gdet at CORN for final result!  Avoids axis problems?
-	// applies to above Toth version as well!
-	// GODMARK
+        // could remove gdet from vconemf and F1/F2 and put gdet at CORN for final result!  Avoids axis problems?
+        // applies to above Toth version as well!
+        // GODMARK
 
 #if((N2>1)||(N3>1))
-	// emf_1
-	emfmp[1] = 
-	  MACP0A1(pb,i  ,jm1mac(j),k  ,B3)*MACP0A1(vconemf,i  ,jm1mac(j),k  ,U2) -
-	  MACP0A1(pb,i  ,jm1mac(j),k  ,B2)*MACP0A1(vconemf,i  ,jm1mac(j),k  ,U3) ;
-	emfmm[1] = 
-	  MACP0A1(pb,i  ,jm1mac(j),km1mac(k),B3)*MACP0A1(vconemf,i  ,jm1mac(j),km1mac(k),U2) -
-	  MACP0A1(pb,i  ,jm1mac(j),km1mac(k),B2)*MACP0A1(vconemf,i  ,jm1mac(j),km1mac(k),U3) ;
-	emfpm[1] = 
-	  MACP0A1(pb,i  ,j  ,km1mac(k),B3)*MACP0A1(vconemf,i  ,j  ,km1mac(k),U2) -
-	  MACP0A1(pb,i  ,j  ,km1mac(k),B2)*MACP0A1(vconemf,i  ,j  ,km1mac(k),U3) ;
-	emfpp[1] = 
-	  MACP0A1(pb,i  ,j  ,k  ,B3)*MACP0A1(vconemf,i  ,j  ,k  ,U2) -
-	  MACP0A1(pb,i  ,j  ,k  ,B2)*MACP0A1(vconemf,i  ,j  ,k  ,U3) ;
+        // emf_1
+        emfmp[1] = 
+          MACP0A1(pb,i  ,jm1mac(j),k  ,B3)*MACP0A1(vconemf,i  ,jm1mac(j),k  ,U2) -
+          MACP0A1(pb,i  ,jm1mac(j),k  ,B2)*MACP0A1(vconemf,i  ,jm1mac(j),k  ,U3) ;
+        emfmm[1] = 
+          MACP0A1(pb,i  ,jm1mac(j),km1mac(k),B3)*MACP0A1(vconemf,i  ,jm1mac(j),km1mac(k),U2) -
+          MACP0A1(pb,i  ,jm1mac(j),km1mac(k),B2)*MACP0A1(vconemf,i  ,jm1mac(j),km1mac(k),U3) ;
+        emfpm[1] = 
+          MACP0A1(pb,i  ,j  ,km1mac(k),B3)*MACP0A1(vconemf,i  ,j  ,km1mac(k),U2) -
+          MACP0A1(pb,i  ,j  ,km1mac(k),B2)*MACP0A1(vconemf,i  ,j  ,km1mac(k),U3) ;
+        emfpp[1] = 
+          MACP0A1(pb,i  ,j  ,k  ,B3)*MACP0A1(vconemf,i  ,j  ,k  ,U2) -
+          MACP0A1(pb,i  ,j  ,k  ,B2)*MACP0A1(vconemf,i  ,j  ,k  ,U3) ;
 #endif
 
 #if((N1>1)||(N3>1))
-	// emf_2
-	emfmp[2] = 
-	  MACP0A1(pb,im1mac(i),j  ,k  ,B1)*MACP0A1(vconemf,im1mac(i),j  ,k  ,U3) -
-	  MACP0A1(pb,im1mac(i),j  ,k  ,B3)*MACP0A1(vconemf,im1mac(i),j  ,k  ,U1) ;
-	emfmm[2] = 
-	  MACP0A1(pb,im1mac(i),j  ,km1mac(k),B1)*MACP0A1(vconemf,im1mac(i),j  ,km1mac(k),U3) -
-	  MACP0A1(pb,im1mac(i),j  ,km1mac(k),B3)*MACP0A1(vconemf,im1mac(i),j  ,km1mac(k),U1) ;
-	emfpm[2] = 
-	  MACP0A1(pb,i  ,j  ,km1mac(k),B1)*MACP0A1(vconemf,i  ,j  ,km1mac(k),U3) -
-	  MACP0A1(pb,i  ,j  ,km1mac(k),B3)*MACP0A1(vconemf,i  ,j  ,km1mac(k),U1) ;
-	emfpp[2] = 
-	  MACP0A1(pb,i  ,j  ,k  ,B1)*MACP0A1(vconemf,i  ,j  ,k  ,U3) -
-	  MACP0A1(pb,i  ,j  ,k  ,B3)*MACP0A1(vconemf,i  ,j  ,k  ,U1) ;
+        // emf_2
+        emfmp[2] = 
+          MACP0A1(pb,im1mac(i),j  ,k  ,B1)*MACP0A1(vconemf,im1mac(i),j  ,k  ,U3) -
+          MACP0A1(pb,im1mac(i),j  ,k  ,B3)*MACP0A1(vconemf,im1mac(i),j  ,k  ,U1) ;
+        emfmm[2] = 
+          MACP0A1(pb,im1mac(i),j  ,km1mac(k),B1)*MACP0A1(vconemf,im1mac(i),j  ,km1mac(k),U3) -
+          MACP0A1(pb,im1mac(i),j  ,km1mac(k),B3)*MACP0A1(vconemf,im1mac(i),j  ,km1mac(k),U1) ;
+        emfpm[2] = 
+          MACP0A1(pb,i  ,j  ,km1mac(k),B1)*MACP0A1(vconemf,i  ,j  ,km1mac(k),U3) -
+          MACP0A1(pb,i  ,j  ,km1mac(k),B3)*MACP0A1(vconemf,i  ,j  ,km1mac(k),U1) ;
+        emfpp[2] = 
+          MACP0A1(pb,i  ,j  ,k  ,B1)*MACP0A1(vconemf,i  ,j  ,k  ,U3) -
+          MACP0A1(pb,i  ,j  ,k  ,B3)*MACP0A1(vconemf,i  ,j  ,k  ,U1) ;
 #endif
 
 #if((N1>1)||(N2>1))
-	// emf_3 (same sign as FLUXCT method as emf[3])
-	emfmp[3] = 
-	  MACP0A1(pb,im1mac(i),j  ,k  ,B2)*MACP0A1(vconemf,im1mac(i),j  ,k  ,U1) -
-	  MACP0A1(pb,im1mac(i),j  ,k  ,B1)*MACP0A1(vconemf,im1mac(i),j  ,k  ,U2) ;
-	emfmm[3] = 
-	  MACP0A1(pb,im1mac(i),jm1mac(j),k  ,B2)*MACP0A1(vconemf,im1mac(i),jm1mac(j),k  ,U1) -
-	  MACP0A1(pb,im1mac(i),jm1mac(j),k  ,B1)*MACP0A1(vconemf,im1mac(i),jm1mac(j),k  ,U2) ;
-	emfpm[3] = 
-	  MACP0A1(pb,i  ,jm1mac(j),k  ,B2)*MACP0A1(vconemf,i  ,jm1mac(j),k  ,U1) -
-	  MACP0A1(pb,i  ,jm1mac(j),k  ,B1)*MACP0A1(vconemf,i  ,jm1mac(j),k  ,U2) ;
-	emfpp[3] = 
-	  MACP0A1(pb,i  ,j  ,k  ,B2)*MACP0A1(vconemf,i  ,j  ,k  ,U1) -
-	  MACP0A1(pb,i  ,j  ,k  ,B1)*MACP0A1(vconemf,i  ,j  ,k  ,U2) ;
+        // emf_3 (same sign as FLUXCT method as emf[3])
+        emfmp[3] = 
+          MACP0A1(pb,im1mac(i),j  ,k  ,B2)*MACP0A1(vconemf,im1mac(i),j  ,k  ,U1) -
+          MACP0A1(pb,im1mac(i),j  ,k  ,B1)*MACP0A1(vconemf,im1mac(i),j  ,k  ,U2) ;
+        emfmm[3] = 
+          MACP0A1(pb,im1mac(i),jm1mac(j),k  ,B2)*MACP0A1(vconemf,im1mac(i),jm1mac(j),k  ,U1) -
+          MACP0A1(pb,im1mac(i),jm1mac(j),k  ,B1)*MACP0A1(vconemf,im1mac(i),jm1mac(j),k  ,U2) ;
+        emfpm[3] = 
+          MACP0A1(pb,i  ,jm1mac(j),k  ,B2)*MACP0A1(vconemf,i  ,jm1mac(j),k  ,U1) -
+          MACP0A1(pb,i  ,jm1mac(j),k  ,B1)*MACP0A1(vconemf,i  ,jm1mac(j),k  ,U2) ;
+        emfpp[3] = 
+          MACP0A1(pb,i  ,j  ,k  ,B2)*MACP0A1(vconemf,i  ,j  ,k  ,U1) -
+          MACP0A1(pb,i  ,j  ,k  ,B1)*MACP0A1(vconemf,i  ,j  ,k  ,U2) ;
 #endif
 
-	for(l=1;l<=3;l++){
-	  diffusiveterm[l]= 0.25*(emfmp[l] + emfmm[l] + emfpm[l] + emfpp[l]);
-	}
+        for(l=1;l<=3;l++){
+          diffusiveterm[l]= 0.25*(emfmp[l] + emfmm[l] + emfpm[l] + emfpp[l]);
+        }
 
 #if(CORNGDETVERSION)// then tack on geometry
       
-	get_geometry_gdetmix(i,j,k,CORN1,ptrgeomf1);
-	get_geometry_gdetmix(i,j,k,CORN2,ptrgeomf2);
-	get_geometry_gdetmix(i,j,k,CORN3,ptrgeomf3);
+        get_geometry_gdetmix(i,j,k,CORN1,ptrgeomf1);
+        get_geometry_gdetmix(i,j,k,CORN2,ptrgeomf2);
+        get_geometry_gdetmix(i,j,k,CORN3,ptrgeomf3);
       
-	// obviously ptrgeom->EOMFUNCMAC(B2) has to be equal to ptrgeom->EOMFUNCMAC(B3) for this method
-	diffusiveterm[1] *=(ptrgeomf1->EOMFUNCMAC(B2));
-	// obviously ptrgeom->EOMFUNCMAC(B1) has to be equal to ptrgeom->EOMFUNCMAC(B2) for this method
-	diffusiveterm[2] *=(ptrgeomf2->EOMFUNCMAC(B1));
-	// obviously ptrgeom->EOMFUNCMAC(B1) has to be equal to ptrgeom->EOMFUNCMAC(B2) for this method
-	diffusiveterm[3] *=(ptrgeomf3->EOMFUNCMAC(B1));
+        // obviously ptrgeom->EOMFUNCMAC(B2) has to be equal to ptrgeom->EOMFUNCMAC(B3) for this method
+        diffusiveterm[1] *=(ptrgeomf1->EOMFUNCMAC(B2));
+        // obviously ptrgeom->EOMFUNCMAC(B1) has to be equal to ptrgeom->EOMFUNCMAC(B2) for this method
+        diffusiveterm[2] *=(ptrgeomf2->EOMFUNCMAC(B1));
+        // obviously ptrgeom->EOMFUNCMAC(B1) has to be equal to ptrgeom->EOMFUNCMAC(B2) for this method
+        diffusiveterm[3] *=(ptrgeomf3->EOMFUNCMAC(B1));
 #endif
 
-	// now add diffusive term to emf
-	// notice original emf multiplied by 2 to account for diffusive term being subtracted, so result is consistent
-	for(l=1;l<=3;l++){
-	  MACP1A0(emf,l,i,j,k) = 2.0*MACP1A0(emf,l,i,j,k) - diffusiveterm[l];
-	}
+        // now add diffusive term to emf
+        // notice original emf multiplied by 2 to account for diffusive term being subtracted, so result is consistent
+        for(l=1;l<=3;l++){
+          MACP1A0(emf,l,i,j,k) = 2.0*MACP1A0(emf,l,i,j,k) - diffusiveterm[l];
+        }
 
 
       }// end COMPEMFZLOOP
@@ -864,267 +864,267 @@ int flux_ct_diffusivecorrections(int stage, FTYPE (*pb)[NSTORE2][NSTORE3][NPR], 
 
 #pragma omp for schedule(OPENMPFULLNOVARYSCHEDULE())
       OPENMP3DLOOPBLOCK{
-	OPENMP3DLOOPBLOCK2IJK(i,j,k);
+        OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
 
-	// dq1 and dq2 and dq3 are well-defined from fluxcalc() (both directions)
+        // dq1 and dq2 and dq3 are well-defined from fluxcalc() (both directions)
      
 
-	// simple average of 1-D linear extrapolation here, where could use p2interp data saved from step_ch.c?  still available by this function call?
+        // simple average of 1-D linear extrapolation here, where could use p2interp data saved from step_ch.c?  still available by this function call?
 
 
 #if((N2>1)||(N3>1))
-	// for emf_1
+        // for emf_1
 
-	// B2 located at FACE2 @ (k-1)
-	B2d = 0.5*(
-		   MACP0A1(pb,i,jm1mac(j),km1mac(k),B2) + 0.5*MACP0A1(dq2,i,jm1mac(j),km1mac(k),B2) +
-		   MACP0A1(pb,i,j  ,km1mac(k),B2) - 0.5*MACP0A1(dq2,i,j  ,km1mac(k),B2)
-		   ) ;
+        // B2 located at FACE2 @ (k-1)
+        B2d = 0.5*(
+                   MACP0A1(pb,i,jm1mac(j),km1mac(k),B2) + 0.5*MACP0A1(dq2,i,jm1mac(j),km1mac(k),B2) +
+                   MACP0A1(pb,i,j  ,km1mac(k),B2) - 0.5*MACP0A1(dq2,i,j  ,km1mac(k),B2)
+                   ) ;
 
-	// B2 located at FACE2 @ (k)
-	B2u = 0.5*(
-		   MACP0A1(pb,i,jm1mac(j),k,B2) + 0.5*MACP0A1(dq2,i,jm1mac(j),k,B2) +
-		   MACP0A1(pb,i,j  ,k,B2) - 0.5*MACP0A1(dq2,i,j  ,k,B2)
-		   ) ;
+        // B2 located at FACE2 @ (k)
+        B2u = 0.5*(
+                   MACP0A1(pb,i,jm1mac(j),k,B2) + 0.5*MACP0A1(dq2,i,jm1mac(j),k,B2) +
+                   MACP0A1(pb,i,j  ,k,B2) - 0.5*MACP0A1(dq2,i,j  ,k,B2)
+                   ) ;
 
-	// B3 located at FACE3 @ (j-1)
-	B3l = 0.5*(
-		   MACP0A1(pb,i,jm1mac(j),km1mac(k),B3) + 0.5*MACP0A1(dq3,i,jm1mac(j),km1mac(k),B3) +
-		   MACP0A1(pb,i,jm1mac(j),k  ,B3) - 0.5*MACP0A1(dq3,i,jm1mac(j),k  ,B3)
-		   ) ;
-	// B3 located at FACE3 @ j
-	B3r = 0.5*(
-		   MACP0A1(pb,i,j,km1mac(k),B3) + 0.5*MACP0A1(dq3,i,j,km1mac(k),B3) +
-		   MACP0A1(pb,i,j,k  ,B3) - 0.5*MACP0A1(dq3,i,j,k  ,B3)
-		   ) ;
+        // B3 located at FACE3 @ (j-1)
+        B3l = 0.5*(
+                   MACP0A1(pb,i,jm1mac(j),km1mac(k),B3) + 0.5*MACP0A1(dq3,i,jm1mac(j),km1mac(k),B3) +
+                   MACP0A1(pb,i,jm1mac(j),k  ,B3) - 0.5*MACP0A1(dq3,i,jm1mac(j),k  ,B3)
+                   ) ;
+        // B3 located at FACE3 @ j
+        B3r = 0.5*(
+                   MACP0A1(pb,i,j,km1mac(k),B3) + 0.5*MACP0A1(dq3,i,j,km1mac(k),B3) +
+                   MACP0A1(pb,i,j,k  ,B3) - 0.5*MACP0A1(dq3,i,j,k  ,B3)
+                   ) ;
 
-	// B2 for all centers around CORN1
-	// B2[j - mp][k - mp]
-	B2mm = MACP0A1(pb,i,jm1mac(j),km1mac(k),B2) ;
-	B2mp = MACP0A1(pb,i,jm1mac(j),k  ,B2) ;
-	B2pm = MACP0A1(pb,i,j  ,km1mac(k),B2) ;
-	B2pp = MACP0A1(pb,i,j  ,k  ,B2) ;
+        // B2 for all centers around CORN1
+        // B2[j - mp][k - mp]
+        B2mm = MACP0A1(pb,i,jm1mac(j),km1mac(k),B2) ;
+        B2mp = MACP0A1(pb,i,jm1mac(j),k  ,B2) ;
+        B2pm = MACP0A1(pb,i,j  ,km1mac(k),B2) ;
+        B2pp = MACP0A1(pb,i,j  ,k  ,B2) ;
 
-	// B3 for all centers around CORN1
-	// B3[j - mp][k - mp]
-	B3mm = MACP0A1(pb,i,jm1mac(j),km1mac(k),B3) ;
-	B3mp = MACP0A1(pb,i,jm1mac(j),k  ,B3) ;
-	B3pm = MACP0A1(pb,i,j  ,km1mac(k),B3) ;
-	B3pp = MACP0A1(pb,i,j  ,k  ,B3) ;
+        // B3 for all centers around CORN1
+        // B3[j - mp][k - mp]
+        B3mm = MACP0A1(pb,i,jm1mac(j),km1mac(k),B3) ;
+        B3mp = MACP0A1(pb,i,jm1mac(j),k  ,B3) ;
+        B3pm = MACP0A1(pb,i,j  ,km1mac(k),B3) ;
+        B3pp = MACP0A1(pb,i,j  ,k  ,B3) ;
 
-	// compute characteristic velocity -- only for Athena2 method
-
-
-	// average pb to CORN1 for average phase speed there
-	PLOOP(pliter,pl) pbavg[pl]=0.25*(MACP0A1(pb,i,j,k,pl)+MACP0A1(pb,i,jm1mac(j),k,pl)+MACP0A1(pb,i,j,km1mac(k),pl)+MACP0A1(pb,i,jm1mac(j),km1mac(k),pl));
-	get_geometry(i, j, k, CORN1, ptrgeomco1); // used here and below emf's
-	MYFUN(get_state(pbavg, ptrgeomco1, &state),"step_ch.c:flux_ct()", "get_state()", 1);
-    // KORALNOTE: Correct because this applies to the diffusive term only for the magnetic field evolution, so needs to stay vchar()
-	dir=2; MYFUN(vchar(pbavg, &state, dir, ptrgeomco1, &cmax1, &cmin1,&ignorecourant),"step_ch.c:flux_ct()", "vchar() dir=1", 1);
-	dir=3; MYFUN(vchar(pbavg, &state, dir, ptrgeomco1, &cmax2, &cmin2,&ignorecourant),"step_ch.c:flux_ct()", "vchar() dir=2", 2);
-	ctop1 = max(fabs(cmax1), fabs(cmin1));
-	ctop2 = max(fabs(cmax2), fabs(cmin2));
-	//      alpha=0.5*(ctop1+ctop2); // use average?
-	//      alpha=max(ctop1,ctop2); // use maximum?
-	// seems alpha can be arbitrary since 0 is ATHENA1
-
-	//      alpha = dx1/dt ;	/* crude approx */
+        // compute characteristic velocity -- only for Athena2 method
 
 
-	// GODMARK: seems to have left/right and up/down asymmetry due to subtraction
-	// if fabs were around each sutracted term, then would be ok (e.g. fabs(B1d-B1u))
+        // average pb to CORN1 for average phase speed there
+        PLOOP(pliter,pl) pbavg[pl]=0.25*(MACP0A1(pb,i,j,k,pl)+MACP0A1(pb,i,jm1mac(j),k,pl)+MACP0A1(pb,i,j,km1mac(k),pl)+MACP0A1(pb,i,jm1mac(j),km1mac(k),pl));
+        get_geometry(i, j, k, CORN1, ptrgeomco1); // used here and below emf's
+        MYFUN(get_state(pbavg, ptrgeomco1, &state),"step_ch.c:flux_ct()", "get_state()", 1);
+        // KORALNOTE: Correct because this applies to the diffusive term only for the magnetic field evolution, so needs to stay vchar()
+        dir=2; MYFUN(vchar(pbavg, &state, dir, ptrgeomco1, &cmax1, &cmin1,&ignorecourant),"step_ch.c:flux_ct()", "vchar() dir=1", 1);
+        dir=3; MYFUN(vchar(pbavg, &state, dir, ptrgeomco1, &cmax2, &cmin2,&ignorecourant),"step_ch.c:flux_ct()", "vchar() dir=2", 2);
+        ctop1 = max(fabs(cmax1), fabs(cmin1));
+        ctop2 = max(fabs(cmax2), fabs(cmin2));
+        //      alpha=0.5*(ctop1+ctop2); // use average?
+        //      alpha=max(ctop1,ctop2); // use maximum?
+        // seems alpha can be arbitrary since 0 is ATHENA1
 
-	// notice that ctop1 and ctop2 have different "units", so cannot use with B2/B3 arbitrarily, must be consistent.
-	diffusiveterm[1] =  0.125*(
-				   +ctop1*(
-					   + B2d - B2mm - B2u + B2mp
-					   + B2d - B2pm - B2u + B2pp
-					   )
-				   +ctop2*(
-					   + B3r - B3pm - B3l + B3mm
-					   + B3r - B3pp - B3l + B3mp
-					   )
-				   ) ;
+        //      alpha = dx1/dt ; /* crude approx */
+
+
+        // GODMARK: seems to have left/right and up/down asymmetry due to subtraction
+        // if fabs were around each sutracted term, then would be ok (e.g. fabs(B1d-B1u))
+
+        // notice that ctop1 and ctop2 have different "units", so cannot use with B2/B3 arbitrarily, must be consistent.
+        diffusiveterm[1] =  0.125*(
+                                   +ctop1*(
+                                           + B2d - B2mm - B2u + B2mp
+                                           + B2d - B2pm - B2u + B2pp
+                                           )
+                                   +ctop2*(
+                                           + B3r - B3pm - B3l + B3mm
+                                           + B3r - B3pp - B3l + B3mp
+                                           )
+                                   ) ;
 #endif
 
 #if((N1>1)||(N3>1))
-	// for emf_2
+        // for emf_2
 
-	// B3 located at FACE3 @ (i-1)
-	B3d = 0.5*(
-		   MACP0A1(pb,im1mac(i),j,km1mac(k),B3) + 0.5*MACP0A1(dq3,im1mac(i),j,km1mac(k),B3) +
-		   MACP0A1(pb,im1mac(i),j,k  ,B3) - 0.5*MACP0A1(dq3,im1mac(i),j,k  ,B3)
-		   ) ;
+        // B3 located at FACE3 @ (i-1)
+        B3d = 0.5*(
+                   MACP0A1(pb,im1mac(i),j,km1mac(k),B3) + 0.5*MACP0A1(dq3,im1mac(i),j,km1mac(k),B3) +
+                   MACP0A1(pb,im1mac(i),j,k  ,B3) - 0.5*MACP0A1(dq3,im1mac(i),j,k  ,B3)
+                   ) ;
 
-	// B3 located at FACE3 @ (i)
-	B3u = 0.5*(
-		   MACP0A1(pb,i,j,km1mac(k),B3) + 0.5*MACP0A1(dq3,i,j,km1mac(k),B3) +
-		   MACP0A1(pb,i,j,k  ,B3) - 0.5*MACP0A1(dq3,i,j,k  ,B3)
-		   ) ;
+        // B3 located at FACE3 @ (i)
+        B3u = 0.5*(
+                   MACP0A1(pb,i,j,km1mac(k),B3) + 0.5*MACP0A1(dq3,i,j,km1mac(k),B3) +
+                   MACP0A1(pb,i,j,k  ,B3) - 0.5*MACP0A1(dq3,i,j,k  ,B3)
+                   ) ;
 
-	// B3 located at FACE1 @ (k-1)
-	B1l = 0.5*(
-		   MACP0A1(pb,im1mac(i),j,km1mac(k),B1) + 0.5*MACP0A1(dq1,im1mac(i),j,km1mac(k),B1) +
-		   MACP0A1(pb,i  ,j,km1mac(k),B1) - 0.5*MACP0A1(dq1,i  ,j,km1mac(k),B1)
-		   ) ;
-	// B1 located at FACE1 @ k
-	B1r = 0.5*(
-		   MACP0A1(pb,im1mac(i),j,k,B1) + 0.5*MACP0A1(dq1,im1mac(i),j,k,B1) +
-		   MACP0A1(pb,i  ,j,k,B1) - 0.5*MACP0A1(dq1,i  ,j,k,B1)
-		   ) ;
+        // B3 located at FACE1 @ (k-1)
+        B1l = 0.5*(
+                   MACP0A1(pb,im1mac(i),j,km1mac(k),B1) + 0.5*MACP0A1(dq1,im1mac(i),j,km1mac(k),B1) +
+                   MACP0A1(pb,i  ,j,km1mac(k),B1) - 0.5*MACP0A1(dq1,i  ,j,km1mac(k),B1)
+                   ) ;
+        // B1 located at FACE1 @ k
+        B1r = 0.5*(
+                   MACP0A1(pb,im1mac(i),j,k,B1) + 0.5*MACP0A1(dq1,im1mac(i),j,k,B1) +
+                   MACP0A1(pb,i  ,j,k,B1) - 0.5*MACP0A1(dq1,i  ,j,k,B1)
+                   ) ;
 
-	// B3 for all centers around CORN1
-	// B3[k - mp][i - mp]
-	B3mm = MACP0A1(pb,im1mac(i),j,km1mac(k),B3) ;
-	B3mp = MACP0A1(pb,i  ,j,km1mac(k),B3) ;
-	B3pm = MACP0A1(pb,im1mac(i),j,k  ,B3) ;
-	B3pp = MACP0A1(pb,i  ,j,k  ,B3) ;
+        // B3 for all centers around CORN1
+        // B3[k - mp][i - mp]
+        B3mm = MACP0A1(pb,im1mac(i),j,km1mac(k),B3) ;
+        B3mp = MACP0A1(pb,i  ,j,km1mac(k),B3) ;
+        B3pm = MACP0A1(pb,im1mac(i),j,k  ,B3) ;
+        B3pp = MACP0A1(pb,i  ,j,k  ,B3) ;
 
-	// B1 for all centers around CORN1
-	// B1[k - mp][i - mp]
-	B1mm = MACP0A1(pb,im1mac(i),j,km1mac(k),B1) ;
-	B1mp = MACP0A1(pb,i  ,j,km1mac(k),B1) ;
-	B1pm = MACP0A1(pb,im1mac(i),j,k  ,B1) ;
-	B1pp = MACP0A1(pb,i  ,j,k  ,B1) ;
+        // B1 for all centers around CORN1
+        // B1[k - mp][i - mp]
+        B1mm = MACP0A1(pb,im1mac(i),j,km1mac(k),B1) ;
+        B1mp = MACP0A1(pb,i  ,j,km1mac(k),B1) ;
+        B1pm = MACP0A1(pb,im1mac(i),j,k  ,B1) ;
+        B1pp = MACP0A1(pb,i  ,j,k  ,B1) ;
 
-	// compute characteristic velocity -- only for Athena2 method
-
-
-	// average pb to CORN1 for average phase speed there
-	PLOOP(pliter,pl) pbavg[pl]=0.25*(MACP0A1(pb,i,j,k,pl)+MACP0A1(pb,im1mac(i),j,k,pl)+MACP0A1(pb,i,j,km1mac(k),pl)+MACP0A1(pb,im1mac(i),j,km1mac(k),pl));
-	get_geometry(i, j, k, CORN2, ptrgeomco2); // used here and below emf's
-	MYFUN(get_state(pbavg, ptrgeomco2, &state),"step_ch.c:flux_ct()", "get_state()", 1);
-	dir=3; MYFUN(vchar(pbavg, &state, dir, ptrgeomco2, &cmax1, &cmin1,&ignorecourant),"step_ch.c:flux_ct()", "vchar() dir=1", 1);
-	dir=1; MYFUN(vchar(pbavg, &state, dir, ptrgeomco2, &cmax2, &cmin2,&ignorecourant),"step_ch.c:flux_ct()", "vchar() dir=2", 2);
-	ctop1 = max(fabs(cmax1), fabs(cmin1));
-	ctop2 = max(fabs(cmax2), fabs(cmin2));
-	//      alpha=0.5*(ctop1+ctop2); // use average?
-	//     alpha=max(ctop1,ctop2); // use maximum?
-	// seems alpha can be arbitrary since 0 is ATHENA1
-
-	//      alpha = dx1/dt ;	/* crude approx */
+        // compute characteristic velocity -- only for Athena2 method
 
 
-	// GODMARK: seems to have left/right and up/down asymmetry due to subtraction
-	// if fabs were around each sutracted term, then would be ok (e.g. fabs(B3d-B3u))
+        // average pb to CORN1 for average phase speed there
+        PLOOP(pliter,pl) pbavg[pl]=0.25*(MACP0A1(pb,i,j,k,pl)+MACP0A1(pb,im1mac(i),j,k,pl)+MACP0A1(pb,i,j,km1mac(k),pl)+MACP0A1(pb,im1mac(i),j,km1mac(k),pl));
+        get_geometry(i, j, k, CORN2, ptrgeomco2); // used here and below emf's
+        MYFUN(get_state(pbavg, ptrgeomco2, &state),"step_ch.c:flux_ct()", "get_state()", 1);
+        dir=3; MYFUN(vchar(pbavg, &state, dir, ptrgeomco2, &cmax1, &cmin1,&ignorecourant),"step_ch.c:flux_ct()", "vchar() dir=1", 1);
+        dir=1; MYFUN(vchar(pbavg, &state, dir, ptrgeomco2, &cmax2, &cmin2,&ignorecourant),"step_ch.c:flux_ct()", "vchar() dir=2", 2);
+        ctop1 = max(fabs(cmax1), fabs(cmin1));
+        ctop2 = max(fabs(cmax2), fabs(cmin2));
+        //      alpha=0.5*(ctop1+ctop2); // use average?
+        //     alpha=max(ctop1,ctop2); // use maximum?
+        // seems alpha can be arbitrary since 0 is ATHENA1
 
-	// notice that ctop1 and ctop2 have different "units", so cannot use with B2/B3 arbitrarily, must be consistent.
-	diffusiveterm[2] =  0.125*(
-				   +ctop1*(
-					   + B3d - B3mm - B3u + B3mp
-					   + B3d - B3pm - B3u + B3pp
-					   )
-				   +ctop2*(
-					   + B1r - B1pm - B1l + B1mm
-					   + B1r - B1pp - B1l + B1mp
-					   )
-				   ) ;
+        //      alpha = dx1/dt ; /* crude approx */
+
+
+        // GODMARK: seems to have left/right and up/down asymmetry due to subtraction
+        // if fabs were around each sutracted term, then would be ok (e.g. fabs(B3d-B3u))
+
+        // notice that ctop1 and ctop2 have different "units", so cannot use with B2/B3 arbitrarily, must be consistent.
+        diffusiveterm[2] =  0.125*(
+                                   +ctop1*(
+                                           + B3d - B3mm - B3u + B3mp
+                                           + B3d - B3pm - B3u + B3pp
+                                           )
+                                   +ctop2*(
+                                           + B1r - B1pm - B1l + B1mm
+                                           + B1r - B1pp - B1l + B1mp
+                                           )
+                                   ) ;
 #endif
 
 #if((N1>1)||(N2>1))
-	// for emf_3
+        // for emf_3
 
-	// B1 located at FACE1 @ (j-1)
-	B1d = 0.5*(
-		   MACP0A1(pb,im1mac(i),jm1mac(j),k,B1) + 0.5*MACP0A1(dq1,im1mac(i),jm1mac(j),k,B1) +
-		   MACP0A1(pb,i  ,jm1mac(j),k,B1) - 0.5*MACP0A1(dq1,i  ,jm1mac(j),k,B1)
-		   ) ;
+        // B1 located at FACE1 @ (j-1)
+        B1d = 0.5*(
+                   MACP0A1(pb,im1mac(i),jm1mac(j),k,B1) + 0.5*MACP0A1(dq1,im1mac(i),jm1mac(j),k,B1) +
+                   MACP0A1(pb,i  ,jm1mac(j),k,B1) - 0.5*MACP0A1(dq1,i  ,jm1mac(j),k,B1)
+                   ) ;
 
-	// B1 located at FACE1 @ j
-	B1u = 0.5*(
-		   MACP0A1(pb,im1mac(i),j,k,B1) + 0.5*MACP0A1(dq1,im1mac(i),j,k,B1) +
-		   MACP0A1(pb,i  ,j,k,B1) - 0.5*MACP0A1(dq1,i  ,j,k,B1)
-		   ) ;
+        // B1 located at FACE1 @ j
+        B1u = 0.5*(
+                   MACP0A1(pb,im1mac(i),j,k,B1) + 0.5*MACP0A1(dq1,im1mac(i),j,k,B1) +
+                   MACP0A1(pb,i  ,j,k,B1) - 0.5*MACP0A1(dq1,i  ,j,k,B1)
+                   ) ;
 
-	// B2 located at FACE2 @ (i-1)
-	B2l = 0.5*(
-		   MACP0A1(pb,im1mac(i),jm1mac(j),k,B2) + 0.5*MACP0A1(dq2,im1mac(i),jm1mac(j),k,B2) +
-		   MACP0A1(pb,im1mac(i),j  ,k,B2) - 0.5*MACP0A1(dq2,im1mac(i),j  ,k,B2)
-		   ) ;
-	// B2 located at FACE2 @ i
-	B2r = 0.5*(
-		   MACP0A1(pb,i,jm1mac(j),k,B2) + 0.5*MACP0A1(dq2,i,jm1mac(j),k,B2) +
-		   MACP0A1(pb,i,j  ,k,B2) - 0.5*MACP0A1(dq2,i,j  ,k,B2)
-		   ) ;
+        // B2 located at FACE2 @ (i-1)
+        B2l = 0.5*(
+                   MACP0A1(pb,im1mac(i),jm1mac(j),k,B2) + 0.5*MACP0A1(dq2,im1mac(i),jm1mac(j),k,B2) +
+                   MACP0A1(pb,im1mac(i),j  ,k,B2) - 0.5*MACP0A1(dq2,im1mac(i),j  ,k,B2)
+                   ) ;
+        // B2 located at FACE2 @ i
+        B2r = 0.5*(
+                   MACP0A1(pb,i,jm1mac(j),k,B2) + 0.5*MACP0A1(dq2,i,jm1mac(j),k,B2) +
+                   MACP0A1(pb,i,j  ,k,B2) - 0.5*MACP0A1(dq2,i,j  ,k,B2)
+                   ) ;
 
-	// B1 for all centers around CORN3
-	// B1[i - mp][j - mp]
-	B1mm = MACP0A1(pb,im1mac(i),jm1mac(j),k,B1) ;
-	B1mp = MACP0A1(pb,im1mac(i),j  ,k,B1) ;
-	B1pm = MACP0A1(pb,i  ,jm1mac(j),k,B1) ;
-	B1pp = MACP0A1(pb,i  ,j  ,k,B1) ;
+        // B1 for all centers around CORN3
+        // B1[i - mp][j - mp]
+        B1mm = MACP0A1(pb,im1mac(i),jm1mac(j),k,B1) ;
+        B1mp = MACP0A1(pb,im1mac(i),j  ,k,B1) ;
+        B1pm = MACP0A1(pb,i  ,jm1mac(j),k,B1) ;
+        B1pp = MACP0A1(pb,i  ,j  ,k,B1) ;
 
-	// B2 for all centers around CORN3
-	// B2[i - mp][j - mp]
-	B2mm = MACP0A1(pb,im1mac(i),jm1mac(j),k,B2) ;
-	B2mp = MACP0A1(pb,im1mac(i),j  ,k,B2) ;
-	B2pm = MACP0A1(pb,i  ,jm1mac(j),k,B2) ;
-	B2pp = MACP0A1(pb,i  ,j  ,k,B2) ;
+        // B2 for all centers around CORN3
+        // B2[i - mp][j - mp]
+        B2mm = MACP0A1(pb,im1mac(i),jm1mac(j),k,B2) ;
+        B2mp = MACP0A1(pb,im1mac(i),j  ,k,B2) ;
+        B2pm = MACP0A1(pb,i  ,jm1mac(j),k,B2) ;
+        B2pp = MACP0A1(pb,i  ,j  ,k,B2) ;
 
-	// compute characteristic velocity -- only for Athena2 method
-
-
-	// average pb to CORN3 for average phase speed there
-	PLOOP(pliter,pl) pbavg[pl]=0.25*(MACP0A1(pb,i,j,k,pl)+MACP0A1(pb,i,jm1mac(j),k,pl)+MACP0A1(pb,im1mac(i),j,k,pl)+MACP0A1(pb,im1mac(i),jm1mac(j),k,pl));
-	get_geometry(i, j, k, CORN3, ptrgeomco3); // used here and below emf's
-	MYFUN(get_state(pbavg, ptrgeomco3, &state),"step_ch.c:flux_ct()", "get_state()", 1);
-	dir=1; MYFUN(vchar(pbavg, &state, dir, ptrgeomco3, &cmax1, &cmin1,&ignorecourant),"step_ch.c:flux_ct()", "vchar() dir=1", 1);
-	dir=2; MYFUN(vchar(pbavg, &state, dir, ptrgeomco3, &cmax2, &cmin2,&ignorecourant),"step_ch.c:flux_ct()", "vchar() dir=2", 2);
-	ctop1 = max(fabs(cmax1), fabs(cmin1));
-	ctop2 = max(fabs(cmax2), fabs(cmin2));
-	//      alpha=0.5*(ctop1+ctop2); // use average?
-	//      alpha=max(ctop1,ctop2); // use maximum?
-	// seems alpha can be arbitrary since 0 is ATHENA1
-
-	//      alpha = dx1/dt ;	/* crude approx */
+        // compute characteristic velocity -- only for Athena2 method
 
 
-	// GODMARK: seems to have left/right and up/down asymmetry due to subtraction
-	// if fabs were around each sutracted term, then would be ok (e.g. fabs(B1d-B1u))
+        // average pb to CORN3 for average phase speed there
+        PLOOP(pliter,pl) pbavg[pl]=0.25*(MACP0A1(pb,i,j,k,pl)+MACP0A1(pb,i,jm1mac(j),k,pl)+MACP0A1(pb,im1mac(i),j,k,pl)+MACP0A1(pb,im1mac(i),jm1mac(j),k,pl));
+        get_geometry(i, j, k, CORN3, ptrgeomco3); // used here and below emf's
+        MYFUN(get_state(pbavg, ptrgeomco3, &state),"step_ch.c:flux_ct()", "get_state()", 1);
+        dir=1; MYFUN(vchar(pbavg, &state, dir, ptrgeomco3, &cmax1, &cmin1,&ignorecourant),"step_ch.c:flux_ct()", "vchar() dir=1", 1);
+        dir=2; MYFUN(vchar(pbavg, &state, dir, ptrgeomco3, &cmax2, &cmin2,&ignorecourant),"step_ch.c:flux_ct()", "vchar() dir=2", 2);
+        ctop1 = max(fabs(cmax1), fabs(cmin1));
+        ctop2 = max(fabs(cmax2), fabs(cmin2));
+        //      alpha=0.5*(ctop1+ctop2); // use average?
+        //      alpha=max(ctop1,ctop2); // use maximum?
+        // seems alpha can be arbitrary since 0 is ATHENA1
 
-	// notice that ctop1 and ctop2 have different "units", so cannot use with B2/B3 arbitrarily, must be consistent.
-	diffusiveterm[3] =  0.125*(
-				   +ctop1*(
-					   + B1d - B1mm - B1u + B1mp
-					   + B1d - B1pm - B1u + B1pp
-					   )
-				   +ctop2*(
-					   + B2r - B2pm - B2l + B2mm
-					   + B2r - B2pp - B2l + B2mp
-					   )
-				   ) ;
+        //      alpha = dx1/dt ; /* crude approx */
+
+
+        // GODMARK: seems to have left/right and up/down asymmetry due to subtraction
+        // if fabs were around each sutracted term, then would be ok (e.g. fabs(B1d-B1u))
+
+        // notice that ctop1 and ctop2 have different "units", so cannot use with B2/B3 arbitrarily, must be consistent.
+        diffusiveterm[3] =  0.125*(
+                                   +ctop1*(
+                                           + B1d - B1mm - B1u + B1mp
+                                           + B1d - B1pm - B1u + B1pp
+                                           )
+                                   +ctop2*(
+                                           + B2r - B2pm - B2l + B2mm
+                                           + B2r - B2pp - B2l + B2mp
+                                           )
+                                   ) ;
 #endif
 
 
 
 
-	/////////////////////////
-	//
-	// add geometry
-	//
-	////////////////////////
+        /////////////////////////
+        //
+        // add geometry
+        //
+        ////////////////////////
 
-	// must add geometry (no choice since above diffusive correction never had geometry)
-	get_geometry_gdetmix(i,j,k,CORN1,ptrgeomf1);
-	get_geometry_gdetmix(i,j,k,CORN2,ptrgeomf2);
-	get_geometry_gdetmix(i,j,k,CORN3,ptrgeomf3);
+        // must add geometry (no choice since above diffusive correction never had geometry)
+        get_geometry_gdetmix(i,j,k,CORN1,ptrgeomf1);
+        get_geometry_gdetmix(i,j,k,CORN2,ptrgeomf2);
+        get_geometry_gdetmix(i,j,k,CORN3,ptrgeomf3);
       
-	// obviously ptrgeom->EOMFUNCMAC(B2) has to be equal to ptrgeom->EOMFUNCMAC(B3) for this method
-	diffusiveterm[1] *=(ptrgeomf1->EOMFUNCMAC(B2));
-	// obviously ptrgeom->EOMFUNCMAC(B1) has to be equal to ptrgeom->EOMFUNCMAC(B2) for this method
-	diffusiveterm[2] *=(ptrgeomf2->EOMFUNCMAC(B1));
-	// obviously ptrgeom->EOMFUNCMAC(B1) has to be equal to ptrgeom->EOMFUNCMAC(B2) for this method
-	diffusiveterm[3] *=(ptrgeomf3->EOMFUNCMAC(B1));
+        // obviously ptrgeom->EOMFUNCMAC(B2) has to be equal to ptrgeom->EOMFUNCMAC(B3) for this method
+        diffusiveterm[1] *=(ptrgeomf1->EOMFUNCMAC(B2));
+        // obviously ptrgeom->EOMFUNCMAC(B1) has to be equal to ptrgeom->EOMFUNCMAC(B2) for this method
+        diffusiveterm[2] *=(ptrgeomf2->EOMFUNCMAC(B1));
+        // obviously ptrgeom->EOMFUNCMAC(B1) has to be equal to ptrgeom->EOMFUNCMAC(B2) for this method
+        diffusiveterm[3] *=(ptrgeomf3->EOMFUNCMAC(B1));
 
-	//////////////
-	//
-	// now add diffusive term to emf
-	//
-	//////////////
-	for(l=1;l<=3;l++){
-	  MACP1A0(emf,l,i,j,k)+= - diffusiveterm[l];
-	}
+        //////////////
+        //
+        // now add diffusive term to emf
+        //
+        //////////////
+        for(l=1;l<=3;l++){
+          MACP1A0(emf,l,i,j,k)+= - diffusiveterm[l];
+        }
 
 
       }// end EMF loop
@@ -1204,38 +1204,38 @@ int flux_ct_emf2flux(int stage, FTYPE (*pb)[NSTORE2][NSTORE3][NPR], FTYPE (*emf)
       OPENMP3DLOOPSETUPFULL;
 #pragma omp for schedule(OPENMPFULLNOVARYSCHEDULE()) // not needed with just 1 loop: nowait // Can "nowait" since each F1,F2,F3 set independently on successive loops
       OPENMP3DLOOPBLOCK{
-	OPENMP3DLOOPBLOCK2IJK(i,j,k);
+        OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
-	/////////////////////////////////////
-	// F1
-	////////////////////////////////////
+        /////////////////////////////////////
+        // F1
+        ////////////////////////////////////
 #if(N1>1)
-	// below line always true
-	MACP0A1(F1,i,j,k,B1) = 0.;
-	MACP0A1(F1,i,j,k,B2) = 0.5 * (MACP1A0(emf,3,i,j,k) + MACP1A0(emf,3,i,jp1mac(j),k)); // put emf3 back to FACE1
-	MACP0A1(F1,i,j,k,B3) = - 0.5 * (MACP1A0(emf,2,i,j,k) + MACP1A0(emf,2,i,j,kp1mac(k))); // put emf2 back to FACE1
+        // below line always true
+        MACP0A1(F1,i,j,k,B1) = 0.;
+        MACP0A1(F1,i,j,k,B2) = 0.5 * (MACP1A0(emf,3,i,j,k) + MACP1A0(emf,3,i,jp1mac(j),k)); // put emf3 back to FACE1
+        MACP0A1(F1,i,j,k,B3) = - 0.5 * (MACP1A0(emf,2,i,j,k) + MACP1A0(emf,2,i,j,kp1mac(k))); // put emf2 back to FACE1
 #endif
 
 
 
-	/////////////////////////////////////
-	// F2
-	////////////////////////////////////
+        /////////////////////////////////////
+        // F2
+        ////////////////////////////////////
 #if(N2>1)
-	MACP0A1(F2,i,j,k,B1) = - 0.5 * (MACP1A0(emf,3,i,j,k) + MACP1A0(emf,3,ip1mac(i),j,k));
-	// below line always true
-	MACP0A1(F2,i,j,k,B2) = 0.;
-	MACP0A1(F2,i,j,k,B3) = 0.5 * (MACP1A0(emf,1,i,j,k) + MACP1A0(emf,1,i,j,kp1mac(k)));
+        MACP0A1(F2,i,j,k,B1) = - 0.5 * (MACP1A0(emf,3,i,j,k) + MACP1A0(emf,3,ip1mac(i),j,k));
+        // below line always true
+        MACP0A1(F2,i,j,k,B2) = 0.;
+        MACP0A1(F2,i,j,k,B3) = 0.5 * (MACP1A0(emf,1,i,j,k) + MACP1A0(emf,1,i,j,kp1mac(k)));
 #endif
 
-	/////////////////////////////////////
-	// F3
-	////////////////////////////////////
+        /////////////////////////////////////
+        // F3
+        ////////////////////////////////////
 #if(N3>1)
-	MACP0A1(F3,i,j,k,B1) = 0.5 * (MACP1A0(emf,2,i,j,k) + MACP1A0(emf,2,ip1mac(i),j,k));
-	MACP0A1(F3,i,j,k,B2) = - 0.5 * (MACP1A0(emf,1,i,j,k) + MACP1A0(emf,1,i,jp1mac(j),k));
-	// below line always true
-	MACP0A1(F3,i,j,k,B3) = 0.;
+        MACP0A1(F3,i,j,k,B1) = 0.5 * (MACP1A0(emf,2,i,j,k) + MACP1A0(emf,2,ip1mac(i),j,k));
+        MACP0A1(F3,i,j,k,B2) = - 0.5 * (MACP1A0(emf,1,i,j,k) + MACP1A0(emf,1,i,jp1mac(j),k));
+        // below line always true
+        MACP0A1(F3,i,j,k,B3) = 0.;
 #endif
       }// end loop block [using outer loop since even though 3X more expensive cache-wise for F1, less so for emf.  Reduces OpenMP overhead alot.
     }// end parallel region (and implied barrier)
@@ -1268,40 +1268,40 @@ int flux_ct_emf2flux(int stage, FTYPE (*pb)[NSTORE2][NSTORE3][NPR], FTYPE (*emf)
       OPENMP3DLOOPSETUPFULL;
 #pragma omp for schedule(OPENMPFULLNOVARYSCHEDULE()) // nowait // Can "nowait" since each successive loop sets F1,F2,F3 independently
       OPENMP3DLOOPBLOCK{
-	OPENMP3DLOOPBLOCK2IJK(i,j,k);
+        OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
-      /////////////////////////////////////
-      // F1
-      ////////////////////////////////////
+        /////////////////////////////////////
+        // F1
+        ////////////////////////////////////
 #if(N1>1)
-	// always below line
-	MACP0A1(F1,i,j,k,B1) = 0.0;
-	MACP0A1(F1,i,j,k,B2) = MACP1A0(emf,3,i,j,k);
-	MACP0A1(F1,i,j,k,B3) = -MACP1A0(emf,2,i,j,k);
+        // always below line
+        MACP0A1(F1,i,j,k,B1) = 0.0;
+        MACP0A1(F1,i,j,k,B2) = MACP1A0(emf,3,i,j,k);
+        MACP0A1(F1,i,j,k,B3) = -MACP1A0(emf,2,i,j,k);
 #endif // end if doing F1
 
 
 
-      /////////////////////////////////////
-      // F2
-      ////////////////////////////////////
+        /////////////////////////////////////
+        // F2
+        ////////////////////////////////////
 #if(N2>1)
-	MACP0A1(F2,i,j,k,B1) = -MACP1A0(emf,3,i,j,k);
-	// always below line
-	MACP0A1(F2,i,j,k,B2) = 0.;
-	MACP0A1(F2,i,j,k,B3) = MACP1A0(emf,1,i,j,k);
+        MACP0A1(F2,i,j,k,B1) = -MACP1A0(emf,3,i,j,k);
+        // always below line
+        MACP0A1(F2,i,j,k,B2) = 0.;
+        MACP0A1(F2,i,j,k,B3) = MACP1A0(emf,1,i,j,k);
 #endif // end if doing F2
 
 
 
-      /////////////////////////////////////
-      // F3
-      ////////////////////////////////////
+        /////////////////////////////////////
+        // F3
+        ////////////////////////////////////
 #if(N3>1)
-	MACP0A1(F3,i,j,k,B1) = MACP1A0(emf,2,i,j,k);
-	MACP0A1(F3,i,j,k,B2) = -MACP1A0(emf,1,i,j,k);
-	// always below line
-	MACP0A1(F3,i,j,k,B3) = 0.;
+        MACP0A1(F3,i,j,k,B1) = MACP1A0(emf,2,i,j,k);
+        MACP0A1(F3,i,j,k,B2) = -MACP1A0(emf,1,i,j,k);
+        // always below line
+        MACP0A1(F3,i,j,k,B3) = 0.;
 #endif // end if doing F3
       }// end loop block [using outer loop since even though 3X more expensive cache-wise for F1, less so for emf.  Reduces OpenMP overhead alot.
     }// end parallel region (and implied barrier)

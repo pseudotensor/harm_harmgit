@@ -178,7 +178,7 @@
 // below is always true unless hit certain terms that are true
 // 
 #define ALLOTHERSMINIMIZE(pl) (! (VELTERMSMINIMIZE(pl) || ORTHOVEL1TERMSMINIMIZE(pl) || ORTHOVEL2TERMSMINIMIZE(pl) || PRESSUREMINIMIZE(pl) || ((emffixedstencil==1)&&EMFTERMS(pl))  ) )
-      //#define OTHERADVECTMINIMIZE(pl) (pl==YL && DOYL!=DONOYL || pl==YNU && DOYNU!=DONOYNU || pl==ENTROPY && DOENTROPY!=DONOENTROPY)
+//#define OTHERADVECTMINIMIZE(pl) (pl==YL && DOYL!=DONOYL || pl==YNU && DOYNU!=DONOYNU || pl==ENTROPY && DOENTROPY!=DONOENTROPY)
 
 
 
@@ -217,8 +217,8 @@
 // ALSO CONTROLS WHETHER MEMORY IS ALLOCATED FOR SPECIAL 1D/2D/3D directional arrays
 // e.g. if N3==1, then second dimension is neglected in all calculations
 
-#define N1	64		// number of zones in 1-direction
-#define N2	64       	// number of zones in 2-direction
+#define N1 64  // number of zones in 1-direction
+#define N2 64        // number of zones in 2-direction
 #define N3      1               // number of zones in 3-direction
 
 //#if(DOENOFLUX==ENOFINITEVOLUME)
@@ -661,10 +661,10 @@
 
 // boundary condition mnemonics
 // can be reset/added to by user init.h
-#define OUTFLOW	0
-#define SYMM	1
-#define ASYMM	2
-#define FIXED	3
+#define OUTFLOW 0
+#define SYMM 1
+#define ASYMM 2
+#define FIXED 3
 #define POLARAXIS 4
 #define FIXEDOUTFLOW 5 // means fixed inflow but allows outflow -- basically outflow if no inflow, but if inflow then set values to fixed quantities
 #define NSSURFACE 6 // whatever in bounds.c for NS surface

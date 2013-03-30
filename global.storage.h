@@ -80,34 +80,34 @@
 // Note that we change the left-hand-side order not the right-hand-side order that should always be 1,2,3 or i,j,k
 
 
-#define OPENMP3DLOOPBLOCK2IJKSTORAGE0(i,j,k)				\
-  k=nzshift+(int)((blockijk-1)%nzsize);					\
-  j=nyshift+(int)(((blockijk-1)%(nzsize*nysize))/nzsize);		\
+#define OPENMP3DLOOPBLOCK2IJKSTORAGE0(i,j,k)                    \
+  k=nzshift+(int)((blockijk-1)%nzsize);                         \
+  j=nyshift+(int)(((blockijk-1)%(nzsize*nysize))/nzsize);       \
   i=nxshift+(int)((blockijk-1)/(nzsize*nysize));
 
-#define OPENMP3DLOOPBLOCK2IJKSTORAGE1(i,j,k) \
-  i=nxshift+(int)((blockijk-1)%nxsize);					\
-  k=nzshift+(int)(((blockijk-1)%(nxsize*nzsize))/nxsize);		\
+#define OPENMP3DLOOPBLOCK2IJKSTORAGE1(i,j,k)                    \
+  i=nxshift+(int)((blockijk-1)%nxsize);                         \
+  k=nzshift+(int)(((blockijk-1)%(nxsize*nzsize))/nxsize);       \
   j=nyshift+(int)((blockijk-1)/(nxsize*nzsize));
 
-#define OPENMP3DLOOPBLOCK2IJKSTORAGE2(i,j,k) \
-  j=nyshift+(int)((blockijk-1)%nysize);					\
-  i=nxshift+(int)(((blockijk-1)%(nysize*nxsize))/nysize);		\
+#define OPENMP3DLOOPBLOCK2IJKSTORAGE2(i,j,k)                    \
+  j=nyshift+(int)((blockijk-1)%nysize);                         \
+  i=nxshift+(int)(((blockijk-1)%(nysize*nxsize))/nysize);       \
   k=nzshift+(int)((blockijk-1)/(nysize*nxsize));
 
-#define OPENMP3DLOOPBLOCK2IJKSTORAGE3(i,j,k) \
-  j=nyshift+(int)((blockijk-1)%nysize);					\
-  k=nzshift+(int)(((blockijk-1)%(nysize*nzsize))/nysize);		\
+#define OPENMP3DLOOPBLOCK2IJKSTORAGE3(i,j,k)                    \
+  j=nyshift+(int)((blockijk-1)%nysize);                         \
+  k=nzshift+(int)(((blockijk-1)%(nysize*nzsize))/nysize);       \
   i=nxshift+(int)((blockijk-1)/(nysize*nzsize));
 
-#define OPENMP3DLOOPBLOCK2IJKSTORAGE4(i,j,k) \
-  k=nzshift+(int)((blockijk-1)%nzsize);					\
-  i=nxshift+(int)(((blockijk-1)%(nzsize*nxsize))/nzsize);		\
+#define OPENMP3DLOOPBLOCK2IJKSTORAGE4(i,j,k)                    \
+  k=nzshift+(int)((blockijk-1)%nzsize);                         \
+  i=nxshift+(int)(((blockijk-1)%(nzsize*nxsize))/nzsize);       \
   j=nyshift+(int)((blockijk-1)/(nzsize*nxsize));
 
-#define OPENMP3DLOOPBLOCK2IJKSTORAGE5(i,j,k) \
-  i=nxshift+(int)((blockijk-1)%nxsize);					\
-  j=nyshift+(int)(((blockijk-1)%(nxsize*nysize))/nxsize);		\
+#define OPENMP3DLOOPBLOCK2IJKSTORAGE5(i,j,k)                    \
+  i=nxshift+(int)((blockijk-1)%nxsize);                         \
+  j=nyshift+(int)(((blockijk-1)%(nxsize*nysize))/nxsize);       \
   k=nzshift+(int)((blockijk-1)/(nxsize*nysize));
 
 
@@ -363,10 +363,10 @@
 
 // below doesn't work since #define can't refer to other #'s
 //#define OPENMPLOOPGEN(is,ie,js,je,ks,ke,VARPRIVATE,EXTRAFOR) OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke); \
-//#pragma omp parallel private(VARPRIVATE) OPENMPGLOBALPRIVATEFULL	\
-//  {									\
-//#pragma omp for schedule(OPENMPSCHEDULE,OPENMPCHUNKSIZE(blocksize)) EXTRAFOR		\
-//    OPENMP3DLOOPBLOCK{						\
+//#pragma omp parallel private(VARPRIVATE) OPENMPGLOBALPRIVATEFULL \
+//  {         \
+//#pragma omp for schedule(OPENMPSCHEDULE,OPENMPCHUNKSIZE(blocksize)) EXTRAFOR  \
+//    OPENMP3DLOOPBLOCK{      \
 //      OPENMP3DLOPBLOCK2IJK(i,j,k);
 
 

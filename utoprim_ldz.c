@@ -25,7 +25,7 @@ static int nrunsafe(void (*funcd) (FTYPE*, FTYPE*,FTYPE*), FTYPE *guess);
 static int nrunsafeorig(void (*funcd) (FTYPE*, FTYPE*,FTYPE*), FTYPE *guess);
 static void func(FTYPE *x, FTYPE *f, FTYPE *df);
 static FTYPE rtsafe(void (*funcd) (), FTYPE x1, FTYPE x2,
-		     FTYPE xacc);
+                    FTYPE xacc);
 static void funcorig(FTYPE *x, FTYPE *f, FTYPE *df);
 
 
@@ -88,26 +88,26 @@ int Utoprim_ldz(FTYPE *U, struct of_geom *ptrgeom, PFTYPE *lpflag, FTYPE *pr, FT
   PALLLOOP(pl) pr0[pl]=pr[pl];
   // for debug
   /*
-  if (get_state(pr0, ptrgeom, &q) >= 1)
+    if (get_state(pr0, ptrgeom, &q) >= 1)
     FAILSTATEMENT("utoprim.c:utoprim()", "get_state()", 1);
-  if (primtoU(NOTHING,pr0, &q, ptrgeom, Ustart) >= 1)
+    if (primtoU(NOTHING,pr0, &q, ptrgeom, Ustart) >= 1)
     FAILSTATEMENT("utoprim_ldz.c:utoprim()", "primtoU()", 1);
   
 
-  if(t>413.84){
+    if(t>413.84){
     if((ptrgeom->i+startpos[1]==32)&&(ptrgeom->j+startpos[2]==0)){
-      PALLLOOP(pl){
-	dualfprintf(fail_file,"32: pr[%d]=%21.15g\n",pl,pr[pl]);
-      }
+    PALLLOOP(pl){
+    dualfprintf(fail_file,"32: pr[%d]=%21.15g\n",pl,pr[pl]);
+    }
     }
     if((ptrgeom->i+startpos[1]==33)&&(ptrgeom->j+startpos[2]==0)){
-      PALLLOOP(pl){
-	dualfprintf(fail_file,"33: pr[%d]=%21.15g\n",pl,pr[pl]);
-      }
+    PALLLOOP(pl){
+    dualfprintf(fail_file,"33: pr[%d]=%21.15g\n",pl,pr[pl]);
     }
-  }
-  // end for debug
-  */
+    }
+    }
+    // end for debug
+    */
 #endif
 
 
@@ -157,8 +157,8 @@ int Utoprim_ldz(FTYPE *U, struct of_geom *ptrgeom, PFTYPE *lpflag, FTYPE *pr, FT
   if(wvsq_solv_ldz(&vsq, &W)>=1){
     if(debugfail>=1) dualfprintf(fail_file,"t=%21.15g : i=%d j=%d : failed to solve in ldz\n",t,startpos[1]+ptrgeom->i,startpos[2]+ptrgeom->j);
     /*
-    if (fail(i,j,k,FAIL_LDZ) >= 1)
-    return(1);
+      if (fail(i,j,k,FAIL_LDZ) >= 1)
+      return(1);
     */
     // Flag bad solution to be treated later by fixup()
     *glpflag = UTOPRIMFAILCONVUTSQ;
@@ -173,7 +173,7 @@ int Utoprim_ldz(FTYPE *U, struct of_geom *ptrgeom, PFTYPE *lpflag, FTYPE *pr, FT
     else{
       dualfprintf(fail_file,"t=%21.15g : unexpected result from utoprim_ldz: vsq=%21.15g passed\n",t,vsq);
       if (fail(i,j,k,FAIL_LDZ) >= 1)
-	return(1);
+        return(1);
     }
   }
 
@@ -222,13 +222,13 @@ int Utoprim_ldz(FTYPE *U, struct of_geom *ptrgeom, PFTYPE *lpflag, FTYPE *pr, FT
     sprintf(testtext[pl],"%21.15g",pr[pl]);
     if((!strcmp("nan",testtext[pl]))||(!strcmp("inf",testtext[pl]))||(!strcmp("-inf",testtext[pl]))){
       if(debugfail>=1){
-	dualfprintf(fail_file,"(SHOULD NEVER REACH THIS ANYMORE!) nan found as solution for ldz: i=%d j=%d p=%d pl=%d\n",startpos[1]+ptrgeom->i,startpos[2]+ptrgeom->j,ptrgeom->p,pl);
-	dualfprintf(fail_file,"failed to find solution in ldz\n");
-	//PALLLOOP(pl) 	dualfprintf(fail_file,"ldz nan: pr[%d]=%21.15g U=%21.15g\n",pl,pr[pl],U[pl]);
-	//dualfprintf(fail_file,"vsq=%21.15g gamma=%21.15g\n",vsq,gamma);
+        dualfprintf(fail_file,"(SHOULD NEVER REACH THIS ANYMORE!) nan found as solution for ldz: i=%d j=%d p=%d pl=%d\n",startpos[1]+ptrgeom->i,startpos[2]+ptrgeom->j,ptrgeom->p,pl);
+        dualfprintf(fail_file,"failed to find solution in ldz\n");
+        //PALLLOOP(pl)  dualfprintf(fail_file,"ldz nan: pr[%d]=%21.15g U=%21.15g\n",pl,pr[pl],U[pl]);
+        //dualfprintf(fail_file,"vsq=%21.15g gamma=%21.15g\n",vsq,gamma);
       }
       if (fail(i,j,k,FAIL_LDZ) >= 1)
-	return(1);
+        return(1);
     }
   }
 #else
@@ -252,22 +252,22 @@ int Utoprim_ldz(FTYPE *U, struct of_geom *ptrgeom, PFTYPE *lpflag, FTYPE *pr, FT
     if(fabs(pr[pl])>prMAX[pl]){
       dualfprintf(fail_file,"t=%21.15g wack solution found as solution for ldz: i=%d j=%d p=%d pl=%d pr=%21.15g prMAX=%21.15g\n",t,startpos[1]+ptrgeom->i,startpos[2]+ptrgeom->j,ptrgeom->p,pl,pr[pl],prMAX[pl]);
       /*
-      dualfprintf(fail_file,"wacked value: pr[%d]: %21.15g > %21.15g\n",pl,pr[pl],prMAX[pl]);
-      bl_coord_ijk_2(ptrgeom->i,ptrgeom->j,ptrgeom->p,X, V);
-      r=V[1]; th=V[2];
-      dualfprintf(fail_file,"i=%d j=%d \nx1=%21.15g x2=%21.15g \nr=%21.15g th=%21.15g \ng=%21.15g\n",startpos[1]+ptrgeom->i,startpos[2]+ptrgeom->j,X[1],X[2],r,th,ptrgeom->g);
-      dualfprintf(fail_file,"ldz wack: pr0=\n");
-      PALLLOOP(pl) 	dualfprintf(fail_file,"%21.15g\n",pr0[pl]);
-      dualfprintf(fail_file,"ldz wack: U0=\n");
-      PALLLOOP(pl) 	dualfprintf(fail_file,"%21.15g\n",Ustart[pl]);
-      dualfprintf(fail_file,"ldz wack: Utarget=\n");
-      PALLLOOP(pl) 	dualfprintf(fail_file,"%21.15g\n",U[pl]);
-      dualfprintf(fail_file,"ldz wack: pr=\n");
-      PALLLOOP(pl) 	dualfprintf(fail_file,"%21.15g\n",pr[pl]);
-      PALLLOOP(pl) 	dualfprintf(fail_file,"vsq=%21.15g gamma=%21.15g\n",vsq,gamma);
+        dualfprintf(fail_file,"wacked value: pr[%d]: %21.15g > %21.15g\n",pl,pr[pl],prMAX[pl]);
+        bl_coord_ijk_2(ptrgeom->i,ptrgeom->j,ptrgeom->p,X, V);
+        r=V[1]; th=V[2];
+        dualfprintf(fail_file,"i=%d j=%d \nx1=%21.15g x2=%21.15g \nr=%21.15g th=%21.15g \ng=%21.15g\n",startpos[1]+ptrgeom->i,startpos[2]+ptrgeom->j,X[1],X[2],r,th,ptrgeom->g);
+        dualfprintf(fail_file,"ldz wack: pr0=\n");
+        PALLLOOP(pl)  dualfprintf(fail_file,"%21.15g\n",pr0[pl]);
+        dualfprintf(fail_file,"ldz wack: U0=\n");
+        PALLLOOP(pl)  dualfprintf(fail_file,"%21.15g\n",Ustart[pl]);
+        dualfprintf(fail_file,"ldz wack: Utarget=\n");
+        PALLLOOP(pl)  dualfprintf(fail_file,"%21.15g\n",U[pl]);
+        dualfprintf(fail_file,"ldz wack: pr=\n");
+        PALLLOOP(pl)  dualfprintf(fail_file,"%21.15g\n",pr[pl]);
+        PALLLOOP(pl)  dualfprintf(fail_file,"vsq=%21.15g gamma=%21.15g\n",vsq,gamma);
       
-      if (fail(i,j,k,FAIL_LDZ) >= 1)
-	return(1);
+        if (fail(i,j,k,FAIL_LDZ) >= 1)
+        return(1);
       */
       gotwack=1;
     }
@@ -301,10 +301,10 @@ int wvsq_solv_ldz(FTYPE *vsq, FTYPE *W)
   // x2 = 0.5 + 0.5*(*vsq) ;
 
 #if(JONCORRECTIONS)
-    if(nrunsafe(func, vsq)>=1){
-      if(debugfail>=1) dualfprintf(fail_file,"t=%21.15g : nrsafe failed\n",t);
-      return(1);
-    }
+  if(nrunsafe(func, vsq)>=1){
+    if(debugfail>=1) dualfprintf(fail_file,"t=%21.15g : nrsafe failed\n",t);
+    return(1);
+  }
   // sometimes, however unlikely, it can (and has) happen that vsq is identically 1.0 to machine precision.  This result can, sometimes, have good enough error to pass nrunsafe.  We however cannot allow this, so fail on this case.
   //  if(*vsq>=1.0){
   // don't fail this since not so bad as a real failure unless actually >=1.0, we only want to rescale velocities, not screw up solution
@@ -321,7 +321,7 @@ int wvsq_solv_ldz(FTYPE *vsq, FTYPE *W)
   // tol = 1.e-4 ;
   // *vsq = rtsafe(func,x1,x2,tol) ;
 #else
-    nrunsafeorig(funcorig, vsq);
+  nrunsafeorig(funcorig, vsq);
 #endif
 
   *W = Wc;
@@ -334,30 +334,30 @@ int wvsq_solv_ldz(FTYPE *vsq, FTYPE *W)
 /*
 // low error mode
 // choice
-#define TOL 		1.e-15
+#define TOL   1.e-15
 #define MINTOL          1.e-5
 #define NITERGOODMAX    50
-#define NITERMAX  	50
-#define NITERMIN  	4
+#define NITERMAX   50
+#define NITERMIN   4
 */
 
 // middle error mode
 // choice
-#define TOL 		1.e-10
+#define TOL   1.e-10
 #define MINTOL          1.e-5
 #define NITERGOODMAX    20
-#define NITERMAX  	20
-#define NITERMIN  	3
+#define NITERMAX   20
+#define NITERMIN   3
 
 
 // seems to fail actually, (causes evolution problems and sometimes failure)
 /*
 // high error mode
-#define TOL 		1.e-5
+#define TOL   1.e-5
 #define MINTOL          1.e-3
 #define NITERGOODMAX    5
-#define NITERMAX  	10
-#define NITERMIN  	0
+#define NITERMAX   10
+#define NITERMIN   0
 */
 
 int nrunsafeorig(void (*funcd)(FTYPE*,FTYPE*,FTYPE*), FTYPE* guess)
@@ -414,30 +414,30 @@ int nrunsafe(void (*funcd) (FTYPE*, FTYPE*,FTYPE*), FTYPE *guess)
     (*funcd) (guess, &f, &df);
     if(n_iter==0){
       if(fabs(f)==1E30){
-	// then absolute failure since initial guess should always be good!
-	dualfprintf(fail_file,"initial guess failure: n_iter=%d oldguess=%21.15g guess=%21.15g lastf=%21.15g f=%21.15g lastdf=%21.15g df=%21.15g Wc=%21.15g\n",n_iter,oldguess,*guess,lastf,f,lastdf,df,Wc);
-	return(1);
+        // then absolute failure since initial guess should always be good!
+        dualfprintf(fail_file,"initial guess failure: n_iter=%d oldguess=%21.15g guess=%21.15g lastf=%21.15g f=%21.15g lastdf=%21.15g df=%21.15g Wc=%21.15g\n",n_iter,oldguess,*guess,lastf,f,lastdf,df,Wc);
+        return(1);
       }
     }
     if(dodamp){
       if(fabs(f)>=fabs(lastf)){
-	//if(fabs(f)>=fabs(lastf)+alpha*df*(*guess-oldguess)){
-	if(debugfail>=2){
-	  if(fabs(f)==1E30){// then physics failure, output data
-	    dualfprintf(fail_file,"reduced dampfactor: n_iter=%d oldguess=%21.15g guess=%21.15g lastf=%21.15g f=%21.15g lastdf=%21.15g df=%21.15g Wc=%21.15g\n",n_iter,oldguess,*guess,lastf,f,lastdf,df,Wc);
-	  }
-	}
+        //if(fabs(f)>=fabs(lastf)+alpha*df*(*guess-oldguess)){
+        if(debugfail>=2){
+          if(fabs(f)==1E30){// then physics failure, output data
+            dualfprintf(fail_file,"reduced dampfactor: n_iter=%d oldguess=%21.15g guess=%21.15g lastf=%21.15g f=%21.15g lastdf=%21.15g df=%21.15g Wc=%21.15g\n",n_iter,oldguess,*guess,lastf,f,lastdf,df,Wc);
+          }
+        }
         // then we need to damp
-	dampfactor*=dampfactorchange;
-	*guess=oldguess-lastf/lastdf*dampfactor; // revert to previous solution with 1 damped
+        dampfactor*=dampfactorchange;
+        *guess=oldguess-lastf/lastdf*dampfactor; // revert to previous solution with 1 damped
       }
       else{
-	// otherwise good, just continue
-	oldguess=*guess;
-	*guess -= f / df * dampfactor;
-	lastf=f;
-	lastdf=df;
-	n_itergood++;
+        // otherwise good, just continue
+        oldguess=*guess;
+        *guess -= f / df * dampfactor;
+        lastf=f;
+        lastdf=df;
+        n_itergood++;
       }
     }
     else{
@@ -449,8 +449,8 @@ int nrunsafe(void (*funcd) (FTYPE*, FTYPE*,FTYPE*), FTYPE *guess)
   if (n_itergood == NITERMAX) {
     if(fabs(f)>MINTOL){
       if(debugfail>=1){
-	dualfprintf(fail_file, "t=%21.15g : max iterations exceeded\n",t);
-	dualfprintf(fail_file,"t=%21.15g : ldz method unable to converge: guess=%21.15g f=%21.15g dampfactor=%21.15g\n",t,*guess,f,dampfactor);
+        dualfprintf(fail_file, "t=%21.15g : max iterations exceeded\n",t);
+        dualfprintf(fail_file,"t=%21.15g : ldz method unable to converge: guess=%21.15g f=%21.15g dampfactor=%21.15g\n",t,*guess,f,dampfactor);
       }
       return(1);
     }
@@ -495,14 +495,14 @@ static void func(FTYPE *x, FTYPE *f, FTYPE *df)
   }
   glf1 = sqrt(1. - vsq);
   /*
-  if(glf1==0.0){
+    if(glf1==0.0){
     // should never reach this if above is caught
     if(debugfail>=1) dualfprintf(fail_file,"tofail in ldz: glf1=%21.15g\n",glf1);
     *f = 1E30;
     *df = 1E30;
     Wc=1E30;
     return;
-  }
+    }
   */
   igam1 = (gam - 1.) / gam;
   cc = 1. / (1. - igam1 * (1. - vsq));
@@ -519,15 +519,15 @@ static void func(FTYPE *x, FTYPE *f, FTYPE *df)
 
     if(q>=0.0){
       if(q<1E-10){
-	if(debugfail>=1) dualfprintf(fail_file,"wastofail in ldz: qldz=%21.15g set to -1E-10n",q);
-	q=-1E-10; // minimum, failure usually at 1E-21 level or 0
+        if(debugfail>=1) dualfprintf(fail_file,"wastofail in ldz: qldz=%21.15g set to -1E-10n",q);
+        q=-1E-10; // minimum, failure usually at 1E-21 level or 0
       }
       else{
-	if(debugfail>=1) dualfprintf(fail_file,"tofail in ldz: qldz=%21.15g\n",q);
-	*f = 1E30;
-	*df = 1E30;
-	Wc=1E30;
-	return;
+        if(debugfail>=1) dualfprintf(fail_file,"tofail in ldz: qldz=%21.15g\n",q);
+        *f = 1E30;
+        *df = 1E30;
+        Wc=1E30;
+        return;
       }
     }
     
@@ -536,29 +536,29 @@ static void func(FTYPE *x, FTYPE *f, FTYPE *df)
 
     if(cosa>1.0){
       if(cosa < 1.0+1E-10){
-	// occurs exceedingly alot (some machine precision issue)
-	if(debugfail>=2) dualfprintf(fail_file,"wastofail in ldz: cosaldz=%21.15g set to 1\n",cosa);
-	cosa = 1.0;
+        // occurs exceedingly alot (some machine precision issue)
+        if(debugfail>=2) dualfprintf(fail_file,"wastofail in ldz: cosaldz=%21.15g set to 1\n",cosa);
+        cosa = 1.0;
       }
       else{
-	if(debugfail>=1) dualfprintf(fail_file,"tofail in ldz: cosaldz=%21.15g\n",cosa);
-	*f = 1E30;
-	*df = 1E30;
-	Wc=1E30;
-	return;
+        if(debugfail>=1) dualfprintf(fail_file,"tofail in ldz: cosaldz=%21.15g\n",cosa);
+        *f = 1E30;
+        *df = 1E30;
+        Wc=1E30;
+        return;
       }
     }
     else if(cosa<-1.){
       if(cosa > -1.0-1E-10){
-	if(debugfail>=2) dualfprintf(fail_file,"wastofail in ldz: cosa=%21.15g set to -1\n",cosa);
-	cosa = -1.0;
+        if(debugfail>=2) dualfprintf(fail_file,"wastofail in ldz: cosa=%21.15g set to -1\n",cosa);
+        cosa = -1.0;
       }
       else{
-	if(debugfail>=1) dualfprintf(fail_file,"tofail in ldz: cosa=%21.15g\n",cosa);
-	*f = 1E30;
-	*df = 1E30;
-	Wc=1E30;
-	return;
+        if(debugfail>=1) dualfprintf(fail_file,"tofail in ldz: cosa=%21.15g\n",cosa);
+        *f = 1E30;
+        *df = 1E30;
+        Wc=1E30;
+        return;
       }
     }
     th = acos(cosa);
@@ -599,7 +599,7 @@ static void func(FTYPE *x, FTYPE *f, FTYPE *df)
 
     vp2 = Tsq * w1 * w1;
     dw = -igam1 * cc * (Wc - 0.5 * Dc / glf1) / (1. +
-						 2. * w1 * (Wc - ee));
+                                                 2. * w1 * (Wc - ee));
     *f = (wsq * vsq + vp2 * (2. * Wc + Bsq) - Qsq) * (inormc * inormc);
     *df = (wsq + 2. * (Wc * dw * (vsq - vp2 * w1))) * (inormc * inormc);
   } else {
@@ -691,19 +691,19 @@ FTYPE rtsafe(void (*funcd) (), FTYPE x1, FTYPE x2, FTYPE xacc)
   (*funcd) (rts, &f, &df);
   for (j = 1; j <= MAXIT; j++) {
     if ((((rts - xh) * df - f) * ((rts - xl) * df - f) >= 0.0)
-	|| (fabs(2.0 * f) > fabs(dxold * df))) {
+        || (fabs(2.0 * f) > fabs(dxold * df))) {
       dxold = dx;
       dx = 0.5 * (xh - xl);
       rts = xl + dx;
       if (xl == rts)
-	return rts;
+        return rts;
     } else {
       dxold = dx;
       dx = f / df;
       temp = rts;
       rts -= dx;
       if (temp == rts)
-	return rts;
+        return rts;
     }
     if (fabs(dx) < xacc)
       return rts;
