@@ -1554,7 +1554,7 @@ int eosdump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
   int loc=CENT;
 
 
-  dualfprintf(fail_file,"NUMEOSGLOBALS=%g LASTEOSGLOBAL=%g FIRSTEOSGLOBAL=%g\n",NUMEOSGLOBALS,LASTEOSGLOBAL,FIRSTEOSGLOBAL);
+  //  dualfprintf(fail_file,"NUMEOSGLOBALS=%g LASTEOSGLOBAL=%g FIRSTEOSGLOBAL=%g\n",NUMEOSGLOBALS,LASTEOSGLOBAL,FIRSTEOSGLOBAL);
 
   //////////////////////////
   //
