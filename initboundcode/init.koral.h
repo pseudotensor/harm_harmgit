@@ -1,124 +1,3 @@
-//problem names
-#define RADBEAM2D (1) // beam of light in SPC
-#define RADTUBE (6) // radiative shock tubes as in Farris et al 09 - assumes Edd.approximation which is currently not handled
-#define RADBONDI (7) // like in Fragile's paper (called BONDI in koral)
-#define RADPULSE (10) //  radiative blob spreading around
-#define RADSHADOW (11)  // radiative shadow
-#define RADATM (12) // atmosphere enlighted
-#define RADPULSEPLANAR (1000) // like RADPULSE but with scattering
-#define RADWAVE (15) // 1d linear rad wave with periodic BC
-#define RADPULSE3D (16) // radiative blob spreading around
-#define RADDBLSHADOW (17) // radiative shadow with two beams inclined
-#define ATMSTATIC (18) // simple hydrostatic atmosphere in SPC
-#define RADBEAM2DKS (19) // like RADBEAM2D, just chooses MCOORD KSCOORDS
-#define RADBEAMFLAT (24) //  beam of light in Cartesian
-#define RADDONUT (25) // 2d radiative Polish donut in KS (called RDONUT in koral.  Similar setup to RADNT.)
-#define RADBEAM2DKSVERT (26) // 2d radiative beam in r,theta plane (does more than KS)
-#define FLATNESS (27) // flat  (koral: but with non-zero four-force)
-#define RADWALL (29) // flat with wall
-#define RADNT (30) // emission from midplane
-#define RADFLATDISK (31) // emission from flat disk (called FLATDISK in koral.  Very similar to RADNT.)
-#define RADCYLBEAM (32) // beam towards the axis in cylindrical (called CYLBEAM in koral.  Somewhat similar to RADFLATDISK but in CYL coords.)
-#define RADDOT (33) // radiating dot (Olek changes this while I was testing)
-#define RADCYLBEAMCART (40) //  similar to RADCYLBEAM but in cartesian
-
-
-
-// TOTRY : optically thin dot in SPC or pulse in SPC.
-
-// TOTRY: Maybe need to avoid bounding if not in PBOUNDLOOP?  Generally true.
-
-
-// KORALTODO: PROBLEMS:
-
-
-// RADATM 5-10X slower now (more inversions somehow?) git diff 070483273c8b08fede6e4dcab95a6a4b621a239e|less  Unsure, seems nothing special...have to look harder since huge hit.  Not inversion accuracy!  Watch an implicit step or count inversions.
-
-// RADATM need to try higher-order interpolation to see if velocity is smaller as in koral paper.  No change.
-
-// RADATM with paraline clearly shows oscillations in vx per grid cell while not improving error.
-
-// RADBONDI kinda works at high resolution with para until entropy reversions occur.  Maybe try MP5 or average2point?
-
-// RADDONUT: Donut explodes, and inversions take forever.
-
-
-//TODO:
-#define RADDOTFLAT (41) // similar to RADDOT but in cartesian (well, RADDOT was similar, but still different after Olek changes)
-#define RVDONUT (42) // radiative and viscous 
-
-
-// non-implemented NON-radiative problems in KORAL that are semi-duplicated by some other radiative tests
-#define RADINFALL (2) // RADBEAM2D with FLATBACKGROUND=0 is like this
-#define DONUT (3) // initboundcode/*fishmon* similar
-#define GEODESICINFALL (4) //like RADINFALL but with blobs
-#define HDTUBE (8) // as in HARM paper
-#define HDTUBE2 (9) // 2D of HDTUBE
-#define DONUTOSC (13) // 2d Polish donut oscillating
-#define ATMKS (20) //  radial atmosphere infalling in KS
-#define DONUTKS (21) // 2d Polish donut in KS (like DONUT)
-#define DONUTMKS1 (22) // 2d Polish donut in MKS1 (like DONUT)
-#define ATMMKS1 (23) //  radial atmosphere infalling in MKS1 (like ATMKS)
-#define BOWSHOCK (28) // bow shock hydro test
-
-// non-implemented radiative problems in KORAL.  Olek says not interesting pre-test versions of other actual tests.
-#define RADWAVEBC (14) // 1d linear rad wave imposed on boundary (not setup in koral yet -- looks like time-dep BC for density on left boundary)
-#define EDDINFALL (5) // infall with flux from inside
-
-
-
-
-////////////////
-// other BCTypes beyond those in definit.h (can't overlap numbers from there)
-//////////////
-#define RADBEAMFLATINFLOW 201
-#define RADSHADOWINFLOW 202
-#define RADSHADOWINFLOWX2UP 203
-#define RADSHADOWINFLOWX2DN 204
-#define RADBEAM2DBEAMINFLOW 205
-#define RADBEAM2DFLOWINFLOW 206
-#define RADATMBEAMINFLOW 207
-#define RADWALLINFLOW 208
-#define RADBONDIINFLOW 209
-#define RADNTBC 210
-#define RADCYLBEAMBC 211
-#define RADBEAM2DKSVERTBEAMINFLOW 212
-#define RADCYLBEAMCARTBC 213
-
-
-///////////////////////////////
-//problem choice
-///////////////////////////////
-
-//#define WHICHPROBLEM FLATNESS
-//#define WHICHPROBLEM RADBEAMFLAT
-//#define WHICHPROBLEM RADPULSE
-//#define WHICHPROBLEM RADPULSEPLANAR
-//#define WHICHPROBLEM RADPULSE3D
-//#define WHICHPROBLEM RADTUBE
-//#define WHICHPROBLEM RADSHADOW
-#define WHICHPROBLEM RADDBLSHADOW
-//#define WHICHPROBLEM ATMSTATIC
-//#define WHICHPROBLEM RADATM
-//#define WHICHPROBLEM RADBEAM2D
-//#define WHICHPROBLEM RADWALL
-//#define WHICHPROBLEM RADWAVE
-//#define WHICHPROBLEM RADBONDI
-//#define WHICHPROBLEM RADDOT
-//#define WHICHPROBLEM RADNT // TODOCHECK
-//#define WHICHPROBLEM RADFLATDISK // TODOCHECK
-//#define WHICHPROBLEM RADDONUT // TODO ONCE RADBONDI works.
-//#define WHICHPROBLEM RADCYLBEAM
-//#define WHICHPROBLEM RADBEAM2DKSVERT
-//#define WHICHPROBLEM RADCYLBEAMCART
-
-
-
-
-
-
-
-
 //undefs
 #undef MAXWELL
 #undef TRACKVPOT
@@ -257,494 +136,6 @@
 #ifdef N3 
 #undef N3
 #endif
-
-//****************************************//
-//****************************************//
-//****************************************//
-// If set any dimensional constants, should not convert to code units here since conversion not yet defined.  Just set MPERSUN here and convert in init.c
-//****************************************//
-//****************************************//
-
-// number of solar masses to define units
-
-//#define MPERSUN (1.0)
-
-// odd default choice by koral that gives Mass in cm as 1cm.
-#define MPERSUN (6.77255E-1)
-//#define MPERSUN (67725.2) // GM/c^2=1cm if gTILDA=1E-10 and cTILDA=1
-//#define MPERSUN (6.77255E-11) // with koral's gTILDA=1E-10
-
-
-
-
-
-
-
-//****************************************//
-//****************************************//
-
-#if(WHICHPROBLEM==FLATNESS)
-
-#undef WHICHRADSOURCEMETHOD
-#define WHICHRADSOURCEMETHOD SOURCEMETHODNONE
-//#define WHICHRADSOURCEMETHOD SOURCEMETHODEXPLICIT
-//#define WHICHRADSOURCEMETHOD SOURCEMETHODIMPLICIT
-
-#define N1 20
-#define N2 20
-#define N3 1
-
-#define MCOORD CARTMINKMETRIC2
-
-#endif
-
-//****************************************//
-//****************************************//
-
-#if(WHICHPROBLEM==RADPULSE || WHICHPROBLEM==RADPULSEPLANAR)
-
-
-
-#undef FORCESOLVEL
-#define FORCESOLVEL 0 // for testing against koral // KORALTODO : Koral actually fails if uses large timestep as suggested by tau limiter.
-
-#define N1 100
-#define N2 1 
-#define N3 1
-
-#endif
-
-#if(WHICHPROBLEM==RADPULSE3D)
-
-// due to memory per core limited by many variables, can't do 50^3.  Roughly can't do more than 32^3 per core.
-#define N1 32
-#define N2 32
-#define N3 32
-
-#endif
-
-#if(WHICHPROBLEM==RADPULSE || WHICHPROBLEM==RADPULSEPLANAR || WHICHPROBLEM==RADPULSE3D)
-
-#undef WHICHRADSOURCEMETHOD
-//#define WHICHRADSOURCEMETHOD SOURCEMETHODNONE
-//#define WHICHRADSOURCEMETHOD SOURCEMETHODEXPLICIT
-//#define WHICHRADSOURCEMETHOD SOURCEMETHODIMPLICIT
-#define WHICHRADSOURCEMETHOD SOURCEMETHODIMPLICITEXPLICITCHECK
-//#define WHICHRADSOURCEMETHOD SOURCEMETHODEXPLICITSUBCYCLE
-
-#define MCOORD CARTMINKMETRIC2
-
-
-#endif
-
-
-//****************************************//
-//****************************************//
-
-#if(WHICHPROBLEM==RADBEAMFLAT)
-
-#undef FORCESOLVEL
-#define FORCESOLVEL 0 // to compare against koral
-
-#undef RADSHOCKFLAT
-#define RADSHOCKFLAT 0 // can't use flattener near inlet where static jump -- leads to lots of oscillations with PPM.
-
-#undef WHICHRADSOURCEMETHOD
-//#define WHICHRADSOURCEMETHOD SOURCEMETHODNONE
-//#define WHICHRADSOURCEMETHOD SOURCEMETHODEXPLICIT
-#define WHICHRADSOURCEMETHOD SOURCEMETHODIMPLICITEXPLICITCHECK // works!
-
-//#define N1 20
-//#define N2 20
-//#define N1 30
-//#define N2 30
-#define N1 31 // making like problem24 in koral code
-#define N2 31 // making like problem24 in koral code
-#define N3 1
-
-#define MCOORD CARTMINKMETRIC2
-
-#endif
-
-
-
-//****************************************//
-//****************************************//
-
-#if(WHICHPROBLEM==RADTUBE)
-
-#undef EOMRADTYPE
-//#define EOMRADTYPE EOMRADEDD // used by calc_Rij_ff() to set IC so IC use Eddington approximation with Prad=(1/3)Irad (intensity)
-#define EOMRADTYPE EOMRADM1CLOSURE
-
-#undef WHICHRADSOURCEMETHOD
-//#define WHICHRADSOURCEMETHOD SOURCEMETHODNONE
-//#define WHICHRADSOURCEMETHOD SOURCEMETHODEXPLICIT
-//#define WHICHRADSOURCEMETHOD SOURCEMETHODEXPLICITSUBCYCLE
-//#define WHICHRADSOURCEMETHOD SOURCEMETHODIMPLICIT
-#define WHICHRADSOURCEMETHOD SOURCEMETHODIMPLICITEXPLICITCHECK
-
-#define N1 800
-#define N2 1
-#define N3 1
-
-#define MCOORD CARTMINKMETRIC2
-
-#endif
-
-
-
-//****************************************//
-//****************************************//
-
-
-
-#if(WHICHPROBLEM==RADSHADOW)
-
-#undef EOMRADTYPE
-//#define EOMRADTYPE EOMRADEDD // used by calc_Rij_ff() to set IC so IC use Eddington approximation with Prad=(1/3)Irad (intensity)
-#define EOMRADTYPE EOMRADM1CLOSURE
-
-#undef WHICHRADSOURCEMETHOD
-//#define WHICHRADSOURCEMETHOD SOURCEMETHODNONE
-//#define WHICHRADSOURCEMETHOD SOURCEMETHODEXPLICIT
-//#define WHICHRADSOURCEMETHOD SOURCEMETHODEXPLICITSUBCYCLE
-//#define WHICHRADSOURCEMETHOD SOURCEMETHODIMPLICIT
-#define WHICHRADSOURCEMETHOD SOURCEMETHODIMPLICITEXPLICITCHECK
-
-#define N1 100
-#define N2 50
-#define N3 1
-
-#define MCOORD CARTMINKMETRIC2
-
-#endif
-
-
-
-//****************************************//
-//****************************************//
-
-
-
-#if(WHICHPROBLEM==RADDBLSHADOW)
-
-#undef EOMRADTYPE
-//#define EOMRADTYPE EOMRADEDD // used by calc_Rij_ff() to set IC so IC use Eddington approximation with Prad=(1/3)Irad (intensity)
-#define EOMRADTYPE EOMRADM1CLOSURE
-
-#undef WHICHRADSOURCEMETHOD
-//#define WHICHRADSOURCEMETHOD SOURCEMETHODNONE
-//#define WHICHRADSOURCEMETHOD SOURCEMETHODEXPLICIT
-//#define WHICHRADSOURCEMETHOD SOURCEMETHODEXPLICITSUBCYCLE
-//#define WHICHRADSOURCEMETHOD SOURCEMETHODIMPLICIT
-#define WHICHRADSOURCEMETHOD SOURCEMETHODIMPLICITEXPLICITCHECK
-
-//#define N1 120 // code
-#define N1 100 // paper
-//#define N2 20 // code
-#define N2 50 // paper
-#define N3 1
-
-#define MCOORD CARTMINKMETRIC2
-
-#endif
-
-
-
-
-//****************************************//
-//****************************************//
-
-#if(WHICHPROBLEM==RADBEAM2D || WHICHPROBLEM==RADBEAM2DKS)
-
-#undef FORCESOLVEL
-#define FORCESOLVEL 0 // doesn't seem to help avoid failures for this test.
-
-
-#undef RADSHOCKFLAT
-#define RADSHOCKFLAT 0 // can't use flattener near inlet where static jump -- leads to lots of oscillations with PPM.
-
-#undef WHICHRADSOURCEMETHOD
-//#define WHICHRADSOURCEMETHOD SOURCEMETHODNONE
-//#define WHICHRADSOURCEMETHOD SOURCEMETHODEXPLICIT
-#define WHICHRADSOURCEMETHOD SOURCEMETHODIMPLICITEXPLICITCHECK
-
-// KORALNOTE: Paper says 30x60 for rin-rout and phi=0..pi/2, which is same as 30x30 for rin-rout and phi=0..pi/4 as setup in koral
-#define N1 30
-#define N2 1
-#define N3 30
-
-// can choose any spherical polar coordinate system
-#if(WHICHPROBLEM==RADBEAM2D)
-//#define MCOORD SPCMINKMETRIC
-#define MCOORD BLCOORDS // default koral is a=0 BLCOORDS
-#elif(WHICHPROBLEM==RADBEAM2DKS)
-#define MCOORD KSCOORDS
-#endif
-
-#endif
-
-
-//****************************************//
-//****************************************//
-
-#if(WHICHPROBLEM==RADBEAM2DKSVERT)
-
-
-#undef RADSHOCKFLAT
-#define RADSHOCKFLAT 0 // can't use flattener near inlet where static jump -- leads to lots of oscillations with PPM.
-
-#undef WHICHRADSOURCEMETHOD
-//#define WHICHRADSOURCEMETHOD SOURCEMETHODNONE
-//#define WHICHRADSOURCEMETHOD SOURCEMETHODEXPLICIT
-#define WHICHRADSOURCEMETHOD SOURCEMETHODIMPLICITEXPLICITCHECK
-
-#define N1 30
-#define N2 30
-#define N3 1
-
-//#define MCOORD SPCMINKMETRIC
-#define MCOORD KSCOORDS
-
-#endif
-
-
-
-//****************************************//
-//****************************************//
-
-#if(WHICHPROBLEM==ATMSTATIC)
-
-#undef WHICHRADSOURCEMETHOD
-//#define WHICHRADSOURCEMETHOD SOURCEMETHODNONE
-//#define WHICHRADSOURCEMETHOD SOURCEMETHODEXPLICIT
-#define WHICHRADSOURCEMETHOD SOURCEMETHODIMPLICITEXPLICITCHECK
-
-#define N1 400
-#define N2 1
-#define N3 1
-
-// can choose any spherical polar coordinate system
-//#define MCOORD SPCMINKMETRIC
-//#define MCOORD KSCOORDS
-#define MCOORD BLCOORDS
-
-#endif
-
-
-//****************************************//
-//****************************************//
-
-#if(WHICHPROBLEM==RADATM)
-
-#undef WHICHRADSOURCEMETHOD
-//#define WHICHRADSOURCEMETHOD SOURCEMETHODNONE
-//#define WHICHRADSOURCEMETHOD SOURCEMETHODEXPLICIT
-#define WHICHRADSOURCEMETHOD SOURCEMETHODIMPLICITEXPLICITCHECK
-
-#define N1 40
-#define N2 1
-#define N3 1
-
-// can choose any spherical polar coordinate system with gravity
-//#define MCOORD KSCOORDS
-#define MCOORD BLCOORDS
-
-#undef MPERSUN
-#define MPERSUN (1.0) // So mass=1 as in koral for gTILDE=1.0
-
-
-#endif
-
-//****************************************//
-//****************************************//
-
-#if(WHICHPROBLEM==RADWALL)
-
-#undef WHICHRADSOURCEMETHOD
-//#define WHICHRADSOURCEMETHOD SOURCEMETHODNONE
-//#define WHICHRADSOURCEMETHOD SOURCEMETHODEXPLICIT
-//#define WHICHRADSOURCEMETHOD SOURCEMETHODIMPLICIT
-#define WHICHRADSOURCEMETHOD SOURCEMETHODIMPLICITEXPLICITCHECK
-
-#define N1 60
-#define N2 20
-#define N3 1
-
-#define MCOORD CARTMINKMETRIC2
-
-#endif
-
-//****************************************//
-//****************************************//
-
-#if(WHICHPROBLEM==RADWAVE)
-
-#undef WHICHRADSOURCEMETHOD
-//#define WHICHRADSOURCEMETHOD SOURCEMETHODNONE
-//#define WHICHRADSOURCEMETHOD SOURCEMETHODEXPLICIT
-//#define WHICHRADSOURCEMETHOD SOURCEMETHODIMPLICIT
-#define WHICHRADSOURCEMETHOD SOURCEMETHODIMPLICITEXPLICITCHECK
-
-#define N1 100
-#define N2 1
-#define N3 1
-
-#define MCOORD CARTMINKMETRIC2
-
-#endif
-
-
-//****************************************//
-//****************************************//
-
-#if(WHICHPROBLEM==RADBONDI)
-
-#undef MPERSUN
-#define MPERSUN (3.0)
-
-#undef RADSHOCKFLAT
-#define RADSHOCKFLAT 0 // can't use flattener near inlet where static jump -- leads to lots of oscillations with PPM.
-
-#undef WHICHRADSOURCEMETHOD
-//#define WHICHRADSOURCEMETHOD SOURCEMETHODNONE
-//#define WHICHRADSOURCEMETHOD SOURCEMETHODEXPLICIT
-#define WHICHRADSOURCEMETHOD SOURCEMETHODIMPLICITEXPLICITCHECK
-
-//#define N1 112 // KORALTODO: 512 in paper
-#define N1 512 // KORALTODO: 512 in paper
-#define N2 1
-#define N3 1
-
-// can choose any spherical polar coordinate system with gravity
-//#define MCOORD BLCOORDS
-#define MCOORD KSCOORDS
-
-#endif
-
-
-
-//****************************************//
-//****************************************//
-
-#if(WHICHPROBLEM==RADDOT)
-
-//#undef MPERSUN
-//#define MPERSUN (1.0/MSUN)
-
-#undef RADSHOCKFLAT
-#define RADSHOCKFLAT 0 // can't use flattener near inlet where static jump -- leads to lots of oscillations with PPM.
-
-#undef WHICHRADSOURCEMETHOD
-//#define WHICHRADSOURCEMETHOD SOURCEMETHODNONE
-//#define WHICHRADSOURCEMETHOD SOURCEMETHODEXPLICIT
-#define WHICHRADSOURCEMETHOD SOURCEMETHODIMPLICITEXPLICITCHECK
-
-// choose odd so DOT is located at center of single cell symmetrically around grid rather than at edge of grid or offset.
-#define N1 41
-#define N2 41
-//#define N3 41 // koral original is 3D, but ok to test in 2D
-#define N3 1
-
-#define MCOORD CARTMINKMETRIC2
-
-#endif
-
-
-//****************************************//
-//****************************************//
-
-#if(WHICHPROBLEM==RADNT || WHICHPROBLEM==RADFLATDISK || WHICHPROBLEM==RADDONUT || WHICHPROBLEM==RADCYLBEAM || WHICHPROBLEM==RADCYLBEAMCART)
-
-#undef MPERSUN
-#define MPERSUN (10.0)
-
-#undef RADSHOCKFLAT
-#define RADSHOCKFLAT 0 // can't use flattener near inlet where static jump -- leads to lots of oscillations with PPM.
-
-#undef WHICHRADSOURCEMETHOD
-//#define WHICHRADSOURCEMETHOD SOURCEMETHODNONE
-//#define WHICHRADSOURCEMETHOD SOURCEMETHODEXPLICIT
-#define WHICHRADSOURCEMETHOD SOURCEMETHODIMPLICITEXPLICITCHECK
-
-
-#if(WHICHPROBLEM==RADNT || WHICHPROBLEM==RADDONUT)
-
-#undef ANALYTICMEMORY
-#define ANALYTICMEMORY 1 // set disk BC using analytical result (at least partially so don't duplicate code.)
-
-
-// N1=30 if using log coords from r=1.7 to r=50
-// N1=60 if using 1.5*hor - 40 (or 27.8)
-#define N1 30
-#define N2 30
-#define N3 1
-
-// can choose any spherical polar coordinate system
-//#define MCOORD SPCMINKMETRIC
-//#define MCOORD BLCOORDS
-#define MCOORD KSCOORDS
-
-#elif(WHICHPROBLEM==RADFLATDISK)
-
-//#define N1 120 // older koral
-#define N1 40 // new koral
-#define N2 40
-#define N3 1
-
-#undef WHICHRADSOURCEMETHOD// DEBUG
-//#define WHICHRADSOURCEMETHOD SOURCEMETHODNONE
-#define WHICHRADSOURCEMETHOD SOURCEMETHODEXPLICIT
-
-
-#define MCOORD SPCMINKMETRIC // i.e. RADFLATDISK
-
-#undef cTILDA
-#define cTILDA (1.0) // like koral
-#undef gTILDA
-#define gTILDA (1E-10) // like koral (no longer)
-//#define gTILDA (1.0)
-
-#undef MPERSUN
-#define MPERSUN (10.0*gTILDA) // due to koral fixing MSUNCM, have to do this.
-
-//#undef FORCESOLVEL
-//#define FORCESOLVEL 1 
-
-
-#undef ARAD
-//#define ARAD (ARAD0*gTILDA*gTILDA) // stupid koral issue with units
-#define ARAD (ARAD0) // stupid koral issue with units
-
-#elif(WHICHPROBLEM==RADCYLBEAM)
-
-#define N1 50 // R // 120 for defcoord=UNIFORMCOORDS
-#define N2 1 // z
-#define N3 30 // \phi
-
-#define MCOORD CYLMINKMETRIC
-
-#elif(WHICHPROBLEM==RADCYLBEAMCART)
-
-#define N1 80
-#define N2 80
-#define N3 1
-
-#define MCOORD CARTMINKMETRIC2
-
-#endif
-
-
-#endif
-
-
-
-
-
-
-
-
 
 
 
@@ -1005,6 +396,654 @@ struct Ccoordparams {
 #define DODEBUG 0
 #define DOFLOORDIAG 0
 #endif
+
+
+
+
+
+
+
+
+
+
+//////////////////////////////////
+// Set or Override with RADIATION settings
+//////////////////////////////////
+
+
+
+
+
+
+
+
+
+//problem names
+#define RADBEAM2D (1) // beam of light in SPC
+#define RADTUBE (6) // radiative shock tubes as in Farris et al 09 - assumes Edd.approximation which is currently not handled
+#define RADBONDI (7) // like in Fragile's paper (called BONDI in koral)
+#define RADPULSE (10) //  radiative blob spreading around
+#define RADSHADOW (11)  // radiative shadow
+#define RADATM (12) // atmosphere enlighted
+#define RADPULSEPLANAR (1000) // like RADPULSE but with scattering
+#define RADWAVE (15) // 1d linear rad wave with periodic BC
+#define RADPULSE3D (16) // radiative blob spreading around
+#define RADDBLSHADOW (17) // radiative shadow with two beams inclined
+#define ATMSTATIC (18) // simple hydrostatic atmosphere in SPC
+#define RADBEAM2DKS (19) // like RADBEAM2D, just chooses MCOORD KSCOORDS
+#define RADBEAMFLAT (24) //  beam of light in Cartesian
+#define RADDONUT (25) // 2d radiative Polish donut in KS (called RDONUT in koral.  Similar setup to RADNT.)
+#define RADBEAM2DKSVERT (26) // 2d radiative beam in r,theta plane (does more than KS)
+#define FLATNESS (27) // flat  (koral: but with non-zero four-force)
+#define RADWALL (29) // flat with wall
+#define RADNT (30) // emission from midplane
+#define RADFLATDISK (31) // emission from flat disk (called FLATDISK in koral.  Very similar to RADNT.)
+#define RADCYLBEAM (32) // beam towards the axis in cylindrical (called CYLBEAM in koral.  Somewhat similar to RADFLATDISK but in CYL coords.)
+#define RADDOT (33) // radiating dot (Olek changes this while I was testing)
+#define RADCYLBEAMCART (40) //  similar to RADCYLBEAM but in cartesian
+
+
+
+// TOTRY : optically thin dot in SPC or pulse in SPC.
+
+// TOTRY: Maybe need to avoid bounding if not in PBOUNDLOOP?  Generally true.
+
+
+// KORALTODO: PROBLEMS:
+
+
+// RADATM 5-10X slower now (more inversions somehow?) git diff 070483273c8b08fede6e4dcab95a6a4b621a239e|less  Unsure, seems nothing special...have to look harder since huge hit.  Not inversion accuracy!  Watch an implicit step or count inversions.
+
+// RADATM need to try higher-order interpolation to see if velocity is smaller as in koral paper.  No change.
+
+// RADATM with paraline clearly shows oscillations in vx per grid cell while not improving error.
+
+// RADBONDI kinda works at high resolution with para until entropy reversions occur.  Maybe try MP5 or average2point?
+
+// RADDONUT: Donut explodes, and inversions take forever.
+
+
+//TODO:
+#define RADDOTFLAT (41) // similar to RADDOT but in cartesian (well, RADDOT was similar, but still different after Olek changes)
+#define RVDONUT (42) // radiative and viscous 
+
+
+// non-implemented NON-radiative problems in KORAL that are semi-duplicated by some other radiative tests
+#define RADINFALL (2) // RADBEAM2D with FLATBACKGROUND=0 is like this
+#define DONUT (3) // initboundcode/*fishmon* similar
+#define GEODESICINFALL (4) //like RADINFALL but with blobs
+#define HDTUBE (8) // as in HARM paper
+#define HDTUBE2 (9) // 2D of HDTUBE
+#define DONUTOSC (13) // 2d Polish donut oscillating
+#define ATMKS (20) //  radial atmosphere infalling in KS
+#define DONUTKS (21) // 2d Polish donut in KS (like DONUT)
+#define DONUTMKS1 (22) // 2d Polish donut in MKS1 (like DONUT)
+#define ATMMKS1 (23) //  radial atmosphere infalling in MKS1 (like ATMKS)
+#define BOWSHOCK (28) // bow shock hydro test
+
+// non-implemented radiative problems in KORAL.  Olek says not interesting pre-test versions of other actual tests.
+#define RADWAVEBC (14) // 1d linear rad wave imposed on boundary (not setup in koral yet -- looks like time-dep BC for density on left boundary)
+#define EDDINFALL (5) // infall with flux from inside
+
+
+
+
+////////////////
+// other BCTypes beyond those in definit.h (can't overlap numbers from there)
+//////////////
+#define RADBEAMFLATINFLOW 201
+#define RADSHADOWINFLOW 202
+#define RADSHADOWINFLOWX2UP 203
+#define RADSHADOWINFLOWX2DN 204
+#define RADBEAM2DBEAMINFLOW 205
+#define RADBEAM2DFLOWINFLOW 206
+#define RADATMBEAMINFLOW 207
+#define RADWALLINFLOW 208
+#define RADBONDIINFLOW 209
+#define RADNTBC 210
+#define RADCYLBEAMBC 211
+#define RADBEAM2DKSVERTBEAMINFLOW 212
+#define RADCYLBEAMCARTBC 213
+
+
+///////////////////////////////
+//problem choice
+///////////////////////////////
+
+//#define WHICHPROBLEM FLATNESS
+//#define WHICHPROBLEM RADBEAMFLAT
+//#define WHICHPROBLEM RADPULSE
+//#define WHICHPROBLEM RADPULSEPLANAR
+//#define WHICHPROBLEM RADPULSE3D
+//#define WHICHPROBLEM RADTUBE
+//#define WHICHPROBLEM RADSHADOW
+//#define WHICHPROBLEM RADDBLSHADOW
+#define WHICHPROBLEM ATMSTATIC
+//#define WHICHPROBLEM RADATM
+//#define WHICHPROBLEM RADBEAM2D
+//#define WHICHPROBLEM RADWALL
+//#define WHICHPROBLEM RADWAVE
+//#define WHICHPROBLEM RADBONDI
+//#define WHICHPROBLEM RADDOT
+//#define WHICHPROBLEM RADNT // TODOCHECK
+//#define WHICHPROBLEM RADFLATDISK // TODOCHECK
+//#define WHICHPROBLEM RADDONUT // TODO ONCE RADBONDI works.
+//#define WHICHPROBLEM RADCYLBEAM
+//#define WHICHPROBLEM RADBEAM2DKSVERT
+//#define WHICHPROBLEM RADCYLBEAMCART
+
+
+
+
+
+
+
+
+
+//****************************************//
+//****************************************//
+//****************************************//
+// If set any dimensional constants, should not convert to code units here since conversion not yet defined.  Just set MPERSUN here and convert in init.c
+//****************************************//
+//****************************************//
+
+// number of solar masses to define units
+
+//#define MPERSUN (1.0)
+
+// odd default choice by koral that gives Mass in cm as 1cm.
+#define MPERSUN (6.77255E-1)
+//#define MPERSUN (67725.2) // GM/c^2=1cm if gTILDA=1E-10 and cTILDA=1
+//#define MPERSUN (6.77255E-11) // with koral's gTILDA=1E-10
+
+
+
+
+
+
+
+//****************************************//
+//****************************************//
+
+#if(WHICHPROBLEM==FLATNESS)
+
+#undef WHICHRADSOURCEMETHOD
+#define WHICHRADSOURCEMETHOD SOURCEMETHODNONE
+//#define WHICHRADSOURCEMETHOD SOURCEMETHODEXPLICIT
+//#define WHICHRADSOURCEMETHOD SOURCEMETHODIMPLICIT
+
+#define N1 20
+#define N2 20
+#define N3 1
+
+#define MCOORD CARTMINKMETRIC2
+
+#endif
+
+//****************************************//
+//****************************************//
+
+#if(WHICHPROBLEM==RADPULSE || WHICHPROBLEM==RADPULSEPLANAR)
+
+
+
+#undef FORCESOLVEL
+#define FORCESOLVEL 0 // for testing against koral // KORALTODO : Koral actually fails if uses large timestep as suggested by tau limiter.
+
+#define N1 100
+#define N2 1 
+#define N3 1
+
+#endif
+
+#if(WHICHPROBLEM==RADPULSE3D)
+
+// due to memory per core limited by many variables, can't do 50^3.  Roughly can't do more than 32^3 per core.
+#define N1 32
+#define N2 32
+#define N3 32
+
+#endif
+
+#if(WHICHPROBLEM==RADPULSE || WHICHPROBLEM==RADPULSEPLANAR || WHICHPROBLEM==RADPULSE3D)
+
+#undef WHICHRADSOURCEMETHOD
+//#define WHICHRADSOURCEMETHOD SOURCEMETHODNONE
+//#define WHICHRADSOURCEMETHOD SOURCEMETHODEXPLICIT
+//#define WHICHRADSOURCEMETHOD SOURCEMETHODIMPLICIT
+#define WHICHRADSOURCEMETHOD SOURCEMETHODIMPLICITEXPLICITCHECK
+//#define WHICHRADSOURCEMETHOD SOURCEMETHODEXPLICITSUBCYCLE
+
+#define MCOORD CARTMINKMETRIC2
+
+
+#endif
+
+
+//****************************************//
+//****************************************//
+
+#if(WHICHPROBLEM==RADBEAMFLAT)
+
+#undef FORCESOLVEL
+#define FORCESOLVEL 0 // to compare against koral
+
+#undef RADSHOCKFLAT
+#define RADSHOCKFLAT 0 // can't use flattener near inlet where static jump -- leads to lots of oscillations with PPM.
+
+#undef WHICHRADSOURCEMETHOD
+//#define WHICHRADSOURCEMETHOD SOURCEMETHODNONE
+//#define WHICHRADSOURCEMETHOD SOURCEMETHODEXPLICIT
+#define WHICHRADSOURCEMETHOD SOURCEMETHODIMPLICITEXPLICITCHECK // works!
+
+//#define N1 20
+//#define N2 20
+//#define N1 30
+//#define N2 30
+#define N1 31 // making like problem24 in koral code
+#define N2 31 // making like problem24 in koral code
+#define N3 1
+
+#define MCOORD CARTMINKMETRIC2
+
+#endif
+
+
+
+//****************************************//
+//****************************************//
+
+#if(WHICHPROBLEM==RADTUBE)
+
+#undef EOMRADTYPE
+//#define EOMRADTYPE EOMRADEDD // used by calc_Rij_ff() to set IC so IC use Eddington approximation with Prad=(1/3)Irad (intensity)
+#define EOMRADTYPE EOMRADM1CLOSURE
+
+#undef WHICHRADSOURCEMETHOD
+//#define WHICHRADSOURCEMETHOD SOURCEMETHODNONE
+//#define WHICHRADSOURCEMETHOD SOURCEMETHODEXPLICIT
+//#define WHICHRADSOURCEMETHOD SOURCEMETHODEXPLICITSUBCYCLE
+//#define WHICHRADSOURCEMETHOD SOURCEMETHODIMPLICIT
+#define WHICHRADSOURCEMETHOD SOURCEMETHODIMPLICITEXPLICITCHECK
+
+#define N1 800
+#define N2 1
+#define N3 1
+
+#define MCOORD CARTMINKMETRIC2
+
+#endif
+
+
+
+//****************************************//
+//****************************************//
+
+
+
+#if(WHICHPROBLEM==RADSHADOW)
+
+#undef EOMRADTYPE
+//#define EOMRADTYPE EOMRADEDD // used by calc_Rij_ff() to set IC so IC use Eddington approximation with Prad=(1/3)Irad (intensity)
+#define EOMRADTYPE EOMRADM1CLOSURE
+
+#undef WHICHRADSOURCEMETHOD
+//#define WHICHRADSOURCEMETHOD SOURCEMETHODNONE
+//#define WHICHRADSOURCEMETHOD SOURCEMETHODEXPLICIT
+//#define WHICHRADSOURCEMETHOD SOURCEMETHODEXPLICITSUBCYCLE
+//#define WHICHRADSOURCEMETHOD SOURCEMETHODIMPLICIT
+#define WHICHRADSOURCEMETHOD SOURCEMETHODIMPLICITEXPLICITCHECK
+
+#define N1 100
+#define N2 50
+#define N3 1
+
+#define MCOORD CARTMINKMETRIC2
+
+#endif
+
+
+
+//****************************************//
+//****************************************//
+
+
+
+#if(WHICHPROBLEM==RADDBLSHADOW)
+
+#undef EOMRADTYPE
+//#define EOMRADTYPE EOMRADEDD // used by calc_Rij_ff() to set IC so IC use Eddington approximation with Prad=(1/3)Irad (intensity)
+#define EOMRADTYPE EOMRADM1CLOSURE
+
+#undef WHICHRADSOURCEMETHOD
+//#define WHICHRADSOURCEMETHOD SOURCEMETHODNONE
+//#define WHICHRADSOURCEMETHOD SOURCEMETHODEXPLICIT
+//#define WHICHRADSOURCEMETHOD SOURCEMETHODEXPLICITSUBCYCLE
+//#define WHICHRADSOURCEMETHOD SOURCEMETHODIMPLICIT
+#define WHICHRADSOURCEMETHOD SOURCEMETHODIMPLICITEXPLICITCHECK
+
+//#define N1 120 // code
+#define N1 100 // paper
+//#define N2 20 // code
+#define N2 50 // paper
+#define N3 1
+
+#define MCOORD CARTMINKMETRIC2
+
+#endif
+
+
+
+
+//****************************************//
+//****************************************//
+
+#if(WHICHPROBLEM==RADBEAM2D || WHICHPROBLEM==RADBEAM2DKS)
+
+#undef FORCESOLVEL
+#define FORCESOLVEL 0 // doesn't seem to help avoid failures for this test.
+
+
+#undef RADSHOCKFLAT
+#define RADSHOCKFLAT 0 // can't use flattener near inlet where static jump -- leads to lots of oscillations with PPM.
+
+#undef WHICHRADSOURCEMETHOD
+//#define WHICHRADSOURCEMETHOD SOURCEMETHODNONE
+//#define WHICHRADSOURCEMETHOD SOURCEMETHODEXPLICIT
+#define WHICHRADSOURCEMETHOD SOURCEMETHODIMPLICITEXPLICITCHECK
+
+// KORALNOTE: Paper says 30x60 for rin-rout and phi=0..pi/2, which is same as 30x30 for rin-rout and phi=0..pi/4 as setup in koral
+#define N1 30
+#define N2 1
+#define N3 30
+
+// can choose any spherical polar coordinate system
+#if(WHICHPROBLEM==RADBEAM2D)
+//#define MCOORD SPCMINKMETRIC
+#define MCOORD BLCOORDS // default koral is a=0 BLCOORDS
+#elif(WHICHPROBLEM==RADBEAM2DKS)
+#define MCOORD KSCOORDS
+#endif
+
+#endif
+
+
+//****************************************//
+//****************************************//
+
+#if(WHICHPROBLEM==RADBEAM2DKSVERT)
+
+
+#undef RADSHOCKFLAT
+#define RADSHOCKFLAT 0 // can't use flattener near inlet where static jump -- leads to lots of oscillations with PPM.
+
+#undef WHICHRADSOURCEMETHOD
+//#define WHICHRADSOURCEMETHOD SOURCEMETHODNONE
+//#define WHICHRADSOURCEMETHOD SOURCEMETHODEXPLICIT
+#define WHICHRADSOURCEMETHOD SOURCEMETHODIMPLICITEXPLICITCHECK
+
+#define N1 30
+#define N2 30
+#define N3 1
+
+//#define MCOORD SPCMINKMETRIC
+#define MCOORD KSCOORDS
+
+#endif
+
+
+
+//****************************************//
+//****************************************//
+
+#if(WHICHPROBLEM==ATMSTATIC)
+
+//#define DOSTOREPOSITIONDATA 0
+
+//#undef VARTOINTERP
+//#define VARTOINTERP PRIMTOINTERP
+//#define VARTOINTERP PRIMTOINTERP_GDETFULLVERSION
+
+
+#undef WHICHRADSOURCEMETHOD
+//#define WHICHRADSOURCEMETHOD SOURCEMETHODNONE
+//#define WHICHRADSOURCEMETHOD SOURCEMETHODEXPLICIT
+#define WHICHRADSOURCEMETHOD SOURCEMETHODIMPLICITEXPLICITCHECK
+
+#define N1 400
+#define N2 1
+#define N3 1
+
+// can choose any spherical polar coordinate system
+//#define MCOORD SPCMINKMETRIC
+//#define MCOORD KSCOORDS
+#define MCOORD BLCOORDS
+
+#endif
+
+
+//****************************************//
+//****************************************//
+
+#if(WHICHPROBLEM==RADATM)
+
+#undef WHICHRADSOURCEMETHOD
+//#define WHICHRADSOURCEMETHOD SOURCEMETHODNONE
+//#define WHICHRADSOURCEMETHOD SOURCEMETHODEXPLICIT
+#define WHICHRADSOURCEMETHOD SOURCEMETHODIMPLICITEXPLICITCHECK
+
+#define N1 40
+#define N2 1
+#define N3 1
+
+// can choose any spherical polar coordinate system with gravity
+//#define MCOORD KSCOORDS
+#define MCOORD BLCOORDS
+
+#undef MPERSUN
+#define MPERSUN (1.0) // So mass=1 as in koral for gTILDE=1.0
+
+
+#endif
+
+//****************************************//
+//****************************************//
+
+#if(WHICHPROBLEM==RADWALL)
+
+#undef WHICHRADSOURCEMETHOD
+//#define WHICHRADSOURCEMETHOD SOURCEMETHODNONE
+//#define WHICHRADSOURCEMETHOD SOURCEMETHODEXPLICIT
+//#define WHICHRADSOURCEMETHOD SOURCEMETHODIMPLICIT
+#define WHICHRADSOURCEMETHOD SOURCEMETHODIMPLICITEXPLICITCHECK
+
+#define N1 60
+#define N2 20
+#define N3 1
+
+#define MCOORD CARTMINKMETRIC2
+
+#endif
+
+//****************************************//
+//****************************************//
+
+#if(WHICHPROBLEM==RADWAVE)
+
+#undef WHICHRADSOURCEMETHOD
+//#define WHICHRADSOURCEMETHOD SOURCEMETHODNONE
+//#define WHICHRADSOURCEMETHOD SOURCEMETHODEXPLICIT
+//#define WHICHRADSOURCEMETHOD SOURCEMETHODIMPLICIT
+#define WHICHRADSOURCEMETHOD SOURCEMETHODIMPLICITEXPLICITCHECK
+
+#define N1 100
+#define N2 1
+#define N3 1
+
+#define MCOORD CARTMINKMETRIC2
+
+#endif
+
+
+//****************************************//
+//****************************************//
+
+#if(WHICHPROBLEM==RADBONDI)
+
+#undef MPERSUN
+#define MPERSUN (3.0)
+
+#undef RADSHOCKFLAT
+#define RADSHOCKFLAT 0 // can't use flattener near inlet where static jump -- leads to lots of oscillations with PPM.
+
+#undef WHICHRADSOURCEMETHOD
+//#define WHICHRADSOURCEMETHOD SOURCEMETHODNONE
+//#define WHICHRADSOURCEMETHOD SOURCEMETHODEXPLICIT
+#define WHICHRADSOURCEMETHOD SOURCEMETHODIMPLICITEXPLICITCHECK
+
+//#define N1 112 // KORALTODO: 512 in paper
+#define N1 512 // KORALTODO: 512 in paper
+#define N2 1
+#define N3 1
+
+// can choose any spherical polar coordinate system with gravity
+//#define MCOORD BLCOORDS
+#define MCOORD KSCOORDS
+
+#endif
+
+
+
+//****************************************//
+//****************************************//
+
+#if(WHICHPROBLEM==RADDOT)
+
+//#undef MPERSUN
+//#define MPERSUN (1.0/MSUN)
+
+#undef RADSHOCKFLAT
+#define RADSHOCKFLAT 0 // can't use flattener near inlet where static jump -- leads to lots of oscillations with PPM.
+
+#undef WHICHRADSOURCEMETHOD
+//#define WHICHRADSOURCEMETHOD SOURCEMETHODNONE
+//#define WHICHRADSOURCEMETHOD SOURCEMETHODEXPLICIT
+#define WHICHRADSOURCEMETHOD SOURCEMETHODIMPLICITEXPLICITCHECK
+
+// choose odd so DOT is located at center of single cell symmetrically around grid rather than at edge of grid or offset.
+#define N1 41
+#define N2 41
+//#define N3 41 // koral original is 3D, but ok to test in 2D
+#define N3 1
+
+#define MCOORD CARTMINKMETRIC2
+
+#endif
+
+
+//****************************************//
+//****************************************//
+
+#if(WHICHPROBLEM==RADNT || WHICHPROBLEM==RADFLATDISK || WHICHPROBLEM==RADDONUT || WHICHPROBLEM==RADCYLBEAM || WHICHPROBLEM==RADCYLBEAMCART)
+
+#undef MPERSUN
+#define MPERSUN (10.0)
+
+#undef RADSHOCKFLAT
+#define RADSHOCKFLAT 0 // can't use flattener near inlet where static jump -- leads to lots of oscillations with PPM.
+
+#undef WHICHRADSOURCEMETHOD
+//#define WHICHRADSOURCEMETHOD SOURCEMETHODNONE
+//#define WHICHRADSOURCEMETHOD SOURCEMETHODEXPLICIT
+#define WHICHRADSOURCEMETHOD SOURCEMETHODIMPLICITEXPLICITCHECK
+
+
+#if(WHICHPROBLEM==RADNT || WHICHPROBLEM==RADDONUT)
+
+#undef ANALYTICMEMORY
+#define ANALYTICMEMORY 1 // set disk BC using analytical result (at least partially so don't duplicate code.)
+
+
+// N1=30 if using log coords from r=1.7 to r=50
+// N1=60 if using 1.5*hor - 40 (or 27.8)
+#define N1 30
+#define N2 30
+#define N3 1
+
+// can choose any spherical polar coordinate system
+//#define MCOORD SPCMINKMETRIC
+//#define MCOORD BLCOORDS
+#define MCOORD KSCOORDS
+
+#elif(WHICHPROBLEM==RADFLATDISK)
+
+//#define N1 120 // older koral
+#define N1 40 // new koral
+#define N2 40
+#define N3 1
+
+#undef WHICHRADSOURCEMETHOD// DEBUG
+//#define WHICHRADSOURCEMETHOD SOURCEMETHODNONE
+#define WHICHRADSOURCEMETHOD SOURCEMETHODEXPLICIT
+
+
+#define MCOORD SPCMINKMETRIC // i.e. RADFLATDISK
+
+#undef cTILDA
+#define cTILDA (1.0) // like koral
+#undef gTILDA
+#define gTILDA (1E-10) // like koral (no longer)
+//#define gTILDA (1.0)
+
+#undef MPERSUN
+#define MPERSUN (10.0*gTILDA) // due to koral fixing MSUNCM, have to do this.
+
+//#undef FORCESOLVEL
+//#define FORCESOLVEL 1 
+
+
+#undef ARAD
+//#define ARAD (ARAD0*gTILDA*gTILDA) // stupid koral issue with units
+#define ARAD (ARAD0) // stupid koral issue with units
+
+#elif(WHICHPROBLEM==RADCYLBEAM)
+
+#define N1 50 // R // 120 for defcoord=UNIFORMCOORDS
+#define N2 1 // z
+#define N3 30 // \phi
+
+#define MCOORD CYLMINKMETRIC
+
+#elif(WHICHPROBLEM==RADCYLBEAMCART)
+
+#define N1 80
+#define N2 80
+#define N3 1
+
+#define MCOORD CARTMINKMETRIC2
+
+#endif
+
+
+#endif
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

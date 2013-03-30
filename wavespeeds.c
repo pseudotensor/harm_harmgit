@@ -35,6 +35,8 @@ int vchar_each(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTY
     *vminrad2=*vminrad=*vminmhd;
   }
 
+  //  dualfprintf(fail_file,"SPEEDS: %g %g  : %g %g\n",*vmaxmhd,*vminmhd,*vmaxrad2,*vminrad2);
+
   return(0);
 }
 

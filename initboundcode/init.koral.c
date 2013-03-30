@@ -644,6 +644,7 @@ int init_global(void)
   if(WHICHPROBLEM==ATMSTATIC){
 
     lim[1]=lim[2]=lim[3]=MINM; 
+    //    lim[1]=lim[2]=lim[3]=PARALINE; // actually more error in u^r than MINM for inner radial boundary points (~factor of two larger u^r).
 	a=0.0; // no spin in case use MCOORD=KSCOORDS
 
 	if(!(ISSPCMCOORDNATIVE(MCOORD))){
@@ -669,6 +670,8 @@ int init_global(void)
 
 	DTr = 100; //number of time steps for restart dumps
 	tf = 1E7; //final time
+
+    //    FLUXDISSIPATION=0.0;
 
     //    DODIAGEVERYSUBSTEP = 1;
 
@@ -2581,7 +2584,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
 
 
     //	pr[PRAD0] = ERADLIMIT;
-	pr[PRAD0] = uint*1E-10;
+	pr[PRAD0] = uint*1E-20;
 	pr[PRAD1] = uradx ;
 	pr[PRAD2] = urady ;    
 	pr[PRAD3] = uradz ;
