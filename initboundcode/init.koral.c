@@ -658,11 +658,14 @@ int init_global(void)
     cooling=KORAL;
     ARAD_CODE=0.0;
 
+    // HORIZONOUTFLOW or HORIZONOUTFLOWSTATIC leads to little bit more static solution near inner radial boundary due to higher-order interpolation.  Could also fix values as in Koral, but odd to fix values for incoming flow.
     //    BCtype[X1UP]=HORIZONOUTFLOWSTATIC;
     //    BCtype[X1DN]=HORIZONOUTFLOWSTATIC;
+
+    // FIXEDUSEPANALYTIC gives solution just like koral where no boundary effects, but a bit odd to generally fix values for incoming flow.
     BCtype[X1UP]=FIXEDUSEPANALYTIC;
     BCtype[X1DN]=FIXEDUSEPANALYTIC;
-    // HORIZONOUTFLOW or HORIZONOUTFLOWSTATIC leads to little bit more static solution near inner radial boundary due to higher-order interpolation.  Could also fix values as in Koral, but odd to fix values for incoming flow.
+
     BCtype[X2UP]=PERIODIC;
     BCtype[X2DN]=PERIODIC;
     BCtype[X3UP]=PERIODIC;
