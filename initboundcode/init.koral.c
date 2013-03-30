@@ -315,7 +315,7 @@ int init_global(void)
     if(WHICHPROBLEM==RADPULSEPLANAR){
       tf=1E5;
       for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=100.0; // Koral output steps
-      //      for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=0.1; // testing
+      //for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=0.1; // testing
     }
     else if(WHICHPROBLEM==RADPULSE){
       tf = 35; //final time
@@ -325,6 +325,9 @@ int init_global(void)
       tf = 70; //final time
       for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=0.1;
     }
+
+    //    DODIAGEVERYSUBSTEP = 1;
+
   }
 
   /*************************************************/
@@ -1120,15 +1123,19 @@ int init_global(void)
       BCtype[X3DN]=PERIODIC;
     }
     else{
+
       BCtype[X1DN]=HORIZONOUTFLOW; // although more specific extrapolation based upon solution might work better
+
       if(WHICHPROBLEM==RADNT || WHICHPROBLEM==RADFLATDISK) BCtype[X1UP]=RADNTBC; // inflow analytic
       else BCtype[X1UP]=RADNTBC; // inflow analytic
       //else BCtype[X1UP]=FIXEDUSEPANALYTIC; // fixed analytic // little silly for most of outer boundary, so avoid // KORALTODO: Also causes hellish problems with solution and implicit solver at the X1UP boundary surface (not just near torus)
       
-      BCtype[X2DN]=POLARAXIS; // assumes Rin_array[2]=0
+      if(WHICHPROBLEM==RADFLATDISK)  BCtype[X2DN]=ASYMM; // if non-zero Rin_array[2]
+      else BCtype[X2DN]=POLARAXIS; // assumes Rin_array[2]=0
       
-      if(WHICHPROBLEM==RADNT || WHICHPROBLEM==RADFLATDISK) BCtype[X2UP]=RADNTBC; // disk condition
+      if(WHICHPROBLEM==RADNT || WHICHPROBLEM==RADFLATDISK) BCtype[X2UP]=RADNTBC; // disk condition (with ASYMM done first)
       else BCtype[X2UP]=ASYMM; // with donut, let free, so ASYMM condition across equator
+
       BCtype[X3UP]=PERIODIC;
       BCtype[X3DN]=PERIODIC;
     }
@@ -1140,7 +1147,7 @@ int init_global(void)
     //	tf = 100*DTdumpgen[0]; // 100 dumps(?)
 	tf = 1000*DTdumpgen[0]; // koral in default setup does 1000 dumps
 
-    //    DODIAGEVERYSUBSTEP = 1;
+    DODIAGEVERYSUBSTEP = 1;
 
   }
 
@@ -1539,12 +1546,23 @@ int init_defcoord(void)
     RADNT_MINX=4.0;
     RADNT_MAXX=100.0;
 
-    defcoord = LOGRUNITH; // Uses R0, Rin, Rout and Rin_array,Rout_array for 2,3 directions
-    R0=0.0;
-	Rin=RADNT_MINX;
-	Rout=RADNT_MAXX;
+    if(0){
+    // KORALTODO: The below use of log radial grid leads to opacity related failure of problem when using pre-recent koral kappa (i.e. not zero)
+      defcoord = LOGRUNITH; // Uses R0, Rin, Rout and Rin_array,Rout_array for 2,3 directions
+      R0=0.0;
+      Rin=RADNT_MINX;
+      Rout=RADNT_MAXX;
+    }
+    else{
+      defcoord = UNIFORMCOORDS;
+      Rin_array[1]=RADNT_MINX;
+      Rout_array[1]=RADNT_MAXX;
+    }
 
-    Rin_array[2]=0.0*Pi/4.;
+
+    //    Rin_array[2]=0.0*Pi/4.;
+    //    Rin_array[2]=0.01*Pi/4.;
+    Rin_array[2]=0.1*Pi/4.;
     Rout_array[2]=Pi/2.;
     Rin_array[3]=-1.;
     Rout_array[3]=1.;
@@ -1787,9 +1805,12 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 // assume KAPPAES defines fractoin of ES opacity
 //#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_CODE(rho,T))
 
-#define KAPPAES (1E3)
+#define KAPPAES (1E3) // takes forever with sub-cycling, but works.
+//#define KAPPAES (1E2)
 //#define KAPPAES (10.0)
 //#define KAPPAES (1E-1)
+//#define KAPPAES (1.0)
+//#define KAPPAES (1E-10)
 
 #define KAPPAUSER(rho,T) (rho*KAPPA)
 #define KAPPAESUSER(rho,T) (rho*KAPPAES)
@@ -3045,40 +3066,46 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
     // atmtype=1 : pr[URAD0]=ERADATMMIN and ncon={0,-1,0,0} with set_ncon_velocity(whichvel,1000.0,ncon,ptrgeomreal,uconreal);
     // atmtype=2 : pr[URAD0]=ERADATMMIN*pow(rout/r,4) pr[URAD1-URAD3]  with ncon={0,-gammamax*(pow(r/rout,1.)),0,0} again using set_non_velocity() with gammamax=10.
 
-    // KORAL:
-    //	pr[PRAD0] = RADNT_ERADATMMIN; // assumed as lab-frame ZAMO frame value
-    //    set_zamo_velocity(*whichvel,ptrgeomreal,&pr[URAD1-U1]); // only sets URAD1-URAD3 to zamo
 
-    // No, just set as in fluid frame
-    FTYPE pradffortho[NPR];
-    pradffortho[PRAD0]=RADNT_ERADATMMIN;
-    pradffortho[PRAD1]=0;
-    pradffortho[PRAD2]=0;
-    pradffortho[PRAD3]=0;
+    if(1){
+
+      // set as in fluid frame
+      FTYPE pradffortho[NPR];
+      pradffortho[PRAD0]=RADNT_ERADATMMIN;
+      pradffortho[PRAD1]=0;
+      pradffortho[PRAD2]=0;
+      pradffortho[PRAD3]=0;
 
 
-    // So donut already has ambient in whichvel whichcoord, now get donut
-    if(WHICHPROBLEM==RADDONUT){
-      // donut expects fluid frame values in pr.  JCM sets as output in fluid frame so use same conversion below.
-      pr[PRAD0]=pradffortho[PRAD0];
-      pr[PRAD1]=pradffortho[PRAD1];
-      pr[PRAD2]=pradffortho[PRAD2];
-      pr[PRAD3]=pradffortho[PRAD3];
+      // So donut already has ambient in whichvel whichcoord, now get donut
+      if(WHICHPROBLEM==RADDONUT){
+        // donut expects fluid frame values in pr.  JCM sets as output in fluid frame so use same conversion below.
+        pr[PRAD0]=pradffortho[PRAD0];
+        pr[PRAD1]=pradffortho[PRAD1];
+        pr[PRAD2]=pradffortho[PRAD2];
+        pr[PRAD3]=pradffortho[PRAD3];
 
-      // ADD DONUT
-      get_full_donut(*whichvel,*whichcoord,pr,X,V,ptrgeomreal);
+        // ADD DONUT
+        get_full_donut(*whichvel,*whichcoord,pr,X,V,ptrgeomreal);
       
-      // donut returns fluid frame orthonormal values for radiation in pp
-      pradffortho[PRAD0]=pr[PRAD0];
-      pradffortho[PRAD1]=pr[PRAD1];
-      pradffortho[PRAD2]=pr[PRAD2];
-      pradffortho[PRAD3]=pr[PRAD3];
+        // donut returns fluid frame orthonormal values for radiation in pp
+        pradffortho[PRAD0]=pr[PRAD0];
+        pradffortho[PRAD1]=pr[PRAD1];
+        pradffortho[PRAD2]=pr[PRAD2];
+        pradffortho[PRAD3]=pr[PRAD3];
      
+      }
+
+      // Transform these fluid frame E,F^i to lab frame coordinate basis primitives
+      prad_fforlab(whichvel, whichcoord, FF2LAB, i,j,k,CENT,ptrgeomreal, pradffortho, pr, pr);
     }
-
-
-    // Transform these fluid frame E,F^i to lab frame coordinate basis primitives
-    prad_fforlab(whichvel, whichcoord, FF2LAB, i,j,k,CENT,ptrgeomreal, pradffortho, pr, pr);
+    else{
+      // like latest koral that assumes radiation frame is zamo and RADNT_ERADATMMIN is actually in that frame, so no transformation for E
+      // So this is somewhat inconsistent with boundary conditions
+      // KORAL:
+      pr[PRAD0] = RADNT_ERADATMMIN; // assumed as lab-frame ZAMO frame value
+      set_zamo_velocity(*whichvel,ptrgeomreal,&pr[URAD1-U1]); // only sets URAD1-URAD3 to zamo
+    }
 
     return(0);
   }
