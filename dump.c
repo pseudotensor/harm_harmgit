@@ -1545,12 +1545,13 @@ int eosdump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 {
   FTYPE rho,u;
   FTYPE height,ye,ynu,temp;
-  FTYPE extras[MAXNUMEXTRAS];
-  FTYPE processed[MAXPROCESSEDEXTRAS];
+  // NOTEMARK: have to fill with zero or else might not be number and if ldouble is used then seg faults
+  FTYPE extras[MAXNUMEXTRAS]={0};
+  FTYPE processed[MAXPROCESSEDEXTRAS]={0};
   int numextras;
   int extraiter;
   int numparms;
-  FTYPE parlist[MAXPARLIST];
+  FTYPE parlist[MAXPARLIST]={0};
   int loc=CENT;
 
 
