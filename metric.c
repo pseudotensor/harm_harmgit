@@ -392,9 +392,9 @@ int rotate_VtoVmetric(int whichcoord, FTYPE *V, FTYPE *Vmetric)
 
     FTYPE b0=THETAROT;
 
-    hold=arctanmath (cos (b0)*cos (hnew) - 1.*cos (phnew)*sin (b0)*sin (hnew),pow (pow (cos (hnew)*sin (b0) + cos (b0)*cos (phnew)*sin (hnew),2) + pow (sin (hnew),2)*pow (sin (phnew),2),0.5));
+    hold=arctanmath (cos(b0)*cos(hnew) - 1.*cos(phnew)*sin(b0)*sin(hnew),pow(pow(cos(hnew)*sin(b0) + cos(b0)*cos(phnew)*sin(hnew),2) + pow(sin(hnew),2)*pow(sin(phnew),2),0.5));
 
-    phold=arctanmath (cos (hnew)*sin (b0) + cos (b0)*cos (phnew)*sin (hnew),sin (hnew)*sin (phnew));
+    phold=arctanmath (cos(hnew)*sin(b0) + cos(b0)*cos(phnew)*sin(hnew),sin(hnew)*sin(phnew));
 
 
     fix_hp(&hold,&phold);
@@ -1646,17 +1646,17 @@ void set_gcov_ks_jp1_metric(FTYPE *V, FTYPE *gcov, FTYPE *gcovpert)
   // only non-zero and non-repeated (due to symmetry) terms:
   DLOOP(j,k) gcovksjp1pert[GIND(j,k)] = 0.0;
 
-  gcovksjp1pert[GIND(0,0)]=-4.*EP3*r*(2.*r*(-2.*MBH + r) + pow (a,2) + cos (2.*th)*pow (a,2))*pow (MBH,3)*pow (pow (a,2) + cos (2.*th)*pow (a,2) + 2.*pow (r,2),-3);
+  gcovksjp1pert[GIND(0,0)]=-4.*EP3*r*(2.*r*(-2.*MBH + r) + pow(a,2) + cos(2.*th)*pow(a,2))*pow(MBH,3)*pow(pow(a,2) + cos(2.*th)*pow(a,2) + 2.*pow(r,2),-3);
 
-  gcovksjp1pert[GIND(0,1)]=2.*EP3*pow (MBH,4)*pow (r,2)*pow (pow (r,2) + pow (a,2)*pow (cos (th),2),-3);
+  gcovksjp1pert[GIND(0,1)]=2.*EP3*pow(MBH,4)*pow(r,2)*pow(pow(r,2) + pow(a,2)*pow(cos(th),2),-3);
 
-  gcovksjp1pert[GIND(1,1)]=-1. - 4.*pow (MBH,2)*pow (r,2)*(EP3*r*pow (MBH,3) + pow (r,4) + 2.*pow (a,2)*pow (r,2)*pow (cos (th),2) + pow (a,4)*pow (cos (th),4))*pow (r*(-2.*MBH + r) + pow (a,2),-1)*pow (pow (r,2) + pow (a,2)*pow (cos (th),2),-3) - 2.*MBH*r*pow (pow (r,2) + pow (a,2)*pow (cos (th),2),-1) + (EP3*r*pow (MBH,3)*(pow (r,2) + pow (a,2)*pow (cos (th),2)) + pow (pow (r,2) + pow (a,2)*pow (cos (th),2),3))*pow ((r*(-2.*MBH + r) + pow (a,2))*pow (pow (r,2) + pow (a,2)*pow (cos (th),2),2) + EP3*r*pow (a,2)*pow (MBH,3)*pow (sin (th),2),-1) + pow (a,2)*pow (r*(-2.*MBH + r) + pow (a,2),-2)*pow (pow (r,2) + pow (a,2)*pow (cos (th),2),-3)*pow (sin (th),2)*(-4.*EP3*pow (MBH,5)*pow (r,3) - 4.*pow (MBH,2)*pow (r,2)*pow (pow (r,2) + pow (a,2)*pow (cos (th),2),2) + (pow (a,2) + pow (r,2))*pow (pow (r,2) + pow (a,2)*pow (cos (th),2),3) + MBH*r*pow (a,2)*(2.*EP3*r*pow (MBH,3) + EP3*pow (MBH,2)*(pow (r,2) + pow (a,2)*pow (cos (th),2)) + 2.*pow (pow (r,2) + pow (a,2)*pow (cos (th),2),2))*pow (sin (th),2));
+  gcovksjp1pert[GIND(1,1)]=-1. - 4.*pow(MBH,2)*pow(r,2)*(EP3*r*pow(MBH,3) + pow(r,4) + 2.*pow(a,2)*pow(r,2)*pow(cos(th),2) + pow(a,4)*pow(cos(th),4))*pow(r*(-2.*MBH + r) + pow(a,2),-1)*pow(pow(r,2) + pow(a,2)*pow(cos(th),2),-3) - 2.*MBH*r*pow(pow(r,2) + pow(a,2)*pow(cos(th),2),-1) + (EP3*r*pow(MBH,3)*(pow(r,2) + pow(a,2)*pow(cos(th),2)) + pow(pow(r,2) + pow(a,2)*pow(cos(th),2),3))*pow((r*(-2.*MBH + r) + pow(a,2))*pow(pow(r,2) + pow(a,2)*pow(cos(th),2),2) + EP3*r*pow(a,2)*pow(MBH,3)*pow(sin(th),2),-1) + pow(a,2)*pow(r*(-2.*MBH + r) + pow(a,2),-2)*pow(pow(r,2) + pow(a,2)*pow(cos(th),2),-3)*pow(sin(th),2)*(-4.*EP3*pow(MBH,5)*pow(r,3) - 4.*pow(MBH,2)*pow(r,2)*pow(pow(r,2) + pow(a,2)*pow(cos(th),2),2) + (pow(a,2) + pow(r,2))*pow(pow(r,2) + pow(a,2)*pow(cos(th),2),3) + MBH*r*pow(a,2)*(2.*EP3*r*pow(MBH,3) + EP3*pow(MBH,2)*(pow(r,2) + pow(a,2)*pow(cos(th),2)) + 2.*pow(pow(r,2) + pow(a,2)*pow(cos(th),2),2))*pow(sin(th),2));
 
-  gcovksjp1pert[GIND(0,3)]=-2.*a*EP3*pow (MBH,4)*pow (r,2)*pow (pow (r,2) + pow (a,2)*pow (cos (th),2),-3)*pow (sin (th),2);
+  gcovksjp1pert[GIND(0,3)]=-2.*a*EP3*pow(MBH,4)*pow(r,2)*pow(pow(r,2) + pow(a,2)*pow(cos(th),2),-3)*pow(sin(th),2);
 
-  gcovksjp1pert[GIND(1,3)]=0.125*a*EP3*r*pow (MBH,3)*(-4.*r*(2.*MBH + r)*pow (a,2) + 4.*r*(2.*MBH + r)*cos (2.*th)*pow (a,2) - 1.*pow (a,4) + cos (4.*th)*pow (a,4) + 32.*pow (MBH,2)*pow (r,2))*pow (r*(-2.*MBH + r) + pow (a,2),-1)*pow (pow (r,2) + pow (a,2)*pow (cos (th),2),-3)*pow (sin (th),2);
+  gcovksjp1pert[GIND(1,3)]=0.125*a*EP3*r*pow(MBH,3)*(-4.*r*(2.*MBH + r)*pow(a,2) + 4.*r*(2.*MBH + r)*cos(2.*th)*pow(a,2) - 1.*pow(a,4) + cos(4.*th)*pow(a,4) + 32.*pow(MBH,2)*pow(r,2))*pow(r*(-2.*MBH + r) + pow(a,2),-1)*pow(pow(r,2) + pow(a,2)*pow(cos(th),2),-3)*pow(sin(th),2);
 
-  gcovksjp1pert[GIND(3,3)]=4.*EP3*r*pow (a,2)*(2.*r*(2.*MBH + r) + pow (a,2) + cos (2.*th)*pow (a,2))*pow (MBH,3)*pow (pow (a,2) + cos (2.*th)*pow (a,2) + 2.*pow (r,2),-3)*pow (sin (th),4);
+  gcovksjp1pert[GIND(3,3)]=4.*EP3*r*pow(a,2)*(2.*r*(2.*MBH + r) + pow(a,2) + cos(2.*th)*pow(a,2))*pow(MBH,3)*pow(pow(a,2) + cos(2.*th)*pow(a,2) + 2.*pow(r,2),-3)*pow(sin(th),4);
 
 
 

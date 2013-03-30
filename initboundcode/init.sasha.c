@@ -3611,7 +3611,7 @@ int init_dsandvels(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr
   //
 
   // If the components of U are ordered U = [d,D*Vx,d*Vy,d*Vz,E,By,Bz], and d=1, P=1/gamma, bx=1, by=sqrt(2), bz=0.5, gamma=5/3, then the right eigenvectors are as follows:
-  //  dU = A R sin (2 \pi x). Here U is the vector of conserved variables, A is an amplitude, and R is the right-eigenvector corresponding to the desired wave family.
+  //  dU = A R sin(2 \pi x). Here U is the vector of conserved variables, A is an amplitude, and R is the right-eigenvector corresponding to the desired wave family.
   // A=1E-6 is used
 
   // set background primitive

@@ -483,12 +483,12 @@ void transV2Vmetric(int whichcoord, int ii, int jj, int kk, int loc, FTYPE *X, F
     trans[1][3]=0.;
     trans[2][0]=0.;
     trans[2][1]=0.;
-    trans[2][2]=pow (pow (cos (h)*sin (b0) - 1.*cos (b0)*cos (ph)*sin (h),2.) + pow (sin (h),2.)*pow (sin (ph),2.),-0.5)*(-1.*cos (h)*cos (ph)*sin (b0) + cos (b0)*sin (h));
-    trans[2][3]=pow (pow (cos (h)*sin (b0) - 1.*cos (b0)*cos (ph)*sin (h),2.) + pow (sin (h),2.)*pow (sin (ph),2.),-0.5)*sin (b0)*sin (h)*sin (ph);
+    trans[2][2]=pow(pow(cos(h)*sin(b0) - 1.*cos(b0)*cos(ph)*sin(h),2.) + pow(sin(h),2.)*pow(sin(ph),2.),-0.5)*(-1.*cos(h)*cos(ph)*sin(b0) + cos(b0)*sin(h));
+    trans[2][3]=pow(pow(cos(h)*sin(b0) - 1.*cos(b0)*cos(ph)*sin(h),2.) + pow(sin(h),2.)*pow(sin(ph),2.),-0.5)*sin(b0)*sin(h)*sin(ph);
     trans[3][0]=0.;
     trans[3][1]=0.;
-    trans[3][2]=-1.*pow (pow (cos (h)*sin (b0) - 1.*cos (b0)*cos (ph)*sin (h),2.) + pow (sin (h),2.)*pow (sin (ph),2.),-1.)*sin (b0)*sin (ph);
-    trans[3][3]=pow (pow (cos (h)*sin (b0) - 1.*cos (b0)*cos (ph)*sin (h),2.) + pow (sin (h),2.)*pow (sin (ph),2.),-1.)*sin (h)*(-1.*cos (h)*cos (ph)*sin (b0) + cos (b0)*sin (h));
+    trans[3][2]=-1.*pow(pow(cos(h)*sin(b0) - 1.*cos(b0)*cos(ph)*sin(h),2.) + pow(sin(h),2.)*pow(sin(ph),2.),-1.)*sin(b0)*sin(ph);
+    trans[3][3]=pow(pow(cos(h)*sin(b0) - 1.*cos(b0)*cos(ph)*sin(h),2.) + pow(sin(h),2.)*pow(sin(ph),2.),-1.)*sin(h)*(-1.*cos(h)*cos(ph)*sin(b0) + cos(b0)*sin(h));
 
 
     // now perform transformation
@@ -548,12 +548,12 @@ void transVmetric2V(int whichcoord, int ii, int jj, int kk, int loc, FTYPE *X, F
     trans[1][3]=0.;
     trans[2][0]=0.;
     trans[2][1]=0.;
-    trans[2][2]=pow (pow (cos (h)*cos (ph)*sin (b0) - 1.*cos (b0)*sin (h),2.) + pow (sin (b0),2.)*pow (sin (ph),2.),-1.)*pow (pow (cos (h)*sin (b0) - 1.*cos (b0)*cos (ph)*sin (h),2.) + pow (sin (h),2.)*pow (sin (ph),2.),0.5)*(-1.*cos (h)*cos (ph)*sin (b0) + cos (b0)*sin (h));
-    trans[2][3]=-1.*sin (b0)*sin (ph);
+    trans[2][2]=pow(pow(cos(h)*cos(ph)*sin(b0) - 1.*cos(b0)*sin(h),2.) + pow(sin(b0),2.)*pow(sin(ph),2.),-1.)*pow(pow(cos(h)*sin(b0) - 1.*cos(b0)*cos(ph)*sin(h),2.) + pow(sin(h),2.)*pow(sin(ph),2.),0.5)*(-1.*cos(h)*cos(ph)*sin(b0) + cos(b0)*sin(h));
+    trans[2][3]=-1.*sin(b0)*sin(ph);
     trans[3][0]=0.;
     trans[3][1]=0.;
-    trans[3][2]=csc (h)*pow (pow (cos (h)*cos (ph)*sin (b0) - 1.*cos (b0)*sin (h),2.) + pow (sin (b0),2.)*pow (sin (ph),2.),-1.)*pow (pow (cos (h)*sin (b0) - 1.*cos (b0)*cos (ph)*sin (h),2.) + pow (sin (h),2.)*pow (sin (ph),2.),0.5)*sin (b0)*sin (ph);
-    trans[3][3]=cos (b0) - 1.*cos (ph)*cot (h)*sin (b0);
+    trans[3][2]=csc(h)*pow(pow(cos(h)*cos(ph)*sin(b0) - 1.*cos(b0)*sin(h),2.) + pow(sin(b0),2.)*pow(sin(ph),2.),-1.)*pow(pow(cos(h)*sin(b0) - 1.*cos(b0)*cos(ph)*sin(h),2.) + pow(sin(h),2.)*pow(sin(ph),2.),0.5)*sin(b0)*sin(ph);
+    trans[3][3]=cos(b0) - 1.*cos(ph)*cot(h)*sin(b0);
 
 
   
