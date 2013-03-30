@@ -23,7 +23,6 @@ extern int indices_12(FTYPE A1[NDIM],FTYPE A2[NDIM],struct of_geom *ptrgeom);
 
 
 
-extern int p2u_rad(FTYPE *pr, FTYPE *Urad, struct of_geom *ptrgeom, struct of_state *q);
 
 
 extern int prad_fforlab(int *whichvel, int *whichcoord, int whichdir, int i, int j, int k, int loc, struct of_geom *ptrgeom, FTYPE *pradffortho, FTYPE *pin, FTYPE *pout);
@@ -44,10 +43,6 @@ extern int get_state_uradconuradcovonly(FTYPE *pr, struct of_geom *ptrgeom, stru
 
 extern int vchar_rad(FTYPE *pr, struct of_state *q, int dir,
 		 struct of_geom *geom, FTYPE *cmax, FTYPE *cmin, FTYPE *cmax2, FTYPE *cmin2,int *ignorecourant);
-extern int vchar_all(FTYPE *pr, struct of_state *q, int dir,
-		 struct of_geom *geom, FTYPE *cmax, FTYPE *cmin,int *ignorecourant);
-extern int vchar_each(FTYPE *pr, struct of_state *q, int dir,
-		 struct of_geom *geom, FTYPE *cmaxmhd, FTYPE *cminmhd, FTYPE *cmaxrad, FTYPE *cminrad, FTYPE *cmaxrad2, FTYPE *cminrad2,int *ignorecourant);
 
 
 extern void calc_kappa(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappa);

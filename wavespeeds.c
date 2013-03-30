@@ -8,6 +8,37 @@
 //
 /////////////////////////////////
 
+int vchar_all(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *vmaxall, FTYPE *vminall,int *ignorecourant)
+{
+  FTYPE vminmhd,vmaxmhd;
+  FTYPE vminrad,vmaxrad;
+  FTYPE vminrad2,vmaxrad2;
+  
+  vchar_each(pr, q, dir, geom, &vmaxmhd, &vminmhd, &vmaxrad, &vminrad, &vmaxrad2, &vminrad2, ignorecourant);
+  // below correct even if EOMRADTYPE==EOMRADNONE because vchar_each() sets both mhd and rad to be mhd and so below always chooses the mhd values.
+  *vminall=MIN(vminmhd,vminrad2); // vminrad2 for dt
+  *vmaxall=MAX(vmaxmhd,vmaxrad2); // vmaxrad2 for dt
+  
+
+  return(0);
+}
+
+int vchar_each(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *vmaxmhd, FTYPE *vminmhd, FTYPE *vmaxrad, FTYPE *vminrad, FTYPE *vmaxrad2, FTYPE *vminrad2,int *ignorecourant)
+{
+  
+  vchar(pr, q, dir, geom, vmaxmhd, vminmhd,ignorecourant);
+  if(EOMRADTYPE!=EOMRADNONE){
+    vchar_rad(pr, q, dir, geom, vmaxrad, vminrad, vmaxrad2, vminrad2, ignorecourant);
+  }
+  else{// default as if no other values for wave speeds
+    *vmaxrad2=*vmaxrad=*vmaxmhd;
+    *vminrad2=*vminrad=*vminmhd;
+  }
+
+  return(0);
+}
+
+
 // get wave speeds for flux calculation
 int get_wavespeeds(int dir, struct of_geom *ptrgeom, FTYPE *p_l, FTYPE *p_r, FTYPE *U_l, FTYPE *U_r, FTYPE *F_l, FTYPE *F_r, struct of_state *state_l, struct of_state * state_r, FTYPE *cminmax_l, FTYPE *cminmax_r, FTYPE *cminmax, FTYPE *ctopptr, FTYPE *cminmaxrad_l, FTYPE *cminmaxrad_r, FTYPE *cminmaxrad, FTYPE *ctopradptr, FTYPE *cminmaxrad2_l, FTYPE *cminmaxrad2_r, FTYPE *cminmaxrad2, FTYPE *ctoprad2ptr)
 {

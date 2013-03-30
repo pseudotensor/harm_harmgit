@@ -11,3 +11,9 @@ extern void make_co_to_comov(FTYPE *ucon, FTYPE (*ecov)[NDIM],
 extern void transform(FTYPE *vec, FTYPE (*t)[NDIM]);
 extern void coeff_set(FTYPE rho, FTYPE u);
 extern void transform(FTYPE *ucon, FTYPE (*t)[NDIM]);
+
+
+extern int vchar_all(FTYPE *pr, struct of_state *q, int dir,
+		 struct of_geom *geom, FTYPE *cmax, FTYPE *cmin,int *ignorecourant);
+extern int vchar_each(FTYPE *pr, struct of_state *q, int dir,
+		 struct of_geom *geom, FTYPE *cmaxmhd, FTYPE *cminmhd, FTYPE *cmaxrad, FTYPE *cminrad, FTYPE *cmaxrad2, FTYPE *cminrad2,int *ignorecourant);
