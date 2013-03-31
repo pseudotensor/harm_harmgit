@@ -691,7 +691,6 @@ int init_global(void)
 
   if(WHICHPROBLEM==RADATM){
 
-
     lim[1]=lim[2]=lim[3]=MINM; // MINM gets larger error and jump in v1 at outer edge
     //    lim[1]=lim[2]=lim[3]=PARALINE;
     // Koral uses MINMOD_THETA2 (MC?)

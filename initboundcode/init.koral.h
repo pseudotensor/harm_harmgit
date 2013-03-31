@@ -450,17 +450,8 @@ struct Ccoordparams {
 
 
 // KORALTODO: PROBLEMS:
-
-
-// RADATM 5-10X slower now (more inversions somehow?) git diff 070483273c8b08fede6e4dcab95a6a4b621a239e|less  Unsure, seems nothing special...have to look harder since huge hit.  Not inversion accuracy!  Watch an implicit step or count inversions.
-
-// RADATM need to try higher-order interpolation to see if velocity is smaller as in koral paper.  No change.
-
-// RADATM with paraline clearly shows oscillations in vx per grid cell while not improving error.
-
-// RADBONDI kinda works at high resolution with para until entropy reversions occur.  Maybe try MP5 or average2point?
-
-// RADDONUT: Donut explodes, and inversions take forever.
+// 1) RADBONDI kinda works at high resolution with para until entropy reversions occur.  Maybe try MP5 or average2point?
+// 2) RADDONUT: Donut explodes, and inversions take forever.
 
 
 //TODO:
@@ -1039,9 +1030,29 @@ struct Ccoordparams {
 
 
 
+// DEBUG sometimes with the below to check code and geometry issues
+#if(0)
 
+#undef WHICHEOM
+#define WHICHEOM WITHNOGDET
 
+#undef CONNMACHINEBODY
+#define CONNMACHINEBODY 0
 
+#undef DOSTOREPOSITIONDATA
+#define DOSTOREPOSITIONDATA 0
+
+#undef STOREFLUXSTATE
+#define STOREFLUXSTATE 0
+
+#undef STORESHOCKINDICATOR
+#define STORESHOCKINDICATOR 0
+
+#undef VARTOINTERP
+#define VARTOINTERP PRIMTOINTERP
+//#define VARTOINTERP PRIMTOINTERP_GDETFULLVERSION
+
+#endif
 
 
 

@@ -130,14 +130,14 @@ int bound_x1dn_analytic(int boundstage, int finalstep, SFTYPE boundtime, int whi
         pl=B1; MACP0A1(prim,i,j,k,pl) = GLOBALMACP0A1(pstaganalytic,i,j,k,pl);
       }
       if(WITHINACTIVEBNDSECTIONX1DN(i,j,k)){
-        PLOOP(pliter,pl) if(pl!=B1) MACP0A1(prim,i,j,k,pl) = GLOBALMACP0A1(pstaganalytic,i,j,k,pl);
+        PBOUNDLOOP(pliter,pl) if(pl!=B1) MACP0A1(prim,i,j,k,pl) = GLOBALMACP0A1(pstaganalytic,i,j,k,pl);
       }
     }
   }
   else{
     COMPFULLLOOP{
       if(WITHINACTIVEBNDSECTIONX1DN(i,j,k)){
-        PLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = GLOBALMACP0A1(panalytic,i,j,k,pl);
+        PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = GLOBALMACP0A1(panalytic,i,j,k,pl);
       }
     }
  
@@ -178,14 +178,14 @@ int bound_x1up_analytic(int boundstage, int finalstep, SFTYPE boundtime, int whi
         pl=B1; MACP0A1(prim,i,j,k,pl) = GLOBALMACP0A1(pstaganalytic,i,j,k,pl);
       }
       if(WITHINACTIVEBNDSECTIONX1UP(i,j,k)){
-        PLOOP(pliter,pl) if(pl!=B1) MACP0A1(prim,i,j,k,pl) = GLOBALMACP0A1(pstaganalytic,i,j,k,pl);
+        PBOUNDLOOP(pliter,pl) if(pl!=B1) MACP0A1(prim,i,j,k,pl) = GLOBALMACP0A1(pstaganalytic,i,j,k,pl);
       }
     }
   }
   else{
     COMPFULLLOOP{
       if(WITHINACTIVEBNDSECTIONX1UP(i,j,k)){
-        PLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = GLOBALMACP0A1(panalytic,i,j,k,pl);
+        PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = GLOBALMACP0A1(panalytic,i,j,k,pl);
       }
     }
  
@@ -228,14 +228,14 @@ int bound_x2dn_analytic(int boundstage, int finalstep, SFTYPE boundtime, int whi
         pl=B2; MACP0A1(prim,i,j,k,pl) = GLOBALMACP0A1(pstaganalytic,i,j,k,pl);
       }
       if(WITHINACTIVEBNDSECTIONX2DN(i,j,k)){
-        PLOOP(pliter,pl) if(pl!=B2) MACP0A1(prim,i,j,k,pl) = GLOBALMACP0A1(pstaganalytic,i,j,k,pl);
+        PBOUNDLOOP(pliter,pl) if(pl!=B2) MACP0A1(prim,i,j,k,pl) = GLOBALMACP0A1(pstaganalytic,i,j,k,pl);
       }
     }
   }
   else{
     COMPFULLLOOP{
       if(WITHINACTIVEBNDSECTIONX2DN(i,j,k)){
-        PLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = GLOBALMACP0A1(panalytic,i,j,k,pl);
+        PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = GLOBALMACP0A1(panalytic,i,j,k,pl);
       }
     }
  
@@ -276,14 +276,14 @@ int bound_x2up_analytic(int boundstage, int finalstep, SFTYPE boundtime, int whi
         pl=B2; MACP0A1(prim,i,j,k,pl) = GLOBALMACP0A1(pstaganalytic,i,j,k,pl);
       }
       if(WITHINACTIVEBNDSECTIONX2UP(i,j,k)){
-        PLOOP(pliter,pl) if(pl!=B2) MACP0A1(prim,i,j,k,pl) = GLOBALMACP0A1(pstaganalytic,i,j,k,pl);
+        PBOUNDLOOP(pliter,pl) if(pl!=B2) MACP0A1(prim,i,j,k,pl) = GLOBALMACP0A1(pstaganalytic,i,j,k,pl);
       }
     }
   }
   else{
     COMPFULLLOOP{
       if(WITHINACTIVEBNDSECTIONX2UP(i,j,k)){
-        PLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = GLOBALMACP0A1(panalytic,i,j,k,pl);
+        PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = GLOBALMACP0A1(panalytic,i,j,k,pl);
       }
     }
  
@@ -327,14 +327,14 @@ int bound_x3dn_analytic(int boundstage, int finalstep, SFTYPE boundtime, int whi
         pl=B3; MACP0A1(prim,i,j,k,pl) = GLOBALMACP0A1(pstaganalytic,i,j,k,pl);
       }
       if(WITHINACTIVEBNDSECTIONX3DN(i,j,k)){
-        PLOOP(pliter,pl) if(pl!=B3) MACP0A1(prim,i,j,k,pl) = GLOBALMACP0A1(pstaganalytic,i,j,k,pl);
+        PBOUNDLOOP(pliter,pl) if(pl!=B3) MACP0A1(prim,i,j,k,pl) = GLOBALMACP0A1(pstaganalytic,i,j,k,pl);
       }
     }
   }
   else{
     COMPFULLLOOP{
       if(WITHINACTIVEBNDSECTIONX3DN(i,j,k)){
-        PLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = GLOBALMACP0A1(panalytic,i,j,k,pl);
+        PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = GLOBALMACP0A1(panalytic,i,j,k,pl);
       }
     }
  
@@ -375,14 +375,14 @@ int bound_x3up_analytic(int boundstage, int finalstep, SFTYPE boundtime, int whi
         pl=B3; MACP0A1(prim,i,j,k,pl) = GLOBALMACP0A1(pstaganalytic,i,j,k,pl);
       }
       if(WITHINACTIVEBNDSECTIONX3UP(i,j,k)){
-        PLOOP(pliter,pl) if(pl!=B3) MACP0A1(prim,i,j,k,pl) = GLOBALMACP0A1(pstaganalytic,i,j,k,pl);
+        PBOUNDLOOP(pliter,pl) if(pl!=B3) MACP0A1(prim,i,j,k,pl) = GLOBALMACP0A1(pstaganalytic,i,j,k,pl);
       }
     }
   }
   else{
     COMPFULLLOOP{
       if(WITHINACTIVEBNDSECTIONX3UP(i,j,k)){
-        PLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = GLOBALMACP0A1(panalytic,i,j,k,pl);
+        PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = GLOBALMACP0A1(panalytic,i,j,k,pl);
       }
     }
  
@@ -3392,6 +3392,16 @@ int poledeath(int whichx2,
   struct of_geom *ptrgeompole=&geompoledontuse;
 
 
+  // NOTE: If bounding less than full quantities, this won't be good diag quantity.
+  int testplexist[MAXNPR]={0};
+  int candodiag=1;
+  PBOUNDLOOP(pliter,pl) testplexist[pl]=1;
+  PLOOP(pliter,pl){ // yes, should be PLOOP(pliter,pl)
+    if(testplexist[pl]!=1){
+      candodiag=0;
+    }
+  }
+
 
   // OPENMPMARK: Can't do this check because if reduce to 1 thread (even in OpenMP) then omp_in_parallel() is false!
   //#if(USEOPENMP)
@@ -3757,7 +3767,8 @@ int poledeath(int whichx2,
         // setup initial pr
         //
         //////////////
-        PLOOP(pliter,pl) prdiag[pl]=MACP0A1(prim,i,j,k,pl);
+        // 
+        PBOUNDLOOP(pliter,pl) prdiag[pl]=MACP0A1(prim,i,j,k,pl);
         int madechange=0;
 
 
@@ -3960,7 +3971,7 @@ int poledeath(int whichx2,
 
 
 
-        if(madechange){
+        if(madechange && candodiag){
           ///////////
           //
           // accounting for on-grid changes
@@ -3976,10 +3987,10 @@ int poledeath(int whichx2,
             fixupptrgeom=ptrgeom[pl];
             break;
           }
-          PLOOP(pliter,pl) pr[pl]=MACP0A1(prim,i,j,k,pl);
+          PBOUNDLOOP(pliter,pl) pr[pl]=MACP0A1(prim,i,j,k,pl);
           int doingmhdfixup=1;
           diag_fixup(modcons,prdiag,pr,ucons,fixupptrgeom,finalstep,doingmhdfixup,COUNTBOUND1);
-          PLOOP(pliter,pl) prdiag[pl]=pr[pl];
+          PBOUNDLOOP(pliter,pl) prdiag[pl]=pr[pl];
         }
 
       
@@ -4009,7 +4020,7 @@ int poledeath(int whichx2,
         // setup initial pr
         //
         //////////////
-        PLOOP(pliter,pl) prdiag[pl]=MACP0A1(prim,i,j,k,pl);
+        PBOUNDLOOP(pliter,pl) prdiag[pl]=MACP0A1(prim,i,j,k,pl);
         int madechange=0;
 
 
@@ -4192,7 +4203,7 @@ int poledeath(int whichx2,
 
 
 
-        if(madechange){ // only need accounting if actually made a change
+        if(madechange&&candodiag){ // only need accounting if actually made a change
           ///////////
           //
           // accounting for on-grid changes
@@ -4209,10 +4220,10 @@ int poledeath(int whichx2,
             break;
           }
 
-          PLOOP(pliter,pl) pr[pl]=MACP0A1(prim,i,j,k,pl);
+          PBOUNDLOOP(pliter,pl) pr[pl]=MACP0A1(prim,i,j,k,pl);
           int doingmhdfixup=1;
           diag_fixup(modcons,prdiag,pr,ucons,fixupptrgeom,finalstep,doingmhdfixup,COUNTBOUND1);
-          PLOOP(pliter,pl) prdiag[pl]=pr[pl];
+          PBOUNDLOOP(pliter,pl) prdiag[pl]=pr[pl];
         }
 
 
@@ -4252,7 +4263,7 @@ int poledeath(int whichx2,
           // setup initial pr (already using pl, so use pl2 for prdiag assignment/setup)
           //
           //////////////
-          PLOOP(pliter,pl2) prdiag[pl2]=MACP0A1(prim,i,j,k,pl2);
+          PBOUNDLOOP(pliter,pl2) prdiag[pl2]=MACP0A1(prim,i,j,k,pl2);
           int madechange=0;
 
 
@@ -4302,7 +4313,7 @@ int poledeath(int whichx2,
 
 
 
-          if(madechange){
+          if(madechange&&candodiag){
             ///////////
             //
             // accounting for on-grid changes
@@ -4320,10 +4331,10 @@ int poledeath(int whichx2,
             //       break;
             //     }
      
-            PLOOP(pliter,pl2) pr[pl2]=MACP0A1(prim,i,j,k,pl2);
+            PBOUNDLOOP(pliter,pl2) pr[pl2]=MACP0A1(prim,i,j,k,pl2);
             int doingmhdfixup=1;
             diag_fixup(modcons,prdiag,pr,ucons,fixupptrgeom,finalstep,doingmhdfixup,COUNTBOUND2);
-            PLOOP(pliter,pl2) prdiag[pl2]=pr[pl2];
+            PBOUNDLOOP(pliter,pl2) prdiag[pl2]=pr[pl2];
 
           }
 
@@ -5104,6 +5115,7 @@ void user1_adjust_final_fluxes(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR]
 // Don't use |\theta-0|<small number since can be quite small yet not on singularity
 // use integer-based grid position based detection as consistent with bondary conditions
 // Called for fresh and restart run
+// Runs over PLOOP(pliter,pl)
 void check_spc_singularities_user(void)
 {
   int i,j,k;
