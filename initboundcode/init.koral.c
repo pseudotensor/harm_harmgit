@@ -645,7 +645,7 @@ int init_global(void)
 
     lim[1]=lim[2]=lim[3]=MINM; 
     //    lim[1]=lim[2]=lim[3]=PARALINE; // actually more error in u^r than MINM for inner radial boundary points (~factor of two larger u^r).
-    // NOTE: with FTYPE as double, not enough precision to have any convergence for u^r -- just noise. See makefile.notes for how to go to ldouble and then has same error as koral.
+    // NOTE: with FTYPE as double, not enough precision to have good convergence for u^r -- just noise. See makefile.notes for how to go to ldouble and then has same error as koral.
     a=0.0; // no spin in case use MCOORD=KSCOORDS
 
     if(!(ISSPCMCOORDNATIVE(MCOORD))){
