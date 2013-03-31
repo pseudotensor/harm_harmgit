@@ -2671,27 +2671,11 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
       ERAD=calc_LTE_EfromT(calc_PEQ_Tfromurho(uint,rho));
     }
 
-    //    dualfprintf(fail_file,"i=%d f=%g p0=%g KKK=%g C3=%g rho=%g uint=%g Fx=%g ERAD=%g : kappaesperrho=%g \n",i,f,p0,KKK,C3,rho,uint,Fx,ERAD , kappaesperrho);
-
-    dualfprintf(fail_file,"i=%d f=%Lg p0=%Lg KKK=%Lg C3=%Lg rho=%Lg uint=%Lg Fx=%Lg ERAD=%Lg : kappaesperrho=%Lg \n",i,f,p0*UBAR,KKK*UBAR/pow(RHOBAR,gamideal),C3,rho*RHOBAR,uint*UBAR,Fx*ENBAR/TBAR/LBAR/LBAR,ERAD*UBAR , kappaesperrho*OPACITYBAR);
-
-    // TOTRY:
-    // NOTHING: 1) source term without gdet (no diff)
-    // NOTHING: 2) source term with no body zeroing (no diff)
-    // NOTHING: storing state or position or shock stuff
-    // SEEMSOK: 3) gcovtt vs. pert and gcontt vs. pert (looks ok)
-    // 4) set f=0 : vel actually smaller.  Why not as small as koral even with koral's f=0.1?  Still grows to be large.
-    //    Actually, with f=0 in harm, similar error in vx at early and late times against koral with no source (but f=0.1 in koral?!!!).
-    // SOLVED PARTIALLY (explicit check wasn't be used): Still rho moves alot when doing radiation.  Moves around similar amount as to when set f!=0 with no source?
-    // OPTICALLY THIN, so radiation energy mostly conserved? : oddly, prad0 and prad1 don't move around with radiation, just rho and u.
-    // NO: 5) could be my prad_fforlab() is not giving correct SPC final values so prad0 is not enough even though it looks like prad1 is right.
-    // FIXED: 6) Using explicit gives different velocity.  Doesn't seem like rho moves around as much as with implicitexplicitcheck.
-    //    Also velocity goes opposite direction.
-    // FIXED:  TODO: CHeck that explicitcheck really has bad wiggle rho.  Yes!  BAD!
-    //   IMPLICIT alone is very slow.  So explicitcheck must be, e.g., not applying *any* force or something.  Or sub-cycling?
-    //      Also, implicit definitely has much larger vx than koral at dump0001
-
-    // NOTHING: 7) Using HORIZONOUTFLOW that interpolates near outer boundary leads to no chang in vx(t,x).  Still large for f=0.1 RAD problem.
+    if(0){//DEBUG:
+      dualfprintf(fail_file,"i=%d f=%g p0=%g KKK=%g C3=%g rho=%g uint=%g Fx=%g ERAD=%g : kappaesperrho=%g \n",i,f,p0,KKK,C3,rho,uint,Fx,ERAD , kappaesperrho);
+      
+      dualfprintf(fail_file,"i=%d f=%g p0=%g KKK=%g C3=%g rho=%g uint=%g Fx=%g ERAD=%g : kappaesperrho=%g \n",i,f,p0*UBAR,KKK*UBAR/pow(RHOBAR,gamideal),C3,rho*RHOBAR,uint*UBAR,Fx*ENBAR/TBAR/LBAR/LBAR,ERAD*UBAR , kappaesperrho*OPACITYBAR);
+    }
 
     
 
@@ -2729,7 +2713,18 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
     *whichcoord=MCOORD;
     prad_fforlab(whichvel, whichcoord, FF2LAB, i,j,k,CENT,NULL,pradffortho, pr, pr);
 
-    //    dualfprintf(fail_file,"AFTER: i=%d rho=%g uint=%g vx=%g uradx=%g ERAD=%g\n",i,pr[RHO],pr[UU],pr[U1],pr[URAD1],pr[URAD0]);
+    if(0){ // DEBUG
+      dualfprintf(fail_file,"AFTER: i=%d rho=%Lg uint=%Lg vx=%Lg ERAD=%Lg uradx=%Lg\n",i,pr[RHO]*RHOBAR,pr[UU]*UBAR,pr[U1]*sqrtl(ptrgeomreal->gcov[GIND(1,1)])*VBAR,pr[URAD0]*UBAR,pr[URAD1]*sqrtl(ptrgeomreal->gcov[GIND(1,1)])*VBAR);
+    }
+
+
+
+
+    // compared to koral, this is how koral would get CGS:
+    // fprintf(stderr,"i=%d f=%g p0=%g KKK=%Lg C3=%g rho=%g uint=%g Fx=%g ERAD=%g : kappaesperrho=%g \n",ix,f,endenGU2CGS(p0),endenGU2CGS(KKK)/powl(rhoGU2CGS(1.0),GAMMA),C3,rhoGU2CGS(pp[0]),endenGU2CGS(pp[1]),fluxGU2CGS(Fx), endenGU2CGS(E) , kappaGU2CGS(KAPPAES));
+    // fprintf(stderr,"AFTER: i=%d rho=%g uint=%g vx=%g ERAD=%g uradx=%g\n",ix,rhoGU2CGS(pp[0]),endenGU2CGS(pp[1]),velGU2CGS(pp[2]),endenGU2CGS(pp[6]),velGU2CGS(pp[7]));
+
+
 
     return(0);
   }
