@@ -61,6 +61,13 @@ phys.tools.rad.o
 
 
 
+SRCPUREDOUBLE=\
+tetlapack_func_doubleonly.c
+#END
+
+OBJSPUREDOUBLE=\
+tetlapack_func_doubleonly.o
+#END
 
 
 

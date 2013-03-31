@@ -1130,6 +1130,22 @@ int koral_source_rad(int whichradsourcemethod, FTYPE *pin, FTYPE *Uiin, FTYPE *U
 
   /////////////////
   //
+  // Check energy density to see if even any radiation or will be any radiation
+  //
+  /////////////////
+
+  FTYPE uu[NPR];
+  PLOOP(pliter,pl) uu[pl]=UFSET(CUf,dt,Uiin[pl],Ufin[pl],dUother[pl],0.0);
+
+  if(pin[URAD0]<ERADLIMIT || -Uiin[URAD0]<ERADLIMIT || -Ufin[URAD0]<ERADLIMIT){
+    // then no radiation here, so just avoid source.
+    // This also helps implicit scheme avoid issues since if E is very small, then won't converge.
+    // Assume dUcomp[RADSOURCE] was set to zero before here, so just return.
+    return(0);
+  }
+
+  /////////////////
+  //
   // Choose which method for stepping to use
   //
   /////////////////

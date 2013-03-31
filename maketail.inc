@@ -113,6 +113,7 @@ include maketail.smcalc.inc
 # "make prep" must be called first so these are set correctly
 #MYCOMMANDS1 := $(shell cat objsonepoint.cmd.list ) 
 #MYCOMMANDS2 := $(shell cat objsmanypoints.cmd.list ) 
+#MYCOMMANDS3 := $(shell cat objspuredouble.cmd.list ) 
 
 
 ########################
@@ -145,10 +146,10 @@ cleanall: cleani
 	rm -rf *~
 
 superclean: cleanall
-	rm -rf $(CMD) $(CMD2) $(LIAISONCMD) $(JONINTERPCMD) $(BIN2TXTCMD) $(SMCALCCMD) $(PREP) $(PREPLD) $(PREPLIAISON) $(PREPJONINTERP) deps.onepoint.list deps.manypoints.list objsmanypoints.cmd.list objsonepoint.cmd.list objslong.cmd.list global.defnprs.h generatenprs libml.a
-	rm -rf objsonepoint.cmd.list objsmanypoints.cmd.list objslong.cmd.list objsdepsliaison.cmd.list objsdepsjoninterp.cmd.list
-	rm -rf deps.manypoints.list deps.onepoint.list deps.long.list deps.depsliaison.list deps.depsjoninterp.list
-	rm -rf objsonepoint objsmanypoints onepoint manypoints
+	rm -rf $(CMD) $(CMD2) $(LIAISONCMD) $(JONINTERPCMD) $(BIN2TXTCMD) $(SMCALCCMD) $(PREP) $(PREPLD) $(PREPLIAISON) $(PREPJONINTERP) deps.onepoint.list deps.manypoints.list deps.puredouble.list objsmanypoints.cmd.list objsonepoint.cmd.list objslong.cmd.list objspuredouble.cmd.list global.defnprs.h generatenprs libml.a
+	rm -rf objsonepoint.cmd.list objsmanypoints.cmd.list objspuredouble.cmd.list objslong.cmd.list objsdepsliaison.cmd.list objsdepsjoninterp.cmd.list
+	rm -rf deps.manypoints.list deps.onepoint.list deps.puredouble.list deps.long.list deps.depsliaison.list deps.depsjoninterp.list
+	rm -rf objsonepoint objsmanypoints objspuredouble onepoint manypoints puredouble
 	rm -rf decs.h mpidecs.h superdecs.h superdecs.pointers.h decs.user.h decs.general.h supermpidecs.h mpidecs.mpi_grmhd_grray_liaison.h rancdecs.h
 	rm -rf freespace.o tau_neededbyharm.o
 	rm -rf depssmcalc depsliaison depsjoninterp deps.depssmcalc.list deps.depsbin2txt.list depsbin2txt
@@ -246,6 +247,22 @@ $(PREP): $(PREPDEP)
 	#
 	# wait for background processes
 	wait
+	#
+ 	############################################
+	#below is for double-only code (that can't be long double converted or compiled with -long_double
+ 	############################################
+	echo $(OBJSPUREDOUBLE) > objspuredouble
+	# remove and touch (so exists) files to create
+	rm -rf objspuredouble.cmd.list ; rm -rf puredouble ; touch objspuredouble.cmd.list ; touch puredouble
+	# create list of prefixes
+	
+	for fil in `cat objspuredouble` ; do prefa=`basename $$fil .o` ; pref=`echo $$prefa | awk '{print $$1}'` ; echo ${ECHOSWITCH} $$pref >> puredouble ; done
+	# create list of commands
+	for fil in `cat puredouble` ; do echo ${ECHOSWITCH} $$fil.o :\\n\\t$(CC) $(CFLAGSNONPRECISENOLONG) -c $$fil.c $(LDFLAGS) >> objspuredouble.cmd.list ; done
+	# remove old depenedencies file and create
+	rm -rf deps.puredouble.list ; touch deps.puredouble.list
+	# create new dependencies file
+	for fil in `cat puredouble` ; do  echo $$fil.c ; ( $(MMCOMP) -c -MM $$fil.c >> deps.puredouble.list &) ; done
 	#
 
 
@@ -441,22 +458,24 @@ $(PREPSMCALC): makefile makehead.inc maketail.inc maketail.ldouble.deps.inc make
 
 
 $(FINISH):
-#	rm -rf objsonepoint objsmanypoints
+#	rm -rf objsonepoint objsmanypoints objspuredouble
 
 #$(CMD):   	GROUP1 GROUP2 makefile freespace.o tau_neededbyharm.o
 #	echo objsmanypoints: $(OBJSMANYPOINTS)
 #	echo objsonepoint: $(OBJSONEPOINT)
+#	echo objspuredouble: $(OBJSPUREDOUBLE)
+#	$(MYCOMMANDS3)
 #	$(MYCOMMANDS2)
 #	$(MYCOMMANDS1)
 
 
-$(CMD):	$(PREP) $(OBJSMANYPOINTS) $(OBJSONEPOINT) makefile
-	$(CC)  $(CFLAGSNONPRECISE) -o $(CMD) $(OBJSMANYPOINTS) $(OBJSONEPOINT) $(LDFLAGS)
+$(CMD):	$(PREP) $(OBJSMANYPOINTS) $(OBJSONEPOINT) $(OBJSPUREDOUBLE) makefile
+	$(CC)  $(CFLAGSNONPRECISE) -o $(CMD) $(OBJSMANYPOINTS) $(OBJSONEPOINT) $(OBJSPUREDOUBLE) $(LDFLAGS)
 
 
-$(CMD2):       $(PREP) $(PREPLD) $(OBJSMANYPOINTS) $(OBJSONEPOINT) makefile libml.a $(OBJSOTHER)
+$(CMD2):       $(PREP) $(PREPLD) $(OBJSMANYPOINTS) $(OBJSONEPOINT) $(OBJSPUREDOUBLE) makefile libml.a $(OBJSOTHER)
 	       $(CC2) $(GCCCFLAGS) -c polevll.c $(LDFLAGS) $(LDFLAGSOTHER)
-	       $(CC)  $(CFLAGS) -o $(CMD2) $(OBJSMANYPOINTS) $(OBJSONEPOINT) polevll.o libml.a $(LDFLAGS) $(LDFLAGSOTHER)
+	       $(CC)  $(CFLAGS) -o $(CMD2) $(OBJSMANYPOINTS) $(OBJSONEPOINT) $(OBJSPUREDOUBLE) polevll.o libml.a $(LDFLAGS) $(LDFLAGSOTHER)
 
 $(LIAISONCMD): $(PREPLIAISON) $(OBJSLIAISON) makefile 
 	       $(CC)  $(CFLAGS) -DUSINGLIAISON=1 -o $(LIAISONCMD) $(OBJSLIAISON) $(LDFLAGS) $(LDFLAGSOTHER)
@@ -484,8 +503,10 @@ $(SMCALCCMD): $(PREPSMCALC) $(OBJSSMCALC) makefile
 ifeq ($(MYMAKECMDGOALS),$(filter $(MYMAKECMDGOALS),$(BINARYTARGETS)))
 -include objsonepoint.cmd.list
 -include objsmanypoints.cmd.list
+-include objspuredouble.cmd.list
 -include deps.manypoints.list
 -include deps.onepoint.list
+-include deps.puredouble.list
 endif
 
 ifeq ($(MYMAKECMDGOALS),$(CMD2))

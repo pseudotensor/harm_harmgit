@@ -34,7 +34,9 @@
 # 5c) lcalc.c : extern int isnanl(), isfinitel(), signbitl();
 # 5d) wrap the isnanl.c:isfinitel(x) function in #if(USINGICC==0) #endif since already in MKL library
 # 6) compile code:
-# make superclean ; make prepgrmhdldouble ; make grmhdldouble
+# make superclean ;make prep ; make prepgrmhdldouble ; make -j 16 grmhdldouble
+
+
 
 # for liaison code do (e.g.):
 # make superclean ; make prepliaison ; make liaison

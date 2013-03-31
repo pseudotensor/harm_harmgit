@@ -94,7 +94,7 @@
 // 3) Details:
 // 3a) Koral's F and U in LAXF have no \detg
 // 4) Runtime differences:
-// 4a) Koral is defaulted to use OpenMP , and default is 4 cores, so any output from parallel loops will be randomly ordered.
+// 4a) Koral is defaulted to use OpenMP , and default is full use of all cores, so any output from parallel loops will be randomly ordered.  remove -fopenmp to get linear debug output.
 //
 //////////////////////////////////
 
