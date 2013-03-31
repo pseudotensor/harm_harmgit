@@ -731,21 +731,31 @@ int bound_x1dn_outflow(
 
             PALLLOOP(pl) get_geometry(i, j, k, dirprim[pl], ptrgeom[pl]);
 
-            for(pl=RHO;pl<=UU;pl++){
-              MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * (ptrrgeom[pl]->gdet/ptrgeom[pl]) ;
+            PBOUNDLOOP(pliter,pl){
+              if(pl>=RHO && pl<=UU){
+                MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * (ptrrgeom[pl]->gdet/ptrgeom[pl]) ;
+              }
             }
-            pl=U1;     // treat U1 as special
-            MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * (1. - (i-ri)*dx[1]) ;
-            for(pl=U2;pl<=U3;pl++){
-              MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * (1. + (i-ri)*dx[1]) ;
+            PBOUNDLOOP(pliter,pl){
+              if(pl==U1){     // treat U1 as special
+                MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * (1. - (i-ri)*dx[1]) ;
+                for(pl=U2;pl<=U3;pl++){
+                  MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * (1. + (i-ri)*dx[1]) ;
+                }
+              }
             }
-            pl=B1; // treat B1 special
-            MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * (ptrrgeom[pl]->gdet/ptrgeom[pl]);
-            for(pl=B2;pl<=B3;pl++){
-              MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * (1. + (i-ri)*dx[1]) ;
+            PBOUNDLOOP(pliter,pl){
+              if(pl==B1){ // treat B1 special
+                MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * (ptrrgeom[pl]->gdet/ptrgeom[pl]);
+                for(pl=B2;pl<=B3;pl++){
+                  MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * (1. + (i-ri)*dx[1]) ;
+                }
+              }
             }
-            for(pl=B3+1;pl<NPRBOUND;pl++){
-              MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * (ptrrgeom[pl]->gdet/ptrgeom[pl]);
+            PBOUNDLOOP(pliter,pl){
+              if(pl>=B3+1 && pl<NPRBOUND){
+                MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * (ptrrgeom[pl]->gdet/ptrgeom[pl]);
+              }
             }
           }
 #elif(HORIZONEXTRAP==2)
@@ -895,21 +905,32 @@ int bound_x1up_outflow(
 
           LOOPBOUND1OUT{
             PALLLOOP(pl) get_geometry(i, j, k, dirprim[pl], ptrgeom[pl]);
-            for(pl=RHO;pl<=UU;pl++){
-              MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * (ptrrgeom[pl]->gdet/ptrgeom[pl]) ;
+
+            PBOUNDLOOP(pliter,pl){
+              if(pl>=RHO && pl<=UU){
+                MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * (ptrrgeom[pl]->gdet/ptrgeom[pl]) ;
+              }
             }
-            pl=U1; // treat U1 as special
-            MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * (1. - 2*(i-ri)*dx[1]) ;
-            for(pl=U2;pl<=U3;pl++){
-              MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * (1. - (i-ri)*dx[1]) ;
+            PBOUNDLOOP(pliter,pl){
+              if(pl==U1){ // treat U1 as special
+                MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * (1. - 2*(i-ri)*dx[1]) ;
+                for(pl=U2;pl<=U3;pl++){
+                  MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * (1. - (i-ri)*dx[1]) ;
+                }
+              }
             }
-            pl=B1; // treat B1 special
-            MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * (ptrrgeom[pl]->gdet/ptrgeom[pl]) ;
-            for(pl=B2;pl<=B3;pl++){
-              MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * (1. - (i-ri)*dx[1]) ;
+            PBOUNDLOOP(pliter,pl){
+              if(pl==B1){ // treat B1 special
+                MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * (ptrrgeom[pl]->gdet/ptrgeom[pl]) ;
+                for(pl=B2;pl<=B3;pl++){
+                  MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * (1. - (i-ri)*dx[1]) ;
+                }
+              }
             }
-            for(pl=B3+1;pl<NPRBOUND;pl++){
-              MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * (ptrrgeom[pl]->gdet/ptrgeom[pl]) ;
+            PBOUNDLOOP(pliter,pl){
+              if(pl>=B3+1 && pl<NPRBOUND){
+                MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) * (ptrrgeom[pl]->gdet/ptrgeom[pl]) ;
+              }
             }
           }
 #elif(OUTEREXTRAP==2)
@@ -2959,7 +2980,7 @@ int extrapfunc(int boundary, int j,int k,
     //
     //////////////////
     PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl)=MACP0A1(prim,ri,rj,rk,pl);
-
+    
     //////////////////
     //
     // get coordinates of local location for all quantities
@@ -3000,7 +3021,7 @@ int extrapfunc(int boundary, int j,int k,
 
 
 #if(1)
-      for(pl=0;pl<NPRBOUND;pl++){
+      PBOUNDLOOP(pliter,pl){
         if(pl!=B1 && pl!=B2 && pl!=B3 && pl!=URAD1 && pl!=URAD2 && pl!=URAD3){
 
           // only use linear if exponentiation causes growth of value, not decreasion
@@ -3025,12 +3046,14 @@ int extrapfunc(int boundary, int j,int k,
       // override using OLD WAY for densities
 #if(0)
       // linear extrap (leads to negative values, which can cause problems with flux inversions)
-      pl=RHO; MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) + dq[pl]*(i-ri);
-      pl=UU;  MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) + dq[pl]*(i-ri);
+      PBOUNDLOOP(pliter,pl) if(pl==RHO) MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) + dq[pl]*(i-ri);
+      PBOUNDLOOP(pliter,pl) if(pl==UU)  MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) + dq[pl]*(i-ri);
+      PBOUNDLOOP(pliter,pl) if(pl==URAD0)  MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) + dq[pl]*(i-ri);
 #else
       // log extrap
-      pl=RHO; MACP0A1(prim,i,j,k,pl) = exp(log(SMALL+fabs(MACP0A1(prim,ri,rj,rk,pl))) + dqlogdensity[pl]*(i-ri));
-      pl=UU;  MACP0A1(prim,i,j,k,pl) = exp(log(SMALL+fabs(MACP0A1(prim,ri,rj,rk,pl))) + dqlogdensity[pl]*(i-ri));
+      PBOUNDLOOP(pliter,pl) if(pl==RHO) MACP0A1(prim,i,j,k,pl) = exp(log(SMALL+fabs(MACP0A1(prim,ri,rj,rk,pl))) + dqlogdensity[pl]*(i-ri));
+      PBOUNDLOOP(pliter,pl) if(pl==UU)  MACP0A1(prim,i,j,k,pl) = exp(log(SMALL+fabs(MACP0A1(prim,ri,rj,rk,pl))) + dqlogdensity[pl]*(i-ri));
+      PBOUNDLOOP(pliter,pl) if(pl==URAD0)  MACP0A1(prim,i,j,k,pl) = exp(log(SMALL+fabs(MACP0A1(prim,ri,rj,rk,pl))) + dqlogdensity[pl]*(i-ri));
 #endif
 
 #endif
@@ -3116,29 +3139,30 @@ int extrapfunc(int boundary, int j,int k,
       D0 = MACP0A1(prim,ri,rj,rk,RHO)*uconref[TT];
 #endif
 
-      for(pl=U1;pl<=U3;pl++){
-
-        // switch away from using near-BC value as reference if going bad since don't want to exaggerate it
-        ftemp = MACP0A1(prim,ri,rj,rk,pl)*(1.0-yfrac) + MACP0A1(prim,ri2,rj,rk,pl)*yfrac;
-        // interpolate
-        MACP0A1(prim,i,j,k,pl) = (ftemp + dq[pl]*(i-ri));
-
-
-        // dualfprintf(fail_file,"i=%d j=%d k=%d pl=%d ftemp=%21.15g yfrac=%21.15g dq[pl]=%21.15g i=%d ri=%d ri2=%d ri3=%d rj=%d rk=%d :: prim=%21.15g pri2=%21.15g pri3=%21.15g\n",i,j,k,pl,ftemp,yfrac,dq[pl],i,ri,ri2,ri3,rj,rk,MACP0A1(prim,i,j,k,pl),MACP0A1(prim,ri2,rj,rk,pl),MACP0A1(prim,ri3,rj,rk,pl)); // CHANGINGMARK
+      PBOUNDLOOP(pliter,pl){
+        if(pl==U1 || pl==U2 || pl==U3 || pl==URAD1 || pl==URAD2 || pl==URAD3){
+          
+          // switch away from using near-BC value as reference if going bad since don't want to exaggerate it
+          ftemp = MACP0A1(prim,ri,rj,rk,pl)*(1.0-yfrac) + MACP0A1(prim,ri2,rj,rk,pl)*yfrac;
+          // interpolate
+          MACP0A1(prim,i,j,k,pl) = (ftemp + dq[pl]*(i-ri));
 
 
+          // dualfprintf(fail_file,"i=%d j=%d k=%d pl=%d ftemp=%21.15g yfrac=%21.15g dq[pl]=%21.15g i=%d ri=%d ri2=%d ri3=%d rj=%d rk=%d :: prim=%21.15g pri2=%21.15g pri3=%21.15g\n",i,j,k,pl,ftemp,yfrac,dq[pl],i,ri,ri2,ri3,rj,rk,MACP0A1(prim,i,j,k,pl),MACP0A1(prim,ri2,rj,rk,pl),MACP0A1(prim,ri3,rj,rk,pl)); // CHANGINGMARK
 
-        if(V[pl][RR]<RADIUSTOAVOIDRADIALSUCK){
-          // only do this if near a BH
-          // also use yfrac to reset on-grid value since apparently it's going bad
-          // this also keeps interpolation scheme passing through to boundary and so avoiding unwanted dissipation that can evolve flow away from sanity
-          // linear extrap
-          // GODMARK: Should probably make sure that u^r doesn't change sign?!
-          MACP0A1(prim,ri,rj,rk,pl) = MACP0A1(prim,ri,rj,rk,pl)*(1.0-yfrac) + (MACP0A1(prim,ri2,rj,rk,pl) + dq[pl]*(ri-(ri2)))*yfrac;
-        }
 
-      }// end over velocities
 
+          if(V[pl][RR]<RADIUSTOAVOIDRADIALSUCK){
+            // only do this if near a BH
+            // also use yfrac to reset on-grid value since apparently it's going bad
+            // this also keeps interpolation scheme passing through to boundary and so avoiding unwanted dissipation that can evolve flow away from sanity
+            // linear extrap
+            // GODMARK: Should probably make sure that u^r doesn't change sign?!
+            MACP0A1(prim,ri,rj,rk,pl) = MACP0A1(prim,ri,rj,rk,pl)*(1.0-yfrac) + (MACP0A1(prim,ri2,rj,rk,pl) + dq[pl]*(ri-(ri2)))*yfrac;
+          }
+
+        }// end over velocities
+      }
 #if(DO_CONSERVE_D_INBOUNDS)
       // get new u^t
       ucon_calc(MAC(prim,ri,rj,rk),ptrrgeom[U1],uconrefnew, othersrefnew);
@@ -3151,26 +3175,27 @@ int extrapfunc(int boundary, int j,int k,
 
 #elif(0)
       // linear extrap
-      for(pl=U1;pl<=U3;pl++){
-
-        // switch away from using near-BC value as reference if going bad since don't want to exaggerate it
-        ftemp = MACP0A1(prim,ri,rj,rk,pl)*(1.0-yfrac) + MACP0A1(prim,ri3,rj,rk,pl)*yfrac;
-        // interpolate
-        MACP0A1(prim,i,j,k,pl) = ftemp + dq[pl]*(i-ri);
-
+      PBOUNDLOOP(pliter,pl){
+        if(pl==U1 || pl==U2 || pl==U3 || pl==URAD1 || pl==URAD2 || pl==URAD3){
+          
+          // switch away from using near-BC value as reference if going bad since don't want to exaggerate it
+          ftemp = MACP0A1(prim,ri,rj,rk,pl)*(1.0-yfrac) + MACP0A1(prim,ri3,rj,rk,pl)*yfrac;
+          // interpolate
+          MACP0A1(prim,i,j,k,pl) = ftemp + dq[pl]*(i-ri);
+        }
       }
 
 
 #elif(1)
-      // linear extrap
-      for(pl=U1;pl<=U3;pl++){
-
-        ftemp = MACP0A1(prim,ri,rj,rk,pl);
-        // interpolate
-        MACP0A1(prim,i,j,k,pl) = ftemp + dq[pl]*(i-ri);
-
+      // linear extrap for velocities
+      PBOUNDLOOP(pliter,pl){
+        if(pl==U1 || pl==U2 || pl==U3 || pl==URAD1 || pl==URAD2 || pl==URAD3){
+          ftemp = MACP0A1(prim,ri,rj,rk,pl);
+          // interpolate
+          MACP0A1(prim,i,j,k,pl) = ftemp + dq[pl]*(i-ri);
+        }
       }
-
+      
 
 #endif   
 
@@ -3921,11 +3946,13 @@ int poledeath(int whichx2,
           //
           ///////////////////////////////////
           if(ispstag==0){
-            for(pl=B3+1;pl<NPRBOUND;pl++){
-              if(doavginradius[pl]) ftemp=THIRD*(MACP0A1(prim,rim1,rj,rk,pl) + MACP0A1(prim,ri,rj,rk,pl) + MACP0A1(prim,rip1,rj,rk,pl));
-              else ftemp=MACP0A1(prim,ri,rj,rk,pl);
-              MACP0A1(prim,i,j,k,pl)=ftemp;
-              madechange++;
+            PBOUNDLOOP(pliter,pl){
+              if(pl>=B3+1 && pl<NPRBOUND){
+                if(doavginradius[pl]) ftemp=THIRD*(MACP0A1(prim,rim1,rj,rk,pl) + MACP0A1(prim,ri,rj,rk,pl) + MACP0A1(prim,rip1,rj,rk,pl));
+                else ftemp=MACP0A1(prim,ri,rj,rk,pl);
+                MACP0A1(prim,i,j,k,pl)=ftemp;
+                madechange++;
+              }
             }
           }
 

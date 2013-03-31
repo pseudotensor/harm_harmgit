@@ -1163,7 +1163,7 @@ int koral_source_rad(int whichradsourcemethod, FTYPE *pin, FTYPE *Uiin, FTYPE *U
       return(EXPLICITNOTNECESSARY);
     }
     //else explicit succeeded, so just return
-    return(EXPLICITNOTFAIL);
+    return(EXPLICITNOTFAILED);
   }
   else if(whichradsourcemethod==SOURCEMETHODIMPLICIT){
  
