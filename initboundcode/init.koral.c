@@ -732,7 +732,7 @@ int init_global(void)
     DTr = 100; //number of time steps for restart dumps
     tf = 2E9; //final time
     
-    tf=1E8; // profiling // SUPERTODOMARK
+    //    tf=1E8; // profiling // SUPERTODOMARK
 
     //    DODIAGEVERYSUBSTEP = 1;
 
