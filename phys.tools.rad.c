@@ -1409,6 +1409,7 @@ static int calc_rad_lambda(FTYPE *pp, struct of_geom *ptrgeom, FTYPE kappa, FTYP
   // energy density loss rate integrated over frequency and solid angle
   *lambda = kappa*4.*Pi*B;
 
+  return(0);
 }
 
 
