@@ -38,6 +38,7 @@ static int get_m1closure_urfconrel_olek(int showmessages, int allowlocalfailuref
 
 
 
+static int calc_rad_lambda(FTYPE *pp, struct of_geom *ptrgeom, FTYPE kappa, FTYPE kappaes, FTYPE *lambda);
 
 
 
@@ -56,8 +57,6 @@ static int Utoprimgen_failwrapper(int showmessages, int allowlocalfailurefixandn
 
   //calculating primitives  
   // OPTMARK: Should optimize this to  not try to get down to machine precision
-  // KORALTODO: NOTEMARK: If failure, then need to really fix-up or abort this implicit solver!
-  // Need to check if Utoprimgen fails in sense of stored inversion failure and revert to explicit or other if happens -- maybe CASE dependent!
   MYFUN(Utoprimgen(showmessages, allowlocalfailurefixandnoreport, finalstep, EVOLVEUTOPRIM, UNOTHING, U, ptrgeom, pr, newtonstats),"phys.tools.rad.c:Utoprimgen_failwrapper()", "Utoprimgen", 1);
 
   // check how inversion did.  If didn't succeed, then check if soft failure and pass.  Else if hard failure have to return didn't work.
@@ -180,7 +179,7 @@ static FTYPE compute_dt(FTYPE *CUf, FTYPE dtin)
 }
 
 // compute changes to U (both T and R) using implicit method
-// KORALTODO: If doing implicit, should also add geometry source term that can sometimes be stiff.  Would require inverting sparse 8x8 matrix (or maybe 6x6 since only r-\theta for SPC).
+// KORALTODO: If doing implicit, should also add geometry source term that can sometimes be stiff.  Would require inverting sparse 8x8 matrix (or maybe 6x6 since only r-\theta for SPC).  Could be important for very dynamic radiative flows.
 static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother ,FTYPE (*dUcomp)[NPR])
 {
   int i1,i2,i3,iv,ii,jj,pliter,sc;
@@ -313,7 +312,7 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
     }// end loop over f1iter
     if(f1iter==MAXF1TRIES){
       if(debugfail>=2) dualfprintf(fail_file,"Reached MAXF1TRIES\n");
-      // KORALTODO: If only soft fluid failure (i.e. rho<0 or u<0, then actually allow somehow)  UTOPRIMFAILFIXEDENTROPY or UTOPRIMFAILFIXEDCOLD (but right now those are already always allowed -- but watch for them to see if that's a problem).
+      // Note that if inversion reduces to entropy or cold, don't fail, so passes until reached this point.  But convergence can be hard if flipping around which EOMs for the inversion are actually used.
       return(1);
     }
 
@@ -366,8 +365,7 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
           del=localIMPEPS*MAX(fabs(uup[jj+URAD0]),fabs(uup[URAD0]));
           // when |URAD0|>>|URAD1|, then can't get better than machine error on URAD0, not URAD1, so using small del just for URAD1 makes no sense.
 
-          // KORALTODO: offset uu (KORALTODO: How to ensure this doesn't have machine precision problems or is good enough difference?)
-          // KORALTODO: If ultrarel, then even this small "del" might be too large change in uu and might have bad P(U).  Need to control this "del" better.
+          // offset uu (KORALTODO: How to ensure this doesn't have machine precision problems or is good enough difference?)
           uu[jj+URAD0]=uup[jj+URAD0]-del;
  
           // get dUresid for this offset uu
@@ -616,7 +614,9 @@ static void get_dtsub(int method, FTYPE *pr, struct of_state *q, FTYPE *Ui, FTYP
     // KORALTODO: \tau suppression not general enough because G\propto R\tau + \gamma R \tau + \gamma B, and further, this assumes T\sim R.  If T<<R, then suppression by \tau won't be enough to treat stiffness effect on fluid's T.
     // dR^t_t/R^t_t \sim c \gamma_{fluid} \chi dt = \sim c \gamma_{fluid} \tau dt/dx , but might as well just use first version
     
+
     if(0){
+      // Older Olek method
       // use approximate dt along each spatial direction.  chi is based in orthonormal basis
       // get maximum \tau for all relevant directions
       FTYPE dxortho[NDIM],tautotdir[NDIM];
@@ -629,6 +629,7 @@ static void get_dtsub(int method, FTYPE *pr, struct of_state *q, FTYPE *Ui, FTYP
       idtsub0=taumax/realdt;
     }
     else{
+      // New Jon method
       FTYPE uu0=q->ucon[TT]; // what enters G for dR^t_t/R^t_t from time part
       //      FTYPE ratchangeRtt=chi * uu0 * realdt * 1.0; // 1.0 = c (1st term)
       FTYPE ratchangeRtt=SMALL+fabs(chi * uu0 * uu0 * realdt * 1.0); // 1.0 = c (2nd term with chi instead of kappaes to be sever and account for B-based term)
@@ -1353,72 +1354,63 @@ static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYP
   //this call returns R^i_j, i.e., the first index is contra-variant and the last index is co-variant
   mhdfull_calc_rad(pp, ptrgeom, q, Rij);
 
-  //  FTYPE Rijkoral[NDIM][NDIM];
-  //  DLOOP(i,j) Rijkoral[i][j] =0;
-  //  DLOOP(i,j) DLOOPA(k) Rijkoral[i][j] += Rij[i][k]*ptrgeom->gcon[GIND(k,j)];
-  //  DLOOP(i,j) dualfprintf(fail_file,"i=%d j=%d Rij=%g Rijkoral=%g\n",i,j,Rij[i][j],Rijkoral[i][j]);
-
   //the four-velocity of fluid in lab frame
   FTYPE *ucon,*ucov;
-
   ucon = q->ucon;
   ucov = q->ucov;
   
-  
-  //gas properties
-  FTYPE rho=pp[RHO];
-  FTYPE u=pp[UU];
-  FTYPE T=compute_temp_simple(ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p,rho,u);
-  FTYPE B=0.25*ARAD_CODE*pow(T,4.)/Pi; // KORALTODO: Why Pi here?
-  // KORALTODO: Also, doesn't this only allow for thermal black body emission?
-  //  dualfprintf(fail_file,"rho=%g u=%g T=%g B=%g Erad=%g\n",rho,u/rho,T*TEMPBAR,B/rho,pp[PRAD0]/rho);
+ 
+  // get opacities
   FTYPE kappa,kappaes;
   calc_kappa(pp,ptrgeom,&kappa);
   calc_kappaes(pp,ptrgeom,&kappaes);
+
+  // get cooling rate
+  FTYPE lambda;
+  calc_rad_lambda(pp, ptrgeom, kappa, kappaes,&lambda);
+
+  // get chi
   FTYPE chi=kappa+kappaes;
   
-  //contravariant four-force in the lab frame
+  // compute contravariant four-force in the lab frame
   
   //R^a_b u_a u^b
   FTYPE Ruu=0.; DLOOP(i,j) Ruu+=Rij[i][j]*ucov[i]*ucon[j];
 
- 
   FTYPE Ru;
   DLOOPA(i){
-
     Ru=0.; DLOOPA(j) Ru+=Rij[i][j]*ucon[j];
-
-    Gu[i]=-chi*Ru - (kappaes*Ruu + kappa*4.*Pi*B)*ucon[i]; // KORALTODO: Is 4*Pi here ok?
-
-
-    //    dualfprintf(fail_file,"i=%d Gu=%g Gup1=%g Gup2=%g : Ruu=%g Ru=%g kappa=%g kappaes=%g chi=%g B=%g ucon=%g %g %g %g\n",i,Gu[i],-chi*Ru,-(kappaes*Ruu + kappa*4.*Pi*B)*ucon[i],Ruu,Ru,kappa,kappaes,chi,B,ucon[0],ucon[1],ucon[2],ucon[3]);
-    // dualfprintf(fail_file,"i=%d : Ruu=%g Ru=%g chi=%g Gu=%g\n",i,Ruu/rho,Ru/RHO_AMB*sqrt(fabs(ptrgeom->gcov[GIND(i,i)])),chi,Gu[i]/RHO_AMB*sqrt(fabs(ptrgeom->gcov[GIND(i,i)])));
-    //    dualfprintf(fail_file,"ratG1=%g ratG2=%g chi=%g Ru=%g rho=%g\n",chi*Ru/rho,kappa*4.*Pi*B/rho,chi,Ru,rho);
-
+    Gu[i]=-chi*Ru - (kappaes*Ruu + lambda)*ucon[i];
   }
-
 
   *chireturn=chi; // if needed
 
 
+}
 
 
-#if(0) // DEBUG
-  DLOOPA(j) dualfprintf(fail_file,"ucov[%d]=%g ucon[%d]=%g\n",j,ucov[j],j,ucon[j]);
-  FTYPE *uradcon,*uradcov;
-  uradcon=q->uradcon;
-  uradcov=q->uradcov;
-  DLOOPA(j) dualfprintf(fail_file,"uradcov[%d]=%g uradcon[%d]=%g\n",j,uradcov[j]*sqrt(fabs(ptrgeom->gcon[GIND(j,j)])),j,uradcon[j]*sqrt(fabs(ptrgeom->gcov[GIND(j,j)])));
-  FTYPE Rijuu[NDIM][NDIM];
-  DLOOP(i,j) Rijuu[i][j]=0.0;
-  int b;
-  DLOOP(i,j) DLOOPA(b) Rijuu[i][j]+=Rij[i][b]*ptrgeom->gcon[GIND(b,j)];
+// energy density loss rate integrated over frequency and solid angle
+static int calc_rad_lambda(FTYPE *pp, struct of_geom *ptrgeom, FTYPE kappa, FTYPE kappaes, FTYPE *lambda)
+{
 
-  DLOOP(i,j) dualfprintf(fail_file,"i=%d j=%d Rij=%g Rijuu=%g\n",i,j,Rij[i][j]/rho,Rijuu[i][j]/rho);
-#endif
+  // get gas properties
+  FTYPE rho=pp[RHO];
+  FTYPE u=pp[UU];
+  FTYPE T=compute_temp_simple(ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p,rho,u);
 
+
+  // This is aT^4/(4\pi) that is the specific black body emission rate in B_\nu d\nu d\Omega corresponding to energy density rate per unit frequency per unit solid angle, which has been integrated over frequency.
+  // More generally, kappa*4*Pi*B can be replaced by some \Lambda that is some energy density rate
+  // But, have to be careful that "kappa rho" is constructed from \Lambda/(u*c) or else balance won't occur.
+  // This is issue because "kappa" is often frequency integrated directly, giving different answer than frequency integrating j_v -> \Lambda/(4\pi) and B_\nu -> (aT^4)/(4\pi) each and then taking the ratio.
+  FTYPE B=0.25*ARAD_CODE*pow(T,4.)/Pi;
+
+
+  // energy density loss rate integrated over frequency and solid angle
+  *lambda = kappa*4.*Pi*B;
 
 }
+
 
 
 int vchar_rad(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *vmax, FTYPE *vmin, FTYPE *vmax2, FTYPE *vmin2,int *ignorecourant)
@@ -1428,11 +1420,9 @@ int vchar_rad(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYP
   // compute chi
   // Assume computed as d\tau/dorthonormallength as defined by user.
   // Assume \chi defined in fluid frame (i.e. not radiation frame).
-  
-  // KORALTODO: below 2 lines were how harm = koralinsert was before
-  // KORALTODO: Need to still use total wave speed for timestep limit!
   FTYPE kappa,chi;
   calc_chi(pr,geom,&chi);
+  // KORALTODO: in paper, suggests only kappaes should matter?
   //  calc_kappa(pr,geom,&kappa);
   //  chi=kappa;
 
@@ -1480,7 +1470,6 @@ int vchar_rad(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYP
   // works even if not using damping of implicit solver
   simplefast_rad(dir,geom,q,2.0/3.0,vmin2,vmax2);
 #endif
-  // KORALTODO: It seems to not always be required (shock tests don't need it even for non-rel optically thick problem), so maybe there's a way to have vrad2 -> c to keep the optically thick regime stable by interpolating vrad2 to become -> c when \tau>>1.
 
   
   return(0);
@@ -1613,7 +1602,7 @@ int calc_Rij_ff(FTYPE *pp, FTYPE Rij[][NDIM])
   Rij[0][0]=E;
 
   if(EOMRADTYPE==EOMRADEDD){
-    // KORALTODO: Below 3 should be zero for Eddington approximation!  Why didn't original koral have that?
+    // KORALTODO: Below 3 should be zero for Eddington approximation, but only if F=0 exactly.
     Rij[0][1]=Rij[1][0]=0.0;
     Rij[0][2]=Rij[2][0]=0.0;
     Rij[0][3]=Rij[3][0]=0.0;
@@ -1914,7 +1903,6 @@ int prad_fforlab(int *whichvel, int *whichcoord, int whichdir, int i, int j, int
     DLOOP(jj,kk) dualfprintf(fail_file,"jj=%d kk=%d gcov=%g gcon=%g\n",jj,kk,ptrgeomtouse->gcov[GIND(jj,kk)],ptrgeomtouse->gcon[GIND(jj,kk)]);
     PLOOP(pliter,pl) dualfprintf(fail_file,"pl=%d pout=%g\n",pl,pout[pl]);
     myexit(189235);
-    //if(ptrgeomtouse->i==700) myexit(189235);
     // KORALTODO: Check whether really succeeded?  Need to call fixups?  Probably, but need per-cell fixup.  Hard to do if other cells not even set yet as in ICs.  Should probably include fixup process during initbase.c stuff.
   }
 
@@ -2186,7 +2174,6 @@ int indices_12(FTYPE A1[NDIM],FTYPE A2[NDIM],struct of_geom *ptrgeom)
 //
 // NEW (currently true): fluid frame no longer needed because go directly from lab-frame conserved quantities to lab-frame primitive quantities.
 //
-// ERADLIMIT applied here, but (SUPERGODMARK KORALTODO) should in general treat Erf<something as failure in inversion and try to average-out first before reducing to ERf=something and zero relative velocity.  And not sure what that something should be except as relative to other energy densities like how handle UU and BSQ relative to RHO.  Should do that instead and just have very small floor. 
 //
 // uu: Conserved quantities with URAD0,1,2,3 as radiation conserved quantities
 // pp: primitives with PRAD0,1,2,3 as radiation primitive quantities
@@ -2312,9 +2299,6 @@ int u2p_rad(int showmessages, int allowlocalfailurefixandnoreport, FTYPE *uu, FT
 
 
 // interpolate between optically thick and thin limits when no u2p_rad() inversion solution
-// KORALTODO SUPERGODMARK: Maybe should reduce to fluid frame or gammamax frame as linearly determined by opacity.
-// I.e. if optically thick, then reduce to fluid frame.  If optically thin, reduce to gammamax.
-//      else if(M1REDUCE==TOOPACITYDEPENDENTFRAME) opacity_interpolated_urfconrel(tautotmax,pp,ptrgeom,Av,Erf,gammarel2,&Erf,urfconrel);
 static int opacity_interpolated_urfconrel(FTYPE tautotmax, FTYPE *pp,struct of_geom *ptrgeom,FTYPE *Av, FTYPE Erf,FTYPE gammarel2,  FTYPE *Erfnew, FTYPE *urfconrel)
 {
   int jj;

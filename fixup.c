@@ -3017,6 +3017,8 @@ int set_density_floors_default(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *prfloo
     prfloor[RHO] = RHOMIN*pow(r, -2.0);
     prfloor[UU] = UUMIN*prfloor[RHO] ;
   }
+  
+  // KORALTODO: Maybe implement floor to ERAD relative to other energy densities like how handle UU and BSQ relative to RHO.
 
 
 
@@ -3108,6 +3110,9 @@ int get_bsqflags(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR])
     else flags[0]=0;
 
 #endif
+
+    // KORALTODO: Maybe implement floor to ERAD relative to other energy densities like how handle UU and BSQ relative to RHO.
+
 
 #if(DOEVOLVEUU)
     // b^2/u
