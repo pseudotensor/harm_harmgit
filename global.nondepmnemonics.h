@@ -154,13 +154,13 @@
 #define NOGDETB1 0
 #define NOGDETB2 0
 #define NOGDETB3 0
+#define NOGDETURAD0 0
+#define NOGDETURAD1 1 // URAD1 and URAD2 are only reasonable choices in SPC
+#define NOGDETURAD2 1
+#define NOGDETURAD3 0
 #define NOGDETENTROPY 0
 #define NOGDETYL 0
 #define NOGDETYNU 0
-#define NOGDETURAD0 0
-#define NOGDETURAD1 0
-#define NOGDETURAD2 0
-#define NOGDETURAD3 0
 
 
 

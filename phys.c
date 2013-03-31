@@ -249,24 +249,7 @@ int source_conn(FTYPE *pr, struct of_geom *ptrgeom,
 
 
     // todo = whether that EOM has the NOGDET form.  If so, then need 2nd connection.  Do this instead of different connection2 for each EOM since each spatial component is actually the same.
-
-    todo[RHO]=(NOGDETRHO>0) ? 1 : 0;
-    todo[UU]  =(NOGDETU0>0) ? 1 : 0;
-    todo[U1]  =(NOGDETU1>0) ? 1 : 0;
-    todo[U2]  =(NOGDETU2>0) ? 1 : 0;
-    todo[U3]  =(NOGDETU3>0) ? 1 : 0;
-    todo[B1]  =(NOGDETB1>0) ? 1 : 0;
-    todo[B2]  =(NOGDETB2>0) ? 1 : 0;
-    todo[B3]  =(NOGDETB3>0) ? 1 : 0;
-    if(DOENTROPY) todo[ENTROPY]=(NOGDETENTROPY>0) ? 1 : 0;
-    if(DOYL)  todo[YL]=(NOGDETYL>0) ? 1 : 0;
-    if(DOYNU) todo[YNU]=(NOGDETYNU>0) ? 1 : 0;
-    if(EOMRADTYPE!=EOMRADNONE){
-      todo[URAD0]  =(NOGDETURAD0>0) ? 1 : 0;
-      todo[URAD1]  =(NOGDETURAD1>0) ? 1 : 0;
-      todo[URAD2]  =(NOGDETURAD2>0) ? 1 : 0;
-      todo[URAD3]  =(NOGDETURAD3>0) ? 1 : 0;
-    }
+    PLOOP(pliter,pl) todo[pl] = (nogdetlist[pl]>0 ? 1 : 0);
 
     // conn2 is assumed to take care of sign
     // conn2 has geom->e and normal d(ln(gdet)) factors combined
@@ -478,105 +461,28 @@ void get_allgeometry(int ii, int jj, int kk, int pp, struct of_allgeom *allgeom,
 // stationary factor in equation of motion that multiplies T^\mu_\nu
 void assign_eomfunc(struct of_geom *geom, FTYPE *EOMFUNCNAME)
 {
+  int pliter,pl;
 
 #if(WHICHEOM==WITHGDET)
   return; // now nothing to do since using new EOMFUNCMAC stuff
 #endif
 
   // now set each EOM
-#if(NOGDETRHO==0)
-  geom->EOMFUNCMAC(RHO)=geom->gdet;
-#else
-  geom->EOMFUNCMAC(RHO)=EOMFUNCASSIGN(RHO);
-#endif
-#if(NOGDETU0==0)
-  geom->EOMFUNCMAC(UU)=geom->gdet;
-#else
-  geom->EOMFUNCMAC(UU)=EOMFUNCASSIGN(UU);
-#endif
-#if(NOGDETU1==0)
-  geom->EOMFUNCMAC(U1)=geom->gdet;
-#else
-  geom->EOMFUNCMAC(U1)=EOMFUNCASSIGN(U1);
-#endif
-#if(NOGDETU2==0)
-  geom->EOMFUNCMAC(U2)=geom->gdet;
-#else
-  geom->EOMFUNCMAC(U2)=EOMFUNCASSIGN(U2);
-#endif
-#if(NOGDETU3==0)
-  geom->EOMFUNCMAC(U3)=geom->gdet;
-#else
-  geom->EOMFUNCMAC(U3)=EOMFUNCASSIGN(U3);
-#endif
+  PLOOP(pliter,pl){
+    if(nogdetlist[pl]==0) geom->EOMFUNCMAC(pl)=geom->gdet;
+    else geom->EOMFUNCMAC(pl)=EOMFUNCASSIGN(pl);
+  }
 
-#if(NOGDETB1==0)
-  geom->EOMFUNCMAC(B1)=geom->gdet;
-#else
-  geom->EOMFUNCMAC(B1)=EOMFUNCASSIGN(B1);
-#endif
-#if(NOGDETB2==0)
-  geom->EOMFUNCMAC(B2)=geom->gdet;
-#else
-  geom->EOMFUNCMAC(B2)=EOMFUNCASSIGN(B2);
-#endif
-#if(NOGDETB3==0)
-  geom->EOMFUNCMAC(B3)=geom->gdet;
-#else
-  geom->EOMFUNCMAC(B3)=EOMFUNCASSIGN(B3);
-#endif
-
-#if(DOENTROPY)
-#if(NOGDETENTROPY==0)
-  geom->EOMFUNCMAC(ENTROPY)=geom->gdet;
-#else
-  geom->EOMFUNCMAC(ENTROPY)=EOMFUNCASSIGN(ENTROPY);
-#endif
-#endif
-
-
-
-
-
-#if(NEWMETRICSTORAGE)
-  // assign inverses (should already be set if PRIMECOORDS)
-  // this only changes (overrides) to use igdetnosing since otherwise already should be set
-
-  // now set each EOM
-#if(NOGDETRHO==0)
-  geom->IEOMFUNCNOSINGMAC(RHO)=geom->igdetnosing;
-#endif
-#if(NOGDETU0==0)
-  geom->IEOMFUNCNOSINGMAC(UU)=geom->igdetnosing;
-#endif
-#if(NOGDETU1==0)
-  geom->IEOMFUNCNOSINGMAC(U1)=geom->igdetnosing;
-#endif
-#if(NOGDETU2==0)
-  geom->IEOMFUNCNOSINGMAC(U2)=geom->igdetnosing;
-#endif
-#if(NOGDETU3==0)
-  geom->IEOMFUNCNOSINGMAC(U3)=geom->igdetnosing;
-#endif
-
-#if(NOGDETB1==0)
-  geom->IEOMFUNCNOSINGMAC(B1)=geom->igdetnosing;
-#endif
-#if(NOGDETB2==0)
-  geom->IEOMFUNCNOSINGMAC(B2)=geom->igdetnosing;
-#endif
-#if(NOGDETB3==0)
-  geom->IEOMFUNCNOSINGMAC(B3)=geom->igdetnosing;
-#endif
-
-#if(DOENTROPY)
-#if(NOGDETENTROPY==0)
-  geom->IEOMFUNCNOSINGMAC(ENTROPY)=geom->igdetnosing;
-#endif
-#endif
-
-
-#endif // end if NEWMETRICSTORAGE==1
+  if(NEWMETRICSTORAGE){
+    // assign inverses (should already be set if PRIMECOORDS)
+    // this only changes (overrides) to use igdetnosing since otherwise already should be set
+    
+    // now set each EOM
+    PLOOP(pliter,pl){
+      if(nogdetlist[pl]==0) geom->IEOMFUNCNOSINGMAC(pl)=geom->igdetnosing;
+      // else will use igdet
+    }
+  } // end if NEWMETRICSTORAGE==1
 
 }
 

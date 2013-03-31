@@ -716,7 +716,7 @@ int init_global(void)
     BCtype[X1UP]=FIXEDUSEPANALYTIC;
     BCtype[X1DN]=FIXEDUSEPANALYTIC;
 
-    //    BCtype[X1UP]=OUTFLOW;
+    //    BCtype[X1UP]=HORIZONOUTFLOW;
     //    BCtype[X1DN]=HORIZONOUTFLOW;
     //BCtype[X1DN]=OUTFLOW;
 
@@ -2677,20 +2677,24 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
     dualfprintf(fail_file,"i=%d f=%Lg p0=%Lg KKK=%Lg C3=%Lg rho=%Lg uint=%Lg Fx=%Lg ERAD=%Lg : kappaesperrho=%Lg \n",i,f,p0*UBAR,KKK*UBAR/pow(RHOBAR,gamideal),C3,rho*RHOBAR,uint*UBAR,Fx*ENBAR/TBAR/LBAR/LBAR,ERAD*UBAR , kappaesperrho*OPACITYBAR);
 
     // TOTRY:
-    // 1) source term without gdet (no diff)
-    // 2) source term with no body zeroing (no diff)
-    // 3) gcovtt vs. pert and gcontt vs. pert (looks ok)
+    // NOTHING: 1) source term without gdet (no diff)
+    // NOTHING: 2) source term with no body zeroing (no diff)
+    // NOTHING: storing state or position or shock stuff
+    // SEEMSOK: 3) gcovtt vs. pert and gcontt vs. pert (looks ok)
     // 4) set f=0 : vel actually smaller.  Why not as small as koral even with koral's f=0.1?  Still grows to be large.
     //    Actually, with f=0 in harm, similar error in vx at early and late times against koral with no source (but f=0.1 in koral?!!!).
-    // Still rho moves alot when doing radiation.  Moves around similar amount as to when set f!=0 with no source?
-    // oddly, prad0 and prad1 don't move around with radiation, just rho and u.
-    // 5) could be my prad_fforlab() is not giving correct SPC final values so prad0 is not enough even though it looks like prad1 is right.
-    //    No, good.
-    // 6) Using explicit gives different velocity.  Doesn't seem like rho moves around as much as with implicitexplicitcheck.
+    // SOLVED PARTIALLY (explicit check wasn't be used): Still rho moves alot when doing radiation.  Moves around similar amount as to when set f!=0 with no source?
+    // OPTICALLY THIN, so radiation energy mostly conserved? : oddly, prad0 and prad1 don't move around with radiation, just rho and u.
+    // NO: 5) could be my prad_fforlab() is not giving correct SPC final values so prad0 is not enough even though it looks like prad1 is right.
+    // FIXED: 6) Using explicit gives different velocity.  Doesn't seem like rho moves around as much as with implicitexplicitcheck.
     //    Also velocity goes opposite direction.
-    //   TODO: CHeck that explicitcheck really has bad wiggle rho.  Yes!  BAD!
+    // FIXED:  TODO: CHeck that explicitcheck really has bad wiggle rho.  Yes!  BAD!
     //   IMPLICIT alone is very slow.  So explicitcheck must be, e.g., not applying *any* force or something.  Or sub-cycling?
     //      Also, implicit definitely has much larger vx than koral at dump0001
+
+    // NOTHING: 7) Using HORIZONOUTFLOW that interpolates near outer boundary leads to no chang in vx(t,x).  Still large for f=0.1 RAD problem.
+
+    
 
     pr[RHO] = rho ;
     pr[UU]  = uint;

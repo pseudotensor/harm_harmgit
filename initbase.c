@@ -707,6 +707,26 @@ int prepre_init(void)
   set_default_nprlists();
 
 
+  // setup NOGDET list
+  nogdetlist[RHO] =NOGDETRHO;
+  nogdetlist[UU] =NOGDETU0;
+  nogdetlist[U1] =NOGDETU1;
+  nogdetlist[U2] =NOGDETU2;
+  nogdetlist[U3] =NOGDETU3;
+  nogdetlist[B1] =NOGDETB1;
+  nogdetlist[B2] =NOGDETB2;
+  nogdetlist[B3] =NOGDETB3;
+  if(EOMRADTYPE!=EOMRADNONE){
+    nogdetlist[URAD0] =NOGDETURAD0;
+    nogdetlist[URAD1] =NOGDETURAD1;
+    nogdetlist[URAD2] =NOGDETURAD2;
+    nogdetlist[URAD3] =NOGDETURAD3;
+  }
+  if(DOENTROPY) nogdetlist[ENTROPY] =NOGDETENTROPY;
+  if(DOYL) nogdetlist[YL] =NOGDETYL;
+  if(DOYNU) nogdetlist[YNU] =NOGDETYNU;
+
+
 
 
   advancepassnumber=-1; // by default assume all things done (should only matter if SPLITNPR==1 and debugging it)

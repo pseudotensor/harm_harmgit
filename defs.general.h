@@ -304,6 +304,10 @@ int nprinvertstart,nprinvertend; // normally 0 and NPRINVERT-1
 int nprinvertlist[MAXNPR]; // maximum is NPRINVERT elements
 
 
+
+int nogdetlist[MAXNPR]; // holds result for WHICHEOM stuff
+
+
 int fluxloop[NDIM][NUMFLUXLOOPNUMBERS];
 int emffluxloop[NDIM][NUMFLUXLOOPNUMBERS];
 int Uconsloop[NUMFLUXLOOPNUMBERS];
