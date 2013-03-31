@@ -2958,7 +2958,9 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
     
     pr[RHO] = rho ;
     pr[UU]  = uint;
-    pr[U1]  = vx;
+    // KORAL sets VEL3 type quantity vx, but then feeds that directly into koral's prad_ff2lab() that takes in relative 4-velocity.  So set ur instead as 4-velocity and assume not extremely close to hole.
+    //    pr[U1]  = vx;
+    pr[U1]  = ur;
     pr[U2]  = 0 ;    
     pr[U3]  = 0 ;
 
@@ -2992,9 +2994,22 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
     pradffortho[PRAD3] = Fz;
 
 
+    if(0){//DEBUG:
+      dualfprintf(fail_file,"i=%d rho=%g uint=%g ERAD=%g\n",i,rho,uint,ERAD);
+      
+      dualfprintf(fail_file,"i=%d rho=%g uint=%g ERAD=%g\n",i,rho*RHOBAR,uint*UBAR,ERAD*UBAR);
+    }
+
+
     // Transform these fluid frame E,F^i to lab frame coordinate basis primitives
-    *whichvel=VEL3;
+    //    *whichvel=VEL3;
+    *whichvel=VEL4;
     prad_fforlab(whichvel, whichcoord, FF2LAB, i,j,k,CENT,ptrgeomreal, pradffortho, pr, pr);
+
+    if(0){ // DEBUG
+      dualfprintf(fail_file,"AFTER: i=%d rho=%Lg uint=%Lg vx=%Lg ERAD=%Lg uradx=%Lg\n",i,pr[RHO]*RHOBAR,pr[UU]*UBAR,pr[U1]*sqrtl(ptrgeomreal->gcov[GIND(1,1)])*VBAR,pr[URAD0]*UBAR,pr[URAD1]*sqrtl(ptrgeomreal->gcov[GIND(1,1)])*VBAR);
+    }
+
 
     return(0);
   }

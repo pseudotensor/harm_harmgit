@@ -2307,12 +2307,12 @@ int bound_radbondiinflow(int dir,
             pradffortho[PRAD2] = Fy;
             pradffortho[PRAD3] = Fz;
 
-            dualfprintf(fail_file,"rho=%g uint=%g vx=%g ERAD=%g\n",rho,uint,vx,ERAD);
+            //            dualfprintf(fail_file,"rho=%g uint=%g vx=%g ERAD=%g\n",rho,uint,vx,ERAD);
 
             int whichcoordrad=whichcoordfluid; // in which coordinates E,F are orthonormal
             whichfluid_ffrad_to_primeall(&whichvel, &whichcoordfluid, &whichcoordrad, ptrgeom[RHO], pradffortho, pr, pr);
 
-            PLOOP(pliter,pl) dualfprintf(fail_file,"pl=%d pr=%g\n",pl,pr[pl]);
+            //            PLOOP(pliter,pl) dualfprintf(fail_file,"pl=%d pr=%g\n",pl,pr[pl]);
 
           }// end if not staggered field
 
@@ -2682,14 +2682,14 @@ int bound_radnt(int dir,
               if(WHICHPROBLEM==RADFLATDISK) whichcoordfluid=MCOORD; // whatever else
               else whichcoordfluid=BLCOORDS; // want to setup things in BLCOORDS
 
-              dualfprintf(fail_file,"FLAT: rho=%g uint=%g prad0=%g Eff=%g\n",pr[RHO],pr[UU]/pr[RHO],pr[PRAD0]/pr[RHO],pradffortho[PRAD0]/pr[RHO]);
+              //              dualfprintf(fail_file,"FLAT: rho=%g uint=%g prad0=%g Eff=%g\n",pr[RHO],pr[UU]/pr[RHO],pr[PRAD0]/pr[RHO],pradffortho[PRAD0]/pr[RHO]);
 
               int whichcoordrad=whichcoordfluid; // in which coordinates E,F are orthonormal
               whichfluid_ffrad_to_primeall(&whichvel, &whichcoordfluid, &whichcoordrad, ptrgeom[RHO], pradffortho, pr, pr);
 
-              dualfprintf(fail_file,"FLATPOST: rho=%g uint=%g Eff=%g\n",pr[RHO],pr[UU]/pr[RHO],pr[PRAD0]/pr[RHO]);
-              dualfprintf(fail_file,"opacity : %g\n",pr[RHO]*KAPPA_ES_CODE(rho,T)/1E14*0.1);
-              dualfprintf(fail_file,"LBAR: %g\n",LBAR);
+              //              dualfprintf(fail_file,"FLATPOST: rho=%g uint=%g Eff=%g\n",pr[RHO],pr[UU]/pr[RHO],pr[PRAD0]/pr[RHO]);
+              //              dualfprintf(fail_file,"opacity : %g\n",pr[RHO]*KAPPA_ES_CODE(rho,T)/1E14*0.1);
+              //              dualfprintf(fail_file,"LBAR: %g\n",LBAR);
 
             } // end if actually doing something to boundary cells in "hot" boundary
 
