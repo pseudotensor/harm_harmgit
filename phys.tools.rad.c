@@ -790,8 +790,8 @@ static void get_dtsub(int method, FTYPE *pr, struct of_state *q, FTYPE *Ui, FTYP
 
 
 #define EXPLICITNOTNECESSARY -1
-#define EXPLICITNOTFAILED 0
-#define EXPLICITFAILED 1
+#define EXPLICITNOTFAILED 0 // should stay zero
+#define EXPLICITFAILED 1 // should stay one
 
 
 
@@ -944,6 +944,7 @@ static int source_explicit(int whichsc, int whichrealstepmethod, int methoddtsub
   //
   //////////////
   int itersub=0;
+  int done=0;
   while(1){
 
   
@@ -1037,7 +1038,8 @@ static int source_explicit(int whichsc, int whichrealstepmethod, int methoddtsub
       }
       else{
         // then implicit testing, and had to do step, but only 1 step, so consider success.
-        return(EXPLICITNOTFAILED);
+        // still need to fill dUcomp[] below
+        break;
       }
     }
 
@@ -1090,7 +1092,7 @@ static int source_explicit(int whichsc, int whichrealstepmethod, int methoddtsub
   PLOOP(pliter,pl) dUcomp[whichsc][pl] += sourcepl[pl];
 
 
-  return(0);
+  return(EXPLICITNOTFAILED);
   
 }
 
@@ -1158,10 +1160,10 @@ int koral_source_rad(int whichradsourcemethod, FTYPE *pin, FTYPE *Uiin, FTYPE *U
     }
     else if(failexplicit==EXPLICITNOTNECESSARY){
       // then don't need any source term
-      return(0);
+      return(EXPLICITNOTNECESSARY);
     }
     //else explicit succeeded, so just return
-    return(0);
+    return(EXPLICITNOTFAIL);
   }
   else if(whichradsourcemethod==SOURCEMETHODIMPLICIT){
  

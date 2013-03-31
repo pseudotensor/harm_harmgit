@@ -1994,6 +1994,11 @@ void check_bnd_num(void)
   myexit(9842511);
 #endif
 
+#if(STOREFLUXSTATE==0 && STORESHOCKINDICATOR==1)
+  dualfprintf(fail_file,"Must store flux state (STOREFLUXSTATE 1) if storing shock indicator\n");
+  myexit(9842512);
+#endif
+
 
 
   if(PRODUCTION>0){

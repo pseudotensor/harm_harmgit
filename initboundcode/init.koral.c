@@ -692,8 +692,8 @@ int init_global(void)
   if(WHICHPROBLEM==RADATM){
 
 
-    //    lim[1]=lim[2]=lim[3]=MINM; // MINM gets larger error and jump in v1 at outer edge
-    lim[1]=lim[2]=lim[3]=PARALINE;
+    lim[1]=lim[2]=lim[3]=MINM; // MINM gets larger error and jump in v1 at outer edge
+    //    lim[1]=lim[2]=lim[3]=PARALINE;
     // Koral uses MINMOD_THETA2 (MC?)
     // koral paper uses MP5
     //    lim[1]=lim[2]=lim[3]=MC;
@@ -710,8 +710,11 @@ int init_global(void)
     cooling=KORAL;
     //    ARAD_CODE=0.0;
 
-    BCtype[X1UP]=RADATMBEAMINFLOW;
-    BCtype[X1DN]=RADATMBEAMINFLOW;
+    //    BCtype[X1UP]=RADATMBEAMINFLOW;
+    //    BCtype[X1DN]=RADATMBEAMINFLOW;
+    // really same as above, just simpler to avoid mistakes and can focus on init.c
+    BCtype[X1UP]=FIXEDUSEPANALYTIC;
+    BCtype[X1DN]=FIXEDUSEPANALYTIC;
 
     //    BCtype[X1UP]=OUTFLOW;
     //    BCtype[X1DN]=HORIZONOUTFLOW;
@@ -2619,7 +2622,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
     //    RADATM_FERATIO=.99999; // koral code
     RADATM_FERATIO=.99; // koral paper
     RADATM_FRATIO=.1; // 1 = edd limit.  They ran 1E-10, 0.1, 0.5, 1.0.
-    RADATM_RHOAMB=1E-15/RHOBAR;
+    RADATM_RHOAMB=1E-15/RHOBAR; // 1E-15 is in cgs
     RADATM_TAMB=1.e6/TEMPBAR;
 
 
@@ -2640,7 +2643,12 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
     *whichcoord=MCOORD;
 
     //at outern boundary
-    FTYPE f = (FTYPE)kappaesperrho*FLUXLEFT*MINX*MINX;
+    FTYPE f;
+    if(WHICHRADSOURCEMETHOD!=SOURCEMETHODNONE){
+      f = (FTYPE)kappaesperrho*FLUXLEFT*MINX*MINX;
+    }
+    else f=0;
+
 
     FTYPE p0=RADATM_RHOAMB*RADATM_TAMB;
     FTYPE KKK=p0/pow(RADATM_RHOAMB,gamideal);
@@ -2664,7 +2672,25 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
       ERAD=calc_LTE_EfromT(calc_PEQ_Tfromurho(uint,rho));
     }
 
-    dualfprintf(fail_file,"i=%d f=%g p0=%g KKK=%g C3=%g rho=%g uint=%g Fx=%g ERAD=%g : kappaesperrho=%g \n",i,f,p0,KKK,C3,rho,uint,Fx,ERAD , kappaesperrho);
+    //    dualfprintf(fail_file,"i=%d f=%g p0=%g KKK=%g C3=%g rho=%g uint=%g Fx=%g ERAD=%g : kappaesperrho=%g \n",i,f,p0,KKK,C3,rho,uint,Fx,ERAD , kappaesperrho);
+
+    dualfprintf(fail_file,"i=%d f=%Lg p0=%Lg KKK=%Lg C3=%Lg rho=%Lg uint=%Lg Fx=%Lg ERAD=%Lg : kappaesperrho=%Lg \n",i,f,p0*UBAR,KKK*UBAR/pow(RHOBAR,gamideal),C3,rho*RHOBAR,uint*UBAR,Fx*ENBAR/TBAR/LBAR/LBAR,ERAD*UBAR , kappaesperrho*OPACITYBAR);
+
+    // TOTRY:
+    // 1) source term without gdet (no diff)
+    // 2) source term with no body zeroing (no diff)
+    // 3) gcovtt vs. pert and gcontt vs. pert (looks ok)
+    // 4) set f=0 : vel actually smaller.  Why not as small as koral even with koral's f=0.1?  Still grows to be large.
+    //    Actually, with f=0 in harm, similar error in vx at early and late times against koral with no source (but f=0.1 in koral?!!!).
+    // Still rho moves alot when doing radiation.  Moves around similar amount as to when set f!=0 with no source?
+    // oddly, prad0 and prad1 don't move around with radiation, just rho and u.
+    // 5) could be my prad_fforlab() is not giving correct SPC final values so prad0 is not enough even though it looks like prad1 is right.
+    //    No, good.
+    // 6) Using explicit gives different velocity.  Doesn't seem like rho moves around as much as with implicitexplicitcheck.
+    //    Also velocity goes opposite direction.
+    //   TODO: CHeck that explicitcheck really has bad wiggle rho.  Yes!  BAD!
+    //   IMPLICIT alone is very slow.  So explicitcheck must be, e.g., not applying *any* force or something.  Or sub-cycling?
+    //      Also, implicit definitely has much larger vx than koral at dump0001
 
     pr[RHO] = rho ;
     pr[UU]  = uint;
