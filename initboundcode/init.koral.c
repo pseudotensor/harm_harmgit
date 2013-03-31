@@ -1157,7 +1157,7 @@ int init_global(void)
     // tf = 100*DTdumpgen[0]; // 100 dumps(?)
     tf = 1000*DTdumpgen[0]; // koral in default setup does 1000 dumps
 
-    DODIAGEVERYSUBSTEP = 1;
+    // DODIAGEVERYSUBSTEP = 1;
 
   }
 

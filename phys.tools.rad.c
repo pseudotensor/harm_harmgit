@@ -1,6 +1,6 @@
 #include "decs.h"
 
-static int f_implicit_lab(int whichcall, int showmessages, int allowlocalfailurefixandnoreport, FTYPE *pp0, FTYPE *uu0,FTYPE *uu,FTYPE localdt, struct of_geom *ptrgeom,  FTYPE *f);
+static int f_implicit_lab(int failreturnallowable, int whichcall, int showmessages, int allowlocalfailurefixandnoreport, FTYPE *pp0, FTYPE *uu0,FTYPE *uu,FTYPE localdt, struct of_geom *ptrgeom,  FTYPE *f);
 
 static void koral_source_rad_calc(int method, FTYPE *pr, FTYPE *Ui, FTYPE *Uf, FTYPE *dUother, FTYPE *CUf, FTYPE *Gpl, struct of_geom *ptrgeom, FTYPE *dtsub);
 
@@ -9,7 +9,7 @@ static void calc_Gd(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYP
 static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *Gu, FTYPE *chireturn);
 void mhdfull_calc_rad(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE (*radstressdir)[NDIM]);
 
-static int source_explicit(int whichsc, int whichrealstepmethod, int methoddtsub,
+static int source_explicit(int whichsc, int whichradsourcemethod, int methoddtsub,
                            void (*sourcefunc)(int method, FTYPE *pr, FTYPE *Ui, FTYPE *Uf, FTYPE *dUother, FTYPE *CUf, FTYPE *Gpl, struct of_geom *ptrgeom, FTYPE *dtsub),
                            FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother, FTYPE (*dUcomp)[NPR]);
 
@@ -48,6 +48,7 @@ static int calc_rad_lambda(FTYPE *pp, struct of_geom *ptrgeom, FTYPE kappa, FTYP
 
 
 // mnemonics for return modes so schemes know how failed and what to do.
+// worse failure should be larger number
 #define UTOPRIMGENWRAPPERRETURNFAILRAD 1
 #define UTOPRIMGENWRAPPERRETURNFAILMHD 2
 
@@ -117,7 +118,7 @@ static int Utoprimgen_failwrapper(int showmessages, int allowlocalfailurefixandn
 //f - (returned) errors
 
 //NOTE: uu WILL be changed from inside this fcn
-static int f_implicit_lab(int whichcall, int showmessages, int allowlocalfailurefixandnoreport, FTYPE *pp0, FTYPE *uu0,FTYPE *uu,FTYPE localdt, struct of_geom *ptrgeom,  FTYPE *f)
+static int f_implicit_lab(int failreturnallowable, int whichcall, int showmessages, int allowlocalfailurefixandnoreport, FTYPE *pp0, FTYPE *uu0,FTYPE *uu,FTYPE localdt, struct of_geom *ptrgeom,  FTYPE *f)
 {
   struct of_state q;
   FTYPE pp[NPR];
@@ -141,8 +142,8 @@ static int f_implicit_lab(int whichcall, int showmessages, int allowlocalfailure
   // Get P(U)
   int failreturn;
   failreturn=Utoprimgen_failwrapper(showmessages,allowlocalfailurefixandnoreport, finalstep, EVOLVEUTOPRIM, UNOTHING, uu, ptrgeom, pp, &newtonstats);
-  if(failreturn){
-    if(showmessages && debugfail>=2) dualfprintf(fail_file,"Utoprimgen_wrapper() failed, must return out of f_implicit_lab()\n");
+  if(failreturn && failreturn>failreturnallowable){
+    if(showmessages && debugfail>=2) dualfprintf(fail_file,"Utoprimgen_wrapper() failed, must return out of f_implicit_lab(): %d vs. %d\n",failreturn,failreturnallowable);
     return(failreturn);
   }
 
@@ -214,7 +215,9 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
 
   // static counter for diagnosing issues
   numimplicits++;
-
+  int showmessages=0; // by default 0, don't show any messages for inversion stuff during implicit solver, unless debugging.  Assume any moment of inversion failure is corrected for now unless failure of final inversion done outside implicit solver.
+  int showmessagesheavy=0;  // very detailed for common debugging
+  int allowlocalfailurefixandnoreport=0; // must be 0 so implicit method knows when really failure
 
 
   // setup implicit loops
@@ -222,7 +225,8 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
   FTYPE DAMPFACTOR=1.0; // factor by which step Newton's method.
   FTYPE fracdtuu0=1.0,fracdtG=1.0,fracuup=1.0; // initially try full realstep step
 
- 
+  int failreturnallowable=UTOPRIMNOFAIL;
+  int failreturnallowableuse=failreturnallowable;
   if(USEDUINRADUPDATE){
     // uu0 will hold original vector of conserved
     // here original means U[before fluxes, geometry, etc.] + dU[due to fluxes, geometry, etc. already applied and included in dUother]
@@ -230,12 +234,29 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
     // I'm guessing that even though one uses RK2 or RK3, the first step generates large radiative velocities without any balanced source term since U isn't updated yet.  One would hope RK2 would recover on the final substep, but it doesn't!  In RK2, upon the final substep, that velocity is present for the radiation source term.  But it's also present for the fluxes!  That is, if there were no flux update on the final substep, then the source would have balanced the previous flux, but yet another flux is done, so there can be no balance.  This leads to a run-away velocity that would be similar to the \tau\sim 1 case.
     PLOOP(pliter,pl) uu[pl]=uu0[pl]=UFSET(CUf,fracdtuu0*dt,Uiin[pl],Ufin[pl],dUother[pl],0.0);
     // Note that "q" isn't used in this function or used in function call, so don't have to update it here.
+
+    // Need to get default failure state.  Can allow such an error if having trouble with convergence (e.g. backing up too much)
+    struct of_newtonstats newtonstats;
+    int failreturn;
+    int finalstep = 1;
+    FTYPE prtest[NPR];
+    PLOOP(pliter,pl) prtest[pl]=pin[pl]; // initial guess
+    failreturnallowable=Utoprimgen_failwrapper(showmessages,allowlocalfailurefixandnoreport, finalstep, EVOLVEUTOPRIM, UNOTHING, Uiin, ptrgeom, prtest, &newtonstats);
+    if(failreturnallowable!=UTOPRIMNOFAIL){
+      if(showmessages && debugfail>=2) dualfprintf(fail_file,"Utoprimgen_wrapper() says that Uiin is already a problem with %d\n",failreturnallowable);
+    }
+    else{
+      if(showmessagesheavy && debugfail>=2) dualfprintf(fail_file,"Utoprimgen_wrapper() says that Uiin is NOT a problem with %d\n",failreturnallowable);
+    }
+
+
   }
   else{
     PLOOP(pliter,iv) uu[iv] = uu0[iv] = Uiin[iv];
   }  
   
 
+  // SUPERGODMARK KORALTODO: Need to check if UFSET with no dUother fails.  How it fails, must allow since can do nothing better.  This avoids excessive attempts to get good solution without that failure!  Should speed-up things.  But what about error recovery?  If goes from CASE to no case!
 
   ////////////////////////////////
   // START IMPLICIT ITERATIONS
@@ -244,9 +265,6 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
   int failreturn;
   int f1iter;
   int checkconv,changeotherdt;
-  int showmessages=0; // by default 0, don't show any messages for inversion stuff during implicit solver, unless debugging.  Assume any moment of inversion failure is corrected for now unless failure of final inversion done outside implicit solver.
-  int showmessagesheavy=0;  // very detailed for common debugging
-  int allowlocalfailurefixandnoreport=0; // must be 0 so implicit method knows when really failure
 
 #define MAXF1TRIES 100 // 100 might sound like alot, but Jacobian does 4*4=16 inversions each iteration, and that 100 is only typically needed for very first iteration.
   // goes to f1iter=10 for RADPULSE KAPPAES=1E3 case.  Might want to scale maximum iterations with \tau, although doubling of damping means exponential w.r.t. f1iter, so probably 100 is certainly enough since 2^(-100) is beyond machine precision.
@@ -268,7 +286,7 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
     //values at zero state
     for(f1iter=0;f1iter<MAXF1TRIES;f1iter++){
       int whichcall=1;
-      failreturn=f_implicit_lab(whichcall,showmessages, allowlocalfailurefixandnoreport, pin, uu0, uu, fracdtG*realdt, ptrgeom, f1); // modifies uu
+      failreturn=f_implicit_lab(failreturnallowableuse, whichcall,showmessages, allowlocalfailurefixandnoreport, pin, uu0, uu, fracdtG*realdt, ptrgeom, f1); // modifies uu
       if(failreturn){
         // if initial uu failed, then should take smaller jump from Uiin->uu until settled between fluid and radiation.
         // If here, know original Uiin is good, so take baby steps in case uu needs heavy raditive changes.
@@ -276,6 +294,12 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
 
         // if f1 fails, try going back to Uiin a bit
         fracdtuu0*=DAMPDELTA; // DAMP Uiin->uu0 step that may be too large and generated too large G
+
+#define BACKUPRELEASEFAIL (1E-5)
+        // if backing up alot, then allow same failure as original Uiin in hopes that can recover that way (otherwise would have hoped would recover via flux update to Uiin)
+        if(fracdtuu0<BACKUPRELEASEFAIL){
+          failreturnallowableuse=failreturnallowable;
+        }
 
         PLOOP(pliter,pl) uu0[pl]=UFSET(CUf,fracdtuu0*dt,Uiin[pl],Ufin[pl],dUother[pl],0.0); // modifies uu0
 
@@ -370,7 +394,7 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
  
           // get dUresid for this offset uu
           int whichcall=2;
-          failreturn=f_implicit_lab(whichcall,showmessages,allowlocalfailurefixandnoreport, pin,uu0,uu,fracdtG*realdt,ptrgeom,f2);
+          failreturn=f_implicit_lab(failreturnallowableuse, whichcall,showmessages,allowlocalfailurefixandnoreport, pin,uu0,uu,fracdtG*realdt,ptrgeom,f2);
           if(failreturn){
             if(showmessages&& debugfail>=2) dualfprintf(fail_file,"f_implicit_lab for f2 failed: ii=%d jj=%d.  Trying smaller localIMPEPS=%g (giving del=%g) to %g\n",ii,jj,localIMPEPS,del,localIMPEPS*FRACIMPEPSCHANGE);
             localIMPEPS*=FRACIMPEPSCHANGE;
@@ -522,7 +546,7 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
         break;
       }
       else{
-        if(debugfail>=2) dualfprintf(fail_file,"iter>IMPMAXITER=%d : iter exceeded in solve_implicit_lab().  Bad error.\n",IMPMAXITER);
+        if(debugfail>=2) dualfprintf(fail_file,"iter>IMPMAXITER=%d : iter exceeded in solve_implicit_lab().  Bad error: %g %g %g %g\n",IMPMAXITER,f3[0],f3[1],f3[2],f3[3]);
         return(1);
       }
     }
@@ -789,11 +813,9 @@ static void get_dtsub(int method, FTYPE *pr, struct of_state *q, FTYPE *Ui, FTYP
  
 }
 
-
 #define EXPLICITNOTNECESSARY -1
 #define EXPLICITNOTFAILED 0 // should stay zero
 #define EXPLICITFAILED 1 // should stay one
-
 
 
 #define GETADVANCEDUNEW0FOREXPLICIT 1 // Use this to check if single explicit step was really allowable, but get_dtsub() already uses advanced U.  But chi will be not updated for fluid dUriemann update, so still might want to do this (with proper code changes) in order to get chi good.
@@ -805,7 +827,7 @@ static void get_dtsub(int method, FTYPE *pr, struct of_state *q, FTYPE *Ui, FTYP
 // 4) U->P locally
 // 5) repeat.
 // Only change dUcomp, and can overwrite prnew, Unew, and qnew since "prepare" function isolated original values already
-static int source_explicit(int whichsc, int whichrealstepmethod, int methoddtsub,
+static int source_explicit(int whichsc, int whichradsourcemethod, int methoddtsub,
                            void (*sourcefunc)(int methoddtsub, FTYPE *pr, FTYPE *Ui, FTYPE *Uf, FTYPE *dUother, FTYPE *CUf, FTYPE *Gpl, struct of_geom *ptrgeom, FTYPE *dtsub),
                            FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother, FTYPE (*dUcomp)[NPR])
 {
@@ -864,7 +886,7 @@ static int source_explicit(int whichsc, int whichrealstepmethod, int methoddtsub
 
       if(failutoprim){
 
-        if(whichrealstepmethod==SOURCEMETHODEXPLICIT || whichrealstepmethod==SOURCEMETHODEXPLICITSUBCYCLE){
+        if(whichradsourcemethod==SOURCEMETHODEXPLICIT || whichradsourcemethod==SOURCEMETHODEXPLICITSUBCYCLE || whichradsourcemethod==SOURCEMETHODEXPLICITREVERSIONFROMIMPLICIT || whichradsourcemethod==SOURCEMETHODEXPLICITSUBCYCLEREVERSIONFROMIMPLICIT){
           // then ok to be here
         }
         else{
@@ -879,7 +901,7 @@ static int source_explicit(int whichsc, int whichrealstepmethod, int methoddtsub
 
         if(fracdtuu0<NUMEPSILON){
           if(showmessagesheavy && debugfail>=2) dualfprintf(fail_file,"In explicit, backed-off to very small level of fracdtuu0=%g, so must abort\n",fracdtuu0);
-          if(whichrealstepmethod==SOURCEMETHODEXPLICIT || whichrealstepmethod==SOURCEMETHODEXPLICITSUBCYCLE){
+          if(whichradsourcemethod==SOURCEMETHODEXPLICIT || whichradsourcemethod==SOURCEMETHODEXPLICITSUBCYCLE || whichradsourcemethod==SOURCEMETHODEXPLICITREVERSIONFROMIMPLICIT || whichradsourcemethod==SOURCEMETHODEXPLICITSUBCYCLEREVERSIONFROMIMPLICIT){
             // just use initial Unew0 then
             fracdtuu0=0.0;
             break;
@@ -914,7 +936,7 @@ static int source_explicit(int whichsc, int whichrealstepmethod, int methoddtsub
   FTYPE dtsubforG;
   sourcefunc(methoddtsub, prforG, Uiin, Ufin, dUother, CUf, Gpl, ptrgeom, &dtsubforG);
 
-  if(whichrealstepmethod!=SOURCEMETHODEXPLICIT){
+  if(!(whichradsourcemethod==SOURCEMETHODEXPLICIT || whichradsourcemethod==SOURCEMETHODEXPLICITREVERSIONFROMIMPLICIT || whichradsourcemethod==SOURCEMETHODEXPLICITCHECKSFROMIMPLICIT)){
     // then if sub-cycling, really want to start with beginning pin so consistently do sub-steps for effective flux force and full-pl fluid force in time.
     // then prforG is only used to ensure not getting bad guess for whether *should* sub-cycle.
     PLOOP(pliter,pl) prnew[pl]=pin[pl];
@@ -961,7 +983,7 @@ static int source_explicit(int whichsc, int whichrealstepmethod, int methoddtsub
     // get fracdtG
     //////////////////
       
-    if(whichrealstepmethod==SOURCEMETHODEXPLICIT){
+    if(whichradsourcemethod==SOURCEMETHODEXPLICIT || whichradsourcemethod==SOURCEMETHODEXPLICITREVERSIONFROMIMPLICIT || whichradsourcemethod==SOURCEMETHODEXPLICITCHECKSFROMIMPLICIT){
       fracdtG=1.0;
     }
     else{
@@ -1000,7 +1022,7 @@ static int source_explicit(int whichsc, int whichrealstepmethod, int methoddtsub
       if(showmessagesheavy&&debugfail>=2){
         dualfprintf(fail_file,"DoingSUBCYCLE: itersub=%d : dtsub=%g dtsubuse=%g dtdiff=%g dttrue=%g dtcum=%g realdt=%g fracdtG=%g ijk=%d %d %d\n",itersub,dtsub,dtsubuse,dtdiff,dttrue,dtcum,realdt,fracdtG,ptrgeom->i,ptrgeom->j,ptrgeom->k);
       }
-      if(debugfail>=2 && (1||showmessages)&&(1.0/fracdtG>MAXSUBCYCLES && itersub==1)){ // use itersub==1 in case itersub=0 used bad force
+      if(debugfail>=2 && (1||showmessages)&&(1.0/fracdtG>MAXSUBCYCLES && itersub==0)){ // have to use itersub==0 since already might be done with itersub==1 and then fracdtG=inf (but itersub=0 might be using bad force)
         dualfprintf(fail_file,"DoingLOTSofsub-cycles: ijk=%d %d %d  1/fracdtG=%g\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,1.0/fracdtG);
       }
     }// end else if not explicit
@@ -1020,10 +1042,10 @@ static int source_explicit(int whichsc, int whichrealstepmethod, int methoddtsub
     // see if done
     //
     ///////////////
-    if(whichrealstepmethod==SOURCEMETHODEXPLICIT){
+    if(whichradsourcemethod==SOURCEMETHODEXPLICIT || whichradsourcemethod==SOURCEMETHODEXPLICITREVERSIONFROMIMPLICIT || whichradsourcemethod==SOURCEMETHODEXPLICITCHECKSFROMIMPLICIT){
       break;
     }
-    else if(whichrealstepmethod==SOURCEMETHODEXPLICITSUBCYCLE){
+    else if(whichradsourcemethod==SOURCEMETHODEXPLICITSUBCYCLE || whichradsourcemethod==SOURCEMETHODEXPLICITSUBCYCLEREVERSIONFROMIMPLICIT || whichradsourcemethod==SOURCEMETHODEXPLICITSUBCYCLECHECKSFROMIMPLICIT){
       if(dtcum>=realdt){
         // then done
         break;
@@ -1150,27 +1172,24 @@ int koral_source_rad(int whichradsourcemethod, FTYPE *pin, FTYPE *Uiin, FTYPE *U
   //
   /////////////////
 
-  if(whichradsourcemethod==SOURCEMETHODEXPLICIT || whichradsourcemethod==SOURCEMETHODEXPLICITSUBCYCLE){
+  if(whichradsourcemethod==SOURCEMETHODEXPLICIT || whichradsourcemethod==SOURCEMETHODEXPLICITSUBCYCLE || whichradsourcemethod==SOURCEMETHODEXPLICITREVERSIONFROMIMPLICIT || whichradsourcemethod==SOURCEMETHODEXPLICITSUBCYCLEREVERSIONFROMIMPLICIT || whichradsourcemethod==SOURCEMETHODEXPLICITCHECKSFROMIMPLICIT || whichradsourcemethod==SOURCEMETHODEXPLICITSUBCYCLECHECKSFROMIMPLICIT){
 
     int methoddtsub;
     // SPACETIMESUBSPLITMHDRAD doesn't work -- generates tons of noise in prad1 with COURRADEXPLICIT=0.2, and was asymmetric in x.
     methoddtsub=TAUSUPPRESS; // forced -- only method that is efficient and effective and noise free at moderate optical depths.
 
-    // real stepping method want to use
-    int whichrealstepmethod=WHICHRADSOURCEMETHOD;
     int whichsc = RADSOURCE;
-
     // try explicit sub-cycling
-    int failexplicit=source_explicit(whichsc, whichrealstepmethod,methoddtsub,koral_source_rad_calc,pinorig, Uiinorig, Ufinorig, CUf, ptrgeom, qorig, dUother, dUcomp);
+    int failexplicit=source_explicit(whichsc, whichradsourcemethod,methoddtsub,koral_source_rad_calc,pinorig, Uiinorig, Ufinorig, CUf, ptrgeom, qorig, dUother, dUcomp);
     if(failexplicit==EXPLICITFAILED){
-      if(WHICHRADSOURCEMETHOD==SOURCEMETHODEXPLICIT || WHICHRADSOURCEMETHOD==SOURCEMETHODEXPLICITSUBCYCLE){
+      if(whichradsourcemethod==SOURCEMETHODEXPLICIT || whichradsourcemethod==SOURCEMETHODEXPLICITSUBCYCLE || whichradsourcemethod==SOURCEMETHODEXPLICITREVERSIONFROMIMPLICIT || whichradsourcemethod==SOURCEMETHODEXPLICITSUBCYCLEREVERSIONFROMIMPLICIT){
         // still do explicit anyways, since best can do with the choice of method -- will fail possibly to work if stiff regime, but ok in non-stiff.
         // assume nothing else to do, BUT DEFINITELY report this.
-        if(debugfail>=2) dualfprintf(fail_file,"BAD: explicit failed: ijk=%d %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
+        if(debugfail>=2) dualfprintf(fail_file,"BAD: explicit failed: ijk=%d %d %d : whichradsourcemethod=%d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,whichradsourcemethod);
         return(0);
       }
       else{
-        // tells that explicit didn't work
+        // tells that explicit didn't work (including implicit checks)
         if(showmessages && debugfail>=2) dualfprintf(fail_file,"explicit failed. ijk=%d %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
         return(EXPLICITFAILED);
       }
@@ -1188,7 +1207,8 @@ int koral_source_rad(int whichradsourcemethod, FTYPE *pin, FTYPE *Uiin, FTYPE *U
  
     if(failimplicit){
       if(IMPLICITREVERTEXPLICIT){ // single level recusive call (to avoid duplicate confusing code)
-        int failexplicit=koral_source_rad(SOURCEMETHODEXPLICITSUBCYCLE, pinorig, Uiinorig, Ufinorig, CUf, ptrgeom, qorig, dUother, dUcomp);
+        // assume if revert from implicit, then need to do sub-cycles
+        int failexplicit=koral_source_rad(SOURCEMETHODEXPLICITSUBCYCLEREVERSIONFROMIMPLICIT, pinorig, Uiinorig, Ufinorig, CUf, ptrgeom, qorig, dUother, dUcomp);
         if(failexplicit==EXPLICITFAILED){
           // nothing else to revert to, but just continue and report
           if(debugfail>=2) dualfprintf(fail_file,"BAD: explicit failed while implicit failed: ijk=%d %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
@@ -1207,7 +1227,8 @@ int koral_source_rad(int whichradsourcemethod, FTYPE *pin, FTYPE *Uiin, FTYPE *U
   else if(whichradsourcemethod==SOURCEMETHODIMPLICITEXPLICITCHECK){
 
     // try explicit (or see if no source at all required)
-    int failreturn=koral_source_rad(SOURCEMETHODEXPLICITSUBCYCLE, pinorig, Uiinorig, Ufinorig, CUf, ptrgeom, qorig, dUother, dUcomp);
+    // Just check using explicit method, since if sub-cycles required then should just do implicit
+    int failreturn=koral_source_rad(SOURCEMETHODEXPLICITCHECKSFROMIMPLICIT, pinorig, Uiinorig, Ufinorig, CUf, ptrgeom, qorig, dUother, dUcomp);
 
     // determine if still need to do implicit
     int doimplicit;

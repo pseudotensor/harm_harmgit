@@ -53,11 +53,17 @@
 
 // IMPLICIT SOLVER TOLERANCES or DERIVATIVE SIZES
 #define IMPEPS (1.e-8) // for used implicit solver (needs to be chosen more generally.  KORALTODO: 1E-8 too small in general).  Could start out with higher, and allow current checks to avoid inversion failure.
-#if(1)
+#if(0)
 // RADPULSEPLANAR: ~5 f1iters and ~8 iters on average
 // RADTUBE NTUBE=31: ~0 f1iters and ~5 iters
 // and each f1iter does 1 inversion, while each iter does 16 inversions!
+// below too hard to get for more realistic problems like RADFLATDISK
 #define IMPTRYCONV (1.e-12)  // for used implicit solver
+#define IMPALLOWCONV (1.e-3)  // for used implicit solver
+#elif(1)
+// 1E-9 is common ok first iteration for RADFLATDISK.  More is too hard.
+// So Choose 1E-8 as good enough solution.
+#define IMPTRYCONV (1.e-8)  // for used implicit solver
 #define IMPALLOWCONV (1.e-3)  // for used implicit solver
 #else
 // RADPULSEPLANAR: below leads to ~5 f1iters and ~7 iters on average

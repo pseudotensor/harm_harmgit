@@ -450,8 +450,9 @@ struct Ccoordparams {
 
 
 // KORALTODO: PROBLEMS:
-// 1) RADBONDI kinda works at high resolution with para until entropy reversions occur.  Maybe try MP5 or average2point?
-// 2) RADDONUT: Donut explodes, and inversions take forever.
+// 1) RADBONDI: Like koral, but major evolution.
+// 2) RADFLATDISK: ok without source, but with implicit on much slower than koral and issues with convergence and resetW's
+// 3) RADDONUT: Donut explodes, and inversions take forever.
 
 
 //TODO:
@@ -512,14 +513,14 @@ struct Ccoordparams {
 //#define WHICHPROBLEM RADSHADOW
 //#define WHICHPROBLEM RADDBLSHADOW
 //#define WHICHPROBLEM ATMSTATIC
-#define WHICHPROBLEM RADATM
+//#define WHICHPROBLEM RADATM
 //#define WHICHPROBLEM RADBEAM2D
 //#define WHICHPROBLEM RADWALL
 //#define WHICHPROBLEM RADWAVE
 //#define WHICHPROBLEM RADBONDI
 //#define WHICHPROBLEM RADDOT
 //#define WHICHPROBLEM RADNT // TODOCHECK
-//#define WHICHPROBLEM RADFLATDISK // TODOCHECK
+#define WHICHPROBLEM RADFLATDISK // TODOCHECK
 //#define WHICHPROBLEM RADDONUT // TODO ONCE RADBONDI works.
 //#define WHICHPROBLEM RADCYLBEAM
 //#define WHICHPROBLEM RADBEAM2DKSVERT
@@ -978,9 +979,9 @@ struct Ccoordparams {
 #define N2 40
 #define N3 1
 
-#undef WHICHRADSOURCEMETHOD// DEBUG
+//#undef WHICHRADSOURCEMETHOD// DEBUG
 //#define WHICHRADSOURCEMETHOD SOURCEMETHODNONE
-#define WHICHRADSOURCEMETHOD SOURCEMETHODEXPLICIT
+//#define WHICHRADSOURCEMETHOD SOURCEMETHODEXPLICIT
 
 
 #define MCOORD SPCMINKMETRIC // i.e. RADFLATDISK
