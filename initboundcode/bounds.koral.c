@@ -2212,9 +2212,6 @@ int bound_radbondiinflow(int dir,
       extern FTYPE RADBONDI_TGAS0;
       extern FTYPE RADBONDI_MDOTPEREDD;
       extern FTYPE RADBONDI_MDOTEDD;
-      extern FTYPE RADBONDI_RHOAMB;
-      extern FTYPE RADBONDI_TAMB;
-      extern FTYPE RADBONDI_MUGAS;
       extern FTYPE RADBONDI_MINX;
       extern FTYPE RADBONDI_MAXX;
 

@@ -81,9 +81,6 @@ FTYPE RADBONDI_PRADGAS;
 FTYPE RADBONDI_TGAS0;
 FTYPE RADBONDI_MDOTPEREDD;
 FTYPE RADBONDI_MDOTEDD;
-FTYPE RADBONDI_RHOAMB;
-FTYPE RADBONDI_TAMB;
-FTYPE RADBONDI_MUGAS;
 FTYPE RADBONDI_MINX;
 FTYPE RADBONDI_MAXX;
 
@@ -991,37 +988,38 @@ int init_global(void)
 
     RADBONDI_TESTNO=2;
 
-    if(RADBONDI_TESTNO==1){
+    if(RADBONDI_TESTNO==1){ // E10T5 (#2 in koral Table 5 and #1 in Fragile paper)
       RADBONDI_PRADGAS=1.2e-7/RHOBAR;
       RADBONDI_TGAS0=1e5/TEMPBAR;
       RADBONDI_MDOTPEREDD=10.;
     }
 
-    if(RADBONDI_TESTNO==2){
+    if(RADBONDI_TESTNO==2){ // E10T6 (#3 in koral Table 5 and #3 in Fragile paper)
       RADBONDI_PRADGAS=1.2e-4/RHOBAR;
       RADBONDI_TGAS0=1.e6/TEMPBAR;
       RADBONDI_MDOTPEREDD=10.;
     }
 
-    if(RADBONDI_TESTNO==3){
+    if(RADBONDI_TESTNO==3){ // E10T7 (#4 in koral Table 5 and #5 in Fragile paper)
       RADBONDI_PRADGAS=1.2e-1/RHOBAR;
       RADBONDI_TGAS0=1e7/TEMPBAR;
       RADBONDI_MDOTPEREDD=10.;
     }
 
-    if(RADBONDI_TESTNO==4){
-      RADBONDI_PRADGAS=1.2e-5/RHOBAR;
+    // koral skips E30T6 that is #6 in Fragile paper
+
+    if(RADBONDI_TESTNO==4){ // E10T7 (#4 in koral Table 5 and #7 in Fragile paper)
+      RADBONDI_PRADGAS=1.2e-5/RHOBAR; // note koral paper has 1.2E-4 that is wrong.
       RADBONDI_TGAS0=1e6/TEMPBAR;
       RADBONDI_MDOTPEREDD=100.;
     } 
 
-    RADBONDI_MDOTEDD=(2.23/16.*1e18*MPERSUN)/(MBAR/TBAR); //Mdot converted to code units
-    RADBONDI_RHOAMB=1.e-25/RHOBAR;
-    RADBONDI_TAMB=1.e5/TEMPBAR;
-    gam=gamideal=(1.+1./3.*((1.+RADBONDI_PRADGAS)/(.5+RADBONDI_PRADGAS)));
-    RADBONDI_MUGAS=.5;
+    // koral skips E300T6 that is #8 in Fragile paper
 
-    trifprintf("RADBONDI: %g %g %g %g %g %g %g %g\n",RADBONDI_PRADGAS,RADBONDI_TGAS0,RADBONDI_MDOTPEREDD,RADBONDI_MDOTEDD,RADBONDI_RHOAMB,RADBONDI_TAMB,gam,RADBONDI_MUGAS);
+    RADBONDI_MDOTEDD=(2.23/16.*1e18*MPERSUN)/(MBAR/TBAR); //Mdot converted to code units
+    gam=gamideal=(1.+1./3.*((1.+RADBONDI_PRADGAS)/(.5+RADBONDI_PRADGAS)));
+
+    trifprintf("RADBONDI: %g %g %g %g %g\n",RADBONDI_PRADGAS,RADBONDI_TGAS0,RADBONDI_MDOTPEREDD,RADBONDI_MDOTEDD,gam);
 
     int idt;
     for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=10.0;
@@ -1481,8 +1479,10 @@ int init_defcoord(void)
     // TRY moving the inner boundary outward a bit.
 
     // KORALTODO: 2.5 to 2E4 in paper
-    RADBONDI_MINX=3.5;
-    RADBONDI_MAXX=2e3;
+    //    RADBONDI_MINX=3.5;
+    //    RADBONDI_MAXX=2e3;
+    RADBONDI_MINX=2.5;
+    RADBONDI_MAXX=2e4;
 
     //#define LOGXGRID
     //    FTYPE LOGPAR1=2.2;
@@ -1490,7 +1490,7 @@ int init_defcoord(void)
 
     // defcoord = UNIFORMCOORDS;
     defcoord = LOGRUNITH; // Uses R0, Rin, Rout and Rin_array,Rout_array for 2,3 directions
-    R0=0.0;
+    R0=2.2;
     Rin=RADBONDI_MINX;
     Rout=RADBONDI_MAXX;
 
@@ -2714,6 +2714,13 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
     prad_fforlab(whichvel, whichcoord, FF2LAB, i,j,k,CENT,NULL,pradffortho, pr, pr);
 
     if(0){ // DEBUG
+
+      // get metric grid geometry for these ICs
+      int getprim=0;
+      struct of_geom geomrealdontuse;
+      struct of_geom *ptrgeomreal=&geomrealdontuse;
+      gset(getprim,*whichcoord,i,j,k,ptrgeomreal);
+
       dualfprintf(fail_file,"AFTER: i=%d rho=%Lg uint=%Lg vx=%Lg ERAD=%Lg uradx=%Lg\n",i,pr[RHO]*RHOBAR,pr[UU]*UBAR,pr[U1]*sqrtl(ptrgeomreal->gcov[GIND(1,1)])*VBAR,pr[URAD0]*UBAR,pr[URAD1]*sqrtl(ptrgeomreal->gcov[GIND(1,1)])*VBAR);
     }
 

@@ -385,6 +385,12 @@ int entropyflux_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *entropyflux)
   // d/d\tau(entropy/rho)=0
   // -> \nabla_\mu(entropy u^\mu)=0
 
+  // SUPERKORALTODO: With an non-zero \kappa, thermal flux exists between fluid and radiation.  Below does not account for this.  See http://adsabs.harvard.edu/abs/2012MNRAS.426.1613R  APPENDIX A.  They don't give general expression, but should be a G_\mu term that enters.
+  //
+  // d/d\tau(entropy/rho)=d/\tau SOURCE
+  // -> \nabla_\mu(entropy u^\mu)= ...
+
+
   // DEBUG:
   //  dualfprintf(fail_file,"entropy=%21.15g dir=%d ucondir=%21.15g\n",entropy,dir,q->ucon[dir]);
 
