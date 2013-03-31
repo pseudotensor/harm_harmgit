@@ -1526,7 +1526,8 @@ int init_defcoord(void)
     a=0.0; // no spin in case use MCOORD=KSCOORDS
 
     if(1){
-      RADNT_MINX=1.7; // allows in KSCOORDS
+      //      RADNT_MINX=1.7; // allowed in KSCOORDS
+      RADNT_MINX=1.9; // allowed in KSCOORDS (latest koral)
       RADNT_MAXX=50.0;
     }
     else{

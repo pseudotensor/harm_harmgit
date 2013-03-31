@@ -1272,7 +1272,7 @@ static int check_Wp(PFTYPE *lpflag, int eomtype, FTYPE *prim, FTYPE *U, struct o
 
       //if(Wtest <= 0.) {
       if( debugfail>=2 ) {
-        dualfprintf(fail_file,"Wtest2 failure %21.15g \n",Wtest) ;
+        dualfprintf(fail_file,"Wtest2 failure %21.15g %21.15g %21.15g %21.15g\n",Wtest,D,wglobal[1],GAMMASQ_TOO_BIG) ;
         dualfprintf(fail_file, "Utoprim_new_body(): Wtest<0 or Wtest=toobig failure, t,i,j,k, p[0-7], U[0-7] = %21.15g %d %d %d ", t, ptrgeom->i, ptrgeom->j,ptrgeom->k );  
         PALLLOOP(i){
           dualfprintf(fail_file, "%21.15g ", prim[i]);

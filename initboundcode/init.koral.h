@@ -451,8 +451,7 @@ struct Ccoordparams {
 
 // KORALTODO: PROBLEMS:
 // 1) RADBONDI: Like koral, but major evolution.
-// 2) RADFLATDISK: ok without source, but with implicit on much slower than koral and issues with convergence and resetW's
-// 3) RADDONUT: Donut explodes, and inversions take forever.
+// 2) RADDONUT: Donut explodes, and inversions take forever.
 
 
 //TODO:
@@ -519,8 +518,8 @@ struct Ccoordparams {
 //#define WHICHPROBLEM RADWAVE
 //#define WHICHPROBLEM RADBONDI
 //#define WHICHPROBLEM RADDOT
-//#define WHICHPROBLEM RADNT // TODOCHECK
-#define WHICHPROBLEM RADFLATDISK // TODOCHECK
+#define WHICHPROBLEM RADNT // TODOCHECK
+//#define WHICHPROBLEM RADFLATDISK // TOCOMPARE
 //#define WHICHPROBLEM RADDONUT // TODO ONCE RADBONDI works.
 //#define WHICHPROBLEM RADCYLBEAM
 //#define WHICHPROBLEM RADBEAM2DKSVERT
