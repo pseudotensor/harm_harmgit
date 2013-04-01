@@ -58,7 +58,7 @@ A) install as per guide
 B) cd to the "run" directory (i.e. not dumps or images directory)
 C) run as per guide: jsm
 D) gogrmhd
-E) jrdp3duentropy dump0000
+E) jrdpcf3duentropy dump0000
 F) plc 0 lrho # This will plot the log of density
 G) help jrdp3duentropy # to see what this macro/script does and what
 else you can plot.  See all the other macros in ~/sm/ that you
@@ -107,7 +107,7 @@ install all those items mentioned in that install script, and only if
 one has problems should one install python directly.  This means
 looking for ubuntu packages: python, python2.7-setuptools,
 python-dateutil, yasm, ipython, python-nose, python2.7-scipy,
-python2.7-numpy, python-matplotlib, python-matplotlib-data
+python2.7-numpy, python-matplotlib, python-matplotlib-data, dvipng
 
 Some things may already be installed (e.g.): python --version # should
 be 2.7.x
@@ -189,13 +189,13 @@ numcorespernode=??   # choose ?? as number of cores on your system.  Try ??=1 at
 moviename="test1"    # name of directory your analysis will be done in
 docleanexist=1       # whether to clean-out old analysis
 dolinks=1            # whether to make links to dumps as required
-dofiles=1            # whether to copy __init__.py and other files needed
+dofiles=1            # whether to copy __init__.py, makemovie.sh, and other files needed
 make1d=1             # Compute 1D stuff vs. radius results
 makemerge=1          # Merge across all core's 1D calculations
 makeplot=1           # Make all plots and latex output and final output for 1D calculations
-makemontage=0        # Make montage of plots
+makemontage=0        # Make montage of plots (can be quite slow for large data)
 makepowervsmplots=0  # Make Power vs. m calculations and plots (needed if doing fft or spec).  Only makes sense in 3D.
-makespacetimeplots=0 # space vs. time plots
+makespacetimeplots=0 # space (r and theta) vs. time plots
 makefftplot=0        # FFT specific to MCAF paper (watch out for non-constant spacing in time for dumping or missing files)
 makespecplot=0       # Spectrogram specific to MCAF paper
 makeinitfinalplot=0  # initial and final 2D plots
@@ -224,8 +224,11 @@ rm -rf run/test1/
 chmod a+rx ./makeallmovie.sh
 bash ./makeallmovie.sh ${moviename} 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 1 1 0 0
 bash ./makeallmovie.sh ${moviename} 0 0 0 1 1 1 1 1 1 1 1 1 1 1 1 0 0 1 0
+
 # NOTE: I avoided doing makeavgplot until the second time, since only the merged avg2d.npy file is required.
-# NOTE: One can of course skip certain things that are not needed, but some items require others (e.g. make1d must come before makemerge that must come before makeplot).
+# NOTE: One can of course skip certain things that are not needed, but some items require others (e.g. make1d must come before makemerge that must come before makeplot).  Indeed, makemontage through makethradfinalplot all require one to do "makeplot"
+# E.g., if one already has the 1d and avg files done, one can fixup your plots and redo the plotting stuff like:
+bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 1 1 1 1 1 1 1 1 1 1 0 0 1 0
 
 
 # Many things are computed and outputted. E.g.
@@ -234,8 +237,10 @@ bash ./makeallmovie.sh ${moviename} 0 0 0 1 1 1 1 1 1 1 1 1 1 1 1 0 0 1 0
 # 2) fitplot* : Some fitting plots
 # 3) aphi.png : vector potential averaged over dumps
 # 4) datavs??.txt : Many computations that can be read into SM using existing SM scripts I used to make MCAF paper plots.  Those SM scripts are in "~/sm/thickdisk.m"
-# FROM makefftplot:
+# FROM makepowervsmplots:
 # 1) power*.png power*.txt rbar*.txt # again, see SM scripts in thickdisk.m for looking at this data.
+# FROM makefftplot:
+# 1) fft1.pdf fft1.png data*fft*.txt
 # FROM makeframes:
 # 1) lrho*.png
 # FROM makemovie:
@@ -243,18 +248,19 @@ bash ./makeallmovie.sh ${moviename} 0 0 0 1 1 1 1 1 1 1 1 1 1 1 1 0 0 1 0
 # FROM makeavgplot:
 # 1) fig2.png aphizoom_avg.png aphizoom_avgfield.png aphialllog_avgfield_avg.png fig4_0.png fig4_1.png dataavgvs*.txt dataavg*.txt python.plot.avg.full.out
 
+# NOTE: Most of the plots won't work for 2D harm data.  Indeed, some plots may hang (e.g. makethradfinalplot making of velocity mkstreamplot1).
 
 # Sometimes if you kill a job, you'll have stray python processes still going.  Assuming it's all you are doing with python as a user, you should do: killall -s 9 python  to get rid of them.
 
 
-8) One can go into the detail of what these scripts do, but instead
-let me just say how one would run the makemovie script directly once one has already
-at least run makeallmovie with the first 1 1 1 options so that the test1-like directory,
-files, etc. are all there.
+8) One can run the makemovie script directly once one has already at
+least run makeallmovie with the first 1 1 1 options so that the
+test1-like directory, files, etc. are all there.  As in those scripts,
+here's the full raw full command assuming one set these parameters on
+the command line with typical choices for a few parameters
 
-# Then, as in those scripts, here's the full raw full command assuming one
-# set these parameters on the command line with typical choices for a few parameters
-
+cd run/ #i.e. actually be in that run's directory
+#
 thedir=`pwd`
 system=3
 parallel=0
@@ -264,10 +270,10 @@ makeplot=1
 makemontage=0
 makepowervsmplots=1
 makespacetimeplots=1
-makefftplot=0
-makespecplot=0
+makefftplot=1
+makespecplot=1
 makeinitfinalplot=1
-makethradfinalplot=1
+makethradfinalplot=0
 makeframes=1
 makemovie=1
 makeavg=1
@@ -291,11 +297,57 @@ chmod a+x ./batch_makemovielocal_${thedir}.sh
 nohup ./batch_makemovielocal_${thedir}.sh &
 
 
+
+
 9) Going even simpler (but with less obvious ways to get something to output)
 one can use python or ipython directly.
 
 cd run/
-ipython __init__.py
+ipython ~/py/mread/__init__.py
+
+# This does nothing except run through the script from top to bottom as well as run main()
+# No command line parameters were given, so "runtype" was not set as viewed by the script,
+# so main() catches no conditionals and the script exits.
+
+# To get a behavior like the makemovie.sh script, one manually runs python and the script
+with arguments just like done by makemovie.sh (NOT RECOMMENDED -- just use makeallmovie.sh):
+
+cd run/
+ipython
+runtype=3 # see main() or makemovie.sh for runtype and what it means and what other parameters need to be passed.
+run ~/py/mread/__init__.py $runtype $modelname $makepowervsmplots $makespacetimeplots $makefftplot $makespecplot $makeinitfinalplot $makethradfinalplot
+
+
+# To use the script in an interactive mode, instead run it without
+# arguments.  One manually sets those functions run globally during
+# the script processing.  This includes the functions
+# "runglobalsetup()" and "main()".  But, the python script relies upon
+# command line arguments explicitly, so this is used to do
+# stuff *NOT* done by makeallmovie.sh or makemovie.sh, like
+# calling the script's more internal functions that don't use argv.
+# E.g.:
+
+cd run/
+ipython
+run ~/py/mread/__init__.py
+# now run a tutorial:
+tutorial1()
+# see how lrho is plotted.
+# See also the short tutorial at the end of main() as runtype==8.
+
+# NOTE: One can't run certain functions on the command line because
+# variables lose scope immediately, even if chosen to be global in the
+# function itself.  So best to create a script file separately
+# (i.e. not inside the base __init__.py) that can contain the same
+# type of lines as tutorial1() and "run" your script file and then
+# call your function.  So the command sequence would look like:
+
+cd run/
+ipython
+run ~/py/mread/__init__.py
+run ~/py/myscript.py
+mytut1()
+
 
 
 
