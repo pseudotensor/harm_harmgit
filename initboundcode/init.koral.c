@@ -2013,8 +2013,15 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 
 #endif
 
-#if(WHICHPROBLEM==RADNT || WHICHPROBLEM==RADFLATDISK || WHICHPROBLEM==RADDONUT)
+#if(WHICHPROBLEM==RADNT || WHICHPROBLEM==RADFLATDISK)
 
+#define KAPPAUSER(rho,T) (rho*KAPPA_ES_CODE(rho,T)/1E14*0.1) // wierd use of kappa_{es} in koral
+#define KAPPAESUSER(rho,T) (0.0)
+
+#endif
+
+#if(WHICHPROBLEM==RADDONUT)
+// kappa can't be zero or else flux will be nan
 #define KAPPAUSER(rho,T) (rho*KAPPA_ES_CODE(rho,T)/1E14*0.1) // wierd use of kappa_{es} in koral
 #define KAPPAESUSER(rho,T) (0.0)
 
