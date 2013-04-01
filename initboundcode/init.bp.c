@@ -265,7 +265,7 @@ int init_global(void)
   RHOMIN = 1E-4;
   UUMIN = 1E-6;
 
-  cooling=COOLUSER; // MARKTODO should override these values set in initbase, right?
+  cooling=NOCOOLING; //COOLUSER; // MARKTODO should override these values set in initbase, right?
   gam=4./3.;
 
 #elif(WHICHPROBLEM==THICKDISK)
@@ -727,7 +727,7 @@ int init_dsandvels_bpthin(int *whichvel, int*whichcoord, int i, int j, int k, FT
   int pl,pliter;
 
 
-  
+
 
   coord(i, j, k, CENT, X);
   bl_coord(X, V);
@@ -735,8 +735,20 @@ int init_dsandvels_bpthin(int *whichvel, int*whichcoord, int i, int j, int k, FT
   th=V[2];
   ph=V[3];
 
+  if(j == totalsize[2]/ 2){
+    FTYPE dr, dth, dph, dR, dTH, dPH;
+    FTYPE dxdxp[NDIM][NDIM];
+    dxdxprim_ijk(i, j, k, CENT, dxdxp);
+    dr=dx[1]*dxdp[1][1]; // delta(r) = dx[1]<this is width in cartesian grid> * <scaling to physical boyer-lindquist>dxdp[][]
+    dth=dx[2]*dxdp[2][2];                    // just chain rule:  dx' = dv/dx
+    dph=dx[3]*dxdp[3][3];
 
+    dR=dr;
+    dTH=dth*r;
+    dPH=dph*sin(th)*r;
 
+    triprintf("At r = %g  Ratios: %g (dR) %g %g",r,dR, dTH/dR, dPH/dR);
+  }
 
   /* region outside disk */
   R = r*sin(th) ;
