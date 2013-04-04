@@ -2650,12 +2650,21 @@ int bound_radnt(int dir,
             FTYPE r;
             r=V[1];
 
-            FTYPE rin;
-            if(WHICHPROBLEM==RADFLATDISK) rin=15.;
-            else rin=6.;
+            FTYPE rin,rout;
+            int conddisk;
+            if(WHICHPROBLEM==RADFLATDISK){
+              rin=15.;
+              rout=25.;
+              conddisk=(r<rout); // as in new koral
+            }
+            else{
+              rin=6.;
+              rout=1E10;
+              conddisk=(r>rin);
+            }
 
-            //hot boundary KORALTODO: JCM confused why not much output in URAD0 out of disk
-            if(r>rin){
+            //hot boundary
+            if(conddisk){
 
               //E, F^i in orthonormal fluid frame
               FTYPE pradffortho[NPR];

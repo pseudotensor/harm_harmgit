@@ -400,6 +400,21 @@ static int advance_standard(
   // from here on, pi/pb/pf are only used a zone at a time rather than on a stencil
 
 
+  
+
+
+  // Do comp full loop in case subset of full grid so that boundary cells of subset domain are defined without having to copy over those cells in bounds.c or initbase.gridsectioning.c
+  /////////////
+  //
+  // Utoprim as initial conditions : can't assume want these to be same in the end, so assign
+  //
+  // Since final step often sets pointers of pi=pf, in order to use arbitrary guess, must set here once done with pi,pb,pf.
+  //
+  ////////////
+  // copy pb->pf as initial pf
+  copy_3dnpr_fullloop(pb,pf);
+
+
 
   /////////////////////////////////////////////////////
   /////////////////////////////////////////////////////
@@ -409,7 +424,7 @@ static int advance_standard(
   /////////////////////////////////////////////////////
 
 
-
+  int didreturnpf;
   if(truestep){
 
 
@@ -491,9 +506,11 @@ static int advance_standard(
 
 
         // find dU(pb)
-        MYFUN(source(MAC(pb,i,j,k), ptrgeom, qptr2, MAC(ui,i,j,k), MAC(uf,i,j,k), CUf, dUriemann, dUcomp, dUgeom),"step_ch.c:advance()", "source", 1);
+        MYFUN(source(MAC(pb,i,j,k), MAC(pf,i,j,k), &didreturnpf, ptrgeom, qptr2, MAC(ui,i,j,k), MAC(uf,i,j,k), CUf, dUriemann, dUcomp, dUgeom),"step_ch.c:advance()", "source", 1);
         // assumes final dUcomp is nonzero and representative of source term over this timestep
  
+        // DEBUG (to check if source updated pf guess)
+        //        if(didreturnpf==1) dualfprintf(fail_file,"didreturnpf=%d\n",didreturnpf);
 
 
 #if(SPLITNPR)
@@ -648,20 +665,6 @@ static int advance_standard(
   trifprintf( "#0s");
 #endif
 
-
-  
-
-
-  // Do comp full loop in case subset of full grid so that boundary cells of subset domain are defined without having to copy over those cells in bounds.c or initbase.gridsectioning.c
-  /////////////
-  //
-  // Utoprim as initial conditions : can't assume want these to be same in the end, so assign
-  //
-  // Since final step often sets pointers of pi=pf, in order to use arbitrary guess, must set here once done with pi,pb,pf.
-  //
-  ////////////
-  // copy pb->pf
-  copy_3dnpr_fullloop(pb,pf);
 
 
 
@@ -1090,6 +1093,18 @@ static int advance_finitevolume(
 #endif
 
 
+  /////////////
+  //
+  // Utoprim as initial conditions : can't assume want these to be same in the end, so assign
+  //
+  // Since final step often sets pointers of pi=pf, in order to use arbitrary guess, must set here once done with pi,pb,pf.
+  //
+  ////////////
+  // setup initial guess for inversion
+  // use pb since should be closer to pf
+  // copy pb->pf
+  copy_3dnpr_fullloop(pb,pf);
+
 
  
   /////////////////////////
@@ -1097,6 +1112,7 @@ static int advance_finitevolume(
   // SOURCE TERM
   //
   ////////////////////////
+  int didreturnpf; // used to have source() pass back better guess for Utoprimgen() than pb.
 
   if(truestep){
     // GODMARK: other/more special cases?
@@ -1144,7 +1160,7 @@ static int advance_finitevolume(
 
      
         // get source term (point source, don't use to update diagnostics)
-        MYFUN(source(MAC(pb,i,j,k), ptrgeom, qptr, MAC(ui,i,j,k), MAC(uf,i,j,k), CUf, dUriemann, dUcomp, MAC(dUgeomarray,i,j,k)),"step_ch.c:advance()", "source", 1);
+        MYFUN(source(MAC(pb,i,j,k), MAC(pf,i,j,k), &didreturnpf, ptrgeom, qptr, MAC(ui,i,j,k), MAC(uf,i,j,k), CUf, dUriemann, dUcomp, MAC(dUgeomarray,i,j,k)),"step_ch.c:advance()", "source", 1);
       }// end COMPZLOOP
 
 
@@ -1180,6 +1196,12 @@ static int advance_finitevolume(
       }
     }// end parallel region
   }// end if truestep
+
+
+
+
+
+
 
 
 
@@ -1281,7 +1303,7 @@ static int advance_finitevolume(
       // SUPERGODMARK: no longer have access to dUcomp : NEED TO FIX
       // below is correct, but excessive
       // get source term again in order to have dUcomp (NEED TO FIX)
-      MYFUN(source(MAC(pb,i,j,k), ptrgeom, qptr, MAC(ui,i,j,k), MAC(uf,i,j,k), CUf, dUriemann, dUcomp, &fdummy),"step_ch.c:advance()", "source", 2);
+      MYFUN(source(MAC(pb,i,j,k), MAC(pf,i,j,k), &didreturnpf, ptrgeom, qptr, MAC(ui,i,j,k), MAC(uf,i,j,k), CUf, dUriemann, dUcomp, &fdummy),"step_ch.c:advance()", "source", 2);
 
 
       dUtodt(ptrgeom, qptr, MAC(pb,i,j,k), dUgeom, dUriemann, dUcomp[GEOMSOURCE], &accdt_ij, &gravitydt_ij);
@@ -1374,18 +1396,6 @@ static int advance_finitevolume(
 
 
 
-
-  /////////////
-  //
-  // Utoprim as initial conditions : can't assume want these to be same in the end, so assign
-  //
-  // Since final step often sets pointers of pi=pf, in order to use arbitrary guess, must set here once done with pi,pb,pf.
-  //
-  ////////////
-  // setup initial guess for inversion
-  // use pb since should be closer to pf
-  // copy pb->pf
-  copy_3dnpr_fullloop(pb,pf);
 
 
 
@@ -2259,6 +2269,8 @@ int set_dt(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], SFTYPE *dt)
   enerregion=OUTSIDEHORIZONENERREGION; // consistent with flux update (except when doing WHAM)
   sourceenerpos=enerposreg[enerregion];
 
+  int didreturnpf=0; // used to have source() pass back better guess for Utoprimgen() than pb.
+
   //  COMPFULLLOOP{ // want to use boundary cells as well to limit dt (otherwise boundary-induced changes not treated)
   LOOPWITHINACTIVESECTIONEXPAND1(i,j,k){ // only 1 grid cell within boundary.  Don't need to use extrapolated cells deep inside boundary because those cells are not evolved.  More consistent with how flux.c sets dt.
 
@@ -2341,7 +2353,8 @@ int set_dt(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], SFTYPE *dt)
       // GODMARK: here dUriemann=0, although in reality this setting of dt is related to the constraint trying to make
       PLOOP(pliter,pl) dUriemann[pl]=0.0;
       FTYPE CUf=0.0; // no update yet!
-      MYFUN(source(MAC(prim,i,j,k), ptrgeom, &state, U, U, CUf, dUriemann, dUcomp, dUgeom),"advance.c:set_dt()", "source", 1);
+      // modifies prim() to be closer to final, which is ok here.
+      MYFUN(source(MAC(prim,i,j,k), MAC(prim,i,j,k), &didreturnpf, ptrgeom, &state, U, U, CUf, dUriemann, dUcomp, dUgeom),"advance.c:set_dt()", "source", 1);
 
       // get dt limit
       compute_dt_fromsource(ptrgeom,&state,MAC(prim,i,j,k), Ugeomfree, dUgeom, dUcomp[GEOMSOURCE], &tempaccdt, &tempgravitydt);

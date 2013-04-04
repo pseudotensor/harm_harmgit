@@ -1,62 +1,64 @@
-Quick Start Guide
-Version 2 Created by Jonathan M. on 22 Jun 2009. Previous Version
 1) Get the harm_sm repository:
 
 mkdir mysm ; cd mysm
 svn checkout https://harm.unfuddle.com/svn/harm_sm/ .
 
-Also get SM macros:
-
+Also get the SM macros:
 svn co https://harm.unfuddle.com/svn/harm_harmsmmacros/
 
-2) Edit the Makefile and change “/home/jon/research/utils/sm/sm2_4_1” to the directory you have chosen and attach “/src” to the end
+2) Edit the Makefile and change "/home/jon/research/utils/sm/sm2_4_1" to the directory you have chosen and attach "/src" to the end
 
-3) Edit the Makefile and change “DEST = /usr/local” to where you want to install SM
+3) Edit the Makefile and change "DEST = /usr/local" to where you want to install SM
 
-4) The code should be setup already for good settings, but if you have problems compiling in the next step, you can try following the instructions in “sm.install”.
+4) The code should be setup already for good settings, but if you have problems compiling in the next step, you can try following the instructions in "sm.install".
 
 5) make clean ; make
 
-6) If you get an error about “cannot find lX11” then you should open the Makefile and edit the CC= line so the L/usr/X11R6/lib points to your library. For example, for 64-bit computers it needs to be /usr/X11R6/lib64/
+6) If you get an error about "cannot find -lX11" then you should open the Makefile and edit the CC= line so the -L/usr/X11R6/lib points to your library.  For example, for 64-bit computers it needs to be /usr/X11R6/lib64/
 
 7) make clean ; make again if you did #6
 
 8) Make the DEST directory
 
-9) You may be required to remove all “.svn” directories or else the installer gets confused.
+9) You may be required to remove all ".svn" directories or else the installer gets confused.
 
-rm rf `find . name .svn`
+rm -rf `find . -name .svn`
 
-10) make install [and note the things it installed since you want to make sure SM (and the .sm file’s uses those path’s instead of yours—or overwrite your old SM stuff with the new stuff]. I’m most worried about the binaries it compiles that were in “lib”
+10) make install  [and note the things it installed since you want to make sure SM (and the .sm file's uses those path's instead of yours--or overwrite your old SM stuff with the new stuff].  I'm most worried about the binaries it compiles that were in "lib"
 
-11) Move the SM macros file from the HARM_SM macros repository: mydotsm/.sm to ~/ (i.e. your home directory). Edit the file to be consistent with the installed files, such as the “lib/sm/” directory and the “/home/jon” directory and the “/home/jon/sm” directory should point to the location where the SM macros are.
+11a) Move the harm_harmsmmacros directory to the home directory and rename it as "sm" so that the ~/sm/ directory contains actual files (i.e. not another directory from the repo!)
 
-12) The installation directory (if it’s not /usr/local/ or /usr when you are root) will contain “man” “emacs” “bin” and “lib” directories.
+11b) Move the SM macros file from the HARM_SM macros repository: mydotsm/.sm to ~/ (i.e. your home directory).   Choose the "ki-jmck" version of the .sm file to start with.  Edit the file to be consistent with the installed files, such as the "lib/sm/" directory and the "/home/jon" directory and the "/home/jon/sm" directory should point to the location where the SM macros are.
 
-a) Copy the contents of those files to your user-located data. For example, you should have a ~/bin/ and so put the contents of “bin/” in there:
+12) The installation directory (if it's not /usr/local/ or /usr when you are root) will contain "man" "emacs" "bin" and "lib" directories.
 
-cp -a /bin/* ~/bin/
+a) Copy the contents of those files to your user-located data.  For example, you should have a ~/bin/ and so put the contents of "bin/" in there:
 
-and ensure that /bin/ is in your path. For example, for bash, ensure in /.bashrc you have:
+cp -a <DEST DIR>/bin/* ~/bin/
+
+and ensure that ~/bin/ is in your path.  For example, for bash, ensure in ~/.bashrc you have:
 
 PATH=~/bin:$PATH
 export PATH
 
-b) For the “lib” contents, you need to do 2 things. First, for bash, in ~/.bashrc you should have (obviously replace with the true DEST dir used above):
+b) For the "lib" contents, you need to do 2 things.  First, for bash, in ~/.bashrc you should have (obviously replace <DEST DIR> with the true DEST dir used above):
 
-if [ -z $LD_LIBRARY_PATH ]; then
-LD_LIBRARY_PATH=/lib/
+if [ -z $LD_LIBRARY_PATH  ]; then
+ LD_LIBRARY_PATH=<DEST DIR>/lib/
 else
-LD_LIBRARY_PATH=/lib:${LD_LIBRARY_PATH}
+ LD_LIBRARY_PATH=<DEST DIR>/lib:${LD_LIBRARY_PATH}
 fi
 #for user libs
 export LD_LIBRARY_PATH
 
-Second, the /lib/sm/ directory should be pointed to within the “.sm” file.
+Second, the <DEST DIR>/lib/sm/ directory should be pointed to within the ".sm" file.
 
-c) There is also probably a way to assign user man pages pointing to the “man” dir. See google.
+c) There is also probably a way to assign user man pages pointing to the "man" dir.  See google.
 
-d) The “emacs” directory’s contents could be copied to ~/.emacs/ or somewhere. See google or sm docs.
+d) The "emacs" directory's contents could be copied to ~/.emacs/ or somewhere.  See google or sm docs.
+
+See inside emacs/sm.el  Maybe copy to ~/emacs/site-lisp/sm.el and then inside your .emacs file you add the stuff mentioned in the top of sm.el and just change ~rhl/sm/sm.el to that location you put the sm.el file.
+
 
 13) When running sm, I suggest creating a script in ~/bin/jsm
 
@@ -64,7 +66,8 @@ The jsm file should contain:
 
 #!/bin/bash
 export TERM=vt100
-/bin/sm m smstart q $@
+<DEST DIR>/bin/sm -m smstart -q $@
+
 
 14) To get the proper /etc/termcap entry for vt100, do on ubuntu:
 
@@ -74,3 +77,12 @@ sudo apt-get install libncurses5-dev
 
 16) Run: jsm
 
+17) See online docs at: http://www.astro.princeton.edu/~rhl/sm/
+
+18) E.g.
+
+B) cd to the "run" directory (i.e. not dumps or images directory) using harm
+C) jsm
+D) gogrmhd
+E) jrdpcf3duentropy dump0000
+F) plc 0 lrho # This will plot the log of density as contours

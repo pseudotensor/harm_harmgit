@@ -44,7 +44,8 @@ int faildebug1(int numnormterms, int whichcons, FTYPE *U_target, FTYPE *EOSextra
   primtoflux(UNOTHING,pr0, &q, 3,ptrgeom, flux[2]);
   PLOOP(pliter,pl) Uwithgeom[pl]=Ustart[pl]*ptrgeom->EOMFUNCMAC(pl);
   FTYPE CUf[4]={1.0};
-  source(pr0, ptrgeom, &q, Uwithgeom, Uwithgeom, CUf, dUriemann, dUcomp,dU);
+  int didreturnpf=0;
+  source(pr0, pr0, &didreturnpf, ptrgeom, &q, Uwithgeom, Uwithgeom, CUf, dUriemann, dUcomp,dU);
   bsq_calc(pr0, ptrgeom, &bsq);
   
   
@@ -249,7 +250,8 @@ int faildebug2(int numnormterms, int whichcons, FTYPE *U_target, FTYPE *EOSextra
   primtoflux(UNOTHING,pr0, &q, 3,ptrgeom, flux[2]);
   PLOOP(pliter,pl) Uwithgeom[pl]=Ustart[pl]*ptrgeom->EOMFUNCMAC(pl);
   FTYPE CUf[4]={1.0};
-  source(pr0, ptrgeom, &q, Uwithgeom, Uwithgeom, CUf, dUriemann, dUcomp,dU);
+  int didreturnpf=0;
+  source(pr0, pr0, &didreturnpf, ptrgeom, &q, Uwithgeom, Uwithgeom, CUf, dUriemann, dUcomp,dU);
   bsq_calc(pr0, ptrgeom, &bsq);
   
   

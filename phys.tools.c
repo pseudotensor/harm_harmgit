@@ -1395,7 +1395,7 @@ void compute_1plusud0_rel4vel(FTYPE *pr, struct of_geom *geom, struct of_state *
 /* add in source terms to equations of motion */
 // ui and dUriemann in UEVOLVE form
 // assume q(pr) so consistent, but p or ui don't yet account for dUriemann!
-int source(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE *ui, FTYPE *uf, FTYPE *CUf, FTYPE *dUriemann, FTYPE (*dUcomp)[NPR], FTYPE *dU)
+int source(FTYPE *pr, FTYPE *pf, int *didreturnpf, struct of_geom *ptrgeom, struct of_state *q, FTYPE *ui, FTYPE *uf, FTYPE *CUf, FTYPE *dUriemann, FTYPE (*dUcomp)[NPR], FTYPE *dU)
 {
   //  double (*)[8]
   VARSTATIC int i,j,sc;
@@ -1437,7 +1437,7 @@ int source(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE *ui, FT
     Ugeomfreei[pl] = ui[pl]*(ptrgeom->IEOMFUNCNOSINGMAC(pl)); // expect ui to be UEVOLVE form
     Ugeomfreef[pl] = uf[pl]*(ptrgeom->IEOMFUNCNOSINGMAC(pl)); // expect uf to be UEVOLVE form
   }
-  sourcephysics(pr, ptrgeom, q, Ugeomfreei, Ugeomfreef, CUf, dUother, dUcomp);
+  sourcephysics(pr, pf, didreturnpf, ptrgeom, q, Ugeomfreei, Ugeomfreef, CUf, dUother, dUcomp);
 
   //////////////////
   //

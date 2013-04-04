@@ -1,14 +1,19 @@
 #include "decs.h"
 
+
+
 // Ugeomfree and dUother are in UNOTHING form (or UEVOLVE without geometry)
-int sourcephysics(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE *Ugeomfreei, FTYPE *Ugeomfreef, FTYPE *CUf, FTYPE *dUother, FTYPE (*dUcomp)[NPR])
+// pf might be modified so better approximation to final update, so easier on Utoprimgen() to get inversion.
+int sourcephysics(FTYPE *pr, FTYPE *pf, int *didreturnpf, struct of_geom *ptrgeom, struct of_state *q, FTYPE *Ugeomfreei, FTYPE *Ugeomfreef, FTYPE *CUf, FTYPE *dUother, FTYPE (*dUcomp)[NPR])
 {
   int coolfunc_thindisk(FTYPE h_over_r, FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q,FTYPE (*dUcomp)[NPR]);
   int coolfunc_neutrino(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q,FTYPE (*dUcomp)[NPR]);
   int coolfunc_rebecca_thindisk(FTYPE h_over_r, FTYPE *pr, struct of_geom *geom, struct of_state *q,FTYPE (*dUcomp)[NPR]);
-  extern int koral_source_rad(int whichsourcemethod, FTYPE *pr, FTYPE *Ui, FTYPE *Uf, FTYPE *CUf, struct of_geom *geom, struct of_state *q, FTYPE *dUother, FTYPE (*dUcomp)[NPR]);
+  extern int koral_source_rad(int whichsourcemethod, FTYPE *pr, FTYPE *pf, int *didreturnpf, FTYPE *Ui, FTYPE *Uf, FTYPE *CUf, struct of_geom *geom, struct of_state *q, FTYPE *dUother, FTYPE (*dUcomp)[NPR]);
 
-  
+  //default
+  *didreturnpf=0;
+
 
   //  SCLOOP(sc) PLOOP(pliter,k) dUcomptmp[sc][k] = 0.; // use when duplicating source type (sc) in dUcomp[sc][k]
   // currently all are unique so can overlap
@@ -26,14 +31,21 @@ int sourcephysics(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE 
     return(coolfunc_rebecca_thindisk(h_over_r, pr, ptrgeom, q,dUcomp));
   }
   else if(cooling==KORAL){
-    return(koral_source_rad(WHICHRADSOURCEMETHOD, pr, Ugeomfreei, Ugeomfreef, CUf, ptrgeom, q, dUother, dUcomp));
+    return(koral_source_rad(WHICHRADSOURCEMETHOD, pr, pf, didreturnpf, Ugeomfreei, Ugeomfreef, CUf, ptrgeom, q, dUother, dUcomp));
   }
-
-  // random physics
-  //misc_source(ph, geom, &q, dU, Dt) ;
+  else{
+    // random physics
+    //misc_source(ph, geom, &q, dU, Dt) ;
+  }
 
   return(0);
 }
+
+
+
+
+
+
 
 /* JON: here's the cooling function, w/ two parameters */
 

@@ -130,7 +130,7 @@ static int f_implicit_lab(int failreturnallowable, int whichcall, int showmessag
   // initialize counters
   newtonstats.nstroke=newtonstats.lntries=0;
 
-  // get primitive (don't change pp0 or uu0)
+  // get primitive (don't change uu0).  This pp is only used for inversion guess and to hold final inversion answer.
   PLOOP(pliter,pl) pp[pl] = pp0[pl];
 
   // get change in conserved quantity between fluid and radiation (equal and opposite 4-force)
@@ -165,6 +165,10 @@ static int f_implicit_lab(int failreturnallowable, int whichcall, int showmessag
   DLOOPA(iv) f[iv] = (uu[URAD0+iv] - uu0[URAD0+iv]) + (SIGNGD2 * localdt * Gd[iv]);
 
 
+  // save better guess for later inversion (including this inversion above) from this inversion
+  PLOOP(pliter,pl) pp0[pl]=pp[pl];
+
+
   //  dualfprintf(fail_file,"i=%d Gd=%g %g %g %g uuG=%g chi=%g\n",ptrgeom->i,Gd[0],Gd[1],Gd[2],Gd[3],(SIGNGD2 * localdt * Gd[iv]),chireturn);
 
 
@@ -194,6 +198,14 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
   static long long int numimplicits=0;
   static long long int numoff1iter=0,numofiter=0;
 
+
+#if(0)
+  // DEBUG
+  dualfprintf(fail_file,"GOT HERE IMPLICIT\n");
+  FTYPE tautot[NDIM],tautotmax;
+  calc_tautot(pin, ptrgeom, tautot, &tautotmax);
+  dualfprintf(fail_file,"GOT HERE IMPLICIT: %g %g %g : %g\n",tautot[1],tautot[2],tautot[3],tautotmax);
+#endif
 
 
 #if(0)
@@ -578,11 +590,14 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
   // DEBUG:
   //  DLOOPA(jj) dualfprintf(fail_file,"nstep=%ld steppart=%d i=%d implicitGd[%d]=%g %g\n",nstep,steppart,ptrgeom->i,jj,radsource[UU+jj],radsource[URAD0+jj]);
 
+
+
   // store source update in dUcomp for return.
   sc = RADSOURCE;
   PLOOP(pliter,pl) dUcomp[sc][pl] += radsource[pl];
 
-
+  // save better guess for later inversion from this inversion
+  // PLOOP(pliter,pl) pin[pl]=pin[pl]; // pin was already modified by f_implicit_lab() with output from inversion returned through pp0
 
   return(0);
   
@@ -1114,6 +1129,8 @@ static int source_explicit(int whichsc, int whichradsourcemethod, int methoddtsu
   ////////////
   PLOOP(pliter,pl) dUcomp[whichsc][pl] += sourcepl[pl];
 
+  // save better guess for later inversion from this inversion
+  PLOOP(pliter,pl) pin[pl]=prnew[pl];
 
   return(EXPLICITNOTFAILED);
   
@@ -1130,7 +1147,7 @@ static int source_explicit(int whichsc, int whichradsourcemethod, int methoddtsu
 // NOTE: source_explicit() takes as first argument a form of function like general koral_source_rad_calc() .  It doesn't have to be just used for radiation.
 // NOTE: koral_source_rad_implicit() currently only works for radiation where only 4 equations involved since 4-force of rad affects exactly mhd.  So only invert 4x4 matrix.
 // For recursion of other consistencies, should keep koral_source_rad() same function arguments as explicit and implicit functions.  Once make koral_source_rad() general, can use this function as general source function instead of it getting called just for radiation.
-int koral_source_rad(int whichradsourcemethod, FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *dUother, FTYPE (*dUcomp)[NPR])
+int koral_source_rad(int whichradsourcemethod, FTYPE *pin, FTYPE *pf, int *didreturnpf, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *dUother, FTYPE (*dUcomp)[NPR])
 {
   int pliter,pl;
   int showmessages=0; // 0 ok if not debugging and think everything works.
@@ -1166,12 +1183,20 @@ int koral_source_rad(int whichradsourcemethod, FTYPE *pin, FTYPE *Uiin, FTYPE *U
     return(0);
   }
 
+
+
   /////////////////
   //
   // Choose which method for stepping to use
   //
   /////////////////
 
+
+  /////////////////
+  //
+  // EXPLICIT TYPES
+  //
+  /////////////////
   if(whichradsourcemethod==SOURCEMETHODEXPLICIT || whichradsourcemethod==SOURCEMETHODEXPLICITSUBCYCLE || whichradsourcemethod==SOURCEMETHODEXPLICITREVERSIONFROMIMPLICIT || whichradsourcemethod==SOURCEMETHODEXPLICITSUBCYCLEREVERSIONFROMIMPLICIT || whichradsourcemethod==SOURCEMETHODEXPLICITCHECKSFROMIMPLICIT || whichradsourcemethod==SOURCEMETHODEXPLICITSUBCYCLECHECKSFROMIMPLICIT){
 
     int methoddtsub;
@@ -1186,21 +1211,41 @@ int koral_source_rad(int whichradsourcemethod, FTYPE *pin, FTYPE *Uiin, FTYPE *U
         // still do explicit anyways, since best can do with the choice of method -- will fail possibly to work if stiff regime, but ok in non-stiff.
         // assume nothing else to do, BUT DEFINITELY report this.
         if(debugfail>=2) dualfprintf(fail_file,"BAD: explicit failed: ijk=%d %d %d : whichradsourcemethod=%d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,whichradsourcemethod);
+        *didreturnpf=0;
         return(0);
       }
+      else if(whichradsourcemethod==SOURCEMETHODEXPLICITCHECKSFROMIMPLICIT || whichradsourcemethod==SOURCEMETHODEXPLICITSUBCYCLECHECKSFROMIMPLICIT){
+        // tells that explicit didn't work for implicit checks
+        if(showmessages && debugfail>=2) dualfprintf(fail_file,"explicit failed for implicit check. ijk=%d %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
+        *didreturnpf=0;
+        return(EXPLICITFAILED);
+      }
       else{
-        // tells that explicit didn't work (including implicit checks)
+        // tells that explicit didn't work
         if(showmessages && debugfail>=2) dualfprintf(fail_file,"explicit failed. ijk=%d %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
+        *didreturnpf=0;
         return(EXPLICITFAILED);
       }
     }
     else if(failexplicit==EXPLICITNOTNECESSARY){
       // then don't need any source term
+      *didreturnpf=0;
       return(EXPLICITNOTNECESSARY);
     }
+
     //else explicit succeeded, so just return
+    if(whichradsourcemethod==SOURCEMETHODEXPLICITSUBCYCLE || whichradsourcemethod==SOURCEMETHODEXPLICITSUBCYCLEREVERSIONFROMIMPLICIT){
+      // if sub-cycled, then have better pf than pb assumed saved in pinorig[].
+      PLOOP(pliter,pl) pf[pl]=pinorig[pl];
+      *didreturnpf=1;
+    }
     return(EXPLICITNOTFAILED);
   }
+  /////////////////
+  //
+  // IMPLICIT TYPES
+  //
+  /////////////////
   else if(whichradsourcemethod==SOURCEMETHODIMPLICIT){
  
     int failimplicit=koral_source_rad_implicit(pinorig, Uiinorig, Ufinorig, CUf, ptrgeom, qorig, dUother, dUcomp);
@@ -1208,29 +1253,53 @@ int koral_source_rad(int whichradsourcemethod, FTYPE *pin, FTYPE *Uiin, FTYPE *U
     if(failimplicit){
       if(IMPLICITREVERTEXPLICIT){ // single level recusive call (to avoid duplicate confusing code)
         // assume if revert from implicit, then need to do sub-cycles
-        int failexplicit=koral_source_rad(SOURCEMETHODEXPLICITSUBCYCLEREVERSIONFROMIMPLICIT, pinorig, Uiinorig, Ufinorig, CUf, ptrgeom, qorig, dUother, dUcomp);
+        int failexplicit=koral_source_rad(SOURCEMETHODEXPLICITSUBCYCLEREVERSIONFROMIMPLICIT, pinorig, pf, didreturnpf, Uiinorig, Ufinorig, CUf, ptrgeom, qorig, dUother, dUcomp);
         if(failexplicit==EXPLICITFAILED){
           // nothing else to revert to, but just continue and report
+          *didreturnpf=0;
           if(debugfail>=2) dualfprintf(fail_file,"BAD: explicit failed while implicit failed: ijk=%d %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
+          return(0);
+        }
+        else if(failexplicit==EXPLICITNOTNECESSARY){
+          // then don't need any source term
+          *didreturnpf=0;
+          return(0);
+        }
+        else{
+          // if sub-cycled, then have better pf than pb assumed saved in pinorig[].
+          PLOOP(pliter,pl) pf[pl]=pinorig[pl];
+          *didreturnpf=1;
           return(0);
         }
       }// end if reverting to explicit
       else{
+        *didreturnpf=0;
         if(debugfail>=2) dualfprintf(fail_file,"BAD: implicit failed and didn't choose to revert: ijk=%d %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
         return(0);        
       }
     }// end if failed to do implicit
+
     // no failure in implicit, then just return
+    // and if did implicit, then better pf guess
+    PLOOP(pliter,pl) pf[pl]=pinorig[pl];
+    *didreturnpf=1;
+    //    if(debugfail>=2) dualfprintf(fail_file,"Good: Imlicit good.: ijk=%d %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
     return(0);
 
   }
+  /////////////////
+  //
+  // IMPLICIT WITH EXPLICIT CHECK TYPES
+  //
+  /////////////////
   else if(whichradsourcemethod==SOURCEMETHODIMPLICITEXPLICITCHECK){
 
     // try explicit (or see if no source at all required)
     // Just check using explicit method, since if sub-cycles required then should just do implicit
-    int failreturn=koral_source_rad(SOURCEMETHODEXPLICITCHECKSFROMIMPLICIT, pinorig, Uiinorig, Ufinorig, CUf, ptrgeom, qorig, dUother, dUcomp);
+    int failreturn=koral_source_rad(SOURCEMETHODEXPLICITCHECKSFROMIMPLICIT, pinorig, pf, didreturnpf, Uiinorig, Ufinorig, CUf, ptrgeom, qorig, dUother, dUcomp);
 
     // determine if still need to do implicit
+    // don't set didreturnpf since already was set
     int doimplicit;
     if(failreturn==EXPLICITFAILED){
       doimplicit=1;
@@ -1253,14 +1322,25 @@ int koral_source_rad(int whichradsourcemethod, FTYPE *pin, FTYPE *Uiin, FTYPE *U
       if(showmessagesheavy && debugfail>=2) dualfprintf(fail_file,"NOTE: Had to take implicit step: %d %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
 
       // one-deep recursive call to implicit scheme
-      return(koral_source_rad(SOURCEMETHODIMPLICIT, pinorig, Uiinorig, Ufinorig, CUf, ptrgeom, qorig, dUother, dUcomp));
+      return(koral_source_rad(SOURCEMETHODIMPLICIT, pinorig, pf, didreturnpf, Uiinorig, Ufinorig, CUf, ptrgeom, qorig, dUother, dUcomp));
     }// end if doimplicit==1
 
   }
+  /////////////////
+  //
+  // NO SOURCE TYPE
+  //
+  /////////////////
   else if(whichradsourcemethod==SOURCEMETHODNONE){
     // then no source applied even if required
+    *didreturnpf=0;
     return(0);
   }
+  /////////////////
+  //
+  // UNKNOWN TYPE
+  //
+  /////////////////
   else{
 
     dualfprintf(fail_file,"3 No Such EOMRADTYPE=%d\n",EOMRADTYPE);

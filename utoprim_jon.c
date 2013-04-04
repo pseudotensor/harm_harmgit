@@ -64,16 +64,16 @@ static FTYPE dSsdvsq_calc(int whicheos, FTYPE *EOSextra, FTYPE W, FTYPE D, FTYPE
 static FTYPE dSsdWp_calc_utsq(int whicheos, FTYPE *EOSextra, FTYPE Wp, FTYPE D, FTYPE utsq);
 
 // Find Root wrappers:
-static int find_root_1D_gen(PFTYPE *lpflag, int eomtype, FTYPE x0, FTYPE *xnew, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra, struct of_newtonstats *newtonstats);
-static int find_root_1D_gen_scn(PFTYPE *lpflag, int eomtype, FTYPE x0, FTYPE *xnew, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra, struct of_newtonstats *newtonstats);
-static int find_root_1D_gen_Eprime(PFTYPE *lpflag, int eomtype, FTYPE x0, FTYPE *xnew, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra, struct of_newtonstats *newtonstats);
-static int find_root_1D_gen_Psq(PFTYPE *lpflag, int eomtype, FTYPE x0, FTYPE *xnew, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra, struct of_newtonstats *newtonstats);
-static int find_root_3D_gen_Palpha(PFTYPE *lpflag, int eomtype, FTYPE x0, FTYPE *xnew, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra, struct of_newtonstats *newtonstats);
-static int find_root_2D_gen(PFTYPE *lpflag, int eomtype, FTYPE x0, FTYPE *xnew, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra, struct of_newtonstats *newtonstats);
-static int find_root_1D_gen_Sc(PFTYPE *lpflag, int eomtype, FTYPE x0, FTYPE *xnew, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra, struct of_newtonstats *newtonstats);
+static int find_root_1D_gen(int showmessages, PFTYPE *lpflag, int eomtype, FTYPE x0, FTYPE *xnew, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra, struct of_newtonstats *newtonstats);
+static int find_root_1D_gen_scn(int showmessages, PFTYPE *lpflag, int eomtype, FTYPE x0, FTYPE *xnew, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra, struct of_newtonstats *newtonstats);
+static int find_root_1D_gen_Eprime(int showmessages, PFTYPE *lpflag, int eomtype, FTYPE x0, FTYPE *xnew, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra, struct of_newtonstats *newtonstats);
+static int find_root_1D_gen_Psq(int showmessages, PFTYPE *lpflag, int eomtype, FTYPE x0, FTYPE *xnew, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra, struct of_newtonstats *newtonstats);
+static int find_root_3D_gen_Palpha(int showmessages, PFTYPE *lpflag, int eomtype, FTYPE x0, FTYPE *xnew, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra, struct of_newtonstats *newtonstats);
+static int find_root_2D_gen(int showmessages, PFTYPE *lpflag, int eomtype, FTYPE x0, FTYPE *xnew, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra, struct of_newtonstats *newtonstats);
+static int find_root_1D_gen_Sc(int showmessages, PFTYPE *lpflag, int eomtype, FTYPE x0, FTYPE *xnew, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra, struct of_newtonstats *newtonstats);
 
 // Newton methods:
-static int general_newton_raphson(PFTYPE *lpflag, int eomtype, FTYPE x[], int n, int do_line_search,
+static int general_newton_raphson(int showmessages, PFTYPE *lpflag, int eomtype, FTYPE x[], int n, int do_line_search,
                                   void (*funcd) (FTYPE [], FTYPE [], FTYPE [], FTYPE [][NEWT_DIM], FTYPE *, FTYPE *, int, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra), 
                                   FTYPE (*res_func) (FTYPE [], FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra), FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra, struct of_newtonstats *newtonstats);
 
@@ -528,11 +528,11 @@ static int Utoprim_new_body(int showmessages, int eomtype, PFTYPE *lpflag, int w
 
       // METHOD specific:
 #if(WHICHHOTINVERTER==3)
-      retval+= find_root_1D_gen_Eprime(lpflag, eomtype, Wp_last, &Wp, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats);
+      retval+= find_root_1D_gen_Eprime(showmessages, lpflag, eomtype, Wp_last, &Wp, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats);
 #elif(WHICHHOTINVERTER==2)
-      retval+= find_root_2D_gen(lpflag, eomtype, Wp_last, &Wp, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats);
+      retval+= find_root_2D_gen(showmessages, lpflag, eomtype, Wp_last, &Wp, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats);
 #elif(WHICHHOTINVERTER==1)
-      retval+= find_root_1D_gen(lpflag, eomtype, Wp_last, &Wp, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats);
+      retval+= find_root_1D_gen(showmessages, lpflag, eomtype, Wp_last, &Wp, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats);
 #else
       dualfprintf(fail_file,"No such WHICHHOTINVERTER=%d\n",WHICHHOTINVERTER);
       myexit(89285221);
@@ -540,9 +540,9 @@ static int Utoprim_new_body(int showmessages, int eomtype, PFTYPE *lpflag, int w
 
 
 #if(0)
-      retval = find_root_2D_gen(lpflag, eomtype, Wp_last, &Wp, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats);
-      retvalother = find_root_1D_gen(lpflag, eomtype, Wp_last, &Wpother, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats);
-      retvalother2=find_root_1D_gen_scn(lpflag, eomtype, W_last, &W, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats);
+      retval = find_root_2D_gen(showmessages, lpflag, eomtype, Wp_last, &Wp, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats);
+      retvalother = find_root_1D_gen(showmessages, lpflag, eomtype, Wp_last, &Wpother, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats);
+      retvalother2=find_root_1D_gen_scn(showmessages, lpflag, eomtype, W_last, &W, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats);
 
       //  Wp=Wpother;
       if(retval!=retvalother || (fabs(Wp-Wpother)/(Wp+Wpother)>1E-13)){
@@ -568,7 +568,7 @@ static int Utoprim_new_body(int showmessages, int eomtype, PFTYPE *lpflag, int w
 
 
 #if(WHICHCOLDINVERTER==0)
-      retval0 = find_root_1D_gen(lpflag, eomtype, Wp_last, &Wp0, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats);
+      retval0 = find_root_1D_gen(showmessages, lpflag, eomtype, Wp_last, &Wp0, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats);
 
 
       //  if(IFUTOPRIMFAIL(*lpflag)){
@@ -590,7 +590,7 @@ static int Utoprim_new_body(int showmessages, int eomtype, PFTYPE *lpflag, int w
 
 
       // Do inversion using E'[W'] equation
-      retval1 = find_root_1D_gen_Eprime(lpflag, eomtype, Wp_last, &Wp1, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats);
+      retval1 = find_root_1D_gen_Eprime(showmessages, lpflag, eomtype, Wp_last, &Wp1, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats);
 
 
 
@@ -628,7 +628,7 @@ static int Utoprim_new_body(int showmessages, int eomtype, PFTYPE *lpflag, int w
       }
 #endif
 
-      retval2 = find_root_1D_gen_Psq(lpflag, eomtype, Wp_last, &Wp2, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats);
+      retval2 = find_root_1D_gen_Psq(showmessages, lpflag, eomtype, Wp_last, &Wp2, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats);
       //  if(IFUTOPRIMFAIL(*lpflag)){
       //    dualfprintf(fail_file,"P^2[W'] equation gave bad answer: Wp=%21.15g Qdotnp=%21.15g Qdotn=%21.15g\n",Wp2,Qdotnp,Qdotn);
       //    myexit(0);
@@ -648,7 +648,7 @@ static int Utoprim_new_body(int showmessages, int eomtype, PFTYPE *lpflag, int w
       // Do inversion using P^\alpha[W'] equation
 
 
-      retval3 = find_root_3D_gen_Palpha(lpflag, eomtype, Wp_last, &Wp3, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats);
+      retval3 = find_root_3D_gen_Palpha(showmessages, lpflag, eomtype, Wp_last, &Wp3, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats);
 
 
 
@@ -689,7 +689,7 @@ static int Utoprim_new_body(int showmessages, int eomtype, PFTYPE *lpflag, int w
 
       // METHOD specific:
 #if(WHICHENTROPYINVERTER==0)
-      retval+= find_root_1D_gen_Sc(lpflag, eomtype, Wp_last, &Wp, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats);
+      retval+= find_root_1D_gen_Sc(showmessages, lpflag, eomtype, Wp_last, &Wp, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats);
 #else
       dualfprintf(fail_file,"No such WHICHENTROPYINVERTER=%d\n",WHICHENTROPYINVERTER);
       myexit(89285225);
@@ -3660,7 +3660,7 @@ GENERAL PROCEDURES BELOW (except validate_x() and must choose function and resid
 *****************************************************/
 
 
-static int find_root_1D_gen(PFTYPE *lpflag, int eomtype, FTYPE x0, FTYPE *xnew, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra, struct of_newtonstats *newtonstats)
+static int find_root_1D_gen(int showmessages, PFTYPE *lpflag, int eomtype, FTYPE x0, FTYPE *xnew, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra, struct of_newtonstats *newtonstats)
 {
   FTYPE x_1d[1];
   int retval;
@@ -3668,7 +3668,7 @@ static int find_root_1D_gen(PFTYPE *lpflag, int eomtype, FTYPE x0, FTYPE *xnew, 
 
   x_1d[0] = x0;
 
-  if( (retval=general_newton_raphson(lpflag, eomtype, x_1d, 1, USE_LINE_SEARCH, func_1d_orig, res_sq_1d_orig, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats) ) ) {
+  if( (retval=general_newton_raphson(showmessages, lpflag, eomtype, x_1d, 1, USE_LINE_SEARCH, func_1d_orig, res_sq_1d_orig, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats) ) ) {
 #if(!OPTIMIZED)
     if( debugfail>=2 ) dualfprintf(fail_file, "GNR failed, x_1d[0] = %21.15g \n", x_1d[0] );  
 #endif
@@ -3681,7 +3681,7 @@ static int find_root_1D_gen(PFTYPE *lpflag, int eomtype, FTYPE x0, FTYPE *xnew, 
 
 
 
-static int find_root_1D_gen_scn(PFTYPE *lpflag, int eomtype, FTYPE x0, FTYPE *xnew, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra, struct of_newtonstats *newtonstats)
+static int find_root_1D_gen_scn(int showmessages, PFTYPE *lpflag, int eomtype, FTYPE x0, FTYPE *xnew, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra, struct of_newtonstats *newtonstats)
 {
   FTYPE x_1d[1];
   int retval;
@@ -3689,7 +3689,7 @@ static int find_root_1D_gen_scn(PFTYPE *lpflag, int eomtype, FTYPE x0, FTYPE *xn
 
   x_1d[0] = x0;
 
-  if( (retval=general_newton_raphson(lpflag, eomtype, x_1d, 1, USE_LINE_SEARCH, func_1d_orig_scn, res_sq_1d_orig_scn, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats) ) ) {
+  if( (retval=general_newton_raphson(showmessages, lpflag, eomtype, x_1d, 1, USE_LINE_SEARCH, func_1d_orig_scn, res_sq_1d_orig_scn, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats) ) ) {
 #if(!OPTIMIZED)
     if( debugfail>=2 ) dualfprintf(fail_file, "GNR failed, x_1d[0] = %21.15g \n", x_1d[0] );  
 #endif
@@ -3702,7 +3702,7 @@ static int find_root_1D_gen_scn(PFTYPE *lpflag, int eomtype, FTYPE x0, FTYPE *xn
 
 
 
-static int find_root_1D_gen_Eprime(PFTYPE *lpflag, int eomtype, FTYPE x0, FTYPE *xnew, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra, struct of_newtonstats *newtonstats)
+static int find_root_1D_gen_Eprime(int showmessages, PFTYPE *lpflag, int eomtype, FTYPE x0, FTYPE *xnew, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra, struct of_newtonstats *newtonstats)
 {
   FTYPE x_1d[1];
   int retval;
@@ -3711,7 +3711,7 @@ static int find_root_1D_gen_Eprime(PFTYPE *lpflag, int eomtype, FTYPE x0, FTYPE 
   x_1d[0] = x0;
 
   // Note u sing func_Eprime_opt() and res_sq_Eprime_opt() : optimized versions.
-  if( (retval=general_newton_raphson(lpflag, eomtype, x_1d, 1, USE_LINE_SEARCH, func_Eprime_opt, res_sq_Eprime_opt, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats) ) ) {
+  if( (retval=general_newton_raphson(showmessages, lpflag, eomtype, x_1d, 1, USE_LINE_SEARCH, func_Eprime_opt, res_sq_Eprime_opt, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats) ) ) {
 #if(!OPTIMIZED)
     if( debugfail>=2 ) dualfprintf(fail_file, "GNR failed, x_1d[0] = %21.15g \n", x_1d[0] );  
 #endif
@@ -3723,7 +3723,7 @@ static int find_root_1D_gen_Eprime(PFTYPE *lpflag, int eomtype, FTYPE x0, FTYPE 
 }
 
 
-static int find_root_1D_gen_Psq(PFTYPE *lpflag, int eomtype, FTYPE x0, FTYPE *xnew, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra, struct of_newtonstats *newtonstats)
+static int find_root_1D_gen_Psq(int showmessages, PFTYPE *lpflag, int eomtype, FTYPE x0, FTYPE *xnew, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra, struct of_newtonstats *newtonstats)
 {
   FTYPE x_1d[1];
   int retval;
@@ -3731,7 +3731,7 @@ static int find_root_1D_gen_Psq(PFTYPE *lpflag, int eomtype, FTYPE x0, FTYPE *xn
 
   x_1d[0] = x0;
 
-  if( (retval=general_newton_raphson(lpflag, eomtype, x_1d, 1, USE_LINE_SEARCH, func_Psq, res_sq_Psq, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats) ) ) {
+  if( (retval=general_newton_raphson(showmessages, lpflag, eomtype, x_1d, 1, USE_LINE_SEARCH, func_Psq, res_sq_Psq, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats) ) ) {
 #if(!OPTIMIZED)
     if( debugfail>=2 ) dualfprintf(fail_file, "GNR failed, x_1d[0] = %21.15g \n", x_1d[0] );  
 #endif
@@ -3746,7 +3746,7 @@ static int find_root_1D_gen_Psq(PFTYPE *lpflag, int eomtype, FTYPE x0, FTYPE *xn
 
 
 // below not done yet!
-static int find_root_3D_gen_Palpha(PFTYPE *lpflag, int eomtype, FTYPE x0, FTYPE *xnew, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra, struct of_newtonstats *newtonstats)
+static int find_root_3D_gen_Palpha(int showmessages, PFTYPE *lpflag, int eomtype, FTYPE x0, FTYPE *xnew, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra, struct of_newtonstats *newtonstats)
 {
   FTYPE x_3d[3];
   int retval;
@@ -3756,7 +3756,7 @@ static int find_root_3D_gen_Palpha(PFTYPE *lpflag, int eomtype, FTYPE x0, FTYPE 
   x_3d[1] = x0;
   x_3d[2] = x0;
 
-  if( (retval=general_newton_raphson(lpflag, eomtype, x_3d, 3, USE_LINE_SEARCH, func_Psq, res_sq_Psq, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats) ) ) {
+  if( (retval=general_newton_raphson(showmessages, lpflag, eomtype, x_3d, 3, USE_LINE_SEARCH, func_Psq, res_sq_Psq, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats) ) ) {
 #if(!OPTIMIZED)
     if( debugfail>=2 ) dualfprintf(fail_file, "GNR failed, x_3d[0] = %21.15g x_3d[1] = %21.15g x_3d[2] = %21.15g \n", x_3d[0], x_3d[1], x_3d[2] );  
 #endif
@@ -3769,7 +3769,7 @@ static int find_root_3D_gen_Palpha(PFTYPE *lpflag, int eomtype, FTYPE x0, FTYPE 
   return(retval);
 }
 
-static int find_root_1D_gen_Sc(PFTYPE *lpflag, int eomtype, FTYPE x0, FTYPE *xnew, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra, struct of_newtonstats *newtonstats)
+static int find_root_1D_gen_Sc(int showmessages, PFTYPE *lpflag, int eomtype, FTYPE x0, FTYPE *xnew, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra, struct of_newtonstats *newtonstats)
 {
   FTYPE x_1d[1];
   int retval;
@@ -3778,7 +3778,7 @@ static int find_root_1D_gen_Sc(PFTYPE *lpflag, int eomtype, FTYPE x0, FTYPE *xne
   x_1d[0] = x0;
 
   // Note, using optimized versions of func_Sc() and res_sq_Sc()
-  if( (retval=general_newton_raphson(lpflag, eomtype, x_1d, 1, USE_LINE_SEARCH, func_Sc_opt, res_sq_Sc_opt, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats) ) ) {
+  if( (retval=general_newton_raphson(showmessages, lpflag, eomtype, x_1d, 1, USE_LINE_SEARCH, func_Sc_opt, res_sq_Sc_opt, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats) ) ) {
 #if(!OPTIMIZED)
     if( debugfail>=2 ) dualfprintf(fail_file, "GNR failed, x_1d[0] = %21.15g \n", x_1d[0] );  
 #endif
@@ -3812,7 +3812,7 @@ static int find_root_1D_gen_Sc(PFTYPE *lpflag, int eomtype, FTYPE x0, FTYPE *xne
 *********************************************************************/
 
 
-static int find_root_2D_gen(PFTYPE *lpflag, int eomtype, FTYPE x0, FTYPE *xnew, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra, struct of_newtonstats *newtonstats)
+static int find_root_2D_gen(int showmessages, PFTYPE *lpflag, int eomtype, FTYPE x0, FTYPE *xnew, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra, struct of_newtonstats *newtonstats)
 {
   
   FTYPE x[2], x_orig[2];
@@ -3844,7 +3844,7 @@ static int find_root_2D_gen(PFTYPE *lpflag, int eomtype, FTYPE x0, FTYPE *xnew, 
   for(it=0;it<n;it++) dualfprintf(fail_file,"x[%d]=%21.15g xnew[%d]=%21.15g\n",it,x[it],it,xnew[it]);
 #endif
 
-  retval = general_newton_raphson(lpflag, eomtype, x, n, USE_LINE_SEARCH,  func_vsq2, res_sq_vsq2, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats) ;
+  retval = general_newton_raphson(showmessages, lpflag, eomtype, x, n, USE_LINE_SEARCH,  func_vsq2, res_sq_vsq2, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats) ;
   ntries++;
 
   while( (retval==1) && (ntries <= MAX_NEWT_RETRIES ) ) {
@@ -3852,8 +3852,8 @@ static int find_root_2D_gen(PFTYPE *lpflag, int eomtype, FTYPE x0, FTYPE *xnew, 
     x[0] = x_orig[0];
     for( it=0; it<ntries; it++)  x[0] *= 10.0;
     x1_of_x0( x[0],&x[1], wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra) ;
-    //       retval = general_newton_raphson(lpflag, eomtype, x, n, USE_LINE_SEARCH,  func_vsq, res_sq_vsq, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats) ;
-    retval = general_newton_raphson(lpflag, eomtype, x, n, USE_LINE_SEARCH,  func_vsq2, res_sq_vsq2, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats) ;
+    //       retval = general_newton_raphson(showmessages, lpflag, eomtype, x, n, USE_LINE_SEARCH,  func_vsq, res_sq_vsq, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats) ;
+    retval = general_newton_raphson(showmessages, lpflag, eomtype, x, n, USE_LINE_SEARCH,  func_vsq2, res_sq_vsq2, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats) ;
 
 #if(!OPTIMIZED)
     if( ltrace ) {
@@ -3890,7 +3890,7 @@ static int find_root_2D_gen(PFTYPE *lpflag, int eomtype, FTYPE x0, FTYPE *xnew, 
     -- inspired in part by Num. Rec.'s routine newt();
 
 *****************************************************************/
-static int general_newton_raphson(PFTYPE *lpflag, int eomtype, FTYPE x[], int n, int do_line_search,
+static int general_newton_raphson(int showmessages, PFTYPE *lpflag, int eomtype, FTYPE x[], int n, int do_line_search,
                                   void (*funcd) (FTYPE [], FTYPE [], FTYPE [], FTYPE [][NEWT_DIM], FTYPE *, FTYPE *, int, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra), 
                                   FTYPE (*res_func) (FTYPE [], FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra), FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra, struct of_newtonstats *newtonstats)
 {
@@ -4109,7 +4109,7 @@ static int general_newton_raphson(PFTYPE *lpflag, int eomtype, FTYPE x[], int n,
           dualfprintf(fail_file,"gnr: doing recursive call, retval, errx = %4i  %21.15g \n", retval, errx );
         }
 #endif
-        retval = general_newton_raphson(lpflag, eomtype, x_orig, n, ((do_line_search+1)%2), funcd, res_func, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats);
+        retval = general_newton_raphson(showmessages, lpflag, eomtype, x_orig, n, ((do_line_search+1)%2), funcd, res_func, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats);
         for( id = 0; id < n ; id++)  x[id] = x_orig[id] ;
         return( retval );
       }
@@ -4166,7 +4166,7 @@ static int general_newton_raphson(PFTYPE *lpflag, int eomtype, FTYPE x[], int n,
               x[id]=x_older[id]; // since current W is what gave bad residual and already saved it into x_old[0]
               dx[id]=dx_old[id]; // new dx is probably messed up (didn't yet save dx[0], so use dx_old[0]
 #if(PRODUCTION==0)
-              if(debugfail>=2) dualfprintf(fail_file,"resetW: nstep=%ld steppart=%d :: lntries=%d :: id=%d :: x=%21.15g dx=%21.15g : x/D=%21.15g DAMPFACTOR=%21.15g errx=%21.15g\n",nstep,steppart,(int)(newtonstats->lntries),id,x[id],dx[id],x[id]/D,DAMPFACTOR[id],newtonstats->lerrx);
+              if(showmessages&&debugfail>=2) dualfprintf(fail_file,"resetW: nstep=%ld steppart=%d :: lntries=%d :: id=%d :: x=%21.15g dx=%21.15g : x/D=%21.15g DAMPFACTOR=%21.15g errx=%21.15g\n",nstep,steppart,(int)(newtonstats->lntries),id,x[id],dx[id],x[id]/D,DAMPFACTOR[id],newtonstats->lerrx);
 #endif
               // SUPERGODMARK: Noticed that if Mathematica solution can be found but gives utsq<0 then this damping leads to nearly circular loop till max iterations.
               diddamp=1;
@@ -4540,7 +4540,7 @@ static int general_newton_raphson(PFTYPE *lpflag, int eomtype, FTYPE x[], int n,
       /* If bad return and we tried line searching, try it without before giving up: */
       //      dualfprintf(fail_file,"gnr: doing recursive call, do_line_search, retval, errx = %4i  %4i  %21.15g \n", do_line_search, retval, errx );
       //      
-      retval2 = general_newton_raphson(lpflag, eomtype, x_orig, n, ((do_line_search+1)%2), funcd, res_func, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats);
+      retval2 = general_newton_raphson(showmessages, lpflag, eomtype, x_orig, n, ((do_line_search+1)%2), funcd, res_func, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra,newtonstats);
       for( id = 0; id < n ; id++)  x[id] = x_orig[id] ;
       //      dualfprintf(fail_file,"gnr retval3 = %4i \n", retval2); 
 
