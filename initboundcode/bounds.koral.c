@@ -2671,6 +2671,7 @@ int bound_radnt(int dir,
               if(WHICHPROBLEM==RADFLATDISK) pradffortho[PRAD0] = calc_LTE_EfromT(1.e11/TEMPBAR);
               else pradffortho[PRAD0] = calc_LTE_EfromT(1.e11/TEMPBAR)*(1.-sqrt(rin/r))/pow(r,3.);
               // KORALTODO: in reality, can only constrain magnitude, not direction, of outflow away from plane.
+              // KORALTODO: Also, in reality, can't really set vrad=0, else solution dominated by numerical diffusion.
               pradffortho[PRAD1] = 0;
               if(WHICHPROBLEM==RADFLATDISK) pradffortho[PRAD2] = 0.0; // current koral value
               else pradffortho[PRAD2] = -0.5*pradffortho[PRAD0];
