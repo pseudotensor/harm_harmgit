@@ -1,6 +1,6 @@
 #include "decs.h"
 
-static int f_implicit_lab(int failreturnallowable, int whichcall, int showmessages, int allowlocalfailurefixandnoreport, FTYPE *pp0, FTYPE *uu0,FTYPE *uu,FTYPE localdt, struct of_geom *ptrgeom,  FTYPE *f);
+static int f_implicit_lab(int failreturnallowable, int whichcall, int showmessages, int allowlocalfailurefixandnoreport, FTYPE *pp0, FTYPE *uu0,FTYPE *uu,FTYPE localdt, struct of_geom *ptrgeom,  FTYPE *f, FTYPE *fnorm);
 
 static void koral_source_rad_calc(int method, FTYPE *pr, FTYPE *Ui, FTYPE *Uf, FTYPE *dUother, FTYPE *CUf, FTYPE *Gpl, struct of_geom *ptrgeom, FTYPE *dtsub);
 
@@ -42,7 +42,7 @@ static int calc_rad_lambda(FTYPE *pp, struct of_geom *ptrgeom, FTYPE kappa, FTYP
 
 
 
-static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int showmessagesheavy, int allowlocalfailurefixandnoreport, FTYPE *uu, FTYPE *uup, FTYPE *uu0, FTYPE *pin, FTYPE fracdtG, FTYPE realdt, struct of_geom *ptrgeom, FTYPE *f1, FTYPE (*iJ)[NDIM]);
+static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int showmessagesheavy, int allowlocalfailurefixandnoreport, FTYPE *uu, FTYPE *uup, FTYPE *uu0, FTYPE *pin, FTYPE fracdtG, FTYPE realdt, struct of_geom *ptrgeom, FTYPE *f1, FTYPE *f1norm, FTYPE (*iJ)[NDIM]);
 
 
 
@@ -118,7 +118,7 @@ static int Utoprimgen_failwrapper(int showmessages, int allowlocalfailurefixandn
 //f - (returned) errors
 
 //NOTE: uu WILL be changed from inside this fcn
-static int f_implicit_lab(int failreturnallowable, int whichcall, int showmessages, int allowlocalfailurefixandnoreport, FTYPE *pp0, FTYPE *uu0,FTYPE *uu,FTYPE localdt, struct of_geom *ptrgeom,  FTYPE *f)
+static int f_implicit_lab(int failreturnallowable, int whichcall, int showmessages, int allowlocalfailurefixandnoreport, FTYPE *pp0, FTYPE *uu0,FTYPE *uu,FTYPE localdt, struct of_geom *ptrgeom,  FTYPE *f, FTYPE *fnorm)
 {
   struct of_state q;
   FTYPE pp[NPR];
@@ -164,6 +164,9 @@ static int f_implicit_lab(int failreturnallowable, int whichcall, int showmessag
 #define SIGNGD2 (1.0) // sign that goes into implicit differencer
   DLOOPA(iv) f[iv] = (uu[URAD0+iv] - uu0[URAD0+iv]) + (SIGNGD2 * localdt * Gd[iv]);
 
+  // get error normalization that involves actual things being differenced
+  DLOOPA(iv) fnorm[iv] = 0.5*(fabs(uu[URAD0+iv]) + fabs(uu0[URAD0+iv]) + fabs(SIGNGD2 * localdt * Gd[iv]));
+
 
   // save better guess for later inversion (including this inversion above) from this inversion
   PLOOP(pliter,pl) pp0[pl]=pp[pl];
@@ -191,7 +194,9 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
   FTYPE iJ[NDIM][NDIM];
   FTYPE uu0[NPR],uup[NPR],uupp[NPR],uu[NPR]; 
   FTYPE uuporig[NPR],uu0orig[NPR];
-  FTYPE f1[NDIM],f3[NDIM],f3a[NDIM],f3b[NDIM],x[NDIM];
+  FTYPE f1[NDIM],f1norm[NDIM];
+  FTYPE f3[NDIM],f3a[NDIM],f3b[NDIM],f3c[NDIM],f3d[NDIM],f3norm[NDIM];
+  FTYPE x[NDIM];
   FTYPE realdt;
   FTYPE radsource[NPR], deltas[NDIM]; 
   int pl;
@@ -306,7 +311,7 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
     /////////////////
     for(f1iter=0;f1iter<MAXF1TRIES;f1iter++){
       int whichcall=1;
-      failreturn=f_implicit_lab(failreturnallowableuse, whichcall,showmessages, allowlocalfailurefixandnoreport, pin, uu0, uu, fracdtG*realdt, ptrgeom, f1); // modifies uu
+      failreturn=f_implicit_lab(failreturnallowableuse, whichcall,showmessages, allowlocalfailurefixandnoreport, pin, uu0, uu, fracdtG*realdt, ptrgeom, f1, f1norm); // modifies uu
       if(failreturn){
         // if initial uu failed, then should take smaller jump from Uiin->uu until settled between fluid and radiation.
         // If here, know original Uiin is good, so take baby steps in case uu needs heavy raditive changes.
@@ -375,6 +380,8 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
     DLOOPA(ii){
       f3a[ii]=fabs(f1[ii]/(SMALL+fabs(uu0[URAD0])));
       f3b[ii]=fabs(f1[ii]/(SMALL+MAX(fabs(uu0[UU]),fabs(uu0[URAD0]))));
+      f3c[ii]=fabs(f1[ii]/(SMALL+MAX(fabs(f1norm[ii]),fabs(uu0[URAD0]))));
+      f3d[ii]=fabs(f1[ii]/(SMALL+MAX(fabs(uu0[UU]),MAX(fabs(f1norm[ii]),fabs(uu0[URAD0])))));
     }
     if(IMPLICITERRORNORM==1){
       if(f3a[0]<LOCALPREIMPCONV && f3a[1]<LOCALPREIMPCONV && f3a[2]<LOCALPREIMPCONV && f3a[3]<LOCALPREIMPCONV){
@@ -384,7 +391,19 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
     }
     else if(IMPLICITERRORNORM==2){
       if(f3b[0]<LOCALPREIMPCONV && f3b[1]<LOCALPREIMPCONV && f3b[2]<LOCALPREIMPCONV && f3b[3]<LOCALPREIMPCONV){
-        if(showmessagesheavy) dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iter PREDONE1=%d : %g %g %g %g : %g %g %g %g\n",nstep,steppart,dt,ptrgeom->i,iter,f3a[0],f3a[1],f3a[2],f3a[3],f3b[0],f3b[1],f3b[2],f3b[3]);
+        if(showmessagesheavy) dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iter PREDONE1=%d : %g %g %g %g : %g %g %g %g\n",nstep,steppart,dt,ptrgeom->i,iter,f3b[0],f3b[1],f3b[2],f3b[3],f3b[0],f3b[1],f3b[2],f3b[3]);
+        break;
+      }
+    }
+    else if(IMPLICITERRORNORM==3){
+      if(f3c[0]<LOCALPREIMPCONV && f3c[1]<LOCALPREIMPCONV && f3c[2]<LOCALPREIMPCONV && f3c[3]<LOCALPREIMPCONV){
+        if(showmessagesheavy) dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iter PREDONE1=%d : %g %g %g %g : %g %g %g %g\n",nstep,steppart,dt,ptrgeom->i,iter,f3c[0],f3c[1],f3c[2],f3c[3],f3c[0],f3c[1],f3c[2],f3c[3]);
+        break;
+      }
+    }
+    else if(IMPLICITERRORNORM==4){
+      if(f3d[0]<LOCALPREIMPCONV && f3d[1]<LOCALPREIMPCONV && f3d[2]<LOCALPREIMPCONV && f3d[3]<LOCALPREIMPCONV){
+        if(showmessagesheavy) dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iter PREDONE1=%d : %g %g %g %g : %g %g %g %g\n",nstep,steppart,dt,ptrgeom->i,iter,f3d[0],f3d[1],f3d[2],f3d[3],f3d[0],f3d[1],f3d[2],f3d[3]);
         break;
       }
     }
@@ -394,7 +413,7 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
     if(showmessagesheavy){
       dualfprintf(fail_file,"POSTF1: uu: %g %g %g %g : uup=%g %g %g %g\n",uu[URAD0],uu[URAD1],uu[URAD2],uu[URAD3],uup[URAD0],uup[URAD1],uup[URAD2],uup[URAD3]);
       int iii;
-      DLOOPA(iii) dualfprintf(fail_file,"f1[%d]=%26.20g\n",iii,f1[iii]);
+      DLOOPA(iii) dualfprintf(fail_file,"iii=%d f1=%26.20g f1norm=%26.20g\n",iii,f1[iii],f1norm[iii]);
     }
 
 
@@ -404,7 +423,7 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
     // get Jacobian and inversion Jacobian 
     //
     /////////
-    int failreturniJ=get_implicit_iJ(failreturnallowableuse, showmessages, showmessagesheavy, allowlocalfailurefixandnoreport, uu, uup, uu0, pin, fracdtG, realdt, ptrgeom, f1, iJ);
+    int failreturniJ=get_implicit_iJ(failreturnallowableuse, showmessages, showmessagesheavy, allowlocalfailurefixandnoreport, uu, uup, uu0, pin, fracdtG, realdt, ptrgeom, f1, f1norm, iJ);
     if(failreturniJ!=0) return(failreturniJ);
 
 
@@ -481,6 +500,9 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
         f3[ii]=(uu[ii+URAD0]-uup[ii+URAD0]);
         f3a[ii]=fabs(f3[ii]/(SMALL+fabs(uup[URAD0])));
         f3b[ii]=fabs(f3[ii]/(SMALL+MAX(fabs(uup[UU]),fabs(uup[URAD0]))));
+        f3norm[ii]=fabs(uu[ii+URAD0])+fabs(uup[ii+URAD0]);
+        f3c[ii]=fabs(f3[ii]/(SMALL+MAX(fabs(f3norm[ii]),fabs(uup[URAD0]))));
+        f3d[ii]=fabs(f3[ii]/(SMALL+MAX(fabs(uup[UU]),MAX(fabs(f3norm[ii]),fabs(uup[URAD0])))));
       }
       
       // see if |dU/U|<tolerance for all components (KORALTODO: What if one component very small and sub-dominant?)
@@ -490,9 +512,21 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
           break;
         }
       }
-      else{
+      else if(IMPLICITERRORNORM==2){
         if(f3b[0]<IMPTRYCONV && f3b[1]<IMPTRYCONV && f3b[2]<IMPTRYCONV && f3b[3]<IMPTRYCONV){
           if(showmessagesheavy) dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iterDONE1=%d : %g %g %g %g\n",nstep,steppart,dt,ptrgeom->i,iter,f3b[0],f3b[1],f3b[2],f3b[3]);
+          break;
+        }
+      }
+      else if(IMPLICITERRORNORM==3){
+        if(f3c[0]<IMPTRYCONV && f3c[1]<IMPTRYCONV && f3c[2]<IMPTRYCONV && f3c[3]<IMPTRYCONV){
+          if(showmessagesheavy) dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iterDONE1=%d : %g %g %g %g\n",nstep,steppart,dt,ptrgeom->i,iter,f3c[0],f3c[1],f3c[2],f3c[3]);
+          break;
+        }
+      }
+      else if(IMPLICITERRORNORM==4){
+        if(f3d[0]<IMPTRYCONV && f3d[1]<IMPTRYCONV && f3d[2]<IMPTRYCONV && f3d[3]<IMPTRYCONV){
+          if(showmessagesheavy) dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iterDONE1=%d : %g %g %g %g\n",nstep,steppart,dt,ptrgeom->i,iter,f3d[0],f3d[1],f3d[2],f3d[3]);
           break;
         }
       }
@@ -512,9 +546,12 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
         f3[ii]=(uu[ii+URAD0]-uup[ii+URAD0]);
         f3a[ii]=fabs(f3[ii]/(SMALL+fabs(uup[URAD0])));
         f3b[ii]=fabs(f3[ii]/(SMALL+MAX(fabs(uup[UU]),fabs(uup[URAD0]))));
+        f3norm[ii]=fabs(uu[ii+URAD0])+fabs(uup[ii+URAD0]);
+        f3c[ii]=fabs(f3[ii]/(SMALL+MAX(fabs(f3norm[ii]),fabs(uup[URAD0]))));
+        f3d[ii]=fabs(f3[ii]/(SMALL+MAX(fabs(uup[UU]),MAX(fabs(f3norm[ii]),fabs(uup[URAD0])))));
       }
 
-      // check both conditions rather than only each for IMPLICITERRORNORM
+      // check all conditions rather than only each for IMPLICITERRORNORM
       if(f3a[0]<IMPALLOWCONV && f3a[1]<IMPALLOWCONV && f3a[2]<IMPALLOWCONV && f3a[3]<IMPALLOWCONV){
         if(showmessagesheavy) dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iterDONE1=%d : %g %g %g %g\n",nstep,steppart,dt,ptrgeom->i,iter,f3a[0],f3a[1],f3a[2],f3a[3]);
         if(showmessages && debugfail>=2) dualfprintf(fail_file,"iter>IMPMAXITER=%d : iter exceeded in solve_implicit_lab().  But f3a error was ok at %g %g %g %g : checkconv=%d (if checkconv=0, could be issue!)\n",IMPMAXITER,f3a[0],f3a[1],f3a[2],f3a[3],checkconv);
@@ -525,6 +562,18 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
         if(showmessagesheavy) dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iterDONE1=%d : %g %g %g %g\n",nstep,steppart,dt,ptrgeom->i,iter,f3b[0],f3b[1],f3b[2],f3b[3]);
         if(showmessages && debugfail>=2) dualfprintf(fail_file,"iter>IMPMAXITER=%d : iter exceeded in solve_implicit_lab().  But f3b error was ok at %g %g %g %g : checkconv=%d (if checkconv=0, could be issue!)\n",IMPMAXITER,f3b[0],f3b[1],f3b[2],f3b[3],checkconv);
         // NOTE: If checkconv=0, then wasn't ready to check convergence and smallness of f3b might only mean smallness of fracuup.  So look for "checkconv=0" cases in fail output.
+        break;
+      }
+      else if(f3c[0]<IMPALLOWCONV && f3c[1]<IMPALLOWCONV && f3c[2]<IMPALLOWCONV && f3c[3]<IMPALLOWCONV){
+        if(showmessagesheavy) dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iterDONE1=%d : %g %g %g %g\n",nstep,steppart,dt,ptrgeom->i,iter,f3c[0],f3c[1],f3c[2],f3c[3]);
+        if(showmessages && debugfail>=2) dualfprintf(fail_file,"iter>IMPMAXITER=%d : iter exceeded in solve_implicit_lab().  But f3c error was ok at %g %g %g %g : checkconv=%d (if checkconv=0, could be issue!)\n",IMPMAXITER,f3c[0],f3c[1],f3c[2],f3c[3],checkconv);
+        // NOTE: If checkconv=0, then wasn't ready to check convergence and smallness of f3c might only mean smallness of fracuup.  So look for "checkconv=0" cases in fail output.
+        break;
+      }
+      else if(f3d[0]<IMPALLOWCONV && f3d[1]<IMPALLOWCONV && f3d[2]<IMPALLOWCONV && f3d[3]<IMPALLOWCONV){
+        if(showmessagesheavy) dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iterDONE1=%d : %g %g %g %g\n",nstep,steppart,dt,ptrgeom->i,iter,f3d[0],f3d[1],f3d[2],f3d[3]);
+        if(showmessages && debugfail>=2) dualfprintf(fail_file,"iter>IMPMAXITER=%d : iter exceeded in solve_implicit_lab().  But f3d error was ok at %g %g %g %g : checkconv=%d (if checkconv=0, could be issue!)\n",IMPMAXITER,f3d[0],f3d[1],f3d[2],f3d[3],checkconv);
+        // NOTE: If checkconv=0, then wasn't ready to check convergence and smallness of f3d might only mean smallness of fracuup.  So look for "checkconv=0" cases in fail output.
         break;
       }
       else{
@@ -581,10 +630,10 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
 
 //calculating approximate Jacobian: dUresid(dUrad,G(Urad))/dUrad = dy(x)/dx
 // then compute inverse Jacobian
-static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int showmessagesheavy, int allowlocalfailurefixandnoreport, FTYPE *uu, FTYPE *uup, FTYPE *uu0, FTYPE *pin, FTYPE fracdtG, FTYPE realdt, struct of_geom *ptrgeom, FTYPE *f1, FTYPE (*iJ)[NDIM])
+static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int showmessagesheavy, int allowlocalfailurefixandnoreport, FTYPE *uu, FTYPE *uup, FTYPE *uu0, FTYPE *pin, FTYPE fracdtG, FTYPE realdt, struct of_geom *ptrgeom, FTYPE *f1, FTYPE *f1norm, FTYPE (*iJ)[NDIM])
 {
   int ii,jj;
-  FTYPE J[NDIM][NDIM],f2[NDIM];
+  FTYPE J[NDIM][NDIM],f2[NDIM],f2norm[NDIM];
 
   /////////////
   //
@@ -615,7 +664,7 @@ static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int sho
  
           // get dUresid for this offset uu
           int whichcall=2;
-          failreturn=f_implicit_lab(failreturnallowableuse, whichcall,showmessages,allowlocalfailurefixandnoreport, pin,uu0,uu,fracdtG*realdt,ptrgeom,f2);
+          failreturn=f_implicit_lab(failreturnallowableuse, whichcall,showmessages,allowlocalfailurefixandnoreport, pin,uu0,uu,fracdtG*realdt,ptrgeom,f2,f2norm);
           if(failreturn){
             if(showmessages&& debugfail>=2) dualfprintf(fail_file,"f_implicit_lab for f2 failed: ii=%d jj=%d.  Trying smaller localIMPEPS=%g (giving del=%g) to %g\n",ii,jj,localIMPEPS,del,localIMPEPS*FRACIMPEPSCHANGE);
             localIMPEPS*=FRACIMPEPSCHANGE;

@@ -90,8 +90,10 @@
 
 // 1 : normalize radiation error by only radiation thermal energy
 // 2 : normalize radiation error by max(radiation,gas) thermal energy
+// 3 : normalize using radiation URAD0 but also fnorm from actual f
+// 4 : URAD0, fnorm, and UU
 // normalize error.  Can't expect radiation to be relatively accurate to itself if UU>>URAD0 due to G between them
-#define IMPLICITERRORNORM 2
+#define IMPLICITERRORNORM 4
 
 // as above, but for del
 // apparently 2 doesn't make sense for this.  Too large change for rad quantities.
