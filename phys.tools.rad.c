@@ -376,9 +376,17 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
       f3a[ii]=fabs(f1[ii]/(SMALL+fabs(uu0[URAD0])));
       f3b[ii]=fabs(f1[ii]/(SMALL+MAX(fabs(uu0[UU]),fabs(uu0[URAD0]))));
     }
-    if(f3a[0]<LOCALPREIMPCONV && f3a[1]<LOCALPREIMPCONV && f3a[2]<LOCALPREIMPCONV && f3a[3]<LOCALPREIMPCONV){
-      if(showmessagesheavy) dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iter PREDONE1=%d : %g %g %g %g : %g %g %g %g\n",nstep,steppart,dt,ptrgeom->i,iter,f3a[0],f3a[1],f3a[2],f3a[3],f3b[0],f3b[1],f3b[2],f3b[3]);
-      break;
+    if(IMPLICITERRORNORM==1){
+      if(f3a[0]<LOCALPREIMPCONV && f3a[1]<LOCALPREIMPCONV && f3a[2]<LOCALPREIMPCONV && f3a[3]<LOCALPREIMPCONV){
+        if(showmessagesheavy) dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iter PREDONE1=%d : %g %g %g %g : %g %g %g %g\n",nstep,steppart,dt,ptrgeom->i,iter,f3a[0],f3a[1],f3a[2],f3a[3],f3b[0],f3b[1],f3b[2],f3b[3]);
+        break;
+      }
+    }
+    else if(IMPLICITERRORNORM==2){
+      if(f3b[0]<LOCALPREIMPCONV && f3b[1]<LOCALPREIMPCONV && f3b[2]<LOCALPREIMPCONV && f3b[3]<LOCALPREIMPCONV){
+        if(showmessagesheavy) dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iter PREDONE1=%d : %g %g %g %g : %g %g %g %g\n",nstep,steppart,dt,ptrgeom->i,iter,f3a[0],f3a[1],f3a[2],f3a[3],f3b[0],f3b[1],f3b[2],f3b[3]);
+        break;
+      }
     }
 
 
@@ -476,9 +484,17 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
       }
       
       // see if |dU/U|<tolerance for all components (KORALTODO: What if one component very small and sub-dominant?)
-      if(f3a[0]<IMPTRYCONV && f3a[1]<IMPTRYCONV && f3a[2]<IMPTRYCONV && f3a[3]<IMPTRYCONV){
-        if(showmessagesheavy) dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iterDONE1=%d : %g %g %g %g\n",nstep,steppart,dt,ptrgeom->i,iter,f3a[0],f3a[1],f3a[2],f3a[3]);
-        break;
+      if(IMPLICITERRORNORM==1){
+        if(f3a[0]<IMPTRYCONV && f3a[1]<IMPTRYCONV && f3a[2]<IMPTRYCONV && f3a[3]<IMPTRYCONV){
+          if(showmessagesheavy) dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iterDONE1=%d : %g %g %g %g\n",nstep,steppart,dt,ptrgeom->i,iter,f3a[0],f3a[1],f3a[2],f3a[3]);
+          break;
+        }
+      }
+      else{
+        if(f3b[0]<IMPTRYCONV && f3b[1]<IMPTRYCONV && f3b[2]<IMPTRYCONV && f3b[3]<IMPTRYCONV){
+          if(showmessagesheavy) dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iterDONE1=%d : %g %g %g %g\n",nstep,steppart,dt,ptrgeom->i,iter,f3b[0],f3b[1],f3b[2],f3b[3]);
+          break;
+        }
       }
     }
  
@@ -498,6 +514,7 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
         f3b[ii]=fabs(f3[ii]/(SMALL+MAX(fabs(uup[UU]),fabs(uup[URAD0]))));
       }
 
+      // check both conditions rather than only each for IMPLICITERRORNORM
       if(f3a[0]<IMPALLOWCONV && f3a[1]<IMPALLOWCONV && f3a[2]<IMPALLOWCONV && f3a[3]<IMPALLOWCONV){
         if(showmessagesheavy) dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iterDONE1=%d : %g %g %g %g\n",nstep,steppart,dt,ptrgeom->i,iter,f3a[0],f3a[1],f3a[2],f3a[3]);
         if(showmessages && debugfail>=2) dualfprintf(fail_file,"iter>IMPMAXITER=%d : iter exceeded in solve_implicit_lab().  But f3a error was ok at %g %g %g %g : checkconv=%d (if checkconv=0, could be issue!)\n",IMPMAXITER,f3a[0],f3a[1],f3a[2],f3a[3],checkconv);
@@ -517,7 +534,7 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
     }
 
     if(showmessagesheavy){
-      dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iter=%d : %g %g %g %g\n",nstep,steppart,dt,ptrgeom->i,iter,f3a[0],f3a[1],f3a[2],f3a[3]);
+      dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iter=%d : %g %g %g %g : %g %g %g %g\n",nstep,steppart,dt,ptrgeom->i,iter,f3a[0],f3a[1],f3a[2],f3a[3],f3b[0],f3b[1],f3b[2],f3b[3]);
       dualfprintf(fail_file,"F3CHECK: uu: %g %g %g %g : uup=%g %g %g %g\n",uu[URAD0],uu[URAD1],uu[URAD2],uu[URAD3],uup[URAD0],uup[URAD1],uup[URAD2],uup[URAD3]);
     }
   }// end do
