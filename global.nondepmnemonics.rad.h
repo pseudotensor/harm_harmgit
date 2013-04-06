@@ -52,7 +52,21 @@
 
 
 // IMPLICIT SOLVER TOLERANCES or DERIVATIVE SIZES
-#define IMPEPS (1.e-8) // for used implicit solver (needs to be chosen more generally.  KORALTODO: 1E-8 too small in general).  Could start out with higher, and allow current checks to avoid inversion failure.
+ // for used implicit solver (needs to be chosen more generally.  KORALTODO: 1E-8 too small in general).  Could start out with higher, and allow current checks to avoid inversion failure.
+//#define IMPEPS (1.e-8)
+// use large, and it'll go smaller if no inversion, but can't start out with too small since then Jac will have diag() terms =0
+#if((REALTYPE==DOUBLETYPE)||(REALTYPE==FLOATTYPE))
+#define IMPEPS (MY1EM4)
+#elif(REALTYPE==LONGDOUBLETYPE)
+#define IMPEPS (MY1EM6)
+#endif
+
+// maximum EPS for getting Jacobian
+#define MAXIMPEPS (0.3)
+
+// maximum number of times to (typically) increase EPS in getting Jacobian for implicit scheme.  This might generally override MAXIMPEPS.
+#define MAXJACITER (10)
+
 #if(0)
 // RADPULSEPLANAR: ~5 f1iters and ~8 iters on average
 // RADTUBE NTUBE=31: ~0 f1iters and ~5 iters
@@ -71,6 +85,7 @@
 #define IMPTRYCONV (1.e-6)  // for used implicit solver
 #define IMPALLOWCONV (1.e-3)  // for used implicit solver
 #endif
+
 #define IMPMAXITER (200) // for used implicit solver
 
 

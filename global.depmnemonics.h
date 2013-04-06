@@ -500,6 +500,8 @@ god=deathadflkjasdflkjasdlfkja242424
 
   // for finite differences.
   // If one uses (say) 1E-5 for DX and has (Vh-Vl)/(Xh-Xl), then even if Xh-Xl is machine representable, Xh and Xl may not be.
+#define MY1EM4 (1.0/(2.0*2.0*2.0*2.0*2.0*2.0*2.0*2.0*2.0*2.0*2.0*2.0*2.0)) // 1/2^{13} \approx 1.2207E-4\sim 1E-4.
+
 #define MY1EM5 (1.0/(2.0*2.0*2.0*2.0*2.0*2.0*2.0*2.0*2.0*2.0*2.0*2.0*2.0*2.0*2.0*2.0*2.0)) // 1/2^{17} \approx 7.6E-6\sim 1E-5.
 
 #define MY1EM6 (1.0/(2.0*2.0*2.0*2.0*2.0*2.0*2.0*2.0*2.0*2.0*2.0*2.0*2.0*2.0*2.0*2.0*2.0*2.0*2.0*2.0)) // 1/2^{20} \approx 7.6E-6\sim 1E-6.

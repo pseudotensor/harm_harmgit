@@ -1157,7 +1157,7 @@ int init_global(void)
     // tf = 100*DTdumpgen[0]; // 100 dumps(?)
     tf = 1000*DTdumpgen[0]; // koral in default setup does 1000 dumps
 
-    // DODIAGEVERYSUBSTEP = 1;
+    //    DODIAGEVERYSUBSTEP = 1;
 
   }
 
@@ -2016,6 +2016,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 #if(WHICHPROBLEM==RADNT || WHICHPROBLEM==RADFLATDISK)
 
 #define KAPPAUSER(rho,T) (rho*KAPPA_ES_CODE(rho,T)/1E14*0.1) // wierd use of kappa_{es} in koral
+//#define KAPPAUSER(rho,T) (rho*KAPPA_ES_CODE(rho,T)/1E14*0.0)
 #define KAPPAESUSER(rho,T) (0.0)
 
 #endif
