@@ -105,6 +105,7 @@ FTYPE RADNT_KKK;
 FTYPE RADNT_ELL;
 FTYPE RADNT_UTPOT;
 FTYPE RADNT_RHOATMMIN;
+FTYPE RADNT_RHODONUT;
 FTYPE RADNT_UINTATMMIN;
 FTYPE RADNT_ERADATMMIN;
 FTYPE RADNT_NODONUT;
@@ -1077,6 +1078,7 @@ int init_global(void)
     RADNT_UTPOT=.98; // KORALTODO: where or when is this really used in koral??
     //RADNT_RHOATMMIN=KORAL2HARMRHO(1.e-4);
     RADNT_RHOATMMIN= KORAL2HARMRHO(1.e-2);
+    RADNT_RHODONUT=100.0*RADNT_RHOATMMIN;
     RADNT_TGASATMMIN = 1.e11/TEMPBAR;
     RADNT_UINTATMMIN= (calc_PEQ_ufromTrho(RADNT_TGASATMMIN,RADNT_RHOATMMIN));
     RADNT_TRADATMMIN = 1.e9/TEMPBAR;
@@ -1086,7 +1088,7 @@ int init_global(void)
     RADNT_ROUT=2.0;
     RADNT_OMSCALE=1.0;
 
-    trifprintf("RADNT_RHOATMMIN=%g RADNT_UINTATMMIN=%g RADNT_ERADATMMIN=%g\n",RADNT_RHOATMMIN,RADNT_UINTATMMIN,RADNT_ERADATMMIN);
+    trifprintf("RADNT_RHOATMMIN=%g RADNT_RHOATMMIN=%g RADNT_UINTATMMIN=%g RADNT_ERADATMMIN=%g\n",RADNT_RHOATMMIN,RADNT_RHOATMMIN,RADNT_UINTATMMIN,RADNT_ERADATMMIN);
 
 
 
@@ -1604,7 +1606,7 @@ int init_defcoord(void)
     Rin=RADNT_MINX;
     Rout=RADNT_MAXX;
 
-    Rin_array[2]=0.0*Pi/4.;
+    Rin_array[2]=0.0*Pi/4.; // but koral currently uses 0.5*Pi/4
     Rout_array[2]=Pi/2.;
     Rin_array[3]=-1.;
     Rout_array[3]=1.;
@@ -2023,7 +2025,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 
 #if(WHICHPROBLEM==RADDONUT)
 // kappa can't be zero or else flux will be nan
-#define KAPPAUSER(rho,T) (rho*KAPPA_ES_CODE(rho,T)/1E14*0.1) // wierd use of kappa_{es} in koral
+#define KAPPAUSER(rho,T) (rho*KAPPA_ES_CODE(rho,T)/1E14*1.0) // wierd use of kappa_{es} in koral
 #define KAPPAESUSER(rho,T) (0.0)
 
 #endif
@@ -3230,6 +3232,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
 
 
 
+// analytical solution for RADDONUT donut
 // get full radiative donut solution assuming pp has atmosphere
 // input pp[PRAD0-PRAD3] are fluid frame orthonormal values
 int get_full_donut(int whichvel, int whichcoord, FTYPE *pp,FTYPE *X, FTYPE *V,struct of_geom *ptrgeom)
@@ -3265,7 +3268,7 @@ int get_full_donut(int whichvel, int whichcoord, FTYPE *pp,FTYPE *X, FTYPE *V,st
 
     FTYPE h=-1./ut;
     FTYPE eps=(h-1.)/gam;
-    rho=pow(eps*(gam-1.)/RADNT_KKK,1./(gam-1.));
+    rho=RADNT_RHODONUT*pow(eps*(gam-1.)/RADNT_KKK,1./(gam-1.));
     uint=rho*eps;
     uphi=-RADNT_ELL*ut;
     uT=(ptrgeom->gcon[GIND(0,0)])*ut+(ptrgeom->gcon[GIND(0,3)])*uphi;
@@ -3433,7 +3436,7 @@ int donut_analytical_solution(FTYPE *pp,FTYPE *X, FTYPE *V,struct of_geom *ptrge
 
   FTYPE h=-1./ut;
   eps=(h-1.)/gam;
-  rho=pow(eps*(gam-1.)/RADNT_KKK,1./(gam-1.));
+  rho=RADNT_RHODONUT*pow(eps*(gam-1.)/RADNT_KKK,1./(gam-1.));
   uint=rho*eps;
   uphi=-RADNT_ELL*ut;
   uT=(ptrgeom->gcon[GIND(0,0)])*ut+(ptrgeom->gcon[GIND(0,3)])*uphi;

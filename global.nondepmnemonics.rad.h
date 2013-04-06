@@ -88,15 +88,17 @@
 
 #define IMPMAXITER (200) // for used implicit solver
 
+// 1 : normalize radiation error by only radiation thermal energy
+// 2 : normalize radiation error by max(radiation,gas) thermal energy
+// normalize error.  Can't expect radiation to be relatively accurate to itself if UU>>URAD0 due to G between them
+#define IMPLICITERRORNORM 2
 
-#define MAXSUBCYCLES (2000) // for explicit sub-cycles
+// as above, but for del
+// apparently 2 doesn't make sense for this.  Too large change for rad quantities.
+#define IMPLICITDELNORM 1
 
+#define MAXSUBCYCLES (2000) // for explicit sub-cycles when doing reversion
 
-// UNUSED NUMERICAL STUFF
-#define RADEPS (1.e-6) // for unused numerical inversion stuff
-#define RADCONV (1.e-7) // for unused numerical inversion stuff
-#define PRADEPS (1.e-6)  // for unused numerical inversion stuff
-#define PRADCONV (1.e-8)  // for unused numerical inversion stuff
 
 
 #define GAMMASMALLLIMIT (1.0-1E-10) // at what point above which assume gamma^2=1.0

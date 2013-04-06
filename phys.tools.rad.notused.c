@@ -1,3 +1,10 @@
+
+// UNUSED NUMERICAL STUFF
+#define RADEPS (1.e-6) // for unused numerical inversion stuff
+#define RADCONV (1.e-7) // for unused numerical inversion stuff
+#define PRADEPS (1.e-6)  // for unused numerical inversion stuff
+#define PRADCONV (1.e-8)  // for unused numerical inversion stuff
+
 /*****************************************************************/
 /*****************************************************************/
 /*****************************************************************/

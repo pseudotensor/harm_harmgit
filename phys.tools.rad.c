@@ -42,7 +42,7 @@ static int calc_rad_lambda(FTYPE *pp, struct of_geom *ptrgeom, FTYPE kappa, FTYP
 
 
 
-
+static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int showmessagesheavy, int allowlocalfailurefixandnoreport, FTYPE *uu, FTYPE *uup, FTYPE *uu0, FTYPE *pin, FTYPE fracdtG, FTYPE realdt, struct of_geom *ptrgeom, FTYPE *f1, FTYPE (*iJ)[NDIM]);
 
 
 
@@ -188,15 +188,16 @@ static FTYPE compute_dt(FTYPE *CUf, FTYPE dtin)
 static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother ,FTYPE (*dUcomp)[NPR])
 {
   int i1,i2,i3,iv,ii,jj,pliter,sc;
-  FTYPE J[NDIM][NDIM],iJ[NDIM][NDIM];
+  FTYPE iJ[NDIM][NDIM];
   FTYPE uu0[NPR],uup[NPR],uupp[NPR],uu[NPR]; 
   FTYPE uuporig[NPR],uu0orig[NPR];
-  FTYPE f1[NDIM],f2[NDIM],f3[NDIM],x[NDIM];
+  FTYPE f1[NDIM],f3[NDIM],f3a[NDIM],f3b[NDIM],x[NDIM];
   FTYPE realdt;
   FTYPE radsource[NPR], deltas[NDIM]; 
   int pl;
   static long long int numimplicits=0;
   static long long int numoff1iter=0,numofiter=0;
+
 
 
 #if(0)
@@ -290,12 +291,19 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
   do{
     iter++;
     
+
+
     //vector of conserved at the previous two iterations
     PLOOP(pliter,pl)  uupp[pl]=uup[pl]; // uupp will have solution for inversion: P(uupp)
     PLOOP(pliter,pl)  uup[pl]=uu[pl]; // uup will not necessarily have P(uup) because uu used Newton step.
     PLOOP(pliter,pl)  uuporig[pl]=uu[pl];
     
+
+    /////////////////
+    //
     //values at zero state
+    //
+    /////////////////
     for(f1iter=0;f1iter<MAXF1TRIES;f1iter++){
       int whichcall=1;
       failreturn=f_implicit_lab(failreturnallowableuse, whichcall,showmessages, allowlocalfailurefixandnoreport, pin, uu0, uu, fracdtG*realdt, ptrgeom, f1); // modifies uu
@@ -365,11 +373,11 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
     // KORALTODO: This isn't a completely general error check since force might be large for fluid that needs itself to have more accuracy, but if using ~NUMEPSILON, won't resolve 4-force of radiation on fluid to better than that.
     FTYPE LOCALPREIMPCONV=(10.0*NUMEPSILON); // more strict than later tolerance
     DLOOPA(ii){
-      f3[ii]=f1[ii];
-      f3[ii]=fabs(f3[ii]/uu0[URAD0]);
+      f3a[ii]=fabs(f1[ii]/(SMALL+fabs(uu0[URAD0])));
+      f3b[ii]=fabs(f1[ii]/(SMALL+MAX(fabs(uu0[UU]),fabs(uu0[URAD0]))));
     }
-    if(f3[0]<LOCALPREIMPCONV && f3[1]<LOCALPREIMPCONV && f3[2]<LOCALPREIMPCONV && f3[3]<LOCALPREIMPCONV){
-      if(showmessagesheavy) dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iter PREDONE1=%d : %g %g %g %g\n",nstep,steppart,dt,ptrgeom->i,iter,f3[0],f3[1],f3[2],f3[3]);
+    if(f3a[0]<LOCALPREIMPCONV && f3a[1]<LOCALPREIMPCONV && f3a[2]<LOCALPREIMPCONV && f3a[3]<LOCALPREIMPCONV){
+      if(showmessagesheavy) dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iter PREDONE1=%d : %g %g %g %g : %g %g %g %g\n",nstep,steppart,dt,ptrgeom->i,iter,f3a[0],f3a[1],f3a[2],f3a[3],f3b[0],f3b[1],f3b[2],f3b[3]);
       break;
     }
 
@@ -383,97 +391,13 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
 
 
     
-    /////////////
+    /////////
     //
-    //calculating approximate Jacobian: dUresid(dUrad,G(Urad))/dUrad = dy(x)/dx
+    // get Jacobian and inversion Jacobian 
     //
-    /////////////
-
-    int fulljaciter=0;
-    while(1){ // ensuring that Jacobian is non-singular if only because del too small (and then if singular, increase del)
-
-      FTYPE localIMPEPS=IMPEPS;
-      FTYPE FRACIMPEPSCHANGE=0.1;
-      FTYPE del;
-      DLOOPA(ii){
-        DLOOPA(jj){
-
-          while(1){
-
-            //          if(uup[jj+URAD0]==0.) del=localIMPEPS*fabs(uup[URAD0]);
-            del=localIMPEPS*MAX(fabs(uup[jj+URAD0]),fabs(uup[URAD0]));
-            // when |URAD0|>>|URAD1|, then can't get better than machine error on URAD0, not URAD1, so using small del just for URAD1 makes no sense.
-
-            // offset uu (KORALTODO: How to ensure this doesn't have machine precision problems or is good enough difference?)
-            uu[jj+URAD0]=uup[jj+URAD0]-del;
- 
-            // get dUresid for this offset uu
-            int whichcall=2;
-            failreturn=f_implicit_lab(failreturnallowableuse, whichcall,showmessages,allowlocalfailurefixandnoreport, pin,uu0,uu,fracdtG*realdt,ptrgeom,f2);
-            if(failreturn){
-              if(showmessages&& debugfail>=2) dualfprintf(fail_file,"f_implicit_lab for f2 failed: ii=%d jj=%d.  Trying smaller localIMPEPS=%g (giving del=%g) to %g\n",ii,jj,localIMPEPS,del,localIMPEPS*FRACIMPEPSCHANGE);
-              localIMPEPS*=FRACIMPEPSCHANGE;
-              if(localIMPEPS<NUMEPSILON*10.0){
-                if(debugfail>=2) dualfprintf(fail_file,"f_implicit_lab for f2 failed: ii=%d jj=%d with localIMPEPS=%g (giving del=%g)\n",ii,jj,localIMPEPS,del);
-                return(1); // can't go below machine precision for difference else will be 0-0
-              }
-            }
-            else{
-              // didn't fail
-              break;
-            }
-          }
-
- 
-          if(showmessagesheavy){
-            dualfprintf(fail_file,"JAC: uu: %26.20g %26.20g %26.20g %26.20g : uup=%26.20g %26.20g %26.20g %26.20g (del=%26.20g localIMPEPS=%26.20g)\n",uu[URAD0],uu[URAD1],uu[URAD2],uu[URAD3],uup[URAD0],uup[URAD1],uup[URAD2],uup[URAD3],del,localIMPEPS);
-            dualfprintf(fail_file,"i=%d ii=%d jj=%d f2: %26.20g %26.20g %26.20g %26.20g\n",ptrgeom->i,ii,jj,f2[0],f2[1],f2[2],f2[3]);
-          }
-
-          // get Jacobian (uncentered, ok?  Probably actually best.  Don't want to go back along unknown trajectory in U that might lead to bad P(U))
-          J[ii][jj]=(f2[ii] - f1[ii])/(uu[jj+URAD0]-uup[jj+URAD0]);
-
-          // restore uu after getting changed by f_implicit_lab(f2)
-          uu[jj+URAD0]=uup[jj+URAD0];
-        }
-      }
-
-
-      if(showmessagesheavy){
-        dualfprintf(fail_file,"POSTJAC: uu: %g %g %g %g : uup=%g %g %g %g\n",uu[URAD0],uu[URAD1],uu[URAD2],uu[URAD3],uup[URAD0],uup[URAD1],uup[URAD2],uup[URAD3]);
-        int iii,jjj;
-        DLOOP(iii,jjj) dualfprintf(fail_file,"J[%d][%d]=%g\n",iii,jjj,J[iii][jjj]);
-      }
-
-    
-
-      /////////////////////
-      //
-      //invert Jacobian
-      //
-      /////////////////////
-      failreturn=inverse_44matrix(J,iJ);
-      if(failreturn){
-        // try increasing localIMPEPS
-        localIMPEPS/=FRACIMPEPSCHANGE;
-        if(localIMPEPS>MAXIMPEPS){
-          if(debugfail>=2) dualfprintf(fail_file,"f_implicit_lab for f2 failed to be different enough from f1 and gave singular Jacobian: localIMPEPS=%g (giving del=%g)\n",localIMPEPS,del);
-          return(1); // can't expect good derivative above ~0.3, so just return as failure of implicit method.
-        }
-        else{
-          if(debugfail>=2) dualfprintf(fail_file,"inverse_44matrix(J,iJ) failed, trying localIMPEPS=%g\n",localIMPEPS);
-        }
-      }
-      else break; // good Jacobian
-
-      fulljaciter++;
-      if(fulljaciter>MAXJACITER){
-        // this is a catch in case bouncing back and forth between singular Jac and no inversion for P(U) to get f2
-        if(debugfail>=2) dualfprintf(fail_file,"Failed to get Jacobian with fulljaciter=%d with localIMPEPS=%g (giving del=%g)\n",localIMPEPS,del);
-        return(1);
-      }
-    }// end over ensuring Jacobian is non-singular for the given del
- 
+    /////////
+    int failreturniJ=get_implicit_iJ(failreturnallowableuse, showmessages, showmessagesheavy, allowlocalfailurefixandnoreport, uu, uup, uu0, pin, fracdtG, realdt, ptrgeom, f1, iJ);
+    if(failreturniJ!=0) return(failreturniJ);
 
 
     /////////
@@ -547,12 +471,13 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
       //test convergence using |dU/U|
       DLOOPA(ii){
         f3[ii]=(uu[ii+URAD0]-uup[ii+URAD0]);
-        f3[ii]=fabs(f3[ii]/uup[URAD0]);
+        f3a[ii]=fabs(f3[ii]/(SMALL+fabs(uup[URAD0])));
+        f3b[ii]=fabs(f3[ii]/(SMALL+MAX(fabs(uup[UU]),fabs(uup[URAD0]))));
       }
       
       // see if |dU/U|<tolerance for all components (KORALTODO: What if one component very small and sub-dominant?)
-      if(f3[0]<IMPTRYCONV && f3[1]<IMPTRYCONV && f3[2]<IMPTRYCONV && f3[3]<IMPTRYCONV){
-        if(showmessagesheavy) dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iterDONE1=%d : %g %g %g %g\n",nstep,steppart,dt,ptrgeom->i,iter,f3[0],f3[1],f3[2],f3[3]);
+      if(f3a[0]<IMPTRYCONV && f3a[1]<IMPTRYCONV && f3a[2]<IMPTRYCONV && f3a[3]<IMPTRYCONV){
+        if(showmessagesheavy) dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iterDONE1=%d : %g %g %g %g\n",nstep,steppart,dt,ptrgeom->i,iter,f3a[0],f3a[1],f3a[2],f3a[3]);
         break;
       }
     }
@@ -569,23 +494,30 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
       //test convergence using |dU/U|
       DLOOPA(ii){
         f3[ii]=(uu[ii+URAD0]-uup[ii+URAD0]);
-        f3[ii]=fabs(f3[ii]/uup[URAD0]);
+        f3a[ii]=fabs(f3[ii]/(SMALL+fabs(uup[URAD0])));
+        f3b[ii]=fabs(f3[ii]/(SMALL+MAX(fabs(uup[UU]),fabs(uup[URAD0]))));
       }
 
-      if(f3[0]<IMPALLOWCONV && f3[1]<IMPALLOWCONV && f3[2]<IMPALLOWCONV && f3[3]<IMPALLOWCONV){
-        if(showmessagesheavy) dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iterDONE1=%d : %g %g %g %g\n",nstep,steppart,dt,ptrgeom->i,iter,f3[0],f3[1],f3[2],f3[3]);
-        if(showmessages && debugfail>=2) dualfprintf(fail_file,"iter>IMPMAXITER=%d : iter exceeded in solve_implicit_lab().  But error was ok at %g %g %g %g : checkconv=%d (if checkconv=0, could be issue!)\n",IMPMAXITER,f3[0],f3[1],f3[2],f3[3],checkconv);
-        // NOTE: If checkconv=0, then wasn't ready to check convergence and smallness of f3 might only mean smallness of fracuup.  So look for "checkconv=0" cases in fail output.
+      if(f3a[0]<IMPALLOWCONV && f3a[1]<IMPALLOWCONV && f3a[2]<IMPALLOWCONV && f3a[3]<IMPALLOWCONV){
+        if(showmessagesheavy) dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iterDONE1=%d : %g %g %g %g\n",nstep,steppart,dt,ptrgeom->i,iter,f3a[0],f3a[1],f3a[2],f3a[3]);
+        if(showmessages && debugfail>=2) dualfprintf(fail_file,"iter>IMPMAXITER=%d : iter exceeded in solve_implicit_lab().  But f3a error was ok at %g %g %g %g : checkconv=%d (if checkconv=0, could be issue!)\n",IMPMAXITER,f3a[0],f3a[1],f3a[2],f3a[3],checkconv);
+        // NOTE: If checkconv=0, then wasn't ready to check convergence and smallness of f3a might only mean smallness of fracuup.  So look for "checkconv=0" cases in fail output.
+        break;
+      }
+      else if(f3b[0]<IMPALLOWCONV && f3b[1]<IMPALLOWCONV && f3b[2]<IMPALLOWCONV && f3b[3]<IMPALLOWCONV){
+        if(showmessagesheavy) dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iterDONE1=%d : %g %g %g %g\n",nstep,steppart,dt,ptrgeom->i,iter,f3b[0],f3b[1],f3b[2],f3b[3]);
+        if(showmessages && debugfail>=2) dualfprintf(fail_file,"iter>IMPMAXITER=%d : iter exceeded in solve_implicit_lab().  But f3b error was ok at %g %g %g %g : checkconv=%d (if checkconv=0, could be issue!)\n",IMPMAXITER,f3b[0],f3b[1],f3b[2],f3b[3],checkconv);
+        // NOTE: If checkconv=0, then wasn't ready to check convergence and smallness of f3b might only mean smallness of fracuup.  So look for "checkconv=0" cases in fail output.
         break;
       }
       else{
-        if(debugfail>=2) dualfprintf(fail_file,"iter>IMPMAXITER=%d : iter exceeded in solve_implicit_lab().  Bad error: %g %g %g %g\n",IMPMAXITER,f3[0],f3[1],f3[2],f3[3]);
+        if(debugfail>=2) dualfprintf(fail_file,"iter>IMPMAXITER=%d : iter exceeded in solve_implicit_lab().  Bad error: %g %g %g %g\n",IMPMAXITER,f3a[0],f3a[1],f3a[2],f3a[3]);
         return(1);
       }
     }
 
     if(showmessagesheavy){
-      dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iter=%d : %g %g %g %g\n",nstep,steppart,dt,ptrgeom->i,iter,f3[0],f3[1],f3[2],f3[3]);
+      dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iter=%d : %g %g %g %g\n",nstep,steppart,dt,ptrgeom->i,iter,f3a[0],f3a[1],f3a[2],f3a[3]);
       dualfprintf(fail_file,"F3CHECK: uu: %g %g %g %g : uup=%g %g %g %g\n",uu[URAD0],uu[URAD1],uu[URAD2],uu[URAD3],uup[URAD0],uup[URAD1],uup[URAD2],uup[URAD3]);
     }
   }// end do
@@ -623,6 +555,141 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
   return(0);
   
 }
+
+
+
+
+
+
+
+//calculating approximate Jacobian: dUresid(dUrad,G(Urad))/dUrad = dy(x)/dx
+// then compute inverse Jacobian
+static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int showmessagesheavy, int allowlocalfailurefixandnoreport, FTYPE *uu, FTYPE *uup, FTYPE *uu0, FTYPE *pin, FTYPE fracdtG, FTYPE realdt, struct of_geom *ptrgeom, FTYPE *f1, FTYPE (*iJ)[NDIM])
+{
+  int ii,jj;
+  FTYPE J[NDIM][NDIM],f2[NDIM];
+
+  /////////////
+  //
+  //
+  /////////////
+
+  int failreturn;
+  int fulljaciter=0;
+  FTYPE FRACIMPEPSCHANGE=0.1;
+  FTYPE del;
+  FTYPE IMPEPSSTART=IMPEPS;
+  while(1){ // ensuring that Jacobian is non-singular if only because del too small (and then if singular, increase del)
+
+    FTYPE localIMPEPS=IMPEPSSTART; // start with fresh del
+
+    DLOOPA(ii){
+      DLOOPA(jj){
+
+        while(1){
+
+          //          if(uup[jj+URAD0]==0.) del=localIMPEPS*fabs(uup[URAD0]);
+          // when |URAD0|>>|URAD1|, then can't get better than machine error on URAD0, not URAD1, so using small del just for URAD1 makes no sense, so avoid above
+          del = localIMPEPS*                  MAX(fabs(uup[jj+URAD0]),fabs(uup[URAD0]))  ;
+          //else if(IMPLICITDELNORM==2) del = localIMPEPS*MAX(fabs(uup[UU]),MAX(fabs(uup[jj+URAD0]),fabs(uup[URAD0])) );
+          
+          // offset uu (KORALTODO: How to ensure this doesn't have machine precision problems or is good enough difference?)
+          uu[jj+URAD0]=uup[jj+URAD0]-del;
+ 
+          // get dUresid for this offset uu
+          int whichcall=2;
+          failreturn=f_implicit_lab(failreturnallowableuse, whichcall,showmessages,allowlocalfailurefixandnoreport, pin,uu0,uu,fracdtG*realdt,ptrgeom,f2);
+          if(failreturn){
+            if(showmessages&& debugfail>=2) dualfprintf(fail_file,"f_implicit_lab for f2 failed: ii=%d jj=%d.  Trying smaller localIMPEPS=%g (giving del=%g) to %g\n",ii,jj,localIMPEPS,del,localIMPEPS*FRACIMPEPSCHANGE);
+            localIMPEPS*=FRACIMPEPSCHANGE;
+            if(localIMPEPS<NUMEPSILON*10.0){
+              if(debugfail>=2) dualfprintf(fail_file,"f_implicit_lab for f2 failed: ii=%d jj=%d with localIMPEPS=%g (giving del=%g)\n",ii,jj,localIMPEPS,del);
+              return(1); // can't go below machine precision for difference else will be 0-0
+            }
+          }
+          else{
+            // didn't fail
+            break;
+          }
+        }
+
+ 
+        if(showmessagesheavy){
+          dualfprintf(fail_file,"JAC: uu: %26.20g %26.20g %26.20g %26.20g : uup=%26.20g %26.20g %26.20g %26.20g (del=%26.20g localIMPEPS=%26.20g)\n",uu[URAD0],uu[URAD1],uu[URAD2],uu[URAD3],uup[URAD0],uup[URAD1],uup[URAD2],uup[URAD3],del,localIMPEPS);
+          dualfprintf(fail_file,"i=%d ii=%d jj=%d f2: %26.20g %26.20g %26.20g %26.20g\n",ptrgeom->i,ii,jj,f2[0],f2[1],f2[2],f2[3]);
+        }
+
+        // get Jacobian (uncentered, ok?  Probably actually best.  Don't want to go back along unknown trajectory in U that might lead to bad P(U))
+        J[ii][jj]=(f2[ii] - f1[ii])/(uu[jj+URAD0]-uup[jj+URAD0]);
+
+        // restore uu after getting changed by f_implicit_lab(f2)
+        uu[jj+URAD0]=uup[jj+URAD0];
+      }
+    }
+
+
+    if(showmessagesheavy){
+      dualfprintf(fail_file,"POSTJAC: uu: %26.20g %26.20g %26.20g %26.20g : uup=%26.20g %26.20g %26.20g %26.20g\n",uu[URAD0],uu[URAD1],uu[URAD2],uu[URAD3],uup[URAD0],uup[URAD1],uup[URAD2],uup[URAD3]);
+      int iii,jjj;
+      DLOOP(iii,jjj) dualfprintf(fail_file,"J[%d][%d]=%26.20g\n",iii,jjj,J[iii][jjj]);
+    }
+
+    
+
+    /////////////////////
+    //
+    //invert Jacobian
+    //
+    /////////////////////
+    failreturn=inverse_44matrix(J,iJ);
+
+
+    if(failreturn){
+      // try increasing localIMPEPS
+      IMPEPSSTART/=FRACIMPEPSCHANGE;
+      int condnotdiff;
+      condnotdiff=IMPEPSSTART > MAXIMPEPS;
+
+      if(condnotdiff){ // KORALTODO: But error relative to uu needs to be accounted for!
+        if(debugfail>=2) dualfprintf(fail_file,"f_implicit_lab for f2 failed to be different enough from f1 and gave singular Jacobian: IMPEPSSTART=%g (giving del=%g)\n",IMPEPSSTART,del);
+        if(1||showmessagesheavy){
+          dualfprintf(fail_file,"POSTJAC1: uu: %26.20g %26.20g %26.20g %26.20g : uup=%26.20g %26.20g %26.20g %26.20g\n",uu[URAD0],uu[URAD1],uu[URAD2],uu[URAD3],uup[URAD0],uup[URAD1],uup[URAD2],uup[URAD3]);
+          int iii,jjj;
+          DLOOP(iii,jjj) dualfprintf(fail_file,"J[%d][%d]=%26.20g\n",iii,jjj,J[iii][jjj]);
+        }
+        return(1); // can't expect good derivative above ~0.3, so just return as failure of implicit method.
+      }
+      else{
+        if(debugfail>=2) dualfprintf(fail_file,"inverse_44matrix(J,iJ) failed, trying IMPEPSSTART=%g :: ijk=%d %d %d\n",IMPEPSSTART,ptrgeom->i,ptrgeom->j,ptrgeom->k);
+        if(1||showmessagesheavy){
+          dualfprintf(fail_file,"POSTJAC2: uu: %26.20g %26.20g %26.20g %26.20g : uup=%26.20g %26.20g %26.20g %26.20g\n",uu[URAD0],uu[URAD1],uu[URAD2],uu[URAD3],uup[URAD0],uup[URAD1],uup[URAD2],uup[URAD3]);
+          int iii,jjj;
+          DLOOP(iii,jjj) dualfprintf(fail_file,"J[%d][%d]=%26.20g\n",iii,jjj,J[iii][jjj]);
+        }
+      }
+    }
+    else break; // good Jacobian
+
+    fulljaciter++;
+    if(fulljaciter>MAXJACITER){
+      // this is a catch in case bouncing back and forth between singular Jac and no inversion for P(U) to get f2
+      if(debugfail>=2) dualfprintf(fail_file,"Failed to get inverse Jacobian with fulljaciter=%d with IMPEPSSTART=%g (giving del=%g)\n",fulljaciter,IMPEPSSTART,del);
+      if(1||showmessagesheavy){
+        dualfprintf(fail_file,"POSTJAC3: uu: %g %g %g %g : uup=%g %g %g %g\n",uu[URAD0],uu[URAD1],uu[URAD2],uu[URAD3],uup[URAD0],uup[URAD1],uup[URAD2],uup[URAD3]);
+        int iii,jjj;
+        DLOOP(iii,jjj) dualfprintf(fail_file,"J[%d][%d]=%g\n",iii,jjj,J[iii][jjj]);
+      }
+      return(1);
+    }
+  }// end over ensuring Jacobian is non-singular for the given del
+
+
+  return(0);
+
+}
+
+
+
 
 
 
@@ -1046,9 +1113,9 @@ static int source_explicit(int whichsc, int whichradsourcemethod, int methoddtsu
     }
     else{
 
-      //      if(0&& realdt/dtsub>MAXSUBCYCLES){
-      if(0){
-        // don't use MAXSUBCYCLES for now.  Assume if really revert to explicit (or really trying to use it) then rarely occurs or want to solve for actual solution, so do all needed sub-cycles!
+      if(realdt/dtsub>MAXSUBCYCLES && whichradsourcemethod==SOURCEMETHODEXPLICITSUBCYCLEREVERSIONFROMIMPLICIT){
+        // Use MAXSUBCYCLES if otherwise was trying implicit.
+        // Impractical to assume if really revert to explicit (or really trying to use it) then rarely occurs or want to solve for actual solution, so do all needed sub-cycles!
         // Semi-required to limit number of cycles for non-simple "methoddtsub" procedure that can produce arbitrarily small dtsub due to (e.g.) momentum term or something like that.
         // NOTE: For high \tau, rad velocity entering chars goes like 1/\tau, so that timestep is higher.  But dtsub remains what it should be for explicit stepping, and so in high-tau case, explicit steps required per actual step goes like \tau^2.  So "kinda" ok that takes long time for explicit sub-stepping since ultimately reaching longer time.
         if(showmessages && debugfail>=2) dualfprintf(fail_file,"itersub=%d dtsub very small: %g with realdt=%g chi=%g and only allowing MAXSUBCYCLES=%d subcycles, so limit dtsub: ijk=%d %d %d\n",itersub,dtsub,realdt,chi,MAXSUBCYCLES,ptrgeom->i,ptrgeom->j,ptrgeom->k);

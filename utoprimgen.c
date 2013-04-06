@@ -915,25 +915,33 @@ static int check_on_inversion(int usedhotinversion,int usedentropyinversion,int 
       //      Unormalnew[pl]*=ptrgeom->gdet;
       //      Unormalold[pl]*=ptrgeom->gdet;
       if(pl==RHO || pl==UU || pl==URAD0&&(*lpflagrad==0) || pl==ENTROPY){
-        fdiff[pl] = fabs(Unormalnew[pl]-Unormalold[pl])/(fabs(Unormalnew[pl])+fabs(Unormalold[pl])+SMALL);
+        errornorm=(fabs(Unormalnew[pl])+fabs(Unormalold[pl])+SMALL);
+        // KORALTODO: when URAD0<<UU, can't expect radiation error to be small relative to only itself when interaction between radiation and fluid. 
+        if(pl==URAD0) errornorm+=(fabs(Unormalnew[UU])+fabs(Unormalold[UU])+SMALL);
+        fdiff[pl] = fabs(Unormalnew[pl]-Unormalold[pl])/errornorm;
       }
       else if(pl==U1 || pl==U2 || pl==U3){
 
-        errornorm  = THIRD*(fabs(Unormalnew[U1])+fabs(Unormalold[U1])+fabs(Unormalnew[U2])+fabs(Unormalold[U2])+fabs(Unormalnew[U3])+fabs(Unormalold[U3]));
+        errornorm  = THIRD*(fabs(Unormalnew[U1]*sqrt(fabs(ptrgeom->gcon[GIND(1,1)]))) + fabs(Unormalold[U1]*sqrt(fabs(ptrgeom->gcon[GIND(1,1)]))) + fabs(Unormalnew[U2]*sqrt(fabs(ptrgeom->gcon[GIND(2,2)])))+fabs(Unormalold[U2]*sqrt(fabs(ptrgeom->gcon[GIND(2,2)])))+fabs(Unormalnew[U3]*sqrt(fabs(ptrgeom->gcon[GIND(3,3)])))+fabs(Unormalold[U3]*sqrt(fabs(ptrgeom->gcon[GIND(3,3)]))));
 #if(REMOVERESTMASSFROMUU==2)
         // only valid comparison if rest-mass taken out of energy term and modify U_i term to be comparable with U_t term
         errornorm = MAX(errornorm,0.5*(fabs(Unormalold[UU])+fabs(Unormalnew[UU])));
 #endif
      
-        fdiff[pl] = fabs(Unormalnew[pl]-Unormalold[pl]) / (errornorm+SMALL);
+        fdiff[pl] = sqrt(fabs(ptrgeom->gcon[GIND(pl-UU,pl-UU)]))*fabs(Unormalnew[pl]-Unormalold[pl]) / (errornorm+SMALL);
 
       }
       else if( (pl==URAD1 || pl==URAD2 || pl==URAD3)&&(*lpflagrad==0) ){
-        errornorm  = THIRD*(fabs(Unormalnew[URAD1])+fabs(Unormalold[URAD1])+fabs(Unormalnew[URAD2])+fabs(Unormalold[URAD2])+fabs(Unormalnew[URAD3])+fabs(Unormalold[URAD3]));
-        fdiff[pl] = fabs(Unormalnew[pl]-Unormalold[pl]) / (errornorm+SMALL);
+        //        errornorm  = THIRD*(fabs(Unormalnew[URAD1])+fabs(Unormalold[URAD1])+fabs(Unormalnew[URAD2])+fabs(Unormalold[URAD2])+fabs(Unormalnew[URAD3])+fabs(Unormalold[URAD3]));
+        errornorm  = THIRD*(fabs(Unormalnew[URAD1]*sqrt(fabs(ptrgeom->gcon[GIND(1,1)])))+fabs(Unormalold[URAD1]*sqrt(fabs(ptrgeom->gcon[GIND(1,1)])))+fabs(Unormalnew[URAD2]*sqrt(fabs(ptrgeom->gcon[GIND(2,2)])))+fabs(Unormalold[URAD2]*sqrt(fabs(ptrgeom->gcon[GIND(2,2)])))+fabs(Unormalnew[URAD3]*sqrt(fabs(ptrgeom->gcon[GIND(3,3)])))+fabs(Unormalold[URAD3]*sqrt(fabs(ptrgeom->gcon[GIND(3,3)]))));
+        // KORALTODO: when URAD0<<UU, can't expect radiation error to be small relative to only itself when interaction between radiation and fluid. 
+        errornorm  += THIRD*(fabs(Unormalnew[U1]*sqrt(fabs(ptrgeom->gcon[GIND(1,1)])))+fabs(Unormalold[U1]*sqrt(fabs(ptrgeom->gcon[GIND(1,1)])))+fabs(Unormalnew[U2]*sqrt(fabs(ptrgeom->gcon[GIND(2,2)])))+fabs(Unormalold[U2]*sqrt(fabs(ptrgeom->gcon[GIND(2,2)])))+fabs(Unormalnew[U3]*sqrt(fabs(ptrgeom->gcon[GIND(3,3)])))+fabs(Unormalold[U3]*sqrt(fabs(ptrgeom->gcon[GIND(3,3)]))));
+        fdiff[pl] = sqrt(fabs(ptrgeom->gcon[GIND(pl-URAD0,pl-URAD0)]))*fabs(Unormalnew[pl]-Unormalold[pl]) / (errornorm+SMALL);
       }
       else if(pl==B1 || pl==B2 || pl==B3){
-        fdiff[pl] = fabs(Unormalnew[pl]-Unormalold[pl])/(THIRD*(fabs(Unormalnew[B1])+fabs(Unormalold[B1])+fabs(Unormalnew[B2])+fabs(Unormalold[B2])+fabs(Unormalnew[B3])+fabs(Unormalold[B3]) )+SMALL);
+
+        errornorm  = THIRD*(fabs(Unormalnew[B1]*sqrt(fabs(ptrgeom->gcov[GIND(1,1)])))+fabs(Unormalold[B1]*sqrt(fabs(ptrgeom->gcov[GIND(1,1)])))+fabs(Unormalnew[B2]*sqrt(fabs(ptrgeom->gcov[GIND(2,2)])))+fabs(Unormalold[B2]*sqrt(fabs(ptrgeom->gcov[GIND(2,2)])))+fabs(Unormalnew[B3]*sqrt(fabs(ptrgeom->gcov[GIND(3,3)])))+fabs(Unormalold[B3]*sqrt(fabs(ptrgeom->gcov[GIND(3,3)]))));
+        fdiff[pl] = sqrt(fabs(ptrgeom->gcov[GIND(pl-B1+1,pl-B1+1)]))*fabs(Unormalnew[pl]-Unormalold[pl]) / (errornorm+SMALL);
       }
     }
 

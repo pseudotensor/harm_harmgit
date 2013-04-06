@@ -449,14 +449,11 @@ struct Ccoordparams {
 // TOTRY: Maybe need to avoid bounding if not in PBOUNDLOOP?  Generally true.
 
 
-// KORALTODO: PROBLEMS:
-// 1) RADBONDI: Like koral, but major evolution.
-// 2) RADDONUT: Donut explodes, and inversions take forever.
-
-
 //TODO:
 #define RADDOTFLAT (41) // similar to RADDOT but in cartesian (well, RADDOT was similar, but still different after Olek changes)
 #define RVDONUT (42) // radiative and viscous 
+#define RVDONUTIN (43) //  radiative and viscous dougnut inflowing
+#define RADNTCYL (44) // emission from midplane in cylindrical
 
 
 // non-implemented NON-radiative problems in KORAL that are semi-duplicated by some other radiative tests
@@ -518,9 +515,9 @@ struct Ccoordparams {
 //#define WHICHPROBLEM RADWAVE
 //#define WHICHPROBLEM RADBONDI
 //#define WHICHPROBLEM RADDOT
-#define WHICHPROBLEM RADNT // TODOCHECK
+//#define WHICHPROBLEM RADNT
 //#define WHICHPROBLEM RADFLATDISK
-//#define WHICHPROBLEM RADDONUT // TODO ONCE RADBONDI works.
+#define WHICHPROBLEM RADDONUT
 //#define WHICHPROBLEM RADCYLBEAM
 //#define WHICHPROBLEM RADBEAM2DKSVERT
 //#define WHICHPROBLEM RADCYLBEAMCART
@@ -953,24 +950,27 @@ struct Ccoordparams {
 //#define WHICHRADSOURCEMETHOD SOURCEMETHODEXPLICIT
 #define WHICHRADSOURCEMETHOD SOURCEMETHODIMPLICITEXPLICITCHECK
 
-
-#if(WHICHPROBLEM==RADNT || WHICHPROBLEM==RADDONUT)
-
-
-
-//#undef WHICHRADSOURCEMETHOD // DEBUG
-//#define WHICHRADSOURCEMETHOD SOURCEMETHODIMPLICIT
-//#define WHICHRADSOURCEMETHOD SOURCEMETHODEXPLICIT
-//#define WHICHRADSOURCEMETHOD SOURCEMETHODEXPLICITSUBCYCLE
-
-
 #undef ANALYTICMEMORY
 #define ANALYTICMEMORY 1 // set disk BC using analytical result (at least partially so don't duplicate code.)
 
 
+#if(WHICHPROBLEM==RADNT)
+
+#define N1 30
+#define N2 30
+#define N3 1
+
+// can choose any spherical polar coordinate system
+//#define MCOORD SPCMINKMETRIC
+//#define MCOORD BLCOORDS
+#define MCOORD KSCOORDS
+
+#elif(WHICHPROBLEM==RADDONUT)
+
 // N1=30 if using log coords from r=1.7 to r=50
 // N1=60 if using 1.5*hor - 40 (or 27.8)
-#define N1 30
+// N1=70 if using 1.5*hor - 30 (or 27.8)
+#define N1 50
 #define N2 30
 #define N3 1
 
