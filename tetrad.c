@@ -639,9 +639,15 @@ int transboost_lab2fluid(int primcoord, struct of_geom *ptrgeom, FTYPE *uconlab,
   
 
   // get orthonormal boost to fluid frame
-  // If convert ucon^i[lab] to orthonormal basis, then can just use simple Lorentz boost from special relativity to operate on the tetrad to have something that converts lastly to the fluid frame.
+  // Convert ucon^i[lab] to orthonormal basis, so then just use simple Lorentz boost from special relativity to operate on the tetrad to have something that converts lastly to the fluid frame.
+  FTYPE wconlabortho[NDIM],uconlabortho[NDIM];
+  DLOOPA(mu) wconlabortho[mu]=uconlabortho[mu]=0.0;
+  // Tetrcov^mu[lab ortho]_\nu[lab coordbasis] uconlab^\nu[lab coordbasis]
+  DLOOP(mu,nu) wconlabortho[mu] += tetrcov[mu][nu]*wconlab[nu];
+  DLOOP(mu,nu) uconlabortho[mu] += tetrcov[mu][nu]*uconlab[nu];
+
   FTYPE lambda[NDIM][NDIM];
-  calc_ortho_boost_uu(wconlab, uconlab, lambda);
+  calc_ortho_boost_uu(wconlabortho, uconlabortho, lambda);
   // get inverse lambda
   FTYPE ilambda[NDIM][NDIM];
   // comments for matrix_inverse() say takes lambda^j_k and pops out (ilambda)^k_j such that (lambda)^j_k (ilambda)^k_l = \delta^j_l

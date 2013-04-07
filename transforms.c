@@ -31,6 +31,8 @@ int bl2met2metp2v_genloc(int whichvel, int whichcoord, FTYPE *pr, int ii, int jj
   struct of_geom *ptrgeom=&geomdontuse;
   FTYPE Bcon[NDIM];
 
+
+
   // whichvel==0 means supplied the 4-velocity
   // whichvel==1 means supplied the 3-velocity
   // whichvel==2 means supplied the relative 4-velocity
@@ -80,6 +82,56 @@ int bl2met2metp2v_genloc(int whichvel, int whichcoord, FTYPE *pr, int ii, int jj
   if(EOMRADTYPE!=EOMRADNONE){
     ucon2pr(WHICHVEL,uradcon,ptrgeom,&pr[URAD1-U1]);
   }
+
+  // convert field
+  SLOOPA(k) pr[B1+k-1]=Bcon[k];
+
+  return(0);
+}
+
+
+
+
+// converts field only and otherwise like normal function
+int bl2met2metp2v_genloc_fieldonly(int whichvel, int whichcoord, FTYPE *pr, int ii, int jj, int kk, int loc)
+{
+  int k = 0;
+  FTYPE ucon[NDIM],uradcon[NDIM];
+  struct of_geom geomdontusebl;
+  struct of_geom *ptrgeombl=&geomdontusebl;
+  struct of_geom geomdontuse;
+  struct of_geom *ptrgeom=&geomdontuse;
+  FTYPE Bcon[NDIM];
+
+
+
+  // whichvel==0 means supplied the 4-velocity
+  // whichvel==1 means supplied the 3-velocity
+  // whichvel==2 means supplied the relative 4-velocity
+
+  // if whichcoord==PRIMECOORDS, then really use uses pr2ucon and ucon2pr, could probably optimize if wanted
+  // effectively this results in changing from one primitive velocity to another within PRIMECOORDS
+
+
+  // pr is in whichcoord coordinates
+  // get geometry (non-prime coords)
+  gset_genloc(0,whichcoord,ii,jj,kk,loc,ptrgeombl);
+
+  // convert field
+  Bcon[0]=0.0;
+  SLOOPA(k) Bcon[k]=pr[B1+k-1];
+
+  // convert from whichcoord to MCOORD, the coordinates of evolution
+  if(whichcoord>=0){
+    // field
+    coordtrans(whichcoord,MCOORD,ii,jj,kk,loc,Bcon);
+    mettometp_genloc(ii,jj,kk,loc,Bcon);
+
+  }
+  // otherwise already in prime
+
+  // get prime geometry
+  get_geometry(ii,jj,kk,loc,ptrgeom) ;
 
   // convert field
   SLOOPA(k) pr[B1+k-1]=Bcon[k];

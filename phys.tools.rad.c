@@ -2106,7 +2106,7 @@ int inverse_44matrix(FTYPE a[][NDIM], FTYPE ia[][NDIM])
 //          If ptrgeom==NULL, then use i,j,k,loc to get geometry in whichcoord coordinates
 // pradffortho: radiation primitives (PRAD0-3) should be fluid-frame orthonormal basis values (i.e. E,F in fluid frame orthonormal basis)
 // pin: inputs for primitives (i.e. whichvel for U1-U3 and whichcoord for U1-U3,URAD1-URAD3)
-// pout: outputs for normal primitives (i.e. WHICHVEL for U1-U3,URAD1-URAD3 but still in whichcoord coordinates)
+// pout: outputs for primitives ("")
 int prad_fforlab(int *whichvel, int *whichcoord, int whichdir, int i, int j, int k, int loc, struct of_geom *ptrgeom, FTYPE *pradffortho, FTYPE *pin, FTYPE *pout)
 {
   FTYPE Rijff[NDIM][NDIM],Rijlab[NDIM][NDIM],U[NPR]={0};
@@ -2154,8 +2154,8 @@ int prad_fforlab(int *whichvel, int *whichcoord, int whichdir, int i, int j, int
   //  DLOOPA(jj) dualfprintf(fail_file,"jj=%d ucon=%g\n",jj,ucon[jj]);
 
 
-  // also convert whichvel ucon to WHICHVEL primitive velocity for use by u2p_rad() and as needed for consistent final output from this function and as possible backup value
-  if(*whichvel!=WHICHVEL) ucon2pr(WHICHVEL,ucon,ptrgeomtouse,pout);
+  // also convert whichvel ucon to VELREL4 primitive velocity for use by u2p_rad() and as needed for consistent final output from this function and as possible backup value
+  if(*whichvel!=VELREL4) ucon2pr(VELREL4,ucon,ptrgeomtouse,pout);
 
   
   // transform and boost (ultimately converts pradffortho -> Rijff -> Rijlab -> U)
@@ -2187,7 +2187,6 @@ int prad_fforlab(int *whichvel, int *whichcoord, int whichdir, int i, int j, int
 
 
 
-  //convert to WHICHVEL PRIMECOORDS velocity type primitives
   PFTYPE lpflag=UTOPRIMNOFAIL,lpflagrad=UTOPRIMRADNOFAIL;
   int showmessages=1; // LEAVE on (not normal debugging)
   int allowlocalfailurefixandnoreport=1;
@@ -2197,19 +2196,13 @@ int prad_fforlab(int *whichvel, int *whichcoord, int whichdir, int i, int j, int
   u2p_rad(showmessages, allowlocalfailurefixandnoreport, U, pout, ptrgeomtouse, &lpflag, &lpflagrad);
 
 
-  // so now both fluid and radiation velocities are in WHICHVEL whichcoord format
-  // inversion returns WHICHVEL velocity type, so pass that back
-  //  *whichvel=WHICHVEL;
-
-
-
-  // no longer force return of WHICHVEL, just change both to whichvel.
+  // get back to whichvel
   FTYPE uconback[NDIM],othersback[NUMOTHERSTATERESULTS];
   // for fluid
-  ucon_calc_whichvel(WHICHVEL,pout,ptrgeomtouse,uconback,othersback);
+  ucon_calc_whichvel(VELREL4,pout,ptrgeomtouse,uconback,othersback);
   ucon2pr(*whichvel,uconback,ptrgeomtouse,pout);
-  // for radiation
-  ucon_calc_whichvel(WHICHVEL,&pout[URAD1-U1],ptrgeomtouse,uconback,othersback);
+  // KORALTODO: for radiation (always returned as VELREL4 so far.
+  ucon_calc_whichvel(VELREL4,&pout[URAD1-U1],ptrgeomtouse,uconback,othersback);
   ucon2pr(*whichvel,uconback,ptrgeomtouse,&pout[URAD1-U1]);
 
 
@@ -2871,6 +2864,7 @@ static int get_m1closure_urfconrel(int showmessages, int allowlocalfailurefixand
       if(showmessages && debugfail>=2) dualfprintf(fail_file,"CASE1A: gammarel>gammamax and Erf<ERADLIMIT: gammarel2=%g : i=%d j=%d k=%d : %ld %d %g\n",gammarel2,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,t);
     }
     else{
+      FTYPE gammarel2orig=gammarel2;
       FTYPE gammarel=gammamax;
       gammarel2=gammamax*gammamax;
 
@@ -2920,7 +2914,7 @@ static int get_m1closure_urfconrel(int showmessages, int allowlocalfailurefixand
         // check that gamma really correctly gammamax
         FTYPE gammatemp2,qsqtemp2;
         MYFUN(gamma_calc_fromuconrel(urfconrel,ptrgeom,&gammatemp2,&qsqtemp2),"ucon_calc_rel4vel_fromuconrel: gamma_calc_fromuconrel failed\n","phys.tools.rad.c",1);
-        if(showmessages) dualfprintf(fail_file,"CASE1B: gammarel>gammamax and Erf normal: gammamax=%g gammatemp=%g gammatemp2=%g ijk=%d %d %d : %ld %d %g\n",gammamax,gammatemp,gammatemp2,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,t);
+        if(showmessages) dualfprintf(fail_file,"CASE1B: gammarel>gammamax and Erf normal: gammarel2orig=%g gammamax=%g gammatemp=%g gammatemp2=%g ijk=%d %d %d : %ld %d %g\n",gammarel2orig,gammamax,gammatemp,gammatemp2,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,t);
 #endif
       }
       //    if(showmessages && debugfail>=2) DLOOPA(jj) dualfprintf(fail_file,"CASE1B: urfconrel[%d]=%g uu[%d]=%g\n",jj,urfconrel[jj],jj,uu[URAD0+jj]);

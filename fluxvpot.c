@@ -1752,7 +1752,8 @@ int transform_primitive_pstag(int whichvel, int whichcoord, int i,int j, int k, 
 
 
     DIMENLOOP(dir){
-      if (bl2met2metp2v_genloc(whichvel,whichcoord,primface[dir], i,j,k,FACE1+dir-1) >= 1) FAILSTATEMENT("initbase.c:transform_primitive_vB()", "bl2ks2ksp2v_genloc()", dir);
+      // must do field only in case velocity (normally at loc=CENT) is at high Lorentz and grid offset would not lead to well-defined value.
+      if (bl2met2metp2v_genloc_fieldonly(whichvel,whichcoord,primface[dir], i,j,k,FACE1+dir-1) >= 1) FAILSTATEMENT("initbase.c:transform_primitive_vB()", "bl2ks2ksp2v_genloc()", dir);
       // now assign single PRIMECOORD value
       MACP0A1(pstag,i,j,k,B1+dir-1) = primface[dir][B1+dir-1];
     }

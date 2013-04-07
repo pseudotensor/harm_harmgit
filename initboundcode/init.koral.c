@@ -1071,21 +1071,21 @@ int init_global(void)
 
   if(WHICHPROBLEM==RADNT || WHICHPROBLEM==RADFLATDISK || WHICHPROBLEM==RADDONUT || WHICHPROBLEM==RADCYLBEAM || WHICHPROBLEM==RADCYLBEAMCART){
 
-    // NOTE: RADNT has very high disk radiation energy and only goes out very slowly, so not even log will show it if one includes boundary cells.
+    gam=gamideal=4.0/3.0;
 
-    RADNT_KKK=1.e-4;
-    RADNT_ELL=4.5;
-    RADNT_UTPOT=.98; // KORALTODO: where or when is this really used in koral??
+    RADNT_ELL=4.5; // torus specific angular momentum
+    RADNT_UTPOT=.98; // scales rin for donut
+    RADNT_ROUT=2.0; // what radius ATMMIN things are defining
     //RADNT_RHOATMMIN=KORAL2HARMRHO(1.e-4);
-    RADNT_RHOATMMIN= KORAL2HARMRHO(1.e-2);
-    RADNT_RHODONUT=100.0*RADNT_RHOATMMIN;
+    RADNT_RHOATMMIN= KORAL2HARMRHO(1.e-2); // current koral choice
+    RADNT_RHODONUT = KORAL2HARMRHO(1.0); // equivalent to koral's non-normalization
+    RADNT_KKK=1.e-4 * (1.0/pow(RADNT_RHODONUT,gam-1.0));
     RADNT_TGASATMMIN = 1.e11/TEMPBAR;
     RADNT_UINTATMMIN= (calc_PEQ_ufromTrho(RADNT_TGASATMMIN,RADNT_RHOATMMIN));
     RADNT_TRADATMMIN = 1.e9/TEMPBAR;
     RADNT_ERADATMMIN= (calc_LTE_EfromT(RADNT_TRADATMMIN));
     RADNT_NODONUT=0;
     RADNT_INFLOWING=0;
-    RADNT_ROUT=2.0;
     RADNT_OMSCALE=1.0;
 
     trifprintf("RADNT_RHOATMMIN=%g RADNT_RHOATMMIN=%g RADNT_UINTATMMIN=%g RADNT_ERADATMMIN=%g\n",RADNT_RHOATMMIN,RADNT_RHOATMMIN,RADNT_UINTATMMIN,RADNT_ERADATMMIN);
@@ -1111,7 +1111,6 @@ int init_global(void)
     }
 
     cour=0.5;
-    gam=gamideal=4.0/3.0;
     cooling=KORAL;
     // ARAD_CODE=ARAD_CODE_DEF*1E5; // tuned so radiation energy flux puts in something much higher than ambient, while initial ambient radiation energy density lower than ambient gas internal energy.
     GAMMAMAXRAD=1000.0; // Koral limits for this problem.
@@ -1159,7 +1158,7 @@ int init_global(void)
     // tf = 100*DTdumpgen[0]; // 100 dumps(?)
     tf = 1000*DTdumpgen[0]; // koral in default setup does 1000 dumps
 
-    //    DODIAGEVERYSUBSTEP = 1;
+    DODIAGEVERYSUBSTEP = 1;
 
   }
 
@@ -3100,7 +3099,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
     th=V[2];
     ph=V[3];
 
-    *whichcoord=MCOORD; // not BLCOORD, in case setting for inside horizon too when MCOORD=KSCOORDS or if using SPCMINKMETRIC
+    *whichcoord=MCOORD; // not just BLCOORD, in case setting for inside horizon too when MCOORD=KSCOORDS or if using SPCMINKMETRIC
     *whichvel=VEL3; // use 3-velocity since later set donut using VEL3
     // get metric grid geometry for these ICs
     int getprim=0;
@@ -3160,6 +3159,8 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
         pradffortho[PRAD1]=pr[PRAD1];
         pradffortho[PRAD2]=pr[PRAD2];
         pradffortho[PRAD3]=pr[PRAD3];
+
+        dualfprintf(fail_file,"CHECK: %g %g %g %g\n",pradffortho[PRAD0],pradffortho[PRAD1],pradffortho[PRAD2],pradffortho[PRAD3]);
      
       }
 
@@ -3173,6 +3174,8 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
       pr[PRAD0] = RADNT_ERADATMMIN; // assumed as lab-frame ZAMO frame value
       set_zamo_velocity(*whichvel,ptrgeomreal,&pr[URAD1-U1]); // only sets URAD1-URAD3 to zamo
     }
+
+    dualfprintf(fail_file,"returning: whichvel=%d whichcoord=%d\n",*whichvel,*whichcoord);
 
     return(0);
   }
@@ -3247,12 +3250,18 @@ int get_full_donut(int whichvel, int whichcoord, FTYPE *pp,FTYPE *X, FTYPE *V,st
   FTYPE r=V[1];
   FTYPE rho,uint,uT,uphi,uPhi,Vr,Vphi,E,Fx,Fy,Fz;
 
+  // get actual BL-coords
+  int whichcoordreal=BLCOORDS;
+  struct of_geom geombldontuse;
+  struct of_geom *ptrgeombl=&geombldontuse;
+  gset(0,whichcoordreal,i,j,k,ptrgeombl);
+
 
   // set backup atmosphere value for primitives
   PLOOP(pliter,pl) ppback[pl]=pp[pl];
 
   // get parameters to decide if inside torus
-  FTYPE podpierd=-((ptrgeom->gcon[GIND(0,0)])-2.*RADNT_ELL*(ptrgeom->gcon[GIND(0,3)])+RADNT_ELL*RADNT_ELL*(ptrgeom->gcon[GIND(3,3)]));
+  FTYPE podpierd=-((ptrgeombl->gcon[GIND(0,0)])-2.*RADNT_ELL*(ptrgeombl->gcon[GIND(0,3)])+RADNT_ELL*RADNT_ELL*(ptrgeombl->gcon[GIND(3,3)]));
   FTYPE ut=-1./sqrt(podpierd);
   ut/=RADNT_UTPOT; //rescales rin
   if(!isfinite(ut)) ut=-1.0; // so skips donut, but doesn't give false in condition below (i.e. condition controlled by only podpierd)
@@ -3268,24 +3277,24 @@ int get_full_donut(int whichvel, int whichcoord, FTYPE *pp,FTYPE *X, FTYPE *V,st
 
     FTYPE h=-1./ut;
     FTYPE eps=(h-1.)/gam;
-    rho=RADNT_RHODONUT*pow(eps*(gam-1.)/RADNT_KKK,1./(gam-1.));
+    rho=pow(eps*(gam-1.)/RADNT_KKK,1./(gam-1.));
     uint=rho*eps;
+    dualfprintf(fail_file,"rhodonut1=%g eps=%g uint=%g\n",rho,eps,uint);
     uphi=-RADNT_ELL*ut;
-    uT=(ptrgeom->gcon[GIND(0,0)])*ut+(ptrgeom->gcon[GIND(0,3)])*uphi;
-    uPhi=(ptrgeom->gcon[GIND(3,3)])*uphi+(ptrgeom->gcon[GIND(0,3)])*ut;
+    uT=(ptrgeombl->gcon[GIND(0,0)])*ut+(ptrgeombl->gcon[GIND(0,3)])*uphi;
+    uPhi=(ptrgeombl->gcon[GIND(3,3)])*uphi+(ptrgeombl->gcon[GIND(0,3)])*ut;
     Vphi=uPhi/uT;
     Vr=0.;
 
-    //3-velocity in BL transformed to MCOORD (which is what ptrgeom is in)
+    //3-velocity in BL transformed to whichcoord (which is what ptrgeom is in)
     FTYPE prucon[NPR];
     prucon[U1]=-Vr;
     prucon[U2]=0;
     prucon[U3]=Vphi;
     FTYPE ucon[NDIM];
-    pr2ucon(whichvel,prucon,ptrgeom,ucon);
-    if(whichcoord!=BLCOORDS && whichcoord!=SPCMINKMETRIC) coordtrans(BLCOORDS,MCOORD,i,j,k,CENT,ucon);
-    else{} // nothing to do if SPCMINKMETRIC
-    ucon2pr(whichvel,ucon,ptrgeom,pp);
+    pr2ucon(whichvel,prucon,ptrgeombl,ucon);
+    coordtrans(BLCOORDS,whichcoord,i,j,k,CENT,ucon);
+    ucon2pr(whichvel,ucon,ptrgeom,pp); // now can mix or overwrite velocity from original pp
 
     pp[RHO]=MAX(rho,ppback[RHO]); 
     pp[UU]=MAX(uint,ppback[UU]);
@@ -3296,24 +3305,30 @@ int get_full_donut(int whichvel, int whichcoord, FTYPE *pp,FTYPE *X, FTYPE *V,st
 
     FTYPE P,aaa,bbb;
     P=(gam-1.0)*uint;
-    //solving for T satisfying P=pgas+prad=bbb T + aaa T^4
+    //solving for T satisfying P=pgas+prad=bbb T + aaa T^4 .  Since using ARAD_CODE, already accounts for TEMPBAR.
     aaa=ARAD_CODE;
     bbb=rho;
     FTYPE naw1=cbrt(9*aaa*Power(bbb,2) - Sqrt(3)*Sqrt(27*Power(aaa,2)*Power(bbb,4) + 256*Power(aaa,3)*Power(P,3)));
     FTYPE T4=-Sqrt((-4*Power(0.6666666666666666,0.3333333333333333)*P)/naw1 + naw1/(Power(2,0.3333333333333333)*Power(3,0.6666666666666666)*aaa))/2. + Sqrt((4*Power(0.6666666666666666,0.3333333333333333)*P)/naw1 - naw1/(Power(2,0.3333333333333333)*Power(3,0.6666666666666666)*aaa) + (2*bbb)/(aaa*Sqrt((-4*Power(0.6666666666666666,0.3333333333333333)*P)/naw1 + naw1/(Power(2,0.3333333333333333)*Power(3,0.6666666666666666)*aaa))))/2.;
-    T4/=TEMPBAR; // assumes T4 is in Kelvin
 
     E=calc_LTE_EfromT(T4);
     Fx=Fy=Fz=0.;
+    // uint here overrides initial uint above
     uint=calc_PEQ_ufromTrho(T4,rho);
-
     pp[UU]=MAX(uint,ppback[UU]);
+    pp[URAD0]=MAX(E,ppback[URAD0]);
+    pp[URAD1]=Fx;
+    pp[URAD2]=Fy;
+    pp[URAD3]=Fz;
+    dualfprintf(fail_file,"rhodonut2=%g eps=%g uint=%g pp[UU]=%g T4=%g\n",rho,eps,uint,pp[UU],T4);
 
 
 
     ////////////////// STAGE3
 
     //estimating F = -1/chi E,i
+    //http://www.astro.wisc.edu/~townsend/resource/teaching/astro-310-F08/23-rad-diffusion.pdf
+    // -(1/chi)dPrad/dx = Frad/c
     FTYPE kappa,kappaes,chi;
     // use of V assumes user knows which coordinates they are in (e.g. r,th,ph vs. x,y,z)
     chi=
@@ -3321,8 +3336,8 @@ int get_full_donut(int whichvel, int whichcoord, FTYPE *pp,FTYPE *X, FTYPE *V,st
       +
       calc_kappaes_user(pp[RHO],calc_PEQ_Tfromurho(pp[UU],pp[RHO]),V[1],V[2],V[3]);
 
-    FTYPE Vtemp[NDIM];
-    FTYPE Xtemp[NDIM];
+    FTYPE Vtemp1[NDIM],Vtemp2[NDIM];
+    FTYPE Xtemp1[NDIM],Xtemp2[NDIM];
     FTYPE pptemp[NPR],E1,E2;
     PLOOP(pliter,pl) pptemp[pl]=pp[pl];
     int anret,anretmin=0;
@@ -3333,61 +3348,67 @@ int get_full_donut(int whichvel, int whichcoord, FTYPE *pp,FTYPE *X, FTYPE *V,st
     ////////////////// STAGE3A
 
     //r dimension
-    Xtemp[0]=X[0];
-    Xtemp[1]=1.01*X[1];
-    Xtemp[2]=1.0*X[2];
-    Xtemp[3]=1.0*X[3];
-    bl_coord(Xtemp,Vtemp); // only needed for Vtemp[1] for radius in donut_analytical_solution()
-    gset_X(getprim,whichcoord,i,j,k,NOWHERE,Xtemp,ptrgeomt);
+    Xtemp1[0]=X[0];
+    Xtemp1[1]=1.01*X[1];
+    Xtemp1[2]=1.0*X[2];
+    Xtemp1[3]=1.0*X[3];
+    bl_coord(Xtemp1,Vtemp1); // only needed for Vtemp1[1] for radius in donut_analytical_solution()
+    gset_X(getprim,whichcoordreal,i,j,k,NOWHERE,Xtemp1,ptrgeomt);
 
-    anret=donut_analytical_solution(pptemp,Xtemp,Vtemp,ptrgeomt);
+    anret=donut_analytical_solution(pptemp,Xtemp1,Vtemp1,ptrgeomt);
     if(anret<0) anretmin=-1;
     E1=pptemp[PRAD0]; // fluid frame E
 
-    Xtemp[0]=X[0];
-    Xtemp[1]=.99*X[1];
-    Xtemp[2]=1.0*X[2];
-    Xtemp[3]=1.0*X[3];
-    bl_coord(Xtemp,Vtemp); // only needed for Vtemp[1] for radius in donut_analytical_solution()
-    gset_X(getprim,whichcoord,i,j,k,NOWHERE,Xtemp,ptrgeomt);
+    Xtemp2[0]=X[0];
+    Xtemp2[1]=.99*X[1];
+    Xtemp2[2]=1.0*X[2];
+    Xtemp2[3]=1.0*X[3];
+    bl_coord(Xtemp2,Vtemp2); // only needed for Vtemp2[1] for radius in donut_analytical_solution()
+    gset_X(getprim,whichcoordreal,i,j,k,NOWHERE,Xtemp2,ptrgeomt);
 
-    anret=donut_analytical_solution(pptemp,Xtemp,Vtemp,ptrgeomt);
+    anret=donut_analytical_solution(pptemp,Xtemp2,Vtemp2,ptrgeomt);
     if(anret<0) anretmin=-1;
     E2=pptemp[PRAD0]; // fluid frame E
 
-    Fx=(E2-E1)/(.02*V[1]*(ptrgeom->gcov[GIND(1,1)]))/chi/3.; // flux frame Fx
+    // fluid frame Fx
+    //    Fx=(E2-E1)/(.02*V[1]*(ptrgeombl->gcov[GIND(1,1)]))/chi/3.;
+    Fx=-THIRD*(E2-E1)/((Vtemp2[1]-Vtemp1[1])*sqrt(fabs(ptrgeombl->gcov[GIND(1,1)])))/chi;
+    dualfprintf(fail_file,"E2=%g E1=%g Fx=%g\n",E2,E1,Fx);
 
     ////////////////// STAGE3B
 
     //th dimension
-    Xtemp[0]=X[0];
-    Xtemp[1]=1.0*X[1];
-    Xtemp[2]=1.01*X[2];
-    Xtemp[3]=1.0*X[3];
-    bl_coord(Xtemp,Vtemp); // only needed for Vtemp[1] for radius in donut_analytical_solution()
-    gset_X(getprim,whichcoord,i,j,k,NOWHERE,Xtemp,ptrgeomt);
+    Xtemp1[0]=X[0];
+    Xtemp1[1]=1.0*X[1];
+    Xtemp1[2]=1.01*X[2];
+    Xtemp1[3]=1.0*X[3];
+    bl_coord(Xtemp1,Vtemp1); // only needed for Vtemp1[2] for theta in donut_analytical_solution()
+    gset_X(getprim,whichcoordreal,i,j,k,NOWHERE,Xtemp1,ptrgeomt);
 
-    anret=donut_analytical_solution(pptemp,Xtemp,Vtemp,ptrgeomt);
+    anret=donut_analytical_solution(pptemp,Xtemp1,Vtemp1,ptrgeomt);
     if(anret<0) anretmin=-1;
-    E1=pptemp[PRAD0]; // flux frame E1
+    E1=pptemp[PRAD0]; // fluid frame E1
 
-    Xtemp[0]=X[0];
-    Xtemp[1]=1.0*X[1];
-    Xtemp[2]=0.99*X[2];
-    Xtemp[3]=1.0*X[3];
-    bl_coord(Xtemp,Vtemp); // only needed for Vtemp[1] for radius in donut_analytical_solution()
-    gset_X(getprim,whichcoord,i,j,k,NOWHERE,Xtemp,ptrgeomt);
+    Xtemp2[0]=X[0];
+    Xtemp2[1]=1.0*X[1];
+    Xtemp2[2]=0.99*X[2];
+    Xtemp2[3]=1.0*X[3];
+    bl_coord(Xtemp2,Vtemp2); // only needed for Vtemp2[2] for theta in donut_analytical_solution()
+    gset_X(getprim,whichcoordreal,i,j,k,NOWHERE,Xtemp2,ptrgeomt);
 
-    anret=donut_analytical_solution(pptemp,Xtemp,Vtemp,ptrgeomt);
+    anret=donut_analytical_solution(pptemp,Xtemp2,Vtemp2,ptrgeomt);
     if(anret<0) anretmin=-1;
     E2=pptemp[PRAD0]; // fluid frame E2
 
-    Fy=(E2-E1)/(.02*V[2]*(ptrgeom->gcov[GIND(2,2)]))/chi/3.; // flux frame Fy
+    // fluid frame Fy
+    //    Fy=(E2-E1)/(.02*V[2]*(ptrgeombl->gcov[GIND(2,2)]))/chi/3.;
+    Fy=-THIRD*(E2-E1)/((Vtemp2[2]-Vtemp1[2])*sqrt(fabs(ptrgeombl->gcov[GIND(2,2)])))/chi;
+    dualfprintf(fail_file,"E2=%g E1=%g Fy=%g\n",E2,E1,Fy);
 
     ////////////////// STAGE3C
 
     //ph dimension
-    Fz=0.; // flux frame Fz
+    Fz=0.; // fluid frame Fz
 
 
     ////////////////// STAGE4
@@ -3396,11 +3417,13 @@ int get_full_donut(int whichvel, int whichcoord, FTYPE *pp,FTYPE *X, FTYPE *V,st
       Fx=Fy=Fz=0.;
     }
     else{
+      FTYPE MAXFOE=0.99;
       FTYPE Fl=sqrt(Fx*Fx+Fy*Fy+Fz*Fz);
-      if(Fl>.99*E){
-        Fx=Fx/Fl*0.99*E;
-        Fy=Fy/Fl*0.99*E;
-        Fz=Fz/Fl*0.99*E;
+      if(Fl>MAXFOE*E){
+        Fx=Fx/Fl*MAXFOE*E;
+        Fy=Fy/Fl*MAXFOE*E;
+        Fz=Fz/Fl*MAXFOE*E;
+        dualfprintf(fail_file,"limited: Fl=%g E=%g Fx=%g Fy=%g Fz=%g\n",Fl,E,Fx,Fy,Fz);
       }
     }
 
@@ -3419,13 +3442,13 @@ int get_full_donut(int whichvel, int whichcoord, FTYPE *pp,FTYPE *X, FTYPE *V,st
 
 // analytical solution for RADDONUT donut
 // expects pp[PRAD0-PRAD3] to be fluid frame orthonormal, while pp[U1-U3] is ptrgeom whichvel whichcoord lab frame value (doesn't change U1-U3)
-int donut_analytical_solution(FTYPE *pp,FTYPE *X, FTYPE *V,struct of_geom *ptrgeom)
+int donut_analytical_solution(FTYPE *pp,FTYPE *X, FTYPE *V,struct of_geom *ptrgeomreal)
 {
 
   FTYPE xx=V[1];
 
  
-  FTYPE podpierd=-((ptrgeom->gcon[GIND(0,0)])-2.*RADNT_ELL*(ptrgeom->gcon[GIND(0,3)])+RADNT_ELL*RADNT_ELL*(ptrgeom->gcon[GIND(3,3)]));
+  FTYPE podpierd=-((ptrgeomreal->gcon[GIND(0,0)])-2.*RADNT_ELL*(ptrgeomreal->gcon[GIND(0,3)])+RADNT_ELL*RADNT_ELL*(ptrgeomreal->gcon[GIND(3,3)]));
   FTYPE ut=-1./sqrt(podpierd);
 
   ut/=RADNT_UTPOT; //rescales rin
@@ -3436,24 +3459,18 @@ int donut_analytical_solution(FTYPE *pp,FTYPE *X, FTYPE *V,struct of_geom *ptrge
 
   FTYPE h=-1./ut;
   eps=(h-1.)/gam;
-  rho=RADNT_RHODONUT*pow(eps*(gam-1.)/RADNT_KKK,1./(gam-1.));
+  rho=pow(eps*(gam-1.)/RADNT_KKK,1./(gam-1.));
   uint=rho*eps;
+  dualfprintf(fail_file,"rhodonut3=%g eps=%g uint=%g\n",rho,eps,uint);
   uphi=-RADNT_ELL*ut;
-  uT=(ptrgeom->gcon[GIND(0,0)])*ut+(ptrgeom->gcon[GIND(0,3)])*uphi;
-  uPhi=(ptrgeom->gcon[GIND(3,3)])*uphi+(ptrgeom->gcon[GIND(0,3)])*ut;
+  uT=(ptrgeomreal->gcon[GIND(0,0)])*ut+(ptrgeomreal->gcon[GIND(0,3)])*uphi;
+  uPhi=(ptrgeomreal->gcon[GIND(3,3)])*uphi+(ptrgeomreal->gcon[GIND(0,3)])*ut;
   Vphi=uPhi/uT;
   Vr=0.;
 
-
   pp[RHO]=rho;
   pp[UU]=uint;
-  //4-velocity in lab frame
-  // just don't set pp[U1-U3]
-  //  FTYPE others[NUMOTHERSTATERESULTS];
-  //  ucon_calc(pp,ptrgeom,ucon,others);
-  //  pp[U1]=ucon[1]; 
-  //  pp[U2]=ucon[2];
-  //  pp[U3]=ucon[3];
+
 
   FTYPE P,aaa,bbb;
   P=(gam-1.0)*uint; // assumes ideal gas
@@ -3466,9 +3483,10 @@ int donut_analytical_solution(FTYPE *pp,FTYPE *X, FTYPE *V,struct of_geom *ptrge
   E=calc_LTE_EfromT(T4);
   Fx=Fy=Fz=0.;
   uint=calc_PEQ_ufromTrho(T4,rho);
-
   // overwrite uint
   pp[UU]=uint;
+  dualfprintf(fail_file,"rhodonut4=%g eps=%g uint=%g T4=%g\n",rho,eps,uint,T4);
+
 
   // fluid frame orthonormal values for radiation
   pp[PRAD0]=E;

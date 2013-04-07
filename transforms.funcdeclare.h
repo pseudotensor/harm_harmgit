@@ -1,6 +1,7 @@
 // transform stuff
 extern int bl2met2metp2v(int whichvel, int whichcoord, FTYPE *pr, int ii, int jj, int kk);
 extern int bl2met2metp2v_genloc(int whichvel, int whichcoord, FTYPE *pr, int ii, int jj, int kk, int loc);
+extern int bl2met2metp2v_genloc_fieldonly(int whichvel, int whichcoord, FTYPE *pr, int ii, int jj, int kk, int loc);
 extern int bl2met2metp2v_gen(int whichvel, int whichcoord, int newwhichvel, int newwhichcoord, FTYPE *pr, int ii, int jj, int kk);
 
 extern int ucov_whichcoord2primecoords(int whichcoord, int ii, int jj, int kk, int loc, FTYPE *ucov);

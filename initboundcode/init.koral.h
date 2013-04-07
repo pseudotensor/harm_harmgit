@@ -979,6 +979,16 @@ struct Ccoordparams {
 //#define MCOORD BLCOORDS
 #define MCOORD KSCOORDS
 
+#undef cTILDA
+#define cTILDA (1.0) // like koral
+#undef gTILDA
+#define gTILDA (1E-10) // like koral (no longer)
+//#define gTILDA (1.0)
+
+#undef MPERSUN
+#define MPERSUN (10.0*gTILDA) // due to koral fixing MSUNCM, have to do this.
+
+
 #elif(WHICHPROBLEM==RADFLATDISK)
 
 //#define N1 120 // older koral
