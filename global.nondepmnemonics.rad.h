@@ -93,6 +93,7 @@
 // 3 : normalize using radiation URAD0 but also fnorm from actual f
 // 4 : URAD0, fnorm, and UU
 // normalize error.  Can't expect radiation to be relatively accurate to itself if UU>>URAD0 due to G between them
+// 3 is safest, but more expensive than 4.  4 should be fine for real systems.
 #define IMPLICITERRORNORM 4
 
 // as above, but for del

@@ -577,7 +577,7 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
         break;
       }
       else{
-        if(debugfail>=2) dualfprintf(fail_file,"iter>IMPMAXITER=%d : iter exceeded in solve_implicit_lab().  Bad error: %g %g %g %g\n",IMPMAXITER,f3a[0],f3a[1],f3a[2],f3a[3]);
+        if(debugfail>=2) dualfprintf(fail_file,"iter>IMPMAXITER=%d : iter exceeded in solve_implicit_lab(). ijk=%d %d %d :  Bad error: a=%g %g %g %g b=%g %g %g %g c=%g %g %g %g d=%g %g %g %g\n",IMPMAXITER,ptrgeom->i,ptrgeom->j,ptrgeom->k,f3a[0],f3a[1],f3a[2],f3a[3],f3b[0],f3b[1],f3b[2],f3b[3],f3c[0],f3c[1],f3c[2],f3c[3],f3d[0],f3d[1],f3d[2],f3d[3]);
         return(1);
       }
     }
@@ -996,6 +996,7 @@ static void get_dtsub(int method, FTYPE *pr, struct of_state *q, FTYPE *Ui, FTYP
  
 }
 
+#define EXPLICITFAILEDBUTWENTTHROUGH -2
 #define EXPLICITNOTNECESSARY -1
 #define EXPLICITNOTFAILED 0 // should stay zero
 #define EXPLICITFAILED 1 // should stay one
@@ -1052,6 +1053,14 @@ static int source_explicit(int whichsc, int whichradsourcemethod, int methoddtsu
   // get updated U (try getting full update)
   FTYPE fracdtuu0=1.0; // try full uu0 at first
   PLOOP(pliter,pl) Unew[pl]=Unew0[pl]=UFSET(CUf,fracdtuu0*dt,Uiin[pl],Ufin[pl],dUother[pl],0.0);
+
+  // if reversion from implicit, then no choice but to push through CASE radiation errors and hope the reductions there are ok.  Would be worse to have no reversion solution!
+  int pushthroughraderror=0;
+  if(whichradsourcemethod==SOURCEMETHODEXPLICITREVERSIONFROMIMPLICIT || whichradsourcemethod==SOURCEMETHODEXPLICITSUBCYCLEREVERSIONFROMIMPLICIT){
+    pushthroughraderror=1;
+  }
+
+
 
 
   if(GETADVANCEDUNEW0FOREXPLICIT){// this is actually inconsistent with explicit stepping, so no longer do it
@@ -1184,7 +1193,7 @@ static int source_explicit(int whichsc, int whichradsourcemethod, int methoddtsu
         // Impractical to assume if really revert to explicit (or really trying to use it) then rarely occurs or want to solve for actual solution, so do all needed sub-cycles!
         // Semi-required to limit number of cycles for non-simple "methoddtsub" procedure that can produce arbitrarily small dtsub due to (e.g.) momentum term or something like that.
         // NOTE: For high \tau, rad velocity entering chars goes like 1/\tau, so that timestep is higher.  But dtsub remains what it should be for explicit stepping, and so in high-tau case, explicit steps required per actual step goes like \tau^2.  So "kinda" ok that takes long time for explicit sub-stepping since ultimately reaching longer time.
-        if(showmessages && debugfail>=2) dualfprintf(fail_file,"itersub=%d dtsub very small: %g with realdt=%g chi=%g and only allowing MAXSUBCYCLES=%d subcycles, so limit dtsub: ijk=%d %d %d\n",itersub,dtsub,realdt,chi,MAXSUBCYCLES,ptrgeom->i,ptrgeom->j,ptrgeom->k);
+        if(showmessages && debugfail>=2) dualfprintf(fail_file,"itersub=%d dtsub very small: %g with realdt=%g and only allowing MAXSUBCYCLES=%d subcycles, so limit dtsub: ijk=%d %d %d\n",itersub,dtsub,realdt,MAXSUBCYCLES,ptrgeom->i,ptrgeom->j,ptrgeom->k);
         dtsub=realdt/(FTYPE)MAXSUBCYCLES;
       }
       else if(NUMEPSILON*dtsub>=realdt && itersub==0){
@@ -1196,11 +1205,14 @@ static int source_explicit(int whichsc, int whichradsourcemethod, int methoddtsu
 
       if(itersub==0) dtsubold=dtsubuse=dtsub;
       else{
-        // ensure don't change step too fast
+        // override if dtsub is larger than realdt, indicating really done with iterations and reached some equilibrium, so no longer necessary to check vs. dtsubold
+        // No, too speculative.
+        //        if(dtsub>realdt) dtsub=realdt;
+        
+        // ensure don't change step too fast.  Sometimes first guess for dtsub can be small, and very next iteration suggests very large.  Not trustable, so stay slow.
         if(dtsub>dtsubold*(1.0+MAXEXPLICITSUBSTEPCHANGE)) dtsubuse=dtsubold*(1.0+MAXEXPLICITSUBSTEPCHANGE);
         else dtsubuse=dtsub;
-        // override if dtsub is larger than realdt, indicating really done with iterations and reached some equilibrium, so no longer necessary to check vs. dtsubold
-        if(dtsub>realdt) dtsubuse=dtsub;
+
         // need to compare with previous actual dt
         dtsubold=dtsubuse;
       }
@@ -1284,7 +1296,8 @@ static int source_explicit(int whichsc, int whichradsourcemethod, int methoddtsu
     // get prnew(Unew)
     newtonstats.nstroke=newtonstats.lntries=0;
     int failutoprim=Utoprimgen_failwrapper(showmessages, allowlocalfailurefixandnoreport, finalstep, EVOLVEUTOPRIM, UNOTHING, Unew, ptrgeom, prnew, &newtonstats);
-    if(failutoprim){
+    // push through inversion failure if just radiation inversion failure since have local fixups that can be ok or even recovered from.  Bad to just stop if doing reversion from implicit.
+    if(pushthroughraderror==0 && failutoprim==UTOPRIMGENWRAPPERRETURNFAILRAD || pushthroughraderror==1 && failutoprim==UTOPRIMGENWRAPPERRETURNFAILMHD){
       if(showmessages && debugfail>=2) dualfprintf(fail_file,"BAD: Utoprimgen_wrapper() failed during explicit sub-stepping.  So sub-cycling failed.\n");
       return(EXPLICITFAILED);
     }
@@ -1399,7 +1412,7 @@ int koral_source_rad(int whichradsourcemethod, FTYPE *pin, FTYPE *pf, int *didre
         // assume nothing else to do, BUT DEFINITELY report this.
         if(debugfail>=2) dualfprintf(fail_file,"BAD: explicit failed: ijk=%d %d %d : whichradsourcemethod=%d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,whichradsourcemethod);
         *didreturnpf=0;
-        return(0);
+        return(EXPLICITFAILEDBUTWENTTHROUGH);
       }
       else if(whichradsourcemethod==SOURCEMETHODEXPLICITCHECKSFROMIMPLICIT || whichradsourcemethod==SOURCEMETHODEXPLICITSUBCYCLECHECKSFROMIMPLICIT){
         // tells that explicit didn't work for implicit checks
@@ -1416,8 +1429,9 @@ int koral_source_rad(int whichradsourcemethod, FTYPE *pin, FTYPE *pf, int *didre
     }
     else if(failexplicit==EXPLICITNOTNECESSARY){
       // then don't need any source term
+      if(debugfail>=2) dualfprintf(fail_file,"ODD: explicit found not necessary while implicit failed: ijk=%d %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
       *didreturnpf=0;
-      return(EXPLICITNOTNECESSARY);
+      return(0);
     }
 
     //else explicit succeeded, so just return
@@ -1450,11 +1464,19 @@ int koral_source_rad(int whichradsourcemethod, FTYPE *pin, FTYPE *pf, int *didre
         }
         else if(failexplicit==EXPLICITNOTNECESSARY){
           // then don't need any source term
+          if(debugfail>=2) dualfprintf(fail_file,"ODD: explicit found not necessary while implicit failed: ijk=%d %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
+          *didreturnpf=0;
+          return(0);
+        }
+        else if(failexplicit==EXPLICITFAILEDBUTWENTTHROUGH){
+          // then had issues, but nothing else can do.
+          if(debugfail>=2) dualfprintf(fail_file,"HMM: explicit found necessary and had problems while implicit failed: ijk=%d %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
           *didreturnpf=0;
           return(0);
         }
         else{
           // if sub-cycled, then have better pf than pb assumed saved in pinorig[].
+          if(debugfail>=2) dualfprintf(fail_file,"GOOD: explicit worked while implicit failed: ijk=%d %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
           PLOOP(pliter,pl) pf[pl]=pinorig[pl];
           *didreturnpf=1;
           return(0);
@@ -1703,7 +1725,7 @@ static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYP
   }
 
   // really a chi-effective that also includes lambda term in case cooling unrelated to absorption
-  *chireturn=chi + lambda/pp[PRAD0]; // if needed
+  *chireturn=chi + lambda/(SMALL+fabs(pp[PRAD0])); // if needed
 
 
 }
@@ -1723,6 +1745,7 @@ static int calc_rad_lambda(FTYPE *pp, struct of_geom *ptrgeom, FTYPE kappa, FTYP
   // More generally, kappa*4*Pi*B can be replaced by some \Lambda that is some energy density rate
   // But, have to be careful that "kappa rho" is constructed from \Lambda/(u*c) or else balance won't occur.
   // This is issue because "kappa" is often frequency integrated directly, giving different answer than frequency integrating j_v -> \Lambda/(4\pi) and B_\nu -> (aT^4)/(4\pi) each and then taking the ratio.
+  // Note if T is near maximum for FTYPE, then aradT^4 likely too large.
   FTYPE B=0.25*ARAD_CODE*pow(T,4.)/Pi;
 
 

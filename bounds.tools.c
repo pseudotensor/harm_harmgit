@@ -3190,11 +3190,18 @@ int extrapfunc(int boundary, int j,int k,
       // linear extrap for velocities
       PBOUNDLOOP(pliter,pl){
         if(pl==U1 || pl==U2 || pl==U3 || pl==URAD1 || pl==URAD2 || pl==URAD3){
+          //if(pl==U1 || pl==U2 || pl==U3){
           ftemp = MACP0A1(prim,ri,rj,rk,pl);
           // interpolate
           MACP0A1(prim,i,j,k,pl) = ftemp + dq[pl]*(i-ri);
         }
       }
+      // SUPERMARK: KORALTODO
+      //        if(pl==URAD1 || pl==URAD2 || pl==URAD3){
+      //          ftemp = MACP0A1(prim,ri,rj,rk,pl);
+      //          // interpolate
+      //         MACP0A1(prim,i,j,k,pl) = ftemp; // FUCK
+      //       }
       
 
 #endif   
