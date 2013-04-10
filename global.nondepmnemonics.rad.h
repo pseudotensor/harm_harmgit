@@ -93,7 +93,8 @@
 // 3 : normalize using radiation URAD0 but also fnorm from actual f
 // 4 : URAD0, fnorm, and UU
 // normalize error.  Can't expect radiation to be relatively accurate to itself if UU>>URAD0 due to G between them
-#define IMPLICITERRORNORM 4
+#define IMPLICITERRORNORM 4 // FUCK
+//#define IMPLICITERRORNORM 3 // FUCK
 
 // as above, but for del
 // apparently 2 doesn't make sense for this.  Too large change for rad quantities.

@@ -789,9 +789,12 @@ static int advance_standard(
         // store guess for diss_compute before changed by normal inversion
         PALLLOOP(pl) prbefore[pl]=MACP0A1(pf,i,j,k,pl);
 
+        dualfprintf(fail_file,"BEFORE NORMALUTOPRIMGEN\n");
+
         MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,EVOLVEUTOPRIM,UEVOLVE,MAC(myupoint,i,j,k), ptrgeom, MAC(pf,i,j,k),&newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
         nstroke+=newtonstats.nstroke; newtonstats.nstroke=newtonstats.lntries=0;
 
+        dualfprintf(fail_file,"AFTER NORMALUTOPRIMGEN\n");
 
 #if(DODISS||DODISSVSR)
         // then see what entropy inversion would give
@@ -800,8 +803,10 @@ static int advance_standard(
  
       }
       else{ // otherwise still iterating on primitives
+        dualfprintf(fail_file,"BEFORE2 NORMALUTOPRIMGEN\n");
         MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,EVOLVEUTOPRIM,UEVOLVE,MAC(myupoint,i,j,k), ptrgeom, MAC(pf,i,j,k),&newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
         nstroke+=newtonstats.nstroke; newtonstats.nstroke=newtonstats.lntries=0;
+        dualfprintf(fail_file,"AFTER2 NORMALUTOPRIMGEN\n");
       }
 
 

@@ -59,6 +59,9 @@ int Utoprimgen(int showmessages, int allowlocalfailurefixandnoreport, int finals
   //  dualfprintf(fail_file,"Doing inversion for ijk=%d %d %d nstep=%ld steppart=%d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart);
 
 
+  //FUCK
+  PLOOP(pliter,pl) if(!isfinite(U[pl])) dualfprintf(fail_file,"NOTFINITEUutoprimgen: pl=%d\n",pl);
+  PLOOP(pliter,pl) if(!isfinite(pr[pl])) dualfprintf(fail_file,"NOTFINITEPutoprimgen: pl=%d\n",pl);
  
   ////////////////////////
   //

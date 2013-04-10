@@ -56,9 +56,11 @@ static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int sho
 static int Utoprimgen_failwrapper(int showmessages, int allowlocalfailurefixandnoreport, int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of_geom *ptrgeom, FTYPE *pr, struct of_newtonstats *newtonstats)
 {
 
+
   //calculating primitives  
   // OPTMARK: Should optimize this to  not try to get down to machine precision
   MYFUN(Utoprimgen(showmessages, allowlocalfailurefixandnoreport, finalstep, EVOLVEUTOPRIM, UNOTHING, U, ptrgeom, pr, newtonstats),"phys.tools.rad.c:Utoprimgen_failwrapper()", "Utoprimgen", 1);
+
 
   // check how inversion did.  If didn't succeed, then check if soft failure and pass.  Else if hard failure have to return didn't work.
   int lpflag,lpflagrad;
@@ -125,7 +127,7 @@ static int f_implicit_lab(int failreturnallowable, int whichcall, int showmessag
   int pliter, pl;
   int iv;
   struct of_newtonstats newtonstats;
-  int finalstep = 1;  //can choose either 1 or 0 depending on whether want floor-like fixups (1) or not (0).  unclear which one would work best since for Newton method to converge might want to allow negative density on the way to the correct solution, on the other hand want to prevent runaway into rho < 0 region and so want floors.
+  int finalstep = 1;  //can choose either 1 or 0 depending on whether want floor-like fixups (1) or not (0).  unclear which one would work best since for Newton method to converge might want to allow negative density on the way to the correct solution, on the other hand want to prevent runaway into rho < 0 region and so want floors. 
 
   // initialize counters
   newtonstats.nstroke=newtonstats.lntries=0;
@@ -133,12 +135,19 @@ static int f_implicit_lab(int failreturnallowable, int whichcall, int showmessag
   // get primitive (don't change uu0).  This pp is only used for inversion guess and to hold final inversion answer.
   PLOOP(pliter,pl) pp[pl] = pp0[pl];
 
+  PLOOP(pliter,pl) if(!isfinite(uu[pl])) dualfprintf(fail_file,"NOTFINITEUU: pl=%d ijk=%d %d %d nstep=%ld steppart=%d : uu0=%g uu=%g\n",pl,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,uu0[pl],uu[pl]);
+
   // get change in conserved quantity between fluid and radiation (equal and opposite 4-force)
   // required for inversion to get P(U) for MHD and RAD variables
   DLOOPA(iv) uu[UU+iv] = uu0[UU+iv] - (uu[URAD0+iv]-uu0[URAD0+iv]);
 
+
+
   //  PLOOP(pliter,pl) dualfprintf(fail_file,"f_implicit_lab: wc=%d i=%d j=%d pl=%d uu=%g\n",whichcall, ptrgeom->i,ptrgeom->j,pl,uu[pl]);
   
+  dualfprintf(fail_file,"BEFORE IMPLICITUTOPRIMGEN\n");
+
+
   // Get P(U)
   int failreturn;
   failreturn=Utoprimgen_failwrapper(showmessages,allowlocalfailurefixandnoreport, finalstep, EVOLVEUTOPRIM, UNOTHING, uu, ptrgeom, pp, &newtonstats);
@@ -146,6 +155,12 @@ static int f_implicit_lab(int failreturnallowable, int whichcall, int showmessag
     if(showmessages && debugfail>=2) dualfprintf(fail_file,"Utoprimgen_wrapper() failed, must return out of f_implicit_lab(): %d vs. %d\n",failreturn,failreturnallowable);
     return(failreturn);
   }
+
+  dualfprintf(fail_file,"AFTER IMPLICITUTOPRIMGEN\n");
+
+  // DEBUG:
+  PLOOP(pliter,pl) if(!isfinite(pp[pl])) dualfprintf(fail_file,"NOTFINITEPP: pl=%d ijk=%d %d %d nstep=%ld steppart=%d\n",pl,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart);
+
 
   // re-get needed q's
   //  get_state_uconucovonly(pp, ptrgeom, &q);
@@ -238,6 +253,14 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
   int allowlocalfailurefixandnoreport=0; // must be 0 so implicit method knows when really failure
 
 
+  // DEBUG:
+  //  if(nstep>=192){
+  //    showmessages=showmessagesheavy=1;
+  //  }
+  if(nstep>=211){
+    showmessages=showmessagesheavy=1;
+  }
+
   // setup implicit loops
   realdt = compute_dt(CUf,dt);
   FTYPE DAMPFACTOR=1.0; // factor by which step Newton's method.
@@ -252,6 +275,9 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
     // I'm guessing that even though one uses RK2 or RK3, the first step generates large radiative velocities without any balanced source term since U isn't updated yet.  One would hope RK2 would recover on the final substep, but it doesn't!  In RK2, upon the final substep, that velocity is present for the radiation source term.  But it's also present for the fluxes!  That is, if there were no flux update on the final substep, then the source would have balanced the previous flux, but yet another flux is done, so there can be no balance.  This leads to a run-away velocity that would be similar to the \tau\sim 1 case.
     PLOOP(pliter,pl) uu[pl]=uu0[pl]=UFSET(CUf,fracdtuu0*dt,Uiin[pl],Ufin[pl],dUother[pl],0.0);
     // Note that "q" isn't used in this function or used in function call, so don't have to update it here.
+
+    PLOOP(pliter,pl) if(!isfinite(uu[pl])) dualfprintf(fail_file,"NOTFINITEUFSET: pl=%d ijk=%d %d %d nstep=%ld steppart=%d : uu=%g pin=%g fracdtuu0=%g realdt=%g Uiin=%g Ufin=%g dUother=%g\n",pl,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,uu[pl],pin[pl],fracdtuu0,realdt,Uiin[pl],Ufin[pl],dUother[pl]);
+
 
     // Need to get default failure state.  Can allow such an error if having trouble with convergence (e.g. backing up too much)
     struct of_newtonstats newtonstats;
@@ -311,6 +337,8 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
     /////////////////
     for(f1iter=0;f1iter<MAXF1TRIES;f1iter++){
       int whichcall=1;
+      PLOOP(pliter,pl) if(!isfinite(uu[pl]) || !isfinite(uu0[pl]) || !isfinite(pin[pl])) dualfprintf(fail_file,"NOTFINITEUUf1: pl=%d ijk=%d %d %d nstep=%ld steppart=%d : uu0=%g uu=%g pin=%g : f1iter=%d fracdtG=%g realdt=%g\n",pl,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,uu0[pl],uu[pl],pin[pl],f1iter,fracdtG,realdt);
+
       failreturn=f_implicit_lab(failreturnallowableuse, whichcall,showmessages, allowlocalfailurefixandnoreport, pin, uu0, uu, fracdtG*realdt, ptrgeom, f1, f1norm); // modifies uu
       if(failreturn){
         // if initial uu failed, then should take smaller jump from Uiin->uu until settled between fluid and radiation.
@@ -577,7 +605,7 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
         break;
       }
       else{
-        if(debugfail>=2) dualfprintf(fail_file,"iter>IMPMAXITER=%d : iter exceeded in solve_implicit_lab().  Bad error: %g %g %g %g\n",IMPMAXITER,f3a[0],f3a[1],f3a[2],f3a[3]);
+        if(debugfail>=2) dualfprintf(fail_file,"iter>IMPMAXITER=%d : iter exceeded in solve_implicit_lab(). ijk=%d %d %d :  Bad error: a=%g %g %g %g b=%g %g %g %g c=%g %g %g %g d=%g %g %g %g\n",IMPMAXITER,ptrgeom->i,ptrgeom->j,ptrgeom->k,f3a[0],f3a[1],f3a[2],f3a[3],f3b[0],f3b[1],f3b[2],f3b[3],f3c[0],f3c[1],f3c[2],f3c[3],f3d[0],f3d[1],f3d[2],f3d[3]);
         return(1);
       }
     }
@@ -664,6 +692,7 @@ static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int sho
  
           // get dUresid for this offset uu
           int whichcall=2;
+          int pliter,pl; PLOOP(pliter,pl) if(!isfinite(uu[pl]) || !isfinite(uu0[pl])) dualfprintf(fail_file,"NOTFINITEUUf2: pl=%d ijk=%d %d %d nstep=%ld steppart=%d : uu0=%g uu=%g\n",pl,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,uu0[pl],uu[pl]);
           failreturn=f_implicit_lab(failreturnallowableuse, whichcall,showmessages,allowlocalfailurefixandnoreport, pin,uu0,uu,fracdtG*realdt,ptrgeom,f2,f2norm);
           if(failreturn){
             if(showmessages&& debugfail>=2) dualfprintf(fail_file,"f_implicit_lab for f2 failed: ii=%d jj=%d.  Trying smaller localIMPEPS=%g (giving del=%g) to %g\n",ii,jj,localIMPEPS,del,localIMPEPS*FRACIMPEPSCHANGE);
@@ -996,6 +1025,7 @@ static void get_dtsub(int method, FTYPE *pr, struct of_state *q, FTYPE *Ui, FTYP
  
 }
 
+#define EXPLICITFAILEDBUTWENTTHROUGH -2
 #define EXPLICITNOTNECESSARY -1
 #define EXPLICITNOTFAILED 0 // should stay zero
 #define EXPLICITFAILED 1 // should stay one
@@ -1025,6 +1055,12 @@ static int source_explicit(int whichsc, int whichradsourcemethod, int methoddtsu
   ///////////////
   int showmessages=0;
   int showmessagesheavy=0;
+
+  // DEBUG:
+  //  if(whichradsourcemethod==SOURCEMETHODEXPLICITREVERSIONFROMIMPLICIT || whichradsourcemethod==SOURCEMETHODEXPLICITSUBCYCLEREVERSIONFROMIMPLICIT){
+  //    showmessages=showmessagesheavy=1;
+  //  }
+
   int allowlocalfailurefixandnoreport=0; // need to see if any failures.
   struct of_newtonstats newtonstats;
   int finalstep = 1;  //can choose either 1 or 0 depending on whether want floor-like fixups (1) or not (0).  unclear which one would work best since for Newton method to converge might want to allow negative density on the way to the correct solution, on the other hand want to prevent runaway into rho < 0 region and so want floors.
@@ -1041,7 +1077,6 @@ static int source_explicit(int whichsc, int whichradsourcemethod, int methoddtsu
   FTYPE prforG[NPR];
   struct of_state q0,qnew;
   FTYPE Gpl[NPR];
-  FTYPE chi;
 
   // backup pin, Uiin, and q and setup "new" versions to be iterated
   PLOOP(pliter,pl) prnew[pl]=pin0[pl]=pin[pl];
@@ -1054,6 +1089,13 @@ static int source_explicit(int whichsc, int whichradsourcemethod, int methoddtsu
   PLOOP(pliter,pl) Unew[pl]=Unew0[pl]=UFSET(CUf,fracdtuu0*dt,Uiin[pl],Ufin[pl],dUother[pl],0.0);
 
 
+  // if reversion from implicit, then no choice but to push through CASE radiation errors and hope the reductions there are ok.  Would be worse to have no reversion solution!
+  int pushthroughraderror=0;
+  if(whichradsourcemethod==SOURCEMETHODEXPLICITREVERSIONFROMIMPLICIT || whichradsourcemethod==SOURCEMETHODEXPLICITSUBCYCLEREVERSIONFROMIMPLICIT){
+    pushthroughraderror=1;
+  }
+
+
   if(GETADVANCEDUNEW0FOREXPLICIT){// this is actually inconsistent with explicit stepping, so no longer do it
     //////////////
     //
@@ -1064,8 +1106,14 @@ static int source_explicit(int whichsc, int whichradsourcemethod, int methoddtsu
       // Get pnew from Unew
       // OPTMARK: Should optimize this to  not try to get down to machine precision
       // initialize counters
+
+      //FUCK
+      dualfprintf(fail_file,"BEFORE EXPLICITUTOPRIMGEN\n");
+
       newtonstats.nstroke=newtonstats.lntries=0;
       int failutoprim=Utoprimgen_failwrapper(showmessages, allowlocalfailurefixandnoreport, finalstep, EVOLVEUTOPRIM, UNOTHING, Unew, ptrgeom, prnew, &newtonstats);
+
+      dualfprintf(fail_file,"AFTER EXPLICITUTOPRIMGEN\n");
 
       if(failutoprim){
 
@@ -1184,7 +1232,7 @@ static int source_explicit(int whichsc, int whichradsourcemethod, int methoddtsu
         // Impractical to assume if really revert to explicit (or really trying to use it) then rarely occurs or want to solve for actual solution, so do all needed sub-cycles!
         // Semi-required to limit number of cycles for non-simple "methoddtsub" procedure that can produce arbitrarily small dtsub due to (e.g.) momentum term or something like that.
         // NOTE: For high \tau, rad velocity entering chars goes like 1/\tau, so that timestep is higher.  But dtsub remains what it should be for explicit stepping, and so in high-tau case, explicit steps required per actual step goes like \tau^2.  So "kinda" ok that takes long time for explicit sub-stepping since ultimately reaching longer time.
-        if(showmessages && debugfail>=2) dualfprintf(fail_file,"itersub=%d dtsub very small: %g with realdt=%g chi=%g and only allowing MAXSUBCYCLES=%d subcycles, so limit dtsub: ijk=%d %d %d\n",itersub,dtsub,realdt,chi,MAXSUBCYCLES,ptrgeom->i,ptrgeom->j,ptrgeom->k);
+        if(showmessages && debugfail>=2) dualfprintf(fail_file,"itersub=%d dtsub very small: %g with realdt=%g and only allowing MAXSUBCYCLES=%d subcycles, so limit dtsub: ijk=%d %d %d\n",itersub,dtsub,realdt,MAXSUBCYCLES,ptrgeom->i,ptrgeom->j,ptrgeom->k);
         dtsub=realdt/(FTYPE)MAXSUBCYCLES;
       }
       else if(NUMEPSILON*dtsub>=realdt && itersub==0){
@@ -1196,11 +1244,14 @@ static int source_explicit(int whichsc, int whichradsourcemethod, int methoddtsu
 
       if(itersub==0) dtsubold=dtsubuse=dtsub;
       else{
-        // ensure don't change step too fast
+        // override if dtsub is larger than realdt, indicating really done with iterations and reached some equilibrium, so no longer necessary to check vs. dtsubold
+        // No, too speculative.
+        //        if(dtsub>realdt) dtsub=realdt;
+
+        // ensure don't change step too fast.  Sometimes first guess for dtsub can be small, and very next iteration suggests very large.  Not trustable, so stay slow.
         if(dtsub>dtsubold*(1.0+MAXEXPLICITSUBSTEPCHANGE)) dtsubuse=dtsubold*(1.0+MAXEXPLICITSUBSTEPCHANGE);
         else dtsubuse=dtsub;
-        // override if dtsub is larger than realdt, indicating really done with iterations and reached some equilibrium, so no longer necessary to check vs. dtsubold
-        if(dtsub>realdt) dtsubuse=dtsub;
+
         // need to compare with previous actual dt
         dtsubold=dtsubuse;
       }
@@ -1283,8 +1334,12 @@ static int source_explicit(int whichsc, int whichradsourcemethod, int methoddtsu
 
     // get prnew(Unew)
     newtonstats.nstroke=newtonstats.lntries=0;
+    dualfprintf(fail_file,"BEFORE EXPLICITUTOPRIMGEN REAL\n");
+    PLOOP(pliter,pl) dualfprintf(fail_file,"pl=%d Unew0=%g Unew=%g sourcepl=%g Uiin=%g Ufin=%g dUother=%g realdt=%g tempdt=%g fakefracdtuu0=%g dt=%g xint=%g fracdtG=%g Gplprevious=%g Gpl=%g\n",pl,Unew0[pl],Unew[pl],sourcepl[pl],Uiin[pl],Ufin[pl],dUother[pl],realdt,tempdt,fakefracdtuu0,dt,xint,fracdtG,Gplprevious[pl],Gpl[pl]);
     int failutoprim=Utoprimgen_failwrapper(showmessages, allowlocalfailurefixandnoreport, finalstep, EVOLVEUTOPRIM, UNOTHING, Unew, ptrgeom, prnew, &newtonstats);
-    if(failutoprim){
+    dualfprintf(fail_file,"AFTER EXPLICITUTOPRIMGEN REAL: itersub=%d\n",itersub);
+    // push through inversion failure if just radiation inversion failure since have local fixups that can be ok or even recovered from.  Bad to just stop if doing reversion from implicit.
+    if(pushthroughraderror==0 && failutoprim==UTOPRIMGENWRAPPERRETURNFAILRAD || pushthroughraderror==1 && failutoprim==UTOPRIMGENWRAPPERRETURNFAILMHD){
       if(showmessages && debugfail>=2) dualfprintf(fail_file,"BAD: Utoprimgen_wrapper() failed during explicit sub-stepping.  So sub-cycling failed.\n");
       return(EXPLICITFAILED);
     }
@@ -1399,7 +1454,7 @@ int koral_source_rad(int whichradsourcemethod, FTYPE *pin, FTYPE *pf, int *didre
         // assume nothing else to do, BUT DEFINITELY report this.
         if(debugfail>=2) dualfprintf(fail_file,"BAD: explicit failed: ijk=%d %d %d : whichradsourcemethod=%d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,whichradsourcemethod);
         *didreturnpf=0;
-        return(0);
+        return(EXPLICITFAILEDBUTWENTTHROUGH);
       }
       else if(whichradsourcemethod==SOURCEMETHODEXPLICITCHECKSFROMIMPLICIT || whichradsourcemethod==SOURCEMETHODEXPLICITSUBCYCLECHECKSFROMIMPLICIT){
         // tells that explicit didn't work for implicit checks
@@ -1450,11 +1505,19 @@ int koral_source_rad(int whichradsourcemethod, FTYPE *pin, FTYPE *pf, int *didre
         }
         else if(failexplicit==EXPLICITNOTNECESSARY){
           // then don't need any source term
+          if(debugfail>=2) dualfprintf(fail_file,"ODD: explicit found not necessary while implicit failed: ijk=%d %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
+          *didreturnpf=0;
+          return(0);
+        }
+        else if(failexplicit==EXPLICITFAILEDBUTWENTTHROUGH){
+          // then had issues, but nothing else can do.
+          if(debugfail>=2) dualfprintf(fail_file,"HMM: explicit found necessary and had problems while implicit failed: ijk=%d %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
           *didreturnpf=0;
           return(0);
         }
         else{
           // if sub-cycled, then have better pf than pb assumed saved in pinorig[].
+          if(debugfail>=2) dualfprintf(fail_file,"GOOD: explicit worked while implicit failed: ijk=%d %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
           PLOOP(pliter,pl) pf[pl]=pinorig[pl];
           *didreturnpf=1;
           return(0);
@@ -1646,6 +1709,9 @@ static void koral_source_rad_calc(int method, FTYPE *pr, FTYPE *Ui, FTYPE *Uf, F
   // else "method" can be anything and it doesn't matter
 
 
+  PLOOP(pliter,pl) if(!isfinite(Gdpl[pl])) dualfprintf(fail_file,"NOTFINITE: pl=%d GPL=%g : %g : %g %g %g %g : %g %g %g %g : %g %g %g %g\n",pl,Gdpl[pl],chi,pr[PRAD0],pr[PRAD1],pr[PRAD2],pr[PRAD3],q.uradcon[0],q.uradcon[1],q.uradcon[2],q.uradcon[3],q.uradcov[0],q.uradcov[1],q.uradcov[2],q.uradcov[3]);
+
+
 }
 
 
@@ -1680,6 +1746,9 @@ static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYP
 
   // get chi
   FTYPE chi=kappa+kappaes;
+
+  dualfprintf(fail_file,"chi=%g kappa=%g kappaes=%g lambda=%g prad0=%g\n",chi,kappa,kappaes,lambda,pp[PRAD0]);
+
   
   // compute contravariant four-force in the lab frame
   
@@ -1719,6 +1788,7 @@ static int calc_rad_lambda(FTYPE *pp, struct of_geom *ptrgeom, FTYPE kappa, FTYP
   FTYPE T=compute_temp_simple(ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p,rho,u);
 
 
+
   // This is aT^4/(4\pi) that is the specific black body emission rate in B_\nu d\nu d\Omega corresponding to energy density rate per unit frequency per unit solid angle, which has been integrated over frequency.
   // More generally, kappa*4*Pi*B can be replaced by some \Lambda that is some energy density rate
   // But, have to be careful that "kappa rho" is constructed from \Lambda/(u*c) or else balance won't occur.
@@ -1728,6 +1798,8 @@ static int calc_rad_lambda(FTYPE *pp, struct of_geom *ptrgeom, FTYPE kappa, FTYP
 
   // energy density loss rate integrated over frequency and solid angle
   *lambda = kappa*4.*Pi*B;
+
+  dualfprintf(fail_file,"T=%g B=%g lambda=%g\n",T,B,*lambda);
 
   return(0);
 }
@@ -1792,6 +1864,7 @@ int vchar_rad(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYP
   simplefast_rad(dir,geom,q,2.0/3.0,vmin2,vmax2);
 #endif
 
+  if( !isfinite(*vmin2) || !isfinite(*vmax2) || !isfinite(*vmin) || !isfinite(*vmax) ) dualfprintf(fail_file,"NOTFINITEV: %g %g %g %g : ijk=%d %d %d nstep=%ld steppart=%d\n",*vmin2,*vmax2,*vmin,*vmax,geom->i,geom->j,geom->k,nstep,steppart);
   
   return(0);
 }
@@ -1877,6 +1950,9 @@ void mhd_calc_rad(FTYPE *pr, int dir, struct of_geom *ptrgeom, struct of_state *
     DLOOPA(jj) radstressdir[jj]=THIRD*pr[PRAD0]*(4.0*q->uradcon[dir]*q->uradcov[jj] + delta(dir,jj));
   }
   else DLOOPA(jj) radstressdir[jj]=0.0; // mhd_calc_rad() called with no condition in phys.tools.c and elsewhere, and just fills normal tempo-spatial components (not RAD0->RAD3), so need to ensure zero.
+
+
+  DLOOPA(jj) if(!isfinite(radstressdir[jj])) dualfprintf(fail_file,"NOTFINITERAD: jj=%d : %g : %g %g %g : ijk=%d %d %d nstep=%ld steppart=%d\n",jj,radstressdir[jj],pr[PRAD0],q->uradcon[dir],q->uradcov[jj],ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart);
 
 
 }
@@ -2591,11 +2667,14 @@ int u2p_rad(int showmessages, int allowlocalfailurefixandnoreport, FTYPE *uu, FT
   pin[PRAD2]=urfconrel[2];
   pin[PRAD3]=urfconrel[3];
 
-  //  DLOOPA(jj){
-  //    if(!isfinite(pin[PRAD0+jj])){
-  //      dualfprintf(fail_file,"caughtnan: jj=%d : ijk=%d %d %d\n",jj,ptrgeom->i,ptrgeom->j,ptrgeom->k);
-  //    }
-  //  }
+
+  // double check that no nan or inf gets through and spoils solution
+  DLOOPA(jj){
+    if(!isfinite(pin[PRAD0+jj])){
+      dualfprintf(fail_file,"caughtnan: jj=%d : ijk=%d %d %d :: %g %g %g %g\n",jj,ptrgeom->i,ptrgeom->j,ptrgeom->k,gammarel2,Av[0],Av[1],Av[2],Av[3]);
+      PLOOP(pliter,pl) dualfprintf(fail_file,"caughtpl: pl=%d pr=%g\n",pl,pin[pl]);
+    }
+  }
 
   if(DORADFIXUPS==1 || allowlocalfailurefixandnoreport==0){
     // KORALTODO: Problem is fixups can average across shock or place where (e.g.) velocity changes alot, and averaging diffuses shock and can leak-out more failures.

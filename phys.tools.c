@@ -1437,6 +1437,11 @@ int source(FTYPE *pr, FTYPE *pf, int *didreturnpf, struct of_geom *ptrgeom, stru
     Ugeomfreei[pl] = ui[pl]*(ptrgeom->IEOMFUNCNOSINGMAC(pl)); // expect ui to be UEVOLVE form
     Ugeomfreef[pl] = uf[pl]*(ptrgeom->IEOMFUNCNOSINGMAC(pl)); // expect uf to be UEVOLVE form
   }
+
+  // FUCK
+  PLOOP(pliter,pl) if(!isfinite(dUother[pl])) dualfprintf(fail_file,"NOTFINITESOURCE: pl=%d ijk=%d %d %d nstep=%ld steppart=%d : dUother=%g : %g %g %g\n",pl,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,dUother[pl],dUriemann[pl],dUcomp[GEOMSOURCE][pl],(ptrgeom->IEOMFUNCNOSINGMAC(pl)));
+
+
   sourcephysics(pr, pf, didreturnpf, ptrgeom, q, Ugeomfreei, Ugeomfreef, CUf, dUother, dUcomp);
 
   //////////////////
