@@ -160,8 +160,9 @@ static int f_implicit_lab(int failreturnallowable, int whichcall, int showmessag
   calc_Gd(pp, ptrgeom, &q, Gd, &chireturn, Gabs);
 
   // compute difference vector between original and new 4-force's effect on conserved radiative quantities
-  // i.e. f->0 as change in conserved quantity approaches current value of 4-force
-#define SIGNGD2 (1.0) // sign that goes into implicit differencer
+  // NR1992 Eq. 16.6.16: y_{n+1} = y_n + h f(y_{n+1}) , so error function is f = (y_{n+1} - y_n) - h f(y_{n+1})
+  // i.e. f->0 as change in conserved quantity approaches the updated value of 4-force
+#define SIGNGD2 (1.0) // sign that goes into implicit differencer that's consistent with sign for SIGNGD of -1 when using the radiative uu to measure f.
   DLOOPA(iv) f[iv] = (uu[URAD0+iv] - uu0[URAD0+iv]) + (SIGNGD2 * localdt * Gd[iv]);
 
   // get error normalization that involves actual things being differenced
@@ -236,6 +237,10 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
   int showmessages=0; // by default 0, don't show any messages for inversion stuff during implicit solver, unless debugging.  Assume any moment of inversion failure is corrected for now unless failure of final inversion done outside implicit solver.
   int showmessagesheavy=0;  // very detailed for common debugging
   int allowlocalfailurefixandnoreport=0; // must be 0 so implicit method knows when really failure
+
+  //  if(nstep>=189 && ptrgeom->i==1 && ptrgeom->j==15){
+  //    showmessages=showmessagesheavy=1;
+  //  }
 
 
   // setup implicit loops
@@ -338,7 +343,8 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
           // So need to damp between original uup and uupp .  This essentially damps Newton step now that have knowledge the Newton step was too large as based upon P(U) failure.
 
           // Avoid G-damping because not needed so far.  If added, competes in non-trivial way with fracuup damping that's required separately for large forces in some problems beyond iter=1 (e.g. NTUBE=31).
-          //fracdtG*=DAMPDELTA; // DAMP give only fraction of 4-force to let uu to catch-up
+          //          fracdtG*=DAMPDELTA; // DAMP give only fraction of 4-force to let uu to catch-up
+          //          fracdtG=0.5; // DAMP give only fraction of 4-force to let uu to catch-up
 
           fracuup*=DAMPDELTA; // DAMP in case Newton step is too large after iter>1 and stuck with certain uu from Newton step that gets stored in uup above.
 
@@ -414,6 +420,7 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
       dualfprintf(fail_file,"POSTF1: uu: %g %g %g %g : uup=%g %g %g %g\n",uu[URAD0],uu[URAD1],uu[URAD2],uu[URAD3],uup[URAD0],uup[URAD1],uup[URAD2],uup[URAD3]);
       int iii;
       DLOOPA(iii) dualfprintf(fail_file,"iii=%d f1=%26.20g f1norm=%26.20g\n",iii,f1[iii],f1norm[iii]);
+      dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iter iter=%d : %g %g %g %g : %g %g %g %g\n",nstep,steppart,dt,ptrgeom->i,iter,f3d[0],f3d[1],f3d[2],f3d[3],f3d[0],f3d[1],f3d[2],f3d[3]);
     }
 
 
@@ -602,7 +609,7 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
 
   // apply source update as force
   PLOOP(pliter,pl) radsource[pl] = 0;
-#define SIGNGD3 (1.0) // sign that goes into implicit solver
+#define SIGNGD3 (1.0) // sign that goes into implicit solver (just that U += U_{new} - U_{old} so that U = U_{new})
   DLOOPA(jj) radsource[UU+jj]    = -SIGNGD3*deltas[jj];
   DLOOPA(jj) radsource[URAD0+jj] = +SIGNGD3*deltas[jj];
 
@@ -649,49 +656,48 @@ static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int sho
 
     FTYPE localIMPEPS=IMPEPSSTART; // start with fresh del
 
-    DLOOPA(ii){
-      DLOOPA(jj){
+    DLOOPA(jj){
 
-        while(1){
+      while(1){
 
-          //          if(uup[jj+URAD0]==0.) del=localIMPEPS*fabs(uup[URAD0]);
-          // when |URAD0|>>|URAD1|, then can't get better than machine error on URAD0, not URAD1, so using small del just for URAD1 makes no sense, so avoid above
-          del = localIMPEPS*                  MAX(fabs(uup[jj+URAD0]),fabs(uup[URAD0]))  ;
-          //else if(IMPLICITDELNORM==2) del = localIMPEPS*MAX(fabs(uup[UU]),MAX(fabs(uup[jj+URAD0]),fabs(uup[URAD0])) );
+        //          if(uup[jj+URAD0]==0.) del=localIMPEPS*fabs(uup[URAD0]);
+        // when |URAD0|>>|URAD1|, then can't get better than machine error on URAD0, not URAD1, so using small del just for URAD1 makes no sense, so avoid above
+        del = localIMPEPS*                  MAX(fabs(uup[jj+URAD0]),fabs(uup[URAD0]))  ;
+        //else if(IMPLICITDELNORM==2) del = localIMPEPS*MAX(fabs(uup[UU]),MAX(fabs(uup[jj+URAD0]),fabs(uup[URAD0])) );
           
-          // offset uu (KORALTODO: How to ensure this doesn't have machine precision problems or is good enough difference?)
-          uu[jj+URAD0]=uup[jj+URAD0]-del;
+        // offset uu (KORALTODO: How to ensure this doesn't have machine precision problems or is good enough difference?)
+        uu[jj+URAD0]=uup[jj+URAD0]-del;
  
-          // get dUresid for this offset uu
-          int whichcall=2;
-          failreturn=f_implicit_lab(failreturnallowableuse, whichcall,showmessages,allowlocalfailurefixandnoreport, pin,uu0,uu,fracdtG*realdt,ptrgeom,f2,f2norm);
-          if(failreturn){
-            if(showmessages&& debugfail>=2) dualfprintf(fail_file,"f_implicit_lab for f2 failed: ii=%d jj=%d.  Trying smaller localIMPEPS=%g (giving del=%g) to %g\n",ii,jj,localIMPEPS,del,localIMPEPS*FRACIMPEPSCHANGE);
-            localIMPEPS*=FRACIMPEPSCHANGE;
-            if(localIMPEPS<NUMEPSILON*10.0){
-              if(debugfail>=2) dualfprintf(fail_file,"f_implicit_lab for f2 failed: ii=%d jj=%d with localIMPEPS=%g (giving del=%g)\n",ii,jj,localIMPEPS,del);
-              return(1); // can't go below machine precision for difference else will be 0-0
-            }
-          }
-          else{
-            // didn't fail
-            break;
+        // get dUresid for this offset uu
+        int whichcall=2;
+        failreturn=f_implicit_lab(failreturnallowableuse, whichcall,showmessages,allowlocalfailurefixandnoreport, pin,uu0,uu,fracdtG*realdt,ptrgeom,f2,f2norm);
+        if(failreturn){
+          if(showmessages&& debugfail>=2) dualfprintf(fail_file,"f_implicit_lab for f2 failed: jj=%d.  Trying smaller localIMPEPS=%g (giving del=%g) to %g\n",jj,localIMPEPS,del,localIMPEPS*FRACIMPEPSCHANGE);
+          localIMPEPS*=FRACIMPEPSCHANGE;
+          if(localIMPEPS<NUMEPSILON*10.0){
+            if(debugfail>=2) dualfprintf(fail_file,"f_implicit_lab for f2 failed: jj=%d with localIMPEPS=%g (giving del=%g)\n",jj,localIMPEPS,del);
+            return(1); // can't go below machine precision for difference else will be 0-0
           }
         }
-
- 
-        if(showmessagesheavy){
-          dualfprintf(fail_file,"JAC: uu: %26.20g %26.20g %26.20g %26.20g : uup=%26.20g %26.20g %26.20g %26.20g (del=%26.20g localIMPEPS=%26.20g)\n",uu[URAD0],uu[URAD1],uu[URAD2],uu[URAD3],uup[URAD0],uup[URAD1],uup[URAD2],uup[URAD3],del,localIMPEPS);
-          dualfprintf(fail_file,"i=%d ii=%d jj=%d f2: %26.20g %26.20g %26.20g %26.20g\n",ptrgeom->i,ii,jj,f2[0],f2[1],f2[2],f2[3]);
+        else{
+          // didn't fail
+          break;
         }
-
-        // get Jacobian (uncentered, ok?  Probably actually best.  Don't want to go back along unknown trajectory in U that might lead to bad P(U))
-        J[ii][jj]=(f2[ii] - f1[ii])/(uu[jj+URAD0]-uup[jj+URAD0]);
-
-        // restore uu after getting changed by f_implicit_lab(f2)
-        uu[jj+URAD0]=uup[jj+URAD0];
       }
+
+ 
+      if(showmessagesheavy){
+        dualfprintf(fail_file,"JAC: uu: %26.20g %26.20g %26.20g %26.20g : uup=%26.20g %26.20g %26.20g %26.20g (del=%26.20g localIMPEPS=%26.20g)\n",uu[URAD0],uu[URAD1],uu[URAD2],uu[URAD3],uup[URAD0],uup[URAD1],uup[URAD2],uup[URAD3],del,localIMPEPS);
+        dualfprintf(fail_file,"i=%d jj=%d f2: %26.20g %26.20g %26.20g %26.20g\n",ptrgeom->i,jj,f2[0],f2[1],f2[2],f2[3]);
+      }
+
+      // get Jacobian (uncentered, ok?  Probably actually best.  Don't want to go back along unknown trajectory in U that might lead to bad P(U))
+      DLOOPA(ii) J[ii][jj]=(f2[ii] - f1[ii])/(uu[jj+URAD0]-uup[jj+URAD0]);
+
+      // restore uu after getting changed by f_implicit_lab(f2)
+      uu[jj+URAD0]=uup[jj+URAD0];
     }
+    
 
 
     if(showmessagesheavy){
@@ -1651,9 +1657,8 @@ static void koral_source_rad_calc(int method, FTYPE *pr, FTYPE *Ui, FTYPE *Uf, F
 
   PLOOP(pliter,pl) Gdpl[pl] = Gdabspl[pl] = 0.0;
   // equal and opposite forces on fluid and radiation due to radiation 4-force
-  // sign of G that goes between Koral determination of G and HARM source term.
-#define SIGNGD (-1.0)
-  //#define SIGNGD 1.0
+  // sign of G that goes between Koral determination of G and HARM source term (e.g. positive \lambda is a cooling of the fluid and heating of the photons, and gives G_t>0 so -G_t<0 and adds to R^t_t such that R^t_t - G_t becomes more negative and so more photon energy density)
+#define SIGNGD (-SIGNGD2)
   DLOOPA(jj) Gdpl[UU+jj]    = -SIGNGD*Gd[jj];
   DLOOPA(jj) Gdpl[URAD0+jj] = +SIGNGD*Gd[jj];
 

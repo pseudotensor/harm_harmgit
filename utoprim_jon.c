@@ -1541,11 +1541,7 @@ static int Wp2prim(int showmessages, PFTYPE *lpflag, int eomtype, FTYPE *prim, F
     if(showmessages && debugfail>=2 ) {
       tmpdiff = w - rho0;
       dualfprintf(fail_file,
-                  "rho or uu < 0 failure: rho,w,(w-rho),p,u  = %21.15g %21.15g %21.15g %21.15g %21.15g \n",
-                  rho0,w,tmpdiff,p,u) ;
-      dualfprintf(fail_file,
-                  "rho or uu < 0 failure: gamma,utsq = %21.15g %21.15g  \n",  gamma, utsq) ;
-      dualfprintf(fail_file,"nstep=%ld steppart=%d :: t=%21.15g :: i=%d j=%d k=%d p=%d\n",nstep,steppart,t,ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p);
+                  "rho or uu < 0 failure: rho,w,(w-rho),p,u  = %21.15g %21.15g %21.15g %21.15g %21.15g gamma,utsq = %21.15g %21.15g : nstep=%ld steppart=%d :: t=%21.15g :: i=%d j=%d k=%d p=%d\n",rho0,w,tmpdiff,p,u,gamma, utsq,nstep,steppart,t,ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p);
     }
     // Below changed to pressure since internal energy can be negative due to arbitrary energy per baryon offset
     if((rho0<=0.)&&(p>=0.)) *lpflag=  UTOPRIMFAILRHONEG;

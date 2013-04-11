@@ -1158,7 +1158,9 @@ int init_global(void)
     // tf = 100*DTdumpgen[0]; // 100 dumps(?)
     tf = 1000*DTdumpgen[0]; // koral in default setup does 1000 dumps
 
-    DODIAGEVERYSUBSTEP = 1;
+    //DODIAGEVERYSUBSTEP = 1;
+
+    if(WHICHPROBLEM==RADDONUT) DODIAGEVERYSUBSTEP = 1;
 
   }
 
@@ -3798,6 +3800,10 @@ void adjust_fluxctstag_emfs(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR
 //absorption
 FTYPE calc_kappa_user(FTYPE rho, FTYPE T,FTYPE x,FTYPE y,FTYPE z)
 {
+  //  if(WHICHPROBLEM==RADDONUT && nstep>100){
+  //    return(0.0);
+  //  }
+  //  else return(KAPPAUSER(rho,T));
   return(KAPPAUSER(rho,T));
 }
 
