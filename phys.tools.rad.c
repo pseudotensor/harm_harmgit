@@ -574,7 +574,7 @@ static int f_error_check(int showmessages, int showmessagesheavy, int iter, FTYP
 
   // see if passed convergence test
   if(passedconv){
-    if(showmessagesheavy) dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iter DONE1=%d for conv=%g : f3report=%g %g %g %g\n",nstep,steppart,dt,ptrgeom->i,iter,f3report[0],f3report[1],f3report[2],f3report[3]);
+    if(showmessagesheavy) dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iter=%d DONE1 for conv=%g : f3report=%g %g %g %g\n",nstep,steppart,dt,ptrgeom->i,iter,conv,f3report[0],f3report[1],f3report[2],f3report[3]);
     return(1);
   }
   else{
@@ -583,7 +583,7 @@ static int f_error_check(int showmessages, int showmessagesheavy, int iter, FTYP
       dualfprintf(fail_file,"POSTF1: uu: %g %g %g %g : uu0=%g %g %g %g\n",uu[URAD0],uu[URAD1],uu[URAD2],uu[URAD3],uu0[URAD0],uu0[URAD1],uu0[URAD2],uu0[URAD3]);
       int iii;
       DLOOPA(iii) dualfprintf(fail_file,"iii=%d f1=%26.20g f1norm=%26.20g\n",iii,f1[iii],f1norm[iii]);
-      dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iter iter=%d : %g %g %g %g\n",nstep,steppart,dt,ptrgeom->i,iter,f3report[0],f3report[1],f3report[2],f3report[3]);
+      dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iter=%d : %g %g %g %g\n",nstep,steppart,dt,ptrgeom->i,iter,f3report[0],f3report[1],f3report[2],f3report[3]);
     }
     return(0);
   }
