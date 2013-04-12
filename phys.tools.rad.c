@@ -2,7 +2,9 @@
 
 static int f_implicit_lab(int failreturnallowable, int whichcall, int showmessages, int allowlocalfailurefixandnoreport, FTYPE *pp0, FTYPE *uu0,FTYPE *uu,FTYPE localdt, struct of_geom *ptrgeom,  FTYPE *f, FTYPE *fnorm);
 
-static void koral_source_rad_calc(int method, FTYPE *pr, FTYPE *Ui, FTYPE *Uf, FTYPE *dUother, FTYPE *CUf, FTYPE *Gpl, struct of_geom *ptrgeom, FTYPE *dtsub);
+static void koral_source_rad_calc(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *Gdpl, FTYPE *Gdabspl, FTYPE *chi, struct of_state *q);
+static void koral_source_dtsub_rad_calc(int method, FTYPE *pr, FTYPE *Ui, FTYPE *Uf, FTYPE *dUother, FTYPE *CUf, FTYPE *Gdpl, struct of_geom *ptrgeom, FTYPE *dtsub);
+
 
 
 static void calc_Gd(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *G, FTYPE *chireturn, FTYPE *Gabs);
@@ -122,7 +124,6 @@ static int Utoprimgen_failwrapper(int showmessages, int allowlocalfailurefixandn
 //NOTE: uu WILL be changed from inside this fcn
 static int f_implicit_lab(int failreturnallowable, int whichcall, int showmessages, int allowlocalfailurefixandnoreport, FTYPE *pp0, FTYPE *uu0,FTYPE *uu,FTYPE localdt, struct of_geom *ptrgeom,  FTYPE *f, FTYPE *fnorm)
 {
-  struct of_state q;
   FTYPE pp[NPR];
   int pliter, pl;
   int iv;
@@ -149,33 +150,27 @@ static int f_implicit_lab(int failreturnallowable, int whichcall, int showmessag
     return(failreturn);
   }
 
-  // re-get needed q's
-  //  get_state_uconucovonly(pp, ptrgeom, &q);
-  //  get_state_uradconuradcovonly(pp, ptrgeom, &q);
-  // Not above because thermo can change
-  get_state(pp,ptrgeom,&q);
 
+  // get 4-force for all pl due to radiation
+  FTYPE Gdpl[NPR];
+  koral_source_rad_calc(pp, ptrgeom, Gdpl, NULL, NULL, NULL);
 
-  //radiative covariant four-force
-  FTYPE Gd[NDIM],Gabs[NDIM];
-  FTYPE chireturn;
-  calc_Gd(pp, ptrgeom, &q, Gd, &chireturn, Gabs);
 
   // compute difference vector between original and new 4-force's effect on conserved radiative quantities
   // NR1992 Eq. 16.6.16: y_{n+1} = y_n + h f(y_{n+1}) , so error function is f = (y_{n+1} - y_n) - h f(y_{n+1})
   // i.e. f->0 as change in conserved quantity approaches the updated value of 4-force
 #define SIGNGD2 (1.0) // sign that goes into implicit differencer that's consistent with sign for SIGNGD of -1 when using the radiative uu to measure f.
-  DLOOPA(iv) f[iv] = (uu[URAD0+iv] - uu0[URAD0+iv]) + (SIGNGD2 * localdt * Gd[iv]);
+  DLOOPA(iv) f[iv] = (uu[URAD0+iv] - uu0[URAD0+iv]) + (SIGNGD2 * localdt * Gdpl[URAD0+iv]);
 
   // get error normalization that involves actual things being differenced
-  DLOOPA(iv) fnorm[iv] = 0.5*(fabs(uu[URAD0+iv]) + fabs(uu0[URAD0+iv]) + fabs(SIGNGD2 * localdt * Gd[iv]));
+  DLOOPA(iv) fnorm[iv] = 0.5*(fabs(uu[URAD0+iv]) + fabs(uu0[URAD0+iv]) + fabs(SIGNGD2 * localdt * Gdpl[URAD0+iv]));
 
 
   // save better guess for later inversion (including this inversion above) from this inversion
   PLOOP(pliter,pl) pp0[pl]=pp[pl];
 
 
-  //  dualfprintf(fail_file,"i=%d Gd=%g %g %g %g uuG=%g chi=%g\n",ptrgeom->i,Gd[0],Gd[1],Gd[2],Gd[3],(SIGNGD2 * localdt * Gd[iv]),chireturn);
+  //  dualfprintf(fail_file,"i=%d Gd=%g %g %g %g uuG=%g chi=%g\n",ptrgeom->i,Gdpl[URAD0+0],Gdpl[URAD0+1],Gdpl[URAD0+2],Gdpl[URAD0+3],(SIGNGD2 * localdt * Gdpl[URAD0+iv]),chireturn);
 
 
   return 0;
@@ -242,6 +237,7 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
   if(nstep>=189 && ptrgeom->i==1 && ptrgeom->j==15){
     showmessages=showmessagesheavy=1;
   }
+    showmessages=showmessagesheavy=1;
 
 
   // setup implicit loops
@@ -278,6 +274,10 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
   else{
     PLOOP(pliter,iv) uu[iv] = uu0[iv] = Uiin[iv];
   }  
+
+
+  failreturnallowableuse=100;
+  failreturnallowable=100;
   
 
   // SUPERGODMARK KORALTODO: Need to check if UFSET with no dUother fails.  How it fails, must allow since can do nothing better.  This avoids excessive attempts to get good solution without that failure!  Should speed-up things.  But what about error recovery?  If goes from CASE to no case!
@@ -308,6 +308,11 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
     PLOOP(pliter,pl)  uupp[pl]=uup[pl]; // uupp will have solution for inversion: P(uupp)
     PLOOP(pliter,pl)  uup[pl]=uu[pl]; // uup will not necessarily have P(uup) because uu used Newton step.
     PLOOP(pliter,pl)  uuporig[pl]=uu[pl];
+
+    // DEBUG:
+    //    if(nstep>=189){
+    //      DAMPFACTOR=0.1; 
+    //    }
     
 
     /////////////////
@@ -345,7 +350,7 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
 
           // Avoid G-damping because not needed so far.  If added, competes in non-trivial way with fracuup damping that's required separately for large forces in some problems beyond iter=1 (e.g. NTUBE=31).
           //          fracdtG*=DAMPDELTA; // DAMP give only fraction of 4-force to let uu to catch-up
-          //          fracdtG=0.5; // DAMP give only fraction of 4-force to let uu to catch-up
+          //           fracdtG=0.5; // DAMP give only fraction of 4-force to let uu to catch-up
 
           fracuup*=DAMPDELTA; // DAMP in case Newton step is too large after iter>1 and stuck with certain uu from Newton step that gets stored in uup above.
 
@@ -362,7 +367,7 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
         // This doesn't necessarily mean could do P(uu0) except for iter=1.
         // Corresponds to success for a certain P(uu0,uu) pair.
         // || ptrgeom->i==23 && ptrgeom->j==24
-        if(showmessagesheavy) PLOOP(pliter,pl) dualfprintf(fail_file,"SUCCESS: pl=%d Ui=%21.15g uu0=%21.15g uu0orig=%21.15g uu=%21.15g uup=%21.15g dUother=%21.15g\n",pl,Uiin[pl],uu0[pl],uu0orig[pl],uu[pl],uup[pl],dUother[pl]);
+        if(showmessagesheavy) PLOOP(pliter,pl) dualfprintf(fail_file,"SUCCESS: pl=%d Ui=%21.15g uu0=%21.15g uu0orig=%21.15g uu=%21.15g uup=%21.15g dUother=%21.15g: fracdtuu0=%g fracdtG=%g fracuup=%g\n",pl,Uiin[pl],uu0[pl],uu0orig[pl],uu[pl],uup[pl],dUother[pl],fracdtuu0,fracdtG,fracuup);
         break;
       }
     }// end loop over f1iter
@@ -395,6 +400,11 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
     int failreturniJ=get_implicit_iJ(failreturnallowableuse, showmessages, showmessagesheavy, allowlocalfailurefixandnoreport, uu, uup, uu0, pin, fracdtG, realdt, ptrgeom, f1, f1norm, iJ);
     if(failreturniJ!=0) return(failreturniJ);
 
+    if(showmessagesheavy){
+      int iii,jjj;
+      DLOOP(iii,jjj) dualfprintf(fail_file,"iJ[%d][%d]=%g\n",iii,jjj,iJ[iii][jjj]);
+    }
+
 
     /////////
     //
@@ -426,8 +436,6 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
     
     if(showmessagesheavy){
       dualfprintf(fail_file,"POSTDX: uu: %g %g %g %g : uup=%g %g %g %g\n",uu[URAD0],uu[URAD1],uu[URAD2],uu[URAD3],uup[URAD0],uup[URAD1],uup[URAD2],uup[URAD3]);
-      int iii,jjj;
-      DLOOP(iii,jjj) dualfprintf(fail_file,"iJ[%d][%d]=%g\n",iii,jjj,iJ[iii][jjj]);
     }
 
     /////////
@@ -580,7 +588,7 @@ static int f_error_check(int showmessages, int showmessagesheavy, int iter, FTYP
   else{
     // report if didn't pass
     if(showmessagesheavy){
-      dualfprintf(fail_file,"POSTF1: uu: %g %g %g %g : uu0=%g %g %g %g\n",uu[URAD0],uu[URAD1],uu[URAD2],uu[URAD3],uu0[URAD0],uu0[URAD1],uu0[URAD2],uu0[URAD3]);
+      dualfprintf(fail_file,"POSTF1 (conv=%g): uu: %g %g %g %g : uu0=%g %g %g %g\n",conv,uu[URAD0],uu[URAD1],uu[URAD2],uu[URAD3],uu0[URAD0],uu0[URAD1],uu0[URAD2],uu0[URAD3]);
       int iii;
       DLOOPA(iii) dualfprintf(fail_file,"iii=%d f1=%26.20g f1norm=%26.20g\n",iii,f1[iii],f1norm[iii]);
       dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iter=%d : %g %g %g %g\n",nstep,steppart,dt,ptrgeom->i,iter,f3report[0],f3report[1],f3report[2],f3report[3]);
@@ -1371,7 +1379,7 @@ int koral_source_rad(int whichradsourcemethod, FTYPE *pin, FTYPE *pf, int *didre
     int whichsc = RADSOURCE;
     // try explicit (with or without sub-cycling)
     //    dualfprintf(fail_file,"Trying explicit: whichradsourcemethod=%d\n",whichradsourcemethod);
-    int failexplicit=source_explicit(whichsc, whichradsourcemethod,methoddtsub,koral_source_rad_calc,pinorig, Uiinorig, Ufinorig, CUf, ptrgeom, qorig, dUother, dUcomp);
+    int failexplicit=source_explicit(whichsc, whichradsourcemethod,methoddtsub,koral_source_dtsub_rad_calc,pinorig, Uiinorig, Ufinorig, CUf, ptrgeom, qorig, dUother, dUcomp);
     if(failexplicit==EXPLICITFAILED){
       if(whichradsourcemethod==SOURCEMETHODEXPLICIT || whichradsourcemethod==SOURCEMETHODEXPLICITSUBCYCLE || whichradsourcemethod==SOURCEMETHODEXPLICITREVERSIONFROMIMPLICIT || whichradsourcemethod==SOURCEMETHODEXPLICITSUBCYCLEREVERSIONFROMIMPLICIT){
         // still do explicit anyways, since best can do with the choice of method -- will fail possibly to work if stiff regime, but ok in non-stiff.
@@ -1599,32 +1607,53 @@ static void calc_Gd(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYP
 
 }
 
+
+
 // get 4-force for all pl's
-static void koral_source_rad_calc(int method, FTYPE *pr, FTYPE *Ui, FTYPE *Uf, FTYPE *dUother, FTYPE *CUf, FTYPE *Gdpl, struct of_geom *ptrgeom, FTYPE *dtsub)
+static void koral_source_rad_calc(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *Gdpl, FTYPE *Gdabspl, FTYPE *chi, struct of_state *q)
 {
-  FTYPE Gd[NDIM],Gdabs[NDIM],Gdabspl[NPR];
   int jj;
   int pliter,pl;
-  FTYPE chi;
+  FTYPE Gd[NDIM],Gdabs[NDIM];
+  struct of_state qlocal;
+  FTYPE chilocal;
 
-  struct of_state q;
+  if(q==NULL) q=&qlocal;
+  if(chi==NULL) chi=&chilocal;
+
+
   // no, thermodynamics stuff can change since MHD fluid U changes, so must do get_state() as above
-  //  get_state_uconucovonly(pr, ptrgeom, &q);
-  //  get_state_uradconuradcovonly(pr, ptrgeom, &q);
-  get_state(pr,ptrgeom,&q);
+  //  get_state_uconucovonly(pr, ptrgeom, q);
+  //  get_state_uradconuradcovonly(pr, ptrgeom, q);
+  get_state(pr,ptrgeom,q);
 
-  calc_Gd(pr, ptrgeom, &q, Gd, &chi, Gdabs);
+  calc_Gd(pr, ptrgeom, q, Gd, chi, Gdabs);
 
-  PLOOP(pliter,pl) Gdpl[pl] = Gdabspl[pl] = 0.0;
+  PLOOP(pliter,pl) Gdpl[pl] = 0.0;
   // equal and opposite forces on fluid and radiation due to radiation 4-force
   // sign of G that goes between Koral determination of G and HARM source term (e.g. positive \lambda is a cooling of the fluid and heating of the photons, and gives G_t>0 so -G_t<0 and adds to R^t_t such that R^t_t - G_t becomes more negative and so more photon energy density)
 #define SIGNGD (-SIGNGD2)
   DLOOPA(jj) Gdpl[UU+jj]    = -SIGNGD*Gd[jj];
   DLOOPA(jj) Gdpl[URAD0+jj] = +SIGNGD*Gd[jj];
 
-  DLOOPA(jj) Gdabspl[UU+jj]    = Gdabs[jj];
-  DLOOPA(jj) Gdabspl[URAD0+jj] = Gdabs[jj];
+  if(Gdabspl!=NULL){
+    PLOOP(pliter,pl) Gdabspl[pl] = 0.0;
+    DLOOPA(jj) Gdabspl[UU+jj]    = Gdabs[jj];
+    DLOOPA(jj) Gdabspl[URAD0+jj] = Gdabs[jj];
+  }
 
+
+}
+
+
+// get 4-force and dtsub for all pl's
+static void koral_source_dtsub_rad_calc(int method, FTYPE *pr, FTYPE *Ui, FTYPE *Uf, FTYPE *dUother, FTYPE *CUf, FTYPE *Gdpl, struct of_geom *ptrgeom, FTYPE *dtsub)
+{
+  FTYPE Gdabspl[NPR];
+  FTYPE chi;
+  struct of_state q;
+
+  koral_source_rad_calc(pr,ptrgeom,Gdpl,Gdabspl,&chi,&q);
 
   if(dtsub!=NULL){
     // then assume expect calculation of dtsub
