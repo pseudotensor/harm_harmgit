@@ -237,7 +237,7 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
   if(nstep>=189 && ptrgeom->i==1 && ptrgeom->j==15){
     showmessages=showmessagesheavy=1;
   }
-    showmessages=showmessagesheavy=1;
+  //    showmessages=showmessagesheavy=1;
 
 
   // setup implicit loops
@@ -1632,7 +1632,8 @@ static void koral_source_rad_calc(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *Gdp
   PLOOP(pliter,pl) Gdpl[pl] = 0.0;
   // equal and opposite forces on fluid and radiation due to radiation 4-force
   // sign of G that goes between Koral determination of G and HARM source term (e.g. positive \lambda is a cooling of the fluid and heating of the photons, and gives G_t>0 so -G_t<0 and adds to R^t_t such that R^t_t - G_t becomes more negative and so more photon energy density)
-#define SIGNGD (-SIGNGD2)
+  // That is, equation is d_t R^t_t + Gdpl = 0
+#define SIGNGD (SIGNGD2)
   DLOOPA(jj) Gdpl[UU+jj]    = -SIGNGD*Gd[jj];
   DLOOPA(jj) Gdpl[URAD0+jj] = +SIGNGD*Gd[jj];
 
