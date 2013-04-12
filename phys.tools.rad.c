@@ -43,6 +43,8 @@ static int calc_rad_lambda(FTYPE *pp, struct of_geom *ptrgeom, FTYPE kappa, FTYP
 
 
 static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int showmessagesheavy, int allowlocalfailurefixandnoreport, FTYPE *uu, FTYPE *uup, FTYPE *uu0, FTYPE *pin, FTYPE fracdtG, FTYPE realdt, struct of_geom *ptrgeom, FTYPE *f1, FTYPE *f1norm, FTYPE (*iJ)[NDIM]);
+static int f_error_check(int showmessages, int showmessagesheavy, int iter, FTYPE conv, FTYPE *f1, FTYPE *f1norm, FTYPE *uu0, FTYPE *uu, struct of_geom *ptrgeom);
+
 
 
 
@@ -196,7 +198,6 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
   FTYPE uu0[NPR],uup[NPR],uupp[NPR],uu[NPR]; 
   FTYPE uuporig[NPR],uu0orig[NPR];
   FTYPE f1[NDIM],f1norm[NDIM];
-  FTYPE f3[NDIM],f3a[NDIM],f3b[NDIM],f3c[NDIM],f3d[NDIM],f3norm[NDIM];
   FTYPE x[NDIM];
   FTYPE realdt;
   FTYPE radsource[NPR], deltas[NDIM]; 
@@ -238,9 +239,9 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
   int showmessagesheavy=0;  // very detailed for common debugging
   int allowlocalfailurefixandnoreport=0; // must be 0 so implicit method knows when really failure
 
-  //  if(nstep>=189 && ptrgeom->i==1 && ptrgeom->j==15){
-  //    showmessages=showmessagesheavy=1;
-  //  }
+  if(nstep>=189 && ptrgeom->i==1 && ptrgeom->j==15){
+    showmessages=showmessagesheavy=1;
+  }
 
 
   // setup implicit loops
@@ -383,46 +384,7 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
     //test pre-convergence using initial |dU/U|
     // KORALTODO: This isn't a completely general error check since force might be large for fluid that needs itself to have more accuracy, but if using ~NUMEPSILON, won't resolve 4-force of radiation on fluid to better than that.
     FTYPE LOCALPREIMPCONV=(10.0*NUMEPSILON); // more strict than later tolerance
-    DLOOPA(ii){
-      f3a[ii]=fabs(f1[ii]/(SMALL+fabs(uu0[URAD0])));
-      f3b[ii]=fabs(f1[ii]/(SMALL+MAX(fabs(uu0[UU]),fabs(uu0[URAD0]))));
-      f3c[ii]=fabs(f1[ii]/(SMALL+MAX(fabs(f1norm[ii]),fabs(uu0[URAD0]))));
-      f3d[ii]=fabs(f1[ii]/(SMALL+MAX(fabs(uu0[UU]),MAX(fabs(f1norm[ii]),fabs(uu0[URAD0])))));
-    }
-    if(IMPLICITERRORNORM==1){
-      if(f3a[0]<LOCALPREIMPCONV && f3a[1]<LOCALPREIMPCONV && f3a[2]<LOCALPREIMPCONV && f3a[3]<LOCALPREIMPCONV){
-        if(showmessagesheavy) dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iter PREDONE1=%d : %g %g %g %g : %g %g %g %g\n",nstep,steppart,dt,ptrgeom->i,iter,f3a[0],f3a[1],f3a[2],f3a[3],f3b[0],f3b[1],f3b[2],f3b[3]);
-        break;
-      }
-    }
-    else if(IMPLICITERRORNORM==2){
-      if(f3b[0]<LOCALPREIMPCONV && f3b[1]<LOCALPREIMPCONV && f3b[2]<LOCALPREIMPCONV && f3b[3]<LOCALPREIMPCONV){
-        if(showmessagesheavy) dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iter PREDONE1=%d : %g %g %g %g : %g %g %g %g\n",nstep,steppart,dt,ptrgeom->i,iter,f3b[0],f3b[1],f3b[2],f3b[3],f3b[0],f3b[1],f3b[2],f3b[3]);
-        break;
-      }
-    }
-    else if(IMPLICITERRORNORM==3){
-      if(f3c[0]<LOCALPREIMPCONV && f3c[1]<LOCALPREIMPCONV && f3c[2]<LOCALPREIMPCONV && f3c[3]<LOCALPREIMPCONV){
-        if(showmessagesheavy) dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iter PREDONE1=%d : %g %g %g %g : %g %g %g %g\n",nstep,steppart,dt,ptrgeom->i,iter,f3c[0],f3c[1],f3c[2],f3c[3],f3c[0],f3c[1],f3c[2],f3c[3]);
-        break;
-      }
-    }
-    else if(IMPLICITERRORNORM==4){
-      if(f3d[0]<LOCALPREIMPCONV && f3d[1]<LOCALPREIMPCONV && f3d[2]<LOCALPREIMPCONV && f3d[3]<LOCALPREIMPCONV){
-        if(showmessagesheavy) dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iter PREDONE1=%d : %g %g %g %g : %g %g %g %g\n",nstep,steppart,dt,ptrgeom->i,iter,f3d[0],f3d[1],f3d[2],f3d[3],f3d[0],f3d[1],f3d[2],f3d[3]);
-        break;
-      }
-    }
-
-
-
-    if(showmessagesheavy){
-      dualfprintf(fail_file,"POSTF1: uu: %g %g %g %g : uup=%g %g %g %g\n",uu[URAD0],uu[URAD1],uu[URAD2],uu[URAD3],uup[URAD0],uup[URAD1],uup[URAD2],uup[URAD3]);
-      int iii;
-      DLOOPA(iii) dualfprintf(fail_file,"iii=%d f1=%26.20g f1norm=%26.20g\n",iii,f1[iii],f1norm[iii]);
-      dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iter iter=%d : %g %g %g %g : %g %g %g %g\n",nstep,steppart,dt,ptrgeom->i,iter,f3d[0],f3d[1],f3d[2],f3d[3],f3d[0],f3d[1],f3d[2],f3d[3]);
-    }
-
+    if(f_error_check(showmessages, showmessagesheavy, iter, LOCALPREIMPCONV,f1,f1norm,uu0,uu,ptrgeom)) break;
 
     
     /////////
@@ -445,6 +407,7 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
     //
     // step forward uu=x
     // DAMPFACTOR unused so far because don't know a priori whether to damp.  fracuup does post-inversion effective damping of this Newton step.
+    // Newton step: U = U0 - (df/dU)^{-1}|_{U=U0} f(U0)
     //
     /////////
     DLOOPA(ii){
@@ -501,109 +464,51 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
     // KORALTODO: This isn't a completely general error check since force might be large for fluid.  So using (e.g.) 1E-6 might still imply a ~1 or larger error for the fluid.  Only down to ~NUMEPSILON will radiation 4-force be unresolved as fluid source term.
     // NOTE: Have to be careful with decreasing DAMPFACTOR or fracdtuu0 because can become small enough that apparently fake convergence with below condition, so only check for convergence if all DAMPs are 1.0.
     /////////
-    if(checkconv){
-      //test convergence using |dU/U|
-      DLOOPA(ii){
-        f3[ii]=(uu[ii+URAD0]-uup[ii+URAD0]);
-        f3a[ii]=fabs(f3[ii]/(SMALL+fabs(uup[URAD0])));
-        f3b[ii]=fabs(f3[ii]/(SMALL+MAX(fabs(uup[UU]),fabs(uup[URAD0]))));
-        f3norm[ii]=fabs(uu[ii+URAD0])+fabs(uup[ii+URAD0]);
-        f3c[ii]=fabs(f3[ii]/(SMALL+MAX(fabs(f3norm[ii]),fabs(uup[URAD0]))));
-        f3d[ii]=fabs(f3[ii]/(SMALL+MAX(fabs(uup[UU]),MAX(fabs(f3norm[ii]),fabs(uup[URAD0])))));
-      }
-      
-      // see if |dU/U|<tolerance for all components (KORALTODO: What if one component very small and sub-dominant?)
-      if(IMPLICITERRORNORM==1){
-        if(f3a[0]<IMPTRYCONV && f3a[1]<IMPTRYCONV && f3a[2]<IMPTRYCONV && f3a[3]<IMPTRYCONV){
-          if(showmessagesheavy) dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iterDONE1=%d : %g %g %g %g\n",nstep,steppart,dt,ptrgeom->i,iter,f3a[0],f3a[1],f3a[2],f3a[3]);
-          break;
-        }
-      }
-      else if(IMPLICITERRORNORM==2){
-        if(f3b[0]<IMPTRYCONV && f3b[1]<IMPTRYCONV && f3b[2]<IMPTRYCONV && f3b[3]<IMPTRYCONV){
-          if(showmessagesheavy) dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iterDONE1=%d : %g %g %g %g\n",nstep,steppart,dt,ptrgeom->i,iter,f3b[0],f3b[1],f3b[2],f3b[3]);
-          break;
-        }
-      }
-      else if(IMPLICITERRORNORM==3){
-        if(f3c[0]<IMPTRYCONV && f3c[1]<IMPTRYCONV && f3c[2]<IMPTRYCONV && f3c[3]<IMPTRYCONV){
-          if(showmessagesheavy) dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iterDONE1=%d : %g %g %g %g\n",nstep,steppart,dt,ptrgeom->i,iter,f3c[0],f3c[1],f3c[2],f3c[3]);
-          break;
-        }
-      }
-      else if(IMPLICITERRORNORM==4){
-        if(f3d[0]<IMPTRYCONV && f3d[1]<IMPTRYCONV && f3d[2]<IMPTRYCONV && f3d[3]<IMPTRYCONV){
-          if(showmessagesheavy) dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iterDONE1=%d : %g %g %g %g\n",nstep,steppart,dt,ptrgeom->i,iter,f3d[0],f3d[1],f3d[2],f3d[3]);
-          break;
-        }
-      }
+    //test convergence using |dU/U|
+    FTYPE f3[NDIM],f3norm[NDIM];
+    DLOOPA(ii){
+      f3[ii]=(uu[ii+URAD0]-uup[ii+URAD0]);
+      f3norm[ii]=fabs(uu[ii+URAD0])+fabs(uup[ii+URAD0]);
     }
+
+    // check convergence
+    if(checkconv){
+      if(f_error_check(showmessages, showmessagesheavy, iter, IMPTRYCONV,f3,f3norm,uup,uu,ptrgeom)) break;
+    } // end if checking convergence
  
 
     /////////
-    //
     // see if took too many Newton steps
-    //
     /////////
     if(iter>IMPMAXITER){
-      // KORALTODO: Need backup that won't fail.
+      if(f_error_check(showmessages, showmessagesheavy, iter, IMPALLOWCONV,f3,f3norm,uup,uu,ptrgeom)){
 
-      //test convergence using |dU/U|
-      DLOOPA(ii){
-        f3[ii]=(uu[ii+URAD0]-uup[ii+URAD0]);
-        f3a[ii]=fabs(f3[ii]/(SMALL+fabs(uup[URAD0])));
-        f3b[ii]=fabs(f3[ii]/(SMALL+MAX(fabs(uup[UU]),fabs(uup[URAD0]))));
-        f3norm[ii]=fabs(uu[ii+URAD0])+fabs(uup[ii+URAD0]);
-        f3c[ii]=fabs(f3[ii]/(SMALL+MAX(fabs(f3norm[ii]),fabs(uup[URAD0]))));
-        f3d[ii]=fabs(f3[ii]/(SMALL+MAX(fabs(uup[UU]),MAX(fabs(f3norm[ii]),fabs(uup[URAD0])))));
-      }
-
-      // check all conditions rather than only each for IMPLICITERRORNORM
-      if(f3a[0]<IMPALLOWCONV && f3a[1]<IMPALLOWCONV && f3a[2]<IMPALLOWCONV && f3a[3]<IMPALLOWCONV){
-        if(showmessagesheavy) dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iterDONE1=%d : %g %g %g %g\n",nstep,steppart,dt,ptrgeom->i,iter,f3a[0],f3a[1],f3a[2],f3a[3]);
-        if(showmessages && debugfail>=2) dualfprintf(fail_file,"iter>IMPMAXITER=%d : iter exceeded in solve_implicit_lab().  But f3a error was ok at %g %g %g %g : checkconv=%d (if checkconv=0, could be issue!)\n",IMPMAXITER,f3a[0],f3a[1],f3a[2],f3a[3],checkconv);
-        // NOTE: If checkconv=0, then wasn't ready to check convergence and smallness of f3a might only mean smallness of fracuup.  So look for "checkconv=0" cases in fail output.
-        break;
-      }
-      else if(f3b[0]<IMPALLOWCONV && f3b[1]<IMPALLOWCONV && f3b[2]<IMPALLOWCONV && f3b[3]<IMPALLOWCONV){
-        if(showmessagesheavy) dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iterDONE1=%d : %g %g %g %g\n",nstep,steppart,dt,ptrgeom->i,iter,f3b[0],f3b[1],f3b[2],f3b[3]);
-        if(showmessages && debugfail>=2) dualfprintf(fail_file,"iter>IMPMAXITER=%d : iter exceeded in solve_implicit_lab().  But f3b error was ok at %g %g %g %g : checkconv=%d (if checkconv=0, could be issue!)\n",IMPMAXITER,f3b[0],f3b[1],f3b[2],f3b[3],checkconv);
-        // NOTE: If checkconv=0, then wasn't ready to check convergence and smallness of f3b might only mean smallness of fracuup.  So look for "checkconv=0" cases in fail output.
-        break;
-      }
-      else if(f3c[0]<IMPALLOWCONV && f3c[1]<IMPALLOWCONV && f3c[2]<IMPALLOWCONV && f3c[3]<IMPALLOWCONV){
-        if(showmessagesheavy) dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iterDONE1=%d : %g %g %g %g\n",nstep,steppart,dt,ptrgeom->i,iter,f3c[0],f3c[1],f3c[2],f3c[3]);
-        if(showmessages && debugfail>=2) dualfprintf(fail_file,"iter>IMPMAXITER=%d : iter exceeded in solve_implicit_lab().  But f3c error was ok at %g %g %g %g : checkconv=%d (if checkconv=0, could be issue!)\n",IMPMAXITER,f3c[0],f3c[1],f3c[2],f3c[3],checkconv);
-        // NOTE: If checkconv=0, then wasn't ready to check convergence and smallness of f3c might only mean smallness of fracuup.  So look for "checkconv=0" cases in fail output.
-        break;
-      }
-      else if(f3d[0]<IMPALLOWCONV && f3d[1]<IMPALLOWCONV && f3d[2]<IMPALLOWCONV && f3d[3]<IMPALLOWCONV){
-        if(showmessagesheavy) dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iterDONE1=%d : %g %g %g %g\n",nstep,steppart,dt,ptrgeom->i,iter,f3d[0],f3d[1],f3d[2],f3d[3]);
-        if(showmessages && debugfail>=2) dualfprintf(fail_file,"iter>IMPMAXITER=%d : iter exceeded in solve_implicit_lab().  But f3d error was ok at %g %g %g %g : checkconv=%d (if checkconv=0, could be issue!)\n",IMPMAXITER,f3d[0],f3d[1],f3d[2],f3d[3],checkconv);
-        // NOTE: If checkconv=0, then wasn't ready to check convergence and smallness of f3d might only mean smallness of fracuup.  So look for "checkconv=0" cases in fail output.
+        if(showmessages && debugfail>=2) dualfprintf(fail_file,"iter>IMPMAXITER=%d : iter exceeded in solve_implicit_lab().  But f3 was allowed error. checkconv=%d (if checkconv=0, could be issue!)\n",IMPMAXITER,checkconv);
+        // NOTE: If checkconv=0, then wasn't ready to check convergence and smallness of f3 might only mean smallness of fracuup.  So look for "checkconv=0" cases in fail output.
         break;
       }
       else{
-        if(debugfail>=2) dualfprintf(fail_file,"iter>IMPMAXITER=%d : iter exceeded in solve_implicit_lab(). ijk=%d %d %d :  Bad error: a=%g %g %g %g b=%g %g %g %g c=%g %g %g %g d=%g %g %g %g\n",IMPMAXITER,ptrgeom->i,ptrgeom->j,ptrgeom->k,f3a[0],f3a[1],f3a[2],f3a[3],f3b[0],f3b[1],f3b[2],f3b[3],f3c[0],f3c[1],f3c[2],f3c[3],f3d[0],f3d[1],f3d[2],f3d[3]);
+        // KORALTODO: Need backup that won't fail.
+        if(debugfail>=2) dualfprintf(fail_file,"iter>IMPMAXITER=%d : iter exceeded in solve_implicit_lab(). ijk=%d %d %d :  Bad error.\n",IMPMAXITER,ptrgeom->i,ptrgeom->j,ptrgeom->k);
         return(1);
       }
-    }
+    }//end if maximum iterations
 
-    if(showmessagesheavy){
-      dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iter=%d : %g %g %g %g : %g %g %g %g\n",nstep,steppart,dt,ptrgeom->i,iter,f3a[0],f3a[1],f3a[2],f3a[3],f3b[0],f3b[1],f3b[2],f3b[3]);
-      dualfprintf(fail_file,"F3CHECK: uu: %g %g %g %g : uup=%g %g %g %g\n",uu[URAD0],uu[URAD1],uu[URAD2],uu[URAD3],uup[URAD0],uup[URAD1],uup[URAD2],uup[URAD3]);
-    }
   }// end do
   while(1);
+
+
   
 
   // diagnose
   numofiter+=iter;
-
-
   if(showmessagesheavy) dualfprintf(fail_file,"numimplicits=%lld averagef1iter=%g averageiter=%g\n",numimplicits,(FTYPE)numoff1iter/(FTYPE)numimplicits,(FTYPE)numofiter/(FTYPE)numimplicits);
 
 
+
+
+  ///////////////////
+  //
   // get source update as "dU" = dU/dt using real dt that used during implicit iterations, and will eventually use to update U in advance.c.
   DLOOPA(jj) deltas[jj]=(uu[URAD0+jj]-uu0[URAD0+jj])/realdt;
 
@@ -630,6 +535,61 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
 }
 
 
+static int f_error_check(int showmessages, int showmessagesheavy, int iter, FTYPE conv, FTYPE *f1, FTYPE *f1norm, FTYPE *uu0, FTYPE *uu, struct of_geom *ptrgeom)
+{
+  int ii,jj;
+  FTYPE f3[NDIM],f3report[NDIM];
+  FTYPE f3a[NDIM],f3b[NDIM],f3c[NDIM],f3d[NDIM];
+  int passedconv;
+
+  // default
+  passedconv=0;
+
+  // get error
+  DLOOPA(ii){
+    f3a[ii]=fabs(f1[ii]/(SMALL+fabs(uu0[URAD0])));
+    f3b[ii]=fabs(f1[ii]/(SMALL+MAX(fabs(uu0[UU]),fabs(uu0[URAD0]))));
+    f3c[ii]=fabs(f1[ii]/(SMALL+MAX(fabs(f1norm[ii]),fabs(uu0[URAD0]))));
+    f3d[ii]=fabs(f1[ii]/(SMALL+MAX(fabs(uu0[UU]),MAX(fabs(f1norm[ii]),fabs(uu0[URAD0])))));
+  }
+
+  // evaluate error
+  if(IMPLICITERRORNORM==1){
+    if(f3a[0]<conv && f3a[1]<conv && f3a[2]<conv && f3a[3]<conv) passedconv=1;
+    DLOOPA(ii) f3report[ii]=f3a[ii];
+  }
+  else if(IMPLICITERRORNORM==2){
+    if(f3b[0]<conv && f3b[1]<conv && f3b[2]<conv && f3b[3]<conv) passedconv=1;
+    DLOOPA(ii) f3report[ii]=f3a[ii];
+  }
+  else if(IMPLICITERRORNORM==3){
+    if(f3c[0]<conv && f3c[1]<conv && f3c[2]<conv && f3c[3]<conv) passedconv=1;
+    DLOOPA(ii) f3report[ii]=f3a[ii];
+  }
+  else if(IMPLICITERRORNORM==4){
+    if(f3d[0]<conv && f3d[1]<conv && f3d[2]<conv && f3d[3]<conv) passedconv=1;
+    DLOOPA(ii) f3report[ii]=f3a[ii];
+  }
+  
+
+  // see if passed convergence test
+  if(passedconv){
+    if(showmessagesheavy) dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iter DONE1=%d for conv=%g : f3report=%g %g %g %g\n",nstep,steppart,dt,ptrgeom->i,iter,f3report[0],f3report[1],f3report[2],f3report[3]);
+    return(1);
+  }
+  else{
+    // report if didn't pass
+    if(showmessagesheavy){
+      dualfprintf(fail_file,"POSTF1: uu: %g %g %g %g : uu0=%g %g %g %g\n",uu[URAD0],uu[URAD1],uu[URAD2],uu[URAD3],uu0[URAD0],uu0[URAD1],uu0[URAD2],uu0[URAD3]);
+      int iii;
+      DLOOPA(iii) dualfprintf(fail_file,"iii=%d f1=%26.20g f1norm=%26.20g\n",iii,f1[iii],f1norm[iii]);
+      dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iter iter=%d : %g %g %g %g\n",nstep,steppart,dt,ptrgeom->i,iter,f3report[0],f3report[1],f3report[2],f3report[3]);
+    }
+    return(0);
+  }
+
+  return(0);
+}
 
 
 
