@@ -25,18 +25,22 @@ static int Utoprimgen_failwrapper(int showmessages, int allowlocalfailurefixandn
 static int simplefast_rad(int dir, struct of_geom *geom,struct of_state *q, FTYPE vrad2,FTYPE *vmin, FTYPE *vmax);
 
 
-static int opacity_interpolated_urfconrel(FTYPE tautotmax, FTYPE *pp,struct of_geom *ptrgeom,FTYPE *Av, FTYPE Erf,FTYPE gammarel2,FTYPE *Erfnew, FTYPE *urfconrel);
+static int opacity_interpolated_urfconrel(FTYPE tautotmax, FTYPE *pp,struct of_geom *ptrgeom,FTYPE *Avcon, FTYPE Erf,FTYPE gammarel2,FTYPE *Erfnew, FTYPE *urfconrel);
 
 static FTYPE compute_dt(FTYPE *CUf, FTYPE dtin);
 
-static int get_m1closure_gammarel2(int showmessages, struct of_geom *ptrgeom, FTYPE *Av, FTYPE *gammarel2return, FTYPE *deltareturn, FTYPE *numeratorreturn, FTYPE *divisorreturn);
-static int get_m1closure_gammarel2_cold(int showmessages, struct of_geom *ptrgeom, FTYPE *Av, FTYPE *gammarel2return, FTYPE *deltareturn, FTYPE *numeratorreturn, FTYPE *divisorreturn, FTYPE *Erfreturn, FTYPE *urfconrel);
+static int get_m1closure_gammarel2_old(int showmessages, struct of_geom *ptrgeom, FTYPE *Avcon, FTYPE *Avcov, FTYPE *gammarel2return, FTYPE *deltareturn, FTYPE *numeratorreturn, FTYPE *divisorreturn);
+static int get_m1closure_gammarel2(int showmessages, struct of_geom *ptrgeom, FTYPE *Avcon, FTYPE *Avcov, FTYPE *gammarel2return, FTYPE *deltareturn, FTYPE *numeratorreturn, FTYPE *divisorreturn);
+
+static int get_m1closure_gammarel2_cold_old(int showmessages, struct of_geom *ptrgeom, FTYPE *Avcon, FTYPE *Avcov, FTYPE *gammarel2return, FTYPE *deltareturn, FTYPE *numeratorreturn, FTYPE *divisorreturn, FTYPE *Erfreturn, FTYPE *urfconrel);
+static int get_m1closure_gammarel2_cold(int showmessages, struct of_geom *ptrgeom, FTYPE *Avcon, FTYPE *Avcov, FTYPE *gammarel2return, FTYPE *deltareturn, FTYPE *numeratorreturn, FTYPE *divisorreturn, FTYPE *Erfreturn, FTYPE *urfconrel);
 
 
-static int get_m1closure_Erf(struct of_geom *ptrgeom, FTYPE *Av, FTYPE gammarel2, FTYPE *Erfreturn);
+static int get_m1closure_Erf(struct of_geom *ptrgeom, FTYPE *Avcon, FTYPE gammarel2, FTYPE *Erfreturn);
 
-static int get_m1closure_urfconrel(int showmessages, int allowlocalfailurefixandnoreport, struct of_geom *ptrgeom, FTYPE *pp, FTYPE *Av, FTYPE gammarel2, FTYPE delta, FTYPE numerator, FTYPE divisor, FTYPE *Erfreturn, FTYPE *urfconrel, PFTYPE *lpflag, PFTYPE *lpflagrad);
-static int get_m1closure_urfconrel_olek(int showmessages, int allowlocalfailurefixandnoreport, struct of_geom *ptrgeom, FTYPE *pp, FTYPE *Av, FTYPE gammarel2, FTYPE delta, FTYPE *Erfreturn, FTYPE *urfconrel, PFTYPE *lpflag, PFTYPE *lpflagrad);
+static int get_m1closure_urfconrel_old(int showmessages, int allowlocalfailurefixandnoreport, struct of_geom *ptrgeom, FTYPE *pp, FTYPE *Avcon, FTYPE *Avcov, FTYPE gammarel2, FTYPE delta, FTYPE numerator, FTYPE divisor, FTYPE *Erfreturn, FTYPE *urfconrel, PFTYPE *lpflag, PFTYPE *lpflagrad);
+static int get_m1closure_urfconrel(int showmessages, int allowlocalfailurefixandnoreport, struct of_geom *ptrgeom, FTYPE *pp, FTYPE *Avcon, FTYPE *Avcov, FTYPE gammarel2, FTYPE delta, FTYPE numerator, FTYPE divisor, FTYPE *Erfreturn, FTYPE *urfconrel, PFTYPE *lpflag, PFTYPE *lpflagrad);
+static int get_m1closure_urfconrel_olek(int showmessages, int allowlocalfailurefixandnoreport, struct of_geom *ptrgeom, FTYPE *pp, FTYPE *Avcon, FTYPE *Avcov, FTYPE gammarel2, FTYPE delta, FTYPE *Erfreturn, FTYPE *urfconrel, PFTYPE *lpflag, PFTYPE *lpflagrad);
 
 
 
@@ -45,7 +49,8 @@ static int calc_rad_lambda(FTYPE *pp, struct of_geom *ptrgeom, FTYPE kappa, FTYP
 
 
 static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int showmessagesheavy, int allowlocalfailurefixandnoreport, FTYPE *uu, FTYPE *uup, FTYPE *uu0, FTYPE *pin, FTYPE fracdtG, FTYPE realdt, struct of_geom *ptrgeom, FTYPE *f1, FTYPE *f1norm, FTYPE (*iJ)[NDIM]);
-static int f_error_check(int showmessages, int showmessagesheavy, int iter, FTYPE conv, FTYPE *f1, FTYPE *f1norm, FTYPE *uu0, FTYPE *uu, struct of_geom *ptrgeom);
+static int f_error_check(int showmessages, int showmessagesheavy, int iter, FTYPE conv, FTYPE *f1, FTYPE *f1norm, FTYPE *f1report, FTYPE *uu0, FTYPE *uu, struct of_geom *ptrgeom);
+
 
 
 
@@ -53,16 +58,21 @@ static int f_error_check(int showmessages, int showmessagesheavy, int iter, FTYP
 
 // mnemonics for return modes so schemes know how failed and what to do.
 // worse failure should be larger number
-#define UTOPRIMGENWRAPPERRETURNFAILRAD 1
-#define UTOPRIMGENWRAPPERRETURNFAILMHD 2
+#define UTOPRIMGENWRAPPERRETURNNOFAIL  (UTOPRIMNOFAIL)
+#define UTOPRIMGENWRAPPERRETURNFAILRAD (1)
+#define UTOPRIMGENWRAPPERRETURNFAILMHD (2)
 
 // wrapper for Utoprimgen() that returns non-zero if failed in some way so know can't continue with that method
 static int Utoprimgen_failwrapper(int showmessages, int allowlocalfailurefixandnoreport, int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of_geom *ptrgeom, FTYPE *pr, struct of_newtonstats *newtonstats)
 {
+  int failreturn;
+
+  // default
+  failreturn=0;
 
   //calculating primitives  
   // OPTMARK: Should optimize this to  not try to get down to machine precision
-  MYFUN(Utoprimgen(showmessages, allowlocalfailurefixandnoreport, finalstep, EVOLVEUTOPRIM, UNOTHING, U, ptrgeom, pr, newtonstats),"phys.tools.rad.c:Utoprimgen_failwrapper()", "Utoprimgen", 1);
+  MYFUN(Utoprimgen(showmessages, allowlocalfailurefixandnoreport, finalstep, evolvetype, inputtype, U, ptrgeom, pr, newtonstats),"phys.tools.rad.c:Utoprimgen_failwrapper()", "Utoprimgen", 1);
 
   // check how inversion did.  If didn't succeed, then check if soft failure and pass.  Else if hard failure have to return didn't work.
   int lpflag,lpflagrad;
@@ -77,18 +87,31 @@ static int Utoprimgen_failwrapper(int showmessages, int allowlocalfailurefixandn
     // have to reduce Newton step if getting failure.
     GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL)=UTOPRIMRADNOFAIL;
     if(showmessages && debugfail>=2) dualfprintf(fail_file,"Got some radiation inversion failure during Utoprimgen_failwrapper: ijk=%d %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
-    return(UTOPRIMGENWRAPPERRETURNFAILRAD);
+    failreturn=UTOPRIMGENWRAPPERRETURNFAILRAD;
   }
   else if( IFUTOPRIMFAIL(lpflag) || IFUTOPRIMRADFAIL(lpflagrad) ){
     // these need to get fixed-up, but can't, so return failure
     if(showmessages && debugfail>=2) dualfprintf(fail_file,"Got hard failure of inversion (MHD part only considered as hard) in f_implicit_lab(): ijk=%d %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
-    return(UTOPRIMGENWRAPPERRETURNFAILMHD);
+    failreturn=UTOPRIMGENWRAPPERRETURNFAILMHD;
   }
   else{
     // no failure
     // dualfprintf(fail_file,"No failure in Utoprimgen_failwrapper: ijk=%d %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
   }
   
+
+  if(debugfail>=2 && showmessages){
+    struct of_state q;
+    MYFUN(get_stateforcheckinversion(pr, ptrgeom, &q),"flux.c:fluxcalc()", "get_state()", 1);
+    int outputtype=inputtype;
+    FTYPE Unew[NPR];
+    MYFUN(primtoU(outputtype,pr, &q, ptrgeom, Unew),"step_ch.c:advance()", "primtoU()", 1); // UtoU inside doesn't do anything...therefore for REMOVERESTMASSFROMUU==1, Unew[UU] will have rest-mass included
+    int pliter,pl;
+    PLOOP(pliter,pl) dualfprintf(fail_file,"COMPARE: pl=%d pr=%g U=%g Unew=%g\n",pl,pr[pl],U[pl],Unew[pl]);
+    int jj;
+    DLOOPA(jj) dualfprintf(fail_file,"COMPARE: jj=%d uradcon=%g uradcov=%g\n",jj,q.uradcon[jj],q.uradcov[jj]);
+    DLOOPA(jj) dualfprintf(fail_file,"COMPARE: jj=%d ucon=%g ucov=%g\n",jj,q.ucon[jj],q.ucov[jj]);
+  }
 
  
 
@@ -104,7 +127,7 @@ static int Utoprimgen_failwrapper(int showmessages, int allowlocalfailurefixandn
   }
 
 
-  return(0);
+  return(failreturn);
 }
 
 
@@ -192,13 +215,16 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
   FTYPE iJ[NDIM][NDIM];
   FTYPE uu0[NPR],uup[NPR],uupp[NPR],uu[NPR]; 
   FTYPE uuporig[NPR],uu0orig[NPR];
-  FTYPE f1[NDIM],f1norm[NDIM];
+  FTYPE f1[NDIM],f1norm[NDIM],f1report[NDIM],f3report[NDIM];
   FTYPE x[NDIM];
   FTYPE realdt;
   FTYPE radsource[NPR], deltas[NDIM]; 
   int pl;
   static long long int numimplicits=0;
   static long long int numoff1iter=0,numofiter=0;
+  FTYPE bestuu[NPR],lowestfreport[NDIM];
+  int gotbest;
+
 
 
 
@@ -234,12 +260,32 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
   int showmessagesheavy=0;  // very detailed for common debugging
   int allowlocalfailurefixandnoreport=0; // must be 0 so implicit method knows when really failure
 
-  if(nstep>=189 && ptrgeom->i==1 && ptrgeom->j==15){
+
+
+#if(0)
+  // DEBUG:
+  if(nstep>=2068 && ptrgeom->i==3 && ptrgeom->j==26){
+  //  if(nstep>=189){
     showmessages=showmessagesheavy=1;
+    int kk;
+    DLOOP(jj,kk) dualfprintf(fail_file,"gn%d%d=%26.20g\n",jj+1,kk+1,ptrgeom->gcon[GIND(jj,kk)]);
+    DLOOP(jj,kk) dualfprintf(fail_file,"gv%d%d=%26.20g\n",jj+1,kk+1,ptrgeom->gcov[GIND(jj,kk)]);
+
   }
   //    showmessages=showmessagesheavy=1;
+#endif
 
 
+
+
+  //////////////
+  // setup reversion to best solution for uu in case iterations lead to worse error and reach maximum iterations.
+  gotbest=0;
+  DLOOPA(jj) lowestfreport[jj]=BIG;
+  FTYPE pinuse[NPR];
+  PLOOP(pliter,pl) pinuse[pl]=pin[pl];
+
+  ///////////////////
   // setup implicit loops
   realdt = compute_dt(CUf,dt);
   FTYPE DAMPFACTOR=1.0; // factor by which step Newton's method.
@@ -260,7 +306,7 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
     int failreturn;
     int finalstep = 1;
     FTYPE prtest[NPR];
-    PLOOP(pliter,pl) prtest[pl]=pin[pl]; // initial guess
+    PLOOP(pliter,pl) prtest[pl]=pinuse[pl]; // initial guess
     failreturnallowable=Utoprimgen_failwrapper(showmessages,allowlocalfailurefixandnoreport, finalstep, EVOLVEUTOPRIM, UNOTHING, Uiin, ptrgeom, prtest, &newtonstats);
     if(failreturnallowable!=UTOPRIMNOFAIL){
       if(showmessages && debugfail>=2) dualfprintf(fail_file,"Utoprimgen_wrapper() says that Uiin is already a problem with %d\n",failreturnallowable);
@@ -276,8 +322,6 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
   }  
 
 
-  failreturnallowableuse=100;
-  failreturnallowable=100;
   
 
   // SUPERGODMARK KORALTODO: Need to check if UFSET with no dUother fails.  How it fails, must allow since can do nothing better.  This avoids excessive attempts to get good solution without that failure!  Should speed-up things.  But what about error recovery?  If goes from CASE to no case!
@@ -302,6 +346,25 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
   do{
     iter++;
     
+    
+    if(iter>10){ // KORALTODO: improve upon this later
+      // assume trying hard and failing to work, then allow CASE radiation errors
+      failreturnallowableuse=UTOPRIMGENWRAPPERRETURNFAILRAD;
+      failreturnallowable=UTOPRIMGENWRAPPERRETURNFAILRAD;
+    }
+
+    // KORALTODO: improve on this later.
+    // Problem is can start jumping too far in steps for near tough spots.
+    // While in normal inversion routine damping is to avoid breaching into unphysical solution space with nan/inf, below is to avoid oscillating around solution
+    if(iter>20){
+      DAMPFACTOR=0.37;
+    }
+    if(iter>40){
+      DAMPFACTOR=0.23;
+    }
+    if(iter>100){
+      DAMPFACTOR=0.17;
+    }
 
 
     //vector of conserved at the previous two iterations
@@ -309,11 +372,20 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
     PLOOP(pliter,pl)  uup[pl]=uu[pl]; // uup will not necessarily have P(uup) because uu used Newton step.
     PLOOP(pliter,pl)  uuporig[pl]=uu[pl];
 
+
     // DEBUG:
     //    if(nstep>=189){
-    //      DAMPFACTOR=0.1; 
+     //      DAMPFACTOR=0.1; 
     //    }
+
+
+
     
+
+    // KORALTODO: Once use certain uu0 value and succeed in getting f1, not enough.  But if take a step and *then* good f1, then know that original U was good choice and can restart from that point instead of backing up uu0 again.
+    // KORALTODO: Look at whether bounding error by sign as in bisection (only true in 1D!!), and if approaching 0 slowly enough and still hit CASE, then must be real CASE not a stepping issue.
+    // KORALTODO: Getting f1 is just about f1(U) as far as radiation is concerned.  So as far as CASE issues, getting f1(U) means we are good with that U and we can certainly stick with the used uu0.
+
 
     /////////////////
     //
@@ -322,7 +394,7 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
     /////////////////
     for(f1iter=0;f1iter<MAXF1TRIES;f1iter++){
       int whichcall=1;
-      failreturn=f_implicit_lab(failreturnallowableuse, whichcall,showmessages, allowlocalfailurefixandnoreport, pin, uu0, uu, fracdtG*realdt, ptrgeom, f1, f1norm); // modifies uu
+      failreturn=f_implicit_lab(failreturnallowableuse, whichcall,showmessages, allowlocalfailurefixandnoreport, pinuse, uu0, uu, fracdtG*realdt, ptrgeom, f1, f1norm); // modifies uu and pinuse
       if(failreturn){
         // if initial uu failed, then should take smaller jump from Uiin->uu until settled between fluid and radiation.
         // If here, know original Uiin is good, so take baby steps in case uu needs heavy raditive changes.
@@ -336,6 +408,8 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
         if(fracdtuu0<BACKUPRELEASEFAIL){
           failreturnallowableuse=failreturnallowable;
         }
+
+
 
         PLOOP(pliter,pl) uu0[pl]=UFSET(CUf,fracdtuu0*dt,Uiin[pl],Ufin[pl],dUother[pl],0.0); // modifies uu0
 
@@ -367,7 +441,7 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
         // This doesn't necessarily mean could do P(uu0) except for iter=1.
         // Corresponds to success for a certain P(uu0,uu) pair.
         // || ptrgeom->i==23 && ptrgeom->j==24
-        if(showmessagesheavy) PLOOP(pliter,pl) dualfprintf(fail_file,"SUCCESS: pl=%d Ui=%21.15g uu0=%21.15g uu0orig=%21.15g uu=%21.15g uup=%21.15g dUother=%21.15g: fracdtuu0=%g fracdtG=%g fracuup=%g\n",pl,Uiin[pl],uu0[pl],uu0orig[pl],uu[pl],uup[pl],dUother[pl],fracdtuu0,fracdtG,fracuup);
+        if(showmessagesheavy) PLOOP(pliter,pl) dualfprintf(fail_file,"SUCCESS: pl=%d Ui=%21.15g uu0=%21.15g uu0orig=%21.15g uu=%21.15g uup=%21.15g dUother=%21.15g: pinuse(pnew)=%g : fracdtuu0=%g fracdtG=%g fracuup=%g\n",pl,Uiin[pl],uu0[pl],uu0orig[pl],uu[pl],uup[pl],dUother[pl],pinuse[pl],fracdtuu0,fracdtG,fracuup);
         break;
       }
     }// end loop over f1iter
@@ -375,6 +449,16 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
       if(debugfail>=2) dualfprintf(fail_file,"Reached MAXF1TRIES\n");
       // Note that if inversion reduces to entropy or cold, don't fail, so passes until reached this point.  But convergence can be hard if flipping around which EOMs for the inversion are actually used.
       return(1);
+    }
+
+
+
+    if(showmessagesheavy && iter==1){
+      PLOOP(pliter,pl) dualfprintf(fail_file,"POSTuu0: pl=%d pinuse=%26.20g pin=%26.20g uu0=%26.20g uu=%26.20g\n",pl,pinuse[pl],pin[pl],uu0[pl],uu[pl]);
+      struct of_state qreport;
+      get_state(pinuse,ptrgeom,&qreport);
+      DLOOPA(jj) dualfprintf(fail_file,"return: jj=%d uradcon=%26.20g uradcov=%26.20g\n",jj,qreport.uradcon[jj],qreport.uradcov[jj]);
+      DLOOPA(jj) dualfprintf(fail_file,"return: jj=%d ucon=%26.20g ucov=%26.20g\n",jj,qreport.ucon[jj],qreport.ucov[jj]);
     }
 
     
@@ -389,7 +473,7 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
     //test pre-convergence using initial |dU/U|
     // KORALTODO: This isn't a completely general error check since force might be large for fluid that needs itself to have more accuracy, but if using ~NUMEPSILON, won't resolve 4-force of radiation on fluid to better than that.
     FTYPE LOCALPREIMPCONV=(10.0*NUMEPSILON); // more strict than later tolerance
-    if(f_error_check(showmessages, showmessagesheavy, iter, LOCALPREIMPCONV,f1,f1norm,uu0,uu,ptrgeom)) break;
+    if(f_error_check(showmessages, showmessagesheavy, iter, LOCALPREIMPCONV,f1,f1norm,f1report,uu0,uu,ptrgeom)) break;
 
     
     /////////
@@ -397,7 +481,7 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
     // get Jacobian and inversion Jacobian 
     //
     /////////
-    int failreturniJ=get_implicit_iJ(failreturnallowableuse, showmessages, showmessagesheavy, allowlocalfailurefixandnoreport, uu, uup, uu0, pin, fracdtG, realdt, ptrgeom, f1, f1norm, iJ);
+    int failreturniJ=get_implicit_iJ(failreturnallowableuse, showmessages, showmessagesheavy, allowlocalfailurefixandnoreport, uu, uup, uu0, pinuse, fracdtG, realdt, ptrgeom, f1, f1norm, iJ);
     if(failreturniJ!=0) return(failreturniJ);
 
     if(showmessagesheavy){
@@ -481,7 +565,18 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
 
     // check convergence
     if(checkconv){
-      if(f_error_check(showmessages, showmessagesheavy, iter, IMPTRYCONV,f3,f3norm,uup,uu,ptrgeom)) break;
+      if(f_error_check(showmessages, showmessagesheavy, iter, IMPTRYCONV,f3,f3norm,f3report,uup,uu,ptrgeom)) break;
+      else{
+        // store error and solution in case eventually lead to max iterations and actually get worse error
+        FTYPE errorabs=0.0;     DLOOPA(jj) errorabs     += fabs(f3report[jj]);
+        FTYPE errorabsbest=0.0; DLOOPA(jj) errorabsbest += fabs(lowestfreport[jj]);
+        if(errorabsbest>errorabs){
+          PLOOP(pliter,pl) bestuu[pl]=uu[pl];
+          DLOOPA(jj) lowestfreport[jj]=f3report[jj];
+          gotbest=1;
+        }
+
+      }
     } // end if checking convergence
  
 
@@ -489,15 +584,35 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
     // see if took too many Newton steps
     /////////
     if(iter>IMPMAXITER){
-      if(f_error_check(showmessages, showmessagesheavy, iter, IMPALLOWCONV,f3,f3norm,uup,uu,ptrgeom)){
+      int convreturn=f_error_check(showmessages, showmessagesheavy, iter, IMPALLOWCONV,f3,f3norm,f3report,uup,uu,ptrgeom);
 
-        if(showmessages && debugfail>=2) dualfprintf(fail_file,"iter>IMPMAXITER=%d : iter exceeded in solve_implicit_lab().  But f3 was allowed error. checkconv=%d (if checkconv=0, could be issue!)\n",IMPMAXITER,checkconv);
+      if(gotbest){
+        // see if should revert to prior best
+        FTYPE errorabs=0.0;     DLOOPA(jj) errorabs     += fabs(f3report[jj]);
+        FTYPE errorabsbest=0.0; DLOOPA(jj) errorabsbest += fabs(lowestfreport[jj]);
+        if(errorabsbest<errorabs)  PLOOP(pliter,pl) uu[pl]=bestuu[pl];
+        if(showmessages && debugfail>=2) dualfprintf(fail_file,"Using best: %g %g\n",errorabs,errorabsbest);
+        // get new convreturn
+        convreturn=(lowestfreport[0]<IMPALLOWCONV && lowestfreport[1]<IMPALLOWCONV && lowestfreport[2]<IMPALLOWCONV && lowestfreport[3]<IMPALLOWCONV);
+      }
+
+      if(convreturn){
+        if(showmessages && debugfail>=2) dualfprintf(fail_file,"iter>IMPMAXITER=%d : iter exceeded in solve_implicit_lab().  But f3 was allowed error. checkconv=%d (if checkconv=0, could be issue!) : %g %g %g %g : %g %g %g %g\n",IMPMAXITER,checkconv,f3report[0],f3report[1],f3report[2],f3report[3],lowestfreport[0],lowestfreport[1],lowestfreport[2],lowestfreport[3]);
         // NOTE: If checkconv=0, then wasn't ready to check convergence and smallness of f3 might only mean smallness of fracuup.  So look for "checkconv=0" cases in fail output.
         break;
       }
       else{
         // KORALTODO: Need backup that won't fail.
-        if(debugfail>=2) dualfprintf(fail_file,"iter>IMPMAXITER=%d : iter exceeded in solve_implicit_lab(). ijk=%d %d %d :  Bad error.\n",IMPMAXITER,ptrgeom->i,ptrgeom->j,ptrgeom->k);
+        if(debugfail>=2){
+          dualfprintf(fail_file,"iter>IMPMAXITER=%d : iter exceeded in solve_implicit_lab(). ijk=%d %d %d :  Bad error.\n",IMPMAXITER,ptrgeom->i,ptrgeom->j,ptrgeom->k);
+          if(showmessages){
+            PLOOP(pliter,pl) dualfprintf(fail_file,"returning: pl=%d pinuse=%26.20g pin=%26.20g uu0=%26.20g uu=%26.20g\n",pl,pinuse[pl],pin[pl],uu0[pl],uu[pl]);
+            struct of_state qreport;
+            get_state(pin,ptrgeom,&qreport);
+            DLOOPA(jj) dualfprintf(fail_file,"return: jj=%d uradcon=%26.20g uradcov=%26.20g\n",jj,qreport.uradcon[jj],qreport.uradcov[jj]);
+            DLOOPA(jj) dualfprintf(fail_file,"return: jj=%d ucon=%26.20g ucov=%26.20g\n",jj,qreport.ucon[jj],qreport.ucov[jj]);
+          }
+        }        
         return(1);
       }
     }//end if maximum iterations
@@ -526,6 +641,7 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
   DLOOPA(jj) radsource[UU+jj]    = -SIGNGD3*deltas[jj];
   DLOOPA(jj) radsource[URAD0+jj] = +SIGNGD3*deltas[jj];
 
+
   // DEBUG:
   //  DLOOPA(jj) dualfprintf(fail_file,"nstep=%ld steppart=%d i=%d implicitGd[%d]=%g %g\n",nstep,steppart,ptrgeom->i,jj,radsource[UU+jj],radsource[URAD0+jj]);
 
@@ -536,17 +652,19 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
   PLOOP(pliter,pl) dUcomp[sc][pl] += radsource[pl];
 
   // save better guess for later inversion from this inversion
-  // PLOOP(pliter,pl) pin[pl]=pin[pl]; // pin was already modified by f_implicit_lab() with output from inversion returned through pp0
+  // pinuse was modified by f_implicit_lab(f1,pinuse) with output from inversion returned through pp0
+  // only use pinuse if successful with implicit method, since if not successful can be various bad reasons with no good pin
+  PLOOP(pliter,pl) pin[pl]=pinuse[pl];
 
   return(0);
   
 }
 
 
-static int f_error_check(int showmessages, int showmessagesheavy, int iter, FTYPE conv, FTYPE *f1, FTYPE *f1norm, FTYPE *uu0, FTYPE *uu, struct of_geom *ptrgeom)
+static int f_error_check(int showmessages, int showmessagesheavy, int iter, FTYPE conv, FTYPE *f1, FTYPE *f1norm, FTYPE *f3report, FTYPE *uu0, FTYPE *uu, struct of_geom *ptrgeom)
 {
   int ii,jj;
-  FTYPE f3[NDIM],f3report[NDIM];
+  FTYPE f3[NDIM];
   FTYPE f3a[NDIM],f3b[NDIM],f3c[NDIM],f3d[NDIM];
   int passedconv;
 
@@ -554,11 +672,15 @@ static int f_error_check(int showmessages, int showmessagesheavy, int iter, FTYP
   passedconv=0;
 
   // get error
+  // NOTE: use of gcov[ii,ii] so comparable dimensionally to f1[ii] and f1norm[ii] that are like R^t_\nu and so need sqrt(gcon[nu,nu]) multiplied on them.  This ensures error is non-dimensional.
+  FTYPE dimfact;
   DLOOPA(ii){
-    f3a[ii]=fabs(f1[ii]/(SMALL+fabs(uu0[URAD0])));
-    f3b[ii]=fabs(f1[ii]/(SMALL+MAX(fabs(uu0[UU]),fabs(uu0[URAD0]))));
-    f3c[ii]=fabs(f1[ii]/(SMALL+MAX(fabs(f1norm[ii]),fabs(uu0[URAD0]))));
-    f3d[ii]=fabs(f1[ii]/(SMALL+MAX(fabs(uu0[UU]),MAX(fabs(f1norm[ii]),fabs(uu0[URAD0])))));
+    dimfact=sqrt(fabs(ptrgeom->gcon[GIND(ii,ii)]));
+    
+    f3a[ii]=fabs(f1[ii]*dimfact/(SMALL+fabs(uu0[URAD0])));
+    f3b[ii]=fabs(f1[ii]*dimfact/(SMALL+MAX(fabs(uu0[UU]),fabs(uu0[URAD0]))));
+    f3c[ii]=fabs(f1[ii]*dimfact/(SMALL+MAX(fabs(f1norm[ii]*dimfact),fabs(uu0[URAD0]))));
+    f3d[ii]=fabs(f1[ii]*dimfact/(SMALL+MAX(fabs(uu0[UU]),MAX(fabs(f1norm[ii]*dimfact),fabs(uu0[URAD0])))));
   }
 
   // evaluate error
@@ -568,15 +690,15 @@ static int f_error_check(int showmessages, int showmessagesheavy, int iter, FTYP
   }
   else if(IMPLICITERRORNORM==2){
     if(f3b[0]<conv && f3b[1]<conv && f3b[2]<conv && f3b[3]<conv) passedconv=1;
-    DLOOPA(ii) f3report[ii]=f3a[ii];
+    DLOOPA(ii) f3report[ii]=f3b[ii];
   }
   else if(IMPLICITERRORNORM==3){
     if(f3c[0]<conv && f3c[1]<conv && f3c[2]<conv && f3c[3]<conv) passedconv=1;
-    DLOOPA(ii) f3report[ii]=f3a[ii];
+    DLOOPA(ii) f3report[ii]=f3c[ii];
   }
   else if(IMPLICITERRORNORM==4){
     if(f3d[0]<conv && f3d[1]<conv && f3d[2]<conv && f3d[3]<conv) passedconv=1;
-    DLOOPA(ii) f3report[ii]=f3a[ii];
+    DLOOPA(ii) f3report[ii]=f3d[ii];
   }
   
 
@@ -588,7 +710,7 @@ static int f_error_check(int showmessages, int showmessagesheavy, int iter, FTYP
   else{
     // report if didn't pass
     if(showmessagesheavy){
-      dualfprintf(fail_file,"POSTF1 (conv=%g): uu: %g %g %g %g : uu0=%g %g %g %g\n",conv,uu[URAD0],uu[URAD1],uu[URAD2],uu[URAD3],uu0[URAD0],uu0[URAD1],uu0[URAD2],uu0[URAD3]);
+      dualfprintf(fail_file,"POSTF1 (conv=%26.20g): uu: %26.20g %26.20g %26.20g %26.20g : uu0=%26.20g %26.20g %26.20g %26.20g\n",conv,uu[URAD0],uu[URAD1],uu[URAD2],uu[URAD3],uu0[URAD0],uu0[URAD1],uu0[URAD2],uu0[URAD3]);
       int iii;
       DLOOPA(iii) dualfprintf(fail_file,"iii=%d f1=%26.20g f1norm=%26.20g\n",iii,f1[iii],f1norm[iii]);
       dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iter=%d : %g %g %g %g\n",nstep,steppart,dt,ptrgeom->i,iter,f3report[0],f3report[1],f3report[2],f3report[3]);
@@ -610,6 +732,17 @@ static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int sho
   int ii,jj;
   FTYPE J[NDIM][NDIM],f2[NDIM],f2norm[NDIM];
 
+  // for scaling del's norm
+  FTYPE sqrtgcov[NDIM];
+  sqrtgcov[0]=1.0;
+  SLOOPA(jj) sqrtgcov[jj] = sqrt(fabs(ptrgeom->gcov[GIND(jj,jj)]));
+
+
+  // ensure pin doesn't get modified by del-shifts to get Jacobian, which can change primitives to order unity at high radiation gamma
+  FTYPE pinjac[NPR];
+  int pliter,pl;
+  PLOOP(pliter,pl) pinjac[pl]=pin[pl];
+
   /////////////
   //
   //
@@ -628,25 +761,34 @@ static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int sho
 
       while(1){
 
-        //          if(uup[jj+URAD0]==0.) del=localIMPEPS*fabs(uup[URAD0]);
         // when |URAD0|>>|URAD1|, then can't get better than machine error on URAD0, not URAD1, so using small del just for URAD1 makes no sense, so avoid above
-        del = localIMPEPS*                  MAX(fabs(uup[jj+URAD0]),fabs(uup[URAD0]))  ;
-        //else if(IMPLICITDELNORM==2) del = localIMPEPS*MAX(fabs(uup[UU]),MAX(fabs(uup[jj+URAD0]),fabs(uup[URAD0])) );
+        del = localIMPEPS*MAX(fabs(uup[jj+URAD0]), fabs(uup[URAD0]*sqrtgcov[jj]))  ;
           
         // offset uu (KORALTODO: How to ensure this doesn't have machine precision problems or is good enough difference?)
         uu[jj+URAD0]=uup[jj+URAD0]-del;
  
         // get dUresid for this offset uu
         int whichcall=2;
-        failreturn=f_implicit_lab(failreturnallowableuse, whichcall,showmessages,allowlocalfailurefixandnoreport, pin,uu0,uu,fracdtG*realdt,ptrgeom,f2,f2norm);
+        failreturn=f_implicit_lab(failreturnallowableuse, whichcall,showmessages,allowlocalfailurefixandnoreport, pinjac,uu0,uu,fracdtG*realdt,ptrgeom,f2,f2norm);
         if(failreturn){
           if(showmessages&& debugfail>=2) dualfprintf(fail_file,"f_implicit_lab for f2 failed: jj=%d.  Trying smaller localIMPEPS=%g (giving del=%g) to %g\n",jj,localIMPEPS,del,localIMPEPS*FRACIMPEPSCHANGE);
           localIMPEPS*=FRACIMPEPSCHANGE;
-          if(localIMPEPS<NUMEPSILON*10.0){
-            if(debugfail>=2) dualfprintf(fail_file,"f_implicit_lab for f2 failed: jj=%d with localIMPEPS=%g (giving del=%g)\n",jj,localIMPEPS,del);
-            return(1); // can't go below machine precision for difference else will be 0-0
+          // try making smaller until no error, unless doesn't work out
+          // see if will be able to resolve differences
+          int baddiff = fabs(uu[jj+URAD0]-uup[jj+URAD0])/(fabs(uu[jj+URAD0])+fabs(uup[jj+URAD0])) < 10.0*NUMEPSILON;
+          if(localIMPEPS<10.0*NUMEPSILON || baddiff){
+            // then probably can't resolve difference due to too small 
+            if(failreturnallowableuse>=UTOPRIMGENWRAPPERRETURNFAILRAD){
+              if(debugfail>=2) dualfprintf(fail_file,"Bad error: f_implicit_lab for f2 failed: jj=%d with localIMPEPS=%g (giving del=%g)\n",jj,localIMPEPS,del);
+              return(1); // can't go below machine precision for difference else will be 0-0 and no reversion to do.
+            }
+            else{
+              // instead of failing, allow radiation error, and restart process
+              failreturnallowableuse=UTOPRIMGENWRAPPERRETURNFAILRAD; // just changes value in this function only.  Assume that once do this, applies to all further terms in Jacobian.
+              localIMPEPS=IMPEPSSTART; // start with fresh del
+            }
           }
-        }
+        }// end if failreturn!=0
         else{
           // didn't fail
           break;
@@ -661,6 +803,10 @@ static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int sho
 
       // get Jacobian (uncentered, ok?  Probably actually best.  Don't want to go back along unknown trajectory in U that might lead to bad P(U))
       DLOOPA(ii) J[ii][jj]=(f2[ii] - f1[ii])/(uu[jj+URAD0]-uup[jj+URAD0]);
+
+      if(debugfail>=2){
+        DLOOPA(ii) if(!isfinite(J[ii][jj])) dualfprintf(fail_file,"JISNAN: %d %d : %26.20g : %26.20g %26.20g : %26.20g %26.20g\n",ii,jj,J[ii][jj],f2[ii],f1[ii],uu[jj+URAD0],uup[jj+URAD0]);
+      }
 
       // restore uu after getting changed by f_implicit_lab(f2)
       uu[jj+URAD0]=uup[jj+URAD0];
@@ -1004,6 +1150,14 @@ static int source_explicit(int whichsc, int whichradsourcemethod, int methoddtsu
   struct of_newtonstats newtonstats;
   int finalstep = 1;  //can choose either 1 or 0 depending on whether want floor-like fixups (1) or not (0).  unclear which one would work best since for Newton method to converge might want to allow negative density on the way to the correct solution, on the other hand want to prevent runaway into rho < 0 region and so want floors.
 
+#if(0)
+  // DEBUG:
+  if(nstep>=2068 && ptrgeom->i==3 && ptrgeom->j==26){
+  //  if(nstep>=189){
+    showmessages=showmessagesheavy=1;
+  }
+  //    showmessages=showmessagesheavy=1;
+#endif
 
   ////////////////
   //
@@ -1146,6 +1300,16 @@ static int source_explicit(int whichsc, int whichradsourcemethod, int methoddtsu
     if(itersub==0 && dtsub>dtsubforG) dtsub=dtsubforG; // ensure initial sub-stepping is not too large due to large state changes not accounted for yet.  Assuming slow safety factor growth in dtsub can occur from then on and that's ok since will catch updated state change to some fraction.
     //    dualfprintf(fail_file,"itersub=%d dtsub=%g\n",itersub,dtsub);
 
+
+    // if no solution for implicit and come to explicit, then failure can manifest as T large and then Gpl->nan or inf.  Must fail this scenario.
+    // This can happen even when have gotten quite close to end of step, but just no actually solution for the accurate value of U0 and G
+    PLOOP(pliter,pl) if(!isfinite(Gpl[pl])) return(EXPLICITFAILED);
+
+
+    if(showmessagesheavy&&debugfail>=2){
+      PLOOP(pliter,pl) dualfprintf(fail_file,"SOURCE: pl=%d Gpl=%g dtsub=%g prnew=%g Uiin=%g Ufin=%g dUother=%g\n",pl,Gpl[pl],dtsub,prnew[pl],Uiin[pl],Ufin[pl],dUother[pl]);
+    }
+
     if(whichradsourcemethod==SOURCEMETHODEXPLICITCHECKSFROMIMPLICIT || whichradsourcemethod==SOURCEMETHODEXPLICITSUBCYCLECHECKSFROMIMPLICIT){
       // then just check if need sub-cycles, and exit if so
       if(realdt>dtsub) return(EXPLICITFAILED);
@@ -1278,7 +1442,7 @@ static int source_explicit(int whichsc, int whichradsourcemethod, int methoddtsu
 
 
     // DEBUG:
-    //    if(debugfail>=2) PLOOP(pliter,pl) dualfprintf(fail_file,"pl=%2d Unew0=%26.20g Unew=%26.20g sourcepl*realdt=%26.20g fakefracdtuu0=%g\n",pl,Unew0[pl],Unew[pl],sourcepl[pl]*realdt,fakefracdtuu0);
+    if(showmessagesheavy &&debugfail>=2) PLOOP(pliter,pl) dualfprintf(fail_file,"POSTEXSTEP: pl=%2d Unew0=%26.20g Unew=%26.20g sourcepl*realdt=%26.20g fakefracdtuu0=%g\n",pl,Unew0[pl],Unew[pl],sourcepl[pl]*realdt,fakefracdtuu0);
 
 
     // step      
@@ -1450,7 +1614,7 @@ int koral_source_rad(int whichradsourcemethod, FTYPE *pin, FTYPE *pf, int *didre
         }
         else{
           // if sub-cycled, then have better pf than pb assumed saved in pinorig[].
-          if(debugfail>=2) dualfprintf(fail_file,"GOOD: explicit worked while implicit failed: ijk=%d %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
+          if(debugfail>=2) dualfprintf(fail_file,"GOOD: explicit worked while implicit failed (%d): ijk=%d %d %d\n",failexplicit,ptrgeom->i,ptrgeom->j,ptrgeom->k);
           PLOOP(pliter,pl) pf[pl]=pinorig[pl];
           *didreturnpf=1;
           return(0);
@@ -1717,6 +1881,14 @@ static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYP
     
     // absolute magnitude of source term that can be used for estimating importance of 4-force relative to existing conserved quantities to get dtsub
     Gabs[i] = fabs(term1) + fabs(term2);
+
+#if(0)
+    // DEBUG:
+    if(ptrgeom->i==3 && ptrgeom->j==26){
+      dualfprintf(fail_file,"i=%d term1=%g term2=%g kappa=%g lambda=%g kappaes=%g ucon=%g Gu=%g Gabs=%g\n",i,term1,term2,kappa,lambda,kappaes,ucon[i],Gu[i],Gabs[i]);
+    }
+#endif
+
   }
 
   // really a chi-effective that also includes lambda term in case cooling unrelated to absorption
@@ -2092,7 +2264,7 @@ int inverse_44matrix(FTYPE a[][NDIM], FTYPE ia[][NDIM])
 
   //  if(isnan(det)){
   if(!isfinite(det)){
-    dualfprintf(fail_file,"det in inverse 4x4 zero\n");
+    dualfprintf(fail_file,"det in inverse 4x4 zero or nan\n");
     return(1); // indicates failure
     //    myexit(13235);
   }
@@ -2516,6 +2688,11 @@ int indices_12(FTYPE A1[NDIM],FTYPE A2[NDIM],struct of_geom *ptrgeom)
 // NOTES:
 //
 // Using *lpflag<=UTOPRIMNOFAIL to check for fluid inversion success rather than a SOFTer condition (e.g. no fail or IFUTOPRIMFAILSOFT==1) because only want to trust fluid as reduction of M1 in case where velocity is accurate with non-negative densities.
+
+// 0 or 1
+// generally, should have TRYCOLD=1 as most general way to deal with failure
+#define TRYCOLD 1
+
 //
 ///////////////
 int u2p_rad(int showmessages, int allowlocalfailurefixandnoreport, FTYPE *uu, FTYPE *pin, struct of_geom *ptrgeom,PFTYPE *lpflag, PFTYPE *lpflagrad)
@@ -2544,9 +2721,10 @@ int u2p_rad(int showmessages, int allowlocalfailurefixandnoreport, FTYPE *uu, FT
 
 
   //conserved - R^t_mu
-  FTYPE Av[NDIM]={uu[URAD0],uu[URAD1],uu[URAD2],uu[URAD3]};
+  FTYPE Avcov[NDIM]={uu[URAD0],uu[URAD1],uu[URAD2],uu[URAD3]};
   //indices up - R^tmu
-  indices_12(Av,Av,ptrgeom);
+  FTYPE Avcon[NDIM];
+  indices_12(Avcov,Avcon,ptrgeom);
 
 
   FTYPE gammarel2,delta,numerator,divisor;
@@ -2569,31 +2747,31 @@ int u2p_rad(int showmessages, int allowlocalfailurefixandnoreport, FTYPE *uu, FT
  
     FTYPE alpha=ptrgeom->alphalapse; //sqrtl(-1./ptrgeom->gcon[GIND(0,0)]);
     // get energy density in fluid frame from lab-frame
-    Erf=3.*Av[0]*alpha*alpha/(4.*gammarel2-1.0);  // JCM
+    Erf=3.*Avcon[0]*alpha*alpha/(4.*gammarel2-1.0);  // JCM
 
   }
   else if(EOMRADTYPE==EOMRADM1CLOSURE){
 
     // get \gamma^2 for relative 4-velocity
-    get_m1closure_gammarel2(showmessages,ptrgeom,Av,&gammarel2,&delta,&numerator,&divisor);
+    get_m1closure_gammarel2(showmessages,ptrgeom,Avcon,Avcov,&gammarel2,&delta,&numerator,&divisor);
 
     if(0){
       // testing
-      FTYPE Avnew[NDIM]={Av[0],Av[1],Av[2],Av[3]};
+      FTYPE Avconnew[NDIM]={Avcon[0],Avcon[1],Avcon[2],Avcon[3]};
       FTYPE urfconrelnew[NDIM];
       FTYPE gammarel2new,deltanew,numeratornew,divisornew,Erfnew;
-      //      get_m1closure_gammarel2_cold(showmessages,ptrgeom,Avnew,&gammarel2new,&deltanew,&numeratornew,&divisornew,&Erfnew,urfconrelnew);
-      get_m1closure_gammarel2_cold(showmessages,ptrgeom,Avnew,NULL,&deltanew,&numeratornew,&divisornew,&Erfnew,urfconrelnew);
+      //      get_m1closure_gammarel2_cold(showmessages,ptrgeom,Avconnew,&gammarel2new,&deltanew,&numeratornew,&divisornew,&Erfnew,urfconrelnew);
+      get_m1closure_gammarel2_cold(showmessages,ptrgeom,Avconnew,Avcov,NULL,&deltanew,&numeratornew,&divisornew,&Erfnew,urfconrelnew);
     }
 
 
 
     // get E in radiation frame
-    get_m1closure_Erf(ptrgeom,Av,gammarel2,&Erf);
+    get_m1closure_Erf(ptrgeom,Avcon,gammarel2,&Erf);
 
     // get relative 4-velocity
-    if(CASECHOICE==JONCHOICE) get_m1closure_urfconrel(showmessages,allowlocalfailurefixandnoreport,ptrgeom,pp,Av,gammarel2,delta,numerator,divisor,&Erf,urfconrel,lpflag,lpflagrad);
-    else if(CASECHOICE==OLEKCHOICE) get_m1closure_urfconrel_olek(showmessages,allowlocalfailurefixandnoreport,ptrgeom,pp,Av,gammarel2,delta,&Erf,urfconrel,lpflag,lpflagrad);
+    if(CASECHOICE==JONCHOICE) get_m1closure_urfconrel(showmessages,allowlocalfailurefixandnoreport,ptrgeom,pp,Avcon,Avcov,gammarel2,delta,numerator,divisor,&Erf,urfconrel,lpflag,lpflagrad);
+    else if(CASECHOICE==OLEKCHOICE) get_m1closure_urfconrel_olek(showmessages,allowlocalfailurefixandnoreport,ptrgeom,pp,Avcon,Avcov,gammarel2,delta,&Erf,urfconrel,lpflag,lpflagrad);
 
 
   }// end if M1
@@ -2631,7 +2809,7 @@ int u2p_rad(int showmessages, int allowlocalfailurefixandnoreport, FTYPE *uu, FT
 
 
 // interpolate between optically thick and thin limits when no u2p_rad() inversion solution
-static int opacity_interpolated_urfconrel(FTYPE tautotmax, FTYPE *pp,struct of_geom *ptrgeom,FTYPE *Av, FTYPE Erf,FTYPE gammarel2,  FTYPE *Erfnew, FTYPE *urfconrel)
+static int opacity_interpolated_urfconrel(FTYPE tautotmax, FTYPE *pp,struct of_geom *ptrgeom,FTYPE *Avcon, FTYPE Erf,FTYPE gammarel2,  FTYPE *Erfnew, FTYPE *urfconrel)
 {
   int jj;
   FTYPE alpha=ptrgeom->alphalapse; //sqrtl(-1./ptrgeom->gcon[GIND(0,0)]);
@@ -2641,13 +2819,13 @@ static int opacity_interpolated_urfconrel(FTYPE tautotmax, FTYPE *pp,struct of_g
   FTYPE gammafluid,gammarel2fluid,qsqfluid,Erffluid;
   gamma_calc_fromuconrel(&pp[U1-1],ptrgeom,&gammafluid,&qsqfluid);
   gammarel2fluid=gammafluid*gammafluid;
-  get_m1closure_Erf(ptrgeom, Av, gammarel2fluid, &Erffluid);
+  get_m1closure_Erf(ptrgeom, Avcon, gammarel2fluid, &Erffluid);
   if(Erffluid<ERADLIMIT) Erffluid=ERADLIMIT;
 
   FTYPE gammarad,gammarel2rad,qsqrad,Erfrad;
   gamma_calc_fromuconrel(&pp[URAD1-1],ptrgeom,&gammarad,&qsqrad);
   gammarel2rad=gammarad*gammarad;
-  get_m1closure_Erf(ptrgeom, Av, gammarel2rad, &Erfrad);
+  get_m1closure_Erf(ptrgeom, Avcon, gammarel2rad, &Erfrad);
   if(Erfrad<ERADLIMIT) Erfrad=ERADLIMIT;
 
   // now set urfconrel.  Choose fluid if tautotmax>=2/3 (updated fluid value), while choose previous radiation value (i.e. static!)
@@ -2656,8 +2834,8 @@ static int opacity_interpolated_urfconrel(FTYPE tautotmax, FTYPE *pp,struct of_g
   *Erfnew = (1.0-tautotmaxlim)*Erfrad + tautotmaxlim*Erffluid;
   SLOOPA(jj) urfconrel[jj] = (1.0-tautotmaxlim)*pp[URAD1+jj-1] + tautotmaxlim*pp[U1+jj-1];
 
-  //  dualfprintf(fail_file,"i=%d tautotmax=%g tautotmaxlim=%g\n",ptrgeom->i,tautotmax,tautotmaxlim);
-  //  SLOOPA(jj) dualfprintf(fail_file,"jj=%d Erfrad=%g Erffluid=%g gammarad=%g gammafluid=%g Erfnew=%g urfconrel=%g\n",jj,Erfrad,Erffluid,gammarad,gammafluid,*Erfnew,urfconrel[jj]);
+  dualfprintf(fail_file,"i=%d tautotmax=%g tautotmaxlim=%g\n",ptrgeom->i,tautotmax,tautotmaxlim);
+  SLOOPA(jj) dualfprintf(fail_file,"jj=%d Erfrad=%g Erffluid=%g gammarad=%g gammafluid=%g Erfnew=%g urfconrel=%g\n",jj,Erfrad,Erffluid,gammarad,gammafluid,*Erfnew,urfconrel[jj]);
 
   return(0);
 }
@@ -2665,25 +2843,25 @@ static int opacity_interpolated_urfconrel(FTYPE tautotmax, FTYPE *pp,struct of_g
 
 
 // get's gamma^2 for lab-frame gamma
-static int get_m1closure_gammarel2(int showmessages, struct of_geom *ptrgeom, FTYPE *Av, FTYPE *gammarel2return, FTYPE *deltareturn, FTYPE *numeratorreturn, FTYPE *divisorreturn)
+static int get_m1closure_gammarel2_old(int showmessages, struct of_geom *ptrgeom, FTYPE *Avcon, FTYPE *Avcov, FTYPE *gammarel2return, FTYPE *deltareturn, FTYPE *numeratorreturn, FTYPE *divisorreturn)
 {
   FTYPE gamma2,gammarel2,delta,numerator,divisor;
 
-  if(1){
+  if(0){
     // has some catastrophic cancellation issue for non-moving velocity at very low E\sim 1E-92 (as in RADPULSE test if no temperature conversion)
 
     //g_munu R^tmu R^tnu
     int jj,kk;
     FTYPE gRR=0.0;
-    DLOOP(jj,kk) gRR += ptrgeom->gcov[GIND(jj,kk)]*Av[jj]*Av[kk];
+    DLOOP(jj,kk) gRR += ptrgeom->gcov[GIND(jj,kk)]*Avcon[jj]*Avcon[kk];
 
     //the quadratic equation for u^t of the radiation rest frame (urf[0])
     // Formed as solution for solving two equations (R^{t\nu} R^t_\nu(E,ut) and R^{tt}(E,ut)) for ut
     //supposed to provide two roots for (u^t)^2 of opposite signs
     FTYPE a,b,c;
     a=16.*gRR;
-    b=8.*(gRR*ptrgeom->gcon[GIND(0,0)]+Av[0]*Av[0]);
-    c=ptrgeom->gcon[GIND(0,0)]*(gRR*ptrgeom->gcon[GIND(0,0)]-Av[0]*Av[0]);
+    b=8.*(gRR*ptrgeom->gcon[GIND(0,0)]+Avcon[0]*Avcon[0]);
+    c=ptrgeom->gcon[GIND(0,0)]*(gRR*ptrgeom->gcon[GIND(0,0)]-Avcon[0]*Avcon[0]);
     delta=b*b-4.*a*c;
 
     numerator=0.5*(-b-sqrt(delta));
@@ -2700,7 +2878,7 @@ static int get_m1closure_gammarel2(int showmessages, struct of_geom *ptrgeom, FT
     *numeratorreturn=numerator;
     *divisorreturn=divisor;
   }
-  //    dualfprintf(fail_file,"GAMMA2CHECK: ijk=%d %d %d : %g %g : a=%g b=%g c=%g : delta=%g gRR=%g Av0123=%g %g %g %g : gamma2=%g\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,0.5*(-b-sqrt(delta))/a,0.5*(-b+sqrt(delta))/a,a,b,c,delta,gRR,Av[0],Av[1],Av[2],Av[3],gamma2);
+  //    dualfprintf(fail_file,"GAMMA2CHECK: ijk=%d %d %d : %g %g : a=%g b=%g c=%g : delta=%g gRR=%g Avcon0123=%g %g %g %g : gamma2=%g\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,0.5*(-b-sqrt(delta))/a,0.5*(-b+sqrt(delta))/a,a,b,c,delta,gRR,Avcon[0],Avcon[1],Avcon[2],Avcon[3],gamma2);
 
 
   else{
@@ -2718,10 +2896,10 @@ static int get_m1closure_gammarel2(int showmessages, struct of_geom *ptrgeom, FT
     gv33=ptrgeom->gcov[GIND(2,2)];
     gv34=ptrgeom->gcov[GIND(2,3)];
     gv44=ptrgeom->gcov[GIND(3,3)];
-    Rtt=Av[0];
-    Rtx=Av[1];
-    Rty=Av[2];
-    Rtz=Av[3];
+    Rtt=Avcon[0];
+    Rtx=Avcon[1];
+    Rty=Avcon[2];
+    Rtz=Avcon[3];
     gctt=ptrgeom->gcon[GIND(0,0)];
 
     delta = (1. + 3.*gctt*gv11)*((Rtt)*(Rtt)) + 
@@ -2773,8 +2951,112 @@ static int get_m1closure_gammarel2(int showmessages, struct of_geom *ptrgeom, FT
 
 
 
+
+
+
+
+
+
+
+
+// get's gamma^2 for lab-frame gamma  using Rd and gcon
+static int get_m1closure_gammarel2(int showmessages, struct of_geom *ptrgeom, FTYPE *Avcon, FTYPE *Avcov, FTYPE *gammarel2return, FTYPE *deltareturn, FTYPE *numeratorreturn, FTYPE *divisorreturn)
+{
+  FTYPE gamma2,gammarel2,delta,numerator,divisor;
+  FTYPE gamma2a,gamma2b;
+
+  // mathematica solution that avoids catastrophic cancellation when Rtt very small (otherwise above gives gamma2=1/2 oddly when gamma2=1) -- otherwise same as above
+  // well, then had problems for R~1E-14 for some reason when near BH.  Couldn't quickly figure out, so use no replacement of gv11.
+  // see u2p_inversion.nb
+  static FTYPE gctt, gn11, gn12,  gn13,  gn14,  gn22,  gn23,  gn24,  gn33,  gn34,  gn44,  Rtt,  Rtx,  Rty,  Rtz,  Rdtt,  Rdtx,  Rdty,  Rdtz;
+  gn11=ptrgeom->gcon[GIND(0,0)];
+  gn12=ptrgeom->gcon[GIND(0,1)];
+  gn13=ptrgeom->gcon[GIND(0,2)];
+  gn14=ptrgeom->gcon[GIND(0,3)];
+  gn22=ptrgeom->gcon[GIND(1,1)];
+  gn23=ptrgeom->gcon[GIND(1,2)];
+  gn24=ptrgeom->gcon[GIND(1,3)];
+  gn33=ptrgeom->gcon[GIND(2,2)];
+  gn34=ptrgeom->gcon[GIND(2,3)];
+  gn44=ptrgeom->gcon[GIND(3,3)];
+
+  Rtt=Avcon[0];
+  Rtx=Avcon[1];
+  Rty=Avcon[2];
+  Rtz=Avcon[3];
+
+  Rdtt=Avcov[0];
+  Rdtx=Avcov[1];
+  Rdty=Avcov[2];
+  Rdtz=Avcov[3];
+
+  gamma2a=(-0.25*(2.*Power(gn11,2)*Power(Rdtt,2) + (gn12*Rdtx + gn13*Rdty + gn14*Rdtz)*
+        (gn12*Rdtx + gn13*Rdty + gn14*Rdtz + Sqrt(4.*Power(gn11,2)*Power(Rdtt,2) + Power(gn12*Rdtx + gn13*Rdty + gn14*Rdtz,2) + 
+            gn11*(8.*gn12*Rdtt*Rdtx + 3.*gn22*Power(Rdtx,2) + 8.*gn13*Rdtt*Rdty + 6.*gn23*Rdtx*Rdty + 3.*gn33*Power(Rdty,2) + 
+               8.*gn14*Rdtt*Rdtz + 6.*gn24*Rdtx*Rdtz + 6.*gn34*Rdty*Rdtz + 3.*gn44*Power(Rdtz,2)))) + 
+       gn11*(4.*gn12*Rdtt*Rdtx + gn22*Power(Rdtx,2) + 2.*gn23*Rdtx*Rdty + gn33*Power(Rdty,2) + 2.*gn24*Rdtx*Rdtz + 
+          2.*gn34*Rdty*Rdtz + gn44*Power(Rdtz,2) + Rdtt*
+           (4.*gn13*Rdty + 4.*gn14*Rdtz + Sqrt(4.*Power(gn11,2)*Power(Rdtt,2) + Power(gn12*Rdtx + gn13*Rdty + gn14*Rdtz,2) + 
+               gn11*(8.*gn12*Rdtt*Rdtx + 3.*gn22*Power(Rdtx,2) + 8.*gn13*Rdtt*Rdty + 6.*gn23*Rdtx*Rdty + 3.*gn33*Power(Rdty,2) + 
+                  8.*gn14*Rdtt*Rdtz + 6.*gn24*Rdtx*Rdtz + 6.*gn34*Rdty*Rdtz + 3.*gn44*Power(Rdtz,2)))))))/
+   (gn11*Power(Rdtt,2) + 2.*gn12*Rdtt*Rdtx + gn22*Power(Rdtx,2) + 2.*gn13*Rdtt*Rdty + 2.*gn23*Rdtx*Rdty + gn33*Power(Rdty,2) + 
+    2.*(gn14*Rdtt + gn24*Rdtx + gn34*Rdty)*Rdtz + gn44*Power(Rdtz,2));
+
+
+  if( gamma2a<GAMMASMALLLIMIT || !isfinite(gamma2a) ){
+    gamma2b=(0.25*(-2.*Power(gn11,2)*Power(Rdtt,2) - 1.*gn11*(4.*gn12*Rdtt*Rdtx + gn22*Power(Rdtx,2) + 
+                                                              Rdty*(4.*gn13*Rdtt + 2.*gn23*Rdtx + gn33*Rdty) + 2.*(2.*gn14*Rdtt + gn24*Rdtx + gn34*Rdty)*Rdtz + gn44*Power(Rdtz,2)) + 
+                   gn11*Rdtt*Sqrt(4.*Power(gn11,2)*Power(Rdtt,2) + Power(gn12*Rdtx + gn13*Rdty + gn14*Rdtz,2) + 
+                                  gn11*(8.*gn12*Rdtt*Rdtx + 3.*gn22*Power(Rdtx,2) + 8.*gn13*Rdtt*Rdty + 6.*gn23*Rdtx*Rdty + 3.*gn33*Power(Rdty,2) + 
+                                        8.*gn14*Rdtt*Rdtz + 6.*gn24*Rdtx*Rdtz + 6.*gn34*Rdty*Rdtz + 3.*gn44*Power(Rdtz,2))) + 
+                   (gn12*Rdtx + gn13*Rdty + gn14*Rdtz)*(-1.*gn12*Rdtx - 1.*gn13*Rdty - 1.*gn14*Rdtz + 
+                                                        Sqrt(4.*Power(gn11,2)*Power(Rdtt,2) + Power(gn12*Rdtx + gn13*Rdty + gn14*Rdtz,2) + 
+                                                             gn11*(8.*gn12*Rdtt*Rdtx + 3.*gn22*Power(Rdtx,2) + 8.*gn13*Rdtt*Rdty + 6.*gn23*Rdtx*Rdty + 3.*gn33*Power(Rdty,2) + 
+                                                                   8.*gn14*Rdtt*Rdtz + 6.*gn24*Rdtx*Rdtz + 6.*gn34*Rdty*Rdtz + 3.*gn44*Power(Rdtz,2))))))/
+      (gn11*Power(Rdtt,2) + 2.*gn12*Rdtt*Rdtx + gn22*Power(Rdtx,2) + 2.*gn13*Rdtt*Rdty + 2.*gn23*Rdtx*Rdty + gn33*Power(Rdty,2) + 
+       2.*(gn14*Rdtt + gn24*Rdtx + gn34*Rdty)*Rdtz + gn44*Power(Rdtz,2));
+    gamma2=gamma2b;
+  }
+  else{
+    // choose
+    gamma2=gamma2a;
+  }
+
+  ////////////////////////
+  //
+  //cap on u^t
+  //
+  ///////////////////////
+  FTYPE alpha=ptrgeom->alphalapse;
+
+
+  // get relative 4-velocity, that is always >=1 even in GR
+  gammarel2 = gamma2*alpha*alpha;
+
+  // check for machine error away from 1.0 that happens sometimes
+  if(gammarel2>GAMMASMALLLIMIT && gammarel2<1.0){
+    // if(debugfail>=2) dualfprintf(fail_file,"Hit machine error of gammarel2=%27.20g fixed to be 1.0\n",gammarel2);
+    gammarel2=1.0;
+  }
+
+  //  dualfprintf(fail_file,"gammarel2=%g gamma2=%g delta=%26.20g\n",gammarel2,gamma2,delta);
+
+  *gammarel2return=gammarel2;
+  *deltareturn=delta=0;
+  *numeratorreturn=numerator=0;
+  *divisorreturn=divisor=0;
+  return(0);
+
+}
+
+
+
+
+
+
+
 // get Erf
-static int get_m1closure_Erf(struct of_geom *ptrgeom, FTYPE *Av, FTYPE gammarel2, FTYPE *Erfreturn)
+static int get_m1closure_Erf(struct of_geom *ptrgeom, FTYPE *Avcon, FTYPE gammarel2, FTYPE *Erfreturn)
 {
   FTYPE alpha=ptrgeom->alphalapse;
 
@@ -2784,18 +3066,15 @@ static int get_m1closure_Erf(struct of_geom *ptrgeom, FTYPE *Av, FTYPE gammarel2
   // If delta<0, then gammarel2=nan and Erf<RADLIMIT check below will fail as good.
   //
   ////////////
-  *Erfreturn = 3.*Av[0]*alpha*alpha/(4.*gammarel2-1.0);  // JCM
+  *Erfreturn = 3.*Avcon[0]*alpha*alpha/(4.*gammarel2-1.0);  // JCM
 
   return(0);
 }
 
 
-// 0 or 1
-#define TRYCOLD 0
-// COLD leads to some bombs/issues near boundaries.  Not sure why.
 
 // get contravariant relative 4-velocity in lab frame
-static int get_m1closure_urfconrel(int showmessages, int allowlocalfailurefixandnoreport, struct of_geom *ptrgeom, FTYPE *pp, FTYPE *Av, FTYPE gammarel2, FTYPE delta, FTYPE numerator, FTYPE divisor, FTYPE *Erfreturn, FTYPE *urfconrel, PFTYPE *lpflag, PFTYPE *lpflagrad)
+static int get_m1closure_urfconrel_old(int showmessages, int allowlocalfailurefixandnoreport, struct of_geom *ptrgeom, FTYPE *pp, FTYPE *Avcon, FTYPE *Avcov, FTYPE gammarel2, FTYPE delta, FTYPE numerator, FTYPE divisor, FTYPE *Erfreturn, FTYPE *urfconrel, PFTYPE *lpflag, PFTYPE *lpflagrad)
 {
   FTYPE Erf=*Erfreturn; // get initial Erf
   FTYPE gammamax=GAMMAMAXRAD;
@@ -2818,7 +3097,7 @@ static int get_m1closure_urfconrel(int showmessages, int allowlocalfailurefixand
   // NOTE: gammarel2 just below 1.0 already fixed to be =1.0
   int nonfailure=gammarel2>=1.0 && Erf>ERADLIMIT && gammarel2<=gammamax*gammamax/GAMMASMALLLIMIT/GAMMASMALLLIMIT;
   // falilure1 : gammarel2 normal, but already Erf<ERADLIMIT (note for M1 that gammarel2>=1/4 for any reasonable chance for correct non-zero Erf
-  int failure1=Av[0]<0.0 || (gammarel2>0.0 && gammarel2<=0.25 && delta>=0.0 && divisor!=0.0) || numerator==0.0 || gammarel2>=1.0 && delta>=0.0 && divisor!=0.0 && Erf<ERADLIMIT;
+  int failure1=Avcon[0]<0.0 || (gammarel2>0.0 && gammarel2<=0.25 && delta>=0.0 && divisor!=0.0) || numerator==0.0 || gammarel2>=1.0 && delta>=0.0 && divisor!=0.0 && Erf<ERADLIMIT;
   // gamma probably around 1
   int failure2=gammarel2<1.0 && gammarel2>0.0 && delta>=0.0;
   // i.e. all else, so not really used below.
@@ -2831,7 +3110,7 @@ static int get_m1closure_urfconrel(int showmessages, int allowlocalfailurefixand
     FTYPE gammarel=sqrt(gammarel2);
     FTYPE alpha=ptrgeom->alphalapse;
 
-    SLOOPA(jj) urfconrel[jj] = alpha * (Av[jj] + 1./3.*Erf*ptrgeom->gcon[GIND(0,jj)]*(4.0*gammarel2-1.0) )/(4./3.*Erf*gammarel);
+    SLOOPA(jj) urfconrel[jj] = alpha * (Avcon[jj] + 1./3.*Erf*ptrgeom->gcon[GIND(0,jj)]*(4.0*gammarel2-1.0) )/(4./3.*Erf*gammarel);
 
     *Erfreturn=Erf; // pass back new Erf to pointer
     return(0);
@@ -2841,7 +3120,7 @@ static int get_m1closure_urfconrel(int showmessages, int allowlocalfailurefixand
   else if(failure1){
     if(TRYCOLD){
       gammarel2=pow(1.0+10.0*NUMEPSILON,2.0);
-      get_m1closure_gammarel2_cold(showmessages,ptrgeom,Av,&gammarel2,&delta,&numerator,&divisor,&Erf,urfconrel);
+      get_m1closure_gammarel2_cold(showmessages,ptrgeom,Avcon,Avcov,&gammarel2,&delta,&numerator,&divisor,&Erf,urfconrel);
     }
     else{
       // Can't have Erf<0.  Like floor on internal energy density.  If leave Erf<0, then will drive code crazy with free energy.
@@ -2856,7 +3135,7 @@ static int get_m1closure_urfconrel(int showmessages, int allowlocalfailurefixand
   else if(failure2){
     if(TRYCOLD){
       gammarel2=pow(1.0+10.0*NUMEPSILON,2.0);
-      get_m1closure_gammarel2_cold(showmessages,ptrgeom,Av,&gammarel2,&delta,&numerator,&divisor,&Erf,urfconrel);
+      get_m1closure_gammarel2_cold(showmessages,ptrgeom,Avcon,Avcov,&gammarel2,&delta,&numerator,&divisor,&Erf,urfconrel);
     }
     else{
       FTYPE gammarel2orig=gammarel2;
@@ -2865,7 +3144,7 @@ static int get_m1closure_urfconrel(int showmessages, int allowlocalfailurefixand
       FTYPE gammarel=1.0;  // use this below
 
       // get new Erf(gammarel)
-      get_m1closure_Erf(ptrgeom, Av, gammarel2, &Erf);
+      get_m1closure_Erf(ptrgeom, Avcon, gammarel2, &Erf);
       if(Erf<ERADLIMIT)  Erf=ERADLIMIT;
     
       SLOOPA(jj) urfconrel[jj] = 0.0;
@@ -2877,9 +3156,9 @@ static int get_m1closure_urfconrel(int showmessages, int allowlocalfailurefixand
   else{
     if(TRYCOLD){
       gammarel2=gammamax*gammamax;
-      get_m1closure_gammarel2_cold(showmessages,ptrgeom,Av,&gammarel2,&delta,&numerator,&divisor,&Erf,urfconrel);
+      get_m1closure_gammarel2_cold(showmessages,ptrgeom,Avcon,Avcov,&gammarel2,&delta,&numerator,&divisor,&Erf,urfconrel);
       if(allowlocalfailurefixandnoreport==0) *lpflagrad=UTOPRIMRADFAILCASE1B;
-      if(showmessages && debugfail>=2) dualfprintf(fail_file,"CASE1A: gammarel>gammamax and Erf<ERADLIMIT: gammarel2=%g : i=%d j=%d k=%d : %ld %d %g\n",gammarel2,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,t);
+      if(showmessages && debugfail>=2) dualfprintf(fail_file,"CASE1A: gammarel>gammamax (cold): gammarel2=%g Erf=%g : i=%d j=%d k=%d : %ld %d %g\n",gammarel2,Erf,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,t);
     }
     else{
       FTYPE gammarel2orig=gammarel2;
@@ -2887,7 +3166,7 @@ static int get_m1closure_urfconrel(int showmessages, int allowlocalfailurefixand
       gammarel2=gammamax*gammamax;
 
       // get new Erf(gammarel)
-      get_m1closure_Erf(ptrgeom, Av, gammarel2, &Erf);
+      get_m1closure_Erf(ptrgeom, Avcon, gammarel2, &Erf);
 
 
       // Check if Erf is too small with gamma->gammamax
@@ -2910,7 +3189,7 @@ static int get_m1closure_urfconrel(int showmessages, int allowlocalfailurefixand
         // regardless of Erf value, now that have some Erf, ensure gamma=gammamax
         // lab-frame radiation relative 4-velocity
         FTYPE alpha=ptrgeom->alphalapse;
-        SLOOPA(jj) urfconrel[jj] = alpha * (Av[jj] + 1./3.*Erf*ptrgeom->gcon[GIND(0,jj)]*(4.0*gammarel2-1.0) )/(4./3.*Erf*gammarel);
+        SLOOPA(jj) urfconrel[jj] = alpha * (Avcon[jj] + 1./3.*Erf*ptrgeom->gcon[GIND(0,jj)]*(4.0*gammarel2-1.0) )/(4./3.*Erf*gammarel);
         
         // compute \gammarel using this (gammatemp can be inf if Erf=ERADLIMIT, and then rescaling below will give urfconrel=0 and gammarel=1
         FTYPE gammatemp,qsqtemp;
@@ -2950,6 +3229,9 @@ static int get_m1closure_urfconrel(int showmessages, int allowlocalfailurefixand
   SLOOPA(jj) pp[PRAD1+jj-1] = urfconrel[jj];
 
 
+#if(0)
+  // KORALTODO: Problems when tau<<1 and gamma->gammamax
+  // KORALTODO: DUH, also should only do if failure, not if no failure.
   FTYPE tautot[NDIM],tautotmax;
   if(M1REDUCE==TOOPACITYDEPENDENTFRAME){
     // then will possibly need tautotmax
@@ -2960,8 +3242,8 @@ static int get_m1closure_urfconrel(int showmessages, int allowlocalfailurefixand
   
   if(M1REDUCE==TOFLUIDFRAME && *lpflag<=UTOPRIMNOFAIL) SLOOPA(jj) urfconrel[jj]=pp[U1+jj-1];
   else if(M1REDUCE==TOZAMOFRAME) SLOOPA(jj) urfconrel[jj]=0.0;
-  else if(M1REDUCE==TOOPACITYDEPENDENTFRAME) opacity_interpolated_urfconrel(tautotmax,pp,ptrgeom,Av,Erf,gammarel2,&Erf,urfconrel);
-     
+  else if(M1REDUCE==TOOPACITYDEPENDENTFRAME) opacity_interpolated_urfconrel(tautotmax,pp,ptrgeom,Avcon,Erf,gammarel2,&Erf,urfconrel);
+#endif     
 
   *Erfreturn=Erf; // pass back new Erf to pointer
   return(0);
@@ -2970,8 +3252,145 @@ static int get_m1closure_urfconrel(int showmessages, int allowlocalfailurefixand
 
 
 
+// get contravariant relative 4-velocity in lab frame
+static int get_m1closure_urfconrel(int showmessages, int allowlocalfailurefixandnoreport, struct of_geom *ptrgeom, FTYPE *pp, FTYPE *Avcon, FTYPE *Avcov, FTYPE gammarel2, FTYPE delta, FTYPE numerator, FTYPE divisor, FTYPE *Erfreturn, FTYPE *urfconrel, PFTYPE *lpflag, PFTYPE *lpflagrad)
+{
+  FTYPE Erf=*Erfreturn; // get initial Erf
+  FTYPE gammamax=GAMMAMAXRAD;
+  int jj,kk;
+
+
+  //////////////////////
+  //
+  // Fix-up inversion if problem with gamma (i.e. velocity) or energy density in radiation rest-frame (i.e. Erf)
+  //
+  //////////////////////
+
+  // NOTE: gammarel2 just below 1.0 already fixed to be =1.0
+  int nonfailure=gammarel2>=1.0 && Erf>ERADLIMIT && gammarel2<=gammamax*gammamax/GAMMASMALLLIMIT/GAMMASMALLLIMIT;
+  // falilure1 : gammarel2 normal, but already Erf<ERADLIMIT (note for M1 that gammarel2>=1/4 for any reasonable chance for correct non-zero Erf
+  int failure1=Avcon[0]<0.0 || (gammarel2>0.0 && gammarel2<=0.25 && delta>=0.0 && divisor!=0.0) || numerator==0.0 || gammarel2>=1.0 && delta>=0.0 && divisor!=0.0 && Erf<ERADLIMIT;
+  // gamma probably around 1
+  int failure2=gammarel2<1.0 && gammarel2>0.0 && delta>=0.0;
+  // i.e. all else, so not really used below.
+  int failure3=gammarel2>gammamax*gammamax && Erf>=ERADLIMIT || gammarel2<0.0 || delta<0.  || divisor==0.0 && numerator==0.0 || divisor==0.0 && numerator!=0.0;
+
+  // any failure
+  int failure=!nonfailure || !isfinite(gammarel2) || !isfinite(Erf);
+
+  if(failure && (failure1==0 && failure2==0 && failure3==0)){
+    if(debugfail>=2) dualfprintf(fail_file,"Undetected failure, now considered\n");
+  }
+
+
+  if(nonfailure){
+    // get good relative velocity
+    FTYPE gammarel=sqrt(gammarel2);
+    FTYPE alpha=ptrgeom->alphalapse;
+
+    SLOOPA(jj) urfconrel[jj] = alpha * (Avcon[jj] + 1./3.*Erf*ptrgeom->gcon[GIND(0,jj)]*(4.0*gammarel2-1.0) )/(4./3.*Erf*gammarel);
+
+    *Erfreturn=Erf; // pass back new Erf to pointer
+    return(0);
+
+    //        dualfprintf(fail_file,"NO failure: %g %g ijk=%d %d %d\n",Erf,gammarel2,ptrgeom->i,ptrgeom->j,ptrgeom->k);
+  }
+  else{
+    // get \gammarel=1 case
+    FTYPE gammarel2slow=pow(1.0+10.0*NUMEPSILON,2.0);
+    FTYPE Avconslow[NDIM],Avcovslow[NDIM],Erfslow,urfconrelslow[NDIM];
+    DLOOPA(jj){
+      Avconslow[jj]=Avcon[jj];
+      Avcovslow[jj]=Avcov[jj];
+    }
+    Erfslow=Erf;
+    get_m1closure_gammarel2_cold(showmessages,ptrgeom,Avconslow,Avcovslow,&gammarel2slow,&delta,&numerator,&divisor,&Erfslow,urfconrelslow);
+
+    // get \gammarel=gammamax case
+    FTYPE gammarel2fast=gammamax*gammamax;
+    FTYPE Avconfast[NDIM],Avcovfast[NDIM],Erffast,urfconrelfast[NDIM];
+    DLOOPA(jj){
+      Avconfast[jj]=Avcon[jj];
+      Avcovfast[jj]=Avcov[jj];
+    }
+    Erffast=Erf;
+    get_m1closure_gammarel2_cold(showmessages,ptrgeom,Avconfast,Avcovfast,&gammarel2fast,&delta,&numerator,&divisor,&Erffast,urfconrelfast);
+
+    int usingfast=1;
+    // choose by which Avcov[0] is closest to original
+    if( fabs(Avcovslow[0]-Avcov[0])>fabs(Avcovfast[0]-Avcov[0]) ){
+      usingfast=1;
+      DLOOPA(jj){
+        Avcon[jj]=Avconfast[jj];
+        Avcov[jj]=Avcovfast[jj];
+        urfconrel[jj]=urfconrelfast[jj];
+      }
+      gammarel2=gammarel2fast;
+      Erf=Erffast;
+    }
+    else{
+      usingfast=0;
+      DLOOPA(jj){
+        Avcon[jj]=Avconslow[jj];
+        Avcov[jj]=Avcovslow[jj];
+        urfconrel[jj]=urfconrelslow[jj];
+      }
+      gammarel2=gammarel2slow;
+      Erf=Erfslow;
+    }
+    
+
+    // report
+    if(1||allowlocalfailurefixandnoreport==0) *lpflagrad=UTOPRIMRADFAILCASE1B;
+    if(showmessages && debugfail>=2) dualfprintf(fail_file,"CASEGEN: gammarel>gammamax (cold, usingfast=%d): gammarel2=%g Erf=%g : i=%d j=%d k=%d : %ld %d %g\n",usingfast,gammarel2,Erf,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,t);
+  }
+
+
+  // if here, then one failure mode.  See if optically thick or thin and reduce to (e.g.) fluid frame if thick
+
+  // can't use normal velocity with small Erf -- fails with inf or nan
+  // setup "old" pp in case used
+  pp[PRAD0] = Erf;
+  SLOOPA(jj) pp[PRAD1+jj-1] = urfconrel[jj];
+
+
+#if(0)
+  // KORALTODO: Problems when tau<<1 and gamma->gammamax
+  FTYPE tautot[NDIM],tautotmax;
+  if(M1REDUCE==TOOPACITYDEPENDENTFRAME){
+    // then will possibly need tautotmax
+    // get tautot based upon previous pp in order to determine what to do in case of failure
+    calc_tautot(pp, ptrgeom, tautot, &tautotmax);
+  }
+
+  
+  if(M1REDUCE==TOFLUIDFRAME && *lpflag<=UTOPRIMNOFAIL) SLOOPA(jj) urfconrel[jj]=pp[U1+jj-1];
+  else if(M1REDUCE==TOZAMOFRAME) SLOOPA(jj) urfconrel[jj]=0.0;
+  else if(M1REDUCE==TOOPACITYDEPENDENTFRAME) opacity_interpolated_urfconrel(tautotmax,pp,ptrgeom,Avcon,Erf,gammarel2,&Erf,urfconrel);
+#endif     
+
+  *Erfreturn=Erf; // pass back new Erf to pointer
+
+
+
+
+
+
+  if(debugfail>=2){
+    if(!isfinite(Erf) || !isfinite(gammarel2) || !isfinite(urfconrel[0])|| !isfinite(urfconrel[1])|| !isfinite(urfconrel[2])|| !isfinite(urfconrel[3]) ){
+      dualfprintf(fail_file,"JONNAN: ijk=%d %d %d :  %g %g : %g %g %g : %d %d %d %d : %g %g %g %g\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,Erf,gammarel2,urfconrel[1],urfconrel[2],urfconrel[3],failure1,failure2,failure3,failure,Avcon[0],Avcon[1],Avcon[2],Avcon[3]);
+    }
+  }
+
+
+  return(0);
+}
+
+
+
+
 // get contravariant relative 4-velocity in lab frame using Olek's koral choices
-static int get_m1closure_urfconrel_olek(int showmessages, int allowlocalfailurefixandnoreport, struct of_geom *ptrgeom, FTYPE *pp, FTYPE *Av, FTYPE gammarel2, FTYPE delta, FTYPE *Erfreturn, FTYPE *urfconrel, PFTYPE *lpflag, PFTYPE *lpflagrad)
+static int get_m1closure_urfconrel_olek(int showmessages, int allowlocalfailurefixandnoreport, struct of_geom *ptrgeom, FTYPE *pp, FTYPE *Avcon, FTYPE *Avcov, FTYPE gammarel2, FTYPE delta, FTYPE *Erfreturn, FTYPE *urfconrel, PFTYPE *lpflag, PFTYPE *lpflagrad)
 {
   FTYPE Erf=*Erfreturn; // get initial Erf
   FTYPE gammamax=GAMMAMAXRAD;
@@ -2985,7 +3404,7 @@ static int get_m1closure_urfconrel_olek(int showmessages, int allowlocalfailuref
   //////////////////////
 
   int failure1=gammarel2>1.01*gammamax*gammamax || gammarel2<0. || delta<0.;
-  int failure2=gammarel2<1. || delta<0.; // NOTE: first failure1 already catches delta<0.
+  int failure2=gammarel2<1. || delta<0. || !isfinite(gammarel2); // NOTE: first failure1 already catches delta<0.
 
 
 
@@ -2996,11 +3415,11 @@ static int get_m1closure_urfconrel_olek(int showmessages, int allowlocalfailuref
     gammarel2=gammamax*gammamax;
 
     // get new Erf(gammarel)
-    get_m1closure_Erf(ptrgeom, Av, gammarel2, &Erf);
+    get_m1closure_Erf(ptrgeom, Avcon, gammarel2, &Erf);
 
 
     // Check if Erf is too small with gamma->gammamax
-    if(Erf<ERADLIMIT){
+    if(Erf<ERADLIMIT || !isfinite(Erf)){
       if(1 || allowlocalfailurefixandnoreport==0) *lpflagrad=UTOPRIMRADFAILCASE1A;
       // Can't have Erf<0.  Like floor on internal energy density.  If leave Erf<0, then will drive code crazy with free energy.
       Erf=ERADLIMIT;
@@ -3018,7 +3437,7 @@ static int get_m1closure_urfconrel_olek(int showmessages, int allowlocalfailuref
       // regardless of Erf value, now that have some Erf, ensure gamma=gammamax
       // lab-frame radiation relative 4-velocity
       FTYPE alpha=ptrgeom->alphalapse;
-      SLOOPA(jj) urfconrel[jj] = alpha * (Av[jj] + 1./3.*Erf*ptrgeom->gcon[GIND(0,jj)]*(4.0*gammarel2-1.0) )/(4./3.*Erf*gammarel);
+      SLOOPA(jj) urfconrel[jj] = alpha * (Avcon[jj] + 1./3.*Erf*ptrgeom->gcon[GIND(0,jj)]*(4.0*gammarel2-1.0) )/(4./3.*Erf*gammarel);
         
       // compute \gammarel using this (gammatemp can be inf if Erf=ERADLIMIT, and then rescaling below will give urfconrel=0 and gammarel=1
       FTYPE gammatemp,qsqtemp;
@@ -3052,11 +3471,11 @@ static int get_m1closure_urfconrel_olek(int showmessages, int allowlocalfailuref
     FTYPE gammarel=1.0;  // use this below
 
     // get new Erf(gammarel)
-    get_m1closure_Erf(ptrgeom, Av, gammarel2, &Erf);
+    get_m1closure_Erf(ptrgeom, Avcon, gammarel2, &Erf);
     SLOOPA(jj) urfconrel[jj] = 0.0;
 
 
-    if(Erf<ERADLIMIT){ // JCM
+    if(Erf<ERADLIMIT || !isfinite(Erf)){ // JCM
       // Can't have Erf<0.  Like floor on internal energy density.  If leave Erf<0, then will drive code crazy with free energy.
       Erf=ERADLIMIT;
       if(1 || allowlocalfailurefixandnoreport==0) *lpflagrad=UTOPRIMRADFAILCASE2A;
@@ -3078,22 +3497,30 @@ static int get_m1closure_urfconrel_olek(int showmessages, int allowlocalfailuref
   //////////////////////
   else{
 
-    if(Erf<ERADLIMIT){
+    if(Erf<ERADLIMIT || !isfinite(Erf)){
       Erf=ERADLIMIT;
       SLOOPA(jj) urfconrel[jj] = 0.0;
+      // must use above because if use ERADLIMIT in normal urfconrel, then urfconrel will be HUGE and probably give inf or nan due to Avcon/(Erf*gammarel) term.
     }
-    
-    // get good relative velocity
-    FTYPE gammarel=sqrt(gammarel2);
-    FTYPE alpha=ptrgeom->alphalapse;
-
-    // NOTEMARK: This overwrites choice above for urfconrel when Erf<ERADLIMIT.
-    SLOOPA(jj) urfconrel[jj] = alpha * (Av[jj] + 1./3.*Erf*ptrgeom->gcon[GIND(0,jj)]*(4.0*gammarel2-1.0) )/(4./3.*Erf*gammarel);
+    else{
+      // get good relative velocity
+      FTYPE gammarel=sqrt(gammarel2);
+      FTYPE alpha=ptrgeom->alphalapse;
+      
+      // NOTEMARK: This overwrites choice above for urfconrel when Erf<ERADLIMIT.
+      SLOOPA(jj) urfconrel[jj] = alpha * (Avcon[jj] + 1./3.*Erf*ptrgeom->gcon[GIND(0,jj)]*(4.0*gammarel2-1.0) )/(4./3.*Erf*gammarel);
+    }
 
 
     //        dualfprintf(fail_file,"NO failure: %g %g ijk=%d %d %d\n",Erf,gammarel2,ptrgeom->i,ptrgeom->j,ptrgeom->k);
   }
 
+
+  if(debugfail>=2){
+    if(!isfinite(Erf) || !isfinite(gammarel2) || !isfinite(urfconrel[0])|| !isfinite(urfconrel[1])|| !isfinite(urfconrel[2])|| !isfinite(urfconrel[3]) ){
+      dualfprintf(fail_file,"OLEKNAN: ijk=%d %d %d :  %g %g : %g %g %g : %d %d : %g %g %g %g\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,Erf,gammarel2,urfconrel[1],urfconrel[2],urfconrel[3],failure1,failure2,Avcon[0],Avcon[1],Avcon[2],Avcon[3]);
+    }
+  }
       
   *Erfreturn=Erf; // pass back new Erf to pointer
   return(0);
@@ -3106,13 +3533,13 @@ static int get_m1closure_urfconrel_olek(int showmessages, int allowlocalfailuref
 
 
 
-
 // get's gamma assuming fixed E rather than using original R^{tt} that we assume is flawed near floor regions.  We want to preserve R^{ti} (i.e momentum)
-static int get_m1closure_gammarel2_cold(int showmessages, struct of_geom *ptrgeom, FTYPE *Av, FTYPE *gammarel2return, FTYPE *deltareturn, FTYPE *numeratorreturn, FTYPE *divisorreturn, FTYPE *Erfreturn, FTYPE *urfconrel)
+static int get_m1closure_gammarel2_cold_old(int showmessages, struct of_geom *ptrgeom, FTYPE *Avcon, FTYPE *Avcov, FTYPE *gammarel2return, FTYPE *deltareturn, FTYPE *numeratorreturn, FTYPE *divisorreturn, FTYPE *Erfreturn, FTYPE *urfconrel)
 {
   FTYPE gamma2,gammarel2,delta;
   FTYPE Erf;
   FTYPE alpha=ptrgeom->alphalapse;
+  int jj;
 
   static FTYPE gctt, gv11, gv12,  gv13,  gv14,  gv22,  gv23,  gv24,  gv33,  gv34,  gv44,  Rtt,  Rtx,  Rty,  Rtz;
   gv11=ptrgeom->gcov[GIND(0,0)];
@@ -3125,10 +3552,10 @@ static int get_m1closure_gammarel2_cold(int showmessages, struct of_geom *ptrgeo
   gv33=ptrgeom->gcov[GIND(2,2)];
   gv34=ptrgeom->gcov[GIND(2,3)];
   gv44=ptrgeom->gcov[GIND(3,3)];
-  //  Rtt=Av[0];
-  Rtx=Av[1];
-  Rty=Av[2];
-  Rtz=Av[3];
+  FTYPE Rttold=Avcon[0];
+  Rtx=Avcon[1];
+  Rty=Avcon[2];
+  Rtz=Avcon[3];
   gctt=ptrgeom->gcon[GIND(0,0)];
 
 
@@ -3236,11 +3663,13 @@ static int get_m1closure_gammarel2_cold(int showmessages, struct of_geom *ptrgeo
   if(utsq<utsqminb && utsqminb>utsqmina) utsq=utsqminb;
 
 
+  FTYPE Avcovorig[NDIM];
+  DLOOPA(jj) Avcovorig[jj]=Avcov[jj];
   
 
-  // get new Av[0]=R^{tt}
+  // get new Avcon[0]=R^{tt}
   
-  Av[0]=(-1.*(gctt + 4.*utsq)*(gctt*(gv12*Rtx + gv13*Rty + gv14*Rtz) + 4.*(gv12*Rtx + gv13*Rty + gv14*Rtz)*utsq + 
+  Avcon[0]=(-1.*(gctt + 4.*utsq)*(gctt*(gv12*Rtx + gv13*Rty + gv14*Rtz) + 4.*(gv12*Rtx + gv13*Rty + gv14*Rtz)*utsq + 
                                0.16666666666666666*Sqrt(36.*Power(gv12*Rtx + gv13*Rty + gv14*Rtz,2)*Power(gctt + 4.*utsq,2) - 
                                                         36.*(gv22*Power(Rtx,2) + 2.*gv23*Rtx*Rty + gv33*Power(Rty,2) + 2.*gv24*Rtx*Rtz + 2.*gv34*Rty*Rtz + gv44*Power(Rtz,2))*
                                                         (Power(gctt,2)*gv11 + 8.*utsq*(1. + 2.*gv11*utsq) + gctt*(-1. + 8.*gv11*utsq)))))/
@@ -3252,8 +3681,14 @@ static int get_m1closure_gammarel2_cold(int showmessages, struct of_geom *ptrgeo
                                      (Power(gctt,2)*gv11 + 8.*utsq*(1. + 2.*gv11*utsq) + gctt*(-1. + 8.*gv11*utsq)))))/
     (Power(gctt,2)*gv11 + 8.*utsq*(1. + 2.*gv11*utsq) + gctt*(-1. + 8.*gv11*utsq));
 
-  dualfprintf(fail_file,"NOR SOL: %g %g :: %g %g %g\n",Av[0],Erf,Rtx,Rty,Rtz);
-  
+
+  dualfprintf(fail_file,"NOR SOL: Avcon0new=%g Avcon0old=%g Erf=%g :: %g %g %g\n",Avcon[0],Rttold,Erf,Rtx,Rty,Rtz);
+ 
+  FTYPE Avcovnew[NDIM];
+  indices_21(Avcon,Avcovnew,ptrgeom);
+  DLOOPA(jj) dualfprintf(fail_file,"jj=%d Avcovorig=%g Avcovnew=%g\n",jj,Avcovorig[jj],Avcovnew[jj]);
+
+ 
   delta=0; // not yet
 
   if(1){
@@ -3271,7 +3706,7 @@ static int get_m1closure_gammarel2_cold(int showmessages, struct of_geom *ptrgeo
                            (Power(gctt,2)*gv11 + 8.*utsq*(1. + 2.*gv11*utsq) + gctt*(-1. + 8.*gv11*utsq))))/
       (Power(gctt,2)*gv11 + 8.*utsq*(1. + 2.*gv11*utsq) + gctt*(-1. + 8.*gv11*utsq));
 
-    dualfprintf(fail_file,"ALT SOL: %g %g : %g %g %g\n",Avalt,Erfalt,Rtx,Rty,Rtz);
+    dualfprintf(fail_file,"ALT SOL: Avalt=%g Av0old=%g Erfalt=%g : %g %g %g\n",Avalt,Rttold,Erfalt,Rtx,Rty,Rtz);
   }
 
 
@@ -3282,11 +3717,121 @@ static int get_m1closure_gammarel2_cold(int showmessages, struct of_geom *ptrgeo
   FTYPE gammarel=sqrt(gammarel2);
 
   // get relative 4-velocity
-  int jj;
-  if(Erf>0.0) SLOOPA(jj) urfconrel[jj] = alpha * (Av[jj] + 1./3.*Erf*ptrgeom->gcon[GIND(0,jj)]*(4.0*gammarel2-1.0) )/(4./3.*Erf*gammarel);
+  if(Erf>0.0) SLOOPA(jj) urfconrel[jj] = alpha * (Avcon[jj] + 1./3.*Erf*ptrgeom->gcon[GIND(0,jj)]*(4.0*gammarel2-1.0) )/(4./3.*Erf*gammarel);
   else SLOOPA(jj) urfconrel[jj] = 0.0;
 
-  dualfprintf(fail_file,"NORM ROOT 4-vel: %g %g %g\n",urfconrel[1],urfconrel[2],urfconrel[3]);
+  dualfprintf(fail_file,"NORM ROOT 4-vel: %g %g %g : %g\n",urfconrel[1],urfconrel[2],urfconrel[3],ptrgeom->gdet);
+
+  
+  *Erfreturn=Erf; // pass back new Erf to pointer
+
+
+  return(0);
+}
+
+
+
+
+
+
+
+
+
+
+
+// get's gamma assuming fixed E rather than using original R^t_t that we assume is flawed near floor regions.  We want to preserve R^t_i (i.e conserved momentum)
+static int get_m1closure_gammarel2_cold(int showmessages, struct of_geom *ptrgeom, FTYPE *Avcon, FTYPE *Avcov, FTYPE *gammarel2return, FTYPE *deltareturn, FTYPE *numeratorreturn, FTYPE *divisorreturn, FTYPE *Erfreturn, FTYPE *urfconrel)
+{
+  FTYPE gamma2,gammarel2,delta;
+  FTYPE Erf;
+  FTYPE alpha=ptrgeom->alphalapse;
+  int jj;
+
+  static FTYPE gctt, gn11, gn12,  gn13,  gn14,  gn22,  gn23,  gn24,  gn33,  gn34,  gn44,  Rtt,  Rtx,  Rty,  Rtz,  Rdtt,  Rdtx,  Rdty,  Rdtz;
+  gn11=ptrgeom->gcon[GIND(0,0)];
+  gn12=ptrgeom->gcon[GIND(0,1)];
+  gn13=ptrgeom->gcon[GIND(0,2)];
+  gn14=ptrgeom->gcon[GIND(0,3)];
+  gn22=ptrgeom->gcon[GIND(1,1)];
+  gn23=ptrgeom->gcon[GIND(1,2)];
+  gn24=ptrgeom->gcon[GIND(1,3)];
+  gn33=ptrgeom->gcon[GIND(2,2)];
+  gn34=ptrgeom->gcon[GIND(2,3)];
+  gn44=ptrgeom->gcon[GIND(3,3)];
+
+  Rtt=Avcon[0];
+  Rtx=Avcon[1];
+  Rty=Avcon[2];
+  Rtz=Avcon[3];
+
+  Rdtt=Avcov[0];
+  Rdtx=Avcov[1];
+  Rdty=Avcov[2];
+  Rdtz=Avcov[3];
+
+
+  // choose gamma
+  if(gammarel2return==NULL){
+    FTYPE gammamax=GAMMAMAXRAD;
+    gammarel2=gammamax*gammamax;
+  }
+  else gammarel2=*gammarel2return; // feed in desired gammarel2
+
+  FTYPE utsq=gammarel2/(alpha*alpha);
+
+
+  FTYPE Avcovorig[NDIM],Avconorig[NDIM];
+  DLOOPA(jj) Avcovorig[jj]=Avcov[jj];
+  DLOOPA(jj) Avconorig[jj]=Avcon[jj];
+
+  // get new Avcov[0]=R^t_t
+
+  // NOTEMARK: Note that Sqrt() is only ever negative when gammarel2<0, so never has to be concern.
+  Avcov[0]=(0.25*(-4.*(gn12*Rdtx + gn13*Rdty + gn14*Rdtz)*utsq*(gn11 + utsq) + 
+                        Sqrt((Power(gn12,2)*Power(Rdtx,2) + 2.*gn12*Rdtx*(gn13*Rdty + gn14*Rdtz) + Power(gn13*Rdty + gn14*Rdtz,2) - 
+                              1.*gn11*(gn22*Power(Rdtx,2) + 2.*gn23*Rdtx*Rdty + gn33*Power(Rdty,2) + 2.*gn24*Rdtx*Rdtz + 2.*gn34*Rdty*Rdtz + 
+                                       gn44*Power(Rdtz,2)))*utsq*(gn11 + utsq)*Power(gn11 + 4.*utsq,2))))/(gn11*utsq*(gn11 + utsq));
+
+  Erf=(0.75*Sqrt((Power(gn12,2)*Power(Rdtx,2) + 2.*gn12*Rdtx*(gn13*Rdty + gn14*Rdtz) + Power(gn13*Rdty + gn14*Rdtz,2) - 
+                           1.*gn11*(gn22*Power(Rdtx,2) + 2.*gn23*Rdtx*Rdty + gn33*Power(Rdty,2) + 2.*gn24*Rdtx*Rdtz + 2.*gn34*Rdty*Rdtz + 
+                                    gn44*Power(Rdtz,2)))*utsq*(gn11 + utsq)*Power(gn11 + 4.*utsq,2)))/(utsq*(gn11 + utsq)*(gn11 + 4.*utsq));
+
+  if(showmessages && debugfail>=2) dualfprintf(fail_file,"NOR SOL: Avcov0new=%g Avcov0old=%g Erf=%g :: %g %g %g\n",Avcov[0],Avcovorig[0],Erf,Rtx,Rty,Rtz);
+
+  //modify Avcon
+  indices_12(Avcov,Avcon,ptrgeom);
+  if(showmessages && debugfail>=2) DLOOPA(jj) dualfprintf(fail_file,"jj=%d Avconorig=%g Avconnew=%g\n",jj,Avconorig[jj],Avcon[jj]);
+
+ 
+  delta=0; // not yet
+
+  if(showmessages && debugfail>=2){
+    // alt solution
+
+    FTYPE Avcovalt = (-0.25*(4.*(gn12*Rdtx + gn13*Rdty + gn14*Rdtz)*utsq*(gn11 + utsq) + 
+       Sqrt((Power(gn12,2)*Power(Rdtx,2) + 2.*gn12*Rdtx*(gn13*Rdty + gn14*Rdtz) + Power(gn13*Rdty + gn14*Rdtz,2) - 
+           1.*gn11*(gn22*Power(Rdtx,2) + 2.*gn23*Rdtx*Rdty + gn33*Power(Rdty,2) + 2.*gn24*Rdtx*Rdtz + 2.*gn34*Rdty*Rdtz + 
+                    gn44*Power(Rdtz,2)))*utsq*(gn11 + utsq)*Power(gn11 + 4.*utsq,2))))/(gn11*utsq*(gn11 + utsq));
+    
+    FTYPE Erfalt=(-0.75*Sqrt((Power(gn12,2)*Power(Rdtx,2) + 2.*gn12*Rdtx*(gn13*Rdty + gn14*Rdtz) + Power(gn13*Rdty + gn14*Rdtz,2) - 
+                        1.*gn11*(gn22*Power(Rdtx,2) + 2.*gn23*Rdtx*Rdty + gn33*Power(Rdty,2) + 2.*gn24*Rdtx*Rdtz + 2.*gn34*Rdty*Rdtz + 
+                  gn44*Power(Rdtz,2)))*utsq*(gn11 + utsq)*Power(gn11 + 4.*utsq,2)))/(utsq*(gn11 + utsq)*(gn11 + 4.*utsq));
+
+    if(showmessages && debugfail>=2) dualfprintf(fail_file,"ALT SOL: Avcovalt=%g Avcov0old=%g Erfalt=%g : %g %g %g\n",Avcovalt,Avcovorig[0],Erfalt,Rdtx,Rdty,Rdtz);
+  }
+
+
+  *gammarel2return=gammarel2;
+  *deltareturn=delta;
+
+  // get good relative velocity
+  FTYPE gammarel=sqrt(gammarel2);
+
+  // get relative 4-velocity
+  if(Erf>0.0) SLOOPA(jj) urfconrel[jj] = alpha * (Avcon[jj] + 1./3.*Erf*ptrgeom->gcon[GIND(0,jj)]*(4.0*gammarel2-1.0) )/(4./3.*Erf*gammarel);
+  else SLOOPA(jj) urfconrel[jj] = 0.0;
+
+  if(showmessages && debugfail>=2) dualfprintf(fail_file,"NORM ROOT 4-vel: %g %g %g : %g\n",urfconrel[1],urfconrel[2],urfconrel[3],ptrgeom->gdet);
 
   
   *Erfreturn=Erf; // pass back new Erf to pointer

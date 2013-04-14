@@ -61,7 +61,7 @@ FTYPE cs2_compute_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
   h=rho0+u+pressure+SMALL;
 
   cs2=GAMMA*pressure/h;
-  if(cs2<0.0) cs2=0.0;
+  if(cs2<SMALL) cs2=SMALL;
 
   return(cs2);
 
@@ -367,7 +367,9 @@ FTYPE compute_temp_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 {
   FTYPE temp;
 
-  temp = GAMMAM1*u/rho0;
+  temp = GAMMAM1*u/(SMALL+fabs(rho0));
+  // can't let temp go negative because have T^2 or T^4 terms in lambda or other functions
+  if(temp<SMALL) temp=SMALL;
 
   return(temp);
 

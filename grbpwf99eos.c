@@ -164,6 +164,7 @@ FTYPE compute_temp_grbpwf99(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
   FTYPE pressure_rho0_u_grbpwf99(FTYPE *EOSextra, FTYPE rho0, FTYPE u);
 
   temp = pressure_rho0_u_grbpwf99(EOSextra,rho0,u)/rho0;
+  if(temp<SMALL) temp=SMALL;
 
   return(temp);
 

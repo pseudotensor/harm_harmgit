@@ -55,8 +55,9 @@
  // for used implicit solver (needs to be chosen more generally.  KORALTODO: 1E-8 too small in general).  Could start out with higher, and allow current checks to avoid inversion failure.
 //#define IMPEPS (1.e-8)
 // use large, and it'll go smaller if no inversion, but can't start out with too small since then Jac will have diag() terms =0
+// KORALTODO: For difficult iterations, there can be solution but Jacobian is too rough and jump around alot in primitive space for small changes in U.  Should really modify IMPEPS in such cases when pr changes alot for such changes in U.
 #if((REALTYPE==DOUBLETYPE)||(REALTYPE==FLOATTYPE))
-#define IMPEPS (MY1EM4)
+#define IMPEPS (MY1EM5)
 #elif(REALTYPE==LONGDOUBLETYPE)
 #define IMPEPS (MY1EM6)
 #endif

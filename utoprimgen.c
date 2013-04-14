@@ -864,10 +864,11 @@ static int check_on_inversion(int usedhotinversion,int usedentropyinversion,int 
     Unormalold[UU] = Uold[UU];
     Unormalnew[UU] = Unew[UU];
 
+    // No longer doing below, just use gcon or gcov to get correct dimensional comparison
     // now deal with momentum terms and correct for geometry so all U_i's are comparable
     // (\rho+u+p)\gamma u_i -> (\rho+u+p)\gamma^2 v^2
-    SLOOPA(jj) Unormalold[UU+jj] = Uold[UU+jj]*(q.ucon[jj]/q.ucon[TT]);
-    SLOOPA(jj) Unormalnew[UU+jj] = Unew[UU+jj]*(q.ucon[jj]/q.ucon[TT]);
+    //    SLOOPA(jj) Unormalold[UU+jj] = Uold[UU+jj]*(q.ucon[jj]/q.ucon[TT]);
+    //    SLOOPA(jj) Unormalnew[UU+jj] = Unew[UU+jj]*(q.ucon[jj]/q.ucon[TT]);
 #endif
 
 
@@ -1023,9 +1024,7 @@ static int check_on_inversion(int usedhotinversion,int usedentropyinversion,int 
       
       DLOOP(j,k) dualfprintf(fail_file,"gcov=%21.15g gcon=%21.15g\n",ptrgeom->gcov[GIND(j,k)],ptrgeom->gcon[GIND(j,k)]);
 
-      for(k=0;k<4;k++){
-        dualfprintf(fail_file,"q.ucon[%d]=%21.15g q.ucov[%d]=%21.15g q.bcon[%d]=%21.15g q.bcov[%d]=%21.15g\n",k,q.ucon[k],k,q.ucov[k],k,q.bcon[k],k,q.bcov[k]);
-      }
+      DLOOPA(k) dualfprintf(fail_file,"k=%d : q.ucon=%21.15g q.ucov=%21.15g :  q.uradcon=%21.15g q.uradcov=%21.15g  : q.bcon=%21.15g q.bcov=%21.15g\n",k,q.ucon[k],q.ucov[k],q.uradcon[k],q.uradcov[k],q.bcon[k],q.bcov[k]);
 
       // only really need the below quantities to check on inversion in mathematica
       // Use Eprime_inversion.nb to check on utoprim_jon.c inversion

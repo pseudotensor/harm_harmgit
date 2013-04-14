@@ -121,6 +121,7 @@ int main(int argc, char *argv[])
     // if(nstep == 130) restart_write(1) ;
     //    if(nstep==50) break;
 
+
     nstep++;
     // restartsteps[whichrestart]=realnstep;
 
