@@ -706,8 +706,11 @@ int prepre_init(void)
 
   set_default_nprlists();
 
-
+  
   // setup NOGDET list
+  // defaults
+  PALLLOOP(pl) nogdetlist[pl]=NOGDETRHO;
+  // details
   nogdetlist[RHO] =NOGDETRHO;
   nogdetlist[UU] =NOGDETU0;
   nogdetlist[U1] =NOGDETU1;
