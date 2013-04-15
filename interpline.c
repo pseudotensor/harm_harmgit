@@ -3089,7 +3089,7 @@ static int get_V_and_P(int whichprimtype, int interporflux, int dir, int bs, int
 #if(VLINEWITHGDETRHO==0)
     V[yiniter] += yrealin[URAD0+dir][0][iii];
 #else
-    V[yiniter] += (ptrgeom->gdet)*yrealin[URAD0][0][num]*(qptr->uradcon[dir]); // KORALTODO: Very rough estimate!
+    V[yiniter] += (ptrgeom->gdet)*yrealin[URAD0][0][num]*(qptr->uradcon[dir]); // KORALTODO: Very rough estimate!  OR, just remove radiation from flux term.
     // KORALTODO SUPERGODMARK: Need to get shock indicator for fluid separately from radiation!
 #endif
 

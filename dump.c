@@ -1292,6 +1292,11 @@ int fieldline_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 
 
   if(EOMRADTYPE!=EOMRADNONE){
+
+    // Erf (for various things)
+    ftemp=(float)GLOBALMACP0A1(pdump,i,j,k,PRAD0);
+    myset(datatype,&ftemp,0,1,writebuf);
+
     // urad^t [ in grid frame]
     ftemp=(float)(q.uradcon[0]);
     myset(datatype,&ftemp,0,1,writebuf);

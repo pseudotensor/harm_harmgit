@@ -1820,6 +1820,7 @@ void compute_and_store_fluxstatecent(FTYPE (*pr)[NSTORE2][NSTORE3][NPR])
       MACP1A0(shocktemparray,SHOCKPLSTOREVEL1+dir-1,i,j,k)=(ptrgeom->gdet)*MACP0A1(pr,i,j,k,RHO)*(GLOBALMAC(fluxstatecent,i,j,k).ucon[dir]);
 #endif
 
+      // KORALTODO: Probably not good idea to add radiative flux like that.  Maybe really do need separate shock term but keep pressure term in total.
 #if(RADSHOCKFLAT&&EOMRADTYPE!=EOMRADNONE) // KORALTODO: Fake.  Need to split shock calculation for fluid and radiation
 #if(VLINEWITHGDETRHO==0)
       MACP1A0(shocktemparray,SHOCKPLSTOREVEL1+dir-1,i,j,k) += MACP0A1(pr,i,j,k,URAD0+dir);
