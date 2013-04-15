@@ -138,7 +138,7 @@
 // 2 : all space merged but separate from time
 // 3 : full split
 // 4 : split even mhd and rad
-#define TAUSUPPRESS 0 // makes physical sense, but might be wrong in some limits (i.e. Gd can still be large relative to U due to R vs. T).
+#define TAUSUPPRESS 0 // makes physical sense, but might be wrong in some limits (i.e. Gd can still be large relative), but try to account for lambda as well.
 #define SPACETIMESUBSPLITNONE 1 // DON'T USE! (gets inversion failures because overly aggressive)
 #define SPACETIMESUBSPLITTIME 2 // probably not ok -- need to split off mhd and rad
 #define SPACETIMESUBSPLITALL 3 // probably not ok -- need to split off mhd and rad
