@@ -16,6 +16,8 @@
 
 #define LAB2FF (0)
 #define FF2LAB (1)
+#define HARM2FF (2)
+#define FF2HARM (3)
 
 #define TYPEUCON (0)
 #define TYPEUCOV (1)
@@ -80,6 +82,7 @@
 // So Choose 1E-8 as good enough solution.
 #define IMPTRYCONV (1.e-8)  // for used implicit solver
 #define IMPALLOWCONV (1.e-3)  // for used implicit solver KORALTODO: Have to be more careful since f/fnorm~1E-3 might mean large changes in primitives.
+//#define IMPALLOWCONV (1.e-1) // KORALTODO SUPERGODMARK FUCK
 #else
 // RADPULSEPLANAR: below leads to ~5 f1iters and ~7 iters on average
 // RADTUBE NTUBE=31: ~0 f1iters and ~1.5-2 iters
@@ -99,6 +102,9 @@
 
 
 #define MAXSUBCYCLES (2000) // for explicit sub-cycles when doing reversion
+
+// if tries more than this number of sub-cycles, just fail and assume no 4-force since probably due to no actual solution even for implicit scheme due to sitting at radiative failure (e.g. gamma->gammamax or Erf->ERADLIMIT)
+#define MAXSUBCYCLESFAIL (MAXSUBCYCLES*100)
 
 
 

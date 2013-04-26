@@ -12,7 +12,7 @@ extern int calc_generalized_boost_uu(struct of_geom *ptrgeom, FTYPE *wcon, FTYPE
 extern int calc_ortho_boost_uu(FTYPE *wcon, FTYPE *ucon, FTYPE (*lambda)[NDIM]);
 
 
-extern int transboost_lab2fluid(int primcoord, struct of_geom *ptrgeom, FTYPE *uconlab, FTYPE (*transboostup)[NDIM], FTYPE (*transboostlo)[NDIM]);
+extern int transboost_lab2fluid(int lab2orthofluid, int primcoord, struct of_geom *ptrgeom, FTYPE *uconlab, FTYPE (*transboostup)[NDIM], FTYPE (*transboostlo)[NDIM]);
 
 extern int vector_lab2orthofluidorback(int primcoord, int lab2orthofluid, struct of_geom *ptrgeom, int uconcovtype, FTYPE *uconcov, FTYPE v4concovtype, FTYPE *vector4in, FTYPE *vector4out);
 

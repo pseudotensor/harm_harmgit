@@ -40,11 +40,16 @@ extern int fluxdump_content(int i, int j, int k, MPI_Datatype datatype,void *wri
 extern int eosdump(long dump_cnt);
 extern int eosdump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf);
 
+extern int raddump(long dump_cnt);
+extern int raddump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf);
+
 extern int vpotdump(long dump_cnt);
 extern int vpotdump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf);
 
 extern int failfloordudump(long dump_cnt);
 extern int failfloordudump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf);
+
+
 
 extern int fakedump(long dump_cnt);
 extern int fakedump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf);

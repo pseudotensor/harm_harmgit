@@ -185,12 +185,13 @@ int Utoprimgen(int showmessages, int allowlocalfailurefixandnoreport, int finals
   usedffdeinversion=0;
 
 
-  // assume solution is good unless flagged as bad
-  GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)=UTOPRIMNOFAIL;
+  // if some process already set fail flag (e.g. inversions somewhere else that wasn't reset) (e.g. like in phys.tools.rad.c for implicit or explicit solvers with radiation), then assume want to treat as failure for purposes of fixing up.  That is, get inversion, but that inversion will be for undefined 4-force and only used in worst-case scenario for fixups.
+  int preexistingfailgas=0;
+  if(GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)>UTOPRIMNOFAIL) preexistingfailgas=GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL);
 
   // Also see if radiation inversion got locally corrected.  Then, might still do better to do multi-point averaging in fixups like with MHD variables.  So capture this flag for fixups.
-  GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL)=UTOPRIMRADNOFAIL;
-
+  int preexistingfailrad=0;
+  if(GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL)>UTOPRIMRADNOFAIL) preexistingfailrad=GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL)=UTOPRIMRADNOFAIL;
 
 
 
@@ -237,7 +238,7 @@ int Utoprimgen(int showmessages, int allowlocalfailurefixandnoreport, int finals
 
 
     ////////////////////
-    //  If hot GRMHD failed or gets suspicious solution, revert to entropy GRMHD if solution
+    // If hot GRMHD failed or gets suspicious solution, revert to entropy GRMHD if solution
     // If radiation, then this redoes radiation inversion since entropy would give new velocity and local corrections in u2p_rad() might use velocity.
     ///////////////////
     if(HOT2ENTROPY){
@@ -511,6 +512,17 @@ int Utoprimgen(int showmessages, int allowlocalfailurefixandnoreport, int finals
 #endif
 
 
+
+
+  ///////////////////////////////////////////////////
+  //
+  ///////////// override fail flags with preexisting conditions, with assumption that wanted to get inversion just for fixups to have something to revert.  In case of radiation-mhd simulations, this will be without the correct 4-force, which isn't necessarily a good backup and can itself be a bad backup.
+  //
+  ///////////////////////////////////////////////////
+  if(preexistingfailgas) GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)=preexistingfailgas;
+  if(preexistingfailrad) GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL)=preexistingfailrad;
+  
+  // KORALTODO: Could further decide to use original pf from some point in source explicit/implicit updates instead of this no-force solution.
 
 
      
@@ -937,6 +949,8 @@ static int check_on_inversion(int usedhotinversion,int usedentropyinversion,int 
         errornorm  = THIRD*(fabs(Unormalnew[URAD1]*sqrt(fabs(ptrgeom->gcon[GIND(1,1)])))+fabs(Unormalold[URAD1]*sqrt(fabs(ptrgeom->gcon[GIND(1,1)])))+fabs(Unormalnew[URAD2]*sqrt(fabs(ptrgeom->gcon[GIND(2,2)])))+fabs(Unormalold[URAD2]*sqrt(fabs(ptrgeom->gcon[GIND(2,2)])))+fabs(Unormalnew[URAD3]*sqrt(fabs(ptrgeom->gcon[GIND(3,3)])))+fabs(Unormalold[URAD3]*sqrt(fabs(ptrgeom->gcon[GIND(3,3)]))));
         // KORALTODO: when URAD0<<UU, can't expect radiation error to be small relative to only itself when interaction between radiation and fluid. 
         errornorm  += THIRD*(fabs(Unormalnew[U1]*sqrt(fabs(ptrgeom->gcon[GIND(1,1)])))+fabs(Unormalold[U1]*sqrt(fabs(ptrgeom->gcon[GIND(1,1)])))+fabs(Unormalnew[U2]*sqrt(fabs(ptrgeom->gcon[GIND(2,2)])))+fabs(Unormalold[U2]*sqrt(fabs(ptrgeom->gcon[GIND(2,2)])))+fabs(Unormalnew[U3]*sqrt(fabs(ptrgeom->gcon[GIND(3,3)])))+fabs(Unormalold[U3]*sqrt(fabs(ptrgeom->gcon[GIND(3,3)]))));
+        errornorm = MAX(errornorm,0.5*(fabs(Unormalold[URAD0])+fabs(Unormalnew[URAD0])));
+
         fdiff[pl] = sqrt(fabs(ptrgeom->gcon[GIND(pl-URAD0,pl-URAD0)]))*fabs(Unormalnew[pl]-Unormalold[pl]) / (errornorm+SMALL);
       }
       else if(pl==B1 || pl==B2 || pl==B3){

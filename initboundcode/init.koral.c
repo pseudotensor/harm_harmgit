@@ -3162,12 +3162,24 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
         pradffortho[PRAD2]=pr[PRAD2];
         pradffortho[PRAD3]=pr[PRAD3];
 
-        dualfprintf(fail_file,"CHECK: %g %g %g %g\n",pradffortho[PRAD0],pradffortho[PRAD1],pradffortho[PRAD2],pradffortho[PRAD3]);
+        dualfprintf(fail_file,"CHECK: ijk=%d %d %d : %g %g %g %g\n",i,j,k,pradffortho[PRAD0],pradffortho[PRAD1],pradffortho[PRAD2],pradffortho[PRAD3]);
      
       }
 
       // Transform these fluid frame E,F^i to lab frame coordinate basis primitives
       prad_fforlab(whichvel, whichcoord, FF2LAB, i,j,k,CENT,ptrgeomreal, pradffortho, pr, pr);
+      
+      dualfprintf(fail_file,"CHECKPOST: ijk=%d %d %d : %g %g %g %g\n",i,j,k,pr[PRAD0],pr[PRAD1],pr[PRAD2],pr[PRAD3]);
+#if(0)
+      // report zamo
+      FTYPE prreport[NPR];
+      set_zamo_velocity(*whichvel,ptrgeomreal,prreport);
+      dualfprintf(fail_file,"ZAMO: ijk=%d %d %d : %g %g %g : fluid: %g %g %g\n",i,j,k,prreport[U1],prreport[U2],prreport[U3],pr[U1],pr[U2],pr[U3]);
+      int jj,kk;
+      DLOOP(jj,kk) dualfprintf(fail_file,"gn%d%d=%26.20g\n",jj+1,kk+1,ptrgeomreal->gcon[GIND(jj,kk)]);
+      DLOOP(jj,kk) dualfprintf(fail_file,"gv%d%d=%26.20g\n",jj+1,kk+1,ptrgeomreal->gcov[GIND(jj,kk)]);
+#endif
+
     }
     else{
       // like latest koral that assumes radiation frame is zamo and RADNT_ERADATMMIN is actually in that frame, so no transformation for E
@@ -3177,7 +3189,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
       set_zamo_velocity(*whichvel,ptrgeomreal,&pr[URAD1-U1]); // only sets URAD1-URAD3 to zamo
     }
 
-    dualfprintf(fail_file,"returning: whichvel=%d whichcoord=%d\n",*whichvel,*whichcoord);
+    //    dualfprintf(fail_file,"returning: whichvel=%d whichcoord=%d\n",*whichvel,*whichcoord);
 
     return(0);
   }

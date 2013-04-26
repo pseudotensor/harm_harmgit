@@ -30,7 +30,7 @@
 
    3) global.nondepmnemonics.h : change NUMDUMPTYPES and add label and add to MYDUMPNAMELIST
 
-   4) global.???.h change NUMDUMPTYPES and add another entry if want separate timing of output
+   4) global.???.h change NUMDUMPTYPES and MYDUMPNAMELIST and add another entry if want separate timing of output
 
    5) dump.c : add dnumcolumns[LABEL]=NUMCOLUMNS where NUMCOLUMNS is number of entries in dump file
 
@@ -185,6 +185,7 @@ void init_dnumcolumns_dnumversion(void)
   extern void set_dumpother_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
   extern void set_fluxdump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
   extern void set_eosdump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
+  extern void set_raddump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
   extern void set_vpotdump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
   extern void set_failfloordudump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
 
@@ -235,6 +236,8 @@ void init_dnumcolumns_dnumversion(void)
   set_fluxdump_content_dnumcolumns_dnumversion(&dnumcolumns[FLUXDUMPTYPE],&dnumversion[FLUXDUMPTYPE]);
   // eosdump
   set_eosdump_content_dnumcolumns_dnumversion(&dnumcolumns[EOSDUMPTYPE],&dnumversion[EOSDUMPTYPE]);
+  // raddump
+  set_raddump_content_dnumcolumns_dnumversion(&dnumcolumns[RADDUMPTYPE],&dnumversion[RADDUMPTYPE]);
   // vpotdump
   set_vpotdump_content_dnumcolumns_dnumversion(&dnumcolumns[VPOTDUMPTYPE],&dnumversion[VPOTDUMPTYPE]);
   // failfloordudump
@@ -1594,6 +1597,176 @@ int eosdump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 
   return (0);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// dump stuff related specially to RAD
+int raddump(long dump_cnt)
+{
+  MPI_Datatype datatype;
+  int whichdump;
+  char fileprefix[MAXFILENAME];
+  char filesuffix[MAXFILENAME];
+  char fileformat[MAXFILENAME];
+
+  
+  trifprintf("begin dumping raddump# %ld ... ",dump_cnt);
+
+  whichdump=RADDUMPTYPE;
+  datatype=MPI_FTYPE;
+  strcpy(fileprefix,"dumps/raddump");
+  strcpy(fileformat,"%04ld");  //atch adjust dump every substep
+  strcpy(filesuffix,"");
+  
+  if(dump_gen(WRITEFILE,dump_cnt,binaryoutput,whichdump,datatype,fileprefix,fileformat,filesuffix,dump_header,raddump_content)>=1) return(1);
+
+  /////// output the symmetry information to the fail file
+  //writesyminfo();
+  ///////
+
+  trifprintf("end dumping raddump# %ld ... ",dump_cnt);
+
+
+  return(0);
+  
+}
+
+
+void set_raddump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
+{
+
+  if(EOMRADTYPE==EOMRADNONE) *numcolumns=0;
+  else *numcolumns=NDIM*2 + 1+1 + NDIM+1 + NDIM + NDIM*2 + 1 + 1 + 1 + 1 + 1 + 4*3;
+
+  // Version number:
+  *numversion=0;
+
+
+}
+
+
+int raddump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
+{
+  int loc=CENT;
+  FTYPE *pr=&GLOBALMACP0A1(pdump,i,j,k,0);
+  
+
+  // leave if shouldn't write anything
+  if(EOMRADTYPE==EOMRADNONE) return(0);
+
+  //////////////////////////
+  //
+  // do the assignments
+  //
+  // if you change # of outputted vars, remember to change numcolumns
+
+
+  // get X,V
+  FTYPE X[NDIM],V[NDIM];
+  bl_coord_ijk_2(i, j, k, loc, X,V);
+  // get geometry
+  struct of_geom geomdontuse;
+  struct of_geom *ptrgeom=&geomdontuse;
+  get_geometry(i, j, k, loc, ptrgeom);
+
+  // get full state
+  struct of_state q;
+  get_state(pr,ptrgeom,&q);
+
+  myset(datatype,q.uradcon,0,NDIM,writebuf); // NDIM
+  myset(datatype,q.uradcov,0,NDIM,writebuf); // NDIM
+ 
+  // get kappa
+  FTYPE kappa,kappaes;
+  calc_kappa(pr,ptrgeom,&kappa);
+  myset(datatype,&kappa,0,1,writebuf); // 1
+  calc_kappaes(pr,ptrgeom,&kappaes);
+  myset(datatype,&kappaes,0,1,writebuf); // 1
+
+  // get tau
+  FTYPE tautot[NDIM]={0},tautotmax;
+  calc_tautot(pr, ptrgeom, tautot, &tautotmax);
+  myset(datatype,tautot,0,NDIM,writebuf); // NDIM
+  myset(datatype,&tautotmax,0,1,writebuf); // 1
+
+  // Transform these lab frame coordinate basis primitives to fluid frame E,F^i
+  int whichvel=VEL4; // desired final ff version
+  int whichcoord=MCOORD; // desired final ff version
+  FTYPE pradffortho[NPR]={-1};
+  FTYPE prff[NPR]; // not new compared to pr
+  prad_fforlab(&whichvel, &whichcoord, LAB2FF, i,j,k,CENT,ptrgeom,pradffortho, pr, prff);
+  myset(datatype,pradffortho,PRAD0,NDIM,writebuf); // NDIM
+
+  // get 4-force in lab and fluid frame
+  FTYPE Gdpl[NPR],Gdabspl[NPR],chi;
+  koral_source_rad_calc(pr, ptrgeom, Gdpl, Gdabspl, &chi, &q);
+  myset(datatype,Gdpl,PRAD0,NDIM,writebuf); // NDIM
+  myset(datatype,Gdabspl,PRAD0,NDIM,writebuf); // NDIM
+
+  // get lambda
+  FTYPE lambda;
+  calc_rad_lambda(pr, ptrgeom, kappa, kappaes, &lambda);
+  myset(datatype,&lambda,0,1,writebuf); // 1
+
+  // get Erf [assuming LTE]
+  FTYPE Erf;
+  Erf=calc_LTE_Efromurho(pr[UU],pr[RHO]);
+  myset(datatype,&Erf,0,1,writebuf); // 1
+
+  // get gas T
+  FTYPE Tgas=calc_PEQ_Tfromurho(pr[UU],pr[RHO]);
+  myset(datatype,&Tgas,0,1,writebuf); // 1
+
+  // get radiation T from actual Erf
+  FTYPE Trad=calc_LTE_TfromE(pr[PRAD0]);
+  myset(datatype,&Trad,0,1,writebuf); // 1
+
+  // get radiation's fluid frame T from actual Erf in fluid frame
+  FTYPE Tradff=calc_LTE_TfromE(pradffortho[PRAD0]);
+  myset(datatype,&Tradff,0,1,writebuf); // 1
+
+
+  // get radiative vchar
+  int ignorecourant;
+  FTYPE vmin1,vmax1,vmax21,vmin21;
+  vchar_rad(pr, &q, 1, ptrgeom, &vmax1, &vmin1, &vmax21, &vmin21, &ignorecourant);
+  myset(datatype,&vmin1,0,1,writebuf); // 1
+  myset(datatype,&vmax1,0,1,writebuf); // 1
+  myset(datatype,&vmin21,0,1,writebuf); // 1
+  myset(datatype,&vmax21,0,1,writebuf); // 1
+  FTYPE vmin2,vmax2,vmax22,vmin22;
+  vchar_rad(pr, &q, 2, ptrgeom, &vmax2, &vmin2, &vmax22, &vmin22, &ignorecourant);
+  myset(datatype,&vmin2,0,1,writebuf); // 1
+  myset(datatype,&vmax2,0,1,writebuf); // 1
+  myset(datatype,&vmin22,0,1,writebuf); // 1
+  myset(datatype,&vmax22,0,1,writebuf); // 1
+  FTYPE vmin3,vmax3,vmax23,vmin23;
+  vchar_rad(pr, &q, 3, ptrgeom, &vmax3, &vmin3, &vmax23, &vmin23, &ignorecourant);
+  myset(datatype,&vmin3,0,1,writebuf); // 1
+  myset(datatype,&vmax3,0,1,writebuf); // 1
+  myset(datatype,&vmin23,0,1,writebuf); // 1
+  myset(datatype,&vmax23,0,1,writebuf); // 1
+
+  return (0);
+}
+
+
+
+
+
+
+
 
 
 
