@@ -943,7 +943,7 @@ struct Ccoordparams {
 #define MPERSUN (10.0)
 
 #undef RADSHOCKFLAT
-#define RADSHOCKFLAT 1 // can't use flattener near inlet where static jump -- leads to lots of oscillations with PPM.
+#define RADSHOCKFLAT 0
 
 #undef WHICHRADSOURCEMETHOD
 //#define WHICHRADSOURCEMETHOD SOURCEMETHODNONE

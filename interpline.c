@@ -2778,7 +2778,7 @@ static void get_1d_line_shockarray(int dir, int interporflux, int bs, int ps, in
     // ULTRASUPERGODMARK: Really must average input array to correct location.  Use of shockindicator in para currently assumes indicator at the cell face in dir-direction after using the result of ficalc() from surrounding center cells
     /////////////////////
     shockindicator[EOMSETMHD][yiniter]=MACP1A0(shockarray,SHOCKPLDIR1+dir-1,i2,j2,k2);
-#if(RADSHOCKFLAT&&EOMRADTYPE!=EOMRADNONE)//KORALTODO
+#if(RADSHOCKFLAT&&EOMRADTYPE!=EOMRADNONE)//KORAL
     shockindicator[EOMSETRAD][yiniter]=MACP1A0(shockarray,SHOCKRADPLDIR1+dir-1,i2,j2,k2);
 #endif
     yiniter++;

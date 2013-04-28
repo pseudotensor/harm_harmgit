@@ -257,12 +257,12 @@ int paraprocess_line_c2e( int whichquantity, int dir, int do_weight_or_recon, we
 #error If Steepen in paraline, must turn on CONTACTINDICATOR
 #endif
     
-    if(smooth==0) parasteepgen(pl,etai[whicheom][i],&Vline[whicheom][i],&Pline[whicheom][i],&yin[i],&df[DFMONO][i],&face[0][i],&face[1][i]);
+    if(smooth==0 && (whicheom==EOMSETMHD || whicheom==EOMSETRAD&&RADSHOCKFLAT)) parasteepgen(pl,etai[whicheom][i],&Vline[whicheom][i],&Pline[whicheom][i],&yin[i],&df[DFMONO][i],&face[0][i],&face[1][i]);
 #endif
   
   
 #if( DOPPMREDUCEMODWENO )
-    paraflatten(dir,pl,&yin[i],shockindicator[whicheom][i],&face[0][i],&face[1][i]);
+    if(whicheom==EOMSETMHD || whicheom==EOMSETRAD&&RADSHOCKFLAT) paraflatten(dir,pl,&yin[i],shockindicator[whicheom][i],&face[0][i],&face[1][i]);
 #endif
   
 
@@ -297,10 +297,12 @@ int paraprocess_line_c2e( int whichquantity, int dir, int do_weight_or_recon, we
 #if(FULLHYBRID==0)
     myetai=0;
     myshock=0;
-    // seem to require -3..3 for blast wave to avoid WENO smearing of contact
-    for(mm=-3;mm<=3;mm++){
-      myetai=max(myetai,etai[whicheom][i+mm]);
-      myshock=max(myshock,shockindicator[whicheom][i+mm]);
+    if(whicheom==EOMSETMHD || whicheom==EOMSETRAD&&RADSHOCKFLAT){
+      // seem to require -3..3 for blast wave to avoid WENO smearing of contact
+      for(mm=-3;mm<=3;mm++){
+        myetai=max(myetai,etai[whicheom][i+mm]);
+        myshock=max(myshock,shockindicator[whicheom][i+mm]);
+      }
     }
     monofrac = min(max(monoindicator[MONOYIN][i],0.0),1.0);
 
@@ -321,7 +323,9 @@ int paraprocess_line_c2e( int whichquantity, int dir, int do_weight_or_recon, we
     //    parafraclocal = min(max(max(2.0*myetai,myshock),0.0),1.0);
 
     // don't use para if in stiff regime since WENO more robust
-    parafraclocal = parafraclocal*(1.0-stiffindicator[whicheom][i]);
+    if(whicheom==EOMSETMHD || whicheom==EOMSETRAD&&RADSHOCKFLAT){
+      parafraclocal *= (1.0-stiffindicator[whicheom][i]);
+    }
 
     //    if(pl==RHO) parafraclocal=1.0;
 
@@ -375,7 +379,7 @@ int paraprocess_line_c2e( int whichquantity, int dir, int do_weight_or_recon, we
 
     // flatten MC in shocks
 #if( DOPPMREDUCEMODWENO )
-    paraflatten(dir,pl,&yin[i],shockindicator[whicheom][i],&leftmc,&rightmc);
+    if(whicheom==EOMSETMHD || whicheom==EOMSETRAD&&RADSHOCKFLAT) paraflatten(dir,pl,&yin[i],shockindicator[whicheom][i],&leftmc,&rightmc);
 #endif
 
     monofrac = min(max(monoindicator[MONOYIN][i],0.0),1.0);
@@ -419,7 +423,7 @@ int paraprocess_line_c2e( int whichquantity, int dir, int do_weight_or_recon, we
 #if( DOPPMREDUCEMODWENO )
     // flatten again in case checkparamonotonic is not reducing all the way to DONOR
     // causes major problems
-    //    paraflatten(dir,pl,&yin[i],shockindicator[whicheom][i],&yout_left[i],&yout_right[i]);
+    //     if(whicheom==EOMSETMHD || whicheom==EOMSETRAD&&RADSHOCKFLAT) paraflatten(dir,pl,&yin[i],shockindicator[whicheom][i],&yout_left[i],&yout_right[i]);
 #endif
 
 

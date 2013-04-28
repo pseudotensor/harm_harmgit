@@ -29,7 +29,7 @@ void pass_1d_line_multipl_paraline(int MULTIPLTYPE, int whichquantity, int dir, 
   FTYPE left,right;
   FTYPE mymono;
   int smooth;
-  int mm;
+  int whicheom;
 
 
 #if(DOPPMREDUCE && SHOCKINDICATOR==0)
@@ -86,8 +86,8 @@ void pass_1d_line_multipl_paraline(int MULTIPLTYPE, int whichquantity, int dir, 
     //    yout[pl][1][i]=facecont[pl][i+1];
     right=facecont[pl][i+1];
 
-    if(RADPL(pl)) mm=EOMSETRAD;
-    else mm=EOMSETMHD;
+    if(RADPL(pl)) whicheom=EOMSETRAD;
+    else whicheom=EOMSETMHD;
 
 #if(JONPARASMOOTH)
     int realisinterp=1; // assume not big deal
@@ -98,12 +98,12 @@ void pass_1d_line_multipl_paraline(int MULTIPLTYPE, int whichquantity, int dir, 
 
 
 #if(DOPPMCONTACTSTEEP)
-    if(smooth==0) parasteepgen(pl,etai[pl][mm][i],&Vline[mm][i],&Pline[mm][i],&yin[pl][0][i],&df[pl][DFMONO][i],&left,&right);
+    if(smooth==0 && (whicheom==EOMSETMHD || whicheom==EOMSETRAD&&RADSHOCKFLAT)) parasteepgen(pl,etai[pl][whicheom][i],&Vline[whicheom][i],&Pline[whicheom][i],&yin[pl][0][i],&df[pl][DFMONO][i],&left,&right);
 #endif
   
   
 #if( DOPPMREDUCE )
-    paraflatten(dir,pl,&yin[pl][0][i],shockindicator[mm][i],&left,&right);
+    if(whicheom==EOMSETMHD || whicheom==EOMSETRAD&&RADSHOCKFLAT) paraflatten(dir,pl,&yin[pl][0][i],shockindicator[whicheom][i],&left,&right);
 #endif
   
 
@@ -137,7 +137,7 @@ void pass_1d_line_multipl_paraline(int MULTIPLTYPE, int whichquantity, int dir, 
 
 #if(NONMONOLIM>0 && DOPPMREDUCE)
     // then flatten final result
-    paraflatten(dir,pl,&yin[pl][0][i],shockindicator[mm][i],&yout[pl][0][i],&yout[pl][1][i]);
+    if(whicheom==EOMSETMHD || whicheom==EOMSETRAD&&RADSHOCKFLAT) paraflatten(dir,pl,&yin[pl][0][i],shockindicator[whicheom][i],&yout[pl][0][i],&yout[pl][1][i]);
 #endif
 
 

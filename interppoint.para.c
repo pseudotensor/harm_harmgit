@@ -1239,9 +1239,9 @@ void parapl(int i, int j, int k, int loc, int realisinterp, int dir, FTYPE **yre
 
   // assume velocity is istelf
   // KORALTODO: need Ficalc for radiation by itself!
-  V[0] = yrealpl[U1+dir-1];
+  V[EOMSETMHD] = yrealpl[U1+dir-1];
 #if(RADSHOCKFLAT&&EOMRADTYPE!=EOMRADNONE)
-  V[1] = yrealpl[URAD1+dir-1];
+  V[EOMSETRAD] = yrealpl[URAD1+dir-1];
 #endif
 
 
@@ -1282,14 +1282,14 @@ void parapl(int i, int j, int k, int loc, int realisinterp, int dir, FTYPE **yre
     para4gen(realisinterp,dqrange,pl,y,&loutpl[pl],&routpl[pl],dq[pl],&smooth);
 
 #if(DOPPMCONTACTSTEEP)
-    if(RADPL(pl)) parasteep(dir,pl,V[EOMSETRAD],P[EOMSETRAD],ypl[pl],dq[pl],&loutpl[pl],&routpl[pl]);
-    else parasteep(dir,pl,V[EOMSETMHD],P[EOMSETMHD],ypl[pl],dq[pl],&loutpl[pl],&routpl[pl]);
+    if(RADPL(pl)&&RADSHOCKFLAT) parasteep(dir,pl,V[EOMSETRAD],P[EOMSETRAD],ypl[pl],dq[pl],&loutpl[pl],&routpl[pl]);
+    if(!RADPL(pl)) parasteep(dir,pl,V[EOMSETMHD],P[EOMSETMHD],ypl[pl],dq[pl],&loutpl[pl],&routpl[pl]);
 #endif
 
 
 #if( DOPPMREDUCE )
-    if(RADPL(pl)) paraflatten(dir,pl,ypl[pl],Fi[EOMSETRAD],&loutpl[pl],&routpl[pl]);
-    else paraflatten(dir,pl,ypl[pl],Fi[EOMSETMHD],&loutpl[pl],&routpl[pl]);
+    if(RADPL(pl)&&RADSHOCKFLAT) paraflatten(dir,pl,ypl[pl],Fi[EOMSETRAD],&loutpl[pl],&routpl[pl]);
+    if(!RADPL(pl)) paraflatten(dir,pl,ypl[pl],Fi[EOMSETMHD],&loutpl[pl],&routpl[pl]);
 #endif
 
 
@@ -1302,8 +1302,8 @@ void parapl(int i, int j, int k, int loc, int realisinterp, int dir, FTYPE **yre
 
 #if(NONMONOLIM>0 && DOPPMREDUCE)
     // then flatten again
-    if(RADPL(pl)) paraflatten(dir,pl,ypl[pl],Fi[EOMSETRAD],&loutpl[pl],&routpl[pl]);
-    else paraflatten(dir,pl,ypl[pl],Fi[EOMSETMHD],&loutpl[pl],&routpl[pl]);
+    if(RADPL(pl)&&RADSHOCKFLAT) paraflatten(dir,pl,ypl[pl],Fi[EOMSETRAD],&loutpl[pl],&routpl[pl]);
+    if(!RADPL(pl)) paraflatten(dir,pl,ypl[pl],Fi[EOMSETMHD],&loutpl[pl],&routpl[pl]);
 #endif
 
     
