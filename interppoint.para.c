@@ -1217,6 +1217,7 @@ void parapl(int i, int j, int k, int loc, int realisinterp, int dir, FTYPE **yre
   FTYPE *ddq;
   int mm;
   int smooth;
+  int whicheom;
 
 
 
@@ -1224,8 +1225,8 @@ void parapl(int i, int j, int k, int loc, int realisinterp, int dir, FTYPE **yre
   dqrange = 5; // dq's will exist from -2,-1,0,1,2 and ddq computed from -2,-1,0,1
 
   // shift P
-  for(mm=0;mm<NUMTRUEEOMSETS;mm++){
-    P[mm]=a_P[mm] + 4; // P accessed from -3..3 ( shifted sufficiently)
+  for(whicheom=0;whicheom<NUMTRUEEOMSETS;whicheom++){
+    P[whicheom]=a_P[whicheom] + 4; // P accessed from -3..3 ( shifted sufficiently)
   }
 
   // shift dq
@@ -1246,20 +1247,20 @@ void parapl(int i, int j, int k, int loc, int realisinterp, int dir, FTYPE **yre
 
   // get pressures for all points since needed for reduction or steepening
 #if( DOPPMREDUCE || DOPPMCONTACTSTEEP)
-  for(mm=0;mm<NUMTRUEEOMSETS;mm++){
-    if(mm==EOMSETRAD && RADSHOCKFLAT || mm==EOMSETMHD) getPressure(mm,i, j, k, loc, yrealpl, P[mm]);
+  for(whicheom=0;whicheom<NUMTRUEEOMSETS;whicheom++){
+    if(whicheom==EOMSETRAD && RADSHOCKFLAT || whicheom==EOMSETMHD) getPressure(whicheom,i, j, k, loc, yrealpl, P[whicheom]);
   }
 #endif
 
 
 
   // computed only once for all variables
-  for(mm=0;mm<NUMTRUEEOMSETS;mm++){
-    if(mm==EOMSETRAD && RADSHOCKFLAT || mm==EOMSETMHD){
+  for(whicheom=0;whicheom<NUMTRUEEOMSETS;whicheom++){
+    if(whicheom==EOMSETRAD && RADSHOCKFLAT || whicheom==EOMSETMHD){
 #if( DOPPMREDUCE )
-      Fi[mm] = Ficalc(dir,V[mm],P[mm]);
+      Fi[whicheom] = Ficalc(dir,V[whicheom],P[whicheom]);
 #else
-      Fi[mm] = 0.0;
+      Fi[whicheom] = 0.0;
 #endif
     }
   }

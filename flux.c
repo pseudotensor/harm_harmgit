@@ -1842,7 +1842,7 @@ void compute_and_store_fluxstatecent(FTYPE (*pr)[NSTORE2][NSTORE3][NPR])
 
       DIMENLOOP(dir){
 
-        if(NxNOT1[dir]==0 && FIELDSTAGMEM){
+        if(NxNOT1[dir]==0 || FIELDSTAGMEM){
           // if dimension doesn't exist, then copy over fluxstatecent to fluxstate[dimen][ISLEFT,ISRIGHT]
           GLOBALMACP1A1(fluxstate,dir,i,j,k,ISLEFT)=GLOBALMAC(fluxstatecent,i,j,k);
           GLOBALMACP1A1(fluxstate,dir,i,j,k,ISRIGHT)=GLOBALMAC(fluxstatecent,i,j,k);
