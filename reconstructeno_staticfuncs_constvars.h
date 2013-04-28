@@ -40,12 +40,12 @@ static int compute_optimized_stencil_weights( int cvt_type, int pl, int order, i
 static int compute_optimized_ac_ca_stencil_weights( int cvt_type, int pl, int order, int min_index, int max_index, FTYPE *monoindicator, FTYPE *uin, weno_weights_t *stencil_weights_out );
 static int compute_optimized_cf_stencil_weights( int cvt_type, int pl, int order, int min_index, int max_index, FTYPE *monoindicator, FTYPE *uin, weno_weights_t *stencil_weights_out );
 
-static void apply_additional_reduction_to_weights( int cvt_type, int whichreduce, int max_order, int min_order, int i0, int pl, int bs, int bf, FTYPE *shockindicator, FTYPE (*dP)[NBIGM],
-                                                   FTYPE *monoindicator, FTYPE *P, FTYPE *uin, 
+static void apply_additional_reduction_to_weights( int cvt_type, int whichreduce, int max_order, int min_order, int i0, int pl, int bs, int bf, FTYPE (*shockindicator)[NBIGM], FTYPE (*dP)[NBIGM],
+                                                   FTYPE *monoindicator, FTYPE *Pindicator, FTYPE *uin, 
                                                    weno_weights_t *stencil_weights_array, struct of_trueijkp *trueijkp );
-static int choose_weno_order( int cvt_type, int whichreduce, int max_order, int min_order, int i0, int pl, int bs, int bf, FTYPE *shockindicator, FTYPE (*dP)[NBIGM],
+static int choose_weno_order( int cvt_type, int whichreduce, int max_order, int min_order, int i0, int pl, int bs, int bf, FTYPE (*shockindicator)[NBIGM], FTYPE (*dP)[NBIGM],
                               FTYPE *monoindicator0, FTYPE *monoindicator1, 
-                              FTYPE *P, FTYPE *uin, 
+                              FTYPE *Pindicator, FTYPE *uin, 
                               weno_weights_t *stencil_weights_array, 
                               weno_weights_t **pp_stencil_weights_to_be_used, struct of_trueijkp *trueijkp  );
 
@@ -54,11 +54,11 @@ static void desensitise_smoothness_indicators( int order, FTYPE epsilon, FTYPE *
 
 static int eno_line_reconstruct( int whichquantity, int do_weight_or_recon, weno_weights_t *stencil_weights_array, int cvt_type, int whichreduce, int preforder, int pl, int bs, int ps, int pf, int bf, 
                                  int *minorderit, int *maxorderit, int *shiftit, 
-                                 FTYPE *shockindicator, 
+                                 FTYPE (*shockindicator)[NBIGM], 
                                  FTYPE (*df)[NBIGM],
                                  FTYPE (*dP)[NBIGM],
                                  FTYPE (*monoindicator)[NBIGM],
-                                 FTYPE *P, 
+                                 FTYPE *Pindicator, 
                                  FTYPE *yin,  FTYPE *yout_left, FTYPE *yout_right, FTYPE (*youtpolycoef)[NBIGM], struct of_trueijkp *trueijkp);
 
 

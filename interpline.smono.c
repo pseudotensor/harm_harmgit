@@ -16,13 +16,13 @@
 void compute_smonotonicity_line(
                                 int recontype, int whichreduce, int preforder, int pl, int bs, int ps, int pe, int be, 
                                 int *minorder, int *maxorder, int *shift,   
-                                FTYPE *shockindicator, FTYPE (*df)[NBIGM], 
+                                FTYPE (*shockindicator)[NBIGM], FTYPE (*df)[NBIGM], 
                                 FTYPE (*monoindicator)[NBIGM], FTYPE *yin, FTYPE (*yout)[NBIGM], FTYPE (*youtpolycoef)[NBIGM])
 { 
   void compute_smonotonicity_line_split(int setindicator, int setyout,
                                         int recontype, int whichreduce, int preforder, int pl, int bs, int ps, int pe, int be, 
                                         int *minorder, int *maxorder, int *shift,   
-                                        FTYPE *shockindicator, FTYPE (*df)[NBIGM], 
+                                        FTYPE (*shockindicator)[NBIGM], FTYPE (*df)[NBIGM], 
                                         FTYPE (*monoindicator)[NBIGM], FTYPE *yin, FTYPE (*yout)[NBIGM], FTYPE (*youtpolycoef)[NBIGM]);
 
   // compute normal monotonicity line
@@ -61,7 +61,7 @@ void compute_polycoef_line(
 void compute_smonotonicity_line_split(int setindicator, int setyout,
                                       int recontype, int whichreduce, int preforder, int pl, int bs, int ps, int pe, int be, 
                                       int *minorder, int *maxorder, int *shift,   
-                                      FTYPE *shockindicator, FTYPE (*df)[NBIGM], 
+                                      FTYPE (*shockindicator)[NBIGM], FTYPE (*df)[NBIGM], 
                                       FTYPE (*monoindicator)[NBIGM], FTYPE *yin, FTYPE (*yout)[NBIGM], FTYPE (*youtpolycoef)[NBIGM])
 { 
   int i;
@@ -404,8 +404,8 @@ void set_as_rough_value(int recontype, int i, FTYPE *yin, FTYPE (*yout)[NBIGM], 
 {
   extern void c2e_simple_limiter(int WHICHLIMITERTOREDUCETO, FTYPE *yin, FTYPE *valueleft, FTYPE *valueright);
 
-  //dualfprintf(fail_file,"shocki[%d]=%21.15g\n",i,shockindicator[i]);
-  //if((shockindicator[i]>=0.1)||(check_for_cusp_new(&df[DFONESIDED][i],&df[DF2OFONESIDED][i],&yin[i]))  ){// does somewhat better than not checking
+  //dualfprintf(fail_file,"shocki[%d]=%21.15g\n",i,shockindicator[EOMSETMHD][i]);
+  //if((shockindicator[EOMSETMHD][i]>=0.1)||(check_for_cusp_new(&df[DFONESIDED][i],&df[DF2OFONESIDED][i],&yin[i]))  ){// does somewhat better than not checking
   //if(0){
 
   // MERGEDC2EA2CMETHOD  TODO

@@ -1206,14 +1206,12 @@ void parapl(int i, int j, int k, int loc, int realisinterp, int dir, FTYPE **yre
   FTYPE *y,*yreal;
   void parasteep(int dir, int pl, FTYPE *V, FTYPE *P, FTYPE *y, FTYPE *dq, FTYPE *l, FTYPE *r);
   void paraflatten(int dir, int pl, FTYPE *y, FTYPE Fi, FTYPE *l, FTYPE *r);
-  void getPressure(int i, int j, int k, int loc, FTYPE **yrealpl, FTYPE *P);
-  FTYPE a_P[10];
-  FTYPE *V,*P;
-  FTYPE Vnewmem[10];
-  FTYPE *Vnew;
+  void getPressure(int whicheom, int i, int j, int k, int loc, FTYPE **yrealpl, FTYPE *P);
+  FTYPE a_P[NUMTRUEEOMSETS][10];
+  FTYPE *V[NUMTRUEEOMSETS],*P[NUMTRUEEOMSETS];
   FTYPE  Ficalc(int dir, FTYPE *V, FTYPE *P);
   int pl,pliter;
-  FTYPE Fi;
+  FTYPE Fi[NUMTRUEEOMSETS];
   int dqrange;
   FTYPE a_ddq[7];
   FTYPE *ddq;
@@ -1226,7 +1224,9 @@ void parapl(int i, int j, int k, int loc, int realisinterp, int dir, FTYPE **yre
   dqrange = 5; // dq's will exist from -2,-1,0,1,2 and ddq computed from -2,-1,0,1
 
   // shift P
-  P=a_P + 4; // P accessed from -3..3 ( shifted sufficiently)
+  for(mm=0;mm<NUMTRUEEOMSETS;mm++){
+    P[mm]=a_P[mm] + 4; // P accessed from -3..3 ( shifted sufficiently)
+  }
 
   // shift dq
   PINTERPLOOP(pliter,pl){
@@ -1238,34 +1238,31 @@ void parapl(int i, int j, int k, int loc, int realisinterp, int dir, FTYPE **yre
 
   // assume velocity is istelf
   // KORALTODO: need Ficalc for radiation by itself!
-  V = yrealpl[U1+dir-1];
-  Vnew = V;
+  V[0] = yrealpl[U1+dir-1];
+#if(RADSHOCKFLAT&&EOMRADTYPE!=EOMRADNONE)
+  V[1] = yrealpl[URAD1+dir-1];
+#endif
 
-#if(RADSHOCKFLAT&&EOMRADTYPE!=EOMRADNONE) // KORALTODO: Fake.  Need to split shock calculation for fluid and radiation
-  int shifti;
-  Vnew=&Vnewmem[4]; // sufficiently shifted
-  // -3 -2 -1 0 1 2 3
-  for(shifti=-3;shifti<=3;shifti++){
-    Vnew[shifti] += yrealpl[U1+dir-1][shifti] + yrealpl[URAD1+dir-1][shifti]; // fake
+
+  // get pressures for all points since needed for reduction or steepening
+#if( DOPPMREDUCE || DOPPMCONTACTSTEEP)
+  for(mm=0;mm<NUMTRUEEOMSETS;mm++){
+    if(mm==EOMSETRAD && RADSHOCKFLAT || mm==EOMSETMHD) getPressure(mm,i, j, k, loc, yrealpl, P[mm]);
   }
 #endif
 
 
 
-  // get pressures for all points since needed for reduction or steepening
-#if( DOPPMREDUCE || DOPPMCONTACTSTEEP)
-  getPressure(i, j, k, loc, yrealpl, P);
-#endif
-
-
-
   // computed only once for all variables
+  for(mm=0;mm<NUMTRUEEOMSETS;mm++){
+    if(mm==EOMSETRAD && RADSHOCKFLAT || mm==EOMSETMHD){
 #if( DOPPMREDUCE )
-  Fi = Ficalc(dir,Vnew,P);
+      Fi[mm] = Ficalc(dir,V[mm],P[mm]);
 #else
-  Fi = 0.0;
+      Fi[mm] = 0.0;
 #endif
-
+    }
+  }
 
 
   ///////////////
@@ -1284,12 +1281,14 @@ void parapl(int i, int j, int k, int loc, int realisinterp, int dir, FTYPE **yre
     para4gen(realisinterp,dqrange,pl,y,&loutpl[pl],&routpl[pl],dq[pl],&smooth);
 
 #if(DOPPMCONTACTSTEEP)
-    parasteep(dir,pl,Vnew,P,ypl[pl],dq[pl],&loutpl[pl],&routpl[pl]);
+    if(RADPL(pl)) parasteep(dir,pl,V[EOMSETRAD],P[EOMSETRAD],ypl[pl],dq[pl],&loutpl[pl],&routpl[pl]);
+    else parasteep(dir,pl,V[EOMSETMHD],P[EOMSETMHD],ypl[pl],dq[pl],&loutpl[pl],&routpl[pl]);
 #endif
 
 
 #if( DOPPMREDUCE )
-    paraflatten(dir,pl,ypl[pl],Fi,&loutpl[pl],&routpl[pl]);
+    if(RADPL(pl)) paraflatten(dir,pl,ypl[pl],Fi[EOMSETRAD],&loutpl[pl],&routpl[pl]);
+    else paraflatten(dir,pl,ypl[pl],Fi[EOMSETMHD],&loutpl[pl],&routpl[pl]);
 #endif
 
 
@@ -1302,7 +1301,8 @@ void parapl(int i, int j, int k, int loc, int realisinterp, int dir, FTYPE **yre
 
 #if(NONMONOLIM>0 && DOPPMREDUCE)
     // then flatten again
-    paraflatten(dir,pl,ypl[pl],Fi,&loutpl[pl],&routpl[pl]);
+    if(RADPL(pl)) paraflatten(dir,pl,ypl[pl],Fi[EOMSETRAD],&loutpl[pl],&routpl[pl]);
+    else paraflatten(dir,pl,ypl[pl],Fi[EOMSETMHD],&loutpl[pl],&routpl[pl]);
 #endif
 
     
@@ -1384,16 +1384,34 @@ FTYPE  Ficalc(int dir, FTYPE *V, FTYPE *P)
 // Get pressure
 // Note this is quite inefficient since operating per-point get same pressure for entire line multiple times
 // (SUPERGODMARK: Also no accounting of magnetic field)
-void getPressure(int i, int j, int k, int loc, FTYPE **yrealpl, FTYPE *P)
+void getPressure(int whicheom, int i, int j, int k, int loc, FTYPE **yrealpl, FTYPE *P)
 {
   int mm;
 
+#if(RADSHOCKFLAT&&EOMRADTYPE!=EOMRADNONE)
+  FTYPE tautot[NDIM],tautotmax;
+  struct of_geom geomdontuse;
+  struct of_geom *ptrgeom=&geomdontuse;
+  get_geometry(i,j,k,loc,ptrgeom);
+  FTYPE prreal[NPR];
+  int pl;
+#endif
+
   // need pressure over full range from -3..3
   for(mm=-interporder[PARAFLAT]/2;mm<=interporder[PARAFLAT]/2;mm++){
-    P[mm] = pressure_rho0_u_simple(i, j, k, loc, yrealpl[RHO][mm],yrealpl[UU][mm]);
+    P[mm] = 0.0;
 
+    if(whicheom==EOMSETMHD){
+      P[mm] += pressure_rho0_u_simple(i, j, k, loc, yrealpl[RHO][mm],yrealpl[UU][mm]);
+    }
 #if(RADSHOCKFLAT&&EOMRADTYPE!=EOMRADNONE)
-    P[mm] += (4.0/3.0-1.0)*yrealpl[PRAD0][mm]; // approximate KORALTODO
+    if(whicheom==EOMSETRAD || whicheom==EOMSETMHD){
+      // add radiation pressure to total pressure if optically thick
+      PALLREALLOOP(pl) prreal[pl]=yrealpl[pl][mm]; // reorder
+      calc_tautot(prreal, ptrgeom, tautot, &tautotmax);
+
+      P[mm] += MIN(tautotmax,1.0)*(4.0/3.0-1.0)*yrealpl[PRAD0][mm]; // KORALNOTE: recall pressure just along diagonal and no velocity in R^\mu_\nu
+    }
 #endif
   }
 

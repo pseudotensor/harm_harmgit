@@ -1747,32 +1747,20 @@ void compute_and_store_fluxstatecent(FTYPE (*pr)[NSTORE2][NSTORE3][NPR])
 {
   int pureget_stateforfluxcalcorsource(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
   int is,ie,js,je,ks,ke,di,dj,dk;
-  int Nvec[NDIM];
   //  FTYPE (*shocktemparray)[NSTORE2][NSTORE3][NPR];
   FTYPE (*shocktemparray)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3];
   int startorderi,endorderi;
   extern FTYPE  Ficalc(int dir, FTYPE *V, FTYPE *P);
 
 
-  Nvec[0]=0;
-  Nvec[1]=N1;
-  Nvec[2]=N2;
-  Nvec[3]=N3;
+  const int Nvec[NDIM]={0,N1,N2,N3};
+  const int NxNOT1[NDIM]={0,N1NOT1,N2NOT1,N3NOT1};
 
-  //  shocktemparray = GLOBALPOINT(ptemparray);
+  // setup temporary space
   shocktemparray = GLOBALPOINT(emf);
-  //GLOBALPOINT(wspeedtemp)
-  //GLOBALPOINT(pimage)=GLOBALPOINT(dUgeomarray);
-  //  velvec[1]=GLOBALPOINT(dq1);
-  //  velvec[2]=GLOBALPOINT(dq2);
-  //  velvec[3]=GLOBALPOINT(dq3);
-
-
 
   // define +-1 in every direction loop range
   set_interppoint_loop_ranges_3Dextended(ENOINTERPTYPE, &is, &ie, &js, &je, &ks, &ke, &di, &dj, &dk);
-
-
 
 
 #if(STOREFLUXSTATE||STORESHOCKINDICATOR)
@@ -1806,83 +1794,43 @@ void compute_and_store_fluxstatecent(FTYPE (*pr)[NSTORE2][NSTORE3][NPR])
       // get state
       pureget_stateforfluxcalcorsource(MAC(pr,i,j,k),ptrgeom,&GLOBALMAC(fluxstatecent,i,j,k));
 
-
-
-
 #if(STORESHOCKINDICATOR)
       // see more details in interpline.c:get_V_and_P()
 
-#if(N1>1)
-      dir=1;
+
+      DIMENLOOP(dir){
+        if(NxNOT1[dir]){
 #if(VLINEWITHGDETRHO==0)
-      MACP1A0(shocktemparray,SHOCKPLSTOREVEL1+dir-1,i,j,k)=MACP0A1(pr,i,j,k,UU+dir);
+          MACP1A0(shocktemparray,SHOCKPLSTOREVEL1+dir-1,i,j,k)=MACP0A1(pr,i,j,k,UU+dir);
 #else
-      MACP1A0(shocktemparray,SHOCKPLSTOREVEL1+dir-1,i,j,k)=(ptrgeom->gdet)*MACP0A1(pr,i,j,k,RHO)*(GLOBALMAC(fluxstatecent,i,j,k).ucon[dir]);
+          MACP1A0(shocktemparray,SHOCKPLSTOREVEL1+dir-1,i,j,k)=(ptrgeom->gdet)*MACP0A1(pr,i,j,k,RHO)*(GLOBALMAC(fluxstatecent,i,j,k).ucon[dir]);
 #endif
-
-      // KORALTODO: Probably not good idea to add radiative flux like that.  Maybe really do need separate shock term but keep pressure term in total.
-#if(RADSHOCKFLAT&&EOMRADTYPE!=EOMRADNONE) // KORALTODO: Fake.  Need to split shock calculation for fluid and radiation
+          
+#if(RADSHOCKFLAT&&EOMRADTYPE!=EOMRADNONE) // KORAL
 #if(VLINEWITHGDETRHO==0)
-      MACP1A0(shocktemparray,SHOCKPLSTOREVEL1+dir-1,i,j,k) += MACP0A1(pr,i,j,k,URAD0+dir);
+          MACP1A0(shocktemparray,SHOCKRADPLSTOREVEL1+dir-1,i,j,k) += MACP0A1(pr,i,j,k,URAD0+dir);
 #else
-      MACP1A0(shocktemparray,SHOCKPLSTOREVEL1+dir-1,i,j,k) += (ptrgeom->gdet)*MACP0A1(pr,i,j,k,URAD0)*(GLOBALMAC(fluxstatecent,i,j,k).uradcon[dir]);
+          MACP1A0(shocktemparray,SHOCKRADPLSTOREVEL1+dir-1,i,j,k) += (ptrgeom->gdet)*MACP0A1(pr,i,j,k,URAD0)*(GLOBALMAC(fluxstatecent,i,j,k).uradcon[dir]);
 #endif
 #endif
+        }
+      }
 
 
-#endif // end if N1>1
-
-#if(N2>1)
-      dir=2;
-#if(VLINEWITHGDETRHO==0)
-      MACP1A0(shocktemparray,SHOCKPLSTOREVEL1+dir-1,i,j,k)=MACP0A1(pr,i,j,k,UU+dir);
-#else
-      MACP1A0(shocktemparray,SHOCKPLSTOREVEL1+dir-1,i,j,k)=(ptrgeom->gdet)*MACP0A1(pr,i,j,k,RHO)*(GLOBALMAC(fluxstatecent,i,j,k).ucon[dir]);
-#endif
-
-#if(RADSHOCKFLAT&&EOMRADTYPE!=EOMRADNONE) // KORALTODO: Fake.  Need to split shock calculation for fluid and radiation
-#if(VLINEWITHGDETRHO==0)
-      MACP1A0(shocktemparray,SHOCKPLSTOREVEL1+dir-1,i,j,k) += MACP0A1(pr,i,j,k,URAD0+dir);
-#else
-      MACP1A0(shocktemparray,SHOCKPLSTOREVEL1+dir-1,i,j,k) += (ptrgeom->gdet)*MACP0A1(pr,i,j,k,URAD0)*(GLOBALMAC(fluxstatecent,i,j,k).uradcon[dir]);
-#endif
-#endif
-
-
-#endif // end if N2>1
-
-#if(N3>1)
-      dir=3;
-#if(VLINEWITHGDETRHO==0)
-      MACP1A0(shocktemparray,SHOCKPLSTOREVEL1+dir-1,i,j,k)=MACP0A1(pr,i,j,k,UU+dir);
-#else
-      MACP1A0(shocktemparray,SHOCKPLSTOREVEL1+dir-1,i,j,k)=(ptrgeom->gdet)*MACP0A1(pr,i,j,k,RHO)*(GLOBALMAC(fluxstatecent,i,j,k).ucon[dir]);
-#endif
-
-#if(RADSHOCKFLAT&&EOMRADTYPE!=EOMRADNONE) // KORALTODO: Fake.  Need to split shock calculation for fluid and radiation
-#if(VLINEWITHGDETRHO==0)
-      MACP1A0(shocktemparray,SHOCKPLSTOREVEL1+dir-1,i,j,k) += MACP0A1(pr,i,j,k,URAD0+dir);
-#else
-      MACP1A0(shocktemparray,SHOCKPLSTOREVEL1+dir-1,i,j,k) += (ptrgeom->gdet)*MACP0A1(pr,i,j,k,URAD0)*(GLOBALMAC(fluxstatecent,i,j,k).uradcon[dir]);
-#endif
-#endif
-
-#endif // end if N3>1
-
-      // get total pressure
+      // get total MHD pressure
       MACP1A0(shocktemparray,SHOCKPLSTOREPTOT,i,j,k)=GLOBALMAC(fluxstatecent,i,j,k).pressure + 0.5*GLOBALMAC(fluxstatecent,i,j,k).bsq;
 
-#if(RADSHOCKFLAT&&EOMRADTYPE!=EOMRADNONE)
-      // KORALTODO: Need to add shock flattener separately for radiation quantities, but for now be aggressive and assume radiation couples strongly to fluid.
-      // approximation KORALTODO
-      MACP1A0(shocktemparray,SHOCKPLSTOREPTOT,i,j,k) += (4.0/3.0-1.0)*MACP0A1(pr,i,j,k,PRAD0);
+#if(RADSHOCKFLAT&&EOMRADTYPE!=EOMRADNONE) // KORAL
+      MACP1A0(shocktemparray,SHOCKRADPLSTOREPTOT,i,j,k) = (4.0/3.0-1.0)*MACP0A1(pr,i,j,k,PRAD0);  // KORALNOTE: recall pressure just along diagonal and no velocity in R^\mu_\nu
+
+      // add radiation pressure to total pressure if optically thick
+      FTYPE tautot[NDIM],tautotmax;
+      calc_tautot(&MACP0A1(pr,i,j,k,0), ptrgeom, tautot, &tautotmax);
+
+      MACP1A0(shocktemparray,SHOCKPLSTOREPTOT,i,j,k) += MIN(tautotmax,1.0)*MACP1A0(shocktemparray,SHOCKRADPLSTOREPTOT,i,j,k);
 #endif
 
 #endif // end if STORESHOCKINDICATOR
-
-
-
-
 
 
 
@@ -1891,25 +1839,17 @@ void compute_and_store_fluxstatecent(FTYPE (*pr)[NSTORE2][NSTORE3][NPR])
       // if dimension doesn't exist, then copy over fluxstatecent to fluxstate[dimen][ISLEFT,ISRIGHT]
       // If doing staggered field method, then also assumes left,right stored like pl_ct and pr_ct are stored
       // note we are copying entire structure here
-#if(N1==1 || FIELDSTAGMEM)
-      // if dimension doesn't exist, then copy over fluxstatecent to fluxstate[dimen][ISLEFT,ISRIGHT]
-      GLOBALMACP1A1(fluxstate,1,i,j,k,ISLEFT)=GLOBALMAC(fluxstatecent,i,j,k);
-      GLOBALMACP1A1(fluxstate,1,i,j,k,ISRIGHT)=GLOBALMAC(fluxstatecent,i,j,k);
-#endif
-#if(N2==1 || FIELDSTAGMEM)
-      // if dimension doesn't exist, then copy over fluxstatecent to fluxstate[dimen,ISLEFT,ISRIGHT]
-      GLOBALMACP1A1(fluxstate,2,i,j,k,ISLEFT)=GLOBALMAC(fluxstatecent,i,j,k);
-      GLOBALMACP1A1(fluxstate,2,i,j,k,ISRIGHT)=GLOBALMAC(fluxstatecent,i,j,k);
-#endif
-#if(N3==1 || FIELDSTAGMEM)
-      // if dimension doesn't exist, then copy over fluxstatecent to fluxstate[dimen,ISLEFT,ISRIGHT]
-      GLOBALMACP1A1(fluxstate,3,i,j,k,ISLEFT)=GLOBALMAC(fluxstatecent,i,j,k);
-      GLOBALMACP1A1(fluxstate,3,i,j,k,ISRIGHT)=GLOBALMAC(fluxstatecent,i,j,k);
-#endif
+
+      DIMENLOOP(dir){
+
+        if(NxNOT1[dir]==0 && FIELDSTAGMEM){
+          // if dimension doesn't exist, then copy over fluxstatecent to fluxstate[dimen][ISLEFT,ISRIGHT]
+          GLOBALMACP1A1(fluxstate,dir,i,j,k,ISLEFT)=GLOBALMAC(fluxstatecent,i,j,k);
+          GLOBALMACP1A1(fluxstate,dir,i,j,k,ISRIGHT)=GLOBALMAC(fluxstatecent,i,j,k);
+        }
+      }
 
 #endif// end if STOREFLUXSTATE
-
-    
 
     }// end 3D loop
   }// end parallel region  
@@ -1941,113 +1881,65 @@ void compute_and_store_fluxstatecent(FTYPE (*pr)[NSTORE2][NSTORE3][NPR])
 
   
 
-
-#if(N1>1)
-    dir=1;
-
-#pragma omp parallel
-    {
-      int i,j,k,l;
-      int pl;
-      OPENMP3DLOOPVARSDEFINE;
-      //    FTYPE *primptr[MAXNPR]; // number of pointers
-      FTYPE *velptr,*ptotptr;
-      //    FTYPE a_primstencil[MAXNPR][MAXSPACEORDER];
-      FTYPE a_velstencil[MAXSPACEORDER],a_ptotstencil[MAXSPACEORDER]; // Shouldn't need anymore than 10      
-
-
-      // shift pointer
-      //    PALLREALLOOP(pl){
-      //      primptr[pl] = a_primstencil[pl] - startorderi;
-      //    }
-      velptr = a_velstencil - startorderi;
-      ptotptr = a_ptotstencil - startorderi;
-
-
-      OPENMP3DLOOPSETUPFULLINOUT2DIR1;
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
-      OPENMP3DLOOPBLOCK{
-        OPENMP3DLOOPBLOCK2IJK(i,j,k);
-
-        // extract stencil of data for Ficalc()
-        for(l=startorderi;l<=endorderi;l++){
-          // PALLREALLOOP(pl) primptr[pl][l] = MACP0A1(pr,i+l,j,k,pl);
-          velptr[l] = MACP1A0(shocktemparray,SHOCKPLSTOREVEL1+dir-1,i+l,j,k);
-          ptotptr[l] = MACP1A0(shocktemparray,SHOCKPLSTOREPTOT,i+l,j,k);
-        }
-      
-        //      GLOBALMACP0A1(shockindicatorarray,i,j,k,SHOCKPLDIR1+dir-1)=Ficalc(dir,&velptr[0],&ptotptr[0],&primptr[0]);
-        GLOBALMACP1A0(shockindicatorarray,SHOCKPLDIR1+dir-1,i,j,k)=Ficalc(dir,&velptr[0],&ptotptr[0]);
-
-      }// end 3D loop
-    }// end parallel region  
-#endif // end if N1>1
-
-
-#if(N2>1)
-    dir=2;
+    DIMENLOOP(dir){
+      if(NxNOT1[dir]){
 
 #pragma omp parallel
-    {
-      int i,j,k,l;
-      OPENMP3DLOOPVARSDEFINE;
-      FTYPE *velptr,*ptotptr;
-      FTYPE a_velstencil[10],a_ptotstencil[10]; // Shouldn't need anymore than 10
+          {
+            int i,j,k,l;
+            int pl;
+            OPENMP3DLOOPVARSDEFINE;
+            //    FTYPE *primptr[MAXNPR]; // number of pointers
+            FTYPE *velptr,*ptotptr;
+            //    FTYPE a_primstencil[MAXNPR][MAXSPACEORDER];
+            FTYPE a_velstencil[MAXSPACEORDER],a_ptotstencil[MAXSPACEORDER]; // Shouldn't need anymore than 10      
 
-      // shift stencils
-      velptr = a_velstencil - startorderi;
-      ptotptr = a_ptotstencil - startorderi;
 
-      OPENMP3DLOOPSETUPFULLINOUT2DIR2;
+            // shift pointer
+            //    PALLREALLOOP(pl){
+            //      primptr[pl] = a_primstencil[pl] - startorderi;
+            //    }
+            velptr = a_velstencil - startorderi;
+            ptotptr = a_ptotstencil - startorderi;
+
+
+            if(dir==1) OPENMP3DLOOPSETUPFULLINOUT2DIR1;
+            if(dir==2) OPENMP3DLOOPSETUPFULLINOUT2DIR2;
+            if(dir==3) OPENMP3DLOOPSETUPFULLINOUT2DIR3;
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
-      OPENMP3DLOOPBLOCK{
-        OPENMP3DLOOPBLOCK2IJK(i,j,k);
+            OPENMP3DLOOPBLOCK{
+              OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
-        // extract stencil of data for Ficalc()
-        for(l=startorderi;l<=endorderi;l++){
-          velptr[l] = MACP1A0(shocktemparray,SHOCKPLSTOREVEL1+dir-1,i,j+l,k);
-          ptotptr[l] = MACP1A0(shocktemparray,SHOCKPLSTOREPTOT,i,j+l,k);
-        }
+              // extract stencil of data for Ficalc()
+              for(l=startorderi;l<=endorderi;l++){
+                // PALLREALLOOP(pl) primptr[pl][l] = MACP0A1(pr,i+l,j,k,pl);
+                velptr[l] = MACP1A0(shocktemparray,SHOCKPLSTOREVEL1+dir-1,i+l,j,k);
+                ptotptr[l] = MACP1A0(shocktemparray,SHOCKPLSTOREPTOT,i+l,j,k);
+              }
       
-        GLOBALMACP1A0(shockindicatorarray,SHOCKPLDIR1+dir-1,i,j,k)=Ficalc(dir,&velptr[0],&ptotptr[0]);
-      
-      }// end 3D loop
-    }// end parallel region  
-#endif // end if N2>1
+              //      GLOBALMACP0A1(shockindicatorarray,i,j,k,SHOCKPLDIR1+dir-1)=Ficalc(dir,&velptr[0],&ptotptr[0],&primptr[0]);
+              GLOBALMACP1A0(shockindicatorarray,SHOCKPLDIR1+dir-1,i,j,k)=Ficalc(dir,&velptr[0],&ptotptr[0]);
+
+              if(RADSHOCKFLAT&&EOMRADTYPE!=EOMRADNONE){
+                // extract stencil of data for Ficalc()
+                for(l=startorderi;l<=endorderi;l++){
+                  // PALLREALLOOP(pl) primptr[pl][l] = MACP0A1(pr,i+l,j,k,pl);
+                  velptr[l] = MACP1A0(shocktemparray,SHOCKRADPLSTOREVEL1+dir-1,i+l,j,k);
+                  ptotptr[l] = MACP1A0(shocktemparray,SHOCKRADPLSTOREPTOT,i+l,j,k);
+                }
+                
+                //      GLOBALMACP0A1(shockindicatorarray,i,j,k,SHOCKRADPLDIR1+dir-1)=Ficalc(dir,&velptr[0],&ptotptr[0],&primptr[0]);
+                GLOBALMACP1A0(shockindicatorarray,SHOCKRADPLDIR1+dir-1,i,j,k)=Ficalc(dir,&velptr[0],&ptotptr[0]);
+              }// end if doing radiation
+
+            }// end 3D loop
+          }// end parallel region
+      }// end if doing dir
+    }//end over dir loop
 
 
 
 
-#if(N3>1)
-    dir=3;
-
-#pragma omp parallel
-    {
-      int i,j,k,l;
-      OPENMP3DLOOPVARSDEFINE;
-      FTYPE *velptr,*ptotptr;
-      FTYPE a_velstencil[10],a_ptotstencil[10]; // Shouldn't need anymore than 10
-
-      // shift stencils
-      velptr = a_velstencil - startorderi;
-      ptotptr = a_ptotstencil - startorderi;
-
-      OPENMP3DLOOPSETUPFULLINOUT2DIR3;
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
-      OPENMP3DLOOPBLOCK{
-        OPENMP3DLOOPBLOCK2IJK(i,j,k);
-
-        // extract stencil of data for Ficalc()
-        for(l=startorderi;l<=endorderi;l++){
-          velptr[l] = MACP1A0(shocktemparray,SHOCKPLSTOREVEL1+dir-1,i,j,k+l);
-          ptotptr[l] = MACP1A0(shocktemparray,SHOCKPLSTOREPTOT,i,j,k+l);
-        }
-      
-        GLOBALMACP1A0(shockindicatorarray,SHOCKPLDIR1+dir-1,i,j,k)=Ficalc(dir,&velptr[0],&ptotptr[0]);
-
-      }// end 3D loop
-    }// end parallel region  
-#endif // end if N3>1
 
 
 

@@ -1094,8 +1094,8 @@ int init_global(void)
 
     // TOTRY: Om not happening even if set!
 
-    lim[1]=lim[2]=lim[3]=MINM; // too low order for ~100 points
-    //    if(WHICHPROBLEM==RADDONUT) lim[1]=lim[2]=lim[3]=PARALINE; // try later
+    //    lim[1]=lim[2]=lim[3]=MINM; // too low order for ~100 points
+    if(WHICHPROBLEM==RADDONUT) lim[1]=lim[2]=lim[3]=PARALINE; // try later
 
     if(!ISSPCMCOORDNATIVE(MCOORD) && (WHICHPROBLEM==RADNT || WHICHPROBLEM==RADFLATDISK || WHICHPROBLEM==RADDONUT) ){
       dualfprintf(fail_file,"Must choose MCOORD (currently %d) to be spherical polar grid type for RADNT,\n",MCOORD);
@@ -1593,7 +1593,8 @@ int init_defcoord(void)
 
     if(1){
       RADNT_MINX=1.7; // allows in KSCOORDS
-      RADNT_MAXX=50.0;
+      //      RADNT_MAXX=50.0;
+      RADNT_MAXX=60.0;
     }
     else{
       RADNT_MINX=1.8*Rhor;

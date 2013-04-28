@@ -116,8 +116,8 @@
 
 
 int eno_line_a2c( int whichquantity, int do_weight_or_recon, weno_weights_t *stencil_weights_array, int whichreduce, int preforder, int pl, int bs, int ps, int pf, int bf, int *minorderit, int *maxorderit, int *shiftit, 
-                  FTYPE *shockindicator, FTYPE (*df)[NBIGM], FTYPE (*dP)[NBIGM], FTYPE (*monoindicator)[NBIGM], 
-                  FTYPE *P, FTYPE *yin,  FTYPE *yout, struct of_trueijkp *trueijkp) 
+                  FTYPE (*shockindicator)[NBIGM], FTYPE (*df)[NBIGM], FTYPE (*dP)[NBIGM], FTYPE (*monoindicator)[NBIGM], 
+                  FTYPE *Pindicator, FTYPE *yin,  FTYPE *yout, struct of_trueijkp *trueijkp) 
 //wrapper function that calls a more general conversion function, eno_line_a2c_c2a
 {
   int i;
@@ -158,7 +158,7 @@ int eno_line_a2c( int whichquantity, int do_weight_or_recon, weno_weights_t *ste
                               maxorderit, 
                               shiftit, 
                               shockindicator,
-                              df, dP, monoindicator, P, yin, yout, NULL, NULL,trueijkp ); 
+                              df, dP, monoindicator, Pindicator, yin, yout, NULL, NULL,trueijkp ); 
 
 
 #if(0) // deprecated with no iterglobal anymore
@@ -226,8 +226,8 @@ int eno_line_a2c( int whichquantity, int do_weight_or_recon, weno_weights_t *ste
 
 
 int eno_line_c2a( int whichquantity, int do_weight_or_recon, weno_weights_t *stencil_weights_array, int whichreduce, int preforder, int pl, int bs, int ps, int pf, int bf, int *minorderit, int *maxorderit, int *shiftit, 
-                  FTYPE *shockindicator, FTYPE (*df)[NBIGM], FTYPE (*dP)[NBIGM], FTYPE (*monoindicator)[NBIGM], 
-                  FTYPE *P, FTYPE *yin,  FTYPE *yout, struct of_trueijkp *trueijkp) 
+                  FTYPE (*shockindicator)[NBIGM], FTYPE (*df)[NBIGM], FTYPE (*dP)[NBIGM], FTYPE (*monoindicator)[NBIGM], 
+                  FTYPE *Pindicator, FTYPE *yin,  FTYPE *yout, struct of_trueijkp *trueijkp) 
 //wrapper function that calls a more general conversion function, eno_line_reconstruct
 {
   int i;
@@ -240,7 +240,7 @@ int eno_line_c2a( int whichquantity, int do_weight_or_recon, weno_weights_t *ste
   return( 0 );
 #else
 
-  res = eno_line_reconstruct( whichquantity, do_weight_or_recon, stencil_weights_array, CVT_C2A, whichreduce, preforder, pl, bs, ps, pf, bf, minorderit, maxorderit, shiftit, shockindicator,  df, dP, monoindicator, P, yin, yout, NULL, NULL,trueijkp ); 
+  res = eno_line_reconstruct( whichquantity, do_weight_or_recon, stencil_weights_array, CVT_C2A, whichreduce, preforder, pl, bs, ps, pf, bf, minorderit, maxorderit, shiftit, shockindicator,  df, dP, monoindicator, Pindicator, yin, yout, NULL, NULL,trueijkp ); 
 
   //#if( TESTNUMBER == 153 && N2 == 1 && N3 == 1 )
   // //for Bondi problem, save the average values of conserved quantities at t = 0; this assumes 1d case
@@ -262,8 +262,8 @@ int eno_line_c2a( int whichquantity, int do_weight_or_recon, weno_weights_t *ste
 
 
 int eno_line_c2e( int whichquantity, int dir, int do_weight_or_recon, weno_weights_t *stencil_weights_array, int whichreduce, int preforder, int pl, int bs, int ps, int pf, int bf, int *minorderit, int *maxorderit, int *shiftit, 
-                  FTYPE *shockindicator, FTYPE *stiffindicator, FTYPE *V, FTYPE *P,
-                  FTYPE (*df)[NBIGM], FTYPE (*dP)[NBIGM], FTYPE *etai, FTYPE (*monoindicator)[NBIGM], 
+                  FTYPE (*shockindicator)[NBIGM], FTYPE *stiffindicator, FTYPE (*Vline)[NBIGM], FTYPE (*Pline)[NBIGM],
+                  FTYPE (*df)[NBIGM], FTYPE (*dP)[NBIGM], FTYPE (*etai)[NBIGM], FTYPE (*monoindicator)[NBIGM], 
                   FTYPE *Pindicator, FTYPE *yin, FTYPE *yout_left, FTYPE *yout_right, FTYPE (*youtpolycoef)[NBIGM], struct of_trueijkp *trueijkp ) 
 {
 
@@ -333,11 +333,11 @@ int eno_line_c2e( int whichquantity, int dir, int do_weight_or_recon, weno_weigh
 int eno_line_reconstruct(int whichquantity, int do_weight_or_recon, weno_weights_t *stencil_weights_array, int cvt_type, int whichreduce, int preforder, int pl, 
                          int bs, int ps, int pf, int bf, 
                          int *minorderit, int *maxorderit, int *shiftit, 
-                         FTYPE *shockindicator, 
+                         FTYPE (*shockindicator)[NBIGM], 
                          FTYPE (*df)[NBIGM],
                          FTYPE (*dP)[NBIGM],
                          FTYPE (*monoindicator)[NBIGM],
-                         FTYPE *P, 
+                         FTYPE *Pindicator, 
                          FTYPE *yin,  FTYPE *yout_left, FTYPE *yout_right, FTYPE (*youtpolycoef)[NBIGM], struct of_trueijkp *trueijkp)
 {
   
@@ -482,7 +482,7 @@ int eno_line_reconstruct(int whichquantity, int do_weight_or_recon, weno_weights
       //modify the lower order fraction by applying extra reduction:
       //dp/p reduction, etc. to the weno5 weights and update the lower order values
       apply_additional_reduction_to_weights( cvt_type, whichreduce, maxorder, minorder, i, pl, bs, bf, shockindicator, 
-                                             dP, monoindicator[MONOYIN], P, yin, stencil_weights_array,trueijkp );
+                                             dP, monoindicator[MONOYIN], Pindicator, yin, stencil_weights_array,trueijkp );
 
       //JCM
       // stencil_weights_array[i].lower_order_fraction;
@@ -574,7 +574,7 @@ int eno_line_reconstruct(int whichquantity, int do_weight_or_recon, weno_weights
     for( i = ps; i <= pf; i++ ) {
 #if( DO_ENO_STENCIL_REDUCTION )
       //for each point: choose the order of interpolation; there can be a linear combination of several orders; the number of orders is returned by the below call
-      num_orders = choose_weno_order( cvt_type, whichreduce, maxorder, minorder, i, pl, bs, bf, shockindicator, dP, monoindicator[MONOYIN], monoindicator[LEFTYOUT], P, yin, stencil_weights_array, &p_stencil_weights_array_to_be_used,trueijkp );
+      num_orders = choose_weno_order( cvt_type, whichreduce, maxorder, minorder, i, pl, bs, bf, shockindicator, dP, monoindicator[MONOYIN], monoindicator[LEFTYOUT], Pindicator, yin, stencil_weights_array, &p_stencil_weights_array_to_be_used,trueijkp );
 #else
       //stencil reduction is turned off, so only use weights of the default order; they have been computed above
       num_orders = 1;
@@ -673,7 +673,7 @@ int eno_line_reconstruct(int whichquantity, int do_weight_or_recon, weno_weights
                               maxorderit, 
                               shiftit, 
                               shockindicator,
-                              df, dP, monoindicator, P, yin, youtpolycoef[derorder], NULL, NULL,trueijkp ); 
+                              df, dP, monoindicator, Pindicator, yin, youtpolycoef[derorder], NULL, NULL,trueijkp ); 
       }
     }
 #endif
@@ -792,8 +792,8 @@ FTYPE rescale_weight( FTYPE order, FTYPE weight )
 
 
 
-void apply_additional_reduction_to_weights( int cvt_type, int whichreduce, int max_order, int min_order, int i0, int pl, int bs, int bf, FTYPE *shockindicator, FTYPE (*dP)[NBIGM],
-                                            FTYPE *monoindicator, FTYPE *P, FTYPE *uin, 
+void apply_additional_reduction_to_weights( int cvt_type, int whichreduce, int max_order, int min_order, int i0, int pl, int bs, int bf, FTYPE (*shockindicator)[NBIGM], FTYPE (*dP)[NBIGM],
+                                            FTYPE *monoindicator, FTYPE *Pindicator, FTYPE *uin, 
                                             weno_weights_t *stencil_weights_array, struct of_trueijkp *trueijkp ) 
 {
   FTYPE dPi;
@@ -2439,8 +2439,8 @@ int compute_weights_ratios(  int cvt_type, int bs, int bf, FTYPE *uin, weno_weig
 //only weights for cells for i = (bs + order - 1), ..., (bf - order + 1) will be used.
 //currently, the stencil is not reduced for the cells sufficiently close to the boundaries: with i = bs, ..., bs + 2 * order - 3, bf - 2 * order + 3, ..., bf.
 //GODMARK: this function is an exact copy of choose_ac_ca_weno_order() with the call to compute_ac_stencil_weights being replaced by compute_cf_stencil_weights()
-int choose_weno_order( int cvt_type, int whichreduce, int max_order, int min_order, int i0, int pl, int bs, int bf, FTYPE *shockindicator, FTYPE (*dP)[NBIGM],
-                       FTYPE *monoindicator0, FTYPE *monoindicator1, FTYPE *P, FTYPE *uin, 
+int choose_weno_order( int cvt_type, int whichreduce, int max_order, int min_order, int i0, int pl, int bs, int bf, FTYPE (*shockindicator)[NBIGM], FTYPE (*dP)[NBIGM],
+                       FTYPE *monoindicator0, FTYPE *monoindicator1, FTYPE *Pindicator, FTYPE *uin, 
                        weno_weights_t *stencil_weights_array, 
                        weno_weights_t **pp_stencil_weights_to_be_used, struct of_trueijkp *trueijkp ) 
 {
@@ -2505,7 +2505,7 @@ int choose_weno_order( int cvt_type, int whichreduce, int max_order, int min_ord
 
     //do PPM reduction instead of default SASHA-type one
     //if WENO_USE_PPM_FLATTENING is enabled, it overrides all other types of flattening/stencil reduction
-    lower_order_fraction = shockindicator[i0];
+    lower_order_fraction = shockindicator[EOMSETMHD][i0];
 
     assert( lower_order_fraction > 1. || lower_order_fraction < 0., "choose_cf_weno_order: shockindicator value is out of bounds [0., 1.]\n" );
 
@@ -2665,31 +2665,31 @@ FTYPE compute_lower_order_fraction( FTYPE w_ratio_left, FTYPE w_ratio_right )
 
 
 // Pass 1D line to ENO scheme
-void pass_1d_line_weno(int whichquantity, int dir, int do_weight_or_recon, int recontype, int whichreduce, int preforder, int pl, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE *shockindicator, FTYPE *stiffindicator, FTYPE *V,  FTYPE *P, FTYPE (*df)[NBIGM], FTYPE (*dP)[NBIGM], FTYPE *etai, FTYPE (*monoindicator)[NBIGM], FTYPE (*yprim)[2][NBIGM], FTYPE (*ystencilvar)[NBIGM], FTYPE (*yin)[NBIGM], FTYPE (*yout)[NBIGM], FTYPE (*youtpolycoef)[NBIGM], struct of_trueijkp *trueijkp)
+void pass_1d_line_weno(int whichquantity, int dir, int do_weight_or_recon, int recontype, int whichreduce, int preforder, int pl, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE (*shockindicator)[NBIGM], FTYPE *stiffindicator, FTYPE (*Vline)[NBIGM],  FTYPE (*Pline)[NBIGM], FTYPE (*df)[NBIGM], FTYPE (*dP)[NBIGM], FTYPE (*etai)[NBIGM], FTYPE (*monoindicator)[NBIGM], FTYPE (*yprim)[2][NBIGM], FTYPE (*ystencilvar)[NBIGM], FTYPE (*yin)[NBIGM], FTYPE (*yout)[NBIGM], FTYPE (*youtpolycoef)[NBIGM], struct of_trueijkp *trueijkp)
 {
-  void pass_1d_line_weno_withweights(int whichquantity, int dir, int do_weight_or_recon, weno_weights_t *stencil_weights_array, int recontype, int whichreduce, int preforder, int pl, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE *shockindicator, FTYPE *stiffindicator, FTYPE *V,  FTYPE *P, FTYPE (*df)[NBIGM], FTYPE (*dP)[NBIGM], FTYPE *etai, FTYPE (*monoindicator)[NBIGM], FTYPE (*yprim)[2][NBIGM], FTYPE (*ystencilvar)[NBIGM], FTYPE (*yin)[NBIGM], FTYPE (*yout)[NBIGM], FTYPE (*youtpolycoef)[NBIGM], struct of_trueijkp *trueijkp);
+  void pass_1d_line_weno_withweights(int whichquantity, int dir, int do_weight_or_recon, weno_weights_t *stencil_weights_array, int recontype, int whichreduce, int preforder, int pl, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE (*shockindicator)[NBIGM], FTYPE *stiffindicator, FTYPE (*Vline)[NBIGM],  FTYPE (*Pline)[NBIGM], FTYPE (*df)[NBIGM], FTYPE (*dP)[NBIGM], FTYPE (*etai)[NBIGM], FTYPE (*monoindicator)[NBIGM], FTYPE (*yprim)[2][NBIGM], FTYPE (*ystencilvar)[NBIGM], FTYPE (*yin)[NBIGM], FTYPE (*yout)[NBIGM], FTYPE (*youtpolycoef)[NBIGM], struct of_trueijkp *trueijkp);
   weno_weights_t *stencil_weights_array; // shouldn't be used
 
   stencil_weights_array = NULL;
 
   pass_1d_line_weno_withweights( whichquantity, dir, do_weight_or_recon, stencil_weights_array, recontype, whichreduce, preforder, 
-                                 pl, bs, ps, pe, be, minorder, maxorder, shift, shockindicator, stiffindicator, V, P, df, dP, etai, monoindicator, yprim, ystencilvar, 
+                                 pl, bs, ps, pe, be, minorder, maxorder, shift, shockindicator, stiffindicator, Vline, Pline, df, dP, etai, monoindicator, yprim, ystencilvar, 
                                  yin, yout,youtpolycoef,trueijkp);
 
 }
 
 
 // Pass 1D line to ENO scheme
-void pass_1d_line_weno_withweights(int whichquantity, int dir, int do_weight_or_recon, weno_weights_t *stencil_weights_array, int recontype, int whichreduce, int preforder, int pl, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE *shockindicator, FTYPE *stiffindicator, FTYPE *V,  FTYPE *P, FTYPE (*df)[NBIGM], FTYPE (*dP)[NBIGM], FTYPE *etai, FTYPE (*monoindicator)[NBIGM], FTYPE (*yprim)[2][NBIGM], FTYPE (*ystencilvar)[NBIGM], FTYPE (*yin)[NBIGM], FTYPE (*yout)[NBIGM], FTYPE (*youtpolycoef)[NBIGM], struct of_trueijkp *trueijkp)
+void pass_1d_line_weno_withweights(int whichquantity, int dir, int do_weight_or_recon, weno_weights_t *stencil_weights_array, int recontype, int whichreduce, int preforder, int pl, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE (*shockindicator)[NBIGM], FTYPE *stiffindicator, FTYPE (*Vline)[NBIGM],  FTYPE (*Pline)[NBIGM], FTYPE (*df)[NBIGM], FTYPE (*dP)[NBIGM], FTYPE (*etai)[NBIGM], FTYPE (*monoindicator)[NBIGM], FTYPE (*yprim)[2][NBIGM], FTYPE (*ystencilvar)[NBIGM], FTYPE (*yin)[NBIGM], FTYPE (*yout)[NBIGM], FTYPE (*youtpolycoef)[NBIGM], struct of_trueijkp *trueijkp)
 {
   FTYPE (*ysend)[NBIGM];
 
   // These are ENO functions
-  //extern int eno_line_c2e(int whichreduce, int preforder, int pl, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift, FTYPE *shockindicator, FTYPE *yin, FTYPE *yout_left, FTYPE *yout_right, struct of_trueijkp *trueijkp );
-  //extern int eno_line_a2c(int whichreduce, int preforder, int pl, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift, FTYPE *shockindicator, FTYPE *yin, FTYPE *yout, struct of_trueijkp *trueijkp );
-  //extern int eno_line_c2a(int whichreduce, int preforder, int pl, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift, FTYPE *shockindicator, FTYPE *yin, FTYPE *yout, struct of_trueijkp *trueijkp );
-  //extern int eno_line_a2em(int whichreduce, int preforder, int pl, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift, FTYPE *shockindicator, FTYPE *yin, FTYPE *yout, struct of_trueijkp *trueijkp );
-  //extern int eno_line_a2ep(int whichreduce, int preforder, int pl, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift, FTYPE *shockindicator, FTYPE *yin, FTYPE *yout, struct of_trueijkp *trueijkp );
+  //extern int eno_line_c2e(int whichreduce, int preforder, int pl, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift, FTYPE (*shockindicator)[NBIGM], FTYPE *yin, FTYPE *yout_left, FTYPE *yout_right, struct of_trueijkp *trueijkp );
+  //extern int eno_line_a2c(int whichreduce, int preforder, int pl, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift, FTYPE (*shockindicator)[NBIGM], FTYPE *yin, FTYPE *yout, struct of_trueijkp *trueijkp );
+  //extern int eno_line_c2a(int whichreduce, int preforder, int pl, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift, FTYPE (*shockindicator)[NBIGM], FTYPE *yin, FTYPE *yout, struct of_trueijkp *trueijkp );
+  //extern int eno_line_a2em(int whichreduce, int preforder, int pl, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift, FTYPE (*shockindicator)[NBIGM], FTYPE *yin, FTYPE *yout, struct of_trueijkp *trueijkp );
+  //extern int eno_line_a2ep(int whichreduce, int preforder, int pl, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift, FTYPE (*shockindicator)[NBIGM], FTYPE *yin, FTYPE *yout, struct of_trueijkp *trueijkp );
 
   // pass yin so that yin[0] is first active point
 
@@ -2739,10 +2739,10 @@ void pass_1d_line_weno_withweights(int whichquantity, int dir, int do_weight_or_
     //GODMARK: pass maxorder and minorder as arrays for each point of interest
     //  eno_line_c2e( whichquantity, do_weight_or_recon, whichreduce, preforder, pl, bs, ps, pe, be, minorder, maxorder, shift,  shockindicator, df, dP, etai, monoindicator, yprim[UU][0], ysend[0], yout[0], yout[1],trueijkp);  
     if(PARAMODWENO==0){
-      eno_line_c2e( whichquantity, dir, do_weight_or_recon, stencil_weights_array, whichreduce, preforder, pl, bs, ps, pe, be, minorder, maxorder, shift,  shockindicator, stiffindicator, V, P, df, dP, etai, monoindicator, yprim[VSQ][0], ysend[0], yout[0], yout[1], youtpolycoef,trueijkp );
+      eno_line_c2e( whichquantity, dir, do_weight_or_recon, stencil_weights_array, whichreduce, preforder, pl, bs, ps, pe, be, minorder, maxorder, shift,  shockindicator, stiffindicator, Vline, Pline, df, dP, etai, monoindicator, yprim[VSQ][0], ysend[0], yout[0], yout[1], youtpolycoef,trueijkp );
     }
     else{
-      paraenohybrid_line_c2e( whichquantity, dir, do_weight_or_recon, stencil_weights_array, whichreduce, preforder, pl, bs, ps, pe, be, minorder, maxorder, shift,  shockindicator, stiffindicator, V, P, df, dP, etai, monoindicator, yprim[VSQ][0], ysend[0], yout[0], yout[1], youtpolycoef,trueijkp );
+      paraenohybrid_line_c2e( whichquantity, dir, do_weight_or_recon, stencil_weights_array, whichreduce, preforder, pl, bs, ps, pe, be, minorder, maxorder, shift,  shockindicator, stiffindicator, Vline, Pline, df, dP, etai, monoindicator, yprim[VSQ][0], ysend[0], yout[0], yout[1], youtpolycoef,trueijkp );
     }
   }
   else if(recontype==CVT_A2C){
@@ -2874,7 +2874,7 @@ void multidir_post_slope_lim_linetype_weno(void)
 
 
 
-void pass_1d_line_multipl_weno(int MULTIPLTYPE, int whichquantity, int dir, int do_weight_or_recon, int recontype, int whichreduce, int preforder, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE *shockindicator, FTYPE *stiffindicator, FTYPE *Vline,  FTYPE *Pline, FTYPE (*df)[NUMDFS][NBIGM], FTYPE (*dP)[NBIGM], FTYPE (*etai)[NBIGM], FTYPE (*monoindicator)[NUMMONOINDICATORS][NBIGM], FTYPE (*yprim)[2][NBIGM], FTYPE (*ystencilvar)[2][NBIGM], FTYPE (*yin)[2][NBIGM], FTYPE (*yout)[2][NBIGM], FTYPE (*youtpolycoef)[MAXSPACEORDER][NBIGM], struct of_trueijkp *trueijkp)
+void pass_1d_line_multipl_weno(int MULTIPLTYPE, int whichquantity, int dir, int do_weight_or_recon, int recontype, int whichreduce, int preforder, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE (*shockindicator)[NBIGM], FTYPE *stiffindicator, FTYPE (*Vline)[NBIGM],  FTYPE (*Pline)[NBIGM], FTYPE (*df)[NUMDFS][NBIGM], FTYPE (*dP)[NBIGM], FTYPE (*etai)[NUMTRUEEOMSETS][NBIGM], FTYPE (*monoindicator)[NUMMONOINDICATORS][NBIGM], FTYPE (*yprim)[2][NBIGM], FTYPE (*ystencilvar)[2][NBIGM], FTYPE (*yin)[2][NBIGM], FTYPE (*yout)[2][NBIGM], FTYPE (*youtpolycoef)[MAXSPACEORDER][NBIGM], struct of_trueijkp *trueijkp)
 {
   int nprlocalstart,nprlocalend;
   int nprlocallist[MAXNPR];

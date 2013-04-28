@@ -943,7 +943,7 @@ struct Ccoordparams {
 #define MPERSUN (10.0)
 
 #undef RADSHOCKFLAT
-#define RADSHOCKFLAT 0 // can't use flattener near inlet where static jump -- leads to lots of oscillations with PPM.
+#define RADSHOCKFLAT 1 // can't use flattener near inlet where static jump -- leads to lots of oscillations with PPM.
 
 #undef WHICHRADSOURCEMETHOD
 //#define WHICHRADSOURCEMETHOD SOURCEMETHODNONE
@@ -972,12 +972,14 @@ struct Ccoordparams {
 //#define WHICHRADSOURCEMETHOD SOURCEMETHODNONE
 //#define WHICHRADSOURCEMETHOD SOURCEMETHODEXPLICIT
 #define WHICHRADSOURCEMETHOD SOURCEMETHODIMPLICIT
-   //#define WHICHRADSOURCEMETHOD SOURCEMETHODIMPLICITEXPLICITCHECK // SUPERKORALTODO: Actually doesn't work -- donut heats-up improperly and grows and unsteady.
+//#define WHICHRADSOURCEMETHOD SOURCEMETHODEXPLICITSUBCYCLECHECKSFROMIMPLICIT // least stable result since doesn't use time-advanced prnew to get force since assumes will be doing accurate substeps.
+//#define WHICHRADSOURCEMETHOD SOURCEMETHODIMPLICITEXPLICITCHECK // SUPERKORALTODO: Actually doesn't work -- donut heats-up improperly and grows and unsteady.  Even with using time-advanced prnew, leads to problems eventually and noisy overall.
 
 // N1=30 if using log coords from r=1.7 to r=50
 // N1=60 if using 1.5*hor - 40 (or 27.8)
 // N1=70 if using 1.5*hor - 30 (or 27.8)
-#define N1 50
+//#define N1 50
+#define N1 60 // KORALTODO testing
 #define N2 30
 #define N3 1
 

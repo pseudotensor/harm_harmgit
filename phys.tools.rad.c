@@ -1242,6 +1242,7 @@ static int source_explicit(int whichsc, int whichradsourcemethod, int methoddtsu
 
   if(!(whichradsourcemethod==SOURCEMETHODEXPLICIT || whichradsourcemethod==SOURCEMETHODEXPLICITREVERSIONFROMIMPLICIT || whichradsourcemethod==SOURCEMETHODEXPLICITCHECKSFROMIMPLICIT)){
     // then if sub-cycling, really want to start with beginning pin so consistently do sub-steps for effective flux force and full-pl fluid force in time.
+    // But if end-up doing just one explcit step, then probably wanted to use time-advanced prnew as estimate.  That gives more stable result.
     // then prforG is only used to ensure not getting bad guess for whether *should* sub-cycle.
     PLOOP(pliter,pl) prnew[pl]=pin[pl];
   }
@@ -2879,11 +2880,26 @@ int u2p_rad(int showmessages, int allowlocalfailurefixandnoreport, FTYPE *uu, FT
 
     // get E in radiation frame
     get_m1closure_Erf(ptrgeom,Avcon,gammarel2,&Erf);
+    FTYPE Erforig=Erf;
 
     // get relative 4-velocity
-    if(0&&CASECHOICE==JONCHOICE) get_m1closure_urfconrel(showmessages,allowlocalfailurefixandnoreport,ptrgeom,pp,Avcon,Avcov,gammarel2,delta,numerator,divisor,&Erf,urfconrel,lpflag,lpflagrad);
-    else if(1||CASECHOICE==OLEKCHOICE) get_m1closure_urfconrel_olek(showmessages,allowlocalfailurefixandnoreport,ptrgeom,pp,Avcon,Avcov,gammarel2,delta,&Erf,urfconrel,lpflag,lpflagrad);
+    if(CASECHOICE==JONCHOICE) get_m1closure_urfconrel(showmessages,allowlocalfailurefixandnoreport,ptrgeom,pp,Avcon,Avcov,gammarel2,delta,numerator,divisor,&Erf,urfconrel,lpflag,lpflagrad);
+    else if(CASECHOICE==OLEKCHOICE) get_m1closure_urfconrel_olek(showmessages,allowlocalfailurefixandnoreport,ptrgeom,pp,Avcon,Avcov,gammarel2,delta,&Erf,urfconrel,lpflag,lpflagrad);
 
+#if(0)
+    // TESTING:
+    FTYPE Erf2=Erforig,urfconrel2[NDIM];
+    get_m1closure_urfconrel_olek(showmessages,allowlocalfailurefixandnoreport,ptrgeom,pp,Avcon,Avcov,gammarel2,delta,&Erf2,urfconrel2,lpflag,lpflagrad);
+    FTYPE ERRORCHECK;
+    ERRORCHECK=1E-1;
+    if( fabs(Erf2-Erf)/(fabs(Erf2)+fabs(Erf))>ERRORCHECK || fabs(urfconrel2[1]-urfconrel[1])/(fabs(urfconrel2[1])+fabs(urfconrel[1]))>ERRORCHECK || fabs(urfconrel2[2]-urfconrel[2])/(fabs(urfconrel2[2])+fabs(urfconrel[2]))>ERRORCHECK || fabs(urfconrel2[3]-urfconrel[3])/(fabs(urfconrel2[3])+fabs(urfconrel[3]))>ERRORCHECK){
+      dualfprintf(fail_file,"JONVSOLEK: ijk=%d %d %d : nstep=%ld steppart=%d : %g %g %g %g : %g %g %g %g\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,Erf,urfconrel[1],urfconrel[2],urfconrel[3],Erf2,urfconrel2[1],urfconrel2[2],urfconrel2[3]);
+    }
+    ERRORCHECK=0.4;
+    if( fabs(Erf2-Erf)/(fabs(Erf2)+fabs(Erf))>ERRORCHECK || fabs(urfconrel2[1]-urfconrel[1])/(fabs(urfconrel2[1])+fabs(urfconrel[1]))>ERRORCHECK || fabs(urfconrel2[2]-urfconrel[2])/(fabs(urfconrel2[2])+fabs(urfconrel[2]))>ERRORCHECK || fabs(urfconrel2[3]-urfconrel[3])/(fabs(urfconrel2[3])+fabs(urfconrel[3]))>ERRORCHECK){
+      dualfprintf(fail_file,"JONVSOLEK: ijk=%d %d %d : nstep=%ld steppart=%d : %g %g %g %g : %g %g %g %g\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,Erf,urfconrel[1],urfconrel[2],urfconrel[3],Erf2,urfconrel2[1],urfconrel2[2],urfconrel2[3]);
+    }
+#endif
 
   }// end if M1
   else{
@@ -3410,6 +3426,12 @@ static int get_m1closure_urfconrel(int showmessages, int allowlocalfailurefixand
     //        dualfprintf(fail_file,"NO failure: %g %g ijk=%d %d %d\n",Erf,gammarel2,ptrgeom->i,ptrgeom->j,ptrgeom->k);
   }
   else{
+    FTYPE Avconorig[NDIM],Avcovorig[NDIM];
+    DLOOPA(jj){
+      Avconorig[jj]=Avcon[jj];
+      Avcovorig[jj]=Avcov[jj];
+    }
+
     // get \gammarel=1 case
     FTYPE gammarel2slow=pow(1.0+10.0*NUMEPSILON,2.0);
     FTYPE Avconslow[NDIM],Avcovslow[NDIM],Erfslow,urfconrelslow[NDIM];
@@ -3430,28 +3452,38 @@ static int get_m1closure_urfconrel(int showmessages, int allowlocalfailurefixand
     Erffast=Erf;
     get_m1closure_gammarel2_cold(showmessages,ptrgeom,Avconfast,Avcovfast,&gammarel2fast,&delta,&numerator,&divisor,&Erffast,urfconrelfast);
 
+    //    dualfprintf(fail_file,"JONVSOLEK: Avconorig: %g %g %g %g\n",Avcon[0],Avcon[1],Avcon[2],Avcon[3]);
+
     int usingfast=1;
     // choose by which Avcov[0] is closest to original
-    if( fabs(Avcovslow[0]-Avcov[0])>fabs(Avcovfast[0]-Avcov[0]) ){
+    if( fabs(Avconslow[0]-Avcon[0])>fabs(Avconfast[0]-Avcon[0]) ){ // compare Avcon that has positive sign always
       usingfast=1;
+      Erf=Erffast;
+      gammarel2=gammarel2fast;
       DLOOPA(jj){
         Avcon[jj]=Avconfast[jj];
         Avcov[jj]=Avcovfast[jj];
         urfconrel[jj]=urfconrelfast[jj];
       }
-      gammarel2=gammarel2fast;
-      Erf=Erffast;
     }
     else{
       usingfast=0;
+      Erf=Erfslow;
+      gammarel2=gammarel2slow;
       DLOOPA(jj){
         Avcon[jj]=Avconslow[jj];
         Avcov[jj]=Avcovslow[jj];
         urfconrel[jj]=urfconrelslow[jj];
       }
-      gammarel2=gammarel2slow;
-      Erf=Erfslow;
     }
+
+    // catch bad issue for when using fast or slow will be bad because probably momentum is bad if inverted energy
+    if(Avcovorig[TT]>0.0){
+      SLOOPA(jj) urfconrel[jj]=0.0;
+    }
+
+    
+    //    dualfprintf(fail_file,"JONVSOLEK: usingfast=%d Avconfast: %g %g %g %g : Avconslow: %g %g %g %g : Erffast=%g Erfslow=%g urfconfast=%g %g %g urfconslow=%g %g %g\n",usingfast,Avconfast[0],Avconfast[1],Avconfast[2],Avconfast[3],Avconslow[0],Avconslow[1],Avconslow[2],Avconslow[3],Erffast,Erfslow,urfconrelfast[1],urfconrelfast[2],urfconrelfast[3],urfconrelslow[1],urfconrelslow[2],urfconrelslow[3]);
     
 
     // report
@@ -3917,16 +3949,16 @@ static int get_m1closure_gammarel2_cold(int showmessages, struct of_geom *ptrgeo
                            1.*gn11*(gn22*Power(Rdtx,2) + 2.*gn23*Rdtx*Rdty + gn33*Power(Rdty,2) + 2.*gn24*Rdtx*Rdtz + 2.*gn34*Rdty*Rdtz + 
                                     gn44*Power(Rdtz,2)))*utsq*(gn11 + utsq)*Power(gn11 + 4.*utsq,2)))/(utsq*(gn11 + utsq)*(gn11 + 4.*utsq));
 
-  if(showmessages && debugfail>=2) dualfprintf(fail_file,"NOR SOL: Avcov0new=%g Avcov0old=%g Erf=%g :: %g %g %g\n",Avcov[0],Avcovorig[0],Erf,Rtx,Rty,Rtz);
+  if(0&&showmessages && debugfail>=2) dualfprintf(fail_file,"NOR SOL: Avcov0new=%g Avcov0old=%g Erf=%g :: %g %g %g\n",Avcov[0],Avcovorig[0],Erf,Rtx,Rty,Rtz);
 
   //modify Avcon
   indices_12(Avcov,Avcon,ptrgeom);
-  if(showmessages && debugfail>=2) DLOOPA(jj) dualfprintf(fail_file,"jj=%d Avconorig=%g Avconnew=%g\n",jj,Avconorig[jj],Avcon[jj]);
+  if(0&&showmessages && debugfail>=2) DLOOPA(jj) dualfprintf(fail_file,"jj=%d Avconorig=%g Avconnew=%g\n",jj,Avconorig[jj],Avcon[jj]);
 
  
   delta=0; // not yet
 
-  if(showmessages && debugfail>=2){
+  if(0&&showmessages && debugfail>=2){
     // alt solution
 
     FTYPE Avcovalt = (-0.25*(4.*(gn12*Rdtx + gn13*Rdty + gn14*Rdtz)*utsq*(gn11 + utsq) + 
@@ -3952,7 +3984,7 @@ static int get_m1closure_gammarel2_cold(int showmessages, struct of_geom *ptrgeo
   if(Erf>0.0) SLOOPA(jj) urfconrel[jj] = alpha * (Avcon[jj] + 1./3.*Erf*ptrgeom->gcon[GIND(0,jj)]*(4.0*gammarel2-1.0) )/(4./3.*Erf*gammarel);
   else SLOOPA(jj) urfconrel[jj] = 0.0;
 
-  if(showmessages && debugfail>=2) dualfprintf(fail_file,"NORM ROOT 4-vel: %g %g %g : %g\n",urfconrel[1],urfconrel[2],urfconrel[3],ptrgeom->gdet);
+  if(0&&showmessages && debugfail>=2) dualfprintf(fail_file,"NORM ROOT 4-vel: %g %g %g : %g\n",urfconrel[1],urfconrel[2],urfconrel[3],ptrgeom->gdet);
 
   
   *Erfreturn=Erf; // pass back new Erf to pointer

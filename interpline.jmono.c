@@ -82,7 +82,7 @@
 // monoindicator[1]: whether set cell's left value
 // monoindicator[2]: whether set cell's right value
 // MERGEDC2EA2CMETHOD  TODO : NOT NECESSARY FOR NOW
-void compute_jmonotonicity_line(int recontype, int whichreduce, int preforder, int pl, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE *shockindicator, FTYPE (*df)[NBIGM], FTYPE (*monoindicator)[NBIGM], FTYPE *yin,  FTYPE (*yout)[NBIGM], FTYPE (*youtpolycoef)[NBIGM])
+void compute_jmonotonicity_line(int recontype, int whichreduce, int preforder, int pl, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE (*shockindicator)[NBIGM], FTYPE (*df)[NBIGM], FTYPE (*monoindicator)[NBIGM], FTYPE *yin,  FTYPE (*yout)[NBIGM], FTYPE (*youtpolycoef)[NBIGM])
 {
   int i;
   int dpup,dpdown,ddpup,ddpdown;
@@ -104,6 +104,10 @@ void compute_jmonotonicity_line(int recontype, int whichreduce, int preforder, i
   myexit(1987526);  
 #endif
 
+  if(EOMRADTYPE!=EOMRADNONE){
+    dualfprintf(fail_file,"JMONO not setup for koral\n");
+    myexit(394343677);      
+  }
 
   if(preforder>5 || preforder<3){
     dualfprintf(fail_file,"JMONO not setup for preforder>5 || preforder<3\n");
@@ -163,8 +167,8 @@ void compute_jmonotonicity_line(int recontype, int whichreduce, int preforder, i
     
     // check for cusp
     if((check_for_cusp(&yin[i],&df[DFONESIDED][i],&df[DF2OFONESIDED][i]))  ){
-      //dualfprintf(fail_file,"shocki[%d]=%21.15g\n",i,shockindicator[i]);
-      //if((shockindicator[i]>=0.1)||(check_for_cusp(&df[DFONESIDED][i],&df[DF2OFONESIDED][i],&yin[i]))  ){// does somewhat better than not checking
+      //dualfprintf(fail_file,"shocki[%d]=%21.15g\n",i,shockindicator[EOMSETMHD][i]);
+      //if((shockindicator[EOMSETMHD][i]>=0.1)||(check_for_cusp(&df[DFONESIDED][i],&df[DF2OFONESIDED][i],&yin[i]))  ){// does somewhat better than not checking
       //if(0){
 
 
@@ -231,12 +235,12 @@ void compute_jmonotonicity_line(int recontype, int whichreduce, int preforder, i
 
 
 #if(USESHOCKINDICATOR&&(USECUSPINDICATOR==2))
-    roughnessindicator=max(shockindicator[i],cuspindicator);
-    //roughnessindicator=shockindicator[i];
+    roughnessindicator=max(shockindicator[EOMSETMHD][i],cuspindicator);
+    //roughnessindicator=shockindicator[EOMSETMHD][i];
 #elif(USECUSPINDICATOR==2)
     roughnessindicator=cuspindicator;
 #elif(USESHOCKINDICATOR)
-    roughnessindicator=shockindicator[i];
+    roughnessindicator=shockindicator[EOMSETMHD][i];
 #else
     roughnessindicator=0.0;
 #endif

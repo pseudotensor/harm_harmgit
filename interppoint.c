@@ -901,7 +901,7 @@ void mcsteeppl(int i, int j, int k, int loc, int realisinterp, int dir, FTYPE **
   FTYPE a_P[10];
   FTYPE *V,*P;
   void slope_lim_3points(int reallim, FTYPE yl, FTYPE yc, FTYPE yr,FTYPE *dq);
-  extern void getPressure(int i, int j, int k, int loc, FTYPE **yrealpl, FTYPE *P);
+  extern void getPressure(int whicheom, int i, int j, int k, int loc, FTYPE **yrealpl, FTYPE *P);
   extern void parasteep(int dir, int pl, FTYPE *V, FTYPE *P, FTYPE *y, FTYPE *dq, FTYPE *l, FTYPE *r);
   extern void paraflatten(int dir, int pl, FTYPE *y, FTYPE Fi, FTYPE *l, FTYPE *r);
   extern FTYPE  Ficalc(int dir, FTYPE *V, FTYPE *P);
@@ -915,6 +915,10 @@ void mcsteeppl(int i, int j, int k, int loc, int realisinterp, int dir, FTYPE **
   FTYPE a_ddq[7];
   FTYPE *ddq;
 
+  if(EOMRADTYPE!=EOMRADNONE){
+    dualfprintf(fail_file,"mcsteppl not setup for koral\n");
+    myexit(3752352523);
+  }
 
   // orthogonal to "dir" direction
   odir1=dir%3+1;
@@ -994,9 +998,10 @@ void mcsteeppl(int i, int j, int k, int loc, int realisinterp, int dir, FTYPE **
 
   // get pressures for all points since needed for reduction or steepening
 #if( DOUSEPARAFLAT || DOUSEPPMCONTACTSTEEP)
-  getPressure(i,j,k,loc,yrealpl, P);
+  getPressure(EOMSETMHD,i,j,k,loc,yrealpl, P);
 #endif
 
+  // KORALTODO: Not using EOMSETRAD yet.
 
 
 

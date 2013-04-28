@@ -77,7 +77,7 @@ FTYPE BASEMACP0A1(ucumformetric,N1M,N2M,N3M,NPR);
 
 
 // emf has extra zone on upper end since corner quantity and some components exist that are needed for cell centered quantities
-FTYPE BASEMACP1A0(emf,NDIM,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3); /* space for emf */
+FTYPE BASEMACP1A0(emf,NDIM*NUMTRUEEOMSETS,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3); /* space for emf and temp vars -- hence why NDIM*NUMTRUEEOMSETS */
 
 #if(STOREFLUXSTATE)
 struct of_state BASEMACP1A1(fluxstate,COMPDIM,N1M,N2M,N3M,NUMLEFTRIGHT);

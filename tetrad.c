@@ -638,7 +638,7 @@ int transboost_lab2fluid(int lab2orthofluid, int primcoord, struct of_geom *ptrg
   DLOOPA(mu) wconlab[mu] = 0.0;
 
   if(lab2orthofluid==LAB2FF || lab2orthofluid==FF2LAB){
-#if(0)
+#if(0) // STAY AS ZERO
     // ZAMO frame: \eta_\mu = (-\alpha,0,0,0)
     wcovlab[TT]=-ptrgeom->alphalapse;
     SLOOPA(mu) wcovlab[mu]=0.0;

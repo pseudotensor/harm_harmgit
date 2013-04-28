@@ -7,14 +7,14 @@
 
 
 int paraenohybrid_line_c2e( int whichquantity, int dir, int do_weight_or_recon, weno_weights_t *stencil_weights_array,  int whichreduce, int preforder, int pl, int bs, int ps, int pf, int bf, int *minorderit, int *maxorderit, int *shiftit, 
-                            FTYPE *shockindicator, FTYPE *stiffindicator, FTYPE *V, FTYPE *P,
-                            FTYPE (*df)[NBIGM], FTYPE (*dP)[NBIGM], FTYPE *etai, FTYPE (*monoindicator)[NBIGM], 
+                            FTYPE (*shockindicator)[NBIGM], FTYPE *stiffindicator, FTYPE (*Vline)[NBIGM], FTYPE (*Pline)[NBIGM],
+                            FTYPE (*df)[NBIGM], FTYPE (*dP)[NBIGM], FTYPE (*etai)[NBIGM], FTYPE (*monoindicator)[NBIGM], 
                             FTYPE *Pindicator, FTYPE *yin, FTYPE *yout_left, FTYPE *yout_right, FTYPE (*youtpolycoef)[NBIGM], struct of_trueijkp *trueijkp ) 
 {
   // JCM STUFF START
   int paraprocess_line_c2e( int whichquantity, int dir, int do_weight_or_recon, weno_weights_t *stencil_weights_array, int whichreduce, int preforder, int pl, int bs, int ps, int pf, int bf, int *minorderit, int *maxorderit, int *shiftit, 
-                            FTYPE *shockindicator, FTYPE *stiffindicator, FTYPE *parafrac, FTYPE *V, FTYPE *P,
-                            FTYPE (*df)[NBIGM], FTYPE (*dP)[NBIGM], FTYPE *etai, FTYPE (*monoindicator)[NBIGM], 
+                            FTYPE (*shockindicator)[NBIGM], FTYPE *stiffindicator, FTYPE *parafrac, FTYPE (*Vline)[NBIGM], FTYPE (*Pline)[NBIGM],
+                            FTYPE (*df)[NBIGM], FTYPE (*dP)[NBIGM], FTYPE (*etai)[NBIGM], FTYPE (*monoindicator)[NBIGM], 
                             FTYPE *Pindicator, FTYPE *yin, FTYPE *yout_left, FTYPE *yout_right, struct of_trueijkp *trueijkp  ) ;
   int returnedvalue;
   FTYPE a_parafrac[NBIGM];
@@ -109,7 +109,7 @@ int paraenohybrid_line_c2e( int whichquantity, int dir, int do_weight_or_recon, 
 
 
   if(FULLHYBRID==1 && !allpara || FULLHYBRID==0 || PARAMODWENO==0){
-    returnedvalue=eno_line_c2e( whichquantity, dir, do_weight_or_recon, stencil_weights_array, whichreduce, preforder, pl, bs, ps, pf, bf, minorderit, maxorderit, shiftit, shockindicator,  stiffindicator, V, P, df, dP, etai, monoindicator, Pindicator, yin, yout_left, yout_right, youtpolycoef,trueijkp ); 
+    returnedvalue=eno_line_c2e( whichquantity, dir, do_weight_or_recon, stencil_weights_array, whichreduce, preforder, pl, bs, ps, pf, bf, minorderit, maxorderit, shiftit, shockindicator,  stiffindicator, Vline, Pline, df, dP, etai, monoindicator, Pindicator, yin, yout_left, yout_right, youtpolycoef,trueijkp ); 
   }
 
 
@@ -118,7 +118,7 @@ int paraenohybrid_line_c2e( int whichquantity, int dir, int do_weight_or_recon, 
   if(PARAMODWENO && MAXBND>=4){ // then assume can store enough dq's for PARA-like steepen/flat/monocheck
 
     if(FULLHYBRID==1 && !allweno || FULLHYBRID==0){
-      paraprocess_line_c2e( whichquantity, dir, do_weight_or_recon, stencil_weights_array, whichreduce, preforder, pl, bs, ps, pf, bf, minorderit, maxorderit, shiftit,  shockindicator, stiffindicator, parafrac, V, P, df, dP, etai, monoindicator, Pindicator, yin, yout_left, yout_right,trueijkp );  
+      paraprocess_line_c2e( whichquantity, dir, do_weight_or_recon, stencil_weights_array, whichreduce, preforder, pl, bs, ps, pf, bf, minorderit, maxorderit, shiftit,  shockindicator, stiffindicator, parafrac, Vline, Pline, df, dP, etai, monoindicator, Pindicator, yin, yout_left, yout_right,trueijkp );  
     }
   }
 
@@ -138,8 +138,8 @@ int paraenohybrid_line_c2e( int whichquantity, int dir, int do_weight_or_recon, 
 // works well as setup for isolated stationary and moving contact and blast wave, but problem for TESTNUMBER==4 contact compared to MCSTEEP,PARALINE,PARAFLAT still -- should look at etai's at late time in contact to see why -- maybe shock not flat enough
 // GODMARK: If parafrac==0, then must behave *exactly* like weno would have!
 int paraprocess_line_c2e( int whichquantity, int dir, int do_weight_or_recon, weno_weights_t *stencil_weights_array, int whichreduce, int preforder, int pl, int bs, int ps, int pf, int bf, int *minorderit, int *maxorderit, int *shiftit, 
-                          FTYPE *shockindicator, FTYPE *stiffindicator, FTYPE *parafrac, FTYPE *V, FTYPE *P, FTYPE (*df)[NBIGM],
-                          FTYPE (*dP)[NBIGM], FTYPE *etai, FTYPE (*monoindicator)[NBIGM], 
+                          FTYPE (*shockindicator)[NBIGM], FTYPE *stiffindicator, FTYPE *parafrac, FTYPE (*Vline)[NBIGM], FTYPE (*Pline)[NBIGM], FTYPE (*df)[NBIGM],
+                          FTYPE (*dP)[NBIGM], FTYPE (*etai)[NBIGM], FTYPE (*monoindicator)[NBIGM], 
                           FTYPE *Pindicator, FTYPE *yin, FTYPE *yout_left, FTYPE *yout_right, struct of_trueijkp *trueijkp  ) 
 {
   extern void paracont(FTYPE ddq, FTYPE *y, FTYPE *facecont);
@@ -232,6 +232,11 @@ int paraprocess_line_c2e( int whichquantity, int dir, int do_weight_or_recon, we
   //dqrange=preforder-2;
   dqrange=5;
 
+  int whicheom;
+  if(RADPL(pl)) whicheom=EOMSETRAD;
+  else whicheom=EOMSETMHD;
+
+
 
   // default left and right states
   // 1 input and 2 outputs
@@ -252,12 +257,12 @@ int paraprocess_line_c2e( int whichquantity, int dir, int do_weight_or_recon, we
 #error If Steepen in paraline, must turn on CONTACTINDICATOR
 #endif
     
-    if(smooth==0) parasteepgen(pl,etai[i],&V[i],&P[i],&yin[i],&df[DFMONO][i],&face[0][i],&face[1][i]);
+    if(smooth==0) parasteepgen(pl,etai[whicheom][i],&Vline[whicheom][i],&Pline[whicheom][i],&yin[i],&df[DFMONO][i],&face[0][i],&face[1][i]);
 #endif
   
   
 #if( DOPPMREDUCEMODWENO )
-    paraflatten(dir,pl,&yin[i],shockindicator[i],&face[0][i],&face[1][i]);
+    paraflatten(dir,pl,&yin[i],shockindicator[whicheom][i],&face[0][i],&face[1][i]);
 #endif
   
 
@@ -294,8 +299,8 @@ int paraprocess_line_c2e( int whichquantity, int dir, int do_weight_or_recon, we
     myshock=0;
     // seem to require -3..3 for blast wave to avoid WENO smearing of contact
     for(mm=-3;mm<=3;mm++){
-      myetai=max(myetai,etai[i+mm]);
-      myshock=max(myshock,shockindicator[i+mm]);
+      myetai=max(myetai,etai[whicheom][i+mm]);
+      myshock=max(myshock,shockindicator[whicheom][i+mm]);
     }
     monofrac = min(max(monoindicator[MONOYIN][i],0.0),1.0);
 
@@ -316,7 +321,7 @@ int paraprocess_line_c2e( int whichquantity, int dir, int do_weight_or_recon, we
     //    parafraclocal = min(max(max(2.0*myetai,myshock),0.0),1.0);
 
     // don't use para if in stiff regime since WENO more robust
-    parafraclocal = parafraclocal*(1.0-stiffindicator[i]);
+    parafraclocal = parafraclocal*(1.0-stiffindicator[whicheom][i]);
 
     //    if(pl==RHO) parafraclocal=1.0;
 
@@ -370,7 +375,7 @@ int paraprocess_line_c2e( int whichquantity, int dir, int do_weight_or_recon, we
 
     // flatten MC in shocks
 #if( DOPPMREDUCEMODWENO )
-    paraflatten(dir,pl,&yin[i],shockindicator[i],&leftmc,&rightmc);
+    paraflatten(dir,pl,&yin[i],shockindicator[whicheom][i],&leftmc,&rightmc);
 #endif
 
     monofrac = min(max(monoindicator[MONOYIN][i],0.0),1.0);
@@ -414,7 +419,7 @@ int paraprocess_line_c2e( int whichquantity, int dir, int do_weight_or_recon, we
 #if( DOPPMREDUCEMODWENO )
     // flatten again in case checkparamonotonic is not reducing all the way to DONOR
     // causes major problems
-    //    paraflatten(dir,pl,&yin[i],shockindicator[i],&yout_left[i],&yout_right[i]);
+    //    paraflatten(dir,pl,&yin[i],shockindicator[whicheom][i],&yout_left[i],&yout_right[i]);
 #endif
 
 

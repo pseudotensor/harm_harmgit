@@ -35,10 +35,10 @@
   int preforder, whichreduce;                                           \
   int pl,pliter;                                                        \
   int recontype;                                                        \
-  extern void pass_1d_line_weno(int whichquantity, int dir, int do_weight_or_recon, int recontype, int whichreduce, int preforder, int pl, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE *shockindicator, FTYPE *stiffindicator, FTYPE *V,  FTYPE *P, FTYPE (*df)[NBIGM], FTYPE (*dP)[NBIGM], FTYPE *etai, FTYPE (*monoindicator)[NBIGM], FTYPE (*yprim)[2][NBIGM], FTYPE (*ystencilvar)[NBIGM], FTYPE (*yin)[NBIGM], FTYPE (*yout)[NBIGM], FTYPE (*youtpolycoef)[NBIGM], struct of_trueijkp *trueijkp); \
-  extern void pass_1d_line_paraline(int whichquantity, int dir, int do_weight_or_recon, int recontype, int whichreduce, int preforder, int pl, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE *shockindicator, FTYPE *stiffindicator, FTYPE *V,  FTYPE *P, FTYPE (*df)[NBIGM], FTYPE (*dP)[NBIGM], FTYPE *etai, FTYPE (*monoindicator)[NBIGM], FTYPE (*yprim)[2][NBIGM], FTYPE (*ystencilvar)[NBIGM], FTYPE (*yin)[NBIGM], FTYPE (*yout)[NBIGM], FTYPE (*youtpolycoef)[NBIGM], struct of_trueijkp *trueijkp); \
-  extern void pass_1d_line_multipl_weno(int MULTIPLTYPE, int whichquantity, int dir, int do_weight_or_recon, int recontype, int whichreduce, int preforder, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE *shockindicator, FTYPE *stiffindicator, FTYPE *V,  FTYPE *P, FTYPE (*df)[NUMDFS][NBIGM], FTYPE (*dP)[NBIGM], FTYPE (*etai)[NBIGM], FTYPE (*monoindicator)[NUMMONOINDICATORS][NBIGM], FTYPE (*yprim)[2][NBIGM], FTYPE (*ystecilvar)[2][NBIGM], FTYPE (*yin)[2][NBIGM], FTYPE (*yout)[2][NBIGM], FTYPE (*youtpolycoef)[MAXSPACEORDER][NBIGM], struct of_trueijkp *trueijkp); \
-  extern void pass_1d_line_multipl_paraline(int MULTIPLTYPE, int whichquantity, int dir, int do_weight_or_recon, int recontype, int whichreduce, int preforder, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE *shockindicator, FTYPE *stiffindicator, FTYPE *V,  FTYPE *P, FTYPE (*df)[NUMDFS][NBIGM], FTYPE (*dP)[NBIGM], FTYPE (*etai)[NBIGM], FTYPE (*monoindicator)[NUMMONOINDICATORS][NBIGM], FTYPE (*yprim)[2][NBIGM], FTYPE (*ystecilvar)[2][NBIGM], FTYPE (*yin)[2][NBIGM], FTYPE (*yout)[2][NBIGM], FTYPE (*youtpolycoef)[MAXSPACEORDER][NBIGM], struct of_trueijkp *trueijkp); \
+  extern void pass_1d_line_weno(int whichquantity, int dir, int do_weight_or_recon, int recontype, int whichreduce, int preforder, int pl, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE (*shockindicator)[NBIGM], FTYPE *stiffindicator, FTYPE (*Vline)[NBIGM],  FTYPE (*Pline)[NBIGM], FTYPE (*df)[NBIGM], FTYPE (*dP)[NBIGM], FTYPE (*etai)[NBIGM], FTYPE (*monoindicator)[NBIGM], FTYPE (*yprim)[2][NBIGM], FTYPE (*ystencilvar)[NBIGM], FTYPE (*yin)[NBIGM], FTYPE (*yout)[NBIGM], FTYPE (*youtpolycoef)[NBIGM], struct of_trueijkp *trueijkp); \
+  extern void pass_1d_line_paraline(int whichquantity, int dir, int do_weight_or_recon, int recontype, int whichreduce, int preforder, int pl, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE (*shockindicator)[NBIGM], FTYPE *stiffindicator, FTYPE (*Vline)[NBIGM],  FTYPE (*Pline)[NBIGM], FTYPE (*df)[NBIGM], FTYPE (*dP)[NBIGM], FTYPE (*etai)[NBIGM], FTYPE (*monoindicator)[NBIGM], FTYPE (*yprim)[2][NBIGM], FTYPE (*ystencilvar)[NBIGM], FTYPE (*yin)[NBIGM], FTYPE (*yout)[NBIGM], FTYPE (*youtpolycoef)[NBIGM], struct of_trueijkp *trueijkp); \
+  extern void pass_1d_line_multipl_weno(int MULTIPLTYPE, int whichquantity, int dir, int do_weight_or_recon, int recontype, int whichreduce, int preforder, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE (*shockindicator)[NBIGM], FTYPE *stiffindicator, FTYPE (*Vline)[NBIGM],  FTYPE (*Pline)[NBIGM], FTYPE (*df)[NUMDFS][NBIGM], FTYPE (*dP)[NBIGM], FTYPE (*etai)[NUMTRUEEOMSETS][NBIGM], FTYPE (*monoindicator)[NUMMONOINDICATORS][NBIGM], FTYPE (*yprim)[2][NBIGM], FTYPE (*ystecilvar)[2][NBIGM], FTYPE (*yin)[2][NBIGM], FTYPE (*yout)[2][NBIGM], FTYPE (*youtpolycoef)[MAXSPACEORDER][NBIGM], struct of_trueijkp *trueijkp); \
+  extern void pass_1d_line_multipl_paraline(int MULTIPLTYPE, int whichquantity, int dir, int do_weight_or_recon, int recontype, int whichreduce, int preforder, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE (*shockindicator)[NBIGM], FTYPE *stiffindicator, FTYPE (*Vline)[NBIGM],  FTYPE (*Pline)[NBIGM], FTYPE (*df)[NUMDFS][NBIGM], FTYPE (*dP)[NBIGM], FTYPE (*etai)[NUMTRUEEOMSETS][NBIGM], FTYPE (*monoindicator)[NUMMONOINDICATORS][NBIGM], FTYPE (*yprim)[2][NBIGM], FTYPE (*ystecilvar)[2][NBIGM], FTYPE (*yin)[2][NBIGM], FTYPE (*yout)[2][NBIGM], FTYPE (*youtpolycoef)[MAXSPACEORDER][NBIGM], struct of_trueijkp *trueijkp); \
   int intdir;                                                           \
   int withshifts;                                                       \
   int nprlocalstart,nprlocalend;                                        \
@@ -69,7 +69,7 @@
   FTYPE a_yin[NPR2INTERP][2][NBIGM];                            \
   FTYPE a_yout[NPR2INTERP][2][NBIGM];                           \
                                                                 \
-  FTYPE a_shockindicator[NBIGM];                                \
+  FTYPE a_shockindicator[NUMTRUEEOMSETS][NBIGM];                 \
   FTYPE a_stiffindicator[NBIGM];                                \
                                                                 \
   FTYPE a_yprim[NPR2INTERP][2][NBIGM];                          \
@@ -78,9 +78,9 @@
   FTYPE a_dfformono[NPR2INTERP][NUMDFS][NBIGM];                 \
   FTYPE a_drho[NUMDFS][NBIGM];                                  \
   FTYPE a_dP[NUMDFS][NBIGM];                                    \
-  FTYPE a_etai[NPR2INTERP][NBIGM];                              \
-  FTYPE a_Pline[NBIGM];                                         \
-  FTYPE a_Vline[NBIGM];                                         \
+  FTYPE a_etai[NPR2INTERP][NUMTRUEEOMSETS][NBIGM];              \
+  FTYPE a_Pline[NUMTRUEEOMSETS][NBIGM];                          \
+  FTYPE a_Vline[NUMTRUEEOMSETS][NBIGM];                          \
   int a_shift[NBIGM];                                           \
   FTYPE a_monoindicator[NPR2INTERP][NUMMONOINDICATORS][NBIGM];  \
   int a_minorder[NBIGM];                                        \
@@ -94,7 +94,7 @@
   FTYPE (*yin)[2][NBIGM];                               \
   FTYPE (*yout)[2][NBIGM];                              \
                                                         \
-  FTYPE *shockindicator;                                \
+  FTYPE (*shockindicator)[NBIGM];               \
   FTYPE *stiffindicator;                                \
                                                         \
   FTYPE (*yprim)[2][NBIGM];                             \
@@ -103,9 +103,9 @@
   FTYPE (*dfformono)[NUMDFS][NBIGM];                    \
   FTYPE (*drho)[NBIGM];                                 \
   FTYPE (*dP)[NBIGM];                                   \
-  FTYPE (*etai)[NBIGM];                                 \
-  FTYPE (*Pline);                                       \
-  FTYPE (*Vline);                                       \
+  FTYPE (*etai)[NUMTRUEEOMSETS][NBIGM];                     \
+  FTYPE (*Pline)[NBIGM];                        \
+  FTYPE (*Vline)[NBIGM];                        \
   int *shift;                                           \
   FTYPE (*monoindicator)[NUMMONOINDICATORS][NBIGM];     \
   int *minorder;                                        \
@@ -125,10 +125,10 @@
   int pllocal;                                                          \
   struct of_trueijkp trueijkp;                                          \
   extern int choose_limiter(int dir, int i, int j, int k, int pl);      \
-  extern void compute_monotonicity_line(int recontype, int whichreduce, int preforder, int pl, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE *shockindicator, FTYPE (*df)[NBIGM],  FTYPE (*monoindicator)[NBIGM] , FTYPE *yin, FTYPE (*yout)[NBIGM], FTYPE (*youtpolycoef)[NBIGM]); \
-  extern void compute_monotonicity_line_multipl(int stencilvarisnull, int MULTIPLTYPE, int whichquantity, int dir, int do_weight_or_recon, int recontype, int whichreduce, int preforder, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE *shockindicator, FTYPE *stiffindicator, FTYPE *Vline,  FTYPE *Pline, FTYPE (*df)[NUMDFS][NBIGM], FTYPE (*dP)[NBIGM], FTYPE (*etai)[NBIGM], FTYPE (*monoindicator)[NUMMONOINDICATORS][NBIGM], FTYPE (*yprim)[2][NBIGM], FTYPE (*ystencilvar)[2][NBIGM], FTYPE (*yin)[2][NBIGM], FTYPE (*yout)[2][NBIGM], FTYPE (*youtpolycoef)[MAXSPACEORDER][NBIGM]); \
-  extern void compute_monotonicity_line_indicatoronly(int recontype, int whichreduce, int preforder, int pl, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE *shockindicator, FTYPE (*df)[NBIGM],  FTYPE (*monoindicator)[NBIGM] , FTYPE *yin, FTYPE (*yout)[NBIGM], FTYPE (*youtpolycoef)[NBIGM]); \
-  extern void compute_monotonicity_line_valueonly(int recontype, int whichreduce, int preforder, int pl, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE *shockindicator, FTYPE (*df)[NBIGM],  FTYPE (*monoindicator)[NBIGM] , FTYPE *yin, FTYPE (*yout)[NBIGM], FTYPE (*youtpolycoef)[NBIGM])
+  extern void compute_monotonicity_line(int recontype, int whichreduce, int preforder, int pl, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE (*shockindicator)[NBIGM], FTYPE (*df)[NBIGM],  FTYPE (*monoindicator)[NBIGM] , FTYPE *yin, FTYPE (*yout)[NBIGM], FTYPE (*youtpolycoef)[NBIGM]); \
+  extern void compute_monotonicity_line_multipl(int stencilvarisnull, int MULTIPLTYPE, int whichquantity, int dir, int do_weight_or_recon, int recontype, int whichreduce, int preforder, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE (*shockindicator)[NBIGM], FTYPE *stiffindicator, FTYPE (*Vline)[NBIGM],  FTYPE (*Pline)[NBIGM], FTYPE (*df)[NUMDFS][NBIGM], FTYPE (*dP)[NBIGM], FTYPE (*etai)[NUMTRUEEOMSETS][NBIGM], FTYPE (*monoindicator)[NUMMONOINDICATORS][NBIGM], FTYPE (*yprim)[2][NBIGM], FTYPE (*ystencilvar)[2][NBIGM], FTYPE (*yin)[2][NBIGM], FTYPE (*yout)[2][NBIGM], FTYPE (*youtpolycoef)[MAXSPACEORDER][NBIGM]); \
+  extern void compute_monotonicity_line_indicatoronly(int recontype, int whichreduce, int preforder, int pl, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE (*shockindicator)[NBIGM], FTYPE (*df)[NBIGM],  FTYPE (*monoindicator)[NBIGM] , FTYPE *yin, FTYPE (*yout)[NBIGM], FTYPE (*youtpolycoef)[NBIGM]); \
+  extern void compute_monotonicity_line_valueonly(int recontype, int whichreduce, int preforder, int pl, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE (*shockindicator)[NBIGM], FTYPE (*df)[NBIGM],  FTYPE (*monoindicator)[NBIGM] , FTYPE *yin, FTYPE (*yout)[NBIGM], FTYPE (*youtpolycoef)[NBIGM])
 
 // last thing has no semicolon
 
@@ -140,7 +140,7 @@
   {yin =(FTYPE (*)[2][NBIGM]) (&(a_yin[0][0][NBIGBND]));                \
     yout=(FTYPE (*)[2][NBIGM]) (&(a_yout[0][0][NBIGBND]));              \
                                                                         \
-    shockindicator=(FTYPE (*)) (&(a_shockindicator[NBIGBND]));          \
+    shockindicator=(FTYPE (*)[NBIGM]) (&(a_shockindicator[0][NBIGBND]));       \
     stiffindicator=(FTYPE (*)) (&(a_stiffindicator[NBIGBND]));          \
                                                                         \
     yprim =(FTYPE (*)[2][NBIGM]) (&(a_yprim[0][0][NBIGBND]));           \
@@ -149,9 +149,9 @@
     dfformono=(FTYPE (*)[NUMDFS][NBIGM]) (&(a_dfformono[0][0][NBIGBND])); \
     drho=(FTYPE (*)[NBIGM]) (&(a_drho[0][NBIGBND]));                    \
     dP=(FTYPE (*)[NBIGM]) (&(a_dP[0][NBIGBND]));                        \
-    etai=(FTYPE (*)[NBIGM]) (&(a_etai[0][NBIGBND]));                    \
-    Pline=(FTYPE (*)) (&(a_Pline[NBIGBND]));                            \
-    Vline=(FTYPE (*)) (&(a_Vline[NBIGBND]));                            \
+    etai=(FTYPE (*)[NUMTRUEEOMSETS][NBIGM]) (&(a_etai[0][0][NBIGBND]));     \
+    Pline=(FTYPE (*)[NBIGM]) (&(a_Pline[0][NBIGBND]));                         \
+    Vline=(FTYPE (*)[NBIGM]) (&(a_Vline[0][NBIGBND]));                         \
     shift=(int (*)) (&(a_shift[NBIGBND]));                              \
     monoindicator=(FTYPE (*)[NUMMONOINDICATORS][NBIGM]) (&(a_monoindicator[0][0][NBIGBND])); \
     minorder=(int (*)) (&(a_minorder[NBIGBND]));                        \
@@ -164,7 +164,7 @@
   FTYPE (*yin)[2][NBIGM],                               \
     FTYPE (*yout)[2][NBIGM],                            \
                                                         \
-    FTYPE *shockindicator,                              \
+    FTYPE (*shockindicator)[NBIGM],             \
     FTYPE *stiffindicator,                              \
                                                         \
     FTYPE (*yprim)[2][NBIGM],                           \
@@ -173,9 +173,9 @@
     FTYPE (*dfformono)[NUMDFS][NBIGM],                  \
     FTYPE (*drho)[NBIGM],                               \
     FTYPE (*dP)[NBIGM],                                 \
-    FTYPE (*etai)[NBIGM],                               \
-    FTYPE (*Pline),                                     \
-    FTYPE (*Vline),                                     \
+    FTYPE (*etai)[NUMTRUEEOMSETS][NBIGM],                               \
+    FTYPE (*Pline)[NBIGM],                      \
+    FTYPE (*Vline)[NBIGM],                      \
     int *shift,                                         \
     FTYPE (*monoindicator)[NUMMONOINDICATORS][NBIGM],   \
     int *minorder,                                      \
@@ -222,8 +222,8 @@ static void slope_lim_linetype_c2e_perijk_precomputeindicators(
                                                                int dir, int intdir,
                                                                int is, int ie, int js, int je, int ks, int ke, int di, int dj, int dk, int bs, int ps, int pe, int be,
                                                                int recontype, int doingweno,
-                                                               void (*pass_1d_line)(int whichquantity, int dir, int do_weight_or_recon, int recontype, int whichreduce, int preforder, int pl, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE *shockindicator, FTYPE *stiffindicator, FTYPE *V,  FTYPE *P, FTYPE (*df)[NBIGM], FTYPE (*dP)[NBIGM], FTYPE *etai, FTYPE (*monoindicator)[NBIGM], FTYPE (*yprim)[2][NBIGM], FTYPE (*ystencilvar)[NBIGM], FTYPE (*yin)[NBIGM], FTYPE (*yout)[NBIGM], FTYPE (*youtpolycoef)[NBIGM], struct of_trueijkp *trueijkp),
-                                                               void (*pass_1d_line_multipl)(int MULTIPLTYPE, int whichquantity, int dir, int do_weight_or_recon, int recontype, int whichreduce, int preforder, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE *shockindicator, FTYPE *stiffindicator, FTYPE *V,  FTYPE *P, FTYPE (*df)[NUMDFS][NBIGM], FTYPE (*dP)[NBIGM], FTYPE (*etai)[NBIGM], FTYPE (*monoindicator)[NUMMONOINDICATORS][NBIGM], FTYPE (*yprim)[2][NBIGM], FTYPE (*ystecilvar)[2][NBIGM], FTYPE (*yin)[2][NBIGM], FTYPE (*yout)[2][NBIGM], FTYPE (*youtpolycoef)[MAXSPACEORDER][NBIGM], struct of_trueijkp *trueijkp),
+                                                               void (*pass_1d_line)(int whichquantity, int dir, int do_weight_or_recon, int recontype, int whichreduce, int preforder, int pl, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE (*shockindicator)[NBIGM], FTYPE *stiffindicator, FTYPE (*Vline)[NBIGM],  FTYPE (*Pline)[NBIGM], FTYPE (*df)[NBIGM], FTYPE (*dP)[NBIGM], FTYPE (*etai)[NBIGM], FTYPE (*monoindicator)[NBIGM], FTYPE (*yprim)[2][NBIGM], FTYPE (*ystencilvar)[NBIGM], FTYPE (*yin)[NBIGM], FTYPE (*yout)[NBIGM], FTYPE (*youtpolycoef)[NBIGM], struct of_trueijkp *trueijkp),
+                                                               void (*pass_1d_line_multipl)(int MULTIPLTYPE, int whichquantity, int dir, int do_weight_or_recon, int recontype, int whichreduce, int preforder, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE (*shockindicator)[NBIGM], FTYPE *stiffindicator, FTYPE (*Vline)[NBIGM],  FTYPE (*Pline)[NBIGM], FTYPE (*df)[NUMDFS][NBIGM], FTYPE (*dP)[NBIGM], FTYPE (*etai)[NUMTRUEEOMSETS][NBIGM], FTYPE (*monoindicator)[NUMMONOINDICATORS][NBIGM], FTYPE (*yprim)[2][NBIGM], FTYPE (*ystecilvar)[2][NBIGM], FTYPE (*yin)[2][NBIGM], FTYPE (*yout)[2][NBIGM], FTYPE (*youtpolycoef)[MAXSPACEORDER][NBIGM], struct of_trueijkp *trueijkp),
                                                                int stencilvarisnull, int preforder, int whichreduce,
                                                                int idel, int jdel, int kdel,
                                                                FTYPE (*primreal)[NSTORE2][NSTORE3][NPR], FTYPE (*stencilvar)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP]);
@@ -237,8 +237,8 @@ static void slope_lim_linetype_c2e_perijk(
                                           int dir, int intdir,
                                           int is, int ie, int js, int je, int ks, int ke, int di, int dj, int dk, int bs, int ps, int pe, int be,
                                           int recontype, int doingweno,
-                                          void (*pass_1d_line)(int whichquantity, int dir, int do_weight_or_recon, int recontype, int whichreduce, int preforder, int pl, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE *shockindicator, FTYPE *stiffindicator, FTYPE *V,  FTYPE *P, FTYPE (*df)[NBIGM], FTYPE (*dP)[NBIGM], FTYPE *etai, FTYPE (*monoindicator)[NBIGM], FTYPE (*yprim)[2][NBIGM], FTYPE (*ystencilvar)[NBIGM], FTYPE (*yin)[NBIGM], FTYPE (*yout)[NBIGM], FTYPE (*youtpolycoef)[NBIGM], struct of_trueijkp *trueijkp),
-                                          void (*pass_1d_line_multipl)(int MULTIPLTYPE, int whichquantity, int dir, int do_weight_or_recon, int recontype, int whichreduce, int preforder, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE *shockindicator, FTYPE *stiffindicator, FTYPE *V,  FTYPE *P, FTYPE (*df)[NUMDFS][NBIGM], FTYPE (*dP)[NBIGM], FTYPE (*etai)[NBIGM], FTYPE (*monoindicator)[NUMMONOINDICATORS][NBIGM], FTYPE (*yprim)[2][NBIGM], FTYPE (*ystecilvar)[2][NBIGM], FTYPE (*yin)[2][NBIGM], FTYPE (*yout)[2][NBIGM], FTYPE (*youtpolycoef)[MAXSPACEORDER][NBIGM], struct of_trueijkp *trueijkp),
+                                          void (*pass_1d_line)(int whichquantity, int dir, int do_weight_or_recon, int recontype, int whichreduce, int preforder, int pl, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE (*shockindicator)[NBIGM], FTYPE *stiffindicator, FTYPE (*Vline)[NBIGM],  FTYPE (*Pline)[NBIGM], FTYPE (*df)[NBIGM], FTYPE (*dP)[NBIGM], FTYPE (*etai)[NBIGM], FTYPE (*monoindicator)[NBIGM], FTYPE (*yprim)[2][NBIGM], FTYPE (*ystencilvar)[NBIGM], FTYPE (*yin)[NBIGM], FTYPE (*yout)[NBIGM], FTYPE (*youtpolycoef)[NBIGM], struct of_trueijkp *trueijkp),
+                                          void (*pass_1d_line_multipl)(int MULTIPLTYPE, int whichquantity, int dir, int do_weight_or_recon, int recontype, int whichreduce, int preforder, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE (*shockindicator)[NBIGM], FTYPE *stiffindicator, FTYPE (*Vline)[NBIGM],  FTYPE (*Pline)[NBIGM], FTYPE (*df)[NUMDFS][NBIGM], FTYPE (*dP)[NBIGM], FTYPE (*etai)[NUMTRUEEOMSETS][NBIGM], FTYPE (*monoindicator)[NUMMONOINDICATORS][NBIGM], FTYPE (*yprim)[2][NBIGM], FTYPE (*ystecilvar)[2][NBIGM], FTYPE (*yin)[2][NBIGM], FTYPE (*yout)[2][NBIGM], FTYPE (*youtpolycoef)[MAXSPACEORDER][NBIGM], struct of_trueijkp *trueijkp),
                                           int stencilvarisnull, int preforder, int whichreduce,
                                           int idel, int jdel, int kdel,
                                           FTYPE (*primreal)[NSTORE2][NSTORE3][NPR], FTYPE (*stencilvar)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP]);
@@ -252,8 +252,8 @@ static void slope_lim_linetype_perijk(
                                       int dir, int intdir,
                                       int is, int ie, int js, int je, int ks, int ke, int di, int dj, int dk, int bs, int ps, int pe, int be,
                                       int recontype, int doingweno,
-                                      void (*pass_1d_line)(int whichquantity, int dir, int do_weight_or_recon, int recontype, int whichreduce, int preforder, int pl, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE *shockindicator, FTYPE *stiffindicator, FTYPE *V,  FTYPE *P, FTYPE (*df)[NBIGM], FTYPE (*dP)[NBIGM], FTYPE *etai, FTYPE (*monoindicator)[NBIGM], FTYPE (*yprim)[2][NBIGM], FTYPE (*ystencilvar)[NBIGM], FTYPE (*yin)[NBIGM], FTYPE (*yout)[NBIGM], FTYPE (*youtpolycoef)[NBIGM], struct of_trueijkp *trueijkp),
-                                      void (*pass_1d_line_multipl)(int MULTIPLTYPE, int whichquantity, int dir, int do_weight_or_recon, int recontype, int whichreduce, int preforder, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE *shockindicator, FTYPE *stiffindicator, FTYPE *V,  FTYPE *P, FTYPE (*df)[NUMDFS][NBIGM], FTYPE (*dP)[NBIGM], FTYPE (*etai)[NBIGM], FTYPE (*monoindicator)[NUMMONOINDICATORS][NBIGM], FTYPE (*yprim)[2][NBIGM], FTYPE (*ystecilvar)[2][NBIGM], FTYPE (*yin)[2][NBIGM], FTYPE (*yout)[2][NBIGM], FTYPE (*youtpolycoef)[MAXSPACEORDER][NBIGM], struct of_trueijkp *trueijkp),
+                                      void (*pass_1d_line)(int whichquantity, int dir, int do_weight_or_recon, int recontype, int whichreduce, int preforder, int pl, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE (*shockindicator)[NBIGM], FTYPE *stiffindicator, FTYPE (*Vline)[NBIGM],  FTYPE (*Pline)[NBIGM], FTYPE (*df)[NBIGM], FTYPE (*dP)[NBIGM], FTYPE (*etai)[NBIGM], FTYPE (*monoindicator)[NBIGM], FTYPE (*yprim)[2][NBIGM], FTYPE (*ystencilvar)[NBIGM], FTYPE (*yin)[NBIGM], FTYPE (*yout)[NBIGM], FTYPE (*youtpolycoef)[NBIGM], struct of_trueijkp *trueijkp),
+                                      void (*pass_1d_line_multipl)(int MULTIPLTYPE, int whichquantity, int dir, int do_weight_or_recon, int recontype, int whichreduce, int preforder, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE (*shockindicator)[NBIGM], FTYPE *stiffindicator, FTYPE (*Vline)[NBIGM],  FTYPE (*Pline)[NBIGM], FTYPE (*df)[NUMDFS][NBIGM], FTYPE (*dP)[NBIGM], FTYPE (*etai)[NUMTRUEEOMSETS][NBIGM], FTYPE (*monoindicator)[NUMMONOINDICATORS][NBIGM], FTYPE (*yprim)[2][NBIGM], FTYPE (*ystecilvar)[2][NBIGM], FTYPE (*yin)[2][NBIGM], FTYPE (*yout)[2][NBIGM], FTYPE (*youtpolycoef)[MAXSPACEORDER][NBIGM], struct of_trueijkp *trueijkp),
                                       int stencilvarisnull, int preforder, int whichreduce,
                                       int weightsplittype, int whichquantity,
                                       int idel, int jdel, int kdel,
@@ -266,7 +266,7 @@ static void assign_eno_result(int interporflux, int pl, int bs, int ps, int pe, 
 // c2e needed functions
 static void get_1d_line_c2e_multipl(int whichquantity, int dir, int interporflux, int bs, int ps, int pe, int be,  int i, int j, int k, FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*yin)[2][NBIGM], struct of_trueijkp *trueijkp);
 static void get_1d_line_c2e(int dir, int interporflux, int pl, int bs, int ps, int pe, int be,  int i, int j, int k, FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP],FTYPE *yin, struct of_trueijkp *trueijkp);
-static void get_1d_line_shockarray(int dir, int interporflux, int bs, int ps, int pe, int be,  int i, int j, int k, FTYPE (*shockarray)[NSTORE1][NSTORE2][NSTORE3], FTYPE *shockindicator, struct of_trueijkp *trueijkp);
+static void get_1d_line_shockarray(int dir, int interporflux, int bs, int ps, int pe, int be,  int i, int j, int k, FTYPE (*shockarray)[NSTORE1][NSTORE2][NSTORE3], FTYPE (*shockindicator)[NBIGM], struct of_trueijkp *trueijkp);
 
 // below for shock indicator used on quantities with NPR elements
 static void assign_eno_result_c2e_multipl(int whichprimtype, int interporflux, int bs, int ps, int pe, int be, int i, int j, int k, int idel, int jdel, int kdel, FTYPE (*yout)[2][NBIGM], FTYPE (*result0)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*result1)[NSTORE2][NSTORE3][NPR2INTERP]);
@@ -275,23 +275,23 @@ static void assign_eno_result_c2e(int interporflux, int pl, int bs, int ps, int 
 static void get_1d_line_c2e_gammaeffhydro(int dir, int interporflux, int pl, int bs, int ps, int pe, int be,  int i, int j, int k, int idel, int jdel, int kdel, FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE *yin, struct of_trueijkp *trueijkp);
 
 // interior _perijk() functions:
-static void get_df_line_gen_new(int realisinterp, int doingweno, int whichprimtype, int interporflux, int recontype, int dir, int whichreduce, int preforder, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift, FTYPE (*yprim)[2][NBIGM], FTYPE (*yin)[2][NBIGM], FTYPE (*df)[NUMDFS][NBIGM], FTYPE (**drhoptr)[NBIGM], FTYPE (**dPptr)[NBIGM], FTYPE *stiffindicator, FTYPE *Vline, FTYPE *Pline, struct of_trueijkp *trueijkp);
-static void get_df_line_paraline(int realisinterp, int doingweno, int whichprimtype, int interporflux, int recontype, int dir, int whichreduce, int preforder, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift, FTYPE (*yprim)[2][NBIGM], FTYPE (*yin)[2][NBIGM], FTYPE (*df)[NUMDFS][NBIGM], FTYPE (**drhoptr)[NBIGM], FTYPE (**dPptr)[NBIGM], FTYPE *stiffindicator, FTYPE *Vline, FTYPE *Pline, struct of_trueijkp *trueijkp);
+static void get_df_line_gen_new(int realisinterp, int doingweno, int whichprimtype, int interporflux, int recontype, int dir, int whichreduce, int preforder, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift, FTYPE (*yprim)[2][NBIGM], FTYPE (*yin)[2][NBIGM], FTYPE (*df)[NUMDFS][NBIGM], FTYPE (**drhoptr)[NBIGM], FTYPE (**dPptr)[NBIGM], FTYPE *stiffindicator, FTYPE (*Vline)[NBIGM], FTYPE (*Pline)[NBIGM], struct of_trueijkp *trueijkp);
+static void get_df_line_paraline(int realisinterp, int doingweno, int whichprimtype, int interporflux, int recontype, int dir, int whichreduce, int preforder, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift, FTYPE (*yprim)[2][NBIGM], FTYPE (*yin)[2][NBIGM], FTYPE (*df)[NUMDFS][NBIGM], FTYPE (**drhoptr)[NBIGM], FTYPE (**dPptr)[NBIGM], FTYPE *stiffindicator, FTYPE (*Vline)[NBIGM], FTYPE (*Pline)[NBIGM], struct of_trueijkp *trueijkp);
 static int compute_df_line(int doingweno,int interporflux, int recontype, int whichreduce, int preforder, int pl, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE *yin, FTYPE (*df)[NBIGM]);
 static int compute_df_line_paraline(int doingweno,int interporflux, int recontype, int whichreduce, int preforder, int pl, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE *yin, FTYPE (*df)[NBIGM]);
-static int compute_df_line_new(int doingweno, int whichprimtype, int interporflux, int recontype, int dir, int whichreduce, int preforder, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE (*yprim)[2][NBIGM], FTYPE *df, FTYPE *stiffindicator, FTYPE *Vline, FTYPE *Pline, struct of_trueijkp *trueijkp);
+static int compute_df_line_new(int doingweno, int whichprimtype, int interporflux, int recontype, int dir, int whichreduce, int preforder, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE (*yprim)[2][NBIGM], FTYPE *df, FTYPE *stiffindicator, FTYPE (*Vline)[NBIGM], FTYPE (*Pline)[NBIGM], struct of_trueijkp *trueijkp);
 static int compute_df_line_formono(int doingweno,int interporflux, int recontype, int whichreduce, int preforder, int pl, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE *yin, FTYPE (*df)[NBIGM]); 
 static void get_1d_line(int dir, int interporflux, int pl, int bs, int ps, int pe, int be,  int i, int j, int k, FTYPE (*p2interpm)[NSTORE2][NSTORE3][NPR],FTYPE (*p2interpp)[NSTORE2][NSTORE3][NPR], FTYPE (*yin)[NBIGM], struct of_trueijkp *trueijkp);
-static int get_V_and_P(int whichprimtype, int interporflux, int dir, int bs, int ps, int pe, int be,  int i, int j, int k, int idel, int jdel, int kdel, FTYPE (*yin)[2][NBIGM], FTYPE *V, FTYPE *P, struct of_trueijkp *trueijkp);
-static int get_shock_indicator(int whichprimtype, int interporflux, int dir, int bs, int ps, int pe, int be,  int i, int j, int k, int idel, int jdel, int kdel, FTYPE (*yin)[2][NBIGM], FTYPE *V, FTYPE *P, FTYPE *shockindicator, struct of_trueijkp *trueijkp);
-static int get_contact_indicator(int realisinterp, int whichprimtype, int interporflux, int dir, int bs, int ps, int pe, int be,  int i, int j, int k, int idel, int jdel, int kdel, FTYPE (*yin)[2][NBIGM], FTYPE *V, FTYPE *P, FTYPE (*etai)[NBIGM]);
+static int get_V_and_P(int whichprimtype, int interporflux, int dir, int bs, int ps, int pe, int be,  int i, int j, int k, int idel, int jdel, int kdel, FTYPE (*yin)[2][NBIGM], FTYPE (*Vline)[NBIGM], FTYPE (*Pline)[NBIGM], struct of_trueijkp *trueijkp);
+static int get_shock_indicator(int whichprimtype, int interporflux, int dir, int bs, int ps, int pe, int be,  int i, int j, int k, int idel, int jdel, int kdel, FTYPE (*yin)[2][NBIGM], FTYPE (*Vline)[NBIGM], FTYPE (*Pline)[NBIGM], FTYPE (*shockindicator)[NBIGM], struct of_trueijkp *trueijkp);
+static int get_contact_indicator(int realisinterp, int whichprimtype, int interporflux, int dir, int bs, int ps, int pe, int be,  int i, int j, int k, int idel, int jdel, int kdel, FTYPE (*yin)[2][NBIGM], FTYPE (*Vline)[NBIGM], FTYPE (*Pline)[NBIGM], FTYPE (*etai)[NUMTRUEEOMSETS][NBIGM]);
 static void causal_shift_order(int whichquantitiy, int interporflux, int dir, int preforder, int bs, int ps, int pe, int be,  int i, int j, int k,  int idel, int jdel, int kdel, int *shift, int *minorder, int *maxorder);
 
 
 static void set_preforder(int dir, int interporflux, int *preforder, int*whichreduce);
 static int get_recon_type(int interporflux);
-static void (*pass_1d_line)(int whichquantity, int dir, int do_weight_or_recon, int recontype, int whichreduce, int preforder, int pl, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE *shockindicator, FTYPE *stiffindicator, FTYPE *V,  FTYPE *P, FTYPE (*df)[NBIGM], FTYPE (*dP)[NBIGM], FTYPE *etai, FTYPE (*monoindicator)[NBIGM], FTYPE (*yprim)[2][NBIGM], FTYPE (*ystencilvar)[NBIGM], FTYPE (*yin)[NBIGM], FTYPE (*yout)[NBIGM], FTYPE (*youtpolycoef)[NBIGM], struct of_trueijkp *trueijkp);
-static void (*pass_1d_line_multipl)(int MULTIPLTYPE, int whichquantity, int dir, int do_weight_or_recon, int recontype, int whichreduce, int preforder, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE *shockindicator, FTYPE *stiffindicator, FTYPE *V,  FTYPE *P, FTYPE (*df)[NUMDFS][NBIGM], FTYPE (*dP)[NBIGM], FTYPE (*etai)[NBIGM], FTYPE (*monoindicator)[NUMMONOINDICATORS][NBIGM], FTYPE (*yprim)[2][NBIGM], FTYPE (*ystecilvar)[2][NBIGM], FTYPE (*yin)[2][NBIGM], FTYPE (*yout)[2][NBIGM], FTYPE (*youtpolycoef)[MAXSPACEORDER][NBIGM], struct of_trueijkp *trueijkp);
+static void (*pass_1d_line)(int whichquantity, int dir, int do_weight_or_recon, int recontype, int whichreduce, int preforder, int pl, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE (*shockindicator)[NBIGM], FTYPE *stiffindicator, FTYPE (*Vline)[NBIGM],  FTYPE (*Pline)[NBIGM], FTYPE (*df)[NBIGM], FTYPE (*dP)[NBIGM], FTYPE (*etai)[NBIGM], FTYPE (*monoindicator)[NBIGM], FTYPE (*yprim)[2][NBIGM], FTYPE (*ystencilvar)[NBIGM], FTYPE (*yin)[NBIGM], FTYPE (*yout)[NBIGM], FTYPE (*youtpolycoef)[NBIGM], struct of_trueijkp *trueijkp);
+static void (*pass_1d_line_multipl)(int MULTIPLTYPE, int whichquantity, int dir, int do_weight_or_recon, int recontype, int whichreduce, int preforder, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE (*shockindicator)[NBIGM], FTYPE *stiffindicator, FTYPE (*Vline)[NBIGM],  FTYPE (*Pline)[NBIGM], FTYPE (*df)[NUMDFS][NBIGM], FTYPE (*dP)[NBIGM], FTYPE (*etai)[NUMTRUEEOMSETS][NBIGM], FTYPE (*monoindicator)[NUMMONOINDICATORS][NBIGM], FTYPE (*yprim)[2][NBIGM], FTYPE (*ystecilvar)[2][NBIGM], FTYPE (*yin)[2][NBIGM], FTYPE (*yout)[2][NBIGM], FTYPE (*youtpolycoef)[MAXSPACEORDER][NBIGM], struct of_trueijkp *trueijkp);
 
 
 static void set_interp_loop(int withshifts, int interporflux, int dir, int *intdir, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk, int *bs, int *ps, int *pe, int *be);
@@ -473,8 +473,8 @@ void slope_lim_linetype_c2e_perijk_precomputeindicators(
                                                         int dir, int intdir,
                                                         int is, int ie, int js, int je, int ks, int ke, int di, int dj, int dk, int bs, int ps, int pe, int be,
                                                         int recontype, int doingweno,
-                                                        void (*pass_1d_line)(int whichquantity, int dir, int do_weight_or_recon, int recontype, int whichreduce, int preforder, int pl, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE *shockindicator, FTYPE *stiffindicator, FTYPE *V,  FTYPE *P, FTYPE (*df)[NBIGM], FTYPE (*dP)[NBIGM], FTYPE *etai, FTYPE (*monoindicator)[NBIGM], FTYPE (*yprim)[2][NBIGM], FTYPE (*ystencilvar)[NBIGM], FTYPE (*yin)[NBIGM], FTYPE (*yout)[NBIGM], FTYPE (*youtpolycoef)[NBIGM], struct of_trueijkp *trueijkp),
-                                                        void (*pass_1d_line_multipl)(int MULTIPLTYPE, int whichquantity, int dir, int do_weight_or_recon, int recontype, int whichreduce, int preforder, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE *shockindicator, FTYPE *stiffindicator, FTYPE *V,  FTYPE *P, FTYPE (*df)[NUMDFS][NBIGM], FTYPE (*dP)[NBIGM], FTYPE (*etai)[NBIGM], FTYPE (*monoindicator)[NUMMONOINDICATORS][NBIGM], FTYPE (*yprim)[2][NBIGM], FTYPE (*ystecilvar)[2][NBIGM], FTYPE (*yin)[2][NBIGM], FTYPE (*yout)[2][NBIGM], FTYPE (*youtpolycoef)[MAXSPACEORDER][NBIGM], struct of_trueijkp *trueijkp),
+                                                        void (*pass_1d_line)(int whichquantity, int dir, int do_weight_or_recon, int recontype, int whichreduce, int preforder, int pl, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE (*shockindicator)[NBIGM], FTYPE *stiffindicator, FTYPE (*Vline)[NBIGM],  FTYPE (*Pline)[NBIGM], FTYPE (*df)[NBIGM], FTYPE (*dP)[NBIGM], FTYPE (*etai)[NBIGM], FTYPE (*monoindicator)[NBIGM], FTYPE (*yprim)[2][NBIGM], FTYPE (*ystencilvar)[NBIGM], FTYPE (*yin)[NBIGM], FTYPE (*yout)[NBIGM], FTYPE (*youtpolycoef)[NBIGM], struct of_trueijkp *trueijkp),
+                                                        void (*pass_1d_line_multipl)(int MULTIPLTYPE, int whichquantity, int dir, int do_weight_or_recon, int recontype, int whichreduce, int preforder, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE (*shockindicator)[NBIGM], FTYPE *stiffindicator, FTYPE (*Vline)[NBIGM],  FTYPE (*Pline)[NBIGM], FTYPE (*df)[NUMDFS][NBIGM], FTYPE (*dP)[NBIGM], FTYPE (*etai)[NUMTRUEEOMSETS][NBIGM], FTYPE (*monoindicator)[NUMMONOINDICATORS][NBIGM], FTYPE (*yprim)[2][NBIGM], FTYPE (*ystecilvar)[2][NBIGM], FTYPE (*yin)[2][NBIGM], FTYPE (*yout)[2][NBIGM], FTYPE (*youtpolycoef)[MAXSPACEORDER][NBIGM], struct of_trueijkp *trueijkp),
                                                         int stencilvarisnull, int preforder, int whichreduce,
                                                         int idel, int jdel, int kdel,
                                                         FTYPE (*primreal)[NSTORE2][NSTORE3][NPR], FTYPE (*stencilvar)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP])
@@ -644,8 +644,8 @@ void slope_lim_linetype_c2e_perijk(
                                    int dir, int intdir,
                                    int is, int ie, int js, int je, int ks, int ke, int di, int dj, int dk, int bs, int ps, int pe, int be,
                                    int recontype, int doingweno,
-                                   void (*pass_1d_line)(int whichquantity, int dir, int do_weight_or_recon, int recontype, int whichreduce, int preforder, int pl, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE *shockindicator, FTYPE *stiffindicator, FTYPE *V,  FTYPE *P, FTYPE (*df)[NBIGM], FTYPE (*dP)[NBIGM], FTYPE *etai, FTYPE (*monoindicator)[NBIGM], FTYPE (*yprim)[2][NBIGM], FTYPE (*ystencilvar)[NBIGM], FTYPE (*yin)[NBIGM], FTYPE (*yout)[NBIGM], FTYPE (*youtpolycoef)[NBIGM], struct of_trueijkp *trueijkp),
-                                   void (*pass_1d_line_multipl)(int MULTIPLTYPE, int whichquantity, int dir, int do_weight_or_recon, int recontype, int whichreduce, int preforder, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE *shockindicator, FTYPE *stiffindicator, FTYPE *V,  FTYPE *P, FTYPE (*df)[NUMDFS][NBIGM], FTYPE (*dP)[NBIGM], FTYPE (*etai)[NBIGM], FTYPE (*monoindicator)[NUMMONOINDICATORS][NBIGM], FTYPE (*yprim)[2][NBIGM], FTYPE (*ystecilvar)[2][NBIGM], FTYPE (*yin)[2][NBIGM], FTYPE (*yout)[2][NBIGM], FTYPE (*youtpolycoef)[MAXSPACEORDER][NBIGM], struct of_trueijkp *trueijkp),
+                                   void (*pass_1d_line)(int whichquantity, int dir, int do_weight_or_recon, int recontype, int whichreduce, int preforder, int pl, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE (*shockindicator)[NBIGM], FTYPE *stiffindicator, FTYPE (*Vline)[NBIGM],  FTYPE (*Pline)[NBIGM], FTYPE (*df)[NBIGM], FTYPE (*dP)[NBIGM], FTYPE (*etai)[NBIGM], FTYPE (*monoindicator)[NBIGM], FTYPE (*yprim)[2][NBIGM], FTYPE (*ystencilvar)[NBIGM], FTYPE (*yin)[NBIGM], FTYPE (*yout)[NBIGM], FTYPE (*youtpolycoef)[NBIGM], struct of_trueijkp *trueijkp),
+                                   void (*pass_1d_line_multipl)(int MULTIPLTYPE, int whichquantity, int dir, int do_weight_or_recon, int recontype, int whichreduce, int preforder, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE (*shockindicator)[NBIGM], FTYPE *stiffindicator, FTYPE (*Vline)[NBIGM],  FTYPE (*Pline)[NBIGM], FTYPE (*df)[NUMDFS][NBIGM], FTYPE (*dP)[NBIGM], FTYPE (*etai)[NUMTRUEEOMSETS][NBIGM], FTYPE (*monoindicator)[NUMMONOINDICATORS][NBIGM], FTYPE (*yprim)[2][NBIGM], FTYPE (*ystecilvar)[2][NBIGM], FTYPE (*yin)[2][NBIGM], FTYPE (*yout)[2][NBIGM], FTYPE (*youtpolycoef)[MAXSPACEORDER][NBIGM], struct of_trueijkp *trueijkp),
                                    int stencilvarisnull, int preforder, int whichreduce,
                                    int idel, int jdel, int kdel,
                                    FTYPE (*primreal)[NSTORE2][NSTORE3][NPR], FTYPE (*stencilvar)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP])
@@ -1052,8 +1052,8 @@ void slope_lim_linetype_perijk(
                                int dir, int intdir,
                                int is, int ie, int js, int je, int ks, int ke, int di, int dj, int dk, int bs, int ps, int pe, int be,
                                int recontype, int doingweno,
-                               void (*pass_1d_line)(int whichquantity, int dir, int do_weight_or_recon, int recontype, int whichreduce, int preforder, int pl, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE *shockindicator, FTYPE *stiffindicator, FTYPE *V,  FTYPE *P, FTYPE (*df)[NBIGM], FTYPE (*dP)[NBIGM], FTYPE *etai, FTYPE (*monoindicator)[NBIGM], FTYPE (*yprim)[2][NBIGM], FTYPE (*ystencilvar)[NBIGM], FTYPE (*yin)[NBIGM], FTYPE (*yout)[NBIGM], FTYPE (*youtpolycoef)[NBIGM], struct of_trueijkp *trueijkp),
-                               void (*pass_1d_line_multipl)(int MULTIPLTYPE, int whichquantity, int dir, int do_weight_or_recon, int recontype, int whichreduce, int preforder, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE *shockindicator, FTYPE *stiffindicator, FTYPE *V,  FTYPE *P, FTYPE (*df)[NUMDFS][NBIGM], FTYPE (*dP)[NBIGM], FTYPE (*etai)[NBIGM], FTYPE (*monoindicator)[NUMMONOINDICATORS][NBIGM], FTYPE (*yprim)[2][NBIGM], FTYPE (*ystecilvar)[2][NBIGM], FTYPE (*yin)[2][NBIGM], FTYPE (*yout)[2][NBIGM], FTYPE (*youtpolycoef)[MAXSPACEORDER][NBIGM], struct of_trueijkp *trueijkp),
+                               void (*pass_1d_line)(int whichquantity, int dir, int do_weight_or_recon, int recontype, int whichreduce, int preforder, int pl, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE (*shockindicator)[NBIGM], FTYPE *stiffindicator, FTYPE (*Vline)[NBIGM],  FTYPE (*Pline)[NBIGM], FTYPE (*df)[NBIGM], FTYPE (*dP)[NBIGM], FTYPE (*etai)[NBIGM], FTYPE (*monoindicator)[NBIGM], FTYPE (*yprim)[2][NBIGM], FTYPE (*ystencilvar)[NBIGM], FTYPE (*yin)[NBIGM], FTYPE (*yout)[NBIGM], FTYPE (*youtpolycoef)[NBIGM], struct of_trueijkp *trueijkp),
+                               void (*pass_1d_line_multipl)(int MULTIPLTYPE, int whichquantity, int dir, int do_weight_or_recon, int recontype, int whichreduce, int preforder, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE (*shockindicator)[NBIGM], FTYPE *stiffindicator, FTYPE (*Vline)[NBIGM],  FTYPE (*Pline)[NBIGM], FTYPE (*df)[NUMDFS][NBIGM], FTYPE (*dP)[NBIGM], FTYPE (*etai)[NUMTRUEEOMSETS][NBIGM], FTYPE (*monoindicator)[NUMMONOINDICATORS][NBIGM], FTYPE (*yprim)[2][NBIGM], FTYPE (*ystecilvar)[2][NBIGM], FTYPE (*yin)[2][NBIGM], FTYPE (*yout)[2][NBIGM], FTYPE (*youtpolycoef)[MAXSPACEORDER][NBIGM], struct of_trueijkp *trueijkp),
                                int stencilvarisnull, int preforder, int whichreduce,
                                int weightsplittype, int whichquantity,
                                int idel, int jdel, int kdel,
@@ -1470,7 +1470,7 @@ static void get_df_line_gen(int realisinterp, int doingweno, int whichprimtype, 
 
 
 // wrapper for compute_df_line and can be used by both c2e and other methods
-static void get_df_line_gen_new(int realisinterp, int doingweno, int whichprimtype, int interporflux, int recontype, int dir, int whichreduce, int preforder, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift, FTYPE (*yprim)[2][NBIGM], FTYPE (*yin)[2][NBIGM], FTYPE (*df)[NUMDFS][NBIGM], FTYPE (**drhoptr)[NBIGM], FTYPE (**dPptr)[NBIGM], FTYPE *stiffindicator, FTYPE *Vline, FTYPE *Pline, struct of_trueijkp *trueijkp)
+static void get_df_line_gen_new(int realisinterp, int doingweno, int whichprimtype, int interporflux, int recontype, int dir, int whichreduce, int preforder, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift, FTYPE (*yprim)[2][NBIGM], FTYPE (*yin)[2][NBIGM], FTYPE (*df)[NUMDFS][NBIGM], FTYPE (**drhoptr)[NBIGM], FTYPE (**dPptr)[NBIGM], FTYPE *stiffindicator, FTYPE (*Vline)[NBIGM], FTYPE (*Pline)[NBIGM], struct of_trueijkp *trueijkp)
 {
   int pl,pliter;
   int nprlocalstart,nprlocalend;
@@ -1536,7 +1536,7 @@ static void get_df_line_gen_new(int realisinterp, int doingweno, int whichprimty
 
 
 // wrapper for compute_df_line and can be used by both c2e and other methods
-static void get_df_line_paraline(int realisinterp, int doingweno, int whichprimtype, int interporflux, int recontype, int dir, int whichreduce, int preforder, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift, FTYPE (*yprim)[2][NBIGM], FTYPE (*yin)[2][NBIGM], FTYPE (*df)[NUMDFS][NBIGM], FTYPE (**drhoptr)[NBIGM], FTYPE (**dPptr)[NBIGM], FTYPE *stiffindicator, FTYPE *Vline, FTYPE *Pline, struct of_trueijkp *trueijkp)
+static void get_df_line_paraline(int realisinterp, int doingweno, int whichprimtype, int interporflux, int recontype, int dir, int whichreduce, int preforder, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift, FTYPE (*yprim)[2][NBIGM], FTYPE (*yin)[2][NBIGM], FTYPE (*df)[NUMDFS][NBIGM], FTYPE (**drhoptr)[NBIGM], FTYPE (**dPptr)[NBIGM], FTYPE *stiffindicator, FTYPE (*Vline)[NBIGM], FTYPE (*Pline)[NBIGM], struct of_trueijkp *trueijkp)
 {
   int pl,pliter;
   int nprlocalstart,nprlocalend;
@@ -2692,7 +2692,7 @@ static void get_1d_line(int dir, int interporflux, int pl, int bs, int ps, int p
 
 
 // Get 1D line of data so can pass it to ENO scheme
-static void get_1d_line_shockarray(int dir, int interporflux, int bs, int ps, int pe, int be,  int i, int j, int k, FTYPE (*shockarray)[NSTORE1][NSTORE2][NSTORE3], FTYPE *shockindicator, struct of_trueijkp *trueijkp)
+static void get_1d_line_shockarray(int dir, int interporflux, int bs, int ps, int pe, int be,  int i, int j, int k, FTYPE (*shockarray)[NSTORE1][NSTORE2][NSTORE3], FTYPE (*shockindicator)[NBIGM], struct of_trueijkp *trueijkp)
 {
   int yiniter;
   int di2,dj2,dk2;
@@ -2777,7 +2777,10 @@ static void get_1d_line_shockarray(int dir, int interporflux, int bs, int ps, in
     /////////////////////
     // ULTRASUPERGODMARK: Really must average input array to correct location.  Use of shockindicator in para currently assumes indicator at the cell face in dir-direction after using the result of ficalc() from surrounding center cells
     /////////////////////
-    shockindicator[yiniter]=MACP1A0(shockarray,SHOCKPLDIR1+dir-1,i2,j2,k2);
+    shockindicator[EOMSETMHD][yiniter]=MACP1A0(shockarray,SHOCKPLDIR1+dir-1,i2,j2,k2);
+#if(RADSHOCKFLAT&&EOMRADTYPE!=EOMRADNONE)//KORALTODO
+    shockindicator[EOMSETRAD][yiniter]=MACP1A0(shockarray,SHOCKRADPLDIR1+dir-1,i2,j2,k2);
+#endif
     yiniter++;
   }
 
@@ -2961,7 +2964,7 @@ static void causal_shift_order(int whichprimtype, int interporflux, int dir, int
 
 
 // determine shock indicator (used for both c2e and other routines, only operates on quantities with NPR elements)
-static int get_V_and_P(int whichprimtype, int interporflux, int dir, int bs, int ps, int pe, int be,  int i, int j, int k, int idel, int jdel, int kdel, FTYPE (*yrealin)[2][NBIGM], FTYPE *V, FTYPE *P, struct of_trueijkp *trueijkp)
+static int get_V_and_P(int whichprimtype, int interporflux, int dir, int bs, int ps, int pe, int be,  int i, int j, int k, int idel, int jdel, int kdel, FTYPE (*yrealin)[2][NBIGM], FTYPE (*Vline)[NBIGM], FTYPE (*Pline)[NBIGM], struct of_trueijkp *trueijkp)
 {
   int num,locali,localj,localk,localloc;
   int di,dj,dk;
@@ -3074,33 +3077,28 @@ static int get_V_and_P(int whichprimtype, int interporflux, int dir, int bs, int
 
 
 #if(VLINEWITHGDETRHO==0)
-    V[yiniter]=yrealin[UU+dir][0][iii];
+    Vline[EOMSETMHD][yiniter]=yrealin[UU+dir][0][iii];
 #else
     // \detg rho u^dir (approximately)
     //    get_geometry_gdetonly(locali,localj,localk,localloc,ptrgeom);
-    //    V[yiniter]=(ptrgeom->g)*yrealin[RHO][0][iii]*yrealin[UU+dir][0][iii];
+    //    Vline[yiniter]=(ptrgeom->g)*yrealin[RHO][0][iii]*yrealin[UU+dir][0][iii];
     // \detg rho u^dir
-    V[yiniter]=(ptrgeom->gdet)*yrealin[RHO][0][num]*(qptr->ucon[dir]);
+    Vline[EOMSETMHD][yiniter]=(ptrgeom->gdet)*yrealin[RHO][0][num]*(qptr->ucon[dir]);
 #endif
-
 
 #if(RADSHOCKFLAT&&EOMRADTYPE!=EOMRADNONE)
-
 #if(VLINEWITHGDETRHO==0)
-    V[yiniter] += yrealin[URAD0+dir][0][iii];
+    Vline[EOMSETRAD][yiniter]=yrealin[PRAD0+dir][0][iii];
 #else
-    V[yiniter] += (ptrgeom->gdet)*yrealin[URAD0][0][num]*(qptr->uradcon[dir]); // KORALTODO: Very rough estimate!  OR, just remove radiation from flux term.
-    // KORALTODO SUPERGODMARK: Need to get shock indicator for fluid separately from radiation!
+    Vline[EOMSETRAD][yiniter]=(ptrgeom->gdet)*yrealin[PRAD0][0][num]*(qptr->uradcon[dir]); // approximate KORALTODO
 #endif
-
-
 #endif
 
 
 
     // OPTMARK: Since assuming at CENT with normal primitive, then already have correct pressure
     //    P[yiniter]=pressure_rho0_u_simple(locali,localj,localk,localloc,yrealin[RHO][0][iii],yrealin[UU][0][iii]);
-    P[yiniter]=qptr->pressure;
+    Pline[EOMSETMHD][yiniter]=qptr->pressure;
 #if(PLINEWITHFIELD==0)
     // done
 #else
@@ -3108,13 +3106,19 @@ static int get_V_and_P(int whichprimtype, int interporflux, int dir, int bs, int
     // add magnetic pressure
     // OPTMARK: Since assuming at CENT with normal primitive, then already have correct b^2
     //    bsq = dot(q.bcon, q.bcov); // now store bsq
-    P[yiniter] += 0.5*(qptr->bsq);
+    Pline[EOMSETMHD][yiniter] += 0.5*(qptr->bsq);
 #endif
 
-#if(RADSHOCKFLAT&&EOMRADTYPE!=EOMRADNONE)
-    P[yiniter] += (4.0/3.0-1.0)*yrealin[PRAD0][0][num]; // approximate KORALTODO
+#if(RADSHOCKFLAT&&EOMRADTYPE!=EOMRADNONE) // KORAL
+    // add radiation pressure to total pressure if optically thick
+    FTYPE tautot[NDIM],tautotmax;
+    calc_tautot(myprim, ptrgeom, tautot, &tautotmax);
+    Pline[EOMSETRAD][yiniter]=(4.0/3.0-1.0)*yrealin[PRAD0][0][num]; // radiative pressure
+    // add radiation pressure to total pressure if optically thick
+    // KORALNOTE: recall pressure just along diagonal and no velocity in R^\mu_\nu
+    Pline[EOMSETMHD][yiniter]+=MIN(tautotmax,1.0)*Pline[EOMSETRAD][yiniter];
 #endif
-    
+
 
     yiniter++;
   }
@@ -3127,7 +3131,7 @@ static int get_V_and_P(int whichprimtype, int interporflux, int dir, int bs, int
 
 
 // determine shock indicator (used for both c2e and other routines, only operates on quantities with NPR elements)
-static int get_shock_indicator(int whichprimtype, int interporflux, int dir, int bs, int ps, int pe, int be,  int i, int j, int k, int idel, int jdel, int kdel, FTYPE (*yprim)[2][NBIGM], FTYPE *V, FTYPE *P, FTYPE *shockindicator, struct of_trueijkp *trueijkp)
+static int get_shock_indicator(int whichprimtype, int interporflux, int dir, int bs, int ps, int pe, int be,  int i, int j, int k, int idel, int jdel, int kdel, FTYPE (*yprim)[2][NBIGM], FTYPE (*Vline)[NBIGM], FTYPE (*Pline)[NBIGM], FTYPE (*shockindicator)[NBIGM], struct of_trueijkp *trueijkp)
 {
   int i3,j3,k3;
   int is3,ie3,js3,je3,ks3,ke3;
@@ -3246,8 +3250,12 @@ static int get_shock_indicator(int whichprimtype, int interporflux, int dir, int
 #endif
     //    dualfprintf(fail_file,"idel=%d jdel=%d kdel=%d :: i3=%d j3=%d k3=%d\n",idel,jdel,kdel,i3,j3,k3);
 
-    //    shockindicator[yiniter]=Ficalc(dir,&V[yiniter],&P[yiniter],ypl);
-    shockindicator[yiniter]=Ficalc(dir,&V[yiniter],&P[yiniter]);
+    //shockindicator[EOMSETMHD][yiniter]=Ficalc(dir,&Vline[EOMSETMHD][yiniter],&Pline[EOMSETMHD][yiniter],ypl);
+    shockindicator[EOMSETMHD][yiniter]=Ficalc(dir,&Vline[EOMSETMHD][yiniter],&Pline[EOMSETMHD][yiniter]);
+
+#if(RADSHOCKFLAT&&EOMRADTYPE!=EOMRADNONE)
+    shockindicator[EOMSETRAD][yiniter]=Ficalc(dir,&Vline[EOMSETRAD][yiniter],&Pline[EOMSETRAD][yiniter]); // KORAL
+#endif
 
 
 #if(0 && FLUXDUMP) // DEBUG: (turn off FLUXDUMP in flux.c)
@@ -3259,7 +3267,7 @@ static int get_shock_indicator(int whichprimtype, int interporflux, int dir, int
     localk=trueijkp->k+dk*num;
     localloc=trueijkp->p;
 
-    GLOBALMACP0A1(fluxdump,locali,localj,localk,4*NPR + (dir-1)*NPR*5 + NPR*0 + RHO)=shockindicator[yiniter];
+    GLOBALMACP0A1(fluxdump,locali,localj,localk,4*NPR + (dir-1)*NPR*5 + NPR*0 + RHO)=shockindicator[EOMSETMHD][yiniter]; // don't look at EOMSETRAD
 
 #endif
 
@@ -3274,7 +3282,7 @@ static int get_shock_indicator(int whichprimtype, int interporflux, int dir, int
 
 
 // currently only sets density etai, rest are 0 GODMARK
-static int get_contact_indicator(int realisinterp, int whichprimtype, int interporflux, int dir, int bs, int ps, int pe, int be,  int i, int j, int k, int idel, int jdel, int kdel, FTYPE (*yin)[2][NBIGM], FTYPE *V, FTYPE *P, FTYPE (*etai)[NBIGM])
+static int get_contact_indicator(int realisinterp, int whichprimtype, int interporflux, int dir, int bs, int ps, int pe, int be,  int i, int j, int k, int idel, int jdel, int kdel, FTYPE (*yin)[2][NBIGM], FTYPE (*Vline)[NBIGM], FTYPE (*Pline)[NBIGM], FTYPE (*etai)[NUMTRUEEOMSETS][NBIGM])
 {
   int i3,j3,k3;
   int is3,ie3,js3,je3,ks3,ke3;
@@ -3357,7 +3365,7 @@ static int get_contact_indicator(int realisinterp, int whichprimtype, int interp
   yiniter=bs+2; // bs+2
 
   if(MAXBND<4){
-    dualfprintf(fail_file,"MAXBND should be 4 for shockindicator???\n");
+    dualfprintf(fail_file,"MAXBND should be 4 for contactindicator???\n");
     myexit(8465684);
   }
 
@@ -3381,9 +3389,17 @@ static int get_contact_indicator(int realisinterp, int whichprimtype, int interp
           ypl[plpl][l]=yin[plpl][0][i3*idel+j3*jdel+k3*kdel + l];
         }
 
-        etai[plpl][yiniter]=etaicalc(plpl, ypl[plpl], &V[yiniter], &P[yiniter]);
+        etai[plpl][EOMSETMHD][yiniter]=etaicalc(plpl, ypl[plpl], &Vline[EOMSETMHD][yiniter], &Pline[EOMSETMHD][yiniter]);
+#if(RADSHOCKFLAT&&EOMRADTYPE!=EOMRADNONE)
+        etai[plpl][EOMSETRAD][yiniter]=etaicalc(plpl, ypl[plpl], &Vline[EOMSETRAD][yiniter], &Pline[EOMSETRAD][yiniter]);
+#endif
       }
-      else etai[plpl][yiniter]=0.0;
+      else{
+        etai[plpl][EOMSETMHD][yiniter]=0.0;
+#if(RADSHOCKFLAT&&EOMRADTYPE!=EOMRADNONE)
+        etai[plpl][EOMSETRAD][yiniter]=0.0;
+#endif
+      }
 
     }
 
@@ -3570,7 +3586,7 @@ static int compute_df_line_formono(int doingweno,int interporflux, int recontype
 
 
 // returns the improved pressure jump indicators
-int compute_df_line_new(int doingweno, int whichprimtype, int interporflux, int recontype, int dir, int whichreduce, int preforder, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE (*yprim)[2][NBIGM], FTYPE *df, FTYPE *stiffindicator, FTYPE *Vline, FTYPE *Pline, struct of_trueijkp *trueijkp)
+int compute_df_line_new(int doingweno, int whichprimtype, int interporflux, int recontype, int dir, int whichreduce, int preforder, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE (*yprim)[2][NBIGM], FTYPE *df, FTYPE *stiffindicator, FTYPE (*Vline)[NBIGM], FTYPE (*Pline)[NBIGM], struct of_trueijkp *trueijkp)
 {
   int i;
   int num,locali,localj,localk,localloc;
@@ -3665,11 +3681,19 @@ int compute_df_line_new(int doingweno, int whichprimtype, int interporflux, int 
     Pgasline[num]=pressure_rho0_u_simple(locali,localj,localk,localloc,myprim[RHO],myprim[UU]); // just gas contribution, add magnetic below
 
 #if(VLINEWITHGDETRHO==0)
-    //    Vline[num]=myprim[UU+dir];
-    //    Vline[num]=(qptr->ucon[dir])/(qptr->ucon[TT]); // more correct generally since wanted w.r.t. grid
-    Vline[num]=qptr->ucon[dir]; // more correct generally since wanted w.r.t. grid (need 4-velocity since consistent with equations of motion)
+    //    Vline[EOMSETMHD][num]=myprim[UU+dir];
+    //    Vline[EOMSETMHD][num]=(qptr->ucon[dir])/(qptr->ucon[TT]); // more correct generally since wanted w.r.t. grid
+    Vline[EOMSETMHD][num]=qptr->ucon[dir]; // more correct generally since wanted w.r.t. grid (need 4-velocity since consistent with equations of motion)
 #else
-    Vline[num]=(ptrgeom->gdet)*yprim[RHO][0][num]*(qptr->ucon[dir]);
+    Vline[EOMSETMHD][num]=(ptrgeom->gdet)*yprim[RHO][0][num]*(qptr->ucon[dir]);
+#endif
+
+#if(RADSHOCKFLAT&&EOMRADTYPE!=EOMRADNONE)
+#if(VLINEWITHGDETRHO==0)
+    Vline[EOMSETRAD][num]=qptr->uradcon[dir];
+#else
+    Vline[EOMSETRAD][num]=(ptrgeom->gdet)*yprim[PRAD0][0][num]*(qptr->uradcon[dir]); // approximate KORALTODO
+#endif
 #endif
 
 
@@ -3680,14 +3704,23 @@ int compute_df_line_new(int doingweno, int whichprimtype, int interporflux, int 
     myPtot = myPgas + 0.5*bsq;
 
     // get total pressure
-    Pline[num]=myPtot;
+    Pline[EOMSETMHD][num]=myPtot;
+#if(RADSHOCKFLAT&&EOMRADTYPE!=EOMRADNONE) // KORAL
+    // add radiation pressure to total pressure if optically thick
+    FTYPE tautot[NDIM],tautotmax;
+    calc_tautot(myprim, ptrgeom, tautot, &tautotmax);
+    Pline[EOMSETRAD][num]=(4.0/3.0-1.0)*yprim[PRAD0][0][num]; // radiative pressure
+    // add radiation pressure to total pressure if optically thick
+    // KORALNOTE: recall pressure just along diagonal and no velocity in R^\mu_\nu
+    Pline[EOMSETMHD][num]+=MIN(tautotmax,1.0)*Pline[EOMSETRAD][num];
+#endif
 
     bsqline[num]=fabs(bsq);
 
     parline[num]=fabs(qptr->ifremoverestplus1ud0elseud0*(qptr->ucon[dir]));
 
     // note sign comes from u^{dir}, but otherwise correct velocity to go into -T^t_t
-    veffline[num] = sign(Vline[num])*parline[num]/(sqrt(parline[num])+SMALL); // GODMARK: sqrt expensive, not sure how to avoid
+    veffline[num] = sign(Vline[EOMSETMHD][num])*parline[num]/(sqrt(parline[num])+SMALL); // GODMARK: sqrt expensive, not sure how to avoid
 
     // upar is really just the non-kinetic part of -T^t_t
     // compute it like below so don't repeat expensive plus1ud0 calculation

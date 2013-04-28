@@ -5,7 +5,7 @@
 
 
 // This version has pressure with total pressure, which is more correct than point version
-void pass_1d_line_multipl_paraline(int MULTIPLTYPE, int whichquantity, int dir, int do_weight_or_recon, int recontype, int whichreduce, int preforder, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE *shockindicator, FTYPE *stiffindicator, FTYPE *V,  FTYPE *P, FTYPE (*df)[NUMDFS][NBIGM], FTYPE (*dP)[NBIGM], FTYPE (*etai)[NBIGM], FTYPE (*monoindicator)[NUMMONOINDICATORS][NBIGM], FTYPE (*yprim)[2][NBIGM], FTYPE (*ystencilvar)[2][NBIGM], FTYPE (*yin)[2][NBIGM], FTYPE (*yout)[2][NBIGM], FTYPE (*youtpolycoef)[MAXSPACEORDER][NBIGM], struct of_trueijkp *trueijkp)
+void pass_1d_line_multipl_paraline(int MULTIPLTYPE, int whichquantity, int dir, int do_weight_or_recon, int recontype, int whichreduce, int preforder, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE (*shockindicator)[NBIGM], FTYPE *stiffindicator, FTYPE (*Vline)[NBIGM],  FTYPE (*Pline)[NBIGM], FTYPE (*df)[NUMDFS][NBIGM], FTYPE (*dP)[NBIGM], FTYPE (*etai)[NUMTRUEEOMSETS][NBIGM], FTYPE (*monoindicator)[NUMMONOINDICATORS][NBIGM], FTYPE (*yprim)[2][NBIGM], FTYPE (*ystencilvar)[2][NBIGM], FTYPE (*yin)[2][NBIGM], FTYPE (*yout)[2][NBIGM], FTYPE (*youtpolycoef)[MAXSPACEORDER][NBIGM], struct of_trueijkp *trueijkp)
 {
   int nprlocalstart,nprlocalend;
   int nprlocallist[MAXNPR];
@@ -29,7 +29,7 @@ void pass_1d_line_multipl_paraline(int MULTIPLTYPE, int whichquantity, int dir, 
   FTYPE left,right;
   FTYPE mymono;
   int smooth;
-
+  int mm;
 
 
 #if(DOPPMREDUCE && SHOCKINDICATOR==0)
@@ -86,6 +86,8 @@ void pass_1d_line_multipl_paraline(int MULTIPLTYPE, int whichquantity, int dir, 
     //    yout[pl][1][i]=facecont[pl][i+1];
     right=facecont[pl][i+1];
 
+    if(RADPL(pl)) mm=EOMSETRAD;
+    else mm=EOMSETMHD;
 
 #if(JONPARASMOOTH)
     int realisinterp=1; // assume not big deal
@@ -96,12 +98,12 @@ void pass_1d_line_multipl_paraline(int MULTIPLTYPE, int whichquantity, int dir, 
 
 
 #if(DOPPMCONTACTSTEEP)
-    if(smooth==0) parasteepgen(pl,etai[pl][i],&V[i],&P[i],&yin[pl][0][i],&df[pl][DFMONO][i],&left,&right);
+    if(smooth==0) parasteepgen(pl,etai[pl][mm][i],&Vline[mm][i],&Pline[mm][i],&yin[pl][0][i],&df[pl][DFMONO][i],&left,&right);
 #endif
   
   
 #if( DOPPMREDUCE )
-    paraflatten(dir,pl,&yin[pl][0][i],shockindicator[i],&left,&right);
+    paraflatten(dir,pl,&yin[pl][0][i],shockindicator[mm][i],&left,&right);
 #endif
   
 
@@ -135,7 +137,7 @@ void pass_1d_line_multipl_paraline(int MULTIPLTYPE, int whichquantity, int dir, 
 
 #if(NONMONOLIM>0 && DOPPMREDUCE)
     // then flatten final result
-    paraflatten(dir,pl,&yin[pl][0][i],shockindicator[i],&yout[pl][0][i],&yout[pl][1][i]);
+    paraflatten(dir,pl,&yin[pl][0][i],shockindicator[mm][i],&yout[pl][0][i],&yout[pl][1][i]);
 #endif
 
 
@@ -148,7 +150,7 @@ void pass_1d_line_multipl_paraline(int MULTIPLTYPE, int whichquantity, int dir, 
 
 
 // Pass 1D line to PARALINE scheme
-void pass_1d_line_paraline(int whichquantity, int dir, int do_weight_or_recon, int recontype, int whichreduce, int preforder, int pl, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE *shockindicator, FTYPE *stiffindicator, FTYPE *V,  FTYPE *P, FTYPE (*df)[NBIGM], FTYPE (*dP)[NBIGM], FTYPE *etai, FTYPE (*monoindicator)[NBIGM], FTYPE (*yprim)[2][NBIGM], FTYPE (*ystencilvar)[NBIGM], FTYPE (*yin)[NBIGM], FTYPE (*yout)[NBIGM], FTYPE (*youtpolycoef)[NBIGM], struct of_trueijkp *trueijkp)
+void pass_1d_line_paraline(int whichquantity, int dir, int do_weight_or_recon, int recontype, int whichreduce, int preforder, int pl, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE (*shockindicator)[NBIGM], FTYPE *stiffindicator, FTYPE (*Vline)[NBIGM],  FTYPE (*Pline)[NBIGM], FTYPE (*df)[NBIGM], FTYPE (*dP)[NBIGM], FTYPE (*etai)[NBIGM], FTYPE (*monoindicator)[NBIGM], FTYPE (*yprim)[2][NBIGM], FTYPE (*ystencilvar)[NBIGM], FTYPE (*yin)[NBIGM], FTYPE (*yout)[NBIGM], FTYPE (*youtpolycoef)[NBIGM], struct of_trueijkp *trueijkp)
 {
 
 
