@@ -1808,9 +1808,9 @@ void compute_and_store_fluxstatecent(FTYPE (*pr)[NSTORE2][NSTORE3][NPR])
           
 #if(RADSHOCKFLAT&&EOMRADTYPE!=EOMRADNONE) // KORAL
 #if(VLINEWITHGDETRHO==0)
-          MACP1A0(shocktemparray,SHOCKRADPLSTOREVEL1+dir-1,i,j,k) += MACP0A1(pr,i,j,k,URAD0+dir);
+          MACP1A0(shocktemparray,SHOCKRADPLSTOREVEL1+dir-1,i,j,k) = MACP0A1(pr,i,j,k,URAD0+dir);
 #else
-          MACP1A0(shocktemparray,SHOCKRADPLSTOREVEL1+dir-1,i,j,k) += (ptrgeom->gdet)*MACP0A1(pr,i,j,k,URAD0)*(GLOBALMAC(fluxstatecent,i,j,k).uradcon[dir]);
+          MACP1A0(shocktemparray,SHOCKRADPLSTOREVEL1+dir-1,i,j,k) = (ptrgeom->gdet)*MACP0A1(pr,i,j,k,URAD0)*(GLOBALMAC(fluxstatecent,i,j,k).uradcon[dir]);
 #endif
 #endif
         }
@@ -1870,6 +1870,7 @@ void compute_and_store_fluxstatecent(FTYPE (*pr)[NSTORE2][NSTORE3][NPR])
     // OPTMARK: Consider storing temporary velvec aligned with extraction direction (dir) .  Although ptot scalar has no preferred choice and final pr should have standard choice.
     // Ficalc() requires vel and p exist +-2 beyond where shock indicator is computed.
     // Assume shock indicator required at largest possible domain, which is then 2-inwards from outer boundaries only in each direction.
+    // shockindicatorarray[] computed here is used in interpline.c when calling get_1d_line_shockarray() to get shockindicator[]
       
 #if(MAXBND<4)
     dualfprintf(fail_file,"MAXBND should be 4 for shockindicator???\n");
@@ -1880,6 +1881,7 @@ void compute_and_store_fluxstatecent(FTYPE (*pr)[NSTORE2][NSTORE3][NPR])
     endorderi   = - startorderi;
 
   
+    int imod,jmod,kmod;
 
     DIMENLOOP(dir){
       if(NxNOT1[dir]){
@@ -1912,9 +1914,12 @@ void compute_and_store_fluxstatecent(FTYPE (*pr)[NSTORE2][NSTORE3][NPR])
 
               // extract stencil of data for Ficalc()
               for(l=startorderi;l<=endorderi;l++){
-                // PALLREALLOOP(pl) primptr[pl][l] = MACP0A1(pr,i+l,j,k,pl);
-                velptr[l] = MACP1A0(shocktemparray,SHOCKPLSTOREVEL1+dir-1,i+l,j,k);
-                ptotptr[l] = MACP1A0(shocktemparray,SHOCKPLSTOREPTOT,i+l,j,k);
+                imod=i+(dir==1)*l;
+                jmod=j+(dir==2)*l;
+                kmod=k+(dir==3)*l;
+                // PALLREALLOOP(pl) primptr[pl][l] = MACP0A1(pr,imod,jmod,kmod,pl);
+                velptr[l] = MACP1A0(shocktemparray,SHOCKPLSTOREVEL1+dir-1,imod,jmod,kmod);
+                ptotptr[l] = MACP1A0(shocktemparray,SHOCKPLSTOREPTOT,imod,jmod,kmod);
               }
       
               //      GLOBALMACP0A1(shockindicatorarray,i,j,k,SHOCKPLDIR1+dir-1)=Ficalc(dir,&velptr[0],&ptotptr[0],&primptr[0]);
@@ -1923,9 +1928,12 @@ void compute_and_store_fluxstatecent(FTYPE (*pr)[NSTORE2][NSTORE3][NPR])
               if(RADSHOCKFLAT&&EOMRADTYPE!=EOMRADNONE){
                 // extract stencil of data for Ficalc()
                 for(l=startorderi;l<=endorderi;l++){
-                  // PALLREALLOOP(pl) primptr[pl][l] = MACP0A1(pr,i+l,j,k,pl);
-                  velptr[l] = MACP1A0(shocktemparray,SHOCKRADPLSTOREVEL1+dir-1,i+l,j,k);
-                  ptotptr[l] = MACP1A0(shocktemparray,SHOCKRADPLSTOREPTOT,i+l,j,k);
+                  imod=i+(dir==1)*l;
+                  jmod=j+(dir==2)*l;
+                  kmod=k+(dir==3)*l;
+                  // PALLREALLOOP(pl) primptr[pl][l] = MACP0A1(pr,imod,jmod,kmod,pl);
+                  velptr[l] = MACP1A0(shocktemparray,SHOCKRADPLSTOREVEL1+dir-1,imod,jmod,kmod);
+                  ptotptr[l] = MACP1A0(shocktemparray,SHOCKRADPLSTOREPTOT,imod,jmod,kmod);
                 }
                 
                 //      GLOBALMACP0A1(shockindicatorarray,i,j,k,SHOCKRADPLDIR1+dir-1)=Ficalc(dir,&velptr[0],&ptotptr[0],&primptr[0]);

@@ -82,7 +82,7 @@
 // So Choose 1E-8 as good enough solution.
 #define IMPTRYCONV (1.e-8)  // for used implicit solver
 #define IMPALLOWCONV (1.e-3)  // for used implicit solver KORALTODO: Have to be more careful since f/fnorm~1E-3 might mean large changes in primitives.
-//#define IMPALLOWCONV (1.e-1) // KORALTODO SUPERGODMARK FUCK
+//#define IMPALLOWCONV (1.e-1) // KORALTODO SUPERGODMARK
 #else
 // RADPULSEPLANAR: below leads to ~5 f1iters and ~7 iters on average
 // RADTUBE NTUBE=31: ~0 f1iters and ~1.5-2 iters
