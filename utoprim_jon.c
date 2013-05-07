@@ -1223,7 +1223,7 @@ static int verify_Wlast(FTYPE u, FTYPE p, struct of_geom *ptrgeom, FTYPE *W_last
 static int check_Wp(PFTYPE *lpflag, int eomtype, FTYPE *prim, FTYPE *U, struct of_geom *ptrgeom, FTYPE Wp_last, FTYPE Wp, int retval, FTYPE *wglobal, FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
 {
 
-  int i;
+  int pliter,pl;
   FTYPE Wtest;
 
    
@@ -1234,11 +1234,11 @@ static int check_Wp(PFTYPE *lpflag, int eomtype, FTYPE *prim, FTYPE *U, struct o
     if( debugfail>=2 ) {
       dualfprintf(fail_file, "Failed to find a prim. var. solution!! Wp_last=%21.15g Bsq=%21.15g QdotBsq=%21.15g Qdotn=%21.15g D=%21.15g Qtsq=%21.15g \n",Wp_last,Bsq,QdotBsq,Qdotn,D,Qtsq);
       dualfprintf(fail_file, "Utoprim_new_body(): bad newt failure, nstep,steppart :: t,i,j,k, p[0-%d], U[0-%d] = %ld %d :: %21.15g %d %d %d ", NPR, NPR, nstep,steppart,t, ptrgeom->i, ptrgeom->j,ptrgeom->k );  
-      PALLLOOP(i){
-        dualfprintf(fail_file, "%21.15g ", prim[i]);
+      PINVERTLOOP(pliter,pl){
+        dualfprintf(fail_file, "%21.15g ", prim[pl]);
       }
-      PALLLOOP(i){
-        dualfprintf(fail_file, "%21.15g ", U[i]);
+      PINVERTLOOP(pliter,pl){
+        dualfprintf(fail_file, "%21.15g ", U[pl]);
       }
       dualfprintf(fail_file, "\n");
     }      
@@ -1274,11 +1274,12 @@ static int check_Wp(PFTYPE *lpflag, int eomtype, FTYPE *prim, FTYPE *U, struct o
       if( debugfail>=2 ) {
         dualfprintf(fail_file,"Wtest2 failure %21.15g %21.15g %21.15g %21.15g\n",Wtest,D,wglobal[1],GAMMASQ_TOO_BIG) ;
         dualfprintf(fail_file, "Utoprim_new_body(): Wtest<0 or Wtest=toobig failure, t,i,j,k, p[0-7], U[0-7] = %21.15g %d %d %d ", t, ptrgeom->i, ptrgeom->j,ptrgeom->k );  
-        PALLLOOP(i){
-          dualfprintf(fail_file, "%21.15g ", prim[i]);
+        PINVERTLOOP(pliter,pl){
+          dualfprintf(fail_file, "%21.15g ", prim[pl]);
         }
-        PALLLOOP(i){
-          dualfprintf(fail_file, "%21.15g ", U[i]);
+        PINVERTLOOP(pliter,pl){
+          if(isfinite(U[pl])) dualfprintf(fail_file, "%21.15g ", U[pl]);
+          else dualfprintf(fail_file, "nan ");
         }
         dualfprintf(fail_file, "\n");
       }      
@@ -1462,11 +1463,11 @@ static int Wp2prim(int showmessages, PFTYPE *lpflag, int eomtype, FTYPE *prim, F
     if( debugfail>=2 ) { 
       dualfprintf(fail_file,"vsq failure:  vsq = %21.15g , W = %21.15g \n",vsq, W) ;
       dualfprintf(fail_file, "Utoprim_new_body(): utsq==bad failure, t,i,j,k, p[0-7], U[0-7] = %21.15g %d %d %d ", t, ptrgeom->i, ptrgeom->j,ptrgeom->k );  
-      PALLLOOP(i){
-        dualfprintf(fail_file, "%21.15g ", prim[i]);
+      PINVERTLOOP(pliter,pl){
+        dualfprintf(fail_file, "%21.15g ", prim[pl]);
       }
-      PALLLOOP(i){
-        dualfprintf(fail_file, "%21.15g ", U[i]);
+      PINVERTLOOP(pliter,pl){
+        dualfprintf(fail_file, "%21.15g ", U[pl]);
       }
       dualfprintf(fail_file, "\n");
     }      

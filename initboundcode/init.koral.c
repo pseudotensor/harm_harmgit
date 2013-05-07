@@ -286,8 +286,8 @@ int init_global(void)
   //  rescaletype=1;
   rescaletype=4;
   BSQORHOLIMIT=1E2; // was 1E2 but latest BC test had 1E3 // CHANGINGMARK
-  BSQOULIMIT=1E3; // was 1E3 but latest BC test had 1E4
-  UORHOLIMIT=1E3;
+  BSQOULIMIT=1E5; // was 1E3 but latest BC test had 1E4
+  UORHOLIMIT=1E10; // has to be quite high, else hit floor in high optical depth cases and run-away injection of u and then rho.
   RHOMIN = 1E-4;
   UUMIN = 1E-6;
   //OSMARK: where is DTr1 defined? what is DTfake?
@@ -1201,10 +1201,10 @@ int init_global(void)
       else BCtype[X2UP]=ASYMM; // with donut, let free, so ASYMM condition across equator
 
       //FUCK
-      //      BCtype[X1DN]=HORIZONOUTFLOW;
-      //      BCtype[X1UP]=HORIZONOUTFLOW;
-      BCtype[X1DN]=OUTFLOW;
-      BCtype[X1UP]=OUTFLOW;
+      BCtype[X1DN]=HORIZONOUTFLOW;
+      BCtype[X1UP]=HORIZONOUTFLOW;
+      //      BCtype[X1DN]=OUTFLOW;
+      //      BCtype[X1UP]=OUTFLOW;
       BCtype[X2UP]=POLARAXIS; // assumes Rin_array[2]=pi
       BCtype[X2DN]=POLARAXIS; // assumes Rin_array[2]=0
 
@@ -1682,7 +1682,7 @@ int init_defcoord(void)
     Rout=RADNT_MAXX;
 
     Rin_array[2]=0.0*Pi/4.; // but koral currently uses 0.5*Pi/4
-    Rout_array[2]=Pi; // FUCK
+    Rout_array[2]=Pi; // KORALNOTE: Different from KORAL code test
     Rin_array[3]=-1.;
     Rout_array[3]=1.;
 
@@ -2122,7 +2122,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 //#define KAPPAUSER(rho,T) (rho*KAPPA_ES_CODE(rho,T)/1E14*1.0) // wierd use of kappa_{es} in koral
 //#define KAPPAESUSER(rho,T) (0.0)
 
-// FUCK
+// KORALNOTE: Different than koral code test, but as if full problem.
 #define KAPPA 1.0
 #define KAPPAES 1.0
 
@@ -3996,9 +3996,8 @@ int set_density_floors(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *prfloor)
     prfloor[PRAD0]=ERADLIMIT;
   }
 
-  // FUCK
   // default is for spherical flow near BH
-  if(WHICHPROBLEM==RADDONUT&&0){
+  if(WHICHPROBLEM==RADDONUT){
     // KORALTODO: floor currently causes injection of hot matter and run-away problems with radiation.
     funreturn=set_density_floors_default(ptrgeom, pr, prfloor);
 
