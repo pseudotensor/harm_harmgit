@@ -133,7 +133,18 @@ void pass_1d_line_multipl_paraline(int MULTIPLTYPE, int whichquantity, int dir, 
     yout[pl][1][i] = right;
 #endif
 
-
+    // FUCK -- force MINM for radiation
+    if(1&&whicheom==EOMSETRAD){
+      FTYPE extremum=0.0;
+      FTYPE theta = 1.0;
+      FTYPE Dqm = theta * df[pl][DFONESIDED][i];
+      FTYPE Dqp = theta * df[pl][DFONESIDED][i+1];
+      FTYPE Dqc = df[pl][DFCENT][i];
+      FTYPE mydq = MINMODGEN(extremum,MINMODGEN(extremum,Dqm,Dqc),Dqp);
+      
+      yout[pl][0][i] = yin[pl][0][i] - 0.5*mydq;
+      yout[pl][1][i] = yin[pl][0][i] + 0.5*mydq;
+    }
 
 #if(NONMONOLIM>0 && DOPPMREDUCE)
     // then flatten final result

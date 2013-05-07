@@ -190,7 +190,7 @@ endif
 ifneq ($(filter $(MPITARGETS), $(MYMAKECMDGOALS)),)
 # choice for below
 # i.e. MPI is only for grmhd, grmhdldouble, and liaison codes
-USEMPI=0
+USEMPI=1
 
 else
 

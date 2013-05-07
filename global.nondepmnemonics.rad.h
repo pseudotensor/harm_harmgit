@@ -81,7 +81,7 @@
 // 1E-9 is common ok first iteration for RADFLATDISK.  More is too hard.
 // So Choose 1E-8 as good enough solution.
 #define IMPTRYCONV (1.e-8)  // for used implicit solver
-#define IMPALLOWCONV (1.e-3)  // for used implicit solver KORALTODO: Have to be more careful since f/fnorm~1E-3 might mean large changes in primitives.
+#define IMPALLOWCONV (1.e-6)  // for used implicit solver KORALTODO: Have to be more careful since f/fnorm~1E-3 might mean large changes in primitives.
 //#define IMPALLOWCONV (1.e-1) // KORALTODO SUPERGODMARK
 #else
 // RADPULSEPLANAR: below leads to ~5 f1iters and ~7 iters on average
@@ -90,7 +90,7 @@
 #define IMPALLOWCONV (1.e-3)  // for used implicit solver
 #endif
 
-#define IMPMAXITER (200) // for used implicit solver
+#define IMPMAXITER (100) // for used implicit solver
 
 // 1 : normalize radiation error by only radiation thermal energy
 // 2 : normalize radiation error by max(radiation,gas) thermal energy
@@ -105,6 +105,13 @@
 
 // if tries more than this number of sub-cycles, just fail and assume no 4-force since probably due to no actual solution even for implicit scheme due to sitting at radiative failure (e.g. gamma->gammamax or Erf->ERADLIMIT)
 #define MAXSUBCYCLESFAIL (MAXSUBCYCLES*100)
+
+
+#define MAXF1TRIES 20 // 20 might sound like alot, but Jacobian does 4 to 5 inversions each iteration, and that amount is only typically needed for very first iteration.
+  // goes to f1iter=10 for RADPULSE KAPPAES=1E3 case.  Might want to scale maximum iterations with \tau, although doubling of damping means exponential w.r.t. f1iter, so probably 20 is certainly enough since 2^(-20) is beyond machine precision.
+
+#define RADDAMPDELTA (0.5) // choose, but best to choose 1/Integer so no machine precision issues.
+#define RADDAMPUNDELTA (1.0/RADDAMPDELTA)
 
 
 
@@ -134,7 +141,7 @@
 #define TAUFAILLIMIT (2.0/3.0) // at what \tau below which to assume "failure1" in u2p_rad() means should be moving at gammamax rather than not moving.
 
 // whether to revert to sub-cycle explicit if implicit fails.  Only alternative is die.
-#define IMPLICITREVERTEXPLICIT 1
+#define IMPLICITREVERTEXPLICIT 0 // QWERTY
 
 // like SAFE for normal dt step, don't allow explicit substepping to change dt too fast to avoid instabilities.
 #define MAXEXPLICITSUBSTEPCHANGE 1.e-2

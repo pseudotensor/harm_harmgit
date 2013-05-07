@@ -22,7 +22,8 @@
 #define PARA2LIM MC
 #elif(WHICHPARA==PARA4)
 // MC recommended by Xiaoyue
-#define PARA2LIM MC
+#define PARA2LIM MC // FUCK
+//#define PARA2LIM VANL
 #endif
 
 // whether to use internal parabola when -1,0,+1 dq's are central

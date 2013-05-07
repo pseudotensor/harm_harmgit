@@ -35,7 +35,7 @@
 // Note that if using -pc64 -mp that error in inversion seems to be limited for doubles to 1E-11 instead of 1E-15
 #if(PRECISEINVERSION)
 #define ITERDAMPSTART 10 // iteration to start using damp if haven't already
-#define MAX_NEWT_ITER 200     /* Max. # of Newton-Raphson iterations for find_root_2D(); */
+#define MAX_NEWT_ITER 100     /* Max. # of Newton-Raphson iterations for find_root_2D();  Hardly ever case where need 200 iterations */
 #define NEWT_TOL   (1E3*NUMEPSILON)    /* Min. of tolerance allowed for Newton-Raphson iterations */
 #define NEWT_TOL_ULTRAREL   (NUMEPSILON)    /* Min. of tolerance allowed for Newton-Raphson iterations */
 //#define MIN_NEWT_TOL  (1E5*NUMEPSILON)    /* Max. of tolerance allowed for Newton-Raphson iterations */

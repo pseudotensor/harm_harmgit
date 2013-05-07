@@ -49,6 +49,7 @@ static int get_m1closure_urfconrel_olek(int showmessages, int allowlocalfailuref
 static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int showmessagesheavy, int allowlocalfailurefixandnoreport, FTYPE *uu, FTYPE *uup, FTYPE *uu0, FTYPE *pin, FTYPE fracdtG, FTYPE realdt, struct of_geom *ptrgeom, FTYPE *f1, FTYPE *f1norm, FTYPE (*iJ)[NDIM]);
 static int f_error_check(int showmessages, int showmessagesheavy, int iter, FTYPE conv, FTYPE *f1, FTYPE *f1norm, FTYPE *f1report, FTYPE *uu0, FTYPE *uu, struct of_geom *ptrgeom);
 
+static int mathematica_report_check(int gotfirstnofail, FTYPE realdt,struct of_geom *ptrgeom, FTYPE *pinuse, FTYPE *pin, FTYPE *uu0, FTYPE *uu);
 
 
 
@@ -326,11 +327,6 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
   int f1iter;
   int checkconv,changeotherdt;
 
-#define MAXF1TRIES 100 // 100 might sound like alot, but Jacobian does 4*4=16 inversions each iteration, and that 100 is only typically needed for very first iteration.
-  // goes to f1iter=10 for RADPULSE KAPPAES=1E3 case.  Might want to scale maximum iterations with \tau, although doubling of damping means exponential w.r.t. f1iter, so probably 100 is certainly enough since 2^(-100) is beyond machine precision.
-
-#define DAMPDELTA (0.5) // choose, but best to choose 1/Integer so no machine precision issues.
-#define DAMPUNDELTA (1.0/DAMPDELTA)
 
   // initialize previous 'good inversion' based uu's
   PLOOP(pliter,pl)  uupp[pl]=uuporig[pl]=uup[pl]=uu0orig[pl]=uu[pl];
@@ -382,7 +378,7 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
         // if initial uu failed, then should take smaller jump from Uiin->uu until settled between fluid and radiation.
         // If here, know original Uiin is good, so take baby steps in case uu needs heavy raditive changes.
         // if f1 fails, try going back to Uiin a bit
-        fracdtuu0*=DAMPDELTA; // DAMP Uiin->uu0 step that may be too large and generated too large G
+        fracdtuu0*=RADDAMPDELTA; // DAMP Uiin->uu0 step that may be too large and generated too large G
 
 #define BACKUPRELEASEFAIL (1E-5)
         // if backing up alot, then allow same failure as original Uiin in hopes that can recover that way (otherwise would have hoped would recover via flux update to Uiin)
@@ -403,10 +399,10 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
           // So need to damp between original uup and uupp .  This essentially damps Newton step now that have knowledge the Newton step was too large as based upon P(U) failure.
 
           // Avoid G-damping because not needed so far.  If added, competes in non-trivial way with fracuup damping that's required separately for large forces in some problems beyond iter=1 (e.g. NTUBE=31).
-          //          fracdtG*=DAMPDELTA; // DAMP give only fraction of 4-force to let uu to catch-up
+          //          fracdtG*=RADDAMPDELTA; // DAMP give only fraction of 4-force to let uu to catch-up
           //           fracdtG=0.5; // DAMP give only fraction of 4-force to let uu to catch-up
 
-          fracuup*=DAMPDELTA; // DAMP in case Newton step is too large after iter>1 and stuck with certain uu from Newton step that gets stored in uup above.
+          fracuup*=RADDAMPDELTA; // DAMP in case Newton step is too large after iter>1 and stuck with certain uu from Newton step that gets stored in uup above.
 
           PLOOP(pliter,pl) uu[pl]=(1.0-fracuup)*uupp[pl] + fracuup*uuporig[pl];
           //          PLOOP(pliter,pl) uu[pl]=(1.0-fracuup)*uupp[pl] + fracuup*uup[pl];
@@ -425,7 +421,8 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
       }
     }// end loop over f1iter
     if(f1iter==MAXF1TRIES){
-      if(debugfail>=2) dualfprintf(fail_file,"Reached MAXF1TRIES\n");
+      if(debugfail>=2) dualfprintf(fail_file,"Reached MAXF1TRIES: nstep=%ld steppart=%d ijk=%d %d %d\n",nstep,steppart,ptrgeom->i,ptrgeom->j,ptrgeom->k);
+      mathematica_report_check(gotfirstnofail, realdt, ptrgeom, pinuse,pin,uu0,uu);
       // Note that if inversion reduces to entropy or cold, don't fail, so passes until reached this point.  But convergence can be hard if flipping around which EOMs for the inversion are actually used.
       return(1);
     }
@@ -502,21 +499,21 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
       //    if(fracuup!=1.0){
       if(fabs(fracuup-1.0)>10.0*NUMEPSILON){
         // try increasing amount of uu used
-        fracuup*=DAMPUNDELTA;
+        fracuup*=RADDAMPUNDELTA;
         checkconv=0;
         changeotherdt=0; // ensure fracuup back to 1.0 first before reverting others.
       }
       //    if(fracdtuu0!=1.0){
       if(fabs(fracdtuu0-1.0)>10.0*NUMEPSILON && changeotherdt){
         // try increasing uu0 away from Uiin to account for full dUother
-        fracdtuu0*=DAMPUNDELTA;
+        fracdtuu0*=RADDAMPUNDELTA;
         PLOOP(pliter,pl) uu0[pl]=UFSET(CUf,fracdtuu0*dt,Uiin[pl],Ufin[pl],dUother[pl],0.0); // modifies uu0
         checkconv=0;
       }
       //    if(fracdtG!=1.0){
       if(fabs(fracdtG-1.0)>10.0*NUMEPSILON && changeotherdt){
         // try increasing amount of G applied
-        fracdtG*=DAMPUNDELTA;
+        fracdtG*=RADDAMPUNDELTA;
         checkconv=0;
       }      
     }// end if finite
@@ -581,20 +578,11 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
       else{
         // KORALTODO: Need backup that won't fail.
         if(debugfail>=2){
-          if(itermaxed) dualfprintf(fail_file,"iter>IMPMAXITER=%d : iter exceeded in solve_implicit_lab(). ijk=%d %d %d :  Bad error.\n",IMPMAXITER,ptrgeom->i,ptrgeom->j,ptrgeom->k);
+          if(itermaxed) dualfprintf(fail_file,"iter>IMPMAXITER=%d : iter exceeded in solve_implicit_lab(). nstep=%ld steppart=%d ijk=%d %d %d :  Bad error.\n",IMPMAXITER,nstep,steppart,ptrgeom->i,ptrgeom->j,ptrgeom->k);
           if(notfinite) dualfprintf(fail_file,"IMPGOTNAN at iter=%d : in solve_implicit_lab(). ijk=%d %d %d :  Bad error.\n",iter,ptrgeom->i,ptrgeom->j,ptrgeom->k);
           dualfprintf(fail_file,"checkconv=%d failreturnallowable=%d: %g %g %g %g : %g %g %g %g\n",checkconv,failreturnallowable,f3report[0],f3report[1],f3report[2],f3report[3],lowestfreport[0],lowestfreport[1],lowestfreport[2],lowestfreport[3]);
           if(1||showmessages){
-            //  emacs regexp: Query replace regexp (default \([0-9]\)e\([-+]*[0-9]+\) -> \1*10^(\2)): 
-            dualfprintf(fail_file,"FAILINFO: %d\ndt=%26.20g\n",gotfirstnofail,realdt);
-            DLOOP(jj,kk) dualfprintf(fail_file,"gn%d%d=%26.20g\n",jj+1,kk+1,ptrgeom->gcon[GIND(jj,kk)]);
-            DLOOP(jj,kk) dualfprintf(fail_file,"gv%d%d=%26.20g\n",jj+1,kk+1,ptrgeom->gcov[GIND(jj,kk)]);
-            // shows first pinuse(uu0)
-            PLOOP(pliter,pl) dualfprintf(fail_file,"pinuse%d=%26.20g\npin%d=%26.20g\nuu0%d=%26.20g\nuu%d=%26.20g\n",pl,pinuse[pl],pl,pin[pl],pl,uu0[pl],pl,uu[pl]);
-            struct of_state qreport;
-            get_state(pinuse,ptrgeom,&qreport);
-            DLOOPA(jj) dualfprintf(fail_file,"uradcon%d=%26.20g\nuradcov%d=%26.20g\n",jj,qreport.uradcon[jj],jj,qreport.uradcov[jj]);
-            DLOOPA(jj) dualfprintf(fail_file,"ucon%d=%26.20g\nucov%d=%26.20g\n",jj,qreport.ucon[jj],jj,qreport.ucov[jj]);
+            mathematica_report_check(gotfirstnofail, realdt, ptrgeom, pinuse,pin,uu0,uu);
           }
         }        
         return(1);
@@ -642,6 +630,25 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
 
   return(0);
   
+}
+
+static int mathematica_report_check(int gotfirstnofail, FTYPE realdt,struct of_geom *ptrgeom, FTYPE *pinuse, FTYPE *pin, FTYPE *uu0, FTYPE *uu)
+{
+  int jj,kk;
+  int pliter,pl;
+
+  //  emacs regexp: Query replace regexp (default \([0-9]\)e\([-+]*[0-9]+\) -> \1*10^(\2)): 
+  dualfprintf(fail_file,"FAILINFO: %d\ndt=%26.20g\n",gotfirstnofail,realdt);
+  DLOOP(jj,kk) dualfprintf(fail_file,"gn%d%d=%26.20g\n",jj+1,kk+1,ptrgeom->gcon[GIND(jj,kk)]);
+  DLOOP(jj,kk) dualfprintf(fail_file,"gv%d%d=%26.20g\n",jj+1,kk+1,ptrgeom->gcov[GIND(jj,kk)]);
+  // shows first pinuse(uu0)
+  PLOOP(pliter,pl) dualfprintf(fail_file,"pinuse%d=%26.20g\npin%d=%26.20g\nuu0%d=%26.20g\nuu%d=%26.20g\n",pl,pinuse[pl],pl,pin[pl],pl,uu0[pl],pl,uu[pl]);
+  struct of_state qreport;
+  get_state(pinuse,ptrgeom,&qreport);
+  DLOOPA(jj) dualfprintf(fail_file,"uradcon%d=%26.20g\nuradcov%d=%26.20g\n",jj,qreport.uradcon[jj],jj,qreport.uradcov[jj]);
+  DLOOPA(jj) dualfprintf(fail_file,"ucon%d=%26.20g\nucov%d=%26.20g\n",jj,qreport.ucon[jj],jj,qreport.ucov[jj]);
+
+  return(0);
 }
 
 // use f and check the error
@@ -2882,6 +2889,7 @@ int u2p_rad(int showmessages, int allowlocalfailurefixandnoreport, FTYPE *uu, FT
     get_m1closure_Erf(ptrgeom,Avcon,gammarel2,&Erf);
     FTYPE Erforig=Erf;
 
+    // FUCK
     // get relative 4-velocity
     if(CASECHOICE==JONCHOICE) get_m1closure_urfconrel(showmessages,allowlocalfailurefixandnoreport,ptrgeom,pp,Avcon,Avcov,gammarel2,delta,numerator,divisor,&Erf,urfconrel,lpflag,lpflagrad);
     else if(CASECHOICE==OLEKCHOICE) get_m1closure_urfconrel_olek(showmessages,allowlocalfailurefixandnoreport,ptrgeom,pp,Avcon,Avcov,gammarel2,delta,&Erf,urfconrel,lpflag,lpflagrad);

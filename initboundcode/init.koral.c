@@ -1,6 +1,21 @@
 
 #include "decs.h"
 
+static SFTYPE rhomax=0,umax=0,bsq_max=0; // OPENMPMARK: These are ok file globals since set using critical construct
+static SFTYPE beta,randfact,rin; // OPENMPMARK: Ok file global since set as constant before used
+static FTYPE rhodisk;
+static FTYPE nz_func(FTYPE R) ;
+
+FTYPE normglobal;
+int inittypeglobal; // for bounds to communicate detail of what doing
+
+#define SLOWFAC 1.0  /* reduce u_phi by this amount */
+#define MAXPASSPARMS 10
+
+//#define THETAROTMETRIC (0.5*0.7)
+#define THETAROTMETRIC (0.0)
+
+
 
 // NOTE on units:
 // Many things below are so far in code units, not physical units, so they don't need conversion.  This includes:
@@ -146,6 +161,10 @@ int prepre_init_specific_init(void)
 int pre_init_specific_init(void)
 {
 
+  h_over_r=0.3;
+  h_over_r_jet=2.0*h_over_r;
+
+
   UTOPRIMVERSION = UTOPRIMJONNONRELCOMPAT;
 
   return(0);
@@ -287,8 +306,16 @@ int init_global(void)
 
   if(WHICHPROBLEM==RADPULSE || WHICHPROBLEM==RADPULSEPLANAR || WHICHPROBLEM==RADPULSE3D){
 
-    lim[1]=lim[2]=lim[3]=MINM;
-    //  cour=0.5;
+    // FUCK
+    //    lim[1]=lim[2]=lim[3]=DONOR;
+    // KORALNEWTODO: Perhaps use MINM in tau<=1 case?
+    //    lim[1]=lim[2]=lim[3]=MINM; // amplitude or phase of pulse quite different with cour=0.2 and cour=0.5
+    //lim[1]=lim[2]=lim[3]=MC; // works with cour=0.2
+    //    lim[1]=lim[2]=lim[3]=PARAFLAT; // kinda ok (but still messy) with cour=0.2
+    lim[1]=lim[2]=lim[3]=PARALINE; // kinda ok with cour=0.1 // similar to MINM only with cour=0.01--0.05 // superbad at cour=0.2--0.3
+    // EATME: PARALINE noisy and wrong value for RADPULSE with or without RADSHOCKFLAT
+
+    //    cour=0.1;
     cour=0.5;
     gam=gamideal=5.0/3.0;
     cooling=KORAL;
@@ -338,7 +365,8 @@ int init_global(void)
   if(WHICHPROBLEM==RADBEAMFLAT){
     //cour=0.8; // this or with old MINDTSET, causes Erf<0 for default koral test
     cour=0.5;
-    lim[1]=lim[2]=lim[3]=MINM;
+    //    lim[1]=lim[2]=lim[3]=MINM;
+    lim[1]=lim[2]=lim[3]=PARALINE;
     // gam=gamideal=5.0/3.0;
     gam=gamideal=4.0/3.0; // koral now
     cooling=KORAL;
@@ -641,8 +669,8 @@ int init_global(void)
 
   if(WHICHPROBLEM==ATMSTATIC){
 
-    lim[1]=lim[2]=lim[3]=MINM; 
-    //    lim[1]=lim[2]=lim[3]=PARALINE; // actually more error in u^r than MINM for inner radial boundary points (~factor of two larger u^r).
+    //    lim[1]=lim[2]=lim[3]=MINM; 
+    lim[1]=lim[2]=lim[3]=PARALINE; // actually more error in u^r than MINM for inner radial boundary points (~factor of two larger u^r).
     // NOTE: with FTYPE as double, not enough precision to have good convergence for u^r -- just noise. See makefile.notes for how to go to ldouble and then has same error as koral.
     a=0.0; // no spin in case use MCOORD=KSCOORDS
 
@@ -689,8 +717,8 @@ int init_global(void)
 
   if(WHICHPROBLEM==RADATM){
 
-    lim[1]=lim[2]=lim[3]=MINM; // MINM gets larger error and jump in v1 at outer edge
-    //    lim[1]=lim[2]=lim[3]=PARALINE;
+    //lim[1]=lim[2]=lim[3]=MINM; // MINM gets larger error and jump in v1 at outer edge
+    lim[1]=lim[2]=lim[3]=PARALINE;
     // Koral uses MINMOD_THETA2 (MC?)
     // koral paper uses MP5
     //    lim[1]=lim[2]=lim[3]=MC;
@@ -1071,14 +1099,17 @@ int init_global(void)
 
   if(WHICHPROBLEM==RADNT || WHICHPROBLEM==RADFLATDISK || WHICHPROBLEM==RADDONUT || WHICHPROBLEM==RADCYLBEAM || WHICHPROBLEM==RADCYLBEAMCART){
 
+
     gam=gamideal=4.0/3.0;
 
     RADNT_ELL=4.5; // torus specific angular momentum
-    RADNT_UTPOT=.98; // scales rin for donut
+    RADNT_UTPOT=0.99999; // scales rin for donut
     RADNT_ROUT=2.0; // what radius ATMMIN things are defining
     //RADNT_RHOATMMIN=KORAL2HARMRHO(1.e-4);
-    RADNT_RHOATMMIN= KORAL2HARMRHO(1.e-2); // current koral choice
-    RADNT_RHODONUT = KORAL2HARMRHO(1.0); // equivalent to koral's non-normalization
+    //    RADNT_RHOATMMIN= KORAL2HARMRHO(1.e-2); // current koral choice
+    //RADNT_RHODONUT = KORAL2HARMRHO(1.0); // equivalent to koral's non-normalization
+    RADNT_RHODONUT=1E-5;
+    RADNT_RHOATMMIN=RADNT_RHODONUT*1E-4;
     RADNT_KKK=1.e-4 * (1.0/pow(RADNT_RHODONUT,gam-1.0));
     RADNT_TGASATMMIN = 1.e11/TEMPBAR;
     RADNT_UINTATMMIN= (calc_PEQ_ufromTrho(RADNT_TGASATMMIN,RADNT_RHOATMMIN));
@@ -1147,16 +1178,25 @@ int init_global(void)
       if(WHICHPROBLEM==RADNT || WHICHPROBLEM==RADFLATDISK) BCtype[X2UP]=RADNTBC; // disk condition (with ASYMM done first)
       else BCtype[X2UP]=ASYMM; // with donut, let free, so ASYMM condition across equator
 
+      //FUCK
+      //      BCtype[X1DN]=HORIZONOUTFLOW;
+      //      BCtype[X1UP]=HORIZONOUTFLOW;
+      BCtype[X1DN]=OUTFLOW;
+      BCtype[X1UP]=OUTFLOW;
+      BCtype[X2UP]=POLARAXIS; // assumes Rin_array[2]=pi
+      BCtype[X2DN]=POLARAXIS; // assumes Rin_array[2]=0
+
       BCtype[X3UP]=PERIODIC;
       BCtype[X3DN]=PERIODIC;
     }
 
     int idt;
-    for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=1.0;
+    //    for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=1.0;
+    for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=0.1;
 
     DTr = 100; //number of time steps for restart dumps
     // tf = 100*DTdumpgen[0]; // 100 dumps(?)
-    tf = 1000*DTdumpgen[0]; // koral in default setup does 1000 dumps
+    tf = 2000*DTdumpgen[0]; // koral in default setup does 1000 dumps
 
     //DODIAGEVERYSUBSTEP = 1;
 
@@ -1589,7 +1629,18 @@ int init_defcoord(void)
   /*************************************************/
   /*************************************************/
   if(WHICHPROBLEM==RADDONUT){
-    a=0.0; // no spin in case use MCOORD=KSCOORDS
+    //    a=0.0; // no spin in case use MCOORD=KSCOORDS
+
+    // metric stuff first
+    a = 0.9375 ;
+    
+    if(ALLOWMETRICROT){
+      THETAROT = THETAROTMETRIC; // defines metric generally
+    }
+    else{
+      THETAROT = 0.0;
+    }
+
 
     if(1){
       RADNT_MINX=1.7; // allows in KSCOORDS
@@ -1603,15 +1654,22 @@ int init_defcoord(void)
 
     // KORALTODO: Why doesn't koral just use same log coords as used for RADBONDI?
     // defcoord = UNIFORMCOORDS;
-    defcoord = LOGRUNITH; // Uses R0, Rin, Rout and Rin_array,Rout_array for 2,3 directions
+    //    defcoord = LOGRUNITH; // Uses R0, Rin, Rout and Rin_array,Rout_array for 2,3 directions
     R0=0.0;
     Rin=RADNT_MINX;
     Rout=RADNT_MAXX;
 
     Rin_array[2]=0.0*Pi/4.; // but koral currently uses 0.5*Pi/4
-    Rout_array[2]=Pi/2.;
+    Rout_array[2]=Pi; // FUCK
     Rin_array[3]=-1.;
     Rout_array[3]=1.;
+
+    defcoord=JET6COORDS;
+    Rhor=rhor_calc(0);
+    //  hslope = 0.3;
+    hslope = 1.04*pow(h_over_r,2.0/3.0);
+    //    setRin_withchecks(&Rin);
+    Rin=1.1;
 
   }
 
@@ -1721,6 +1779,18 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
   FTYPE X[NDIM],V[NDIM],r,th;
   extern void check_spc_singularities_user(void);
 
+
+
+
+  // some calculations, althogh perhaps calculated already, definitely need to make sure computed
+  Rhor=rhor_calc(0);
+  Risco=rmso_calc(PROGRADERISCO);
+
+
+  // defaults
+  beta = 10.0*4.0;
+  randfact = 0.1;
+  rin=10.0;
 
 
 
@@ -2027,8 +2097,18 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 
 #if(WHICHPROBLEM==RADDONUT)
 // kappa can't be zero or else flux will be nan
-#define KAPPAUSER(rho,T) (rho*KAPPA_ES_CODE(rho,T)/1E14*1.0) // wierd use of kappa_{es} in koral
-#define KAPPAESUSER(rho,T) (0.0)
+//#define KAPPAUSER(rho,T) (rho*KAPPA_ES_CODE(rho,T)/1E14*1.0) // wierd use of kappa_{es} in koral
+//#define KAPPAESUSER(rho,T) (0.0)
+
+// FUCK
+#define KAPPA 1.0
+#define KAPPAES 1.0
+
+// assume KAPPA defines fraction of FF opacity
+#define KAPPAUSER(rho,T) (rho*KAPPA*KAPPA_FF_CODE(rho,T))
+// assume KAPPAES defines fractoin of ES opacity
+#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_CODE(rho,T))
+
 
 #endif
 
@@ -2055,12 +2135,12 @@ int init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2
   if(funreturn!=0) return(funreturn);
 
 
+  THETAROT = THETAROTMETRIC; // back to metric version
 
   return(0);
 
 
 }
-
 
 
 
@@ -3163,14 +3243,14 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
         pradffortho[PRAD2]=pr[PRAD2];
         pradffortho[PRAD3]=pr[PRAD3];
 
-        dualfprintf(fail_file,"CHECK: ijk=%d %d %d : %g %g %g %g\n",i,j,k,pradffortho[PRAD0],pradffortho[PRAD1],pradffortho[PRAD2],pradffortho[PRAD3]);
+        //dualfprintf(fail_file,"CHECK: ijk=%d %d %d : %g %g %g %g\n",i,j,k,pradffortho[PRAD0],pradffortho[PRAD1],pradffortho[PRAD2],pradffortho[PRAD3]);
      
       }
 
       // Transform these fluid frame E,F^i to lab frame coordinate basis primitives
       prad_fforlab(whichvel, whichcoord, FF2LAB, i,j,k,CENT,ptrgeomreal, pradffortho, pr, pr);
       
-      dualfprintf(fail_file,"CHECKPOST: ijk=%d %d %d : %g %g %g %g\n",i,j,k,pr[PRAD0],pr[PRAD1],pr[PRAD2],pr[PRAD3]);
+      //      dualfprintf(fail_file,"CHECKPOST: ijk=%d %d %d : %g %g %g %g\n",i,j,k,pr[PRAD0],pr[PRAD1],pr[PRAD2],pr[PRAD3]);
 #if(0)
       // report zamo
       FTYPE prreport[NPR];
@@ -3530,7 +3610,71 @@ int donut_analytical_solution(FTYPE *pp,FTYPE *X, FTYPE *V,struct of_geom *ptrge
 #define BLANDFORDQUAD 5
 #define TOROIDALFIELD 6
 
-#define FIELDTYPE NOFIELD
+//#define FIELDTYPE NOFIELD
+#define FIELDTYPE DISK2FIELD
+//#define FIELDTYPE DISK1FIELD
+
+
+
+
+FTYPE setgpara(FTYPE myr, FTYPE th, FTYPE thpower)
+{
+  FTYPE fneg,fpos;
+  FTYPE gpara;
+
+  fneg=1.0-pow(cos(th),thpower);
+  fpos=1.0+pow(cos(th),thpower);
+  gpara=0.5*(myr*fneg + 2.0*fpos*(1.0-log(fpos)));
+  // remove BZ77 Paraboloidal divb!=0 at pole
+  gpara=gpara-2.0*(1.0-log(2.0));
+
+  return(gpara);
+
+
+}
+
+FTYPE setblandfordfield(FTYPE r, FTYPE th)
+{
+  FTYPE setgpara(FTYPE myr, FTYPE th, FTYPE thpower);
+  FTYPE rshift,myr,rpower,myz,myR,myvert;
+  FTYPE thother,thpower,gparalow,gparahigh,mygpara;
+  FTYPE aphi;
+
+
+  rshift=4.0;
+  rpower=0.75;
+  thpower=4.0;
+  
+
+  myr=pow(r+rshift,rpower);
+  myz=myr*cos(th);
+  myR=myr*sin(th);
+  myvert = (th>M_PI*0.5) ? (myr*sin(th)) : (myr*sin(-th));
+
+  thother=M_PI-th;
+  gparalow=setgpara(myr,th,thpower);
+  gparahigh=setgpara(myr,thother,thpower);
+  mygpara=(th<0.5*M_PI) ? gparalow : gparahigh;
+
+  // GOOD:
+  // aphi=mygpara;
+  // aphi=mygpara*cos(th); // B1 diverges at pole
+  //  aphi=mygpara*cos(th)*sin(th); // doesn't diverge as much
+  //  aphi=mygpara*cos(th)*sin(th)*sin(th); // old choice before subtracted original BZ77 problem
+  aphi=mygpara*cos(th); // latest choice
+  //aphi=myvert*cos(th); // vert with quad
+  //aphi=myR*cos(th);
+
+  // BAD:
+  // aphi=myvert;
+  
+  
+
+  return(aphi);
+
+
+}
+
 
 
 // assumes normal field in pr
@@ -3540,8 +3684,16 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
   SFTYPE rho_av, u_av,q;
   FTYPE r,th,ph;
   FTYPE vpot;
+  FTYPE setblandfordfield(FTYPE r, FTYPE th);
+
+
+#define FRACAPHICUT 0.2
+  //#define FRACAPHICUT 0.1
+
+
 
   vpot=0.0;
+
 
 
   // since init_vpot() is called for all i,j,k, can't use
@@ -3574,12 +3726,102 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
       r=V[1];
       th=V[2];
 
+      //      q = r*r*r*fabs(sin(th)) * 1.0 ; // constant B^\phi
+      q = r*r*r;
 
-      vpot += 0;
+      q=q/(r); // makes more uniform in radius
+
+      q = q*(u_av / umax - FRACAPHICUT); // weight by internal energy density
+      //      q = (rho_av / rhomax - FRACAPHICUT);
+
+      if(q<0.0) q=0.0;
+
+      vpot += q;
       
     }
   }
 
+
+  FTYPE rpow;
+  rpow=3.0/4.0; // Using rpow=1 leads to quite strong field at large radius, and for standard atmosphere will lead to \sigma large at all radii, which is very difficult to deal with -- especially with grid sectioning where outer moving wall keeps opening up highly magnetized region
+  //  FTYPE FIELDROT=M_PI*0.5;
+  FTYPE FIELDROT=0.0;
+  FTYPE hpow=2.0;
+
+
+  if(l==2){// A_\theta
+
+    r=V[1];
+    th=V[2];
+    ph=V[3];
+
+
+    /* vertical field version*/
+    if((FIELDTYPE==VERTFIELD)||(FIELDTYPE==DISK1VERT)||(FIELDTYPE==DISK2VERT)){
+      vpot += -(pow(r,rpow)*pow(sin(th),hpow)*sin(FIELDROT)*sin(ph));
+    }
+
+
+  }
+
+  if(l==3){// A_\phi
+
+    r=V[1];
+    th=V[2];
+    ph=V[3];
+
+
+    // Blandford quadrapole field version
+    if(FIELDTYPE==BLANDFORDQUAD){
+      vpot += setblandfordfield(r,th);
+    }
+
+    /* vertical field version*/
+    if((FIELDTYPE==VERTFIELD)||(FIELDTYPE==DISK1VERT)||(FIELDTYPE==DISK2VERT)){
+      //vpot += 0.5*pow(r,rpow)*sin(th)*sin(th) ;
+      vpot += pow(r,rpow)*pow(sin(th),hpow)*(cos(FIELDROT) - cos(ph)*cot(th)*sin(FIELDROT));
+    }
+
+
+    /* field-in-disk version */
+    if(FIELDTYPE==DISK1FIELD || FIELDTYPE==DISK1VERT){
+      q = rho_av / rhomax - 0.2;
+      if (q > 0.)      vpot += q;
+    }
+
+
+    if(FIELDTYPE==DISK2FIELD || FIELDTYPE==DISK2VERT){
+      // average of density that lives on CORN3
+
+
+#define FRACAPHICUT 0.1
+      //#define FRACAPHICUT 0.1
+
+      //      q = (rho_av / rhomax - FRACAPHICUT);
+      q = (u_av / umax - FRACAPHICUT);
+
+      //#define QPOWER 0.5
+#define QPOWER (1.0)
+
+#define POWERNU (2.0)
+      //#define POWERNU (4.0)
+
+      //      if (q > 0.)      vpot += q*q*pow(r*fabs(sin(th)),POWERNU);
+      FTYPE fact1,fact2,SSS,TTT;
+      fact1=pow(fabs(q),QPOWER)*pow(r*fabs(sin(th)),POWERNU);
+      SSS=rin*0.5;
+      TTT=0.28;
+      fact2=sin(log(r/SSS)/TTT);
+      fact2=1.0;
+
+      if (q > 0.)      vpot += fact1*fact2;
+      //      if (q > 0.)      vpot += q*q;
+      dualfprintf(fail_file,"ijk=%d %d %d : umax=%g u_av=%g q=%g %g %g rin=%g vpot=%g\n",i,j,k,umax,u_av,q,fact1,fact2,rin,vpot);
+    }
+
+
+
+  }
 
   //////////////////////////////////
   //
@@ -3617,6 +3859,26 @@ int init_vpot2field_user(SFTYPE time, FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SH
 int normalize_densities(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 {
 
+
+  if(0){
+    int funreturn;
+    FTYPE parms[MAXPASSPARMS];
+    int eqline;
+
+    eqline=1;
+    parms[0]=rin;
+    parms[1]=rhodisk;
+
+    funreturn=user1_normalize_densities(eqline, parms, prim, &rhomax, &umax);
+    if(funreturn!=0) return(funreturn);
+  }
+  else{
+    int getmax_densities(FTYPE (*prim)[NSTORE2][NSTORE3][NPR],SFTYPE *rhomax, SFTYPE *umax);
+    int funreturn=getmax_densities(prim,&rhomax,&umax);
+    if(funreturn!=0) return(funreturn);
+
+  }
+
   return(0);
 }
 
@@ -3634,10 +3896,25 @@ int getmax_densities(FTYPE (*prim)[NSTORE2][NSTORE3][NPR],SFTYPE *rhomax, SFTYPE
 }
 
 
-
 // get maximum b^2 and p_g
 int get_maxes(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *bsq_max, FTYPE *pg_max, FTYPE *beta_min)
 {
+  int funreturn;
+  int eqslice;
+  FTYPE parms[MAXPASSPARMS];
+  
+  if(FIELDTYPE==VERTFIELD || FIELDTYPE==BLANDFORDQUAD){
+    eqslice=1;
+  }
+  else{
+    eqslice=0;
+  }
+
+  parms[0]=rin;
+
+  funreturn=user1_get_maxes(eqslice, parms,prim, bsq_max, pg_max, beta_min);
+  if(funreturn!=0) return(funreturn);
+ 
   return(0);
 }
 
@@ -3647,9 +3924,10 @@ int normalize_field(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2
 {
   int funreturn;
 
+  dualfprintf(fail_file,"DID NORM FIELD\n");
  
-  //  funreturn=user1_normalize_field(beta, prim, pstag, ucons, vpot, Bhat);
-  //  if(funreturn!=0) return(funreturn);
+  funreturn=user1_normalize_field(beta, prim, pstag, ucons, vpot, Bhat);
+  if(funreturn!=0) return(funreturn);
  
   return(0);
 
@@ -3687,9 +3965,6 @@ int set_atmosphere(int whichcond, int whichvel, struct of_geom *ptrgeom, FTYPE *
 int set_density_floors(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *prfloor)
 {
   int funreturn;
-  
-  // default is for spherical flow near BH
-  //  funreturn=set_density_floors_default(ptrgeom, pr, prfloor);
 
   int pliter,pl;
   PLOOP(pliter,pl){
@@ -3698,8 +3973,14 @@ int set_density_floors(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *prfloor)
 
     prfloor[PRAD0]=ERADLIMIT;
   }
+  
+  // default is for spherical flow near BH
+  if(WHICHPROBLEM==RADDONUT&&0){
+    // KORALTODO: floor currently causes injection of hot matter and run-away problems with radiation.
+    funreturn=set_density_floors_default(ptrgeom, pr, prfloor);
 
-  //  if(funreturn!=0) return(funreturn);
+    if(funreturn!=0) return(funreturn);
+  }
 
   return(0);
 }

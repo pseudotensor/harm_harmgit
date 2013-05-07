@@ -1123,20 +1123,20 @@ void init_placeongrid_griddecomposition(void)
               if(bti==BOUNDPRIMTYPE || bti==BOUNDPRIMSIMPLETYPE || bti==BOUNDPSTAGTYPE || bti==BOUNDPSTAGSIMPLETYPE ){
                 // at both poles we flip signature of B2 and U2 only
                 // Here we flip upon packing
-                primfactor[bti][dir][gridpos][PACK][U1]=SIGNFLIPU1;
+                primfactor[bti][dir][gridpos][PACK][URAD1]=primfactor[bti][dir][gridpos][PACK][U1]=SIGNFLIPU1;
                 primfactor[bti][dir][gridpos][PACK][B1]=SIGNFLIPB1;
-                primfactor[bti][dir][gridpos][PACK][U2]=SIGNFLIPU2;
+                primfactor[bti][dir][gridpos][PACK][URAD2]=primfactor[bti][dir][gridpos][PACK][U2]=SIGNFLIPU2;
                 primfactor[bti][dir][gridpos][PACK][B2]=SIGNFLIPB2;
                 // NOTEMARK: if only interpolate U3 and B3 across pole and not \detg U3 and \detg B3 (with FLIPGDETAXIS==1), then have to flip sign across pole to avoid jump in U3 and B3 at pole.  Then, U3 and B3 will be an extremum and reduce to lower order but not have a dissipation term in the EMF-type flux calculation.
-                primfactor[bti][dir][gridpos][PACK][U3]=SIGNFLIPU3;
+                primfactor[bti][dir][gridpos][PACK][URAD3]=primfactor[bti][dir][gridpos][PACK][U3]=SIGNFLIPU3;
                 primfactor[bti][dir][gridpos][PACK][B3]=SIGNFLIPB3;
               }
               else if(bti==BOUNDFLUXTYPE || bti==BOUNDFLUXSIMPLETYPE){
                 // process sign while packing
                 PALLLOOP(pl) primfactor[bti][dir][gridpos][PACK][pl]=SIGNFLIPGDET; // (e.g. gdet T^2_1. Assuming primitives are correct on active domain, then T^2_1 would be opposite signs for continuous flow through pole, but gdet has kink, so product has no kink)
-                primfactor[bti][dir][gridpos][PACK][U2]=-SIGNFLIPGDET; // \detg T^2_2
+                primfactor[bti][dir][gridpos][PACK][URAD2]=primfactor[bti][dir][gridpos][PACK][U2]=-SIGNFLIPGDET; // \detg T^2_2
                 primfactor[bti][dir][gridpos][PACK][B2]=-SIGNFLIPGDET; // Note that F^2_{B2) = 0, so doesn't matter, but maintain consistency
-                primfactor[bti][dir][gridpos][PACK][U3]=-SIGNFLIPGDET; // \detg T^2_3 is like \detg T^2_2 as far as sign if don't interpolate \detg U3 and \detg B3 across pole.
+                primfactor[bti][dir][gridpos][PACK][URAD3]=primfactor[bti][dir][gridpos][PACK][U3]=-SIGNFLIPGDET; // \detg T^2_3 is like \detg T^2_2 as far as sign if don't interpolate \detg U3 and \detg B3 across pole.
                 primfactor[bti][dir][gridpos][PACK][B3]=-SIGNFLIPGDET; // F^2_{B3) like T^2_3 like T^2_2
                 // No need to handle T^2_3 
               }
@@ -1318,21 +1318,21 @@ void init_placeongrid_griddecomposition(void)
               if(bti==BOUNDPRIMTYPE || bti==BOUNDPRIMSIMPLETYPE || bti==BOUNDPSTAGTYPE || bti==BOUNDPSTAGSIMPLETYPE ){
                 // at both poles we flip signature of B2 and U2 only
                 // Here we flip upon unpacking
-                primfactor[bti][dir][gridpos][UNPACK][U1]=SIGNFLIPU1;
+                primfactor[bti][dir][gridpos][UNPACK][URAD1]=primfactor[bti][dir][gridpos][UNPACK][U1]=SIGNFLIPU1;
                 primfactor[bti][dir][gridpos][UNPACK][B1]=SIGNFLIPB1;
-                primfactor[bti][dir][gridpos][UNPACK][U2]=SIGNFLIPU2;
+                primfactor[bti][dir][gridpos][UNPACK][URAD2]=primfactor[bti][dir][gridpos][UNPACK][U2]=SIGNFLIPU2;
                 primfactor[bti][dir][gridpos][UNPACK][B2]=SIGNFLIPB2;
                 // again assumes U3 and B3 interpolated across pole and not \detg U3 and \detg B3
-                primfactor[bti][dir][gridpos][UNPACK][U3]=SIGNFLIPU3;
+                primfactor[bti][dir][gridpos][UNPACK][URAD3]=primfactor[bti][dir][gridpos][UNPACK][U3]=SIGNFLIPU3;
                 primfactor[bti][dir][gridpos][UNPACK][B3]=SIGNFLIPB3;
               }
               else if(bti==BOUNDFLUXTYPE || bti==BOUNDFLUXSIMPLETYPE){
                 // Here we flip upon unpacking
                 PALLLOOP(pl) primfactor[bti][dir][gridpos][UNPACK][pl]=SIGNFLIPGDET; // gdet T^2_1, so like gdet*B2, and kink avoided if don't flip sign since B2 standard in active domains with sign change itself in active domains.
                 // override for symmetric quantities
-                primfactor[bti][dir][gridpos][UNPACK][U2]=-SIGNFLIPGDET; // \detg T^2_2 , avoid kink must flip sign
+                primfactor[bti][dir][gridpos][UNPACK][URAD2]=primfactor[bti][dir][gridpos][UNPACK][U2]=-SIGNFLIPGDET; // \detg T^2_2 , avoid kink must flip sign
                 primfactor[bti][dir][gridpos][UNPACK][B2]=-SIGNFLIPGDET; // Note that F^2_{B2) = 0, so doesn't matter, but maintain consistency
-                primfactor[bti][dir][gridpos][UNPACK][U3]=-SIGNFLIPGDET; // \detg T^2_3 like \detg T^2_3 if U3&B3 (not \detg U3&B3) interpolated
+                primfactor[bti][dir][gridpos][UNPACK][URAD3]=primfactor[bti][dir][gridpos][UNPACK][U3]=-SIGNFLIPGDET; // \detg T^2_3 like \detg T^2_3 if U3&B3 (not \detg U3&B3) interpolated
                 primfactor[bti][dir][gridpos][UNPACK][B3]=-SIGNFLIPGDET; // F^2_{B3) like T^2_3 like T^2_2
               }
               else if(bti==BOUNDVPOTTYPE || bti==BOUNDVPOTSIMPLETYPE){

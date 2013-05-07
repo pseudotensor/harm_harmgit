@@ -192,8 +192,8 @@
 #define HIGHERORDERMEM 0
 #define MAXBND 4 // 4 for PARAFLAT, 6 for WENO5BND wo/a2c stuff : 11 for full point-field FLUXRECON method
 #define PRODUCTION 0
-#define FULLOUTPUT MAXBND // TESTING BCs
-//#define FULLOUTPUT 0
+//#define FULLOUTPUT MAXBND // TESTING BCs // FUCK
+#define FULLOUTPUT 0
 
 #define MAILWHENDONE 1
 #define MAILFROMREMOTE 0
@@ -575,10 +575,11 @@ struct Ccoordparams {
 
 #if(WHICHPROBLEM==RADPULSE || WHICHPROBLEM==RADPULSEPLANAR)
 
-
+#undef RADSHOCKFLAT
+#define RADSHOCKFLAT 1 // FUCK
 
 #undef FORCESOLVEL
-#define FORCESOLVEL 0 // for testing against koral // KORALTODO : Koral actually fails if uses large timestep as suggested by tau limiter.
+#define FORCESOLVEL 0 // FUCK // for testing against koral // KORALTODO : Koral actually fails if uses large timestep as suggested by tau limiter.
 
 #define N1 100
 #define N2 1 
@@ -801,7 +802,8 @@ struct Ccoordparams {
 #undef WHICHRADSOURCEMETHOD
 //#define WHICHRADSOURCEMETHOD SOURCEMETHODNONE
 //#define WHICHRADSOURCEMETHOD SOURCEMETHODEXPLICIT
-#define WHICHRADSOURCEMETHOD SOURCEMETHODIMPLICITEXPLICITCHECK
+#define WHICHRADSOURCEMETHOD SOURCEMETHODIMPLICIT
+//#define WHICHRADSOURCEMETHOD SOURCEMETHODIMPLICITEXPLICITCHECK
 
 #define N1 400
 #define N2 1
@@ -823,7 +825,8 @@ struct Ccoordparams {
 #undef WHICHRADSOURCEMETHOD
 //#define WHICHRADSOURCEMETHOD SOURCEMETHODNONE
 //#define WHICHRADSOURCEMETHOD SOURCEMETHODEXPLICIT
-#define WHICHRADSOURCEMETHOD SOURCEMETHODIMPLICITEXPLICITCHECK
+#define WHICHRADSOURCEMETHOD SOURCEMETHODIMPLICIT
+//#define WHICHRADSOURCEMETHOD SOURCEMETHODIMPLICITEXPLICITCHECK
 
 #define N1 40
 #define N2 1
@@ -979,8 +982,10 @@ struct Ccoordparams {
 // N1=60 if using 1.5*hor - 40 (or 27.8)
 // N1=70 if using 1.5*hor - 30 (or 27.8)
 //#define N1 50
-#define N1 60 // KORALTODO testing
-#define N2 30
+#define N1 64
+//#define N1 60 // KORALTODO testing
+//#define N2 30
+#define N2 32
 #define N3 1
 
 // can choose any spherical polar coordinate system
@@ -991,8 +996,8 @@ struct Ccoordparams {
 #undef cTILDA
 #define cTILDA (1.0) // like koral
 #undef gTILDA
-#define gTILDA (1E-10) // like koral (no longer)
-//#define gTILDA (1.0)
+//#define gTILDA (1E-10) // like koral (no longer)
+#define gTILDA (1.0) // FUCK
 
 #undef MPERSUN
 #define MPERSUN (10.0*gTILDA) // due to koral fixing MSUNCM, have to do this.

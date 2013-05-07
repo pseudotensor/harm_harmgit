@@ -609,16 +609,9 @@ int bound_x1up_outflow_simple(
 #endif
 #elif(WHICHVEL==VELREL4)
                 get_geometry(i,j,k,dirprim[U1],ptrgeom[U1]) ;
-                //        dualfprintf(fail_file,"JUST BEFORE INFLOWCHECK: i=%d j=%d k=%d prim[U1]=%21.15g prim[U2]=%21.15g prim[U3]=%21.15g\n",i,j,k,MACP0A1(prim,i,j,k,U1) *sqrt(geom[U1].gcov[GIND(1,1)]),MACP0A1(prim,i,j,k,U2) *sqrt(geom[U1].gcov[GIND(2,2)]),MACP0A1(prim,i,j,k,U3) *sqrt(geom[U1].gcov[GIND(3,3)]));
-                //        dualfprintf(fail_file,"JUST BEFORE INFLOWCHECK: i=%d j=%d k=%d prim[U1]=%21.15g prim[U2]=%21.15g prim[U3]=%21.15g\n",i,j,k,MACP0A1(prim,i,j,k,U1),MACP0A1(prim,i,j,k,U2),MACP0A1(prim,i,j,k,U3));
-                //       DLOOP(jj,kk) dualfprintf(fail_file,"gcov[%d][%d]=%21.15g\n",jj,kk,geom[U1].gcov[GIND(jj,kk)]);
                 inflow_check_rel4vel(1,MAC(prim,i,j,k),NULL,ptrgeom[U1],0) ;
-                //        dualfprintf(fail_file,"JUST BEFORE LIMIT: i=%d j=%d k=%d prim[U1]=%21.15g prim[U2]=%21.15g prim[U3]=%21.15g\n",i,j,k,MACP0A1(prim,i,j,k,U1) *sqrt(geom[U1].gcov[GIND(1,1)]),MACP0A1(prim,i,j,k,U2) *sqrt(geom[U1].gcov[GIND(2,2)]),MACP0A1(prim,i,j,k,U3) *sqrt(geom[U1].gcov[GIND(3,3)]));
-                //        dualfprintf(fail_file,"JUST BEFORE LIMIT: i=%d j=%d k=%d prim[U1]=%21.15g prim[U2]=%21.15g prim[U3]=%21.15g\n",i,j,k,MACP0A1(prim,i,j,k,U1),MACP0A1(prim,i,j,k,U2),MACP0A1(prim,i,j,k,U3));
                 if(limit_gamma(GAMMAMAX,MAC(prim,i,j,k),NULL,ptrgeom[U1], 0)>=1)
                   FAILSTATEMENT("bounds.c:bound_prim()", "limit_gamma()", 2);
-                //       dualfprintf(fail_file,"JUST AFTER LIMIT: i=%d j=%d k=%d prim[U1]=%21.15g prim[U2]=%21.15g prim[U3]=%21.15g\n",i,j,k,MACP0A1(prim,i,j,k,U1) *sqrt(geom[U1].gcov[GIND(1,1)]),MACP0A1(prim,i,j,k,U2) *sqrt(geom[U1].gcov[GIND(2,2)]),MACP0A1(prim,i,j,k,U3) *sqrt(geom[U1].gcov[GIND(3,3)]));
-                //       dualfprintf(fail_file,"JUST AFTER LIMIT: i=%d j=%d k=%d prim[U1]=%21.15g prim[U2]=%21.15g prim[U3]=%21.15g\n",i,j,k,MACP0A1(prim,i,j,k,U1),MACP0A1(prim,i,j,k,U2),MACP0A1(prim,i,j,k,U3));
 #endif 
               }// end over i
             }// end if not allowing inflow
@@ -974,16 +967,9 @@ int bound_x1up_outflow(
 #endif
 #elif(WHICHVEL==VELREL4)
                 get_geometry(i,j,k,dirprim[U1],ptrgeom[U1]) ;
-                //        dualfprintf(fail_file,"JUST BEFORE INFLOWCHECK: i=%d j=%d k=%d prim[U1]=%21.15g prim[U2]=%21.15g prim[U3]=%21.15g\n",i,j,k,MACP0A1(prim,i,j,k,U1) *sqrt(geom[U1].gcov[GIND(1,1)]),MACP0A1(prim,i,j,k,U2) *sqrt(geom[U1].gcov[GIND(2,2)]),MACP0A1(prim,i,j,k,U3) *sqrt(geom[U1].gcov[GIND(3,3)]));
-                //        dualfprintf(fail_file,"JUST BEFORE INFLOWCHECK: i=%d j=%d k=%d prim[U1]=%21.15g prim[U2]=%21.15g prim[U3]=%21.15g\n",i,j,k,MACP0A1(prim,i,j,k,U1),MACP0A1(prim,i,j,k,U2),MACP0A1(prim,i,j,k,U3));
-                //       DLOOP(jj,kk) dualfprintf(fail_file,"gcov[%d][%d]=%21.15g\n",jj,kk,geom[U1].gcov[GIND(jj,kk)]);
                 inflow_check_rel4vel(1,MAC(prim,i,j,k),NULL,ptrgeom[U1],0) ;
-                //        dualfprintf(fail_file,"JUST BEFORE LIMIT: i=%d j=%d k=%d prim[U1]=%21.15g prim[U2]=%21.15g prim[U3]=%21.15g\n",i,j,k,MACP0A1(prim,i,j,k,U1) *sqrt(geom[U1].gcov[GIND(1,1)]),MACP0A1(prim,i,j,k,U2) *sqrt(geom[U1].gcov[GIND(2,2)]),MACP0A1(prim,i,j,k,U3) *sqrt(geom[U1].gcov[GIND(3,3)]));
-                //        dualfprintf(fail_file,"JUST BEFORE LIMIT: i=%d j=%d k=%d prim[U1]=%21.15g prim[U2]=%21.15g prim[U3]=%21.15g\n",i,j,k,MACP0A1(prim,i,j,k,U1),MACP0A1(prim,i,j,k,U2),MACP0A1(prim,i,j,k,U3));
                 if(limit_gamma(GAMMAMAX,MAC(prim,i,j,k),NULL,ptrgeom[U1], 0)>=1)
                   FAILSTATEMENT("bounds.c:bound_prim()", "limit_gamma()", 2);
-                //       dualfprintf(fail_file,"JUST AFTER LIMIT: i=%d j=%d k=%d prim[U1]=%21.15g prim[U2]=%21.15g prim[U3]=%21.15g\n",i,j,k,MACP0A1(prim,i,j,k,U1) *sqrt(geom[U1].gcov[GIND(1,1)]),MACP0A1(prim,i,j,k,U2) *sqrt(geom[U1].gcov[GIND(2,2)]),MACP0A1(prim,i,j,k,U3) *sqrt(geom[U1].gcov[GIND(3,3)]));
-                //       dualfprintf(fail_file,"JUST AFTER LIMIT: i=%d j=%d k=%d prim[U1]=%21.15g prim[U2]=%21.15g prim[U3]=%21.15g\n",i,j,k,MACP0A1(prim,i,j,k,U1),MACP0A1(prim,i,j,k,U2),MACP0A1(prim,i,j,k,U3));
 #endif 
               }// end over i
             }// end if not allowing inflow
@@ -1086,7 +1072,7 @@ int bound_x1dn_sym(
             // SECTIONMARK: assume r=0 singularity can't move
             i=0;
             PBOUNDLOOP(pliter,pl){
-              if(pl==U1 || pl==B1){
+              if(pl==U1 || pl==URAD1 || pl==B1){
                 if(dirprim[pl]==FACE1 || dirprim[pl]==CORN3 || dirprim[pl]==CORN2 || dirprim[pl]==CORNT ){
                   MACP0A1(prim,i,j,k,pl) = 0.0;
                 }
@@ -1095,7 +1081,7 @@ int bound_x1dn_sym(
  
             LOOPBOUND1IN {
               PBOUNDLOOP(pliter,pl){
-                if(pl==U1 || pl==B1){
+                if(pl==U1 || pl==URAD1 || pl==B1){
                   MACP0A1(prim,i,j,k,pl) *= -1.;
                 }// end if right pl
               } // end over pl
@@ -1447,13 +1433,13 @@ int bound_x2dn_polaraxis_full3d(
                 // flip sign
                 if(pl==U1) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU1;
                 if(pl==B1) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPB1;
-                if(pl==URAD1) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPURAD1;
+                if(pl==URAD1) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU1;
                 if(pl==U2) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU2;
                 if(pl==B2) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPB2;
-                if(pl==URAD2) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPURAD2;
+                if(pl==URAD2) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU2;
                 if(pl==U3) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU3;
                 if(pl==B3) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPB3;
-                if(pl==URAD3) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPURAD3;
+                if(pl==URAD3) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU3;
 
 #if(DEBUGINOUTLOOPS)  
                 dualfprintf(fail_file,"INNER pole1: ispstag=%d  pl=%d :: ri=%d rj=%d rk=%d i=%d j=%d k=%d\n",ispstag,pl,ri,rj,rk,i,j,k);
@@ -1476,15 +1462,15 @@ int bound_x2dn_polaraxis_full3d(
    
                 if(pl==U1) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU1;
                 if(pl==B1) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPB1;
-                if(pl==URAD1) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPURAD1;
+                if(pl==URAD1) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU1;
                 // flip sign
                 if(pl==U2) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU2;
                 if(pl==B2) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPB2;
-                if(pl==URAD2) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPURAD2;
+                if(pl==URAD2) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU2;
                 // NOTEMARK: No U3,B3 staggered yet, so below not used
                 if(pl==U3) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU3;
                 if(pl==B3) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPB3;
-                if(pl==URAD3) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPURAD3;
+                if(pl==URAD3) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU3;
 
 #if(DEBUGINOUTLOOPS)  
                 dualfprintf(fail_file,"INNER pole2: ispstag=%d  pl=%d :: ri=%d rj=%d rk=%d i=%d j=%d k=%d\n",ispstag,pl,ri,rj,rk,i,j,k);
@@ -1618,13 +1604,13 @@ int bound_x2dn_polaraxis(
                 PBOUNDLOOP(pliter,pl){
                   if(pl==U1) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU1;
                   if(pl==B1) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPB1;
-                  if(pl==URAD1) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPURAD1;
+                  if(pl==URAD1) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU1;
                   if(pl==U2) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU2;
                   if(pl==B2) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPB2;
-                  if(pl==URAD2) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPURAD2;
+                  if(pl==URAD2) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU2;
                   if(pl==U3) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU3;
                   if(pl==B3) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPB3;
-                  if(pl==URAD3) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPURAD3;
+                  if(pl==URAD3) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU3;
                 } // end over pl
               } // end over boundary cells
             }// end of polar axis type
@@ -1727,13 +1713,13 @@ int bound_x2up_polaraxis_full3d(
                 // flip sign
                 if(pl==U1) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU1;
                 if(pl==B1) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPB1;
-                if(pl==URAD1) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPURAD1;
+                if(pl==URAD1) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU1;
                 if(pl==U2) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU2;
                 if(pl==B2) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPB2;
-                if(pl==URAD2) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPURAD2;
+                if(pl==URAD2) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU2;
                 if(pl==U3) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU3;
                 if(pl==B3) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPB3;
-                if(pl==URAD3) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPURAD3;
+                if(pl==URAD3) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU3;
 
 #if(DEBUGINOUTLOOPS)  
                 dualfprintf(fail_file,"OUTER pole1: ispstag=%d  pl=%d :: ri=%d rj=%d rk=%d i=%d j=%d k=%d\n",ispstag,pl,ri,rj,rk,i,j,k);
@@ -1757,13 +1743,13 @@ int bound_x2up_polaraxis_full3d(
                 // flip sign
                 if(pl==U1) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU1;
                 if(pl==B1) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPB1;
-                if(pl==URAD1) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPURAD1;
+                if(pl==URAD1) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU1;
                 if(pl==U2) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU2;
                 if(pl==B2) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPB2;
-                if(pl==URAD2) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPURAD2;
+                if(pl==URAD2) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU2;
                 if(pl==U3) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU3;
                 if(pl==B3) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPB3;
-                if(pl==URAD3) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPURAD3;
+                if(pl==URAD3) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU3;
 
 #if(DEBUGINOUTLOOPS)  
                 dualfprintf(fail_file,"OUTER pole2: ispstag=%d  pl=%d :: ri=%d rj=%d rk=%d i=%d j=%d k=%d\n",ispstag,pl,ri,rj,rk,i,j,k);
@@ -1888,13 +1874,13 @@ int bound_x2up_polaraxis(
                 PBOUNDLOOP(pliter,pl){
                   if(pl==U1) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU1;
                   if(pl==B1) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPB1;
-                  if(pl==URAD1) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPURAD1;
+                  if(pl==URAD1) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU1;
                   if(pl==U2) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU2;
                   if(pl==B2) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPB2;
-                  if(pl==URAD2) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPURAD2;
+                  if(pl==URAD2) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU2;
                   if(pl==U3) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU3;
                   if(pl==B3) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPB3;
-                  if(pl==URAD3) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPURAD3;
+                  if(pl==URAD3) MACP0A1(prim,i,j,k,pl) *= SIGNFLIPU3;
                 } // end over pl
               } // end over bondary cells
             }// end if polar axis
@@ -2714,16 +2700,17 @@ int extrapfunc(int boundary, int j,int k,
   FTYPE Bu1,Bu2,gcon03,gcon13,gcon23,gcon33;
   FTYPE gcov01,gcov02,gcov11,gcov12,gcov21,gcov22,gcov03,gcov13,gcov23;
   // Mdot copy
-  FTYPE Mdot,ucon[NDIM],uconref[NDIM];
-  FTYPE Mraddot,uradcon[NDIM],uradconref[NDIM];
+  FTYPE Mdot,ucon[NDIM],uconref[NDIM],uradconref[NDIM];
+  FTYPE Mraddot,uradcon[NDIM];
   FTYPE Xr[NPR][NDIM],Vr[NPR][NDIM],X[NPR][NDIM],V[NPR][NDIM];
   FTYPE primtemp[NPR];
   FTYPE *ucontouse, ucon2[NDIM];
   int itervphi;
-  FTYPE uconrefri2[NDIM];
+  FTYPE uconrefri2[NDIM],uradconrefri2[NDIM];
   FTYPE Mdotri2;
-  FTYPE uconrefri3[NDIM];
+  FTYPE uconrefri3[NDIM],uradconrefri3[NDIM];
   FTYPE othersref[NUMOTHERSTATERESULTS],othersrefri2[NUMOTHERSTATERESULTS],othersrefri3[NUMOTHERSTATERESULTS],others[NUMOTHERSTATERESULTS],othersrefnew[NUMOTHERSTATERESULTS];
+  FTYPE othersradref[NUMOTHERSTATERESULTS],othersradrefri2[NUMOTHERSTATERESULTS],othersradrefri3[NUMOTHERSTATERESULTS],othersrad[NUMOTHERSTATERESULTS],othersradrefnew[NUMOTHERSTATERESULTS];
   FTYPE Mdotri3;
   FTYPE Dqp,Dqm,Dqc,dqMdot;
   FTYPE myMdot;
@@ -2732,13 +2719,13 @@ int extrapfunc(int boundary, int j,int k,
   FTYPE dqBd3,myBd3;
   FTYPE dqgdetpl[NPR];
   FTYPE dqlogdensity[NPR];
-  FTYPE uconreftouse[NDIM];
+  FTYPE uconreftouse[NDIM],uradconreftouse[NDIM];
   FTYPE xfrac,yfrac;
   FTYPE ftemp;
   FTYPE signdq;
   FTYPE xdqfrac,ydqfrac;
   FTYPE ftemp2,linearvalue,expvalue;
-  FTYPE D0,uconrefnew[NDIM];
+  FTYPE D0,uconrefnew[NDIM],uradconrefnew[NDIM];
   FTYPE mydqlog;
   FTYPE igdetnosing;
   struct of_geom geomdontuse[NPR];
@@ -2849,7 +2836,12 @@ int extrapfunc(int boundary, int j,int k,
     Dqc*=0.5;
     dqMdot = signdq*MINMOD(MINMOD(Dqp,Dqm),Dqc);
 
-    // KORALTODO: Could treat radiation stuff equal to MHD, but here MHD is just getting Mdot, that has no real counterpart for radiation
+    if(EOMRADTYPE!=EOMRADNONE){
+      // KORALTODO: Could treat radiation stuff equal to MHD, but here MHD is just getting Mdot, that has no real counterpart for radiation
+      ucon_calc(&MACP0A1(prim,ri,rj,rk,URAD1-U1),ptrrgeom[URAD1],uradconref,othersradref);
+      ucon_calc(&MACP0A1(prim,ri2,rj,rk,URAD1-U1),ptrri2geom[URAD1],uradconrefri2,othersradrefri2);
+      ucon_calc(&MACP0A1(prim,ri3,rj,rk,URAD1-U1),ptrri3geom[URAD1],uradconrefri3,othersradrefri3);
+    }
 
   }
 
@@ -3195,13 +3187,35 @@ int extrapfunc(int boundary, int j,int k,
           // interpolate
           MACP0A1(prim,i,j,k,pl) = ftemp + dq[pl]*(i-ri);
         }
+      
+        // SUPERMARK: KORALTODO
+        if(pl==URAD1 || pl==URAD2 || pl==URAD3){
+          ftemp = MACP0A1(prim,ri,rj,rk,pl);
+          // interpolate
+          MACP0A1(prim,i,j,k,pl) = ftemp;
+        }
       }
-      // SUPERMARK: KORALTODO
-      //        if(pl==URAD1 || pl==URAD2 || pl==URAD3){
-      //          ftemp = MACP0A1(prim,ri,rj,rk,pl);
-      //          // interpolate
-      //         MACP0A1(prim,i,j,k,pl) = ftemp;
-      //       }
+
+
+#if(0)
+      ucon_calc(&MACP0A1(prim,ri,rj,rk,0),ptrgeom[U1],ucon,others);
+      if(whichdir==X1DN && (uconref[1]>0.0 || ucon[1]>0.0)) MACP0A1(prim,i,j,k,U1)=0.0;
+      if(whichdir==X1UP && (uconref[1]<0.0 || ucon[1]<0.0)) MACP0A1(prim,i,j,k,U1)=0.0;
+      if(whichdir==X2DN && (uconref[2]>0.0 || ucon[2]>0.0)) MACP0A1(prim,i,j,k,U2)=0.0;
+      if(whichdir==X2UP && (uconref[2]<0.0 || ucon[2]<0.0)) MACP0A1(prim,i,j,k,U2)=0.0;
+      if(whichdir==X3DN && (uconref[3]>0.0 || ucon[3]>0.0)) MACP0A1(prim,i,j,k,U3)=0.0;
+      if(whichdir==X3UP && (uconref[3]<0.0 || ucon[3]<0.0)) MACP0A1(prim,i,j,k,U3)=0.0;
+
+      if(EOMRADTYPE!=EOMRADNONE){
+        ucon_calc(&MACP0A1(prim,ri,rj,rk,URAD1-U1),ptrgeom[URAD1],uradcon,othersrad);
+        if(whichdir==X1DN && (uradconref[1]>0.0 || uradcon[1]>0.0)) MACP0A1(prim,i,j,k,URAD1)=0.0;
+        if(whichdir==X1UP && (uradconref[1]<0.0 || uradcon[1]<0.0)) MACP0A1(prim,i,j,k,URAD1)=0.0;
+        if(whichdir==X2DN && (uradconref[2]>0.0 || uradcon[2]>0.0)) MACP0A1(prim,i,j,k,URAD2)=0.0;
+        if(whichdir==X2UP && (uradconref[2]<0.0 || uradcon[2]<0.0)) MACP0A1(prim,i,j,k,URAD2)=0.0;
+        if(whichdir==X3DN && (uradconref[3]>0.0 || uradcon[3]>0.0)) MACP0A1(prim,i,j,k,URAD3)=0.0;
+        if(whichdir==X3UP && (uradconref[3]<0.0 || uradcon[3]<0.0)) MACP0A1(prim,i,j,k,URAD3)=0.0;
+      }
+#endif
       
 
 #endif   

@@ -3200,6 +3200,7 @@ int limit_gamma(FTYPE gammamax, FTYPE*pr, FTYPE *ucons, struct of_geom *ptrgeom,
   FTYPE f,gamma,pref;
   FTYPE qsq;
   FTYPE alpha;
+  FTYPE radgamma,radqsq;
   FTYPE pr0[NPR];
   int pl,pliter;
   FTYPE realgammamax;
@@ -3255,6 +3256,14 @@ int limit_gamma(FTYPE gammamax, FTYPE*pr, FTYPE *ucons, struct of_geom *ptrgeom,
       return (1);
   }
 
+  if(EOMRADTYPE!=EOMRADNONE){
+    if(gamma_calc(&pr[URAD1-U1],ptrgeom,&radgamma,&radqsq)>=1){
+      dualfprintf(fail_file,"limit_gamma: gamma calc failed: rad\n");
+      dualfprintf(fail_file,"i=%d j=%d k=%d : rad : oldgamma=%21.15g\n",startpos[1]+ptrgeom->i,startpos[2]+ptrgeom->j,startpos[3]+ptrgeom->k,gamma);
+      if (fail(i,j,k,loc,FAIL_UTCALC_DISCR) >= 1)
+        return (1);
+    }
+  }
   
 
 
@@ -3303,11 +3312,46 @@ int limit_gamma(FTYPE gammamax, FTYPE*pr, FTYPE *ucons, struct of_geom *ptrgeom,
 
     gamma=gammamax; // reset gamma for next check
     didchange=1; // indicate did change primitive
-
-
-
   }
 
+
+
+  // KORAL:
+  if(EOMRADTYPE!=EOMRADNONE){
+
+    if((radgamma > realgammamax && (radgamma!=1.0))) {    
+
+      // rescale velocities to reduce radgamma to realgammamax
+      pref=(realgammamax*realgammamax - 1.)/(radgamma*radgamma - 1.);
+
+      if(debugfail>=3){ // special >=3 since often called when floor or fixup
+        dualfprintf(fail_file,"nstep=%ld steppart=%d t=%21.15g :: i=%d j=%d k=%d :: pref=%21.15g oldradgamma=%21.15g realgammamax=%21.15g\n",nstep,steppart,t,startpos[1]+ptrgeom->i,startpos[2]+ptrgeom->j,startpos[3]+ptrgeom->k,pref,radgamma,realgammamax);
+      }
+
+      if(pref<0.0){
+        dualfprintf(fail_file,"limit_gamma: pref calc failed pref=%21.15g\n",pref);
+        dualfprintf(fail_file,"i=%d j=%d k=%d oldgamma=%21.15g\n",startpos[1]+ptrgeom->i,startpos[2]+ptrgeom->j,startpos[3]+ptrgeom->k,radgamma);
+        if (fail(i,j,k,loc,FAIL_UTCALC_DISCR) >= 1)
+          return (1);
+      }
+
+      f = sqrt(pref);
+      pr[U1] *= f ; 
+      pr[U2] *= f ; 
+      pr[U3] *= f ;
+
+
+#if(DO_CONSERVE_D)
+      //    alpha = alpha = 1./sqrt(-ptrgeom->gcon[GIND(TT,TT)]) ;
+      //uu0old=radgamma/alpha;
+      // force conservation of particle number
+      pr[RHO] = pr0[RHO]*radgamma/realgammamax; // can do this since alpha is constant and so cancels
+#endif
+
+      radgamma=gammamax; // reset radgamma for next check
+      didchange=1; // indicate did change primitive
+    }
+  }
 
 
 
