@@ -148,7 +148,27 @@ int prepre_init_specific_init(void)
   funreturn=user1_prepre_init_specific_init();
   if(funreturn!=0) return(funreturn);
 
-  periodicx1=periodicx2=periodicx3=1;
+
+  // set periodicity in x1,x2,x3 directions
+
+  // fully periodic problems
+  if(WHICHPROBLEM==FLATNESS){
+    periodicx1=periodicx2=periodicx3=1;
+  }
+  // if ever only 1D problems
+  else if(WHICHPROBLEM==RADBEAMFLAT || WHICHPROBLEM==RADTUBE || WHICHPROBLEM==RADPULSE || WHICHPROBLEM==RADPULSEPLANAR || WHICHPROBLEM==RADWAVE){
+    periodicx1=0;
+    periodicx2=periodicx3=1;
+  }
+  // problems with no necessary symmetry
+  else if(WHICHPROBLEM==RADPULSE3D || WHICHPROBLEM==RADSHADOW || WHICHPROBLEM==RADDBLSHADOW || WHICHPROBLEM==RADBEAM2D || WHICHPROBLEM==RADWALL || WHICHPROBLEM==RADDOT || WHICHPROBLEM==RADCYLBEAM || WHICHPROBLEM==RADBEAM2DKSVERT || WHICHPROBLEM==RADCYLBEAMCART){
+    periodicx1=periodicx2=periodicx3=0;
+  }
+  // spherical polar problems:
+  else if(WHICHPROBLEM==RADDONUT || WHICHPROBLEM==ATMSTATIC || WHICHPROBLEM==RADATM || WHICHPROBLEM==RADBONDI || WHICHPROBLEM==RADNT || WHICHPROBLEM==RADFLATDISK){
+    periodicx1=periodicx2=0;
+    periodicx3=1;
+  }
 
   // Also: SET USEROMIO to 0 or 1 in mympi.definit.h (needs to be 0 for TEXTOUTPUT)
   binaryoutput=TEXTOUTPUT;
