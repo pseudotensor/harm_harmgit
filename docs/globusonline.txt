@@ -330,6 +330,18 @@ command.
 
 
 
+# recover thickdiskfull3d7tilt0.35 thickdiskfull3d7tilt0.7
+
+# /lustre/medusa/jmckinne/data3/jmckinne/jmckinne/thickdiskfull3d7tilt0.35/
+# /lustre/medusa/jmckinne/data3/jmckinne/jmckinne/thickdiskfull3d7tilt0.7/
+
+dirs="thickdiskfull3d7a thickdiskfull3d7b thickdiskfull3d7c thickdiskfull3d7d thickdiskfull3d7e thickdiskfull3d7f thickdiskfull3d7g thickdiskfull3d7h thickdiskfull3d7i thickdiskfull3d7j thickdiskfull3d7k thickdiskfull3d7l thickdiskfull3d7m thickdiskfull3d7n thickdiskfull3d7o thickdiskfull3d7p thickdiskfull3d7q thickdiskfull3d7r thickdiskfull3d7s thickdiskfull3d7t thickdiskfull3d7u thickdiskfull3d7v thickdiskfull3d7w thickdiskfull3d7x thickdiskfull3d7y thickdiskfull3d7z thickdiskfull3d7nexta thickdiskfull3d7nextb thickdiskfull3d7nextc thickdiskfull3d7nextd thickdiskfull3d7nexte thickdiskfull3d7nextf thickdiskfull3d7nextg thickdiskfull3d7nexth thickdiskfull3d7nexti thickdiskfull3d7nextj thickdiskfull3d7nextk thickdiskfull3d7nextl thickdiskfull3d7nextm thickdiskfull3d7nextn thickdiskfull3d7nexto thickdiskfull3d7nextp thickdiskfull3d7tilt0.7a thickdiskfull3d7tilt0.7b thickdiskfull3d7tilt0.7c thickdiskfull3d7tilt0.7d thickdiskfull3d7tilt0.7e thickdiskfull3d7tilt0.7f thickdiskfull3d7tilt0.7g thickdiskfull3d7tilt0.7h thickdiskfull3d7tilt0.7i thickdiskfull3d7tilt0.7j thickdiskfull3d7tilt0.7k thickdiskfull3d7tilt0.7l thickdiskfull3d7tilt0.7m thickdiskfull3d7tilt0.7n thickdiskfull3d7tilt0.7o thickdiskfull3d7tilt0.7p thickdiskfull3d7tilt0.7q thickdiskfull3d7tilt0.7r thickdiskfull3d7tilt0.7s thickdiskfull3d7tilt0.7t thickdiskfull3d7tilt0.7u thickdiskfull3d7tilt0.7v thickdiskfull3d7tilt0.7w thickdiskfull3d7tilt0.7x thickdiskfull3d7tilt0.7y thickdiskfull3d7tilt0.7z thickdiskfull3d7tilt0.7nexta thickdiskfull3d7tilt0.7nextb thickdiskfull3d7tilt0.7nextc thickdiskfull3d7tilt0.7nextd thickdiskfull3d7tilt0.7nexte thickdiskfull3d7tilt0.7nextf thickdiskfull3d7tilt0.7nextg thickdiskfull3d7tilt0.7nexth thickdiskfull3d7tilt0.7nexti thickdiskfull3d7tilt0.7nextj thickdiskfull3d7tilt0.7nextk"
+
+for fil in `echo $dirs`
+do
+        mkdir -p /lustre/medusa/jmckinne/data3/jmckinne/jmckinne/$fil/dumps/
+        ssh pseudotensor@cli.globusonline.org scp -D -r -s 1 xsede#ranch:/home/01014/tg802609/$fil xsede#nautilus:/lustre/medusa/jmckinne/data3/jmckinne/jmckinne/
+done
 
 
 

@@ -441,8 +441,8 @@ int bound_x1dn_outflow_simple(
       if ( (totalsize[1]>1) && (mycpupos[1] <= 0)) {
         /* inner r boundary condition: u, just copy */
 
-        PBOUNDLOOP(pliter,pl) dualfprintf(fail_file,"WTF1A: pl=%d pliter=%d : %d %d %d : nstep=%ld %d %g\n",pl,pliter,nprboundstart,nprboundend,nprboundlist[pliter],nstep,steppart,t);
-        dualfprintf(fail_file,"WTF1A: ri=%d loopin=%d %d\n",riin,inoutlohi[POINTDOWN][POINTDOWN][1],inoutlohi[POINTDOWN][POINTUP][1]);
+        //        PBOUNDLOOP(pliter,pl) dualfprintf(fail_file,"WTF1A: pl=%d pliter=%d : %d %d %d : nstep=%ld %d %g\n",pl,pliter,nprboundstart,nprboundend,nprboundlist[pliter],nstep,steppart,t);
+        //        dualfprintf(fail_file,"WTF1A: ri=%d loopin=%d %d\n",riin,inoutlohi[POINTDOWN][POINTDOWN][1],inoutlohi[POINTDOWN][POINTUP][1]);
 
 
         OPENMPBCLOOPVARSDEFINELOOPX1DIR; OPENMPBCLOOPSETUPLOOPX1DIR;
@@ -568,8 +568,8 @@ int bound_x1up_outflow_simple(
       if ( (totalsize[1]>1) && (mycpupos[1] == ncpux1 - 1) ) {
 
 
-        PBOUNDLOOP(pliter,pl) dualfprintf(fail_file,"WTF2A: pl=%d pliter=%d : %d %d %d : nstep=%ld %d %g\n",pl,pliter,nprboundstart,nprboundend,nprboundlist[pliter],nstep,steppart,t);
-        dualfprintf(fail_file,"WTF2A: ri=%d loop=%d %d\n",riout,inoutlohi[POINTUP][POINTDOWN][1],inoutlohi[POINTUP][POINTUP][1]);
+        //        PBOUNDLOOP(pliter,pl) dualfprintf(fail_file,"WTF2A: pl=%d pliter=%d : %d %d %d : nstep=%ld %d %g\n",pl,pliter,nprboundstart,nprboundend,nprboundlist[pliter],nstep,steppart,t);
+        //        dualfprintf(fail_file,"WTF2A: ri=%d loop=%d %d\n",riout,inoutlohi[POINTUP][POINTDOWN][1],inoutlohi[POINTUP][POINTUP][1]);
 
 
         OPENMPBCLOOPVARSDEFINELOOPX1DIR; OPENMPBCLOOPSETUPLOOPX1DIR;

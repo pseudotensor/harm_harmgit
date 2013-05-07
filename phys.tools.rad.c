@@ -75,8 +75,15 @@ static int Utoprimgen_failwrapper(int showmessages, int allowlocalfailurefixandn
 {
   int failreturn;
 
-  // default
+  // defaults
   failreturn=0;
+
+  // KORALTODO: 
+  // flag needs to be reset to preexistingfail(gas/rad) is not a failure.  Only use preexisting catches in utoprimgen.c if done with 4-force and report error in pflag and eventually go to the final advance.c inversion.
+  GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)=UTOPRIMNOFAIL;
+  GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL)=UTOPRIMRADNOFAIL;
+  
+
 
   //calculating primitives  
   // OPTMARK: Should optimize this to  not try to get down to machine precision
@@ -100,7 +107,7 @@ static int Utoprimgen_failwrapper(int showmessages, int allowlocalfailurefixandn
   }
   else if( IFUTOPRIMFAIL(lpflag) || IFUTOPRIMRADFAIL(lpflagrad) ){
     // these need to get fixed-up, but can't, so return failure
-    if(showmessages && debugfail>=2) dualfprintf(fail_file,"Got hard failure of inversion (MHD part only considered as hard) in f_implicit_lab(): ijk=%d %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
+    if(showmessages && debugfail>=2) dualfprintf(fail_file,"Got hard failure of inversion (MHD part only considered as hard) in f_implicit_lab(): ijk=%d %d %d : %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,lpflag,lpflagrad);
     failreturn=UTOPRIMGENWRAPPERRETURNFAILMHD;
   }
   else{
@@ -125,7 +132,7 @@ static int Utoprimgen_failwrapper(int showmessages, int allowlocalfailurefixandn
   }
 
   //DEBUG:
-  if(showmessages && debugfail>=2){
+  if(showmessages || debugfail>=2){
     static int maxlntries=0,maxnstroke=0;
     int diff;
     diff=0;
@@ -254,6 +261,8 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
   int allowlocalfailurefixandnoreport=0; // must be 0 so implicit method knows when really failure
 
 
+  //FUCK
+  //  showmessages=showmessagesheavy=1;
 
   //////////////
   // setup reversion to best solution for uu in case iterations lead to worse error and reach maximum iterations.
@@ -347,11 +356,14 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
     if(iter>20){
       DAMPFACTOR=0.37;
     }
-    if(iter>40){
+    if(iter>30){
       DAMPFACTOR=0.23;
     }
-    if(iter>100){
+    if(iter>40){
       DAMPFACTOR=0.17;
+    }
+    if(iter>50){
+      DAMPFACTOR=0.07;
     }
 
 
@@ -597,7 +609,7 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
 
   // diagnose
   numofiter+=iter;
-  if(showmessagesheavy) dualfprintf(fail_file,"numimplicits=%lld averagef1iter=%g averageiter=%g\n",numimplicits,(FTYPE)numoff1iter/(FTYPE)numimplicits,(FTYPE)numofiter/(FTYPE)numimplicits);
+  if(debugfail>=2 || showmessagesheavy) dualfprintf(fail_file,"numimplicits=%lld averagef1iter=%g averageiter=%g\n",numimplicits,(FTYPE)numoff1iter/(FTYPE)numimplicits,(FTYPE)numofiter/(FTYPE)numimplicits);
 
 
 
@@ -830,7 +842,7 @@ static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int sho
 
       if(condnotdiff){ // KORALTODO: But error relative to uu needs to be accounted for!
         if(debugfail>=2) dualfprintf(fail_file,"f_implicit_lab for f2 failed to be different enough from f1 and gave singular Jacobian: IMPEPSSTART=%g (giving del=%g)\n",IMPEPSSTART,del);
-        if(1||showmessagesheavy){
+        if(debugfail>=2 || showmessagesheavy){
           dualfprintf(fail_file,"POSTJAC1: uu: %26.20g %26.20g %26.20g %26.20g : uup=%26.20g %26.20g %26.20g %26.20g\n",uu[URAD0],uu[URAD1],uu[URAD2],uu[URAD3],uup[URAD0],uup[URAD1],uup[URAD2],uup[URAD3]);
           int iii,jjj;
           DLOOP(iii,jjj) dualfprintf(fail_file,"J[%d][%d]=%26.20g\n",iii,jjj,J[iii][jjj]);
@@ -839,7 +851,7 @@ static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int sho
       }
       else{
         if(debugfail>=2) dualfprintf(fail_file,"inverse_44matrix(J,iJ) failed, trying IMPEPSSTART=%g :: ijk=%d %d %d\n",IMPEPSSTART,ptrgeom->i,ptrgeom->j,ptrgeom->k);
-        if(1||showmessagesheavy){
+        if(debugfail>=2 || showmessagesheavy){
           dualfprintf(fail_file,"POSTJAC2: uu: %26.20g %26.20g %26.20g %26.20g : uup=%26.20g %26.20g %26.20g %26.20g\n",uu[URAD0],uu[URAD1],uu[URAD2],uu[URAD3],uup[URAD0],uup[URAD1],uup[URAD2],uup[URAD3]);
           int iii,jjj;
           DLOOP(iii,jjj) dualfprintf(fail_file,"J[%d][%d]=%26.20g\n",iii,jjj,J[iii][jjj]);
@@ -853,7 +865,7 @@ static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int sho
     if(fulljaciter>MAXJACITER){
       // this is a catch in case bouncing back and forth between singular Jac and no inversion for P(U) to get f2
       if(debugfail>=2) dualfprintf(fail_file,"Failed to get inverse Jacobian with fulljaciter=%d with IMPEPSSTART=%g (giving del=%g)\n",fulljaciter,IMPEPSSTART,del);
-      if(1||showmessagesheavy){
+      if(debugfail>=2 || showmessagesheavy){
         dualfprintf(fail_file,"POSTJAC3: uu: %g %g %g %g : uup=%g %g %g %g\n",uu[URAD0],uu[URAD1],uu[URAD2],uu[URAD3],uup[URAD0],uup[URAD1],uup[URAD2],uup[URAD3]);
         int iii,jjj;
         DLOOP(iii,jjj) dualfprintf(fail_file,"J[%d][%d]=%g\n",iii,jjj,J[iii][jjj]);
@@ -2889,7 +2901,6 @@ int u2p_rad(int showmessages, int allowlocalfailurefixandnoreport, FTYPE *uu, FT
     get_m1closure_Erf(ptrgeom,Avcon,gammarel2,&Erf);
     FTYPE Erforig=Erf;
 
-    // FUCK
     // get relative 4-velocity
     if(CASECHOICE==JONCHOICE) get_m1closure_urfconrel(showmessages,allowlocalfailurefixandnoreport,ptrgeom,pp,Avcon,Avcov,gammarel2,delta,numerator,divisor,&Erf,urfconrel,lpflag,lpflagrad);
     else if(CASECHOICE==OLEKCHOICE) get_m1closure_urfconrel_olek(showmessages,allowlocalfailurefixandnoreport,ptrgeom,pp,Avcon,Avcov,gammarel2,delta,&Erf,urfconrel,lpflag,lpflagrad);

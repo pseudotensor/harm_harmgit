@@ -1502,6 +1502,19 @@ int post_init(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*faraday)[NSTORE2][NS
 
   trifprintf("begin: post_init\n");
 
+  // post-init checks
+  if(
+     ((BCtype[X1UP]==PERIODIC || BCtype[X1DN]==PERIODIC) && periodicx1==0)
+     ||((BCtype[X1UP]!=PERIODIC || BCtype[X1DN]!=PERIODIC) && periodicx1==1)
+     ||((BCtype[X2UP]==PERIODIC || BCtype[X2DN]==PERIODIC) && periodicx2==0)
+     ||((BCtype[X2UP]!=PERIODIC || BCtype[X2DN]!=PERIODIC) && periodicx2==1)
+     ||((BCtype[X3UP]==PERIODIC || BCtype[X3DN]==PERIODIC) && periodicx3==0)
+     ||((BCtype[X3UP]!=PERIODIC || BCtype[X3DN]!=PERIODIC) && periodicx3==1)
+     ){
+    dualfprintf(fail_file,"inconsistent periodic settings\n");
+    myexit(39472525);
+  }
+
 
   // need to compute various things for EOS
   // also done per timestep in step_ch.c

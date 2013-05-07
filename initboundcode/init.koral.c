@@ -225,6 +225,8 @@ int post_init_specific_init(void)
   funreturn=user1_post_init_specific_init();
   if(funreturn!=0) return(funreturn);
 
+
+
   // print out units and some constants
   trifprintf("Constants\n");
   trifprintf("LBAR=%g TBAR=%g VBAR=%g RHOBAR=%g MBAR=%g UBAR=%g TEMPBAR=%g\n",LBAR,TBAR,VBAR,RHOBAR,MBAR,UBAR,TEMPBAR); 
@@ -1211,8 +1213,8 @@ int init_global(void)
     }
 
     int idt;
-    //    for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=1.0;
-    for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=0.1;
+    for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=1.0;
+    //    for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=0.1;
 
     DTr = 100; //number of time steps for restart dumps
     // tf = 100*DTdumpgen[0]; // 100 dumps(?)
@@ -3707,7 +3709,7 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
   FTYPE setblandfordfield(FTYPE r, FTYPE th);
 
 
-#define FRACAPHICUT 0.2
+#define FRACAPHICUT 0.1
   //#define FRACAPHICUT 0.1
 
 
@@ -3814,7 +3816,7 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
       // average of density that lives on CORN3
 
 
-#define FRACAPHICUT 0.1
+      //#define FRACAPHICUT 0.1
       //#define FRACAPHICUT 0.1
 
       //      q = (rho_av / rhomax - FRACAPHICUT);
@@ -3993,7 +3995,8 @@ int set_density_floors(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *prfloor)
 
     prfloor[PRAD0]=ERADLIMIT;
   }
-  
+
+  // FUCK
   // default is for spherical flow near BH
   if(WHICHPROBLEM==RADDONUT&&0){
     // KORALTODO: floor currently causes injection of hot matter and run-away problems with radiation.

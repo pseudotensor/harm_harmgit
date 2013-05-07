@@ -107,8 +107,8 @@
 #define MAXSUBCYCLESFAIL (MAXSUBCYCLES*100)
 
 
-#define MAXF1TRIES 20 // 20 might sound like alot, but Jacobian does 4 to 5 inversions each iteration, and that amount is only typically needed for very first iteration.
-  // goes to f1iter=10 for RADPULSE KAPPAES=1E3 case.  Might want to scale maximum iterations with \tau, although doubling of damping means exponential w.r.t. f1iter, so probably 20 is certainly enough since 2^(-20) is beyond machine precision.
+#define MAXF1TRIES 50 // 50 might sound like alot, but Jacobian does 4 to 5 inversions each iteration, and that amount is only typically needed for very first iteration.
+  // goes to f1iter=10 for RADPULSE KAPPAES=1E3 case.  Might want to scale maximum iterations with \tau, although doubling of damping means exponential w.r.t. f1iter, so probably 50 is certainly enough since 2^(-50) is beyond machine precision for doubles.
 
 #define RADDAMPDELTA (0.5) // choose, but best to choose 1/Integer so no machine precision issues.
 #define RADDAMPUNDELTA (1.0/RADDAMPDELTA)
@@ -141,7 +141,7 @@
 #define TAUFAILLIMIT (2.0/3.0) // at what \tau below which to assume "failure1" in u2p_rad() means should be moving at gammamax rather than not moving.
 
 // whether to revert to sub-cycle explicit if implicit fails.  Only alternative is die.
-#define IMPLICITREVERTEXPLICIT 0 // QWERTY
+#define IMPLICITREVERTEXPLICIT 0 // FUCK -- problem not a good idea.
 
 // like SAFE for normal dt step, don't allow explicit substepping to change dt too fast to avoid instabilities.
 #define MAXEXPLICITSUBSTEPCHANGE 1.e-2
