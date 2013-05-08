@@ -98,7 +98,7 @@ scripts below behave normally) to your home directory as:
 
 mv ~/pythontools ~/py/
 
-4) Make sure you have installed python2.7 (not 2.6 or 3.0 or any
+4a) Make sure you have installed python2.7 (not 2.6 or 3.0 or any
 other).  Install all the related packages like matplotlib, numpy,
 scipy.  Also best to install ipython.  For some help on that, see
 ~/py/docs/pythonfullinstall.sh .  However, this is for installing on
@@ -109,8 +109,30 @@ looking for ubuntu packages: python, python2.7-setuptools,
 python-dateutil, yasm, ipython, python-nose, python2.7-scipy,
 python2.7-numpy, python-matplotlib, python-matplotlib-data, dvipng
 
+Maybe also install medibuntu: http://www.medibuntu.org/repository.php
+
 Some things may already be installed (e.g.): python --version # should
 be 2.7.x
+
+4b) Ensure PYTHONPATH is set.  Put in your .bashrc the following:
+
+source ~/.bashrc.jon
+#source /opt/intel/bin/compilervars.sh intel64
+export PYTHONPATH=$HOME/py/:$PYTHONPATH
+export LESS="-R"
+export EDITOR=emacs
+alias ipython='ipython --pylab --colors=LightBG'
+#export PYTHONPATH=$HOME/lib/python/:$HOME/py/:$PYTHONPATH
+PATH=/home/$USER/mpich-install/bin:$PATH ; export PATH
+export HOSTNAME
+if [ -z $LD_LIBRARY_PATH  ]; then
+LD_LIBRARY_PATH=/home/$USER/lib/
+else
+LD_LIBRARY_PATH=/home/$USER/lib:${LD_LIBRARY_PATH}
+fi
+#for user libs
+export LD_LIBRARY_PATH
+
 
 5) The primary script for HARM analysis is: ~/py/mread/__init__.py .
 There are lots of bash script wrappers for python stuff in
