@@ -49,7 +49,7 @@ static int get_m1closure_urfconrel_olek(int showmessages, int allowlocalfailuref
 static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int showmessagesheavy, int allowlocalfailurefixandnoreport, FTYPE *uu, FTYPE *uup, FTYPE *uu0, FTYPE *pin, FTYPE fracdtG, FTYPE realdt, struct of_geom *ptrgeom, FTYPE *f1, FTYPE *f1norm, FTYPE (*iJ)[NDIM]);
 static int f_error_check(int showmessages, int showmessagesheavy, int iter, FTYPE conv, FTYPE *f1, FTYPE *f1norm, FTYPE *f1report, FTYPE *uu0, FTYPE *uu, struct of_geom *ptrgeom);
 
-static int mathematica_report_check(int gotfirstnofail, FTYPE realdt,struct of_geom *ptrgeom, FTYPE *pinuse, FTYPE *pin, FTYPE *uu0, FTYPE *uu);
+static int mathematica_report_check(int failtype, long long int failnum, int gotfirstnofail, FTYPE realdt,struct of_geom *ptrgeom, FTYPE *pinuse, FTYPE *pin, FTYPE *uu0, FTYPE *uu, FTYPE *Ui);
 
 
 
@@ -249,7 +249,8 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
   static long long int numoff1iter=0,numofiter=0;
   FTYPE bestuu[NPR],lowestfreport[NDIM];
   int gotbest;
-
+  static long long int failnum=0;
+  
 
 
 
@@ -433,8 +434,9 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
       }
     }// end loop over f1iter
     if(f1iter==MAXF1TRIES){
-      if(debugfail>=2) dualfprintf(fail_file,"Reached MAXF1TRIES: nstep=%ld steppart=%d ijk=%d %d %d\n",nstep,steppart,ptrgeom->i,ptrgeom->j,ptrgeom->k);
-      mathematica_report_check(gotfirstnofail, realdt, ptrgeom, pinuse,pin,uu0,uu);
+      if(debugfail>=2) dualfprintf(fail_file,"Reached MAXF1TRIES: nstep=%ld steppart=%d ijk=%d %d %d : iter=%d\n",nstep,steppart,ptrgeom->i,ptrgeom->j,ptrgeom->k,iter);
+      failnum++;
+      mathematica_report_check(0, failnum, gotfirstnofail, realdt, ptrgeom, pinuse,pin,uu0,uu,Uiin);
       // Note that if inversion reduces to entropy or cold, don't fail, so passes until reached this point.  But convergence can be hard if flipping around which EOMs for the inversion are actually used.
       return(1);
     }
@@ -594,7 +596,8 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
           if(notfinite) dualfprintf(fail_file,"IMPGOTNAN at iter=%d : in solve_implicit_lab(). ijk=%d %d %d :  Bad error.\n",iter,ptrgeom->i,ptrgeom->j,ptrgeom->k);
           dualfprintf(fail_file,"checkconv=%d failreturnallowable=%d: %g %g %g %g : %g %g %g %g\n",checkconv,failreturnallowable,f3report[0],f3report[1],f3report[2],f3report[3],lowestfreport[0],lowestfreport[1],lowestfreport[2],lowestfreport[3]);
           if(1||showmessages){
-            mathematica_report_check(gotfirstnofail, realdt, ptrgeom, pinuse,pin,uu0,uu);
+            failnum++;
+            mathematica_report_check(1, failnum, gotfirstnofail, realdt, ptrgeom, pinuse,pin,uu0,uu,Uiin);
           }
         }        
         return(1);
@@ -645,21 +648,56 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
   
 }
 
-static int mathematica_report_check(int gotfirstnofail, FTYPE realdt,struct of_geom *ptrgeom, FTYPE *pinuse, FTYPE *pin, FTYPE *uu0, FTYPE *uu)
+static int mathematica_report_check(int failtype, long long int failnum, int gotfirstnofail, FTYPE realdt,struct of_geom *ptrgeom, FTYPE *pinuse, FTYPE *pin, FTYPE *uu0, FTYPE *uu, FTYPE *Uiin)
 {
   int jj,kk;
   int pliter,pl;
 
-  //  emacs regexp: Query replace regexp (default \([0-9]\)e\([-+]*[0-9]+\) -> \1*10^(\2)): 
-  dualfprintf(fail_file,"FAILINFO: %d\ndt=%26.20g\n",gotfirstnofail,realdt);
-  DLOOP(jj,kk) dualfprintf(fail_file,"gn%d%d=%26.20g\n",jj+1,kk+1,ptrgeom->gcon[GIND(jj,kk)]);
-  DLOOP(jj,kk) dualfprintf(fail_file,"gv%d%d=%26.20g\n",jj+1,kk+1,ptrgeom->gcov[GIND(jj,kk)]);
-  // shows first pinuse(uu0)
-  PLOOP(pliter,pl) dualfprintf(fail_file,"pinuse%d=%26.20g\npin%d=%26.20g\nuu0%d=%26.20g\nuu%d=%26.20g\n",pl,pinuse[pl],pl,pin[pl],pl,uu0[pl],pl,uu[pl]);
-  struct of_state qreport;
-  get_state(pinuse,ptrgeom,&qreport);
-  DLOOPA(jj) dualfprintf(fail_file,"uradcon%d=%26.20g\nuradcov%d=%26.20g\n",jj,qreport.uradcon[jj],jj,qreport.uradcov[jj]);
-  DLOOPA(jj) dualfprintf(fail_file,"ucon%d=%26.20g\nucov%d=%26.20g\n",jj,qreport.ucon[jj],jj,qreport.ucov[jj]);
+  if(0){ // old mathematica style
+    dualfprintf(fail_file,"FAILINFO: %d %d %lld %d\ndt=%26.20g\n",failtype, myid, failnum, gotfirstnofail,realdt);
+    DLOOP(jj,kk) dualfprintf(fail_file,"gn%d%d=%26.20g\n",jj+1,kk+1,ptrgeom->gcon[GIND(jj,kk)]);
+    DLOOP(jj,kk) dualfprintf(fail_file,"gv%d%d=%26.20g\n",jj+1,kk+1,ptrgeom->gcov[GIND(jj,kk)]);
+    // shows first pinuse(uu0)
+    PLOOP(pliter,pl) dualfprintf(fail_file,"pinuse%d=%26.20g\npin%d=%26.20g\nuu0%d=%26.20g\nuu%d=%26.20g\nuui%d=%26.20g\n",pl,pinuse[pl],pl,pin[pl],pl,uu0[pl],pl,uu[pl],pl,Uiin[pl]);
+    struct of_state qreport;
+    get_state(pinuse,ptrgeom,&qreport);
+    DLOOPA(jj) dualfprintf(fail_file,"uradcon%d=%26.20g\nuradcov%d=%26.20g\n",jj,qreport.uradcon[jj],jj,qreport.uradcov[jj]);
+    DLOOPA(jj) dualfprintf(fail_file,"ucon%d=%26.20g\nucov%d=%26.20g\n",jj,qreport.ucon[jj],jj,qreport.ucov[jj]);
+    // then do:
+    // 1) grep -A 134 --text FAILINFO 0_fail.out.grmhd* > fails.txt
+    // 2) emacs regexp:  \([0-9]\)e\([-+]*[0-9]+\)   ->   \1*10^(\2)
+  }
+  else{
+    // 134 things
+    dualfprintf(fail_file,"FAILINFO: %d %d %lld %d %26.20g ",failtype,myid,failnum,gotfirstnofail,realdt);
+    DLOOP(jj,kk) dualfprintf(fail_file,"%26.20g ",ptrgeom->gcon[GIND(jj,kk)]);
+    DLOOP(jj,kk) dualfprintf(fail_file,"%26.20g ",ptrgeom->gcov[GIND(jj,kk)]);
+    // shows first pinuse(uu0)
+    PLOOP(pliter,pl) dualfprintf(fail_file,"%26.20g %26.20g %26.20g %26.20g %26.20g ",pinuse[pl],pin[pl],uu0[pl],uu[pl],Uiin[pl]);
+    struct of_state qreport;
+    get_state(pinuse,ptrgeom,&qreport);
+    DLOOPA(jj) dualfprintf(fail_file,"%26.20g %26.20g ",qreport.uradcon[jj],qreport.uradcov[jj]);
+    DLOOPA(jj) dualfprintf(fail_file,"%26.20g %26.20g ",qreport.ucon[jj],qreport.ucov[jj]);
+    struct of_state q;
+    get_state(pin,ptrgeom,&q);
+    DLOOPA(jj) dualfprintf(fail_file,"%26.20g %26.20g ",q.uradcon[jj],q.uradcov[jj]);
+    DLOOPA(jj) dualfprintf(fail_file,"%26.20g %26.20g ",q.ucon[jj],q.ucov[jj]);
+    dualfprintf(fail_file,"\n");
+    // then do:
+    // 1) grep -h --text FAILINFO 0_fail.out.grmhd* | sed 's/FAILINFO: //g' > fails.txt
+    // 2) Choose numfails in below mathematica script
+    // 3) ~/bin/math < /data/jon/harm_math/solveimplicit_superwrapper.m
+    // or:  nohup ~/bin/math < /data/jon/harm_math/solveimplicit_superwrapper.m &> math.out &
+    // or:  ~/bin/math < /data/jon/harm_math/solveimplicit_superwrapper.m &> math.out &
+    // 4) grep 0Good math.out
+    // if any Good's appear, mathematica found solution when harm did not.  Fix it!
+
+    // If any appear in  grep 0WGood math.out   , then precision issue with long doubles in harm even.
+
+    // If any appear in  grep 0MGood math.out   , then gammamax case should work!
+  }
+
+
 
   return(0);
 }
