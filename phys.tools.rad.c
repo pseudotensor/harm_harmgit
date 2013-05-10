@@ -49,9 +49,13 @@ static int get_m1closure_urfconrel_olek(int showmessages, int allowlocalfailuref
 static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int showmessagesheavy, int allowlocalfailurefixandnoreport, FTYPE *uu, FTYPE *uup, FTYPE *uu0, FTYPE *pin, FTYPE fracdtG, FTYPE realdt, struct of_geom *ptrgeom, FTYPE *f1, FTYPE *f1norm, FTYPE (*iJ)[NDIM]);
 static int f_error_check(int showmessages, int showmessagesheavy, int iter, FTYPE conv, FTYPE *f1, FTYPE *f1norm, FTYPE *f1report, FTYPE *uu0, FTYPE *uu, struct of_geom *ptrgeom);
 
-static int mathematica_report_check(int failtype, long long int failnum, int gotfirstnofail, FTYPE realdt,struct of_geom *ptrgeom, FTYPE *pinuse, FTYPE *pin, FTYPE *uu0, FTYPE *uu, FTYPE *Ui);
+static int mathematica_report_check(int failtype, long long int failnum, int gotfirstnofail, FTYPE realdt,struct of_geom *ptrgeom, FTYPE *pinuse, FTYPE *pin, FTYPE *uu0, FTYPE *uu, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_state *q, FTYPE *dUother);
 
 
+
+
+
+// KORALTODO:  If solve for full RHO+MHD+RAD solution and iterate primitives instead, then can nominally better avoid out of bounds p(U) inversion.  While involves 1+4+4=9 dimensional Newton's method, use of p(U) is avoided completely so saves lots of time.  Only ever need to call U(p).  But then doesn't take advantage of accurate(and reductions) for p(U).
 
 
 
@@ -250,9 +254,6 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
   FTYPE bestuu[NPR],lowestfreport[NDIM];
   int gotbest;
   static long long int failnum=0;
-  
-
-
 
 
   // static counter for diagnosing issues
@@ -262,8 +263,27 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
   int allowlocalfailurefixandnoreport=0; // must be 0 so implicit method knows when really failure
 
 
-  //FUCK
-  //  showmessages=showmessagesheavy=1;
+
+  
+
+  int doingit=0;
+#if(1)
+  if(nstep==1 && steppart==0 && ptrgeom->i==16 && ptrgeom->j==4 && ptrgeom->k==0 && myid==6){ // so similar situation and grid at least
+    doingit=1;
+
+dt=  0.0042442838741569434583;CUf[2]=                       0.5;pin[0]=    0.82133999827905109707;Uiin[0]=    0.88431091907420555633;Ufin[0]=                         0;dUother[0]=-5.0024930289881199527e-06;pin[1]= 0.00021647631951235228073;Uiin[1]=   0.014888392679125363067;Ufin[1]=                         0;dUother[1]=-8.4507029782070272192e-08;pin[2]=  0.0038132029655719230736;Uiin[2]=      1.726626739230534639;Ufin[2]=                         0;dUother[2]=  0.0010432722210732850274;pin[3]= 0.00025209278341441304745;Uiin[3]=  0.0014462157383832252317;Ufin[3]=                         0;dUother[3]=    0.11382455704071276338;pin[4]=  0.0020962681837186076471;Uiin[4]=     24.584387095002524943;Ufin[4]=                         0;dUother[4]= -0.0001389172426323190473;pin[5]= 1.7320654379886289489e-05;Uiin[5]=    0.03939613714896833853;Ufin[5]=                         0;dUother[5]=-3.1350616010614794771e-08;pin[6]=-4.6043509248704378492e-08;Uiin[6]=                         0;Ufin[6]=                         0;dUother[6]= 7.7424146779867995632e-09;pin[7]=-4.4131736193679712551e-10;Uiin[7]=-1.7466174047346716303e-23;Ufin[7]=                         0;dUother[7]=-5.4130434712384561599e-07;pin[8]=     8.4180452807836352808;Uiin[8]=    -9.0719301069058669446;Ufin[8]=                         0;dUother[8]=  0.0010463038168644575084;pin[9]=  0.0038132029364648441934;Uiin[9]=     23.587009706184088507;Ufin[9]=                         0;dUother[9]=     49.396492661967307067;pin[10]= 0.00025209279156768187253;Uiin[10]=   0.019754180947983061648;Ufin[10]=                         0;dUother[10]=     10.709936430890673664;pin[11]=  0.0020962681965309745859;Uiin[11]=     335.84101583335730157;Ufin[11]=                         0;dUother[11]=  -0.029063092581872888775;pin[12]=                         0;Uiin[12]=    -24.603875437523524685;Ufin[12]=                         0;dUother[12]= 0.00014449170096785320321;ptrgeom->gcov[GIND(0,0)]=   -0.91225025275170583703;ptrgeom->gcon[GIND(0,0)]=    -1.0877497472482941629;ptrgeom->gcov[GIND(0,1)]=     1.9988302325646892206;ptrgeom->gcon[GIND(0,1)]=  0.0038522621965046294564;ptrgeom->gcov[GIND(0,2)]=                         0;ptrgeom->gcon[GIND(0,2)]= 0.00025438369584466114771;ptrgeom->gcov[GIND(0,3)]=   -0.33830648266961095333;ptrgeom->gcon[GIND(0,3)]= 3.5990620089329799808e-24;ptrgeom->gcov[GIND(1,0)]=     1.9988302325646892206;ptrgeom->gcon[GIND(1,0)]=  0.0038522621965046294564;ptrgeom->gcov[GIND(1,1)]=     589.12131092604360905;ptrgeom->gcon[GIND(1,1)]=  0.0017602773015187332733;ptrgeom->gcov[GIND(1,2)]=    -374.32695776739281932;ptrgeom->gcon[GIND(1,2)]= 0.00011623971132549160088;ptrgeom->gcov[GIND(1,3)]=      -95.5264133760752151;ptrgeom->gcon[GIND(1,3)]= 1.2616741813995659856e-05;ptrgeom->gcov[GIND(2,0)]=                         0;ptrgeom->gcon[GIND(2,0)]= 0.00025438369584466114771;ptrgeom->gcov[GIND(2,1)]=    -374.32695776739281932;ptrgeom->gcon[GIND(2,1)]= 0.00011623971132549160088;ptrgeom->gcov[GIND(2,2)]=     5668.6242557796232138;ptrgeom->gcon[GIND(2,2)]= 0.00018408552241724017404;ptrgeom->gcov[GIND(2,3)]=                         0;ptrgeom->gcon[GIND(2,3)]= 8.3314511018337255591e-07;ptrgeom->gcov[GIND(3,0)]=   -0.33830648266961095333;ptrgeom->gcon[GIND(3,0)]= 3.5990620089329799808e-24;ptrgeom->gcov[GIND(3,1)]=      -95.5264133760752151;ptrgeom->gcon[GIND(3,1)]= 1.2616741813995659856e-05;ptrgeom->gcov[GIND(3,2)]=                         0;ptrgeom->gcon[GIND(3,2)]= 8.3314511018337255591e-07;ptrgeom->gcov[GIND(3,3)]=     13431.060485635423204;ptrgeom->gcon[GIND(3,3)]= 7.4544019302479968168e-05;ptrgeom->gcovpert[0]=   0.087749747248294162965;ptrgeom->beta[0]=                         0;ptrgeom->gcovpert[1]=     588.12131092604360905;ptrgeom->beta[1]=  0.0035414967516653409852;ptrgeom->gcovpert[2]=     5667.6242557796232138;ptrgeom->beta[2]= 0.00023386233505287544325;ptrgeom->gcovpert[3]=     13430.060485635423204;ptrgeom->beta[3]= 3.3087224502121106998e-24;ptrgeom->alphalapse=    0.95881651191845051688;ptrgeom->betasqoalphasq=  0.0077000181421395090224;ptrgeom->gdet=     198638.06134925452197;ptrgeom->igdetnosing= 5.0342819155980095682e-06;ptrgeom->i=16;ptrgeom->j=4;ptrgeom->k=0;ptrgeom->p=0;q->ucon[0]=     1.0766685184297575449;q->ucov[0]=    -0.9828999395897475964;q->ucon[1]= 1.8490493260141373974e-07;q->ucov[1]=     1.9518250241491588606;q->ucon[2]= 3.0056961651008936278e-07;q->ucov[2]=  0.0016346013178026000479;q->ucon[3]=  0.0020962681837186076471;q->ucov[3]=     27.790843166861629544;q->uradcon[0]=     1.0766685187321055377;q->uradcov[0]=   -0.98289993993021952163;q->uradcon[1]= 1.8487475475809917338e-07;q->uradcov[1]=     1.9518250027256506179;q->uradcon[2]= 3.0057769907110685415e-07;q->uradcov[2]=  0.0016346584311843125409;q->uradcon[3]=  0.0020962681965309745859;q->uradcov[3]=      27.79084334172579971;q->pressure= 7.2158773170784093582e-05;q->entropy=    -22.851857388201970772;q->ifremoverestplus1ud0elseud0=   0.017100060410252403518;
+
+    //FUCK
+    showmessages=showmessagesheavy=1;
+  }
+
+#endif
+
+
+
+
+
+
 
   //////////////
   // setup reversion to best solution for uu in case iterations lead to worse error and reach maximum iterations.
@@ -280,6 +300,11 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
   realdt = compute_dt(CUf,dt);
   FTYPE DAMPFACTOR=1.0; // factor by which step Newton's method.
   FTYPE fracdtuu0=1.0,fracdtG=1.0,fracuup=1.0; // initially try full realstep step
+  FTYPE fracdtuu0p=fracdtuu0;
+  FTYPE fracdtuu0pp=fracdtuu0p;
+
+  FTYPE fracdtGp=fracdtG;
+  FTYPE fracdtGpp=fracdtGp;
 
   // default is to allow no failure
   int failreturnallowable=UTOPRIMNOFAIL;
@@ -354,6 +379,10 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
     // KORALTODO: improve on this later.
     // Problem is can start jumping too far in steps for near tough spots.
     // While in normal inversion routine damping is to avoid breaching into unphysical solution space with nan/inf, below is to avoid oscillating around solution
+    if(iter>0){ // FUCK
+      DAMPFACTOR=0.37;
+    }
+
     if(iter>20){
       DAMPFACTOR=0.37;
     }
@@ -373,6 +402,13 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
     PLOOP(pliter,pl)  uup[pl]=uu[pl]; // uup will not necessarily have P(uup) because uu used Newton step.
     PLOOP(pliter,pl)  uuporig[pl]=uu[pl];
 
+    fracdtuu0pp=fracdtuu0p; // fracdtuu0 used when computing previous f1 and f2's
+    fracdtuu0p=fracdtuu0; // fracdtuu0 used when computing previous f1 and f2's
+
+    fracdtGpp=fracdtGp; // fracdtG used when computing previous f1 and f2's
+    fracdtGp=fracdtG; // fracdtG used when computing previous f1 and f2's
+
+
 
     // KORALTODO: Once use certain uu0 value and succeed in getting f1, not enough.  But if take a step and *then* good f1, then know that original U was good choice and can restart from that point instead of backing up uu0 again.
     // KORALTODO: Look at whether bounding error by sign as in bisection (only true in 1D!!), and if approaching 0 slowly enough and still hit CASE, then must be real CASE not a stepping issue.
@@ -388,10 +424,6 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
       int whichcall=1;
       failreturn=f_implicit_lab(failreturnallowableuse, whichcall,showmessages, allowlocalfailurefixandnoreport, pinuse, uu0, uu, fracdtG*realdt, ptrgeom, f1, f1norm); // modifies uu and pinuse
       if(failreturn){
-        // if initial uu failed, then should take smaller jump from Uiin->uu until settled between fluid and radiation.
-        // If here, know original Uiin is good, so take baby steps in case uu needs heavy raditive changes.
-        // if f1 fails, try going back to Uiin a bit
-        fracdtuu0*=RADDAMPDELTA; // DAMP Uiin->uu0 step that may be too large and generated too large G
 
 #define BACKUPRELEASEFAIL (1E-5)
         // if backing up alot, then allow same failure as original Uiin in hopes that can recover that way (otherwise would have hoped would recover via flux update to Uiin)
@@ -399,10 +431,13 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
           failreturnallowableuse=failreturnallowable;
         }
 
-        // get uu0 (which may be changing)
-        PLOOP(pliter,pl) uu0[pl]=UFSET(CUf,fracdtuu0*dt,Uiin[pl],Ufin[pl],dUother[pl],0.0);
 
         if(iter==1){
+          // if initial uu failed, then should take smaller jump from Uiin->uu until settled between fluid and radiation.
+          // If here, know original Uiin is good, so take baby steps in case uu needs heavy raditive changes.
+          // if f1 fails, try going back to Uiin a bit
+          fracdtuu0*=RADDAMPDELTA; // DAMP Uiin->uu0 step that may be too large and generated too large G
+
           // modifies uup and uu as if starting over, and then another call to f_implicit_lab(f1) will change uu by generally smaller amount.
           PLOOP(pliter,pl) uup[pl]=uu[pl]=uu0[pl];
         }
@@ -420,7 +455,20 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
           PLOOP(pliter,pl) uu[pl]=(1.0-fracuup)*uupp[pl] + fracuup*uuporig[pl];
           //          PLOOP(pliter,pl) uu[pl]=(1.0-fracuup)*uupp[pl] + fracuup*uup[pl];
           PLOOP(pliter,pl) uup[pl]=uu[pl]; // store new version of prior Newton step
+          
+          // get interpolated fracdtuu0 so using fracdtuu0 that was used with the corresponding uu
+          fracdtuu0=(1.0-fracuup)*fracdtuu0pp + fracuup*fracdtuu0p;
+          // same for fracdtG
+          fracdtG=(1.0-fracuup)*fracdtGpp + fracuup*fracdtGp;
+
         }
+
+
+        // get uu0 (which may be changing)
+        PLOOP(pliter,pl) uu0[pl]=UFSET(CUf,fracdtuu0*dt,Uiin[pl],Ufin[pl],dUother[pl],0.0);
+
+
+
         // keep below so can count inversion failures against retry successes in the failure file.
         if(showmessages && debugfail>=2) dualfprintf(fail_file,"f_implicit_lab for f1 failed: iter=%d  Backing-up both uu0 and G.: f1iter=%d fracdtuu0=%g fracdtG=%g fracuup=%g\n",iter,f1iter,fracdtuu0,fracdtG,fracuup);
         if(showmessagesheavy) PLOOP(pliter,pl) dualfprintf(fail_file,"pl=%d Ui=%21.15g uu0=%21.15g uu0orig=%21.15g uu=%21.15g uup=%21.15g dUother=%21.15g\n",pl,Uiin[pl],uu0[pl],uu0orig[pl],uu[pl],uup[pl],dUother[pl]);
@@ -436,9 +484,16 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
     if(f1iter==MAXF1TRIES){
       if(debugfail>=2) dualfprintf(fail_file,"Reached MAXF1TRIES: nstep=%ld steppart=%d ijk=%d %d %d : iter=%d\n",nstep,steppart,ptrgeom->i,ptrgeom->j,ptrgeom->k,iter);
       failnum++;
-      mathematica_report_check(0, failnum, gotfirstnofail, realdt, ptrgeom, pinuse,pin,uu0,uu,Uiin);
+      mathematica_report_check(0, failnum, gotfirstnofail, realdt, ptrgeom, pinuse,pin,uu0,uu,Uiin,Ufin, CUf, q, dUother);
+      if(doingit==1) myexit(10000000); // DEBUG
       // Note that if inversion reduces to entropy or cold, don't fail, so passes until reached this point.  But convergence can be hard if flipping around which EOMs for the inversion are actually used.
       return(1);
+    }
+    else{
+      // restore fracuup back to 1 since this is only meant to adjust how much go back to previous uu to be able to get f1 computed.
+      // fracuup doesn't stay <1.0 because each attempt to get f1 is independent.
+      // KORALNOTE: Perhaps reasonable and safer to keep fracuup as not reverted back to 1, since apparently unable to take full steps.  This effectively damps stepping.
+      fracuup=1.0;
     }
 
     // diagnose
@@ -571,11 +626,16 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
     if(itermaxed || notfinite ){
       int convreturn=f_error_check(showmessages, showmessagesheavy, iter, IMPALLOWCONV,f3,f3norm,f3report,uup,uu,ptrgeom);
 
+      FTYPE errorabs=0.0;
+      FTYPE errorabsbest=0.0;
       if(gotbest){
         // see if should revert to prior best
-        FTYPE errorabs=0.0;     DLOOPA(jj) errorabs     += fabs(f3report[jj]);
-        FTYPE errorabsbest=0.0; DLOOPA(jj) errorabsbest += fabs(lowestfreport[jj]);
-        if(errorabsbest<errorabs || !isfinite(errorabs) )  PLOOP(pliter,pl) uu[pl]=bestuu[pl];
+        DLOOPA(jj) errorabs     += fabs(f3report[jj]);
+        DLOOPA(jj) errorabsbest += fabs(lowestfreport[jj]);
+        if(errorabsbest<errorabs || !isfinite(errorabs) ){
+          PLOOP(pliter,pl) uu[pl]=bestuu[pl];
+          errorabs=errorabsbest;
+        }
         if(showmessages && debugfail>=2) dualfprintf(fail_file,"Using best: %g %g\n",errorabs,errorabsbest);
         // get new convreturn
         convreturn=(lowestfreport[0]<IMPALLOWCONV && lowestfreport[1]<IMPALLOWCONV && lowestfreport[2]<IMPALLOWCONV && lowestfreport[3]<IMPALLOWCONV);
@@ -585,7 +645,7 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
       // KORALTODO: Or, perhaps should really take it as a failure and use fixups.  Probably should allow for result to be written if error<10%, but only use as super-backup in fixups.  So should set pflag still.
 
       if(convreturn){
-        if(showmessages && debugfail>=2) dualfprintf(fail_file,"iter>IMPMAXITER=%d : iter exceeded in solve_implicit_lab().  But f3 was allowed error. checkconv=%d (if checkconv=0, could be issue!) : %g %g %g %g : %g %g %g %g\n",IMPMAXITER,checkconv,f3report[0],f3report[1],f3report[2],f3report[3],lowestfreport[0],lowestfreport[1],lowestfreport[2],lowestfreport[3]);
+        if(showmessages && debugfail>=2) dualfprintf(fail_file,"iter>IMPMAXITER=%d : iter exceeded in solve_implicit_lab().  But f3 was allowed error. checkconv=%d (if checkconv=0, could be issue!) : %g %g %g %g : %g %g %g %g : errorabs=%g : %g %g %g\n",IMPMAXITER,checkconv,f3report[0],f3report[1],f3report[2],f3report[3],lowestfreport[0],lowestfreport[1],lowestfreport[2],lowestfreport[3],errorabs,fracdtuu0,fracuup,fracdtG);
         // NOTE: If checkconv=0, then wasn't ready to check convergence and smallness of f3 might only mean smallness of fracuup.  So look for "checkconv=0" cases in fail output.
         break;
       }
@@ -597,7 +657,8 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
           dualfprintf(fail_file,"checkconv=%d failreturnallowable=%d: %g %g %g %g : %g %g %g %g\n",checkconv,failreturnallowable,f3report[0],f3report[1],f3report[2],f3report[3],lowestfreport[0],lowestfreport[1],lowestfreport[2],lowestfreport[3]);
           if(1||showmessages){
             failnum++;
-            mathematica_report_check(1, failnum, gotfirstnofail, realdt, ptrgeom, pinuse,pin,uu0,uu,Uiin);
+            mathematica_report_check(1, failnum, gotfirstnofail, realdt, ptrgeom, pinuse,pin,uu0,uu,Uiin,Ufin, CUf, q, dUother);
+            if(doingit==1) myexit(100000000); // DEBUG
           }
         }        
         return(1);
@@ -644,11 +705,14 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
   // only use pinuse if successful with implicit method, since if not successful can be various bad reasons with no good pin
   PLOOP(pliter,pl) pin[pl]=pinuse[pl];
 
+
+
+
   return(0);
   
 }
 
-static int mathematica_report_check(int failtype, long long int failnum, int gotfirstnofail, FTYPE realdt,struct of_geom *ptrgeom, FTYPE *pinuse, FTYPE *pin, FTYPE *uu0, FTYPE *uu, FTYPE *Uiin)
+static int mathematica_report_check(int failtype, long long int failnum, int gotfirstnofail, FTYPE realdt,struct of_geom *ptrgeom, FTYPE *pinuse, FTYPE *pin, FTYPE *uu0, FTYPE *uu, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_state *q, FTYPE *dUother)
 {
   int jj,kk;
   int pliter,pl;
@@ -669,7 +733,7 @@ static int mathematica_report_check(int failtype, long long int failnum, int got
   }
   else{
     // 134 things
-    dualfprintf(fail_file,"FAILINFO: %d %d %lld %d %26.20g ",failtype,myid,failnum,gotfirstnofail,realdt);
+    dualfprintf(fail_file,"\nFAILINFO: %d %d %lld %d %26.20g ",failtype,myid,failnum,gotfirstnofail,realdt);
     DLOOP(jj,kk) dualfprintf(fail_file,"%26.20g ",ptrgeom->gcon[GIND(jj,kk)]);
     DLOOP(jj,kk) dualfprintf(fail_file,"%26.20g ",ptrgeom->gcov[GIND(jj,kk)]);
     // shows first pinuse(uu0)
@@ -678,17 +742,36 @@ static int mathematica_report_check(int failtype, long long int failnum, int got
     get_state(pinuse,ptrgeom,&qreport);
     DLOOPA(jj) dualfprintf(fail_file,"%26.20g %26.20g ",qreport.uradcon[jj],qreport.uradcov[jj]);
     DLOOPA(jj) dualfprintf(fail_file,"%26.20g %26.20g ",qreport.ucon[jj],qreport.ucov[jj]);
-    struct of_state q;
-    get_state(pin,ptrgeom,&q);
-    DLOOPA(jj) dualfprintf(fail_file,"%26.20g %26.20g ",q.uradcon[jj],q.uradcov[jj]);
-    DLOOPA(jj) dualfprintf(fail_file,"%26.20g %26.20g ",q.ucon[jj],q.ucov[jj]);
+    struct of_state qin;
+    get_state(pin,ptrgeom,&qin);
+    DLOOPA(jj) dualfprintf(fail_file,"%26.20g %26.20g ",qin.uradcon[jj],qin.uradcov[jj]);
+    DLOOPA(jj) dualfprintf(fail_file,"%26.20g %26.20g ",qin.ucon[jj],qin.ucov[jj]);
     dualfprintf(fail_file,"\n");
+
+    /////////////
+    dualfprintf(fail_file,"\nFAILREPEATABLE: %d %d %lld",failtype,myid,failnum);
+    dualfprintf(fail_file,"dt=%26.20g;CUf[2]=%26.20g;",realdt,CUf[2]);
+    PLOOP(pliter,pl) dualfprintf(fail_file,"pin[%d]=%26.20g;Uiin[%d]=%26.20g;Ufin[%d]=%26.20g;dUother[%d]=%26.20g;",pl,pin[pl],pl,Uiin[pl],pl,Ufin[pl],pl,dUother[pl]);
+     // ptrgeom stuff
+    DLOOP(jj,kk) dualfprintf(fail_file,"ptrgeom->gcov[GIND(%d,%d)]=%26.20g;ptrgeom->gcon[GIND(%d,%d)]=%26.20g;",jj,kk,ptrgeom->gcov[GIND(jj,kk)],jj,kk,ptrgeom->gcon[GIND(jj,kk)]);
+    DLOOPA(jj) dualfprintf(fail_file,"ptrgeom->gcovpert[%d]=%26.20g;ptrgeom->beta[%d]=%26.20g;",jj,ptrgeom->gcovpert[jj],jj,ptrgeom->beta[jj]);
+    dualfprintf(fail_file,"ptrgeom->alphalapse=%26.20g;ptrgeom->betasqoalphasq=%26.20g;ptrgeom->gdet=%26.20g;ptrgeom->igdetnosing=%26.20g;ptrgeom->i=%d;ptrgeom->j=%d;ptrgeom->k=%d;ptrgeom->p=%d;",ptrgeom->alphalapse,ptrgeom->betasqoalphasq,ptrgeom->gdet,ptrgeom->igdetnosing,ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p);
+    DLOOPA(jj) dualfprintf(fail_file,"q->ucon[%d]=%26.20g;q->ucov[%d]=%26.20g;",jj,q->ucon[jj],jj,q->ucov[jj]);
+    DLOOPA(jj) dualfprintf(fail_file,"q->uradcon[%d]=%26.20g;q->uradcov[%d]=%26.20g;",jj,q->uradcon[jj],jj,q->uradcov[jj]);
+    dualfprintf(fail_file,"q->pressure=%26.20g;q->entropy=%26.20g;q->ifremoverestplus1ud0elseud0=%26.20g;",q->pressure,q->entropy,q->ifremoverestplus1ud0elseud0);
+    dualfprintf(fail_file,"\n");
+    
+
     // then do:
     // 1) grep -h --text FAILINFO 0_fail.out.grmhd* | sed 's/FAILINFO: //g' > fails.txt
+    //   see if any MAXF1ITER: less -S fails.txt| awk '{print $1}'|sort|less
+
     // 2) Choose numfails in below mathematica script
+
     // 3) ~/bin/math < /data/jon/harm_math/solveimplicit_superwrapper.m
     // or:  nohup ~/bin/math < /data/jon/harm_math/solveimplicit_superwrapper.m &> math.out &
-    // or:  ~/bin/math < /data/jon/harm_math/solveimplicit_superwrapper.m &> math.out &
+    // or: preferred:  ~/bin/math < /data/jon/harm_math/solveimplicit_superwrapper.m &> math.out &
+
     // 4) grep 0Good math.out
     // if any Good's appear, mathematica found solution when harm did not.  Fix it!
 
@@ -714,15 +797,16 @@ static int f_error_check(int showmessages, int showmessagesheavy, int iter, FTYP
   passedconv=0;
 
   // get error
-  // NOTE: use of gcov[ii,ii] so comparable dimensionally to f1[ii] and f1norm[ii] that are like R^t_\nu and so need sqrt(gcon[nu,nu]) multiplied on them.  This ensures error is non-dimensional.
-  FTYPE dimfact;
+  // NOTE: use of gcov[ii,ii] so comparable dimensionally to f1[ii] and f1norm[ii] that are like R^t_\nu and so need sqrt(gcon[nu,nu]) multiplied on them.  This ensures error is non-dimensional (or, really only ^t dimensional)
+  FTYPE dimfact[NDIM];
   DLOOPA(ii){
-    dimfact=sqrt(fabs(ptrgeom->gcon[GIND(ii,ii)]));
-    
-    f3a[ii]=fabs(f1[ii]*dimfact/(SMALL+fabs(uu0[URAD0])));
-    f3b[ii]=fabs(f1[ii]*dimfact/(SMALL+MAX(fabs(uu0[UU]),fabs(uu0[URAD0]))));
-    f3c[ii]=fabs(f1[ii]*dimfact/(SMALL+MAX(fabs(f1norm[ii]*dimfact),fabs(uu0[URAD0]))));
-    f3d[ii]=fabs(f1[ii]*dimfact/(SMALL+MAX(fabs(uu0[UU]),MAX(fabs(f1norm[ii]*dimfact),fabs(uu0[URAD0])))));
+    dimfact[ii]=sqrt(fabs(ptrgeom->gcon[GIND(ii,ii)]));
+  }    
+  DLOOPA(ii){
+    f3a[ii]=fabs(f1[ii]*dimfact[ii]/(SMALL+fabs(uu0[URAD0]*dimfact[0])));
+    f3b[ii]=fabs(f1[ii]*dimfact[ii]/(SMALL+MAX(fabs(uu0[UU]*dimfact[0]),fabs(uu0[URAD0]*dimfact[0]))));
+    f3c[ii]=fabs(f1[ii]*dimfact[ii]/(SMALL+MAX(fabs(f1norm[ii]*dimfact[ii]),fabs(uu0[URAD0]*dimfact[0]))));
+    f3d[ii]=fabs(f1[ii]*dimfact[ii]/(SMALL+MAX(fabs(uu0[UU]*dimfact[0]),MAX(fabs(f1norm[ii]*dimfact[ii]),fabs(uu0[URAD0]*dimfact[0])))));
   }
 
   // evaluate error
