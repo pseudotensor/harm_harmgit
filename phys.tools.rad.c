@@ -49,7 +49,7 @@ static int get_m1closure_urfconrel_olek(int showmessages, int allowlocalfailuref
 static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int showmessagesheavy, int allowlocalfailurefixandnoreport, FTYPE *uu, FTYPE *uup, FTYPE *uu0, FTYPE *pin, FTYPE fracdtG, FTYPE realdt, struct of_geom *ptrgeom, FTYPE *f1, FTYPE *f1norm, FTYPE (*iJ)[NDIM]);
 static int f_error_check(int showmessages, int showmessagesheavy, int iter, FTYPE conv, FTYPE *f1, FTYPE *f1norm, FTYPE *f1report, FTYPE *uu0, FTYPE *uu, struct of_geom *ptrgeom);
 
-//int mathematica_report_check(int failtype, long long int failnum, int gotfirstnofail, FTYPE realdt,struct of_geom *ptrgeom, FTYPE *pinuse, FTYPE *pin, FTYPE *uu0, FTYPE *uu, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_state *q, FTYPE *dUother);
+int mathematica_report_check(int failtype, long long int failnum, int gotfirstnofail, FTYPE realdt,struct of_geom *ptrgeom, FTYPE *pinuse, FTYPE *pin, FTYPE *uu0, FTYPE *uu, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_state *q, FTYPE *dUother);
 
 
 
@@ -254,6 +254,7 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
   FTYPE bestuu[NPR],lowestfreport[NDIM];
   int gotbest;
   static long long int failnum=0;
+  extern int mathematica_report_check(int failtype, long long int failnum, int gotfirstnofail, FTYPE realdt,struct of_geom *ptrgeom, FTYPE *pinuse, FTYPE *pin, FTYPE *uu0, FTYPE *uu, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_state *q, FTYPE *dUother);
 
 
   // static counter for diagnosing issues
@@ -728,7 +729,8 @@ int mathematica_report_check(int failtype, long long int failnum, int gotfirstno
     PLOOP(pliter,pl) dualfprintf(fail_file,"pinuse%d=%26.20g\npin%d=%26.20g\nuu0%d=%26.20g\nuu%d=%26.20g\nuui%d=%26.20g\n",pl,pinuse[pl],pl,pin[pl],pl,uu0[pl],pl,uu[pl],pl,Uiin[pl]);
     struct of_state qreport;
     get_state(pinuse,ptrgeom,&qreport);
-    DLOOPA(jj) dualfprintf(fail_file,"uradcon%d=%26.20g\nuradcov%d=%26.20g\n",jj,qreport.uradcon[jj],jj,qreport.uradcov[jj]);
+    if(EOMRADTYPE!=EOMRADNONE) DLOOPA(jj) dualfprintf(fail_file,"uradcon%d=%26.20g\nuradcov%d=%26.20g\n",jj,qreport.uradcon[jj],jj,qreport.uradcov[jj]);
+    else DLOOPA(jj) dualfprintf(fail_file,"uradcon%d=%26.20g\nuradcov%d=%26.20g\n",jj,0.0,jj,0.0);
     DLOOPA(jj) dualfprintf(fail_file,"ucon%d=%26.20g\nucov%d=%26.20g\n",jj,qreport.ucon[jj],jj,qreport.ucov[jj]);
     // then do:
     // 1) grep -A 134 --text FAILINFO 0_fail.out.grmhd* > fails.txt
@@ -743,11 +745,13 @@ int mathematica_report_check(int failtype, long long int failnum, int gotfirstno
     PLOOP(pliter,pl) dualfprintf(fail_file,"%26.20g %26.20g %26.20g %26.20g %26.20g ",pinuse[pl],pin[pl],uu0[pl],uu[pl],Uiin[pl]);
     struct of_state qreport;
     get_state(pinuse,ptrgeom,&qreport);
-    DLOOPA(jj) dualfprintf(fail_file,"%26.20g %26.20g ",qreport.uradcon[jj],qreport.uradcov[jj]);
+    if(EOMRADTYPE!=EOMRADNONE) DLOOPA(jj) dualfprintf(fail_file,"%26.20g %26.20g ",qreport.uradcon[jj],qreport.uradcov[jj]);
+    else DLOOPA(jj) dualfprintf(fail_file,"%26.20g %26.20g ",0.0,0.0);
     DLOOPA(jj) dualfprintf(fail_file,"%26.20g %26.20g ",qreport.ucon[jj],qreport.ucov[jj]);
     struct of_state qin;
     get_state(pin,ptrgeom,&qin);
-    DLOOPA(jj) dualfprintf(fail_file,"%26.20g %26.20g ",qin.uradcon[jj],qin.uradcov[jj]);
+    if(EOMRADTYPE!=EOMRADNONE) DLOOPA(jj) dualfprintf(fail_file,"%26.20g %26.20g ",qin.uradcon[jj],qin.uradcov[jj]);
+    else dualfprintf(fail_file,"%26.20g %26.20g ",0.0,0.0);
     DLOOPA(jj) dualfprintf(fail_file,"%26.20g %26.20g ",qin.ucon[jj],qin.ucov[jj]);
     dualfprintf(fail_file,"\n");
 
@@ -761,7 +765,8 @@ int mathematica_report_check(int failtype, long long int failnum, int gotfirstno
     dualfprintf(fail_file,"ptrgeom->alphalapse=%26.20g;ptrgeom->betasqoalphasq=%26.20g;ptrgeom->gdet=%26.20g;ptrgeom->igdetnosing=%26.20g;ptrgeom->i=%d;ptrgeom->j=%d;ptrgeom->k=%d;ptrgeom->p=%d;",ptrgeom->alphalapse,ptrgeom->betasqoalphasq,ptrgeom->gdet,ptrgeom->igdetnosing,ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p);
     if(q!=NULL){
       DLOOPA(jj) dualfprintf(fail_file,"q->ucon[%d]=%26.20g;q->ucov[%d]=%26.20g;",jj,q->ucon[jj],jj,q->ucov[jj]);
-      DLOOPA(jj) dualfprintf(fail_file,"q->uradcon[%d]=%26.20g;q->uradcov[%d]=%26.20g;",jj,q->uradcon[jj],jj,q->uradcov[jj]);
+      if(EOMRADTYPE!=EOMRADNONE) DLOOPA(jj) dualfprintf(fail_file,"q->uradcon[%d]=%26.20g;q->uradcov[%d]=%26.20g;",jj,q->uradcon[jj],jj,q->uradcov[jj]);
+      else DLOOPA(jj) dualfprintf(fail_file,"q->uradcon[%d]=%26.20g;q->uradcov[%d]=%26.20g;",jj,0.0,jj,0.0);
       dualfprintf(fail_file,"q->pressure=%26.20g;q->entropy=%26.20g;q->ifremoverestplus1ud0elseud0=%26.20g;",q->pressure,q->entropy,q->ifremoverestplus1ud0elseud0);
     }
     dualfprintf(fail_file,"\n");
