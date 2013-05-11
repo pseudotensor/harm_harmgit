@@ -49,7 +49,7 @@ static int get_m1closure_urfconrel_olek(int showmessages, int allowlocalfailuref
 static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int showmessagesheavy, int allowlocalfailurefixandnoreport, FTYPE *uu, FTYPE *uup, FTYPE *uu0, FTYPE *pin, FTYPE fracdtG, FTYPE realdt, struct of_geom *ptrgeom, FTYPE *f1, FTYPE *f1norm, FTYPE (*iJ)[NDIM]);
 static int f_error_check(int showmessages, int showmessagesheavy, int iter, FTYPE conv, FTYPE *f1, FTYPE *f1norm, FTYPE *f1report, FTYPE *uu0, FTYPE *uu, struct of_geom *ptrgeom);
 
-static int mathematica_report_check(int failtype, long long int failnum, int gotfirstnofail, FTYPE realdt,struct of_geom *ptrgeom, FTYPE *pinuse, FTYPE *pin, FTYPE *uu0, FTYPE *uu, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_state *q, FTYPE *dUother);
+//int mathematica_report_check(int failtype, long long int failnum, int gotfirstnofail, FTYPE realdt,struct of_geom *ptrgeom, FTYPE *pinuse, FTYPE *pin, FTYPE *uu0, FTYPE *uu, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_state *q, FTYPE *dUother);
 
 
 
@@ -267,7 +267,7 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
   
 
   int doingit=0;
-#if(1)
+#if(0)
   if(nstep==1 && steppart==0 && ptrgeom->i==16 && ptrgeom->j==4 && ptrgeom->k==0 && myid==6){ // so similar situation and grid at least
     dualfprintf(fail_file,"DOINGIT\n");
     doingit=1;
@@ -715,7 +715,7 @@ dt=  0.0042442838741569434583;CUf[2]=                       0.5;pin[0]=    0.821
   
 }
 
-static int mathematica_report_check(int failtype, long long int failnum, int gotfirstnofail, FTYPE realdt,struct of_geom *ptrgeom, FTYPE *pinuse, FTYPE *pin, FTYPE *uu0, FTYPE *uu, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_state *q, FTYPE *dUother)
+int mathematica_report_check(int failtype, long long int failnum, int gotfirstnofail, FTYPE realdt,struct of_geom *ptrgeom, FTYPE *pinuse, FTYPE *pin, FTYPE *uu0, FTYPE *uu, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_state *q, FTYPE *dUother)
 {
   int jj,kk;
   int pliter,pl;
@@ -759,9 +759,11 @@ static int mathematica_report_check(int failtype, long long int failnum, int got
     DLOOP(jj,kk) dualfprintf(fail_file,"ptrgeom->gcov[GIND(%d,%d)]=%26.20g;ptrgeom->gcon[GIND(%d,%d)]=%26.20g;",jj,kk,ptrgeom->gcov[GIND(jj,kk)],jj,kk,ptrgeom->gcon[GIND(jj,kk)]);
     DLOOPA(jj) dualfprintf(fail_file,"ptrgeom->gcovpert[%d]=%26.20g;ptrgeom->beta[%d]=%26.20g;",jj,ptrgeom->gcovpert[jj],jj,ptrgeom->beta[jj]);
     dualfprintf(fail_file,"ptrgeom->alphalapse=%26.20g;ptrgeom->betasqoalphasq=%26.20g;ptrgeom->gdet=%26.20g;ptrgeom->igdetnosing=%26.20g;ptrgeom->i=%d;ptrgeom->j=%d;ptrgeom->k=%d;ptrgeom->p=%d;",ptrgeom->alphalapse,ptrgeom->betasqoalphasq,ptrgeom->gdet,ptrgeom->igdetnosing,ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p);
-    DLOOPA(jj) dualfprintf(fail_file,"q->ucon[%d]=%26.20g;q->ucov[%d]=%26.20g;",jj,q->ucon[jj],jj,q->ucov[jj]);
-    DLOOPA(jj) dualfprintf(fail_file,"q->uradcon[%d]=%26.20g;q->uradcov[%d]=%26.20g;",jj,q->uradcon[jj],jj,q->uradcov[jj]);
-    dualfprintf(fail_file,"q->pressure=%26.20g;q->entropy=%26.20g;q->ifremoverestplus1ud0elseud0=%26.20g;",q->pressure,q->entropy,q->ifremoverestplus1ud0elseud0);
+    if(q!=NULL){
+      DLOOPA(jj) dualfprintf(fail_file,"q->ucon[%d]=%26.20g;q->ucov[%d]=%26.20g;",jj,q->ucon[jj],jj,q->ucov[jj]);
+      DLOOPA(jj) dualfprintf(fail_file,"q->uradcon[%d]=%26.20g;q->uradcov[%d]=%26.20g;",jj,q->uradcon[jj],jj,q->uradcov[jj]);
+      dualfprintf(fail_file,"q->pressure=%26.20g;q->entropy=%26.20g;q->ifremoverestplus1ud0elseud0=%26.20g;",q->pressure,q->entropy,q->ifremoverestplus1ud0elseud0);
+    }
     dualfprintf(fail_file,"\n");
     
 

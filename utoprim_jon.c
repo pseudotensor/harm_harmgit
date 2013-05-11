@@ -1157,6 +1157,8 @@ static int verify_Wlast(FTYPE u, FTYPE p, struct of_geom *ptrgeom, FTYPE *W_last
   int i_increase;
 
 
+  //  FTYPE Wpnewsmall=-3.0*MAX(MAX(MAX(MAX(MAX(fabs(D),fabs(Qdotn)),fabs(Bsq)),fabs(Qdotnp)),fabs(wglobal[0])),fabs(wglobal[1]));
+  // allow this constraint on W_last and Wp_last so starts hotter than could be.
 
   if(*W_last<-(D) || *Wp_last<0){
     *W_last = -(D);
@@ -1254,18 +1256,21 @@ static int check_Wp(PFTYPE *lpflag, int eomtype, FTYPE *prim, FTYPE *U, struct o
     // GODMARK
     //      if(Wtest<=0. && fabs(Wtest)>1E-4){
     // Complex result if W+D<0 or Wp-D+D<0 or Wp<0
-    if(Wtest<=-(D)){
+    FTYPE Wpnewsmall=-3.0*MAX(MAX(MAX(MAX(MAX(fabs(D),fabs(Qdotn)),fabs(Bsq)),fabs(Qdotnp)),fabs(wglobal[0])),fabs(wglobal[1]));
+    //    if(Wtest<=-(D)){
+    if(Wtest<Wpnewsmall){
       if(debugfail>=1){
         dualfprintf(fail_file,"Wtest1 failed :: Wp=%21.15g D=%21.15g wglobal=%21.15g\n",Wp,(D),wglobal[1]);
         dualfprintf(fail_file,"nstep=%ld steppart=%d :: t=%21.15g :: i=%d j=%d k=%d p=%d\n",nstep,steppart,t,ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p);
       }
       *lpflag= retval+UTOPRIMFAILCONVRET+1;// related to UTOPRIMFAILCONVRET
       // reset Wp
-      Wp = -(D)+fabs((D))*0.01;
+      //      Wp = -(D)+fabs((D))*0.01;
+      Wp = Wpnewsmall;
       //
       return(retval) ;
     }
-    else if(Wtest <= -(D) || Wtest/wglobal[1] > GAMMASQ_TOO_BIG) {
+    else if(Wtest < Wpnewsmall || Wtest/wglobal[1] > GAMMASQ_TOO_BIG) {
       //      dualfprintf(fail_file,"Wtest2 failed Wp=%21.15g\n",Wp);
 
 
@@ -1273,7 +1278,7 @@ static int check_Wp(PFTYPE *lpflag, int eomtype, FTYPE *prim, FTYPE *U, struct o
       //if(Wtest <= 0.) {
       if( debugfail>=2 ) {
         dualfprintf(fail_file,"Wtest2 failure %21.15g %21.15g %21.15g %21.15g\n",Wtest,D,wglobal[1],GAMMASQ_TOO_BIG) ;
-        dualfprintf(fail_file, "Utoprim_new_body(): Wtest<0 or Wtest=toobig failure, t,i,j,k, p[0-7], U[0-7] = %21.15g %d %d %d ", t, ptrgeom->i, ptrgeom->j,ptrgeom->k );  
+        dualfprintf(fail_file, "Utoprim_new_body(): Wtest<Wpnewsmall or Wtest=toobig failure, t,i,j,k, p[0-7], U[0-7] = %21.15g %d %d %d ", t, ptrgeom->i, ptrgeom->j,ptrgeom->k );  
         int pliter,pl;
         PINVERTLOOP(pliter,pl){
           dualfprintf(fail_file, "%21.15g ", prim[pl]);
@@ -2362,7 +2367,11 @@ static void validate_Wp(FTYPE Wpold, FTYPE *Wpnew, FTYPE *wglobal, FTYPE Bsq,FTY
 
   /* Always take the absolute value of Wpnew[0] and check to see if it's too big:  */ 
   //  Wpnew[0] = fabs(Wpold);
-  if(Wpnew[0]<-D && D>0.0){
+  // below allows cases when can be negative internal energy density.  Primarily allowed by wglobal[0].
+  FTYPE Wpnewsmall=-3.0*MAX(MAX(MAX(MAX(MAX(fabs(D),fabs(Qdotn)),fabs(Bsq)),fabs(Qdotnp)),fabs(wglobal[0])),fabs(wglobal[1]));
+  //  dualfprintf(fail_file,"Wpnewsmall=%Lg : %Lg %Lg %Lg %Lg %Lg %Lg\n",Wpnewsmall,D,Qtsq,Qdotn,*wglobal,Bsq,Qdotnp);
+  if(Wpnew[0]<Wpnewsmall){
+    //  if(Wpnew[0]<-D && D>0.0){
     //    Wpnew[0] = 10.0*Qtsq/(2.0*D+Wp0);
     //    Wpnew[0]=10.0*D+dv;
 
@@ -2455,7 +2464,9 @@ static void validate_x_1d_old(FTYPE x[1], FTYPE x0[1], FTYPE *wglobal,FTYPE Bsq,
 
   /* Always take the absolute value of x[0] and check to see if it's too big:  */
   //  x[0] = fabs(x[0]);
-  if(x[0]<-D) x[0]=D+dv;
+  FTYPE Wpnewsmall=-3.0*MAX(MAX(MAX(MAX(MAX(fabs(D),fabs(Qdotn)),fabs(Bsq)),fabs(Qdotnp)),fabs(wglobal[0])),fabs(wglobal[1]));
+  //  dualfprintf(fail_file,"Wpnewsmall=%Lg : %Lg %Lg %Lg %Lg %Lg %Lg\n",Wpnewsmall,D,Qtsq,Qdotn,*wglobal,Bsq,Qdotnp);
+  if(x[0]<Wpnewsmall) x[0]=D+dv;
   // x[0]/global = gamma^2
   x[0] = (x[0]/wglobal[1] > GAMMASQ_TOO_BIG) ?  x0[0] : x[0];
 

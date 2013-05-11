@@ -229,12 +229,29 @@ int Utoprimgen(int showmessages, int allowlocalfailurefixandnoreport, int finals
 #endif
 
 
+    PFTYPE hotpflag;
+    // get failure flag
+    hotpflag=GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL);
+    int hardfailure=(IFUTOPRIMFAIL(hotpflag) && IFUTOPRIMFAILSOFT(hotpflag)==0);
+
+    if(!hardfailure){
+      // check on hot inversion if it thinks it was successful
+      check_on_inversion(usedhotinversion,usedentropyinversion,usedcoldinversion,usedffdeinversion,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr0, pr, pressure, ptrgeom, Uold, Unew,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
+    }
 
 
-    // check on hot inversion
-    check_on_inversion(usedhotinversion,usedentropyinversion,usedcoldinversion,usedffdeinversion,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr0, pr, pressure, ptrgeom, Uold, Unew,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
 
-
+    if(1&&hardfailure){ // DEBUG: only report if hard failure.  Seems when gets negative density or internal energy, jon's inversion is fine.
+      // first report info so can check on inversion
+      extern int mathematica_report_check(int failtype, long long int failnum, int gotfirstnofail, FTYPE realdt,struct of_geom *ptrgeom, FTYPE *pinuse, FTYPE *pin, FTYPE *uu0, FTYPE *uu, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_state *q, FTYPE *dUother);
+      static long long int failnum=0;
+      FTYPE fakedt=0.0; // since no 4-force
+      FTYPE fakeCUf[4]={0}; // fake
+      FTYPE dUother[NPR]={0};// fake
+      struct of_state *qptr=NULL; // fake
+      failnum++;
+      mathematica_report_check(2, failnum, hotpflag, fakedt, ptrgeom, pr, pr0, Ugeomfree0, Ugeomfree, Ugeomfree0, Ugeomfree0, fakeCUf, qptr, dUother);
+    }
 
 
     ////////////////////
@@ -242,9 +259,9 @@ int Utoprimgen(int showmessages, int allowlocalfailurefixandnoreport, int finals
     // If radiation, then this redoes radiation inversion since entropy would give new velocity and local corrections in u2p_rad() might use velocity.
     ///////////////////
     if(HOT2ENTROPY){
-      PFTYPE hotpflag;
       // get failure flag
       hotpflag=GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL);
+
 
       if(hotpflag){
         tryentropyinversion(showmessages, allowlocalfailurefixandnoreport,finalstep, hotpflag, pr0, pr, pressure, Ugeomfree, Ugeomfree0, ptrgeom,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
@@ -253,11 +270,11 @@ int Utoprimgen(int showmessages, int allowlocalfailurefixandnoreport, int finals
           usedentropyinversion=1;
           usedcoldinversion=0;
           usedffdeinversion=0;
+
+          // check entropy inversion if inversion thinks it was successful
+          check_on_inversion(usedhotinversion,usedentropyinversion,usedcoldinversion,usedffdeinversion,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr0, pr, pressure, ptrgeom, Uold, Unew,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
         }
-
-        // check entropy inversion
-        check_on_inversion(usedhotinversion,usedentropyinversion,usedcoldinversion,usedffdeinversion,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr0, pr, pressure, ptrgeom, Uold, Unew,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
-
+          
       }
     }
 
@@ -268,7 +285,6 @@ int Utoprimgen(int showmessages, int allowlocalfailurefixandnoreport, int finals
     //  If hot GRMHD failed or gets suspicious solution, revert to cold GRMHD if solution is cold
     ///////////////////
     if(HOT2COLD){
-      PFTYPE hotpflag;
       // get failure flag
       hotpflag=GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL);
 
@@ -279,10 +295,10 @@ int Utoprimgen(int showmessages, int allowlocalfailurefixandnoreport, int finals
           usedentropyinversion=0;
           usedcoldinversion=1;
           usedffdeinversion=0;
+        
+          // check cold inversion if inversion thinks it was successful
+          check_on_inversion(usedhotinversion,usedentropyinversion,usedcoldinversion,usedffdeinversion,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr0, pr, pressure, ptrgeom, Uold, Unew,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
         }
-
-        // check cold inversion
-        check_on_inversion(usedhotinversion,usedentropyinversion,usedcoldinversion,usedffdeinversion,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr0, pr, pressure, ptrgeom, Uold, Unew,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
 
       }// end if hotpflag
 
@@ -927,11 +943,15 @@ static int check_on_inversion(int usedhotinversion,int usedentropyinversion,int 
       // leave geometry out of it
       //      Unormalnew[pl]*=ptrgeom->gdet;
       //      Unormalold[pl]*=ptrgeom->gdet;
-      if(pl==RHO || pl==UU || pl==URAD0&&(*lpflagrad==0) || pl==ENTROPY){
+      if(pl==RHO || pl==UU || pl==URAD0&&(*lpflagrad==0)){
         errornorm=(fabs(Unormalnew[pl])+fabs(Unormalold[pl])+SMALL);
         // KORALTODO: when URAD0<<UU, can't expect radiation error to be small relative to only itself when interaction between radiation and fluid. 
         if(pl==URAD0) errornorm+=(fabs(Unormalnew[UU])+fabs(Unormalold[UU])+SMALL);
         fdiff[pl] = fabs(Unormalnew[pl]-Unormalold[pl])/errornorm;
+      }
+      else if(pl==ENTROPY){// can be + or -, so use positive definite exp(S/rho)=exp(s) version
+        errornorm=(fabs(exp(Unormalnew[pl]/(SMALL+fabs(Unormalnew[RHO]))))+fabs(exp(Unormalold[pl]/(SMALL+fabs(Unormalold[RHO]))))+SMALL);
+        fdiff[pl] = fabs(exp(Unormalnew[pl]/(SMALL+fabs(Unormalnew[RHO])))-exp(Unormalold[pl]/(SMALL+fabs(Unormalold[RHO]))))/errornorm;
       }
       else if(pl==U1 || pl==U2 || pl==U3){
 
@@ -980,7 +1000,10 @@ static int check_on_inversion(int usedhotinversion,int usedentropyinversion,int 
            ){
           if(pl<URAD0 && pl>URAD3) badinversion++;
           else  badinversionrad++;
-          dualfprintf(fail_file,"fdiff[%d]=%21.15g :: %21.15g %21.15g\n",pl,fdiff[pl],Unormalold[pl],Unormalnew[pl]);
+
+          if(pl==ENTROPY) dualfprintf(fail_file,"fdiff[%d]=%21.15g :: %21.15g %21.15g : %21.15g %21.15g : %21.15g %21.15g\n",pl,fdiff[pl],Unormalold[pl],Unormalnew[pl],exp(Unormalold[pl]/Unormalold[RHO]),exp(Unormalnew[pl]/Unormalnew[RHO]),Unormalold[RHO],Unormalnew[RHO]);
+          else dualfprintf(fail_file,"fdiff[%d]=%21.15g :: %21.15g %21.15g\n",pl,fdiff[pl],Unormalold[pl],Unormalnew[pl]);
+
         }
       }
       if(fdiff[pl]>CHECKONINVFRACFAIL){

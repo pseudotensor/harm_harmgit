@@ -187,6 +187,7 @@ static int advance_standard(
   FTYPE (*utoinvert)[NSTORE2][NSTORE3][NPR];
   FTYPE (*tempucum)[NSTORE2][NSTORE3][NPR];
   FTYPE (*useducum)[NSTORE2][NSTORE3][NPR];
+  FTYPE (*preupoint)[NSTORE2][NSTORE3][NPR];
   FTYPE (*myupoint)[NSTORE2][NSTORE3][NPR];
   int whichpltoavg[NPR];
   int ifnotavgthencopy[NPR];
@@ -427,13 +428,16 @@ static int advance_standard(
       // first copy over all quantities as point, which is true except for fields if FLUXRECON active
       // copy utoinvert -> myupoint
       // only copy magnetic field pl's -- later copy rest when needed for inversion
-      copy_tempucum_finalucum(DOBPL,Uconsevolveloop,tempucum,myupoint);
+      if(finalstep==1) preupoint=tempucum;
+      else preupoint=uf;
+      
+      copy_tempucum_finalucum(DOBPL,Uconsevolveloop,preupoint,myupoint);
 
 
       if(extrazones4emf && dofluxreconevolvepointfield==0){
         // uses tempucum and gets reaveraged field into myupoint
         // SUPERGODMARK: Unsure if this fluxrecon method is still correct with movement of field stuff.
-        field_integrate_fluxrecon(stage, pb, tempucum, myupoint);
+        field_integrate_fluxrecon(stage, pb, preupoint, myupoint);
       }
 
 
