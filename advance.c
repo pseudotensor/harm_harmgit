@@ -18,8 +18,8 @@ static int prepare_globaldt(
 
 
 
-static void flux2dUavg(int i, int j, int k, FTYPE (*F1)[NSTORE2][NSTORE3][NPR],FTYPE (*F2)[NSTORE2][NSTORE3][NPR],FTYPE (*F3)[NSTORE2][NSTORE3][NPR],FTYPE *dUavg1,FTYPE *dUavg2,FTYPE *dUavg3);
-static void dUtoU(int i, int j, int k, int loc, FTYPE *dUgeom, FTYPE *dUriemann, FTYPE *CUf, FTYPE *CUnew, FTYPE *Ui,  FTYPE *uf, FTYPE *ucum);
+static void flux2dUavg(int whichpl, int i, int j, int k, FTYPE (*F1)[NSTORE2][NSTORE3][NPR],FTYPE (*F2)[NSTORE2][NSTORE3][NPR],FTYPE (*F3)[NSTORE2][NSTORE3][NPR],FTYPE *dUavg1,FTYPE *dUavg2,FTYPE *dUavg3);
+static void dUtoU(int whichpl, int i, int j, int k, int loc, FTYPE *dUgeom, FTYPE *dUriemann, FTYPE *CUf, FTYPE *CUnew, FTYPE *Ui,  FTYPE *uf, FTYPE *ucum);
 static void dUtoU_check(int i, int j, int k, int loc, int pl, FTYPE *dUgeom, FTYPE *dUriemann, FTYPE *CUf, FTYPE *CUnew, FTYPE *Ui,  FTYPE *Uf, FTYPE *ucum);
 static int asym_compute_1(FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
 static int asym_compute_2(FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
@@ -36,6 +36,13 @@ static void show_fluxes(int i, int j, int k, int loc, int pl,FTYPE (*F1)[NSTORE2
 
 
 static int advance_standard(int truestep,int stage, FTYPE (*pi)[NSTORE2][NSTORE3][NPR],FTYPE (*pb)[NSTORE2][NSTORE3][NPR], FTYPE (*pf)[NSTORE2][NSTORE3][NPR],
+                            FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],
+                            FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],
+                            FTYPE (*F1)[NSTORE2][NSTORE3][NPR],FTYPE (*F2)[NSTORE2][NSTORE3][NPR],FTYPE (*F3)[NSTORE2][NSTORE3][NPR],
+                            FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
+                            FTYPE (*ui)[NSTORE2][NSTORE3][NPR], FTYPE (*uf)[NSTORE2][NSTORE3][NPR], FTYPE (*ucum)[NSTORE2][NSTORE3][NPR],
+                            FTYPE *CUf,FTYPE *CUnew,SFTYPE fluxdt, SFTYPE boundtime, SFTYPE fluxtime, int stagenow, int numstages, FTYPE *ndt);
+static int advance_standard_orig(int truestep,int stage, FTYPE (*pi)[NSTORE2][NSTORE3][NPR],FTYPE (*pb)[NSTORE2][NSTORE3][NPR], FTYPE (*pf)[NSTORE2][NSTORE3][NPR],
                             FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],
                             FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],
                             FTYPE (*F1)[NSTORE2][NSTORE3][NPR],FTYPE (*F2)[NSTORE2][NSTORE3][NPR],FTYPE (*F3)[NSTORE2][NSTORE3][NPR],
@@ -112,6 +119,7 @@ int advance(int truestep, int stage, FTYPE (*pi)[NSTORE2][NSTORE3][NPR],FTYPE (*
   }
   else if((DOENOFLUX==NOENOFLUX)||(DOENOFLUX==ENOFLUXRECON)||(DOENOFLUX==ENOFLUXSPLIT)){
     // new standard preserves conserved quantities even when metric changes
+    //    MYFUN(advance_standard_orig(truestep,stage,pi,pb,pf,pstag,pl_ct, pr_ct, F1, F2, F3, vpot,ui,uf,ucum,CUf,CUnew,fluxdt,boundtime,fluxtime,timeorder,numtimeorders,ndt),"advance.c:advance()", "advance_standard()", 1);
     MYFUN(advance_standard(truestep,stage,pi,pb,pf,pstag,pl_ct, pr_ct, F1, F2, F3, vpot,ui,uf,ucum,CUf,CUnew,fluxdt,boundtime,fluxtime,timeorder,numtimeorders,ndt),"advance.c:advance()", "advance_standard()", 1);
   }
   else{
@@ -138,7 +146,737 @@ int advance(int truestep, int stage, FTYPE (*pi)[NSTORE2][NSTORE3][NPR],FTYPE (*
 // this method guarantees conservation of non-sourced conserved quantities when metric is time-dependent
 // this method has updated field staggered method
 // Note that when dt==0.0, assume no fluxing, just take ucum -> ui -> {uf,ucum} and invert.  Used with metric update.
+// like advance_standard_orig(), but removed debug info and set field "inversion" first so have centered value for source() so have it for any point-use of values like in implicit solver for radiation-fluid interaction.
 static int advance_standard(
+                            int truestep,
+                            int stage,
+                            FTYPE (*pi)[NSTORE2][NSTORE3][NPR],
+                            FTYPE (*pb)[NSTORE2][NSTORE3][NPR],
+                            FTYPE (*pf)[NSTORE2][NSTORE3][NPR],
+                            FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],
+                            FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],
+                            FTYPE (*F1)[NSTORE2][NSTORE3][NPR],FTYPE (*F2)[NSTORE2][NSTORE3][NPR],FTYPE (*F3)[NSTORE2][NSTORE3][NPR],
+                            FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
+                            FTYPE (*ui)[NSTORE2][NSTORE3][NPR],
+                            FTYPE (*uf)[NSTORE2][NSTORE3][NPR],
+                            FTYPE (*ucum)[NSTORE2][NSTORE3][NPR], 
+                            FTYPE *CUf, 
+                            FTYPE *CUnew, 
+                            SFTYPE fluxdt,
+                            SFTYPE boundtime,
+                            SFTYPE fluxtime,
+                            int timeorder, int numtimeorders,
+                            FTYPE *ndt)
+{
+  FTYPE ndt1, ndt2, ndt3;
+  FTYPE dUtot;
+  FTYPE idx1,idx2;
+  SFTYPE dt4diag;
+  static SFTYPE dt4diag_willbe=0;
+  int finalstep,initialstep;
+  FTYPE accdt, accdt_ij;
+  int accdti,accdtj,accdtk;
+  FTYPE gravitydt, gravitydt_ij;
+  int gravitydti,gravitydtj,gravitydtk;
+  //  FTYPE (*dUriemannarray)[NSTORE2][NSTORE3][NPR];
+  FTYPE (*ucumformetric)[NSTORE2][NSTORE3][NPR];
+  int enerregion;
+  int *localenerpos;
+  int jj;
+  FTYPE (*utoinvert)[NSTORE2][NSTORE3][NPR];
+  FTYPE (*tempucum)[NSTORE2][NSTORE3][NPR];
+  FTYPE (*useducum)[NSTORE2][NSTORE3][NPR];
+  FTYPE (*myupoint)[NSTORE2][NSTORE3][NPR];
+  int whichpltoavg[NPR];
+  int ifnotavgthencopy[NPR];
+  int is,ie,js,je,ks,ke;
+  int doingextrashiftforstag;
+
+
+
+
+
+
+  if(FLUXB==FLUXCTSTAG){
+    // fill in tempucum with changes that are not controlled well in space, but later fill in ucum from this in controlled way
+    tempucum=GLOBALPOINT(utemparray);
+    useducum=tempucum; // unless changed
+  }
+  else{
+    // no special shifting of indices occurs that requires loop shifting
+    tempucum=ucum;
+    useducum=ucum;
+  }
+
+
+  ucumformetric=GLOBALPOINT(ucumformetric);// temporary space for ucum for metric that is same time as "pb", so not updated yet or is ui
+
+
+
+  /////////////////////////////////////////////
+  //
+  // Setup function tasks
+  //
+  ////////////////////////////////////////////
+
+
+  // for ZLOOP:
+  // avoid looping over region outside active+ghost grid
+  // good because somewhat general and avoid bad inversions, etc.
+  enerregion=TRUEGLOBALWITHBNDENERREGION;
+  localenerpos=enerposreg[enerregion];
+
+
+  accdt=BIG; // initially no limit to dt due to acceleration
+  accdti=accdtj=accdtk=-100;
+  gravitydt=BIG; // initially no limit to dt due to time derivatives in gravity
+  gravitydti=gravitydtj=gravitydtk=-100;
+
+
+
+
+
+  /////////
+  //
+  // set initialstep and finalstep to tell some procedures and diagnostic functions if should be accounting or not
+  //
+  /////////
+  if(timeorder==0){
+    initialstep=1;
+  }
+  else{
+    initialstep=0;
+  }
+
+  if(timeorder==numtimeorders-1){
+    finalstep=1;
+  }
+  else{
+    finalstep=0;
+  }
+
+
+
+
+  /////////
+  //
+  // set dt4diag for source diagnostics
+  //
+  /////////
+  if(timeorder==numtimeorders-1 && (nstep%DIAGSOURCECOMPSTEP==0) ){
+    // every 4 full steps as well as on final step of full step (otherwise diag_source_comp() too expensive)
+    dt4diag=dt4diag_willbe;
+    dt4diag_willbe=0;
+  }
+  else{
+    dt4diag_willbe+=dt;
+    dt4diag=-1.0;
+  }
+
+
+
+  /////////////////////////////////////////////
+  //
+  // Setup loops [+1 extra compared to normal comp region if doing FLUXCTSTAG]
+  //
+  ////////////////////////////////////////////
+  get_flux_startendindices(Uconsevolveloop,&is,&ie,&js,&je,&ks,&ke);
+
+
+
+  /////////////////////////////////////////////
+  //
+  // Set initial ui, temporary space, so ok that COMPZLOOP() goes over +1 in FLUXB==FLUXCTSTAG case
+  //
+  ////////////////////////////////////////////
+  if(timeorder==0){
+    // last timestep's final ucum is stored into ucumformetric and ui as initial term in ucum
+    // copy ucum -> {ucumformetric,ui}
+    if(doingmetricsubstep()) copy_3dnpr_2ptrs(is,ie,js,je,ks,ke,ucum,ucumformetric,ui);
+    else copy_3dnpr(is,ie,js,je,ks,ke,ucum,ui); // only need to setup ui then
+  }
+  else{
+    // preserve this time's value of ucum for the metric (for timeorder==0 ucumformetric is assigned from ui)
+    // copy ucum -> ucumformetric
+    if(doingmetricsubstep()) copy_3dnpr(is,ie,js,je,ks,ke,ucum,ucumformetric);
+  }
+
+
+  /////////////////////////////////////////////
+  //
+  // Compute flux
+  //
+  ////////////////////////////////////////////
+
+#if(PRODUCTION==0)
+  trifprintf( "#0f");
+#endif
+
+
+
+
+  if(truestep){ // only do if not just passing through
+    if(1){
+      // NORMAL:
+      ndt1=ndt2=ndt3=BIG;
+      // pb used here on a stencil, so if pb=pf or pb=pi in pointers, shouldn't change pi or pf yet -- don't currently
+      MYFUN(fluxcalc(stage,initialstep,finalstep,pb,pstag,pl_ct, pr_ct, vpot,F1,F2,F3,CUf,CUnew,fluxdt,fluxtime,&ndt1,&ndt2,&ndt3),"advance.c:advance_standard()", "fluxcalcall", 1);
+    }
+  }// end if not just passing through
+
+
+
+
+
+
+#if(PRODUCTION==0)
+  trifprintf( "1f");
+#endif
+
+
+
+
+  // from here on, pi/pb/pf are only used a zone at a time rather than on a stencil
+
+
+  
+
+
+  // Do comp full loop in case subset of full grid so that boundary cells of subset domain are defined without having to copy over those cells in bounds.c or initbase.gridsectioning.c
+  /////////////
+  //
+  // Utoprim as initial conditions : can't assume want these to be same in the end, so assign
+  //
+  // Since final step often sets pointers of pi=pf, in order to use arbitrary guess, must set here once done with pi,pb,pf.
+  //
+  ////////////
+  // copy pb->pf as initial pf
+  copy_3dnpr_fullloop(pb,pf);
+
+
+
+  /////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////
+  //
+  // now update get flux update [loop should go over normal computational region +1 on outer edges so automatically set field if staggered.  Since we only set tempucum so far, ucum in that +1 region is unaffected]
+  //
+  /////////////////////////////////////////////////////
+
+
+  int didreturnpf;
+  if(truestep){
+
+
+    // initialize uf and ucum if very first time here since ucum is cumulative (+=) [now tempucum is cumulative]
+    // copy 0 -> {uf,tempucum}
+    if(timeorder==0) init_3dnpr_2ptrs(is, ie, js, je, ks, ke,0.0, uf,tempucum);
+
+
+
+#if(WHICHEOM==WITHNOGDET && (NOGDETB1==1 || NOGDETB2==1 || NOGDETB3==1) )
+    // for FLUXB==FLUXCTSTAG, assume no source term for field
+    if(FLUXB==FLUXCTSTAG){
+      dualfprintf(fail_file,"Not setup for field source term if staggered field\n");
+      myexit(176023);
+    }
+#endif
+
+
+
+    ////////////////////////
+    //
+    // FIRST UPDATE FIELD using flux
+    //
+    ////////////////////////
+    int doother=DOALLPL; // default
+    if(FLUXB==FLUXCTSTAG){
+      doother=DONONBPL;
+      
+      // then field version of ui[] is stored as "conserved" value at FACE, not CENT
+      //PLOOPBONLY(pl) MACP0A1(ui,i,j,k,pl) is itself // FACE (see step_ch.c's setup_rktimestep and know that ui=unew for before first substep)
+
+      if(NOGDETB1 ||NOGDETB2 ||NOGDETB3){
+        dualfprintf(fail_file,"This approach requires B have no source terms.\n");
+        myexit(34983463);
+      }
+
+#pragma omp parallel OPENMPGLOBALPRIVATEFORSTATEANDGEOM
+      {
+        int pl,pliter,i,j,k;
+        // zero-out dUgeom in case non-B pl's used.
+        FTYPE dUgeom[NPR]={0.0},dUriemann[NPR],dUriemann1[NPR],dUriemann2[NPR],dUriemann3[NPR];
+
+
+        /////////////////////////////////////////////////////
+        //
+        // [Loop goes over up to +1 normal computational region for getting new staggered U if doing FLUXCTSTAG] so can do interpolation on it to get centered field
+        //
+        /////////////////////////////////////////////////////
+
+        OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
+
+#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+        OPENMP3DLOOPBLOCK{
+          OPENMP3DLOOPBLOCK2IJK(i,j,k);
+
+          // dUriemann is actually average quantity, but we treat is as a point quantity at the zone center
+          flux2dUavg(DOBPL,i,j,k,F1,F2,F3,dUriemann1,dUriemann2,dUriemann3);
+          PLOOPBONLY(pl) dUriemann[pl]=dUriemann1[pl]+dUriemann2[pl]+dUriemann3[pl]; // this addition is one type of avg->point mistake
+
+          // Get update
+          // ui is itself at FACE as already set
+          dUtoU(DOBPL,i,j,k,CENT,dUgeom, dUriemann, CUf, CUnew, MAC(ui,i,j,k), MAC(uf,i,j,k), MAC(tempucum,i,j,k));
+        }
+      }
+
+
+      // if using staggered grid for magnetic field, then need to convert ucum to pstag to new pb/pf
+      // GODMARK: Use of globals
+      myupoint=GLOBALPOINT(upointglobal);
+
+      // first copy over all quantities as point, which is true except for fields if FLUXRECON active
+      // copy utoinvert -> myupoint
+      // copy all pl's since myupoint eventually used to invert rest of non-field quantities
+      copy_tempucum_finalucum(DOALLPL,Uconsevolveloop,tempucum,myupoint);
+
+
+      if(extrazones4emf && dofluxreconevolvepointfield==0){
+        // uses tempucum and gets reaveraged field into myupoint
+        field_integrate_fluxrecon(stage, pb, tempucum, myupoint);
+      }
+
+
+      // first pb entry is used for shock indicator, second is filled with new field
+      // myupoint goes in as staggered point value of magnetic flux and returned as centered point value of magnetic flux
+      interpolate_ustag2fieldcent(stage, boundtime, timeorder, numtimeorders, pb, pstag, myupoint, pf);
+
+      ////////////////////    
+      // now myupoint and pf contain centered point conserved and primitive quantities ready for MHD or RAD inversion procedures (or implicit use of such inversions)
+      ////////////////////
+
+    }// end if staggered field method
+  
+
+
+
+
+    // get loop range (only needs to be over same location as final centered primitive to invert.
+    get_inversion_startendindices(Uconsevolveloop,&is,&ie,&js,&je,&ks,&ke);
+
+
+    ////////////////////////
+    //
+    // UPDATE NON_FIELD using flux and source
+    //
+    ////////////////////////
+#pragma omp parallel OPENMPGLOBALPRIVATEFORSTATEANDGEOM
+    {
+      int pl,pliter,i,j,k;
+      struct of_geom geomdontuse;
+      struct of_geom *ptrgeom=&geomdontuse;
+      FTYPE Uitemp[NPR];
+      FTYPE dUgeom[NPR]={0},dUriemann[NPR]={0},dUriemann1[NPR]={0},dUriemann2[NPR]={0},dUriemann3[NPR]={0},dUcomp[NUMSOURCES][NPR]={0};
+      struct of_state qdontuse;
+      struct of_state *qptr=&qdontuse;
+      struct of_state qdontuse2;
+      struct of_state *qptr2=&qdontuse2; // different qptr since call normal and special get_state()
+
+
+
+
+      OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
+
+      
+#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+      OPENMP3DLOOPBLOCK{
+        OPENMP3DLOOPBLOCK2IJK(i,j,k);
+
+
+        // set geometry for centered zone to be updated
+        get_geometry(i, j, k, CENT, ptrgeom);
+      
+        // find Ui(pi)
+        // force use of primitive to set Ui since otherwise wherever corrected/changed primitive (in fixup, etc.) then would have to change conserved quantity, while same since both are point values
+        // only field for staggered method is special point value at faces that needs to come from conserved quantity
+        MYFUN(get_state(MAC(pi,i,j,k), ptrgeom, qptr),"step_ch.c:advance()", "get_state()", 1);
+        MYFUN(primtoU(UEVOLVE,MAC(pi,i,j,k), qptr, ptrgeom, Uitemp),"step_ch.c:advance()", "primtoU()", 1);
+
+        if(FLUXB==FLUXCTSTAG || DOENOFLUX != NOENOFLUX ){
+          // then field version of ui[] is stored as "conserved" value at FACE, not CENT
+          PLOOPNOB1(pl) MACP0A1(ui,i,j,k,pl)=Uitemp[pl]; // CENT
+          //PLOOPBONLY(pl) MACP0A1(ui,i,j,k,pl) is itself // FACE (see step_ch.c's setup_rktimestep and know that ui=unew for before first substep)
+          PLOOPNOB2(pl) MACP0A1(ui,i,j,k,pl)=Uitemp[pl]; // CENT
+        }
+        else{
+          PLOOP(pliter,pl) MACP0A1(ui,i,j,k,pl)=Uitemp[pl]; // all at CENT
+        }
+ 
+        // dUriemann is actually average quantity, but we treat is as a point quantity at the zone center
+        flux2dUavg(doother,i,j,k,F1,F2,F3,dUriemann1,dUriemann2,dUriemann3);
+        PLOOP(pliter,pl) dUriemann[pl]=dUriemann1[pl]+dUriemann2[pl]+dUriemann3[pl]; // this addition is one type of avg->point mistake
+
+
+
+        /////////////////////////////////////////////////////
+        // get state since both source() and dUtodt() need same state
+        // From pb, so different than state for Ui(pi)
+        MYFUN(get_stateforsource(MAC(pb,i,j,k), ptrgeom, &qptr2) ,"advance.c:()", "get_state() dir=0", 1);
+      
+
+        // note that uf and ucum are initialized inside setup_rktimestep() before first substep
+
+
+        // find dU(pb)
+        // so pf contains updated field at cell center for use in (e.g.) implicit solver that uses inversion P(U)
+        MYFUN(source(MAC(pb,i,j,k), MAC(pf,i,j,k), &didreturnpf, ptrgeom, qptr2, MAC(ui,i,j,k), MAC(uf,i,j,k), CUf, dUriemann, dUcomp, dUgeom),"step_ch.c:advance()", "source", 1);
+        // assumes final dUcomp is nonzero and representative of source term over this timestep
+ 
+
+
+#if(SPLITNPR)
+        // don't update metric if only doing B1-B3
+        if(advancepassnumber==-1 || advancepassnumber==1)
+#endif
+          {
+#if(ACCURATESOURCEDIAG)
+            if(DODIAGS){
+              diag_source_comp(ptrgeom,dUcomp,fluxdt);
+              diag_source_all(ptrgeom,dUgeom,fluxdt);
+            }
+#else
+            if(DODIAGS){
+              diag_source_comp(ptrgeom,dUcomp,dt4diag);
+              diag_source_all(ptrgeom,dUgeom,dt4diag);
+            }
+#endif
+          }
+
+      
+
+        // Get update
+        dUtoU(doother,i,j,k,ptrgeom->p,dUgeom, dUriemann, CUf, CUnew, MAC(ui,i,j,k), MAC(uf,i,j,k), MAC(tempucum,i,j,k));
+      
+      
+      
+        // get timestep limit from acceleration
+#if(LIMITDTWITHSOURCETERM)
+#if(SPLITNPR)
+        // don't do dUtodt if only doing B1-B3
+        if(advancepassnumber==-1 || advancepassnumber==1)
+#endif
+          {
+            // geometry is post-metric update, but should still give good estimate of future dt
+            dUtodt(ptrgeom, qptr2, MAC(pb,i,j,k), dUgeom, dUriemann, dUcomp[GEOMSOURCE], &accdt_ij, &gravitydt_ij);
+
+#pragma omp critical
+            {
+              if(accdt_ij<accdt){
+                accdt=accdt_ij;
+                accdti=i;
+                accdtj=j;
+                accdtk=k;
+              }
+              if(gravitydt_ij<gravitydt){
+                gravitydt=gravitydt_ij;
+                gravitydti=i;
+                gravitydtj=j;
+                gravitydtk=k;
+              }
+            }// end critical region
+          }// end block that may mean: if not only doing B1-B3
+
+#endif // end if doing LIMITDTWITHSOURCETERM
+          
+
+
+
+
+
+
+      } // end COMPZLOOP :: end looping to obtain dUriemann and full unew update
+    }// end parallel block
+  } // end if truestep
+  else{
+    // then nothing to do since nothing changed
+    // previously updated dU and got new ucum as fed into metric, but now metric has its own ucummetric so all that is not needed
+    // SUPERGODMARK: no, I guess I don't recall what was being done for metric and why when passing through with dt==0.0
+
+    // just need to copy ui -> {uf,tempucum} to duplicate behavior of dUtoU()
+    copy_3dnpr_2ptrs(is,ie,js,je,ks,ke,ui,uf,tempucum);
+  }
+
+
+
+
+
+
+
+#if(PRODUCTION==0)
+  trifprintf( "#0m");
+#endif
+
+  
+    
+  /////////////////////////////////////////////
+  //
+  // EVOLVE (update/compute) METRIC HERE
+  // In general computes stress-energy tensor (T) from pb and T is then used to compute metric
+  // Done here instead of after flux since horizon_flux() updates flux through boundary that would change metric
+  // want metric to be at same time as everything else done with pb so RK method is consistent
+  //
+  // uses unew that's NOT updated yet
+  /////////////////////////////////////////////
+  if(truestep){
+    if(doingmetricsubstep()){
+#if(SPLITNPR)
+      // don't update metric if only doing B1-B3
+      if(advancepassnumber==-1 || advancepassnumber==1)
+#endif
+        {
+          compute_new_metric_substep(CUf,CUnew,pb,ucumformetric); // CHANGINGMARK : Not sure if CUnew here is correct
+        }
+    }// end if doing metric substepping
+  }
+
+
+
+
+  ////////////////////////////////
+  //
+  // compute flux diagnostics (accurately using all substeps)
+  //
+  ///////////////////////////////
+  if(truestep){
+    // must come after metric changes that can change where flux surface is since otherwise when flux surface changes, we won't track this substep's flux through the new surface but the old surface (which could even be at r=0 and have no flux)
+    // if using unew, then since metric update above uses old unew, need present flux at new horizon surface
+#if(SPLITNPR)
+    // don't update metric if only doing B1-B3
+    if(advancepassnumber==-1 || advancepassnumber==1)
+#endif
+      {
+#if(ACCURATEDIAG)
+        diag_flux_pureflux(pb,F1, F2, F3, fluxdt); // fluxdt is true dt for this flux as added in dUtoU() as part of ucum
+#endif
+      }
+  }
+
+
+
+
+
+
+  
+#if(PRODUCTION==0)
+  trifprintf( "#0s");
+#endif
+
+
+
+
+
+  ///////////////////////////////////////
+  //
+  // Copy over tempucum -> ucum per pl to account for staggered field
+  //
+  // And choose which RK-quantity to invert
+  //
+  ///////////////////////////////////////
+  if(finalstep){
+    if(FLUXB==FLUXCTSTAG){
+      // copy over new ucum in only desired locations irrespective of where tempucum was updated
+      // copy tempucum -> ucum
+      copy_tempucum_finalucum(DOALLPL,Uconsevolveloop,tempucum,ucum); // fill-in all pl's for storage
+    }
+    else{
+      // else tempucum and ucum are actually the same array, so no need to copy
+    }
+    // invert ucum on final step
+    utoinvert = ucum;
+    useducum=ucum;
+  }
+  else{
+    // invert uf on substeps
+    utoinvert = uf;
+    // tempucum just cumulates for now
+    useducum=tempucum;
+  }
+
+
+  ////////////////////////////
+  //
+  // setup myupoint to invert
+  //
+  ////////////////////////////
+  if(FLUXB==FLUXCTSTAG){
+    // already have field in myupoint, just copy the others over
+    copy_tempucum_finalucum(DONONBPL,Uconsevolveloop,utoinvert,myupoint); // only copy over NONBPL since myupoint's B1,B2,B3 already have been set.
+  }
+  else{
+    // utoinvert never reassigned from global a_utoinvert assignment since if here not doing FLUXCTSTAG
+    myupoint=utoinvert;
+  }
+
+
+
+
+
+
+
+
+  ////////////////////////////
+  //
+  // INVERT [loop only over "centered" cells]
+  //
+  ////////////////////////////
+
+
+  // get loop range
+  get_inversion_startendindices(Uconsevolveloop,&is,&ie,&js,&je,&ks,&ke);
+
+#pragma omp parallel OPENMPGLOBALPRIVATEFORINVERSION
+  {
+    int pl,pliter,i,j,k;
+    struct of_geom geomdontuse;
+    struct of_geom *ptrgeom=&geomdontuse;
+    FTYPE prbefore[NPR];
+    struct of_newtonstats newtonstats; // not pointer
+    int showmessages=1;
+    int allowlocalfailurefixandnoreport=1; // allow local fixups
+    
+    OPENMP3DLOOPVARSDEFINE;  OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
+
+    // initialize counters
+    newtonstats.nstroke=newtonstats.lntries=0;
+
+
+#pragma omp for schedule(OPENMPVARYENDTIMESCHEDULE(),OPENMPCHUNKSIZE(blocksize)) reduction(+: nstroke)
+    OPENMP3DLOOPBLOCK{
+      OPENMP3DLOOPBLOCK2IJK(i,j,k);
+ 
+      // set geometry for centered zone to be updated
+      get_geometry(i, j, k, CENT, ptrgeom);
+
+      
+      // invert U->p
+      if(finalstep){ // last call, so ucum is cooked and ready to eat!
+        // store guess for diss_compute before changed by normal inversion
+        PALLLOOP(pl) prbefore[pl]=MACP0A1(pf,i,j,k,pl);
+
+        MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,EVOLVEUTOPRIM,UEVOLVE,MAC(myupoint,i,j,k), ptrgeom, MAC(pf,i,j,k),&newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
+        nstroke+=newtonstats.nstroke; newtonstats.nstroke=newtonstats.lntries=0;
+
+
+#if(DODISS||DODISSVSR)
+        // then see what entropy inversion would give
+        diss_compute(EVOLVEUTOPRIM,UEVOLVE,MAC(myupoint,i,j,k),ptrgeom,prbefore,MAC(pf,i,j,k),&newtonstats);
+#endif
+ 
+      }
+      else{ // otherwise still iterating on primitives
+        MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,EVOLVEUTOPRIM,UEVOLVE,MAC(myupoint,i,j,k), ptrgeom, MAC(pf,i,j,k),&newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
+        nstroke+=newtonstats.nstroke; newtonstats.nstroke=newtonstats.lntries=0;
+      }
+
+
+
+
+      
+#if(SPLITNPR)
+      // don't update metric if only doing B1-B3
+      if(advancepassnumber==-1 || advancepassnumber==1)
+#endif
+        {
+          // immediate local (i.e. 1-zone) fix
+#if(FIXUPZONES==FIXUP1ZONE)
+          // SUPERGODMARK: Below should differentiate beteween whether want negative densities fixed or not, but right now fixup1zone() does all
+          if((STEPOVERNEGU==0)||(STEPOVERNEGRHO==0)||(STEPOVERNEGRHOU==0)||(finalstep)){
+            MYFUN(fixup1zone(MAC(pf,i,j,k),MAC(useducum,i,j,k), ptrgeom,finalstep),"fixup.c:fixup()", "fixup1zone()", 1);
+          }
+#endif
+        }
+
+
+    }// end COMPZLOOP
+  }// end parallel section
+
+
+
+
+
+
+
+  /////////////////////////////////
+  //
+  // If not fixing up primitives after inversion immediately, then fix up all zones at once afterwards
+  //
+  /////////////////////////////////
+
+#if(SPLITNPR)
+  // don't update metric if only doing B1-B3
+  if(advancepassnumber==-1 || advancepassnumber==1)
+#endif
+    {
+#if(FIXUPZONES==FIXUPALLZONES)
+      fixup(stage,pf,useducum,finalstep);
+#endif  
+    }
+
+
+  /////////////////////////////////
+  //
+  // Determine next timestep from waves, fluxes, and source updates
+  //
+  /////////////////////////////////
+
+
+  prepare_globaldt(truestep,ndt1,ndt2,ndt3,accdt,accdti,accdtj,accdtk,gravitydt,gravitydti,gravitydtj,gravitydtk,ndt);
+
+
+
+#if(PRODUCTION==0)
+  trifprintf( "2f");
+#endif
+
+  return (0);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// this method guarantees conservation of non-sourced conserved quantities when metric is time-dependent
+// this method has updated field staggered method
+// Note that when dt==0.0, assume no fluxing, just take ucum -> ui -> {uf,ucum} and invert.  Used with metric update.
+static int advance_standard_orig_(
                             int truestep,
                             int stage,
                             FTYPE (*pi)[NSTORE2][NSTORE3][NPR],
@@ -321,14 +1059,14 @@ static int advance_standard(
       // NORMAL:
       ndt1=ndt2=ndt3=BIG;
       // pb used here on a stencil, so if pb=pf or pb=pi in pointers, shouldn't change pi or pf yet -- don't currently
-      MYFUN(fluxcalc(stage,initialstep,finalstep,pb,pstag,pl_ct, pr_ct, vpot,F1,F2,F3,CUf,CUnew,fluxdt,fluxtime,&ndt1,&ndt2,&ndt3),"advance.c:advance_standard()", "fluxcalcall", 1);
+      MYFUN(fluxcalc(stage,initialstep,finalstep,pb,pstag,pl_ct, pr_ct, vpot,F1,F2,F3,CUf,CUnew,fluxdt,fluxtime,&ndt1,&ndt2,&ndt3),"advance.c:advance_standard_orig()", "fluxcalcall", 1);
     }
 
   
 #if(0)// DEBUG:
     if(1){
       ndt1donor=ndt2donor=ndt3donor=BIG;
-      MYFUN(fluxcalc_donor(stage,pb,pstag,pl_ct, pr_ct, vpot,GLOBALPOINT(F1EM),GLOBALPOINT(F2EM),GLOBALPOINT(F3EM),CUf,CUnew,fluxdt,fluxtime,&ndt1donor,&ndt2donor,&ndt3donor),"advance.c:advance_standard()", "fluxcalcall", 1);
+      MYFUN(fluxcalc_donor(stage,pb,pstag,pl_ct, pr_ct, vpot,GLOBALPOINT(F1EM),GLOBALPOINT(F2EM),GLOBALPOINT(F3EM),CUf,CUnew,fluxdt,fluxtime,&ndt1donor,&ndt2donor,&ndt3donor),"advance.c:advance_standard_orig()", "fluxcalcall", 1);
     }
     // DEBUG:
     if(1){
@@ -484,7 +1222,7 @@ static int advance_standard(
         }
  
         // dUriemann is actually average quantity, but we treat is as a point quantity at the zone center
-        flux2dUavg(i,j,k,F1,F2,F3,dUriemann1,dUriemann2,dUriemann3);
+        flux2dUavg(DOALLPL,i,j,k,F1,F2,F3,dUriemann1,dUriemann2,dUriemann3);
         PLOOP(pliter,pl) dUriemann[pl]=dUriemann1[pl]+dUriemann2[pl]+dUriemann3[pl]; // this addition is one type of avg->point mistake
 
 
@@ -534,7 +1272,7 @@ static int advance_standard(
       
 
         // Get update
-        dUtoU(i,j,k,ptrgeom->p,dUgeom, dUriemann, CUf, CUnew, MAC(ui,i,j,k), MAC(uf,i,j,k), MAC(tempucum,i,j,k));
+        dUtoU(DOALLPL, i,j,k,ptrgeom->p,dUgeom, dUriemann, CUf, CUnew, MAC(ui,i,j,k), MAC(uf,i,j,k), MAC(tempucum,i,j,k));
       
       
       
@@ -680,7 +1418,7 @@ static int advance_standard(
     if(FLUXB==FLUXCTSTAG){
       // copy over new ucum in only desired locations irrespective of where tempucum was updated
       // copy tempucum -> ucum
-      copy_tempucum_finalucum(Uconsevolveloop,tempucum,ucum);
+      copy_tempucum_finalucum(DOALLPL,Uconsevolveloop,tempucum,ucum);
     }
     utoinvert = ucum;
     useducum=ucum;
@@ -712,7 +1450,7 @@ static int advance_standard(
     // first copy over all quantities as point, which is true except for fields if FLUXRECON active
     // copy utoinvert -> myupoint
     // copy all pl's since myupoint eventually used to invert rest of non-field quantities
-    copy_tempucum_finalucum(Uconsevolveloop,utoinvert,myupoint);
+    copy_tempucum_finalucum(DOALLPL,Uconsevolveloop,utoinvert,myupoint);
 
 
     if(extrazones4emf && dofluxreconevolvepointfield==0){
@@ -878,6 +1616,16 @@ static int advance_standard(
 
   return (0);
 }
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1074,7 +1822,7 @@ static int advance_finitevolume(
   if(truestep){
     ndt1=ndt2=ndt3=BIG;
     // pb used here on a stencil, so if pb=pf or pb=pi in pointers, shouldn't change pi or pf yet -- don't currently
-    MYFUN(fluxcalc(stage,initialstep,finalstep,pb,pstag,pl_ct, pr_ct, vpot,F1,F2,F3,CUf,CUnew,fluxdt,fluxtime,&ndt1,&ndt2,&ndt3),"advance.c:advance_standard()", "fluxcalcall", 1);
+    MYFUN(fluxcalc(stage,initialstep,finalstep,pb,pstag,pl_ct, pr_ct, vpot,F1,F2,F3,CUf,CUnew,fluxdt,fluxtime,&ndt1,&ndt2,&ndt3),"advance.c:advance_standard_orig()", "fluxcalcall", 1);
   }
 
 #if(PRODUCTION==0)
@@ -1155,7 +1903,7 @@ static int advance_finitevolume(
 
 
         // dUriemann is volume averaged quantity (here this calcuation is done in case want to limit sources)
-        flux2dUavg(i,j,k,F1,F2,F3,dUriemann1,dUriemann2,dUriemann3);
+        flux2dUavg(DOALLPL,i,j,k,F1,F2,F3,dUriemann1,dUriemann2,dUriemann3);
         PLOOP(pliter,pl) dUriemann[pl]=dUriemann1[pl]+dUriemann2[pl]+dUriemann3[pl]; // this addition is entirely consistent with point->averages
 
      
@@ -1284,7 +2032,7 @@ static int advance_finitevolume(
     
 
         // dUriemann is volume averaged quantity
-        flux2dUavg(i,j,k,F1,F2,F3,dUriemann1,dUriemann2,dUriemann3);
+        flux2dUavg(DOALLPL,i,j,k,F1,F2,F3,dUriemann1,dUriemann2,dUriemann3);
         PLOOP(pliter,pl) dUriemann[pl]=dUriemann1[pl]+dUriemann2[pl]+dUriemann3[pl]; // this addition is entirely consistent with point->averages
       }
       else{
@@ -1295,7 +2043,7 @@ static int advance_finitevolume(
       }
 
       // find uf==Uf and additional terms to ucum
-      dUtoU(i,j,k,ptrgeom->p,dUgeom, dUriemann, CUf, CUnew, MAC(ui,i,j,k), MAC(uf,i,j,k), MAC(tempucum,i,j,k));
+      dUtoU(DOALLPL, i,j,k,ptrgeom->p,dUgeom, dUriemann, CUf, CUnew, MAC(ui,i,j,k), MAC(uf,i,j,k), MAC(tempucum,i,j,k));
 
 
 
@@ -1409,7 +2157,7 @@ static int advance_finitevolume(
   if(finalstep){
     // last call, so ucum is cooked and ready to eat!
     if(FLUXB==FLUXCTSTAG){
-      copy_tempucum_finalucum(Uconsevolveloop,tempucum,ucum);
+      copy_tempucum_finalucum(DOALLPL,Uconsevolveloop,tempucum,ucum);
     }
     // useducum only used after ucum assigned to ui above
     utoinvert=ucum;
@@ -1448,7 +2196,7 @@ static int advance_finitevolume(
   }
   else{
     //    myupoint=utoinvert;
-    copy_tempucum_finalucum(Uconsevolveloop,utoinvert,myupoint);
+    copy_tempucum_finalucum(DOALLPL,Uconsevolveloop,utoinvert,myupoint);
   }
 
 
@@ -1930,7 +2678,7 @@ static FTYPE fractional_diff( FTYPE a, FTYPE b )
 
 
 // get dUavg
-static void flux2dUavg(int i, int j, int k, FTYPE (*F1)[NSTORE2][NSTORE3][NPR],FTYPE (*F2)[NSTORE2][NSTORE3][NPR],FTYPE (*F3)[NSTORE2][NSTORE3][NPR],FTYPE *dU1avg,FTYPE *dU2avg,FTYPE *dU3avg)
+static void flux2dUavg(int whichpl, int i, int j, int k, FTYPE (*F1)[NSTORE2][NSTORE3][NPR],FTYPE (*F2)[NSTORE2][NSTORE3][NPR],FTYPE (*F3)[NSTORE2][NSTORE3][NPR],FTYPE *dU1avg,FTYPE *dU2avg,FTYPE *dU3avg)
 {
   FTYPE idx1,idx2,idx3;
   int pl,pliter;
@@ -1952,126 +2700,74 @@ static void flux2dUavg(int i, int j, int k, FTYPE (*F1)[NSTORE2][NSTORE3][NPR],F
     dU3avg[pl]=0;
   }
 
-
   if(FLUXB==FLUXCD){ // don't use volume reg. since differencing is large
-    PLOOPNOB1(pl){
+    
+    if(whichpl==DOALLPL || whichpl==DONONBPL){
+
+      PLOOPNOB1(pl){
 #if(N1>1)
-      dU1avg[pl]=(
-                  - (MACP0A1(F1,ip1mac(i),j,k,pl) - MACP0A1(F1,i,j,k,pl)) *idx1
-                  );
+        dU1avg[pl]=(
+                    - (MACP0A1(F1,ip1mac(i),j,k,pl) - MACP0A1(F1,i,j,k,pl)) *idx1
+                    );
 #endif
 #if(N2>1)
-      dU2avg[pl]=(
-                  - (MACP0A1(F2,i,jp1mac(j),k,pl) - MACP0A1(F2,i,j,k,pl)) *idx2
-                  );
+        dU2avg[pl]=(
+                    - (MACP0A1(F2,i,jp1mac(j),k,pl) - MACP0A1(F2,i,j,k,pl)) *idx2
+                    );
 #endif
 
 #if(N3>1)
-      dU3avg[pl]=(
-                  - (MACP0A1(F3,i,j,kp1mac(k),pl) - MACP0A1(F3,i,j,k,pl)) *idx3
-                  );
+        dU3avg[pl]=(
+                    - (MACP0A1(F3,i,j,kp1mac(k),pl) - MACP0A1(F3,i,j,k,pl)) *idx3
+                    );
 #endif
 
-    }
-
-    // simple version that assumes Fi[Bi] is set to 0 in flux.c for FLUXCD (which it is currently)
-    PLOOPBONLY(pl){
+      }
+    
+      // rest of variables (if any) are normal
+      PLOOPNOB2(pl){
 #if(N1>1)
-      dU1avg[pl]=(
-                  - (MACP0A1(F1,ip1mac(i),j,k,pl) - MACP0A1(F1,im1mac(i),j,k,pl)) *idx1
-                  );
+        dU1avg[pl]=(
+                    - (MACP0A1(F1,ip1mac(i),j,k,pl) - MACP0A1(F1,i,j,k,pl)) *idx1
+                    );
 #endif
 #if(N2>1)
-      dU2avg[pl]=(
-                  - (MACP0A1(F2,i,jp1mac(j),k,pl) - MACP0A1(F2,i,jm1mac(j),k,pl)) *idx2
-                  );
+        dU2avg[pl]=(
+                    - (MACP0A1(F2,i,jp1mac(j),k,pl) - MACP0A1(F2,i,j,k,pl)) *idx2
+                    );
 #endif
 #if(N3>1)
-      dU3avg[pl]=(
-                  - (MACP0A1(F3,i,j,kp1mac(k),pl) - MACP0A1(F3,i,j,km1mac(k),pl)) *idx3
-                  );
+        dU3avg[pl]=(
+                    - (MACP0A1(F3,i,j,kp1mac(k),pl) - MACP0A1(F3,i,j,k,pl)) *idx3
+                    );
 #endif
-    }
 
-    /*
-    // old version
-    // FIELDS are special.  The 0's would have come automatically, but spacing is twice the normal size.
-    // the double spacing is accounted for in fluxct().
-    pl=B1;
-    #if(N1>1)
-    dU1avg[pl]=(
-    0.0
-    );
-    #endif
-    #if(N2>1)
-    dU2avg[pl]=(
-    - (MACP0A1(F2,i,jp1mac(j),k,pl) - MACP0A1(F2,i,jm1mac(j),k,pl)) *idx2
-    );
-    #endif
-    #if(N3>1)
-    dU3avg[pl]=(
-    - (MACP0A1(F3,i,j,kp1mac(k),pl) - MACP0A1(F3,i,j,km1mac(k),pl)) *idx3
-    );
-    #endif
+      }
+    }// end if doing non-B U
 
-    pl=B2;
-    #if(N1>1)
-    dU1avg[pl]=(
-    - (MACP0A1(F1,ip1mac(i),j,k,pl) - MACP0A1(F1,im1mac(i),j,k,pl)) *idx1
-    );
-    #endif
-    #if(N2>1)
-    dU2avg[pl]=(
-    0.0
-    );
-    #endif
-    #if(N3>1)
-    dU3avg[pl]=(
-    - (MACP0A1(F3,i,j,kp1mac(k),pl) - MACP0A1(F3,i,j,km1mac(k),pl)) *idx3
-    );
-    #endif
+    if(whichpl==DOALLPL || whichpl==DOBPL){
 
-
-    pl=B3;
-    #if(N1>1)
-    dU1avg[pl]=(
-    - (MACP0A1(F1,ip1mac(i),j,k,pl) - MACP0A1(F1,im1mac(i),j,k,pl)) *idx1
-    );
-    #endif
-    #if(N2>1)
-    dU2avg[pl]=(
-    - (MACP0A1(F2,i,jp1mac(j),k,pl) - MACP0A1(F2,i,jm1mac(j),k,pl)) *idx2
-    );
-    #endif
-    #if(N3>1)
-    dU3avg[pl]=(
-    0.0
-    );
-    #endif
-    // end old version
-    */
-
-
-    // rest of variables (if any) are normal
-    PLOOPNOB2(pl){
+      // simple version that assumes Fi[Bi] is set to 0 in flux.c for FLUXCD (which it is currently)
+      PLOOPBONLY(pl){
 #if(N1>1)
-      dU1avg[pl]=(
-                  - (MACP0A1(F1,ip1mac(i),j,k,pl) - MACP0A1(F1,i,j,k,pl)) *idx1
-                  );
+        dU1avg[pl]=(
+                    - (MACP0A1(F1,ip1mac(i),j,k,pl) - MACP0A1(F1,im1mac(i),j,k,pl)) *idx1
+                    );
 #endif
 #if(N2>1)
-      dU2avg[pl]=(
-                  - (MACP0A1(F2,i,jp1mac(j),k,pl) - MACP0A1(F2,i,j,k,pl)) *idx2
-                  );
+        dU2avg[pl]=(
+                    - (MACP0A1(F2,i,jp1mac(j),k,pl) - MACP0A1(F2,i,jm1mac(j),k,pl)) *idx2
+                    );
 #endif
 #if(N3>1)
-      dU3avg[pl]=(
-                  - (MACP0A1(F3,i,j,kp1mac(k),pl) - MACP0A1(F3,i,j,k,pl)) *idx3
-                  );
+        dU3avg[pl]=(
+                    - (MACP0A1(F3,i,j,kp1mac(k),pl) - MACP0A1(F3,i,j,km1mac(k),pl)) *idx3
+                    );
 #endif
+      }
+    }// end if doing B U
 
-    }
-  }
+  }// end FLUXCD
 
   else{
 
@@ -2087,6 +2783,8 @@ static void flux2dUavg(int i, int j, int k, FTYPE (*F1)[NSTORE2][NSTORE3][NPR],F
 
     // other (normal) FLUXB methods, including FLUXCTSTAG
     PLOOP(pliter,pl) {
+      if(whichpl==DONONBPL && BPL(pl)==1 || whichpl==DOBPL && BPL(pl)==0) continue;
+
 
 #if(IF3DSPCTHENMPITRANSFERATPOLE==1)
       if(pl!=B2 && preconditionF2lower) lowerF2=0.0;
@@ -2131,29 +2829,40 @@ static void flux2dUavg(int i, int j, int k, FTYPE (*F1)[NSTORE2][NSTORE3][NPR],F
 
 
 // convert point versions of U_i^{n} and dU -> U_i^{n+1} and other versions
-static void dUtoU(int i, int j, int k, int loc, FTYPE *dUgeom, FTYPE *dUriemann, FTYPE *CUf, FTYPE *CUnew, FTYPE *Ui,  FTYPE *Uf, FTYPE *ucum)
+static void dUtoU(int whichpl, int i, int j, int k, int loc, FTYPE *dUgeom, FTYPE *dUriemann, FTYPE *CUf, FTYPE *CUnew, FTYPE *Ui,  FTYPE *Uf, FTYPE *ucum)
 {
   int pl,pliter;
   void dUtoU_check(int i, int j, int k, int loc, int pl, FTYPE *dUgeom, FTYPE *dUriemann, FTYPE *CUf, FTYPE *CUnew, FTYPE *Ui,  FTYPE *Uf, FTYPE *ucum);
 
 
 
-
-  // finally assign new Uf and ucum
-  // store uf to avoid recomputing U(pf) used later as pb for advance()
-  PLOOP(pliter,pl) Uf[pl] = UFSET(CUf,dt,Ui[pl],Uf[pl],dUriemann[pl],dUgeom[pl]);
-
-
-  // how much of Ui, dU, and Uf to keep for final solution
-  // ultimately ucum is actual solution used to find final pf
-  PLOOP(pliter,pl) ucum[pl] += UCUMUPDATE(CUnew,dt,Ui[pl],Uf[pl],dUriemann[pl],dUgeom[pl]);
-
+  if(whichpl==DOALLPL){
+    // finally assign new Uf and ucum
+    // store uf to avoid recomputing U(pf) used later as pb for advance()
+    PLOOP(pliter,pl) Uf[pl] = UFSET(CUf,dt,Ui[pl],Uf[pl],dUriemann[pl],dUgeom[pl]);
+    
+    
+    // how much of Ui, dU, and Uf to keep for final solution
+    // ultimately ucum is actual solution used to find final pf
+    PLOOP(pliter,pl) ucum[pl] += UCUMUPDATE(CUnew,dt,Ui[pl],Uf[pl],dUriemann[pl],dUgeom[pl]);
 
 #if(PRODUCTION==0)
-  if(FLUXB!=FLUXCTSTAG){// turned off by default for FLUXB==FLUXCTSTAG since even with PRODUCTION==0, FLUXB==FLUXCTSTAG's extended loop causes output at edges.
-    PLOOP(pliter,pl) dUtoU_check(i,j,k,loc,pl, dUgeom, dUriemann, CUf, CUnew, Ui,  Uf, ucum);
-  }
+    if(FLUXB!=FLUXCTSTAG){// turned off by default for FLUXB==FLUXCTSTAG since even with PRODUCTION==0, FLUXB==FLUXCTSTAG's extended loop causes output at edges.
+      PLOOP(pliter,pl) dUtoU_check(i,j,k,loc,pl, dUgeom, dUriemann, CUf, CUnew, Ui,  Uf, ucum);
+    }
 #endif
+
+  }
+  else if(whichpl==DOBPL){
+    PLOOPBONLY(pl) Uf[pl] = UFSET(CUf,dt,Ui[pl],Uf[pl],dUriemann[pl],dUgeom[pl]);
+    PLOOPBONLY(pl) ucum[pl] += UCUMUPDATE(CUnew,dt,Ui[pl],Uf[pl],dUriemann[pl],dUgeom[pl]);
+  }
+  else if(whichpl==DONONBPL){
+    PLOOP(pliter,pl) if(!BPL(pl)) Uf[pl] = UFSET(CUf,dt,Ui[pl],Uf[pl],dUriemann[pl],dUgeom[pl]);
+    PLOOP(pliter,pl) if(!BPL(pl)) ucum[pl] += UCUMUPDATE(CUnew,dt,Ui[pl],Uf[pl],dUriemann[pl],dUgeom[pl]);
+  }
+
+
 
 }
 

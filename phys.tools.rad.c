@@ -269,13 +269,14 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
   int doingit=0;
 #if(1)
   if(nstep==1 && steppart==0 && ptrgeom->i==16 && ptrgeom->j==4 && ptrgeom->k==0 && myid==6){ // so similar situation and grid at least
+    dualfprintf(fail_file,"DOINGIT\n");
     doingit=1;
 
 dt=  0.0042442838741569434583;CUf[2]=                       0.5;pin[0]=    0.82133999827905109707;Uiin[0]=    0.88431091907420555633;Ufin[0]=                         0;dUother[0]=-5.0024930289881199527e-06;pin[1]= 0.00021647631951235228073;Uiin[1]=   0.014888392679125363067;Ufin[1]=                         0;dUother[1]=-8.4507029782070272192e-08;pin[2]=  0.0038132029655719230736;Uiin[2]=      1.726626739230534639;Ufin[2]=                         0;dUother[2]=  0.0010432722210732850274;pin[3]= 0.00025209278341441304745;Uiin[3]=  0.0014462157383832252317;Ufin[3]=                         0;dUother[3]=    0.11382455704071276338;pin[4]=  0.0020962681837186076471;Uiin[4]=     24.584387095002524943;Ufin[4]=                         0;dUother[4]= -0.0001389172426323190473;pin[5]= 1.7320654379886289489e-05;Uiin[5]=    0.03939613714896833853;Ufin[5]=                         0;dUother[5]=-3.1350616010614794771e-08;pin[6]=-4.6043509248704378492e-08;Uiin[6]=                         0;Ufin[6]=                         0;dUother[6]= 7.7424146779867995632e-09;pin[7]=-4.4131736193679712551e-10;Uiin[7]=-1.7466174047346716303e-23;Ufin[7]=                         0;dUother[7]=-5.4130434712384561599e-07;pin[8]=     8.4180452807836352808;Uiin[8]=    -9.0719301069058669446;Ufin[8]=                         0;dUother[8]=  0.0010463038168644575084;pin[9]=  0.0038132029364648441934;Uiin[9]=     23.587009706184088507;Ufin[9]=                         0;dUother[9]=     49.396492661967307067;pin[10]= 0.00025209279156768187253;Uiin[10]=   0.019754180947983061648;Ufin[10]=                         0;dUother[10]=     10.709936430890673664;pin[11]=  0.0020962681965309745859;Uiin[11]=     335.84101583335730157;Ufin[11]=                         0;dUother[11]=  -0.029063092581872888775;pin[12]=                         0;Uiin[12]=    -24.603875437523524685;Ufin[12]=                         0;dUother[12]= 0.00014449170096785320321;ptrgeom->gcov[GIND(0,0)]=   -0.91225025275170583703;ptrgeom->gcon[GIND(0,0)]=    -1.0877497472482941629;ptrgeom->gcov[GIND(0,1)]=     1.9988302325646892206;ptrgeom->gcon[GIND(0,1)]=  0.0038522621965046294564;ptrgeom->gcov[GIND(0,2)]=                         0;ptrgeom->gcon[GIND(0,2)]= 0.00025438369584466114771;ptrgeom->gcov[GIND(0,3)]=   -0.33830648266961095333;ptrgeom->gcon[GIND(0,3)]= 3.5990620089329799808e-24;ptrgeom->gcov[GIND(1,0)]=     1.9988302325646892206;ptrgeom->gcon[GIND(1,0)]=  0.0038522621965046294564;ptrgeom->gcov[GIND(1,1)]=     589.12131092604360905;ptrgeom->gcon[GIND(1,1)]=  0.0017602773015187332733;ptrgeom->gcov[GIND(1,2)]=    -374.32695776739281932;ptrgeom->gcon[GIND(1,2)]= 0.00011623971132549160088;ptrgeom->gcov[GIND(1,3)]=      -95.5264133760752151;ptrgeom->gcon[GIND(1,3)]= 1.2616741813995659856e-05;ptrgeom->gcov[GIND(2,0)]=                         0;ptrgeom->gcon[GIND(2,0)]= 0.00025438369584466114771;ptrgeom->gcov[GIND(2,1)]=    -374.32695776739281932;ptrgeom->gcon[GIND(2,1)]= 0.00011623971132549160088;ptrgeom->gcov[GIND(2,2)]=     5668.6242557796232138;ptrgeom->gcon[GIND(2,2)]= 0.00018408552241724017404;ptrgeom->gcov[GIND(2,3)]=                         0;ptrgeom->gcon[GIND(2,3)]= 8.3314511018337255591e-07;ptrgeom->gcov[GIND(3,0)]=   -0.33830648266961095333;ptrgeom->gcon[GIND(3,0)]= 3.5990620089329799808e-24;ptrgeom->gcov[GIND(3,1)]=      -95.5264133760752151;ptrgeom->gcon[GIND(3,1)]= 1.2616741813995659856e-05;ptrgeom->gcov[GIND(3,2)]=                         0;ptrgeom->gcon[GIND(3,2)]= 8.3314511018337255591e-07;ptrgeom->gcov[GIND(3,3)]=     13431.060485635423204;ptrgeom->gcon[GIND(3,3)]= 7.4544019302479968168e-05;ptrgeom->gcovpert[0]=   0.087749747248294162965;ptrgeom->beta[0]=                         0;ptrgeom->gcovpert[1]=     588.12131092604360905;ptrgeom->beta[1]=  0.0035414967516653409852;ptrgeom->gcovpert[2]=     5667.6242557796232138;ptrgeom->beta[2]= 0.00023386233505287544325;ptrgeom->gcovpert[3]=     13430.060485635423204;ptrgeom->beta[3]= 3.3087224502121106998e-24;ptrgeom->alphalapse=    0.95881651191845051688;ptrgeom->betasqoalphasq=  0.0077000181421395090224;ptrgeom->gdet=     198638.06134925452197;ptrgeom->igdetnosing= 5.0342819155980095682e-06;ptrgeom->i=16;ptrgeom->j=4;ptrgeom->k=0;ptrgeom->p=0;q->ucon[0]=     1.0766685184297575449;q->ucov[0]=    -0.9828999395897475964;q->ucon[1]= 1.8490493260141373974e-07;q->ucov[1]=     1.9518250241491588606;q->ucon[2]= 3.0056961651008936278e-07;q->ucov[2]=  0.0016346013178026000479;q->ucon[3]=  0.0020962681837186076471;q->ucov[3]=     27.790843166861629544;q->uradcon[0]=     1.0766685187321055377;q->uradcov[0]=   -0.98289993993021952163;q->uradcon[1]= 1.8487475475809917338e-07;q->uradcov[1]=     1.9518250027256506179;q->uradcon[2]= 3.0057769907110685415e-07;q->uradcov[2]=  0.0016346584311843125409;q->uradcon[3]=  0.0020962681965309745859;q->uradcov[3]=      27.79084334172579971;q->pressure= 7.2158773170784093582e-05;q->entropy=    -22.851857388201970772;q->ifremoverestplus1ud0elseud0=   0.017100060410252403518;
 
-    //FUCK
-    showmessages=showmessagesheavy=1;
   }
+  //FUCK
+  showmessages=showmessagesheavy=1;
 
 #endif
 
@@ -324,6 +325,8 @@ dt=  0.0042442838741569434583;CUf[2]=                       0.5;pin[0]=    0.821
 
     // Need to get default failure state.  Can allow such an error if having trouble with convergence (e.g. backing up too much)
     struct of_newtonstats newtonstats;
+    // initialize counters
+    newtonstats.nstroke=newtonstats.lntries=0;
     int failreturn;
     int finalstep = 1;
     FTYPE prtest[NPR];
@@ -1276,6 +1279,8 @@ static int source_explicit(int whichsc, int whichradsourcemethod, int methoddtsu
   int showmessagesheavy=0;
   int allowlocalfailurefixandnoreport=0; // need to see if any failures.
   struct of_newtonstats newtonstats;
+  // initialize counters
+  newtonstats.nstroke=newtonstats.lntries=0;
   int finalstep = 1;  //can choose either 1 or 0 depending on whether want floor-like fixups (1) or not (0).  unclear which one would work best since for Newton method to converge might want to allow negative density on the way to the correct solution, on the other hand want to prevent runaway into rho < 0 region and so want floors.
 
 

@@ -157,7 +157,7 @@ void get_flux_startendindices(int *loop, int *is,int *ie,int *js,int *je,int *ks
 // Note that inversion U->p is also within well-defined computational box.
 // Note that ustag->pstag occurs in fluxctstag.c in well-defined computational box [with extra face for each B1,B2,B3 as required]
 // So overall prim,pstag,unew are only updated where desired -- no leakage unlike fluxes, temp primitives, and other things.
-void copy_tempucum_finalucum(int *loop, FTYPE (*tempucum)[NSTORE2][NSTORE3][NPR], FTYPE (*ucum)[NSTORE2][NSTORE3][NPR])
+void copy_tempucum_finalucum(int whichpl, int *loop, FTYPE (*tempucum)[NSTORE2][NSTORE3][NPR], FTYPE (*ucum)[NSTORE2][NSTORE3][NPR])
 {
 
 
@@ -178,81 +178,83 @@ void copy_tempucum_finalucum(int *loop, FTYPE (*tempucum)[NSTORE2][NSTORE3][NPR]
 
 
     if(FLUXB==FLUXCTSTAG){
-      // do non-field quantities
-      copy_3d_nofield_nowait(is, ie, js, je, ks, ke, tempucum,ucum);
+      if(whichpl==DOALLPL || whichpl==DONONBPL){
+        // do non-field quantities
+        copy_3d_nofield_nowait(is, ie, js, je, ks, ke, tempucum,ucum);
+
+#if(PRODUCTION==0)
+#pragma omp barrier // force barrier since otherwise nowait will leak into here with undefined values in general
+        COMPZSLOOP(is,ie,js,je,ks,ke){
+          PLOOPNOB1(pl) ucum_check(i,j,k,CENT,pl, MAC(ucum,i,j,k));
+          PLOOPNOB2(pl) ucum_check(i,j,k,CENT,pl, MAC(ucum,i,j,k));
+        }
+#endif
+      }
+
+      // do field quantities
+      if(whichpl==DOALLPL || whichpl==DOBPL){
+
+        // do pl==B1
+        pl=B1;
+        is=loop[FIS]-SHIFT1*(AVOIDADVANCESHIFTX1DN==0);
+        ie=loop[FIE]+SHIFT1*(AVOIDADVANCESHIFTX1UP==0);
+        js=loop[FJS]-SHIFT2*(AVOIDADVANCESHIFTX2DN==0);
+        je=loop[FJE]+SHIFT2*(AVOIDADVANCESHIFTX2UP==0);
+        ks=loop[FKS]-SHIFT3*(AVOIDADVANCESHIFTX3DN==0);
+        ke=loop[FKE]+SHIFT3*(AVOIDADVANCESHIFTX3UP==0);
+
+        ie=loop[FIE]+SHIFT1; // always shift - override
+        copy_3d_onepl_nowait(is, ie, js, je, ks, ke, pl, tempucum, ucum );
+
+#if(PRODUCTION==0)
+#pragma omp barrier // force barrier since otherwise nowait will leak into here with undefined values in general
+        COMPZSLOOP(is,ie,js,je,ks,ke){
+          ucum_check(i,j,k,FACE1,pl, MAC(ucum,i,j,k));
+        }
+#endif
+
+
+        // do pl==B2
+        pl=B2;
+        is=loop[FIS]-SHIFT1*(AVOIDADVANCESHIFTX1DN==0);
+        ie=loop[FIE]+SHIFT1*(AVOIDADVANCESHIFTX1UP==0);
+        js=loop[FJS]-SHIFT2*(AVOIDADVANCESHIFTX2DN==0);
+        je=loop[FJE]+SHIFT2*(AVOIDADVANCESHIFTX2UP==0);
+        ks=loop[FKS]-SHIFT3*(AVOIDADVANCESHIFTX3DN==0);
+        ke=loop[FKE]+SHIFT3*(AVOIDADVANCESHIFTX3UP==0);
+
+        je=loop[FJE]+SHIFT2;
+        copy_3d_onepl_nowait(is, ie, js, je, ks, ke, pl, tempucum, ucum );
 
 
 #if(PRODUCTION==0)
 #pragma omp barrier // force barrier since otherwise nowait will leak into here with undefined values in general
-      COMPZSLOOP(is,ie,js,je,ks,ke){
-        PLOOPNOB1(pl) ucum_check(i,j,k,CENT,pl, MAC(ucum,i,j,k));
-        PLOOPNOB2(pl) ucum_check(i,j,k,CENT,pl, MAC(ucum,i,j,k));
-      }
+        COMPZSLOOP(is,ie,js,je,ks,ke){
+          ucum_check(i,j,k,FACE2,pl, MAC(ucum,i,j,k));
+        }
 #endif
 
 
+        // do pl==B3
+        pl=B3;
+        is=loop[FIS]-SHIFT1*(AVOIDADVANCESHIFTX1DN==0);
+        ie=loop[FIE]+SHIFT1*(AVOIDADVANCESHIFTX1UP==0);
+        js=loop[FJS]-SHIFT2*(AVOIDADVANCESHIFTX2DN==0);
+        je=loop[FJE]+SHIFT2*(AVOIDADVANCESHIFTX2UP==0);
+        ks=loop[FKS]-SHIFT3*(AVOIDADVANCESHIFTX3DN==0);
+        ke=loop[FKE]+SHIFT3*(AVOIDADVANCESHIFTX3UP==0);
 
-      // do pl==B1
-      pl=B1;
-      is=loop[FIS]-SHIFT1*(AVOIDADVANCESHIFTX1DN==0);
-      ie=loop[FIE]+SHIFT1*(AVOIDADVANCESHIFTX1UP==0);
-      js=loop[FJS]-SHIFT2*(AVOIDADVANCESHIFTX2DN==0);
-      je=loop[FJE]+SHIFT2*(AVOIDADVANCESHIFTX2UP==0);
-      ks=loop[FKS]-SHIFT3*(AVOIDADVANCESHIFTX3DN==0);
-      ke=loop[FKE]+SHIFT3*(AVOIDADVANCESHIFTX3UP==0);
-
-      ie=loop[FIE]+SHIFT1; // always shift - override
-      copy_3d_onepl_nowait(is, ie, js, je, ks, ke, pl, tempucum, ucum );
-
-#if(PRODUCTION==0)
-#pragma omp barrier // force barrier since otherwise nowait will leak into here with undefined values in general
-      COMPZSLOOP(is,ie,js,je,ks,ke){
-        ucum_check(i,j,k,FACE1,pl, MAC(ucum,i,j,k));
-      }
-#endif
-
-
-      // do pl==B2
-      pl=B2;
-      is=loop[FIS]-SHIFT1*(AVOIDADVANCESHIFTX1DN==0);
-      ie=loop[FIE]+SHIFT1*(AVOIDADVANCESHIFTX1UP==0);
-      js=loop[FJS]-SHIFT2*(AVOIDADVANCESHIFTX2DN==0);
-      je=loop[FJE]+SHIFT2*(AVOIDADVANCESHIFTX2UP==0);
-      ks=loop[FKS]-SHIFT3*(AVOIDADVANCESHIFTX3DN==0);
-      ke=loop[FKE]+SHIFT3*(AVOIDADVANCESHIFTX3UP==0);
-
-      je=loop[FJE]+SHIFT2;
-      copy_3d_onepl_nowait(is, ie, js, je, ks, ke, pl, tempucum, ucum );
+        ke=loop[FKE]+SHIFT3;
+        copy_3d_onepl_nowait(is, ie, js, je, ks, ke, pl, tempucum, ucum );
 
 
 #if(PRODUCTION==0)
 #pragma omp barrier // force barrier since otherwise nowait will leak into here with undefined values in general
-      COMPZSLOOP(is,ie,js,je,ks,ke){
-        ucum_check(i,j,k,FACE2,pl, MAC(ucum,i,j,k));
-      }
+        COMPZSLOOP(is,ie,js,je,ks,ke){
+          ucum_check(i,j,k,FACE3,pl, MAC(ucum,i,j,k));
+        }
 #endif
-
-
-      // do pl==B3
-      pl=B3;
-      is=loop[FIS]-SHIFT1*(AVOIDADVANCESHIFTX1DN==0);
-      ie=loop[FIE]+SHIFT1*(AVOIDADVANCESHIFTX1UP==0);
-      js=loop[FJS]-SHIFT2*(AVOIDADVANCESHIFTX2DN==0);
-      je=loop[FJE]+SHIFT2*(AVOIDADVANCESHIFTX2UP==0);
-      ks=loop[FKS]-SHIFT3*(AVOIDADVANCESHIFTX3DN==0);
-      ke=loop[FKE]+SHIFT3*(AVOIDADVANCESHIFTX3UP==0);
-
-      ke=loop[FKE]+SHIFT3;
-      copy_3d_onepl_nowait(is, ie, js, je, ks, ke, pl, tempucum, ucum );
-
-
-#if(PRODUCTION==0)
-#pragma omp barrier // force barrier since otherwise nowait will leak into here with undefined values in general
-      COMPZSLOOP(is,ie,js,je,ks,ke){
-        ucum_check(i,j,k,FACE3,pl, MAC(ucum,i,j,k));
-      }
-#endif
-
+      }// end if need to to B type pl
 
       // now ucum is assigned only where should be changed
 
@@ -263,7 +265,10 @@ void copy_tempucum_finalucum(int *loop, FTYPE (*tempucum)[NSTORE2][NSTORE3][NPR]
 #if(PRODUCTION==0)
 #pragma omp barrier // force barrier since otherwise nowait will leak into here with undefined values in general
       COMPZSLOOP(is,ie,js,je,ks,ke){
-        PLOOP(pliter,pl) ucum_check(i,j,k,CENT,pl, MAC(ucum,i,j,k));
+        PLOOP(pliter,pl){
+          if(whichpl==DONONBPL && BPL(pl)==1 || whichpl==DOBPL && BPL(pl)==0) continue;
+          ucum_check(i,j,k,CENT,pl, MAC(ucum,i,j,k));
+        }
       }
 #endif
     }

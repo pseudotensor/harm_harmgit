@@ -92,8 +92,16 @@
 #define SHOCKRADPLSTOREVEL2 (SHOCKRADPLSTOREVEL1+1)
 #define SHOCKRADPLSTOREVEL3 (SHOCKRADPLSTOREVEL2+1)
 
+
+#define DOALLPL 0
+#define DOBPL 1
+#define DONONBPL 2
+
 #define RADUPL(pl) (pl==URAD0 || pl==URAD1 || pl==URAD2 || pl==URAD3)
 #define RADPL(pl) (pl==PRAD0 || pl==PRAD1 || pl==PRAD2 || pl==PRAD3)
+
+#define BPL(pl) (pl==B1 || pl==B2 || pl==B3)
+
 
 #if((WHICHCURRENTCALC==0)||(WHICHCURRENTCALC==2))
 #define NUMCURRENTSLOTS 5

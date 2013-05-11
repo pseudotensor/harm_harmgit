@@ -186,11 +186,11 @@ int Utoprimgen(int showmessages, int allowlocalfailurefixandnoreport, int finals
 
 
   // if some process already set fail flag (e.g. inversions somewhere else that wasn't reset) (e.g. like in phys.tools.rad.c for implicit or explicit solvers with radiation), then assume want to treat as failure for purposes of fixing up.  That is, get inversion, but that inversion will be for undefined 4-force and only used in worst-case scenario for fixups.
-  int preexistingfailgas=0;
+  PFTYPE preexistingfailgas=0;
   if(GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)>UTOPRIMNOFAIL) preexistingfailgas=GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL);
 
   // Also see if radiation inversion got locally corrected.  Then, might still do better to do multi-point averaging in fixups like with MHD variables.  So capture this flag for fixups.
-  int preexistingfailrad=0;
+  PFTYPE preexistingfailrad=0;
   if(GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL)>UTOPRIMRADNOFAIL) preexistingfailrad=GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL)=UTOPRIMRADNOFAIL;
 
 
