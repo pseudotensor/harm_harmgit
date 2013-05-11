@@ -436,7 +436,6 @@ static int advance_standard(
 
       if(extrazones4emf && dofluxreconevolvepointfield==0){
         // uses tempucum and gets reaveraged field into myupoint
-        // SUPERGODMARK: Unsure if this fluxrecon method is still correct with movement of field stuff.
         field_integrate_fluxrecon(stage, pb, preupoint, myupoint);
       }
 
