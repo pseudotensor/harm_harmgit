@@ -1437,6 +1437,20 @@ int source(FTYPE *pr, FTYPE *pf, int *didreturnpf, struct of_geom *ptrgeom, stru
     Ugeomfreei[pl] = ui[pl]*(ptrgeom->IEOMFUNCNOSINGMAC(pl)); // expect ui to be UEVOLVE form
     Ugeomfreef[pl] = uf[pl]*(ptrgeom->IEOMFUNCNOSINGMAC(pl)); // expect uf to be UEVOLVE form
   }
+
+  if(FLUXB==FLUXCTSTAG){
+    // if staggered field, then ui and uf are staggered field locations, but for *physics* processes, we want to assume all at same location, so send in physical version
+    // this overwrites above assignments
+    PLOOPBONLY(pl){
+      // assume already got field update in advance_standard() [as opposed to advance_standard_orig()] and no geometry for field as required for that method.
+      // but want to be able to have Ui by itself mean no changes, so that's pr. Uf is only used in some RK methods, that can be pf.  But then want dUother to be so that when using IFSET() with full dt that get pf
+      Ugeomfreei[pl]=pr[pl]; 
+      Ugeomfreef[pl]=pf[pl];
+      dUother[pl]=dUfromUFSET(CUf,dt,Ugeomfreei[pl],Ugeomfreef[pl],pf[pl]);
+    }
+    // now sourcephysics() call will have all CENT quantities
+  }
+
   sourcephysics(pr, pf, didreturnpf, ptrgeom, q, Ugeomfreei, Ugeomfreef, CUf, dUother, dUcomp);
 
   //////////////////

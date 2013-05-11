@@ -11,7 +11,7 @@
 
 
 
-// inverse of above (assuming only 1 dU)
+// inverse of above UFSET() (assuming only 1 dU)
 #define dUfromUFSET(theCUf,thedt,theUi,theUf,theUfnew) ( ((theUfnew) - ((theCUf[0])*(theUi) + (theCUf[1])*(theUf)))/((theCUf[2])*(thedt)) )
 
 

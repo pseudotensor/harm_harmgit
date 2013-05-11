@@ -146,7 +146,8 @@ int advance(int truestep, int stage, FTYPE (*pi)[NSTORE2][NSTORE3][NPR],FTYPE (*
 // this method guarantees conservation of non-sourced conserved quantities when metric is time-dependent
 // this method has updated field staggered method
 // Note that when dt==0.0, assume no fluxing, just take ucum -> ui -> {uf,ucum} and invert.  Used with metric update.
-// like advance_standard_orig(), but removed debug info and set field "inversion" first so have centered value for source() so have it for any point-use of values like in implicit solver for radiation-fluid interaction.
+//
+// NEW: like advance_standard_orig(), but removed debug info and set field "inversion" first so have centered value for source() so have it for any point-use of values like in implicit solver for radiation-fluid interaction.
 static int advance_standard(
                             int truestep,
                             int stage,
@@ -323,9 +324,7 @@ static int advance_standard(
       MYFUN(fluxcalc(stage,initialstep,finalstep,pb,pstag,pl_ct, pr_ct, vpot,F1,F2,F3,CUf,CUnew,fluxdt,fluxtime,&ndt1,&ndt2,&ndt3),"advance.c:advance_standard()", "fluxcalcall", 1);
     }
   }// end if not just passing through
-
-
-
+  // from here on, pi/pb/pf are only used a zone at a time rather than on a stencil
 
 
 
@@ -333,13 +332,7 @@ static int advance_standard(
   trifprintf( "1f");
 #endif
 
-
-
-
-  // from here on, pi/pb/pf are only used a zone at a time rather than on a stencil
-
-
-  
+ 
 
 
   // Do comp full loop in case subset of full grid so that boundary cells of subset domain are defined without having to copy over those cells in bounds.c or initbase.gridsectioning.c
@@ -385,7 +378,7 @@ static int advance_standard(
 
     ////////////////////////
     //
-    // FIRST UPDATE FIELD using flux
+    // FIRST UPDATE FIELD using its flux
     //
     ////////////////////////
     int doother=DOALLPL; // default
@@ -400,19 +393,16 @@ static int advance_standard(
         myexit(34983463);
       }
 
-#pragma omp parallel OPENMPGLOBALPRIVATEFORSTATEANDGEOM
+#pragma omp parallel // OPENMPGLOBALPRIVATEFORINVERSION // don't need EOS stuff here since not getting state or doing inversion yet.
       {
         int pl,pliter,i,j,k;
         // zero-out dUgeom in case non-B pl's used.
-        FTYPE dUgeom[NPR]={0.0},dUriemann[NPR],dUriemann1[NPR],dUriemann2[NPR],dUriemann3[NPR];
+        FTYPE dUgeom[NPR]={0.0},dUriemann[NPR]={0.0},dUriemann1[NPR]={0.0},dUriemann2[NPR]={0.0},dUriemann3[NPR]={0.0};
 
 
         /////////////////////////////////////////////////////
-        //
         // [Loop goes over up to +1 normal computational region for getting new staggered U if doing FLUXCTSTAG] so can do interpolation on it to get centered field
-        //
         /////////////////////////////////////////////////////
-
         OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
 
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
@@ -426,8 +416,8 @@ static int advance_standard(
           // Get update
           // ui is itself at FACE as already set
           dUtoU(DOBPL,i,j,k,CENT,dUgeom, dUriemann, CUf, CUnew, MAC(ui,i,j,k), MAC(uf,i,j,k), MAC(tempucum,i,j,k));
-        }
-      }
+        }//end loop
+      }// end parallel
 
 
       // if using staggered grid for magnetic field, then need to convert ucum to pstag to new pb/pf
@@ -436,12 +426,13 @@ static int advance_standard(
 
       // first copy over all quantities as point, which is true except for fields if FLUXRECON active
       // copy utoinvert -> myupoint
-      // copy all pl's since myupoint eventually used to invert rest of non-field quantities
-      copy_tempucum_finalucum(DOALLPL,Uconsevolveloop,tempucum,myupoint);
+      // only copy magnetic field pl's -- later copy rest when needed for inversion
+      copy_tempucum_finalucum(DOBPL,Uconsevolveloop,tempucum,myupoint);
 
 
       if(extrazones4emf && dofluxreconevolvepointfield==0){
         // uses tempucum and gets reaveraged field into myupoint
+        // SUPERGODMARK: Unsure if this fluxrecon method is still correct with movement of field stuff.
         field_integrate_fluxrecon(stage, pb, tempucum, myupoint);
       }
 
@@ -467,14 +458,19 @@ static int advance_standard(
     ////////////////////////
     //
     // UPDATE NON_FIELD using flux and source
+    // PERFORM INVERSION
+    // DO FIXUP1ZONE
     //
     ////////////////////////
-#pragma omp parallel OPENMPGLOBALPRIVATEFORSTATEANDGEOM
+#pragma omp parallel OPENMPGLOBALPRIVATEFORSTATEANDGEOM  // <-- only includes more than OPENMPGLOBALPRIVATEFORINVERSION needed for inversion
     {
       int pl,pliter,i,j,k;
       struct of_geom geomdontuse;
       struct of_geom *ptrgeom=&geomdontuse;
+
+      // for source()
       FTYPE Uitemp[NPR];
+      // set all to zero in case doother=DONONBPL in which case need rest of calculations to know no change to field
       FTYPE dUgeom[NPR]={0},dUriemann[NPR]={0},dUriemann1[NPR]={0},dUriemann2[NPR]={0},dUriemann3[NPR]={0},dUcomp[NUMSOURCES][NPR]={0};
       struct of_state qdontuse;
       struct of_state *qptr=&qdontuse;
@@ -482,10 +478,17 @@ static int advance_standard(
       struct of_state *qptr2=&qdontuse2; // different qptr since call normal and special get_state()
 
 
+      // for inversion
+      FTYPE prbefore[NPR];
+      struct of_newtonstats newtonstats; // not pointer
+      int showmessages=1;
+      int allowlocalfailurefixandnoreport=1; // allow local fixups
+      // initialize counters
+      newtonstats.nstroke=newtonstats.lntries=0;
+
 
 
       OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
-
       
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
       OPENMP3DLOOPBLOCK{
@@ -520,6 +523,7 @@ static int advance_standard(
         /////////////////////////////////////////////////////
         // get state since both source() and dUtodt() need same state
         // From pb, so different than state for Ui(pi)
+        // Inside source() might use pb,pf,etc. to get new state.
         MYFUN(get_stateforsource(MAC(pb,i,j,k), ptrgeom, &qptr2) ,"advance.c:()", "get_state() dir=0", 1);
       
 
@@ -552,13 +556,93 @@ static int advance_standard(
           }
 
       
-
-        // Get update
+        /////////////
+        //
+        // Get update: tempucum
+        //
+        /////////////
         dUtoU(doother,i,j,k,ptrgeom->p,dUgeom, dUriemann, CUf, CUnew, MAC(ui,i,j,k), MAC(uf,i,j,k), MAC(tempucum,i,j,k));
+
+
+
+
+        ////////////////////////////
+        // Choose what to invert
+        ////////////////////////////
+        if(finalstep){
+          // invert ucum on final step
+          utoinvert = ucum;
+          useducum=ucum;
+        }
+        else{
+          // invert uf on substeps
+          utoinvert = uf;
+          // tempucum just cumulates for now
+          useducum=tempucum;
+        }
+
+
+        ////////////////////////////
+        // setup myupoint to invert
+        ////////////////////////////
+        if(FLUXB==FLUXCTSTAG){
+          // already have field in myupoint, just copy the others over
+          PLOOP(pliter,pl) if(doother==DOALLPL || doother==DONONBPL && BPL(pl)==0 || doother==DOBPL && BPL(pl)==1) MACP0A1(myupoint,i,j,k,pl)=MACP0A1(utoinvert,i,j,k,pl);
+        }
+        else{
+          // utoinvert never reassigned from global a_utoinvert assignment since if here not doing FLUXCTSTAG
+          myupoint=utoinvert;
+        }
+
+
+
+        ////////////////////////////
+        // INVERT [loop only over "centered" cells]
+        ////////////////////////////
+        if(finalstep){ // last call, so ucum is cooked and ready to eat!
+          // store guess for diss_compute before changed by normal inversion
+          PALLLOOP(pl) prbefore[pl]=MACP0A1(pf,i,j,k,pl);
+          
+          MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,EVOLVEUTOPRIM,UEVOLVE,MAC(myupoint,i,j,k), ptrgeom, MAC(pf,i,j,k),&newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
+          nstroke+=newtonstats.nstroke; newtonstats.nstroke=newtonstats.lntries=0;
+          
+          
+#if(DODISS||DODISSVSR)
+          // then see what entropy inversion would give
+          diss_compute(EVOLVEUTOPRIM,UEVOLVE,MAC(myupoint,i,j,k),ptrgeom,prbefore,MAC(pf,i,j,k),&newtonstats);
+#endif
+          
+        }
+        else{ // otherwise still iterating on primitives
+          MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,EVOLVEUTOPRIM,UEVOLVE,MAC(myupoint,i,j,k), ptrgeom, MAC(pf,i,j,k),&newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
+          nstroke+=newtonstats.nstroke; newtonstats.nstroke=newtonstats.lntries=0;
+        }
+
+        
+        
+        
+        ////////////////////////////
+        // Do fixup1zone
+        ////////////////////////////
+#if(SPLITNPR)
+        // don't update metric if only doing B1-B3
+        if(advancepassnumber==-1 || advancepassnumber==1)
+#endif
+          {
+            // immediate local (i.e. 1-zone) fix
+#if(FIXUPZONES==FIXUP1ZONE)
+            // SUPERGODMARK: Below should differentiate beteween whether want negative densities fixed or not, but right now fixup1zone() does all
+            if((STEPOVERNEGU==0)||(STEPOVERNEGRHO==0)||(STEPOVERNEGRHOU==0)||(finalstep)){
+              MYFUN(fixup1zone(MAC(pf,i,j,k),MAC(useducum,i,j,k), ptrgeom,finalstep),"fixup.c:fixup()", "fixup1zone()", 1);
+            }
+#endif
+          }// end doing single-point fixups
       
+            
       
-      
+        /////////////////////////////////////
         // get timestep limit from acceleration
+        /////////////////////////////////////
 #if(LIMITDTWITHSOURCETERM)
 #if(SPLITNPR)
         // don't do dUtodt if only doing B1-B3
@@ -590,9 +674,6 @@ static int advance_standard(
 
 
 
-
-
-
       } // end COMPZLOOP :: end looping to obtain dUriemann and full unew update
     }// end parallel block
   } // end if truestep
@@ -607,15 +688,10 @@ static int advance_standard(
 
 
 
-
-
-
-
 #if(PRODUCTION==0)
   trifprintf( "#0m");
 #endif
-
-  
+ 
     
   /////////////////////////////////////////////
   //
@@ -640,7 +716,6 @@ static int advance_standard(
 
 
 
-
   ////////////////////////////////
   //
   // compute flux diagnostics (accurately using all substeps)
@@ -661,148 +736,22 @@ static int advance_standard(
   }
 
 
-
-
-
-
   
 #if(PRODUCTION==0)
   trifprintf( "#0s");
 #endif
 
 
-
-
-
   ///////////////////////////////////////
   //
   // Copy over tempucum -> ucum per pl to account for staggered field
   //
-  // And choose which RK-quantity to invert
-  //
   ///////////////////////////////////////
-  if(finalstep){
-    if(FLUXB==FLUXCTSTAG){
-      // copy over new ucum in only desired locations irrespective of where tempucum was updated
-      // copy tempucum -> ucum
-      copy_tempucum_finalucum(DOALLPL,Uconsevolveloop,tempucum,ucum); // fill-in all pl's for storage
-    }
-    else{
-      // else tempucum and ucum are actually the same array, so no need to copy
-    }
-    // invert ucum on final step
-    utoinvert = ucum;
-    useducum=ucum;
+  if(finalstep && FLUXB==FLUXCTSTAG){
+    // copy over new ucum in only desired locations irrespective of where tempucum was updated
+    // copy tempucum -> ucum
+    copy_tempucum_finalucum(DOALLPL,Uconsevolveloop,tempucum,ucum); // fill-in all pl's for storage and for next step.
   }
-  else{
-    // invert uf on substeps
-    utoinvert = uf;
-    // tempucum just cumulates for now
-    useducum=tempucum;
-  }
-
-
-  ////////////////////////////
-  //
-  // setup myupoint to invert
-  //
-  ////////////////////////////
-  if(FLUXB==FLUXCTSTAG){
-    // already have field in myupoint, just copy the others over
-    copy_tempucum_finalucum(DONONBPL,Uconsevolveloop,utoinvert,myupoint); // only copy over NONBPL since myupoint's B1,B2,B3 already have been set.
-  }
-  else{
-    // utoinvert never reassigned from global a_utoinvert assignment since if here not doing FLUXCTSTAG
-    myupoint=utoinvert;
-  }
-
-
-
-
-
-
-
-
-  ////////////////////////////
-  //
-  // INVERT [loop only over "centered" cells]
-  //
-  ////////////////////////////
-
-
-  // get loop range
-  get_inversion_startendindices(Uconsevolveloop,&is,&ie,&js,&je,&ks,&ke);
-
-#pragma omp parallel OPENMPGLOBALPRIVATEFORINVERSION
-  {
-    int pl,pliter,i,j,k;
-    struct of_geom geomdontuse;
-    struct of_geom *ptrgeom=&geomdontuse;
-    FTYPE prbefore[NPR];
-    struct of_newtonstats newtonstats; // not pointer
-    int showmessages=1;
-    int allowlocalfailurefixandnoreport=1; // allow local fixups
-    
-    OPENMP3DLOOPVARSDEFINE;  OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
-
-    // initialize counters
-    newtonstats.nstroke=newtonstats.lntries=0;
-
-
-#pragma omp for schedule(OPENMPVARYENDTIMESCHEDULE(),OPENMPCHUNKSIZE(blocksize)) reduction(+: nstroke)
-    OPENMP3DLOOPBLOCK{
-      OPENMP3DLOOPBLOCK2IJK(i,j,k);
- 
-      // set geometry for centered zone to be updated
-      get_geometry(i, j, k, CENT, ptrgeom);
-
-      
-      // invert U->p
-      if(finalstep){ // last call, so ucum is cooked and ready to eat!
-        // store guess for diss_compute before changed by normal inversion
-        PALLLOOP(pl) prbefore[pl]=MACP0A1(pf,i,j,k,pl);
-
-        MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,EVOLVEUTOPRIM,UEVOLVE,MAC(myupoint,i,j,k), ptrgeom, MAC(pf,i,j,k),&newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
-        nstroke+=newtonstats.nstroke; newtonstats.nstroke=newtonstats.lntries=0;
-
-
-#if(DODISS||DODISSVSR)
-        // then see what entropy inversion would give
-        diss_compute(EVOLVEUTOPRIM,UEVOLVE,MAC(myupoint,i,j,k),ptrgeom,prbefore,MAC(pf,i,j,k),&newtonstats);
-#endif
- 
-      }
-      else{ // otherwise still iterating on primitives
-        MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,EVOLVEUTOPRIM,UEVOLVE,MAC(myupoint,i,j,k), ptrgeom, MAC(pf,i,j,k),&newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
-        nstroke+=newtonstats.nstroke; newtonstats.nstroke=newtonstats.lntries=0;
-      }
-
-
-
-
-      
-#if(SPLITNPR)
-      // don't update metric if only doing B1-B3
-      if(advancepassnumber==-1 || advancepassnumber==1)
-#endif
-        {
-          // immediate local (i.e. 1-zone) fix
-#if(FIXUPZONES==FIXUP1ZONE)
-          // SUPERGODMARK: Below should differentiate beteween whether want negative densities fixed or not, but right now fixup1zone() does all
-          if((STEPOVERNEGU==0)||(STEPOVERNEGRHO==0)||(STEPOVERNEGRHOU==0)||(finalstep)){
-            MYFUN(fixup1zone(MAC(pf,i,j,k),MAC(useducum,i,j,k), ptrgeom,finalstep),"fixup.c:fixup()", "fixup1zone()", 1);
-          }
-#endif
-        }
-
-
-    }// end COMPZLOOP
-  }// end parallel section
-
-
-
-
-
 
 
   /////////////////////////////////
