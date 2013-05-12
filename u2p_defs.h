@@ -37,7 +37,7 @@
 #define ITERDAMPSTART 10 // iteration to start using damp if haven't already
 #define MAX_NEWT_ITER 100     /* Max. # of Newton-Raphson iterations for find_root_2D();  Hardly ever case where need 200 iterations */
 #define NEWT_TOL   (1E3*NUMEPSILON)    /* Min. of tolerance allowed for Newton-Raphson iterations */
-#define NEWT_TOL_ULTRAREL   (NUMEPSILON)    /* Min. of tolerance allowed for Newton-Raphson iterations */
+#define NEWT_TOL_ULTRAREL   (5.0*NUMEPSILON)    /* Min. of tolerance allowed for Newton-Raphson iterations */
 //#define MIN_NEWT_TOL  (1E5*NUMEPSILON)    /* Max. of tolerance allowed for Newton-Raphson iterations */
 
 #if(REALTYPE==FLOATTYPE)

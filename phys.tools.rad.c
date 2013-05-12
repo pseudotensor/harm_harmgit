@@ -244,20 +244,23 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
   FTYPE iJ[NDIM][NDIM];
   FTYPE uu0[NPR],uup[NPR],uupp[NPR],uu[NPR]; 
   FTYPE uuporig[NPR],uu0orig[NPR];
-  FTYPE f1[NDIM],f1norm[NDIM],f1report[NDIM],f3report[NDIM];
+  FTYPE f1[NDIM],f1norm[NDIM],f3report[NDIM];
   FTYPE x[NDIM];
   FTYPE realdt;
   FTYPE radsource[NPR], deltas[NDIM]; 
   int pl;
-  static long long int numimplicits=0;
-  static long long int numoff1iter=0,numofiter=0;
   FTYPE bestuu[NPR],lowestfreport[NDIM];
   int gotbest;
-  static long long int failnum=0;
   extern int mathematica_report_check(int failtype, long long int failnum, int gotfirstnofail, FTYPE realdt,struct of_geom *ptrgeom, FTYPE *pinuse, FTYPE *pin, FTYPE *uu0, FTYPE *uu, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_state *q, FTYPE *dUother);
 
 
   // static counter for diagnosing issues
+  static long long int numimplicits=0;
+  static long long int numoff1iter=0,numofiter=0;
+  static long long int failnum=0;
+#define NUMNUMHIST (20)
+  static long long int numhisterr[NUMNUMHIST]={0}; // histogram of error for implicit solver to be reported infrequently
+  static long long int numhistiter[IMPMAXITER+1]={0}; // histogram of error for implicit solver to be reported infrequently
   numimplicits++;
   int showmessages=0; // by default 0, don't show any messages for inversion stuff during implicit solver, unless debugging.  Assume any moment of inversion failure is corrected for now unless failure of final inversion done outside implicit solver.
   int showmessagesheavy=0;  // very detailed for common debugging
@@ -510,7 +513,7 @@ dt=  0.0042442838741569434583;CUf[2]=                       0.5;pin[0]=    0.821
     //test pre-convergence using initial |dU/U|
     // KORALTODO: This isn't a completely general error check since force might be large for fluid that needs itself to have more accuracy, but if using ~NUMEPSILON, won't resolve 4-force of radiation on fluid to better than that.
     FTYPE LOCALPREIMPCONV=(10.0*NUMEPSILON); // more strict than later tolerance
-    if(f_error_check(showmessages, showmessagesheavy, iter, LOCALPREIMPCONV,f1,f1norm,f1report,uu0,uu,ptrgeom)) break;
+    if(f_error_check(showmessages, showmessagesheavy, iter, LOCALPREIMPCONV,f1,f1norm,f3report,uu0,uu,ptrgeom)) break;
 
 
     int notfinite= !isfinite(uu[0])|| !isfinite(uu[1])|| !isfinite(uu[2])|| !isfinite(uu[3]) || !isfinite(uup[0])|| !isfinite(uup[1])|| !isfinite(uup[2])|| !isfinite(uup[3]);
@@ -709,6 +712,27 @@ dt=  0.0042442838741569434583;CUf[2]=                       0.5;pin[0]=    0.821
   // only use pinuse if successful with implicit method, since if not successful can be various bad reasons with no good pin
   PLOOP(pliter,pl) pin[pl]=pinuse[pl];
 
+
+
+  if(debugfail>=2){
+    // then do some diagnostics and reporting
+    FTYPE errorabs=0.0;
+    if(gotbest) DLOOPA(jj) errorabs += fabs(lowestfreport[jj]);
+    else DLOOPA(jj) errorabs += fabs(f3report[jj]);
+    //    dualfprintf(fail_file,"errorabs=%g\n",errorabs);
+    numhisterr[MAX(MIN((int)(-log10(errorabs)),NUMNUMHIST-1),0)]++;
+    numhistiter[MAX(MIN(iter,IMPMAXITER),0)]++;
+#define HISTREPORTSTEP (20)
+    if(nstep%HISTREPORTSTEP==0 && ptrgeom->i==0 && ptrgeom->j==0 && ptrgeom->k==0){
+      int histi;
+      for(histi=0;histi<NUMNUMHIST;histi++){
+        dualfprintf(fail_file,"numhisterr%d=%lld\n",histi,numhisterr[histi]);
+      }
+      for(histi=0;histi<=IMPMAXITER;histi++){
+        dualfprintf(fail_file,"numhistiter%d=%lld\n",histi,numhistiter[histi]);
+      }
+    }
+  }
 
 
 
