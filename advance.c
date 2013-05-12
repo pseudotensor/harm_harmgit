@@ -574,8 +574,8 @@ static int advance_standard(
         ////////////////////////////
         if(finalstep){
           // invert ucum on final step
-          utoinvert = ucum;
-          useducum=ucum;
+          utoinvert = tempucum;
+          useducum=tempucum;
         }
         else{
           // invert uf on substeps
@@ -828,7 +828,7 @@ static int advance_standard(
 // this method guarantees conservation of non-sourced conserved quantities when metric is time-dependent
 // this method has updated field staggered method
 // Note that when dt==0.0, assume no fluxing, just take ucum -> ui -> {uf,ucum} and invert.  Used with metric update.
-static int advance_standard_orig_(
+static int advance_standard_orig(
                             int truestep,
                             int stage,
                             FTYPE (*pi)[NSTORE2][NSTORE3][NPR],
