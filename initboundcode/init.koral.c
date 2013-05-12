@@ -278,7 +278,21 @@ int init_global(void)
 
   //////////////////
   // overrides for more detailed problem dependence
-  TIMEORDER=2; // no need for 4 unless higher-order or cold collapse problem.
+  //  TIMEORDER=2; // no need for 4 unless higher-order or cold collapse problem.
+
+  //    TIMEORDER=4;
+  TIMEORDER=3; // more smooth accurate solution than TIMEORDER=4 or 2 (midpoint or TVD)
+  //    lim[1]=lim[2]=lim[3]=DONOR;
+  //    lim[1]=lim[2]=lim[3]=MINM;
+  //lim[1]=lim[2]=lim[3]=MC;
+  //    lim[1]=lim[2]=lim[3]=PARAFLAT;
+  lim[1]=lim[2]=lim[3]=PARALINE;
+
+  //    cour=0.1;
+  //    cour=0.5;
+  //    cour=0.9; // works fine, but 0.8 more generally good.  Although sometimes cour=0.9 actually gives a bit smoother solution.
+  cour=0.8;
+
   //  FLUXB=FLUXCTTOTH;
   FLUXB=FLUXCTSTAG;
   
@@ -303,7 +317,7 @@ int init_global(void)
   if(WHICHPROBLEM==FLATNESS){
  
     //  lim[1]=lim[2]=lim[3]=MINM;
-    cour=0.5;
+    //    cour=0.5;
     gam=gamideal=5.0/3.0;
     cooling=KORAL;
 
@@ -328,15 +342,13 @@ int init_global(void)
 
   if(WHICHPROBLEM==RADPULSE || WHICHPROBLEM==RADPULSEPLANAR || WHICHPROBLEM==RADPULSE3D){
 
-    //    lim[1]=lim[2]=lim[3]=DONOR;
-    //    lim[1]=lim[2]=lim[3]=MINM;
-    //lim[1]=lim[2]=lim[3]=MC;
-    //    lim[1]=lim[2]=lim[3]=PARAFLAT;
+    TIMEORDER=3; // more smooth accurate solution than TIMEORDER=4 or 2 (midpoint or TVD)
     lim[1]=lim[2]=lim[3]=PARALINE;
 
     //    cour=0.1;
     //    cour=0.5;
-    cour=0.9;
+    //    cour=0.9; // works fine, but 0.8 more generally good.
+    cour=0.8;
     gam=gamideal=5.0/3.0;
     cooling=KORAL;
 

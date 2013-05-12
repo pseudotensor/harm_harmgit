@@ -1346,7 +1346,7 @@ void setup_rktimestep(int truestep, int *numtimeorders,
 
   }
   else if(TIMEORDER==2  && truestep){
-#if(1)
+#if(0)
     // midpoint method
 
     *numtimeorders=2;

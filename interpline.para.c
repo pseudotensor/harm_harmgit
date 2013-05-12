@@ -133,8 +133,8 @@ void pass_1d_line_multipl_paraline(int MULTIPLTYPE, int whichquantity, int dir, 
     yout[pl][1][i] = right;
 #endif
 
-    // FUCK -- force MINM for radiation
-    if(1&&whicheom==EOMSETRAD){
+    // can force MINM for radiation, but don't need to.
+    if(0&&whicheom==EOMSETRAD){
       FTYPE extremum=0.0;
       FTYPE theta = 1.0;
       FTYPE Dqm = theta * df[pl][DFONESIDED][i];
