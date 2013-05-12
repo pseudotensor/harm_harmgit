@@ -59,9 +59,11 @@
 // use large, and it'll go smaller if no inversion, but can't start out with too small since then Jac will have diag() terms =0
 // KORALTODO: For difficult iterations, there can be solution but Jacobian is too rough and jump around alot in primitive space for small changes in U.  Should really modify IMPEPS in such cases when pr changes alot for such changes in U.
 #if((REALTYPE==DOUBLETYPE)||(REALTYPE==FLOATTYPE))
-#define IMPEPS (MY1EM5)
+//#define IMPEPS (MY1EM5)
+#define IMPEPS (1E-7)
 #elif(REALTYPE==LONGDOUBLETYPE)
-#define IMPEPS (MY1EM6)
+//#define IMPEPS (MY1EM6)
+#define IMPEPS (1E-8) // works well, but would like to choose more specifically
 #endif
 
 // maximum EPS for getting Jacobian

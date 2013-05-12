@@ -46,7 +46,7 @@ static int get_m1closure_urfconrel_olek(int showmessages, int allowlocalfailuref
 
 
 
-static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int showmessagesheavy, int allowlocalfailurefixandnoreport, FTYPE *uu, FTYPE *uup, FTYPE *uu0, FTYPE *pin, FTYPE fracdtG, FTYPE realdt, struct of_geom *ptrgeom, FTYPE *f1, FTYPE *f1norm, FTYPE (*iJ)[NDIM]);
+static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int showmessagesheavy, int allowlocalfailurefixandnoreport, FTYPE impepsjac, FTYPE *uu, FTYPE *uup, FTYPE *uu0, FTYPE *pin, FTYPE fracdtG, FTYPE realdt, struct of_geom *ptrgeom, FTYPE *f1, FTYPE *f1norm, FTYPE (*iJ)[NDIM]);
 static int f_error_check(int showmessages, int showmessagesheavy, int iter, FTYPE conv, FTYPE *f1, FTYPE *f1norm, FTYPE *f1report, FTYPE *uu0, FTYPE *uu, struct of_geom *ptrgeom);
 
 int mathematica_report_check(int failtype, long long int failnum, int gotfirstnofail, FTYPE realdt,struct of_geom *ptrgeom, FTYPE *pinuse, FTYPE *pin, FTYPE *uu0, FTYPE *uu, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_state *q, FTYPE *dUother);
@@ -269,20 +269,23 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
 
 
   
-
+  int doingitsomecpu=0;
   int doingit=0;
 #if(0)
-  if(nstep==1 && steppart==0 && ptrgeom->i==16 && ptrgeom->j==4 && ptrgeom->k==0 && myid==6){ // so similar situation and grid at least
-    dualfprintf(fail_file,"DOINGIT\n");
-    doingit=1;
+  if(nstep==15 && steppart==0 && ptrgeom->i==6 && ptrgeom->j==8 && ptrgeom->k==0){
+    doingitsomecpu=1;
+    if(myid==0){ // so similar situation and grid at least
+      dualfprintf(fail_file,"DOINGIT\n");
+      doingit=1;
 
-dt=  0.0042442838741569434583;CUf[2]=                       0.5;pin[0]=    0.82133999827905109707;Uiin[0]=    0.88431091907420555633;Ufin[0]=                         0;dUother[0]=-5.0024930289881199527e-06;pin[1]= 0.00021647631951235228073;Uiin[1]=   0.014888392679125363067;Ufin[1]=                         0;dUother[1]=-8.4507029782070272192e-08;pin[2]=  0.0038132029655719230736;Uiin[2]=      1.726626739230534639;Ufin[2]=                         0;dUother[2]=  0.0010432722210732850274;pin[3]= 0.00025209278341441304745;Uiin[3]=  0.0014462157383832252317;Ufin[3]=                         0;dUother[3]=    0.11382455704071276338;pin[4]=  0.0020962681837186076471;Uiin[4]=     24.584387095002524943;Ufin[4]=                         0;dUother[4]= -0.0001389172426323190473;pin[5]= 1.7320654379886289489e-05;Uiin[5]=    0.03939613714896833853;Ufin[5]=                         0;dUother[5]=-3.1350616010614794771e-08;pin[6]=-4.6043509248704378492e-08;Uiin[6]=                         0;Ufin[6]=                         0;dUother[6]= 7.7424146779867995632e-09;pin[7]=-4.4131736193679712551e-10;Uiin[7]=-1.7466174047346716303e-23;Ufin[7]=                         0;dUother[7]=-5.4130434712384561599e-07;pin[8]=     8.4180452807836352808;Uiin[8]=    -9.0719301069058669446;Ufin[8]=                         0;dUother[8]=  0.0010463038168644575084;pin[9]=  0.0038132029364648441934;Uiin[9]=     23.587009706184088507;Ufin[9]=                         0;dUother[9]=     49.396492661967307067;pin[10]= 0.00025209279156768187253;Uiin[10]=   0.019754180947983061648;Ufin[10]=                         0;dUother[10]=     10.709936430890673664;pin[11]=  0.0020962681965309745859;Uiin[11]=     335.84101583335730157;Ufin[11]=                         0;dUother[11]=  -0.029063092581872888775;pin[12]=                         0;Uiin[12]=    -24.603875437523524685;Ufin[12]=                         0;dUother[12]= 0.00014449170096785320321;ptrgeom->gcov[GIND(0,0)]=   -0.91225025275170583703;ptrgeom->gcon[GIND(0,0)]=    -1.0877497472482941629;ptrgeom->gcov[GIND(0,1)]=     1.9988302325646892206;ptrgeom->gcon[GIND(0,1)]=  0.0038522621965046294564;ptrgeom->gcov[GIND(0,2)]=                         0;ptrgeom->gcon[GIND(0,2)]= 0.00025438369584466114771;ptrgeom->gcov[GIND(0,3)]=   -0.33830648266961095333;ptrgeom->gcon[GIND(0,3)]= 3.5990620089329799808e-24;ptrgeom->gcov[GIND(1,0)]=     1.9988302325646892206;ptrgeom->gcon[GIND(1,0)]=  0.0038522621965046294564;ptrgeom->gcov[GIND(1,1)]=     589.12131092604360905;ptrgeom->gcon[GIND(1,1)]=  0.0017602773015187332733;ptrgeom->gcov[GIND(1,2)]=    -374.32695776739281932;ptrgeom->gcon[GIND(1,2)]= 0.00011623971132549160088;ptrgeom->gcov[GIND(1,3)]=      -95.5264133760752151;ptrgeom->gcon[GIND(1,3)]= 1.2616741813995659856e-05;ptrgeom->gcov[GIND(2,0)]=                         0;ptrgeom->gcon[GIND(2,0)]= 0.00025438369584466114771;ptrgeom->gcov[GIND(2,1)]=    -374.32695776739281932;ptrgeom->gcon[GIND(2,1)]= 0.00011623971132549160088;ptrgeom->gcov[GIND(2,2)]=     5668.6242557796232138;ptrgeom->gcon[GIND(2,2)]= 0.00018408552241724017404;ptrgeom->gcov[GIND(2,3)]=                         0;ptrgeom->gcon[GIND(2,3)]= 8.3314511018337255591e-07;ptrgeom->gcov[GIND(3,0)]=   -0.33830648266961095333;ptrgeom->gcon[GIND(3,0)]= 3.5990620089329799808e-24;ptrgeom->gcov[GIND(3,1)]=      -95.5264133760752151;ptrgeom->gcon[GIND(3,1)]= 1.2616741813995659856e-05;ptrgeom->gcov[GIND(3,2)]=                         0;ptrgeom->gcon[GIND(3,2)]= 8.3314511018337255591e-07;ptrgeom->gcov[GIND(3,3)]=     13431.060485635423204;ptrgeom->gcon[GIND(3,3)]= 7.4544019302479968168e-05;ptrgeom->gcovpert[0]=   0.087749747248294162965;ptrgeom->beta[0]=                         0;ptrgeom->gcovpert[1]=     588.12131092604360905;ptrgeom->beta[1]=  0.0035414967516653409852;ptrgeom->gcovpert[2]=     5667.6242557796232138;ptrgeom->beta[2]= 0.00023386233505287544325;ptrgeom->gcovpert[3]=     13430.060485635423204;ptrgeom->beta[3]= 3.3087224502121106998e-24;ptrgeom->alphalapse=    0.95881651191845051688;ptrgeom->betasqoalphasq=  0.0077000181421395090224;ptrgeom->gdet=     198638.06134925452197;ptrgeom->igdetnosing= 5.0342819155980095682e-06;ptrgeom->i=16;ptrgeom->j=4;ptrgeom->k=0;ptrgeom->p=0;q->ucon[0]=     1.0766685184297575449;q->ucov[0]=    -0.9828999395897475964;q->ucon[1]= 1.8490493260141373974e-07;q->ucov[1]=     1.9518250241491588606;q->ucon[2]= 3.0056961651008936278e-07;q->ucov[2]=  0.0016346013178026000479;q->ucon[3]=  0.0020962681837186076471;q->ucov[3]=     27.790843166861629544;q->uradcon[0]=     1.0766685187321055377;q->uradcov[0]=   -0.98289993993021952163;q->uradcon[1]= 1.8487475475809917338e-07;q->uradcov[1]=     1.9518250027256506179;q->uradcon[2]= 3.0057769907110685415e-07;q->uradcov[2]=  0.0016346584311843125409;q->uradcon[3]=  0.0020962681965309745859;q->uradcov[3]=      27.79084334172579971;q->pressure= 7.2158773170784093582e-05;q->entropy=    -22.851857388201970772;q->ifremoverestplus1ud0elseud0=   0.017100060410252403518;
-
+      dt=  0.0039533717184373549738;CUf[2]=                       0.5;pin[0]= 5.8671573019816740585e-10;Uiin[0]= 1.8599071962339443935e-09;Ufin[0]=                         0;dUother[0]=-4.8369293236147600752e-09;pin[1]= 0.00014782262868803244442;Uiin[1]= -0.0016713894984997005364;Ufin[1]=                         0;dUother[1]=   0.021472966823648780533;pin[2]=   -0.97252338339604188115;Uiin[2]= -0.0024519334986580419117;Ufin[2]=                         0;dUother[2]=   0.032932795156698776105;pin[3]=  -0.018379994918252814202;Uiin[3]=-0.00024591049864253674949;Ufin[3]=                         0;dUother[3]=   0.002978006528940405943;pin[4]=   -0.11277198666607900795;Uiin[4]= 0.00035374677585359898144;Ufin[4]=                         0;dUother[4]= -0.0062075118422483781515;pin[5]=                         0;Uiin[5]=                         0;Ufin[5]=                         0;dUother[5]=                         0;pin[6]=                         0;Uiin[6]=                         0;Ufin[6]=                         0;dUother[6]=                         0;pin[7]=                         0;Uiin[7]=                         0;Ufin[7]=                         0;dUother[7]=                         0;pin[8]=     8.8758605434764514036;Uiin[8]=    -8.9393883704115929432;Ufin[8]=                         0;dUother[8]=    -5.0519156634008387076;pin[9]= -0.0011231891505075573715;Uiin[9]=   -0.20132916332265980042;Ufin[9]=                         0;dUother[9]=    -1.8634463818029622854;pin[10]= 0.00031504056189326296922;Uiin[10]=    0.30458156264522790929;Ufin[10]=                         0;dUother[10]=     3.6127343678807874675;pin[11]= 0.00034068784347714866871;Uiin[11]=     1.0039678561251826477;Ufin[11]=                         0;dUother[11]=    -1.4134718906839051758;pin[12]= 0.00014782262868803244442;Uiin[12]= 1.0280003452952356973e-07;Ufin[12]=                         0;dUother[12]=  -4.04686258718244875e-07;ptrgeom->gcov[GIND(0,0)]=     0.1112097304662429864;ptrgeom->gcon[GIND(0,0)]=    -2.1112097304662429864;ptrgeom->gcov[GIND(0,1)]=     1.8347557720715785915;ptrgeom->gcon[GIND(0,1)]=    0.67299805449784306957;ptrgeom->gcov[GIND(0,2)]=                         0;ptrgeom->gcon[GIND(0,2)]=  0.0076778296331190674917;ptrgeom->gcov[GIND(0,3)]=    -4.7169723403409002565;ptrgeom->gcon[GIND(0,3)]=                         0;ptrgeom->gcov[GIND(1,0)]=     1.8347557720715785915;ptrgeom->gcon[GIND(1,0)]=    0.67299805449784306957;ptrgeom->gcov[GIND(1,1)]=      5.762700808386148114;ptrgeom->gcon[GIND(1,1)]=    0.03738451761499675204;ptrgeom->gcov[GIND(1,2)]=   -0.61634522990604687586;ptrgeom->gcon[GIND(1,2)]=  0.0004264974545557230198;ptrgeom->gcov[GIND(1,3)]=    -14.797246198131100303;ptrgeom->gcon[GIND(1,3)]=   0.030408359722302656999;ptrgeom->gcov[GIND(2,0)]=                         0;ptrgeom->gcon[GIND(2,0)]=  0.0076778296331190674917;ptrgeom->gcov[GIND(2,1)]=   -0.61634522990604687586;ptrgeom->gcon[GIND(2,1)]=  0.0004264974545557230198;ptrgeom->gcov[GIND(2,2)]=     54.025572387868411831;ptrgeom->gcon[GIND(2,2)]=   0.018514618641898817149;ptrgeom->gcov[GIND(2,3)]=                         0;ptrgeom->gcon[GIND(2,3)]=  0.0003469106690726516806;ptrgeom->gcov[GIND(3,0)]=    -4.7169723403409002565;ptrgeom->gcon[GIND(3,0)]=                         0;ptrgeom->gcov[GIND(3,1)]=    -14.797246198131100303;ptrgeom->gcon[GIND(3,1)]=   0.030408359722302656999;ptrgeom->gcov[GIND(3,2)]=                         0;ptrgeom->gcon[GIND(3,2)]=  0.0003469106690726516806;ptrgeom->gcov[GIND(3,3)]=     122.58803675566230759;ptrgeom->gcon[GIND(3,3)]=   0.011827907711600354189;ptrgeom->gcovpert[0]=     1.1112097304662429864;ptrgeom->beta[0]=                         0;ptrgeom->gcovpert[1]=      4.762700808386148114;ptrgeom->beta[1]=     0.3187736608002545943;ptrgeom->gcovpert[2]=     53.025572387868411831;ptrgeom->beta[2]=  0.0036366967820972874747;ptrgeom->gcovpert[3]=     121.58803675566230759;ptrgeom->beta[3]=                         0;ptrgeom->alphalapse=    0.68823112663654761439;ptrgeom->betasqoalphasq=     1.2347870650828603863;ptrgeom->gdet=     111.59068711266855677;ptrgeom->igdetnosing=  0.0089613212883109220732;ptrgeom->i=6;ptrgeom->j=8;ptrgeom->k=0;ptrgeom->p=0;q->ucon[0]=      3.170031244271817163;q->ucov[0]=    -2.7539241537565477709;q->ucon[1]=    -1.9830458479837551403;q->ucov[1]=    -3.9243180145269111608;q->ucon[2]=  -0.029908437343443991947;q->ucov[2]=   -0.39357959761648096219;q->ucon[3]=   -0.11277198666607900795;q->ucov[3]=    0.56617149112032208284;q->uradcon[0]=     1.4530283094901191383;q->uradcov[0]=   -0.69191220961803263223;q->uradcon[1]=   -0.46431034261307814926;q->uradcov[1]=  -0.011708018669792006875;q->uradcon[2]= -0.0049691828155257148169;q->uradcov[2]=   0.017712518956876775202;q->uradcon[3]= 0.00034068784347714866871;q->uradcov[3]=   0.058384360265514081798;q->pressure= 4.9274209562677481479e-05;q->entropy=   3.24287133495233427e-08;q->ifremoverestplus1ud0elseud0=     -1.753924153756547771;
+      showmessages=showmessagesheavy=1;
+    }// end on doing it core
   }
-  //FUCK
-  showmessages=showmessagesheavy=1;
 
 #endif
+  // FUCK
+  //  showmessages=showmessagesheavy=1;
 
 
 
@@ -368,14 +371,17 @@ dt=  0.0042442838741569434583;CUf[2]=                       0.5;pin[0]=    0.821
   int failreturn;
   int f1iter;
   int checkconv,changeotherdt;
-
+  FTYPE impepsjac=IMPEPS;
+  FTYPE errorabs=0.0;
+  FTYPE errorabsp=BIG;
 
   // initialize previous 'good inversion' based uu's
   PLOOP(pliter,pl)  uupp[pl]=uuporig[pl]=uup[pl]=uu0orig[pl]=uu[pl];
   
   do{
     iter++;
-    
+
+
     
     if(iter>10){ // KORALTODO: improve upon this later
       // assume trying hard and failing to work, then allow CASE radiation errors
@@ -383,14 +389,21 @@ dt=  0.0042442838741569434583;CUf[2]=                       0.5;pin[0]=    0.821
       failreturnallowable=UTOPRIMGENWRAPPERRETURNFAILRAD;
     }
 
-    // KORALTODO: improve on this later.
-    // Problem is can start jumping too far in steps for near tough spots.
-    // While in normal inversion routine damping is to avoid breaching into unphysical solution space with nan/inf, below is to avoid oscillating around solution
-    if(iter>0){ // FUCK
+    // cautious first step to get reasonable error measurement. Allows often only 1 iteration to get sufficiently small error, while DAMPFACTOR=1 would already go beyond point where error actually increases.
+    if(iter==1){
       DAMPFACTOR=0.37;
     }
 
-    if(iter>20){
+
+#if(0)
+    // KORALTODO: improve on this later.
+    // Problem is can start jumping too far in steps for near tough spots.
+    // While in normal inversion routine damping is to avoid breaching into unphysical solution space with nan/inf, below is to avoid oscillating around solution
+
+    //    if(iter>10){
+    //      impepsjac=IMPEPS*1E-10;
+    //    }
+    if(iter>10){
       DAMPFACTOR=0.37;
     }
     if(iter>30){
@@ -402,6 +415,7 @@ dt=  0.0042442838741569434583;CUf[2]=                       0.5;pin[0]=    0.821
     if(iter>50){
       DAMPFACTOR=0.07;
     }
+#endif
 
 
     //vector of conserved at the previous two iterations
@@ -414,6 +428,8 @@ dt=  0.0042442838741569434583;CUf[2]=                       0.5;pin[0]=    0.821
 
     fracdtGpp=fracdtGp; // fracdtG used when computing previous f1 and f2's
     fracdtGp=fracdtG; // fracdtG used when computing previous f1 and f2's
+
+    errorabsp=errorabs;
 
 
 
@@ -524,7 +540,7 @@ dt=  0.0042442838741569434583;CUf[2]=                       0.5;pin[0]=    0.821
       // get Jacobian and inversion Jacobian 
       //
       /////////
-      int failreturniJ=get_implicit_iJ(failreturnallowableuse, showmessages, showmessagesheavy, allowlocalfailurefixandnoreport, uu, uup, uu0, pinuse, fracdtG, realdt, ptrgeom, f1, f1norm, iJ);
+      int failreturniJ=get_implicit_iJ(failreturnallowableuse, showmessages, showmessagesheavy, allowlocalfailurefixandnoreport, impepsjac, uu, uup, uu0, pinuse, fracdtG, realdt, ptrgeom, f1, f1norm, iJ);
       if(failreturniJ!=0) return(failreturniJ);
 
       if(showmessagesheavy){
@@ -602,19 +618,35 @@ dt=  0.0042442838741569434583;CUf[2]=                       0.5;pin[0]=    0.821
     // KORALTODO: This isn't a completely general error check since force might be large for fluid.  So using (e.g.) 1E-6 might still imply a ~1 or larger error for the fluid.  Only down to ~NUMEPSILON will radiation 4-force be unresolved as fluid source term.
     // NOTE: Have to be careful with decreasing DAMPFACTOR or fracdtuu0 because can become small enough that apparently fake convergence with below condition, so only check for convergence if all DAMPs are 1.0.
     /////////
+    int convreturn;
     //test convergence using |dU/U|
     FTYPE f3[NDIM],f3norm[NDIM];
     DLOOPA(ii){
       f3[ii]=(uu[ii+URAD0]-uup[ii+URAD0]);
       f3norm[ii]=fabs(uu[ii+URAD0])+fabs(uup[ii+URAD0]);
     }
+  
+    convreturn=f_error_check(showmessages, showmessagesheavy, iter, IMPTRYCONV,f3,f3norm,f3report,uup,uu,ptrgeom);
+    // store error and solution in case eventually lead to max iterations and actually get worse error
+    errorabs=0.0;     DLOOPA(jj) errorabs     += fabs(f3report[jj]);
+
+
+    // DAMP CONTROL
+    if(iter==1){
+      // un-damp first step, but still don't go back to 1.0.
+      DAMPFACTOR=0.7;
+    }
+    else{
+      // see if need to damp, but don't damp below some point.
+      if(errorabs>errorabsp && DAMPFACTOR>0.1) DAMPFACTOR*=0.5;
+    }
+
 
     // check convergence
     if(checkconv){
-      if(f_error_check(showmessages, showmessagesheavy, iter, IMPTRYCONV,f3,f3norm,f3report,uup,uu,ptrgeom)) break;
+      if(convreturn) break;
       else{
         // store error and solution in case eventually lead to max iterations and actually get worse error
-        FTYPE errorabs=0.0;     DLOOPA(jj) errorabs     += fabs(f3report[jj]);
         FTYPE errorabsbest=0.0; DLOOPA(jj) errorabsbest += fabs(lowestfreport[jj]);
         if(errorabsbest>errorabs && isfinite(errorabs)){
           PLOOP(pliter,pl) bestuu[pl]=uu[pl];
@@ -631,13 +663,11 @@ dt=  0.0042442838741569434583;CUf[2]=                       0.5;pin[0]=    0.821
     /////////
     int itermaxed=iter>IMPMAXITER;
     if(itermaxed || notfinite ){
-      int convreturn=f_error_check(showmessages, showmessagesheavy, iter, IMPALLOWCONV,f3,f3norm,f3report,uup,uu,ptrgeom);
+      convreturn=f_error_check(showmessages, showmessagesheavy, iter, IMPALLOWCONV,f3,f3norm,f3report,uup,uu,ptrgeom);
 
-      FTYPE errorabs=0.0;
       FTYPE errorabsbest=0.0;
       if(gotbest){
         // see if should revert to prior best
-        DLOOPA(jj) errorabs     += fabs(f3report[jj]);
         DLOOPA(jj) errorabsbest += fabs(lowestfreport[jj]);
         if(errorabsbest<errorabs || !isfinite(errorabs) ){
           PLOOP(pliter,pl) uu[pl]=bestuu[pl];
@@ -716,7 +746,7 @@ dt=  0.0042442838741569434583;CUf[2]=                       0.5;pin[0]=    0.821
 
   if(debugfail>=2){
     // then do some diagnostics and reporting
-    FTYPE errorabs=0.0;
+    errorabs=0.0;
     if(gotbest) DLOOPA(jj) errorabs += fabs(lowestfreport[jj]);
     else DLOOPA(jj) errorabs += fabs(f3report[jj]);
     //    dualfprintf(fail_file,"errorabs=%g\n",errorabs);
@@ -733,7 +763,6 @@ dt=  0.0042442838741569434583;CUf[2]=                       0.5;pin[0]=    0.821
       }
     }
   }
-
 
 
   return(0);
@@ -780,7 +809,7 @@ int mathematica_report_check(int failtype, long long int failnum, int gotfirstno
     dualfprintf(fail_file,"\n");
 
     /////////////
-    dualfprintf(fail_file,"\nFAILREPEATABLE: %d %d %lld",failtype,myid,failnum);
+    dualfprintf(fail_file,"\nFAILREPEATABLE: %d %d %lld : ",failtype,myid,failnum);
     dualfprintf(fail_file,"dt=%26.20g;CUf[2]=%26.20g;",realdt,CUf[2]);
     PLOOP(pliter,pl) dualfprintf(fail_file,"pin[%d]=%26.20g;Uiin[%d]=%26.20g;Ufin[%d]=%26.20g;dUother[%d]=%26.20g;",pl,pin[pl],pl,Uiin[pl],pl,Ufin[pl],pl,dUother[pl]);
      // ptrgeom stuff
@@ -887,7 +916,7 @@ static int f_error_check(int showmessages, int showmessagesheavy, int iter, FTYP
 
 // calculating approximate Jacobian: dUresid(dUrad,G(Urad))/dUrad = dy(x)/dx
 // then compute inverse Jacobian
-static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int showmessagesheavy, int allowlocalfailurefixandnoreport, FTYPE *uu, FTYPE *uup, FTYPE *uu0, FTYPE *pin, FTYPE fracdtG, FTYPE realdt, struct of_geom *ptrgeom, FTYPE *f1, FTYPE *f1norm, FTYPE (*iJ)[NDIM])
+static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int showmessagesheavy, int allowlocalfailurefixandnoreport, FTYPE impepsjac, FTYPE *uu, FTYPE *uup, FTYPE *uu0, FTYPE *pin, FTYPE fracdtG, FTYPE realdt, struct of_geom *ptrgeom, FTYPE *f1, FTYPE *f1norm, FTYPE (*iJ)[NDIM])
 {
   int ii,jj;
   FTYPE J[NDIM][NDIM],f2[NDIM],f2norm[NDIM];
@@ -908,7 +937,7 @@ static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int sho
   int fulljaciter=0;
   FTYPE FRACIMPEPSCHANGE=0.1;
   FTYPE del;
-  FTYPE IMPEPSSTART=IMPEPS;
+  FTYPE IMPEPSSTART=impepsjac;
   while(1){ // ensuring that Jacobian is non-singular if only because del too small (and then if singular, increase del)
 
     FTYPE localIMPEPS=IMPEPSSTART; // start with fresh del
