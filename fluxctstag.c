@@ -1272,13 +1272,15 @@ int interpolate_pfield_face2cent(FTYPE (*preal)[NSTORE2][NSTORE3][NPR], FTYPE (*
         OPENMP3DLOOPBLOCK{
           OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
-          MACP0A1(pcent,i,j,k,pl)=MACP0A1(pstag,i,j,k,pl);
+          if(pcent!=NULL){
+            MACP0A1(pcent,i,j,k,pl)=MACP0A1(pstag,i,j,k,pl);
+          }
 
           // get ucent if required
           if(ucent!=NULL){// OPTMARK: Is this expensive?
             // Note: If WHICHEOM==WITHNOGDET and turned off \detg for fields, then staggered method doesn't work, so ok to assume gdet below and assume standard primitive field such that \detg B^i = conserved quantity
             get_geometry_gdetonly(i, j, k, CENT, ptrgdetgeomc); // final quantity is at CENT
-            MACP0A1(ucent,i,j,k,pl)  = MACP0A1(pcent,i,j,k,pl)*(ptrgdetgeomc->gdet); // exactly correct (even for ENO/FV)
+            MACP0A1(ucent,i,j,k,pl)  = MACP0A1(pstag,i,j,k,pl)*(ptrgdetgeomc->gdet); // exactly correct (even for ENO/FV)
           }// end if ucent!=NULL
 
         }// end 3D LOOP
@@ -1391,13 +1393,13 @@ int interpolate_pfield_face2cent(FTYPE (*preal)[NSTORE2][NSTORE3][NPR], FTYPE (*
 #endif
 
 
-      
-          // now set pcent -- GODMARK -- should interpolate such that only 1 continuous value
-          // Must preserve divb in 1D Riemann problem, so B^{dir} must be continuous
-          // Yes, should use larger stencil and interpolate such that constant. Essentially choose
-          // large stencil and effectively choosing which points we trust (not necessarily local points)
-          MACP0A1(pcent,i,j,k,pl)=0.5*(p_l[pl]+p_r[pl]);
-
+          if(pcent!=NULL){
+            // now set pcent -- GODMARK -- should interpolate such that only 1 continuous value
+            // Must preserve divb in 1D Riemann problem, so B^{dir} must be continuous
+            // Yes, should use larger stencil and interpolate such that constant. Essentially choose
+            // large stencil and effectively choosing which points we trust (not necessarily local points)
+            MACP0A1(pcent,i,j,k,pl)=0.5*(p_l[pl]+p_r[pl]);
+          }
 
         }// endCOMPZSLOOP
 
@@ -1424,7 +1426,7 @@ int interpolate_pfield_face2cent(FTYPE (*preal)[NSTORE2][NSTORE3][NPR], FTYPE (*
 
 
 #if(0)
-  bound_prim(STAGEM1,t,pcent);
+  if(pcent!=NULL) bound_prim(STAGEM1,t,pcent);
   if(ucent!=NULL) bound_prim(STAGEM1,t,ucent);
 #endif
 

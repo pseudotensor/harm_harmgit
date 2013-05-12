@@ -336,17 +336,6 @@ static int advance_standard(
  
 
 
-  // Do comp full loop in case subset of full grid so that boundary cells of subset domain are defined without having to copy over those cells in bounds.c or initbase.gridsectioning.c
-  /////////////
-  //
-  // Utoprim as initial conditions : can't assume want these to be same in the end, so assign
-  //
-  // Since final step often sets pointers of pi=pf, in order to use arbitrary guess, must set here once done with pi,pb,pf.
-  //
-  ////////////
-  // copy pb->pf as initial pf
-  copy_3dnpr_fullloop(pb,pf);
-
 
 
   /////////////////////////////////////////////////////
@@ -442,10 +431,10 @@ static int advance_standard(
 
       // first pb entry is used for shock indicator, second is filled with new field
       // myupoint goes in as staggered point value of magnetic flux and returned as centered point value of magnetic flux
-      interpolate_ustag2fieldcent(stage, boundtime, timeorder, numtimeorders, pb, pstag, myupoint, pf);
+      interpolate_ustag2fieldcent(stage, boundtime, timeorder, numtimeorders, pb, pstag, myupoint, NULL);
 
       ////////////////////    
-      // now myupoint and pf contain centered point conserved and primitive quantities ready for MHD or RAD inversion procedures (or implicit use of such inversions)
+      // now myupoint contain CENTered point conserved (to be converted to primitive quantity later) ready for MHD or RAD inversion procedures (or implicit use of such inversions)
       ////////////////////
 
     }// end if staggered field method
@@ -521,6 +510,17 @@ static int advance_standard(
         flux2dUavg(doother,i,j,k,F1,F2,F3,dUriemann1,dUriemann2,dUriemann3);
         PLOOP(pliter,pl) dUriemann[pl]=dUriemann1[pl]+dUriemann2[pl]+dUriemann3[pl]; // this addition is one type of avg->point mistake
 
+
+        /////////////
+        // Utoprim as initial conditions : can't assume want these to be same in the end, so assign
+        // MAJORNOTE: final step often sets pointers of pi=pf, in order to use arbitrary guess, so must set pf ONLY once pi is done being used.
+        // pb is probably closer than pi for inversion
+        ////////////
+        PALLLOOP(pl) MACP0A1(pf,i,j,k,pl) = MACP0A1(pb,i,j,k,pl);
+        if(FLUXB==FLUXCTSTAG){
+          // then upoint actually contains centered updated field used for source() and starting point for more readily getting inversion
+          PLOOPBONLY(pl) MACP0A1(pf,i,j,k,pl)=MACP0A1(myupoint,i,j,k,pl)*ptrgeom->igdetnosing; // valid for this setup of NOGDETB1/B2/B3==0
+        }
 
 
         /////////////////////////////////////////////////////
@@ -1093,17 +1093,6 @@ static int advance_standard_orig(
   
 
 
-  // Do comp full loop in case subset of full grid so that boundary cells of subset domain are defined without having to copy over those cells in bounds.c or initbase.gridsectioning.c
-  /////////////
-  //
-  // Utoprim as initial conditions : can't assume want these to be same in the end, so assign
-  //
-  // Since final step often sets pointers of pi=pf, in order to use arbitrary guess, must set here once done with pi,pb,pf.
-  //
-  ////////////
-  // copy pb->pf as initial pf
-  copy_3dnpr_fullloop(pb,pf);
-
 
 
   /////////////////////////////////////////////////////
@@ -1177,6 +1166,17 @@ static int advance_standard_orig(
         flux2dUavg(DOALLPL,i,j,k,F1,F2,F3,dUriemann1,dUriemann2,dUriemann3);
         PLOOP(pliter,pl) dUriemann[pl]=dUriemann1[pl]+dUriemann2[pl]+dUriemann3[pl]; // this addition is one type of avg->point mistake
 
+
+        /////////////
+        //
+        // Utoprim as initial conditions : can't assume want these to be same in the end, so assign
+        //
+        // MAJORNOTE: Since final step often sets pointers of pi=pf, in order to use arbitrary guess, must set here once done with pi,pb,pf.
+        //
+        ////////////
+        // copy pb->pf as initial pf
+        // can do this now that don't need pi anymore
+        PALLLOOP(pl) MACP0A1(pf,i,j,k,pl) = MACP0A1(pb,i,j,k,pl);
 
 
         /////////////////////////////////////////////////////
@@ -1803,6 +1803,7 @@ static int advance_finitevolume(
   // setup initial guess for inversion
   // use pb since should be closer to pf
   // copy pb->pf
+  // OK to do here, because never really use pi
   copy_3dnpr_fullloop(pb,pf);
 
 

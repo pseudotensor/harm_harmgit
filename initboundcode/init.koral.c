@@ -328,17 +328,15 @@ int init_global(void)
 
   if(WHICHPROBLEM==RADPULSE || WHICHPROBLEM==RADPULSEPLANAR || WHICHPROBLEM==RADPULSE3D){
 
-    // FUCK
     //    lim[1]=lim[2]=lim[3]=DONOR;
-    // KORALNEWTODO: Perhaps use MINM in tau<=1 case?
-    //    lim[1]=lim[2]=lim[3]=MINM; // amplitude or phase of pulse quite different with cour=0.2 and cour=0.5
-    //lim[1]=lim[2]=lim[3]=MC; // works with cour=0.2
-    //    lim[1]=lim[2]=lim[3]=PARAFLAT; // kinda ok (but still messy) with cour=0.2
-    lim[1]=lim[2]=lim[3]=PARALINE; // kinda ok with cour=0.1 // similar to MINM only with cour=0.01--0.05 // superbad at cour=0.2--0.3
-    // EATME: PARALINE noisy and wrong value for RADPULSE with or without RADSHOCKFLAT
+    //    lim[1]=lim[2]=lim[3]=MINM;
+    //lim[1]=lim[2]=lim[3]=MC;
+    //    lim[1]=lim[2]=lim[3]=PARAFLAT;
+    lim[1]=lim[2]=lim[3]=PARALINE;
 
     //    cour=0.1;
-    cour=0.5;
+    //    cour=0.5;
+    cour=0.9;
     gam=gamideal=5.0/3.0;
     cooling=KORAL;
 

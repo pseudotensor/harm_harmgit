@@ -1227,7 +1227,7 @@ static int debug_utoprimgen(PFTYPE *lpflag, FTYPE *pr0, FTYPE *pr, struct of_geo
     PLOOP(pliter,pl){
       Unew[pl]*=ptrgeom->gdet;
       Uold[pl]*=ptrgeom->gdet;
-      fdiff[pl] = fabs(Unew[pl]-Uold[pl])/(fabs(Unew[pl]+Uold[pl])+1E-30);
+      fdiff[pl] = fabs(Unew[pl]-Uold[pl])/(fabs(Unew[pl]+Uold[pl])+SMALL);
       //    if(fdiff[pl]>1E-10){
       if((pl>=RHO)&&(pl<=B3)&&((fabs(Uold[pl])>1E-20)||(fabs(Unew[pl])>1E-20))){
         dualfprintf(fail_file,"fdiff[%d]=%21.15g :: %21.15g %21.15g\n",pl,fdiff[pl],Uold[pl],Unew[pl]);
