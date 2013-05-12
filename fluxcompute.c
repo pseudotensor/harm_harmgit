@@ -269,7 +269,8 @@ int flux_compute(int i, int j, int k, int dir, struct of_geom *geom, FTYPE *cmin
 
   // assign cmin/cmax/ctop for each conserved quantity
   PLOOP(pliter,pl){
-    if(pl<URAD0 || pl>URAD3){
+    if(RADUPL(pl)==0){
+      // MHD terms
       cmin_l[pl] = cminmax_l[CMIN];
       cmax_l[pl] = cminmax_l[CMAX];
       cmin_r[pl] = cminmax_r[CMIN];

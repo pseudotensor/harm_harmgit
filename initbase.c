@@ -2949,12 +2949,7 @@ int addremovefromanynpr(int doadd, int *whichpltoavg, int *ifnotavgthencopy, int
 int transform_primitive_vB(int whichvel, int whichcoord, int i,int j, int k, FTYPE (*p)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR])
 {
 
-  // deal with pstag using p before p is changed
-  MYFUN(transform_primitive_pstag(whichvel, whichcoord, i,j, k, p, pstag),"initbase.c:transform_primitive_vB()","transform_primitive_pstag()",0);
-  
-
   // For p, transform from whichcoord to MCOORD
-  // This changes p directly, so must come AFTER pstag change that uses original p
   if (bl2met2metp2v(whichvel,whichcoord,MAC(p,i,j,k), i,j,k) >= 1) FAILSTATEMENT("initbase.c:transform_primitive_vB()", "bl2ks2ksp2v()", 1);
 
 

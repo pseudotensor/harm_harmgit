@@ -58,12 +58,14 @@
 //#define IMPEPS (1.e-8)
 // use large, and it'll go smaller if no inversion, but can't start out with too small since then Jac will have diag() terms =0
 // KORALTODO: For difficult iterations, there can be solution but Jacobian is too rough and jump around alot in primitive space for small changes in U.  Should really modify IMPEPS in such cases when pr changes alot for such changes in U.
-#if((REALTYPE==DOUBLETYPE)||(REALTYPE==FLOATTYPE))
+// roughly (NUMEPSILON)**(1/3) as in NR5.7 on numerical derivatives
+#if(REALTYPE==FLOATTYPE)
+#define IMPEPS (1E-4) // on small side
+#elif(REALTYPE==DOUBLETYPE)
 //#define IMPEPS (MY1EM5)
-#define IMPEPS (1E-7)
+#define IMPEPS (1E-6) // on small side
 #elif(REALTYPE==LONGDOUBLETYPE)
-//#define IMPEPS (MY1EM6)
-#define IMPEPS (1E-8) // works well, but would like to choose more specifically
+#define IMPEPS (1E-8) // on small side
 #endif
 
 // maximum EPS for getting Jacobian
@@ -83,7 +85,8 @@
 // 1E-9 is common ok first iteration for RADFLATDISK.  More is too hard.
 // So Choose 1E-8 as good enough solution.
 #define IMPTRYCONV (1.e-8)  // for used implicit solver
-#define IMPALLOWCONV (1.e-6)  // for used implicit solver KORALTODO: Have to be more careful since f/fnorm~1E-3 might mean large changes in primitives.
+#define IMPALLOWCONV (1.e-4)  // for used implicit solver KORALTODO: Have to be more careful since f/fnorm~1E-3 might mean large changes in primitives.
+// Chose 1E-4 based upon histogram for implicit solver in RADDONUT problem with field.
 //#define IMPALLOWCONV (1.e-1) // KORALTODO SUPERGODMARK
 #else
 // RADPULSEPLANAR: below leads to ~5 f1iters and ~7 iters on average

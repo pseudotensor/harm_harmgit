@@ -372,8 +372,10 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
   int f1iter;
   int checkconv,changeotherdt;
   FTYPE impepsjac=IMPEPS;
-  FTYPE errorabs=0.0;
-  FTYPE errorabsp=BIG;
+  FTYPE errorabs=BIG;
+  FTYPE errorabsp=errorabs;
+  int convreturn;
+  FTYPE f3[NDIM],f3norm[NDIM];
 
   // initialize previous 'good inversion' based uu's
   PLOOP(pliter,pl)  uupp[pl]=uuporig[pl]=uup[pl]=uu0orig[pl]=uu[pl];
@@ -618,9 +620,7 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
     // KORALTODO: This isn't a completely general error check since force might be large for fluid.  So using (e.g.) 1E-6 might still imply a ~1 or larger error for the fluid.  Only down to ~NUMEPSILON will radiation 4-force be unresolved as fluid source term.
     // NOTE: Have to be careful with decreasing DAMPFACTOR or fracdtuu0 because can become small enough that apparently fake convergence with below condition, so only check for convergence if all DAMPs are 1.0.
     /////////
-    int convreturn;
     //test convergence using |dU/U|
-    FTYPE f3[NDIM],f3norm[NDIM];
     DLOOPA(ii){
       f3[ii]=(uu[ii+URAD0]-uup[ii+URAD0]);
       f3norm[ii]=fabs(uu[ii+URAD0])+fabs(uup[ii+URAD0]);
@@ -636,10 +636,10 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
       // un-damp first step, but still don't go back to 1.0.
       DAMPFACTOR=0.7;
     }
-    else{
-      // see if need to damp, but don't damp below some point.
-      if(errorabs>errorabsp && DAMPFACTOR>0.1) DAMPFACTOR*=0.5;
-    }
+#define LOWESTDAMP (0.05)
+    // see if need to damp, but don't damp below some point.
+    if(errorabs>errorabsp && DAMPFACTOR>LOWESTDAMP) DAMPFACTOR*=0.5;
+  
 
 
     // check convergence
@@ -2151,8 +2151,21 @@ int vchar_rad(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYP
     vrad2limited=vrad2;
   }
 
+
   // for setting flux so diffusive term is not exaggerated in high \tau regions
   simplefast_rad(dir,geom,q,vrad2limited,vmin,vmax);
+
+  
+  if(FORCESOLVELFLUX){
+    FTYPE ftemp=1.0/sqrt(geom->gcov[GIND(dir,dir)]);
+    *vmin=-ftemp;
+    *vmax=+ftemp;
+  }
+  //    cminmaxrad_l[CMIN]=-ftemp;
+  //    cminmaxrad_l[CMAX]=+ftemp;
+  //      cminmax_calc(cminmaxrad_l[CMIN],cminmaxrad_r[CMIN],cminmaxrad_l[CMAX],cminmaxrad_r[CMAX],&cminmaxrad[CMIN],&cminmaxrad[CMAX],ctopradptr);
+  //      ctoprad=ftemp;
+
 #if(1)
   *vmin2=*vmin;
   *vmax2=*vmax;

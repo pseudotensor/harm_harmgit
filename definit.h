@@ -431,6 +431,8 @@
 // whether to force dt to use velocity based upon speed of light
 // Doesn't change how fluxes are computed!
 #define FORCESOLVEL 0
+// below changes how fluxes are computed
+#define FORCESOLVELFLUX 0
 
 
 // whether to check on inversion and report problem

@@ -372,6 +372,27 @@ int user1_init_primitives(int inittype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FT
   }// end parallel region
 
 
+  //////////////////////
+  //
+  // assign rough pstag value in case not using vector potential
+  //
+  //////////////////////
+  if(FLUXB==FLUXCTSTAG){
+#pragma omp parallel private(i,j,k,initreturn,whichvel,whichcoord) OPENMPGLOBALPRIVATEFULL
+    {
+      OPENMP3DLOOPVARSDEFINE;
+      ////////  COMPFULLLOOP{
+      OPENMP3DLOOPSETUPFULL;
+#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+      OPENMP3DLOOPBLOCK{
+        OPENMP3DLOOPBLOCK2IJK(i,j,k);
+
+        MYFUN(assignrough_primitive_pstag(i,j,k, prim, pstag, ucons),"init.c:init_primitives","transform_primitive_vB()",0);
+
+      }
+    }// end parallel region
+  }
+
 
   /////////////////////////////
   //

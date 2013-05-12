@@ -1689,76 +1689,53 @@ int assign_fieldconservatives_pointvalues(FTYPE (*prim)[NSTORE2][NSTORE3][NPR],F
 
 
 
-
-// used to transform from one coordinate system to PRIMECOORDS
-// when acting on pstag, only relevant for magnetic field part, and in that case if didn't use vector potential to define pstag then assume not too important to get high accuracy, so average field to other positions in simple way
-// This function completely overwrites original pstag, so user doesn't have to set pstag in init.c
-int transform_primitive_pstag(int whichvel, int whichcoord, int i,int j, int k, FTYPE (*p)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR])
+// this assigns rough pstag value from p
+// in case not using vector potential
+int assignrough_primitive_pstag(int i,int j, int k, FTYPE (*p)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR])
 {
-  int pl,pliter;
-  FTYPE primface[NDIM][NPR];
-  int dir;
-  int myim1,myjm1,mykm1;
-  int myip1,myjp1,mykp1;
-
-
-  // limit to avoid where have no data
-  myim1=MAX(-N1BND,im1mac(i));
-  myjm1=MAX(-N2BND,jm1mac(j));
-  mykm1=MAX(-N3BND,km1mac(k));
-
-  myip1=MIN(N1+N1BND-1,ip1mac(i));
-  myjp1=MIN(N2+N2BND-1,jp1mac(j));
-  mykp1=MIN(N3+N3BND-1,kp1mac(k));
 
   if(FLUXB==FLUXCTSTAG && pstag!=NULL && p!=NULL){
-    // first copy over non-field quantities so treats 4-velocity part without failure even if don't need result
-    DIMENLOOP(dir){
-      PLOOPNOB1(pl) primface[dir][pl]=MACP0A1(p,i,j,k,pl);
-      PLOOPNOB2(pl) primface[dir][pl]=MACP0A1(p,i,j,k,pl);
-    }
-    
-    // average field to right location if doing stag (note only matters if mixing between coordinates -- i.e. dxdxp off-diagonals are nonzero)
-    // GODMARK: Could accurately interpolate, but assume most often use vector potential for accurate field in PRIMECOORDS
-    // SUPERGODMARK: Note that really should transform faraday or maxwell, not B^\mu -- if there is space-time mixing in dxdxp then this is wrong, but at the moment don't have this mixing
-    // Was stupidly using pstag to get pstag, so bl2met2metp2v_genloc() was using bad pstag values from averages.  Just use p, so user doesn't have to set pstag.
+
+    int myim1,myjm1,mykm1;
+    int myip1,myjp1,mykp1;
+    int dir,jj,pl;
+    struct of_gdetgeom geomfdontuse[NDIM];
+    struct of_gdetgeom *ptrgeomf[NDIM];
+
+    // generally ptr's are different inside parallel block
+    DLOOPA(jj) ptrgeomf[jj]=&(geomfdontuse[jj]);
+
+    // limit to avoid where have no data
+    myim1=MAX(-N1BND,im1mac(i));
+    myjm1=MAX(-N2BND,jm1mac(j));
+    mykm1=MAX(-N3BND,km1mac(k));
+
+    myip1=MIN(N1+N1BND-1,ip1mac(i));
+    myjp1=MIN(N2+N2BND-1,jp1mac(j));
+    mykp1=MIN(N3+N3BND-1,kp1mac(k));
+
    
-    // do FACE1 for B1 in PRIMECOORDS
-    dir=1;
-    //    primface[dir][B1]=MACP0A1(pstag,i,j,k,B1);
-    //    primface[dir][B2]=0.25*(MACP0A1(pstag,i,j,k,B2)+MACP0A1(pstag,i,myjp1,k,B2)+MACP0A1(pstag,myim1,j,k,B2)+MACP0A1(pstag,myim1,myjp1,k,B2));
-    //    primface[dir][B3]=0.25*(MACP0A1(pstag,i,j,k,B3)+MACP0A1(pstag,i,j,mykp1,B3)+MACP0A1(pstag,myim1,j,k,B3)+MACP0A1(pstag,myim1,j,mykp1,B3));
-    primface[dir][B1]=0.5*(MACP0A1(p,i,j,k,B1)+MACP0A1(p,myim1,j,k,B1));
-    primface[dir][B2]=0.5*(MACP0A1(p,i,j,k,B2)+MACP0A1(p,myim1,j,k,B2));
-    primface[dir][B3]=0.5*(MACP0A1(p,i,j,k,B3)+MACP0A1(p,myim1,j,k,B3));
+    // do FACE1 for B1
+    dir=1; pl=B1;
+    MACP0A1(pstag,i,j,k,pl)=0.5*(MACP0A1(p,i,j,k,pl)+MACP0A1(p,myim1,j,k,pl));
+    get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgeomf[dir]);
+    MACP0A1(ucons,i,j,k,B1-1+dir)=MACP0A1(pstag,i,j,k,B1)*ptrgeomf[dir]->IEOMFUNCNOSINGMAC(pl);
 
-    // do FACE2 for B2 in PRIMECOORDS
-    dir=2;
-    //    primface[dir][B2]=MACP0A1(pstag,i,j,k,B2);
-    //    primface[dir][B1]=0.25*(MACP0A1(pstag,i,j,k,B1)+MACP0A1(pstag,myip1,j,k,B1)+MACP0A1(pstag,i,myjm1,k,B1)+MACP0A1(pstag,myip1,myjm1,k,B1));
-    //    primface[dir][B3]=0.25*(MACP0A1(pstag,i,j,k,B3)+MACP0A1(pstag,i,j,mykp1,B3)+MACP0A1(pstag,i,myjm1,k,B3)+MACP0A1(pstag,i,myjm1,mykp1,B3));
-    primface[dir][B1]=0.5*(MACP0A1(p,i,j,k,B1)+MACP0A1(p,i,myjm1,k,B1));
-    primface[dir][B2]=0.5*(MACP0A1(p,i,j,k,B2)+MACP0A1(p,i,myjm1,k,B2));
-    primface[dir][B3]=0.5*(MACP0A1(p,i,j,k,B3)+MACP0A1(p,i,myjm1,k,B3));
+    // do FACE2 for B2
+    dir=2; pl=B2;
+    MACP0A1(pstag,i,j,k,pl)=0.5*(MACP0A1(p,i,j,k,pl)+MACP0A1(p,i,myjm1,k,pl));
+    get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgeomf[dir]);
+    MACP0A1(ucons,i,j,k,B1-1+dir)=MACP0A1(pstag,i,j,k,B1)*ptrgeomf[dir]->IEOMFUNCNOSINGMAC(pl);
 
-    // do FACE3 for B3 in PRIMECOORDS
-    dir=3;
-    //    primface[dir][B1]=0.25*(MACP0A1(pstag,i,j,k,B1)+MACP0A1(pstag,myip1,j,k,B1)+MACP0A1(pstag,i,j,mykm1,B1)+MACP0A1(pstag,myip1,j,mykm1,B1));
-    //    primface[dir][B2]=0.25*(MACP0A1(pstag,i,j,k,B2)+MACP0A1(pstag,i,myjp1,k,B2)+MACP0A1(pstag,i,j,mykm1,B2)+MACP0A1(pstag,i,myjp1,mykm1,B2));
-    //    primface[dir][B3]=MACP0A1(pstag,i,j,k,B3);
-    primface[dir][B1]=0.5*(MACP0A1(p,i,j,k,B1)+MACP0A1(p,i,j,mykm1,B1));
-    primface[dir][B2]=0.5*(MACP0A1(p,i,j,k,B2)+MACP0A1(p,i,j,mykm1,B2));
-    primface[dir][B3]=0.5*(MACP0A1(p,i,j,k,B3)+MACP0A1(p,i,j,mykm1,B3));
-
-
-    DIMENLOOP(dir){
-      // must do field only in case velocity (normally at loc=CENT) is at high Lorentz and grid offset would not lead to well-defined value.
-      if (bl2met2metp2v_genloc_fieldonly(whichvel,whichcoord,primface[dir], i,j,k,FACE1+dir-1) >= 1) FAILSTATEMENT("initbase.c:transform_primitive_vB()", "bl2ks2ksp2v_genloc()", dir);
-      // now assign single PRIMECOORD value
-      MACP0A1(pstag,i,j,k,B1+dir-1) = primface[dir][B1+dir-1];
-    }
+    // do FACE3 for B3
+    dir=3; pl=B3;
+    MACP0A1(pstag,i,j,k,B2)=0.5*(MACP0A1(p,i,j,k,pl)+MACP0A1(p,i,j,mykm1,pl));
+    get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgeomf[dir]);
+    MACP0A1(ucons,i,j,k,B1-1+dir)=MACP0A1(pstag,i,j,k,B1)*ptrgeomf[dir]->IEOMFUNCNOSINGMAC(pl);
 
   }
+
+
   
 
   return(0);

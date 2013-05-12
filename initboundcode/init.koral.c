@@ -1844,11 +1844,12 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
     trifprintf("RADDOT: %g %g %g : %d %d %d\n",RADDOT_XDOT,RADDOT_YDOT,RADDOT_ZDOT,RADDOT_IDOT,RADDOT_JDOT,RADDOT_KDOT);
   }
 
-
-  trifprintf("BEGIN check_rmin\n");
-  // check rmin
-  check_rmin();
-  trifprintf("END check_rmin\n");
+  if(ISBLACKHOLEMCOORD(MCOORD)){
+    trifprintf("BEGIN check_rmin\n");
+    // check rmin
+    check_rmin();
+    trifprintf("END check_rmin\n");
+  }
 
 
   // check that singularities are properly represented by code
@@ -3632,9 +3633,12 @@ int donut_analytical_solution(FTYPE *pp,FTYPE *X, FTYPE *V,struct of_geom *ptrge
 #define BLANDFORDQUAD 5
 #define TOROIDALFIELD 6
 
-//#define FIELDTYPE NOFIELD
+#if(WHICHPROBLEM==RADDONUT)
 #define FIELDTYPE DISK2FIELD
 //#define FIELDTYPE DISK1FIELD
+#else
+#define FIELDTYPE NOFIELD
+#endif
 
 
 
@@ -3868,7 +3872,6 @@ int init_vpot2field_user(SFTYPE time, FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SH
 
   funreturn=user1_init_vpot2field_user(time, fieldfrompotential, A, prim, pstag, ucons, Bhat);
   if(funreturn!=0) return(funreturn);
- 
 
   return(0);
 
@@ -3946,10 +3949,13 @@ int normalize_field(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2
 {
   int funreturn;
 
-  dualfprintf(fail_file,"DID NORM FIELD\n");
- 
-  funreturn=user1_normalize_field(beta, prim, pstag, ucons, vpot, Bhat);
-  if(funreturn!=0) return(funreturn);
+  if(WHICHPROBLEM==RADDONUT){
+    dualfprintf(fail_file,"DID NORM FIELD\n");
+    
+    funreturn=user1_normalize_field(beta, prim, pstag, ucons, vpot, Bhat);
+    if(funreturn!=0) return(funreturn);
+  }
+  
  
   return(0);
 
