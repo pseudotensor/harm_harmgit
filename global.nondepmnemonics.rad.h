@@ -123,7 +123,6 @@
 #define GAMMASMALLLIMIT (1.0-1E-10) // at what point above which assume gamma^2=1.0
 
 #define RADSHOCKFLAT 1 // 0 or 1.  Whether to include radiation in shock flatener
-// RADSHOCKFLAT 1 causes excessive oscillations in RADBEAMFLAT at injection point
 
 // whether to choose Jon or Olek way of handling u2p_rad inversion failures
 #define JONCHOICE 0

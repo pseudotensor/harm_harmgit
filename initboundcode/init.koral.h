@@ -576,10 +576,10 @@ struct Ccoordparams {
 #if(WHICHPROBLEM==RADPULSE || WHICHPROBLEM==RADPULSEPLANAR)
 
 #undef RADSHOCKFLAT
-#define RADSHOCKFLAT 1 // FUCK
+#define RADSHOCKFLAT 1
 
 #undef FORCESOLVEL
-#define FORCESOLVEL 0 // FUCK // for testing against koral // KORALTODO : Koral actually fails if uses large timestep as suggested by tau limiter.
+#define FORCESOLVEL 0 // for testing against koral
 
 #define N1 100
 #define N2 1 
@@ -620,7 +620,7 @@ struct Ccoordparams {
 #define FORCESOLVEL 0 // to compare against koral
 
 #undef RADSHOCKFLAT
-#define RADSHOCKFLAT 0 // can't use flattener near inlet where static jump -- leads to lots of oscillations with PPM.
+#define RADSHOCKFLAT 1
 
 #undef WHICHRADSOURCEMETHOD
 //#define WHICHRADSOURCEMETHOD SOURCEMETHODNONE
@@ -736,7 +736,7 @@ struct Ccoordparams {
 
 
 #undef RADSHOCKFLAT
-#define RADSHOCKFLAT 0 // can't use flattener near inlet where static jump -- leads to lots of oscillations with PPM.
+#define RADSHOCKFLAT 1
 
 #undef WHICHRADSOURCEMETHOD
 //#define WHICHRADSOURCEMETHOD SOURCEMETHODNONE
@@ -766,7 +766,7 @@ struct Ccoordparams {
 
 
 #undef RADSHOCKFLAT
-#define RADSHOCKFLAT 0 // can't use flattener near inlet where static jump -- leads to lots of oscillations with PPM.
+#define RADSHOCKFLAT 1
 
 #undef WHICHRADSOURCEMETHOD
 //#define WHICHRADSOURCEMETHOD SOURCEMETHODNONE
@@ -890,7 +890,7 @@ struct Ccoordparams {
 #define MPERSUN (3.0)
 
 #undef RADSHOCKFLAT
-#define RADSHOCKFLAT 0 // can't use flattener near inlet where static jump -- leads to lots of oscillations with PPM.
+#define RADSHOCKFLAT 1
 
 #undef WHICHRADSOURCEMETHOD
 //#define WHICHRADSOURCEMETHOD SOURCEMETHODNONE
@@ -919,7 +919,7 @@ struct Ccoordparams {
 //#define MPERSUN (1.0/MSUN)
 
 #undef RADSHOCKFLAT
-#define RADSHOCKFLAT 0 // can't use flattener near inlet where static jump -- leads to lots of oscillations with PPM.
+#define RADSHOCKFLAT 1
 
 #undef WHICHRADSOURCEMETHOD
 //#define WHICHRADSOURCEMETHOD SOURCEMETHODNONE
@@ -1083,6 +1083,9 @@ struct Ccoordparams {
 #undef VARTOINTERP
 #define VARTOINTERP PRIMTOINTERP
 //#define VARTOINTERP PRIMTOINTERP_GDETFULLVERSION
+
+#undef RADSHOCKFLAT
+#define RADSHOCKFLAT 0
 
 #endif
 

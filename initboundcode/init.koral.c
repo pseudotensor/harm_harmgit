@@ -156,12 +156,12 @@ int prepre_init_specific_init(void)
     periodicx1=periodicx2=periodicx3=1;
   }
   // if ever only 1D problems
-  else if(WHICHPROBLEM==RADBEAMFLAT || WHICHPROBLEM==RADTUBE || WHICHPROBLEM==RADPULSE || WHICHPROBLEM==RADPULSEPLANAR || WHICHPROBLEM==RADWAVE){
+  else if(WHICHPROBLEM==RADTUBE || WHICHPROBLEM==RADPULSE || WHICHPROBLEM==RADPULSEPLANAR || WHICHPROBLEM==RADWAVE){
     periodicx1=0;
     periodicx2=periodicx3=1;
   }
   // problems with no necessary symmetry
-  else if(WHICHPROBLEM==RADPULSE3D || WHICHPROBLEM==RADSHADOW || WHICHPROBLEM==RADDBLSHADOW || WHICHPROBLEM==RADBEAM2D || WHICHPROBLEM==RADWALL || WHICHPROBLEM==RADDOT || WHICHPROBLEM==RADCYLBEAM || WHICHPROBLEM==RADBEAM2DKSVERT || WHICHPROBLEM==RADCYLBEAMCART){
+  else if(WHICHPROBLEM==RADBEAMFLAT || WHICHPROBLEM==RADPULSE3D || WHICHPROBLEM==RADSHADOW || WHICHPROBLEM==RADDBLSHADOW || WHICHPROBLEM==RADBEAM2D || WHICHPROBLEM==RADWALL || WHICHPROBLEM==RADDOT || WHICHPROBLEM==RADCYLBEAM || WHICHPROBLEM==RADBEAM2DKSVERT || WHICHPROBLEM==RADCYLBEAMCART){
     periodicx1=periodicx2=periodicx3=0;
   }
   // spherical polar problems:
@@ -342,8 +342,8 @@ int init_global(void)
 
   if(WHICHPROBLEM==RADPULSE || WHICHPROBLEM==RADPULSEPLANAR || WHICHPROBLEM==RADPULSE3D){
 
-    TIMEORDER=3; // more smooth accurate solution than TIMEORDER=4 or 2 (midpoint or TVD)
-    lim[1]=lim[2]=lim[3]=PARALINE;
+    //    TIMEORDER=3;
+    //    lim[1]=lim[2]=lim[3]=PARALINE;
 
     //    cour=0.1;
     //    cour=0.5;
@@ -396,9 +396,9 @@ int init_global(void)
 
   if(WHICHPROBLEM==RADBEAMFLAT){
     //cour=0.8; // this or with old MINDTSET, causes Erf<0 for default koral test
-    cour=0.5;
+    //    cour=0.5;
     //    lim[1]=lim[2]=lim[3]=MINM;
-    lim[1]=lim[2]=lim[3]=PARALINE;
+    //    lim[1]=lim[2]=lim[3]=PARALINE;
     // gam=gamideal=5.0/3.0;
     gam=gamideal=4.0/3.0; // koral now
     cooling=KORAL;
@@ -437,10 +437,10 @@ int init_global(void)
     //#define NTUBE 5
     //#define NTUBE 3
 
-    lim[1]=lim[2]=lim[3]=MINM; // NTUBE=1 has issues near cusp, so use MINM
+    //    lim[1]=lim[2]=lim[3]=MINM; // NTUBE=1 has issues near cusp, so use MINM
     // should have PARA(LINE) not oscillate so much at cusp
     // Also should eliminate PARA's zig-zag steps in internal energy density in other tests.
-    cour=0.5;
+    //cour=0.5;
     cooling=KORAL;
 
     // arad = 4*sigmarad/c (so removed /4. from koral sigma setup).
@@ -505,10 +505,10 @@ int init_global(void)
 
   if(WHICHPROBLEM==RADSHADOW){
 
-    lim[1]=lim[2]=lim[3]=MINM; // NTUBE=1 has issues near cusp, so use MINM
+    //    lim[1]=lim[2]=lim[3]=MINM; // NTUBE=1 has issues near cusp, so use MINM
     // should have PARA(LINE) not oscillate so much at cusp
     // Also should eliminate PARA's zig-zag steps in internal energy density in other tests.
-    cour=0.5;
+    //    cour=0.5;
     gam=gamideal=1.4;
     cooling=KORAL;
     ARAD_CODE=1E7*1E-5*(2.5E-9/7.115025791e-10); // tuned so radiation energy flux puts in something much higher than ambient, while initial ambient radiation energy density lower than ambient gas internal energy.
@@ -537,12 +537,12 @@ int init_global(void)
 
   if(WHICHPROBLEM==RADDBLSHADOW){
 
-    lim[1]=lim[2]=lim[3]=MINM; // NTUBE=1 has issues near cusp, so use MINM
+    //    lim[1]=lim[2]=lim[3]=MINM; // NTUBE=1 has issues near cusp, so use MINM
     // lim[1]=lim[2]=lim[3]=MC; // MC gets totally bonkers answer with NLEFT=0.99999
     //lim[1]=lim[2]=lim[3]=PARALINE; // bonkers answer for NLEFT=0.99999, ok for NLEFT=0.99
     // should have PARA(LINE) not oscillate so much at cusp
     // Also should eliminate PARA's zig-zag steps in internal energy density in other tests.
-    cour=0.5;
+    //cour=0.5;
     // cour=0.49; // doesn't help oscillations for NLEFT=0.99999 with MINM
     gam=gamideal=1.4;
     cooling=KORAL;
@@ -579,7 +579,10 @@ int init_global(void)
     RADBEAM2D_FLATBACKGROUND=1;
 
 
-    lim[1]=lim[2]=lim[3]=MINM; // NTUBE=1 has issues near cusp, so use MINM
+    //lim[1]=lim[2]=lim[3]=MINM; // NTUBE=1 has issues near cusp, so use MINM
+    //    cour=0.5;
+    // cour=0.2; // doesn't seem to help avoid failures for this test
+
     a=0.0; // no spin in case use MCOORD=KSCOORDS
 
     if(!(ISSPCMCOORDNATIVE(MCOORD))){
@@ -587,8 +590,6 @@ int init_global(void)
       myexit(3434628752);
     }
 
-    cour=0.5;
-    // cour=0.2; // doesn't seem to help avoid failures for this test
     gam=gamideal=1.4;
     cooling=KORAL;
     // ARAD_CODE=ARAD_CODE_DEF*1E5; // tuned so radiation energy flux puts in something much higher than ambient, while initial ambient radiation energy density lower than ambient gas internal energy.
@@ -644,7 +645,10 @@ int init_global(void)
     RADBEAM2D_FLATBACKGROUND=1;
 
 
-    lim[1]=lim[2]=lim[3]=MINM; // NTUBE=1 has issues near cusp, so use MINM
+    //    lim[1]=lim[2]=lim[3]=MINM; // NTUBE=1 has issues near cusp, so use MINM
+    //    cour=0.5;
+
+
     a=0.0; // no spin in case use MCOORD=KSCOORDS
 
     if(!(ISSPCMCOORDNATIVE(MCOORD))){
@@ -652,7 +656,6 @@ int init_global(void)
       myexit(3434628752);
     }
 
-    cour=0.5;
     gam=gamideal=1.4;
     cooling=KORAL;
     // ARAD_CODE=ARAD_CODE_DEF*1E5; // tuned so radiation energy flux puts in something much higher than ambient, while initial ambient radiation energy density lower than ambient gas internal energy.
@@ -702,16 +705,17 @@ int init_global(void)
   if(WHICHPROBLEM==ATMSTATIC){
 
     //    lim[1]=lim[2]=lim[3]=MINM; 
-    lim[1]=lim[2]=lim[3]=PARALINE; // actually more error in u^r than MINM for inner radial boundary points (~factor of two larger u^r).
+    //    lim[1]=lim[2]=lim[3]=PARALINE; // actually more error in u^r than MINM for inner radial boundary points (~factor of two larger u^r).
     // NOTE: with FTYPE as double, not enough precision to have good convergence for u^r -- just noise. See makefile.notes for how to go to ldouble and then has same error as koral.
-    a=0.0; // no spin in case use MCOORD=KSCOORDS
+    //    cour=0.5;
+
 
     if(!(ISSPCMCOORDNATIVE(MCOORD))){
       dualfprintf(fail_file,"Must choose MCOORD (currently %d) to be spherical polar grid type for ATMSTATIC\n",MCOORD);
       myexit(3434628752);
     }
 
-    cour=0.5;
+    a=0.0; // no spin in case use MCOORD=KSCOORDS
     gam=gamideal=1.4;
     cooling=KORAL;
     ARAD_CODE=0.0;
@@ -750,19 +754,19 @@ int init_global(void)
   if(WHICHPROBLEM==RADATM){
 
     //lim[1]=lim[2]=lim[3]=MINM; // MINM gets larger error and jump in v1 at outer edge
-    lim[1]=lim[2]=lim[3]=PARALINE;
+    //    lim[1]=lim[2]=lim[3]=PARALINE;
     // Koral uses MINMOD_THETA2 (MC?)
     // koral paper uses MP5
     //    lim[1]=lim[2]=lim[3]=MC;
+    //    cour=0.5;
     
-    a=0.0; // no spin in case use MCOORD=KSCOORDS
 
     if(!(ISSPCMCOORDNATIVE(MCOORD))){
       dualfprintf(fail_file,"Must choose MCOORD (currently %d) to be spherical polar grid type for RADATM\n",MCOORD);
       myexit(3434628753);
     }
 
-    cour=0.5;
+    a=0.0; // no spin in case use MCOORD=KSCOORDS
     gam=gamideal=1.4;
     cooling=KORAL;
     //    ARAD_CODE=0.0;
@@ -802,9 +806,10 @@ int init_global(void)
 
   if(WHICHPROBLEM==RADWALL){
 
-    lim[1]=lim[2]=lim[3]=MINM; // Messy with PARALINE
+    //    lim[1]=lim[2]=lim[3]=MINM; // Messy with PARALINE
+    //    cour=0.5;
 
-    cour=0.5;
+
     gam=gamideal=5.0/3.0;
     cooling=KORAL;
 
@@ -828,10 +833,11 @@ int init_global(void)
 
   if(WHICHPROBLEM==RADWAVE){
 
-    lim[1]=lim[2]=lim[3]=MINM; // generates glitch at extrema in prad0
+    //    lim[1]=lim[2]=lim[3]=MINM; // generates glitch at extrema in prad0
     //lim[1]=lim[2]=lim[3]=MC; // less of a glitch near extrema in prad0
+    //    cour=0.5;
 
-    cour=0.5;
+
     cooling=KORAL;
     gam=gamideal=5./3.;
 
@@ -1024,15 +1030,16 @@ int init_global(void)
   if(WHICHPROBLEM==RADBONDI){
 
     // lim[1]=lim[2]=lim[3]=MINM; // too low order for ~100 points
-    lim[1]=lim[2]=lim[3]=PARALINE;
-    a=0.0; // no spin in case use MCOORD=KSCOORDS
+    //    lim[1]=lim[2]=lim[3]=PARALINE;
+    //    cour=0.5;
+
 
     if(!(ISSPCMCOORDNATIVE(MCOORD))){
       dualfprintf(fail_file,"Must choose MCOORD (currently %d) to be spherical polar grid type for RADBONDI\n",MCOORD);
       myexit(3434628752);
     }
 
-    cour=0.5;
+    a=0.0; // no spin in case use MCOORD=KSCOORDS
     cooling=KORAL;
     // ARAD_CODE=ARAD_CODE_DEF*1E5; // tuned so radiation energy flux puts in something much higher than ambient, while initial ambient radiation energy density lower than ambient gas internal energy.
 
@@ -1099,10 +1106,10 @@ int init_global(void)
 
   if(WHICHPROBLEM==RADDOT){
 
-    lim[1]=lim[2]=lim[3]=MINM; // NTUBE=1 has issues near cusp, so use MINM
-    a=0.0; // no spin in case use MCOORD=KSCOORDS
+    //    lim[1]=lim[2]=lim[3]=MINM; // NTUBE=1 has issues near cusp, so use MINM
+    //    cour=0.5;
 
-    cour=0.5;
+    a=0.0; // no spin in case use MCOORD=KSCOORDS
     gam=gamideal=4.0/3.0;
     cooling=KORAL;
     ARAD_CODE=ARAD_CODE_DEF*1E-20; // tuned so radiation energy flux puts in something much higher than ambient, while initial ambient radiation energy density lower than ambient gas internal energy.
@@ -1158,7 +1165,8 @@ int init_global(void)
     // TOTRY: Om not happening even if set!
 
     //    lim[1]=lim[2]=lim[3]=MINM; // too low order for ~100 points
-    if(WHICHPROBLEM==RADDONUT) lim[1]=lim[2]=lim[3]=PARALINE; // try later
+    //    if(WHICHPROBLEM==RADDONUT) lim[1]=lim[2]=lim[3]=PARALINE; // try later
+    //    cour=0.5;
 
     if(!ISSPCMCOORDNATIVE(MCOORD) && (WHICHPROBLEM==RADNT || WHICHPROBLEM==RADFLATDISK || WHICHPROBLEM==RADDONUT) ){
       dualfprintf(fail_file,"Must choose MCOORD (currently %d) to be spherical polar grid type for RADNT,\n",MCOORD);
@@ -1173,7 +1181,6 @@ int init_global(void)
       myexit(2493434635);
     }
 
-    cour=0.5;
     cooling=KORAL;
     // ARAD_CODE=ARAD_CODE_DEF*1E5; // tuned so radiation energy flux puts in something much higher than ambient, while initial ambient radiation energy density lower than ambient gas internal energy.
     GAMMAMAXRAD=1000.0; // Koral limits for this problem.

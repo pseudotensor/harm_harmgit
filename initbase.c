@@ -2235,6 +2235,13 @@ void check_bnd_num(void)
   }
 
 
+  if(RADSHOCKFLAT==0 && EOMRADTYPE!=EOMRADNONE && TIMEORDER<3 && (lim[1]>MC || lim[2]>MC || lim[3]>MC)){
+    dualfprintf(fail_file,"With radiation, need to use shock flattener with para and TIMEORDER=3 to avoid unphysical oscillations that lead to bad evolution and no radiation inversion.\n");
+    // example test is RADBEAMFLAT with cour=0.8 and lim=PARALINE and TIMEORDER=2 which generates problems at beginning of test.
+    myexit(245834);
+  }
+    
+
 
 
 

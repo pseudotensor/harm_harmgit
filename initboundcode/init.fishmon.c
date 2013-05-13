@@ -297,8 +297,8 @@ int init_global(void)
   //  rescaletype=1;
   rescaletype=4;
   BSQORHOLIMIT=1E2; // was 1E2 but latest BC test had 1E3 // CHANGINGMARK
-  BSQOULIMIT=1E3; // was 1E3 but latest BC test had 1E4
-  UORHOLIMIT=1E3;
+  BSQOULIMIT=1E5; // was 1E3 but latest BC test had 1E4
+  UORHOLIMIT=1E10;
   RHOMIN = 1E-4;
   UUMIN = 1E-6;
 #elif(WHICHPROBLEM==THICKDISK)
@@ -308,7 +308,7 @@ int init_global(void)
   rescaletype=4;
   BSQORHOLIMIT=50.0; // was 1E2 but latest BC test had 1E3 // CHANGINGMARK
   BSQOULIMIT=1E3; // was 1E3 but latest BC test had 1E4
-  UORHOLIMIT=50.0;
+  UORHOLIMIT=1E10;
   RHOMIN = 1E-4;
   UUMIN = 1E-6;
 #elif(WHICHPROBLEM==GRBJET)
