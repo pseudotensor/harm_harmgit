@@ -47,7 +47,7 @@ static int get_m1closure_urfconrel_olek(int showmessages, int allowlocalfailuref
 
 
 static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int showmessagesheavy, int allowlocalfailurefixandnoreport, FTYPE impepsjac, FTYPE *uu, FTYPE *uup, FTYPE *uu0, FTYPE *pin, FTYPE fracdtG, FTYPE realdt, struct of_geom *ptrgeom, FTYPE *f1, FTYPE *f1norm, FTYPE (*iJ)[NDIM]);
-static int f_error_check(int showmessages, int showmessagesheavy, int iter, FTYPE conv, FTYPE *f1, FTYPE *f1norm, FTYPE *f1report, FTYPE *uu0, FTYPE *uu, struct of_geom *ptrgeom);
+static int f_error_check(int showmessages, int showmessagesheavy, int iter, FTYPE conv, FTYPE realdt, FTYPE *f1, FTYPE *f1norm, FTYPE *f1report, FTYPE *Uiin, FTYPE *uu0, FTYPE *uu, struct of_geom *ptrgeom);
 
 int mathematica_report_check(int failtype, long long int failnum, int gotfirstnofail, FTYPE realdt,struct of_geom *ptrgeom, FTYPE *pinuse, FTYPE *pin, FTYPE *uu0, FTYPE *uu, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_state *q, FTYPE *dUother);
 
@@ -222,7 +222,8 @@ static int f_implicit_lab(int failreturnallowable, int whichcall, int showmessag
   PLOOP(pliter,pl) pp0[pl]=pp[pl];
 
 
-  //  dualfprintf(fail_file,"i=%d Gd=%g %g %g %g uuG=%g chi=%g\n",ptrgeom->i,Gdpl[URAD0+0],Gdpl[URAD0+1],Gdpl[URAD0+2],Gdpl[URAD0+3],(SIGNGD2 * localdt * Gdpl[URAD0+iv]),chireturn);
+  //  dualfprintf(fail_file,"i=%d Gd=%Lg %Lg %Lg %Lg : uuG=%Lg %Lg %Lg %Lg\n",ptrgeom->i,Gdpl[URAD0+0],Gdpl[URAD0+1],Gdpl[URAD0+2],Gdpl[URAD0+3],SIGNGD2 * localdt * Gdpl[URAD0],SIGNGD2 * localdt * Gdpl[URAD1],SIGNGD2 * localdt * Gdpl[URAD2],SIGNGD2 * localdt * Gdpl[URAD3]);
+
 
 
   return 0;
@@ -290,6 +291,9 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
 
 
 
+  if(showmessagesheavy){
+    dualfprintf(fail_file,"DOING: nstep=%ld steppart=%d ijk=%d %d %d\n",nstep,steppart,ptrgeom->i,ptrgeom->j,ptrgeom->k);
+  }
 
 
   //////////////
@@ -530,7 +534,10 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
     //test pre-convergence using initial |dU/U|
     // KORALTODO: This isn't a completely general error check since force might be large for fluid that needs itself to have more accuracy, but if using ~NUMEPSILON, won't resolve 4-force of radiation on fluid to better than that.
     FTYPE LOCALPREIMPCONV=(10.0*NUMEPSILON); // more strict than later tolerance
-    if(f_error_check(showmessages, showmessagesheavy, iter, LOCALPREIMPCONV,f1,f1norm,f3report,uu0,uu,ptrgeom)) break;
+    if(f_error_check(showmessages, showmessagesheavy, iter, LOCALPREIMPCONV,realdt,f1,f1norm,f3report,Uiin, uu0,uu,ptrgeom)){
+      dualfprintf(fail_file,"Initial error near machine precision.\n");
+      break;
+    }
 
 
     int notfinite= !isfinite(uu[0])|| !isfinite(uu[1])|| !isfinite(uu[2])|| !isfinite(uu[3]) || !isfinite(uup[0])|| !isfinite(uup[1])|| !isfinite(uup[2])|| !isfinite(uup[3]);
@@ -625,7 +632,7 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
       f3norm[ii]=fabs(uu[ii+URAD0])+fabs(uup[ii+URAD0]);
     }
   
-    convreturn=f_error_check(showmessages, showmessagesheavy, iter, IMPTRYCONV,f3,f3norm,f3report,uup,uu,ptrgeom);
+    convreturn=f_error_check(showmessages, showmessagesheavy, iter, IMPTRYCONV,realdt,f3,f3norm,f3report,Uiin,uup,uu,ptrgeom);
     // store error and solution in case eventually lead to max iterations and actually get worse error
     errorabs=0.0;     DLOOPA(jj) errorabs     += fabs(f3report[jj]);
 
@@ -662,7 +669,7 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
     /////////
     int itermaxed=iter>IMPMAXITER;
     if(itermaxed || notfinite ){
-      convreturn=f_error_check(showmessages, showmessagesheavy, iter, IMPALLOWCONV,f3,f3norm,f3report,uup,uu,ptrgeom);
+      convreturn=f_error_check(showmessages, showmessagesheavy, iter, IMPALLOWCONV,realdt,f3,f3norm,f3report,Uiin,uup,uu,ptrgeom);
 
       FTYPE errorabsbest=0.0;
       if(gotbest){
@@ -848,7 +855,7 @@ int mathematica_report_check(int failtype, long long int failnum, int gotfirstno
 }
 
 // use f and check the error
-static int f_error_check(int showmessages, int showmessagesheavy, int iter, FTYPE conv, FTYPE *f1, FTYPE *f1norm, FTYPE *f3report, FTYPE *uu0, FTYPE *uu, struct of_geom *ptrgeom)
+static int f_error_check(int showmessages, int showmessagesheavy, int iter, FTYPE conv, FTYPE realdt, FTYPE *f1, FTYPE *f1norm, FTYPE *f3report, FTYPE *Uiin, FTYPE *uu0, FTYPE *uu, struct of_geom *ptrgeom)
 {
   int ii,jj;
   FTYPE f3[NDIM];
@@ -868,7 +875,7 @@ static int f_error_check(int showmessages, int showmessagesheavy, int iter, FTYP
     f3a[ii]=fabs(f1[ii]*dimfact[ii]/(SMALL+fabs(uu0[URAD0]*dimfact[0])));
     f3b[ii]=fabs(f1[ii]*dimfact[ii]/(SMALL+MAX(fabs(uu0[UU]*dimfact[0]),fabs(uu0[URAD0]*dimfact[0]))));
     f3c[ii]=fabs(f1[ii]*dimfact[ii]/(SMALL+MAX(fabs(f1norm[ii]*dimfact[ii]),fabs(uu0[URAD0]*dimfact[0]))));
-    f3d[ii]=fabs(f1[ii]*dimfact[ii]/(SMALL+MAX(fabs(uu0[UU]*dimfact[0]),MAX(fabs(f1norm[ii]*dimfact[ii]),fabs(uu0[URAD0]*dimfact[0])))));
+    f3d[ii]=fabs(f1[ii]*dimfact[ii]/(SMALL+MAX(fabs((uu0[UU]-Uiin[UU])*dimfact[0]),MAX(fabs(f1norm[ii]*dimfact[ii]),fabs(uu0[URAD0]*dimfact[0])))));
   }
 
   // evaluate error
@@ -892,7 +899,7 @@ static int f_error_check(int showmessages, int showmessagesheavy, int iter, FTYP
 
   // see if passed convergence test
   if(passedconv){
-    if(showmessagesheavy) dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iter=%d DONE1 for conv=%g : f3report=%g %g %g %g\n",nstep,steppart,dt,ptrgeom->i,iter,conv,f3report[0],f3report[1],f3report[2],f3report[3]);
+    if(showmessagesheavy) dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g realdt=%g i=%d iter=%d DONE1 for conv=%g : f3report=%g %g %g %g\n",nstep,steppart,dt,realdt,ptrgeom->i,iter,conv,f3report[0],f3report[1],f3report[2],f3report[3]);
     return(1);
   }
   else{

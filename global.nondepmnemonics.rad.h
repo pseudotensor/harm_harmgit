@@ -85,7 +85,7 @@
 // 1E-9 is common ok first iteration for RADFLATDISK.  More is too hard.
 // So Choose 1E-8 as good enough solution.
 #define IMPTRYCONV (1.e-8)  // for used implicit solver
-#define IMPALLOWCONV (1.e-4)  // for used implicit solver KORALTODO: Have to be more careful since f/fnorm~1E-3 might mean large changes in primitives.
+#define IMPALLOWCONV (1.e-3)  // for used implicit solver KORALTODO: Have to be more careful since f/fnorm~1E-3 might mean large changes in primitives.
 // Chose 1E-4 based upon histogram for implicit solver in RADDONUT problem with field.
 //#define IMPALLOWCONV (1.e-1) // KORALTODO SUPERGODMARK
 #else
