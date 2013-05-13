@@ -2237,7 +2237,8 @@ void check_bnd_num(void)
 
   if(RADSHOCKFLAT==0 && EOMRADTYPE!=EOMRADNONE && TIMEORDER<3 && (lim[1]>MC || lim[2]>MC || lim[3]>MC)){
     dualfprintf(fail_file,"With radiation, need to use shock flattener with para and TIMEORDER=3 to avoid unphysical oscillations that lead to bad evolution and no radiation inversion.\n");
-    // example test is RADBEAMFLAT with cour=0.8 and lim=PARALINE and TIMEORDER=2 which generates problems at beginning of test.
+    // example test is RADBEAMFLAT with cour=0.8 and lim=PARALINE and TIMEORDER=2 which generates problems at beginning of test.  Also later in time generates consistent stripping and noise at much larger level compared to TIMEORDER=3.
+    // generally want to have TIMEORDER\sim SPATIALORDER for consistent space-time errors.  Too much high spatial order at low temporal order can mean dominant temporal errors that interact poorly with attempt at higher spatial accuracy.
     myexit(245834);
   }
     
