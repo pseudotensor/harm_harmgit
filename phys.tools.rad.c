@@ -386,7 +386,7 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
   do{
     iter++;
 
-
+#define DAMPSTRATEGY 1 // 1: works for RADPULSEPLANAR  2: works for RADDONUT
     
     if(iter>10){ // KORALTODO: improve upon this later
       // assume trying hard and failing to work, then allow CASE radiation errors
@@ -394,34 +394,35 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
       failreturnallowable=UTOPRIMGENWRAPPERRETURNFAILRAD;
     }
 
-    // cautious first step to get reasonable error measurement. Allows often only 1 iteration to get sufficiently small error, while DAMPFACTOR=1 would already go beyond point where error actually increases.
-    if(iter==1){
-      DAMPFACTOR=0.37;
+    if(DAMPSTRATEGY==2){
+      // cautious first step to get reasonable error measurement. Allows often only 1 iteration to get sufficiently small error, while DAMPFACTOR=1 would already go beyond point where error actually increases.
+      if(iter==1){
+        DAMPFACTOR=0.37;
+      }
     }
 
 
-#if(0)
-    // KORALTODO: improve on this later.
-    // Problem is can start jumping too far in steps for near tough spots.
-    // While in normal inversion routine damping is to avoid breaching into unphysical solution space with nan/inf, below is to avoid oscillating around solution
+    if(DAMPSTRATEGY==1){ // needed for RADPULSEPLANAR
+      // KORALTODO: improve on this later.
+      // Problem is can start jumping too far in steps for near tough spots.
+      // While in normal inversion routine damping is to avoid breaching into unphysical solution space with nan/inf, below is to avoid oscillating around solution
 
-    //    if(iter>10){
-    //      impepsjac=IMPEPS*1E-10;
-    //    }
-    if(iter>10){
-      DAMPFACTOR=0.37;
+      //    if(iter>10){
+      //      impepsjac=IMPEPS*1E-10;
+      //    }
+      if(iter>10){
+        DAMPFACTOR=0.37;
+      }
+      if(iter>30){
+        DAMPFACTOR=0.23;
+      }
+      if(iter>40){
+        DAMPFACTOR=0.17;
+      }
+      if(iter>50){
+        DAMPFACTOR=0.07;
+      }
     }
-    if(iter>30){
-      DAMPFACTOR=0.23;
-    }
-    if(iter>40){
-      DAMPFACTOR=0.17;
-    }
-    if(iter>50){
-      DAMPFACTOR=0.07;
-    }
-#endif
-
 
     //vector of conserved at the previous two iterations
     PLOOP(pliter,pl)  uupp[pl]=uup[pl]; // uupp will have solution for inversion: P(uupp)
@@ -636,31 +637,31 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
     // store error and solution in case eventually lead to max iterations and actually get worse error
     errorabs=0.0;     DLOOPA(jj) errorabs     += fabs(f3report[jj]);
 
+    // store error and solution in case eventually lead to max iterations and actually get worse error
+    FTYPE errorabsbest=0.0; DLOOPA(jj) errorabsbest += fabs(lowestfreport[jj]);
+    if(errorabsbest>errorabs && isfinite(errorabs)){
+      PLOOP(pliter,pl) bestuu[pl]=uu[pl];
+      DLOOPA(jj) lowestfreport[jj]=f3report[jj];
+      gotbest=1;
+    }
+
 
     // DAMP CONTROL
-    if(iter==1){
-      // un-damp first step, but still don't go back to 1.0.
-      DAMPFACTOR=0.7;
-    }
+    if(DAMPSTRATEGY==2){
+      if(iter==1){
+        // un-damp first step, but still don't go back to 1.0.
+        DAMPFACTOR=0.7;
+      }
 #define LOWESTDAMP (0.05)
-    // see if need to damp, but don't damp below some point.
-    if(errorabs>errorabsp && DAMPFACTOR>LOWESTDAMP) DAMPFACTOR*=0.5;
+      // see if need to damp, but don't damp below some point.
+      if(errorabs>errorabsp && DAMPFACTOR>LOWESTDAMP) DAMPFACTOR*=0.5;
+    }
   
 
 
     // check convergence
     if(checkconv){
       if(convreturn) break;
-      else{
-        // store error and solution in case eventually lead to max iterations and actually get worse error
-        FTYPE errorabsbest=0.0; DLOOPA(jj) errorabsbest += fabs(lowestfreport[jj]);
-        if(errorabsbest>errorabs && isfinite(errorabs)){
-          PLOOP(pliter,pl) bestuu[pl]=uu[pl];
-          DLOOPA(jj) lowestfreport[jj]=f3report[jj];
-          gotbest=1;
-        }
-
-      }
     } // end if checking convergence
 
 
@@ -669,19 +670,13 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
     /////////
     int itermaxed=iter>IMPMAXITER;
     if(itermaxed || notfinite ){
-      convreturn=f_error_check(showmessages, showmessagesheavy, iter, IMPALLOWCONV,realdt,f3,f3norm,f3report,Uiin,uup,uu,ptrgeom);
-
-      FTYPE errorabsbest=0.0;
       if(gotbest){
-        // see if should revert to prior best
-        DLOOPA(jj) errorabsbest += fabs(lowestfreport[jj]);
-        if(errorabsbest<errorabs || !isfinite(errorabs) ){
-          PLOOP(pliter,pl) uu[pl]=bestuu[pl];
-          errorabs=errorabsbest;
-        }
         if(showmessages && debugfail>=2) dualfprintf(fail_file,"Using best: %g %g\n",errorabs,errorabsbest);
         // get new convreturn
         convreturn=(lowestfreport[0]<IMPALLOWCONV && lowestfreport[1]<IMPALLOWCONV && lowestfreport[2]<IMPALLOWCONV && lowestfreport[3]<IMPALLOWCONV);
+      }
+      else{
+        convreturn=(f3report[0]<IMPALLOWCONV && f3report[1]<IMPALLOWCONV && f3report[2]<IMPALLOWCONV && f3report[3]<IMPALLOWCONV);
       }
 
       // KORALTODO: If convreturn doesn't work, but still (say) 10% error, might want to hold onto result in case explicit backup fails as well (which is likely), in which case *much* better to use 10% error because otherwise 4-force not accounted for, which can lead to very big changes in fluid behavior due to large flux from previous step.
@@ -756,7 +751,7 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
     if(gotbest) DLOOPA(jj) errorabs += fabs(lowestfreport[jj]);
     else DLOOPA(jj) errorabs += fabs(f3report[jj]);
     //    dualfprintf(fail_file,"errorabs=%g\n",errorabs);
-    numhisterr[MAX(MIN((int)(-log10(errorabs)),NUMNUMHIST-1),0)]++;
+    numhisterr[MAX(MIN((int)(-log10(errorabs+SMALL)),NUMNUMHIST-1),0)]++;
     numhistiter[MAX(MIN(iter,IMPMAXITER),0)]++;
 #define HISTREPORTSTEP (20)
     if(nstep%HISTREPORTSTEP==0 && ptrgeom->i==0 && ptrgeom->j==0 && ptrgeom->k==0){
