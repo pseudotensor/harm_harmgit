@@ -192,7 +192,7 @@
 #define HIGHERORDERMEM 0
 #define MAXBND 4 // 4 for PARAFLAT, 6 for WENO5BND wo/a2c stuff : 11 for full point-field FLUXRECON method
 #define PRODUCTION 0
-//#define FULLOUTPUT MAXBND // TESTING BCs // FUCK
+//#define FULLOUTPUT MAXBND // TESTING BCs
 #define FULLOUTPUT 0
 
 #define MAILWHENDONE 1
@@ -997,7 +997,7 @@ struct Ccoordparams {
 #define cTILDA (1.0) // like koral
 #undef gTILDA
 //#define gTILDA (1E-10) // like koral (no longer)
-#define gTILDA (1.0) // FUCK
+#define gTILDA (1.0)
 
 #undef MPERSUN
 #define MPERSUN (10.0*gTILDA) // due to koral fixing MSUNCM, have to do this.

@@ -1217,7 +1217,6 @@ int init_global(void)
       if(WHICHPROBLEM==RADNT || WHICHPROBLEM==RADFLATDISK) BCtype[X2UP]=RADNTBC; // disk condition (with ASYMM done first)
       else BCtype[X2UP]=ASYMM; // with donut, let free, so ASYMM condition across equator
 
-      //FUCK
       BCtype[X1DN]=HORIZONOUTFLOW;
       BCtype[X1UP]=HORIZONOUTFLOW;
       //      BCtype[X1DN]=OUTFLOW;

@@ -284,7 +284,6 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
   }
 
 #endif
-  // FUCK
   //  showmessages=showmessagesheavy=1;
 
 

@@ -145,7 +145,7 @@
 #define TAUFAILLIMIT (2.0/3.0) // at what \tau below which to assume "failure1" in u2p_rad() means should be moving at gammamax rather than not moving.
 
 // whether to revert to sub-cycle explicit if implicit fails.  Only alternative is die.
-#define IMPLICITREVERTEXPLICIT 0 // FUCK -- problem not a good idea.
+#define IMPLICITREVERTEXPLICIT 0 // FUCK -- problem not a good idea. -- should try implicit again, starting out with more damping.
 
 // like SAFE for normal dt step, don't allow explicit substepping to change dt too fast to avoid instabilities.
 #define MAXEXPLICITSUBSTEPCHANGE 1.e-2
