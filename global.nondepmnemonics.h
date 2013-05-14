@@ -104,14 +104,14 @@
 
 // for cour fixed for any dimensional problem, below makes no sense.  When grid-aligned flow in higher dimension, this also makes no sense even for lower cour for the higher dimensions
 // this also might not make sense for relativistic flows when gamma couples all dimensions, so need to treat as if no lowering of dt for nearly grid-aliged relativistic flows
-//#define MINDTSET(dt1,dt2,dt3) (1.0/(1.0/(dt1) + 1.0/(dt2) + 1.0/(dt3)))
+#define MINDTSET(dt1,dt2,dt3) (1.0/(1.0/(dt1) + 1.0/(dt2) + 1.0/(dt3)))
 // strict limit (doesn't work in general)
 //#define MINDTSET(dt1,dt2,dt3) (MIN(MIN((dt1),(dt2)),(dt3)))
 
 // relativistically inspired (based upon RADBEAMFLAT)
 // This is more strict in that it presumes that if one direction is relativistic one should really limit things because full (here) 2D effects really imply the general 2D characteristic (not just the i or j char) is probably v~c.  That is, it's bad to assume that just because exactly along y it's v~c/2 and exactly along x it's v~c that this represents a *smooth* ~linear version for any other direction.  E.g., at other angles, it should be still v~c despite beaming effects.  In that sense, looking at exactly y-direction is degenerate and highly non-representative.
 // Note that NR1997 Eq19.3.11 suggests dt<delta/(\sqrt{N} |v|) for N dimensions and absolute magnitude of velocity v.  This is much higher dt than required for stability of many problems, perhaps related to non-linear multi-D coupling in relativistic case.
-#define MINDTSET(dt1,dt2,dt3) (MIN(MIN((dt1),(dt2)),(dt3))/(FTYPE)(N1NOT1+N2NOT1+N3NOT1))
+//#define MINDTSET(dt1,dt2,dt3) (MIN(MIN((dt1),(dt2)),(dt3))/(FTYPE)(N1NOT1+N2NOT1+N3NOT1))
 
 
 // number of extra things in state that ucon_calc computes

@@ -84,8 +84,13 @@
 #elif(1)
 // 1E-9 is common ok first iteration for RADFLATDISK.  More is too hard.
 // So Choose 1E-8 as good enough solution.
-#define IMPTRYCONV (1.e-8)  // for used implicit solver
-#define IMPALLOWCONV (1.e-3)  // for used implicit solver KORALTODO: Have to be more careful since f/fnorm~1E-3 might mean large changes in primitives.
+#define IMPTRYCONVHIGHTAU (NUMEPSILON*5.0)  // for used implicit solver
+#define IMPTRYCONV (NUMEPSILON*100.0)  // for used implicit solver
+//#define IMPTRYCONV (1E-20)  // for used implicit solver
+//#define IMPTRYCONV (1.e-8)
+#define IMPTRYCONV2 (1.e-8)  // for used implicit solver
+#define IMPALLOWCONV (1.e-2)
+#define IMPALLOWCONV2 (1.e-2)
 // Chose 1E-4 based upon histogram for implicit solver in RADDONUT problem with field.
 //#define IMPALLOWCONV (1.e-1) // KORALTODO SUPERGODMARK
 #else
@@ -95,7 +100,8 @@
 #define IMPALLOWCONV (1.e-3)  // for used implicit solver
 #endif
 
-#define IMPMAXITER (100) // for used implicit solver
+#define IMPMAXITER (15) // for used implicit solver
+#define IMPMAXITER2 (100) // for used implicit solver
 
 // 1 : normalize radiation error by only radiation thermal energy
 // 2 : normalize radiation error by max(radiation,gas) thermal energy
