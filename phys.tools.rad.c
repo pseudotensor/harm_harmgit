@@ -6,8 +6,8 @@ static void koral_source_dtsub_rad_calc(int method, FTYPE *pr, FTYPE *Ui, FTYPE 
 
 
 
-static void calc_Gd(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *G, FTYPE *chireturn, FTYPE *Gabs);
-static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *Gu, FTYPE *chireturn, FTYPE *Gabs);
+static void calc_Gd(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *G, FTYPE *Tgas, FTYPE *chieffreturn, FTYPE *Gabs);
+static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *Gu, FTYPE *Tgas, FTYPE *chieffreturn, FTYPE *Gabs);
 void mhdfull_calc_rad(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE (*radstressdir)[NDIM]);
 
 static int source_explicit(int whichsc, int whichradsourcemethod, int methoddtsub,
@@ -42,6 +42,7 @@ static int get_m1closure_urfconrel(int showmessages, int allowlocalfailurefixand
 static int get_m1closure_urfconrel_olek(int showmessages, int allowlocalfailurefixandnoreport, struct of_geom *ptrgeom, FTYPE *pp, FTYPE *Avcon, FTYPE *Avcov, FTYPE gammarel2, FTYPE delta, FTYPE *Erfreturn, FTYPE *urfconrel, PFTYPE *lpflag, PFTYPE *lpflagrad);
 
 
+static void calc_kappa_kappaes(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappa, FTYPE *kappaes, FTYPE *Tgas);
 
 
 
@@ -261,14 +262,15 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
   int impmaxiterarray[NUMDAMPSTRATEGY];//={IMPMAXITER,IMPMAXITER2, IMPMAXITER2,IMPMAXITER2,IMPMAXITER2,IMPMAXITER2,IMPMAXITER2,IMPMAXITER2,IMPMAXITER2,IMPMAXITER2,IMPMAXITER2,IMPMAXITER2}; // ""
   int impmaxiter;
   FTYPE errorabsbest=BIG;
-  FTYPE radsource[NPR],radsourcebest[NPR];
-  FTYPE pinsource[NPR],pinsourcebest[NPR];
+  FTYPE radsource[NPR]={0},radsourcebest[NPR]={0};
+  FTYPE pinsource[NPR]={0},pinsourcebest[NPR]={0};
   int sc;
   int pliter,pl;
   int returntype;
   int iterreturn;
   FTYPE errorabs;
   int strati;
+  int gotsomesolution=0;
 
 
   // get defaults
@@ -323,6 +325,7 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
     failreturn=koral_source_rad_implicit_perdampstrategy(1, imptryconv, impallowconv, impmaxiter, pinsource, Uiin, Ufin, CUf, ptrgeom, q, dUother, radsource, &errorabs, &iterreturn, &returntype);
 
     if(failreturn==0){
+      gotsomesolution=1;
       // get best
       if(errorabs<errorabsbest){
         errorabsbest=errorabs;
@@ -340,15 +343,20 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
     }// end if no failure in implicit solver
   }
 
-  // use best got
-  errorabs=errorabsbest;
-  sc = RADSOURCE;
-  PLOOP(pliter,pl){
-    // store source update in dUcomp for return.
-    dUcomp[sc][pl] += radsourcebest[pl];
-    pin[pl]=pinsourcebest[pl];
-  }
 
+  if(gotsomesolution){
+    // use best got
+    errorabs=errorabsbest;
+    sc = RADSOURCE;
+    PLOOP(pliter,pl){
+      // store source update in dUcomp for return.
+      dUcomp[sc][pl] += radsourcebest[pl];
+      pin[pl]=pinsourcebest[pl];
+    }
+  }
+  else{
+    if(debugfail>=2) dualfprintf(fail_file,"Got no solution.\n");
+  }
 
 
 #else
@@ -2166,10 +2174,33 @@ void calc_chi(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *chi)
   *chi=kappa+kappaes;
 }
 
-// get G_\mu
-static void calc_Gd(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *G, FTYPE* chireturn, FTYPE *Gabs)
+// get \kappa_{abs} and \kappa_{es}
+static void calc_kappa_kappaes(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappa, FTYPE *kappaes, FTYPE *Tgas)
 {
-  calc_Gu(pp, ptrgeom, q, G, chireturn,Gabs);
+  extern FTYPE calc_kappa_user(FTYPE rho, FTYPE T,FTYPE x,FTYPE y,FTYPE z);
+  //user_calc_kappa()
+  FTYPE rho=pr[RHO];
+  FTYPE u=pr[UU];
+  int ii=ptrgeom->i;
+  int jj=ptrgeom->j;
+  int kk=ptrgeom->k;
+  int loc=ptrgeom->p;
+  FTYPE T=compute_temp_simple(ii,jj,kk,loc,rho,u);
+  FTYPE V[NDIM],xx,yy,zz;
+  bl_coord_ijk(ii,jj,kk,loc,V);
+  xx=V[1];
+  yy=V[2];
+  zz=V[3];
+  *kappa = calc_kappa_user(rho,T,xx,yy,zz);
+  *kappa = calc_kappaes_user(rho,T,xx,yy,zz);
+  *Tgas = T;
+  //  dualfprintf(fail_file,"kappaabs=%g kappaes=%g\n",*kappa,*kappaes);
+}
+
+// get G_\mu
+static void calc_Gd(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *G, FTYPE *Tgas, FTYPE* chieffreturn, FTYPE *Gabs)
+{
+  calc_Gu(pp, ptrgeom, q, G, Tgas, chieffreturn,Gabs);
   indices_21(G, G, ptrgeom);
 }
 
@@ -2182,7 +2213,7 @@ void koral_source_rad_calc(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *Gdpl, FTYP
   int pliter,pl;
   FTYPE Gd[NDIM],Gdabs[NDIM];
   struct of_state qlocal;
-  FTYPE chilocal;
+  FTYPE chilocal,Tgas;
 
   if(q==NULL) q=&qlocal;
   if(chi==NULL) chi=&chilocal;
@@ -2193,7 +2224,7 @@ void koral_source_rad_calc(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *Gdpl, FTYP
   //  get_state_uradconuradcovonly(pr, ptrgeom, q);
   get_state(pr,ptrgeom,q);
 
-  calc_Gd(pr, ptrgeom, q, Gd, chi, Gdabs);
+  calc_Gd(pr, ptrgeom, q, Gd, &Tgas, chi, Gdabs);
 
   PLOOP(pliter,pl) Gdpl[pl] = 0.0;
   // equal and opposite forces on fluid and radiation due to radiation 4-force
@@ -2208,6 +2239,22 @@ void koral_source_rad_calc(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *Gdpl, FTYP
     DLOOPA(jj) Gdabspl[UU+jj]    = Gdabs[jj];
     DLOOPA(jj) Gdabspl[URAD0+jj] = Gdabs[jj];
   }
+
+#if(DOENTROPY!=DONOENTROPY && ENTROPY!=-100)
+  // The equation is (1/\sqrt{-g})*d_\mu(\sqrt{-g} s\rho_0 u^\mu) + Gdpl[ENTROPY].ucon = 0
+  FTYPE Gdplentropycontribs[NDIM];
+  // -Gdpl[UU+jj] is so heating (so lowering of T^t_t to be more negative) implies increases entropy.
+  DLOOPA(jj) Gdplentropycontribs[jj] = (pr[RHO]/(SMALL+fabs(Tgas)))*(-Gdpl[UU+jj])*(q->ucon[jj]);
+
+  Gdpl[ENTROPY] = 0.0;
+  DLOOPA(jj) Gdpl[ENTROPY] += Gdplentropycontribs[jj];
+
+  if(Gdabspl!=NULL){
+    Gdabspl[ENTROPY] = 0.0;
+    DLOOPA(jj) Gdabspl[ENTROPY] += fabs(Gdplentropycontribs[jj]);
+  }
+#endif
+
 
 
 }
@@ -2232,7 +2279,7 @@ static void koral_source_dtsub_rad_calc(int method, FTYPE *pr, FTYPE *Ui, FTYPE 
 }
 
 // compute G^\mu 4-force
-static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *Gu, FTYPE* chireturn, FTYPE *Gabs) 
+static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *Gu, FTYPE *Tgas, FTYPE* chieffreturn, FTYPE *Gabs) 
 {
   int i,j,k;
   
@@ -2250,12 +2297,11 @@ static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYP
  
   // get opacities
   FTYPE kappa,kappaes;
-  calc_kappa(pp,ptrgeom,&kappa);
-  calc_kappaes(pp,ptrgeom,&kappaes);
+  calc_kappa_kappaes(pp,ptrgeom,&kappa,&kappaes,Tgas);
 
   // get cooling rate
   FTYPE lambda;
-  calc_rad_lambda(pp, ptrgeom, kappa, kappaes,&lambda);
+  calc_rad_lambda(pp, ptrgeom, kappa, kappaes,*Tgas, &lambda);
 
   // get chi
   FTYPE chi=kappa+kappaes;
@@ -2290,20 +2336,20 @@ static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYP
   }
 
   // really a chi-effective that also includes lambda term in case cooling unrelated to absorption
-  *chireturn=chi + lambda/(SMALL+fabs(pp[PRAD0])); // if needed
+  *chieffreturn=chi + lambda/(SMALL+fabs(pp[PRAD0])); // if needed
 
 
 }
 
 
 // energy density loss rate integrated over frequency and solid angle
-int calc_rad_lambda(FTYPE *pp, struct of_geom *ptrgeom, FTYPE kappa, FTYPE kappaes, FTYPE *lambda)
+int calc_rad_lambda(FTYPE *pp, struct of_geom *ptrgeom, FTYPE kappa, FTYPE kappaes, FTYPE Tgas, FTYPE *lambda)
 {
 
   // get gas properties
   FTYPE rho=pp[RHO];
   FTYPE u=pp[UU];
-  FTYPE T=compute_temp_simple(ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p,rho,u);
+  //  FTYPE T=compute_temp_simple(ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p,rho,u);
 
 
   // This is aT^4/(4\pi) that is the specific black body emission rate in B_\nu d\nu d\Omega corresponding to energy density rate per unit frequency per unit solid angle, which has been integrated over frequency.
@@ -2311,7 +2357,7 @@ int calc_rad_lambda(FTYPE *pp, struct of_geom *ptrgeom, FTYPE kappa, FTYPE kappa
   // But, have to be careful that "kappa rho" is constructed from \Lambda/(u*c) or else balance won't occur.
   // This is issue because "kappa" is often frequency integrated directly, giving different answer than frequency integrating j_v -> \Lambda/(4\pi) and B_\nu -> (aT^4)/(4\pi) each and then taking the ratio.
   // Note if T is near maximum for FTYPE, then aradT^4 likely too large.
-  FTYPE B=0.25*ARAD_CODE*pow(T,4.)/Pi;
+  FTYPE B=0.25*ARAD_CODE*pow(Tgas,4.)/Pi;
 
 
   // energy density loss rate integrated over frequency and solid angle

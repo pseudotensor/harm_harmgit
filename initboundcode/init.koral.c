@@ -1946,7 +1946,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 
 // KAPPAs are fraction of physical FF and ES opacities
 #define KAPPA 0.
-#define KAPPAES 1.e-30
+#define KAPPAES (SMALL)
 
 // assume KAPPA defines fraction of FF opacity
 #define KAPPAUSER(rho,T) (rho*KAPPA*KAPPA_FF_CODE(rho,T))

@@ -1716,7 +1716,8 @@ int raddump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 
   // get lambda
   FTYPE lambda;
-  calc_rad_lambda(pr, ptrgeom, kappa, kappaes, &lambda);
+  FTYPE Tgas=calc_PEQ_Tfromurho(pr[UU],pr[RHO]);
+  calc_rad_lambda(pr, ptrgeom, kappa, kappaes, Tgas, &lambda);
   myset(datatype,&lambda,0,1,writebuf); // 1
 
   // get Erf [assuming LTE]
@@ -1725,7 +1726,6 @@ int raddump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
   myset(datatype,&Erf,0,1,writebuf); // 1
 
   // get gas T
-  FTYPE Tgas=calc_PEQ_Tfromurho(pr[UU],pr[RHO]);
   myset(datatype,&Tgas,0,1,writebuf); // 1
 
   // get radiation T from actual Erf
