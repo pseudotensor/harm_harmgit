@@ -183,29 +183,35 @@ static int f_implicit_lab(int failreturnallowable, int whichcall, int showmessag
   // initialize counters
   newtonstats.nstroke=newtonstats.lntries=0;
   int finalstep = 1;  //can choose either 1 or 0 depending on whether want floor-like fixups (1) or not (0).  unclear which one would work best since for Newton method to converge might want to allow negative density on the way to the correct solution, on the other hand want to prevent runaway into rho < 0 region and so want floors.
+  FTYPE Gdpl[NPR];
 
 
   // get primitive (don't change uu0).  This pp is used for inversion guess and to hold final inversion answer.
   PLOOP(pliter,pl) pp[pl] = pp0[pl];
+  // initialize Gdpl
+  PLOOP(pliter,pl) Gdpl[pl] = 0.0;
+
 
   // get change in conserved quantity between fluid and radiation (equal and opposite 4-force)
   // required for inversion to get P(U) for MHD and RAD variables
   // this preserves machine accurate conservation instead of applying 4-force on each fluid and radiation separately that can accumulate errors
   DLOOPA(iv) uu[UU+iv] = uu0[UU+iv] - (uu[URAD0+iv]-uu0[URAD0+iv]);
 
+#if(DOENTROPY!=DONOENTROPY && ENTROPY!=-100)
+  koral_source_rad_calc(pp, ptrgeom, Gdpl, NULL, NULL, NULL);
+  uu[ENTROPY] = uu0[ENTROPY] + Gdpl[ENTROPY];
+#endif
+
+
+
   //  PLOOP(pliter,pl) dualfprintf(fail_file,"f_implicit_lab: wc=%d i=%d j=%d pl=%d uu=%g\n",whichcall, ptrgeom->i,ptrgeom->j,pl,uu[pl]);
   
   // Get P(U)
   int failreturn;
   failreturn=Utoprimgen_failwrapper(showmessages,allowlocalfailurefixandnoreport, finalstep, EVOLVEUTOPRIM, UNOTHING, uu, ptrgeom, pp, &newtonstats);
-  if(failreturn && failreturn>failreturnallowable){
-    if(showmessages && debugfail>=2) dualfprintf(fail_file,"Utoprimgen_wrapper() failed, must return out of f_implicit_lab(): %d vs. %d\n",failreturn,failreturnallowable);
-    return(failreturn);
-  }
 
 
-  // get 4-force for all pl due to radiation
-  FTYPE Gdpl[NPR];
+  // get 4-force for all pl due to radiation as due to pp[uu]
   koral_source_rad_calc(pp, ptrgeom, Gdpl, NULL, NULL, NULL);
 
 
@@ -219,13 +225,19 @@ static int f_implicit_lab(int failreturnallowable, int whichcall, int showmessag
   DLOOPA(iv) fnorm[iv] = 0.5*(fabs(uu[URAD0+iv]) + fabs(uu0[URAD0+iv]) + fabs(SIGNGD2 * localdt * Gdpl[URAD0+iv]));
 
 
-  // save better guess for later inversion (including this inversion above) from this inversion
-  PLOOP(pliter,pl) pp0[pl]=pp[pl];
 
 
-  //  dualfprintf(fail_file,"i=%d Gd=%g %g %g %g : uuG=%g %g %g %g\n",ptrgeom->i,Gdpl[URAD0+0],Gdpl[URAD0+1],Gdpl[URAD0+2],Gdpl[URAD0+3],SIGNGD2 * localdt * Gdpl[URAD0],SIGNGD2 * localdt * Gdpl[URAD1],SIGNGD2 * localdt * Gdpl[URAD2],SIGNGD2 * localdt * Gdpl[URAD3]);
+  //  dualfprintf(fail_file,"i=%d fnorm=%g %g %g %g : Gd=%g %g %g %g : uuG=%g %g %g %g\n",ptrgeom->i,fnorm[0],fnorm[1],fnorm[2],fnorm[3],Gdpl[URAD0+0],Gdpl[URAD0+1],Gdpl[URAD0+2],Gdpl[URAD0+3],SIGNGD2 * localdt * Gdpl[URAD0],SIGNGD2 * localdt * Gdpl[URAD1],SIGNGD2 * localdt * Gdpl[URAD2],SIGNGD2 * localdt * Gdpl[URAD3]);
 
 
+  if(failreturn && failreturn>failreturnallowable){
+    if(showmessages && debugfail>=2) dualfprintf(fail_file,"Utoprimgen_wrapper() failed, must return out of f_implicit_lab(): %d vs. %d\n",failreturn,failreturnallowable);
+    return(failreturn);
+  }
+  else{
+    // save better guess for later inversion (including this inversion above) from this inversion
+    PLOOP(pliter,pl) pp0[pl]=pp[pl];
+  }
 
   return 0;
 } 
@@ -488,9 +500,13 @@ static int koral_source_rad_implicit_perdampstrategy(int dampstrategy, FTYPE imp
 
 
 
+
+
   if(showmessagesheavy){
     dualfprintf(fail_file,"DOING: nstep=%ld steppart=%d ijk=%d %d %d\n",nstep,steppart,ptrgeom->i,ptrgeom->j,ptrgeom->k);
   }
+
+
 
 
   //////////////
@@ -518,6 +534,8 @@ static int koral_source_rad_implicit_perdampstrategy(int dampstrategy, FTYPE imp
   int failreturnallowable=UTOPRIMNOFAIL;
   int failreturnallowableuse=failreturnallowable;
   int failreturnallowablefirst=-1;
+
+
 
   // see if uu0->p possible and what type of failure one gets as reference for what failure to allow.
   // KORALTODO: Need to check if UFSET with no dUother fails.  How it fails, must allow since can do nothing better.  This avoids excessive attempts to get good solution without that failure!  Should speed-up things.  But what about error recovery?  If goes from CASE to no case!
@@ -578,6 +596,7 @@ static int koral_source_rad_implicit_perdampstrategy(int dampstrategy, FTYPE imp
   int convreturn;
   FTYPE f3[NDIM],f3norm[NDIM];
   int f1break;
+  FTYPE LOCALPREIMPCONV=(NUMEPSILON); // more strict than later tolerance
 
   // initialize previous 'good inversion' based uu's
   PLOOP(pliter,pl)  uupp[pl]=uuporig[pl]=uup[pl]=uu0orig[pl]=uu[pl];
@@ -660,6 +679,16 @@ static int koral_source_rad_implicit_perdampstrategy(int dampstrategy, FTYPE imp
     for(f1iter=0;f1iter<MAXF1TRIES;f1iter++){
       int whichcall=1;
       failreturn=f_implicit_lab(failreturnallowableuse, whichcall,showmessages, allowlocalfailurefixandnoreport, pinuse, uu0, uu, fracdtG*realdt, ptrgeom, f1, f1norm); // modifies uu and pinuse
+
+      // regardless of failure, check if below machine precision for 4-force and abort if so.
+      // below ==1.0 assumes powers of 2 for changing those things so definitely comes back to 1.0 exactly.
+      if(fracdtuu0==1.0 && fracdtG==1.0 && f_error_check(showmessages, showmessagesheavy, iter, LOCALPREIMPCONV,realdt,f1,f1norm,f3report,Uiin, uu0,uu,ptrgeom)){
+        if(debugfail>=2) dualfprintf(fail_file,"Very Initial error near machine precision.\n");
+        // this is also required to catch cases when G is below machine error and won't affect result.
+        // break, and next coming f_error_check() post-f1iter loop will catch this and break again.
+        break;
+      }
+  
       if(failreturn){
 
 #define BACKUPRELEASEFAIL (100.0*NUMEPSILON)  // (1E-30L)
@@ -740,12 +769,12 @@ static int koral_source_rad_implicit_perdampstrategy(int dampstrategy, FTYPE imp
     // see if pre-convergence (happens if force is small or no force at all.  Can't necessarily continue since Jacobian can require arbitrarily large dU on fluid and fail to invert even if no fluid-radiation interaction!
     //test pre-convergence using initial |dU/U|
     // KORALTODO: This isn't a completely general error check since force might be large for fluid that needs itself to have more accuracy, but if using ~NUMEPSILON, won't resolve 4-force of radiation on fluid to better than that.
-    FTYPE LOCALPREIMPCONV=(NUMEPSILON); // more strict than later tolerance
     if(f_error_check(showmessages, showmessagesheavy, iter, LOCALPREIMPCONV,realdt,f1,f1norm,f3report,Uiin, uu0,uu,ptrgeom)){
       if(debugfail>=2) dualfprintf(fail_file,"Initial error near machine precision.\n");
-      //      f1break=1;
-      //      *returntype=RETURNIMPLICITTRY;
-      //      break;
+      // this is also required to catch cases when G is below machine error and won't affect result.
+      f1break=1;
+      *returntype=RETURNIMPLICITTRY;
+      break;
     }
 
 
@@ -1090,10 +1119,10 @@ static int f_error_check(int showmessages, int showmessagesheavy, int iter, FTYP
     dimfact[ii]=sqrt(fabs(ptrgeom->gcon[GIND(ii,ii)]));
   }    
   DLOOPA(ii){
-    f3a[ii]=fabs(f1[ii]*dimfact[ii]/(SMALL+fabs(uu0[URAD0]*dimfact[0])));
-    f3b[ii]=fabs(f1[ii]*dimfact[ii]/(SMALL+MAX(fabs(uu0[UU]*dimfact[0]),fabs(uu0[URAD0]*dimfact[0]))));
-    f3c[ii]=fabs(f1[ii]*dimfact[ii]/(SMALL+MAX(fabs(f1norm[ii]*dimfact[ii]),fabs(uu0[URAD0]*dimfact[0]))));
-    f3d[ii]=fabs(f1[ii]*dimfact[ii]/(SMALL+MAX(fabs((uu0[UU]-Uiin[UU])*dimfact[0]),MAX(fabs(f1norm[ii]*dimfact[ii]),fabs(uu0[URAD0]*dimfact[0])))));
+    f3a[ii]=fabs(f1[ii]*dimfact[ii]/(IMPMINABSERROR+fabs(uu0[URAD0]*dimfact[0])));
+    f3b[ii]=fabs(f1[ii]*dimfact[ii]/(IMPMINABSERROR+MAX(fabs(uu0[UU]*dimfact[0]),fabs(uu0[URAD0]*dimfact[0]))));
+    f3c[ii]=fabs(f1[ii]*dimfact[ii]/(IMPMINABSERROR+MAX(fabs(f1norm[ii]*dimfact[ii]),fabs(uu0[URAD0]*dimfact[0]))));
+    f3d[ii]=fabs(f1[ii]*dimfact[ii]/(IMPMINABSERROR+MAX(fabs((uu0[UU]-Uiin[UU])*dimfact[0]),MAX(fabs(f1norm[ii]*dimfact[ii]),fabs(uu0[URAD0]*dimfact[0])))));
   }
 
   // evaluate error

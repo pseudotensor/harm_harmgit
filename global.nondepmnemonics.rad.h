@@ -103,6 +103,8 @@
 #define IMPMAXITER (15) // for used implicit solver
 #define IMPMAXITER2 (100) // for used implicit solver
 
+#define IMPMINABSERROR (1E-100) // minimum absolute error (or value) below which don't treat as bad error and just avoid 4-force.  Otherwise will "fail" implicit solver even if impossible to reach smaller relative error due to absolute machine precision issues.
+
 // 1 : normalize radiation error by only radiation thermal energy
 // 2 : normalize radiation error by max(radiation,gas) thermal energy
 // 3 : normalize using radiation URAD0 but also fnorm from actual f
