@@ -1,3 +1,10 @@
+// issues:
+
+// RADTUBE: oscillations and slow.
+// RADSHADOW : FAILINFOs without mathematica solution and CASE and slow.  prad1 fills-in shadow.  maybe radfixups worked to help that.
+// RADDBLSHADOW: Odd spot in prad0 in top-right in im8p0s0l0001.r8 .  More fake substructure near left wall, but more narrow shadow beam.
+// ATMSTATIC: prad0,1 evolve majorly.
+
 
 #include "decs.h"
 
@@ -161,8 +168,13 @@ int prepre_init_specific_init(void)
     periodicx2=periodicx3=1;
   }
   // problems with no necessary symmetry
-  else if(WHICHPROBLEM==RADBEAMFLAT || WHICHPROBLEM==RADPULSE3D || WHICHPROBLEM==RADSHADOW || WHICHPROBLEM==RADDBLSHADOW || WHICHPROBLEM==RADBEAM2D || WHICHPROBLEM==RADWALL || WHICHPROBLEM==RADDOT || WHICHPROBLEM==RADCYLBEAM || WHICHPROBLEM==RADBEAM2DKSVERT || WHICHPROBLEM==RADCYLBEAMCART){
+  else if(WHICHPROBLEM==RADBEAMFLAT || WHICHPROBLEM==RADPULSE3D || WHICHPROBLEM==RADDBLSHADOW || WHICHPROBLEM==RADWALL || WHICHPROBLEM==RADBEAM2D || WHICHPROBLEM==RADDOT || WHICHPROBLEM==RADCYLBEAM || WHICHPROBLEM==RADBEAM2DKSVERT || WHICHPROBLEM==RADCYLBEAMCART){
     periodicx1=periodicx2=periodicx3=0;
+  }
+  // periodic in x2
+  else if(WHICHPROBLEM==RADSHADOW){
+    periodicx1=periodicx3=0;
+    periodicx2=1;
   }
   // spherical polar problems:
   else if(WHICHPROBLEM==RADDONUT || WHICHPROBLEM==ATMSTATIC || WHICHPROBLEM==RADATM || WHICHPROBLEM==RADBONDI || WHICHPROBLEM==RADNT || WHICHPROBLEM==RADFLATDISK){

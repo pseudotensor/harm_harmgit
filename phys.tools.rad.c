@@ -279,13 +279,14 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
   int sc;
   int pliter,pl;
   int returntype;
-  int iterreturn;
+  int iterreturn,itertotal;
   FTYPE errorabs;
   int strati;
   int gotsomesolution=0;
 
 
   // get defaults
+  itertotal=0;
   for(strati=0;strati<NUMDAMPSTRATEGY;strati++){
     imptryconvarray[strati]=IMPTRYCONV2;
     impallowconvarray[strati]=IMPALLOWCONV2;
@@ -320,6 +321,7 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
       dUcomp[sc][pl] += radsource[pl];
     }
   }
+  itertotal+=iterreturn;
 
 #elif(0)
   for(strati=0;strati<NUMDAMPSTRATEGY;strati++){
@@ -331,10 +333,12 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
     returntype=RETURNIMPLICITFAIL;//default
     PLOOP(pliter,pl) pinsource[pl]=pin[pl]; // reset to defalut input
     failreturn=koral_source_rad_implicit_perdampstrategy(3, imptryconv, impallowconv, impmaxiter,pinsource, Uiin, Ufin, CUf, ptrgeom, q, dUother, radsource, &errorabs, &iterreturn, &returntype);
+    itertotal+=iterreturn;
 
     returntype=RETURNIMPLICITFAIL;//default
     PLOOP(pliter,pl) pinsource[pl]=pin[pl]; // reset to defalut input
     failreturn=koral_source_rad_implicit_perdampstrategy(1, imptryconv, impallowconv, impmaxiter, pinsource, Uiin, Ufin, CUf, ptrgeom, q, dUother, radsource, &errorabs, &iterreturn, &returntype);
+    itertotal+=iterreturn;
 
     if(failreturn==0){
       gotsomesolution=1;
@@ -381,6 +385,7 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
     returntype=RETURNIMPLICITFAIL;//default
     PLOOP(pliter,pl) pinsource[pl]=pin[pl]; // reset to defalut input
     failreturn=koral_source_rad_implicit_perdampstrategy(dampstrategy, imptryconv, impallowconv, impmaxiter, pinsource, Uiin, Ufin, CUf, ptrgeom, q, dUother, radsource, &errorabs, &iterreturn, &returntype);
+    itertotal+=iterreturn;
 
     if(failreturn==0){
       // get best
@@ -426,7 +431,7 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
     static long long int numhistiter[MAX(IMPMAXITER,IMPMAXITER2)+1]={0}; // histogram of error for implicit solver to be reported infrequently
     //    dualfprintf(fail_file,"errorabs=%g\n",errorabs);
     numhisterr[MAX(MIN((int)(-log10l(errorabs+SMALL)),NUMNUMHIST-1),0)]++;
-    numhistiter[MAX(MIN(iterreturn,impmaxiter),0)]++;
+    numhistiter[MAX(MIN(itertotal,impmaxiter),0)]++;
 #define HISTREPORTSTEP (20)
     if(nstep%HISTREPORTSTEP==0 && ptrgeom->i==0 && ptrgeom->j==0 && ptrgeom->k==0){
       int histi;
