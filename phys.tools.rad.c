@@ -2173,7 +2173,7 @@ void calc_kappa(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappa)
 }
 
 //scattering
-void calc_kappaes(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappa)
+void calc_kappaes(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappaes)
 {  
   extern FTYPE calc_kappaes_user(FTYPE rho, FTYPE T,FTYPE x,FTYPE y,FTYPE z);
   //user_calc_kappaes()
@@ -2189,7 +2189,7 @@ void calc_kappaes(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappa)
   xx=V[1];
   yy=V[2];
   zz=V[3];
-  *kappa = calc_kappaes_user(rho,T,xx,yy,zz);
+  *kappaes = calc_kappaes_user(rho,T,xx,yy,zz);
   //  dualfprintf(fail_file,"kappaes=%g\n",*kappa);
 }
 
@@ -2221,7 +2221,7 @@ static void calc_kappa_kappaes(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappa,
   yy=V[2];
   zz=V[3];
   *kappa = calc_kappa_user(rho,T,xx,yy,zz);
-  *kappa = calc_kappaes_user(rho,T,xx,yy,zz);
+  *kappaes = calc_kappaes_user(rho,T,xx,yy,zz);
   *Tgas = T;
   //  dualfprintf(fail_file,"kappaabs=%g kappaes=%g\n",*kappa,*kappaes);
 }
