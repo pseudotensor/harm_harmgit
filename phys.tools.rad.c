@@ -285,6 +285,11 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
   int gotsomesolution=0;
 
 
+
+  int showmessages=0;
+  int showmessagesheavy=0;
+
+
   // get defaults
   itertotal=0;
   for(strati=0;strati<NUMDAMPSTRATEGY;strati++){
@@ -421,10 +426,10 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
   if(debugfail>=2){
 
     // report result of best answer
-    if(errorabs>IMPALLOWCONV) dualfprintf(fail_file,"Never got IMPALLOWCONV: %g %g\n",IMPALLOWCONV,errorabs);
-    if(errorabs>IMPALLOWCONV2) dualfprintf(fail_file,"Never got IMPALLOWCONV2: %g %g\n",IMPALLOWCONV,errorabs);
+    if(showmessagesheavy&&errorabs>IMPALLOWCONV) dualfprintf(fail_file,"Never got IMPALLOWCONV: %g %g\n",IMPALLOWCONV,errorabs);
+    if(showmessagesheavy&&errorabs>IMPALLOWCONV2) dualfprintf(fail_file,"Never got IMPALLOWCONV2: %g %g\n",IMPALLOWCONV,errorabs);
 
-    if(errorabs>IMPTRYCONV) dualfprintf(fail_file,"Never got IMPTRYCONV: %g %g\n",IMPTRYCONV,errorabs);
+    if(showmessagesheavy&&errorabs>IMPTRYCONV) dualfprintf(fail_file,"Never got IMPTRYCONV: %g %g\n",IMPTRYCONV,errorabs);
 
 #define NUMNUMHIST (20)
     static long long int numhisterr[NUMNUMHIST]={0}; // histogram of error for implicit solver to be reported infrequently
@@ -688,7 +693,7 @@ static int koral_source_rad_implicit_perdampstrategy(int dampstrategy, FTYPE imp
       // regardless of failure, check if below machine precision for 4-force and abort if so.
       // below ==1.0 assumes powers of 2 for changing those things so definitely comes back to 1.0 exactly.
       if(fracdtuu0==1.0 && fracdtG==1.0 && f_error_check(showmessages, showmessagesheavy, iter, LOCALPREIMPCONV,realdt,f1,f1norm,f3report,Uiin, uu0,uu,ptrgeom)){
-        if(debugfail>=2) dualfprintf(fail_file,"Very Initial error near machine precision.\n");
+        if(showmessagesheavy&&debugfail>=2) dualfprintf(fail_file,"Very Initial error near machine precision.\n");
         // this is also required to catch cases when G is below machine error and won't affect result.
         // break, and next coming f_error_check() post-f1iter loop will catch this and break again.
         break;
@@ -775,7 +780,7 @@ static int koral_source_rad_implicit_perdampstrategy(int dampstrategy, FTYPE imp
     //test pre-convergence using initial |dU/U|
     // KORALTODO: This isn't a completely general error check since force might be large for fluid that needs itself to have more accuracy, but if using ~NUMEPSILON, won't resolve 4-force of radiation on fluid to better than that.
     if(f_error_check(showmessages, showmessagesheavy, iter, LOCALPREIMPCONV,realdt,f1,f1norm,f3report,Uiin, uu0,uu,ptrgeom)){
-      if(debugfail>=2) dualfprintf(fail_file,"Initial error near machine precision.\n");
+      if(showmessagesheavy&&debugfail>=2) dualfprintf(fail_file,"Initial error near machine precision.\n");
       // this is also required to catch cases when G is below machine error and won't affect result.
       f1break=1;
       *returntype=RETURNIMPLICITTRY;

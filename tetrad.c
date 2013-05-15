@@ -307,7 +307,7 @@ static int compute_tetrcon_frommetric_mathematica(FTYPE (*generalmatrix)[NDIM], 
   // But, even for a\neq 0, the order is found correctly since spherical polar and KS gtr terms dominate
 
   if(THETAROT!=0.0){
-    dualfprintf(fail_file,"compute_tetrcon_frommetric_mathematica() needs to have rotation added (see jon_interp stuff) so can handle tilts that mix theta and phi.  Then can trust picking up dominate terms.\n");
+    dualfprintf(fail_file,"compute_tetrcon_frommetric_mathematica() needs to have rotation added (see jon_interp stuff) so can handle tilts that mix theta and phi.  Then can trust picking up dominate terms: THETAROT=%g\n",THETAROT);
     myexit(546292153);
   }
 

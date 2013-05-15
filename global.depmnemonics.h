@@ -744,8 +744,14 @@ god=deathadflkjasdflkjasdlfkja242424
     "%ld %d %d %d %ld %ld %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g "
 
 #define HEADERONEOUT "%26.20g"
-#define SFTYPEHEADERONEOUT "%31.26g"
 
+#if(SENSITIVE==FLOATTYPE)
+#define SFTYPEHEADERONEOUT "%31.26g"
+#elif(SENSITIVE==DOUBLETYPE)
+#define SFTYPEHEADERONEOUT "%31.26g"
+#elif(SENSITIVE==LONGDOUBLETYPE)
+#define SFTYPEHEADERONEOUT "%31.26Lg"
+#endif
 
 
 

@@ -3,7 +3,18 @@
 // RADTUBE: oscillations and slow.
 // RADSHADOW : FAILINFOs without mathematica solution and CASE and slow.  prad1 fills-in shadow.  maybe radfixups worked to help that.
 // RADDBLSHADOW: Odd spot in prad0 in top-right in im8p0s0l0001.r8 .  More fake substructure near left wall, but more narrow shadow beam.
-// ATMSTATIC: prad0,1 evolve majorly.
+// ATMSTATIC: prad0,1 evolve majorly, but that's correct.
+// RADWALL: Bit noisy.  Probably need to use stronger shock condition for radiation.
+// RADWAVE: Unsure if right.  too fast.
+// runnew16: RADBONDI  : goes crazy, bad in prad.
+// runnew17: RADDOT: CASEGEN failures!!! and "Bad inv" problems.  Has stripes along certain directions unlike with MINM and older code.  Maybe PARA shock reduction will help here too. But expanding?
+// RADNT: IC look odd, but need to look at next step.
+// runnew23: raddonut still was running and very bad behavior
+// runnew18: RADCYLBEAM? was still running.
+// runnew19: RADBEAM2DKSVERT: Unsure, probably ok. But check old version.  Goes crazy.
+// runnew20: RADCYLBEAMCART : Maybe ok.
+
+// runnew7: still running after 1073 minutes.
 
 
 #include "decs.h"
@@ -163,13 +174,22 @@ int prepre_init_specific_init(void)
     periodicx1=periodicx2=periodicx3=1;
   }
   // if ever only 1D problems
-  else if(WHICHPROBLEM==RADTUBE || WHICHPROBLEM==RADPULSE || WHICHPROBLEM==RADPULSEPLANAR || WHICHPROBLEM==RADWAVE){
+  else if(WHICHPROBLEM==RADTUBE || WHICHPROBLEM==RADPULSE || WHICHPROBLEM==RADPULSEPLANAR){
     periodicx1=0;
     periodicx2=periodicx3=1;
   }
+  // if ever only 1D problems
+  else if(WHICHPROBLEM==RADWAVE){
+    periodicx1=1;
+  }
   // problems with no necessary symmetry
-  else if(WHICHPROBLEM==RADBEAMFLAT || WHICHPROBLEM==RADPULSE3D || WHICHPROBLEM==RADDBLSHADOW || WHICHPROBLEM==RADWALL || WHICHPROBLEM==RADBEAM2D || WHICHPROBLEM==RADDOT || WHICHPROBLEM==RADCYLBEAM || WHICHPROBLEM==RADBEAM2DKSVERT || WHICHPROBLEM==RADCYLBEAMCART){
+  else if(WHICHPROBLEM==RADBEAMFLAT || WHICHPROBLEM==RADPULSE3D || WHICHPROBLEM==RADDBLSHADOW || WHICHPROBLEM==RADWALL || WHICHPROBLEM==RADBEAM2D || WHICHPROBLEM==RADDOT || WHICHPROBLEM==RADBEAM2DKSVERT || WHICHPROBLEM==RADCYLBEAMCART){
     periodicx1=periodicx2=periodicx3=0;
+  }
+  // periodic in x3
+  else if(WHICHPROBLEM==RADCYLBEAM){
+    periodicx1=periodicx2=0;
+    periodicx3=1;
   }
   // periodic in x2
   else if(WHICHPROBLEM==RADSHADOW){
@@ -239,6 +259,7 @@ int post_init_specific_init(void)
 
 
 
+  trifprintf("WHICHPROBLEM: %d\n",WHICHPROBLEM);
   // print out units and some constants
   trifprintf("Constants\n");
   trifprintf("LBAR=%g TBAR=%g VBAR=%g RHOBAR=%g MBAR=%g UBAR=%g TEMPBAR=%g\n",LBAR,TBAR,VBAR,RHOBAR,MBAR,UBAR,TEMPBAR); 
@@ -664,7 +685,7 @@ int init_global(void)
     a=0.0; // no spin in case use MCOORD=KSCOORDS
 
     if(!(ISSPCMCOORDNATIVE(MCOORD))){
-      dualfprintf(fail_file,"Must choose MCOORD (currently %d) to be spherical polar grid type for RADBEAM2D\n",MCOORD);
+      dualfprintf(fail_file,"Must choose MCOORD (currently %d) to be spherical polar grid type for RADBEAM2DKSVERT\n",MCOORD);
       myexit(3434628752);
     }
 
