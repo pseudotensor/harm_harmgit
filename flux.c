@@ -1883,67 +1883,111 @@ void compute_and_store_fluxstatecent(FTYPE (*pr)[NSTORE2][NSTORE3][NPR])
   
     int imod,jmod,kmod;
 
-    DIMENLOOP(dir){
-      if(NxNOT1[dir]){
-
 #pragma omp parallel
-          {
-            int i,j,k,l;
-            int pl;
-            OPENMP3DLOOPVARSDEFINE;
-            //    FTYPE *primptr[MAXNPR]; // number of pointers
-            FTYPE *velptr,*ptotptr;
-            //    FTYPE a_primstencil[MAXNPR][MAXSPACEORDER];
-            FTYPE a_velstencil[MAXSPACEORDER],a_ptotstencil[MAXSPACEORDER]; // Shouldn't need anymore than 10      
+    {
+      int i,j,k,l;
+      int pl;
+      OPENMP3DLOOPVARSDEFINE;
+      //    FTYPE *primptr[MAXNPR]; // number of pointers
+      FTYPE *velptr,*ptotptr;
+      //    FTYPE a_primstencil[MAXNPR][MAXSPACEORDER];
+      FTYPE a_velstencil[MAXSPACEORDER],a_ptotstencil[MAXSPACEORDER]; // Shouldn't need anymore than 10      
 
 
-            // shift pointer
-            //    PALLREALLOOP(pl){
-            //      primptr[pl] = a_primstencil[pl] - startorderi;
-            //    }
-            velptr = a_velstencil - startorderi;
-            ptotptr = a_ptotstencil - startorderi;
+      // shift pointer
+      //    PALLREALLOOP(pl){
+      //      primptr[pl] = a_primstencil[pl] - startorderi;
+      //    }
+      velptr = a_velstencil - startorderi;
+      ptotptr = a_ptotstencil - startorderi;
 
 
-            if(dir==1) OPENMP3DLOOPSETUPFULLINOUT2DIR1;
-            if(dir==2) OPENMP3DLOOPSETUPFULLINOUT2DIR2;
-            if(dir==3) OPENMP3DLOOPSETUPFULLINOUT2DIR3;
+      //            if(dir==1) OPENMP3DLOOPSETUPFULLINOUT2DIR1;
+      //            if(dir==2) OPENMP3DLOOPSETUPFULLINOUT2DIR2;
+      //            if(dir==3) OPENMP3DLOOPSETUPFULLINOUT2DIR3;
+      OPENMP3DLOOPSETUPFULL;
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
-            OPENMP3DLOOPBLOCK{
-              OPENMP3DLOOPBLOCK2IJK(i,j,k);
+      OPENMP3DLOOPBLOCK{
+        OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
+        FTYPE radshock={0},mhdshock={0}; // KORALTODO: Not used yet, but can be roughly used to pull-over multiple dimensions for shock indicator
+        
+        DIMENLOOP(dir){
+          if(NxNOT1[dir]){
+            
+            
+            // extract stencil of data for Ficalc()
+            for(l=startorderi;l<=endorderi;l++){
+              imod=i+(dir==1)*l;
+              jmod=j+(dir==2)*l;
+              kmod=k+(dir==3)*l;
+
+              imod=MAX(-N1BND,imod);
+              imod=MIN(N1-1+N1BND,imod);
+
+              jmod=MAX(-N2BND,jmod);
+              jmod=MIN(N2-1+N2BND,jmod);
+
+              kmod=MAX(-N3BND,kmod);
+              kmod=MIN(N3-1+N3BND,kmod);
+
+
+              // PALLREALLOOP(pl) primptr[pl][l] = MACP0A1(pr,imod,jmod,kmod,pl);
+              velptr[l] = MACP1A0(shocktemparray,SHOCKPLSTOREVEL1+dir-1,imod,jmod,kmod);
+              ptotptr[l] = MACP1A0(shocktemparray,SHOCKPLSTOREPTOT,imod,jmod,kmod);
+            }
+      
+            //      GLOBALMACP0A1(shockindicatorarray,i,j,k,SHOCKPLDIR1+dir-1)=Ficalc(dir,&velptr[0],&ptotptr[0],&primptr[0]);
+            GLOBALMACP1A0(shockindicatorarray,SHOCKPLDIR1+dir-1,i,j,k)=Ficalc(dir,&velptr[0],&ptotptr[0]);
+
+            if(RADSHOCKFLAT&&EOMRADTYPE!=EOMRADNONE){
               // extract stencil of data for Ficalc()
               for(l=startorderi;l<=endorderi;l++){
                 imod=i+(dir==1)*l;
                 jmod=j+(dir==2)*l;
                 kmod=k+(dir==3)*l;
+
+                imod=MAX(-N1BND,imod);
+                imod=MIN(N1-1+N1BND,imod);
+
+                jmod=MAX(-N2BND,jmod);
+                jmod=MIN(N2-1+N2BND,jmod);
+
+                kmod=MAX(-N3BND,kmod);
+                kmod=MIN(N3-1+N3BND,kmod);
+
                 // PALLREALLOOP(pl) primptr[pl][l] = MACP0A1(pr,imod,jmod,kmod,pl);
-                velptr[l] = MACP1A0(shocktemparray,SHOCKPLSTOREVEL1+dir-1,imod,jmod,kmod);
-                ptotptr[l] = MACP1A0(shocktemparray,SHOCKPLSTOREPTOT,imod,jmod,kmod);
+                velptr[l] = MACP1A0(shocktemparray,SHOCKRADPLSTOREVEL1+dir-1,imod,jmod,kmod);
+                ptotptr[l] = MACP1A0(shocktemparray,SHOCKRADPLSTOREPTOT,imod,jmod,kmod);
               }
-      
-              //      GLOBALMACP0A1(shockindicatorarray,i,j,k,SHOCKPLDIR1+dir-1)=Ficalc(dir,&velptr[0],&ptotptr[0],&primptr[0]);
-              GLOBALMACP1A0(shockindicatorarray,SHOCKPLDIR1+dir-1,i,j,k)=Ficalc(dir,&velptr[0],&ptotptr[0]);
-
-              if(RADSHOCKFLAT&&EOMRADTYPE!=EOMRADNONE){
-                // extract stencil of data for Ficalc()
-                for(l=startorderi;l<=endorderi;l++){
-                  imod=i+(dir==1)*l;
-                  jmod=j+(dir==2)*l;
-                  kmod=k+(dir==3)*l;
-                  // PALLREALLOOP(pl) primptr[pl][l] = MACP0A1(pr,imod,jmod,kmod,pl);
-                  velptr[l] = MACP1A0(shocktemparray,SHOCKRADPLSTOREVEL1+dir-1,imod,jmod,kmod);
-                  ptotptr[l] = MACP1A0(shocktemparray,SHOCKRADPLSTOREPTOT,imod,jmod,kmod);
-                }
                 
-                //      GLOBALMACP0A1(shockindicatorarray,i,j,k,SHOCKRADPLDIR1+dir-1)=Ficalc(dir,&velptr[0],&ptotptr[0],&primptr[0]);
-                GLOBALMACP1A0(shockindicatorarray,SHOCKRADPLDIR1+dir-1,i,j,k)=Ficalc(dir,&velptr[0],&ptotptr[0]);
-              }// end if doing radiation
+              //      GLOBALMACP0A1(shockindicatorarray,i,j,k,SHOCKRADPLDIR1+dir-1)=Ficalc(dir,&velptr[0],&ptotptr[0],&primptr[0]);
+              GLOBALMACP1A0(shockindicatorarray,SHOCKRADPLDIR1+dir-1,i,j,k)=Ficalc(dir,&velptr[0],&ptotptr[0]);
+            }// end if doing radiation
+          }// end if doing dir
+        }//end over dir loop
 
-            }// end 3D loop
-          }// end parallel region
-      }// end if doing dir
-    }//end over dir loop
+        // set geometry for centered zone to be updated
+        struct of_geom geomdontuse;
+        struct of_geom *ptrgeom=&geomdontuse;
+        get_geometry(i, j, k, CENT, ptrgeom);
+
+        // use maximum shock indicator if optically thick
+        // KORALTODO: using tau here, but tau is only over a cell.  If resolution changes, different tau, yet physics is the same.  How to manage?
+        // KORALNOTE: Need this because radiation can be escaping from shock, so radiation itself is not converging, while still sufficient for MHD shock conditions.
+        FTYPE tautot[NDIM],tautotmax;
+        calc_tautot(&MACP0A1(pr,i,j,k,0), ptrgeom, tautot, &tautotmax);
+
+        DIMENLOOP(dir){
+          if(NxNOT1[dir]){
+            GLOBALMACP1A0(shockindicatorarray,SHOCKPLDIR1+dir-1,i,j,k) = MAX(MIN(tautotmax,1.0)*GLOBALMACP1A0(shockindicatorarray,SHOCKRADPLDIR1+dir-1,i,j,k),GLOBALMACP1A0(shockindicatorarray,SHOCKPLDIR1+dir-1,i,j,k));
+            GLOBALMACP1A0(shockindicatorarray,SHOCKRADPLDIR1+dir-1,i,j,k) = MAX(MIN(tautotmax,1.0)*GLOBALMACP1A0(shockindicatorarray,SHOCKPLDIR1+dir-1,i,j,k),GLOBALMACP1A0(shockindicatorarray,SHOCKRADPLDIR1+dir-1,i,j,k));
+          }
+        }
+
+
+      }// end 3D loop
+    }// end parallel region
 
 
 

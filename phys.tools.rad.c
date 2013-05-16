@@ -2283,7 +2283,8 @@ void koral_source_rad_calc(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *Gdpl, FTYP
   // The equation is (1/\sqrt{-g})*d_\mu(\sqrt{-g} s\rho_0 u^\mu) + Gdpl[ENTROPY].ucon = 0
   FTYPE Gdplentropycontribs[NDIM];
   // -Gdpl[UU+jj] is so heating (so lowering of T^t_t to be more negative) implies increases entropy.
-  DLOOPA(jj) Gdplentropycontribs[jj] = (pr[RHO]/(SMALL+fabs(Tgas)))*(-Gdpl[UU+jj])*(q->ucon[jj]);
+  // assumes Gpl includes kappa already with rho so that Gpl is energy per unit volume per unit time.  Dividing by T (energy) gives a dimensionless thing (entropy) per unit volume.
+  DLOOPA(jj) Gdplentropycontribs[jj] = (1.0/(SMALL+fabs(Tgas)))*(-Gdpl[UU+jj])*(q->ucon[jj]);
 
   Gdpl[ENTROPY] = 0.0;
   DLOOPA(jj) Gdpl[ENTROPY] += Gdplentropycontribs[jj];
@@ -4624,7 +4625,7 @@ FTYPE calc_LTE_EfromT(FTYPE T)
 FTYPE calc_LTE_TfromE(FTYPE E )
 {
   //  return sqrt(sqrt((E/4./SIGMA_RAD)));
-  return (sqrt(sqrt((E/ARAD_CODE))));
+  return (sqrt(sqrt((E/(SMALL+ARAD_CODE)))));
 }
 
 // This will really give back only LTE E

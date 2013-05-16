@@ -1,20 +1,21 @@
 // issues:
 
-// RADTUBE: oscillations and slow.
-// RADSHADOW : FAILINFOs without mathematica solution and CASE and slow.  prad1 fills-in shadow.  maybe radfixups worked to help that.
-// RADDBLSHADOW: Odd spot in prad0 in top-right in im8p0s0l0001.r8 .  More fake substructure near left wall, but more narrow shadow beam.
-// ATMSTATIC: prad0,1 evolve majorly, but that's correct.
-// RADWALL: Bit noisy.  Probably need to use stronger shock condition for radiation.
-// RADWAVE: Unsure if right.  too fast.
+// runnew8: RADTUBE: oscillations and slow.  averageiter=6.7
+// runnew9: RADSHADOW : FAILINFOs without mathematica solution and CASE and slow.  prad1 fills-in shadow.  maybe radfixups worked to help that.
+// runnew10: RADDBLSHADOW: Odd spot in prad0 in top-right in im8p0s0l0001.r8 .  More fake substructure near left wall, but more narrow shadow beam.
+// runnew11: ATMSTATIC: prad0,1 evolve majorly, but that's correct.
+// runnew12: RADATM: fine.
+// runnew13: RADBEAM2D: ok
+// runnew14: RADWALL: Bit noisy.  Probably need to use stronger shock condition for radiation.
+// runnew15: RADWAVE: Unsure if right.  too fast.
 // runnew16: RADBONDI  : goes crazy, bad in prad.
-// runnew17: RADDOT: CASEGEN failures!!! and "Bad inv" problems.  Has stripes along certain directions unlike with MINM and older code.  Maybe PARA shock reduction will help here too. But expanding?
+// runnew17: RADDOT: CASEGEN failures!!! and "Bad inv" problems.  Has stripes along certain directions unlike with MINM and older code.  Maybe PARA shock reduction will help here too. But expanding flow?  Or try 2Dify shock flattener.
 // RADNT: IC look odd, but need to look at next step.
 // runnew23: raddonut still was running and very bad behavior
 // runnew18: RADCYLBEAM? was still running.
-// runnew19: RADBEAM2DKSVERT: Unsure, probably ok. But check old version.  Goes crazy.
+// runnew19: RADBEAM2DKSVERT: Goes crazy.
 // runnew20: RADCYLBEAMCART : Maybe ok.
 
-// runnew7: still running after 1073 minutes.
 
 
 #include "decs.h"

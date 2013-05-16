@@ -3336,17 +3336,10 @@ int limit_gamma(FTYPE gammamax, FTYPE*pr, FTYPE *ucons, struct of_geom *ptrgeom,
       }
 
       f = sqrt(pref);
-      pr[U1] *= f ; 
-      pr[U2] *= f ; 
-      pr[U3] *= f ;
+      pr[URAD1] *= f ; 
+      pr[URAD2] *= f ; 
+      pr[URAD3] *= f ;
 
-
-#if(DO_CONSERVE_D)
-      //    alpha = alpha = 1./sqrt(-ptrgeom->gcon[GIND(TT,TT)]) ;
-      //uu0old=radgamma/alpha;
-      // force conservation of particle number
-      pr[RHO] = pr0[RHO]*radgamma/realgammamax; // can do this since alpha is constant and so cancels
-#endif
 
       radgamma=gammamax; // reset radgamma for next check
       didchange=1; // indicate did change primitive
