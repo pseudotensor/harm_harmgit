@@ -1967,6 +1967,7 @@ void compute_and_store_fluxstatecent(FTYPE (*pr)[NSTORE2][NSTORE3][NPR])
           }// end if doing dir
         }//end over dir loop
 
+#if(RADSHOCKFLAT&&EOMRADTYPE!=EOMRADNONE) // KORAL
         // set geometry for centered zone to be updated
         struct of_geom geomdontuse;
         struct of_geom *ptrgeom=&geomdontuse;
@@ -1984,6 +1985,7 @@ void compute_and_store_fluxstatecent(FTYPE (*pr)[NSTORE2][NSTORE3][NPR])
             GLOBALMACP1A0(shockindicatorarray,SHOCKRADPLDIR1+dir-1,i,j,k) = MAX(MIN(tautotmax,1.0)*GLOBALMACP1A0(shockindicatorarray,SHOCKPLDIR1+dir-1,i,j,k),GLOBALMACP1A0(shockindicatorarray,SHOCKRADPLDIR1+dir-1,i,j,k));
           }
         }
+#endif
 
 
       }// end 3D loop

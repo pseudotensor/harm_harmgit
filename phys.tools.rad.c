@@ -265,7 +265,7 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
 #define NUMDAMPSTRATEGY (12)
   // 1: works for RADPULSEPLANAR  2: works for RADDONUT // 1?: for reduced DAMPFACTOR each ?.
   // start with simpler #1, try #2, then just reduce DAMPFACTOR sequentially like in koral code.
-  int dampstrategyarray[NUMDAMPSTRATEGY]={0,1, 2,13,14,15,16,17,18,19,20,21}; // if add/remove, change number
+  int dampstrategyarray[NUMDAMPSTRATEGY]={2,0, 1,13,14,15,16,17,18,19,20,21}; // if add/remove, change number
   int dampstrategy;
   FTYPE imptryconvarray[NUMDAMPSTRATEGY];//={IMPTRYCONV,IMPTRYCONV2, IMPTRYCONV2,IMPTRYCONV2,IMPTRYCONV2,IMPTRYCONV2,IMPTRYCONV2,IMPTRYCONV2,IMPTRYCONV2,IMPTRYCONV2,IMPTRYCONV2,IMPTRYCONV2}; // ""
   FTYPE imptryconv;
@@ -633,7 +633,7 @@ static int koral_source_rad_implicit_perdampstrategy(int dampstrategy, FTYPE imp
     }
 
 
-    if(dampstrategy==1){ // needed for RADPULSEPLANAR
+    if(dampstrategy==1||dampstrategy==2){
       // KORALTODO: improve on this later.
       // Problem is can start jumping too far in steps for near tough spots.
       // While in normal inversion routine damping is to avoid breaching into unphysical solution space with nan/inf, below is to avoid oscillating around solution
