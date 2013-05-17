@@ -1054,21 +1054,21 @@ int mathematica_report_check(int failtype, long long int failnum, int gotfirstno
   }
   else{
     // 134 things
-    dualfprintf(fail_file,"\nFAILINFO: %d %d %lld %d %21.15g ",failtype,myid,failnum,gotfirstnofail,realdt);
-    DLOOP(jj,kk) dualfprintf(fail_file,"%21.15g ",ptrgeom->gcon[GIND(jj,kk)]);
-    DLOOP(jj,kk) dualfprintf(fail_file,"%21.15g ",ptrgeom->gcov[GIND(jj,kk)]);
+    dualfprintf(fail_file,"\nFAILINFO: %d %d %lld %d %21.15g ",failtype,myid,failnum,gotfirstnofail,realdt); // 6
+    DLOOP(jj,kk) dualfprintf(fail_file,"%21.15g ",ptrgeom->gcon[GIND(jj,kk)]); // 16 -> 20
+    DLOOP(jj,kk) dualfprintf(fail_file,"%21.15g ",ptrgeom->gcov[GIND(jj,kk)]); // 16 -> 36
     // shows first pinuse(uu0)
-    PLOOP(pliter,pl) dualfprintf(fail_file,"%21.15g %21.15g %21.15g %21.15g %21.15g ",pinuse[pl],pin[pl],uu0[pl],uu[pl],Uiin[pl]);
+    PLOOP(pliter,pl) dualfprintf(fail_file,"%21.15g %21.15g %21.15g %21.15g %21.15g ",pinuse[pl],pin[pl],uu0[pl],uu[pl],Uiin[pl]);  // 5*13=65 -> 103
     struct of_state qreport;
     get_state(pinuse,ptrgeom,&qreport);
-    if(EOMRADTYPE!=EOMRADNONE) DLOOPA(jj) dualfprintf(fail_file,"%21.15g %21.15g ",qreport.uradcon[jj],qreport.uradcov[jj]);
+    if(EOMRADTYPE!=EOMRADNONE) DLOOPA(jj) dualfprintf(fail_file,"%21.15g %21.15g ",qreport.uradcon[jj],qreport.uradcov[jj]); // 4*2=8
     else DLOOPA(jj) dualfprintf(fail_file,"%21.15g %21.15g ",0.0,0.0);
-    DLOOPA(jj) dualfprintf(fail_file,"%21.15g %21.15g ",qreport.ucon[jj],qreport.ucov[jj]);
+    DLOOPA(jj) dualfprintf(fail_file,"%21.15g %21.15g ",qreport.ucon[jj],qreport.ucov[jj]); // 4*2=8
     struct of_state qin;
     get_state(pin,ptrgeom,&qin);
-    if(EOMRADTYPE!=EOMRADNONE) DLOOPA(jj) dualfprintf(fail_file,"%21.15g %21.15g ",qin.uradcon[jj],qin.uradcov[jj]);
+    if(EOMRADTYPE!=EOMRADNONE) DLOOPA(jj) dualfprintf(fail_file,"%21.15g %21.15g ",qin.uradcon[jj],qin.uradcov[jj]); // 4*2=8
     else dualfprintf(fail_file,"%21.15g %21.15g ",0.0,0.0);
-    DLOOPA(jj) dualfprintf(fail_file,"%21.15g %21.15g ",qin.ucon[jj],qin.ucov[jj]);
+    DLOOPA(jj) dualfprintf(fail_file,"%21.15g %21.15g ",qin.ucon[jj],qin.ucov[jj]); // 4*2=8
     dualfprintf(fail_file,"\n");
 
     /////////////
@@ -3327,6 +3327,10 @@ int indices_12(FTYPE A1[NDIM],FTYPE A2[NDIM],struct of_geom *ptrgeom)
 // generally, should have TRYCOLD=1 as most general way to deal with failure
 #define TRYCOLD 1
 
+// for debugging
+FTYPE globaluu[NPR];
+FTYPE globalpin[NPR];
+
 //
 ///////////////
 int u2p_rad(int showmessages, int allowlocalfailurefixandnoreport, FTYPE *uu, FTYPE *pin, struct of_geom *ptrgeom,PFTYPE *lpflag, PFTYPE *lpflagrad)
@@ -3335,6 +3339,8 @@ int u2p_rad(int showmessages, int allowlocalfailurefixandnoreport, FTYPE *uu, FT
   FTYPE pp[NPR];
   int pliter,pl;
 
+  PLOOP(pliter,pl) globaluu[pl]=uu[pl];
+  PLOOP(pliter,pl) globalpin[pl]=pin[pl];
 
   if(WHICHVEL!=VELREL4){
     dualfprintf(fail_file,"u2p_rad() only setup for relative 4-velocity, currently.\n");
@@ -3919,7 +3925,7 @@ static int get_m1closure_urfconrel(int showmessages, int allowlocalfailurefixand
   //////////////////////
 
   // NOTE: gammarel2 just below 1.0 already fixed to be =1.0
-  int nonfailure=gammarel2>=1.0 && Erf>ERADLIMIT && gammarel2<=gammamax*gammamax/GAMMASMALLLIMIT/GAMMASMALLLIMIT;
+  int nonfailure=gammarel2>=1.0 && gammarel2<=gammamax*gammamax/GAMMASMALLLIMIT/GAMMASMALLLIMIT;
   // falilure1 : gammarel2 normal, but already Erf<ERADLIMIT (note for M1 that gammarel2>=1/4 for any reasonable chance for correct non-zero Erf
   int failure1=Avcon[0]<0.0 || (gammarel2>0.0 && gammarel2<=0.25L && delta>=0.0 && divisor!=0.0) || numerator==0.0 || gammarel2>=1.0 && delta>=0.0 && divisor!=0.0 && Erf<ERADLIMIT;
   // gamma probably around 1
@@ -3935,12 +3941,17 @@ static int get_m1closure_urfconrel(int showmessages, int allowlocalfailurefixand
   }
 
 
+  FTYPE Erf0=MAX(NUMEPSILON*fabs(Avcon[TT])/gammamax/gammamax,ERADLIMIT);
   if(nonfailure){
     // get good relative velocity
     FTYPE gammarel=sqrt(gammarel2);
     FTYPE alpha=ptrgeom->alphalapse;
 
     SLOOPA(jj) urfconrel[jj] = alpha * (Avcon[jj] + 1./3.*Erf*ptrgeom->gcon[GIND(0,jj)]*(4.0*gammarel2-1.0) )/(4./3.*Erf*gammarel);
+
+    //    if(Erf<ERADLIMIT) Erf=ERADLIMIT; // case when velocity fine and probably just Erf slightly negative
+    //    if(Erf<ERADLIMIT) Erf=MAX(NUMEPSILON*fabs(Erf),ERADLIMIT); // case when velocity fine and probably just Erf slightly negative
+    if(Erf<ERADLIMIT) Erf=Erf0; // case when velocity fine and probably just Erf slightly negative
 
     *Erfreturn=Erf; // pass back new Erf to pointer
     return(0);
@@ -3953,6 +3964,10 @@ static int get_m1closure_urfconrel(int showmessages, int allowlocalfailurefixand
       Avconorig[jj]=Avcon[jj];
       Avcovorig[jj]=Avcov[jj];
     }
+    FTYPE gammarel2orig;
+    gammarel2orig=gammarel2;
+    FTYPE Erforig;
+    Erforig=Erf;
 
     // get \gammarel=1 case
     FTYPE gammarel2slow=pow(1.0+10.0*NUMEPSILON,2.0);
@@ -4002,8 +4017,45 @@ static int get_m1closure_urfconrel(int showmessages, int allowlocalfailurefixand
     // catch bad issue for when using fast or slow will be bad because probably momentum is bad if inverted energy
     if(Avcovorig[TT]>0.0){
       SLOOPA(jj) urfconrel[jj]=0.0;
+      //dualfprintf(fail_file,"THIS ONE1\n");
     }
-
+    else if(Avcov[TT]>0.0){
+      //      Erf=ERADLIMIT;
+      Erf=Erf0;
+      SLOOPA(jj) urfconrel[jj]=0.0;
+      //dualfprintf(fail_file,"THIS ONE2\n");
+    }
+    else{
+      //    Erf=ERADLIMIT;
+      //    Erf=MAX(MIN(Erf,Erforig),ERADLIMIT);
+      if(gammarel2orig>=1.0 && isfinite(gammarel2orig) && isfinite(Erforig)){
+        Erf=MAX(MIN(Erf,Erforig),Erf0);
+        //        Erf=ERADLIMIT;
+        dualfprintf(fail_file,"THIS ONE3\n");
+      }
+#define AVCOVRELDIFFALLOWED 1E-2 // KORALTODO: only use new "cold" solution if relatively close Avcov.
+      else if(fabs(Avcovorig[TT]-Avcov[TT])/fabs(fabs(Avcovorig[TT])+fabs(Avcov[TT]))<AVCOVRELDIFFALLOWED ){
+        //dualfprintf(fail_file,"THIS ONE4\n");
+        Erf=MAX(MIN(Erf,Erf*(-Avcovorig[TT])/(SMALL+fabs(-Avcov[TT]))),Erf0);
+        Erf=MAX(MIN(Erf,Erf*(-Avcov[TT])/(SMALL+fabs(-Avcovorig[TT]))),Erf0);
+        //dualfprintf(fail_file,"nstep=%ld steppart=%d ijk=%d %d %d : Erforig=%g Erf=%g urfconrel=%g %g %g : Avcovorig=%g Avcov=%g\n",nstep,steppart,ptrgeom->i,ptrgeom->j,ptrgeom->k,Erforig,Erf,urfconrel[1],urfconrel[2],urfconrel[3],Avcovorig[0],Avcov[0]);
+        //        Erf=6E-15;
+      }
+      else{
+        //dualfprintf(fail_file,"THIS ONE5\n");
+        Erf=Erf0;
+      }
+#if(0)
+      // for RADBEAM2DKSVERT, very tricky and very sensitive (i.e. whether really fails) at coordinate singularity.
+      //      if(gammarel2orig<1.0){
+      //      if(gammarel2orig<0.5){
+      if(gammarel2orig<=0.0){
+        dualfprintf(fail_file,"THIS ONE6\n");
+        Erf=Erf0;
+        //        Erf=ERADLIMIT;
+      }
+#endif
+    }
     
     //    dualfprintf(fail_file,"JONVSOLEK: usingfast=%d Avconfast: %g %g %g %g : Avconslow: %g %g %g %g : Erffast=%g Erfslow=%g urfconfast=%g %g %g urfconslow=%g %g %g\n",usingfast,Avconfast[0],Avconfast[1],Avconfast[2],Avconfast[3],Avconslow[0],Avconslow[1],Avconslow[2],Avconslow[3],Erffast,Erfslow,urfconrelfast[1],urfconrelfast[2],urfconrelfast[3],urfconrelslow[1],urfconrelslow[2],urfconrelslow[3]);
     
@@ -4021,6 +4073,30 @@ static int get_m1closure_urfconrel(int showmessages, int allowlocalfailurefixand
   pp[PRAD0] = Erf;
   SLOOPA(jj) pp[PRAD1+jj-1] = urfconrel[jj];
 
+
+#if(0)
+  // normally don't ever do this unless really debugging inversion.
+  //  if((ptrgeom->j==14 || ptrgeom->j==13 || ptrgeom->j==15) &&nstep>=195){// || *lpflagrad!=0 && debugfail>=2){
+  if(nstep>=223){
+  //  if(0&&nstep>=223){// || *lpflagrad!=0 && debugfail>=2){
+    // first report info so can check on inversion
+    static long long int failnum=0;
+    FTYPE fakedt=0.0; // since no 4-force
+    FTYPE fakeCUf[4]={0}; // fake
+    FTYPE dUother[NPR]={0};// fake
+    struct of_state *qptr=NULL; // fake
+    failnum++;
+    globalpin[ENTROPY]=0.0;
+    globaluu[ENTROPY]=0.0;
+    pp[ENTROPY]=0.0;
+
+    globalpin[PRAD0] = Erf;
+    SLOOPA(jj) globalpin[PRAD1+jj-1] = urfconrel[jj];
+
+    mathematica_report_check(3, failnum, *lpflagrad, fakedt, ptrgeom, pp, globalpin, globaluu, globaluu, globaluu, globaluu, fakeCUf, qptr, dUother);
+  }
+  //  if(nstep==224) exit(0);
+#endif
 
 #if(0)
   // KORALTODO: Problems when tau<<1 and gamma->gammamax
@@ -4049,6 +4125,8 @@ static int get_m1closure_urfconrel(int showmessages, int allowlocalfailurefixand
     SLOOPA(jj) urfconrel[jj]=0.0; // ZAMO
     if(1||allowlocalfailurefixandnoreport==0) *lpflagrad=UTOPRIMRADFAILCASE1B;
   }
+
+
 
   // DEBUG:
   if(debugfail>=2){
