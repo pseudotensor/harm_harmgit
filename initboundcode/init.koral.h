@@ -764,6 +764,9 @@ struct Ccoordparams {
 
 #if(WHICHPROBLEM==RADBEAM2DKSVERT)
 
+// below required to avoid runaway energy gains when putting singulary on the grid.  With singularity on grid, can either fail or not in very sensitive way due to machine precision issues right around the singularity.
+#undef FORCEGDETPOSITIVE
+#define FORCEGDETPOSITIVE 1
 
 #undef RADSHOCKFLAT
 #define RADSHOCKFLAT 1

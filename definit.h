@@ -601,6 +601,8 @@
 // whether to make gdet finite volume-like when reverting to 1D spherical polar coordinates
 #define FIXGDETSPC_WHEN_1DRADIAL 1
 
+// whether to force gdet to be positive everywhere.
+#define FORCEGDETPOSITIVE 0
 
 #define MINDT 1.e-20 // minimum dt
 

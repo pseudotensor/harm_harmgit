@@ -826,6 +826,11 @@ void eomfunc_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X
     dualfprintf(fail_file,"eomfunc_func(): no such WHICHEOM=%d\n",WHICHEOM);
     myexit(798436);
   }
+  
+  if(FORCEGDETPOSITIVE==1){
+    PLOOP(pliter,pl) EOMFUNCASSIGN(pl)=fabs(EOMFUNCASSIGN(pl));
+  }
+
 }
 
 

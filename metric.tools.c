@@ -804,6 +804,10 @@ int gdet_func_metric(int whichcoord, FTYPE *V,FTYPE *gcov, FTYPE *gdet)
 
   toreturn=gdet_func_singcheck(whichcoord, V,generalmatrixlower,gdet);
 
+  if(FORCEGDETPOSITIVE==1){
+    *gdet=fabs(*gdet);
+  }
+
 
   return(toreturn);
 

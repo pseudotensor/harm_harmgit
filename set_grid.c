@@ -783,7 +783,6 @@ static void set_grid_metrics_gcov(void)
         if(gdet_func_metric(MCOORD,V,localgcov,&(localgdet[0]))!=0){
           if(debugfail>=2) dualfprintf(fail_file,"Caught gdet_func_metric() problem in set_grid.c:set_grid_metrics_gcov() i=%d j=%d k=%d gcovtt=%21.15g gcovperttt=%21.15g\n",i,j,k,localgcov[GIND(TT,TT)],localgcovpert[TT]);   
         }
-
       }// end over location
     }// end 3D LOOP
   }// end parallel region
