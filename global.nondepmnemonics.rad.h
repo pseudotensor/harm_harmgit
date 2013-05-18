@@ -85,9 +85,9 @@
 // 1E-9 is common ok first iteration for RADFLATDISK.  More is too hard.
 // So Choose 1E-8 as good enough solution.
 #define IMPTRYCONVHIGHTAU (NUMEPSILON*5.0)  // for used implicit solver
-#define IMPTRYCONV (NUMEPSILON*100.0)  // for used implicit solver
+//#define IMPTRYCONV (NUMEPSILON*100.0)  // for used implicit solver
 //#define IMPTRYCONV (1E-20)  // for used implicit solver
-//#define IMPTRYCONV (1.e-8)
+#define IMPTRYCONV (1.e-8)
 #define IMPTRYCONV2 (1.e-8)  // for used implicit solver
 #define IMPALLOWCONV (1.e-2)
 #define IMPALLOWCONV2 (1.e-2)
@@ -100,7 +100,8 @@
 #define IMPALLOWCONV (1.e-3)  // for used implicit solver
 #endif
 
-#define IMPMAXITER (15) // for used implicit solver
+//#define IMPMAXITER (15) // for used implicit solver // For others
+#define IMPMAXITER (100) // for used implicit solver // for RADDONUT
 #define IMPMAXITER2 (100) // for used implicit solver
 
 #define IMPMINABSERROR (1E-100) // minimum absolute error (or value) below which don't treat as bad error and just avoid 4-force.  Otherwise will "fail" implicit solver even if impossible to reach smaller relative error due to absolute machine precision issues.
