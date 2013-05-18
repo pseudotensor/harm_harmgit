@@ -63,7 +63,8 @@
 #define IMPEPS (1E-4) // on small side
 #elif(REALTYPE==DOUBLETYPE)
 //#define IMPEPS (MY1EM5)
-#define IMPEPS (1E-6) // on small side
+//#define IMPEPS (1E-6) // on small side
+#define IMPEPS (1E-8) // on small side // but required for doubles to work with RADDONUT
 #elif(REALTYPE==LONGDOUBLETYPE)
 #define IMPEPS (1E-8) // on small side
 #endif
