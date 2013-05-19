@@ -150,9 +150,10 @@ FTYPE RADNT_ROUT;
 FTYPE RADNT_OMSCALE;
 FTYPE RADNT_FULLPHI;
 
+FTYPE RADDONUT_OPTICALLYTHICKTORUS;
 
-int get_full_donut(int whichvel, int whichcoord, FTYPE *pp,FTYPE *X, FTYPE *V,struct of_geom *ptrgeom);
-int donut_analytical_solution(FTYPE *pp,FTYPE *X, FTYPE *V,struct of_geom *ptrgeom);
+static int get_full_donut(int whichvel, int whichcoord, int opticallythick, FTYPE *pp,FTYPE *X, FTYPE *V,struct of_geom *ptrgeom);
+static int donut_analytical_solution(int opticallythick, FTYPE *pp,FTYPE *X, FTYPE *V,struct of_geom *ptrgeom);
 
 
 
@@ -1191,6 +1192,8 @@ int init_global(void)
     RADNT_NODONUT=0;
     RADNT_INFLOWING=0;
     RADNT_OMSCALE=1.0;
+
+    RADDONUT_OPTICALLYTHICKTORUS=1; // otherwise, pressure only from gas.
 
     trifprintf("RADNT_RHOATMMIN=%g RADNT_RHOATMMIN=%g RADNT_UINTATMMIN=%g RADNT_ERADATMMIN=%g\n",RADNT_RHOATMMIN,RADNT_RHOATMMIN,RADNT_UINTATMMIN,RADNT_ERADATMMIN);
 
@@ -3308,7 +3311,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
         pr[PRAD3]=pradffortho[PRAD3];
 
         // ADD DONUT
-        get_full_donut(*whichvel,*whichcoord,pr,X,V,ptrgeomreal);
+        get_full_donut(*whichvel,*whichcoord,RADDONUT_OPTICALLYTHICKTORUS, pr,X,V,ptrgeomreal);
       
         // donut returns fluid frame orthonormal values for radiation in pp
         pradffortho[PRAD0]=pr[PRAD0];
@@ -3406,7 +3409,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
 // analytical solution for RADDONUT donut
 // get full radiative donut solution assuming pp has atmosphere
 // input pp[PRAD0-PRAD3] are fluid frame orthonormal values
-int get_full_donut(int whichvel, int whichcoord, FTYPE *pp,FTYPE *X, FTYPE *V,struct of_geom *ptrgeom)
+int get_full_donut(int whichvel, int whichcoord, int opticallythick, FTYPE *pp,FTYPE *X, FTYPE *V,struct of_geom *ptrgeom)
 {
   int jj,kk;
   int pliter,pl;
@@ -3481,9 +3484,11 @@ int get_full_donut(int whichvel, int whichcoord, FTYPE *pp,FTYPE *X, FTYPE *V,st
 
     E=calc_LTE_EfromT(T4);
     Fx=Fy=Fz=0.;
-    // uint here overrides initial uint above
-    uint=calc_PEQ_ufromTrho(T4,rho);
-    pp[UU]=MAX(uint,ppback[UU]);
+    if(opticallythick){
+      // uint here overrides initial uint above
+      uint=calc_PEQ_ufromTrho(T4,rho);
+      pp[UU]=MAX(uint,ppback[UU]);
+    }
     pp[URAD0]=MAX(E,ppback[URAD0]);
     pp[URAD1]=Fx;
     pp[URAD2]=Fy;
@@ -3523,7 +3528,7 @@ int get_full_donut(int whichvel, int whichcoord, FTYPE *pp,FTYPE *X, FTYPE *V,st
     bl_coord(Xtemp1,Vtemp1); // only needed for Vtemp1[1] for radius in donut_analytical_solution()
     gset_X(getprim,whichcoordreal,i,j,k,NOWHERE,Xtemp1,ptrgeomt);
 
-    anret=donut_analytical_solution(pptemp,Xtemp1,Vtemp1,ptrgeomt);
+    anret=donut_analytical_solution(opticallythick, pptemp,Xtemp1,Vtemp1,ptrgeomt);
     if(anret<0) anretmin=-1;
     E1=pptemp[PRAD0]; // fluid frame E
 
@@ -3534,7 +3539,7 @@ int get_full_donut(int whichvel, int whichcoord, FTYPE *pp,FTYPE *X, FTYPE *V,st
     bl_coord(Xtemp2,Vtemp2); // only needed for Vtemp2[1] for radius in donut_analytical_solution()
     gset_X(getprim,whichcoordreal,i,j,k,NOWHERE,Xtemp2,ptrgeomt);
 
-    anret=donut_analytical_solution(pptemp,Xtemp2,Vtemp2,ptrgeomt);
+    anret=donut_analytical_solution(opticallythick, pptemp,Xtemp2,Vtemp2,ptrgeomt);
     if(anret<0) anretmin=-1;
     E2=pptemp[PRAD0]; // fluid frame E
 
@@ -3553,7 +3558,7 @@ int get_full_donut(int whichvel, int whichcoord, FTYPE *pp,FTYPE *X, FTYPE *V,st
     bl_coord(Xtemp1,Vtemp1); // only needed for Vtemp1[2] for theta in donut_analytical_solution()
     gset_X(getprim,whichcoordreal,i,j,k,NOWHERE,Xtemp1,ptrgeomt);
 
-    anret=donut_analytical_solution(pptemp,Xtemp1,Vtemp1,ptrgeomt);
+    anret=donut_analytical_solution(opticallythick, pptemp,Xtemp1,Vtemp1,ptrgeomt);
     if(anret<0) anretmin=-1;
     E1=pptemp[PRAD0]; // fluid frame E1
 
@@ -3564,7 +3569,7 @@ int get_full_donut(int whichvel, int whichcoord, FTYPE *pp,FTYPE *X, FTYPE *V,st
     bl_coord(Xtemp2,Vtemp2); // only needed for Vtemp2[2] for theta in donut_analytical_solution()
     gset_X(getprim,whichcoordreal,i,j,k,NOWHERE,Xtemp2,ptrgeomt);
 
-    anret=donut_analytical_solution(pptemp,Xtemp2,Vtemp2,ptrgeomt);
+    anret=donut_analytical_solution(opticallythick, pptemp,Xtemp2,Vtemp2,ptrgeomt);
     if(anret<0) anretmin=-1;
     E2=pptemp[PRAD0]; // fluid frame E2
 
@@ -3610,7 +3615,7 @@ int get_full_donut(int whichvel, int whichcoord, FTYPE *pp,FTYPE *X, FTYPE *V,st
 
 // analytical solution for RADDONUT donut
 // expects pp[PRAD0-PRAD3] to be fluid frame orthonormal, while pp[U1-U3] is ptrgeom whichvel whichcoord lab frame value (doesn't change U1-U3)
-int donut_analytical_solution(FTYPE *pp,FTYPE *X, FTYPE *V,struct of_geom *ptrgeomreal)
+int donut_analytical_solution(int opticallythick, FTYPE *pp,FTYPE *X, FTYPE *V,struct of_geom *ptrgeomreal)
 {
 
   FTYPE xx=V[1];
@@ -3650,11 +3655,12 @@ int donut_analytical_solution(FTYPE *pp,FTYPE *X, FTYPE *V,struct of_geom *ptrge
 
   E=calc_LTE_EfromT(T4);
   Fx=Fy=Fz=0.;
-  uint=calc_PEQ_ufromTrho(T4,rho);
-  // overwrite uint
-  pp[UU]=uint;
+  if(opticallythick){
+    uint=calc_PEQ_ufromTrho(T4,rho);
+    // overwrite uint
+    pp[UU]=uint;
+  }
   dualfprintf(fail_file,"rhodonut4=%g eps=%g uint=%g T4=%g\n",rho,eps,uint,T4);
-
 
   // fluid frame orthonormal values for radiation
   pp[PRAD0]=E;
