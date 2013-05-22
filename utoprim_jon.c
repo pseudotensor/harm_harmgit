@@ -1088,12 +1088,12 @@ static int set_guess_Wp(int showmessages, PFTYPE *lpflag, int eomtype, FTYPE *pr
     if(utsq>=0.0 && utsq==utsq && isfinite(utsq) && (Ss==Ss && isfinite(Ss) && Ss>Ss0)){
       // if utsq=nan or inf, will fail to reach here
       // if Ss=nan or inf, will fail to reach here
-      if(numattemptstofixguess>0) if(showmessages && debugfail>=2) dualfprintf(fail_file,"GOOD Initial guess #%d/%d [i=%d j=%d k=%d] for W=%21.15g Wp=%21.15g Wp/D=%21.15g gives bad utsq=%21.15g Ss=%21.15g D=%21.15g u=%21.15g p=%21.15g gamma=%21.15g Ss0=%21.15g\n",numattemptstofixguess,MAXNUMGUESSCHANGES,ptrgeom->i,ptrgeom->j,ptrgeom->k,*W_last,*Wp_last,*Wp_last/D,utsq,Ss,D,u,p,gamma,Ss0);
+      if(numattemptstofixguess>0) if(showmessages && debugfail>=3) dualfprintf(fail_file,"GOOD Initial guess #%d/%d [i=%d j=%d k=%d] for W=%21.15g Wp=%21.15g Wp/D=%21.15g gives bad utsq=%21.15g Ss=%21.15g D=%21.15g u=%21.15g p=%21.15g gamma=%21.15g Ss0=%21.15g\n",numattemptstofixguess,MAXNUMGUESSCHANGES,ptrgeom->i,ptrgeom->j,ptrgeom->k,*W_last,*Wp_last,*Wp_last/D,utsq,Ss,D,u,p,gamma,Ss0);
       break;
     }
     else{
 #if(PRODUCTION==0)
-      if(showmessages && debugfail>=2) dualfprintf(fail_file,"Initial guess #%d/%d [i=%d j=%d k=%d] for W=%21.15g Wp=%21.15g Wp/D=%21.15g gives bad utsq=%21.15g Ss=%21.15g D=%21.15g u=%21.15g p=%21.15g gamma=%21.15g Ss0=%21.15g\n",numattemptstofixguess,MAXNUMGUESSCHANGES,ptrgeom->i,ptrgeom->j,ptrgeom->k,*W_last,*Wp_last,*Wp_last/D,utsq,Ss,D,u,p,gamma,Ss0);
+      if(showmessages && debugfail>=3) dualfprintf(fail_file,"Initial guess #%d/%d [i=%d j=%d k=%d] for W=%21.15g Wp=%21.15g Wp/D=%21.15g gives bad utsq=%21.15g Ss=%21.15g D=%21.15g u=%21.15g p=%21.15g gamma=%21.15g Ss0=%21.15g\n",numattemptstofixguess,MAXNUMGUESSCHANGES,ptrgeom->i,ptrgeom->j,ptrgeom->k,*W_last,*Wp_last,*Wp_last/D,utsq,Ss,D,u,p,gamma,Ss0);
 #endif
 
 

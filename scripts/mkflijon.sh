@@ -19,10 +19,10 @@ for (( k=0 ; k < 1 ; k++ ))
 do
 # make a list file
 echo "doing $i $j $k"
-#ppm2fli -p/home/jon/research/current/bin/i/john.pal -N -g $nx'x'$ny -z $nx'x'$ny -s 0 tmp.lis im${i}p.fli
-#((ls images/im${i}p*.r8 > tmp.lis.$i ; ppm2fli -p/home/jon/research/current/bin/i/john.pal -N -g $nx'x'$ny  -s 0 tmp.lis.$i im${i}p.fli ; rm tmp.lis.$i) > output.txt.$i 2>&1 &)
-ls images/im${i}p${j}s${k}l????.r8 > tmp.lis ; ppm2fli -p/home/jon/research/current/bin/i/john.pal -N -g $nx'x'$ny  -s 0 tmp.lis im${i}p${j}s${k}l.fli ; rm tmp.lis
-ls images/im${i}c${j}s${k}l????.r8 > tmp.lis ; ppm2fli -p/home/jon/research/current/bin/i/john.pal -N -g $nx'x'$ny  -s 0 tmp.lis im${i}c${j}s${k}l.fli ; rm tmp.lis
+#ppm2fli -p/home/jon/bin/john.pal -N -g $nx'x'$ny -z $nx'x'$ny -s 0 tmp.lis im${i}p.fli
+#((ls images/im${i}p*.r8 > tmp.lis.$i ; ppm2fli -p/home/jon/bin/john.pal -N -g $nx'x'$ny  -s 0 tmp.lis.$i im${i}p.fli ; rm tmp.lis.$i) > output.txt.$i 2>&1 &)
+ls images/im${i}p${j}s${k}l????.r8 > tmp.lis ; ppm2fli -p/home/jon/bin/john.pal -N -g $nx'x'$ny  -s 0 tmp.lis im${i}p${j}s${k}l.fli ; rm tmp.lis
+ls images/im${i}c${j}s${k}l????.r8 > tmp.lis ; ppm2fli -p/home/jon/bin/john.pal -N -g $nx'x'$ny  -s 0 tmp.lis im${i}c${j}s${k}l.fli ; rm tmp.lis
 echo "done $i $j $k"
 done
 done

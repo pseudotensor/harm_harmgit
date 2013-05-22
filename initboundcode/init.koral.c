@@ -328,6 +328,8 @@ int init_global(void)
   //    cour=0.9; // works fine, but 0.8 more generally good.  Although sometimes cour=0.9 actually gives a bit smoother solution.
   cour=0.8;
 
+  //  fluxmethod=HLLFLUX; // fails to work with radiation for RADDONUT.
+
   //  FLUXB=FLUXCTTOTH;
   FLUXB=FLUXCTSTAG;
   
