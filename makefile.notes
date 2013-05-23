@@ -23,16 +23,25 @@
 # 1) setup code dir
 #    mkdir newgrmhdcode ; cd newgrmhdcode ; cp ~/grmhd/ .
 # 2a) run:
-#    sh double2longdouble.sh
-# 2b) run that script in the initboundcode directory as well
+#    sh scripts/double2longdouble.sh ; cd initboundcode ; sh ../scripts/double2longdouble.sh ; cd ..
 # 3) copy back the tau_neededbyharm.c file:
 #    cp <prelongdoubledirectory>/tau_neededbyharm.c .
+# e.g.
+#    cp ../tau_neededbyharm.c .
 # 4) untgz the ldouble.tgz file:
 #    tar xvzf ldouble.tgz
-# 5a) in nantst.c replace "int isnanl(), isfinitel(), signbitl();" with "extern int isnanl(), isfinitel(), signbitl();" to avoid compiler error about multiple definitions
-# 5b) Do same for testvect.c :  "int isfinitel (long double);" -> "extern int isfinitel (long double);"
-# 5c) lcalc.c : extern int isnanl(), isfinitel(), signbitl();
-# 5d) wrap the isnanl.c:isfinitel(x) function in #if(USINGICC==0) #endif since already in MKL library
+
+# 5) to avoid compiler error about multiple definitions, do:
+
+cp nantst.c nantst.c.backup ; sed 's/int isnanl(), isfinitel(), signbitl();/extern int isnanl(), isfinitel(), signbitl();/g' nantst.c.backup > nantst.c
+cp testvect.c testvect.c.backup ; sed 's/int isfinitel (long double);/extern int isfinitel (long double);/g' testvect.c.backup > testvect.c
+cp lcalc.c lcalc.c.backup ; sed 's/int isnanl(), isfinitel(), signbitl();/extern int isnanl(), isfinitel(), signbitl();/g' lcalc.c.backup > lcalc.c
+
+# since already in MKL library:
+cp isnanl.c isnanl.c.backup ; sed 's/int isfinitel(x)/#if(USINGICC==0)\nint isfinitel(x)/g' isnanl.c.backup > isnanl.c.backup2
+echo  "#endif" >  isnanl.end.c
+cat  isnanl.c.backup2 isnanl.end.c > isnanl.c
+
 # 6) compile code:
 # make superclean ;make prep ; make prepgrmhdldouble ; make -j 16 grmhdldouble
 
