@@ -1209,9 +1209,12 @@ int init_global(void)
     RADNT_RHODONUT=1E-5;
     RADNT_RHOATMMIN=RADNT_RHODONUT*1E-4;
     RADNT_KKK=1.e-4 * (1.0/pow(RADNT_RHODONUT,gam-1.0));
-    RADNT_TGASATMMIN = 1.e11/TEMPBAR;
+    //    RADNT_TGASATMMIN = 1.e11/TEMPBAR;
+    RADNT_TGASATMMIN = 1.e9/TEMPBAR;
     RADNT_UINTATMMIN= (calc_PEQ_ufromTrho(RADNT_TGASATMMIN,RADNT_RHOATMMIN));
-    RADNT_TRADATMMIN = 1.e9/TEMPBAR;
+    // need external radiation energy density to be lower than interior of torus, else drives photons into torus from overpressured atmosphere and is more difficult to evolve.
+    //    RADNT_TRADATMMIN = 1.e9/TEMPBAR;
+    RADNT_TRADATMMIN = 1.e8/TEMPBAR;
     RADNT_ERADATMMIN= (calc_LTE_EfromT(RADNT_TRADATMMIN));
     RADNT_NODONUT=0;
     RADNT_INFLOWING=0;
@@ -3315,15 +3318,22 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
     // atmtype=1 : pr[URAD0]=ERADATMMIN and ncon={0,-1,0,0} with set_ncon_velocity(whichvel,1000.0,ncon,ptrgeomreal,uconreal);
     // atmtype=2 : pr[URAD0]=ERADATMMIN*pow(rout/r,4) pr[URAD1-URAD3]  with ncon={0,-gammamax*(pow(r/rout,1.)),0,0} again using set_non_velocity() with gammamax=10.
 
-
+    int returndonut;
+    // set as in fluid frame
+    FTYPE pradffortho[NPR],pradfforthoatm[NPR];
     if(1){
 
-      // set as in fluid frame
-      FTYPE pradffortho[NPR];
-      pradffortho[PRAD0]=RADNT_ERADATMMIN;
-      pradffortho[PRAD1]=0;
-      pradffortho[PRAD2]=0;
-      pradffortho[PRAD3]=0;
+      // choose atmosphere level of radiation
+      pradfforthoatm[PRAD0]=RADNT_ERADATMMIN*pow(r/RADNT_ROUT,-2.5);
+      pradfforthoatm[PRAD1]=0;
+      pradfforthoatm[PRAD2]=0;
+      pradfforthoatm[PRAD3]=0;
+
+      // copy as backup or atmosphere
+      pradffortho[PRAD0]=pradfforthoatm[PRAD0];
+      pradffortho[PRAD1]=pradfforthoatm[PRAD1];
+      pradffortho[PRAD2]=pradfforthoatm[PRAD2];
+      pradffortho[PRAD3]=pradfforthoatm[PRAD3];
 
 
       // So donut already has ambient in whichvel whichcoord, now get donut
@@ -3335,8 +3345,8 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
         pr[PRAD3]=pradffortho[PRAD3];
 
         // ADD DONUT
-        get_full_donut(*whichvel,*whichcoord,RADDONUT_OPTICALLYTHICKTORUS, pr,X,V,ptrgeomreal);
-      
+        returndonut=get_full_donut(*whichvel,*whichcoord,RADDONUT_OPTICALLYTHICKTORUS, pr,X,V,ptrgeomreal);
+     
         // donut returns fluid frame orthonormal values for radiation in pp
         pradffortho[PRAD0]=pr[PRAD0];
         pradffortho[PRAD1]=pr[PRAD1];
@@ -3350,7 +3360,12 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
       // Transform these fluid frame E,F^i to lab frame coordinate basis primitives
       prad_fforlab(whichvel, whichcoord, FF2LAB, i,j,k,CENT,ptrgeomreal, pradffortho, pr, pr);
       
-      //      dualfprintf(fail_file,"CHECKPOST: ijk=%d %d %d : %g %g %g %g\n",i,j,k,pr[PRAD0],pr[PRAD1],pr[PRAD2],pr[PRAD3]);
+      if(debugfail>=2 && returndonut==0 && pradfforthoatm[PRAD0]>pradffortho[PRAD0]){
+        dualfprintf(fail_file,"WARNING: Torus radiation pressure below atmosphere.\n");
+        dualfprintf(fail_file,"CHECKPOST: ijk=%d %d %d : %g %g %g %g\n",i,j,k,pr[PRAD0],pr[PRAD1],pr[PRAD2],pr[PRAD3]);
+      }
+
+
 #if(0)
       // report zamo
       FTYPE prreport[NPR];
@@ -3464,7 +3479,10 @@ int get_full_donut(int whichvel, int whichcoord, int opticallythick, FTYPE *pp,F
 
   
   // see if adding donut (otherwise nothing to do and just return)
+  // below like koral and doesn't define torus existence, just its being unboudn or not.
   if(r>=3.0 && RADNT_NODONUT==0 && RADNT_INFLOWING==0 && ut>=-1.0 && podpierd>=0.0){
+  // allow torus to be unbound
+  //  if(r>=3.0 && RADNT_NODONUT==0 && RADNT_INFLOWING==0 && podpierd>=0.0){
     
 
 
@@ -3491,8 +3509,18 @@ int get_full_donut(int whichvel, int whichcoord, int opticallythick, FTYPE *pp,F
     coordtrans(BLCOORDS,whichcoord,i,j,k,CENT,ucon);
     ucon2pr(whichvel,ucon,ptrgeom,pp); // now can mix or overwrite velocity from original pp
 
-    pp[RHO]=MAX(rho,ppback[RHO]); 
-    pp[UU]=MAX(uint,ppback[UU]);
+    int useback;
+    if(rho<ppback[RHO]) useback=1;
+    else useback=0;
+
+    if(useback){
+      pp[RHO]=ppback[RHO];
+      pp[UU]=ppback[UU];
+    }
+    else{
+      pp[RHO]=rho;
+      pp[UU]=uint;
+    }
 
 
 
@@ -3511,13 +3539,15 @@ int get_full_donut(int whichvel, int whichcoord, int opticallythick, FTYPE *pp,F
     if(opticallythick){
       // uint here overrides initial uint above
       uint=calc_PEQ_ufromTrho(T4,rho);
-      pp[UU]=MAX(uint,ppback[UU]);
+      if(useback) pp[UU]=ppback[UU];
+      else pp[UU]=uint;
     }
-    pp[URAD0]=MAX(E,ppback[URAD0]);
+    if(useback) pp[URAD0]=ppback[URAD0];
+    else pp[URAD0]=E;
     pp[URAD1]=Fx;
     pp[URAD2]=Fy;
     pp[URAD3]=Fz;
-    dualfprintf(fail_file,"rhodonut2=%g eps=%g uint=%g pp[UU]=%g T4=%g\n",rho,eps,uint,pp[UU],T4);
+    dualfprintf(fail_file,"rhodonut2=%g eps=%g uint=%g pp[UU]=%g T4=%g : E=%g ppback=%g\n",rho,eps,uint,pp[UU],T4,E,ppback[URAD0]);
 
 
 
@@ -3630,9 +3660,11 @@ int get_full_donut(int whichvel, int whichcoord, int opticallythick, FTYPE *pp,F
     pp[PRAD3]=Fz;
 
 
+    return(0);
   }// end if adding donut
+  else return(-1);
 
-  return(0);
+
 }
 
 
@@ -3651,7 +3683,10 @@ int donut_analytical_solution(int opticallythick, FTYPE *pp,FTYPE *X, FTYPE *V,s
   ut/=RADNT_UTPOT; //rescales rin
   FTYPE Vphi,Vr;
   FTYPE D,W,eps,uT,uphi,uPhi,rho,ucon[NDIM],uint,E,Fx,Fy,Fz;
+  // below assumes no torus in unbound region
   if(ut<-1 || podpierd<0. || xx<3. || RADNT_NODONUT || RADNT_INFLOWING)
+  // allow torus to be unbound with radiation -- not a problem
+  //  if(podpierd<0. || xx<3. || RADNT_NODONUT || RADNT_INFLOWING)
     return -1; //outside donut
 
   FTYPE h=-1./ut;
