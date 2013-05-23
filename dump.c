@@ -369,6 +369,7 @@ int dump_header_general(int whichdump, int whichdumpversion, int numcolumns, lon
     realstartx[3]=X[3];
   }
   else realstartx[3]=startx[3];
+
   
   // dx is the same (constant)
 

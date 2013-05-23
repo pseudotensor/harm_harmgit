@@ -150,7 +150,7 @@ FTYPE RADNT_ROUT;
 FTYPE RADNT_OMSCALE;
 FTYPE RADNT_FULLPHI;
 
-FTYPE RADDONUT_OPTICALLYTHICKTORUS;
+int RADDONUT_OPTICALLYTHICKTORUS;
 
 static int get_full_donut(int whichvel, int whichcoord, int opticallythick, FTYPE *pp,FTYPE *X, FTYPE *V,struct of_geom *ptrgeom);
 static int donut_analytical_solution(int opticallythick, FTYPE *pp,FTYPE *X, FTYPE *V,struct of_geom *ptrgeom);
@@ -269,6 +269,26 @@ int post_init_specific_init(void)
   trifprintf("ARAD_CODE_DEF=%g\n",ARAD_CODE_DEF);
 
   trifprintf("MASSCM=%g 1 koral unit = %g harm units (g/cm^3)\n",MASSCM,KORAL2HARMRHO(1.0));
+
+  if(myid==0){
+    // 16 things
+#define DIMVARLIST GGG,CCCTRUE,MSUNCM,MPERSUN,LBAR,TBAR,VBAR,RHOBAR,MBAR,ENBAR,UBAR,TEMPBAR,ARAD_CODE_DEF,OPACITYBAR,MASSCM,KORAL2HARMRHO(1.0)
+#if(REALTYPE==FLOATYPE || REALTYPE==DOUBLETYPE)
+#define DIMTYPELIST "%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n"
+#elif
+#define DIMTYPELIST "%26.20Lg %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g\n"
+#endif
+
+    FILE *dimfile;
+    dimfile=fopen("dimensions.txt","wt");
+    if(dimfile!=NULL){
+      fprintf(dimfile,DIMTYPELIST,DIMVARLIST);
+    }
+    else{
+      dualfprintf(fail_file,"Could not open dimensions.txt\n");
+      myexit(394582526);
+    }
+  }
 
   return(0);
 }
