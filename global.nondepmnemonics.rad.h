@@ -85,6 +85,7 @@
 #elif(1)
 // 1E-9 is common ok first iteration for RADFLATDISK.  More is too hard.
 // So Choose 1E-8 as good enough solution.
+// KORALNOTE: For current 4D Newton-in-Newton method, 1E-8 leaves log of internal energy as asymmetry with RADDONUT and more diffused edge for one side, while should be sharp on both sides.  <=1E-10 is required to avoid that, but too expensive.  Marginal errors like using 1E-9 lead to hot points due to sharper edge.
 #define IMPTRYCONVHIGHTAU (NUMEPSILON*5.0)  // for used implicit solver
 //#define IMPTRYCONV (NUMEPSILON*100.0)  // for used implicit solver
 //#define IMPTRYCONV (1E-20)  // for used implicit solver
