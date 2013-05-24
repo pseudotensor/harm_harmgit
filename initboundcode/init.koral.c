@@ -285,6 +285,7 @@ int post_init_specific_init(void)
     dimfile=fopen("dimensions.txt","wt");
     if(dimfile!=NULL){
       fprintf(dimfile,DIMTYPELIST,DIMVARLIST);
+      fclose(dimfile);
     }
     else{
       dualfprintf(fail_file,"Could not open dimensions.txt\n");
@@ -1757,7 +1758,6 @@ int init_defcoord(void)
     // KORALTODO: Why doesn't koral just use same log coords as used for RADBONDI?
     // defcoord = UNIFORMCOORDS;
     //    defcoord = LOGRUNITH; // Uses R0, Rin, Rout and Rin_array,Rout_array for 2,3 directions
-    R0=0.0;
     Rin=RADNT_MINX;
     Rout=RADNT_MAXX;
 
@@ -1770,8 +1770,11 @@ int init_defcoord(void)
     Rhor=rhor_calc(0);
     //  hslope = 0.3;
     hslope = 1.04*pow(h_over_r,2.0/3.0);
-    //    setRin_withchecks(&Rin);
-    Rin=1.1;
+    //    R0=0.0;
+    R0=0.2;
+    setRin_withchecks(&Rin);
+    //Rin=1.1;
+    
 
   }
 
