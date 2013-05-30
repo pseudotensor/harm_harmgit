@@ -271,7 +271,7 @@ int post_init_specific_init(void)
   trifprintf("MASSCM=%g 1 koral unit = %g harm units (g/cm^3)\n",MASSCM,KORAL2HARMRHO(1.0));
 
   if(myid==0){
-    // 16 things
+    // 21 things
 #define DIMVARLIST GGG,CCCTRUE,MSUNCM,MPERSUN,LBAR,TBAR,VBAR,RHOBAR,MBAR,ENBAR,UBAR,TEMPBAR,ARAD_CODE_DEF,XFACT,ZATOM,AATOM,MUE,MUI,OPACITYBAR,MASSCM,KORAL2HARMRHO(1.0)
 #if(REALTYPE==FLOATYPE || REALTYPE==DOUBLETYPE)
 #define DIMTYPELIST "%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n"
@@ -304,6 +304,8 @@ int init_consts(void)
 
   // units can be used for user to read in data, but otherwise for rest of code all that matters is Mfactor and Jfactor
   Mfactor=Jfactor=1.0;
+
+  MBH=1.0;
 
   return(0);
 

@@ -277,6 +277,7 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
   FTYPE f1[NDIM],f1norm[NDIM],f3report[NDIM];
   FTYPE x[NDIM];
   FTYPE realdt;
+  FTYPE uubackup[NDIM]={0},pinusebackup[NPR]={0};
   FTYPE radsource[NPR], deltas[NDIM]; 
   int pl;
   FTYPE bestuu[NPR],lowestfreport[NDIM];
@@ -397,6 +398,7 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
   ////////////////////////////////
   // START IMPLICIT ITERATIONS
   ////////////////////////////////
+  int gotbackup=0;
   int iter=0;
   int failreturn;
   int f1iter;
@@ -561,7 +563,15 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
     //test pre-convergence using initial |dU/U|
     // KORALTODO: This isn't a completely general error check since force might be large for fluid that needs itself to have more accuracy, but if using ~NUMEPSILON, won't resolve 4-force of radiation on fluid to better than that.
     FTYPE LOCALPREIMPCONV=(10.0*NUMEPSILON); // more strict than later tolerance
-    if(f_error_check(showmessages, showmessagesheavy, iter, LOCALPREIMPCONV,realdt,f1,f1norm,f3report,Uiin, uu0,uu,ptrgeom)) break;
+    if(f_error_check(showmessages, showmessagesheavy, iter, LOCALPREIMPCONV,realdt,f1,f1norm,f3report,Uiin, uu0,uu,ptrgeom)){
+      // avoid arbitrary sucking on thermal energy densities
+      if(pinuse[RHO]>=0.0 && pinuse[UU]>=0.0 && pinuse[PRAD0]>=0.0){
+        gotbackup=1;
+        DLOOPA(jj) uubackup[jj]=uu[jj];
+        PLOOP(pliter,pl) pinusebackup[pl]=pinuse[pl];
+      }
+      break;
+    }
 
 
     int notfinite= !isfinitel(uu[0])|| !isfinitel(uu[1])|| !isfinitel(uu[2])|| !isfinitel(uu[3]) || !isfinitel(uup[0])|| !isfinitel(uup[1])|| !isfinitel(uup[2])|| !isfinitel(uup[3]);
@@ -674,7 +684,15 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
 
     // check convergence
     if(checkconv){
-      if(convreturn) break;
+      if(convreturn){
+        // avoid arbitrary sucking on thermal energy densities
+        if(pinuse[RHO]>=0.0 && pinuse[UU]>=0.0 && pinuse[PRAD0]>=0.0){
+          gotbackup=1;
+          DLOOPA(jj) uubackup[jj]=uu[jj];
+          PLOOP(pliter,pl) pinusebackup[pl]=pinuse[pl];
+        }
+        break;
+      }
       else{
         // store error and solution in case eventually lead to max iterations and actually get worse error
         FTYPE errorabsbest=0.0; DLOOPA(jj) errorabsbest += fabs(lowestfreport[jj]);
@@ -714,6 +732,12 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
       if(convreturn){
         if(showmessages && debugfail>=2) dualfprintf(fail_file,"iter>IMPMAXITER=%d : iter exceeded in solve_implicit_lab().  But f3 was allowed error. checkconv=%d (if checkconv=0, could be issue!) : %g %g %g %g : %g %g %g %g : errorabs=%g : %g %g %g\n",IMPMAXITER,checkconv,f3report[0],f3report[1],f3report[2],f3report[3],lowestfreport[0],lowestfreport[1],lowestfreport[2],lowestfreport[3],errorabs,fracdtuu0,fracuup,fracdtG);
         // NOTE: If checkconv=0, then wasn't ready to check convergence and smallness of f3 might only mean smallness of fracuup.  So look for "checkconv=0" cases in fail output.
+        // avoid arbitrary sucking on thermal energy densities
+        if(pinuse[RHO]>=0.0 && pinuse[UU]>=0.0 && pinuse[PRAD0]>=0.0){
+          gotbackup=1;
+          DLOOPA(jj) uubackup[jj]=uu[jj];
+          PLOOP(pliter,pl) pinusebackup[pl]=pinuse[pl];
+        }
         break;
       }
       else{
@@ -732,11 +756,48 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
       }
     }//end if maximum iterations
 
+
+    // avoid arbitrary sucking on thermal energy densities
+    if(pinuse[RHO]>=0.0 && pinuse[UU]>=0.0 && pinuse[PRAD0]>=0.0){
+      gotbackup=1;
+      DLOOPA(jj) uubackup[jj]=uu[jj];
+      PLOOP(pliter,pl) pinusebackup[pl]=pinuse[pl];
+    }
+
   }// end do
   while(1);
 
 
-  
+
+  if(gotbackup && !(pinuse[RHO]>=0.0 && pinuse[UU]>=0.0 && pinuse[PRAD0]>=0.0)){
+    // then might be sucking into radiation or into thermal energy density nothingness, so see if backup is good enough error
+    DLOOPA(jj) uu[jj]=uubackup[jj];
+    PLOOP(pliter,pl) pinuse[pl]=pinusebackup[pl];
+    dualfprintf(fail_file,"Thought was good error, but gotbackup=%d and pinuse=%g %g %g : nstep=%ld steppart=%d ijk=%d %d %d\n",gotbackup,pinuse[RHO],pinuse[UU],pinuse[PRAD0],nstep,steppart,ptrgeom->i,ptrgeom->j,ptrgeom->k);
+  }
+
+
+  // sanity check on error, and final inversion
+  // can't just check (uup-uu)/(|uu|-|uup|) because uup and uu  might diverge, leading to huge G, while uup-uu might be similar enough.
+  // In that case, also using f1 and f1norm not good enough.
+  // Have to compare with static norm
+  int whichcall=1;
+  failreturn=f_implicit_lab(failreturnallowableuse, whichcall,showmessages, allowlocalfailurefixandnoreport, pinuse, uu0, uu, fracdtG*realdt, ptrgeom, f1, f1norm); // modifies uu and pinuse
+  // overwrite f1norm with static choice to avoid run-away G
+  DLOOPA(jj) f1norm[jj]=MAX(pin[PRAD0],pin[UU]);
+  int convreturn=f_error_check(showmessages, showmessagesheavy, iter, IMPALLOWCONV,realdt,f1,f1norm,f3report,Uiin,uup,uu,ptrgeom);
+  errorabs=0.0;     DLOOPA(jj) errorabs     += fabs(f3report[jj]);
+  if(convreturn==0){
+    if(debugfail>=2){
+      dualfprintf(fail_file,"Thought was good error (gotbackup=%d : %g %g %g), but recheck showed otherwise: nstep=%ld steppart=%d ijk=%d %d %d\n",gotbackup,pinuse[RHO],pinuse[UU],pinuse[PRAD0],nstep,steppart,ptrgeom->i,ptrgeom->j,ptrgeom->k);
+      DLOOPA(jj) dualfprintf(fail_file,"Issue with jj=%d %g %g %g : %g %g\n",jj,f1[jj],f1norm[jj],f3report[jj],uup[jj],uu[jj]);
+      failnum++;
+      mathematica_report_check(4, failnum, gotfirstnofail, realdt, ptrgeom, pinuse,pin,uu0,uu,Uiin,Ufin, CUf, q, dUother);
+    }
+    return(1);
+  }
+
+
 
   // diagnose
   numofiter+=iter;
@@ -4301,6 +4362,7 @@ static int get_m1closure_urfconrel_old(int showmessages, int allowlocalfailurefi
 {
   FTYPE Erf=*Erfreturn; // get initial Erf
   FTYPE gammamax=GAMMAMAXRAD;
+  FTYPE gammamaxfail=GAMMAMAXRADFAIL;
   int jj,kk;
 
 
@@ -4480,6 +4542,7 @@ static int get_m1closure_urfconrel(int showmessages, int allowlocalfailurefixand
 {
   FTYPE Erf=*Erfreturn; // get initial Erf
   FTYPE gammamax=GAMMAMAXRAD;
+  FTYPE gammamaxfail=GAMMAMAXRADFAIL;
   int jj,kk;
 
 
@@ -4715,6 +4778,7 @@ static int get_m1closure_urfconrel_olek(int showmessages, int allowlocalfailuref
 {
   FTYPE Erf=*Erfreturn; // get initial Erf
   FTYPE gammamax=GAMMAMAXRAD;
+  FTYPE gammamaxfail=GAMMAMAXRADFAIL;
   int jj,kk;
 
 
@@ -4882,6 +4946,7 @@ static int get_m1closure_gammarel2_cold_old(int showmessages, struct of_geom *pt
 
   // choose gamma
   if(gammarel2return==NULL){
+    FTYPE gammamaxfail=GAMMAMAXRADFAIL;
     FTYPE gammamax=GAMMAMAXRAD;
     gammarel2=gammamax*gammamax;
   }
@@ -5094,6 +5159,7 @@ static int get_m1closure_gammarel2_cold(int showmessages, struct of_geom *ptrgeo
   // choose gamma
   if(gammarel2return==NULL){
     FTYPE gammamax=GAMMAMAXRAD;
+    FTYPE gammamaxfail=GAMMAMAXRADFAIL;
     gammarel2=gammamax*gammamax;
   }
   else gammarel2=*gammarel2return; // feed in desired gammarel2

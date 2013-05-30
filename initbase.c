@@ -1326,7 +1326,8 @@ int init_defglobal(void)
     GAMMAMAX=2000.0;
   }
 
-  GAMMAMAXRAD=10000.0; // maximum radiation frame lorentz factor
+  GAMMAMAXRAD=1000.0; // maximum radiation frame lorentz factor
+  GAMMAMAXRADFAIL=10000.0; // maximum radiation frame lorentz factor
   ERADLIMIT=UUMINLIMIT;
 
 
