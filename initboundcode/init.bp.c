@@ -859,7 +859,7 @@ FTYPE setblandfordfield(FTYPE r, FTYPE th)
   myz=myr*cos(th);
   myR=myr*sin(th);
   myvert = (th>M_PI*0.5) ? (myr*sin(th)) : (myr*sin(-th));
-
+ 
   thother=M_PI-th;
   gparalow=setgpara(myr,th,thpower);
   gparahigh=setgpara(myr,thother,thpower);
