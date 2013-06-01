@@ -89,8 +89,13 @@
 #define IMPTRYCONVHIGHTAU (NUMEPSILON*5.0)  // for used implicit solver
 //#define IMPTRYCONV (NUMEPSILON*100.0)  // for used implicit solver
 //#define IMPTRYCONV (1E-20)  // for used implicit solver
-#define IMPTRYCONV (1.e-8)
-#define IMPTRYCONV2 (1.e-8)  // for used implicit solver
+
+//#define IMPTRYCONV (1.e-8)
+//#define IMPTRYCONV2 (1.e-8)  // for used implicit solver
+// use below is necessary for RADDONUT to be reasonablely indifferent to tolerance.  Is expensive, but later can improve implicit method to avoid that issue.
+#define IMPTRYCONV (1.e-9)
+#define IMPTRYCONV2 (1.e-9)  // for used implicit solver
+
 #define IMPALLOWCONV (1.e-2)
 #define IMPALLOWCONV2 (1.e-2)
 // Chose 1E-4 based upon histogram for implicit solver in RADDONUT problem with field.
@@ -151,7 +156,8 @@
 
 // whether to fixup inversion failures using harm fixups
 // can lead to issues because diffuses, so across sharp boundary radiation can be given quite "wrong" values that don't match what solution "wants" 
-#define DORADFIXUPS 0 // KORALTODO SUPERGODMARK: Turn this on and rest all tests and see if makes worse or better.  Makes things worse at failure boundary.  Leads to very bad results for (e.g.) RADDONUT.
+#define DORADFIXUPS 1 // for RADDONUT ok, since no sharp edges.
+// KORALTODO SUPERGODMARK: Turn this on and rest all tests and see if makes worse or better.  Makes things worse at failure boundary.  Leads to very bad results for (e.g.) RADDONUT.
 
 #define TAUFAILLIMIT (2.0/3.0) // at what \tau below which to assume "failure1" in u2p_rad() means should be moving at gammamax rather than not moving.
 

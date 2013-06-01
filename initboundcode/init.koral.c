@@ -363,7 +363,7 @@ int init_global(void)
   rescaletype=4;
   BSQORHOLIMIT=1E2; // was 1E2 but latest BC test had 1E3 // CHANGINGMARK
   BSQOULIMIT=1E5; // was 1E3 but latest BC test had 1E4
-  UORHOLIMIT=1E10; // has to be quite high, else hit floor in high optical depth cases and run-away injection of u and then rho.
+  UORHOLIMIT=1E13; // has to be quite high, else hit floor in high optical depth cases and run-away injection of u and then rho.
   RHOMIN = 1E-4;
   UUMIN = 1E-6;
   //OSMARK: where is DTr1 defined? what is DTfake?
@@ -1200,6 +1200,10 @@ int init_global(void)
 
   if(WHICHPROBLEM==RADNT || WHICHPROBLEM==RADFLATDISK || WHICHPROBLEM==RADDONUT || WHICHPROBLEM==RADCYLBEAM || WHICHPROBLEM==RADCYLBEAMCART){
 
+    // NOTENOTENOTE: Also do following before running with RADDONUT:
+    // coord.c: rbr=5E2 -> 1E2
+    // OR use Sasha or Jon coordinate setup for all parameters.
+
 
     gam=gamideal=4.0/3.0;
 
@@ -1250,7 +1254,10 @@ int init_global(void)
 
     cooling=KORAL;
     // ARAD_CODE=ARAD_CODE_DEF*1E5; // tuned so radiation energy flux puts in something much higher than ambient, while initial ambient radiation energy density lower than ambient gas internal energy.
-    GAMMAMAXRAD=1000.0; // Koral limits for this problem.
+    //    GAMMAMAXRAD=1000.0; // Koral limits for this problem.
+    GAMMAMAXRAD=50.0L; // Koral limits for this problem.
+    GAMMAMAXRADFAIL=50.0L;
+    GAMMAMAX=15.0L; // MHD
 
     if(WHICHPROBLEM==RADCYLBEAM){
       //      BCtype[X1DN]=ASYMM;
@@ -1301,7 +1308,8 @@ int init_global(void)
 
     DTr = 100; //number of time steps for restart dumps
     // tf = 100*DTdumpgen[0]; // 100 dumps(?)
-    tf = 2000*DTdumpgen[0]; // koral in default setup does 1000 dumps
+    //    tf = 2000*DTdumpgen[0]; // koral in default setup does 1000 dumps
+    tf = 1E4;
 
     //DODIAGEVERYSUBSTEP = 1;
 
@@ -1750,7 +1758,8 @@ int init_defcoord(void)
     if(1){
       RADNT_MINX=1.7; // allows in KSCOORDS
       //      RADNT_MAXX=50.0;
-      RADNT_MAXX=60.0;
+      //      RADNT_MAXX=60.0;
+      RADNT_MAXX=400.0;
     }
     else{
       RADNT_MINX=1.8*Rhor;
@@ -1769,13 +1778,15 @@ int init_defcoord(void)
     Rout_array[3]=1.;
 
     defcoord=JET6COORDS;
+    //defcoord=LOGRUNITH;
     Rhor=rhor_calc(0);
     //  hslope = 0.3;
     hslope = 1.04*pow(h_over_r,2.0/3.0);
     //    R0=0.0;
     R0=0.2;
-    setRin_withchecks(&Rin);
+    //    setRin_withchecks(&Rin);
     //Rin=1.1;
+    Rin=1.05;
     
 
   }

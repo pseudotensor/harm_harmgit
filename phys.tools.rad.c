@@ -773,7 +773,7 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
     // then might be sucking into radiation or into thermal energy density nothingness, so see if backup is good enough error
     DLOOPA(jj) uu[jj]=uubackup[jj];
     PLOOP(pliter,pl) pinuse[pl]=pinusebackup[pl];
-    dualfprintf(fail_file,"Thought was good error, but gotbackup=%d and pinuse=%g %g %g : nstep=%ld steppart=%d ijk=%d %d %d\n",gotbackup,pinuse[RHO],pinuse[UU],pinuse[PRAD0],nstep,steppart,ptrgeom->i,ptrgeom->j,ptrgeom->k);
+    if(debugfail>=2) dualfprintf(fail_file,"Thought was good error, but gotbackup=%d and pinuse=%g %g %g : nstep=%ld steppart=%d ijk=%d %d %d\n",gotbackup,pinuse[RHO],pinuse[UU],pinuse[PRAD0],nstep,steppart,ptrgeom->i,ptrgeom->j,ptrgeom->k);
   }
 
 

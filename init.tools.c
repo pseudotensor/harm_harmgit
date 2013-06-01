@@ -17,7 +17,7 @@ int setRin_withchecks(FTYPE *rin)
   //  (*rin) = 0.98 * Rhor;
   
 
-  trifprintf("R0=%21.15g Rhor=%21.15g Rin=%21.15g Rout=%21.15g ihor=%d\n",R0,Rhor,(*rin),Rout,setihor());
+  trifprintf("R0=%21.15g Rhor=%21.15g Rin=%21.15g Rout=%21.15g ihor=%d MBH=%g\n",R0,Rhor,(*rin),Rout,setihor(),MBH);
 
   if((*rin)<R0){
     dualfprintf(fail_file,"Wrong Rin calculation\n");
@@ -29,11 +29,11 @@ int setRin_withchecks(FTYPE *rin)
   }
   rminus=rhor_calc(1);
   if((*rin)<rminus){
-    dualfprintf(fail_file,"Rin<r_- : Poor Rin calculation\n");
+    dualfprintf(fail_file,"Rin<r_- : Poor Rin calculation: %g %g\n",*rin,rminus);
     myexit(34968348);
   }
   if((*rin)>Rhor){
-    dualfprintf(fail_file,"Rin>r_+ : Poor Rin calculation\n");
+    dualfprintf(fail_file,"Rin>r_+ : Poor Rin calculation: %g %g\n",*rin,Rhor);
     myexit(34968349);
   }
 
