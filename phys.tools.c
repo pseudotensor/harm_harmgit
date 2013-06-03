@@ -2385,6 +2385,16 @@ FTYPE taper_func(FTYPE R,FTYPE rin)
 
 }
 
+FTYPE taper_func_exp(FTYPE R,FTYPE rin)  // MAVARA added June 3 2013
+{
+
+  if(R <= rin)
+    return(0.) ;
+  else
+    return(1. - exp(rin - R)) ;
+
+}
+
 
 
 

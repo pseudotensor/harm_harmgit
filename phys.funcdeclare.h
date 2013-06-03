@@ -161,6 +161,7 @@ extern int source(FTYPE *pa, struct of_geom *geom, struct of_state *q, FTYPE *Ui
 		  FTYPE (*Uacomp)[NPR], FTYPE *Ua);
 
 extern FTYPE taper_func(FTYPE R,FTYPE rin) ;
+extern FTYPE taper_func_exp(FTYPE R,FTYPE rin) ; //MAVARA
 
 extern FTYPE lc4(int updown, FTYPE detg, int mu,int nu,int kappa,int lambda);
 extern void faraday_calc(int which, FTYPE *b, FTYPE *u, struct of_geom *geom, FTYPE (*faraday)[NDIM]);

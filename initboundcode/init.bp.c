@@ -40,6 +40,7 @@ static FTYPE rhodisk;
 
 
 static FTYPE nz_func(FTYPE R) ;   // MARKNOTE torus calculation
+//static FTYPE taper_func_exp(FTYPE R,FTYPE rin) ;
 
 FTYPE normglobal;
 int inittypeglobal; // for bounds to communicate detail of what doing
@@ -187,7 +188,7 @@ int init_grid(void)
 {
   
   // metric stuff first
-  a = 0.9375 ;
+  a = 0.5 ;
   
 
 #if(WHICHPROBLEM==NORMALTORUS || WHICHPROBLEM==KEPDISK)
@@ -374,7 +375,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 #elif(WHICHPROBLEM==THINBP)
   //rin = (1. + h_over_r)*Risco;
   rin = Risco;
-  beta = 1.e2 ;
+  beta = 5.e1 ;
   randfact = 4.e-2;
 #elif(WHICHPROBLEM==THICKDISK)
   //  beta = 1.e2 ;
@@ -725,7 +726,7 @@ int init_dsandvels_bpthin(int *whichvel, int*whichcoord, int i, int j, int k, FT
   FTYPE R,H,nz,z,S,cs ;
   SFTYPE rh;
   int pl,pliter;
-
+  //FTYPE dxdxp[NDIM][NDIM];
 
 
 
@@ -735,21 +736,22 @@ int init_dsandvels_bpthin(int *whichvel, int*whichcoord, int i, int j, int k, FT
   th=V[2];
   ph=V[3];
 
-  /*
-  if(j == totalsize[2]/ 2){
+
+  /* if(j == totalsize[2]/ 2){
+
     FTYPE dr, dth, dph, dR, dTH, dPH;
     FTYPE dxdxp[NDIM][NDIM];
     dxdxprim_ijk(i, j, k, CENT, dxdxp);
-    dr=dx[1]*dxdp[1][1]; // delta(r) = dx[1]<this is width in cartesian grid> * <scaling to physical boyer-lindquist>dxdp[][]
-    dth=dx[2]*dxdp[2][2];                    // just chain rule:  dx' = dv/dx
-    dph=dx[3]*dxdp[3][3];
+    dr=dx[1]*dxdxp[1][1]; // delta(r) = dx[1]<this is width in cartesian grid> * <scaling to physical boyer-lindquist>dxdp[][]
+    dth=dx[2]*dxdxp[2][2];                    // just chain rule:  dx' = dv/dx
+    dph=dx[3]*dxdxp[3][3];
 
     dR=dr;
     dTH=dth*r;
     dPH=dph*sin(th)*r;
 
-    triprintf("At r = %g  Ratios: %g (dR) %g %g",r,dR, dTH/dR, dPH/dR);
-  }
+    trifprintf("At r = %g  Ratios: %g (dR) %g %g",r,dR, dTH/dR, dPH/dR);
+    }
   */
 
   /* region outside disk */
@@ -1419,6 +1421,4 @@ int coolfunc_user(FTYPE h_over_r, FTYPE *pr, struct of_geom *geom, struct of_sta
 	//			trifprintf("ducomps are %g %g %g %g \n", dUcomp[RADSOURCE][UU], dUcomp[RADSOURCE][U1], dUcomp[RADSOURCE][U2],	dUcomp[RADSOURCE][U3]); 
         return(0) ;
 }
-
-
 
