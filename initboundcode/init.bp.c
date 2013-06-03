@@ -735,6 +735,7 @@ int init_dsandvels_bpthin(int *whichvel, int*whichcoord, int i, int j, int k, FT
   th=V[2];
   ph=V[3];
 
+  /*
   if(j == totalsize[2]/ 2){
     FTYPE dr, dth, dph, dR, dTH, dPH;
     FTYPE dxdxp[NDIM][NDIM];
@@ -749,6 +750,7 @@ int init_dsandvels_bpthin(int *whichvel, int*whichcoord, int i, int j, int k, FT
 
     triprintf("At r = %g  Ratios: %g (dR) %g %g",r,dR, dTH/dR, dPH/dR);
   }
+  */
 
   /* region outside disk */
   R = r*sin(th) ;
