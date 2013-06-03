@@ -39,6 +39,8 @@ static SFTYPE beta,randfact,rin; // OPENMPMARK: Ok file global since set as cons
 static FTYPE rhodisk;
 
 
+static FTYPE taper_func_exp(FTYPE R,FTYPE rin) ;  // MAVARA added June 3 2013
+
 static FTYPE nz_func(FTYPE R) ;   // MARKNOTE torus calculation
 
 FTYPE normglobal;
@@ -374,7 +376,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 #elif(WHICHPROBLEM==THINBP)
   //rin = (1. + h_over_r)*Risco;
   rin = Risco;
-  beta = 1.e2 ;
+  beta = 5.e1 ;
   randfact = 4.e-2;
 #elif(WHICHPROBLEM==THICKDISK)
   //  beta = 1.e2 ;
@@ -685,7 +687,7 @@ int init_dsandvels_thindisk(int *whichvel, int*whichcoord, int i, int j, int k, 
     S = 1./(H*H*nz) ;
     cs = H*nz ;
 
-    rho = (S/sqrt(2.*M_PI*H*H)) * exp(-z*z/(2.*H*H)) * taper_func(R,rin) ;
+    rho = (S/sqrt(2.*M_PI*H*H)) * exp(-z*z/(2.*H*H)) * taper_func_exp(R,rin) ;
     u = rho*cs*cs/(gam - 1.) ;
     ur = 0. ;
     uh = 0. ;
@@ -772,7 +774,7 @@ int init_dsandvels_bpthin(int *whichvel, int*whichcoord, int i, int j, int k, FT
     S = 1./(H*H*nz) ;
     cs = H*nz ;
 
-    rho = (S/sqrt(2.*M_PI*H*H)) * exp(-z*z/(2.*H*H)) * taper_func(R,rin) ;
+    rho = (S/sqrt(2.*M_PI*H*H)) * exp(-z*z/(2.*H*H)) * taper_func_exp(R,rin) ;
     u = rho*cs*cs/(gam - 1.) ;
     ur = 0. ;
     uh = 0. ;
@@ -1231,6 +1233,15 @@ static FTYPE nz_func(FTYPE R)
 
 }
 
+static FTYPE taper_func_exp(FTYPE R,FTYPE rin)  // MAVARA added June 3 2013
+{
+
+  if(R <= rin)
+    return(0.) ;
+  else
+    return(1. - exp(rin - R)) ;
+
+}
 
 
 // Setup problem-dependent grid sectioning

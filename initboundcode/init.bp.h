@@ -11,9 +11,9 @@
 #undef N3
 #endif
 
-#define N1 4  // MARKTODO resolution
-#define N2 4
-#define N3 8
+#define N1 8  // MARKTODO resolution
+#define N2 32
+#define N3 1
 
 // atch adjusts
 #undef MAXWELL
