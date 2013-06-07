@@ -3545,9 +3545,9 @@ int get_full_donut(int whichvel, int whichcoord, int opticallythick, FTYPE *pp,F
     ///////////////// STAGE2
 
     FTYPE P,aaa,bbb;
-    P=(gam-1.0)*uint;
+    P=(gam-1.0)*uint; // used as *total* pressure when radiation is present and optically thick
     //solving for T satisfying P=pgas+prad=bbb T + aaa T^4 .  Since using ARAD_CODE, already accounts for TEMPBAR.
-    aaa=ARAD_CODE;
+    aaa=(4.0/3.0-1.0)*ARAD_CODE; // Prad=(gamma-1)*urad and gamma=4/3 and urad=arad*T^4
     bbb=rho;
     FTYPE naw1=cbrt(9*aaa*Power(bbb,2) - Sqrt(3)*Sqrt(27*Power(aaa,2)*Power(bbb,4) + 256*Power(aaa,3)*Power(P,3)));
     FTYPE T4=-Sqrt((-4*Power(0.6666666666666666,0.3333333333333333)*P)/naw1 + naw1/(Power(2,0.3333333333333333)*Power(3,0.6666666666666666)*aaa))/2. + Sqrt((4*Power(0.6666666666666666,0.3333333333333333)*P)/naw1 - naw1/(Power(2,0.3333333333333333)*Power(3,0.6666666666666666)*aaa) + (2*bbb)/(aaa*Sqrt((-4*Power(0.6666666666666666,0.3333333333333333)*P)/naw1 + naw1/(Power(2,0.3333333333333333)*Power(3,0.6666666666666666)*aaa))))/2.;
@@ -3725,7 +3725,7 @@ int donut_analytical_solution(int opticallythick, FTYPE *pp,FTYPE *X, FTYPE *V,s
   FTYPE P,aaa,bbb;
   P=(gam-1.0)*uint; // assumes ideal gas
   //solving for T satisfying P=pgas+prad=bbb T + aaa T^4
-  aaa=ARAD_CODE;
+  aaa=(4.0/3.0-1.0)*ARAD_CODE; // Prad=(gamma-1)*urad and gamma=4/3 and urad=arad*T^4
   bbb=rho;
   FTYPE naw1=cbrt(9*aaa*Power(bbb,2) - Sqrt(3)*Sqrt(27*Power(aaa,2)*Power(bbb,4) + 256*Power(aaa,3)*Power(P,3)));
   FTYPE T4=-Sqrt((-4*Power(0.6666666666666666,0.3333333333333333)*P)/naw1 + naw1/(Power(2,0.3333333333333333)*Power(3,0.6666666666666666)*aaa))/2. + Sqrt((4*Power(0.6666666666666666,0.3333333333333333)*P)/naw1 - naw1/(Power(2,0.3333333333333333)*Power(3,0.6666666666666666)*aaa) + (2*bbb)/(aaa*Sqrt((-4*Power(0.6666666666666666,0.3333333333333333)*P)/naw1 + naw1/(Power(2,0.3333333333333333)*Power(3,0.6666666666666666)*aaa))))/2.;
