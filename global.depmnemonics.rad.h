@@ -72,8 +72,8 @@
 #define OPACITYBAR (LBAR*LBAR/MBAR) // cgs in cm^2/g
 // non-relativistic ES:
 #define KAPPA_ES_CODE(rhocode,Tcode) (0.2*(1.0+XFACT)/OPACITYBAR)
-#define KAPPA_FF_CODE(rhocode,Tcode) (1.0E23*ZATOM*ZATOM/(MUE*MUI)*(rhocode*RHOBAR)*pow(Tcode*TEMPBAR,-7.0/2.0)/OPACITYBAR)
-#define KAPPA_BF_CODE(rhocode,Tcode) (1.0E25*ZATOM*(1.0+XFACT)*(rhocode*RHOBAR)*pow(Tcode*TEMPBAR,-7.0/2.0)/OPACITYBAR)
+#define KAPPA_FF_CODE(rhocode,Tcode) (1.0E23*ZATOM*ZATOM/(MUE*MUI)*((rhocode)*RHOBAR)*pow((Tcode)*TEMPBAR,-7.0/2.0)/OPACITYBAR)
+#define KAPPA_BF_CODE(rhocode,Tcode) (1.0E25*ZATOM*(1.0+XFACT)*((rhocode)*RHOBAR)*pow((Tcode)*TEMPBAR,-7.0/2.0)/OPACITYBAR)
 
 
 

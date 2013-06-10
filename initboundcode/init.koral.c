@@ -361,7 +361,7 @@ int init_global(void)
 
   //  rescaletype=1;
   rescaletype=4;
-  BSQORHOLIMIT=1E2; // was 1E2 but latest BC test had 1E3 // CHANGINGMARK
+  BSQORHOLIMIT=2E2; // was 1E2 but latest BC test had 1E3 // CHANGINGMARK
   BSQOULIMIT=1E5; // was 1E3 but latest BC test had 1E4
   UORHOLIMIT=1E13; // has to be quite high, else hit floor in high optical depth cases and run-away injection of u and then rho.
   RHOMIN = 1E-4;
@@ -3549,8 +3549,12 @@ int get_full_donut(int whichvel, int whichcoord, int opticallythick, FTYPE *pp,F
     //solving for T satisfying P=pgas+prad=bbb T + aaa T^4 .  Since using ARAD_CODE, already accounts for TEMPBAR.
     aaa=(4.0/3.0-1.0)*ARAD_CODE; // Prad=(gamma-1)*urad and gamma=4/3 and urad=arad*T^4
     bbb=rho;
-    FTYPE naw1=cbrt(9*aaa*Power(bbb,2) - Sqrt(3)*Sqrt(27*Power(aaa,2)*Power(bbb,4) + 256*Power(aaa,3)*Power(P,3)));
-    FTYPE T4=-Sqrt((-4*Power(0.6666666666666666,0.3333333333333333)*P)/naw1 + naw1/(Power(2,0.3333333333333333)*Power(3,0.6666666666666666)*aaa))/2. + Sqrt((4*Power(0.6666666666666666,0.3333333333333333)*P)/naw1 - naw1/(Power(2,0.3333333333333333)*Power(3,0.6666666666666666)*aaa) + (2*bbb)/(aaa*Sqrt((-4*Power(0.6666666666666666,0.3333333333333333)*P)/naw1 + naw1/(Power(2,0.3333333333333333)*Power(3,0.6666666666666666)*aaa))))/2.;
+    FTYPE naw1=cbrt(9.*aaa*Power(bbb,2.) - Sqrt(3.)*Sqrt(27.*Power(aaa,2.)*Power(bbb,4.) + 256.*Power(aaa,3.)*Power(P,3.)));
+    FTYPE T4=-Sqrt((-4.*Power(0.6666666666666666,0.3333333333333333)*P)/naw1 + naw1/(Power(2.,0.3333333333333333)*Power(3.,0.6666666666666666)*aaa))/2. + Sqrt((4.*Power(0.6666666666666666,0.3333333333333333)*P)/naw1 - naw1/(Power(2.,0.3333333333333333)*Power(3.,0.6666666666666666)*aaa) + (2.*bbb)/(aaa*Sqrt((-4.*Power(0.6666666666666666,0.3333333333333333)*P)/naw1 + naw1/(Power(2.,0.3333333333333333)*Power(3.,0.6666666666666666)*aaa))))/2.;
+
+    if(fabsl(rho*T4 + aaa*pow(T4,4.0) - P)>1E-10){
+      dualfprintf(fail_file,"1: NOT right equation: rho=%26.21Lg T4=%26.21Lg aaa=%26.21Lg Ptried=%26.21Lg P=%26.21Lg\n",rho,T4,aaa,rho*T4 + aaa*pow(T4,4.),P);
+    }
 
     E=calc_LTE_EfromT(T4);
     Fx=Fy=Fz=0.;
@@ -3727,8 +3731,12 @@ int donut_analytical_solution(int opticallythick, FTYPE *pp,FTYPE *X, FTYPE *V,s
   //solving for T satisfying P=pgas+prad=bbb T + aaa T^4
   aaa=(4.0/3.0-1.0)*ARAD_CODE; // Prad=(gamma-1)*urad and gamma=4/3 and urad=arad*T^4
   bbb=rho;
-  FTYPE naw1=cbrt(9*aaa*Power(bbb,2) - Sqrt(3)*Sqrt(27*Power(aaa,2)*Power(bbb,4) + 256*Power(aaa,3)*Power(P,3)));
-  FTYPE T4=-Sqrt((-4*Power(0.6666666666666666,0.3333333333333333)*P)/naw1 + naw1/(Power(2,0.3333333333333333)*Power(3,0.6666666666666666)*aaa))/2. + Sqrt((4*Power(0.6666666666666666,0.3333333333333333)*P)/naw1 - naw1/(Power(2,0.3333333333333333)*Power(3,0.6666666666666666)*aaa) + (2*bbb)/(aaa*Sqrt((-4*Power(0.6666666666666666,0.3333333333333333)*P)/naw1 + naw1/(Power(2,0.3333333333333333)*Power(3,0.6666666666666666)*aaa))))/2.;
+  FTYPE naw1=cbrt(9.*aaa*Power(bbb,2.) - Sqrt(3.)*Sqrt(27.*Power(aaa,2.)*Power(bbb,4.) + 256.*Power(aaa,3.)*Power(P,3.)));
+  FTYPE T4=-Sqrt((-4.*Power(0.6666666666666666,0.3333333333333333)*P)/naw1 + naw1/(Power(2.,0.3333333333333333)*Power(3.,0.6666666666666666)*aaa))/2. + Sqrt((4.*Power(0.6666666666666666,0.3333333333333333)*P)/naw1 - naw1/(Power(2.,0.3333333333333333)*Power(3.,0.6666666666666666)*aaa) + (2.*bbb)/(aaa*Sqrt((-4.*Power(0.6666666666666666,0.3333333333333333)*P)/naw1 + naw1/(Power(2.,0.3333333333333333)*Power(3.,0.6666666666666666)*aaa))))/2.;
+
+  if(fabsl(rho*T4 + aaa*pow(T4,4.0) - P)>1E-10){
+    dualfprintf(fail_file,"2: NOT right equation: rho=%26.21Lg T4=%26.21Lg aaa=%26.21Lg Ptried=%26.21Lg P=%26.21Lg\n",rho,T4,aaa,rho*T4 + aaa*pow(T4,4.),P);
+  }
 
   E=calc_LTE_EfromT(T4);
   Fx=Fy=Fz=0.;
