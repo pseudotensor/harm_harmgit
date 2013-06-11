@@ -34,7 +34,7 @@
 #define Csc(x)          (1./sin((x)))
 
 
-
+#define Conjugate(x) (x) // assume not complex
 
 /** Could add definitions for Random(), SeedRandom(), etc. **/
 

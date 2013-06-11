@@ -1,6 +1,7 @@
 
 #include "decs.h"
 
+int globalii,globaljj,globalkk;
 
 // declarations
 static int compute_tetrcon_frommetric_mathematica(FTYPE (*generalmatrix)[NDIM], FTYPE (*tetrcon)[NDIM], FTYPE eigenvalues[]);
@@ -208,10 +209,12 @@ static int compute_tetrcon_frommetric(FTYPE (*generalmatrix)[NDIM], FTYPE (*tetr
     int minjj=-1;
     FTYPE minerror=BIG;
     DLOOP(jj,kk){
-      if(fabs(errorlist[jj][kk])<minerror && newlist[kk]==-1){ // only use minimum if minimum AND not already on list (forces result to be unique)
+      int uniquecheck=0; DLOOPA(pp) if(pp!=kk) uniquecheck += (newlist[pp]==jj);
+      if(fabs(errorlist[jj][kk])<minerror && newlist[kk]==-1 && uniquecheck==0){ // only use minimum if minimum AND not already on list (forces result to be unique)
         minerror=fabs(errorlist[jj][kk]);
         minjj=jj;
         minkk=kk;
+        if(globalii==0 && globaljj==N2/2) dualfprintf(fail_file,"minkk=%d",minkk);
         signerror=sign(signlistmat[jj][kk]);
       }
     }
@@ -222,6 +225,11 @@ static int compute_tetrcon_frommetric(FTYPE (*generalmatrix)[NDIM], FTYPE (*tetr
     else{
       newlist[minkk]=minjj; // point {t,x,y,z}=minkk to lapack (minjj)
       signlist[minkk]=signerror; // set sign to flip for this given {t,x,y,z}=minkk
+      int uniquecheck=0; DLOOPA(kk) if(kk!=minkk) uniquecheck += (newlist[kk]==minjj);
+      if(uniquecheck==1){
+        dualfprintf(fail_file,"Tried to double set: %d %d %d\n",minkk,minjj);
+        DLOOPA(jj) dualfprintf(fail_file,"jj=%d newlist=%d\n",jj,newlist[jj]);
+      }
     }
     notfoundall=0; // end?
     DLOOPA(kk) if(newlist[kk]==-1) notfoundall=1; // nope, not end
@@ -247,9 +255,10 @@ static int compute_tetrcon_frommetric(FTYPE (*generalmatrix)[NDIM], FTYPE (*tetr
 
 #if(DEBUGLAPACK==2)
   // real debug
-  if(1){
+  if(globalii==0 && globaljj==N2/2){
     //  if(tiglobal[1]==200 && tiglobal[2]==10 && tiglobal[3]==0){
     dualfprintf(fail_file,"\ninfo=%d\n",info);
+    DLOOPA(jj) dualfprintf(fail_file,"jj=%d newlist=%d\n",jj,newlist[jj]);
     DLOOPA(jj){
       dualfprintf(fail_file,"jj=%d eigenorig=%21.15g eigen=%21.15g old=%21.15g\n",jj,tempeigenvalues[jj],eigenvalues[jj],eigenvaluesother[jj]);
     }
@@ -389,6 +398,9 @@ int calc_ORTHOes(int primcoord, struct of_geom *ptrgeom, FTYPE tmuup[][NDIM], FT
   FTYPE tetrconX[NDIM][NDIM];
   int jj,kk,ll;
 
+  globalii=ptrgeom->i;
+  globaljj=ptrgeom->j;
+  globalkk=ptrgeom->k;
 
   if(primcoord){
     // get dxdxp
@@ -1041,4 +1053,90 @@ void vecX2vecVortho(int concovtype, struct of_geom *ptrgeom, FTYPE *veclab, FTYP
 
 }
 
+// http://stackoverflow.com/questions/12449079/roots-of-cubic-using-c-and-gsl
+// http://en.wikipedia.org/wiki/Cubic_function (but not good if need to use all real numbers)
+// a x^3 + b c^2 + c x + d = 0
+FTYPE Root(FTYPE a, FTYPE b, FTYPE c, FTYPE d, FTYPE *roots, int *numroots)
+{
+  FTYPE x0=BIG,x1=BIG,x2=BIG;
+  int failreturn = gsl_poly_solve_cubic(b/a,c/a,d/a,&x0,&x1,&x2);
+  if(x1==BIG){ // then only 1 root
+    *numroots=1;
+  }
+  else{ // then 3 roots
+    *numroots=3;
+  }
+  roots[0]=x0;
+  roots[1]=x1;
+  roots[2]=x2;
+  
+  return(roots[0]); // assume first root always chosen
+}
 
+
+// http://en.wikipedia.org/wiki/Cubic_function (but not good if need to use all real numbers)
+// a x^3 + b c^2 + c x + d = 0
+int cubicroots(FTYPE a, FTYPE b, FTYPE c, FTYPE d, FTYPE *roots)
+{
+  FTYPE Delta = 18.0*a*b*c*d - 4.0*b*b*b*d + b*b*c*c - 4.0*a*c*c*c - 27.0*a*a*d*d;
+
+  //The following cases need to be considered: [17]
+  // If Δ > 0, then the equation has three distinct real roots.
+  // If Δ = 0, then the equation has a multiple root and all its roots are real.
+  // If Δ < 0, then the equation has one real root and two nonreal complex conjugate roots.
+  
+  FTYPE u1=1.0;
+  FTYPE u2=0.0;// complex
+  FTYPE u3=0.0;// complex
+
+  FTYPE Delta0 = b*b - 3.0*a*c;
+  FTYPE Delta1 = 2.0*b*b*b - 9.0*a*b*c + 27.0*a*a*d;
+  FTYPE Delta2sq = -27.0*a*a*Delta + 4.0*Delta0*Delta0*Delta0;
+  FTYPE Delta2=sqrt(Delta2sq);
+  
+  FTYPE C = pow( (Delta1 + sqrt(Delta1*Delta1 - 4.0*Delta0*Delta0*Delta0))*0.5 ,1.0/3.0);
+
+  FTYPE r1 = -1.0/(3.0*a) * (b + u1*C + Delta0/(u1*C));
+  FTYPE r2 = -1.0/(3.0*a) * (b + u2*C + Delta0/(u2*C));
+  FTYPE r3 = -1.0/(3.0*a) * (b + u3*C + Delta0/(u3*C));
+
+  return(0);
+}
+
+// compute the semi-general eigensystem for a pretty general metric.
+int genes(FTYPE *gcov[4], FTYPE *evec[4], FTYPE *eval)
+{
+  FTYPE Root(FTYPE a, FTYPE b, FTYPE c, FTYPE d, FTYPE *roots, int *numroots);
+ 
+  //#include "genes.txt"
+
+  return(0);
+}
+
+// compute the general orthonormal version of 4 vectors (that should be from eigensystem)
+int genortho(FTYPE *vec1, FTYPE *vec2, FTYPE *vec3, FTYPE *vec4, FTYPE *ovec1, FTYPE *ovec2, FTYPE *ovec3, FTYPE *ovec4)
+{
+  FTYPE vec1a=vec1[0];
+  FTYPE vec1b=vec1[1];
+  FTYPE vec1c=vec1[2];
+  FTYPE vec1d=vec1[3];
+
+  FTYPE vec2a=vec2[0];
+  FTYPE vec2b=vec2[1];
+  FTYPE vec2c=vec2[2];
+  FTYPE vec2d=vec2[3];
+
+  FTYPE vec3a=vec3[0];
+  FTYPE vec3b=vec3[1];
+  FTYPE vec3c=vec3[2];
+  FTYPE vec3d=vec3[3];
+
+  FTYPE vec4a=vec4[0];
+  FTYPE vec4b=vec4[1];
+  FTYPE vec4c=vec4[2];
+  FTYPE vec4d=vec4[3];
+
+  //  #include "genortho.c"
+
+  return(0);
+}

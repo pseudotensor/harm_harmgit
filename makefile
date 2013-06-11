@@ -290,6 +290,18 @@ GPROFFLAG=
 endif
 
 
+ifeq ($(USEGSL),1)
+GSLCFLAGS=`gsl-config --cflags`
+GSLLIB=-lgsl -lgslcblas
+endif
+ifeq ($(USEGSL),0)
+GSLCFLAGS=
+GSLLIB=
+endif
+
+
+
+
 #################### IF USEDEBUG
 ifeq ($(USEDEBUG),1)
 DEBUGFLAG=-g
@@ -335,7 +347,7 @@ endif
 
 
 # default extra flags to pass to compiler
-EXTRA=$(DEBUGFLAG) $(GPROFFLAG) -DUSINGMPI=$(USEMPI) -DUSINGOPENMP=$(USEOPENMP) -DUSINGMPIAVOIDFORK=$(AVOIDFORK) -DUSINGMPIAVOIDMKDIR=$(AVOIDMKDIR) -DUSINGLAPACK=$(USELAPACK) -DOSX=$(USEOSX)
+EXTRA=$(DEBUGFLAG) $(GPROFFLAG) -DUSINGMPI=$(USEMPI) -DUSINGOPENMP=$(USEOPENMP) -DUSINGMPIAVOIDFORK=$(AVOIDFORK) -DUSINGMPIAVOIDMKDIR=$(AVOIDMKDIR) -DUSINGLAPACK=$(USELAPACK) -DOSX=$(USEOSX) ${GSLCFLAGS}
 
 
 
@@ -404,7 +416,7 @@ CFLAGSPRENONPRECISE=-O0 $(DFLAGS)
 #CFLAGS = -Wall -O0
 #CFLAGS = -O6 -g
 #CFLAGS = -O0 -pg -g
-LDFLAGS = -lm $(LAPACKLDFLAGS)
+LDFLAGS = -lm $(LAPACKLDFLAGS) ${GSLLIB}
 # -l$(LAPACKLIB) -l$(BLASLIB)  -L/usr/lib/gcc-lib/i386-redhat-linux/2.96/ -l$(F2CLIB) 
 
 #CC = cc
@@ -433,7 +445,7 @@ CFLAGSPRE=$(PRECISE) $(CFLAGSPRENONPRECISE)
 GCCCFLAGSPRE= -Wall -O2 $(DFLAGS)
 
 # regarding compiler error "undefined reference to `pthread_mutex_trylock'" : http://stackoverflow.com/questions/2009625/undefined-reference-to-pthread-mutex-trylock
-LDFLAGS=-lm $(LIBPTHREAD) $(PTHREADFLAGS) $(LAPACKLDFLAGS)
+LDFLAGS=-lm $(LIBPTHREAD) $(PTHREADFLAGS) $(LAPACKLDFLAGS) ${GSLLIB}
 LDFLAGSOTHER=
 
 endif
@@ -524,7 +536,7 @@ GCCCFLAGSPRE= -Wall -O2 $(DFLAGS)
 # CFLAGS = -O3 -ipo
 
 
-LDFLAGS=-lm $(LIBPTHREAD) $(LAPACKLDFLAGS)
+LDFLAGS=-lm $(LIBPTHREAD) $(LAPACKLDFLAGS) ${GSLLIB}
 LDFLAGSOTHER=
 
 
@@ -550,7 +562,7 @@ CFLAGSPRE=$(PRECISE) $(CFLAGSPRENONPRECISE)
 GCCCFLAGSPRE= -Wall -O2 $(DFLAGS)
 
 
-LDFLAGS=-lm  $(LAPACKLDFLAGS)
+LDFLAGS=-lm  $(LAPACKLDFLAGS) ${GSLLIB}
 LDFLAGSOTHER=
 
 
@@ -615,7 +627,7 @@ ifeq ($(USECCC),1)
 LONGDOUBLECOMMAND=
 DFLAGS=-DUSINGICC=0 -DUSINGORANGE=0 $(EXTRA)
 COMP=ccc $(DFLAGS)
-LDFLAGS =  -lm -lcxml  $(LAPACKLDFLAGS)
+LDFLAGS =  -lm -lcxml  $(LAPACKLDFLAGS) ${GSLLIB}
 
 #CDEBUG = -g3 # -g3 for higher opts than -O0
 #CDEBUG = -g
@@ -646,7 +658,7 @@ CFLAGSPRE= -O3 -funroll-loops  $(DFLAGS)
 CFLAGSPRENONPRECISE= $(CFLAGSPRE)
 GCCCFLAGSPRE= -O3 $(DFLAGS)
 #-funroll-loops -fargument-noalias -mcpu=k8 -msse2 -mfpmath=sse -static
-LDFLAGS= -lm  $(LAPACKLDFLAGS)
+LDFLAGS= -lm  $(LAPACKLDFLAGS) ${GSLLIB}
 endif
 
 
@@ -658,7 +670,7 @@ COMP=icc -I/afs/slac/package/OpenMPI/include/ -L/afs/slac/package/OpenMPI/lib/ $
 #CFLAGSPRE=-O3 -fno-alias -ftz -unroll -Wall -w2 -wd=175,177,279,593,869,810,981,1418,1419,310,1572
 CFLAGSPRE=-O2 -fno-alias -ftz -unroll -Wall -w2 -wd=175,177,279,593,869,810,981,1418,1419,310 $(DFLAGS)
 CFLAGSPRENONPRECISE=$(CFLAGSPRE)
-LDFLAGS = -lm  $(LAPACKLDFLAGS)
+LDFLAGS = -lm  $(LAPACKLDFLAGS) ${GSLLIB}
 #GCCCFLAGSPRE= -Wall -O3 -m32
 GCCCFLAGSPRE= -Wall -O3 $(DFLAGS)
 endif
@@ -672,7 +684,7 @@ COMP=cc $(DFLAGS)
 CFLAGSPRE = -O3 $(DFLAGS)
 CFLAGSPRENONPRECISE = $(CFLAGSPRE)
 GCCCFLAGSPRE=  $(CFLAGSPRE)
-LDFLAGS = -lm  $(LAPACKLDFLAGS)
+LDFLAGS = -lm  $(LAPACKLDFLAGS) ${GSLLIB}
 endif
 
 
@@ -683,13 +695,13 @@ COMP=cc $(DFLAGS)
 CFLAGSPRE = -Ofast -msse3 $(DFLAGS)
 CFLAGSPRENONPRECISE = $(CFLAGSPRE)
 GCCCFLAGSPRE=  $(CFLAGSPRE)
-LDFLAGS = -lm  $(LAPACKLDFLAGS)
+LDFLAGS = -lm  $(LAPACKLDFLAGS) ${GSLLIB}
 endif
 
 
 ifeq ($(USEKRAKENICC),1)
 LONGDOUBLECOMMAND=
-DFLAGS=-DUSINGICC=1  -DUSINGORANGE=0 -no-ipo $(EXTRA) $(GSLCFLAGS)
+DFLAGS=-DUSINGICC=1  -DUSINGORANGE=0 -no-ipo $(EXTRA) $(GSLLIB)
 # AKMARK: added -no-ipo following Bob's discovery that -ipo is the cause of holes appearing in disk
 # AKMARK: related suggestion by Sasha to disable -msse3 in CFLAGSPRE
 # Note that JCM already knew -ipo is bad.  It actually makes no sense to use.
@@ -698,7 +710,7 @@ COMP=cc $(DFLAGS)
 CFLAGSPRE = -fast $(DFLAGS)
 CFLAGSPRENONPRECISE = $(CFLAGSPRE)
 GCCCFLAGSPRE=  $(CFLAGSPRE)
-LDFLAGS= -lm  $(LAPACKLDFLAGS)
+LDFLAGS= -lm  $(LAPACKLDFLAGS) ${GSLLIB}
 endif
 
 ifeq ($(USEPFE),1)
@@ -711,9 +723,9 @@ CFLAGSPRE=-O3 -funroll-loops $(DFLAGS)
 CFLAGSPRENONPRECISE= $(CFLAGSPRE)
 GCCCFLAGSPRE= -O3 $(DFLAGS)
 # uses MVAPICH
-LDFLAGS= -lm  $(LAPACKLDFLAGS)
+LDFLAGS= -lm  $(LAPACKLDFLAGS) ${GSLLIB}
 # uses SGI MPT, but with mpicc don't need to include -lmpi manually
-#LDFLAGS=-lmpi -l$(LAPACKLDFLAGS)
+#LDFLAGS=-lmpi -l$(LAPACKLDFLAGS) ${GSLLIB}
 endif
 
 
