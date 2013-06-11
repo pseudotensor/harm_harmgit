@@ -717,12 +717,74 @@ int user1_getmax_densities(FTYPE (*prim)[NSTORE2][NSTORE3][NPR],SFTYPE *rhomax, 
 
 
 
-// get maximum b^2 and p_g and minimum of beta
-// OPENMPOPTMARK: No benefit from OpenMP due to critical region required and too user specific
-int user1_get_maxes(int eqslice, FTYPE *parms, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *bsq_max, FTYPE *pg_max, FTYPE *beta_min)
+// assumes we are fed the true densities
+// OPENMPOPTMARK: No benefit from OpenMP due to critical region required
+int user1_getmax_densities_full(FTYPE (*prim)[NSTORE2][NSTORE3][NPR],SFTYPE *rhomax, SFTYPE *umax, SFTYPE *uradmax, SFTYPE *utotmax, SFTYPE *pmax, SFTYPE *pradmax, SFTYPE *ptotmax)
 {
   int i,j,k;
-  FTYPE bsq_ij,pg_ij,beta_ij;
+  FTYPE X[NDIM],V[NDIM],r,th;
+  
+
+  *rhomax=SMALL;
+  *umax=SMALL;
+  *uradmax=SMALL;
+  *utotmax=SMALL;
+  *pmax=SMALL;
+  *pradmax=SMALL;
+  *ptotmax=SMALL;
+
+  FTYPE utot,p,prad,ptot;
+
+  ZLOOP{
+    bl_coord_ijk_2(i, j, k, CENT, X, V);
+    r=V[1];
+    th=V[2];
+     
+    FTYPE *pr = &MACP0A1(prim,i,j,k,0);
+ 
+    if (pr[RHO] > *rhomax)   *rhomax = pr[RHO];
+    if (pr[UU] > *umax )    *umax = pr[UU];
+    if (pr[URAD0] > *uradmax )    *uradmax = pr[URAD0];
+    utot = pr[UU]+pr[URAD0]; /// not really meaningful since different frames
+    if (utot > *utotmax )    *utotmax = utot;
+    
+    p=pressure_rho0_u_simple(i,j,k,CENT,pr[RHO],pr[UU]);
+    prad=pr[URAD0]*(4.0/3.0-1.0);
+    ptot=p+prad; // meaningful as a pressure as diagonal term in stress.
+
+    if (p > *pmax )    *pmax = p;
+    if (prad > *pmax )    *pradmax = prad;
+    if (ptot > *ptotmax )    *ptotmax = ptot;
+  }
+
+
+  ////////////
+  //
+  // Find max over all MPI procs
+  //
+  ////////////
+  mpimax(rhomax);
+  mpimax(umax);
+  mpimax(uradmax);
+  mpimax(utotmax);
+  mpimax(pmax);
+  mpimax(pradmax);
+  mpimax(ptotmax);
+
+
+  trifprintf("rhomax: %21.15g umax: %21.15g uradmax: %21.15g utotmax: %21.15g pmax: %21.15g pradmax: %21.15g ptotmax: %21.15g\n", *rhomax, *umax, *uradmax, *utotmax, *pmax, *pradmax, *ptotmax);
+
+  return(0);
+}
+
+
+
+// get maximum b^2 and p_g and minimum of beta
+// OPENMPOPTMARK: No benefit from OpenMP due to critical region required and too user specific
+int user1_get_maxes(int eqslice, FTYPE *parms, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *bsq_max, FTYPE *ptot_max, FTYPE *beta_min)
+{
+  int i,j,k;
+  FTYPE bsq_ij,ptot_ij,beta_ij;
   struct of_geom geomdontuse;
   struct of_geom *ptrgeom=&geomdontuse;
   FTYPE X[NDIM],V[NDIM];
@@ -739,13 +801,14 @@ int user1_get_maxes(int eqslice, FTYPE *parms, FTYPE (*prim)[NSTORE2][NSTORE3][N
 
 
   bsq_max[0] = SMALL;
-  pg_max[0]= 0.;
+  ptot_max[0]= 0.;
   beta_min[0]=VERYBIG;
   gotnormal=0; // to check if ever was in location where wanted to normalize
   loc=CENT;
 
   ZLOOP {
     get_geometry(i, j, k, loc, ptrgeom);
+    FTYPE *pr = &MACP0A1(prim,i,j,k,0);
 
     if(eqslice){
       bl_coord_ijk_2(i, j, k, loc, X, V);
@@ -757,10 +820,13 @@ int user1_get_maxes(int eqslice, FTYPE *parms, FTYPE (*prim)[NSTORE2][NSTORE3][N
         if (bsq_calc(MAC(prim,i,j,k), ptrgeom, &bsq_ij) >= 1) FAILSTATEMENT("init.c:init()", "bsq_calc()", 1);
         if (bsq_ij > bsq_max[0])      bsq_max[0] = bsq_ij;
 
-        pg_ij=pressure_rho0_u_simple(i,j,k,loc,MACP0A1(prim,i,j,k,RHO),MACP0A1(prim,i,j,k,UU));
-        if (pg_ij > pg_max[0])      pg_max[0] = pg_ij;
+        ptot_ij=pressure_rho0_u_simple(i,j,k,loc,MACP0A1(prim,i,j,k,RHO),MACP0A1(prim,i,j,k,UU));
+        if(EOMRADTYPE!=EOMRADNONE) ptot_ij += pr[URAD0]*(4.0/3.0-1.0);
 
-        beta_ij=pg_ij/(bsq_ij*0.5);
+        
+        if (ptot_ij > ptot_max[0])      ptot_max[0] = ptot_ij;
+
+        beta_ij=ptot_ij/(bsq_ij*0.5);
 
         if (beta_ij < beta_min[0])      beta_min[0] = beta_ij;
 
@@ -771,10 +837,12 @@ int user1_get_maxes(int eqslice, FTYPE *parms, FTYPE (*prim)[NSTORE2][NSTORE3][N
       if (bsq_calc(MAC(prim,i,j,k), ptrgeom, &bsq_ij) >= 1) FAILSTATEMENT("init.c:init()", "bsq_calc()", 1);
       if (bsq_ij > bsq_max[0])      bsq_max[0] = bsq_ij;
 
-      pg_ij=pressure_rho0_u_simple(i,j,k,loc,MACP0A1(prim,i,j,k,RHO),MACP0A1(prim,i,j,k,UU));
-      if (pg_ij > pg_max[0])      pg_max[0] = pg_ij;
+      ptot_ij=pressure_rho0_u_simple(i,j,k,loc,MACP0A1(prim,i,j,k,RHO),MACP0A1(prim,i,j,k,UU));
+      if(EOMRADTYPE!=EOMRADNONE) ptot_ij += pr[URAD0]*(4.0/3.0-1.0);
 
-      beta_ij=pg_ij/(bsq_ij*0.5);
+      if (ptot_ij > ptot_max[0])      ptot_max[0] = ptot_ij;
+
+      beta_ij=ptot_ij/(bsq_ij*0.5);
       
       if (beta_ij < beta_min[0])      beta_min[0] = beta_ij;
 
@@ -800,7 +868,7 @@ int user1_get_maxes(int eqslice, FTYPE *parms, FTYPE (*prim)[NSTORE2][NSTORE3][N
   }
 
   mpimax(bsq_max);
-  mpimax(pg_max);
+  mpimax(ptot_max);
   mpimin(beta_min);
 
 
@@ -817,21 +885,21 @@ int user1_get_maxes(int eqslice, FTYPE *parms, FTYPE (*prim)[NSTORE2][NSTORE3][N
 int user1_normalize_field(FTYPE beta, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR])
 {
   FTYPE bsq_max, norm, beta_act;
-  FTYPE mypgmax;
+  FTYPE myptotmax;
   FTYPE betamin;
-  int get_maxes(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *bsq_max, FTYPE *mypgmax, FTYPE *beta_min);
+  int get_maxes(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *bsq_max, FTYPE *myptotmax, FTYPE *beta_min);
 
 
   if(EOMTYPE==EOMFFDE) return(0); // do nothing
 
 
   // get initial maximum
-  get_maxes(prim, &bsq_max, &mypgmax, &betamin);
-  trifprintf("initial bsq_max: %21.15g pgmax: %21.15g betamin=%21.15g\n", bsq_max,mypgmax,betamin);
+  get_maxes(prim, &bsq_max, &myptotmax, &betamin);
+  trifprintf("initial bsq_max: %21.15g ptotmax: %21.15g betamin=%21.15g\n", bsq_max,myptotmax,betamin);
 
 #if(FIELDBETANORMMETHOD==0)
   // get normalization parameter
-  beta_act = mypgmax / (0.5 * bsq_max);
+  beta_act = myptotmax / (0.5 * bsq_max);
   norm = sqrt(beta_act / beta);
 #elif(FIELDBETANORMMETHOD==1)
   beta_act = betamin;
@@ -844,11 +912,11 @@ int user1_normalize_field(FTYPE beta, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYP
   normalize_field_withnorm(norm, prim, pstag, ucons, vpot, Bhat);
 
   // get new maxes to check if beta is correct
-  get_maxes(prim, &bsq_max, &mypgmax, &betamin);
-  trifprintf("new initial bsq_max: %21.15g pgmax: %21.15g betamin=%21.15g\n", bsq_max,mypgmax,betamin);
+  get_maxes(prim, &bsq_max, &myptotmax, &betamin);
+  trifprintf("new initial bsq_max: %21.15g ptotmax: %21.15g betamin=%21.15g\n", bsq_max,myptotmax,betamin);
 
 #if(FIELDBETANORMMETHOD==0)
-  beta_act = mypgmax / (0.5 * bsq_max);
+  beta_act = myptotmax / (0.5 * bsq_max);
 #elif(FIELDBETANORMMETHOD==1)
   beta_act = betamin;
 #endif

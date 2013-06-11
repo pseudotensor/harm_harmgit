@@ -20,7 +20,7 @@
 
 #include "decs.h"
 
-static SFTYPE rhomax=0,umax=0,bsq_max=0; // OPENMPMARK: These are ok file globals since set using critical construct
+static SFTYPE rhomax=0,umax=0,uradmax=0,utotmax=0,pmax=0,pradmax=0,ptotmax=0,bsq_max=0; // OPENMPMARK: These are ok file globals since set using critical construct
 static SFTYPE beta,randfact,rin; // OPENMPMARK: Ok file global since set as constant before used
 static FTYPE rhodisk;
 static FTYPE nz_func(FTYPE R) ;
@@ -1947,15 +1947,15 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
     trifprintf("END check_rmin\n");
   }
 
-
-  // check that singularities are properly represented by code
-  trifprintf("BEGIN check_spc_singularities_user\n");
-  // SUPERGODMARK: Goes very slowly sometimes randomly for unknown reasons.
-  dualfprintf(fail_file,"WARNING: check_spc_singularities_user() oddly stalls sometimes...\n");
-  check_spc_singularities_user();
-  trifprintf("END check_spc_singularities_user\n");
-  dualfprintf(fail_file,"WARNING: done with check_spc_singularities_user(), but it sometimes stalls or goes very very slow for no apparently good reason.  E.g., on NAUTILUS with -O0, very slow checks.  But just putting dualfprintf before and after the above call leads to quick finish.\n");
-
+  if(1){
+    // check that singularities are properly represented by code
+    trifprintf("BEGIN check_spc_singularities_user\n");
+    // SUPERGODMARK: Goes very slowly sometimes randomly for unknown reasons.
+    dualfprintf(fail_file,"WARNING: check_spc_singularities_user() oddly stalls sometimes...\n");
+    check_spc_singularities_user();
+    trifprintf("END check_spc_singularities_user\n");
+    dualfprintf(fail_file,"WARNING: done with check_spc_singularities_user(), but it sometimes stalls or goes very very slow for no apparently good reason.  E.g., on NAUTILUS with -O0, very slow checks.  But just putting dualfprintf before and after the above call leads to quick finish.\n");
+  }
   
   return(0);
 
@@ -3848,7 +3848,7 @@ FTYPE setblandfordfield(FTYPE r, FTYPE th)
 // SUPERNOTE: A_i must be computed consistently across all CPUs.  So, for example, cannot use randomization of vector potential here.
 int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int loc, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *V, FTYPE *A)
 {
-  SFTYPE rho_av, u_av,q;
+  SFTYPE rho_av, p_av,u_av,q;
   FTYPE r,th,ph;
   FTYPE vpot;
   FTYPE setblandfordfield(FTYPE r, FTYPE th);
@@ -3861,25 +3861,32 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
 
   vpot=0.0;
 
-
+  FTYPE *pr = &MACP0A1(prim,i,j,k,0);
 
   // since init_vpot() is called for all i,j,k, can't use
   // non-existence values, so limit averaging:
   if((i==-N1BND)&&(j==-N2BND)){
-    rho_av = MACP0A1(prim,i,j,k,RHO);
-    u_av = MACP0A1(prim,i,j,k,UU);
+    rho_av = pr[RHO];
+    p_av = pressure_rho0_u_simple(i,j,k,CENT,pr[RHO],pr[UU]);
+    if(EOMRADTYPE!=EOMRADNONE) p_av += pr[URAD0]*(4.0/3.0-1.0);
   }
   else if(i==-N1BND){
     rho_av = AVGN_2(prim,i,j,k,RHO);
-    u_av = AVGN_2(prim,i,j,k,UU);
+    u_av = AVGN_2(prim,i,j,k,UU); // simple cheat to avoid defining new AVGN macros
+    p_av = pressure_rho0_u_simple(i,j,k,loc,rho_av,u_av);
+    if(EOMRADTYPE!=EOMRADNONE) p_av += AVGN_2(prim,i,j,k,URAD0)*(4.0/3.0-1.0);
   }
   else if(j==-N2BND){
     rho_av = AVGN_1(prim,i,j,k,RHO);
     u_av = AVGN_1(prim,i,j,k,UU);
+    p_av = pressure_rho0_u_simple(i,j,k,loc,rho_av,u_av);
+    if(EOMRADTYPE!=EOMRADNONE) p_av += AVGN_2(prim,i,j,k,URAD0)*(4.0/3.0-1.0);
   }
   else{ // normal cells
     rho_av = AVGN_for3(prim,i,j,k,RHO);
     u_av = AVGN_for3(prim,i,j,k,UU);
+    p_av = pressure_rho0_u_simple(i,j,k,loc,rho_av,u_av);
+    if(EOMRADTYPE!=EOMRADNONE) p_av += AVGN_for3(prim,i,j,k,URAD0)*(4.0/3.0-1.0);
   }
 
 
@@ -3898,7 +3905,7 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
 
       q=q/(r); // makes more uniform in radius
 
-      q = q*(u_av / umax - FRACAPHICUT); // weight by internal energy density
+      q = q*(p_av / ptotmax - FRACAPHICUT); // weight by pressure
       //      q = (rho_av / rhomax - FRACAPHICUT);
 
       if(q<0.0) q=0.0;
@@ -3965,7 +3972,7 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
       //#define FRACAPHICUT 0.1
 
       //      q = (rho_av / rhomax - FRACAPHICUT);
-      q = (u_av / umax - FRACAPHICUT);
+      q = (p_av / ptotmax - FRACAPHICUT);
 
       //#define QPOWER 0.5
 #define QPOWER (1.0)
@@ -3983,7 +3990,7 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
 
       if (q > 0.)      vpot += fact1*fact2;
       //      if (q > 0.)      vpot += q*q;
-      dualfprintf(fail_file,"ijk=%d %d %d : umax=%g u_av=%g q=%g %g %g rin=%g vpot=%g\n",i,j,k,umax,u_av,q,fact1,fact2,rin,vpot);
+      dualfprintf(fail_file,"ijk=%d %d %d : ptotmax=%g p_av=%g q=%g %g %g rin=%g vpot=%g\n",i,j,k,ptotmax,p_av,q,fact1,fact2,rin,vpot);
     }
 
 
@@ -4039,8 +4046,8 @@ int normalize_densities(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
     if(funreturn!=0) return(funreturn);
   }
   else{
-    int getmax_densities(FTYPE (*prim)[NSTORE2][NSTORE3][NPR],SFTYPE *rhomax, SFTYPE *umax);
-    int funreturn=getmax_densities(prim,&rhomax,&umax);
+    int getmax_densities_full(FTYPE (*prim)[NSTORE2][NSTORE3][NPR],SFTYPE *rhomax, SFTYPE *umax, SFTYPE *uradmax, SFTYPE *utotmax, SFTYPE *pmax, SFTYPE *pradmax, SFTYPE *ptotmax);
+    int funreturn=getmax_densities_full(prim,&rhomax,&umax,&uradmax,&utotmax,&pmax,&pradmax,&ptotmax);
     if(funreturn!=0) return(funreturn);
 
   }
@@ -4051,19 +4058,19 @@ int normalize_densities(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 
 
 // assumes we are fed the true densities
-int getmax_densities(FTYPE (*prim)[NSTORE2][NSTORE3][NPR],SFTYPE *rhomax, SFTYPE *umax)
+int getmax_densities_full(FTYPE (*prim)[NSTORE2][NSTORE3][NPR],SFTYPE *rhomax, SFTYPE *umax, SFTYPE *uradmax, SFTYPE *utotmax, SFTYPE *pmax, SFTYPE *pradmax, SFTYPE *ptotmax)
 {
   int funreturn;
 
-  funreturn=user1_getmax_densities(prim,rhomax, umax);
+  funreturn=user1_getmax_densities_full(prim,rhomax, umax, uradmax, utotmax, pmax, pradmax, ptotmax);
   if(funreturn!=0) return(funreturn);
  
   return(0);
 }
 
 
-// get maximum b^2 and p_g
-int get_maxes(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *bsq_max, FTYPE *pg_max, FTYPE *beta_min)
+// get maximum b^2 and p_tot
+int get_maxes(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *bsq_max, FTYPE *ptot_max, FTYPE *beta_min)
 {
   int funreturn;
   int eqslice;
@@ -4078,7 +4085,7 @@ int get_maxes(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *bsq_max, FTYPE *pg_ma
 
   parms[0]=rin;
 
-  funreturn=user1_get_maxes(eqslice, parms,prim, bsq_max, pg_max, beta_min);
+  funreturn=user1_get_maxes(eqslice, parms,prim, bsq_max, ptot_max, beta_min);
   if(funreturn!=0) return(funreturn);
  
   return(0);
