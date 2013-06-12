@@ -85,7 +85,7 @@ int pre_init_specific_init(void)
   }
   else if(WHICHPROBLEM==THINBP){
     // globally used parameters set by specific initial condition routines, reran for restart as well *before* all other calculations
-    h_over_r=0.1;
+    h_over_r=0.05;
     // below is theta distance from equator where jet will start, usually about 2-3X disk thickness
     h_over_r_jet=M_PI*0.4;
   }
@@ -189,7 +189,7 @@ int init_grid(void)
 {
   
   // metric stuff first
-  a = 0.9375 ;
+  a = 0.5; //9375 ;
   
 
 #if(WHICHPROBLEM==NORMALTORUS || WHICHPROBLEM==KEPDISK)
@@ -687,7 +687,7 @@ int init_dsandvels_thindisk(int *whichvel, int*whichcoord, int i, int j, int k, 
     S = 1./(H*H*nz) ;
     cs = H*nz ;
 
-    rho = (S/sqrt(2.*M_PI*H*H)) * exp(-z*z/(2.*H*H)) * taper_func_exp(R,rin) ;
+    rho = (S/sqrt(2.*M_PI*H*H)) * exp(-z*z/(2.*H*H)) * taper_func(R,rin) ;
     u = rho*cs*cs/(gam - 1.) ;
     ur = 0. ;
     uh = 0. ;
@@ -774,7 +774,7 @@ int init_dsandvels_bpthin(int *whichvel, int*whichcoord, int i, int j, int k, FT
     S = 1./(H*H*nz) ;
     cs = H*nz ;
 
-    rho = (S/sqrt(2.*M_PI*H*H)) * exp(-z*z/(2.*H*H)) * taper_func_exp(R,rin) ;
+    rho = (S/sqrt(2.*M_PI*H*H)) * exp(-z*z/(2.*H*H)) * taper_func_exp(R,rin)  * ( 1.0 - R*R/((pow(R,1.5) + a)*(pow(R,1.5) + a)) )  ;
     u = rho*cs*cs/(gam - 1.) ;
     ur = 0. ;
     uh = 0. ;
@@ -785,7 +785,7 @@ int init_dsandvels_bpthin(int *whichvel, int*whichcoord, int i, int j, int k, FT
     
     
     pr[RHO] = rho ;
-    pr[UU] = u* (1. + randfact * (ranc(0,0) - 0.5));
+    pr[UU] = u * (1. + randfact * (ranc(0,0) - 0.5));
 
     pr[U1] = ur ;
     pr[U2] = uh ;    
@@ -1236,10 +1236,11 @@ static FTYPE nz_func(FTYPE R)
 static FTYPE taper_func_exp(FTYPE R,FTYPE rin)  // MAVARA added June 3 2013
 {
 
+  FTYPE softer = 2.0; // 2.0 works ok for resolution of 64 cells for inner 40 M radius
   if(R <= rin)
     return(0.) ;
   else
-    return(1. - exp(rin - R)) ;
+    return(1. - exp((rin - R)*softer)) ;
 
 }
 

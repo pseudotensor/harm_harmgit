@@ -11,7 +11,7 @@
 #undef N3
 #endif
 
-#define N1 8  // MARKTODO resolution
+#define N1 32  // MARKTODO resolution
 #define N2 32
 #define N3 1
 
