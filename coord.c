@@ -1357,7 +1357,7 @@ void bl_coord(FTYPE *X, FTYPE *V)
     // JET3COORDS-based:
     myhslope=2.0-bp_Qjet*pow(V[1]/bp_r1jet,-bp_njet*(0.5+1.0/M_PI*atan(V[1]/bp_r0jet-bp_rsjet/bp_r0jet)));
     // myhslope here is h0 in MCAF paper
-    th0 = M_PI * X[2] + ((1. - myhslope) * 0.5) * mysin(2. * M_PI * X[2]);   // MARKTODO
+    th0 = M_PI * .5 * (1. + (1.-((1. - myhslope) * 0.5))*(2.*X[2]-1.) + ((1. - myhslope) * 0.5)*pow(2.*X[2]-1.,9) ) ; // MARKTODODONE  switched to poly type from Noble+ 2010 on June 10, 2013
 
     // determine switches (only function of radius and not x2 or theta)
     switch0 = 0.5+1.0/M_PI*atan((V[1]-bp_rs)/bp_r0); // switch in .nb file
@@ -1372,7 +1372,7 @@ void bl_coord(FTYPE *X, FTYPE *V)
     theta2 = M_PI*0.5*(bp_htheta*(2.0*X[2]-1.0)+(1.0-bp_htheta)*pow(2.0*X[2]-1.0,bp_ntheta)+1.0);
 
     // generate interpolation factor
-    arctan2 = 0.5 + 1.0/M_PI*(atan( (V[1]-bp_rsjet2)/bp_r0jet2) );
+    arctan2 = 0.5 + 1.0/M_PI*(atan( (V[1]-bp_rsjet2)/bp_r0jet2) ); // MAVARA: outside a certain radius this switches the v2 dependence from theta2 to theta1....known as interpolation. this interpolation fixes pole issue. previous involving switch0/2 involves more fundamental difference in vertical distribution.
 
     // now interpolate between them
     V[2] = theta2 + arctan2*(theta1-theta2);
