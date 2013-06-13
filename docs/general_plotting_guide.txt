@@ -183,6 +183,16 @@ __init__.py script is setup.
 stages of the calculation used for the MCAF paper.  This is based upon how
 the script makeallmovie.sh uses makemovie.sh.
 
+preA1)  Ensure right files exist in run/dumps and run/
+
+# if created dump0000 and gdump but not .bin versions, convert them is best:
+# e.g., for 128x64 simulation, do (do head -1 on original files and see last number as being numcolumns to use below after the "d"):
+bin2txt 2 1 0 -1 2 128 64 1 1 dump0000 dump0000.bin d 81
+bin2txt 2 1 0 -1 2 128 64 1 1 gdump gdump.bin d 126
+
+preA2) Add your run name (e.g. "run" below, where "run" could be any modelname like "thickdisk7" and other things.) to ~/py/mread/__init__.py as another modelname entry in case defaults aren't good enough (e.g. for defaultfti and defaultftf that need to at least cover the range where any data exists, else avg merge will fail as NOTUSING will be applied to all files.)
+
+
 A) Run the default torus problem or your problem with harm, so now you
 have a "run" directory with "dumps" and "images" directories.  Enter
 the "run" directory, whatever it's called.  I'll assume harm master
@@ -205,7 +215,7 @@ numkeep=2            # number of files to really use out of all of them (2 for n
 numcorespernode=??   # choose ?? as number of cores on your system.  Try ??=1 at first to avoid confusion of multiple stderr and stdout output files in case something goes wrong.
 2) change itemspergroup=$(( 20 ))  and replace 20 with 1 unless one has more than 20 files.
 
-# Note that in general, one should setup makeallmovie.sh and makemovie.sh to have your own "system" sections.
+# Note that in general, one should setup makeallmovie.sh and makemovie.sh to have your own "system" sections *and* "modelname" sections.  That is so you can control by default which files are actually kept (default is higher half of fieldline files).
 
 # now get ready to run by setting arguments to pass to the script
 moviename="test1"    # name of directory your analysis will be done in
