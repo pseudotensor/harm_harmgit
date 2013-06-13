@@ -27,11 +27,11 @@
 #define GENFORALLOVERLAP(iter,src,dest,numelem) memmove(dest, src, numelem*sizeof(src[0]))
 #else
 // assumes iteration is single (i.e. all data from start to finish)
-#define GENFORALL(iter,src,dest,numelem) \
-for (iter = 0; iter < numelem; iter++) \
-{\
-dest[iter] = src[iter];\
-}
+#define GENFORALL(iter,src,dest,numelem)        \
+  for (iter = 0; iter < numelem; iter++)        \
+    {                                           \
+      dest[iter] = src[iter];                   \
+    }
 #define GENFORALLOVERLAP(iter,src,dest,numelem) GENFORALL(iter,src,dest,numelem)
 #endif
 
@@ -215,7 +215,7 @@ dest[iter] = src[iter];\
 //#endif
 
 // computing emf for FLUXCT
-		    //#define LOOPINFP1 LOOPINFP11 LOOPINFP12 LOOPINFP13
+//#define LOOPINFP1 LOOPINFP11 LOOPINFP12 LOOPINFP13
 
 //#define LOOPINFP1dir1full LOOPF1 LOOPINFP12 LOOPINFP13
 
@@ -231,7 +231,7 @@ dest[iter] = src[iter];\
 
 
 // computing emf for FLUXCD
-		    //#define LOOPOUTFM1 LOOPOUTFM11 LOOPOUTFM12 LOOPOUTFM13
+//#define LOOPOUTFM1 LOOPOUTFM11 LOOPOUTFM12 LOOPOUTFM13
 
 //#if(BOUNDPLPR&&NOFLUXCTONX1DN)
 //#define LOOPOUTFM1dir1fullflux LOOPF1 LOOPOUTFM12 LOOPOUTFM13 if(!(startpos[1]+i==0))
@@ -239,7 +239,7 @@ dest[iter] = src[iter];\
 //#define LOOPOUTFM1dir1fullflux LOOPF1 LOOPOUTFM12 LOOPOUTFM13
 //#endif
 
-		    //#define LOOPOUTFM1dir1full LOOPF1 LOOPOUTFM12 LOOPOUTFM13
+//#define LOOPOUTFM1dir1full LOOPF1 LOOPOUTFM12 LOOPOUTFM13
 
 //#define LOOPOUTFM1dir2full LOOPOUTFM11 LOOPF2 LOOPOUTFM13
 

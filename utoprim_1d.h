@@ -16,11 +16,11 @@
 #define USE_LINE_SEARCH_ALWAYS 0
 /*
 
-USE_LINE_SEARCH = 0    line-searching is used only when normal NR fails to
-                           converge
+  USE_LINE_SEARCH = 0    line-searching is used only when normal NR fails to
+  converge
 
-                = 1     line-searching is always used
-                < 0     line-searching is never used
+  = 1     line-searching is always used
+  < 0     line-searching is never used
 
 */
 

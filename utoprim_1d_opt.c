@@ -1,6 +1,6 @@
 
 #include "decs.h"
-#include "utoprim_1d_opt.h"	
+#include "utoprim_1d_opt.h"     
 
 
 /* these variables need to be shared between the functions
@@ -11,7 +11,7 @@ static FTYPE wglobal;
 static PFTYPE *glpflag; // global pflag for local file
 
 static void my_lnsrch(int, FTYPE [], FTYPE, FTYPE [], FTYPE [], FTYPE [], FTYPE *, 
-		      FTYPE, FTYPE, int *, FTYPE (*res_func) (FTYPE []));
+                      FTYPE, FTYPE, int *, FTYPE (*res_func) (FTYPE []));
 
 
 static void func_1d_orig(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE (*jac)[NEWT_DIM], FTYPE *f, FTYPE *df, int n);
@@ -78,16 +78,16 @@ int Utoprim_1d_opt(FTYPE U[NPR], struct of_geom *ptrgeom,  PFTYPE *lpflag,  FTYP
   if( ltrace ) {
     for(i = 0; i < NDIM; i++ ) {
       for(j = 0; j < NDIM; j++ ) {
-	gcov[GIND(i,j)] = ptrgeom->gcov[GIND(i,j)];
-	gcon[GIND(i,j)] = ptrgeom->gcon[GIND(i,j)];
-	dualfprintf(fail_file,"gcov,gcon %d %d = %21.15g %21.15g \n", i, j, gcov[GIND(i,j)], gcon[GIND(i,j)]);fflush(fail_file);
+        gcov[GIND(i,j)] = ptrgeom->gcov[GIND(i,j)];
+        gcon[GIND(i,j)] = ptrgeom->gcon[GIND(i,j)];
+        dualfprintf(fail_file,"gcov,gcon %d %d = %21.15g %21.15g \n", i, j, gcov[GIND(i,j)], gcon[GIND(i,j)]);fflush(fail_file);
       }
     }
     dualfprintf(fail_file,"gdet = %21.15g \n", ptrgeom->g);fflush(fail_file);
     primtoU_g(ptrgeom, prim_tmp, gcov, gcon, U_tmp2 ); 
     for( i = 0; i < NPR; i++ ) {
       dualfprintf(fail_file, "Utoprim_1d_opt(): Utmp1[%d] = %21.15g , Utmp2[%d] = %21.15g , dUtmp[%d] = %21.15g \n", 
-	       i, U_tmp[i], i, U_tmp2[i], i, fabs( (U_tmp[i]-U_tmp2[i]) / ( (U_tmp2[i]!=0.) ? U_tmp2[i] : 1. ) )  ); 
+                  i, U_tmp[i], i, U_tmp2[i], i, fabs( (U_tmp[i]-U_tmp2[i]) / ( (U_tmp2[i]!=0.) ? U_tmp2[i] : 1. ) )  ); 
     }
   }
 #endif
@@ -118,20 +118,20 @@ prim.
 
 
              /    rho        \
-	 P = |    uu         |
+         P = |    uu         |
              | \tilde{u}^i   |
              \  alpha B^i   /
 
 
-*glpflag:  (i*100 + j)  where 
+             *glpflag:  (i*100 + j)  where 
          i = 0 ->  Newton-Raphson solver either was not called (yet or not used) or returned successfully;
              1 ->  Newton-Raphson solver did not converge to a solution with the given tolerances;
              2 ->  Newton-Raphson procedure encountered a numerical divergence (occurrence of "nan" or "+/-inf" ;
-	     
+             
          j = 0 -> success 
              1 -> failure: some sort of failure in Newton-Raphson; 
              2 -> failure: utsq<0 w/ initial p[] guess;
-	     3 -> failure: W<0 or W>W_TOO_BIG
+             3 -> failure: W<0 or W>W_TOO_BIG
              4 -> failure: utsq<0 or utsq > UTSQ_TOO_BIG   with new  W;
              5 -> failure: rho,uu <= 0 ;
 
@@ -238,7 +238,7 @@ static int Utoprim_new_body(FTYPE U[NPR], struct of_geom *ptrgeom,  FTYPE prim[N
     dualfprintf(fail_file,"Bcov[0-3] = %21.15g   %21.15g   %21.15g   %21.15g   \n", Bcov[0],Bcov[1],Bcov[2],Bcov[3]);
     dualfprintf(fail_file,"Qcon[0-3] = %21.15g   %21.15g   %21.15g   %21.15g   \n", Qcon[0],Qcon[1],Qcon[2],Qcon[3]);
     dualfprintf(fail_file,"Qcov[0-3] = %21.15g   %21.15g   %21.15g   %21.15g   \n", Qcov[0],Qcov[1],Qcov[2],Qcov[3]);
-    dualfprintf(fail_file,"call find_root\n") ; 	fflush(fail_file);
+    dualfprintf(fail_file,"call find_root\n") ;         fflush(fail_file);
     fflush(fail_file);
   }
 #endif
@@ -249,15 +249,15 @@ static int Utoprim_new_body(FTYPE U[NPR], struct of_geom *ptrgeom,  FTYPE prim[N
 #if(!OPTIMIZED)
   if( ret ) { 
     dualfprintf(fail_file, "general_newton_raphson() failed, x_1d[0] = %21.15g \n", x_1d[0] );  fflush(fail_file);
-//    dualfprintf(fail_file, "general_newton_raphson() failed, t,i,j, p[0-7], U[0-7] = %21.15g %d %d ", t, ptrgeom->i, ptrgeom->j );  
-//    for( i = 0 ; i < NPR; i++ ) {
-//      dualfprintf(fail_file, "%21.15g ", prim[i]);
-//    }
-//    for( i = 0 ; i < NPR; i++ ) {
-//      dualfprintf(fail_file, "%21.15g ", U[i]);
-//    }
-//    dualfprintf(fail_file, "\n");
-//    fflush(fail_file);
+    //    dualfprintf(fail_file, "general_newton_raphson() failed, t,i,j, p[0-7], U[0-7] = %21.15g %d %d ", t, ptrgeom->i, ptrgeom->j );  
+    //    for( i = 0 ; i < NPR; i++ ) {
+    //      dualfprintf(fail_file, "%21.15g ", prim[i]);
+    //    }
+    //    for( i = 0 ; i < NPR; i++ ) {
+    //      dualfprintf(fail_file, "%21.15g ", U[i]);
+    //    }
+    //    dualfprintf(fail_file, "\n");
+    //    fflush(fail_file);
   }
 #endif
   W = x_1d[0];
@@ -265,7 +265,7 @@ static int Utoprim_new_body(FTYPE U[NPR], struct of_geom *ptrgeom,  FTYPE prim[N
 #if(!OPTIMIZED)
   if( ltrace ) {
     dualfprintf(fail_file,"(W,W_last,Bsq,Qtsq,QdotB,gammasq,Qdotn,gam) %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",
-	    W,W_last, Bsq,Qtsq,QdotB,gammasq,Qdotn,gam) ;
+                W,W_last, Bsq,Qtsq,QdotB,gammasq,Qdotn,gam) ;
   }
 
   if( ltrace2 ) {
@@ -278,14 +278,14 @@ static int Utoprim_new_body(FTYPE U[NPR], struct of_geom *ptrgeom,  FTYPE prim[N
   if( (ret != 0) || (W == FAIL_VAL) ) {
     if( debugfail>=2 ) {
       dualfprintf(fail_file, "Failed to find a prim. var. solution!! %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g \n",W_last,Bsq,QdotBsq,Qdotn,D,Qtsq);
-//      dualfprintf(fail_file, "Utoprim_new_body(): bad newt failure, t,i,j, p[0-7], U[0-7] = %21.15g %d %d ", t, ptrgeom->i, ptrgeom->j );  
-//      for( i = 0 ; i < NPR; i++ ) {
-//	dualfprintf(fail_file, "%21.15g ", prim[i]);
-//      }
-//      for( i = 0 ; i < NPR; i++ ) {
-//	dualfprintf(fail_file, "%21.15g ", U[i]);
-//      }
-//      dualfprintf(fail_file, "\n");
+      //      dualfprintf(fail_file, "Utoprim_new_body(): bad newt failure, t,i,j, p[0-7], U[0-7] = %21.15g %d %d ", t, ptrgeom->i, ptrgeom->j );  
+      //      for( i = 0 ; i < NPR; i++ ) {
+      //        dualfprintf(fail_file, "%21.15g ", prim[i]);
+      //      }
+      //      for( i = 0 ; i < NPR; i++ ) {
+      //        dualfprintf(fail_file, "%21.15g ", U[i]);
+      //      }
+      //      dualfprintf(fail_file, "\n");
     }      
     *glpflag= ret+UTOPRIMFAILCONVRET+1;// related to UTOPRIMFAILCONVRET
     return(0);
@@ -296,15 +296,15 @@ static int Utoprim_new_body(FTYPE U[NPR], struct of_geom *ptrgeom,  FTYPE prim[N
     if(Wtest <= 0. || Wtest > W_TOO_BIG) {
       //if(Wtest <= 0.) {
       if( debugfail>=2 ) {
-	dualfprintf(fail_file,"Wtest failure %21.15g \n",Wtest) ;
-//	dualfprintf(fail_file, "Utoprim_new_body(): Wtest<0 or Wtest=toobig failure, t,i,j, p[0-7], U[0-7] = %21.15g %d %d ", t, ptrgeom->i, ptrgeom->j );  
-//	for( i = 0 ; i < NPR; i++ ) {
-//	  dualfprintf(fail_file, "%21.15g ", prim[i]);
-//	}
-//	for( i = 0 ; i < NPR; i++ ) {
-//	  dualfprintf(fail_file, "%21.15g ", U[i]);
-//	}
-//	dualfprintf(fail_file, "\n");
+        dualfprintf(fail_file,"Wtest failure %21.15g \n",Wtest) ;
+        //      dualfprintf(fail_file, "Utoprim_new_body(): Wtest<0 or Wtest=toobig failure, t,i,j, p[0-7], U[0-7] = %21.15g %d %d ", t, ptrgeom->i, ptrgeom->j );  
+        //      for( i = 0 ; i < NPR; i++ ) {
+        //        dualfprintf(fail_file, "%21.15g ", prim[i]);
+        //      }
+        //      for( i = 0 ; i < NPR; i++ ) {
+        //        dualfprintf(fail_file, "%21.15g ", U[i]);
+        //      }
+        //      dualfprintf(fail_file, "\n");
       }      
 
       *glpflag= UTOPRIMFAILCONVW;
@@ -315,7 +315,7 @@ static int Utoprim_new_body(FTYPE U[NPR], struct of_geom *ptrgeom,  FTYPE prim[N
 
 #if(!OPTIMIZED)
   if( ltrace ) {
-    dualfprintf(fail_file,"done find_root\n") ;	fflush(fail_file);
+    dualfprintf(fail_file,"done find_root\n") ; fflush(fail_file);
   }
 #endif
 
@@ -327,14 +327,14 @@ static int Utoprim_new_body(FTYPE U[NPR], struct of_geom *ptrgeom,  FTYPE prim[N
   if(utsq < 0. || utsq > UTSQ_TOO_BIG) { // takes care of W_TOO_BIG
     if( debugfail>=2 ) { 
       dualfprintf(fail_file,"utsq failure:  utsq = %21.15g , W = %21.15g \n",utsq, W) ;
-//      dualfprintf(fail_file, "Utoprim_new_body(): utsq==bad failure, t,i,j, p[0-7], U[0-7] = %21.15g %d %d ", t, ptrgeom->i, ptrgeom->j );  
-//      for( i = 0 ; i < NPR; i++ ) {
-//	dualfprintf(fail_file, "%21.15g ", prim[i]);
-//      }
-//      for( i = 0 ; i < NPR; i++ ) {
-//	dualfprintf(fail_file, "%21.15g ", U[i]);
-//      }
-//      dualfprintf(fail_file, "\n");
+      //      dualfprintf(fail_file, "Utoprim_new_body(): utsq==bad failure, t,i,j, p[0-7], U[0-7] = %21.15g %d %d ", t, ptrgeom->i, ptrgeom->j );  
+      //      for( i = 0 ; i < NPR; i++ ) {
+      //        dualfprintf(fail_file, "%21.15g ", prim[i]);
+      //      }
+      //      for( i = 0 ; i < NPR; i++ ) {
+      //        dualfprintf(fail_file, "%21.15g ", U[i]);
+      //      }
+      //      dualfprintf(fail_file, "\n");
     }      
 
     *glpflag= UTOPRIMFAILCONVUTSQ;
@@ -353,12 +353,12 @@ static int Utoprim_new_body(FTYPE U[NPR], struct of_geom *ptrgeom,  FTYPE prim[N
     if( debugfail>=2 ) {
       tmpdiff = w - rho0;
       dualfprintf(fail_file,
-		  "rho or uu < 0 failure: rho,w,(w-rho),p,u  = %21.15g %21.15g %21.15g %21.15g %21.15g \n",
-		  rho0,w,tmpdiff,p,u) ;
+                  "rho or uu < 0 failure: rho,w,(w-rho),p,u  = %21.15g %21.15g %21.15g %21.15g %21.15g \n",
+                  rho0,w,tmpdiff,p,u) ;
       dualfprintf(fail_file,
-		  "rho or uu < 0 failure: gamma,utsq = %21.15g %21.15g  \n",  gamma, utsq) ;
+                  "rho or uu < 0 failure: gamma,utsq = %21.15g %21.15g  \n",  gamma, utsq) ;
     }
-     if((rho0<=0.)&&(u>=0.)) *glpflag=  UTOPRIMFAILRHONEG;
+    if((rho0<=0.)&&(u>=0.)) *glpflag=  UTOPRIMFAILRHONEG;
     if((rho0>=0.)&&(u<0.)) *glpflag= UTOPRIMFAILUNEG;
     if((rho0<=0.)&&(u<0.)) *glpflag= UTOPRIMFAILRHOUNEG;
     if(UTOPRIMFAILRETURNTYPE==UTOPRIMRETURNNOTADJUSTED) return(0) ; // else let assign -- used to check how bad failure is.
@@ -370,9 +370,9 @@ static int Utoprim_new_body(FTYPE U[NPR], struct of_geom *ptrgeom,  FTYPE prim[N
 
   for(i=1;i<4;i++)  Qtcon[i] = Qcon[i] + ncon[i] * Qdotn;
   for(i=1;i<4;i++) prim[UTCON1+i-1] = 
-		     -gamma*Qtcon[i]/(W + Bsq) 
-		     - gamma*QdotB*Bcon[i]/(W*(W + Bsq)) ;
-	
+                     -gamma*Qtcon[i]/(W + Bsq) 
+                     - gamma*QdotB*Bcon[i]/(W*(W + Bsq)) ;
+        
   for(i = BCON1; i <= BCON3; i++) prim[i] = U[i] ;
 
 #if(!OPTIMIZED)
@@ -393,38 +393,38 @@ static int Utoprim_new_body(FTYPE U[NPR], struct of_geom *ptrgeom,  FTYPE prim[N
 *************************************************/
 static FTYPE utsq_calc(FTYPE W)
 {
-	FTYPE Wsq,W4,utsq,tmp ;
-	//	extern FTYPE Bsq,QdotBsq,Qtsq ;
-	const int ltrace = 0;
-	
-	Wsq = W*W ;
-	W4 = Wsq*Wsq ;
+  FTYPE Wsq,W4,utsq,tmp ;
+  //    extern FTYPE Bsq,QdotBsq,Qtsq ;
+  const int ltrace = 0;
+        
+  Wsq = W*W ;
+  W4 = Wsq*Wsq ;
 
 #if(!OPTIMIZED)
-	if( ltrace ) {
-	  dualfprintf(fail_file,"enter utsq %21.15g %21.15g %21.15g %21.15g %21.15g\n",Bsq,QdotBsq,Qtsq,W4,Wsq) ;
-	  fflush(fail_file);
-	}
+  if( ltrace ) {
+    dualfprintf(fail_file,"enter utsq %21.15g %21.15g %21.15g %21.15g %21.15g\n",Bsq,QdotBsq,Qtsq,W4,Wsq) ;
+    fflush(fail_file);
+  }
 #endif
 
-//	utsq = (Bsq*QdotBsq + W*(2.*QdotBsq + Qtsq*W))/
-//		(W4 + 2.*Bsq*Wsq*W + Wsq*(Bsq*Bsq - Qtsq) 
-//			- QdotBsq*(2.*W + Bsq)) ; 
-//
+  //    utsq = (Bsq*QdotBsq + W*(2.*QdotBsq + Qtsq*W))/
+  //            (W4 + 2.*Bsq*Wsq*W + Wsq*(Bsq*Bsq - Qtsq) 
+  //                    - QdotBsq*(2.*W + Bsq)) ; 
+  //
 
-	tmp = QdotBsq * ( Bsq + 2*W ) + Qtsq * Wsq;
+  tmp = QdotBsq * ( Bsq + 2*W ) + Qtsq * Wsq;
 
 
-	utsq = tmp / (  Wsq*(W+Bsq)*(W+Bsq) - tmp ) ;
+  utsq = tmp / (  Wsq*(W+Bsq)*(W+Bsq) - tmp ) ;
 
-	/*
-	  if(utsq < 0. || utsq > UTSQ_TOO_BIG) {
-	    dualfprintf(fail_file,"utsq failure %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",utsq,Bsq,QdotBsq,Qtsq,W4,Wsq) ;
-	    return(0.) ;
-	  }
-	*/
+  /*
+    if(utsq < 0. || utsq > UTSQ_TOO_BIG) {
+    dualfprintf(fail_file,"utsq failure %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",utsq,Bsq,QdotBsq,Qtsq,W4,Wsq) ;
+    return(0.) ;
+    }
+  */
 
-	return(utsq) ;	
+  return(utsq) ;        
 }
 
 /*************************************************
@@ -432,26 +432,26 @@ static FTYPE utsq_calc(FTYPE W)
 *************************************************/
 static FTYPE gammasq_calc(FTYPE W)
 {
-	FTYPE Wsq,gammasq,tmp,tmp2 ;
-	//	extern FTYPE Bsq,QdotBsq,Qtsq ;
-	const int ltrace = 0;
-	
-	Wsq = W*W ;
+  FTYPE Wsq,gammasq,tmp,tmp2 ;
+  //    extern FTYPE Bsq,QdotBsq,Qtsq ;
+  const int ltrace = 0;
+        
+  Wsq = W*W ;
 
 #if(!OPTIMIZED)
-	if( ltrace ) {
-	  dualfprintf(fail_file,"enter utsq  %21.15g %21.15g %21.15g %21.15g\n",Bsq,QdotBsq,Qtsq,Wsq) ;
-	  fflush(fail_file);
-	}
+  if( ltrace ) {
+    dualfprintf(fail_file,"enter utsq  %21.15g %21.15g %21.15g %21.15g\n",Bsq,QdotBsq,Qtsq,Wsq) ;
+    fflush(fail_file);
+  }
 #endif
 
-	tmp = QdotBsq * ( Bsq + 2*W ) + Qtsq * Wsq;
-	tmp2 = Wsq*(W+Bsq)*(W+Bsq);
+  tmp = QdotBsq * ( Bsq + 2*W ) + Qtsq * Wsq;
+  tmp2 = Wsq*(W+Bsq)*(W+Bsq);
 
 
-	gammasq = tmp2 / (  tmp2 - tmp ) ;
+  gammasq = tmp2 / (  tmp2 - tmp ) ;
 
-	return(gammasq) ;	
+  return(gammasq) ;     
 }
 
 
@@ -459,89 +459,89 @@ static FTYPE gammasq_calc(FTYPE W)
    variables plus the metric */
 static void ucon_calc_g(FTYPE prim[8],FTYPE gcov[GIND(4,4)],FTYPE gcon[GIND(4,4)],FTYPE ucon[4])
 {
-	FTYPE u_tilde_con[4] ;
-	FTYPE u_tilde_sq ;
-	FTYPE gamma,lapse ;
-	int i,j ;
-	
-	u_tilde_con[0] = 0. ;
-	u_tilde_con[1] = prim[UTCON1] ;
-	u_tilde_con[2] = prim[UTCON2] ;
-	u_tilde_con[3] = prim[UTCON3] ;
+  FTYPE u_tilde_con[4] ;
+  FTYPE u_tilde_sq ;
+  FTYPE gamma,lapse ;
+  int i,j ;
+        
+  u_tilde_con[0] = 0. ;
+  u_tilde_con[1] = prim[UTCON1] ;
+  u_tilde_con[2] = prim[UTCON2] ;
+  u_tilde_con[3] = prim[UTCON3] ;
 
-	u_tilde_sq = 0. ;
-	for(i=0;i<4;i++)
-	for(j=0;j<4;j++)
-		u_tilde_sq += gcov[GIND(i,j)]*u_tilde_con[i]*u_tilde_con[j] ;
-	u_tilde_sq = fabs(u_tilde_sq) ;
+  u_tilde_sq = 0. ;
+  for(i=0;i<4;i++)
+    for(j=0;j<4;j++)
+      u_tilde_sq += gcov[GIND(i,j)]*u_tilde_con[i]*u_tilde_con[j] ;
+  u_tilde_sq = fabs(u_tilde_sq) ;
 
-	gamma = sqrt(1. + u_tilde_sq) ;
+  gamma = sqrt(1. + u_tilde_sq) ;
 
-	lapse = sqrt(-1./gcon[GIND(0,0)]) ;
+  lapse = sqrt(-1./gcon[GIND(0,0)]) ;
 
-	for(i=0;i<4;i++) ucon[i] = u_tilde_con[i] - lapse*gamma*gcon[GIND(0,i)] ;
+  for(i=0;i<4;i++) ucon[i] = u_tilde_con[i] - lapse*gamma*gcon[GIND(0,i)] ;
 
-	return ;
+  return ;
 }
 
 /* raise covariant vector vcov using gcon, place result in vcon */
 static void raise_g(FTYPE vcov[4], FTYPE gcon[GIND(4,4)], FTYPE vcon[4])
 {
-	int i,j;
+  int i,j;
 
-	for(i=0;i<4;i++) {
-		vcon[i] = 0. ;
-		for(j=0;j<4;j++) 
-			vcon[i] += gcon[GIND(i,j)]*vcov[j] ;
-	}
+  for(i=0;i<4;i++) {
+    vcon[i] = 0. ;
+    for(j=0;j<4;j++) 
+      vcon[i] += gcon[GIND(i,j)]*vcov[j] ;
+  }
 
-	return ;
+  return ;
 }
 /* lower contravariant vector vcon using gcov, place result in vcov */
 static void lower_g(FTYPE vcon[4], FTYPE gcov[GIND(4,4)], FTYPE vcov[4])
 {
-	int i,j;
+  int i,j;
 
-	for(i=0;i<4;i++) {
-		vcov[i] = 0. ;
-		for(j=0;j<4;j++) 
-			vcov[i] += gcov[GIND(i,j)]*vcon[j] ;
-	}
+  for(i=0;i<4;i++) {
+    vcov[i] = 0. ;
+    for(j=0;j<4;j++) 
+      vcov[i] += gcov[GIND(i,j)]*vcon[j] ;
+  }
 
-	return ;
+  return ;
 }
 
 /* set covariant normal observer four-velocity */
 static void ncov_calc(FTYPE g00,FTYPE ncov[4]) 
 {
-	FTYPE lapse ;
+  FTYPE lapse ;
 
-	lapse = sqrt(-1./g00) ;
+  lapse = sqrt(-1./g00) ;
 
-	ncov[0] = -lapse ;
-	ncov[1] = 0. ;
-	ncov[2] = 0. ;
-	ncov[3] = 0. ;
+  ncov[0] = -lapse ;
+  ncov[1] = 0. ;
+  ncov[2] = 0. ;
+  ncov[3] = 0. ;
 
-	return ;
+  return ;
 }
 
 /* calculate contravariant magnetic field four-vector b */
 static void bcon_calc_g(FTYPE prim[8],FTYPE ucon[4],FTYPE ucov[4],FTYPE ncov[4],FTYPE bcon[4]) 
 {
-	FTYPE Bcon[4] ;
-	FTYPE u_dot_B ;
-	FTYPE gamma ;
-	int i ;
+  FTYPE Bcon[4] ;
+  FTYPE u_dot_B ;
+  FTYPE gamma ;
+  int i ;
 
-	Bcon[0] = 0. ;
-	for(i=1;i<4;i++) Bcon[i] = prim[BCON1+i-1] ;
+  Bcon[0] = 0. ;
+  for(i=1;i<4;i++) Bcon[i] = prim[BCON1+i-1] ;
 
-	u_dot_B = 0. ;
-	for(i=0;i<4;i++) u_dot_B += ucov[i]*Bcon[i] ;
+  u_dot_B = 0. ;
+  for(i=0;i<4;i++) u_dot_B += ucov[i]*Bcon[i] ;
 
-	gamma = -ucon[0]*ncov[0] ;
-	for(i=0;i<4;i++) bcon[i] = (Bcon[i] + ucon[i]*u_dot_B)/gamma ;
+  gamma = -ucon[0]*ncov[0] ;
+  for(i=0;i<4;i++) bcon[i] = (Bcon[i] + ucon[i]*u_dot_B)/gamma ;
 }
 
 
@@ -575,8 +575,8 @@ static int is_nan_inf( FTYPE x )
 
 *****************************************************************/
 static int general_newton_raphson( FTYPE x[], int n, int do_line_search,
-			    void (*funcd) (FTYPE [], FTYPE [], FTYPE [], FTYPE [][NEWT_DIM], FTYPE *, FTYPE *, int), 
-			    FTYPE (*res_func) (FTYPE []) )
+                                   void (*funcd) (FTYPE [], FTYPE [], FTYPE [], FTYPE [][NEWT_DIM], FTYPE *, FTYPE *, int), 
+                                   FTYPE (*res_func) (FTYPE []) )
 {
   FTYPE f, f_old, df, df_old, dx[NEWT_DIM], dx_old[NEWT_DIM], x_old[NEWT_DIM], resid[NEWT_DIM], jac[NEWT_DIM][NEWT_DIM];
   FTYPE errx, errx_old, errx_oldest, x_orig[NEWT_DIM];
@@ -615,7 +615,7 @@ static int general_newton_raphson( FTYPE x[], int n, int do_line_search,
     if( n_iter == 0 ) { 
       resid_norm = 0.0e0;
       for( id = 0; id < n ; id++) {
-	resid_norm += fabs(resid[id]);
+        resid_norm += fabs(resid[id]);
       }
       resid_norm /= 1.0*n ;
       if( resid_norm == 0.0 ) resid_norm = 1.0;
@@ -633,7 +633,7 @@ static int general_newton_raphson( FTYPE x[], int n, int do_line_search,
     if( ((n_iter+1) % CYCLE_BREAK_PERIOD) == 0 ) {
       randtmp = ( (1.*rand())/(1.*RAND_MAX) );
       for( id = 0; id < n ; id++) dx[id] *= randtmp;
-      //	for( id = 0; id < n ; id++) dx[id] *= ( (1.*rand())/(1.*RAND_MAX) );
+      //        for( id = 0; id < n ; id++) dx[id] *= ( (1.*rand())/(1.*RAND_MAX) );
     }
 #endif
 
@@ -654,104 +654,104 @@ static int general_newton_raphson( FTYPE x[], int n, int do_line_search,
     if( do_line_search == 1 ) { 
 
       for( id = 0; id < n ; id++) {
-	tmp = 0.;
-	for( jd = 0; jd < n ; jd++) {
-	  tmp += jac[jd][id] * resid[jd];
-	}
-	del_f[id] = tmp;
+        tmp = 0.;
+        for( jd = 0; jd < n ; jd++) {
+          tmp += jac[jd][id] * resid[jd];
+        }
+        del_f[id] = tmp;
       }
       for( id = 0; id < n ; id++) {
-	dn[id] = dx[id];
+        dn[id] = dx[id];
       }
 
       my_lnsrch(n, x_old-1, f_old, del_f-1, dn-1, x-1, &f, TOL_LINE_STEP, SCALEMAX, &retval, res_func);
 
       /* dx is needed for errx calculation below: */
       for( id = 0; id < n ; id++) {
-	dx[id] = x[id] - x_old[id];
+        dx[id] = x[id] - x_old[id];
       }
 
 #if(!OPTIMIZED)
       if( ltrace ) { 
-	res_func_val = res_func(x);
-	res_func_old = res_func(x_old);
-	dualfprintf(fail_file,"gnr(): f_old, f, res_func_old, res_func_val = %21.15g  %21.15g  %21.15g  %21.15g  \n",
-		f_old, f, res_func_old, res_func_val );
-	dualfprintf(fail_file,"gnr(): x_old = ");
-	for( id = 0; id < n ; id++) {
-	  dualfprintf(fail_file," %21.15g ",x_old[id]);
-	}
-	dualfprintf(fail_file,"\n ");
-	dualfprintf(fail_file,"gnr(): x     = ");
-	for( id = 0; id < n ; id++) {
-	  dualfprintf(fail_file," %21.15g ",x[id]);
-	}
-	dualfprintf(fail_file,"\n ");
-	dualfprintf(fail_file,"gnr(): dn    = ");
-	for( id = 0; id < n ; id++) {
-	  dualfprintf(fail_file," %21.15g ",dn[id]);
-	}
-	dualfprintf(fail_file,"\n ");
-	dualfprintf(fail_file,"gnr(): del_f = ");
-	for( id = 0; id < n ; id++) {
-	  dualfprintf(fail_file," %21.15g ",del_f[id]);
-	}
-	dualfprintf(fail_file,"\n ");
+        res_func_val = res_func(x);
+        res_func_old = res_func(x_old);
+        dualfprintf(fail_file,"gnr(): f_old, f, res_func_old, res_func_val = %21.15g  %21.15g  %21.15g  %21.15g  \n",
+                    f_old, f, res_func_old, res_func_val );
+        dualfprintf(fail_file,"gnr(): x_old = ");
+        for( id = 0; id < n ; id++) {
+          dualfprintf(fail_file," %21.15g ",x_old[id]);
+        }
+        dualfprintf(fail_file,"\n ");
+        dualfprintf(fail_file,"gnr(): x     = ");
+        for( id = 0; id < n ; id++) {
+          dualfprintf(fail_file," %21.15g ",x[id]);
+        }
+        dualfprintf(fail_file,"\n ");
+        dualfprintf(fail_file,"gnr(): dn    = ");
+        for( id = 0; id < n ; id++) {
+          dualfprintf(fail_file," %21.15g ",dn[id]);
+        }
+        dualfprintf(fail_file,"\n ");
+        dualfprintf(fail_file,"gnr(): del_f = ");
+        for( id = 0; id < n ; id++) {
+          dualfprintf(fail_file," %21.15g ",del_f[id]);
+        }
+        dualfprintf(fail_file,"\n ");
       }
 #endif
 
       /* Check to see if line search problem is because the residual vector is already small enough */
       if( retval == 1 ) {
-	resid_check = 0.0e0;
-	for( id = 0; id < n ; id++) {
-	  resid_check += fabs(resid[id]);
-	}
-	resid_check /= 1.0*n;
-	
-	if( resid_check <= resid_norm * NEWT_FUNC_TOL ) {
-	  retval = 0;
-	}
-	if( ltrace && retval ) { 
-	  dualfprintf(fail_file,"general_newton_raphson():  retval, resid_check = %4i  %21.15g \n",retval, resid_check);
-	  fflush(fail_file);
-	}	  
+        resid_check = 0.0e0;
+        for( id = 0; id < n ; id++) {
+          resid_check += fabs(resid[id]);
+        }
+        resid_check /= 1.0*n;
+        
+        if( resid_check <= resid_norm * NEWT_FUNC_TOL ) {
+          retval = 0;
+        }
+        if( ltrace && retval ) { 
+          dualfprintf(fail_file,"general_newton_raphson():  retval, resid_check = %4i  %21.15g \n",retval, resid_check);
+          fflush(fail_file);
+        }         
       }
       /* If initial Newton step is bad, then try again without line searching: */
       if( (retval == 2) && (USE_LINE_SEARCH == do_line_search) ) { 
-	if( ltrace ) { 
-	  dualfprintf(fail_file,"gnr(): bad first step: retval, f_old, f  = %4i  %21.15g  %21.15g  \n",retval,f_old,f);
-	  dualfprintf(fail_file,"gnr: doing recursive call, retval, errx = %4i  %21.15g \n", retval, errx );
-	  fflush(fail_file);
-	  retval = general_newton_raphson( x_orig, n, ((do_line_search+1)%2), funcd, res_func );
-	  for( id = 0; id < n ; id++)  x[id] = x_orig[id] ;
-	  return( retval );
-	}
+        if( ltrace ) { 
+          dualfprintf(fail_file,"gnr(): bad first step: retval, f_old, f  = %4i  %21.15g  %21.15g  \n",retval,f_old,f);
+          dualfprintf(fail_file,"gnr: doing recursive call, retval, errx = %4i  %21.15g \n", retval, errx );
+          fflush(fail_file);
+          retval = general_newton_raphson( x_orig, n, ((do_line_search+1)%2), funcd, res_func );
+          for( id = 0; id < n ; id++)  x[id] = x_orig[id] ;
+          return( retval );
+        }
       }
-	
+        
       /* Check to see if it is trapped in a local minimum, i.e. gradient is too small */ 
       if( retval == 1 ) { 
-	grad_check = 0.0e0;
-	for( id = 0; id < n ; id++) {
-	  resid_check = (x[id] == 0.) ? 1.0 : fabs(x[id]) ;
-	  grad_check  +=  del_f[id] * resid_check ;
-	}
-	resid_check = (f == 0.) ? 1.0 : fabs(f) ;
-	grad_check /= resid_check;
-	
-	/* Then we've most likely found a solution: */
-	if( grad_check > GRADMIN ) { 
-	  retval = -1;
-	}
-	else if( ltrace ) { 
-	  dualfprintf(fail_file,"general_newton_raphson():  retval, grad_check = %4i  %21.15g \n",retval, grad_check);
-	  fflush(fail_file);
-	}
+        grad_check = 0.0e0;
+        for( id = 0; id < n ; id++) {
+          resid_check = (x[id] == 0.) ? 1.0 : fabs(x[id]) ;
+          grad_check  +=  del_f[id] * resid_check ;
+        }
+        resid_check = (f == 0.) ? 1.0 : fabs(f) ;
+        grad_check /= resid_check;
+        
+        /* Then we've most likely found a solution: */
+        if( grad_check > GRADMIN ) { 
+          retval = -1;
+        }
+        else if( ltrace ) { 
+          dualfprintf(fail_file,"general_newton_raphson():  retval, grad_check = %4i  %21.15g \n",retval, grad_check);
+          fflush(fail_file);
+        }
       }
     }
     else {
-    /* don't use line search : */
+      /* don't use line search : */
       for( id = 0; id < n ; id++) {
-	x[id] += dx[id] ;
+        x[id] += dx[id] ;
       }
     }
 
@@ -776,15 +776,15 @@ static int general_newton_raphson( FTYPE x[], int n, int do_line_search,
 #if(!OPTIMIZED)
     if( ltrace ) {
       dualfprintf(fail_file," general_newton_raphson(): niter,f_old,f,errx_old,errx = %4i  %21.15g  %21.15g  %21.15g  %21.15g\n",  
-	      n_iter,f_old,f,errx_old,errx );
+                  n_iter,f_old,f,errx_old,errx );
       dualfprintf(fail_file,"gnr(): x_old = ");
       for( id = 0; id < n ; id++) {
-	dualfprintf(fail_file," %21.15g ",x_old[id]);
+        dualfprintf(fail_file," %21.15g ",x_old[id]);
       }
       dualfprintf(fail_file,"\n ");
       dualfprintf(fail_file,"gnr(): x     = ");
       for( id = 0; id < n ; id++) {
-	dualfprintf(fail_file," %21.15g ",x[id]);
+        dualfprintf(fail_file," %21.15g ",x[id]);
       }
       dualfprintf(fail_file,"\n ");
       fflush(fail_file);
@@ -815,21 +815,21 @@ static int general_newton_raphson( FTYPE x[], int n, int do_line_search,
     if( (do_line_search != USE_LINE_SEARCH) || (USE_LINE_SEARCH < 0) ) { 
 #if(!OPTIMIZED)
       if(ltrace2) {
-	dualfprintf(fail_file," totalcount = %d   0   %d  %d  %d  %21.15g \n",n_iter,retval,do_line_search,i_extra,errx); 
-	fflush(fail_file);
- 	//bin_newt_data( errx, n_iter, 0, 0 );
+        dualfprintf(fail_file," totalcount = %d   0   %d  %d  %d  %21.15g \n",n_iter,retval,do_line_search,i_extra,errx); 
+        fflush(fail_file);
+        //bin_newt_data( errx, n_iter, 0, 0 );
       }
       if(ltrace) {
-	dualfprintf(fail_file,"general_newton_raphson():  did not find solution \n");
-	if( retval == -1 ) {
-	  dualfprintf(fail_file,"general_newton_raphson(): lnsrch converged: x = ");
-	  for( id = 0; id < n ; id++)  dualfprintf(fail_file," %21.15g  ",x[id]);
-	  dualfprintf(fail_file,"\n");
-	  dualfprintf(fail_file,"general_newton_raphson(): lnsrch converged: x_old = ");
-	  for( id = 0; id < n ; id++)  dualfprintf(fail_file," %21.15g  ",x_old[id]);
-	  dualfprintf(fail_file,"\n");
-	}
-	fflush(fail_file);
+        dualfprintf(fail_file,"general_newton_raphson():  did not find solution \n");
+        if( retval == -1 ) {
+          dualfprintf(fail_file,"general_newton_raphson(): lnsrch converged: x = ");
+          for( id = 0; id < n ; id++)  dualfprintf(fail_file," %21.15g  ",x[id]);
+          dualfprintf(fail_file,"\n");
+          dualfprintf(fail_file,"general_newton_raphson(): lnsrch converged: x_old = ");
+          for( id = 0; id < n ; id++)  dualfprintf(fail_file," %21.15g  ",x_old[id]);
+          dualfprintf(fail_file,"\n");
+        }
+        fflush(fail_file);
       }
 #endif
       return(1);
@@ -838,7 +838,7 @@ static int general_newton_raphson( FTYPE x[], int n, int do_line_search,
       /* If bad return and we tried line searching, try it without before giving up: */
 #if(!OPTIMIZED)
       dualfprintf(fail_file,"gnr: doing recursive call, do_line_search, retval, errx = %4i  %4i  %21.15g \n",
-	      do_line_search, retval, errx );
+                  do_line_search, retval, errx );
       fflush(fail_file);
 #endif
       retval2 = general_newton_raphson( x_orig, n, ((do_line_search+1)%2), funcd, res_func );
@@ -976,7 +976,7 @@ static FTYPE dgamma_dW(FTYPE W, FTYPE gamma)
   Wsq = W*W;
 
   tmp =  -QdotBsq * ( Bsq + 2*W ) + 
-         Wsq * ( Bsq * (Bsq + 2*W) - Qtsq + Wsq );
+    Wsq * ( Bsq * (Bsq + 2*W) - Qtsq + Wsq );
 
 
   tmp3 = W*(Bsq+W);
@@ -985,7 +985,7 @@ static FTYPE dgamma_dW(FTYPE W, FTYPE gamma)
     tmp2 = tmp3 * sqrt(tmp);
 
     return( -((W*(Bsq + W)*( Bsq*QdotBsq*( Bsq + 3*W ) + 
-			     Wsq*(3*QdotBsq + Qtsq*W))) / (tmp*tmp2))    );
+                             Wsq*(3*QdotBsq + Qtsq*W))) / (tmp*tmp2))    );
   }
   else {
     return( 0.5*gamma/W ); 
@@ -994,7 +994,7 @@ static FTYPE dgamma_dW(FTYPE W, FTYPE gamma)
 }
 
 /******************************************************************************************
-******************************************************************************************
+ ******************************************************************************************
 
  The following routines are based on the 
  particular equation of state being used. 
@@ -1002,7 +1002,7 @@ static FTYPE dgamma_dW(FTYPE W, FTYPE gamma)
 **********************************************/
 
 /*
- Pressure as a function of only gamma and D 
+  Pressure as a function of only gamma and D 
 */
 
 static FTYPE dpress_dW( FTYPE W, FTYPE gamma, FTYPE dg )
@@ -1015,21 +1015,21 @@ static FTYPE dpress_dW( FTYPE W, FTYPE gamma, FTYPE dg )
 
 
 /* 
-pressure as a function of rho0 and u 
-this is used by primtoU and Utoprim_?D
+   pressure as a function of rho0 and u 
+   this is used by primtoU and Utoprim_?D
 */
 static FTYPE pressure_rho0_u_1dopt(FTYPE rho0, FTYPE u)
 {
-	return((gam - 1.)*u) ;
+  return((gam - 1.)*u) ;
 }
 
 /* 
-pressure as a function of rho0 and w = rho0 + u + p 
-this is used by primtoU and Utoprim_1D
+   pressure as a function of rho0 and w = rho0 + u + p 
+   this is used by primtoU and Utoprim_1D
 */
 static FTYPE pressure_rho0_w_1dopt(FTYPE rho0, FTYPE w)
 {
-	return((gam-1.)*(w - rho0)/gam) ;
+  return((gam-1.)*(w - rho0)/gam) ;
 }
 
 
@@ -1040,7 +1040,7 @@ static FTYPE pressure_rho0_w_1dopt(FTYPE rho0, FTYPE w)
 /*#define TOLX 1.0e-7*/
 
 static void my_lnsrch( int n, FTYPE xold[], FTYPE fold, FTYPE g[], FTYPE p[], FTYPE x[], 
-		FTYPE *f, FTYPE TOLX, FTYPE stpmax, int *check, FTYPE (*func) (FTYPE []) )
+                       FTYPE *f, FTYPE TOLX, FTYPE stpmax, int *check, FTYPE (*func) (FTYPE []) )
 {
   int i;
   FTYPE a,alam,alam2,alamin,b,disc,f2,fold2,rhs1,rhs2,slope,sum,temp,test,tmplam;
@@ -1050,7 +1050,7 @@ static void my_lnsrch( int n, FTYPE xold[], FTYPE fold, FTYPE g[], FTYPE p[], FT
   FTYPE bad_step_factor = 2.0;
   
   const int ltrace = 0;
-	
+        
   
   *check=0;
   for (sum=0.0,i=1;i<=n;i++) sum += p[i]*p[i];
@@ -1099,48 +1099,48 @@ static void my_lnsrch( int n, FTYPE xold[], FTYPE fold, FTYPE g[], FTYPE p[], FT
       for (i=1;i<=n;i++) x[i]=xold[i];
       *check=1;
       if( ltrace ) { 
-	dualfprintf(fail_file,"my_lnsrch(): alam < alamin: alam, alamin = %21.15g  %21.15g \n", alam,alamin); fflush(fail_file);
+        dualfprintf(fail_file,"my_lnsrch(): alam < alamin: alam, alamin = %21.15g  %21.15g \n", alam,alamin); fflush(fail_file);
       }
       return;
     } 
     else if (*f <= fold+ALF*alam*slope) {
       if( ltrace ) { 
-	dualfprintf(fail_file,"my_lnsrch(): good exit:  alam, alamin, f, fold = %21.15g  %21.15g %21.15g  %21.15g \n", alam,alamin, *f, fold); fflush(fail_file);
+        dualfprintf(fail_file,"my_lnsrch(): good exit:  alam, alamin, f, fold = %21.15g  %21.15g %21.15g  %21.15g \n", alam,alamin, *f, fold); fflush(fail_file);
       }
       return;
     }
     else {
       if (alam == 1.0) {
-	tmplam = -slope/(2.0*(*f-fold-slope));
-	if( ltrace ) {
-	  dualfprintf(fail_file,"my_lnsrch(): setting tmplam!!    tmplam, alam =  %21.15g  %21.15g !!\n", tmplam, alam);
-	  fflush(fail_file);
-	}
+        tmplam = -slope/(2.0*(*f-fold-slope));
+        if( ltrace ) {
+          dualfprintf(fail_file,"my_lnsrch(): setting tmplam!!    tmplam, alam =  %21.15g  %21.15g !!\n", tmplam, alam);
+          fflush(fail_file);
+        }
       }
       else {
-	rhs1 = *f-fold-alam*slope;
-	rhs2=f2-fold2-alam2*slope;
-	a=(rhs1/(alam*alam)-rhs2/(alam2*alam2))/(alam-alam2);
-	b=(-alam2*rhs1/(alam*alam)+alam*rhs2/(alam2*alam2))/(alam-alam2);
-	if (a == 0.0) tmplam = -slope/(2.0*b);
-	else {
-	  disc=b*b-3.0*a*slope;
-	  if (disc<0.0) {
-	    if( disc < -1.e-10 ) {
-	      dualfprintf(fail_file,"my_lnsrch(): Big Roundoff problem:  disc = %21.15g \n", disc);
-	      fflush(fail_file);
-	    }
-	    disc = 0.;
-	  }
-	  else tmplam=(-b+sqrt(disc))/(3.0*a);
-	}
-	if (tmplam>0.5*alam)
-	  tmplam=0.5*alam;
-	if( ltrace ) {
-	  dualfprintf(fail_file,"my_lnsrch(): rhs1, rhs2, a, b, tmplam, alam =  %21.15g  %21.15g  %21.15g  %21.15g  %21.15g  %21.15g !!\n",
-		  rhs1, rhs2, a, b, tmplam, alam );
-	  fflush(fail_file);
-	}
+        rhs1 = *f-fold-alam*slope;
+        rhs2=f2-fold2-alam2*slope;
+        a=(rhs1/(alam*alam)-rhs2/(alam2*alam2))/(alam-alam2);
+        b=(-alam2*rhs1/(alam*alam)+alam*rhs2/(alam2*alam2))/(alam-alam2);
+        if (a == 0.0) tmplam = -slope/(2.0*b);
+        else {
+          disc=b*b-3.0*a*slope;
+          if (disc<0.0) {
+            if( disc < -1.e-10 ) {
+              dualfprintf(fail_file,"my_lnsrch(): Big Roundoff problem:  disc = %21.15g \n", disc);
+              fflush(fail_file);
+            }
+            disc = 0.;
+          }
+          else tmplam=(-b+sqrt(disc))/(3.0*a);
+        }
+        if (tmplam>0.5*alam)
+          tmplam=0.5*alam;
+        if( ltrace ) {
+          dualfprintf(fail_file,"my_lnsrch(): rhs1, rhs2, a, b, tmplam, alam =  %21.15g  %21.15g  %21.15g  %21.15g  %21.15g  %21.15g !!\n",
+                      rhs1, rhs2, a, b, tmplam, alam );
+          fflush(fail_file);
+        }
       }
     }
     alam2=alam;
@@ -1149,7 +1149,7 @@ static void my_lnsrch( int n, FTYPE xold[], FTYPE fold, FTYPE g[], FTYPE p[], FT
     alam=max(tmplam,0.1*alam);
     if( ltrace ) {
       dualfprintf(fail_file,"my_lnsrch(): icount, alam, alam2, tmplam  =   %4i  %21.15g  %21.15g  %21.15g \n",
-	      icount, alam, alam2, tmplam);
+                  icount, alam, alam2, tmplam);
       fflush(fail_file);
     }
     icount++;
@@ -1210,10 +1210,10 @@ static void bin_newt_data( FTYPE errx, int niters, int conv_type, int print_now 
     
     for( i = 0; i < N_CONV_TYPES; i++ ) { 
       for( j = 0; j < NBINS; j++ ) { 
-	n_errx[i][j] = 0;
+        n_errx[i][j] = 0;
       }
       for( j = 0; j < N_NITER_BINS; j++ ) { 
-	n_niters[i][j] = 0;
+        n_niters[i][j] = 0;
       }
     }
 
@@ -1249,7 +1249,7 @@ static void bin_newt_data( FTYPE errx, int niters, int conv_type, int print_now 
     else {
       ibin = (int) ( ( lerrx - lerrx_min ) / d_errx );
     }
-		  
+                  
     /* Tally this solution  */
     n_errx[ conv_type][ibin]++;
     n_niters[conv_type][niters]++;
@@ -1274,7 +1274,7 @@ static void bin_newt_data( FTYPE errx, int niters, int conv_type, int print_now 
     for( i = 0; i < NBINS; i++ ) { 
       dualfprintf(fail_file,"%21.15g ",xbin[i]);
       for( j = 0; j < N_CONV_TYPES; j++ ) { 
-	dualfprintf(fail_file,"%13ld ", n_errx[j][i]);
+        dualfprintf(fail_file,"%13ld ", n_errx[j][i]);
       }
       dualfprintf(fail_file,"\n");
     }    
@@ -1293,7 +1293,7 @@ static void bin_newt_data( FTYPE errx, int niters, int conv_type, int print_now 
     for( i = 0; i < N_NITER_BINS; i++ ) { 
       dualfprintf(fail_file,"%13d ", i);
       for( j = 0; j < N_CONV_TYPES; j++ ) { 
-	dualfprintf(fail_file,"%13ld ", n_niters[j][i]);
+        dualfprintf(fail_file,"%13ld ", n_niters[j][i]);
       }
       dualfprintf(fail_file,"\n");
     }    

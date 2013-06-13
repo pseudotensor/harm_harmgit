@@ -39,7 +39,7 @@ static FTYPE tauff;
 
 // changed SLOWFAC, beta,Rbeta, DTd
 
-#define SLOWFAC 0.5		/* reduce u_phi by this amount */
+#define SLOWFAC 0.5             /* reduce u_phi by this amount */
 
 SFTYPE rhomax=0,umax=0,bsq_max=0,beta,Rbeta=0.0,rin;
 FTYPE rhodisk;
@@ -889,7 +889,7 @@ int init_global(void)
   /* debug file */  
   DTdumpgen[DEBUGDUMPTYPE] = DTdumpgen[MAINDUMPTYPE];
 
-  DTr = 100;			/* restart file period in steps */
+  DTr = 100;                    /* restart file period in steps */
 
 
 
@@ -913,7 +913,7 @@ int init_global(void)
   DTdumpgen[DEBUGDUMPTYPE] = DTdumpgen[MAINDUMPTYPE];
 
 
-  DTr = 100;			/* restart file period in steps */
+  DTr = 100;                    /* restart file period in steps */
 #else
   // DEBUG:
   //  tf = 6483.63983628599; // dump~766
@@ -936,7 +936,7 @@ int init_global(void)
   DTdumpgen[DEBUGDUMPTYPE] = DTdumpgen[MAINDUMPTYPE];
 
   // DTr = .1 ; /* restart file frequ., in units of M */
-  DTr = 100;			/* restart file period in steps */
+  DTr = 100;                    /* restart file period in steps */
 #endif
 
 
@@ -1169,24 +1169,24 @@ int init_disk(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr, FTY
   
   if (r >= rin) {
     lnh = 0.5 * log((1. + sqrt(1. + 4. * (l * l * SS * SS) * DD /
-			       (AA * sth * AA * sth))) / (SS * DD /
-							  AA))
+                               (AA * sth * AA * sth))) / (SS * DD /
+                                                          AA))
       - 0.5 * sqrt(1. +
-		   4. * (l * l * SS * SS) * DD / (AA * AA * sth *
-						  sth))
+                   4. * (l * l * SS * SS) * DD / (AA * AA * sth *
+                                                  sth))
       - 2. * jbh * r * l / AA -
       (0.5 *
        log((1. +
-	    sqrt(1. +
-		 4. * (l * l * SSin * SSin) * DDin / (AAin * AAin *
-						      sthin *
-						      sthin))) /
-	   (SSin * DDin / AAin))
+            sqrt(1. +
+                 4. * (l * l * SSin * SSin) * DDin / (AAin * AAin *
+                                                      sthin *
+                                                      sthin))) /
+           (SSin * DDin / AAin))
        - 0.5 * sqrt(1. +
-		    4. * (l * l * SSin * SSin) * DDin / (AAin *
-							 AAin *
-							 sthin *
-							 sthin))
+                    4. * (l * l * SSin * SSin) * DDin / (AAin *
+                                                         AAin *
+                                                         sthin *
+                                                         sthin))
        - 2. * jbh * rin * l / AAin);
   } else
     lnh = 1.;
@@ -1335,23 +1335,23 @@ int init_vpot_user(int *whichcoord, int l, int i, int j, int k, int loc, FTYPE (
 
       Rtrans=14341.8; // Nagataki 2007
       if(r>Rtrans){
-	// dipole
-	vpot += 0.5*Bpole*Rb*Rb*sin(th)*sin(th)/((r+SMALL)/Rtrans) ;
+        // dipole
+        vpot += 0.5*Bpole*Rb*Rb*sin(th)*sin(th)/((r+SMALL)/Rtrans) ;
       }
       //      else if(r>
-	// uniform field
-	//	vpot += 0.5*Bpole*Rb*Rb*(Rb/Rtrans)*sin(th)*sin(th)*(r/Rtrans)*(r/Rtrans) ;
-	// uniform field makes no sense
+      // uniform field
+      //        vpot += 0.5*Bpole*Rb*Rb*(Rb/Rtrans)*sin(th)*sin(th)*(r/Rtrans)*(r/Rtrans) ;
+      // uniform field makes no sense
 
       //}
       else{
-	// split-monopole makes sense
-	if(th<M_PI*0.5){
-	  vpot += -0.5*Bpole*Rb*Rb*cos(th);
-	}
-	else{
-	  vpot += 0.5*Bpole*Rb*Rb*cos(th);
-	}
+        // split-monopole makes sense
+        if(th<M_PI*0.5){
+          vpot += -0.5*Bpole*Rb*Rb*cos(th);
+        }
+        else{
+          vpot += 0.5*Bpole*Rb*Rb*cos(th);
+        }
       }
     }
 
@@ -1362,12 +1362,12 @@ int init_vpot_user(int *whichcoord, int l, int i, int j, int k, int loc, FTYPE (
 
       Rtrans=3.6E9/Lunit; // Nagataki 2007
       if(r>Rtrans){
-	// dipole
-	vpot += 0.5*Bpole*Rb*Rb*sin(th)*sin(th)/((r+SMALL)/Rtrans) ;
+        // dipole
+        vpot += 0.5*Bpole*Rb*Rb*sin(th)*sin(th)/((r+SMALL)/Rtrans) ;
       }
       else{
-	// uniform field
-	vpot += 0.5*Bpole*Rb*Rb*sin(th)*sin(th)*(r/Rtrans)*(r/Rtrans) ;
+        // uniform field
+        vpot += 0.5*Bpole*Rb*Rb*sin(th)*sin(th)*(r/Rtrans)*(r/Rtrans) ;
       }
     }
     /* field-in-disk version */
@@ -1379,16 +1379,16 @@ int init_vpot_user(int *whichcoord, int l, int i, int j, int k, int loc, FTYPE (
       // since init_vpot() is called for all i,j,k, can't use
       // non-existence values, so limit averaging:
       if((i==-N1BND)&&(j==-N2BND)){
-	rho_av = MACP0A1(prim,i,j,k,RHO);
+        rho_av = MACP0A1(prim,i,j,k,RHO);
       }
       else if(i==-N1BND){
-	rho_av = AVGN_2(prim,i,j,k,RHO);
+        rho_av = AVGN_2(prim,i,j,k,RHO);
       }
       else if(j==-N2BND){
-	rho_av = AVGN_1(prim,i,j,k,RHO);
+        rho_av = AVGN_1(prim,i,j,k,RHO);
       }
       else{ // normal cells
-	rho_av = AVGN_for3(prim,i,j,k,RHO);
+        rho_av = AVGN_for3(prim,i,j,k,RHO);
       }
 
       q = rho_av / rhomax - 0.2;
@@ -1511,25 +1511,25 @@ SFTYPE lfish_calc(SFTYPE oldr)
   jbh=a/MBH;
 
   ud3= (((pow(jbh, 2) - 2. * jbh * sqrt(newr) + pow(newr, 2)) *
-	   ((-2. * jbh * newr * (pow(jbh, 2) - 2. * jbh * sqrt(newr) + pow(newr, 2))) /
-	    sqrt(2. * jbh * sqrt(newr) + (-3. + newr) * newr) +
-	    ((jbh + (-2. + newr) * sqrt(newr)) * (pow(newr, 3) +
-					  pow(jbh,
-					      2) * (2. + newr))) / sqrt(1 +
-								     (2.
-								      *
-								      jbh)
-								     /
-								     pow
-								     (newr,
-								      1.5)
-								     -
-								     3.
-								     /
-								     newr)))
-	  / (pow(newr, 3) * sqrt(2. * jbh * sqrt(newr) + (-3. + newr) * newr) *
-	     (pow(jbh, 2) + (-2. + newr) * newr))
-	  );
+         ((-2. * jbh * newr * (pow(jbh, 2) - 2. * jbh * sqrt(newr) + pow(newr, 2))) /
+          sqrt(2. * jbh * sqrt(newr) + (-3. + newr) * newr) +
+          ((jbh + (-2. + newr) * sqrt(newr)) * (pow(newr, 3) +
+                                                pow(jbh,
+                                                    2) * (2. + newr))) / sqrt(1 +
+                                                                              (2.
+                                                                               *
+                                                                               jbh)
+                                                                              /
+                                                                              pow
+                                                                              (newr,
+                                                                               1.5)
+                                                                              -
+                                                                              3.
+                                                                              /
+                                                                              newr)))
+        / (pow(newr, 3) * sqrt(2. * jbh * sqrt(newr) + (-3. + newr) * newr) *
+           (pow(jbh, 2) + (-2. + newr) * newr))
+        );
 
   //  return(ud3*MBH); // puts "units" back in
   return(ud3); // assumes still normalized by MBH

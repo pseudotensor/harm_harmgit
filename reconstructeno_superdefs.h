@@ -20,9 +20,9 @@ FTYPE PTRDEFGLOBALMACP1A0(weno_prim_lower_order_fraction,FILL,N1M,N2M,N3M); //at
 
 
 #if( WENOMEMORY && WENO_REDUCE_A2C_LOOK_OTHER_DIRECTIONS )
-FTYPE BASEMACP0A1(weno_lower_order_fraction,N1M,N2M,N3M,NPR);	/* space for lower order indicators */  //atch
+FTYPE BASEMACP0A1(weno_lower_order_fraction,N1M,N2M,N3M,NPR);   /* space for lower order indicators */  //atch
 #endif 
 
 #if( WENOMEMORY && STORE_GAMMA_PRIM_REDUCTION_FRACTION )
-FTYPE BASEMACP0A1(weno_prim_lower_order_fraction,NDIM,N1M,N2M,N3M);	/* space for lower order fraction of primitive quantities */  //atch
+FTYPE BASEMACP0A1(weno_prim_lower_order_fraction,NDIM,N1M,N2M,N3M);     /* space for lower order fraction of primitive quantities */  //atch
 #endif 

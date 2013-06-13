@@ -1593,7 +1593,7 @@ void Max_con_old(FTYPE prffde[NPR], struct of_geom *geom, FTYPE (*Mcon)[NDIM])
   Mcon[1][2] = (-beta[1] * Mt2 + beta[2] * Mt1 + alpha/(geom->gdet) * Ecov[3]) ;
   Mcon[2][3] = (-beta[2] * Mt3 + beta[3] * Mt2 + alpha/(geom->gdet) * Ecov[1]) ;
   Mcon[3][1] = (-beta[3] * Mt1 + beta[1] * Mt3 + alpha/(geom->gdet) * Ecov[2]) ;
-	 
+         
   /* copy remaining spacial terms */
    
   Mcon[2][1] = -Mcon[1][2] ;
@@ -1705,45 +1705,45 @@ void testffdeinversion(void)
     for(uu[2]=-100.0;uu[2]<=100.0;uu[2]+=10)
       for(uu[3]=-100.0;uu[3]<=010.0;uu[3]+=10)
 
-	for(Bu[1]=-10.0;Bu[1]<=10.0;Bu[1]+=1)
-	  for(Bu[2]=-10.0;Bu[2]<=10.0;Bu[2]+=1)
-	    for(Bu[3]=-10.0;Bu[3]<=10.0;Bu[3]+=1){
+        for(Bu[1]=-10.0;Bu[1]<=10.0;Bu[1]+=1)
+          for(Bu[2]=-10.0;Bu[2]<=10.0;Bu[2]+=1)
+            for(Bu[3]=-10.0;Bu[3]<=10.0;Bu[3]+=1){
 
-	      if((Bu[1]==0)&&(Bu[2]==0)&&(Bu[3]==0)) continue;
+              if((Bu[1]==0)&&(Bu[2]==0)&&(Bu[3]==0)) continue;
 
-	      prin[RHO]=prin[UU]=0;
+              prin[RHO]=prin[UU]=0;
 
-	      prin[U1]=uu[1];
-	      prin[U2]=uu[2];
-	      prin[U3]=uu[3];
+              prin[U1]=uu[1];
+              prin[U2]=uu[2];
+              prin[U3]=uu[3];
 
-	      prin[B1]=Bu[1];
-	      prin[B2]=Bu[2];
-	      prin[B3]=Bu[3];
+              prin[B1]=Bu[1];
+              prin[B2]=Bu[2];
+              prin[B3]=Bu[3];
 
-	      get_geometry(i,j,k,CENT,ptrgeom);
+              get_geometry(i,j,k,CENT,ptrgeom);
 
-	      if(get_state(prin,ptrgeom,&q)>=1) dualfprintf(fail_file,"getstate failure in realtest\n");
-	      if(primtoU(UNOTHING,prin,&q,ptrgeom,U)>=1) dualfprintf(fail_file,"primtoU failure in realtest\n");
-	      
-	      Utoprim_ffde(U,ptrgeom,prout); // no need for initial guess since analytic inversion
+              if(get_state(prin,ptrgeom,&q)>=1) dualfprintf(fail_file,"getstate failure in realtest\n");
+              if(primtoU(UNOTHING,prin,&q,ptrgeom,U)>=1) dualfprintf(fail_file,"primtoU failure in realtest\n");
+              
+              Utoprim_ffde(U,ptrgeom,prout); // no need for initial guess since analytic inversion
 
-	      PLOOP(pliter,pl) prin[pl]=prout[pl];
+              PLOOP(pliter,pl) prin[pl]=prout[pl];
 
-	      // only clean solution to test
-	      get_state(prin,ptrgeom,&q);
-	      primtoU(UNOTHING,prin,&q,ptrgeom,U);
-	      
-	      Utoprim_ffde(U,ptrgeom,prout); // no need for initial guess since analytic inversion
+              // only clean solution to test
+              get_state(prin,ptrgeom,&q);
+              primtoU(UNOTHING,prin,&q,ptrgeom,U);
+              
+              Utoprim_ffde(U,ptrgeom,prout); // no need for initial guess since analytic inversion
 
-	      // just compare pr in and pr out.
-	      SLOOPA(j) dualfprintf(fail_file,"realtest uu[%d]=%21.15g\n",j,uu[j]);
-	      SLOOPA(j) dualfprintf(fail_file,"realtest Bu[%d]=%21.15g\n",j,Bu[j]);
-	      for(k=U1;k<=B3;k++) dualfprintf(fail_file,"prold[%d]=%21.15g  prnew[%d]=%21.15g :: %21.15g\n",pl,prin[pl],pl,prout[pl],(prin[pl]-prout[pl])/prin[pl]); 
-	      fflush(fail_file);
+              // just compare pr in and pr out.
+              SLOOPA(j) dualfprintf(fail_file,"realtest uu[%d]=%21.15g\n",j,uu[j]);
+              SLOOPA(j) dualfprintf(fail_file,"realtest Bu[%d]=%21.15g\n",j,Bu[j]);
+              for(k=U1;k<=B3;k++) dualfprintf(fail_file,"prold[%d]=%21.15g  prnew[%d]=%21.15g :: %21.15g\n",pl,prin[pl],pl,prout[pl],(prin[pl]-prout[pl])/prin[pl]); 
+              fflush(fail_file);
 
-	      //	      myexit(0);
-	    }
+              //              myexit(0);
+            }
 
 #endif
 
@@ -1800,7 +1800,7 @@ void testffdeinversion(void)
   if(get_state(prin,ptrgeom,&q)>=1) dualfprintf(fail_file,"getstate failure in realtest\n");
   DLOOPA(pl) dualfprintf(fail_file,"1 uu[%d]=%21.15g\n",k,q.ucon[pl]);
   if(primtoU(UNOTHING,prin,&q,ptrgeom,U)>=1) dualfprintf(fail_file,"primtoU failure in realtest\n");
-	      
+              
   Utoprim_ffde(U,ptrgeom,prout); // no need for initial guess since analytic inversion
   for(pl=U1;pl<=B3;pl++) dualfprintf(fail_file,"prold[%d]=%21.15g  prnew[%d]=%21.15g :: %21.15g\n",pl,prin[pl],pl,prout[pl],(prin[pl]-prout[pl])/prin[pl]); 
 
@@ -1810,14 +1810,14 @@ void testffdeinversion(void)
   get_state(prin,ptrgeom,&q);
   DLOOPA(k) dualfprintf(fail_file,"2 uu[%d]=%21.15g\n",k,q.ucon[pl]);
   primtoU(UNOTHING,prin,&q,ptrgeom,U);
-	      
+              
   Utoprim_ffde(U,ptrgeom,prout); // no need for initial guess since analytic inversion
 
   // just compare pr in and pr out.
   for(pl=U1;pl<=B3;pl++) dualfprintf(fail_file,"prold[%d]=%21.15g  prnew[%d]=%21.15g :: %21.15g\n",pl,prin[pl],pl,prout[pl],(prin[pl]-prout[pl])/prin[pl]); 
   fflush(fail_file);
 
-  //	      myexit(0);
+  //          myexit(0);
 #endif
 
 

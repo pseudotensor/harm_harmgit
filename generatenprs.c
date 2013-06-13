@@ -1,7 +1,7 @@
 #include <stdio.h>
 
 #include "global.realdef.h"
-#include "global.nondepnmemonics.h"
+#include "global.nondepmnemonics.h"
 #include "definit.h"
 #include "init.h"
 

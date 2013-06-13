@@ -18,7 +18,7 @@ void preinterp_flux_point2avg(void)
   //zero out the array with lower order fractions at every substep before c2e reconstructions are performed
   if(DOENOFLUX!=NOENOFLUX){
     COMPFULLLOOP {
-      DIMENLOOP(dir)	MACP1A0(weno_prim_lower_order_fraction,dir,i,j,k) = 0.0;
+      DIMENLOOP(dir)    MACP1A0(weno_prim_lower_order_fraction,dir,i,j,k) = 0.0;
     }
   }
 #endif
@@ -113,7 +113,7 @@ int flux_point2avg(int stage, int whichmaem, FTYPE (*pr)[NSTORE2][NSTORE3][NPR],
 
 
 #if(PRODUCTION==0)
-    trifprintf( "e");
+  trifprintf( "e");
 #endif
     
 
@@ -141,9 +141,9 @@ int flux_deaverage_fluxrecon(int stage, int whichmaem, FTYPE (*pr)[NSTORE2][NSTO
   extern void flux_interp(int *whichpltoavg, int *ifnotavgthencopy, int whichquantity, int interporflux, int dir, int idel, int jdel, int kdel, FTYPE (*prims_guess)[NSTORE2][NSTORE3][NPR], FTYPE (*stencilvar)[NSTORE2][NSTORE3][NPR], FTYPE (*p2interpm)[NSTORE2][NSTORE3][NPR], FTYPE (*p2interpp)[NSTORE2][NSTORE3][NPR], FTYPE (*pleft)[NSTORE2][NSTORE3][NPR], FTYPE (*pright)[NSTORE2][NSTORE3][NPR]);
   int simple_a2c_limit_onepl(int dotransverse, int dir, int pl, FTYPE (*primreal)[NSTORE2][NSTORE3][NPR], FTYPE (*in)[NSTORE2][NSTORE3][NPR], FTYPE (*out)[NSTORE2][NSTORE3][NPR]);
   FTYPE limit_fluxc2a_prim_change( 
-				  int dir, FTYPE (*pr)[NSTORE2][NSTORE3][NPR],
-				  FTYPE (*fluxvec_point)[NSTORE2][NSTORE3][NPR],
-				  FTYPE (*fluxvec_avg)[NSTORE2][NSTORE3][NPR]);   //atch
+                                  int dir, FTYPE (*pr)[NSTORE2][NSTORE3][NPR],
+                                  FTYPE (*fluxvec_point)[NSTORE2][NSTORE3][NPR],
+                                  FTYPE (*fluxvec_avg)[NSTORE2][NSTORE3][NPR]);   //atch
   int pl,pliter,i,j,k;
   int whichpltoavg[NPR];
   int ifnotavgthencopy[NPR];
@@ -287,195 +287,195 @@ int flux_deaverage_fluxrecon(int stage, int whichmaem, FTYPE (*pr)[NSTORE2][NSTO
       if(Nvec[dir]!=1){
 
 
-	// other dimensions
-	odir1=dir%3+1;
-	odir2=(dir+1)%3+1;
+        // other dimensions
+        odir1=dir%3+1;
+        odir2=(dir+1)%3+1;
 
-	odirarray[0]=odir1;
-	odirarray[1]=odir2;
+        odirarray[0]=odir1;
+        odirarray[1]=odir2;
 
 
 
-	if(whichmaem==ISMAONLY && splitmaem==1){
-	  // override above and deal with flux[FLUXSPLITPMA(dir)] term
-	  // this term really contains diagonal gas pressure
-	  pl=FLUXSPLITPMA(dir);
-	  whichpltoavg[pl]=dotranslocal[UU+dir];
-	  ifnotavgthencopy[pl]=0;
-	}
+        if(whichmaem==ISMAONLY && splitmaem==1){
+          // override above and deal with flux[FLUXSPLITPMA(dir)] term
+          // this term really contains diagonal gas pressure
+          pl=FLUXSPLITPMA(dir);
+          whichpltoavg[pl]=dotranslocal[UU+dir];
+          ifnotavgthencopy[pl]=0;
+        }
     
-	//////////////////////////////////
-	// go ahead and control nprlist
-	//
-	// needed for Sasha's limit_fluxc2a (flux_interp internally would remove unwanted pl's based upon whichpltoavg/ifnotavgthencopy)
-	//
-	//////////////////////////////////
-	addremovefromnpr(REMOVEFROMNPR,whichpltoavg,ifnotavgthencopy,&nprlocalstart,&nprlocalend,nprlocallist,NULL,NULL);
+        //////////////////////////////////
+        // go ahead and control nprlist
+        //
+        // needed for Sasha's limit_fluxc2a (flux_interp internally would remove unwanted pl's based upon whichpltoavg/ifnotavgthencopy)
+        //
+        //////////////////////////////////
+        addremovefromnpr(REMOVEFROMNPR,whichpltoavg,ifnotavgthencopy,&nprlocalstart,&nprlocalend,nprlocallist,NULL,NULL);
 
-	////////////////////////////////////////////
-	//
-	// if no variables to do, then continue to next direction or if no more directions just done
-	//
-	////////////////////////////////////////////
+        ////////////////////////////////////////////
+        //
+        // if no variables to do, then continue to next direction or if no more directions just done
+        //
+        ////////////////////////////////////////////
 
-	if(nprlocalend>-1){
+        if(nprlocalend>-1){
 
-	  ////////////////////////////////////////////
-	  //
-	  // Setup idel,jdel,kdel
-	  //
-	  ////////////////////////////////////////////
-	  idel = fluxloop[dir][FIDEL];
-	  jdel = fluxloop[dir][FJDEL];
-	  kdel = fluxloop[dir][FKDEL];
-
-
-	  /////////////
-	  //
-	  // store original lower-order flux
-	  // used for any extra limiting after higher-order calculation is done
-	  //
-	  /////////////
-	  if(extralimiting){
-	    COMPFULLLOOP PLOOP(pliter,pl) GLOBALMACP0A1(fluxvectemp,i,j,k,pl) = MACP1A1(fluxvec,dir,i,j,k,pl);
-	  }
+          ////////////////////////////////////////////
+          //
+          // Setup idel,jdel,kdel
+          //
+          ////////////////////////////////////////////
+          idel = fluxloop[dir][FIDEL];
+          jdel = fluxloop[dir][FJDEL];
+          kdel = fluxloop[dir][FKDEL];
 
 
-	
-	  /////////////
-	  //
-	  // Determine variable to be used to determine stencil for higher-order calculation
-	  //
-	  // ok to use stencilvartemp since the flux_intepr() function used below never calls flux_interp_multiple() or avg2cen() that use stencilvartemp
-	  //
-	  /////////////
-	  // if fluxvecother!=NULL then assume "stencil" chosen by sum of original and other fluxes
-	  if(fluxvecother==NULL){
-	    COMPFULLLOOP PLOOP(pliter,pl) GLOBALMACP0A1(stencilvartemp,i,j,k,pl) = MACP1A1(fluxvec,dir,i,j,k,pl);
-	  }
-	  else{ // then using fluxvectother[] for some part of stencilvartemp[]
-	    // using 1|| above since this is less accurate than separating fluxes for stencil when using SPLITMAEM
-	    if(whichmaem==ISMAANDEM || (whichmaem==ISMAONLY && splitmaem==0) || whichmaem==ISEMONLY){
-	      COMPFULLLOOP PLOOP(pliter,pl) GLOBALMACP0A1(stencilvartemp,i,j,k,pl) = MACP1A1(fluxvec,dir,i,j,k,pl) + MACP1A1(fluxvecother,dir,i,j,k,pl);
-	    }
-	    else if(whichmaem==ISMAONLY && splitmaem==1){
-	      // have to be more careful now with MA+EM split and pdiag term moved to FLUXSPLITPMA(dir)
-	      // for no obvious reason, for test=106 the below is different than the above (this code leads to no failure for no obvious reasons -- probably minimization code or something is wrong)
+          /////////////
+          //
+          // store original lower-order flux
+          // used for any extra limiting after higher-order calculation is done
+          //
+          /////////////
+          if(extralimiting){
+            COMPFULLLOOP PLOOP(pliter,pl) GLOBALMACP0A1(fluxvectemp,i,j,k,pl) = MACP1A1(fluxvec,dir,i,j,k,pl);
+          }
 
 
-	      COMPFULLLOOP{
-		PLOOPNOB1(pl)  GLOBALMACP0A1(stencilvartemp,i,j,k,pl) = MACP1A1(fluxvec,dir,i,j,k,pl) + MACP1A1(fluxvecother,dir,i,j,k,pl);
-		PLOOPNOB2(pl)  GLOBALMACP0A1(stencilvartemp,i,j,k,pl) = MACP1A1(fluxvec,dir,i,j,k,pl) + MACP1A1(fluxvecother,dir,i,j,k,pl);
+        
+          /////////////
+          //
+          // Determine variable to be used to determine stencil for higher-order calculation
+          //
+          // ok to use stencilvartemp since the flux_intepr() function used below never calls flux_interp_multiple() or avg2cen() that use stencilvartemp
+          //
+          /////////////
+          // if fluxvecother!=NULL then assume "stencil" chosen by sum of original and other fluxes
+          if(fluxvecother==NULL){
+            COMPFULLLOOP PLOOP(pliter,pl) GLOBALMACP0A1(stencilvartemp,i,j,k,pl) = MACP1A1(fluxvec,dir,i,j,k,pl);
+          }
+          else{ // then using fluxvectother[] for some part of stencilvartemp[]
+            // using 1|| above since this is less accurate than separating fluxes for stencil when using SPLITMAEM
+            if(whichmaem==ISMAANDEM || (whichmaem==ISMAONLY && splitmaem==0) || whichmaem==ISEMONLY){
+              COMPFULLLOOP PLOOP(pliter,pl) GLOBALMACP0A1(stencilvartemp,i,j,k,pl) = MACP1A1(fluxvec,dir,i,j,k,pl) + MACP1A1(fluxvecother,dir,i,j,k,pl);
+            }
+            else if(whichmaem==ISMAONLY && splitmaem==1){
+              // have to be more careful now with MA+EM split and pdiag term moved to FLUXSPLITPMA(dir)
+              // for no obvious reason, for test=106 the below is different than the above (this code leads to no failure for no obvious reasons -- probably minimization code or something is wrong)
 
-		// GODMARK: In stiff flows need to couple pressure and velocity, but otherwise pressure can be independent
-		// By "couple" I mean when minimizing weights need to include pressure in stiff regimes
-		// Must keep pressure out when velocity small so can have static equilibrium, for example, at high order.
-		// so create stiffness that is d\gamma/\gamma and dv/u almost like already have, but not static stiff things like b^2/rho or u/rho...just want to compare velocity and pressure/internal energy
+
+              COMPFULLLOOP{
+                PLOOPNOB1(pl)  GLOBALMACP0A1(stencilvartemp,i,j,k,pl) = MACP1A1(fluxvec,dir,i,j,k,pl) + MACP1A1(fluxvecother,dir,i,j,k,pl);
+                PLOOPNOB2(pl)  GLOBALMACP0A1(stencilvartemp,i,j,k,pl) = MACP1A1(fluxvec,dir,i,j,k,pl) + MACP1A1(fluxvecother,dir,i,j,k,pl);
+
+                // GODMARK: In stiff flows need to couple pressure and velocity, but otherwise pressure can be independent
+                // By "couple" I mean when minimizing weights need to include pressure in stiff regimes
+                // Must keep pressure out when velocity small so can have static equilibrium, for example, at high order.
+                // so create stiffness that is d\gamma/\gamma and dv/u almost like already have, but not static stiff things like b^2/rho or u/rho...just want to compare velocity and pressure/internal energy
  
 #if(SPLITPRESSURETERMINFLUXMA)
-		// assume pdiag can't be mixed with EM term, but for pressure term add back in ram pressure term
-		// don't want gas pressure term inside ram pressure because pressure can be constant with variations in velocity and so won't resolve variations in velocity if pressure nearly constant and noisy
-		pl=UU+dir; GLOBALMACP0A1(stencilvartemp,i,j,k,pl) += MACP1A1(fluxvec,dir,i,j,k,FLUXSPLITPMA(dir));
-		// to the gas pressure term, add full magnetic term instead of just some ad-hoc pressure term
-		// This is done to ensure higher-order force-balance when magnetic and gas fluids spatially meet
-		// go ahead and add full MA and full EM term as stencil for pressure term since if v->0 still good and want higher order if this flux is continuous if other terms (when minimized) still give mass-energy-momentum flux that doesn't reduce -- so now UU+dir and FLUXSPLITPMA terms both have same stencil weight choice at this level (then minimization later processes further)
-		pl=FLUXSPLITPMA(dir); GLOBALMACP0A1(stencilvartemp,i,j,k,pl) = MACP1A1(fluxvec,dir,i,j,k,pl) + MACP1A1(fluxvec,dir,i,j,k,UU+dir) + MACP1A1(fluxvecother,dir,i,j,k,UU+dir);
+                // assume pdiag can't be mixed with EM term, but for pressure term add back in ram pressure term
+                // don't want gas pressure term inside ram pressure because pressure can be constant with variations in velocity and so won't resolve variations in velocity if pressure nearly constant and noisy
+                pl=UU+dir; GLOBALMACP0A1(stencilvartemp,i,j,k,pl) += MACP1A1(fluxvec,dir,i,j,k,FLUXSPLITPMA(dir));
+                // to the gas pressure term, add full magnetic term instead of just some ad-hoc pressure term
+                // This is done to ensure higher-order force-balance when magnetic and gas fluids spatially meet
+                // go ahead and add full MA and full EM term as stencil for pressure term since if v->0 still good and want higher order if this flux is continuous if other terms (when minimized) still give mass-energy-momentum flux that doesn't reduce -- so now UU+dir and FLUXSPLITPMA terms both have same stencil weight choice at this level (then minimization later processes further)
+                pl=FLUXSPLITPMA(dir); GLOBALMACP0A1(stencilvartemp,i,j,k,pl) = MACP1A1(fluxvec,dir,i,j,k,pl) + MACP1A1(fluxvec,dir,i,j,k,UU+dir) + MACP1A1(fluxvecother,dir,i,j,k,UU+dir);
 
 
-		/////////////////////
-		// BEGIN DEBUG:
+                /////////////////////
+                // BEGIN DEBUG:
 #if(0)
-		// assume pdiag can't be mixed with EM term, but for pressure term add back in ram pressure term
-		// CHANGINGMARK:
-		pl=FLUXSPLITPMA(dir); GLOBALMACP0A1(stencilvartemp,i,j,k,pl) += MACP1A1(fluxvec,dir,i,j,k,UU+dir);
-		pl=UU+dir; GLOBALMACP0A1(stencilvartemp,i,j,k,pl) += MACP1A1(fluxvec,dir,i,j,k,FLUXSPLITPMA(dir));
+                // assume pdiag can't be mixed with EM term, but for pressure term add back in ram pressure term
+                // CHANGINGMARK:
+                pl=FLUXSPLITPMA(dir); GLOBALMACP0A1(stencilvartemp,i,j,k,pl) += MACP1A1(fluxvec,dir,i,j,k,UU+dir);
+                pl=UU+dir; GLOBALMACP0A1(stencilvartemp,i,j,k,pl) += MACP1A1(fluxvec,dir,i,j,k,FLUXSPLITPMA(dir));
 #endif
 #if(0)
-		// CHANGINGMARK:
-		pl=UU+dir;  MACP1A1(fluxvec,dir,i,j,k,pl) += MACP1A1(fluxvec,dir,i,j,k,FLUXSPLITPMA(dir));
-		pl=FLUXSPLITPMA(dir); MACP1A1(fluxvec,dir,i,j,k,pl) =0.0;
+                // CHANGINGMARK:
+                pl=UU+dir;  MACP1A1(fluxvec,dir,i,j,k,pl) += MACP1A1(fluxvec,dir,i,j,k,FLUXSPLITPMA(dir));
+                pl=FLUXSPLITPMA(dir); MACP1A1(fluxvec,dir,i,j,k,pl) =0.0;
 #endif
-		// END  DEBUG:
-		/////////////////////
+                // END  DEBUG:
+                /////////////////////
 #endif
 
 
-	      }// end COMPFULLLOOP
-	    }// end else if splitmaem==1 and ismaonly==1
-	    else{
-	      dualfprintf(fail_file,"No such stencilvartemp[] condition: %d %d\n",whichmaem,splitmaem);
-	      myexit(1751536);
-	    }
+              }// end COMPFULLLOOP
+            }// end else if splitmaem==1 and ismaonly==1
+            else{
+              dualfprintf(fail_file,"No such stencilvartemp[] condition: %d %d\n",whichmaem,splitmaem);
+              myexit(1751536);
+            }
 
 
- 	    if(weightsplittype==MASSENERGYMOMENTUM_IS_COUPLED_WEIGHTS){
-	      ///////////////
-	      //
-	      // modify strencilvar so all quantities have comparable values (should be able to use this method under any case of splitmaem or SPLITPRESSUREFLUXMA/EM)
-	      //
-	      ///////////////
-	      COMPFULLLOOP{
-		get_geometry(i,j,k,FACE1+dir-1,ptrgeom); // location of flux is always on face
+            if(weightsplittype==MASSENERGYMOMENTUM_IS_COUPLED_WEIGHTS){
+              ///////////////
+              //
+              // modify strencilvar so all quantities have comparable values (should be able to use this method under any case of splitmaem or SPLITPRESSUREFLUXMA/EM)
+              //
+              ///////////////
+              COMPFULLLOOP{
+                get_geometry(i,j,k,FACE1+dir-1,ptrgeom); // location of flux is always on face
 
-		// modify stress-energy terms that are orthogonal to dir-flux along dir
-		// energy stencilvar not modified since this method combines RHO,UU,UU+dir weights without direct comparison of weight values and then UU+dir version used as basis for comparison
-		for(odirindex=0;odirindex<=1;odirindex++){
-		  theotherdir=odirarray[odirindex];
-		  pl=UU+theotherdir;
-		  GLOBALMACP0A1(stencilvartemp,i,j,k,pl) *= sqrt(fabs(ptrgeom->gcon[GIND(theotherdir,theotherdir)])/(fabs(ptrgeom->gcon[GIND(dir,dir)])+SMALL));
-		}
+                // modify stress-energy terms that are orthogonal to dir-flux along dir
+                // energy stencilvar not modified since this method combines RHO,UU,UU+dir weights without direct comparison of weight values and then UU+dir version used as basis for comparison
+                for(odirindex=0;odirindex<=1;odirindex++){
+                  theotherdir=odirarray[odirindex];
+                  pl=UU+theotherdir;
+                  GLOBALMACP0A1(stencilvartemp,i,j,k,pl) *= sqrt(fabs(ptrgeom->gcon[GIND(theotherdir,theotherdir)])/(fabs(ptrgeom->gcon[GIND(dir,dir)])+SMALL));
+                }
 
-		PLOOP(pliter,pl){
-		  if(pl==RHO || (pl>=B3+1 && pl<NPR)){
-		    // GODMARK: assume all other are advective and get into form so like pressure but with advective component weighting
-		    // Then have \rho u^i u_i Y_e for term that was \rho Y_e u^i
-		    // no fabs() around first stencilvartemp term so picks up sign of u^i (e.g. u^i u_i is constant in reflecting wall type shock)
-		    // as currently written has same signature as original term but scales like pressure now
-		    GLOBALMACP0A1(stencilvartemp,i,j,k,pl) = fabs(MACP1A1(fluxvec,dir,i,j,k,UU+dir))*GLOBALMACP0A1(stencilvartemp,i,j,k,pl)/(fabs(MACP1A1(fluxvec,dir,i,j,k,RHO))+SMALL);
-		  }
-		}
-	      }// end COMPFULLLOOP
-	    }// end if special weightsplittype such that compare weights across quantities
-
-
-	  }// end else if using separate stencilvar
+                PLOOP(pliter,pl){
+                  if(pl==RHO || (pl>=B3+1 && pl<NPR)){
+                    // GODMARK: assume all other are advective and get into form so like pressure but with advective component weighting
+                    // Then have \rho u^i u_i Y_e for term that was \rho Y_e u^i
+                    // no fabs() around first stencilvartemp term so picks up sign of u^i (e.g. u^i u_i is constant in reflecting wall type shock)
+                    // as currently written has same signature as original term but scales like pressure now
+                    GLOBALMACP0A1(stencilvartemp,i,j,k,pl) = fabs(MACP1A1(fluxvec,dir,i,j,k,UU+dir))*GLOBALMACP0A1(stencilvartemp,i,j,k,pl)/(fabs(MACP1A1(fluxvec,dir,i,j,k,RHO))+SMALL);
+                  }
+                }
+              }// end COMPFULLLOOP
+            }// end if special weightsplittype such that compare weights across quantities
 
 
-	  ////////////////////
-	  //
-	  // Set stencilvar for higher-order stencil calculation
-	  //
-	  ////////////////////
-
-	  if(fluxvecother!=NULL || weightsplittype==MASSENERGYMOMENTUM_IS_COUPLED_WEIGHTS){
-	    stencilvar=GLOBALPOINT(stencilvartemp); // use modified specialized stencil variable
-	  }
- 	  else stencilvar=NULL; // just use normal variables
-
-	  ////////////////////
-	  //
-	  // only single quasi-deaverage along flux direction if to be used to update point conserved quantities
-	  //
-	  ////////////////////
-
-	  flux_interp(whichpltoavg, ifnotavgthencopy, whichquantity, interporflux, dir, idel, jdel, kdel, pr, stencilvar, fluxvec[dir], NULL, fluxvec[dir], NULL); 
+          }// end else if using separate stencilvar
 
 
-	  if(extralimiting){
-	    // 0 below means limit along direction
-	    // limit this deaveragingn process since similar to differentiating that creates more structure
-	    // CHANGINGMARK: Must couple fluxes as coupled to determine stencil for a2c itself
-	    // CHANGINGMARK: so need to split "weight" and calculation
-	    PLOOP(pliter,pl) simple_a2c_limit_onepl(0, dir, pl, pr, GLOBALPOINT(fluxvectemp), fluxvec[dir]);
-	  }
+          ////////////////////
+          //
+          // Set stencilvar for higher-order stencil calculation
+          //
+          ////////////////////
+
+          if(fluxvecother!=NULL || weightsplittype==MASSENERGYMOMENTUM_IS_COUPLED_WEIGHTS){
+            stencilvar=GLOBALPOINT(stencilvartemp); // use modified specialized stencil variable
+          }
+          else stencilvar=NULL; // just use normal variables
+
+          ////////////////////
+          //
+          // only single quasi-deaverage along flux direction if to be used to update point conserved quantities
+          //
+          ////////////////////
+
+          flux_interp(whichpltoavg, ifnotavgthencopy, whichquantity, interporflux, dir, idel, jdel, kdel, pr, stencilvar, fluxvec[dir], NULL, fluxvec[dir], NULL); 
+
+
+          if(extralimiting){
+            // 0 below means limit along direction
+            // limit this deaveragingn process since similar to differentiating that creates more structure
+            // CHANGINGMARK: Must couple fluxes as coupled to determine stencil for a2c itself
+            // CHANGINGMARK: so need to split "weight" and calculation
+            PLOOP(pliter,pl) simple_a2c_limit_onepl(0, dir, pl, pr, GLOBALPOINT(fluxvectemp), fluxvec[dir]);
+          }
 
 
 
 
-	} // end if something to do
+        } // end if something to do
 
-	// restore list
-	addremovefromnpr(RESTORENPR,whichpltoavg,ifnotavgthencopy,&nprlocalstart,&nprlocalend,nprlocallist,NULL,NULL);
+        // restore list
+        addremovefromnpr(RESTORENPR,whichpltoavg,ifnotavgthencopy,&nprlocalstart,&nprlocalend,nprlocallist,NULL,NULL);
 
 
       }// end if dimension exists
@@ -500,7 +500,7 @@ int flux_deaverage_fluxrecon(int stage, int whichmaem, FTYPE (*pr)[NSTORE2][NSTO
 
 #if(0)
   LOOPF2 dualfprintf(fail_file,"AFTEr: emf(0)=%21.15g %21.15g emf(N1)=%21.15g %21.15g diff0-N1 = %21.15g\n",MACP1A1(fluxvec,1,0,j,0,B2),-MACP1A1(fluxvec,2,0,j,0,B1),MACP1A1(fluxvec,1,N1,j,0,B2),-MACP1A1(fluxvec,2,N1,j,0,B1),MACP1A1(fluxvec,1,0,j,0,B2)-MACP1A1(fluxvec,1,N1,j,0,B2));
-  #endif
+#endif
 
 
 
@@ -534,9 +534,9 @@ int field_integrate_fluxrecon(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTY
   int is, ie, js, je, ks, ke;
   extern void flux_interp(int *whichpltoavg, int *ifnotavgthencopy, int whichquantity, int interporflux, int dir, int idel, int jdel, int kdel, FTYPE (*prims_guess)[NSTORE2][NSTORE3][NPR], FTYPE (*stencilvar)[NSTORE2][NSTORE3][NPR], FTYPE (*p2interpm)[NSTORE2][NSTORE3][NPR], FTYPE (*p2interpp)[NSTORE2][NSTORE3][NPR], FTYPE (*pleft)[NSTORE2][NSTORE3][NPR], FTYPE (*pright)[NSTORE2][NSTORE3][NPR]);
   FTYPE limit_fluxc2a_prim_change( 
-				  int dir, FTYPE (*pr)[NSTORE2][NSTORE3][NPR],
-				  FTYPE (*fluxvec_point)[NSTORE2][NSTORE3][NPR],
-				  FTYPE (*fluxvec_avg)[NSTORE2][NSTORE3][NPR]);   //atch
+                                  int dir, FTYPE (*pr)[NSTORE2][NSTORE3][NPR],
+                                  FTYPE (*fluxvec_point)[NSTORE2][NSTORE3][NPR],
+                                  FTYPE (*fluxvec_avg)[NSTORE2][NSTORE3][NPR]);   //atch
   int pl,pliter,i,j,k;
   int pldir;
   int whichpltoavg[NPR];
@@ -607,53 +607,53 @@ int field_integrate_fluxrecon(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTY
 
       if(dodir[dir]){
 
-	pldir=B1+dir-1;
-	// other dimensions
-	odir1=dir%3+1;
-	odir2=(dir+1)%3+1;
+        pldir=B1+dir-1;
+        // other dimensions
+        odir1=dir%3+1;
+        odir2=(dir+1)%3+1;
 
 
-	// then simpler to have separate "emf" section, so remove fields for all calculations
-	// default is to average all fluxes
-	PALLLOOP(pl) whichpltoavg[pl]=0;
-	PALLLOOP(pl) ifnotavgthencopy[pl]=0; // no need to copy since already exists
-	PLOOPBONLY(pl) ifnotavgthencopy[pl]=1; // need to copy if not doing
-	PLOOPBONLY(pl) whichpltoavg[pl]=0; // default
-	// now choose which field to operate on
-	whichpltoavg[pldir]=do_conserved_integration[pldir];
-	
-	// go ahead and control nprlist
-	// needed for Sasha's limit_fluxc2a (flux_interp internally would remove unwanted pl's based upon whichpltoavg/ifnotavgthencopy)
-	addremovefromnpr(REMOVEFROMNPR,whichpltoavg,ifnotavgthencopy,&nprlocalstart,&nprlocalend,nprlocallist,NULL,NULL);
+        // then simpler to have separate "emf" section, so remove fields for all calculations
+        // default is to average all fluxes
+        PALLLOOP(pl) whichpltoavg[pl]=0;
+        PALLLOOP(pl) ifnotavgthencopy[pl]=0; // no need to copy since already exists
+        PLOOPBONLY(pl) ifnotavgthencopy[pl]=1; // need to copy if not doing
+        PLOOPBONLY(pl) whichpltoavg[pl]=0; // default
+        // now choose which field to operate on
+        whichpltoavg[pldir]=do_conserved_integration[pldir];
+        
+        // go ahead and control nprlist
+        // needed for Sasha's limit_fluxc2a (flux_interp internally would remove unwanted pl's based upon whichpltoavg/ifnotavgthencopy)
+        addremovefromnpr(REMOVEFROMNPR,whichpltoavg,ifnotavgthencopy,&nprlocalstart,&nprlocalend,nprlocallist,NULL,NULL);
 
-	////////////////////////////////////////////
-	//
-	// if no variables to do, then continue to next direction or if no more directions just done
-	//
-	////////////////////////////////////////////
+        ////////////////////////////////////////////
+        //
+        // if no variables to do, then continue to next direction or if no more directions just done
+        //
+        ////////////////////////////////////////////
 
-	if(nprlocalend>-1){
-
-
-
-	  idel = fluxloop[dir][FIDEL];
-	  jdel = fluxloop[dir][FJDEL];
-	  kdel = fluxloop[dir][FKDEL];
+        if(nprlocalend>-1){
 
 
-	  ////////////////////
-	  //
-	  // reintegrate quasifield to point field
-	  // ENOQUASIFIELDFLUXRECONTYPE defines an interporflux type that means c2a but along direction of flux and on face
-	  //
-	  ////////////////////
-	  flux_interp(whichpltoavg, ifnotavgthencopy, whichquantity, interporflux, dir, idel, jdel, kdel, pr, NULL, quasifield, NULL, pointfield, NULL); 
+
+          idel = fluxloop[dir][FIDEL];
+          jdel = fluxloop[dir][FJDEL];
+          kdel = fluxloop[dir][FKDEL];
+
+
+          ////////////////////
+          //
+          // reintegrate quasifield to point field
+          // ENOQUASIFIELDFLUXRECONTYPE defines an interporflux type that means c2a but along direction of flux and on face
+          //
+          ////////////////////
+          flux_interp(whichpltoavg, ifnotavgthencopy, whichquantity, interporflux, dir, idel, jdel, kdel, pr, NULL, quasifield, NULL, pointfield, NULL); 
       
 
-	} // end if something to do
+        } // end if something to do
 
-	// restore list
-	addremovefromnpr(RESTORENPR,whichpltoavg,ifnotavgthencopy,&nprlocalstart,&nprlocalend,nprlocallist,NULL,NULL);
+        // restore list
+        addremovefromnpr(RESTORENPR,whichpltoavg,ifnotavgthencopy,&nprlocalstart,&nprlocalend,nprlocallist,NULL,NULL);
 
 
       }// end if dimension exists
@@ -821,74 +821,74 @@ int field_deaverage_fluxrecon(int *fieldfrompotential, FTYPE (*pr)[NSTORE2][NSTO
       if(dodir[dir]){ // only do if dimension exists and not true that both other dimensions don't exist since then field along dir must be constant (optimization for 1D problems)
 
 
-	pldir=B1+dir-1;
-	// other dimensions
-	odir1=dir%3+1;
-	odir2=(dir+1)%3+1;
+        pldir=B1+dir-1;
+        // other dimensions
+        odir1=dir%3+1;
+        odir2=(dir+1)%3+1;
 
 
-	// DEBUG:
-	//      dualfprintf(fail_file,"DOING dir=%d pldir=%d fieldfrompotential[%d]=%d\n",dir,pldir,dir,fieldfrompotential[dir]);
-
-
-
-
-	// then simpler to have separate "emf" section, so remove fields for all calculations
-	// default is to average all fluxes
-	PALLLOOP(pl) whichpltoavg[pl]=0;
-	PALLLOOP(pl) ifnotavgthencopy[pl]=0; // no need to copy since already exists
-	PLOOPBONLY(pl) ifnotavgthencopy[pl]=1-fieldfrompotential[dir]; // don't copy if not doing since assume output is correct from vector potential
-	PLOOPBONLY(pl) whichpltoavg[pl]=0; // default
-	// now choose which field to operate on
-	whichpltoavg[pldir]=do_conserved_integration[pldir];
-	
-	// go ahead and control nprlist
-	// needed for Sasha's limit_fluxc2a (flux_interp internally would remove unwanted pl's based upon whichpltoavg/ifnotavgthencopy)
-	addremovefromnpr(REMOVEFROMNPR,whichpltoavg,ifnotavgthencopy,&nprlocalstart,&nprlocalend,nprlocallist,NULL,NULL);
-
-
-	////////////////////////////////////////////
-	//
-	// if no variables to do, then continue to next direction or if no more directions just done
-	//
-	////////////////////////////////////////////
-
-	if(nprlocalend>-1){
+        // DEBUG:
+        //      dualfprintf(fail_file,"DOING dir=%d pldir=%d fieldfrompotential[%d]=%d\n",dir,pldir,dir,fieldfrompotential[dir]);
 
 
 
-	  idel = fluxloop[dir][FIDEL];
-	  jdel = fluxloop[dir][FJDEL];
-	  kdel = fluxloop[dir][FKDEL];
 
-	  if(extralimiting){
-	    if(pointfield==quasifield){
-	      intemp=GLOBALPOINT(fluxvectemp);
-	      // below not needed if input and output arrays are different
-	      COMPFULLLOOP MACP0A1(intemp,i,j,k,pldir) = MACP0A1(pointfield,i,j,k,pldir);
-	    }
-	    else intemp=pointfield; // then just access pointfield directly since unchanged by flux_interp operation
-	  }// otherwise don't have to define intemp
+        // then simpler to have separate "emf" section, so remove fields for all calculations
+        // default is to average all fluxes
+        PALLLOOP(pl) whichpltoavg[pl]=0;
+        PALLLOOP(pl) ifnotavgthencopy[pl]=0; // no need to copy since already exists
+        PLOOPBONLY(pl) ifnotavgthencopy[pl]=1-fieldfrompotential[dir]; // don't copy if not doing since assume output is correct from vector potential
+        PLOOPBONLY(pl) whichpltoavg[pl]=0; // default
+        // now choose which field to operate on
+        whichpltoavg[pldir]=do_conserved_integration[pldir];
+        
+        // go ahead and control nprlist
+        // needed for Sasha's limit_fluxc2a (flux_interp internally would remove unwanted pl's based upon whichpltoavg/ifnotavgthencopy)
+        addremovefromnpr(REMOVEFROMNPR,whichpltoavg,ifnotavgthencopy,&nprlocalstart,&nprlocalend,nprlocallist,NULL,NULL);
 
-	  ////////////////////
-	  //
-	  // reintegrate quasifield to point field
-	  // ENOQUASIFIELDFLUXRECONTYPE defines an interporflux type that means c2a but along direction of flux and on face
-	  //
-	  ////////////////////
-	  flux_interp(whichpltoavg, ifnotavgthencopy, whichquantity, interporflux, dir, idel, jdel, kdel, pr, NULL, pointfield, NULL, quasifield, NULL); 
+
+        ////////////////////////////////////////////
+        //
+        // if no variables to do, then continue to next direction or if no more directions just done
+        //
+        ////////////////////////////////////////////
+
+        if(nprlocalend>-1){
+
+
+
+          idel = fluxloop[dir][FIDEL];
+          jdel = fluxloop[dir][FJDEL];
+          kdel = fluxloop[dir][FKDEL];
+
+          if(extralimiting){
+            if(pointfield==quasifield){
+              intemp=GLOBALPOINT(fluxvectemp);
+              // below not needed if input and output arrays are different
+              COMPFULLLOOP MACP0A1(intemp,i,j,k,pldir) = MACP0A1(pointfield,i,j,k,pldir);
+            }
+            else intemp=pointfield; // then just access pointfield directly since unchanged by flux_interp operation
+          }// otherwise don't have to define intemp
+
+          ////////////////////
+          //
+          // reintegrate quasifield to point field
+          // ENOQUASIFIELDFLUXRECONTYPE defines an interporflux type that means c2a but along direction of flux and on face
+          //
+          ////////////////////
+          flux_interp(whichpltoavg, ifnotavgthencopy, whichquantity, interporflux, dir, idel, jdel, kdel, pr, NULL, pointfield, NULL, quasifield, NULL); 
       
 
-	  if(extralimiting){
-	    // 0 below means limit along direction
-	    simple_a2c_limit_onepl(0, dir, pldir, pr, intemp, quasifield);
-	  }
+          if(extralimiting){
+            // 0 below means limit along direction
+            simple_a2c_limit_onepl(0, dir, pldir, pr, intemp, quasifield);
+          }
 
-	} // end if something to do
+        } // end if something to do
 
 
-	// restore list
-	addremovefromnpr(RESTORENPR,whichpltoavg,ifnotavgthencopy,&nprlocalstart,&nprlocalend,nprlocallist,NULL,NULL);
+        // restore list
+        addremovefromnpr(RESTORENPR,whichpltoavg,ifnotavgthencopy,&nprlocalstart,&nprlocalend,nprlocallist,NULL,NULL);
 
 
       }// end if dimension exists
@@ -912,9 +912,9 @@ int field_deaverage_fluxrecon(int *fieldfrompotential, FTYPE (*pr)[NSTORE2][NSTO
     
     if(fieldfrompotential[dir]==0){
       if(dodir[dir]==0 ){
-	// then need to copy over
-	//	dualfprintf(fail_file,"LASTCOPY dir=%d pldir=%d\n",dir,pldir);
-	COMPFULLLOOP MACP0A1(quasifield,i,j,k,pldir)=MACP0A1(pointfield,i,j,k,pldir);
+        // then need to copy over
+        //      dualfprintf(fail_file,"LASTCOPY dir=%d pldir=%d\n",dir,pldir);
+        COMPFULLLOOP MACP0A1(quasifield,i,j,k,pldir)=MACP0A1(pointfield,i,j,k,pldir);
       }
     }
   }
@@ -968,9 +968,9 @@ int emforvectorpot_fluxrecon(int stage, int isemf, int *fluxdirlist, int *pldirl
   int is, ie, js, je, ks, ke;
   extern void flux_interp_multiple(int *whichpltoavg, int *ifnotavgthencopy, int numdirs, int *whichquantitylist, int *interporfluxlist, int *dirmethodlist, int *Nvec, int *intdirlist, int *fluxdirlist, int *idellist, int *jdellist, int *kdellist, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR]);
   FTYPE limit_fluxc2a_prim_change( 
-				  int dir, FTYPE (*pr)[NSTORE2][NSTORE3][NPR],
-				  FTYPE (*fluxvec_point)[NSTORE2][NSTORE3][NPR],
-				  FTYPE (*fluxvec_avg)[NSTORE2][NSTORE3][NPR]);   //atch
+                                  int dir, FTYPE (*pr)[NSTORE2][NSTORE3][NPR],
+                                  FTYPE (*fluxvec_point)[NSTORE2][NSTORE3][NPR],
+                                  FTYPE (*fluxvec_avg)[NSTORE2][NSTORE3][NPR]);   //atch
   int pl,pliter,i,j,k;
   int whichpltoavg[NPR];
   int ifnotavgthencopy[NPR];
@@ -1046,99 +1046,99 @@ int emforvectorpot_fluxrecon(int stage, int isemf, int *fluxdirlist, int *pldirl
       // do emf[dir]
       if(!(Nvec[odir1]==1 && Nvec[odir2]==1)){ // then emf[dir] is unimportant (cancels itself always), so assume original emf[dir] was set to 0 already
 
-	// then doing emf[dir]
-	fluxdir=fluxdirlist[dir];
-	pldir=pldirlist[dir];
-	plforflux = B1+pldir-1;
-	
+        // then doing emf[dir]
+        fluxdir=fluxdirlist[dir];
+        pldir=pldirlist[dir];
+        plforflux = B1+pldir-1;
+        
 
-	if(Nvec[fluxdir]>1){
-
-
-	  // first set which quantities to deal with (fields only)
-	  PALLLOOP(pl) whichpltoavg[pl]=0;
-	  PALLLOOP(pl) ifnotavgthencopy[pl]=0;
-	
-	  // now choose which pl to use (only 1 and SAME for a given dir)
-	  whichpltoavg[plforflux]=do_transverse_flux_integration[plforflux];
-	  ifnotavgthencopy[plforflux]=0; // already exists as some value, so no need to copy over into self
+        if(Nvec[fluxdir]>1){
 
 
-	  // go ahead and control nprlist (changes for each dir)
-	  // needed for Sasha's limit_fluxc2a
-	  addremovefromnpr(REMOVEFROMNPR,whichpltoavg,ifnotavgthencopy,&nprlocalstart,&nprlocalend,nprlocallist,NULL,NULL);
-
-	  ////////////////////////////////////////////
-	  //
-	  // if no variables to do, then continue to next direction or if no more directions just done
-	  //
-	  ////////////////////////////////////////////
-	  
-	  if(nprlocalend>-1){
+          // first set which quantities to deal with (fields only)
+          PALLLOOP(pl) whichpltoavg[pl]=0;
+          PALLLOOP(pl) ifnotavgthencopy[pl]=0;
+        
+          // now choose which pl to use (only 1 and SAME for a given dir)
+          whichpltoavg[plforflux]=do_transverse_flux_integration[plforflux];
+          ifnotavgthencopy[plforflux]=0; // already exists as some value, so no need to copy over into self
 
 
-	    // get loop details
-	    idel1 = fluxloop[fluxdir][FIDEL];
-	    jdel1 = fluxloop[fluxdir][FJDEL];
-	    kdel1 = fluxloop[fluxdir][FKDEL];
+          // go ahead and control nprlist (changes for each dir)
+          // needed for Sasha's limit_fluxc2a
+          addremovefromnpr(REMOVEFROMNPR,whichpltoavg,ifnotavgthencopy,&nprlocalstart,&nprlocalend,nprlocallist,NULL,NULL);
 
-	    idel2 = fluxloop[pldir][FIDEL];
-	    jdel2 = fluxloop[pldir][FJDEL];
-	    kdel2 = fluxloop[pldir][FKDEL];
-
-
-	    // store original flux
-	    // limit this de-averaging process
-	    if(extralimiting){
-	      COMPFULLLOOP GLOBALMACP0A1(fluxvectemp,i,j,k,plforflux) = MACP1A1(fluxvec,fluxdir,i,j,k,plforflux);
-	    }
-
-	    ///////////////////////////
-	    //
-	    // Obtain quasi-deaveraged EMFs or vector potential
-	    //
-	    // The E_{dir} or A_{dir} are quasi-deaveraged in both orthogonal directions
-	    //
-	    // In this case divb=0 is maintained when using EMF update for quasi-deaveraged fields and vector potential defines quasi-deaveraged fields
-	    //
-	    // Then the field is some quasi "conserved" magnetic flux
-	    //
-	    // To maintain higher-order fields, they need to be re-averaged (c2a) along the field direction to obtain point value at that FACE to be used for flux calculation
-	    // GODMARK: Re-deaveraging of the flux (a2c) should lead to the same quasi-conserved field in some limits, but for WENO c2a(a2c(f))!=f, so this is a problem as in FV method.
-	    //
-	    ///////////////////////////
-
-	    // 	  dualfprintf(fail_file,"dir=%d fluxdir=%d pldir=%d plforflux=%d :: idel1=%d jdel1=%d kdel1=%d ::  idel2=%d jdel2=%d kdel2=%d :: \n",dir,fluxdir,pldir,plforflux,idel1,jdel1,kdel1,idel2,jdel2,kdel2);
-
-	    numdirs=2;
-	    // fluxdirlist is already set correctly upon input
-	    // dirmethodlist and intdirlist should be same for FLUXRECON
-
-	  
-	    otherdir=1; dirmethodlist[otherdir]=fluxdir; whichquantitylist[otherdir]=whichquantity; interporfluxlist[otherdir]=interporflux; fluxdirlistnew[otherdir]=fluxdir; intdirlist[otherdir]=fluxdir; idellist[otherdir]=idel1; jdellist[otherdir]=jdel1; kdellist[otherdir]=kdel1;
-	    otherdir=2; dirmethodlist[otherdir]=pldir;   whichquantitylist[otherdir]=whichquantity; interporfluxlist[otherdir]=interporflux; fluxdirlistnew[otherdir]=fluxdir; intdirlist[otherdir]=pldir;   idellist[otherdir]=idel2; jdellist[otherdir]=jdel2; kdellist[otherdir]=kdel2;
-	  
-	    flux_interp_multiple(whichpltoavg, ifnotavgthencopy, numdirs, whichquantitylist, interporfluxlist, dirmethodlist, Nvec, intdirlist, fluxdirlistnew, idellist, jdellist, kdellist, pr, fluxvec);
+          ////////////////////////////////////////////
+          //
+          // if no variables to do, then continue to next direction or if no more directions just done
+          //
+          ////////////////////////////////////////////
+          
+          if(nprlocalend>-1){
 
 
-	    // limit changes between original flux and new (quasi-deaveraged) flux
-	    // 1 below means doing both transverse directions (if they exist)
-	    if(extralimiting){
-	      simple_a2c_limit_onepl(1,fluxdir, plforflux, pr, GLOBALPOINT(fluxvectemp), fluxvec[fluxdir]);
-	    }
-	
-	  }// end if something to do
-	
-	  // restore list
-	  addremovefromnpr(RESTORENPR,whichpltoavg,ifnotavgthencopy,&nprlocalstart,&nprlocalend,nprlocallist,NULL,NULL);
+            // get loop details
+            idel1 = fluxloop[fluxdir][FIDEL];
+            jdel1 = fluxloop[fluxdir][FJDEL];
+            kdel1 = fluxloop[fluxdir][FKDEL];
+
+            idel2 = fluxloop[pldir][FIDEL];
+            jdel2 = fluxloop[pldir][FJDEL];
+            kdel2 = fluxloop[pldir][FKDEL];
 
 
-	  // now copy over the other flux for same emf as required
-	  // assume emf's that should be zero are zero already
-	  if(isemf) if(Nvec[fluxdir]!=1 && Nvec[pldir]!=1) COMPFULLLOOP MACP1A1(fluxvec,pldir,i,j,k,B1+fluxdir-1) = - MACP1A1(fluxvec,fluxdir,i,j,k,B1+pldir-1);
+            // store original flux
+            // limit this de-averaging process
+            if(extralimiting){
+              COMPFULLLOOP GLOBALMACP0A1(fluxvectemp,i,j,k,plforflux) = MACP1A1(fluxvec,fluxdir,i,j,k,plforflux);
+            }
+
+            ///////////////////////////
+            //
+            // Obtain quasi-deaveraged EMFs or vector potential
+            //
+            // The E_{dir} or A_{dir} are quasi-deaveraged in both orthogonal directions
+            //
+            // In this case divb=0 is maintained when using EMF update for quasi-deaveraged fields and vector potential defines quasi-deaveraged fields
+            //
+            // Then the field is some quasi "conserved" magnetic flux
+            //
+            // To maintain higher-order fields, they need to be re-averaged (c2a) along the field direction to obtain point value at that FACE to be used for flux calculation
+            // GODMARK: Re-deaveraging of the flux (a2c) should lead to the same quasi-conserved field in some limits, but for WENO c2a(a2c(f))!=f, so this is a problem as in FV method.
+            //
+            ///////////////////////////
+
+            //    dualfprintf(fail_file,"dir=%d fluxdir=%d pldir=%d plforflux=%d :: idel1=%d jdel1=%d kdel1=%d ::  idel2=%d jdel2=%d kdel2=%d :: \n",dir,fluxdir,pldir,plforflux,idel1,jdel1,kdel1,idel2,jdel2,kdel2);
+
+            numdirs=2;
+            // fluxdirlist is already set correctly upon input
+            // dirmethodlist and intdirlist should be same for FLUXRECON
+
+          
+            otherdir=1; dirmethodlist[otherdir]=fluxdir; whichquantitylist[otherdir]=whichquantity; interporfluxlist[otherdir]=interporflux; fluxdirlistnew[otherdir]=fluxdir; intdirlist[otherdir]=fluxdir; idellist[otherdir]=idel1; jdellist[otherdir]=jdel1; kdellist[otherdir]=kdel1;
+            otherdir=2; dirmethodlist[otherdir]=pldir;   whichquantitylist[otherdir]=whichquantity; interporfluxlist[otherdir]=interporflux; fluxdirlistnew[otherdir]=fluxdir; intdirlist[otherdir]=pldir;   idellist[otherdir]=idel2; jdellist[otherdir]=jdel2; kdellist[otherdir]=kdel2;
+          
+            flux_interp_multiple(whichpltoavg, ifnotavgthencopy, numdirs, whichquantitylist, interporfluxlist, dirmethodlist, Nvec, intdirlist, fluxdirlistnew, idellist, jdellist, kdellist, pr, fluxvec);
 
 
-	}// end if fluxdir exists, as required for fluxvec[fluxdir] to be used
+            // limit changes between original flux and new (quasi-deaveraged) flux
+            // 1 below means doing both transverse directions (if they exist)
+            if(extralimiting){
+              simple_a2c_limit_onepl(1,fluxdir, plforflux, pr, GLOBALPOINT(fluxvectemp), fluxvec[fluxdir]);
+            }
+        
+          }// end if something to do
+        
+          // restore list
+          addremovefromnpr(RESTORENPR,whichpltoavg,ifnotavgthencopy,&nprlocalstart,&nprlocalend,nprlocallist,NULL,NULL);
+
+
+          // now copy over the other flux for same emf as required
+          // assume emf's that should be zero are zero already
+          if(isemf) if(Nvec[fluxdir]!=1 && Nvec[pldir]!=1) COMPFULLLOOP MACP1A1(fluxvec,pldir,i,j,k,B1+fluxdir-1) = - MACP1A1(fluxvec,fluxdir,i,j,k,B1+pldir-1);
+
+
+        }// end if fluxdir exists, as required for fluxvec[fluxdir] to be used
 
       }// end if orthogonal odir1 or odir2 dimensions exist
     }// end over emf/vpot directions
@@ -1177,7 +1177,7 @@ int debug_boundfluxinitial(FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR])
       PLOOP(pliter,pl) dualfprintf(fail_file,"%g %g ",MACP1A1(fluxvec,1,i,j,k,pl),MACP1A1(fluxvec,2,i,j,k,pl));
       dualfprintf(fail_file,"\n");
     }
-    //		myexit(0);
+    //          myexit(0);
   }
 
   return(0);
@@ -1346,7 +1346,7 @@ int vectorpot_fluxreconorfvavg(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FT
 
       // e.g. A3 will be treated as if F1[B2] or F2[B1]
       if(fluxdir!=0 && Nvec[fluxdir]>1){
-	COMPFULLLOOP MACP1A1(fluxvec,fluxdir,i,j,k,plforflux)=signforflux*MACP1A0(A,dir,i,j,k);
+        COMPFULLLOOP MACP1A1(fluxvec,fluxdir,i,j,k,plforflux)=signforflux*MACP1A0(A,dir,i,j,k);
       }
 
     }
@@ -1365,7 +1365,7 @@ int vectorpot_fluxreconorfvavg(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FT
     
       // e.g. A3 will be treated as if F1[B2] or F2[B1]
       if(fluxdir!=0 && Nvec[fluxdir]>1){
-	bound_prim(STAGEM1,fluxvec[fluxdir]);
+        bound_prim(STAGEM1,fluxvec[fluxdir]);
       
       }
     }
@@ -1377,12 +1377,12 @@ int vectorpot_fluxreconorfvavg(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FT
     // this accounts for final flux
     FULLLOOP{
       DIMENLOOP(dir){
-	if(Nvec[dir]>1){
-	  PLOOP(pliter,pl) GLOBALMACP0A1(fluxdump,i,j,k,4*NPR + (dir-1)*NPR*5 + NPR*0 + pl)=MACP1A1(fluxvec,dir,i,j,k,pl);
-	}
-	else{
-	  PLOOP(pliter,pl) GLOBALMACP0A1(fluxdump,i,j,k,4*NPR + (dir-1)*NPR*5 + NPR*0 + pl)=0.0L;
-	}
+        if(Nvec[dir]>1){
+          PLOOP(pliter,pl) GLOBALMACP0A1(fluxdump,i,j,k,4*NPR + (dir-1)*NPR*5 + NPR*0 + pl)=MACP1A1(fluxvec,dir,i,j,k,pl);
+        }
+        else{
+          PLOOP(pliter,pl) GLOBALMACP0A1(fluxdump,i,j,k,4*NPR + (dir-1)*NPR*5 + NPR*0 + pl)=0.0L;
+        }
       }
     }
 #endif
@@ -1439,21 +1439,21 @@ int vectorpot_fluxreconorfvavg(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FT
 int flux_integrate_fluxsplit(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR])
 {
 
-    // GODMARK: NOTICE: this will probably go inside fluxcalc_fluxspliteno() because the procedure is
+  // GODMARK: NOTICE: this will probably go inside fluxcalc_fluxspliteno() because the procedure is
     
-    // -1) no need to bound fluxes since SHOULD exist everywhere (should be taken care of by new fluxcalc_fluxspliteno() function)
-    // 0) assume primitives everywhere defined (all grid including ghost zones)
-    // 1) Compute split F's (F^+ F^-) for all grid including ghost zones, store in F1m/p F2m/p F3m/p
-    // 2) use flux_interp(ENOFLUXSPLITTYPE,...) for each dir and get F1l/r F2l/r F3l/r
-    // 3) add together fluxes and store in F1,F2,F3 (can be same memory space as used for F1m/p F2m/p F3m/p since done with it, but can't be same memory space as F123l/r
+  // -1) no need to bound fluxes since SHOULD exist everywhere (should be taken care of by new fluxcalc_fluxspliteno() function)
+  // 0) assume primitives everywhere defined (all grid including ghost zones)
+  // 1) Compute split F's (F^+ F^-) for all grid including ghost zones, store in F1m/p F2m/p F3m/p
+  // 2) use flux_interp(ENOFLUXSPLITTYPE,...) for each dir and get F1l/r F2l/r F3l/r
+  // 3) add together fluxes and store in F1,F2,F3 (can be same memory space as used for F1m/p F2m/p F3m/p since done with it, but can't be same memory space as F123l/r
     
-    //    dir=1; flux_interp(ENOFLUXSPLITTYPE, dir, idel, jdel, kdel, F1m, F1p, F1l, F1r);
-    //    dir=2; flux_interp(ENOFLUXSPLITTYPE, dir, idel, jdel, kdel, F2m, F2p, F2l, F2r);
-    //    dir=3; flux_interp(ENOFLUXSPLITTYPE, dir, idel, jdel, kdel, F3m, F3p, F3l, F3r);
-    // these should be read in correct form as Fr Fl in fluxcalc_fluxspliteno() such that for i-th index:
-    // dir=1
-    // Fr(i) = F1l(i)
-    // Fl(i) = F1r(i-1)
+  //    dir=1; flux_interp(ENOFLUXSPLITTYPE, dir, idel, jdel, kdel, F1m, F1p, F1l, F1r);
+  //    dir=2; flux_interp(ENOFLUXSPLITTYPE, dir, idel, jdel, kdel, F2m, F2p, F2l, F2r);
+  //    dir=3; flux_interp(ENOFLUXSPLITTYPE, dir, idel, jdel, kdel, F3m, F3p, F3l, F3r);
+  // these should be read in correct form as Fr Fl in fluxcalc_fluxspliteno() such that for i-th index:
+  // dir=1
+  // Fr(i) = F1l(i)
+  // Fl(i) = F1r(i-1)
 
   return(0);
 
@@ -1480,9 +1480,9 @@ int flux_integrate_finitevolume(int stage, int whichmaem, FTYPE (*pr)[NSTORE2][N
   int is, ie, js, je, ks, ke;
   extern void flux_interp_multiple(int *whichpltoavg, int *ifnotavgthencopy, int numdirs, int *whichquantitylist, int *interporfluxlist, int *dirmethodlist, int *Nvec, int *intdirlist, int *fluxdirlist, int *idellist, int *jdellist, int *kdellist, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR]);
   FTYPE limit_fluxc2a_prim_change( 
-				  int dir, FTYPE (*pr)[NSTORE2][NSTORE3][NPR],
-				  FTYPE (*fluxvec_point)[NSTORE2][NSTORE3][NPR],
-				  FTYPE (*fluxvec_avg)[NSTORE2][NSTORE3][NPR]);   //atch
+                                  int dir, FTYPE (*pr)[NSTORE2][NSTORE3][NPR],
+                                  FTYPE (*fluxvec_point)[NSTORE2][NSTORE3][NPR],
+                                  FTYPE (*fluxvec_avg)[NSTORE2][NSTORE3][NPR]);   //atch
   FTYPE (*fluxveca[NDIM])[NSTORE2][NSTORE3][NPR];
   FTYPE (*fluxvecb[NDIM])[NSTORE2][NSTORE3][NPR];
   int pl,pliter,i,j,k;
@@ -1572,13 +1572,13 @@ int flux_integrate_finitevolume(int stage, int whichmaem, FTYPE (*pr)[NSTORE2][N
       PALLLOOP(pl) whichpltoavg[pl]=do_transverse_flux_integration[pl];// default
       PALLLOOP(pl) ifnotavgthencopy[pl]=0; // already exists as some value so no need to copy over to self
       if(treatemfspecial){
-	// never do field since always do field with specially located emf below
-	PLOOPBONLY(pl) whichpltoavg[pl]=0;
-	PLOOPBONLY(pl) ifnotavgthencopy[pl]=0;
+        // never do field since always do field with specially located emf below
+        PLOOPBONLY(pl) whichpltoavg[pl]=0;
+        PLOOPBONLY(pl) ifnotavgthencopy[pl]=0;
       }
       else{
-	PLOOPBONLY(pl) whichpltoavg[pl]=do_transverse_flux_integration[pl];
-	PLOOPBONLY(pl) ifnotavgthencopy[pl]=0;
+        PLOOPBONLY(pl) whichpltoavg[pl]=do_transverse_flux_integration[pl];
+        PLOOPBONLY(pl) ifnotavgthencopy[pl]=0;
       }
     
       // go ahead and control nprlist
@@ -1595,57 +1595,57 @@ int flux_integrate_finitevolume(int stage, int whichmaem, FTYPE (*pr)[NSTORE2][N
       if(nprlocalend>-1){
 
     
-	///////////////////////////////////////////////////////////
-	//
-	// LOOP OVER FACES
-	//
-	///////////////////////////////////////////////////////////
-	DIMENLOOP(dir){
+        ///////////////////////////////////////////////////////////
+        //
+        // LOOP OVER FACES
+        //
+        ///////////////////////////////////////////////////////////
+        DIMENLOOP(dir){
       
-	  // other dimensions
-	  odir1=dir%3+1;
-	  odir2=(dir+1)%3+1;
+          // other dimensions
+          odir1=dir%3+1;
+          odir2=(dir+1)%3+1;
 
 
 
       
-	  if(Nvec[dir]!=1){
-	    // skip to next dir if no such dimension
+          if(Nvec[dir]!=1){
+            // skip to next dir if no such dimension
 
-	    if(extralimiting){
-	      //otherwise fluxvectemp points to space in memory set in set_arrays.c
-	      //intitialize it with the flux given by the riemann solver in the dir direction
-	      COMPFULLLOOP PLOOP(pliter,pl) GLOBALMACP0A1(fluxvectemp,i,j,k,pl) = MACP1A1(fluxvec,dir,i,j,k,pl);
-	    }
+            if(extralimiting){
+              //otherwise fluxvectemp points to space in memory set in set_arrays.c
+              //intitialize it with the flux given by the riemann solver in the dir direction
+              COMPFULLLOOP PLOOP(pliter,pl) GLOBALMACP0A1(fluxvectemp,i,j,k,pl) = MACP1A1(fluxvec,dir,i,j,k,pl);
+            }
 
-	    // get loop details
-	    idel1 = fluxloop[odir1][FIDEL];
-	    jdel1 = fluxloop[odir1][FJDEL];
-	    kdel1 = fluxloop[odir1][FKDEL];
+            // get loop details
+            idel1 = fluxloop[odir1][FIDEL];
+            jdel1 = fluxloop[odir1][FJDEL];
+            kdel1 = fluxloop[odir1][FKDEL];
 
-	    idel2 = fluxloop[odir2][FIDEL];
-	    jdel2 = fluxloop[odir2][FJDEL];
-	    kdel2 = fluxloop[odir2][FKDEL];
-
-
-	    numdirs=2;
-	    fluxdir=dir;
-	    otherdir=1; intdirlist[otherdir]=odir1; dirmethodlist[otherdir]=dir; whichquantitylist[otherdir]=whichquantity; interporfluxlist[otherdir]=avgdirtype[odir1]; fluxdirlist[otherdir]=fluxdir; idellist[otherdir]=idel1; jdellist[otherdir]=jdel1; kdellist[otherdir]=kdel1;
-	    otherdir=2; intdirlist[otherdir]=odir2; dirmethodlist[otherdir]=dir; whichquantitylist[otherdir]=whichquantity; interporfluxlist[otherdir]=avgdirtype[odir2]; fluxdirlist[otherdir]=fluxdir; idellist[otherdir]=idel2; jdellist[otherdir]=jdel2; kdellist[otherdir]=kdel2;
-	  
-	    flux_interp_multiple(whichpltoavg, ifnotavgthencopy, numdirs, whichquantitylist, interporfluxlist, dirmethodlist, Nvec, intdirlist, fluxdirlist, idellist, jdellist, kdellist, pr, fluxvec); 
+            idel2 = fluxloop[odir2][FIDEL];
+            jdel2 = fluxloop[odir2][FJDEL];
+            kdel2 = fluxloop[odir2][FKDEL];
 
 
-	    if(extralimiting){
-	      // GODMARK: above parameter is off normally since Sasha says his method didn't work (caused more problems)
-	      //limits how different fluxvec[dir] (averaged fluxes) is from fluxvectemp (point fluxes) are based on how much rho and gamma would
-	      //change due to such a difference in flux during the timestep, dt
-	      limit_fluxc2a_prim_change( dir, pr, GLOBALPOINT(fluxvectemp), fluxvec[dir] );
-	    }
+            numdirs=2;
+            fluxdir=dir;
+            otherdir=1; intdirlist[otherdir]=odir1; dirmethodlist[otherdir]=dir; whichquantitylist[otherdir]=whichquantity; interporfluxlist[otherdir]=avgdirtype[odir1]; fluxdirlist[otherdir]=fluxdir; idellist[otherdir]=idel1; jdellist[otherdir]=jdel1; kdellist[otherdir]=kdel1;
+            otherdir=2; intdirlist[otherdir]=odir2; dirmethodlist[otherdir]=dir; whichquantitylist[otherdir]=whichquantity; interporfluxlist[otherdir]=avgdirtype[odir2]; fluxdirlist[otherdir]=fluxdir; idellist[otherdir]=idel2; jdellist[otherdir]=jdel2; kdellist[otherdir]=kdel2;
+          
+            flux_interp_multiple(whichpltoavg, ifnotavgthencopy, numdirs, whichquantitylist, interporfluxlist, dirmethodlist, Nvec, intdirlist, fluxdirlist, idellist, jdellist, kdellist, pr, fluxvec); 
 
 
-	  }// end if F_{dir} does not exist since not doing dimension in dir-direction
-	} // end over DIMENLOOP
+            if(extralimiting){
+              // GODMARK: above parameter is off normally since Sasha says his method didn't work (caused more problems)
+              //limits how different fluxvec[dir] (averaged fluxes) is from fluxvectemp (point fluxes) are based on how much rho and gamma would
+              //change due to such a difference in flux during the timestep, dt
+              limit_fluxc2a_prim_change( dir, pr, GLOBALPOINT(fluxvectemp), fluxvec[dir] );
+            }
+
+
+          }// end if F_{dir} does not exist since not doing dimension in dir-direction
+        } // end over DIMENLOOP
       } // end if something to do
 
       // restore list
@@ -1688,9 +1688,9 @@ int emforvectorpot_fvavg(int stage, int isemf, int *fluxdirlist, int *pldirlist,
   int is, ie, js, je, ks, ke;
   extern void flux_interp(int *whichpltoavg, int *ifnotavgthencopy, int whichquantity, int interporflux, int dir, int idel, int jdel, int kdel, FTYPE (*prims_guess)[NSTORE2][NSTORE3][NPR], FTYPE (*stencilvar)[NSTORE2][NSTORE3][NPR], FTYPE (*p2interpm)[NSTORE2][NSTORE3][NPR], FTYPE (*p2interpp)[NSTORE2][NSTORE3][NPR], FTYPE (*pleft)[NSTORE2][NSTORE3][NPR], FTYPE (*pright)[NSTORE2][NSTORE3][NPR]);
   FTYPE limit_fluxc2a_prim_change( 
-				  int dir, FTYPE (*pr)[NSTORE2][NSTORE3][NPR],
-				  FTYPE (*fluxvec_point)[NSTORE2][NSTORE3][NPR],
-				  FTYPE (*fluxvec_avg)[NSTORE2][NSTORE3][NPR]);   //atch
+                                  int dir, FTYPE (*pr)[NSTORE2][NSTORE3][NPR],
+                                  FTYPE (*fluxvec_point)[NSTORE2][NSTORE3][NPR],
+                                  FTYPE (*fluxvec_avg)[NSTORE2][NSTORE3][NPR]);   //atch
   int pl,pliter,i,j,k;
   int nprlocalstart,nprlocalend;
   int nprlocallist[MAXNPR];
@@ -1754,88 +1754,88 @@ int emforvectorpot_fvavg(int stage, int isemf, int *fluxdirlist, int *pldirlist,
 
       // do emf[dir]
       if(!(Nvec[odir1]==1 && Nvec[odir2]==1)){ // then emf[dir] is unimportant (cancels itself always), so assume original emf[dir] was set to 0 already
-	  
-	// then doing emf[dir]
-	fluxdir=fluxdirlist[dir];
-	pldir=pldirlist[dir];
-	plforflux=B1+pldir-1;
-	orthogonaldir=fluxdir;
+          
+        // then doing emf[dir]
+        fluxdir=fluxdirlist[dir];
+        pldir=pldirlist[dir];
+        plforflux=B1+pldir-1;
+        orthogonaldir=fluxdir;
 
 
-	// first set which quantities to deal with (fields only)
-	PALLLOOP(pl) whichpltoavg[pl]=0;
-	PALLLOOP(pl) ifnotavgthencopy[pl]=0;
-	// now choose which pl to use
-	whichpltoavg[plforflux]=do_transverse_flux_integration[plforflux];
-	ifnotavgthencopy[plforflux]=0; // already exists as some value so no need to copy over to self
+        // first set which quantities to deal with (fields only)
+        PALLLOOP(pl) whichpltoavg[pl]=0;
+        PALLLOOP(pl) ifnotavgthencopy[pl]=0;
+        // now choose which pl to use
+        whichpltoavg[plforflux]=do_transverse_flux_integration[plforflux];
+        ifnotavgthencopy[plforflux]=0; // already exists as some value so no need to copy over to self
 
-	// go ahead and control nprlist (changes for each dir)
-	// needed for Sasha's limit_fluxc2a
-	addremovefromnpr(REMOVEFROMNPR,whichpltoavg,ifnotavgthencopy,&nprlocalstart,&nprlocalend,nprlocallist,NULL,NULL);
+        // go ahead and control nprlist (changes for each dir)
+        // needed for Sasha's limit_fluxc2a
+        addremovefromnpr(REMOVEFROMNPR,whichpltoavg,ifnotavgthencopy,&nprlocalstart,&nprlocalend,nprlocallist,NULL,NULL);
 
-	////////////////////////////////////////////
-	//
-	// if no variables to do, then continue to next direction or if no more directions just done
-	//
-	////////////////////////////////////////////
+        ////////////////////////////////////////////
+        //
+        // if no variables to do, then continue to next direction or if no more directions just done
+        //
+        ////////////////////////////////////////////
 
-	if(nprlocalend>-1){
-
-
-	  // save the point flux for comparison
-	  if(isemf){ // otherwise vectorpotential which is not flux for conserved quantity
-	    if(extralimiting){
-	      // only need 1 flux value per dir
-	      COMPFULLLOOP GLOBALMACP0A1(fluxvectemp,i,j,k,plforflux) = MACP1A1(fluxvec,fluxdir,i,j,k,plforflux);
-	    }
-	  }
+        if(nprlocalend>-1){
 
 
-	  // as consistent with above normal fluxes, integration directly is controlled via these "del"'s, and integration direction is in dir-direction for emf
-	  idel = fluxloop[dir][FIDEL];
-	  jdel = fluxloop[dir][FJDEL];
-	  kdel = fluxloop[dir][FKDEL];
+          // save the point flux for comparison
+          if(isemf){ // otherwise vectorpotential which is not flux for conserved quantity
+            if(extralimiting){
+              // only need 1 flux value per dir
+              COMPFULLLOOP GLOBALMACP0A1(fluxvectemp,i,j,k,plforflux) = MACP1A1(fluxvec,fluxdir,i,j,k,plforflux);
+            }
+          }
 
-	  //      dualfprintf(fail_file,"isemf: %d %d %d %d %d %d\n",isemf,vpotfluxdir,dir,avgdirtype[dir],orthogonaldir,fluxdir);
+
+          // as consistent with above normal fluxes, integration directly is controlled via these "del"'s, and integration direction is in dir-direction for emf
+          idel = fluxloop[dir][FIDEL];
+          jdel = fluxloop[dir][FJDEL];
+          kdel = fluxloop[dir][FKDEL];
+
+          //      dualfprintf(fail_file,"isemf: %d %d %d %d %d %d\n",isemf,vpotfluxdir,dir,avgdirtype[dir],orthogonaldir,fluxdir);
 
 #if(0) // INCOMPLETE
-	  // GODMARK: Should be able to use Taylor series expansion or something to be able to generalize this to 3D
-	  // Here we subtract off the emf term related to divb=0 constraint assuming 2D problem
-	  if(isemf){
-	    if(dir==2 && Nvec[3]==1){ // then E2 with term $\int_y v^z B^x dy$ can have vz0 subtracted out
-	      if(fluxdir==3 && pldir==1){ // then E2=F3[B1] has B^1 v^3 term, so remove it
-		//	    COMPFULLLOOP MACP1A1(fluxvec,fluxdir,i,j,k,plforflux) -= (
-	      }
-	    }
-	  }
+          // GODMARK: Should be able to use Taylor series expansion or something to be able to generalize this to 3D
+          // Here we subtract off the emf term related to divb=0 constraint assuming 2D problem
+          if(isemf){
+            if(dir==2 && Nvec[3]==1){ // then E2 with term $\int_y v^z B^x dy$ can have vz0 subtracted out
+              if(fluxdir==3 && pldir==1){ // then E2=F3[B1] has B^1 v^3 term, so remove it
+                //          COMPFULLLOOP MACP1A1(fluxvec,fluxdir,i,j,k,plforflux) -= (
+              }
+            }
+          }
 
 #endif
 
 
 
-	  // 3rd argument "dir" corresponds to direction of averaging (i.e. along dir)
-	  // 4th argument "fluxdir" corresponds to orthogonal direction
-	  if(Nvec[dir]>1 && Nvec[fluxdir]>1) flux_interp(whichpltoavg, ifnotavgthencopy, whichquantity, avgdirtype[dir], orthogonaldir, idel, jdel, kdel, pr, NULL, fluxvec[fluxdir], NULL, fluxvec[fluxdir], NULL);
+          // 3rd argument "dir" corresponds to direction of averaging (i.e. along dir)
+          // 4th argument "fluxdir" corresponds to orthogonal direction
+          if(Nvec[dir]>1 && Nvec[fluxdir]>1) flux_interp(whichpltoavg, ifnotavgthencopy, whichquantity, avgdirtype[dir], orthogonaldir, idel, jdel, kdel, pr, NULL, fluxvec[fluxdir], NULL, fluxvec[fluxdir], NULL);
 
 
 
-	  if(isemf){
-	    if(extralimiting){
-	      // below controlled by PLOOP, so only use over range changed fluxes
-	      limit_fluxc2a_prim_change( fluxdir, pr, GLOBALPOINT(fluxvectemp), fluxvec[fluxdir] );
-	    }
-	  }
+          if(isemf){
+            if(extralimiting){
+              // below controlled by PLOOP, so only use over range changed fluxes
+              limit_fluxc2a_prim_change( fluxdir, pr, GLOBALPOINT(fluxvectemp), fluxvec[fluxdir] );
+            }
+          }
 
-	}//end if something to do
+        }//end if something to do
 
-	// go ahead and control nprlist
-	// needed for Sasha's limit_fluxc2a
-	addremovefromnpr(RESTORENPR,whichpltoavg,ifnotavgthencopy,&nprlocalstart,&nprlocalend,nprlocallist,NULL,NULL);
+        // go ahead and control nprlist
+        // needed for Sasha's limit_fluxc2a
+        addremovefromnpr(RESTORENPR,whichpltoavg,ifnotavgthencopy,&nprlocalstart,&nprlocalend,nprlocallist,NULL,NULL);
 
 
-	// now copy over the other flux for same emf as required
-	// assume emf's that should be zero are zero already
-	if(isemf) if(Nvec[fluxdir]!=1 && Nvec[pldir]!=1) COMPFULLLOOP MACP1A1(fluxvec,pldir,i,j,k,B1+fluxdir-1) = - MACP1A1(fluxvec,fluxdir,i,j,k,B1+pldir-1);
+        // now copy over the other flux for same emf as required
+        // assume emf's that should be zero are zero already
+        if(isemf) if(Nvec[fluxdir]!=1 && Nvec[pldir]!=1) COMPFULLLOOP MACP1A1(fluxvec,pldir,i,j,k,B1+fluxdir-1) = - MACP1A1(fluxvec,fluxdir,i,j,k,B1+pldir-1);
 
 
       }// end if doing this emf[dir]
@@ -2165,13 +2165,13 @@ int initial_averageu_fv(int *fieldfrompotential, FTYPE (*prim)[NSTORE2][NSTORE3]
     if(1 || FLUXB==FLUXCTSTAG || FLUXB==FLUXCTTOTH){ //(1 || because currently all FLUXB methods set Uavg before pi2Uavg either through vpot or in init.c's  init_conservatives() before the pi2Uavg call)
       // can't overwrite staggered conserved field that MUST be set
       COMPFULLLOOP{
-	PLOOPNOB1(pl) MACP0A1(Uavg,i,j,k,pl) = MACP0A1(Upoint,i,j,k,pl);
-	PLOOPNOB2(pl) MACP0A1(Uavg,i,j,k,pl) = MACP0A1(Upoint,i,j,k,pl);
+        PLOOPNOB1(pl) MACP0A1(Uavg,i,j,k,pl) = MACP0A1(Upoint,i,j,k,pl);
+        PLOOPNOB2(pl) MACP0A1(Uavg,i,j,k,pl) = MACP0A1(Upoint,i,j,k,pl);
       }
     }
     else{
       COMPFULLLOOP PLOOP(pliter,pl) {
-	MACP0A1(Uavg,i,j,k,pl) = MACP0A1(Upoint,i,j,k,pl);
+        MACP0A1(Uavg,i,j,k,pl) = MACP0A1(Upoint,i,j,k,pl);
       }
     }
   }
@@ -2210,13 +2210,13 @@ int get_primitive_centerlocation(int *locpl, int *whichpltoavg, int interporflux
   PALLLOOP(pl){
     if(whichpltoavg[pl]){
       if(locpl[pl]!=CENT){
-	dualfprintf(fail_file,"avg2cen_interp() not setup for non-CENT locations\n");
-	myexit(1659562);
+        dualfprintf(fail_file,"avg2cen_interp() not setup for non-CENT locations\n");
+        myexit(1659562);
       }
     }
   }
 #endif
-	
+        
 
   // 1|| since should always be doing since always need primitive
   if(1|| avgscheme[1] == WENO5FLAT ||avgscheme[2] == WENO5FLAT ||avgscheme[3] == WENO5FLAT || CONTACTINDICATOR || COMPUTEDRHODP|| SHOCKINDICATOR ) {
@@ -2224,13 +2224,13 @@ int get_primitive_centerlocation(int *locpl, int *whichpltoavg, int interporflux
     if(USEPRIMITIVEFROMAVGCONSERVED){
 
       COMPFULLLOOP{
-	get_geometry(i, j, k, CENT, ptrgeom);
-	// set guess
-	PALLLOOP(pl) MACP0A1(prim_goodlocation,i,j,k,pl)=MACP0A1(primreal,i,j,k,pl);
-	MYFUN(Utoprimgen(0,EVOLVEUTOPRIM, UEVOLVE, MAC(U,i,j,k), ptrgeom, MAC(prim_goodlocation,i,j,k),&newtonstats),"interpline.c:avg2cen_interp()", "Utoprimgen", 1);
-	// if problem with inversion, then reduce to using primreal
-	if(GLOBALMACP0A1(pflag,i,j,k,FLAGUTOPRIMFAIL)) PALLLOOP(pl) MACP0A1(prim_goodlocation,i,j,k,pl)=MACP0A1(primreal,i,j,k,pl);
-	// pflag will be reset by real inversion routine in advance.c before used elsewhere
+        get_geometry(i, j, k, CENT, ptrgeom);
+        // set guess
+        PALLLOOP(pl) MACP0A1(prim_goodlocation,i,j,k,pl)=MACP0A1(primreal,i,j,k,pl);
+        MYFUN(Utoprimgen(0,EVOLVEUTOPRIM, UEVOLVE, MAC(U,i,j,k), ptrgeom, MAC(prim_goodlocation,i,j,k),&newtonstats),"interpline.c:avg2cen_interp()", "Utoprimgen", 1);
+        // if problem with inversion, then reduce to using primreal
+        if(GLOBALMACP0A1(pflag,i,j,k,FLAGUTOPRIMFAIL)) PALLLOOP(pl) MACP0A1(prim_goodlocation,i,j,k,pl)=MACP0A1(primreal,i,j,k,pl);
+        // pflag will be reset by real inversion routine in advance.c before used elsewhere
       }
 
     }
@@ -2239,9 +2239,9 @@ int get_primitive_centerlocation(int *locpl, int *whichpltoavg, int interporflux
       // probably very good indicator of the future behavior
 
       if( primreal == NULL ) {
-	//no primitive quantities values supplied -> obtain them by treating input as conserved quantities and inverting them
-	dualfprintf( fail_file, "interpline.c: avg2cen_interp: WENO5FLAT requires supplying the primitive quantities\n" );
-	myexit( 1 );
+        //no primitive quantities values supplied -> obtain them by treating input as conserved quantities and inverting them
+        dualfprintf( fail_file, "interpline.c: avg2cen_interp: WENO5FLAT requires supplying the primitive quantities\n" );
+        myexit( 1 );
       }
 
       // GODMARK: for FLUXCTSTAG offset in transverse direction for non-dir fields that are de-averaged
@@ -2277,19 +2277,19 @@ int get_primitive_fluxlocation(int dir, int interporflux, FTYPE (*primreal)[NSTO
     // 1|| because should always have this even if not doing WENOFLAT
     if(1||USEAVGPRIMITIVEFORWENOFLAT && interporflux!=ENOFLUXSPLITTYPE){
       if(dir==1){
-	// need to average primitive in dir=1 direction so in same location
-	// GODMARK: loop is too big, but data isn't accessed later in bad region
-	COMPLOOPINFP1dir23full PALLLOOP(pl) MACP0A1(prim_goodlocation,i,j,k,pl) = 0.5*(MACP0A1(primreal,i,j,k,pl)+MACP0A1(primreal,im1mac(i),j,k,pl));
+        // need to average primitive in dir=1 direction so in same location
+        // GODMARK: loop is too big, but data isn't accessed later in bad region
+        COMPLOOPINFP1dir23full PALLLOOP(pl) MACP0A1(prim_goodlocation,i,j,k,pl) = 0.5*(MACP0A1(primreal,i,j,k,pl)+MACP0A1(primreal,im1mac(i),j,k,pl));
       }
       else if(dir==2){
-	COMPLOOPINFP1dir13full PALLLOOP(pl) MACP0A1(prim_goodlocation,i,j,k,pl) = 0.5*(MACP0A1(primreal,i,j,k,pl)+MACP0A1(primreal,i,jm1mac(j),k,pl));
+        COMPLOOPINFP1dir13full PALLLOOP(pl) MACP0A1(prim_goodlocation,i,j,k,pl) = 0.5*(MACP0A1(primreal,i,j,k,pl)+MACP0A1(primreal,i,jm1mac(j),k,pl));
       }
       else if(dir==3){
-	COMPLOOPINFP1dir12full PALLLOOP(pl) MACP0A1(prim_goodlocation,i,j,k,pl) = 0.5*(MACP0A1(primreal,i,j,k,pl)+MACP0A1(primreal,i,j,km1mac(k),pl));
+        COMPLOOPINFP1dir12full PALLLOOP(pl) MACP0A1(prim_goodlocation,i,j,k,pl) = 0.5*(MACP0A1(primreal,i,j,k,pl)+MACP0A1(primreal,i,j,km1mac(k),pl));
       }
       else{
-	dualfprintf(fail_file,"No such dir=%d in flux_interp()\n",dir);
-	myexit(100);
+        dualfprintf(fail_file,"No such dir=%d in flux_interp()\n",dir);
+        myexit(100);
       }
     }
     else{
@@ -2424,8 +2424,8 @@ void flux_interp_multiple(int *whichpltoavg, int *ifnotavgthencopy, int numdirs,
       whichquantity=whichquantitylist[otherdir]; interporflux=interporfluxlist[otherdir]; dirmethod=dirmethodlist[otherdir]; intdir=intdirlist[otherdir]; fluxdir=fluxdirlist[otherdir]; idel=idellist[otherdir]; jdel=jdellist[otherdir];  kdel=kdellist[otherdir];
 
       if(numdirs>1){
-	// then need to store original to use for weights
-	COMPFULLLOOP PLOOP(pliter,pl) MACP0A1(stencilvar,i,j,k,pl) = MACP1A1(fluxvec,fluxdir,i,j,k,pl); // assumes not flux splitting method since only one input and one output
+        // then need to store original to use for weights
+        COMPFULLLOOP PLOOP(pliter,pl) MACP0A1(stencilvar,i,j,k,pl) = MACP1A1(fluxvec,fluxdir,i,j,k,pl); // assumes not flux splitting method since only one input and one output
       }
       else stencilvar=NULL; // says use normal input for stencil
 
@@ -2443,25 +2443,25 @@ void flux_interp_multiple(int *whichpltoavg, int *ifnotavgthencopy, int numdirs,
     if((nstep*(long long)numstepparts+(long long)steppart)%2 || dodouble==0){
 
 
-      //	      dualfprintf(fail_file,"nstep=%ld steppart=%d :: dir=%d fluxdir=%d pldir=%d plforflux=%d\n",nstep,steppart,dir,fluxdir,pldir,plforflux);
-      //	      dualfprintf(fail_file,"nprstart=%d nprend=%d\n",nprstart,nprend);
-      //	      PALLLOOP(pl) dualfprintf(fail_file,"nprlist[%d]=%d\n",pl,nprlist[pl]);
+      //              dualfprintf(fail_file,"nstep=%ld steppart=%d :: dir=%d fluxdir=%d pldir=%d plforflux=%d\n",nstep,steppart,dir,fluxdir,pldir,plforflux);
+      //              dualfprintf(fail_file,"nprstart=%d nprend=%d\n",nprstart,nprend);
+      //              PALLLOOP(pl) dualfprintf(fail_file,"nprlist[%d]=%d\n",pl,nprlist[pl]);
 
       // over at most 2 orthogonal directions
       // GODMARK: ordering issue.  If a2c operations commuted, then would not matter.  How to ensure this?
-	      
+              
       // first do integration along flux dir, then along pldir
       // only change integration direction, not which quantity (e.g. emf[3]=+-F2[B1] or F1[B2] -- only do 1 both times)
       otherdir=1;  whichquantity=whichquantitylist[otherdir]; interporflux=interporfluxlist[otherdir]; dirmethod=dirmethodlist[otherdir]; intdir=intdirlist[otherdir]; fluxdir=fluxdirlist[otherdir]; idel=idellist[otherdir]; jdel=jdellist[otherdir];  kdel=kdellist[otherdir];
       if(Nvec[intdir]>1) flux_interp(whichpltoavg, ifnotavgthencopy, whichquantity, interporflux, dirmethod, idel, jdel, kdel, pr, NULL, fluxvec[fluxdir], NULL, fluxvec[fluxdir], NULL); 
-	      
+              
       otherdir=2;  whichquantity=whichquantitylist[otherdir]; interporflux=interporfluxlist[otherdir]; dirmethod=dirmethodlist[otherdir]; intdir=intdirlist[otherdir]; fluxdir=fluxdirlist[otherdir]; idel=idellist[otherdir]; jdel=jdellist[otherdir];  kdel=kdellist[otherdir];
       if(Nvec[intdir]>1) flux_interp(whichpltoavg, ifnotavgthencopy, whichquantity, interporflux, dirmethod, idel, jdel, kdel, pr, NULL, fluxvec[fluxdir], NULL, fluxvec[fluxdir], NULL); 
     }
     else{
       otherdir=2;  whichquantity=whichquantitylist[otherdir]; interporflux=interporfluxlist[otherdir]; dirmethod=dirmethodlist[otherdir]; intdir=intdirlist[otherdir]; fluxdir=fluxdirlist[otherdir]; idel=idellist[otherdir]; jdel=jdellist[otherdir];  kdel=kdellist[otherdir];
       if(Nvec[intdir]>1) flux_interp(whichpltoavg, ifnotavgthencopy, whichquantity, interporflux, dirmethod, idel, jdel, kdel, pr, NULL, fluxvec[fluxdir], NULL, fluxvec[fluxdir], NULL); 
-	      
+              
       otherdir=1;  whichquantity=whichquantitylist[otherdir]; interporflux=interporfluxlist[otherdir]; dirmethod=dirmethodlist[otherdir]; intdir=intdirlist[otherdir]; fluxdir=fluxdirlist[otherdir]; idel=idellist[otherdir]; jdel=jdellist[otherdir];  kdel=kdellist[otherdir];
       if(Nvec[intdir]>1) flux_interp(whichpltoavg, ifnotavgthencopy, whichquantity, interporflux, dirmethod, idel, jdel, kdel, pr, NULL, fluxvec[fluxdir], NULL, fluxvec[fluxdir], NULL); 
     }
@@ -2481,17 +2481,17 @@ void flux_interp_multiple(int *whichpltoavg, int *ifnotavgthencopy, int numdirs,
     // if here, always will do fluxdir since fluxdir was defined to necessarily be an existing dimension
     otherdir=1;  whichquantity=whichquantitylist[otherdir]; interporflux=interporfluxlist[otherdir]; dirmethod=dirmethodlist[otherdir]; intdir=intdirlist[otherdir]; fluxdir=fluxdirlist[otherdir]; idel=idellist[otherdir]; jdel=jdellist[otherdir];  kdel=kdellist[otherdir];
     if(Nvec[intdir]>1) flux_interp(whichpltoavg, ifnotavgthencopy, whichquantity, interporflux, dirmethod, idel, jdel, kdel, pr, NULL, fluxvec[fluxdir], NULL, fluxveca[fluxdir], NULL); 
-	    
+            
     otherdir=2;  whichquantity=whichquantitylist[otherdir]; interporflux=interporfluxlist[otherdir]; dirmethod=dirmethodlist[otherdir]; intdir=intdirlist[otherdir]; fluxdir=fluxdirlist[otherdir]; idel=idellist[otherdir]; jdel=jdellist[otherdir];  kdel=kdellist[otherdir];
     if(Nvec[intdir]>1) flux_interp(whichpltoavg, ifnotavgthencopy, whichquantity, interporflux, dirmethod, idel, jdel, kdel, pr, NULL, fluxveca[fluxdir], NULL, fluxveca[fluxdir], NULL); 
-	  
+          
 
     otherdir=2;  whichquantity=whichquantitylist[otherdir]; interporflux=interporfluxlist[otherdir]; dirmethod=dirmethodlist[otherdir]; intdir=intdirlist[otherdir]; fluxdir=fluxdirlist[otherdir]; idel=idellist[otherdir]; jdel=jdellist[otherdir];  kdel=kdellist[otherdir];
     if(Nvec[intdir]>1) flux_interp(whichpltoavg, ifnotavgthencopy, whichquantity, interporflux, dirmethod, idel, jdel, kdel, pr, NULL, fluxvec[fluxdir], NULL, fluxvecb[fluxdir], NULL); 
-	    
+            
     otherdir=1;  whichquantity=whichquantitylist[otherdir]; interporflux=interporfluxlist[otherdir]; dirmethod=dirmethodlist[otherdir]; intdir=intdirlist[otherdir]; fluxdir=fluxdirlist[otherdir]; idel=idellist[otherdir]; jdel=jdellist[otherdir];  kdel=kdellist[otherdir];
     if(Nvec[intdir]>1) flux_interp(whichpltoavg, ifnotavgthencopy, whichquantity, interporflux, dirmethod, idel, jdel, kdel, pr, NULL, fluxvecb[fluxdir], NULL, fluxvecb[fluxdir], NULL); 
-	    
+            
     // symmetrize flux
     // assumes pl is chosen correctly (i.e. plforflux for FLUXRECON)
     // GODMARK: assumes fluxdir is same for both dimensions, which is normal
@@ -2570,7 +2570,7 @@ int avg2cen_interp(int *locpl, int *whichpltoavg, int *ifnotavgthencopy, int whi
     dualfprintf(fail_file,"No such defined multidir_pre/post_slope_lim_linetype() for avgscheme[1,2,3]=%d %d %d\n",avgscheme[1],avgscheme[2],avgscheme[3]);
     myexit(91758726);
   }
-	
+        
 
 
   Nvec[0]=0;
@@ -2680,8 +2680,8 @@ int avg2cen_interp(int *locpl, int *whichpltoavg, int *ifnotavgthencopy, int whi
       addremovefieldfromnpr(REMOVEFROMNPR, whichpltoavg, ifnotavgthencopy, whichavg2cen, dir, &nprlocalstart,&nprlocalend,nprlocallist,out,out);
 
       if(nprlocalend>-1){
-	// a2c or c2a
-	slope_lim_linetype(whichquantity, whichavg2cen, dir, idel, jdel, kdel, prim_goodlocation, stencilvar, out, NULL, out, NULL);
+        // a2c or c2a
+        slope_lim_linetype(whichquantity, whichavg2cen, dir, idel, jdel, kdel, prim_goodlocation, stencilvar, out, NULL, out, NULL);
       }
 
       // restore dir-field
@@ -2712,31 +2712,31 @@ int avg2cen_interp(int *locpl, int *whichpltoavg, int *ifnotavgthencopy, int whi
       // loop over dimensions/directions
       for(dirlisti=1;dirlisti<=numdirs;dirlisti++){
 
-	// get direction to integrate
-	dir=dirlist[dirlisti];
-	//	dualfprintf(fail_file,"steppart=%d nstep=%d : dirlisti=%d dir=%d\n",steppart,nstep,dirlisti,dir);
+        // get direction to integrate
+        dir=dirlist[dirlisti];
+        //      dualfprintf(fail_file,"steppart=%d nstep=%d : dirlisti=%d dir=%d\n",steppart,nstep,dirlisti,dir);
 
-	// get loop details
-	// GODMARK: determine idel,jdel,kdel
-	idel = fluxloop[dir][FIDEL];
-	jdel = fluxloop[dir][FJDEL];
-	kdel = fluxloop[dir][FKDEL];
-
-
-	// remove fields should not average or deaverage
-	addremovefieldfromnpr(REMOVEFROMNPR, whichpltoavg, ifnotavgthencopy, whichavg2cen, dir, &nprlocalstart,&nprlocalend,nprlocallist,current_in,current_out);
-
-	if(nprlocalend>-1){
-	  // a2c or c2a
-	  slope_lim_linetype(whichquantity, whichavg2cen, dir, idel, jdel, kdel, prim_goodlocation, NULL, current_in, NULL, current_out, NULL);
-	}
-
-	// restore dir-field
-	addremovefieldfromnpr(RESTORENPR, whichpltoavg, ifnotavgthencopy, whichavg2cen, dir, &nprlocalstart,&nprlocalend,nprlocallist,current_in,current_out);
+        // get loop details
+        // GODMARK: determine idel,jdel,kdel
+        idel = fluxloop[dir][FIDEL];
+        jdel = fluxloop[dir][FJDEL];
+        kdel = fluxloop[dir][FKDEL];
 
 
-	// apply deaveraging one after another on the same array (out)
-	current_in = current_out;
+        // remove fields should not average or deaverage
+        addremovefieldfromnpr(REMOVEFROMNPR, whichpltoavg, ifnotavgthencopy, whichavg2cen, dir, &nprlocalstart,&nprlocalend,nprlocallist,current_in,current_out);
+
+        if(nprlocalend>-1){
+          // a2c or c2a
+          slope_lim_linetype(whichquantity, whichavg2cen, dir, idel, jdel, kdel, prim_goodlocation, NULL, current_in, NULL, current_out, NULL);
+        }
+
+        // restore dir-field
+        addremovefieldfromnpr(RESTORENPR, whichpltoavg, ifnotavgthencopy, whichavg2cen, dir, &nprlocalstart,&nprlocalend,nprlocallist,current_in,current_out);
+
+
+        // apply deaveraging one after another on the same array (out)
+        current_in = current_out;
 
       }
 
@@ -2748,12 +2748,12 @@ int avg2cen_interp(int *locpl, int *whichpltoavg, int *ifnotavgthencopy, int whi
       // UNSPLIT a2c method (2X more expensive in 2D and 6X more expensive in 3D)
 
       if(numdirs==3){
-	// then have 6 permutations to average out
-	numperms=6;
+        // then have 6 permutations to average out
+        numperms=6;
       }
       else if(numdirs==2){
-	// then have 2 permutations to average out
-	numperms=2;
+        // then have 2 permutations to average out
+        numperms=2;
       }
       else numperms=1;
 
@@ -2762,12 +2762,12 @@ int avg2cen_interp(int *locpl, int *whichpltoavg, int *ifnotavgthencopy, int whi
 
       // don't necessarily touch all outputs
       PLOOP(pliter,pl){
-	if(whichpltoavg[pl] || ifnotavgthencopy[pl]){
-	  COMPFULLLOOP{
-	    // inialize output (if in=out, then ok since just above stored in)
-	    MACP0A1(out,i,j,k,pl) = 0.0;
-	  }
-	}
+        if(whichpltoavg[pl] || ifnotavgthencopy[pl]){
+          COMPFULLLOOP{
+            // inialize output (if in=out, then ok since just above stored in)
+            MACP0A1(out,i,j,k,pl) = 0.0;
+          }
+        }
       }
 
 
@@ -2776,76 +2776,76 @@ int avg2cen_interp(int *locpl, int *whichpltoavg, int *ifnotavgthencopy, int whi
       // loop over permutations
       for(permi=0;permi<numperms;permi++){
 
-	// get permutation
-	if(numdirs==3) dirlist3d(permi,dirlist);
-	else if(numdirs==2) dirlist2d(permi,dirlist);
-	else if(numdirs==1) dirlist1d(permi,dirlist);
+        // get permutation
+        if(numdirs==3) dirlist3d(permi,dirlist);
+        else if(numdirs==2) dirlist2d(permi,dirlist);
+        else if(numdirs==1) dirlist1d(permi,dirlist);
 
-	// setup input array so don't have to assume user sends in=out
-	current_in = in;
-	// output array is the temporary storage for this permutation
-	current_out = GLOBALPOINT(a2cout);
-
-
-	// things to do before all directions for slope_lim_linetype()
-	multidir_pre_slope_lim_linetype();
+        // setup input array so don't have to assume user sends in=out
+        current_in = in;
+        // output array is the temporary storage for this permutation
+        current_out = GLOBALPOINT(a2cout);
 
 
-	// loop over dimensions/directions
-	for(dirlisti=1;dirlisti<=numdirs;dirlisti++){
-
-	  // get direction to integrate
-	  dir=dirlist[dirlisti];
-	  //    dualfprintf(fail_file,"steppart=%d nstep=%d : dirlisti=%d dir=%d\n",steppart,nstep,dirlisti,dir);
-
-	  // get loop details
-	  // GODMARK: determine idel,jdel,kdel
-	  idel = fluxloop[dir][FIDEL];
-	  jdel = fluxloop[dir][FJDEL];
-	  kdel = fluxloop[dir][FKDEL];
+        // things to do before all directions for slope_lim_linetype()
+        multidir_pre_slope_lim_linetype();
 
 
-	  // remove fields should not average or deaverage
-	  addremovefieldfromnpr(REMOVEFROMNPR, whichpltoavg, ifnotavgthencopy, whichavg2cen, dir, &nprlocalstart,&nprlocalend,nprlocallist,current_in,current_out);
+        // loop over dimensions/directions
+        for(dirlisti=1;dirlisti<=numdirs;dirlisti++){
+
+          // get direction to integrate
+          dir=dirlist[dirlisti];
+          //    dualfprintf(fail_file,"steppart=%d nstep=%d : dirlisti=%d dir=%d\n",steppart,nstep,dirlisti,dir);
+
+          // get loop details
+          // GODMARK: determine idel,jdel,kdel
+          idel = fluxloop[dir][FIDEL];
+          jdel = fluxloop[dir][FJDEL];
+          kdel = fluxloop[dir][FKDEL];
 
 
-	  if(nprlocalend>-1){
-	    // a2c or c2a
-	    //atch here every next interpolation will use the global value of whether we have reduced while interpolating in 
-	    //the other direction, and if we did reduce then, then it will reduce now in the same way
-	    slope_lim_linetype(whichquantity, whichavg2cen, dir, idel, jdel, kdel, prim_goodlocation, NULL, current_in, NULL, current_out, NULL);
-	  }
-
-	  // restore dir-field
-	  addremovefieldfromnpr(RESTORENPR, whichpltoavg, ifnotavgthencopy, whichavg2cen, dir, &nprlocalstart,&nprlocalend,nprlocallist,current_in,current_out);
+          // remove fields should not average or deaverage
+          addremovefieldfromnpr(REMOVEFROMNPR, whichpltoavg, ifnotavgthencopy, whichavg2cen, dir, &nprlocalstart,&nprlocalend,nprlocallist,current_in,current_out);
 
 
+          if(nprlocalend>-1){
+            // a2c or c2a
+            //atch here every next interpolation will use the global value of whether we have reduced while interpolating in 
+            //the other direction, and if we did reduce then, then it will reduce now in the same way
+            slope_lim_linetype(whichquantity, whichavg2cen, dir, idel, jdel, kdel, prim_goodlocation, NULL, current_in, NULL, current_out, NULL);
+          }
 
-	  // apply de/averaging one after another on the a2cout array
-	  // and don't overwrite the a2cin array since needed for every permutation
-	  current_in = current_out;
-
-	}// end loop over dirlisti
+          // restore dir-field
+          addremovefieldfromnpr(RESTORENPR, whichpltoavg, ifnotavgthencopy, whichavg2cen, dir, &nprlocalstart,&nprlocalend,nprlocallist,current_in,current_out);
 
 
-	multidir_post_slope_lim_linetype();
+
+          // apply de/averaging one after another on the a2cout array
+          // and don't overwrite the a2cin array since needed for every permutation
+          current_in = current_out;
+
+        }// end loop over dirlisti
 
 
-	// add this permutation to out (current_out=a2cout)
-	PLOOP(pliter,pl) {
-	  if(whichpltoavg[pl] || ifnotavgthencopy[pl]){
-	    COMPFULLLOOP MACP0A1(out,i,j,k,pl) += MACP0A1(current_out,i,j,k,pl);
-	  }
-	}
+        multidir_post_slope_lim_linetype();
+
+
+        // add this permutation to out (current_out=a2cout)
+        PLOOP(pliter,pl) {
+          if(whichpltoavg[pl] || ifnotavgthencopy[pl]){
+            COMPFULLLOOP MACP0A1(out,i,j,k,pl) += MACP0A1(current_out,i,j,k,pl);
+          }
+        }
     
 
       }// end loop over permutations
 
       // normalize the permutations
       PLOOP(pliter,pl){
-	if(whichpltoavg[pl] || ifnotavgthencopy[pl]){
-	  COMPFULLLOOP MACP0A1(out,i,j,k,pl) /= ( (FTYPE)numperms ) ;
-	}
+        if(whichpltoavg[pl] || ifnotavgthencopy[pl]){
+          COMPFULLLOOP MACP0A1(out,i,j,k,pl) /= ( (FTYPE)numperms ) ;
+        }
       }
 
 
@@ -2887,13 +2887,13 @@ int addremovefieldfromnpr(int doadd, int *whichpltoavg, int *ifnotavgthencopy, i
     // now remove any other pl's not wanting to average for whatever reason
     for(pl3=0;pl3<NPR;pl3++){ // as above, but loop over all undesired quantities
       for(pl=nprstart;pl<=nprend;pl++){
-	if(whichpltoavg[pl3]==0 && nprlist[pl]==pl3){
-	  // need to copy over unchanged quantity
-	  if(ifnotavgthencopy[pl3] && out!=NULL && in!=NULL) COMPFULLLOOP MACP0A1(out,i,j,k,pl3)=MACP0A1(in,i,j,k,pl3);
-	  for(pl2=pl+1;pl2<=nprend;pl2++) nprlist[pl2-1]=nprlist[pl2]; // moving upper to lower index
-	  nprend-=1; // removed dir-field
-	  break;
-	}
+        if(whichpltoavg[pl3]==0 && nprlist[pl]==pl3){
+          // need to copy over unchanged quantity
+          if(ifnotavgthencopy[pl3] && out!=NULL && in!=NULL) COMPFULLLOOP MACP0A1(out,i,j,k,pl3)=MACP0A1(in,i,j,k,pl3);
+          for(pl2=pl+1;pl2<=nprend;pl2++) nprlist[pl2-1]=nprlist[pl2]; // moving upper to lower index
+          nprend-=1; // removed dir-field
+          break;
+        }
       }
     }
 
@@ -2907,14 +2907,14 @@ int addremovefieldfromnpr(int doadd, int *whichpltoavg, int *ifnotavgthencopy, i
       // just remove dir-field
       pl3=B1+dir-1;
       for(pl=nprstart;pl<=nprend;pl++){
-	if(nprlist[pl]==pl3){
-	  // need to copy over unchanged quantity
-	  // dir-field for avg2cent always gets copied!
-	  if(out!=NULL && in!=NULL) COMPFULLLOOP MACP0A1(out,i,j,k,pl3)=MACP0A1(in,i,j,k,pl3);
-	  for(pl2=pl+1;pl2<=nprend;pl2++) nprlist[pl2-1]=nprlist[pl2]; // moving upper to lower index
-	  nprend-=1; // removed dir-field
-	  break;
-	}
+        if(nprlist[pl]==pl3){
+          // need to copy over unchanged quantity
+          // dir-field for avg2cent always gets copied!
+          if(out!=NULL && in!=NULL) COMPFULLLOOP MACP0A1(out,i,j,k,pl3)=MACP0A1(in,i,j,k,pl3);
+          for(pl2=pl+1;pl2<=nprend;pl2++) nprlist[pl2-1]=nprlist[pl2]; // moving upper to lower index
+          nprend-=1; // removed dir-field
+          break;
+        }
       }
 
 
@@ -3114,9 +3114,9 @@ int dirlist1d(long long itemp, int *dirlist)
 // this code seems to have incorrect position for flux (uses CENT for pr, but doesn't at least interpolate/average to flux position)
 // dir here is always direction of flux as it would be differenced
 FTYPE limit_fluxc2a_prim_change( 
-				int dir, FTYPE (*pr)[NSTORE2][NSTORE3][NPR],
-				FTYPE (*fluxvec_point)[NSTORE2][NSTORE3][NPR],
-				FTYPE (*fluxvec_avg)[NSTORE2][NSTORE3][NPR])
+                                int dir, FTYPE (*pr)[NSTORE2][NSTORE3][NPR],
+                                FTYPE (*fluxvec_point)[NSTORE2][NSTORE3][NPR],
+                                FTYPE (*fluxvec_avg)[NSTORE2][NSTORE3][NPR])
 {
   int is, ie, js, je, ks, ke;
   int i, j, k;
@@ -3156,7 +3156,7 @@ FTYPE limit_fluxc2a_prim_change(
   ks = Uconsloop[FKS];
   ke = Uconsloop[FKE] + kdel;
 
- COMPZSLOOP( is, ie, js, je, ks, ke ) {
+  COMPZSLOOP( is, ie, js, je, ks, ke ) {
     PLOOP(pliter,pl) { //loop over the interfaces where the fluxes that determine the evolution of conserved quantities are
       //
       // !! Insert c2a limiting code here !! SASMARK atch
@@ -3206,34 +3206,34 @@ FTYPE limit_fluxc2a_prim_change(
       //3. invert & check if the difference between pr_adjacent_updated[0..1] and pr_adjacent_original[0..1]= pr is too large
       // invert point Upoint_updated-> point pr_updated
       pflag_backup = GLOBALMACP0A1(pflag,i1,j1,k1,FLAGUTOPRIMFAIL); //back up the old inversion flag, just in case, probably not needed anyway
-			
+                        
       MYFUN(Utoprimgen(0,EVOLVEUTOPRIM, UEVOLVE, Upoint_updated, ptrgeom, pr_updated,&newtonstats),"flux.c:fluxcalc()", "Utoprimgen", 1);
 
       pflag_current = GLOBALMACP0A1(pflag,i1,j1,k1,FLAGUTOPRIMFAIL);  //backup the new inversion flag
       GLOBALMACP0A1(pflag,i1,j1,k1,FLAGUTOPRIMFAIL) = pflag_backup;   //restore the inversion flag
 
       if( 
-	 //(pflag_backup==UTOPRIMFAILUNEG || IFUTOPRIMNOFAILORFIXED(pflag_backup)) && //not sure if can use this since it will always fix up the failure in the end
-	 (pflag_current==UTOPRIMFAILUNEG || IFUTOPRIMNOFAILORFIXED(pflag_current))   //if only u < 0 or no failure it is OK (since only check rho & gamma)
-	 ) {
+         //(pflag_backup==UTOPRIMFAILUNEG || IFUTOPRIMNOFAILORFIXED(pflag_backup)) && //not sure if can use this since it will always fix up the failure in the end
+         (pflag_current==UTOPRIMFAILUNEG || IFUTOPRIMNOFAILORFIXED(pflag_current))   //if only u < 0 or no failure it is OK (since only check rho & gamma)
+          ) {
 
-	//4. limit the flux c2a correction (difference btw. pr & pr_updated based on this difference
-	frac_point_flux_used_array[index] = limit_prim_correction(MAX_AC_PRIM_FRAC_CHANGE, ptrgeom, MAC(pr,i1,j1,k1), pr_updated);
+        //4. limit the flux c2a correction (difference btw. pr & pr_updated based on this difference
+        frac_point_flux_used_array[index] = limit_prim_correction(MAX_AC_PRIM_FRAC_CHANGE, ptrgeom, MAC(pr,i1,j1,k1), pr_updated);
 
       }
       else {
-	frac_point_flux_used_array[index] = 1.; //if inversion from new value failed, let there be no c2a correction done to flux
+        frac_point_flux_used_array[index] = 1.; //if inversion from new value failed, let there be no c2a correction done to flux
       }
     }
 
-    frac_point_flux_used = MAX( frac_point_flux_used_array[0], 	frac_point_flux_used_array[1] );
+    frac_point_flux_used = MAX( frac_point_flux_used_array[0],  frac_point_flux_used_array[1] );
 
     if( 0 < frac_point_flux_used ) { 
       dualfprintf( fail_file, "Limited flux integration, dir = %d, i = %d, j = %d\n", dir, i, j );
     }
 
     PLOOP(pliter,pl) MACP0A1(fluxvec_avg,i1,j1,k1,pl) = frac_point_flux_used * MACP0A1(fluxvec_point,i1,j1,k1,pl) + (1.0 - frac_point_flux_used) * MACP0A1(fluxvec_avg,i1,j1,k1,pl);
-		
+                
   } //end COMPZSLOOP
 
   return( 0 );
@@ -3301,10 +3301,10 @@ int higherorder_set(int whichquantity, int recontype, int*weightsplittype)
 // generally can be user-defined, but chosen as best right now
 int plstart_set(int whichquantity, int dir, int recontype, int *plstart)
 {
- int Batemp,Bbtemp;
+  int Batemp,Bbtemp;
   // GODMARK: Very dependent upon what quantities dealing with -- so why depends upon what's in nprlist
       
- if(dir==1){
+  if(dir==1){
     Batemp=B2;
     Bbtemp=B3;
   }
@@ -3347,10 +3347,10 @@ int plstart_set(int whichquantity, int dir, int recontype, int *plstart)
 
   }
   else if(
-	  (nprstart==0 && nprend==2 && nprlist[nprstart]==B1 && nprlist[nprend]==B3)||
-	  (nprstart==0 && nprend==0 && (nprlist[nprstart]==B1 && nprlist[nprend]==B1 || nprlist[nprstart]==B2 && nprlist[nprend]==B2 || nprlist[nprstart]==B3 && nprlist[nprend]==B3) )
-	  ){
-	
+          (nprstart==0 && nprend==2 && nprlist[nprstart]==B1 && nprlist[nprend]==B3)||
+          (nprstart==0 && nprend==0 && (nprlist[nprstart]==B1 && nprlist[nprend]==B1 || nprlist[nprstart]==B2 && nprlist[nprend]==B2 || nprlist[nprstart]==B3 && nprlist[nprend]==B3) )
+          ){
+        
     // then doing fraction of normal quantities (e.g. field or emf)
     *plstart=nprlist[nprstart];
   }

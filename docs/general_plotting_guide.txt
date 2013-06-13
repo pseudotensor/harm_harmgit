@@ -1,0 +1,389 @@
+
+There are a couple plotting tools that go beyond vis5d+'s capability
+to deal with more publishable plots.
+
+===============================================================
+HARM data:
+
+1) In general, in the harm git, see docs/tousedata.txt for the format
+for fieldline, gdump, and maybe dump files. All the plotting begins
+starting with using that data, so it's good to know what one is
+starting with!
+
+2) Don't forget about http://globusonline.org/ for handling copying of
+data to/from various computers.  Don't use scp or bbcp or any other
+method.  Any other method is highly unreliable and slow.
+
+Most of XSEDE has this setup, and virtually any computer you have access
+to can have a globusconnect going (even with out you logged in by using
+"nohup").
+
+3) One can do most analysis/plotting on supercomputers, although for
+just learning one can use a local computer.
+
+===============================================================
+SuperMongo (SM):
+
+SM is good for basic 2D plots with ability to quickly appear high
+quality with latex (math) mode for axes labels, titles, etc.
+
+1) It requires text dump and gdump files.  So one either needs to use
+"bin2txt" to convert the binary to text, or one needs to ensure the
+files are written as text during the simulation (not good for
+supercomputers).  To do this, one sets in your
+init.c:prepre_init_specific_init():
+
+binaryoutput=TEXTOUTPUT;
+
+And also do: SET USEROMIO to 0 or 1 in mympi.definit.h (needs to be 0
+for TEXTOUTPUT)
+
+2) SM Project and Repo (SVN based):
+
+https://harm.unfuddle.com/svn/harm_harmsmmacros/
+
+QuickStartGuide(updated):
+https://harm.unfuddle.com/a#/projects/2/notebooks/3/pages/6/latest
+
+Use guide:
+https://harm.unfuddle.com/a#/projects/1/notebooks/1/pages/45/latest
+
+3) One should use "jrdp3duentropy" to read-in the latest dump files
+(one must have text dump files) and "grid3d" to read in the gdump file
+(again text only).
+
+E.g., 
+
+A) install as per guide
+B) cd to the "run" directory (i.e. not dumps or images directory)
+C) run as per guide: jsm
+D) gogrmhd
+E) jrdpcf3duentropy dump0000
+F) plc 0 lrho # This will plot the log of density
+G) help jrdp3duentropy # to see what this macro/script does and what
+else you can plot.  See all the other macros in ~/sm/ that you
+installed during the quick start guide.
+H) pl 0 r lrho # 1D plot of all data for radius vs. log(rho0)
+
+
+
+
+
+
+
+===============================================================
+Python Scripting:
+
+1) Using SM is easy for simple high quality 2D plots, but not as robust
+or general as python.
+
+Python will read-in the binary or binary fieldline file and gdump file
+but it's not as easy to make a quick high-quality 2D BW plot.  But for
+color of >1D (and often >2D) or more complicated analysis using
+various packages, python is best.
+
+2) Repo (git based) is part of the HARM project on unfuddle:
+
+git@harm.unfuddle.com:harm/pythontools.git
+
+Switch to branch "jon" and don't use "master":  git checkout jon
+
+It should tell you that it's tracking remote branch from origin.  If
+not, something's wrong.
+
+
+3) After getting the repo and the directory called "pythontools" (say
+downloaded into your home directory), *move* (do not link, so that
+scripts below behave normally) to your home directory as:
+
+mv ~/pythontools ~/py/
+
+4a) Make sure you have installed python2.7 (not 2.6 or 3.0 or any
+other).  Install all the related packages like matplotlib, numpy,
+scipy.  Also best to install ipython.  For some help on that, see
+~/py/docs/pythonfullinstall.sh .  However, this is for installing on
+any arbitrary system, not ubuntu.  Try using the package manager and
+install all those items mentioned in that install script, and only if
+one has problems should one install python directly.  This means
+looking for ubuntu packages: python, python2.7-setuptools,
+python-dateutil, yasm, ipython, python-nose, python2.7-scipy,
+python2.7-numpy, python-matplotlib, python-matplotlib-data, dvipng
+
+Maybe also install medibuntu: http://www.medibuntu.org/repository.php
+
+Some things may already be installed (e.g.): python --version # should
+be 2.7.x
+
+4b) Ensure PYTHONPATH is set.  Put in your .bashrc the following:
+
+source ~/.bashrc.jon
+#source /opt/intel/bin/compilervars.sh intel64
+export PYTHONPATH=$HOME/py/:$PYTHONPATH
+export LESS="-R"
+export EDITOR=emacs
+alias ipython='ipython --pylab --colors=LightBG'
+#export PYTHONPATH=$HOME/lib/python/:$HOME/py/:$PYTHONPATH
+PATH=/home/$USER/mpich-install/bin:$PATH ; export PATH
+export HOSTNAME
+if [ -z $LD_LIBRARY_PATH  ]; then
+LD_LIBRARY_PATH=/home/$USER/lib/
+else
+LD_LIBRARY_PATH=/home/$USER/lib:${LD_LIBRARY_PATH}
+fi
+#for user libs
+export LD_LIBRARY_PATH
+
+
+5) The primary script for HARM analysis is: ~/py/mread/__init__.py .
+There are lots of bash script wrappers for python stuff in
+~/py/scripts/ .
+
+The __init__.py file is a monster master file used for the tons of
+calculations in the MCAF paper.
+
+Along with those bash scripts (the *links* to make a single place of
+links for the multiple supercomputer runs, makemovie.sh and
+makemovieall.sh for doing batch jobs of analysis over all files for
+each supercomputer run, etc.), this is how one can do large-scale
+analysis on supercomputers.  Indeed, those scripts show exactly
+how that __init__.py file is really used under many cases.
+I mostly tuned __init__.py to be command-line driven.  It doesn't
+focus on popping-up pictures.
+
+Note that this __init__.py is quite advanced.  It deals with many
+issues related to what computer one is one, issues with various
+computers, etc.  But, python is fairly modular (although many global
+variables have been used), so it's not too hard to ignore the advanced
+bits and add your own analysis calls or use existing analysis.
+
+6) You should learn python or get a book.  I used a lot of google
+searching after starting with someone else's template file.
+Alot of results will come up as from stackoverflow.org answers (very good stuff)
+or direct websites about python (e.g. http://docs.python.org/2.7/
+or http://matplotlib.org/ or http://www.scipy.org/
+
+Basically, python is a scripting language, meaning the user doesn't
+have to compile the code.  One just runs something like:
+
+python <scriptname>
+
+Python scripts are run sequentially as the file appears.  Many times
+all that's in the script are functions and no commands,
+but at least sometimes commands appear like "import <package>" at the top
+so that when one runs the script packages one needs are already loaded
+before running any functions.
+
+Python scripts have a "def main()" type function that is the only
+function ran when running a script.  Many times, however, this doesn't
+do anything itself unless one passes it arguments.  That's how this
+__init__.py script is setup.
+
+
+7) Here's an example use of python with my script, using it to compute various
+stages of the calculation used for the MCAF paper.  This is based upon how
+the script makeallmovie.sh uses makemovie.sh.
+
+preA1)  Ensure right files exist in run/dumps and run/
+
+# if created dump0000 and gdump but not .bin versions, convert them is best:
+# e.g., for 128x64 simulation, do (do head -1 on original files and see last number as being numcolumns to use below after the "d"):
+bin2txt 2 1 0 -1 2 128 64 1 1 dump0000 dump0000.bin d 81
+bin2txt 2 1 0 -1 2 128 64 1 1 gdump gdump.bin d 126
+
+preA2) Add your run name (e.g. "run" below, where "run" could be any modelname like "thickdisk7" and other things.) to ~/py/mread/__init__.py as another modelname entry in case defaults aren't good enough (e.g. for defaultfti and defaultftf that need to at least cover the range where any data exists, else avg merge will fail as NOTUSING will be applied to all files.)
+
+
+A) Run the default torus problem or your problem with harm, so now you
+have a "run" directory with "dumps" and "images" directories.  Enter
+the "run" directory, whatever it's called.  I'll assume harm master
+has been downloaded to ~/harmgit/ and the python stuff has been linked
+to ~/py/
+
+cd run/
+cd ../  #really? Yes!
+cp ~/py/scripts/makeallmovie.sh .
+
+# open that makeallmovie.sh and set (and remove or commend-out previous such settings):
+
+                     # "run" here is name of your "model" according to the bash and python scripts.
+dircollect="run"     # models (here just 1) to collect latex tables over 
+dirruns="run"        # models (here just 1) to run over
+numkeep=2            # number of files to really use out of all of them (2 for now to iterate quickly on confusions)
+
+# then edit ~/py/scripts/makemovie.sh :
+1) change for "$system -eq 3" part:
+numcorespernode=??   # choose ?? as number of cores on your system.  Try ??=1 at first to avoid confusion of multiple stderr and stdout output files in case something goes wrong.
+2) change itemspergroup=$(( 20 ))  and replace 20 with 1 unless one has more than 20 files.
+
+# Note that in general, one should setup makeallmovie.sh and makemovie.sh to have your own "system" sections *and* "modelname" sections.  That is so you can control by default which files are actually kept (default is higher half of fieldline files).
+
+# now get ready to run by setting arguments to pass to the script
+moviename="test1"    # name of directory your analysis will be done in
+docleanexist=1       # whether to clean-out old analysis
+dolinks=1            # whether to make links to dumps as required
+dofiles=1            # whether to copy __init__.py, makemovie.sh, and other files needed
+make1d=1             # Compute 1D stuff vs. radius results
+makemerge=1          # Merge across all core's 1D calculations
+makeplot=1           # Make all plots and latex output and final output for 1D calculations
+makemontage=0        # Make montage of plots (can be quite slow for large data)
+makepowervsmplots=0  # Make Power vs. m calculations and plots (needed if doing fft or spec).  Only makes sense in 3D.
+makespacetimeplots=0 # space (r and theta) vs. time plots
+makefftplot=0        # FFT specific to MCAF paper (watch out for non-constant spacing in time for dumping or missing files)
+makespecplot=0       # Spectrogram specific to MCAF paper
+makeinitfinalplot=0  # initial and final 2D plots
+makethradfinalplot=0 # theta vs. radius 2D plots
+makeframes=1         # make movie frames
+makemovie=1          # make movie (or just run ffmpeg yourself)
+makeavg=0            # compute 2D averaged time-averaged data (need to do first before made1d stuff for Qnlm)
+makeavgmerge=0       # merge avg
+makeavgplot=0        # make plots or tables related to averages
+collect=0            # collect results from latex info from all models
+
+
+# run it
+rm -rf run/test1/ # in case already exists
+chmod a+rx ./makeallmovie.sh
+bash ./makeallmovie.sh ${moviename} $docleanexist $dolinks $dofiles $make1d $makemerge $makeplot $makemontage $makepowervsmplots $makespacetimeplots $makefftplot $makespecplot $makeinitfinalplot $makethradfinalplot $makeframes $makemovie $makeavg $makeavgmerge $makeavgplot $collect
+
+# One can do each stage separately to see what's going on.
+# e.g., to clean-up the directory, setup links, and copy files, do just:
+# rm -rf run/test1/ ; bash ./makeallmovie.sh ${moviename} $docleanexist $dolinks 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+
+# MOST generally, one has to run the avg stuff first so it's available for all calculations, by doing 2 runs
+# This is because the proper Fourier transforms need the time-averaged value subtracted off.
+# Do:
+rm -rf run/test1/
+chmod a+rx ./makeallmovie.sh
+bash ./makeallmovie.sh ${moviename} 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 1 1 0 0
+bash ./makeallmovie.sh ${moviename} 0 0 0 1 1 1 1 1 1 1 1 1 1 1 1 0 0 1 0
+
+# NOTE: I avoided doing makeavgplot until the second time, since only the merged avg2d.npy file is required.
+# NOTE: One can of course skip certain things that are not needed, but some items require others (e.g. make1d must come before makemerge that must come before makeplot).  Indeed, makemontage through makethradfinalplot all require one to do "makeplot"
+# E.g., if one already has the 1d and avg files done, one can fixup your plots and redo the plotting stuff like:
+bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 1 1 1 1 1 1 1 1 1 1 0 0 1 0
+
+
+# Many things are computed and outputted. E.g.
+# FROM make1d/makemerge/makeplot:
+# 1) python.plot.full.out : All things from "1D" calculations
+# 2) fitplot* : Some fitting plots
+# 3) aphi.png : vector potential averaged over dumps
+# 4) datavs??.txt : Many computations that can be read into SM using existing SM scripts I used to make MCAF paper plots.  Those SM scripts are in "~/sm/thickdisk.m"
+# FROM makepowervsmplots:
+# 1) power*.png power*.txt rbar*.txt # again, see SM scripts in thickdisk.m for looking at this data.
+# FROM makefftplot:
+# 1) fft1.pdf fft1.png data*fft*.txt
+# FROM makeframes:
+# 1) lrho*.png
+# FROM makemovie:
+# 1) *.avi *.mov
+# FROM makeavgplot:
+# 1) fig2.png aphizoom_avg.png aphizoom_avgfield.png aphialllog_avgfield_avg.png fig4_0.png fig4_1.png dataavgvs*.txt dataavg*.txt python.plot.avg.full.out
+
+# NOTE: Most of the plots won't work for 2D harm data.  Indeed, some plots may hang (e.g. makethradfinalplot making of velocity mkstreamplot1).
+
+# Sometimes if you kill a job, you'll have stray python processes still going.  Assuming it's all you are doing with python as a user, you should do: killall -s 9 python  to get rid of them.
+
+
+8) One can run the makemovie script directly once one has already at
+least run makeallmovie with the first 1 1 1 options so that the
+test1-like directory, files, etc. are all there.  As in those scripts,
+here's the full raw full command assuming one set these parameters on
+the command line with typical choices for a few parameters
+
+cd run/ #i.e. actually be in that run's directory
+#
+thedir=`pwd`
+system=3
+parallel=0
+make1d=1
+makemerge=1
+makeplot=1
+makemontage=0
+makepowervsmplots=1
+makespacetimeplots=1
+makefftplot=1
+makespecplot=1
+makeinitfinalplot=1
+makethradfinalplot=0
+makeframes=1
+makemovie=1
+makeavg=1
+makeavgmerge=1
+makeavgplot=1
+cmdraw="sh makemovielocal.sh ${thedir} $make1d $makemerge $makeplot $makemontage $makepowervsmplots $makespacetimeplots $makefftplot $makespecplot $makeinitfinalplot $makethradfinalplot $makeframes $makemovie $makeavg $makeavgmerge $makeavgplot ${system} ${parallel}"
+
+# If one is not running on a batch system or in parallel, just run it
+# as that command:
+
+$cmdraw
+
+# Otherwise, it's best to do (to avoid output to screen and avoiding
+# the job to die if one gets logged out):
+
+rm -rf makemovielocal_${thedir}.stderr.out
+rm -rf makemovielocal_${thedir}.out
+rm -rf makemovielocal_${thedir}.full.out
+echo "((nohup $cmdraw 2>&1 1>&3 | tee makemovielocal_${thedir}.stderr.out) 3>&1 1>&2 | tee makemovielocal_${thedir}.out) > makemovielocal_${thedir}.full.out 2>&1" > batch_makemovielocal_${thedir}.sh
+chmod a+x ./batch_makemovielocal_${thedir}.sh
+nohup ./batch_makemovielocal_${thedir}.sh &
+
+
+
+
+9) Going even simpler (but with less obvious ways to get something to output)
+one can use python or ipython directly.
+
+cd run/
+ipython ~/py/mread/__init__.py
+
+# This does nothing except run through the script from top to bottom as well as run main()
+# No command line parameters were given, so "runtype" was not set as viewed by the script,
+# so main() catches no conditionals and the script exits.
+
+# To get a behavior like the makemovie.sh script, one manually runs python and the script
+with arguments just like done by makemovie.sh (NOT RECOMMENDED -- just use makeallmovie.sh):
+
+cd run/
+ipython
+runtype=3 # see main() or makemovie.sh for runtype and what it means and what other parameters need to be passed.
+run ~/py/mread/__init__.py $runtype $modelname $makepowervsmplots $makespacetimeplots $makefftplot $makespecplot $makeinitfinalplot $makethradfinalplot
+
+
+# To use the script in an interactive mode, instead run it without
+# arguments.  One manually sets those functions run globally during
+# the script processing.  This includes the functions
+# "runglobalsetup()" and "main()".  But, the python script relies upon
+# command line arguments explicitly, so this is used to do
+# stuff *NOT* done by makeallmovie.sh or makemovie.sh, like
+# calling the script's more internal functions that don't use argv.
+# E.g.:
+
+cd run/
+ipython
+run ~/py/mread/__init__.py
+# now run a tutorial:
+tutorial1()
+# see how lrho is plotted.
+# See also the short tutorial at the end of main() as runtype==8.
+
+# NOTE: One can't run certain functions on the command line because
+# variables lose scope immediately, even if chosen to be global in the
+# function itself.  So best to create a script file separately
+# (i.e. not inside the base __init__.py) that can contain the same
+# type of lines as tutorial1() and "run" your script file and then
+# call your function.  So the command sequence would look like:
+
+cd run/
+ipython
+run ~/py/mread/__init__.py
+run ~/py/myscript.py
+mytut1()
+
+
+
+
+
+
+
+

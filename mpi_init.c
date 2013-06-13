@@ -112,10 +112,10 @@ void init_MPI_setupfilesandgrid(int argc, char *argv[])
     // 
     if(mpicombine){
       if(USEROMIO==0){
-	// choice
-	if(sortedoutput==SORTED) mpicombinetype=MPICOMBINEMINMEM;
-	else if(sortedoutput==UNSORTED) mpicombinetype=MPICOMBINESIMPLE; //forced to happen since no unsorted method for the advanced combine technique
-	//mpicombinetype=MPICOMBINESIMPLE; // forced for testing
+        // choice
+        if(sortedoutput==SORTED) mpicombinetype=MPICOMBINEMINMEM;
+        else if(sortedoutput==UNSORTED) mpicombinetype=MPICOMBINESIMPLE; //forced to happen since no unsorted method for the advanced combine technique
+        //mpicombinetype=MPICOMBINESIMPLE; // forced for testing
       }
       else truempicombinetype=mpicombinetype=MPICOMBINEROMIO;
     }
@@ -203,10 +203,10 @@ void myargs(int argc, char *argv[])
 
     if(! (argc==numargs || argc==numargs+numextraargs) ){
       if(myid==0){
-	stderrfprintf("proc: %04d : Incorrect command line: argc: %d needed at least=%d, please specify:\n",myid,argc,numargs);
-	stderrfprintf("proc: %04d : mpirun <mpirunoptions> <progname> numopenmpithreads ncpux1 ncpux2 ncpux3\n",myid);
-	stderrfprintf("proc: %04d : OR\n",myid);
-	stderrfprintf("proc: %04d : mpirun <mpirunoptions> <progname> numopenmpithreads ncpux1 ncpux2 ncpux3 RESTARTMODE WHICHFILE\n",myid);
+        stderrfprintf("proc: %04d : Incorrect command line: argc: %d needed at least=%d, please specify:\n",myid,argc,numargs);
+        stderrfprintf("proc: %04d : mpirun <mpirunoptions> <progname> numopenmpithreads ncpux1 ncpux2 ncpux3\n",myid);
+        stderrfprintf("proc: %04d : OR\n",myid);
+        stderrfprintf("proc: %04d : mpirun <mpirunoptions> <progname> numopenmpithreads ncpux1 ncpux2 ncpux3 RESTARTMODE WHICHFILE\n",myid);
       }
       exit(1);
     }
@@ -221,10 +221,10 @@ void myargs(int argc, char *argv[])
 
     if(! (argc==numargs || argc==numargs+numextraargs) ){
       if(myid==0){
-	stderrfprintf("proc: %04d : Incorrect command line: argc: %d needed at least=%d, please specify:\n",myid,argc,numargs);
-	stderrfprintf("proc: %04d : mpirun <mpirunoptions> <progname> ncpux1 ncpux2 ncpux3\n",myid);
-	stderrfprintf("proc: %04d : OR\n",myid);
-	stderrfprintf("proc: %04d : mpirun <mpirunoptions> <progname> ncpux1 ncpux2 ncpux3 RESTARTMODE WHICHFILE\n",myid);
+        stderrfprintf("proc: %04d : Incorrect command line: argc: %d needed at least=%d, please specify:\n",myid,argc,numargs);
+        stderrfprintf("proc: %04d : mpirun <mpirunoptions> <progname> ncpux1 ncpux2 ncpux3\n",myid);
+        stderrfprintf("proc: %04d : OR\n",myid);
+        stderrfprintf("proc: %04d : mpirun <mpirunoptions> <progname> ncpux1 ncpux2 ncpux3 RESTARTMODE WHICHFILE\n",myid);
       }
       exit(1);
     }
@@ -238,10 +238,10 @@ void myargs(int argc, char *argv[])
 
     if(! (argc==numargs || argc==numargs+numextraargs) ){
       if(myid==0){
-	stderrfprintf("proc: %04d : Incorrect command line: argc: %d needed at least=%d, please specify:\n",myid,argc,numargs);
-	stderrfprintf("proc: %04d : mpirun <mpirunoptions> <progname> numopenmpthreads\n",myid);
-	stderrfprintf("proc: %04d : OR\n",myid);
-	stderrfprintf("proc: %04d : mpirun <mpirunoptions> <progname> numopenmpthreads RESTARTMODE WHICHFILE\n",myid);
+        stderrfprintf("proc: %04d : Incorrect command line: argc: %d needed at least=%d, please specify:\n",myid,argc,numargs);
+        stderrfprintf("proc: %04d : mpirun <mpirunoptions> <progname> numopenmpthreads\n",myid);
+        stderrfprintf("proc: %04d : OR\n",myid);
+        stderrfprintf("proc: %04d : mpirun <mpirunoptions> <progname> numopenmpthreads RESTARTMODE WHICHFILE\n",myid);
       }
       exit(1);
     }
@@ -253,9 +253,9 @@ void myargs(int argc, char *argv[])
 
     if(! (argc==numargs || argc==numargs+numextraargs) ){
       if(myid==0){
-	stderrfprintf("<progname>\n");
-	stderrfprintf("OR\n");
-	stderrfprintf("<progname> RESTARTMODE WHICHFILE\n");
+        stderrfprintf("<progname>\n");
+        stderrfprintf("OR\n");
+        stderrfprintf("<progname> RESTARTMODE WHICHFILE\n");
       }
       exit(1);
     }
@@ -316,8 +316,8 @@ void myargs(int argc, char *argv[])
 
 
   myfprintf(stderr,
-	    "numprocs=%d ncpux1=%d ncpux2=%d ncpux3=%d numopenmpthreads=%d :: percpusize: N1=%d N2=%d N3=%d\n",
-	    numprocs, ncpux1, ncpux2, ncpux3, numopenmpthreads, N1, N2,N3);
+            "numprocs=%d ncpux1=%d ncpux2=%d ncpux3=%d numopenmpthreads=%d :: percpusize: N1=%d N2=%d N3=%d\n",
+            numprocs, ncpux1, ncpux2, ncpux3, numopenmpthreads, N1, N2,N3);
 
 
 }
@@ -361,7 +361,7 @@ void init_genfiles(int gopp)
     }
     stderrfprintf( "opened: %s\n", temps);
     fprintf(log_file, "fail_file: %d log_file: %d\n", (int)fail_file,
-	    (int)log_file);
+            (int)log_file);
     fflush(log_file);
   }
 
@@ -639,12 +639,12 @@ void init_placeongrid_griddecomposition(void)
   //
   /////////////////////
   for(bti=0;bti<NUMBOUNDTYPES;bti++) for(dir=0;dir<COMPDIM*2;dir++) for(j=0;j<DIRGENNUMVARS;j++){
-    dirgenset[bti][dir][j]=0;
-  }
+        dirgenset[bti][dir][j]=0;
+      }
 
   for(bti=0;bti<NUMBOUNDTYPES;bti++) for(dir=0;dir<COMPDIM*2;dir++) for(gridpos=0;gridpos<NUMPRIMGRIDPOS;gridpos++) for(j=0;j<DIRLOOPNUMVARS;j++){
-    dirloopset[bti][dir][gridpos][j]=0;
-  }
+          dirloopset[bti][dir][gridpos][j]=0;
+        }
   // see where this cpu needs to send/recv
 
 
@@ -667,16 +667,16 @@ void init_placeongrid_griddecomposition(void)
     if(N1>1){
       // figure out left/right send/recv
       if (mycpupos[1] > 0) {
-	dirgenset[bti][X1DN][DIRIF] = 1;		// do -x1 dir
+        dirgenset[bti][X1DN][DIRIF] = 1;                // do -x1 dir
       }
       if (mycpupos[1] < ncpux1 - 1) {
-	dirgenset[bti][X1UP][DIRIF] = 1;		// do +x1 dir
+        dirgenset[bti][X1UP][DIRIF] = 1;                // do +x1 dir
       }
       
       // only do periodic mpi if 
       if(periodicx1&&(ncpux1>1)){
-	if(mycpupos[1]==0) dirgenset[bti][X1DN][DIRIF]=1;
-	else if(mycpupos[1]==ncpux1-1) dirgenset[bti][X1UP][DIRIF]=1;
+        if(mycpupos[1]==0) dirgenset[bti][X1DN][DIRIF]=1;
+        else if(mycpupos[1]==ncpux1-1) dirgenset[bti][X1UP][DIRIF]=1;
       }
       
 
@@ -690,21 +690,21 @@ void init_placeongrid_griddecomposition(void)
     // figure out up/down send/recv
     if(N2>1){
       if (mycpupos[2] > 0) {
-	dirgenset[bti][X2DN][DIRIF] = 1;		// -x2 dir
+        dirgenset[bti][X2DN][DIRIF] = 1;                // -x2 dir
       }
       if (mycpupos[2] < ncpux2 - 1) {
-	dirgenset[bti][X2UP][DIRIF] = 1;		// towards and from +x2 dir
+        dirgenset[bti][X2UP][DIRIF] = 1;                // towards and from +x2 dir
       }
 
       // can't have both periodicx2 and SPC periodicx3      
       if(periodicx2&&(ncpux2>1)){
-	if(mycpupos[2]==0) dirgenset[bti][X2DN][DIRIF]=1;
-	else if(mycpupos[2]==ncpux2-1) dirgenset[bti][X2UP][DIRIF]=1;
+        if(mycpupos[2]==0) dirgenset[bti][X2DN][DIRIF]=1;
+        else if(mycpupos[2]==ncpux2-1) dirgenset[bti][X2UP][DIRIF]=1;
       }
       else if(special3dspc&&(ncpux3>1)){
-	// non-reflecting, transmissive boundary conditions
-	if(mycpupos[2]==0) dirgenset[bti][X2DN][DIRIF]=1;
-	else if(mycpupos[2]==ncpux2-1) dirgenset[bti][X2UP][DIRIF]=1;
+        // non-reflecting, transmissive boundary conditions
+        if(mycpupos[2]==0) dirgenset[bti][X2DN][DIRIF]=1;
+        else if(mycpupos[2]==ncpux2-1) dirgenset[bti][X2UP][DIRIF]=1;
       }
       
       
@@ -718,15 +718,15 @@ void init_placeongrid_griddecomposition(void)
     // figure out out/in send/recv
     if(N3>1){
       if (mycpupos[3] > 0) {
-	dirgenset[bti][X3DN][DIRIF] = 1;		// -x3 dir
+        dirgenset[bti][X3DN][DIRIF] = 1;                // -x3 dir
       }
       if (mycpupos[3] < ncpux3 - 1) {
-	dirgenset[bti][X3UP][DIRIF] = 1;		// towards and from +x3 dir
+        dirgenset[bti][X3UP][DIRIF] = 1;                // towards and from +x3 dir
       }
       
       if(periodicx3&&(ncpux3>1)){
-	if(mycpupos[3]==0) dirgenset[bti][X3DN][DIRIF]=1;
-	else if(mycpupos[3]==ncpux3-1) dirgenset[bti][X3UP][DIRIF]=1;
+        if(mycpupos[3]==0) dirgenset[bti][X3DN][DIRIF]=1;
+        else if(mycpupos[3]==ncpux3-1) dirgenset[bti][X3UP][DIRIF]=1;
       }
       
       
@@ -770,78 +770,78 @@ void init_placeongrid_griddecomposition(void)
     
       // x1
       if((dir==X1UP)||(dir==X1DN)){
-	if(ncpux1>1 &&
-	   (
-	    ((mycpupos[1]>0)&&(mycpupos[1]<ncpux1-1)) // interior CPUs
-	    || (mycpupos[1]==0 && dir==X1UP) // inner-CPUs pointing up
-	    || (mycpupos[1]==ncpux1-1 && dir==X1DN) // outer-CPUs pointing down
-	    )
-	   ){
-	  if(dir==X1UP) dirgenset[bti][dir][DIROTHER]=myid+1;
-	  if(dir==X1DN) dirgenset[bti][dir][DIROTHER]=myid-1;
-	}
-	else if(periodicx1 && ncpux1>1){ // here X1DN/X1UP are implicitly associated with 0/ncpux1-1
-	  if(mycpupos[1]==0 && dir==X1DN) dirgenset[bti][dir][DIROTHER]=myid+(ncpux1-1);  // for X1DN
-	  else if(mycpupos[1]==ncpux1-1 && dir==X1UP) dirgenset[bti][dir][DIROTHER]=myid-(ncpux1-1); // for X1UP
-	}
+        if(ncpux1>1 &&
+           (
+            ((mycpupos[1]>0)&&(mycpupos[1]<ncpux1-1)) // interior CPUs
+            || (mycpupos[1]==0 && dir==X1UP) // inner-CPUs pointing up
+            || (mycpupos[1]==ncpux1-1 && dir==X1DN) // outer-CPUs pointing down
+            )
+           ){
+          if(dir==X1UP) dirgenset[bti][dir][DIROTHER]=myid+1;
+          if(dir==X1DN) dirgenset[bti][dir][DIROTHER]=myid-1;
+        }
+        else if(periodicx1 && ncpux1>1){ // here X1DN/X1UP are implicitly associated with 0/ncpux1-1
+          if(mycpupos[1]==0 && dir==X1DN) dirgenset[bti][dir][DIROTHER]=myid+(ncpux1-1);  // for X1DN
+          else if(mycpupos[1]==ncpux1-1 && dir==X1UP) dirgenset[bti][dir][DIROTHER]=myid-(ncpux1-1); // for X1UP
+        }
       }
     
       // x2
       if((dir==X2UP)||(dir==X2DN)){
-	if(ncpux2>1 &&
-	   (
-	    (mycpupos[2]>0 && mycpupos[2]<ncpux2-1) // interior CPU
-	    || (mycpupos[2]==0 && dir==X2UP) // exterior CPU connected to interior
-	    || (mycpupos[2]==ncpux2-1 && dir==X2DN) // exterior CPU connected to interior
-	    )
-	   ){
-	  if(dir==X2UP) dirgenset[bti][dir][DIROTHER]=myid+ncpux1;
-	  if(dir==X2DN) dirgenset[bti][dir][DIROTHER]=myid-ncpux1;
-	}
-	else if(periodicx2 && ncpux2>1){
-	  if(mycpupos[2]==0 && dir==X2DN) dirgenset[bti][dir][DIROTHER]=myid+(ncpux2-1)*ncpux1;
-	  else if(mycpupos[2]==ncpux2-1 && dir==X2UP) dirgenset[bti][dir][DIROTHER]=myid-(ncpux2-1)*ncpux1;
-	}
-	else if(special3dspc&&(ncpux3>1)){
+        if(ncpux2>1 &&
+           (
+            (mycpupos[2]>0 && mycpupos[2]<ncpux2-1) // interior CPU
+            || (mycpupos[2]==0 && dir==X2UP) // exterior CPU connected to interior
+            || (mycpupos[2]==ncpux2-1 && dir==X2DN) // exterior CPU connected to interior
+            )
+           ){
+          if(dir==X2UP) dirgenset[bti][dir][DIROTHER]=myid+ncpux1;
+          if(dir==X2DN) dirgenset[bti][dir][DIROTHER]=myid-ncpux1;
+        }
+        else if(periodicx2 && ncpux2>1){
+          if(mycpupos[2]==0 && dir==X2DN) dirgenset[bti][dir][DIROTHER]=myid+(ncpux2-1)*ncpux1;
+          else if(mycpupos[2]==ncpux2-1 && dir==X2UP) dirgenset[bti][dir][DIROTHER]=myid-(ncpux2-1)*ncpux1;
+        }
+        else if(special3dspc&&(ncpux3>1)){
 
-	  if(ncpux3%2){
-	    // must have ncpux3 as even
-	    dualfprintf(fail_file,"ncpux3=%d must be even for polar transmissive BCs\n",ncpux3);
-	    myexit(33676958);
-	  }
-	  // see placeongrid.nb
-	  // spherical polar wrapping
-	  int othercpupos1 = mycpupos[1];
-	  int othercpupos2 = mycpupos[2];
-	  int othercpupos3 = (mycpupos[3] + (int)ncpux3/2)%ncpux3;
-	  int othermyid = othercpupos1 + othercpupos2*ncpux1 + othercpupos3*ncpux1*ncpux2;
-	  if(mycpupos[2]==0 && dir==X2DN){
-	    dirgenset[bti][dir][DIROTHER] = othermyid;
-	    dirgenset[bti][dir][DIROPP]=X2DN; // X2DN communicates with X2DN on other CPU
-	  }
-	  else if(mycpupos[2]==ncpux2-1 && dir==X2UP){
-	    dirgenset[bti][dir][DIROTHER] = othermyid;
-	    dirgenset[bti][dir][DIROPP]=X2UP; // X2UP communicates with X2UP on other CPU
-	  }
-	}
+          if(ncpux3%2){
+            // must have ncpux3 as even
+            dualfprintf(fail_file,"ncpux3=%d must be even for polar transmissive BCs\n",ncpux3);
+            myexit(33676958);
+          }
+          // see placeongrid.nb
+          // spherical polar wrapping
+          int othercpupos1 = mycpupos[1];
+          int othercpupos2 = mycpupos[2];
+          int othercpupos3 = (mycpupos[3] + (int)ncpux3/2)%ncpux3;
+          int othermyid = othercpupos1 + othercpupos2*ncpux1 + othercpupos3*ncpux1*ncpux2;
+          if(mycpupos[2]==0 && dir==X2DN){
+            dirgenset[bti][dir][DIROTHER] = othermyid;
+            dirgenset[bti][dir][DIROPP]=X2DN; // X2DN communicates with X2DN on other CPU
+          }
+          else if(mycpupos[2]==ncpux2-1 && dir==X2UP){
+            dirgenset[bti][dir][DIROTHER] = othermyid;
+            dirgenset[bti][dir][DIROPP]=X2UP; // X2UP communicates with X2UP on other CPU
+          }
+        }
       }
     
       // x3
       if((dir==X3UP)||(dir==X3DN)){
-	if(ncpux3>1 &&
-	   (
-	    ((mycpupos[3]>0)&&(mycpupos[3]<ncpux3-1))
-	    || (mycpupos[3]==0 && dir==X3UP)
-	    || (mycpupos[3]==ncpux3-1 && dir==X3DN)
-	    )
-	   ){
-	  if(dir==X3UP) dirgenset[bti][dir][DIROTHER]=myid+ncpux1*ncpux2;
-	  if(dir==X3DN) dirgenset[bti][dir][DIROTHER]=myid-ncpux1*ncpux2;
-	}
-	else if(periodicx3 && ncpux3>1){
-	  if(mycpupos[3]==0 && dir==X3DN) dirgenset[bti][dir][DIROTHER]=myid+(ncpux3-1)*ncpux1*ncpux2;
-	  else if(mycpupos[3]==ncpux3-1 && dir==X3UP) dirgenset[bti][dir][DIROTHER]=myid-(ncpux3-1)*ncpux1*ncpux2;
-	}
+        if(ncpux3>1 &&
+           (
+            ((mycpupos[3]>0)&&(mycpupos[3]<ncpux3-1))
+            || (mycpupos[3]==0 && dir==X3UP)
+            || (mycpupos[3]==ncpux3-1 && dir==X3DN)
+            )
+           ){
+          if(dir==X3UP) dirgenset[bti][dir][DIROTHER]=myid+ncpux1*ncpux2;
+          if(dir==X3DN) dirgenset[bti][dir][DIROTHER]=myid-ncpux1*ncpux2;
+        }
+        else if(periodicx3 && ncpux3>1){
+          if(mycpupos[3]==0 && dir==X3DN) dirgenset[bti][dir][DIROTHER]=myid+(ncpux3-1)*ncpux1*ncpux2;
+          else if(mycpupos[3]==ncpux3-1 && dir==X3UP) dirgenset[bti][dir][DIROTHER]=myid-(ncpux3-1)*ncpux1*ncpux2;
+        }
       }
 
       // MPI tags that label transfer, must be unique while doing multiple transfers
@@ -896,64 +896,64 @@ void init_placeongrid_griddecomposition(void)
       if(dirgenset[bti][dir][DIRIF]){
 
   
-	//////////////////////
-	//
-	// set number of variable types to transfer
-	//
-	//////////////////////
-	if(bti==BOUNDPRIMTYPE || bti==BOUNDPRIMSIMPLETYPE || bti==BOUNDPSTAGTYPE || bti==BOUNDPSTAGSIMPLETYPE || bti==BOUNDINTTYPE ){
-	  dirgenset[bti][dir][DIRNUMPR]=NPRBOUND; // not used if SPLITNPR==1 or doing general range for quantities
-	}
-	else if(bti==BOUNDFLUXTYPE || bti==BOUNDFLUXSIMPLETYPE){
-	  dirgenset[bti][dir][DIRNUMPR]=NFLUXBOUND;// not used if SPLITNPR==1 or doing general range for quantities
-	}
-	else if(bti==BOUNDVPOTTYPE || bti==BOUNDVPOTSIMPLETYPE){
-	  dirgenset[bti][dir][DIRNUMPR]=NDIM;// used
-	}
-	else{
-	  dualfprintf(fail_file,"No such bti=%d setup in set number of variable types in mpi_init.c\n",bti);
-	  myexit(246346769);
-	}
+        //////////////////////
+        //
+        // set number of variable types to transfer
+        //
+        //////////////////////
+        if(bti==BOUNDPRIMTYPE || bti==BOUNDPRIMSIMPLETYPE || bti==BOUNDPSTAGTYPE || bti==BOUNDPSTAGSIMPLETYPE || bti==BOUNDINTTYPE ){
+          dirgenset[bti][dir][DIRNUMPR]=NPRBOUND; // not used if SPLITNPR==1 or doing general range for quantities
+        }
+        else if(bti==BOUNDFLUXTYPE || bti==BOUNDFLUXSIMPLETYPE){
+          dirgenset[bti][dir][DIRNUMPR]=NFLUXBOUND;// not used if SPLITNPR==1 or doing general range for quantities
+        }
+        else if(bti==BOUNDVPOTTYPE || bti==BOUNDVPOTSIMPLETYPE){
+          dirgenset[bti][dir][DIRNUMPR]=NDIM;// used
+        }
+        else{
+          dualfprintf(fail_file,"No such bti=%d setup in set number of variable types in mpi_init.c\n",bti);
+          myexit(246346769);
+        }
 
-	//////////////////////
-	//
-	// set transfer size
-	//
-	//////////////////////
+        //////////////////////
+        //
+        // set transfer size
+        //
+        //////////////////////
 
-	// surface area must be consistent with loops
-	surfa[1]=(N2+numbnd[2]*2)*(N3+numbnd[3]*2)*N1NOT1;
-	surfa[2]=(N1+numbnd[1]*2)*(N3+numbnd[3]*2)*N2NOT1;
-	surfa[3]=(N1+numbnd[1]*2)*(N2+numbnd[2]*2)*N3NOT1;
+        // surface area must be consistent with loops
+        surfa[1]=(N2+numbnd[2]*2)*(N3+numbnd[3]*2)*N1NOT1;
+        surfa[2]=(N1+numbnd[1]*2)*(N3+numbnd[3]*2)*N2NOT1;
+        surfa[3]=(N1+numbnd[1]*2)*(N2+numbnd[2]*2)*N3NOT1;
 
-	if(
-	   bti==BOUNDPRIMTYPE || bti==BOUNDPRIMSIMPLETYPE
-	   || bti==BOUNDPSTAGTYPE || bti==BOUNDPSTAGSIMPLETYPE
-	   || bti==BOUNDINTTYPE
-	   || bti==BOUNDFLUXTYPE || bti==BOUNDFLUXSIMPLETYPE
-	   || bti==BOUNDVPOTTYPE || bti==BOUNDVPOTSIMPLETYPE
-	   ){
-	  // sets size of transfer for primitive
-	  if((dir==X1UP)||(dir==X1DN)) dirgenset[bti][dir][DIRSIZE]=numbnd[1]*surfa[1]*numnpr;
-	  else if((dir==X2UP)||(dir==X2DN)) dirgenset[bti][dir][DIRSIZE]=numbnd[2]*surfa[2]*numnpr;
-	  else if((dir==X3UP)||(dir==X3DN)) dirgenset[bti][dir][DIRSIZE]=numbnd[3]*surfa[3]*numnpr;
-	}
-	// GODMARK: Why was I doing the below?
-	//      else if(
-	//	      ){
-	//	// sets size of transfer for fluxes
-	//	// (different for "left" and "right") for flux-types
-	//	if(dir==X1UP) dirgenset[bti][dir][DIRSIZE]=numbnd[1]*surfa[1]*numnpr;
-	//	else if(dir==X1DN) dirgenset[bti][dir][DIRSIZE]=(numbnd[1]-1)*surfa[1]*numnpr;
-	//	else if(dir==X2UP) dirgenset[bti][dir][DIRSIZE]=numbnd[2]*surfa[2]*numnpr;
-	//	else if(dir==X2DN) dirgenset[bti][dir][DIRSIZE]=(numbnd[2]-1)*surfa[2]*numnpr;
-	//	else if(dir==X3UP) dirgenset[bti][dir][DIRSIZE]=numbnd[3]*surfa[3]*numnpr;
-	//	else if(dir==X3DN) dirgenset[bti][dir][DIRSIZE]=(numbnd[3]-1)*surfa[3]*numnpr;
-	//      }
-	else{
-	  dualfprintf(fail_file,"No such bti=%d setup in set transfer size in mpi_init.c\n",bti);
-	  myexit(246346770);
-	}
+        if(
+           bti==BOUNDPRIMTYPE || bti==BOUNDPRIMSIMPLETYPE
+           || bti==BOUNDPSTAGTYPE || bti==BOUNDPSTAGSIMPLETYPE
+           || bti==BOUNDINTTYPE
+           || bti==BOUNDFLUXTYPE || bti==BOUNDFLUXSIMPLETYPE
+           || bti==BOUNDVPOTTYPE || bti==BOUNDVPOTSIMPLETYPE
+           ){
+          // sets size of transfer for primitive
+          if((dir==X1UP)||(dir==X1DN)) dirgenset[bti][dir][DIRSIZE]=numbnd[1]*surfa[1]*numnpr;
+          else if((dir==X2UP)||(dir==X2DN)) dirgenset[bti][dir][DIRSIZE]=numbnd[2]*surfa[2]*numnpr;
+          else if((dir==X3UP)||(dir==X3DN)) dirgenset[bti][dir][DIRSIZE]=numbnd[3]*surfa[3]*numnpr;
+        }
+        // GODMARK: Why was I doing the below?
+        //      else if(
+        //            ){
+        //      // sets size of transfer for fluxes
+        //      // (different for "left" and "right") for flux-types
+        //      if(dir==X1UP) dirgenset[bti][dir][DIRSIZE]=numbnd[1]*surfa[1]*numnpr;
+        //      else if(dir==X1DN) dirgenset[bti][dir][DIRSIZE]=(numbnd[1]-1)*surfa[1]*numnpr;
+        //      else if(dir==X2UP) dirgenset[bti][dir][DIRSIZE]=numbnd[2]*surfa[2]*numnpr;
+        //      else if(dir==X2DN) dirgenset[bti][dir][DIRSIZE]=(numbnd[2]-1)*surfa[2]*numnpr;
+        //      else if(dir==X3UP) dirgenset[bti][dir][DIRSIZE]=numbnd[3]*surfa[3]*numnpr;
+        //      else if(dir==X3DN) dirgenset[bti][dir][DIRSIZE]=(numbnd[3]-1)*surfa[3]*numnpr;
+        //      }
+        else{
+          dualfprintf(fail_file,"No such bti=%d setup in set transfer size in mpi_init.c\n",bti);
+          myexit(246346770);
+        }
 
       }// end if DIRIF
     }// over dir's
@@ -1042,380 +1042,380 @@ void init_placeongrid_griddecomposition(void)
       /////////////////
       if(dirgenset[bti][dir][DIRIF]){
 
-	// default factor by which to multiply data
-	// allows simple transformations on MPI copies
-	PALLLOOP(pl){
-	  for(gridpos=0;gridpos<NUMPRIMGRIDPOS;gridpos++){
-	    primfactor[bti][dir][gridpos][PACK][pl]  =1.0;
-	    primfactor[bti][dir][gridpos][UNPACK][pl]=1.0;
-	  }
-	}
+        // default factor by which to multiply data
+        // allows simple transformations on MPI copies
+        PALLLOOP(pl){
+          for(gridpos=0;gridpos<NUMPRIMGRIDPOS;gridpos++){
+            primfactor[bti][dir][gridpos][PACK][pl]  =1.0;
+            primfactor[bti][dir][gridpos][UNPACK][pl]=1.0;
+          }
+        }
 
-	// NOTEMARK: Must ensure that # of elements copied is same for PACK and UNPACK (generally numbnd[] BCs in all cases for a given direction along that direction)
-
-
-	///////////////////
-	//
-	// PACKING quantities (inclusive range for loops)
-	//
-	//////////////////
-	// zones to copy from (packing -- where to copy FROM)
-	if(dir==X1UP){ // right
-	  gridpos=CENTGRID;
-	  dirloopset[bti][dir][gridpos][DIRPSTART1]=(N1-1)-(numbnd[1]-SHIFT1);
-	  dirloopset[bti][dir][gridpos][DIRPSTOP1] =(N1-1);
-	  dirloopset[bti][dir][gridpos][DIRPDIR1]=+1;
-
-	  gridpos=STAGGRID;
-	  dirloopset[bti][dir][gridpos][DIRPSTART1]=(N1-1)-(numbnd[1]-SHIFT1);
-	  dirloopset[bti][dir][gridpos][DIRPSTOP1] =(N1-1);
-	  dirloopset[bti][dir][gridpos][DIRPDIR1]=+1;
-	}
-	else if(dir==X1DN){ // left
-	  gridpos=CENTGRID;
-	  dirloopset[bti][dir][gridpos][DIRPSTART1]=+0;
-	  dirloopset[bti][dir][gridpos][DIRPSTOP1] =+0+(numbnd[1]-SHIFT1);
-	  dirloopset[bti][dir][gridpos][DIRPDIR1]=+1;
-
-	  gridpos=STAGGRID;
-	  dirloopset[bti][dir][gridpos][DIRPSTART1]=+0;
-	  dirloopset[bti][dir][gridpos][DIRPSTOP1] =+0+(numbnd[1]-SHIFT1);
-	  dirloopset[bti][dir][gridpos][DIRPDIR1]=+1;
-	}
-
-	for(gridpos=0;gridpos<NUMPRIMGRIDPOS;gridpos++){ // stag and cent same for off-dir directions.  Both are equivalent to CENTGRID
-	  if((dir==X1UP)||(dir==X1DN)){
-	    dirloopset[bti][dir][gridpos][DIRPSTART2]=0   -numbnd[2];
-	    dirloopset[bti][dir][gridpos][DIRPSTOP2] =N2-1+numbnd[2];
-	    dirloopset[bti][dir][gridpos][DIRPDIR2]=+1;
-	    dirloopset[bti][dir][gridpos][DIRPSTART3]=0   -numbnd[3];
-	    dirloopset[bti][dir][gridpos][DIRPSTOP3] =N3-1+numbnd[3];
-	    dirloopset[bti][dir][gridpos][DIRPDIR3]=+1;
-	  }
-	}
+        // NOTEMARK: Must ensure that # of elements copied is same for PACK and UNPACK (generally numbnd[] BCs in all cases for a given direction along that direction)
 
 
+        ///////////////////
+        //
+        // PACKING quantities (inclusive range for loops)
+        //
+        //////////////////
+        // zones to copy from (packing -- where to copy FROM)
+        if(dir==X1UP){ // right
+          gridpos=CENTGRID;
+          dirloopset[bti][dir][gridpos][DIRPSTART1]=(N1-1)-(numbnd[1]-SHIFT1);
+          dirloopset[bti][dir][gridpos][DIRPSTOP1] =(N1-1);
+          dirloopset[bti][dir][gridpos][DIRPDIR1]=+1;
 
-	// below also correct for "if(periodicx3&&(ncpux3>1)&&ISSPCMCOORDNATIVE(MCOORD))"
-	// for ISSPC, assumes "j=0" at \theta=0 and "j=N2" at \theta=\pi is copied to other CPUs.
-	// mycpupos[3]<ncpux3/2 CPUs dominate others for polar value of B2, but all consistent in the end!
-	// That should only affect things to machine accuracy since both poles should evolve polar B2 the same.
-	//
-	// Note that this special polar copy is unlike was setup, where copied j=0 and j=N2-1 effectively.
-	if(special3dspc&&(ncpux3>1)&&(mycpupos[2]==0 && dir==X2DN || mycpupos[2]==ncpux2-1 && dir==X2UP) ){
-	  if(dir==X2UP){ // up
-	    gridpos=CENTGRID;
-	    dirloopset[bti][dir][gridpos][DIRPSTART2]=(N2-1); // inverted order
-	    dirloopset[bti][dir][gridpos][DIRPSTOP2] =(N2-1)-(numbnd[2]-SHIFT2); //N2-numbnd[2];
-	    dirloopset[bti][dir][gridpos][DIRPDIR2]=-1;
+          gridpos=STAGGRID;
+          dirloopset[bti][dir][gridpos][DIRPSTART1]=(N1-1)-(numbnd[1]-SHIFT1);
+          dirloopset[bti][dir][gridpos][DIRPSTOP1] =(N1-1);
+          dirloopset[bti][dir][gridpos][DIRPDIR1]=+1;
+        }
+        else if(dir==X1DN){ // left
+          gridpos=CENTGRID;
+          dirloopset[bti][dir][gridpos][DIRPSTART1]=+0;
+          dirloopset[bti][dir][gridpos][DIRPSTOP1] =+0+(numbnd[1]-SHIFT1);
+          dirloopset[bti][dir][gridpos][DIRPDIR1]=+1;
 
-	    gridpos=STAGGRID;
-	    // mycpupos[3]<ncpux3/2 packs j=N2
+          gridpos=STAGGRID;
+          dirloopset[bti][dir][gridpos][DIRPSTART1]=+0;
+          dirloopset[bti][dir][gridpos][DIRPSTOP1] =+0+(numbnd[1]-SHIFT1);
+          dirloopset[bti][dir][gridpos][DIRPDIR1]=+1;
+        }
 
-	    if(mycpupos[3]<ncpux3/2) dirloopset[bti][dir][gridpos][DIRPSTART2]=(N2-1+SHIFT2);  // inverted order // diff compared to non-pole // includes j=N2 right at pole
-	    else  dirloopset[bti][dir][gridpos][DIRPSTART2]=(N2-1+SHIFT2)-(SHIFT2);  // inverted order // do not pack j=N2 right at pole since will come from matching CPU
-
-	    dirloopset[bti][dir][gridpos][DIRPSTOP2] =(N2-1+SHIFT2)-(numbnd[2]-SHIFT2); //N2-numbnd[2];
-	    dirloopset[bti][dir][gridpos][DIRPDIR2]=-1;
-
-
-	    for(gridpos=0;gridpos<NUMPRIMGRIDPOS;gridpos++){
-	      if(bti==BOUNDPRIMTYPE || bti==BOUNDPRIMSIMPLETYPE || bti==BOUNDPSTAGTYPE || bti==BOUNDPSTAGSIMPLETYPE ){
-		// at both poles we flip signature of B2 and U2 only
-		// Here we flip upon packing
-		primfactor[bti][dir][gridpos][PACK][U1]=SIGNFLIPU1;
-		primfactor[bti][dir][gridpos][PACK][B1]=SIGNFLIPB1;
-		primfactor[bti][dir][gridpos][PACK][U2]=SIGNFLIPU2;
-		primfactor[bti][dir][gridpos][PACK][B2]=SIGNFLIPB2;
-		// NOTEMARK: if only interpolate U3 and B3 across pole and not \detg U3 and \detg B3 (with FLIPGDETAXIS==1), then have to flip sign across pole to avoid jump in U3 and B3 at pole.  Then, U3 and B3 will be an extremum and reduce to lower order but not have a dissipation term in the EMF-type flux calculation.
-		primfactor[bti][dir][gridpos][PACK][U3]=SIGNFLIPU3;
-		primfactor[bti][dir][gridpos][PACK][B3]=SIGNFLIPB3;
-	      }
-	      else if(bti==BOUNDFLUXTYPE || bti==BOUNDFLUXSIMPLETYPE){
-		// process sign while packing
-		PALLLOOP(pl) primfactor[bti][dir][gridpos][PACK][pl]=SIGNFLIPGDET; // (e.g. gdet T^2_1. Assuming primitives are correct on active domain, then T^2_1 would be opposite signs for continuous flow through pole, but gdet has kink, so product has no kink)
-		primfactor[bti][dir][gridpos][PACK][U2]=-SIGNFLIPGDET; // \detg T^2_2
-		primfactor[bti][dir][gridpos][PACK][B2]=-SIGNFLIPGDET; // Note that F^2_{B2) = 0, so doesn't matter, but maintain consistency
-		primfactor[bti][dir][gridpos][PACK][U3]=-SIGNFLIPGDET; // \detg T^2_3 is like \detg T^2_2 as far as sign if don't interpolate \detg U3 and \detg B3 across pole.
-		primfactor[bti][dir][gridpos][PACK][B3]=-SIGNFLIPGDET; // F^2_{B3) like T^2_3 like T^2_2
-		// No need to handle T^2_3 
-	      }
-	      else if(bti==BOUNDVPOTTYPE || bti==BOUNDVPOTSIMPLETYPE){
-		// flip while packing
-		DLOOPA(pl) primfactor[bti][dir][gridpos][PACK][pl]=-SIGNFLIPGDET; // A_1 A_3 : These point in 1 and 3 directions like scalars, but gdet-compressed at pole with kink, so need to unkink
-		primfactor[bti][dir][gridpos][PACK][2]=SIGNFLIPGDET; // A_2 (points into axis but with gdet, so as if gdet*B2)
-	      }
-	    }// end over gridpos
-	  }
-	  else if(dir==X2DN){ // down
-	    gridpos=CENTGRID;
-	    dirloopset[bti][dir][gridpos][DIRPSTART2]=0;
-	    dirloopset[bti][dir][gridpos][DIRPSTOP2] =0+(numbnd[2]-SHIFT2);
-	    dirloopset[bti][dir][gridpos][DIRPDIR2]=+1;
-
-	    gridpos=STAGGRID;
-	    // mycpupos[3]<ncpux3/2 packs j=0
-	    if(mycpupos[3]<ncpux3/2) dirloopset[bti][dir][gridpos][DIRPSTART2]=0; // includes j=0 right at pole
-	    else dirloopset[bti][dir][gridpos][DIRPSTART2]=SHIFT2; // doesn't includes j=0 right at pole
-
-	    dirloopset[bti][dir][gridpos][DIRPSTOP2] =0+(numbnd[2]-SHIFT2);
-	    dirloopset[bti][dir][gridpos][DIRPDIR2]=+1;
-	  }
-	}
-	else{
-	  // Old treatment of pole
-	  if(dir==X2UP){ // up
-	    gridpos=CENTGRID;
-	    dirloopset[bti][dir][gridpos][DIRPSTART2]=(N2-1)-(numbnd[2]-SHIFT2); //N2-numbnd[2];
-	    dirloopset[bti][dir][gridpos][DIRPSTOP2] =(N2-1);
-	    dirloopset[bti][dir][gridpos][DIRPDIR2]=+1;
-
-	    gridpos=STAGGRID;
-	    dirloopset[bti][dir][gridpos][DIRPSTART2]=(N2-1)-(numbnd[2]-SHIFT2); //N2-numbnd[2];
-	    dirloopset[bti][dir][gridpos][DIRPSTOP2] =(N2-1);
-	    dirloopset[bti][dir][gridpos][DIRPDIR2]=+1;
-	  }
-	  else if(dir==X2DN){ // down
-	    gridpos=CENTGRID;
-	    dirloopset[bti][dir][gridpos][DIRPSTART2]=0;
-	    dirloopset[bti][dir][gridpos][DIRPSTOP2] =0+(numbnd[2]-SHIFT2);
-	    dirloopset[bti][dir][gridpos][DIRPDIR2]=+1;
-
-	    gridpos=STAGGRID;
-	    dirloopset[bti][dir][gridpos][DIRPSTART2]=0;
-	    dirloopset[bti][dir][gridpos][DIRPSTOP2] =0+(numbnd[2]-SHIFT2);
-	    dirloopset[bti][dir][gridpos][DIRPDIR2]=+1;
-	  }
-	}
-
-	for(gridpos=0;gridpos<NUMPRIMGRIDPOS;gridpos++){ // stag and cent same for off-dir directions.  Both are equivalent to CENTGRID
-	  if((dir==X2UP)||(dir==X2DN)){
-	    dirloopset[bti][dir][gridpos][DIRPSTART1]=-numbnd[1];
-	    dirloopset[bti][dir][gridpos][DIRPSTOP1]=N1-1+numbnd[1];
-	    dirloopset[bti][dir][gridpos][DIRPDIR1]=+1;
-	    dirloopset[bti][dir][gridpos][DIRPSTART3]=-numbnd[3];
-	    dirloopset[bti][dir][gridpos][DIRPSTOP3]=N3-1+numbnd[3];
-	    dirloopset[bti][dir][gridpos][DIRPDIR3]=+1;
-	  }
-	}
+        for(gridpos=0;gridpos<NUMPRIMGRIDPOS;gridpos++){ // stag and cent same for off-dir directions.  Both are equivalent to CENTGRID
+          if((dir==X1UP)||(dir==X1DN)){
+            dirloopset[bti][dir][gridpos][DIRPSTART2]=0   -numbnd[2];
+            dirloopset[bti][dir][gridpos][DIRPSTOP2] =N2-1+numbnd[2];
+            dirloopset[bti][dir][gridpos][DIRPDIR2]=+1;
+            dirloopset[bti][dir][gridpos][DIRPSTART3]=0   -numbnd[3];
+            dirloopset[bti][dir][gridpos][DIRPSTOP3] =N3-1+numbnd[3];
+            dirloopset[bti][dir][gridpos][DIRPDIR3]=+1;
+          }
+        }
 
 
 
-	if(dir==X3UP){ // up
-	  gridpos=CENTGRID;
-	  dirloopset[bti][dir][gridpos][DIRPSTART3]=(N3-1)-(numbnd[3]-SHIFT3); //N3-numbnd[3];
-	  dirloopset[bti][dir][gridpos][DIRPSTOP3] =(N3-1);
-	  dirloopset[bti][dir][gridpos][DIRPDIR3]=+1;
+        // below also correct for "if(periodicx3&&(ncpux3>1)&&ISSPCMCOORDNATIVE(MCOORD))"
+        // for ISSPC, assumes "j=0" at \theta=0 and "j=N2" at \theta=\pi is copied to other CPUs.
+        // mycpupos[3]<ncpux3/2 CPUs dominate others for polar value of B2, but all consistent in the end!
+        // That should only affect things to machine accuracy since both poles should evolve polar B2 the same.
+        //
+        // Note that this special polar copy is unlike was setup, where copied j=0 and j=N2-1 effectively.
+        if(special3dspc&&(ncpux3>1)&&(mycpupos[2]==0 && dir==X2DN || mycpupos[2]==ncpux2-1 && dir==X2UP) ){
+          if(dir==X2UP){ // up
+            gridpos=CENTGRID;
+            dirloopset[bti][dir][gridpos][DIRPSTART2]=(N2-1); // inverted order
+            dirloopset[bti][dir][gridpos][DIRPSTOP2] =(N2-1)-(numbnd[2]-SHIFT2); //N2-numbnd[2];
+            dirloopset[bti][dir][gridpos][DIRPDIR2]=-1;
 
-	  gridpos=STAGGRID;
-	  dirloopset[bti][dir][gridpos][DIRPSTART3]=(N3-1)-(numbnd[3]-SHIFT3); //N3-numbnd[3];
-	  dirloopset[bti][dir][gridpos][DIRPSTOP3] =(N3-1);
-	  dirloopset[bti][dir][gridpos][DIRPDIR3]=+1;
-	}
-	else if(dir==X3DN){ // down
-	  gridpos=CENTGRID;
-	  dirloopset[bti][dir][gridpos][DIRPSTART3]=+0;
-	  dirloopset[bti][dir][gridpos][DIRPSTOP3] =+0+(numbnd[3]-SHIFT3);
-	  dirloopset[bti][dir][gridpos][DIRPDIR3]=+1;
+            gridpos=STAGGRID;
+            // mycpupos[3]<ncpux3/2 packs j=N2
 
-	  gridpos=STAGGRID;
-	  dirloopset[bti][dir][gridpos][DIRPSTART3]=+0;
-	  dirloopset[bti][dir][gridpos][DIRPSTOP3] =+0+(numbnd[3]-SHIFT3);
-	  dirloopset[bti][dir][gridpos][DIRPDIR3]=+1;
-	}
+            if(mycpupos[3]<ncpux3/2) dirloopset[bti][dir][gridpos][DIRPSTART2]=(N2-1+SHIFT2);  // inverted order // diff compared to non-pole // includes j=N2 right at pole
+            else  dirloopset[bti][dir][gridpos][DIRPSTART2]=(N2-1+SHIFT2)-(SHIFT2);  // inverted order // do not pack j=N2 right at pole since will come from matching CPU
 
-	for(gridpos=0;gridpos<NUMPRIMGRIDPOS;gridpos++){ // stag and cent same for off-dir directions.  Both are equivalent to CENTGRID
-	  if((dir==X3UP)||(dir==X3DN)){
-	    dirloopset[bti][dir][gridpos][DIRPSTART1]=-numbnd[1];
-	    dirloopset[bti][dir][gridpos][DIRPSTOP1]=N1-1+numbnd[1];
-	    dirloopset[bti][dir][gridpos][DIRPDIR1]=+1;
-	    dirloopset[bti][dir][gridpos][DIRPSTART2]=-numbnd[2];
-	    dirloopset[bti][dir][gridpos][DIRPSTOP2]=N2-1+numbnd[2];
-	    dirloopset[bti][dir][gridpos][DIRPDIR2]=+1;
-	  }
-	}
+            dirloopset[bti][dir][gridpos][DIRPSTOP2] =(N2-1+SHIFT2)-(numbnd[2]-SHIFT2); //N2-numbnd[2];
+            dirloopset[bti][dir][gridpos][DIRPDIR2]=-1;
 
 
+            for(gridpos=0;gridpos<NUMPRIMGRIDPOS;gridpos++){
+              if(bti==BOUNDPRIMTYPE || bti==BOUNDPRIMSIMPLETYPE || bti==BOUNDPSTAGTYPE || bti==BOUNDPSTAGSIMPLETYPE ){
+                // at both poles we flip signature of B2 and U2 only
+                // Here we flip upon packing
+                primfactor[bti][dir][gridpos][PACK][U1]=SIGNFLIPU1;
+                primfactor[bti][dir][gridpos][PACK][B1]=SIGNFLIPB1;
+                primfactor[bti][dir][gridpos][PACK][U2]=SIGNFLIPU2;
+                primfactor[bti][dir][gridpos][PACK][B2]=SIGNFLIPB2;
+                // NOTEMARK: if only interpolate U3 and B3 across pole and not \detg U3 and \detg B3 (with FLIPGDETAXIS==1), then have to flip sign across pole to avoid jump in U3 and B3 at pole.  Then, U3 and B3 will be an extremum and reduce to lower order but not have a dissipation term in the EMF-type flux calculation.
+                primfactor[bti][dir][gridpos][PACK][U3]=SIGNFLIPU3;
+                primfactor[bti][dir][gridpos][PACK][B3]=SIGNFLIPB3;
+              }
+              else if(bti==BOUNDFLUXTYPE || bti==BOUNDFLUXSIMPLETYPE){
+                // process sign while packing
+                PALLLOOP(pl) primfactor[bti][dir][gridpos][PACK][pl]=SIGNFLIPGDET; // (e.g. gdet T^2_1. Assuming primitives are correct on active domain, then T^2_1 would be opposite signs for continuous flow through pole, but gdet has kink, so product has no kink)
+                primfactor[bti][dir][gridpos][PACK][U2]=-SIGNFLIPGDET; // \detg T^2_2
+                primfactor[bti][dir][gridpos][PACK][B2]=-SIGNFLIPGDET; // Note that F^2_{B2) = 0, so doesn't matter, but maintain consistency
+                primfactor[bti][dir][gridpos][PACK][U3]=-SIGNFLIPGDET; // \detg T^2_3 is like \detg T^2_2 as far as sign if don't interpolate \detg U3 and \detg B3 across pole.
+                primfactor[bti][dir][gridpos][PACK][B3]=-SIGNFLIPGDET; // F^2_{B3) like T^2_3 like T^2_2
+                // No need to handle T^2_3 
+              }
+              else if(bti==BOUNDVPOTTYPE || bti==BOUNDVPOTSIMPLETYPE){
+                // flip while packing
+                DLOOPA(pl) primfactor[bti][dir][gridpos][PACK][pl]=-SIGNFLIPGDET; // A_1 A_3 : These point in 1 and 3 directions like scalars, but gdet-compressed at pole with kink, so need to unkink
+                primfactor[bti][dir][gridpos][PACK][2]=SIGNFLIPGDET; // A_2 (points into axis but with gdet, so as if gdet*B2)
+              }
+            }// end over gridpos
+          }
+          else if(dir==X2DN){ // down
+            gridpos=CENTGRID;
+            dirloopset[bti][dir][gridpos][DIRPSTART2]=0;
+            dirloopset[bti][dir][gridpos][DIRPSTOP2] =0+(numbnd[2]-SHIFT2);
+            dirloopset[bti][dir][gridpos][DIRPDIR2]=+1;
+
+            gridpos=STAGGRID;
+            // mycpupos[3]<ncpux3/2 packs j=0
+            if(mycpupos[3]<ncpux3/2) dirloopset[bti][dir][gridpos][DIRPSTART2]=0; // includes j=0 right at pole
+            else dirloopset[bti][dir][gridpos][DIRPSTART2]=SHIFT2; // doesn't includes j=0 right at pole
+
+            dirloopset[bti][dir][gridpos][DIRPSTOP2] =0+(numbnd[2]-SHIFT2);
+            dirloopset[bti][dir][gridpos][DIRPDIR2]=+1;
+          }
+        }
+        else{
+          // Old treatment of pole
+          if(dir==X2UP){ // up
+            gridpos=CENTGRID;
+            dirloopset[bti][dir][gridpos][DIRPSTART2]=(N2-1)-(numbnd[2]-SHIFT2); //N2-numbnd[2];
+            dirloopset[bti][dir][gridpos][DIRPSTOP2] =(N2-1);
+            dirloopset[bti][dir][gridpos][DIRPDIR2]=+1;
+
+            gridpos=STAGGRID;
+            dirloopset[bti][dir][gridpos][DIRPSTART2]=(N2-1)-(numbnd[2]-SHIFT2); //N2-numbnd[2];
+            dirloopset[bti][dir][gridpos][DIRPSTOP2] =(N2-1);
+            dirloopset[bti][dir][gridpos][DIRPDIR2]=+1;
+          }
+          else if(dir==X2DN){ // down
+            gridpos=CENTGRID;
+            dirloopset[bti][dir][gridpos][DIRPSTART2]=0;
+            dirloopset[bti][dir][gridpos][DIRPSTOP2] =0+(numbnd[2]-SHIFT2);
+            dirloopset[bti][dir][gridpos][DIRPDIR2]=+1;
+
+            gridpos=STAGGRID;
+            dirloopset[bti][dir][gridpos][DIRPSTART2]=0;
+            dirloopset[bti][dir][gridpos][DIRPSTOP2] =0+(numbnd[2]-SHIFT2);
+            dirloopset[bti][dir][gridpos][DIRPDIR2]=+1;
+          }
+        }
+
+        for(gridpos=0;gridpos<NUMPRIMGRIDPOS;gridpos++){ // stag and cent same for off-dir directions.  Both are equivalent to CENTGRID
+          if((dir==X2UP)||(dir==X2DN)){
+            dirloopset[bti][dir][gridpos][DIRPSTART1]=-numbnd[1];
+            dirloopset[bti][dir][gridpos][DIRPSTOP1]=N1-1+numbnd[1];
+            dirloopset[bti][dir][gridpos][DIRPDIR1]=+1;
+            dirloopset[bti][dir][gridpos][DIRPSTART3]=-numbnd[3];
+            dirloopset[bti][dir][gridpos][DIRPSTOP3]=N3-1+numbnd[3];
+            dirloopset[bti][dir][gridpos][DIRPDIR3]=+1;
+          }
+        }
+
+
+
+        if(dir==X3UP){ // up
+          gridpos=CENTGRID;
+          dirloopset[bti][dir][gridpos][DIRPSTART3]=(N3-1)-(numbnd[3]-SHIFT3); //N3-numbnd[3];
+          dirloopset[bti][dir][gridpos][DIRPSTOP3] =(N3-1);
+          dirloopset[bti][dir][gridpos][DIRPDIR3]=+1;
+
+          gridpos=STAGGRID;
+          dirloopset[bti][dir][gridpos][DIRPSTART3]=(N3-1)-(numbnd[3]-SHIFT3); //N3-numbnd[3];
+          dirloopset[bti][dir][gridpos][DIRPSTOP3] =(N3-1);
+          dirloopset[bti][dir][gridpos][DIRPDIR3]=+1;
+        }
+        else if(dir==X3DN){ // down
+          gridpos=CENTGRID;
+          dirloopset[bti][dir][gridpos][DIRPSTART3]=+0;
+          dirloopset[bti][dir][gridpos][DIRPSTOP3] =+0+(numbnd[3]-SHIFT3);
+          dirloopset[bti][dir][gridpos][DIRPDIR3]=+1;
+
+          gridpos=STAGGRID;
+          dirloopset[bti][dir][gridpos][DIRPSTART3]=+0;
+          dirloopset[bti][dir][gridpos][DIRPSTOP3] =+0+(numbnd[3]-SHIFT3);
+          dirloopset[bti][dir][gridpos][DIRPDIR3]=+1;
+        }
+
+        for(gridpos=0;gridpos<NUMPRIMGRIDPOS;gridpos++){ // stag and cent same for off-dir directions.  Both are equivalent to CENTGRID
+          if((dir==X3UP)||(dir==X3DN)){
+            dirloopset[bti][dir][gridpos][DIRPSTART1]=-numbnd[1];
+            dirloopset[bti][dir][gridpos][DIRPSTOP1]=N1-1+numbnd[1];
+            dirloopset[bti][dir][gridpos][DIRPDIR1]=+1;
+            dirloopset[bti][dir][gridpos][DIRPSTART2]=-numbnd[2];
+            dirloopset[bti][dir][gridpos][DIRPSTOP2]=N2-1+numbnd[2];
+            dirloopset[bti][dir][gridpos][DIRPDIR2]=+1;
+          }
+        }
 
 
 
 
-	///////////////////
-	//
-	// UNPACKING quantities
-	//
-	//////////////////
-	// zones to copy into (unpacking -- where to copy INTO)
-
-	// x1
-	if(dir==X1UP){ // right
-	  gridpos=CENTGRID;
-	  dirloopset[bti][dir][gridpos][DIRUSTART1]=(N1-1+SHIFT1);
-	  dirloopset[bti][dir][gridpos][DIRUSTOP1] =(N1-1+SHIFT1)+(numbnd[1]-SHIFT1);
-	  dirloopset[bti][dir][gridpos][DIRUDIR1]=+1;
-
-	  gridpos=STAGGRID;
-	  dirloopset[bti][dir][gridpos][DIRUSTART1]=(N1-1+SHIFT1);
-	  dirloopset[bti][dir][gridpos][DIRUSTOP1] =(N1-1+SHIFT1)+(numbnd[1]-SHIFT1);
-	  dirloopset[bti][dir][gridpos][DIRUDIR1]=+1;
-	}
-	else if(dir==X1DN){ // left
-	  gridpos=CENTGRID;
-	  dirloopset[bti][dir][gridpos][DIRUSTART1]=-SHIFT1-(numbnd[1]-SHIFT1);
-	  dirloopset[bti][dir][gridpos][DIRUSTOP1] =-SHIFT1;
-	  dirloopset[bti][dir][gridpos][DIRUDIR1]=+1;
-
-	  gridpos=STAGGRID;
-	  dirloopset[bti][dir][gridpos][DIRUSTART1]=-SHIFT1-(numbnd[1]-SHIFT1);
-	  dirloopset[bti][dir][gridpos][DIRUSTOP1] =-SHIFT1;
-	  dirloopset[bti][dir][gridpos][DIRUDIR1]=+1;
-	}
-	for(gridpos=0;gridpos<NUMPRIMGRIDPOS;gridpos++){ // stag and cent same for off-dir directions.  Both are equivalent to CENTGRID
-	  if((dir==X1UP)||(dir==X1DN)){
-	    dirloopset[bti][dir][gridpos][DIRUSTART2]=-numbnd[2];
-	    dirloopset[bti][dir][gridpos][DIRUSTOP2]=N2-1+numbnd[2];
-	    dirloopset[bti][dir][gridpos][DIRUDIR2]=+1;
-	    dirloopset[bti][dir][gridpos][DIRUSTART3]=-numbnd[3];
-	    dirloopset[bti][dir][gridpos][DIRUSTOP3]=N3-1+numbnd[3];
-	    dirloopset[bti][dir][gridpos][DIRUDIR3]=+1;
-	  }
-	}
-
-	// normal bc has 0,1,2 -> N,N+1,N+2 for both pcent and pstag
-	// for "if(periodicx3&&(ncpux3>1)&&ISSPCMCOORDNATIVE(MCOORD))" below gives: 0,1,2 -> 0,-1,-2 for pstag and 0,1,2 -> -1,-2,-3 for pcent
-	// When inverting v^\theta -> -v^\theta, this effectively inverts order in x2 direction too
-	// x2
-	if(special3dspc&&(ncpux3>1)&&(mycpupos[2]==0 && dir==X2DN || mycpupos[2]==ncpux2-1 && dir==X2UP)){
-	  if(dir==X2UP){ // up
-	    gridpos=CENTGRID;
-	    dirloopset[bti][dir][gridpos][DIRUSTART2]=(N2-1+SHIFT2);
-	    dirloopset[bti][dir][gridpos][DIRUSTOP2] =(N2-1+SHIFT2)+(numbnd[2]-SHIFT2);
-	    dirloopset[bti][dir][gridpos][DIRUDIR2]=+1;
-
-	    gridpos=STAGGRID;
-	    // mycpupos[3]<ncpux3/2 packs j=N2,0, so mycpupos[3]>=ncpux3/2 unpacks j=N2,0
-	    if(mycpupos[3]<ncpux3/2) dirloopset[bti][dir][gridpos][DIRUSTART2]=(N2-1+SHIFT2)+(SHIFT2);
-	    else dirloopset[bti][dir][gridpos][DIRUSTART2]=(N2-1+SHIFT2); // includes from j=N2
-
-	    dirloopset[bti][dir][gridpos][DIRUSTOP2] =(N2-1+SHIFT2)+(numbnd[2]-SHIFT2);
-	    dirloopset[bti][dir][gridpos][DIRUDIR2]=+1;
-	  }
-	  else if(dir==X2DN){ // down
-	    gridpos=CENTGRID;
-	    dirloopset[bti][dir][gridpos][DIRUSTART2]=-SHIFT2; // inverted order compared to packing
-	    dirloopset[bti][dir][gridpos][DIRUSTOP2] =-SHIFT2-(numbnd[2]-SHIFT2);
-	    dirloopset[bti][dir][gridpos][DIRUDIR2]=-1;
-
-	    gridpos=STAGGRID;
-	    // mycpupos[3]<ncpux3/2 packs j=N2,0, so mycpupos[3]>=ncpux3/2 unpacks j=N2,0
-	    if(mycpupos[3]<ncpux3/2) dirloopset[bti][dir][gridpos][DIRUSTART2]=-SHIFT2; // inverted order compared to packing
-	    else dirloopset[bti][dir][gridpos][DIRUSTART2]=-0; // diff due to pole copy // inverted order compared to packing
-
-	    dirloopset[bti][dir][gridpos][DIRUSTOP2] =-0-(numbnd[2]-SHIFT2);
-	    dirloopset[bti][dir][gridpos][DIRUDIR2]=-1;
-
-	    for(gridpos=0;gridpos<NUMPRIMGRIDPOS;gridpos++){
-	      if(bti==BOUNDPRIMTYPE || bti==BOUNDPRIMSIMPLETYPE || bti==BOUNDPSTAGTYPE || bti==BOUNDPSTAGSIMPLETYPE ){
-		// at both poles we flip signature of B2 and U2 only
-		// Here we flip upon unpacking
-		primfactor[bti][dir][gridpos][UNPACK][U1]=SIGNFLIPU1;
-		primfactor[bti][dir][gridpos][UNPACK][B1]=SIGNFLIPB1;
-		primfactor[bti][dir][gridpos][UNPACK][U2]=SIGNFLIPU2;
-		primfactor[bti][dir][gridpos][UNPACK][B2]=SIGNFLIPB2;
-		// again assumes U3 and B3 interpolated across pole and not \detg U3 and \detg B3
-		primfactor[bti][dir][gridpos][UNPACK][U3]=SIGNFLIPU3;
-		primfactor[bti][dir][gridpos][UNPACK][B3]=SIGNFLIPB3;
-	      }
-	      else if(bti==BOUNDFLUXTYPE || bti==BOUNDFLUXSIMPLETYPE){
-		// Here we flip upon unpacking
-		PALLLOOP(pl) primfactor[bti][dir][gridpos][UNPACK][pl]=SIGNFLIPGDET; // gdet T^2_1, so like gdet*B2, and kink avoided if don't flip sign since B2 standard in active domains with sign change itself in active domains.
-		// override for symmetric quantities
-		primfactor[bti][dir][gridpos][UNPACK][U2]=-SIGNFLIPGDET; // \detg T^2_2 , avoid kink must flip sign
-		primfactor[bti][dir][gridpos][UNPACK][B2]=-SIGNFLIPGDET; // Note that F^2_{B2) = 0, so doesn't matter, but maintain consistency
-		primfactor[bti][dir][gridpos][UNPACK][U3]=-SIGNFLIPGDET; // \detg T^2_3 like \detg T^2_3 if U3&B3 (not \detg U3&B3) interpolated
-		primfactor[bti][dir][gridpos][UNPACK][B3]=-SIGNFLIPGDET; // F^2_{B3) like T^2_3 like T^2_2
-	      }
-	      else if(bti==BOUNDVPOTTYPE || bti==BOUNDVPOTSIMPLETYPE){
-		// Here we flip upon unpacking
-		DLOOPA(pl) primfactor[bti][dir][gridpos][UNPACK][pl]=-SIGNFLIPGDET; // A_0 A_1 A_3 like scalars, but compressed by gdet.  So flip sign so no kink
-		primfactor[bti][dir][gridpos][UNPACK][2]=SIGNFLIPGDET; // A_2 like gdet B2.  A_2 will have opposite sign across pole in active domains, but gdet + in both, so avoid flipping so that A_2 has no kink at pole.
-	      }
-	    }// end over gridpos
-
-	  }// end dir==X2DN
-	}
-	else{
-	  // Old treatment of pole
-	  if(dir==X2UP){ // up
-	    gridpos=CENTGRID;
-	    dirloopset[bti][dir][gridpos][DIRUSTART2]=(N2-1+SHIFT2);
-	    dirloopset[bti][dir][gridpos][DIRUSTOP2] =(N2-1+SHIFT2)+(numbnd[2]-SHIFT2);
-	    dirloopset[bti][dir][gridpos][DIRUDIR2]=+1;
-
-	    gridpos=STAGGRID;
-	    dirloopset[bti][dir][gridpos][DIRUSTART2]=(N2-1+SHIFT2);
-	    dirloopset[bti][dir][gridpos][DIRUSTOP2] =(N2-1+SHIFT2)+(numbnd[2]-SHIFT2);
-	    dirloopset[bti][dir][gridpos][DIRUDIR2]=+1;
-	  }
-	  else if(dir==X2DN){ // down
-	    gridpos=CENTGRID;
-	    dirloopset[bti][dir][gridpos][DIRUSTART2]=-SHIFT2-(numbnd[2]-SHIFT2);
-	    dirloopset[bti][dir][gridpos][DIRUSTOP2] =-SHIFT2;
-	    dirloopset[bti][dir][gridpos][DIRUDIR2]=+1;
-
-	    gridpos=STAGGRID;
-	    dirloopset[bti][dir][gridpos][DIRUSTART2]=-SHIFT2-(numbnd[2]-SHIFT2);
-	    dirloopset[bti][dir][gridpos][DIRUSTOP2] =-SHIFT2;
-	    dirloopset[bti][dir][gridpos][DIRUDIR2]=+1;
-	  }
-	}
-
-	for(gridpos=0;gridpos<NUMPRIMGRIDPOS;gridpos++){ // stag and cent same for off-dir directions.  Both are equivalent to CENTGRID
-	  if((dir==X2UP)||(dir==X2DN)){
-	    dirloopset[bti][dir][gridpos][DIRUSTART1]=-numbnd[1];
-	    dirloopset[bti][dir][gridpos][DIRUSTOP1]=N1-1+numbnd[1];
-	    dirloopset[bti][dir][gridpos][DIRUDIR1]=+1;
-	    dirloopset[bti][dir][gridpos][DIRUSTART3]=-numbnd[3];
-	    dirloopset[bti][dir][gridpos][DIRUSTOP3]=N3-1+numbnd[3];
-	    dirloopset[bti][dir][gridpos][DIRUDIR3]=+1;
-	  }
-	}
 
 
-	// x3
-	if(dir==X3UP){ // up
-	  gridpos=CENTGRID;
-	  dirloopset[bti][dir][gridpos][DIRUSTART3]=(N3-1+SHIFT3);
-	  dirloopset[bti][dir][gridpos][DIRUSTOP3] =(N3-1+SHIFT3)+(numbnd[3]-SHIFT3);
-	  dirloopset[bti][dir][gridpos][DIRUDIR3]=+1;
+        ///////////////////
+        //
+        // UNPACKING quantities
+        //
+        //////////////////
+        // zones to copy into (unpacking -- where to copy INTO)
 
-	  gridpos=STAGGRID;
-	  dirloopset[bti][dir][gridpos][DIRUSTART3]=(N3-1+SHIFT3);
-	  dirloopset[bti][dir][gridpos][DIRUSTOP3] =(N3-1+SHIFT3)+(numbnd[3]-SHIFT3);
-	  dirloopset[bti][dir][gridpos][DIRUDIR3]=+1;
-	}
-	else if(dir==X3DN){ // down
-	  gridpos=CENTGRID;
-	  dirloopset[bti][dir][gridpos][DIRUSTART3]=-SHIFT3-(numbnd[3]-SHIFT3);
-	  dirloopset[bti][dir][gridpos][DIRUSTOP3] =-SHIFT3;
-	  dirloopset[bti][dir][gridpos][DIRUDIR3]=+1;
+        // x1
+        if(dir==X1UP){ // right
+          gridpos=CENTGRID;
+          dirloopset[bti][dir][gridpos][DIRUSTART1]=(N1-1+SHIFT1);
+          dirloopset[bti][dir][gridpos][DIRUSTOP1] =(N1-1+SHIFT1)+(numbnd[1]-SHIFT1);
+          dirloopset[bti][dir][gridpos][DIRUDIR1]=+1;
 
-	  gridpos=STAGGRID;
-	  dirloopset[bti][dir][gridpos][DIRUSTART3]=-SHIFT3-(numbnd[3]-SHIFT3);
-	  dirloopset[bti][dir][gridpos][DIRUSTOP3] =-SHIFT3;
-	  dirloopset[bti][dir][gridpos][DIRUDIR3]=+1;
-	}
+          gridpos=STAGGRID;
+          dirloopset[bti][dir][gridpos][DIRUSTART1]=(N1-1+SHIFT1);
+          dirloopset[bti][dir][gridpos][DIRUSTOP1] =(N1-1+SHIFT1)+(numbnd[1]-SHIFT1);
+          dirloopset[bti][dir][gridpos][DIRUDIR1]=+1;
+        }
+        else if(dir==X1DN){ // left
+          gridpos=CENTGRID;
+          dirloopset[bti][dir][gridpos][DIRUSTART1]=-SHIFT1-(numbnd[1]-SHIFT1);
+          dirloopset[bti][dir][gridpos][DIRUSTOP1] =-SHIFT1;
+          dirloopset[bti][dir][gridpos][DIRUDIR1]=+1;
 
-	for(gridpos=0;gridpos<NUMPRIMGRIDPOS;gridpos++){ // stag and cent same for off-dir directions.  Both are equivalent to CENTGRID
-	  if((dir==X3UP)||(dir==X3DN)){
-	    dirloopset[bti][dir][gridpos][DIRUSTART1]=-numbnd[1];
-	    dirloopset[bti][dir][gridpos][DIRUSTOP1]=N1-1+numbnd[1];
-	    dirloopset[bti][dir][gridpos][DIRUDIR1]=+1;
-	    dirloopset[bti][dir][gridpos][DIRUSTART2]=-numbnd[2];
-	    dirloopset[bti][dir][gridpos][DIRUSTOP2]=N2-1+numbnd[2];
-	    dirloopset[bti][dir][gridpos][DIRUDIR2]=+1;
-	  }
-	}
+          gridpos=STAGGRID;
+          dirloopset[bti][dir][gridpos][DIRUSTART1]=-SHIFT1-(numbnd[1]-SHIFT1);
+          dirloopset[bti][dir][gridpos][DIRUSTOP1] =-SHIFT1;
+          dirloopset[bti][dir][gridpos][DIRUDIR1]=+1;
+        }
+        for(gridpos=0;gridpos<NUMPRIMGRIDPOS;gridpos++){ // stag and cent same for off-dir directions.  Both are equivalent to CENTGRID
+          if((dir==X1UP)||(dir==X1DN)){
+            dirloopset[bti][dir][gridpos][DIRUSTART2]=-numbnd[2];
+            dirloopset[bti][dir][gridpos][DIRUSTOP2]=N2-1+numbnd[2];
+            dirloopset[bti][dir][gridpos][DIRUDIR2]=+1;
+            dirloopset[bti][dir][gridpos][DIRUSTART3]=-numbnd[3];
+            dirloopset[bti][dir][gridpos][DIRUSTOP3]=N3-1+numbnd[3];
+            dirloopset[bti][dir][gridpos][DIRUDIR3]=+1;
+          }
+        }
+
+        // normal bc has 0,1,2 -> N,N+1,N+2 for both pcent and pstag
+        // for "if(periodicx3&&(ncpux3>1)&&ISSPCMCOORDNATIVE(MCOORD))" below gives: 0,1,2 -> 0,-1,-2 for pstag and 0,1,2 -> -1,-2,-3 for pcent
+        // When inverting v^\theta -> -v^\theta, this effectively inverts order in x2 direction too
+        // x2
+        if(special3dspc&&(ncpux3>1)&&(mycpupos[2]==0 && dir==X2DN || mycpupos[2]==ncpux2-1 && dir==X2UP)){
+          if(dir==X2UP){ // up
+            gridpos=CENTGRID;
+            dirloopset[bti][dir][gridpos][DIRUSTART2]=(N2-1+SHIFT2);
+            dirloopset[bti][dir][gridpos][DIRUSTOP2] =(N2-1+SHIFT2)+(numbnd[2]-SHIFT2);
+            dirloopset[bti][dir][gridpos][DIRUDIR2]=+1;
+
+            gridpos=STAGGRID;
+            // mycpupos[3]<ncpux3/2 packs j=N2,0, so mycpupos[3]>=ncpux3/2 unpacks j=N2,0
+            if(mycpupos[3]<ncpux3/2) dirloopset[bti][dir][gridpos][DIRUSTART2]=(N2-1+SHIFT2)+(SHIFT2);
+            else dirloopset[bti][dir][gridpos][DIRUSTART2]=(N2-1+SHIFT2); // includes from j=N2
+
+            dirloopset[bti][dir][gridpos][DIRUSTOP2] =(N2-1+SHIFT2)+(numbnd[2]-SHIFT2);
+            dirloopset[bti][dir][gridpos][DIRUDIR2]=+1;
+          }
+          else if(dir==X2DN){ // down
+            gridpos=CENTGRID;
+            dirloopset[bti][dir][gridpos][DIRUSTART2]=-SHIFT2; // inverted order compared to packing
+            dirloopset[bti][dir][gridpos][DIRUSTOP2] =-SHIFT2-(numbnd[2]-SHIFT2);
+            dirloopset[bti][dir][gridpos][DIRUDIR2]=-1;
+
+            gridpos=STAGGRID;
+            // mycpupos[3]<ncpux3/2 packs j=N2,0, so mycpupos[3]>=ncpux3/2 unpacks j=N2,0
+            if(mycpupos[3]<ncpux3/2) dirloopset[bti][dir][gridpos][DIRUSTART2]=-SHIFT2; // inverted order compared to packing
+            else dirloopset[bti][dir][gridpos][DIRUSTART2]=-0; // diff due to pole copy // inverted order compared to packing
+
+            dirloopset[bti][dir][gridpos][DIRUSTOP2] =-0-(numbnd[2]-SHIFT2);
+            dirloopset[bti][dir][gridpos][DIRUDIR2]=-1;
+
+            for(gridpos=0;gridpos<NUMPRIMGRIDPOS;gridpos++){
+              if(bti==BOUNDPRIMTYPE || bti==BOUNDPRIMSIMPLETYPE || bti==BOUNDPSTAGTYPE || bti==BOUNDPSTAGSIMPLETYPE ){
+                // at both poles we flip signature of B2 and U2 only
+                // Here we flip upon unpacking
+                primfactor[bti][dir][gridpos][UNPACK][U1]=SIGNFLIPU1;
+                primfactor[bti][dir][gridpos][UNPACK][B1]=SIGNFLIPB1;
+                primfactor[bti][dir][gridpos][UNPACK][U2]=SIGNFLIPU2;
+                primfactor[bti][dir][gridpos][UNPACK][B2]=SIGNFLIPB2;
+                // again assumes U3 and B3 interpolated across pole and not \detg U3 and \detg B3
+                primfactor[bti][dir][gridpos][UNPACK][U3]=SIGNFLIPU3;
+                primfactor[bti][dir][gridpos][UNPACK][B3]=SIGNFLIPB3;
+              }
+              else if(bti==BOUNDFLUXTYPE || bti==BOUNDFLUXSIMPLETYPE){
+                // Here we flip upon unpacking
+                PALLLOOP(pl) primfactor[bti][dir][gridpos][UNPACK][pl]=SIGNFLIPGDET; // gdet T^2_1, so like gdet*B2, and kink avoided if don't flip sign since B2 standard in active domains with sign change itself in active domains.
+                // override for symmetric quantities
+                primfactor[bti][dir][gridpos][UNPACK][U2]=-SIGNFLIPGDET; // \detg T^2_2 , avoid kink must flip sign
+                primfactor[bti][dir][gridpos][UNPACK][B2]=-SIGNFLIPGDET; // Note that F^2_{B2) = 0, so doesn't matter, but maintain consistency
+                primfactor[bti][dir][gridpos][UNPACK][U3]=-SIGNFLIPGDET; // \detg T^2_3 like \detg T^2_3 if U3&B3 (not \detg U3&B3) interpolated
+                primfactor[bti][dir][gridpos][UNPACK][B3]=-SIGNFLIPGDET; // F^2_{B3) like T^2_3 like T^2_2
+              }
+              else if(bti==BOUNDVPOTTYPE || bti==BOUNDVPOTSIMPLETYPE){
+                // Here we flip upon unpacking
+                DLOOPA(pl) primfactor[bti][dir][gridpos][UNPACK][pl]=-SIGNFLIPGDET; // A_0 A_1 A_3 like scalars, but compressed by gdet.  So flip sign so no kink
+                primfactor[bti][dir][gridpos][UNPACK][2]=SIGNFLIPGDET; // A_2 like gdet B2.  A_2 will have opposite sign across pole in active domains, but gdet + in both, so avoid flipping so that A_2 has no kink at pole.
+              }
+            }// end over gridpos
+
+          }// end dir==X2DN
+        }
+        else{
+          // Old treatment of pole
+          if(dir==X2UP){ // up
+            gridpos=CENTGRID;
+            dirloopset[bti][dir][gridpos][DIRUSTART2]=(N2-1+SHIFT2);
+            dirloopset[bti][dir][gridpos][DIRUSTOP2] =(N2-1+SHIFT2)+(numbnd[2]-SHIFT2);
+            dirloopset[bti][dir][gridpos][DIRUDIR2]=+1;
+
+            gridpos=STAGGRID;
+            dirloopset[bti][dir][gridpos][DIRUSTART2]=(N2-1+SHIFT2);
+            dirloopset[bti][dir][gridpos][DIRUSTOP2] =(N2-1+SHIFT2)+(numbnd[2]-SHIFT2);
+            dirloopset[bti][dir][gridpos][DIRUDIR2]=+1;
+          }
+          else if(dir==X2DN){ // down
+            gridpos=CENTGRID;
+            dirloopset[bti][dir][gridpos][DIRUSTART2]=-SHIFT2-(numbnd[2]-SHIFT2);
+            dirloopset[bti][dir][gridpos][DIRUSTOP2] =-SHIFT2;
+            dirloopset[bti][dir][gridpos][DIRUDIR2]=+1;
+
+            gridpos=STAGGRID;
+            dirloopset[bti][dir][gridpos][DIRUSTART2]=-SHIFT2-(numbnd[2]-SHIFT2);
+            dirloopset[bti][dir][gridpos][DIRUSTOP2] =-SHIFT2;
+            dirloopset[bti][dir][gridpos][DIRUDIR2]=+1;
+          }
+        }
+
+        for(gridpos=0;gridpos<NUMPRIMGRIDPOS;gridpos++){ // stag and cent same for off-dir directions.  Both are equivalent to CENTGRID
+          if((dir==X2UP)||(dir==X2DN)){
+            dirloopset[bti][dir][gridpos][DIRUSTART1]=-numbnd[1];
+            dirloopset[bti][dir][gridpos][DIRUSTOP1]=N1-1+numbnd[1];
+            dirloopset[bti][dir][gridpos][DIRUDIR1]=+1;
+            dirloopset[bti][dir][gridpos][DIRUSTART3]=-numbnd[3];
+            dirloopset[bti][dir][gridpos][DIRUSTOP3]=N3-1+numbnd[3];
+            dirloopset[bti][dir][gridpos][DIRUDIR3]=+1;
+          }
+        }
+
+
+        // x3
+        if(dir==X3UP){ // up
+          gridpos=CENTGRID;
+          dirloopset[bti][dir][gridpos][DIRUSTART3]=(N3-1+SHIFT3);
+          dirloopset[bti][dir][gridpos][DIRUSTOP3] =(N3-1+SHIFT3)+(numbnd[3]-SHIFT3);
+          dirloopset[bti][dir][gridpos][DIRUDIR3]=+1;
+
+          gridpos=STAGGRID;
+          dirloopset[bti][dir][gridpos][DIRUSTART3]=(N3-1+SHIFT3);
+          dirloopset[bti][dir][gridpos][DIRUSTOP3] =(N3-1+SHIFT3)+(numbnd[3]-SHIFT3);
+          dirloopset[bti][dir][gridpos][DIRUDIR3]=+1;
+        }
+        else if(dir==X3DN){ // down
+          gridpos=CENTGRID;
+          dirloopset[bti][dir][gridpos][DIRUSTART3]=-SHIFT3-(numbnd[3]-SHIFT3);
+          dirloopset[bti][dir][gridpos][DIRUSTOP3] =-SHIFT3;
+          dirloopset[bti][dir][gridpos][DIRUDIR3]=+1;
+
+          gridpos=STAGGRID;
+          dirloopset[bti][dir][gridpos][DIRUSTART3]=-SHIFT3-(numbnd[3]-SHIFT3);
+          dirloopset[bti][dir][gridpos][DIRUSTOP3] =-SHIFT3;
+          dirloopset[bti][dir][gridpos][DIRUDIR3]=+1;
+        }
+
+        for(gridpos=0;gridpos<NUMPRIMGRIDPOS;gridpos++){ // stag and cent same for off-dir directions.  Both are equivalent to CENTGRID
+          if((dir==X3UP)||(dir==X3DN)){
+            dirloopset[bti][dir][gridpos][DIRUSTART1]=-numbnd[1];
+            dirloopset[bti][dir][gridpos][DIRUSTOP1]=N1-1+numbnd[1];
+            dirloopset[bti][dir][gridpos][DIRUDIR1]=+1;
+            dirloopset[bti][dir][gridpos][DIRUSTART2]=-numbnd[2];
+            dirloopset[bti][dir][gridpos][DIRUSTOP2]=N2-1+numbnd[2];
+            dirloopset[bti][dir][gridpos][DIRUDIR2]=+1;
+          }
+        }
 
 
       }// end if DIRIF
@@ -1448,7 +1448,7 @@ void init_placeongrid_griddecomposition(void)
   for(bti=0;bti<NUMBOUNDTYPES;bti++) {
     for (m = 0; m < COMPDIM*2; m++) {
       for(l = 0 ; l < DIRGENNUMVARS ; l++) {
-	logfprintf( "dirgenset[%d][%d][%d]: %d\n", bti, m, l, dirgenset[bti][m][l]);
+        logfprintf( "dirgenset[%d][%d][%d]: %d\n", bti, m, l, dirgenset[bti][m][l]);
       }
     }
   }
@@ -1456,9 +1456,9 @@ void init_placeongrid_griddecomposition(void)
   for(bti=0;bti<NUMBOUNDTYPES;bti++) {
     for (m = 0; m < COMPDIM*2; m++) {
       for(gridpos=0;gridpos<NUMPRIMGRIDPOS;gridpos++) {
-	for(l = 0 ; l < DIRLOOPNUMVARS ; l++) {
-	  logfprintf( "dirloopset[%d][%d][%d][%d]: %d\n", bti, m, gridpos, l, dirloopset[bti][m][gridpos][l]);
-	}
+        for(l = 0 ; l < DIRLOOPNUMVARS ; l++) {
+          logfprintf( "dirloopset[%d][%d][%d][%d]: %d\n", bti, m, gridpos, l, dirloopset[bti][m][gridpos][l]);
+        }
       }
     }
   }
@@ -1484,23 +1484,23 @@ void init_placeongrid_griddecomposition(void)
     
     if(SIMULBCCALC>=1){
       for(stage=stagei;stage<=stagef;stage++){
-	STAGECONDITION(0,N1-1,0,N2-1,isc,iec,jsc,jec);
-	logfprintf("CZLOOP: stage=%d : %d %d %d %d\n",stage,isc,iec,jsc,jec);
-	STAGECONDITION(0,N1,-1,N2,isc,iec,jsc,jec);
-	logfprintf("F1LOOP: stage=%d : %d %d %d %d\n",stage,isc,iec,jsc,jec);
-	STAGECONDITION(-1,N1,0,N2,isc,iec,jsc,jec);
-	logfprintf("F2LOOP: stage=%d : %d %d %d %d\n",stage,isc,iec,jsc,jec);
-	STAGECONDITION(0,N1,0,N2,isc,iec,jsc,jec);
-	logfprintf("EMFLOOP: stage=%d : %d %d %d %d\n",stage,isc,iec,jsc,jec);
-	STAGECONDITION(0,N1,0,N2-1,isc,iec,jsc,jec);
-	logfprintf("F1CTLOOP: stage=%d : %d %d %d %d\n",stage,isc,iec,jsc,jec);
-	STAGECONDITION(0,N1-1,0,N2,isc,iec,jsc,jec);
-	logfprintf("F2CTLOOP: stage=%d : %d %d %d %d\n",stage,isc,iec,jsc,jec);
-	STAGECONDITION(-1,N1,-1,N2,isc,iec,jsc,jec);
-	logfprintf("DQLOOP: stage=%d : %d %d %d %d\n",stage,isc,iec,jsc,jec);
-	STAGECONDITION(-2,N1+1,-2,N2+1,isc,iec,jsc,jec);
-	logfprintf("PREDQLOOP: stage=%d : %d %d %d %d\n",stage,isc,iec,jsc,jec);
-	logfprintf("\n");
+        STAGECONDITION(0,N1-1,0,N2-1,isc,iec,jsc,jec);
+        logfprintf("CZLOOP: stage=%d : %d %d %d %d\n",stage,isc,iec,jsc,jec);
+        STAGECONDITION(0,N1,-1,N2,isc,iec,jsc,jec);
+        logfprintf("F1LOOP: stage=%d : %d %d %d %d\n",stage,isc,iec,jsc,jec);
+        STAGECONDITION(-1,N1,0,N2,isc,iec,jsc,jec);
+        logfprintf("F2LOOP: stage=%d : %d %d %d %d\n",stage,isc,iec,jsc,jec);
+        STAGECONDITION(0,N1,0,N2,isc,iec,jsc,jec);
+        logfprintf("EMFLOOP: stage=%d : %d %d %d %d\n",stage,isc,iec,jsc,jec);
+        STAGECONDITION(0,N1,0,N2-1,isc,iec,jsc,jec);
+        logfprintf("F1CTLOOP: stage=%d : %d %d %d %d\n",stage,isc,iec,jsc,jec);
+        STAGECONDITION(0,N1-1,0,N2,isc,iec,jsc,jec);
+        logfprintf("F2CTLOOP: stage=%d : %d %d %d %d\n",stage,isc,iec,jsc,jec);
+        STAGECONDITION(-1,N1,-1,N2,isc,iec,jsc,jec);
+        logfprintf("DQLOOP: stage=%d : %d %d %d %d\n",stage,isc,iec,jsc,jec);
+        STAGECONDITION(-2,N1+1,-2,N2+1,isc,iec,jsc,jec);
+        logfprintf("PREDQLOOP: stage=%d : %d %d %d %d\n",stage,isc,iec,jsc,jec);
+        logfprintf("\n");
       }
     }
   }
@@ -1558,12 +1558,12 @@ int myexit(int call_code)
       sprintf(mysys,"echo \"%s : done with `pwd`, inparallel=%d\" > done%s.txt",EMAILMESSAGE,inparallel,binarytype);
       system(mysys);
       if(MAILFROMREMOTE){
-	sprintf(mysys,"scp done.txt %s ; ssh %s \"mail %s < done%s.txt\"",REMOTEHOST,REMOTEHOST,EMAILADDRESS,binarytype);
-	system(mysys);
+        sprintf(mysys,"scp done.txt %s ; ssh %s \"mail %s < done%s.txt\"",REMOTEHOST,REMOTEHOST,EMAILADDRESS,binarytype);
+        system(mysys);
       }
       else{
-	sprintf(mysys,"mail %s < done%s.txt",EMAILADDRESS,binarytype);
-	system(mysys);
+        sprintf(mysys,"mail %s < done%s.txt",EMAILADDRESS,binarytype);
+        system(mysys);
       }
     }
 #endif
@@ -1571,8 +1571,8 @@ int myexit(int call_code)
     dofaildump=0;
     if (call_code > 0) {
       stderrfprintf(
-	      "proc: %s : Failure.  Please check failure file: cc: %d\n",
-	      myidtxt, call_code);
+                    "proc: %s : Failure.  Please check failure file: cc: %d\n",
+                    myidtxt, call_code);
 
       if(call_code<ERRORCODEBELOWCLEANFINISH) cleanfinish = 1;
       else cleanfinish=0; // assume this means dump procedure failed, so don't get into infinite failure loop
@@ -1580,8 +1580,8 @@ int myexit(int call_code)
       if(cleanfinish) dofaildump=1;
       if(!cleanfinish){
 #if(USEMPI)
-	// must abort since no clear to communicate to other cpus now
-	MPI_Abort(MPI_COMM_GRMHD, 1);
+        // must abort since no clear to communicate to other cpus now
+        MPI_Abort(MPI_COMM_GRMHD, 1);
 #endif
       }
     }
@@ -1594,7 +1594,7 @@ int myexit(int call_code)
 
     if (dofaildump) {
       stderrfprintf( "proc: %s : dumping failure dump with callcode=2\n",
-	      myidtxt);
+                     myidtxt);
 
       // assume want previous timestep data, not bad just-computed
       // data\n");
@@ -1663,8 +1663,8 @@ int error_check(int wherefrom)
 
   if (failed > 0) {
     dualfprintf(fail_file,
-	    "Detected failure on proc: %d failed: %d nstep: %ld realnstep: %ld steppart=%d :: t: %21.15g wherefrom = %d\n",
-		myid, failed, nstep, realnstep, steppart, t,wherefrom);
+                "Detected failure on proc: %d failed: %d nstep: %ld realnstep: %ld steppart=%d :: t: %21.15g wherefrom = %d\n",
+                myid, failed, nstep, realnstep, steppart, t,wherefrom);
   }
 
   if (numprocs > 1) {
@@ -1673,15 +1673,15 @@ int error_check(int wherefrom)
     // dualfprintf(fail_file,"wtf: %d %d\n",errorsend,failed);
     // fflush(fail_file);
     MPI_Allreduce(&errorsend, &failed, 1, MPI_INT, MPI_MAX,
-		  MPI_COMM_GRMHD);
+                  MPI_COMM_GRMHD);
     // dualfprintf(fail_file,"wtf: %d %d\n",errorsend,failed);
     // fflush(fail_file);
 #endif
   }
   if (failed > 0) {
     dualfprintf(fail_file,
-	    "Result: Detected failure on proc: %d failed: %d nstep: %ld realnstep: %ld steppart=%d :: t: %21.15g\n",
-		myid, failed, nstep, realnstep, steppart, t);
+                "Result: Detected failure on proc: %d failed: %d nstep: %ld realnstep: %ld steppart=%d :: t: %21.15g\n",
+                myid, failed, nstep, realnstep, steppart, t);
     // control behavior of failure here (i.e. could return(1) and
     // continue or something)
     // if(failed==1) myexit(1);
@@ -1880,12 +1880,12 @@ void init_MPIgroup(void)
 
 
 // To enable OpenMP:
-// Compiler 	Flag
+// Compiler     Flag
 ///------------------------
-// IBM         	-qsmp=omp
-// Intel 	-openmp
-// PathScale 	-mp
-// PGI 	        -mp
+// IBM          -qsmp=omp
+// Intel        -openmp
+// PathScale    -mp
+// PGI          -mp
 // GNU          -fopenmp
 
 
@@ -1914,19 +1914,19 @@ void get_report_openmp_thread_info(FILE * out)
 
       fprintf(out,"Master MPI proc=%d reports: Number of threads originaly=%d out of maximum=%d out of procs=%d\n", myid, numopenmpthreadsorig,omp_get_max_threads(),omp_get_num_procs());
       if(omp_get_dynamic()){
-	fprintf(out,"Dynamic thread adjustment is enabled\n");
+        fprintf(out,"Dynamic thread adjustment is enabled\n");
       }
       else{
-	fprintf(out,"Dynamic thread adjustment is disabled\n");
+        fprintf(out,"Dynamic thread adjustment is disabled\n");
       }
 
       // Use omp_set_nested() to enable if desired
 
       if(omp_get_nested()){
-	fprintf(out,"Nested parallelism is enabled, so allowed\n");
+        fprintf(out,"Nested parallelism is enabled, so allowed\n");
       }
       else{
-	fprintf(out,"Nested parallelism is disabled, so is NOT allowed\n");
+        fprintf(out,"Nested parallelism is disabled, so is NOT allowed\n");
       }
 
       // Note that when numopenmpthreads is requested in the next parallel region, all threads will have the value since the numopenmpthreads value is shared.

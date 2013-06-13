@@ -50,32 +50,32 @@
 
 // COMP version of SUPERGENLOOP for OpenMP : Not used anywhere currently
 #define OPENMP3DLOOPSETUPSUPERGENCOMP(i,j,k,istart,istop,jstart,jstop,kstart,kstop,di,dj,dk) \
-  {nxsize=(  ((istop+SHIFTX1UP) - (istart+SHIFTX1DN))*di +1 );		\
-    nxshift=istart+SHIFTX1DN;						\
-    nysize=( ((jstop+SHIFTX2UP) - (jstart+SHIFTX2DN))*dj +1 );		\
-    nyshift=jstart+SHIFTX2DN;						\
-    nzsize=( ((kstop+SHIFTX3UP) - (kstart+SHIFTX3DN))*dk +1 );		\
-    nzshift=kstart+SHIFTX3DN;						\
+  {nxsize=(  ((istop+SHIFTX1UP) - (istart+SHIFTX1DN))*di +1 );          \
+    nxshift=istart+SHIFTX1DN;                                           \
+    nysize=( ((jstop+SHIFTX2UP) - (jstart+SHIFTX2DN))*dj +1 );          \
+    nyshift=jstart+SHIFTX2DN;                                           \
+    nzsize=( ((kstop+SHIFTX3UP) - (kstart+SHIFTX3DN))*dk +1 );          \
+    nzshift=kstart+SHIFTX3DN;                                           \
     blocksize=nxsize*nysize*nzsize;}
 
 // non-comp loop (or used in interlpline.c where start and stops already have grid section shifts
 #define OPENMP3DLOOPSETUPSUPERGEN(istart,istop,jstart,jstop,kstart,kstop,di,dj,dk) \
-  {nxsize=(  (istop - istart)*di +1 );					\
-    nxshift=istart;							\
-    nysize=( (jstop - jstart)*dj +1 );					\
-    nyshift=jstart;							\
-    nzsize=( (kstop - kstart)*dk +1 );					\
-    nzshift=kstart;							\
+  {nxsize=(  (istop - istart)*di +1 );                                  \
+    nxshift=istart;                                                     \
+    nysize=( (jstop - jstart)*dj +1 );                                  \
+    nyshift=jstart;                                                     \
+    nzsize=( (kstop - kstart)*dk +1 );                                  \
+    nzshift=kstart;                                                     \
     blocksize=nxsize*nysize*nzsize;}
 
 // forced to be a computational loop, so start/stop cannot already have shifts in them (which is normal for everywhere except interpline.c)
-#define OPENMP3DLOOPSETUP(istart,istop,jstart,jstop,kstart,kstop) \
-  {nxsize=((istop+SHIFTX1UP) - (istart+SHIFTX1DN) +1 );			\
-    nxshift=istart+SHIFTX1DN;						\
-    nysize=((jstop+SHIFTX2UP) - (jstart+SHIFTX2DN) +1 );		\
-    nyshift=jstart+SHIFTX2DN;						\
-    nzsize=((kstop+SHIFTX3UP) - (kstart+SHIFTX3DN) +1 );		\
-    nzshift=kstart+SHIFTX3DN;						\
+#define OPENMP3DLOOPSETUP(istart,istop,jstart,jstop,kstart,kstop)       \
+  {nxsize=((istop+SHIFTX1UP) - (istart+SHIFTX1DN) +1 );                 \
+    nxshift=istart+SHIFTX1DN;                                           \
+    nysize=((jstop+SHIFTX2UP) - (jstart+SHIFTX2DN) +1 );                \
+    nyshift=jstart+SHIFTX2DN;                                           \
+    nzsize=((kstop+SHIFTX3UP) - (kstart+SHIFTX3DN) +1 );                \
+    nzshift=kstart+SHIFTX3DN;                                           \
     blocksize=nxsize*nysize*nzsize;}
 
 
@@ -104,13 +104,13 @@
 
 
 // This is used for BC's that have SHIFT's included or not automatically, so shouldn't appear here.
-#define OPENMPBCLOOPSETUP(istart,istop,jstart,jstop,kstart,kstop) \
-  {nxsize=((istop) - (istart) +1 );			\
-    nxshift=istart;						\
-    nysize=((jstop) - (jstart) +1 );		\
-    nyshift=jstart;						\
-    nzsize=((kstop) - (kstart) +1 );		\
-    nzshift=kstart;						\
+#define OPENMPBCLOOPSETUP(istart,istop,jstart,jstop,kstart,kstop)       \
+  {nxsize=((istop) - (istart) +1 );                                     \
+    nxshift=istart;                                                     \
+    nysize=((jstop) - (jstart) +1 );                                    \
+    nyshift=jstart;                                                     \
+    nzsize=((kstop) - (kstart) +1 );                                    \
+    nzshift=kstart;                                                     \
     blocksize=nxsize*nysize*nzsize;}
 
 

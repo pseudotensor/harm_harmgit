@@ -119,11 +119,11 @@ int pre_init_specific_init(void)
 
 
   //assert( MCOORD != CYLMINKMETRIC && MCOORD != CARTMINKMETRIC && MCOORD !=UNIGRAVITY, "pre_init_specific_init: MCOORD != CARTMINKMETRIC: 1-D tests will not be running correctly" );
-	
+        
   //default setting for values that can be used outside of init.c (in initibase.c), e.g. grid parameters.
   //Decide if the test is non-relativistic or not and set timescalefactor appropriately
   if(NONRELTEST(TESTNUMBER)){
-    //		if( TESTNUMBER < 100 || TESTNUMBER == 666 ) {
+    //          if( TESTNUMBER < 100 || TESTNUMBER == 666 ) {
     //non-relativistic test
     coordparams.timescalefactor = 1e10;
   }
@@ -194,9 +194,9 @@ int init_conservatives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR],FTYPE (*pstag)[NSTOR
   //
   ////////////////////////////
   trifprintf("pi2Uavg\n");
-  //	is_pi2Uavg = 1;
+  //    is_pi2Uavg = 1;
   pi2Uavg(fieldfrompotential, prim, pstag, Utemp, U);
-  //	is_pi2Uavg = 0;
+  //    is_pi2Uavg = 0;
 
   trifprintf("pi2Uavg_specific\n");
   pi2Uavg_specific(fieldfrompotential, prim, pstag, Utemp, U);
@@ -220,19 +220,19 @@ int post_init_specific_init(void)
 
   // globally used parameters set by specific initial condition routines, reran for restart as well *after* all other calculations
   extern int set_dt(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], SFTYPE *dt);  //atch update
-	
+        
   set_dt( pglobal, &dt);  //atch update: always use dt determined by the courant factor
 
   //dt = 0.; //SASMARK
   //SAFE = 1.0;
-	
+        
   trifprintf( "TESTNUMBER = %d, dt = %f\n", testno, dt );
 
-  //	if( TESTNUMBER >= 101 && TESTNUMBER <= 199 && REMOVERESTMASSFROMUU == 1 ) {  //Relativistic tests	
+  //    if( TESTNUMBER >= 101 && TESTNUMBER <= 199 && REMOVERESTMASSFROMUU == 1 ) {  //Relativistic tests       
   //UTOPRIMVERSION = UTOPRIM2DFINAL;
-  //	}
+  //    }
   //UTOPRIMVERSION = UTOPRIMJONNONRELCOMPAT;
-  //	UTOPRIMVERSION = UTOPRIM5D1;
+  //    UTOPRIMVERSION = UTOPRIM5D1;
 
 
   trifprintf( "Using REMOVERESTMASSFROMUU = %d, ", REMOVERESTMASSFROMUU );
@@ -246,17 +246,17 @@ int post_init_specific_init(void)
   else if( UTOPRIMVERSION == UTOPRIM5D1 ) {
     trifprintf( "UTOPRIM5D1\n" );
   }
-  //	else {
-  //		dualfprintf( fail_file, "cannot use REMOVERESTMASSFROMUU != 1 and != 2\n" );
-  //		myexit(1);
-  //	}
+  //    else {
+  //            dualfprintf( fail_file, "cannot use REMOVERESTMASSFROMUU != 1 and != 2\n" );
+  //            myexit(1);
+  //    }
 
   //assert( REMOVERESTMASSFROMUU != 1, 
-  //	"For relativistic test problems should use the UTOPRIM2D inversion which requires REMOVERESTMASSFROMUU = 1, currently: %d\n", 
-  //	(int)REMOVERESTMASSFROMUU );
+  //    "For relativistic test problems should use the UTOPRIM2D inversion which requires REMOVERESTMASSFROMUU = 1, currently: %d\n", 
+  //    (int)REMOVERESTMASSFROMUU );
   //
   ////////
-			
+                        
 
 #if( TESTNUMBER == 1102 )   // Circularly Polarized non-linear Alfven wave stable against parameteric instability
 
@@ -274,14 +274,14 @@ int post_init_specific_init(void)
 
 
   ////////////
-	
+        
   return(0);
 }
 
 
 
 int pi2Uavg_specific(int *fieldfrompotential, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*Upoint)
-		     [NSTORE2][NSTORE3][NPR], FTYPE (*Uavg)[NSTORE2][NSTORE3][NPR])
+                     [NSTORE2][NSTORE3][NPR], FTYPE (*Uavg)[NSTORE2][NSTORE3][NPR])
 {
   FILE *fp;
   char fname[256];
@@ -316,7 +316,7 @@ int pi2Uavg_specific(int *fieldfrompotential, FTYPE (*prim)[NSTORE2][NSTORE3][NP
 
   if( REMOVERESTMASSFROMUU != 2 ) {
     dualfprintf( fail_file, "REMOVERESTMASSFROMUU has to be 2 for pi2Uavg_specific() to operate correctly, currently it is = %d\n", 
-		 REMOVERESTMASSFROMUU );
+                 REMOVERESTMASSFROMUU );
     myexit(1);
   }
 
@@ -351,55 +351,55 @@ int pi2Uavg_specific(int *fieldfrompotential, FTYPE (*prim)[NSTORE2][NSTORE3][NP
       //  Open file for reading
       fp = fopen( fname, "rb" );
       if( NULL != fp ) {
-	trifprintf( "done.\npi2Uavg_specific(): reading data from %s... ", fname );
+        trifprintf( "done.\npi2Uavg_specific(): reading data from %s... ", fname );
 
-	lineno = 0;
-	numused = 0;
-	while( (nscanned = fscanf(fp, "%d %d %lg %lg %lg %lg %lg %lg %lg %lg\r\n", &ti, &tj, &rhoa, &Ua, &p1a, &p2a, &rho, &u, &v1, &v2 )) == 10 ) {
-	  ///////
-	  //
-	  //  Check if within range and if within, save it to the array
-	  //  i, j - local grid indices for this processor, ti, tj - global indices
-	  i = ti - startpos[1];  
-	  j = tj - startpos[2]; 
-	  if( i >= INFULL1 && i <= OUTFULL1 && 
-	      j >= INFULL2 && j <= OUTFULL2 ) {
-	    for( k = INFULL3; k <= OUTFULL3; k++ ) {
-	      MACP0A1(Uavg,i,j,k,RHO) = rhoa;
-	      MACP0A1(Uavg,i,j,k,UU) = -Ua / (coordparams.timescalefactor * coordparams.timescalefactor);  //change the sign -- according to HARM convention the total energy is negative
-	      MACP0A1(Uavg,i,j,k,U1) = p1a / coordparams.timescalefactor;
-	      MACP0A1(Uavg,i,j,k,U2) = p2a / coordparams.timescalefactor;
-	      MACP0A1(Uavg,i,j,k,U3) = 0.0;
-	      MACP0A1(Uavg,i,j,k,B1) = 0.0;
-	      MACP0A1(Uavg,i,j,k,B2) = 0.0;
-	      MACP0A1(Uavg,i,j,k,B3) = 0.0;
+        lineno = 0;
+        numused = 0;
+        while( (nscanned = fscanf(fp, "%d %d %lg %lg %lg %lg %lg %lg %lg %lg\r\n", &ti, &tj, &rhoa, &Ua, &p1a, &p2a, &rho, &u, &v1, &v2 )) == 10 ) {
+          ///////
+          //
+          //  Check if within range and if within, save it to the array
+          //  i, j - local grid indices for this processor, ti, tj - global indices
+          i = ti - startpos[1];  
+          j = tj - startpos[2]; 
+          if( i >= INFULL1 && i <= OUTFULL1 && 
+              j >= INFULL2 && j <= OUTFULL2 ) {
+            for( k = INFULL3; k <= OUTFULL3; k++ ) {
+              MACP0A1(Uavg,i,j,k,RHO) = rhoa;
+              MACP0A1(Uavg,i,j,k,UU) = -Ua / (coordparams.timescalefactor * coordparams.timescalefactor);  //change the sign -- according to HARM convention the total energy is negative
+              MACP0A1(Uavg,i,j,k,U1) = p1a / coordparams.timescalefactor;
+              MACP0A1(Uavg,i,j,k,U2) = p2a / coordparams.timescalefactor;
+              MACP0A1(Uavg,i,j,k,U3) = 0.0;
+              MACP0A1(Uavg,i,j,k,B1) = 0.0;
+              MACP0A1(Uavg,i,j,k,B2) = 0.0;
+              MACP0A1(Uavg,i,j,k,B3) = 0.0;
 
-	      get_geometry(i, j, k, CENT, &geom);
+              get_geometry(i, j, k, CENT, &geom);
 
-	      PLOOP(pliter,pl) {
-		MACP0A1(Uavg,i,j,k,pl) *= geom.e[pl];  //multiply conserved quantities by the gdet to have the same representation as inside the code
-	      }
-								
+              PLOOP(pliter,pl) {
+                MACP0A1(Uavg,i,j,k,pl) *= geom.e[pl];  //multiply conserved quantities by the gdet to have the same representation as inside the code
+              }
+                                                                
 
-	      // center
-	      coord(i, j, k, CENT, X);
-	      bl_coord(X, V);
-	      get_geometry(i,j,k,CENT,&geom) ;
-	      dxdxprim(X, V, dxdxp);
+              // center
+              coord(i, j, k, CENT, X);
+              bl_coord(X, V);
+              get_geometry(i,j,k,CENT,&geom) ;
+              dxdxprim(X, V, dxdxp);
 
-	      //convert the conserved momenta (covariant quantities) from orthonormal basis to coordinate one.
-	      MACP0A1(Uavg,i,j,k,U1) *= dxdxp[1][1];
-	      MACP0A1(Uavg,i,j,k,U2) *= dxdxp[2][2];
-	    }
-	    numused++;
-	  }
-	  lineno++;
-	}
+              //convert the conserved momenta (covariant quantities) from orthonormal basis to coordinate one.
+              MACP0A1(Uavg,i,j,k,U1) *= dxdxp[1][1];
+              MACP0A1(Uavg,i,j,k,U2) *= dxdxp[2][2];
+            }
+            numused++;
+          }
+          lineno++;
+        }
 
-	// Close file
-	fclose( fp );
-	//
-	///////
+        // Close file
+        fclose( fp );
+        //
+        ///////
       }
 #if(USEMPI)
     }
@@ -494,52 +494,52 @@ int readin_bondi_solution(int *pN_bondi, FTYPE *pR0_bondi, FTYPE *pRin_bondi, FT
       //  Open file for reading
       fp = fopen( fname, "rb" );
       if( NULL != fp ) {
-	trifprintf( "done.\nreadin_bondi_solution(): reading data from %s... ", fname );
+        trifprintf( "done.\nreadin_bondi_solution(): reading data from %s... ", fname );
 
-	lineno = 0;
-	numused = 0;
-					
-	nscanned = fscanf(fp, "#Gamma = %lg Rcr = %lg uu1cr = %lg rhocr = %lg\r\n", pgam_bondi, &Rcr, &uu1cr, &rhocr );
-	lineno++;
+        lineno = 0;
+        numused = 0;
+                                        
+        nscanned = fscanf(fp, "#Gamma = %lg Rcr = %lg uu1cr = %lg rhocr = %lg\r\n", pgam_bondi, &Rcr, &uu1cr, &rhocr );
+        lineno++;
 
-	if( nscanned != 4 ) {
-	  trifprintf( "Could not read from line %ld of %s\n", lineno, fname );
-	  return( 1 );
-	}
+        if( nscanned != 4 ) {
+          trifprintf( "Could not read from line %ld of %s\n", lineno, fname );
+          return( 1 );
+        }
 
-	nscanned = fscanf(fp, "#Nx = %d Rin = %lg Rout = %lg R0 = %lg xstart = %lg dx = %lg istart = %lg\r\n", 
-			  pN_bondi, pRin_bondi, pRout_bondi, pR0_bondi, 
-			  &xstart_bondi, &dx_bondi, &istart_bondi);
-	lineno++;
+        nscanned = fscanf(fp, "#Nx = %d Rin = %lg Rout = %lg R0 = %lg xstart = %lg dx = %lg istart = %lg\r\n", 
+                          pN_bondi, pRin_bondi, pRout_bondi, pR0_bondi, 
+                          &xstart_bondi, &dx_bondi, &istart_bondi);
+        lineno++;
 
-	if( nscanned != 7 ) {
-	  trifprintf( "Could not read from line %ld of %s\n", lineno, fname );
-	  return( 1 );
-	}
+        if( nscanned != 7 ) {
+          trifprintf( "Could not read from line %ld of %s\n", lineno, fname );
+          return( 1 );
+        }
 
-	nscanned = fscanf(fp, "#%*[^\n]s\r\n" );  //skip the header desciption line
+        nscanned = fscanf(fp, "#%*[^\n]s\r\n" );  //skip the header desciption line
 
-	lineno++;
+        lineno++;
 
-	while( (nscanned = fscanf(fp, "%d %*lg %*lg %lg %lg %lg\r\n", &ti, &rho, &uu1, &u )) == 4 ) {
-	  ///////
-	  //
-	  //  Check if within range and if within, save it to the array
-	  //  i, j - local grid indices for this processor, ti, tj - global indices
-	  i = ti - startpos[1];  
-	  if( i >= INFULL1 && i <= OUTFULL1 ) {
-	    prho_bondi[i] = rho;
-	    puu1_bondi[i] = uu1;
-	    pu_bondi[i] = u;
-	    numused++;
-	  }
-	  lineno++;
-	}
+        while( (nscanned = fscanf(fp, "%d %*lg %*lg %lg %lg %lg\r\n", &ti, &rho, &uu1, &u )) == 4 ) {
+          ///////
+          //
+          //  Check if within range and if within, save it to the array
+          //  i, j - local grid indices for this processor, ti, tj - global indices
+          i = ti - startpos[1];  
+          if( i >= INFULL1 && i <= OUTFULL1 ) {
+            prho_bondi[i] = rho;
+            puu1_bondi[i] = uu1;
+            pu_bondi[i] = u;
+            numused++;
+          }
+          lineno++;
+        }
 
-	// Close file
-	fclose( fp );
-	//
-	///////
+        // Close file
+        fclose( fp );
+        //
+        ///////
       }
 #if(USEMPI)
     }
@@ -551,7 +551,7 @@ int readin_bondi_solution(int *pN_bondi, FTYPE *pR0_bondi, FTYPE *pRin_bondi, FT
     trifprintf( "file %s does not exist.\n", fname );
     return( -2 );
   }
-	
+        
   if( numused < OUTFULL1 - INFULL1 + 1 ) {  //did not fill in all the required values (assuming each value of i appeared only once)
     trifprintf( "Not enough values provided in %s: n_required = %d, n_readin = %d.\n", fname, (int)(OUTFULL1 - INFULL1 + 1), numused );
     return( 2 );
@@ -761,7 +761,7 @@ int init_grid(void)
   Rin_array[DIRZ] = 0.;
   Rout_array[DIRZ] = 1.;
 #elif( TESTNUMBER == 49 )
-  //	Rin_array[DIRX] = -0.5; // normal
+  //    Rin_array[DIRX] = -0.5; // normal
   Rin_array[DIRX] = 0.0; // half-box
   Rout_array[DIRX] = 0.5;
 #elif( TESTNUMBER == 51  ) // Sod's 1D Riemann problem
@@ -864,7 +864,7 @@ int init_grid(void)
   Rout_array[DIRZ] = 2.*M_PIl;  
 #elif( TESTNUMBER == 153 ) // Bondi problem
   assert( DIRX != 1 || DIRY != 2 || DIRZ != 3, "Axes should be directed along the default directions for the Bondi problem, TESTNUMBER = %d\n", (int)TESTNUMBER );
-	
+        
   //sets the grid parameters: R0, Rin, Rout
   res = readin_bondi_solution( &n1, &R0, &Rin, &Rout, &gam_bondi, rho_bondi, uu1_bondi, u_bondi );
 
@@ -1042,8 +1042,8 @@ int init_grid(void)
   Rin_array[DIRX] = 0;
 #if(FULL2D)
   myangle = 26.565 / 180. * M_PIl;
-  //	myangle = 10.0 / 180. * M_PIl;
-  //	myangle = 0.9553; // makes background field along x-direction
+  //    myangle = 10.0 / 180. * M_PIl;
+  //    myangle = 0.9553; // makes background field along x-direction
 #else
   myangle = 0.0; // for 1D tests
 #endif
@@ -1076,7 +1076,7 @@ int init_grid(void)
 
 int init_global(void)
 {
-  FTYPE R, v0;	
+  FTYPE R, v0;  
   int whichbcextrap;
   int pl,dir;
 
@@ -1233,7 +1233,7 @@ int init_global(void)
   /* some physics parameters */
   cooling=NOCOOLING;
 
-  //set up defaults for tests	
+  //set up defaults for tests   
 
   //default value of gamma
   gam=gamideal = 1.4; 
@@ -1565,7 +1565,7 @@ int init_global(void)
   BCtype[Y_DN] = OUTFLOW;  //should set up the jet; there will partially be outflow bc, partially fixed, see the init_ds_and_vels()
   gam=gamideal = 5./3.;
   //#else
-  //	#error "Boundary conditions have to be specified for test number TESTNUMBER"
+  //    #error "Boundary conditions have to be specified for test number TESTNUMBER"
 #endif
 
   return(0);
@@ -1638,7 +1638,7 @@ int init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2
     else{
       // transform from whichcoord to MCOORD
       if (bl2met2metp2v(whichvel, whichcoord,MAC(prim,i,j,k), i,j,k) >= 1)
-	FAILSTATEMENT("init.c:init()", "bl2ks2ksp2v()", 1);
+        FAILSTATEMENT("init.c:init()", "bl2ks2ksp2v()", 1);
     }
   }
 #endif
@@ -1760,7 +1760,7 @@ int init_atmosphere(int *whichvel, int*whichcoord,int i, int j, int k, FTYPE *pr
 int bounds_generate( int i, int j, int k, FTYPE *prim)
 {
   int init_dsandvels(int *whichvel, int *whichcoord, int i, int j, int k, FTYPE *p, FTYPE *pstag);
-	
+        
   int initreturn;
   int whichvel;
   int whichcoord;
@@ -1797,7 +1797,7 @@ int init_dsandvels(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr
 
   FTYPE randfact;
   extern int get_compdimen(int *numdirs, long long *itemp);
-  void 	init_torus( int *whichcoord, int *whichvel, int i, int j, int k, FTYPE *pr );
+  void  init_torus( int *whichcoord, int *whichvel, int i, int j, int k, FTYPE *pr );
   int dir, numdirs;
   long long itemp;
   FTYPE X[NDIM],V[NDIM], r, th;
@@ -2147,17 +2147,17 @@ int init_dsandvels(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr
   rhom =   1;
   um = 0;
   pm = 0.01;
-	    
+            
   rhor =  1;
   ur = 0;
   pr = 100;
-	  
+          
   x0 = 0.1;
   x1 = 0.9;
   tf = 0.038;
 #endif
-			
-			
+                        
+                        
 #if( TESTNUMBER == 9 )     //shock entropy wave
   *whichcoord=CARTMINKMETRIC;
   rhol = 3.857143  ;
@@ -2255,7 +2255,7 @@ int init_dsandvels(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr
   prinit[0][0][RHO] = 0.5323;
   prinit[0][0][UU+DIRX] = 1.206;
   prinit[0][0][UU+DIRY] = 0.0;
-	
+        
   prinit[0][1][UU] = 0.029 / (gam - 1);
   prinit[0][1][RHO] = 0.138;
   prinit[0][1][UU+DIRX] = 1.206;
@@ -2279,7 +2279,7 @@ int init_dsandvels(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr
   prinit[0][0][RHO] = 0.5065;
   prinit[0][0][UU+DIRX] = 0.8939;
   prinit[0][0][UU+DIRY] = 0.0;
-	
+        
   prinit[0][1][UU] = 1.1 / (gam - 1);
   prinit[0][1][RHO] = 1.1;
   prinit[0][1][UU+DIRX] = 0.8939;
@@ -2303,7 +2303,7 @@ int init_dsandvels(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr
   prinit[0][0][RHO] = 2.0;
   prinit[0][0][UU+DIRX] = 0.75;
   prinit[0][0][UU+DIRY] = 0.5;
-	
+        
   prinit[0][1][UU] = 1.0 / (gam - 1);
   prinit[0][1][RHO] = 1.0;
   prinit[0][1][UU+DIRX] = -0.75;
@@ -2327,7 +2327,7 @@ int init_dsandvels(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr
   prinit[0][0][RHO] = 1.0;
   prinit[0][0][UU+DIRX] = 0.7276;
   prinit[0][0][UU+DIRY] = 0.0;
-	
+        
   prinit[0][1][UU] = 1.0 / (gam - 1);
   prinit[0][1][RHO] = 0.8;
   prinit[0][1][UU+DIRX] = 0.0;
@@ -2351,7 +2351,7 @@ int init_dsandvels(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr
   prinit[0][0][RHO] = 0.5197;
   prinit[0][0][UU+DIRX] = -0.6259;
   prinit[0][0][UU+DIRY] = -0.3;
-	
+        
   prinit[0][1][UU] = 0.4 / (gam - 1);
   prinit[0][1][RHO] = 0.8;
   prinit[0][1][UU+DIRX] = 0.1;
@@ -2375,7 +2375,7 @@ int init_dsandvels(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr
   prinit[0][0][RHO] = 2.0;
   prinit[0][0][UU+DIRX] = 0.0;
   prinit[0][0][UU+DIRY] = -0.3;
-	
+        
   prinit[0][1][UU] = 0.4 / (gam - 1);
   prinit[0][1][RHO] = 1.0625;
   prinit[0][1][UU+DIRX] = 0.0;
@@ -2531,7 +2531,7 @@ int init_dsandvels(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr
 
     x0 = 0.5;*/
   tf = 0.0029;
-	
+        
   prim[RHO] = test29rho[i];
   prim[UU] = test29p[i] / (gam - 1);
   prim[U1] = test29u[i];
@@ -2933,7 +2933,7 @@ int init_dsandvels(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr
   prinit[0][0][UU+DIRX] = 0.99;
   prinit[0][0][UU+DIRY] = 0.0;
   prinit[0][0][UU] = 1.0 / (gam - 1);
-	
+        
   prinit[0][1][RHO] = 0.5;
   prinit[0][1][UU+DIRX] = 0.0;
   prinit[0][1][UU+DIRY] = 0.0;
@@ -3811,11 +3811,11 @@ int init_dsandvels(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr
 
   //  dualfprintf(fail_file,"g=%21.15g gcov11=%21.15g gcov22=%21.15g gcov33=%21.15g\n",geomreal.g,geomreal.gcov[GIND(1,1)],geomreal.gcov[GIND(2,2)],geomreal.gcov[GIND(3,3)]);
   //  dualfprintf(fail_file,"i=%d j=%d k=%d :: Uf[U1]=%21.15g Ucheck[U1]=%21.15g Ureal[U1]=%21.15g myU1=%21.15g codeU1=%21.15g fakeU1=%21.15g:: prim[U1]=%21.15g\n",
-  //	      i,j,k,Uf[U1],Ucheck[U1],Ureal[U1]*( coordparams.timescalefactor )
-  //	      ,0.5*prim[RHO]*(prim[U1]*prim[U1]+prim[U2]*prim[U2]+prim[U3]*prim[U3])+prim[UU]+0.5*(prim[B1]*prim[B1]+prim[B2]*prim[B2]+prim[B3]*prim[B3])
-  //	      ,0.5*primtest[RHO]*(primtest[U1]*primtest[U1]*geomreal.gcov[GIND(1,1)] + primtest[U2]*primtest[U2]*geomreal.gcov[GIND(2,2)] + primtest[U3]*primtest[U3]*geomreal.gcov[GIND(3,3)])+primtest[UU]+0.5*(primtest[B1]*primtest[B1]*geomreal.gcov[GIND(1,1)] + primtest[B2]*primtest[B2]*geomreal.gcov[GIND(2,2)] + primtest[B3]*primtest[B3]*geomreal.gcov[GIND(3,3)])
-  //	      ,0.5*prim[RHO]*(prim[U1]*prim[U1]*geomreal.gcov[GIND(1,1)] + prim[U2]*prim[U2]*geomreal.gcov[GIND(2,2)] + prim[U3]*prim[U3]*geomreal.gcov[GIND(3,3)])+prim[UU]+0.5*(prim[B1]*prim[B1]*geomreal.gcov[GIND(1,1)] + prim[B2]*prim[B2]*geomreal.gcov[GIND(2,2)] + prim[B3]*prim[B3]*geomreal.gcov[GIND(3,3)])
-  //	      ,prim[UU]);
+  //          i,j,k,Uf[U1],Ucheck[U1],Ureal[U1]*( coordparams.timescalefactor )
+  //          ,0.5*prim[RHO]*(prim[U1]*prim[U1]+prim[U2]*prim[U2]+prim[U3]*prim[U3])+prim[UU]+0.5*(prim[B1]*prim[B1]+prim[B2]*prim[B2]+prim[B3]*prim[B3])
+  //          ,0.5*primtest[RHO]*(primtest[U1]*primtest[U1]*geomreal.gcov[GIND(1,1)] + primtest[U2]*primtest[U2]*geomreal.gcov[GIND(2,2)] + primtest[U3]*primtest[U3]*geomreal.gcov[GIND(3,3)])+primtest[UU]+0.5*(primtest[B1]*primtest[B1]*geomreal.gcov[GIND(1,1)] + primtest[B2]*primtest[B2]*geomreal.gcov[GIND(2,2)] + primtest[B3]*primtest[B3]*geomreal.gcov[GIND(3,3)])
+  //          ,0.5*prim[RHO]*(prim[U1]*prim[U1]*geomreal.gcov[GIND(1,1)] + prim[U2]*prim[U2]*geomreal.gcov[GIND(2,2)] + prim[U3]*prim[U3]*geomreal.gcov[GIND(3,3)])+prim[UU]+0.5*(prim[B1]*prim[B1]*geomreal.gcov[GIND(1,1)] + prim[B2]*prim[B2]*geomreal.gcov[GIND(2,2)] + prim[B3]*prim[B3]*geomreal.gcov[GIND(3,3)])
+  //          ,prim[UU]);
 #endif
 
 
@@ -3899,7 +3899,7 @@ int init_dsandvels(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr
     prim[UU] = u_rho0_p(rhom,pm);
     prim[UU + DIRX] = um;
   }
-#endif	  
+#endif    
   else {
     prim[RHO] = rhor;
     prim[UU] = u_rho0_p(rhor,pr);
@@ -3933,7 +3933,7 @@ int init_dsandvels(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr
       pstag[UU] = u_rho0_p(rhom,pm);
       pstag[UU + DIRX] = um;
     }
-#endif	  
+#endif    
     else {
       pstag[RHO] = rhor;
       pstag[UU] = u_rho0_p(rhor,pr);
@@ -4015,7 +4015,7 @@ int init_dsandvels(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr
   //  if( 0 == i && 0 == j && 0 == k ) trifprintf( "tf = %g\n", tf );
   
   //  PLOOP(pliter,p_no) {
-  //	prim[p_no]*=(1.+1.e-13*(ranc(0,0)-0.5));
+  //    prim[p_no]*=(1.+1.e-13*(ranc(0,0)-0.5));
   //  }
 
   return(0);
@@ -4055,7 +4055,7 @@ static int rel2nonrel(FTYPE *prim)
 
 
 //initializes the torus problem according to the harm paper and init.fishmon.c
-void 	init_torus( int *whichcoord, int *whichvel, int i, int j, int k, FTYPE *pr )
+void    init_torus( int *whichcoord, int *whichvel, int i, int j, int k, FTYPE *pr )
 {
   FTYPE sth, cth;
   FTYPE ur, uh, up, u, rho;
@@ -4103,24 +4103,24 @@ void 	init_torus( int *whichcoord, int *whichvel, int i, int j, int k, FTYPE *pr
   
   if (r >= rin) {
     lnh = 0.5 * log((1. + sqrt(1. + 4. * (l * l * SS * SS) * DD /
-			       (AA * sth * AA * sth))) / (SS * DD /
-							  AA))
+                               (AA * sth * AA * sth))) / (SS * DD /
+                                                          AA))
       - 0.5 * sqrt(1. +
-		   4. * (l * l * SS * SS) * DD / (AA * AA * sth *
-						  sth))
+                   4. * (l * l * SS * SS) * DD / (AA * AA * sth *
+                                                  sth))
       - 2. * a * r * l / AA -
       (0.5 *
        log((1. +
-	    sqrt(1. +
-		 4. * (l * l * SSin * SSin) * DDin / (AAin * AAin *
-						      sthin *
-						      sthin))) /
-	   (SSin * DDin / AAin))
+            sqrt(1. +
+                 4. * (l * l * SSin * SSin) * DDin / (AAin * AAin *
+                                                      sthin *
+                                                      sthin))) /
+           (SSin * DDin / AAin))
        - 0.5 * sqrt(1. +
-		    4. * (l * l * SSin * SSin) * DDin / (AAin *
-							 AAin *
-							 sthin *
-							 sthin))
+                    4. * (l * l * SSin * SSin) * DDin / (AAin *
+                                                         AAin *
+                                                         sthin *
+                                                         sthin))
        - 2. * a * rin * l / AAin);
   } else
     lnh = 1.;
@@ -4195,7 +4195,7 @@ void 	init_torus( int *whichcoord, int *whichvel, int i, int j, int k, FTYPE *pr
 
 
 void write_riemannproblem_params_to_file( FTYPE rhol, FTYPE pl, FTYPE ul, FTYPE uly, FTYPE rhor, FTYPE pr, FTYPE ur, FTYPE ury, FTYPE *Bl, FTYPE *Br, 
-					  FTYPE tf, FTYPE timescalefactor, FTYPE x0, FTYPE a, FTYPE b ) 
+                                          FTYPE tf, FTYPE timescalefactor, FTYPE x0, FTYPE a, FTYPE b ) 
 {
   FILE *fp;
 
@@ -4561,7 +4561,7 @@ int normalize_field(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2
 
 
 int set_atmosphere(int whichcond, int whichvel, struct of_geom *ptrgeom, FTYPE *
-		   pr)
+                   pr)
 {
   return(0);
 }

@@ -20,10 +20,10 @@
 
 #if(CHECKYIN!=0)
 
-#define CHECKYINIF ((!CHECKYIN) ||\
-	 ((CHECKYIN==1)&& (dpup||dpdown))||\
-	 ((CHECKYIN==2)&& (ddpup||ddpdown))||\
-	 ((CHECKYIN==3)&& (dpup||dpdown) && (ddpup||ddpdown)))
+#define CHECKYINIF ((!CHECKYIN) ||                                      \
+                    ((CHECKYIN==1)&& (dpup||dpdown))||                  \
+                    ((CHECKYIN==2)&& (ddpup||ddpdown))||                \
+                    ((CHECKYIN==3)&& (dpup||dpdown) && (ddpup||ddpdown)))
 #else
 
 #define CHECKYINIF (1)
@@ -100,8 +100,8 @@ void compute_jmonotonicity_line(int recontype, int whichreduce, int preforder, i
 
 
 #if(MERGEDC2EA2CMETHOD)
-    dualfprintf(fail_file,"JMONO not setup for MERGEDC2EA2CMETHOD\n");
-    myexit(1987526);  
+  dualfprintf(fail_file,"JMONO not setup for MERGEDC2EA2CMETHOD\n");
+  myexit(1987526);  
 #endif
 
 
@@ -133,7 +133,7 @@ void compute_jmonotonicity_line(int recontype, int whichreduce, int preforder, i
       monoindicator[MONORIGHTSET][i]=0;
     }
     //if( nstep > 0 || steppart >= 3 ) 
- 		//return;
+    //return;
     // noticed that if always do S-WENO (return above), then normal Sasha-WENO is quite oscillatory for testnumber=9 (shock-entropy interaction)
   }
 
@@ -163,9 +163,9 @@ void compute_jmonotonicity_line(int recontype, int whichreduce, int preforder, i
     
     // check for cusp
     if((check_for_cusp(&yin[i],&df[DFONESIDED][i],&df[DF2OFONESIDED][i]))  ){
-    //dualfprintf(fail_file,"shocki[%d]=%21.15g\n",i,shockindicator[i]);
-    //if((shockindicator[i]>=0.1)||(check_for_cusp(&df[DFONESIDED][i],&df[DF2OFONESIDED][i],&yin[i]))  ){// does somewhat better than not checking
-    //if(0){
+      //dualfprintf(fail_file,"shocki[%d]=%21.15g\n",i,shockindicator[i]);
+      //if((shockindicator[i]>=0.1)||(check_for_cusp(&df[DFONESIDED][i],&df[DF2OFONESIDED][i],&yin[i]))  ){// does somewhat better than not checking
+      //if(0){
 
 
       if(recontype==CVT_C2E) c2e_simple_limiter(MINM, &yin[i], &yout[0][i],&yout[1][i]);
@@ -202,26 +202,26 @@ void compute_jmonotonicity_line(int recontype, int whichreduce, int preforder, i
       //////////////////////////////
       // finally check that interpolated values are between original values
       if(CHECKYINIF){
-	compute_check_output(i, bs, be, recontype, preforder, df, yin, monoindicator, yout);
-	//	if((pl==UU)&&(recontype==CVT_C2E)) dualfprintf(fail_file,"monoyout=%d\n",monoindicator[MONOINDTYPE][i]);
+        compute_check_output(i, bs, be, recontype, preforder, df, yin, monoindicator, yout);
+        //      if((pl==UU)&&(recontype==CVT_C2E)) dualfprintf(fail_file,"monoyout=%d\n",monoindicator[MONOINDTYPE][i]);
       
 #if(MONOFAIL2WENO3)
-	// then try again with lower order
-	if(monoindicator[MONOINDTYPE][i]!=1){
-	  compute_check_output(i, bs, be, recontype, preforder-2, df, yin, monoindicator, yout);
-	}
+        // then try again with lower order
+        if(monoindicator[MONOINDTYPE][i]!=1){
+          compute_check_output(i, bs, be, recontype, preforder-2, df, yin, monoindicator, yout);
+        }
 #endif
 
       }// end if monotonic based upon df's
       else{
-	//	dualfprintf(fail_file,"C2EINTPUT_NOTMONO: i=%d\n",i);
-	monoindicator[MONOINDTYPE][i]=0;
+        //      dualfprintf(fail_file,"C2EINTPUT_NOTMONO: i=%d\n",i);
+        monoindicator[MONOINDTYPE][i]=0;
 #if(NONMONOTONIC2LIMITER)
-	if(recontype==CVT_C2E) c2e_simple_limiter(DONOR, &yin[i], &yout[0][i],&yout[1][i]);
-	monoindicator[MONOINDTYPE][i]=0;
-	// say already set
-	monoindicator[MONOLEFTSET][i]=1;
-	monoindicator[MONORIGHTSET][i]=1;      
+        if(recontype==CVT_C2E) c2e_simple_limiter(DONOR, &yin[i], &yout[0][i],&yout[1][i]);
+        monoindicator[MONOINDTYPE][i]=0;
+        // say already set
+        monoindicator[MONOLEFTSET][i]=1;
+        monoindicator[MONORIGHTSET][i]=1;      
 #endif
       }
 
@@ -231,29 +231,29 @@ void compute_jmonotonicity_line(int recontype, int whichreduce, int preforder, i
 
 
 #if(USESHOCKINDICATOR&&(USECUSPINDICATOR==2))
-      roughnessindicator=max(shockindicator[i],cuspindicator);
-      //roughnessindicator=shockindicator[i];
+    roughnessindicator=max(shockindicator[i],cuspindicator);
+    //roughnessindicator=shockindicator[i];
 #elif(USECUSPINDICATOR==2)
-      roughnessindicator=cuspindicator;
+    roughnessindicator=cuspindicator;
 #elif(USESHOCKINDICATOR)
-      roughnessindicator=shockindicator[i];
+    roughnessindicator=shockindicator[i];
 #else
-      roughnessindicator=0.0;
+    roughnessindicator=0.0;
 #endif
 
-      // linearly combine result from DONOR (for roughness) with high order solution
-      if((USESHOCKINDICATOR||(USECUSPINDICATOR==2))&&(monoindicator[MONOINDTYPE][i]==1)){
-	if(recontype==CVT_C2E){
-	  c2e_simple_limiter(DONOR, &yin[i], &pleft, &pright);
-	  
-	  yout[0][i] = yout[0][i]*(1.0-roughnessindicator)+roughnessindicator*pleft;
-	  yout[1][i] = yout[1][i]*(1.0-roughnessindicator)+roughnessindicator*pright;
-	}
-	else{
-	  pcenter=yin[i]; // DONOR-like
-	  yout[0][i] = yout[0][i]*(1.0-roughnessindicator)+roughnessindicator*pcenter;
-	}
+    // linearly combine result from DONOR (for roughness) with high order solution
+    if((USESHOCKINDICATOR||(USECUSPINDICATOR==2))&&(monoindicator[MONOINDTYPE][i]==1)){
+      if(recontype==CVT_C2E){
+        c2e_simple_limiter(DONOR, &yin[i], &pleft, &pright);
+          
+        yout[0][i] = yout[0][i]*(1.0-roughnessindicator)+roughnessindicator*pleft;
+        yout[1][i] = yout[1][i]*(1.0-roughnessindicator)+roughnessindicator*pright;
       }
+      else{
+        pcenter=yin[i]; // DONOR-like
+        yout[0][i] = yout[0][i]*(1.0-roughnessindicator)+roughnessindicator*pcenter;
+      }
+    }
   
 
 
@@ -262,12 +262,12 @@ void compute_jmonotonicity_line(int recontype, int whichreduce, int preforder, i
 #if(AMBIGUOUS2LIMITER)
     if(recontype==CVT_C2E){
       if(monoindicator[MONOINDTYPE][i]==0){
-	// fool around with what SWENO might do
-	c2e_simple_limiter(DONOR, &yin[i], &yout[0][i],&yout[1][i]);
-	monoindicator[MONOINDTYPE][i]=0;
-	// say already set
-	monoindicator[MONOLEFTSET][i]=1;
-	monoindicator[MONORIGHTSET][i]=1;      
+        // fool around with what SWENO might do
+        c2e_simple_limiter(DONOR, &yin[i], &yout[0][i],&yout[1][i]);
+        monoindicator[MONOINDTYPE][i]=0;
+        // say already set
+        monoindicator[MONOLEFTSET][i]=1;
+        monoindicator[MONORIGHTSET][i]=1;      
       }
     }
     else{
@@ -295,7 +295,7 @@ void compute_jmonotonicity_line(int recontype, int whichreduce, int preforder, i
     if(monoindicator[MONOINDTYPE][i]!=monoindicator[0][(pe+ps) - i]){
       dualfprintf(fail_file,"problem at i=%d io=%d : %d %d :: recontype=%d\n",i,pe+ps-i, monoindicator[MONOINDTYPE][i],monoindicator[0][pe-i],recontype);
       for(i=ps;i<=pe;i++){
-	dualfprintf(fail_file,"mon[%d]=%d :: %21.15g %21.15g :: %21.15g :: %21.15g %21.15g\n",i,monoindicator[MONOINDTYPE][i],yin[i],yout[0][i],df[DF2OFONESIDED][i],df[DFONESIDED][i],df[0][i+1]);
+        dualfprintf(fail_file,"mon[%d]=%d :: %21.15g %21.15g :: %21.15g :: %21.15g %21.15g\n",i,monoindicator[MONOINDTYPE][i],yin[i],yout[0][i],df[DF2OFONESIDED][i],df[DFONESIDED][i],df[0][i+1]);
       }
       myexit(1);
     }
@@ -509,14 +509,14 @@ void compute_check_output(int i, int bs, int be, int recontype, int preforder, F
       check_mono_c2e_output(i, preforder, &df[DFONESIDED][i], &df[DF2OFONESIDED][i], pleft, pright, &yin[i], &monoindicator[MONOINDTYPE][i], &monoindicator[MONOLEFTSET][i], &monoindicator[MONORIGHTSET][i],&yout[0][i],&yout[1][i]);
 
       if(monoindicator[MONOINDTYPE][i]==1){
-	// then set other interface values to be equal
-	yout[1][i-1]=pleft; // right face for i-1
-	monoindicator[2][i-1]=1;
-	monoindicator[0][i-1]=0;
+        // then set other interface values to be equal
+        yout[1][i-1]=pleft; // right face for i-1
+        monoindicator[2][i-1]=1;
+        monoindicator[0][i-1]=0;
 
-	yout[0][i+1]=pright; // left face for i+1
-	monoindicator[1][i+1]=1;
-	monoindicator[0][i+1]=0;
+        yout[0][i+1]=pright; // left face for i+1
+        monoindicator[1][i+1]=1;
+        monoindicator[0][i+1]=0;
       }
 
 
@@ -699,7 +699,7 @@ void check_mono_c2e_output(int i, int preforder, FTYPE *df, FTYPE *ddf, FTYPE pl
     //    *monosetleft=*monosetright=0;
     
 #if(DEBUGMONONEW)
-    //	  dualfprintf(fail_file,"C2ENOTMONO: i=%d pl=%d : monoup=%d monodown=%d :: %21.15g %21.15g pleft=%21.15g %21.15g pright=%21.15g %21.15g %21.15g\n",i,pl,monoup,monodown,yin[i-2],yin[i-1],pleft,yin[i],pright,yin[i+1],yin[i+2]);
+    //    dualfprintf(fail_file,"C2ENOTMONO: i=%d pl=%d : monoup=%d monodown=%d :: %21.15g %21.15g pleft=%21.15g %21.15g pright=%21.15g %21.15g %21.15g\n",i,pl,monoup,monodown,yin[i-2],yin[i-1],pleft,yin[i],pright,yin[i+1],yin[i+2]);
     dualfprintf(fail_file,"C2ENOTMONO: mup=%d mdown=%d dmup=%d dmdown=%d :: %21.15g %21.15g  %21.15g %21.15g\n",mup,mdown,dmup,dmdown,yin[-1]-pleft,pleft-yin[0],yin[0]-pright,pright-yin[1]);
 #endif
 
@@ -862,12 +862,12 @@ void check_mono_a2c_c2a_output(int preforder, FTYPE *df, FTYPE *ddf, FTYPE *pcen
   FTYPE ratios[MAXORDERS];
   int mdown,mup;
   int dmdown,dmup;
-	int ddmdown,ddmup;
+  int ddmdown,ddmup;
   FTYPE fractionalchange;
   FTYPE derivatives[MAXORDERS];
   FTYPE dder[MAXORDERS];
 
-	extern FTYPE limit_ac_correction( int order, int pl, int bs, int bf, FTYPE max_frac_difference, FTYPE *yin, FTYPE *yout );  //atch debug changed return type from int to FTYPE
+  extern FTYPE limit_ac_correction( int order, int pl, int bs, int bf, FTYPE max_frac_difference, FTYPE *yin, FTYPE *yout );  //atch debug changed return type from int to FTYPE
 
 #if(CHECKYOUTA2CC2A)
 
@@ -885,13 +885,13 @@ void check_mono_a2c_c2a_output(int preforder, FTYPE *df, FTYPE *ddf, FTYPE *pcen
   ratios[2]=(yin[1] - (*pcenter));
   ratios[3]=(yin[2] - yin[1]);
     
-	// larger than some positive number
-	mdown=       (ratios[0]>-rationorm);
+  // larger than some positive number
+  mdown=       (ratios[0]>-rationorm);
   mdown=mdown&&(ratios[1]>-rationorm);
   mdown=mdown&&(ratios[2]>-rationorm);
   mdown=mdown&&(ratios[3]>-rationorm);
 
-	// smaller than some negative number
+  // smaller than some negative number
   mup=     (ratios[0]<rationorm);
   mup=mup&&(ratios[1]<rationorm);
   mup=mup&&(ratios[2]<rationorm);
@@ -908,22 +908,22 @@ void check_mono_a2c_c2a_output(int preforder, FTYPE *df, FTYPE *ddf, FTYPE *pcen
   // just check sign didn't change
   //dmdown=dmup = (fabs(derivatives[0]-derivatives[1])<ERRORNORM) || (sign(derivatives[0])==sign(derivatives[1]) );
 
-	dmdown=        (derivatives[0]>-rationorm);
+  dmdown=        (derivatives[0]>-rationorm);
   dmdown=dmdown&&(derivatives[1]>-rationorm);
   dmdown=dmdown&&(derivatives[2]>-rationorm);
 
-	dmup=      (derivatives[0]<rationorm);
+  dmup=      (derivatives[0]<rationorm);
   dmup=dmup&&(derivatives[1]<rationorm);
   dmup=dmup&&(derivatives[2]<rationorm);
 
-	//3rd der monotonicity check
-	dder[0] = derivatives[1] - derivatives[0];
-	dder[1] = derivatives[2] - derivatives[1];
-	
-	ddmdown=         (dder[0]>-rationorm);
+  //3rd der monotonicity check
+  dder[0] = derivatives[1] - derivatives[0];
+  dder[1] = derivatives[2] - derivatives[1];
+        
+  ddmdown=         (dder[0]>-rationorm);
   ddmdown=ddmdown&&(dder[1]>-rationorm);
 
-	ddmup=       (dder[0]<rationorm);
+  ddmup=       (dder[0]<rationorm);
   ddmup=ddmup&&(dder[1]<rationorm);
 
 

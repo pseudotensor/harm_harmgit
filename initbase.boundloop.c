@@ -35,9 +35,9 @@ int report_bound_loop(void)
     trifprintf("Note inout/lowhigh iter has POINTDOWN=%d and POINTUP=%d\n",POINTDOWN,POINTUP);
     DIMENLOOP(dimen){
       for(ii=NUMUPDOWN-1;ii>=0;ii--){
-	for(jj=NUMUPDOWN-1;jj>=0;jj--){
-	  trifprintf("inoutlohi[inoutboundary=%d][lowhighrange=%d][dimen=%d]=%d\n",ii,jj,dimen,inoutlohi[ii][jj][dimen]);
-	}
+        for(jj=NUMUPDOWN-1;jj>=0;jj--){
+          trifprintf("inoutlohi[inoutboundary=%d][lowhighrange=%d][dimen=%d]=%d\n",ii,jj,dimen,inoutlohi[ii][jj][dimen]);
+        }
       }
       trifprintf("inboundloop[dimen=%d]=%d outboundloop[dimen=%d]=%d\n",dimen,inboundloop[dimen],dimen,outboundloop[dimen]);
       if(dimen==1) trifprintf("riin=%d riout=%d\n",riin,riout);
@@ -135,7 +135,7 @@ void set_numbnd(int boundvartype, int *numbnd, int *numnpr)
 
 // the resulting shifts should include shift due to GRIDSECTION *and* due to normal boundaries
 // so specifies really is,ie,js,je,ks,ke for normal loop
-// boundvartype is one of NUMBOUNDTYPES in global.nondepnmemonics.h
+// boundvartype is one of NUMBOUNDTYPES in global.nondepmnemonics.h
 // This sets up both LOOPBOUND?IN loops *and* LOOPX?dir loops
 // Notes:
 // 1) Assume set_boundloop() is called each time needed since BCs could change with time
@@ -174,14 +174,14 @@ void set_boundloop(int boundvartype, int *inboundloop, int*outboundloop, int*inn
   if(GLOBALBCMOVEDWITHACTIVESECTION==1){
     DIRLOOP(dir){
       if(
-	 BCtype[dir]==OUTFLOW
-	 || BCtype[dir]==FIXEDOUTFLOW
-	 || BCtype[dir]==OUTFLOWNOINFLOW
-	 || BCtype[dir]==RAMESHOUTFLOW
-	 || BCtype[dir]==RESCALEOUTFLOW
-	 || BCtype[dir]==FREEOUTFLOW
-	 ){
-	outflowtype[dir]=1;
+         BCtype[dir]==OUTFLOW
+         || BCtype[dir]==FIXEDOUTFLOW
+         || BCtype[dir]==OUTFLOWNOINFLOW
+         || BCtype[dir]==RAMESHOUTFLOW
+         || BCtype[dir]==RESCALEOUTFLOW
+         || BCtype[dir]==FREEOUTFLOW
+         ){
+        outflowtype[dir]=1;
       }
       else outflowtype[dir]=0;
     }
@@ -208,16 +208,16 @@ void set_boundloop(int boundvartype, int *inboundloop, int*outboundloop, int*inn
 
       // define physical boundary loop range
       if(dosetbc[dir]){
-	// standard shift for physical boundary when doing that boundary
-	shifts[POINTFROMDIR(dir)][DIMEN(dir)]=0;
+        // standard shift for physical boundary when doing that boundary
+        shifts[POINTFROMDIR(dir)][DIMEN(dir)]=0;
       }
       else{
-	shifts[POINTFROMDIR(dir)][DIMEN(dir)]=shiftamount[dir];
+        shifts[POINTFROMDIR(dir)][DIMEN(dir)]=shiftamount[dir];
 
-	// below is wrong:
-	// shift so that never access interior of such boundary loops in case not using dosetbc[] to check
-	//	if(DIRSIGN(dir)==-1) shifts[POINTFROMDIR(dir)][DIMEN(dir)]=totalsize[DIMEN(dir)]+MAXBND;
-	//	else if(DIRSIGN(dir)==1) shifts[POINTFROMDIR(dir)][DIMEN(dir)]=-MAXBND;
+        // below is wrong:
+        // shift so that never access interior of such boundary loops in case not using dosetbc[] to check
+        //      if(DIRSIGN(dir)==-1) shifts[POINTFROMDIR(dir)][DIMEN(dir)]=totalsize[DIMEN(dir)]+MAXBND;
+        //      else if(DIRSIGN(dir)==1) shifts[POINTFROMDIR(dir)][DIMEN(dir)]=-MAXBND;
       }
 
     }
@@ -378,7 +378,7 @@ void set_boundloop(int boundvartype, int *inboundloop, int*outboundloop, int*inn
   for(ii=0;ii<NUMUPDOWN;ii++){
     for(jj=0;jj<NUMUPDOWN;jj++){
       DIMENLOOP(dimen){
-	inoutlohi[ii][jj][dimen] += shifts[ii][dimen];
+        inoutlohi[ii][jj][dimen] += shifts[ii][dimen];
       }
     }
   }

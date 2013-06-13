@@ -1,6 +1,6 @@
 
 #include "decs.h"
-#define GAMMA	(gamideal)  /* Adiabatic index used for the state equation */
+#define GAMMA   (gamideal)  /* Adiabatic index used for the state equation */
 
 // jon commented those out:
 
@@ -103,9 +103,9 @@
 #define NEWT_FUNC_TOL 1.0e-5  /* Max. ratio of the final and initial resid magnitudes to be considered converged */
 
 
-//#define W_TOO_BIG	(GAMMAFAIL*GAMMAFAIL)   
+//#define W_TOO_BIG     (GAMMAFAIL*GAMMAFAIL)   
 //  \gamma^2 (\rho_0 + u + p) is assumed to always be smaller than this.  This
-//				  is used to detect solver failures
+//                                is used to detect solver failures
 
 
 
@@ -147,25 +147,25 @@
 /* some mnemonics */
 /* for primitive variables */
 #ifndef RHO
-#define RHO 	0 
+#define RHO     0 
 #endif
 
 #ifndef UU
-#define UU 	1 
+#define UU      1 
 #endif
 
-#define UTCON1 	2
-#define UTCON2 	3
-#define UTCON3 	4
-#define BCON1	5
-#define BCON2	6
-#define BCON3	7
+#define UTCON1  2
+#define UTCON2  3
+#define UTCON3  4
+#define BCON1   5
+#define BCON2   6
+#define BCON3   7
 
 /* for conserved variables */
-#define QCOV0	1
-#define QCOV1	2
-#define QCOV2	3
-#define QCOV3	4
+#define QCOV0   1
+#define QCOV1   2
+#define QCOV2   3
+#define QCOV3   4
 
 
 #define MYMAX(a,b) ( ((a) > (b)) ? (a) : (b) )

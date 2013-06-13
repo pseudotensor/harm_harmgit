@@ -26,62 +26,62 @@ struct blink {
 // if add something, then should set it in (at least) set_grid.c
 // gcon put below gcov,gcovpert,alphalapse since gcon not as often needed
 // store betasqoalphasq to avoid need of gcon in most calculations
-#define interiorofgeompart1a \
+#define interiorofgeompart1a                    \
   int i,j,k,p;
 
 
 #if(WHICHEOM==WITHGDET)
-#define interiorofgeompart1b \
+#define interiorofgeompart1b                    \
   FTYPE gdet;
 #else
-#define interiorofgeompart1b \
-  FTYPE gdet;		    \
+#define interiorofgeompart1b                    \
+  FTYPE gdet;                                   \
   FTYPE eomfunc[NPR];
 #endif
 
-  //  FTYPE gcov[SYMMATRIXNDIM];			\
+//  FTYPE gcov[SYMMATRIXNDIM];                  \
 
-#define interiorofgeompart1c \
-  FTYPE gcov[SYMMATRIXNDIM];			\
-  FTYPE gcovpert[NDIM];	    \
-  FTYPE alphalapse;	    \
-  FTYPE betasqoalphasq;	    \
+#define interiorofgeompart1c                    \
+  FTYPE gcov[SYMMATRIXNDIM];                    \
+  FTYPE gcovpert[NDIM];                         \
+  FTYPE alphalapse;                             \
+  FTYPE betasqoalphasq;                         \
   FTYPE beta[NDIM];
 
 #if(WHICHEOM==WITHGDET)
 // must always create eomfunc[NPR],ieomfuncnosing[NPR] even if(WHICHEOM!=WITHGDET) since code refers to these arrays[pl] in general
-#define interiorofgeompart2			\
+#define interiorofgeompart2                     \
   FTYPE igdetnosing;
 #else
-#define interiorofgeompart2			\
-  FTYPE igdetnosing;				\
+#define interiorofgeompart2                     \
+  FTYPE igdetnosing;                            \
   FTYPE ieomfuncnosing[NPR];
 #endif
 
 //  FTYPE gcon[SYMMATRIXNDIM];
 
 #if(GDETVOLDIFF)
-#define interiorofgeompart3			\
+#define interiorofgeompart3                     \
   FTYPE gdetvol;
 #else
 #define interiorofgeompart3
 #endif
 
-#define interiorofgeompart4 \
+#define interiorofgeompart4                     \
   FTYPE gcon[SYMMATRIXNDIM];
 
 // done with parts of structure
 
-#define interiorofgeom \
-  interiorofgeompart1a \
-  interiorofgeompart1b \
-  interiorofgeompart1c \
-  interiorofgeompart2 \
-  interiorofgeompart3 \
+#define interiorofgeom                          \
+  interiorofgeompart1a                          \
+  interiorofgeompart1b                          \
+  interiorofgeompart1c                          \
+  interiorofgeompart2                           \
+  interiorofgeompart3                           \
   interiorofgeompart4
 
-#define interiorofgdetgeom \
-  interiorofgeompart1b \
+#define interiorofgdetgeom                      \
+  interiorofgeompart1b                          \
   interiorofgeompart2
 
 

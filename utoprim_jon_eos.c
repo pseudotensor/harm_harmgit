@@ -9,7 +9,7 @@
 ////////////////////////////////////////////////////////////////
 
 
-  /* 
+/* 
    This file must contain the equation of state
    in two different forms:
 
@@ -70,7 +70,7 @@ static FTYPE wmrho0_compute_vsq(FTYPE Wp, FTYPE D, FTYPE vsq, FTYPE gamma,FTYPE 
 
 /* 
 
-pressure as a function of W, vsq, and D:
+   pressure as a function of W, vsq, and D:
 
 
 */
@@ -220,11 +220,11 @@ static FTYPE pressure_W_vsq_scn(int whicheos, FTYPE *EOSextra, FTYPE W, FTYPE D,
 
 /* 
 
-partial derivative of pressure with respect to W holding vsq fixed
+   partial derivative of pressure with respect to W holding vsq fixed
 
-// dp/dW|v^2 = dp/drho|wmrho0 drho/dW|v^2 + dp/dwmrho0|rho dwmrho0/dW|v^2
+   // dp/dW|v^2 = dp/drho|wmrho0 drho/dW|v^2 + dp/dwmrho0|rho dwmrho0/dW|v^2
 
-*/
+   */
 #if(OLDCALCJON)
 static FTYPE dpdW_calc_vsq(int whicheos, FTYPE *EOSextra, FTYPE W, FTYPE D, FTYPE vsq)
 {
@@ -402,7 +402,7 @@ static FTYPE dpdW_calc_vsq_scn(int whicheos, FTYPE *EOSextra, FTYPE W, FTYPE D, 
 
 /* 
 
-partial derivative of pressure with respect to vsq holding W fixed
+   partial derivative of pressure with respect to vsq holding W fixed
 
 
 */
@@ -475,10 +475,10 @@ static FTYPE dpdvsq_calc_Wp(int whicheos, FTYPE *EOSextra, FTYPE Wp, FTYPE D, FT
 
   dpdvsq =   drho0dvsq *idrho0dp  +   dwmrho0dvsq *idwmrho0dp;
 
-//  if( outval > 0. ) { 
-//    dualfprintf(fail_file,"outval = %21.15g , D = %21.15g  , vsq = %21.15g,  W = %21.15g \n",
-//	    outval, D, vsq, W );
-//  }
+  //  if( outval > 0. ) { 
+  //    dualfprintf(fail_file,"outval = %21.15g , D = %21.15g  , vsq = %21.15g,  W = %21.15g \n",
+  //        outval, D, vsq, W );
+  //  }
 
   return(dpdvsq);
 }
@@ -513,10 +513,10 @@ static FTYPE dpdvsq_calc2_Wp(int whicheos, FTYPE *EOSextra, FTYPE Wp, FTYPE D, F
 
   dpdvsq =   drho0dvsq *idrho0dp  +   dwmrho0dvsq *idwmrho0dp;
 
-//  if( outval > 0. ) { 
-//    dualfprintf(fail_file,"outval = %21.15g , D = %21.15g  , vsq = %21.15g,  W = %21.15g \n",
-//	    outval, D, vsq, W );
-//  }
+  //  if( outval > 0. ) { 
+  //    dualfprintf(fail_file,"outval = %21.15g , D = %21.15g  , vsq = %21.15g,  W = %21.15g \n",
+  //        outval, D, vsq, W );
+  //  }
 
   return(dpdvsq);
 }
@@ -557,10 +557,10 @@ static FTYPE dSsdvsq_calc_Wp(int whicheos, FTYPE *EOSextra, FTYPE Wp, FTYPE D, F
 
   dSsdvsq =   drho0dvsq *idrho0dSs  +   dwmrho0dvsq *idwmrho0dSs;
 
-//  if( outval > 0. ) { 
-//    dualfprintf(fail_file,"outval = %21.15g , D = %21.15g  , vsq = %21.15g,  W = %21.15g \n",
-//	    outval, D, vsq, W );
-//  }
+  //  if( outval > 0. ) { 
+  //    dualfprintf(fail_file,"outval = %21.15g , D = %21.15g  , vsq = %21.15g,  W = %21.15g \n",
+  //        outval, D, vsq, W );
+  //  }
 
   return(dSsdvsq);
 }
@@ -595,10 +595,10 @@ static FTYPE dSsdvsq_calc2_Wp(int whicheos, FTYPE *EOSextra, FTYPE Wp, FTYPE D, 
 
   dSsdvsq =   drho0dvsq *idrho0dSs  +   dwmrho0dvsq *idwmrho0dSs;
 
-//  if( outval > 0. ) { 
-//    dualfprintf(fail_file,"outval = %21.15g , D = %21.15g  , vsq = %21.15g,  W = %21.15g \n",
-//	    outval, D, vsq, W );
-//  }
+  //  if( outval > 0. ) { 
+  //    dualfprintf(fail_file,"outval = %21.15g , D = %21.15g  , vsq = %21.15g,  W = %21.15g \n",
+  //        outval, D, vsq, W );
+  //  }
 
   return(dSsdvsq);
 }
@@ -630,10 +630,10 @@ static FTYPE dpdvsq_calc_scn(int whicheos, FTYPE *EOSextra, FTYPE W, FTYPE D, FT
   //  return( (gam - 1.) * ( 0.5 * D / sqrt(1.-vsq)  - W  ) / gam  ) ;
   outval =  ( 0.5 * D / sqrt(1.-vsq)  - W  )*idwmrho0dp  ;
 
-//  if( outval > 0. ) { 
-//    dualfprintf(fail_file,"outval = %21.15g , D = %21.15g  , vsq = %21.15g,  W = %21.15g \n",
-//	    outval, D, vsq, W );
-//  }
+  //  if( outval > 0. ) { 
+  //    dualfprintf(fail_file,"outval = %21.15g , D = %21.15g  , vsq = %21.15g,  W = %21.15g \n",
+  //        outval, D, vsq, W );
+  //  }
 
   return(outval);
 }

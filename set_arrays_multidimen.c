@@ -92,48 +92,48 @@ void set_arrays_multidimen()
     DIMENLOOP(dimen){
       
       if(isleftright==NUMLEFTRIGHT){ // last entry (related to +1 in above isleftright loop) treated as if for centered fluxstatecent
-	if(firsttimeinloop==0) break; // break if dimen iterated since only have fluxstatecent[] that doesn't depend upon dimen
-	else firsttimeinloop=0;
+        if(firsttimeinloop==0) break; // break if dimen iterated since only have fluxstatecent[] that doesn't depend upon dimen
+        else firsttimeinloop=0;
       }
       else{
-	// then correct to go over all dimen for fluxstate[dimen]
+        // then correct to go over all dimen for fluxstate[dimen]
       }
 
       // loop over i,j,k
       FULLLOOP{
 
-	if(isleftright==NUMLEFTRIGHT){ // last entry treated as if for centered fluxstatecent
-	  // just way to select centered case so below assignments are in a single code
-	  myfluxstatetempptr = &GLOBALMACP0A0(fluxstatecent,i,j,k);
-	}
-	else{
-	  myfluxstatetempptr = &GLOBALMACP1A1(fluxstate,dimen,i,j,k,isleftright);
-	}
+        if(isleftright==NUMLEFTRIGHT){ // last entry treated as if for centered fluxstatecent
+          // just way to select centered case so below assignments are in a single code
+          myfluxstatetempptr = &GLOBALMACP0A0(fluxstatecent,i,j,k);
+        }
+        else{
+          myfluxstatetempptr = &GLOBALMACP1A1(fluxstate,dimen,i,j,k,isleftright);
+        }
 
 
 #if(MERGEDC2EA2CMETHOD)
-	  PALLLOOP(pl){
-	    myfluxstatetempptr->prim[pl]=valueinit;
-	    myfluxstatetempptr->EOMFUNCMAC(pl)=valueinit;
-	  }
-	  DLOOPA(jj){
-	    myfluxstatetempptr->Blower[jj]=valueinit;
-	    myfluxstatetempptr->vcon[jj]=valueinit;
-	    myfluxstatetempptr->gdetBcon[jj]=valueinit;
-	  }
-	  myfluxstatetempptr->gdet=valueinit;
-	  myfluxstatetempptr->overut=valueinit;
+        PALLLOOP(pl){
+          myfluxstatetempptr->prim[pl]=valueinit;
+          myfluxstatetempptr->EOMFUNCMAC(pl)=valueinit;
+        }
+        DLOOPA(jj){
+          myfluxstatetempptr->Blower[jj]=valueinit;
+          myfluxstatetempptr->vcon[jj]=valueinit;
+          myfluxstatetempptr->gdetBcon[jj]=valueinit;
+        }
+        myfluxstatetempptr->gdet=valueinit;
+        myfluxstatetempptr->overut=valueinit;
 #endif
-	// always done
-	myfluxstatetempptr->pressure=valueinit;
-	myfluxstatetempptr->entropy=valueinit;
-	myfluxstatetempptr->ifremoverestplus1ud0elseud0=valueinit;
-	DLOOPA(jj){
-	  myfluxstatetempptr->ucon[jj]=valueinit;
-	  myfluxstatetempptr->ucov[jj]=valueinit;
-	  myfluxstatetempptr->bcon[jj]=valueinit;
-	  myfluxstatetempptr->bcov[jj]=valueinit;      
-	}
+        // always done
+        myfluxstatetempptr->pressure=valueinit;
+        myfluxstatetempptr->entropy=valueinit;
+        myfluxstatetempptr->ifremoverestplus1ud0elseud0=valueinit;
+        DLOOPA(jj){
+          myfluxstatetempptr->ucon[jj]=valueinit;
+          myfluxstatetempptr->ucov[jj]=valueinit;
+          myfluxstatetempptr->bcon[jj]=valueinit;
+          myfluxstatetempptr->bcov[jj]=valueinit;      
+        }
 
       }
     }
@@ -446,14 +446,14 @@ void set_arrays_multidimen()
   FULLLOOP{
     for(pl=0;pl<NUMCURRENTSLOTS;pl++) for(l=0;l<3;l++){
 #if(DOGRIDSECTIONING)
-	// GODMARK: if grid moves while computing current, then near boundary current will be undefined for time derivative.
-	// Could compute J^i using substeps, but harder to do.
-	// So for now just assume border-region of current is poorly computed and just avoid nan's
-      GLOBALMACP0A2(cfaraday,i,j,k,pl,l)=0.0;
+        // GODMARK: if grid moves while computing current, then near boundary current will be undefined for time derivative.
+        // Could compute J^i using substeps, but harder to do.
+        // So for now just assume border-region of current is poorly computed and just avoid nan's
+        GLOBALMACP0A2(cfaraday,i,j,k,pl,l)=0.0;
 #else
-      GLOBALMACP0A2(cfaraday,i,j,k,pl,l)=valueinit;
+        GLOBALMACP0A2(cfaraday,i,j,k,pl,l)=valueinit;
 #endif
-    }
+      }
     for(pl=0;pl<NUMFARADAY;pl++){
       GLOBALMACP0A1(fcon,i,j,k,pl)=valueinit;
     }

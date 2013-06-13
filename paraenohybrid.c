@@ -7,15 +7,15 @@
 
 
 int paraenohybrid_line_c2e( int whichquantity, int dir, int do_weight_or_recon, weno_weights_t *stencil_weights_array,  int whichreduce, int preforder, int pl, int bs, int ps, int pf, int bf, int *minorderit, int *maxorderit, int *shiftit, 
-		  FTYPE *shockindicator, FTYPE *stiffindicator, FTYPE *V, FTYPE *P,
-		  FTYPE (*df)[NBIGM], FTYPE (*dP)[NBIGM], FTYPE *etai, FTYPE (*monoindicator)[NBIGM], 
-		  FTYPE *Pindicator, FTYPE *yin, FTYPE *yout_left, FTYPE *yout_right, FTYPE (*youtpolycoef)[NBIGM], struct of_trueijkp *trueijkp ) 
+                            FTYPE *shockindicator, FTYPE *stiffindicator, FTYPE *V, FTYPE *P,
+                            FTYPE (*df)[NBIGM], FTYPE (*dP)[NBIGM], FTYPE *etai, FTYPE (*monoindicator)[NBIGM], 
+                            FTYPE *Pindicator, FTYPE *yin, FTYPE *yout_left, FTYPE *yout_right, FTYPE (*youtpolycoef)[NBIGM], struct of_trueijkp *trueijkp ) 
 {
   // JCM STUFF START
   int paraprocess_line_c2e( int whichquantity, int dir, int do_weight_or_recon, weno_weights_t *stencil_weights_array, int whichreduce, int preforder, int pl, int bs, int ps, int pf, int bf, int *minorderit, int *maxorderit, int *shiftit, 
-			    FTYPE *shockindicator, FTYPE *stiffindicator, FTYPE *parafrac, FTYPE *V, FTYPE *P,
-			    FTYPE (*df)[NBIGM], FTYPE (*dP)[NBIGM], FTYPE *etai, FTYPE (*monoindicator)[NBIGM], 
-			    FTYPE *Pindicator, FTYPE *yin, FTYPE *yout_left, FTYPE *yout_right, struct of_trueijkp *trueijkp  ) ;
+                            FTYPE *shockindicator, FTYPE *stiffindicator, FTYPE *parafrac, FTYPE *V, FTYPE *P,
+                            FTYPE (*df)[NBIGM], FTYPE (*dP)[NBIGM], FTYPE *etai, FTYPE (*monoindicator)[NBIGM], 
+                            FTYPE *Pindicator, FTYPE *yin, FTYPE *yout_left, FTYPE *yout_right, struct of_trueijkp *trueijkp  ) ;
   int returnedvalue;
   FTYPE a_parafrac[NBIGM];
   FTYPE *parafrac;
@@ -86,20 +86,20 @@ int paraenohybrid_line_c2e( int whichquantity, int dir, int do_weight_or_recon, 
       // use extended maximum stiff indicator to avoid switching to PARA too quickly
       stiffnonlocal=0.0;
       for(mm=-1;mm<=1;mm++){ // allowed since stiffindicator defined over full bs..bf range
-	stiffnonlocal=max(stiffnonlocal,stiffindicator[i+mm]);
+        stiffnonlocal=max(stiffnonlocal,stiffindicator[i+mm]);
       }
 
       if(stiffnonlocal<PARAEND){// assumes stiffindicator already well-truncated (and is)
-	parafrac[i]=1.0;
-	allweno=0;
+        parafrac[i]=1.0;
+        allweno=0;
       }
       else if(stiffnonlocal<MIXEND){
-	parafrac[i] = 1.0 - (stiffnonlocal-PARAEND)/(MIXEND-PARAEND);
-	allweno=allpara=0;
+        parafrac[i] = 1.0 - (stiffnonlocal-PARAEND)/(MIXEND-PARAEND);
+        allweno=allpara=0;
       }
       else{
-	parafrac[i]=0.0;
-	allpara=0;
+        parafrac[i]=0.0;
+        allpara=0;
       }
     }
   }
@@ -138,9 +138,9 @@ int paraenohybrid_line_c2e( int whichquantity, int dir, int do_weight_or_recon, 
 // works well as setup for isolated stationary and moving contact and blast wave, but problem for TESTNUMBER==4 contact compared to MCSTEEP,PARALINE,PARAFLAT still -- should look at etai's at late time in contact to see why -- maybe shock not flat enough
 // GODMARK: If parafrac==0, then must behave *exactly* like weno would have!
 int paraprocess_line_c2e( int whichquantity, int dir, int do_weight_or_recon, weno_weights_t *stencil_weights_array, int whichreduce, int preforder, int pl, int bs, int ps, int pf, int bf, int *minorderit, int *maxorderit, int *shiftit, 
-			  FTYPE *shockindicator, FTYPE *stiffindicator, FTYPE *parafrac, FTYPE *V, FTYPE *P, FTYPE (*df)[NBIGM],
-			  FTYPE (*dP)[NBIGM], FTYPE *etai, FTYPE (*monoindicator)[NBIGM], 
-			  FTYPE *Pindicator, FTYPE *yin, FTYPE *yout_left, FTYPE *yout_right, struct of_trueijkp *trueijkp  ) 
+                          FTYPE *shockindicator, FTYPE *stiffindicator, FTYPE *parafrac, FTYPE *V, FTYPE *P, FTYPE (*df)[NBIGM],
+                          FTYPE (*dP)[NBIGM], FTYPE *etai, FTYPE (*monoindicator)[NBIGM], 
+                          FTYPE *Pindicator, FTYPE *yin, FTYPE *yout_left, FTYPE *yout_right, struct of_trueijkp *trueijkp  ) 
 {
   extern void paracont(FTYPE ddq, FTYPE *y, FTYPE *facecont);
   extern void parasteepgen(int pl, FTYPE etai, FTYPE *V, FTYPE *P, FTYPE *y, FTYPE *dq, FTYPE *l, FTYPE *r);
@@ -283,7 +283,7 @@ int paraprocess_line_c2e( int whichquantity, int dir, int do_weight_or_recon, we
 
     //      if(etai>=0.01) etai=1.0;
     //      if(pl==RHO){
-    //	dualfprintf(fail_file,"i=%d etai=%21.15g\n",i,etai);
+    //  dualfprintf(fail_file,"i=%d etai=%21.15g\n",i,etai);
     //      }
     //      parafraclocal = etai;
     //parafraclocal=1.0;
@@ -403,7 +403,7 @@ int paraprocess_line_c2e( int whichquantity, int dir, int do_weight_or_recon, we
     //    if(1||parafraclocal>0.01){
     
     if(monofrac<0.1){
-    //    if(parafraclocal>0.01){
+      //    if(parafraclocal>0.01){
       // check monotonicity of FINAL result rather than just para result, to ensure monotonic
       dqrange=5;
       checkparamonotonicity(dqrange, pl, &yin[i], &df[DF2OFMONO][i], &df[DFMONO][i],&yout_left[i],&yout_right[i],&yout_left[i],&yout_right[i]);

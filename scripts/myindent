@@ -1,0 +1,61 @@
+#Introduction
+#
+#Most visual text editors for programmers have a re-indent feature. However, for large projects with many C/C++/Java files, I frequently need a script that I can execute from the command line that will indent the code in a source file without manually opening the file in the text editor. Emacs has two versatile commands, c-set-style and indent-region, that are useful when you are editing your program with Emacs. This page describes how to apply these commands in batch mode from the command line without ever getting into Emacs.
+#The Emacs script
+#
+#You only need one file with the following content:
+#;;; File: emacs-format-file
+#;;; Stan Warford
+#;;; 17 May 2006
+#
+#(defun emacs-format-function ()
+#   "Format the whole buffer."
+#   (c-set-style "stroustrup")
+#   (indent-region (point-min) (point-max) nil)
+#   (untabify (point-min) (point-max))
+#   (save-buffer)
+#)
+#I recommend that you put a copy of this script in your bin directory in a file named emacs-format-file.
+#
+#The first command is c-set-style. Emacs has a large number of predefined styles including gnu, k&r, bsd, stroustrup, linux, python, java, whitesmith, ellemtel, cc-mode, and user. My current favorite is stroustrup as in the above script. You can replace stroustrup with your own choice of style. The second command indents the entire file. The third command replaces tabs with spaces to make the file printer-friendly. If you want tabs in your file, omit the untabify command. The fourth command saves the re-indented file if necessary, that is, if the previous commands actually changed the file. You might wind up with the usual Emacs ~ backup file as well.
+#
+#To execute the script issue the following command:
+#emacs -batch file-to-indent -l ~/bin/emacs-format-file -f emacs-format-function
+#assuming you have put the script in your bin directory. Emacs will echo the actions it is taking. If the indentation is taking a long time it will even echo its progress.
+#A Bourne shell script
+#
+#Of course, you probably don't want to type that long command every time you need to indent a source file. So, here is a Bourne shell script that wraps the command up with all the fancy error checking bells and whistles. I recommend that you put a copy of this script in your directory in a file named my-indent, or whatever else you want to call it. Thanks to Michael Jensen for improving the script to provide multiple file processing.
+
+
+#!/bin/sh
+# File: my-indent
+# Opens a set of files in emacs and executes the emacs-format-function.
+# Assumes the function named emacs-format-function is defined in the
+# file named emacs-format-file.
+
+if [ $# == 0 ]
+then
+   echo "my-indent requires at least one argument." 1>&2
+   echo "Usage: my-indent files-to-indent" 1>&2
+   exit 1
+fi
+while [ $# -ge 1 ]
+do
+   if [ -d $1 ]
+   then
+      echo "Argument of my-indent $1 cannot be a directory." 1>&2
+      exit 1
+   fi
+   # Check for existence of file:
+   ls $1 2> /dev/null | grep $1 > /dev/null
+   if [ $? != 0 ]
+   then
+      echo "my-indent: $1 not found." 1>&2
+      exit 1
+   fi
+   echo "Indenting $1 with emacs in batch mode"
+   emacs -batch $1 -l ~/bin/emacs-format-file -f emacs-format-function
+   echo
+   shift 1
+done
+exit 0

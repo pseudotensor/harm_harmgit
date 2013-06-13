@@ -171,12 +171,12 @@ int init(int *argc, char **argv[])
 
 
       if(selfgraviter>1){
-	if(DOSELFGRAVVSR){
-	  trifprintf("new metric with self-gravity: selfgraviter=%d\n",selfgraviter);
-	  // if box_grid needs to change, is done inside below function
-	  compute_new_metric_and_prims(0,MBH, a, QBH, EP3, THETAROT, GLOBALPOINT(pglobal),GLOBALPOINT(pstagglobal),GLOBALPOINT(unewglobal),GLOBALPOINT(vpotarrayglobal),GLOBALPOINT(Bhatglobal),GLOBALPOINT(gp_l),GLOBALPOINT(gp_r),GLOBALPOINT(F1),GLOBALPOINT(F2),GLOBALPOINT(F3),GLOBALPOINT(emf),GLOBALPOINT(ulastglobal));
-	  trifprintf("done with computing new metric with self-gravity dt=%21.15g selfgraviter=%d\n",dt,selfgraviter);
-	}
+        if(DOSELFGRAVVSR){
+          trifprintf("new metric with self-gravity: selfgraviter=%d\n",selfgraviter);
+          // if box_grid needs to change, is done inside below function
+          compute_new_metric_and_prims(0,MBH, a, QBH, EP3, THETAROT, GLOBALPOINT(pglobal),GLOBALPOINT(pstagglobal),GLOBALPOINT(unewglobal),GLOBALPOINT(vpotarrayglobal),GLOBALPOINT(Bhatglobal),GLOBALPOINT(gp_l),GLOBALPOINT(gp_r),GLOBALPOINT(F1),GLOBALPOINT(F2),GLOBALPOINT(F3),GLOBALPOINT(emf),GLOBALPOINT(ulastglobal));
+          trifprintf("done with computing new metric with self-gravity dt=%21.15g selfgraviter=%d\n",dt,selfgraviter);
+        }
       }
 
 
@@ -215,19 +215,19 @@ int init(int *argc, char **argv[])
       /////////////////////////////// 
       
       if(EOMTYPE==EOMFFDE){
-	trifprintf("System filtered to FFDE\n");
-	// filter to get force-free
-	COMPFULLLOOP{
-	  filterffde(i,j,k,GLOBALMAC(pglobal,i,j,k));
-	}
+        trifprintf("System filtered to FFDE\n");
+        // filter to get force-free
+        COMPFULLLOOP{
+          filterffde(i,j,k,GLOBALMAC(pglobal,i,j,k));
+        }
       }
       
       if(EOMTYPE==EOMCOLDGRMHD){
-	trifprintf("System filtered to cold GRMHD\n");
-	// filter to get cold GRMHD
-	COMPFULLLOOP{
-	  filter_coldgrmhd(i,j,k,GLOBALMAC(pglobal,i,j,k));
-	}
+        trifprintf("System filtered to cold GRMHD\n");
+        // filter to get cold GRMHD
+        COMPFULLLOOP{
+          filter_coldgrmhd(i,j,k,GLOBALMAC(pglobal,i,j,k));
+        }
       }
       
       
@@ -242,14 +242,14 @@ int init(int *argc, char **argv[])
       
 #if(FIXUPAFTERINIT)
       if(fixup(STAGEM1,GLOBALPOINT(pglobal),GLOBALPOINT(unewglobal),0)>=1)
-	FAILSTATEMENT("initbase.c:init()", "fixup()", 1);
+        FAILSTATEMENT("initbase.c:init()", "fixup()", 1);
 #endif
 
       
       {
-	int finalstep=1; // assume user wants to know if initial conserved quants changed
-	if (bound_allprim(STAGEM1,finalstep,t,GLOBALPOINT(pglobal),GLOBALPOINT(pstagglobal),GLOBALPOINT(unewglobal), USEMPI) >= 1)
-	  FAILSTATEMENT("initbase.c:init()", "bound_allprim()", 1);
+        int finalstep=1; // assume user wants to know if initial conserved quants changed
+        if (bound_allprim(STAGEM1,finalstep,t,GLOBALPOINT(pglobal),GLOBALPOINT(pstagglobal),GLOBALPOINT(unewglobal), USEMPI) >= 1)
+          FAILSTATEMENT("initbase.c:init()", "bound_allprim()", 1);
       }
 
 
@@ -258,36 +258,36 @@ int init(int *argc, char **argv[])
 
       
       if(pre_fixup(STAGEM1,GLOBALPOINT(pglobal))>=1)
-	FAILSTATEMENT("initbase.c:init()", "pre_fixup()", 1);
+        FAILSTATEMENT("initbase.c:init()", "pre_fixup()", 1);
 
 
       if(DODIAGS && PRODUCTION==0){
-	///////////////////////////////
-	// BEGIN DEBUG
-	// dump solution so far
-	if(selfgraviter==1){
-	  GLOBALPOINT(pdump)=GLOBALPOINT(pglobal);
-	  if (dump(9000) >= 1){
-	    dualfprintf(fail_file,"unable to print dump file\n");
-	    return (1);
-	  }
-	}
-	else if(selfgraviter==2){
-	  GLOBALPOINT(pdump)=GLOBALPOINT(pglobal);
-	  if (dump(9001) >= 1){
-	    dualfprintf(fail_file,"unable to print dump file\n");
-	    return (1);
-	  }
-	}
-	else if(selfgraviter==3){
-	  GLOBALPOINT(pdump)=GLOBALPOINT(pglobal);
-	  if (dump(9002) >= 1){
-	    dualfprintf(fail_file,"unable to print dump file\n");
-	    return (1);
-	  }
-	}
-	// END DEBUG
-	///////////////////////////////
+        ///////////////////////////////
+        // BEGIN DEBUG
+        // dump solution so far
+        if(selfgraviter==1){
+          GLOBALPOINT(pdump)=GLOBALPOINT(pglobal);
+          if (dump(9000) >= 1){
+            dualfprintf(fail_file,"unable to print dump file\n");
+            return (1);
+          }
+        }
+        else if(selfgraviter==2){
+          GLOBALPOINT(pdump)=GLOBALPOINT(pglobal);
+          if (dump(9001) >= 1){
+            dualfprintf(fail_file,"unable to print dump file\n");
+            return (1);
+          }
+        }
+        else if(selfgraviter==3){
+          GLOBALPOINT(pdump)=GLOBALPOINT(pglobal);
+          if (dump(9002) >= 1){
+            dualfprintf(fail_file,"unable to print dump file\n");
+            return (1);
+          }
+        }
+        // END DEBUG
+        ///////////////////////////////
       }// end if doing diagnostics and production==0
 
       
@@ -300,32 +300,32 @@ int init(int *argc, char **argv[])
 
 
       if(DODIAGS && PRODUCTION==0){
-	///////////////////////////////
-	// BEGIN DEBUG
-	// dump solution so far
-	if(selfgraviter==1){
-	  GLOBALPOINT(pdump)=GLOBALPOINT(pglobal);
-	  if (dump(9100) >= 1){
-	    dualfprintf(fail_file,"unable to print dump file\n");
-	    return (1);
-	  }
-	}
-	else if(selfgraviter==2){
-	  GLOBALPOINT(pdump)=GLOBALPOINT(pglobal);
-	  if (dump(9101) >= 1){
-	    dualfprintf(fail_file,"unable to print dump file\n");
-	    return (1);
-	  }
-	}
-	else if(selfgraviter==3){
-	  GLOBALPOINT(pdump)=GLOBALPOINT(pglobal);
-	  if (dump(9102) >= 1){
-	    dualfprintf(fail_file,"unable to print dump file\n");
-	    return (1);
-	  }
-	}
-	// END DEBUG
-	///////////////////////////////
+        ///////////////////////////////
+        // BEGIN DEBUG
+        // dump solution so far
+        if(selfgraviter==1){
+          GLOBALPOINT(pdump)=GLOBALPOINT(pglobal);
+          if (dump(9100) >= 1){
+            dualfprintf(fail_file,"unable to print dump file\n");
+            return (1);
+          }
+        }
+        else if(selfgraviter==2){
+          GLOBALPOINT(pdump)=GLOBALPOINT(pglobal);
+          if (dump(9101) >= 1){
+            dualfprintf(fail_file,"unable to print dump file\n");
+            return (1);
+          }
+        }
+        else if(selfgraviter==3){
+          GLOBALPOINT(pdump)=GLOBALPOINT(pglobal);
+          if (dump(9102) >= 1){
+            dualfprintf(fail_file,"unable to print dump file\n");
+            return (1);
+          }
+        }
+        // END DEBUG
+        ///////////////////////////////
       }
 
       trifprintf("end iteration over metric: selfgraviter=%d\n",selfgraviter);
@@ -394,18 +394,18 @@ int init(int *argc, char **argv[])
 
     
     // now bound unewglobal and vpot's
-  if(FLUXB==FLUXCTSTAG){
-    int boundvartype=BOUNDPRIMTYPE;
-    int finalstep=1; // assume user wants to know if initial conserved quants changed
-    int doboundmpi=1;
-    bound_anypstag(STAGEM1, finalstep, t, boundvartype, GLOBALPOINT(unewglobal), GLOBALPOINT(unewglobal), GLOBALPOINT(unewglobal), doboundmpi);
-  }
-  if(EVOLVEWITHVPOT||TRACKVPOT){
-    int boundvartype=BOUNDVPOTTYPE;
-    int finalstep=1; // assume user wants to know if initial conserved quants changed
-    int doboundmpi=1;
-    bound_vpot(STAGEM1, finalstep, t, boundvartype, GLOBALPOINT(vpotarrayglobal),doboundmpi);
-  }
+    if(FLUXB==FLUXCTSTAG){
+      int boundvartype=BOUNDPRIMTYPE;
+      int finalstep=1; // assume user wants to know if initial conserved quants changed
+      int doboundmpi=1;
+      bound_anypstag(STAGEM1, finalstep, t, boundvartype, GLOBALPOINT(unewglobal), GLOBALPOINT(unewglobal), GLOBALPOINT(unewglobal), doboundmpi);
+    }
+    if(EVOLVEWITHVPOT||TRACKVPOT){
+      int boundvartype=BOUNDVPOTTYPE;
+      int finalstep=1; // assume user wants to know if initial conserved quants changed
+      int doboundmpi=1;
+      bound_vpot(STAGEM1, finalstep, t, boundvartype, GLOBALPOINT(vpotarrayglobal),doboundmpi);
+    }
 
 
     restart_init_simple_checks(4);
@@ -562,7 +562,7 @@ void set_grid_all(FTYPE thetarot, int restartmode)
 
 
 
- // copy over initial solution as analytic solution
+// copy over initial solution as analytic solution
 int copy_prim2panalytic(FTYPE (*prim)[NSTORE2][NSTORE3][NPR],FTYPE (*panalytic)[NSTORE2][NSTORE3][NPR],FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],FTYPE (*pstaganalytic)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*vpotanalytic)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR], FTYPE (*Bhatanalytic)[NSTORE2][NSTORE3][NPR])
 {
 
@@ -588,10 +588,10 @@ int copy_prim2panalytic(FTYPE (*prim)[NSTORE2][NSTORE3][NPR],FTYPE (*panalytic)[
 
       PLOOP(pliter,pl) MACP0A1(panalytic,i,j,k,pl)=MACP0A1(prim,i,j,k,pl);
       if(FIELDSTAGMEM){
-	PLOOP(pliter,pl) MACP0A1(pstaganalytic,i,j,k,pl)=MACP0A1(pstag,i,j,k,pl);
+        PLOOP(pliter,pl) MACP0A1(pstaganalytic,i,j,k,pl)=MACP0A1(pstag,i,j,k,pl);
       }
       if(HIGHERORDERMEM){
-	PLOOP(pliter,pl) MACP0A1(Bhatanalytic,i,j,k,pl)=MACP0A1(Bhat,i,j,k,pl);
+        PLOOP(pliter,pl) MACP0A1(Bhatanalytic,i,j,k,pl)=MACP0A1(Bhat,i,j,k,pl);
       }
 
     }
@@ -601,9 +601,9 @@ int copy_prim2panalytic(FTYPE (*prim)[NSTORE2][NSTORE3][NPR],FTYPE (*panalytic)[
       OPENMP3DLOOPSETUPFULLP1;
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) nowait // next vpot assignment is independent
       OPENMP3DLOOPBLOCK{
-	OPENMP3DLOOPBLOCK2IJK(i,j,k);
-	
-	DLOOPA(jj) MACP1A0(vpotanalytic,jj,i,j,k)=MACP1A0(vpot,jj,i,j,k);
+        OPENMP3DLOOPBLOCK2IJK(i,j,k);
+        
+        DLOOPA(jj) MACP1A0(vpotanalytic,jj,i,j,k)=MACP1A0(vpot,jj,i,j,k);
       }
     }
 
@@ -1003,10 +1003,10 @@ int pre_init(int *argc, char **argv[])
       FLOORLOOP(floor) fladdterms[floor][pl]=0;
       U_init[pl] = 0;
       DIRLOOP(dir){
-	pcum[dir][pl]=0;
-	pdot[dir][pl]=0;
-	FLLOOP(fl) pdotterms[dir][fl][pl]=0;
-	if(enerregion==0) FLLOOP(fl) pdottermsjet2[dir][fl][pl]=0; // needed for other not-flux cpus!
+        pcum[dir][pl]=0;
+        pdot[dir][pl]=0;
+        FLLOOP(fl) pdotterms[dir][fl][pl]=0;
+        if(enerregion==0) FLLOOP(fl) pdottermsjet2[dir][fl][pl]=0; // needed for other not-flux cpus!
       }
       sourceadd[pl] = 0;
       SCLOOP(sc) sourceaddterms[sc][pl] = 0;
@@ -1276,7 +1276,7 @@ int init_defglobal(void)
   gamideal=gam;
   zerouuperbaryon=0.0; // definition of zero-point energy per baryon (i.e. such that internal energy cannot be lower than this times baryon density)
 
-	     // doesn't escape
+  // doesn't escape
   // gam=5/3 for non-relativistic gas, such as neucleons in collapsar model
   cooling=NOCOOLING;
   // cooling: 0: no cooling 1: adhoc thin disk cooling 2: neutrino cooling for collapsar model
@@ -1345,7 +1345,7 @@ int init_defconsts(void)
   //hpl=6.6262E-27
   //
   hpl=4.13566733E-15*1E-6*ergPmev;
-    //
+  //
 
   //  mn=1.67492716E-24;
   //  mp=1.67262158E-24;
@@ -1551,9 +1551,9 @@ int init_arrays_before_set_pu(void)
     if(FLUXB==FLUXCTSTAG){
       // then pl=B1,B2,B3 actually should be correct (i.e. not NaN), so don't reset those so nan-check works
       PLOOP(pliter,pl){
-	if(! (pl==B1 || pl==B2 || pl==B3) ){
-	  GLOBALMACP0A1(udump,i,j,k,pl)=0.0;
-	}
+        if(! (pl==B1 || pl==B2 || pl==B3) ){
+          GLOBALMACP0A1(udump,i,j,k,pl)=0.0;
+        }
       }
     }
     else if(DOENOFLUX != NOENOFLUX){
@@ -1857,7 +1857,7 @@ void check_bnd_num(void)
   DIMENLOOP(dimen){
     if(avgscheme[dimen]!=DONOR){ // using DONOR just turns off and assume standard way to turn off so no need to message user
       if(avgscheme[dimen]<FIRSTWENO || avgscheme[dimen]>LASTWENO){
-	dualfprintf(fail_file,"Choice of avgscheme[%d]=%d has no effect\n",dimen,avgscheme[dimen]);
+        dualfprintf(fail_file,"Choice of avgscheme[%d]=%d has no effect\n",dimen,avgscheme[dimen]);
       }
     }
   }
@@ -2672,13 +2672,13 @@ int pi2Uavg(int *fieldfrompotential, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE
       PLOOPNOB2(pl) MACP0A1(Upoint,i,j,k,pl)=Utemp[pl];
 
       if(FLUXB==FLUXCTSTAG){
-	PLOOPBONLY(pl) if(fieldfrompotential[pl-B1+1]==0){
-	  ptrgeomf=&geomf; get_geometry(i, j, k, FACE1+(pl-B1), ptrgeomf);
-	  MACP0A1(Upoint,i,j,k,pl)=MACP0A1(pstag,i,j,k,pl)*(ptrgeomf->gdet);
-	}
+        PLOOPBONLY(pl) if(fieldfrompotential[pl-B1+1]==0){
+          ptrgeomf=&geomf; get_geometry(i, j, k, FACE1+(pl-B1), ptrgeomf);
+          MACP0A1(Upoint,i,j,k,pl)=MACP0A1(pstag,i,j,k,pl)*(ptrgeomf->gdet);
+        }
       }
       else{
-	PLOOPBONLY(pl) if(fieldfrompotential[pl-B1+1]==0) MACP0A1(Upoint,i,j,k,pl)=Utemp[pl];
+        PLOOPBONLY(pl) if(fieldfrompotential[pl-B1+1]==0) MACP0A1(Upoint,i,j,k,pl)=Utemp[pl];
       }
     
       //    dualfprintf(fail_file,"Upoint[%d][%d][%d][UU]=%21.15g prim[UU]=%21.15g\n",i,j,k,MACP0A1(Upoint,i,j,k,UU)/(ptrgeom->gdet),MACP0A1(prim,i,j,k,UU));
@@ -2713,12 +2713,12 @@ int pi2Uavg(int *fieldfrompotential, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE
       OPENMP3DLOOPSETUPFULL;
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
       OPENMP3DLOOPBLOCK{
-	OPENMP3DLOOPBLOCK2IJK(i,j,k);
+        OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
 
-	PLOOPNOB1(pl) MACP0A1(Uavg,i,j,k,pl)=MACP0A1(Upoint,i,j,k,pl);
-	PLOOPNOB2(pl) MACP0A1(Uavg,i,j,k,pl)=MACP0A1(Upoint,i,j,k,pl);
-	PLOOPBONLY(pl) if(fieldfrompotential[pl-B1+1]==0) MACP0A1(Uavg,i,j,k,pl)=MACP0A1(Upoint,i,j,k,pl);
+        PLOOPNOB1(pl) MACP0A1(Uavg,i,j,k,pl)=MACP0A1(Upoint,i,j,k,pl);
+        PLOOPNOB2(pl) MACP0A1(Uavg,i,j,k,pl)=MACP0A1(Upoint,i,j,k,pl);
+        PLOOPBONLY(pl) if(fieldfrompotential[pl-B1+1]==0) MACP0A1(Uavg,i,j,k,pl)=MACP0A1(Upoint,i,j,k,pl);
       }// end 3D LOOP
     }// end parallel region
   }// end else
@@ -2815,13 +2815,13 @@ int addremovefromanynpr(int doadd, int *whichpltoavg, int *ifnotavgthencopy, int
     // now remove any other pl's not wanting to average for whatever reason
     for(pl3=0;pl3<num;pl3++){ // as above, but loop over all undesired quantities
       for(pl= *anynprstart;pl<= *anynprend;pl++){
-	if(whichpltoavg[pl3]==0 && anynprlist[pl]==pl3){
-	  // need to copy over unchanged quantity
-	  if(ifnotavgthencopy[pl3] && in!=NULL && out!=NULL) copy_3d_onepl_fullloop(pl3,in,out); //COMPFULLLOOP MACP0A1(out,i,j,k,pl3)=MACP0A1(in,i,j,k,pl3);
-	  for(pl2=pl+1;pl2<= *anynprend;pl2++) anynprlist[pl2-1]=anynprlist[pl2]; // moving upper to lower index
-	  *anynprend-=1; // removed dir-field
-	  break;
-	}
+        if(whichpltoavg[pl3]==0 && anynprlist[pl]==pl3){
+          // need to copy over unchanged quantity
+          if(ifnotavgthencopy[pl3] && in!=NULL && out!=NULL) copy_3d_onepl_fullloop(pl3,in,out); //COMPFULLLOOP MACP0A1(out,i,j,k,pl3)=MACP0A1(in,i,j,k,pl3);
+          for(pl2=pl+1;pl2<= *anynprend;pl2++) anynprlist[pl2-1]=anynprlist[pl2]; // moving upper to lower index
+          *anynprend-=1; // removed dir-field
+          break;
+        }
       }
     }
 

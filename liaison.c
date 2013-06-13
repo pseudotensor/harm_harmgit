@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
 {
   static SFTYPE comptstart;
 
- /* perform initializations */
+  /* perform initializations */
   if (init(&argc,&argv) >= 1) {
     dualfprintf(fail_file, "main:init: failure\n");
     myexit(1);
@@ -286,7 +286,7 @@ void makedirs(void)
       //      system("mkdir images");
     }
 #if(USEMPILIAISON)
-    //    MPI_Barrier(MPI_COMM_LIAISON_FROM_GRMHD);	// all cpus wait for directory
+    //    MPI_Barrier(MPI_COMM_LIAISON_FROM_GRMHD);     // all cpus wait for directory
     // to be created
 #endif
   }

@@ -532,11 +532,11 @@
 // ordered from most diffusive to least diffusive, so can start high and go down if needed
 // 0 should be reasonble most diffusive, highest should be least diffusive
 
-#define DONOR	0
+#define DONOR   0
 
 // POSINTERPS:
-#define VANL	1
-#define MINM	2
+#define VANL    1
+#define MINM    2
 #define MC      3
 #define PARA    4
 #define PARAFLAT 5
@@ -716,19 +716,19 @@
 
 
 // -------------> r
-// |	     3    
-// |	    1-0   
-// |	     2    
-// v	        
+// |         3    
+// |        1-0   
+// |         2    
+// v            
 // theta      
 // and likewise for 4,5 (4=out,5=in)
 // directions:
-#define X1UP	0
-#define X1DN	1
-#define X2UP	2
-#define X2DN	3
-#define X3UP	4
-#define X3DN	5
+#define X1UP    0
+#define X1DN    1
+#define X2UP    2
+#define X2DN    3
+#define X3UP    4
+#define X3DN    5
 
 #define NUMUPDOWN 2
 #define POINTUP 0
@@ -892,35 +892,35 @@
 
 
 /* failure modes */
-#define FAIL_UTOPRIM_NEG	1
+#define FAIL_UTOPRIM_NEG        1
 #define FAILSTR01 "UTOPRIM_NEG"
-#define FAIL_UTOPRIM_TEST	2
+#define FAIL_UTOPRIM_TEST       2
 #define FAILSTR02 "UTOPRIM_TEST"
-#define FAIL_VCHAR_DISCR	3
+#define FAIL_VCHAR_DISCR        3
 #define FAILSTR03 "VCHAR_DISCR"
-#define FAIL_COEFF_NEG		4
+#define FAIL_COEFF_NEG          4
 #define FAILSTR04 "COEFF_NEG"
-#define FAIL_COEFF_SUP		5
+#define FAIL_COEFF_SUP          5
 #define FAILSTR05 "COEFF_SUP"
-#define FAIL_UTCALC_DISCR	6
+#define FAIL_UTCALC_DISCR       6
 #define FAILSTR06 "UTCALC_DISCR"
-#define FAIL_LDZ	        7
+#define FAIL_LDZ                7
 #define FAILSTR07 "FAIL_LDZ"
-#define FAIL_BCFIX	        8
+#define FAIL_BCFIX              8
 #define FAILSTR08 "FAIL_BCFIX"
-#define FAIL_VSQ_NEG	        9
+#define FAIL_VSQ_NEG            9
 #define FAILSTR09 "FAIL_VSQ_NEG"
 
 /* mnemonics for primitive vars; conserved vars */
 #define VARNOTDEFINED -100
-#define RHO	0
-#define UU	1
-#define U1	2
-#define U2	3
-#define U3	4
-#define B1	5
-#define B2	6
-#define B3	7
+#define RHO     0
+#define UU      1
+#define U1      2
+#define U2      3
+#define U3      4
+#define B1      5
+#define B2      6
+#define B3      7
 
 // for STORESHOCKINDICATOR
 #define NUMSHOCKPLS 3
@@ -941,7 +941,7 @@
 #define STAGGEREDPRIM 1
 
 
-#define NDIM	4		/* number of total dimensions.  Never changes */
+#define NDIM    4               /* number of total dimensions.  Never changes */
 #define SYMMATRIXNDIM 10 // total number of independent elements of a symmetric matrix
 
 // flag failures/problems for correction/check in fixup
@@ -1019,25 +1019,25 @@
 
 
 /* mnemonics for dimensional indices */
-#define TT	0
-#define RR	1
-#define TH	2
-#define PH	3
+#define TT      0
+#define RR      1
+#define TH      2
+#define PH      3
 
 
 /* mnemonics for centering of grid functions */
 // GODMARK: is there a way to pick and choose the dimension and number of grid positions?
 /* number of positions on grid for grid 
-				   functions */
+   functions */
 #define NPG 8
 #define NOWHERE -1 // tells a function that not necessarily requesting value at a standard grid location (unusual) -- this stores no memroy, so doesn't increase NPG
 #define CENT    0
-#define FACE1	1
-#define FACE2	2
+#define FACE1   1
+#define FACE2   2
 #define FACE3   3
-#define CORN1	4 // corner in 2-3 plane
-#define CORN2	5 // corner in 1-3 plane
-#define CORN3	6 // corner in 1-2 plane
+#define CORN1   4 // corner in 2-3 plane
+#define CORN2   5 // corner in 1-3 plane
+#define CORN3   6 // corner in 1-2 plane
 #define CORNT   7 // true corner: full 3D corner (only required for 3D)
 
 // used for primgridpos[]
@@ -1046,11 +1046,11 @@
 #define STAGGRID 1
 
 /* mnemonics for diagnostic calls */
-#define INIT_OUT	0
-#define DUMP_OUT	1
-#define IMAGE_OUT	1
-#define LOG_OUT		1
-#define FINAL_OUT	2
+#define INIT_OUT        0
+#define DUMP_OUT        1
+#define IMAGE_OUT       1
+#define LOG_OUT         1
+#define FINAL_OUT       2
 #define FUTURE_OUT      3
 
 // below should not be >=0

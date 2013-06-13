@@ -131,7 +131,7 @@ int get_stateforglobalwavespeeds(FTYPE *pr, struct of_geom *ptrgeom, struct of_s
 
 /* add in source terms related to geometry to equations of motion */
 int source_conn(FTYPE *pr, struct of_geom *ptrgeom,
-		struct of_state *q,FTYPE *dU)
+                struct of_state *q,FTYPE *dU)
 {
   VARSTATIC int i, j, k, l;
   VARSTATIC int pl,pliter;
@@ -185,15 +185,15 @@ int source_conn(FTYPE *pr, struct of_geom *ptrgeom,
 
 
     for(l=0;l<NDIM;l++)  DLOOP(j,k){
-      dUconn[UU+l] += mhd[j][k] * GLOBALMETMACP0A3(conn,myii,myjj,mykk,k,l,j);
-    }
+        dUconn[UU+l] += mhd[j][k] * GLOBALMETMACP0A3(conn,myii,myjj,mykk,k,l,j);
+      }
 
 #if(REMOVERESTMASSFROMUU==2)
     // then need to add-in density term to source (used to avoid non-rel problems)
     // GODMARK: for no non-rel problems one must make sure conn^t_{lj} is computed accurately.
     for(l=0;l<NDIM;l++)  DLOOPA(j){
-      dUconn[UU+l] += - pr[RHO] * q->ucon[j] * GLOBALMETMACP0A3(conn,myii,myjj,mykk,TT,l,j);
-    }
+        dUconn[UU+l] += - pr[RHO] * q->ucon[j] * GLOBALMETMACP0A3(conn,myii,myjj,mykk,TT,l,j);
+      }
 #endif
 
 
@@ -240,8 +240,8 @@ int source_conn(FTYPE *pr, struct of_geom *ptrgeom,
 
     if(REMOVERESTMASSFROMUU){
       if(todo[RHO]!=todo[UU]){
-	dualfprintf(fail_file,"Mixed form of REMOVERESTMASSFROMUU and NOGDET's not allowed.\n");
-	myexit(1);
+        dualfprintf(fail_file,"Mixed form of REMOVERESTMASSFROMUU and NOGDET's not allowed.\n");
+        myexit(1);
       }
     }
 
@@ -786,45 +786,45 @@ void current_calc_0(FTYPE (*cfaraday)[NSTORE2][NSTORE3][NUMCURRENTSLOTS][3])
       get_geometry(i,j,kp1mac(k),FACE3,ptrgeompp1);
 
       if(calls>0){ // since need 2 times
-	timeterm[0]=0;
-	timeterm[1]=+(GLOBALMACP0A2(cfaraday,i,j,k,0,0)-GLOBALMACP0A2(cfaraday,i,j,k,4,0))*idtc; // F^{rt},t
-	timeterm[2]=+(GLOBALMACP0A2(cfaraday,i,j,k,0,1)-GLOBALMACP0A2(cfaraday,i,j,k,4,1))*idtc; // F^{ht},t
-	timeterm[3]=+(GLOBALMACP0A2(cfaraday,i,j,k,0,2)-GLOBALMACP0A2(cfaraday,i,j,k,4,2))*idtc; // F^{pt},t
+        timeterm[0]=0;
+        timeterm[1]=+(GLOBALMACP0A2(cfaraday,i,j,k,0,0)-GLOBALMACP0A2(cfaraday,i,j,k,4,0))*idtc; // F^{rt},t
+        timeterm[2]=+(GLOBALMACP0A2(cfaraday,i,j,k,0,1)-GLOBALMACP0A2(cfaraday,i,j,k,4,1))*idtc; // F^{ht},t
+        timeterm[3]=+(GLOBALMACP0A2(cfaraday,i,j,k,0,2)-GLOBALMACP0A2(cfaraday,i,j,k,4,2))*idtc; // F^{pt},t
       }
       else{
-	timeterm[0]=0;
-	timeterm[1]=0;
-	timeterm[2]=0;
-	timeterm[3]=0;
+        timeterm[0]=0;
+        timeterm[1]=0;
+        timeterm[2]=0;
+        timeterm[3]=0;
       }
       
       // J^t = F^{tr},r + F^{th},h + F^{tp},p
       GLOBALMACP0A1(jcon,i,j,k,0)=
-	+1./ptrgeomt->gdet*(ptrgeomrp1->gdet*GLOBALMACP0A2(cfaraday,ip1mac(i),j,k,1,0)-ptrgeomr->gdet*GLOBALMACP0A2(cfaraday,i,j,k,1,0))*idx1 // F^{tr},r
-	+1./ptrgeomt->gdet*(ptrgeomhp1->gdet*GLOBALMACP0A2(cfaraday,i,jp1mac(j),k,2,0)-ptrgeomh->gdet*GLOBALMACP0A2(cfaraday,i,j,k,2,0))*idx2 // F^{th},h
-	+1./ptrgeomt->gdet*(ptrgeompp1->gdet*GLOBALMACP0A2(cfaraday,i,j,kp1mac(k),3,0)-ptrgeomp->gdet*GLOBALMACP0A2(cfaraday,i,j,k,3,0))*idx3 // F^{tp},p
-	;
+        +1./ptrgeomt->gdet*(ptrgeomrp1->gdet*GLOBALMACP0A2(cfaraday,ip1mac(i),j,k,1,0)-ptrgeomr->gdet*GLOBALMACP0A2(cfaraday,i,j,k,1,0))*idx1 // F^{tr},r
+        +1./ptrgeomt->gdet*(ptrgeomhp1->gdet*GLOBALMACP0A2(cfaraday,i,jp1mac(j),k,2,0)-ptrgeomh->gdet*GLOBALMACP0A2(cfaraday,i,j,k,2,0))*idx2 // F^{th},h
+        +1./ptrgeomt->gdet*(ptrgeompp1->gdet*GLOBALMACP0A2(cfaraday,i,j,kp1mac(k),3,0)-ptrgeomp->gdet*GLOBALMACP0A2(cfaraday,i,j,k,3,0))*idx3 // F^{tp},p
+        ;
       
       // J^r = F^{rt},t + F^{rh},h + F^{rp},p
       GLOBALMACP0A1(jcon,i,j,k,1)=
-	+timeterm[1]
-	+1./ptrgeomt->gdet*(ptrgeomhp1->gdet*GLOBALMACP0A2(cfaraday,i,jp1mac(j),k,2,1)-ptrgeomh->gdet*GLOBALMACP0A2(cfaraday,i,j,k,2,1))*idx2 // F^{rh},h
-	+1./ptrgeomt->gdet*(ptrgeompp1->gdet*GLOBALMACP0A2(cfaraday,i,j,kp1mac(k),3,1)-ptrgeomp->gdet*GLOBALMACP0A2(cfaraday,i,j,k,3,1))*idx3 // F^{rp},p
-	;
+        +timeterm[1]
+        +1./ptrgeomt->gdet*(ptrgeomhp1->gdet*GLOBALMACP0A2(cfaraday,i,jp1mac(j),k,2,1)-ptrgeomh->gdet*GLOBALMACP0A2(cfaraday,i,j,k,2,1))*idx2 // F^{rh},h
+        +1./ptrgeomt->gdet*(ptrgeompp1->gdet*GLOBALMACP0A2(cfaraday,i,j,kp1mac(k),3,1)-ptrgeomp->gdet*GLOBALMACP0A2(cfaraday,i,j,k,3,1))*idx3 // F^{rp},p
+        ;
       
       // J^h = F^{ht},t + F^{hr},r + F^{hp},p
       GLOBALMACP0A1(jcon,i,j,k,2)=
-	+timeterm[2]
-	+1./ptrgeomt->gdet*(ptrgeomrp1->gdet*GLOBALMACP0A2(cfaraday,ip1mac(i),j,k,1,1)-ptrgeomr->gdet*GLOBALMACP0A2(cfaraday,i,j,k,1,1))*idx1 // F^{hr},r
-	+1./ptrgeomt->gdet*(ptrgeompp1->gdet*GLOBALMACP0A2(cfaraday,i,j,kp1mac(k),3,2)-ptrgeomp->gdet*GLOBALMACP0A2(cfaraday,i,j,k,3,2))*idx3 // F^{hp},p
-	;
+        +timeterm[2]
+        +1./ptrgeomt->gdet*(ptrgeomrp1->gdet*GLOBALMACP0A2(cfaraday,ip1mac(i),j,k,1,1)-ptrgeomr->gdet*GLOBALMACP0A2(cfaraday,i,j,k,1,1))*idx1 // F^{hr},r
+        +1./ptrgeomt->gdet*(ptrgeompp1->gdet*GLOBALMACP0A2(cfaraday,i,j,kp1mac(k),3,2)-ptrgeomp->gdet*GLOBALMACP0A2(cfaraday,i,j,k,3,2))*idx3 // F^{hp},p
+        ;
       
       // J^p = F^{pt},t + F^{pr},r + F^{ph},h
       GLOBALMACP0A1(jcon,i,j,k,3)=
-	+timeterm[3]
-	+1./ptrgeomt->gdet*(ptrgeomrp1->gdet*GLOBALMACP0A2(cfaraday,ip1mac(i),j,k,1,2)-ptrgeomr->gdet*GLOBALMACP0A2(cfaraday,i,j,k,1,2))*idx1 // F^{pr},r
-	+1./ptrgeomt->gdet*(ptrgeomhp1->gdet*GLOBALMACP0A2(cfaraday,i,jp1mac(j),k,2,2)-ptrgeomh->gdet*GLOBALMACP0A2(cfaraday,i,j,k,2,2))*idx2 // F^{ph},h
-	;
+        +timeterm[3]
+        +1./ptrgeomt->gdet*(ptrgeomrp1->gdet*GLOBALMACP0A2(cfaraday,ip1mac(i),j,k,1,2)-ptrgeomr->gdet*GLOBALMACP0A2(cfaraday,i,j,k,1,2))*idx1 // F^{pr},r
+        +1./ptrgeomt->gdet*(ptrgeomhp1->gdet*GLOBALMACP0A2(cfaraday,i,jp1mac(j),k,2,2)-ptrgeomh->gdet*GLOBALMACP0A2(cfaraday,i,j,k,2,2))*idx2 // F^{ph},h
+        ;
 
     }// end loops
 
@@ -928,61 +928,61 @@ void current_calc_1(int which, FTYPE (*cfaraday)[NSTORE2][NSTORE3][NUMCURRENTSLO
 
       if(which==CURRENTCALC1){
       
-	if(calls>=2){ // since need 3 times to properly time center without having to worry about what RK is doing
+        if(calls>=2){ // since need 3 times to properly time center without having to worry about what RK is doing
 
-	  timeterm[0]=0;
-	
-	  fl=GLOBALMACP0A2(cfaraday,i,j,k,4,0);
-	  f0=GLOBALMACP0A2(cfaraday,i,j,k,5,0);
-	  fr=GLOBALMACP0A2(cfaraday,i,j,k,0,0);
-	  AA=(dtr*(fl-f0)+dtl*(fr-f0))/(dtl*dtr*(dtl+dtr));
-	  BB=(-dtr*dtr*(fl-f0)+dtl*dtl*(fr-f0))/(dtl*dtr*(dtl+dtr));
-	  derf=2.0*AA*dtr+BB;
-	
-	  timeterm[1]=derf;
-	
-	  fl=GLOBALMACP0A2(cfaraday,i,j,k,4,1);
-	  f0=GLOBALMACP0A2(cfaraday,i,j,k,5,1);
-	  fr=GLOBALMACP0A2(cfaraday,i,j,k,0,1);
-	  AA=(dtr*(fl-f0)+dtl*(fr-f0))/(dtl*dtr*(dtl+dtr));
-	  BB=(-dtr*dtr*(fl-f0)+dtl*dtl*(fr-f0))/(dtl*dtr*(dtl+dtr));
-	  derf=2.0*AA*dtr+BB;
-	
-	  timeterm[2]=derf;
+          timeterm[0]=0;
+        
+          fl=GLOBALMACP0A2(cfaraday,i,j,k,4,0);
+          f0=GLOBALMACP0A2(cfaraday,i,j,k,5,0);
+          fr=GLOBALMACP0A2(cfaraday,i,j,k,0,0);
+          AA=(dtr*(fl-f0)+dtl*(fr-f0))/(dtl*dtr*(dtl+dtr));
+          BB=(-dtr*dtr*(fl-f0)+dtl*dtl*(fr-f0))/(dtl*dtr*(dtl+dtr));
+          derf=2.0*AA*dtr+BB;
+        
+          timeterm[1]=derf;
+        
+          fl=GLOBALMACP0A2(cfaraday,i,j,k,4,1);
+          f0=GLOBALMACP0A2(cfaraday,i,j,k,5,1);
+          fr=GLOBALMACP0A2(cfaraday,i,j,k,0,1);
+          AA=(dtr*(fl-f0)+dtl*(fr-f0))/(dtl*dtr*(dtl+dtr));
+          BB=(-dtr*dtr*(fl-f0)+dtl*dtl*(fr-f0))/(dtl*dtr*(dtl+dtr));
+          derf=2.0*AA*dtr+BB;
+        
+          timeterm[2]=derf;
 
-	  fl=GLOBALMACP0A2(cfaraday,i,j,k,4,2);
-	  f0=GLOBALMACP0A2(cfaraday,i,j,k,5,2);
-	  fr=GLOBALMACP0A2(cfaraday,i,j,k,0,2);
-	  AA=(dtr*(fl-f0)+dtl*(fr-f0))/(dtl*dtr*(dtl+dtr));
-	  BB=(-dtr*dtr*(fl-f0)+dtl*dtl*(fr-f0))/(dtl*dtr*(dtl+dtr));
-	  derf=2.0*AA*dtr+BB;
-	
-	  timeterm[3]=derf;
-	}
-	else{
-	  timeterm[0]=0;
-	  timeterm[1]=0;
-	  timeterm[2]=0;
-	  timeterm[3]=0;
-	}
+          fl=GLOBALMACP0A2(cfaraday,i,j,k,4,2);
+          f0=GLOBALMACP0A2(cfaraday,i,j,k,5,2);
+          fr=GLOBALMACP0A2(cfaraday,i,j,k,0,2);
+          AA=(dtr*(fl-f0)+dtl*(fr-f0))/(dtl*dtr*(dtl+dtr));
+          BB=(-dtr*dtr*(fl-f0)+dtl*dtl*(fr-f0))/(dtl*dtr*(dtl+dtr));
+          derf=2.0*AA*dtr+BB;
+        
+          timeterm[3]=derf;
+        }
+        else{
+          timeterm[0]=0;
+          timeterm[1]=0;
+          timeterm[2]=0;
+          timeterm[3]=0;
+        }
       }
       else if(which==CURRENTCALC2){
-	// the current is calculated to end up at the zone and time edge
-	// point is to have J^t at same time as rest of J's, and same spatial points.  time for J is one timestep back for all components.
-	// like current_calc_0 in time and current_calc_1 in space
+        // the current is calculated to end up at the zone and time edge
+        // point is to have J^t at same time as rest of J's, and same spatial points.  time for J is one timestep back for all components.
+        // like current_calc_0 in time and current_calc_1 in space
       
-	if(calls>0){ // since need 2 times
-	  timeterm[0]=0;
-	  timeterm[1]=(GLOBALMACP0A2(cfaraday,i,j,k,0,0)-GLOBALMACP0A2(cfaraday,i,j,k,4,0))*idtc; // F^{rt},t
-	  timeterm[2]=(GLOBALMACP0A2(cfaraday,i,j,k,0,1)-GLOBALMACP0A2(cfaraday,i,j,k,4,1))*idtc; // F^{ht},t
-	  timeterm[3]=(GLOBALMACP0A2(cfaraday,i,j,k,0,2)-GLOBALMACP0A2(cfaraday,i,j,k,4,2))*idtc; // F^{pt},t
-	}
-	else{
-	  timeterm[0]=0;
-	  timeterm[1]=0;
-	  timeterm[2]=0;
-	  timeterm[3]=0;
-	}
+        if(calls>0){ // since need 2 times
+          timeterm[0]=0;
+          timeterm[1]=(GLOBALMACP0A2(cfaraday,i,j,k,0,0)-GLOBALMACP0A2(cfaraday,i,j,k,4,0))*idtc; // F^{rt},t
+          timeterm[2]=(GLOBALMACP0A2(cfaraday,i,j,k,0,1)-GLOBALMACP0A2(cfaraday,i,j,k,4,1))*idtc; // F^{ht},t
+          timeterm[3]=(GLOBALMACP0A2(cfaraday,i,j,k,0,2)-GLOBALMACP0A2(cfaraday,i,j,k,4,2))*idtc; // F^{pt},t
+        }
+        else{
+          timeterm[0]=0;
+          timeterm[1]=0;
+          timeterm[2]=0;
+          timeterm[3]=0;
+        }
 
       }
 
@@ -990,31 +990,31 @@ void current_calc_1(int which, FTYPE (*cfaraday)[NSTORE2][NSTORE3][NUMCURRENTSLO
 
       // J^t = F^{tr},r + F^{th},h + F^{tp},p
       GLOBALMACP0A1(jcon,i,j,k,0)=
-	+1./ptrgeomt->gdet*(ptrgeomrp1->gdet*GLOBALMACP0A2(cfaraday,ip1mac(i),j,k,1,0)-ptrgeomrm1->gdet*GLOBALMACP0A2(cfaraday,im1mac(i),j,k,1,0))*idx1 // F^{tr},r
-	+1./ptrgeomt->gdet*(ptrgeomhp1->gdet*GLOBALMACP0A2(cfaraday,i,jp1mac(j),k,2,0)-ptrgeomhm1->gdet*GLOBALMACP0A2(cfaraday,i,jm1mac(j),k,2,0))*idx2 // F^{th},h
-	+1./ptrgeomt->gdet*(ptrgeompp1->gdet*GLOBALMACP0A2(cfaraday,i,j,kp1mac(k),3,0)-ptrgeompm1->gdet*GLOBALMACP0A2(cfaraday,i,j,km1mac(k),3,0))*idx3 // F^{tp},p
-	;
+        +1./ptrgeomt->gdet*(ptrgeomrp1->gdet*GLOBALMACP0A2(cfaraday,ip1mac(i),j,k,1,0)-ptrgeomrm1->gdet*GLOBALMACP0A2(cfaraday,im1mac(i),j,k,1,0))*idx1 // F^{tr},r
+        +1./ptrgeomt->gdet*(ptrgeomhp1->gdet*GLOBALMACP0A2(cfaraday,i,jp1mac(j),k,2,0)-ptrgeomhm1->gdet*GLOBALMACP0A2(cfaraday,i,jm1mac(j),k,2,0))*idx2 // F^{th},h
+        +1./ptrgeomt->gdet*(ptrgeompp1->gdet*GLOBALMACP0A2(cfaraday,i,j,kp1mac(k),3,0)-ptrgeompm1->gdet*GLOBALMACP0A2(cfaraday,i,j,km1mac(k),3,0))*idx3 // F^{tp},p
+        ;
 
       // J^r = F^{rt},t + F^{rh},h + F^{rp},p
       GLOBALMACP0A1(jcon,i,j,k,1)=
-	+timeterm[1]
-	+1./ptrgeomt->gdet*(ptrgeomhp1->gdet*GLOBALMACP0A2(cfaraday,i,jp1mac(j),k,2,1)-ptrgeomhm1->gdet*GLOBALMACP0A2(cfaraday,i,jm1mac(j),k,2,1))*idx2 // F^{rh},h
-	+1./ptrgeomt->gdet*(ptrgeompp1->gdet*GLOBALMACP0A2(cfaraday,i,j,kp1mac(k),3,1)-ptrgeompm1->gdet*GLOBALMACP0A2(cfaraday,i,j,km1mac(k),3,1))*idx3 // F^{rp},p
-	;
+        +timeterm[1]
+        +1./ptrgeomt->gdet*(ptrgeomhp1->gdet*GLOBALMACP0A2(cfaraday,i,jp1mac(j),k,2,1)-ptrgeomhm1->gdet*GLOBALMACP0A2(cfaraday,i,jm1mac(j),k,2,1))*idx2 // F^{rh},h
+        +1./ptrgeomt->gdet*(ptrgeompp1->gdet*GLOBALMACP0A2(cfaraday,i,j,kp1mac(k),3,1)-ptrgeompm1->gdet*GLOBALMACP0A2(cfaraday,i,j,km1mac(k),3,1))*idx3 // F^{rp},p
+        ;
       
       // J^h = F^{ht},t + F^{hr},r + F^{hp},p
       GLOBALMACP0A1(jcon,i,j,k,2)=
-	+timeterm[2]
-	+1./ptrgeomt->gdet*(ptrgeomrp1->gdet*GLOBALMACP0A2(cfaraday,ip1mac(i),j,k,1,1)-ptrgeomrm1->gdet*GLOBALMACP0A2(cfaraday,im1mac(i),j,k,1,1))*idx1 // F^{hr},r
-	+1./ptrgeomt->gdet*(ptrgeompp1->gdet*GLOBALMACP0A2(cfaraday,i,j,kp1mac(k),3,2)-ptrgeompm1->gdet*GLOBALMACP0A2(cfaraday,i,j,km1mac(k),3,2))*idx3 // F^{hp},p
-	;
+        +timeterm[2]
+        +1./ptrgeomt->gdet*(ptrgeomrp1->gdet*GLOBALMACP0A2(cfaraday,ip1mac(i),j,k,1,1)-ptrgeomrm1->gdet*GLOBALMACP0A2(cfaraday,im1mac(i),j,k,1,1))*idx1 // F^{hr},r
+        +1./ptrgeomt->gdet*(ptrgeompp1->gdet*GLOBALMACP0A2(cfaraday,i,j,kp1mac(k),3,2)-ptrgeompm1->gdet*GLOBALMACP0A2(cfaraday,i,j,km1mac(k),3,2))*idx3 // F^{hp},p
+        ;
       
       // J^p = F^{pt},t + F^{pr},r + F^{ph},h
       GLOBALMACP0A1(jcon,i,j,k,3)=
-	+timeterm[3]
-	+1./ptrgeomt->gdet*(ptrgeomrp1->gdet*GLOBALMACP0A2(cfaraday,ip1mac(i),j,k,1,2)-ptrgeomrm1->gdet*GLOBALMACP0A2(cfaraday,im1mac(i),j,k,1,2))*idx1 // F^{pr},r
-	+1./ptrgeomt->gdet*(ptrgeomhp1->gdet*GLOBALMACP0A2(cfaraday,i,jp1mac(j),k,2,2)-ptrgeomhm1->gdet*GLOBALMACP0A2(cfaraday,i,jm1mac(j),k,2,2))*idx2 // F^{ph},h
-	;
+        +timeterm[3]
+        +1./ptrgeomt->gdet*(ptrgeomrp1->gdet*GLOBALMACP0A2(cfaraday,ip1mac(i),j,k,1,2)-ptrgeomrm1->gdet*GLOBALMACP0A2(cfaraday,im1mac(i),j,k,1,2))*idx1 // F^{pr},r
+        +1./ptrgeomt->gdet*(ptrgeomhp1->gdet*GLOBALMACP0A2(cfaraday,i,jp1mac(j),k,2,2)-ptrgeomhm1->gdet*GLOBALMACP0A2(cfaraday,i,jm1mac(j),k,2,2))*idx2 // F^{ph},h
+        ;
 
     
     }// end loops

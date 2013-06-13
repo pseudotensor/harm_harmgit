@@ -522,7 +522,7 @@ void test_coldgrmhd_inversion(void)
   if(get_state(prin,ptrgeom,&q)>=1) dualfprintf(fail_file,"getstate failure in realtest\n");
   DLOOPA(pl) dualfprintf(fail_file,"1 uu[%d]=%21.15g\n",k,q.ucon[pl]);
   if(primtoU(UNOTHING,prin,&q,ptrgeom,U)>=1) dualfprintf(fail_file,"primtoU failure in realtest\n");
-	      
+              
   Utoprim_coldgrmhd(U,ptrgeom,prout,&positivityproblem); // no need for initial guess since analytic inversion
   for(pl=U1;pl<=B3;pl++) dualfprintf(fail_file,"prold[%d]=%21.15g  prnew[%d]=%21.15g :: %21.15g\n",pl,prin[pl],pl,prout[pl],(prin[pl]-prout[pl])/prin[pl]); 
 

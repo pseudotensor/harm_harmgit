@@ -22,7 +22,7 @@
 // define your user type here
 // (normal non-sensitive or performance critical datatypes)
 #define REALTYPE DOUBLETYPE
- // (non-perf critical or sensitive data types) 
+// (non-perf critical or sensitive data types) 
 #define SENSITIVE DOUBLETYPE
 // WE ASSUME SENSITIVE>=REALTYPE !
 

@@ -91,36 +91,36 @@ extern long long int gcountmod(int numcolumns);
 extern int getsizeofdatatype(MPI_Datatype datatype);
 
 extern void mpiio_init(int bintxt, int sorted, FILE ** fp, long headerbytesize, int which, char *filename, int numcolumns,
-		       MPI_Datatype datatype, void **jonio, void **writebuf);
+                       MPI_Datatype datatype, void **jonio, void **writebuf);
 
 extern void mpiio_final(int bintxt, int sorted, FILE ** fpptr, long headerbytesize, int which, char *filename, int numcolumns, MPI_Datatype datatype, void **jonioptr, void **writebufptr);
 
 extern void mpiio_combine(int bintxt, int sorted,
-			  int numcolumns, MPI_Datatype datatype,
-			  FILE ** fp, void *jonio, void *writebuf);
+                          int numcolumns, MPI_Datatype datatype,
+                          FILE ** fp, void *jonio, void *writebuf);
 extern void mpiio_seperate(int bintxt, int sorted, int stage,
-			   int numcolumns,
-			   MPI_Datatype datatype, FILE ** fp, void *jonio,
-			   void *writebuf);
+                           int numcolumns,
+                           MPI_Datatype datatype, FILE ** fp, void *jonio,
+                           void *writebuf);
 extern void mpiios_init(int bintxt, int sorted, FILE ** fp, int which, int headerbytesize, char *filename, int numcolumns,
-			MPI_Datatype datatype, void **jonio, void **writebuf);
+                        MPI_Datatype datatype, void **jonio, void **writebuf);
 extern void mpiiomin_final(int numcolumns,FILE **fp, void *jonio, void *writebuf);
 extern void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt, int sorted,
-			      int numcolumns, MPI_Datatype datatype,
-			      FILE ** fpptr, void *jonio, void *writebuf);
+                         int numcolumns, MPI_Datatype datatype,
+                         FILE ** fpptr, void *jonio, void *writebuf);
 
 
 extern void mpiioromio_init_combine(int operationtype, int which, long headerbytesize, char *filename, int numcolumns,MPI_Datatype datatype, void **writebufptr, void *writebuf);
 
 extern void mpiios_combine(int bintxt, MPI_Datatype datatype, int numcolumns,
-			   FILE ** fp, void *jonio, void *writebuf);
+                           FILE ** fp, void *jonio, void *writebuf);
 extern void mpiios_seperate(int bintxt, int stage, MPI_Datatype datatype, int numcolumns,
-			    FILE ** fp, void *jonio,
-			    void *writebuf);
+                            FILE ** fp, void *jonio,
+                            void *writebuf);
 extern void mpiiotu_combine(MPI_Datatype datatype, int numcolumns,
-			    FILE ** fp, void *writebuf);
+                            FILE ** fp, void *writebuf);
 extern void mpiiotu_seperate(int stage, MPI_Datatype datatype, int numcolumns,
-			     FILE ** fp,void *writebuf);
+                             FILE ** fp,void *writebuf);
 
 
 

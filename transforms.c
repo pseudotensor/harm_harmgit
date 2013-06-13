@@ -285,7 +285,7 @@ void bltoks(int ii, int jj, int kk, int loc, FTYPE*ucon)
   //  r=Vmetric[1]; th=Vmetric[2];
 
 
-// bl2ks for contravariant components
+  // bl2ks for contravariant components
 #define bl2ks_trans00   (1)
 #define bl2ks_trans01   (2.*r/(r*r - 2.*r + a*a))
 #define bl2ks_trans02   (0)
@@ -350,7 +350,7 @@ void kstobl(int ii, int jj, int kk, int loc, FTYPE*ucon)
   //  r=Vmetric[1]; th=Vmetric[2];
 
 
-// just inverse (no transpose) of above
+  // just inverse (no transpose) of above
 #define ks2bl_trans00   (1)
 #define ks2bl_trans01   (-2.*r/(r*r - 2.*r + a*a))
 #define ks2bl_trans02   (0)

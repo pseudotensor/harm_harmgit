@@ -101,10 +101,10 @@ void get_processtypelist(int processtype, MPI_Comm localcomm, int **processtypel
 
 // declaration
 static void init_MPI_group_grmhd_grray_liaison(
-					       int *processtypelistlocal_world,int sizeproclistlocal_world,
-					       MPI_Group *MPI_GROUP_WORLD,
-					       MPI_Group *MPI_GROUP_GRMHD_LIAISON, MPI_Comm *MPI_COMM_GRMHD_LIAISON,
-					       MPI_Group *MPI_GROUP_GRRAY_LIAISON, MPI_Comm *MPI_COMM_GRRAY_LIAISON);
+                                               int *processtypelistlocal_world,int sizeproclistlocal_world,
+                                               MPI_Group *MPI_GROUP_WORLD,
+                                               MPI_Group *MPI_GROUP_GRMHD_LIAISON, MPI_Comm *MPI_COMM_GRMHD_LIAISON,
+                                               MPI_Group *MPI_GROUP_GRRAY_LIAISON, MPI_Comm *MPI_COMM_GRRAY_LIAISON);
 
 
 
@@ -115,37 +115,37 @@ static void init_MPI_group_grmhd_grray_liaison(
 void liaison_init_mpi_liaisonmode_globalset(void)
 {
   void liaison_init_mpi_liaisonmode(
-				    int **processtypelistlocal_world,int *sizeproclistlocal_world,
-				    int **processtypelistlocal_grmhd_liaison,int *sizeproclistlocal_grmhd_liaison,
-				    int **processtypelistlocal_grray_liaison,int *sizeproclistlocal_grray_liaison,
-				    int **processtypelistlocal_grmhd,int *sizeproclistlocal_grmhd,
-				    int **processtypelistlocal_grray,int *sizeproclistlocal_grray,
-				    int **processtypelistlocal_liaison_from_grmhd,int *sizeproclistlocal_liaison_from_grmhd,
-				    int **processtypelistlocal_liaison_from_grray,int *sizeproclistlocal_liaison_from_grray,
-				    MPI_Group *MPI_GROUP_WORLD,
-				    MPI_Group *MPI_GROUP_GRMHD_LIAISON, MPI_Comm *MPI_COMM_GRMHD_LIAISON,
-				    MPI_Group *MPI_GROUP_GRRAY_LIAISON, MPI_Comm *MPI_COMM_GRRAY_LIAISON,
-				    MPI_Group *MPI_GROUP_GRMHD, MPI_Comm *MPI_COMM_GRMHD,
-				    MPI_Group *MPI_GROUP_GRRAY, MPI_Comm *MPI_COMM_GRRAY,
-				    MPI_Group *MPI_GROUP_LIAISON_FROM_GRMHD, MPI_Comm *MPI_COMM_LIAISON_FROM_GRMHD, 
-				    MPI_Group *MPI_GROUP_LIAISON_FROM_GRRAY, MPI_Comm *MPI_COMM_LIAISON_FROM_GRRAY);
+                                    int **processtypelistlocal_world,int *sizeproclistlocal_world,
+                                    int **processtypelistlocal_grmhd_liaison,int *sizeproclistlocal_grmhd_liaison,
+                                    int **processtypelistlocal_grray_liaison,int *sizeproclistlocal_grray_liaison,
+                                    int **processtypelistlocal_grmhd,int *sizeproclistlocal_grmhd,
+                                    int **processtypelistlocal_grray,int *sizeproclistlocal_grray,
+                                    int **processtypelistlocal_liaison_from_grmhd,int *sizeproclistlocal_liaison_from_grmhd,
+                                    int **processtypelistlocal_liaison_from_grray,int *sizeproclistlocal_liaison_from_grray,
+                                    MPI_Group *MPI_GROUP_WORLD,
+                                    MPI_Group *MPI_GROUP_GRMHD_LIAISON, MPI_Comm *MPI_COMM_GRMHD_LIAISON,
+                                    MPI_Group *MPI_GROUP_GRRAY_LIAISON, MPI_Comm *MPI_COMM_GRRAY_LIAISON,
+                                    MPI_Group *MPI_GROUP_GRMHD, MPI_Comm *MPI_COMM_GRMHD,
+                                    MPI_Group *MPI_GROUP_GRRAY, MPI_Comm *MPI_COMM_GRRAY,
+                                    MPI_Group *MPI_GROUP_LIAISON_FROM_GRMHD, MPI_Comm *MPI_COMM_LIAISON_FROM_GRMHD, 
+                                    MPI_Group *MPI_GROUP_LIAISON_FROM_GRRAY, MPI_Comm *MPI_COMM_LIAISON_FROM_GRRAY);
 
 
   liaison_init_mpi_liaisonmode(
-			       &processtypelist_world,&sizeproclist_world,
-			       &processtypelist_grmhd_liaison,&sizeproclist_grmhd_liaison,
-			       &processtypelist_grray_liaison,&sizeproclist_grray_liaison,
-			       &processtypelist_grmhd,&sizeproclist_grmhd,
-			       &processtypelist_grray,&sizeproclist_grray,
-			       &processtypelist_liaison_from_grmhd,&sizeproclist_grmhd,
-			       &processtypelist_liaison_from_grray,&sizeproclist_grray,
-			       &MPI_GROUP_WORLD,
-			       &MPI_GROUP_GRMHD_LIAISON, &MPI_COMM_GRMHD_LIAISON,
-			       &MPI_GROUP_GRRAY_LIAISON, &MPI_COMM_GRRAY_LIAISON,
-			       &MPI_GROUP_GRMHD, &MPI_COMM_GRMHD,
-			       &MPI_GROUP_GRRAY, &MPI_COMM_GRRAY,
-			       &MPI_GROUP_LIAISON_FROM_GRMHD, &MPI_COMM_LIAISON_FROM_GRMHD, 
-			       &MPI_GROUP_LIAISON_FROM_GRRAY, &MPI_COMM_LIAISON_FROM_GRRAY);
+                               &processtypelist_world,&sizeproclist_world,
+                               &processtypelist_grmhd_liaison,&sizeproclist_grmhd_liaison,
+                               &processtypelist_grray_liaison,&sizeproclist_grray_liaison,
+                               &processtypelist_grmhd,&sizeproclist_grmhd,
+                               &processtypelist_grray,&sizeproclist_grray,
+                               &processtypelist_liaison_from_grmhd,&sizeproclist_grmhd,
+                               &processtypelist_liaison_from_grray,&sizeproclist_grray,
+                               &MPI_GROUP_WORLD,
+                               &MPI_GROUP_GRMHD_LIAISON, &MPI_COMM_GRMHD_LIAISON,
+                               &MPI_GROUP_GRRAY_LIAISON, &MPI_COMM_GRRAY_LIAISON,
+                               &MPI_GROUP_GRMHD, &MPI_COMM_GRMHD,
+                               &MPI_GROUP_GRRAY, &MPI_COMM_GRRAY,
+                               &MPI_GROUP_LIAISON_FROM_GRMHD, &MPI_COMM_LIAISON_FROM_GRMHD, 
+                               &MPI_GROUP_LIAISON_FROM_GRRAY, &MPI_COMM_LIAISON_FROM_GRRAY);
 }
 
 
@@ -158,28 +158,28 @@ void liaison_init_mpi_liaisonmode_globalset(void)
 void grmhd_init_mpi_liaisonmode_globalset(void)
 {
   void grmhd_init_mpi_liaisonmode(
-				  int **processtypelistlocal_world,int *sizeproclistlocal_world,
-				  int **processtypelistlocal_grmhd_liaison,int *sizeproclistlocal_grmhd_liaison,
-				  int **processtypelistlocal_grray_liaison,int *sizeproclistlocal_grray_liaison,
-				  int **processtypelistlocal_grmhd,int *sizeproclistlocal_grmhd,
-				  int **processtypelistlocal_liaison_from_grmhd,int *sizeproclistlocal_liaison_from_grmhd,
-				  MPI_Group *MPI_GROUP_WORLD,
-				  MPI_Group *MPI_GROUP_GRMHD_LIAISON, MPI_Comm *MPI_COMM_GRMHD_LIAISON,
-				  MPI_Group *MPI_GROUP_GRRAY_LIAISON, MPI_Comm *MPI_COMM_GRRAY_LIAISON,
-				  MPI_Group *MPI_GROUP_GRMHD, MPI_Comm *MPI_COMM_GRMHD,
-				  MPI_Group *MPI_GROUP_LIAISON_FROM_GRMHD, MPI_Comm *MPI_COMM_LIAISON_FROM_GRMHD);
+                                  int **processtypelistlocal_world,int *sizeproclistlocal_world,
+                                  int **processtypelistlocal_grmhd_liaison,int *sizeproclistlocal_grmhd_liaison,
+                                  int **processtypelistlocal_grray_liaison,int *sizeproclistlocal_grray_liaison,
+                                  int **processtypelistlocal_grmhd,int *sizeproclistlocal_grmhd,
+                                  int **processtypelistlocal_liaison_from_grmhd,int *sizeproclistlocal_liaison_from_grmhd,
+                                  MPI_Group *MPI_GROUP_WORLD,
+                                  MPI_Group *MPI_GROUP_GRMHD_LIAISON, MPI_Comm *MPI_COMM_GRMHD_LIAISON,
+                                  MPI_Group *MPI_GROUP_GRRAY_LIAISON, MPI_Comm *MPI_COMM_GRRAY_LIAISON,
+                                  MPI_Group *MPI_GROUP_GRMHD, MPI_Comm *MPI_COMM_GRMHD,
+                                  MPI_Group *MPI_GROUP_LIAISON_FROM_GRMHD, MPI_Comm *MPI_COMM_LIAISON_FROM_GRMHD);
 
   grmhd_init_mpi_liaisonmode(
-			     &processtypelist_world,&sizeproclist_world,
-			     &processtypelist_grmhd_liaison,&sizeproclist_grmhd_liaison,
-			     &processtypelist_grray_liaison,&sizeproclist_grray_liaison,
-			     &processtypelist_grmhd,&sizeproclist_grmhd,
-			     &processtypelist_liaison_from_grmhd,&sizeproclist_grmhd,
-			     &MPI_GROUP_WORLD,
-			     &MPI_GROUP_GRMHD_LIAISON, &MPI_COMM_GRMHD_LIAISON,
-			     &MPI_GROUP_GRRAY_LIAISON, &MPI_COMM_GRRAY_LIAISON,
-			     &MPI_GROUP_GRMHD, &MPI_COMM_GRMHD,
-			     &MPI_GROUP_LIAISON_FROM_GRMHD, &MPI_COMM_LIAISON_FROM_GRMHD);
+                             &processtypelist_world,&sizeproclist_world,
+                             &processtypelist_grmhd_liaison,&sizeproclist_grmhd_liaison,
+                             &processtypelist_grray_liaison,&sizeproclist_grray_liaison,
+                             &processtypelist_grmhd,&sizeproclist_grmhd,
+                             &processtypelist_liaison_from_grmhd,&sizeproclist_grmhd,
+                             &MPI_GROUP_WORLD,
+                             &MPI_GROUP_GRMHD_LIAISON, &MPI_COMM_GRMHD_LIAISON,
+                             &MPI_GROUP_GRRAY_LIAISON, &MPI_COMM_GRRAY_LIAISON,
+                             &MPI_GROUP_GRMHD, &MPI_COMM_GRMHD,
+                             &MPI_GROUP_LIAISON_FROM_GRMHD, &MPI_COMM_LIAISON_FROM_GRMHD);
 }
 
 
@@ -194,28 +194,28 @@ void grmhd_init_mpi_liaisonmode_globalset(void)
 void grray_init_mpi_liaisonmode_globalset(void)
 {
   void grray_init_mpi_liaisonmode(
-				  int **processtypelistlocal_world,int *sizeproclistlocal_world,
-				  int **processtypelistlocal_grmhd_liaison,int *sizeproclistlocal_grmhd_liaison,
-				  int **processtypelistlocal_grray_liaison,int *sizeproclistlocal_grray_liaison,
-				  int **processtypelistlocal_grray,int *sizeproclistlocal_grray,
-				  int **processtypelistlocal_liaison_from_grray,int *sizeproclistlocal_liaison_from_grray,
-				  MPI_Group *MPI_GROUP_WORLD,
-				  MPI_Group *MPI_GROUP_GRMHD_LIAISON, MPI_Comm *MPI_COMM_GRMHD_LIAISON,
-				  MPI_Group *MPI_GROUP_GRRAY_LIAISON, MPI_Comm *MPI_COMM_GRRAY_LIAISON,
-				  MPI_Group *MPI_GROUP_GRRAY, MPI_Comm *MPI_COMM_GRRAY,
-				  MPI_Group *MPI_GROUP_LIAISON_FROM_GRRAY, MPI_Comm *MPI_COMM_LIAISON_FROM_GRRAY);
+                                  int **processtypelistlocal_world,int *sizeproclistlocal_world,
+                                  int **processtypelistlocal_grmhd_liaison,int *sizeproclistlocal_grmhd_liaison,
+                                  int **processtypelistlocal_grray_liaison,int *sizeproclistlocal_grray_liaison,
+                                  int **processtypelistlocal_grray,int *sizeproclistlocal_grray,
+                                  int **processtypelistlocal_liaison_from_grray,int *sizeproclistlocal_liaison_from_grray,
+                                  MPI_Group *MPI_GROUP_WORLD,
+                                  MPI_Group *MPI_GROUP_GRMHD_LIAISON, MPI_Comm *MPI_COMM_GRMHD_LIAISON,
+                                  MPI_Group *MPI_GROUP_GRRAY_LIAISON, MPI_Comm *MPI_COMM_GRRAY_LIAISON,
+                                  MPI_Group *MPI_GROUP_GRRAY, MPI_Comm *MPI_COMM_GRRAY,
+                                  MPI_Group *MPI_GROUP_LIAISON_FROM_GRRAY, MPI_Comm *MPI_COMM_LIAISON_FROM_GRRAY);
 
   grray_init_mpi_liaisonmode(
-			     &processtypelist_world,&sizeproclist_world,
-			     &processtypelist_grmhd_liaison,&sizeproclist_grmhd_liaison,
-			     &processtypelist_grray_liaison,&sizeproclist_grray_liaison,
-			     &processtypelist_grray,&sizeproclist_grray,
-			     &processtypelist_liaison_from_grray,&sizeproclist_liaison_from_grray,
-			     &MPI_GROUP_WORLD,
-			     &MPI_GROUP_GRMHD_LIAISON, &MPI_COMM_GRMHD_LIAISON,
-			     &MPI_GROUP_GRRAY_LIAISON, &MPI_COMM_GRRAY_LIAISON,
-			     &MPI_GROUP_GRRAY, &MPI_COMM_GRRAY,
-			     &MPI_GROUP_LIAISON_FROM_GRRAY, &MPI_COMM_LIAISON_FROM_GRRAY);
+                             &processtypelist_world,&sizeproclist_world,
+                             &processtypelist_grmhd_liaison,&sizeproclist_grmhd_liaison,
+                             &processtypelist_grray_liaison,&sizeproclist_grray_liaison,
+                             &processtypelist_grray,&sizeproclist_grray,
+                             &processtypelist_liaison_from_grray,&sizeproclist_liaison_from_grray,
+                             &MPI_GROUP_WORLD,
+                             &MPI_GROUP_GRMHD_LIAISON, &MPI_COMM_GRMHD_LIAISON,
+                             &MPI_GROUP_GRRAY_LIAISON, &MPI_COMM_GRRAY_LIAISON,
+                             &MPI_GROUP_GRRAY, &MPI_COMM_GRRAY,
+                             &MPI_GROUP_LIAISON_FROM_GRRAY, &MPI_COMM_LIAISON_FROM_GRRAY);
 
 }
 
@@ -226,30 +226,30 @@ void grray_init_mpi_liaisonmode_globalset(void)
 
 // After MPI_init() this must be called by liaison code if want to avoid global variables
 void liaison_init_mpi_liaisonmode(
-				  int **processtypelistlocal_world,int *sizeproclistlocal_world,
-				  int **processtypelistlocal_grmhd_liaison,int *sizeproclistlocal_grmhd_liaison,
-				  int **processtypelistlocal_grray_liaison,int *sizeproclistlocal_grray_liaison,
-				  int **processtypelistlocal_grmhd,int *sizeproclistlocal_grmhd,
-				  int **processtypelistlocal_grray,int *sizeproclistlocal_grray,
-				  int **processtypelistlocal_liaison_from_grmhd,int *sizeproclistlocal_liaison_from_grmhd,
-				  int **processtypelistlocal_liaison_from_grray,int *sizeproclistlocal_liaison_from_grray,
-				  MPI_Group *MPI_GROUP_LOCAL_WORLD,
-				  MPI_Group *MPI_GROUP_LOCAL_GRMHD_LIAISON, MPI_Comm *MPI_COMM_LOCAL_GRMHD_LIAISON,
-				  MPI_Group *MPI_GROUP_LOCAL_GRRAY_LIAISON, MPI_Comm *MPI_COMM_LOCAL_GRRAY_LIAISON,
-				  MPI_Group *MPI_GROUP_LOCAL_GRMHD, MPI_Comm *MPI_COMM_LOCAL_GRMHD,
-				  MPI_Group *MPI_GROUP_LOCAL_GRRAY, MPI_Comm *MPI_COMM_LOCAL_GRRAY,
-				  MPI_Group *MPI_GROUP_LOCAL_LIAISON_FROM_GRMHD, MPI_Comm *MPI_COMM_LOCAL_LIAISON_FROM_GRMHD, 
-				  MPI_Group *MPI_GROUP_LOCAL_LIAISON_FROM_GRRAY, MPI_Comm *MPI_COMM_LOCAL_LIAISON_FROM_GRRAY)
+                                  int **processtypelistlocal_world,int *sizeproclistlocal_world,
+                                  int **processtypelistlocal_grmhd_liaison,int *sizeproclistlocal_grmhd_liaison,
+                                  int **processtypelistlocal_grray_liaison,int *sizeproclistlocal_grray_liaison,
+                                  int **processtypelistlocal_grmhd,int *sizeproclistlocal_grmhd,
+                                  int **processtypelistlocal_grray,int *sizeproclistlocal_grray,
+                                  int **processtypelistlocal_liaison_from_grmhd,int *sizeproclistlocal_liaison_from_grmhd,
+                                  int **processtypelistlocal_liaison_from_grray,int *sizeproclistlocal_liaison_from_grray,
+                                  MPI_Group *MPI_GROUP_LOCAL_WORLD,
+                                  MPI_Group *MPI_GROUP_LOCAL_GRMHD_LIAISON, MPI_Comm *MPI_COMM_LOCAL_GRMHD_LIAISON,
+                                  MPI_Group *MPI_GROUP_LOCAL_GRRAY_LIAISON, MPI_Comm *MPI_COMM_LOCAL_GRRAY_LIAISON,
+                                  MPI_Group *MPI_GROUP_LOCAL_GRMHD, MPI_Comm *MPI_COMM_LOCAL_GRMHD,
+                                  MPI_Group *MPI_GROUP_LOCAL_GRRAY, MPI_Comm *MPI_COMM_LOCAL_GRRAY,
+                                  MPI_Group *MPI_GROUP_LOCAL_LIAISON_FROM_GRMHD, MPI_Comm *MPI_COMM_LOCAL_LIAISON_FROM_GRMHD, 
+                                  MPI_Group *MPI_GROUP_LOCAL_LIAISON_FROM_GRRAY, MPI_Comm *MPI_COMM_LOCAL_LIAISON_FROM_GRRAY)
 {
   void init_MPI_group_grmhd_grray_liaison_split(
-						int *processtypelistlocal_grmhd_liaison,int sizeproclistlocal_grmhd_liaison,
-						int *processtypelistlocal_grray_liaison,int sizeproclistlocal_grray_liaison,
-						MPI_Group *MPI_GROUP_LOCAL_GRMHD_LIAISON, MPI_Comm *MPI_COMM_LOCAL_GRMHD_LIAISON,
-						MPI_Group *MPI_GROUP_LOCAL_GRRAY_LIAISON, MPI_Comm *MPI_COMM_LOCAL_GRRAY_LIAISON,
-						MPI_Group *MPI_GROUP_LOCAL_GRMHD, MPI_Comm *MPI_COMM_LOCAL_GRMHD,
-						MPI_Group *MPI_GROUP_LOCAL_GRRAY, MPI_Comm *MPI_COMM_LOCAL_GRRAY,
-						MPI_Group *MPI_GROUP_LOCAL_LIAISON_FROM_GRMHD, MPI_Comm *MPI_COMM_LOCAL_LIAISON_FROM_GRMHD, 
-						MPI_Group *MPI_GROUP_LOCAL_LIAISON_FROM_GRRAY, MPI_Comm *MPI_COMM_LOCAL_LIAISON_FROM_GRRAY);
+                                                int *processtypelistlocal_grmhd_liaison,int sizeproclistlocal_grmhd_liaison,
+                                                int *processtypelistlocal_grray_liaison,int sizeproclistlocal_grray_liaison,
+                                                MPI_Group *MPI_GROUP_LOCAL_GRMHD_LIAISON, MPI_Comm *MPI_COMM_LOCAL_GRMHD_LIAISON,
+                                                MPI_Group *MPI_GROUP_LOCAL_GRRAY_LIAISON, MPI_Comm *MPI_COMM_LOCAL_GRRAY_LIAISON,
+                                                MPI_Group *MPI_GROUP_LOCAL_GRMHD, MPI_Comm *MPI_COMM_LOCAL_GRMHD,
+                                                MPI_Group *MPI_GROUP_LOCAL_GRRAY, MPI_Comm *MPI_COMM_LOCAL_GRRAY,
+                                                MPI_Group *MPI_GROUP_LOCAL_LIAISON_FROM_GRMHD, MPI_Comm *MPI_COMM_LOCAL_LIAISON_FROM_GRMHD, 
+                                                MPI_Group *MPI_GROUP_LOCAL_LIAISON_FROM_GRRAY, MPI_Comm *MPI_COMM_LOCAL_LIAISON_FROM_GRRAY);
 
 #if(USEMPILIAISON)
 
@@ -259,10 +259,10 @@ void liaison_init_mpi_liaisonmode(
 
   // global group sets:
   init_MPI_group_grmhd_grray_liaison(
-				     *processtypelistlocal_world,*sizeproclistlocal_world,
-				     MPI_GROUP_LOCAL_WORLD,
-				     MPI_GROUP_LOCAL_GRMHD_LIAISON, MPI_COMM_LOCAL_GRMHD_LIAISON,
-				     MPI_GROUP_LOCAL_GRRAY_LIAISON, MPI_COMM_LOCAL_GRRAY_LIAISON);
+                                     *processtypelistlocal_world,*sizeproclistlocal_world,
+                                     MPI_GROUP_LOCAL_WORLD,
+                                     MPI_GROUP_LOCAL_GRMHD_LIAISON, MPI_COMM_LOCAL_GRMHD_LIAISON,
+                                     MPI_GROUP_LOCAL_GRRAY_LIAISON, MPI_COMM_LOCAL_GRRAY_LIAISON);
 
   // get processtypes for newly created subgroups
   // 1) Get GRMHD+LIAISON
@@ -272,14 +272,14 @@ void liaison_init_mpi_liaisonmode(
 
   // liaison split from liaison+grmhd and liaison+grray groups
   init_MPI_group_grmhd_grray_liaison_split(
-					   *processtypelistlocal_grmhd_liaison,*sizeproclistlocal_grmhd_liaison,
-					   *processtypelistlocal_grray_liaison,*sizeproclistlocal_grray_liaison,
-					   MPI_GROUP_LOCAL_GRMHD_LIAISON, MPI_COMM_LOCAL_GRMHD_LIAISON,
-					   MPI_GROUP_LOCAL_GRRAY_LIAISON, MPI_COMM_LOCAL_GRRAY_LIAISON,
-					   MPI_GROUP_LOCAL_GRMHD, MPI_COMM_LOCAL_GRMHD,
-					   MPI_GROUP_LOCAL_GRRAY, MPI_COMM_LOCAL_GRRAY,
-					   MPI_GROUP_LOCAL_LIAISON_FROM_GRMHD, MPI_COMM_LOCAL_LIAISON_FROM_GRMHD,
-					   MPI_GROUP_LOCAL_LIAISON_FROM_GRRAY, MPI_COMM_LOCAL_LIAISON_FROM_GRRAY);
+                                           *processtypelistlocal_grmhd_liaison,*sizeproclistlocal_grmhd_liaison,
+                                           *processtypelistlocal_grray_liaison,*sizeproclistlocal_grray_liaison,
+                                           MPI_GROUP_LOCAL_GRMHD_LIAISON, MPI_COMM_LOCAL_GRMHD_LIAISON,
+                                           MPI_GROUP_LOCAL_GRRAY_LIAISON, MPI_COMM_LOCAL_GRRAY_LIAISON,
+                                           MPI_GROUP_LOCAL_GRMHD, MPI_COMM_LOCAL_GRMHD,
+                                           MPI_GROUP_LOCAL_GRRAY, MPI_COMM_LOCAL_GRRAY,
+                                           MPI_GROUP_LOCAL_LIAISON_FROM_GRMHD, MPI_COMM_LOCAL_LIAISON_FROM_GRMHD,
+                                           MPI_GROUP_LOCAL_LIAISON_FROM_GRRAY, MPI_COMM_LOCAL_LIAISON_FROM_GRRAY);
 
   // ensure NULL
   if(*MPI_COMM_LOCAL_GRMHD!=MPI_COMM_NULL){
@@ -312,22 +312,22 @@ void liaison_init_mpi_liaisonmode(
 
 // After MPI_init() this must be called by grmhd code if want to avoid global variables
 void grmhd_init_mpi_liaisonmode(
-				int **processtypelistlocal_world,int *sizeproclistlocal_world,
-				int **processtypelistlocal_grmhd_liaison,int *sizeproclistlocal_grmhd_liaison,
-				int **processtypelistlocal_grray_liaison,int *sizeproclistlocal_grray_liaison,
-				int **processtypelistlocal_grmhd,int *sizeproclistlocal_grmhd,
-				int **processtypelistlocal_liaison_from_grmhd,int *sizeproclistlocal_liaison_from_grmhd,
-				MPI_Group *MPI_GROUP_LOCAL_WORLD,
-				MPI_Group *MPI_GROUP_LOCAL_GRMHD_LIAISON, MPI_Comm *MPI_COMM_LOCAL_GRMHD_LIAISON,
-				MPI_Group *MPI_GROUP_LOCAL_GRRAY_LIAISON, MPI_Comm *MPI_COMM_LOCAL_GRRAY_LIAISON,
-				MPI_Group *MPI_GROUP_LOCAL_GRMHD, MPI_Comm *MPI_COMM_LOCAL_GRMHD,
-				MPI_Group *MPI_GROUP_LOCAL_LIAISON_FROM_GRMHD, MPI_Comm *MPI_COMM_LOCAL_LIAISON_FROM_GRMHD)
+                                int **processtypelistlocal_world,int *sizeproclistlocal_world,
+                                int **processtypelistlocal_grmhd_liaison,int *sizeproclistlocal_grmhd_liaison,
+                                int **processtypelistlocal_grray_liaison,int *sizeproclistlocal_grray_liaison,
+                                int **processtypelistlocal_grmhd,int *sizeproclistlocal_grmhd,
+                                int **processtypelistlocal_liaison_from_grmhd,int *sizeproclistlocal_liaison_from_grmhd,
+                                MPI_Group *MPI_GROUP_LOCAL_WORLD,
+                                MPI_Group *MPI_GROUP_LOCAL_GRMHD_LIAISON, MPI_Comm *MPI_COMM_LOCAL_GRMHD_LIAISON,
+                                MPI_Group *MPI_GROUP_LOCAL_GRRAY_LIAISON, MPI_Comm *MPI_COMM_LOCAL_GRRAY_LIAISON,
+                                MPI_Group *MPI_GROUP_LOCAL_GRMHD, MPI_Comm *MPI_COMM_LOCAL_GRMHD,
+                                MPI_Group *MPI_GROUP_LOCAL_LIAISON_FROM_GRMHD, MPI_Comm *MPI_COMM_LOCAL_LIAISON_FROM_GRMHD)
 {
   void init_MPI_group_grmhd_liaison_split(
-					  int *processtypelistlocal_grmhd_liaison,int sizeproclistlocal_grmhd_liaison,
-					  MPI_Group *MPI_GROUP_LOCAL_GRMHD_LIAISON, MPI_Comm *MPI_COMM_LOCAL_GRMHD_LIAISON,
-					  MPI_Group *MPI_GROUP_LOCAL_GRMHD, MPI_Comm *MPI_COMM_LOCAL_GRMHD,
-					  MPI_Group *MPI_GROUP_LOCAL_LIAISON_FROM_GRMHD, MPI_Comm *MPI_COMM_LOCAL_LIAISON_FROM_GRMHD);
+                                          int *processtypelistlocal_grmhd_liaison,int sizeproclistlocal_grmhd_liaison,
+                                          MPI_Group *MPI_GROUP_LOCAL_GRMHD_LIAISON, MPI_Comm *MPI_COMM_LOCAL_GRMHD_LIAISON,
+                                          MPI_Group *MPI_GROUP_LOCAL_GRMHD, MPI_Comm *MPI_COMM_LOCAL_GRMHD,
+                                          MPI_Group *MPI_GROUP_LOCAL_LIAISON_FROM_GRMHD, MPI_Comm *MPI_COMM_LOCAL_LIAISON_FROM_GRMHD);
 
 
   stderrfprintf("USEMPILIAISON=%d\n",USEMPILIAISON);
@@ -342,10 +342,10 @@ void grmhd_init_mpi_liaisonmode(
 
   // global group sets:
   init_MPI_group_grmhd_grray_liaison(
-				     *processtypelistlocal_world,*sizeproclistlocal_world,
-				     MPI_GROUP_LOCAL_WORLD,
-				     MPI_GROUP_LOCAL_GRMHD_LIAISON, MPI_COMM_LOCAL_GRMHD_LIAISON,
-				     MPI_GROUP_LOCAL_GRRAY_LIAISON, MPI_COMM_LOCAL_GRRAY_LIAISON);
+                                     *processtypelistlocal_world,*sizeproclistlocal_world,
+                                     MPI_GROUP_LOCAL_WORLD,
+                                     MPI_GROUP_LOCAL_GRMHD_LIAISON, MPI_COMM_LOCAL_GRMHD_LIAISON,
+                                     MPI_GROUP_LOCAL_GRRAY_LIAISON, MPI_COMM_LOCAL_GRRAY_LIAISON);
 
   // ensure really NULL
   if(*MPI_COMM_LOCAL_GRRAY_LIAISON!=MPI_COMM_NULL){
@@ -359,10 +359,10 @@ void grmhd_init_mpi_liaisonmode(
 
   // liaison split from liaison+grmhd group
   init_MPI_group_grmhd_liaison_split(
-				     *processtypelistlocal_grmhd_liaison,*sizeproclistlocal_grmhd_liaison,
-				     MPI_GROUP_LOCAL_GRMHD_LIAISON, MPI_COMM_LOCAL_GRMHD_LIAISON,
-				     MPI_GROUP_LOCAL_GRMHD, MPI_COMM_LOCAL_GRMHD,
-				     MPI_GROUP_LOCAL_LIAISON_FROM_GRMHD, MPI_COMM_LOCAL_LIAISON_FROM_GRMHD);
+                                     *processtypelistlocal_grmhd_liaison,*sizeproclistlocal_grmhd_liaison,
+                                     MPI_GROUP_LOCAL_GRMHD_LIAISON, MPI_COMM_LOCAL_GRMHD_LIAISON,
+                                     MPI_GROUP_LOCAL_GRMHD, MPI_COMM_LOCAL_GRMHD,
+                                     MPI_GROUP_LOCAL_LIAISON_FROM_GRMHD, MPI_COMM_LOCAL_LIAISON_FROM_GRMHD);
 
   // ensure really NULL
   if(*MPI_COMM_LOCAL_LIAISON_FROM_GRMHD!=MPI_COMM_NULL){
@@ -385,22 +385,22 @@ void grmhd_init_mpi_liaisonmode(
 
 // After MPI_init() this must be called by grray code if want to avoid global variables
 void grray_init_mpi_liaisonmode(
-				int **processtypelistlocal_world,int *sizeproclistlocal_world,
-				int **processtypelistlocal_grmhd_liaison,int *sizeproclistlocal_grmhd_liaison,
-				int **processtypelistlocal_grray_liaison,int *sizeproclistlocal_grray_liaison,
-				int **processtypelistlocal_grray,int *sizeproclistlocal_grray,
-				int **processtypelistlocal_liaison_from_grray,int *sizeproclistlocal_liaison_from_grray,
-				MPI_Group *MPI_GROUP_LOCAL_WORLD,
-				MPI_Group *MPI_GROUP_LOCAL_GRMHD_LIAISON, MPI_Comm *MPI_COMM_LOCAL_GRMHD_LIAISON,
-				MPI_Group *MPI_GROUP_LOCAL_GRRAY_LIAISON, MPI_Comm *MPI_COMM_LOCAL_GRRAY_LIAISON,
-				MPI_Group *MPI_GROUP_LOCAL_GRRAY, MPI_Comm *MPI_COMM_LOCAL_GRRAY,
-				MPI_Group *MPI_GROUP_LOCAL_LIAISON_FROM_GRRAY, MPI_Comm *MPI_COMM_LOCAL_LIAISON_FROM_GRRAY)
+                                int **processtypelistlocal_world,int *sizeproclistlocal_world,
+                                int **processtypelistlocal_grmhd_liaison,int *sizeproclistlocal_grmhd_liaison,
+                                int **processtypelistlocal_grray_liaison,int *sizeproclistlocal_grray_liaison,
+                                int **processtypelistlocal_grray,int *sizeproclistlocal_grray,
+                                int **processtypelistlocal_liaison_from_grray,int *sizeproclistlocal_liaison_from_grray,
+                                MPI_Group *MPI_GROUP_LOCAL_WORLD,
+                                MPI_Group *MPI_GROUP_LOCAL_GRMHD_LIAISON, MPI_Comm *MPI_COMM_LOCAL_GRMHD_LIAISON,
+                                MPI_Group *MPI_GROUP_LOCAL_GRRAY_LIAISON, MPI_Comm *MPI_COMM_LOCAL_GRRAY_LIAISON,
+                                MPI_Group *MPI_GROUP_LOCAL_GRRAY, MPI_Comm *MPI_COMM_LOCAL_GRRAY,
+                                MPI_Group *MPI_GROUP_LOCAL_LIAISON_FROM_GRRAY, MPI_Comm *MPI_COMM_LOCAL_LIAISON_FROM_GRRAY)
 {
   void init_MPI_group_grray_liaison_split(
-					  int *processtypelistlocal_grray_liaison,int sizeproclistlocal_grray_liaison,
-					  MPI_Group *MPI_GROUP_LOCAL_GRRAY_LIAISON, MPI_Comm *MPI_COMM_LOCAL_GRRAY_LIAISON,
-					  MPI_Group *MPI_GROUP_LOCAL_GRRAY, MPI_Comm *MPI_COMM_LOCAL_GRRAY,
-					  MPI_Group *MPI_GROUP_LOCAL_LIAISON_FROM_GRRAY, MPI_Comm *MPI_COMM_LOCAL_LIAISON_FROM_GRRAY);
+                                          int *processtypelistlocal_grray_liaison,int sizeproclistlocal_grray_liaison,
+                                          MPI_Group *MPI_GROUP_LOCAL_GRRAY_LIAISON, MPI_Comm *MPI_COMM_LOCAL_GRRAY_LIAISON,
+                                          MPI_Group *MPI_GROUP_LOCAL_GRRAY, MPI_Comm *MPI_COMM_LOCAL_GRRAY,
+                                          MPI_Group *MPI_GROUP_LOCAL_LIAISON_FROM_GRRAY, MPI_Comm *MPI_COMM_LOCAL_LIAISON_FROM_GRRAY);
 
 #if(USEMPILIAISON)
 
@@ -411,10 +411,10 @@ void grray_init_mpi_liaisonmode(
 
   // global group sets:
   init_MPI_group_grmhd_grray_liaison(
-				     *processtypelistlocal_world,*sizeproclistlocal_world,
-				     MPI_GROUP_LOCAL_WORLD,
-				     MPI_GROUP_LOCAL_GRMHD_LIAISON, MPI_COMM_LOCAL_GRMHD_LIAISON,
-				     MPI_GROUP_LOCAL_GRRAY_LIAISON, MPI_COMM_LOCAL_GRRAY_LIAISON);
+                                     *processtypelistlocal_world,*sizeproclistlocal_world,
+                                     MPI_GROUP_LOCAL_WORLD,
+                                     MPI_GROUP_LOCAL_GRMHD_LIAISON, MPI_COMM_LOCAL_GRMHD_LIAISON,
+                                     MPI_GROUP_LOCAL_GRRAY_LIAISON, MPI_COMM_LOCAL_GRRAY_LIAISON);
 
   // ensure really NULL
   if(*MPI_COMM_LOCAL_GRMHD_LIAISON!=MPI_COMM_NULL){
@@ -428,10 +428,10 @@ void grray_init_mpi_liaisonmode(
 
   // liaison split from liaison+grray group
   init_MPI_group_grray_liaison_split(
-				     *processtypelistlocal_grray_liaison,*sizeproclistlocal_grray_liaison,
-				     MPI_GROUP_LOCAL_GRRAY_LIAISON, MPI_COMM_LOCAL_GRRAY_LIAISON,
-				     MPI_GROUP_LOCAL_GRRAY, MPI_COMM_LOCAL_GRRAY,
-				     MPI_GROUP_LOCAL_LIAISON_FROM_GRRAY, MPI_COMM_LOCAL_LIAISON_FROM_GRRAY);
+                                     *processtypelistlocal_grray_liaison,*sizeproclistlocal_grray_liaison,
+                                     MPI_GROUP_LOCAL_GRRAY_LIAISON, MPI_COMM_LOCAL_GRRAY_LIAISON,
+                                     MPI_GROUP_LOCAL_GRRAY, MPI_COMM_LOCAL_GRRAY,
+                                     MPI_GROUP_LOCAL_LIAISON_FROM_GRRAY, MPI_COMM_LOCAL_LIAISON_FROM_GRRAY);
 
   // ensure really NULL
   if(*MPI_COMM_LOCAL_LIAISON_FROM_GRRAY!=MPI_COMM_NULL){
@@ -464,10 +464,10 @@ void grray_init_mpi_liaisonmode(
 // 1) GRMHD+LIAISON from MPI_COMM_WORLD
 // 2) GRRAY+LIAISON from MPI_COMM_WORLD
 void init_MPI_group_grmhd_grray_liaison(
-					int *processtypelistlocal,int sizeproclistlocal,
-					MPI_Group *MPI_GROUP_LOCAL_WORLD,
-					MPI_Group *MPI_GROUP_LOCAL_GRMHD_LIAISON, MPI_Comm *MPI_COMM_LOCAL_GRMHD_LIAISON,
-					MPI_Group *MPI_GROUP_LOCAL_GRRAY_LIAISON, MPI_Comm *MPI_COMM_LOCAL_GRRAY_LIAISON)
+                                        int *processtypelistlocal,int sizeproclistlocal,
+                                        MPI_Group *MPI_GROUP_LOCAL_WORLD,
+                                        MPI_Group *MPI_GROUP_LOCAL_GRMHD_LIAISON, MPI_Comm *MPI_COMM_LOCAL_GRMHD_LIAISON,
+                                        MPI_Group *MPI_GROUP_LOCAL_GRRAY_LIAISON, MPI_Comm *MPI_COMM_LOCAL_GRRAY_LIAISON)
 {
   int *ranks; 
   int i,j,k,numranks;
@@ -564,42 +564,42 @@ void init_MPI_group_grmhd_grray_liaison(
 // 3) GRRAY from GRRAY+LIAISON
 // 4) LIAISON_FROM_GRRAY from GRRAY+LIAISON
 void init_MPI_group_grmhd_grray_liaison_split(
-					      int *processtypelistlocal_grmhd_liaison,int sizeproclistlocal_grmhd_liaison,
-					      int *processtypelistlocal_grray_liaison,int sizeproclistlocal_grray_liaison,
-					      MPI_Group *MPI_GROUP_LOCAL_GRMHD_LIAISON, MPI_Comm *MPI_COMM_LOCAL_GRMHD_LIAISON,
-					      MPI_Group *MPI_GROUP_LOCAL_GRRAY_LIAISON, MPI_Comm *MPI_COMM_LOCAL_GRRAY_LIAISON,
-					      MPI_Group *MPI_GROUP_LOCAL_GRMHD, MPI_Comm *MPI_COMM_LOCAL_GRMHD,
-					      MPI_Group *MPI_GROUP_LOCAL_GRRAY, MPI_Comm *MPI_COMM_LOCAL_GRRAY,
-					      MPI_Group *MPI_GROUP_LOCAL_LIAISON_FROM_GRMHD, MPI_Comm *MPI_COMM_LOCAL_LIAISON_FROM_GRMHD, 
-					      MPI_Group *MPI_GROUP_LOCAL_LIAISON_FROM_GRRAY, MPI_Comm *MPI_COMM_LOCAL_LIAISON_FROM_GRRAY)
+                                              int *processtypelistlocal_grmhd_liaison,int sizeproclistlocal_grmhd_liaison,
+                                              int *processtypelistlocal_grray_liaison,int sizeproclistlocal_grray_liaison,
+                                              MPI_Group *MPI_GROUP_LOCAL_GRMHD_LIAISON, MPI_Comm *MPI_COMM_LOCAL_GRMHD_LIAISON,
+                                              MPI_Group *MPI_GROUP_LOCAL_GRRAY_LIAISON, MPI_Comm *MPI_COMM_LOCAL_GRRAY_LIAISON,
+                                              MPI_Group *MPI_GROUP_LOCAL_GRMHD, MPI_Comm *MPI_COMM_LOCAL_GRMHD,
+                                              MPI_Group *MPI_GROUP_LOCAL_GRRAY, MPI_Comm *MPI_COMM_LOCAL_GRRAY,
+                                              MPI_Group *MPI_GROUP_LOCAL_LIAISON_FROM_GRMHD, MPI_Comm *MPI_COMM_LOCAL_LIAISON_FROM_GRMHD, 
+                                              MPI_Group *MPI_GROUP_LOCAL_LIAISON_FROM_GRRAY, MPI_Comm *MPI_COMM_LOCAL_LIAISON_FROM_GRRAY)
 {
 
   void init_MPI_group_grmhd_liaison_split(
-					  int *processtypelistlocal_grmhd_liaison,int sizeproclistlocal_grmhd_liaison,
-					  MPI_Group *MPI_GROUP_LOCAL_GRMHD_LIAISON, MPI_Comm *MPI_COMM_LOCAL_GRMHD_LIAISON,
-					  MPI_Group *MPI_GROUP_LOCAL_GRMHD, MPI_Comm *MPI_COMM_LOCAL_GRMHD,
-					  MPI_Group *MPI_GROUP_LOCAL_LIAISON_FROM_GRMHD, MPI_Comm *MPI_COMM_LOCAL_LIAISON_FROM_GRMHD);
+                                          int *processtypelistlocal_grmhd_liaison,int sizeproclistlocal_grmhd_liaison,
+                                          MPI_Group *MPI_GROUP_LOCAL_GRMHD_LIAISON, MPI_Comm *MPI_COMM_LOCAL_GRMHD_LIAISON,
+                                          MPI_Group *MPI_GROUP_LOCAL_GRMHD, MPI_Comm *MPI_COMM_LOCAL_GRMHD,
+                                          MPI_Group *MPI_GROUP_LOCAL_LIAISON_FROM_GRMHD, MPI_Comm *MPI_COMM_LOCAL_LIAISON_FROM_GRMHD);
   void init_MPI_group_grray_liaison_split(
-					  int *processtypelistlocal_grray_liaison,int sizeproclistlocal_grray_liaison,
-					  MPI_Group *MPI_GROUP_LOCAL_GRRAY_LIAISON, MPI_Comm *MPI_COMM_LOCAL_GRRAY_LIAISON,
-					  MPI_Group *MPI_GROUP_LOCAL_GRRAY, MPI_Comm *MPI_COMM_LOCAL_GRRAY,
-					  MPI_Group *MPI_GROUP_LOCAL_LIAISON_FROM_GRRAY, MPI_Comm *MPI_COMM_LOCAL_LIAISON_FROM_GRRAY);
+                                          int *processtypelistlocal_grray_liaison,int sizeproclistlocal_grray_liaison,
+                                          MPI_Group *MPI_GROUP_LOCAL_GRRAY_LIAISON, MPI_Comm *MPI_COMM_LOCAL_GRRAY_LIAISON,
+                                          MPI_Group *MPI_GROUP_LOCAL_GRRAY, MPI_Comm *MPI_COMM_LOCAL_GRRAY,
+                                          MPI_Group *MPI_GROUP_LOCAL_LIAISON_FROM_GRRAY, MPI_Comm *MPI_COMM_LOCAL_LIAISON_FROM_GRRAY);
 
 
 #if(USEMPILIAISON)
 
   // split GRMHD+LIAISON (uses same function used by GRMHD code)
   init_MPI_group_grmhd_liaison_split(processtypelistlocal_grmhd_liaison,sizeproclistlocal_grmhd_liaison,
-				     MPI_GROUP_LOCAL_GRMHD_LIAISON,  MPI_COMM_LOCAL_GRMHD_LIAISON,
-				     MPI_GROUP_LOCAL_GRMHD,  MPI_COMM_LOCAL_GRMHD,
-				     MPI_GROUP_LOCAL_LIAISON_FROM_GRMHD,  MPI_COMM_LOCAL_LIAISON_FROM_GRMHD);
+                                     MPI_GROUP_LOCAL_GRMHD_LIAISON,  MPI_COMM_LOCAL_GRMHD_LIAISON,
+                                     MPI_GROUP_LOCAL_GRMHD,  MPI_COMM_LOCAL_GRMHD,
+                                     MPI_GROUP_LOCAL_LIAISON_FROM_GRMHD,  MPI_COMM_LOCAL_LIAISON_FROM_GRMHD);
 
 
   // split GRRAY+LIAISON (uses same function used by GRRAY code)
   init_MPI_group_grray_liaison_split(processtypelistlocal_grray_liaison,sizeproclistlocal_grray_liaison,
-				     MPI_GROUP_LOCAL_GRRAY_LIAISON,  MPI_COMM_LOCAL_GRRAY_LIAISON,
-				     MPI_GROUP_LOCAL_GRRAY,  MPI_COMM_LOCAL_GRRAY,
-				     MPI_GROUP_LOCAL_LIAISON_FROM_GRRAY,  MPI_COMM_LOCAL_LIAISON_FROM_GRRAY);
+                                     MPI_GROUP_LOCAL_GRRAY_LIAISON,  MPI_COMM_LOCAL_GRRAY_LIAISON,
+                                     MPI_GROUP_LOCAL_GRRAY,  MPI_COMM_LOCAL_GRRAY,
+                                     MPI_GROUP_LOCAL_LIAISON_FROM_GRRAY,  MPI_COMM_LOCAL_LIAISON_FROM_GRRAY);
   
 
 
@@ -613,10 +613,10 @@ void init_MPI_group_grmhd_grray_liaison_split(
 // create sub groups (grmhd code and liaison code will call this)
 // 1,2) GRMHD and LIAISON_FROM_GRMHD from GRMHD+LIAISON
 void init_MPI_group_grmhd_liaison_split(
-					int *processtypelistlocal,int sizeproclistlocal,
-					MPI_Group *MPI_GROUP_LOCAL_GRMHD_LIAISON, MPI_Comm *MPI_COMM_LOCAL_GRMHD_LIAISON,
-					MPI_Group *MPI_GROUP_LOCAL_GRMHD, MPI_Comm *MPI_COMM_LOCAL_GRMHD,
-					MPI_Group *MPI_GROUP_LOCAL_LIAISON_FROM_GRMHD, MPI_Comm *MPI_COMM_LOCAL_LIAISON_FROM_GRMHD)
+                                        int *processtypelistlocal,int sizeproclistlocal,
+                                        MPI_Group *MPI_GROUP_LOCAL_GRMHD_LIAISON, MPI_Comm *MPI_COMM_LOCAL_GRMHD_LIAISON,
+                                        MPI_Group *MPI_GROUP_LOCAL_GRMHD, MPI_Comm *MPI_COMM_LOCAL_GRMHD,
+                                        MPI_Group *MPI_GROUP_LOCAL_LIAISON_FROM_GRMHD, MPI_Comm *MPI_COMM_LOCAL_LIAISON_FROM_GRMHD)
 {
   int *ranks;
   int i,j,k,numranks;
@@ -677,10 +677,10 @@ void init_MPI_group_grmhd_liaison_split(
 // create sub groups (grray code and liaison code will call this)
 // 1,2) GRRAY and LIAISON_FROM_GRRAY from GRRAY+LIAISON
 void init_MPI_group_grray_liaison_split(
-					int *processtypelistlocal,int sizeproclistlocal,
-					MPI_Group *MPI_GROUP_LOCAL_GRRAY_LIAISON, MPI_Comm *MPI_COMM_LOCAL_GRRAY_LIAISON,
-					MPI_Group *MPI_GROUP_LOCAL_GRRAY, MPI_Comm *MPI_COMM_LOCAL_GRRAY,
-					MPI_Group *MPI_GROUP_LOCAL_LIAISON_FROM_GRRAY, MPI_Comm *MPI_COMM_LOCAL_LIAISON_FROM_GRRAY)
+                                        int *processtypelistlocal,int sizeproclistlocal,
+                                        MPI_Group *MPI_GROUP_LOCAL_GRRAY_LIAISON, MPI_Comm *MPI_COMM_LOCAL_GRRAY_LIAISON,
+                                        MPI_Group *MPI_GROUP_LOCAL_GRRAY, MPI_Comm *MPI_COMM_LOCAL_GRRAY,
+                                        MPI_Group *MPI_GROUP_LOCAL_LIAISON_FROM_GRRAY, MPI_Comm *MPI_COMM_LOCAL_LIAISON_FROM_GRRAY)
 {
   int *ranks;
   int i,j,k,numranks;
@@ -743,8 +743,8 @@ void init_MPI_group_grray_liaison_split(
 
 //void init_MPI_group_liaison_free(void)
 //{
-  //      MPI_Comm_free(&combound[i]); // messy since makes nonmember have NULL comm.  Should make as is, and if not member, then skip
-  //    MPI_Group_free(&grprem[i]);
+//      MPI_Comm_free(&combound[i]); // messy since makes nonmember have NULL comm.  Should make as is, and if not member, then skip
+//    MPI_Group_free(&grprem[i]);
 //}
 
 
@@ -756,15 +756,15 @@ void init_MPI_group_grray_liaison_split(
 int final_myexit(void)
 {
 #if(USEMPI)
-    // must abort since no clear to communicate to other cpus
-    MPI_Abort(MPI_COMM_WORLD, 1);
+  // must abort since no clear to communicate to other cpus
+  MPI_Abort(MPI_COMM_WORLD, 1);
 #endif
 
-    stderrfprintf( "END\n");
-    fflush(stderr);
-    exit(0);
+  stderrfprintf( "END\n");
+  fflush(stderr);
+  exit(0);
     
-    return(0);
+  return(0);
 }
 
 

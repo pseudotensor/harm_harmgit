@@ -29,8 +29,8 @@
 // Below WITHINACTIVESECTION() applies to only active computed cells not including their used boundary cells
 #if( DOGRIDSECTIONING )
 #define WITHINACTIVESECTION(ri,rj,rk) ( ri >= enerposreg[ACTIVEREGION][X1DN] && ri <= enerposreg[ACTIVEREGION][X1UP] \
-                                     && rj >= enerposreg[ACTIVEREGION][X2DN] && rj <= enerposreg[ACTIVEREGION][X2UP] \
-                                     && rk >= enerposreg[ACTIVEREGION][X3DN] && rk <= enerposreg[ACTIVEREGION][X3UP] )
+                                        && rj >= enerposreg[ACTIVEREGION][X2DN] && rj <= enerposreg[ACTIVEREGION][X2UP] \
+                                        && rk >= enerposreg[ACTIVEREGION][X3DN] && rk <= enerposreg[ACTIVEREGION][X3UP] )
 #else
 #define WITHINACTIVESECTION(ri,rj,rk) (ri >=0 && ri<=N1-1 && rj>=0 && rj<=N2-1 && rk>=0 && rk<=N3-1 )  //always within active section since no sectioning (JCM: No, this is only comp cells not BC cells)
 #endif
@@ -40,8 +40,8 @@
 #if( DOGRIDSECTIONING )
 
 #define WITHINACTIVESECTIONEXPAND1(ri,rj,rk) ( ri >= enerposreg[ACTIVEREGION][X1DN]-SHIFT1 && ri <= enerposreg[ACTIVEREGION][X1UP]+SHIFT1 \
-                                     && rj >= enerposreg[ACTIVEREGION][X2DN]-SHIFT2 && rj <= enerposreg[ACTIVEREGION][X2UP]+SHIFT2 \
-                                     && rk >= enerposreg[ACTIVEREGION][X3DN]-SHIFT3 && rk <= enerposreg[ACTIVEREGION][X3UP]+SHIFT3 )
+                                               && rj >= enerposreg[ACTIVEREGION][X2DN]-SHIFT2 && rj <= enerposreg[ACTIVEREGION][X2UP]+SHIFT2 \
+                                               && rk >= enerposreg[ACTIVEREGION][X3DN]-SHIFT3 && rk <= enerposreg[ACTIVEREGION][X3UP]+SHIFT3 )
 
 #define LOOPWITHINACTIVESECTIONEXPAND1(ri,rj,rk) GENLOOP(ri,rj,rk,enerposreg[ACTIVEREGION][X1DN]-SHIFT1,enerposreg[ACTIVEREGION][X1UP]+SHIFT1,enerposreg[ACTIVEREGION][X2DN]-SHIFT2,enerposreg[ACTIVEREGION][X2UP]+SHIFT2,enerposreg[ACTIVEREGION][X3DN]-SHIFT3,enerposreg[ACTIVEREGION][X3UP]+SHIFT3)
 
@@ -70,8 +70,8 @@
 // Below WITHINACTIVEWITHBNDSECTION() applies to active computed cells including their used boundary cells
 #if( DOGRIDSECTIONING )
 #define WITHINACTIVEWITHBNDSECTION(ri,rj,rk) ( ri >= enerposreg[ACTIVEWITHBNDREGION][X1DN] && ri <= enerposreg[ACTIVEWITHBNDREGION][X1UP] \
-                                     && rj >= enerposreg[ACTIVEWITHBNDREGION][X2DN] && rj <= enerposreg[ACTIVEWITHBNDREGION][X2UP] \
-                                     && rk >= enerposreg[ACTIVEWITHBNDREGION][X3DN] && rk <= enerposreg[ACTIVEWITHBNDREGION][X3UP] )
+                                               && rj >= enerposreg[ACTIVEWITHBNDREGION][X2DN] && rj <= enerposreg[ACTIVEWITHBNDREGION][X2UP] \
+                                               && rk >= enerposreg[ACTIVEWITHBNDREGION][X3DN] && rk <= enerposreg[ACTIVEWITHBNDREGION][X3UP] )
 #else
 #define WITHINACTIVEWITHBNDSECTION(ri,rj,rk) (ri >=-N1BND && ri<=N1-1+N1BND && rj>=-N2BND && rj<=N2-1+N2BND && rk>=-N3BND && rk<=N3-1+N3BND )  //always within active section since no sectioning (JCM: No, this is only comp+bnd cells)
 #endif
@@ -80,14 +80,14 @@
 // Below WITHINACTIVEWITHBNDSECTION() applies to active computed cells including their used boundary cells
 #if( DOGRIDSECTIONING )
 #define WITHINACTIVESTAGWITHBNDSECTIONX1(ri,rj,rk) ( ri >= enerposreg[ACTIVEWITHBNDREGION][X1DN] && ri <= MIN(1+enerposreg[ACTIVEWITHBNDREGION][X1UP],N1-1+N1BND) \
-						     && rj >= enerposreg[ACTIVEWITHBNDREGION][X2DN] && rj <= enerposreg[ACTIVEWITHBNDREGION][X2UP] \
-						     && rk >= enerposreg[ACTIVEWITHBNDREGION][X3DN] && rk <= enerposreg[ACTIVEWITHBNDREGION][X3UP] )
+                                                     && rj >= enerposreg[ACTIVEWITHBNDREGION][X2DN] && rj <= enerposreg[ACTIVEWITHBNDREGION][X2UP] \
+                                                     && rk >= enerposreg[ACTIVEWITHBNDREGION][X3DN] && rk <= enerposreg[ACTIVEWITHBNDREGION][X3UP] )
 #define WITHINACTIVESTAGWITHBNDSECTIONX2(ri,rj,rk) ( ri >= enerposreg[ACTIVEWITHBNDREGION][X1DN] && ri <= enerposreg[ACTIVEWITHBNDREGION][X1UP] \
-						     && rj >= enerposreg[ACTIVEWITHBNDREGION][X2DN] && rj <= MIN(1+enerposreg[ACTIVEWITHBNDREGION][X2UP],N2-1+N2BND) \
-						     && rk >= enerposreg[ACTIVEWITHBNDREGION][X3DN] && rk <= enerposreg[ACTIVEWITHBNDREGION][X3UP] )
+                                                     && rj >= enerposreg[ACTIVEWITHBNDREGION][X2DN] && rj <= MIN(1+enerposreg[ACTIVEWITHBNDREGION][X2UP],N2-1+N2BND) \
+                                                     && rk >= enerposreg[ACTIVEWITHBNDREGION][X3DN] && rk <= enerposreg[ACTIVEWITHBNDREGION][X3UP] )
 #define WITHINACTIVESTAGWITHBNDSECTIONX3(ri,rj,rk) ( ri >= enerposreg[ACTIVEWITHBNDREGION][X1DN] && ri <= enerposreg[ACTIVEWITHBNDREGION][X1UP] \
-						     && rj >= enerposreg[ACTIVEWITHBNDREGION][X2DN] && rj <= enerposreg[ACTIVEWITHBNDREGION][X2UP] \
-						     && rk >= enerposreg[ACTIVEWITHBNDREGION][X3DN] && rk <= MIN(1+enerposreg[ACTIVEWITHBNDREGION][X3UP],N3-1+N3BND) )
+                                                     && rj >= enerposreg[ACTIVEWITHBNDREGION][X2DN] && rj <= enerposreg[ACTIVEWITHBNDREGION][X2UP] \
+                                                     && rk >= enerposreg[ACTIVEWITHBNDREGION][X3DN] && rk <= MIN(1+enerposreg[ACTIVEWITHBNDREGION][X3UP],N3-1+N3BND) )
 #else
 // all same
 #define WITHINACTIVESTAGWITHBNDSECTIONX1(ri,rj,rk) (ri >=-N1BND && ri<=N1-1+N1BND && rj>=-N2BND && rj<=N2-1+N2BND && rk>=-N3BND && rk<=N3-1+N3BND )  //always within active section since no sectioning (JCM: No, this is only comp+bnd cells)
@@ -100,33 +100,33 @@
 // Below WITHINACTIVEBNDSECTION() applies to only the boundary cells of active computed cells
 // Applies to centered quantities
 #if( DOGRIDSECTIONING )
-#define WITHINACTIVEBNDSECTION(ri,rj,rk) ( \
-					  (((ri >= enerposreg[ACTIVEWITHBNDREGION][X1DN] && ri < enerposreg[ACTIVEREGION][X1DN]) || (ri <= enerposreg[ACTIVEWITHBNDREGION][X1UP] && ri > enerposreg[ACTIVEREGION][X1UP])) && (rj >= enerposreg[ACTIVEWITHBNDREGION][X2DN] && rj <= enerposreg[ACTIVEWITHBNDREGION][X2UP] && rk >= enerposreg[ACTIVEWITHBNDREGION][X3DN] && rk <= enerposreg[ACTIVEWITHBNDREGION][X3UP])) \
-					  || (((rj >= enerposreg[ACTIVEWITHBNDREGION][X2DN] && rj < enerposreg[ACTIVEREGION][X2DN]) || (rj <= enerposreg[ACTIVEWITHBNDREGION][X2UP] && rj > enerposreg[ACTIVEREGION][X2UP])) && (ri >= enerposreg[ACTIVEWITHBNDREGION][X1DN] && ri <= enerposreg[ACTIVEWITHBNDREGION][X1UP] && rk >= enerposreg[ACTIVEWITHBNDREGION][X3DN] && rk <= enerposreg[ACTIVEWITHBNDREGION][X3UP])) \
-					  || (((rk >= enerposreg[ACTIVEWITHBNDREGION][X3DN] && rk < enerposreg[ACTIVEREGION][X3DN]) || (rk <= enerposreg[ACTIVEWITHBNDREGION][X3UP] && rk > enerposreg[ACTIVEREGION][X3UP])) && (ri >= enerposreg[ACTIVEWITHBNDREGION][X1DN] && ri <= enerposreg[ACTIVEWITHBNDREGION][X1UP] && rj >= enerposreg[ACTIVEWITHBNDREGION][X2DN] && rj <= enerposreg[ACTIVEWITHBNDREGION][X2UP])) \
-					   )
+#define WITHINACTIVEBNDSECTION(ri,rj,rk) (                              \
+                                          (((ri >= enerposreg[ACTIVEWITHBNDREGION][X1DN] && ri < enerposreg[ACTIVEREGION][X1DN]) || (ri <= enerposreg[ACTIVEWITHBNDREGION][X1UP] && ri > enerposreg[ACTIVEREGION][X1UP])) && (rj >= enerposreg[ACTIVEWITHBNDREGION][X2DN] && rj <= enerposreg[ACTIVEWITHBNDREGION][X2UP] && rk >= enerposreg[ACTIVEWITHBNDREGION][X3DN] && rk <= enerposreg[ACTIVEWITHBNDREGION][X3UP])) \
+                                          || (((rj >= enerposreg[ACTIVEWITHBNDREGION][X2DN] && rj < enerposreg[ACTIVEREGION][X2DN]) || (rj <= enerposreg[ACTIVEWITHBNDREGION][X2UP] && rj > enerposreg[ACTIVEREGION][X2UP])) && (ri >= enerposreg[ACTIVEWITHBNDREGION][X1DN] && ri <= enerposreg[ACTIVEWITHBNDREGION][X1UP] && rk >= enerposreg[ACTIVEWITHBNDREGION][X3DN] && rk <= enerposreg[ACTIVEWITHBNDREGION][X3UP])) \
+                                          || (((rk >= enerposreg[ACTIVEWITHBNDREGION][X3DN] && rk < enerposreg[ACTIVEREGION][X3DN]) || (rk <= enerposreg[ACTIVEWITHBNDREGION][X3UP] && rk > enerposreg[ACTIVEREGION][X3UP])) && (ri >= enerposreg[ACTIVEWITHBNDREGION][X1DN] && ri <= enerposreg[ACTIVEWITHBNDREGION][X1UP] && rj >= enerposreg[ACTIVEWITHBNDREGION][X2DN] && rj <= enerposreg[ACTIVEWITHBNDREGION][X2UP])) \
+                                           )
 #else
-#define WITHINACTIVEBNDSECTION(ri,rj,rk) ( \
-					  (((ri >= -N1BND && ri < 0) || (ri <= N1-1+N1BND && ri > N1-1)) && (rj >= -N2BND && rj <= N2-1+N2BND && rk >= -N3BND && rk <= N3-1+N3BND)) \
-					  || (((rj >= -N2BND && rj < 0) || (rj <= N2-1+N2BND && rj > N2-1)) && (ri >= -N1BND && ri <= N1-1+N1BND && rk >= -N3BND && rk <= N3-1+N3BND)) \
-					  || (((rk >= -N3BND && rk < 0) || (rk <= N3-1+N3BND && rk > N3-1)) && (rj >= -N2BND && rj <= N2-1+N2BND && ri >= -N1BND && ri <= N1-1+N1BND)) \
-					   )
+#define WITHINACTIVEBNDSECTION(ri,rj,rk) (                              \
+                                          (((ri >= -N1BND && ri < 0) || (ri <= N1-1+N1BND && ri > N1-1)) && (rj >= -N2BND && rj <= N2-1+N2BND && rk >= -N3BND && rk <= N3-1+N3BND)) \
+                                          || (((rj >= -N2BND && rj < 0) || (rj <= N2-1+N2BND && rj > N2-1)) && (ri >= -N1BND && ri <= N1-1+N1BND && rk >= -N3BND && rk <= N3-1+N3BND)) \
+                                          || (((rk >= -N3BND && rk < 0) || (rk <= N3-1+N3BND && rk > N3-1)) && (rj >= -N2BND && rj <= N2-1+N2BND && ri >= -N1BND && ri <= N1-1+N1BND)) \
+                                           )
 #endif
 
 // Below WITHINACTIVEBNDSECTION() applies to only the boundary cells of active computed cells
 // Applies to staggered quantities (e.g. i=0 is boundary cell for fixed BCs)
 #if( DOGRIDSECTIONING )
-#define WITHINACTIVESTAGBNDSECTION(ri,rj,rk) ( \
-					  (((ri >= enerposreg[ACTIVEWITHBNDREGION][X1DN] && ri <= enerposreg[ACTIVEREGION][X1DN]) || (ri <= enerposreg[ACTIVEWITHBNDREGION][X1UP] && ri > enerposreg[ACTIVEREGION][X1UP])) && (rj >= enerposreg[ACTIVEWITHBNDREGION][X2DN] && rj <= enerposreg[ACTIVEWITHBNDREGION][X2UP] && rk >= enerposreg[ACTIVEWITHBNDREGION][X3DN] && rk <= enerposreg[ACTIVEWITHBNDREGION][X3UP])) \
-					  || (((rj >= enerposreg[ACTIVEWITHBNDREGION][X2DN] && rj <= enerposreg[ACTIVEREGION][X2DN]) || (rj <= enerposreg[ACTIVEWITHBNDREGION][X2UP] && rj > enerposreg[ACTIVEREGION][X2UP])) && (ri >= enerposreg[ACTIVEWITHBNDREGION][X1DN] && ri <= enerposreg[ACTIVEWITHBNDREGION][X1UP] && rk >= enerposreg[ACTIVEWITHBNDREGION][X3DN] && rk <= enerposreg[ACTIVEWITHBNDREGION][X3UP])) \
-					  || (((rk >= enerposreg[ACTIVEWITHBNDREGION][X3DN] && rk <= enerposreg[ACTIVEREGION][X3DN]) || (rk <= enerposreg[ACTIVEWITHBNDREGION][X3UP] && rk > enerposreg[ACTIVEREGION][X3UP])) && (ri >= enerposreg[ACTIVEWITHBNDREGION][X1DN] && ri <= enerposreg[ACTIVEWITHBNDREGION][X1UP] && rj >= enerposreg[ACTIVEWITHBNDREGION][X2DN] && rj <= enerposreg[ACTIVEWITHBNDREGION][X2UP])) \
-					   )
+#define WITHINACTIVESTAGBNDSECTION(ri,rj,rk) (                          \
+                                              (((ri >= enerposreg[ACTIVEWITHBNDREGION][X1DN] && ri <= enerposreg[ACTIVEREGION][X1DN]) || (ri <= enerposreg[ACTIVEWITHBNDREGION][X1UP] && ri > enerposreg[ACTIVEREGION][X1UP])) && (rj >= enerposreg[ACTIVEWITHBNDREGION][X2DN] && rj <= enerposreg[ACTIVEWITHBNDREGION][X2UP] && rk >= enerposreg[ACTIVEWITHBNDREGION][X3DN] && rk <= enerposreg[ACTIVEWITHBNDREGION][X3UP])) \
+                                              || (((rj >= enerposreg[ACTIVEWITHBNDREGION][X2DN] && rj <= enerposreg[ACTIVEREGION][X2DN]) || (rj <= enerposreg[ACTIVEWITHBNDREGION][X2UP] && rj > enerposreg[ACTIVEREGION][X2UP])) && (ri >= enerposreg[ACTIVEWITHBNDREGION][X1DN] && ri <= enerposreg[ACTIVEWITHBNDREGION][X1UP] && rk >= enerposreg[ACTIVEWITHBNDREGION][X3DN] && rk <= enerposreg[ACTIVEWITHBNDREGION][X3UP])) \
+                                              || (((rk >= enerposreg[ACTIVEWITHBNDREGION][X3DN] && rk <= enerposreg[ACTIVEREGION][X3DN]) || (rk <= enerposreg[ACTIVEWITHBNDREGION][X3UP] && rk > enerposreg[ACTIVEREGION][X3UP])) && (ri >= enerposreg[ACTIVEWITHBNDREGION][X1DN] && ri <= enerposreg[ACTIVEWITHBNDREGION][X1UP] && rj >= enerposreg[ACTIVEWITHBNDREGION][X2DN] && rj <= enerposreg[ACTIVEWITHBNDREGION][X2UP])) \
+                                               )
 #else
-#define WITHINACTIVESTAGBNDSECTION(ri,rj,rk) ( \
-					  (((ri >= -N1BND && ri <= 0) || (ri <= N1-1+N1BND && ri > N1-1)) && (rj >= -N2BND && rj <= N2-1+N2BND && rk >= -N3BND && rk <= N3-1+N3BND)) \
-					  || (((rj >= -N2BND && rj <= 0) || (rj <= N2-1+N2BND && rj > N2-1)) && (ri >= -N1BND && ri <= N1-1+N1BND && rk >= -N3BND && rk <= N3-1+N3BND)) \
-					  || (((rk >= -N3BND && rk <= 0) || (rk <= N3-1+N3BND && rk > N3-1)) && (rj >= -N2BND && rj <= N2-1+N2BND && ri >= -N1BND && ri <= N1-1+N1BND)) \
-					   )
+#define WITHINACTIVESTAGBNDSECTION(ri,rj,rk) (                          \
+                                              (((ri >= -N1BND && ri <= 0) || (ri <= N1-1+N1BND && ri > N1-1)) && (rj >= -N2BND && rj <= N2-1+N2BND && rk >= -N3BND && rk <= N3-1+N3BND)) \
+                                              || (((rj >= -N2BND && rj <= 0) || (rj <= N2-1+N2BND && rj > N2-1)) && (ri >= -N1BND && ri <= N1-1+N1BND && rk >= -N3BND && rk <= N3-1+N3BND)) \
+                                              || (((rk >= -N3BND && rk <= 0) || (rk <= N3-1+N3BND && rk > N3-1)) && (rj >= -N2BND && rj <= N2-1+N2BND && ri >= -N1BND && ri <= N1-1+N1BND)) \
+                                               )
 #endif
 
 
@@ -140,45 +140,45 @@
 // Below WITHINACTIVEBNDSECTION() applies to only the boundary cells of active computed cells
 // Applies to centered quantities
 #if( DOGRIDSECTIONING )
-#define WITHINACTIVEBNDSECTIONX1DN(ri,rj,rk) ( \
-					      ( ri >= enerposreg[ACTIVEWITHBNDREGION][X1DN] && ri < enerposreg[ACTIVEREGION][X1DN] ) && (rj >= enerposreg[ACTIVEWITHBNDREGION][X2DN] && rj <= enerposreg[ACTIVEWITHBNDREGION][X2UP] && rk >= enerposreg[ACTIVEWITHBNDREGION][X3DN] && rk <= enerposreg[ACTIVEWITHBNDREGION][X3UP]) \
-					       )
-#define WITHINACTIVEBNDSECTIONX1UP(ri,rj,rk) ( \
-					  ( ri <= enerposreg[ACTIVEWITHBNDREGION][X1UP] && ri > enerposreg[ACTIVEREGION][X1UP] ) && (rj >= enerposreg[ACTIVEWITHBNDREGION][X2DN] && rj <= enerposreg[ACTIVEWITHBNDREGION][X2UP] && rk >= enerposreg[ACTIVEWITHBNDREGION][X3DN] && rk <= enerposreg[ACTIVEWITHBNDREGION][X3UP]) \
-					   )
+#define WITHINACTIVEBNDSECTIONX1DN(ri,rj,rk) (                          \
+                                              ( ri >= enerposreg[ACTIVEWITHBNDREGION][X1DN] && ri < enerposreg[ACTIVEREGION][X1DN] ) && (rj >= enerposreg[ACTIVEWITHBNDREGION][X2DN] && rj <= enerposreg[ACTIVEWITHBNDREGION][X2UP] && rk >= enerposreg[ACTIVEWITHBNDREGION][X3DN] && rk <= enerposreg[ACTIVEWITHBNDREGION][X3UP]) \
+                                               )
+#define WITHINACTIVEBNDSECTIONX1UP(ri,rj,rk) (                          \
+                                              ( ri <= enerposreg[ACTIVEWITHBNDREGION][X1UP] && ri > enerposreg[ACTIVEREGION][X1UP] ) && (rj >= enerposreg[ACTIVEWITHBNDREGION][X2DN] && rj <= enerposreg[ACTIVEWITHBNDREGION][X2UP] && rk >= enerposreg[ACTIVEWITHBNDREGION][X3DN] && rk <= enerposreg[ACTIVEWITHBNDREGION][X3UP]) \
+                                               )
 
-#define WITHINACTIVEBNDSECTIONX2DN(ri,rj,rk) ( \
-					      ( rj >= enerposreg[ACTIVEWITHBNDREGION][X2DN] && rj < enerposreg[ACTIVEREGION][X2DN])  && (ri >= enerposreg[ACTIVEWITHBNDREGION][X1DN] && ri <= enerposreg[ACTIVEWITHBNDREGION][X1UP] && rk >= enerposreg[ACTIVEWITHBNDREGION][X3DN] && rk <= enerposreg[ACTIVEWITHBNDREGION][X3UP]) \
-					       )
-#define WITHINACTIVEBNDSECTIONX2UP(ri,rj,rk) ( \
-					      ( rj <= enerposreg[ACTIVEWITHBNDREGION][X2UP] && rj > enerposreg[ACTIVEREGION][X2UP]) && (ri >= enerposreg[ACTIVEWITHBNDREGION][X1DN] && ri <= enerposreg[ACTIVEWITHBNDREGION][X1UP] && rk >= enerposreg[ACTIVEWITHBNDREGION][X3DN] && rk <= enerposreg[ACTIVEWITHBNDREGION][X3UP]) \
-					       )
+#define WITHINACTIVEBNDSECTIONX2DN(ri,rj,rk) (                          \
+                                              ( rj >= enerposreg[ACTIVEWITHBNDREGION][X2DN] && rj < enerposreg[ACTIVEREGION][X2DN])  && (ri >= enerposreg[ACTIVEWITHBNDREGION][X1DN] && ri <= enerposreg[ACTIVEWITHBNDREGION][X1UP] && rk >= enerposreg[ACTIVEWITHBNDREGION][X3DN] && rk <= enerposreg[ACTIVEWITHBNDREGION][X3UP]) \
+                                               )
+#define WITHINACTIVEBNDSECTIONX2UP(ri,rj,rk) (                          \
+                                              ( rj <= enerposreg[ACTIVEWITHBNDREGION][X2UP] && rj > enerposreg[ACTIVEREGION][X2UP]) && (ri >= enerposreg[ACTIVEWITHBNDREGION][X1DN] && ri <= enerposreg[ACTIVEWITHBNDREGION][X1UP] && rk >= enerposreg[ACTIVEWITHBNDREGION][X3DN] && rk <= enerposreg[ACTIVEWITHBNDREGION][X3UP]) \
+                                               )
 
-#define WITHINACTIVEBNDSECTIONX3DN(ri,rj,rk) ( \
-					      ( rk >= enerposreg[ACTIVEWITHBNDREGION][X3DN] && rk < enerposreg[ACTIVEREGION][X3DN]) && (ri >= enerposreg[ACTIVEWITHBNDREGION][X1DN] && ri <= enerposreg[ACTIVEWITHBNDREGION][X1UP] && rj >= enerposreg[ACTIVEWITHBNDREGION][X2DN] && rj <= enerposreg[ACTIVEWITHBNDREGION][X2UP]) \
-					       )
-#define WITHINACTIVEBNDSECTIONX3UP(ri,rj,rk) ( \
-					      ( rk <= enerposreg[ACTIVEWITHBNDREGION][X3UP] && rk > enerposreg[ACTIVEREGION][X3UP]) && (ri >= enerposreg[ACTIVEWITHBNDREGION][X1DN] && ri <= enerposreg[ACTIVEWITHBNDREGION][X1UP] && rj >= enerposreg[ACTIVEWITHBNDREGION][X2DN] && rj <= enerposreg[ACTIVEWITHBNDREGION][X2UP])) \
-					       )
+#define WITHINACTIVEBNDSECTIONX3DN(ri,rj,rk) (                          \
+                                              ( rk >= enerposreg[ACTIVEWITHBNDREGION][X3DN] && rk < enerposreg[ACTIVEREGION][X3DN]) && (ri >= enerposreg[ACTIVEWITHBNDREGION][X1DN] && ri <= enerposreg[ACTIVEWITHBNDREGION][X1UP] && rj >= enerposreg[ACTIVEWITHBNDREGION][X2DN] && rj <= enerposreg[ACTIVEWITHBNDREGION][X2UP]) \
+                                               )
+#define WITHINACTIVEBNDSECTIONX3UP(ri,rj,rk) (                          \
+                                              ( rk <= enerposreg[ACTIVEWITHBNDREGION][X3UP] && rk > enerposreg[ACTIVEREGION][X3UP]) && (ri >= enerposreg[ACTIVEWITHBNDREGION][X1DN] && ri <= enerposreg[ACTIVEWITHBNDREGION][X1UP] && rj >= enerposreg[ACTIVEWITHBNDREGION][X2DN] && rj <= enerposreg[ACTIVEWITHBNDREGION][X2UP])) \
+  )
 #else
-#define WITHINACTIVEBNDSECTIONX1DN(ri,rj,rk) (\
-					      (((ri >= -N1BND && ri < 0) ) && (rj >= -N2BND && rj <= N2-1+N2BND && rk >= -N3BND && rk <= N3-1+N3BND)) \
-					      )
-#define WITHINACTIVEBNDSECTIONX1UP(ri,rj,rk) (\
-					      (((ri <= N1-1+N1BND && ri > N1-1)) && (rj >= -N2BND && rj <= N2-1+N2BND && rk >= -N3BND && rk <= N3-1+N3BND)) \
-					      )
-#define WITHINACTIVEBNDSECTIONX2DN(ri,rj,rk) (\
-					      (((rj >= -N2BND && rj < 0) ) && (ri >= -N1BND && ri <= N1-1+N1BND && rk >= -N3BND && rk <= N3-1+N3BND)) \
-					      )
-#define WITHINACTIVEBNDSECTIONX2UP(ri,rj,rk) (\
-					      (((rj <= N2-1+N2BND && rj > N2-1)) && (ri >= -N1BND && ri <= N1-1+N1BND && rk >= -N3BND && rk <= N3-1+N3BND)) \
-					      )
-#define WITHINACTIVEBNDSECTIONX3DN(ri,rj,rk) (\
-					      (((rk >= -N3BND && rk < 0) ) && (rj >= -N2BND && rj <= N2-1+N2BND && ri >= -N1BND && ri <= N1-1+N1BND)) \
-					      )
-#define WITHINACTIVEBNDSECTIONX3UP(ri,rj,rk) (\
-					      (((rk <= N3-1+N3BND && rk > N3-1)) && (rj >= -N2BND && rj <= N2-1+N2BND && ri >= -N1BND && ri <= N1-1+N1BND)) \
-					      )
+#define WITHINACTIVEBNDSECTIONX1DN(ri,rj,rk) (                          \
+                                              (((ri >= -N1BND && ri < 0) ) && (rj >= -N2BND && rj <= N2-1+N2BND && rk >= -N3BND && rk <= N3-1+N3BND)) \
+                                              )
+#define WITHINACTIVEBNDSECTIONX1UP(ri,rj,rk) (                          \
+                                              (((ri <= N1-1+N1BND && ri > N1-1)) && (rj >= -N2BND && rj <= N2-1+N2BND && rk >= -N3BND && rk <= N3-1+N3BND)) \
+                                              )
+#define WITHINACTIVEBNDSECTIONX2DN(ri,rj,rk) (                          \
+                                              (((rj >= -N2BND && rj < 0) ) && (ri >= -N1BND && ri <= N1-1+N1BND && rk >= -N3BND && rk <= N3-1+N3BND)) \
+                                              )
+#define WITHINACTIVEBNDSECTIONX2UP(ri,rj,rk) (                          \
+                                              (((rj <= N2-1+N2BND && rj > N2-1)) && (ri >= -N1BND && ri <= N1-1+N1BND && rk >= -N3BND && rk <= N3-1+N3BND)) \
+                                              )
+#define WITHINACTIVEBNDSECTIONX3DN(ri,rj,rk) (                          \
+                                              (((rk >= -N3BND && rk < 0) ) && (rj >= -N2BND && rj <= N2-1+N2BND && ri >= -N1BND && ri <= N1-1+N1BND)) \
+                                              )
+#define WITHINACTIVEBNDSECTIONX3UP(ri,rj,rk) (                          \
+                                              (((rk <= N3-1+N3BND && rk > N3-1)) && (rj >= -N2BND && rj <= N2-1+N2BND && ri >= -N1BND && ri <= N1-1+N1BND)) \
+                                              )
 #endif
 
 
@@ -186,45 +186,45 @@
 // Below WITHINACTIVESTAGBNDSECTION() applies to only the boundary cells of active computed cells
 // Applies to staggered quantities (e.g. i=0 is boundary cell for fixed BCs)
 #if( DOGRIDSECTIONING )
-#define WITHINACTIVESTAGBNDSECTIONX1DN(ri,rj,rk) ( \
-					      ( ri >= enerposreg[ACTIVEWITHBNDREGION][X1DN] && ri <= enerposreg[ACTIVEREGION][X1DN] ) && (rj >= enerposreg[ACTIVEWITHBNDREGION][X2DN] && rj <= enerposreg[ACTIVEWITHBNDREGION][X2UP] && rk >= enerposreg[ACTIVEWITHBNDREGION][X3DN] && rk <= enerposreg[ACTIVEWITHBNDREGION][X3UP]) \
-					       )
-#define WITHINACTIVESTAGBNDSECTIONX1UP(ri,rj,rk) ( \
-					  ( ri <= enerposreg[ACTIVEWITHBNDREGION][X1UP] && ri > enerposreg[ACTIVEREGION][X1UP] ) && (rj >= enerposreg[ACTIVEWITHBNDREGION][X2DN] && rj <= enerposreg[ACTIVEWITHBNDREGION][X2UP] && rk >= enerposreg[ACTIVEWITHBNDREGION][X3DN] && rk <= enerposreg[ACTIVEWITHBNDREGION][X3UP]) \
-					   )
+#define WITHINACTIVESTAGBNDSECTIONX1DN(ri,rj,rk) (                      \
+                                                  ( ri >= enerposreg[ACTIVEWITHBNDREGION][X1DN] && ri <= enerposreg[ACTIVEREGION][X1DN] ) && (rj >= enerposreg[ACTIVEWITHBNDREGION][X2DN] && rj <= enerposreg[ACTIVEWITHBNDREGION][X2UP] && rk >= enerposreg[ACTIVEWITHBNDREGION][X3DN] && rk <= enerposreg[ACTIVEWITHBNDREGION][X3UP]) \
+                                                   )
+#define WITHINACTIVESTAGBNDSECTIONX1UP(ri,rj,rk) (                      \
+                                                  ( ri <= enerposreg[ACTIVEWITHBNDREGION][X1UP] && ri > enerposreg[ACTIVEREGION][X1UP] ) && (rj >= enerposreg[ACTIVEWITHBNDREGION][X2DN] && rj <= enerposreg[ACTIVEWITHBNDREGION][X2UP] && rk >= enerposreg[ACTIVEWITHBNDREGION][X3DN] && rk <= enerposreg[ACTIVEWITHBNDREGION][X3UP]) \
+                                                   )
 
-#define WITHINACTIVESTAGBNDSECTIONX2DN(ri,rj,rk) ( \
-					      ( rj >= enerposreg[ACTIVEWITHBNDREGION][X2DN] && rj <= enerposreg[ACTIVEREGION][X2DN])  && (ri >= enerposreg[ACTIVEWITHBNDREGION][X1DN] && ri <= enerposreg[ACTIVEWITHBNDREGION][X1UP] && rk >= enerposreg[ACTIVEWITHBNDREGION][X3DN] && rk <= enerposreg[ACTIVEWITHBNDREGION][X3UP]) \
-					       )
-#define WITHINACTIVESTAGBNDSECTIONX2UP(ri,rj,rk) ( \
-					      ( rj <= enerposreg[ACTIVEWITHBNDREGION][X2UP] && rj > enerposreg[ACTIVEREGION][X2UP]) && (ri >= enerposreg[ACTIVEWITHBNDREGION][X1DN] && ri <= enerposreg[ACTIVEWITHBNDREGION][X1UP] && rk >= enerposreg[ACTIVEWITHBNDREGION][X3DN] && rk <= enerposreg[ACTIVEWITHBNDREGION][X3UP]) \
-					       )
+#define WITHINACTIVESTAGBNDSECTIONX2DN(ri,rj,rk) (                      \
+                                                  ( rj >= enerposreg[ACTIVEWITHBNDREGION][X2DN] && rj <= enerposreg[ACTIVEREGION][X2DN])  && (ri >= enerposreg[ACTIVEWITHBNDREGION][X1DN] && ri <= enerposreg[ACTIVEWITHBNDREGION][X1UP] && rk >= enerposreg[ACTIVEWITHBNDREGION][X3DN] && rk <= enerposreg[ACTIVEWITHBNDREGION][X3UP]) \
+                                                   )
+#define WITHINACTIVESTAGBNDSECTIONX2UP(ri,rj,rk) (                      \
+                                                  ( rj <= enerposreg[ACTIVEWITHBNDREGION][X2UP] && rj > enerposreg[ACTIVEREGION][X2UP]) && (ri >= enerposreg[ACTIVEWITHBNDREGION][X1DN] && ri <= enerposreg[ACTIVEWITHBNDREGION][X1UP] && rk >= enerposreg[ACTIVEWITHBNDREGION][X3DN] && rk <= enerposreg[ACTIVEWITHBNDREGION][X3UP]) \
+                                                   )
 
-#define WITHINACTIVESTAGBNDSECTIONX3DN(ri,rj,rk) ( \
-					      ( rk >= enerposreg[ACTIVEWITHBNDREGION][X3DN] && rk <= enerposreg[ACTIVEREGION][X3DN]) && (ri >= enerposreg[ACTIVEWITHBNDREGION][X1DN] && ri <= enerposreg[ACTIVEWITHBNDREGION][X1UP] && rj >= enerposreg[ACTIVEWITHBNDREGION][X2DN] && rj <= enerposreg[ACTIVEWITHBNDREGION][X2UP]) \
-					       )
-#define WITHINACTIVESTAGBNDSECTIONX3UP(ri,rj,rk) ( \
-					      ( rk <= enerposreg[ACTIVEWITHBNDREGION][X3UP] && rk > enerposreg[ACTIVEREGION][X3UP]) && (ri >= enerposreg[ACTIVEWITHBNDREGION][X1DN] && ri <= enerposreg[ACTIVEWITHBNDREGION][X1UP] && rj >= enerposreg[ACTIVEWITHBNDREGION][X2DN] && rj <= enerposreg[ACTIVEWITHBNDREGION][X2UP])) \
-					       )
+#define WITHINACTIVESTAGBNDSECTIONX3DN(ri,rj,rk) (                      \
+                                                  ( rk >= enerposreg[ACTIVEWITHBNDREGION][X3DN] && rk <= enerposreg[ACTIVEREGION][X3DN]) && (ri >= enerposreg[ACTIVEWITHBNDREGION][X1DN] && ri <= enerposreg[ACTIVEWITHBNDREGION][X1UP] && rj >= enerposreg[ACTIVEWITHBNDREGION][X2DN] && rj <= enerposreg[ACTIVEWITHBNDREGION][X2UP]) \
+                                                   )
+#define WITHINACTIVESTAGBNDSECTIONX3UP(ri,rj,rk) (                      \
+                                                  ( rk <= enerposreg[ACTIVEWITHBNDREGION][X3UP] && rk > enerposreg[ACTIVEREGION][X3UP]) && (ri >= enerposreg[ACTIVEWITHBNDREGION][X1DN] && ri <= enerposreg[ACTIVEWITHBNDREGION][X1UP] && rj >= enerposreg[ACTIVEWITHBNDREGION][X2DN] && rj <= enerposreg[ACTIVEWITHBNDREGION][X2UP])) \
+  )
 #else
-#define WITHINACTIVESTAGBNDSECTIONX1DN(ri,rj,rk) (\
-					      (((ri >= -N1BND && ri <= 0) ) && (rj >= -N2BND && rj <= N2-1+N2BND && rk >= -N3BND && rk <= N3-1+N3BND)) \
-					      )
-#define WITHINACTIVESTAGBNDSECTIONX1UP(ri,rj,rk) (\
-					      (((ri <= N1-1+N1BND && ri > N1-1)) && (rj >= -N2BND && rj <= N2-1+N2BND && rk >= -N3BND && rk <= N3-1+N3BND)) \
-					      )
-#define WITHINACTIVESTAGBNDSECTIONX2DN(ri,rj,rk) (\
-					      (((rj >= -N2BND && rj <= 0) ) && (ri >= -N1BND && ri <= N1-1+N1BND && rk >= -N3BND && rk <= N3-1+N3BND)) \
-					      )
-#define WITHINACTIVESTAGBNDSECTIONX2UP(ri,rj,rk) (\
-					      (((rj <= N2-1+N2BND && rj > N2-1)) && (ri >= -N1BND && ri <= N1-1+N1BND && rk >= -N3BND && rk <= N3-1+N3BND)) \
-					      )
-#define WITHINACTIVESTAGBNDSECTIONX3DN(ri,rj,rk) (\
-					      (((rk >= -N3BND && rk <= 0) ) && (rj >= -N2BND && rj <= N2-1+N2BND && ri >= -N1BND && ri <= N1-1+N1BND)) \
-					      )
-#define WITHINACTIVESTAGBNDSECTIONX3UP(ri,rj,rk) (\
-					      (((rk <= N3-1+N3BND && rk > N3-1)) && (rj >= -N2BND && rj <= N2-1+N2BND && ri >= -N1BND && ri <= N1-1+N1BND)) \
-					      )
+#define WITHINACTIVESTAGBNDSECTIONX1DN(ri,rj,rk) (                      \
+                                                  (((ri >= -N1BND && ri <= 0) ) && (rj >= -N2BND && rj <= N2-1+N2BND && rk >= -N3BND && rk <= N3-1+N3BND)) \
+                                                  )
+#define WITHINACTIVESTAGBNDSECTIONX1UP(ri,rj,rk) (                      \
+                                                  (((ri <= N1-1+N1BND && ri > N1-1)) && (rj >= -N2BND && rj <= N2-1+N2BND && rk >= -N3BND && rk <= N3-1+N3BND)) \
+                                                  )
+#define WITHINACTIVESTAGBNDSECTIONX2DN(ri,rj,rk) (                      \
+                                                  (((rj >= -N2BND && rj <= 0) ) && (ri >= -N1BND && ri <= N1-1+N1BND && rk >= -N3BND && rk <= N3-1+N3BND)) \
+                                                  )
+#define WITHINACTIVESTAGBNDSECTIONX2UP(ri,rj,rk) (                      \
+                                                  (((rj <= N2-1+N2BND && rj > N2-1)) && (ri >= -N1BND && ri <= N1-1+N1BND && rk >= -N3BND && rk <= N3-1+N3BND)) \
+                                                  )
+#define WITHINACTIVESTAGBNDSECTIONX3DN(ri,rj,rk) (                      \
+                                                  (((rk >= -N3BND && rk <= 0) ) && (rj >= -N2BND && rj <= N2-1+N2BND && ri >= -N1BND && ri <= N1-1+N1BND)) \
+                                                  )
+#define WITHINACTIVESTAGBNDSECTIONX3UP(ri,rj,rk) (                      \
+                                                  (((rk <= N3-1+N3BND && rk > N3-1)) && (rj >= -N2BND && rj <= N2-1+N2BND && ri >= -N1BND && ri <= N1-1+N1BND)) \
+                                                  )
 #endif
 
 

@@ -28,7 +28,7 @@
 // see UtoU and source_conn()
 // Note that if MAXWELL==PRIMMAXWELL then primtoflux doesn't use b^\mu or b_\mu (bcon and bcov)
 int primtoflux(int returntype, FTYPE *pr, struct of_state *q, int dir,
-	       struct of_geom *geom, FTYPE *flux)
+               struct of_geom *geom, FTYPE *flux)
 {
   int primtoflux_ma(int *returntype, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux, FTYPE *fluxdiag);
   int primtoflux_em(int *returntype, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux);
@@ -164,22 +164,22 @@ int primtoflux_ma(int *returntype, FTYPE *pr, struct of_state *q, int dir, struc
 #if(SPLITNPR)
   if(nprlist[nprstart]<=UU && nprlist[nprend]>=U3)
 #endif
-  {
-    mhd_calc_ma(pr, dir, geom, q, &flux[UU], &fluxdiagpress[UU]); // fills flux[UU->U3] and fluxdiagonal[UU->U3]
-    *fluxdiag = fluxdiagpress[UU+dir];
-  }
+    {
+      mhd_calc_ma(pr, dir, geom, q, &flux[UU], &fluxdiagpress[UU]); // fills flux[UU->U3] and fluxdiagonal[UU->U3]
+      *fluxdiag = fluxdiagpress[UU+dir];
+    }
 
 #if(DOYL!=DONOYL)
 #if(SPLITNPR)
   if(nprlist[nprstart]<=YL && nprlist[nprend]>=YL)
 #endif
-  ylflux_calc(geom,pr, dir, q, &flux[YL],YL); // fills YL only
+    ylflux_calc(geom,pr, dir, q, &flux[YL],YL); // fills YL only
 #endif
 #if(DOYNU!=DONOYNU)
 #if(SPLITNPR)
   if(nprlist[nprstart]<=YNU && nprlist[nprend]>=YNU)
 #endif
-  ynuflux_calc(geom, pr, dir, q, &flux[YNU],YNU); // fills YNU only
+    ynuflux_calc(geom, pr, dir, q, &flux[YNU],YNU); // fills YNU only
 #endif
 
 
@@ -187,7 +187,7 @@ int primtoflux_ma(int *returntype, FTYPE *pr, struct of_state *q, int dir, struc
 #if(SPLITNPR)
   if(nprlist[nprstart]<=ENTROPY && nprlist[nprend]>=ENTROPY)
 #endif
-  entropyflux_calc(pr, dir, q, &flux[ENTROPY]); // fills ENTROPY only
+    entropyflux_calc(pr, dir, q, &flux[ENTROPY]); // fills ENTROPY only
 
   // below is special for utoprim() 5D version for full entropy evolution and inversion
   if(*returntype==UENTROPY){
@@ -235,7 +235,7 @@ int primtoflux_em(int *returntype, FTYPE *pr, struct of_state *q, int dir, struc
 #if(SPLITNPR)
   if(nprlist[nprstart]<=B1 && nprlist[nprend]>=B3)
 #endif
-  dualfaradayspatial_calc(pr,dir,q,&flux[B1]); // fills B1->B3
+    dualfaradayspatial_calc(pr,dir,q,&flux[B1]); // fills B1->B3
 
 
 #if(DEBUGNSBH)
@@ -465,7 +465,7 @@ int Mcon_calc(FTYPE *pr, struct of_state *q, FTYPE (*Mcon)[NDIM])
 
 // returns entire space-time(NDIM in size) / EOM(NPR in size) matrix
 int primtofullflux(int returntype, FTYPE *pr, struct of_state *q,
-		   struct of_geom *ptrgeom, FTYPE (*flux)[NPR])
+                   struct of_geom *ptrgeom, FTYPE (*flux)[NPR])
 {
   VARSTATIC int j;
   
@@ -479,7 +479,7 @@ int primtofullflux(int returntype, FTYPE *pr, struct of_state *q,
 
 /* calculate "conserved" quantities */
 int primtoU(int returntype, FTYPE *pr, struct of_state *q, struct of_geom *geom,
-	    FTYPE *U)
+            FTYPE *U)
 {
   MYFUN(primtoflux(returntype,pr, q, 0, geom, U) ,"phys.c:primtoU()", "primtoflux_calc() dir=0", 1);
 
@@ -519,10 +519,10 @@ void UtoU_gen_fromunothing(int whichmaem, int returntype,struct of_geom *ptrgeom
 
 
 #if((REMOVERESTMASSFROMUU==1)&&(DOEVOLVERHO))
-    removemass = (whichmaem==ISMAONLY || whichmaem==ISMAANDEM);
+  removemass = (whichmaem==ISMAONLY || whichmaem==ISMAANDEM);
 #else
-    // otherwise removemass = 0 effectively
-    removemass = 0;
+  // otherwise removemass = 0 effectively
+  removemass = 0;
 #endif
 
 
@@ -579,8 +579,8 @@ void UtoU_gen_gengdet(int removemass, int whichmaem, int inputtype, int returnty
       //    dualfprintf(fail_file,"diff: %21.15g %21.15g\n",ptrgeom->EOMFUNCMAC(UU),MACP0A1(gdetvol,ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p)); 
 #if((REMOVERESTMASSFROMUU==1)&&(DOEVOLVERHO))
       if(removemass){
-	// go back to standard stress-energy tensor form
-	Ugeomfree[UU]  +=  - Ugeomfree[RHO] ; // - means adding back rest-mass
+        // go back to standard stress-energy tensor form
+        Ugeomfree[UU]  +=  - Ugeomfree[RHO] ; // - means adding back rest-mass
       }
 #endif
       break;
@@ -956,7 +956,7 @@ void mhd_calc_em(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, F
 #elif(MAXWELL==PRIMMAXWELL)
   mhd_calc_primfield_em(pr, dir, geom, q, mhd);
 #else
-  #error No such MAXWELL
+#error No such MAXWELL
 #endif
 
 
@@ -1325,7 +1325,7 @@ void compute_1plusud0_rel4vel(FTYPE *pr, struct of_geom *geom, struct of_state *
 /* add in source terms to equations of motion */
 // ui and dUriemann in UEVOLVE form
 int source(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE *ui, FTYPE *dUriemann,
-	   FTYPE (*dUcomp)[NPR], FTYPE *dU)
+           FTYPE (*dUcomp)[NPR], FTYPE *dU)
 {
   //  double (*)[8]
   VARSTATIC int i,j,sc;
@@ -1504,8 +1504,8 @@ void lowerf(FTYPE *fcon, struct of_geom *geom, FTYPE *fcov)
   DLOOP(j,k){
     myfcov[j][k]=0;
     for(jp=0;jp<NDIM;jp++) for(kp=0;kp<NDIM;kp++){
-      myfcov[j][k]+=myfcon[jp][kp]*geom->gcov[GIND(j,jp)]*geom->gcov[GIND(k,kp)];
-    }
+        myfcov[j][k]+=myfcon[jp][kp]*geom->gcov[GIND(j,jp)]*geom->gcov[GIND(k,kp)];
+      }
   }
   fcov[0]=myfcov[0][1];
   fcov[1]=myfcov[0][2];
@@ -2025,7 +2025,7 @@ int gamma_calc_fromuconrel(FTYPE *uconrel, struct of_geom *geom, FTYPE*gamma, FT
       SLOOPA(j) dualfprintf(fail_file,"uconrel[%d]=%21.15g\n",j,uconrel[j]);
       DLOOP(j,k) dualfprintf(fail_file,"gcov[%d][%d]=%21.15g\n",j,k,geom->gcov[GIND(j,k)]);
       if (fail(geom->i,geom->j,geom->k,geom->p,FAIL_UTCALC_DISCR) >= 1)
-	return (1);
+        return (1);
     }
   }
 #else
@@ -2054,11 +2054,11 @@ int qsq_calc(FTYPE *uconrel, struct of_geom *geom, FTYPE *qsq)
     + geom->gcov[GIND(3,3)]*uconrel[3]*uconrel[3]
 #if(DOMIXTHETAPHI)
     + 2.*(geom->gcov[GIND(1,2)]*uconrel[1]*uconrel[2]
-	  + geom->gcov[GIND(1,3)]*uconrel[1]*uconrel[3]
-	  + geom->gcov[GIND(2,3)]*uconrel[2]*uconrel[3])
+          + geom->gcov[GIND(1,3)]*uconrel[1]*uconrel[3]
+          + geom->gcov[GIND(2,3)]*uconrel[2]*uconrel[3])
 #else
     + 2.*(geom->gcov[GIND(1,2)]*uconrel[1]*uconrel[2]
-	  + geom->gcov[GIND(1,3)]*uconrel[1]*uconrel[3])
+          + geom->gcov[GIND(1,3)]*uconrel[1]*uconrel[3])
 #endif
     ;
 
@@ -2104,32 +2104,32 @@ int ucon_calc_3vel(FTYPE *pr, struct of_geom *geom, FTYPE *ucon, FTYPE *others)
       // then report on disc
       dualfprintf(fail_file,"negdisc=%21.15g, should be negative\n",negdiscr);
       for(k=U1;k<=U3;k++){
-	dualfprintf(fail_file,"uconfailed on pr[%d]=%21.15g\n",k,pr[k]);
+        dualfprintf(fail_file,"uconfailed on pr[%d]=%21.15g\n",k,pr[k]);
       }
       bl_coord_ijk_2(geom->i,geom->j,geom->k,geom->p,X, V);
       dualfprintf(fail_file,"i=%d j=%d k=%d pcurr=%d\nx1=%21.15g x2=%21.15g x3=%21.15g \nV1=%21.15g V2=%21.15g V3=%21.15g \ng=%21.15g\n",startpos[1]+geom->i,startpos[2]+geom->j,startpos[3]+geom->k,geom->p,X[1],X[2],X[3],V[1],V[2],V[3],geom->gdet);
       dualfprintf(fail_file,"\ngcon\n");
       dualfprintf(fail_file,"{");
       for(j=0;j<NDIM;j++){
-	dualfprintf(fail_file,"{");
-	for(k=0;k<NDIM;k++){
-	  dualfprintf(fail_file,"%21.15g",geom->gcon[GIND(j,k)]);
-	  if(k!=NDIM-1) dualfprintf(fail_file," , ");
-	}
-	dualfprintf(fail_file,"}");	
-	if(j!=NDIM-1) dualfprintf(fail_file," , ");
+        dualfprintf(fail_file,"{");
+        for(k=0;k<NDIM;k++){
+          dualfprintf(fail_file,"%21.15g",geom->gcon[GIND(j,k)]);
+          if(k!=NDIM-1) dualfprintf(fail_file," , ");
+        }
+        dualfprintf(fail_file,"}");     
+        if(j!=NDIM-1) dualfprintf(fail_file," , ");
       }
       dualfprintf(fail_file,"}");
       dualfprintf(fail_file,"\ngcov\n");
       dualfprintf(fail_file,"{");
       for(j=0;j<NDIM;j++){
-	dualfprintf(fail_file,"{");
-	for(k=0;k<NDIM;k++){
-	  dualfprintf(fail_file,"%21.15g",geom->gcov[GIND(j,k)]);
-	  if(k!=NDIM-1) dualfprintf(fail_file," , ");
-	}
-	dualfprintf(fail_file,"}");	
-	if(j!=NDIM-1) dualfprintf(fail_file," , ");
+        dualfprintf(fail_file,"{");
+        for(k=0;k<NDIM;k++){
+          dualfprintf(fail_file,"%21.15g",geom->gcov[GIND(j,k)]);
+          if(k!=NDIM-1) dualfprintf(fail_file," , ");
+        }
+        dualfprintf(fail_file,"}");     
+        if(j!=NDIM-1) dualfprintf(fail_file," , ");
       }
       dualfprintf(fail_file,"}");
     }
@@ -2156,12 +2156,12 @@ int get_3velterm(FTYPE *vcon, struct of_geom *geom, FTYPE *velterm)
     + geom->gcov[GIND(2,2)] * vcon[2] * vcon[2]
     + geom->gcov[GIND(3,3)] * vcon[3] * vcon[3]
     + 2. * (geom->gcov[GIND(0,1)]* vcon[1]
-	    + geom->gcov[GIND(0,2)] * vcon[2]
-	    + geom->gcov[GIND(0,3)] * vcon[3]
-	    + geom->gcov[GIND(1,2)] * vcon[1] * vcon[2]
-	    + geom->gcov[GIND(1,3)] * vcon[1] * vcon[3]
-	    + geom->gcov[GIND(2,3)] * vcon[2] * vcon[3]
-	    );
+            + geom->gcov[GIND(0,2)] * vcon[2]
+            + geom->gcov[GIND(0,3)] * vcon[3]
+            + geom->gcov[GIND(1,2)] * vcon[1] * vcon[2]
+            + geom->gcov[GIND(1,3)] * vcon[1] * vcon[3]
+            + geom->gcov[GIND(2,3)] * vcon[2] * vcon[3]
+            );
   return(0);
 }
 
@@ -2270,14 +2270,14 @@ int ucon_calc_4vel_bothut(FTYPE *pr, struct of_geom *geom, FTYPE *ucon, FTYPE *u
       ucon[TT] = -BB/(2.*AA) ;
     */
     dualfprintf(fail_file,"failure: spacelike four-velocity %21.15g\n",
-	    discr) ;
+                discr) ;
     dualfprintf(fail_file,"i=%d j=%d k=%d p=%d\n",startpos[1]+geom->i,startpos[2]+geom->j,startpos[3]+geom->k,geom->p) ;
     coord(geom->i,geom->j,geom->k,geom->p,X);
     dualfprintf(fail_file,"%21.15g %21.15g %21.15g\n",X[1],X[2],X[3]) ;
 
     for(k=0;k<NPR;k++) dualfprintf(fail_file,"%d %21.15g\n",k,pr[k]) ;
     // GODMARK -- why did we have failed=1?
-    //		failed=1;
+    //          failed=1;
     return(1);
   }
 
@@ -2313,14 +2313,14 @@ int ucon_calc_4vel(FTYPE *pr, struct of_geom *geom, FTYPE *ucon, FTYPE *others)
       ucon[TT] = -BB/(2.*AA) ;
     */
     dualfprintf(fail_file,"failure: spacelike four-velocity %21.15g\n",
-	    discr) ;
+                discr) ;
     dualfprintf(fail_file,"i=%d j=%d k=%d p=%d\n",startpos[1]+geom->i,startpos[2]+geom->j,startpos[3]+geom->k,geom->p) ;
     coord(geom->i,geom->j,geom->k,geom->p,X);
     dualfprintf(fail_file,"%21.15g %21.15g %21.15g\n",X[1],X[2],X[3]) ;
 
     for(k=0;k<NPR;k++) dualfprintf(fail_file,"%d %21.15g\n",k,pr[k]) ;
     // GODMARK -- why did we have failed=1?
-    //		failed=1;
+    //          failed=1;
     return(1);
   }
 
@@ -2339,16 +2339,16 @@ int get_4velterms(FTYPE *ucon, struct of_geom *geom, FTYPE *AA, FTYPE *BB, FTYPE
 
   // 2 u^i g_{it}
   *BB = 2.*(geom->gcov[GIND(TT,1)]*ucon[1] +
-	    geom->gcov[GIND(TT,2)]*ucon[2] +
-	    geom->gcov[GIND(TT,3)]*ucon[3]) ;
+            geom->gcov[GIND(TT,2)]*ucon[2] +
+            geom->gcov[GIND(TT,3)]*ucon[3]) ;
 
   // u^i u^j g_{ij}
   *CCM1 = geom->gcov[GIND(1,1)]*ucon[1]*ucon[1] +
     geom->gcov[GIND(2,2)]*ucon[2]*ucon[2] +
     geom->gcov[GIND(3,3)]*ucon[3]*ucon[3] +
     2.*(geom->gcov[GIND(1,2)]*ucon[1]*ucon[2] +
-	geom->gcov[GIND(1,3)]*ucon[1]*ucon[3] +
-	geom->gcov[GIND(2,3)]*ucon[2]*ucon[3]) ;
+        geom->gcov[GIND(1,3)]*ucon[1]*ucon[3] +
+        geom->gcov[GIND(2,3)]*ucon[2]*ucon[3]) ;
 
   // 1 + u^i u^j g_{ij}
   CC = *CCM1 + 1.0;
@@ -2382,16 +2382,6 @@ FTYPE taper_func(FTYPE R,FTYPE rin)
     return(0.) ;
   else
     return(1. - sqrt(rin/R)) ;
-
-}
-
-FTYPE taper_func_exp(FTYPE R,FTYPE rin)  // MAVARA added June 3 2013
-{
-
-  if(R <= rin)
-    return(0.) ;
-  else
-    return(1. - exp(rin - R)) ;
 
 }
 
@@ -2429,11 +2419,11 @@ void faraday_calc(int which, FTYPE *b, FTYPE *u, struct of_geom *geom, FTYPE (*f
   int nu,mu,kappa,lambda;
 
   for(nu=0;nu<NDIM;nu++) for(mu=0;mu<NDIM;mu++){
-    faraday[mu][nu]=0.0;
-    for(kappa=0;kappa<NDIM;kappa++) for(lambda=0;lambda<NDIM;lambda++){
-      faraday[mu][nu]+=lc4(which,geom->gdet,mu,nu,kappa,lambda)*u[kappa]*b[lambda];
+      faraday[mu][nu]=0.0;
+      for(kappa=0;kappa<NDIM;kappa++) for(lambda=0;lambda<NDIM;lambda++){
+          faraday[mu][nu]+=lc4(which,geom->gdet,mu,nu,kappa,lambda)*u[kappa]*b[lambda];
+        }
     }
-  }
 
 }
 
@@ -2889,8 +2879,8 @@ int OBtopr_general(FTYPE omegaf,FTYPE *Bccon,struct of_geom *geom, FTYPE *pr)
   MYFUN(vcon2pr(WHICHVEL, vcon, geom, pr),"phys.c:OBtopr_general()", "vcon2pr() dir=0", 1);
 
   //  if(t>1.9 && t<2.1){
-    //    dualfprintf(fail_file,"ftemp=%21.15g Bsq=%21.15g ftemp2=%21.15g :: v1=%21.15g v2=%21.15g v3=%21.15g pru1=%21.15g pru2=%21.15g pru3=%21.15g\n",ftemp,Bsq,ftemp2,vcon[1],vcon[2],vcon[3],pr[U1],pr[U2],pr[U3]);
-    // }
+  //    dualfprintf(fail_file,"ftemp=%21.15g Bsq=%21.15g ftemp2=%21.15g :: v1=%21.15g v2=%21.15g v3=%21.15g pru1=%21.15g pru2=%21.15g pru3=%21.15g\n",ftemp,Bsq,ftemp2,vcon[1],vcon[2],vcon[3],pr[U1],pr[U2],pr[U3]);
+  // }
 
   return(0);
 
@@ -2932,8 +2922,8 @@ int OBtopr_general2(FTYPE omegaf, FTYPE v0, FTYPE *Bccon,struct of_geom *geom, F
   MYFUN(vcon2pr(WHICHVEL, vcon, geom, pr),"phys.c:OBtopr_general()", "vcon2pr() dir=0", 1);
 
   //  if(t>1.9 && t<2.1){
-    //    dualfprintf(fail_file,"ftemp=%21.15g Bsq=%21.15g ftemp2=%21.15g :: v1=%21.15g v2=%21.15g v3=%21.15g pru1=%21.15g pru2=%21.15g pru3=%21.15g\n",ftemp,Bsq,ftemp2,vcon[1],vcon[2],vcon[3],pr[U1],pr[U2],pr[U3]);
-    // }
+  //    dualfprintf(fail_file,"ftemp=%21.15g Bsq=%21.15g ftemp2=%21.15g :: v1=%21.15g v2=%21.15g v3=%21.15g pru1=%21.15g pru2=%21.15g pru3=%21.15g\n",ftemp,Bsq,ftemp2,vcon[1],vcon[2],vcon[3],pr[U1],pr[U2],pr[U3]);
+  // }
 
   return(0);
 
@@ -3043,36 +3033,36 @@ int OBtopr_general3n(FTYPE omegaf, FTYPE v0, FTYPE *Bccon, FTYPE *normalvec,stru
 
 void ffdestresstensor(FTYPE (*Mcon)[NDIM], struct of_geom *geom, FTYPE (*T)[NDIM])
 {
-      int i,j,k ;
-      void lower_A(FTYPE (*Acon)[NDIM], struct of_geom *geom, FTYPE (*Acov)[NDIM]);
+  int i,j,k ;
+  void lower_A(FTYPE (*Acon)[NDIM], struct of_geom *geom, FTYPE (*Acov)[NDIM]);
 
 
-      FTYPE Mcov[NDIM][NDIM] ; /* covariant Maxwell */
-      FTYPE Msq ;
+  FTYPE Mcov[NDIM][NDIM] ; /* covariant Maxwell */
+  FTYPE Msq ;
 
-      /* get covariant Maxwell from contravariant */
-      lower_A(Mcon, geom, Mcov) ;
+  /* get covariant Maxwell from contravariant */
+  lower_A(Mcon, geom, Mcov) ;
 
-      /* out with the old */
-      DLOOP(j,k)  T[j][k] = 0. ;
+  /* out with the old */
+  DLOOP(j,k)  T[j][k] = 0. ;
 
-      /* in with the new:
-       *
-       * a, b, c, d run 0 to 4:
-       *
-       * T^a_b = M^ac * M_bc - 1/4 KroneckerDelta[a,b] (M_cd M^cd)
-       *
-       */
+  /* in with the new:
+   *
+   * a, b, c, d run 0 to 4:
+   *
+   * T^a_b = M^ac * M_bc - 1/4 KroneckerDelta[a,b] (M_cd M^cd)
+   *
+   */
 
-      Msq = 0. ;
-      DLOOP(j,k) Msq += Mcov[j][k]*Mcon[j][k] ;
+  Msq = 0. ;
+  DLOOP(j,k) Msq += Mcov[j][k]*Mcon[j][k] ;
 
-      DLOOP(j,k) {
-	for(i = 0; i < NDIM; i++) {
-	  T[j][k] += Mcon[j][i]*Mcov[k][i] ;
-	}
-      }
-      DLOOPA(j) T[j][j] -= 0.25 * Msq ;
+  DLOOP(j,k) {
+    for(i = 0; i < NDIM; i++) {
+      T[j][k] += Mcon[j][i]*Mcov[k][i] ;
+    }
+  }
+  DLOOPA(j) T[j][j] -= 0.25 * Msq ;
 }
 
 
@@ -3080,107 +3070,107 @@ void ffdestresstensor(FTYPE (*Mcon)[NDIM], struct of_geom *geom, FTYPE (*T)[NDIM
 // give back T^dir_\mu
 void ffdestresstensor_dir(int dir, FTYPE (*Mcon)[NDIM], struct of_geom *geom, FTYPE *TEMdir)
 {
-      int i,j,k ;
-      void lower_A(FTYPE (*Acon)[NDIM], struct of_geom *geom, FTYPE (*Acov)[NDIM]);
+  int i,j,k ;
+  void lower_A(FTYPE (*Acon)[NDIM], struct of_geom *geom, FTYPE (*Acov)[NDIM]);
 
 
-      FTYPE Mcov[NDIM][NDIM] ; /* covariant Maxwell */
-      FTYPE Msq ;
+  FTYPE Mcov[NDIM][NDIM] ; /* covariant Maxwell */
+  FTYPE Msq ;
 
-      /* get covariant Maxwell from contravariant */
-      lower_A(Mcon, geom, Mcov) ;
+  /* get covariant Maxwell from contravariant */
+  lower_A(Mcon, geom, Mcov) ;
 
-      /* out with the old */
-      DLOOPA(k)  TEMdir[k] = 0. ;
+  /* out with the old */
+  DLOOPA(k)  TEMdir[k] = 0. ;
 
-      /* in with the new:
-       *
-       * a, b, c, d run 0 to 4:
-       *
-       * T^a_b = M^ac * M_bc - 1/4 KroneckerDelta[a,b] (M_cd M^cd)
-       *
-       */
+  /* in with the new:
+   *
+   * a, b, c, d run 0 to 4:
+   *
+   * T^a_b = M^ac * M_bc - 1/4 KroneckerDelta[a,b] (M_cd M^cd)
+   *
+   */
 
-      Msq = 0. ;
-      DLOOP(j,k) Msq += Mcov[j][k]*Mcon[j][k] ;
+  Msq = 0. ;
+  DLOOP(j,k) Msq += Mcov[j][k]*Mcon[j][k] ;
 
-      DLOOPA(k) {
-	for(i = 0; i < NDIM; i++) {
-	  TEMdir[k] += Mcon[dir][i]*Mcov[k][i] ;
-	}
-      }
-      TEMdir[dir] -= 0.25 * Msq ;
+  DLOOPA(k) {
+    for(i = 0; i < NDIM; i++) {
+      TEMdir[k] += Mcon[dir][i]*Mcov[k][i] ;
+    }
+  }
+  TEMdir[dir] -= 0.25 * Msq ;
 }
 
 
 void raise_A(FTYPE (*Acov)[NDIM], struct of_geom *geom, FTYPE (*Acon)[NDIM])
 {
-        int j,k ;
-	FTYPE localgcon[SYMMATRIXNDIM];
+  int j,k ;
+  FTYPE localgcon[SYMMATRIXNDIM];
 
-	/* out with the old */
-	DLOOP(j,k){
-	  Acon[j][k] = 0. ;
-	  // store since use all terms many times -- compiler doesn't do this for some reason
-	  localgcon[GIND(j,k)]=geom->gcon[GIND(j,k)];
-	}
+  /* out with the old */
+  DLOOP(j,k){
+    Acon[j][k] = 0. ;
+    // store since use all terms many times -- compiler doesn't do this for some reason
+    localgcon[GIND(j,k)]=geom->gcon[GIND(j,k)];
+  }
 
-	/* in with the new */
-	DLOOP(j,k) {
-       	       Acon[0][1] += (localgcon[GIND(0,j)])*(localgcon[GIND(1,k)])*Acov[j][k] ;
-       	       Acon[0][2] += (localgcon[GIND(0,j)])*(localgcon[GIND(2,k)])*Acov[j][k] ;
-       	       Acon[0][3] += (localgcon[GIND(0,j)])*(localgcon[GIND(3,k)])*Acov[j][k] ;
-	       Acon[1][2] += (localgcon[GIND(1,j)])*(localgcon[GIND(2,k)])*Acov[j][k] ;
-	       Acon[2][3] += (localgcon[GIND(2,j)])*(localgcon[GIND(3,k)])*Acov[j][k] ;
-	       Acon[3][1] += (localgcon[GIND(3,j)])*(localgcon[GIND(1,k)])*Acov[j][k] ;
-	      }
+  /* in with the new */
+  DLOOP(j,k) {
+    Acon[0][1] += (localgcon[GIND(0,j)])*(localgcon[GIND(1,k)])*Acov[j][k] ;
+    Acon[0][2] += (localgcon[GIND(0,j)])*(localgcon[GIND(2,k)])*Acov[j][k] ;
+    Acon[0][3] += (localgcon[GIND(0,j)])*(localgcon[GIND(3,k)])*Acov[j][k] ;
+    Acon[1][2] += (localgcon[GIND(1,j)])*(localgcon[GIND(2,k)])*Acov[j][k] ;
+    Acon[2][3] += (localgcon[GIND(2,j)])*(localgcon[GIND(3,k)])*Acov[j][k] ;
+    Acon[3][1] += (localgcon[GIND(3,j)])*(localgcon[GIND(1,k)])*Acov[j][k] ;
+  }
 
-	/*
-	 * diagonal is already set to zero,
-	 * just copy the rest
-	 */
+  /*
+   * diagonal is already set to zero,
+   * just copy the rest
+   */
 
-	Acon[1][0] = - Acon[0][1] ;
-	Acon[2][0] = - Acon[0][2] ;
-	Acon[3][0] = - Acon[0][3] ;
-	Acon[2][1] = - Acon[1][2] ;
-	Acon[3][2] = - Acon[2][3] ;
-	Acon[1][3] = - Acon[3][1] ;
+  Acon[1][0] = - Acon[0][1] ;
+  Acon[2][0] = - Acon[0][2] ;
+  Acon[3][0] = - Acon[0][3] ;
+  Acon[2][1] = - Acon[1][2] ;
+  Acon[3][2] = - Acon[2][3] ;
+  Acon[1][3] = - Acon[3][1] ;
 }
 
 void lower_A(FTYPE (*Acon)[NDIM], struct of_geom *geom, FTYPE (*Acov)[NDIM])
 {
-        int j,k ;
-	FTYPE localgcov[SYMMATRIXNDIM];
+  int j,k ;
+  FTYPE localgcov[SYMMATRIXNDIM];
 
-	/* out with the old */
-	DLOOP(j,k){
-	  Acov[j][k] = 0. ;
-	  // store since use all terms many times -- compiler doesn't do this for some reason and lower_A() appears to be very costly
-	  localgcov[GIND(j,k)]=geom->gcov[GIND(j,k)];
-	}
+  /* out with the old */
+  DLOOP(j,k){
+    Acov[j][k] = 0. ;
+    // store since use all terms many times -- compiler doesn't do this for some reason and lower_A() appears to be very costly
+    localgcov[GIND(j,k)]=geom->gcov[GIND(j,k)];
+  }
 
-	/* in with the new */
-	DLOOP(j,k) {
-       	       Acov[0][1] += (localgcov[GIND(0,j)])*(localgcov[GIND(1,k)])*Acon[j][k] ;
-       	       Acov[0][2] += (localgcov[GIND(0,j)])*(localgcov[GIND(2,k)])*Acon[j][k] ;
-       	       Acov[0][3] += (localgcov[GIND(0,j)])*(localgcov[GIND(3,k)])*Acon[j][k] ;
-	       Acov[1][2] += (localgcov[GIND(1,j)])*(localgcov[GIND(2,k)])*Acon[j][k] ;
-	       Acov[2][3] += (localgcov[GIND(2,j)])*(localgcov[GIND(3,k)])*Acon[j][k] ;
-	       Acov[3][1] += (localgcov[GIND(3,j)])*(localgcov[GIND(1,k)])*Acon[j][k] ;
-	      }
+  /* in with the new */
+  DLOOP(j,k) {
+    Acov[0][1] += (localgcov[GIND(0,j)])*(localgcov[GIND(1,k)])*Acon[j][k] ;
+    Acov[0][2] += (localgcov[GIND(0,j)])*(localgcov[GIND(2,k)])*Acon[j][k] ;
+    Acov[0][3] += (localgcov[GIND(0,j)])*(localgcov[GIND(3,k)])*Acon[j][k] ;
+    Acov[1][2] += (localgcov[GIND(1,j)])*(localgcov[GIND(2,k)])*Acon[j][k] ;
+    Acov[2][3] += (localgcov[GIND(2,j)])*(localgcov[GIND(3,k)])*Acon[j][k] ;
+    Acov[3][1] += (localgcov[GIND(3,j)])*(localgcov[GIND(1,k)])*Acon[j][k] ;
+  }
 
-	/*
-	 * diagonal is already set to zero,
-	 * just copy the rest
-	 */
+  /*
+   * diagonal is already set to zero,
+   * just copy the rest
+   */
 
-	Acov[1][0] = - Acov[0][1] ;
-	Acov[2][0] = - Acov[0][2] ;
-	Acov[3][0] = - Acov[0][3] ;
-	Acov[2][1] = - Acov[1][2] ;
-	Acov[3][2] = - Acov[2][3] ;
-	Acov[1][3] = - Acov[3][1] ;
+  Acov[1][0] = - Acov[0][1] ;
+  Acov[2][0] = - Acov[0][2] ;
+  Acov[3][0] = - Acov[0][3] ;
+  Acov[2][1] = - Acov[1][2] ;
+  Acov[3][2] = - Acov[2][3] ;
+  Acov[1][3] = - Acov[3][1] ;
 }
 
 
@@ -3212,11 +3202,11 @@ void MtoF(int which, FTYPE (*invar)[NDIM],struct of_geom *geom, FTYPE (*outvar)[
   }
 
   for(nu=0;nu<NDIM;nu++) for(mu=0;mu<NDIM;mu++){
-    outvar[mu][nu]=0.0;
-    for(kappa=0;kappa<NDIM;kappa++) for(lambda=0;lambda<NDIM;lambda++){
-      outvar[mu][nu]+=prefactor*lc4(whichlc,geom->gdet,mu,nu,kappa,lambda)*invar[kappa][lambda];
+      outvar[mu][nu]=0.0;
+      for(kappa=0;kappa<NDIM;kappa++) for(lambda=0;lambda<NDIM;lambda++){
+          outvar[mu][nu]+=prefactor*lc4(whichlc,geom->gdet,mu,nu,kappa,lambda)*invar[kappa][lambda];
+        }
     }
-  }
 
 
 }
@@ -3407,8 +3397,8 @@ FTYPE compute_entropy_simple_forcheckinversion(int i, int j, int k, int loc, FTY
     // unlike inversion, require non-NaN entropy, so force rho,u to be positive
     if(rho<SMALL) rho=SMALL;
 #if(WHICHEOS!=KAZFULL)
-  // for Kaz EOS, u<0 is ok
-  if(u<SMALL) u=SMALL;
+    // for Kaz EOS, u<0 is ok
+    if(u<SMALL) u=SMALL;
 #endif
     
     return(compute_entropy(WHICHEOS,GLOBALMAC(EOSextraglobal,i,j,k),rho,u));

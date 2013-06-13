@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
   comptstart=0; // assumes normal simulation started t=0 at nstep=0
   // start timing
   timecheck(STARTTIME,comptstart);
-	  
+          
 
   //////////////////////
   //
@@ -218,14 +218,14 @@ int gocheck(int whichlocation)
     if(myid<=0){
       if(CHECKCONT){
       
-	sprintf(stemp,"%sgo.cont",DATADIR);
+        sprintf(stemp,"%sgo.cont",DATADIR);
       
-	if((gocont_file=fopen(stemp,"rt"))==NULL){
-	  dualfprintf(fail_file,"WARNING: Could not open go.cont file: %s , assume user doesn't want to use it\n",stemp);
-	  //	myexit(1); // can't exit yet if want clean MPI exit
-	  goch='z';
-	}
-	else goch='a';
+        if((gocont_file=fopen(stemp,"rt"))==NULL){
+          dualfprintf(fail_file,"WARNING: Could not open go.cont file: %s , assume user doesn't want to use it\n",stemp);
+          //    myexit(1); // can't exit yet if want clean MPI exit
+          goch='z';
+        }
+        else goch='a';
       }
     }
 
@@ -239,24 +239,24 @@ int gocheck(int whichlocation)
     }
     else{
       if(CHECKCONT){
-	if(myid<=0){
-	  goch=fgetc(gocont_file);
-	  if( (goch=='y')||(goch=='Y')){
-	    gocont=1;
-	    trifprintf("#go.cont called\n");
+        if(myid<=0){
+          goch=fgetc(gocont_file);
+          if( (goch=='y')||(goch=='Y')){
+            gocont=1;
+            trifprintf("#go.cont called\n");
 
-	    fscanf(gocont_file,"%d",&runtype); // can be used to specify which restart file to use among other things
-	  }
-	  fclose(gocont_file);
-	}
+            fscanf(gocont_file,"%d",&runtype); // can be used to specify which restart file to use among other things
+          }
+          fclose(gocont_file);
+        }
       
     
-	if(numprocs>1){
+        if(numprocs>1){
 #if(USEMPI)
-	  MPI_Bcast(&gocont,1,MPI_INT,MPIid[0], MPI_COMM_GRMHD);
-	  MPI_Bcast(&runtype,1,MPI_INT,MPIid[0], MPI_COMM_GRMHD);
+          MPI_Bcast(&gocont,1,MPI_INT,MPIid[0], MPI_COMM_GRMHD);
+          MPI_Bcast(&runtype,1,MPI_INT,MPIid[0], MPI_COMM_GRMHD);
 #endif
-	}
+        }
       }// end if checking cont file
 
     }// end if cont file exits
@@ -266,23 +266,23 @@ int gocheck(int whichlocation)
     if(myid==0){
 
       if(!(nstep%NGOCHECK)){
-	sprintf(stemp,"%sgo.go",DATADIR);
-	
-	if((gogo_file=fopen(stemp,"rt"))==NULL){
-	  //	dualfprintf(fail_file,"Could not open go file: %s\n",stemp);
-	  //	myexit(1);
-	  // just assume user didn't want to use this file
-	}
-	else{
-	  goch=fgetc(gogo_file);
-	  if( (goch=='n')||(goch=='N')){
-	    goend=1;
-	    trifprintf("#go.go called\n");
-	  }
-	  fclose(gogo_file);      
-	  // if myid!=0 and numprocs>1 then could deal with this, but messy due to timers
-	
-	}// end if go file exists
+        sprintf(stemp,"%sgo.go",DATADIR);
+        
+        if((gogo_file=fopen(stemp,"rt"))==NULL){
+          //    dualfprintf(fail_file,"Could not open go file: %s\n",stemp);
+          //    myexit(1);
+          // just assume user didn't want to use this file
+        }
+        else{
+          goch=fgetc(gogo_file);
+          if( (goch=='n')||(goch=='N')){
+            goend=1;
+            trifprintf("#go.go called\n");
+          }
+          fclose(gogo_file);      
+          // if myid!=0 and numprocs>1 then could deal with this, but messy due to timers
+        
+        }// end if go file exists
       }// end if time to check go file
 
     }// end myid==0

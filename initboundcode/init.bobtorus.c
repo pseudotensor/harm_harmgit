@@ -59,7 +59,7 @@ static FTYPE torusrmax;   // AKMARK: torus pressure max
 
 static int read_data(FTYPE (*panalytic)[NSTORE2][NSTORE3][NPR]);
 
-#define SLOWFAC 1.0		/* reduce u_phi by this amount */
+#define SLOWFAC 1.0             /* reduce u_phi by this amount */
 
 #include "init.torus.h"
 
@@ -168,49 +168,49 @@ int init_consts(void)
 
 /*
 
-Models to run:
+  Models to run:
 
-Constant parameters:
+  Constant parameters:
 
-1) Rout=1E3 and run for tf=1E4 (so will take 5X longer than compared to Orange run at 128x128x32)
+  1) Rout=1E3 and run for tf=1E4 (so will take 5X longer than compared to Orange run at 128x128x32)
 
-2) BSQORHOLIMIT=1E3, etc.
+  2) BSQORHOLIMIT=1E3, etc.
 
-3) PARALINE, FLUXCTSTAG, TO=4
+  3) PARALINE, FLUXCTSTAG, TO=4
 
-4) Form of A_\phi fixed
+  4) Form of A_\phi fixed
 
-Field parameter studies in 2D axisymmetry at 256^2:
+  Field parameter studies in 2D axisymmetry at 256^2:
 
-1) H/R=0.3, a=0.9: LS quadrapole,  LS dipole, SS quadrapole, SS dipole
-
- 
-
-Spin parameter study in 2D axisymmetry at 256^2:
+  1) H/R=0.3, a=0.9: LS quadrapole,  LS dipole, SS quadrapole, SS dipole
 
  
 
-1) H/R=0.3, LS quadrapole: a=-.999,-.99,-.9,-.5,-0.2,0,.2,.5,.9,.99,.999
+  Spin parameter study in 2D axisymmetry at 256^2:
 
-H/R parameter study in 2D axisymmetry at 256^2:
+ 
 
-1) a=0.9 LS quadrapole with H/R=0.1,0.3,0.9,1.5
+  1) H/R=0.3, LS quadrapole: a=-.999,-.99,-.9,-.5,-0.2,0,.2,.5,.9,.99,.999
 
-2D Fiducial Models:
+  H/R parameter study in 2D axisymmetry at 256^2:
 
-1) Using a=0.9, H/R=0.3, LS quad and LS dipole, do two 2D fudicial models at: 1024^2
+  1) a=0.9 LS quadrapole with H/R=0.1,0.3,0.9,1.5
 
-3D Fiducial Models:
+  2D Fiducial Models:
 
-1) Using a=0.9, H/R=0.3, LS quadrapole and LS dipole, do two 3D fiducial models at 2 different resolutions: 128x128x32 and 256x256x64
+  1) Using a=0.9, H/R=0.3, LS quad and LS dipole, do two 2D fudicial models at: 1024^2
 
-Questions for Roger:
+  3D Fiducial Models:
 
-1) Choice for disk thickness?
-2) Choice for field shape -- specifically?
-3) Choice for flux threading disk vs. BH initially?
-4) Ask about BZ77 and residual A_\phi at pole
-5) 
+  1) Using a=0.9, H/R=0.3, LS quadrapole and LS dipole, do two 3D fiducial models at 2 different resolutions: 128x128x32 and 256x256x64
+
+  Questions for Roger:
+
+  1) Choice for disk thickness?
+  2) Choice for field shape -- specifically?
+  3) Choice for flux threading disk vs. BH initially?
+  4) Ask about BZ77 and residual A_\phi at pole
+  5) 
 
 */
 
@@ -243,7 +243,7 @@ int init_grid(void)
   // metric stuff first
 
 
-// AKMARK: spin
+  // AKMARK: spin
 #if(WHICHPROBLEM==THINDISKFROMMATHEMATICA)
   a = 0.;
 #elif(WHICHPROBLEM==THINTORUS)
@@ -262,7 +262,7 @@ int init_grid(void)
   //hslope = 1.04*pow(h_over_r,2.0/3.0);
 
 
-// AKMARK: inner (Rin) and outer (Rout) radii of simulation domain, R0
+  // AKMARK: inner (Rin) and outer (Rout) radii of simulation domain, R0
 #if(WHICHPROBLEM==NORMALTORUS || WHICHPROBLEM==KEPDISK)
   // make changes to primary coordinate parameters R0, Rin, Rout, hslope
   Rin = 0.8 * Rhor;  //to be chosen manually so that there are 5.5 cells inside horizon to guarantee stability
@@ -284,8 +284,8 @@ int init_grid(void)
   R0 = 0.3;
   Rout = 5.e4;
 #elif(WHICHPROBLEM==GRBJET)
-	setRin_withchecks(&Rin);
-	R0 = -3.0;
+  setRin_withchecks(&Rin);
+  R0 = -3.0;
   Rout = 1E5;
 #endif
 
@@ -341,10 +341,10 @@ int init_grid(void)
   
   global_x10 = 3.3;  //radial distance in MCOORD until which the innermost angular cell is cylinrdical
   global_x20 = -1. + 1./totalsize[2];     //This restricts grid cylindrification to the one 
-    //single grid closest to the pole (other cells virtually unaffeced, so there evolution is accurate).  
-    //This trick minimizes the resulting pole deresolution and relaxes the time step.
-    //The innermost grid cell is evolved inaccurately whether you resolve it or not, and it will be fixed
-    //by POLEDEATH (see bounds.tools.c).
+  //single grid closest to the pole (other cells virtually unaffeced, so there evolution is accurate).  
+  //This trick minimizes the resulting pole deresolution and relaxes the time step.
+  //The innermost grid cell is evolved inaccurately whether you resolve it or not, and it will be fixed
+  //by POLEDEATH (see bounds.tools.c).
 
   return(0);
 }
@@ -370,7 +370,7 @@ int init_global(void)
   lim[1] = lim[2] = lim[3] = PARALINE; //sas: it's already set in init.tools.c but reset it here just to make sure
   //also need to ensure that in para_and_paraenohybrid.h JONPARASMOOTH is set to 0 (resolves disk best) or 1 (resolves jet best)
 
-// AKMARK: cooling
+  // AKMARK: cooling
 #if(  WHICHPROBLEM==THINDISKFROMMATHEMATICA )
   cooling = COOLREBECCATHINDISK; //do Rebecca-type cooling; make sure enk0 is set to the same value as p/rho^\Gamma in the initial conditions (as found in dump0000).
 #elif( WHICHPROBLEM==THINTORUS )
@@ -384,7 +384,7 @@ int init_global(void)
   //FLUXB = FLUXCTTOTH;
   FLUXB = FLUXCTSTAG;
 
-// AKMARK: floors
+  // AKMARK: floors
 #if(WHICHPROBLEM==NORMALTORUS || WHICHPROBLEM==KEPDISK || WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM==THICKDISKFROMMATHEMATICA || WHICHPROBLEM == THINTORUS)
   BCtype[X1UP]=OUTFLOW;
   BCtype[X1DN]=FREEOUTFLOW;
@@ -411,7 +411,7 @@ int init_global(void)
 
 
 
-// AKMARK: dumping frequencies, final time
+  // AKMARK: dumping frequencies, final time
 #if(WHICHPROBLEM==NORMALTORUS || WHICHPROBLEM==KEPDISK)
   /* output choices */
   tf = 1e4;
@@ -578,7 +578,7 @@ int init_dsandvels(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr
   int init_dsandvels_thindiskfrommathematica(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr, FTYPE *pstag);
   int init_dsandvels_thintorus(int *whichvel, int*whichcoord, int ti, int tj, int tk, FTYPE *pr, FTYPE *pstag);
 
-// AKMARK: check which function is called for your WHICHPROBLEM, and change parameters in it below
+  // AKMARK: check which function is called for your WHICHPROBLEM, and change parameters in it below
 #if(WHICHPROBLEM==NORMALTORUS)
   return(init_dsandvels_torus(whichvel, whichcoord,  i,  j,  k, pr, pstag));
 #elif(WHICHPROBLEM==KEPDISK)
@@ -643,7 +643,7 @@ int init_vpot_user(int *whichcoord, int l, int i, int j, int k, int loc, FTYPE (
     
     if((FIELDTYPE==DISKFIELD)||(FIELDTYPE==DISKVERT)){
 
-// AKMARK: magnetic loop radial wavelength
+      // AKMARK: magnetic loop radial wavelength
 #if( WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM == THINTORUS ) 
 #define STARTFIELD (1.1*rin)
       fieldhor=0.28;
@@ -655,20 +655,20 @@ int init_vpot_user(int *whichcoord, int l, int i, int j, int k, int loc, FTYPE (
       // since init_vpot() is called for all i,j,k, can't use
       // non-existence values, so limit averaging:
       if((i==-N1BND)&&(j==-N2BND)){
-	rho_av = MACP0A1(prim,i,j,k,RHO);
+        rho_av = MACP0A1(prim,i,j,k,RHO);
         u_av = MACP0A1(prim,i,j,k,UU);
       }
       else if(i==-N1BND){
-	rho_av = AVGN_2(prim,i,j,k,RHO);
+        rho_av = AVGN_2(prim,i,j,k,RHO);
         u_av = AVGN_2(prim,i,j,k,UU);
       }
       else if(j==-N2BND){
-	rho_av = AVGN_1(prim,i,j,k,RHO);
+        rho_av = AVGN_1(prim,i,j,k,RHO);
         u_av = AVGN_1(prim,i,j,k,UU);
       }
       else{ // normal cells
-	rho_av = AVGN_for3(prim,i,j,k,RHO);
-	u_av=AVGN_for3(prim,i,j,k,UU);
+        rho_av = AVGN_for3(prim,i,j,k,RHO);
+        u_av=AVGN_for3(prim,i,j,k,UU);
       }
 
 #if( WHICHPROBLEM==THINDISKFROMMATHEMATICA || WHICHPROBLEM==THICKDISKFROMMATHEMATICA || WHICHPROBLEM == THINTORUS ) 
@@ -678,8 +678,8 @@ int init_vpot_user(int *whichcoord, int l, int i, int j, int k, int loc, FTYPE (
       //trifprintf("rhoav=%g q=%g\n", rho_av, q);
 
       if(q > 0.){
-	//       vpot += q*q*sin(log(r/STARTFIELD)/fieldhor)* (1. + 0.02 * (ranc(0,0) - 0.5))  ;
-       vpot += q*q*sin(log(r/STARTFIELD)/fieldhor) ;
+        //       vpot += q*q*sin(log(r/STARTFIELD)/fieldhor)* (1. + 0.02 * (ranc(0,0) - 0.5))  ;
+        vpot += q*q*sin(log(r/STARTFIELD)/fieldhor) ;
       }
 #else
       q = rho_av / rhomax - 0.2;

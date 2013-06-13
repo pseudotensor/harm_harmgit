@@ -1,0 +1,70 @@
+# .bashrc
+
+# Source global definitions
+if [ -f /etc/bashrc ]; then
+	. /etc/bashrc
+fi
+
+# User specific aliases and functions
+
+source ~/.bashrc.jon
+
+
+#module load globus
+
+
+module load cue-login-env
+if [ $CUE_HOST_PROMPT = nautilus ]; then
+    echo "Do nothing with modules"
+    #module unload python/2.6
+    #module load python/2.7.1
+    #export MKL_DYNAMIC=FALSE
+    #export MKL_NUM_THREADS=8
+    #export MPLCONFIGDIR=/lustre/medusa/jmckinne/matplotlibdir/
+    #unset MPLCONFIGDIR
+
+    module unload intel/11.1.038
+    module unload PE-intel
+    module load PE-gnu
+fi
+
+
+if [ $CUE_HOST_PROMPT = kraken ]; then
+#module unload PrgEnv-pgi/2.2.74
+#module load PrgEnv-intel/1.0.0
+#module unload pgi/11.9.0
+#module load intel/12.1.2.273
+    module unload PrgEnv-gnu/3.1.72
+    module unload PrgEnv-pgi/3.1.72
+    module load PrgEnv-intel/3.1.72
+
+    module unload python/2.6
+    module load python/2.7.1-cnl # has to be specifically this 2.7 version or else compute node complains that not compiled for compute nodes (because this library is  on lustre as required)
+    export MKL_DYNAMIC=FALSE
+    export MKL_NUM_THREADS=8
+    export MPLCONFIGDIR=/lustre/scratch/jmckinne/matplotlibdir/
+
+#see https://mailman.ucsd.edu/pipermail/enzo-users-l/Week-of-Mon-20110103/000539.html
+#Try increasing the value of env var MPICH_UNEX_BUFFER_SIZE (curvalue is 62914560), and/or reducing the size of MPICH_MAX_SHORT_MSG_SIZE (cur value is 128000).
+
+    #export MPICH_UNEX_BUFFER_SIZE=1073741824
+    #export MPICH_MAX_SHORT_MSG_SIZE=32000
+#[356] MPICH PtlEQPoll error (PTL_EQ_DROPPED): An event was dropped on the UNEXEQ handle.  #Try increasing the value of env var MPICH_PTL_UNEX_EVENTS (cur size is 20480).
+    #export MPICH_PTL_UNEX_EVENTS=100000
+    #export MPICH_PTL_OTHER_EVENTS=400000
+
+    #export MPICH_PTL_SEND_CREDITS=-1
+    #export MPICH_MAX_SHORT_MSG_SIZE=16000
+    #export MPICH_PTL_UNEX_EVENTS=80000
+    #export MPICH_UNEX_BUFFER_SIZE=512M
+    
+    export MPI_TYPE_DEPTH=20
+    export MPICH_MAX_SHORT_MSG_SIZE=16000
+    export MPICH_PTL_UNEX_EVENTS=80000
+    export MPICH_UNEX_BUFFER_SIZE=768M
+
+fi
+
+export PYTHONPATH=$HOME/py:$PYTHONPATH
+
+# newgrp tug1111  ## calling this from your bashrc file WILL cause an infinite loop and many many bash shells
