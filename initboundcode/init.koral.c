@@ -364,7 +364,7 @@ int init_global(void)
   rescaletype=4;
   BSQORHOLIMIT=2E2; // was 1E2 but latest BC test had 1E3 // CHANGINGMARK
   BSQOULIMIT=1E5; // was 1E3 but latest BC test had 1E4
-  UORHOLIMIT=1E13; // has to be quite high, else hit floor in high optical depth cases and run-away injection of u and then rho.
+  UORHOLIMIT=1E10; // has to be quite high, else hit floor in high optical depth cases and run-away injection of u and then rho.
   RHOMIN = 1E-4;
   UUMIN = 1E-6;
   //OSMARK: where is DTr1 defined? what is DTfake?
@@ -1205,26 +1205,36 @@ int init_global(void)
     // coord.c: rbr=5E2 -> 1E2
     // OR use Sasha or Jon coordinate setup for all parameters.
 
+    // NOTENOTENOTE: Also do following before running with RADDONUT:
+    // coord.c: rbr=5E2 -> 1E2
+    // OR use Sasha or Jon coordinate setup for all parameters.
 
-    gam=gamideal=4.0/3.0;
+    // Torus setups:
+    // 3) gam=gamideal=5.0/3.0; RADNT_ELL=4.5; RADNT_UTPOT=0.9999999; RADNT_ROUT=2.0;  RADNT_RHODONUT=3.0; RADDONUT_OPTICALLYTHICKTORUS=1;     RADNT_KKK=1.e-1 * (1.0/powl(RADNT_RHODONUT,gam-1.0)); // where KKK doesn't matter.
+    // ATM setups:
+    // 1,2,3)  RADNT_ROUT=2.0; RADNT_RHOATMMIN=RADNT_RHODONUT*1E-4;  RADNT_TGASATMMIN = 1.e9/TEMPBAR;  RADNT_UINTATMMIN= (calc_PEQ_ufromTrho(RADNT_TGASATMMIN,RADNT_RHOATMMIN));    RADNT_TRADATMMIN = 1.e7/TEMPBAR;    RADNT_ERADATMMIN= (calc_LTE_EfromT(RADNT_TRADATMMIN));
+
+
+
+    gam=gamideal=5.0/3.0; // Ohsuga
 
     //    RADNT_ELL=4.5; // torus specific angular momentum
-    RADNT_ELL=3.5; // torus specific angular momentum
-    RADNT_UTPOT=0.99999; // scales rin for donut
+    RADNT_ELL=4.5; // torus specific angular momentum
+    RADNT_UTPOT=0.9999999; // scales rin for donut
     RADNT_ROUT=2.0; // what radius ATMMIN things are defining
     //RADNT_RHOATMMIN=KORAL2HARMRHO(1.e-4);
     //    RADNT_RHOATMMIN= KORAL2HARMRHO(1.e-2); // current koral choice
     //RADNT_RHODONUT = KORAL2HARMRHO(1.0); // equivalent to koral's non-normalization
     //    RADNT_RHODONUT=1E-5; // gives
-    RADNT_RHODONUT=1E-7; // gives 0.26 final density peak if RAD_ELL=3.5
-    RADNT_RHOATMMIN=RADNT_RHODONUT*1E-4;
-    RADNT_KKK=1.e-4 * (1.0/pow(RADNT_RHODONUT,gam-1.0));
+    RADNT_RHODONUT=3.0; // gives 0.26 final density peak if RAD_ELL=3.5
+    RADNT_RHOATMMIN=RADNT_RHODONUT*1E-6;
+    RADNT_KKK=1.e-1 * (1.0/pow(RADNT_RHODONUT,gam-1.0));
     //    RADNT_TGASATMMIN = 1.e11/TEMPBAR;
     RADNT_TGASATMMIN = 1.e9/TEMPBAR;
     RADNT_UINTATMMIN= (calc_PEQ_ufromTrho(RADNT_TGASATMMIN,RADNT_RHOATMMIN));
     // need external radiation energy density to be lower than interior of torus, else drives photons into torus from overpressured atmosphere and is more difficult to evolve.
     //    RADNT_TRADATMMIN = 1.e9/TEMPBAR;
-    RADNT_TRADATMMIN = 1.e8/TEMPBAR;
+    RADNT_TRADATMMIN = 1.e7/TEMPBAR;
     RADNT_ERADATMMIN= (calc_LTE_EfromT(RADNT_TRADATMMIN));
     RADNT_NODONUT=0;
     RADNT_INFLOWING=0;
@@ -3366,9 +3376,21 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
         pr[PRAD1]=pradffortho[PRAD1];
         pr[PRAD2]=pradffortho[PRAD2];
         pr[PRAD3]=pradffortho[PRAD3];
+        
+        FTYPE gambackup,gamidealbackup;
+        if(RADDONUT_OPTICALLYTHICKTORUS==1){
+          gambackup=gam;gamidealbackup=gamideal;
+          gam=gamideal=4.0L/3.0L; // then should be as if gam=4/3 so radiation supports torus properly at t=0
+        }
 
         // ADD DONUT
         returndonut=get_full_donut(*whichvel,*whichcoord,RADDONUT_OPTICALLYTHICKTORUS, pr,X,V,ptrgeomreal);
+
+        // restore gam
+        if(RADDONUT_OPTICALLYTHICKTORUS==1){
+          gam=gambackup;gamideal=gamidealbackup;
+        }
+     
      
         // donut returns fluid frame orthonormal values for radiation in pp
         pradffortho[PRAD0]=pr[PRAD0];

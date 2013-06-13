@@ -2131,7 +2131,7 @@ void dxdxp_numerical(FTYPE *X, FTYPE (*dxdxp)[NDIM])
       // }
 
       if(j==k && fabs(dxdxp[j][k])<NUMEPSILON){
-        dualfprintf(fail_file,"dxdxp[%d][%d]=%g is too small.  Ensure SINGSMALL=%g > %g\n",j,k,dxdxp[j][k],SINGSMALL,(Xh[k] - Xl[k]));
+        dualfprintf(fail_file,"dxdxp[%d][%d]=%g is too small.  Ensure SINGSMALL=%g < %g\n",j,k,dxdxp[j][k],SINGSMALL,(Xh[k] - Xl[k]));
       }
 
     }
