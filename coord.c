@@ -72,7 +72,7 @@ static FTYPE torusrmax_loc;
 static FTYPE ntheta,htheta,rsjet2,r0jet2,rsjet3,r0jet3; // and rs,r0
 
 // for defcoord=BPTHIN1
-static FTYPE bp_npow,bp_r1jet,bp_njet,bp_r0jet,bp_rsjet,bp_Qjet, bp_ntheta,bp_htheta,bp_rsjet2,bp_r0jet2,bp_rsjet3,bp_r0jet3, bp_rs, bp_r0,bp_npow2,bp_cpow2,bp_rbr,bp_x1br, bp_h0; 
+static FTYPE bp_npow,bp_r1jet,bp_njet1,bp_njet,bp_r0jet,bp_rsjet,bp_Qjet, bp_ntheta,bp_htheta,bp_rsjet2,bp_r0jet2,bp_rsjet3,bp_r0jet3, bp_rs, bp_r0,bp_npow2,bp_cpow2,bp_rbr,bp_x1br, bp_h0; 
 
 // for defcoord=PULSARCOORDS
 static FTYPE hinner,houter;
@@ -279,7 +279,7 @@ void set_coord_parms_nodeps(int defcoordlocal)
     bp_npow2=10.0;    // MARKNOTE set to 10.0 before using BP values //power exponent
     bp_cpow2=1.0; //exponent prefactor (the larger it is, the more hyperexponentiation is)
     //    rbr = 1E3;  //radius at which hyperexponentiation kicks in
-    bp_rbr = 5E2;  //radius at which hyperexponentiation kicks in
+    bp_rbr = 60.0;  //radius at which hyperexponentiation kicks in
 
 
 
@@ -287,28 +287,28 @@ void set_coord_parms_nodeps(int defcoordlocal)
     // GODMARK: Note njet here is overwritten by njet later, but could have been different values if setup variable names differently.
     if(0){ // first attempt
       bp_r1jet=2.8;
-      bp_njet=0.3;
+      bp_njet1=0.3;
       bp_r0jet=7.0;
       bp_rsjet=21.0;
       bp_Qjet=1.7;
     }
     else if(0){ // chosen to resolve disk then resolve jet
       bp_r1jet=2.8;
-      bp_njet=0.3;
+      bp_njet1=0.3;
       bp_r0jet=20.0;
       bp_rsjet=80.0;
       bp_Qjet=1.8;
     }
     else if(1){
       bp_r1jet=2.8;
-      bp_njet=0.0; // MARKNOTE set to 0.3 before using BP values
-      bp_r0jet=15.0;
-      bp_rsjet=40.0;
-      bp_Qjet=1.3; // chosen to help keep jet resolved even within disk region
+      bp_njet1=0.2; // MARKNOTE set to 0.3 before using BP values
+      bp_r0jet=35.0;
+      bp_rsjet=30.0;
+      bp_Qjet=2.0-hslope; // chosen to help keep jet resolved even within disk region
     }
 
     // for switches from normal theta to ramesh theta
-    bp_rs=40.0; // shift
+    bp_rs=60.0; // shift
     bp_r0=20.0; // divisor
  
     // for theta1
@@ -319,7 +319,7 @@ void set_coord_parms_nodeps(int defcoordlocal)
     // for theta2
     bp_h0=0.3; // inner-radial "hslope" for theta2
     // GODMARK: Note that this overwrites above njet!
-    bp_njet=1.0;  // MARKNOTE set to 1.0 before using BP values // power \theta_j \propto r^{-njet}
+    bp_njet=0.1;  // MARKNOTE set to 1.0 before using BP values // power \theta_j \propto r^{-njet}
 
 
     // see fix_3dpoledtissue.nb
@@ -723,7 +723,7 @@ void write_coord_parms(int defcoordlocal)
 	fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",npow,r1jet,njet,r0jet,rsjet,Qjet,ntheta,htheta,rsjet2,r0jet2,rsjet3,r0jet3,rs,r0,npow2,cpow2,rbr,x1br);
       }
       else if (defcoordlocal == BPTHIN1) {
-	fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",bp_npow,bp_r1jet,bp_njet,bp_r0jet,bp_rsjet,bp_Qjet,bp_ntheta,bp_htheta,bp_rsjet2,bp_r0jet2,bp_rsjet3,bp_r0jet3,bp_rs,bp_r0,bp_npow2,bp_cpow2,bp_rbr,bp_x1br);   // MARKTODO   add bp_h0?
+	fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",bp_npow,bp_r1jet,bp_njet,bp_r0jet,bp_rsjet,bp_Qjet,bp_ntheta,bp_htheta,bp_rsjet2,bp_r0jet2,bp_rsjet3,bp_r0jet3,bp_rs,bp_r0,bp_npow2,bp_cpow2,bp_rbr,bp_x1br);   // MARKTODO   add bp_h0? and add bp_njet1
       }
       else if (defcoordlocal == JET5COORDS) {
 	fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",AAAA,AAA,BBB,DDD,ii0,CCCC,Rj);
@@ -1335,13 +1335,13 @@ void bl_coord(FTYPE *X, FTYPE *V)
 
 #if(0)
     // JET3COORDS-based:
-    myhslope=2.0-bp_Qjet*pow(V[1]/bp_r1jet,-bp_njet*(0.5+1.0/M_PI*atan(V[1]/bp_r0jet-bp_rsjet/bp_r0jet)));
+    myhslope=2.0-bp_Qjet*pow(V[1]/bp_r1jet,-bp_njet1*(0.5+1.0/M_PI*atan(V[1]/bp_r0jet-bp_rsjet/bp_r0jet)));
     theta1 = M_PI * X[2] + ((1. - myhslope) * 0.5) * mysin(2. * M_PI * X[2]);
 #else
     // RAMESH BASED
     // myhslope here is h2 in MCAF paper
     // h0 here is h3 in MCAF paper
-    myhslope=bp_h0 + pow( (V[1]-bp_rsjet3)/bp_r0jet3 , bp_njet);
+    myhslope=bp_h0 + pow( (V[1]-bp_rsjet3)/bp_r0jet3 , bp_njet1);
 
     // determine theta2
     if(X[2]>1.0) myx2=2.0-X[2];
@@ -1355,9 +1355,13 @@ void bl_coord(FTYPE *X, FTYPE *V)
 
     // determine theta0
     // JET3COORDS-based:
-    myhslope=2.0-bp_Qjet*pow(V[1]/bp_r1jet,-bp_njet*(0.5+1.0/M_PI*atan(V[1]/bp_r0jet-bp_rsjet/bp_r0jet)));
+    //    myhslope=2.0-bp_Qjet*pow(V[1]/bp_r1jet,-bp_njet*(0.5+1.0/M_PI*atan(V[1]/bp_r0jet-bp_rsjet/bp_r0jet)));
+    myhslope=hslope;
     // myhslope here is h0 in MCAF paper
-    th0 = M_PI * .5 * (1. + (1.-((1. - myhslope) * 0.5))*(2.*X[2]-1.) + ((1. - myhslope) * 0.5)*pow(2.*X[2]-1.,9) ) ; // MARKTODODONE  switched to poly type from Noble+ 2010 on June 10, 2013
+    //    th0 = M_PI * .5 * (1. + (1.-((1. - myhslope) * 0.5))*(2.*X[2]-1.) + ((1. - myhslope) * 0.5)*pow(2.*X[2]-1.,9) ) ; // MARKTODODONE  switched to poly type from Noble+ 2010 on June 10, 2013
+    FTYPE xi=((1. - myhslope) * 0.5);
+    //    th0 = M_PI * .5 * (1. + (1.-xi)*(2.*X[2]-1.) + xi*pow(2.*X[2]-1.,9) ) ; // MARKTODODONE  switched to poly type from Noble+ 2010 on June 10, 2013
+    th0 = M_PI * .5 * (myhslope*(2.0*X[2]-1.0) + (1.0-myhslope)*pow(2.0*X[2]-1.0,9.0)+1);
 
     // determine switches (only function of radius and not x2 or theta)
     switch0 = 0.5+1.0/M_PI*atan((V[1]-bp_rs)/bp_r0); // switch in .nb file
@@ -1367,7 +1371,8 @@ void bl_coord(FTYPE *X, FTYPE *V)
     theta1 = th0*switch2 + th2*switch0; // th0 is activated for small V[1] and th2 is activated at large radii.  Notice that sum of switch2+switch0=1 so normalization correct.
 
 #endif
-    
+
+#if(0)    
     // fix_3dpoledtissue.nb based:
     theta2 = M_PI*0.5*(bp_htheta*(2.0*X[2]-1.0)+(1.0-bp_htheta)*pow(2.0*X[2]-1.0,bp_ntheta)+1.0);
 
@@ -1376,7 +1381,9 @@ void bl_coord(FTYPE *X, FTYPE *V)
 
     // now interpolate between them
     V[2] = theta2 + arctan2*(theta1-theta2);
-    
+#else
+    V[2] = theta1;
+#endif
 
 
     // default is uniform \phi grid
@@ -2310,7 +2317,7 @@ void dxdxp_numerical(FTYPE *X, FTYPE (*dxdxp)[NDIM])
       //	}
 
       if(j==k && fabs(dxdxp[j][k])<NUMEPSILON){
-	dualfprintf(fail_file,"dxdxp[%d][%d]=%g is too small.  Ensure SINGSMALL=%g > %g\n",j,k,dxdxp[j][k],SINGSMALL,(Xh[k] - Xl[k]));
+	dualfprintf(fail_file,"dxdxp[%d][%d]=%g is too small.  Ensure SINGSMALL=%g < %g\n",j,k,dxdxp[j][k],SINGSMALL,(Xh[k] - Xl[k]));
       }
 
     }
