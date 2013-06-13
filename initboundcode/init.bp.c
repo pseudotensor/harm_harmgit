@@ -279,7 +279,8 @@ int init_global(void)
   RHOMINEVOLVE = 1E-4;
   UUMINEVOLVE = 1E-6;
 
-  cooling=NOCOOLING; //COOLUSER; // MARKTODO should override these values set in initbase, right?
+  //  cooling=COOLUSER; // MARKTODO should override these values set in initbase, right?
+  cooling=NOCOOLING;
   gam=4./3.;
 
 #elif(WHICHPROBLEM==THICKDISK)
@@ -972,8 +973,10 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
   FTYPE rpow;
   rpow=3.0/4.0; // Using rpow=1 leads to quite strong field at large radius, and for standard atmosphere will lead to \sigma large at all radii, which is very difficult to deal with -- especially with grid sectioning where outer moving wall keeps opening up highly magnetized region
   //  FTYPE FIELDROT=M_PI*0.5;
+  FTYPE rpow2=0.0;
   FTYPE FIELDROT=0.0;
   FTYPE hpow=2.0;
+  FTYPE RBREAK=100.0;
 
 
   if(l==2){// A_\theta
@@ -988,7 +991,8 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
       vpot += -(pow(r,rpow)*pow(sin(th),hpow)*sin(FIELDROT)*sin(ph));
     }
     if(FIELDTYPE==DISKVERTBP){
-      vpot += -(pow(r,rpow)*pow(sin(th),hpow)*sin(FIELDROT)*sin(ph));
+      if(r<RBREAK) vpot += -(pow(r,rpow)*pow(sin(th),hpow)*sin(FIELDROT)*sin(ph));
+      else if(r>=RBREAK) vpot += -((pow(RBREAK,rpow)/pow(RBREAK,rpow2)*pow(r,rpow2))*pow(sin(th),hpow)*sin(FIELDROT)*sin(ph));
     }
 
 
@@ -1014,7 +1018,8 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
  
     if(FIELDTYPE==DISKVERTBP){
       //vpot += 0.5*pow(r,rpow)*sin(th)*sin(th) ;
-      vpot += pow(r,rpow)*pow(sin(th),hpow)*(cos(FIELDROT) - cos(ph)*cot(th)*sin(FIELDROT));
+      if(r<RBREAK) vpot += pow(r,rpow)*pow(sin(th),hpow)*(cos(FIELDROT) - cos(ph)*cot(th)*sin(FIELDROT));
+      else if(r>=RBREAK) vpot += (pow(RBREAK,rpow)/pow(RBREAK,rpow2)*pow(r,rpow2))*pow(sin(th),hpow)*(cos(FIELDROT) - cos(ph)*cot(th)*sin(FIELDROT));
     }
 
     /* field-in-disk version */
