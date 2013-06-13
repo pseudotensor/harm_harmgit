@@ -810,10 +810,11 @@ int user1_get_maxes(int eqslice, FTYPE *parms, FTYPE (*prim)[NSTORE2][NSTORE3][N
     get_geometry(i, j, k, loc, ptrgeom);
     FTYPE *pr = &MACP0A1(prim,i,j,k,0);
 
+    bl_coord_ijk_2(i, j, k, loc, X, V);
+    r=V[1];
+    th=V[2];
+
     if(eqslice){
-      bl_coord_ijk_2(i, j, k, loc, X, V);
-      r=V[1];
-      th=V[2];
       
       if((r>rin)&&(fabs(th-M_PI*0.5)<4.0*M_PI*dx[2]*hslope)){
         gotnormal=1;
@@ -833,19 +834,22 @@ int user1_get_maxes(int eqslice, FTYPE *parms, FTYPE (*prim)[NSTORE2][NSTORE3][N
       }
     }
     else{
-      gotnormal=1;
-      if (bsq_calc(MAC(prim,i,j,k), ptrgeom, &bsq_ij) >= 1) FAILSTATEMENT("init.c:init()", "bsq_calc()", 1);
-      if (bsq_ij > bsq_max[0])      bsq_max[0] = bsq_ij;
-
-      ptot_ij=pressure_rho0_u_simple(i,j,k,loc,MACP0A1(prim,i,j,k,RHO),MACP0A1(prim,i,j,k,UU));
-      if(EOMRADTYPE!=EOMRADNONE) ptot_ij += pr[URAD0]*(4.0/3.0-1.0);
-
-      if (ptot_ij > ptot_max[0])      ptot_max[0] = ptot_ij;
-
-      beta_ij=ptot_ij/(bsq_ij*0.5);
       
-      if (beta_ij < beta_min[0])      beta_min[0] = beta_ij;
+      if(r>rin){
 
+        gotnormal=1;
+        if (bsq_calc(MAC(prim,i,j,k), ptrgeom, &bsq_ij) >= 1) FAILSTATEMENT("init.c:init()", "bsq_calc()", 1);
+        if (bsq_ij > bsq_max[0])      bsq_max[0] = bsq_ij;
+
+        ptot_ij=pressure_rho0_u_simple(i,j,k,loc,MACP0A1(prim,i,j,k,RHO),MACP0A1(prim,i,j,k,UU));
+        if(EOMRADTYPE!=EOMRADNONE) ptot_ij += pr[URAD0]*(4.0/3.0-1.0);
+
+        if (ptot_ij > ptot_max[0])      ptot_max[0] = ptot_ij;
+
+        beta_ij=ptot_ij/(bsq_ij*0.5);
+      
+        if (beta_ij < beta_min[0])      beta_min[0] = beta_ij;
+      }
     }
   }
 

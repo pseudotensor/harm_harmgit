@@ -215,7 +215,8 @@ int prepre_init_specific_init(void)
 int pre_init_specific_init(void)
 {
 
-  h_over_r=0.3;
+  //  h_over_r=0.3;
+  h_over_r=0.2;
   h_over_r_jet=2.0*h_over_r;
 
 
@@ -1207,13 +1208,15 @@ int init_global(void)
 
     gam=gamideal=4.0/3.0;
 
-    RADNT_ELL=4.5; // torus specific angular momentum
+    //    RADNT_ELL=4.5; // torus specific angular momentum
+    RADNT_ELL=3.5; // torus specific angular momentum
     RADNT_UTPOT=0.99999; // scales rin for donut
     RADNT_ROUT=2.0; // what radius ATMMIN things are defining
     //RADNT_RHOATMMIN=KORAL2HARMRHO(1.e-4);
     //    RADNT_RHOATMMIN= KORAL2HARMRHO(1.e-2); // current koral choice
     //RADNT_RHODONUT = KORAL2HARMRHO(1.0); // equivalent to koral's non-normalization
-    RADNT_RHODONUT=1E-5;
+    //    RADNT_RHODONUT=1E-5; // gives
+    RADNT_RHODONUT=1E-7; // gives 0.26 final density peak if RAD_ELL=3.5
     RADNT_RHOATMMIN=RADNT_RHODONUT*1E-4;
     RADNT_KKK=1.e-4 * (1.0/pow(RADNT_RHODONUT,gam-1.0));
     //    RADNT_TGASATMMIN = 1.e11/TEMPBAR;
@@ -1906,9 +1909,11 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 
 
   // defaults
-  beta = 10.0*4.0;
+  //  beta = 10.0*4.0;
+  beta = 100.0;
   randfact = 0.1;
-  rin=10.0;
+  //  rin=10.0;
+  rin=6.0;
 
 
 
@@ -3854,7 +3859,8 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
   FTYPE setblandfordfield(FTYPE r, FTYPE th);
 
 
-#define FRACAPHICUT 0.1
+  //#define FRACAPHICUT 0.1
+#define FRACAPHICUT 0.05
   //#define FRACAPHICUT 0.1
 
 
@@ -3960,6 +3966,7 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
     /* field-in-disk version */
     if(FIELDTYPE==DISK1FIELD || FIELDTYPE==DISK1VERT){
       q = rho_av / rhomax - 0.2;
+      if(r<rin) q=0.0;
       if (q > 0.)      vpot += q;
     }
 
@@ -3983,6 +3990,7 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
       //      if (q > 0.)      vpot += q*q*pow(r*fabs(sin(th)),POWERNU);
       FTYPE fact1,fact2,SSS,TTT;
       fact1=pow(fabs(q),QPOWER)*pow(r*fabs(sin(th)),POWERNU);
+      if(r<rin) fact1=0.0;
       SSS=rin*0.5;
       TTT=0.28;
       fact2=sin(log(r/SSS)/TTT);
@@ -4032,6 +4040,9 @@ int init_vpot2field_user(SFTYPE time, FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SH
 int normalize_densities(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 {
 
+  int getmax_densities_full(FTYPE (*prim)[NSTORE2][NSTORE3][NPR],SFTYPE *rhomax, SFTYPE *umax, SFTYPE *uradmax, SFTYPE *utotmax, SFTYPE *pmax, SFTYPE *pradmax, SFTYPE *ptotmax);
+  int funreturn=getmax_densities_full(prim,&rhomax,&umax,&uradmax,&utotmax,&pmax,&pradmax,&ptotmax);
+
 
   if(0){
     int funreturn;
@@ -4043,14 +4054,9 @@ int normalize_densities(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
     parms[1]=rhodisk;
 
     funreturn=user1_normalize_densities(eqline, parms, prim, &rhomax, &umax);
-    if(funreturn!=0) return(funreturn);
   }
-  else{
-    int getmax_densities_full(FTYPE (*prim)[NSTORE2][NSTORE3][NPR],SFTYPE *rhomax, SFTYPE *umax, SFTYPE *uradmax, SFTYPE *utotmax, SFTYPE *pmax, SFTYPE *pradmax, SFTYPE *ptotmax);
-    int funreturn=getmax_densities_full(prim,&rhomax,&umax,&uradmax,&utotmax,&pmax,&pradmax,&ptotmax);
-    if(funreturn!=0) return(funreturn);
 
-  }
+  if(funreturn!=0) return(funreturn);
 
   return(0);
 }
