@@ -35,7 +35,7 @@
 #define WHICHPROBLEM THINBP
 
 static SFTYPE rhomax=0,umax=0,bsq_max=0; // OPENMPMARK: These are ok file globals since set using critical construct
-static SFTYPE beta,randfact,rin; // OPENMPMARK: Ok file global since set as constant before used
+static SFTYPE beta,randfact,rin,fieldnormalizemin; // OPENMPMARK: Ok file global since set as constant before used
 static FTYPE rhodisk;
 
 
@@ -381,6 +381,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
   rin = Risco;
   beta = 5.e1 ;
   randfact = 4.e-2;
+  fieldnormalizemin = 3. * Risco;
 #elif(WHICHPROBLEM==THICKDISK)
   //  beta = 1.e2 ;
   //  beta = 20.0;
@@ -1128,13 +1129,106 @@ int get_maxes(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *bsq_max, FTYPE *pg_ma
     eqslice=0;
   }
 
-  parms[0]=rin;
+  parms[0]=fieldnormalizemin;
 
-  funreturn=user1_get_maxes(eqslice, parms,prim, bsq_max, pg_max, beta_min);
+  funreturn=user1_get_maxes2(eqslice, parms,prim, bsq_max, pg_max, beta_min);
   if(funreturn!=0) return(funreturn);
  
   return(0);
 }
+
+
+// get maximum b^2 and p_g and minimum of beta    MAVARA This is done just as user1_get_maxes except things are normalized only considering values outside a certain minimum radius.
+// OPENMPOPTMARK: No benefit from OpenMP due to critical region required and too user specific
+int user1_get_maxes2(int eqslice, FTYPE *parms, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *bsq_max, FTYPE *pg_max, FTYPE *beta_min)
+{
+  int i,j,k;
+  FTYPE bsq_ij,pg_ij,beta_ij;
+  struct of_geom geomdontuse;
+  struct of_geom *ptrgeom=&geomdontuse;
+  FTYPE X[NDIM],V[NDIM];
+  FTYPE dxdxp[NDIM][NDIM];
+  FTYPE r,th;
+  int gotnormal;
+  FTYPE rin;
+  int loc;
+
+  
+  
+
+  rin=parms[0];
+
+
+  bsq_max[0] = SMALL;
+  pg_max[0]= 0.;
+  beta_min[0]=VERYBIG;
+  gotnormal=0; // to check if ever was in location where wanted to normalize
+  loc=CENT;
+
+  ZLOOP {
+    get_geometry(i, j, k, loc, ptrgeom);
+
+    if(eqslice){
+      bl_coord_ijk_2(i, j, k, loc, X, V);
+      r=V[1];
+      th=V[2];
+      
+      if((r>rin)&&(fabs(th-M_PI*0.5)<4.0*M_PI*dx[2]*hslope)){
+	gotnormal=1;
+	if (bsq_calc(MAC(prim,i,j,k), ptrgeom, &bsq_ij) >= 1) FAILSTATEMENT("init.c:init()", "bsq_calc()", 1);
+	if (bsq_ij > bsq_max[0])      bsq_max[0] = bsq_ij;
+
+	pg_ij=pressure_rho0_u_simple(i,j,k,loc,MACP0A1(prim,i,j,k,RHO),MACP0A1(prim,i,j,k,UU));
+	if (pg_ij > pg_max[0])      pg_max[0] = pg_ij;
+
+	beta_ij=pg_ij/(bsq_ij*0.5);
+
+	if (beta_ij < beta_min[0])      beta_min[0] = beta_ij;
+
+      }
+    }
+    else{
+      gotnormal=1;
+      if (bsq_calc(MAC(prim,i,j,k), ptrgeom, &bsq_ij) >= 1) FAILSTATEMENT("init.c:init()", "bsq_calc()", 1);
+      if (bsq_ij > bsq_max[0])      bsq_max[0] = bsq_ij;
+
+      pg_ij=pressure_rho0_u_simple(i,j,k,loc,MACP0A1(prim,i,j,k,RHO),MACP0A1(prim,i,j,k,UU));
+      if (pg_ij > pg_max[0])      pg_max[0] = pg_ij;
+
+      beta_ij=pg_ij/(bsq_ij*0.5);
+      
+      if (beta_ij < beta_min[0])      beta_min[0] = beta_ij;
+
+    }
+  }
+
+
+  mpiisum(&gotnormal);
+
+  if(gotnormal==0){
+    dualfprintf(fail_file,"Never found place to normalize field\n");
+    if(N2==1 && N3==1){
+      ZLOOP {
+	bl_coord_ijk_2(i, j, k, loc, X, V);
+	dxdxprim_ijk(i, j, k, loc, dxdxp);
+	r=V[1];
+	th=V[2];
+
+	dualfprintf(fail_file,"i=%d j=%d k=%d V[1]=%21.15g dxdxp[1][1]*dx[1]=%21.15g dx[1]=%21.15g\n",i,j,k,V[1],dxdxp[1][1]*dx[1],dx[1]);
+      }
+    }
+    myexit(111);
+  }
+
+  mpimax(bsq_max);
+  mpimax(pg_max);
+  mpimin(beta_min);
+
+
+  return(0);
+
+}
+
 
 
 // assumes normal field definition
@@ -1240,7 +1334,7 @@ static FTYPE nz_func(FTYPE R)
 static FTYPE taper_func_exp(FTYPE R,FTYPE rin)  // MAVARA added June 3 2013
 {
 
-  FTYPE softer = 2.0; // 2.0 works ok for resolution of 64 cells for inner 40 M radius
+  FTYPE softer = .5; // 2.0 works ok for resolution of 64 cells for inner 40 M radius
   if(R <= rin)
     return(0.) ;
   else

@@ -1357,7 +1357,7 @@ void bl_coord(FTYPE *X, FTYPE *V)
     // JET3COORDS-based:
     myhslope=2.0-bp_Qjet*pow(V[1]/bp_r1jet,-bp_njet*(0.5+1.0/M_PI*atan(V[1]/bp_r0jet-bp_rsjet/bp_r0jet)));
     // myhslope here is h0 in MCAF paper
-    th0 = M_PI * .5 * (1. + (1.-((1. - myhslope) * 0.5))*(2.*X[2]-1.) + ((1. - myhslope) * 0.5)*pow(2.*X[2]-1.,9) ) ; // MARKTODODONE  switched to poly type from Noble+ 2010 on June 10, 2013
+    th0 = M_PI * X[2] + ((1. - myhslope) * 0.5) * mysin(2. * M_PI * X[2]); //M_PI * .5 * (1. + (1.-((1. - myhslope) * 0.5))*(2.*X[2]-1.) + ((1. - myhslope) * 0.5)*pow(2.*X[2]-1.,9) ) ; // MARKTODODONE  switched to poly type from Noble+ 2010 on June 10, 2013
 
     // determine switches (only function of radius and not x2 or theta)
     switch0 = 0.5+1.0/M_PI*atan((V[1]-bp_rs)/bp_r0); // switch in .nb file
