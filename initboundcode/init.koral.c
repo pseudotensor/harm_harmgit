@@ -4045,7 +4045,6 @@ int normalize_densities(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 
 
   if(0){
-    int funreturn;
     FTYPE parms[MAXPASSPARMS];
     int eqline;
 
@@ -4053,12 +4052,10 @@ int normalize_densities(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
     parms[0]=rin;
     parms[1]=rhodisk;
 
-    funreturn=user1_normalize_densities(eqline, parms, prim, &rhomax, &umax);
+    funreturn+=user1_normalize_densities(eqline, parms, prim, &rhomax, &umax);
   }
 
-  if(funreturn!=0) return(funreturn);
-
-  return(0);
+  return(funreturn);
 }
 
 
