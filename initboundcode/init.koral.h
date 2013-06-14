@@ -473,7 +473,10 @@ struct Ccoordparams {
 #define RADWAVEBC (14) // 1d linear rad wave imposed on boundary (not setup in koral yet -- looks like time-dep BC for density on left boundary)
 #define EDDINFALL (5) // infall with flux from inside
 
-
+// RADDONUT types
+#define NODONUT 0
+#define DONUTOLEK 1
+#define DONUTOHSUGA 2
 
 
 ////////////////

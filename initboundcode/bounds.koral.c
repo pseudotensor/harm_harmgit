@@ -2468,7 +2468,7 @@ int bound_radnt(int dir,
     extern FTYPE RADNT_RHODONUT;
     extern FTYPE RADNT_UINTATMMIN;
     extern FTYPE RADNT_ERADATMMIN;
-    extern FTYPE RADNT_NODONUT;
+    extern FTYPE RADNT_DONUTTYPE;
     extern FTYPE RADNT_INFLOWING;
     extern FTYPE RADNT_TGASATMMIN;
     extern FTYPE RADNT_TRADATMMIN;
