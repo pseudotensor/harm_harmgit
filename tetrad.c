@@ -3,16 +3,16 @@
 
 // Charles had wrong function call!
 //extern int dsyev_(char *jobz, char *uplo, int *n, double *a, int *lda,
-//		  double *w, double *work, int *lwork, int *iwork,
-//		  int *liwork, int *info);
+//                double *w, double *work, int *lwork, int *iwork,
+//                int *liwork, int *info);
 extern int dsyev_(char *jobz, char *uplo, int *n, double *a, int *lda,
-		  double *w, double *work, int *lwork, int *info);
+                  double *w, double *work, int *lwork, int *info);
 extern int dsyevr_(char *jobz, char *range, char *uplo, int *n, double *a, int *lda,
-		   double *vl, double *vu, int *il, int *iu, double *abstol, int *M,
-		   double *w,
-		   double *z, int *ldz, int *isuppz,
-		   double *work, int *lwork, int *iwork,
-		   int *liwork, int *info);
+                   double *vl, double *vu, int *il, int *iu, double *abstol, int *M,
+                   double *w,
+                   double *z, int *ldz, int *isuppz,
+                   double *work, int *lwork, int *iwork,
+                   int *liwork, int *info);
 //extern double dlamch_(char *);
 
 // declarations
@@ -129,23 +129,23 @@ static int tetlapack_func(FTYPE (*metr)[NDIM], FTYPE (*tetr)[NDIM], FTYPE eigenv
   DLOOP(j,k) a[j][k] = metr[j][k] ;
 
   chk = dsyev_(
-	       &jobz, 		/* job: 'V' -> compute eigenvectors too */
-	       &uplo,		/* which part of a is stored, 'U' -> upper */
-	       &n,		/* order of matrix a */
-	       (double *)a,	/* matrix (row major order) */
-	       &lda,		/* leading dimension of a */
-	       w,		/* eigenvalues, ascending order */
-	       work,		/* workspace */
-	       &lwork,		/* size of workspace */
-	       &info		/* successful? */
-	       ) ;
+               &jobz,           /* job: 'V' -> compute eigenvectors too */
+               &uplo,           /* which part of a is stored, 'U' -> upper */
+               &n,              /* order of matrix a */
+               (double *)a,     /* matrix (row major order) */
+               &lda,            /* leading dimension of a */
+               w,               /* eigenvalues, ascending order */
+               work,            /* workspace */
+               &lwork,          /* size of workspace */
+               &info            /* successful? */
+               ) ;
 
 
   if(info>0 && 0){
     // doesn't seem to work (gives wrong results)
     // gives right eigenvalues but not right eigenvectors
     int liwork,iwork[LIWORKSIZE] ;
-	  
+          
     liwork = LIWORKSIZE ;
     // then dsyev failed for some reason, try another algorithm
 
@@ -153,7 +153,7 @@ static int tetlapack_func(FTYPE (*metr)[NDIM], FTYPE (*tetr)[NDIM], FTYPE eigenv
     // http://www.gfd-dennou.org/arch/ruby/products/ruby-lapack/doc/dsy.html
     // http://www.netlib.org/lapack/double/dsyevr.f
     DLOOP(j,k) a[j][k] = metr[j][k] ;
-	  
+          
     char range = 'A';
     double vl=0;
     double vu=1E30;
@@ -167,22 +167,22 @@ static int tetlapack_func(FTYPE (*metr)[NDIM], FTYPE (*tetr)[NDIM], FTYPE eigenv
     int ldz=NDIM;
     int isuppz[2*NDIM]; // output
     chk = dsyevr_(
-		  &jobz, 		/* job: 'V' -> compute eigenvectors too */
-		  &range,
-		  &uplo,		/* which part of a is stored, 'U' -> upper */
-		  &n,		/* order of matrix a */
-		  (double *)a,	/* matrix (row major order) */
-		  &lda,		/* leading dimension of a */
-		  &vl,&vu,&il,&iu,&abstol,&M,
-		  w,		/* eigenvalues, ascending order */
-		  (double *)z,&ldz,isuppz,
-		  work,		/* workspace */
-		  &lwork,		/* size of workspace */
-		  iwork,		/* size of iwork */
-		  &liwork,	/* working array for optimal liwork */
-		  &info		/* successful? */
-		  ) ;
-	  
+                  &jobz,                /* job: 'V' -> compute eigenvectors too */
+                  &range,
+                  &uplo,                /* which part of a is stored, 'U' -> upper */
+                  &n,           /* order of matrix a */
+                  (double *)a,  /* matrix (row major order) */
+                  &lda,         /* leading dimension of a */
+                  &vl,&vu,&il,&iu,&abstol,&M,
+                  w,            /* eigenvalues, ascending order */
+                  (double *)z,&ldz,isuppz,
+                  work,         /* workspace */
+                  &lwork,               /* size of workspace */
+                  iwork,                /* size of iwork */
+                  &liwork,      /* working array for optimal liwork */
+                  &info         /* successful? */
+                  ) ;
+          
   }
 
 
@@ -302,10 +302,10 @@ static int compute_tetrcon_frommetric(FTYPE (*generalmatrix)[NDIM], FTYPE (*tetr
     FTYPE minerror=BIG;
     DLOOP(jj,kk){
       if(fabs(errorlist[jj][kk])<minerror && newlist[kk]==-1){ // only use minimum if minimum AND not already on list (forces result to be unique)
-	minerror=fabs(errorlist[jj][kk]);
-	minjj=jj;
-	minkk=kk;
-	signerror=sign(errorlist[jj][kk]);
+        minerror=fabs(errorlist[jj][kk]);
+        minjj=jj;
+        minkk=kk;
+        signerror=sign(errorlist[jj][kk]);
       }
     }
     if(minjj==-1 || minkk==-1){
@@ -341,19 +341,19 @@ static int compute_tetrcon_frommetric(FTYPE (*generalmatrix)[NDIM], FTYPE (*tetr
 #if(DEBUGLAPACK==2)
   // real debug
   if(1){
-      //  if(tiglobal[1]==200 && tiglobal[2]==10 && tiglobal[3]==0){
-      dualfprintf(fail_file,"\ninfo=%d\n",info);
-      DLOOPA(jj){
-	dualfprintf(fail_file,"jj=%d eigenorig=%21.15g eigen=%21.15g old=%21.15g\n",jj,tempeigenvalues[jj],eigenvalues[jj],eigenvaluesother[jj]);
-      }
-      DLOOP(jj,kk){
-	dualfprintf(fail_file,"jj=%d kk=%d lapack=%21.15g old=%21.15g\n",jj,kk,tetrcon[jj][kk],tetrconother[jj][kk]);
-      }
-      dualfprintf(fail_file,"\n");
-    
-      fflush(fail_file);
-      myexit(0);
+    //  if(tiglobal[1]==200 && tiglobal[2]==10 && tiglobal[3]==0){
+    dualfprintf(fail_file,"\ninfo=%d\n",info);
+    DLOOPA(jj){
+      dualfprintf(fail_file,"jj=%d eigenorig=%21.15g eigen=%21.15g old=%21.15g\n",jj,tempeigenvalues[jj],eigenvalues[jj],eigenvaluesother[jj]);
     }
+    DLOOP(jj,kk){
+      dualfprintf(fail_file,"jj=%d kk=%d lapack=%21.15g old=%21.15g\n",jj,kk,tetrcon[jj][kk],tetrconother[jj][kk]);
+    }
+    dualfprintf(fail_file,"\n");
+    
+    fflush(fail_file);
+    myexit(0);
+  }
 #endif
 
 
@@ -411,19 +411,19 @@ static int compute_tetrcon_frommetric_mathematica(FTYPE (*generalmatrix)[NDIM], 
 
   // get orthonormal basis transformation
   tetrcon[0][0]=-(sqrt(grr + sqrt(4.0*((grt)*(grt)) + ((grr - gtt)*(grr - gtt))) - gtt)/
-		  pow((4.0*((grt)*(grt)) + ((grr - gtt)*(grr - gtt)))*blob1sq,0.25));
+                  pow((4.0*((grt)*(grt)) + ((grr - gtt)*(grr - gtt)))*blob1sq,0.25));
   
   tetrcon[0][1] =  (2.0*grt)/(sqrt(4.0*((grt)*(grt)) + (grr - gtt)*(grr + sqrt(4.0*((grt)*(grt)) + ((grr - gtt)*(grr - gtt))) - gtt))*
-			      sqrt(fabs(grr - sqrt(4.0*((grt)*(grt)) + ((grr - gtt)*(grr - gtt))) + gtt)));
+                              sqrt(fabs(grr - sqrt(4.0*((grt)*(grt)) + ((grr - gtt)*(grr - gtt))) + gtt)));
 
   tetrcon[0][2] = 0.0;
   tetrcon[0][3] = 0.0;
 
   tetrcon[1][0] = (2.0*grt)/sqrt((4.0*((grt)*(grt)) + (grr - gtt)*(grr + sqrt(4.0*((grt)*(grt)) + ((grr - gtt)*(grr - gtt))) - gtt))*
-				 (grr + sqrt(4.0*((grt)*(grt)) + ((grr - gtt)*(grr - gtt))) + gtt));
+                                 (grr + sqrt(4.0*((grt)*(grt)) + ((grr - gtt)*(grr - gtt))) + gtt));
 
   tetrcon[1][1] = sqrt((grr + sqrt(4.0*((grt)*(grt)) + ((grr - gtt)*(grr - gtt))) - gtt)/
-		       (sqrt(4.0*((grt)*(grt)) + ((grr - gtt)*(grr - gtt)))*(grr + sqrt(4.0*((grt)*(grt)) + ((grr - gtt)*(grr - gtt))) + gtt)));
+                       (sqrt(4.0*((grt)*(grt)) + ((grr - gtt)*(grr - gtt)))*(grr + sqrt(4.0*((grt)*(grt)) + ((grr - gtt)*(grr - gtt))) + gtt)));
 
   tetrcon[1][2] = 0.0;
   tetrcon[1][3] = 0.0;

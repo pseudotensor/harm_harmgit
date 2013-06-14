@@ -185,8 +185,8 @@ void copy_tempucum_finalucum(int *loop, FTYPE (*tempucum)[NSTORE2][NSTORE3][NPR]
 #if(PRODUCTION==0)
 #pragma omp barrier // force barrier since otherwise nowait will leak into here with undefined values in general
       COMPZSLOOP(is,ie,js,je,ks,ke){
-	PLOOPNOB1(pl) ucum_check(i,j,k,CENT,pl, MAC(ucum,i,j,k));
-	PLOOPNOB2(pl) ucum_check(i,j,k,CENT,pl, MAC(ucum,i,j,k));
+        PLOOPNOB1(pl) ucum_check(i,j,k,CENT,pl, MAC(ucum,i,j,k));
+        PLOOPNOB2(pl) ucum_check(i,j,k,CENT,pl, MAC(ucum,i,j,k));
       }
 #endif
 
@@ -207,7 +207,7 @@ void copy_tempucum_finalucum(int *loop, FTYPE (*tempucum)[NSTORE2][NSTORE3][NPR]
 #if(PRODUCTION==0)
 #pragma omp barrier // force barrier since otherwise nowait will leak into here with undefined values in general
       COMPZSLOOP(is,ie,js,je,ks,ke){
-	ucum_check(i,j,k,FACE1,pl, MAC(ucum,i,j,k));
+        ucum_check(i,j,k,FACE1,pl, MAC(ucum,i,j,k));
       }
 #endif
 
@@ -228,7 +228,7 @@ void copy_tempucum_finalucum(int *loop, FTYPE (*tempucum)[NSTORE2][NSTORE3][NPR]
 #if(PRODUCTION==0)
 #pragma omp barrier // force barrier since otherwise nowait will leak into here with undefined values in general
       COMPZSLOOP(is,ie,js,je,ks,ke){
-	ucum_check(i,j,k,FACE2,pl, MAC(ucum,i,j,k));
+        ucum_check(i,j,k,FACE2,pl, MAC(ucum,i,j,k));
       }
 #endif
 
@@ -249,7 +249,7 @@ void copy_tempucum_finalucum(int *loop, FTYPE (*tempucum)[NSTORE2][NSTORE3][NPR]
 #if(PRODUCTION==0)
 #pragma omp barrier // force barrier since otherwise nowait will leak into here with undefined values in general
       COMPZSLOOP(is,ie,js,je,ks,ke){
-	ucum_check(i,j,k,FACE3,pl, MAC(ucum,i,j,k));
+        ucum_check(i,j,k,FACE3,pl, MAC(ucum,i,j,k));
       }
 #endif
 
@@ -263,7 +263,7 @@ void copy_tempucum_finalucum(int *loop, FTYPE (*tempucum)[NSTORE2][NSTORE3][NPR]
 #if(PRODUCTION==0)
 #pragma omp barrier // force barrier since otherwise nowait will leak into here with undefined values in general
       COMPZSLOOP(is,ie,js,je,ks,ke){
-	PLOOP(pliter,pl) ucum_check(i,j,k,CENT,pl, MAC(ucum,i,j,k));
+        PLOOP(pliter,pl) ucum_check(i,j,k,CENT,pl, MAC(ucum,i,j,k));
       }
 #endif
     }
@@ -304,7 +304,7 @@ void copy_tempucum_finalucum_fieldonly(int *loop, FTYPE (*tempucum)[NSTORE2][NST
 
 #if(PRODUCTION==0)
       COMPZSLOOP(is,ie,js,je,ks,ke){
-	ucum_check(i,j,k,FACE1,pl, MAC(ucum,i,j,k));
+        ucum_check(i,j,k,FACE1,pl, MAC(ucum,i,j,k));
       }
 #endif
 
@@ -317,7 +317,7 @@ void copy_tempucum_finalucum_fieldonly(int *loop, FTYPE (*tempucum)[NSTORE2][NST
 
 #if(PRODUCTION==0)
       COMPZSLOOP(is,ie,js,je,ks,ke){
-	ucum_check(i,j,k,FACE2,pl, MAC(ucum,i,j,k));
+        ucum_check(i,j,k,FACE2,pl, MAC(ucum,i,j,k));
       }
 #endif
 
@@ -330,7 +330,7 @@ void copy_tempucum_finalucum_fieldonly(int *loop, FTYPE (*tempucum)[NSTORE2][NST
 
 #if(PRODUCTION==0)
       COMPZSLOOP(is,ie,js,je,ks,ke){
-	ucum_check(i,j,k,FACE3,pl, MAC(ucum,i,j,k));
+        ucum_check(i,j,k,FACE3,pl, MAC(ucum,i,j,k));
       }
 #endif
 
@@ -343,7 +343,7 @@ void copy_tempucum_finalucum_fieldonly(int *loop, FTYPE (*tempucum)[NSTORE2][NST
       // just check
 #if(PRODUCTION==0)
       COMPZSLOOP(is,ie,js,je,ks,ke){
-	PLOOPBONLY(pl) ucum_check(i,j,k,CENT,pl, MAC(ucum,i,j,k));
+        PLOOPBONLY(pl) ucum_check(i,j,k,CENT,pl, MAC(ucum,i,j,k));
       }
 #endif
     }
@@ -376,7 +376,7 @@ void copy_3dnpr(int is, int ie, int js, int je, int ks, int ke,FTYPE (*source)[N
 
       ////      COMPZSLOOP(is,ie,js,je,ks,ke){
       PLOOP(pliter,pl){
-	MACP0A1(dest,i,j,k,pl)=MACP0A1(source,i,j,k,pl);
+        MACP0A1(dest,i,j,k,pl)=MACP0A1(source,i,j,k,pl);
       }
     }// end 3D loop
 
@@ -614,7 +614,7 @@ void init_3dnpr(int is, int ie, int js, int je, int ks, int ke,FTYPE initvalue, 
 
       //      COMPZSLOOP(is,ie,js,je,ks,ke){
       PLOOP(pliter,pl){
-	MACP0A1(dest,i,j,k,pl)=initvalue;
+        MACP0A1(dest,i,j,k,pl)=initvalue;
       }
     }// end 3D loop
 
@@ -724,7 +724,7 @@ void init_3dnpr_2ptrs(int is, int ie, int js, int je, int ks, int ke,FTYPE initv
 
       //      COMPZSLOOP(is,ie,js,je,ks,ke){
       PLOOP(pliter,pl){
-	MACP0A1(dest1,i,j,k,pl)=MACP0A1(dest2,i,j,k,pl)=initvalue;
+        MACP0A1(dest1,i,j,k,pl)=MACP0A1(dest2,i,j,k,pl)=initvalue;
       }
     }// end 3D loop
 
@@ -752,7 +752,7 @@ void copy_3dnpr_2ptrs(int is, int ie, int js, int je, int ks, int ke,FTYPE (*sou
 
       //      COMPZSLOOP(is,ie,js,je,ks,ke){
       PLOOP(pliter,pl){
-	MACP0A1(dest1,i,j,k,pl)=MACP0A1(dest2,i,j,k,pl)=MACP0A1(source,i,j,k,pl);
+        MACP0A1(dest1,i,j,k,pl)=MACP0A1(dest2,i,j,k,pl)=MACP0A1(source,i,j,k,pl);
       }
     }// end 3D loop
 
@@ -836,7 +836,7 @@ void copy_3dnpr2interp_2ptrs(int is, int ie, int js, int je, int ks, int ke,FTYP
 
       //      COMPZSLOOP(is,ie,js,je,ks,ke){
       PINTERPLOOP(pliter,pl){
-	MACP0A1(dest1,i,j,k,pl)=MACP0A1(dest2,i,j,k,pl)=MACP0A1(source,i,j,k,pl);
+        MACP0A1(dest1,i,j,k,pl)=MACP0A1(dest2,i,j,k,pl)=MACP0A1(source,i,j,k,pl);
       }
     }// end 3D loop
 

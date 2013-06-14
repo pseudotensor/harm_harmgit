@@ -7,8 +7,8 @@
    iseed > 0 */
 
 
-#define RND	( 0x7fff & rand() )
-#define MINN	( 2 << 8 )
+#define RND     ( 0x7fff & rand() )
+#define MINN    ( 2 << 8 )
 
 // OPENMPMARK: constant static, so ok
 static int P[NRANC] = {
@@ -35,17 +35,17 @@ FTYPE ranc(int initialize, int iseed)
 #pragma omp critical
   {
     
-  // seed the random number generator if first time called or if iseed > 0
+    // seed the random number generator if first time called or if iseed > 0
     if (initialize || iseed != 0) {
       if (iseed == 0) iseed = time(0);
       srand(iseed);
       rancvaln = 0;
       for (i = 0; i < NRANC; i++) {
-	
-	rancaa[i] = 0.0;
-	rancS[i] = 0.0;
-	while ((rancaa[i] = RND) < MINN || rancaa[i] > P[i] - MINN);
-	while ((rancS[i] = RND) < 1 || rancaa[i] > P[i] - 1);
+        
+        rancaa[i] = 0.0;
+        rancS[i] = 0.0;
+        while ((rancaa[i] = RND) < MINN || rancaa[i] > P[i] - MINN);
+        while ((rancS[i] = RND) < 1 || rancaa[i] > P[i] - 1);
       }
     }
   

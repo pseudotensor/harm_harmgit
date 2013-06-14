@@ -12,8 +12,10 @@
 #endif
 
 
+
 #define N1 16  // MARKTODO resolution
 #define N2 16
+
 #define N3 1
 
 
@@ -296,6 +298,7 @@
 // theta value where singularity is displaced to
 //#define SINGSMALL (1E-3)
 #define SINGSMALL (10000*NUMEPSILON) // must be larger than machine precision to work for outer M_PI boundary!
+//#define SINGSMALL (1E-4) // must be larger than machine precision to work for outer M_PI boundary!
 // Hawley uses 0.06283 (0.02Pi)
 
 #define DOSTOREPOSITIONDATA 1 // DEBUG

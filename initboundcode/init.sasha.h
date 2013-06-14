@@ -318,10 +318,10 @@
 #define FARADAYT0 1
 #define CURRENTST0 1
 
-#define OUTFLOW	0
-#define SYMM	1
-#define ASYMM	2
-#define FIXED	3
+#define OUTFLOW 0
+#define SYMM    1
+#define ASYMM   2
+#define FIXED   3
 #define POLARAXIS 4
 #define FIXEDOUTFLOW 5
 #define NSSURFACE 6
@@ -397,28 +397,28 @@
 
 /* size of global arrays */
 #if( TESTNUMBER == -3 )
-#define NXTEST 32		
+#define NXTEST 32               
 #define NYTEST 1
 #define NZTEST 1
 #elif( TESTNUMBER == -2 )
-#define NXTEST 32		
+#define NXTEST 32               
 #define NYTEST 1
 #define NZTEST 1
 #elif( TESTNUMBER == -1 )
-#define NXTEST 32		
+#define NXTEST 32               
 #define NYTEST 1
 #define NZTEST 1
 #elif( TESTNUMBER == 0 ) // Hubble
-#define NXTEST 64		
+#define NXTEST 64               
 #define NYTEST 1
 #define NZTEST 1
 #elif( TESTNUMBER == 3 ) // 1-D Noh
-#define NXTEST 100		
+#define NXTEST 100              
 #define NYTEST 1
 #define NZTEST 1
 #elif( TESTNUMBER == 666 )// 1d analog of 2d test case 4
-//#define NXTEST 100	 /// play around with test
-#define NXTEST 400	 /// play around with test
+//#define NXTEST 100     /// play around with test
+#define NXTEST 400       /// play around with test
 #define NYTEST 1
 #define NZTEST 1
 #elif( TESTNUMBER == 4)

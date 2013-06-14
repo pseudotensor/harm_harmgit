@@ -13,14 +13,14 @@ extern int deaverage_ustag2pstag(FTYPE (*preal)[NSTORE2][NSTORE3][NPR], FTYPE (*
 
 
 extern int evolve_vpotgeneral(int whichmethod, int stage,
-		       int initialstep, int finalstep,
-		       FTYPE (*pr)[NSTORE2][NSTORE3][NPR],
-		       int *Nvec,
-		       FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR],
-		       FTYPE (*emf)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
-			      FTYPE *CUf, FTYPE *CUnew, SFTYPE fluxdt, SFTYPE fluxtime,
-		       FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3]
-		       );
+                              int initialstep, int finalstep,
+                              FTYPE (*pr)[NSTORE2][NSTORE3][NPR],
+                              int *Nvec,
+                              FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR],
+                              FTYPE (*emf)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
+                              FTYPE *CUf, FTYPE *CUnew, SFTYPE fluxdt, SFTYPE fluxtime,
+                              FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3]
+                              );
 
 
 extern void adjust_emfs(SFTYPE time, int whichmethod, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR], FTYPE (*emf)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3] );

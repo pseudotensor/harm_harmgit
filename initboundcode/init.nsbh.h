@@ -356,7 +356,7 @@
 #define FLUXDUMP 1
 
 struct Ccoordparams {
-    double timescalefactor;
+  double timescalefactor;
 }  coordparams;
 
 

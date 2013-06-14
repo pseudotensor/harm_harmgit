@@ -7,7 +7,7 @@
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // SPECIAL USE OF PTRDEF: (and in metric.c):
-  //  int interpX_gcov(FTYPE *X, struct of_compgeom (*compgeom)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*gcovgrid)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3][SYMMATRIXNDIM], FTYPE (*gcovpertgrid)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3][NDIM], FTYPE *gcov, FTYPE *gcovpert);
+//  int interpX_gcov(FTYPE *X, struct of_compgeom (*compgeom)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*gcovgrid)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3][SYMMATRIXNDIM], FTYPE (*gcovpertgrid)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3][NDIM], FTYPE *gcov, FTYPE *gcovpert);
 int interpX_gcov(FTYPE *X, struct of_compgeom PTRDEFMETMACP1A0(compgeom,FILL,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3), FTYPE PTRDEFMETMACP1A2(gcovgrid,FILL,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3,NDIM,NDIM), FTYPE PTRDEFMETMACP1A1(gcovpertgrid,FILL,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3,NDIM), FTYPE *gcov, FTYPE *gcovpert);
 
 
@@ -188,16 +188,16 @@ extern void  setup_nprlocalist(int whichprimtype, int *nprlocalstart, int *nprlo
 ////
 ////////////////////////////////
 //extern void bondi_solve(FTYPE K, FTYPE gam, FTYPE *Rs, FTYPE *Urs,
-//			FTYPE *Edot);
+//                      FTYPE *Edot);
 //extern FTYPE bondi_trace(FTYPE K, FTYPE gam, FTYPE edotf, FTYPE r,
-//			  FTYPE rs, FTYPE urs);
+//                        FTYPE rs, FTYPE urs);
 //extern void timestep(FTYPE ndtr, FTYPE ndth);
 //extern FTYPE dtset(FTYPE ndtr, FTYPE ndth);
 //
 //extern FTYPE bondi_trace(FTYPE K, FTYPE gam, FTYPE edotf,
-//			  FTYPE r, FTYPE rs, FTYPE urs);
+//                        FTYPE r, FTYPE rs, FTYPE urs);
 //extern void bondi_solve(FTYPE K, FTYPE gam, FTYPE *Rs,
-//			FTYPE *Urs, FTYPE *Edot);
+//                      FTYPE *Urs, FTYPE *Edot);
 //extern FTYPE edot_calc(FTYPE r, FTYPE ur, FTYPE g, FTYPE K);
 //extern FTYPE dedr_calc(FTYPE r, FTYPE ur, FTYPE g, FTYPE K);
 //extern FTYPE dedur_calc(FTYPE r, FTYPE ur, FTYPE g, FTYPE K);

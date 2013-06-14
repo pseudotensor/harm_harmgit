@@ -37,8 +37,8 @@
 #define WHICHEOSDIMEN 4
 
 // define which Ynu to evolve and keep as primitive (i.e. pr[YNU])
- // OLD COMMENT: pr[YNU] = Ynu[orig] = Ynu (i.e. not Ynu0 so that conservation law equation for Y_\nu is correctly using radiative transfer version of Y_\nu, while EOSextra[YNU] is Ynu0 used for table lookup
-    // note that if ynu changes meaning from Ynu to Ynu0 depending upon WHICHEVOLVEYNU==EVOLVEYNUNOTRAD or WHICHEVOLVEYNU==EVOLVEYNURAD
+// OLD COMMENT: pr[YNU] = Ynu[orig] = Ynu (i.e. not Ynu0 so that conservation law equation for Y_\nu is correctly using radiative transfer version of Y_\nu, while EOSextra[YNU] is Ynu0 used for table lookup
+// note that if ynu changes meaning from Ynu to Ynu0 depending upon WHICHEVOLVEYNU==EVOLVEYNUNOTRAD or WHICHEVOLVEYNU==EVOLVEYNURAD
 #define EVOLVEYNUNOTRAD 0
 #define EVOLVEYNURAD 1
 #define WHICHEVOLVEYNU EVOLVEYNUNOTRAD

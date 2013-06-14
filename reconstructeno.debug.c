@@ -45,24 +45,24 @@ int check_symmetry_of_weno_output( int cvt_type, FTYPE (*monoindicator)[NBIGM], 
 
     for( i = 0; i <= pf-ps; i++ ) {
       for( j = 0; j < maxorder; j++ ) {
-	if( stencil_weights_array[i+ps].weights[j] != stencil_weights_array[pf-i].weights[maxorder-1-j] ) {
-	  dualfprintf( fail_file, "Asymmetry in the weights of a2c/c2a:  nstep = %ld, steppart = %d\n", nstep, steppart );
-	  is_not_symmetric = 1;
-	}
+        if( stencil_weights_array[i+ps].weights[j] != stencil_weights_array[pf-i].weights[maxorder-1-j] ) {
+          dualfprintf( fail_file, "Asymmetry in the weights of a2c/c2a:  nstep = %ld, steppart = %d\n", nstep, steppart );
+          is_not_symmetric = 1;
+        }
       }
       for( j = 0; j < maxorder; j++ ) {
-	if( stencil_weights_array[i+ps].weights[j+maxorder] != stencil_weights_array[pf-i].weights[maxorder + maxorder-1-j] ) {
-	  dualfprintf( fail_file, "Asymmetry in the optimal weights of a2c/c2a:  nstep = %ld, steppart = %d\n", nstep, steppart );
-	  is_not_symmetric = 1;
-	}
+        if( stencil_weights_array[i+ps].weights[j+maxorder] != stencil_weights_array[pf-i].weights[maxorder + maxorder-1-j] ) {
+          dualfprintf( fail_file, "Asymmetry in the optimal weights of a2c/c2a:  nstep = %ld, steppart = %d\n", nstep, steppart );
+          is_not_symmetric = 1;
+        }
       }
     }
 
     //check symmetry of output solution atch symmetrize
     for( i = 0; i <= pf-ps; i++ ) {
       if( (pl < U1 && yout[0][i+ps] != yout[0][pf-i]) || (pl == U1 && yout[0][i+ps] != - yout[0][pf-i]) ) {
-	dualfprintf( fail_file, "Asymmetry in the output of a2c/c2a (%d):  nstep = %ld, steppart = %d, i = %d\n", cvt_type, nstep, steppart, i + ps );
-	is_not_symmetric = 1;
+        dualfprintf( fail_file, "Asymmetry in the output of a2c/c2a (%d):  nstep = %ld, steppart = %d, i = %d\n", cvt_type, nstep, steppart, i + ps );
+        is_not_symmetric = 1;
       }
     }
 
@@ -73,38 +73,38 @@ int check_symmetry_of_weno_output( int cvt_type, FTYPE (*monoindicator)[NBIGM], 
     ////
     for( i = 0; i <= pf-ps; i++ ) {
       if( 
-	 (pl < U1 && yout[0][i+ps] != yout[1][pf-i]) || 
-	 (pl == U1 && yout[0][i+ps] != - yout[1][pf-i]) ) {
-	dualfprintf( fail_file, "Asymmetry in the output of c2e:  nstep = %ld, steppart = %d, i = %d\n", nstep, steppart, i + ps );
-	is_not_symmetric = 1;
-	for( j = 0; j < maxorder; j++ ) {
-	  if( stencil_weights_array[i+ps].weights[j] != stencil_weights_array[pf-i].weights[maxorder-1-j] ) {
-	    dualfprintf( fail_file, "Asymmetry in the weights of c2e:  nstep = %ld, steppart = %d, i = %d\n", nstep, steppart, i + ps );
-	    is_not_symmetric = 1;
-	  }
-	}
-	for( j = 0; j < 2 * maxorder; j++ ) {
-	  if( stencil_weights_array[i+ps].weights[j+maxorder] != stencil_weights_array[pf-i].weights[maxorder + 2*maxorder-1-j] ) {
-	    dualfprintf( fail_file, "Asymmetry in the optimal weights of c2e:  nstep = %ld, steppart = %d, i = %d\n", nstep, steppart, i + ps );
-	    is_not_symmetric = 1;
-	  }
-	}
+         (pl < U1 && yout[0][i+ps] != yout[1][pf-i]) || 
+         (pl == U1 && yout[0][i+ps] != - yout[1][pf-i]) ) {
+        dualfprintf( fail_file, "Asymmetry in the output of c2e:  nstep = %ld, steppart = %d, i = %d\n", nstep, steppart, i + ps );
+        is_not_symmetric = 1;
+        for( j = 0; j < maxorder; j++ ) {
+          if( stencil_weights_array[i+ps].weights[j] != stencil_weights_array[pf-i].weights[maxorder-1-j] ) {
+            dualfprintf( fail_file, "Asymmetry in the weights of c2e:  nstep = %ld, steppart = %d, i = %d\n", nstep, steppart, i + ps );
+            is_not_symmetric = 1;
+          }
+        }
+        for( j = 0; j < 2 * maxorder; j++ ) {
+          if( stencil_weights_array[i+ps].weights[j+maxorder] != stencil_weights_array[pf-i].weights[maxorder + 2*maxorder-1-j] ) {
+            dualfprintf( fail_file, "Asymmetry in the optimal weights of c2e:  nstep = %ld, steppart = %d, i = %d\n", nstep, steppart, i + ps );
+            is_not_symmetric = 1;
+          }
+        }
       }
     }
 
 
     for( i = 0; i <= pf-ps; i++ ) {
       for( j = 0; j < maxorder; j++ ) {
-	if( stencil_weights_array[i+ps].weights[j] != stencil_weights_array[pf-i].weights[maxorder-1-j] || monoindicator[MONOYIN][i+ps] != monoindicator[MONOYIN][pf-i] ) {
-	  dualfprintf( fail_file, "Asymmetry in the weights of c2e:  nstep = %ld, steppart = %d\n", nstep, steppart );
-	  is_not_symmetric = 1;
-	}
+        if( stencil_weights_array[i+ps].weights[j] != stencil_weights_array[pf-i].weights[maxorder-1-j] || monoindicator[MONOYIN][i+ps] != monoindicator[MONOYIN][pf-i] ) {
+          dualfprintf( fail_file, "Asymmetry in the weights of c2e:  nstep = %ld, steppart = %d\n", nstep, steppart );
+          is_not_symmetric = 1;
+        }
       }
       for( j = 0; j < 2 * maxorder; j++ ) {
-	if( stencil_weights_array[i+ps].weights[j+maxorder] != stencil_weights_array[pf-i].weights[maxorder + 2*maxorder-1-j] && monoindicator[MONOYIN][i+ps] != 1.0 ) {
-	  dualfprintf( fail_file, "Asymmetry in the optimal weights of c2e:  nstep = %ld, steppart = %d\n", nstep, steppart );
-	  is_not_symmetric = 1;
-	}
+        if( stencil_weights_array[i+ps].weights[j+maxorder] != stencil_weights_array[pf-i].weights[maxorder + 2*maxorder-1-j] && monoindicator[MONOYIN][i+ps] != 1.0 ) {
+          dualfprintf( fail_file, "Asymmetry in the optimal weights of c2e:  nstep = %ld, steppart = %d\n", nstep, steppart );
+          is_not_symmetric = 1;
+        }
       }
     }
   }
@@ -125,13 +125,13 @@ int check_symmetry_of_weno_output( int cvt_type, FTYPE (*monoindicator)[NBIGM], 
 
 
     
-	
+        
 #if(0) // sasha has to fix all this // JONMARK GODMARK SUPERGODMARK
 
 void debugeno_compute(FTYPE (*p)[NSTORE2][NSTORE3][NPR],FTYPE (*U)[NSTORE2][NSTORE3][NPR],FTYPE (*debugvars)[NSTORE2][NSTORE3][NUMENODEBUGS])
-     // NPR*3 order*3*NPR   NPR
-     // Uavg Upoint  order*2 per point reduce
-     // NPR*2 order*2*NPR NPR
+// NPR*3 order*3*NPR   NPR
+// Uavg Upoint  order*2 per point reduce
+// NPR*2 order*2*NPR NPR
 {
   void para4(int pl, FTYPE *y, FTYPE *lout, FTYPE *rout, FTYPE *dqleft, FTYPE *dqcenter, FTYPE *dqright);
   extern int get_shock_indicator(int whichprimtype, int interporflux, int dir, int bs, int ps, int pe, int be,  int i, int j, int k, int idel, int jdel, int kdel, FTYPE (*yin)[2][NBIGM], FTYPE *V, FTYPE *P, FTYPE *shockindicator);
@@ -175,7 +175,7 @@ void debugeno_compute(FTYPE (*p)[NSTORE2][NSTORE3][NPR],FTYPE (*U)[NSTORE2][NSTO
   const int start_Upoint = start_Uavg + NPR;
   const int start_weights_a2c = start_Upoint + NPR;  //NPR * 2 * ( 2 *order - 1 )
   const int start_shockindicator = start_weights_a2c + NPR * 2 * ( 2 *order - 1 );
-	
+        
   //a2c finished
 
   int i, j, k, pl, pliter;
@@ -229,7 +229,7 @@ void debugeno_compute(FTYPE (*p)[NSTORE2][NSTORE3][NPR],FTYPE (*U)[NSTORE2][NSTO
     //call the reconstruction; the weights are in stencil_weights_array[] -- but we do not used them; calculate them separately
     //because need to know if the stencil was reduced
     eno_line_c2e( whichreduce, dir, preforder, pl, bs, ps, pf, bf, minorderit, maxorderit, &shiftit, shockindicator, yin1, yout_left, yout_right ); 
-		
+                
     //copy p_l and p_r to the debug array for that pl
     for( i = ps, j = 0, k = 0; i <= pf; i++ ) {
       MACP0A1(debugvars,i,j,k,start_index) = (FTYPE)i;
@@ -240,11 +240,11 @@ void debugeno_compute(FTYPE (*p)[NSTORE2][NSTORE3][NPR],FTYPE (*U)[NSTORE2][NSTO
       para4( pl, &yin1[i], &left, &right, &dqleft, &dqcenter, &dqright );
       MACP0A1(debugvars,i  ,j,k,pl+start_para_p_r) = left;
       MACP0A1(debugvars,i+1,j,k,pl+start_para_p_l) = right;
-			
+                        
       //atch modify indices in such a way that p_l and p_r sit on the same interface for the same i
       MACP0A1(debugvars,i  ,j,k,pl+start_p_r) = yout_left[i];
       MACP0A1(debugvars,i+1,j,k,pl+start_p_l) = yout_right[i];
-			
+                        
 #if( DO_ENO_STENCIL_REDUCTION )
       //for each point: choose the order of interpolation
       //choose whether to reduce the stencil and compute the weights
@@ -253,48 +253,48 @@ void debugeno_compute(FTYPE (*p)[NSTORE2][NSTORE3][NPR],FTYPE (*U)[NSTORE2][NSTO
       num_orders = 1;
       p_stencil_weights_array_to_be_used = &stencil_weights_array[i];
 #endif
-		
+                
       //cycle over the c2e weights, 3 groups of them: roughness, optimized left, optimized right for 3d order
       for( counter = 0; counter < num_stencil_sets_c2e * order; counter++ ) {
-	index = start_weights_c2e 
-	  + num_stencil_sets_c2e * (order + order - 1) * pl  //shift to the start of high-order weights
-	  + counter;																				 //shift to the current weight
+        index = start_weights_c2e 
+          + num_stencil_sets_c2e * (order + order - 1) * pl  //shift to the start of high-order weights
+          + counter;                                                                                                                                                             //shift to the current weight
 
-	if( counter < p_stencil_weights_array_to_be_used->len && p_stencil_weights_array_to_be_used->order == 3 ) {
-	  MACP0A1(debugvars,i,j,k,index) = p_stencil_weights_array_to_be_used->weights[counter];
-	}
-	else {
-	  //if the weights do not exist, feed zeroes so that SM does not crash
-	  MACP0A1(debugvars,i,j,k,index) = 0.0;
-	}
+        if( counter < p_stencil_weights_array_to_be_used->len && p_stencil_weights_array_to_be_used->order == 3 ) {
+          MACP0A1(debugvars,i,j,k,index) = p_stencil_weights_array_to_be_used->weights[counter];
+        }
+        else {
+          //if the weights do not exist, feed zeroes so that SM does not crash
+          MACP0A1(debugvars,i,j,k,index) = 0.0;
+        }
       }
 
       //if there are two orders whose linear combination is to be taken, retrieve the lower order weights by shifting a pointer to point to them
       if( num_orders == 2 && p_stencil_weights_array_to_be_used->order == 3 ) {
-	p_stencil_weights_array_to_be_used += 1;
+        p_stencil_weights_array_to_be_used += 1;
       }
 
       //lower order weights
       for( counter = 0; counter < num_stencil_sets_c2e * (order - 1); counter++ ) {
-	index = start_weights_c2e 
-	  + num_stencil_sets_c2e * (order + order - 1) * pl  //shift to the start of high-order weights
-	  + num_stencil_sets_c2e * order                     //shift to the start fo lower-order weights
-	  + counter;																				 //shift to the current weight
+        index = start_weights_c2e 
+          + num_stencil_sets_c2e * (order + order - 1) * pl  //shift to the start of high-order weights
+          + num_stencil_sets_c2e * order                     //shift to the start fo lower-order weights
+          + counter;                                                                                                                                                             //shift to the current weight
 
-	if( counter < p_stencil_weights_array_to_be_used->len /*&& p_stencil_weights_array_to_be_used->order == 2*/ ) {
-	  MACP0A1(debugvars,i,j,k,index) = p_stencil_weights_array_to_be_used->weights[counter];
-	}
-	else {
-	  //if the weights do not exist, feed zeroes so that SM does not crash
-	  MACP0A1(debugvars,i,j,k,index) = 0.0;
-	}
+        if( counter < p_stencil_weights_array_to_be_used->len /*&& p_stencil_weights_array_to_be_used->order == 2*/ ) {
+          MACP0A1(debugvars,i,j,k,index) = p_stencil_weights_array_to_be_used->weights[counter];
+        }
+        else {
+          //if the weights do not exist, feed zeroes so that SM does not crash
+          MACP0A1(debugvars,i,j,k,index) = 0.0;
+        }
       }
 
       //c2e stuff finished.
     }
-	
+        
     //a2c stuff starts
-		
+                
     //extract a line with primitives
     for( i = bs, j = 0, k = 0; i <= bf; i++ ) {
       //copy centered primitives to the debugvars array
@@ -308,7 +308,7 @@ void debugeno_compute(FTYPE (*p)[NSTORE2][NSTORE3][NPR],FTYPE (*U)[NSTORE2][NSTO
     //because need to know if the stencil was reduced
     //yout_left is actually not "left", just a bad name for a temp variable 
     eno_line_a2c(1, 5, pl, -2, 0, N1-1, N1 + 1, minorderit, maxorderit, &shiftit, shockindicator, yin, yout_left ); 
-		
+                
     bs = -2;
     ps = 0;
     pf = N1 - 1;
@@ -318,7 +318,7 @@ void debugeno_compute(FTYPE (*p)[NSTORE2][NSTORE3][NPR],FTYPE (*U)[NSTORE2][NSTO
     for( i = ps, j = 0, k = 0; i <= pf; i++ ) {
       //atch modify indices in such a way that p_l and p_r sit on the same interface for the same i
       MACP0A1(debugvars,i,j,k,start_Upoint+pl) = yout_left[i];
-			
+                        
       //choose whether to reduce the stencil and compute the weights
 #if( DO_ENO_STENCIL_REDUCTION )
       num_orders = choose_weno_order( CVT_A2C, whichreduce, maxorder, minorder, i, pl, bs, bf, shockindicator, yin, stencil_weights_array, &p_stencil_weights_array_to_be_used );
@@ -329,40 +329,40 @@ void debugeno_compute(FTYPE (*p)[NSTORE2][NSTORE3][NPR],FTYPE (*U)[NSTORE2][NSTO
 
       //cycle over the a2c weights, 2 groups of them: unoptimal, optimal
       for( counter = 0; counter < num_stencil_sets_a2c * order; counter++ ) {
-	if( counter < p_stencil_weights_array_to_be_used->len && p_stencil_weights_array_to_be_used->order == 3 ) {
-	  MACP0A1(debugvars,i,j,k,start_weights_a2c + 2 * (order + order - 1) * pl + counter) = p_stencil_weights_array_to_be_used->weights[counter];
-	}
-	else {
-	  //if the weights do not exist, feed zeroes so that SM does not crash
-	  MACP0A1(debugvars,i,j,k,start_weights_a2c + 2 * (order + order - 1) * pl + counter) = 0.0;
-	}
+        if( counter < p_stencil_weights_array_to_be_used->len && p_stencil_weights_array_to_be_used->order == 3 ) {
+          MACP0A1(debugvars,i,j,k,start_weights_a2c + 2 * (order + order - 1) * pl + counter) = p_stencil_weights_array_to_be_used->weights[counter];
+        }
+        else {
+          //if the weights do not exist, feed zeroes so that SM does not crash
+          MACP0A1(debugvars,i,j,k,start_weights_a2c + 2 * (order + order - 1) * pl + counter) = 0.0;
+        }
       }
 
       //if there are two orders whose linear combination is to be taken, retrieve the lower order weights by shifting a pointer to point to them
       if( num_orders == 2 && p_stencil_weights_array_to_be_used->order == 3 ) {
-	p_stencil_weights_array_to_be_used += 1;
+        p_stencil_weights_array_to_be_used += 1;
       }
-				
+                                
       //lower order weights, therefore re
       for( counter = 0; counter < num_stencil_sets_a2c * (order - 1); counter++ ) {
-	index = start_weights_a2c 
-	  + num_stencil_sets_a2c * (order + order - 1) * pl  //shift to the start of high-order weights
-	  + num_stencil_sets_a2c * order                     //shift to the start fo lower-order weights
-	  + counter;																				 //shift to the current weight
+        index = start_weights_a2c 
+          + num_stencil_sets_a2c * (order + order - 1) * pl  //shift to the start of high-order weights
+          + num_stencil_sets_a2c * order                     //shift to the start fo lower-order weights
+          + counter;                                                                                                                                                             //shift to the current weight
 
-	if( counter < p_stencil_weights_array_to_be_used->len && p_stencil_weights_array_to_be_used->order == 2 ) {
-	  MACP0A1(debugvars,i,j,k,index) = p_stencil_weights_array_to_be_used->weights[counter];
-	}
-	else {
-	  //if the weights do not exist, feed zeroes so that SM does not crash
-	  MACP0A1(debugvars,i,j,k,index) = 0.0;
-	}
+        if( counter < p_stencil_weights_array_to_be_used->len && p_stencil_weights_array_to_be_used->order == 2 ) {
+          MACP0A1(debugvars,i,j,k,index) = p_stencil_weights_array_to_be_used->weights[counter];
+        }
+        else {
+          //if the weights do not exist, feed zeroes so that SM does not crash
+          MACP0A1(debugvars,i,j,k,index) = 0.0;
+        }
       }
 
       //c2e stuff finished.
     }
   }
-	
+        
   idel = jdel = kdel = 1;
   i = 0; 
   j = 0;

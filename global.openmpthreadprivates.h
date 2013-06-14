@@ -42,9 +42,9 @@
 // Below were included in "state" and "full" threadprivate before moved outside parallel regions
 
 #define INDEXPARAMETERSNAMES kaziiwhichd,kazjjwhichd,kazkkwhichd,kazllwhichd,kazmmwhichd, \
-    kaziiowhichd,kazjjowhichd,kazkkowhichd,kazllowhichd,kazmmowhichd,			\
+    kaziiowhichd,kazjjowhichd,kazkkowhichd,kazllowhichd,kazmmowhichd,   \
     kazstartiiiwhichd,kazstartjjjwhichd,kazstartkkkwhichd,kazstartlllwhichd,kazstartmmmwhichd, \
-    kazendiiiwhichd,kazendjjjwhichd,kazendkkkwhichd,kazendlllwhichd,kazendmmmwhichd,	\
+    kazendiiiwhichd,kazendjjjwhichd,kazendkkkwhichd,kazendlllwhichd,kazendmmmwhichd, \
     kazdiwhichd,kazdjwhichd,kazdkwhichd,kazdlwhichd,kazdmwhichd
 
 // below defined in kazfulleos.c [enabled or disabled below using ALLOWKAZEOS]

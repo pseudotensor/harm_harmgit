@@ -139,43 +139,43 @@ void slope_lim_pointtype(int interporflux, int realisinterp, int pl, int dir, in
       //////////////////////////////
 
       PINTERPLOOP(pliter,plpl){
-	//      dualfprintf(fail_file,"PLOOPINTERP: plpl=%d\n",plpl);
-	ypl[plpl] = interplistpl[plpl] - startorderi;
+        //      dualfprintf(fail_file,"PLOOPINTERP: plpl=%d\n",plpl);
+        ypl[plpl] = interplistpl[plpl] - startorderi;
       }
       PALLREALLOOP(plpl){ // need all variables for real quantity
-	// in general need space to be separate in case modify ypl's in some way during interpolation, so can't have pointer yrealpl->ypl
-	//      dualfprintf(fail_file,"PALLREALLOOP: plpl=%d\n",plpl);
-	yrealpl[plpl] = realinterplistpl[plpl] - startorderi;
+        // in general need space to be separate in case modify ypl's in some way during interpolation, so can't have pointer yrealpl->ypl
+        //      dualfprintf(fail_file,"PALLREALLOOP: plpl=%d\n",plpl);
+        yrealpl[plpl] = realinterplistpl[plpl] - startorderi;
       }
 
       
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
       OPENMP3DLOOPBLOCK{
-	OPENMP3DLOOPBLOCK2IJK(i,j,k);
+        OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
 
-	PINTERPLOOP(pliter,plpl) for(l=startorderi;l<=endorderi;l++){
-	  // get interpolation points, where y[0] is point of interest for which interpolation is found.
-	  ypl[plpl][l]=MACP0A1(p2interp,i + l*idel,j + l*jdel,k + l*kdel,plpl);
-	}
+        PINTERPLOOP(pliter,plpl) for(l=startorderi;l<=endorderi;l++){
+          // get interpolation points, where y[0] is point of interest for which interpolation is found.
+          ypl[plpl][l]=MACP0A1(p2interp,i + l*idel,j + l*jdel,k + l*kdel,plpl);
+        }
       
-	if(realisinterp){
-	  // need all quantities for real var
-	  // PLOOPINTERP is used because PALLREALLOOP can be different (extra things at end not part of "real" set
-	  PINTERPLOOP(pliter,plpl) for(l=startorderi;l<=endorderi;l++){
-	    yrealpl[plpl][l]=ypl[plpl][l];// faster to copy from ypl than duplicating primreal access
-	  }
-	}
-	else{
-	  // need all quantities for real var
-	  PALLREALLOOP(plpl) for(l=startorderi;l<=endorderi;l++){
-	    yrealpl[plpl][l]=MACP0A1(primreal,i + l*idel,j + l*jdel,k + l*kdel,plpl);
-	  }
-	}
+        if(realisinterp){
+          // need all quantities for real var
+          // PLOOPINTERP is used because PALLREALLOOP can be different (extra things at end not part of "real" set
+          PINTERPLOOP(pliter,plpl) for(l=startorderi;l<=endorderi;l++){
+            yrealpl[plpl][l]=ypl[plpl][l];// faster to copy from ypl than duplicating primreal access
+          }
+        }
+        else{
+          // need all quantities for real var
+          PALLREALLOOP(plpl) for(l=startorderi;l<=endorderi;l++){
+            yrealpl[plpl][l]=MACP0A1(primreal,i + l*idel,j + l*jdel,k + l*kdel,plpl);
+          }
+        }
 
-	slope_lim_point_allpl(i, j, k, loc, realisinterp, dir,reallim,startorderi,endorderi,yrealpl,ypl,
-			      &MACP0A1(dq,i,j,k,0),&MACP0A1(pleft,i,j,k,0),&MACP0A1(pright,i,j,k,0)
-			      );
+        slope_lim_point_allpl(i, j, k, loc, realisinterp, dir,reallim,startorderi,endorderi,yrealpl,ypl,
+                              &MACP0A1(dq,i,j,k,0),&MACP0A1(pleft,i,j,k,0),&MACP0A1(pright,i,j,k,0)
+                              );
       }// end over loop
     }// end parallel region
   } // end if doing all plpl at once
@@ -213,26 +213,26 @@ void slope_lim_pointtype(int interporflux, int realisinterp, int pl, int dir, in
 
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
       OPENMP3DLOOPBLOCK{
-	OPENMP3DLOOPBLOCK2IJK(i,j,k);
+        OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
 
-	for(l=startorderi;l<=endorderi;l++){
-	  y[l]=MACP0A1(p2interp,i + l*idel,j + l*jdel,k + l*kdel,pl);
-	}
-	if(realisinterp){
-	  for(l=startorderi;l<=endorderi;l++){
-	    yreal[l]=y[l];
-	  }
-	}
-	else{
-	  for(l=startorderi;l<=endorderi;l++){
-	    yreal[l]=MACP0A1(primreal,i + l*idel,j + l*jdel,k + l*kdel,pl);
-	  }
-	}
+        for(l=startorderi;l<=endorderi;l++){
+          y[l]=MACP0A1(p2interp,i + l*idel,j + l*jdel,k + l*kdel,pl);
+        }
+        if(realisinterp){
+          for(l=startorderi;l<=endorderi;l++){
+            yreal[l]=y[l];
+          }
+        }
+        else{
+          for(l=startorderi;l<=endorderi;l++){
+            yreal[l]=MACP0A1(primreal,i + l*idel,j + l*jdel,k + l*kdel,pl);
+          }
+        }
       
-	slope_lim_point(i, j, k, loc, realisinterp, dir, reallim,pl,startorderi,endorderi,yreal,y,
-			&MACP0A1(dq,i,j,k,pl),&MACP0A1(pleft,i,j,k,pl),&MACP0A1(pright,i,j,k,pl)
-			);
+        slope_lim_point(i, j, k, loc, realisinterp, dir, reallim,pl,startorderi,endorderi,yreal,y,
+                        &MACP0A1(dq,i,j,k,pl),&MACP0A1(pleft,i,j,k,pl),&MACP0A1(pright,i,j,k,pl)
+                        );
       }// end over loop
     }// end parallel region
   }// end if doing per pl
@@ -262,11 +262,11 @@ int set_interppoint_loop_ranges(int interporflux, int dir, int *is, int *ie, int
 {
   
   //  if(useghostplusactive){
-    set_interppoint_loop_expanded(interporflux, dir, is, ie, js, je, ks, ke, di, dj, dk);
-    //  }
-    //  else{
-    //    set_interppoint_loop(interporflux, dir, is, ie, js, je, ks, ke, di, dj, dk);
-    //  }
+  set_interppoint_loop_expanded(interporflux, dir, is, ie, js, je, ks, ke, di, dj, dk);
+  //  }
+  //  else{
+  //    set_interppoint_loop(interporflux, dir, is, ie, js, je, ks, ke, di, dj, dk);
+  //  }
 
 
   return(0);
@@ -705,11 +705,11 @@ void slope_lim_3points_old(int reallim, FTYPE yl, FTYPE yc, FTYPE yr,FTYPE *dq)
     if (s <= 0.)  *dq= 0.;
     else{
       if (fabs(Dqm) < fabs(Dqp) && fabs(Dqm) < fabs(Dqc))
-	*dq= (Dqm);
+        *dq= (Dqm);
       else if (fabs(Dqp) < fabs(Dqc))
-	*dq= (Dqp);
+        *dq= (Dqp);
       else
-	*dq= (Dqc);
+        *dq= (Dqc);
     }
   }
   /* van leer slope limiter */
@@ -1153,8 +1153,8 @@ void get_mcsteep_dqs(int dqrange, FTYPE *y, FTYPE *dq)
   mm=dqrange/2+1; // get last dq1 (can't do in loop above since +1 would mean dq2 beyond data range
   dq1[mm] = (y[mm]-y[mm-1]); // slope centered at cell face
 
-    // Dqm(0) = 2.0*(dq1[0])
-    // Dqp(0) = 2.0*(dq1[1]) // so need to go 1 farther to get all needed Dqp's
+  // Dqm(0) = 2.0*(dq1[0])
+  // Dqp(0) = 2.0*(dq1[1]) // so need to go 1 farther to get all needed Dqp's
 
   for(mm=-dqrange/2 ; mm<=dqrange/2 ; mm++) {
     Dqc = dq2[mm];        // normal

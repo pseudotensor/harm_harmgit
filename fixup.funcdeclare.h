@@ -2,7 +2,7 @@
 
 extern int check_pr(FTYPE *pr, FTYPE *prmodel, FTYPE *ucons, struct of_geom *geom, int modelpos,int finalstep);
 extern int ucon_fix(FTYPE disc, FTYPE AA, FTYPE BB, FTYPE CC,
-		    FTYPE *ucon);
+                    FTYPE *ucon);
 
 
 extern int set_atmosphere(int whichcond, int whichvel, struct of_geom *geom, FTYPE *pr);

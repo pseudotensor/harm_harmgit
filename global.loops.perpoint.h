@@ -7,7 +7,7 @@
 /////////////////////////////////////
 
 
-  // check for existence in bad form using:
+// check for existence in bad form using:
 // grep "PLOOP" *.c | grep --invert-match "PLOOP("
 
 // After conversion to PLOOP(pliter,pl) form, regexp to help replace:

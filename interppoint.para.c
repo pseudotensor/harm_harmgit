@@ -458,15 +458,15 @@ void parajon(int ii, int jj, int kk, int loc, int realisinterp, int dir, int pl,
 
 
 #if(DO4MONO)
-      // 4mono version
-      Dqm4mono = 2.0 *(y4mono[mm]-y4mono[mm-1]);
-      Dqp4mono = 2.0 *(y4mono[mm+1]-y4mono[mm]);
-      Dqc4mono = 0.5 *(y4mono[mm+1]-y4mono[mm-1]);
+    // 4mono version
+    Dqm4mono = 2.0 *(y4mono[mm]-y4mono[mm-1]);
+    Dqp4mono = 2.0 *(y4mono[mm+1]-y4mono[mm]);
+    Dqc4mono = 0.5 *(y4mono[mm+1]-y4mono[mm-1]);
 #else
-      // normal version
-      Dqm4mono = Dqm;
-      Dqp4mono = Dqp;
-      Dqc4mono = Dqc;
+    // normal version
+    Dqm4mono = Dqm;
+    Dqp4mono = Dqp;
+    Dqc4mono = Dqc;
 #endif
 
 
@@ -1031,24 +1031,24 @@ void paracontsmooth(int pl, FTYPE *y, FTYPE *facecont, int *smooth)
 
   // always compute in case used later regardless of smoothness measurement
   *facecont = (1./16.)*(9.*y[0]+9*y[-1]-y[-2]-y[1]);
-    //    *smooth=1;
+  //    *smooth=1;
   //}
 
 #if(0)
   if(sign(ddqtest[0])==sign(ddqtest[1]) && sign(ddqtest[1])==sign(ddqtest[2]) && sign(ddqtest[2])==sign(ddqtest[3])){
     if(pl==2){
       dualfprintf(fail_file,"GOOD :: %g %g %g %g :: %d %d %d\n",
-		  sign(ddqtest[0]),sign(ddqtest[1]),sign(ddqtest[2]),sign(ddqtest[3])
-		  ,sign(ddqtest[0])==sign(ddqtest[1]),sign(ddqtest[1])==sign(ddqtest[2]),sign(ddqtest[2])==sign(ddqtest[3])
-		  );
+                  sign(ddqtest[0]),sign(ddqtest[1]),sign(ddqtest[2]),sign(ddqtest[3])
+                  ,sign(ddqtest[0])==sign(ddqtest[1]),sign(ddqtest[1])==sign(ddqtest[2]),sign(ddqtest[2])==sign(ddqtest[3])
+                  );
     }
   }
   else{
     if(pl==2){
       dualfprintf(fail_file,"BAD::: %g %g %g %g :: %d %d %d\n",
-		  sign(ddqtest[0]),sign(ddqtest[1]),sign(ddqtest[2]),sign(ddqtest[3])
-		  ,sign(ddqtest[0])==sign(ddqtest[1]),sign(ddqtest[1])==sign(ddqtest[2]),sign(ddqtest[2])==sign(ddqtest[3])
-		  );
+                  sign(ddqtest[0]),sign(ddqtest[1]),sign(ddqtest[2]),sign(ddqtest[3])
+                  ,sign(ddqtest[0])==sign(ddqtest[1]),sign(ddqtest[1])==sign(ddqtest[2]),sign(ddqtest[2])==sign(ddqtest[3])
+                  );
     }
   }
 #endif
@@ -1139,37 +1139,37 @@ void checkparamonotonicity(int smooth, int dqrange, int pl, FTYPE *y, FTYPE *ddq
 #if(PARAGENDQALLOWEXTREMUM)
   if (qa <=0.0 && qb<=0.0 )
 #else
-  if (qa <=0.0)
+    if (qa <=0.0)
 #endif
- { // Condition 1
+      { // Condition 1
 
 
 #if(NONMONOLIM==0)
-    l=y[0];
-    r=y[0];
+        l=y[0];
+        r=y[0];
 #elif(NONMONOLIM==1)
-    // makes no sense to reduce all the way to DONOR since to second order can still have monotonic result, so use MONO result in this case and assume flatten result
-    // appears to be too speculative as results in  more failures at horizon with PARA2LIM==MC
-    l = y[0] - 0.5* dq[0];
-    r = y[0] + 0.5* dq[0];
+        // makes no sense to reduce all the way to DONOR since to second order can still have monotonic result, so use MONO result in this case and assume flatten result
+        // appears to be too speculative as results in  more failures at horizon with PARA2LIM==MC
+        l = y[0] - 0.5* dq[0];
+        r = y[0] + 0.5* dq[0];
 #endif
 
-  }
-  else if(1){
-    // Condition 2
+      }
+    else if(1){
+      // Condition 2
 
-    // qe can be positive or negative still here even though qa>0
-    if     (qd*(qd-qe)<0.0)  l = (-(2.0+a6COEF)*r + 2.0*a6COEF*y[0])/(a6COEF-2.0);
-    else if(qd*(qd+qe)<0.0)  r = (-(2.0+a6COEF)*l + 2.0*a6COEF*y[0])/(a6COEF-2.0);
-    // else no change needed
-    //    else{
-    //      dualfprintf(fail_file,"Problem with limiting condition 2\n");
-    //    }
+      // qe can be positive or negative still here even though qa>0
+      if     (qd*(qd-qe)<0.0)  l = (-(2.0+a6COEF)*r + 2.0*a6COEF*y[0])/(a6COEF-2.0);
+      else if(qd*(qd+qe)<0.0)  r = (-(2.0+a6COEF)*l + 2.0*a6COEF*y[0])/(a6COEF-2.0);
+      // else no change needed
+      //    else{
+      //      dualfprintf(fail_file,"Problem with limiting condition 2\n");
+      //    }
     
-    // Xiaoyue's verison:
-    //    if (qd*(qd-qe)<0.0) l=3.0*y[0]-2.0*r;
-    //    if (qd*(qd+qe)<0.0) r=3.0*y[0]-2.0*l;
-  }
+      // Xiaoyue's verison:
+      //    if (qd*(qd-qe)<0.0) l=3.0*y[0]-2.0*r;
+      //    if (qd*(qd+qe)<0.0) r=3.0*y[0]-2.0*l;
+    }
 
 
 #if(PARAGENDQALLOWEXTREMUM)
@@ -1397,8 +1397,8 @@ void parasteep(int dir, int pl, FTYPE *V, FTYPE *P, FTYPE *y, FTYPE *dq, FTYPE *
 #if(DOPPMSTEEPVARTYPE==0)
   if(pl==RHO)
 #elif(DOPPMSTEEPVARTYPE==1)
-  // define orthogonal directions for field steepening
-  odir1=dir%3+1;
+    // define orthogonal directions for field steepening
+    odir1=dir%3+1;
   odir2=(dir+1)%3+1;
   if(pl==RHO || pl==B1+odir1-1 || pl==B1+odir2-1)
 #endif

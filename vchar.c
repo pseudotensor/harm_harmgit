@@ -53,11 +53,11 @@ int vchar(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *v
 
   /* for regions along poles */
   /*
-  if (geom->gdet < GTOL) {
+    if (geom->gdet < GTOL) {
     *vmax = 0.;
     *vmin = 0.;
     return (0);
-  }
+    }
   */
 
   /* find fast magnetosonic speed */
@@ -99,7 +99,7 @@ int vchar(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *v
   // if(EF>0.0) va2 = bsq / EF;
   // else EF=va2=0.0;
 
-  cms2 = cs2 + va2 - cs2 * va2;	/* and there it is... */
+  cms2 = cs2 + va2 - cs2 * va2; /* and there it is... */
 
   //atch SASMARK debug print
   //if( nstep == 1 && steppart == 0 && 95 == geom->i && 0 == geom->j && 0 == geom-> k ) {
@@ -124,8 +124,8 @@ int vchar(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *v
     if (cms2/(cs2+va2) > -NUMEPSILON*100.0) cms2=0.0;
     else{
       if (fail(i,j,k,loc,FAIL_COEFF_NEG) >= 1){
-	dualfprintf(fail_file,"cms2<0.0 : dir=%d :\n bsq=%21.15g\n rho=%21.15g\n u=%21.15g\n WW=%21.15g\n EF=%21.15g\n va2=%21.15g\n cs2=%21.15g\n cms2=%21.15g\n",dir,bsq,rho,u,WW,EF,va2,cs2,cms2);
-	return (1);
+        dualfprintf(fail_file,"cms2<0.0 : dir=%d :\n bsq=%21.15g\n rho=%21.15g\n u=%21.15g\n WW=%21.15g\n EF=%21.15g\n va2=%21.15g\n cs2=%21.15g\n cms2=%21.15g\n",dir,bsq,rho,u,WW,EF,va2,cs2,cms2);
+        return (1);
       }
     }
   }
@@ -325,7 +325,7 @@ int simplefast(int dir,struct of_geom *geom, struct of_state *q, FTYPE cms2,FTYP
     ( 
      (AB * AB - Asq * Bsq) * cms2
      + (2.0 * AB * Au * Bu - Asq * Bu2 - Bsq * Au2) * (cms2 - 1.0)
-     );
+      );
 #endif
 
 
@@ -341,7 +341,7 @@ int simplefast(int dir,struct of_geom *geom, struct of_state *q, FTYPE cms2,FTYP
   if((discr<0.0)&&(discr> -1E-10)) discr=0.0;  //atch: negative but not too much -- allow fractional error of 1e-10
   else if(discr<0.0){  //if discriminant is too negative
     dualfprintf(fail_file,"simplefast discr=%21.15g, nstep = %ld, steppart == %d, i = %d, j = %d, k = %d, p = %d\n",
-	discr, nstep, steppart, geom->i, geom->j, geom->k, geom->p );
+                discr, nstep, steppart, geom->i, geom->j, geom->k, geom->p );
 
     DLOOP(j,k){
       dualfprintf(fail_file,"geom->gcov[%d][%d]=%21.15g\n",j,k,geom->gcov[GIND(j,k)]);
@@ -357,13 +357,13 @@ int simplefast(int dir,struct of_geom *geom, struct of_state *q, FTYPE cms2,FTYP
     dualfprintf(fail_file, "\n\t %21.15g %21.15g %21.15g\n", A, discr, cms2);
 #endif
     dualfprintf(fail_file, "\n\t q->ucon: %21.15g %21.15g %21.15g %21.15g\n", q->ucon[0],
-	    q->ucon[1], q->ucon[2], q->ucon[3]);
+                q->ucon[1], q->ucon[2], q->ucon[3]);
     dualfprintf(fail_file, "\n\t q->bcon: %21.15g %21.15g %21.15g %21.15g\n", q->bcon[0],
-	    q->bcon[1], q->bcon[2], q->bcon[3]);
+                q->bcon[1], q->bcon[2], q->bcon[3]);
     dualfprintf(fail_file, "\n\t Acon: %21.15g %21.15g %21.15g %21.15g\n", Acon[0], Acon[1],
-	    Acon[2], Acon[3]);
+                Acon[2], Acon[3]);
     dualfprintf(fail_file, "\n\t Bcon: %21.15g %21.15g %21.15g %21.15g\n", Bcon[0], Bcon[1],
-	    Bcon[2], Bcon[3]);
+                Bcon[2], Bcon[3]);
     if (fail(ii,jj,kk,loc,FAIL_VCHAR_DISCR) >= 1)  return (1);
     discr = 0.;
   }
@@ -559,8 +559,8 @@ FTYPE quarticsol(FTYPE sign1, FTYPE sign2,FTYPE AAA,FTYPE BBB,FTYPE CCC,FTYPE DD
     if(disc<0.0){
       if(disc>-NUMEPSILON*100.0) disc=0.0;
       else{
-      dualfprintf(fail_file,"part3 disc=%21.15g\n",disc);
-      myexit(1);
+        dualfprintf(fail_file,"part3 disc=%21.15g\n",disc);
+        myexit(1);
       }
     }
     part3 = sqrt(disc);

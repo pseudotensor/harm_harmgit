@@ -73,12 +73,12 @@ int image_dump(long dump_cnt)
     // no special images for production mode, just basic log density
     if(GAMMIEIMAGE){
       if(DOEVOLVERHO){
-	startpl=0;
-	endpl=0;
+        startpl=0;
+        endpl=0;
       }
       else{
-	startpl=B1;
-	endpl=B1;
+        startpl=B1;
+        endpl=B1;
       }
       starts=0;
       ends=0;
@@ -89,12 +89,12 @@ int image_dump(long dump_cnt)
     }
     else{
       if(DOEVOLVERHO){
-	startpl=0;
-	endpl=0;
+        startpl=0;
+        endpl=0;
       }
       else{
-	startpl=B1;
-	endpl=B1;
+        startpl=B1;
+        endpl=B1;
       }
       starts=0;
       ends=0;
@@ -110,14 +110,14 @@ int image_dump(long dump_cnt)
   for(vartype=startv;vartype<=endv;vartype++){
     for(limits=startl;limits<=endl;limits++){
       for(scale=starts;scale<=ends;scale++){
-	for (whichpl = startpl; whichpl <= endpl; whichpl++) {
-	  if(
-	     ((vartype<=1)||((vartype==2)&&(DODEBUG)&&(whichpl<=NUMFAILFLOORFLAGS-1)))||
-	     ((limits==0)&&(scale==LINEAR)&&(vartype==2)&&(whichpl==4)&&DO_VORTICITY_IMAGE)
-	     ){
-	    if(image(dump_cnt,whichpl,scale,limits,vartype)>=1) return(1);
-	  }
-	}
+        for (whichpl = startpl; whichpl <= endpl; whichpl++) {
+          if(
+             ((vartype<=1)||((vartype==2)&&(DODEBUG)&&(whichpl<=NUMFAILFLOORFLAGS-1)))||
+             ((limits==0)&&(scale==LINEAR)&&(vartype==2)&&(whichpl==4)&&DO_VORTICITY_IMAGE)
+             ){
+            if(image(dump_cnt,whichpl,scale,limits,vartype)>=1) return(1);
+          }
+        }
       }
     }
   }
@@ -167,72 +167,72 @@ int imagedefs(int whichpl, int scale, int limits, int vartype)
   if(limits==ZOOM){ // zoom in on dynamic range of values to see fine details
     DUMPGENLOOP{ // diagnostic loop // OPENMPOPTMARK: Could optimize this, but not frequently done
       if(vartype==0){
-	if(whichpl<=1){
-	  bl_coord_ijk_2(i,j,k,CENT,X,V);
-	  r=V[1];
-	  th=V[2];
-	  if(whichpl==0) GLOBALMACP0A1(pimage,i,j,k,whichpl)=GLOBALMACP0A1(pdump,i,j,k,whichpl)/(RHOMIN*pow(r,-1.5));
-	  if(whichpl==1) GLOBALMACP0A1(pimage,i,j,k,whichpl)=GLOBALMACP0A1(pdump,i,j,k,whichpl)/(UUMIN*pow(r,-2.5));
-	}
-	else{
-	  if(scale==LINEAR) GLOBALMACP0A1(pimage,i,j,k,whichpl)=GLOBALMACP0A1(pdump,i,j,k,whichpl);
-	  else if(scale==LOG) GLOBALMACP0A1(pimage,i,j,k,whichpl)=fabs(GLOBALMACP0A1(pdump,i,j,k,whichpl))+MINVECTOR;
-	}
+        if(whichpl<=1){
+          bl_coord_ijk_2(i,j,k,CENT,X,V);
+          r=V[1];
+          th=V[2];
+          if(whichpl==0) GLOBALMACP0A1(pimage,i,j,k,whichpl)=GLOBALMACP0A1(pdump,i,j,k,whichpl)/(RHOMIN*pow(r,-1.5));
+          if(whichpl==1) GLOBALMACP0A1(pimage,i,j,k,whichpl)=GLOBALMACP0A1(pdump,i,j,k,whichpl)/(UUMIN*pow(r,-2.5));
+        }
+        else{
+          if(scale==LINEAR) GLOBALMACP0A1(pimage,i,j,k,whichpl)=GLOBALMACP0A1(pdump,i,j,k,whichpl);
+          else if(scale==LOG) GLOBALMACP0A1(pimage,i,j,k,whichpl)=fabs(GLOBALMACP0A1(pdump,i,j,k,whichpl))+MINVECTOR;
+        }
       }
       else if(vartype==1){// conserved quantity
-	// computes too much (all conserved quantites every time)
-	if(DOENOFLUX == NOENOFLUX){
-	  get_geometry(i,j,k,CENT,ptrgeom) ;
-	  if(!failed){
-	    if(get_state(GLOBALMAC(pdump,i,j,k),ptrgeom,&q)>=1) return(1);
-	    if(primtoU(UDIAG,GLOBALMAC(pdump,i,j,k),&q,ptrgeom,U)>=1) return(1);
-	  }
-	}
-	else{
-	  PALLLOOP(pl) U[pl]=GLOBALMACP0A1(udump,i,j,k,pl);
-	}
-	if(scale==LINEAR) GLOBALMACP0A1(pimage,i,j,k,whichpl)=U[whichpl];
-	else if(scale==LOG) GLOBALMACP0A1(pimage,i,j,k,whichpl)=fabs(U[whichpl]/ptrgeom->gdet)+MINVECTOR;
+        // computes too much (all conserved quantites every time)
+        if(DOENOFLUX == NOENOFLUX){
+          get_geometry(i,j,k,CENT,ptrgeom) ;
+          if(!failed){
+            if(get_state(GLOBALMAC(pdump,i,j,k),ptrgeom,&q)>=1) return(1);
+            if(primtoU(UDIAG,GLOBALMAC(pdump,i,j,k),&q,ptrgeom,U)>=1) return(1);
+          }
+        }
+        else{
+          PALLLOOP(pl) U[pl]=GLOBALMACP0A1(udump,i,j,k,pl);
+        }
+        if(scale==LINEAR) GLOBALMACP0A1(pimage,i,j,k,whichpl)=U[whichpl];
+        else if(scale==LOG) GLOBALMACP0A1(pimage,i,j,k,whichpl)=fabs(U[whichpl]/ptrgeom->gdet)+MINVECTOR;
       }
       else if(vartype==2){ // failure quantity (no diff from below right now -- could zoom in on single failure regions)
-	if(whichpl<NUMFAILFLOORFLAGS){
-	  floor=whichpl;
-	  if(scale==LINEAR) GLOBALMACP0A1(pimage,i,j,k,whichpl)=(FTYPE)GLOBALMACP0A3(failfloorcount,i,j,k,0,IMAGETS,floor); // always finalstep==0
-	  else if(scale==LOG) GLOBALMACP0A1(pimage,i,j,k,whichpl)=fabs((FTYPE)GLOBALMACP0A3(failfloorcount,i,j,k,0,IMAGETS,floor)+1); // always finalstep==0
-	}
+        if(whichpl<NUMFAILFLOORFLAGS){
+          floor=whichpl;
+          if(scale==LINEAR) GLOBALMACP0A1(pimage,i,j,k,whichpl)=(FTYPE)GLOBALMACP0A3(failfloorcount,i,j,k,0,IMAGETS,floor); // always finalstep==0
+          else if(scale==LOG) GLOBALMACP0A1(pimage,i,j,k,whichpl)=fabs((FTYPE)GLOBALMACP0A3(failfloorcount,i,j,k,0,IMAGETS,floor)+1); // always finalstep==0
+        }
       }
     }
   }
   else{
     DUMPGENLOOP{ // diagnostic loop // OPENMPOPTMARK: Could optimize this, but not frequently done
       if(vartype==0){
-	if(whichpl<=1) GLOBALMACP0A1(pimage,i,j,k,whichpl)=GLOBALMACP0A1(pdump,i,j,k,whichpl);
-	else{
-	  if(scale==LINEAR) GLOBALMACP0A1(pimage,i,j,k,whichpl)=GLOBALMACP0A1(pdump,i,j,k,whichpl);
-	  else if(scale==LOG) GLOBALMACP0A1(pimage,i,j,k,whichpl)=fabs(GLOBALMACP0A1(pdump,i,j,k,whichpl))+MINVECTOR;
-	}
+        if(whichpl<=1) GLOBALMACP0A1(pimage,i,j,k,whichpl)=GLOBALMACP0A1(pdump,i,j,k,whichpl);
+        else{
+          if(scale==LINEAR) GLOBALMACP0A1(pimage,i,j,k,whichpl)=GLOBALMACP0A1(pdump,i,j,k,whichpl);
+          else if(scale==LOG) GLOBALMACP0A1(pimage,i,j,k,whichpl)=fabs(GLOBALMACP0A1(pdump,i,j,k,whichpl))+MINVECTOR;
+        }
       }
       else if(vartype==1){// conserved quantity
-	// computes too much (all conserved quantites every time)
-	if(DOENOFLUX == NOENOFLUX){
-	  get_geometry(i,j,k,CENT,ptrgeom) ;
-	  if(!failed){
-	    if(get_state(GLOBALMAC(pdump,i,j,k),ptrgeom,&q)>=1) return(1);
-	    if(primtoU(UDIAG,GLOBALMAC(pdump,i,j,k),&q,ptrgeom,U)>=1) return(1);
-	  }
-	}
-	else{
-	  PALLLOOP(pl) U[pl]=GLOBALMACP0A1(udump,i,j,k,pl);
-	}
-	if(scale==LINEAR) GLOBALMACP0A1(pimage,i,j,k,whichpl)=U[whichpl];
-	else if(scale==LOG) GLOBALMACP0A1(pimage,i,j,k,whichpl)=fabs(U[whichpl]/ptrgeom->gdet)+MINVECTOR;
+        // computes too much (all conserved quantites every time)
+        if(DOENOFLUX == NOENOFLUX){
+          get_geometry(i,j,k,CENT,ptrgeom) ;
+          if(!failed){
+            if(get_state(GLOBALMAC(pdump,i,j,k),ptrgeom,&q)>=1) return(1);
+            if(primtoU(UDIAG,GLOBALMAC(pdump,i,j,k),&q,ptrgeom,U)>=1) return(1);
+          }
+        }
+        else{
+          PALLLOOP(pl) U[pl]=GLOBALMACP0A1(udump,i,j,k,pl);
+        }
+        if(scale==LINEAR) GLOBALMACP0A1(pimage,i,j,k,whichpl)=U[whichpl];
+        else if(scale==LOG) GLOBALMACP0A1(pimage,i,j,k,whichpl)=fabs(U[whichpl]/ptrgeom->gdet)+MINVECTOR;
       }
       else if(vartype==2){ // failure quantity
-	if(whichpl<NUMFAILFLOORFLAGS){
-	  floor=whichpl;
-	  if(scale==LINEAR) GLOBALMACP0A1(pimage,i,j,k,whichpl)=(FTYPE)GLOBALMACP0A3(failfloorcount,i,j,k,0,IMAGETS,floor); // finalstep==0
-	  else if(scale==LOG) GLOBALMACP0A1(pimage,i,j,k,whichpl)=fabs((FTYPE)GLOBALMACP0A3(failfloorcount,i,j,k,0,IMAGETS,floor)+1); // finalstep==0
-	}
+        if(whichpl<NUMFAILFLOORFLAGS){
+          floor=whichpl;
+          if(scale==LINEAR) GLOBALMACP0A1(pimage,i,j,k,whichpl)=(FTYPE)GLOBALMACP0A3(failfloorcount,i,j,k,0,IMAGETS,floor); // finalstep==0
+          else if(scale==LOG) GLOBALMACP0A1(pimage,i,j,k,whichpl)=fabs((FTYPE)GLOBALMACP0A3(failfloorcount,i,j,k,0,IMAGETS,floor)+1); // finalstep==0
+        }
       }
     }
 #if(DO_VORTICITY_IMAGE)
@@ -272,13 +272,13 @@ int imagedefs(int whichpl, int scale, int limits, int vartype)
     sum=sumptr[whichpl];
 #ifdef TESTNUMBER 
 #if( DO_VORTICITY_IMAGE && (TESTNUMBER == 26 || TESTNUMBER == 27) )
-if( vartype==2 && whichpl==4 && limits == 0 && scale == LINEAR ) {
-			//The exact vorticity should be changing between -5 & 10, so make the limits 
-			//a bit larger than that to avoid "black" spots on the image
-			if( debugfail >= 1)	 trifprintf( "Vorticity: old: min = %lg, max = %lg", min, max );
-			min = -5.5 / coordparams.timescalefactor;
-			max = 10.5 / coordparams.timescalefactor;
-			if( debugfail >= 1)  trifprintf( ", new: min = %lg, max = %lg\n", min, max );
+    if( vartype==2 && whichpl==4 && limits == 0 && scale == LINEAR ) {
+      //The exact vorticity should be changing between -5 & 10, so make the limits 
+      //a bit larger than that to avoid "black" spots on the image
+      if( debugfail >= 1)        trifprintf( "Vorticity: old: min = %lg, max = %lg", min, max );
+      min = -5.5 / coordparams.timescalefactor;
+      max = 10.5 / coordparams.timescalefactor;
+      if( debugfail >= 1)  trifprintf( ", new: min = %lg, max = %lg\n", min, max );
     }
 #endif
 #endif
@@ -290,12 +290,12 @@ if( vartype==2 && whichpl==4 && limits == 0 && scale == LINEAR ) {
     }
     else{
       if(scale==LINEAR){
-	max=maxptr[whichpl]/ZOOMFACTOR;
-	min=minptr[whichpl]/ZOOMFACTOR;
+        max=maxptr[whichpl]/ZOOMFACTOR;
+        min=minptr[whichpl]/ZOOMFACTOR;
       }
       else{
-	max=maxptr[whichpl]/ZOOMFACTOR;
-	min=minptr[whichpl];
+        max=maxptr[whichpl]/ZOOMFACTOR;
+        min=minptr[whichpl];
       }
     }
   }
@@ -416,28 +416,28 @@ int image_header(int whichdump, int whichdumpversion, int numcolumns, int bintxt
     }
     else{
       if( (realtotalsize[2]>1)&&(realtotalsize[3]>1)){
-	fprintf(headerptr, "%i %i\n255\n", realtotalsize[2],realtotalsize[3]);
+        fprintf(headerptr, "%i %i\n255\n", realtotalsize[2],realtotalsize[3]);
       }
       else if( (realtotalsize[1]>1)&&(realtotalsize[3]>1)){
-	fprintf(headerptr, "%i %i\n255\n", realtotalsize[1],realtotalsize[3]);
+        fprintf(headerptr, "%i %i\n255\n", realtotalsize[1],realtotalsize[3]);
       }
       else if( (realtotalsize[1]>1)&&(realtotalsize[2]>1)){
-	fprintf(headerptr, "%i %i\n255\n", realtotalsize[1],realtotalsize[2]);
+        fprintf(headerptr, "%i %i\n255\n", realtotalsize[1],realtotalsize[2]);
       }
       else{
-	if(realtotalsize[1]>1){
-	  fprintf(headerptr, "%i %i\n255\n", realtotalsize[1],1);
-	}
-	else if(realtotalsize[2]>1){
-	  fprintf(headerptr, "%i %i\n255\n", realtotalsize[2],1);
-	}
-	else if(realtotalsize[3]>1){
-	  fprintf(headerptr, "%i %i\n255\n", realtotalsize[3],1);
-	}
-	else{
-	  dualfprintf(fail_file,"Shouldn't reach here: %d %d %d\n",realtotalsize[1],realtotalsize[2],realtotalsize[3]);
-	  myexit(248742);
-	}
+        if(realtotalsize[1]>1){
+          fprintf(headerptr, "%i %i\n255\n", realtotalsize[1],1);
+        }
+        else if(realtotalsize[2]>1){
+          fprintf(headerptr, "%i %i\n255\n", realtotalsize[2],1);
+        }
+        else if(realtotalsize[3]>1){
+          fprintf(headerptr, "%i %i\n255\n", realtotalsize[3],1);
+        }
+        else{
+          dualfprintf(fail_file,"Shouldn't reach here: %d %d %d\n",realtotalsize[1],realtotalsize[2],realtotalsize[3]);
+          myexit(248742);
+        }
       }
     }
   }

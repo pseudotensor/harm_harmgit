@@ -316,7 +316,7 @@ int user1_init_atmosphere(int *whichvel, int*whichcoord,int i, int j, int k, FTY
 
 
 int user1_init_primitives(int inittype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR], FTYPE (*panalytic)[NSTORE2][NSTORE3][NPR], FTYPE (*pstaganalytic)[NSTORE2][NSTORE3][NPR], FTYPE (*vpotanalytic)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhatanalytic)[NSTORE2][NSTORE3][NPR],
-			  FTYPE (*F1)[NSTORE2][NSTORE3][NPR],FTYPE (*F2)[NSTORE2][NSTORE3][NPR],FTYPE (*F3)[NSTORE2][NSTORE3][NPR], FTYPE (*Atemp)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
+                          FTYPE (*F1)[NSTORE2][NSTORE3][NPR],FTYPE (*F2)[NSTORE2][NSTORE3][NPR],FTYPE (*F3)[NSTORE2][NSTORE3][NPR], FTYPE (*Atemp)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
 {
   int whichvel, whichcoord;
   int initreturn;
@@ -348,7 +348,7 @@ int user1_init_primitives(int inittype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FT
 #pragma omp parallel private(i,j,k,initreturn,whichvel,whichcoord) OPENMPGLOBALPRIVATEFULL
   {
     OPENMP3DLOOPVARSDEFINE;
-  ////////  COMPFULLLOOP{
+    ////////  COMPFULLLOOP{
     OPENMP3DLOOPSETUPFULL;
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
     OPENMP3DLOOPBLOCK{
@@ -356,7 +356,7 @@ int user1_init_primitives(int inittype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FT
 
       initreturn=init_dsandvels(inittype, CENT, &whichvel, &whichcoord,t,i,j,k,MAC(prim,i,j,k),MAC(pstag,i,j,k)); // request densities for all computational centers // t is ok here for initialization
       if(initreturn>0){
-	FAILSTATEMENT("init.c:init_primitives()", "init_dsandvels()", 1);
+        FAILSTATEMENT("init.c:init_primitives()", "init_dsandvels()", 1);
       }
       else MYFUN(transform_primitive_vB(whichvel, whichcoord, i,j,k, prim, pstag),"init.c:init_primitives","transform_primitive_vB()",0);
 
@@ -393,19 +393,19 @@ int user1_init_primitives(int inittype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FT
       OPENMP3DLOOPSETUPZLOOP;
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
       OPENMP3DLOOPBLOCK{
-	OPENMP3DLOOPBLOCK2IJK(i,j,k);
+        OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
-	initreturn=init_atmosphere(&whichvel, &whichcoord,i,j,k,MAC(prim,i,j,k));
-	if(initreturn>0){
-	  FAILSTATEMENT("init.c:init_primitives()", "init_atmosphere()", 1);
-	}
-	else{
-	  // transform from whichcoord to MCOORD
-	  if (bl2met2metp2v(whichvel, whichcoord,MAC(prim,i,j,k), i,j,k) >= 1){
-	    FAILSTATEMENT("init.c:init()", "bl2ks2ksp2v()", 1);
-	  }
+        initreturn=init_atmosphere(&whichvel, &whichcoord,i,j,k,MAC(prim,i,j,k));
+        if(initreturn>0){
+          FAILSTATEMENT("init.c:init_primitives()", "init_atmosphere()", 1);
+        }
+        else{
+          // transform from whichcoord to MCOORD
+          if (bl2met2metp2v(whichvel, whichcoord,MAC(prim,i,j,k), i,j,k) >= 1){
+            FAILSTATEMENT("init.c:init()", "bl2ks2ksp2v()", 1);
+          }
 
-	}
+        }
       }// end 3D LOOP
     }// end parallel region
   }
@@ -717,16 +717,16 @@ int user1_get_maxes(int eqslice, FTYPE *parms, FTYPE (*prim)[NSTORE2][NSTORE3][N
       th=V[2];
       
       if((r>rin)&&(fabs(th-M_PI*0.5)<4.0*M_PI*dx[2]*hslope)){
-	gotnormal=1;
-	if (bsq_calc(MAC(prim,i,j,k), ptrgeom, &bsq_ij) >= 1) FAILSTATEMENT("init.c:init()", "bsq_calc()", 1);
-	if (bsq_ij > bsq_max[0])      bsq_max[0] = bsq_ij;
+        gotnormal=1;
+        if (bsq_calc(MAC(prim,i,j,k), ptrgeom, &bsq_ij) >= 1) FAILSTATEMENT("init.c:init()", "bsq_calc()", 1);
+        if (bsq_ij > bsq_max[0])      bsq_max[0] = bsq_ij;
 
-	pg_ij=pressure_rho0_u_simple(i,j,k,loc,MACP0A1(prim,i,j,k,RHO),MACP0A1(prim,i,j,k,UU));
-	if (pg_ij > pg_max[0])      pg_max[0] = pg_ij;
+        pg_ij=pressure_rho0_u_simple(i,j,k,loc,MACP0A1(prim,i,j,k,RHO),MACP0A1(prim,i,j,k,UU));
+        if (pg_ij > pg_max[0])      pg_max[0] = pg_ij;
 
-	beta_ij=pg_ij/(bsq_ij*0.5);
+        beta_ij=pg_ij/(bsq_ij*0.5);
 
-	if (beta_ij < beta_min[0])      beta_min[0] = beta_ij;
+        if (beta_ij < beta_min[0])      beta_min[0] = beta_ij;
 
       }
     }
@@ -752,12 +752,12 @@ int user1_get_maxes(int eqslice, FTYPE *parms, FTYPE (*prim)[NSTORE2][NSTORE3][N
     dualfprintf(fail_file,"Never found place to normalize field\n");
     if(N2==1 && N3==1){
       ZLOOP {
-	bl_coord_ijk_2(i, j, k, loc, X, V);
-	dxdxprim_ijk(i, j, k, loc, dxdxp);
-	r=V[1];
-	th=V[2];
+        bl_coord_ijk_2(i, j, k, loc, X, V);
+        dxdxprim_ijk(i, j, k, loc, dxdxp);
+        r=V[1];
+        th=V[2];
 
-	dualfprintf(fail_file,"i=%d j=%d k=%d V[1]=%21.15g dxdxp[1][1]*dx[1]=%21.15g dx[1]=%21.15g\n",i,j,k,V[1],dxdxp[1][1]*dx[1],dx[1]);
+        dualfprintf(fail_file,"i=%d j=%d k=%d V[1]=%21.15g dxdxp[1][1]*dx[1]=%21.15g dx[1]=%21.15g\n",i,j,k,V[1],dxdxp[1][1]*dx[1],dx[1]);
       }
     }
     myexit(111);
@@ -775,7 +775,7 @@ int user1_get_maxes(int eqslice, FTYPE *parms, FTYPE (*prim)[NSTORE2][NSTORE3][N
 
 // 0: maxes method
 // 1: betamin
-#define FIELDBETANORMMETHOD 0
+#define FIELDBETANORMMETHOD 1
 
 // assumes normal field definition
 int user1_normalize_field(FTYPE beta, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR])
@@ -920,24 +920,24 @@ int user1_normalize_densities_postnormalizefield(SFTYPE time, FTYPE (*prim)[NSTO
       sigma_ij=bsq_ij/(2.0*fabs(MACP0A1(prim,i,j,k,RHO)+SMALL));
 
       if(sigma_ij>BSQORHOLIMIT*0.5){
-	dualfprintf(fail_file,"RENORMDEN1: %d %d %d %21.15g %21.15g\n",i,j,k,sigma_ij,MACP0A1(prim,i,j,k,RHO));
-	MACP0A1(prim,i,j,k,RHO)*=sigma_ij/(BSQORHOLIMIT*0.5);
+        dualfprintf(fail_file,"RENORMDEN1: %d %d %d %21.15g %21.15g\n",i,j,k,sigma_ij,MACP0A1(prim,i,j,k,RHO));
+        MACP0A1(prim,i,j,k,RHO)*=sigma_ij/(BSQORHOLIMIT*0.5);
       }
 
       // \sigma \sim \mu \sim b^2/(2u)
       sigmahot_ij=bsq_ij/(2.0*fabs(MACP0A1(prim,i,j,k,UU))+SMALL);
-					   
+                                           
       if(sigmahot_ij>BSQOULIMIT*0.5){
-	dualfprintf(fail_file,"RENORMDEN2: %d %d %d %21.15g %21.15g\n",i,j,k,sigmahot_ij,MACP0A1(prim,i,j,k,UU));
-	MACP0A1(prim,i,j,k,UU)*=sigmahot_ij/(BSQOULIMIT*0.5);
+        dualfprintf(fail_file,"RENORMDEN2: %d %d %d %21.15g %21.15g\n",i,j,k,sigmahot_ij,MACP0A1(prim,i,j,k,UU));
+        MACP0A1(prim,i,j,k,UU)*=sigmahot_ij/(BSQOULIMIT*0.5);
       }
 
       // u/\rho_0
       uorho=MACP0A1(prim,i,j,k,UU)/(fabs(MACP0A1(prim,i,j,k,RHO))+SMALL);
 
       if(uorho>UORHOLIMIT){
-	dualfprintf(fail_file,"RENORMDEN3: %d %d %d %21.15g %21.15g %21.15g\n",i,j,k,uorho,MACP0A1(prim,i,j,k,RHO),MACP0A1(prim,i,j,k,UU));
-	MACP0A1(prim,i,j,k,RHO)*=uorho/UORHOLIMIT;
+        dualfprintf(fail_file,"RENORMDEN3: %d %d %d %21.15g %21.15g %21.15g\n",i,j,k,uorho,MACP0A1(prim,i,j,k,RHO),MACP0A1(prim,i,j,k,UU));
+        MACP0A1(prim,i,j,k,RHO)*=uorho/UORHOLIMIT;
       }
 
       // old, stupid, maybe:
@@ -1016,12 +1016,12 @@ int user1_get_sigmabsq_atpole(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *sigma
     dualfprintf(fail_file,"Never found place to normalize field for NS\n");
     if(N2==1 && N3==1){
       ZLOOP {
-	bl_coord_ijk_2(i, j, k, loc, X, V);
-	dxdxprim_ijk(i, j, k, loc, dxdxp);
-	r=V[1];
-	th=V[2];
+        bl_coord_ijk_2(i, j, k, loc, X, V);
+        dxdxprim_ijk(i, j, k, loc, dxdxp);
+        r=V[1];
+        th=V[2];
 
-	dualfprintf(fail_file,"i=%d j=%d k=%d V[1]=%21.15g dxdxp[1][1]*dx[1]=%21.15g dx[1]=%21.15g\n",i,j,k,V[1],dxdxp[1][1]*dx[1],dx[1]);
+        dualfprintf(fail_file,"i=%d j=%d k=%d V[1]=%21.15g dxdxp[1][1]*dx[1]=%21.15g dx[1]=%21.15g\n",i,j,k,V[1],dxdxp[1][1]*dx[1],dx[1]);
       }
     }
     myexit(111);
@@ -1068,13 +1068,13 @@ int user1_set_atmosphere(int atmospheretype, int whichcond, int whichvel, struct
     // Bondi-like atmosphere
     if(rescaletype==4){
       if(atmospheretype==1){
-	// couple rescaletype to atmosphere type
-	prlocal[RHO] = RHOMIN*pow(r,-2.0);
+        // couple rescaletype to atmosphere type
+        prlocal[RHO] = RHOMIN*pow(r,-2.0);
       }
       else if(atmospheretype==2){
-	// couple rescaletype to atmosphere type
-	if(r>40.0) prlocal[RHO] = RHOMIN*pow(r,-2.0);
-	else prlocal[RHO] = RHOMIN*pow(40.0,-2.0);
+        // couple rescaletype to atmosphere type
+        if(r>40.0) prlocal[RHO] = RHOMIN*pow(r,-2.0);
+        else prlocal[RHO] = RHOMIN*pow(40.0,-2.0);
       }
     }
     else{

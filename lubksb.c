@@ -17,7 +17,7 @@ void lubksb(FTYPE **a, int n, int *indx, FTYPE b[])
     b[ip] = b[i];
     if (ii)
       for (j = ii; j <= i - 1; j++)
-	sum -= a[i][j] * b[j];
+        sum -= a[i][j] * b[j];
     else if (sum)
       ii = i;
     b[i] = sum;

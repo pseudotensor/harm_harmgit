@@ -380,15 +380,15 @@ static void readdata_preprocessdata(void)
     if(!DOUBLEWORK){
       oldimage0 = c5matrix(0,0,-numbc[0]+0,oN0-1+numbc[0],-numbc[1]+0,oN1-1+numbc[1],-numbc[2]+0,oN2-1+numbc[2],-numbc[3]+0,oN3-1+numbc[3]) ;
       if(oldimage0==NULL){
-	fprintf(stderr,"Couldn't allocate oldimage0\n"); fflush(stderr);
-	myexit(1);
+        fprintf(stderr,"Couldn't allocate oldimage0\n"); fflush(stderr);
+        myexit(1);
       }
     }
     else{
       olddata0 = f5matrix(0,0,-numbc[0]+0,oN0-1+numbc[0],-numbc[1]+0,oN1-1+numbc[1],-numbc[2]+0,oN2-1+numbc[2],-numbc[3]+0,oN3-1+numbc[3]) ;   // olddata0[col][h][i][j][k]
       if(olddata0==NULL){
-	fprintf(stderr,"Couldn't allocate olddata0\n"); fflush(stderr);
-	myexit(1);
+        fprintf(stderr,"Couldn't allocate olddata0\n"); fflush(stderr);
+        myexit(1);
       }
     }
     /* read in old image */
@@ -405,21 +405,21 @@ static void readdata_preprocessdata(void)
     totalmax[coli]=-BIG;
     for(h=0;h<oN0;h++){ // for files (reading-writing), time is slowest index
       for(k=0;k<oN3;k++){
-	for(j=0;j<oN2;j++){
-	  for(i=0;i<oN1;i++){
-	    if(DOUBLEWORK){
-	      fread(&tempuc, sizeof(unsigned char), 1, infile) ;
-	      olddata0[coli][h][i][j][k]=(FTYPE)tempuc;
-	      if(olddata0[coli][h][i][j][k]>totalmax[coli]) totalmax[coli]=olddata0[coli][h][i][j][k];
-	      if(olddata0[coli][h][i][j][k]<totalmin[coli]) totalmin[coli]=olddata0[coli][h][i][j][k];
-	    }
-	    else{
-	      fread(&oldimage0[coli][h][i][j][k], sizeof(unsigned char), 1, infile) ;
-	      if(oldimage0[coli][h][i][j][k]>totalmax[coli]) totalmax[coli]=oldimage0[coli][h][i][j][k];
-	      if(oldimage0[coli][h][i][j][k]<totalmin[coli]) totalmin[coli]=oldimage0[coli][h][i][j][k];
-	    }
-	  }
-	}
+        for(j=0;j<oN2;j++){
+          for(i=0;i<oN1;i++){
+            if(DOUBLEWORK){
+              fread(&tempuc, sizeof(unsigned char), 1, infile) ;
+              olddata0[coli][h][i][j][k]=(FTYPE)tempuc;
+              if(olddata0[coli][h][i][j][k]>totalmax[coli]) totalmax[coli]=olddata0[coli][h][i][j][k];
+              if(olddata0[coli][h][i][j][k]<totalmin[coli]) totalmin[coli]=olddata0[coli][h][i][j][k];
+            }
+            else{
+              fread(&oldimage0[coli][h][i][j][k], sizeof(unsigned char), 1, infile) ;
+              if(oldimage0[coli][h][i][j][k]>totalmax[coli]) totalmax[coli]=oldimage0[coli][h][i][j][k];
+              if(oldimage0[coli][h][i][j][k]<totalmin[coli]) totalmin[coli]=oldimage0[coli][h][i][j][k];
+            }
+          }
+        }
       }
     }
 
@@ -463,8 +463,8 @@ static void readdata_preprocessdata(void)
       // ALLOCATE MEMORY for storing HARM-based processed data (olddata0)
       olddata0 = f5matrix(0,numoutputcols-1,-numbc[0]+0,oN0-1+numbc[0],-numbc[1]+0,oN1-1+numbc[1],-numbc[2]+0,oN2-1+numbc[2],-numbc[3]+0,oN3-1+numbc[3]) ;   // olddata0[coli][h][i][j][k]
       if(olddata0==NULL){
-	fprintf(stderr,"Couldn't allocate olddata0\n"); fflush(stderr);
-	myexit(1);
+        fprintf(stderr,"Couldn't allocate olddata0\n"); fflush(stderr);
+        myexit(1);
       }
       fprintf(stderr,"After allocate olddata0\n"); fflush(stderr);
 
@@ -485,8 +485,8 @@ static void readdata_preprocessdata(void)
       //
       // initialize totalmin and totalmax
       for(coli=0;coli<numoutputcols;coli++){ // over all independent columsn of data
-	totalmin[coli]=BIG;
-	totalmax[coli]=-BIG;
+        totalmin[coli]=BIG;
+        totalmax[coli]=-BIG;
       }
       // read it (Note the loop order!) (see global.jon_interp.h)  time is slowest index for reading and writing files
       int kprior,firsttimecompute=1;
@@ -495,19 +495,19 @@ static void readdata_preprocessdata(void)
       // setup temp new column space to avoid passing entire array "olddata0" to functions because "coli" is at the front of array storage function, when only need per space-time point.
       FTYPE *olddata0temp=(FTYPE*)malloc((unsigned)(numoutputcols)*sizeof(FTYPE));
       if(olddata0temp==NULL){
-	fprintf(stderr,"Couldn't allocate olddata0temp\n");
-	exit(1);
+        fprintf(stderr,"Couldn't allocate olddata0temp\n");
+        exit(1);
       }
 
 
       FTYPE *olddata0temporig=NULL;
       if(outputvartype==0){
-	// old column space
-	olddata0temporig=(FTYPE*)malloc((unsigned)(numcolumns)*sizeof(FTYPE));
-	if(olddata0temporig==NULL){
-	  fprintf(stderr,"Couldn't allocate olddata0temporig\n");
-	  exit(1);
-	}
+        // old column space
+        olddata0temporig=(FTYPE*)malloc((unsigned)(numcolumns)*sizeof(FTYPE));
+        if(olddata0temporig==NULL){
+          fprintf(stderr,"Couldn't allocate olddata0temporig\n");
+          exit(1);
+        }
       }
 
 
@@ -517,75 +517,75 @@ static void readdata_preprocessdata(void)
       // no iteration over coli -- multiple input columns handled by outputvartype>0
       int hprior=-1000;
       LOOPOLDDATA{
-	
-	// only 1 thing in (e.g. for scalar image or data)
-	if(outputvartype==0){
-	  for(colini=0;colini<numcolumns;colini++) readelement(binaryinput,inFTYPE,infile,&olddata0temporig[colini]);
+        
+        // only 1 thing in (e.g. for scalar image or data)
+        if(outputvartype==0){
+          for(colini=0;colini<numcolumns;colini++) readelement(binaryinput,inFTYPE,infile,&olddata0temporig[colini]);
 
-	  // if multiple input columns, choose 0th column, unless selecting part of field line file
-	  if(DATATYPE==1000){
-	    coli=0; colini=0;  olddata0[coli][h][i][j][k]=olddata0temporig[colini]; // rho_0
-	  }
-	  else if(DATATYPE==1001){
-	    coli=0; colini=1;  olddata0[coli][h][i][j][k]=olddata0temporig[colini]; // u_g
-	  }
-	  else{
-	    coli=0; colini=0;  olddata0[coli][h][i][j][k]=olddata0temporig[colini]; // first or only column
-	  }
-
-
-	}
-	else{
-	  // for reading anything larger than 1 item per grid point or for non-interpolation type diagnostics
-	  int dotstoappear;
-	  dotstoappear=oN0*oN3;
+          // if multiple input columns, choose 0th column, unless selecting part of field line file
+          if(DATATYPE==1000){
+            coli=0; colini=0;  olddata0[coli][h][i][j][k]=olddata0temporig[colini]; // rho_0
+          }
+          else if(DATATYPE==1001){
+            coli=0; colini=1;  olddata0[coli][h][i][j][k]=olddata0temporig[colini]; // u_g
+          }
+          else{
+            coli=0; colini=0;  olddata0[coli][h][i][j][k]=olddata0temporig[colini]; // first or only column
+          }
 
 
- 	  if(firsttimecompute==1){
-	    fprintf(stderr,"compute_preprocess(%d dots to appear):",dotstoappear); fflush(stderr);
-	  }
-	  if(k!=kprior){
-	    fprintf(stderr,"."); fflush(stderr);
-	    kprior=k;
-	  }
-
-	  // reset gdump if changed time -- assumes gdump same for each time so don't have to create multi-time gdump
-	  if(h!=hprior && oN0!=1){
-	    gdump_tostartofdata(&gdumpin);
-	    hprior=h;
-	  }
+        }
+        else{
+          // for reading anything larger than 1 item per grid point or for non-interpolation type diagnostics
+          int dotstoappear;
+          dotstoappear=oN0*oN3;
 
 
-	  // get new columns by processing data
-	  compute_preprocess(outputvartype, gdumpin, h,i,j,k,olddatacurrent, olddata0temp);
+          if(firsttimecompute==1){
+            fprintf(stderr,"compute_preprocess(%d dots to appear):",dotstoappear); fflush(stderr);
+          }
+          if(k!=kprior){
+            fprintf(stderr,"."); fflush(stderr);
+            kprior=k;
+          }
+
+          // reset gdump if changed time -- assumes gdump same for each time so don't have to create multi-time gdump
+          if(h!=hprior && oN0!=1){
+            gdump_tostartofdata(&gdumpin);
+            hprior=h;
+          }
 
 
-	  // copy from temp space
-	  for(coli=0;coli<numoutputcols;coli++)  olddata0[coli][h][i][j][k]=olddata0temp[coli];
+          // get new columns by processing data
+          compute_preprocess(outputvartype, gdumpin, h,i,j,k,olddatacurrent, olddata0temp);
 
-	}
 
-	// determine min/max of data
-	for(coli=0;coli<numoutputcols;coli++){ // over all independent columsn of data
-	  if(olddata0[coli][h][i][j][k]>totalmax[coli]) totalmax[coli]=olddata0[coli][h][i][j][k];
-	  if(olddata0[coli][h][i][j][k]<totalmin[coli]) totalmin[coli]=olddata0[coli][h][i][j][k];
-	}
-	
-	firsttimecompute=0;
+          // copy from temp space
+          for(coli=0;coli<numoutputcols;coli++)  olddata0[coli][h][i][j][k]=olddata0temp[coli];
+
+        }
+
+        // determine min/max of data
+        for(coli=0;coli<numoutputcols;coli++){ // over all independent columsn of data
+          if(olddata0[coli][h][i][j][k]>totalmax[coli]) totalmax[coli]=olddata0[coli][h][i][j][k];
+          if(olddata0[coli][h][i][j][k]<totalmin[coli]) totalmin[coli]=olddata0[coli][h][i][j][k];
+        }
+        
+        firsttimecompute=0;
       }// end LOOPOLDDATA
 
 
       // free temp column space
       free(olddata0temp);
       if(outputvartype==0){
-	free(olddata0temporig);
+        free(olddata0temporig);
       }
 
 
       if(filter){
-	// filter not setup for periodic bc
-	fprintf(stderr,"filter\n");
-	gaussian_filter(filter,sigma,oN0,oN1,oN2,oN3,oldimage0,olddata0);
+        // filter not setup for periodic bc
+        fprintf(stderr,"filter\n");
+        gaussian_filter(filter,sigma,oN0,oN1,oN2,oN3,oldimage0,olddata0);
       }
 
 
@@ -616,114 +616,114 @@ static void readdata_preprocessdata(void)
 
     if(defaultvaluetype==0){
       if(DATATYPE==14){ // then select per output variable
-	for(coli=0;coli<numoutputcols;coli++) defaultvalue[coli]=0.0; // default
-	// now set
-	defaultvalue[0]=totalmin[0]; // rho0
-	defaultvalue[1]=totalmin[1]; // ug
-	defaultvalue[2]=0.0; // vx
-	defaultvalue[3]=0.0; // vy
-	defaultvalue[4]=0.0; // vz
-	defaultvalue[5]=0.0; // Bx
-	defaultvalue[6]=0.0; // By
-	defaultvalue[7]=0.0; // Bz
-	defaultvalue[8]=0.0; // FEMrad
-	defaultvalue[9]=0.0; // Bphi
-	if(docurrent==1){
-	  defaultvalue[9]=0.0; // Jt (can be + or -, so choose 0 as default)
-	  defaultvalue[10]=0.0; // Jx
-	  defaultvalue[11]=0.0; // Jy
-	  defaultvalue[12]=0.0; // Jz
-	}
+        for(coli=0;coli<numoutputcols;coli++) defaultvalue[coli]=0.0; // default
+        // now set
+        defaultvalue[0]=totalmin[0]; // rho0
+        defaultvalue[1]=totalmin[1]; // ug
+        defaultvalue[2]=0.0; // vx
+        defaultvalue[3]=0.0; // vy
+        defaultvalue[4]=0.0; // vz
+        defaultvalue[5]=0.0; // Bx
+        defaultvalue[6]=0.0; // By
+        defaultvalue[7]=0.0; // Bz
+        defaultvalue[8]=0.0; // FEMrad
+        defaultvalue[9]=0.0; // Bphi
+        if(docurrent==1){
+          defaultvalue[9]=0.0; // Jt (can be + or -, so choose 0 as default)
+          defaultvalue[10]=0.0; // Jx
+          defaultvalue[11]=0.0; // Jy
+          defaultvalue[12]=0.0; // Jz
+        }
       }
       else if(DATATYPE==15){ // then select per output variable
-	for(coli=0;coli<numoutputcols;coli++) defaultvalue[coli]=0.0; // default
-	// now set
-	defaultvalue[0]=totalmin[0]; // rho0
-	defaultvalue[1]=totalmin[1]; // ug
-	defaultvalue[2]=1.0; // uu0
-	defaultvalue[3]=0.0; // bsq
+        for(coli=0;coli<numoutputcols;coli++) defaultvalue[coli]=0.0; // default
+        // now set
+        defaultvalue[0]=totalmin[0]; // rho0
+        defaultvalue[1]=totalmin[1]; // ug
+        defaultvalue[2]=1.0; // uu0
+        defaultvalue[3]=0.0; // bsq
       }
       else if(DATATYPE==16){ // then select per output variable
-	for(coli=0;coli<numoutputcols;coli++) defaultvalue[coli]=0.0; // default
-	// now set
-	defaultvalue[0]=totalmin[0]; // rho0
-	defaultvalue[1]=totalmin[1]; // ug
-	defaultvalue[2]=1.0; // uu0
-	defaultvalue[3]=0.0; // bsq
-	defaultvalue[4]=log10(totalmin[0]); // lrho
-	defaultvalue[5]=-log10(totalmin[0]); // -lrho
-	defaultvalue[6]=log10(totalmin[0]); // lbsq
-	defaultvalue[7]=0.0; // R
+        for(coli=0;coli<numoutputcols;coli++) defaultvalue[coli]=0.0; // default
+        // now set
+        defaultvalue[0]=totalmin[0]; // rho0
+        defaultvalue[1]=totalmin[1]; // ug
+        defaultvalue[2]=1.0; // uu0
+        defaultvalue[3]=0.0; // bsq
+        defaultvalue[4]=log10(totalmin[0]); // lrho
+        defaultvalue[5]=-log10(totalmin[0]); // -lrho
+        defaultvalue[6]=log10(totalmin[0]); // lbsq
+        defaultvalue[7]=0.0; // R
       }
       else if(DATATYPE==17){ // then select per output variable
-	for(coli=0;coli<numoutputcols;coli++) defaultvalue[coli]=0.0; // default
-	// now set
-	defaultvalue[0]=totalmin[0]; // rho0
-	defaultvalue[1]=totalmin[1]; // ug
-	defaultvalue[2]=1.0; // uu0
-	defaultvalue[3]=0.0; // bsq
-	defaultvalue[4]=log10(totalmin[0]); // lrho
-	defaultvalue[5]=-log10(totalmin[0]); // -lrho
-	defaultvalue[6]=log10(totalmin[0]); // lbsq
-	defaultvalue[7]=0.0; // R
-	defaultvalue[8]=0.0; // vx
-	defaultvalue[9]=0.0; // vy
-	defaultvalue[10]=0.0; // vz
-	defaultvalue[11]=0.0; // bx
-	defaultvalue[12]=0.0; // by
-	defaultvalue[13]=0.0; // bz
+        for(coli=0;coli<numoutputcols;coli++) defaultvalue[coli]=0.0; // default
+        // now set
+        defaultvalue[0]=totalmin[0]; // rho0
+        defaultvalue[1]=totalmin[1]; // ug
+        defaultvalue[2]=1.0; // uu0
+        defaultvalue[3]=0.0; // bsq
+        defaultvalue[4]=log10(totalmin[0]); // lrho
+        defaultvalue[5]=-log10(totalmin[0]); // -lrho
+        defaultvalue[6]=log10(totalmin[0]); // lbsq
+        defaultvalue[7]=0.0; // R
+        defaultvalue[8]=0.0; // vx
+        defaultvalue[9]=0.0; // vy
+        defaultvalue[10]=0.0; // vz
+        defaultvalue[11]=0.0; // bx
+        defaultvalue[12]=0.0; // by
+        defaultvalue[13]=0.0; // bz
       }
       else if(DATATYPE==18){ // then select per output variable
-	for(coli=0;coli<numoutputcols;coli++) defaultvalue[coli]=0.0; // default
-	// now set
-	defaultvalue[0]=totalmin[0]; // rho0
-	defaultvalue[1]=totalmin[1]; // ug
-	defaultvalue[2]=1.0; // uu0
-	defaultvalue[3]=0.0; // bsq
-	defaultvalue[4]=log10(totalmin[0]); // lrho
-	defaultvalue[5]=-log10(totalmin[0]); // -lrho
-	defaultvalue[6]=log10(totalmin[0]); // lbsq
-	defaultvalue[7]=0.0; // R
-	defaultvalue[8]=0.0; // vx
-	defaultvalue[9]=0.0; // vy
-	defaultvalue[10]=0.0; // vz
-	defaultvalue[11]=0.0; // bx
-	defaultvalue[12]=0.0; // by
-	defaultvalue[13]=0.0; // bz
-	defaultvalue[14]=0.0; // posr
-	defaultvalue[15]=0.0; // posh
-	defaultvalue[16]=0.0; // posph
+        for(coli=0;coli<numoutputcols;coli++) defaultvalue[coli]=0.0; // default
+        // now set
+        defaultvalue[0]=totalmin[0]; // rho0
+        defaultvalue[1]=totalmin[1]; // ug
+        defaultvalue[2]=1.0; // uu0
+        defaultvalue[3]=0.0; // bsq
+        defaultvalue[4]=log10(totalmin[0]); // lrho
+        defaultvalue[5]=-log10(totalmin[0]); // -lrho
+        defaultvalue[6]=log10(totalmin[0]); // lbsq
+        defaultvalue[7]=0.0; // R
+        defaultvalue[8]=0.0; // vx
+        defaultvalue[9]=0.0; // vy
+        defaultvalue[10]=0.0; // vz
+        defaultvalue[11]=0.0; // bx
+        defaultvalue[12]=0.0; // by
+        defaultvalue[13]=0.0; // bz
+        defaultvalue[14]=0.0; // posr
+        defaultvalue[15]=0.0; // posh
+        defaultvalue[16]=0.0; // posph
       }
       else if(DATATYPE==19){ // then select per output variable
-	for(coli=0;coli<numoutputcols;coli++) defaultvalue[coli]=0.0; // default
-	// now set
-	defaultvalue[0]=totalmin[0]; // rho0
-	defaultvalue[1]=totalmin[1]; // ug
-	defaultvalue[2]=1.0; // uu0
-	defaultvalue[3]=0.0; // bsq
-	defaultvalue[4]=log10(totalmin[0]); // lrho
-	defaultvalue[5]=-log10(totalmin[0]); // -lrho
-	defaultvalue[6]=log10(totalmin[0]); // lbsq
-	defaultvalue[7]=0.0; // R
-	defaultvalue[8]=0.0; // vx
-	defaultvalue[9]=0.0; // vy
-	defaultvalue[10]=0.0; // vz
-	defaultvalue[11]=0.0; // bx
-	defaultvalue[12]=0.0; // by
-	defaultvalue[13]=0.0; // bz
-	defaultvalue[14]=0.0; // posr
-	defaultvalue[15]=0.0; // posh
-	defaultvalue[16]=0.0; // posph
-	defaultvalue[17]=0.0; // PRAD0
-	defaultvalue[18]=0.0; // PRAD1
-	defaultvalue[19]=0.0; // PRAD2
-	defaultvalue[20]=0.0; // PRAD3
+        for(coli=0;coli<numoutputcols;coli++) defaultvalue[coli]=0.0; // default
+        // now set
+        defaultvalue[0]=totalmin[0]; // rho0
+        defaultvalue[1]=totalmin[1]; // ug
+        defaultvalue[2]=1.0; // uu0
+        defaultvalue[3]=0.0; // bsq
+        defaultvalue[4]=log10(totalmin[0]); // lrho
+        defaultvalue[5]=-log10(totalmin[0]); // -lrho
+        defaultvalue[6]=log10(totalmin[0]); // lbsq
+        defaultvalue[7]=0.0; // R
+        defaultvalue[8]=0.0; // vx
+        defaultvalue[9]=0.0; // vy
+        defaultvalue[10]=0.0; // vz
+        defaultvalue[11]=0.0; // bx
+        defaultvalue[12]=0.0; // by
+        defaultvalue[13]=0.0; // bz
+        defaultvalue[14]=0.0; // posr
+        defaultvalue[15]=0.0; // posh
+        defaultvalue[16]=0.0; // posph
+        defaultvalue[17]=0.0; // PRAD0
+        defaultvalue[18]=0.0; // PRAD1
+        defaultvalue[19]=0.0; // PRAD2
+        defaultvalue[20]=0.0; // PRAD3
       }
       else{
-	for(coli=0;coli<numoutputcols;coli++){ // over all independent columsn of data
-	  if(outputvartype==0 || (outputvartype==1||outputvartype==2) && vectorcomponent==0) defaultvalue[coli]=totalmin[coli];
-	  else defaultvalue[coli]=0.0; // vector-like things otherwise around 0
-	}
+        for(coli=0;coli<numoutputcols;coli++){ // over all independent columsn of data
+          if(outputvartype==0 || (outputvartype==1||outputvartype==2) && vectorcomponent==0) defaultvalue[coli]=totalmin[coli];
+          else defaultvalue[coli]=0.0; // vector-like things otherwise around 0
+        }
       }
     }
     else if(defaultvaluetype==1){
@@ -737,8 +737,8 @@ static void readdata_preprocessdata(void)
     }
     else if(defaultvaluetype==4){
       for(coli=0;coli<numoutputcols;coli++){
-	defaultvalue[coli]=1E35; // for V5D missing data
-	fprintf(stderr,"Using V5D missing data for defaultvalue[coli=%d]=%g\n",coli,defaultvalue[coli]);
+        defaultvalue[coli]=1E35; // for V5D missing data
+        fprintf(stderr,"Using V5D missing data for defaultvalue[coli=%d]=%g\n",coli,defaultvalue[coli]);
       }
     }
 
@@ -794,63 +794,63 @@ void apply_boundaryconditions_olddata(int numcols, int oN0local, int numbc0local
     if(BOUNDARYEXTRAP==1){
       // lower and upper h
       for(i=0;i<oN1;i++){
-	for(j=0;j<oN2;j++){
-	  for(k=0;k<oN3;k++){
-	    if(doubleworklocal){
-	      for(h=-numbclocal[0];h<0;h++) olddatalocal[coli][h][i][j][k]=olddatalocal[coli][0][i][j][k];
-	      for(h=oN0local;h<oN0local+numbclocal[0];h++) olddatalocal[coli][h][i][j][k]=olddatalocal[coli][oN0local-1][i][j][k];
-	    }
-	    else{
-	      for(h=-numbclocal[0];h<0;h++) oldimage0[coli][h][i][j][k]=oldimage0[coli][0][i][j][k];
-	      for(h=oN0local;h<oN0local+numbclocal[0];h++) oldimage0[coli][h][i][j][k]=oldimage0[coli][oN0local-1][i][j][k];
-	    }
-	  }
-	}
+        for(j=0;j<oN2;j++){
+          for(k=0;k<oN3;k++){
+            if(doubleworklocal){
+              for(h=-numbclocal[0];h<0;h++) olddatalocal[coli][h][i][j][k]=olddatalocal[coli][0][i][j][k];
+              for(h=oN0local;h<oN0local+numbclocal[0];h++) olddatalocal[coli][h][i][j][k]=olddatalocal[coli][oN0local-1][i][j][k];
+            }
+            else{
+              for(h=-numbclocal[0];h<0;h++) oldimage0[coli][h][i][j][k]=oldimage0[coli][0][i][j][k];
+              for(h=oN0local;h<oN0local+numbclocal[0];h++) oldimage0[coli][h][i][j][k]=oldimage0[coli][oN0local-1][i][j][k];
+            }
+          }
+        }
       }
       // lower and upper i
       for(h=0;h<oN0local;h++){
-	for(j=0;j<oN2;j++){
-	  for(k=0;k<oN3;k++){
-	    if(doubleworklocal){
-	      for(i=-numbclocal[1];i<0;i++) olddatalocal[coli][h][i][j][k]=olddatalocal[coli][h][0][j][k];
-	      for(i=oN1;i<oN1+numbclocal[1];i++) olddatalocal[coli][h][i][j][k]=olddatalocal[coli][h][oN1-1][j][k];
-	    }
-	    else{
-	      for(i=-numbclocal[1];i<0;i++) oldimage0[coli][h][i][j][k]=oldimage0[coli][h][0][j][k];
-	      for(i=oN1;i<oN1+numbclocal[1];i++) oldimage0[coli][h][i][j][k]=oldimage0[coli][h][oN1-1][j][k];
-	    }
-	  }
-	}
+        for(j=0;j<oN2;j++){
+          for(k=0;k<oN3;k++){
+            if(doubleworklocal){
+              for(i=-numbclocal[1];i<0;i++) olddatalocal[coli][h][i][j][k]=olddatalocal[coli][h][0][j][k];
+              for(i=oN1;i<oN1+numbclocal[1];i++) olddatalocal[coli][h][i][j][k]=olddatalocal[coli][h][oN1-1][j][k];
+            }
+            else{
+              for(i=-numbclocal[1];i<0;i++) oldimage0[coli][h][i][j][k]=oldimage0[coli][h][0][j][k];
+              for(i=oN1;i<oN1+numbclocal[1];i++) oldimage0[coli][h][i][j][k]=oldimage0[coli][h][oN1-1][j][k];
+            }
+          }
+        }
       }
       // lower and upper j
       for(h=0;h<oN0local;h++){
-	for(i=0;i<oN1;i++){
-	  for(k=0;k<oN3;k++){
-	    if(doubleworklocal){
-	      for(j=-numbclocal[2];j<0;j++) olddatalocal[coli][h][i][j][k]=olddatalocal[coli][h][i][0][k];
-	      for(j=oN2;j<oN2+numbclocal[2];j++) olddatalocal[coli][h][i][j][k]=olddatalocal[coli][h][i][oN2-1][k];
-	    }
-	    else{
-	      for(j=-numbclocal[2];j<0;j++) oldimage0[coli][h][i][j][k]=oldimage0[coli][h][i][0][k];
-	      for(j=oN2;j<oN2+numbclocal[2];j++) oldimage0[coli][h][i][j][k]=oldimage0[coli][h][i][oN2-1][k];
-	    }
-	  }
-	}
+        for(i=0;i<oN1;i++){
+          for(k=0;k<oN3;k++){
+            if(doubleworklocal){
+              for(j=-numbclocal[2];j<0;j++) olddatalocal[coli][h][i][j][k]=olddatalocal[coli][h][i][0][k];
+              for(j=oN2;j<oN2+numbclocal[2];j++) olddatalocal[coli][h][i][j][k]=olddatalocal[coli][h][i][oN2-1][k];
+            }
+            else{
+              for(j=-numbclocal[2];j<0;j++) oldimage0[coli][h][i][j][k]=oldimage0[coli][h][i][0][k];
+              for(j=oN2;j<oN2+numbclocal[2];j++) oldimage0[coli][h][i][j][k]=oldimage0[coli][h][i][oN2-1][k];
+            }
+          }
+        }
       }
       // lower and upper k
       for(h=0;h<oN0local;h++){
-	for(j=0;j<oN2;j++){
-	  for(i=0;i<oN1;i++){
-	    if(doubleworklocal){
-	      for(k=-numbclocal[3];k<0;k++) olddatalocal[coli][h][i][j][k]=olddatalocal[coli][h][i][j][0];
-	      for(k=oN3;k<oN3+numbclocal[3];k++) olddatalocal[coli][h][i][j][k]=olddatalocal[coli][h][i][j][oN3-1];
-	    }
-	    else{
-	      for(k=-numbclocal[3];k<0;k++) oldimage0[coli][h][i][j][k]=oldimage0[coli][h][i][j][0];
-	      for(k=oN3;k<oN3+numbclocal[3];k++) oldimage0[coli][h][i][j][k]=oldimage0[coli][h][i][j][oN3-1];
-	    }
-	  }
-	}
+        for(j=0;j<oN2;j++){
+          for(i=0;i<oN1;i++){
+            if(doubleworklocal){
+              for(k=-numbclocal[3];k<0;k++) olddatalocal[coli][h][i][j][k]=olddatalocal[coli][h][i][j][0];
+              for(k=oN3;k<oN3+numbclocal[3];k++) olddatalocal[coli][h][i][j][k]=olddatalocal[coli][h][i][j][oN3-1];
+            }
+            else{
+              for(k=-numbclocal[3];k<0;k++) oldimage0[coli][h][i][j][k]=oldimage0[coli][h][i][j][0];
+              for(k=oN3;k<oN3+numbclocal[3];k++) oldimage0[coli][h][i][j][k]=oldimage0[coli][h][i][j][oN3-1];
+            }
+          }
+        }
       }
     }// end if BOUNDARYEXTRAP=1
       
@@ -858,18 +858,18 @@ void apply_boundaryconditions_olddata(int numcols, int oN0local, int numbc0local
     if(PERIODICINPHI && oN3>1 && oldgridtype==GRIDTYPESPC){
       // then fill boundary cells for good interpolation rather than ad hoc extrapolation that leaves feature at \phi=0=2\pi boundary
       for(h=0;h<oN0local;h++){
-	for(j=0;j<oN2;j++){
-	  for(i=0;i<oN1;i++){
-	    if(doubleworklocal){
-	      for(k=-numbclocal[3];k<0;k++) olddatalocal[coli][h][i][j][k]=olddatalocal[coli][h][i][j][k+oN3];
-	      for(k=oN3;k<oN3+numbclocal[3];k++) olddatalocal[coli][h][i][j][k]=olddatalocal[coli][h][i][j][k-oN3];
-	    }
-	    else{
-	      for(k=-numbclocal[3];k<0;k++) oldimage0[coli][h][i][j][k]=oldimage0[coli][h][i][j][k+oN3];
-	      for(k=oN3;k<oN3+numbclocal[3];k++) oldimage0[coli][h][i][j][k]=oldimage0[coli][h][i][j][k-oN3];
-	    }
-	  }
-	}
+        for(j=0;j<oN2;j++){
+          for(i=0;i<oN1;i++){
+            if(doubleworklocal){
+              for(k=-numbclocal[3];k<0;k++) olddatalocal[coli][h][i][j][k]=olddatalocal[coli][h][i][j][k+oN3];
+              for(k=oN3;k<oN3+numbclocal[3];k++) olddatalocal[coli][h][i][j][k]=olddatalocal[coli][h][i][j][k-oN3];
+            }
+            else{
+              for(k=-numbclocal[3];k<0;k++) oldimage0[coli][h][i][j][k]=oldimage0[coli][h][i][j][k+oN3];
+              for(k=oN3;k<oN3+numbclocal[3];k++) oldimage0[coli][h][i][j][k]=oldimage0[coli][h][i][j][k-oN3];
+            }
+          }
+        }
       }
     }// end if periodic
 
@@ -926,33 +926,33 @@ void apply_boundaryconditions_olddata_cleanpole(int numcols, int oN0local, int n
     if(oldgridtype==GRIDTYPESPC){ // only method right now applies if original PRIMECOORD grid is spherical polar grid.
       // over all h and i
       for(h=0;h<oN0local;h++){
-	for(i=0;i<oN1;i++){
+        for(i=0;i<oN1;i++){
 
-	  if(doubleworklocal){
-	    // form average
-	    // no need to include boundary cells and do extra work since just copies of active cells
-	    ftemp[0]=ftemp[1]=0.0;
-	    count[0]=count[1]=0;
-	    for(k=0;k<oN3;k++) for(j=0;j<SMOOTHSIZE;j++){ ftemp[0]+=olddatalocal[coli][h][i][j][k]; count[0]++; }
-	    for(k=0;k<oN3;k++) for(j=oN2-SMOOTHSIZE;j<oN2;j++){ ftemp[1]+=olddatalocal[coli][h][i][j][k]; count[1]++; }
-	    // assign average to all members, including boundary cells!
-	    if(count[0]!=0) for(k=-numbclocal[3];k<oN3+numbclocal[3];k++) for(j=-MIN(numbclocal[2],SMOOTHSIZE);j<SMOOTHSIZE;j++) olddatalocal[coli][h][i][j][k]=ftemp[0]/((FTYPE)count[0]);
-	    if(count[1]!=0) for(k=-numbclocal[3];k<oN3+numbclocal[3];k++) for(j=oN2-SMOOTHSIZE;j<oN2+MIN(numbclocal[2],SMOOTHSIZE);j++) olddatalocal[coli][h][i][j][k]=ftemp[1]/((FTYPE)count[1]);
-	  } // end if doubleworklocal==1
-	  else{
-	    // no need to include boundary cells and do extra work since just copies of active cells
-	    // form average
-	    ftemp[0]=ftemp[1]=0.0;
-	    count[0]=count[1]=0;
-	    for(k=0;k<oN3;k++) for(j=0;j<SMOOTHSIZE;j++){ ftemp[0]+=oldimage0[coli][h][i][j][k]; count[0]++; }
-	    for(k=0;k<oN3;k++) for(j=oN2-SMOOTHSIZE;j<oN2;j++){ ftemp[1]+=oldimage0[coli][h][i][j][k]; count[1]++; }
-	    // assign average to all members, including boundary cells!
-	    if(count[0]!=0) for(k=-numbclocal[3];k<oN3+numbclocal[3];k++) for(j=-MIN(numbclocal[2],SMOOTHSIZE);j<SMOOTHSIZE;j++) oldimage0[coli][h][i][j][k]=ftemp[0]/((FTYPE)count[0]);
-	    if(count[1]!=0) for(k=-numbclocal[3];k<oN3+numbclocal[3];k++) for(j=oN2-SMOOTHSIZE;j<oN2+MIN(numbclocal[2],SMOOTHSIZE);j++) oldimage0[coli][h][i][j][k]=ftemp[1]/((FTYPE)count[1]);
-	  } // end if doubleworklocal==1
-	  
+          if(doubleworklocal){
+            // form average
+            // no need to include boundary cells and do extra work since just copies of active cells
+            ftemp[0]=ftemp[1]=0.0;
+            count[0]=count[1]=0;
+            for(k=0;k<oN3;k++) for(j=0;j<SMOOTHSIZE;j++){ ftemp[0]+=olddatalocal[coli][h][i][j][k]; count[0]++; }
+            for(k=0;k<oN3;k++) for(j=oN2-SMOOTHSIZE;j<oN2;j++){ ftemp[1]+=olddatalocal[coli][h][i][j][k]; count[1]++; }
+            // assign average to all members, including boundary cells!
+            if(count[0]!=0) for(k=-numbclocal[3];k<oN3+numbclocal[3];k++) for(j=-MIN(numbclocal[2],SMOOTHSIZE);j<SMOOTHSIZE;j++) olddatalocal[coli][h][i][j][k]=ftemp[0]/((FTYPE)count[0]);
+            if(count[1]!=0) for(k=-numbclocal[3];k<oN3+numbclocal[3];k++) for(j=oN2-SMOOTHSIZE;j<oN2+MIN(numbclocal[2],SMOOTHSIZE);j++) olddatalocal[coli][h][i][j][k]=ftemp[1]/((FTYPE)count[1]);
+          } // end if doubleworklocal==1
+          else{
+            // no need to include boundary cells and do extra work since just copies of active cells
+            // form average
+            ftemp[0]=ftemp[1]=0.0;
+            count[0]=count[1]=0;
+            for(k=0;k<oN3;k++) for(j=0;j<SMOOTHSIZE;j++){ ftemp[0]+=oldimage0[coli][h][i][j][k]; count[0]++; }
+            for(k=0;k<oN3;k++) for(j=oN2-SMOOTHSIZE;j<oN2;j++){ ftemp[1]+=oldimage0[coli][h][i][j][k]; count[1]++; }
+            // assign average to all members, including boundary cells!
+            if(count[0]!=0) for(k=-numbclocal[3];k<oN3+numbclocal[3];k++) for(j=-MIN(numbclocal[2],SMOOTHSIZE);j<SMOOTHSIZE;j++) oldimage0[coli][h][i][j][k]=ftemp[0]/((FTYPE)count[0]);
+            if(count[1]!=0) for(k=-numbclocal[3];k<oN3+numbclocal[3];k++) for(j=oN2-SMOOTHSIZE;j<oN2+MIN(numbclocal[2],SMOOTHSIZE);j++) oldimage0[coli][h][i][j][k]=ftemp[1]/((FTYPE)count[1]);
+          } // end if doubleworklocal==1
+          
 
-	}// over i
+        }// over i
       } // over h
     }
   }// end over coli
@@ -1058,7 +1058,7 @@ static void input_header(void)
     nstep=realnstep;
     if(oldparse){ // only a problem at this point if oldparse==1 and READHEADER==1 since old parse line needs to have correct oN?
       if((totalsize[1]!=oN1)||(totalsize[2]!=oN2)||(totalsize[3]!=oN3)){
-	fprintf(stderr,"expected %d x %d x %d and got %d x %d x %d resolution -- ok if totalsize sets grid and oN? sets data size in file itself\n",oN1,oN2,oN3,totalsize[1],totalsize[2],totalsize[3]);
+        fprintf(stderr,"expected %d x %d x %d and got %d x %d x %d resolution -- ok if totalsize sets grid and oN? sets data size in file itself\n",oN1,oN2,oN3,totalsize[1],totalsize[2],totalsize[3]);
       }
     }
     while(fgetc(infile)!='\n'); // go past end of line (so can add stuff to end of header, but won't be funneled to new interpolated file)
@@ -1178,10 +1178,10 @@ void output2file_perpoint_postinterpolation(int which, int h, int i, int j, int 
     if(which==1){
       // assign (interpolated) old value to new grid position
       if(DATATYPE==0){
-	for(coli=0;coli<numoutputcols;coli++) newimage[coli][h][i][j][k] = FLOAT2IMAGE(newdatalocal[coli]);
+        for(coli=0;coli<numoutputcols;coli++) newimage[coli][h][i][j][k] = FLOAT2IMAGE(newdatalocal[coli]);
       }
       else{
-	for(coli=0;coli<numoutputcols;coli++)  newdata[coli][h][i][j][k] = (FTYPE)(newdatalocal[coli]) ;
+        for(coli=0;coli<numoutputcols;coli++)  newdata[coli][h][i][j][k] = (FTYPE)(newdatalocal[coli]) ;
       }
     }
     else{
@@ -1207,7 +1207,7 @@ void output2file_perpointcoli_postinterpolation(unsigned char newimagelocal, FTY
   else{
     if(imagedata==0){
       ftemp=newdatalocal;
-      //	if(ftemp<0.0) ftemp=0.0;
+      //        if(ftemp<0.0) ftemp=0.0;
       //if(ftemp>255.0) ftemp=255.0;
       //uctemp=(unsigned char)ftemp;
       uctemp = FLOAT2IMAGE(ftemp);
@@ -1237,10 +1237,10 @@ void writeimage(char * name, unsigned char *****image, int nt, int nx, int ny, i
   for(h=0;h<nt;h++){
     for(k=0;k<nz;k++){
       for(j=0;j<ny;j++){
-	for(i=0;i<nx;i++){
-	  fwrite(&image[coli][h][i][j][k], sizeof(unsigned char), 1, out) ;
-	  //      fprintf(out, "%c",(unsigned char)((int)image[coli][h][i][j][k]));
-	}
+        for(i=0;i<nx;i++){
+          fwrite(&image[coli][h][i][j][k], sizeof(unsigned char), 1, out) ;
+          //      fprintf(out, "%c",(unsigned char)((int)image[coli][h][i][j][k]));
+        }
       }
     }
   }
@@ -1311,16 +1311,16 @@ void old_usage(int argc, int basicargcnum)
   fprintf(stderr,"args (argc=%d should be %d+ (%d+ user args)): DATATYPE,INTERPTYPE, READHEADER,WRITEHEADER, oN0,oN1,oN2,oN3, refinefactor,filter,sigma, oldgridtype,newgridtype, nN0,nN1,nN2,nN3, starttc,endtc,startxc,endxc,startyc,endyc,startzc,endzc, Rin,Rout,R0,hslope,defcoord,dofull2pi, <starttdata,endtdata>,  tnrdegrees, <extrapolate,defaultvaluetype,gdumpfilepathname>\n",argc,basicargcnum,basicargcnum-1);
 
   fprintf(stderr,"DATATYPE:\n"
-	  "0=image (input&output: byte binary only, 1 column only)\n"
-	  "1=data (input&output: text only, 1=scalar 1 column)\n"
-	  "2,3,4,5=correspond to output of orthonormal vectors v^0,v^1,v^2,v^3 (inputting all 4 columns of data u^0 u^1 u^2 u^3)\n"
-	  "6,7,8,9=correspond to output of orthonormal vectors v^0,v^1,v^2,v^3 (inputting all 4 columns of data u_0 u_1 u_2 u_3)\n"
-	  "11=corresponds to output of \\detg T^x1_t[EM]/sin(\\theta) (inputting all 7 columns of data: u^t v^1 v^2 v^3 B^1 B^2 B^3)\n"
-	  "12=output lower component (inputting all 4 columns of data: u^i)\n"
-	  "13=fulldiag\n"
-	  "100+x=corresponds to inputting x-number of 4-vectors and outputting all 4-vectors in orthonormal basis without any interpolation\n"
-	  "1000+x=input fieldline file and generate certain outputs for each x=0,1,2,...\n"
-	  );
+          "0=image (input&output: byte binary only, 1 column only)\n"
+          "1=data (input&output: text only, 1=scalar 1 column)\n"
+          "2,3,4,5=correspond to output of orthonormal vectors v^0,v^1,v^2,v^3 (inputting all 4 columns of data u^0 u^1 u^2 u^3)\n"
+          "6,7,8,9=correspond to output of orthonormal vectors v^0,v^1,v^2,v^3 (inputting all 4 columns of data u_0 u_1 u_2 u_3)\n"
+          "11=corresponds to output of \\detg T^x1_t[EM]/sin(\\theta) (inputting all 7 columns of data: u^t v^1 v^2 v^3 B^1 B^2 B^3)\n"
+          "12=output lower component (inputting all 4 columns of data: u^i)\n"
+          "13=fulldiag\n"
+          "100+x=corresponds to inputting x-number of 4-vectors and outputting all 4-vectors in orthonormal basis without any interpolation\n"
+          "1000+x=input fieldline file and generate certain outputs for each x=0,1,2,...\n"
+          );
   fprintf(stderr,"INTERPTYPE: 0=nearest 1=bi-linear 2=planar 3=bicubic\n");
   fprintf(stderr,"READHEADER: 0=false 1=true\n");
   fprintf(stderr,"WRITEHEADER: 0=false 1=true\n");
@@ -1377,13 +1377,13 @@ void old_usage(int argc, int basicargcnum)
 
   fprintf(stderr,"\nin SM: (see blandford.m and zakamska.m)\n");
   fprintf(stderr,"$program $DATATYPE $interptype $READHEADERDATA $WRITEHEADERDATA \\ "
-	  "1 $nx $ny $nz $refinement 0 0  $oldgrid $igrid \\ \n"
-	  "1 $iinx $iiny $iinz 0 0 $iixmin $iixmax $iiymin $iiymax $iizmin $iizmax \\ \n"
-	  "$iRin $iRout $iR0 $ihslope $idefcoord $dofull2pi $EXTRAPOLATE $DEFAULTVALUETYPE < $1 > $2 \n");
+          "1 $nx $ny $nz $refinement 0 0  $oldgrid $igrid \\ \n"
+          "1 $iinx $iiny $iinz 0 0 $iixmin $iixmax $iiymin $iiymax $iizmin $iizmax \\ \n"
+          "$iRin $iRout $iR0 $ihslope $idefcoord $dofull2pi $EXTRAPOLATE $DEFAULTVALUETYPE < $1 > $2 \n");
   fprintf(stderr,"$program $1 $interptype $READHEADERDATA $WRITEHEADERDATA \\ \n"
-	  "1 $nx $ny $nz $refinement 0 0  $oldgrid $igrid \\ \n"
-	  "1 $iinx $iiny $iinz 0 0 $iixmin $iixmax $iiymin $iiymax $iizmin $iizmax \\ \n"
-	  "$iRin $iRout $iR0 $ihslope $idefcoord $dofull2pi $EXTRAPOLATE $DEFAULTVALUETYPE dumps/gdump < $2 > $3 \n");
+          "1 $nx $ny $nz $refinement 0 0  $oldgrid $igrid \\ \n"
+          "1 $iinx $iiny $iinz 0 0 $iixmin $iixmax $iiymin $iiymax $iizmin $iizmax \\ \n"
+          "$iRin $iRout $iR0 $ihslope $idefcoord $dofull2pi $EXTRAPOLATE $DEFAULTVALUETYPE dumps/gdump < $2 > $3 \n");
   
   exit(0) ;
 
@@ -1439,9 +1439,9 @@ void parse_commandline(int argc, char *argv[])
     }
     if(argc>1){
       for(i=1;i<argc;i++){
-	if(strcmp(argv[i],"-usage")==0){ // usage check must come first so only 1 arg of -usage or even argc==1 will allow for usage print-out
-	  usage=1;
-	}
+        if(strcmp(argv[i],"-usage")==0){ // usage check must come first so only 1 arg of -usage or even argc==1 will allow for usage print-out
+          usage=1;
+        }
       }
     }
 
@@ -1471,7 +1471,7 @@ void parse_commandline(int argc, char *argv[])
 
       // checking for -usage to trigger goodarg==1
       if(argc>1 && strcmp(argv[i],"-usage")==0){
-	goodarg++;
+        goodarg++;
       }
 
       
@@ -1496,631 +1496,631 @@ void parse_commandline(int argc, char *argv[])
       //
       /////////////////
       if(usage || strcmp(argv[i],"-version")==0 || strcmp(argv[i],"-ver")==0 || strcmp(argv[i],"--version")==0 || strcmp(argv[i],"--ver")==0 || strcmp(argv[i],"-v")==0 || strcmp(argv[i],"--v")==0 ){
-	if(usage==0){
-	  goodarg++;
-	  fprintf(stderr,"iinterp %s\n\n"
-		 "Jon's interpolation code for HARM post-processing.\n",
-		 VERSION);
-	  fprintf(stderr,"         Home page: http://harm.unfuddle.com/projects/3 \n"
-		 "Copyright (C) 2002-2010 Jonathan McKinney, et al.  This program is free\n"
-		 "software; you can redistribute it and/or modify it under the terms of\n"
-		 "the GNU General Public License, with some exceptions.\n\n"
-		 "This program is distributed in the hope that it will be useful,\n"
-		 "but WITHOUT ANY WARRANTY; without even the implied warranty of\n"
-		 "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n"
-		 "For more details, see the file license.txt in code tree.\n");
-	  exit(0);
-	}
-	else{
-	  fprintf(stderr,"-version -ver --version --ver -v --v : Gives Version Information\n");
-	}
+        if(usage==0){
+          goodarg++;
+          fprintf(stderr,"iinterp %s\n\n"
+                  "Jon's interpolation code for HARM post-processing.\n",
+                  VERSION);
+          fprintf(stderr,"         Home page: http://harm.unfuddle.com/projects/3 \n"
+                  "Copyright (C) 2002-2010 Jonathan McKinney, et al.  This program is free\n"
+                  "software; you can redistribute it and/or modify it under the terms of\n"
+                  "the GNU General Public License, with some exceptions.\n\n"
+                  "This program is distributed in the hope that it will be useful,\n"
+                  "but WITHOUT ANY WARRANTY; without even the implied warranty of\n"
+                  "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n"
+                  "For more details, see the file license.txt in code tree.\n");
+          exit(0);
+        }
+        else{
+          fprintf(stderr,"-version -ver --version --ver -v --v : Gives Version Information\n");
+        }
       }  
       if(usage || strcmp(argv[i],"-examples")==0) {
-	if(usage==0){
-	  goodarg++;
-	  print_out_example_usage();
-	  exit(0);
-	}
-	else{
-	  fprintf(stderr,"-examples : Gives Example Usage Forms/Points\n");
-	}
+        if(usage==0){
+          goodarg++;
+          print_out_example_usage();
+          exit(0);
+        }
+        else{
+          fprintf(stderr,"-examples : Gives Example Usage Forms/Points\n");
+        }
       }  
       if(usage || strcmp(argv[i],"-compile")==0) {
-	if(usage==0){
-	  goodarg++;
-	  fprintf(stderr,"To compile as part of HARM package, do: \n\n"
-		 "make superclean ; make prepiinterp ; make iinterp \n");
-	  exit(0);
-	}
-	else{
-	  fprintf(stderr,"-compile : Gives Compilation Information\n");
-	}
+        if(usage==0){
+          goodarg++;
+          fprintf(stderr,"To compile as part of HARM package, do: \n\n"
+                  "make superclean ; make prepiinterp ; make iinterp \n");
+          exit(0);
+        }
+        else{
+          fprintf(stderr,"-compile : Gives Compilation Information\n");
+        }
       }  
       if (usage || strcmp(argv[i],"-binaryinput")==0) {
-	if(usage==0){
-	  goodarg++;
-	  if(i+1<argc) sscanf(argv[++i],"%d",&binaryinput) ;
-	  setbinaryinput=1;
-	  // set defaults
-	  if(setbinaryoutput==0){
-	    // default is in and out the same
-	    setbinaryoutput=1;
-	    binaryoutput=binaryinput;
-	  }
-	}
-	else{
-	  fprintf(stderr,"-binaryinput <binaryinput>\n");
-	  fprintf(stderr,"\t<binaryinput>: 0=text 1=binary (assumed little Endian or at least same Endian)\n");
-	}
+        if(usage==0){
+          goodarg++;
+          if(i+1<argc) sscanf(argv[++i],"%d",&binaryinput) ;
+          setbinaryinput=1;
+          // set defaults
+          if(setbinaryoutput==0){
+            // default is in and out the same
+            setbinaryoutput=1;
+            binaryoutput=binaryinput;
+          }
+        }
+        else{
+          fprintf(stderr,"-binaryinput <binaryinput>\n");
+          fprintf(stderr,"\t<binaryinput>: 0=text 1=binary (assumed little Endian or at least same Endian)\n");
+        }
       }
       if (usage || strcmp(argv[i],"-binaryoutput")==0) {
-	if(usage==0){
-	  goodarg++;
-	  if(i+1<argc) sscanf(argv[++i],"%d",&binaryoutput) ;
-	  setbinaryoutput=1;
-	  // set defaults
-	  if(setbinaryinput==0){
-	    // default is in and out the same
-	    setbinaryinput=1;
-	    binaryinput=binaryoutput;
-	  }
-	}
-	else{
-	  fprintf(stderr,"-binaryoutput <binaryoutput>\n");
-	  fprintf(stderr,"\t<binaryoutput>: 0=text 1=binary\n");
-	}
+        if(usage==0){
+          goodarg++;
+          if(i+1<argc) sscanf(argv[++i],"%d",&binaryoutput) ;
+          setbinaryoutput=1;
+          // set defaults
+          if(setbinaryinput==0){
+            // default is in and out the same
+            setbinaryinput=1;
+            binaryinput=binaryoutput;
+          }
+        }
+        else{
+          fprintf(stderr,"-binaryoutput <binaryoutput>\n");
+          fprintf(stderr,"\t<binaryoutput>: 0=text 1=binary\n");
+        }
       }
       if (usage || strcmp(argv[i],"-infile")==0) {
-	if(usage==0){
-	  goodarg++;
-	  if(i+1<argc){
-	    if(binaryinput) infile=fopen(argv[++i],"rb"); // b for binary not relevant for unix
-	    else infile=fopen(argv[++i],"rt");
-	    if(infile==NULL){
-	      perror("fopen");
-	      fprintf(stderr,"Can't open infile\n");
-	      myexit(1);
-	    }
-	    //while(fgetc(infile)!='\n');
-	  }
-	  setinfile=1;
-	  // set defaults
-	  if(setoutfile==0){
-	    setoutfile=1;
-	    outfile=stdout;
-	  }
-	}
-	else{
-	  fprintf(stderr,"-infile <inputfilename>\n");
-	  fprintf(stderr,"\t<inputfilename>: Name of input file (used instead of stdin)\n");
-	}
+        if(usage==0){
+          goodarg++;
+          if(i+1<argc){
+            if(binaryinput) infile=fopen(argv[++i],"rb"); // b for binary not relevant for unix
+            else infile=fopen(argv[++i],"rt");
+            if(infile==NULL){
+              perror("fopen");
+              fprintf(stderr,"Can't open infile\n");
+              myexit(1);
+            }
+            //while(fgetc(infile)!='\n');
+          }
+          setinfile=1;
+          // set defaults
+          if(setoutfile==0){
+            setoutfile=1;
+            outfile=stdout;
+          }
+        }
+        else{
+          fprintf(stderr,"-infile <inputfilename>\n");
+          fprintf(stderr,"\t<inputfilename>: Name of input file (used instead of stdin)\n");
+        }
       }
       if (usage || strcmp(argv[i],"-infilem1")==0) {
-	if(usage==0){
-	  goodarg++;
-	  if(i+1<argc){
-	    if(binaryinput) infilem1=fopen(argv[++i],"rb"); // b for binary not relevant for unix
-	    else infilem1=fopen(argv[++i],"rt");
-	    if(infilem1==NULL){
-	      perror("fopen");
-	      fprintf(stderr,"Can't open infilem1: %s\n",argv[i]);
-	      myexit(1);
-	    }
-	    while(fgetc(infilem1)!='\n'); // not going to use header, so start-out at right position
-	  }
-	  setinfilem1=1;
-	}
-	else{
-	  fprintf(stderr,"-infilem1 <inputfilenamem1>\n");
-	  fprintf(stderr,"\t<inputfilenamem1>: Name of input file for m1 of 3-time DATATYPE==14 case\n");
-	}
+        if(usage==0){
+          goodarg++;
+          if(i+1<argc){
+            if(binaryinput) infilem1=fopen(argv[++i],"rb"); // b for binary not relevant for unix
+            else infilem1=fopen(argv[++i],"rt");
+            if(infilem1==NULL){
+              perror("fopen");
+              fprintf(stderr,"Can't open infilem1: %s\n",argv[i]);
+              myexit(1);
+            }
+            while(fgetc(infilem1)!='\n'); // not going to use header, so start-out at right position
+          }
+          setinfilem1=1;
+        }
+        else{
+          fprintf(stderr,"-infilem1 <inputfilenamem1>\n");
+          fprintf(stderr,"\t<inputfilenamem1>: Name of input file for m1 of 3-time DATATYPE==14 case\n");
+        }
       }
       if (usage || strcmp(argv[i],"-infilep1")==0) {
-	if(usage==0){
-	  goodarg++;
-	  if(i+1<argc){
-	    if(binaryinput) infilep1=fopen(argv[++i],"rb"); // b for binary not relevant for unix
-	    else infilep1=fopen(argv[++i],"rt");
-	    if(infilep1==NULL){
-	      perror("fopen");
-	      fprintf(stderr,"Can't open infilep1: %s\n",argv[i]);
-	      myexit(1);
-	    }
-	    while(fgetc(infilep1)!='\n'); // not going to use header, so start-out at right position
-	  }
-	  setinfilep1=1;
-	}
-	else{
-	  fprintf(stderr,"-infilep1 <inputfilenamep1>\n");
-	  fprintf(stderr,"\t<inputfilenamep1>: Name of input file for p1 of 3-time DATATYPE==14 case\n");
-	}
+        if(usage==0){
+          goodarg++;
+          if(i+1<argc){
+            if(binaryinput) infilep1=fopen(argv[++i],"rb"); // b for binary not relevant for unix
+            else infilep1=fopen(argv[++i],"rt");
+            if(infilep1==NULL){
+              perror("fopen");
+              fprintf(stderr,"Can't open infilep1: %s\n",argv[i]);
+              myexit(1);
+            }
+            while(fgetc(infilep1)!='\n'); // not going to use header, so start-out at right position
+          }
+          setinfilep1=1;
+        }
+        else{
+          fprintf(stderr,"-infilep1 <inputfilenamep1>\n");
+          fprintf(stderr,"\t<inputfilenamep1>: Name of input file for p1 of 3-time DATATYPE==14 case\n");
+        }
       }
       if (usage || strcmp(argv[i],"-outfile")==0) {
-	if(usage==0){
-	  goodarg++;
-	  if(i+1<argc){
-	    if(binaryinput) outfile=fopen(argv[++i],"wb"); // b for binary not relevant for unix
-	    else outfile=fopen(argv[++i],"wt");
-	  }
-	  setoutfile=1;
-	  // set defaults
-	  if(setoutfile==0){
-	    setinfile=1;
-	    infile=stdin;
-	  }
-	}
-	else{
-	  fprintf(stderr,"-outfile <outputfilename>\n");
-	  fprintf(stderr,"\t<outputfilename>: Name of output file (used instead of stdout)\n");
-	}
+        if(usage==0){
+          goodarg++;
+          if(i+1<argc){
+            if(binaryinput) outfile=fopen(argv[++i],"wb"); // b for binary not relevant for unix
+            else outfile=fopen(argv[++i],"wt");
+          }
+          setoutfile=1;
+          // set defaults
+          if(setoutfile==0){
+            setinfile=1;
+            infile=stdin;
+          }
+        }
+        else{
+          fprintf(stderr,"-outfile <outputfilename>\n");
+          fprintf(stderr,"\t<outputfilename>: Name of output file (used instead of stdout)\n");
+        }
       }
       if (usage || strcmp(argv[i],"-inFTYPE")==0) {
-	if(usage==0){
-	  goodarg++;
-	  if(i+1<argc){
-	    i++;
-	    if(strcmp(argv[i],"byte")==0){
-	      strcpy(inFTYPE,"b"); setinFTYPE=1;
-	    }
-	    else if(strcmp(argv[i],"int")==0){
-	      strcpy(inFTYPE,"i"); setinFTYPE=1;
-	    }
-	    else if(strcmp(argv[i],"longint")==0){
-	      strcpy(inFTYPE,"li"); setinFTYPE=1;
-	    }
-	    else if(strcmp(argv[i],"longlongint")==0){
-	      strcpy(inFTYPE,"lli"); setinFTYPE=1;
-	    }
-	    else if(strcmp(argv[i],"float")==0){
-	      strcpy(inFTYPE,"f"); setinFTYPE=1;
-	    }
-	    else if(strcmp(argv[i],"double")==0){
-	      strcpy(inFTYPE,"d"); setinFTYPE=1;
-	    }
-	    else if(strcmp(argv[i],"longdouble")==0){
-	      strcpy(inFTYPE,"ld"); setinFTYPE=1;
-	    }
-	    else{
-	      fprintf(stderr,"Unknown inFTYPE\n");
-	      exit(1);
-	    }
+        if(usage==0){
+          goodarg++;
+          if(i+1<argc){
+            i++;
+            if(strcmp(argv[i],"byte")==0){
+              strcpy(inFTYPE,"b"); setinFTYPE=1;
+            }
+            else if(strcmp(argv[i],"int")==0){
+              strcpy(inFTYPE,"i"); setinFTYPE=1;
+            }
+            else if(strcmp(argv[i],"longint")==0){
+              strcpy(inFTYPE,"li"); setinFTYPE=1;
+            }
+            else if(strcmp(argv[i],"longlongint")==0){
+              strcpy(inFTYPE,"lli"); setinFTYPE=1;
+            }
+            else if(strcmp(argv[i],"float")==0){
+              strcpy(inFTYPE,"f"); setinFTYPE=1;
+            }
+            else if(strcmp(argv[i],"double")==0){
+              strcpy(inFTYPE,"d"); setinFTYPE=1;
+            }
+            else if(strcmp(argv[i],"longdouble")==0){
+              strcpy(inFTYPE,"ld"); setinFTYPE=1;
+            }
+            else{
+              fprintf(stderr,"Unknown inFTYPE\n");
+              exit(1);
+            }
 
-	    // default is for in and out types to be the same
-	    if(setinFTYPE==1 && setoutFTYPE==0){
-	      setoutFTYPE=1;
-	      strcpy(outFTYPE,inFTYPE);
-	    }
+            // default is for in and out types to be the same
+            if(setinFTYPE==1 && setoutFTYPE==0){
+              setoutFTYPE=1;
+              strcpy(outFTYPE,inFTYPE);
+            }
 
-	  }
-	}
-	else{
-	  fprintf(stderr,"-inFTYPE <inFTYPEstring>\n");
-	  fprintf(stderr,"\t<inFTYPEstring>: byte, int, longint, longlongint, float, double, longdouble\n");
-	}
+          }
+        }
+        else{
+          fprintf(stderr,"-inFTYPE <inFTYPEstring>\n");
+          fprintf(stderr,"\t<inFTYPEstring>: byte, int, longint, longlongint, float, double, longdouble\n");
+        }
       }
       if (usage || strcmp(argv[i],"-outFTYPE")==0) {
-	if(usage==0){
-	  goodarg++;
-	  if(i+1<argc){
-	    i++;
-	    if(strcmp(argv[i],"byte")==0){
-	      strcpy(outFTYPE,"b"); setoutFTYPE=1;
-	    }
-	    else if(strcmp(argv[i],"int")==0){
-	      strcpy(outFTYPE,"i"); setoutFTYPE=1;
-	    }
-	    else if(strcmp(argv[i],"longint")==0){
-	      strcpy(outFTYPE,"li"); setoutFTYPE=1;
-	    }
-	    else if(strcmp(argv[i],"longlongint")==0){
-	      strcpy(outFTYPE,"lli"); setoutFTYPE=1;
-	    }
-	    else if(strcmp(argv[i],"float")==0){
-	      strcpy(outFTYPE,"f"); setoutFTYPE=1;
-	    }
-	    else if(strcmp(argv[i],"double")==0){
-	      strcpy(outFTYPE,"d"); setoutFTYPE=1;
-	    }
-	    else if(strcmp(argv[i],"longdouble")==0){
-	      strcpy(outFTYPE,"ld"); setoutFTYPE=1;
-	    }
-	    else{
-	      fprintf(stderr,"Unknown outFTYPE\n");
-	      exit(1);
-	    }
+        if(usage==0){
+          goodarg++;
+          if(i+1<argc){
+            i++;
+            if(strcmp(argv[i],"byte")==0){
+              strcpy(outFTYPE,"b"); setoutFTYPE=1;
+            }
+            else if(strcmp(argv[i],"int")==0){
+              strcpy(outFTYPE,"i"); setoutFTYPE=1;
+            }
+            else if(strcmp(argv[i],"longint")==0){
+              strcpy(outFTYPE,"li"); setoutFTYPE=1;
+            }
+            else if(strcmp(argv[i],"longlongint")==0){
+              strcpy(outFTYPE,"lli"); setoutFTYPE=1;
+            }
+            else if(strcmp(argv[i],"float")==0){
+              strcpy(outFTYPE,"f"); setoutFTYPE=1;
+            }
+            else if(strcmp(argv[i],"double")==0){
+              strcpy(outFTYPE,"d"); setoutFTYPE=1;
+            }
+            else if(strcmp(argv[i],"longdouble")==0){
+              strcpy(outFTYPE,"ld"); setoutFTYPE=1;
+            }
+            else{
+              fprintf(stderr,"Unknown outFTYPE\n");
+              exit(1);
+            }
 
-	    // default is for in and out types to be the same
-	    if(setoutFTYPE==1 && setinFTYPE==0){
-	      setinFTYPE=1;
-	      strcpy(inFTYPE,outFTYPE);
-	    }
+            // default is for in and out types to be the same
+            if(setoutFTYPE==1 && setinFTYPE==0){
+              setinFTYPE=1;
+              strcpy(inFTYPE,outFTYPE);
+            }
 
-	  }
-	}
-	else{
-	  fprintf(stderr,"-outFTYPE <outFTYPEstring>\n");
-	  fprintf(stderr,"\t<outFTYPEstring>: byte, int, longint, longlongint, float, double, longdouble\n");
-	}
+          }
+        }
+        else{
+          fprintf(stderr,"-outFTYPE <outFTYPEstring>\n");
+          fprintf(stderr,"\t<outFTYPEstring>: byte, int, longint, longlongint, float, double, longdouble\n");
+        }
       }
       if (usage || strcmp(argv[i],"-dtype")==0) {
-	if(usage==0){
-	  goodarg++;
-	  if(i+1<argc) sscanf(argv[++i],"%d",&DATATYPE) ; // 0,1, etc.
-	  // set specific defaults, but don't override user choice if already set
-	  if(setbinaryinput==0){
-	    setbinaryinput=setbinaryoutput=1;
-	    if(DATATYPE==0){
-	      binaryinput=binaryoutput=1;
-	      if(setreadheader==0){ setreadheader=1; READHEADER=0; }
-	      if(setwriteheader==0){ setwriteheader=1; WRITEHEADER=0; }
-	    }
-	    else{
-	      binaryinput=binaryoutput=0;
-	      if(setreadheader==0){ setreadheader=1; READHEADER=1; }
-	      if(setwriteheader==0){ setwriteheader=1; WRITEHEADER=1; }
-	    }
-	  }
-	}
-	else{
-	  fprintf(stderr,"-dtype <DATATYPE>\n");
-	  fprintf(stderr,"\t<DATATYPE> as one of:\n"
-	  "\t0=image (input&output: byte binary default, 1 column only)\n"
-	  "\t1=data (input&output: text default, 1=scalar 1 column)\n"
-	  "\t2,3,4,5=correspond to output of orthonormal vectors v^0,v^1,v^2,v^3 (inputting all 4 columns of data u^0 u^1 u^2 u^3)\n"
-	  "\t6,7,8,9=correspond to output of orthonormal vectors v^0,v^1,v^2,v^3 (inputting all 4 columns of data u_0 u_1 u_2 u_3)\n"
-	  "\t11=corresponds to output of \\detg T^x1_t[EM]/sin(\\theta) (inputting all 7 columns of data: u^t v^1 v^2 v^3 B^1 B^2 B^3)\n"
-	  "\t12=output lower component (inputting all 4 columns of data: u^i)\n"
-	  "\t13=Full Diag\n"
-	  "\t14=Input fieldline file and output rho, ug, vortho123, Borth123, FEMradial, Bphi all in 1 file and interpolate all at once using more memory\n"
-	  "\t15=Input fieldline file and output rho, uu0, bsq all in 1 file and interpolate all at once using more memory\n"
-	  "\t100+x=corresponds to inputting x-number of 4-vectors and outputting all 4-vectors in orthonormal basis without any interpolation\n"
-	  "\t1000+x=Input fieldline file and output rho(x=0) ug(x=1) vortho^{0,1,2,3}(x=2,3,4,5) and Bortho^{0,1,2,3}(x=6,7,8,9) or radial energy flux(x=11) current(x=12)\n"
-	  );
-	}
+        if(usage==0){
+          goodarg++;
+          if(i+1<argc) sscanf(argv[++i],"%d",&DATATYPE) ; // 0,1, etc.
+          // set specific defaults, but don't override user choice if already set
+          if(setbinaryinput==0){
+            setbinaryinput=setbinaryoutput=1;
+            if(DATATYPE==0){
+              binaryinput=binaryoutput=1;
+              if(setreadheader==0){ setreadheader=1; READHEADER=0; }
+              if(setwriteheader==0){ setwriteheader=1; WRITEHEADER=0; }
+            }
+            else{
+              binaryinput=binaryoutput=0;
+              if(setreadheader==0){ setreadheader=1; READHEADER=1; }
+              if(setwriteheader==0){ setwriteheader=1; WRITEHEADER=1; }
+            }
+          }
+        }
+        else{
+          fprintf(stderr,"-dtype <DATATYPE>\n");
+          fprintf(stderr,"\t<DATATYPE> as one of:\n"
+                  "\t0=image (input&output: byte binary default, 1 column only)\n"
+                  "\t1=data (input&output: text default, 1=scalar 1 column)\n"
+                  "\t2,3,4,5=correspond to output of orthonormal vectors v^0,v^1,v^2,v^3 (inputting all 4 columns of data u^0 u^1 u^2 u^3)\n"
+                  "\t6,7,8,9=correspond to output of orthonormal vectors v^0,v^1,v^2,v^3 (inputting all 4 columns of data u_0 u_1 u_2 u_3)\n"
+                  "\t11=corresponds to output of \\detg T^x1_t[EM]/sin(\\theta) (inputting all 7 columns of data: u^t v^1 v^2 v^3 B^1 B^2 B^3)\n"
+                  "\t12=output lower component (inputting all 4 columns of data: u^i)\n"
+                  "\t13=Full Diag\n"
+                  "\t14=Input fieldline file and output rho, ug, vortho123, Borth123, FEMradial, Bphi all in 1 file and interpolate all at once using more memory\n"
+                  "\t15=Input fieldline file and output rho, uu0, bsq all in 1 file and interpolate all at once using more memory\n"
+                  "\t100+x=corresponds to inputting x-number of 4-vectors and outputting all 4-vectors in orthonormal basis without any interpolation\n"
+                  "\t1000+x=Input fieldline file and output rho(x=0) ug(x=1) vortho^{0,1,2,3}(x=2,3,4,5) and Bortho^{0,1,2,3}(x=6,7,8,9) or radial energy flux(x=11) current(x=12)\n"
+                  );
+        }
       }
       if (usage || strcmp(argv[i],"-itype")==0) {
-	if(usage==0){
-	  goodarg++;
-	  if(i+1<argc) sscanf(argv[++i],"%d",&INTERPTYPE) ; // 0,1,2,3
-	}
-	else{
-	  fprintf(stderr,"-itype <INTERPTYPE>\n");
-	  fprintf(stderr,"\t<INTERPTYPE>: 0=nearest 1=bi-linear 2=planar 3=bicubic\n");
-	}
+        if(usage==0){
+          goodarg++;
+          if(i+1<argc) sscanf(argv[++i],"%d",&INTERPTYPE) ; // 0,1,2,3
+        }
+        else{
+          fprintf(stderr,"-itype <INTERPTYPE>\n");
+          fprintf(stderr,"\t<INTERPTYPE>: 0=nearest 1=bi-linear 2=planar 3=bicubic\n");
+        }
       }
       if (usage || strcmp(argv[i],"-head")==0) {
-	if(usage==0){
-	  goodarg++;
-	  if(i+1<argc){ setreadheader=1; sscanf(argv[++i],"%d",&READHEADER); } // 0 or 1
-	  if(i+1<argc){ setwriteheader=1; sscanf(argv[++i],"%d",&WRITEHEADER); } // 0 or 1
-	}
-	else{
-	  fprintf(stderr,"-head <DOREADHEADER> <DOWRITEHEADER>\n");
-	  fprintf(stderr,"\t<DOREADHEADER> or <DOWRITEHEADER>: 0 or 1 for each\n");
-	}
+        if(usage==0){
+          goodarg++;
+          if(i+1<argc){ setreadheader=1; sscanf(argv[++i],"%d",&READHEADER); } // 0 or 1
+          if(i+1<argc){ setwriteheader=1; sscanf(argv[++i],"%d",&WRITEHEADER); } // 0 or 1
+        }
+        else{
+          fprintf(stderr,"-head <DOREADHEADER> <DOWRITEHEADER>\n");
+          fprintf(stderr,"\t<DOREADHEADER> or <DOWRITEHEADER>: 0 or 1 for each\n");
+        }
       }
       if (usage || strcmp(argv[i],"-headtype")==0) {
-	if(usage==0){
-	  goodarg++;
-	  if(i+1<argc){ sscanf(argv[++i],"%d",&OLDERHEADER); } // 0,1,2,...
-	}
-	else{
-	  fprintf(stderr,"-headtype <OLDERHEADER>\n");
-	  fprintf(stderr,"\t<OLDERHEADER>: 2=very old runlocaldipole, 1=thickdisksasha models 0=tilted models\n");
-	  fprintf(stderr,"\tApplies to gdump, dump, fieldline, or any input files with header.\n");
-	}
+        if(usage==0){
+          goodarg++;
+          if(i+1<argc){ sscanf(argv[++i],"%d",&OLDERHEADER); } // 0,1,2,...
+        }
+        else{
+          fprintf(stderr,"-headtype <OLDERHEADER>\n");
+          fprintf(stderr,"\t<OLDERHEADER>: 2=very old runlocaldipole, 1=thickdisksasha models 0=tilted models\n");
+          fprintf(stderr,"\tApplies to gdump, dump, fieldline, or any input files with header.\n");
+        }
       }
       if (usage || strcmp(argv[i],"-oN")==0) {
-	if(usage==0){
-	  goodarg++;
-	  if(i+1<argc) sscanf(argv[++i],"%d",&oN0) ;
-	  if(i+1<argc) sscanf(argv[++i],"%d",&oN1) ;
-	  if(i+1<argc) sscanf(argv[++i],"%d",&oN2) ;
-	  if(i+1<argc) sscanf(argv[++i],"%d",&oN3) ;
-	}
-	else{
-	  fprintf(stderr,"-oN <oN0> <oN1> <oN2> <oN3>\n");
-	  fprintf(stderr,"\t<oN?> : old grid sizes for (e.g.) t,r,\\theta,\\phi \n");
-	}
+        if(usage==0){
+          goodarg++;
+          if(i+1<argc) sscanf(argv[++i],"%d",&oN0) ;
+          if(i+1<argc) sscanf(argv[++i],"%d",&oN1) ;
+          if(i+1<argc) sscanf(argv[++i],"%d",&oN2) ;
+          if(i+1<argc) sscanf(argv[++i],"%d",&oN3) ;
+        }
+        else{
+          fprintf(stderr,"-oN <oN0> <oN1> <oN2> <oN3>\n");
+          fprintf(stderr,"\t<oN?> : old grid sizes for (e.g.) t,r,\\theta,\\phi \n");
+        }
       }
       if (usage || strcmp(argv[i],"-numcolumns")==0) {
-	if(usage==0){
-	  goodarg++;
-	  if(i+1<argc) sscanf(argv[++i],"%d",&numcolumns) ;
-	}
-	else{
-	  fprintf(stderr,"-numcolumns <numcolumns>\n");
-	  fprintf(stderr,"\t<numcolumns> : number of columns in input file.  Required if OLDERHEADER>=2\n");
-	}
+        if(usage==0){
+          goodarg++;
+          if(i+1<argc) sscanf(argv[++i],"%d",&numcolumns) ;
+        }
+        else{
+          fprintf(stderr,"-numcolumns <numcolumns>\n");
+          fprintf(stderr,"\t<numcolumns> : number of columns in input file.  Required if OLDERHEADER>=2\n");
+        }
       }
       if (usage || strcmp(argv[i],"-refine")==0) {
-	if(usage==0){
-	  goodarg++;
-	  if(i+1<argc) sscanf(argv[++i],SCANARG,&refinefactor) ;// 1.0 then no refinement, just normal old image used
-	}
-	else{
-	  fprintf(stderr,"-refine <refinementfactor>\n");
-	  fprintf(stderr,"\t<refinementfactor>=1.0=no refinement, otherwise refines image before interpolation with this factor increase in size: standard is bicubic refinement\n");
-	}
+        if(usage==0){
+          goodarg++;
+          if(i+1<argc) sscanf(argv[++i],SCANARG,&refinefactor) ;// 1.0 then no refinement, just normal old image used
+        }
+        else{
+          fprintf(stderr,"-refine <refinementfactor>\n");
+          fprintf(stderr,"\t<refinementfactor>=1.0=no refinement, otherwise refines image before interpolation with this factor increase in size: standard is bicubic refinement\n");
+        }
       }
       if (usage || strcmp(argv[i],"-filter")==0) {
-	if(usage==0){
-	  goodarg++;
-	  if(i+1<argc) sscanf(argv[++i],"%d",&filter) ;// 0=no filter #=filter given image within surrounding # pixels per pixel with sigma
-	  if(filter!=0 && i+1<argc) sscanf(argv[++i],SCANARG,&sigma) ;// only used if filter!=0, then sigma of gaussian filter, usually ~ filter value
-	}
-	else{
-	  fprintf(stderr,"-filter <filter> <sigma>\n");
-	  fprintf(stderr,"\t<filter>: 0=no filter #=filter image with surrounding # pixels per pixel with sigma width\n");
-	  fprintf(stderr,"\t<sigma>: only used if filter!=0, then sigma of gaussian filter, usually ~ filter value\n");
-	}
+        if(usage==0){
+          goodarg++;
+          if(i+1<argc) sscanf(argv[++i],"%d",&filter) ;// 0=no filter #=filter given image within surrounding # pixels per pixel with sigma
+          if(filter!=0 && i+1<argc) sscanf(argv[++i],SCANARG,&sigma) ;// only used if filter!=0, then sigma of gaussian filter, usually ~ filter value
+        }
+        else{
+          fprintf(stderr,"-filter <filter> <sigma>\n");
+          fprintf(stderr,"\t<filter>: 0=no filter #=filter image with surrounding # pixels per pixel with sigma width\n");
+          fprintf(stderr,"\t<sigma>: only used if filter!=0, then sigma of gaussian filter, usually ~ filter value\n");
+        }
       }
       if (usage || strcmp(argv[i],"-grids")==0) {
-	if(usage==0){
-	  goodarg++;
-	  if(i+1<argc) sscanf(argv[++i],"%d",&oldgridtype) ; // 0, 1, 2, 3, 4, and 5 currently
-	  if(i+1<argc) sscanf(argv[++i],"%d",&newgridtype) ; // -1, and above 0+ versions
-	}
-	else{
-	  fprintf(stderr,"-grids <oldgridtype> <newgridtype>\n");
-	  fprintf(stderr,"\t<oldgridtype>: (V in GRMHD code): 0=Cartesian  1=spherical polar 2=cylindrical 3=log(z) vs. log(R), 4=x'=sin\\theta log(r) z'=cos\\theta log(r) 5=Cartesian w/ light travel time accounting\n");
-	  fprintf(stderr,"\t<newgridtype>: (output coord system): -1=no change (and rest same as above)\n");
-	  fprintf(stderr,"\tNote: Assume if oN3>1 and oldgridtype==1, then periodic in \\phi since otherwise extrapolate values and poor at low resolution.\n");
-	}
+        if(usage==0){
+          goodarg++;
+          if(i+1<argc) sscanf(argv[++i],"%d",&oldgridtype) ; // 0, 1, 2, 3, 4, and 5 currently
+          if(i+1<argc) sscanf(argv[++i],"%d",&newgridtype) ; // -1, and above 0+ versions
+        }
+        else{
+          fprintf(stderr,"-grids <oldgridtype> <newgridtype>\n");
+          fprintf(stderr,"\t<oldgridtype>: (V in GRMHD code): 0=Cartesian  1=spherical polar 2=cylindrical 3=log(z) vs. log(R), 4=x'=sin\\theta log(r) z'=cos\\theta log(r) 5=Cartesian w/ light travel time accounting\n");
+          fprintf(stderr,"\t<newgridtype>: (output coord system): -1=no change (and rest same as above)\n");
+          fprintf(stderr,"\tNote: Assume if oN3>1 and oldgridtype==1, then periodic in \\phi since otherwise extrapolate values and poor at low resolution.\n");
+        }
       }
       if (usage || strcmp(argv[i],"-nN")==0) {
-	if(usage==0){
-	  goodarg++;
-	  if(i+1<argc) sscanf(argv[++i],"%d",&nN0) ;
-	  if(i+1<argc) sscanf(argv[++i],"%d",&nN1) ;
-	  if(i+1<argc) sscanf(argv[++i],"%d",&nN2) ;
-	  if(i+1<argc) sscanf(argv[++i],"%d",&nN3) ;
-	}
-	else{
-	  fprintf(stderr,"-nN <nN0> <nN1> <nN2> <nN3>\n");
-	  fprintf(stderr,"\t<nN?> : new grid sizes for tc,xc,yc,zc (e.g. for Cart as for tprime,xprime,zprime,yprime as potentially rotated by tnrdegrees)  \n");
-	}
+        if(usage==0){
+          goodarg++;
+          if(i+1<argc) sscanf(argv[++i],"%d",&nN0) ;
+          if(i+1<argc) sscanf(argv[++i],"%d",&nN1) ;
+          if(i+1<argc) sscanf(argv[++i],"%d",&nN2) ;
+          if(i+1<argc) sscanf(argv[++i],"%d",&nN3) ;
+        }
+        else{
+          fprintf(stderr,"-nN <nN0> <nN1> <nN2> <nN3>\n");
+          fprintf(stderr,"\t<nN?> : new grid sizes for tc,xc,yc,zc (e.g. for Cart as for tprime,xprime,zprime,yprime as potentially rotated by tnrdegrees)  \n");
+        }
       }
       if (usage || strcmp(argv[i],"-ibox")==0) {
-	if(usage==0){
-	  goodarg++;
-	  //(t=time, x=R-cyl, y=Z-cyl, z=Y-cyl)
-	  if(i+1<argc) sscanf(argv[++i],SCANARG,&starttc) ; // arbitrary
-	  if(i+1<argc) sscanf(argv[++i],SCANARG,&endtc) ; // arbitrary
-	  if(i+1<argc) sscanf(argv[++i],SCANARG,&startxc) ; // arbitrary
-	  if(i+1<argc) sscanf(argv[++i],SCANARG,&endxc) ; // arbitrary
-	  if(i+1<argc) sscanf(argv[++i],SCANARG,&startyc) ; // arbitrary
-	  if(i+1<argc) sscanf(argv[++i],SCANARG,&endyc) ; // arbitrary
-	  if(i+1<argc) sscanf(argv[++i],SCANARG,&startzc) ; // arbitrary
-	  if(i+1<argc) sscanf(argv[++i],SCANARG,&endzc) ; // arbitrary
-	}
-	else{
-	  fprintf(stderr,"-ibox <starttc> <endtc> <startxc> <endxc> <startyc> <endyc> <startzc> <endzc>\n");
-	  fprintf(stderr,"\t<starttc>: inner interp t(t-Cart,t-Cyl t=time)\n");
-	  fprintf(stderr,"\t<endtc>: outer t\n");
-	  fprintf(stderr,"\t<startxc>: inner interp x(x-Cart,R-Cyl)\n");
-	  fprintf(stderr,"\t<endxc>: outer x\n");
-	  fprintf(stderr,"\t<startyc>: inner interp y(z-Cart,z-Cyl)\n");
-	  fprintf(stderr,"\t<endyc>: outer y\n");
-	  fprintf(stderr,"\t<startzc>: inner interp z(y-Cart,y-Cyl)\n");
-	  fprintf(stderr,"\t<endzc>: outer z\n");
-	  fprintf(stderr,"\tNote: Only need if doing interpolation\n");
-	}
+        if(usage==0){
+          goodarg++;
+          //(t=time, x=R-cyl, y=Z-cyl, z=Y-cyl)
+          if(i+1<argc) sscanf(argv[++i],SCANARG,&starttc) ; // arbitrary
+          if(i+1<argc) sscanf(argv[++i],SCANARG,&endtc) ; // arbitrary
+          if(i+1<argc) sscanf(argv[++i],SCANARG,&startxc) ; // arbitrary
+          if(i+1<argc) sscanf(argv[++i],SCANARG,&endxc) ; // arbitrary
+          if(i+1<argc) sscanf(argv[++i],SCANARG,&startyc) ; // arbitrary
+          if(i+1<argc) sscanf(argv[++i],SCANARG,&endyc) ; // arbitrary
+          if(i+1<argc) sscanf(argv[++i],SCANARG,&startzc) ; // arbitrary
+          if(i+1<argc) sscanf(argv[++i],SCANARG,&endzc) ; // arbitrary
+        }
+        else{
+          fprintf(stderr,"-ibox <starttc> <endtc> <startxc> <endxc> <startyc> <endyc> <startzc> <endzc>\n");
+          fprintf(stderr,"\t<starttc>: inner interp t(t-Cart,t-Cyl t=time)\n");
+          fprintf(stderr,"\t<endtc>: outer t\n");
+          fprintf(stderr,"\t<startxc>: inner interp x(x-Cart,R-Cyl)\n");
+          fprintf(stderr,"\t<endxc>: outer x\n");
+          fprintf(stderr,"\t<startyc>: inner interp y(z-Cart,z-Cyl)\n");
+          fprintf(stderr,"\t<endyc>: outer y\n");
+          fprintf(stderr,"\t<startzc>: inner interp z(y-Cart,y-Cyl)\n");
+          fprintf(stderr,"\t<endzc>: outer z\n");
+          fprintf(stderr,"\tNote: Only need if doing interpolation\n");
+        }
       }
       if (usage || strcmp(argv[i],"-coord")==0) {
-	if(usage==0){
-	  goodarg++;
-	  // often other coord.c dependent stuff needed
-	  if(i+1<argc) sscanf(argv[++i],SCANARG,&Rin) ; // could use setRin()
-	  if(i+1<argc) sscanf(argv[++i],SCANARG,&Rout) ;
-	  if(i+1<argc) sscanf(argv[++i],SCANARG,&R0) ;
-	  if(i+1<argc) sscanf(argv[++i],SCANARG,&hslope) ;
-	}
-	else{
-	  fprintf(stderr,"-coord <Rin> <Rout> <R0> <hslope>\n");
-	  // some basic grid parameters, but sometimes need specific coord.c file with its parameters
-	  fprintf(stderr,"\t<Rin>: Inner radial edge\n");
-	  fprintf(stderr,"\t<Rout>: Outer radial edge\n");
-	  fprintf(stderr,"\t<R0>: Radial inner-grid enhancement factor\n");
-	  fprintf(stderr,"\t<hslope>: theta grid refinement factor\n");
-	  fprintf(stderr,"\tNote: -coord required if not reading header\n");
-	}
+        if(usage==0){
+          goodarg++;
+          // often other coord.c dependent stuff needed
+          if(i+1<argc) sscanf(argv[++i],SCANARG,&Rin) ; // could use setRin()
+          if(i+1<argc) sscanf(argv[++i],SCANARG,&Rout) ;
+          if(i+1<argc) sscanf(argv[++i],SCANARG,&R0) ;
+          if(i+1<argc) sscanf(argv[++i],SCANARG,&hslope) ;
+        }
+        else{
+          fprintf(stderr,"-coord <Rin> <Rout> <R0> <hslope>\n");
+          // some basic grid parameters, but sometimes need specific coord.c file with its parameters
+          fprintf(stderr,"\t<Rin>: Inner radial edge\n");
+          fprintf(stderr,"\t<Rout>: Outer radial edge\n");
+          fprintf(stderr,"\t<R0>: Radial inner-grid enhancement factor\n");
+          fprintf(stderr,"\t<hslope>: theta grid refinement factor\n");
+          fprintf(stderr,"\tNote: -coord required if not reading header\n");
+        }
       }
       if (usage || strcmp(argv[i],"-defcoord")==0) {
-	if(usage==0){
-	  goodarg++;
-	  if(i+1<argc) sscanf(argv[++i],"%d",&defcoord) ;
-	}
-	else{
-	  fprintf(stderr,"-defcoord <defcoord>\n");
-	  fprintf(stderr,"\t<defcoord>: which coordinate system (see coord.c)\n");
-	  fprintf(stderr,"\tNote: -defcoord required if not reading header\n");
-	}
+        if(usage==0){
+          goodarg++;
+          if(i+1<argc) sscanf(argv[++i],"%d",&defcoord) ;
+        }
+        else{
+          fprintf(stderr,"-defcoord <defcoord>\n");
+          fprintf(stderr,"\t<defcoord>: which coordinate system (see coord.c)\n");
+          fprintf(stderr,"\tNote: -defcoord required if not reading header\n");
+        }
       }
       if (usage || strcmp(argv[i],"-dofull2pi")==0) {
-	if(usage==0){
-	  goodarg++;
-	  if(i+1<argc) sscanf(argv[++i],"%d",&dofull2pi) ;
-	}
-	else{
-	  fprintf(stderr,"-dofull2pi <dofull2pi>\n");
-	  fprintf(stderr,"\t<dofull2pi>: whether to do full 2pi or not (see coord.c)\n");
-	}
+        if(usage==0){
+          goodarg++;
+          if(i+1<argc) sscanf(argv[++i],"%d",&dofull2pi) ;
+        }
+        else{
+          fprintf(stderr,"-dofull2pi <dofull2pi>\n");
+          fprintf(stderr,"\t<dofull2pi>: whether to do full 2pi or not (see coord.c)\n");
+        }
       }
       if (usage || strcmp(argv[i],"-docurrent")==0) {
-	if(usage==0){
-	  goodarg++;
-	  if(i+1<argc) sscanf(argv[++i],"%d",&docurrent) ;
-	}
-	else{
-	  fprintf(stderr,"-docurrent <docurrent>\n");
-	  fprintf(stderr,"\t<docurrent>: whether to compute current (slower) if doing datatype==14\n");
-	}
+        if(usage==0){
+          goodarg++;
+          if(i+1<argc) sscanf(argv[++i],"%d",&docurrent) ;
+        }
+        else{
+          fprintf(stderr,"-docurrent <docurrent>\n");
+          fprintf(stderr,"\t<docurrent>: whether to compute current (slower) if doing datatype==14\n");
+        }
       }
       if (usage || strcmp(argv[i],"-tdata")==0) {
-	if(usage==0){
-	  goodarg++;
-	  // below 2 for 4D data inputs, specifying start and end times for dumps used
-	  // also store starttdata0 and endtdata0 in case the others are modified since dual-using these variables really for DATATYPE==14
-	  if(i+2<argc) checktdata=1;
-	  if(i+1<argc){ sscanf(argv[++i],SCANARG,&starttdata); starttdata0=starttdata;}
-	  if(i+1<argc){ sscanf(argv[++i],SCANARG,&endtdata); endtdata0=endtdata;}
-	}
-	else{
-	  fprintf(stderr,"-tdata <starttdata> <endtdata>\n");
-	  // below are only inputted when oN0>1 || nN0>1
-	  fprintf(stderr,"\t<starttdata>: time 4D input dumps start (assume uniformly spaced in time, and corresponds to actual time when data exists, not FACE values, but CENT in terms of internal interpolation routines)\n");
-	  fprintf(stderr,"\t<endtdata>: time 4D input dumps end\n");
-	  fprintf(stderr,"\tNote: -tdata required if oN0>1 || nN1>1\n");
-	  fprintf(stderr,"\tAlso used to set infilem1 and infilep1 times for 3-time DATATYPE==14 procedure for getting current\n");
-	}
+        if(usage==0){
+          goodarg++;
+          // below 2 for 4D data inputs, specifying start and end times for dumps used
+          // also store starttdata0 and endtdata0 in case the others are modified since dual-using these variables really for DATATYPE==14
+          if(i+2<argc) checktdata=1;
+          if(i+1<argc){ sscanf(argv[++i],SCANARG,&starttdata); starttdata0=starttdata;}
+          if(i+1<argc){ sscanf(argv[++i],SCANARG,&endtdata); endtdata0=endtdata;}
+        }
+        else{
+          fprintf(stderr,"-tdata <starttdata> <endtdata>\n");
+          // below are only inputted when oN0>1 || nN0>1
+          fprintf(stderr,"\t<starttdata>: time 4D input dumps start (assume uniformly spaced in time, and corresponds to actual time when data exists, not FACE values, but CENT in terms of internal interpolation routines)\n");
+          fprintf(stderr,"\t<endtdata>: time 4D input dumps end\n");
+          fprintf(stderr,"\tNote: -tdata required if oN0>1 || nN1>1\n");
+          fprintf(stderr,"\tAlso used to set infilem1 and infilep1 times for 3-time DATATYPE==14 procedure for getting current\n");
+        }
       }
       if (usage || strcmp(argv[i],"-tnrdeg")==0) {
-	if(usage==0){
-	  goodarg++;
-	  // angle for CARTLIGHT or CART grid
-	  if(i+1<argc) sscanf(argv[++i],SCANARG,&tnrdegrees) ;
-	}
-	else{
-	  fprintf(stderr,"-tnrdeg <tnrdegrees>\n");
-	  fprintf(stderr,"\t<tnrdegrees>: angle [in degrees] between observer and z-axis of original grid.  0 degrees gives no transformation.  20degrees means data rotated 20degrees from z-axis towards x-axis around y-axis.\n");
-	  fprintf(stderr,"\tNote: -tnrdeg recommended if want rotation or using multiple time data (i.e. -tdata with oN0>1 or nN0>1)\n");
-	}
+        if(usage==0){
+          goodarg++;
+          // angle for CARTLIGHT or CART grid
+          if(i+1<argc) sscanf(argv[++i],SCANARG,&tnrdegrees) ;
+        }
+        else{
+          fprintf(stderr,"-tnrdeg <tnrdegrees>\n");
+          fprintf(stderr,"\t<tnrdegrees>: angle [in degrees] between observer and z-axis of original grid.  0 degrees gives no transformation.  20degrees means data rotated 20degrees from z-axis towards x-axis around y-axis.\n");
+          fprintf(stderr,"\tNote: -tnrdeg recommended if want rotation or using multiple time data (i.e. -tdata with oN0>1 or nN0>1)\n");
+        }
       }
       if (usage || strcmp(argv[i],"-extrap")==0) {
-	if(usage==0){
-	  goodarg++;
-	  sscanf(argv[++i],"%d",&EXTRAPOLATE);
-	}
-	else{
-	  fprintf(stderr,"-extrap <extrapolate>\n");
-	  // below 1 are separately optional
-	  fprintf(stderr,"\t<extrapolate>: 0 = no, 1 = yes\n");
-	}
+        if(usage==0){
+          goodarg++;
+          sscanf(argv[++i],"%d",&EXTRAPOLATE);
+        }
+        else{
+          fprintf(stderr,"-extrap <extrapolate>\n");
+          // below 1 are separately optional
+          fprintf(stderr,"\t<extrapolate>: 0 = no, 1 = yes\n");
+        }
       }
       if (usage || strcmp(argv[i],"-defaultvaluetype")==0) {
-	if(usage==0){
-	  goodarg++;
-	  if(i+1<argc) sscanf(argv[++i],"%d",&defaultvaluetype);
-	}
-	else{
-	  fprintf(stderr,"-defaultvaluetype <defaultvaluetype>\n");
-	  fprintf(stderr,"\t<defaultvaluetype>: 0 = min if scalar 0 if vector, 1 = min, 2 = max, 3 = 0.0, 4 = 1E35 for v5d missingdata\n");
-	}
+        if(usage==0){
+          goodarg++;
+          if(i+1<argc) sscanf(argv[++i],"%d",&defaultvaluetype);
+        }
+        else{
+          fprintf(stderr,"-defaultvaluetype <defaultvaluetype>\n");
+          fprintf(stderr,"\t<defaultvaluetype>: 0 = min if scalar 0 if vector, 1 = min, 2 = max, 3 = 0.0, 4 = 1E35 for v5d missingdata\n");
+        }
       }
       if (usage || strcmp(argv[i],"-smoothpole")==0) {
-	if(usage==0){
-	  goodarg++;
-	  sscanf(argv[++i],"%d",&smoothpole);
-	}
-	else{
-	  fprintf(stderr,"-smoothpole <smoothpole>\n");
-	  fprintf(stderr,"\t<smoothpole>: 0 = no, 1 = yes\n");
-	}
+        if(usage==0){
+          goodarg++;
+          sscanf(argv[++i],"%d",&smoothpole);
+        }
+        else{
+          fprintf(stderr,"-smoothpole <smoothpole>\n");
+          fprintf(stderr,"\t<smoothpole>: 0 = no, 1 = yes\n");
+        }
       }
       if (usage || strcmp(argv[i],"-gdump")==0) {
-	if(usage==0){
-	  goodarg++;
-	  if(i+1<argc) getgdump=1;
-	  if(i+1<argc) sscanf(argv[++i],"%s",&gdumpfilename[0]);
-	  if(setreadheadergdump==0){ setreadheadergdump=1; READHEADERGDUMP=1; }
-	  if(setwriteheadergdump==0){ setwriteheadergdump=1; WRITEHEADERGDUMP=1; }
-	}
-	else{
-	  fprintf(stderr,"-gdump <gdumpfilepathname>\n");
-	  // below is optional but requires above 2 to be read-in
-	  fprintf(stderr,"\t<gdumpfilepathname> : only if vector type (DATATYPE=(e.g.) 2,3,4,5,11,12,13,14,15,100+x,1000+x...\n");
-	}
+        if(usage==0){
+          goodarg++;
+          if(i+1<argc) getgdump=1;
+          if(i+1<argc) sscanf(argv[++i],"%s",&gdumpfilename[0]);
+          if(setreadheadergdump==0){ setreadheadergdump=1; READHEADERGDUMP=1; }
+          if(setwriteheadergdump==0){ setwriteheadergdump=1; WRITEHEADERGDUMP=1; }
+        }
+        else{
+          fprintf(stderr,"-gdump <gdumpfilepathname>\n");
+          // below is optional but requires above 2 to be read-in
+          fprintf(stderr,"\t<gdumpfilepathname> : only if vector type (DATATYPE=(e.g.) 2,3,4,5,11,12,13,14,15,100+x,1000+x...\n");
+        }
       }
       if (usage || strcmp(argv[i],"-gdumphead")==0) {
-	if(usage==0){
-	  goodarg++;
-	  if(i+1<argc){ setreadheadergdump=1; sscanf(argv[++i],"%d",&READHEADERGDUMP); } // 0 or 1
-	  if(i+1<argc){ setwriteheadergdump=1; sscanf(argv[++i],"%d",&WRITEHEADERGDUMP); } // 0 or 1
-	}
-	else{
-	  fprintf(stderr,"-gdumphead <DOREADHEADERGDUMP> <DOWRITEHEADERGDUMP>\n");
-	  fprintf(stderr,"\t<DOREADHEADERGDUMP> or <DOWRITEHEADERGDUMP>: 0 or 1 for each\n");
-	}
+        if(usage==0){
+          goodarg++;
+          if(i+1<argc){ setreadheadergdump=1; sscanf(argv[++i],"%d",&READHEADERGDUMP); } // 0 or 1
+          if(i+1<argc){ setwriteheadergdump=1; sscanf(argv[++i],"%d",&WRITEHEADERGDUMP); } // 0 or 1
+        }
+        else{
+          fprintf(stderr,"-gdumphead <DOREADHEADERGDUMP> <DOWRITEHEADERGDUMP>\n");
+          fprintf(stderr,"\t<DOREADHEADERGDUMP> or <DOWRITEHEADERGDUMP>: 0 or 1 for each\n");
+        }
       }
       if (usage || strcmp(argv[i],"-binaryinputgdump")==0) {
-	if(usage==0){
-	  goodarg++;
-	  if(i+1<argc) sscanf(argv[++i],"%d",&binaryinputgdump) ;
-	  setbinaryinputgdump=1;
-	}
-	else{
-	  fprintf(stderr,"-binaryinputgdump <binaryinputgdump>\n");
-	  fprintf(stderr,"\t<binaryinputgdump>: 0=text 1=binary (assumed little Endian or at least same Endian)\n");
-	}
+        if(usage==0){
+          goodarg++;
+          if(i+1<argc) sscanf(argv[++i],"%d",&binaryinputgdump) ;
+          setbinaryinputgdump=1;
+        }
+        else{
+          fprintf(stderr,"-binaryinputgdump <binaryinputgdump>\n");
+          fprintf(stderr,"\t<binaryinputgdump>: 0=text 1=binary (assumed little Endian or at least same Endian)\n");
+        }
       }
       if (usage || strcmp(argv[i],"-inFTYPEgdump")==0) {
-	if(usage==0){
-	  goodarg++;
-	  if(i+1<argc){
-	    i++;
-	    if(strcmp(argv[i],"byte")==0){
-	      strcpy(inFTYPEgdump,"b"); setinFTYPEgdump=1;
-	    }
-	    else if(strcmp(argv[i],"int")==0){
-	      strcpy(inFTYPEgdump,"i"); setinFTYPEgdump=1;
-	    }
-	    else if(strcmp(argv[i],"longint")==0){
-	      strcpy(inFTYPEgdump,"li"); setinFTYPEgdump=1;
-	    }
-	    else if(strcmp(argv[i],"longlongint")==0){
-	      strcpy(inFTYPEgdump,"lli"); setinFTYPEgdump=1;
-	    }
-	    else if(strcmp(argv[i],"float")==0){
-	      strcpy(inFTYPEgdump,"f"); setinFTYPEgdump=1;
-	    }
-	    else if(strcmp(argv[i],"double")==0){
-	      strcpy(inFTYPEgdump,"d"); setinFTYPEgdump=1;
-	    }
-	    else if(strcmp(argv[i],"longdouble")==0){
-	      strcpy(inFTYPEgdump,"ld"); setinFTYPEgdump=1;
-	    }
-	    else{
-	      fprintf(stderr,"Unknown inFTYPEgdump\n");
-	      exit(1);
-	    }
+        if(usage==0){
+          goodarg++;
+          if(i+1<argc){
+            i++;
+            if(strcmp(argv[i],"byte")==0){
+              strcpy(inFTYPEgdump,"b"); setinFTYPEgdump=1;
+            }
+            else if(strcmp(argv[i],"int")==0){
+              strcpy(inFTYPEgdump,"i"); setinFTYPEgdump=1;
+            }
+            else if(strcmp(argv[i],"longint")==0){
+              strcpy(inFTYPEgdump,"li"); setinFTYPEgdump=1;
+            }
+            else if(strcmp(argv[i],"longlongint")==0){
+              strcpy(inFTYPEgdump,"lli"); setinFTYPEgdump=1;
+            }
+            else if(strcmp(argv[i],"float")==0){
+              strcpy(inFTYPEgdump,"f"); setinFTYPEgdump=1;
+            }
+            else if(strcmp(argv[i],"double")==0){
+              strcpy(inFTYPEgdump,"d"); setinFTYPEgdump=1;
+            }
+            else if(strcmp(argv[i],"longdouble")==0){
+              strcpy(inFTYPEgdump,"ld"); setinFTYPEgdump=1;
+            }
+            else{
+              fprintf(stderr,"Unknown inFTYPEgdump\n");
+              exit(1);
+            }
 
-	  }
-	}
-	else{
-	  fprintf(stderr,"-inFTYPEgdump <inFTYPEgdumpstring>\n");
-	  fprintf(stderr,"\t<inFTYPEgdumpstring>: byte, int, longint, longlongint, float, double, longdouble\n");
-	}
+          }
+        }
+        else{
+          fprintf(stderr,"-inFTYPEgdump <inFTYPEgdumpstring>\n");
+          fprintf(stderr,"\t<inFTYPEgdumpstring>: byte, int, longint, longlongint, float, double, longdouble\n");
+        }
       }
       if (usage || strcmp(argv[i],"-verbose")==0) {
-	if(usage==0){
-	  goodarg++;
-	  if(i+1<argc) sscanf(argv[++i],"%d",&VERBOSITY) ;
-	}
-	else{
-	  fprintf(stderr,"-verbose <VERBOSITY>\n");
-	  fprintf(stderr,"\t<VERBOSITY> : 0 = no extra info : 1 = some extra info : 2 = lots of extra info\n");
-	}
+        if(usage==0){
+          goodarg++;
+          if(i+1<argc) sscanf(argv[++i],"%d",&VERBOSITY) ;
+        }
+        else{
+          fprintf(stderr,"-verbose <VERBOSITY>\n");
+          fprintf(stderr,"\t<VERBOSITY> : 0 = no extra info : 1 = some extra info : 2 = lots of extra info\n");
+        }
       }
       if (usage || strcmp(argv[i],"-debug")==0){
-	if(usage==0){
-	  goodarg++;
-	  if(i+1<argc) sscanf(argv[++i],"%d",&DEBUGINTERP) ;
-	}
-	else{
-	  fprintf(stderr,"-debug <DEBUGINTERP>\n");
-	  fprintf(stderr,"\t<DEBUGINTERP> : Level of debug for interpolation: 0 or 1 currently\n");
-	}
+        if(usage==0){
+          goodarg++;
+          if(i+1<argc) sscanf(argv[++i],"%d",&DEBUGINTERP) ;
+        }
+        else{
+          fprintf(stderr,"-debug <DEBUGINTERP>\n");
+          fprintf(stderr,"\t<DEBUGINTERP> : Level of debug for interpolation: 0 or 1 currently\n");
+        }
       }
       if (usage || strcmp(argv[i],"-simpledebug")==0){
-	if(usage==0){
-	  goodarg++;
-	  if(i+1<argc) sscanf(argv[++i],"%d",&SIMPLEDEBUGINTERP) ;
-	}
-	else{
-	  fprintf(stderr,"-simpledebug <SIMPLEDEBUGINTERP>\n");
-	  fprintf(stderr,"\t<SIMPLEDEBUGINTERP> : Level of simpledebug for interpolation: 0 or 1 currently\n");
-	}
+        if(usage==0){
+          goodarg++;
+          if(i+1<argc) sscanf(argv[++i],"%d",&SIMPLEDEBUGINTERP) ;
+        }
+        else{
+          fprintf(stderr,"-simpledebug <SIMPLEDEBUGINTERP>\n");
+          fprintf(stderr,"\t<SIMPLEDEBUGINTERP> : Level of simpledebug for interpolation: 0 or 1 currently\n");
+        }
       }
 
 
@@ -2131,10 +2131,10 @@ void parse_commandline(int argc, char *argv[])
 
       // check if didn't find any good args (should always find if have consistent command line)
       if(argc>1 && goodarg==0){
-	fprintf(stderr,"\ntotalgoodargs(i.e. switches)=%d\nUnknown option: %s\n\n", totalgoodargs, argv[i] );
-	exit(1);
+        fprintf(stderr,"\ntotalgoodargs(i.e. switches)=%d\nUnknown option: %s\n\n", totalgoodargs, argv[i] );
+        exit(1);
       }
-	
+        
 
 
     }// loop over command-line arguments
@@ -2195,175 +2195,175 @@ void print_out_example_usage(void)
 
 
   fprintf(stderr,
-"##################\n"
-"# shows how to use interpolation routine to take fieldline data and get back interpolation for each quantity desired.\n"
-"\n"
-"#\n"
-"# 1) make program\n"
-"\n"
-"cd /lustre/ki/pfs/jmckinne/harmgit_jon2interp/\n"
-"# setup for reduced code set\n"
-"rm -rf init.c init.h\n"
-"touch init.h\n"
-"\n"
-"\n"
-"# 2) ensure PRINTHEADER and SCANHEADER in global.jon_interp.h are correct for older/newer simulations (i.e. THETAROT in new only)\n"
-"# Do this by setting OLDERHEADER 1 if non-tilted runs.  Else set to 0.\n"
-"\n"
-"# 3) make program itself (need Intel MKL -- modify makefile if path needs to be changed -- currently setup for ki-rh39)\n"
-"\n"
-"make superclean ; make prepiinterp ; make iinterp &> make.log\n"
-"\n"
-"# also make bin2txt program:\n"
-"\n"
-"make superclean ; make prepbin2txt ; make bin2txt\n"
-"# check makefile and setup for ki-rh39/orange/etc.\n"
-"\n"
-"# ensure no errors during compile or link (need lapack!)\n"
-"\n"
-"##############\n"
-"4) copy programs to your path\n"
-"\n"
-"cp iinterp ~/bin/iinterp.orange.thickdisk7\n"
-"cp bin2txt ~/bin/bin2txt.orange\n"
-"\n"
-"###############\n"
-"# 5) do interpolation (directly read-in binary fieldline file and output full single file that contains interpolated data)\n"
-"\n"
-"# 0=OLDER header with 30 entries (thickdisk/sasha sims)  1=NEWER header with 32 entries (tilted sims)\n"
-"newheader=0\n"
-"\n"
-"# get 3 times so can compute temporal derivative for (e.g.) current density at same spatial/temporal location as dump\n"
-"dumpnum=5437\n"
-"dumpnumm1=$(($dumpnum-1))\n"
-"if [ -e dumps/fieldline$dumpnumm1.bin ]\n"
-"then\n"
-"    dumpnumm1=$(($dumpnum-1))\n"
-"else\n"
-"    dumpnumm1=$(($dumpnum))\n"
-"fi\n"
-"dumpnump1=$(($dumpnum+1))\n"
-"if [ -e dumps/fieldline$dumpnump1.bin ]\n"
-"then\n"
-"    dumpnump1=$(($dumpnum+1))\n"
-"else\n"
-"    dumpnump1=$(($dumpnum))\n"
-"fi	\n"
-"#\n"
-"# get times of dumps\n"
-"time0=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $1}'`\n"
-"timem1=`head -1 dumps/fieldline$dumpnumm1.bin |awk '{print $1}'`\n"
-"timep1=`head -1 dumps/fieldline$dumpnump1.bin |awk '{print $1}'`\n"
-"#\n"
-"# get original resolution\n"
-"nt=1\n"
-"nx=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $2}'`\n"
-"ny=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $3}'`\n"
-"nz=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $4}'`\n"
-"if [ $newheader -eq 0 ]\n"
-"then\n"
-"    numcolumns=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $30}'`\n"
-"else\n"
-"    numcolumns=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $32}'`\n"
-"fi\n"
-"R0=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $14}'`\n"
-"Rin=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $15}'`\n"
-"Rout=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $16}'`\n"
-"hslope=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $17}'`\n"
-"defcoord=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $19}'`\n"
-"#\n"
-"# Note that iinterp has x->xc y->zc z->yc since originally was doing 2D in x-z\n"
-"# That is:\n"
-"# So box(n)x refers to true x\n"
-"# So box(n)y refers to true z\n"
-"# So box(n)z refers to true y\n"
-"#\n"
-"# True x is V5D's x and iinterp's x\n"
-"# True z is V5D's y and iinterp's y\n"
-"# True y is V5D's z and iinterp's z\n"
-"#\n"
-"#\n"
-"# Vectors are still in order as columns as vx, vy, vz for true x,y,z, respectively\n"
-"#\n"
-"boxnt=1\n"
-"boxnx=100\n"
-"boxny=100\n"
-"boxnz=100\n"
-"boxxl=-10\n"
-"boxyl=-10\n"
-"boxzl=-10\n"
-"boxxh=10\n"
-"boxyh=10\n"
-"boxzh=10\n"
-"\n"
-"# set docurrent=0 if want quick result with no current density\n"
-"# this will change number of output columns\n"
-"docurrent=1\n"
-"\n"
-"cd /lustre/ki/pfs/jmckinne/thickdisk7/\n"
-"IDUMPDIR=/lustre/ki/pfs/jmckinne/thickdisk7/idumps/\n"
-"# ensure coordparms.dat exists here -- required to read in harm internal grid parameters\n"
-"mkdir $IDUMPDIR\n"
-"#\n"
-"#\n"
-"#\n"
-"whichoutput=14\n"
-"outfilename=$IDUMPDIR/fieldline$dumpnum.cart.bin.$boxnx.$boxny.$boxnz\n"
-"~/bin/iinterp.orange.thickdisk7 -binaryinput 1 -binaryoutput 1 -inFTYPE float -outFTYPE float -dtype $whichoutput -itype 1 -head 1 1 -oN $nt $nx $ny $nz -refine 1.0 -filter 0 -grids 1 0 -nN $boxnt $boxnx $boxny $boxnz -ibox $time0 $time0 $boxxl $boxxh $boxyl $boxyh $boxzl $boxzh -coord $Rin $Rout $R0 $hslope -defcoord $defcoord -dofull2pi 1 -docurrent $docurrent -tdata $timem1 $timep1 -extrap 1 -defaultvaluetype 0 -gdump ./dumps/gdump.bin -gdumphead 1 1 -binaryinputgdump 1 -inFTYPEgdump double -infile dumps/fieldline$dumpnum.bin -infilem1 dumps/fieldline$dumpnumm1.bin -infilep1 dumps/fieldline$dumpnump1.bin -outfile $outfilename\n"
-"\n"
-"\n"
-"# as a test, one can do just 1 variable (the density)\n"
-"if [ 1 -eq 0 ]\n"
-"then\n"
-"    outfilename=$IDUMPDIR/fieldline$dumpnum.cart.bin.densityonly.$boxnx.$boxny.$boxnz\n"
-"    ~/bin/iinterp.orange.thickdisk7 -binaryinput 1 -binaryoutput 1 -inFTYPE float -outFTYPE float -dtype 1 -itype 1 -head 1 1 -oN $nt $nx $ny $nz -refine 1.0 -filter 0 -grids 1 0 -nN $boxnt $boxnx $boxny $boxnz -ibox $time0 $time0 $boxxl $boxxh $boxyl $boxyh $boxzl $boxzh -coord $Rin $Rout $R0 $hslope -defcoord $defcoord -dofull2pi 1 -extrap 1 -defaultvaluetype 0 -infile dumps/fieldline$dumpnum.bin -outfile $outfilename\n"
-"fi\n"
-"\n"
-"\n"
-"# The whichoutput==14 case results in a file with 1 line text header, line break, then data\n"
-"# The binary data block of *floats* (4 bytes) is ordered as:\n"
-"# fastest index: column or quantity list\n"
-"# next fastest index: i (associated with true x)\n"
-"# next fastest index: j (associated with true y)\n"
-"# next fastest index: k (associated with true z)\n"
-"# slowest index: h (time, but only single time here)\n"
-"\n"
-"# Note that while array access of quantity is out of order in iinterp result, the 3D spatial grid is still written as a right-handed coordinate system.\n"
-"# So, if you face the screen showing positive z-axis pointing up (increasing j) and positive x-axis pointing to the right (increasing i), then the positive y-axis points into the screen (increasing k).\n"
-"\n"
-"# The columns or quantities in the list are ordered as:\n"
-"# rho0,ug,vx,vy,vz,Bx,By,Bz,FEMrad,Bphi,Jt,Jx,Jy,Jz  (J's only exist if -docurrent 1 was set)\n"
-"# FEMrad is the radial energy flux\n"
-"# Bphi is the poloidal enclosed current density\n"
-"# J\\mu=J^\\mu is the current density.  So the invariant current squared is J^2=J.J = -Jt*Jt + Jx*Jx + Jy*Jy + Jz*Jz (full space-time square)\n"
-"# The comoving current density is j^\\nu = J^\\mu h_\\mu^\\nu = J^\\mu (\\delta_\\mu^\\nu + u_\\mu u^\\nu) = J^\\nu + (J^\\mu u_\\mu)u^\\nu\n"
-"# So that the comoving scalar squared current is j^\\nu j_\\nu = J^2 + (J.u)^2  where u={ut,ut*vx,ut*vy,ut*vz) with ut = 1/sqrt(1-v^2) with v^2=vx^2+vy^2+vz^2 (i.e. just spatials are squared)\n"
-"# So the invariant j^2 in the comoving frame is = j^2 = J^2 + ut*(Jt + Jx*vx + Jy*vy + Jz*vz)  .  This is what would lead to dissipation in the comoving frame.\n"
-"# All vectors are orthonormal\n"
-"#\n"
-"# We can add other things, like the actual local current density, which would show where dissipation could be occuring.\n"
-"\n"
-"\n"
-"\n"
-"\n"
-"# can check how looks in text by doing:\n"
-"\n"
-"file=$outfilename\n"
-"if [ $newheader -eq 0 ]\n"
-"then\n"
-"    numoutputcols=`head -1 $file  |awk '{print $30}'`\n"
-"else\n"
-"    numoutputcols=`head -1 $fil |awk '{print $32}'`\n"
-"fi\n"
-"newnx=`head -1 $file |awk '{print $2}'`\n"
-"newny=`head -1 $file |awk '{print $3}'`\n"
-"newnz=`head -1 $file |awk '{print $4}'`\n"
-"bin2txt.orange 1 2 0 -1 3 $newnx $newny $newnz 1 $file $file.txt f $numoutputcols\n"
-"less -S $file.txt\n"
-"\n"
-"# should look reasonable.\n"
+          "##################\n"
+          "# shows how to use interpolation routine to take fieldline data and get back interpolation for each quantity desired.\n"
+          "\n"
+          "#\n"
+          "# 1) make program\n"
+          "\n"
+          "cd /lustre/ki/pfs/jmckinne/harmgit_jon2interp/\n"
+          "# setup for reduced code set\n"
+          "rm -rf init.c init.h\n"
+          "touch init.h\n"
+          "\n"
+          "\n"
+          "# 2) ensure PRINTHEADER and SCANHEADER in global.jon_interp.h are correct for older/newer simulations (i.e. THETAROT in new only)\n"
+          "# Do this by setting OLDERHEADER 1 if non-tilted runs.  Else set to 0.\n"
+          "\n"
+          "# 3) make program itself (need Intel MKL -- modify makefile if path needs to be changed -- currently setup for ki-rh39)\n"
+          "\n"
+          "make superclean ; make prepiinterp ; make iinterp &> make.log\n"
+          "\n"
+          "# also make bin2txt program:\n"
+          "\n"
+          "make superclean ; make prepbin2txt ; make bin2txt\n"
+          "# check makefile and setup for ki-rh39/orange/etc.\n"
+          "\n"
+          "# ensure no errors during compile or link (need lapack!)\n"
+          "\n"
+          "##############\n"
+          "4) copy programs to your path\n"
+          "\n"
+          "cp iinterp ~/bin/iinterp.orange.thickdisk7\n"
+          "cp bin2txt ~/bin/bin2txt.orange\n"
+          "\n"
+          "###############\n"
+          "# 5) do interpolation (directly read-in binary fieldline file and output full single file that contains interpolated data)\n"
+          "\n"
+          "# 0=OLDER header with 30 entries (thickdisk/sasha sims)  1=NEWER header with 32 entries (tilted sims)\n"
+          "newheader=0\n"
+          "\n"
+          "# get 3 times so can compute temporal derivative for (e.g.) current density at same spatial/temporal location as dump\n"
+          "dumpnum=5437\n"
+          "dumpnumm1=$(($dumpnum-1))\n"
+          "if [ -e dumps/fieldline$dumpnumm1.bin ]\n"
+          "then\n"
+          "    dumpnumm1=$(($dumpnum-1))\n"
+          "else\n"
+          "    dumpnumm1=$(($dumpnum))\n"
+          "fi\n"
+          "dumpnump1=$(($dumpnum+1))\n"
+          "if [ -e dumps/fieldline$dumpnump1.bin ]\n"
+          "then\n"
+          "    dumpnump1=$(($dumpnum+1))\n"
+          "else\n"
+          "    dumpnump1=$(($dumpnum))\n"
+          "fi   \n"
+          "#\n"
+          "# get times of dumps\n"
+          "time0=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $1}'`\n"
+          "timem1=`head -1 dumps/fieldline$dumpnumm1.bin |awk '{print $1}'`\n"
+          "timep1=`head -1 dumps/fieldline$dumpnump1.bin |awk '{print $1}'`\n"
+          "#\n"
+          "# get original resolution\n"
+          "nt=1\n"
+          "nx=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $2}'`\n"
+          "ny=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $3}'`\n"
+          "nz=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $4}'`\n"
+          "if [ $newheader -eq 0 ]\n"
+          "then\n"
+          "    numcolumns=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $30}'`\n"
+          "else\n"
+          "    numcolumns=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $32}'`\n"
+          "fi\n"
+          "R0=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $14}'`\n"
+          "Rin=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $15}'`\n"
+          "Rout=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $16}'`\n"
+          "hslope=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $17}'`\n"
+          "defcoord=`head -1 dumps/fieldline$dumpnum.bin |awk '{print $19}'`\n"
+          "#\n"
+          "# Note that iinterp has x->xc y->zc z->yc since originally was doing 2D in x-z\n"
+          "# That is:\n"
+          "# So box(n)x refers to true x\n"
+          "# So box(n)y refers to true z\n"
+          "# So box(n)z refers to true y\n"
+          "#\n"
+          "# True x is V5D's x and iinterp's x\n"
+          "# True z is V5D's y and iinterp's y\n"
+          "# True y is V5D's z and iinterp's z\n"
+          "#\n"
+          "#\n"
+          "# Vectors are still in order as columns as vx, vy, vz for true x,y,z, respectively\n"
+          "#\n"
+          "boxnt=1\n"
+          "boxnx=100\n"
+          "boxny=100\n"
+          "boxnz=100\n"
+          "boxxl=-10\n"
+          "boxyl=-10\n"
+          "boxzl=-10\n"
+          "boxxh=10\n"
+          "boxyh=10\n"
+          "boxzh=10\n"
+          "\n"
+          "# set docurrent=0 if want quick result with no current density\n"
+          "# this will change number of output columns\n"
+          "docurrent=1\n"
+          "\n"
+          "cd /lustre/ki/pfs/jmckinne/thickdisk7/\n"
+          "IDUMPDIR=/lustre/ki/pfs/jmckinne/thickdisk7/idumps/\n"
+          "# ensure coordparms.dat exists here -- required to read in harm internal grid parameters\n"
+          "mkdir $IDUMPDIR\n"
+          "#\n"
+          "#\n"
+          "#\n"
+          "whichoutput=14\n"
+          "outfilename=$IDUMPDIR/fieldline$dumpnum.cart.bin.$boxnx.$boxny.$boxnz\n"
+          "~/bin/iinterp.orange.thickdisk7 -binaryinput 1 -binaryoutput 1 -inFTYPE float -outFTYPE float -dtype $whichoutput -itype 1 -head 1 1 -oN $nt $nx $ny $nz -refine 1.0 -filter 0 -grids 1 0 -nN $boxnt $boxnx $boxny $boxnz -ibox $time0 $time0 $boxxl $boxxh $boxyl $boxyh $boxzl $boxzh -coord $Rin $Rout $R0 $hslope -defcoord $defcoord -dofull2pi 1 -docurrent $docurrent -tdata $timem1 $timep1 -extrap 1 -defaultvaluetype 0 -gdump ./dumps/gdump.bin -gdumphead 1 1 -binaryinputgdump 1 -inFTYPEgdump double -infile dumps/fieldline$dumpnum.bin -infilem1 dumps/fieldline$dumpnumm1.bin -infilep1 dumps/fieldline$dumpnump1.bin -outfile $outfilename\n"
+          "\n"
+          "\n"
+          "# as a test, one can do just 1 variable (the density)\n"
+          "if [ 1 -eq 0 ]\n"
+          "then\n"
+          "    outfilename=$IDUMPDIR/fieldline$dumpnum.cart.bin.densityonly.$boxnx.$boxny.$boxnz\n"
+          "    ~/bin/iinterp.orange.thickdisk7 -binaryinput 1 -binaryoutput 1 -inFTYPE float -outFTYPE float -dtype 1 -itype 1 -head 1 1 -oN $nt $nx $ny $nz -refine 1.0 -filter 0 -grids 1 0 -nN $boxnt $boxnx $boxny $boxnz -ibox $time0 $time0 $boxxl $boxxh $boxyl $boxyh $boxzl $boxzh -coord $Rin $Rout $R0 $hslope -defcoord $defcoord -dofull2pi 1 -extrap 1 -defaultvaluetype 0 -infile dumps/fieldline$dumpnum.bin -outfile $outfilename\n"
+          "fi\n"
+          "\n"
+          "\n"
+          "# The whichoutput==14 case results in a file with 1 line text header, line break, then data\n"
+          "# The binary data block of *floats* (4 bytes) is ordered as:\n"
+          "# fastest index: column or quantity list\n"
+          "# next fastest index: i (associated with true x)\n"
+          "# next fastest index: j (associated with true y)\n"
+          "# next fastest index: k (associated with true z)\n"
+          "# slowest index: h (time, but only single time here)\n"
+          "\n"
+          "# Note that while array access of quantity is out of order in iinterp result, the 3D spatial grid is still written as a right-handed coordinate system.\n"
+          "# So, if you face the screen showing positive z-axis pointing up (increasing j) and positive x-axis pointing to the right (increasing i), then the positive y-axis points into the screen (increasing k).\n"
+          "\n"
+          "# The columns or quantities in the list are ordered as:\n"
+          "# rho0,ug,vx,vy,vz,Bx,By,Bz,FEMrad,Bphi,Jt,Jx,Jy,Jz  (J's only exist if -docurrent 1 was set)\n"
+          "# FEMrad is the radial energy flux\n"
+          "# Bphi is the poloidal enclosed current density\n"
+          "# J\\mu=J^\\mu is the current density.  So the invariant current squared is J^2=J.J = -Jt*Jt + Jx*Jx + Jy*Jy + Jz*Jz (full space-time square)\n"
+          "# The comoving current density is j^\\nu = J^\\mu h_\\mu^\\nu = J^\\mu (\\delta_\\mu^\\nu + u_\\mu u^\\nu) = J^\\nu + (J^\\mu u_\\mu)u^\\nu\n"
+          "# So that the comoving scalar squared current is j^\\nu j_\\nu = J^2 + (J.u)^2  where u={ut,ut*vx,ut*vy,ut*vz) with ut = 1/sqrt(1-v^2) with v^2=vx^2+vy^2+vz^2 (i.e. just spatials are squared)\n"
+          "# So the invariant j^2 in the comoving frame is = j^2 = J^2 + ut*(Jt + Jx*vx + Jy*vy + Jz*vz)  .  This is what would lead to dissipation in the comoving frame.\n"
+          "# All vectors are orthonormal\n"
+          "#\n"
+          "# We can add other things, like the actual local current density, which would show where dissipation could be occuring.\n"
+          "\n"
+          "\n"
+          "\n"
+          "\n"
+          "# can check how looks in text by doing:\n"
+          "\n"
+          "file=$outfilename\n"
+          "if [ $newheader -eq 0 ]\n"
+          "then\n"
+          "    numoutputcols=`head -1 $file  |awk '{print $30}'`\n"
+          "else\n"
+          "    numoutputcols=`head -1 $fil |awk '{print $32}'`\n"
+          "fi\n"
+          "newnx=`head -1 $file |awk '{print $2}'`\n"
+          "newny=`head -1 $file |awk '{print $3}'`\n"
+          "newnz=`head -1 $file |awk '{print $4}'`\n"
+          "bin2txt.orange 1 2 0 -1 3 $newnx $newny $newnz 1 $file $file.txt f $numoutputcols\n"
+          "less -S $file.txt\n"
+          "\n"
+          "# should look reasonable.\n"
 
-	  );
+          );
 
   fflush(stderr);
 }
@@ -2477,8 +2477,8 @@ void old_parse_commandline(int argc, char *argv[])
     // see if doing non-scalar output that needs metric, etc.
     if(outputvartype>0){
       if(argc!=basicargcnum+2+1){
-	fprintf(stderr,"argc=%d insufficient-vector type\n",argc);
-	exit(1);
+        fprintf(stderr,"argc=%d insufficient-vector type\n",argc);
+        exit(1);
       }
       sscanf(argv[i++],"%s",&gdumpfilename[0]);
       getgdump=1;
@@ -2650,28 +2650,28 @@ void interpret_commandlineresults_subpart1(void)
       if(xdatatype==0) outputvartype=0; // rho
       else if(xdatatype==1) outputvartype=0; // u
       else if(xdatatype>=2 && xdatatype<=5){
-	immediateoutput=0;
-	vectorcomponent=xdatatype-2;// v^x0
-	num4vectors=1;
-	outputvartype=1; 
-	fprintf(stderr,"Output v-vector=%d type file\n",vectorcomponent);
+        immediateoutput=0;
+        vectorcomponent=xdatatype-2;// v^x0
+        num4vectors=1;
+        outputvartype=1; 
+        fprintf(stderr,"Output v-vector=%d type file\n",vectorcomponent);
       }
       else if(xdatatype>=6 && xdatatype<=9){
-	immediateoutput=0;
-	vectorcomponent=xdatatype-6;// B^x0
-	num4vectors=1;
-	outputvartype=1; 
-	fprintf(stderr,"Output B-vector=%d type file\n",vectorcomponent);
+        immediateoutput=0;
+        vectorcomponent=xdatatype-6;// B^x0
+        num4vectors=1;
+        outputvartype=1; 
+        fprintf(stderr,"Output B-vector=%d type file\n",vectorcomponent);
       }
       else if(xdatatype==11){
-	outputvartype=11; // energy flux
-	vectorcomponent=1;
-	fprintf(stderr,"Output energy flux\n");
+        outputvartype=11; // energy flux
+        vectorcomponent=1;
+        fprintf(stderr,"Output energy flux\n");
       }
       else if(xdatatype==12){
-	outputvartype=12; // Current
-	vectorcomponent=3;
-	fprintf(stderr,"Output current\n");
+        outputvartype=12; // Current
+        vectorcomponent=3;
+        fprintf(stderr,"Output current\n");
       }
     }
     else{

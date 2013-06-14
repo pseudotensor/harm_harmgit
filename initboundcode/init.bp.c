@@ -34,8 +34,10 @@
 
 #define WHICHPROBLEM THINBP
 
+static FTYPE RHOMINEVOLVE,UUMINEVOLVE;
 static SFTYPE rhomax=0,umax=0,bsq_max=0; // OPENMPMARK: These are ok file globals since set using critical construct
-static SFTYPE beta,randfact,rin,fieldnormalizemin; // OPENMPMARK: Ok file global since set as constant before used
+static SFTYPE beta,randfact,rin,rinfield; // OPENMPMARK: Ok file global since set as constant before used
+
 static FTYPE rhodisk;
 
 
@@ -210,14 +212,19 @@ int init_grid(void)
 #elif(WHICHPROBLEM==THINBP)
   // make changes to primary coordinate parameters R0, Rin, Rout, hslope
   R0 = 0.0;
-  Rout = 40.0;
+  //  Rout = 40.0;
+  //  if(totalsize[1]<32) Rout=50.0;
+  //  else if(totalsize[1]<=64) Rout=1E4;
+  //  else Rout=1E5;
+  Rout=1E5;
 #endif
 
  
   Rhor=rhor_calc(0);
 
   //  hslope = 0.3;
-  hslope = 1.04*pow(h_over_r,2.0/3.0);
+  //  hslope = 1.04*pow(h_over_r,2.0/3.0);
+  hslope = h_over_r;
 
 
   setRin_withchecks(&Rin);
@@ -264,13 +271,17 @@ int init_global(void)
   BCtype[X1DN]=FREEOUTFLOW;
   //  rescaletype=1;
   rescaletype=4;
-  BSQORHOLIMIT=1E2; // was 1E2 but latest BC test had 1E3 // CHANGINGMARK
-  BSQOULIMIT=1E3; // was 1E3 but latest BC test had 1E4
-  UORHOLIMIT=1E3;
+  BSQORHOLIMIT=1E2; // may have to make smaller if problems
+  BSQOULIMIT=1E4;
+  UORHOLIMIT=1E2;
+  // JCM: Have to choose below so that Mdot from atmosphere is not important compared to true Mdot for thin disk.
   RHOMIN = 1E-4;
   UUMIN = 1E-6;
+  RHOMINEVOLVE = 1E-4;
+  UUMINEVOLVE = 1E-6;
 
-  cooling=NOCOOLING; //COOLUSER; // MARKTODO should override these values set in initbase, right?
+  //  cooling=COOLUSER; // MARKTODO should override these values set in initbase, right?
+  cooling=NOCOOLING;
   gam=4./3.;
 
 #elif(WHICHPROBLEM==THICKDISK)
@@ -379,6 +390,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 #elif(WHICHPROBLEM==THINBP)
   //rin = (1. + h_over_r)*Risco;
   rin = Risco;
+  rinfield = 10.0;
   beta = 5.e1 ;
   randfact = 4.e-2;
   fieldnormalizemin = 3. * Risco;
@@ -963,8 +975,10 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
   FTYPE rpow;
   rpow=3.0/4.0; // Using rpow=1 leads to quite strong field at large radius, and for standard atmosphere will lead to \sigma large at all radii, which is very difficult to deal with -- especially with grid sectioning where outer moving wall keeps opening up highly magnetized region
   //  FTYPE FIELDROT=M_PI*0.5;
+  FTYPE rpow2=0.0;
   FTYPE FIELDROT=0.0;
   FTYPE hpow=2.0;
+  FTYPE RBREAK=100.0;
 
 
   if(l==2){// A_\theta
@@ -979,7 +993,8 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
       vpot += -(pow(r,rpow)*pow(sin(th),hpow)*sin(FIELDROT)*sin(ph));
     }
     if(FIELDTYPE==DISKVERTBP){
-      vpot += -(pow(r,rpow)*pow(sin(th),hpow)*sin(FIELDROT)*sin(ph));
+      if(r<RBREAK) vpot += -(pow(r,rpow)*pow(sin(th),hpow)*sin(FIELDROT)*sin(ph));
+      else if(r>=RBREAK) vpot += -((pow(RBREAK,rpow)/pow(RBREAK,rpow2)*pow(r,rpow2))*pow(sin(th),hpow)*sin(FIELDROT)*sin(ph));
     }
 
 
@@ -1005,7 +1020,8 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
  
     if(FIELDTYPE==DISKVERTBP){
       //vpot += 0.5*pow(r,rpow)*sin(th)*sin(th) ;
-      vpot += pow(r,rpow)*pow(sin(th),hpow)*(cos(FIELDROT) - cos(ph)*cot(th)*sin(FIELDROT));
+      if(r<RBREAK) vpot += pow(r,rpow)*pow(sin(th),hpow)*(cos(FIELDROT) - cos(ph)*cot(th)*sin(FIELDROT));
+      else if(r>=RBREAK) vpot += (pow(RBREAK,rpow)/pow(RBREAK,rpow2)*pow(r,rpow2))*pow(sin(th),hpow)*(cos(FIELDROT) - cos(ph)*cot(th)*sin(FIELDROT));
     }
 
     /* field-in-disk version */
@@ -1129,9 +1145,12 @@ int get_maxes(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *bsq_max, FTYPE *pg_ma
     eqslice=0;
   }
 
-  parms[0]=fieldnormalizemin;
 
-  funreturn=user1_get_maxes2(eqslice, parms,prim, bsq_max, pg_max, beta_min);
+  parms[0]=rinfield;
+
+  int user2_get_maxes(int eqslice, FTYPE *parms, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *bsq_max, FTYPE *pg_max, FTYPE *beta_min);
+  funreturn=user2_get_maxes(eqslice, parms,prim, bsq_max, pg_max, beta_min);
+
   if(funreturn!=0) return(funreturn);
  
   return(0);
@@ -1296,13 +1315,120 @@ int set_atmosphere(int whichcond, int whichvel, struct of_geom *ptrgeom, FTYPE *
   else{
     atmospheretype=1; // default
   }
+
+  int user2_set_atmosphere(int atmospheretype, int whichcond, int whichvel, struct of_geom *ptrgeom, FTYPE *pr);
  
-  funreturn=user1_set_atmosphere(atmospheretype, whichcond, whichvel, ptrgeom, pr);
+  funreturn=user2_set_atmosphere(atmospheretype, whichcond, whichvel, ptrgeom, pr);
   if(funreturn!=0) return(funreturn);
  
   return(0);
 
 }
+
+// UUMIN/RHOMIN used for atmosphere
+
+// for each WHICHVEL possibility, set atmosphere state for any coordinate system
+// which=0 : initial condition
+// which=1 : evolution condition (might also include a specific angular momentum or whatever)
+// which==1 assumes pr set to something locally reasonable, and we adjust to that slowly
+
+#define TAUADJUSTATM (10.0) // timescale for boundary to adjust to using preset inflow
+int user2_set_atmosphere(int atmospheretype, int whichcond, int whichvel, struct of_geom *ptrgeom, FTYPE *pr)
+{
+  FTYPE rho,u,ur,uh,up;
+  FTYPE X[NDIM],V[NDIM];
+  FTYPE r,th;
+  FTYPE prlocal[NPR];
+  int pl,pliter;
+
+  // Bondi like initial atmosphere
+  //    rho = RHOMIN * 1.E-14;
+  //    u = UUMIN * 1.E-14;
+  bl_coord_ijk_2(ptrgeom->i, ptrgeom->j, ptrgeom->k, ptrgeom->p, X, V);
+  r=V[1];
+  th=V[2];
+
+  // default
+  PLOOP(pliter,pl) prlocal[pl]=pr[pl];
+
+  if(DOEVOLVERHO){
+    // Bondi-like atmosphere
+    if(rescaletype==4){
+      if(atmospheretype==1){
+        // couple rescaletype to atmosphere type
+        prlocal[RHO] = RHOMIN*pow(r,-1.5);
+      }
+      else if(atmospheretype==2){
+        // couple rescaletype to atmosphere type
+        if(r>40.0) prlocal[RHO] = RHOMIN*pow(r,-2.0);
+        else prlocal[RHO] = RHOMIN*pow(40.0,-2.0);
+      }
+    }
+    else{
+      prlocal[RHO] = RHOMIN*pow(r,-1.5);
+    }
+  }
+  else{
+    prlocal[RHO] = 0;
+  }
+
+
+  if(DOEVOLVEUU){
+    // Bondi-like atmosphere
+    prlocal[UU]  = UUMIN*pow(r,-2.5);
+  }
+  else{
+    prlocal[UU]  = 0;
+  }
+
+    
+  // bl-normal observer (4-vel components)
+  
+  // normal observer velocity in atmosphere
+  if(whichvel==VEL4){
+    prlocal[U1] = -ptrgeom->gcon[GIND(0,1)]/sqrt(-ptrgeom->gcon[GIND(0,0)]) ;
+    prlocal[U2] = -ptrgeom->gcon[GIND(0,2)]/sqrt(-ptrgeom->gcon[GIND(0,0)]) ;
+    prlocal[U3] = -ptrgeom->gcon[GIND(0,3)]/sqrt(-ptrgeom->gcon[GIND(0,0)]) ;
+  }
+  else if(whichvel==VEL3){
+    prlocal[U1] = ptrgeom->gcon[GIND(0,1)]/ptrgeom->gcon[GIND(0,0)] ;
+    prlocal[U2] = ptrgeom->gcon[GIND(0,2)]/ptrgeom->gcon[GIND(0,0)] ;
+    prlocal[U3] = ptrgeom->gcon[GIND(0,3)]/ptrgeom->gcon[GIND(0,0)] ;
+    // GAMMIE
+    //ur = -1./(r*r);
+    //uh=up=0.0;
+  }
+  else if(whichvel==VELREL4){
+    prlocal[U1] = 0.0;
+    prlocal[U2] = 0.0;
+    prlocal[U3] = 0.0;
+  }
+  
+  if(whichcond==1){
+    if(100.0*dt>TAUADJUSTATM){
+      dualfprintf(fail_file,"dt=%21.15g and TAUADJUSTATM=%21.15g\n",dt,TAUADJUSTATM);
+      myexit(1);
+    }
+    // TAUADJUSTATM must be >> dt always in order for this to make sense (i.e. critical damping to fixed solution)
+    PLOOP(pliter,pl) pr[pl] = pr[pl]+(prlocal[pl]-pr[pl])*dt/TAUADJUSTATM;
+  }
+  else if(whichcond==0){ 
+    PLOOP(pliter,pl) pr[pl] = prlocal[pl];
+    // very specific
+    // always outflow field
+    //    pr[B1] = pr[B2] = pr[B3] = 0;
+  }
+  else if(whichcond==-1){ 
+    // t=0, just sets as "floor"
+    PLOOP(pliter,pl) pr[pl] = prlocal[pl];
+    pr[B1] = pr[B2] = pr[B3] = 0;
+  }
+
+
+  return(0);
+
+}
+
 
 
 
@@ -1311,6 +1437,21 @@ int set_density_floors(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *prfloor)
   int funreturn;
   
   funreturn=set_density_floors_default(ptrgeom, pr, prfloor);
+
+  FTYPE X[NDIM],V[NDIM];
+  FTYPE r,th;
+  FTYPE prlocal[NPR];
+  bl_coord_ijk_2(ptrgeom->i, ptrgeom->j, ptrgeom->k, ptrgeom->p, X, V);
+  r=V[1];
+  th=V[2];
+
+  prlocal[RHO] = RHOMINEVOLVE*pow(r,-2.0);
+  prlocal[UU]  = UUMINEVOLVE*pow(r,-2.5);
+  
+
+  if(pr[RHO]<prlocal[RHO]) pr[RHO]=prlocal[RHO];
+  if(pr[UU]<prlocal[UU]) pr[UU]=prlocal[UU];
+
   if(funreturn!=0) return(funreturn);
 
   return(0);
@@ -1530,3 +1671,96 @@ int coolfunc_user(FTYPE h_over_r, FTYPE *pr, struct of_geom *geom, struct of_sta
         return(0) ;
 }
 
+
+
+
+// get maximum b^2 and p_g and minimum of beta
+// OPENMPOPTMARK: No benefit from OpenMP due to critical region required and too user specific
+int user2_get_maxes(int eqslice, FTYPE *parms, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *bsq_max, FTYPE *pg_max, FTYPE *beta_min)
+{
+  int i,j,k;
+  FTYPE bsq_ij,pg_ij,beta_ij;
+  struct of_geom geomdontuse;
+  struct of_geom *ptrgeom=&geomdontuse;
+  FTYPE X[NDIM],V[NDIM];
+  FTYPE dxdxp[NDIM][NDIM];
+  FTYPE r,th;
+  int gotnormal;
+  FTYPE rinlocal;
+  int loc;
+
+  
+  
+
+  rinlocal=parms[0];
+
+
+  bsq_max[0] = SMALL;
+  pg_max[0]= 0.;
+  beta_min[0]=VERYBIG;
+  gotnormal=0; // to check if ever was in location where wanted to normalize
+  loc=CENT;
+
+  ZLOOP {
+    get_geometry(i, j, k, loc, ptrgeom);
+
+    if(eqslice){
+      bl_coord_ijk_2(i, j, k, loc, X, V);
+      r=V[1];
+      th=V[2];
+      
+      if((r>rinlocal)&&(fabs(th-M_PI*0.5)<10.0*M_PI*dx[2]*hslope)){
+        gotnormal=1;
+        if (bsq_calc(MAC(prim,i,j,k), ptrgeom, &bsq_ij) >= 1) FAILSTATEMENT("init.c:init()", "bsq_calc()", 1);
+        if (bsq_ij > bsq_max[0])      bsq_max[0] = bsq_ij;
+
+        pg_ij=pressure_rho0_u_simple(i,j,k,loc,MACP0A1(prim,i,j,k,RHO),MACP0A1(prim,i,j,k,UU));
+        if (pg_ij > pg_max[0])      pg_max[0] = pg_ij;
+
+        beta_ij=pg_ij/(bsq_ij*0.5);
+
+        if (beta_ij < beta_min[0])      beta_min[0] = beta_ij;
+
+      }
+    }
+    else{
+      gotnormal=1;
+      if (bsq_calc(MAC(prim,i,j,k), ptrgeom, &bsq_ij) >= 1) FAILSTATEMENT("init.c:init()", "bsq_calc()", 1);
+      if (bsq_ij > bsq_max[0])      bsq_max[0] = bsq_ij;
+
+      pg_ij=pressure_rho0_u_simple(i,j,k,loc,MACP0A1(prim,i,j,k,RHO),MACP0A1(prim,i,j,k,UU));
+      if (pg_ij > pg_max[0])      pg_max[0] = pg_ij;
+
+      beta_ij=pg_ij/(bsq_ij*0.5);
+      
+      if (beta_ij < beta_min[0])      beta_min[0] = beta_ij;
+
+    }
+  }
+
+
+  mpiisum(&gotnormal);
+
+  if(gotnormal==0){
+    dualfprintf(fail_file,"Never found place to normalize field\n");
+    if(N2==1 && N3==1){
+      ZLOOP {
+        bl_coord_ijk_2(i, j, k, loc, X, V);
+        dxdxprim_ijk(i, j, k, loc, dxdxp);
+        r=V[1];
+        th=V[2];
+
+        dualfprintf(fail_file,"i=%d j=%d k=%d V[1]=%21.15g dxdxp[1][1]*dx[1]=%21.15g dx[1]=%21.15g\n",i,j,k,V[1],dxdxp[1][1]*dx[1],dx[1]);
+      }
+    }
+    myexit(111);
+  }
+
+  mpimax(bsq_max);
+  mpimax(pg_max);
+  mpimin(beta_min);
+
+
+  return(0);
+
+}

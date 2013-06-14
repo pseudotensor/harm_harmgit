@@ -10,7 +10,7 @@
 #include "decs.h"
 
 
-#define SLOWFAC 1.0		/* reduce u_phi by this amount */
+#define SLOWFAC 1.0             /* reduce u_phi by this amount */
 
 SFTYPE rhomax=0,umax=0,bsq_max=0,beta,rin;
 double tabrho[512][128];
@@ -120,15 +120,15 @@ int init_grid(void)
   R0 = -3.0;
   Rout = 1E5;
   // define coordinate type
-   defcoord = JET4COORDS;
+  defcoord = JET4COORDS;
 
-   // defcoord=0.;
+  // defcoord=0.;
 #endif
 
  
-   Rhor=rhor_calc(0);
-   // Rin=setRin(setihor());  // REBECCAMARK
-    Rin = 0.95* Rhor;
+  Rhor=rhor_calc(0);
+  // Rin=setRin(setihor());  // REBECCAMARK
+  Rin = 0.95* Rhor;
   
   hslope = 0.15;  // REBECCAMARK
 
@@ -304,14 +304,14 @@ int init_global(void)
   /* output choices */
   tf = 8000.0;
 
-  DTdumpgen[FLUXDUMPTYPE]=DTdumpgen[OTHERDUMPTYPE]=DTdumpgen[EOSDUMPTYPE]=DTdumpgen[VPOTDUMPTYPE]=DTdumpgen[MAINDUMPTYPE] = 50.;			/* dumping frequency, in units of M */
+  DTdumpgen[FLUXDUMPTYPE]=DTdumpgen[OTHERDUMPTYPE]=DTdumpgen[EOSDUMPTYPE]=DTdumpgen[VPOTDUMPTYPE]=DTdumpgen[MAINDUMPTYPE] = 50.;                        /* dumping frequency, in units of M */
   DTdumpgen[DISSDUMPTYPE]=DTdumpgen[MAINDUMPTYPE]/5.0;
   DTdumpgen[AVG1DUMPTYPE]=DTdumpgen[AVG2DUMPTYPE]= 50.0;
-  DTdumpgen[FIELDLINEDUMPTYPE]=DTdumpgen[ENERDUMPTYPE] = 2.0;			/* logfile frequency, in units of M */
-  DTdumpgen[IMAGEDUMPTYPE] = 2.0;			/* image file frequ., in units of M */
+  DTdumpgen[FIELDLINEDUMPTYPE]=DTdumpgen[ENERDUMPTYPE] = 2.0;                   /* logfile frequency, in units of M */
+  DTdumpgen[IMAGEDUMPTYPE] = 2.0;                       /* image file frequ., in units of M */
   DTdumpgen[DEBUGDUMPTYPE] = 1000.0; /* debug file */
   // DTr = .1 ; /* restart file frequ., in units of M */
-  DTr = 1000;			/* restart file period in steps */
+  DTr = 1000;                   /* restart file period in steps */
 #elif(WHICHPROBLEM==GRBJET)
   /* output choices */
   tf = 5E5;
@@ -393,56 +393,56 @@ int read_data(void)
               j >= INFULL2 && j <= OUTFULL2 && k>=INFULL3 && k<=OUTFULL3 ) {
 
 
-	    MACP0A1(p,i,j,k,RHO) = tabr;
-	    MACP0A1(p,i,j,k,U3) = tabo;
+            MACP0A1(p,i,j,k,RHO) = tabr;
+            MACP0A1(p,i,j,k,U3) = tabo;
 
-	    trifprintf(" k = %d , i=%d, j=%d, rho=%lg\n", k,i, j, tabr);
-
-
-	    //   trifprintf("i=%d, j=%d, k=%d, ti=%d, tj=%d, rho=%lg, om=%lg\n", i, j, k, ti, tj, tabr, tabo);
-
-	    //  MACP0A1(Uavg,i,j,k,U1) = p1a / coordparams.timescalefactor;
-	    // MACP0A1(Uavg,i,j,k,U2) = p2a / coordparams.timescalefactor;
-	    // MACP0A1(Uavg,i,j,k,U3) = 0.0;
-	    // MACP0A1(Uavg,i,j,k,B1) = 0.0;
-	    // MACP0A1(Uavg,i,j,k,B2) = 0.0;
-	    // MACP0A1(Uavg,i,j,k,B3) = 0.0;
+            trifprintf(" k = %d , i=%d, j=%d, rho=%lg\n", k,i, j, tabr);
 
 
+            //   trifprintf("i=%d, j=%d, k=%d, ti=%d, tj=%d, rho=%lg, om=%lg\n", i, j, k, ti, tj, tabr, tabo);
 
-	    //              get_geometry(i, j, k, CENT, &geom);
-
-	    // PLOOP(pliter,pl) {
-	    //        MACP0A1(Uavg,i,j,k,pl) *= geom.e[pl];  //multiply conserved quantities by the gdet to have the same representation as inside the code
-  /// }
+            //  MACP0A1(Uavg,i,j,k,U1) = p1a / coordparams.timescalefactor;
+            // MACP0A1(Uavg,i,j,k,U2) = p2a / coordparams.timescalefactor;
+            // MACP0A1(Uavg,i,j,k,U3) = 0.0;
+            // MACP0A1(Uavg,i,j,k,B1) = 0.0;
+            // MACP0A1(Uavg,i,j,k,B2) = 0.0;
+            // MACP0A1(Uavg,i,j,k,B3) = 0.0;
 
 
 
-  // FTYPE   coord(i, j, k, CENT, X);
-  //FTYPE   bl_coord(X, V);
-  //FTYPE   get_geometry(i,j,k,CENT,&geom) ;
+            //              get_geometry(i, j, k, CENT, &geom);
+
+            // PLOOP(pliter,pl) {
+            //        MACP0A1(Uavg,i,j,k,pl) *= geom.e[pl];  //multiply conserved quantities by the gdet to have the same representation as inside the code
+            /// }
 
 
-  //convert the conserved momenta (covariant quantities) from orthonormal basis to coordinate one.
-  // MACP0A1(Uavg,i,j,k,U1) *= dxdxp[1][1];
-  //      MACP0A1(Uavg,i,j,k,U2) *= dxdxp[2][2];
 
-  //*whichvel=VEL3;
-  //*whichcoord=BLCOORD;
+            // FTYPE   coord(i, j, k, CENT, X);
+            //FTYPE   bl_coord(X, V);
+            //FTYPE   get_geometry(i,j,k,CENT,&geom) ;
 
-  numused++;
+
+            //convert the conserved momenta (covariant quantities) from orthonormal basis to coordinate one.
+            // MACP0A1(Uavg,i,j,k,U1) *= dxdxp[1][1];
+            //      MACP0A1(Uavg,i,j,k,U2) *= dxdxp[2][2];
+
+            //*whichvel=VEL3;
+            //*whichcoord=BLCOORD;
+
+            numused++;
           }
           lineno++;
         }
-	// Close file
+        // Close file
         fclose( fpr );
         //
         ///////
       }
       else{
-	// if null report and fail!
-	dualfprintf(fail_file,"No Rebecca file 1\n");
-	myexit(246346);
+        // if null report and fail!
+        dualfprintf(fail_file,"No Rebecca file 1\n");
+        myexit(246346);
       }
 #if(USEMPI)
     }
@@ -460,26 +460,26 @@ int read_data(void)
     if(fpr!=NULL){
     
       for(j=0; j<N2; j++){
-	
-	for(i=0; i<N1; i++){
-	  
-	  for(k=0; k<N3; k++){
-	    
-	    
-	    //      dualfprintf(fail_file,"i=%d j=%d\n",i,j);
-	    
-	    fscanf(fpr, "%d %d %d %lg %lg \r\n", &ti, &tj, &tk , &tabr, &tabo );
-	    
-	    MACP0A1(p,i,j,k,RHO) = tabr;
-	    MACP0A1(p,i,j,k,U3) = tabo;
-	    
-	    
-	    //      printf("tabom %lf  ", tabom[i][j]);
+        
+        for(i=0; i<N1; i++){
+          
+          for(k=0; k<N3; k++){
+            
+            
+            //      dualfprintf(fail_file,"i=%d j=%d\n",i,j);
+            
+            fscanf(fpr, "%d %d %d %lg %lg \r\n", &ti, &tj, &tk , &tabr, &tabo );
+            
+            MACP0A1(p,i,j,k,RHO) = tabr;
+            MACP0A1(p,i,j,k,U3) = tabo;
+            
+            
+            //      printf("tabom %lf  ", tabom[i][j]);
 
-	    
-	    //      dualfprintf(fail_file,"i=%d j=%d tabr=%21.15g\n",i,j,tabr);
-	  }
-	}
+            
+            //      dualfprintf(fail_file,"i=%d j=%d tabr=%21.15g\n",i,j,tabr);
+          }
+        }
       }
     }
     else{
@@ -641,7 +641,7 @@ int init_primitives(FTYPE (*p)[NSTORE2][NSTORE3][NPR])
     else{
       // transform from whichcoord to MCOORD
       if (bl2met2metp2v(whichvel, whichcoord,MAC(p,i,j,k), i,j,k) >= 1)
-	FAILSTATEMENT("init.c:init()", "bl2ks2ksp2v()", 1);
+        FAILSTATEMENT("init.c:init()", "bl2ks2ksp2v()", 1);
     }
     //  trifprintf("done with atmo\n");
   }
@@ -691,7 +691,7 @@ int init_primitives(FTYPE (*p)[NSTORE2][NSTORE3][NPR])
  
 #if(1)
   init_vpot(p);
-   normalize_field(p); // normalizes p and pstagscratch and unew and vpotarray if tracked
+  normalize_field(p); // normalizes p and pstagscratch and unew and vpotarray if tracked
 #else
   // no field
   init_zero_field(p);
@@ -788,16 +788,16 @@ int init_dsandvels(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr
 
 
   if(r<rin || pr[0] < 10e-24)
-  {
-    trifprintf("density still zero r is %g \n", r);
-    pr[RHO]=1E-30;
-    // small density will indicate to atmosphere to change it
+    {
+      trifprintf("density still zero r is %g \n", r);
+      pr[RHO]=1E-30;
+      // small density will indicate to atmosphere to change it
 
-    *whichvel=WHICHVEL;
-    *whichcoord=PRIMECOORDS;
+      *whichvel=WHICHVEL;
+      *whichcoord=PRIMECOORDS;
 
 
-  }
+    }
 
   else{
     mrho=pr[0];
@@ -1008,15 +1008,15 @@ int normalize_field(FTYPE (*pr)[NSTORE2][NSTORE3][NPR])
       th=V[2];
       
       if((r>rin)&&(fabs(th-M_PI*0.5)<4.0*M_PI*dx[2]*hslope)){
-	if (bsq_calc(MAC(pr,i,j,k), &geom, &bsq_ij) >= 1)
-	  FAILSTATEMENT("init.c:init()", "bsq_calc()", 1);
-	
-	if (bsq_ij > bsq_max)      bsq_max = bsq_ij;
+        if (bsq_calc(MAC(pr,i,j,k), &geom, &bsq_ij) >= 1)
+          FAILSTATEMENT("init.c:init()", "bsq_calc()", 1);
+        
+        if (bsq_ij > bsq_max)      bsq_max = bsq_ij;
       }
     }
     else{
       if (bsq_calc(MAC(pr,i,j,k), &geom, &bsq_ij) >= 1)
-	FAILSTATEMENT("init.c:init()", "bsq_calc()", 1);
+        FAILSTATEMENT("init.c:init()", "bsq_calc()", 1);
       
       if (bsq_ij > bsq_max)      bsq_max = bsq_ij;
     }
@@ -1062,25 +1062,25 @@ int normalize_field(FTYPE (*pr)[NSTORE2][NSTORE3][NPR])
 SFTYPE lfish_calc(SFTYPE r)
 {
   return (((pow(a, 2) - 2. * a * sqrt(r) + pow(r, 2)) *
-	   ((-2. * a * r * (pow(a, 2) - 2. * a * sqrt(r) + pow(r, 2))) /
-	    sqrt(2. * a * sqrt(r) + (-3. + r) * r) +
-	    ((a + (-2. + r) * sqrt(r)) * (pow(r, 3) +
-					  pow(a,
-					      2) * (2. + r))) / sqrt(1 +
-								     (2.
-								      *
-								      a)
-								     /
-								     pow
-								     (r,
-								      1.5)
-								     -
-								     3.
-								     /
-								     r)))
-	  / (pow(r, 3) * sqrt(2. * a * sqrt(r) + (-3. + r) * r) *
-	     (pow(a, 2) + (-2. + r) * r))
-	  );
+           ((-2. * a * r * (pow(a, 2) - 2. * a * sqrt(r) + pow(r, 2))) /
+            sqrt(2. * a * sqrt(r) + (-3. + r) * r) +
+            ((a + (-2. + r) * sqrt(r)) * (pow(r, 3) +
+                                          pow(a,
+                                              2) * (2. + r))) / sqrt(1 +
+                                                                     (2.
+                                                                      *
+                                                                      a)
+                                                                     /
+                                                                     pow
+                                                                     (r,
+                                                                      1.5)
+                                                                     -
+                                                                     3.
+                                                                     /
+                                                                     r)))
+          / (pow(r, 3) * sqrt(2. * a * sqrt(r) + (-3. + r) * r) *
+             (pow(a, 2) + (-2. + r) * r))
+          );
 }
 
 // UUMIN/RHOMIN used for atmosphere

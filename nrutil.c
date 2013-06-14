@@ -58,7 +58,7 @@ FTYPE **dmatrix(long nrl, long nrh, long ncl, long nch)
 
   for (i = nrl; i <= nrh; i++) {
     m[i] =
-	(FTYPE *) malloc( (nch - ncl + 1) * sizeof(FTYPE));
+      (FTYPE *) malloc( (nch - ncl + 1) * sizeof(FTYPE));
     if (!m[i])
       nrerror("allocation failure 2 in dmatrix()");
     m[i] -= ncl;
@@ -78,7 +78,7 @@ FTYPE **matrix(long nrl, long nrh, long ncl, long nch)
 
   for (i = nrl; i <= nrh; i++) {
     m[i] =
-	(FTYPE *) malloc( (nch - ncl + 1) * sizeof(FTYPE));
+      (FTYPE *) malloc( (nch - ncl + 1) * sizeof(FTYPE));
     if (!m[i])
       nrerror("allocation failure 2 in dmatrix()");
     m[i] -= ncl;
@@ -108,13 +108,13 @@ int **imatrix(long nrl, long nrh, long ncl, long nch)
 
 
 FTYPE **submatrix(FTYPE **a, long oldrl, long oldrh, long oldcl,
-		  long oldch, long newrl, long newcl)
+                  long oldch, long newrl, long newcl)
 {
   long i, j;
   FTYPE **m;
 
   m = (FTYPE **) malloc( (oldrh - oldrl + 1) *
-			sizeof(FTYPE *));
+                         sizeof(FTYPE *));
   if (!m)
     nrerror("allocation failure in submatrix()");
   m -= newrl;
@@ -126,13 +126,13 @@ FTYPE **submatrix(FTYPE **a, long oldrl, long oldrh, long oldcl,
 }
 
 FTYPE **dsubmatrix(FTYPE **a, long oldrl, long oldrh, long oldcl,
-		  long oldch, long newrl, long newcl)
+                   long oldch, long newrl, long newcl)
 {
   long i, j;
   FTYPE **m;
 
   m = (FTYPE **) malloc( (oldrh - oldrl + 1) *
-			sizeof(FTYPE *));
+                         sizeof(FTYPE *));
   if (!m)
     nrerror("allocation failure in submatrix()");
   m -= newrl;
@@ -220,7 +220,7 @@ FTYPE **convert_matrix(FTYPE *a, long nrl, long nrh, long ncl, long nch)
 
 
 void free_convert_matrix(FTYPE **b, long nrl, long nrh, long ncl,
-			 long nch)
+                         long nch)
 {
   free((char *) (b + nrl));
 }
@@ -228,9 +228,9 @@ void free_convert_matrix(FTYPE **b, long nrl, long nrh, long ncl,
 #define JMAX 100
 
 FTYPE rtbis(FTYPE (*func)(FTYPE,FTYPE*), FTYPE *parms, FTYPE x1, FTYPE x2, FTYPE xacc)
-    //Using bisection, find the root of a function func known to lie between x1 and x2. The root,
-    //returned as rtbis, will be refined until its accuracy is \pm xacc.
-    //taken from http://gpiserver.dcom.upv.es/Numerical_Recipes/bookcpdf/c9-1.pdf
+//Using bisection, find the root of a function func known to lie between x1 and x2. The root,
+//returned as rtbis, will be refined until its accuracy is \pm xacc.
+//taken from http://gpiserver.dcom.upv.es/Numerical_Recipes/bookcpdf/c9-1.pdf
 {
   int j;
   FTYPE dx,f,fmid,xmid,rtb;

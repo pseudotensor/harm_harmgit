@@ -239,9 +239,9 @@
 //#define DIVBNORMFLUXCTTOTHPRIM(p,i,j,k) (MAX(MAX(dx[1],dx[2]),dx[3])/(THIRD*fabs(DIVBNORMFLUXCTTOTHPRIMx(p,i,j,k)+DIVBNORMFLUXCTTOTHPRIMy(p,i,j,k)+DIVBNORMFLUXCTTOTHPRIMz(p,i,j,k)) +SMALL))
 #define DIVBNORMFLUXCTTOTHPRIM(p,i,j,k) (1.0/(fabs(DIVBNORMFLUXCTTOTHPRIMx(p,i,j,k)/dx[1]+DIVBNORMFLUXCTTOTHPRIMy(p,i,j,k)/dx[2]+DIVBNORMFLUXCTTOTHPRIMz(p,i,j,k)/dx[3]) +SMALL))
 
-#define DIVBFLUXCTTOTHPRIM(p,i,j,k) ((\
-                             DIVBDIFFFLUXCTTOTHPRIMx(p,i,j,k)/dx[1] + DIVBDIFFFLUXCTTOTHPRIMy(p,i,j,k)/dx[2] + DIVBDIFFFLUXCTTOTHPRIMz(p,i,j,k)/dx[3]\
-                             )*(DIVBNORMFLUXCTTOTHPRIM(p,i,j,k)))
+#define DIVBFLUXCTTOTHPRIM(p,i,j,k) ((                                  \
+                                      DIVBDIFFFLUXCTTOTHPRIMx(p,i,j,k)/dx[1] + DIVBDIFFFLUXCTTOTHPRIMy(p,i,j,k)/dx[2] + DIVBDIFFFLUXCTTOTHPRIMz(p,i,j,k)/dx[3] \
+                                      )*(DIVBNORMFLUXCTTOTHPRIM(p,i,j,k)))
 
 
 
@@ -266,9 +266,9 @@
 //#define DIVBNORMFLUXCTTOTH(U,i,j,k) (MAX(MAX(dx[1],dx[2]),dx[3])/(THIRD*fabs(DIVBNORMFLUXCTTOTHx(U,i,j,k)+DIVBNORMFLUXCTTOTHy(U,i,j,k)+DIVBNORMFLUXCTTOTHz(U,i,j,k)) +SMALL))
 #define DIVBNORMFLUXCTTOTH(U,i,j,k) (1.0/(fabs(DIVBNORMFLUXCTTOTHx(U,i,j,k)/dx[1]+DIVBNORMFLUXCTTOTHy(U,i,j,k)/dx[2]+DIVBNORMFLUXCTTOTHz(U,i,j,k)/dx[3]) +SMALL))
 
-#define DIVBFLUXCTTOTH(U,i,j,k) ((\
-                             DIVBDIFFFLUXCTTOTHx(U,i,j,k)/dx[1] + DIVBDIFFFLUXCTTOTHy(U,i,j,k)/dx[2] + DIVBDIFFFLUXCTTOTHz(U,i,j,k)/dx[3]\
-                             )*(DIVBNORMFLUXCTTOTH(U,i,j,k)))
+#define DIVBFLUXCTTOTH(U,i,j,k) ((                                      \
+                                  DIVBDIFFFLUXCTTOTHx(U,i,j,k)/dx[1] + DIVBDIFFFLUXCTTOTHy(U,i,j,k)/dx[2] + DIVBDIFFFLUXCTTOTHz(U,i,j,k)/dx[3] \
+                                  )*(DIVBNORMFLUXCTTOTH(U,i,j,k)))
 
 
 
@@ -294,9 +294,9 @@
 //#define DIVBNORMFLUXCTSTAG(U,i,j,k) (MAX(MAX(dx[1],dx[2]),dx[3])/(THIRD*fabs(DIVBNORMFLUXCTSTAGx(U,i,j,k)+DIVBNORMFLUXCTSTAGy(U,i,j,k)+DIVBNORMFLUXCTSTAGz(U,i,j,k)) +SMALL))
 #define DIVBNORMFLUXCTSTAG(U,i,j,k) (1.0/(fabs(DIVBNORMFLUXCTSTAGx(U,i,j,k)/dx[1]+DIVBNORMFLUXCTSTAGy(U,i,j,k)/dx[2]+DIVBNORMFLUXCTSTAGz(U,i,j,k)/dx[3]) +SMALL))
 
-#define DIVBFLUXCTSTAG(U,i,j,k) ((\
-                             DIVBDIFFFLUXCTSTAGx(U,i,j,k)/dx[1] + DIVBDIFFFLUXCTSTAGy(U,i,j,k)/dx[2] + DIVBDIFFFLUXCTSTAGz(U,i,j,k)/dx[3]\
-                             )*(DIVBNORMFLUXCTSTAG(U,i,j,k)))
+#define DIVBFLUXCTSTAG(U,i,j,k) ((                                      \
+                                  DIVBDIFFFLUXCTSTAGx(U,i,j,k)/dx[1] + DIVBDIFFFLUXCTSTAGy(U,i,j,k)/dx[2] + DIVBDIFFFLUXCTSTAGz(U,i,j,k)/dx[3] \
+                                  )*(DIVBNORMFLUXCTSTAG(U,i,j,k)))
 
 /////////////////////
 // PRMITIVE quantity
@@ -314,9 +314,9 @@
 // keep like-dimensional things together
 #define DIVBNORMFLUXCTSTAGPRIM(p,i,j,k) (1.0/(fabs(DIVBNORMFLUXCTSTAGPRIMx(p,i,j,k)/dx[1]+DIVBNORMFLUXCTSTAGPRIMy(p,i,j,k)/dx[2]+DIVBNORMFLUXCTSTAGPRIMz(p,i,j,k)/dx[3]) +SMALL))
 
-#define DIVBFLUXCTSTAGPRIM(p,i,j,k) ((\
-                             DIVBDIFFFLUXCTSTAGPRIMx(p,i,j,k)/dx[1] + DIVBDIFFFLUXCTSTAGPRIMy(p,i,j,k)/dx[2] + DIVBDIFFFLUXCTSTAGPRIMz(p,i,j,k)/dx[3]\
-                             )*(DIVBNORMFLUXCTSTAGPRIM(p,i,j,k)))
+#define DIVBFLUXCTSTAGPRIM(p,i,j,k) ((                                  \
+                                      DIVBDIFFFLUXCTSTAGPRIMx(p,i,j,k)/dx[1] + DIVBDIFFFLUXCTSTAGPRIMy(p,i,j,k)/dx[2] + DIVBDIFFFLUXCTSTAGPRIMz(p,i,j,k)/dx[3] \
+                                      )*(DIVBNORMFLUXCTSTAGPRIM(p,i,j,k)))
 
 
 
@@ -333,33 +333,33 @@
 /////////////////////
 // CONSERVED quantity
 // FLUXCD divb lives at CENT
-#define DIVBNORMFLUXCD(p,i,j,k) (MAX(MAX(dx[1],dx[2]),dx[3])/(MYGDET(i,j,k,CENT)*fabs(\
-                                   Fg(p,ip1mac(i),j,k,B1) + Fg(p,im1mac(i),j,k,B1)\
-                                  +Fg(p,i,jp1mac(j),k,B2) + Fg(p,i,jm1mac(j),k,B2)\
-                                  +Fg(p,i,j,kp1mac(k),B3) + Fg(p,i,j,km1mac(k),B3)\
-				 )+SMALL))
+#define DIVBNORMFLUXCD(p,i,j,k) (MAX(MAX(dx[1],dx[2]),dx[3])/(MYGDET(i,j,k,CENT)*fabs( \
+                                                                                      Fg(p,ip1mac(i),j,k,B1) + Fg(p,im1mac(i),j,k,B1) \
+                                                                                      +Fg(p,i,jp1mac(j),k,B2) + Fg(p,i,jm1mac(j),k,B2) \
+                                                                                      +Fg(p,i,j,kp1mac(k),B3) + Fg(p,i,j,km1mac(k),B3) \
+                                                                                      )+SMALL))
 
-#define DIVBFLUXCD(p,i,j,k)  (0.5*(\
-                                  (Fg(p,ip1mac(i),j,k,B1) - Fg(p,im1mac(i),j,k,B1))/dx[1]\
-                                 +(Fg(p,i,jp1mac(j),k,B2) - Fg(p,i,jm1mac(j),k,B2))/dx[2]\
-                                 +(Fg(p,i,j,kp1mac(k),B3) - Fg(p,i,j,km1mac(k),B3))/dx[3]\
-                                )*DIVBNORMFLUXCD(p,i,j,k))
+#define DIVBFLUXCD(p,i,j,k)  (0.5*(                                     \
+                                   (Fg(p,ip1mac(i),j,k,B1) - Fg(p,im1mac(i),j,k,B1))/dx[1] \
+                                   +(Fg(p,i,jp1mac(j),k,B2) - Fg(p,i,jm1mac(j),k,B2))/dx[2] \
+                                   +(Fg(p,i,j,kp1mac(k),B3) - Fg(p,i,j,km1mac(k),B3))/dx[3] \
+                                   )*DIVBNORMFLUXCD(p,i,j,k))
 
 
 /////////////////////
 // PRMITIVE quantity
 // FLUXCD divb lives at CENT
-#define DIVBNORMFLUXCDPRIM(p,i,j,k) (MAX(MAX(dx[1],dx[2]),dx[3])/(MYGDET(i,j,k,CENT)*fabs(\
-                                   FgN(p,ip1mac(i),j,k,B1) + FgN(p,im1mac(i),j,k,B1)\
-                                  +FgN(p,i,jp1mac(j),k,B2) + FgN(p,i,jm1mac(j),k,B2)\
-                                  +FgN(p,i,j,kp1mac(k),B3) + FgN(p,i,j,km1mac(k),B3)\
-				 )+SMALL))
+#define DIVBNORMFLUXCDPRIM(p,i,j,k) (MAX(MAX(dx[1],dx[2]),dx[3])/(MYGDET(i,j,k,CENT)*fabs( \
+                                                                                          FgN(p,ip1mac(i),j,k,B1) + FgN(p,im1mac(i),j,k,B1) \
+                                                                                          +FgN(p,i,jp1mac(j),k,B2) + FgN(p,i,jm1mac(j),k,B2) \
+                                                                                          +FgN(p,i,j,kp1mac(k),B3) + FgN(p,i,j,km1mac(k),B3) \
+                                                                                          )+SMALL))
 
-#define DIVBFLUXCDPRIM(p,i,j,k)  (0.5*(\
-                                  (FgN(p,ip1mac(i),j,k,B1) - FgN(p,im1mac(i),j,k,B1))/dx[1]\
-                                 +(FgN(p,i,jp1mac(j),k,B2) - FgN(p,i,jm1mac(j),k,B2))/dx[2]\
-                                 +(FgN(p,i,j,kp1mac(k),B3) - FgN(p,i,j,km1mac(k),B3))/dx[3]\
-                                )*DIVBNORMFLUXCDPRIM(p,i,j,k))
+#define DIVBFLUXCDPRIM(p,i,j,k)  (0.5*(                                 \
+                                       (FgN(p,ip1mac(i),j,k,B1) - FgN(p,im1mac(i),j,k,B1))/dx[1] \
+                                       +(FgN(p,i,jp1mac(j),k,B2) - FgN(p,i,jm1mac(j),k,B2))/dx[2] \
+                                       +(FgN(p,i,j,kp1mac(k),B3) - FgN(p,i,j,km1mac(k),B3))/dx[3] \
+                                       )*DIVBNORMFLUXCDPRIM(p,i,j,k))
 
 
 

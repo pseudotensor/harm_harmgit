@@ -8,7 +8,7 @@
 
 // for function prototypes associated with function calls
 //#define INDEXPARAMETERSPROTOTYPES int kazii, int kazjj, int kazkk, int kazll, int kazmm, \
-//    int kaziio, int kazjjo, int kazkko, int kazllo, int kazmmo,	\
+//    int kaziio, int kazjjo, int kazkko, int kazllo, int kazmmo,       \
 //    int kazstartiii, int kazstartjjj, int kazstartkkk, int kazstartlll, int kazstartmmm, \
 //    int kazendiii, int kazendjjj, int kazendkkk, int kazendlll, int kazendmmm, \
 //    FTYPEEOS kazdi[], FTYPEEOS kazdj[], FTYPEEOS kazdk[], FTYPEEOS kazdl[], FTYPEEOS kazdm[]
@@ -21,17 +21,17 @@
 //    kazdiwhichd[whichd],kazdjwhichd[whichd],kazdkwhichd[whichd],kazdlwhichd[whichd],kazdmwhichd[whichd]
 
 // for function calls inside main function call (e.g. _dumb() inside others)
-//#define INDEXPARAMETERSTOSUBPASS kazii,kazjj,kazkk,kazll,kazmm,	\
-//    kaziio,kazjjo,kazkko,kazllo,kazmmo,				\
-//    kazstartiii,kazstartjjj,kazstartkkk,kazstartlll,kazstartmmm,	\
-//    kazendiii,kazendjjj,kazendkkk,kazendlll,kazendmmm,		\
+//#define INDEXPARAMETERSTOSUBPASS kazii,kazjj,kazkk,kazll,kazmm,       \
+//    kaziio,kazjjo,kazkko,kazllo,kazmmo,                               \
+//    kazstartiii,kazstartjjj,kazstartkkk,kazstartlll,kazstartmmm,      \
+//    kazendiii,kazendjjj,kazendkkk,kazendlll,kazendmmm,                \
 //    kazdi,kazdj,kazdk,kazdl,kazdm
 
 #define INDEXPARAMETERSLOCALDEFS int kazii; int kazjj; int kazkk; int kazll; int kazmm; \
-    int kaziio; int kazjjo; int kazkko; int kazllo; int kazmmo;	\
-    int kazstartiii; int kazstartjjj; int kazstartkkk; int kazstartlll; int kazstartmmm; \
-    int kazendiii; int kazendjjj; int kazendkkk; int kazendlll; int kazendmmm; \
-    FTYPEEOS kazdi[2]; FTYPEEOS kazdj[2]; FTYPEEOS kazdk[2]; FTYPEEOS kazdl[2]; FTYPEEOS kazdm[2]
+  int kaziio; int kazjjo; int kazkko; int kazllo; int kazmmo;           \
+  int kazstartiii; int kazstartjjj; int kazstartkkk; int kazstartlll; int kazstartmmm; \
+  int kazendiii; int kazendjjj; int kazendkkk; int kazendlll; int kazendmmm; \
+  FTYPEEOS kazdi[2]; FTYPEEOS kazdj[2]; FTYPEEOS kazdk[2]; FTYPEEOS kazdl[2]; FTYPEEOS kazdm[2]
 
 
 
@@ -299,43 +299,43 @@ static int get_eos_fromlookup_parabolicfull(int repeatedeos, int tabledimen, int
     }
     if(degentable==1 || tempcheck>invalidtempcode) // Avoid invalid inversions if T>Tbad, but only deal with temperature if degentable==0
 #else
-    if(1)
+      if(1)
 #endif
-    {
+        {
 
-      // get value
-      get_arrays_eostable_direct(whichdegenfun,degentable,whichtable,whichtablesubtype,iffun,kazmm+mmm,kazll+lll,kazkk+kkk,kazjj+jjj,kazii+iii,tempanswers);
+          // get value
+          get_arrays_eostable_direct(whichdegenfun,degentable,whichtable,whichtablesubtype,iffun,kazmm+mmm,kazll+lll,kazkk+kkk,kazjj+jjj,kazii+iii,tempanswers);
 
 
-      // non-pipelined section
-      for(coli=0;coli<numcols;coli++){
-	if(iffun[coli]){
+          // non-pipelined section
+          for(coli=0;coli<numcols;coli++){
+            if(iffun[coli]){
 
-	  if(shouldloginterp[coli] && (tempanswers[coli]<=0.0 && DOPRELOGIFY==0 ||tempanswers[coli]>=0.99999*OUTOFBOUNDSPRELOGIFY && DOPRELOGIFY==1) ){
-	    // avoid point if should have been log but value is <=0.0
-	    includeptr[coli][iii][jjj][kkk][lll]=0;
-	  }
-	  else{
-	    // set to include this point in interpolation
-	    includeptr[coli][iii][jjj][kkk][lll]=1;
-	    // then include general offset
-	    if(degentable==1) offsetquant2_general(whichdegenfun, quant1, tempanswers[coli], &tempanswers[coli]);
-	    tfptr[coli][iii][jjj][kkk][lll]=tempanswers[coli];
-	  }
-	}// end iffun==1
-      }//end over coli
-    }// end if good temperature or doing degentable
-    else{
-      // no temperature found
+              if(shouldloginterp[coli] && (tempanswers[coli]<=0.0 && DOPRELOGIFY==0 ||tempanswers[coli]>=0.99999*OUTOFBOUNDSPRELOGIFY && DOPRELOGIFY==1) ){
+                // avoid point if should have been log but value is <=0.0
+                includeptr[coli][iii][jjj][kkk][lll]=0;
+              }
+              else{
+                // set to include this point in interpolation
+                includeptr[coli][iii][jjj][kkk][lll]=1;
+                // then include general offset
+                if(degentable==1) offsetquant2_general(whichdegenfun, quant1, tempanswers[coli], &tempanswers[coli]);
+                tfptr[coli][iii][jjj][kkk][lll]=tempanswers[coli];
+              }
+            }// end iffun==1
+          }//end over coli
+        }// end if good temperature or doing degentable
+      else{
+        // no temperature found
 
-      for(coli=0;coli<numcols;coli++){
-	if(iffun[coli]){
-	  // set to NOT include point in interpolation
-	  includeptr[coli][iii][jjj][kkk][lll]=0;
-	}
-      }
+        for(coli=0;coli<numcols;coli++){
+          if(iffun[coli]){
+            // set to NOT include point in interpolation
+            includeptr[coli][iii][jjj][kkk][lll]=0;
+          }
+        }
 
-    }// end else if no temperature lookup
+      }// end else if no temperature lookup
 
   }// end loop over dimensions
 
@@ -353,12 +353,12 @@ static int get_eos_fromlookup_parabolicfull(int repeatedeos, int tabledimen, int
       // then above check for logification already sufficient
 #else 
       if(shouldloginterp[coli]){
-	LOOPKAZIJKL{
-	  if(includeptr[coli][iii][jjj][kkk][lll]){
-	    if(tfptr[coli][iii][jjj][kkk][lll]>0.0) tfptr[coli][iii][jjj][kkk][lll] = log10(tfptr[coli][iii][jjj][kkk][lll]);
-	    else includeptr[coli][iii][jjj][kkk][lll]=0; // then force to not include
-	  }
-	}// end loop over dimensions
+        LOOPKAZIJKL{
+          if(includeptr[coli][iii][jjj][kkk][lll]){
+            if(tfptr[coli][iii][jjj][kkk][lll]>0.0) tfptr[coli][iii][jjj][kkk][lll] = log10(tfptr[coli][iii][jjj][kkk][lll]);
+            else includeptr[coli][iii][jjj][kkk][lll]=0; // then force to not include
+          }
+        }// end loop over dimensions
       }// end if logifying
 #endif
 
@@ -386,53 +386,53 @@ static int get_eos_fromlookup_parabolicfull(int repeatedeos, int tabledimen, int
       KAZPARALOOP1{
 
 
-	// now use 3 data points to get density-parabolic distribution and value at ieos
-	// have tfptr[coli][iii][jjj][kkk][lll] @ iii=-1,0,1 with i=0 meaning ii and offset being ROUND2INT(ieos)
-	// Form parabolic answer
-	include2ptr[coli][jjj][kkk][lll]=1; // default
-	if(kazstartiii<=-1 && kazendiii>=1 && includeptr[coli][-1][jjj][kkk][lll] && includeptr[coli][0][jjj][kkk][lll]&& includeptr[coli][1][jjj][kkk][lll]){
-	  xmx0 = (ieos-(FTYPEEOS)kazii);
-	  AA = 0.5*(tfptr[coli][1][jjj][kkk][lll]-tfptr[coli][-1][jjj][kkk][lll]);
-	  BB = 0.5*(tfptr[coli][1][jjj][kkk][lll]+tfptr[coli][-1][jjj][kkk][lll]-2.0*tfptr[coli][0][jjj][kkk][lll]);
-	  tfptr[coli][0][jjj][kkk][lll] = tfptr[coli][0][jjj][kkk][lll] + AA*xmx0 + BB*xmx0*xmx0;
-	  // e.g. xmx0=0 -> tf[0]
-	  // e.g. xmx0=-1 -> tf[0]-tf[1]/2+tf[-1]/2 + tf[1]/2+tf[-1]/2-tf[0] = tf[-1]
-	  // e.g. xmx0=1 -> tf[0]+tf[1]/2-tf[-1]/2 + tf[1]/2+tf[-1]/2-tf[0] = tf[1]
-	}
-	else if(kazstartiii<=-1 && kazendiii>=0 && includeptr[coli][-1][jjj][kkk][lll] && includeptr[coli][0][jjj][kkk][lll]){
-	  // reduce to linear interpolation
-	  xmx0 = (ieos-(FTYPEEOS)(kazii-1));
-	  AA=(tfptr[coli][0][jjj][kkk][lll]-tfptr[coli][-1][jjj][kkk][lll]);
-	  tfptr[coli][0][jjj][kkk][lll] = tfptr[coli][-1][jjj][kkk][lll] + AA*xmx0;
-	  // e.g. xmx0=0 (ieos=kazii-1) -> tf[-1]
-	  // e.g. xmx0=1 (ieos=kazii) -> tf[0]
-	}
-	else if(kazstartiii<=0 && kazendiii>=1 && includeptr[coli][0][jjj][kkk][lll] && includeptr[coli][1][jjj][kkk][lll]){
-	  // reduce to linear interpolation
-	  xmx0 = (ieos-(FTYPEEOS)(kazii));
-	  AA=(tfptr[coli][1][jjj][kkk][lll]-tfptr[coli][0][jjj][kkk][lll]);
-	  tfptr[coli][0][jjj][kkk][lll] = tfptr[coli][0][jjj][kkk][lll] + AA*xmx0;
-	}
-	else if(kazstartiii<=0 && kazendiii>=0 && includeptr[coli][0][jjj][kkk][lll]){
-	  // reduce to nearest neighbor
-	  tfptr[coli][0][jjj][kkk][lll] = tfptr[coli][0][jjj][kkk][lll];
-	}
-	else if(kazstartiii<=-1 && kazendiii>=-1 && includeptr[coli][-1][jjj][kkk][lll]){
-	  // reduce to nearest neighbor
-	  tfptr[coli][0][jjj][kkk][lll] = tfptr[coli][-1][jjj][kkk][lll];
-	}
-	else if(kazstartiii<=1 && kazendiii>=1 && includeptr[coli][1][jjj][kkk][lll]){
-	  // reduce to nearest neighbor
-	  tfptr[coli][0][jjj][kkk][lll] = tfptr[coli][1][jjj][kkk][lll];
-	}
-	else{
-	  include2ptr[coli][jjj][kkk][lll]=0;
-	}
+        // now use 3 data points to get density-parabolic distribution and value at ieos
+        // have tfptr[coli][iii][jjj][kkk][lll] @ iii=-1,0,1 with i=0 meaning ii and offset being ROUND2INT(ieos)
+        // Form parabolic answer
+        include2ptr[coli][jjj][kkk][lll]=1; // default
+        if(kazstartiii<=-1 && kazendiii>=1 && includeptr[coli][-1][jjj][kkk][lll] && includeptr[coli][0][jjj][kkk][lll]&& includeptr[coli][1][jjj][kkk][lll]){
+          xmx0 = (ieos-(FTYPEEOS)kazii);
+          AA = 0.5*(tfptr[coli][1][jjj][kkk][lll]-tfptr[coli][-1][jjj][kkk][lll]);
+          BB = 0.5*(tfptr[coli][1][jjj][kkk][lll]+tfptr[coli][-1][jjj][kkk][lll]-2.0*tfptr[coli][0][jjj][kkk][lll]);
+          tfptr[coli][0][jjj][kkk][lll] = tfptr[coli][0][jjj][kkk][lll] + AA*xmx0 + BB*xmx0*xmx0;
+          // e.g. xmx0=0 -> tf[0]
+          // e.g. xmx0=-1 -> tf[0]-tf[1]/2+tf[-1]/2 + tf[1]/2+tf[-1]/2-tf[0] = tf[-1]
+          // e.g. xmx0=1 -> tf[0]+tf[1]/2-tf[-1]/2 + tf[1]/2+tf[-1]/2-tf[0] = tf[1]
+        }
+        else if(kazstartiii<=-1 && kazendiii>=0 && includeptr[coli][-1][jjj][kkk][lll] && includeptr[coli][0][jjj][kkk][lll]){
+          // reduce to linear interpolation
+          xmx0 = (ieos-(FTYPEEOS)(kazii-1));
+          AA=(tfptr[coli][0][jjj][kkk][lll]-tfptr[coli][-1][jjj][kkk][lll]);
+          tfptr[coli][0][jjj][kkk][lll] = tfptr[coli][-1][jjj][kkk][lll] + AA*xmx0;
+          // e.g. xmx0=0 (ieos=kazii-1) -> tf[-1]
+          // e.g. xmx0=1 (ieos=kazii) -> tf[0]
+        }
+        else if(kazstartiii<=0 && kazendiii>=1 && includeptr[coli][0][jjj][kkk][lll] && includeptr[coli][1][jjj][kkk][lll]){
+          // reduce to linear interpolation
+          xmx0 = (ieos-(FTYPEEOS)(kazii));
+          AA=(tfptr[coli][1][jjj][kkk][lll]-tfptr[coli][0][jjj][kkk][lll]);
+          tfptr[coli][0][jjj][kkk][lll] = tfptr[coli][0][jjj][kkk][lll] + AA*xmx0;
+        }
+        else if(kazstartiii<=0 && kazendiii>=0 && includeptr[coli][0][jjj][kkk][lll]){
+          // reduce to nearest neighbor
+          tfptr[coli][0][jjj][kkk][lll] = tfptr[coli][0][jjj][kkk][lll];
+        }
+        else if(kazstartiii<=-1 && kazendiii>=-1 && includeptr[coli][-1][jjj][kkk][lll]){
+          // reduce to nearest neighbor
+          tfptr[coli][0][jjj][kkk][lll] = tfptr[coli][-1][jjj][kkk][lll];
+        }
+        else if(kazstartiii<=1 && kazendiii>=1 && includeptr[coli][1][jjj][kkk][lll]){
+          // reduce to nearest neighbor
+          tfptr[coli][0][jjj][kkk][lll] = tfptr[coli][1][jjj][kkk][lll];
+        }
+        else{
+          include2ptr[coli][jjj][kkk][lll]=0;
+        }
 
 #if(PRODUCTION==0)
-	if(!isfinite(tfptr[coli][0][jjj][kkk][lll])){
-	  dualfprintf(fail_file,"1notfinite, :: %d %d %d\n",jjj,kkk,lll);
-	}
+        if(!isfinite(tfptr[coli][0][jjj][kkk][lll])){
+          dualfprintf(fail_file,"1notfinite, :: %d %d %d\n",jjj,kkk,lll);
+        }
 #endif
     
       } // end over iii,jjj,kkk,lll
@@ -440,45 +440,45 @@ static int get_eos_fromlookup_parabolicfull(int repeatedeos, int tabledimen, int
       // perform interpolation over values
       KAZPARALOOP2{
 
-	include3ptr[coli][kkk][lll]=1; // default
-	if(kazstartjjj<=-1 && kazendjjj>=1 && include2ptr[coli][-1][kkk][lll] && include2ptr[coli][0][kkk][lll] && include2ptr[coli][1][kkk][lll]){
-	  xmx0 = (jeos-(FTYPEEOS)kazjj);
-	  AA = 0.5*(tfptr[coli][0][1][kkk][lll]-tfptr[coli][0][-1][kkk][lll]);
-	  BB = 0.5*(tfptr[coli][0][1][kkk][lll]+tfptr[coli][0][-1][kkk][lll]-2.0*tfptr[coli][0][0][kkk][lll]);
-	  tfptr[coli][0][0][kkk][lll] = tfptr[coli][0][0][kkk][lll] + AA*xmx0 + BB*xmx0*xmx0;
-	}
-	else if(kazstartjjj<=-1 && kazendjjj>=0 && include2ptr[coli][-1][kkk][lll] && include2ptr[coli][0][kkk][lll]){
-	  // reduce to linear interpolation
-	  xmx0 = (jeos-(FTYPEEOS)(kazjj-1));
-	  AA=(tfptr[coli][0][0][kkk][lll]-tfptr[coli][0][-1][kkk][lll]);
-	  tfptr[coli][0][0][kkk][lll] = tfptr[coli][0][-1][kkk][lll] + AA*xmx0;
-	}
-	else if(kazstartjjj<=0 && kazendjjj>=1 && include2ptr[coli][0][kkk][lll] && include2ptr[coli][1][kkk][lll]){
-	  // reduce to linear interpolation
-	  xmx0 = (jeos-(FTYPEEOS)(kazjj));
-	  AA=(tfptr[coli][0][1][kkk][lll]-tfptr[coli][0][0][kkk][lll]);
-	  tfptr[coli][0][0][kkk][lll] = tfptr[coli][0][0][kkk][lll] + AA*xmx0;
-	}
-	else if(kazstartjjj<=0 && kazendjjj>=0 && include2ptr[coli][0][kkk][lll]){
-	  // reduce to nearest neighbor
-	  tfptr[coli][0][0][kkk][lll] = tfptr[coli][0][0][kkk][lll];
-	}
-	else if(kazstartjjj<=-1 && kazendjjj>=-1 && include2ptr[coli][-1][kkk][lll]){
-	  // reduce to nearest neighbor
-	  tfptr[coli][0][0][kkk][lll] = tfptr[coli][0][-1][kkk][lll];
-	}
-	else if(kazstartjjj<=1 && kazendjjj>=1 && include2ptr[coli][1][kkk][lll]){
-	  // reduce to nearest neighbor
-	  tfptr[coli][0][0][kkk][lll] = tfptr[coli][0][1][kkk][lll];
-	}
-	else{
-	  include3ptr[coli][kkk][lll]=0;
-	}
+        include3ptr[coli][kkk][lll]=1; // default
+        if(kazstartjjj<=-1 && kazendjjj>=1 && include2ptr[coli][-1][kkk][lll] && include2ptr[coli][0][kkk][lll] && include2ptr[coli][1][kkk][lll]){
+          xmx0 = (jeos-(FTYPEEOS)kazjj);
+          AA = 0.5*(tfptr[coli][0][1][kkk][lll]-tfptr[coli][0][-1][kkk][lll]);
+          BB = 0.5*(tfptr[coli][0][1][kkk][lll]+tfptr[coli][0][-1][kkk][lll]-2.0*tfptr[coli][0][0][kkk][lll]);
+          tfptr[coli][0][0][kkk][lll] = tfptr[coli][0][0][kkk][lll] + AA*xmx0 + BB*xmx0*xmx0;
+        }
+        else if(kazstartjjj<=-1 && kazendjjj>=0 && include2ptr[coli][-1][kkk][lll] && include2ptr[coli][0][kkk][lll]){
+          // reduce to linear interpolation
+          xmx0 = (jeos-(FTYPEEOS)(kazjj-1));
+          AA=(tfptr[coli][0][0][kkk][lll]-tfptr[coli][0][-1][kkk][lll]);
+          tfptr[coli][0][0][kkk][lll] = tfptr[coli][0][-1][kkk][lll] + AA*xmx0;
+        }
+        else if(kazstartjjj<=0 && kazendjjj>=1 && include2ptr[coli][0][kkk][lll] && include2ptr[coli][1][kkk][lll]){
+          // reduce to linear interpolation
+          xmx0 = (jeos-(FTYPEEOS)(kazjj));
+          AA=(tfptr[coli][0][1][kkk][lll]-tfptr[coli][0][0][kkk][lll]);
+          tfptr[coli][0][0][kkk][lll] = tfptr[coli][0][0][kkk][lll] + AA*xmx0;
+        }
+        else if(kazstartjjj<=0 && kazendjjj>=0 && include2ptr[coli][0][kkk][lll]){
+          // reduce to nearest neighbor
+          tfptr[coli][0][0][kkk][lll] = tfptr[coli][0][0][kkk][lll];
+        }
+        else if(kazstartjjj<=-1 && kazendjjj>=-1 && include2ptr[coli][-1][kkk][lll]){
+          // reduce to nearest neighbor
+          tfptr[coli][0][0][kkk][lll] = tfptr[coli][0][-1][kkk][lll];
+        }
+        else if(kazstartjjj<=1 && kazendjjj>=1 && include2ptr[coli][1][kkk][lll]){
+          // reduce to nearest neighbor
+          tfptr[coli][0][0][kkk][lll] = tfptr[coli][0][1][kkk][lll];
+        }
+        else{
+          include3ptr[coli][kkk][lll]=0;
+        }
 
 #if(PRODUCTION==0)
-	if(!isfinite(tfptr[coli][0][0][kkk][lll])){
-	  dualfprintf(fail_file,"2notfinite, :: %d %d %d\n",0,kkk,lll);
-	}
+        if(!isfinite(tfptr[coli][0][0][kkk][lll])){
+          dualfprintf(fail_file,"2notfinite, :: %d %d %d\n",0,kkk,lll);
+        }
 #endif
 
 
@@ -487,104 +487,104 @@ static int get_eos_fromlookup_parabolicfull(int repeatedeos, int tabledimen, int
       // perform interpolation over values
       KAZPARALOOP3{
 
-	include4ptr[coli][lll]=1; // default
-	if(kazstartkkk<=-1 && kazendkkk>=1 && include3ptr[coli][-1][lll] && include3ptr[coli][0][lll] && include3ptr[coli][1][lll]){
-	  xmx0 = (keos-(FTYPEEOS)kazkk);
-	  AA = 0.5*(tfptr[coli][0][0][1][lll]-tfptr[coli][0][0][-1][lll]);
-	  BB = 0.5*(tfptr[coli][0][0][1][lll]+tfptr[coli][0][0][-1][lll]-2.0*tfptr[coli][0][0][0][lll]);
-	  tfptr[coli][0][0][0][lll] = tfptr[coli][0][0][0][lll] + AA*xmx0 + BB*xmx0*xmx0;
-	}
-	else if(kazstartkkk<=-1 && kazendkkk>=0 && include3ptr[coli][-1][lll] && include3ptr[coli][0][lll]){
-	  // reduce to linear interpolation
-	  xmx0 = (keos-(FTYPEEOS)(kazkk-1));
-	  AA=(tfptr[coli][0][0][0][lll]-tfptr[coli][0][0][-1][lll]);
-	  tfptr[coli][0][0][0][lll] = tfptr[coli][0][0][-1][lll] + AA*xmx0;
-	}
-	else if(kazstartkkk<=0 && kazendkkk>=1 && include3ptr[coli][0][lll] && include3ptr[coli][1][lll]){
-	  // reduce to linear interpolation
-	  xmx0 = (keos-(FTYPEEOS)(kazkk));
-	  AA=(tfptr[coli][0][0][1][lll]-tfptr[coli][0][0][0][lll]);
-	  tfptr[coli][0][0][0][lll] = tfptr[coli][0][0][0][lll] + AA*xmx0;
-	}
-	else if(kazstartkkk<=0 && kazendkkk>=0 && include3ptr[coli][0][lll]){
-	  // reduce to nearest neighbor
-	  tfptr[coli][0][0][0][lll] = tfptr[coli][0][0][0][lll];
-	}
-	else if(kazstartkkk<=-1 && kazendkkk>=-1 && include3ptr[coli][-1][lll]){
-	  // reduce to nearest neighbor
-	  tfptr[coli][0][0][0][lll] = tfptr[coli][0][0][-1][lll];
-	}
-	else if(kazstartkkk<=1 && kazendkkk>=1 && include3ptr[coli][1][lll]){
-	  // reduce to nearest neighbor
-	  tfptr[coli][0][0][0][lll] = tfptr[coli][0][0][1][lll];
-	}
-	else{
-	  include4ptr[coli][lll]=0;
-	}
+        include4ptr[coli][lll]=1; // default
+        if(kazstartkkk<=-1 && kazendkkk>=1 && include3ptr[coli][-1][lll] && include3ptr[coli][0][lll] && include3ptr[coli][1][lll]){
+          xmx0 = (keos-(FTYPEEOS)kazkk);
+          AA = 0.5*(tfptr[coli][0][0][1][lll]-tfptr[coli][0][0][-1][lll]);
+          BB = 0.5*(tfptr[coli][0][0][1][lll]+tfptr[coli][0][0][-1][lll]-2.0*tfptr[coli][0][0][0][lll]);
+          tfptr[coli][0][0][0][lll] = tfptr[coli][0][0][0][lll] + AA*xmx0 + BB*xmx0*xmx0;
+        }
+        else if(kazstartkkk<=-1 && kazendkkk>=0 && include3ptr[coli][-1][lll] && include3ptr[coli][0][lll]){
+          // reduce to linear interpolation
+          xmx0 = (keos-(FTYPEEOS)(kazkk-1));
+          AA=(tfptr[coli][0][0][0][lll]-tfptr[coli][0][0][-1][lll]);
+          tfptr[coli][0][0][0][lll] = tfptr[coli][0][0][-1][lll] + AA*xmx0;
+        }
+        else if(kazstartkkk<=0 && kazendkkk>=1 && include3ptr[coli][0][lll] && include3ptr[coli][1][lll]){
+          // reduce to linear interpolation
+          xmx0 = (keos-(FTYPEEOS)(kazkk));
+          AA=(tfptr[coli][0][0][1][lll]-tfptr[coli][0][0][0][lll]);
+          tfptr[coli][0][0][0][lll] = tfptr[coli][0][0][0][lll] + AA*xmx0;
+        }
+        else if(kazstartkkk<=0 && kazendkkk>=0 && include3ptr[coli][0][lll]){
+          // reduce to nearest neighbor
+          tfptr[coli][0][0][0][lll] = tfptr[coli][0][0][0][lll];
+        }
+        else if(kazstartkkk<=-1 && kazendkkk>=-1 && include3ptr[coli][-1][lll]){
+          // reduce to nearest neighbor
+          tfptr[coli][0][0][0][lll] = tfptr[coli][0][0][-1][lll];
+        }
+        else if(kazstartkkk<=1 && kazendkkk>=1 && include3ptr[coli][1][lll]){
+          // reduce to nearest neighbor
+          tfptr[coli][0][0][0][lll] = tfptr[coli][0][0][1][lll];
+        }
+        else{
+          include4ptr[coli][lll]=0;
+        }
 
 #if(PRODUCTION==0)
-	if(!isfinite(tfptr[coli][0][0][0][lll])){
-	  dualfprintf(fail_file,"3notfinite, :: %d %d %d\n",0,0,lll);
-	}
+        if(!isfinite(tfptr[coli][0][0][0][lll])){
+          dualfprintf(fail_file,"3notfinite, :: %d %d %d\n",0,0,lll);
+        }
 #endif
     
       } // end over lll
 
       // final interpolation
       KAZPARALOOP4{
-	if(kazstartlll<=-1 && kazendlll>=1 && include4ptr[coli][-1] && include4ptr[coli][0] && include4ptr[coli][1]){
-	  xmx0 = (leos-(FTYPEEOS)kazll);
-	  AA = 0.5*(tfptr[coli][0][0][0][1]-tfptr[coli][0][0][0][-1]);
-	  BB = 0.5*(tfptr[coli][0][0][0][1]+tfptr[coli][0][0][0][-1]-2.0*tfptr[coli][0][0][0][0]);
-	  tfptr[coli][0][0][0][0] = tfptr[coli][0][0][0][0] + AA*xmx0 + BB*xmx0*xmx0;
-	}
-	else if(kazstartlll<=-1 && kazendlll>=0 && include4ptr[coli][-1] && include4ptr[coli][0]){
-	  // reduce to linear interpolation
-	  xmx0 = (leos-(FTYPEEOS)(kazll-1));
-	  AA=(tfptr[coli][0][0][0][0]-tfptr[coli][0][0][0][-1]);
-	  tfptr[coli][0][0][0][0] = tfptr[coli][0][0][0][-1] + AA*xmx0;
-	}
-	else if(kazstartlll<=0 && kazendlll>=1 && include4ptr[coli][0] && include4ptr[coli][1]){
-	  // reduce to linear interpolation
-	  xmx0 = (leos-(FTYPEEOS)(kazll));
-	  AA=(tfptr[coli][0][0][0][1]-tfptr[coli][0][0][0][0]);
-	  tfptr[coli][0][0][0][0] = tfptr[coli][0][0][0][0] + AA*xmx0;
-	}
-	else if(kazstartlll<=0 && kazendlll>=0 && include4ptr[coli][0]){
-	  // reduce to nearest neighbor
-	  tfptr[coli][0][0][0][0] = tfptr[coli][0][0][0][0];
-	}
-	else if(kazstartlll<=-1 && kazendlll>=-1 && include4ptr[coli][-1]){
-	  // reduce to nearest neighbor
-	  tfptr[coli][0][0][0][0] = tfptr[coli][0][0][0][-1];
-	}
-	else if(kazstartlll<=1 && kazendlll>=1 && include4ptr[coli][1]){
-	  // reduce to nearest neighbor
-	  tfptr[coli][0][0][0][0] = tfptr[coli][0][0][0][1];
-	}
-	else{
+        if(kazstartlll<=-1 && kazendlll>=1 && include4ptr[coli][-1] && include4ptr[coli][0] && include4ptr[coli][1]){
+          xmx0 = (leos-(FTYPEEOS)kazll);
+          AA = 0.5*(tfptr[coli][0][0][0][1]-tfptr[coli][0][0][0][-1]);
+          BB = 0.5*(tfptr[coli][0][0][0][1]+tfptr[coli][0][0][0][-1]-2.0*tfptr[coli][0][0][0][0]);
+          tfptr[coli][0][0][0][0] = tfptr[coli][0][0][0][0] + AA*xmx0 + BB*xmx0*xmx0;
+        }
+        else if(kazstartlll<=-1 && kazendlll>=0 && include4ptr[coli][-1] && include4ptr[coli][0]){
+          // reduce to linear interpolation
+          xmx0 = (leos-(FTYPEEOS)(kazll-1));
+          AA=(tfptr[coli][0][0][0][0]-tfptr[coli][0][0][0][-1]);
+          tfptr[coli][0][0][0][0] = tfptr[coli][0][0][0][-1] + AA*xmx0;
+        }
+        else if(kazstartlll<=0 && kazendlll>=1 && include4ptr[coli][0] && include4ptr[coli][1]){
+          // reduce to linear interpolation
+          xmx0 = (leos-(FTYPEEOS)(kazll));
+          AA=(tfptr[coli][0][0][0][1]-tfptr[coli][0][0][0][0]);
+          tfptr[coli][0][0][0][0] = tfptr[coli][0][0][0][0] + AA*xmx0;
+        }
+        else if(kazstartlll<=0 && kazendlll>=0 && include4ptr[coli][0]){
+          // reduce to nearest neighbor
+          tfptr[coli][0][0][0][0] = tfptr[coli][0][0][0][0];
+        }
+        else if(kazstartlll<=-1 && kazendlll>=-1 && include4ptr[coli][-1]){
+          // reduce to nearest neighbor
+          tfptr[coli][0][0][0][0] = tfptr[coli][0][0][0][-1];
+        }
+        else if(kazstartlll<=1 && kazendlll>=1 && include4ptr[coli][1]){
+          // reduce to nearest neighbor
+          tfptr[coli][0][0][0][0] = tfptr[coli][0][0][0][1];
+        }
+        else{
 
 #if(0)
-	  // DEBUG:
-	  LOOPKAZIJKL{
-	    dualfprintf(fail_file,"BOOB: %d : %d : %d %d %d %d : %d : %21.15g\n",degentable,shouldloginterp,iii,jjj,kkk,lll,includeptr[coli][iii][jjj][kkk][lll],tfptr[coli][iii][jjj][kkk][lll]);
-	  }
-	  dualfprintf(fail_file,"kaz=%d %d %d %d : %d %d : %d %d : %d %d : %d %d\n",kazii,kazjj,kazkk,kazll,kazstartiii,kazendiii,kazstartjjj,kazendjjj,kazstartkkk,kazendkkk,kazstartlll,kazendlll);
+          // DEBUG:
+          LOOPKAZIJKL{
+            dualfprintf(fail_file,"BOOB: %d : %d : %d %d %d %d : %d : %21.15g\n",degentable,shouldloginterp,iii,jjj,kkk,lll,includeptr[coli][iii][jjj][kkk][lll],tfptr[coli][iii][jjj][kkk][lll]);
+          }
+          dualfprintf(fail_file,"kaz=%d %d %d %d : %d %d : %d %d : %d %d : %d %d\n",kazii,kazjj,kazkk,kazll,kazstartiii,kazendiii,kazstartjjj,kazendjjj,kazstartkkk,kazendkkk,kazstartlll,kazendlll);
 #endif
 
 
-	  dualfprintf(fail_file,"No valid data points in table despite within table.\n");
-	  // no valid data points, so return badlookup
-	  localbadlookups[coli]=1;
-	  // GODMARK: Should have caught this with the check if within table function, so could return failure
-	  //	  return(1);
+          dualfprintf(fail_file,"No valid data points in table despite within table.\n");
+          // no valid data points, so return badlookup
+          localbadlookups[coli]=1;
+          // GODMARK: Should have caught this with the check if within table function, so could return failure
+          //      return(1);
 
-	}// end else if no valid points
+        }// end else if no valid points
 
 #if(PRODUCTION==0)
-	if(!isfinite(tfptr[coli][0][0][0][0])){
-	  dualfprintf(fail_file,"4notfinite, :: %d %d %d\n",0,0,0);
-	}
+        if(!isfinite(tfptr[coli][0][0][0][0])){
+          dualfprintf(fail_file,"4notfinite, :: %d %d %d\n",0,0,0);
+        }
 #endif
 
       }// end KAZPARALOOP4
@@ -594,47 +594,47 @@ static int get_eos_fromlookup_parabolicfull(int repeatedeos, int tabledimen, int
 
       if(localbadlookups[coli]==0){
 
-	///////////////////////
-	//
-	// final fully parabolic result
-	//
-	///////////////////////
-	answers[coli]=tfptr[coli][0][0][0][0];
+        ///////////////////////
+        //
+        // final fully parabolic result
+        //
+        ///////////////////////
+        answers[coli]=tfptr[coli][0][0][0][0];
 
 
-	////////////////////////////
-	//
-	// enforce no new extrema to over overshoots in sharp regions of table
-	//
-	////////////////////////////
+        ////////////////////////////
+        //
+        // enforce no new extrema to over overshoots in sharp regions of table
+        //
+        ////////////////////////////
 #if(1)
-	FTYPEEOS largest=-BIG;
-	FTYPEEOS smallest=BIG;
-	LOOPKAZIJKL{
-	  if(includeptr[coli][iii][jjj][kkk][lll]){
-	    if(tfptr[coli][iii][jjj][kkk][lll]>largest) largest=tfptr[coli][iii][jjj][kkk][lll];
-	    if(tfptr[coli][iii][jjj][kkk][lll]<smallest) smallest=tfptr[coli][iii][jjj][kkk][lll];
-	  }
-	}
-	if(answers[coli]>largest) answers[coli]=largest;
-	if(answers[coli]<smallest) answers[coli]=smallest;
+        FTYPEEOS largest=-BIG;
+        FTYPEEOS smallest=BIG;
+        LOOPKAZIJKL{
+          if(includeptr[coli][iii][jjj][kkk][lll]){
+            if(tfptr[coli][iii][jjj][kkk][lll]>largest) largest=tfptr[coli][iii][jjj][kkk][lll];
+            if(tfptr[coli][iii][jjj][kkk][lll]<smallest) smallest=tfptr[coli][iii][jjj][kkk][lll];
+          }
+        }
+        if(answers[coli]>largest) answers[coli]=largest;
+        if(answers[coli]<smallest) answers[coli]=smallest;
 #endif
 
 
-	///////////////////////////
-	//
-	// unlogify (if either logified here or prelogified)
-	//
-	//////////////////////////
-	if(shouldloginterp[coli]) answers[coli]=pow(10.0,answers[coli]);
+        ///////////////////////////
+        //
+        // unlogify (if either logified here or prelogified)
+        //
+        //////////////////////////
+        if(shouldloginterp[coli]) answers[coli]=pow(10.0,answers[coli]);
 
-	//////////////////////////
-	//
-	// invert offset
-	//
-	//////////////////////////
-	if(degentable==1) offsetquant2_general_inverse(whichdegenfun, quant1, answers[coli], &answers[coli]);
-	badlookups[coli]=0; // finally return that have good answer
+        //////////////////////////
+        //
+        // invert offset
+        //
+        //////////////////////////
+        if(degentable==1) offsetquant2_general_inverse(whichdegenfun, quant1, answers[coli], &answers[coli]);
+        badlookups[coli]=0; // finally return that have good answer
 
       } // end if local was not bad lookup
 
@@ -910,11 +910,11 @@ static int get_eos_fromlookup_parabolicone(int repeatedeos, int tabledimen, int 
 
 
   // pick para-interpolation range for quantity to do para interpolation upon
-  if(paravar==1){      genstart=kazstartiii; genend=kazendiii; 	xmx0 = kazdi[1];}
-  else if(paravar==2){ genstart=kazstartjjj; genend=kazendjjj; 	xmx0 = kazdj[1];}
-  else if(paravar==3){ genstart=kazstartkkk; genend=kazendkkk; 	xmx0 = kazdk[1];}
-  else if(paravar==4){ genstart=kazstartlll; genend=kazendlll; 	xmx0 = kazdl[1];}
-  else if(paravar==5){ genstart=kazstartmmm; genend=kazendmmm; 	xmx0 = kazdm[1];}
+  if(paravar==1){      genstart=kazstartiii; genend=kazendiii;  xmx0 = kazdi[1];}
+  else if(paravar==2){ genstart=kazstartjjj; genend=kazendjjj;  xmx0 = kazdj[1];}
+  else if(paravar==3){ genstart=kazstartkkk; genend=kazendkkk;  xmx0 = kazdk[1];}
+  else if(paravar==4){ genstart=kazstartlll; genend=kazendlll;  xmx0 = kazdl[1];}
+  else if(paravar==5){ genstart=kazstartmmm; genend=kazendmmm;  xmx0 = kazdm[1];}
     
 
 
@@ -927,8 +927,8 @@ static int get_eos_fromlookup_parabolicone(int repeatedeos, int tabledimen, int 
   for(coli=0;coli<numcols;coli++){
     if(iffun[coli]){
       for(genpi=genstart;genpi<=genend;genpi++){
-	tfptr[coli][genpi]=0.0;
-	tdist[coli][genpi]=0.0;
+        tfptr[coli][genpi]=0.0;
+        tdist[coli][genpi]=0.0;
       }
     }
   }
@@ -973,58 +973,58 @@ static int get_eos_fromlookup_parabolicone(int repeatedeos, int tabledimen, int 
     //    dualfprintf(fail_file,"temp=%21.15g\n",tempcheck);
     if(degentable==1 || tempcheck>invalidtempcode) // Avoid invalid inversions if T>Tbad, but only deal with temperature if degentable==0
 #else
-    if(1)
+      if(1)
 #endif
-    {
+        {
 
-      // get value
-      get_arrays_eostable_direct(whichdegenfun,degentable,whichtable,whichtablesubtype,iffun,kazmm+mmm,kazll+lll,kazkk+kkk,kazjj+jjj,kazii+iii,tempanswers);
+          // get value
+          get_arrays_eostable_direct(whichdegenfun,degentable,whichtable,whichtablesubtype,iffun,kazmm+mmm,kazll+lll,kazkk+kkk,kazjj+jjj,kazii+iii,tempanswers);
 
-      // get distance
-      if(paravar==1)      dist = kazdj[jjj]*kazdk[kkk]*kazdl[lll]*kazdm[mmm]; // dist for kazi
-      else if(paravar==2) dist = kazdi[iii]*kazdk[kkk]*kazdl[lll]*kazdm[mmm]; // dist for kazj
-      else if(paravar==3) dist = kazdi[iii]*kazdj[jjj]*kazdl[lll]*kazdm[mmm]; // dist for kazk
-      else if(paravar==4) dist = kazdi[iii]*kazdj[jjj]*kazdk[kkk]*kazdm[mmm]; // dist for kazl
-      else if(paravar==5) dist = kazdi[iii]*kazdj[jjj]*kazdk[kkk]*kazdl[lll]; // dist for kazm
+          // get distance
+          if(paravar==1)      dist = kazdj[jjj]*kazdk[kkk]*kazdl[lll]*kazdm[mmm]; // dist for kazi
+          else if(paravar==2) dist = kazdi[iii]*kazdk[kkk]*kazdl[lll]*kazdm[mmm]; // dist for kazj
+          else if(paravar==3) dist = kazdi[iii]*kazdj[jjj]*kazdl[lll]*kazdm[mmm]; // dist for kazk
+          else if(paravar==4) dist = kazdi[iii]*kazdj[jjj]*kazdk[kkk]*kazdm[mmm]; // dist for kazl
+          else if(paravar==5) dist = kazdi[iii]*kazdj[jjj]*kazdk[kkk]*kazdl[lll]; // dist for kazm
 
 
 
-      // non-pipelined section
-      // first do offset and see if can use log for all points
-      for(coli=0;coli<numcols;coli++){
-	if(iffun[coli]){
-	  if(degentable==1) offsetquant2_general(whichdegenfun, quant1, tempanswers[coli], &tempanswers[coli]);
+          // non-pipelined section
+          // first do offset and see if can use log for all points
+          for(coli=0;coli<numcols;coli++){
+            if(iffun[coli]){
+              if(degentable==1) offsetquant2_general(whichdegenfun, quant1, tempanswers[coli], &tempanswers[coli]);
   
 #if(DOLOGINTERP && DOPRELOGIFY)
-	  // only add if non-log or if should be log and not out of bounds
-	  if(shouldloginterp[coli]==0 || shouldloginterp[coli] && tempanswers[coli]<0.99999*OUTOFBOUNDSPRELOGIFY){
-	    tfptr[coli][genpi] += tempanswers[coli]*dist;
-	    tdist[coli][genpi] += dist;
-	  }
+              // only add if non-log or if should be log and not out of bounds
+              if(shouldloginterp[coli]==0 || shouldloginterp[coli] && tempanswers[coli]<0.99999*OUTOFBOUNDSPRELOGIFY){
+                tfptr[coli][genpi] += tempanswers[coli]*dist;
+                tdist[coli][genpi] += dist;
+              }
 #else 
-	  if(shouldloginterp[coli]){
-	    if(tempanswers[coli]<=0.0){
-	      // then don't include since if should have been able to do log but couldn't, then remove point from interpolation
-	    }
-	    else{
-	      // should and can do log
-	      tfptr[coli][genpi] += log10(tempanswers[coli])*dist; // interpolated answer that will replace answer[coli] in the end
-	      tdist[coli][genpi] += dist;
-	    }
-	  }// if should do log interp
-	  else{
-	    // shouldn't do log
-	    tfptr[coli][genpi] += tempanswers[coli]*dist;
-	    tdist[coli][genpi] += dist;
-	  }// else if not log interp
+              if(shouldloginterp[coli]){
+                if(tempanswers[coli]<=0.0){
+                  // then don't include since if should have been able to do log but couldn't, then remove point from interpolation
+                }
+                else{
+                  // should and can do log
+                  tfptr[coli][genpi] += log10(tempanswers[coli])*dist; // interpolated answer that will replace answer[coli] in the end
+                  tdist[coli][genpi] += dist;
+                }
+              }// if should do log interp
+              else{
+                // shouldn't do log
+                tfptr[coli][genpi] += tempanswers[coli]*dist;
+                tdist[coli][genpi] += dist;
+              }// else if not log interp
 #endif
 
-	}// end if doing this coli
-      }// end over coli      
-    }// end if good temperature or doing degentable
-    else{
-      // no good temperature for this point
-    }
+            }// end if doing this coli
+          }// end over coli      
+        }// end if good temperature or doing degentable
+      else{
+        // no good temperature for this point
+      }
   }// end loop over dimensions
 
 
@@ -1046,16 +1046,16 @@ static int get_eos_fromlookup_parabolicone(int repeatedeos, int tabledimen, int 
     int badany=0;
     for(coli=0;coli<numcols;coli++){
       if(iffun[coli]){
-	// check if any bad lookups
-	if(tdist[coli][genpi]==0.0){
-	  badany++;
-	  localiffun[coli]=1;
-	  localbadlookups[coli]=1;
-	}
-	else{
-	  localiffun[coli]=0;
-	  localbadlookups[coli]=0; // already good
-	}
+        // check if any bad lookups
+        if(tdist[coli][genpi]==0.0){
+          badany++;
+          localiffun[coli]=1;
+          localbadlookups[coli]=1;
+        }
+        else{
+          localiffun[coli]=0;
+          localbadlookups[coli]=0; // already good
+        }
       }
     }
       
@@ -1067,19 +1067,19 @@ static int get_eos_fromlookup_parabolicone(int repeatedeos, int tabledimen, int 
 
       // do offset and logify, but only if badlookup before but goodlookup from nearest_dumb()
       for(coli=0;coli<numcols;coli++){
-	if(tdist[coli][genpi]==0.0 && localiffun[coli] && localbadlookups[coli]==0){
-	  // only do if fixing no-temperature lookup
-	  if(degentable==1) offsetquant2_general(whichdegenfun, quant1, tempanswers[coli], &tempanswers[coli]);
-	  
+        if(tdist[coli][genpi]==0.0 && localiffun[coli] && localbadlookups[coli]==0){
+          // only do if fixing no-temperature lookup
+          if(degentable==1) offsetquant2_general(whichdegenfun, quant1, tempanswers[coli], &tempanswers[coli]);
+          
 #if(DOLOGINTERP && DOPRELOGIFY)
-	  // only add if non-log or if should be log and not out of bounds
-	  if(shouldloginterp[coli]==0 || shouldloginterp[coli] && tempanswers[coli]<0.99999*OUTOFBOUNDSPRELOGIFY) tfptr[coli][genpi] = tempanswers[coli];
+          // only add if non-log or if should be log and not out of bounds
+          if(shouldloginterp[coli]==0 || shouldloginterp[coli] && tempanswers[coli]<0.99999*OUTOFBOUNDSPRELOGIFY) tfptr[coli][genpi] = tempanswers[coli];
 #else 
-	  if(shouldloginterp[coli]) tfptr[coli][genpi] = log10(tempanswers[coli]);
-	  else tfptr[coli][genpi] = tempanswers[coli];
+          if(shouldloginterp[coli]) tfptr[coli][genpi] = log10(tempanswers[coli]);
+          else tfptr[coli][genpi] = tempanswers[coli];
 #endif
-	  
-	}// end if localbadlookups==0
+          
+        }// end if localbadlookups==0
       }//end over coli
     }// end if any bad values that need to be looked-up with nearest_dumb()
 
@@ -1087,10 +1087,10 @@ static int get_eos_fromlookup_parabolicone(int repeatedeos, int tabledimen, int 
     // for those cases when found good temperature, normalize based upon distance
     for(coli=0;coli<numcols;coli++){
       if(iffun[coli]){
-	if(tdist[coli][genpi]!=0.0){ // only do if found good temperature (and can't be badlookup)
-	  //	  tfptr[coli][genpi] /= tdist[coli][genpi];
-	  // already normalized properly (old wrong normalization)
-	}
+        if(tdist[coli][genpi]!=0.0){ // only do if found good temperature (and can't be badlookup)
+          //      tfptr[coli][genpi] /= tdist[coli][genpi];
+          // already normalized properly (old wrong normalization)
+        }
       } // end iffun==1
     }//end over coli
 
@@ -1111,20 +1111,20 @@ static int get_eos_fromlookup_parabolicone(int repeatedeos, int tabledimen, int 
     if(iffun[coli]){
       if(localbadlookups[coli]==0){
 
-	AA = 0.5*(tfptr[coli][1]-tfptr[coli][-1]);
-	BB = 0.5*(tfptr[coli][1]+tfptr[coli][-1]-2.0*tfptr[coli][0]);
-	answers[coli] = tfptr[coli][0] + AA*xmx0 + BB*xmx0*xmx0;
+        AA = 0.5*(tfptr[coli][1]-tfptr[coli][-1]);
+        BB = 0.5*(tfptr[coli][1]+tfptr[coli][-1]-2.0*tfptr[coli][0]);
+        answers[coli] = tfptr[coli][0] + AA*xmx0 + BB*xmx0*xmx0;
 
-	// enforce monotonicity to avoid exaggerated answers near sharp regions
-	maxanswer=MAX(MAX(tfptr[coli][1],tfptr[coli][-1]),tfptr[coli][0]);
-	minanswer=MIN(MIN(tfptr[coli][1],tfptr[coli][-1]),tfptr[coli][0]);
-	if(answers[coli]>maxanswer) answers[coli]=maxanswer;
-	if(answers[coli]<minanswer) answers[coli]=minanswer;
-	
-	// either prelogify or not, we have to unlogify if should have logified
-	if(shouldloginterp[coli]) answers[coli]=pow(10.0,answers[coli]);
-	if(degentable==1) offsetquant2_general_inverse(whichdegenfun, quant1, answers[coli], &answers[coli]);
-	badlookups[coli]=0; // finally return that was good lookup
+        // enforce monotonicity to avoid exaggerated answers near sharp regions
+        maxanswer=MAX(MAX(tfptr[coli][1],tfptr[coli][-1]),tfptr[coli][0]);
+        minanswer=MIN(MIN(tfptr[coli][1],tfptr[coli][-1]),tfptr[coli][0]);
+        if(answers[coli]>maxanswer) answers[coli]=maxanswer;
+        if(answers[coli]<minanswer) answers[coli]=minanswer;
+        
+        // either prelogify or not, we have to unlogify if should have logified
+        if(shouldloginterp[coli]) answers[coli]=pow(10.0,answers[coli]);
+        if(degentable==1) offsetquant2_general_inverse(whichdegenfun, quant1, answers[coli], &answers[coli]);
+        badlookups[coli]=0; // finally return that was good lookup
 
       }
     }
@@ -1222,7 +1222,7 @@ static int get_eos_fromlookup_linear(int repeatedeos, int tabledimen, int degent
     if(kazmm+kazendmmm>=tablesize[whichtable][vartypearraylocal[5]]){ kazmm=tablesize[whichtable][vartypearraylocal[5]]-1-kazendmmm; }
 
 
-	
+        
     kazdi[1]=ieos-(FTYPEEOS)kazii;
     kazdi[0]=1.0-kazdi[1];
     kazdj[1]=jeos-(FTYPEEOS)kazjj;
@@ -1273,9 +1273,9 @@ static int get_eos_fromlookup_linear(int repeatedeos, int tabledimen, int degent
 
     //      // DEBUG:
     //      for(coli=0;coli<numcols;coli++){
-    //	if(iffun[coli]){
-    //      	  if(whichtablesubtype==SUBTYPEDEGEN || whichtablesubtype==SUBTYPESTANDARD && coli==0) dualfprintf(fail_file,"coli=%d :: ieos=%21.15g jeos=%21.15g keos=%21.15g leos=%21.15g meos=%21.15g :: kazii=%d kazjj=%d kazkk=%d kazll=%d kazmm=%d : kazdi[%d]=%21.15g kazdj[%d]=%21.15g kazdk[%d]=%21.15g kazdl[%d]=%21.15g kazdm[%d]=%21.15g\n",coli,ieos,jeos,keos,leos,meos,kazii,kazjj,kazkk,kazll,kazmm,iii,kazdi[iii],jjj,kazdj[jjj],kkk,kazdk[kkk],lll,kazdl[lll],mmm,kazdm[mmm]);
-    //	}
+    //  if(iffun[coli]){
+    //            if(whichtablesubtype==SUBTYPEDEGEN || whichtablesubtype==SUBTYPESTANDARD && coli==0) dualfprintf(fail_file,"coli=%d :: ieos=%21.15g jeos=%21.15g keos=%21.15g leos=%21.15g meos=%21.15g :: kazii=%d kazjj=%d kazkk=%d kazll=%d kazmm=%d : kazdi[%d]=%21.15g kazdj[%d]=%21.15g kazdk[%d]=%21.15g kazdl[%d]=%21.15g kazdm[%d]=%21.15g\n",coli,ieos,jeos,keos,leos,meos,kazii,kazjj,kazkk,kazll,kazmm,iii,kazdi[iii],jjj,kazdj[jjj],kkk,kazdk[kkk],lll,kazdl[lll],mmm,kazdm[mmm]);
+    //  }
     //      }
 
 
@@ -1288,68 +1288,68 @@ static int get_eos_fromlookup_linear(int repeatedeos, int tabledimen, int degent
     }
     if(degentable==1 || tempcheck>invalidtempcode) // Avoid invalid inversions if T>Tbad, but only deal with temperature if degentable==0
 #else
-    if(1)
+      if(1)
 #endif
-    {
-      // get value
-      get_arrays_eostable_direct(whichdegenfun,degentable,whichtable,whichtablesubtype,iffun,kazmm+mmm,kazll+lll,kazkk+kkk,kazjj+jjj,kazii+iii,tempanswers);
+        {
+          // get value
+          get_arrays_eostable_direct(whichdegenfun,degentable,whichtable,whichtablesubtype,iffun,kazmm+mmm,kazll+lll,kazkk+kkk,kazjj+jjj,kazii+iii,tempanswers);
 
 
-      // get distance to value
-      dist = kazdi[iii]*kazdj[jjj]*kazdk[kkk]*kazdl[lll]*kazdm[mmm];
-
-
-
-      //      // DEBUG:
-      //      for(coli=0;coli<numcols;coli++){
-      //	if(iffun[coli]){
-      //      	  if(whichtablesubtype==SUBTYPEDEGEN || whichtablesubtype==SUBTYPESTANDARD && coli==0) dualfprintf(fail_file,"coli=%d :: dist=%21.15g : answer=%21.15g tempcheck=%21.15g\n",coli,dist,tempanswers[coli],tempcheck);
-      //    }
-      //      }
+          // get distance to value
+          dist = kazdi[iii]*kazdj[jjj]*kazdk[kkk]*kazdl[lll]*kazdm[mmm];
 
 
 
-      // non-pipelined section:
-      for(coli=0;coli<numcols;coli++){
+          //      // DEBUG:
+          //      for(coli=0;coli<numcols;coli++){
+          //    if(iffun[coli]){
+          //              if(whichtablesubtype==SUBTYPEDEGEN || whichtablesubtype==SUBTYPESTANDARD && coli==0) dualfprintf(fail_file,"coli=%d :: dist=%21.15g : answer=%21.15g tempcheck=%21.15g\n",coli,dist,tempanswers[coli],tempcheck);
+          //    }
+          //      }
 
-	if(iffun[coli]){
 
-	  if(degentable==1) offsetquant2_general(whichdegenfun, quant1, tempanswers[coli], &tempanswers[coli]);
+
+          // non-pipelined section:
+          for(coli=0;coli<numcols;coli++){
+
+            if(iffun[coli]){
+
+              if(degentable==1) offsetquant2_general(whichdegenfun, quant1, tempanswers[coli], &tempanswers[coli]);
 
 #if(DOLOGINTERP && DOPRELOGIFY)
-	  // only add if non-log or if should be log and not out of bounds
-	  if(shouldloginterp[coli]==0 || shouldloginterp[coli] && tempanswers[coli]<0.99999*OUTOFBOUNDSPRELOGIFY){
-	    totalanswers[coli] += tempanswers[coli]*dist;
-	    totaldist[coli] += dist;
-	  }
+              // only add if non-log or if should be log and not out of bounds
+              if(shouldloginterp[coli]==0 || shouldloginterp[coli] && tempanswers[coli]<0.99999*OUTOFBOUNDSPRELOGIFY){
+                totalanswers[coli] += tempanswers[coli]*dist;
+                totaldist[coli] += dist;
+              }
 #else 
-	  if(shouldloginterp[coli]){
-	    if(tempanswers[coli]<=0.0){
-	      // then don't include since if should have been able to do log but couldn't, then remove point from interpolation
-	    }
-	    else{
-	      // should and can do log
-	      totalanswers[coli] += log10(tempanswers[coli])*dist; // interpolated answer that will replace answer[coli] in the end
-	      totaldist[coli] += dist;
-	    }
-	  }// if should do log interp
-	  else{
-	    // shouldn't do log
-	    totalanswers[coli] += tempanswers[coli]*dist;
-	    totaldist[coli] += dist;
-	  }// else if not log interp
+              if(shouldloginterp[coli]){
+                if(tempanswers[coli]<=0.0){
+                  // then don't include since if should have been able to do log but couldn't, then remove point from interpolation
+                }
+                else{
+                  // should and can do log
+                  totalanswers[coli] += log10(tempanswers[coli])*dist; // interpolated answer that will replace answer[coli] in the end
+                  totaldist[coli] += dist;
+                }
+              }// if should do log interp
+              else{
+                // shouldn't do log
+                totalanswers[coli] += tempanswers[coli]*dist;
+                totaldist[coli] += dist;
+              }// else if not log interp
 #endif
 
-	}// end if doing this coli
-      }// end over coli      
+            }// end if doing this coli
+          }// end over coli      
 
-    }// end if good temperature or doing degentable
-    else{
+        }// end if good temperature or doing degentable
+      else{
       
-      // out of bounds for temperature
-      dualfprintf(fail_file,"Out of bounds based upon temperature: whichtablesubtype=%d tempcheck=%21.15g\n",whichtablesubtype,tempcheck);
+        // out of bounds for temperature
+        dualfprintf(fail_file,"Out of bounds based upon temperature: whichtablesubtype=%d tempcheck=%21.15g\n",whichtablesubtype,tempcheck);
       
-    }// end if out of bounds for temperature
+      }// end if out of bounds for temperature
   }// end loop over dimensions
 
 
@@ -1364,32 +1364,32 @@ static int get_eos_fromlookup_linear(int repeatedeos, int tabledimen, int degent
     if(iffun[coli]){
       if(totaldist[coli]==0.0){
 
-	if(debugfail>=2){
-	  dualfprintf(fail_file,"No valid data points in table despite within table.\n");
-	  dualfprintf(fail_file,"kaz=%d %d %d %d : %d %d : %d %d : %d %d : %d %d : %d %d\n",kazii,kazjj,kazkk,kazll,kazstartiii,kazendiii,kazstartjjj,kazendjjj,kazstartkkk,kazendkkk,kazstartlll,kazendlll,kazstartmmm,kazendmmm);
-	  dualfprintf(fail_file,"%d %d %d %d %d X %d %21.15g X X X X\n",repeatedeos, tabledimen, degentable, whichtable, whichtablesubtype, whichindep, quant1);
+        if(debugfail>=2){
+          dualfprintf(fail_file,"No valid data points in table despite within table.\n");
+          dualfprintf(fail_file,"kaz=%d %d %d %d : %d %d : %d %d : %d %d : %d %d : %d %d\n",kazii,kazjj,kazkk,kazll,kazstartiii,kazendiii,kazstartjjj,kazendjjj,kazstartkkk,kazendkkk,kazstartlll,kazendlll,kazstartmmm,kazendmmm);
+          dualfprintf(fail_file,"%d %d %d %d %d X %d %21.15g X X X X\n",repeatedeos, tabledimen, degentable, whichtable, whichtablesubtype, whichindep, quant1);
 
-	  dualfprintf(fail_file,"coli=%d tempanswers=%21.15g\n",coli,tempanswers[coli]);
+          dualfprintf(fail_file,"coli=%d tempanswers=%21.15g\n",coli,tempanswers[coli]);
 
-	}
+        }
 
       }
       else{
 
-	// get normalized answer
-	//	answers[coli] = totalanswers[coli]/totaldist[coli];
-	// true normalization for multid-linear interpolation
-	answers[coli] = totalanswers[coli];
+        // get normalized answer
+        //      answers[coli] = totalanswers[coli]/totaldist[coli];
+        // true normalization for multid-linear interpolation
+        answers[coli] = totalanswers[coli];
 
-	// invert log interpolation
-	// either prelogify or not, we have to unlogify if should have logified
-	if(shouldloginterp[coli]) answers[coli]=pow(10.0,answers[coli]);
-	
-	// invert offset
-	if(degentable==1) offsetquant2_general_inverse(whichdegenfun, quant1, answers[coli], &answers[coli]);
-	
-	// finally return that was good lookup
-	badlookups[coli]=0;
+        // invert log interpolation
+        // either prelogify or not, we have to unlogify if should have logified
+        if(shouldloginterp[coli]) answers[coli]=pow(10.0,answers[coli]);
+        
+        // invert offset
+        if(degentable==1) offsetquant2_general_inverse(whichdegenfun, quant1, answers[coli], &answers[coli]);
+        
+        // finally return that was good lookup
+        badlookups[coli]=0;
 
       }// end else if totaldist!=0.0
     }// end iffun==1
@@ -1467,7 +1467,7 @@ static int get_eos_fromlookup_nearest(int repeatedeos, int tabledimen, int degen
     kazkk=ROUND2INT(keos);
     kazll=ROUND2INT(leos);
     kazmm=ROUND2INT(meos);
-	
+        
 
   }
 
@@ -1495,23 +1495,23 @@ static int get_eos_fromlookup_nearest(int repeatedeos, int tabledimen, int degen
   }
   if(degentable==1 || tempcheck>invalidtempcode) // Avoid invalid inversions if T>Tbad, but only deal with temperature if degentable==0
 #else
-  if(1)
+    if(1)
 #endif
-  {
-    get_arrays_eostable_direct(whichdegenfun,degentable,whichtable,whichtablesubtype,iffun,kazmm,kazll,kazkk,kazjj,kazii,answers);
+      {
+        get_arrays_eostable_direct(whichdegenfun,degentable,whichtable,whichtablesubtype,iffun,kazmm,kazll,kazkk,kazjj,kazii,answers);
 
 
-    for(coli=0;coli<numcols;coli++) {
-      if(iffun[coli]){
+        for(coli=0;coli<numcols;coli++) {
+          if(iffun[coli]){
 #if(DOLOGINTERP && DOPRELOGIFY)
-	// only add if non-log or if should be log and not out of bounds
-	if(shouldloginterp[coli]==0 || shouldloginterp[coli] && answers[coli]<0.99999*OUTOFBOUNDSPRELOGIFY) localbadlookups[coli]=0;
+            // only add if non-log or if should be log and not out of bounds
+            if(shouldloginterp[coli]==0 || shouldloginterp[coli] && answers[coli]<0.99999*OUTOFBOUNDSPRELOGIFY) localbadlookups[coli]=0;
 #else
-	if(shouldloginterp[coli]==0 || shouldloginterp[coli] && answers[coli]>0.0) localbadlookups[coli]=0;
+            if(shouldloginterp[coli]==0 || shouldloginterp[coli] && answers[coli]>0.0) localbadlookups[coli]=0;
 #endif
-      }// end iffun==1
-    }// end over coli
-  }
+          }// end iffun==1
+        }// end over coli
+      }
 
 
   ////////////////////////
@@ -1537,7 +1537,7 @@ static int get_eos_fromlookup_nearest(int repeatedeos, int tabledimen, int degen
       kazkk=(int)(keos);
       kazll=(int)(leos);
       kazmm=(int)(meos);
-	
+        
 
       // set range of loops for different table types
       // tabledimen overrules table type (i.e. take section out of fuller table -- assumed to be 0 index)
@@ -1574,43 +1574,43 @@ static int get_eos_fromlookup_nearest(int repeatedeos, int tabledimen, int degen
     
 #if(CHECKIFVALIDEOSDATA)
       if(degentable==0){
-	// don't use values of table that have no inversion to temperature
-	get_arrays_eostable_direct_temperature(whichdegenfun,whichtable,kazmm,kazll,kazkk,kazjj,kazii,&tempcheck);
+        // don't use values of table that have no inversion to temperature
+        get_arrays_eostable_direct_temperature(whichdegenfun,whichtable,kazmm,kazll,kazkk,kazjj,kazii,&tempcheck);
       }
       if(degentable==1 || tempcheck>invalidtempcode) // Avoid invalid inversions if T>Tbad, but only deal with temperature if degentable==0
 #else
-      if(1)
+        if(1)
 #endif
-      {
-	get_arrays_eostable_direct(whichdegenfun,degentable,whichtable,whichtablesubtype,iffun,kazmm,kazll,kazkk,kazjj,kazii,answers);
+          {
+            get_arrays_eostable_direct(whichdegenfun,degentable,whichtable,whichtablesubtype,iffun,kazmm,kazll,kazkk,kazjj,kazii,answers);
 
-	for(coli=0;coli<numcols;coli++){
-	  if(iffun[coli]){
+            for(coli=0;coli<numcols;coli++){
+              if(iffun[coli]){
 #if(DOLOGINTERP && DOPRELOGIFY)
-	    // only add if non-log or if should be log and not out of bounds
-	    if(shouldloginterp[coli]==0 || shouldloginterp[coli] && answers[coli]<0.99999*OUTOFBOUNDSPRELOGIFY) localbadlookups[coli]=0;
+                // only add if non-log or if should be log and not out of bounds
+                if(shouldloginterp[coli]==0 || shouldloginterp[coli] && answers[coli]<0.99999*OUTOFBOUNDSPRELOGIFY) localbadlookups[coli]=0;
 #else
-	    if(shouldloginterp[coli]==0 || shouldloginterp[coli] && answers[coli]>0.0) localbadlookups[coli]=0;
+                if(shouldloginterp[coli]==0 || shouldloginterp[coli] && answers[coli]>0.0) localbadlookups[coli]=0;
 #endif
-	  }// end iffun==1
-	}// end over coli
+              }// end iffun==1
+            }// end over coli
 
-	////////////////////////
-	// see if should keep going and trying to get all or some values
-	// check if all good
-	////////////////////////
-	gotgood=1; for(coli=0;coli<numcols;coli++) if(iffun[coli]) if(localbadlookups[coli]==1) gotgood=0;
+            ////////////////////////
+            // see if should keep going and trying to get all or some values
+            // check if all good
+            ////////////////////////
+            gotgood=1; for(coli=0;coli<numcols;coli++) if(iffun[coli]) if(localbadlookups[coli]==1) gotgood=0;
 
-	if(gotgood){
-	  // terminate all 4 loops once have all good values
-	  iii=kazendiii;
-	  jjj=kazendjjj;
-	  kkk=kazendkkk;
-	  lll=kazendlll;
-	  mmm=kazendmmm;
-	}
+            if(gotgood){
+              // terminate all 4 loops once have all good values
+              iii=kazendiii;
+              jjj=kazendjjj;
+              kkk=kazendkkk;
+              lll=kazendlll;
+              mmm=kazendmmm;
+            }
 
-      }// end if did find a good temperature or doing degentable
+          }// end if did find a good temperature or doing degentable
     }// end loop over dimensions
   }// else if ROUNT2INT failed so picking nearest neighbor  
 
@@ -1618,7 +1618,7 @@ static int get_eos_fromlookup_nearest(int repeatedeos, int tabledimen, int degen
 
 
 #if(DOLOGINTERP && DOPRELOGIFY)
-    // then still need to unlogify even if didn't logify here since no interpolation, but prelogify did occur still.
+  // then still need to unlogify even if didn't logify here since no interpolation, but prelogify did occur still.
   for(coli=0;coli<numcols;coli++){
     if(shouldloginterp[coli] && iffun[coli] && localbadlookups[coli]==0){
       answers[coli]=pow(10.0,answers[coli]);
@@ -1754,10 +1754,10 @@ static void get_arrays_eostable_direct(int whichd, int whichdegen, int whichtabl
   if(WHICHDATATYPEGENERAL==4){
     if(whichtablesubtype!=SUBTYPEEXTRA){
       if(mmm!=0 || lll!=0){
-	// Then non-extras have no Ynu or H dependence
-	// should ensure loops don't use non-zero mmm or lll
-	dualfprintf(fail_file,"Bad get_arrays_eostable_direct: mmm=%d lll=%d whichtablesubtype=%d\n",mmm,lll,whichtablesubtype);
-	myexit(4633221);
+        // Then non-extras have no Ynu or H dependence
+        // should ensure loops don't use non-zero mmm or lll
+        dualfprintf(fail_file,"Bad get_arrays_eostable_direct: mmm=%d lll=%d whichtablesubtype=%d\n",mmm,lll,whichtablesubtype);
+        myexit(4633221);
       }
     }
   }
@@ -1785,35 +1785,35 @@ static void get_arrays_eostable_direct(int whichd, int whichdegen, int whichtabl
     if(whichdegen==ISNOTDEGENTABLE){
       // degentable not dealt with here
       if(whichtable==FULLTABLE){
-	// assume whichtablesubtype==SUBTYPEEXTRA is not reached if WHICHDATATYPEGENERAL==4 (controlled by which_eostable())
-	if(whichtablesubtype==SUBTYPESTANDARD){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eosfulltablestandard,0,mmm,lll,kkk,jjj,iii,coli);}
-	else if(whichtablesubtype==SUBTYPEGUESS){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eosfulltableguess,0,mmm,lll,kkk,jjj,iii,coli);}
-	else if(whichtablesubtype==SUBTYPEDISS){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eosfulltablediss,0,mmm,lll,kkk,jjj,iii,coli);}
-	else if(whichtablesubtype==SUBTYPEDP){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eosfulltabledp,0,mmm,lll,kkk,jjj,iii,coli);}
-	else if(whichtablesubtype==SUBTYPESDEN){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eosfulltablesden,0,mmm,lll,kkk,jjj,iii,coli);}
-	else if(whichtablesubtype==SUBTYPESSPEC){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eosfulltablesspec,0,mmm,lll,kkk,jjj,iii,coli);}
-	else if(whichtablesubtype==SUBTYPEPOFCHI){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eosfulltablepofchi,0,mmm,lll,kkk,jjj,iii,coli);}
-	// temp table special like degen table such that only 1 returned temp associated with whichd value
-	else if(whichtablesubtype==SUBTYPETEMP){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eosfulltabletemp,whichd,mmm,lll,kkk,jjj,iii,coli);} // whichd used
-	else if(whichtablesubtype==SUBTYPEEXTRA){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eosfulltableextra,0,mmm,lll,kkk,jjj,iii,coli);}
-	// in principle can request degen data directly, so allow this
-	else if(whichtablesubtype==SUBTYPEDEGEN){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eosfulltabledegen,whichd,mmm,lll,kkk,jjj,iii,coli);} // whichd used
+        // assume whichtablesubtype==SUBTYPEEXTRA is not reached if WHICHDATATYPEGENERAL==4 (controlled by which_eostable())
+        if(whichtablesubtype==SUBTYPESTANDARD){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eosfulltablestandard,0,mmm,lll,kkk,jjj,iii,coli);}
+        else if(whichtablesubtype==SUBTYPEGUESS){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eosfulltableguess,0,mmm,lll,kkk,jjj,iii,coli);}
+        else if(whichtablesubtype==SUBTYPEDISS){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eosfulltablediss,0,mmm,lll,kkk,jjj,iii,coli);}
+        else if(whichtablesubtype==SUBTYPEDP){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eosfulltabledp,0,mmm,lll,kkk,jjj,iii,coli);}
+        else if(whichtablesubtype==SUBTYPESDEN){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eosfulltablesden,0,mmm,lll,kkk,jjj,iii,coli);}
+        else if(whichtablesubtype==SUBTYPESSPEC){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eosfulltablesspec,0,mmm,lll,kkk,jjj,iii,coli);}
+        else if(whichtablesubtype==SUBTYPEPOFCHI){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eosfulltablepofchi,0,mmm,lll,kkk,jjj,iii,coli);}
+        // temp table special like degen table such that only 1 returned temp associated with whichd value
+        else if(whichtablesubtype==SUBTYPETEMP){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eosfulltabletemp,whichd,mmm,lll,kkk,jjj,iii,coli);} // whichd used
+        else if(whichtablesubtype==SUBTYPEEXTRA){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eosfulltableextra,0,mmm,lll,kkk,jjj,iii,coli);}
+        // in principle can request degen data directly, so allow this
+        else if(whichtablesubtype==SUBTYPEDEGEN){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eosfulltabledegen,whichd,mmm,lll,kkk,jjj,iii,coli);} // whichd used
       }
       else if(whichtable==FULLTABLEEXTRA){
-	// reach here if WHICHDATATYPEGENERAL==4 and want extras(controlled by which_eostable())
-	if(whichtablesubtype==SUBTYPEEXTRA){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eosfulltableextra,0,mmm,lll,kkk,jjj,iii,coli);}
-	// in principle can request degen data directly, so allow this
-	else if(whichtablesubtype==SUBTYPEDEGEN){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eosfulltableextradegen,whichd,mmm,lll,kkk,jjj,iii,coli);} // whichd used
-	else if(whichtablesubtype==SUBTYPETEMP){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eosfulltableextratemp,whichd,mmm,lll,kkk,jjj,iii,coli);}
+        // reach here if WHICHDATATYPEGENERAL==4 and want extras(controlled by which_eostable())
+        if(whichtablesubtype==SUBTYPEEXTRA){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eosfulltableextra,0,mmm,lll,kkk,jjj,iii,coli);}
+        // in principle can request degen data directly, so allow this
+        else if(whichtablesubtype==SUBTYPEDEGEN){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eosfulltableextradegen,whichd,mmm,lll,kkk,jjj,iii,coli);} // whichd used
+        else if(whichtablesubtype==SUBTYPETEMP){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eosfulltableextratemp,whichd,mmm,lll,kkk,jjj,iii,coli);}
       }
     }
     else{
       // then ignore whichtablesubtype
       if(whichtable==FULLTABLE){
-	for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eosfulltabledegen,whichd,mmm,lll,kkk,jjj,iii,coli); // whichd used
+        for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eosfulltabledegen,whichd,mmm,lll,kkk,jjj,iii,coli); // whichd used
       }
       else if(whichtable==FULLTABLEEXTRA){
-	for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eosfulltableextradegen,whichd,mmm,lll,kkk,jjj,iii,coli); // whichd used
+        for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eosfulltableextradegen,whichd,mmm,lll,kkk,jjj,iii,coli); // whichd used
       }
     }// end else if degentable      
   }// end if fulltable
@@ -1823,35 +1823,35 @@ static void get_arrays_eostable_direct(int whichd, int whichdegen, int whichtabl
     if(whichdegen==ISNOTDEGENTABLE){
       // degentable not dealt with here
       if(whichtable==SIMPLETABLE){
-	// assume whichtablesubtype==SUBTYPEEXTRA is not reached if WHICHDATATYPEGENERAL==4 (controlled by which_eostable())
-	if(whichtablesubtype==SUBTYPESTANDARD){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimpletablestandard,0,mmm,lll,kkk,jjj,iii,coli);}
-	else if(whichtablesubtype==SUBTYPEGUESS){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimpletableguess,0,mmm,lll,kkk,jjj,iii,coli);}
-	else if(whichtablesubtype==SUBTYPEDISS){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimpletablediss,0,mmm,lll,kkk,jjj,iii,coli);}
-	else if(whichtablesubtype==SUBTYPEDP){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimpletabledp,0,mmm,lll,kkk,jjj,iii,coli);}
-	else if(whichtablesubtype==SUBTYPESDEN){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimpletablesden,0,mmm,lll,kkk,jjj,iii,coli);}
-	else if(whichtablesubtype==SUBTYPESSPEC){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimpletablesspec,0,mmm,lll,kkk,jjj,iii,coli);}
-	else if(whichtablesubtype==SUBTYPEPOFCHI){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimpletablepofchi,0,mmm,lll,kkk,jjj,iii,coli);}
-	// temp table special like degen table such that only 1 returned temp associated with whichd value
-	else if(whichtablesubtype==SUBTYPETEMP){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimpletabletemp,whichd,mmm,lll,kkk,jjj,iii,coli);} // whichd used
-	else if(whichtablesubtype==SUBTYPEEXTRA){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimpletableextra,0,mmm,lll,kkk,jjj,iii,coli);}
-	// in principle can request degen data directly, so allow this
-	else if(whichtablesubtype==SUBTYPEDEGEN){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimpletabledegen,whichd,mmm,lll,kkk,jjj,iii,coli);} // whichd used
+        // assume whichtablesubtype==SUBTYPEEXTRA is not reached if WHICHDATATYPEGENERAL==4 (controlled by which_eostable())
+        if(whichtablesubtype==SUBTYPESTANDARD){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimpletablestandard,0,mmm,lll,kkk,jjj,iii,coli);}
+        else if(whichtablesubtype==SUBTYPEGUESS){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimpletableguess,0,mmm,lll,kkk,jjj,iii,coli);}
+        else if(whichtablesubtype==SUBTYPEDISS){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimpletablediss,0,mmm,lll,kkk,jjj,iii,coli);}
+        else if(whichtablesubtype==SUBTYPEDP){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimpletabledp,0,mmm,lll,kkk,jjj,iii,coli);}
+        else if(whichtablesubtype==SUBTYPESDEN){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimpletablesden,0,mmm,lll,kkk,jjj,iii,coli);}
+        else if(whichtablesubtype==SUBTYPESSPEC){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimpletablesspec,0,mmm,lll,kkk,jjj,iii,coli);}
+        else if(whichtablesubtype==SUBTYPEPOFCHI){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimpletablepofchi,0,mmm,lll,kkk,jjj,iii,coli);}
+        // temp table special like degen table such that only 1 returned temp associated with whichd value
+        else if(whichtablesubtype==SUBTYPETEMP){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimpletabletemp,whichd,mmm,lll,kkk,jjj,iii,coli);} // whichd used
+        else if(whichtablesubtype==SUBTYPEEXTRA){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimpletableextra,0,mmm,lll,kkk,jjj,iii,coli);}
+        // in principle can request degen data directly, so allow this
+        else if(whichtablesubtype==SUBTYPEDEGEN){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimpletabledegen,whichd,mmm,lll,kkk,jjj,iii,coli);} // whichd used
       }
       else if(whichtable==SIMPLETABLEEXTRA){
-	// reach here if WHICHDATATYPEGENERAL==4 and want extras(controlled by which_eostable())
-	if(whichtablesubtype==SUBTYPEEXTRA){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimpletableextra,0,mmm,lll,kkk,jjj,iii,coli);}
-	// in principle can request degen data directly, so allow this
-	else if(whichtablesubtype==SUBTYPEDEGEN){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimpletableextradegen,whichd,mmm,lll,kkk,jjj,iii,coli);} // whichd used
-	else if(whichtablesubtype==SUBTYPETEMP){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimpletableextratemp,whichd,mmm,lll,kkk,jjj,iii,coli);}
+        // reach here if WHICHDATATYPEGENERAL==4 and want extras(controlled by which_eostable())
+        if(whichtablesubtype==SUBTYPEEXTRA){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimpletableextra,0,mmm,lll,kkk,jjj,iii,coli);}
+        // in principle can request degen data directly, so allow this
+        else if(whichtablesubtype==SUBTYPEDEGEN){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimpletableextradegen,whichd,mmm,lll,kkk,jjj,iii,coli);} // whichd used
+        else if(whichtablesubtype==SUBTYPETEMP){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimpletableextratemp,whichd,mmm,lll,kkk,jjj,iii,coli);}
       }
     }
     else{
       // then ignore whichtablesubtype
       if(whichtable==SIMPLETABLE){
-	for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimpletabledegen,whichd,mmm,lll,kkk,jjj,iii,coli); // whichd used
+        for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimpletabledegen,whichd,mmm,lll,kkk,jjj,iii,coli); // whichd used
       }
       else if(whichtable==SIMPLETABLEEXTRA){
-	for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimpletableextradegen,whichd,mmm,lll,kkk,jjj,iii,coli); // whichd used
+        for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimpletableextradegen,whichd,mmm,lll,kkk,jjj,iii,coli); // whichd used
       }
     }// end else if degentable      
   }// end if simpletable
@@ -1861,35 +1861,35 @@ static void get_arrays_eostable_direct(int whichd, int whichdegen, int whichtabl
     if(whichdegen==ISNOTDEGENTABLE){
       // degentable not dealt with here
       if(whichtable==SIMPLEZOOMTABLE){
-	// assume whichtablesubtype==SUBTYPEEXTRA is not reached if WHICHDATATYPEGENERAL==4 (controlled by which_eostable())
-	if(whichtablesubtype==SUBTYPESTANDARD){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimplezoomtablestandard,0,mmm,lll,kkk,jjj,iii,coli);}
-	else if(whichtablesubtype==SUBTYPEGUESS){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimplezoomtableguess,0,mmm,lll,kkk,jjj,iii,coli);}
-	else if(whichtablesubtype==SUBTYPEDISS){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimplezoomtablediss,0,mmm,lll,kkk,jjj,iii,coli);}
-	else if(whichtablesubtype==SUBTYPEDP){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimplezoomtabledp,0,mmm,lll,kkk,jjj,iii,coli);}
-	else if(whichtablesubtype==SUBTYPESDEN){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimplezoomtablesden,0,mmm,lll,kkk,jjj,iii,coli);}
-	else if(whichtablesubtype==SUBTYPESSPEC){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimplezoomtablesspec,0,mmm,lll,kkk,jjj,iii,coli);}
-	else if(whichtablesubtype==SUBTYPEPOFCHI){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimplezoomtablepofchi,0,mmm,lll,kkk,jjj,iii,coli);}
-	// temp table special like degen table such that only 1 returned temp associated with whichd value
-	else if(whichtablesubtype==SUBTYPETEMP){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimplezoomtabletemp,whichd,mmm,lll,kkk,jjj,iii,coli);} // whichd used
-	else if(whichtablesubtype==SUBTYPEEXTRA){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimplezoomtableextra,0,mmm,lll,kkk,jjj,iii,coli);}
-	// in principle can request degen data directly, so allow this
-	else if(whichtablesubtype==SUBTYPEDEGEN){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimplezoomtabledegen,whichd,mmm,lll,kkk,jjj,iii,coli);} // whichd used
+        // assume whichtablesubtype==SUBTYPEEXTRA is not reached if WHICHDATATYPEGENERAL==4 (controlled by which_eostable())
+        if(whichtablesubtype==SUBTYPESTANDARD){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimplezoomtablestandard,0,mmm,lll,kkk,jjj,iii,coli);}
+        else if(whichtablesubtype==SUBTYPEGUESS){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimplezoomtableguess,0,mmm,lll,kkk,jjj,iii,coli);}
+        else if(whichtablesubtype==SUBTYPEDISS){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimplezoomtablediss,0,mmm,lll,kkk,jjj,iii,coli);}
+        else if(whichtablesubtype==SUBTYPEDP){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimplezoomtabledp,0,mmm,lll,kkk,jjj,iii,coli);}
+        else if(whichtablesubtype==SUBTYPESDEN){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimplezoomtablesden,0,mmm,lll,kkk,jjj,iii,coli);}
+        else if(whichtablesubtype==SUBTYPESSPEC){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimplezoomtablesspec,0,mmm,lll,kkk,jjj,iii,coli);}
+        else if(whichtablesubtype==SUBTYPEPOFCHI){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimplezoomtablepofchi,0,mmm,lll,kkk,jjj,iii,coli);}
+        // temp table special like degen table such that only 1 returned temp associated with whichd value
+        else if(whichtablesubtype==SUBTYPETEMP){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimplezoomtabletemp,whichd,mmm,lll,kkk,jjj,iii,coli);} // whichd used
+        else if(whichtablesubtype==SUBTYPEEXTRA){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimplezoomtableextra,0,mmm,lll,kkk,jjj,iii,coli);}
+        // in principle can request degen data directly, so allow this
+        else if(whichtablesubtype==SUBTYPEDEGEN){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimplezoomtabledegen,whichd,mmm,lll,kkk,jjj,iii,coli);} // whichd used
       }
       else if(whichtable==SIMPLEZOOMEXTRATABLE){
-	// reach here if WHICHDATATYPEGENERAL==4 and want extras(controlled by which_eostable())
-	if(whichtablesubtype==SUBTYPEEXTRA){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimplezoomtableextra,0,mmm,lll,kkk,jjj,iii,coli);}
-	// in principle can request degen data directly, so allow this
-	else if(whichtablesubtype==SUBTYPEDEGEN){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimplezoomtableextradegen,whichd,mmm,lll,kkk,jjj,iii,coli);} // whichd used
-	else if(whichtablesubtype==SUBTYPETEMP){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimplezoomtableextratemp,whichd,mmm,lll,kkk,jjj,iii,coli);}
+        // reach here if WHICHDATATYPEGENERAL==4 and want extras(controlled by which_eostable())
+        if(whichtablesubtype==SUBTYPEEXTRA){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimplezoomtableextra,0,mmm,lll,kkk,jjj,iii,coli);}
+        // in principle can request degen data directly, so allow this
+        else if(whichtablesubtype==SUBTYPEDEGEN){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimplezoomtableextradegen,whichd,mmm,lll,kkk,jjj,iii,coli);} // whichd used
+        else if(whichtablesubtype==SUBTYPETEMP){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimplezoomtableextratemp,whichd,mmm,lll,kkk,jjj,iii,coli);}
       }
     }
     else{
       // then ignore whichtablesubtype
       if(whichtable==SIMPLEZOOMTABLE){
-	for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimplezoomtabledegen,whichd,mmm,lll,kkk,jjj,iii,coli); // whichd used
+        for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimplezoomtabledegen,whichd,mmm,lll,kkk,jjj,iii,coli); // whichd used
       }
       else if(whichtable==SIMPLEZOOMEXTRATABLE){
-	for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimplezoomtableextradegen,whichd,mmm,lll,kkk,jjj,iii,coli); // whichd used
+        for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimplezoomtableextradegen,whichd,mmm,lll,kkk,jjj,iii,coli); // whichd used
       }
     }// end else if degentable      
   }// end if simplezoomtable

@@ -82,7 +82,7 @@ int Utoprim(int whichcons, FTYPE *U, struct of_geom *ptrgeom, PFTYPE *lpflag, FT
   if(0&&( (EOMTYPE==EOMGRMHD||EOMTYPE==EOMENTROPYGRMHD)||(EOMTYPE==EOMCOLDGRMHD) )){ // don't check for now, just fail later
     if (U[RHO] < 0.) {
       if (fail(i,j,k,loc,FAIL_UTOPRIM_NEG) >= 1)
-	return (1);
+        return (1);
     }
   }
   
@@ -163,8 +163,8 @@ int Utoprim(int whichcons, FTYPE *U, struct of_geom *ptrgeom, PFTYPE *lpflag, FT
     // assumes dudp_calc replaces total energy equation with entropy equation
 
 #if(ENTROPY==-100)
-  dualfprintf(fail_file,"Should not be here in utoprim() ENTROPY variable defined\n");
-  myexit(2486726);
+    dualfprintf(fail_file,"Should not be here in utoprim() ENTROPY variable defined\n");
+    myexit(2486726);
 #endif
 
   }
@@ -276,29 +276,29 @@ int Utoprim(int whichcons, FTYPE *U, struct of_geom *ptrgeom, PFTYPE *lpflag, FT
       flagifnonrel=1;
 
       if(Utoprim_nonrel(U_target,ptrgeom,pr)>0){
-	*lpflag= UTOPRIMFAILRHONEG;
-	flagifnonrel=0; //then can't trust non-rel inversion
+        *lpflag= UTOPRIMFAILRHONEG;
+        flagifnonrel=0; //then can't trust non-rel inversion
       }
       else{
     
-	// report if failure.  Only negative densities can occur with non-relativistic inversion
-	if((pr[RHO]<=0.)&&(pr[UU]>=0.)) *lpflag= UTOPRIMFAILRHONEG;
-	if((pr[RHO]>=0.)&&(pr[UU]<=0.)) *lpflag= UTOPRIMFAILUNEG;
-	if((pr[RHO]<=0.)&&(pr[UU]<=0.)) *lpflag= UTOPRIMFAILRHOUNEG;
+        // report if failure.  Only negative densities can occur with non-relativistic inversion
+        if((pr[RHO]<=0.)&&(pr[UU]>=0.)) *lpflag= UTOPRIMFAILRHONEG;
+        if((pr[RHO]>=0.)&&(pr[UU]<=0.)) *lpflag= UTOPRIMFAILUNEG;
+        if((pr[RHO]<=0.)&&(pr[UU]<=0.)) *lpflag= UTOPRIMFAILRHOUNEG;
 
-	if(IFUTOPRIMNOFAILORFIXED(*lpflag)){
-	  //	PLOOP(pliter,pl) dualfprintf(fail_file,"U[%d]=%21.15g pr0[%d]=%21.15g pr[%d]=%21.15g\n",pl,U_target[pl],pl,pr0[pl],pl,pr[pl]);
-	}
-	PLOOP(pliter,pl) prnonrel[pl]=pr[pl];
+        if(IFUTOPRIMNOFAILORFIXED(*lpflag)){
+          //    PLOOP(pliter,pl) dualfprintf(fail_file,"U[%d]=%21.15g pr0[%d]=%21.15g pr[%d]=%21.15g\n",pl,U_target[pl],pl,pr0[pl],pl,pr[pl]);
+        }
+        PLOOP(pliter,pl) prnonrel[pl]=pr[pl];
       
-	/////////////
-	//
-	// checks if initial pr gives good u^t and determines U(pr)
-	//
-	////////////
-	if (get_state(pr, ptrgeom, &q) >= 1)
-	  FAILSTATEMENT("utoprim.c:utoprim()", "get_state()", 1);
-	if(fabs(q.ucon[TT]-1.0)>NUMEPSILON*5.0) flagifnonrel=0;
+        /////////////
+        //
+        // checks if initial pr gives good u^t and determines U(pr)
+        //
+        ////////////
+        if (get_state(pr, ptrgeom, &q) >= 1)
+          FAILSTATEMENT("utoprim.c:utoprim()", "get_state()", 1);
+        if(fabs(q.ucon[TT]-1.0)>NUMEPSILON*5.0) flagifnonrel=0;
       }
     }
     else{
@@ -350,21 +350,21 @@ int Utoprim(int whichcons, FTYPE *U, struct of_geom *ptrgeom, PFTYPE *lpflag, FT
     //////////////////
     while(mnewtfailed){
       if(mnewtfailed){
-	if(countutoprims==-1){
-	  // forced to use static solution. Probably better ways than a
-	  // linear approx, but better than nothing.  Must improve flux,
-	  // or lower courant factor to otherwise improve this situation
-	  break;
-	}
-	if(countutoprims==0){
-	  // force to be nearly identical instead of exactly identical, last hope!
-	  PLOOP(pliter,pl) U_target[pl]=Ustart[pl]+dU[pl]*SUPERFRAC;
-	}
-	else{
-	  // Only failed because U_target is trying to send u^t to imaginary values, or densities to negative values
-	  // try backup up towards original solution in conservative variable space
-	  PLOOP(pliter,pl) U_target[pl]=Ustart[pl]+dU[pl]*(FTYPE)countutoprims*frac;
-	}
+        if(countutoprims==-1){
+          // forced to use static solution. Probably better ways than a
+          // linear approx, but better than nothing.  Must improve flux,
+          // or lower courant factor to otherwise improve this situation
+          break;
+        }
+        if(countutoprims==0){
+          // force to be nearly identical instead of exactly identical, last hope!
+          PLOOP(pliter,pl) U_target[pl]=Ustart[pl]+dU[pl]*SUPERFRAC;
+        }
+        else{
+          // Only failed because U_target is trying to send u^t to imaginary values, or densities to negative values
+          // try backup up towards original solution in conservative variable space
+          PLOOP(pliter,pl) U_target[pl]=Ustart[pl]+dU[pl]*(FTYPE)countutoprims*frac;
+        }
       }
 
       // mnewt is set to only take 5 entries and deal with pl=0-4 in the inversion.
@@ -377,8 +377,8 @@ int Utoprim(int whichcons, FTYPE *U, struct of_geom *ptrgeom, PFTYPE *lpflag, FT
 
       if(mnewtfailed) countutoprims--;
       if(nutoprims==1){
-	break; // if failed, static immediately if failure since apparently goes that way anyways
-	// if good, then break cause we are done
+        break; // if failed, static immediately if failure since apparently goes that way anyways
+        // if good, then break cause we are done
       }
 
     }
@@ -489,7 +489,7 @@ int Utoprim(int whichcons, FTYPE *U, struct of_geom *ptrgeom, PFTYPE *lpflag, FT
   if(jonchecks) fixup1zone(pr,ptrgeom,0); // actually this is done in a general fixup call soon after this point in step_ch.c
   // check and see if u^t is actually a good solution now we think we have the solution? or fix it if u^t is bad
   if(jonchecks) if(check_pr(pr,pr0,ptrgeom,0)>=1)
-    FAILSTATEMENT("utoprim.c:Utoprim()", "mnewt check:check_pr()", 1);
+                  FAILSTATEMENT("utoprim.c:Utoprim()", "mnewt check:check_pr()", 1);
 #endif
 
 
@@ -527,7 +527,7 @@ int Utoprim(int whichcons, FTYPE *U, struct of_geom *ptrgeom, PFTYPE *lpflag, FT
     
     if(!jonchecks){
       if (fail(i,j,k,loc,FAIL_UTOPRIM_TEST) >= 1)
-	return (1);
+        return (1);
     }
   }
 
@@ -555,15 +555,15 @@ int Utoprim(int whichcons, FTYPE *U, struct of_geom *ptrgeom, PFTYPE *lpflag, FT
 
 /*
 
-Conserved quantities:
+  Conserved quantities:
 
 
-rest-mass : U[RHO] = \rho
+  rest-mass : U[RHO] = \rho
 
-REMOVERESTMASSFROMUU==2
--Energy   : U[UU]  = -\rho v^2/2 - u  = -(\rho v^2/2 + u)
+  REMOVERESTMASSFROMUU==2
+  -Energy   : U[UU]  = -\rho v^2/2 - u  = -(\rho v^2/2 + u)
 
-Momentums : U[UU+j] = \rho v_j  j=1..3
+  Momentums : U[UU+j] = \rho v_j  j=1..3
 
 
 
@@ -658,7 +658,7 @@ int Utoprim_nonrel(FTYPE *U, struct of_geom *ptrgeom, FTYPE *pr)
 
   //    PLOOP(pliter,pl) dualfprintf(fail_file,"U[%d]=%21.15g\n",pl,U[pl]);
 
-    //  PLOOP(pliter,pl)  dualfprintf(fail_file,"%ld %d %d nonrel inversion pr[%d]=%21.15g\n",nstep,steppart,ptrgeom->i,pl,pr[pl]);
+  //  PLOOP(pliter,pl)  dualfprintf(fail_file,"%ld %d %d nonrel inversion pr[%d]=%21.15g\n",nstep,steppart,ptrgeom->i,pl,pr[pl]);
 
   return(0);// can't fail
 }
@@ -732,7 +732,7 @@ int usrfun(FTYPE *U_target,FTYPE *pr0,int numnormterms,int whichcons, int primto
   // essentially we are doing a constrained damped Newton's method.
   if(0&&jonchecks) failreturn=check_pr(pr,pr0,ptrgeom,-100);
   if(0&&jonchecks) if(failreturn>=1)
-    FAILSTATEMENT("utoprim.c:usrfun()", "mnewt check:check_pr()", 2);
+                     FAILSTATEMENT("utoprim.c:usrfun()", "mnewt check:check_pr()", 2);
 
   // just check
   if(jonchecks) failreturn=check_pr(pr,pr0,ptrgeom,-2);
@@ -783,7 +783,7 @@ int usrfun(FTYPE *U_target,FTYPE *pr0,int numnormterms,int whichcons, int primto
 #if(EOMTYPE==EOMGRMHD||EOMTYPE==EOMENTROPYGRMHD)
     for (j = 0; j < INVERTNPR ; j++){
       for (k = 0; k < INVERTNPR ; k++){
-	alpha[j+1][k+1]=alpha5[j+1][k+1];
+        alpha[j+1][k+1]=alpha5[j+1][k+1];
       }
     }    
 #elif(EOMTYPE==EOMFFDE)
@@ -813,13 +813,13 @@ int usrfun(FTYPE *U_target,FTYPE *pr0,int numnormterms,int whichcons, int primto
     numnormterms=0;
     for (j = 0; j < INVERTNPR ; j++){
       for (k = 0; k < INVERTNPR ; k++){
-	// GODMARK: correction:
-	if(fabs(alpha[j + 1][k + 1])>NUMEPSILON){
-	// old version (bug)
-	//	if(alpha[j + 1][k + 1]>NUMEPSILON){
-	  *norm+=fabs(alpha[j + 1][k + 1]);
-	  numnormterms++;
-	}
+        // GODMARK: correction:
+        if(fabs(alpha[j + 1][k + 1])>NUMEPSILON){
+          // old version (bug)
+          //    if(alpha[j + 1][k + 1]>NUMEPSILON){
+          *norm+=fabs(alpha[j + 1][k + 1]);
+          numnormterms++;
+        }
       }
     }
     *norm=(FTYPE)(numnormterms)/(*norm); // (i.e. inverse of average)
@@ -828,7 +828,7 @@ int usrfun(FTYPE *U_target,FTYPE *pr0,int numnormterms,int whichcons, int primto
     
     for (j = 0; j < INVERTNPR ; j++)
       for (k = 0; k < INVERTNPR ; k++)
-	alpha[j + 1][k + 1] *= (*norm);
+        alpha[j + 1][k + 1] *= (*norm);
 
     
     // below assumes alpha at U_curr isn't too different from at U_target
@@ -881,15 +881,15 @@ void removerow(int row, FTYPE **alpha5, FTYPE**alpha)
     for(k = STARTPINVERT; k < STARTPINVERT+INVERTNPR ; k++){
       
       if(j<row){
-	jj=(j+1)-U1;
-	kk=k-STARTPINVERT;
+        jj=(j+1)-U1;
+        kk=k-STARTPINVERT;
       }
       else if(j==row){
-	continue;
+        continue;
       }
       else if(j>row){
-	jj=(j+1)-(U1+1);
-	kk=k-STARTPINVERT;
+        jj=(j+1)-(U1+1);
+        kk=k-STARTPINVERT;
       }
       alpha[jj+1][kk+1]=alpha5[j+1][k+1];
     }
