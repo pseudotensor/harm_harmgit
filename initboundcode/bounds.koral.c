@@ -2475,6 +2475,9 @@ int bound_radnt(int dir,
     extern FTYPE RADNT_ROUT;
     extern FTYPE RADNT_OMSCALE;
     extern FTYPE RADNT_FULLPHI;
+    extern FTYPE RADNT_DONUTRADPMAX;
+    extern FTYPE RADNT_HOVERR;
+    extern FTYPE RADNT_LPOW;
 
 
     int i,j,k,pl,pliter;

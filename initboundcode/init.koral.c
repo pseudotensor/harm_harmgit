@@ -149,6 +149,9 @@ FTYPE RADNT_TRADATMMIN;
 FTYPE RADNT_ROUT;
 FTYPE RADNT_OMSCALE;
 FTYPE RADNT_FULLPHI;
+FTYPE RADNT_DONUTRADPMAX;
+FTYPE RADNT_HOVERR;
+FTYPE RADNT_LPOW;
 
 int RADDONUT_OPTICALLYTHICKTORUS;
 
@@ -1218,6 +1221,11 @@ int init_global(void)
 
     gam=gamideal=5.0/3.0; // Ohsuga
 
+    RADNT_DONUTTYPE=DONUTOLEK;
+    //RADNT_DONUTTYPE=DONUTOHSUGA;
+    RADNT_INFLOWING=0;
+    RADNT_OMSCALE=1.0;
+
     //    RADNT_ELL=4.5; // torus specific angular momentum
     RADNT_ELL=4.5; // torus specific angular momentum
     RADNT_UTPOT=0.9999999; // scales rin for donut
@@ -1225,8 +1233,18 @@ int init_global(void)
     //RADNT_RHOATMMIN=KORAL2HARMRHO(1.e-4);
     //    RADNT_RHOATMMIN= KORAL2HARMRHO(1.e-2); // current koral choice
     //RADNT_RHODONUT = KORAL2HARMRHO(1.0); // equivalent to koral's non-normalization
-    //    RADNT_RHODONUT=1E-5; // gives
-    RADNT_RHODONUT=3.0; // gives 0.26 final density peak if RAD_ELL=3.5
+    if(RADNT_DONUTTYPE==DONUTOLEK){
+      //    RADNT_RHODONUT=1E-5; // gives
+      RADNT_RHODONUT=3.0; // gives 0.26 final density peak if RAD_ELL=3.5
+    }
+    else{
+      RADNT_RHODONUT=1E-2; // actual torus maximum density
+      RADNT_DONUTRADPMAX=20.0; // radius of pressure maximum
+      RADNT_HOVERR=0.5; // H/R\sim c_s/v_K at torus pressure maximum
+      RADNT_LPOW=0.1; // l\propto r^lpow , lpow=0.5 would be Keplerian, lpow=0 would be constant angular momentum.
+    }
+
+
     RADNT_RHOATMMIN=RADNT_RHODONUT*1E-6;
     RADNT_KKK=1.e-1 * (1.0/pow(RADNT_RHODONUT,gam-1.0));
     //    RADNT_TGASATMMIN = 1.e11/TEMPBAR;
@@ -1236,10 +1254,6 @@ int init_global(void)
     //    RADNT_TRADATMMIN = 1.e9/TEMPBAR;
     RADNT_TRADATMMIN = 1.e7/TEMPBAR;
     RADNT_ERADATMMIN= (calc_LTE_EfromT(RADNT_TRADATMMIN));
-    RADNT_DONUTTYPE=DONUTOLEK;
-    //RADNT_DONUTTYPE=DONUTOHSUGA;
-    RADNT_INFLOWING=0;
-    RADNT_OMSCALE=1.0;
 
     RADDONUT_OPTICALLYTHICKTORUS=1; // otherwise, pressure only from gas.
 
@@ -3713,10 +3727,10 @@ int donut_analytical_solution(int opticallythick, FTYPE *pp,FTYPE *X, FTYPE *V,s
   }
   else if(RADNT_DONUTTYPE==DONUTOHSUGA){
     FTYPE rs=2.0; // Schwarzschild radius
-    FTYPE r0=10.0*rs;  // pressure maximum radius // FREEPAR
+    FTYPE r0=RADNT_DONUTRADPMAX;  // pressure maximum radius // FREEPAR
     FTYPE l0=pow(r0,1.5)/(r0-rs); // angular momentum at pressure maximum [type in S3.3 in Ohsuga in text for l0]
     //    FTYPE aa=0.46; // FREEPAR 
-    FTYPE aa=0.1; // FREEPAR 
+    FTYPE aa=RADNT_LPOW; // FREEPAR 
     FTYPE ll=l0*pow(Rcyl/r0,aa); // l ~ r^aa (i.e. non-constant angular momentum)
     FTYPE rhoc=RADNT_RHODONUT; // density at center of torus
     FTYPE nn=1.0/(gamtorus-1.0);  //3.0; // -> 1 + 1/n = gamma -> n = 1/(gamma-1) : gamma=4/3 -> n=3
@@ -3747,8 +3761,8 @@ int donut_analytical_solution(int opticallythick, FTYPE *pp,FTYPE *X, FTYPE *V,s
     else{
       // Kato et al. (2004):
       //FTYPE vs0=5.6E-3; // FREEPAR // Table1
-      FTYPE HoR0=0.5;
       //      FTYPE vs0=1E-1;
+      FTYPE HoR0=RADNT_HOVERR;
       FTYPE vphi0=l0/r0;
       FTYPE vs0=HoR0*vphi0;
       rhotarg=1.0 - (gamtorus/(vs0*vs0))*(phieff-phieffr0)/(nn+1.0);
