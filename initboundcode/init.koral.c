@@ -1219,23 +1219,28 @@ int init_global(void)
 
 
 
-    gam=gamideal=5.0/3.0; // Ohsuga
 
+    /////////////////////////////////
+    // DONUT selections
     RADNT_DONUTTYPE=DONUTOLEK;
     //RADNT_DONUTTYPE=DONUTOHSUGA;
+    RADDONUT_OPTICALLYTHICKTORUS=1; // otherwise, pressure only from gas.
     RADNT_INFLOWING=0;
     RADNT_OMSCALE=1.0;
+    // gas (not radiation) EOS \gamma value:
+    gam=gamideal=5.0/3.0; // Ohsuga choice, assumes pairs not important.
 
-    //    RADNT_ELL=4.5; // torus specific angular momentum
-    RADNT_ELL=4.5; // torus specific angular momentum
-    RADNT_UTPOT=0.9999999; // scales rin for donut
-    RADNT_ROUT=2.0; // what radius ATMMIN things are defining
-    //RADNT_RHOATMMIN=KORAL2HARMRHO(1.e-4);
-    //    RADNT_RHOATMMIN= KORAL2HARMRHO(1.e-2); // current koral choice
-    //RADNT_RHODONUT = KORAL2HARMRHO(1.0); // equivalent to koral's non-normalization
+
+    /////////////////////////////////////
+    // DONUT TYPE and PARAMETERS
     if(RADNT_DONUTTYPE==DONUTOLEK){
-      //    RADNT_RHODONUT=1E-5; // gives
+      //    RADNT_RHODONUT=1E-5;
       RADNT_RHODONUT=3.0; // gives 0.26 final density peak if RAD_ELL=3.5
+      //RADNT_RHODONUT = KORAL2HARMRHO(1.0); // equivalent to koral's non-normalization
+      //    RADNT_ELL=4.5; // torus specific angular momentum
+      RADNT_ELL=4.5; // torus specific angular momentum
+      RADNT_UTPOT=0.9999999; // scales rin for donut
+      RADNT_KKK=1.e-1 * (1.0/pow(RADNT_RHODONUT,gam-1.0)); // no effect with the scaling with density put in.
     }
     else{
       RADNT_RHODONUT=1E-2; // actual torus maximum density
@@ -1245,8 +1250,12 @@ int init_global(void)
     }
 
 
+    ///////////////////////////////////
+    // DONUT atmosphere:
+    RADNT_ROUT=2.0; // what radius ATMMIN things are defining
+    //RADNT_RHOATMMIN=KORAL2HARMRHO(1.e-4);
+    //    RADNT_RHOATMMIN= KORAL2HARMRHO(1.e-2); // current koral choice
     RADNT_RHOATMMIN=RADNT_RHODONUT*1E-6;
-    RADNT_KKK=1.e-1 * (1.0/pow(RADNT_RHODONUT,gam-1.0));
     //    RADNT_TGASATMMIN = 1.e11/TEMPBAR;
     RADNT_TGASATMMIN = 1.e9/TEMPBAR;
     RADNT_UINTATMMIN= (calc_PEQ_ufromTrho(RADNT_TGASATMMIN,RADNT_RHOATMMIN));
@@ -1254,8 +1263,6 @@ int init_global(void)
     //    RADNT_TRADATMMIN = 1.e9/TEMPBAR;
     RADNT_TRADATMMIN = 1.e7/TEMPBAR;
     RADNT_ERADATMMIN= (calc_LTE_EfromT(RADNT_TRADATMMIN));
-
-    RADDONUT_OPTICALLYTHICKTORUS=1; // otherwise, pressure only from gas.
 
     trifprintf("RADNT_RHOATMMIN=%g RADNT_RHOATMMIN=%g RADNT_UINTATMMIN=%g RADNT_ERADATMMIN=%g\n",RADNT_RHOATMMIN,RADNT_RHOATMMIN,RADNT_UINTATMMIN,RADNT_ERADATMMIN);
 
