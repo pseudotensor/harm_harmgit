@@ -215,7 +215,8 @@ int init_grid(void)
   //  if(totalsize[1]<32) Rout=50.0;
   //  else if(totalsize[1]<=64) Rout=1E4;
   //  else Rout=1E5;
-  Rout=1E5;
+  //  Rout=1E5;
+  Rout=1E4;
 #endif
 
  
@@ -279,8 +280,8 @@ int init_global(void)
   RHOMINEVOLVE = 1E-4;
   UUMINEVOLVE = 1E-6;
 
-  //  cooling=COOLUSER; // MARKTODO should override these values set in initbase, right?
-  cooling=NOCOOLING;
+  cooling=COOLUSER; // MARKTODO should override these values set in initbase, right?
+  //  cooling=NOCOOLING;
   gam=4./3.;
 
 #elif(WHICHPROBLEM==THICKDISK)
@@ -976,7 +977,7 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
   FTYPE rpow2=0.0;
   FTYPE FIELDROT=0.0;
   FTYPE hpow=2.0;
-  FTYPE RBREAK=100.0;
+  FTYPE RBREAK=60.0;
 
 
   if(l==2){// A_\theta
@@ -1348,7 +1349,7 @@ int set_density_floors(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *prfloor)
   r=V[1];
   th=V[2];
 
-  prlocal[RHO] = RHOMINEVOLVE*pow(r,-2.0);
+  prlocal[RHO] = RHOMINEVOLVE*pow(r,-1.5);
   prlocal[UU]  = UUMINEVOLVE*pow(r,-2.5);
   
 

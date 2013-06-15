@@ -12,7 +12,7 @@
 #endif
 
 
-#define N1 64  // MARKTODO resolution
+#define N1 128  // MARKTODO resolution
 #define N2 64
 #define N3 1
 
@@ -200,7 +200,7 @@
 #define FIELDSTAGMEM 1 // testing
 #define HIGHERORDERMEM 0
 #define MAXBND 4 // 4 for PARAFLAT, 6 for WENO5BND wo/a2c stuff : 11 for full point-field FLUXRECON method  // MARKNOTE number of ghost cells
-#define PRODUCTION 0  // MARKTODO   see definit.h ; choose >=1 for super computer. Don't want to output too much per core
+#define PRODUCTION 2  // MARKTODO   see definit.h ; choose >=1 for super computer. Don't want to output too much per core
 //#define FULLOUTPUT MAXBND
 #define FULLOUTPUT 0
 

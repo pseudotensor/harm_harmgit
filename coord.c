@@ -276,10 +276,10 @@ void set_coord_parms_nodeps(int defcoordlocal)
 
     //radial hyperexponential grid
     //    npow2=4.0; //power exponent
-    bp_npow2=10.0;    // MARKNOTE set to 10.0 before using BP values //power exponent
+    bp_npow2=10.0; //5.0; // 10.0;    // MARKNOTE set to 10.0 before using BP values //power exponent
     bp_cpow2=1.0; //exponent prefactor (the larger it is, the more hyperexponentiation is)
     //    rbr = 1E3;  //radius at which hyperexponentiation kicks in
-    bp_rbr = 60.0;  //radius at which hyperexponentiation kicks in
+    bp_rbr = 50.0;  //radius at which hyperexponentiation kicks in
 
 
 
@@ -301,7 +301,7 @@ void set_coord_parms_nodeps(int defcoordlocal)
     }
     else if(1){
       bp_r1jet=2.8;
-      bp_njet1=0.2; // MARKNOTE set to 0.3 before using BP values
+      bp_njet1=0.1; // MARKNOTE set to 0.3 before using BP values
       bp_r0jet=35.0;
       bp_rsjet=30.0;
       bp_Qjet=2.0-hslope; // chosen to help keep jet resolved even within disk region
@@ -317,9 +317,9 @@ void set_coord_parms_nodeps(int defcoordlocal)
     bp_rsjet3=0.0; // subtractor
 
     // for theta2
-    bp_h0=0.3; // inner-radial "hslope" for theta2
+    bp_h0=0.1; // inner-radial "hslope" for theta2
     // GODMARK: Note that this overwrites above njet!
-    bp_njet=0.1;  // MARKNOTE set to 1.0 before using BP values // power \theta_j \propto r^{-njet}
+    bp_njet=0.5;  // MARKNOTE set to 1.0 before using BP values // power \theta_j \propto r^{-njet}
 
 
     // see fix_3dpoledtissue.nb
@@ -1335,13 +1335,13 @@ void bl_coord(FTYPE *X, FTYPE *V)
 
 #if(0)
     // JET3COORDS-based:
-    myhslope=2.0-bp_Qjet*pow(V[1]/bp_r1jet,-bp_njet1*(0.5+1.0/M_PI*atan(V[1]/bp_r0jet-bp_rsjet/bp_r0jet)));
+    myhslope=2.0-bp_Qjet*pow(V[1]/bp_r1jet,-bp_njet*(0.5+1.0/M_PI*atan(V[1]/bp_r0jet-bp_rsjet/bp_r0jet)));
     theta1 = M_PI * X[2] + ((1. - myhslope) * 0.5) * mysin(2. * M_PI * X[2]);
 #else
     // RAMESH BASED
     // myhslope here is h2 in MCAF paper
     // h0 here is h3 in MCAF paper
-    myhslope=bp_h0 + pow( (V[1]-bp_rsjet3)/bp_r0jet3 , bp_njet1);
+    myhslope=bp_h0 + pow( (V[1]-bp_rsjet3)/bp_r0jet3 , bp_njet);
 
     // determine theta2
     if(X[2]>1.0) myx2=2.0-X[2];
@@ -1355,7 +1355,7 @@ void bl_coord(FTYPE *X, FTYPE *V)
 
     // determine theta0
     // JET3COORDS-based:
-    //    myhslope=2.0-bp_Qjet*pow(V[1]/bp_r1jet,-bp_njet*(0.5+1.0/M_PI*atan(V[1]/bp_r0jet-bp_rsjet/bp_r0jet)));
+    //    myhslope=2.0-bp_Qjet*pow(V[1]/bp_r1jet,-bp_njet1*(0.5+1.0/M_PI*atan(V[1]/bp_r0jet-bp_rsjet/bp_r0jet)));
     myhslope=hslope;
     // myhslope here is h0 in MCAF paper
     //    th0 = M_PI * .5 * (1. + (1.-((1. - myhslope) * 0.5))*(2.*X[2]-1.) + ((1. - myhslope) * 0.5)*pow(2.*X[2]-1.,9) ) ; // MARKTODODONE  switched to poly type from Noble+ 2010 on June 10, 2013
