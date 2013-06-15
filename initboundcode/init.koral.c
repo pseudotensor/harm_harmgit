@@ -3747,7 +3747,10 @@ int donut_analytical_solution(int opticallythick, FTYPE *pp,FTYPE *X, FTYPE *V,s
     else{
       // Kato et al. (2004):
       //FTYPE vs0=5.6E-3; // FREEPAR // Table1
-      FTYPE vs0=1E-1;
+      FTYPE HoR0=0.5;
+      //      FTYPE vs0=1E-1;
+      FTYPE vphi0=l0/r0;
+      FTYPE vs0=HoR0*vphi0;
       rhotarg=1.0 - (gamtorus/(vs0*vs0))*(phieff-phieffr0)/(nn+1.0);
       rhotargeq=1.0 - (gamtorus/(vs0*vs0))*(phieffeq-phieffr0)/(nn+1.0);
       rhot = rhoc*pow(rhotarg,nn);
