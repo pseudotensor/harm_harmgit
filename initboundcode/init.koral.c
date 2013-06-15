@@ -1237,6 +1237,7 @@ int init_global(void)
     RADNT_TRADATMMIN = 1.e7/TEMPBAR;
     RADNT_ERADATMMIN= (calc_LTE_EfromT(RADNT_TRADATMMIN));
     RADNT_DONUTTYPE=DONUTOLEK;
+    //RADNT_DONUTTYPE=DONUTOHSUGA;
     RADNT_INFLOWING=0;
     RADNT_OMSCALE=1.0;
 
@@ -3666,21 +3667,15 @@ int get_full_donut(int whichvel, int whichcoord, int opticallythick, FTYPE *pp,F
 // expects pp[PRAD0-PRAD3] to be fluid frame orthonormal, while pp[U1-U3] is ptrgeom whichvel whichcoord lab frame value (doesn't change U1-U3)
 int donut_analytical_solution(int opticallythick, FTYPE *pp,FTYPE *X, FTYPE *V,struct of_geom *ptrgeomreal, FTYPE *vel)
 {
-
-  FTYPE r=V[1];
-  FTYPE podpierd=-((ptrgeomreal->gcon[GIND(0,0)])-2.*RADNT_ELL*(ptrgeomreal->gcon[GIND(0,3)])+RADNT_ELL*RADNT_ELL*(ptrgeomreal->gcon[GIND(3,3)]));
-  FTYPE ut=-1./sqrt(podpierd);
-  if(!isfinite(ut)) ut=-1.0; // so skips donut, but doesn't give false in condition below (i.e. condition controlled by only podpierd)
-
-  ut/=RADNT_UTPOT; //rescales rin
   FTYPE Vphi,Vr;
   FTYPE D,W,uT,uphi,uPhi,rho,ucon[NDIM],uint,E,Fx,Fy,Fz;
-  // below assumes no torus in unbound region
-  if(ut<-1 || podpierd<0. || r<3. || RADNT_DONUTTYPE==NODONUT || RADNT_INFLOWING){
-    // allow torus to be unbound with radiation -- not a problem
-    //  if(podpierd<0. || r<3. || RADNT_DONUTTYPE==NODONUT || RADNT_INFLOWING)
-    return -1; //outside donut
-  }
+
+  // get location
+  FTYPE r=V[1];
+  FTYPE th=V[2];
+  FTYPE Rcyl=fabs(r*sin(th));
+
+
 
   // choose \gamma ideal gas constant for torus (KORALTODO: Could interpolate based upon some estimate of \tau)
   FTYPE gamtorus;
@@ -3692,6 +3687,18 @@ int donut_analytical_solution(int opticallythick, FTYPE *pp,FTYPE *X, FTYPE *V,s
 
   // get density and velocity for torus
   if(RADNT_DONUTTYPE==DONUTOLEK){
+    FTYPE podpierd=-((ptrgeomreal->gcon[GIND(0,0)])-2.*RADNT_ELL*(ptrgeomreal->gcon[GIND(0,3)])+RADNT_ELL*RADNT_ELL*(ptrgeomreal->gcon[GIND(3,3)]));
+    FTYPE ut=-1./sqrt(podpierd);
+    if(!isfinite(ut)) ut=-1.0; // so skips donut, but doesn't give false in condition below (i.e. condition controlled by only podpierd)
+
+    ut/=RADNT_UTPOT; //rescales rin
+    // below assumes no torus in unbound region
+    if(ut<-1 || podpierd<0. || r<3. || RADNT_DONUTTYPE==NODONUT || RADNT_INFLOWING){
+      // allow torus to be unbound with radiation -- not a problem
+      //  if(podpierd<0. || r<3. || RADNT_DONUTTYPE==NODONUT || RADNT_INFLOWING)
+      return -1; //outside donut
+    }
+
     FTYPE h=-1./ut;
     FTYPE eps=(h-1.)/gamtorus;
     rho=pow(eps*(gamtorus-1.)/RADNT_KKK,1./(gamtorus-1.));
@@ -3705,29 +3712,60 @@ int donut_analytical_solution(int opticallythick, FTYPE *pp,FTYPE *X, FTYPE *V,s
     dualfprintf(fail_file,"rhodonut1=%g eps=%g uint=%g\n",rho,eps,uint);
   }
   else if(RADNT_DONUTTYPE==DONUTOHSUGA){
-    FTYPE rs=2.0;
-    FTYPE r0=40.0*rs;
-    FTYPE l0=pow(r0,1.5)/(r-rs);
-    FTYPE aa=0.46;
-    FTYPE ll=l0*pow(r/r0,aa); // l ~ r^aa (i.e. non-constant angular momentum)
-    FTYPE rhoc=1.0; // density at center of torus
-    FTYPE nn=3.0; // so p = rho^(1/nn)
-    FTYPE epsilon0=1.45E-3;
-    //      FTYPE phi = -0.5*ln(-ptrgeom->gcov[GIND(0,0)]); // rough potential, accurate for a=0
-    FTYPE phi = (1.0+ptrgeomreal->gcov[GIND(0,0)]); // rough potential, accurate for a=0
-    FTYPE phir0 = 1.0/r0; // estimate, good enough for that large radius
-    FTYPE phieff=phi + 0.5*pow(ll/r,2.0)/(1.0-aa);
-    FTYPE rhot = rhoc*pow(1.0 - (1.0/(gamtorus*epsilon0*epsilon0*phir0*phir0))*(phieff-phir0)/(nn+1.0),nn);
-    pt = rhoc*gamtorus*epsilon0*epsilon0*phir0*phir0*pow(rhot/rhoc,1.0+1.0/nn);
+    FTYPE rs=2.0; // Schwarzschild radius
+    FTYPE r0=10.0*rs;  // pressure maximum radius // FREEPAR
+    FTYPE l0=pow(r0,1.5)/(r0-rs); // angular momentum at pressure maximum [type in S3.3 in Ohsuga in text for l0]
+    //    FTYPE aa=0.46; // FREEPAR 
+    FTYPE aa=0.1; // FREEPAR 
+    FTYPE ll=l0*pow(Rcyl/r0,aa); // l ~ r^aa (i.e. non-constant angular momentum)
+    FTYPE rhoc=RADNT_RHODONUT; // density at center of torus
+    FTYPE nn=1.0/(gamtorus-1.0);  //3.0; // -> 1 + 1/n = gamma -> n = 1/(gamma-1) : gamma=4/3 -> n=3
+    // so p = P = K \rho^((n+1)/n) = K \rho^(1 + 1/n) = K \rho^\gamma  [typo in S3.3 in Ohsuga in text part]
+    // Neutron stars are well modeled by polytropes with index about in the range between n=0.5 and n=1.
+    // A polytrope with index n=1.5  is a good model for fully convective star cores (like those of red giants), brown dwarfs, giant gaseous planets (like Jupiter), or even for rocky planets.
+    // Main sequence stars like our Sun and relativistic degenerate cores like those of white dwarfs are usually modeled by a polytrope with index n=3, corresponding to the Eddington standard model of stellar structure.
+    //A polytrope with index n=5  has an infinite radius. It corresponds to the simplest plausible model of a self-consistent stellar system, first studied by A. Schuster in 1883.
+    //A polytrope with index n=\infty corresponds to what is called isothermal sphere, that is an isothermal self-gravitating sphere of gas, whose structure is identical with the structure of a collisionless system of stars like a globular cluster.
+    //Note that the higher the polytropic index, the more condensed at the centre is the density distribution.
+    //    FTYPE phi = -(1.0+ptrgeomreal->gcov[GIND(0,0)]); // rough potential, accurate for a=0
+    FTYPE phi = -1.0/(r-rs);
+    FTYPE phieq = -1.0/(Rcyl-rs);
+    FTYPE phir0 = -1.0/(r0-rs); // estimate, good enough for that large radius
+    FTYPE phieff=phi + 0.5*pow(ll/Rcyl,2.0)/(1.0-aa);
+    FTYPE phieffr0=phir0 + 0.5*pow(l0/r0,2.0)/(1.0-aa);
+    FTYPE phieffeq=phieq + 0.5*pow(ll/Rcyl,2.0)/(1.0-aa);
+    FTYPE rhot,rhotarg,rhoteq,rhotargeq;
+    if(0){
+      // Ohsuga & Mineshige (2011):
+      FTYPE epsilon0=1.45E-3; // FREEPAR // shifts how hot the flow is
+      rhotarg=1.0 - (1.0/(gamtorus*epsilon0*epsilon0*phir0*phir0))*(phieff-phieffr0)/(nn+1.0);
+      rhotargeq=1.0 - (1.0/(gamtorus*epsilon0*epsilon0*phir0*phir0))*(phieffeq-phieffr0)/(nn+1.0);
+      rhot = rhoc*pow(rhotarg,nn); // [typo in paper Eq18]
+      rhoteq = rhoc*pow(rhotargeq,nn); // [typo in paper Eq18]
+      pt = rhoc*gamtorus*epsilon0*epsilon0*phir0*phir0*pow(rhot/rhoc,1.0+1.0/nn);
+    }
+    else{
+      // Kato et al. (2004):
+      //FTYPE vs0=5.6E-3; // FREEPAR // Table1
+      FTYPE vs0=1E-1;
+      rhotarg=1.0 - (gamtorus/(vs0*vs0))*(phieff-phieffr0)/(nn+1.0);
+      rhotargeq=1.0 - (gamtorus/(vs0*vs0))*(phieffeq-phieffr0)/(nn+1.0);
+      rhot = rhoc*pow(rhotarg,nn);
+      rhoteq = rhoc*pow(rhotargeq,nn);
+      pt = rhoc*vs0*vs0/(gamtorus)*pow(rhot/rhoc,1.0+1.0/nn);
+      FTYPE Eth0=vs0*vs0/(gamtorus*fabs(phir0));
+    }
+
+    if(r<3.0 || rhotarg<0.0 || phieff<phieffr0 || rhot<0.0 || rhot>rhoc || phieffeq>0.0 || rhoteq>rhoc || rhoteq<0.0 ) return(-1);
 
     rho=rhot; // torus density
     uint=pt/(gamtorus-1.0); // torus internal energy density assuming ideal gas with gamtorus
 
-    uphi=-ll*ut;
-    uT=(ptrgeomreal->gcon[GIND(0,0)])*ut+(ptrgeomreal->gcon[GIND(0,3)])*uphi;
-    uPhi=(ptrgeomreal->gcon[GIND(3,3)])*uphi+(ptrgeomreal->gcon[GIND(0,3)])*ut;
-    Vphi=uPhi/uT;
+    Vphi=ll/(r*r);
     Vr=0.;
+
+    dualfprintf(fail_file,"donutohsuga: r(%d)=%g th(%d)=%g Rcyl=%g : l0=%g ll=%g phi=%g phieff=%g phir0=%g phieffr0=%g rhot=%g rhotarg=%g pt=%g Vphi=%g\n",r,ptrgeomreal->i,th,ptrgeomreal->j,Rcyl,l0,ll,phi,phieff,phir0,phieffr0,rhot,rhotarg,pt,Vphi);
+
   }
 
   // assign torus density-velocity values for return
@@ -3748,7 +3786,7 @@ int donut_analytical_solution(int opticallythick, FTYPE *pp,FTYPE *X, FTYPE *V,s
   FTYPE naw1=cbrt(9.*aaa*Power(bbb,2.) - Sqrt(3.)*Sqrt(27.*Power(aaa,2.)*Power(bbb,4.) + 256.*Power(aaa,3.)*Power(P,3.)));
   FTYPE T4=-Sqrt((-4.*Power(0.6666666666666666,0.3333333333333333)*P)/naw1 + naw1/(Power(2.,0.3333333333333333)*Power(3.,0.6666666666666666)*aaa))/2. + Sqrt((4.*Power(0.6666666666666666,0.3333333333333333)*P)/naw1 - naw1/(Power(2.,0.3333333333333333)*Power(3.,0.6666666666666666)*aaa) + (2.*bbb)/(aaa*Sqrt((-4.*Power(0.6666666666666666,0.3333333333333333)*P)/naw1 + naw1/(Power(2.,0.3333333333333333)*Power(3.,0.6666666666666666)*aaa))))/2.;
 
-  if(fabsl(rho*T4 + aaa*pow(T4,4.0) - P)>1E-10){
+  if(fabs(rho*T4 + aaa*pow(T4,4.0) - P)>1E-10){
     dualfprintf(fail_file,"2: NOT right equation: rho=%26.21Lg T4=%26.21Lg aaa=%26.21Lg Ptried=%26.21Lg P=%26.21Lg\n",rho,T4,aaa,rho*T4 + aaa*pow(T4,4.),P);
   }
 
@@ -3782,10 +3820,19 @@ int donut_analytical_solution(int opticallythick, FTYPE *pp,FTYPE *X, FTYPE *V,s
 #define DISK2VERT 4
 #define BLANDFORDQUAD 5
 #define TOROIDALFIELD 6
+#define OHSUGAFIELD 7
 
 #if(WHICHPROBLEM==RADDONUT)
+
+#if(RADNT_DONUTTYPE==DONUTOLEK)
 #define FIELDTYPE DISK2FIELD
+#elif(RADNT_DONUTTYPE==DONUTOHSUGA)
+#define FIELDTYPE OHSUGAFIELD
+#else
+#define FIELDTYPE DISK2FIELD // default
 //#define FIELDTYPE DISK1FIELD
+#endif
+
 #else
 #define FIELDTYPE NOFIELD
 #endif
@@ -3969,6 +4016,12 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
 
     /* field-in-disk version */
     if(FIELDTYPE==DISK1FIELD || FIELDTYPE==DISK1VERT){
+      q = rho_av / rhomax - 0.2;
+      if(r<rin) q=0.0;
+      if (q > 0.)      vpot += q;
+    }
+
+    if(FIELDTYPE==OHSUGAFIELD){
       q = rho_av / rhomax - 0.2;
       if(r<rin) q=0.0;
       if (q > 0.)      vpot += q;
