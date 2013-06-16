@@ -277,6 +277,24 @@
 #define CHECKSOLUTION 0 // can cause erratic behavior near BH -- when gamma jumps are relatively large this averages causing large heating -- could just use internal energy check
 
 #define GAMMAPERCDIFFMAX (2.0)
+
+
+#undef GAMMAERGOLIMIT
+#undef GAMMAERGOLIMITVALUE
+#undef GAMMAERGOLIMITRADIUS
+#undef GAMMAOUTERLIMIT
+#undef GAMMAOUTERLIMITVALUE
+#undef GAMMAOUTERLIMITRADIUS
+// whether to limit gamma inside ergosphere
+#define GAMMAERGOLIMIT 0
+#define GAMMAERGOLIMITVALUE (3.0)
+#define GAMMAERGOLIMITRADIUS (2)
+// whether to limit gamma at large radius
+#define GAMMAOUTERLIMIT 1
+#define GAMMAOUTERLIMITVALUE (2.0)
+#define GAMMAOUTERLIMITRADIUS (200.0)
+
+
 #define UPERCDIFFMAX (1E3) // 10.0 too restrictive
 #define LIMADJUST LIMITERFIXED
 #define HYDROLIMADJUSTONLY 0

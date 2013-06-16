@@ -487,6 +487,16 @@
 #define UPERCDIFFMAX 10.0
 
 
+// whether to limit gamma inside ergosphere
+#define GAMMAERGOLIMIT 0
+#define GAMMAERGOLIMITVALUE (3.0)
+#define GAMMAERGOLIMITRADIUS (2)
+// whether to limit gamma at large radius
+#define GAMMAOUTERLIMIT 0
+#define GAMMAOUTERLIMITVALUE (3.0)
+#define GAMMAOUTERLIMITRADIUS (1E3)
+
+
 // whether to interpolate extra quantity (e.g. v^2) and use to renormalize velocities after they are interpolated
 #define DOEXTRAINTERP 0
 // must also set RESCALEINTERP=1
