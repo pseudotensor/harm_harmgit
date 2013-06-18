@@ -292,7 +292,7 @@
 // whether to limit gamma at large radius
 #define GAMMAOUTERLIMIT 1
 #define GAMMAOUTERLIMITVALUE (2.0)
-#define GAMMAOUTERLIMITRADIUS (200.0)
+#define GAMMAOUTERLIMITRADIUS (150.0)
 
 
 #define UPERCDIFFMAX (1E3) // 10.0 too restrictive
