@@ -15,7 +15,6 @@
 
 #define N1 8  // MARKTODO resolution
 #define N2 8
-
 #define N3 1
 
 
@@ -202,7 +201,7 @@
 #define FIELDSTAGMEM 1 // testing
 #define HIGHERORDERMEM 0
 #define MAXBND 4 // 4 for PARAFLAT, 6 for WENO5BND wo/a2c stuff : 11 for full point-field FLUXRECON method  // MARKNOTE number of ghost cells
-#define PRODUCTION 0  // MARKTODO   see definit.h ; choose >=1 for super computer. Don't want to output too much per core
+#define PRODUCTION 2  // MARKTODO   see definit.h ; choose >=1 for super computer. Don't want to output too much per core
 //#define FULLOUTPUT MAXBND
 #define FULLOUTPUT 0
 
@@ -279,6 +278,24 @@
 #define CHECKSOLUTION 0 // can cause erratic behavior near BH -- when gamma jumps are relatively large this averages causing large heating -- could just use internal energy check
 
 #define GAMMAPERCDIFFMAX (2.0)
+
+
+#undef GAMMAERGOLIMIT
+#undef GAMMAERGOLIMITVALUE
+#undef GAMMAERGOLIMITRADIUS
+#undef GAMMAOUTERLIMIT
+#undef GAMMAOUTERLIMITVALUE
+#undef GAMMAOUTERLIMITRADIUS
+// whether to limit gamma inside ergosphere
+#define GAMMAERGOLIMIT 0
+#define GAMMAERGOLIMITVALUE (3.0)
+#define GAMMAERGOLIMITRADIUS (2)
+// whether to limit gamma at large radius
+#define GAMMAOUTERLIMIT 1
+#define GAMMAOUTERLIMITVALUE (2.0)
+#define GAMMAOUTERLIMITRADIUS (150.0)
+
+
 #define UPERCDIFFMAX (1E3) // 10.0 too restrictive
 #define LIMADJUST LIMITERFIXED
 #define HYDROLIMADJUSTONLY 0

@@ -2901,8 +2901,6 @@ int get_bsqflags(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR])
 
 
 
-// whether to limit gamma inside ergosphere
-#define GAMMAERGOLIMIT 0
 
 // whether to conserve (at least) D=\rho_0 u^t when modifying \gamma
 // risky to assume D=rho_0 u^t conserved when limiting \gamma because \gamma may be large due to error simply in T^t_\nu evolution alone
@@ -2941,21 +2939,24 @@ int limit_gamma(FTYPE gammamax, FTYPE*pr, FTYPE *ucons, struct of_geom *ptrgeom,
   // Ad-hoc ergo fix for force-free black hole problem (enabled very rarely)
   //
   /////////////////////////////////
-#if(GAMMAERGOLIMIT)
   coord_ijk(i,j,k,loc,X);
   bl_coord_ijk(i,j,k,loc,V);
   r=V[1];
 
+#if(GAMMAERGOLIMIT)
   // force flow to not move too fast inside ergosphere
-  if(r<2) realgammamax=3;
+  if(r<GAMMAERGOLIMITRADIUS) realgammamax=GAMMAERGOLIMITVALUE;
   else realgammamax=GAMMAMAX;
 #else
   realgammamax=gammamax;
-  if(realgammamax<=1.0) return(0); // nothing to do
 #endif
 
+#if(GAMMAOUTERLIMIT)
+  if(r>GAMMAOUTERLIMITRADIUS) realgammamax=GAMMAOUTERLIMITVALUE;
+  else realgammamax=GAMMAMAX;
+#endif
 
-
+  if(realgammamax<=1.0) return(0); // nothing to do
 
 
 
