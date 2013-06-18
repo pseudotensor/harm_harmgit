@@ -1362,8 +1362,8 @@ void bl_coord(FTYPE *X, FTYPE *V)
 
     //    th0 = M_PI * .5 * (1. + (1.-((1. - myhslope) * 0.5))*(2.*X[2]-1.) + ((1. - myhslope) * 0.5)*pow(2.*X[2]-1.,9) ) ; // MARKTODODONE  switched to poly type from Noble+ 2010 on June 10, 2013
     FTYPE xi=((1. - myhslope) * 0.5);
-    //    th0 = M_PI * .5 * (1. + (1.-xi)*(2.*X[2]-1.) + xi*pow(2.*X[2]-1.,9) ) ; // MARKTODODONE  switched to poly type from Noble+ 2010 on June 10, 2013
-    th0 = M_PI * .5 * (myhslope*(2.0*X[2]-1.0) + (1.0-myhslope)*pow(2.0*X[2]-1.0,9.0)+1);
+    //  th0 = M_PI * .5 * (1. + (1.-xi)*(2.*X[2]-1.) + xi*pow(2.*X[2]-1.,9) ) ; // MARKTODODONE  switched to poly type from Noble+ 2010 on June 10, 2013
+    th0 = M_PI * .5 * (myhslope*(2.0*X[2]-1.0) + (1.0-myhslope)*pow(2.0*X[2]-1.0,9.0)+1.);
 
     // determine switches (only function of radius and not x2 or theta)
     switch0 = 0.5+1.0/M_PI*atan((V[1]-bp_rs)/bp_r0); // switch in .nb file

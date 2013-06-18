@@ -212,11 +212,11 @@ int init_grid(void)
 #elif(WHICHPROBLEM==THINBP)
   // make changes to primary coordinate parameters R0, Rin, Rout, hslope
   R0 = 0.0;
-  //  Rout = 40.0;
-  //  if(totalsize[1]<32) Rout=50.0;
-  //  else if(totalsize[1]<=64) Rout=1E4;
-  //  else Rout=1E5;
-  Rout=1E5;
+    Rout = 40.0;
+    if(totalsize[1]<32) Rout=50.0;
+    else if(totalsize[1]<=64) Rout=1.E3;
+    else Rout=1.E5;
+    //Rout=1E5;
 #endif
 
  
@@ -280,8 +280,8 @@ int init_global(void)
   RHOMINEVOLVE = 1E-4;
   UUMINEVOLVE = 1E-6;
 
-  //  cooling=COOLUSER; // MARKTODO should override these values set in initbase, right?
-  cooling=NOCOOLING;
+  cooling=COOLUSER; // MARKTODO should override these values set in initbase, right?
+  // cooling=NOCOOLING;
   gam=4./3.;
 
 #elif(WHICHPROBLEM==THICKDISK)
@@ -393,7 +393,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
   rinfield = 10.0;
   beta = 5.e1 ;
   randfact = 4.e-2;
-  fieldnormalizemin = 3. * Risco;
+  //  fieldnormalizemin = 3. * Risco;
 #elif(WHICHPROBLEM==THICKDISK)
   //  beta = 1.e2 ;
   //  beta = 20.0;
@@ -1156,7 +1156,7 @@ int get_maxes(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *bsq_max, FTYPE *pg_ma
   return(0);
 }
 
-
+/*
 // get maximum b^2 and p_g and minimum of beta    MAVARA This is done just as user1_get_maxes except things are normalized only considering values outside a certain minimum radius.
 // OPENMPOPTMARK: No benefit from OpenMP due to critical region required and too user specific
 int user1_get_maxes2(int eqslice, FTYPE *parms, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *bsq_max, FTYPE *pg_max, FTYPE *beta_min)
@@ -1247,7 +1247,7 @@ int user1_get_maxes2(int eqslice, FTYPE *parms, FTYPE (*prim)[NSTORE2][NSTORE3][
   return(0);
 
 }
-
+*/
 
 
 // assumes normal field definition

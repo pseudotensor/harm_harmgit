@@ -13,8 +13,8 @@
 
 
 
-#define N1 16  // MARKTODO resolution
-#define N2 16
+#define N1 8  // MARKTODO resolution
+#define N2 8
 
 #define N3 1
 
