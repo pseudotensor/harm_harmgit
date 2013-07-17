@@ -69,6 +69,10 @@
 //
 /////////////////////
 
+#define TEMPMINKELVIN (1.0E4) // Kelvin
+#define TEMPMIN (TEMPMINKELVIN/TEMPBAR) // Code units
+
+
 #define OPACITYBAR (LBAR*LBAR/MBAR) // cgs in cm^2/g
 // non-relativistic ES:
 #define KAPPA_ES_CODE(rhocode,Tcode) (0.2*(1.0+XFACT)/OPACITYBAR)

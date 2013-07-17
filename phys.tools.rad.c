@@ -2910,7 +2910,7 @@ void koral_source_rad_calc(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *Gdpl, FTYP
   FTYPE Gdplentropycontribs[NDIM];
   // -Gdpl[UU+jj] is so heating (so lowering of T^t_t to be more negative) implies increases entropy.
   // assumes Gpl includes kappa already with rho so that Gpl is energy per unit volume per unit time.  Dividing by T (energy) gives a dimensionless thing (entropy) per unit volume.
-  DLOOPA(jj) Gdplentropycontribs[jj] = (1.0/(SMALL+fabs(Tgas)))*(-Gdpl[UU+jj])*(q->ucon[jj]);
+  DLOOPA(jj) Gdplentropycontribs[jj] = (1.0/(TEMPMIN+fabs(Tgas)))*(-Gdpl[UU+jj])*(q->ucon[jj]);
 
   Gdpl[ENTROPY] = 0.0;
   DLOOPA(jj) Gdpl[ENTROPY] += Gdplentropycontribs[jj];
