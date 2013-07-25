@@ -184,6 +184,7 @@
 // ok now, but effectively setup already the below 2 lines implicitly
 // global.h : FIXUPAFTERINIT, FIXUPAFTERRESTART,CHECKSOLUTION,LIMADJUST,FLUXADJUST
 // global.h FIXUPZONES->FIXUPNOZONES
+#define EOMDEFAULT -1 // choose default behavior without any forced EOM
 #define EOMFFDE 0
 #define EOMCOLDGRMHD 1
 #define EOMENTROPYGRMHD 2

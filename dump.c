@@ -1710,14 +1710,14 @@ int raddump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
   myset(datatype,pradffortho,PRAD0,NDIM,writebuf); // NDIM
 
   // get 4-force in lab and fluid frame
-  FTYPE Gdpl[NPR],Gdabspl[NPR],chi;
-  koral_source_rad_calc(pr, ptrgeom, Gdpl, Gdabspl, &chi, &q);
+  FTYPE Gdpl[NPR],Gdabspl[NPR],chi,Tgas;
+  koral_source_rad_calc(pr, ptrgeom, Gdpl, Gdabspl, &chi, &Tgas, &q);
   myset(datatype,Gdpl,PRAD0,NDIM,writebuf); // NDIM
   myset(datatype,Gdabspl,PRAD0,NDIM,writebuf); // NDIM
 
   // get lambda
   FTYPE lambda;
-  FTYPE Tgas=calc_PEQ_Tfromurho(pr[UU],pr[RHO]);
+  //  FTYPE Tgas=calc_PEQ_Tfromurho(pr[UU],pr[RHO]);
   calc_rad_lambda(pr, ptrgeom, kappa, kappaes, Tgas, &lambda);
   myset(datatype,&lambda,0,1,writebuf); // 1
 
