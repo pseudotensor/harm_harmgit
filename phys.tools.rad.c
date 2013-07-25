@@ -1,42 +1,31 @@
 #include "decs.h"
 
+//////// implicit stuff
 static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother ,FTYPE (*dUcomp)[NPR]);
 static int koral_source_rad_implicit_perdampstrategy(int dampstrategy, FTYPE imptryconv, FTYPE impallowconv, int impmaxiter, FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother ,FTYPE *radsource, FTYPE *errorabs, int *iterreturn, int *returntype);
-
-static int Utoprimgen_failwrapper(int doradonly, int showmessages, int allowlocalfailurefixandnoreport, int finalstep, int eomtype, int evolvetype, int inputtype,FTYPE *U,  struct of_geom *ptrgeom, FTYPE *pr, struct of_newtonstats *newtonstats);
 
 static int f_implicit_lab(int failreturnallowable, int whichcall, int showmessages, int allowlocalfailurefixandnoreport, int eomtype, FTYPE *pp, FTYPE *uu0,FTYPE *uu,FTYPE localdt, struct of_geom *ptrgeom,  FTYPE *f, FTYPE *fnorm);
 static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int showmessagesheavy, int allowlocalfailurefixandnoreport, int eomtype, FTYPE impepsjac, FTYPE *uu, FTYPE *uup, FTYPE *uu0, FTYPE *pp, FTYPE *ppp, FTYPE fracdtG, FTYPE realdt, struct of_geom *ptrgeom, FTYPE *f1, FTYPE *f1norm, FTYPE (*iJ)[NPR]);
 static int f_error_check(int showmessages, int showmessagesheavy, int iter, FTYPE conv, FTYPE realdt, int dimtypef, FTYPE *f1, FTYPE *f1norm, FTYPE *f1report, FTYPE *Uiin, FTYPE *uu0, FTYPE *uu, struct of_geom *ptrgeom);
 
+static int Utoprimgen_failwrapper(int doradonly, int showmessages, int allowlocalfailurefixandnoreport, int finalstep, int eomtype, int evolvetype, int inputtype,FTYPE *U,  struct of_geom *ptrgeom, FTYPE *pr, struct of_newtonstats *newtonstats);
+
+// debug stuff
 int mathematica_report_check(int failtype, long long int failnum, int gotfirstnofail, FTYPE realdt,struct of_geom *ptrgeom, FTYPE *ppfirst, FTYPE *pp, FTYPE *pin, FTYPE *uu0, FTYPE *uu, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_state *q, FTYPE *dUother);
 
-
+// explicit stuff
 static void get_dtsub(int method, FTYPE *pr, struct of_state *q, FTYPE *Ui, FTYPE *Uf, FTYPE *dUother, FTYPE *CUf, FTYPE *Gdpl, FTYPE chi, FTYPE *Gdabspl, struct of_geom *ptrgeom, FTYPE *dtsub);
 static void koral_source_dtsub_rad_calc(int method, FTYPE *pr, FTYPE *Ui, FTYPE *Uf, FTYPE *dUother, FTYPE *CUf, FTYPE *Gdpl, struct of_geom *ptrgeom, FTYPE *dtsub);
-
-static void calc_Gd(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *G, FTYPE *Tgas, FTYPE *chieffreturn, FTYPE *Gabs);
-static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *Gu, FTYPE *Tgas, FTYPE *chieffreturn, FTYPE *Gabs);
-void mhdfull_calc_rad(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE (*radstressdir)[NDIM]);
-
 static int source_explicit(int whichsc, int whichradsourcemethod, int methoddtsub,
                            void (*sourcefunc)(int method, FTYPE *pr, FTYPE *Ui, FTYPE *Uf, FTYPE *dUother, FTYPE *CUf, FTYPE *Gpl, struct of_geom *ptrgeom, FTYPE *dtsub),
                            FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother, FTYPE (*dUcomp)[NPR]);
 
-
-static int simplefast_rad(int dir, struct of_geom *geom,struct of_state *q, FTYPE vrad2,FTYPE *vmin, FTYPE *vmax);
-
-
-static int opacity_interpolated_urfconrel(FTYPE tautotmax, FTYPE *pp,struct of_geom *ptrgeom,FTYPE *Avcon, FTYPE Erf,FTYPE gammarel2,FTYPE *Erfnew, FTYPE *urfconrel);
-
-static FTYPE compute_dt(FTYPE *CUf, FTYPE dtin);
-
+// RAD inversion stuff
 static int get_m1closure_gammarel2_old(int showmessages, struct of_geom *ptrgeom, FTYPE *Avcon, FTYPE *Avcov, FTYPE *gammarel2return, FTYPE *deltareturn, FTYPE *numeratorreturn, FTYPE *divisorreturn);
 static int get_m1closure_gammarel2(int showmessages, struct of_geom *ptrgeom, FTYPE *Avcon, FTYPE *Avcov, FTYPE *gammarel2return, FTYPE *deltareturn, FTYPE *numeratorreturn, FTYPE *divisorreturn);
 
 static int get_m1closure_gammarel2_cold_old(int showmessages, struct of_geom *ptrgeom, FTYPE *Avcon, FTYPE *Avcov, FTYPE *gammarel2return, FTYPE *deltareturn, FTYPE *numeratorreturn, FTYPE *divisorreturn, FTYPE *Erfreturn, FTYPE *urfconrel);
 static int get_m1closure_gammarel2_cold(int showmessages, struct of_geom *ptrgeom, FTYPE *Avcon, FTYPE *Avcov, FTYPE *gammarel2return, FTYPE *deltareturn, FTYPE *numeratorreturn, FTYPE *divisorreturn, FTYPE *Erfreturn, FTYPE *urfconrel);
-
 
 static int get_m1closure_Erf(struct of_geom *ptrgeom, FTYPE *Avcon, FTYPE gammarel2, FTYPE *Erfreturn);
 
@@ -44,6 +33,15 @@ static int get_m1closure_urfconrel_old(int showmessages, int allowlocalfailurefi
 static int get_m1closure_urfconrel(int showmessages, int allowlocalfailurefixandnoreport, struct of_geom *ptrgeom, FTYPE *pp, FTYPE *Avcon, FTYPE *Avcov, FTYPE gammarel2, FTYPE delta, FTYPE numerator, FTYPE divisor, FTYPE *Erfreturn, FTYPE *urfconrel, PFTYPE *lpflag, PFTYPE *lpflagrad);
 static int get_m1closure_urfconrel_olek(int showmessages, int allowlocalfailurefixandnoreport, struct of_geom *ptrgeom, FTYPE *pp, FTYPE *Avcon, FTYPE *Avcov, FTYPE gammarel2, FTYPE delta, FTYPE *Erfreturn, FTYPE *urfconrel, PFTYPE *lpflag, PFTYPE *lpflagrad);
 
+static int opacity_interpolated_urfconrel(FTYPE tautotmax, FTYPE *pp,struct of_geom *ptrgeom,FTYPE *Avcon, FTYPE Erf,FTYPE gammarel2,FTYPE *Erfnew, FTYPE *urfconrel);
+
+// general stuff
+static FTYPE compute_dt(FTYPE *CUf, FTYPE dtin);
+
+static void calc_Gd(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *G, FTYPE *Tgas, FTYPE *chieffreturn, FTYPE *Gabs);
+static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *Gu, FTYPE *Tgas, FTYPE *chieffreturn, FTYPE *Gabs);
+void mhdfull_calc_rad(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE (*radstressdir)[NDIM]);
+static int simplefast_rad(int dir, struct of_geom *geom,struct of_state *q, FTYPE vrad2,FTYPE *vmin, FTYPE *vmax);
 
 static void calc_kappa_kappaes(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappa, FTYPE *kappaes, FTYPE *Tgas);
 
@@ -175,8 +173,13 @@ static int Utoprimgen_failwrapper(int doradonly, int showmessages, int allowloca
 #define QTYPMHD 2 // only iter
 #define QTYPRAD 3 // only iter
 #define QTYENTROPYUMHD 4 // iter or ferr
-#define QTYENTROPYPMHD 4 // iter or ferr
+#define QTYENTROPYPMHD 5 // iter (not used)
 
+/// OLD SETUP
+//#define IMPLICITITER (QTYURAD) // choice
+//#define IMPLICITFERR (QTYURAD) // choice
+
+/// NEW SETUP
 #define IMPLICITITER (QTYPMHD) // choice
 #define IMPLICITFERR (QTYENTROPYUMHD) // choice
 
@@ -184,26 +187,26 @@ static int Utoprimgen_failwrapper(int doradonly, int showmessages, int allowloca
 
 // same list and numbers in array for both primitives and conserved
 #if(IMPLICITITER==QTYUMHD || IMPLICITITER==QTYPMHD)
-int irefU[4]={UU,U1,U2,U3};
-int iotherU[4]={URAD0,URAD1,URAD2,URAD3};
+int irefU[NDIM]={UU,U1,U2,U3};
+int iotherU[NDIM]={URAD0,URAD1,URAD2,URAD3};
 #elif(IMPLICITITER==QTYENTROPYUMHD || IMPLICITITER==QTYENTROPYPMHD)
-int irefU[4]={ENTROPY,U1,U2,U3};
-int iotherU[4]={URAD0,URAD1,URAD2,URAD3};
+int irefU[NDIM]={ENTROPY,U1,U2,U3};
+int iotherU[NDIM]={URAD0,URAD1,URAD2,URAD3};
 #elif(IMPLICITITER==QTYURAD || IMPLICITITER==QTYPRAD)
-int irefU[4] {URAD0,URAD1,URAD2,URAD3};
-int iotherU[4]={UU,U1,U2,U3};
+int irefU[NDIM] {URAD0,URAD1,URAD2,URAD3};
+int iotherU[NDIM]={UU,U1,U2,U3};
 #endif
 
 // same list and numbers in array for both primitives and conserved
 #if(IMPLICITFERR==QTYUMHD || IMPLICITFERR==QTYPMHD)
-int erefU[4]={UU,U1,U2,U3};
-int eotherU[4]={URAD0,URAD1,URAD2,URAD3};
+int erefU[NDIM]={UU,U1,U2,U3};
+int eotherU[NDIM]={URAD0,URAD1,URAD2,URAD3};
 #elif(IMPLICITFERR==QTYENTROPYUMHD || IMPLICITFERR==QTYENTROPYPMHD)
-int erefU[4]={ENTROPY,U1,U2,U3};
-int eotherU[4]={URAD0,URAD1,URAD2,URAD3};
+int erefU[NDIM]={ENTROPY,U1,U2,U3};
+int eotherU[NDIM]={URAD0,URAD1,URAD2,URAD3};
 #elif(IMPLICITFERR==QTYURAD || IMPLICITFERR==QTYPRAD)
-int erefU[4] {URAD0,URAD1,URAD2,URAD3};
-int eotherU[4]={UU,U1,U2,U3};
+int erefU[NDIM] {URAD0,URAD1,URAD2,URAD3};
+int eotherU[NDIM]={UU,U1,U2,U3};
 #endif
 
 
@@ -262,7 +265,7 @@ static int f_implicit_lab(int failreturnallowable, int whichcall, int showmessag
 
 
   if(IMPLICITITER==QTYUMHD || IMPLICITITER==QTYURAD){ // then don't yet have updated primitives, so invert to get them
-    // 1) get old state
+    // 1) get old state [so can get ucon for below estimated GS]
     struct of_state q; get_state(pp, ptrgeom, &q);
     // 2) get change in conserved quantity between fluid and radiation (equal and opposite 4-force)
     // required for inversion to get P(U) for MHD and RAD variables
@@ -285,12 +288,14 @@ static int f_implicit_lab(int failreturnallowable, int whichcall, int showmessag
   }
   else if(IMPLICITITER==QTYENTROPYUMHD){
     // so iterating U[ENTROPY,U1,U2,U3]
+    //    FTYPE uuorig[NPR]; PLOOP(pliter,pl) uuorig[pl]=uu[pl];
     // 1) Do pure ENTROPYMHD inversion to get pmhd
     int doradonly=0; int eomtypetemp=EOMENTROPYGRMHD; failreturn=Utoprimgen_failwrapper(doradonly,showmessages,allowlocalfailurefixandnoreport, finalstep, eomtypetemp, EVOLVEUTOPRIM, UNOTHING, uu, ptrgeom, pp, &newtonstats);
-    // 2) get state (rad state needed for mhd_calc_rad, while mhd state needed to get uu[ENTROPY])
+    // 2) get state (mhd and entropy are up-to-date, while rad is out-of-date, but fixed below)
     struct of_state q; get_state(pp, ptrgeom, &q);
-    // 3) Compute U[UU] so have it for below.
+    // 3) Compute U[UU] so have it for below (computes U[Ui,ENTROPY,RAD], but those not used or already known.)
     primtoU(UNOTHING,pp,&q,ptrgeom, uu);
+    //    PLOOP(pliter,pl) if(pl==U1||pl==U2||pl==U3||pl==ENTROPY) pp[pl]=pporig[pl]; // get back U[ENTROPY,Ui] so no machine error introduced from u(p(u)) for actually known quantities that won't change due to fixups or anything. -- no, primitives from Utoprimgen might change things and act as Newton step fix.
     // 4) Get actual Urad
     DLOOPA(iv) uu[iotherU[iv]] = uu0[iotherU[iv]] - (uu[irefU[iv]]-uu0[irefU[iv]]);
     // 5) Do RAD-ONLY inversion
@@ -301,6 +306,10 @@ static int f_implicit_lab(int failreturnallowable, int whichcall, int showmessag
     get_state(pp, ptrgeom, &q);
     primtoU(UNOTHING,pp,&q,ptrgeom, uu);
     // now have full primitives and full U including entropy and these are consistent with each other.
+  }
+  else if(IMPLICITITER==QTYENTROPYPMHD){
+    // not setup
+    myexit(92846534);
   }
   else if(IMPLICITITER==QTYPMHD){
     FTYPE pporig[NPR]; PLOOP(pliter,pl) pporig[pl]=pp[pl];
@@ -314,7 +323,7 @@ static int f_implicit_lab(int failreturnallowable, int whichcall, int showmessag
     // 4) Do RAD-ONLY Inversion
     int doradonly=1; failreturn=Utoprimgen_failwrapper(doradonly,showmessages,allowlocalfailurefixandnoreport, finalstep, eomtype, EVOLVEUTOPRIM, UNOTHING, uu, ptrgeom, pp, &newtonstats);
     // 5) Recover actual iterated pmhd to avoid machine related differences between original pp and pp(U(pp)) for pmhd quantities
-    // This assumes that iterated pmhd is optimal and not modified except by iteration by Newton step
+    // This assumes that iterated pmhd is optimal and not modified except by iteration by Newton step, which is currently true.
     PLOOP(pliter,pl) if(!RADPL(pl)) pp[pl]=pporig[pl];
     // 6) Get consistent Urad [also computes Umhd and Uentropy, which is ok]
     get_state(pp, ptrgeom, &q);
@@ -324,7 +333,7 @@ static int f_implicit_lab(int failreturnallowable, int whichcall, int showmessag
   else if(IMPLICITITER==QTYPRAD){
     FTYPE pporig[NPR]; PLOOP(pliter,pl) pporig[pl]=pp[pl];
     // Have prad={Erf,uradvel1,uradvel2,uradvel3}
-    // 1) get state (rad state needed for mhd_calc_rad, while mhd state needed to get uu[ENTROPY])
+    // 1) get state (rad state needed for mhd_calc_rad, while old mhd state needed to estimate uu[ENTROPY] below)
     struct of_state q; get_state(pp, ptrgeom, &q);
     // 2) Compute Urad[prad0,uradcon,uradcov] [also computes old Umhd and old Uentropy, but overwritten next]
     primtoU(UNOTHING,pp,&q,ptrgeom, uu);
@@ -335,7 +344,7 @@ static int f_implicit_lab(int failreturnallowable, int whichcall, int showmessag
     FTYPE Tgaslocal=compute_temp_simple(ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p,pp[RHO],pp[UU]);
     FTYPE GS=0.0; DLOOPA(iv) GS += (-q.ucon[iv]*SIGNGD2*Gddt[iv])/(Tgaslocal+TEMPMIN); // more accurate than just using entropy from pp and ucon[TT] from state from pp.
     uu[ENTROPY] = uu0[ENTROPY] + SIGNGD4*GS;
-    // 5) Invert to get pmhd (also does rad inversion, but not expensive)
+    // 5) Invert to get pmhd (also does rad inversion, but not expensive so ok)
     int doradonly=0; failreturn=Utoprimgen_failwrapper(doradonly,showmessages,allowlocalfailurefixandnoreport, finalstep, eomtype, EVOLVEUTOPRIM, UNOTHING, uu, ptrgeom, pp, &newtonstats);
     // 6) Recover actual iterated prad to avoid machine related differences between original pp and pp(U(pp)) for prad quantities
     // This assumes that iterated prad is optimal and not modified except by iteration by Newton step
