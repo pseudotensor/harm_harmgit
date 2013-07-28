@@ -227,7 +227,8 @@ int eotherU[NDIM]={UU,U1,U2,U3};
 
 // sign that goes into implicit differencer that's consistent with sign for SIGNGD of -1 when using the radiative uu to measure f.
 #define SIGNGD2 (+1.0)
-#define SIGNGD4 (+1.0) // for entropy alone
+#define SIGNGD4 (-1.0) // for entropy alone for Gdpl in error function // FUCK: Not sure which sign is right.
+#define SIGNGD6 (-1.0) // for entropy as goes into GS from dUrad or dUmhd
 
 
 
@@ -301,7 +302,7 @@ static int f_implicit_lab(int failreturnallowable, int whichcall, int showmessag
     FTYPE Tgaslocal=compute_temp_simple(ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p,pp[RHO],pp[UU]);
     struct of_state q; get_state(pp, ptrgeom, &q);
     FTYPE GS=0.0; DLOOPA(iv) GS += (-q.ucon[iv]*SIGNGD2*Gddt[iv])/(Tgaslocal+TEMPMIN); // more accurate than just using entropy from pp and ucon[TT] from state from pp.
-    uu[ENTROPY] = uu0[ENTROPY];// + SIGNGD4*GS; // FUCKTEMP
+    uu[ENTROPY] = uu0[ENTROPY];// + SIGNGD6*GS; // FUCKTEMP
     // 3) Do MHD+RAD Inversion
     int doradonly=0; failreturn=Utoprimgen_failwrapper(doradonly,showmessages,allowlocalfailurefixandnoreport, finalstep, eomtype, EVOLVEUTOPRIM, UNOTHING, uu, ptrgeom, pp, &newtonstats);
     // 4) now get consistent uu[] based upon actual final primitives.
@@ -368,7 +369,7 @@ static int f_implicit_lab(int failreturnallowable, int whichcall, int showmessag
     // 4) Estimate U[ENTROPY](G)
     FTYPE Tgaslocal=compute_temp_simple(ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p,pp[RHO],pp[UU]);
     FTYPE GS=0.0; DLOOPA(iv) GS += (-q.ucon[iv]*SIGNGD2*Gddt[iv])/(Tgaslocal+TEMPMIN); // more accurate than just using entropy from pp and ucon[TT] from state from pp.
-    uu[ENTROPY] = uu0[ENTROPY] + SIGNGD4*GS;
+    uu[ENTROPY] = uu0[ENTROPY] + SIGNGD6*GS;
     // 5) Invert to get pmhd (also does rad inversion, but not expensive so ok)
     int doradonly=0; failreturn=Utoprimgen_failwrapper(doradonly,showmessages,allowlocalfailurefixandnoreport, finalstep, eomtype, EVOLVEUTOPRIM, UNOTHING, uu, ptrgeom, pp, &newtonstats);
     // 6) Recover actual iterated prad to avoid machine related differences between original pp and pp(U(pp)) for prad quantities
@@ -521,6 +522,8 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
   eomtype=EOMGRMHD; // start using MHD.
   //  }
 
+  // whether to change damp factor
+#define CHANGEDAMPFACTOR 0
 
   //////////////
   // setup reversion to best solution for uu in case iterations lead to worse error and reach maximum iterations.
@@ -631,32 +634,33 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
 
     //    impepsjac=1E-8;
 
-    if(iter==1){
-      DAMPFACTOR=0.37;
-    }
-
+    if(CHANGEDAMPFACTOR){
+      if(iter==1){
+        DAMPFACTOR=0.37;
+      }
 
 #if(0)
-    // KORALTODO: improve on this later.
-    // Problem is can start jumping too far in steps for near tough spots.
-    // While in normal inversion routine damping is to avoid breaching into unphysical solution space with nan/inf, below is to avoid oscillating around solution
+      // KORALTODO: improve on this later.
+      // Problem is can start jumping too far in steps for near tough spots.
+      // While in normal inversion routine damping is to avoid breaching into unphysical solution space with nan/inf, below is to avoid oscillating around solution
 
-    //    if(iter>10){
-    //      impepsjac=IMPEPS*1E-10;
-    //    }
-    if(iter>10){
-      DAMPFACTOR=0.37;
-    }
-    if(iter>30){
-      DAMPFACTOR=0.23;
-    }
-    if(iter>40){
-      DAMPFACTOR=0.17;
-    }
-    if(iter>50){
-      DAMPFACTOR=0.07;
-    }
+      //    if(iter>10){
+      //      impepsjac=IMPEPS*1E-10;
+      //    }
+      if(iter>10){
+        DAMPFACTOR=0.37;
+      }
+      if(iter>30){
+        DAMPFACTOR=0.23;
+      }
+      if(iter>40){
+        DAMPFACTOR=0.17;
+      }
+      if(iter>50){
+        DAMPFACTOR=0.07;
+      }
 #endif
+    }
 
 
     //vector of conserved at the previous two iterations
@@ -958,18 +962,19 @@ static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE
 
 
 
-    /////////
-    //
-    // DAMP if error changes too much
-    //
-    /////////
-    if(iter==1){
-      DAMPFACTOR=0.7;
+    if(CHANGEDAMPFACTOR){
+      /////////
+      //
+      // DAMP if error changes too much
+      //
+      /////////
+      if(iter==1){
+        DAMPFACTOR=0.7;
+      }
+      else{
+        if(errorabsf3>errorabspf3 && DAMPFACTOR>0.1) DAMPFACTOR*=0.5;
+      }
     }
-    else{
-      if(errorabsf3>errorabspf3 && DAMPFACTOR>0.1) DAMPFACTOR*=0.5;
-    }
-
 
     /////////////////
     //
@@ -2170,8 +2175,8 @@ static int f_error_check(int showmessages, int showmessagesheavy, int iter, FTYP
 // choose:
 #if(IMPLICITITER==QTYPMHD)
 // with IMPLICITITER==QTYPMHD, no longer expensive so can do JDIFFCENTERED
-//#define JDIFFTYPE JDIFFCENTERED
-#define JDIFFTYPE JDIFFONESIDED  // FUCKTEMP
+#define JDIFFTYPE JDIFFCENTERED
+//#define JDIFFTYPE JDIFFONESIDED  // FUCKTEMP
 #else
 #define JDIFFTYPE JDIFFONESIDED
 #endif
