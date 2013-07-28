@@ -196,8 +196,8 @@ static int Utoprimgen_failwrapper(int doradonly, int showmessages, int allowloca
 
 /// NEW SETUP
 #define IMPLICITITER (QTYPMHD) // choice
+#define IMPLICITFERR (QTYUMHD)
 //#define IMPLICITFERR (QTYENTROPYUMHD) // choice
-#define IMPLICITFERR (QTYPMHD)
 
 
 
@@ -214,17 +214,20 @@ int iotherU[NDIM]={UU,U1,U2,U3};
 #endif
 
 // same list and numbers in array for both primitives and conserved
-#if(IMPLICITFERR==QTYUMHD || IMPLICITFERR==QTYPMHD)
+#if(IMPLICITFERR==QTYUMHD)
 int erefU[NDIM]={UU,U1,U2,U3};
 int eotherU[NDIM]={URAD0,URAD1,URAD2,URAD3};
-#elif(IMPLICITFERR==QTYENTROPYUMHD || IMPLICITFERR==QTYENTROPYPMHD)
+#elif(IMPLICITFERR==QTYENTROPYUMHD)
 int erefU[NDIM]={ENTROPY,U1,U2,U3};
 int eotherU[NDIM]={URAD0,URAD1,URAD2,URAD3};
-#elif(IMPLICITFERR==QTYURAD || IMPLICITFERR==QTYPRAD)
+#elif(IMPLICITFERR==QTYURAD)
 int erefU[NDIM]={URAD0,URAD1,URAD2,URAD3};
 int eotherU[NDIM]={UU,U1,U2,U3};
 #endif
 
+// sign that goes into implicit differencer that's consistent with sign for SIGNGD of -1 when using the radiative uu to measure f.
+#define SIGNGD2 (+1.0)
+#define SIGNGD4 (+1.0) // for entropy alone
 
 
 
@@ -280,14 +283,7 @@ static int f_implicit_lab(int failreturnallowable, int whichcall, int showmessag
   // initialize Gdpl
   PLOOP(pliter,pl) Gdpl[pl] = 0.0;
 
-  // sign that goes into implicit differencer that's consistent with sign for SIGNGD of -1 when using the radiative uu to measure f.
-#if(IMPLICITITER==QTYURAD)
-#define SIGNGD2 (1.0)
-#else
-#define SIGNGD2 (-1.0)
-#endif
 
-#define SIGNGD4 (1.0) // for entropy alone
 
 
   //  PLOOP(pliter,pl) dualfprintf(fail_file,"f_implicit_lab: wc=%d i=%d j=%d pl=%d uu=%g\n",whichcall, ptrgeom->i,ptrgeom->j,pl,uu[pl]);
@@ -2269,8 +2265,7 @@ static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int sho
 
           // when |irefU[0]|>>|irefU[1]|, then can't get better than machine error on irefU[0], not irefU[1], so using small del just for irefU[1] makes no sense, so avoid above
           del = localIMPEPS*predel[jj];
-
-          
+         
           // origin point
           PLOOP(pliter,pl) xjac[sided][pl]=x[pl];
           // offset xjac (KORALTODO: How to ensure this doesn't have machine precision problems or is good enough difference?)
@@ -3808,14 +3803,16 @@ void koral_source_rad_calc(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *Gdpl, FTYP
   // equal and opposite forces on fluid and radiation due to radiation 4-force
   // sign of G that goes between Koral determination of G and HARM source term (e.g. positive \lambda is a cooling of the fluid and heating of the photons, and gives G_t>0 so -G_t<0 and adds to R^t_t such that R^t_t - G_t becomes more negative and so more photon energy density)
   // That is, equation is d_t R^t_t + Gdpl = 0
-#define SIGNGD (SIGNGD2)
-  DLOOPA(jj) Gdpl[iotherU[jj]]    = -SIGNGD*Gd[jj];
-  DLOOPA(jj) Gdpl[irefU[jj]]      = +SIGNGD*Gd[jj];
+#define SIGNGD (1.0)
+  // keep SIGNGD as 1.0.  Just apply SIGNGD2 in front of Gdpl in other places.
+  // sign fixed-linked as + for URAD0 case.
+  DLOOPA(jj) Gdpl[UU+jj]     = -SIGNGD*Gd[jj];
+  DLOOPA(jj) Gdpl[URAD0+jj]  = +SIGNGD*Gd[jj];
 
   if(Gdabspl!=NULL){
     PLOOP(pliter,pl) Gdabspl[pl] = 0.0;
-    DLOOPA(jj) Gdabspl[iotherU[jj]]    = Gdabs[jj];
-    DLOOPA(jj) Gdabspl[irefU[jj]]      = Gdabs[jj];
+    DLOOPA(jj) Gdabspl[UU+jj]     = Gdabs[jj];
+    DLOOPA(jj) Gdabspl[URAD0+jj]  = Gdabs[jj];
   }
 
 #if(DOENTROPY!=DONOENTROPY && ENTROPY!=-100)
