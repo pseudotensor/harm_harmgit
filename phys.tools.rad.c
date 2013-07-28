@@ -191,12 +191,12 @@ static int Utoprimgen_failwrapper(int doradonly, int showmessages, int allowloca
 #define QTYENTROPYPMHD 5 // iter (not used)
 
 /// OLD SETUP
-//#define IMPLICITITER (QTYURAD) // choice
-//#define IMPLICITFERR (QTYURAD) // choice
+#define IMPLICITITER (QTYURAD) // choice
+#define IMPLICITFERR (QTYURAD) // choice
 
 /// NEW SETUP
-#define IMPLICITITER (QTYPMHD) // choice
-#define IMPLICITFERR (QTYUMHD)
+//#define IMPLICITITER (QTYPMHD) // choice
+//#define IMPLICITFERR (QTYUMHD)
 //#define IMPLICITFERR (QTYENTROPYUMHD) // choice
 
 
@@ -228,7 +228,7 @@ int eotherU[NDIM]={UU,U1,U2,U3};
 // sign that goes into implicit differencer that's consistent with sign for SIGNGD of -1 when using the radiative uu to measure f.
 #define SIGNGD2 (+1.0)
 #define SIGNGD4 (-1.0) // for entropy alone for Gdpl in error function // FUCK: Not sure which sign is right.
-#define SIGNGD6 (-1.0) // for entropy as goes into GS from dUrad or dUmhd
+#define SIGNGD6 (-1.0) // for entropy as goes into GS from dUrad or dUmhd  //  // FUCK  -- unsure about sign!
 
 
 
@@ -302,7 +302,7 @@ static int f_implicit_lab(int failreturnallowable, int whichcall, int showmessag
     FTYPE Tgaslocal=compute_temp_simple(ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p,pp[RHO],pp[UU]);
     struct of_state q; get_state(pp, ptrgeom, &q);
     FTYPE GS=0.0; DLOOPA(iv) GS += (-q.ucon[iv]*SIGNGD2*Gddt[iv])/(Tgaslocal+TEMPMIN); // more accurate than just using entropy from pp and ucon[TT] from state from pp.
-    uu[ENTROPY] = uu0[ENTROPY];// + SIGNGD6*GS; // FUCKTEMP
+    uu[ENTROPY] = uu0[ENTROPY] + SIGNGD6*GS;
     // 3) Do MHD+RAD Inversion
     int doradonly=0; failreturn=Utoprimgen_failwrapper(doradonly,showmessages,allowlocalfailurefixandnoreport, finalstep, eomtype, EVOLVEUTOPRIM, UNOTHING, uu, ptrgeom, pp, &newtonstats);
     // 4) now get consistent uu[] based upon actual final primitives.
@@ -2176,7 +2176,7 @@ static int f_error_check(int showmessages, int showmessagesheavy, int iter, FTYP
 #if(IMPLICITITER==QTYPMHD)
 // with IMPLICITITER==QTYPMHD, no longer expensive so can do JDIFFCENTERED
 #define JDIFFTYPE JDIFFCENTERED
-//#define JDIFFTYPE JDIFFONESIDED  // FUCKTEMP
+//#define JDIFFTYPE JDIFFONESIDED
 #else
 #define JDIFFTYPE JDIFFONESIDED
 #endif
