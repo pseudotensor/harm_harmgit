@@ -263,6 +263,10 @@ int eotherU[NDIM]={UU,U1,U2,U3};
 //#define SWITCHTOENTROPYIFCHANGESTOENTROPY (IMPLICITFERR==QTYUMHD ? 0 : 1)
 #define SWITCHTOENTROPYIFCHANGESTOENTROPY (1)
 
+//FUCK: Do basic koral damping if error high or no solution.
+// FUCK: entropy switch condition.
+// FUCK: run normal koral tests.  Figure out all entropy signs.
+// FUCK: Need backup to entropy since really dies if no backup.
 
 //uu0 - original cons. qty
 //uu -- current iteration
