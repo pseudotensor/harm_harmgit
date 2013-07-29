@@ -258,9 +258,10 @@ int eotherU[NDIM]={UU,U1,U2,U3};
 
 // whether to use Ramesh's fix
 // 0, 1, 2
-#define RAMESHTRADTGASFIX 1
+#define RAMESHTRADTGASFIX 0
 
-#define SWITCHTOENTROPYIFCHANGESTOENTROPY 0
+//#define SWITCHTOENTROPYIFCHANGESTOENTROPY (IMPLICITFERR==QTYUMHD ? 0 : 1)
+#define SWITCHTOENTROPYIFCHANGESTOENTROPY (1)
 
 
 //uu0 - original cons. qty
@@ -2245,6 +2246,9 @@ int mathematica_report_check(int failtype, long long int failnum, int gotfirstno
     // If any appear in  grep 0WGood math.out   , then precision issue with long doubles in harm even.
 
     // If any appear in  grep 0MGood math.out   , then gammamax case should work!
+
+    // 5) More advanced version of #4.  Use check.sh script:
+    // bash /data/jon/harmgit/scripts/check.sh math.out .  Gives overall report.
   }
 
 
