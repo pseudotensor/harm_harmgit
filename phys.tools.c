@@ -1395,7 +1395,7 @@ void compute_1plusud0_rel4vel(FTYPE *pr, struct of_geom *geom, struct of_state *
 /* add in source terms to equations of motion */
 // ui and dUriemann in UEVOLVE form
 // assume q(pr) so consistent, but p or ui don't yet account for dUriemann!
-int source(FTYPE *pr, FTYPE *pf, int *didreturnpf, struct of_geom *ptrgeom, struct of_state *q, FTYPE *ui, FTYPE *uf, FTYPE *CUf, FTYPE *dUriemann, FTYPE (*dUcomp)[NPR], FTYPE *dU)
+int source(FTYPE *pr, FTYPE *pf, int *didreturnpf, int *eomtype, struct of_geom *ptrgeom, struct of_state *q, FTYPE *ui, FTYPE *uf, FTYPE *CUf, FTYPE *dUriemann, FTYPE (*dUcomp)[NPR], FTYPE *dU)
 {
   //  double (*)[8]
   VARSTATIC int i,j,sc;
@@ -1451,7 +1451,7 @@ int source(FTYPE *pr, FTYPE *pf, int *didreturnpf, struct of_geom *ptrgeom, stru
     // now sourcephysics() call will have all CENT quantities
   }
 
-  sourcephysics(pr, pf, didreturnpf, ptrgeom, q, Ugeomfreei, Ugeomfreef, CUf, dUother, dUcomp);
+  sourcephysics(pr, pf, didreturnpf, eomtype, ptrgeom, q, Ugeomfreei, Ugeomfreef, CUf, dUother, dUcomp);
 
   //////////////////
   //
@@ -2406,7 +2406,8 @@ int limit_3vel_ffde(FTYPE *Bcon, struct of_geom *geom, FTYPE *vcon, FTYPE *pr)
   // initialize counters
   newtonstats.nstroke=newtonstats.lntries=0;
   int finalstep=1; // doesn't matter for ffde
-  MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,EOMDEFAULT,EVOLVEUTOPRIM,UNOTHING,U, geom, pr,&newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
+  int eomtype=EOMDEFAULT;
+  MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,&eomtype,EVOLVEUTOPRIM,UNOTHING,U, geom, pr,&newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
   //  nstroke+=newtonstats.nstroke; newtonstats.nstroke=newtonstats.lntries=0;
 
 

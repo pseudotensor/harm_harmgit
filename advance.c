@@ -17,7 +17,7 @@ static int prepare_globaldt(
                             FTYPE *ndt);
 
 
-
+FTYPE globalgeom[NPR];
 static void flux2dUavg(int whichpl, int i, int j, int k, FTYPE (*F1)[NSTORE2][NSTORE3][NPR],FTYPE (*F2)[NSTORE2][NSTORE3][NPR],FTYPE (*F3)[NSTORE2][NSTORE3][NPR],FTYPE *dUavg1,FTYPE *dUavg2,FTYPE *dUavg3);
 static void dUtoU(int whichpl, int i, int j, int k, int loc, FTYPE *dUgeom, FTYPE *dUriemann, FTYPE *CUf, FTYPE *CUnew, FTYPE *Ui,  FTYPE *uf, FTYPE *ucum);
 static void dUtoU_check(int i, int j, int k, int loc, int pl, FTYPE *dUgeom, FTYPE *dUriemann, FTYPE *CUf, FTYPE *CUnew, FTYPE *Ui,  FTYPE *Uf, FTYPE *ucum);
@@ -477,6 +477,7 @@ static int advance_standard(
       int allowlocalfailurefixandnoreport=1; // allow local fixups
       // initialize counters
       newtonstats.nstroke=newtonstats.lntries=0;
+      int eomtype;
 
 
 
@@ -485,6 +486,9 @@ static int advance_standard(
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
       OPENMP3DLOOPBLOCK{
         OPENMP3DLOOPBLOCK2IJK(i,j,k);
+
+        // setup default eomtype
+        eomtype=EOMDEFAULT;
 
 
         // set geometry for centered zone to be updated
@@ -535,7 +539,7 @@ static int advance_standard(
 
         // find dU(pb)
         // so pf contains updated field at cell center for use in (e.g.) implicit solver that uses inversion P(U)
-        MYFUN(source(MAC(pb,i,j,k), MAC(pf,i,j,k), &didreturnpf, ptrgeom, qptr2, MAC(ui,i,j,k), MAC(uf,i,j,k), CUf, dUriemann, dUcomp, dUgeom),"step_ch.c:advance()", "source", 1);
+        MYFUN(source(MAC(pb,i,j,k), MAC(pf,i,j,k), &didreturnpf, &eomtype, ptrgeom, qptr2, MAC(ui,i,j,k), MAC(uf,i,j,k), CUf, dUriemann, dUcomp, dUgeom),"step_ch.c:advance()", "source", 1);
         // assumes final dUcomp is nonzero and representative of source term over this timestep
  
 
@@ -564,10 +568,13 @@ static int advance_standard(
         // Get update: tempucum
         //
         /////////////
+        PLOOP(pliter,pl) globalgeom[pl]=ptrgeom->gdet;
         dUtoU(doother,i,j,k,ptrgeom->p,dUgeom, dUriemann, CUf, CUnew, MAC(ui,i,j,k), MAC(uf,i,j,k), MAC(tempucum,i,j,k));
 
-
-
+        //        if(nstep==4 && steppart==0){
+        //          pl=RHO;
+        //          dualfprintf(fail_file,"PRIMPOSTIMPLICITDU: dUgeom=%21.15g dUriemann=%21.15g ui=%21.15g uf=%21.15g tempucum=%21.15g\n",dUgeom[pl],dUriemann[pl],MACP0A1(ui,i,j,k,pl),MACP0A1(uf,i,j,k,pl),MACP0A1(tempucum,i,j,k,pl));
+        //        }
 
         ////////////////////////////
         // Choose what to invert
@@ -584,6 +591,11 @@ static int advance_standard(
           useducum=tempucum;
         }
 
+        //        if(nstep==4 && steppart==0){
+        //          PLOOP(pliter,pl) dualfprintf(fail_file,"PRIMPOSTIMPLICIT(%d,%g): pl=%d pf=%21.15g uu=%21.15g\n",eomtype,fluxdt,pl,MACP0A1(pf,i,j,k,pl),MACP0A1(utoinvert,i,j,k,pl)/ptrgeom->gdet);
+        //        }
+
+
 
         ////////////////////////////
         // setup myupoint to invert
@@ -597,16 +609,23 @@ static int advance_standard(
           myupoint=utoinvert;
         }
 
+        //        if(nstep==4 && steppart==0){
+        //          PLOOP(pliter,pl) dualfprintf(fail_file,"PRIMPOSTIMPLICIT2(%d,%g): pl=%d pf=%21.15g uu=%21.15g\n",eomtype,fluxdt,pl,MACP0A1(pf,i,j,k,pl),MACP0A1(myupoint,i,j,k,pl)/ptrgeom->gdet);
+        //        }
+
 
 
         ////////////////////////////
         // INVERT [loop only over "centered" cells]
+        //
+        // Utoprimgen() properly  uses eomtype as potentially changed in source() call
+        //
         ////////////////////////////
         if(finalstep){ // last call, so ucum is cooked and ready to eat!
           // store guess for diss_compute before changed by normal inversion
           PALLLOOP(pl) prbefore[pl]=MACP0A1(pf,i,j,k,pl);
-          
-          MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,EOMDEFAULT,EVOLVEUTOPRIM,UEVOLVE,MAC(myupoint,i,j,k), ptrgeom, MAC(pf,i,j,k),&newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
+
+          MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,&eomtype,EVOLVEUTOPRIM,UEVOLVE,MAC(myupoint,i,j,k), ptrgeom, MAC(pf,i,j,k),&newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
           nstroke+=newtonstats.nstroke; newtonstats.nstroke=newtonstats.lntries=0;
           
           
@@ -617,7 +636,7 @@ static int advance_standard(
           
         }
         else{ // otherwise still iterating on primitives
-          MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,EOMDEFAULT,EVOLVEUTOPRIM,UEVOLVE,MAC(myupoint,i,j,k), ptrgeom, MAC(pf,i,j,k),&newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
+          MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,&eomtype,EVOLVEUTOPRIM,UEVOLVE,MAC(myupoint,i,j,k), ptrgeom, MAC(pf,i,j,k),&newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
           nstroke+=newtonstats.nstroke; newtonstats.nstroke=newtonstats.lntries=0;
         }
 
@@ -1133,6 +1152,8 @@ static int advance_standard_orig(
       struct of_state *qptr=&qdontuse;
       struct of_state qdontuse2;
       struct of_state *qptr2=&qdontuse2; // different qptr since call normal and special get_state()
+      // setup default eomtype
+      int eomtype;
 
 
       OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
@@ -1141,6 +1162,9 @@ static int advance_standard_orig(
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
       OPENMP3DLOOPBLOCK{
         OPENMP3DLOOPBLOCK2IJK(i,j,k);
+
+        // setup default eomtype
+        eomtype=EOMDEFAULT;
 
 
         // set geometry for centered zone to be updated
@@ -1196,8 +1220,9 @@ static int advance_standard_orig(
 
 
         // find dU(pb)
-        MYFUN(source(MAC(pb,i,j,k), MAC(pf,i,j,k), &didreturnpf, ptrgeom, qptr2, MAC(ui,i,j,k), MAC(uf,i,j,k), CUf, dUriemann, dUcomp, dUgeom),"step_ch.c:advance()", "source", 1);
+        MYFUN(source(MAC(pb,i,j,k), MAC(pf,i,j,k), &didreturnpf, &eomtype, ptrgeom, qptr2, MAC(ui,i,j,k), MAC(uf,i,j,k), CUf, dUriemann, dUcomp, dUgeom),"step_ch.c:advance()", "source", 1);
         // assumes final dUcomp is nonzero and representative of source term over this timestep
+        // KORALTODO: Not using eomtype for this method because outside loop.  Would have to store eomtype in array or something!
  
         // DEBUG (to check if source updated pf guess)
         //        if(didreturnpf==1) dualfprintf(fail_file,"didreturnpf=%d\n",didreturnpf);
@@ -1459,6 +1484,9 @@ static int advance_standard_orig(
     struct of_newtonstats newtonstats; // not pointer
     int showmessages=1;
     int allowlocalfailurefixandnoreport=1; // allow local fixups
+
+    // setup default eomtype
+    int eomtype;
     
     OPENMP3DLOOPVARSDEFINE;  OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
 
@@ -1470,6 +1498,10 @@ static int advance_standard_orig(
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
  
+      // setup default eomtype
+      // KORALTODO: Note that eomtype should have been set from source(), but different loop.  But not using this "orig"  method for koral evolution, so ok.
+      eomtype=EOMDEFAULT;
+
       // set geometry for centered zone to be updated
       get_geometry(i, j, k, CENT, ptrgeom);
 
@@ -1479,7 +1511,7 @@ static int advance_standard_orig(
         // store guess for diss_compute before changed by normal inversion
         PALLLOOP(pl) prbefore[pl]=MACP0A1(pf,i,j,k,pl);
 
-        MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,EOMDEFAULT,EVOLVEUTOPRIM,UEVOLVE,MAC(myupoint,i,j,k), ptrgeom, MAC(pf,i,j,k),&newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
+        MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,&eomtype,EVOLVEUTOPRIM,UEVOLVE,MAC(myupoint,i,j,k), ptrgeom, MAC(pf,i,j,k),&newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
         nstroke+=newtonstats.nstroke; newtonstats.nstroke=newtonstats.lntries=0;
 
 
@@ -1490,7 +1522,7 @@ static int advance_standard_orig(
  
       }
       else{ // otherwise still iterating on primitives
-        MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,EOMDEFAULT,EVOLVEUTOPRIM,UEVOLVE,MAC(myupoint,i,j,k), ptrgeom, MAC(pf,i,j,k),&newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
+        MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,&eomtype,EVOLVEUTOPRIM,UEVOLVE,MAC(myupoint,i,j,k), ptrgeom, MAC(pf,i,j,k),&newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
         nstroke+=newtonstats.nstroke; newtonstats.nstroke=newtonstats.lntries=0;
       }
 
@@ -1839,6 +1871,8 @@ static int advance_finitevolume(
       struct of_geom *ptrgeom=&geomdontuse;
       struct of_state qdontuse;
       struct of_state *qptr=&qdontuse;
+      // setup default eomtype
+      int eomtype;
 
       OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
 
@@ -1846,6 +1880,10 @@ static int advance_finitevolume(
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
       OPENMP3DLOOPBLOCK{
         OPENMP3DLOOPBLOCK2IJK(i,j,k);
+
+        // setup default eomtype
+        eomtype=EOMDEFAULT;
+
         // find dU(pb)
         // only find source term if non-Minkowski and non-Cartesian
         // set geometry for centered zone to be updated
@@ -1861,7 +1899,7 @@ static int advance_finitevolume(
 
      
         // get source term (point source, don't use to update diagnostics)
-        MYFUN(source(MAC(pb,i,j,k), MAC(pf,i,j,k), &didreturnpf, ptrgeom, qptr, MAC(ui,i,j,k), MAC(uf,i,j,k), CUf, dUriemann, dUcomp, MAC(dUgeomarray,i,j,k)),"step_ch.c:advance()", "source", 1);
+        MYFUN(source(MAC(pb,i,j,k), MAC(pf,i,j,k), &didreturnpf, &eomtype, ptrgeom, qptr, MAC(ui,i,j,k), MAC(uf,i,j,k), CUf, dUriemann, dUcomp, MAC(dUgeomarray,i,j,k)),"step_ch.c:advance()", "source", 1);
       }// end COMPZLOOP
 
 
@@ -1928,6 +1966,8 @@ static int advance_finitevolume(
     struct of_geom *ptrgeom=&geomdontuse;
     struct of_state qdontuse;
     struct of_state *qptr=&qdontuse;
+    // GODMARK: KORALTODO: setup default eomtype (not using source() from above!)
+    int eomtype;
 
     OPENMP3DLOOPVARSDEFINE;  OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
 
@@ -1935,6 +1975,9 @@ static int advance_finitevolume(
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
+
+      // setup default eomtype
+      eomtype=EOMDEFAULT;
 
 
       // get geometry at center where source is located
@@ -2004,7 +2047,7 @@ static int advance_finitevolume(
       // SUPERGODMARK: no longer have access to dUcomp : NEED TO FIX
       // below is correct, but excessive
       // get source term again in order to have dUcomp (NEED TO FIX)
-      MYFUN(source(MAC(pb,i,j,k), MAC(pf,i,j,k), &didreturnpf, ptrgeom, qptr, MAC(ui,i,j,k), MAC(uf,i,j,k), CUf, dUriemann, dUcomp, &fdummy),"step_ch.c:advance()", "source", 2);
+      MYFUN(source(MAC(pb,i,j,k), MAC(pf,i,j,k), &didreturnpf, &eomtype, ptrgeom, qptr, MAC(ui,i,j,k), MAC(uf,i,j,k), CUf, dUriemann, dUcomp, &fdummy),"step_ch.c:advance()", "source", 2);
 
 
       dUtodt(ptrgeom, qptr, MAC(pb,i,j,k), dUgeom, dUriemann, dUcomp[GEOMSOURCE], &accdt_ij, &gravitydt_ij);
@@ -2198,6 +2241,10 @@ static int advance_finitevolume(
     struct of_newtonstats newtonstats;
     int showmessages=1;
     int allowlocalfailurefixandnoreport=1; // allow local fixups
+    
+    // setup default eomtype
+    int eomtype;
+
 
     OPENMP3DLOOPVARSDEFINE;  OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
 
@@ -2209,6 +2256,9 @@ static int advance_finitevolume(
 #pragma omp for schedule(OPENMPVARYENDTIMESCHEDULE(),OPENMPCHUNKSIZE(blocksize)) reduction(+: nstroke)
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
+
+      // setup default eomtype (KORALTODO: GODMARK: Doesn't use source() version of eomtype from above)
+      eomtype=EOMDEFAULT;
  
       // set geometry for centered zone to be updated
       get_geometry(i, j, k, CENT, ptrgeom);
@@ -2219,7 +2269,7 @@ static int advance_finitevolume(
   
 
       // invert point U-> point p
-      MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,EOMDEFAULT,EVOLVEUTOPRIM, UEVOLVE, MAC(myupoint,i,j,k), ptrgeom, MAC(pf,i,j,k),&newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
+      MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,&eomtype,EVOLVEUTOPRIM, UEVOLVE, MAC(myupoint,i,j,k), ptrgeom, MAC(pf,i,j,k),&newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
       nstroke+=newtonstats.nstroke; newtonstats.nstroke=newtonstats.lntries=0;
 
       //If using a high order scheme, need to choose whether to trust the point value
@@ -2390,6 +2440,9 @@ static int check_point_vs_average(int timeorder, int numtimeorders, PFTYPE *lpfl
   int showmessages=1;
   int allowlocalfailurefixandnoreport=1; // allow local fixups
 
+  // setup default eomtype
+  int eomtype=EOMDEFAULT;
+
 
   finalstep=timeorder == numtimeorders-1;
 
@@ -2418,10 +2471,11 @@ static int check_point_vs_average(int timeorder, int numtimeorders, PFTYPE *lpfl
        )
       ) {
 
+
     //make a copy of the initial guess so that not to modify the original pb's
     PLOOP(pliter,pl) pavg[pl] = pb[pl];
     //invert the average U -> "average" p
-    MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,EOMDEFAULT,EVOLVEUTOPRIM, UEVOLVE, uavg, ptrgeom, pavg,newtonstats),"step_ch.c:advance()", "Utoprimgen", 3);
+    MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,&eomtype,EVOLVEUTOPRIM, UEVOLVE, uavg, ptrgeom, pavg,newtonstats),"step_ch.c:advance()", "Utoprimgen", 3);
 
     invert_from_average_flag = GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL);
 
@@ -2488,7 +2542,7 @@ static int check_point_vs_average(int timeorder, int numtimeorders, PFTYPE *lpfl
       //make a copy of the initial guess so that not to modify the original pb's
       PLOOP(pliter,pl) pf[pl] = pb[pl];
       //invert the average U -> "average" p
-      MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,EOMDEFAULT,EVOLVEUTOPRIM, UEVOLVE, uavg, ptrgeom, pf,newtonstats),"step_ch.c:advance()", "Utoprimgen", 3);
+      MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,&eomtype,EVOLVEUTOPRIM, UEVOLVE, uavg, ptrgeom, pf,newtonstats),"step_ch.c:advance()", "Utoprimgen", 3);
       //      invert_from_average_flag = lpflag[FLAGUTOPRIMFAIL];
 
 
@@ -2497,7 +2551,7 @@ static int check_point_vs_average(int timeorder, int numtimeorders, PFTYPE *lpfl
       //      lpflag[FLAGUTOPRIMFAIL] = invert_from_average_flag;
 
       //old code:
-      //MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,EOMDEFAULT,EVOLVEUTOPRIM, UEVOLVE, avg, ptrgeom, pf,&newtonstats),"step_ch.c:advance()", "Utoprimgen", 2);
+      //MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,&eomtype,EVOLVEUTOPRIM, UEVOLVE, avg, ptrgeom, pf,&newtonstats),"step_ch.c:advance()", "Utoprimgen", 2);
 
       frac_avg_used = 1.0; //reverted to the average value
 
@@ -2815,6 +2869,9 @@ static void dUtoU(int whichpl, int i, int j, int k, int loc, FTYPE *dUgeom, FTYP
     PLOOP(pliter,pl) if(!BPL(pl)) ucum[pl] += UCUMUPDATE(CUnew,dt,Ui[pl],Uf[pl],dUriemann[pl],dUgeom[pl]);
   }
 
+  //  if(nstep==4 && steppart==0 && whichpl==DONONBPL){
+  //    PLOOP(pliter,pl) dualfprintf(fail_file,"UtoU: %21.15g %21.15g %21.15g %21.15g\n",(CUf[0])*(Ui[pl]/globalgeom[pl]),(CUf[1])*(Uf[pl]/globalgeom[pl]),(CUf[2])*(dt)*((dUriemann[pl]/globalgeom[pl])+(dUgeom[pl]/globalgeom[pl])),CUf[2]*dt);
+  //  }
 
 
 }
@@ -3016,7 +3073,9 @@ int set_dt(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], SFTYPE *dt)
       PLOOP(pliter,pl) dUriemann[pl]=0.0;
       FTYPE CUf=0.0; // no update yet!
       // modifies prim() to be closer to final, which is ok here.
-      MYFUN(source(MAC(prim,i,j,k), MAC(prim,i,j,k), &didreturnpf, ptrgeom, &state, U, U, CUf, dUriemann, dUcomp, dUgeom),"advance.c:set_dt()", "source", 1);
+      // setup default eomtype
+      int eomtype=EOMDEFAULT;
+      MYFUN(source(MAC(prim,i,j,k), MAC(prim,i,j,k), &didreturnpf, &eomtype, ptrgeom, &state, U, U, CUf, dUriemann, dUcomp, dUgeom),"advance.c:set_dt()", "source", 1);
 
       // get dt limit
       compute_dt_fromsource(ptrgeom,&state,MAC(prim,i,j,k), Ugeomfree, dUgeom, dUcomp[GEOMSOURCE], &tempaccdt, &tempgravitydt);

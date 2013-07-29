@@ -143,7 +143,8 @@ int rescale(int which, int dir, FTYPE *pr, struct of_geom *ptrgeom,FTYPE *p2inte
     struct of_newtonstats newtonstats;  
     int showmessages=1;
     int allowlocalfailurefixandnoreport=1;
-    MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, 0, EOMDEFAULT,OTHERUTOPRIM,UDIAG,p2interp, ptrgeom, pr,&newtonstats),"interp.c:rescale()", "Utoprimgen", 1);
+    int eomtype=EOMDEFAULT;
+    MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, 0, &eomtype,OTHERUTOPRIM,UDIAG,p2interp, ptrgeom, pr,&newtonstats),"interp.c:rescale()", "Utoprimgen", 1);
   }
   else{
     dualfprintf(fail_file,"rescale(): no such rescale type! which=%d\n",which);

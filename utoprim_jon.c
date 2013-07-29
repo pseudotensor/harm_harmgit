@@ -149,6 +149,7 @@ int Utoprim_jon_nonrelcompat_inputnorestmass(int showmessages, int eomtype, FTYP
   int whicheos;
   int pliter;
 
+  //  showmessages=1; // FORCE
 
   // DEBUG:
   //  PLOOP(pliter,pl) dualfprintf(fail_file,"%d %d %d : pl=%d U=%21.15g\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,pl,U[pl]);
@@ -1029,7 +1030,7 @@ static int set_guess_Wp(int showmessages, PFTYPE *lpflag, int eomtype, FTYPE *pr
 
 
   //  if((nstep==4)&&(ptrgeom->i==0)&&(ptrgeom->j==47)){
-  // dualfprintf(fail_file,"utsq=%g p=%g w=%g W_last=%g Wp_last=%g\n",utsq,p,w,*W_last,*Wp_last);
+  //  dualfprintf(fail_file,"utsq=%g p=%g w=%g W_last=%g Wp_last=%g\n",utsq,p,w,*W_last,*Wp_last);
   //    exit(0);
   //  }
 
@@ -1085,7 +1086,8 @@ static int set_guess_Wp(int showmessages, PFTYPE *lpflag, int eomtype, FTYPE *pr
       Ss0=0.0;
     }
 
-    if(utsq>=0.0 && utsq==utsq && isfinite(utsq) && (Ss==Ss && isfinite(Ss) && Ss>Ss0)){
+#define FRACSs0 (0.5) // want to have initial entropy not too far below previous entropy value
+    if(utsq>=0.0 && utsq==utsq && isfinite(utsq) && (Ss==Ss && isfinite(Ss) && Ss>=Ss0-FRACSs0*fabs(Ss0))){
       // if utsq=nan or inf, will fail to reach here
       // if Ss=nan or inf, will fail to reach here
       if(numattemptstofixguess>0) if(showmessages && debugfail>=3) dualfprintf(fail_file,"GOOD Initial guess #%d/%d [i=%d j=%d k=%d] for W=%21.15g Wp=%21.15g Wp/D=%21.15g gives bad utsq=%21.15g Ss=%21.15g D=%21.15g u=%21.15g p=%21.15g gamma=%21.15g Ss0=%21.15g\n",numattemptstofixguess,MAXNUMGUESSCHANGES,ptrgeom->i,ptrgeom->j,ptrgeom->k,*W_last,*Wp_last,*Wp_last/D,utsq,Ss,D,u,p,gamma,Ss0);
@@ -1105,7 +1107,9 @@ static int set_guess_Wp(int showmessages, PFTYPE *lpflag, int eomtype, FTYPE *pr
 
       if(numattemptstofixguess>0){
         // then cold fix was not enough:
-        *Wp_last = MAX(MAX(fabs(*Wp_last)*10.0,NUMEPSILON*100.0*fabs(D)),KINDASMALL);
+        //#define FACTORSHIFT (10.0) // bit much
+#define FACTORSHIFT (2.0)
+        *Wp_last = MAX(MAX(fabs(*Wp_last)*FACTORSHIFT,NUMEPSILON*100.0*fabs(D)),KINDASMALL);
       }
 
       // set new W
@@ -1128,7 +1132,7 @@ static int set_guess_Wp(int showmessages, PFTYPE *lpflag, int eomtype, FTYPE *pr
 
 
   // DEBUG:
-  //dualfprintf(fail_file,"DEBUG: %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",utsq,rho0,u,p,bsq,*Wp_last,wglobal[2]);
+  //  dualfprintf(fail_file,"DEBUG: %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",utsq,rho0,u,p,bsq,*Wp_last,wglobal[2]);
   //int pl; PALLLOOP(pl) dualfprintf(fail_file,"DEBUG2: prim[%d]=%21.15g\n",pl,prim[pl]);
   //  int jjm,kkm; DLOOP(jjm,kkm) dualfprintf(fail_file,"DEBUG3: gcov=%21.15g gcon=%21.15g\n",ptrgeom->gcov[GIND(jjm,kkm)],ptrgeom->gcon[GIND(jjm,kkm)]);
   //for(pl=FIRSTEOSGLOBAL;pl<=LASTEOSGLOBAL;pl++) dualfprintf(fail_file,"DEBUG3: EOSextra[%d]=%21.15g\n",pl,EOSextra[pl]);
@@ -4413,7 +4417,7 @@ static int general_newton_raphson(int showmessages, PFTYPE *lpflag, int eomtype,
 
 
 
-
+  //  dualfprintf(fail_file,"n_iter=%d\n",n_iter);
 
 
 

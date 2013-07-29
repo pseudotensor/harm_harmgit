@@ -4,12 +4,12 @@
 
 // Ugeomfree and dUother are in UNOTHING form (or UEVOLVE without geometry)
 // pf might be modified so better approximation to final update, so easier on Utoprimgen() to get inversion.
-int sourcephysics(FTYPE *pr, FTYPE *pf, int *didreturnpf, struct of_geom *ptrgeom, struct of_state *q, FTYPE *Ugeomfreei, FTYPE *Ugeomfreef, FTYPE *CUf, FTYPE *dUother, FTYPE (*dUcomp)[NPR])
+int sourcephysics(FTYPE *pr, FTYPE *pf, int *didreturnpf, int *eomtype, struct of_geom *ptrgeom, struct of_state *q, FTYPE *Ugeomfreei, FTYPE *Ugeomfreef, FTYPE *CUf, FTYPE *dUother, FTYPE (*dUcomp)[NPR])
 {
   int coolfunc_thindisk(FTYPE h_over_r, FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q,FTYPE (*dUcomp)[NPR]);
   int coolfunc_neutrino(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q,FTYPE (*dUcomp)[NPR]);
   int coolfunc_rebecca_thindisk(FTYPE h_over_r, FTYPE *pr, struct of_geom *geom, struct of_state *q,FTYPE (*dUcomp)[NPR]);
-  extern int koral_source_rad(int whichsourcemethod, FTYPE *pr, FTYPE *pf, int *didreturnpf, FTYPE *Ui, FTYPE *Uf, FTYPE *CUf, struct of_geom *geom, struct of_state *q, FTYPE *dUother, FTYPE (*dUcomp)[NPR]);
+  extern int koral_source_rad(int whichsourcemethod, FTYPE *pr, FTYPE *pf, int *didreturnpf, int *eomtype, FTYPE *Ui, FTYPE *Uf, FTYPE *CUf, struct of_geom *geom, struct of_state *q, FTYPE *dUother, FTYPE (*dUcomp)[NPR]);
 
   //default
   *didreturnpf=0;
@@ -31,7 +31,7 @@ int sourcephysics(FTYPE *pr, FTYPE *pf, int *didreturnpf, struct of_geom *ptrgeo
     return(coolfunc_rebecca_thindisk(h_over_r, pr, ptrgeom, q,dUcomp));
   }
   else if(cooling==KORAL){
-    return(koral_source_rad(WHICHRADSOURCEMETHOD, pr, pf, didreturnpf, Ugeomfreei, Ugeomfreef, CUf, ptrgeom, q, dUother, dUcomp));
+    return(koral_source_rad(WHICHRADSOURCEMETHOD, pr, pf, didreturnpf, eomtype, Ugeomfreei, Ugeomfreef, CUf, ptrgeom, q, dUother, dUcomp));
   }
   else{
     // random physics

@@ -29,7 +29,7 @@ static int tryentropyinversion(int showmessages, int allowlocalfailurefixandnore
 static int trycoldinversion(int showmessages, int allowlocalfailurefixandnoreport, int finalstep, PFTYPE hotpflag, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, FTYPE *Ugeomfree, FTYPE *Ugeomfree0, struct of_geom *ptrgeom, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad);
 
 
-int Utoprimgen(int showmessages, int allowlocalfailurefixandnoreport, int finalstep, int eomtype, int evolvetype, int inputtype,FTYPE *U,  struct of_geom *ptrgeom, FTYPE *pr, struct of_newtonstats *newtonstats)
+int Utoprimgen(int showmessages, int allowlocalfailurefixandnoreport, int finalstep, int *eomtype, int evolvetype, int inputtype,FTYPE *U,  struct of_geom *ptrgeom, FTYPE *pr, struct of_newtonstats *newtonstats)
 {
   // debug
   int i, j, k;
@@ -46,7 +46,7 @@ int Utoprimgen(int showmessages, int allowlocalfailurefixandnoreport, int finals
   int Utoprimgen_tryagain(int showmessages, int allowlocalfailurefixandnoreport, int eomtype, int parameter, FTYPE *Ugeomfree0, FTYPE *Ugeomfree,struct of_geom *ptrgeom, PFTYPE *lpflag, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad);
   int Utoprimgen_tryagain2(int showmessages, int allowlocalfailurefixandnoreport, int eomtype, int parameter, FTYPE *Ugeomfree0, FTYPE *Ugeomfree,struct of_geom *ptrgeom, PFTYPE *lpflag, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad);
   void convert_U_removerestmassfromuu(int utoprimverison, int removerestmassfromuu, FTYPE *U);
-  int invert_scalars(struct of_geom *ptrgeom, FTYPE *Uold, FTYPE *Ugeomfree0,FTYPE *Ugeomfree,FTYPE *pr0,FTYPE *pr);
+  int invert_scalars(struct of_geom *ptrgeom, FTYPE *Ugeomfree,FTYPE *pr);
   int pl,pliter;
   PFTYPE lpflag,lpflagrad;
   int usedhotinversion,usedentropyinversion,usedcoldinversion,usedffdeinversion;
@@ -55,14 +55,21 @@ int Utoprimgen(int showmessages, int allowlocalfailurefixandnoreport, int finals
   int eomtypelocal;
 
 
+  //
+  ///////////////
+  if(*eomtype==EOMDONOTHING){
+    // then do nothing since assume already pr=pr[U].
+    // also don't change any failure flags, assuming prior flags are correct.
+    return(0);
+  }
 
   ///////////////
   //
   // setup default eomtype
   //
   ///////////////
-  if(eomtype==EOMDEFAULT) eomtypelocal=EOMTYPE; // use default
-  else eomtypelocal=eomtype; // force eomtype
+  if(*eomtype==EOMDEFAULT) eomtypelocal=EOMTYPE; // use default
+  else eomtypelocal=*eomtype; // force eomtype
 
 
 
@@ -148,6 +155,12 @@ int Utoprimgen(int showmessages, int allowlocalfailurefixandnoreport, int finals
 
 
 
+  ///////////////
+  //
+  //  if(nstep==4 && steppart==0){
+  //    PLOOP(pliter,pl) dualfprintf(fail_file,"PRIMUTOPRIMGEN0(%d): pl=%d pp=%21.15g uu=%21.15g\n",*eomtype,pl,pr[pl],Ugeomfree[pl]);
+  //  }
+
 
 
 
@@ -161,7 +174,7 @@ int Utoprimgen(int showmessages, int allowlocalfailurefixandnoreport, int finals
   // So don't include passive scalars in check_on_inversion() [Since modify passive scalars]
   //
   ////////////////////////
-  invert_scalars(ptrgeom, Uold,Ugeomfree0,Ugeomfree,pr0,pr);
+  invert_scalars(ptrgeom, Ugeomfree,pr);
 
 
 
@@ -219,6 +232,8 @@ int Utoprimgen(int showmessages, int allowlocalfailurefixandnoreport, int finals
     //
     ///////////////////////////////////////////////////
 
+    // report back that used this
+    *eomtype=eomtypelocal;
 
 
     if(UTOPRIMVERSION!=UTOPRIMCOMPARE) Utoprimgen_pick(showmessages, allowlocalfailurefixandnoreport, UTOPRIMVERSION, eomtypelocal, EVOLVENOENTROPY, Ugeomfree, ptrgeom, &GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr,pressure,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
@@ -281,6 +296,9 @@ int Utoprimgen(int showmessages, int allowlocalfailurefixandnoreport, int finals
       if(hotpflag){
         tryentropyinversion(showmessages, allowlocalfailurefixandnoreport,finalstep, hotpflag, pr0, pr, pressure, Ugeomfree, Ugeomfree0, ptrgeom,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
         if(GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)<=UTOPRIMNOFAIL){
+          // report back that used this
+          *eomtype=EOMENTROPYGRMHD;
+
           usedhotinversion=0;
           usedentropyinversion=1;
           usedcoldinversion=0;
@@ -310,6 +328,9 @@ int Utoprimgen(int showmessages, int allowlocalfailurefixandnoreport, int finals
           usedentropyinversion=0;
           usedcoldinversion=1;
           usedffdeinversion=0;
+
+          // report back that used this
+          *eomtype=EOMCOLDGRMHD;
         
           // check cold inversion if inversion thinks it was successful
           check_on_inversion(usedhotinversion,usedentropyinversion,usedcoldinversion,usedffdeinversion,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr0, pr, pressure, ptrgeom, Uold, Unew,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
@@ -332,7 +353,10 @@ int Utoprimgen(int showmessages, int allowlocalfailurefixandnoreport, int finals
     //
     ///////////////////////////////////////////////////
 
+    // report back that used this
+    *eomtype=eomtypelocal;
 
+    // setup as if full entropy evolution
     whichentropy=EVOLVEFULLENTROPY;
 
 
@@ -413,11 +437,13 @@ int Utoprimgen(int showmessages, int allowlocalfailurefixandnoreport, int finals
           usedentropyinversion=0;
           usedcoldinversion=1;
           usedffdeinversion=0;
+
+          // report back that used this
+          *eomtype=EOMCOLDGRMHD;
+
+          // check cold inversion
+          check_on_inversion(usedhotinversion,usedentropyinversion,usedcoldinversion,usedffdeinversion,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr0, pr, pressure, ptrgeom, Uold, Unew,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
         }
-
-        // check cold inversion
-        check_on_inversion(usedhotinversion,usedentropyinversion,usedcoldinversion,usedffdeinversion,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr0, pr, pressure, ptrgeom, Uold, Unew,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
-
 
       }// end if entropypflag
  
@@ -436,6 +462,8 @@ int Utoprimgen(int showmessages, int allowlocalfailurefixandnoreport, int finals
     //
     ///////////////////////////////////////////////////
 
+    // report back that used this
+    *eomtype=eomtypelocal;
 
 
     if(1){
@@ -460,6 +488,9 @@ int Utoprimgen(int showmessages, int allowlocalfailurefixandnoreport, int finals
     ///////////// FORCE FREE
     //
     ///////////////////////////////////////////////////
+
+    // report back that used this
+    *eomtype=eomtypelocal;
 
 
 
@@ -555,6 +586,13 @@ int Utoprimgen(int showmessages, int allowlocalfailurefixandnoreport, int finals
   
   // KORALTODO: Could further decide to use original pf from some point in source explicit/implicit updates instead of this no-force solution.
 
+
+
+  ///////////////
+  //
+  //  if(nstep==4 && steppart==0){
+  //    PLOOP(pliter,pl) dualfprintf(fail_file,"PRIMUTOPRIMGEN1 (%d): pl=%d pp=%21.15g uu=%21.15g\n",*eomtype,pl,pr[pl],Ugeomfree[pl]);
+  //  }
 
      
   return(0);
@@ -1289,7 +1327,7 @@ static int negdensitycheck(int finalstep, FTYPE *prim, PFTYPE *pflag)
 
 
 // perform U->p inversion on advected scalars
-int invert_scalars(struct of_geom *ptrgeom, FTYPE *Uold, FTYPE *Ugeomfree0,FTYPE *Ugeomfree,FTYPE *pr0,FTYPE *pr)
+int invert_scalars(struct of_geom *ptrgeom, FTYPE *Ugeomfree, FTYPE *pr)
 {
   FTYPE myrhouu0,oneOmyrhouu0;
   int i,j,k,loc;
@@ -1785,7 +1823,8 @@ int Utoprimloop(FTYPE (*U)[NSTORE2][NSTORE3][NPR],FTYPE (*prim)[NSTORE2][NSTORE3
   ZLOOP{
     get_geometry(i, j, k, CENT, ptrgeom);
     // invert True U->p
-    MYFUN(Utoprimgen(showmessages, allowlocalfailurefixandnoreport,0,EOMDEFAULT,EVOLVEUTOPRIM,UEVOLVE,MAC(U,i,j,k), ptrgeom, MAC(prim,i,j,k),newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
+    int eomtype=EOMDEFAULT;
+    MYFUN(Utoprimgen(showmessages, allowlocalfailurefixandnoreport,0,&eomtype,EVOLVEUTOPRIM,UEVOLVE,MAC(U,i,j,k), ptrgeom, MAC(prim,i,j,k),newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
   }
   return(0);
 }
@@ -1832,7 +1871,8 @@ void filterffde(int i, int j, int k, FTYPE *pr)
   primtoU(UNOTHING,pr,&q,ptrgeom,U);
 
   //  Utoprim_ffde(U,ptrgeom,prout); // no need for initial guess since analytic inversion
-  Utoprimgen(showmessages, allowlocalfailurefixandnoreport, finalstep, EOMDEFAULT,EVOLVEUTOPRIM,UNOTHING,U,ptrgeom,prout,&newtonstats);
+  int eomtype=EOMDEFAULT;
+  Utoprimgen(showmessages, allowlocalfailurefixandnoreport, finalstep, &eomtype,EVOLVEUTOPRIM,UNOTHING,U,ptrgeom,prout,&newtonstats);
 
   PALLLOOP(pl) pr[pl]=prout[pl];
   // kill densities

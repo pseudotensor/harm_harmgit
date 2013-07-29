@@ -45,7 +45,8 @@ int faildebug1(int numnormterms, int whichcons, FTYPE *U_target, FTYPE *EOSextra
   PLOOP(pliter,pl) Uwithgeom[pl]=Ustart[pl]*ptrgeom->EOMFUNCMAC(pl);
   FTYPE CUf[4]={1.0};
   int didreturnpf=0;
-  source(pr0, pr0, &didreturnpf, ptrgeom, &q, Uwithgeom, Uwithgeom, CUf, dUriemann, dUcomp,dU);
+  int eomtype=EOMDEFAULT;
+  source(pr0, pr0, &didreturnpf, &eomtype, ptrgeom, &q, Uwithgeom, Uwithgeom, CUf, dUriemann, dUcomp,dU);
   bsq_calc(pr0, ptrgeom, &bsq);
   
   
@@ -251,7 +252,8 @@ int faildebug2(int numnormterms, int whichcons, FTYPE *U_target, FTYPE *EOSextra
   PLOOP(pliter,pl) Uwithgeom[pl]=Ustart[pl]*ptrgeom->EOMFUNCMAC(pl);
   FTYPE CUf[4]={1.0};
   int didreturnpf=0;
-  source(pr0, pr0, &didreturnpf, ptrgeom, &q, Uwithgeom, Uwithgeom, CUf, dUriemann, dUcomp,dU);
+  int eomtype=EOMDEFAULT;
+  source(pr0, pr0, &didreturnpf, &eomtype, ptrgeom, &q, Uwithgeom, Uwithgeom, CUf, dUriemann, dUcomp,dU);
   bsq_calc(pr0, ptrgeom, &bsq);
   
   
