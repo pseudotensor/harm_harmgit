@@ -263,9 +263,19 @@ int eotherU[NDIM]={UU,U1,U2,U3};
 //#define SWITCHTOENTROPYIFCHANGESTOENTROPY (IMPLICITFERR==QTYUMHD ? 0 : 1)
 #define SWITCHTOENTROPYIFCHANGESTOENTROPY (1)
 
+// whether to avoid solutions where u_g<0 or rho<0 and use backup that didn't have that problem.
+// KORALTODO: Bad to use backup since can be high error, but can recheck error or just use this to indicate to try entropy.
+#define AVOIDSUCK 1
+
+
+// need to do final check since get f1 and then do step.
+#define DOFINALCHECK 1
+
 // need better normalization for sanity check before use it again
 // The current Erf,u normalization kinda checks whether Erf or u_g are going to have high *relative self* error.
 #define DOSANITYCHECK 0
+
+
 
 // below 1 if reporting cases when MAXITER reached, but allowd error so not otherwise normally reported.
 #define REPORTMAXITERALLOWED 0
@@ -575,7 +585,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
   FTYPE uu0[NPR],uup[NPR],uupp[NPR],uu[NPR],uuporig[NPR],uu0orig[NPR],bestuu[NPR];
   FTYPE pp0[NPR],ppp[NPR],pppp[NPR],pp[NPR],ppporig[NPR],pp0orig[NPR],bestpp[NPR];
   FTYPE f1[NPR],f1norm[NPR],f1report[NPR],f3report[NPR],lowestfreportf1[NPR],lowestfreportf3[NPR];
-  FTYPE uubackup[NPR]={0},ppbackup[NPR]={0};
+  FTYPE uubackup[NPR]={0},ppbackup[NPR]={0},fbackup[NPR];
   FTYPE radsource[NPR], deltas[NPR]; 
   extern int mathematica_report_check(int failtype, long long int failnum, int gotfirstnofail, FTYPE errorabs, int iters, FTYPE realdt,struct of_geom *ptrgeom, FTYPE *ppfirst, FTYPE *pp, FTYPE *pb, FTYPE *piin, FTYPE *uu0, FTYPE *uu, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_state *q, FTYPE *dUother);
 
@@ -948,8 +958,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
     ///////////////////////
     if(pp[RHO]>=0.0 && pp[UU]>=0.0 && pp[PRAD0]>=0.0){
       gotbackup=1;
-        
       PLOOP(pliter,pl){
+        fbackup[pl]=f1[pl];
         uubackup[pl]=uu[pl];
         ppbackup[pl]=pp[pl];
       }
@@ -1208,44 +1218,47 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
 
 
 
-  ////////////////////
-  //
-  // See if final solution is sucking on energy.  If so, backup to solution where that wasn't happening.
-  //
-  ////////////////////
-  if(gotbackup && !(pp[RHO]>=0.0 && pp[UU]>=0.0 && pp[PRAD0]>=0.0)){
-    // then might be sucking into radiation or into thermal energy density nothingness, so see if backup is good enough error
-    PLOOP(pliter,pl){
-      uu[pl]=uubackup[pl];
-      pp[pl]=ppbackup[pl];
+  if(AVOIDSUCK){
+    ////////////////////
+    //
+    // See if final solution is sucking on energy.  If so, backup to solution where that wasn't happening.
+    //
+    ////////////////////
+    if(gotbackup && !(pp[RHO]>=0.0 && pp[UU]>=0.0 && pp[PRAD0]>=0.0)){
+      // then might be sucking into radiation or into thermal energy density nothingness, so see if backup is good enough error
+      if(debugfail>=2) dualfprintf(fail_file,"Thought was good error, but gotbackup=%d and pp=%g %g %g : f1report: %g %g %g %g : nstep=%ld steppart=%d ijk=%d %d %d\n",gotbackup,pp[RHO],pp[UU],pp[PRAD0],f1report[erefU[0]],f1report[erefU[1]],f1report[erefU[2]],f1report[erefU[3]],nstep,steppart,ptrgeom->i,ptrgeom->j,ptrgeom->k);
+      PLOOP(pliter,pl){
+        uu[pl]=uubackup[pl];
+        pp[pl]=ppbackup[pl];
+      }
+      if(debugfail>=2) dualfprintf(fail_file,"Used backup: pp=%g %g %g : fbackup=%g %g %g %g\n",pp[RHO],pp[UU],pp[PRAD0],fbackup[erefU[0]],fbackup[erefU[1]],fbackup[erefU[2]],fbackup[erefU[3]]);
     }
-    if(debugfail>=2) dualfprintf(fail_file,"Thought was good error, but gotbackup=%d and pp=%g %g %g : nstep=%ld steppart=%d ijk=%d %d %d\n",gotbackup,pp[RHO],pp[UU],pp[PRAD0],nstep,steppart,ptrgeom->i,ptrgeom->j,ptrgeom->k);
   }
 
 
-
-  if(DOSANITYCHECK){
+  if(DOSANITYCHECK||DOFINALCHECK){
     //////////////////////////
     //
     // sanity check on error, and final inversion
-    // can't just check (uup-uu)/(|uu|-|uup|) because uup and uu  might diverge, leading to huge G, while uup-uu might be similar enough.
-    // In that case, also using f1 and f1norm not good enough.
-    // Have to compare with static norm
     //
     ////////////////////////
     int whichcall=1;
     //  eomtypelocal=*eomtype; // re-chose default each time. No, stick with what f1 (last call to f1) chose
-    int fakeiter=1;
-    failreturn=f_implicit_lab(fakeiter,failreturnallowableuse, whichcall,showmessages, allowlocalfailurefixandnoreport, &eomtypelocal, pp, uu0, uu, fracdtG*realdt, ptrgeom, f1, f1norm); // modifies uu and pp
-    // overwrite f1norm with static choice to avoid run-away G
-    jj=TT; f1norm[erefU[jj]]=MAX(pb[PRAD0],pb[UU]);
-    SLOOPA(jj) f1norm[erefU[jj]]=MAX(pb[PRAD0],pb[UU])/sqrt(fabs(ptrgeom->gcon[GIND(jj,jj)]));  // make into conserved type: R^t_\nu ~ {prad0,uu} / sqrt(gcon[nu,nu])
+    failreturn=f_implicit_lab(iter,failreturnallowableuse, whichcall,showmessages, allowlocalfailurefixandnoreport, &eomtypelocal, pp, uu0, uu, fracdtG*realdt, ptrgeom, f1, f1norm); // modifies uu and pp
+    if(DOSANITYCHECK){
+      // can't just check (uup-uu)/(|uu|-|uup|) because uup and uu  might diverge, leading to huge G, while uup-uu might be similar enough.
+      // In that case, also using f1 and f1norm not good enough.
+      // Have to compare with static norm
+      // overwrite f1norm with static choice to avoid run-away G
+      jj=TT; f1norm[erefU[jj]]=MAX(pb[PRAD0],pb[UU]);
+      SLOOPA(jj) f1norm[erefU[jj]]=MAX(pb[PRAD0],pb[UU])/sqrt(fabs(ptrgeom->gcon[GIND(jj,jj)]));  // make into conserved type: R^t_\nu ~ {prad0,uu} / sqrt(gcon[nu,nu])
+    }
     int dimtypef=DIMTYPEFCONS; // 0 = conserved R^t_\nu type, 1 = primitive (u,v^i) type, i.e. v^i has no energy density term
     int convreturn=f_error_check(showmessages, showmessagesheavy, iter, IMPALLOWCONV,realdt,dimtypef,f1,f1norm,f1report,Uiin,uu0,uu,ptrgeom);
     errorabsf1=0.0;     DLOOPA(jj) errorabsf1     += fabs(f1report[erefU[jj]]);
     if(convreturn==0){
       if(debugfail>=2){
-        dualfprintf(fail_file,"Thought was good error (gotbackup=%d : %g %g %g), but recheck showed otherwise: nstep=%ld steppart=%d ijk=%d %d %d\n",gotbackup,pp[RHO],pp[UU],pp[PRAD0],nstep,steppart,ptrgeom->i,ptrgeom->j,ptrgeom->k);
+        dualfprintf(fail_file,"Thought was good error (gotbackup=%d : %g %g %g), but final-check or re-check showed otherwise: nstep=%ld steppart=%d ijk=%d %d %d\n",gotbackup,pp[RHO],pp[UU],pp[PRAD0],nstep,steppart,ptrgeom->i,ptrgeom->j,ptrgeom->k);
         DLOOPA(jj) dualfprintf(fail_file,"Issue with jj=%d %g %g %g : %g %g\n",jj,f1[erefU[jj]],f1norm[erefU[jj]],f1report[erefU[jj]],uup[irefU[jj]],uu[irefU[jj]]);
         failnum++;
         mathematica_report_check(4, failnum, gotfirstnofail, errorabsf1, iter, realdt, ptrgeom, ppfirst,pp,pb,piin,uu0,uu,Uiin,Ufin, CUf, q, dUother);
