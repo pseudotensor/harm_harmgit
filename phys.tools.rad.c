@@ -1228,11 +1228,18 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
     if(gotbackup && !(pp[RHO]>=0.0 && pp[UU]>=0.0 && pp[PRAD0]>=0.0)){
       // then might be sucking into radiation or into thermal energy density nothingness, so see if backup is good enough error
       if(debugfail>=2) dualfprintf(fail_file,"Thought was good error, but gotbackup=%d and pp=%g %g %g : f1report: %g %g %g %g : nstep=%ld steppart=%d ijk=%d %d %d\n",gotbackup,pp[RHO],pp[UU],pp[PRAD0],f1report[erefU[0]],f1report[erefU[1]],f1report[erefU[2]],f1report[erefU[3]],nstep,steppart,ptrgeom->i,ptrgeom->j,ptrgeom->k);
-      PLOOP(pliter,pl){
-        uu[pl]=uubackup[pl];
-        pp[pl]=ppbackup[pl];
+      FTYPE errorabsfbackup=0.0;     DLOOPA(jj) errorabsfbackup     += fabs(fbackup[erefU[jj]]);
+      if(errorabsfbackup<IMPALLOWCONV){
+        PLOOP(pliter,pl){
+          uu[pl]=uubackup[pl];
+          pp[pl]=ppbackup[pl];
+        }
+        if(debugfail>=2) dualfprintf(fail_file,"Used backup: pp=%g %g %g : fbackup=%g %g %g %g\n",pp[RHO],pp[UU],pp[PRAD0],fbackup[erefU[0]],fbackup[erefU[1]],fbackup[erefU[2]],fbackup[erefU[3]]);
       }
-      if(debugfail>=2) dualfprintf(fail_file,"Used backup: pp=%g %g %g : fbackup=%g %g %g %g\n",pp[RHO],pp[UU],pp[PRAD0],fbackup[erefU[0]],fbackup[erefU[1]],fbackup[erefU[2]],fbackup[erefU[3]]);
+      else{
+        if(debugfail>=2) dualfprintf(fail_file,"Couldn't use backup: pp=%g %g %g : fbackup=%g %g %g %g\n",pp[RHO],pp[UU],pp[PRAD0],fbackup[erefU[0]],fbackup[erefU[1]],fbackup[erefU[2]],fbackup[erefU[3]]);
+        return(1);
+      }
     }
   }
 
