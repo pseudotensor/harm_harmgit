@@ -10,7 +10,7 @@
 // 0 = no debug indexes set
 // 1 = set global (file scope) index for debugging
 //     OPENMPMARK: This is not thread safe!, so only set to 1 if not using more than one OpenMP thread.
-#define DEBUGINDEX 0
+#define DEBUGINDEX 1
 
 #if(DEBUGINDEX)
 // 
@@ -3983,8 +3983,9 @@ static int general_newton_raphson(int showmessages, PFTYPE *lpflag, int eomtype,
 
 
     // DEBUG:
-    //    for(it=0;it<n;it++) dualfprintf(fail_file,"lntries=%d after funcd: x[%d]=%26.20g dx[%d]=%26.20g errx=%26.20g diddamp=%d dampfactor=%26.20g didcycle=%d\n",(int)(newtonstats->lntries),it,x[it],it,dx[it],errx,diddamp,DAMPFACTOR[it],didcycle);
-
+    //    if(myid==5 && nstep==1 && steppart==0 && ifileglobal==19 && jfileglobal==15){
+    //      for(it=0;it<n;it++) dualfprintf(fail_file,"lntries=%d after funcd: x[%d]=%26.20g dx[%d]=%26.20g errx=%26.20g diddamp=%d dampfactor=%26.20g didcycle=%d\n",(int)(newtonstats->lntries),it,x[it],it,dx[it],errx,diddamp,DAMPFACTOR[it],didcycle);
+    //    }
 
 #if(CRAZYDEBUG&&DEBUGINDEX)
     // DEBUG:

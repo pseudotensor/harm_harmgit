@@ -1102,12 +1102,17 @@ static int check_on_inversion(int usedhotinversion,int usedentropyinversion,int 
     // Report bad inversion
     //
     /////////////
+
+    //    if(myid==5 && nstep==1 && steppart==0 && ptrgeom->i==19 && ptrgeom->j==15){
+    //      badinversion=1;
+    //    }
+    
     if(badinversion || badinversionrad){
       dualfprintf(fail_file,"Bad inversion (or possibly Bad U(p) calculation):\n");
       dualfprintf(fail_file,"Inversion types: %d %d %d %d\n",usedffdeinversion,usedcoldinversion,usedentropyinversion,usedhotinversion);
 
       dualfprintf(fail_file,"t=%21.15g nstep=%ld stepart=%d :: i=%d j=%d k=%d :: lntries=%d lerrx=%21.15g\n",t,nstep,steppart,ptrgeom->i,ptrgeom->j,ptrgeom->k,newtonstats->lntries,newtonstats->lerrx);
-      PLOOP(pliter,pl) dualfprintf(fail_file,"Uoldgeomfree[%d]=%21.15g Unewgeomfree[%d]=%21.15g pr[%d]=%21.15g (pr0[%d]=%21.15g)\n",pl,Uold[pl],pl,Unew[pl],pl,pr[pl],pl,pr0[pl]);
+      PLOOP(pliter,pl) dualfprintf(fail_file,"Uoldgeomfree[%d]=%21.15g Unewgeomfree[%d]=%21.15g pr[%d]=%21.15g (pr0[%d]=%21.15g) fdiff=%21.15g\n",pl,Uold[pl],pl,Unew[pl],pl,pr[pl],pl,pr0[pl],fdiff[pl]);
       dualfprintf(fail_file,"special inversion pressure=%21.15g statepressure=%21.15g stateentropy=%21.15g\n",*pressure,q.pressure,q.entropy);
       
       dualfprintf(fail_file,"g=%21.15g\n",ptrgeom->gdet);

@@ -509,6 +509,10 @@ static int advance_standard(
         else{
           PLOOP(pliter,pl) MACP0A1(ui,i,j,k,pl)=Uitemp[pl]; // all at CENT
         }
+
+        //        if(myid==5 && nstep==1 && steppart==0 && ptrgeom->i==19 && ptrgeom->j==15){
+        //          PLOOP(pliter,pl) dualfprintf(fail_file,"pl=%d pi=%21.15g ui=%21.15g\n",MACP0A1(pi,i,j,k,pl),MACP0A1(ui,i,j,k,pl)*ptrgeom->igdetnosing);
+        //        }
  
         // dUriemann is actually average quantity, but we treat is as a point quantity at the zone center
         flux2dUavg(doother,i,j,k,F1,F2,F3,dUriemann1,dUriemann2,dUriemann3);
@@ -539,7 +543,7 @@ static int advance_standard(
 
         // find dU(pb)
         // so pf contains updated field at cell center for use in (e.g.) implicit solver that uses inversion P(U)
-        MYFUN(source(MAC(pb,i,j,k), MAC(pf,i,j,k), &didreturnpf, &eomtype, ptrgeom, qptr2, MAC(ui,i,j,k), MAC(uf,i,j,k), CUf, dUriemann, dUcomp, dUgeom),"step_ch.c:advance()", "source", 1);
+        MYFUN(source(MAC(pi,i,j,k), MAC(pb,i,j,k), MAC(pf,i,j,k), &didreturnpf, &eomtype, ptrgeom, qptr2, MAC(ui,i,j,k), MAC(uf,i,j,k), CUf, dUriemann, dUcomp, dUgeom),"step_ch.c:advance()", "source", 1);
         // assumes final dUcomp is nonzero and representative of source term over this timestep
  
 
@@ -627,6 +631,10 @@ static int advance_standard(
 
           MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,&eomtype,EVOLVEUTOPRIM,UEVOLVE,MAC(myupoint,i,j,k), ptrgeom, MAC(pf,i,j,k),&newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
           nstroke+=newtonstats.nstroke; newtonstats.nstroke=newtonstats.lntries=0;
+
+          //          if(myid==5 && nstep==1 && steppart==0 && ptrgeom->i==19 && ptrgeom->j==15){
+          //            PLOOP(pliter,pl) dualfprintf(fail_file,"pl=%d pf=%21.15g myupoint=%21.15g\n",MACP0A1(pf,i,j,k,pl),MACP0A1(myupoint,i,j,k,pl)*ptrgeom->igdetnosing);
+          //          }
           
           
 #if(DODISS||DODISSVSR)
@@ -1220,7 +1228,7 @@ static int advance_standard_orig(
 
 
         // find dU(pb)
-        MYFUN(source(MAC(pb,i,j,k), MAC(pf,i,j,k), &didreturnpf, &eomtype, ptrgeom, qptr2, MAC(ui,i,j,k), MAC(uf,i,j,k), CUf, dUriemann, dUcomp, dUgeom),"step_ch.c:advance()", "source", 1);
+        MYFUN(source(MAC(pi,i,j,k), MAC(pb,i,j,k), MAC(pf,i,j,k), &didreturnpf, &eomtype, ptrgeom, qptr2, MAC(ui,i,j,k), MAC(uf,i,j,k), CUf, dUriemann, dUcomp, dUgeom),"step_ch.c:advance()", "source", 1);
         // assumes final dUcomp is nonzero and representative of source term over this timestep
         // KORALTODO: Not using eomtype for this method because outside loop.  Would have to store eomtype in array or something!
  
@@ -1899,7 +1907,7 @@ static int advance_finitevolume(
 
      
         // get source term (point source, don't use to update diagnostics)
-        MYFUN(source(MAC(pb,i,j,k), MAC(pf,i,j,k), &didreturnpf, &eomtype, ptrgeom, qptr, MAC(ui,i,j,k), MAC(uf,i,j,k), CUf, dUriemann, dUcomp, MAC(dUgeomarray,i,j,k)),"step_ch.c:advance()", "source", 1);
+        MYFUN(source(MAC(pi,i,j,k), MAC(pb,i,j,k), MAC(pf,i,j,k), &didreturnpf, &eomtype, ptrgeom, qptr, MAC(ui,i,j,k), MAC(uf,i,j,k), CUf, dUriemann, dUcomp, MAC(dUgeomarray,i,j,k)),"step_ch.c:advance()", "source", 1);
       }// end COMPZLOOP
 
 
@@ -2047,7 +2055,7 @@ static int advance_finitevolume(
       // SUPERGODMARK: no longer have access to dUcomp : NEED TO FIX
       // below is correct, but excessive
       // get source term again in order to have dUcomp (NEED TO FIX)
-      MYFUN(source(MAC(pb,i,j,k), MAC(pf,i,j,k), &didreturnpf, &eomtype, ptrgeom, qptr, MAC(ui,i,j,k), MAC(uf,i,j,k), CUf, dUriemann, dUcomp, &fdummy),"step_ch.c:advance()", "source", 2);
+      MYFUN(source(MAC(pi,i,j,k), MAC(pb,i,j,k), MAC(pf,i,j,k), &didreturnpf, &eomtype, ptrgeom, qptr, MAC(ui,i,j,k), MAC(uf,i,j,k), CUf, dUriemann, dUcomp, &fdummy),"step_ch.c:advance()", "source", 2);
 
 
       dUtodt(ptrgeom, qptr, MAC(pb,i,j,k), dUgeom, dUriemann, dUcomp[GEOMSOURCE], &accdt_ij, &gravitydt_ij);
@@ -3075,7 +3083,7 @@ int set_dt(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], SFTYPE *dt)
       // modifies prim() to be closer to final, which is ok here.
       // setup default eomtype
       int eomtype=EOMDEFAULT;
-      MYFUN(source(MAC(prim,i,j,k), MAC(prim,i,j,k), &didreturnpf, &eomtype, ptrgeom, &state, U, U, CUf, dUriemann, dUcomp, dUgeom),"advance.c:set_dt()", "source", 1);
+      MYFUN(source(MAC(prim,i,j,k), MAC(prim,i,j,k), MAC(prim,i,j,k), &didreturnpf, &eomtype, ptrgeom, &state, U, U, CUf, dUriemann, dUcomp, dUgeom),"advance.c:set_dt()", "source", 1);
 
       // get dt limit
       compute_dt_fromsource(ptrgeom,&state,MAC(prim,i,j,k), Ugeomfree, dUgeom, dUcomp[GEOMSOURCE], &tempaccdt, &tempgravitydt);

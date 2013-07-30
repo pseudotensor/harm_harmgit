@@ -4,14 +4,14 @@
 #define DOOLD 0
 
 static int f_implicit_lab_old(int failreturnallowable, int whichcall, int showmessages, int allowlocalfailurefixandnoreport, FTYPE *pp0, FTYPE *uu0,FTYPE *uu,FTYPE localdt, struct of_geom *ptrgeom,  FTYPE *f, FTYPE *fnorm);
-static int get_implicit_iJ_old(int failreturnallowableuse, int showmessages, int showmessagesheavy, int allowlocalfailurefixandnoreport, FTYPE impepsjac, FTYPE *uu, FTYPE *uup, FTYPE *uu0, FTYPE *pin, FTYPE fracdtG, FTYPE realdt, struct of_geom *ptrgeom, FTYPE *f1, FTYPE *f1norm, FTYPE (*iJ)[NDIM]);
+static int get_implicit_iJ_old(int failreturnallowableuse, int showmessages, int showmessagesheavy, int allowlocalfailurefixandnoreport, FTYPE impepsjac, FTYPE *uu, FTYPE *uup, FTYPE *uu0, FTYPE *pb, FTYPE fracdtG, FTYPE realdt, struct of_geom *ptrgeom, FTYPE *f1, FTYPE *f1norm, FTYPE (*iJ)[NDIM]);
 static int f_error_check_old(int showmessages, int showmessagesheavy, int iter, FTYPE conv, FTYPE realdt, FTYPE *f1, FTYPE *f1norm, FTYPE *f3report, FTYPE *Uiin, FTYPE *uu0, FTYPE *uu, struct of_geom *ptrgeom);
 static int Utoprimgen_failwrapper_old(int showmessages, int allowlocalfailurefixandnoreport, int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of_geom *ptrgeom, FTYPE *pr, struct of_newtonstats *newtonstats);
 
 
 //////// implicit stuff
-static int koral_source_rad_implicit(int *eomtype, FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother ,FTYPE (*dUcomp)[NPR]);
-static int koral_source_rad_implicit_perdampstrategy(int dampstrategy, FTYPE imptryconv, FTYPE impallowconv, int impmaxiter, int *eomtype, FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother ,FTYPE *radsource, FTYPE *errorabs, int *iterreturn, int *returntype);
+static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother ,FTYPE (*dUcomp)[NPR]);
+static int koral_source_rad_implicit_perdampstrategy(int dampstrategy, FTYPE imptryconv, FTYPE impallowconv, int impmaxiter, int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother ,FTYPE *radsource, FTYPE *errorabs, int *iterreturn, int *returntype);
 
 static int f_implicit_lab(int iter, int failreturnallowable, int whichcall, int showmessages, int allowlocalfailurefixandnoreport, int *eomtype, FTYPE *pp, FTYPE *uu0,FTYPE *uu,FTYPE localdt, struct of_geom *ptrgeom,  FTYPE *f, FTYPE *fnorm);
 static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int showmessagesheavy, int allowlocalfailurefixandnoreport, int *eomtype, FTYPE impepsjac, FTYPE *uu, FTYPE *uup, FTYPE *uu0, FTYPE *pp, FTYPE *ppp, FTYPE fracdtG, FTYPE realdt, struct of_geom *ptrgeom, FTYPE *f1, FTYPE *f1norm, FTYPE (*iJ)[NPR]);
@@ -20,14 +20,14 @@ static int f_error_check(int showmessages, int showmessagesheavy, int iter, FTYP
 static int Utoprimgen_failwrapper(int doradonly, int showmessages, int allowlocalfailurefixandnoreport, int finalstep, int *eomtype, int evolvetype, int inputtype,FTYPE *U,  struct of_geom *ptrgeom, FTYPE *pr, struct of_newtonstats *newtonstats);
 
 // debug stuff
-int mathematica_report_check(int failtype, long long int failnum, int gotfirstnofail, FTYPE realdt,struct of_geom *ptrgeom, FTYPE *ppfirst, FTYPE *pp, FTYPE *pin, FTYPE *uu0, FTYPE *uu, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_state *q, FTYPE *dUother);
+int mathematica_report_check(int failtype, long long int failnum, int gotfirstnofail, FTYPE errorabs, int iters, FTYPE realdt,struct of_geom *ptrgeom, FTYPE *ppfirst, FTYPE *pp, FTYPE *pb, FTYPE *piin, FTYPE *uu0, FTYPE *uu, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_state *q, FTYPE *dUother);
 
 // explicit stuff
 static void get_dtsub(int method, FTYPE *pr, struct of_state *q, FTYPE *Ui, FTYPE *Uf, FTYPE *dUother, FTYPE *CUf, FTYPE *Gdpl, FTYPE chi, FTYPE *Gdabspl, struct of_geom *ptrgeom, FTYPE *dtsub);
 static void koral_source_dtsub_rad_calc(int method, FTYPE *pr, FTYPE *Ui, FTYPE *Uf, FTYPE *dUother, FTYPE *CUf, FTYPE *Gdpl, struct of_geom *ptrgeom, FTYPE *dtsub);
 static int source_explicit(int whichsc, int whichradsourcemethod, int methoddtsub,int *eomtype,
                            void (*sourcefunc)(int method, FTYPE *pr, FTYPE *Ui, FTYPE *Uf, FTYPE *dUother, FTYPE *CUf, FTYPE *Gpl, struct of_geom *ptrgeom, FTYPE *dtsub),
-                           FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother, FTYPE (*dUcomp)[NPR]);
+                           FTYPE *pb, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother, FTYPE (*dUcomp)[NPR]);
 
 // RAD inversion stuff
 static int get_m1closure_gammarel2_old(int showmessages, struct of_geom *ptrgeom, FTYPE *Avcon, FTYPE *Avcov, FTYPE *gammarel2return, FTYPE *deltareturn, FTYPE *numeratorreturn, FTYPE *divisorreturn);
@@ -263,10 +263,17 @@ int eotherU[NDIM]={UU,U1,U2,U3};
 //#define SWITCHTOENTROPYIFCHANGESTOENTROPY (IMPLICITFERR==QTYUMHD ? 0 : 1)
 #define SWITCHTOENTROPYIFCHANGESTOENTROPY (1)
 
+// need better normalization for sanity check before use it again
+// The current Erf,u normalization kinda checks whether Erf or u_g are going to have high *relative self* error.
+#define DOSANITYCHECK 0
+
+// below 1 if reporting cases when MAXITER reached, but allowd error so not otherwise normally reported.
+#define REPORTMAXITERALLOWED 0
+
 //FUCK: Do basic koral damping if error high or no solution.
 // FUCK: entropy switch condition.
 // FUCK: run normal koral tests.  Figure out all entropy signs.
-// FUCK: Need backup to entropy since really dies if no backup.
+// FUCK: Need backup to entropy since really dies if no backup.  Maybe backup has to be energy still.
 
 //uu0 - original cons. qty
 //uu -- current iteration
@@ -558,7 +565,7 @@ static FTYPE compute_dt(FTYPE *CUf, FTYPE dtin)
 
 // compute changes to U (both T and R) using implicit method
 // KORALTODO: If doing implicit, should also add geometry source term that can sometimes be stiff.  Would require inverting sparse 8x8 matrix (or maybe 6x6 since only r-\theta for SPC).  Could be important for very dynamic radiative flows.
-static int koral_source_rad_implicit(int *eomtype, FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother ,FTYPE (*dUcomp)[NPR])
+static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother ,FTYPE (*dUcomp)[NPR])
 {
   int i1,i2,i3,iv,ii,jj,kk,pliter,sc;
   int pl;
@@ -570,7 +577,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pin, FTYPE *Uiin, FTYP
   FTYPE f1[NPR],f1norm[NPR],f1report[NPR],f3report[NPR],lowestfreportf1[NPR],lowestfreportf3[NPR];
   FTYPE uubackup[NPR]={0},ppbackup[NPR]={0};
   FTYPE radsource[NPR], deltas[NPR]; 
-  extern int mathematica_report_check(int failtype, long long int failnum, int gotfirstnofail, FTYPE realdt,struct of_geom *ptrgeom, FTYPE *ppfirst, FTYPE *pp, FTYPE *pin, FTYPE *uu0, FTYPE *uu, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_state *q, FTYPE *dUother);
+  extern int mathematica_report_check(int failtype, long long int failnum, int gotfirstnofail, FTYPE errorabs, int iters, FTYPE realdt,struct of_geom *ptrgeom, FTYPE *ppfirst, FTYPE *pp, FTYPE *pb, FTYPE *piin, FTYPE *uu0, FTYPE *uu, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_state *q, FTYPE *dUother);
 
   int eomtypelocal=*eomtype; // default choice
   // override default and selection of eomtype itself right now if error function will be entropy-based always.
@@ -622,7 +629,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pin, FTYPE *Uiin, FTYP
   gotbest=0;
   DLOOPA(jj) lowestfreportf1[erefU[jj]]=BIG;
   DLOOPA(jj) lowestfreportf3[erefU[jj]]=BIG;
-  // setup locally-used ppfirst that can pass back as pin if good solution
+  // setup locally-used ppfirst that can pass back as pb if good solution
   int gotfirstnofail=0;
   FTYPE ppfirst[NPR];
 
@@ -649,8 +656,6 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pin, FTYPE *Uiin, FTYP
 
 
 
-
-
 #define GETDEFAULTFAILURESTATE 1 // 1 was normal before.
   // FUCK: Instead of doing this, just keep inversion error from previously as stored in pflag.  So don't reset pflag elsewhere in fixup_utoprim() for elsewhere
 
@@ -668,7 +673,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pin, FTYPE *Uiin, FTYP
     int failreturn;
     int finalstep = 1;
     FTYPE prtest[NPR];
-    PLOOP(pliter,pl) prtest[pl]=pin[pl]; // initial guess
+    PLOOP(pliter,pl) prtest[pl]=piin[pl]; // initial guess (should be easy with piin=ppin(Uiin))
     int doradonly=0;
     eomtypelocal=*eomtype; // stick with default choice so far
     failreturnallowable=Utoprimgen_failwrapper(doradonly,showmessages,allowlocalfailurefixandnoreport, finalstep, &eomtypelocal, EVOLVEUTOPRIM, UNOTHING, Uiin, ptrgeom, prtest, &newtonstats);
@@ -682,6 +687,11 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pin, FTYPE *Uiin, FTYP
     if(failreturnallowable==UTOPRIMGENWRAPPERRETURNNOFAIL) gotfirstnofail=1;
     else gotfirstnofail=0;
     failreturnallowablefirst=failreturnallowable;
+
+    //    if(myid==5 && nstep==1 && steppart==0 && ptrgeom->i==19 && ptrgeom->j==15){
+    //      PLOOP(pliter,pl) dualfprintf(fail_file,"pl=%d prtest=%21.15g Uiin=%21.15g\n",pl,prtest[pl],Uiin[pl]);
+    //    }
+
   }
   else{
     failreturnallowablefirst=failreturnallowable;
@@ -705,7 +715,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pin, FTYPE *Uiin, FTYP
     int failreturn;
     int finalstep = 1;
     FTYPE prtest[NPR];
-    PLOOP(pliter,pl) prtest[pl]=pin[pl]; // initial guess
+    PLOOP(pliter,pl) prtest[pl]=pb[pl]; // initial guess
     int doradonly=0;
     eomtypelocal=*eomtype; // stick with default choice so far
     failreturn=Utoprimgen_failwrapper(doradonly,showmessages,allowlocalfailurefixandnoreport, finalstep, &eomtypelocal, EVOLVEUTOPRIM, UNOTHING, uu0, ptrgeom, prtest, &newtonstats);
@@ -719,14 +729,14 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pin, FTYPE *Uiin, FTYP
     // normal behavior, where uu0 has no known primitive inversion yet.
     PLOOP(pliter,pl){
       uu[pl] = uu0[pl];
-      ppfirst[pl] = pp[pl] = pp0[pl] = pin[pl];
+      ppfirst[pl] = pp[pl] = pp0[pl] = pb[pl];
     }
   }
   else{
     // then (not recommended) just using Uiin as uu0 .  KORALNOTE: But uu0 reset later anyways.
     PLOOP(pliter,pl){
       uu[pl] = uu0[pl] = Uiin[pl];
-      ppfirst[pl] = pp[pl] = pp0[pl] = pin[pl];
+      ppfirst[pl] = pp[pl] = pp0[pl] = piin[pl];
     }
   }  
 
@@ -835,7 +845,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pin, FTYPE *Uiin, FTYP
       failreturn=f_implicit_lab(iter, failreturnallowableuse, whichcall,showmessages, allowlocalfailurefixandnoreport, &eomtypelocal, pp, uu0, uu, fracdtG*realdt, ptrgeom, f1, f1norm); // modifies uu and pp
       if(failreturn){
 
-#define BACKUPRELEASEFAIL0 (1E-5)
+#define BACKUPRELEASEFAIL0 (1E-4)
 #define BACKUPRELEASEFAIL1 (1E-6)
 #define BACKUPRELEASEFAIL2 (1E-7)
         // if backing up alot, then allow same failure as original Uiin in hopes that can recover that way (otherwise would have hoped would recover via flux update to Uiin)
@@ -907,9 +917,9 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pin, FTYPE *Uiin, FTYP
       }
     }// end loop over f1iter
     if(f1iter==MAXF1TRIES){
-      if(debugfail>=2) dualfprintf(fail_file,"Reached MAXF1TRIES: nstep=%ld steppart=%d ijk=%d %d %d : iter=%d\n",nstep,steppart,ptrgeom->i,ptrgeom->j,ptrgeom->k,iter);
+      if(debugfail>=2) dualfprintf(fail_file,"Reached MAXF1TRIES: fracdtuu0=%g nstep=%ld steppart=%d ijk=%d %d %d : iter=%d\n",fracdtuu0,nstep,steppart,ptrgeom->i,ptrgeom->j,ptrgeom->k,iter);
       failnum++;
-      mathematica_report_check(0, failnum, gotfirstnofail, realdt, ptrgeom, ppfirst,pp,pin,uu0,uu,Uiin,Ufin, CUf, q, dUother);
+      mathematica_report_check(0, failnum, gotfirstnofail, BIG, iter, realdt, ptrgeom, ppfirst,pp,pb,piin,uu0,uu,Uiin,Ufin, CUf, q, dUother);
       if(doingit==1) myexit(10000000); // DEBUG
       // Note that if inversion reduces to entropy or cold, don't fail, so passes until reached this point.  But convergence can be hard if flipping around which EOMs for the inversion are actually used.
       return(1);
@@ -1169,6 +1179,11 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pin, FTYPE *Uiin, FTYP
 
       if(convreturnf1allow){
         if(showmessages && debugfail>=2) dualfprintf(fail_file,"iter>IMPMAXITER=%d : iter exceeded in solve_implicit_lab().  But f1 was allowed error. checkconv=%d (if checkconv=0, could be issue!) : %g %g %g %g : %g %g %g %g : errorabs=%g : %g %g %g\n",IMPMAXITER,checkconv,f1report[erefU[0]],f1report[erefU[1]],f1report[erefU[2]],f1report[erefU[3]],lowestfreportf1[erefU[0]],lowestfreportf1[erefU[1]],lowestfreportf1[erefU[2]],lowestfreportf1[erefU[3]],errorabsf1,fracdtuu0,fracuup,fracdtG);
+        if(REPORTMAXITERALLOWED){
+          failnum++;
+          mathematica_report_check(6, failnum, gotfirstnofail, errorabsf1, iter, realdt, ptrgeom, ppfirst,pp,pb,piin,uu0,uu,Uiin,Ufin, CUf, q, dUother);
+        }
+
         break;
       }
       else{
@@ -1179,7 +1194,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pin, FTYPE *Uiin, FTYP
           dualfprintf(fail_file,"checkconv=%d failreturnallowable=%d: %g %g %g %g : %g %g %g %g\n",checkconv,failreturnallowable,f1report[erefU[0]],f1report[erefU[1]],f1report[erefU[2]],f1report[erefU[3]],lowestfreportf1[erefU[0]],lowestfreportf1[erefU[1]],lowestfreportf1[erefU[2]],lowestfreportf1[erefU[3]]);
           if(1||showmessages){
             failnum++;
-            mathematica_report_check(1, failnum, gotfirstnofail, realdt, ptrgeom, ppfirst,pp,pin,uu0,uu,Uiin,Ufin, CUf, q, dUother);
+            mathematica_report_check(1, failnum, gotfirstnofail, errorabsf1, iter, realdt, ptrgeom, ppfirst,pp,pb,piin,uu0,uu,Uiin,Ufin, CUf, q, dUother);
             if(doingit==1) myexit(100000000); // DEBUG
           }
         }        
@@ -1209,35 +1224,35 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pin, FTYPE *Uiin, FTYP
 
 
 
-
-  //////////////////////////
-  //
-  // sanity check on error, and final inversion
-  // can't just check (uup-uu)/(|uu|-|uup|) because uup and uu  might diverge, leading to huge G, while uup-uu might be similar enough.
-  // In that case, also using f1 and f1norm not good enough.
-  // Have to compare with static norm
-  //
-  ////////////////////////
-  int whichcall=1;
-  //  eomtypelocal=*eomtype; // re-chose default each time. No, stick with what f1 (last call to f1) chose
-  int fakeiter=1;
-  failreturn=f_implicit_lab(fakeiter,failreturnallowableuse, whichcall,showmessages, allowlocalfailurefixandnoreport, &eomtypelocal, pp, uu0, uu, fracdtG*realdt, ptrgeom, f1, f1norm); // modifies uu and pp
-  // overwrite f1norm with static choice to avoid run-away G
-  jj=TT; f1norm[erefU[jj]]=MAX(pin[PRAD0],pin[UU]);
-  SLOOPA(jj) f1norm[erefU[jj]]=MAX(pin[PRAD0],pin[UU])/sqrt(fabs(ptrgeom->gcon[GIND(jj,jj)]));  // make into conserved type: R^t_\nu ~ {prad0,uu} / sqrt(gcon[nu,nu])
-  int dimtypef=DIMTYPEFCONS; // 0 = conserved R^t_\nu type, 1 = primitive (u,v^i) type, i.e. v^i has no energy density term
-  int convreturn=f_error_check(showmessages, showmessagesheavy, iter, IMPALLOWCONV,realdt,dimtypef,f1,f1norm,f1report,Uiin,uu0,uu,ptrgeom);
-  errorabsf1=0.0;     DLOOPA(jj) errorabsf1     += fabs(f1report[erefU[jj]]);
-  if(convreturn==0){
-    if(debugfail>=2){
-      dualfprintf(fail_file,"Thought was good error (gotbackup=%d : %g %g %g), but recheck showed otherwise: nstep=%ld steppart=%d ijk=%d %d %d\n",gotbackup,pp[RHO],pp[UU],pp[PRAD0],nstep,steppart,ptrgeom->i,ptrgeom->j,ptrgeom->k);
-      DLOOPA(jj) dualfprintf(fail_file,"Issue with jj=%d %g %g %g : %g %g\n",jj,f1[erefU[jj]],f1norm[erefU[jj]],f1report[erefU[jj]],uup[irefU[jj]],uu[irefU[jj]]);
-      failnum++;
-      mathematica_report_check(4, failnum, gotfirstnofail, realdt, ptrgeom, ppfirst,pp,pin,uu0,uu,Uiin,Ufin, CUf, q, dUother);
+  if(DOSANITYCHECK){
+    //////////////////////////
+    //
+    // sanity check on error, and final inversion
+    // can't just check (uup-uu)/(|uu|-|uup|) because uup and uu  might diverge, leading to huge G, while uup-uu might be similar enough.
+    // In that case, also using f1 and f1norm not good enough.
+    // Have to compare with static norm
+    //
+    ////////////////////////
+    int whichcall=1;
+    //  eomtypelocal=*eomtype; // re-chose default each time. No, stick with what f1 (last call to f1) chose
+    int fakeiter=1;
+    failreturn=f_implicit_lab(fakeiter,failreturnallowableuse, whichcall,showmessages, allowlocalfailurefixandnoreport, &eomtypelocal, pp, uu0, uu, fracdtG*realdt, ptrgeom, f1, f1norm); // modifies uu and pp
+    // overwrite f1norm with static choice to avoid run-away G
+    jj=TT; f1norm[erefU[jj]]=MAX(pb[PRAD0],pb[UU]);
+    SLOOPA(jj) f1norm[erefU[jj]]=MAX(pb[PRAD0],pb[UU])/sqrt(fabs(ptrgeom->gcon[GIND(jj,jj)]));  // make into conserved type: R^t_\nu ~ {prad0,uu} / sqrt(gcon[nu,nu])
+    int dimtypef=DIMTYPEFCONS; // 0 = conserved R^t_\nu type, 1 = primitive (u,v^i) type, i.e. v^i has no energy density term
+    int convreturn=f_error_check(showmessages, showmessagesheavy, iter, IMPALLOWCONV,realdt,dimtypef,f1,f1norm,f1report,Uiin,uu0,uu,ptrgeom);
+    errorabsf1=0.0;     DLOOPA(jj) errorabsf1     += fabs(f1report[erefU[jj]]);
+    if(convreturn==0){
+      if(debugfail>=2){
+        dualfprintf(fail_file,"Thought was good error (gotbackup=%d : %g %g %g), but recheck showed otherwise: nstep=%ld steppart=%d ijk=%d %d %d\n",gotbackup,pp[RHO],pp[UU],pp[PRAD0],nstep,steppart,ptrgeom->i,ptrgeom->j,ptrgeom->k);
+        DLOOPA(jj) dualfprintf(fail_file,"Issue with jj=%d %g %g %g : %g %g\n",jj,f1[erefU[jj]],f1norm[erefU[jj]],f1report[erefU[jj]],uup[irefU[jj]],uu[irefU[jj]]);
+        failnum++;
+        mathematica_report_check(4, failnum, gotfirstnofail, errorabsf1, iter, realdt, ptrgeom, ppfirst,pp,pb,piin,uu0,uu,Uiin,Ufin, CUf, q, dUother);
+      }
+      return(1);
     }
-    return(1);
   }
-
 
   /////////////
   //
@@ -1280,10 +1295,10 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pin, FTYPE *Uiin, FTYP
   //
   // save better guess for later inversion from this inversion
   // pp was modified by f_implicit_lab(f1,pp) with output from inversion returned through pp0
-  // only use pp if successful with implicit method, since if not successful can be various bad reasons with no good pin
+  // only use pp if successful with implicit method, since if not successful can be various bad reasons with no good pb
   //
   ////////////////
-  PLOOP(pliter,pl) pin[pl]=pp[pl];
+  PLOOP(pliter,pl) pb[pl]=pp[pl];
 
   ///////////
   //
@@ -1358,8 +1373,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pin, FTYPE *Uiin, FTYP
 #define RETURNIMPLICITFAILALLOW 3
 
 // wrapper for koral_source_rad_implicit_perdampstrategy()
-// CHANGED: pin (if successful), dUcomp[RADSOURCE] (if successful)
-static int koral_source_rad_implicit_new(int *eomtype, FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother ,FTYPE (*dUcomp)[NPR])
+// CHANGED: pb (if successful), dUcomp[RADSOURCE] (if successful)
+static int koral_source_rad_implicit_new(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother ,FTYPE (*dUcomp)[NPR])
 {
   int failreturn;
 #define NUMDAMPSTRATEGY (12)
@@ -1375,7 +1390,7 @@ static int koral_source_rad_implicit_new(int *eomtype, FTYPE *pin, FTYPE *Uiin, 
   int impmaxiter;
   FTYPE errorabsbest=BIG;
   FTYPE radsource[NPR]={0},radsourcebest[NPR]={0};
-  FTYPE pinsource[NPR]={0},pinsourcebest[NPR]={0};
+  FTYPE pbsource[NPR]={0},pbsourcebest[NPR]={0};
   int sc;
   int pliter,pl;
   int returntype;
@@ -1400,7 +1415,7 @@ static int koral_source_rad_implicit_new(int *eomtype, FTYPE *pin, FTYPE *Uiin, 
 
   // get tau to know how hard should try for implicit solver.  The higher the tau, the harder it is, but the more likely a problem if innacurate solution (even accurate to 1E-10 is not good enough!)
   FTYPE tautot[NDIM],tautotmax;
-  calc_tautot(pin, ptrgeom, tautot, &tautotmax);
+  calc_tautot(pb, ptrgeom, tautot, &tautotmax);
 #define TAUIMPLIMIT (0.05)
   if(tautotmax>=TAUIMPLIMIT){
     imptryconvarray[0]=IMPTRYCONVHIGHTAU;
@@ -1418,8 +1433,8 @@ static int koral_source_rad_implicit_new(int *eomtype, FTYPE *pin, FTYPE *Uiin, 
     
 #if(1)
   impmaxiter=IMPMAXITER2;
-  //    failreturn=koral_source_rad_implicit_perdampstrategy(1, IMPTRYCONV, IMPALLOWCONV, eomtype, pin, Uiin, Ufin, CUf, ptrgeom, q, dUother, radsource, &errorabs, &iterreturn, &returntype);
-  failreturn=koral_source_rad_implicit_perdampstrategy(2, IMPTRYCONV, IMPALLOWCONV, impmaxiter, eomtype, pin, Uiin, Ufin, CUf, ptrgeom, q, dUother, radsource, &errorabs, &iterreturn, &returntype);
+  //    failreturn=koral_source_rad_implicit_perdampstrategy(1, IMPTRYCONV, IMPALLOWCONV, eomtype, pb, piin, Uiin, Ufin, CUf, ptrgeom, q, dUother, radsource, &errorabs, &iterreturn, &returntype);
+  failreturn=koral_source_rad_implicit_perdampstrategy(2, IMPTRYCONV, IMPALLOWCONV, impmaxiter, eomtype, pb, piin, Uiin, Ufin, CUf, ptrgeom, q, dUother, radsource, &errorabs, &iterreturn, &returntype);
   if(failreturn==0){
     sc = RADSOURCE;
     PLOOP(pliter,pl){
@@ -1437,13 +1452,13 @@ static int koral_source_rad_implicit_new(int *eomtype, FTYPE *pin, FTYPE *Uiin, 
     impmaxiter=impmaxiterarray[strati];
 
     returntype=RETURNIMPLICITFAIL;//default
-    PLOOP(pliter,pl) pinsource[pl]=pin[pl]; // reset to defalut input
-    failreturn=koral_source_rad_implicit_perdampstrategy(3, imptryconv, impallowconv, impmaxiter,pinsource, eomtype, Uiin, Ufin, CUf, ptrgeom, q, dUother, radsource, &errorabs, &iterreturn, &returntype);
+    PLOOP(pliter,pl) pbsource[pl]=pb[pl]; // reset to defalut input
+    failreturn=koral_source_rad_implicit_perdampstrategy(3, imptryconv, impallowconv, impmaxiter, eomtype,pbsource, piin, Uiin, Ufin, CUf, ptrgeom, q, dUother, radsource, &errorabs, &iterreturn, &returntype);
     itertotal+=iterreturn;
 
     returntype=RETURNIMPLICITFAIL;//default
-    PLOOP(pliter,pl) pinsource[pl]=pin[pl]; // reset to defalut input
-    failreturn=koral_source_rad_implicit_perdampstrategy(1, imptryconv, impallowconv, impmaxiter, eomtype, pinsource, Uiin, Ufin, CUf, ptrgeom, q, dUother, radsource, &errorabs, &iterreturn, &returntype);
+    PLOOP(pliter,pl) pbsource[pl]=pb[pl]; // reset to defalut input
+    failreturn=koral_source_rad_implicit_perdampstrategy(1, imptryconv, impallowconv, impmaxiter, eomtype, pbsource, piin, Uiin, Ufin, CUf, ptrgeom, q, dUother, radsource, &errorabs, &iterreturn, &returntype);
     itertotal+=iterreturn;
 
     if(failreturn==0){
@@ -1453,7 +1468,7 @@ static int koral_source_rad_implicit_new(int *eomtype, FTYPE *pin, FTYPE *Uiin, 
         errorabsbest=errorabs;
         PLOOP(pliter,pl){
           radsourcebest[pl]=radsource[pl];
-          pinsourcebest[pl]=pinsource[pl];
+          pbsourcebest[pl]=pbsource[pl];
         }
       }
      
@@ -1473,7 +1488,7 @@ static int koral_source_rad_implicit_new(int *eomtype, FTYPE *pin, FTYPE *Uiin, 
     PLOOP(pliter,pl){
       // store source update in dUcomp for return.
       dUcomp[sc][pl] += radsourcebest[pl];
-      pin[pl]=pinsourcebest[pl];
+      pb[pl]=pbsourcebest[pl];
     }
   }
   else{
@@ -1489,8 +1504,8 @@ static int koral_source_rad_implicit_new(int *eomtype, FTYPE *pin, FTYPE *Uiin, 
     impmaxiter=impmaxiterarray[strati];
 
     returntype=RETURNIMPLICITFAIL;//default
-    PLOOP(pliter,pl) pinsource[pl]=pin[pl]; // reset to defalut input
-    failreturn=koral_source_rad_implicit_perdampstrategy(dampstrategy, imptryconv, impallowconv, impmaxiter, eomtype, pinsource, Uiin, Ufin, CUf, ptrgeom, q, dUother, radsource, &errorabs, &iterreturn, &returntype);
+    PLOOP(pliter,pl) pbsource[pl]=pb[pl]; // reset to defalut input
+    failreturn=koral_source_rad_implicit_perdampstrategy(dampstrategy, imptryconv, impallowconv, impmaxiter, eomtype, pbsource, piin, Uiin, Ufin, CUf, ptrgeom, q, dUother, radsource, &errorabs, &iterreturn, &returntype);
     itertotal+=iterreturn;
 
     if(failreturn==0){
@@ -1499,7 +1514,7 @@ static int koral_source_rad_implicit_new(int *eomtype, FTYPE *pin, FTYPE *Uiin, 
         errorabsbest=errorabs;
         PLOOP(pliter,pl){
           radsourcebest[pl]=radsource[pl];
-          pinsourcebest[pl]=pinsource[pl];
+          pbsourcebest[pl]=pbsource[pl];
         }
         if(strati>0) dualfprintf(fail_file,"new best: nstep=%ld steppart=%d ijk=%d %d %d strati=%d errorabs=%g\n",nstep,steppart,ptrgeom->i,ptrgeom->j,ptrgeom->k,strati,errorabs);
       }
@@ -1517,7 +1532,7 @@ static int koral_source_rad_implicit_new(int *eomtype, FTYPE *pin, FTYPE *Uiin, 
   PLOOP(pliter,pl){
     // store source update in dUcomp for return.
     dUcomp[sc][pl] += radsourcebest[pl];
-    pin[pl]=pinsourcebest[pl];
+    pb[pl]=pbsourcebest[pl];
   }
 
 #endif
@@ -1561,7 +1576,7 @@ static int koral_source_rad_implicit_new(int *eomtype, FTYPE *pin, FTYPE *Uiin, 
 
 // compute changes to U (both T and R) using implicit method
 // KORALTODO: If doing implicit, should also add geometry source term that can sometimes be stiff.  Would require inverting sparse 8x8 matrix (or maybe 6x6 since only r-\theta for SPC).  Could be important for very dynamic radiative flows.
-static int koral_source_rad_implicit_perdampstrategy(int dampstrategy, FTYPE imptryconv, FTYPE impallowconv, int impmaxiter, int *eomtype, FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother ,FTYPE *radsource, FTYPE *errorabs, int *iterreturn, int *returntype)
+static int koral_source_rad_implicit_perdampstrategy(int dampstrategy, FTYPE imptryconv, FTYPE impallowconv, int impmaxiter, int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother ,FTYPE *radsource, FTYPE *errorabs, int *iterreturn, int *returntype)
 {
   int i1,i2,i3,iv,ii,jj,kk,pliter,sc;
   int pl;
@@ -1572,7 +1587,7 @@ static int koral_source_rad_implicit_perdampstrategy(int dampstrategy, FTYPE imp
   FTYPE f1[NPR],f1norm[NPR],f3report[NPR],lowestfreport[NPR];
   FTYPE uubackup[NPR]={0},ppbackup[NPR]={0};
   FTYPE deltas[NPR]; 
-  extern int mathematica_report_check(int failtype, long long int failnum, int gotfirstnofail, FTYPE realdt,struct of_geom *ptrgeom, FTYPE *ppfirst, FTYPE *pp, FTYPE *pin, FTYPE *uu0, FTYPE *uu, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_state *q, FTYPE *dUother);
+  extern int mathematica_report_check(int failtype, long long int failnum, int gotfirstnofail, FTYPE errorabs, int iters, FTYPE realdt,struct of_geom *ptrgeom, FTYPE *ppfirst, FTYPE *pp, FTYPE *pb, FTYPE *piin, FTYPE *uu0, FTYPE *uu, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_state *q, FTYPE *dUother);
 
   FTYPE f3reportuu[NPR];
   int gotbest=0,iterbest=0;
@@ -1628,7 +1643,7 @@ static int koral_source_rad_implicit_perdampstrategy(int dampstrategy, FTYPE imp
   // setup reversion to best solution for uu in case iterations lead to worse error and reach maximum iterations.
   gotbest=0;
   DLOOPA(jj) lowestfreport[erefU[jj]]=BIG;
-  // setup locally-used pp that can pass back as pin if good solution
+  // setup locally-used pp that can pass back as pb if good solution
   int gotfirstnofail=0;
   FTYPE ppfirst[NPR];
 
@@ -1668,7 +1683,7 @@ static int koral_source_rad_implicit_perdampstrategy(int dampstrategy, FTYPE imp
     int failreturn;
     int finalstep = 1;
     FTYPE prtest[NPR];
-    PLOOP(pliter,pl) prtest[pl]=pin[pl]; // initial guess
+    PLOOP(pliter,pl) prtest[pl]=pb[pl]; // initial guess
     int doradonly=0;
     eomtypelocal=*eomtype; // default
     failreturnallowable=Utoprimgen_failwrapper(doradonly,showmessages,allowlocalfailurefixandnoreport, finalstep, &eomtypelocal, EVOLVEUTOPRIM, UNOTHING, Uiin, ptrgeom, prtest, &newtonstats);
@@ -1692,8 +1707,8 @@ static int koral_source_rad_implicit_perdampstrategy(int dampstrategy, FTYPE imp
     // then (not recommended) just using Uiin as uu0
     PLOOP(pliter,pl){
       uu[pl] = uu0[pl] = Uiin[pl];
-      pp[pl] = pp0[pl] = pin[pl];
-      ppfirst[pl] = pin[pl];
+      pp[pl] = pp0[pl] = piin[pl];
+      ppfirst[pl] = piin[pl];
     }
   }  
 
@@ -2137,14 +2152,12 @@ static int koral_source_rad_implicit_perdampstrategy(int dampstrategy, FTYPE imp
     //
     // get source update as "dU" = dU/dt using real dt that used during implicit iterations, and will eventually use to update U in advance.c.
     // apply source update as force
-    PLOOP(pliter,pl) radsource[pl] = 0;
-    DLOOPA(jj) radsource[iotherU[jj]]    = -(uu[irefU[jj]]-uu0[irefU[jj]])/realdt;
-    DLOOPA(jj) radsource[irefU[jj]]      = +(uu[irefU[jj]]-uu0[irefU[jj]])/realdt;
+    PLOOP(pliter,pl) radsource[pl] = +(uu[pl]-uu0[pl])/realdt;
 
     // save better guess for later inversion from this inversion
     // pp was modified by f_implicit_lab(f1,pp) with output from inversion returned through pp0
-    // only use pp if successful with implicit method, since if not successful can be various bad reasons with no good pin
-    PLOOP(pliter,pl) pin[pl]=pp[pl];
+    // only use pp if successful with implicit method, since if not successful can be various bad reasons with no good pb
+    PLOOP(pliter,pl) pb[pl]=pp[pl];
 
     ///////////
     //
@@ -2164,7 +2177,7 @@ static int koral_source_rad_implicit_perdampstrategy(int dampstrategy, FTYPE imp
 
 
   if(*returntype==RETURNIMPLICITFAIL || *returntype==RETURNIMPLICITFAILALLOW){
-    mathematica_report_check(0, failnum, gotfirstnofail, realdt, ptrgeom, ppfirst,pp,pin,uu0,uu,Uiin,Ufin, CUf, q, dUother);
+    mathematica_report_check(0, failnum, gotfirstnofail, *errorabs, iter, realdt, ptrgeom, ppfirst,pp,pb,piin,uu0,uu,Uiin,Ufin, CUf, q, dUother);
     //      if(doingit==1) myexit(10000000); // DEBUG
     // Note that if inversion reduces to entropy or cold, don't fail, so passes until reached this point.  But convergence can be hard if flipping around which EOMs for the inversion are actually used.
   }
@@ -2178,7 +2191,7 @@ static int koral_source_rad_implicit_perdampstrategy(int dampstrategy, FTYPE imp
   
 }
 
-int mathematica_report_check(int failtype, long long int failnum, int gotfirstnofail, FTYPE realdt,struct of_geom *ptrgeom, FTYPE *ppfirst, FTYPE *pp, FTYPE *pin, FTYPE *uu0, FTYPE *uu, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_state *q, FTYPE *dUother)
+int mathematica_report_check(int failtype, long long int failnum, int gotfirstnofail, FTYPE errorabs, int iters, FTYPE realdt,struct of_geom *ptrgeom, FTYPE *ppfirst, FTYPE *pp, FTYPE *pb, FTYPE *piin, FTYPE *uu0, FTYPE *uu, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_state *q, FTYPE *dUother)
 {
   int jj,kk;
   int pliter,pl;
@@ -2188,7 +2201,7 @@ int mathematica_report_check(int failtype, long long int failnum, int gotfirstno
     DLOOP(jj,kk) dualfprintf(fail_file,"gn%d%d=%21.15g\n",jj+1,kk+1,ptrgeom->gcon[GIND(jj,kk)]);
     DLOOP(jj,kk) dualfprintf(fail_file,"gv%d%d=%21.15g\n",jj+1,kk+1,ptrgeom->gcov[GIND(jj,kk)]);
     // shows first pp(uu0)
-    PLOOP(pliter,pl) dualfprintf(fail_file,"pp%d=%21.15g\npin%d=%21.15g\nuu0%d=%21.15g\nuu%d=%21.15g\nuui%d=%21.15g\n",pl,pp[pl],pl,pin[pl],pl,uu0[pl],pl,uu[pl],pl,Uiin[pl]);
+    PLOOP(pliter,pl) dualfprintf(fail_file,"pp%d=%21.15g\npb%d=%21.15g\nuu0%d=%21.15g\nuu%d=%21.15g\nuui%d=%21.15g\n",pl,pp[pl],pl,pb[pl],pl,uu0[pl],pl,uu[pl],pl,Uiin[pl]);
     struct of_state qreport;
     get_state(pp,ptrgeom,&qreport);
     if(EOMRADTYPE!=EOMRADNONE) DLOOPA(jj) dualfprintf(fail_file,"uradcon%d=%21.15g\nuradcov%d=%21.15g\n",jj,qreport.uradcon[jj],jj,qreport.uradcov[jj]);
@@ -2199,28 +2212,32 @@ int mathematica_report_check(int failtype, long long int failnum, int gotfirstno
     // 2) emacs regexp:  \([0-9]\)e\([-+]*[0-9]+\)   ->   \1*10^(\2)
   }
   else{
-    // 134 things
-    dualfprintf(fail_file,"\nFAILINFO: %d %d %lld %d %21.15g ",failtype,myid,failnum,gotfirstnofail,realdt); // 6
-    DLOOP(jj,kk) dualfprintf(fail_file,"%21.15g ",ptrgeom->gcon[GIND(jj,kk)]); // 16 -> 20
-    DLOOP(jj,kk) dualfprintf(fail_file,"%21.15g ",ptrgeom->gcov[GIND(jj,kk)]); // 16 -> 36
-    // shows pp, but could also output ppfirst(uu0)
-    PLOOP(pliter,pl) dualfprintf(fail_file,"%21.15g %21.15g %21.15g %21.15g %21.15g ",pp[pl],pin[pl],uu0[pl],uu[pl],Uiin[pl]);  // 5*13=65 -> 103
-    struct of_state qreport;
-    get_state(pp,ptrgeom,&qreport);
-    if(EOMRADTYPE!=EOMRADNONE) DLOOPA(jj) dualfprintf(fail_file,"%21.15g %21.15g ",qreport.uradcon[jj],qreport.uradcov[jj]); // 4*2=8
+    // 181 things
+    dualfprintf(fail_file,"\nFAILINFO: %d %d %lld %d %21.15g %d %21.15g %lld %d %21.15g ",failtype,myid,failnum,gotfirstnofail,errorabs,iters,realdt,nstep,steppart,gam); // 8
+    DLOOP(jj,kk) dualfprintf(fail_file,"%21.15g ",ptrgeom->gcon[GIND(jj,kk)]); // 16
+    DLOOP(jj,kk) dualfprintf(fail_file,"%21.15g ",ptrgeom->gcov[GIND(jj,kk)]); // 16
+    PLOOP(pliter,pl) dualfprintf(fail_file,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g ",pp[pl],ppfirst[pl],pb[pl],piin[pl],uu0[pl],uu[pl],Uiin[pl]);  // 7*13
+    struct of_state qpp;
+    get_state(pp,ptrgeom,&qpp);
+    if(EOMRADTYPE!=EOMRADNONE) DLOOPA(jj) dualfprintf(fail_file,"%21.15g %21.15g ",qpp.uradcon[jj],qpp.uradcov[jj]); // 4*2=8
     else DLOOPA(jj) dualfprintf(fail_file,"%21.15g %21.15g ",0.0,0.0);
-    DLOOPA(jj) dualfprintf(fail_file,"%21.15g %21.15g ",qreport.ucon[jj],qreport.ucov[jj]); // 4*2=8
-    struct of_state qin;
-    get_state(pin,ptrgeom,&qin);
-    if(EOMRADTYPE!=EOMRADNONE) DLOOPA(jj) dualfprintf(fail_file,"%21.15g %21.15g ",qin.uradcon[jj],qin.uradcov[jj]); // 4*2=8
+    DLOOPA(jj) dualfprintf(fail_file,"%21.15g %21.15g ",qpp.ucon[jj],qpp.ucov[jj]); // 4*2=8
+    struct of_state qpb;
+    get_state(pb,ptrgeom,&qpb);
+    if(EOMRADTYPE!=EOMRADNONE) DLOOPA(jj) dualfprintf(fail_file,"%21.15g %21.15g ",qpb.uradcon[jj],qpb.uradcov[jj]); // 4*2=8
     else dualfprintf(fail_file,"%21.15g %21.15g ",0.0,0.0);
-    DLOOPA(jj) dualfprintf(fail_file,"%21.15g %21.15g ",qin.ucon[jj],qin.ucov[jj]); // 4*2=8
+    DLOOPA(jj) dualfprintf(fail_file,"%21.15g %21.15g ",qpb.ucon[jj],qpb.ucov[jj]); // 4*2=8
+    struct of_state qpiin;
+    get_state(piin,ptrgeom,&qpiin);
+    if(EOMRADTYPE!=EOMRADNONE) DLOOPA(jj) dualfprintf(fail_file,"%21.15g %21.15g ",qpiin.uradcon[jj],qpiin.uradcov[jj]); // 4*2=8
+    else dualfprintf(fail_file,"%21.15g %21.15g ",0.0,0.0);
+    DLOOPA(jj) dualfprintf(fail_file,"%21.15g %21.15g ",qpiin.ucon[jj],qpiin.ucov[jj]); // 4*2=8
     dualfprintf(fail_file,"\n");
 
     /////////////
     dualfprintf(fail_file,"\nFAILREPEATABLE: %d %d %lld : ",failtype,myid,failnum);
-    dualfprintf(fail_file,"dt=%21.15g;CUf[2]=%21.15g;",realdt,CUf[2]);
-    PLOOP(pliter,pl) dualfprintf(fail_file,"pin[%d]=%21.15g;Uiin[%d]=%21.15g;Ufin[%d]=%21.15g;dUother[%d]=%21.15g;",pl,pin[pl],pl,Uiin[pl],pl,Ufin[pl],pl,dUother[pl]);
+    dualfprintf(fail_file,"dt=%21.15g;CUf[2]=%21.15g;gam=%21.15g;",realdt,CUf[2],gam);
+    PLOOP(pliter,pl) dualfprintf(fail_file,"pp[%d]=%21.15g;ppfirst[%d]=%21.15g;pb[%d]=%21.15g;piin[%d]=%21.15g;Uiin[%d]=%21.15g;Ufin[%d]=%21.15g;dUother[%d]=%21.15g;",pl,pp[pl],pl,ppfirst[pl],pl,pb[pl],pl,piin[pl],pl,Uiin[pl],pl,Ufin[pl],pl,dUother[pl]);
      // ptrgeom stuff
     DLOOP(jj,kk) dualfprintf(fail_file,"ptrgeom->gcov[GIND(%d,%d)]=%21.15g;ptrgeom->gcon[GIND(%d,%d)]=%21.15g;",jj,kk,ptrgeom->gcov[GIND(jj,kk)],jj,kk,ptrgeom->gcon[GIND(jj,kk)]);
     DLOOPA(jj) dualfprintf(fail_file,"ptrgeom->gcovpert[%d]=%21.15g;ptrgeom->beta[%d]=%21.15g;",jj,ptrgeom->gcovpert[jj],jj,ptrgeom->beta[jj]);
@@ -2725,7 +2742,7 @@ static int f_implicit_lab_old(int failreturnallowable, int whichcall, int showme
 
 // calculating approximate Jacobian: dUresid(dUrad,G(Urad))/dUrad = dy(x)/dx
 // then compute inverse Jacobian
-static int get_implicit_iJ_old(int failreturnallowableuse, int showmessages, int showmessagesheavy, int allowlocalfailurefixandnoreport, FTYPE impepsjac, FTYPE *uu, FTYPE *uup, FTYPE *uu0, FTYPE *pin, FTYPE fracdtG, FTYPE realdt, struct of_geom *ptrgeom, FTYPE *f1, FTYPE *f1norm, FTYPE (*iJ)[NDIM])
+static int get_implicit_iJ_old(int failreturnallowableuse, int showmessages, int showmessagesheavy, int allowlocalfailurefixandnoreport, FTYPE impepsjac, FTYPE *uu, FTYPE *uup, FTYPE *uu0, FTYPE *pb, FTYPE fracdtG, FTYPE realdt, struct of_geom *ptrgeom, FTYPE *f1, FTYPE *f1norm, FTYPE (*iJ)[NDIM])
 {
   int ii,jj;
   FTYPE J[NDIM][NDIM],f2[NDIM],f2norm[NDIM];
@@ -2736,10 +2753,10 @@ static int get_implicit_iJ_old(int failreturnallowableuse, int showmessages, int
   SLOOPA(jj) sqrtgcov[jj] = sqrt(fabs(ptrgeom->gcov[GIND(jj,jj)]));
 
 
-  // ensure pin doesn't get modified by del-shifts to get Jacobian, which can change primitives to order unity at high radiation gamma
-  FTYPE pinjac[NPR];
+  // ensure pb doesn't get modified by del-shifts to get Jacobian, which can change primitives to order unity at high radiation gamma
+  FTYPE pbjac[NPR];
   int pliter,pl;
-  PLOOP(pliter,pl) pinjac[pl]=pin[pl];
+  PLOOP(pliter,pl) pbjac[pl]=pb[pl];
 
 
   int failreturn;
@@ -2766,13 +2783,13 @@ static int get_implicit_iJ_old(int failreturnallowableuse, int showmessages, int
         // get dUresid for this offset uu
         int whichcall=2;
         if(0){
-          failreturn=f_implicit_lab_old(failreturnallowableuse, whichcall,showmessages,allowlocalfailurefixandnoreport, pinjac,uu0,uu,fracdtG*realdt,ptrgeom,f2,f2norm); // old calling old is ok and necessary
+          failreturn=f_implicit_lab_old(failreturnallowableuse, whichcall,showmessages,allowlocalfailurefixandnoreport, pbjac,uu0,uu,fracdtG*realdt,ptrgeom,f2,f2norm); // old calling old is ok and necessary
         }
         else{
           FTYPE f2pl[NPR],f2normpl[NPR];
           int eomtype=EOMDEFAULT;
           int fakeiter=1;
-          failreturn=f_implicit_lab(fakeiter,failreturnallowableuse, whichcall,showmessages,allowlocalfailurefixandnoreport, &eomtype, pinjac,uu0,uu,fracdtG*realdt,ptrgeom,f2pl,f2normpl);
+          failreturn=f_implicit_lab(fakeiter,failreturnallowableuse, whichcall,showmessages,allowlocalfailurefixandnoreport, &eomtype, pbjac,uu0,uu,fracdtG*realdt,ptrgeom,f2pl,f2normpl);
           int kk;
           DLOOPA(kk){
             f2[kk]=f2pl[erefU[kk]];
@@ -3304,7 +3321,7 @@ static void get_dtsub(int method, FTYPE *pr, struct of_state *q, FTYPE *Ui, FTYP
 // Only change dUcomp, and can overwrite prnew, Unew, and qnew since "prepare" function isolated original values already
 static int source_explicit(int whichsc, int whichradsourcemethod, int methoddtsub,int *eomtype,
                            void (*sourcefunc)(int methoddtsub, FTYPE *pr, FTYPE *Ui, FTYPE *Uf, FTYPE *dUother, FTYPE *CUf, FTYPE *Gpl, struct of_geom *ptrgeom, FTYPE *dtsub),
-                           FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother, FTYPE (*dUcomp)[NPR])
+                           FTYPE *pb, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother, FTYPE (*dUcomp)[NPR])
 {
   int pliter, pl;
 
@@ -3334,15 +3351,15 @@ static int source_explicit(int whichsc, int whichradsourcemethod, int methoddtsu
   //
   ///////////////
 
-  FTYPE pin0[NPR],Uiin0[NPR];
+  FTYPE pb0[NPR],Uiin0[NPR];
   FTYPE prnew[NPR],Unew[NPR],Unew0[NPR];
   FTYPE prforG[NPR];
   struct of_state q0,qnew;
   FTYPE Gpl[NPR];
   FTYPE chi;
 
-  // backup pin, Uiin, and q and setup "new" versions to be iterated
-  PLOOP(pliter,pl) prnew[pl]=pin0[pl]=pin[pl];
+  // backup pb, Uiin, and q and setup "new" versions to be iterated
+  PLOOP(pliter,pl) prnew[pl]=pb0[pl]=pb[pl];
   PLOOP(pliter,pl) Unew[pl]=Uiin0[pl]=Uiin[pl];
   qnew=q0=*q;
 
@@ -3404,7 +3421,7 @@ static int source_explicit(int whichsc, int whichradsourcemethod, int methoddtsu
           // recompute use of full dU so Unew0 is updated
           PLOOP(pliter,pl) Unew[pl]=Unew0[pl]=UFSET(CUf,fracdtuu0*dt,Uiin[pl],Ufin[pl],dUother[pl],0.0);
           // reset prnew
-          PLOOP(pliter,pl) prnew[pl]=pin0[pl]=pin[pl];
+          PLOOP(pliter,pl) prnew[pl]=pb0[pl]=pb[pl];
         }
             
       }
@@ -3431,10 +3448,10 @@ static int source_explicit(int whichsc, int whichradsourcemethod, int methoddtsu
   //  dualfprintf(fail_file,"dtsubforG=%g\n",dtsubforG);
 
   if(!(whichradsourcemethod==SOURCEMETHODEXPLICIT || whichradsourcemethod==SOURCEMETHODEXPLICITREVERSIONFROMIMPLICIT || whichradsourcemethod==SOURCEMETHODEXPLICITCHECKSFROMIMPLICIT)){
-    // then if sub-cycling, really want to start with beginning pin so consistently do sub-steps for effective flux force and full-pl fluid force in time.
+    // then if sub-cycling, really want to start with beginning pb so consistently do sub-steps for effective flux force and full-pl fluid force in time.
     // But if end-up doing just one explcit step, then probably wanted to use time-advanced prnew as estimate.  That gives more stable result.
     // then prforG is only used to ensure not getting bad guess for whether *should* sub-cycle.
-    PLOOP(pliter,pl) prnew[pl]=pin[pl];
+    PLOOP(pliter,pl) prnew[pl]=pb[pl];
   }
 
 
@@ -3643,7 +3660,7 @@ static int source_explicit(int whichsc, int whichradsourcemethod, int methoddtsu
   PLOOP(pliter,pl) dUcomp[whichsc][pl] += sourcepl[pl];
 
   // save better guess for later inversion from this inversion
-  PLOOP(pliter,pl) pin[pl]=prnew[pl];
+  PLOOP(pliter,pl) pb[pl]=prnew[pl];
 
   // save eomtype settled on
   *eomtype=eomtypelocal;
@@ -3664,7 +3681,7 @@ static int source_explicit(int whichsc, int whichradsourcemethod, int methoddtsu
 // NOTE: source_explicit() takes as first argument a form of function like general koral_source_rad_calc() .  It doesn't have to be just used for radiation.
 // NOTE: koral_source_rad_implicit() currently only works for radiation where only 4 equations involved since 4-force of rad affects exactly mhd.  So only invert 4x4 matrix.
 // For recursion of other consistencies, should keep koral_source_rad() same function arguments as explicit and implicit functions.  Once make koral_source_rad() general, can use this function as general source function instead of it getting called just for radiation.
-int koral_source_rad(int whichradsourcemethod, FTYPE *pin, FTYPE *pf, int *didreturnpf, int *eomtype, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *dUother, FTYPE (*dUcomp)[NPR])
+int koral_source_rad(int whichradsourcemethod, FTYPE *piin, FTYPE *pb, FTYPE *pf, int *didreturnpf, int *eomtype, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *dUother, FTYPE (*dUcomp)[NPR])
 {
   int pliter,pl;
   int showmessages=0; // 0 ok if not debugging and think everything works.
@@ -3676,12 +3693,13 @@ int koral_source_rad(int whichradsourcemethod, FTYPE *pin, FTYPE *pf, int *didre
 
 
   // make code use "orig" values that below can modify, so return preserves no changes to these no matter what internal functions do.
-  // save pin, Uiin, Ufin, and q to avoid being modified upon return
-  FTYPE pinorig[NPR],Uiinorig[NPR],Ufinorig[NPR];
+  // save pb, Uiin, Ufin, and q to avoid being modified upon return
+  FTYPE pborig[NPR],piinorig[NPR],Uiinorig[NPR],Ufinorig[NPR];
   struct of_state qorigmem;
   struct of_state *qorig=&qorigmem;
   PLOOP(pliter,pl){
-    pinorig[pl]=pin[pl];
+    pborig[pl]=pb[pl];
+    piinorig[pl]=piin[pl];
     Uiinorig[pl]=Uiin[pl];
     Ufinorig[pl]=Ufin[pl];
   }
@@ -3714,7 +3732,7 @@ int koral_source_rad(int whichradsourcemethod, FTYPE *pin, FTYPE *pf, int *didre
     int whichsc = RADSOURCE;
     // try explicit (with or without sub-cycling)
     //    dualfprintf(fail_file,"Trying explicit: whichradsourcemethod=%d\n",whichradsourcemethod);
-    int failexplicit=source_explicit(whichsc, whichradsourcemethod,methoddtsub,eomtype,koral_source_dtsub_rad_calc,pinorig, Uiinorig, Ufinorig, CUf, ptrgeom, qorig, dUother, dUcomp);
+    int failexplicit=source_explicit(whichsc, whichradsourcemethod,methoddtsub,eomtype,koral_source_dtsub_rad_calc,pborig, piinorig, Uiinorig, Ufinorig, CUf, ptrgeom, qorig, dUother, dUcomp);
     if(failexplicit==EXPLICITFAILED){
       if(whichradsourcemethod==SOURCEMETHODEXPLICIT || whichradsourcemethod==SOURCEMETHODEXPLICITSUBCYCLE || whichradsourcemethod==SOURCEMETHODEXPLICITREVERSIONFROMIMPLICIT || whichradsourcemethod==SOURCEMETHODEXPLICITSUBCYCLEREVERSIONFROMIMPLICIT){
         // still do explicit anyways, since best can do with the choice of method -- will fail possibly to work if stiff regime, but ok in non-stiff.
@@ -3747,9 +3765,9 @@ int koral_source_rad(int whichradsourcemethod, FTYPE *pin, FTYPE *pf, int *didre
 
     //else explicit succeeded, so just return
     if(whichradsourcemethod==SOURCEMETHODEXPLICITSUBCYCLE || whichradsourcemethod==SOURCEMETHODEXPLICITSUBCYCLEREVERSIONFROMIMPLICIT){
-      // if sub-cycled, then have better pf than pb assumed saved in pinorig[].
+      // if sub-cycled, then have better pf than pb assumed saved in pborig[].
       if(showmessagesheavy && debugfail>=2) dualfprintf(fail_file,"explicit didn't fail. ijk=%d %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
-      PLOOP(pliter,pl) pf[pl]=pinorig[pl];
+      PLOOP(pliter,pl) pf[pl]=pborig[pl];
       *didreturnpf=1;
     }
     return(EXPLICITNOTFAILED);
@@ -3761,12 +3779,12 @@ int koral_source_rad(int whichradsourcemethod, FTYPE *pin, FTYPE *pf, int *didre
   /////////////////
   else if(whichradsourcemethod==SOURCEMETHODIMPLICIT){
  
-    int failimplicit=koral_source_rad_implicit(eomtype, pinorig, Uiinorig, Ufinorig, CUf, ptrgeom, qorig, dUother, dUcomp);
+    int failimplicit=koral_source_rad_implicit(eomtype, pborig, piinorig, Uiinorig, Ufinorig, CUf, ptrgeom, qorig, dUother, dUcomp);
  
     if(failimplicit){
       if(IMPLICITREVERTEXPLICIT){ // single level recusive call (to avoid duplicate confusing code)
         // assume if revert from implicit, then need to do sub-cycles
-        int failexplicit=koral_source_rad(SOURCEMETHODEXPLICITSUBCYCLEREVERSIONFROMIMPLICIT, pinorig, pf, didreturnpf, eomtype, Uiinorig, Ufinorig, CUf, ptrgeom, qorig, dUother, dUcomp);
+        int failexplicit=koral_source_rad(SOURCEMETHODEXPLICITSUBCYCLEREVERSIONFROMIMPLICIT, piinorig, pborig, pf, didreturnpf, eomtype, Uiinorig, Ufinorig, CUf, ptrgeom, qorig, dUother, dUcomp);
         if(failexplicit==EXPLICITFAILED){
           // nothing else to revert to, but just continue and report
           *didreturnpf=0;
@@ -3789,9 +3807,9 @@ int koral_source_rad(int whichradsourcemethod, FTYPE *pin, FTYPE *pf, int *didre
           return(0);
         }
         else{
-          // if sub-cycled, then have better pf than pb assumed saved in pinorig[].
+          // if sub-cycled, then have better pf than pb assumed saved in pborig[].
           if(debugfail>=2) dualfprintf(fail_file,"GOOD: explicit worked while implicit failed (%d): ijk=%d %d %d\n",failexplicit,ptrgeom->i,ptrgeom->j,ptrgeom->k);
-          PLOOP(pliter,pl) pf[pl]=pinorig[pl];
+          PLOOP(pliter,pl) pf[pl]=pborig[pl];
           *didreturnpf=1;
           return(0);
         }
@@ -3806,7 +3824,7 @@ int koral_source_rad(int whichradsourcemethod, FTYPE *pin, FTYPE *pf, int *didre
 
     // no failure in implicit, then just return
     // and if did implicit, then better pf guess
-    PLOOP(pliter,pl) pf[pl]=pinorig[pl];
+    PLOOP(pliter,pl) pf[pl]=pborig[pl];
     *didreturnpf=1;
     //    if(debugfail>=2) dualfprintf(fail_file,"Good: Imlicit good.: ijk=%d %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
     return(0);
@@ -3821,7 +3839,7 @@ int koral_source_rad(int whichradsourcemethod, FTYPE *pin, FTYPE *pf, int *didre
 
     // try explicit (or see if no source at all required)
     // Just check using explicit method, since if sub-cycles required then should just do implicit
-    int failreturn=koral_source_rad(SOURCEMETHODEXPLICITCHECKSFROMIMPLICIT, pinorig, pf, didreturnpf, eomtype, Uiinorig, Ufinorig, CUf, ptrgeom, qorig, dUother, dUcomp);
+    int failreturn=koral_source_rad(SOURCEMETHODEXPLICITCHECKSFROMIMPLICIT, piinorig, pborig, pf, didreturnpf, eomtype, Uiinorig, Ufinorig, CUf, ptrgeom, qorig, dUother, dUcomp);
 
     // determine if still need to do implicit
     // don't set didreturnpf since already was set
@@ -3848,7 +3866,7 @@ int koral_source_rad(int whichradsourcemethod, FTYPE *pin, FTYPE *pf, int *didre
       if(showmessagesheavy && debugfail>=2) dualfprintf(fail_file,"NOTE: Had to take implicit step: %d %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
 
       // one-deep recursive call to implicit scheme
-      return(koral_source_rad(SOURCEMETHODIMPLICIT, pinorig, pf, didreturnpf, eomtype, Uiinorig, Ufinorig, CUf, ptrgeom, qorig, dUother, dUcomp));
+      return(koral_source_rad(SOURCEMETHODIMPLICIT, piinorig, pborig, pf, didreturnpf, eomtype, Uiinorig, Ufinorig, CUf, ptrgeom, qorig, dUother, dUcomp));
     }// end if doimplicit==1
 
   }
@@ -5829,7 +5847,7 @@ static int get_m1closure_urfconrel(int showmessages, int allowlocalfailurefixand
     SLOOPA(jj) globalpin[PRAD1+jj-1] = urfconrel[jj];
 
     // ppfirst is faked as pp
-    mathematica_report_check(3, failnum, *lpflagrad, fakedt, ptrgeom, pp, pp, globalpin, globaluu, globaluu, globaluu, globaluu, fakeCUf, qptr, dUother);
+    mathematica_report_check(3, failnum, *lpflagrad, BIG, -1, fakedt, ptrgeom, pp, pp, pp, globalpin, globaluu, globaluu, globaluu, globaluu, fakeCUf, qptr, dUother);
   }
   //  if(nstep==224) exit(0);
 #endif

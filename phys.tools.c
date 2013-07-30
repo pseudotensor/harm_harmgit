@@ -1395,7 +1395,7 @@ void compute_1plusud0_rel4vel(FTYPE *pr, struct of_geom *geom, struct of_state *
 /* add in source terms to equations of motion */
 // ui and dUriemann in UEVOLVE form
 // assume q(pr) so consistent, but p or ui don't yet account for dUriemann!
-int source(FTYPE *pr, FTYPE *pf, int *didreturnpf, int *eomtype, struct of_geom *ptrgeom, struct of_state *q, FTYPE *ui, FTYPE *uf, FTYPE *CUf, FTYPE *dUriemann, FTYPE (*dUcomp)[NPR], FTYPE *dU)
+int source(FTYPE *pi, FTYPE *pr, FTYPE *pf, int *didreturnpf, int *eomtype, struct of_geom *ptrgeom, struct of_state *q, FTYPE *ui, FTYPE *uf, FTYPE *CUf, FTYPE *dUriemann, FTYPE (*dUcomp)[NPR], FTYPE *dU)
 {
   //  double (*)[8]
   VARSTATIC int i,j,sc;
@@ -1444,14 +1444,14 @@ int source(FTYPE *pr, FTYPE *pf, int *didreturnpf, int *eomtype, struct of_geom 
     PLOOPBONLY(pl){
       // assume already got field update in advance_standard() [as opposed to advance_standard_orig()] and no geometry for field as required for that method.
       // but want to be able to have Ui by itself mean no changes, so that's pr. Uf is only used in some RK methods, that can be pf.  But then want dUother to be so that when using IFSET() with full dt that get pf
-      Ugeomfreei[pl]=pr[pl]; 
+      Ugeomfreei[pl]=pi[pl]; 
       Ugeomfreef[pl]=pf[pl];
       dUother[pl]=dUfromUFSET(CUf,dt,Ugeomfreei[pl],Ugeomfreef[pl],pf[pl]);
     }
     // now sourcephysics() call will have all CENT quantities
   }
 
-  sourcephysics(pr, pf, didreturnpf, eomtype, ptrgeom, q, Ugeomfreei, Ugeomfreef, CUf, dUother, dUcomp);
+  sourcephysics(pi, pr, pf, didreturnpf, eomtype, ptrgeom, q, Ugeomfreei, Ugeomfreef, CUf, dUother, dUcomp);
 
   //////////////////
   //
