@@ -947,23 +947,6 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
 
 
 
-    ///////////////////////
-    //
-    // set backup solution
-    //
-    // avoid arbitrary sucking on thermal energy densities
-    // but only get backup if already below error
-    // at this point, uu and pp are fully up-to-date and consistent
-    //
-    ///////////////////////
-    if(pp[RHO]>=0.0 && pp[UU]>=0.0 && pp[PRAD0]>=0.0){
-      gotbackup=1;
-      PLOOP(pliter,pl){
-        fbackup[pl]=f1[pl];
-        uubackup[pl]=uu[pl];
-        ppbackup[pl]=pp[pl];
-      }
-    }
 
     /////////////////
     //
@@ -999,6 +982,24 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
       PLOOP(pliter,pl) bestpp[pl]=pp[pl];
       DLOOPA(jj) lowestfreportf1[erefU[jj]]=f1report[erefU[jj]];
       gotbest=1;
+    }
+
+    ///////////////////////
+    //
+    // set backup solution
+    //
+    // avoid arbitrary sucking on thermal energy densities
+    // but only get backup if already below error
+    // at this point, uu and pp are fully up-to-date and consistent
+    //
+    ///////////////////////
+    if(pp[RHO]>=0.0 && pp[UU]>=0.0 && pp[PRAD0]>=0.0){
+      gotbackup=1;
+      PLOOP(pliter,pl){
+        fbackup[pl]=f1report[pl];
+        uubackup[pl]=uu[pl];
+        ppbackup[pl]=pp[pl];
+      }
     }
 
 
