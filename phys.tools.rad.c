@@ -275,10 +275,12 @@ int eotherU[NDIM]={UU,U1,U2,U3};
 // The current Erf,u normalization kinda checks whether Erf or u_g are going to have high *relative self* error.
 #define DOSANITYCHECK 0
 
-
-
 // below 1 if reporting cases when MAXITER reached, but allowd error so not otherwise normally reported.
 #define REPORTMAXITERALLOWED 0
+
+// whether to ensure rho and u_g in Jacobian calculation difference do not cross over 0 and stay on same side as origin point.
+#define FORCEJDIFFNOCROSS 1
+
 
 //FUCK: Do basic koral damping if error high or no solution.
 // FUCK: entropy switch condition.
@@ -2429,37 +2431,85 @@ static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int sho
   FTYPE uujac[NPR],ppjac[NPR];
   int pliter,pl;
 
+  ///////////////
+  //
+  // Setup which quantitiy iterating
+  // Scale-out dimensional stuff before forming predel
+  //
+  ///////////////
   // for scaling del's norm.  Applies to time component to make as if like space component.
-  FTYPE upitoup0[NPR];
+  FTYPE upitoup0[NPR], upitoup0U[NPR], upitoup0P[NPR];
   FTYPE x[NPR],xp[NPR],xjac[2][NPR];
   FTYPE velmomscale;
+
+  // U
+  PLOOP(pliter,pl) upitoup0U[pl] = sqrt(fabs(1.0/ptrgeom->gcon[GIND(TT,TT)]));  // \rho_0 u^t * sqrt(-1/g^{tt})  and most things will be scalars like S u^t as well
+  DLOOPA(jj) upitoup0U[UU+jj] = upitoup0U[URAD0+jj] = sqrt(fabs(ptrgeom->gcon[GIND(jj,jj)]/ptrgeom->gcon[GIND(TT,TT)]));  // R^t_nu * sqrt(g^{ii}/g^{tt}) = R^t_orthonu
+
+  // P
+  PLOOP(pliter,pl) upitoup0P[pl] = 1.0; // comoving quantities
+  SLOOPA(jj) upitoup0P[UU+jj] =upitoup0P[URAD0+jj] = 1.0/sqrt(fabs(ptrgeom->gcon[GIND(jj,jj)]));  // v^i / sqrt(g^{ii}) = vortho^i
+
+  // U
   if(IMPLICITITER==QTYUMHD || IMPLICITITER==QTYURAD || IMPLICITITER==QTYENTROPYUMHD){
     PLOOP(pliter,pl) x[pl]=uu[pl];
     PLOOP(pliter,pl) xp[pl]=uup[pl];
     PLOOP(pliter,pl) xjac[0][pl]=xjac[1][pl]=uu[pl];
-    DLOOPA(jj) upitoup0[jj] = sqrt(fabs(ptrgeom->gcon[GIND(jj,jj)]));  // R^t_nu * sqrt(g^{ii}) = R^t_orthonu
+    PLOOP(pliter,pl) upitoup0[pl] = upitoup0U[pl];
     // velmomscale is set such that when (e.g.) T^t_i is near zero, we use T^t_t as reference since we consider T^t_i/T^t_t to be velocity scale that is up to order unity.
-    velmomscale=fabs(x[irefU[0]]*upitoup0[0]);
+    velmomscale=fabs(x[irefU[0]]*upitoup0[irefU[0]]);
   }
+  // P
   else if(IMPLICITITER==QTYPMHD || IMPLICITITER==QTYPRAD || IMPLICITITER==QTYENTROPYPMHD){
     PLOOP(pliter,pl) x[pl]=pp[pl];
     PLOOP(pliter,pl) xp[pl]=ppp[pl];
     PLOOP(pliter,pl) xjac[0][pl]=xjac[1][pl]=pp[pl];
-    jj=TT; upitoup0[jj] = 1.0; // comoving quantity, not v^t
-    //DLOOPA(jj) upitoup0[jj] = 1.0/sqrt(fabs(ptrgeom->gcon[GIND(jj,jj)])); // v^i / sqrt(g^{ii}) = vortho^i
-    SLOOPA(jj) upitoup0[jj] = 1.0/sqrt(fabs(ptrgeom->gcon[GIND(jj,jj)])); // v^i / sqrt(g^{ii}) = vortho^i
+    PLOOP(pliter,pl) upitoup0[pl] = upitoup0P[pl];
     // for velocity, assume ortho-scale is order unity (i.e. v=1.0*c)
-    velmomscale=1.0; // reference scale considered to be order unity
-    //velmomscale=fabs(x[irefU[0]]*upitoup0[0]);
+    velmomscale=1.0; // reference scale considered to be order unity  KORALTODO: Not sure if should use something like T^t_i/T^t_t with denominator something more non-zero-ish.
   }
 
+
+  //////////////////////////
+  //
   // form pre-del
+  //
+  //////////////////////////
   FTYPE delspace,predel[NDIM];
-  jj=TT; predel[jj] = fabs(x[irefU[jj]]);
+
+  // get everything in terms of quasi-orthonormal quantities
+  DLOOPA(jj){
+    predel[jj] = fabs(x[irefU[jj]]*upitoup0[irefU[jj]]);
+    if(jj==TT || IMPLICITITER==QTYUMHD || IMPLICITITER==QTYURAD || IMPLICITITER==QTYENTROPYUMHD){
+      // below makes sense because U and ferr are linear in x and same dimensional units
+      // TT term (e.g. u_g) can be too small primitive or otherwise, so use maximum of ferr, uu, and x.
+      // This avoids issue with Jacobian giving J44[0][0]=0 so that can't iterate u_g because u_g itself is very small.
+      predel[jj] = MAX(predel[jj],fabs(uup[irefU[jj]]*upitoup0U[irefU[jj]]));
+      predel[jj] = MAX(predel[jj],fabs(uu0[irefU[jj]]*upitoup0U[irefU[jj]]));
+      predel[jj] = MAX(predel[jj],fabs(f1[erefU[jj]]*upitoup0U[erefU[jj]]));
+      predel[jj] = MAX(predel[jj],fabs(f1norm[erefU[jj]]*upitoup0U[erefU[jj]]));
+    }
+    else{
+      // if primitive velocity, then different units than conserved or error function that have energy density scale
+    }
+  }
+
+  ///////////
   // form delspace that absorbs all spatial values into a single dimensionless scale to avoid one dimensions smallness causing issues.
   // KORALTODO: Maybe causes problems if Jacobian becomes singular because no change in small velocity-momentum values when should be change.  But can't resolve it really, so should be ok.
-  delspace=0.0; SLOOPA(jj) delspace = MAX(delspace,MAX(fabs(x[irefU[jj]]*upitoup0[jj]) , velmomscale )); // dimensionless-ortho
-  SLOOPA(jj) predel[jj] = delspace/upitoup0[jj]; // back to actual spatial dimension-space scale for application to x and xjac
+  //////////
+  delspace=0.0; SLOOPA(jj) delspace = MAX(delspace,MAX(fabs(predel[jj]) , velmomscale )); // dimensionless-ortho
+
+
+  /////////////////
+  // back to actual spatial dimension-space scale for application to x and xjac
+  SLOOPA(jj) predel[jj] = delspace/upitoup0[irefU[jj]];
+
+  // back to actual time dimension scale
+  jj=TT;
+  predel[jj] = predel[jj]/upitoup0[irefU[jj]];
+
+
 
 
   FTYPE J[NPR][NPR];
@@ -2483,7 +2533,7 @@ static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int sho
     DLOOPA(jj){
 
       int sided,signside;
-      int numsides=2;
+      int numsides=2; // fixed at 2
       for(sided=0;sided<numsides;sided++){
         if(JDIFFTYPE==JDIFFONESIDED && sided==0) continue;
         if(sided==1) signside=-1.0;
@@ -2498,7 +2548,6 @@ static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int sho
           PLOOP(pliter,pl) xjac[sided][pl]=x[pl];
           // offset xjac (KORALTODO: How to ensure this doesn't have machine precision problems or is good enough difference?)
           xjac[sided][irefU[jj]]=x[irefU[jj]] + signside*del; // KORALNOTE: Not sure why koral was using uup or xp here.  Should use x (or uu or pp) because as updated from f_implicit_lab() and uup or ppp for xp hasn't been set yet, so not consistent with desired jacobian or ferr for Newton step.
-
           //          dualfprintf(fail_file,"NEW: jj=%d del=%g xjac=%g x=%g\n",jj,del,xjac[sided][irefU[jj]],x[irefU[jj]]);
 
           // set uujac and ppjac using xjac
@@ -2513,8 +2562,27 @@ static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int sho
               uujac[pl]=uu[pl];
               ppjac[pl]=xjac[sided][pl];
             }
-          }
- 
+            if(FORCEJDIFFNOCROSS){
+              // ppmin is positive value of some offset around zero
+              FTYPE ppmin[NPR];
+              ppmin[UU]=SMALL;            //            FTYPE umin=calc_PEQ_ufromTrho(TEMPMIN,ppjac[RHO]);
+              ppmin[RHO]=SMALL;
+              PLOOP(pliter,pl){
+                if(POSPL(pl)){
+                  if(xjac[sided][pl]<ppmin[pl] && x[pl]>0.0){
+                    xjac[sided][pl]=ppmin[pl];
+                  }
+                  else if(xjac[sided][pl]>-ppmin[pl] && x[pl]<0.0){
+                    xjac[sided][pl]=-ppmin[pl];
+                  }
+                  // now fix ppjac
+                  ppjac[pl]=xjac[sided][pl];
+                }// end if supposed to normally be positive value quantity
+              }
+            }
+          } 
+
+
           // get dUresid for this offset xjac
           int whichcall=2;
           eomtypelocallocal=*eomtypelocal; // re-default
@@ -2543,7 +2611,7 @@ static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int sho
             // didn't fail
             break;
           }
-        }// end while(1)
+        }// end while(1), checking if ferr failed due to (e.g.) inversion issue.
       }// end sided=0,1
       
 

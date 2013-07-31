@@ -10,7 +10,7 @@
 // 0 = no debug indexes set
 // 1 = set global (file scope) index for debugging
 //     OPENMPMARK: This is not thread safe!, so only set to 1 if not using more than one OpenMP thread.
-#define DEBUGINDEX 1
+#define DEBUGINDEX 0
 
 #if(DEBUGINDEX)
 // 
