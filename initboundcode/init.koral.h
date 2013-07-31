@@ -289,8 +289,8 @@
 // Hawley uses 0.06283 (0.02Pi)
 
 #define DOSTOREPOSITIONDATA 1 // DEBUG
-//#define CONNDERTYPE DIFFGAMMIE // DEBUG
-#define CONNDERTYPE DIFFNUMREC
+#define CONNDERTYPE DIFFGAMMIE // DEBUG
+//#define CONNDERTYPE DIFFNUMREC
 #define VOLUMEDIFF 0
 #define GDETVOLDIFF 0 // doesn't help much
 #define FIXGDETSPC_WHEN_1DRADIAL 1
@@ -988,7 +988,8 @@ struct Ccoordparams {
 // N1=60 if using 1.5*hor - 40 (or 27.8)
 // N1=70 if using 1.5*hor - 30 (or 27.8)
 //#define N1 50
-#define N1 16
+//#define N1 16
+#define N1 32
 //#define N1 60 // KORALTODO testing
 //#define N2 30
 #define N2 16

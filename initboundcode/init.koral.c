@@ -1204,12 +1204,15 @@ int init_global(void)
 
   if(WHICHPROBLEM==RADNT || WHICHPROBLEM==RADFLATDISK || WHICHPROBLEM==RADDONUT || WHICHPROBLEM==RADCYLBEAM || WHICHPROBLEM==RADCYLBEAMCART){
 
+
     // NOTENOTENOTE: Also do following before running with RADDONUT:
     // 1) coord.c: rbr=5E2 -> 1E2 OR use Sasha or Jon coordinate setup for all parameters.
     // 2) DORADFIXUPS 0
     // 3) BSQORHOLIMIT=1E2;
     // 4) #define CONNDERTYPE DIFFGAMMIE
     // 5) #define N1 32
+
+    BSQORHOLIMIT=1E2;
 
 
     // Torus setups:

@@ -156,7 +156,7 @@
 
 // whether to fixup inversion failures using harm fixups
 // can lead to issues because diffuses, so across sharp boundary radiation can be given quite "wrong" values that don't match what solution "wants" 
-#define DORADFIXUPS 1 // for RADDONUT ok, since no sharp edges.
+#define DORADFIXUPS 0 // for RADDONUT ok, since no sharp edges.
 // KORALTODO SUPERGODMARK: Turn this on and rest all tests and see if makes worse or better.  Makes things worse at failure boundary.  Leads to very bad results for (e.g.) RADDONUT.
 
 #define TAUFAILLIMIT (2.0/3.0) // at what \tau below which to assume "failure1" in u2p_rad() means should be moving at gammamax rather than not moving.

@@ -258,10 +258,10 @@ int eotherU[NDIM]={UU,U1,U2,U3};
 
 // whether to use Ramesh's fix
 // 0, 1, 2
-#define RAMESHTRADTGASFIX 0
+#define RAMESHTRADTGASFIX 1
 
 //#define SWITCHTOENTROPYIFCHANGESTOENTROPY (IMPLICITFERR==QTYUMHD ? 0 : 1)
-#define SWITCHTOENTROPYIFCHANGESTOENTROPY (1)
+#define SWITCHTOENTROPYIFCHANGESTOENTROPY (0)
 
 // whether to avoid solutions where u_g<0 or rho<0 and use backup that didn't have that problem.
 // KORALTODO: Bad to use backup since can be high error, but can recheck error or just use this to indicate to try entropy.
@@ -2563,17 +2563,22 @@ static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int sho
               ppjac[pl]=xjac[sided][pl];
             }
             if(FORCEJDIFFNOCROSS){
-              // ppmin is positive value of some offset around zero
+              // set ppmin is positive value of some offset around zero
               FTYPE ppmin[NPR];
-              ppmin[UU]=SMALL;            //            FTYPE umin=calc_PEQ_ufromTrho(TEMPMIN,ppjac[RHO]);
-              ppmin[RHO]=SMALL;
               PLOOP(pliter,pl){
+                if(POSPL(pl)) ppmin[pl]=SMALL;
+                else ppmin[pl]=0.0;
+                //            FTYPE umin=calc_PEQ_ufromTrho(TEMPMIN,ppjac[RHO]);
+              }
+              // constrain that which enters jacobian
+              DLOOPA(jj){
+                pl=irefU[jj];
                 if(POSPL(pl)){
                   if(xjac[sided][pl]<ppmin[pl] && x[pl]>0.0){
-                    xjac[sided][pl]=ppmin[pl];
+                    xjac[sided][pl]=MAX(ppmin[pl],fabs(del));
                   }
                   else if(xjac[sided][pl]>-ppmin[pl] && x[pl]<0.0){
-                    xjac[sided][pl]=-ppmin[pl];
+                    xjac[sided][pl]=-MAX(ppmin[pl],fabs(del));
                   }
                   // now fix ppjac
                   ppjac[pl]=xjac[sided][pl];
