@@ -1304,11 +1304,11 @@ static int koral_source_rad_implicit_mode(int *eomtype, FTYPE *pb, FTYPE *piin, 
               if(holdingaspositive==0) iterhold=iter;
               pp[irefU[0]]=NUMEPSILON; // hold as positive just one iteration
               holdingaspositive=1;
-              dualfprintf(fail_file,"HOLDING: Deteteced unphysical pp[irefU[0]]: iter=%d\n",iter);
+              if(debugfail>=3) dualfprintf(fail_file,"HOLDING: Deteteced unphysical pp[irefU[0]]: iter=%d\n",iter);
             }
             else{
               if(eomcond){
-                dualfprintf(fail_file,"SWITCHING MODE: Deteteced unphysical pp[irefU[0]]: iter=%d\n",iter);
+                if(debugfail>=3) dualfprintf(fail_file,"SWITCHING MODE: Deteteced unphysical pp[irefU[0]]: iter=%d\n",iter);
                 return(FAILRETURNMODESWITCH);
               }
               else{
@@ -1422,11 +1422,11 @@ static int koral_source_rad_implicit_mode(int *eomtype, FTYPE *pb, FTYPE *piin, 
     //
     /////////////////
     if(checkconv){
-      // then can check convergence: using f1 and f3limit (not f3 so far anymore)
-      //      if(convreturnf1 || convreturnf3limit){
-      if(convreturnf1){
+      // then can check convergence: using f1 and f3limit
+      if(convreturnf1 || convreturnf3limit){
+        //      if(convreturnf1){
         //        if(convreturnf1) dualfprintf(fail_file,"f1 good\n");
-        if(convreturnf3limit){
+        if(convreturnf3limit && debugfail>=3){
           dualfprintf(fail_file,"f3limit good\n");
           if(POSTNEWTONCONVCHECK==1) DLOOPA(ii) dualfprintf(fail_file,"ii=%d f3=%21.15g f3norm=%21.15g f3report=%21.15g\n",f3[erefU[ii]],f3norm[erefU[ii]],f3report[erefU[ii]]);          
         }
@@ -2895,11 +2895,11 @@ static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int sho
                 if(POSPL(pl)){
                   if(xjac[sided][pl]<ppmin && x[pl]>0.0){
                     xjac[sided][pl]=ppmin;
-                    dualfprintf(fail_file,"Got 1: sided=%d\n",sided);
+                    if(debugfail>=3) dualfprintf(fail_file,"Got 1: sided=%d\n",sided);
                   }
                   else if(xjac[sided][pl]>-ppmin && x[pl]<0.0){
                     xjac[sided][pl]=-ppmin;
-                    dualfprintf(fail_file,"Got 2: sided=%d\n",sided);
+                    if(debugfail>=3) dualfprintf(fail_file,"Got 2: sided=%d\n",sided);
                   }
                   // now fix ppjac
                   ppjac[pl]=xjac[sided][pl];
