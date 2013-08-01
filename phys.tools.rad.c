@@ -329,6 +329,10 @@ static void get_refUs(int *implicititer, int *implicitferr, int *irefU, int *iot
 // whether to ensure rho and u_g in Jacobian calculation difference do not cross over 0 and stay on same side as origin point.
 #define FORCEJDIFFNOCROSS 1
 
+// whether to check pp-ppp
+// 1: directly check post pp-ppp and see if machine precision change
+// 2: directly check if any changes to pp during Newton step.
+#define POSTNEWTONCONVCHECK 2
 
 //FUCK: Do basic koral damping if error high or no solution.
 // FUCK: entropy switch condition.
@@ -1228,6 +1232,7 @@ static int koral_source_rad_implicit_mode(int *eomtype, FTYPE *pb, FTYPE *piin, 
       notfinite = !isfinitel(pp[irefU[0]])|| !isfinitel(pp[irefU[1]])|| !isfinitel(pp[irefU[2]])|| !isfinitel(pp[irefU[3]]) || !isfinitel(ppp[irefU[0]])|| !isfinitel(ppp[irefU[1]])|| !isfinitel(ppp[irefU[2]])|| !isfinitel(ppp[irefU[3]]);
     }
 
+    int convreturnf3limit=0;
     if(!notfinite){
     
       /////////
@@ -1265,17 +1270,36 @@ static int koral_source_rad_implicit_mode(int *eomtype, FTYPE *pb, FTYPE *piin, 
         PLOOP(pliter,pl) uu[pl] = uup[pl];
         DLOOP(ii,jj) uu[irefU[ii]] -= DAMPFACTOR*iJ[irefU[ii]][erefU[jj]]*f1[erefU[jj]];
 
+        if(POSTNEWTONCONVCHECK==2){
+          // check if any actual changes in primitives.  If none, then have to stop.
+          FTYPE diffuu=0.0;
+          PLOOP(pliter,pl) diffuu += fabs(uu[pl]-uup[pl]);
+          if(diffuu<NUMEPSILON){
+            convreturnf3limit=1;
+          }
+        }
+
         if(showmessagesheavy) dualfprintf(fail_file,"POSTDX: uu: %g %g %g %g : uup=%g %g %g %g\n",uu[irefU[0]],uu[irefU[1]],uu[irefU[2]],uu[irefU[3]],uup[irefU[0]],uup[irefU[1]],uup[irefU[2]],uup[irefU[3]]);
       }
       else if(implicititer==QTYPMHD || implicititer==QTYPRAD || implicititer==QTYENTROPYPMHD){
         PLOOP(pliter,pl) pp[pl]=ppp[pl];
         DLOOP(ii,jj) pp[irefU[ii]] -= DAMPFACTOR*iJ[irefU[ii]][erefU[jj]]*f1[erefU[jj]];
 
+        if(POSTNEWTONCONVCHECK==2){
+          // check if any actual changes in primitives.  If none, then have to stop.
+          FTYPE diffpp=0.0;
+          PLOOP(pliter,pl) diffpp += fabs(pp[pl]-ppp[pl]);
+          if(diffpp<NUMEPSILON){
+            convreturnf3limit=1;
+          }
+        }
+
         if(RAMESHFIXEARLYSTEPS){
           if(iter<RAMESHFIXEARLYSTEPS) pp[irefU[0]]=ppp[irefU[0]]; // don't trust first Newton step in u_g, Erf, or S
           else if(iter==RAMESHFIXEARLYSTEPS) SLOOPA(jj) pp[irefU[jj]]=ppp[irefU[jj]]; // don't trust second Newton step in velocity-momentum.
           if(pp[irefU[0]]<0.0 && implicititer==QTYPMHD || implicititer==QTYPRAD){ // don't consider implicititer==QTYENTROPYPMHD since S can be positive or negative.  Would only be unphysical or absolute-limited if the related u_g<0 or rho<0.
-#define NUMITERHOLD 2
+            int eomcond=(eomtypelocal==EOMGRMHD || eomtypelocal==EOMDEFAULT && EOMDEFAULT==EOMGRMHD);
+#define NUMITERHOLD (eomcond ? 2 : 4)
             if(JONHOLDPOS && (holdingaspositive==0 || holdingaspositive==1 && iter<iterhold+NUMITERHOLD)){
               if(holdingaspositive==0) iterhold=iter;
               pp[irefU[0]]=NUMEPSILON; // hold as positive just one iteration
@@ -1283,7 +1307,7 @@ static int koral_source_rad_implicit_mode(int *eomtype, FTYPE *pb, FTYPE *piin, 
               dualfprintf(fail_file,"HOLDING: Deteteced unphysical pp[irefU[0]]: iter=%d\n",iter);
             }
             else{
-              if(eomtypelocal==EOMGRMHD || eomtypelocal==EOMDEFAULT && EOMDEFAULT==EOMGRMHD){
+              if(eomcond){
                 dualfprintf(fail_file,"SWITCHING MODE: Deteteced unphysical pp[irefU[0]]: iter=%d\n",iter);
                 return(FAILRETURNMODESWITCH);
               }
@@ -1299,7 +1323,7 @@ static int koral_source_rad_implicit_mode(int *eomtype, FTYPE *pb, FTYPE *piin, 
 
         if(showmessagesheavy) dualfprintf(fail_file,"POSTDX: pp: %g %g %g %g : ppp=%g %g %g %g\n",pp[irefU[0]],pp[irefU[1]],pp[irefU[2]],pp[irefU[3]],ppp[irefU[0]],ppp[irefU[1]],ppp[irefU[2]],ppp[irefU[3]]);
 
-      }
+      }// end if primitves
 
 
    
@@ -1336,39 +1360,44 @@ static int koral_source_rad_implicit_mode(int *eomtype, FTYPE *pb, FTYPE *piin, 
 
 
 
-    /////////
-    //
-    // test convergence after Newton step
-    // test convergence using |dU/U|
-    // KORALTODO: This isn't a completely general error check since force might be large for fluid.  So using (e.g.) 1E-6 might still imply a ~1 or larger error for the fluid.  Only down to ~NUMEPSILON will radiation 4-force be unresolved as fluid source term.
-    // NOTE: Have to be careful with decreasing DAMPFACTOR or fracdtuu0 because can become small enough that apparently fake convergence with below condition, so only check for convergence if all DAMPs are 1.0.
-    /////////
-    FTYPE f3[NPR],f3norm[NPR];
-    // 0 = conserved R^t_\nu type, 1 = primitive R^{ti} type
-    if(implicititer==QTYUMHD || implicititer==QTYURAD || implicititer==QTYENTROPYUMHD){ // still considering iterate error
-      dimtypef=DIMTYPEFCONS;
-      DLOOPA(ii){
-        f3[erefU[ii]]=(uu[irefU[ii]]-uup[irefU[ii]]);
-        f3norm[erefU[ii]]=fabs(uu[irefU[ii]])+fabs(uup[irefU[ii]]);
+    FTYPE f3[NPR]={0},f3norm[NPR]={0};
+    if(POSTNEWTONCONVCHECK==1){
+      /////////
+      //
+      // test convergence after Newton step
+      // test convergence using |dU/U|
+      // KORALTODO: This isn't a completely general error check since force might be large for fluid.  So using (e.g.) 1E-6 might still imply a ~1 or larger error for the fluid.  Only down to ~NUMEPSILON will radiation 4-force be unresolved as fluid source term.
+      // NOTE: Have to be careful with decreasing DAMPFACTOR or fracdtuu0 because can become small enough that apparently fake convergence with below condition, so only check for convergence if all DAMPs are 1.0.
+      /////////
+      // 0 = conserved R^t_\nu type, 1 = primitive R^{ti} type
+      if(implicititer==QTYUMHD || implicititer==QTYURAD || implicititer==QTYENTROPYUMHD){ // still considering iterate error
+        dimtypef=DIMTYPEFCONS;
+        DLOOPA(ii){
+          f3[erefU[ii]]=(uu[irefU[ii]]-uup[irefU[ii]]);
+          f3norm[erefU[ii]]=fabs(uu[irefU[ii]])+fabs(uup[irefU[ii]]);
+        }
       }
-    }
-    else if(implicititer==QTYPMHD || implicititer==QTYPRAD || implicititer==QTYENTROPYPMHD){ // still considering iterate error
-      dimtypef=DIMTYPEFPRIM;
-      DLOOPA(ii){
-        f3[erefU[ii]]=(pp[irefU[ii]]-ppp[irefU[ii]]);
-        f3norm[erefU[ii]]=fabs(pp[irefU[ii]])+fabs(ppp[irefU[ii]]);
+      else if(implicititer==QTYPMHD || implicititer==QTYPRAD || implicititer==QTYENTROPYPMHD){ // still considering iterate error
+        dimtypef=DIMTYPEFPRIM;
+        DLOOPA(ii){
+          f3[erefU[ii]]=(pp[irefU[ii]]-ppp[irefU[ii]]);
+          f3norm[erefU[ii]]=fabs(pp[irefU[ii]])+fabs(ppp[irefU[ii]]);
+        }
       }
-    }
   
-    // store error and solution in case eventually lead to max iterations and actually get worse error
-    // f_error_check(uu0,uu) is ok to use since it just normalizes error
-    int convreturnf3;
-    convreturnf3=f_error_check(showmessages, showmessagesheavy, iter, IMPTRYCONV,realdt, dimtypef,eomtypelocal ,f3,f3norm,f3report,Uiin,uu0,uu,ptrgeom);
-    errorabsf3=0.0;     DLOOPA(jj) errorabsf3     += fabs(f3report[erefU[jj]]);
-    // while using f1 for true error, can't do better if f3 error is below near machine precision.
-    int convreturnf3limit;
-    convreturnf3limit=f_error_check(showmessages, showmessagesheavy, iter, LOCALPREIMPCONV,realdt,DIMTYPEFCONS,eomtypelocal,f1,f1norm,f1report,Uiin, uu0,uu,ptrgeom);
+      // store error and solution in case eventually lead to max iterations and actually get worse error
+      // f_error_check(uu0,uu) is ok to use since it just normalizes error
+      int convreturnf3;
+      convreturnf3=f_error_check(showmessages, showmessagesheavy, iter, IMPTRYCONV,realdt, dimtypef,eomtypelocal ,f3,f3norm,f3report,Uiin,uu0,uu,ptrgeom);
+      errorabsf3=0.0;     DLOOPA(jj) errorabsf3     += fabs(f3report[erefU[jj]]);
+      // while using f1 for true error, can't do better if f3 error is below near machine precision.
+      FTYPE LOCALPREIMPCONVX=(NUMEPSILON);
+      convreturnf3limit=f_error_check(showmessages, showmessagesheavy, iter, LOCALPREIMPCONVX,realdt,DIMTYPEFCONS,eomtypelocal,f3,f3norm,f3report,Uiin, uu0,uu,ptrgeom);
+    }
 
+    if(POSTNEWTONCONVCHECK==0){
+      convreturnf3limit=0;
+    }
 
 
 
@@ -1383,7 +1412,7 @@ static int koral_source_rad_implicit_mode(int *eomtype, FTYPE *pb, FTYPE *piin, 
         DAMPFACTOR=0.7;
       }
       else{
-        if(errorabsf3>errorabspf3 && DAMPFACTOR>0.1) DAMPFACTOR*=0.5;
+        if(POSTNEWTONCONVCHECK==1 && errorabsf3>errorabspf3 && DAMPFACTOR>0.1) DAMPFACTOR*=0.5;
       }
     }
 
@@ -1394,7 +1423,13 @@ static int koral_source_rad_implicit_mode(int *eomtype, FTYPE *pb, FTYPE *piin, 
     /////////////////
     if(checkconv){
       // then can check convergence: using f1 and f3limit (not f3 so far anymore)
-      if(convreturnf1 || convreturnf3limit){
+      //      if(convreturnf1 || convreturnf3limit){
+      if(convreturnf1){
+        //        if(convreturnf1) dualfprintf(fail_file,"f1 good\n");
+        if(convreturnf3limit){
+          dualfprintf(fail_file,"f3limit good\n");
+          if(POSTNEWTONCONVCHECK==1) DLOOPA(ii) dualfprintf(fail_file,"ii=%d f3=%21.15g f3norm=%21.15g f3report=%21.15g\n",f3[erefU[ii]],f3norm[erefU[ii]],f3report[erefU[ii]]);          
+        }
          // then done
         break;
       }
@@ -1528,6 +1563,20 @@ static int koral_source_rad_implicit_mode(int *eomtype, FTYPE *pb, FTYPE *piin, 
       }
       return(FAILRETURNGENERAL);
     }
+
+    // but use best if this last iteration actually has higher error.
+    if(gotbest){
+      // f1 based
+      // see if should revert to prior best
+      FTYPE errorabsbest=0.0;
+      DLOOPA(jj) errorabsbest += fabs(lowestfreportf1[erefU[jj]]);
+      if(errorabsbest<errorabsf1 || !isfinitel(errorabsf1) ){
+        PLOOP(pliter,pl) uu[pl]=bestuu[pl];
+        PLOOP(pliter,pl) pp[pl]=bestpp[pl];
+        errorabsf1=errorabsbest;
+      }
+      if(showmessages && debugfail>=2) dualfprintf(fail_file,"FINALCHECK: Using best: %g %g\n",errorabsf1,errorabsbest);
+    }
   }
 
   /////////////
@@ -1600,10 +1649,12 @@ static int koral_source_rad_implicit_mode(int *eomtype, FTYPE *pb, FTYPE *piin, 
   //
   //////////////////////
   if(debugfail>=2){
-    errorabsf1=0.0;
-    if(gotbest) DLOOPA(jj) errorabsf1 += fabs(lowestfreportf1[erefU[jj]]);
-    else DLOOPA(jj) errorabsf1 += fabs(f1report[erefU[jj]]);
-    //    dualfprintf(fail_file,"errorabs=%g\n",errorabsf1);
+    errorabsf1=0.0; DLOOPA(jj) errorabsf1 += fabs(f1report[erefU[jj]]);
+    
+    // debug:
+    //    if(errorabsf1>IMPTRYCONV) dualfprintf(fail_file,"errorabs=%g\n",errorabsf1);
+    if(errorabsf1>1E-6) dualfprintf(fail_file,"errorabs=%g\n",errorabsf1);
+
     numhisterr[MAX(MIN((int)(-log10l(errorabsf1)),NUMNUMHIST-1),0)]++;
     numhistiter[MAX(MIN(iter,IMPMAXITER),0)]++;
 #define HISTREPORTSTEP (20)
@@ -2964,7 +3015,7 @@ static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int sho
         return(1); // can't expect good derivative above ~0.3, so just return as failure of implicit method.
       }
       else{
-        if(debugfail>=2) dualfprintf(fail_file,"inverse_44matrix(J,iJ) failed, trying IMPEPSSTART=%g :: ijk=%d %d %d\n",IMPEPSSTART,ptrgeom->i,ptrgeom->j,ptrgeom->k);
+        if(debugfail>=2) dualfprintf(fail_file,"inverse_44matrix(J,iJ) failed with eomtypelocallocal=%d, trying IMPEPSSTART=%g :: ijk=%d %d %d\n",eomtypelocallocal,IMPEPSSTART,ptrgeom->i,ptrgeom->j,ptrgeom->k);
         if(debugfail>=2 || showmessagesheavy){
           dualfprintf(fail_file,"POSTJAC2: x: %21.15g %21.15g %21.15g %21.15g : x=%21.15g %21.15g %21.15g %21.15g\n",x[irefU[0]],x[irefU[1]],x[irefU[2]],x[irefU[3]],x[irefU[0]],x[irefU[1]],x[irefU[2]],x[irefU[3]]);
           int iii,jjj;
