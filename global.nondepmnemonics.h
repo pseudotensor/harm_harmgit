@@ -184,7 +184,12 @@
 // ok now, but effectively setup already the below 2 lines implicitly
 // global.h : FIXUPAFTERINIT, FIXUPAFTERRESTART,CHECKSOLUTION,LIMADJUST,FLUXADJUST
 // global.h FIXUPZONES->FIXUPNOZONES
-#define EOMDONOTHING -2 // do nothing in Utoprimgen() assuming already effectively or actually did the inversion.
+ // do nothing in Utoprimgen() assuming already effectively or actually did the inversion.
+#define EOMDIDFFDE -5
+#define EOMDIDCOLDGRMHD -4
+#define EOMDIDENTROPYGRMHD -3
+#define EOMDIDGRMHD -2
+#define EOMDONOTHING(eomtype) (eomtype<=EOMDIDGRMHD)
 #define EOMDEFAULT -1 // choose to do default behavior without any forced EOM
 #define EOMFFDE 0
 #define EOMCOLDGRMHD 1

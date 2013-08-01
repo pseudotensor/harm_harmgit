@@ -219,7 +219,7 @@ static void define_method(int *eomtype, int *implicititer, int *implicitferr)
   if(eomtypelocal==EOMDEFAULT){
     eomtypelocal=EOMTYPE; // override
   }
-  if(eomtypelocal==EOMDONOTHING){
+  if(EOMDONOTHING(eomtypelocal)){
     dualfprintf(fail_file,"Can't have EOMDONOTHING in radiation code.\n");
     myexit(938463651);
   }
@@ -333,8 +333,8 @@ static void get_refUs(int *implicititer, int *implicitferr, int *irefU, int *iot
 
 // whether to use EOMDONOTHING if error is good enough.
 // 1: check if should do nothing
-// 2: always avoid external inversion (so no longer can do cold MHD, but cold MHD in \tau\gtrsim 1 places is very bad)
-#define SWITCHTODONOTHING 1
+// 2: always avoid external inversion (so no longer can do cold MHD, but cold MHD in \tau\gtrsim 1 places is very bad).  Or avoid energy switching to entropy, which also is bad.
+#define SWITCHTODONOTHING 2
 
 //FUCK: Do basic koral damping if error high or no solution.
 // FUCK: entropy switch condition.
@@ -646,7 +646,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
   int pliter,pl;
   int sc;
 
-  int failreturn;
+  int failreturn,noprims;
   int havebackup;
 
   // set backups that might change and contaminate a fresh start
@@ -663,6 +663,18 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
     qbackup=*q;
   }
 
+  // It's up to inversion method to set failure flags, not utoprimgen() that just checks them mostly (it might modify them based upon doing reductions).
+  // setup pflags
+  PFTYPE *lpflag,*lpflagrad;
+  lpflag=&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL);
+  lpflagrad=&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL);
+  // set default
+  *lpflag=UTOPRIMNOFAIL;
+  *lpflagrad==UTOPRIMRADNOFAIL;
+
+  // default is didn't get good primitives.  Similar, but slightly different from, failreturn
+  failreturn=1;
+  noprims=1;
 
   
   if(MODEMETHOD==MODEENERGY){
@@ -677,6 +689,10 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
         *q=qbackup;
       }
     }
+    else{
+      noprims=0;
+      *eomtype=eomtypelocal; // can be EOMDONOTHING if successful and small enough error
+    }
   }
 
   if(MODEMETHOD==MODEENTROPY){
@@ -690,6 +706,10 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
         SCLOOP(sc) dUcomp[sc][pl]=dUcompbackup[sc][pl];
         *q=qbackup;
       }
+    }
+    else{
+      noprims=0;
+      *eomtype=eomtypelocal; // can be EOMDONOTHING if successful and small enough error
     }
   }
 
@@ -716,12 +736,14 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
         dualfprintf(fail_file,"Entropy also failed: %d\n",failreturn);
       }
       else{
+        noprims=0;
         // tell an externals to switch to entropy
         //*eomtype=EOMENTROPYGRMHD;
         *eomtype=eomtypelocal; // EOMDONOTHING if successful call to koral_source_rad_implicit_mode()
       }
     }
     else{
+      noprims=0;
       // switch to whatever solver suggested if didn't meet go-entropy condition
       *eomtype=eomtypelocal; // can also be EOMDONOTHING if successful and good enough error.
       if(failreturn>0 && debugfail>=2) dualfprintf(fail_file,"Decided didn't meet go-entropy condition but failed: failreturn=%d eomtypelocal=%d\n",failreturn,eomtypelocal);
@@ -799,6 +821,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
         SCLOOP(sc) dUcomp[sc][pl]=dUcompentropy[sc][pl];
         *q=qentropy;
       }
+      noprims=0;
       failreturn=failreturnentropy;
     }
     else if(failreturnenergy<=0){
@@ -810,15 +833,34 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
         SCLOOP(sc) dUcomp[sc][pl]=dUcompenergy[sc][pl];
         *q=qenergy;
       }
+      noprims=0;
       failreturn=failreturnenergy;
     }
     else{
       // just fail.  No source
       dualfprintf(fail_file,"No source\n");
+      // if no source, then will do normal inversion (no change to *eomtype) as if G=0.
+      noprims=1;
+      failreturn=0;
+      // KORALTODO: But might want to fail more aggressively and report total failure.  Need to have estimate of whether G was important.
+      //      failreturn=1;
     }
 
   }// end MODEPICKBEST
 
+
+  // whether failed completely and should have gotten solution, so set as major failure.
+  if(failreturn>0){
+    *lpflag=UTOPRIMFAILCONV;
+    *lpflagrad=UTOPRIMRADFAILCASE1A;
+  }
+
+  // whether set some primitives (implies also failreturn=0)
+  if(noprims==0){
+    if((pb[RHO]<=0.)&&(pb[UU]>=0.)) *lpflag= UTOPRIMFAILRHONEG;
+    if((pb[RHO]>0.)&&(pb[UU]<0.))   *lpflag= UTOPRIMFAILUNEG;
+    if((pb[RHO]<=0.)&&(pb[UU]<0.))  *lpflag= UTOPRIMFAILRHOUNEG;
+  }
 
 
 
@@ -1370,13 +1412,16 @@ static int koral_source_rad_implicit_mode(int havebackup, int *eomtype, FTYPE *p
                 return(FAILRETURNMODESWITCH);
               }
               else{
-                // already using entropy or no backup, so full failure
-                failnum++;
-                mathematica_report_check(10, failnum, gotfirstnofail, errorabsf1, iter, realdt, ptrgeom, ppfirst,pp,pb,piin,uu0,uu,Uiin,Ufin, CUf, q, dUother);
-                return(FAILRETURNGENERAL);
-              }
-            }
-          }
+                if(DOFINALCHECK) break; // just break since might be good (or at least allowable) error still.  Let final error check handle this.
+                else{
+                  // already using entropy, so full failure
+                  failnum++;
+                  mathematica_report_check(10, failnum, gotfirstnofail, errorabsf1, iter, realdt, ptrgeom, ppfirst,pp,pb,piin,uu0,uu,Uiin,Ufin, CUf, q, dUother);
+                  return(FAILRETURNGENERAL);
+                }
+              }// end else if nobackup&&eomgrmhd
+            }// end if no longer holding
+          }// end if primitive and u_g<0
         }
 
         if(showmessagesheavy) dualfprintf(fail_file,"POSTDX: pp: %g %g %g %g : ppp=%g %g %g %g\n",pp[irefU[0]],pp[irefU[1]],pp[irefU[2]],pp[irefU[3]],ppp[irefU[0]],ppp[irefU[1]],ppp[irefU[2]],ppp[irefU[3]]);
@@ -1707,17 +1752,18 @@ static int koral_source_rad_implicit_mode(int havebackup, int *eomtype, FTYPE *p
       //  if(implicititer==QTYPMHD && implicitferr==QTYENTROPYUMHD){
       // more general case when can just avoid external entropy inversion
       if(*eomtype==EOMENTROPYGRMHD && SWITCHTOENTROPYIFCHANGESTOENTROPY || implicitferr==QTYENTROPYUMHD){
-        *eomtype=EOMDONOTHING;
+        *eomtype=EOMDIDENTROPYGRMHD;
       }
     
       if(*eomtype==EOMGRMHD){
-        *eomtype=EOMDONOTHING;
+        *eomtype=EOMDIDGRMHD;
       }
     }
   }
   else if(SWITCHTODONOTHING==2){
     // always do nothing, so entropy won't try to revert to cold.
-    *eomtype=EOMDONOTHING;
+    if(EOMENTROPYGRMHD) *eomtype=EOMDIDENTROPYGRMHD;
+    if(EOMGRMHD) *eomtype=EOMDIDGRMHD;
   }
 
   ////////////////////

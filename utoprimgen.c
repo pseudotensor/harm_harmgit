@@ -55,13 +55,6 @@ int Utoprimgen(int showmessages, int allowlocalfailurefixandnoreport, int finals
   int eomtypelocal;
 
 
-  //
-  ///////////////
-  if(*eomtype==EOMDONOTHING){
-    // then do nothing since assume already pr=pr[U].
-    // also don't change any failure flags, assuming prior flags are correct.
-    return(0);
-  }
 
   ///////////////
   //
@@ -137,7 +130,7 @@ int Utoprimgen(int showmessages, int allowlocalfailurefixandnoreport, int finals
   //
   ////////////////////////////////////////////////////////
   PALLLOOP(pl){
-    Ugeomfree0[pl]=Ugeomfree[pl];
+    Uold[pl]=Ugeomfree0[pl]=Ugeomfree[pl];
     pr0[pl]=pr[pl];
   }
 
@@ -160,6 +153,48 @@ int Utoprimgen(int showmessages, int allowlocalfailurefixandnoreport, int finals
   //  if(nstep==4 && steppart==0){
   //    PLOOP(pliter,pl) dualfprintf(fail_file,"PRIMUTOPRIMGEN0(%d): pl=%d pp=%21.15g uu=%21.15g\n",*eomtype,pl,pr[pl],Ugeomfree[pl]);
   //  }
+
+
+  ///////////////
+  if(EOMDONOTHING(*eomtype)){
+    // then do nothing since assume already pr=pr[U].
+    // also don't change any failure flags, assuming prior flags are correct.
+
+    // still can check inversion
+    if(GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)<=UTOPRIMNOFAIL){
+      usedhotinversion=usedentropyinversion=usedcoldinversion=usedffdeinversion=0;
+      if(*eomtype==EOMDIDGRMHD) usedhotinversion=1;
+      if(*eomtype==EOMDIDENTROPYGRMHD) usedentropyinversion=1;
+      if(*eomtype==EOMDIDCOLDGRMHD) usedcoldinversion=1;
+      if(*eomtype==EOMDIDFFDE) usedffdeinversion=1;
+
+      // check cold inversion if inversion thinks it was successful
+      check_on_inversion(usedhotinversion,usedentropyinversion,usedcoldinversion,usedffdeinversion,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr0, pr, pressure, ptrgeom, Uold, Unew,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
+    }
+    if(DOEVOLVERHO){
+      negdensitycheck(finalstep, pr, &GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL));
+    }
+    return(0);
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+  ////////////////////////////////////////////////////////
+  //
+  // START INVERSION PROCESS
+  //
+  //
+  ////////////////////////////////////////////////////////
 
 
 
