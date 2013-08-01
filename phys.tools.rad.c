@@ -12,7 +12,7 @@ static int Utoprimgen_failwrapper_old(int showmessages, int allowlocalfailurefix
 //////// implicit stuff
 static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother ,FTYPE (*dUcomp)[NPR]);
 
-static int koral_source_rad_implicit_mode(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother ,FTYPE (*dUcomp)[NPR]);
+static int koral_source_rad_implicit_mode(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother ,FTYPE (*dUcomp)[NPR], FTYPE *errorabs, int *iters);
 
 static int koral_source_rad_implicit_perdampstrategy(int dampstrategy, FTYPE imptryconv, FTYPE impallowconv, int impmaxiter, int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother ,FTYPE *radsource, FTYPE *errorabs, int *iterreturn, int *returntype);
 
@@ -330,6 +330,11 @@ static void get_refUs(int *implicititer, int *implicitferr, int *irefU, int *iot
 // 1: directly check post pp-ppp and see if machine precision change
 // 2: directly check if any changes to pp during Newton step.
 #define POSTNEWTONCONVCHECK 2
+
+// whether to use EOMDONOTHING if error is good enough.
+// 1: check if should do nothing
+// 2: always avoid external inversion (so no longer can do cold MHD, but cold MHD in \tau\gtrsim 1 places is very bad)
+#define SWITCHTODONOTHING 1
 
 //FUCK: Do basic koral damping if error high or no solution.
 // FUCK: entropy switch condition.
@@ -654,10 +659,11 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
     qbackup=*q;
   }
 
-
+  FTYPE errorabsenergy,errorabsentropy;
+  int itersenergy,itersentropy;
   if(MODEMETHOD==MODESWITCH){
     // first try normal mode if *eomtype==EOMGRMHD
-    failreturn=koral_source_rad_implicit_mode(&eomtypelocal, pb, piin, Uiin, Ufin, CUf, ptrgeom, q, dUother ,dUcomp);
+    failreturn=koral_source_rad_implicit_mode(&eomtypelocal, pb, piin, Uiin, Ufin, CUf, ptrgeom, q, dUother ,dUcomp, &errorabsenergy, &itersenergy);
     int eomtypecond=(*eomtype==EOMGRMHD || *eomtype==EOMDEFAULT && EOMTYPE==EOMGRMHD);
     if((failreturn>0 || eomtypelocal==EOMENTROPYGRMHD) && eomtypecond){
       // if failed with GRMHD or return reported switching to entropy is preferred, then do entropy method
@@ -669,7 +675,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
         *q=qbackup;
       }
       // get fresh start entropy solution
-      failreturn=koral_source_rad_implicit_mode(&eomtypelocal, pb, piin, Uiin, Ufin, CUf, ptrgeom, q, dUother ,dUcomp);
+      failreturn=koral_source_rad_implicit_mode(&eomtypelocal, pb, piin, Uiin, Ufin, CUf, ptrgeom, q, dUother ,dUcomp, &errorabsentropy, &itersentropy);
       if(failreturn>0){
         dualfprintf(fail_file,"Entropy also failed: %d\n",failreturn);
       }
@@ -701,7 +707,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
       qentropy=*q;
     }
     // get fresh start entropy solution
-    failreturnentropy=koral_source_rad_implicit_mode(&eomtypeentropy, pbentropy, piin, Uiin, Ufin, CUf, ptrgeom, &qentropy, dUother ,dUcompentropy);
+    failreturnentropy=koral_source_rad_implicit_mode(&eomtypeentropy, pbentropy, piin, Uiin, Ufin, CUf, ptrgeom, &qentropy, dUother ,dUcompentropy, &errorabsentropy, &itersentropy);
     // eomtypeentropy can become EOMDONOTHING if this call was successful
 
     // now consider trying energy method
@@ -729,13 +735,18 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
         }
       }
 
-      failreturnenergy=koral_source_rad_implicit_mode(&eomtypeenergy, pbenergy, piin, Uiin, Ufin, CUf, ptrgeom, &qenergy, dUother ,dUcompenergy);
+      failreturnenergy=koral_source_rad_implicit_mode(&eomtypeenergy, pbenergy, piin, Uiin, Ufin, CUf, ptrgeom, &qenergy, dUother ,dUcompenergy, &errorabsenergy, &itersenergy);
     }// end if doing GRMHD inversion
     
 
 
     // see if should use the entropy solution
-    if(failreturnenergy && failreturnentropy<=0 || pbenergy[UU]<0.5*pbentropy[UU] && failreturnentropy<=0 && failreturnenergy<=0 ){
+    // only use entropy if energy failed, or energy predicts smaller u_g while having also larger error in solution and energy has larger than desired error.  Avoids larger error entropy cases messing up solution.
+    if(
+       failreturnenergy && failreturnentropy<=0
+#define IMPOKENTROPY (1E-8)
+       || pbenergy[UU]<0.5*pbentropy[UU] && failreturnentropy<=0 && failreturnenergy<=0 && (errorabsentropy<IMPOKENTROPY && errorabsenergy>errorabsentropy)
+       ){
       //      dualfprintf(fail_file,"USING ENTROPY\n");
       // tell an externals to switch to entropy
       *eomtype=eomtypeentropy; // can be EOMDONOTHING if successful and small enough error
@@ -747,7 +758,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
       }
       failreturn=failreturnentropy;
     }
-    else{
+    else if(failreturnenergy<=0){
       //      dualfprintf(fail_file,"USING ENERGY\n");
       *eomtype=eomtypeenergy; // can be EOMDONOTHING if successful
       // set result as energy result
@@ -757,6 +768,10 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
         *q=qenergy;
       }
       failreturn=failreturnenergy;
+    }
+    else{
+      // just fail.  No source
+      dualfprintf(fail_file,"No source\n");
     }
 
   }
@@ -775,7 +790,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
 
 // compute changes to U (both T and R) using implicit method
 // KORALTODO: If doing implicit, should also add geometry source term that can sometimes be stiff.  Would require inverting sparse 8x8 matrix (or maybe 6x6 since only r-\theta for SPC).  Could be important for very dynamic radiative flows.
-static int koral_source_rad_implicit_mode(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother ,FTYPE (*dUcomp)[NPR])
+static int koral_source_rad_implicit_mode(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother ,FTYPE (*dUcomp)[NPR], FTYPE *errorabsreturn, int *itersreturn)
 {
   int i1,i2,i3,iv,ii,jj,kk,pliter,sc;
   int pl;
@@ -980,10 +995,10 @@ static int koral_source_rad_implicit_mode(int *eomtype, FTYPE *pb, FTYPE *piin, 
 
   // whether holding as positive
   int holdingaspositive=0,iterhold=0;
+  *errorabsreturn=BIG;
   
   do{
-    iter++;
-
+    iter++; *itersreturn=iter;
 
     
     if(iter>10){ // KORALTODO: improve upon this later
@@ -1448,6 +1463,7 @@ static int koral_source_rad_implicit_mode(int *eomtype, FTYPE *pb, FTYPE *piin, 
     if(itermaxed || notfinite ){
       // f1-based
       convreturnf1allow=f_error_check(showmessages, showmessagesheavy, iter, IMPALLOWCONV,realdt,dimtypef,eomtypelocal,f1,f1norm,f1report,Uiin,uup,uu,ptrgeom);
+      errorabsf1=0.0;     DLOOPA(jj) errorabsf1     += fabs(f1report[erefU[jj]]);
       
       if(gotbest){
         // f1 based
@@ -1458,10 +1474,11 @@ static int koral_source_rad_implicit_mode(int *eomtype, FTYPE *pb, FTYPE *piin, 
           PLOOP(pliter,pl) uu[pl]=bestuu[pl];
           PLOOP(pliter,pl) pp[pl]=bestpp[pl];
           errorabsf1=errorabsbest;
+          DLOOPA(jj) f1report[erefU[jj]] = lowestfreportf1[erefU[jj]];
         }
         if(showmessages && debugfail>=2) dualfprintf(fail_file,"Using best: %g %g\n",errorabsf1,errorabsbest);
-        // get new convreturnf1allowlow
-        convreturnf1allow=(lowestfreportf1[erefU[0]]<IMPALLOWCONV && lowestfreportf1[erefU[1]]<IMPALLOWCONV && lowestfreportf1[erefU[2]]<IMPALLOWCONV && lowestfreportf1[erefU[3]]<IMPALLOWCONV);
+        // get new convreturnf1allow
+        convreturnf1allow=(f1report[erefU[0]]<IMPALLOWCONV && f1report[erefU[1]]<IMPALLOWCONV && f1report[erefU[2]]<IMPALLOWCONV && f1report[erefU[3]]<IMPALLOWCONV);
       }
 
       // KORALTODO: If convreturnf1allow doesn't work, but still (say) 10% error, might want to hold onto result in case explicit backup fails as well (which is likely), in which case *much* better to use 10% error because otherwise 4-force not accounted for, which can lead to very big changes in fluid behavior due to large flux from previous step.
@@ -1554,12 +1571,13 @@ static int koral_source_rad_implicit_mode(int *eomtype, FTYPE *pb, FTYPE *piin, 
       FTYPE errorabsbest=0.0;
       DLOOPA(jj) errorabsbest += fabs(lowestfreportf1[erefU[jj]]);
       if(errorabsbest<errorabsf1 || !isfinitel(errorabsf1) ){
+        if(showmessages && debugfail>=2) dualfprintf(fail_file,"FINALCHECK: Using best: %g %g\n",errorabsf1,errorabsbest);
         PLOOP(pliter,pl) uu[pl]=bestuu[pl];
         PLOOP(pliter,pl) pp[pl]=bestpp[pl];
         errorabsf1=errorabsbest;
-        convreturn=(lowestfreportf1[erefU[0]]<IMPALLOWCONV && lowestfreportf1[erefU[1]]<IMPALLOWCONV && lowestfreportf1[erefU[2]]<IMPALLOWCONV && lowestfreportf1[erefU[3]]<IMPALLOWCONV);
+        DLOOPA(jj) f1report[erefU[jj]] = lowestfreportf1[erefU[jj]];
+        convreturn=(f1report[erefU[0]]<IMPALLOWCONV && f1report[erefU[1]]<IMPALLOWCONV && f1report[erefU[2]]<IMPALLOWCONV && f1report[erefU[3]]<IMPALLOWCONV);
 
-        if(showmessages && debugfail>=2) dualfprintf(fail_file,"FINALCHECK: Using best: %g %g\n",errorabsf1,errorabsbest);
       }
     }
 
@@ -1630,20 +1648,30 @@ static int koral_source_rad_implicit_mode(int *eomtype, FTYPE *pb, FTYPE *piin, 
   //////////
   *eomtype=eomtypelocal;
 
-  // can further just choose to avoid inversion entirely since this step fully inverted (even if somewhat inaccurately) all parts used in advance.c:
-  // especially for entropy inversion, no need to be very accurate as normal inversion does, since no need to have exact entropy conservation, unlike desirable to have exact energy conservation.
-  if(errorabsf1<=IMPTRYCONV*(FTYPE)(2+NDIM)){// risky unless put in error condition
-    //  if(implicititer==QTYPMHD && implicitferr==QTYENTROPYUMHD){
-    // more general case when can just avoid external entropy inversion
-    if(*eomtype==EOMENTROPYGRMHD && SWITCHTOENTROPYIFCHANGESTOENTROPY || implicitferr==QTYENTROPYUMHD){
-      *eomtype=EOMDONOTHING;
-    }
+
+  errorabsf1=0.0; DLOOPA(jj) errorabsf1 += fabs(f1report[erefU[jj]]);
+  *errorabsreturn=errorabsf1;
+
+
+  if(SWITCHTODONOTHING==1){
+    // can further just choose to avoid inversion entirely since this step fully inverted (even if somewhat inaccurately) all parts used in advance.c:
+    // especially for entropy inversion, no need to be very accurate as normal inversion does, since no need to have exact entropy conservation, unlike desirable to have exact energy conservation.
+    if(errorabsf1<=IMPTRYCONV*(FTYPE)(2+NDIM)){// risky unless put in error condition
+      //  if(implicititer==QTYPMHD && implicitferr==QTYENTROPYUMHD){
+      // more general case when can just avoid external entropy inversion
+      if(*eomtype==EOMENTROPYGRMHD && SWITCHTOENTROPYIFCHANGESTOENTROPY || implicitferr==QTYENTROPYUMHD){
+        *eomtype=EOMDONOTHING;
+      }
     
-    if(*eomtype==EOMGRMHD){
-      *eomtype=EOMDONOTHING;
+      if(*eomtype==EOMGRMHD){
+        *eomtype=EOMDONOTHING;
+      }
     }
   }
-
+  else if(SWITCHTODONOTHING==2){
+    // always do nothing, so entropy won't try to revert to cold.
+    *eomtype=EOMDONOTHING;
+  }
 
   ////////////////////
   //
@@ -1651,7 +1679,6 @@ static int koral_source_rad_implicit_mode(int *eomtype, FTYPE *pb, FTYPE *piin, 
   //
   //////////////////////
   if(debugfail>=2){
-    errorabsf1=0.0; DLOOPA(jj) errorabsf1 += fabs(f1report[erefU[jj]]);
     
     // debug:
     //    if(errorabsf1>IMPTRYCONV) dualfprintf(fail_file,"errorabs=%g\n",errorabsf1);
