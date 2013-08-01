@@ -319,9 +319,6 @@ static void get_refUs(int *implicititer, int *implicitferr, int *irefU, int *iot
 // need to do final check since get f1 and then do step.
 #define DOFINALCHECK 1
 
-// need better normalization for sanity check before use it again
-// The current Erf,u normalization kinda checks whether Erf or u_g are going to have high *relative self* error.
-#define DOSANITYCHECK 0
 
 // below 1 if reporting cases when MAXITER reached, but allowd error so not otherwise normally reported.
 #define REPORTMAXITERALLOWED 0
@@ -684,8 +681,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
     }
     else{
       // switch to whatever solver suggested if didn't meet go-entropy condition
-      *eomtype=eomtypelocal;
-      if(failreturn>0) dualfprintf(fail_file,"Decided didn't meet go-entropy condition but failed: failreturn=%d eomtypelocal=%d\n",failreturn,eomtypelocal);
+      *eomtype=eomtypelocal; // can also be EOMDONOTHING if successful and good enough error.
+      if(failreturn>0 && debugfail>=2) dualfprintf(fail_file,"Decided didn't meet go-entropy condition but failed: failreturn=%d eomtypelocal=%d\n",failreturn,eomtypelocal);
     }
   }
 
@@ -710,7 +707,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
     // now consider trying energy method
     int eomtypecond=(*eomtype==EOMGRMHD || *eomtype==EOMDEFAULT && EOMTYPE==EOMGRMHD);
     int eomtypeenergy=EOMGRMHD;
-    int failreturnenergy=1; // default to fail in case grmhd not done
+    int failreturnenergy=1; // default to fail in case energy not to be done at all
     FTYPE pbenergy[NPR];
     FTYPE dUcompenergy[NUMSOURCES][NPR];
     struct of_state qenergy;
@@ -741,7 +738,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
     if(failreturnenergy && failreturnentropy<=0 || pbenergy[UU]<0.5*pbentropy[UU] && failreturnentropy<=0 && failreturnenergy<=0 ){
       //      dualfprintf(fail_file,"USING ENTROPY\n");
       // tell an externals to switch to entropy
-      *eomtype=eomtypeentropy;
+      *eomtype=eomtypeentropy; // can be EOMDONOTHING if successful and small enough error
       // set result as entropy result
       PLOOP(pliter,pl){
         pb[pl]=pbentropy[pl];
@@ -752,7 +749,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
     }
     else{
       //      dualfprintf(fail_file,"USING ENERGY\n");
-      *eomtype=eomtypeenergy;
+      *eomtype=eomtypeenergy; // can be EOMDONOTHING if successful
       // set result as energy result
       PLOOP(pliter,pl){
         pb[pl]=pbenergy[pl];
@@ -761,6 +758,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
       }
       failreturn=failreturnenergy;
     }
+
   }
 
 
@@ -1500,6 +1498,7 @@ static int koral_source_rad_implicit_mode(int *eomtype, FTYPE *pb, FTYPE *piin, 
 
 
 
+
   if(AVOIDSUCK){
     ////////////////////
     //
@@ -1534,7 +1533,7 @@ static int koral_source_rad_implicit_mode(int *eomtype, FTYPE *pb, FTYPE *piin, 
   }// end if testing if sucking
 
 
-  if(DOSANITYCHECK||DOFINALCHECK){
+  if(DOFINALCHECK){
     //////////////////////////
     //
     // sanity check on error, and final inversion
@@ -1543,26 +1542,10 @@ static int koral_source_rad_implicit_mode(int *eomtype, FTYPE *pb, FTYPE *piin, 
     int whichcall=1;
     //  eomtypelocal=*eomtype; // re-chose default each time. No, stick with what f1 (last call to f1) chose
     failreturn=f_implicit_lab(iter,failreturnallowableuse, whichcall,showmessages, allowlocalfailurefixandnoreport, &eomtypelocal, pp, uu0, uu, fracdtG*realdt, ptrgeom, f1, f1norm); // modifies uu and pp
-    if(DOSANITYCHECK){
-      // can't just check (uup-uu)/(|uu|-|uup|) because uup and uu  might diverge, leading to huge G, while uup-uu might be similar enough.
-      // In that case, also using f1 and f1norm not good enough.
-      // Have to compare with static norm
-      // overwrite f1norm with static choice to avoid run-away G
-      jj=TT; f1norm[erefU[jj]]=MAX(pb[PRAD0],pb[UU]);
-      SLOOPA(jj) f1norm[erefU[jj]]=MAX(pb[PRAD0],pb[UU])/sqrt(fabs(ptrgeom->gcon[GIND(jj,jj)]));  // make into conserved type: R^t_\nu ~ {prad0,uu} / sqrt(gcon[nu,nu])
-    }
     int dimtypef=DIMTYPEFCONS; // 0 = conserved R^t_\nu type, 1 = primitive (u,v^i) type, i.e. v^i has no energy density term
     int convreturn=f_error_check(showmessages, showmessagesheavy, iter, IMPALLOWCONV,realdt,dimtypef,eomtypelocal,f1,f1norm,f1report,Uiin,uu0,uu,ptrgeom);
     errorabsf1=0.0;     DLOOPA(jj) errorabsf1     += fabs(f1report[erefU[jj]]);
-    if(convreturn==0){
-      if(debugfail>=2){
-        dualfprintf(fail_file,"Thought was good error (gotbackup=%d : %g %g %g), but final-check or re-check showed otherwise: nstep=%ld steppart=%d ijk=%d %d %d\n",gotbackup,pp[RHO],pp[UU],pp[PRAD0],nstep,steppart,ptrgeom->i,ptrgeom->j,ptrgeom->k);
-        DLOOPA(jj) dualfprintf(fail_file,"Issue with jj=%d %g %g %g : %g %g\n",jj,f1[erefU[jj]],f1norm[erefU[jj]],f1report[erefU[jj]],uup[irefU[jj]],uu[irefU[jj]]);
-        failnum++;
-        mathematica_report_check(4, failnum, gotfirstnofail, errorabsf1, iter, realdt, ptrgeom, ppfirst,pp,pb,piin,uu0,uu,Uiin,Ufin, CUf, q, dUother);
-      }
-      return(FAILRETURNGENERAL);
-    }
+
 
     // but use best if this last iteration actually has higher error.
     if(gotbest){
@@ -1574,9 +1557,22 @@ static int koral_source_rad_implicit_mode(int *eomtype, FTYPE *pb, FTYPE *piin, 
         PLOOP(pliter,pl) uu[pl]=bestuu[pl];
         PLOOP(pliter,pl) pp[pl]=bestpp[pl];
         errorabsf1=errorabsbest;
+        convreturn=(lowestfreportf1[erefU[0]]<IMPALLOWCONV && lowestfreportf1[erefU[1]]<IMPALLOWCONV && lowestfreportf1[erefU[2]]<IMPALLOWCONV && lowestfreportf1[erefU[3]]<IMPALLOWCONV);
+
+        if(showmessages && debugfail>=2) dualfprintf(fail_file,"FINALCHECK: Using best: %g %g\n",errorabsf1,errorabsbest);
       }
-      if(showmessages && debugfail>=2) dualfprintf(fail_file,"FINALCHECK: Using best: %g %g\n",errorabsf1,errorabsbest);
     }
+
+    if(convreturn==0){
+      if(debugfail>=2){
+        dualfprintf(fail_file,"Thought was good error (gotbackup=%d : %g %g %g), but final-check or re-check showed otherwise: nstep=%ld steppart=%d ijk=%d %d %d\n",gotbackup,pp[RHO],pp[UU],pp[PRAD0],nstep,steppart,ptrgeom->i,ptrgeom->j,ptrgeom->k);
+        DLOOPA(jj) dualfprintf(fail_file,"Issue with jj=%d %g %g %g : %g %g\n",jj,f1[erefU[jj]],f1norm[erefU[jj]],f1report[erefU[jj]],uup[irefU[jj]],uu[irefU[jj]]);
+        failnum++;
+        mathematica_report_check(4, failnum, gotfirstnofail, errorabsf1, iter, realdt, ptrgeom, ppfirst,pp,pb,piin,uu0,uu,Uiin,Ufin, CUf, q, dUother);
+      }
+      return(FAILRETURNGENERAL);
+    }
+
   }
 
   /////////////
@@ -1636,10 +1632,16 @@ static int koral_source_rad_implicit_mode(int *eomtype, FTYPE *pb, FTYPE *piin, 
 
   // can further just choose to avoid inversion entirely since this step fully inverted (even if somewhat inaccurately) all parts used in advance.c:
   // especially for entropy inversion, no need to be very accurate as normal inversion does, since no need to have exact entropy conservation, unlike desirable to have exact energy conservation.
-  //  if(implicititer==QTYPMHD && implicitferr==QTYENTROPYUMHD){
-  // more general case when can just avoid external entropy inversion
-  if(*eomtype==EOMENTROPYGRMHD && SWITCHTOENTROPYIFCHANGESTOENTROPY || implicitferr==QTYENTROPYUMHD){ // risky perhaps
-    *eomtype=EOMDONOTHING;
+  if(errorabsf1<=IMPTRYCONV*(FTYPE)(2+NDIM)){// risky unless put in error condition
+    //  if(implicititer==QTYPMHD && implicitferr==QTYENTROPYUMHD){
+    // more general case when can just avoid external entropy inversion
+    if(*eomtype==EOMENTROPYGRMHD && SWITCHTOENTROPYIFCHANGESTOENTROPY || implicitferr==QTYENTROPYUMHD){
+      *eomtype=EOMDONOTHING;
+    }
+    
+    if(*eomtype==EOMGRMHD){
+      *eomtype=EOMDONOTHING;
+    }
   }
 
 

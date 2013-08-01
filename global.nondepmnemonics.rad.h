@@ -93,11 +93,14 @@
 //#define IMPTRYCONV (1.e-8)
 //#define IMPTRYCONV2 (1.e-8)  // for used implicit solver
 // use below is necessary for RADDONUT to be reasonablely indifferent to tolerance.  Is expensive, but later can improve implicit method to avoid that issue.
-#define IMPTRYCONV (1.e-9)
-#define IMPTRYCONV2 (1.e-9)  // for used implicit solver
+//#define IMPTRYCONV (1.e-9)
+//#define IMPTRYCONV2 (1.e-9)  // for used implicit solver
 
-#define IMPALLOWCONV (1.e-2)
-#define IMPALLOWCONV2 (1.e-2)
+#define IMPTRYCONV (1.e-12)
+#define IMPTRYCONV2 (1.e-12)  // for used implicit solver
+
+#define IMPALLOWCONV (1.e-3)
+#define IMPALLOWCONV2 (1.e-3)
 // Chose 1E-4 based upon histogram for implicit solver in RADDONUT problem with field.
 //#define IMPALLOWCONV (1.e-1) // KORALTODO SUPERGODMARK
 #else
