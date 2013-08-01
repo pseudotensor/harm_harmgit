@@ -12,7 +12,7 @@ static int Utoprimgen_failwrapper_old(int showmessages, int allowlocalfailurefix
 //////// implicit stuff
 static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother ,FTYPE (*dUcomp)[NPR]);
 
-static int koral_source_rad_implicit_mode(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother ,FTYPE (*dUcomp)[NPR], FTYPE *errorabs, int *iters);
+static int koral_source_rad_implicit_mode(int havebackup, int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother ,FTYPE (*dUcomp)[NPR], FTYPE *errorabs, int *iters);
 
 static int koral_source_rad_implicit_perdampstrategy(int dampstrategy, FTYPE imptryconv, FTYPE impallowconv, int impmaxiter, int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother ,FTYPE *radsource, FTYPE *errorabs, int *iterreturn, int *returntype);
 
@@ -628,11 +628,14 @@ static FTYPE compute_dt(FTYPE *CUf, FTYPE dtin)
 #define FAILRETURNJACISSUE 2
 #define FAILRETURNMODESWITCH 3
 
-#define MODESWITCH 0
-#define MODEPICKBEST 1
+#define MODEENERGY 0
+#define MODEENTROPY 1
+#define MODESWITCH 2
+#define MODEPICKBEST 3
 
 // choose to switch to entropy only if energy fails or gives u_g<0.  Or choose to always do both and use best solution.
-#define MODEMETHOD MODEPICKBEST
+//#define MODEMETHOD MODEPICKBEST
+#define MODEMETHOD MODEENERGY
 
 // TO CHECK:
 // grep BAD 0_fail.out.grmhd.00*|wc -l ;  grep FAILINFO 0_fail.out.grmhd.00*|wc -l ; grep MAXF1 0_fail.out.grmhd.00*| wc -l ; grep MAXITER 0_fail.out.grmhd.00*|wc -l ; grep "also failed" 0_fail.out.grmhd.00*|wc -l 
@@ -644,6 +647,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
   int sc;
 
   int failreturn;
+  int havebackup;
 
   // set backups that might change and contaminate a fresh start
   // piin, Uiin, Ufin, CUf, ptrgeom, dUother don't change, rest can.
@@ -659,11 +663,42 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
     qbackup=*q;
   }
 
-  FTYPE errorabsenergy,errorabsentropy;
-  int itersenergy,itersentropy;
+
+  
+  if(MODEMETHOD==MODEENERGY){
+    FTYPE errorabs; int iters;
+    havebackup=0;
+    failreturn=koral_source_rad_implicit_mode(havebackup, &eomtypelocal, pb, piin, Uiin, Ufin, CUf, ptrgeom, q, dUother ,dUcomp, &errorabs, &iters);
+    if(failreturn>0){
+      // restore backups in case got contaminated
+      PLOOP(pliter,pl){
+        pb[pl]=pbbackup[pl];
+        SCLOOP(sc) dUcomp[sc][pl]=dUcompbackup[sc][pl];
+        *q=qbackup;
+      }
+    }
+  }
+
+  if(MODEMETHOD==MODEENTROPY){
+    FTYPE errorabs; int iters;
+    havebackup=0;
+    failreturn=koral_source_rad_implicit_mode(havebackup, &eomtypelocal, pb, piin, Uiin, Ufin, CUf, ptrgeom, q, dUother ,dUcomp, &errorabs, &iters);
+    if(failreturn>0){
+      // restore backups in case got contaminated
+      PLOOP(pliter,pl){
+        pb[pl]=pbbackup[pl];
+        SCLOOP(sc) dUcomp[sc][pl]=dUcompbackup[sc][pl];
+        *q=qbackup;
+      }
+    }
+  }
+
   if(MODEMETHOD==MODESWITCH){
+    FTYPE errorabsenergy,errorabsentropy;
+    int itersenergy,itersentropy;
     // first try normal mode if *eomtype==EOMGRMHD
-    failreturn=koral_source_rad_implicit_mode(&eomtypelocal, pb, piin, Uiin, Ufin, CUf, ptrgeom, q, dUother ,dUcomp, &errorabsenergy, &itersenergy);
+    havebackup=1;
+    failreturn=koral_source_rad_implicit_mode(havebackup, &eomtypelocal, pb, piin, Uiin, Ufin, CUf, ptrgeom, q, dUother ,dUcomp, &errorabsenergy, &itersenergy);
     int eomtypecond=(*eomtype==EOMGRMHD || *eomtype==EOMDEFAULT && EOMTYPE==EOMGRMHD);
     if((failreturn>0 || eomtypelocal==EOMENTROPYGRMHD) && eomtypecond){
       // if failed with GRMHD or return reported switching to entropy is preferred, then do entropy method
@@ -675,7 +710,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
         *q=qbackup;
       }
       // get fresh start entropy solution
-      failreturn=koral_source_rad_implicit_mode(&eomtypelocal, pb, piin, Uiin, Ufin, CUf, ptrgeom, q, dUother ,dUcomp, &errorabsentropy, &itersentropy);
+      havebackup=0;
+      failreturn=koral_source_rad_implicit_mode(havebackup, &eomtypelocal, pb, piin, Uiin, Ufin, CUf, ptrgeom, q, dUother ,dUcomp, &errorabsentropy, &itersentropy);
       if(failreturn>0){
         dualfprintf(fail_file,"Entropy also failed: %d\n",failreturn);
       }
@@ -693,7 +729,12 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
   }
 
 
+
+
+
   if(MODEMETHOD==MODEPICKBEST){
+    FTYPE errorabsenergy,errorabsentropy;
+    int itersenergy,itersentropy;
 
     // try entropy solution since more often obtainable and can use non-failed result as initial guess.
     int failreturnentropy=1;// default to fail
@@ -707,7 +748,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
       qentropy=*q;
     }
     // get fresh start entropy solution
-    failreturnentropy=koral_source_rad_implicit_mode(&eomtypeentropy, pbentropy, piin, Uiin, Ufin, CUf, ptrgeom, &qentropy, dUother ,dUcompentropy, &errorabsentropy, &itersentropy);
+    havebackup=0;
+    failreturnentropy=koral_source_rad_implicit_mode(havebackup, &eomtypeentropy, pbentropy, piin, Uiin, Ufin, CUf, ptrgeom, &qentropy, dUother ,dUcompentropy, &errorabsentropy, &itersentropy);
     // eomtypeentropy can become EOMDONOTHING if this call was successful
 
     // now consider trying energy method
@@ -735,7 +777,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
         }
       }
 
-      failreturnenergy=koral_source_rad_implicit_mode(&eomtypeenergy, pbenergy, piin, Uiin, Ufin, CUf, ptrgeom, &qenergy, dUother ,dUcompenergy, &errorabsenergy, &itersenergy);
+      havebackup=0;
+      failreturnenergy=koral_source_rad_implicit_mode(havebackup, &eomtypeenergy, pbenergy, piin, Uiin, Ufin, CUf, ptrgeom, &qenergy, dUother ,dUcompenergy, &errorabsenergy, &itersenergy);
     }// end if doing GRMHD inversion
     
 
@@ -774,7 +817,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
       dualfprintf(fail_file,"No source\n");
     }
 
-  }
+  }// end MODEPICKBEST
 
 
 
@@ -790,7 +833,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
 
 // compute changes to U (both T and R) using implicit method
 // KORALTODO: If doing implicit, should also add geometry source term that can sometimes be stiff.  Would require inverting sparse 8x8 matrix (or maybe 6x6 since only r-\theta for SPC).  Could be important for very dynamic radiative flows.
-static int koral_source_rad_implicit_mode(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother ,FTYPE (*dUcomp)[NPR], FTYPE *errorabsreturn, int *itersreturn)
+static int koral_source_rad_implicit_mode(int havebackup, int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother ,FTYPE (*dUcomp)[NPR], FTYPE *errorabsreturn, int *itersreturn)
 {
   int i1,i2,i3,iv,ii,jj,kk,pliter,sc;
   int pl;
@@ -1152,9 +1195,11 @@ static int koral_source_rad_implicit_mode(int *eomtype, FTYPE *pb, FTYPE *piin, 
       // if during f1iter-ations u_g or rho is negative, switch to entropy
       //      if(implicititer==QTYPMHD || implicititer==QTYPRAD || implicititer==QTYENTROPYPMHD){
 #define F1ITERSWITCHONNEG 20
-      if((eomtypelocal==EOMGRMHD || eomtypelocal==EOMDEFAULT && EOMDEFAULT==EOMGRMHD) && f1iter>F1ITERSWITCHONNEG && (pp[RHO]<0 || pp[UU]<0)){
-        dualfprintf(fail_file,"Switched modes during f1iter=%d : rho=%21.15g ug=%21.15g\n",f1iter,pp[RHO],pp[UU]);
-        return(FAILRETURNMODESWITCH);
+      if(havebackup){
+        if((eomtypelocal==EOMGRMHD || eomtypelocal==EOMDEFAULT && EOMDEFAULT==EOMGRMHD) && f1iter>F1ITERSWITCHONNEG && (pp[RHO]<0 || pp[UU]<0)){
+          dualfprintf(fail_file,"Switched modes during f1iter=%d : rho=%21.15g ug=%21.15g\n",f1iter,pp[RHO],pp[UU]);
+          return(FAILRETURNMODESWITCH);
+        }
       }
       
 
@@ -1320,12 +1365,12 @@ static int koral_source_rad_implicit_mode(int *eomtype, FTYPE *pb, FTYPE *piin, 
               if(debugfail>=3) dualfprintf(fail_file,"HOLDING: Deteteced unphysical pp[irefU[0]]: iter=%d\n",iter);
             }
             else{
-              if(eomcond){
+              if(eomcond && havebackup){
                 if(debugfail>=3) dualfprintf(fail_file,"SWITCHING MODE: Deteteced unphysical pp[irefU[0]]: iter=%d\n",iter);
                 return(FAILRETURNMODESWITCH);
               }
               else{
-                // already using entropy, so full failure or hold more
+                // already using entropy or no backup, so full failure
                 failnum++;
                 mathematica_report_check(10, failnum, gotfirstnofail, errorabsf1, iter, realdt, ptrgeom, ppfirst,pp,pb,piin,uu0,uu,Uiin,Ufin, CUf, q, dUother);
                 return(FAILRETURNGENERAL);
@@ -1524,8 +1569,10 @@ static int koral_source_rad_implicit_mode(int *eomtype, FTYPE *pb, FTYPE *piin, 
     ////////////////////
     if(gotbackup && !(pp[RHO]>=0.0 && pp[UU]>=0.0 && pp[PRAD0]>=0.0)){
       if(eomtypelocal==EOMGRMHD || eomtypelocal==EOMDEFAULT && EOMDEFAULT==EOMGRMHD){// grmhd and sucking
-        dualfprintf(fail_file,"SWITCHING MODE: Deteteced unphysical suck\n",pp[RHO],pp[UU],pp[PRAD0]);
-        return(FAILRETURNMODESWITCH);
+        if(havebackup){
+          dualfprintf(fail_file,"SWITCHING MODE: Deteteced unphysical suck\n",pp[RHO],pp[UU],pp[PRAD0]);
+          return(FAILRETURNMODESWITCH);
+        }
       }
       else{
         // then might be sucking into radiation or into thermal energy density nothingness, so see if backup is good enough error
