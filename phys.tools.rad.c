@@ -1374,13 +1374,21 @@ static int koral_source_rad_implicit_mode(int havebackup, int *eomtype, FTYPE *p
     else{
 
       if(f1iter==MAXF1TRIES){
+
         if(debugfail>=2) dualfprintf(fail_file,"Reached MAXF1TRIES: fracdtuu0=%g nstep=%ld steppart=%d ijk=%d %d %d : iter=%d eomtype=%d failreturn=%d\n",fracdtuu0,nstep,steppart,ptrgeom->i,ptrgeom->j,ptrgeom->k,iter,eomtypelocal,failreturn);
-        failnum++;
-        mathematica_report_check(0, failnum, gotfirstnofail, BIG, iter, realdt, ptrgeom, ppfirst,pp,pb,piin,uu0,uu,Uiin,Ufin, CUf, q, dUother);
-        if(doingit==1) myexit(10000000); // DEBUG
-        // Note that if inversion reduces to entropy or cold, don't fail, so passes until reached this point.  But convergence can be hard if flipping around which EOMs for the inversion are actually used.
-        failreturn=FAILRETURNGENERAL;
-        break;
+        if(havebackup){
+          dualfprintf(fail_file,"SWITCHING MODE: Deteteced MAXF1TRIES\n");
+          failreturn=FAILRETURNMODESWITCH;
+          break;
+        }
+        else{
+          failnum++;
+          mathematica_report_check(0, failnum, gotfirstnofail, BIG, iter, realdt, ptrgeom, ppfirst,pp,pb,piin,uu0,uu,Uiin,Ufin, CUf, q, dUother);
+          if(doingit==1) myexit(10000000); // DEBUG
+          // Note that if inversion reduces to entropy or cold, don't fail, so passes until reached this point.  But convergence can be hard if flipping around which EOMs for the inversion are actually used.
+          failreturn=FAILRETURNGENERAL;
+          break;
+        }
       }
       else{
         // restore fracuup back to 1 since this is only meant to adjust how much go back to previous uu to be able to get f1 computed.
@@ -1471,10 +1479,17 @@ static int koral_source_rad_implicit_mode(int havebackup, int *eomtype, FTYPE *p
 
 
       if(failreturniJ!=0){
-        failnum++;
-        mathematica_report_check(12, failnum, gotfirstnofail, errorabsf1, iter, realdt, ptrgeom, ppfirst,pp,pb,piin,uu0,uu,Uiin,Ufin, CUf, q, dUother);
-        failreturn=FAILRETURNJACISSUE;
-        break;
+        if(havebackup){
+          dualfprintf(fail_file,"SWITCHING MODE: Deteteced bad Jacobian\n");
+          failreturn=FAILRETURNMODESWITCH;
+          break;
+        }
+        else{
+          failnum++;
+          mathematica_report_check(12, failnum, gotfirstnofail, errorabsf1, iter, realdt, ptrgeom, ppfirst,pp,pb,piin,uu0,uu,Uiin,Ufin, CUf, q, dUother);
+          failreturn=FAILRETURNJACISSUE;
+          break;
+        }
       }
 
       if(showmessagesheavy){
@@ -1548,8 +1563,13 @@ static int koral_source_rad_implicit_mode(int havebackup, int *eomtype, FTYPE *p
               }
               else{
                 if(DOFINALCHECK) canbreak=1; // just break since might be good (or at least allowable) error still.  Let final error check handle this.
+                else if(havebackup){
+                  dualfprintf(fail_file,"SWITCHING MODE: Deteteced bad u_g\n");
+                  failreturn=FAILRETURNMODESWITCH;
+                  break;
+                }
                 else{
-                  // already using entropy, so full failure
+                  // then full failure
                   failnum++;
                   mathematica_report_check(10, failnum, gotfirstnofail, errorabsf1, iter, realdt, ptrgeom, ppfirst,pp,pb,piin,uu0,uu,Uiin,Ufin, CUf, q, dUother);
                   failreturn=FAILRETURNGENERAL;
@@ -1732,13 +1752,19 @@ static int koral_source_rad_implicit_mode(int havebackup, int *eomtype, FTYPE *p
             }
             else{
               if(debugfail>=2) dualfprintf(fail_file,"Couldn't use backup: pp=%g %g %g : fbackup=%g %g %g %g\n",pp[RHO],pp[UU],pp[PRAD0],fbackup[erefU[0]],fbackup[erefU[1]],fbackup[erefU[2]],fbackup[erefU[3]]);
-              // already using entropy, so full failure or hold more
-              failnum++;
-              // in case changed primitive, modify conserved quantity so consistent (have to do this since iterated uu or pp but didn't yet call f_implicit_lab())
-              struct of_state qcheck; get_state(pp, ptrgeom, &qcheck);  primtoU(UNOTHING,pp,&qcheck,ptrgeom, uu);
-              mathematica_report_check(11, failnum, gotfirstnofail, errorabsf1, iter, realdt, ptrgeom, ppfirst,pp,pb,piin,uu0,uu,Uiin,Ufin, CUf, q, dUother);
-              failreturn=FAILRETURNGENERAL;
-              break;
+              if(havebackup){
+                dualfprintf(fail_file,"SWITCHING MODE: Deteteced suck was unrecoverable.\n");
+                failreturn=FAILRETURNMODESWITCH;
+                break;
+              }
+              else{
+                failnum++;
+                // in case changed primitive, modify conserved quantity so consistent (have to do this since iterated uu or pp but didn't yet call f_implicit_lab())
+                struct of_state qcheck; get_state(pp, ptrgeom, &qcheck);  primtoU(UNOTHING,pp,&qcheck,ptrgeom, uu);
+                mathematica_report_check(11, failnum, gotfirstnofail, errorabsf1, iter, realdt, ptrgeom, ppfirst,pp,pb,piin,uu0,uu,Uiin,Ufin, CUf, q, dUother);
+                failreturn=FAILRETURNGENERAL;
+                break;
+              }
             }
           }// end if entropy and sucking
         }// end if sucking
@@ -1802,10 +1828,16 @@ static int koral_source_rad_implicit_mode(int havebackup, int *eomtype, FTYPE *p
         if(iter>IMPMAXITER){// then reached maximum iterations
           if(showmessages && debugfail>=2) dualfprintf(fail_file,"iter>IMPMAXITER=%d : iter exceeded in solve_implicit_lab().  But f1 was allowed error. checkconv=%d (if checkconv=0, could be issue!) : %g %g %g %g : %g %g %g %g : errorabs=%g : %g %g %g\n",IMPMAXITER,checkconv,f1report[erefU[0]],f1report[erefU[1]],f1report[erefU[2]],f1report[erefU[3]],lowestfreportf1[erefU[0]],lowestfreportf1[erefU[1]],lowestfreportf1[erefU[2]],lowestfreportf1[erefU[3]],errorabsf1,fracdtuu0,fracuup,fracdtG);
           if(REPORTMAXITERALLOWED){
-            failnum++;
-            // in case changed primitive, modify conserved quantity so consistent (have to do this since iterated uu or pp but didn't yet call f_implicit_lab())
-            struct of_state qcheck; get_state(pp, ptrgeom, &qcheck);  primtoU(UNOTHING,pp,&qcheck,ptrgeom, uu);
-            mathematica_report_check(6, failnum, gotfirstnofail, errorabsf1, iter, realdt, ptrgeom, ppfirst,pp,pb,piin,uu0,uu,Uiin,Ufin, CUf, q, dUother);
+            if(havebackup){
+              dualfprintf(fail_file,"SWITCHING MODE: Deteteced MAXITER\n");
+              // don't break, just reporting or not
+            }
+            else{
+              failnum++;
+              // in case changed primitive, modify conserved quantity so consistent (have to do this since iterated uu or pp but didn't yet call f_implicit_lab())
+              struct of_state qcheck; get_state(pp, ptrgeom, &qcheck);  primtoU(UNOTHING,pp,&qcheck,ptrgeom, uu);
+              mathematica_report_check(6, failnum, gotfirstnofail, errorabsf1, iter, realdt, ptrgeom, ppfirst,pp,pb,piin,uu0,uu,Uiin,Ufin, CUf, q, dUother);
+            }
           }
         }
         // can continue if convreturnallow
@@ -1817,11 +1849,16 @@ static int koral_source_rad_implicit_mode(int havebackup, int *eomtype, FTYPE *p
           if(notfinite) dualfprintf(fail_file,"IMPGOTNAN at iter=%d : in solve_implicit_lab(). ijk=%d %d %d :  Bad error.\n",iter,ptrgeom->i,ptrgeom->j,ptrgeom->k);
           dualfprintf(fail_file,"checkconv=%d failreturnallowable=%d: %g %g %g %g : %g %g %g %g\n",checkconv,failreturnallowable,f1report[erefU[0]],f1report[erefU[1]],f1report[erefU[2]],f1report[erefU[3]],lowestfreportf1[erefU[0]],lowestfreportf1[erefU[1]],lowestfreportf1[erefU[2]],lowestfreportf1[erefU[3]]);
           if(1||showmessages){
-            failnum++;
-            // in case changed primitive, modify conserved quantity so consistent (have to do this since iterated uu or pp but didn't yet call f_implicit_lab())
-            struct of_state qcheck; get_state(pp, ptrgeom, &qcheck);  primtoU(UNOTHING,pp,&qcheck,ptrgeom, uu);
-            mathematica_report_check(1, failnum, gotfirstnofail, errorabsf1, iter, realdt, ptrgeom, ppfirst,pp,pb,piin,uu0,uu,Uiin,Ufin, CUf, q, dUother);
-            if(doingit==1) myexit(100000000); // DEBUG
+            if(havebackup){
+              // don't break, just don't report.
+            }
+            else{
+              failnum++;
+              // in case changed primitive, modify conserved quantity so consistent (have to do this since iterated uu or pp but didn't yet call f_implicit_lab())
+              struct of_state qcheck; get_state(pp, ptrgeom, &qcheck);  primtoU(UNOTHING,pp,&qcheck,ptrgeom, uu);
+              mathematica_report_check(1, failnum, gotfirstnofail, errorabsf1, iter, realdt, ptrgeom, ppfirst,pp,pb,piin,uu0,uu,Uiin,Ufin, CUf, q, dUother);
+              if(doingit==1) myexit(100000000); // DEBUG
+            }
           }
         }        
         failreturn=FAILRETURNGENERAL;
