@@ -3963,7 +3963,7 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
     rho_av = AVGN_1(prim,i,j,k,RHO);
     u_av = AVGN_1(prim,i,j,k,UU);
     p_av = pressure_rho0_u_simple(i,j,k,loc,rho_av,u_av);
-    if(EOMRADTYPE!=EOMRADNONE) p_av += AVGN_2(prim,i,j,k,URAD0)*(4.0/3.0-1.0);
+    if(EOMRADTYPE!=EOMRADNONE) p_av += AVGN_1(prim,i,j,k,URAD0)*(4.0/3.0-1.0);
   }
   else{ // normal cells
     rho_av = AVGN_for3(prim,i,j,k,RHO);
@@ -4081,7 +4081,7 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
 
       if (q > 0.)      vpot += fact1*fact2;
       //      if (q > 0.)      vpot += q*q;
-      dualfprintf(fail_file,"ijk=%d %d %d : ptotmax=%g p_av=%g q=%g %g %g rin=%g vpot=%g\n",i,j,k,ptotmax,p_av,q,fact1,fact2,rin,vpot);
+      //      dualfprintf(fail_file,"ijk=%d %d %d : ptotmax=%g p_av=%g q=%g %g %g rin=%g vpot=%g\n",i,j,k,ptotmax,p_av,q,fact1,fact2,rin,vpot);
     }
 
 

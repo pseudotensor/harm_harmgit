@@ -541,11 +541,12 @@ static int advance_standard(
         // note that uf and ucum are initialized inside setup_rktimestep() before first substep
 
 
+
         // find dU(pb)
         // so pf contains updated field at cell center for use in (e.g.) implicit solver that uses inversion P(U)
         MYFUN(source(MAC(pi,i,j,k), MAC(pb,i,j,k), MAC(pf,i,j,k), &didreturnpf, &eomtype, ptrgeom, qptr2, MAC(ui,i,j,k), MAC(uf,i,j,k), CUf, dUriemann, dUcomp, dUgeom),"step_ch.c:advance()", "source", 1);
         // assumes final dUcomp is nonzero and representative of source term over this timestep
- 
+        
 
 
 #if(SPLITNPR)
@@ -616,7 +617,6 @@ static int advance_standard(
         //        if(nstep==4 && steppart==0){
         //          PLOOP(pliter,pl) dualfprintf(fail_file,"PRIMPOSTIMPLICIT2(%d,%g): pl=%d pf=%21.15g uu=%21.15g\n",eomtype,fluxdt,pl,MACP0A1(pf,i,j,k,pl),MACP0A1(myupoint,i,j,k,pl)/ptrgeom->gdet);
         //        }
-
 
 
         ////////////////////////////

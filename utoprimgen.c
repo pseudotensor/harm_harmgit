@@ -1064,7 +1064,7 @@ static int check_on_inversion(int usedhotinversion,int usedentropyinversion,int 
       else if(pl==B1 || pl==B2 || pl==B3){
 
         errornorm  = THIRD*(fabs(Unormalnew[B1]*sqrt(fabs(ptrgeom->gcov[GIND(1,1)])))+fabs(Unormalold[B1]*sqrt(fabs(ptrgeom->gcov[GIND(1,1)])))+fabs(Unormalnew[B2]*sqrt(fabs(ptrgeom->gcov[GIND(2,2)])))+fabs(Unormalold[B2]*sqrt(fabs(ptrgeom->gcov[GIND(2,2)])))+fabs(Unormalnew[B3]*sqrt(fabs(ptrgeom->gcov[GIND(3,3)])))+fabs(Unormalold[B3]*sqrt(fabs(ptrgeom->gcov[GIND(3,3)]))));
-        fdiff[pl] = sqrt(fabs(ptrgeom->gcov[GIND(pl-B1+1,pl-B1+1)]))*fabs(Unormalnew[pl]-Unormalold[pl]) / (errornorm+SMALL);
+        fdiff[pl] = sqrt(fabs(ptrgeom->gcov[GIND(pl-B1+1,pl-B1+1)]))*fabs(Unormalnew[pl]-Unormalold[pl]) / (errornorm+KINDASMALL); // for field order 1E-100 or less, geometry division and multiplication causes this to shift in value by order unity.
       }
     }
 

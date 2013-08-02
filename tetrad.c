@@ -214,7 +214,7 @@ static int compute_tetrcon_frommetric(FTYPE (*generalmatrix)[NDIM], FTYPE (*tetr
         minerror=fabs(errorlist[jj][kk]);
         minjj=jj;
         minkk=kk;
-        if(globalii==0 && globaljj==N2/2) dualfprintf(fail_file,"minkk=%d",minkk);
+        //        if(globalii==0 && globaljj==N2/2) dualfprintf(fail_file,"minkk=%d",minkk);
         signerror=sign(signlistmat[jj][kk]);
       }
     }

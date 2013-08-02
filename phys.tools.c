@@ -1447,6 +1447,8 @@ int source(FTYPE *pi, FTYPE *pr, FTYPE *pf, int *didreturnpf, int *eomtype, stru
       Ugeomfreei[pl]=pi[pl]; 
       Ugeomfreef[pl]=pf[pl];
       dUother[pl]=dUfromUFSET(CUf,dt,Ugeomfreei[pl],Ugeomfreef[pl],pf[pl]);
+      // Also, update "guess" pr with new field, since pr is used as default guess and want field to be correct.  So pr is no longer what computed flux.
+      pr[pl]=pf[pl];
     }
     // now sourcephysics() call will have all CENT quantities
   }

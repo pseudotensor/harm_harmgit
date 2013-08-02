@@ -99,8 +99,8 @@
 #define IMPTRYCONV (1.e-12)
 #define IMPTRYCONV2 (1.e-12)  // for used implicit solver
 
-#define IMPALLOWCONV (1.e-2)
-#define IMPALLOWCONV2 (1.e-2)
+#define IMPALLOWCONV (1.e-3)
+#define IMPALLOWCONV2 (1.e-3)
 // Chose 1E-4 based upon histogram for implicit solver in RADDONUT problem with field.
 //#define IMPALLOWCONV (1.e-1) // KORALTODO SUPERGODMARK
 #else

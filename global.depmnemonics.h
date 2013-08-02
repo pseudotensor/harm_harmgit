@@ -575,7 +575,7 @@ god=deathadflkjasdflkjasdlfkja242424
 #define VERYBIG (1.e150)
 #define BIG (1.e+100)
 #define SMALL (1.e-300)
-#define KINDASMALL (1.e-100)
+#define KINDASMALL (1.e-60)
 #endif
 
 
