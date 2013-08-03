@@ -331,10 +331,6 @@ static void get_refUs(int *implicititer, int *implicitferr, int *irefU, int *iot
 // whether to get lowest error solution instead of final one.
 #define GETBEST 1
 
-// whether to avoid solutions where u_g<0 or rho<0 and use backup that didn't have that problem.
-// KORALTODO: Bad to use backup since can be high error, but can recheck error or just use this to indicate to try entropy.
-#define AVOIDSUCK 1
-
 
 // need to do final check since get f1 and then do step.
 #define DOFINALCHECK 1
@@ -1126,7 +1122,6 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
   FTYPE uu0[NPR],uup[NPR],uupp[NPR],uu[NPR],uuporig[NPR],uu0orig[NPR],bestuu[NPR];
   FTYPE pp0[NPR],ppp[NPR],pppp[NPR],pp[NPR],ppporig[NPR],pp0orig[NPR],bestpp[NPR];
   FTYPE f1[NPR],f1norm[NPR],f1report[NPR],f3report[NPR],lowestfreportf1[NPR],lowestfreportf3[NPR];
-  FTYPE uubackup[NPR]={0},ppbackup[NPR]={0},fbackup[NPR];
 
   FTYPE radsource[NPR], deltas[NPR]; 
   extern int mathematica_report_check(int failtype, long long int failnum, int gotfirstnofail, FTYPE errorabs, int iters, FTYPE realdt,struct of_geom *ptrgeom, FTYPE *ppfirst, FTYPE *pp, FTYPE *pb, FTYPE *piin, FTYPE *uu0, FTYPE *uu, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_state *q, FTYPE *dUother);
@@ -1635,30 +1630,13 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
       // f1 based
       FTYPE errorabsbest=0.0;
       DLOOPA(jj) errorabsbest += fabs(lowestfreportf1[erefU[jj]]);
-      if(errorabsbest>errorabsf1 && isfinitel(errorabsf1)){
+      if(errorabsbest>errorabsf1 && isfinitel(errorabsf1) && pp[RHO]>0.0 && pp[UU]>0.0 && pp[PRAD0]>0.0){
         PLOOP(pliter,pl) bestuu[pl]=uu[pl];
         PLOOP(pliter,pl) bestpp[pl]=pp[pl];
         DLOOPA(jj) lowestfreportf1[erefU[jj]]=f1report[erefU[jj]];
         gotbest=1;
       }
 
-      ///////////////////////
-      //
-      // set backup solution
-      //
-      // avoid arbitrary sucking on thermal energy densities
-      // but only get backup if already below error
-      // at this point, uu and pp are fully up-to-date and consistent
-      //
-      ///////////////////////
-      if(pp[RHO]>=0.0 && pp[UU]>=0.0 && pp[PRAD0]>=0.0){
-        gotbackup=1;
-        PLOOP(pliter,pl){
-          fbackup[pl]=f1report[pl];
-          uubackup[pl]=uu[pl];
-          ppbackup[pl]=pp[pl];
-        }
-      }
 
 
 
@@ -1759,7 +1737,8 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
               if(countholdpositive<NUMHOLDTIMES){
                 if(debugfail>=DEBUGLEVELIMPSOLVER) dualfprintf(fail_file,"HOLDING: Deteteced unphysical iter=%d countholdpositive=%d : pp[irefU[0]]=%g : ijknstepsteppart=%d %d %d %ld %d\n",iter,countholdpositive,pp[irefU[0]],ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart);
                 //pp[irefU[0]]=MAX(100.0*NUMEPSILON*fabs(pp[RHO]),fabs(ppp[irefU[0]])); // hold as positive -- ppp might be too large so hold might be too aggressive to be useful.
-                pp[irefU[0]]=100.0*NUMEPSILON*fabs(pp[RHO]); // hold as positive
+                FTYPE umin=calc_PEQ_ufromTrho(TEMPMIN,fabs(pp[RHO]));
+                pp[irefU[0]]=2.0*umin; // hold as positive.  Basically setting u/rho that's like setting temperature.
                 countholdpositive++;
                 holdingaspositive=1;
               }
@@ -2003,89 +1982,7 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
       int fakeiter;
       for(fakeiter=0;fakeiter<=0;fakeiter++){
 
-        if(AVOIDSUCK){
-          ////////////////////
-          //
-          // See if final solution is sucking on energy.  If so, backup to solution where that wasn't happening.
-          //
-          ////////////////////
-          if(gotbackup && !(pp[RHO]>=0.0 && pp[UU]>=0.0 && pp[PRAD0]>=0.0)){
-            if(eomtypelocal==EOMGRMHD || eomtypelocal==EOMDEFAULT && EOMDEFAULT==EOMGRMHD){// grmhd and sucking
-              if(havebackup){
-                if(debugfail>=DEBUGLEVELIMPSOLVER) dualfprintf(fail_file,"SWITCHING MODE: Deteteced unphysical suck\n",pp[RHO],pp[UU],pp[PRAD0]);
-                failreturn=FAILRETURNMODESWITCH;
-                if(REPORTSWITCHINCASESHOULDNTHAVESWITCH){ failnum++;  mathematica_report_check(110, failnum, gotfirstnofail, errorabsf1, iter, realdt, ptrgeom, ppfirst,pp,pb,piin,uu0,uu,Uiin,Ufin, CUf, q, dUother);} // still report in case should have gotten solution
-                break;
-              }
-            }
-            else{
-              // then might be sucking into radiation or into thermal energy density nothingness, so see if backup is good enough error
-              if(debugfail>=2) dualfprintf(fail_file,"Thought was good error (eomtypelocal=%d havebackup=%d didentropyalready=%d), but gotbackup=%d and pp=%g %g %g : errorabsf1=%g : f1report: %g %g %g %g : nstep=%ld steppart=%d ijk=%d %d %d\n",eomtypelocal,havebackup,didentropyalready,gotbackup,pp[RHO],pp[UU],pp[PRAD0],errorabsf1,f1report[erefU[0]],f1report[erefU[1]],f1report[erefU[2]],f1report[erefU[3]],nstep,steppart,ptrgeom->i,ptrgeom->j,ptrgeom->k);
-
-              // before revert to backup, output mathematica result to see why (e.g.) entropy get u_g<0 and if that's correct.
-              if(REPORTPREBACKUP){
-                // in case changed primitive, modify conserved quantity so consistent (have to do this since iterated uu or pp but didn't yet call f_implicit_lab())
-                struct of_state qcheck; get_state(pp, ptrgeom, &qcheck);  primtoU(UNOTHING,pp,&qcheck,ptrgeom, uu);
-                failnum++; mathematica_report_check(40, failnum, gotfirstnofail, errorabsf1, iter, realdt, ptrgeom, ppfirst,pp,pb,piin,uu0,uu,Uiin,Ufin, CUf, q, dUother);
-                // no break, first try to use backup below, and only fail if not allowable error.
-              }
-
-
-              FTYPE errorabsfbackup=0.0;     DLOOPA(jj) errorabsfbackup     += fabs(fbackup[erefU[jj]]);
-              if(errorabsfbackup<IMPALLOWCONV){
-                PLOOP(pliter,pl){
-                  uu[pl]=uubackup[pl];
-                  pp[pl]=ppbackup[pl];
-                }
-                if(debugfail>=2) dualfprintf(fail_file,"Used backup: pp=%g %g %g : errorabsfbackup=%g : fbackup=%g %g %g %g\n",pp[RHO],pp[UU],pp[PRAD0],errorabsfbackup,fbackup[erefU[0]],fbackup[erefU[1]],fbackup[erefU[2]],fbackup[erefU[3]]);
-              }
-              else{
-                if(debugfail>=2) dualfprintf(fail_file,"Couldn't use backup: pp=%g %g %g : errorabsfbackup=%g : fbackup=%g %g %g %g\n",pp[RHO],pp[UU],pp[PRAD0],errorabsfbackup,fbackup[erefU[0]],fbackup[erefU[1]],fbackup[erefU[2]],fbackup[erefU[3]]);
-                if(havebackup){
-                  if(debugfail>=DEBUGLEVELIMPSOLVER) dualfprintf(fail_file,"SWITCHING MODE: Deteteced suck was unrecoverable.\n");
-                  failreturn=FAILRETURNMODESWITCH;
-                  if(REPORTSWITCHINCASESHOULDNTHAVESWITCH){ // still report in case should have been better solution
-                    // in case changed primitive, modify conserved quantity so consistent (have to do this since iterated uu or pp but didn't yet call f_implicit_lab())
-                    struct of_state qcheck; get_state(pp, ptrgeom, &qcheck);  primtoU(UNOTHING,pp,&qcheck,ptrgeom, uu);
-                    failnum++; mathematica_report_check(14, failnum, gotfirstnofail, errorabsf1, iter, realdt, ptrgeom, ppfirst,pp,pb,piin,uu0,uu,Uiin,Ufin, CUf, q, dUother);
-                  }
-                  break;
-                }
-                else{
-                  // in case changed primitive, modify conserved quantity so consistent (have to do this since iterated uu or pp but didn't yet call f_implicit_lab())
-                  struct of_state qcheck; get_state(pp, ptrgeom, &qcheck);  primtoU(UNOTHING,pp,&qcheck,ptrgeom, uu);
-                  failnum++; mathematica_report_check(11, failnum, gotfirstnofail, errorabsf1, iter, realdt, ptrgeom, ppfirst,pp,pb,piin,uu0,uu,Uiin,Ufin, CUf, q, dUother);
-                  failreturn=FAILRETURNGENERAL;
-                  break;
-                }
-              }
-            }// end if entropy and sucking
-          }// end if sucking
-        }// end if testing if sucking
-
-
-
-
-
         int convreturn=1,convreturnallow=1; // default is solution is acceptable.
-
-        if(DOFINALCHECK){
-          //////////////////////////
-          //
-          // check and get error for last iteration or any mods from above that are post-iteration
-          //
-          ////////////////////////
-          int whichcall=1;
-          //  eomtypelocal=*eomtype; // re-chose default each time. No, stick with what f1 (last call to f1) chose
-          failreturn=f_implicit_lab(iter,failreturnallowableuse, whichcall,showmessages, allowlocalfailurefixandnoreport, &eomtypelocal, pp, uu0, uu, fracdtG*realdt, ptrgeom, f1, f1norm); // modifies uu and pp
-          int dimtypef=DIMTYPEFCONS; // 0 = conserved R^t_\nu type, 1 = primitive (u,v^i) type, i.e. v^i has no energy density term
-          convreturn=f_error_check(showmessages, showmessagesheavy, iter, IMPTRYCONV,realdt,dimtypef,eomtypelocal,f1,f1norm,f1report,Uiin,uu0,uu,ptrgeom);
-          convreturnallow=f_error_check(showmessages, showmessagesheavy, iter, IMPALLOWCONV,realdt,dimtypef,eomtypelocal,f1,f1norm,f1report,Uiin,uup,uu,ptrgeom);
-          errorabsf1=0.0;     DLOOPA(jj) errorabsf1     += fabs(f1report[erefU[jj]]);
-        }// end if doing final check
-
-
-
 
         if(GETBEST){
           // f1-based
@@ -2112,6 +2009,29 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
 
 
 
+
+        if(DOFINALCHECK){
+          //////////////////////////
+          //
+          // check and get error for last iteration or any mods from above that are post-iteration
+          //
+          ////////////////////////
+          int whichcall=1;
+          //  eomtypelocal=*eomtype; // re-chose default each time. No, stick with what f1 (last call to f1) chose
+          failreturn=f_implicit_lab(iter,failreturnallowableuse, whichcall,showmessages, allowlocalfailurefixandnoreport, &eomtypelocal, pp, uu0, uu, fracdtG*realdt, ptrgeom, f1, f1norm); // modifies uu and pp
+          int dimtypef=DIMTYPEFCONS; // 0 = conserved R^t_\nu type, 1 = primitive (u,v^i) type, i.e. v^i has no energy density term
+          convreturn=f_error_check(showmessages, showmessagesheavy, iter, IMPTRYCONV,realdt,dimtypef,eomtypelocal,f1,f1norm,f1report,Uiin,uu0,uu,ptrgeom);
+          convreturnallow=f_error_check(showmessages, showmessagesheavy, iter, IMPALLOWCONV,realdt,dimtypef,eomtypelocal,f1,f1norm,f1report,Uiin,uup,uu,ptrgeom);
+          errorabsf1=0.0;     DLOOPA(jj) errorabsf1     += fabs(f1report[erefU[jj]]);
+        }// end if doing final check
+
+
+
+
+
+
+
+
         // KORALTODO: If convreturnallow doesn't work, but still (say) 10% error, might want to hold onto result in case explicit backup fails as well (which is likely), in which case *much* better to use 10% error because otherwise 4-force not accounted for, which can lead to very big changes in fluid behavior due to large flux from previous step.
         // KORALTODO: Or, perhaps should really take it as a failure and use fixups.  Probably should allow for result to be written if error<10%, but only use as super-backup in fixups.  So should set pflag still.
 
@@ -2134,7 +2054,8 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
               else{
                 // in case changed primitive, modify conserved quantity so consistent (have to do this since iterated uu or pp but didn't yet call f_implicit_lab())
                 struct of_state qcheck; get_state(pp, ptrgeom, &qcheck);  primtoU(UNOTHING,pp,&qcheck,ptrgeom, uu);
-                failnum++; mathematica_report_check((eomtypelocal==EOMGRMHD ? 6 : 600) , failnum, gotfirstnofail, errorabsf1, iter, realdt, ptrgeom, ppfirst,pp,pb,piin,uu0,uu,Uiin,Ufin, CUf, q, dUother);
+                int whichmath=(eomtypelocal==EOMGRMHD ? 6 : 600);
+                failnum++; mathematica_report_check(whichmath, failnum, gotfirstnofail, errorabsf1, iter, realdt, ptrgeom, ppfirst,pp,pb,piin,uu0,uu,Uiin,Ufin, CUf, q, dUother);
                 showdebuglist(pppreholdlist,ppposholdlist,f1reportlist,errorabsf1list);
               }// end else
             }
