@@ -2897,10 +2897,10 @@ static int koral_source_rad_implicit_perdampstrategy(int dampstrategy, FTYPE imp
   
       convreturn=f_error_check(showmessages, showmessagesheavy, iter, imptryconv,realdt,dimtypef,eomtypelocal,f3,f3norm,f3reportuu,Uiin,uup,uu,ptrgeom);
       // store error and solution in case eventually lead to max iterations and actually get worse error
-      // errorabslocal=0.0;      DLOOPA(jj) errorabslocal     += fabs(f3reportuu[erefU[jj]]);// use for machine precision test of uu-uup.  FUCK
+      // errorabslocal=0.0;      DLOOPA(jj) errorabslocal     += fabs(f3reportuu[erefU[jj]]);// use for machine precision test of uu-uup.
       errorabslocal=0.0;     DLOOPA(jj) errorabslocal     += fabs(f3report[erefU[jj]]); // try using real error
-      //DLOOPA(jj) f3report[erefU[jj]]=f3reportuu[erefU[jj]]; // FUCK
-      DLOOPA(jj) f3reportuu[erefU[jj]]=f3report[erefU[jj]]; // FUCK
+      //DLOOPA(jj) f3report[erefU[jj]]=f3reportuu[erefU[jj]];
+      DLOOPA(jj) f3reportuu[erefU[jj]]=f3report[erefU[jj]];
 
       if(checkconv){ // only store best if settled into full solution
         // store error and solution in case eventually lead to max iterations and actually get worse error
