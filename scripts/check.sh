@@ -29,3 +29,6 @@ echo "0S: Good: `grep 0SGood $mymath |wc -l` GoodW: `grep 0WSGood $mymath |wc -l
 
 echo " "
 echo "SHOULDS: `grep SHOULDUSEENTROPYNEGU $mymath |wc -l`  `grep SHOULDUSEENTROPYNEGRHO $mymath |wc -l`  `grep SHOULDUSEENTROPYNEGER $mymath |wc -l`"
+
+echo " "
+echo "SHOULDCONDS: `grep SHOULDUSEENTROPYCOND $mymath |wc -l`"
