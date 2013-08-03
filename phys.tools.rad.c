@@ -1334,7 +1334,7 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
 
 
     ////////////////////////////////
-    // START IMPLICIT ITERATIONS
+    // SETUP IMPLICIT ITERATIONS
     ////////////////////////////////
     int f1iter;
     int checkconv,changeotherdt;
@@ -1350,6 +1350,18 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
       pppp[pl]=ppporig[pl]=ppp[pl]=pp0orig[pl]=pp[pl];
     }
 
+
+    // setup debug so can see starting guess
+    if(DEBUGMAXITER){
+      int iterlist=0;
+      PLOOP(pliter,pl) pppreholdlist[iterlist][pl]=pp[pl];
+      PLOOP(pliter,pl) ppposholdlist[iterlist][pl]=pp[pl];
+      errorabsf1list[iter]=BIG;
+      DLOOPA(jj) f1reportlist[iter][jj]=BIG;
+    }
+
+
+
     // whether holding as positive
     int holdingaspositive=0,iterhold=0;
 
@@ -1362,6 +1374,9 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
     int notfinite=0;
 
 
+    ////////////////////////////////
+    // START IMPLICIT ITERATIONS
+    ////////////////////////////////
 
     do{
       iter++;
@@ -1730,15 +1745,16 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
 
           // check if u_g<0.  Do even if RAMESHFIXEARLYSTEPS going.
           int eomcond=(eomtypelocal==EOMGRMHD || eomtypelocal==EOMDEFAULT && EOMDEFAULT==EOMGRMHD);
-          if(pp[irefU[0]]<0.0 && (implicititer==QTYPMHD || implicititer==QTYPRAD)){ // don't consider implicititer==QTYENTROPYPMHD since S can be positive or negative.  Would only be unphysical or absolute-limited if the related u_g<0 or rho<0.
+          FTYPE umin=10.0*calc_PEQ_ufromTrho(TEMPMIN,fabs(pp[RHO]));
+          if(pp[irefU[0]]<umin && (implicititer==QTYPMHD || implicititer==QTYPRAD)){ // don't consider implicititer==QTYENTROPYPMHD since S can be positive or negative.  Would only be unphysical or absolute-limited if the related u_g<0 or rho<0.
             if(JONHOLDPOS){
 #if(0)
               holdingaspositive=0; // default
               if(countholdpositive<NUMHOLDTIMES){
                 if(debugfail>=DEBUGLEVELIMPSOLVER) dualfprintf(fail_file,"HOLDING: Deteteced unphysical iter=%d countholdpositive=%d : pp[irefU[0]]=%g : ijknstepsteppart=%d %d %d %ld %d\n",iter,countholdpositive,pp[irefU[0]],ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart);
                 //pp[irefU[0]]=MAX(100.0*NUMEPSILON*fabs(pp[RHO]),fabs(ppp[irefU[0]])); // hold as positive -- ppp might be too large so hold might be too aggressive to be useful.
-                FTYPE umin=calc_PEQ_ufromTrho(TEMPMIN,fabs(pp[RHO]));
-                pp[irefU[0]]=2.0*umin; // hold as positive.  Basically setting u/rho that's like setting temperature.
+                //                if(gotbest) umin=MAX(umin,0.5*fabs(pp[UU])); // override with last best version of u_g, because using very minimum leads to jump in behavior. // causes problems, leads to many high error events.
+                pp[irefU[0]]=umin; // hold as positive.
                 countholdpositive++;
                 holdingaspositive=1;
               }
@@ -1749,7 +1765,9 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
                 if(holdingaspositive==0) iterhold=iter;
                 //              else holdingaspositive=1;
                 holdingaspositive=1;
-                pp[irefU[0]]=100.0*NUMEPSILON*fabs(pp[RHO]); // hold as positive just one iteration
+                //                pp[irefU[0]]=100.0*NUMEPSILON*fabs(pp[RHO]); // hold as positive just one iteration
+                //                if(gotbest) umin=MAX(umin,0.5*fabs(pp[UU])); // override with last best version of u_g, because using very minimum leads to jump in behavior. // causes problems, leads to many high error events.
+                pp[irefU[0]]=umin; // hold as positive
               }
 #endif
               else{// then exceeding hold attempts
@@ -1984,6 +2002,24 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
 
         int convreturn=1,convreturnallow=1; // default is solution is acceptable.
 
+
+        if(DOFINALCHECK){
+          //////////////////////////
+          //
+          // check and get error for last iteration or any mods from above that are post-iteration
+          //
+          ////////////////////////
+          int whichcall=1;
+          //  eomtypelocal=*eomtype; // re-chose default each time. No, stick with what f1 (last call to f1) chose
+          failreturn=f_implicit_lab(iter,failreturnallowableuse, whichcall,showmessages, allowlocalfailurefixandnoreport, &eomtypelocal, pp, uu0, uu, fracdtG*realdt, ptrgeom, f1, f1norm); // modifies uu and pp
+          int dimtypef=DIMTYPEFCONS; // 0 = conserved R^t_\nu type, 1 = primitive (u,v^i) type, i.e. v^i has no energy density term
+          convreturn=f_error_check(showmessages, showmessagesheavy, iter, IMPTRYCONV,realdt,dimtypef,eomtypelocal,f1,f1norm,f1report,Uiin,uu0,uu,ptrgeom);
+          convreturnallow=f_error_check(showmessages, showmessagesheavy, iter, IMPALLOWCONV,realdt,dimtypef,eomtypelocal,f1,f1norm,f1report,Uiin,uup,uu,ptrgeom);
+          errorabsf1=0.0;     DLOOPA(jj) errorabsf1     += fabs(f1report[erefU[jj]]);
+        }// end if doing final check
+
+
+
         if(GETBEST){
           // f1-based
           // using old uu,uup, but probably ok since just helps normalize error
@@ -2010,20 +2046,6 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
 
 
 
-        if(DOFINALCHECK){
-          //////////////////////////
-          //
-          // check and get error for last iteration or any mods from above that are post-iteration
-          //
-          ////////////////////////
-          int whichcall=1;
-          //  eomtypelocal=*eomtype; // re-chose default each time. No, stick with what f1 (last call to f1) chose
-          failreturn=f_implicit_lab(iter,failreturnallowableuse, whichcall,showmessages, allowlocalfailurefixandnoreport, &eomtypelocal, pp, uu0, uu, fracdtG*realdt, ptrgeom, f1, f1norm); // modifies uu and pp
-          int dimtypef=DIMTYPEFCONS; // 0 = conserved R^t_\nu type, 1 = primitive (u,v^i) type, i.e. v^i has no energy density term
-          convreturn=f_error_check(showmessages, showmessagesheavy, iter, IMPTRYCONV,realdt,dimtypef,eomtypelocal,f1,f1norm,f1report,Uiin,uu0,uu,ptrgeom);
-          convreturnallow=f_error_check(showmessages, showmessagesheavy, iter, IMPALLOWCONV,realdt,dimtypef,eomtypelocal,f1,f1norm,f1report,Uiin,uup,uu,ptrgeom);
-          errorabsf1=0.0;     DLOOPA(jj) errorabsf1     += fabs(f1report[erefU[jj]]);
-        }// end if doing final check
 
 
 
@@ -2065,11 +2087,11 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
         else{
           // KORALTODO: Need backup that won't fail.
           if(debugfail>=2){
-            if(canbreak==1) dualfprintf(fail_file,"Held u_g, couldn't hold anymore and broke, but error still larger than allowed.\n");
-            if(canbreak==2) dualfprintf(fail_file,"Aborted due to oscillatory error despite not having backup.\n");
-            if(iter>IMPMAXITER) dualfprintf(fail_file,"iter>IMPMAXITER=%d : iter exceeded in solve_implicit_lab(). nstep=%ld steppart=%d ijk=%d %d %d :  Bad error.\n",IMPMAXITER,nstep,steppart,ptrgeom->i,ptrgeom->j,ptrgeom->k);
-            if(notfinite) dualfprintf(fail_file,"IMPGOTNAN at iter=%d : in solve_implicit_lab(). ijk=%d %d %d :  Bad error.\n",iter,ptrgeom->i,ptrgeom->j,ptrgeom->k);
-            dualfprintf(fail_file,"checkconv=%d failreturnallowable=%d: %g %g %g %g : %g %g %g %g\n",checkconv,failreturnallowable,f1report[erefU[0]],f1report[erefU[1]],f1report[erefU[2]],f1report[erefU[3]],lowestfreportf1[erefU[0]],lowestfreportf1[erefU[1]],lowestfreportf1[erefU[2]],lowestfreportf1[erefU[3]]);
+            if(canbreak==1 && havebackup==0) dualfprintf(fail_file,"Held u_g, couldn't hold anymore and broke, but error still larger than allowed.\n");
+            if(canbreak==2 && havebackup==0) dualfprintf(fail_file,"Aborted due to oscillatory error despite not having backup.\n");
+            if(iter>IMPMAXITER && havebackup==0) dualfprintf(fail_file,"iter>IMPMAXITER=%d : iter exceeded in solve_implicit_lab(). nstep=%ld steppart=%d ijk=%d %d %d :  Bad error.\n",IMPMAXITER,nstep,steppart,ptrgeom->i,ptrgeom->j,ptrgeom->k);
+            if(notfinite && havebackup==0) dualfprintf(fail_file,"IMPGOTNAN at iter=%d : in solve_implicit_lab(). ijk=%d %d %d :  Bad error.\n",iter,ptrgeom->i,ptrgeom->j,ptrgeom->k);
+            dualfprintf(fail_file,"checkconv=%d havebackup=%d failreturnallowable=%d: %g %g %g %g : %g %g %g %g\n",checkconv,havebackup,failreturnallowable,f1report[erefU[0]],f1report[erefU[1]],f1report[erefU[2]],f1report[erefU[3]],lowestfreportf1[erefU[0]],lowestfreportf1[erefU[1]],lowestfreportf1[erefU[2]],lowestfreportf1[erefU[3]]);
             if(1||showmessages){
               if(havebackup){
                 // don't break, just don't report.
@@ -2103,6 +2125,13 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
 
       }// end fake loop that can break out of
     }// end if failreturn==0 originally
+    else{
+      // then failreturn>0
+      // if not switching, then want to see why high error via iteration stepping
+      if(failreturn==FAILRETURNGENERAL || failreturn==FAILRETURNJACISSUE){
+        showdebuglist(pppreholdlist,ppposholdlist,f1reportlist,errorabsf1list);
+      }
+    }
 
 
 
@@ -2211,7 +2240,7 @@ static void showdebuglist(FTYPE (*pppreholdlist)[NPR],FTYPE (*ppposholdlist)[NPR
 {
   int listiter;
   dualfprintf(fail_file,"%3s : %21s %21s %21s %21s %21s %21s %21s %21s %21s : %21s %21s %21s %21s %21s %21s %21s %21s %21s : %21s %21s %21s %21s : %21s : %21s\n","li","rho","ug","v1","v2","v3","Erf","vr1","vr2","vr3","rho","ug","v1","v2","v3","Erf","vr1","vr2","vr3","f1rep0","f1rep1","f1rep2","f1rep3","errorabs","umin");
-  for(listiter=1;listiter<=IMPMAXITER;listiter++){
+  for(listiter=0;listiter<=IMPMAXITER;listiter++){
     FTYPE umin=calc_PEQ_ufromTrho(TEMPMIN,pppreholdlist[listiter][RHO]);
     dualfprintf(fail_file
                 ,"%3d : %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g : %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g : %21.15g %21.15g %21.15g %21.15g : %21.15g : %21.15g\n"
