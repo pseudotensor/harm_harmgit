@@ -672,9 +672,9 @@ static FTYPE compute_dt(FTYPE *CUf, FTYPE dtin)
 #define MODEPICKBEST 3
 
 // choose to switch to entropy only if energy fails or gives u_g<0.  Or choose to always do both and use best solution.
-#define MODEMETHOD MODEPICKBEST
+//#define MODEMETHOD MODEPICKBEST
 //#define MODEMETHOD MODESWITCH
-//#define MODEMETHOD MODEENERGY
+#define MODEMETHOD MODEENERGY
 //#define MODEMETHOD MODEENTROPY
 
 
@@ -1313,7 +1313,7 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
     FTYPE DAMPFACTOR;
     if(dampattempt>0 && iter<=IMPMAXITER){ // dampattempt>0 refers to any attempt beyond the very first.  Uses iter from end of region inside this loop.
       if(dampattempt>=2){ // dampattempt>=2 refers to attempts with at least 1 damp attempt
-        if(debugfail>=2) dualfprintf(fail_file,"Damping worked to avoid maximum iterations, so should have lower error.\n");
+        if(debugfail>=2) dualfprintf(fail_file,"Damping worked to avoid maximum iterations, so should have lower error: dampattempt=%d.\n",dampattempt);
       }
       break; // if didn't hit max iterations, no need to damp since got tolerance requested or returned because will just switch to another scheme.
     }
@@ -1356,8 +1356,8 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
       int iterlist=0;
       PLOOP(pliter,pl) pppreholdlist[iterlist][pl]=pp[pl];
       PLOOP(pliter,pl) ppposholdlist[iterlist][pl]=pp[pl];
-      errorabsf1list[iter]=BIG;
-      DLOOPA(jj) f1reportlist[iter][jj]=BIG;
+      errorabsf1list[iterlist]=BIG;
+      DLOOPA(jj) f1reportlist[iterlist][jj]=BIG;
     }
 
 
@@ -1645,7 +1645,7 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
       // f1 based
       FTYPE errorabsbest=0.0;
       DLOOPA(jj) errorabsbest += fabs(lowestfreportf1[erefU[jj]]);
-      if(errorabsbest>errorabsf1 && isfinitel(errorabsf1) && pp[RHO]>0.0 && pp[UU]>0.0 && pp[PRAD0]>0.0){
+      if(errorabsbest>errorabsf1 && isfinite(errorabsf1) && pp[RHO]>0.0 && pp[UU]>0.0 && pp[PRAD0]>0.0){
         PLOOP(pliter,pl) bestuu[pl]=uu[pl];
         PLOOP(pliter,pl) bestpp[pl]=pp[pl];
         DLOOPA(jj) lowestfreportf1[erefU[jj]]=f1report[erefU[jj]];
@@ -1656,10 +1656,10 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
 
 
       if(implicititer==QTYUMHD || implicititer==QTYURAD || implicititer==QTYENTROPYUMHD){
-        notfinite = !isfinitel(uu[irefU[0]])|| !isfinitel(uu[irefU[1]])|| !isfinitel(uu[irefU[2]])|| !isfinitel(uu[irefU[3]]) || !isfinitel(uup[irefU[0]])|| !isfinitel(uup[irefU[1]])|| !isfinitel(uup[irefU[2]])|| !isfinitel(uup[irefU[3]]);
+        notfinite = !isfinite(uu[irefU[0]])|| !isfinite(uu[irefU[1]])|| !isfinite(uu[irefU[2]])|| !isfinite(uu[irefU[3]]) || !isfinite(uup[irefU[0]])|| !isfinite(uup[irefU[1]])|| !isfinite(uup[irefU[2]])|| !isfinite(uup[irefU[3]]);
       }
       else if(implicititer==QTYPMHD || implicititer==QTYPRAD || implicititer==QTYENTROPYPMHD){
-        notfinite = !isfinitel(pp[irefU[0]])|| !isfinitel(pp[irefU[1]])|| !isfinitel(pp[irefU[2]])|| !isfinitel(pp[irefU[3]]) || !isfinitel(ppp[irefU[0]])|| !isfinitel(ppp[irefU[1]])|| !isfinitel(ppp[irefU[2]])|| !isfinitel(ppp[irefU[3]]);
+        notfinite = !isfinite(pp[irefU[0]])|| !isfinite(pp[irefU[1]])|| !isfinite(pp[irefU[2]])|| !isfinite(pp[irefU[3]]) || !isfinite(ppp[irefU[0]])|| !isfinite(ppp[irefU[1]])|| !isfinite(ppp[irefU[2]])|| !isfinite(ppp[irefU[3]]);
       }
 
       int convreturnf3limit=0;
@@ -2030,7 +2030,7 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
             // see if should revert to prior best
             FTYPE errorabsbest=0.0;
             DLOOPA(jj) errorabsbest += fabs(lowestfreportf1[erefU[jj]]);
-            if(errorabsbest<errorabsf1 || !isfinitel(errorabsf1) ){
+            if(errorabsbest<errorabsf1 || !isfinite(errorabsf1) ){
               PLOOP(pliter,pl) uu[pl]=bestuu[pl];
               PLOOP(pliter,pl) pp[pl]=bestpp[pl];
               errorabsf1=errorabsbest;
@@ -2138,7 +2138,7 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
     totaliters+=iter;
   }// end loop over damping
   if(dampattempt==NUMDAMPATTEMPTS){
-    if(debugfail>=2) dualfprintf(fail_file,"Damping failed to avoid max iterations: dampattempt=%d eomtypelocal=%d *eomtype=%d\n",dampattempt,eomtypelocal,*eomtype);
+    if(debugfail>=2) dualfprintf(fail_file,"Damping failed to avoid max iterations (but error might have dropped): dampattempt=%d eomtypelocal=%d *eomtype=%d\n",dampattempt,eomtypelocal,*eomtype);
   }
 
 
@@ -2818,10 +2818,10 @@ static int koral_source_rad_implicit_perdampstrategy(int dampstrategy, FTYPE imp
 
     int notfinite;
     if(implicititer==QTYUMHD || implicititer==QTYURAD || implicititer==QTYENTROPYUMHD){
-      notfinite = !isfinitel(uu[irefU[0]])|| !isfinitel(uu[irefU[1]])|| !isfinitel(uu[irefU[2]])|| !isfinitel(uu[irefU[3]]) || !isfinitel(uup[irefU[0]])|| !isfinitel(uup[irefU[1]])|| !isfinitel(uup[irefU[2]])|| !isfinitel(uup[irefU[3]]);
+      notfinite = !isfinite(uu[irefU[0]])|| !isfinite(uu[irefU[1]])|| !isfinite(uu[irefU[2]])|| !isfinite(uu[irefU[3]]) || !isfinite(uup[irefU[0]])|| !isfinite(uup[irefU[1]])|| !isfinite(uup[irefU[2]])|| !isfinite(uup[irefU[3]]);
     }
     else if(implicititer==QTYPMHD || implicititer==QTYPRAD || implicititer==QTYENTROPYPMHD){
-      notfinite = !isfinitel(pp[irefU[0]])|| !isfinitel(pp[irefU[1]])|| !isfinitel(pp[irefU[2]])|| !isfinitel(pp[irefU[3]]) || !isfinitel(ppp[irefU[0]])|| !isfinitel(ppp[irefU[1]])|| !isfinitel(ppp[irefU[2]])|| !isfinitel(ppp[irefU[3]]);
+      notfinite = !isfinite(pp[irefU[0]])|| !isfinite(pp[irefU[1]])|| !isfinite(pp[irefU[2]])|| !isfinite(pp[irefU[3]]) || !isfinite(ppp[irefU[0]])|| !isfinite(ppp[irefU[1]])|| !isfinite(ppp[irefU[2]])|| !isfinite(ppp[irefU[3]]);
     }
 
 
@@ -2934,7 +2934,7 @@ static int koral_source_rad_implicit_perdampstrategy(int dampstrategy, FTYPE imp
       if(checkconv){ // only store best if settled into full solution
         // store error and solution in case eventually lead to max iterations and actually get worse error
         errorabsbest=0.0; DLOOPA(jj) errorabsbest += fabs(lowestfreport[erefU[jj]]);
-        if(errorabsbest>errorabslocal && isfinitel(errorabslocal)){
+        if(errorabsbest>errorabslocal && isfinite(errorabslocal)){
           //        dualfprintf(fail_file,"Got best: %ld %d : %d %d %d : jj=%d uu=%g bestuu=%g\n",nstep,steppart,ptrgeom->i,ptrgeom->j,ptrgeom->j,jj,uu[irefU[jj]],bestuu[irefU[jj]]);
           //          dualfprintf(fail_file,"Choosing best: %ld %d : %d %d %d  iter=%d : errl=%g errb=%g : uu=%g %g %g %g : uubest=%g %g %g %g\n",nstep,steppart,ptrgeom->i,ptrgeom->j,ptrgeom->j,iter,errorabslocal,errorabsbest,uu[irefU[0]],uu[irefU[1]],uu[irefU[2]],uu[irefU[3]],bestuu[irefU[0]],bestuu[irefU[1]],bestuu[irefU[2]],bestuu[irefU[3]]);
           PLOOP(pliter,pl) bestuu[pl]=uu[pl];
@@ -3525,7 +3525,7 @@ static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int sho
 
       // debug info
       if(debugfail>=2){
-        DLOOPA(ii) if(showmessagesheavy || !isfinitel(J[erefU[ii]][irefU[jj]])){
+        DLOOPA(ii) if(showmessagesheavy || !isfinite(J[erefU[ii]][irefU[jj]])){
           dualfprintf(fail_file,"JAC: xjac[0]: %21.15g %21.15g %21.15g %21.15g :  xjac[1]: %21.15g %21.15g %21.15g %21.15g : x=%21.15g %21.15g %21.15g %21.15g (del=%21.15g localIMPEPS=%21.15g)\n",
                       xjac[0][irefU[0]],xjac[0][irefU[1]],xjac[0][irefU[2]],xjac[0][irefU[3]],
                       xjac[1][irefU[0]],xjac[1][irefU[1]],xjac[1][irefU[2]],xjac[1][irefU[3]],
@@ -3824,7 +3824,7 @@ static int get_implicit_iJ_old(int failreturnallowableuse, int showmessages, int
       //      DLOOPA(ii) dualfprintf(fail_file,"OLD: ii=%d jj=%d J=%g : %g %g : %g %g\n",ii,jj,J[ii][jj],f2[ii],f1[ii],uu[jj+URAD0],uup[jj+URAD0]);
 
       if(debugfail>=2){
-        DLOOPA(ii) if(showmessagesheavy || !isfinitel(J[ii][jj])){
+        DLOOPA(ii) if(showmessagesheavy || !isfinite(J[ii][jj])){
           dualfprintf(fail_file,"JAC: uu: %21.15g %21.15g %21.15g %21.15g : uup=%21.15g %21.15g %21.15g %21.15g (del=%21.15g localIMPEPS=%21.15g)\n",uu[URAD0],uu[URAD1],uu[URAD2],uu[URAD3],uup[URAD0],uup[URAD1],uup[URAD2],uup[URAD3],del,localIMPEPS);
           dualfprintf(fail_file,"i=%d jj=%d f2: %21.15g %21.15g %21.15g %21.15g\n",ptrgeom->i,jj,f2[0],f2[1],f2[2],f2[3]);
           dualfprintf(fail_file,"JISNAN: %d %d : %21.15g : %21.15g %21.15g : %21.15g %21.15g\n",ii,jj,J[ii][jj],f2[ii],f1[ii],uu[jj+URAD0],uup[jj+URAD0]);
@@ -4488,7 +4488,7 @@ static int source_explicit(int whichsc, int whichradsourcemethod, int methoddtsu
 
     // if no solution for implicit and come to explicit, then failure can manifest as T large and then Gpl->nan or inf.  Must fail this scenario.
     // This can happen even when have gotten quite close to end of step, but just no actually solution for the accurate value of U0 and G
-    PLOOP(pliter,pl) if(!isfinitel(Gpl[pl])) return(EXPLICITFAILED);
+    PLOOP(pliter,pl) if(!isfinite(Gpl[pl])) return(EXPLICITFAILED);
 
 
     if(showmessagesheavy&&debugfail>=2){
@@ -5495,7 +5495,7 @@ int inverse_44matrix(FTYPE a[][NDIM], FTYPE ia[][NDIM])
   idet = 1.0/det;
 
   //  if(isnan(idet)){
-  if(!isfinitel(idet)){
+  if(!isfinite(idet)){
     dualfprintf(fail_file,"idet (det=%26.15g idet=%26.15g) in inverse 4x4 zero or nan\n",det,idet);
     return(1); // indicates failure
     //    myexit(13235);
@@ -6185,7 +6185,7 @@ int u2p_rad(int showmessages, int allowlocalfailurefixandnoreport, FTYPE *uu, FT
   pin[PRAD3]=urfconrel[3];
 
   //  DLOOPA(jj){
-  //    if(!isfinitel(pin[PRAD0+jj])){
+  //    if(!isfinite(pin[PRAD0+jj])){
   //      dualfprintf(fail_file,"caughtnan: jj=%d : ijk=%d %d %d\n",jj,ptrgeom->i,ptrgeom->j,ptrgeom->k);
   //    }
   //  }
@@ -6403,7 +6403,7 @@ static int get_m1closure_gammarel2(int showmessages, struct of_geom *ptrgeom, FT
     2.*(gn14*Rdtt + gn24*Rdtx + gn34*Rdty)*Rdtz + gn44*Power(Rdtz,2));
 
 
-  if( gamma2a<GAMMASMALLLIMIT || !isfinitel(gamma2a) ){
+  if( gamma2a<GAMMASMALLLIMIT || !isfinite(gamma2a) ){
     gamma2b=(0.25*(-2.*Power(gn11,2)*Power(Rdtt,2) - 1.*gn11*(4.*gn12*Rdtt*Rdtx + gn22*Power(Rdtx,2) + 
                                                               Rdty*(4.*gn13*Rdtt + 2.*gn23*Rdtx + gn33*Rdty) + 2.*(2.*gn14*Rdtt + gn24*Rdtx + gn34*Rdty)*Rdtz + gn44*Power(Rdtz,2)) + 
                    gn11*Rdtt*Sqrt(4.*Power(gn11,2)*Power(Rdtt,2) + Power(gn12*Rdtx + gn13*Rdty + gn14*Rdtz,2) + 
@@ -6597,7 +6597,7 @@ static int get_m1closure_urfconrel_old(int showmessages, int allowlocalfailurefi
         int gamma_calc_fromuconrel(FTYPE *uconrel, struct of_geom *geom, FTYPE*gamma, FTYPE *qsq);
         MYFUN(gamma_calc_fromuconrel(urfconrel,ptrgeom,&gammatemp,&qsqtemp),"ucon_calc_rel4vel_fromuconrel: gamma_calc_fromuconrel failed\n","phys.tools.rad.c",1);
 
-        if(!isfinitel(gammatemp)){
+        if(!isfinite(gammatemp)){
           SLOOPA(jj) urfconrel[jj] =0.0;
         }
         else if(0&&gammatemp<=gammamax){
@@ -6679,7 +6679,7 @@ static int get_m1closure_urfconrel(int showmessages, int allowlocalfailurefixand
   int failure3=gammarel2>gammamax*gammamax && Erf>=ERADLIMIT || gammarel2<0.0 || delta<0.  || divisor==0.0 && numerator==0.0 || divisor==0.0 && numerator!=0.0;
 
   // any failure
-  int failure=!nonfailure || !isfinitel(gammarel2) || !isfinitel(Erf);
+  int failure=!nonfailure || !isfinite(gammarel2) || !isfinite(Erf);
 
   if(failure && (failure1==0 && failure2==0 && failure3==0)){
     if(debugfail>=2) dualfprintf(fail_file,"Undetected failure, now considered\n");
@@ -6865,7 +6865,7 @@ static int get_m1closure_urfconrel(int showmessages, int allowlocalfailurefixand
 
 
   // catch any nan/inf's:
-  int notfinite=(!isfinitel(Erf) || !isfinitel(urfconrel[1])|| !isfinitel(urfconrel[2])|| !isfinitel(urfconrel[3]));
+  int notfinite=(!isfinite(Erf) || !isfinite(urfconrel[1])|| !isfinite(urfconrel[2])|| !isfinite(urfconrel[3]));
   if(notfinite){
     // nothing else to do unless want to use nan/inf as indicator that should abort something
     // using such a small Erf can lead itself to problems due to precision issues, so assume will fixup this
@@ -6906,7 +6906,7 @@ static int get_m1closure_urfconrel_olek(int showmessages, int allowlocalfailuref
   //////////////////////
 
   int failure1=gammarel2>1.01*gammamax*gammamax || gammarel2<0. || delta<0.;
-  int failure2=gammarel2<1. || delta<0. || !isfinitel(gammarel2); // NOTE: first failure1 already catches delta<0.
+  int failure2=gammarel2<1. || delta<0. || !isfinite(gammarel2); // NOTE: first failure1 already catches delta<0.
 
 
 
@@ -6921,7 +6921,7 @@ static int get_m1closure_urfconrel_olek(int showmessages, int allowlocalfailuref
 
 
     // Check if Erf is too small with gamma->gammamax
-    if(Erf<ERADLIMIT || !isfinitel(Erf)){
+    if(Erf<ERADLIMIT || !isfinite(Erf)){
       if(1 || allowlocalfailurefixandnoreport==0) *lpflagrad=UTOPRIMRADFAILCASE1A;
       // Can't have Erf<0.  Like floor on internal energy density.  If leave Erf<0, then will drive code crazy with free energy.
       Erf=ERADLIMIT;
@@ -6977,7 +6977,7 @@ static int get_m1closure_urfconrel_olek(int showmessages, int allowlocalfailuref
     SLOOPA(jj) urfconrel[jj] = 0.0;
 
 
-    if(Erf<ERADLIMIT || !isfinitel(Erf)){ // JCM
+    if(Erf<ERADLIMIT || !isfinite(Erf)){ // JCM
       // Can't have Erf<0.  Like floor on internal energy density.  If leave Erf<0, then will drive code crazy with free energy.
       Erf=ERADLIMIT;
       if(1 || allowlocalfailurefixandnoreport==0) *lpflagrad=UTOPRIMRADFAILCASE2A;
@@ -6999,7 +6999,7 @@ static int get_m1closure_urfconrel_olek(int showmessages, int allowlocalfailuref
   //////////////////////
   else{
 
-    if(Erf<ERADLIMIT || !isfinitel(Erf)){
+    if(Erf<ERADLIMIT || !isfinite(Erf)){
       Erf=ERADLIMIT;
       SLOOPA(jj) urfconrel[jj] = 0.0;
       // must use above because if use ERADLIMIT in normal urfconrel, then urfconrel will be HUGE and probably give inf or nan due to Avcon/(Erf*gammarel) term.
@@ -7019,7 +7019,7 @@ static int get_m1closure_urfconrel_olek(int showmessages, int allowlocalfailuref
 
 
   if(debugfail>=2){
-    if(!isfinitel(Erf) || !isfinitel(gammarel2) || !isfinitel(urfconrel[0])|| !isfinitel(urfconrel[1])|| !isfinitel(urfconrel[2])|| !isfinitel(urfconrel[3]) ){
+    if(!isfinite(Erf) || !isfinite(gammarel2) || !isfinite(urfconrel[0])|| !isfinite(urfconrel[1])|| !isfinite(urfconrel[2])|| !isfinite(urfconrel[3]) ){
       dualfprintf(fail_file,"OLEKNAN: ijk=%d %d %d :  %g %g : %g %g %g : %d %d : %g %g %g %g\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,Erf,gammarel2,urfconrel[1],urfconrel[2],urfconrel[3],failure1,failure2,Avcon[0],Avcon[1],Avcon[2],Avcon[3]);
     }
   }
