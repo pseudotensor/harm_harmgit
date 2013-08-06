@@ -518,6 +518,10 @@ static int advance_standard(
         flux2dUavg(doother,i,j,k,F1,F2,F3,dUriemann1,dUriemann2,dUriemann3);
         PLOOP(pliter,pl) dUriemann[pl]=dUriemann1[pl]+dUriemann2[pl]+dUriemann3[pl]; // this addition is one type of avg->point mistake
 
+        // save pi before it gets modified in case pf=pi as a pointer.
+        FTYPE piorig[NPR];
+        PALLLOOP(pl) piorig[pl] = MACP0A1(pi,i,j,k,pl);
+
 
         /////////////
         // Utoprim as initial conditions : can't assume want these to be same in the end, so assign
@@ -544,7 +548,7 @@ static int advance_standard(
 
         // find dU(pb)
         // so pf contains updated field at cell center for use in (e.g.) implicit solver that uses inversion P(U)
-        MYFUN(source(MAC(pi,i,j,k), MAC(pb,i,j,k), MAC(pf,i,j,k), &didreturnpf, &eomtype, ptrgeom, qptr2, MAC(ui,i,j,k), MAC(uf,i,j,k), CUf, dUriemann, dUcomp, dUgeom),"step_ch.c:advance()", "source", 1);
+        MYFUN(source(piorig, MAC(pb,i,j,k), MAC(pf,i,j,k), &didreturnpf, &eomtype, ptrgeom, qptr2, MAC(ui,i,j,k), MAC(uf,i,j,k), CUf, dUriemann, dUcomp, dUgeom),"step_ch.c:advance()", "source", 1);
         // assumes final dUcomp is nonzero and representative of source term over this timestep
         
 
