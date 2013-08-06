@@ -28,7 +28,13 @@ echo " "
 echo "0S: Good: `grep 0SGood $mymath |wc -l` GoodW: `grep 0WSGood $mymath |wc -l` Bad: `grep 0WSBad $mymath |wc -l`  NEGS: `grep 0Sresultnegu $mymath |wc -l` `grep 0Sresultnegrho $mymath |wc -l` `grep 0SresultnegEr $mymath |wc -l`  COMPLX: `grep 0Sresultcomplexu $mymath |wc -l` `grep 0Sresultcomplexrho $mymath |wc -l` `grep 0SresultcomplexEr $mymath |wc -l`   NEGSW: `grep 0WSresultnegu $mymath |wc -l` `grep 0WSresultnegrho $mymath |wc -l` `grep 0WSresultnegEr $mymath |wc -l`  COMPLXW: `grep 0WSresultcomplexu $mymath |wc -l` `grep 0WSresultcomplexrho $mymath |wc -l` `grep 0WSresultcomplexEr $mymath |wc -l`"
 
 echo " "
-echo "SHOULDS: `grep SHOULDUSEENTROPYNEGU $mymath |wc -l`  `grep SHOULDUSEENTROPYNEGRHO $mymath |wc -l`  `grep SHOULDUSEENTROPYNEGER $mymath |wc -l`"
+echo "SHOULDS: `grep SHOULDUSEENTROPYNEGU $mymath | grep -v SHOULDUSEENTROPYNEGUBUTCANT |wc -l`  `grep SHOULDUSEENTROPYNEGRHO $mymath | grep -v SHOULDUSEENTROPYNEGRHOBUTCANT |wc -l`  `grep SHOULDUSEENTROPYNEGER $mymath | grep -v SHOULDUSEENTROPYNEGERBUTCANT |wc -l`"
 
 echo " "
-echo "SHOULDCONDS: `grep SHOULDUSEENTROPYCOND $mymath |wc -l`"
+echo "SHOULDSBUTCANT: `grep SHOULDUSEENTROPYNEGUBUTCANT $mymath |wc -l`  `grep SHOULDUSEENTROPYNEGRHOBUTCANT $mymath |wc -l`  `grep SHOULDUSEENTROPYNEGERBUTCANT $mymath |wc -l`"
+
+echo " "
+echo "SHOULDCOND: `grep SHOULDUSEENTROPYCOND $mymath | grep -v SHOULDUSEENTROPYCONDBUTCANT |wc -l`"
+
+echo " "
+echo "SHOULDCONDBUTCANT: `grep SHOULDUSEENTROPYCONDBUTCANT $mymath |wc -l`"

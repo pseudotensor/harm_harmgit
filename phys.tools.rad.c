@@ -202,6 +202,8 @@ static int Utoprimgen_failwrapper(int doradonly, int showmessages, int allowloca
 ///////////////////////////////
 
 // whether to do subjac iter-dependent solver.
+// 0 : normal full 4D method
+// 1 : Invert sub Jacobian method
 #define DOSUBJAC 0
 
 // whether to store steps for primitive and so debug max iteration cases
@@ -215,7 +217,7 @@ static int Utoprimgen_failwrapper(int doradonly, int showmessages, int allowloca
 #define RAMESHTRADTGASFIX 0
 
 // how many holds on u_g to apply while stepping velocity.
-#define RAMESHFIXEARLYSTEPS 3
+#define RAMESHFIXEARLYSTEPS (DOSUBJAC==1 ? 0 : 3) // 3 if used is default
 
 // whether to apply Jon's hold on u_g or rho from going negative
 #define JONHOLDPOS 1
@@ -1191,7 +1193,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
 
 
     // i=j=k=0 just to show infrequently
-    if(debugfail>=2 && (ptrgeom->i==0 && ptrgeom->j==0  && ptrgeom->k==0)) dualfprintf(fail_file,"numimplicits=%lld numenergy=%d numentropy=%d numbad=%d averagef1iter=%g averageiter=%g\n",numimplicits,numenergy,numentropy,numbad,(FTYPE)numoff1iter/(FTYPE)numimplicits,(FTYPE)numofiter/(FTYPE)numimplicits);
+    if(debugfail>=2 && (ptrgeom->i==0 && ptrgeom->j==0  && ptrgeom->k==0)) dualfprintf(fail_file,"numimplicits=%lld numenergy=%lld numentropy=%lld numbad=%lld averagef1iter=%g averageiter=%g\n",numimplicits,numenergy,numentropy,numbad,(FTYPE)numoff1iter/(FTYPE)numimplicits,(FTYPE)numofiter/(FTYPE)numimplicits);
     
     numhisterr[MAX(MIN((int)(-log10l(errorabs)),NUMNUMHIST-1),0)]++;
     numhistiter[MAX(MIN(iters,IMPMAXITER),0)]++;
@@ -1223,7 +1225,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
       }
       if(myid==MPIid[0]){
         // i=j=k=0 just to show infrequently
-        if(debugfail>=2 && (ptrgeom->i==0 && ptrgeom->j==0  && ptrgeom->k==0)) trifprintf("totalnumimplicits=%lld totalnumenergy=%d totalnumentropy=%d totalnumbad=%d totalaveragef1iter=%g totalaverageiter=%g\n",totalnumimplicits,totalnumenergy,totalnumentropy,totalnumbad,(FTYPE)totalnumoff1iter/(FTYPE)totalnumimplicits,(FTYPE)totalnumofiter/(FTYPE)totalnumimplicits);
+        if(debugfail>=2 && (ptrgeom->i==0 && ptrgeom->j==0  && ptrgeom->k==0)) trifprintf("totalnumimplicits=%lld totalnumenergy=%lld totalnumentropy=%lld totalnumbad=%lld totalaveragef1iter=%g totalaverageiter=%g\n",totalnumimplicits,totalnumenergy,totalnumentropy,totalnumbad,(FTYPE)totalnumoff1iter/(FTYPE)totalnumimplicits,(FTYPE)totalnumofiter/(FTYPE)totalnumimplicits);
 
         if(nstep%HISTREPORTSTEP==0 && ptrgeom->i==0 && ptrgeom->j==0 && ptrgeom->k==0){
           int histi;
@@ -1852,7 +1854,7 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
 
         if(showmessagesheavy){
           int iii,jjj;
-          DLOOP(iii,jjj) dualfprintf(fail_file,"iJ[i %d][e %d]=%g\n",iii,jjj,iJ[irefU[iii]][erefU[jjj]]);
+          JAC2DLOOP(iii,jjj,startjac,endjac)  dualfprintf(fail_file,"iJ[i %d][e %d]=%g\n",iii,jjj,iJ[irefU[iii]][erefU[jjj]]);
         }
 
 
@@ -1868,7 +1870,7 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
         /////////
         if(implicititer==QTYUMHD || implicititer==QTYURAD || implicititer==QTYENTROPYUMHD){
           PLOOP(pliter,pl) uu[pl] = uup[pl];
-          DLOOP(ii,jj) uu[irefU[ii]] -= DAMPFACTOR*iJ[irefU[ii]][erefU[jj]]*f1[erefU[jj]];
+          JAC2DLOOP(ii,jj,startjac,endjac) uu[irefU[ii]] -= DAMPFACTOR*iJ[irefU[ii]][erefU[jj]]*f1[erefU[jj]];
 
           if(POSTNEWTONCONVCHECK==2){
             // check if any actual changes in primitives.  If none, then have to stop.
@@ -1886,8 +1888,8 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
         }
         else if(implicititer==QTYPMHD || implicititer==QTYPRAD || implicititer==QTYENTROPYPMHD){
           PLOOP(pliter,pl) pp[pl]=ppp[pl];
-          DLOOP(ii,jj) pp[irefU[ii]] -= DAMPFACTOR*iJ[irefU[ii]][erefU[jj]]*f1[erefU[jj]];
-
+          JAC2DLOOP(ii,jj,startjac,endjac)  pp[irefU[ii]] -= DAMPFACTOR*iJ[irefU[ii]][erefU[jj]]*f1[erefU[jj]];
+          
           // store steps in case hit max iter and want to debug
           if(DEBUGMAXITER) PLOOP(pliter,pl) pppreholdlist[iter][pl]=pp[pl];
 
@@ -3003,7 +3005,7 @@ static int koral_source_rad_implicit_perdampstrategy(int dampstrategy, FTYPE imp
 
       if(showmessagesheavy){
         int iii,jjj;
-        DLOOP(iii,jjj) dualfprintf(fail_file,"iJ[i %d][e %d]=%g\n",iii,jjj,iJ[irefU[iii]][erefU[jjj]]);
+        JAC2DLOOP(iii,jjj,startjac,endjac)  dualfprintf(fail_file,"iJ[i %d][e %d]=%g\n",iii,jjj,iJ[irefU[iii]][erefU[jjj]]);
       }
 
       /////////
@@ -3013,16 +3015,16 @@ static int koral_source_rad_implicit_perdampstrategy(int dampstrategy, FTYPE imp
       // DAMPFACTOR unused so far because don't know a priori whether to damp.  fracuup does post-inversion effective damping of this Newton step.
       // Newton step: x = x0 - (df/dx)^{-1}|_{x=x0} f(x0)
       //
-      // Only updates 4D part of NPR data
+      // Only updates sub portion (up to 4D) of NPR data
       //
       /////////
       if(implicititer==QTYUMHD || implicititer==QTYURAD || implicititer==QTYENTROPYUMHD){
         PLOOP(pliter,pl) uu[pl] = uup[pl];
-        DLOOP(ii,jj) uu[irefU[ii]] -= DAMPFACTOR*iJ[irefU[ii]][erefU[jj]]*f1[erefU[jj]];
+        JAC2DLOOP(ii,jj,startjac,endjac)  uu[irefU[ii]] -= DAMPFACTOR*iJ[irefU[ii]][erefU[jj]]*f1[erefU[jj]];
       }
       else if(implicititer==QTYPMHD || implicititer==QTYPRAD || implicititer==QTYENTROPYPMHD){
         PLOOP(pliter,pl) pp[pl]=ppp[pl];
-        DLOOP(ii,jj) pp[irefU[ii]] -= DAMPFACTOR*iJ[irefU[ii]][erefU[jj]]*f1[erefU[jj]];
+        JAC2DLOOP(ii,jj,startjac,endjac)  pp[irefU[ii]] -= DAMPFACTOR*iJ[irefU[ii]][erefU[jj]]*f1[erefU[jj]];
       }
     
     
@@ -3313,7 +3315,7 @@ int mathematica_report_check(int failtype, long long int failnum, int gotfirstno
     // grep -h --text FAILINFO 0_fail.out.grmhd* | grep -v "FAILINFO: 100" |grep -v "FAILINFO: 80"| sed 's/FAILINFO: //g' | sort -r -g -k 5 > failshigherror.txt ; head -100 failshigherror.txt > failshigherror100.txt
     //
 
-    // grep BAD 0_fail.out.grmhd.00*|wc -l ;  grep FAILINFO 0_fail.out.grmhd.00*|wc -l ; grep MAXF1 0_fail.out.grmhd.00*| wc -l ; grep MAXITER 0_fail.out.grmhd.00*|wc -l ; grep "also failed" 0_fail.out.grmhd.00*|wc -l 
+    // grep --text BAD 0_fail.out.grmhd.00*|wc -l ;  grep FAILINFO 0_fail.out.grmhd.00*|wc -l ; grep MAXF1 0_fail.out.grmhd.00*| wc -l ; grep MAXITER 0_fail.out.grmhd.00*|wc -l ; grep "also failed" 0_fail.out.grmhd.00*|wc -l 
 
     // TO CHECK ON DAMPING:
     //     grep -i "Damping worked" 0_fail.out.grmhd.00*|wc -l ; grep -i "Damping failed" 0_fail.out.grmhd.00*|wc -l
