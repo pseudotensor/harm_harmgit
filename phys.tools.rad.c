@@ -194,6 +194,114 @@ static int Utoprimgen_failwrapper(int doradonly, int showmessages, int allowloca
 
 
 
+
+///////////////////////////////
+//
+// START SOME LOCAL OPTIONS
+//
+///////////////////////////////
+
+// whether to do subjac iter-dependent solver.
+#define DOSUBJAC 0
+
+// whether to store steps for primitive and so debug max iteration cases
+#define DEBUGMAXITER 1
+
+#define DEBUGLEVELIMPSOLVER 3 // which debugfail>=# to use for some common debug stuff
+//#define DEBUGLEVELIMPSOLVER 2 // which debugfail>=# to use for some common debug stuff
+
+// whether to use Ramesh's fix
+// 0, 1, 2
+#define RAMESHTRADTGASFIX 0
+
+// how many holds on u_g to apply while stepping velocity.
+#define RAMESHFIXEARLYSTEPS 3
+
+// whether to apply Jon's hold on u_g or rho from going negative
+#define JONHOLDPOS 1
+
+// number of times allowed to hold u_g as positive
+#define NUMHOLDTIMES 6
+
+
+#define BADENERGY(ugenergy,ugentropy) ((ugenergy) < 0.5*(ugentropy))
+
+// stop iterating energy if pbenergy[UU]<0.5*pbentropy[UU] consistently starting aafter below number of iterations and lasting for 2nd below number of iterations
+#define RAMESHSTOPENERGYIFTOOOFTENBELOWENTROPY0 4
+#define RAMESHSTOPENERGYIFTOOOFTENBELOWENTROPY 3
+
+//#define SWITCHTOENTROPYIFCHANGESTOENTROPY (*implicitferr==QTYUMHD ? 0 : 1)
+#define SWITCHTOENTROPYIFCHANGESTOENTROPY (0)
+
+// whether to get lowest error solution instead of final one.
+#define GETBEST 1
+
+
+// need to do final check since get f1 and then do step.
+#define DOFINALCHECK 1
+
+
+// below 1 if reporting cases when MAXITER reached, but allowd error so not otherwise normally reported.
+#define REPORTMAXITERALLOWED (PRODUCTION==0)
+
+#define REPORTSWITCHINCASESHOULDNTHAVESWITCH (PRODUCTION==0&&0)
+
+#define REPORTPREBACKUP (PRODUCTION==0)
+
+// whether to ensure rho and u_g in Jacobian calculation difference do not cross over 0 and stay on same side as origin point.
+#define FORCEJDIFFNOCROSS 1
+
+// whether to check pp-ppp
+// 1: directly check post pp-ppp relative error and see if changes by LOCALPREIMPCONVX
+// 2: directly check if any changes to pp during Newton step are bigger than DIFFXLIMIT.
+#define POSTNEWTONCONVCHECK 1
+
+// below which sum of all primitives is taken as no interesting change.
+#define DIFFXLIMIT (10.0*NUMEPSILON)
+
+#define LOCALPREIMPCONVX (10.0*NUMEPSILON)
+
+
+// number of iterations by which to check (1st) whether after some number of times (2nd) error rose instead of reduced.
+#define NUMNOERRORREDUCE0 5
+#define NUMNOERRORREDUCE 5
+
+
+// whether to use EOMDONOTHING if error is good enough.
+// 1: check if should do nothing
+// 2: always avoid external inversion (so no longer can do cold MHD, but cold MHD in \tau\gtrsim 1 places is very bad).  Or avoid energy switching to entropy, which also is bad.
+#define SWITCHTODONOTHING 2
+
+  // whether to change damp factor during this instance.
+#define CHANGEDAMPFACTOR 0
+#define NUMDAMPATTEMPTS 5
+
+// whether to abort even the backup if error is not reducing.
+#define ABORTBACKUPIFNOERRORREDUCE 1
+#define IMPTRYCONVALT (MAX(1E-8,IMPTRYCONV)) // say that if error isn't reducing, ok to abort with this error.   Only time saver, but realistic about likelihood of getting smaller error.
+
+
+///////////////////////////////
+//
+// END SOME LOCAL OPTIONS
+//
+///////////////////////////////
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 //////////////////////////////////////////////////////
 //
 // whether iterate or have as error function: MHD T^t_\nu or RAD R^t_\nu, etc.
@@ -218,18 +326,6 @@ static void define_method(int iter, int *eomtype, int *implicititer, int *implic
 {
   int eomtypelocal=*eomtype; // default, but not changing it so far.
 
-  /// OLD SETUP, works even with entropy source
-  // V1: Works fine, but slow.  Gives hot fluid near jumps like torus edge.  Computing UU[ENTROPY] with or without source doesn't change much.
-  //*implicititer=(QTYURAD); // choice
-  //*implicitferr=(QTYURAD); // choice
-
-  /// UMHD: no setup works unless entropy source turned off, and then QTYENTROPYUMHD as FERR can't be chosen.
-  // V1: Ok unless entropy source added.
-  //*implicititer=(QTYUMHD); // choice
-  //*implicitferr=(QTYUMHD); // choice
-  // V2: Like V1 but goes unstable.
-  //*implicititer=(QTYUMHD); // choice
-  //*implicitferr=(QTYENTROPYUMHD); // choice
 
   if(eomtypelocal==EOMDEFAULT){
     eomtypelocal=EOMTYPE; // override
@@ -241,33 +337,73 @@ static void define_method(int iter, int *eomtype, int *implicititer, int *implic
 
   /// PMHD:
   if(eomtypelocal==EOMGRMHD){
-    // assume iter=1 is first iteration
-    if(iter==1){
-      *implicititer=(QTYPMHDMOMONLY); // choice
-      *implicitferr=(QTYUMHDMOMONLY);
+
+    /// OLD SETUP, works even with entropy source
+    // V1: Works fine, but slow.  Gives hot fluid near jumps like torus edge.  Computing UU[ENTROPY] with or without source doesn't change much.
+    //*implicititer=(QTYURAD); // choice
+    //*implicitferr=(QTYURAD); // choice
+
+    /// UMHD: no setup works unless entropy source turned off, and then QTYENTROPYUMHD as FERR can't be chosen.
+    // V1: Ok unless entropy source added.
+    //*implicititer=(QTYUMHD); // choice
+    //*implicitferr=(QTYUMHD); // choice
+
+    /// PRAD:
+    // V1: unstable with entropy source
+    //*implicititer=(QTYPRAD);
+    //*implicitferr=(QTYURAD);
+
+
+    if(DOSUBJAC==1){
+      // assume iter=1 is first iteration
+      if(iter==1){
+        *implicititer=(QTYPMHDMOMONLY); // choice
+        *implicitferr=(QTYUMHDMOMONLY);
+      }
+      if(iter>=2 && iter<6){
+        *implicititer=(QTYPMHDENERGYONLY); // choice
+        *implicitferr=(QTYUMHDENERGYONLY);
+      }
+      if(iter>=6){
+        // V1: noisy in atmosphere and torus edge, but otherwise ok.
+        *implicititer=(QTYPMHD); // choice
+        *implicitferr=(QTYUMHD);
+      }
     }
-    if(iter>=2 && iter<6){
-      *implicititer=(QTYPMHDENERGYONLY); // choice
-      *implicitferr=(QTYUMHDENERGYONLY);
-    }
-    if(iter>=6){
-      // V1: noisy in atmosphere and torus edge, but otherwise ok.
+    else{
       *implicititer=(QTYPMHD); // choice
       *implicitferr=(QTYUMHD);
     }
   }
   else if(eomtypelocal==EOMENTROPYGRMHD){
-    // assume iter=1 is first iteration
-    if(iter==1){
-      *implicititer=(QTYPMHDMOMONLY); // choice
-      *implicitferr=(QTYENTROPYUMHDMOMONLY);
+
+    /// UMHD: no setup works unless entropy source turned off, and then QTYENTROPYUMHD as FERR can't be chosen.
+    // V2: Like V1 but goes unstable.
+    //*implicititer=(QTYUMHD); // choice
+    //*implicitferr=(QTYENTROPYUMHD); // choice
+
+    /// ENTROPY:
+    // V1: works perfectly fine and acts like PMHD,ENTROPYUMHD method just slower:
+    //*implicititer=(QTYENTROPYUMHD);
+    //*implicitferr=(QTYENTROPYUMHD);
+
+    if(DOSUBJAC==1){
+      // assume iter=1 is first iteration
+      if(iter==1){
+        *implicititer=(QTYPMHDMOMONLY); // choice
+        *implicitferr=(QTYENTROPYUMHDMOMONLY);
+      }
+      if(iter>=2 && iter<6){
+        *implicititer=(QTYPMHDENERGYONLY); // choice
+        *implicitferr=(QTYENTROPYUMHDENERGYONLY);
+      }
+      if(iter>=6){
+        // V2: perfectly fine as entropy method
+        *implicititer=(QTYPMHD); // choice
+        *implicitferr=(QTYENTROPYUMHD); // choice
+      }
     }
-    if(iter>=2 && iter<6){
-      *implicititer=(QTYPMHDENERGYONLY); // choice
-      *implicitferr=(QTYENTROPYUMHDENERGYONLY);
-    }
-    if(iter>=6){
-      // V2: perfectly fine as entropy method
+    else{
       *implicititer=(QTYPMHD); // choice
       *implicitferr=(QTYENTROPYUMHD); // choice
     }
@@ -277,15 +413,7 @@ static void define_method(int iter, int *eomtype, int *implicititer, int *implic
     myexit(938463653);
   }
 
-  /// PRAD:
-  // V1: unstable with entropy source
-  //*implicititer=(QTYPRAD);
-  //*implicitferr=(QTYURAD);
 
-  /// ENTROPY:
-  // V1: works perfectly fine and acts like PMHD,ENTROPYUMHD method just slower:
-  //*implicititer=(QTYENTROPYUMHD);
-  //*implicitferr=(QTYENTROPYUMHD);
 
 }
 
@@ -402,81 +530,6 @@ static void get_refUs(int *numdims, int *startjac, int *endjac, int *implicitite
 
 }
 
-// whether to store steps for primitive and so debug max iteration cases
-#define DEBUGMAXITER 1
-
-#define DEBUGLEVELIMPSOLVER 3 // which debugfail>=# to use for some common debug stuff
-//#define DEBUGLEVELIMPSOLVER 2 // which debugfail>=# to use for some common debug stuff
-
-// whether to use Ramesh's fix
-// 0, 1, 2
-#define RAMESHTRADTGASFIX 0
-
-// how many holds on u_g to apply while stepping velocity.
-#define RAMESHFIXEARLYSTEPS 3
-
-// whether to apply Jon's hold on u_g or rho from going negative
-#define JONHOLDPOS 1
-
-// number of times allowed to hold u_g as positive
-#define NUMHOLDTIMES 6
-
-
-#define BADENERGY(ugenergy,ugentropy) ((ugenergy) < 0.5*(ugentropy))
-
-// stop iterating energy if pbenergy[UU]<0.5*pbentropy[UU] consistently starting aafter below number of iterations and lasting for 2nd below number of iterations
-#define RAMESHSTOPENERGYIFTOOOFTENBELOWENTROPY0 4
-#define RAMESHSTOPENERGYIFTOOOFTENBELOWENTROPY 3
-
-//#define SWITCHTOENTROPYIFCHANGESTOENTROPY (*implicitferr==QTYUMHD ? 0 : 1)
-#define SWITCHTOENTROPYIFCHANGESTOENTROPY (0)
-
-// whether to get lowest error solution instead of final one.
-#define GETBEST 1
-
-
-// need to do final check since get f1 and then do step.
-#define DOFINALCHECK 1
-
-
-// below 1 if reporting cases when MAXITER reached, but allowd error so not otherwise normally reported.
-#define REPORTMAXITERALLOWED (PRODUCTION==0)
-
-#define REPORTSWITCHINCASESHOULDNTHAVESWITCH (PRODUCTION==0&&0)
-
-#define REPORTPREBACKUP (PRODUCTION==0)
-
-// whether to ensure rho and u_g in Jacobian calculation difference do not cross over 0 and stay on same side as origin point.
-#define FORCEJDIFFNOCROSS 1
-
-// whether to check pp-ppp
-// 1: directly check post pp-ppp relative error and see if changes by LOCALPREIMPCONVX
-// 2: directly check if any changes to pp during Newton step are bigger than DIFFXLIMIT.
-#define POSTNEWTONCONVCHECK 1
-
-// below which sum of all primitives is taken as no interesting change.
-#define DIFFXLIMIT (10.0*NUMEPSILON)
-
-#define LOCALPREIMPCONVX (10.0*NUMEPSILON)
-
-
-// number of iterations by which to check (1st) whether after some number of times (2nd) error rose instead of reduced.
-#define NUMNOERRORREDUCE0 5
-#define NUMNOERRORREDUCE 5
-
-
-// whether to use EOMDONOTHING if error is good enough.
-// 1: check if should do nothing
-// 2: always avoid external inversion (so no longer can do cold MHD, but cold MHD in \tau\gtrsim 1 places is very bad).  Or avoid energy switching to entropy, which also is bad.
-#define SWITCHTODONOTHING 2
-
-  // whether to change damp factor during this instance.
-#define CHANGEDAMPFACTOR 0
-#define NUMDAMPATTEMPTS 5
-
-// whether to abort even the backup if error is not reducing.
-#define ABORTBACKUPIFNOERRORREDUCE 1
-#define IMPTRYCONVALT (MAX(1E-8,IMPTRYCONV)) // say that if error isn't reducing, ok to abort with this error.   Only time saver, but realistic about likelihood of getting smaller error.
 
 
 //uu0 - original cons. qty
