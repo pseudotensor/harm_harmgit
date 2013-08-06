@@ -34,7 +34,7 @@ static void get_refUs(int *numdims, int *startjac, int *endjac, int *implicitite
 
 
 // debug stuff
-static void showdebuglist(FTYPE (*pppreholdlist)[NPR],FTYPE (*ppposholdlist)[NPR],FTYPE (*f1reportlist)[NDIM],FTYPE *errorabsf1list);
+static void showdebuglist(int iter, FTYPE (*pppreholdlist)[NPR],FTYPE (*ppposholdlist)[NPR],FTYPE (*f1reportlist)[NDIM],FTYPE *errorabsf1list);
 int mathematica_report_check(int failtype, long long int failnum, int gotfirstnofail, FTYPE errorabs, int iters, FTYPE realdt,struct of_geom *ptrgeom, FTYPE *ppfirst, FTYPE *pp, FTYPE *pb, FTYPE *piin, FTYPE *uu0, FTYPE *uu, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_state *q, FTYPE *dUother);
 
 // explicit stuff
@@ -204,7 +204,7 @@ static int Utoprimgen_failwrapper(int doradonly, int showmessages, int allowloca
 // whether to do subjac iter-dependent solver.
 // 0 : normal full 4D method
 // 1 : Invert sub Jacobian method
-#define DOSUBJAC 0
+#define DOSUBJAC 1
 
 // whether to store steps for primitive and so debug max iteration cases
 #define DEBUGMAXITER 1
@@ -310,17 +310,28 @@ static int Utoprimgen_failwrapper(int doradonly, int showmessages, int allowloca
 //
 //////////////////////////////////////////////////////
 #define QTYUMHD 0 // iter or ferr
-#define QTYURAD 1 // iter or ferr
-#define QTYPMHD 2 // only iter
-#define QTYPRAD 3 // only iter
-#define QTYENTROPYUMHD 4 // iter or ferr
-#define QTYENTROPYPMHD 5 // iter (not used)
-#define QTYPMHDENERGYONLY 6 // iter
-#define QTYUMHDENERGYONLY 7 // ferr only for now
+#define QTYUMHDENERGYONLY 1 // ferr only for now
+#define QTYUMHDMOMONLY 2 // ferr only for now
+#define QTYURAD 3 // iter or ferr
+#define QTYURADENERGYONLY 4 // ferr only for now
+#define QTYURADMOMONLY 5 // ferr only for now
+#define QTYPMHD 6 // only iter
+#define QTYPMHDENERGYONLY 7 // iter
 #define QTYPMHDMOMONLY 8 // iter
-#define QTYUMHDMOMONLY 9 // ferr only for now
-#define QTYENTROPYUMHDENERGYONLY 10 // ferr only for now
-#define QTYENTROPYUMHDMOMONLY 11 // ferr only for now
+#define QTYPRAD 9 // only iter
+#define QTYPRADENERGYONLY 10 // only iter
+#define QTYPRADMOMONLY 11 // only iter
+#define QTYENTROPYUMHD 12 // iter or ferr
+#define QTYENTROPYUMHDENERGYONLY 13 // ferr only for now
+#define QTYENTROPYUMHDMOMONLY 14 // ferr only for now
+#define QTYENTROPYPMHD 15 // iter (not used)
+#define QTYENTROPYPMHDENERGYONLY 16 // iter (not used)
+#define QTYENTROPYPMHDMOMONLY 17 // iter (not used)
+
+
+#define IMPPTYPE(implicititer) (implicititer==QTYPMHD ||implicititer==QTYPMHDENERGYONLY ||implicititer==QTYPMHDMOMONLY || implicititer==QTYPRAD ||implicititer==QTYPRADENERGYONLY ||implicititer==QTYPRADMOMONLY   || implicititer==QTYENTROPYPMHD ||implicititer==QTYENTROPYPMHDENERGYONLY ||implicititer==QTYENTROPYPMHDMOMONLY)
+
+#define IMPUTYPE(implicititer) (implicititer==QTYUMHD ||implicititer==QTYUMHDENERGYONLY ||implicititer==QTYUMHDMOMONLY  || implicititer==QTYURAD ||implicititer==QTYURADENERGYONLY ||implicititer==QTYURADMOMONLY || implicititer==QTYENTROPYUMHD ||implicititer==QTYENTROPYUMHDENERGYONLY ||implicititer==QTYENTROPYUMHDMOMONLY)
 
 // set default method
 // can control method per iteration
@@ -600,7 +611,11 @@ static int f_implicit_lab(int iter, int failreturnallowable, int whichcall, int 
 
 
 
-  if(implicititer==QTYUMHD || implicititer==QTYURAD){ // then don't yet have updated primitives, so invert to get them
+
+  if(
+     implicititer==QTYUMHD || implicititer==QTYUMHDENERGYONLY || implicititer==QTYUMHDMOMONLY
+     || implicititer==QTYURAD || implicititer==QTYURADENERGYONLY || implicititer==QTYURADMOMONLY
+     ){ // then don't yet have updated primitives, so invert to get them
     // 1) get change in conserved quantity between fluid and radiation (equal and opposite 4-force)
     // required for inversion to get P(U) for MHD and RAD variables
     // this preserves machine accurate conservation instead of applying 4-force on each fluid and radiation separately that can accumulate errors
@@ -622,7 +637,7 @@ static int f_implicit_lab(int iter, int failreturnallowable, int whichcall, int 
     primtoU(UNOTHING,pp,&q,ptrgeom, uu);
     // now have full primitives and full U including entropy and these are consistent with each other.
   }
-  else if(implicititer==QTYENTROPYUMHD){
+  else if(implicititer==QTYENTROPYUMHD || implicititer==QTYENTROPYUMHDENERGYONLY || implicititer==QTYENTROPYUMHDMOMONLY){
     // so iterating U[ENTROPY,U1,U2,U3]
     //    FTYPE uuorig[NPR]; PLOOP(pliter,pl) uuorig[pl]=uu[pl];
     // 1) Do pure ENTROPYMHD inversion to get pmhd
@@ -651,7 +666,7 @@ static int f_implicit_lab(int iter, int failreturnallowable, int whichcall, int 
     // not setup
     myexit(92846534);
   }
-  else if(implicititer==QTYPMHD){
+  else if(implicititer==QTYPMHD || implicititer==QTYPMHDENERGYONLY || implicititer==QTYPMHDMOMONLY){
     extern int invert_scalars(struct of_geom *ptrgeom, FTYPE *Ugeomfree, FTYPE *pr);
     // Have pmhd={ug,uvel1,uvel2,uvel3}
     // 1) get state (mhd state needed for primtoU) and Umhd, Uentropy [also computes Urad, but overwritten next and not expensive]
@@ -709,7 +724,7 @@ static int f_implicit_lab(int iter, int failreturnallowable, int whichcall, int 
     PLOOPBONLY(pl) uu[pl]=pp[pl];// overwrite so machine accurate field
     // now have full primitives and full U including entropy and these are consistent with each other.
   }
-  else if(implicititer==QTYPRAD){
+  else if(implicititer==QTYPRAD || implicititer==QTYPRADENERGYONLY || implicititer==QTYPRADMOMONLY){
     FTYPE pporig[NPR]; PLOOP(pliter,pl) pporig[pl]=pp[pl];
     // Have prad={Erf,uradvel1,uradvel2,uradvel3}
     // 1) get state (rad state needed for mhd_calc_rad, while old mhd state needed to estimate uu[ENTROPY] below)
@@ -767,7 +782,9 @@ static int f_implicit_lab(int iter, int failreturnallowable, int whichcall, int 
   ///////////////////////////////
   // GET ENTROPY ERROR FUNCTION
   ///////////////////////////////
-  if(implicitferr==QTYENTROPYUMHD || implicitferr==QTYUMHD && *eomtype==EOMENTROPYGRMHD && SWITCHTOENTROPYIFCHANGESTOENTROPY){ // risky perhaps.
+  if(
+     implicitferr==QTYENTROPYUMHD || implicitferr==QTYENTROPYUMHDENERGYONLY || implicitferr==QTYENTROPYUMHDMOMONLY
+     || implicitferr==QTYUMHD && *eomtype==EOMENTROPYGRMHD && SWITCHTOENTROPYIFCHANGESTOENTROPY){ // risky perhaps.
   //  if(implicitferr==QTYENTROPYUMHD){
     // replace original equation with dS*T equation
     pl=erefU[0];
@@ -779,13 +796,13 @@ static int f_implicit_lab(int iter, int failreturnallowable, int whichcall, int 
     *eomtype=EOMENTROPYGRMHD;
     // assume if got here with UMHD, then each implicit step for computing f1 tries to revert back to UMHD.
   }
-  else if(implicitferr==QTYUMHD){
+  else if(implicitferr==QTYUMHD || implicitferr==QTYUMHDENERGYONLY || implicitferr==QTYUMHDMOMONLY){
     // force external inversion or any further processing to first try to use energy equation since that's only consistent with our choice here.
     // No, UMHD inversion call still might have reduced to entropy during 1D MHD inversion, and then should really have used entropy error function for consistency.  But that's not what one has chosen.  But, we can switch if that was the case.  This is done above.  So if here, then really sticking with EOMGRMHD.
     *eomtype=EOMGRMHD;
    
   }
-  else if(implicitferr==QTYURAD){
+  else if(implicitferr==QTYURAD || implicitferr==QTYURADENERGYONLY || implicitferr==QTYURADMOMONLY){
     // URAD method forces no specific constraint on eomtype other than what came out of MHD inversion stage.
     // i.e. *eomtype=*eomtype and is can be either energy or entropy equation and that's fine.
   }
@@ -1266,10 +1283,10 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
   PLOOP(pliter,pl) pborig[pl]=pb[pl];
 
 #if(DEBUGMAXITER)
-  FTYPE pppreholdlist[IMPMAXITER+1][NPR]={0}; // for debug
-  FTYPE ppposholdlist[IMPMAXITER+1][NPR]={0}; // for debug
-  FTYPE f1reportlist[IMPMAXITER+1][NDIM]={0}; // for debug
-  FTYPE errorabsf1list[IMPMAXITER+1]={0}; // for debug
+  FTYPE pppreholdlist[IMPMAXITER+2][NPR]={0}; // for debug
+  FTYPE ppposholdlist[IMPMAXITER+2][NPR]={0}; // for debug
+  FTYPE f1reportlist[IMPMAXITER+2][NDIM]={0}; // for debug
+  FTYPE errorabsf1list[IMPMAXITER+2]={0}; // for debug
 #else
   FTYPE (*pppreholdlist)[NPR];
   FTYPE (*ppposholdlist)[NPR];
@@ -1694,7 +1711,6 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
         }
 
         // if during f1iter-ations u_g or rho is negative, switch to entropy
-        //      if(implicititer==QTYPMHD || implicititer==QTYPRAD || implicititer==QTYENTROPYPMHD){
 #define F1ITERSWITCHONNEG 20
         if(havebackup){
           if((eomtypelocal==EOMGRMHD || eomtypelocal==EOMDEFAULT && EOMDEFAULT==EOMGRMHD) && f1iter>F1ITERSWITCHONNEG && (pp[RHO]<0 || pp[UU]<0)){
@@ -1743,8 +1759,6 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
         // diagnose
         if(showmessagesheavy) dualfprintf(fail_file,"i=%d f1: %g %g %g %g\n",ptrgeom->i,f1[erefU[0]],f1[erefU[1]],f1[erefU[2]],f1[erefU[3]]);
       }
-
-
 
       /////////////////
       //
@@ -1818,10 +1832,10 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
 
 
 
-      if(implicititer==QTYUMHD || implicititer==QTYURAD || implicititer==QTYENTROPYUMHD){
+      if(IMPUTYPE(implicititer)){
         notfinite = !isfinite(uu[irefU[0]])|| !isfinite(uu[irefU[1]])|| !isfinite(uu[irefU[2]])|| !isfinite(uu[irefU[3]]) || !isfinite(uup[irefU[0]])|| !isfinite(uup[irefU[1]])|| !isfinite(uup[irefU[2]])|| !isfinite(uup[irefU[3]]);
       }
-      else if(implicititer==QTYPMHD || implicititer==QTYPRAD || implicititer==QTYENTROPYPMHD){
+      else if(IMPPTYPE(implicititer)){
         notfinite = !isfinite(pp[irefU[0]])|| !isfinite(pp[irefU[1]])|| !isfinite(pp[irefU[2]])|| !isfinite(pp[irefU[3]]) || !isfinite(ppp[irefU[0]])|| !isfinite(ppp[irefU[1]])|| !isfinite(ppp[irefU[2]])|| !isfinite(ppp[irefU[3]]);
       }
 
@@ -1836,7 +1850,6 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
         /////////
         //      eomtypelocal=*eomtype; // re-chose default each time.  No, stick with what f1 reduced to for consistency.
         int failreturniJ=get_implicit_iJ(failreturnallowableuse, showmessages, showmessagesheavy, allowlocalfailurefixandnoreport, &eomtypelocal, impepsjac, iter, uu, uup, uu0, pp, ppp, fracdtG, realdt, ptrgeom, f1, f1norm, iJ);
-
 
         if(failreturniJ!=0){
           if(havebackup){
@@ -1868,7 +1881,7 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
         // Only updates 4D part of NPR data
         //
         /////////
-        if(implicititer==QTYUMHD || implicititer==QTYURAD || implicititer==QTYENTROPYUMHD){
+        if(IMPUTYPE(implicititer)){
           PLOOP(pliter,pl) uu[pl] = uup[pl];
           JAC2DLOOP(ii,jj,startjac,endjac) uu[irefU[ii]] -= DAMPFACTOR*iJ[irefU[ii]][erefU[jj]]*f1[erefU[jj]];
 
@@ -1886,9 +1899,12 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
 
           if(showmessagesheavy) dualfprintf(fail_file,"POSTDX: uu: %g %g %g %g : uup=%g %g %g %g\n",uu[irefU[0]],uu[irefU[1]],uu[irefU[2]],uu[irefU[3]],uup[irefU[0]],uup[irefU[1]],uup[irefU[2]],uup[irefU[3]]);
         }
-        else if(implicititer==QTYPMHD || implicititer==QTYPRAD || implicititer==QTYENTROPYPMHD){
+        else if(IMPPTYPE(implicititer)){
           PLOOP(pliter,pl) pp[pl]=ppp[pl];
-          JAC2DLOOP(ii,jj,startjac,endjac)  pp[irefU[ii]] -= DAMPFACTOR*iJ[irefU[ii]][erefU[jj]]*f1[erefU[jj]];
+          JAC2DLOOP(ii,jj,startjac,endjac){
+            dualfprintf(fail_file,"ii=%d jj=%d irefU=%d erefU=%d\n",ii,jj,irefU[ii],erefU[jj]);
+            pp[irefU[ii]] -= DAMPFACTOR*iJ[irefU[ii]][erefU[jj]]*f1[erefU[jj]];
+          }
           
           // store steps in case hit max iter and want to debug
           if(DEBUGMAXITER) PLOOP(pliter,pl) pppreholdlist[iter][pl]=pp[pl];
@@ -1909,7 +1925,7 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
           // check if u_g<0.  Do even if RAMESHFIXEARLYSTEPS going.
           int eomcond=(eomtypelocal==EOMGRMHD || eomtypelocal==EOMDEFAULT && EOMDEFAULT==EOMGRMHD);
           FTYPE umin=10.0*calc_PEQ_ufromTrho(TEMPMIN,fabs(pp[RHO]));
-          if(pp[irefU[0]]<umin && (implicititer==QTYPMHD || implicititer==QTYPRAD)){ // don't consider implicititer==QTYENTROPYPMHD since S can be positive or negative.  Would only be unphysical or absolute-limited if the related u_g<0 or rho<0.
+          if(pp[irefU[0]]<umin && (IMPPTYPE(implicititer)&&implicititer!=QTYENTROPYPMHD)){ // don't consider implicititer==QTYENTROPYPMHD since S can be positive or negative.  Would only be unphysical or absolute-limited if the related u_g<0 or rho<0.
             if(JONHOLDPOS){
 #if(0)
               holdingaspositive=0; // default
@@ -1974,7 +1990,7 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
           // check if energy u_g too often bad compared to entropy u_g
           // assume this is only done after 
           if(RAMESHSTOPENERGYIFTOOOFTENBELOWENTROPY){
-            if(implicititer==QTYPMHD && didentropyalready && havebackup){
+            if((implicititer==QTYPMHD || implicititer==QTYPMHDENERGYONLY)  && didentropyalready && havebackup){
               if(notholding==1){
                 if(iter>RAMESHSTOPENERGYIFTOOOFTENBELOWENTROPY0){
                   if(BADENERGY(pp[irefU[0]],pborig[irefU[0]])) countbadenergy++;
@@ -1988,7 +2004,6 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
               }// whether allowed to check right now.  If other things are going, don't check.
             }// whether have information necessary to check
           }// whether to check u_g energy vs. entropy
-
 
 
 
@@ -2062,14 +2077,14 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
         // NOTE: Have to be careful with decreasing DAMPFACTOR or fracdtuu0 because can become small enough that apparently fake convergence with below condition, so only check for convergence if all DAMPs are 1.0.
         /////////
         // 0 = conserved R^t_\nu type, 1 = primitive R^{ti} type
-        if(implicititer==QTYUMHD || implicititer==QTYURAD || implicititer==QTYENTROPYUMHD){ // still considering iterate error
+        if(IMPUTYPE(implicititer)){ // still considering iterate error
           dimtypef=DIMTYPEFCONS;
           DLOOPA(ii){
             f3[erefU[ii]]=(uu[irefU[ii]]-uup[irefU[ii]]);
             f3norm[erefU[ii]]=fabs(uu[irefU[ii]])+fabs(uup[irefU[ii]]);
           }
         }
-        else if(implicititer==QTYPMHD || implicititer==QTYPRAD || implicititer==QTYENTROPYPMHD){ // still considering iterate error
+        else if(IMPPTYPE(implicititer)){ // still considering iterate error
           dimtypef=DIMTYPEFPRIM;
           DLOOPA(ii){
             f3[erefU[ii]]=(pp[irefU[ii]]-ppp[irefU[ii]]);
@@ -2089,7 +2104,6 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
       if(POSTNEWTONCONVCHECK==0 || notholding==0){
         convreturnf3limit=0;
       }
-
 
 
 
@@ -2242,7 +2256,7 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
                 struct of_state qcheck; get_state(pp, ptrgeom, &qcheck);  primtoU(UNOTHING,pp,&qcheck,ptrgeom, uu);
                 int whichmath=(eomtypelocal==EOMGRMHD ? 6 : 600);
                 failnum++; mathematica_report_check(whichmath, failnum, gotfirstnofail, errorabsf1, iter, realdt, ptrgeom, ppfirst,pp,pb,piin,uu0,uu,Uiin,Ufin, CUf, q, dUother);
-                showdebuglist(pppreholdlist,ppposholdlist,f1reportlist,errorabsf1list);
+                showdebuglist(iter,pppreholdlist,ppposholdlist,f1reportlist,errorabsf1list);
               }// end else
             }
           }
@@ -2272,7 +2286,7 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
                 // in case changed primitive, modify conserved quantity so consistent (have to do this since iterated uu or pp but didn't yet call f_implicit_lab())
                 struct of_state qcheck; get_state(pp, ptrgeom, &qcheck);  primtoU(UNOTHING,pp,&qcheck,ptrgeom, uu);
                 mathematica_report_check(1, failnum, gotfirstnofail, errorabsf1, iter, realdt, ptrgeom, ppfirst,pp,pb,piin,uu0,uu,Uiin,Ufin, CUf, q, dUother);
-                showdebuglist(pppreholdlist,ppposholdlist,f1reportlist,errorabsf1list);
+                showdebuglist(iter,pppreholdlist,ppposholdlist,f1reportlist,errorabsf1list);
                 if(doingit==1) myexit(100000000); // DEBUG
               }
             }
@@ -2293,7 +2307,7 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
       // then failreturn>0
       // if not switching, then want to see why high error via iteration stepping
       if(failreturn==FAILRETURNGENERAL || failreturn==FAILRETURNJACISSUE){
-        showdebuglist(pppreholdlist,ppposholdlist,f1reportlist,errorabsf1list);
+        showdebuglist(iter,pppreholdlist,ppposholdlist,f1reportlist,errorabsf1list);
       }
     }
 
@@ -2364,9 +2378,8 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
       // can further just choose to avoid inversion entirely since this step fully inverted (even if somewhat inaccurately) all parts used in advance.c:
       // especially for entropy inversion, no need to be very accurate as normal inversion does, since no need to have exact entropy conservation, unlike desirable to have exact energy conservation.
       if(errorabsf1<=IMPTRYCONV*(FTYPE)(2+NDIM)){// risky unless put in error condition
-        //  if(implicititer==QTYPMHD && implicitferr==QTYENTROPYUMHD){
         // more general case when can just avoid external entropy inversion
-        if(*eomtype==EOMENTROPYGRMHD && SWITCHTOENTROPYIFCHANGESTOENTROPY || implicitferr==QTYENTROPYUMHD){
+        if(*eomtype==EOMENTROPYGRMHD && SWITCHTOENTROPYIFCHANGESTOENTROPY || (implicitferr==QTYENTROPYUMHD || implicitferr==QTYENTROPYUMHDENERGYONLY || implicitferr==QTYENTROPYUMHDMOMONLY)){
           *eomtype=EOMDIDENTROPYGRMHD;
         }
     
@@ -2399,11 +2412,11 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
 
 
 // DEBUGMAXITER stuff
-static void showdebuglist(FTYPE (*pppreholdlist)[NPR],FTYPE (*ppposholdlist)[NPR],FTYPE (*f1reportlist)[NDIM],FTYPE *errorabsf1list)
+static void showdebuglist(int iter, FTYPE (*pppreholdlist)[NPR],FTYPE (*ppposholdlist)[NPR],FTYPE (*f1reportlist)[NDIM],FTYPE *errorabsf1list)
 {
   int listiter;
   dualfprintf(fail_file,"%3s : %21s %21s %21s %21s %21s %21s %21s %21s %21s : %21s %21s %21s %21s %21s %21s %21s %21s %21s : %21s %21s %21s %21s : %21s : %21s\n","li","rho","ug","v1","v2","v3","Erf","vr1","vr2","vr3","rho","ug","v1","v2","v3","Erf","vr1","vr2","vr3","f1rep0","f1rep1","f1rep2","f1rep3","errorabs","umin");
-  for(listiter=0;listiter<=IMPMAXITER;listiter++){
+  for(listiter=0;listiter<=iter;listiter++){
     FTYPE umin=calc_PEQ_ufromTrho(TEMPMIN,pppreholdlist[listiter][RHO]);
     dualfprintf(fail_file
                 ,"%3d : %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g : %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g : %21.15g %21.15g %21.15g %21.15g : %21.15g : %21.15g\n"
@@ -2981,10 +2994,10 @@ static int koral_source_rad_implicit_perdampstrategy(int dampstrategy, FTYPE imp
 
 
     int notfinite;
-    if(implicititer==QTYUMHD || implicititer==QTYURAD || implicititer==QTYENTROPYUMHD){
+    if(IMPUTYPE(implicititer)){
       notfinite = !isfinite(uu[irefU[0]])|| !isfinite(uu[irefU[1]])|| !isfinite(uu[irefU[2]])|| !isfinite(uu[irefU[3]]) || !isfinite(uup[irefU[0]])|| !isfinite(uup[irefU[1]])|| !isfinite(uup[irefU[2]])|| !isfinite(uup[irefU[3]]);
     }
-    else if(implicititer==QTYPMHD || implicititer==QTYPRAD || implicititer==QTYENTROPYPMHD){
+    else if(IMPPTYPE(implicititer)){
       notfinite = !isfinite(pp[irefU[0]])|| !isfinite(pp[irefU[1]])|| !isfinite(pp[irefU[2]])|| !isfinite(pp[irefU[3]]) || !isfinite(ppp[irefU[0]])|| !isfinite(ppp[irefU[1]])|| !isfinite(ppp[irefU[2]])|| !isfinite(ppp[irefU[3]]);
     }
 
@@ -3018,11 +3031,11 @@ static int koral_source_rad_implicit_perdampstrategy(int dampstrategy, FTYPE imp
       // Only updates sub portion (up to 4D) of NPR data
       //
       /////////
-      if(implicititer==QTYUMHD || implicititer==QTYURAD || implicititer==QTYENTROPYUMHD){
+      if(IMPUTYPE(implicititer)){
         PLOOP(pliter,pl) uu[pl] = uup[pl];
         JAC2DLOOP(ii,jj,startjac,endjac)  uu[irefU[ii]] -= DAMPFACTOR*iJ[irefU[ii]][erefU[jj]]*f1[erefU[jj]];
       }
-      else if(implicititer==QTYPMHD || implicititer==QTYPRAD || implicititer==QTYENTROPYPMHD){
+      else if(IMPPTYPE(implicititer)){
         PLOOP(pliter,pl) pp[pl]=ppp[pl];
         JAC2DLOOP(ii,jj,startjac,endjac)  pp[irefU[ii]] -= DAMPFACTOR*iJ[irefU[ii]][erefU[jj]]*f1[erefU[jj]];
       }
@@ -3073,14 +3086,14 @@ static int koral_source_rad_implicit_perdampstrategy(int dampstrategy, FTYPE imp
       // NOTE: Have to be careful with decreasing DAMPFACTOR or fracdtuu0 because can become small enough that apparently fake convergence with below condition, so only check for convergence if all DAMPs are 1.0.
       /////////
       // 0 = conserved R^t_\nu type, 1 = primitive R^{ti} type
-      if(implicititer==QTYUMHD || implicititer==QTYURAD || implicititer==QTYENTROPYUMHD){ // still considering iterate error
+      if(IMPUTYPE(implicititer)){ // still considering iterate error
         dimtypef=DIMTYPEFCONS;
         DLOOPA(ii){
           f3[erefU[ii]]=(uu[irefU[ii]]-uup[irefU[ii]]);
           f3norm[erefU[ii]]=fabs(uu[irefU[ii]])+fabs(uup[irefU[ii]]);
         }
       }
-      else if(implicititer==QTYPMHD || implicititer==QTYPRAD || implicititer==QTYENTROPYPMHD){ // still considering iterate error
+      else if(IMPPTYPE(implicititer)){ // still considering iterate error
         dimtypef=DIMTYPEFPRIM;
         DLOOPA(ii){
           f3[erefU[ii]]=(pp[irefU[ii]]-ppp[irefU[ii]]);
@@ -3479,7 +3492,7 @@ static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int sho
 
 
   int JDIFFTYPE;
-  if(implicititer==QTYPMHD){
+  if(IMPPTYPE(implicititer)){
     // with implicititer==QTYPMHD, no longer expensive so can do JDIFFCENTERED
     // choose:
     JDIFFTYPE=JDIFFCENTERED;
@@ -3493,6 +3506,7 @@ static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int sho
   // ensure uu and pp don't get modified by del-shifts to get Jacobian, which can change primitives to order unity at high radiation gamma
   FTYPE uujac[NPR],ppjac[NPR];
   int pliter,pl;
+
 
   ///////////////
   //
@@ -3514,7 +3528,7 @@ static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int sho
   SLOOPA(jj) upitoup0P[UU+jj] =upitoup0P[URAD0+jj] = 1.0/sqrt(fabs(ptrgeom->gcon[GIND(jj,jj)]));  // v^i / sqrt(g^{ii}) = vortho^i
 
   // U
-  if(implicititer==QTYUMHD || implicititer==QTYURAD || implicititer==QTYENTROPYUMHD){
+  if(IMPUTYPE(implicititer)){
     PLOOP(pliter,pl) x[pl]=uu[pl];
     PLOOP(pliter,pl) xp[pl]=uup[pl];
     PLOOP(pliter,pl) xjac[0][pl]=xjac[1][pl]=uu[pl];
@@ -3523,7 +3537,7 @@ static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int sho
     velmomscale=fabs(x[irefU[TT]]*upitoup0[irefU[TT]]);
   }
   // P
-  else if(implicititer==QTYPMHD || implicititer==QTYPRAD || implicititer==QTYENTROPYPMHD){
+  else if(IMPPTYPE(implicititer)){
     PLOOP(pliter,pl) x[pl]=pp[pl];
     PLOOP(pliter,pl) xp[pl]=ppp[pl];
     PLOOP(pliter,pl) xjac[0][pl]=xjac[1][pl]=pp[pl];
@@ -3543,7 +3557,7 @@ static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int sho
   // get everything in terms of quasi-orthonormal quantities
   JACLOOP(jj,startjac,endjac){
     predel[jj] = fabs(x[irefU[jj]]*upitoup0[irefU[jj]]);
-    if(irefU[jj]==UU || irefU[jj]==URAD0 || implicititer==QTYUMHD || implicititer==QTYURAD || implicititer==QTYENTROPYUMHD){
+    if(irefU[jj]==UU || irefU[jj]==URAD0 || IMPUTYPE(implicititer)){
       // below makes sense because U and ferr are linear in x and same dimensional units
       // TT term (e.g. u_g) can be too small primitive or otherwise, so use maximum of ferr, uu, and x.
       // This avoids issue with Jacobian giving J44[0][0]=0 so that can't iterate u_g because u_g itself is very small.
@@ -3614,13 +3628,13 @@ static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int sho
           //          dualfprintf(fail_file,"NEW: jj=%d del=%g xjac=%g x=%g\n",jj,del,xjac[sided][irefU[jj]],x[irefU[jj]]);
 
           // set uujac and ppjac using xjac
-          if(implicititer==QTYUMHD || implicititer==QTYURAD || implicititer==QTYENTROPYUMHD){
+          if(IMPUTYPE(implicititer)){
             PLOOP(pliter,pl){
               uujac[pl]=xjac[sided][pl];
               ppjac[pl]=pp[pl];
             }
           }
-          else if(implicititer==QTYPMHD || implicititer==QTYPRAD || implicititer==QTYENTROPYPMHD){
+          else if(IMPPTYPE(implicititer)){
             PLOOP(pliter,pl){
               uujac[pl]=uu[pl];
               ppjac[pl]=xjac[sided][pl];
@@ -3690,14 +3704,18 @@ static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int sho
 
       // debug info
       if(debugfail>=2){
-        JACLOOP(ii,startjac,endjac) if(showmessagesheavy || !isfinite(J[erefU[ii]][irefU[jj]])){
-          dualfprintf(fail_file,"JAC: xjac[0]: %21.15g %21.15g %21.15g %21.15g :  xjac[1]: %21.15g %21.15g %21.15g %21.15g : x=%21.15g %21.15g %21.15g %21.15g (del=%21.15g localIMPEPS=%21.15g)\n",
-                      xjac[0][irefU[0]],xjac[0][irefU[1]],xjac[0][irefU[2]],xjac[0][irefU[3]],
-                      xjac[1][irefU[0]],xjac[1][irefU[1]],xjac[1][irefU[2]],xjac[1][irefU[3]],
-                      x[irefU[0]],x[irefU[1]],x[irefU[2]],x[irefU[3]],del,localIMPEPS);
-          dualfprintf(fail_file,"i=%d jj=%d f2[0]: %21.15g %21.15g %21.15g %21.15g\n",ptrgeom->i,jj,f2[0][erefU[0]],f2[0][erefU[1]],f2[0][erefU[2]],f2[0][erefU[3]]);
-          dualfprintf(fail_file,"i=%d jj=%d f2[1]: %21.15g %21.15g %21.15g %21.15g\n",ptrgeom->i,jj,f2[1][erefU[0]],f2[1][erefU[1]],f2[1][erefU[2]],f2[1][erefU[3]]);
-          dualfprintf(fail_file,"JISNAN: %d %d : J=%21.15g : f2[1]=%21.15g f2[0]=%21.15g : xjac[1]=%21.15g xjac[0]=%21.15g dx=%g\n",ii,jj,J[erefU[ii]][irefU[jj]], f2[1][erefU[ii]],f2[0][erefU[ii]],xjac[1][irefU[jj]],xjac[0][irefU[jj]],xjac[1][irefU[jj]]-xjac[0][irefU[jj]]);
+        JACLOOP(ii,startjac,endjac){
+          if(showmessagesheavy || !isfinite(J[erefU[ii]][irefU[jj]])){
+            dualfprintf(fail_file,"JISNAN: iter=%d startjac=%d endjac=%d ii=%d jj=%d irefU[jj]=%d erefU[ii]=%d : xjac[0]: %21.15g :  xjac[1]: %21.15g : x=%21.15g (del=%21.15g localIMPEPS=%21.15g) : f2[0]=%21.15g f2[1]=%21.15g J=%21.15g\n",
+                        iter,startjac,endjac,
+                        ii,jj,irefU[jj],erefU[ii],
+                        xjac[0][irefU[jj]],
+                        xjac[1][irefU[jj]],
+                        x[irefU[jj]],
+                        del,localIMPEPS,
+                        f2[0][erefU[ii]],f2[1][erefU[ii]],J[erefU[ii]][irefU[jj]]
+                        );
+          }
         }
       }
 
@@ -3719,6 +3737,7 @@ static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int sho
     //invert Jacobian
     //
     /////////////////////
+
 
     // copy over matrix to sub (up to) 4x4 version
     FTYPE Jsub[NDIM][NDIM];
@@ -3791,6 +3810,8 @@ static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int sho
       return(1);
     }
   }// end over ensuring Jacobian is non-singular for the given del
+
+
 
 
   return(0);
