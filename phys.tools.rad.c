@@ -206,6 +206,14 @@ static int Utoprimgen_failwrapper(int doradonly, int showmessages, int allowloca
 // 1 : Invert sub Jacobian method
 #define DOSUBJAC 1
 
+#define BEGINMOMSTEPS 1
+#define ENDMOMSTEPS 2
+
+#define BEGINENERGYSTEPS 3
+#define ENDENERGYSTEPS 13
+
+#define BEGINNORMALSTEPS 14
+
 // whether to store steps for primitive and so debug max iteration cases
 #define DEBUGMAXITER 1
 
@@ -229,7 +237,7 @@ static int Utoprimgen_failwrapper(int doradonly, int showmessages, int allowloca
 #define BADENERGY(ugenergy,ugentropy) ((ugenergy) < 0.5*(ugentropy))
 
 // stop iterating energy if pbenergy[UU]<0.5*pbentropy[UU] consistently starting aafter below number of iterations and lasting for 2nd below number of iterations
-#define RAMESHSTOPENERGYIFTOOOFTENBELOWENTROPY0 4
+#define RAMESHSTOPENERGYIFTOOOFTENBELOWENTROPY0 (4+BEGINNORMALSTEPS)
 #define RAMESHSTOPENERGYIFTOOOFTENBELOWENTROPY 3
 
 //#define SWITCHTOENTROPYIFCHANGESTOENTROPY (*implicitferr==QTYUMHD ? 0 : 1)
@@ -265,7 +273,7 @@ static int Utoprimgen_failwrapper(int doradonly, int showmessages, int allowloca
 
 
 // number of iterations by which to check (1st) whether after some number of times (2nd) error rose instead of reduced.
-#define NUMNOERRORREDUCE0 5
+#define NUMNOERRORREDUCE0 (5+BEGINNORMALSTEPS)
 #define NUMNOERRORREDUCE 5
 
 
@@ -369,15 +377,15 @@ static void define_method(int iter, int *eomtype, int *implicititer, int *implic
 
     if(DOSUBJAC==1){
       // assume iter=1 is first iteration
-      if(iter==1){
+      if(iter>=BEGINMOMSTEPS && iter<=ENDMOMSTEPS){
         *implicititer=(QTYPMHDMOMONLY); // choice
         *implicitferr=(QTYUMHDMOMONLY);
       }
-      if(iter>=2 && iter<6){
+      if(iter>=BEGINENERGYSTEPS && iter<=ENDENERGYSTEPS){
         *implicititer=(QTYPMHDENERGYONLY); // choice
         *implicitferr=(QTYUMHDENERGYONLY);
       }
-      if(iter>=6){
+      if(iter>=BEGINNORMALSTEPS){
         // V1: noisy in atmosphere and torus edge, but otherwise ok.
         *implicititer=(QTYPMHD); // choice
         *implicitferr=(QTYUMHD);
@@ -402,15 +410,15 @@ static void define_method(int iter, int *eomtype, int *implicititer, int *implic
 
     if(DOSUBJAC==1){
       // assume iter=1 is first iteration
-      if(iter==1){
+      if(iter>=BEGINMOMSTEPS && iter<=ENDMOMSTEPS){
         *implicititer=(QTYPMHDMOMONLY); // choice
         *implicitferr=(QTYENTROPYUMHDMOMONLY);
       }
-      if(iter>=2 && iter<6){
+      if(iter>=BEGINENERGYSTEPS && iter<=ENDENERGYSTEPS){
         *implicititer=(QTYPMHDENERGYONLY); // choice
         *implicitferr=(QTYENTROPYUMHDENERGYONLY);
       }
-      if(iter>=6){
+      if(iter>=BEGINNORMALSTEPS){
         // V2: perfectly fine as entropy method
         *implicititer=(QTYPMHD); // choice
         *implicitferr=(QTYENTROPYUMHD); // choice
@@ -433,6 +441,8 @@ static void define_method(int iter, int *eomtype, int *implicititer, int *implic
 
 
 #define JACLOOP(jj,startjj,endjj) for(jj=startjj;jj<=endjj;jj++)
+#define JACLOOPALT(jj,startjj,endjj) DLOOPA(jj) //for(jj=startjj;jj<=endjj;jj++) // for those things might or might not want to do all terms
+#define EXTRACONVCOND (1) // (startjac!=0 || endjac!=NDIM-1)
 #define JAC2DLOOP(ii,jj,startjj,endjj) JACLOOP(ii,startjj,endjj) JACLOOP(jj,startjj,endjj)
 
 static void get_refUs(int *numdims, int *startjac, int *endjac, int *implicititer, int *implicitferr, int *irefU, int *iotherU, int *erefU, int *eotherU, int *signgd2, int *signgd4, int *signgd6, int *signgd7)
@@ -770,7 +780,7 @@ static int f_implicit_lab(int iter, int failreturnallowable, int whichcall, int 
   // compute difference vector between original and new 4-force's effect on conserved radiative quantities
   // NR1992 Eq. 16.6.16: y_{n+1} = y_n + h f(y_{n+1}) , so error function is f = (y_{n+1} - y_n) - h f(y_{n+1})
   // i.e. f->0 as change in conserved quantity approaches the updated value of 4-force
-  DLOOPA(iv){
+  JACLOOPALT(iv,startjac,endjac){
     pl=erefU[iv];
     f[pl] = (uu[pl] - uu0[pl]) + (signgd2 * localdt * Gdpl[pl]);
 
@@ -779,19 +789,20 @@ static int f_implicit_lab(int iter, int failreturnallowable, int whichcall, int 
     fnorm[pl] = 0.5*(fabs(uu[pl]) + fabs(uu0[pl]) + fabs(signgd2 * localdt * Gdabspl[pl]));
   }
 
-  ///////////////////////////////
   // GET ENTROPY ERROR FUNCTION
-  ///////////////////////////////
   if(
      implicitferr==QTYENTROPYUMHD || implicitferr==QTYENTROPYUMHDENERGYONLY || implicitferr==QTYENTROPYUMHDMOMONLY
      || implicitferr==QTYUMHD && *eomtype==EOMENTROPYGRMHD && SWITCHTOENTROPYIFCHANGESTOENTROPY){ // risky perhaps.
-  //  if(implicitferr==QTYENTROPYUMHD){
-    // replace original equation with dS*T equation
-    pl=erefU[0];
-    // error function is T*dS so no actual division by T.  Found in mathematica that this works best in difficult precision cases.
-    f[pl] = ((uu[pl] - uu0[pl]) + (signgd4 * localdt * Gdpl[pl]))*Tgas;
-    fnorm[pl] = (0.5*(fabs(uu[pl]) + fabs(uu0[pl]) + fabs(signgd4 * localdt * Gdabspl[pl])))*Tgas;
-
+    JACLOOPALT(iv,startjac,endjac){
+      if(iv==TT){
+        pl=erefU[iv];
+        //  if(implicitferr==QTYENTROPYUMHD){
+        // replace original equation with dS*T equation
+        // error function is T*dS so no actual division by T.  Found in mathematica that this works best in difficult precision cases.
+        f[pl] = ((uu[pl] - uu0[pl]) + (signgd4 * localdt * Gdpl[pl]))*Tgas;
+        fnorm[pl] = (0.5*(fabs(uu[pl]) + fabs(uu0[pl]) + fabs(signgd4 * localdt * Gdabspl[pl])))*Tgas;
+      }
+    }
     // force external inversion or any further processing to use entropy equation instead of energy equation since that's only consistent with our choice here.
     *eomtype=EOMENTROPYGRMHD;
     // assume if got here with UMHD, then each implicit step for computing f1 tries to revert back to UMHD.
@@ -808,7 +819,6 @@ static int f_implicit_lab(int iter, int failreturnallowable, int whichcall, int 
   }
 
 
-  //  dualfprintf(fail_file,"i=%d fnorm=%g %g %g %g : Gd=%g %g %g %g : uuG=%g %g %g %g\n",ptrgeom->i,fnorm[erefU[0]],fnorm[erefU[1]],fnorm[erefU[2]],fnorm[erefU[3]],Gdpl[erefU[0],Gdpl[erefU[1],Gdpl[erefU[2],Gdpl[erefU[3],signgd2 * localdt * Gdpl[erefU[0],signgd2 * localdt * Gdpl[erefU[1],signgd2 * localdt * Gdpl[erefU[2],signgd2 * localdt * Gdpl[erefU[3]);
 
 
   if(failreturn && failreturn>failreturnallowable){
@@ -1757,7 +1767,7 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
         }
   
         // diagnose
-        if(showmessagesheavy) dualfprintf(fail_file,"i=%d f1: %g %g %g %g\n",ptrgeom->i,f1[erefU[0]],f1[erefU[1]],f1[erefU[2]],f1[erefU[3]]);
+        if(showmessagesheavy) JACLOOPALT(ii,startjac,endjac) dualfprintf(fail_file,"i=%d ii=%d erefU[ii]=%d f1=%g\n",ptrgeom->i,ii,erefU[ii],f1[erefU[ii]]);
       }
 
       /////////////////
@@ -1770,7 +1780,7 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
       FTYPE LOCALPREIMPCONV=MIN(10.0*NUMEPSILON,IMPTRYCONV); // more strict than later tolerance
       int dimtypef=DIMTYPEFCONS; // 0 = conserved R^t_\nu type, 1 = primitive R^{ti} type
       if(f_error_check(showmessages, showmessagesheavy, iter, LOCALPREIMPCONV,realdt,dimtypef,eomtypelocal,f1,f1norm,f1report,Uiin, uu0,uu,ptrgeom)){
-        errorabsf1=0.0;     DLOOPA(jj) errorabsf1     += fabs(f1report[erefU[jj]]);
+        errorabsf1=0.0;     JACLOOPALT(jj,startjac,endjac) errorabsf1     += fabs(f1report[erefU[jj]]);
         if(debugfail>=DEBUGLEVELIMPSOLVER) dualfprintf(fail_file,"Early low error=%g iter=%d\n",errorabsf1,iter);
         //  not failure.
         break;
@@ -1783,14 +1793,14 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
       //////////////
       int convreturnf1;
       convreturnf1=f_error_check(showmessages, showmessagesheavy, iter, IMPTRYCONV,realdt, dimtypef,eomtypelocal ,f1,f1norm,f1report,Uiin,uu0,uu,ptrgeom);
-      errorabsf1=0.0;     DLOOPA(jj) errorabsf1     += fabs(f1report[erefU[jj]]);
+      errorabsf1=0.0;     JACLOOPALT(jj,startjac,endjac) errorabsf1     += fabs(f1report[erefU[jj]]);
       if(convreturnf1){
         // but don't break, since need to iterate a bit first and check |dU/U|
       }
 
       if(DEBUGMAXITER){
         errorabsf1list[iter]=errorabsf1;
-        DLOOPA(jj) f1reportlist[iter][jj]=f1report[erefU[jj]];
+        JACLOOPALT(jj,startjac,endjac) f1reportlist[iter][jj]=f1report[erefU[jj]];
       }
 
 
@@ -1821,11 +1831,11 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
       // store error and solution in case eventually lead to max iterations and actually get worse error
       // f1 based
       FTYPE errorabsbest=0.0;
-      DLOOPA(jj) errorabsbest += fabs(lowestfreportf1[erefU[jj]]);
+      JACLOOPALT(jj,startjac,endjac) errorabsbest += fabs(lowestfreportf1[erefU[jj]]);
       if(errorabsbest>errorabsf1 && isfinite(errorabsf1) && pp[RHO]>0.0 && pp[UU]>0.0 && pp[PRAD0]>0.0){
         PLOOP(pliter,pl) bestuu[pl]=uu[pl];
         PLOOP(pliter,pl) bestpp[pl]=pp[pl];
-        DLOOPA(jj) lowestfreportf1[erefU[jj]]=f1report[erefU[jj]];
+        JACLOOPALT(jj,startjac,endjac) lowestfreportf1[erefU[jj]]=f1report[erefU[jj]];
         gotbest=1;
       }
 
@@ -1902,7 +1912,6 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
         else if(IMPPTYPE(implicititer)){
           PLOOP(pliter,pl) pp[pl]=ppp[pl];
           JAC2DLOOP(ii,jj,startjac,endjac){
-            dualfprintf(fail_file,"ii=%d jj=%d irefU=%d erefU=%d\n",ii,jj,irefU[ii],erefU[jj]);
             pp[irefU[ii]] -= DAMPFACTOR*iJ[irefU[ii]][erefU[jj]]*f1[erefU[jj]];
           }
           
@@ -2062,6 +2071,7 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
           fracdtG=MIN(1.0,fracdtG);
           checkconv=0;
         }      
+        if(EXTRACONVCOND) checkconv=0; // don't check actual convergence till doing full steps
       }// end if finite
 
 
@@ -2079,14 +2089,14 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
         // 0 = conserved R^t_\nu type, 1 = primitive R^{ti} type
         if(IMPUTYPE(implicititer)){ // still considering iterate error
           dimtypef=DIMTYPEFCONS;
-          DLOOPA(ii){
+          JACLOOPALT(ii,startjac,endjac){
             f3[erefU[ii]]=(uu[irefU[ii]]-uup[irefU[ii]]);
             f3norm[erefU[ii]]=fabs(uu[irefU[ii]])+fabs(uup[irefU[ii]]);
           }
         }
         else if(IMPPTYPE(implicititer)){ // still considering iterate error
           dimtypef=DIMTYPEFPRIM;
-          DLOOPA(ii){
+          JACLOOPALT(ii,startjac,endjac){
             f3[erefU[ii]]=(pp[irefU[ii]]-ppp[irefU[ii]]);
             f3norm[erefU[ii]]=fabs(pp[irefU[ii]])+fabs(ppp[irefU[ii]]);
           }
@@ -2096,7 +2106,7 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
         // f_error_check(uu0,uu) is ok to use since it just normalizes error
         int convreturnf3;
         convreturnf3=f_error_check(showmessages, showmessagesheavy, iter, IMPTRYCONV,realdt, dimtypef,eomtypelocal ,f3,f3norm,f3report,Uiin,uu0,uu,ptrgeom);
-        errorabsf3=0.0;     DLOOPA(jj) errorabsf3     += fabs(f3report[erefU[jj]]);
+        errorabsf3=0.0;     JACLOOPALT(jj,startjac,endjac) errorabsf3     += fabs(f3report[erefU[jj]]);
         // while using f1 for true error, can't do better if f3 error is below near machine precision.
         convreturnf3limit=f_error_check(showmessages, showmessagesheavy, iter, LOCALPREIMPCONVX,realdt,DIMTYPEFCONS,eomtypelocal,f3,f3norm,f3report,Uiin, uu0,uu,ptrgeom);
       }
@@ -2132,7 +2142,7 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
           if(debugfail>=DEBUGLEVELIMPSOLVER){
             if(convreturnf3limit && debugfail>=3){
               dualfprintf(fail_file,"f3limit good\n");
-              if(POSTNEWTONCONVCHECK==1) DLOOPA(ii) dualfprintf(fail_file,"ii=%d f3=%21.15g f3norm=%21.15g f3report=%21.15g\n",f3[erefU[ii]],f3norm[erefU[ii]],f3report[erefU[ii]]);          
+              if(POSTNEWTONCONVCHECK==1) JACLOOPALT(ii,startjac,endjac) dualfprintf(fail_file,"ii=%d erefU[ii]=%d f3=%21.15g f3norm=%21.15g f3report=%21.15g\n",ii,erefU[ii],f3[erefU[ii]],f3norm[erefU[ii]],f3report[erefU[ii]]);          
             }
             if(convreturnf1) dualfprintf(fail_file,"f1 good: ijknstepsteppart=%d %d %d %ld %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart);
             if(convreturnf3limit) dualfprintf(fail_file,"f3 good: ijknstepsteppart=%d %d %d %ld %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart);
@@ -2193,7 +2203,7 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
           int dimtypef=DIMTYPEFCONS; // 0 = conserved R^t_\nu type, 1 = primitive (u,v^i) type, i.e. v^i has no energy density term
           convreturn=f_error_check(showmessages, showmessagesheavy, iter, IMPTRYCONV,realdt,dimtypef,eomtypelocal,f1,f1norm,f1report,Uiin,uu0,uu,ptrgeom);
           convreturnallow=f_error_check(showmessages, showmessagesheavy, iter, IMPALLOWCONV,realdt,dimtypef,eomtypelocal,f1,f1norm,f1report,Uiin,uup,uu,ptrgeom);
-          errorabsf1=0.0;     DLOOPA(jj) errorabsf1     += fabs(f1report[erefU[jj]]);
+          errorabsf1=0.0;     JACLOOPALT(jj,startjac,endjac) errorabsf1     += fabs(f1report[erefU[jj]]);
         }// end if doing final check
 
 
@@ -2201,20 +2211,20 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
         if(GETBEST){
           // f1-based
           // using old uu,uup, but probably ok since just helps normalize error
-          errorabsf1=0.0;     DLOOPA(jj) errorabsf1     += fabs(f1report[erefU[jj]]);
+          errorabsf1=0.0;     JACLOOPALT(jj,startjac,endjac) errorabsf1     += fabs(f1report[erefU[jj]]);
       
           if(gotbest){
             // f1 based
             // see if should revert to prior best
             FTYPE errorabsbest=0.0;
-            DLOOPA(jj) errorabsbest += fabs(lowestfreportf1[erefU[jj]]);
+            JACLOOPALT(jj,startjac,endjac) errorabsbest += fabs(lowestfreportf1[erefU[jj]]);
             if(errorabsbest<errorabsf1 || !isfinite(errorabsf1) ){
               PLOOP(pliter,pl) uu[pl]=bestuu[pl];
               PLOOP(pliter,pl) pp[pl]=bestpp[pl];
               errorabsf1=errorabsbest;
-              DLOOPA(jj) f1report[erefU[jj]] = lowestfreportf1[erefU[jj]];
-              convreturn=(f1report[erefU[0]]<IMPTRYCONV && f1report[erefU[1]]<IMPTRYCONV && f1report[erefU[2]]<IMPTRYCONV && f1report[erefU[3]]<IMPTRYCONV);
-              convreturnallow=(f1report[erefU[0]]<IMPALLOWCONV && f1report[erefU[1]]<IMPALLOWCONV && f1report[erefU[2]]<IMPALLOWCONV && f1report[erefU[3]]<IMPALLOWCONV);
+              JACLOOPALT(jj,startjac,endjac) f1report[erefU[jj]] = lowestfreportf1[erefU[jj]];
+              convreturn=1; JACLOOPALT(jj,startjac,endjac) convreturn*=(f1report[erefU[jj]]<IMPTRYCONV); // like doing &&
+              convreturnallow=1; JACLOOPALT(jj,startjac,endjac) convreturnallow*=(f1report[erefU[jj]]<IMPALLOWCONV); // like doing &&
               if(showmessages && debugfail>=2) dualfprintf(fail_file,"Using best: %g %g\n",errorabsf1,errorabsbest);
             }
           }
@@ -2401,7 +2411,7 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
   *errorabsreturn=errorabsf1;
 
   // report iters not matter what the error.
-  *itersreturn=totaliters;
+  *itersreturn=totaliters - (ENDENERGYSTEPS-BEGINENERGYSTEPS+1); // don't count energy steps as full step for diagnostics.
 
   return(failreturn);
   
@@ -2973,10 +2983,10 @@ static int koral_source_rad_implicit_perdampstrategy(int dampstrategy, FTYPE imp
       // KORALNOTE: Perhaps reasonable and safer to keep fracuup as not reverted back to 1, since apparently unable to take full steps.  This effectively damps stepping.
       //      fracuup=1.0; // KORALTODO.
     }
-
+  
     // diagnose
     numoff1iter += f1iter;
-    if(showmessagesheavy) dualfprintf(fail_file,"i=%d f1: %g %g %g %g\n",ptrgeom->i,f1[erefU[0]],f1[erefU[1]],f1[erefU[2]],f1[erefU[3]]);
+    if(showmessagesheavy) JACLOOPALT(jj,startjac,endjac) dualfprintf(fail_file,"i=%d jj=%d erefU[jj]=%d f1=%g\n",ptrgeom->i,jj,erefU[jj],f1[erefU[jj]]);
 
 
 
@@ -3088,14 +3098,14 @@ static int koral_source_rad_implicit_perdampstrategy(int dampstrategy, FTYPE imp
       // 0 = conserved R^t_\nu type, 1 = primitive R^{ti} type
       if(IMPUTYPE(implicititer)){ // still considering iterate error
         dimtypef=DIMTYPEFCONS;
-        DLOOPA(ii){
+        JACLOOPALT(ii,startjac,endjac){
           f3[erefU[ii]]=(uu[irefU[ii]]-uup[irefU[ii]]);
           f3norm[erefU[ii]]=fabs(uu[irefU[ii]])+fabs(uup[irefU[ii]]);
         }
       }
       else if(IMPPTYPE(implicititer)){ // still considering iterate error
         dimtypef=DIMTYPEFPRIM;
-        DLOOPA(ii){
+        JACLOOPALT(ii,startjac,endjac){
           f3[erefU[ii]]=(pp[irefU[ii]]-ppp[irefU[ii]]);
           f3norm[erefU[ii]]=fabs(pp[irefU[ii]])+fabs(ppp[irefU[ii]]);
         }
@@ -3104,19 +3114,19 @@ static int koral_source_rad_implicit_perdampstrategy(int dampstrategy, FTYPE imp
       convreturn=f_error_check(showmessages, showmessagesheavy, iter, imptryconv,realdt,dimtypef,eomtypelocal,f3,f3norm,f3reportuu,Uiin,uup,uu,ptrgeom);
       // store error and solution in case eventually lead to max iterations and actually get worse error
       // errorabslocal=0.0;      DLOOPA(jj) errorabslocal     += fabs(f3reportuu[erefU[jj]]);// use for machine precision test of uu-uup.
-      errorabslocal=0.0;     DLOOPA(jj) errorabslocal     += fabs(f3report[erefU[jj]]); // try using real error
-      //DLOOPA(jj) f3report[erefU[jj]]=f3reportuu[erefU[jj]];
-      DLOOPA(jj) f3reportuu[erefU[jj]]=f3report[erefU[jj]];
+      errorabslocal=0.0;  JACLOOPALT(jj,startjac,endjac) errorabslocal     += fabs(f3report[erefU[jj]]); // try using real error
+      //JACLOOPALT(jj,startjac,endjac) f3report[erefU[jj]]=f3reportuu[erefU[jj]];
+      JACLOOPALT(jj,startjac,endjac) f3reportuu[erefU[jj]]=f3report[erefU[jj]];
 
       if(checkconv){ // only store best if settled into full solution
         // store error and solution in case eventually lead to max iterations and actually get worse error
-        errorabsbest=0.0; DLOOPA(jj) errorabsbest += fabs(lowestfreport[erefU[jj]]);
+        errorabsbest=0.0; JACLOOPALT(jj,startjac,endjac) errorabsbest += fabs(lowestfreport[erefU[jj]]);
         if(errorabsbest>errorabslocal && isfinite(errorabslocal)){
           //        dualfprintf(fail_file,"Got best: %ld %d : %d %d %d : jj=%d uu=%g bestuu=%g\n",nstep,steppart,ptrgeom->i,ptrgeom->j,ptrgeom->j,jj,uu[irefU[jj]],bestuu[irefU[jj]]);
           //          dualfprintf(fail_file,"Choosing best: %ld %d : %d %d %d  iter=%d : errl=%g errb=%g : uu=%g %g %g %g : uubest=%g %g %g %g\n",nstep,steppart,ptrgeom->i,ptrgeom->j,ptrgeom->j,iter,errorabslocal,errorabsbest,uu[irefU[0]],uu[irefU[1]],uu[irefU[2]],uu[irefU[3]],bestuu[irefU[0]],bestuu[irefU[1]],bestuu[irefU[2]],bestuu[irefU[3]]);
           PLOOP(pliter,pl) bestuu[pl]=uu[pl];
           PLOOP(pliter,pl) bestpp[pl]=pp[pl];
-          DLOOPA(jj) lowestfreport[erefU[jj]]=f3report[erefU[jj]];
+          JACLOOPALT(jj,startjac,endjac) lowestfreport[erefU[jj]]=f3report[erefU[jj]];
           gotbest=1;
           iterbest=iter;
         }
@@ -3155,10 +3165,10 @@ static int koral_source_rad_implicit_perdampstrategy(int dampstrategy, FTYPE imp
       if(gotbest){
         if(showmessages && debugfail>=2) dualfprintf(fail_file,"Using best: %g %g\n",errorabslocal,errorabsbest);
         // get new convreturn
-        convreturn=(lowestfreport[erefU[0]]<impallowconv && lowestfreport[erefU[1]]<impallowconv && lowestfreport[erefU[2]]<impallowconv && lowestfreport[erefU[3]]<impallowconv);
+        convreturn=1; JACLOOPALT(jj,startjac,endjac) convreturn*=(lowestfreport[erefU[jj]]<IMPALLOWCONV); // like doing &&
       }
       else{
-        convreturn=(f3report[erefU[0]]<impallowconv && f3report[erefU[1]]<impallowconv && f3report[erefU[2]]<impallowconv && f3report[erefU[3]]<impallowconv);
+        convreturn=1; JACLOOPALT(jj,startjac,endjac) convreturn*=(f3report[erefU[jj]]<IMPALLOWCONV); // like doing &&
       }
 
       // KORALTODO: If convreturn doesn't work, but still (say) 10% error, might want to hold onto result in case explicit backup fails as well (which is likely), in which case *much* better to use 10% error because otherwise 4-force not accounted for, which can lead to very big changes in fluid behavior due to large flux from previous step.
@@ -3199,7 +3209,7 @@ static int koral_source_rad_implicit_perdampstrategy(int dampstrategy, FTYPE imp
     // final actual errorabs
     errorabslocal=0.0;
     if(f1break==0 && gotbest){
-      DLOOPA(jj){
+      JACLOOPALT(jj,startjac,endjac){
         //        dualfprintf(fail_file,"Got best: %ld %d : %d %d %d : jj=%d uu=%g bestuu=%g\n",nstep,steppart,ptrgeom->i,ptrgeom->j,ptrgeom->j,jj,uu[irefU[jj]],bestuu[irefU[jj]]);
         errorabslocal += fabs(lowestfreport[erefU[jj]]);
       }
@@ -3208,13 +3218,13 @@ static int koral_source_rad_implicit_perdampstrategy(int dampstrategy, FTYPE imp
         pp[pl]=bestpp[pl];
       }
       FTYPE errorabslocaltest=0.0;
-      DLOOPA(jj) errorabslocaltest += fabs(f3report[erefU[jj]]);
+      JACLOOPALT(jj,startjac,endjac) errorabslocaltest += fabs(f3report[erefU[jj]]);
       //      dualfprintf(fail_file,"Got best final: %ld %d : %d %d %d : error=%g lasterror=%g\n",nstep,steppart,ptrgeom->i,ptrgeom->j,ptrgeom->j,errorabslocal,errorabslocaltest);
       //      dualfprintf(fail_file,"Best: %ld %d : %d %d %d  iter=%d : uu=%g %g %g %g : uubest=%g %g %g %g\n",nstep,steppart,ptrgeom->i,ptrgeom->j,ptrgeom->j,iter,uu[irefU[0]],uu[irefU[1]],uu[irefU[2]],uu[irefU[3]],bestuu[irefU[0]],bestuu[irefU[1]],bestuu[irefU[2]],bestuu[irefU[3]]);
       //      dualfprintf(fail_file,"iter=%d iterbest=%d\n",iter,iterbest);
       //      if(iter!=iterbest) dualfprintf(fail_file,"HEREIT\n");
     }
-    else DLOOPA(jj) errorabslocal += fabs(f3report[erefU[jj]]);
+    else JACLOOPALT(jj,startjac,endjac) errorabslocal += fabs(f3report[erefU[jj]]);
 
 
 
@@ -3375,12 +3385,12 @@ static int f_error_check(int showmessages, int showmessagesheavy, int iter, FTYP
 
   if(DOOLD){
     FTYPE fin4[NDIM],finnorm4[NDIM],finreport4[NDIM];
-    DLOOPA(ii){
+    JACLOOPALT(ii,startjac,endjac){
       fin4[ii]=fin[erefU[ii]];
       finnorm4[ii]=finnorm[erefU[ii]];
     }
     int convreturn=f_error_check_old(showmessages, showmessagesheavy, iter, conv,realdt,fin4,finnorm4,finreport4,Uiin,uu0,uu,ptrgeom);
-    DLOOPA(ii) finreport[erefU[ii]]=finreport4[ii];
+    JACLOOPALT(ii,startjac,endjac) finreport[erefU[ii]]=finreport4[ii];
     return(convreturn);
   }
 
@@ -3410,31 +3420,35 @@ static int f_error_check(int showmessages, int showmessagesheavy, int iter, FTYP
   FTYPE finnew[NPR];
   DLOOPA(ii) finnew[erefU[ii]]=fin[erefU[ii]]*dimfactferr[erefU[ii]];
 
-  // get relative errors
-  DLOOPA(ii){
-    fina[erefU[ii]]=fabs(finnew[erefU[ii]]/(IMPMINABSERROR+fabs(uu0[erefU[0]]*dimfactU[erefU[0]])));
-    finb[erefU[ii]]=fabs(finnew[erefU[ii]]/(IMPMINABSERROR+MAX(fabs(uu0[iotherU[0]]*dimfactU[iotherU[0]]),fabs(uu0[erefU[0]]*dimfactU[erefU[0]]))));
-    finc[erefU[ii]]=fabs(finnew[erefU[ii]]/(IMPMINABSERROR+MAX(finnormnew[erefU[ii]],fabs(uu0[erefU[0]]*dimfactU[erefU[0]]))));
+  // get relative errors (keep sign)
+  JACLOOPALT(ii,startjac,endjac){
+    fina[erefU[ii]]=finnew[erefU[ii]]/fabs((IMPMINABSERROR+fabs(uu0[erefU[0]]*dimfactU[erefU[0]])));
+    finb[erefU[ii]]=finnew[erefU[ii]]/fabs((IMPMINABSERROR+MAX(fabs(uu0[iotherU[0]]*dimfactU[iotherU[0]]),fabs(uu0[erefU[0]]*dimfactU[erefU[0]]))));
+    finc[erefU[ii]]=finnew[erefU[ii]]/fabs((IMPMINABSERROR+MAX(finnormnew[erefU[ii]],fabs(uu0[erefU[0]]*dimfactU[erefU[0]]))));
     // SMALL was (uu0[iotherU[0]]-Uiin[iotherU[0]])
-    find[erefU[ii]]=fabs(finnew[erefU[ii]]/(IMPMINABSERROR+MAX(fabs((SMALL)*dimfactU[erefU[0]]),MAX(finnormnew[erefU[ii]],fabs(uu0[erefU[0]]*dimfactU[erefU[0]])))));
+    find[erefU[ii]]=finnew[erefU[ii]]/fabs((IMPMINABSERROR+MAX(fabs((SMALL)*dimfactU[erefU[0]]),MAX(finnormnew[erefU[ii]],fabs(uu0[erefU[0]]*dimfactU[erefU[0]])))));
   }
 
   // evaluate error
   if(IMPLICITERRORNORM==1){
-    if(fina[erefU[0]]<conv && fina[erefU[1]]<conv && fina[erefU[2]]<conv && fina[erefU[3]]<conv) passedconv=1;
-    DLOOPA(ii) finreport[erefU[ii]]=fina[erefU[ii]];
+    passedconv=1; JACLOOPALT(ii,startjac,endjac) passedconv *= fabs(fina[erefU[ii]])<conv;
+    passedconv *= (startjac==0 && endjac==NDIM-1);
+    JACLOOPALT(ii,startjac,endjac) finreport[erefU[ii]]=fina[erefU[ii]];
   }
   else if(IMPLICITERRORNORM==2){
-    if(finb[erefU[0]]<conv && finb[erefU[1]]<conv && finb[erefU[2]]<conv && finb[erefU[3]]<conv) passedconv=1;
-    DLOOPA(ii) finreport[erefU[ii]]=finb[erefU[ii]];
+    passedconv=1; JACLOOPALT(ii,startjac,endjac) passedconv *= fabs(finb[erefU[ii]])<conv;
+    passedconv *= (startjac==0 && endjac==NDIM-1);
+    JACLOOPALT(ii,startjac,endjac) finreport[erefU[ii]]=finb[erefU[ii]];
   }
   else if(IMPLICITERRORNORM==3){
-    if(finc[erefU[0]]<conv && finc[erefU[1]]<conv && finc[erefU[2]]<conv && finc[erefU[3]]<conv) passedconv=1;
-    DLOOPA(ii) finreport[erefU[ii]]=finc[erefU[ii]];
+    passedconv=1; JACLOOPALT(ii,startjac,endjac) passedconv *= fabs(finc[erefU[ii]])<conv;
+    passedconv *= (startjac==0 && endjac==NDIM-1);
+    JACLOOPALT(ii,startjac,endjac) finreport[erefU[ii]]=finc[erefU[ii]];
   }
   else if(IMPLICITERRORNORM==4){
-    if(find[erefU[0]]<conv && find[erefU[1]]<conv && find[erefU[2]]<conv && find[erefU[3]]<conv) passedconv=1;
-    DLOOPA(ii) finreport[erefU[ii]]=find[erefU[ii]];
+    passedconv=1; JACLOOPALT(ii,startjac,endjac) passedconv *= fabs(find[erefU[ii]])<conv;
+    passedconv *= (startjac==0 && endjac==NDIM-1);
+    JACLOOPALT(ii,startjac,endjac) finreport[erefU[ii]]=find[erefU[ii]];
   }
   
 
@@ -3479,7 +3493,7 @@ static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int sho
 
   if(DOOLD){
     FTYPE iJ44[NDIM][NDIM]={0.0},f14[NDIM]={0.0},f1norm4[NDIM]={0.0};
-    JACLOOP(ii,startjac,endjac){
+    JACLOOPALT(ii,startjac,endjac){
       f14[ii]=f1[erefU[ii]];
       f1norm4[ii]=f1norm[erefU[ii]];
     }
@@ -3555,7 +3569,7 @@ static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int sho
   FTYPE delspace,predel[NDIM];
 
   // get everything in terms of quasi-orthonormal quantities
-  JACLOOP(jj,startjac,endjac){
+  JACLOOPALT(jj,startjac,endjac){
     predel[jj] = fabs(x[irefU[jj]]*upitoup0[irefU[jj]]);
     if(irefU[jj]==UU || irefU[jj]==URAD0 || IMPUTYPE(implicititer)){
       // below makes sense because U and ferr are linear in x and same dimensional units
@@ -3574,7 +3588,7 @@ static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int sho
   ///////////
   // form delspace that absorbs all spatial values into a single dimensionless scale to avoid one dimensions smallness causing issues.
   // KORALTODO: Maybe causes problems if Jacobian becomes singular because no change in small velocity-momentum values when should be change.  But can't resolve it really, so should be ok.
-  // NOTE: If JACLOOP doesn't include momentum, the below doesn't hurt.
+  // NOTE: If JACLOOPALT doesn't include momentum, the below doesn't hurt.
   //////////
   delspace=0.0; SLOOPA(jj) delspace = MAX(delspace,MAX(fabs(predel[jj]) , velmomscale )); // dimensionless-ortho
   /////////////////
@@ -3582,7 +3596,7 @@ static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int sho
   SLOOPA(jj) predel[jj] = delspace/upitoup0[irefU[jj]];
 
   // back to actual time dimension scale
-  // NOTE: If JACLOOP doesn't include energy, the below doesn't hurt.
+  // NOTE: If JACLOOPALT doesn't include energy, the below doesn't hurt.
   jj=TT;
   predel[jj] = predel[jj]/upitoup0[irefU[jj]];
 
