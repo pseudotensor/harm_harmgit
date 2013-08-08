@@ -262,7 +262,7 @@ static int Utoprimgen_failwrapper(int doradonly, int showmessages, int allowloca
 // below 1 if reporting cases when MAXITER reached, but allowd error so not otherwise normally reported.
 #define REPORTMAXITERALLOWED (PRODUCTION==0)
 
-#define REPORTCONVRETURNALLOW (PRODUCTION==0)
+#define REPORTCONVRETURNALLOW (PRODUCTION==0&&0)
 
 #define REPORTSWITCHINCASESHOULDNTHAVESWITCH (PRODUCTION==0&&0)
 
