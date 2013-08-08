@@ -214,8 +214,8 @@ static int Utoprimgen_failwrapper(int doradonly, int showmessages, int allowloca
 #define BEGINNORMALSTEPS 14
 
 // number of prior iterations to see if error has dropped enough to seem relevant
-#define NUMPRIORERRORSITER0 5
-#define NUMPRIORERRORS 5
+#define NUMPRIORERRORSITER0 6
+#define NUMPRIORERRORS 4
 #define PRIORERRORCHANGEREQUIRED (0.5)
 
 // whether to store steps for primitive and so debug max iteration cases
@@ -239,6 +239,7 @@ static int Utoprimgen_failwrapper(int doradonly, int showmessages, int allowloca
 
 
 #define BADENERGY(ugenergy,ugentropy) ((ugenergy) < 0.5*(ugentropy))
+#define BADENERGY2(ugenergy,ugentropy) ((ugenergy) < (ugentropy))
 
 // stop iterating energy if pbenergy[UU]<0.5*pbentropy[UU] consistently starting aafter below number of iterations and lasting for 2nd below number of iterations
 #define RAMESHSTOPENERGYIFTOOOFTENBELOWENTROPY0 (4+BEGINNORMALSTEPS)
@@ -260,6 +261,8 @@ static int Utoprimgen_failwrapper(int doradonly, int showmessages, int allowloca
 
 // below 1 if reporting cases when MAXITER reached, but allowd error so not otherwise normally reported.
 #define REPORTMAXITERALLOWED (PRODUCTION==0)
+
+#define REPORTCONVRETURNALLOW (PRODUCTION==0)
 
 #define REPORTSWITCHINCASESHOULDNTHAVESWITCH (PRODUCTION==0&&0)
 
@@ -1114,7 +1117,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
     if(
        failreturnenergy>0 && failreturnentropy<=0 ||
 #define IMPOKENTROPY (1E-8)
-       failreturnentropy<=0 && failreturnenergy<=0 && (BADENERGY(pbenergy[UU],pbentropy[UU]) && (errorabsentropy<IMPOKENTROPY && errorabsenergy>errorabsentropy))
+       failreturnentropy<=0 && failreturnenergy<=0 && (BADENERGY(pbenergy[UU],pbentropy[UU]) && (errorabsentropy<IMPOKENTROPY && errorabsenergy>errorabsentropy)) ||
+       failreturnentropy<=0 && failreturnenergy<=0 && (BADENERGY2(pbenergy[UU],pbentropy[UU]) && (errorabsentropy<(NDIM+2)*IMPTRYCONV && errorabsenergy>(NDIM+2)*IMPTRYCONV)) // switch to entropy if suspicious energy solution that looks approximate but mathematica checks suggest are mostly u_g<0 if accurate solution found.
        ){
       //      dualfprintf(fail_file,"USING ENTROPY\n");
       // tell an externals to switch to entropy
@@ -1572,7 +1576,9 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
   int debugiter=0;
   int momiters=0,energyiters=0,normaliters=0;
   FTYPE errorabsf1=BIG;
+  FTYPE suberrorabsf1=BIG;
   FTYPE errorabsf3=BIG;
+  FTYPE suberrorabsf3=BIG;
 
   ////////////////
   // THE DAMP LOOP
@@ -1698,9 +1704,18 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
       fracdtGp=fracdtG; // fracdtG used when computing previous f1 and f2's
 
       errorabspf3=errorabsf3;
+
+      if(NUMPRIORERRORS>0){
+        // reset at start of new use of equations
+        if(iter==BEGINMOMSTEPS || iter==BEGINENERGYSTEPS || iter==BEGINNORMALSTEPS){
+          priorerrorscount=0;
+          int itererror; for(itererror=0;itererror<NUMPRIORERRORS;itererror++) errorabspf1[itererror]=BIG;
+        }
+        else if(iter>1) priorerrorscount++;
+      }
       {
         int itererror; for(itererror=MIN(priorerrorscount,NUMPRIORERRORS)-1;itererror>=1;itererror--) errorabspf1[itererror]=errorabspf1[itererror-1]; // shift to higher
-        if(iter>1) errorabspf1[0]=errorabsf1;
+        if(iter>1) errorabspf1[0]=suberrorabsf1; // only for equations that are currently iterating.
       }
       // store previous f1 values
       PLOOP(pliter,pl) f1p[pl]=f1[pl];
@@ -1809,7 +1824,7 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
             if(REPORTSWITCHINCASESHOULDNTHAVESWITCH){
               int convreturnf1=f_error_check(showmessages, showmessagesheavy, iter, IMPTRYCONV,realdt, DIMTYPEFCONS,eomtypelocal ,f1,f1norm,f1report,Uiin,uu0,uu,ptrgeom);
               // but don't break, since need to iterate a bit first and check |dU/U| and need to see if checkconv==1
-              errorabsf1=0.0;     JACLOOPERROR(jj,startjac,endjac) errorabsf1     += fabs(f1report[erefU[jj]]);
+              errorabsf1=0.0;     JACLOOPALT(jj,startjac,endjac) errorabsf1     += fabs(f1report[erefU[jj]]);
               failnum++;  mathematica_report_check(70, failnum, gotfirstnofail, eomtypelocal, errorabsf1, iter, realdt, ptrgeom, ppfirst,pp,pb,piin,prtestUiin,prtestUU0,uu0,uu,Uiin,Ufin, CUf, q, dUother);
             } // still report in case should have gotten solution
             break;
@@ -1837,7 +1852,7 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
             if(REPORTSWITCHINCASESHOULDNTHAVESWITCH){
               int convreturnf1=f_error_check(showmessages, showmessagesheavy, iter, IMPTRYCONV,realdt, DIMTYPEFCONS,eomtypelocal ,f1,f1norm,f1report,Uiin,uu0,uu,ptrgeom);
               // but don't break, since need to iterate a bit first and check |dU/U| and need to see if checkconv==1
-              errorabsf1=0.0;     JACLOOPERROR(jj,startjac,endjac) errorabsf1     += fabs(f1report[erefU[jj]]);
+              errorabsf1=0.0;     JACLOOPALT(jj,startjac,endjac) errorabsf1     += fabs(f1report[erefU[jj]]);
               failnum++;    mathematica_report_check(20, failnum, gotfirstnofail, eomtypelocal, errorabsf1, iter, realdt, ptrgeom, ppfirst,pp,pb,piin,prtestUiin,prtestUU0,uu0,uu,Uiin,Ufin, CUf, q, dUother);
             } // still report in case should have gotten solution
             failreturn=FAILRETURNMODESWITCH;
@@ -1846,7 +1861,7 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
           else{
             int convreturnf1=f_error_check(showmessages, showmessagesheavy, iter, IMPTRYCONV,realdt, DIMTYPEFCONS,eomtypelocal ,f1,f1norm,f1report,Uiin,uu0,uu,ptrgeom);
             // but don't break, since need to iterate a bit first and check |dU/U| and need to see if checkconv==1
-            errorabsf1=0.0;     JACLOOPERROR(jj,startjac,endjac) errorabsf1     += fabs(f1report[erefU[jj]]);
+            errorabsf1=0.0;     JACLOOPALT(jj,startjac,endjac) errorabsf1     += fabs(f1report[erefU[jj]]);
             failnum++;  mathematica_report_check(0, failnum, gotfirstnofail, eomtypelocal, errorabsf1, iter, realdt, ptrgeom, ppfirst,pp,pb,piin,prtestUiin,prtestUU0,uu0,uu,Uiin,Ufin, CUf, q, dUother);
             if(doingit==1) myexit(10000000); // DEBUG
             // Note that if inversion reduces to entropy or cold, don't fail, so passes until reached this point.  But convergence can be hard if flipping around which EOMs for the inversion are actually used.
@@ -1862,7 +1877,7 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
         }
   
         // diagnose
-        if(showmessagesheavy) JACLOOPERROR(ii,startjac,endjac) dualfprintf(fail_file,"i=%d ii=%d erefU[ii]=%d f1=%g\n",ptrgeom->i,ii,erefU[ii],f1[erefU[ii]]);
+        if(showmessagesheavy) JACLOOPALT(ii,startjac,endjac) dualfprintf(fail_file,"i=%d ii=%d erefU[ii]=%d f1=%g\n",ptrgeom->i,ii,erefU[ii],f1[erefU[ii]]);
       }// else if f1 calculation didn't fail.
 
 
@@ -1921,7 +1936,8 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
       //////////////
       int convreturnf1=f_error_check(showmessages, showmessagesheavy, iter, IMPTRYCONV,realdt, DIMTYPEFCONS,eomtypelocal ,f1,f1norm,f1report,Uiin,uu0,uu,ptrgeom);
       // but don't break, since need to iterate a bit first and check |dU/U| and need to see if checkconv==1
-      errorabsf1=0.0;     JACLOOPERROR(jj,startjac,endjac) errorabsf1     += fabs(f1report[erefU[jj]]);
+      suberrorabsf1=0.0;  JACLOOPERROR(jj,startjac,endjac) suberrorabsf1     += fabs(f1report[erefU[jj]]); // e.g. may only be energy error.
+      errorabsf1=0.0;     JACLOOPALT(jj,startjac,endjac)      errorabsf1     += fabs(f1report[erefU[jj]]); // always full error.
 
 
       //      dualfprintf(fail_file,"ERROR: %g : %g %g %g %g : %d %d\n",errorabsf1,f1report[erefU[0]],f1report[erefU[1]],f1report[erefU[2]],f1report[erefU[3]],startjac,endjac);
@@ -1944,7 +1960,8 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
 
       // check if doing energy stepping and error jumped up too much
       //      if(iter>BEGINENERGYSTEPS && iter<=ENDENERGYSTEPS){ // iter>BEGIN not iter>=BEGIN so previous error is an energy step
-      if(iter>=BEGINENERGYSTEPS && iter<=ENDENERGYSTEPS){ // iter>BEGIN not iter>=BEGIN so previous error is an energy step
+      //      if(iter>=BEGINENERGYSTEPS && iter<=ENDENERGYSTEPS){ // iter>BEGIN not iter>=BEGIN so previous error is an energy step
+      if(iter>=BEGINENERGYSTEPS || iter>=BEGINNORMALSTEPS){// now all steps beyond energy
         if(fabs(f1[erefU[0]]/f1p[erefU[0]])>FACTORBADJUMPERROR && fabs(f1[erefU[0]])>IMPTRYCONV){
           // then pseudo-bisect (between zero and previous ok error case
           if(debugfail>=DEBUGLEVELIMPSOLVER) dualfprintf(fail_file,"pseudo-bisect: iter=%d f1=%g f1p=%g pp=%g ppp=%g  pppp=%g  ppppp=%g\n",iter,f1[erefU[0]],f1p[erefU[0]],pp[erefU[0]],ppp[erefU[0]],pppp[erefU[0]],ppppp[erefU[0]]);
@@ -1977,7 +1994,7 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
         /////////////////
         FTYPE LOCALPREIMPCONV=MIN(10.0*NUMEPSILON,IMPTRYCONV); // more strict than later tolerance
         if(f_error_check(showmessages, showmessagesheavy, iter, LOCALPREIMPCONV,realdt,DIMTYPEFCONS,eomtypelocal,f1,f1norm,f1report,Uiin, uu0,uu,ptrgeom)){
-          errorabsf1=0.0;     JACLOOPERROR(jj,startjac,endjac) errorabsf1     += fabs(f1report[erefU[jj]]);
+          errorabsf1=0.0;     JACLOOPALT(jj,startjac,endjac) errorabsf1     += fabs(f1report[erefU[jj]]);
           if(debugfail>=DEBUGLEVELIMPSOLVER) dualfprintf(fail_file,"Early low error=%g iter=%d\n",errorabsf1,iter);
           //  not failure.
           break;
@@ -2001,13 +2018,13 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
 
 
         // check if error repeatedly rises
-        if(NUMNOERRORREDUCE){
-          if(iter>NUMNOERRORREDUCE0 && errorabsf1>IMPTRYCONV){ // no need to do this if actually error is below desired tolerance,  hence second argument
-            if(errorabsf1>=errorabspf1[0]) counterrorrose++;
-            int allowedtoabort=(havebackup || ABORTBACKUPIFNOERRORREDUCE==1 && errorabsf1<IMPTRYCONVALT);
+        if(NUMNOERRORREDUCE && iter>=BEGINNORMALSTEPS){
+          if(iter>NUMNOERRORREDUCE0 && suberrorabsf1>IMPTRYCONV){ // no need to do this if actually error is below desired tolerance,  hence second argument
+            if(suberrorabsf1>=errorabspf1[0]) counterrorrose++;
+            int allowedtoabort=(havebackup || ABORTBACKUPIFNOERRORREDUCE==1 && suberrorabsf1<IMPTRYCONVALT);
             if(counterrorrose>=NUMNOERRORREDUCE && allowedtoabort){ // would be risky to do abort if don't have backup, even if enter into limit cycle.
               if(havebackup){
-                if(debugfail>=DEBUGLEVELIMPSOLVER) dualfprintf(fail_file,"SWITCHING MODE: Deteteced did not decrease error %d times at iter=%d : errorabsf1=%g errorabspf1=%g\n",counterrorrose,iter,errorabsf1,errorabspf1[0]);
+                if(debugfail>=DEBUGLEVELIMPSOLVER) dualfprintf(fail_file,"SWITCHING MODE: Deteteced did not decrease error %d times at iter=%d : suberrorabsf1=%g errorabspf1=%g\n",counterrorrose,iter,suberrorabsf1,errorabspf1[0]);
                 failreturn=FAILRETURNMODESWITCH;
                 // if want to ensure should have gotten solution, should still report
                 if(REPORTSWITCHINCASESHOULDNTHAVESWITCH){ failnum++;  mathematica_report_check(80, failnum, gotfirstnofail, eomtypelocal, errorabsf1, iter, realdt, ptrgeom, ppfirst,pp,pb,piin,prtestUiin,prtestUU0,uu0,uu,Uiin,Ufin, CUf, q, dUother);} // still report in case should have gotten solution
@@ -2015,7 +2032,7 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
               else{
                 // then aborting due to error alone even without backup
                 canbreak=2;
-                if(debugfail>=DEBUGLEVELIMPSOLVER) dualfprintf(fail_file,"Aborting even without backup because error oscillated (iter=%d) and errorabsf1=%g\n",iter,errorabsf1);
+                if(debugfail>=DEBUGLEVELIMPSOLVER) dualfprintf(fail_file,"Aborting even without backup because error oscillated (iter=%d) and suberrorabsf1=%g errorabsf1=%g\n",iter,suberrorabsf1,errorabsf1);
                 // no failure or switch.
               }
               break;
@@ -2027,17 +2044,10 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
         // check if error isn't decreasing enough for be interesting
         if(NUMPRIORERRORS>0){
 
-          // reset at start of new use of equations
-          if(iter==BEGINMOMSTEPS) priorerrorscount=0;
-          if(iter==BEGINENERGYSTEPS) priorerrorscount=0;
-          if(iter==BEGINNORMALSTEPS) priorerrorscount=0;
-
-          priorerrorscount++;
           if(priorerrorscount>=NUMPRIORERRORSITER0){
             FTYPE erroraverage=0.0; int numerroraverage=0; int itererror;
             for(itererror=1;itererror<MIN(priorerrorscount,NUMPRIORERRORS);itererror++){ erroraverage += errorabspf1[itererror]; numerroraverage++;} erroraverage/=((FTYPE)numerroraverage);
-            //        if(errorabsf1/errorabspf1[NUMPRIORERRORS-1]>PRIORERRORCHANGEREQUIRED && errorabsf1>IMPTRYCONV){
-            if(errorabsf1/erroraverage>PRIORERRORCHANGEREQUIRED && errorabsf1>IMPTRYCONV){
+            if(suberrorabsf1/erroraverage>PRIORERRORCHANGEREQUIRED && suberrorabsf1>IMPTRYCONV){
 
               if(iter>=BEGINMOMSTEPS && iter<=ENDMOMSTEPS){
                 if(iter<ENDMOMSTEPS){ iter=BEGINENERGYSTEPS-1; continue;} // force as if already doing energy steps.  If already next iteration is to be this energy step, then no skipping needed.
@@ -2048,7 +2058,7 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
               else{
                 canbreak=3;
                 if(debugfail>=DEBUGLEVELIMPSOLVER){
-                  dualfprintf(fail_file,"Error is not decreasing sufficiently fast: iter=%d priorerrorscount=%d errorabsf1=%g\n",iter,priorerrorscount,errorabsf1);
+                  dualfprintf(fail_file,"Error is not decreasing sufficiently fast: iter=%d priorerrorscount=%d suberrorabsf1=%g\n",iter,priorerrorscount,suberrorabsf1);
                   for(itererror=1;itererror<MIN(priorerrorscount,NUMPRIORERRORS);itererror++) dualfprintf(fail_file,"errorabspf1[%d]=%g\n",itererror,errorabspf1[itererror]);
                 }
                 break;
@@ -2445,7 +2455,7 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
           int dimtypef=DIMTYPEFCONS; // 0 = conserved R^t_\nu type, 1 = primitive (u,v^i) type, i.e. v^i has no energy density term
           convreturn=f_error_check(showmessages, showmessagesheavy, iter, IMPTRYCONV,realdt,dimtypef,eomtypelocal,f1,f1norm,f1report,Uiin,uu0,uu,ptrgeom);
           convreturnallow=f_error_check(showmessages, showmessagesheavy, iter, IMPALLOWCONV,realdt,dimtypef,eomtypelocal,f1,f1norm,f1report,Uiin,uup,uu,ptrgeom);
-          errorabsf1=0.0;     JACLOOPERROR(jj,startjac,endjac) errorabsf1     += fabs(f1report[erefU[jj]]);
+          errorabsf1=0.0;     JACLOOPALT(jj,startjac,endjac) errorabsf1     += fabs(f1report[erefU[jj]]);
           if(debugfail>=DEBUGLEVELIMPSOLVER) dualfprintf(fail_file,"DOFINALCHECK: convreturn=%d convreturnallow=%d (IMPALLOWCONV=%g) f1report: %g %g %g %g : %g\n",convreturn,convreturnallow,IMPALLOWCONV,f1report[erefU[0]],f1report[erefU[1]],f1report[erefU[2]],f1report[erefU[3]],errorabsf1);
         }// end if doing final check
 
@@ -2518,7 +2528,6 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
               }// end else
             }
           }
-          // can continue if convreturnallow
         }
         else{
           // KORALTODO: Need backup that won't fail.
@@ -2662,7 +2671,19 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
       if(EOMGRMHD) *eomtype=EOMDIDGRMHD;
     }
 
+    // see if those error>10*tol events are bad or not
+    if(REPORTCONVRETURNALLOW){
+      if(errorabsf1>1E-7){ // only those that are not failures so potentially used.
+        struct of_state qcheck; get_state(pp, ptrgeom, &qcheck);  primtoU(UNOTHING,pp,&qcheck,ptrgeom, uu);
+        int whichmath=(eomtypelocal==EOMGRMHD ? 7 : 700);
+        failnum++; mathematica_report_check(whichmath, failnum, gotfirstnofail, eomtypelocal, errorabsf1, iter, realdt, ptrgeom, ppfirst,pp,pb,piin,prtestUiin,prtestUU0,uu0,uu,Uiin,Ufin, CUf, q, dUother);
+        showdebuglist(debugiter,pppreholdlist,ppposholdlist,f1reportlist,f1list,errorabsf1list,realiterlist,jac00list);
+      }
+    }
+
   }// end if didn't fail, so can set final solution.
+
+
 
 
   // report error no matter whether got solution or not.
