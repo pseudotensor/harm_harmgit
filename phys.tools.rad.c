@@ -247,6 +247,9 @@ static int Utoprimgen_failwrapper(int doradonly, int showmessages, int allowloca
 //#define SWITCHTOENTROPYIFCHANGESTOENTROPY (*implicitferr==QTYUMHD ? 0 : 1)
 #define SWITCHTOENTROPYIFCHANGESTOENTROPY (0)
 
+// whether to ensure specific entropy no smaller than guess
+#define ENTROPYFIXGUESS 1
+
 // whether to get lowest error solution instead of final one.
 #define GETBEST 1
 
@@ -1522,8 +1525,29 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
     }
   }  
 
-  
 
+
+  /////////////////////////////
+  //
+  // Fix u_g so entropy not smaller than guess
+  //
+  /////////////////////////////
+
+
+  if(ENTROPYFIXGUESS && ENTROPY>=0){
+    FTYPE entropy0,specificentropy0;
+    entropy_calc(ptrgeom,pp,&entropy0);
+    specificentropy0=entropy0/pp[RHO];
+    FTYPE entropyE,specificentropyE;
+    specificentropyE=uu[ENTROPY]/uu[RHO];
+    entropyE=specificentropyE*MIN(fabs(uu[RHO]),fabs(pp[RHO])); // worse case for entropy
+    if(specificentropy0<specificentropyE){
+      FTYPE ppnew[NPR]; PLOOP(pliter,pl) ppnew[pl]=pp[pl];
+      ufromentropy_calc(ptrgeom, entropyE, ppnew); ppnew[UU]=ppnew[ENTROPY];
+      if(debugfail>=2 && (fabs(ppnew[UU]/pp[UU])>10.0 || ppnew[UU]<pp[UU]) ) dualfprintf(fail_file,"CHANGE: Fixed entropy (%g vs. %g): guessrho=%g guessug=%g  newug=%g dug=%g\n",specificentropy0,specificentropyE,pp[RHO],pp[UU],ppnew[UU],pp[UU]-ppnew[UU]);
+      pp[UU]=ppnew[UU];
+    }
+  }
   
 
   /////////////////////////////
