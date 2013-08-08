@@ -1705,6 +1705,7 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
 
       errorabspf3=errorabsf3;
 
+      //      dualfprintf(fail_file,"priorerrorscount=%d\n",priorerrorscount);
       if(NUMPRIORERRORS>0){
         // reset at start of new use of equations
         if(iter==BEGINMOMSTEPS || iter==BEGINENERGYSTEPS || iter==BEGINNORMALSTEPS){
@@ -1936,11 +1937,28 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
       //////////////
       int convreturnf1=f_error_check(showmessages, showmessagesheavy, iter, IMPTRYCONV,realdt, DIMTYPEFCONS,eomtypelocal ,f1,f1norm,f1report,Uiin,uu0,uu,ptrgeom);
       // but don't break, since need to iterate a bit first and check |dU/U| and need to see if checkconv==1
-      suberrorabsf1=0.0;  JACLOOPERROR(jj,startjac,endjac) suberrorabsf1     += fabs(f1report[erefU[jj]]); // e.g. may only be energy error.
+      suberrorabsf1=0.0;  JACLOOPERROR(jj,startjac,endjac) suberrorabsf1     += fabs(f1report[erefU[jj]]); // e.g. may only be energy error or only momentum error.
       errorabsf1=0.0;     JACLOOPALT(jj,startjac,endjac)      errorabsf1     += fabs(f1report[erefU[jj]]); // always full error.
 
 
-      //      dualfprintf(fail_file,"ERROR: %g : %g %g %g %g : %d %d\n",errorabsf1,f1report[erefU[0]],f1report[erefU[1]],f1report[erefU[2]],f1report[erefU[3]],startjac,endjac);
+      ////////////////
+      //
+      // If error dropped below tolerance for this sub-matrix iteration mode, then continue to next level.
+      //
+      /////////////////
+      // check if energy only iteration has error that has dropped below tolerance, then can move on to 
+      if(iter>=BEGINMOMSTEPS && iter<=ENDMOMSTEPS){
+        if(fabs(f1report[irefU[1]])<IMPTRYCONV && fabs(f1report[irefU[2]])<IMPTRYCONV && fabs(f1report[irefU[3]])<IMPTRYCONV){
+          if(iter<=ENDMOMSTEPS){ iter=BEGINENERGYSTEPS-1; continue;} // force as if already doing energy steps.  If already next iteration is to be this energy step, then no skipping needed.
+        }
+      }
+      // check if energy only iteration has error that has dropped below tolerance, then can move on to 
+      if(iter>=BEGINENERGYSTEPS && iter<=ENDENERGYSTEPS){
+        if(fabs(f1report[irefU[0]])<IMPTRYCONV){
+          if(iter<=ENDENERGYSTEPS){ iter=BEGINNORMALSTEPS-1; continue;} // force as if already doing normal steps.  If already next iteration is to be normal step, no need to skip.
+        }
+      }
+
 
 
       // DEBUG STUFF
@@ -2002,21 +2020,6 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
 
 
 
-        // check if energy only iteration has error that has dropped below tolerance, then can move on to 
-        if(iter>=BEGINMOMSTEPS && iter<=ENDMOMSTEPS){
-          if(fabs(f1report[irefU[1]])<IMPTRYCONV && fabs(f1report[irefU[2]])<IMPTRYCONV && fabs(f1report[irefU[3]])<IMPTRYCONV){
-            if(iter<ENDMOMSTEPS){ iter=BEGINENERGYSTEPS; continue;} // force as if already doing energy steps.  If already next iteration is to be this energy step, then no skipping needed.
-          }
-        }
-        // check if energy only iteration has error that has dropped below tolerance, then can move on to 
-        if(iter>=BEGINENERGYSTEPS && iter<=ENDENERGYSTEPS){
-          if(fabs(f1report[irefU[0]])<IMPTRYCONV){
-            if(iter<ENDENERGYSTEPS){ iter=BEGINNORMALSTEPS; continue;} // force as if already doing normal steps.  If already next iteration is to be normal step, no need to skip.
-          }
-        }
-
-
-
         // check if error repeatedly rises
         if(NUMNOERRORREDUCE && iter>=BEGINNORMALSTEPS){
           if(iter>NUMNOERRORREDUCE0 && suberrorabsf1>IMPTRYCONV){ // no need to do this if actually error is below desired tolerance,  hence second argument
@@ -2050,10 +2053,10 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
             if(suberrorabsf1/erroraverage>PRIORERRORCHANGEREQUIRED && suberrorabsf1>IMPTRYCONV){
 
               if(iter>=BEGINMOMSTEPS && iter<=ENDMOMSTEPS){
-                if(iter<ENDMOMSTEPS){ iter=BEGINENERGYSTEPS-1; continue;} // force as if already doing energy steps.  If already next iteration is to be this energy step, then no skipping needed.
+                if(iter<=ENDMOMSTEPS){ iter=BEGINENERGYSTEPS-1; continue;} // force as if already doing energy steps.  If already next iteration is to be this energy step, then no skipping needed.
               }// end if doing momentum steps and error not decreasing fast enough, then skip to energy steps
               else if(iter>=BEGINENERGYSTEPS && iter<=ENDENERGYSTEPS){
-                if(iter<ENDENERGYSTEPS){ iter=BEGINNORMALSTEPS-1; continue;} // force as if already doing normal steps.  If already next iteration is to be normal step, no need to skip.
+                if(iter<=ENDENERGYSTEPS){ iter=BEGINNORMALSTEPS-1; continue;} // force as if already doing normal steps.  If already next iteration is to be normal step, no need to skip.
               }// end if doing energy steps and error not decreasing fast enough, then skip to normal steps
               else{
                 canbreak=3;
