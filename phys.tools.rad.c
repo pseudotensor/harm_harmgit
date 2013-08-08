@@ -1544,7 +1544,8 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
     if(specificentropy0<specificentropyE){
       FTYPE ppnew[NPR]; PLOOP(pliter,pl) ppnew[pl]=pp[pl];
       ufromentropy_calc(ptrgeom, entropyE, ppnew); ppnew[UU]=ppnew[ENTROPY];
-      if(debugfail>=2 && (fabs(ppnew[UU]/pp[UU])>10.0 || ppnew[UU]<pp[UU]) ) dualfprintf(fail_file,"CHANGE: Fixed entropy (%g vs. %g): guessrho=%g guessug=%g  newug=%g dug=%g\n",specificentropy0,specificentropyE,pp[RHO],pp[UU],ppnew[UU],pp[UU]-ppnew[UU]);
+#define SHOWUGCHANGEDUETOENTROPY (10.0)
+      if(debugfail>=DEBUGLEVELIMPSOLVER && (fabs(ppnew[UU]/pp[UU])>SHOWUGCHANGEDUETOENTROPY || ppnew[UU]<pp[UU]) ) dualfprintf(fail_file,"CHANGE: Fixed entropy (%g vs. %g): guessrho=%g guessug=%g  newug=%g dug=%g\n",specificentropy0,specificentropyE,pp[RHO],pp[UU],ppnew[UU],pp[UU]-ppnew[UU]);
       pp[UU]=ppnew[UU];
     }
   }
