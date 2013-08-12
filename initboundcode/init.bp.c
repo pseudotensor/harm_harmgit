@@ -212,11 +212,11 @@ int init_grid(void)
 #elif(WHICHPROBLEM==THINBP)
   // make changes to primary coordinate parameters R0, Rin, Rout, hslope
   R0 = 0.0;
-    Rout = 40.0;
-    if(totalsize[1]<32) Rout=50.0;
-    else if(totalsize[1]<=64) Rout=1.E3;
-    else Rout=1.E5;
-    //Rout=1E5;
+  Rout = 40.0;
+  if(totalsize[1]<32) Rout=50.0;
+  else if(totalsize[1]<=64) Rout=1.E3;
+  else Rout=1.E5;
+  //Rout=1.E4; // MAVARA tilttest used this
 #endif
 
  
@@ -315,13 +315,13 @@ int init_global(void)
   // ener period
   DTdumpgen[ENERDUMPTYPE] = 2.0;
   /* image file frequ., in units of M */
-  DTdumpgen[IMAGEDUMPTYPE] = 2.0;
+  DTdumpgen[IMAGEDUMPTYPE] = 5.0; // was 2.0
   // fieldline locked to images so can overlay
   DTdumpgen[FIELDLINEDUMPTYPE] = DTdumpgen[IMAGEDUMPTYPE];
 
   // DTr = .1 ; /* restart file frequ., in units of M */
   /* restart file period in steps */
-  DTr = 1000;
+  DTr = 2000; // was 1000
   DTfake=MAX(1,DTr/10);
 
 
@@ -330,7 +330,7 @@ int init_global(void)
   tf = 4000.0;
 #elif(WHICHPROBLEM==THINBP)
 /* output choices */
-  tf = 4000.0;
+  tf = 100000.0;
 #elif(WHICHPROBLEM==THICKDISK)
   /* output choices */
   tf = 1.3E4*2.0;
@@ -340,8 +340,8 @@ int init_global(void)
   
   DTd = 250.;                 /* dumping frequency, in units of M */
   DTavg = 250.0;
-  DTener = 2.0;                       /* logfile frequency, in units of M */
-  DTi = 10.0;                 /* image file frequ., in units of M */
+  DTener = 20.0;                       /* logfile frequency, in units of M */
+  DTi = 50.0;                 /* image file frequ., in units of M */
   DTdebug = 250.0; /* debug file */
   // DTr = .1 ; /* restart file frequ., in units of M */
   DTr = 1000;                  /* restart file period in steps */
@@ -977,7 +977,7 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
   //  FTYPE FIELDROT=M_PI*0.5;
   FTYPE rpow2=0.0;
   FTYPE FIELDROT=0.0;
-  FTYPE hpow=2.0;
+  FTYPE hpow=4.0; // MAVARANOTE originally 2.0
   FTYPE RBREAK=60.0;
 
 
@@ -1582,7 +1582,7 @@ void adjust_fluxctstag_emfs(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR
 
 // User's cooling function:
 
-#define USERTHETACOOL       (h_over_r)	/* should be same as h_over_r */
+#define USERTHETACOOL       (0.05)	/* should be same as h_over_r */
 #define USERTAUCOOL         (2.0*M_PI)	        /* cooling time in number of rotational times : really USERTAUCOOL=2*M_PI would be 1 rotational time */
 #define USERNOCOOLTHETAFACT     (1.0)           /* this times h_over_r and no more cooling there*/
 
@@ -1652,7 +1652,7 @@ int coolfunc_user(FTYPE h_over_r, FTYPE *pr, struct of_geom *geom, struct of_sta
 	Yscaling = (gam-1.)*e/(Tfix);
 
 
-	if(t > 0. && dt < taucool/Wcirc  && Yscaling > 1.0 ) {
+	if(t > 0. && dt < taucool/Wcirc  && Yscaling > 1.0 && r >= rin) {
 
 	  dUcool = - Wcirc * u * sqrt( Yscaling - 1.) * photoncapture ;
 	  //	  dUcool=-u*(Wcirc/taucool)*log(enk/enk0)*photoncapture;

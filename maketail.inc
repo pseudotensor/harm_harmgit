@@ -192,60 +192,60 @@ $(PREP): $(PREPDEP)
 	#
 	#
 	# can't make below 2 background
-	rm -rf defs.h ; ln -s defs.grmhd.h defs.h
-	rm -rf global.h ; ln -s global.grmhd.h global.h
+	( rm -rf defs.h ; ln -s defs.grmhd.h defs.h )
+	( rm -rf global.h ; ln -s global.grmhd.h global.h )
 	#
-	sh ./makedecs.h.sh defs.h &
-	sh ./makedecs.h.sh mpidefs.h &
-	sh ./makedecs.h.sh rancdefs.h &
-	sh ./makedecs.h.sh kazfulleos.defsglobalprivate.h &
-	sh ./makedecs.h.sh kazfulleos.superdefs.h &
-	sh ./makedecs.h.sh superdefs.h &
-	sh ./makedecs.h.sh superdefs.pointers.h &
-	sh ./makedecs.h.sh superdefs.rad.h &
-	sh ./makedecs.h.sh superdefs.pointers.rad.h &
-	sh ./makedecs.h.sh defs.user.h &
-	sh ./makedecs.h.sh defs.general.h &
-	sh ./makedecs.h.sh supermpidefs.h &
-	sh ./makedecs.h.sh mpidefs.mpi_grmhd_grray_liaison.h &
-	wait
+	( sh ./makedecs.h.sh defs.h )
+	( sh ./makedecs.h.sh mpidefs.h )
+	( sh ./makedecs.h.sh rancdefs.h )
+	( sh ./makedecs.h.sh kazfulleos.defsglobalprivate.h )
+	( sh ./makedecs.h.sh kazfulleos.superdefs.h )
+	( sh ./makedecs.h.sh superdefs.h )
+	( sh ./makedecs.h.sh superdefs.pointers.h )
+	( sh ./makedecs.h.sh superdefs.rad.h )
+	( sh ./makedecs.h.sh superdefs.pointers.rad.h )
+	( sh ./makedecs.h.sh defs.user.h )
+	( sh ./makedecs.h.sh defs.general.h )
+	( sh ./makedecs.h.sh supermpidefs.h )
+	( sh ./makedecs.h.sh mpidefs.mpi_grmhd_grray_liaison.h )
+	#wait
 	#
  	############################################
 	#below is for code working per point
  	############################################
-	echo $(OBJSONEPOINT) > objsonepoint
+	( echo $(OBJSONEPOINT) > objsonepoint )
 	# remove and touch (so exists) files to create
-	rm -rf objsonepoint.cmd.list ; rm -rf onepoint ; touch objsonepoint.cmd.list ; touch onepoint
+	( rm -rf objsonepoint.cmd.list ; rm -rf onepoint ; touch objsonepoint.cmd.list ; touch onepoint )
 	# create list of prefixes
 	
-	for fil in `cat objsonepoint` ; do prefa=`basename $$fil .o` ; pref=`echo $$prefa | awk '{print $$1}'` ; echo ${ECHOSWITCH} $$pref >> onepoint ; done
+	( for fil in `cat objsonepoint` ; do prefa=`basename $$fil .o` ; pref=`echo $$prefa | awk '{print $$1}'` ; echo ${ECHOSWITCH} $$pref >> onepoint ; done )
 	# create list of commands
-	for fil in `cat onepoint` ; do echo ${ECHOSWITCH} $$fil.o :\\n\\t$(CC) $(CFLAGSNONPRECISE) -c $$fil.c $(LDFLAGS) >> objsonepoint.cmd.list ; done
+	( for fil in `cat onepoint` ; do echo ${ECHOSWITCH} $$fil.o :\\n\\t$(CC) $(CFLAGSNONPRECISE) -c $$fil.c $(LDFLAGS) >> objsonepoint.cmd.list ; done )
 	# remove old depenedencies file and create
-	rm -rf deps.onepoint.list ; touch deps.onepoint.list
+	( rm -rf deps.onepoint.list ; touch deps.onepoint.list )
 	# create new dependencies file
-	for fil in `cat onepoint` ; do  echo $$fil.c ; ( $(MMCOMP) -c -MM $$fil.c >> deps.onepoint.list &) ; done
+	( for fil in `cat onepoint` ; do  echo $$fil.c ; ( $(MMCOMP) -c -MM $$fil.c >> deps.onepoint.list ) ; done )
 	#
 	#
  	############################################
 	#below is for code working on multiple point at once
  	############################################
 	# below is only different in CFLAGS part
-	echo $(OBJSMANYPOINTS) > objsmanypoints
+	( echo $(OBJSMANYPOINTS) > objsmanypoints )
 	# remove and touch (so exists) files to create
-	rm -rf objsmanypoints.cmd.list ; rm -rf manypoints ; touch objsmanypoints.cmd.list ; touch manypoints
+	( rm -rf objsmanypoints.cmd.list ; rm -rf manypoints ; touch objsmanypoints.cmd.list ; touch manypoints )
 	# create list of prefixes
-	for fil in `cat objsmanypoints` ; do prefa=`basename $$fil .o` ; pref=`echo $$prefa | awk '{print $$1}'` ; echo ${ECHOSWITCH} $$pref >> manypoints ; done
+	( for fil in `cat objsmanypoints` ; do prefa=`basename $$fil .o` ; pref=`echo $$prefa | awk '{print $$1}'` ; echo ${ECHOSWITCH} $$pref >> manypoints ; done )
 	# create list of commands
-	for fil in `cat manypoints` ; do echo ${ECHOSWITCH} $$fil.o :\\n\\t$(CC) $(CFLAGS) -c $$fil.c $(LDFLAGS) >> objsmanypoints.cmd.list ; done
+	( for fil in `cat manypoints` ; do echo ${ECHOSWITCH} $$fil.o :\\n\\t$(CC) $(CFLAGS) -c $$fil.c $(LDFLAGS) >> objsmanypoints.cmd.list ; done )
 	# remove old depenedencies file and create
-	rm -rf deps.manypoints.list ; touch deps.manypoints.list
+	( rm -rf deps.manypoints.list ; touch deps.manypoints.list )
 	# create new dependencies file
-	for fil in `cat manypoints` ; do  echo $$fil.c ; ($(MMCOMP) -c -MM $$fil.c >> deps.manypoints.list &) ; done
-	echo	$(OBJSMANYPOINTS) > $(PREP)
+	( for fil in `cat manypoints` ; do  echo $$fil.c ; ($(MMCOMP) -c -MM $$fil.c >> deps.manypoints.list ) ; done )
+	( echo	$(OBJSMANYPOINTS) > $(PREP) )
 	#
 	# wait for background processes
-	wait
+	#wait
 	#
 
 
