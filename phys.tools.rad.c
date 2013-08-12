@@ -2026,6 +2026,8 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
       }
 
 
+
+
       ///////////////////////////
       //
       //  PRE NEWTON ADJUSTMENTS
@@ -2218,6 +2220,13 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
         // Only updates 4D part of NPR data
         //
         /////////
+
+
+        //////////////
+        //
+        // ITERATING U
+        //
+        ///////////////
         if(IMPUTYPE(implicititer)){
           PLOOP(pliter,pl) uu[pl] = uup[pl];
           JAC2DLOOP(ii,jj,startjac,endjac) uu[irefU[ii]] -= DAMPFACTOR*iJ[irefU[ii]][erefU[jj]]*f1[erefU[jj]];
@@ -2235,8 +2244,16 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
           }
 
           if(showmessagesheavy) dualfprintf(fail_file,"POSTDX: uu: %g %g %g %g : uup=%g %g %g %g\n",uu[irefU[0]],uu[irefU[1]],uu[irefU[2]],uu[irefU[3]],uup[irefU[0]],uup[irefU[1]],uup[irefU[2]],uup[irefU[3]]);
-        }
+        }// end iterating U
+
+
+        //////////////
+        //
+        // ITERATING P
+        //
+        ///////////////
         else if(IMPPTYPE(implicititer)){
+
           PLOOP(pliter,pl) pp[pl]=ppp[pl];
           JAC2DLOOP(ii,jj,startjac,endjac){
             pp[irefU[ii]] -= DAMPFACTOR*iJ[irefU[ii]][erefU[jj]]*f1[erefU[jj]];
@@ -2433,7 +2450,9 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
 
           if(showmessagesheavy) dualfprintf(fail_file,"POSTDX: pp: %g %g %g %g : ppp=%g %g %g %g\n",pp[irefU[0]],pp[irefU[1]],pp[irefU[2]],pp[irefU[3]],ppp[irefU[0]],ppp[irefU[1]],ppp[irefU[2]],ppp[irefU[3]]);
 
-        }// end if primitves
+
+
+        }// end if iterating primitves
 
 
    
