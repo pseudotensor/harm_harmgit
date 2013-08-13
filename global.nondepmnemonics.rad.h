@@ -36,8 +36,6 @@
 /*********************/
 
 
-#define COURRADEXPLICIT (0.1) // Effective Courant-like factor for stiff explicit radiation source term.  Required to not only avoid failure of explicit scheme, but also that explicit scheme is really accurate compared to implicit.  E.g., near \tau\sim 1, explicit won't fail with RADPULSEPLANAR but will not give same results as implicit.  So only use explicit if really in optically thin regime.
-
 
 ///////////////////
 //
@@ -46,154 +44,12 @@
 ///////////////////
 #define Pi (M_PI)     
 
-// KORALTODO: The below need to be chosen intelligently
-
-// below this \tau, no source term applied.
-// KORALTODO: Need to fix implicit solver so avoids dU-del in fluid if no radiatoin-fluid interaction, else overestimates effect and inversion failures occur.
-#define MINTAUSOURCE (NUMEPSILON)
-
-
-// IMPLICIT SOLVER TOLERANCES or DERIVATIVE SIZES
- // for used implicit solver (needs to be chosen more generally.  KORALTODO: 1E-8 too small in general).  Could start out with higher, and allow current checks to avoid inversion failure.
-//#define IMPEPS (1.e-8)
-// use large, and it'll go smaller if no inversion, but can't start out with too small since then Jac will have diag() terms =0
-// KORALTODO: For difficult iterations, there can be solution but Jacobian is too rough and jump around alot in primitive space for small changes in U.  Should really modify IMPEPS in such cases when pr changes alot for such changes in U.
-// roughly (NUMEPSILON)**(1/3) as in NR5.7 on numerical derivatives
-#if(REALTYPE==FLOATTYPE)
-#define IMPEPS (1E-4) // on small side
-#elif(REALTYPE==DOUBLETYPE)
-//#define IMPEPS (MY1EM5)
-//#define IMPEPS (1E-6) // on small side
-//#define IMPEPS (1E-8) // on small side // but required for doubles to work with RADDONUT
-#define IMPEPS (1E-8) // on small side // but required for doubles to work with RADDONUT
-#elif(REALTYPE==LONGDOUBLETYPE)
-#define IMPEPS (1E-8)
-#endif
-
-// maximum EPS for getting Jacobian
-#define MAXIMPEPS (0.3)
-
-// maximum number of times to (typically) increase EPS in getting Jacobian for implicit scheme.  This might generally override MAXIMPEPS.
-#define MAXJACITER (10)
-
-#if(0)
-// RADPULSEPLANAR: ~5 f1iters and ~8 iters on average
-// RADTUBE NTUBE=31: ~0 f1iters and ~5 iters
-// and each f1iter does 1 inversion, while each iter does 16 inversions!
-// below too hard to get for more realistic problems like RADFLATDISK
-#define IMPTRYCONV (1.e-12)  // for used implicit solver
-#define IMPALLOWCONV (1.e-3)  // for used implicit solver
-#elif(1)
-// 1E-9 is common ok first iteration for RADFLATDISK.  More is too hard.
-// So Choose 1E-8 as good enough solution.
-// KORALNOTE: For current 4D Newton-in-Newton method, 1E-8 leaves log of internal energy as asymmetry with RADDONUT and more diffused edge for one side, while should be sharp on both sides.  <=1E-10 is required to avoid that, but too expensive.  Marginal errors like using 1E-9 lead to hot points due to sharper edge.
-#define IMPTRYCONVHIGHTAU (NUMEPSILON*5.0)  // for used implicit solver
-//#define IMPTRYCONV (NUMEPSILON*100.0)  // for used implicit solver
-//#define IMPTRYCONV (1E-20)  // for used implicit solver
-
-//#define IMPTRYCONV (1.e-8)
-//#define IMPTRYCONV2 (1.e-8)  // for used implicit solver
-// use below is necessary for RADDONUT to be reasonablely indifferent to tolerance.  Is expensive, but later can improve implicit method to avoid that issue.
-//#define IMPTRYCONV (1.e-9)
-//#define IMPTRYCONV2 (1.e-9)  // for used implicit solver
-
-#define IMPTRYCONV (1.e-12)
-#define IMPTRYCONV2 (1.e-12)  // for used implicit solver
-
-#define IMPALLOWCONV (1.e-4)
-#define IMPALLOWCONV2 (1.e-4)
-// Chose 1E-4 based upon histogram for implicit solver in RADDONUT problem with field.
-//#define IMPALLOWCONV (1.e-1) // KORALTODO SUPERGODMARK
-#else
-// RADPULSEPLANAR: below leads to ~5 f1iters and ~7 iters on average
-// RADTUBE NTUBE=31: ~0 f1iters and ~1.5-2 iters
-#define IMPTRYCONV (1.e-6)  // for used implicit solver
-#define IMPALLOWCONV (1.e-3)  // for used implicit solver
-#endif
-
-//#define IMPMAXITER (15) // for used implicit solver // For others
-#define IMPMAXITER (100) // for used implicit solver // for RADDONUT
-#define IMPMAXITER2 (100) // for used implicit solver
-
-#define IMPMINABSERROR (1E-100) // minimum absolute error (or value) below which don't treat as bad error and just avoid 4-force.  Otherwise will "fail" implicit solver even if impossible to reach smaller relative error due to absolute machine precision issues.
-
-// 1 : normalize radiation error by only radiation thermal energy
-// 2 : normalize radiation error by max(radiation,gas) thermal energy
-// 3 : normalize using radiation URAD0 but also fnorm from actual f
-// 4 : URAD0, fnorm, and UU
-// normalize error.  Can't expect radiation to be relatively accurate to itself if UU>>URAD0 due to G between them
-// 3 is safest, but more expensive than 4.  4 should be fine for real systems.
-#define IMPLICITERRORNORM 4
-
-
-#define MAXSUBCYCLES (2000) // for explicit sub-cycles when doing reversion
-
-// if tries more than this number of sub-cycles, just fail and assume no 4-force since probably due to no actual solution even for implicit scheme due to sitting at radiative failure (e.g. gamma->gammamax or Erf->ERADLIMIT)
-#define MAXSUBCYCLESFAIL (MAXSUBCYCLES*100)
-
-
-#define MAXF1TRIES 50 // 50 might sound like alot, but Jacobian does 4 to 5 inversions each iteration, and that amount is only typically needed for very first iteration.
-  // goes to f1iter=10 for RADPULSE KAPPAES=1E3 case.  Might want to scale maximum iterations with \tau, although doubling of damping means exponential w.r.t. f1iter, so probably 50 is certainly enough since 2^(-50) is beyond machine precision for doubles.
-
-#define RADDAMPDELTA (0.5) // choose, but best to choose 1/Integer so no machine precision issues.
-#define RADDAMPUNDELTA (1.0/RADDAMPDELTA)
-
-
-
-#define GAMMASMALLLIMIT (1.0-1E-10) // at what point above which assume gamma^2=1.0
-
 #define RADSHOCKFLAT 1 // 0 or 1.  Whether to include radiation in shock flatener
-
-// whether to choose Jon or Olek way of handling u2p_rad inversion failures
-#define JONCHOICE 0
-#define OLEKCHOICE 1
-
-#define CASECHOICE JONCHOICE // choose
-//#define CASECHOICE OLEKCHOICE // choose
-
-#define TOZAMOFRAME 0 // reduce to ZAMO gammarel=1 frame (e.g. in non-GR that would be grid frame or v=0 frame or gammarel=1).
-#define TOFLUIDFRAME 1 // reduce to using fluid frame (probably more reasonable in general).
-#define TOOPACITYDEPENDENTFRAME 2
-
-#define M1REDUCE TOOPACITYDEPENDENTFRAME // choose
-
 
 // whether to fixup inversion failures using harm fixups
 // can lead to issues because diffuses, so across sharp boundary radiation can be given quite "wrong" values that don't match what solution "wants" 
 #define DORADFIXUPS 0 // for RADDONUT ok, since no sharp edges.
 // KORALTODO SUPERGODMARK: Turn this on and rest all tests and see if makes worse or better.  Makes things worse at failure boundary.  Leads to very bad results for (e.g.) RADDONUT.
-
-#define TAUFAILLIMIT (2.0/3.0) // at what \tau below which to assume "failure1" in u2p_rad() means should be moving at gammamax rather than not moving.
-
-// whether to revert to sub-cycle explicit if implicit fails.  Only alternative is die.
-#define IMPLICITREVERTEXPLICIT 0 // FUCK -- problem not a good idea. -- should try implicit again, starting out with more damping.
-
-// like SAFE for normal dt step, don't allow explicit substepping to change dt too fast to avoid instabilities.
-#define MAXEXPLICITSUBSTEPCHANGE 1.e-2
-
-// 0 : tau suppression
-// 1 : space-time merged
-// 2 : all space merged but separate from time
-// 3 : full split
-// 4 : split even mhd and rad
-#define TAUSUPPRESS 0 // makes physical sense, but might be wrong in some limits (i.e. Gd can still be large relative), but try to account for lambda as well.
-#define SPACETIMESUBSPLITNONE 1 // DON'T USE! (gets inversion failures because overly aggressive)
-#define SPACETIMESUBSPLITTIME 2 // probably not ok -- need to split off mhd and rad
-#define SPACETIMESUBSPLITALL 3 // probably not ok -- need to split off mhd and rad
-#define SPACETIMESUBSPLITSUPERALL 4 // OK TO USE sometimes, but not always
-#define SPACETIMESUBSPLITMHDRAD 5 // KINDA OK TO USE (generates noise in velocity where E is very small, but maybe ok since sub-dominant and don't care about velocity where E is small.  E evolves fine, but Rtx eventually shows issues.)
-#define SPACETIMESUBSPLITTIMEMHDRAD 6 // OK TO USE sometimes (works fine and no noise in velocity because split it off.  Might have trouble in multiple dimensions if sub-dominant momentum dimension requires implicit step -- but general diffusive would suggest unlikely.  But, not efficient in optically thick regime once radiation velocity is non-trivial in magnitude)
-
-#define WHICHSPACETIMESUBSPLIT TAUSUPPRESS // only tausuppress works in general.
-
-//SPACETIMESUBSPLITTIMEMHDRAD // TAUSUPPRESS
-// SPACETIMESUBSPLITTIMEMHDRAD  //  SPACETIMESUBSPLITMHDRAD // SPACETIMESUBSPLITSUPERALL // TAUSUPPRESS
-
-
-
-// whether to use dUriemann and dUgeom or other dU's sitting in dUother for radiation update
-#define USEDUINRADUPDATE 1
-
 
 
 
