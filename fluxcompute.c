@@ -298,7 +298,22 @@ int flux_compute(int i, int j, int k, int dir, struct of_geom *geom, FTYPE *cmin
   }
 
 
+  //////////////////
+  //
+  // store non-dissipative contribution
+  //
+  ////////////////////
+  if(NSPECIAL==1){
+    int plsp=NPR+NSPECIAL-1;
+    F[plsp] = 0.5 * (F_l[RHO] + F_r[RHO]);
+  }
 
+
+  //////////////////
+  //
+  // store full non-dissipative + dissipative contributions
+  //
+  ////////////////////
   if(fluxmethod==LAXFFLUX){
     PLOOP(pliter,pl) F[pl] = LAXFCOMPUTE(ctop[pl],U_l[pl],U_r[pl],F_l[pl],F_r[pl]);
   }

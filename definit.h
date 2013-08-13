@@ -32,6 +32,12 @@
 // whether to try cold inversion if entropy fails
 #define ENTROPY2COLD 1
 
+// which method to store divergence condition
+#define DIVMETHODPREFLUX 0
+#define DIVMETHODPOSTFLUX 1
+
+#define DIVERGENCEMETHOD 1 // choose
+
 
 // *NUMBER* OF DIMENSIONS FOR COMPUTATION
 // Can choose 3 and still do 1D optimized problems

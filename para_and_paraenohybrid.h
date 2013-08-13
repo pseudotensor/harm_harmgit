@@ -131,6 +131,7 @@
 
 #define SPSMOOTH 0.5  // default: 0.5
 
+#define SV0 (0.0)
 
 /////////////////////////
 //

@@ -34,11 +34,11 @@ void preinterp_flux_point2avg(void)
 // whether to debug bound_flux()
 #define DEBUGBOUNDFLUX 0
 
-int vectorpot_useflux(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR])
+int vectorpot_useflux(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL])
 {
-  int flux_point2avg(int stage, int whichmaem, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR], FTYPE (*fluxvecother[NDIM])[NSTORE2][NSTORE3][NPR]);
+  int flux_point2avg(int stage, int whichmaem, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*fluxvecother[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL]);
   int Nvec[NDIM];
-  FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR];
+  FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL];
   int i,j,k;
 
 
@@ -68,17 +68,22 @@ int vectorpot_useflux(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)
 
 
 // integrate point fluxes AT face to get average fluxes OVER entire face surface
-int flux_point2avg(int stage, int whichmaem, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR], FTYPE (*fluxvecother[NDIM])[NSTORE2][NSTORE3][NPR])
+int flux_point2avg(int stage, int whichmaem, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*fluxvecother[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL])
 {
-  int flux_deaverage_fluxrecon(int stage, int whichmaem, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR], FTYPE (*fluxvecother[NDIM])[NSTORE2][NSTORE3][NPR]);
-  int bound_flux_fluxrecon(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR]);
-  int debug_boundfluxinitial(FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR]);
-  int debug_boundfluxfinal(FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR]);
+  int flux_deaverage_fluxrecon(int stage, int whichmaem, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*fluxvecother[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL]);
+  int bound_flux_fluxrecon(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL]);
+  int debug_boundfluxinitial(FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL]);
+  int debug_boundfluxfinal(FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL]);
 
-  int flux_integrate_fluxsplit(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR]);
+  int flux_integrate_fluxsplit(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL]);
 
-  int flux_integrate_finitevolume(int stage, int whichmaem, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR]);
+  int flux_integrate_finitevolume(int stage, int whichmaem, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL]);
 
+
+  if(NSPECIAL!=0){
+    dualfprintf(fail_file,"flux_point2avg() not setup for NSPECIAL!=0\n");
+    myexit(29855252);
+  }
 
 
   if(DOENOFLUX==ENOFLUXRECON){
@@ -132,7 +137,7 @@ int flux_point2avg(int stage, int whichmaem, FTYPE (*pr)[NSTORE2][NSTORE3][NPR],
 // quasi-deaverage fluxes along their direction
 // assumes only gets fluxvec on active region using ghost+active fluxes
 // need to change ENOFLUXRECONTYPE to ENOFLUXRECONTYPEGHOSTACTIVE if have fluxes everywhere and want in ghost+active + active regions
-int flux_deaverage_fluxrecon(int stage, int whichmaem, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR], FTYPE (*fluxvecother[NDIM])[NSTORE2][NSTORE3][NPR])
+int flux_deaverage_fluxrecon(int stage, int whichmaem, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*fluxvecother[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL])
 {
   int odir1,odir2;
   int dir;
@@ -142,14 +147,14 @@ int flux_deaverage_fluxrecon(int stage, int whichmaem, FTYPE (*pr)[NSTORE2][NSTO
   int simple_a2c_limit_onepl(int dotransverse, int dir, int pl, FTYPE (*primreal)[NSTORE2][NSTORE3][NPR], FTYPE (*in)[NSTORE2][NSTORE3][NPR], FTYPE (*out)[NSTORE2][NSTORE3][NPR]);
   FTYPE limit_fluxc2a_prim_change( 
                                   int dir, FTYPE (*pr)[NSTORE2][NSTORE3][NPR],
-                                  FTYPE (*fluxvec_point)[NSTORE2][NSTORE3][NPR],
-                                  FTYPE (*fluxvec_avg)[NSTORE2][NSTORE3][NPR]);   //atch
+                                  FTYPE (*fluxvec_point)[NSTORE2][NSTORE3][NPR+NSPECIAL],
+                                  FTYPE (*fluxvec_avg)[NSTORE2][NSTORE3][NPR+NSPECIAL]);   //atch
   int pl,pliter,i,j,k;
   int whichpltoavg[NPR];
   int ifnotavgthencopy[NPR];
   int dotrans,dotransem,dotransma;
   int ftemp;
-  int emforvectorpot_fluxrecon(int stage, int isemf, int *fluxdirlist, int *pldirlist, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR]);
+  int emforvectorpot_fluxrecon(int stage, int isemf, int *fluxdirlist, int *pldirlist, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL]);
   int nprlocalstart,nprlocalend;
   int nprlocallist[MAXNPR];
   int fluxdirlist[NDIM],pldirlist[NDIM],plforfluxlist[NDIM];
@@ -459,6 +464,8 @@ int flux_deaverage_fluxrecon(int stage, int whichmaem, FTYPE (*pr)[NSTORE2][NSTO
           //
           ////////////////////
 
+          //            COMPFULLLOOP PLOOP(pliter,pl) GLOBALMACP0A1(stencilvartemp,i,j,k,pl) = MACP1A1(fluxvec,dir,i,j,k,pl);
+
           flux_interp(whichpltoavg, ifnotavgthencopy, whichquantity, interporflux, dir, idel, jdel, kdel, pr, stencilvar, fluxvec[dir], NULL, fluxvec[dir], NULL); 
 
 
@@ -536,8 +543,8 @@ int field_integrate_fluxrecon(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTY
   extern void flux_interp(int *whichpltoavg, int *ifnotavgthencopy, int whichquantity, int interporflux, int dir, int idel, int jdel, int kdel, FTYPE (*prims_guess)[NSTORE2][NSTORE3][NPR], FTYPE (*stencilvar)[NSTORE2][NSTORE3][NPR], FTYPE (*p2interpm)[NSTORE2][NSTORE3][NPR], FTYPE (*p2interpp)[NSTORE2][NSTORE3][NPR], FTYPE (*pleft)[NSTORE2][NSTORE3][NPR], FTYPE (*pright)[NSTORE2][NSTORE3][NPR]);
   FTYPE limit_fluxc2a_prim_change( 
                                   int dir, FTYPE (*pr)[NSTORE2][NSTORE3][NPR],
-                                  FTYPE (*fluxvec_point)[NSTORE2][NSTORE3][NPR],
-                                  FTYPE (*fluxvec_avg)[NSTORE2][NSTORE3][NPR]);   //atch
+                                  FTYPE (*fluxvec_point)[NSTORE2][NSTORE3][NPR+NSPECIAL],
+                                  FTYPE (*fluxvec_avg)[NSTORE2][NSTORE3][NPR+NSPECIAL]);   //atch
   int pl,pliter,i,j,k;
   int pldir;
   int whichpltoavg[NPR];
@@ -958,7 +965,7 @@ int field_Bhat_fluxrecon(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pointfield)
 // fluxdir[dir=1,2,3] gives which flux is used to store emf/vpot in dir-direction
 // pldir[dir=1,2,3] gives the "field" B1+pldir-1 direction for the emf/vpot in dir-direction
 // single input is treated as output, so no need to "copy" over results as some other functions do
-int emforvectorpot_fluxrecon(int stage, int isemf, int *fluxdirlist, int *pldirlist, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR])
+int emforvectorpot_fluxrecon(int stage, int isemf, int *fluxdirlist, int *pldirlist, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL])
 {
   int plforflux,fluxdir,pldir;
   int myintdir;
@@ -967,11 +974,11 @@ int emforvectorpot_fluxrecon(int stage, int isemf, int *fluxdirlist, int *pldirl
   int dir;
   int idel, jdel, kdel, face, idel1, idel2, jdel1, jdel2, kdel1, kdel2;
   int is, ie, js, je, ks, ke;
-  extern void flux_interp_multiple(int *whichpltoavg, int *ifnotavgthencopy, int numdirs, int *whichquantitylist, int *interporfluxlist, int *dirmethodlist, int *Nvec, int *intdirlist, int *fluxdirlist, int *idellist, int *jdellist, int *kdellist, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR]);
+  extern void flux_interp_multiple(int *whichpltoavg, int *ifnotavgthencopy, int numdirs, int *whichquantitylist, int *interporfluxlist, int *dirmethodlist, int *Nvec, int *intdirlist, int *fluxdirlist, int *idellist, int *jdellist, int *kdellist, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL]);
   FTYPE limit_fluxc2a_prim_change( 
                                   int dir, FTYPE (*pr)[NSTORE2][NSTORE3][NPR],
-                                  FTYPE (*fluxvec_point)[NSTORE2][NSTORE3][NPR],
-                                  FTYPE (*fluxvec_avg)[NSTORE2][NSTORE3][NPR]);   //atch
+                                  FTYPE (*fluxvec_point)[NSTORE2][NSTORE3][NPR+NSPECIAL],
+                                  FTYPE (*fluxvec_avg)[NSTORE2][NSTORE3][NPR+NSPECIAL]);   //atch
   int pl,pliter,i,j,k;
   int whichpltoavg[NPR];
   int ifnotavgthencopy[NPR];
@@ -1157,7 +1164,7 @@ int emforvectorpot_fluxrecon(int stage, int isemf, int *fluxdirlist, int *pldirl
 
 
 
-int debug_boundfluxinitial(FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR])
+int debug_boundfluxinitial(FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL])
 {
   int i,j,k,pl,pliter;
 
@@ -1185,7 +1192,7 @@ int debug_boundfluxinitial(FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR])
 
 }
 
-int debug_boundfluxfinal(FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR])
+int debug_boundfluxfinal(FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL])
 {
   int i,j,k,pl,pliter;
 
@@ -1224,7 +1231,7 @@ int debug_boundfluxfinal(FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR])
 
 
 
-int bound_flux_fluxrecon(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR])
+int bound_flux_fluxrecon(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL])
 {
   int nprlocalstart,nprlocalend;
   int nprlocallist[MAXNPR];
@@ -1296,13 +1303,13 @@ int bound_flux_fluxrecon(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], int *Nve
 // single input is treated as output, so no need to "copy" over results as some other functions do
 // This function (for FV or FLUXRECON) is such that A has unique colocation with Flux and not multi-valued at end so only 1 flux is needed for temporary space
 // So strictly the signforflux isn't needed since whatever put in cancels in end
-int vectorpot_fluxreconorfvavg(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR])
+int vectorpot_fluxreconorfvavg(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL])
 {
-  int emforvectorpot_fluxrecon(int stage, int isemf, int *fluxdirlist, int *pldirlist, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR]);
-  int emforvectorpot_fvavg(int stage, int isemf, int *fluxdir, int *pldir, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR]);
+  int emforvectorpot_fluxrecon(int stage, int isemf, int *fluxdirlist, int *pldirlist, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL]);
+  int emforvectorpot_fvavg(int stage, int isemf, int *fluxdir, int *pldir, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL]);
 
   int odir1,odir2;
-  FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR];
+  FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL];
   int Nvec[NDIM];
   int fluxdir,pldir,plforflux;
   int fluxdirlist[NDIM],pldirlist[NDIM],plforfluxlist[NDIM];
@@ -1437,7 +1444,7 @@ int vectorpot_fluxreconorfvavg(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FT
 
 
 
-int flux_integrate_fluxsplit(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR])
+int flux_integrate_fluxsplit(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL])
 {
 
   // GODMARK: NOTICE: this will probably go inside fluxcalc_fluxspliteno() because the procedure is
@@ -1473,25 +1480,25 @@ int flux_integrate_fluxsplit(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], int 
 
 // FV method to surface (trnasverse to flux direction) integrate fluxes
 // single input is treated as output, so no need to "copy" over results as some other functions do
-int flux_integrate_finitevolume(int stage, int whichmaem, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR])
+int flux_integrate_finitevolume(int stage, int whichmaem, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL])
 {
   int avgdirtype[NDIM],odir1,odir2;
   int dir;
   int idel, jdel, kdel, face, idel1, idel2, jdel1, jdel2, kdel1, kdel2;
   int is, ie, js, je, ks, ke;
-  extern void flux_interp_multiple(int *whichpltoavg, int *ifnotavgthencopy, int numdirs, int *whichquantitylist, int *interporfluxlist, int *dirmethodlist, int *Nvec, int *intdirlist, int *fluxdirlist, int *idellist, int *jdellist, int *kdellist, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR]);
+  extern void flux_interp_multiple(int *whichpltoavg, int *ifnotavgthencopy, int numdirs, int *whichquantitylist, int *interporfluxlist, int *dirmethodlist, int *Nvec, int *intdirlist, int *fluxdirlist, int *idellist, int *jdellist, int *kdellist, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL]);
   FTYPE limit_fluxc2a_prim_change( 
                                   int dir, FTYPE (*pr)[NSTORE2][NSTORE3][NPR],
-                                  FTYPE (*fluxvec_point)[NSTORE2][NSTORE3][NPR],
-                                  FTYPE (*fluxvec_avg)[NSTORE2][NSTORE3][NPR]);   //atch
-  FTYPE (*fluxveca[NDIM])[NSTORE2][NSTORE3][NPR];
-  FTYPE (*fluxvecb[NDIM])[NSTORE2][NSTORE3][NPR];
+                                  FTYPE (*fluxvec_point)[NSTORE2][NSTORE3][NPR+NSPECIAL],
+                                  FTYPE (*fluxvec_avg)[NSTORE2][NSTORE3][NPR+NSPECIAL]);   //atch
+  FTYPE (*fluxveca[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL];
+  FTYPE (*fluxvecb[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL];
   int pl,pliter,i,j,k;
   int nprlocalstart,nprlocalend;
   int nprlocallist[MAXNPR];
   int whichpltoavg[NPR];
   int ifnotavgthencopy[NPR];
-  int emforvectorpot_fvavg(int stage, int isemf, int *fluxdirlist, int *pldirlist, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR]);
+  int emforvectorpot_fvavg(int stage, int isemf, int *fluxdirlist, int *pldirlist, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL]);
   int dotrans,dotransma,dotransem;
   int fluxdirlist[NDIM],pldirlist[NDIM],plforfluxlist[NDIM];
   FTYPE signforfluxlist[NDIM];
@@ -1681,7 +1688,7 @@ int flux_integrate_finitevolume(int stage, int whichmaem, FTYPE (*pr)[NSTORE2][N
 // integrate point emf/vector potential at EDGE (CORN1,2,3) to get line-integrated value
 // input in fluxvec form
 // single input is treated as output, so no need to "copy" over results as some other functions do
-int emforvectorpot_fvavg(int stage, int isemf, int *fluxdirlist, int *pldirlist, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR])
+int emforvectorpot_fvavg(int stage, int isemf, int *fluxdirlist, int *pldirlist, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL])
 {
   int avgdirtype[NDIM],odir1,odir2;
   int dir;
@@ -1690,8 +1697,8 @@ int emforvectorpot_fvavg(int stage, int isemf, int *fluxdirlist, int *pldirlist,
   extern void flux_interp(int *whichpltoavg, int *ifnotavgthencopy, int whichquantity, int interporflux, int dir, int idel, int jdel, int kdel, FTYPE (*prims_guess)[NSTORE2][NSTORE3][NPR], FTYPE (*stencilvar)[NSTORE2][NSTORE3][NPR], FTYPE (*p2interpm)[NSTORE2][NSTORE3][NPR], FTYPE (*p2interpp)[NSTORE2][NSTORE3][NPR], FTYPE (*pleft)[NSTORE2][NSTORE3][NPR], FTYPE (*pright)[NSTORE2][NSTORE3][NPR]);
   FTYPE limit_fluxc2a_prim_change( 
                                   int dir, FTYPE (*pr)[NSTORE2][NSTORE3][NPR],
-                                  FTYPE (*fluxvec_point)[NSTORE2][NSTORE3][NPR],
-                                  FTYPE (*fluxvec_avg)[NSTORE2][NSTORE3][NPR]);   //atch
+                                  FTYPE (*fluxvec_point)[NSTORE2][NSTORE3][NPR+NSPECIAL],
+                                  FTYPE (*fluxvec_avg)[NSTORE2][NSTORE3][NPR+NSPECIAL]);   //atch
   int pl,pliter,i,j,k;
   int nprlocalstart,nprlocalend;
   int nprlocallist[MAXNPR];
@@ -2359,6 +2366,7 @@ void flux_interp(int *whichpltoavg, int *ifnotavgthencopy, int whichquantity, in
 
 
 
+
   // get reference primitive but in correct location
   get_primitive_fluxlocation(dir, interporflux, primreal, prim_goodlocation);
 
@@ -2398,7 +2406,7 @@ void flux_interp(int *whichpltoavg, int *ifnotavgthencopy, int whichquantity, in
 
 // dir here is each direction for each flux (F1,F2,F3)
 // does a 1D integration or differentiation for multiple directions in a way that preserves commutivity of directions by using a single original quantity to compute weights
-void flux_interp_multiple(int *whichpltoavg, int *ifnotavgthencopy, int numdirs, int *whichquantitylist, int *interporfluxlist, int *dirmethodlist, int *Nvec, int *intdirlist, int *fluxdirlist, int *idellist, int *jdellist, int *kdellist, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR])
+void flux_interp_multiple(int *whichpltoavg, int *ifnotavgthencopy, int numdirs, int *whichquantitylist, int *interporfluxlist, int *dirmethodlist, int *Nvec, int *intdirlist, int *fluxdirlist, int *idellist, int *jdellist, int *kdellist, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL])
 {
   int i, j, k, pl, pliter;
   int intdir,fluxdir,idel,jdel,kdel,interporflux,whichquantity,dirmethod;
@@ -2406,8 +2414,8 @@ void flux_interp_multiple(int *whichpltoavg, int *ifnotavgthencopy, int numdirs,
   int nprlocallist[MAXNPR];
   //use ptemparray as a temp array
   int otherdir;
-  FTYPE (*fluxveca[NDIM])[NSTORE2][NSTORE3][NPR];
-  FTYPE (*fluxvecb[NDIM])[NSTORE2][NSTORE3][NPR];
+  FTYPE (*fluxveca[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL];
+  FTYPE (*fluxvecb[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL];
   FTYPE (*stencilvar)[NSTORE2][NSTORE3][NPR];
   void flux_interp(int *whichpltoavg, int *ifnotavgthencopy, int whichquantity, int interporflux, int dir, int idel, int jdel, int kdel, FTYPE (*primreal)[NSTORE2][NSTORE3][NPR], FTYPE (*stencilvar)[NSTORE2][NSTORE3][NPR], FTYPE (*p2interpm)[NSTORE2][NSTORE3][NPR], FTYPE (*p2interpp)[NSTORE2][NSTORE3][NPR], FTYPE (*pleft)[NSTORE2][NSTORE3][NPR], FTYPE (*pright)[NSTORE2][NSTORE3][NPR]);
   int dodouble;
@@ -3120,8 +3128,8 @@ int dirlist1d(long long itemp, int *dirlist)
 // dir here is always direction of flux as it would be differenced
 FTYPE limit_fluxc2a_prim_change( 
                                 int dir, FTYPE (*pr)[NSTORE2][NSTORE3][NPR],
-                                FTYPE (*fluxvec_point)[NSTORE2][NSTORE3][NPR],
-                                FTYPE (*fluxvec_avg)[NSTORE2][NSTORE3][NPR])
+                                FTYPE (*fluxvec_point)[NSTORE2][NSTORE3][NPR+NSPECIAL],
+                                FTYPE (*fluxvec_avg)[NSTORE2][NSTORE3][NPR+NSPECIAL])
 {
   int is, ie, js, je, ks, ke;
   int i, j, k;

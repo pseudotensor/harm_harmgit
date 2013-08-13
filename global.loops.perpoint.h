@@ -99,6 +99,7 @@
 
 // always goes over all conserved
 #define PALLLOOP(pl) for(pl=0;pl<NPR;pl++)
+#define PALLLOOPSPECIAL(pl,special) for(pl=0;pl<NPR+special;pl++)
 
 
 // always goes over all conserved
@@ -125,6 +126,7 @@
 #define PLOOPNOB1(pl) for(pl=0;pl<B1;pl++)
 #define PLOOPBONLY(pl) for(pl=B1;pl<=B3;pl++)
 #define PLOOPNOB2(pl) for(pl=B3+1;pl<NPR;pl++)
+#define PLOOPNOB2SPECIAL(pl,special) for(pl=B3+1;pl<NPR+special;pl++)
 
 
 #define PLOOPRADONLY(pl) for(pl=PRAD0;pl<=PRAD3;pl++)

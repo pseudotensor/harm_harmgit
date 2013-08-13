@@ -138,8 +138,8 @@ static int threeterm2Ddeconvolution(
 
 static int a2cflux_from_prim(int dir, FTYPE (*prim_coef_list)[MAXSPACEORDER]);
 
-static int deconvolve_emf_1d(int corner, int odir1, int odir2, int *Nvec, int *NNOT1vec, int i, int j, int k, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR]);
-static int deconvolve_emf_2d(int corner, int odir1, int odir2, int *Nvec, int *NNOT1vec, int i, int j, int k, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR]);
+static int deconvolve_emf_1d(int corner, int odir1, int odir2, int *Nvec, int *NNOT1vec, int i, int j, int k, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL]);
+static int deconvolve_emf_2d(int corner, int odir1, int odir2, int *Nvec, int *NNOT1vec, int i, int j, int k, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL]);
 
 
 
@@ -511,7 +511,7 @@ int setup_3value_vB(int corner, int odir1, int odir2, int *Nvec, int *NNOT1vec, 
 
 
 // called from flux.c from fluxcalc() after all dimensions fluxes are computed and need to correct
-void mergedc2ea2cmethod_compute(int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR])
+void mergedc2ea2cmethod_compute(int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL])
 {
   int dimen;
   int corner;
@@ -1392,7 +1392,7 @@ static int deconvolve_flux_em(int dir, int odir1, int odir2, FTYPE *EOSextra, st
 
 // Note that always \hat{odir1}\times\hat{odir2}=\hat{corner,dir}
 // F[+-odir1 l/r][+-odir2 d/u]
-static int deconvolve_emf_2d(int corner, int odir1, int odir2, int *Nvec, int *NNOT1vec, int i, int j, int k, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR])
+static int deconvolve_emf_2d(int corner, int odir1, int odir2, int *Nvec, int *NNOT1vec, int i, int j, int k, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL])
 {
   FTYPE vcon[NDIM][NUMCS+1][NUMCS+1];
   FTYPE gdetBcon[NDIM][NUMCS+1][NUMCS+1];
@@ -1463,7 +1463,7 @@ static int deconvolve_emf_2d(int corner, int odir1, int odir2, int *Nvec, int *N
 
 
 
-static int deconvolve_emf_1d(int corner, int odir1, int odir2, int *Nvec, int *NNOT1vec, int i, int j, int k, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR])
+static int deconvolve_emf_1d(int corner, int odir1, int odir2, int *Nvec, int *NNOT1vec, int i, int j, int k, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL])
 {
   FTYPE Fleft[NPR],Fright[NPR];
   FTYPE Flefttemp,Frighttemp;

@@ -5,6 +5,9 @@ extern void init_3dvpot(int is, int ie, int js, int je, int ks, int ke,FTYPE ini
 
 
 extern void init_3dnpr_fullloop(FTYPE initvalue, FTYPE (*dest)[NSTORE2][NSTORE3][NPR]);
+extern void init_3dnpr_fullloop_flux(FTYPE initvalue, FTYPE (*dest)[NSTORE2][NSTORE3][NPR+NSPECIAL]);
+
+extern void init_3dnpr_flux(int is, int ie, int js, int je, int ks, int ke,FTYPE initvalue, FTYPE (*dest)[NSTORE2][NSTORE3][NPR+NSPECIAL]);
 
 
 extern void copy_3dpftype_special(int is, int ie, int js, int je, int ks, int ke,PFTYPE (*source)[NSTORE2][NSTORE3][NUMPFLAGS],PFTYPE (*destspecial)[NSTORE2][NSTORE3][NUMFAILPFLAGS]);

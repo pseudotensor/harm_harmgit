@@ -1,6 +1,6 @@
 // some physics
 
-extern int sourcephysics(FTYPE *pi, FTYPE *ph, FTYPE *pf, int *didreturnpf, int *eomtype, struct of_geom *geom, struct of_state *q, FTYPE *Ugeomfreei, FTYPE *Ugeomfreef, FTYPE* CUf, FTYPE *dUother, FTYPE (*dUcomp)[NPR]);
+extern int sourcephysics(FTYPE *pi, FTYPE *ph, FTYPE *pf, int *didreturnpf, int *eomtype, struct of_geom *geom, struct of_state *q, FTYPE *Ugeomfreei, FTYPE *Ugeomfreef, FTYPE* CUf, FTYPE dissmeasure, FTYPE *dUother, FTYPE (*dUcomp)[NPR]);
 
 extern void postdt(void);
 extern int primtoU(int returntype, FTYPE *p, struct of_state *q, struct of_geom *geom,
@@ -160,7 +160,7 @@ extern int flux_compute_splitmaem(int i, int j, int k, int dir, struct of_geom *
 
 extern void mks_source_conn(FTYPE *ph, struct of_geom *ptrgeom,
                             struct of_state *q,FTYPE *dU);
-extern int source(FTYPE *pi, FTYPE *pa,  FTYPE *pf, int *didreturnpf, int *eomtype, struct of_geom *geom, struct of_state *q, FTYPE *Ui, FTYPE *Uf, FTYPE *CUf, FTYPE *dUriemann,
+extern int source(FTYPE *pi, FTYPE *pa,  FTYPE *pf, int *didreturnpf, int *eomtype, struct of_geom *geom, struct of_state *q, FTYPE *Ui, FTYPE *Uf, FTYPE *CUf, FTYPE dissmeasure, FTYPE *dUriemann,
                   FTYPE (*Uacomp)[NPR], FTYPE *Ua);
 
 extern FTYPE taper_func(FTYPE R,FTYPE rin) ;

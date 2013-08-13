@@ -1529,9 +1529,9 @@ void adjust_fluxctstag_vpot_dosetfinalforce(SFTYPE fluxtime, FTYPE (*prim)[NSTOR
 
 
 // special NS boundary code for EMFs for staggered fields
-void adjust_fluxctstag_emfs_old1(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR])
+void adjust_fluxctstag_emfs_old1(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL])
 // GODMARK TODO DEBUG
-//void adjust_fluxctstag_emfs(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR])
+//void adjust_fluxctstag_emfs(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL])
 {
 
   // v1) force EMFperp1=EMFperp2=0 after computed EMF so that B^n stays fixed.

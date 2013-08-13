@@ -1339,7 +1339,7 @@ FTYPE ftilde( int dir, int shift, FTYPE *Vabs, FTYPE *Pabs)
   P = Pabs + shift;
   V = Vabs + shift;
 
-  // FLASH Equation 43
+  // FLASH Equation 43 (pressure jump)
   P2diff=P[2]-P[-2];
   Pbottom=sign(P2diff)/(fabs(P2diff)+SMALL); // singularity avoidance but keeps signature
   Sp = (P[1] - P[-1]) * Pbottom ;
@@ -1347,20 +1347,44 @@ FTYPE ftilde( int dir, int shift, FTYPE *Vabs, FTYPE *Pabs)
 
 
 
-  // FLASH Equation 45
+  // FLASH Equation 45 (shock must have sufficient pressure jump)
   Ftilde = max( 0, min( 1.0, 10.0 * (Sp - SP0) ) );
 
-  // FLASH Equation 46
+  // FLASH Equation 46 (shock must have pressure jump)
   Ftilde1 = fabs(P[1] - P[-1]) / (min(fabs(P[1]), fabs(P[-1]))+ SMALL );
   Ftilde *= ( (FTYPE)(Ftilde1>=THIRD) );
   //  if(Ftilde1<THIRD) Ftilde=0.0;
 
-  // FLASH Equation 47
+  // FLASH Equation 47 (shock must have convergence)
   Ftilde2 = V[1] - V[-1];
   Ftilde *= ( (FTYPE)(Ftilde2<=0.0) );
   //  if(Ftilde2>0.0) Ftilde=0.0;
 
   //  dualfprintf(fail_file,"Ftilde=%21.15g\n",Ftilde);
+  
+  return( Ftilde );
+}
+
+FTYPE divftilde( int dir, int shift, FTYPE *Vabs, FTYPE *Pabs)
+{
+  FTYPE Ftilde,Ftilde1,Ftilde2;
+  FTYPE Sv;
+  FTYPE *V, *P;
+  FTYPE V2diff,Vbottom;
+
+
+  // shift as needed
+  P = Pabs + shift;
+  V = Vabs + shift;
+
+  // (flow divergence)
+  Sv = fabs(V[1] - V[-1]) / ( fabs(V[1]) + fabs(V[-1]) + SMALL );
+
+  // (flow divergence must be sufficient)
+  Ftilde = MAX(SV0,MIN(+1.0,Sv));
+
+  Ftilde2 = V[1] - V[-1];
+  Ftilde *= ( (FTYPE)(Ftilde2>=0.0) );
   
   return( Ftilde );
 }
@@ -1378,6 +1402,24 @@ FTYPE  Ficalc(int dir, FTYPE *V, FTYPE *P)
   Fi = max( ftilde(dir, 0, V,P), ftilde(dir, -signdP, V,P) );
 
   return(Fi);
+}
+
+// Jon's divergence condition
+// currently Fi check is redundant
+FTYPE  Divcalc(int dir, FTYPE Fi, FTYPE *V, FTYPE *P)
+{
+  FTYPE divftilde( int dir, int shift, FTYPE *Vabs, FTYPE *Pabs);
+  FTYPE ftilde( int dir, int shift, FTYPE *P, FTYPE *V);
+  int signdV;
+  FTYPE Div;
+
+  signdV = (V[1] - V[-1] > 0) * 2 - 1;
+  Div = max( divftilde(dir, 0, V,P), divftilde(dir, -signdV, V,P) );
+
+  // now put back actual scale
+  Div *= (V[1] - V[-1]);
+
+  return(Div);
 }
 
 

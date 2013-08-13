@@ -10,7 +10,7 @@ static int Utoprimgen_failwrapper_old(int showmessages, int allowlocalfailurefix
 
 
 //////// implicit stuff
-static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother ,FTYPE (*dUcomp)[NPR]);
+static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE dissmeasure, FTYPE *dUother ,FTYPE (*dUcomp)[NPR]);
 
 static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready, int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother ,FTYPE (*dUcomp)[NPR], FTYPE *errorabs, int *iters, int *f1iters);
 
@@ -1068,7 +1068,7 @@ static FTYPE compute_dt(FTYPE *CUf, FTYPE dtin)
 
 
 // wrapper for mode method
-static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother ,FTYPE (*dUcomp)[NPR])
+static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE dissmeasure, FTYPE *dUother ,FTYPE (*dUcomp)[NPR])
 {
   int pliter,pl;
   int sc;
@@ -1250,18 +1250,52 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
     failreturnentropy=koral_source_rad_implicit_mode(havebackup, didentropyalready, &eomtypeentropy, pbentropy, piin, Uiin, Ufin, CUf, ptrgeom, &qentropy, dUother ,dUcompentropy, &errorabsentropy, &itersentropy, &f1itersentropy);
     // eomtypeentropy can become EOMDONOTHING if this call was successful
 
+
+    
+    // get divcond.  Go over dimensions in case not full 3D.  Just duplicates value as per in flux.c.
+    const int NxNOT1[NDIM]={0,N1NOT1,N2NOT1,N3NOT1};
+    int dir;
+    FTYPE divcond;
+    FTYPE uu0[NPR];
+    FTYPE fracdtuu0=1.0;
+    PLOOP(pliter,pl) uu0[pl]=UFSET(CUf,fracdtuu0*dt,Uiin[pl],Ufin[pl],dUother[pl],0.0);
+    FTYPE DIVCONDLIMIT;
+
+
+    if(DIVERGENCEMETHOD==0){
+      DIVCONDLIMIT=0.0;
+      DIMENLOOP(dir){
+        if(NxNOT1[dir]){
+          // problems when V small
+          divcond=GLOBALMACP1A0(shockindicatorarray,DIVPLDIR1+dir-1,ptrgeom->i,ptrgeom->j,ptrgeom->k);
+        }
+      }
+    }
+    else if(DIVERGENCEMETHOD==1){
+      DIVCONDLIMIT=-0.1;
+      divcond=dissmeasure;
+    }
+
+    // DEBUG
+    //    dualfprintf(fail_file,"divcond=%g\n",divcond);
+
+
     ////////////////
     //
     // now consider trying energy method
     //
     ///////////////
     int eomtypecond=(*eomtype==EOMGRMHD || *eomtype==EOMDEFAULT && EOMTYPE==EOMGRMHD);
+    // only do energy case if divcond too small or if entropy failed
+    int energycond=(divcond<=DIVCONDLIMIT ||  ACCEPTASNOFAILURE(failreturnentropy)==0);
+
     int eomtypeenergy=EOMGRMHD;
     int failreturnenergy=FAILRETURNGENERAL; // default to fail in case energy not to be done at all
     FTYPE pbenergy[NPR];
     FTYPE dUcompenergy[NUMSOURCES][NPR];
     struct of_state qenergy;
-    if(eomtypecond){
+    if(eomtypecond && energycond==1){
+    //    if(eomtypecond){
       if(ACCEPTASNOFAILURE(failreturnentropy)==0){
         havebackup=0; // no entropy solver solution, so no backup.
         didentropyalready=0;
@@ -1285,7 +1319,10 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
 
       failreturnenergy=koral_source_rad_implicit_mode(havebackup, didentropyalready, &eomtypeenergy, pbenergy, piin, Uiin, Ufin, CUf, ptrgeom, &qenergy, dUother ,dUcompenergy, &errorabsenergy, &itersenergy, &f1itersenergy);
     }// end if doing GRMHD inversion
-
+    else{
+      // if didn't do energy inversion, treat as failure of said inversion
+      failreturnenergy=FAILRETURNGENERAL;
+    }
     
 
     /////////////
@@ -1294,6 +1331,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
     // only use entropy if energy failed, or energy predicts smaller u_g while having also larger error in solution and energy has larger than desired error.  Avoids larger error entropy cases messing up solution.
     //
     /////////////
+
+
     if(
        ACCEPTASNOFAILURE(failreturnenergy)==0 && ACCEPTASNOFAILURE(failreturnentropy)==1 ||
        ACCEPTASNOFAILURE(failreturnentropy)==1 && ACCEPTASNOFAILURE(failreturnenergy)==1 && (errorabsentropy<IMPTRYCONVABS && errorabsenergy>IMPBADENERGY) ||
@@ -4747,7 +4786,7 @@ static int source_explicit(int whichsc, int whichradsourcemethod, int methoddtsu
 // NOTE: source_explicit() takes as first argument a form of function like general koral_source_rad_calc() .  It doesn't have to be just used for radiation.
 // NOTE: koral_source_rad_implicit() currently only works for radiation where only 4 equations involved since 4-force of rad affects exactly mhd.  So only invert 4x4 matrix.
 // For recursion of other consistencies, should keep koral_source_rad() same function arguments as explicit and implicit functions.  Once make koral_source_rad() general, can use this function as general source function instead of it getting called just for radiation.
-int koral_source_rad(int whichradsourcemethod, FTYPE *piin, FTYPE *pb, FTYPE *pf, int *didreturnpf, int *eomtype, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *dUother, FTYPE (*dUcomp)[NPR])
+int koral_source_rad(int whichradsourcemethod, FTYPE *piin, FTYPE *pb, FTYPE *pf, int *didreturnpf, int *eomtype, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE dissmeasure, FTYPE *dUother, FTYPE (*dUcomp)[NPR])
 {
   int pliter,pl;
   int showmessages=0; // 0 ok if not debugging and think everything works.
@@ -4845,12 +4884,12 @@ int koral_source_rad(int whichradsourcemethod, FTYPE *piin, FTYPE *pb, FTYPE *pf
   /////////////////
   else if(whichradsourcemethod==SOURCEMETHODIMPLICIT){
  
-    int failimplicit=koral_source_rad_implicit(eomtype, pborig, piinorig, Uiinorig, Ufinorig, CUf, ptrgeom, qorig, dUother, dUcomp);
+    int failimplicit=koral_source_rad_implicit(eomtype, pborig, piinorig, Uiinorig, Ufinorig, CUf, ptrgeom, qorig, dissmeasure, dUother, dUcomp);
  
     if(failimplicit){
       if(IMPLICITREVERTEXPLICIT){ // single level recusive call (to avoid duplicate confusing code)
         // assume if revert from implicit, then need to do sub-cycles
-        int failexplicit=koral_source_rad(SOURCEMETHODEXPLICITSUBCYCLEREVERSIONFROMIMPLICIT, piinorig, pborig, pf, didreturnpf, eomtype, Uiinorig, Ufinorig, CUf, ptrgeom, qorig, dUother, dUcomp);
+        int failexplicit=koral_source_rad(SOURCEMETHODEXPLICITSUBCYCLEREVERSIONFROMIMPLICIT, piinorig, pborig, pf, didreturnpf, eomtype, Uiinorig, Ufinorig, CUf, ptrgeom, qorig, dissmeasure, dUother, dUcomp);
         if(failexplicit==EXPLICITFAILED){
           // nothing else to revert to, but just continue and report
           *didreturnpf=0;
@@ -4905,7 +4944,7 @@ int koral_source_rad(int whichradsourcemethod, FTYPE *piin, FTYPE *pb, FTYPE *pf
 
     // try explicit (or see if no source at all required)
     // Just check using explicit method, since if sub-cycles required then should just do implicit
-    int failreturn=koral_source_rad(SOURCEMETHODEXPLICITCHECKSFROMIMPLICIT, piinorig, pborig, pf, didreturnpf, eomtype, Uiinorig, Ufinorig, CUf, ptrgeom, qorig, dUother, dUcomp);
+    int failreturn=koral_source_rad(SOURCEMETHODEXPLICITCHECKSFROMIMPLICIT, piinorig, pborig, pf, didreturnpf, eomtype, Uiinorig, Ufinorig, CUf, ptrgeom, qorig, dissmeasure, dUother, dUcomp);
 
     // determine if still need to do implicit
     // don't set didreturnpf since already was set
@@ -4932,7 +4971,7 @@ int koral_source_rad(int whichradsourcemethod, FTYPE *piin, FTYPE *pb, FTYPE *pf
       if(showmessagesheavy && debugfail>=2) dualfprintf(fail_file,"NOTE: Had to take implicit step: %d %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
 
       // one-deep recursive call to implicit scheme
-      return(koral_source_rad(SOURCEMETHODIMPLICIT, piinorig, pborig, pf, didreturnpf, eomtype, Uiinorig, Ufinorig, CUf, ptrgeom, qorig, dUother, dUcomp));
+      return(koral_source_rad(SOURCEMETHODIMPLICIT, piinorig, pborig, pf, didreturnpf, eomtype, Uiinorig, Ufinorig, CUf, ptrgeom, qorig, dissmeasure, dUother, dUcomp));
     }// end if doimplicit==1
 
   }

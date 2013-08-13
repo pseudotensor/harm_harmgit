@@ -17,8 +17,8 @@ static int prepare_globaldt(
                             FTYPE *ndt);
 
 
-FTYPE globalgeom[NPR];
-static void flux2dUavg(int whichpl, int i, int j, int k, FTYPE (*F1)[NSTORE2][NSTORE3][NPR],FTYPE (*F2)[NSTORE2][NSTORE3][NPR],FTYPE (*F3)[NSTORE2][NSTORE3][NPR],FTYPE *dUavg1,FTYPE *dUavg2,FTYPE *dUavg3);
+//FTYPE globalgeom[NPR];
+static void flux2dUavg(int whichpl, int i, int j, int k, FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE *dUavg1,FTYPE *dUavg2,FTYPE *dUavg3);
 static void dUtoU(int whichpl, int i, int j, int k, int loc, FTYPE *dUgeom, FTYPE *dUriemann, FTYPE *CUf, FTYPE *CUnew, FTYPE *Ui,  FTYPE *uf, FTYPE *ucum);
 static void dUtoU_check(int i, int j, int k, int loc, int pl, FTYPE *dUgeom, FTYPE *dUriemann, FTYPE *CUf, FTYPE *CUnew, FTYPE *Ui,  FTYPE *Uf, FTYPE *ucum);
 static int asym_compute_1(FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
@@ -32,27 +32,27 @@ static FTYPE fractional_diff( FTYPE a, FTYPE b );
 // AVG_2_POINT functions:
 static void debugeno_compute(FTYPE (*p)[NSTORE2][NSTORE3][NPR],FTYPE (*U)[NSTORE2][NSTORE3][NPR],FTYPE (*debugvars)[NSTORE2][NSTORE3][NUMENODEBUGS]);
 
-static void show_fluxes(int i, int j, int k, int loc, int pl,FTYPE (*F1)[NSTORE2][NSTORE3][NPR],FTYPE (*F2)[NSTORE2][NSTORE3][NPR],FTYPE (*F3)[NSTORE2][NSTORE3][NPR]);
+static void show_fluxes(int i, int j, int k, int loc, int pl,FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL]);
 
 
 static int advance_standard(int truestep,int stage, FTYPE (*pi)[NSTORE2][NSTORE3][NPR],FTYPE (*pb)[NSTORE2][NSTORE3][NPR], FTYPE (*pf)[NSTORE2][NSTORE3][NPR],
                             FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],
                             FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],
-                            FTYPE (*F1)[NSTORE2][NSTORE3][NPR],FTYPE (*F2)[NSTORE2][NSTORE3][NPR],FTYPE (*F3)[NSTORE2][NSTORE3][NPR],
+                            FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL],
                             FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
                             FTYPE (*ui)[NSTORE2][NSTORE3][NPR], FTYPE (*uf)[NSTORE2][NSTORE3][NPR], FTYPE (*ucum)[NSTORE2][NSTORE3][NPR],
                             FTYPE *CUf,FTYPE *CUnew,SFTYPE fluxdt, SFTYPE boundtime, SFTYPE fluxtime, int stagenow, int numstages, FTYPE *ndt);
 static int advance_standard_orig(int truestep,int stage, FTYPE (*pi)[NSTORE2][NSTORE3][NPR],FTYPE (*pb)[NSTORE2][NSTORE3][NPR], FTYPE (*pf)[NSTORE2][NSTORE3][NPR],
                             FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],
                             FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],
-                            FTYPE (*F1)[NSTORE2][NSTORE3][NPR],FTYPE (*F2)[NSTORE2][NSTORE3][NPR],FTYPE (*F3)[NSTORE2][NSTORE3][NPR],
+                            FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL],
                             FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
                             FTYPE (*ui)[NSTORE2][NSTORE3][NPR], FTYPE (*uf)[NSTORE2][NSTORE3][NPR], FTYPE (*ucum)[NSTORE2][NSTORE3][NPR],
                             FTYPE *CUf,FTYPE *CUnew,SFTYPE fluxdt, SFTYPE boundtime, SFTYPE fluxtime, int stagenow, int numstages, FTYPE *ndt);
 static int advance_finitevolume(int truestep,int stage, FTYPE (*pi)[NSTORE2][NSTORE3][NPR],FTYPE (*pb)[NSTORE2][NSTORE3][NPR], FTYPE (*pf)[NSTORE2][NSTORE3][NPR],
                                 FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],
                                 FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],
-                                FTYPE (*F1)[NSTORE2][NSTORE3][NPR],FTYPE (*F2)[NSTORE2][NSTORE3][NPR],FTYPE (*F3)[NSTORE2][NSTORE3][NPR],
+                                FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL],
                                 FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
                                 FTYPE (*ui)[NSTORE2][NSTORE3][NPR],FTYPE (*uf)[NSTORE2][NSTORE3][NPR], FTYPE (*ucum)[NSTORE2][NSTORE3][NPR],
                                 FTYPE *CUf,FTYPE *CUnew, SFTYPE fluxdt, SFTYPE boundtime, SFTYPE fluxtime,  int stagenow, int numstages, FTYPE *ndt);
@@ -93,7 +93,7 @@ void pre_interpolate_and_advance(FTYPE (*pb)[NSTORE2][NSTORE3][NPR])
 int advance(int truestep, int stage, FTYPE (*pi)[NSTORE2][NSTORE3][NPR],FTYPE (*pb)[NSTORE2][NSTORE3][NPR], FTYPE (*pf)[NSTORE2][NSTORE3][NPR],
             FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],
             FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],
-            FTYPE (*F1)[NSTORE2][NSTORE3][NPR],FTYPE (*F2)[NSTORE2][NSTORE3][NPR],FTYPE (*F3)[NSTORE2][NSTORE3][NPR],
+            FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL],
             FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
             FTYPE (*ui)[NSTORE2][NSTORE3][NPR],FTYPE (*uf)[NSTORE2][NSTORE3][NPR], FTYPE (*ucum)[NSTORE2][NSTORE3][NPR],
             FTYPE *CUf, FTYPE *CUnew, SFTYPE fluxdt, SFTYPE boundtime, SFTYPE fluxtime, int timeorder, int numtimeorders, FTYPE *ndt)
@@ -156,7 +156,7 @@ static int advance_standard(
                             FTYPE (*pf)[NSTORE2][NSTORE3][NPR],
                             FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],
                             FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],
-                            FTYPE (*F1)[NSTORE2][NSTORE3][NPR],FTYPE (*F2)[NSTORE2][NSTORE3][NPR],FTYPE (*F3)[NSTORE2][NSTORE3][NPR],
+                            FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL],
                             FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
                             FTYPE (*ui)[NSTORE2][NSTORE3][NPR],
                             FTYPE (*uf)[NSTORE2][NSTORE3][NPR],
@@ -387,7 +387,7 @@ static int advance_standard(
       {
         int pl,pliter,i,j,k;
         // zero-out dUgeom in case non-B pl's used.
-        FTYPE dUgeom[NPR]={0.0},dUriemann[NPR]={0.0},dUriemann1[NPR]={0.0},dUriemann2[NPR]={0.0},dUriemann3[NPR]={0.0};
+        FTYPE dUgeom[NPR]={0.0},dUriemann[NPR+NSPECIAL]={0.0},dUriemann1[NPR+NSPECIAL]={0.0},dUriemann2[NPR+NSPECIAL]={0.0},dUriemann3[NPR+NSPECIAL]={0.0};
 
 
         /////////////////////////////////////////////////////
@@ -463,7 +463,7 @@ static int advance_standard(
       // for source()
       FTYPE Uitemp[NPR];
       // set all to zero in case doother=DONONBPL in which case need rest of calculations to know no change to field
-      FTYPE dUgeom[NPR]={0},dUriemann[NPR]={0},dUriemann1[NPR]={0},dUriemann2[NPR]={0},dUriemann3[NPR]={0},dUcomp[NUMSOURCES][NPR]={0};
+      FTYPE dUgeom[NPR]={0},dUriemann[NPR]={0},dUriemann1[NPR+NSPECIAL]={0},dUriemann2[NPR+NSPECIAL]={0},dUriemann3[NPR+NSPECIAL]={0},dUcomp[NUMSOURCES][NPR]={0};
       struct of_state qdontuse;
       struct of_state *qptr=&qdontuse;
       struct of_state qdontuse2;
@@ -545,10 +545,44 @@ static int advance_standard(
         // note that uf and ucum are initialized inside setup_rktimestep() before first substep
 
 
+        // get update to tempucum so have non-dissipative update
+        FTYPE dissmeasure=0.0;
+        if(NSPECIAL>0){
+          FTYPE dUgeomtemp[NPR+NSPECIAL];
+          FTYPE uitemp[NPR+NSPECIAL];
+          FTYPE uftemp[NPR+NSPECIAL];
+          FTYPE tempucumtemp[NPR+NSPECIAL];
+          PLOOP(pliter,pl){
+            dUgeomtemp[pl]=0.0; // geometry not relevant for this calculation
+            uitemp[pl]=MACP0A1(ui,i,j,k,pl);
+            uftemp[pl]=MACP0A1(uf,i,j,k,pl);
+            tempucumtemp[pl]=MACP0A1(tempucum,i,j,k,pl);
+          }
+          //
+          int plsp=NPR+NSPECIAL-1;
+          dUgeomtemp[plsp]=0.0;
+          uitemp[plsp] = uitemp[RHO];
+          uftemp[plsp] = uftemp[RHO];
+          tempucumtemp[plsp] = tempucumtemp[RHO];
+          //
+          FTYPE dUriemanntemp[NPR+NSPECIAL]={0},dUriemann1temp[NPR+NSPECIAL]={0},dUriemann2temp[NPR+NSPECIAL]={0},dUriemann3temp[NPR+NSPECIAL]={0};
+          flux2dUavg(DOSPECIALPL,i,j,k,F1,F2,F3,dUriemann1temp,dUriemann2temp,dUriemann3temp);
+          PLOOP(pliter,pl) dUriemanntemp[pl]=dUriemann1temp[pl]+dUriemann2temp[pl]+dUriemann3temp[pl];
+          dUriemanntemp[plsp]=dUriemann1temp[plsp]+dUriemann2temp[plsp]+dUriemann3temp[plsp];
+          //
+          dUtoU(DOSPECIALPL,i,j,k,ptrgeom->p,dUgeomtemp, dUriemanntemp, CUf, CUnew, uitemp, uftemp, tempucumtemp);
+          // now get dissipation measure.  dissmeasure<0.0 means dissipation occuring in density field
+          //          dissmeasure = -(uftemp[RHO]-uftemp[plsp])/(fabs(uftemp[RHO])+fabs(uftemp[plsp]));
+          FTYPE dUdissplusnondiss=(uftemp[RHO]-uitemp[RHO]);
+          FTYPE dUnondiss=(uftemp[plsp]-uitemp[plsp]);
+          FTYPE dUdiss=dUdissplusnondiss-dUnondiss;
+          dissmeasure = -(dUdiss)/(fabs(dUdiss)+fabs(dUnondiss));
+          //          dualfprintf(fail_file,"DISS: ui=%g %g : uf=%g %g : dUdiss=%g dUnondiss=%g : dU1=%g %g : dU2=%g %g : dissmeasure=%g\n",uitemp[RHO],uitemp[plsp],uftemp[RHO],uftemp[plsp],dUdiss,dUnondiss,dUriemann1temp[RHO]*CUf[2]*dt,dUriemann1temp[plsp]*CUf[2]*dt,dUriemann2temp[RHO]*CUf[2]*dt,dUriemann2temp[plsp]*CUf[2]*dt,dissmeasure);
+        }
 
         // find dU(pb)
         // so pf contains updated field at cell center for use in (e.g.) implicit solver that uses inversion P(U)
-        MYFUN(source(piorig, MAC(pb,i,j,k), MAC(pf,i,j,k), &didreturnpf, &eomtype, ptrgeom, qptr2, MAC(ui,i,j,k), MAC(uf,i,j,k), CUf, dUriemann, dUcomp, dUgeom),"step_ch.c:advance()", "source", 1);
+        MYFUN(source(piorig, MAC(pb,i,j,k), MAC(pf,i,j,k), &didreturnpf, &eomtype, ptrgeom, qptr2, MAC(ui,i,j,k), MAC(uf,i,j,k), CUf, dissmeasure, dUriemann, dUcomp, dUgeom),"step_ch.c:advance()", "source", 1);
         // assumes final dUcomp is nonzero and representative of source term over this timestep
         
 
@@ -577,7 +611,7 @@ static int advance_standard(
         // Get update: tempucum
         //
         /////////////
-        PLOOP(pliter,pl) globalgeom[pl]=ptrgeom->gdet;
+        //        PLOOP(pliter,pl) globalgeom[pl]=ptrgeom->gdet;
         dUtoU(doother,i,j,k,ptrgeom->p,dUgeom, dUriemann, CUf, CUnew, MAC(ui,i,j,k), MAC(uf,i,j,k), MAC(tempucum,i,j,k));
 
         //        if(nstep==4 && steppart==0){
@@ -867,7 +901,7 @@ static int advance_standard_orig(
                             FTYPE (*pf)[NSTORE2][NSTORE3][NPR],
                             FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],
                             FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],
-                            FTYPE (*F1)[NSTORE2][NSTORE3][NPR],FTYPE (*F2)[NSTORE2][NSTORE3][NPR],FTYPE (*F3)[NSTORE2][NSTORE3][NPR],
+                            FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL],
                             FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
                             FTYPE (*ui)[NSTORE2][NSTORE3][NPR],
                             FTYPE (*uf)[NSTORE2][NSTORE3][NPR],
@@ -1159,7 +1193,7 @@ static int advance_standard_orig(
       struct of_geom geomdontuse;
       struct of_geom *ptrgeom=&geomdontuse;
       FTYPE Uitemp[NPR];
-      FTYPE dUgeom[NPR],dUriemann[NPR],dUriemann1[NPR],dUriemann2[NPR],dUriemann3[NPR],dUcomp[NUMSOURCES][NPR];
+      FTYPE dUgeom[NPR],dUriemann[NPR],dUriemann1[NPR+NSPECIAL],dUriemann2[NPR+NSPECIAL],dUriemann3[NPR+NSPECIAL],dUcomp[NUMSOURCES][NPR];
       struct of_state qdontuse;
       struct of_state *qptr=&qdontuse;
       struct of_state qdontuse2;
@@ -1232,7 +1266,7 @@ static int advance_standard_orig(
 
 
         // find dU(pb)
-        MYFUN(source(MAC(pi,i,j,k), MAC(pb,i,j,k), MAC(pf,i,j,k), &didreturnpf, &eomtype, ptrgeom, qptr2, MAC(ui,i,j,k), MAC(uf,i,j,k), CUf, dUriemann, dUcomp, dUgeom),"step_ch.c:advance()", "source", 1);
+        MYFUN(source(MAC(pi,i,j,k), MAC(pb,i,j,k), MAC(pf,i,j,k), &didreturnpf, &eomtype, ptrgeom, qptr2, MAC(ui,i,j,k), MAC(uf,i,j,k), CUf, 0.0, dUriemann, dUcomp, dUgeom),"step_ch.c:advance()", "source", 1);
         // assumes final dUcomp is nonzero and representative of source term over this timestep
         // KORALTODO: Not using eomtype for this method because outside loop.  Would have to store eomtype in array or something!
  
@@ -1639,7 +1673,7 @@ static int advance_finitevolume(
                                 FTYPE (*pf)[NSTORE2][NSTORE3][NPR],
                                 FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],
                                 FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],
-                                FTYPE (*F1)[NSTORE2][NSTORE3][NPR],FTYPE (*F2)[NSTORE2][NSTORE3][NPR],FTYPE (*F3)[NSTORE2][NSTORE3][NPR],
+                                FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL],
                                 FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
                                 FTYPE (*ui)[NSTORE2][NSTORE3][NPR],
                                 FTYPE (*uf)[NSTORE2][NSTORE3][NPR],
@@ -1878,7 +1912,7 @@ static int advance_finitevolume(
 #endif
     {
       int i,j,k,pl,pliter;
-      FTYPE dUgeom[NPR],dUriemann[NPR],dUriemann1[NPR],dUriemann2[NPR],dUriemann3[NPR],dUcomp[NUMSOURCES][NPR];
+      FTYPE dUgeom[NPR],dUriemann[NPR],dUriemann1[NPR+NSPECIAL],dUriemann2[NPR+NSPECIAL],dUriemann3[NPR+NSPECIAL],dUcomp[NUMSOURCES][NPR];
       struct of_geom geomdontuse;
       struct of_geom *ptrgeom=&geomdontuse;
       struct of_state qdontuse;
@@ -1911,7 +1945,7 @@ static int advance_finitevolume(
 
      
         // get source term (point source, don't use to update diagnostics)
-        MYFUN(source(MAC(pi,i,j,k), MAC(pb,i,j,k), MAC(pf,i,j,k), &didreturnpf, &eomtype, ptrgeom, qptr, MAC(ui,i,j,k), MAC(uf,i,j,k), CUf, dUriemann, dUcomp, MAC(dUgeomarray,i,j,k)),"step_ch.c:advance()", "source", 1);
+        MYFUN(source(MAC(pi,i,j,k), MAC(pb,i,j,k), MAC(pf,i,j,k), &didreturnpf, &eomtype, ptrgeom, qptr, MAC(ui,i,j,k), MAC(uf,i,j,k), CUf, 0.0, dUriemann, dUcomp, MAC(dUgeomarray,i,j,k)),"step_ch.c:advance()", "source", 1);
       }// end COMPZLOOP
 
 
@@ -1973,7 +2007,7 @@ static int advance_finitevolume(
   {
     int i,j,k,pl,pliter;
     FTYPE fdummy;
-    FTYPE dUgeom[NPR],dUriemann[NPR],dUriemann1[NPR],dUriemann2[NPR],dUriemann3[NPR],dUcomp[NUMSOURCES][NPR];
+    FTYPE dUgeom[NPR],dUriemann[NPR],dUriemann1[NPR+NSPECIAL],dUriemann2[NPR+NSPECIAL],dUriemann3[NPR+NSPECIAL],dUcomp[NUMSOURCES][NPR];
     struct of_geom geomdontuse;
     struct of_geom *ptrgeom=&geomdontuse;
     struct of_state qdontuse;
@@ -2059,7 +2093,7 @@ static int advance_finitevolume(
       // SUPERGODMARK: no longer have access to dUcomp : NEED TO FIX
       // below is correct, but excessive
       // get source term again in order to have dUcomp (NEED TO FIX)
-      MYFUN(source(MAC(pi,i,j,k), MAC(pb,i,j,k), MAC(pf,i,j,k), &didreturnpf, &eomtype, ptrgeom, qptr, MAC(ui,i,j,k), MAC(uf,i,j,k), CUf, dUriemann, dUcomp, &fdummy),"step_ch.c:advance()", "source", 2);
+      MYFUN(source(MAC(pi,i,j,k), MAC(pb,i,j,k), MAC(pf,i,j,k), &didreturnpf, &eomtype, ptrgeom, qptr, MAC(ui,i,j,k), MAC(uf,i,j,k), CUf, 0.0, dUriemann, dUcomp, &fdummy),"step_ch.c:advance()", "source", 2);
 
 
       dUtodt(ptrgeom, qptr, MAC(pb,i,j,k), dUgeom, dUriemann, dUcomp[GEOMSOURCE], &accdt_ij, &gravitydt_ij);
@@ -2697,7 +2731,7 @@ static FTYPE fractional_diff( FTYPE a, FTYPE b )
 
 
 // get dUavg
-static void flux2dUavg(int whichpl, int i, int j, int k, FTYPE (*F1)[NSTORE2][NSTORE3][NPR],FTYPE (*F2)[NSTORE2][NSTORE3][NPR],FTYPE (*F3)[NSTORE2][NSTORE3][NPR],FTYPE *dU1avg,FTYPE *dU2avg,FTYPE *dU3avg)
+static void flux2dUavg(int whichpl, int i, int j, int k, FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE *dU1avg,FTYPE *dU2avg,FTYPE *dU3avg)
 {
   FTYPE idx1,idx2,idx3;
   int pl,pliter;
@@ -2712,8 +2746,15 @@ static void flux2dUavg(int whichpl, int i, int j, int k, FTYPE (*F1)[NSTORE2][NS
   idx3=GLOBALMETMACP0A1(idxvol,i,j,k,PH);
 #endif
 
+  int special;
+  if(whichpl==DOSPECIALPL){
+    special=NSPECIAL;
+    whichpl=DOALLPL; // override
+  }
+  else special=0;
+
   // initialize for simplicity so don't have to do it conditionally on N>1
-  PLOOP(pliter,pl){
+  PALLLOOPSPECIAL(pl,special){
     dU1avg[pl]=0;
     dU2avg[pl]=0;
     dU3avg[pl]=0;
@@ -2744,7 +2785,7 @@ static void flux2dUavg(int whichpl, int i, int j, int k, FTYPE (*F1)[NSTORE2][NS
       }
     
       // rest of variables (if any) are normal
-      PLOOPNOB2(pl){
+      PLOOPNOB2SPECIAL(pl,special){
 #if(N1>1)
         dU1avg[pl]=(
                     - (MACP0A1(F1,ip1mac(i),j,k,pl) - MACP0A1(F1,i,j,k,pl)) *idx1
@@ -2801,7 +2842,7 @@ static void flux2dUavg(int whichpl, int i, int j, int k, FTYPE (*F1)[NSTORE2][NS
 #endif
 
     // other (normal) FLUXB methods, including FLUXCTSTAG
-    PLOOP(pliter,pl) {
+    PALLLOOPSPECIAL(pl,special) {
       if(whichpl==DONONBPL && BPL(pl)==1 || whichpl==DOBPL && BPL(pl)==0) continue;
 
 
@@ -2853,17 +2894,23 @@ static void dUtoU(int whichpl, int i, int j, int k, int loc, FTYPE *dUgeom, FTYP
   int pl,pliter;
   void dUtoU_check(int i, int j, int k, int loc, int pl, FTYPE *dUgeom, FTYPE *dUriemann, FTYPE *CUf, FTYPE *CUnew, FTYPE *Ui,  FTYPE *Uf, FTYPE *ucum);
 
+  int special;
+  if(whichpl==DOSPECIALPL){
+    special=NSPECIAL;
+    whichpl=DOALLPL; // override
+  }
+  else special=0;
 
 
   if(whichpl==DOALLPL){
     // finally assign new Uf and ucum
     // store uf to avoid recomputing U(pf) used later as pb for advance()
-    PLOOP(pliter,pl) Uf[pl] = UFSET(CUf,dt,Ui[pl],Uf[pl],dUriemann[pl],dUgeom[pl]);
+    PALLLOOPSPECIAL(pl,special) Uf[pl] = UFSET(CUf,dt,Ui[pl],Uf[pl],dUriemann[pl],dUgeom[pl]);
     
     
     // how much of Ui, dU, and Uf to keep for final solution
     // ultimately ucum is actual solution used to find final pf
-    PLOOP(pliter,pl) ucum[pl] += UCUMUPDATE(CUnew,dt,Ui[pl],Uf[pl],dUriemann[pl],dUgeom[pl]);
+    PALLLOOPSPECIAL(pl,special) ucum[pl] += UCUMUPDATE(CUnew,dt,Ui[pl],Uf[pl],dUriemann[pl],dUgeom[pl]);
 
 #if(PRODUCTION==0)
     if(FLUXB!=FLUXCTSTAG){// turned off by default for FLUXB==FLUXCTSTAG since even with PRODUCTION==0, FLUXB==FLUXCTSTAG's extended loop causes output at edges.
@@ -2877,12 +2924,12 @@ static void dUtoU(int whichpl, int i, int j, int k, int loc, FTYPE *dUgeom, FTYP
     PLOOPBONLY(pl) ucum[pl] += UCUMUPDATE(CUnew,dt,Ui[pl],Uf[pl],dUriemann[pl],dUgeom[pl]);
   }
   else if(whichpl==DONONBPL){
-    PLOOP(pliter,pl) if(!BPL(pl)) Uf[pl] = UFSET(CUf,dt,Ui[pl],Uf[pl],dUriemann[pl],dUgeom[pl]);
-    PLOOP(pliter,pl) if(!BPL(pl)) ucum[pl] += UCUMUPDATE(CUnew,dt,Ui[pl],Uf[pl],dUriemann[pl],dUgeom[pl]);
+    PALLLOOPSPECIAL(pl,special) if(!BPL(pl)) Uf[pl] = UFSET(CUf,dt,Ui[pl],Uf[pl],dUriemann[pl],dUgeom[pl]);
+    PALLLOOPSPECIAL(pl,special) if(!BPL(pl)) ucum[pl] += UCUMUPDATE(CUnew,dt,Ui[pl],Uf[pl],dUriemann[pl],dUgeom[pl]);
   }
 
   //  if(nstep==4 && steppart==0 && whichpl==DONONBPL){
-  //    PLOOP(pliter,pl) dualfprintf(fail_file,"UtoU: %21.15g %21.15g %21.15g %21.15g\n",(CUf[0])*(Ui[pl]/globalgeom[pl]),(CUf[1])*(Uf[pl]/globalgeom[pl]),(CUf[2])*(dt)*((dUriemann[pl]/globalgeom[pl])+(dUgeom[pl]/globalgeom[pl])),CUf[2]*dt);
+  //    PALLLOOPSPECIAL(pl,special) dualfprintf(fail_file,"UtoU: %21.15g %21.15g %21.15g %21.15g\n",(CUf[0])*(Ui[pl]/globalgeom[pl]),(CUf[1])*(Uf[pl]/globalgeom[pl]),(CUf[2])*(dt)*((dUriemann[pl]/globalgeom[pl])+(dUgeom[pl]/globalgeom[pl])),CUf[2]*dt);
   //  }
 
 
@@ -2894,7 +2941,7 @@ static void dUtoU(int whichpl, int i, int j, int k, int loc, FTYPE *dUgeom, FTYP
 static void dUtoU_check(int i, int j, int k, int loc, int pl, FTYPE *dUgeom, FTYPE *dUriemann, FTYPE *CUf, FTYPE *CUnew, FTYPE *Ui,  FTYPE *Uf, FTYPE *ucum)
 {
   int showfluxes;
-  void show_fluxes(int i, int j, int k, int loc, int pl,FTYPE (*F1)[NSTORE2][NSTORE3][NPR],FTYPE (*F2)[NSTORE2][NSTORE3][NPR],FTYPE (*F3)[NSTORE2][NSTORE3][NPR]);
+  void show_fluxes(int i, int j, int k, int loc, int pl,FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL]);
 
 
   // default
@@ -2941,7 +2988,7 @@ void ucum_check(int i, int j, int k, int loc, int pl, FTYPE *ucum)
 
 }
 
-static void show_fluxes(int i, int j, int k, int loc, int pl,FTYPE (*F1)[NSTORE2][NSTORE3][NPR],FTYPE (*F2)[NSTORE2][NSTORE3][NPR],FTYPE (*F3)[NSTORE2][NSTORE3][NPR])
+static void show_fluxes(int i, int j, int k, int loc, int pl,FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL])
 {
   if(N1>1){
     dualfprintf(fail_file,"pl=%d i=%d j=%d k=%d :: F1[i]=%21.15g F1[i+1]=%21.15g dF1/dx1=%21.15g \n",pl,i,j,k,MACP0A1(F1,i,j,k,pl),MACP0A1(F1,i+SHIFT1,j,k,pl),(MACP0A1(F1,i+SHIFT1,j,k,pl)-MACP0A1(F1,i,j,k,pl))/dx[1]);
@@ -3087,7 +3134,7 @@ int set_dt(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], SFTYPE *dt)
       // modifies prim() to be closer to final, which is ok here.
       // setup default eomtype
       int eomtype=EOMDEFAULT;
-      MYFUN(source(MAC(prim,i,j,k), MAC(prim,i,j,k), MAC(prim,i,j,k), &didreturnpf, &eomtype, ptrgeom, &state, U, U, CUf, dUriemann, dUcomp, dUgeom),"advance.c:set_dt()", "source", 1);
+      MYFUN(source(MAC(prim,i,j,k), MAC(prim,i,j,k), MAC(prim,i,j,k), &didreturnpf, &eomtype, ptrgeom, &state, U, U, CUf, 0.0, dUriemann, dUcomp, dUgeom),"advance.c:set_dt()", "source", 1);
 
       // get dt limit
       compute_dt_fromsource(ptrgeom,&state,MAC(prim,i,j,k), Ugeomfree, dUgeom, dUcomp[GEOMSOURCE], &tempaccdt, &tempgravitydt);

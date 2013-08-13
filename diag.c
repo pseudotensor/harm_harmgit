@@ -1105,13 +1105,13 @@ int area_map(int call_code, int type, int size, int i, int j, int k, FTYPE (*pri
 
 // notice that F1 and F2 have arbitrary eomfunc that must be divided out to get real flux
 // This pureflux function only computes using F1,F2,F3 that can occur on substeps to maintain high accuracy that occurs exactly as consistent with RK method
-int diag_flux_pureflux(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR], SFTYPE Dt)
+int diag_flux_pureflux(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL], SFTYPE Dt)
 {
   int fluxdir;
   int i, j, k, pl, pliter, l, dir,fl,enerregion;
   SFTYPE surface,mysurface,surf2;
   SFTYPE surgdet;
-  FTYPE (*flux)[NSTORE2][NSTORE3][NPR];
+  FTYPE (*flux)[NSTORE2][NSTORE3][NPR+NSPECIAL];
   int start1,start2,start3,stop1,stop2,stop3;
   int gpos;
   int ii;

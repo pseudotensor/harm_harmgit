@@ -603,6 +603,31 @@ void copy_3d_onepl_fullloop_nowait(int pl, FTYPE (*source)[NSTORE2][NSTORE3][NPR
 
 // general purpose copy machine for 3D arrays with only size NPR appended onto the end of array
 // put as function because then wrap-up OpenMP stuff
+void init_3dnpr_flux(int is, int ie, int js, int je, int ks, int ke,FTYPE initvalue, FTYPE (*dest)[NSTORE2][NSTORE3][NPR+NSPECIAL])
+{
+
+
+#pragma omp parallel 
+  {
+    int i,j,k,pl,pliter;
+    OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
+
+
+#pragma omp for schedule(OPENMPFULLNOVARYSCHEDULE())
+    OPENMP3DLOOPBLOCK{
+      OPENMP3DLOOPBLOCK2IJK(i,j,k);
+
+      //      COMPZSLOOP(is,ie,js,je,ks,ke){
+      PLOOP(pliter,pl){
+        MACP0A1(dest,i,j,k,pl)=initvalue;
+      }
+    }// end 3D loop
+
+
+  }// end parallel region
+
+}
+
 void init_3dnpr(int is, int ie, int js, int je, int ks, int ke,FTYPE initvalue, FTYPE (*dest)[NSTORE2][NSTORE3][NPR])
 {
 
@@ -639,6 +664,20 @@ void init_3dnpr_fullloop(FTYPE initvalue, FTYPE (*dest)[NSTORE2][NSTORE3][NPR])
   int ke=N3-1+N3BND;
   
   init_3dnpr(is,ie,js,je,ks,ke,initvalue,dest);
+
+}
+
+
+void init_3dnpr_fullloop_flux(FTYPE initvalue, FTYPE (*dest)[NSTORE2][NSTORE3][NPR+NSPECIAL])
+{
+  int is=-N1BND;
+  int ie=N1-1+N1BND;
+  int js=-N2BND;
+  int je=N2-1+N2BND;
+  int ks=-N3BND;
+  int ke=N3-1+N3BND;
+  
+  init_3dnpr_flux(is,ie,js,je,ks,ke,initvalue,dest);
 
 }
 
