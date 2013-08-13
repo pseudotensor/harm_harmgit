@@ -101,6 +101,8 @@
 #define PALLLOOP(pl) for(pl=0;pl<NPR;pl++)
 #define PALLLOOPSPECIAL(pl,special) for(pl=0;pl<NPR+special;pl++)
 
+#define PLOOPSPECIALONLY(pl,special) for(pl=NPR;pl<NPR+special;pl++)
+
 
 // always goes over all conserved
 #define PALLREALLOOP(pl) for(pl=0;pl<NPRREALSET;pl++)

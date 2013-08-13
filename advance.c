@@ -559,25 +559,46 @@ static int advance_standard(
             tempucumtemp[pl]=MACP0A1(tempucum,i,j,k,pl);
           }
           //
-          int plsp=NPR+NSPECIAL-1;
-          dUgeomtemp[plsp]=0.0;
-          uitemp[plsp] = uitemp[RHO];
-          uftemp[plsp] = uftemp[RHO];
-          tempucumtemp[plsp] = tempucumtemp[RHO];
+          int plsp;
+          int specialfrom;
+          int plspeciallist[NSPECIAL]={SPECIALPL1,SPECIALPL2};
+          PLOOPSPECIALONLY(plsp,NSPECIAL){
+            specialfrom=plspeciallist[plsp-NPR];
+            dUgeomtemp[plsp]=0.0;
+            uitemp[plsp] = uitemp[specialfrom];
+            uftemp[plsp] = uftemp[specialfrom];
+            tempucumtemp[plsp] = tempucumtemp[specialfrom];
+          }
           //
           FTYPE dUriemanntemp[NPR+NSPECIAL]={0},dUriemann1temp[NPR+NSPECIAL]={0},dUriemann2temp[NPR+NSPECIAL]={0},dUriemann3temp[NPR+NSPECIAL]={0};
+          //
           flux2dUavg(DOSPECIALPL,i,j,k,F1,F2,F3,dUriemann1temp,dUriemann2temp,dUriemann3temp);
           PLOOP(pliter,pl) dUriemanntemp[pl]=dUriemann1temp[pl]+dUriemann2temp[pl]+dUriemann3temp[pl];
-          dUriemanntemp[plsp]=dUriemann1temp[plsp]+dUriemann2temp[plsp]+dUriemann3temp[plsp];
+          //
+          PLOOPSPECIALONLY(plsp,NSPECIAL){
+            dUriemanntemp[plsp]=dUriemann1temp[plsp]+dUriemann2temp[plsp]+dUriemann3temp[plsp];
+          }
           //
           dUtoU(DOSPECIALPL,i,j,k,ptrgeom->p,dUgeomtemp, dUriemanntemp, CUf, CUnew, uitemp, uftemp, tempucumtemp);
+          //
           // now get dissipation measure.  dissmeasure<0.0 means dissipation occuring in density field
-          //          dissmeasure = -(uftemp[RHO]-uftemp[plsp])/(fabs(uftemp[RHO])+fabs(uftemp[plsp]));
-          FTYPE dUdissplusnondiss=(uftemp[RHO]-uitemp[RHO]);
-          FTYPE dUnondiss=(uftemp[plsp]-uitemp[plsp]);
-          FTYPE dUdiss=dUdissplusnondiss-dUnondiss;
-          dissmeasure = -(dUdiss)/(fabs(dUdiss)+fabs(dUnondiss));
-          //          dualfprintf(fail_file,"DISS: ui=%g %g : uf=%g %g : dUdiss=%g dUnondiss=%g : dU1=%g %g : dU2=%g %g : dissmeasure=%g\n",uitemp[RHO],uitemp[plsp],uftemp[RHO],uftemp[plsp],dUdiss,dUnondiss,dUriemann1temp[RHO]*CUf[2]*dt,dUriemann1temp[plsp]*CUf[2]*dt,dUriemann2temp[RHO]*CUf[2]*dt,dUriemann2temp[plsp]*CUf[2]*dt,dissmeasure);
+          FTYPE dUdissplusnondiss[NPR];
+          FTYPE dUnondiss[NPR];
+          FTYPE dUdiss[NPR];
+          FTYPE dissmeasurepl[NPR];
+          PLOOPSPECIALONLY(plsp,NSPECIAL){
+            specialfrom=plspeciallist[plsp-NPR];
+            dUdissplusnondiss[specialfrom]=(uftemp[specialfrom] - uitemp[specialfrom]);
+            dUnondiss[specialfrom]=(uftemp[plsp] - uitemp[plsp]);
+            dUdiss[specialfrom]=dUdissplusnondiss[specialfrom] - dUnondiss[specialfrom];
+            FTYPE signdiss;
+            if(specialfrom==RHO) signdiss=+1.0; // dUdiss>0 means adding density due to dissipation
+            else if(specialfrom==UU) signdiss=-1.0; // dUdiss<0 means adding energy due to dissipation
+            //
+            dissmeasurepl[specialfrom] = -signdiss*(dUdiss[specialfrom])/(fabs(dUdiss[specialfrom])+fabs(dUnondiss[specialfrom]));
+          }
+          dissmeasure=dissmeasurepl[SPECIALPL1];
+          //          dualfprintf(fail_file,"DISS: ui=%g %g : uf=%g %g : dUdiss=%g dUnondiss=%g : dU1=%g %g : dU2=%g %g : dissmeasure=%g\n",uitemp[specialfrom],uitemp[specialfrom],uftemp[specialfrom],uftemp[specialfrom],dUdiss,dUnondiss,dUriemann1temp[specialfrom]*CUf[2]*dt,dUriemann1temp[specialfrom]*CUf[2]*dt,dUriemann2temp[specialfrom]*CUf[2]*dt,dUriemann2temp[specialfrom]*CUf[2]*dt,dissmeasure);
         }
 
         // find dU(pb)

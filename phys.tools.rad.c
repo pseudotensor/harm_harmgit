@@ -1273,7 +1273,13 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
     }
     else if(DIVERGENCEMETHOD==1){
       DIVCONDLIMIT=-0.1;
+      //      DIVCONDLIMIT=-0.01;
+      //      DIVCONDLIMIT=-SMALL;
+      //      DIVCONDLIMIT=-1E-6;
+      //      DIVCONDLIMIT=-100.0*NUMEPSILON;
+      //      DIVCONDLIMIT=-1E-3;
       divcond=dissmeasure;
+      //      if(GLOBALMACP1A0(shockindicatorarray,SHOCKPLDIR1+dir-1,ptrgeom->i,ptrgeom->j,ptrgeom->k);
     }
 
     // DEBUG
