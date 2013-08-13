@@ -303,12 +303,13 @@ int flux_compute(int i, int j, int k, int dir, struct of_geom *geom, FTYPE *cmin
   // store non-dissipative contribution
   //
   ////////////////////
-  int plsp=NPR+NSPECIAL-1;
+  int plsp;
   if(NSPECIAL>=1){
+    plsp=NPR;
     F[plsp] = 0.5 * (F_l[SPECIALPL1] + F_r[SPECIALPL1]);
   }
   if(NSPECIAL>=2){
-    plsp+=1;
+    plsp=NPR+1;
     F[plsp] = 0.5 * (F_l[SPECIALPL2] + F_r[SPECIALPL2]);
   }
 
