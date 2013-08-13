@@ -27,6 +27,7 @@ static int asym_compute_2(FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
 
 static FTYPE fractional_diff( FTYPE a, FTYPE b );
 
+static FTYPE compute_dissmeasure(int i, int j, int k, int loc, FTYPE *CUf, FTYPE *CUnew, FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE *Ui,  FTYPE *Uf, FTYPE *tempucum);
 
 
 // AVG_2_POINT functions:
@@ -544,62 +545,8 @@ static int advance_standard(
 
         // note that uf and ucum are initialized inside setup_rktimestep() before first substep
 
-
-        // get update to tempucum so have non-dissipative update
-        FTYPE dissmeasure=0.0;
-        if(NSPECIAL>0){
-          FTYPE dUgeomtemp[NPR+NSPECIAL];
-          FTYPE uitemp[NPR+NSPECIAL];
-          FTYPE uftemp[NPR+NSPECIAL];
-          FTYPE tempucumtemp[NPR+NSPECIAL];
-          PLOOP(pliter,pl){
-            dUgeomtemp[pl]=0.0; // geometry not relevant for this calculation
-            uitemp[pl]=MACP0A1(ui,i,j,k,pl);
-            uftemp[pl]=MACP0A1(uf,i,j,k,pl);
-            tempucumtemp[pl]=MACP0A1(tempucum,i,j,k,pl);
-          }
-          //
-          int plsp;
-          int specialfrom;
-          int plspeciallist[NSPECIAL]={SPECIALPL1,SPECIALPL2};
-          PLOOPSPECIALONLY(plsp,NSPECIAL){
-            specialfrom=plspeciallist[plsp-NPR];
-            dUgeomtemp[plsp]=0.0;
-            uitemp[plsp] = uitemp[specialfrom];
-            uftemp[plsp] = uftemp[specialfrom];
-            tempucumtemp[plsp] = tempucumtemp[specialfrom];
-          }
-          //
-          FTYPE dUriemanntemp[NPR+NSPECIAL]={0},dUriemann1temp[NPR+NSPECIAL]={0},dUriemann2temp[NPR+NSPECIAL]={0},dUriemann3temp[NPR+NSPECIAL]={0};
-          //
-          flux2dUavg(DOSPECIALPL,i,j,k,F1,F2,F3,dUriemann1temp,dUriemann2temp,dUriemann3temp);
-          PLOOP(pliter,pl) dUriemanntemp[pl]=dUriemann1temp[pl]+dUriemann2temp[pl]+dUriemann3temp[pl];
-          //
-          PLOOPSPECIALONLY(plsp,NSPECIAL){
-            dUriemanntemp[plsp]=dUriemann1temp[plsp]+dUriemann2temp[plsp]+dUriemann3temp[plsp];
-          }
-          //
-          dUtoU(DOSPECIALPL,i,j,k,ptrgeom->p,dUgeomtemp, dUriemanntemp, CUf, CUnew, uitemp, uftemp, tempucumtemp);
-          //
-          // now get dissipation measure.  dissmeasure<0.0 means dissipation occuring in density field
-          FTYPE dUdissplusnondiss[NPR];
-          FTYPE dUnondiss[NPR];
-          FTYPE dUdiss[NPR];
-          FTYPE dissmeasurepl[NPR];
-          PLOOPSPECIALONLY(plsp,NSPECIAL){
-            specialfrom=plspeciallist[plsp-NPR];
-            dUdissplusnondiss[specialfrom]=(uftemp[specialfrom] - uitemp[specialfrom]);
-            dUnondiss[specialfrom]=(uftemp[plsp] - uitemp[plsp]);
-            dUdiss[specialfrom]=dUdissplusnondiss[specialfrom] - dUnondiss[specialfrom];
-            FTYPE signdiss;
-            if(specialfrom==RHO) signdiss=+1.0; // dUdiss>0 means adding density due to dissipation
-            else if(specialfrom==UU) signdiss=-1.0; // dUdiss<0 means adding energy due to dissipation
-            //
-            dissmeasurepl[specialfrom] = -signdiss*(dUdiss[specialfrom])/(fabs(dUdiss[specialfrom])+fabs(dUnondiss[specialfrom]));
-          }
-          dissmeasure=dissmeasurepl[SPECIALPL1];
-          //          dualfprintf(fail_file,"DISS: ui=%g %g : uf=%g %g : dUdiss=%g dUnondiss=%g : dU1=%g %g : dU2=%g %g : dissmeasure=%g\n",uitemp[specialfrom],uitemp[specialfrom],uftemp[specialfrom],uftemp[specialfrom],dUdiss,dUnondiss,dUriemann1temp[specialfrom]*CUf[2]*dt,dUriemann1temp[specialfrom]*CUf[2]*dt,dUriemann2temp[specialfrom]*CUf[2]*dt,dUriemann2temp[specialfrom]*CUf[2]*dt,dissmeasure);
-        }
+        // get dissmeasure
+        FTYPE dissmeasure=compute_dissmeasure(i,j,k,ptrgeom->p,CUf, CUnew, F1, F2, F3, MAC(ui,i,j,k),MAC(uf,i,j,k), MAC(tempucum,i,j,k));
 
         // find dU(pb)
         // so pf contains updated field at cell center for use in (e.g.) implicit solver that uses inversion P(U)
@@ -887,13 +834,114 @@ static int advance_standard(
 
 
 
+// compute dissipation measure for determining if can use entropy or must use energy
+static FTYPE compute_dissmeasure(int i, int j, int k, int loc, FTYPE *CUf, FTYPE *CUnew, FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE *ui,  FTYPE *uf, FTYPE *tempucum)
+{
+  FTYPE dissmeasure;
+  int pliter,pl;
 
+  if(NSPECIAL>0){
+    FTYPE dUgeomtemp[NPR+NSPECIAL];
+    FTYPE uitemp[NPR+NSPECIAL];
+    FTYPE uftemp[NPR+NSPECIAL];
+    FTYPE tempucumtemp[NPR+NSPECIAL];
+    PLOOP(pliter,pl){
+      dUgeomtemp[pl]=0.0; // geometry not relevant for this calculation
+      uitemp[pl]=ui[pl];
+      uftemp[pl]=uf[pl];
+      tempucumtemp[pl]=tempucum[pl];
+    }
+    //
+    int plsp;
+    int specialfrom;
+#if(NSPECIAL==5)
+    int plspeciallist[NSPECIAL]={SPECIALPL1,SPECIALPL2,SPECIALPL3,SPECIALPL4,SPECIALPL5};
+#elif(NSPECIAL==2)
+    int plspeciallist[NSPECIAL]={SPECIALPL1,SPECIALPL2};
+#elif(NSPECIAL==1)
+    int plspeciallist[NSPECIAL]={SPECIALPL1};
+#endif
+    PLOOPSPECIALONLY(plsp,NSPECIAL){
+      specialfrom=plspeciallist[plsp-NPR];
+      dUgeomtemp[plsp]=0.0;
+      uitemp[plsp] = uitemp[specialfrom];
+      uftemp[plsp] = uftemp[specialfrom];
+      tempucumtemp[plsp] = tempucumtemp[specialfrom];
+    }
+    //
+    FTYPE dUriemanntemp[NPR+NSPECIAL]={0},dUriemann1temp[NPR+NSPECIAL]={0},dUriemann2temp[NPR+NSPECIAL]={0},dUriemann3temp[NPR+NSPECIAL]={0};
+    //
+    flux2dUavg(DOSPECIALPL,i,j,k,F1,F2,F3,dUriemann1temp,dUriemann2temp,dUriemann3temp);
+    PLOOP(pliter,pl) dUriemanntemp[pl]=dUriemann1temp[pl]+dUriemann2temp[pl]+dUriemann3temp[pl];
+    //
+    PLOOPSPECIALONLY(plsp,NSPECIAL){
+      dUriemanntemp[plsp]=dUriemann1temp[plsp]+dUriemann2temp[plsp]+dUriemann3temp[plsp];
+    }
+    //
+    dUtoU(DOSPECIALPL,i,j,k,loc,dUgeomtemp, dUriemanntemp, CUf, CUnew, uitemp, uftemp, tempucumtemp);
+    //
+    // now get dissipation measure.  dissmeasure<0.0 means dissipation occuring in density field
+    FTYPE dUdissplusnondiss[NPR];
+    FTYPE dUnondiss[NPR];
+    FTYPE dUdiss[NPR];
+    FTYPE dissmeasurepl[NPR];
+    FTYPE signdiss;
+    FTYPE norm[NPR];
+    PLOOPSPECIALONLY(plsp,NSPECIAL){
+      specialfrom=plspeciallist[plsp-NPR];
+      dUdissplusnondiss[specialfrom]=(uftemp[specialfrom] - uitemp[specialfrom]);
+      dUnondiss[specialfrom]=(uftemp[plsp] - uitemp[plsp]);
+      dUdiss[specialfrom]=dUdissplusnondiss[specialfrom] - dUnondiss[specialfrom];
+            
+      norm[specialfrom]=(fabs(dUdiss[specialfrom])+fabs(dUnondiss[specialfrom]));
+    }
+    FTYPE actualnorm[NPR];
+    PLOOPSPECIALONLY(plsp,NSPECIAL){
+      specialfrom=plspeciallist[plsp-NPR];
+      if(specialfrom==RHO || specialfrom==UU){
+        actualnorm[specialfrom]=norm[specialfrom];
+      }
+      else if(specialfrom==B1 || specialfrom==B2 || specialfrom==B3){
+        actualnorm[specialfrom]=0.0;
+        int jj;
+        SLOOPA(jj){
+          pl=B1+jj-1;
+          actualnorm[specialfrom] += (fabs(dUdiss[pl]*dUdiss[pl])+fabs(dUnondiss[pl]*dUnondiss[pl]));
+        }
+        actualnorm[specialfrom] += fabs(dUdiss[UU]) + fabs(dUnondiss[UU]); // add energy as reference
+      }
+    }
+    PLOOPSPECIALONLY(plsp,NSPECIAL){
+      specialfrom=plspeciallist[plsp-NPR];
 
+      if(specialfrom==RHO) signdiss=+1.0; // dUdiss>0 means adding density due to dissipation
+      else if(specialfrom==UU) signdiss=-1.0; // dUdiss<0 means adding energy due to dissipation
+      else if(specialfrom==B1 || specialfrom==B2 || specialfrom==B3) signdiss=-1.0; // dUdiss<0 means lost magentic energy due to dissipation
 
+      if(specialfrom==RHO || specialfrom==UU){
+        dissmeasurepl[specialfrom] = -signdiss*(dUdiss[specialfrom])/actualnorm[specialfrom];
+      }
+      else if(specialfrom==B1 || specialfrom==B2 || specialfrom==B3){
+        dissmeasurepl[specialfrom] = -signdiss*(sign(dUdiss[specialfrom])*dUdiss[specialfrom]*dUdiss[specialfrom])/actualnorm[specialfrom];
+      }
+    }
 
+    if(NSPECIAL==1){
+      dissmeasure=dissmeasurepl[SPECIALPL1];
+    }
+    //          dissmeasure=dissmeasurepl[SPECIALPL2];
+    else if(NSPECIAL==5){
+      // can't trust energy, but density doesn't account for magnetic energy.  So use density and magnetic energy flux
+      dissmeasure=MIN(dissmeasurepl[SPECIALPL1],dissmeasurepl[B1]);
+      dissmeasure=MIN(dissmeasure,dissmeasurepl[B2]);
+      dissmeasure=MIN(dissmeasure,dissmeasurepl[B3]);
+    }
 
+    //          dualfprintf(fail_file,"DISS: ui=%g %g : uf=%g %g : dUdiss=%g dUnondiss=%g : dU1=%g %g : dU2=%g %g : dissmeasure=%g\n",uitemp[specialfrom],uitemp[specialfrom],uftemp[specialfrom],uftemp[specialfrom],dUdiss,dUnondiss,dUriemann1temp[specialfrom]*CUf[2]*dt,dUriemann1temp[specialfrom]*CUf[2]*dt,dUriemann2temp[specialfrom]*CUf[2]*dt,dUriemann2temp[specialfrom]*CUf[2]*dt,dissmeasure);
+  }
 
-
+  return(dissmeasure);
+}
 
 
 

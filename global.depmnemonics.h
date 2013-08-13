@@ -99,14 +99,20 @@
 #define SHOCKRADPLSTOREVEL3 (SHOCKRADPLSTOREVEL2+1)
 
 #if(DIVERGENCEMETHOD==DIVMETHODPOSTFLUX)
-#define NSPECIAL 2
+#define NSPECIAL 5
 // choose SPECIALPL
 #define SPECIALPL1 RHO
 #define SPECIALPL2 UU
+#define SPECIALPL3 B1
+#define SPECIALPL4 B2
+#define SPECIALPL5 B3
 #else
 #define NSPECIAL 0
 #define SPECIALPL1 RHO // dummy, not used.
 #define SPECIALPL2 UU // dummy, not used.
+#define SPECIALPL3 B1
+#define SPECIALPL4 B2
+#define SPECIALPL5 B3
 #endif
 
 #define DOALLPL 0
