@@ -987,11 +987,7 @@ struct Ccoordparams {
 // N1=30 if using log coords from r=1.7 to r=50
 // N1=60 if using 1.5*hor - 40 (or 27.8)
 // N1=70 if using 1.5*hor - 30 (or 27.8)
-//#define N1 50
-//#define N1 16
 #define N1 32
-//#define N1 60 // KORALTODO testing
-//#define N2 30
 #define N2 16
 #define N3 1
 

@@ -119,7 +119,7 @@ int main(int argc, char *argv[])
     
     /* restart dump */
     // if(nstep == 130) restart_write(1) ;
-    //    if(nstep==50) break;
+    //    if(nstep==20) break;
 
 
     nstep++;

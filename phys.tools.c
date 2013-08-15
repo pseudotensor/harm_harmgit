@@ -79,6 +79,70 @@ int primtoflux(int returntype, FTYPE *pr, struct of_state *q, int dir,
 
 }
 
+
+
+
+int primtoflux_nonradonly(FTYPE *pr, struct of_state *q, int dir,
+               struct of_geom *geom, FTYPE *flux)
+{
+  int primtoflux_ma(int *returntype, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux, FTYPE *fluxdiag);
+  int primtoflux_em(int *returntype, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux);
+  VARSTATIC FTYPE fluxma[NPR],fluxem[NPR];
+  VARSTATIC FTYPE fluxdiag;
+  VARSTATIC int pl,pliter;
+  int returntype=UNOTHING;
+
+
+  // initialize fluxma and fluxem so individual functions only have to define non-zero terms
+  PLOOP(pliter,pl) flux[pl]=fluxma[pl]=fluxem[pl]=0.0;
+  fluxdiag=0.0;
+
+
+  // define MA terms
+  primtoflux_ma(&returntype, pr, q, dir, geom, fluxma, &fluxdiag);
+  fluxma[UU+dir]+=fluxdiag; // add back to normal term
+  // add up MA
+  PLOOP(pliter,pl) flux[pl] += fluxma[pl];
+
+  // define EM terms
+  primtoflux_em(&returntype, pr, q, dir, geom, fluxem);
+  // add up EM
+  PLOOP(pliter,pl) flux[pl] += fluxem[pl];
+
+  // returns UNOTHING form
+
+  return(0);
+}
+
+int primtoflux_radonly(FTYPE *pr, struct of_state *q, int dir,
+               struct of_geom *geom, FTYPE *flux)
+{
+  int primtoflux_rad(int *returntype, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux);
+  VARSTATIC FTYPE fluxrad[NPR];
+  VARSTATIC FTYPE fluxdiag;
+  VARSTATIC int pl,pliter;
+  int returntype=UNOTHING;
+
+
+
+  PLOOP(pliter,pl) flux[pl]=fluxrad[pl]=0.0;
+
+
+  if(EOMRADTYPE!=EOMRADNONE){
+    // define RAD terms
+    primtoflux_rad(&returntype, pr, q, dir, geom, fluxrad);
+    // add up RAD
+    PLOOP(pliter,pl) flux[pl] += fluxrad[pl];
+  }
+
+  // returns UNOTHING form
+
+  return(0);
+}
+
+
+
+
 /* calculate fluxes in direction dir and conserved variable U; these
    are always needed together, so there is no point in calculated the
    stress tensor twice */
