@@ -377,8 +377,8 @@ static int Utoprimgen_failwrapper(int doradonly, int showmessages, int allowloca
 // whether to store steps for primitive and so debug max iteration cases
 #define DEBUGMAXITER 1
 
-//#define DEBUGLEVELIMPSOLVER 3 // which debugfail>=# to use for some common debug stuff
-#define DEBUGLEVELIMPSOLVER 2 // which debugfail>=# to use for some common debug stuff
+#define DEBUGLEVELIMPSOLVER 3 // which debugfail>=# to use for some common debug stuff
+//#define DEBUGLEVELIMPSOLVER 2 // which debugfail>=# to use for some common debug stuff
 
 #define DEBUGLEVELIMPSOLVERMORE 3 // which debugfail>=# to use for some common debug stuff
 
@@ -1283,12 +1283,14 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
     }
     else if(DIVERGENCEMETHOD==DIVMETHODPOSTFLUX){
       DIVCONDDN=-0.1;
-      DIVCONDUP=-1E-6;
       //      DIVCONDDN=-0.01;
       //      DIVCONDDN=-SMALL;
       //      DIVCONDDN=-1E-6;
-      //      DIVCONDDN=-100.0*NUMEPSILON;
       //      DIVCONDDN=-1E-3;
+
+      //      DIVCONDUP=-1E-6;
+      DIVCONDUP=-100.0*NUMEPSILON;
+
       divcond=dissmeasure;
       //      if(GLOBALMACP1A0(shockindicatorarray,SHOCKPLDIR1+dir-1,ptrgeom->i,ptrgeom->j,ptrgeom->k);
     }
