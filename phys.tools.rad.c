@@ -1415,7 +1415,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
       failreturn=failreturnenergy;
      
     }
-    else if(ACCEPTASNOFAILURE(failreturnenergy)==1){
+    else if(ACCEPTASNOFAILURE(failreturnenergy)==1){ // automatically also done when divcond<=DIVBONDDN
       //      dualfprintf(fail_file,"USING ENERGY\n");
       *eomtype=eomtypeenergy; // can be EOMDONOTHING if successful
       // set result as energy result
