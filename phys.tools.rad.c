@@ -1398,7 +1398,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
       // except choose larger of u_g to avoid using dropped-out energy when partialy using energy.  This allows shocks to also still be accounted for.
       pb[UU] = MAX(pbenergy[UU],pbentropy[UU]);
       *q=qenergy;
-      if(1||EOMDONOTHING(*eomtype)==0){ // keep as 1 in case dUcomp used.
+      if(1||EOMDONOTHING(*eomtype)==0){ // keep as 1|| in case dUcomp used.
         // dUcomp not modified since normal mode is to not do external inversion, otherwise should recompute uu and dUcomp from this modified primitive.
         get_state(pb, ptrgeom, q);
         FTYPE uunew[NPR];
