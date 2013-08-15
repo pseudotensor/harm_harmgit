@@ -1262,7 +1262,7 @@ int step_ch_supermpi(int truestep, int *dumpingnext, FTYPE *fullndt, FTYPE (*pri
 
 // Uf^i = ulast^i = CUf^{i0} Ui^i + CUf^{i1} ulast^i + CUf^{i2} dU^i
 
-// unew^i = Cunew^{i0} Ui^i + Cunew^{i1} dU^i + Cunew^{i2} Uf^i
+// unew^i = Cunew^{i0} Ui^i + Cunew^{i1} dU^i + Cunew^{i2} Uf^i [SUPERNOTE: currently only TIMEORDER==4 has final unew different from final uf.  This factis usd in utoprimgen.c to avoid inversion if requested, unless cannot because unew must itself be inverted.]
 
 // (how also used) CUf[timeorder][2] : t + dt*CUf[timeorder][3]+ dt*CUf[timeorder][2] = time of pf
 

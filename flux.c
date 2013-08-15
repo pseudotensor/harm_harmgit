@@ -1971,7 +1971,9 @@ void compute_and_store_fluxstatecent(FTYPE (*pr)[NSTORE2][NSTORE3][NPR])
               //      GLOBALMACP0A1(shockindicatorarray,i,j,k,SHOCKRADPLDIR1+dir-1)=Ficalc(dir,&velptr[0],&ptotptr[0],&primptr[0]);
               FTYPE Firad;
               GLOBALMACP1A0(shockindicatorarray,SHOCKRADPLDIR1+dir-1,i,j,k)=Firad=Ficalc(dir,&velptr[0],&ptotptr[0]);
-              GLOBALMACP1A0(shockindicatorarray,DIVRADPLDIR1+dir-1,i,j,k)=Divcalc(dir,Firad,&velptr[0],&ptotptr[0]);
+              if(DIVERGENCEMETHOD==DIVMETHODPREFLUX){
+                GLOBALMACP1A0(shockindicatorarray,DIVRADPLDIR1+dir-1,i,j,k)=Divcalc(dir,Firad,&velptr[0],&ptotptr[0]);
+              }
             }// end if doing radiation
           }// end if doing dir
         }//end over dir loop

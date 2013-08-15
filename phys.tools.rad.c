@@ -130,6 +130,7 @@ static int Utoprimgen_failwrapper(int doradonly, int showmessages, int allowloca
     //calculating primitives  
     // OPTMARK: Should optimize this to  not try to get down to machine precision
     MYFUN(Utoprimgen(showmessages, allowlocalfailurefixandnoreport, finalstep, eomtype, evolvetype, inputtype, U, ptrgeom, pr, newtonstats),"phys.tools.rad.c:Utoprimgen_failwrapper()", "Utoprimgen", 1);
+    nstroke+=(newtonstats->nstroke);
     // this can change eomtype
   }
 
@@ -1083,7 +1084,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
 
   int failreturn,noprims;
   int havebackup,didentropyalready;
-  int usedenergy,usedentropy;
+  int usedenergy,usedentropy,usedboth;
 
   // set backups that might change and contaminate a fresh start
   // piin, Uiin, Ufin, CUf, ptrgeom, dUother don't change, rest can.
@@ -1112,6 +1113,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
   noprims=1;
   usedenergy=0;
   usedentropy=0;
+  usedboth=0;
 
 
   // diags
@@ -1248,7 +1250,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
     FTYPE dUcompentropy[NUMSOURCES][NPR];
     struct of_state qentropy;
     PLOOP(pliter,pl){
-      pbentropy[pl]=pb[pl];
+      pbentropy[pl]=pbbackup[pl];
       SCLOOP(sc) dUcompentropy[sc][pl]=dUcompbackup[sc][pl];
       qentropy=*q;
     }
@@ -1267,11 +1269,11 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
     FTYPE uu0[NPR];
     FTYPE fracdtuu0=1.0;
     PLOOP(pliter,pl) uu0[pl]=UFSET(CUf,fracdtuu0*dt,Uiin[pl],Ufin[pl],dUother[pl],0.0);
-    FTYPE DIVCONDLIMIT;
+    FTYPE DIVCONDDN=-BIG,DIVCONDUP=BIG;
 
 
-    if(DIVERGENCEMETHOD==0){
-      DIVCONDLIMIT=0.0;
+    if(DIVERGENCEMETHOD==DIVMETHODPREFLUX){
+      DIVCONDDN=0.0;
       DIMENLOOP(dir){
         if(NxNOT1[dir]){
           // problems when V small
@@ -1279,13 +1281,14 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
         }
       }
     }
-    else if(DIVERGENCEMETHOD==1){
-      DIVCONDLIMIT=-0.1;
-      //      DIVCONDLIMIT=-0.01;
-      //      DIVCONDLIMIT=-SMALL;
-      //      DIVCONDLIMIT=-1E-6;
-      //      DIVCONDLIMIT=-100.0*NUMEPSILON;
-      //      DIVCONDLIMIT=-1E-3;
+    else if(DIVERGENCEMETHOD==DIVMETHODPOSTFLUX){
+      DIVCONDDN=-0.1;
+      DIVCONDUP=-1E-6;
+      //      DIVCONDDN=-0.01;
+      //      DIVCONDDN=-SMALL;
+      //      DIVCONDDN=-1E-6;
+      //      DIVCONDDN=-100.0*NUMEPSILON;
+      //      DIVCONDDN=-1E-3;
       divcond=dissmeasure;
       //      if(GLOBALMACP1A0(shockindicatorarray,SHOCKPLDIR1+dir-1,ptrgeom->i,ptrgeom->j,ptrgeom->k);
     }
@@ -1301,7 +1304,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
     ///////////////
     int eomtypecond=(*eomtype==EOMGRMHD || *eomtype==EOMDEFAULT && EOMTYPE==EOMGRMHD);
     // only do energy case if divcond too small or if entropy failed
-    int energycond=(divcond<=DIVCONDLIMIT ||  ACCEPTASNOFAILURE(failreturnentropy)==0);
+    // Now do energy if would use only energy or if doing interpolation
+    int energycond=(divcond<DIVCONDUP ||  ACCEPTASNOFAILURE(failreturnentropy)==0);
 
     int eomtypeenergy=EOMGRMHD;
     int failreturnenergy=FAILRETURNGENERAL; // default to fail in case energy not to be done at all
@@ -1315,7 +1319,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
         didentropyalready=0;
         // first try normal mode if *eomtype==EOMGRMHD
         PLOOP(pliter,pl){
-          pbenergy[pl]=pb[pl];
+          pbenergy[pl]=pbbackup[pl];
           SCLOOP(sc) dUcompenergy[sc][pl]=dUcompbackup[sc][pl];
           qenergy=*q;
         }
@@ -1346,8 +1350,12 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
     //
     /////////////
 
-
-    if(
+    /////////////
+    //
+    // cases where must use entropy
+    //
+    /////////////
+    if( divcond>=DIVCONDUP && ACCEPTASNOFAILURE(failreturnentropy)==1 ||
        ACCEPTASNOFAILURE(failreturnenergy)==0 && ACCEPTASNOFAILURE(failreturnentropy)==1 ||
        ACCEPTASNOFAILURE(failreturnentropy)==1 && ACCEPTASNOFAILURE(failreturnenergy)==1 && (errorabsentropy<IMPTRYCONVABS && errorabsenergy>IMPBADENERGY) ||
        ACCEPTASNOFAILURE(failreturnentropy)==1 && ACCEPTASNOFAILURE(failreturnenergy)==1 && (BADENERGY(pbenergy[UU],pbentropy[UU]) && (errorabsentropy<IMPOKENTROPY && errorabsenergy>errorabsentropy)) ||
@@ -1368,6 +1376,42 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
       iters=itersentropy+itersenergy; // count both since did both
       f1iters=f1itersentropy+f1itersenergy; // count both since did both
       failreturn=failreturnentropy;
+    }
+    // && (errorabsentropy<IMPTRYCONVABS && errorabsenergy<IMPTRYCONVABS)
+    else if(ACCEPTASNOFAILURE(failreturnenergy)==1 && ACCEPTASNOFAILURE(failreturnentropy)==1 && (divcond>DIVCONDDN && divcond<DIVCONDUP)){
+      // then interpolate between energy and entropy solution
+      // below DIVCONDDN, do only energy
+      // above DIVCONDUP, do only entropy
+      FTYPE fracenergy = (divcond-DIVCONDUP)/(DIVCONDDN-DIVCONDUP);
+
+      //      fracenergy=0.0;
+
+      //      dualfprintf(fail_file,"USING INTERPOLATION of ENERGY and ENTROPY\n");
+      *eomtype=eomtypeenergy; // can be EOMDONOTHING if successful
+
+      PLOOP(pliter,pl){
+        pb[pl]=fracenergy*pbenergy[pl] + (1.0-fracenergy)*pbentropy[pl];
+        SCLOOP(sc) dUcomp[sc][pl] = fracenergy*dUcompenergy[sc][pl] + (1.0-fracenergy)*dUcompentropy[sc][pl]; // not really accurate, below fixes this.
+      }
+      // except choose larger of u_g to avoid using dropped-out energy when partialy using energy.  This allows shocks to also still be accounted for.
+      pb[UU] = MAX(pbenergy[UU],pbentropy[UU]);
+      *q=qenergy;
+      if(1||EOMDONOTHING(*eomtype)==0){ // keep as 1 in case dUcomp used.
+        // dUcomp not modified since normal mode is to not do external inversion, otherwise should recompute uu and dUcomp from this modified primitive.
+        get_state(pb, ptrgeom, q);
+        FTYPE uunew[NPR];
+        primtoU(UNOTHING,pb,q,ptrgeom, uunew);
+        sc = RADSOURCE;
+        FTYPE realdt = compute_dt(CUf,dt);
+        PLOOP(pliter,pl) dUcomp[sc][pl] = +(uunew[pl]-uu0[pl])/realdt;
+      }
+      usedboth=1;
+      noprims=0;
+      errorabs=fracenergy*errorabsenergy + (1.0-fracenergy)*errorabsentropy; // interpolate error
+      iters=itersentropy+itersenergy; // count both since did both
+      f1iters=f1itersentropy+f1itersenergy; // count both since did both
+      failreturn=failreturnenergy;
+     
     }
     else if(ACCEPTASNOFAILURE(failreturnenergy)==1){
       //      dualfprintf(fail_file,"USING ENERGY\n");
@@ -1441,6 +1485,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
 
   static long long int numenergy=0;
   static long long int numentropy=0;
+  static long long int numboth=0;
   static long long int numbad=0;
 
   static long long int numimplicits=0;
@@ -1451,6 +1496,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
   // static counter for diagnosing issues
   static long long int totalnumenergy=0;
   static long long int totalnumentropy=0;
+  static long long int totalnumboth=0;
   static long long int totalnumbad=0;
 
   static long long int totalnumimplicits=0;
@@ -1475,11 +1521,12 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
     numoff1iter+=f1iters;
     numenergy+=usedenergy;
     numentropy+=usedentropy;
-    numbad+=(usedenergy==0 && usedentropy==0);
+    numboth+=usedboth;
+    numbad+=(usedenergy==0 && usedentropy==0 && usedboth==0);
 
 
     // i=j=k=0 just to show infrequently
-    if(debugfail>=2 && (ptrgeom->i==0 && ptrgeom->j==0  && ptrgeom->k==0)) dualfprintf(fail_file,"numimplicits=%lld numenergy=%lld numentropy=%lld numbad=%lld averagef1iter=%g averageiter=%g\n",numimplicits,numenergy,numentropy,numbad,(FTYPE)numoff1iter/(FTYPE)numimplicits,(FTYPE)numofiter/(FTYPE)numimplicits);
+    if(debugfail>=2 && (ptrgeom->i==0 && ptrgeom->j==0  && ptrgeom->k==0)) dualfprintf(fail_file,"numimplicits=%lld numenergy=%lld numentropy=%lld numboth=%lld numbad=%lld averagef1iter=%g averageiter=%g\n",numimplicits,numenergy,numentropy,numboth,numbad,(FTYPE)numoff1iter/(FTYPE)numimplicits,(FTYPE)numofiter/(FTYPE)numimplicits);
     
     numhisterr[MAX(MIN((int)(-log10l(errorabs)),NUMNUMHIST-1),0)]++;
     numhistiter[MAX(MIN(iters,IMPMAXITER),0)]++;
@@ -1504,6 +1551,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
         MPI_Reduce(&numofiter, &totalnumofiter, 1, MPI_LONG_LONG_INT, MPI_SUM, MPIid[0], MPI_COMM_GRMHD);
         MPI_Reduce(&numenergy, &totalnumenergy, 1, MPI_LONG_LONG_INT, MPI_SUM, MPIid[0], MPI_COMM_GRMHD);
         MPI_Reduce(&numentropy, &totalnumentropy, 1, MPI_LONG_LONG_INT, MPI_SUM, MPIid[0], MPI_COMM_GRMHD);
+        MPI_Reduce(&numboth, &totalnumboth, 1, MPI_LONG_LONG_INT, MPI_SUM, MPIid[0], MPI_COMM_GRMHD);
         MPI_Reduce(&numbad, &totalnumbad, 1, MPI_LONG_LONG_INT, MPI_SUM, MPIid[0], MPI_COMM_GRMHD);
 
         MPI_Reduce(numhisterr, totalnumhisterr, NUMNUMHIST, MPI_LONG_LONG_INT, MPI_SUM, MPIid[0], MPI_COMM_GRMHD);
@@ -1511,7 +1559,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
       }
       if(myid==MPIid[0]){
         // i=j=k=0 just to show infrequently
-        if(debugfail>=2 && (ptrgeom->i==0 && ptrgeom->j==0  && ptrgeom->k==0)) trifprintf("totalnumimplicits=%lld totalnumenergy=%lld totalnumentropy=%lld totalnumbad=%lld totalaveragef1iter=%g totalaverageiter=%g\n",totalnumimplicits,totalnumenergy,totalnumentropy,totalnumbad,(FTYPE)totalnumoff1iter/(FTYPE)totalnumimplicits,(FTYPE)totalnumofiter/(FTYPE)totalnumimplicits);
+        if(debugfail>=2 && (ptrgeom->i==0 && ptrgeom->j==0  && ptrgeom->k==0)) trifprintf("totalnumimplicits=%lld totalnumenergy=%lld totalnumentropy=%lld totalnumboth=%lld totalnumbad=%lld totalaveragef1iter=%g totalaverageiter=%g\n",totalnumimplicits,totalnumenergy,totalnumentropy,totalnumboth,totalnumbad,(FTYPE)totalnumoff1iter/(FTYPE)totalnumimplicits,(FTYPE)totalnumofiter/(FTYPE)totalnumimplicits);
 
         if(nstep%HISTREPORTSTEP==0 && ptrgeom->i==0 && ptrgeom->j==0 && ptrgeom->k==0){
           int histi;
@@ -4140,6 +4188,7 @@ static int Utoprimgen_failwrapper_old(int showmessages, int allowlocalfailurefix
   // OPTMARK: Should optimize this to  not try to get down to machine precision
   int eomtype=EOMDEFAULT;
   MYFUN(Utoprimgen(showmessages, allowlocalfailurefixandnoreport, finalstep, &eomtype, evolvetype, inputtype, U, ptrgeom, pr, newtonstats),"phys.tools.rad.c:Utoprimgen_failwrapper()", "Utoprimgen", 1);
+  nstroke+=(newtonstats->nstroke);
 
   // check how inversion did.  If didn't succeed, then check if soft failure and pass.  Else if hard failure have to return didn't work.
   int lpflag,lpflagrad;

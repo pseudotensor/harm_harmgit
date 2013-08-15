@@ -56,13 +56,6 @@ int Utoprimgen(int showmessages, int allowlocalfailurefixandnoreport, int finals
 
 
 
-  ///////////////
-  //
-  // setup default eomtype
-  //
-  ///////////////
-  if(*eomtype==EOMDEFAULT) eomtypelocal=EOMTYPE; // use default
-  else eomtypelocal=*eomtype; // force eomtype
 
 
 
@@ -154,9 +147,12 @@ int Utoprimgen(int showmessages, int allowlocalfailurefixandnoreport, int finals
   //    PLOOP(pliter,pl) dualfprintf(fail_file,"PRIMUTOPRIMGEN0(%d): pl=%d pp=%21.15g uu=%21.15g\n",*eomtype,pl,pr[pl],Ugeomfree[pl]);
   //  }
 
-
+  static long long int didnothing=0,didsomething=0;
   ///////////////
-  if(EOMDONOTHING(*eomtype)){
+  if(EOMDONOTHING(*eomtype) && (finalstep==0 || TIMEORDER<=3)){
+
+
+    // if finalstep==0, then don't do inversion.  If finalstep==1, only need to do inversion if ucum is different than final uf.
     // then do nothing since assume already pr=pr[U].
     // also don't change any failure flags, assuming prior flags are correct.
 
@@ -174,7 +170,22 @@ int Utoprimgen(int showmessages, int allowlocalfailurefixandnoreport, int finals
     if(DOEVOLVERHO){
       negdensitycheck(finalstep, pr, &GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL));
     }
+    didnothing++;
+    if(debugfail>=2) if(didnothing%totalzones==0) dualfprintf(fail_file,"DIDNOTHING: %lld : %ld %d : %d\n",didnothing,nstep,steppart,*eomtype);
     return(0);
+  }
+  else{
+    // setup default eomtype
+    if(*eomtype==EOMDEFAULT) eomtypelocal=EOMTYPE; // use default
+    // if did certain inversion on last sub-step, then assume want same inversion type (e.g. for finalstep==1 for TIMEORDER>2 cases)
+    else if(*eomtype==EOMDIDGRMHD) eomtypelocal=EOMGRMHD;
+    else if(*eomtype==EOMDIDENTROPYGRMHD) eomtypelocal=EOMENTROPYGRMHD;
+    else if(*eomtype==EOMDIDCOLDGRMHD) eomtypelocal=EOMCOLDGRMHD;
+    else if(*eomtype==EOMDIDFFDE) eomtypelocal=EOMFFDE;
+    else eomtypelocal=*eomtype; // force eomtype
+
+    didsomething++;
+    if(debugfail>=2) if(didsomething%totalzones==0) dualfprintf(fail_file,"DIDSOMETHING: %lld : %ld %d : eomtype=%d -> eomtypelocal=%d\n",didsomething,nstep,steppart,*eomtype,eomtypelocal);
   }
 
 

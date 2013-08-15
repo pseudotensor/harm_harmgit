@@ -637,7 +637,7 @@ static int advance_standard(
 
           MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,&eomtype,EVOLVEUTOPRIM,UEVOLVE,MAC(myupoint,i,j,k), ptrgeom, MAC(pf,i,j,k),&newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
           nstroke+=newtonstats.nstroke; newtonstats.nstroke=newtonstats.lntries=0;
-
+          //          dualfprintf(fail_file,"nstroke=%d\n",nstroke);
           //          if(myid==5 && nstep==1 && steppart==0 && ptrgeom->i==19 && ptrgeom->j==15){
           //            PLOOP(pliter,pl) dualfprintf(fail_file,"pl=%d pf=%21.15g myupoint=%21.15g\n",MACP0A1(pf,i,j,k,pl),MACP0A1(myupoint,i,j,k,pl)*ptrgeom->igdetnosing);
           //          }
