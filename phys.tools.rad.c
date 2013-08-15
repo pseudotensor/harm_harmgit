@@ -295,7 +295,7 @@ static int Utoprimgen_failwrapper(int doradonly, int showmessages, int allowloca
 #define TAUFAILLIMIT (2.0/3.0) // at what \tau below which to assume "failure1" in u2p_rad() means should be moving at gammamax rather than not moving.
 
 // whether to revert to sub-cycle explicit if implicit fails.  Only alternative is die.
-#define IMPLICITREVERTEXPLICIT 0 // FUCK -- problem not a good idea. -- should try implicit again, starting out with more damping.
+#define IMPLICITREVERTEXPLICIT 0 // problem.  Not a good idea. -- should try implicit again, starting out with more damping.
 
 // like SAFE for normal dt step, don't allow explicit substepping to change dt too fast to avoid instabilities.
 #define MAXEXPLICITSUBSTEPCHANGE 1.e-2
@@ -748,7 +748,7 @@ static void get_refUs(int *numdims, int *startjac, int *endjac, int *implicitite
   // sign that goes into implicit differencer that's consistent with sign for *signgd of -1 when using the radiative uu to measure f.
   *signgd2=(+1.0);
   *signgd4=(+1.0); // for entropy alone for Gdpl in error function // Appears for QTYUMHD,QTYENTROPYUMHD this sign is the right one.  But both cases have lots of cold MHD inversions.
-  *signgd6=(-1.0); // for entropy as goes into GS from dUrad or dUmhd  //  // FUCK  -- unsure about sign!
+  *signgd6=(-1.0); // for entropy as goes into GS from dUrad or dUmhd  //  // KORALTODO SUPERGODMARK:  -- unsure about sign!
 
 }
 
@@ -835,7 +835,7 @@ static int f_implicit_lab(int iter, int failreturnallowable, int whichcall, int 
     FTYPE Tgaslocal=compute_temp_simple(ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p,pp[RHO],pp[UU]);
     struct of_state q; get_state(pp, ptrgeom, &q);
     FTYPE GS=0.0; DLOOPA(iv) GS += (-q.ucon[iv]*signgd2*(signgd7*Gddt[iv]))/(Tgaslocal+TEMPMIN); // more accurate than just using entropy from pp and ucon[TT] from state from pp.
-    uu[ENTROPY] = uu0[ENTROPY] + signgd6*GS; // FUCK: Problem with UMHD,UMHD no matter signgd7.  Ok with URAD,URAD.   Ok with UMHD,ENTROPYUMHD if signgd7 +1 and signgd4 +1.
+    uu[ENTROPY] = uu0[ENTROPY] + signgd6*GS; // KORALTODO SUPERGODMARK: Problem with UMHD,UMHD no matter signgd7.  Ok with URAD,URAD.   Ok with UMHD,ENTROPYUMHD if signgd7 +1 and signgd4 +1.
     // 3) Do MHD+RAD Inversion
     int doradonly=0; failreturn=Utoprimgen_failwrapper(doradonly,showmessages,allowlocalfailurefixandnoreport, finalstep, eomtype, EVOLVEUTOPRIM, UNOTHING, uu, ptrgeom, pp, &newtonstats);
     // KORALTODO: now can check if actually did eomtype==EOMGRMHD or EOMENTROPYGRMHD or EOMCOLDGRMHD and apply correct error function if using QTYUMHD.
@@ -1219,8 +1219,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
 
 
 
-// FUCK: run normal koral tests.  Figure out all entropy signs.
-// FUCK: Need backup to entropy since really dies if no backup.  E.g. cold backup.   But maybe using high accurate cold bad compared to lower accuracy entropy or lower accuracy energy.  Not sure should always prefer entropy if didn't reach desired tolerance.  But, currently if allowed tolerance, treated as ok solution and not failure to reject.  So this issue is ok relative to chosen IMPALLOWCONV.
+// KORALTODO: SUPERGODMARK: run normal koral tests.  Figure out all entropy signs.
+// KORALTODO: SUPERGODMARK: Need backup to entropy since really dies if no backup.  E.g. cold backup.   But maybe using high accurate cold bad compared to lower accuracy entropy or lower accuracy energy.  Not sure should always prefer entropy if didn't reach desired tolerance.  But, currently if allowed tolerance, treated as ok solution and not failure to reject.  So this issue is ok relative to chosen IMPALLOWCONV.
 
 
   //////////////////////////////
