@@ -1776,19 +1776,34 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
   /////////////////////////////
 
   if(ENTROPYFIXGUESS && ENTROPY>=0){
+    // guess's entropy
     FTYPE entropy0,specificentropy0;
     entropy_calc(ptrgeom,pp,&entropy0);
     specificentropy0=entropy0/pp[RHO];
-    FTYPE entropyE,specificentropyE;
-    specificentropyE=uu[ENTROPY]/uu[RHO];
-    entropyE=specificentropyE*MIN(fabs(uu[RHO]),fabs(pp[RHO])); // worse case for entropy
-    if(specificentropy0<specificentropyE){
-      FTYPE ppnew[NPR]; PLOOP(pliter,pl) ppnew[pl]=pp[pl];
-      ufromentropy_calc(ptrgeom, entropyE, ppnew); ppnew[UU]=ppnew[ENTROPY];
+
+    // conserved "initial+flux" estimate of entropy
+    FTYPE rhoE,entropyE,specificentropyE;
+    rhoE=fabs(uu[RHO]/q->ucon[TT]); // approximate using old u^t
+    // modify guess for rho
+    pp[RHO]=MAX(SMALL,MIN(fabs(pp[RHO]),fabs(rhoE))); // start small side to make entropy higher
+
+    specificentropyE=uu[ENTROPY]/uu[RHO]; // no approximation
+    entropyE=specificentropyE*pp[RHO]; // worse case for entropy (i.e. highest entropy).  Approximate entropyE.
+    //    if(specificentropy0<specificentropyE){
+    FTYPE ppnew[NPR]; PLOOP(pliter,pl) ppnew[pl]=pp[pl];
+    // no approximation for u_g from entropyE
+    ufromentropy_calc(ptrgeom, entropyE, ppnew);
+    ppnew[UU]=ppnew[ENTROPY];
 #define SHOWUGCHANGEDUETOENTROPY (10.0)
-      if(debugfail>=DEBUGLEVELIMPSOLVERMORE && (fabs(ppnew[UU]/pp[UU])>SHOWUGCHANGEDUETOENTROPY || ppnew[UU]<pp[UU]) ) dualfprintf(fail_file,"CHANGE: Fixed entropy (%g vs. %g): guessrho=%g guessug=%g  newug=%g dug=%g\n",specificentropy0,specificentropyE,pp[RHO],pp[UU],ppnew[UU],pp[UU]-ppnew[UU]);
-      pp[UU]=ppnew[UU];
-    }
+    if(debugfail>=DEBUGLEVELIMPSOLVERMORE && (fabs(ppnew[UU]/pp[UU])>SHOWUGCHANGEDUETOENTROPY || ppnew[UU]<pp[UU]) ) dualfprintf(fail_file,"CHANGE: Fixed entropy (%g vs. %g): guessrho=%g guessug=%g  newug=%g dug=%g\n",specificentropy0,specificentropyE,pp[RHO],pp[UU],ppnew[UU],pp[UU]-ppnew[UU]);
+    // modify guess for u_g (start higher than actual solution hopefully)
+    pp[UU]=MAX(pp[UU],ppnew[UU]);
+
+    // recompute uu's so consistent (No, uu=uu0 is better approximation)
+    //    struct of_state req;
+    //    get_state(pp, ptrgeom, &req);
+    //    primtoU(UNOTHING,pp,&req,ptrgeom, uu);
+
   }
   
 
@@ -6207,7 +6222,139 @@ int indices_12(FTYPE A1[NDIM],FTYPE A2[NDIM],struct of_geom *ptrgeom)
 
 
 
+int u2p_rad(int showmessages, int allowlocalfailurefixandnoreport, FTYPE *uu, FTYPE *pin, struct of_geom *ptrgeom,PFTYPE *lpflag, PFTYPE *lpflagrad)
+{
+  int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE *uu, FTYPE *pin, struct of_geom *ptrgeom,PFTYPE *lpflag, PFTYPE *lpflagrad);
+  int u2p_rad_orig(int showmessages, int allowlocalfailurefixandnoreport, FTYPE *uu, FTYPE *pin, struct of_geom *ptrgeom,PFTYPE *lpflag, PFTYPE *lpflagrad);
+  int toreturn;
 
+  toreturn=u2p_rad_new(showmessages, allowlocalfailurefixandnoreport, uu, pin, ptrgeom,lpflag, lpflagrad);
+  //toreturn=u2p_rad_orig(showmessages, allowlocalfailurefixandnoreport, uu, pin, ptrgeom,lpflag, lpflagrad);
+
+  return(toreturn);
+}
+
+
+///////////////
+//
+// Like u2p_rad_orig(), but uses Jon's paper draft ZAMO RAD version
+//
+//////////////
+int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE *uu, FTYPE *pin, struct of_geom *ptrgeom,PFTYPE *lpflag, PFTYPE *lpflagrad)
+{
+  if(WHICHVEL!=VELREL4){
+    dualfprintf(fail_file,"u2p_rad() only setup for relative 4-velocity, currently.\n");
+    myexit(137432636);
+  }
+
+
+  // copy over pin so pin isn't modified until end
+  int pliter,pl;
+  FTYPE pp[NPR];
+  PLOOP(pliter,pl) pp[pl]=pin[pl];
+
+  //////////////////////
+  //
+  // Prepare inversion from U->p for radiation assuming M1 closure
+  //
+  //////////////////////
+
+  *lpflagrad=UTOPRIMRADNOFAIL;
+
+
+
+  int jj,kk;
+  FTYPE etacov[NDIM],etacon[NDIM];
+  FTYPE Ucon[NDIM],Ucov[NDIM],Utildecon[NDIM],Utildecov[NDIM],Utildesq,Er,Ersq;
+
+  // \eta_\mu
+  etacov[TT] = -ptrgeom->alphalapse;
+  SLOOPA(jj) etacov[jj]=0.0;
+  // \eta^\mu
+  raise_vec(etacov,ptrgeom,etacon);
+
+  // U_\mu = -R^\nu_\mu \eta_\nu = \alpha R^t_\mu
+  DLOOPA(jj) Ucov[jj] = ptrgeom->alphalapse*uu[URAD0+jj];
+  // U^\mu
+  raise_vec(Ucov,ptrgeom,Ucon);
+
+  // \tilde{U}^\mu = j^\mu_\nu U^\nu = (\delta^\mu_\nu + \eta^\mu \eta_\nu) U^\nu : ZAMO frame momentum
+  DLOOPA(jj) Utildecon[jj]=0.0;
+  DLOOP(jj,kk) Utildecon[jj] += (delta(jj,kk) + etacon[jj]*etacov[kk])*Ucon[kk];
+  // \tilde{U}_\mu
+  lower_vec(Utildecon,ptrgeom,Utildecov);
+  
+  // \tilde{U}^2 = \tilde{U}^\mu \tilde{U}_\mu
+  Utildesq=0.0;
+  DLOOPA(jj) Utildesq += Utildecon[jj]*Utildecov[jj];
+
+  // -Er = -R^\nu_\mu \eta_\nu \eta^\mu = U_\mu \eta^\mu = alpha R^t_\mu \eta^\mu : ZAMO frame energy
+  Er=0.0;
+  DLOOPA(jj) Er += -Ucov[jj]*etacon[jj];
+  // Er^2
+  Ersq=Er*Er;
+
+  // y
+  FTYPE yvar = Utildesq / (SMALL+Ersq);
+
+  // \gamma_{\rm rad}^2 :  only 1 root
+  FTYPE gammasq,gamma;
+  if(yvar<0.0){
+    yvar=0.0;
+    gammasq = 1.0;
+    gamma = 1.0;
+  }
+  else if(yvar>=1.0){
+    yvar=0.99;
+    gammasq = GAMMAMAXRAD*GAMMAMAXRAD;
+    gamma = GAMMAMAXRAD;
+  }
+  else{
+    gammasq = (2.0 - yvar + sqrt(4.0-3.0*yvar))/ (4.0*(1.0-yvar));
+    gamma=sqrt(gammasq);
+  }
+
+  // now obtain primitives
+  FTYPE pr = Er/(4.0*gammasq-1.0);
+  // radiation frame energy density
+  FTYPE Erf = pr/(4.0/3.0-1.0);
+  
+  // radiation frame relativity 4-velocity
+  FTYPE urfconrel[NDIM]={0.0};
+  SLOOPA(jj) urfconrel[jj] = gamma*(Utildecon[jj]/(4.0*pr*gammasq));
+
+
+  /////////////////
+  //
+  //new primitives (only uses urfcon[1-3])
+  //
+  /////////////////
+  pin[PRAD0]=Erf;
+  pin[PRAD1]=urfconrel[1];
+  pin[PRAD2]=urfconrel[2];
+  pin[PRAD3]=urfconrel[3];
+
+  //  dualfprintf(fail_file,"uu: %g %g %g %g : pin=%g %g %g %g : Utilde=%g %g %g %g : Utildesq=%g Er=%g yvar=%g gammasq=%g\n",uu[URAD0],uu[URAD1],uu[URAD2],uu[URAD3],pin[PRAD0],pin[PRAD1],pin[PRAD2],pin[PRAD3],Utildecon[0],Utildecon[1],Utildecon[2],Utildecon[3],Utildesq,Er,yvar,gammasq);
+
+  //  DLOOPA(jj){
+  //    if(!isfinite(pin[PRAD0+jj])){
+  //      dualfprintf(fail_file,"caughtnan: jj=%d : ijk=%d %d %d\n",jj,ptrgeom->i,ptrgeom->j,ptrgeom->k);
+  //    }
+  //  }
+
+  if(DORADFIXUPS==1 || allowlocalfailurefixandnoreport==0){
+    // KORALTODO: Problem is fixups can average across shock or place where (e.g.) velocity changes alot, and averaging diffuses shock and can leak-out more failures.
+  }
+  else{
+    // CASE reductions (so set as no failure so fixups don't operate -- but might also want to turn off CHECKINVERSIONRAD else that routine won't know when to ignore bad U->P->U cases.)
+    *lpflagrad=UTOPRIMRADNOFAIL;
+  }
+
+  return 0;
+
+
+
+}
 
 //**********************************************************************
 //**********************************************************************
@@ -6249,7 +6396,7 @@ FTYPE globalpin[NPR];
 
 //
 ///////////////
-int u2p_rad(int showmessages, int allowlocalfailurefixandnoreport, FTYPE *uu, FTYPE *pin, struct of_geom *ptrgeom,PFTYPE *lpflag, PFTYPE *lpflagrad)
+int u2p_rad_orig(int showmessages, int allowlocalfailurefixandnoreport, FTYPE *uu, FTYPE *pin, struct of_geom *ptrgeom,PFTYPE *lpflag, PFTYPE *lpflagrad)
 {
   int jj,kk;
   FTYPE pp[NPR];
