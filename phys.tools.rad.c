@@ -1412,8 +1412,9 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
       errorabs=fracenergy*errorabsenergy + (1.0-fracenergy)*errorabsentropy; // interpolate error
       iters=itersentropy+itersenergy; // count both since did both
       f1iters=f1itersentropy+f1itersenergy; // count both since did both
-      failreturn=failreturnenergy;
-     
+      // determine which fail mode dominates
+      if(fracenergy>=0.5) failreturn=failreturnenergy;
+      else failreturn=failreturnentropy;     
     }
     else if(ACCEPTASNOFAILURE(failreturnenergy)==1){ // automatically also done when divcond<=DIVBONDDN
       //      dualfprintf(fail_file,"USING ENERGY\n");
@@ -1440,7 +1441,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
       f1iters=f1itersentropy+f1itersenergy; // count both since did both
       //      failreturn=0;
       // KORALTODO: But might want to fail more aggressively and report total failure.  Need to have estimate of whether G was important.
-      failreturn=1;
+      failreturn=failreturnenergy;
       if(debugfail>=2) dualfprintf(fail_file,"No source: eenergy=%g eentropy=%g ienergy=%d ientropy=%d\n",errorabsenergy,errorabsentropy,itersenergy,itersentropy);
     }
     else{
@@ -1456,13 +1457,16 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
   //  *eomtype=EOMGRMHD;
 
 
+  int failfinalreturn;
   // whether failed completely and should have gotten solution, so set as major failure.
   if(ACCEPTASNOFAILURE(failreturn)==0){
     *lpflag=UTOPRIMFAILCONV;
     *lpflagrad=UTOPRIMRADFAILCASE1A;
+    failfinalreturn=1;
   }
+  else failfinalreturn=0;
 
-  // whether set some primitives (implies also failreturn=0)
+  // whether set some primitives (implies also failfinalreturn=0)
   if(noprims==0){
     if((pb[RHO]<=0.)&&(pb[UU]>=0.)) *lpflag= UTOPRIMFAILRHONEG;
     if((pb[RHO]>0.)&&(pb[UU]<0.))   *lpflag= UTOPRIMFAILUNEG;
@@ -1578,7 +1582,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
 
 
 
-  return(failreturn);
+  return(failfinalreturn);
 }
 
 

@@ -363,6 +363,30 @@ done
 ssh pseudotensor@cli.globusonline.org transfer -s 1 < ~/globus1.txt
 
 
+############## new ranch to nautilus:
+
+1) On ranch:
+
+cd /home/01014/tg802609/thickdisk7/ # location where happen to have all files..blah
+for fil in $list ; do result=`ls -aR $fil/dumps/ | grep fieldline`; for sfil in $result; do echo "/home/01014/tg802609/thickdisk7/$fil/dumps/$sfil" ; done ; done > ~/listthickdisk7_fieldline.txt
+for fil in $list ; do result=`ls -aR $fil/dumps/ | grep gdump`; for sfil in $result; do echo "/home/01014/tg802609/thickdisk7/$fil/dumps/$sfil" ; done ; done > ~/listthickdisk7_gdump.txt
+for fil in $list ; do result=`ls -aR $fil | grep coordparms`; for sfil in $result; do echo "/home/01014/tg802609/thickdisk7/$fil/$sfil" ; done ; done > ~/listthickdisk7_coordparms.txt
+cat ~/listthickdisk7_fieldline.txt ~/listthickdisk7_gdump.txt ~/listthickdisk7_coordparms.txt > ~/listthickdisk7_all.txt
+
+
+2) On Nautilus:
+scp tg802609@ranch.tacc.utexas.edu:listthickdisk7_all.txt .
+
+rm -rf ~/globus1.txt
+for fil in `cat listthickdisk7_all.txt`
+do
+    newname=`echo $fil | sed 's/\/home\/01014\/tg802609\//\/lustre\/medusa\/jmckinne\/data1\/jmckinne\/jmckinne\//'`
+    echo "xsede#ranch$fil xsede#nautilus$newname" >> ~/globus1.txt
+done
+
+ssh pseudotensor@cli.globusonline.org transfer -s 1 < ~/globus1.txt
+
+####################
 
 
 rm -rf ~/globus1.txt

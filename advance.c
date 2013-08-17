@@ -834,7 +834,7 @@ static int advance_standard(
 
 
 
-// compute dissipation measure for determining if can use entropy or must use energy
+// compute dissipation measure for determining if can use entropy equations of motion or must use energy equations of motion
 static FTYPE compute_dissmeasure(int i, int j, int k, int loc, FTYPE *CUf, FTYPE *CUnew, FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE *ui,  FTYPE *uf, FTYPE *tempucum)
 {
   FTYPE dissmeasure;
@@ -880,7 +880,7 @@ static FTYPE compute_dissmeasure(int i, int j, int k, int loc, FTYPE *CUf, FTYPE
     //
     dUtoU(DOSPECIALPL,i,j,k,loc,dUgeomtemp, dUriemanntemp, CUf, CUnew, uitemp, uftemp, tempucumtemp);
     //
-    // now get dissipation measure.  dissmeasure<0.0 means dissipation occuring in density field
+    // now get dissipation measure.  dissmeasure<0.0 means dissipation occuring (e.g. in density field)
     FTYPE dUdissplusnondiss[NPR];
     FTYPE dUnondiss[NPR];
     FTYPE dUdiss[NPR];
