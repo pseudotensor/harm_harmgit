@@ -882,6 +882,8 @@ static FTYPE compute_dissmeasure(int i, int j, int k, int loc, FTYPE *CUf, FTYPE
     // Get final U for NPR and NSPECIAL quantities
     dUtoU(DOSPECIALPL,i,j,k,loc,dUgeomtemp, dUriemanntemp, CUf, CUnew, uitemp, uftemp, tempucumtemp);
 
+
+
     //////////////
     //
     // now get dissipation measure.  dissmeasure<0.0 means dissipation occuring (e.g. in density field)
@@ -921,11 +923,17 @@ static FTYPE compute_dissmeasure(int i, int j, int k, int loc, FTYPE *CUf, FTYPE
           pl=B1+jj-1;
           actualnorm[specialfrom] += (fabs(dUdiss[pl]*dUdiss[pl])+fabs(dUnondiss[pl]*dUnondiss[pl]));
         }
-        actualnorm[specialfrom] += fabs(dUdiss[UU]) + fabs(dUnondiss[UU]); // add energy as reference for normalization to avoid weak magnetic fields suggesting strong dissipation.  GODMARK: But, kinda risky, because nominally want to use energy to capture any field dissipation, not just when the field is important to total energy.
+        actualnorm[specialfrom] += fabs(dUdiss[UU]) + fabs(dUnondiss[UU]); // add energy as reference for normalization to avoid weak magnetic fields suggesting strong dissipation.  GODMARK: But, kinda risky, because nominally want to use energy to capture any field dissipation, not just when the field is important to total energy dissipation.
+        //  But much better than (say) using total energy density as reference.  We  use actual energy dissipation as reference.  So if reconnection is at all important to total dissipation, it will be accounted for.  When total energy dissipation is dominated by non-reconnection, that missed dissipation is a small correction.
+        // But, because total energy dissipation is less trustable due to average vs. point issue in general creating artificial heating or cooling, this is a bit less trustable as even a normalization.
       }
     }
     
+    /////////////
+    //
     // compute dissmeasure for each quantity using actualnorm
+    //
+    /////////////
     PLOOPSPECIALONLY(plsp,NSPECIAL){
       specialfrom=plspeciallist[plsp-NPR];
 
@@ -945,7 +953,11 @@ static FTYPE compute_dissmeasure(int i, int j, int k, int loc, FTYPE *CUf, FTYPE
       }
     }
 
+    ///////////
+    //
     // Choose which *total* dissipation measurement to use.  Must somehow combine different original equations of motion into a single measure since energy vs. entropy changes involve energy equation that combines both shocks and reconnection.
+    //
+    ///////////
     if(NSPECIAL==1){
       dissmeasure=dissmeasurepl[SPECIALPL1];
     }
