@@ -871,16 +871,24 @@ static FTYPE compute_dissmeasure(int i, int j, int k, int loc, FTYPE *CUf, FTYPE
     //
     FTYPE dUriemanntemp[NPR+NSPECIAL]={0},dUriemann1temp[NPR+NSPECIAL]={0},dUriemann2temp[NPR+NSPECIAL]={0},dUriemann3temp[NPR+NSPECIAL]={0};
     //
+    // get flux update for all NPR and NSEPCIAL quantities
     flux2dUavg(DOSPECIALPL,i,j,k,F1,F2,F3,dUriemann1temp,dUriemann2temp,dUriemann3temp);
-    PLOOP(pliter,pl) dUriemanntemp[pl]=dUriemann1temp[pl]+dUriemann2temp[pl]+dUriemann3temp[pl];
     //
+    // get dUriemann for NPR and NSPECIAL quantities
+    PLOOP(pliter,pl) dUriemanntemp[pl]=dUriemann1temp[pl]+dUriemann2temp[pl]+dUriemann3temp[pl];
     PLOOPSPECIALONLY(plsp,NSPECIAL){
       dUriemanntemp[plsp]=dUriemann1temp[plsp]+dUriemann2temp[plsp]+dUriemann3temp[plsp];
     }
-    //
+    // Get final U for NPR and NSPECIAL quantities
     dUtoU(DOSPECIALPL,i,j,k,loc,dUgeomtemp, dUriemanntemp, CUf, CUnew, uitemp, uftemp, tempucumtemp);
+
+    //////////////
     //
     // now get dissipation measure.  dissmeasure<0.0 means dissipation occuring (e.g. in density field)
+    //
+    /////////////
+    
+    // First, get dUnondiss and dUdiss and norm
     FTYPE dUdissplusnondiss[NPR];
     FTYPE dUnondiss[NPR];
     FTYPE dUdiss[NPR];
@@ -895,6 +903,8 @@ static FTYPE compute_dissmeasure(int i, int j, int k, int loc, FTYPE *CUf, FTYPE
             
       norm[specialfrom]=(fabs(dUdiss[specialfrom])+fabs(dUnondiss[specialfrom]));
     }
+
+    // get actual norm that's over multiple components for the magentic field
     FTYPE actualnorm[NPR];
     PLOOPSPECIALONLY(plsp,NSPECIAL){
       specialfrom=plspeciallist[plsp-NPR];
@@ -902,36 +912,47 @@ static FTYPE compute_dissmeasure(int i, int j, int k, int loc, FTYPE *CUf, FTYPE
         actualnorm[specialfrom]=norm[specialfrom];
       }
       else if(specialfrom==B1 || specialfrom==B2 || specialfrom==B3){
+        // for magnetic field, actualnorm is computed as:
+        // |dUdiss(B1)|^2 |dUnondiss(B1)|^2 + |dUdiss(B2)|^2 + |dUnondiss(B2)|^2 + |dUdiss(B3)|^2 + |dUnondiss(B3)|^2 + |dUdiss(UU)| + |dUnondiss(UU)|
+        // So we account for any magnetic energy change and help with normalization by also using total energy change
         actualnorm[specialfrom]=0.0;
         int jj;
         SLOOPA(jj){
           pl=B1+jj-1;
           actualnorm[specialfrom] += (fabs(dUdiss[pl]*dUdiss[pl])+fabs(dUnondiss[pl]*dUnondiss[pl]));
         }
-        actualnorm[specialfrom] += fabs(dUdiss[UU]) + fabs(dUnondiss[UU]); // add energy as reference
+        actualnorm[specialfrom] += fabs(dUdiss[UU]) + fabs(dUnondiss[UU]); // add energy as reference for normalization to avoid weak magnetic fields suggesting strong dissipation.  GODMARK: But, kinda risky, because nominally want to use energy to capture any field dissipation, not just when the field is important to total energy.
       }
     }
+    
+    // compute dissmeasure for each quantity using actualnorm
     PLOOPSPECIALONLY(plsp,NSPECIAL){
       specialfrom=plspeciallist[plsp-NPR];
 
-      if(specialfrom==RHO) signdiss=+1.0; // dUdiss>0 means adding density due to dissipation
-      else if(specialfrom==UU) signdiss=-1.0; // dUdiss<0 means adding energy due to dissipation
-      else if(specialfrom==B1 || specialfrom==B2 || specialfrom==B3) signdiss=-1.0; // dUdiss<0 means lost magentic energy due to dissipation
+      // set sign in front of dissmeasure
+      if(specialfrom==RHO) signdiss=+1.0; // dUdiss>0 means adding density due to dissipation (i.e. convergence, not divergence)
+      else if(specialfrom==UU) signdiss=-1.0; // dUdiss<0 means adding energy due to dissipation (i.e. dissipation)
+      else if(specialfrom==B1 || specialfrom==B2 || specialfrom==B3) signdiss=-1.0; // dUdiss<0 means lost magentic energy due to dissipation (i.e. dissipation)
 
+      // get dissmeasure, which is normalized dUdiss with correct sign
       if(specialfrom==RHO || specialfrom==UU){
+        // standard dUdiss/actualnorm
         dissmeasurepl[specialfrom] = -signdiss*(dUdiss[specialfrom])/actualnorm[specialfrom];
       }
       else if(specialfrom==B1 || specialfrom==B2 || specialfrom==B3){
+        // special use of square of dUdiss: dUdiss^2(B1,B2,B3)/actualnorm
         dissmeasurepl[specialfrom] = -signdiss*(sign(dUdiss[specialfrom])*dUdiss[specialfrom]*dUdiss[specialfrom])/actualnorm[specialfrom];
       }
     }
 
+    // Choose which *total* dissipation measurement to use.  Must somehow combine different original equations of motion into a single measure since energy vs. entropy changes involve energy equation that combines both shocks and reconnection.
     if(NSPECIAL==1){
       dissmeasure=dissmeasurepl[SPECIALPL1];
     }
+    // Can't trust energy, since average vs. point issue itself leads to erreoneous apparent dissipation (which when using energy equation alone is what leads to inappropriate heating in divergent flows, as well as inappropriate cooling in divergent flows, often in stripes in u_g due to sensitivity to higher-order interpolation schemes like PPM).
     //          dissmeasure=dissmeasurepl[SPECIALPL2];
     else if(NSPECIAL==5){
-      // can't trust energy, but density doesn't account for magnetic energy.  So use density and magnetic energy flux
+      // can't trust energy, but density doesn't account for magnetic energy.  So use density for shocks and magnetic energy flux for reconnection.
       dissmeasure=MIN(dissmeasurepl[SPECIALPL1],dissmeasurepl[B1]);
       dissmeasure=MIN(dissmeasure,dissmeasurepl[B2]);
       dissmeasure=MIN(dissmeasure,dissmeasurepl[B3]);
