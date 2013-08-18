@@ -940,8 +940,9 @@
 #define UTOPRIMRADFAILCASE2B 4 //
 #define UTOPRIMRADFAILCASE3A 5 //
 #define UTOPRIMRADFAILCASE3B 6 //
+#define UTOPRIMRADFAILERFNEG 7
 // unfixable inversion problems
-#define UTOPRIMRADFAILBAD1 7 // not used yet
+#define UTOPRIMRADFAILBAD1 8 // not used yet
 
 // for radiation terms
 #define COUNTRADNOTHING -1

@@ -1471,7 +1471,9 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
     if((pb[RHO]<=0.)&&(pb[UU]>=0.)) *lpflag= UTOPRIMFAILRHONEG;
     if((pb[RHO]>0.)&&(pb[UU]<0.))   *lpflag= UTOPRIMFAILUNEG;
     if((pb[RHO]<=0.)&&(pb[UU]<0.))  *lpflag= UTOPRIMFAILRHOUNEG;
+    if(pb[PRAD0]<=0.) *lpflagrad = UTOPRIMRADFAILERFNEG;
   }
+  
 
 
 
@@ -2119,6 +2121,7 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
             // If here, know original Uiin is good, so take baby steps in case uu needs heavy raditive changes.
             // if f1 fails, try going back to Uiin a bit
             fracdtuu0*=RADDAMPDELTA; // DAMP Uiin->uu0 step that may be too large and generated too large G
+            fracdtuu0=MIN(1.0,fracdtuu0);
 
             //          if(fracdtuu0<BACKUPRELEASEFAIL2) fracdtuu0=0.0; // just stop trying to start with some uu0 and revert to Uiin
 
@@ -6312,6 +6315,8 @@ int u2p_rad(int showmessages, int allowlocalfailurefixandnoreport, FTYPE *uu, FT
 //////////////
 int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE *uu, FTYPE *pin, struct of_geom *ptrgeom,PFTYPE *lpflag, PFTYPE *lpflagrad)
 {
+  static long long int numyvarneg,numyvarbig,numErneg,nummod;
+
   if(WHICHVEL!=VELREL4){
     dualfprintf(fail_file,"u2p_rad() only setup for relative 4-velocity, currently.\n");
     myexit(137432636);
@@ -6331,11 +6336,167 @@ int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE *uu
 
   *lpflagrad=UTOPRIMRADNOFAIL;
 
+  FTYPE Er,Utildesq,Utildecon[NDIM];
+  static int compute_ZAMORAD(FTYPE *uu, struct of_geom *ptrgeom, FTYPE *Er, FTYPE *Utildesq, FTYPE *Utildecon);
+  compute_ZAMORAD(uu, ptrgeom, &Er, &Utildesq, Utildecon);
+  
 
 
+  FTYPE Ersq,yvar;
+  int didmod=0;
+
+  if(Er>=0.0){ // then good solution
+    // Er^2
+    Ersq=Er*Er;
+    // y
+    yvar = Utildesq / (SMALL+Ersq);
+  }
+  else{// then bad solution
+    Ersq=SMALL;
+    yvar = 0.0;
+    didmod=1;
+    numErneg++;
+  }
+
+  //  dualfprintf(fail_file,"Er=%g Utildesq=%g\n",Er,Utildesq);
+
+  // \gamma_{\rm rad}^2 :  only 1 root
+  FTYPE gammasq,gamma;
+  FTYPE gammamax=GAMMAMAXRAD;
+  FTYPE gammamaxsq=gammamax*gammamax;
+  FTYPE ylimit = 16.0*gammamaxsq*(gammamaxsq-1.0)/((1.0-4.0*gammamaxsq)*(1.0-4.0*gammamaxsq));
+  if(yvar<0.0){
+    yvar=0.0;
+    gammasq = 1.0;
+    gamma = 1.0;
+    didmod=1;
+    numyvarneg++;
+    //    dualfprintf(fail_file,"yvar=%g<0.0 Ersq=%g gamma=%g\n",yvar,Ersq,gamma);
+  }
+  else if(yvar>ylimit){ // beyond gamma limit, then rescale gamma
+    yvar=ylimit;
+    gammasq = gammamaxsq;
+    gamma = gammamax;
+    didmod=1;
+    numyvarbig++;
+    //    dualfprintf(fail_file,"yvar=%g>%g Ersq=%g gamma=%g\n",yvar,ylimit,Ersq,gamma);
+  }
+  else{ // normal solution
+    gammasq = (2.0 - yvar + sqrt(4.0-3.0*yvar))/ (4.0*(1.0-yvar));
+    gamma=sqrt(gammasq);
+    //    dualfprintf(fail_file,"yvar=%g Ersq=%g gamma=%g\n",yvar,Ersq,gamma);
+  }
+
+  FTYPE Erf;
+  FTYPE urfconrel[NDIM]={0.0};
+  int jj;
+  if(Er>=0.0){
+    // now obtain primitives
+    FTYPE pr = Er/(4.0*gammasq-1.0);
+    // radiation frame energy density
+    Erf = pr/(4.0/3.0-1.0);
+    
+    // radiation frame relativity 4-velocity
+    SLOOPA(jj) urfconrel[jj] = gamma*(Utildecon[jj]/(4.0*pr*gammasq));
+  }
+  else{
+    Erf = ERADLIMIT;
+    gamma=1.0;
+    // radiation frame relativity 4-velocity
+    SLOOPA(jj) urfconrel[jj] = 0.0;
+    didmod=1;
+  }
+
+
+  /////////////////
+  //
+  //new primitives (only uses urfcon[1-3])
+  //
+  /////////////////
+  pin[PRAD0]=Erf;
+  pin[PRAD1]=urfconrel[1];
+  pin[PRAD2]=urfconrel[2];
+  pin[PRAD3]=urfconrel[3];
+
+  //  dualfprintf(fail_file,"didmod=%d\n",didmod);
+
+  // make sure E_r no larger than starting value
+  if(didmod==1){
+    nummod++;
+    
+
+    // First, ensure \gamma correct
+    FTYPE gammanew,qsqnew;
+    gamma_calc_fromuconrel(&pin[URAD1-1],ptrgeom,&gammanew,&qsqnew);
+    //    dualfprintf(fail_file,"gamma=%g gammanew=%g\n",gamma,gammanew);
+
+    // rescale, assuming want to be gamma
+    if(gamma<gammanew && gammanew>1.0){
+      SLOOPA(jj) urfconrel[jj] *= sqrt((gamma*gamma-1.0)/(gammanew*gammanew-1.0));
+    }
+    //    dualfprintf(fail_file,"urfconrel=%g %g %g\n",urfconrel[1],urfconrel[2],urfconrel[3]);
+
+    
+    // new prims
+    pin[PRAD1]=urfconrel[1];
+    pin[PRAD2]=urfconrel[2];
+    pin[PRAD3]=urfconrel[3];
+
+    // Second, ensure not creating energy in ZAMO frame
+    struct of_state q;
+    get_state_uradconuradcovonly(pin, ptrgeom, &q);
+    FTYPE Rtnu[NDIM];
+    mhd_calc_rad( pin, TT, ptrgeom, &q, Rtnu );
+    //    dualfprintf(fail_file,"Rtnu=%g %g %g %g\n",Rtnu[0],Rtnu[1],Rtnu[2],Rtnu[3]);
+    FTYPE Ernew,Utildesqnew,Utildeconnew;
+    compute_ZAMORAD(&Rtnu[0-URAD0], ptrgeom, &Ernew, &Utildesqnew, &Utildeconnew); // out of range warning ok.
+    Erf = Erf*MIN(1.0,Er/Ernew);
+
+    // could continue iterating, or should find closed form expressions for all this.
+    //    dualfprintf(fail_file,"Ernew=%g Utildesqnew=%g\n",Ernew,Utildesqnew);
+  }
+
+
+  /////////////////
+  //
+  // really new primitives (only uses urfcon[1-3])
+  //
+  /////////////////
+  pin[PRAD0]=Erf;
+  pin[PRAD1]=urfconrel[1];
+  pin[PRAD2]=urfconrel[2];
+  pin[PRAD3]=urfconrel[3];
+
+
+  if(debugfail>=2){
+    if(nstep%100==0 && ptrgeom->i==0 && ptrgeom->j==0 && ptrgeom->k==0 && steppart==0){
+      dualfprintf(fail_file,"numyvarneg=%lld numyvarbig=%lld numErneg=%lld nummod=%lld\n",numyvarneg,numyvarbig,numErneg,nummod);
+    }
+  }
+
+
+  if(DORADFIXUPS==1 || allowlocalfailurefixandnoreport==0){
+    // KORALTODO: Problem is fixups can average across shock or place where (e.g.) velocity changes alot, and averaging diffuses shock and can leak-out more failures.
+  }
+  else{
+    // CASE reductions (so set as no failure so fixups don't operate -- but might also want to turn off CHECKINVERSIONRAD else that routine won't know when to ignore bad U->P->U cases.)
+    *lpflagrad=UTOPRIMRADNOFAIL;
+  }
+
+  return 0;
+
+
+
+}
+
+
+static int compute_ZAMORAD(FTYPE *uu, struct of_geom *ptrgeom, FTYPE *Er, FTYPE *Utildesq, FTYPE *Utildecon)
+{
   int jj,kk;
   FTYPE etacov[NDIM],etacon[NDIM];
-  FTYPE Ucon[NDIM],Ucov[NDIM],Utildecon[NDIM],Utildecov[NDIM],Utildesq,Er,Ersq;
+  FTYPE Ucon[NDIM],Ucov[NDIM],Utildecov[NDIM];
+
+  //  dualfprintf(fail_file,"uu=%g %g %g %g\n",uu[URAD0],uu[URAD1],uu[URAD2],uu[URAD3]);
 
   // \eta_\mu
   etacov[TT] = -ptrgeom->alphalapse;
@@ -6355,75 +6516,15 @@ int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE *uu
   lower_vec(Utildecon,ptrgeom,Utildecov);
   
   // \tilde{U}^2 = \tilde{U}^\mu \tilde{U}_\mu
-  Utildesq=0.0;
-  DLOOPA(jj) Utildesq += Utildecon[jj]*Utildecov[jj];
+  *Utildesq=0.0;
+  DLOOPA(jj) *Utildesq += Utildecon[jj]*Utildecov[jj];
 
   // -Er = -R^\nu_\mu \eta_\nu \eta^\mu = U_\mu \eta^\mu = alpha R^t_\mu \eta^\mu : ZAMO frame energy
-  Er=0.0;
-  DLOOPA(jj) Er += -Ucov[jj]*etacon[jj];
-  // Er^2
-  Ersq=Er*Er;
-
-  // y
-  FTYPE yvar = Utildesq / (SMALL+Ersq);
-
-  // \gamma_{\rm rad}^2 :  only 1 root
-  FTYPE gammasq,gamma;
-  if(yvar<0.0){
-    yvar=0.0;
-    gammasq = 1.0;
-    gamma = 1.0;
-  }
-  else if(yvar>=1.0){
-    yvar=0.99;
-    gammasq = GAMMAMAXRAD*GAMMAMAXRAD;
-    gamma = GAMMAMAXRAD;
-  }
-  else{
-    gammasq = (2.0 - yvar + sqrt(4.0-3.0*yvar))/ (4.0*(1.0-yvar));
-    gamma=sqrt(gammasq);
-  }
-
-  // now obtain primitives
-  FTYPE pr = Er/(4.0*gammasq-1.0);
-  // radiation frame energy density
-  FTYPE Erf = pr/(4.0/3.0-1.0);
-  
-  // radiation frame relativity 4-velocity
-  FTYPE urfconrel[NDIM]={0.0};
-  SLOOPA(jj) urfconrel[jj] = gamma*(Utildecon[jj]/(4.0*pr*gammasq));
+  *Er=0.0;
+  DLOOPA(jj) *Er += -Ucov[jj]*etacon[jj];
 
 
-  /////////////////
-  //
-  //new primitives (only uses urfcon[1-3])
-  //
-  /////////////////
-  pin[PRAD0]=Erf;
-  pin[PRAD1]=urfconrel[1];
-  pin[PRAD2]=urfconrel[2];
-  pin[PRAD3]=urfconrel[3];
-
-  //  dualfprintf(fail_file,"uu: %g %g %g %g : pin=%g %g %g %g : Utilde=%g %g %g %g : Utildesq=%g Er=%g yvar=%g gammasq=%g\n",uu[URAD0],uu[URAD1],uu[URAD2],uu[URAD3],pin[PRAD0],pin[PRAD1],pin[PRAD2],pin[PRAD3],Utildecon[0],Utildecon[1],Utildecon[2],Utildecon[3],Utildesq,Er,yvar,gammasq);
-
-  //  DLOOPA(jj){
-  //    if(!isfinite(pin[PRAD0+jj])){
-  //      dualfprintf(fail_file,"caughtnan: jj=%d : ijk=%d %d %d\n",jj,ptrgeom->i,ptrgeom->j,ptrgeom->k);
-  //    }
-  //  }
-
-  if(DORADFIXUPS==1 || allowlocalfailurefixandnoreport==0){
-    // KORALTODO: Problem is fixups can average across shock or place where (e.g.) velocity changes alot, and averaging diffuses shock and can leak-out more failures.
-  }
-  else{
-    // CASE reductions (so set as no failure so fixups don't operate -- but might also want to turn off CHECKINVERSIONRAD else that routine won't know when to ignore bad U->P->U cases.)
-    *lpflagrad=UTOPRIMRADNOFAIL;
-  }
-
-  return 0;
-
-
-
+  return(0);
 }
 
 //**********************************************************************

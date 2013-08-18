@@ -8,7 +8,7 @@ static int simple_average(int startpl, int endpl, int i, int j, int k, int doing
 static int general_average(int startpl, int endpl, int i, int j, int k, int doingmhd, PFTYPE mhdlpflag, PFTYPE radlpflag, PFTYPE (*lpflagfailorig)[NSTORE2][NSTORE3][NUMFAILPFLAGS],FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ptoavg)[NSTORE2][NSTORE3][NPR], struct of_geom *geom);
 static int fixup_nogood(int startpl, int endpl, int i, int j, int k, FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ptoavg)[NSTORE2][NSTORE3][NPR],FTYPE (*pbackup)[NSTORE2][NSTORE3][NPR], struct of_geom *ptrgeom);
 static int fixuputoprim_accounting(int i, int j, int k, PFTYPE mhdlpflag, PFTYPE radlpflag, PFTYPE (*lpflag)[NSTORE2][NSTORE3][NUMPFLAGS],FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ptoavg)[NSTORE2][NSTORE3][NPR], struct of_geom *geom, FTYPE *pr0, FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], int finalstep);
-static int fixup_negdensities(int *fixed, int startpl, int endpl, int i, int j, int k, PFTYPE mhdlpflag, FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ptoavg)[NSTORE2][NSTORE3][NPR], struct of_geom *geom, FTYPE *pr0, FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], int finalstep);
+static int fixup_negdensities(int whichtofix, int *fixed, int startpl, int endpl, int i, int j, int k, PFTYPE mhdlpflag, FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ptoavg)[NSTORE2][NSTORE3][NPR], struct of_geom *geom, FTYPE *pr0, FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], int finalstep);
 
 static int superdebug_utoprim(FTYPE *pr0, FTYPE *pr, struct of_geom *ptrgeom, int whocalled);
 
@@ -1429,18 +1429,6 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
 
 
 
-            //////////////////////////////
-            //
-            // fixup negative densities
-            //
-            //////////////////////////////
-            fixup_negdensities(&fixedmhd, startpl, endpl, i, j, k, mhdlpflag, pv,ptoavg, ptrgeom, pr0, ucons, finalstep);
-
-            if(fixedmhd==1 && (startpl<=RHO && endpl>=U1)){
-              // then fixup but only changed densities, so still need to process non-densities
-              startpl=U1; // start at U1 (first velocity) and finish at same ending if was ending on some velocity
-              fixedmhd=0; // then reset fixedmhd->0 so can still modify these remaining quantities -- otherwise v^i would be unchanged even if wanted to average that out for (e.g.) negative density results for inversions.
-            }
 
 
             //////////////////////////////
@@ -1463,6 +1451,27 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
 #else
               nogood=simple_average(startpl,endpl,i,j,k, doingmhd, GLOBALPOINT(pflagfailorig) ,pv,ptoavg);
 #endif
+
+
+              if(nogood){
+                //////////////////////////////
+                //
+                // fixup negative densities (if no good case)
+                //
+                //////////////////////////////
+                fixup_negdensities(EOMSETMHD, &fixedmhd, startpl, endpl, i, j, k, mhdlpflag, pv,ptoavg, ptrgeom, pr0, ucons, finalstep);
+
+                if(fixedmhd==1 && (startpl<=RHO && endpl<=UU)){
+                  // assume success for densities, so no longer nogood.
+                  nogood=0;
+                }
+
+                if(fixedmhd==1 && (startpl<=RHO && endpl>=U1)){
+                  // then fixup but only changed densities, so still need to process non-densities
+                  startpl=U1; // start at U1 (first velocity) and finish at same ending if was ending on some velocity
+                  fixedmhd=0; // then reset fixedmhd->0 so can still modify these remaining quantities -- otherwise v^i would be unchanged even if wanted to average that out for (e.g.) negative density results for inversions.
+                }
+              }
 
               /////////////////////
               //
@@ -1648,18 +1657,40 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
               nogood=simple_average(startpl,endpl,i,j,k, doingmhd, GLOBALPOINT(pflagfailorig) ,pv,ptoavg);
 #endif
 
+
+              if(nogood){
+                //////////////////////////////
+                //
+                // fixup negative densities
+                //
+                //////////////////////////////
+                fixup_negdensities(EOMSETRAD,&fixedrad, startpl, endpl, i, j, k, radlpflag, pv,ptoavg, ptrgeom, pr0, ucons, finalstep);
+
+                if(fixedrad==1 && (startpl==URAD0 && endpl==URAD0)){
+                  // assume success for densities, so no longer nogood.
+                  nogood=0;
+                }
+                if(fixedrad==1 && (startpl<=URAD0 && endpl>=URAD1)){
+                  // then fixup but only changed densities, so still need to process non-densities
+                  startpl=URAD1; // start at U1 (first velocity) and finish at same ending if was ending on some velocity
+                  fixedrad=0; // then reset fixedmhd->0 so can still modify these remaining quantities -- otherwise v^i would be unchanged even if wanted to average that out for (e.g.) negative density results for inversions.
+                }
+              }
+
+
               /////////////////////
               //
               // If no good surrounding value found, then average bad values in some way
               //
               //////////////////////
-              if(0){
+              if(1){ // should stay 1, see below.
                 if(nogood){
                   fixup_nogood(startpl, endpl, i, j, k, pv,ptoavg, pbackup, ptrgeom);
                 }
               }
               else{
                 // normally assume u2p_rad() did ok local fixup if non-local fixup doesn't work out.
+                // NO, reset failure to non-failure if ok local fixup.  If here, want fixup even of radiation quantity, such as when implicit solver fails.
               }
 
 
@@ -1822,114 +1853,155 @@ int fixup_utoprim_nofixup(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (
 
 
 // fixup negative densities
-static int fixup_negdensities(int *fixed, int startpl, int endpl, int i, int j, int k, PFTYPE mhdlpflag, FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ptoavg)[NSTORE2][NSTORE3][NPR], struct of_geom *ptrgeom, FTYPE *pr0, FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], int finalstep)
+static int fixup_negdensities(int whicheomset, int *fixed, int startpl, int endpl, int i, int j, int k, PFTYPE lpflag, FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ptoavg)[NSTORE2][NSTORE3][NPR], struct of_geom *ptrgeom, FTYPE *pr0, FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], int finalstep)
 {
   FTYPE prguess[NPR];
 
-  ////////////////////////////
-  //
-  // deal with negative internal energy as special case of failure
-  //
 
-  if(*fixed!=0){
-    if(mhdlpflag==UTOPRIMFAILUNEG){
+  if(whicheomset==EOMSETMHD){
+    ////////////////////////////
+    //
+    // deal with negative internal energy as special case of failure
+    //
+
+    if(*fixed!=0){
+      if(lpflag==UTOPRIMFAILUNEG){
    
-      if(STEPOVERNEGU==NEGDENSITY_NEVERFIXUP){ if(HANDLEUNEG==1) *fixed=1; }
-      else if((STEPOVERNEGU==NEGDENSITY_ALWAYSFIXUP)||(STEPOVERNEGU==NEGDENSITY_FIXONFULLSTEP && finalstep)){
+        if(STEPOVERNEGU==NEGDENSITY_NEVERFIXUP){ if(HANDLEUNEG==1) *fixed=1; }
+        else if((STEPOVERNEGU==NEGDENSITY_ALWAYSFIXUP)||(STEPOVERNEGU==NEGDENSITY_FIXONFULLSTEP && finalstep)){
 
-        if(HANDLEUNEG==1){
-          // set back to floor level
-          set_density_floors(ptrgeom,MAC(pv,i,j,k),prguess);
-          // GODMARK -- maybe too agressive, maybe allow more negative?
+          if(HANDLEUNEG==1){
+            // set back to floor level
+            set_density_floors(ptrgeom,MAC(pv,i,j,k),prguess);
+            // GODMARK -- maybe too agressive, maybe allow more negative?
   
-          if(UTOPRIMFAILRETURNTYPE==UTOPRIMRETURNADJUSTED){
-            // then pv is previous timestep value and can use to make fix
-            if(-MACP0A1(pv,i,j,k,UU)<prguess[UU]){ *fixed=1; MACP0A1(pv,i,j,k,UU)=prguess[UU];} // otherwise assume really so bad that failure
-          }
-          else{
-            // just treat as floor for all failures since do not know what updated quantity is
-            MACP0A1(pv,i,j,k,UU)=prguess[UU];
-            *fixed=1;
-          }
-        }// end if handling u<zerouuperbaryon*prim[RHO] in special way
-      }// end if not allowing negative u or if allowing but not yet final step
-      else if((STEPOVERNEGU==NEGDENSITY_FIXONFULLSTEP)&&(!finalstep)){
-        if(HANDLEUNEG==1) *fixed=1; // tells rest of routine to leave alone and say ok solution, but don't use it to fix convergence failures for other zones
-      }
-    }// end if u<zerouuperbaryon*prim[RHO]
-  }// end if not fixed
+            if(UTOPRIMFAILRETURNTYPE==UTOPRIMRETURNADJUSTED){
+              // then pv is previous timestep value and can use to make fix
+              if(-MACP0A1(pv,i,j,k,UU)<prguess[UU]){ *fixed=1; MACP0A1(pv,i,j,k,UU)=prguess[UU];} // otherwise assume really so bad that failure
+            }
+            else{
+              // just treat as floor for all failures since do not know what updated quantity is
+              MACP0A1(pv,i,j,k,UU)=prguess[UU];
+              *fixed=1;
+            }
+          }// end if handling u<zerouuperbaryon*prim[RHO] in special way
+        }// end if not allowing negative u or if allowing but not yet final step
+        else if((STEPOVERNEGU==NEGDENSITY_FIXONFULLSTEP)&&(!finalstep)){
+          if(HANDLEUNEG==1) *fixed=1; // tells rest of routine to leave alone and say ok solution, but don't use it to fix convergence failures for other zones
+        }
+      }// end if u<zerouuperbaryon*prim[RHO]
+    }// end if not fixed
 
 
-  ////////////////////////////
-  //
-  // deal with negative density as special case of failure (as for internal energy above)
-  //
+    ////////////////////////////
+    //
+    // deal with negative density as special case of failure (as for internal energy above)
+    //
 
-  if(*fixed!=0){
-    if(mhdlpflag==UTOPRIMFAILRHONEG){
+    if(*fixed!=0){
+      if(lpflag==UTOPRIMFAILRHONEG){
    
-      if(STEPOVERNEGRHO==NEGDENSITY_NEVERFIXUP){ if(HANDLERHONEG) *fixed=1; }
-      else if((STEPOVERNEGRHO==NEGDENSITY_ALWAYSFIXUP)||(STEPOVERNEGRHO==NEGDENSITY_FIXONFULLSTEP && finalstep)){
+        if(STEPOVERNEGRHO==NEGDENSITY_NEVERFIXUP){ if(HANDLERHONEG) *fixed=1; }
+        else if((STEPOVERNEGRHO==NEGDENSITY_ALWAYSFIXUP)||(STEPOVERNEGRHO==NEGDENSITY_FIXONFULLSTEP && finalstep)){
 
-        if(HANDLERHONEG==1){
-          // set back to floor level
-          set_density_floors(ptrgeom,MAC(pv,i,j,k),prguess);
-          // GODMARK -- maybe too agressive, maybe allow more negative?
+          if(HANDLERHONEG==1){
+            // set back to floor level
+            set_density_floors(ptrgeom,MAC(pv,i,j,k),prguess);
+            // GODMARK -- maybe too agressive, maybe allow more negative?
   
-          if(UTOPRIMFAILRETURNTYPE==UTOPRIMRETURNADJUSTED){
-            // then pv is previous timestep value and can use to make fix
-            if(-MACP0A1(pv,i,j,k,RHO)<prguess[RHO]){ *fixed=1; MACP0A1(pv,i,j,k,RHO)=prguess[RHO];} // otherwise assume really so bad that failure
-          }
-          else{
-            // just treat as floor for all failures since do not know what updated quantity is
-            MACP0A1(pv,i,j,k,RHO)=prguess[RHO];
-            *fixed=1;
-          }
-        }// end if handling rho<0 in special way
-      }// end if not allowing negative rho or if allowing but not yet final step
-      else if((STEPOVERNEGRHO==NEGDENSITY_FIXONFULLSTEP)&&(!finalstep)){
-        if(HANDLERHONEG) *fixed=1; // tells rest of routine to leave alone and say ok solution, but don't use it to fix convergence failures for other zones
-      }
-    }// end if rho<0
-  }// end if not fixed
+            if(UTOPRIMFAILRETURNTYPE==UTOPRIMRETURNADJUSTED){
+              // then pv is previous timestep value and can use to make fix
+              if(-MACP0A1(pv,i,j,k,RHO)<prguess[RHO]){ *fixed=1; MACP0A1(pv,i,j,k,RHO)=prguess[RHO];} // otherwise assume really so bad that failure
+            }
+            else{
+              // just treat as floor for all failures since do not know what updated quantity is
+              MACP0A1(pv,i,j,k,RHO)=prguess[RHO];
+              *fixed=1;
+            }
+          }// end if handling rho<0 in special way
+        }// end if not allowing negative rho or if allowing but not yet final step
+        else if((STEPOVERNEGRHO==NEGDENSITY_FIXONFULLSTEP)&&(!finalstep)){
+          if(HANDLERHONEG) *fixed=1; // tells rest of routine to leave alone and say ok solution, but don't use it to fix convergence failures for other zones
+        }
+      }// end if rho<0
+    }// end if not fixed
 
 
 
-  ////////////////////////////
-  //
-  // deal with negative density and negative internal energy as special case of failure (as for internal energy above)
-  //
+    ////////////////////////////
+    //
+    // deal with negative density and negative internal energy as special case of failure (as for internal energy above)
+    //
 
-  if(*fixed!=0){
-    if(mhdlpflag==UTOPRIMFAILRHOUNEG){
+    if(*fixed!=0){
+      if(lpflag==UTOPRIMFAILRHOUNEG){
 
-      if(STEPOVERNEGRHOU==NEGDENSITY_NEVERFIXUP){ if(HANDLERHOUNEG) *fixed=1; }
-      // GODMARK: Why use STEPOVERNEGU and STEPOVERNEGRH instead of STEPOVERNEGRHOU below?
-      else if( (STEPOVERNEGRHOU==NEGDENSITY_ALWAYSFIXUP)  ||(STEPOVERNEGU==NEGDENSITY_FIXONFULLSTEP && STEPOVERNEGRHO==NEGDENSITY_FIXONFULLSTEP && finalstep)){
+        if(STEPOVERNEGRHOU==NEGDENSITY_NEVERFIXUP){ if(HANDLERHOUNEG) *fixed=1; }
+        // GODMARK: Why use STEPOVERNEGU and STEPOVERNEGRH instead of STEPOVERNEGRHOU below?
+        else if( (STEPOVERNEGRHOU==NEGDENSITY_ALWAYSFIXUP)  ||(STEPOVERNEGU==NEGDENSITY_FIXONFULLSTEP && STEPOVERNEGRHO==NEGDENSITY_FIXONFULLSTEP && finalstep)){
 
-        if(HANDLERHOUNEG==1){
-          // set back to floor level
-          set_density_floors(ptrgeom,MAC(pv,i,j,k),prguess);
-          // GODMARK -- maybe too agressive, maybe allow more negative?
+          if(HANDLERHOUNEG==1){
+            // set back to floor level
+            set_density_floors(ptrgeom,MAC(pv,i,j,k),prguess);
+            // GODMARK -- maybe too agressive, maybe allow more negative?
   
-          if(UTOPRIMFAILRETURNTYPE==UTOPRIMRETURNADJUSTED){
-            // then pv is previous timestep value and can use to make fix
-            if(-MACP0A1(pv,i,j,k,UU)<prguess[UU]){ *fixed=1; MACP0A1(pv,i,j,k,UU)=prguess[UU];} // otherwise assume really so bad that failure
-            if(-MACP0A1(pv,i,j,k,RHO)<prguess[RHO]){ *fixed=1; MACP0A1(pv,i,j,k,RHO)=prguess[RHO];} // otherwise assume really so bad that failure
-          }
-          else{
-            // just treat as floor for all failures since do not know what updated quantity is
-            MACP0A1(pv,i,j,k,UU)=prguess[UU];
-            MACP0A1(pv,i,j,k,RHO)=prguess[RHO];
-            *fixed=1;
-          }
-        }// end if handling rho<0 and u<zerouuperbaryon*prim[RHO] in special way
-      }// end if not allowing negative rho or if allowing but not yet final step
-      else if(STEPOVERNEGRHOU==NEGDENSITY_FIXONFULLSTEP &&(!finalstep)){
-        if(HANDLERHOUNEG) *fixed=1; // tells rest of routine to leave alone and say ok solution, but don't use it to fix convergence failures for other zones
-      }
-    }// end if rho<0 and u<zerouuperbaryon*prim[RHO]
-  }// end if not fixed
+            if(UTOPRIMFAILRETURNTYPE==UTOPRIMRETURNADJUSTED){
+              // then pv is previous timestep value and can use to make fix
+              if(-MACP0A1(pv,i,j,k,UU)<prguess[UU]){ *fixed=1; MACP0A1(pv,i,j,k,UU)=prguess[UU];} // otherwise assume really so bad that failure
+              if(-MACP0A1(pv,i,j,k,RHO)<prguess[RHO]){ *fixed=1; MACP0A1(pv,i,j,k,RHO)=prguess[RHO];} // otherwise assume really so bad that failure
+            }
+            else{
+              // just treat as floor for all failures since do not know what updated quantity is
+              MACP0A1(pv,i,j,k,UU)=prguess[UU];
+              MACP0A1(pv,i,j,k,RHO)=prguess[RHO];
+              *fixed=1;
+            }
+          }// end if handling rho<0 and u<zerouuperbaryon*prim[RHO] in special way
+        }// end if not allowing negative rho or if allowing but not yet final step
+        else if(STEPOVERNEGRHOU==NEGDENSITY_FIXONFULLSTEP &&(!finalstep)){
+          if(HANDLERHOUNEG) *fixed=1; // tells rest of routine to leave alone and say ok solution, but don't use it to fix convergence failures for other zones
+        }
+      }// end if rho<0 and u<zerouuperbaryon*prim[RHO]
+    }// end if not fixed
+  }
+  else if(whicheomset==EOMSETRAD){
+
+    ////////////////////////////
+    //
+    // deal with negative internal energy as special case of failure
+    //
+
+    if(*fixed!=0){
+      if(lpflag==UTOPRIMRADFAILERFNEG){
+   
+        if(STEPOVERNEGU==NEGDENSITY_NEVERFIXUP){ if(HANDLEUNEG==1) *fixed=1; }
+        else if((STEPOVERNEGU==NEGDENSITY_ALWAYSFIXUP)||(STEPOVERNEGU==NEGDENSITY_FIXONFULLSTEP && finalstep)){
+
+          if(HANDLEUNEG==1){
+            // set back to floor level
+            prguess[URAD0]=ERADLIMIT;
+  
+            if(UTOPRIMFAILRETURNTYPE==UTOPRIMRETURNADJUSTED){
+              // then pv is previous timestep value and can use to make fix
+              if(-MACP0A1(pv,i,j,k,URAD0)<prguess[URAD0]){ *fixed=1; MACP0A1(pv,i,j,k,URAD0)=prguess[URAD0];} // otherwise assume really so bad that failure
+            }
+            else{
+              // just treat as floor for all failures since do not know what updated quantity is
+              MACP0A1(pv,i,j,k,UU)=prguess[URAD0];
+              *fixed=1;
+            }
+          }// end if handling u<zerouuperbaryon*prim[RHO] in special way
+        }// end if not allowing negative u or if allowing but not yet final step
+        else if((STEPOVERNEGU==NEGDENSITY_FIXONFULLSTEP)&&(!finalstep)){
+          if(HANDLEUNEG==1) *fixed=1; // tells rest of routine to leave alone and say ok solution, but don't use it to fix convergence failures for other zones
+        }
+      }// end if u<zerouuperbaryon*prim[RHO]
+    }// end if not fixed
+
+
+  }
+  
+
  
   return(0);
 }
@@ -2147,7 +2219,7 @@ static int fixuputoprim_accounting(int i, int j, int k, PFTYPE mhdlpflag, PFTYPE
     radutoprimfailtype=-1;
     docorrectucons=0;
   }
-  else if(radlpflag>=UTOPRIMRADFAILCASE1A || radlpflag<=UTOPRIMRADFAILCASE3B){
+  else if(radlpflag>=UTOPRIMRADFAILCASE1A || radlpflag<=UTOPRIMRADFAILCASE3B || radlpflag==UTOPRIMRADFAILERFNEG){
     radutoprimfailtype=COUNTRADLOCAL;
     docorrectucons=1;
   }
@@ -2276,7 +2348,7 @@ static int general_average(int startpl, int endpl, int i, int j, int k, int doin
   int whichpflag;
 
 
-  if(debugfail>=2) dualfprintf(fail_file,"uc2general: doingmhd=%d mhdlpflag=%d radlpflag=%d startpl=%d endpl=%d :: i=%d j=%d k=%d\n",doingmhd,mhdlpflag,radlpflag,startpl,endpl,i,j,k); // not too much
+  if(debugfail>=2) dualfprintf(fail_file,"uc2generalA: doingmhd=%d mhdlpflag=%d radlpflag=%d startpl=%d endpl=%d :: i=%d j=%d k=%d\n",doingmhd,mhdlpflag,radlpflag,startpl,endpl,i,j,k); // not too much
   //  if(debugfail>=2) for(pl=startpl; pl<=endpl; pl++) dualfprintf(fail_file,"uc2generalSTART: pl=%d pv=%g\n",pl,MACP0A1(pv,i,j,k,pl));
 
 
@@ -2523,7 +2595,7 @@ static int general_average(int startpl, int endpl, int i, int j, int k, int doin
   }
 
 
-  if(debugfail>=2) dualfprintf(fail_file,"uc2general: mhdlpflag=%d radlpflag=%d numavg=%d startpl=%d endpl=%d :: i=%d j=%d k=%d\n",mhdlpflag,radlpflag,numavg,startpl,endpl,i,j,k);
+  if(debugfail>=2) dualfprintf(fail_file,"uc2generalB: mhdlpflag=%d radlpflag=%d numavg=%d startpl=%d endpl=%d :: i=%d j=%d k=%d\n",mhdlpflag,radlpflag,numavg,startpl,endpl,i,j,k);
   if(numavg==0) if(debugfail>=2) dualfprintf(fail_file,"Failed to average over good neighbors.\n");
   //  if(debugfail>=2) for(pl=startpl; pl<=endpl; pl++) dualfprintf(fail_file,"uc2generalFINISH: pl=%d pv=%g\n",pl,MACP0A1(pv,i,j,k,pl));
 
@@ -2944,6 +3016,7 @@ int set_density_floors_default(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *prfloo
   th=V[2];
 
 
+  if(PRAD0>=0.0) prfloor[PRAD0]=ERADLIMIT;
 
   ////////////////////
   // scaling functions
