@@ -772,6 +772,8 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
   if(DOEVOLVEUU){
     checkfl[UU]=1;
   }
+  int DOEVOLVEURAD0=PRAD0>=0 && EOMRADTYPE!=EOMRADNONE;
+  if(DOEVOLVEURAD0) checkfl[PRAD0]=1;
 
 
     
@@ -780,7 +782,7 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
   // Only apply floor if cold or hot GRMHD
   //
   ////////////
-  if(DOEVOLVERHO||DOEVOLVEUU){
+  if(DOEVOLVERHO||DOEVOLVEUU||DOEVOLVEURAD0){
 
 
     //////////////
@@ -791,6 +793,7 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
     set_density_floors(ptrgeom,prmhd,prfloor);
     scalemin[RHO]=RHOMINLIMIT;
     scalemin[UU]=UUMINLIMIT;
+    if(PRAD0>=0) scalemin[URAD0]=ERADLIMIT;
     
     
 
@@ -982,6 +985,7 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
   ///////////////
   //
   // Only changed mhd quantities with this floor approach, now return pr with prmhd for those MHD quantities.
+  // KORALTODO: Did modify prmhd[URAD0] if required, but didn't account for radiation stress-energy yet, so keep below so far.
   PALLLOOP(pl){
     if(!(pl==PRAD0 || pl==PRAD1 || pl==PRAD2 || pl==PRAD3)){
       pr[pl]=prmhd[pl];
