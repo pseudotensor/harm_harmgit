@@ -878,6 +878,10 @@ static int f_implicit_lab(int iter, int failreturnallowable, int whichcall, int 
   else if(implicititer==QTYPMHD || implicititer==QTYPMHDENERGYONLY || implicititer==QTYPMHDMOMONLY){
     extern int invert_scalars(struct of_geom *ptrgeom, FTYPE *Ugeomfree, FTYPE *pr);
     // Have pmhd={ug,uvel1,uvel2,uvel3}
+    // 0) Apply any fixups, like floors or limit_gamma's.  Won't help reduce error, but even if solution with high fluid gamma, later apply limit_gamma, but then balance between fluid and radiation lost.  So better to see as high error event than accurate high gamma event.
+    int finalstep=0; // treat as if not needing to diagnose, just act.  KORALTODO: Although, Utoprimgen(finalstep) used to get change in fluid primitives.
+    // Note, uu is old, but only used for diagnostics, and don't care about diagnostics in this stepping.
+    fixup1zone(pp,uu, ptrgeom,finalstep);
     // 1) get state (mhd state needed for primtoU) and Umhd, Uentropy [also computes Urad, but overwritten next and not expensive]
     struct of_state q; get_state(pp, ptrgeom, &q);
     // 1.5) trivially invert to get rho and other scalars
@@ -1070,9 +1074,9 @@ static FTYPE compute_dt(FTYPE *CUf, FTYPE dtin)
 #define MODEPICKBEST 3
 
 // choose to switch to entropy only if energy fails or gives u_g<0.  Or choose to always do both and use best solution.
-#define MODEMETHOD MODEPICKBEST
+//#define MODEMETHOD MODEPICKBEST
 //#define MODEMETHOD MODESWITCH
-//#define MODEMETHOD MODEENERGY
+#define MODEMETHOD MODEENERGY
 //#define MODEMETHOD MODEENTROPY
 
 
@@ -3017,7 +3021,7 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
 
             // KORALTODO: Need backup that won't fail.
             if(debugfail>=2){
-              if(canbreak==1 && havebackup==0) dualfprintf(fail_file,"Held u_g, couldn't hold anymore and broke, but error still larger than allowed.\n");
+              if(canbreak==1 && havebackup==0) dualfprintf(fail_file,"Held u_g, couldn't hold anymore and broke, but error still larger than allowed : iter=%d ijknstepsteppart=%d %d %d %ld %d\n",iter,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart);
               if(canbreak==2 && havebackup==0) dualfprintf(fail_file,"Aborted due to oscillatory error despite not having backup.\n");
               if(canbreak==3 && havebackup==0) dualfprintf(fail_file,"Aborted due to error not decreasing fast enough: errorabsf1=%g\n",errorabsf1);
               if(iter>IMPMAXITER && havebackup==0) dualfprintf(fail_file,"iter>IMPMAXITER=%d : iter exceeded in solve_implicit_lab(). nstep=%ld steppart=%d ijk=%d %d %d :  Bad error.\n",IMPMAXITER,nstep,steppart,ptrgeom->i,ptrgeom->j,ptrgeom->k);
@@ -3569,8 +3573,9 @@ static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int sho
       // This avoids issue with Jacobian giving J44[0][0]=0 so that can't iterate u_g because u_g itself is very small.
       predel[jj] = MAX(predel[jj],fabs(uup[irefU[jj]]*upitoup0U[irefU[jj]]));
       predel[jj] = MAX(predel[jj],fabs(uu0[irefU[jj]]*upitoup0U[irefU[jj]]));
-      predel[jj] = MAX(predel[jj],fabs(f1[erefU[jj]]*upitoup0U[erefU[jj]]));
-      predel[jj] = MAX(predel[jj],fabs(f1norm[erefU[jj]]*upitoup0U[erefU[jj]]));
+      // using error function to normalize is too risky since error is not linear in irefU.  e.g., error is not linear in u_g.
+      //      predel[jj] = MAX(predel[jj],fabs(f1[erefU[jj]]*upitoup0U[erefU[jj]]));
+      //      predel[jj] = MAX(predel[jj],fabs(f1norm[erefU[jj]]*upitoup0U[erefU[jj]]));
     }
     else{
       // if primitive velocity, then different units than conserved or error function that have energy density scale
@@ -6345,7 +6350,7 @@ int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE *uu
   FTYPE Ersq,yvar;
   int didmod=0;
 
-  if(Er>=0.0){ // then good solution
+  if(Er>=SMALL){ // then good solution
     // Er^2
     Ersq=Er*Er;
     // y
