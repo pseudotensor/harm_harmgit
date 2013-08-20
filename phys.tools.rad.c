@@ -879,9 +879,9 @@ static int f_implicit_lab(int iter, int failreturnallowable, int whichcall, int 
     extern int invert_scalars(struct of_geom *ptrgeom, FTYPE *Ugeomfree, FTYPE *pr);
     // Have pmhd={ug,uvel1,uvel2,uvel3}
     // 0) Apply any fixups, like floors or limit_gamma's.  Won't help reduce error, but even if solution with high fluid gamma, later apply limit_gamma, but then balance between fluid and radiation lost.  So better to see as high error event than accurate high gamma event.
-    int finalstep=0; // treat as if not needing to diagnose, just act.  KORALTODO: Although, Utoprimgen(finalstep) used to get change in fluid primitives.
+    int finalstepfixup=0; // treat as if not needing to diagnose, just act.  KORALTODO: Although, Utoprimgen(finalstep) used to get change in fluid primitives.
     // Note, uu is old, but only used for diagnostics, and don't care about diagnostics in this stepping.
-    fixup1zone(pp,uu, ptrgeom,finalstep);
+    fixup1zone(pp,uu, ptrgeom,finalstepfixup);
     // 1) get state (mhd state needed for primtoU) and Umhd, Uentropy [also computes Urad, but overwritten next and not expensive]
     struct of_state q; get_state(pp, ptrgeom, &q);
     // 1.5) trivially invert to get rho and other scalars
@@ -1074,9 +1074,9 @@ static FTYPE compute_dt(FTYPE *CUf, FTYPE dtin)
 #define MODEPICKBEST 3
 
 // choose to switch to entropy only if energy fails or gives u_g<0.  Or choose to always do both and use best solution.
-//#define MODEMETHOD MODEPICKBEST
+#define MODEMETHOD MODEPICKBEST
 //#define MODEMETHOD MODESWITCH
-#define MODEMETHOD MODEENERGY
+//#define MODEMETHOD MODEENERGY
 //#define MODEMETHOD MODEENTROPY
 
 
@@ -3069,7 +3069,8 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
 
 
     // estimate effective work based on iterations done for each equation type
-    totaliters += (int)( (FTYPE)(3.0/NDIM)*(FTYPE)momiters + (FTYPE)(1.0/NDIM)*(FTYPE)energyiters + (FTYPE)(NDIM/NDIM)*(FTYPE)normaliters);
+    FTYPE fndim=(FTYPE)NDIM;
+    totaliters += (int)( (3.0/fndim)*(FTYPE)momiters + (1.0/fndim)*(FTYPE)energyiters + (fndim/fndim)*(FTYPE)normaliters);
 
   }// end loop over damping
   if(dampattempt==NUMDAMPATTEMPTS){
@@ -3180,8 +3181,8 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
   //
   //////////////
   if(REPORTINSIDE==0){
-    //    if(PRODUCTION==0 && NOTACTUALFAILURE(failreturn)==0 || PRODUCTION>0 && NOTBADFAILURE(failreturn)){
-    if(NOTBADFAILURE(failreturn)==0){
+    if(PRODUCTION==0 && NOTACTUALFAILURE(failreturn)==0 || PRODUCTION>0 && NOTBADFAILURE(failreturn)==0){
+    //    if(NOTBADFAILURE(failreturn)==0){
       struct of_state qcheck; get_state(pp, ptrgeom, &qcheck);  primtoU(UNOTHING,pp,&qcheck,ptrgeom, uu);
       failnum++; mathematica_report_check(mathfailtype, failnum, gotfirstnofail, eomtypelocal, errorabsf1, iter, realdt, ptrgeom, ppfirst,pp,pb,piin,prtestUiin,prtestUU0,uu0,uu,Uiin,Ufin, CUf, q, dUother);
       showdebuglist(debugiter,pppreholdlist,ppposholdlist,f1reportlist,f1list,errorabsf1list,realiterlist,jac00list);
@@ -3428,22 +3429,22 @@ static int f_error_check(int showmessages, int showmessagesheavy, int iter, FTYP
   // evaluate error
   if(IMPLICITERRORNORM==1){
     passedconv=1; JACLOOPALT(ii,startjac,endjac) passedconv *= fabs(fina[erefU[ii]])<conv;
-    passedconv *= (startjac==0 && endjac==NDIM-1);
+    //    passedconv *= (startjac==0 && endjac==NDIM-1); // controlled externally
     JACLOOPALT(ii,startjac,endjac) finreport[erefU[ii]]=fina[erefU[ii]];
   }
   else if(IMPLICITERRORNORM==2){
     passedconv=1; JACLOOPALT(ii,startjac,endjac) passedconv *= fabs(finb[erefU[ii]])<conv;
-    passedconv *= (startjac==0 && endjac==NDIM-1);
+    //    passedconv *= (startjac==0 && endjac==NDIM-1);
     JACLOOPALT(ii,startjac,endjac) finreport[erefU[ii]]=finb[erefU[ii]];
   }
   else if(IMPLICITERRORNORM==3){
     passedconv=1; JACLOOPALT(ii,startjac,endjac) passedconv *= fabs(finc[erefU[ii]])<conv;
-    passedconv *= (startjac==0 && endjac==NDIM-1);
+    //    passedconv *= (startjac==0 && endjac==NDIM-1);
     JACLOOPALT(ii,startjac,endjac) finreport[erefU[ii]]=finc[erefU[ii]];
   }
   else if(IMPLICITERRORNORM==4){
     passedconv=1; JACLOOPALT(ii,startjac,endjac) passedconv *= fabs(find[erefU[ii]])<conv;
-    passedconv *= (startjac==0 && endjac==NDIM-1);
+    //    passedconv *= (startjac==0 && endjac==NDIM-1);
     JACLOOPALT(ii,startjac,endjac) finreport[erefU[ii]]=find[erefU[ii]];
   }
   
