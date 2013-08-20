@@ -149,7 +149,7 @@ int Utoprimgen(int showmessages, int allowlocalfailurefixandnoreport, int finals
 
   static long long int didnothing=0,didsomething=0;
   ///////////////
-  if(EOMDONOTHING(*eomtype) && (finalstep==0 || TIMEORDER<=3)){
+  if(EOMDONOTHING(*eomtype)){
 
 
     // if finalstep==0, then don't do inversion.  If finalstep==1, only need to do inversion if ucum is different than final uf.

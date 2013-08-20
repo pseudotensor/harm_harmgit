@@ -369,6 +369,7 @@ static int advance_standard(
 
   
     // KORALNOTE: field dUtoU loses previous time uf needed for RK3 and RK4, so need to store it for safe keeping
+    // this oldud is used for B1,B2,B3 and required in cases when CUf[1]!=0.0, as even TVD RK2 method needs.
     olduf=GLOBALPOINT(oldufstore);
     copy_3dnpr_fullloop(uf,olduf);
     
@@ -442,8 +443,10 @@ static int advance_standard(
         interpolate_ustag2fieldcent(stage, boundtime, timeorder, numtimeorders, pb, pstag, myupoint, NULL);
       }
 
-      // special higher-time-order uf-always calculation of field
-      if(TIMEORDER>=3 && finalstep==1){
+      // special higher-time-order uf-always calculation of field for when final ucum is different from final uf
+      // if Cunew[2]==1 on final step, then means Uf we compute is same as ucum.
+      if(finalstep==1 && CUnew[2]!=1.0){
+
         // still have to do uf calculation
         myupointuf=GLOBALPOINT(upointglobaluf);
         // get other non-field things in case used
@@ -674,12 +677,22 @@ static int advance_standard(
           // store guess for diss_compute before changed by normal inversion
           PALLLOOP(pl) prbefore[pl]=MACP0A1(pf,i,j,k,pl);
 
-          MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,&eomtype,EVOLVEUTOPRIM,UEVOLVE,MAC(myupoint,i,j,k), ptrgeom, MAC(pf,i,j,k),&newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
+          int eomtypelocal;
+          if(CUnew[2]==1.0){
+            eomtypelocal=eomtype;
+          }
+          else{
+            // then Uf is not ucum on finalstep=1, so any prior implicit inversion was not final inversion.
+            // So change any do nothing to do something
+            if(eomtype==EOMDIDGRMHD) eomtypelocal=EOMGRMHD;
+            else if(eomtype==EOMDIDENTROPYGRMHD) eomtypelocal=EOMENTROPYGRMHD;
+            else if(eomtype==EOMDIDCOLDGRMHD) eomtypelocal=EOMCOLDGRMHD;
+            else if(eomtype==EOMDIDFFDE) eomtypelocal=EOMFFDE;
+            else eomtypelocal=eomtype; // force eomtype
+          }
+
+          MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,&eomtypelocal,EVOLVEUTOPRIM,UEVOLVE,MAC(myupoint,i,j,k), ptrgeom, MAC(pf,i,j,k),&newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
           nstroke+=newtonstats.nstroke; newtonstats.nstroke=newtonstats.lntries=0;
-          //          dualfprintf(fail_file,"nstroke=%d\n",nstroke);
-          //          if(myid==5 && nstep==1 && steppart==0 && ptrgeom->i==19 && ptrgeom->j==15){
-          //            PLOOP(pliter,pl) dualfprintf(fail_file,"pl=%d pf=%21.15g myupoint=%21.15g\n",MACP0A1(pf,i,j,k,pl),MACP0A1(myupoint,i,j,k,pl)*ptrgeom->igdetnosing);
-          //          }
           
           
 #if(DODISS||DODISSVSR)
