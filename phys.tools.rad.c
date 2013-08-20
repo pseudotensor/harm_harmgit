@@ -478,6 +478,9 @@ static int Utoprimgen_failwrapper(int doradonly, int showmessages, int allowloca
 //#define IMPTRYDAMPCONV (MAX(1.e-8,IMPTRYCONVABS))
 #define IMPTRYDAMPCONV (5.0*IMPTRYCONVABS)
 
+// 0 : old Jon  method
+// 2 : Jon's paper draft method
+#define WHICHU2PRAD 1
 
 ///////////////////////////////
 //
@@ -876,38 +879,56 @@ static int f_implicit_lab(int iter, int failreturnallowable, int whichcall, int 
     myexit(92846534);
   }
   else if(implicititer==QTYPMHD || implicititer==QTYPMHDENERGYONLY || implicititer==QTYPMHDMOMONLY){
-    extern int invert_scalars(struct of_geom *ptrgeom, FTYPE *Ugeomfree, FTYPE *pr);
-    // Have pmhd={ug,uvel1,uvel2,uvel3}
-    // 0) Apply any fixups, like floors or limit_gamma's.  Won't help reduce error, but even if solution with high fluid gamma, later apply limit_gamma, but then balance between fluid and radiation lost.  So better to see as high error event than accurate high gamma event.
-    int finalstepfixup=0; // treat as if not needing to diagnose, just act.  KORALTODO: Although, Utoprimgen(finalstep) used to get change in fluid primitives.
-    // Note, uu is old, but only used for diagnostics, and don't care about diagnostics in this stepping.
-    fixup1zone(pp,uu, ptrgeom,finalstepfixup);
-    // 1) get state (mhd state needed for primtoU) and Umhd, Uentropy [also computes Urad, but overwritten next and not expensive]
-    struct of_state q; get_state(pp, ptrgeom, &q);
-    // 1.5) trivially invert to get rho and other scalars
-    pp[RHO]= uu0[RHO]/q.ucon[TT];
-    invert_scalars(ptrgeom, uu,pp);
-    // trivially invert field
+    // 0) Have pmhd={ug,uvel1,uvel2,uvel3}
+    //
+    // 0.5) trivially invert field
     PLOOPBONLY(pl) pp[pl] = uu0[pl];
     // set p[ENTROPY] in case evaluated as a diagnostic.
     if(ENTROPY>=0) pp[ENTROPY] = pp[UU];
-    // 1.6) save these primitives as original pmhd's
+    //
+    // 1) get state of non-density related things (mhd state needed for q.ucon[TT] and primtoU) and Umhd, Uentropy [also computes Urad, but overwritten next and not expensive]
+    struct of_state q;
+    get_state_norad_part1(pp, ptrgeom, &q);
+    //
+    // 2) trivially invert to get rho
+    pp[RHO]= uu0[RHO]/q.ucon[TT];
+    //
+    // 3) Apply any fixups, like floors or limit_gamma's.  Won't help reduce error, but even if solution with high fluid gamma, later apply limit_gamma, but then balance between fluid and radiation lost.  So better to see as high error event than accurate high gamma event.
+    int finalstepfixup=0; // treat as if not needing to diagnose, just act.  KORALTODO: Although, Utoprimgen(finalstep) used to get change in fluid primitives.
+    // Note, uu is old, but only used for diagnostics, and don't care about diagnostics in this stepping.
+    fixup1zone(pp,uu, ptrgeom,finalstepfixup);
+    // fix uu[RHO] to be consistent, since uu[RHO] used to get inverted scalars
+    uu[RHO] = pp[RHO]*q.ucon[TT];
+    //
+    // 4) Invert other scalars (only uses uu[RHO], not pp[RHO])
+    extern int invert_scalars(struct of_geom *ptrgeom, FTYPE *Ugeomfree, FTYPE *pr);
+    invert_scalars(ptrgeom, uu,pp);
+    //
+    // save final fixed-up pp's
     FTYPE pporig[NPR]; PLOOP(pliter,pl) pporig[pl]=pp[pl];
-    FTYPE uuorig[NPR]; PLOOP(pliter,pl) uuorig[pl]=uu[pl];
-    // 1.7) Do rest of get_state that used rho and other scalars
-    extern int get_state_thermodynamics(struct of_geom *ptrgeom, FTYPE *pr, struct of_state *q);
-    get_state_thermodynamics(ptrgeom, pp, &q);
-    // 2) Compute Umhd and Uentropy (keeps Urad as zero, but Urad set next)
+    // NOW all MHD pp's are set and backed-up
+    //
+    // 5) Do rest of get_state that used rho, and other scalars, in case used.
+    // This computes pressure (as required for T^t_\mu) and entropy (as required for primtoflux_nonradonly below for entropy flux)
+    // KORALTODO: Although, don't need entropy if doing implicitferr==UMHD
+    get_state_norad_part2(pp, ptrgeom, &q);
+    //
+    // 6) Compute Umhd and Uentropy (keeps Urad as zero, but Urad set next)
     //primtoU(UNOTHING,pp,&q,ptrgeom, uu);
     extern int primtoflux_nonradonly(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux);
     primtoflux_nonradonly(pp,&q,TT,ptrgeom, uu);
-    // 3) Get actual Urad(G) via energy conservation (correct even if using entropy as error function, because just computed correct U[ENTROPY] consistent with U[UU].
+    //
+    // 7) Get actual Urad(G) via energy conservation (correct even if using entropy as error function, because just computed correct U[ENTROPY] consistent with U[UU].
     DLOOPA(iv) uu[iotherU[iv]] = uu0[iotherU[iv]] - (uu[irefU[iv]]-uu0[irefU[iv]]);
-    // 4) Do RAD-ONLY Inversion
+    //
+    // 8) Do RAD-ONLY Inversion
     int doradonly=1; failreturn=Utoprimgen_failwrapper(doradonly,showmessages,allowlocalfailurefixandnoreport, finalstep, eomtype, EVOLVEUTOPRIM, UNOTHING, uu, ptrgeom, pp, &newtonstats);
     //  no need to concern with eomtype in RAD only case.  i.e. eomtype won't change.
-    // 5) Get consistent Urad because fixes might have been applied
-    get_state_uradconuradcovonly(pp, ptrgeom, &q); // only changes radiation state, not fluid state, but keeps old q's for fluid state for next step.
+    //
+    // 9) Get consistent RAD state
+    // only changes radiation state, not fluid state, but keeps old q's for fluid state for next step.
+    get_state_radonly(pp, ptrgeom, &q);
+    //
     // fix-up primitives to avoid violent steps in temperature
 #if(RAMESHTRADTGASFIX)
     if(implicitferr==QTYUMHD){
@@ -931,19 +952,26 @@ static int f_implicit_lab(int iter, int failreturnallowable, int whichcall, int 
       Tradold=Tradnew;
     }
 #endif
+    //
+    // 10) Get new uu[RAD] since original uu[RAD]->pp[RAD] might have had fixups applied and then uu[RAD] no longer consistent.
+    // This violates total energy conservation in favor of consistency of radiative quantities between pp and uu
     //    primtoU(UNOTHING,pp,&q,ptrgeom, uu);
     extern int primtoflux_radonly(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux);
     FTYPE uurad[NPR];
     primtoflux_radonly(pp,&q,TT,ptrgeom, uurad);
     // write new uurad's to uu
     PLOOP(pliter,pl) if(RADUPL(pl)) uu[pl]=uurad[pl];
-    // 6) Recover actual iterated pmhd to avoid machine related differences between original pp and pp(U(pp)) for pmhd quantities
+    //
+    // 11) Recover actual iterated pmhd to avoid machine related differences between original pp and pp(U(pp)) for pmhd quantities
     // This assumes that iterated pmhd is optimal and not modified except by iteration by Newton step, which is currently true.
     // This gives machine error priority to mhd primitives rather than mhd U's.
     // below not necessary since don't overwrite pp[non-rad]
     //PLOOP(pliter,pl) if(!RADPL(pl)) pp[pl]=pporig[pl];
-    PLOOPBONLY(pl) uu[pl]=pp[pl];// overwrite so machine accurate field
-    // now have full primitives and full U including entropy and these are consistent with each other.
+    //
+    // 12) overwrite any setting of uu[B1,B2,B3], so machine accurate field
+    PLOOPBONLY(pl) uu[pl]=pp[pl];
+    //
+    // now have full primitives (pp) and full U (uu) including entropy and these (pp and uu) are fully consistent with each other.
   }
   else if(implicititer==QTYPRAD || implicititer==QTYPRADENERGYONLY || implicititer==QTYPRADMOMONLY){
     FTYPE pporig[NPR]; PLOOP(pliter,pl) pporig[pl]=pp[pl];
@@ -3181,7 +3209,8 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
   //
   //////////////
   if(REPORTINSIDE==0){
-    if(PRODUCTION==0 && NOTACTUALFAILURE(failreturn)==0 || PRODUCTION>0 && NOTBADFAILURE(failreturn)==0){
+    //    if(PRODUCTION==0 && NOTACTUALFAILURE(failreturn)==0 || PRODUCTION>0 && NOTBADFAILURE(failreturn)==0){ // catches oscillators at small error but still >tol.
+    if(PRODUCTION==0 && NOTACTUALFAILURE(failreturn)==0 && errorabsf1>=IMPTRYCONVALT || PRODUCTION>0 && NOTBADFAILURE(failreturn)==0){
     //    if(NOTBADFAILURE(failreturn)==0){
       struct of_state qcheck; get_state(pp, ptrgeom, &qcheck);  primtoU(UNOTHING,pp,&qcheck,ptrgeom, uu);
       failnum++; mathematica_report_check(mathfailtype, failnum, gotfirstnofail, eomtypelocal, errorabsf1, iter, realdt, ptrgeom, ppfirst,pp,pb,piin,prtestUiin,prtestUU0,uu0,uu,Uiin,Ufin, CUf, q, dUother);
@@ -6307,8 +6336,11 @@ int u2p_rad(int showmessages, int allowlocalfailurefixandnoreport, FTYPE *uu, FT
   int u2p_rad_orig(int showmessages, int allowlocalfailurefixandnoreport, FTYPE *uu, FTYPE *pin, struct of_geom *ptrgeom,PFTYPE *lpflag, PFTYPE *lpflagrad);
   int toreturn;
 
+#if(WHICHU2PRAD==0)
+  toreturn=u2p_rad_orig(showmessages, allowlocalfailurefixandnoreport, uu, pin, ptrgeom,lpflag, lpflagrad);
+#else
   toreturn=u2p_rad_new(showmessages, allowlocalfailurefixandnoreport, uu, pin, ptrgeom,lpflag, lpflagrad);
-  //toreturn=u2p_rad_orig(showmessages, allowlocalfailurefixandnoreport, uu, pin, ptrgeom,lpflag, lpflagrad);
+#endif
 
   return(toreturn);
 }
@@ -6358,6 +6390,7 @@ int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE *uu
     yvar = Utildesq / (SMALL+Ersq);
   }
   else{// then bad solution
+    dualfprintf(fail_file,"Er=%26.20g<SMALL=%26.20g yvar=%26.20g Utildesq=%26.20g Ersq=%26.20g\n",Er,SMALL,yvar,Utildesq,Ersq);
     Ersq=SMALL;
     yvar = 0.0;
     didmod=1;
@@ -6370,14 +6403,14 @@ int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE *uu
   FTYPE gammasq,gamma;
   FTYPE gammamax=GAMMAMAXRAD;
   FTYPE gammamaxsq=gammamax*gammamax;
-  FTYPE ylimit = 16.0*gammamaxsq*(gammamaxsq-1.0)/((1.0-4.0*gammamaxsq)*(1.0-4.0*gammamaxsq));
+  FTYPE ylimit = 16.0*gammamaxsq*(gammamaxsq-1.0)/((4.0*gammamaxsq-1.0)*(4.0*gammamaxsq-1.0));
   if(yvar<0.0){
+    dualfprintf(fail_file,"Er=%26.20g yvar=%26.20g<0.0 Utildesq=%26.20g Ersq=%26.20g\n",Er,yvar,Utildesq,Ersq);
     yvar=0.0;
     gammasq = 1.0;
     gamma = 1.0;
     didmod=1;
     numyvarneg++;
-    //    dualfprintf(fail_file,"yvar=%g<0.0 Ersq=%g gamma=%g\n",yvar,Ersq,gamma);
   }
   else if(yvar>ylimit){ // beyond gamma limit, then rescale gamma
     yvar=ylimit;
@@ -6396,7 +6429,7 @@ int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE *uu
   FTYPE Erf;
   FTYPE urfconrel[NDIM]={0.0};
   int jj;
-  if(Er>=0.0){
+  if(Er>=SMALL){
     // now obtain primitives
     FTYPE pr = Er/(4.0*gammasq-1.0);
     // radiation frame energy density
@@ -6475,8 +6508,10 @@ int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE *uu
 
 
   if(debugfail>=2){
-    if(nstep%100==0 && ptrgeom->i==0 && ptrgeom->j==0 && ptrgeom->k==0 && steppart==0){
-      dualfprintf(fail_file,"numyvarneg=%lld numyvarbig=%lld numErneg=%lld nummod=%lld\n",numyvarneg,numyvarbig,numErneg,nummod);
+    static long int nstepold=-1;
+    if(nstep!=nstepold && nstep%100==0 && ptrgeom->i==0 && ptrgeom->j==0 && ptrgeom->k==0 && steppart==0){
+      nstepold=nstep;
+      dualfprintf(fail_file,"numyvarneg=%lld numyvarbig=%lld numErneg=%lld nummod=%lld : nstep=%ld\n",numyvarneg,numyvarbig,numErneg,nummod,nstep);
     }
   }
 
@@ -6495,7 +6530,7 @@ int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE *uu
 
 }
 
-
+// compute ZAMO version of radiation quantities as in paper draft
 static int compute_ZAMORAD(FTYPE *uu, struct of_geom *ptrgeom, FTYPE *Er, FTYPE *Utildesq, FTYPE *Utildecon)
 {
   int jj,kk;

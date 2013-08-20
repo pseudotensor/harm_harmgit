@@ -1720,6 +1720,50 @@ int get_state(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q)
 }
 
 
+/* find ucon, ucov, bcon, bcov from primitive variables */
+// when calling get_state, users of this function expect to get q->{ucon,ucov,bcon,bcov,pressure}
+int get_state_radonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q)
+{
+  int get_state_uradconuradcovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
+
+
+#if(EOMRADTYPE!=EOMRADNONE)
+  get_state_uradconuradcovonly(pr, ptrgeom, q);
+#endif
+  return (0);
+}
+
+/* find ucon, ucov, bcon, bcov from primitive variables */
+// when calling get_state, users of this function expect to get q->{ucon,ucov,bcon,bcov,pressure}
+int get_state_norad_part1(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q)
+{
+  int get_state_uconucovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
+  int get_state_bconbcovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
+  int bsq_calc_fromq(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE *bsq);
+
+
+  get_state_uconucovonly(pr, ptrgeom, q);
+
+  get_state_bconbcovonly(pr, ptrgeom, q);
+
+  bsq_calc_fromq(pr,ptrgeom,q,&(q->bsq));
+
+  return (0);
+}
+
+/* find ucon, ucov, bcon, bcov from primitive variables */
+// when calling get_state, users of this function expect to get q->{ucon,ucov,bcon,bcov,pressure}
+int get_state_norad_part2(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q)
+{
+  int get_state_thermodynamics(struct of_geom *ptrgeom, FTYPE *pr, struct of_state *q);
+
+
+  get_state_thermodynamics(ptrgeom, pr, q);
+
+  return (0);
+}
+
+
 // all get_state() things except the field quantities
 int get_state_nofield(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q)
 {

@@ -137,6 +137,9 @@ extern void get_allgeometry(int i, int j, int k, int loc, struct of_allgeom *all
 
 
 extern int get_state(FTYPE *pr, struct of_geom *geom,struct of_state *q);
+extern int get_state_norad_part1(FTYPE *pr, struct of_geom *geom,struct of_state *q);
+extern int get_state_norad_part2(FTYPE *pr, struct of_geom *geom,struct of_state *q);
+extern int get_state_radonly(FTYPE *pr, struct of_geom *geom,struct of_state *q);
 extern int get_state_nofield(FTYPE *pr, struct of_geom *geom,struct of_state *q);
 extern int get_stateforcheckinversion(FTYPE *pr, struct of_geom *geom,struct of_state *q);
 extern int get_state_uconucovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
