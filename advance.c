@@ -623,6 +623,7 @@ static int advance_standard(
         //
         /////////////
         //        PLOOP(pliter,pl) globalgeom[pl]=ptrgeom->gdet;
+        // ok to use "uf" here instead of "olduf" since field is not done here.
         dUtoU(doother,i,j,k,ptrgeom->p,dUgeom, dUriemann, CUf, CUnew, MAC(ui,i,j,k), MAC(uf,i,j,k), MAC(tempucum,i,j,k));
 
         //        if(nstep==4 && steppart==0){
