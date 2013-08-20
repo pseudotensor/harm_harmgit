@@ -1498,7 +1498,9 @@ int source(FTYPE *pi, FTYPE *pr, FTYPE *pf, int *didreturnpf, int *eomtype, stru
   // get update pre- additional physics
   PLOOP(pliter,pl){
     dUother[pl] = (dUriemann[pl] + dUcomp[GEOMSOURCE][pl])*(ptrgeom->IEOMFUNCNOSINGMAC(pl)); // remove geometry factor for dUother
+    // ui is current timestep's ui.
     Ugeomfreei[pl] = ui[pl]*(ptrgeom->IEOMFUNCNOSINGMAC(pl)); // expect ui to be UEVOLVE form
+    // uf is "previous" timestep's uf, which is not generally ui for arbitrary RK methods, and should not include dUother, etc.
     Ugeomfreef[pl] = uf[pl]*(ptrgeom->IEOMFUNCNOSINGMAC(pl)); // expect uf to be UEVOLVE form
   }
 
