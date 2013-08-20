@@ -592,7 +592,7 @@ static int advance_standard(
 
         // find dU(pb)
         // so pf contains updated field at cell center for use in (e.g.) implicit solver that uses inversion P(U)
-        // Note that uf[B1,B2,B3] is already updated, but need to pass old uf for RK3/RK4.
+        // Note that uf[B1,B2,B3] is already updated, but need to pass old uf for RK3/RK4, so use olduf.
         MYFUN(source(piorig, MAC(pb,i,j,k), MAC(pf,i,j,k), &didreturnpf, &eomtype, ptrgeom, qptr2, MAC(ui,i,j,k), MAC(olduf,i,j,k), CUf, dissmeasure, dUriemann, dUcomp, dUgeom),"step_ch.c:advance()", "source", 1);
         // assumes final dUcomp is nonzero and representative of source term over this timestep
         
