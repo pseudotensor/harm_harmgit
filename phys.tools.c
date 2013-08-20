@@ -1508,7 +1508,7 @@ int source(FTYPE *pi, FTYPE *pr, FTYPE *pf, int *didreturnpf, int *eomtype, stru
     PLOOPBONLY(pl){
       // assume already got field update in advance_standard() [as opposed to advance_standard_orig()] and no geometry for field as required for that method.
       // but want to be able to have Ui by itself mean no changes, so that's pr. Uf is only used in some RK methods, that can be pf.  But then want dUother to be so that when using IFSET() with full dt that get pf
-      Ugeomfreei[pl]=pi[pl]; 
+      //      Ugeomfreei[pl]=pi[pl];  // unnecessary
       //      Ugeomfreef[pl]=pf[pl]; // No, should stay as from uf as *previous* timestep's Uf, so that RK3/4 are consistent with below.
       // KORALTODO SUPERGODMARK: This means need advance.c source() to have uf as previous field uf, not updated uf from dUriemann *and* not tempucum for finalstep=1
       dUother[pl]=dUfromUFSET(CUf,dt,Ugeomfreei[pl],Ugeomfreef[pl],pf[pl]);
