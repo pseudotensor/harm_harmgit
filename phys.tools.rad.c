@@ -878,6 +878,66 @@ static int f_implicit_lab(int iter, int failreturnallowable, int whichcall, int 
     // not setup
     myexit(92846534);
   }
+#if(0)
+ else if(implicititer==QTYPMHD || implicititer==QTYPMHDENERGYONLY || implicititer==QTYPMHDMOMONLY){
+    extern int invert_scalars(struct of_geom *ptrgeom, FTYPE *Ugeomfree, FTYPE *pr);
+    // Have pmhd={ug,uvel1,uvel2,uvel3}
+    // 1) get state (mhd state needed for primtoU) and Umhd, Uentropy [also computes Urad, but overwritten next and not expensive]
+    struct of_state q; get_state(pp, ptrgeom, &q);
+    // 1.5) trivially invert to get rho and other scalars
+    pp[RHO]= uu0[RHO]/q.ucon[TT];
+    invert_scalars(ptrgeom, uu,pp);
+    // trivially invert field
+    PLOOPBONLY(pl) pp[pl] = uu0[pl];
+    // set p[ENTROPY] in case evaluated as a diagnostic.
+    if(ENTROPY>=0) pp[ENTROPY] = pp[UU];
+    // 1.6) save these primitives as original pmhd's
+    FTYPE pporig[NPR]; PLOOP(pliter,pl) pporig[pl]=pp[pl];
+    // 1.7) Do rest of get_state that used rho and other scalars
+    extern int get_state_thermodynamics(struct of_geom *ptrgeom, FTYPE *pr, struct of_state *q);
+    get_state_thermodynamics(ptrgeom, pp, &q);
+    // 2) Compute Umhd and Uentropy [happens to compute old Urad from old pprad, but overwritten next step]
+    primtoU(UNOTHING,pp,&q,ptrgeom, uu);
+    // 3) Get actual Urad(G) via energy conservation (correct even if using entropy as error function, because just computed correct U[ENTROPY] consistent with U[UU].
+    DLOOPA(iv) uu[iotherU[iv]] = uu0[iotherU[iv]] - (uu[irefU[iv]]-uu0[irefU[iv]]);
+    // 4) Do RAD-ONLY Inversion
+    int doradonly=1; failreturn=Utoprimgen_failwrapper(doradonly,showmessages,allowlocalfailurefixandnoreport, finalstep, eomtype, EVOLVEUTOPRIM, UNOTHING, uu, ptrgeom, pp, &newtonstats);
+    //  no need to concern with eomtype in RAD only case.  i.e. eomtype won't change.
+    // 5) Get consistent Urad [also computes Umhd and Uentropy, which is ok]
+    get_state_uradconuradcovonly(pp, ptrgeom, &q); // only changes radiation state, not fluid state, but keeps old q's for fluid state for next step.
+    // fix-up primitives to avoid violent steps in temperature
+#if(RAMESHTRADTGASFIX)
+    if(implicitferr==QTYUMHD){
+      FTYPE Tgasnew=compute_temp_simple(ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p,pp[RHO],pp[UU]);
+      FTYPE Tradnew=calc_LTE_TfromE(pp[PRAD0]);
+      if(iter>1){
+        if(
+           (RAMESHTRADTGASFIX==1 && sign(Tgasnew-Tradnew)!=sign(Tgasold-Tradold))
+           || (RAMESHTRADTGASFIX==2 && sign(Tgasnew-Tradnew)!=sign(Tgasiter1-Traditer1))
+           ){
+          // restrict u_g to have Tgas=Trad
+          pp[UU]=calc_PEQ_ufromTrho(Tradnew,pp[RHO]);
+          Tgasnew=Tradnew;
+        }
+      }
+      if(iter==1){
+        Tgasiter1=Tgasnew;
+        Traditer1=Tradnew;
+      }
+      Tgasold=Tgasnew;
+      Tradold=Tradnew;
+    }
+#endif
+    primtoU(UNOTHING,pp,&q,ptrgeom, uu);
+    // 6) Recover actual iterated pmhd to avoid machine related differences between original pp and pp(U(pp)) for pmhd quantities
+    // This assumes that iterated pmhd is optimal and not modified except by iteration by Newton step, which is currently true.
+    // This gives machine error priority to mhd primitives rather than mhd U's.
+    // below not necessary since don't overwrite pp[non-rad]
+    //PLOOP(pliter,pl) if(!RADPL(pl)) pp[pl]=pporig[pl];
+    PLOOPBONLY(pl) uu[pl]=pp[pl];// overwrite so machine accurate field
+    // now have full primitives and full U including entropy and these are consistent with each other.
+  }
+#else
   else if(implicititer==QTYPMHD || implicititer==QTYPMHDENERGYONLY || implicititer==QTYPMHDMOMONLY){
     // 0) Have pmhd={ug,uvel1,uvel2,uvel3}
     //
@@ -973,6 +1033,7 @@ static int f_implicit_lab(int iter, int failreturnallowable, int whichcall, int 
     //
     // now have full primitives (pp) and full U (uu) including entropy and these (pp and uu) are fully consistent with each other.
   }
+#endif
   else if(implicititer==QTYPRAD || implicititer==QTYPRADENERGYONLY || implicititer==QTYPRADMOMONLY){
     FTYPE pporig[NPR]; PLOOP(pliter,pl) pporig[pl]=pp[pl];
     // Have prad={Erf,uradvel1,uradvel2,uradvel3}
