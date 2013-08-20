@@ -190,6 +190,8 @@ static int advance_standard(
   FTYPE (*useducum)[NSTORE2][NSTORE3][NPR];
   FTYPE (*preupoint)[NSTORE2][NSTORE3][NPR];
   FTYPE (*myupoint)[NSTORE2][NSTORE3][NPR];
+  FTYPE (*myupointuf)[NSTORE2][NSTORE3][NPR];
+  FTYPE (*olduf)[NSTORE2][NSTORE3][NPR];
   int whichpltoavg[NPR];
   int ifnotavgthencopy[NPR];
   int is,ie,js,je,ks,ke;
@@ -365,7 +367,11 @@ static int advance_standard(
     }
 #endif
 
-
+  
+    // KORALNOTE: field dUtoU loses previous time uf needed for RK3 and RK4, so need to store it for safe keeping
+    olduf=GLOBALPOINT(oldufstore);
+    copy_3dnpr_fullloop(uf,olduf);
+    
 
     ////////////////////////
     //
@@ -411,31 +417,62 @@ static int advance_standard(
       }// end parallel
 
 
-      // if using staggered grid for magnetic field, then need to convert ucum to pstag to new pb/pf
-      // GODMARK: Use of globals
-      myupoint=GLOBALPOINT(upointglobal);
 
       // first copy over all quantities as point, which is true except for fields if FLUXRECON active
       // copy utoinvert -> myupoint
       // only copy magnetic field pl's -- later copy rest when needed for inversion
-      if(finalstep==1) preupoint=tempucum;
-      else preupoint=uf;
+      // KORALNOTE: For general RK method, need to feed-into implicit solver field from Uf, not tempucum.  So seems I need both fields to be processed for such RK methods.   One for actual final field, and one for "initial+flux" form into implicit solver that just contributes to tempucum.
+
+      // if using staggered grid for magnetic field, then need to convert ucum to pstag to new pb/pf
+      // GODMARK: Use of globals
+      myupoint=GLOBALPOINT(upointglobal);
       
-      copy_tempucum_finalucum(DOBPL,Uconsevolveloop,preupoint,myupoint);
+      if(1){ // normal switching case
+      
+        if(finalstep==1) preupoint=tempucum;
+        else preupoint=uf;
+      
+        copy_tempucum_finalucum(DOBPL,Uconsevolveloop,preupoint,myupoint);
 
-
-      if(extrazones4emf && dofluxreconevolvepointfield==0){
         // uses tempucum and gets reaveraged field into myupoint
-        field_integrate_fluxrecon(stage, pb, preupoint, myupoint);
+        if(extrazones4emf && dofluxreconevolvepointfield==0) field_integrate_fluxrecon(stage, pb, preupoint, myupoint);
+
+        // first pb entry is used for shock indicator, second is filled with new field
+        // myupoint goes in as staggered point value of magnetic flux and returned as centered point value of magnetic flux
+        interpolate_ustag2fieldcent(stage, boundtime, timeorder, numtimeorders, pb, pstag, myupoint, NULL);
+      }
+
+      // special higher-time-order uf-always calculation of field
+      if(TIMEORDER>=3 && finalstep==1){
+        // still have to do uf calculation
+        myupointuf=GLOBALPOINT(upointglobaluf);
+        // get other non-field things in case used
+        // NO, not used, so can avoid.
+        //        int pliter;
+        //        // NOT RIGHT, shoud full copy: PLOOP(pliter,pl) MACP0A1(myupointuf,i,j,k,pl) = MACP0A1(myupoint,i,j,k,pl);
+
+        preupoint=uf;
+      
+        copy_tempucum_finalucum(DOBPL,Uconsevolveloop,preupoint,myupointuf);
+
+        // uses tempucum and gets reaveraged field into myupointuf
+        if(extrazones4emf && dofluxreconevolvepointfield==0) field_integrate_fluxrecon(stage, pb, preupoint, myupointuf);
+
+        // first pb entry is used for shock indicator, second is filled with new field
+        // myupointuf goes in as staggered point value of magnetic flux and returned as centered point value of magnetic flux
+        interpolate_ustag2fieldcent(stage, boundtime, timeorder, numtimeorders, pb, pstag, myupointuf, NULL);
+
+      }
+      else{
+        // then no need for separate myupointuf, so just point to same space
+        myupointuf=GLOBALPOINT(upointglobal);
       }
 
 
-      // first pb entry is used for shock indicator, second is filled with new field
-      // myupoint goes in as staggered point value of magnetic flux and returned as centered point value of magnetic flux
-      interpolate_ustag2fieldcent(stage, boundtime, timeorder, numtimeorders, pb, pstag, myupoint, NULL);
-
       ////////////////////    
       // now myupoint contain CENTered point conserved (to be converted to primitive quantity later) ready for MHD or RAD inversion procedures (or implicit use of such inversions)
+      // myupointuf contains always uf version of field
+      // myupoint constains uf version except for finalstep=1, when it contains tempucum version
       ////////////////////
 
     }// end if staggered field method
@@ -532,7 +569,8 @@ static int advance_standard(
         PALLLOOP(pl) MACP0A1(pf,i,j,k,pl) = MACP0A1(pb,i,j,k,pl);
         if(FLUXB==FLUXCTSTAG){
           // then upoint actually contains centered updated field used for source() and starting point for more readily getting inversion
-          PLOOPBONLY(pl) MACP0A1(pf,i,j,k,pl)=MACP0A1(myupoint,i,j,k,pl)*ptrgeom->igdetnosing; // valid for this setup of NOGDETB1/B2/B3==0
+          // myupointuf contains always uf version, not tempucum version, of updated field.
+          PLOOPBONLY(pl) MACP0A1(pf,i,j,k,pl)=MACP0A1(myupointuf,i,j,k,pl)*ptrgeom->igdetnosing; // valid for this setup of NOGDETB1/B2/B3==0
         }
 
 
@@ -546,11 +584,12 @@ static int advance_standard(
         // note that uf and ucum are initialized inside setup_rktimestep() before first substep
 
         // get dissmeasure
-        FTYPE dissmeasure=compute_dissmeasure(i,j,k,ptrgeom->p,CUf, CUnew, F1, F2, F3, MAC(ui,i,j,k),MAC(uf,i,j,k), MAC(tempucum,i,j,k));
+        FTYPE dissmeasure=compute_dissmeasure(i,j,k,ptrgeom->p,CUf, CUnew, F1, F2, F3, MAC(ui,i,j,k),MAC(olduf,i,j,k), MAC(tempucum,i,j,k));
 
         // find dU(pb)
         // so pf contains updated field at cell center for use in (e.g.) implicit solver that uses inversion P(U)
-        MYFUN(source(piorig, MAC(pb,i,j,k), MAC(pf,i,j,k), &didreturnpf, &eomtype, ptrgeom, qptr2, MAC(ui,i,j,k), MAC(uf,i,j,k), CUf, dissmeasure, dUriemann, dUcomp, dUgeom),"step_ch.c:advance()", "source", 1);
+        // Note that uf[B1,B2,B3] is already updated, but need to pass old uf for RK3/RK4.
+        MYFUN(source(piorig, MAC(pb,i,j,k), MAC(pf,i,j,k), &didreturnpf, &eomtype, ptrgeom, qptr2, MAC(ui,i,j,k), MAC(olduf,i,j,k), CUf, dissmeasure, dUriemann, dUcomp, dUgeom),"step_ch.c:advance()", "source", 1);
         // assumes final dUcomp is nonzero and representative of source term over this timestep
         
 

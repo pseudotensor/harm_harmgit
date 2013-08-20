@@ -137,6 +137,8 @@ FTYPE BASEMACP0A1(dUgeomarray,N1M,N2M,N3M,NPR); // assume not used across subste
 #if(HIGHERORDERMEM||FIELDSTAGMEM)
 // below is used within substeps but not across
 FTYPE BASEMACP0A1(upointglobal,N1M,N2M,N3M,NPR);
+FTYPE BASEMACP0A1(upointglobaluf,N1M,N2M,N3M,NPR);
+FTYPE BASEMACP0A1(oldufstore,N1M,N2M,N3M,NPR);
 #endif
 
 
