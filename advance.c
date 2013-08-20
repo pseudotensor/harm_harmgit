@@ -413,6 +413,7 @@ static int advance_standard(
 
           // Get update
           // ui is itself at FACE as already set
+          // this overwrites uf[B1,B2,B3], while need original uf[B1,B2,B3] for some RK methods, so store as olduf outside this loop, already.
           dUtoU(DOBPL,i,j,k,CENT,dUgeom, dUriemann, CUf, CUnew, MAC(ui,i,j,k), MAC(uf,i,j,k), MAC(tempucum,i,j,k));
         }//end loop
       }// end parallel
