@@ -263,7 +263,7 @@ void pack(int dir, int boundvartype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE
   int bci,pr;
   
   bci=0;
-  if(vpot==NULL){
+  if(prim!=NULL){
     PACKLOOP(i,j,k       \
              ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pr]][DIRPSTART1] \
              ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pr]][DIRPSTOP1] \
@@ -288,8 +288,8 @@ void pack(int dir, int boundvartype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE
       
     }// end of vpot==NULL loop
     
-  }// end if vpot==NULL
-  else{
+  }// end if prim!=NULL
+  else{ // flux or vpot
     PACKLOOPORIG(i,j,k       \
                  ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pr]][DIRPSTART1] \
                  ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pr]][DIRPSTOP1] \
@@ -302,11 +302,15 @@ void pack(int dir, int boundvartype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE
                  ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pr]][DIRPDIR3] \
                  ,pr       \
                  ,dirgenset[boundvartype][dir][DIRNUMPR]){
-      if(prim!=NULL){
+      if(vpot!=NULL){
         workbc[PACK][dir][bci++] = MACP1A0(vpot,pr,i,j,k) * primfactor[boundvartype][dir][primgridpos[boundvartype][dir][pr]][PACK][pr];
       }
-      else{
+      else if(flux!=NULL){
         workbc[PACK][dir][bci++] = MACP1A0(flux,pr,i,j,k) * primfactor[boundvartype][dir][primgridpos[boundvartype][dir][pr]][PACK][pr];
+      }
+      else{
+        dualfprintf(fail_file,"No such pack type\n");
+        myexit(982359235);
       }
     }// end vpot!=NULL loop
   }// end if vpot!=NULL
@@ -436,7 +440,7 @@ void unpack(int dir, int boundvartype, FTYPE (*workbc)[COMPDIM * 2][NMAXBOUND * 
   int bci,pr;
 
   bci=0;
-  if(vpot==NULL){
+  if(prim!=NULL){
     PACKLOOP(i,j,k \
              ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pr]][DIRUSTART1] \
              ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pr]][DIRUSTOP1] \
@@ -466,11 +470,15 @@ void unpack(int dir, int boundvartype, FTYPE (*workbc)[COMPDIM * 2][NMAXBOUND * 
                  ,dirloopset[boundvartype][dir][primgridpos[boundvartype][dir][pr]][DIRUDIR3] \
                  ,pr \
                  ,dirgenset[boundvartype][dir][DIRNUMPR]){
-      if(prim!=NULL){
+      if(vpot!=NULL){
         MACP1A0(vpot,pr,i,j,k)=workbc[UNPACK][dir][bci++] * primfactor[boundvartype][dir][primgridpos[boundvartype][dir][pr]][UNPACK][pr];
       }
-      else{
+      else if(flux!=NULL){
         MACP1A0(flux,pr,i,j,k)=workbc[UNPACK][dir][bci++] * primfactor[boundvartype][dir][primgridpos[boundvartype][dir][pr]][UNPACK][pr];
+      }
+      else{
+        dualfprintf(fail_file,"No such unpack type\n");
+        myexit(982359236);
       }
     }
   }
