@@ -641,7 +641,7 @@ static int advance_standard(
         }
         else{
           // invert uf on substeps
-          utoinvert = uf;
+          utoinvert = uf; // should always be uf, not olduf.
           // tempucum just cumulates for now
           useducum=tempucum;
         }
