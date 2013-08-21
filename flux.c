@@ -2215,8 +2215,8 @@ int check_plpr(int dir, int i, int j, int k, int idel, int jdel, int kdel, struc
   inflow_check_rel4vel(dir,p_r,NULL,geom,-1);
 #endif
   // need to limit gamma since gamma may be large for interpolated value and would lead to bad fluxes
-  MYFUN(limit_gamma(GAMMAMAX,p_l,NULL,geom,-1),"flux.c:check_plpr()", "limit_gamma()", 1);  //jon corr, see email re: SPINT warnings from 4/24/2006 10:54 p.m.
-  MYFUN(limit_gamma(GAMMAMAX,p_r,NULL,geom,-1),"flux.c:check_plpr()", "limit_gamma()", 2);  //jon corr
+  MYFUN(limit_gamma(GAMMAMAX,GAMMAMAXRAD,p_l,NULL,geom,-1),"flux.c:check_plpr()", "limit_gamma()", 1);  //jon corr, see email re: SPINT warnings from 4/24/2006 10:54 p.m.
+  MYFUN(limit_gamma(GAMMAMAX,GAMMAMAXRAD,p_r,NULL,geom,-1),"flux.c:check_plpr()", "limit_gamma()", 2);  //jon corr
 #endif// end if WHICHVEL==VEL4REL      
 #endif
 

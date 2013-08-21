@@ -104,7 +104,7 @@ int bound_prim_user(int boundstage, FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 #elif(WHICHVEL==VELREL4)
             get_geometry(i,j,k,CENT,&geom) ;
             inflow_check_rel4vel(1,MAC(prim,i,j,k),&geom,Dt) ;
-            if(limit_gamma(GAMMAMAX,MAC(prim,i,j,k),&geom,Dt)>=1)
+            if(limit_gamma(GAMMAMAX,GAMMAMAXRAD,MAC(prim,i,j,k),&geom,Dt)>=1)
               FAILSTATEMENT("bounds.c:bound_prim()", "limit_gamma()", 1);
 #endif 
           }
@@ -163,7 +163,7 @@ int bound_prim_user(int boundstage, FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 #elif(WHICHVEL==VELREL4)
             get_geometry(i,j,k,CENT,&geom) ;
             inflow_check_rel4vel(1,MAC(prim,i,j,k),&geom,Dt) ;
-            if(limit_gamma(GAMMAMAX,MAC(prim,i,j,k),&geom, Dt)>=1)
+            if(limit_gamma(GAMMAMAX,GAMMAMAXRAD,MAC(prim,i,j,k),&geom, Dt)>=1)
               FAILSTATEMENT("bounds.c:bound_prim()", "limit_gamma()", 2);
 #endif 
           }

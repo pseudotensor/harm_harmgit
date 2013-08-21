@@ -1757,7 +1757,7 @@ int Utoprimgen_pick(int showmessages, int allowlocalfailurefixandnoreport, int w
 
   // KORAL
   // NOTEMARK: u2p_rad() uses pr, which will have updated velocities in case radiation inversion wants to use fluid frame reduction.  But need to know if got good solution, so pass that flag to u2p_rad()
-  if(EOMRADTYPE!=EOMRADNONE) u2p_rad(showmessages, allowlocalfailurefixandnoreport,Ugeomfree,pr,ptrgeom,lpflag,lpflagrad);
+  if(EOMRADTYPE!=EOMRADNONE) u2p_rad(showmessages, allowlocalfailurefixandnoreport, GAMMAMAXRAD, Ugeomfree,pr,ptrgeom,lpflag,lpflagrad);
   //*lpflagrad=0; // test that check_on_inversion triggered where velocity limiter applies
 
 

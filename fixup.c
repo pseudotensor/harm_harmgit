@@ -202,7 +202,7 @@ int fixup(int stage,FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ucons)[NSTORE2][N
 
     /* limit gamma wrt normal observer */
 #if(WHICHVEL==VELREL4)
-    if(limit_gamma(GAMMAMAX,MAC(pv,i,j,k),MAC(ucons,i,j,k), ptrgeom,-1)>=1)  // need general accounting for entire routine.
+    if(limit_gamma(GAMMAMAX,GAMMAMAXRAD,MAC(pv,i,j,k),MAC(ucons,i,j,k), ptrgeom,-1)>=1)  // need general accounting for entire routine.
       FAILSTATEMENT("fixup.c:fixup()", "limit_gamma()", 1);
 #endif
   }
@@ -956,7 +956,7 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
   int docorrectucons=1;
   didchangeprim=0;
 
-  failreturn=limit_gamma(GAMMAMAX,prmhd,ucons,ptrgeom,-1);
+  failreturn=limit_gamma(GAMMAMAX,GAMMAMAXRAD,prmhd,ucons,ptrgeom,-1);
   if(failreturn>=1) FAILSTATEMENT("fixup.c:fixup()", "limit_gamma()", 1);
   if(failreturn==-1) didchangeprim=1;
 
@@ -1560,7 +1560,7 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
                 /////////////
      
 #if(WHICHVEL==VELREL4)
-                if(limit_gamma(gamma,MAC(pv,i,j,k),MAC(ucons,i,j,k),ptrgeom,-1)>=1) FAILSTATEMENT("fixup.c:fixup()", "limit_gamma()", 2);
+                if(limit_gamma(gamma,GAMMAMAXRAD,MAC(pv,i,j,k),MAC(ucons,i,j,k),ptrgeom,-1)>=1) FAILSTATEMENT("fixup.c:fixup()", "limit_gamma()", 2);
 
                 if(debugfail>=3){
                   if(limitedgamma){
@@ -1737,7 +1737,7 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
                 /////////////
      
 #if(WHICHVEL==VELREL4)
-                if(limit_gamma(gamma,&MACP0A1(pv,i,j,k,URAD1-U1),MAC(ucons,i,j,k),ptrgeom,-1)>=1) FAILSTATEMENT("fixup.c:fixup()", "limit_gamma()", 2);
+                if(limit_gamma(gamma,GAMMAMAXRAD,&MACP0A1(pv,i,j,k,URAD1-U1),MAC(ucons,i,j,k),ptrgeom,-1)>=1) FAILSTATEMENT("fixup.c:fixup()", "limit_gamma()", 2);
 
                 if(debugfail>=3){
                   if(limitedgamma){
@@ -3274,7 +3274,7 @@ int get_bsqflags(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR])
 #define DO_CONSERVE_D 0
 
 // limit \gamma=\alpha u^t and u^t
-int limit_gamma(FTYPE gammamax, FTYPE*pr, FTYPE *ucons, struct of_geom *ptrgeom,int finalstep)
+int limit_gamma(FTYPE gammamax, FTYPE gammamaxrad, FTYPE*pr, FTYPE *ucons, struct of_geom *ptrgeom,int finalstep)
 {
   FTYPE f,gamma,pref;
   FTYPE qsq;
@@ -3282,7 +3282,7 @@ int limit_gamma(FTYPE gammamax, FTYPE*pr, FTYPE *ucons, struct of_geom *ptrgeom,
   FTYPE radgamma,radqsq;
   FTYPE pr0[NPR];
   int pl,pliter;
-  FTYPE realgammamax;
+  FTYPE realgammamax,realgammamaxrad;
   FTYPE r,X[NDIM],V[NDIM];
   int didchange;
   FTYPE uu0,uu0max;
@@ -3312,9 +3312,11 @@ int limit_gamma(FTYPE gammamax, FTYPE*pr, FTYPE *ucons, struct of_geom *ptrgeom,
   // force flow to not move too fast inside ergosphere
   if(r<2) realgammamax=3;
   else realgammamax=GAMMAMAX;
+  realgammamaxrad=GAMMAMAXRAD;
 #else
   realgammamax=gammamax;
-  if(realgammamax<=1.0) return(0); // nothing to do
+  realgammamaxrad=gammamaxrad;
+  if(realgammamax<=1.0 && realgammamaxrad<=1.0) return(0); // nothing to do
 #endif
 
 
@@ -3398,13 +3400,13 @@ int limit_gamma(FTYPE gammamax, FTYPE*pr, FTYPE *ucons, struct of_geom *ptrgeom,
   // KORAL:
   if(EOMRADTYPE!=EOMRADNONE){
 
-    if((radgamma > realgammamax && (radgamma!=1.0))) {    
+    if((radgamma > realgammamaxrad && (radgamma!=1.0))) {    
 
-      // rescale velocities to reduce radgamma to realgammamax
-      pref=(realgammamax*realgammamax - 1.)/(radgamma*radgamma - 1.);
+      // rescale velocities to reduce radgamma to realgammamaxrad
+      pref=(realgammamaxrad*realgammamaxrad - 1.)/(radgamma*radgamma - 1.);
 
       if(debugfail>=3){ // special >=3 since often called when floor or fixup
-        dualfprintf(fail_file,"nstep=%ld steppart=%d t=%21.15g :: i=%d j=%d k=%d :: pref=%21.15g oldradgamma=%21.15g realgammamax=%21.15g\n",nstep,steppart,t,startpos[1]+ptrgeom->i,startpos[2]+ptrgeom->j,startpos[3]+ptrgeom->k,pref,radgamma,realgammamax);
+        dualfprintf(fail_file,"nstep=%ld steppart=%d t=%21.15g :: i=%d j=%d k=%d :: pref=%21.15g oldradgamma=%21.15g realgammamaxrad=%21.15g\n",nstep,steppart,t,startpos[1]+ptrgeom->i,startpos[2]+ptrgeom->j,startpos[3]+ptrgeom->k,pref,radgamma,realgammamaxrad);
       }
 
       if(pref<0.0){

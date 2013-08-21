@@ -1,194 +1,6 @@
 #include "decs.h"
 
-// whether to use older method before new iter-error approaches
-#define DOOLD 0
 
-static int f_implicit_lab_old(int failreturnallowable, int whichcall, int showmessages, int allowlocalfailurefixandnoreport, FTYPE *pp0, FTYPE *uu0,FTYPE *uu,FTYPE localdt, struct of_geom *ptrgeom,  FTYPE *f, FTYPE *fnorm);
-static int get_implicit_iJ_old(int failreturnallowableuse, int showmessages, int showmessagesheavy, int allowlocalfailurefixandnoreport, FTYPE impepsjac, FTYPE *uu, FTYPE *uup, FTYPE *uu0, FTYPE *pb, FTYPE fracdtG, FTYPE realdt, struct of_geom *ptrgeom, FTYPE *f1, FTYPE *f1norm, FTYPE (*iJ)[NDIM]);
-static int f_error_check_old(int showmessages, int showmessagesheavy, int iter, FTYPE conv, FTYPE realdt, FTYPE *dimfactU, FTYPE *f1, FTYPE *f1norm, FTYPE *f3report, FTYPE *Uiin, FTYPE *uu0, FTYPE *uu, struct of_geom *ptrgeom);
-static int Utoprimgen_failwrapper_old(int showmessages, int allowlocalfailurefixandnoreport, int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of_geom *ptrgeom, FTYPE *pr, struct of_newtonstats *newtonstats);
-
-
-//////// implicit stuff
-static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE dissmeasure, FTYPE *dUother ,FTYPE (*dUcomp)[NPR]);
-
-static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready, int *eomtype, FTYPE fracenergy, int *radinvmod, FTYPE *pb, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother ,FTYPE (*dUcomp)[NPR], FTYPE *errorabs, int *iters, int *f1iters);
-
-static int f_implicit_lab(int iter, int failreturnallowable, int whichcall, int showmessages, int allowlocalfailurefixandnoreport, int *eomtype, FTYPE fracenergy, int *radinvmod, FTYPE *pp, FTYPE *uu0,FTYPE *uu,FTYPE localdt, struct of_geom *ptrgeom,  FTYPE *f, FTYPE *fnorm);
-
-static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int showmessagesheavy, int allowlocalfailurefixandnoreport, int *eomtype, FTYPE fracenergy, FTYPE impepsjac, int iter, FTYPE *uu, FTYPE *uup, FTYPE *uu0, FTYPE *pp, FTYPE *ppp, FTYPE fracdtG, FTYPE realdt, struct of_geom *ptrgeom, FTYPE *f1, FTYPE *f1norm, FTYPE (*iJ)[NPR]);
-static int inverse_33matrix(int sj, int ej, FTYPE a[][NDIM], FTYPE ia[][NDIM]);
-static int inverse_11matrix(int sj, int ej, FTYPE a[][NDIM], FTYPE ia[][NDIM]);
-
-
-static int f_error_check(int showmessages, int showmessagesheavy, int iter, FTYPE conv, FTYPE realdt, int dimtypef, int eomtype, FTYPE fracenergy, FTYPE *dimfactU, FTYPE *f1, FTYPE *f1norm, FTYPE *f1report, FTYPE *Uiin, FTYPE *uu0, FTYPE *uu, struct of_geom *ptrgeom);
-
-
-
-static int Utoprimgen_failwrapper(int doradonly, int showmessages, int allowlocalfailurefixandnoreport, int finalstep, int *eomtype, int evolvetype, int inputtype,FTYPE *U,  struct of_geom *ptrgeom, FTYPE *pr, struct of_newtonstats *newtonstats);
-
-static void define_method(int iter, int *eomtype, FTYPE fracenergy, int *implicititer, int *implicitferr);
-static void get_refUs(int *numdims, int *startjac, int *endjac, int *implicititer, int *implicitferr, int *irefU, int *iotherU, int *erefU, int *eotherU, int *signgd2, int *signgd4, int *signgd6, int *signgd7);
-
-
-// debug stuff
-static void showdebuglist(int debugiter, FTYPE (*pppreholdlist)[NPR],FTYPE (*ppposholdlist)[NPR],FTYPE (*f1reportlist)[NDIM],FTYPE (*f1list)[NDIM],FTYPE *errorabsf1list, int *realiterlist, FTYPE *jac00list);
-int mathematica_report_check(int failtype, long long int failnum, int gotfirstnofail, int eomtypelocal, FTYPE errorabs, int iters, FTYPE realdt,struct of_geom *ptrgeom, FTYPE *ppfirst, FTYPE *pp, FTYPE *pb, FTYPE *piin, FTYPE *prtestUiin, FTYPE *prtestUU0, FTYPE *uu0, FTYPE *uu, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_state *q, FTYPE *dUother);
-
-// explicit stuff
-static void get_dtsub(int method, FTYPE *pr, struct of_state *q, FTYPE *Ui, FTYPE *Uf, FTYPE *dUother, FTYPE *CUf, FTYPE *Gdpl, FTYPE chi, FTYPE *Gdabspl, struct of_geom *ptrgeom, FTYPE *dtsub);
-static void koral_source_dtsub_rad_calc(int method, FTYPE *pr, FTYPE *Ui, FTYPE *Uf, FTYPE *dUother, FTYPE *CUf, FTYPE *Gdpl, struct of_geom *ptrgeom, FTYPE *dtsub);
-static int source_explicit(int whichsc, int whichradsourcemethod, int methoddtsub,int *eomtype,
-                           void (*sourcefunc)(int method, FTYPE *pr, FTYPE *Ui, FTYPE *Uf, FTYPE *dUother, FTYPE *CUf, FTYPE *Gpl, struct of_geom *ptrgeom, FTYPE *dtsub),
-                           FTYPE *pb, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother, FTYPE (*dUcomp)[NPR]);
-
-// RAD inversion stuff
-static int get_m1closure_gammarel2_old(int showmessages, struct of_geom *ptrgeom, FTYPE *Avcon, FTYPE *Avcov, FTYPE *gammarel2return, FTYPE *deltareturn, FTYPE *numeratorreturn, FTYPE *divisorreturn);
-static int get_m1closure_gammarel2(int showmessages, struct of_geom *ptrgeom, FTYPE *Avcon, FTYPE *Avcov, FTYPE *gammarel2return, FTYPE *deltareturn, FTYPE *numeratorreturn, FTYPE *divisorreturn);
-
-static int get_m1closure_gammarel2_cold_old(int showmessages, struct of_geom *ptrgeom, FTYPE *Avcon, FTYPE *Avcov, FTYPE *gammarel2return, FTYPE *deltareturn, FTYPE *numeratorreturn, FTYPE *divisorreturn, FTYPE *Erfreturn, FTYPE *urfconrel);
-static int get_m1closure_gammarel2_cold(int showmessages, struct of_geom *ptrgeom, FTYPE *Avcon, FTYPE *Avcov, FTYPE *gammarel2return, FTYPE *deltareturn, FTYPE *numeratorreturn, FTYPE *divisorreturn, FTYPE *Erfreturn, FTYPE *urfconrel);
-
-static int get_m1closure_Erf(struct of_geom *ptrgeom, FTYPE *Avcon, FTYPE gammarel2, FTYPE *Erfreturn);
-
-static int get_m1closure_urfconrel_old(int showmessages, int allowlocalfailurefixandnoreport, struct of_geom *ptrgeom, FTYPE *pp, FTYPE *Avcon, FTYPE *Avcov, FTYPE gammarel2, FTYPE delta, FTYPE numerator, FTYPE divisor, FTYPE *Erfreturn, FTYPE *urfconrel, PFTYPE *lpflag, PFTYPE *lpflagrad);
-static int get_m1closure_urfconrel(int showmessages, int allowlocalfailurefixandnoreport, struct of_geom *ptrgeom, FTYPE *pp, FTYPE *Avcon, FTYPE *Avcov, FTYPE gammarel2, FTYPE delta, FTYPE numerator, FTYPE divisor, FTYPE *Erfreturn, FTYPE *urfconrel, PFTYPE *lpflag, PFTYPE *lpflagrad);
-static int get_m1closure_urfconrel_olek(int showmessages, int allowlocalfailurefixandnoreport, struct of_geom *ptrgeom, FTYPE *pp, FTYPE *Avcon, FTYPE *Avcov, FTYPE gammarel2, FTYPE delta, FTYPE *Erfreturn, FTYPE *urfconrel, PFTYPE *lpflag, PFTYPE *lpflagrad);
-
-static int opacity_interpolated_urfconrel(FTYPE tautotmax, FTYPE *pp,struct of_geom *ptrgeom,FTYPE *Avcon, FTYPE Erf,FTYPE gammarel2,FTYPE *Erfnew, FTYPE *urfconrel);
-
-// general stuff
-static FTYPE compute_dt(FTYPE *CUf, FTYPE dtin);
-
-static void calc_Gd(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *G, FTYPE *Tgas, FTYPE *chieffreturn, FTYPE *Gabs);
-static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *Gu, FTYPE *Tgas, FTYPE *chieffreturn, FTYPE *Gabs);
-void mhdfull_calc_rad(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE (*radstressdir)[NDIM]);
-static int simplefast_rad(int dir, struct of_geom *geom,struct of_state *q, FTYPE vrad2,FTYPE *vmin, FTYPE *vmax);
-
-static void calc_kappa_kappaes(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappa, FTYPE *kappaes, FTYPE *Tgas);
-
-
-
-
-
-
-
-
-
-// KORALTODO:  If solve for full RHO+MHD+RAD solution and iterate primitives instead, then can nominally better avoid out of bounds p(U) inversion.  While involves 1+4+4=9 dimensional Newton's method, use of p(U) is avoided completely so saves lots of time.  Only ever need to call U(p).  But then doesn't take advantage of accurate(and reductions) for p(U).
-
-#define DIMTYPEFCONS 0
-#define DIMTYPEFPRIM 1
-
-// mnemonics for return modes so schemes know how failed and what to do.
-// worse failure should be larger number
-#define UTOPRIMGENWRAPPERRETURNNOFAIL  (UTOPRIMNOFAIL)
-#define UTOPRIMGENWRAPPERRETURNFAILRAD (1)
-#define UTOPRIMGENWRAPPERRETURNFAILMHD (2)
-
-// wrapper for Utoprimgen() that returns non-zero if failed in some way so know can't continue with that method
-// doradonly: ==1: Do only radiative inversion.  ==0: do full inversion.
-// showmessages : 0 or 1 : whether to show messages for issues
-// allowlocalfailurefixandnoreport : 0 or 1 : whether to have inversion avoid report and just use local fix
-// finalstep : whether this is the final step of RK substeps
-// evolvetype :
-// inputtype :
-// U : conserved quantity
-// ptrgeom : geometry pointer
-// pr : primitive (acts as guess for inversion and holds output for U->P)
-// newtonstats: for inversion method report
-static int Utoprimgen_failwrapper(int doradonly, int showmessages, int allowlocalfailurefixandnoreport, int finalstep, int *eomtype, int evolvetype, int inputtype,FTYPE *U,  struct of_geom *ptrgeom, FTYPE *pr, struct of_newtonstats *newtonstats)
-{
-  if(DOOLD){
-    int failreturnallowable=Utoprimgen_failwrapper_old(showmessages,allowlocalfailurefixandnoreport, finalstep, evolvetype, inputtype, U, ptrgeom, pr, newtonstats);
-    return(failreturnallowable);
-  }
-
-
-  int failreturn;
-
-  // defaults
-  failreturn=0;
-
-
-
-  // KORALTODO: 
-  // flag needs to be reset to preexistingfail(gas/rad) is not a failure.  Only use preexisting catches in utoprimgen.c if done with 4-force and report error in pflag and eventually go to the final advance.c inversion.
-  GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)=UTOPRIMNOFAIL;
-  GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL)=UTOPRIMRADNOFAIL;
-  
-
-  PFTYPE *lpflag,*lpflagrad;
-  lpflag=&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL);
-  lpflagrad=&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL);
-
-
-  if(doradonly==1){
-    u2p_rad(showmessages, allowlocalfailurefixandnoreport,U,pr,ptrgeom,lpflag,lpflagrad);
-  }
-  else{
-    //calculating primitives  
-    // OPTMARK: Should optimize this to  not try to get down to machine precision
-    MYFUN(Utoprimgen(showmessages, allowlocalfailurefixandnoreport, finalstep, eomtype, evolvetype, inputtype, U, ptrgeom, pr, newtonstats),"phys.tools.rad.c:Utoprimgen_failwrapper()", "Utoprimgen", 1);
-    nstroke+=(newtonstats->nstroke);
-    // this can change eomtype
-  }
-
-  // check how inversion did.  If didn't succeed, then check if soft failure and pass.  Else if hard failure have to return didn't work.
-  if(IFUTOPRIMFAILSOFT(*lpflag)){
-    // assume soft failure ok, but reset
-    GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)=UTOPRIMNOFAIL;
-    if(showmessages && debugfail>=2) dualfprintf(fail_file,"Got soft MHD failure inversion failure during Utoprimgen_failwrapper: ijk=%d %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
-  }
-  else if(IFUTOPRIMRADFAIL(*lpflagrad)){
-    // can reduce Newton step if getting failure.
-    // reset pflag for radiation to no failure, but treat here locally
-    GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL)=UTOPRIMRADNOFAIL;
-    if(showmessages && debugfail>=2) dualfprintf(fail_file,"Got some radiation inversion failure during Utoprimgen_failwrapper: ijk=%d %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
-    failreturn=UTOPRIMGENWRAPPERRETURNFAILRAD;
-  }
-  else if( IFUTOPRIMFAIL(*lpflag) || IFUTOPRIMRADFAIL(*lpflagrad) ){
-    // these need to get fixed-up, but can't, so return failure
-    if(showmessages && debugfail>=2) dualfprintf(fail_file,"Got hard failure of inversion (MHD part only considered as hard) in f_implicit_lab(): ijk=%d %d %d : %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,*lpflag,*lpflagrad);
-    failreturn=UTOPRIMGENWRAPPERRETURNFAILMHD;
-  }
-  else{
-    // no failure
-    // dualfprintf(fail_file,"No failure in Utoprimgen_failwrapper: ijk=%d %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
-  }
-  
-
-
-  //DEBUG:
-  if(debugfail>=2 && showmessages){
-    struct of_state q;
-    MYFUN(get_stateforcheckinversion(pr, ptrgeom, &q),"flux.c:fluxcalc()", "get_state()", 1);
-    int outputtype=inputtype;
-    FTYPE Unew[NPR];
-    MYFUN(primtoU(outputtype,pr, &q, ptrgeom, Unew),"step_ch.c:advance()", "primtoU()", 1); // UtoU inside doesn't do anything...therefore for REMOVERESTMASSFROMUU==1, Unew[UU] will have rest-mass included
-    int pliter,pl;
-    PLOOP(pliter,pl) dualfprintf(fail_file,"COMPARE: pl=%d pr=%g U=%g Unew=%g\n",pl,pr[pl],U[pl],Unew[pl]);
-    int jj;
-    DLOOPA(jj) dualfprintf(fail_file,"COMPARE: jj=%d uradcon=%g uradcov=%g\n",jj,q.uradcon[jj],q.uradcov[jj]);
-    DLOOPA(jj) dualfprintf(fail_file,"COMPARE: jj=%d ucon=%g ucov=%g\n",jj,q.ucon[jj],q.ucov[jj]);
-  }
-
-  //DEBUG:
-  if(showmessages || debugfail>=2){
-    static int maxlntries=0,maxnstroke=0;
-    int diff;
-    diff=0;
-    // For RADSHADOW, gets up to 5
-    if(newtonstats->lntries>maxlntries){ maxlntries=newtonstats->lntries; diff=1;}
-    if(newtonstats->nstroke>maxnstroke){ maxnstroke=newtonstats->nstroke; diff=1;}
-    // only report if grew beyond prior maximum
-    if(diff) dualfprintf(fail_file,"newtonsteps: lntries=%d (max=%d) nstroke=%d (max=%d) logerror=%g\n",newtonstats->lntries,maxlntries,newtonstats->nstroke,maxnstroke,newtonstats->lerrx);
-  }
-
-
-  // return failure mode of inversion U->P
-  return(failreturn);
-}
 
 
 
@@ -482,11 +294,212 @@ static int Utoprimgen_failwrapper(int doradonly, int showmessages, int allowloca
 // 2 : Jon's paper draft method
 #define WHICHU2PRAD 1
 
+// during implicit solver, don't limit gamma so much as normally.  Otherwise, solution may not be found and solver struggles and leads to high errors and iterations.  If limit gammarad but not gammafluid, then gammafluid can be too high.  If limit both, no solutions can be found.   So just limit afterwards for now.
+#define GAMMAMAXRADIMPLICITSOLVER (1E5)
+
 ///////////////////////////////
 //
 // END SOME LOCAL OPTIONS
 //
 ///////////////////////////////
+
+
+
+
+
+// whether to use older method before new iter-error approaches
+#define DOOLD 0
+
+static int f_implicit_lab_old(int failreturnallowable, int whichcall, int showmessages, int allowlocalfailurefixandnoreport, FTYPE *pp0, FTYPE *uu0,FTYPE *uu,FTYPE localdt, struct of_geom *ptrgeom,  FTYPE *f, FTYPE *fnorm);
+static int get_implicit_iJ_old(int failreturnallowableuse, int showmessages, int showmessagesheavy, int allowlocalfailurefixandnoreport, FTYPE impepsjac, FTYPE *uu, FTYPE *uup, FTYPE *uu0, FTYPE *pb, FTYPE fracdtG, FTYPE realdt, struct of_geom *ptrgeom, FTYPE *f1, FTYPE *f1norm, FTYPE (*iJ)[NDIM]);
+static int f_error_check_old(int showmessages, int showmessagesheavy, int iter, FTYPE conv, FTYPE realdt, FTYPE *dimfactU, FTYPE *f1, FTYPE *f1norm, FTYPE *f3report, FTYPE *Uiin, FTYPE *uu0, FTYPE *uu, struct of_geom *ptrgeom);
+static int Utoprimgen_failwrapper_old(int showmessages, int allowlocalfailurefixandnoreport, int finalstep, int evolvetype, int inputtype,FTYPE *U,  struct of_geom *ptrgeom, FTYPE *pr, struct of_newtonstats *newtonstats);
+
+
+//////// implicit stuff
+static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE dissmeasure, FTYPE *dUother ,FTYPE (*dUcomp)[NPR]);
+
+static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready, int *eomtype, FTYPE fracenergy, int *radinvmod, FTYPE *pb, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother ,FTYPE (*dUcomp)[NPR], FTYPE *errorabs, int *iters, int *f1iters);
+
+static int f_implicit_lab(int iter, int failreturnallowable, int whichcall, int showmessages, int allowlocalfailurefixandnoreport, int *eomtype, FTYPE fracenergy, int *radinvmod, FTYPE *pp, FTYPE *uu0,FTYPE *uu,FTYPE localdt, struct of_geom *ptrgeom,  FTYPE *f, FTYPE *fnorm);
+
+static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int showmessagesheavy, int allowlocalfailurefixandnoreport, int *eomtype, FTYPE fracenergy, FTYPE impepsjac, int iter, FTYPE *uu, FTYPE *uup, FTYPE *uu0, FTYPE *pp, FTYPE *ppp, FTYPE fracdtG, FTYPE realdt, struct of_geom *ptrgeom, FTYPE *f1, FTYPE *f1norm, FTYPE (*iJ)[NPR]);
+static int inverse_33matrix(int sj, int ej, FTYPE a[][NDIM], FTYPE ia[][NDIM]);
+static int inverse_11matrix(int sj, int ej, FTYPE a[][NDIM], FTYPE ia[][NDIM]);
+
+
+static int f_error_check(int showmessages, int showmessagesheavy, int iter, FTYPE conv, FTYPE realdt, int dimtypef, int eomtype, FTYPE fracenergy, FTYPE *dimfactU, FTYPE *f1, FTYPE *f1norm, FTYPE *f1report, FTYPE *Uiin, FTYPE *uu0, FTYPE *uu, struct of_geom *ptrgeom);
+
+
+
+static int Utoprimgen_failwrapper(int doradonly, int showmessages, int allowlocalfailurefixandnoreport, int finalstep, int *eomtype, int evolvetype, int inputtype,FTYPE *U,  struct of_geom *ptrgeom, FTYPE *pr, struct of_newtonstats *newtonstats);
+
+static void define_method(int iter, int *eomtype, FTYPE fracenergy, int *implicititer, int *implicitferr);
+static void get_refUs(int *numdims, int *startjac, int *endjac, int *implicititer, int *implicitferr, int *irefU, int *iotherU, int *erefU, int *eotherU, int *signgd2, int *signgd4, int *signgd6, int *signgd7);
+
+
+// debug stuff
+static void showdebuglist(int debugiter, FTYPE (*pppreholdlist)[NPR],FTYPE (*ppposholdlist)[NPR],FTYPE (*f1reportlist)[NDIM],FTYPE (*f1list)[NDIM],FTYPE *errorabsf1list, int *realiterlist, FTYPE *jac00list);
+int mathematica_report_check(int failtype, long long int failnum, int gotfirstnofail, int eomtypelocal, FTYPE errorabs, int iters, FTYPE realdt,struct of_geom *ptrgeom, FTYPE *ppfirst, FTYPE *pp, FTYPE *pb, FTYPE *piin, FTYPE *prtestUiin, FTYPE *prtestUU0, FTYPE *uu0, FTYPE *uu, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_state *q, FTYPE *dUother);
+
+// explicit stuff
+static void get_dtsub(int method, FTYPE *pr, struct of_state *q, FTYPE *Ui, FTYPE *Uf, FTYPE *dUother, FTYPE *CUf, FTYPE *Gdpl, FTYPE chi, FTYPE *Gdabspl, struct of_geom *ptrgeom, FTYPE *dtsub);
+static void koral_source_dtsub_rad_calc(int method, FTYPE *pr, FTYPE *Ui, FTYPE *Uf, FTYPE *dUother, FTYPE *CUf, FTYPE *Gdpl, struct of_geom *ptrgeom, FTYPE *dtsub);
+static int source_explicit(int whichsc, int whichradsourcemethod, int methoddtsub,int *eomtype,
+                           void (*sourcefunc)(int method, FTYPE *pr, FTYPE *Ui, FTYPE *Uf, FTYPE *dUother, FTYPE *CUf, FTYPE *Gpl, struct of_geom *ptrgeom, FTYPE *dtsub),
+                           FTYPE *pb, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother, FTYPE (*dUcomp)[NPR]);
+
+// RAD inversion stuff
+static int get_m1closure_gammarel2_old(int showmessages, struct of_geom *ptrgeom, FTYPE *Avcon, FTYPE *Avcov, FTYPE *gammarel2return, FTYPE *deltareturn, FTYPE *numeratorreturn, FTYPE *divisorreturn);
+static int get_m1closure_gammarel2(int showmessages, struct of_geom *ptrgeom, FTYPE *Avcon, FTYPE *Avcov, FTYPE *gammarel2return, FTYPE *deltareturn, FTYPE *numeratorreturn, FTYPE *divisorreturn);
+
+static int get_m1closure_gammarel2_cold_old(int showmessages, struct of_geom *ptrgeom, FTYPE *Avcon, FTYPE *Avcov, FTYPE *gammarel2return, FTYPE *deltareturn, FTYPE *numeratorreturn, FTYPE *divisorreturn, FTYPE *Erfreturn, FTYPE *urfconrel);
+static int get_m1closure_gammarel2_cold(int showmessages, struct of_geom *ptrgeom, FTYPE *Avcon, FTYPE *Avcov, FTYPE *gammarel2return, FTYPE *deltareturn, FTYPE *numeratorreturn, FTYPE *divisorreturn, FTYPE *Erfreturn, FTYPE *urfconrel);
+
+static int get_m1closure_Erf(struct of_geom *ptrgeom, FTYPE *Avcon, FTYPE gammarel2, FTYPE *Erfreturn);
+
+static int get_m1closure_urfconrel_old(int showmessages, int allowlocalfailurefixandnoreport, struct of_geom *ptrgeom, FTYPE *pp, FTYPE *Avcon, FTYPE *Avcov, FTYPE gammarel2, FTYPE delta, FTYPE numerator, FTYPE divisor, FTYPE *Erfreturn, FTYPE *urfconrel, PFTYPE *lpflag, PFTYPE *lpflagrad);
+static int get_m1closure_urfconrel(int showmessages, int allowlocalfailurefixandnoreport, struct of_geom *ptrgeom, FTYPE *pp, FTYPE *Avcon, FTYPE *Avcov, FTYPE gammarel2, FTYPE delta, FTYPE numerator, FTYPE divisor, FTYPE *Erfreturn, FTYPE *urfconrel, PFTYPE *lpflag, PFTYPE *lpflagrad);
+static int get_m1closure_urfconrel_olek(int showmessages, int allowlocalfailurefixandnoreport, struct of_geom *ptrgeom, FTYPE *pp, FTYPE *Avcon, FTYPE *Avcov, FTYPE gammarel2, FTYPE delta, FTYPE *Erfreturn, FTYPE *urfconrel, PFTYPE *lpflag, PFTYPE *lpflagrad);
+
+static int opacity_interpolated_urfconrel(FTYPE tautotmax, FTYPE *pp,struct of_geom *ptrgeom,FTYPE *Avcon, FTYPE Erf,FTYPE gammarel2,FTYPE *Erfnew, FTYPE *urfconrel);
+
+// general stuff
+static FTYPE compute_dt(FTYPE *CUf, FTYPE dtin);
+
+static void calc_Gd(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *G, FTYPE *Tgas, FTYPE *chieffreturn, FTYPE *Gabs);
+static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *Gu, FTYPE *Tgas, FTYPE *chieffreturn, FTYPE *Gabs);
+void mhdfull_calc_rad(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE (*radstressdir)[NDIM]);
+static int simplefast_rad(int dir, struct of_geom *geom,struct of_state *q, FTYPE vrad2,FTYPE *vmin, FTYPE *vmax);
+
+static void calc_kappa_kappaes(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappa, FTYPE *kappaes, FTYPE *Tgas);
+
+
+
+
+
+
+
+
+
+// KORALTODO:  If solve for full RHO+MHD+RAD solution and iterate primitives instead, then can nominally better avoid out of bounds p(U) inversion.  While involves 1+4+4=9 dimensional Newton's method, use of p(U) is avoided completely so saves lots of time.  Only ever need to call U(p).  But then doesn't take advantage of accurate(and reductions) for p(U).
+
+#define DIMTYPEFCONS 0
+#define DIMTYPEFPRIM 1
+
+// mnemonics for return modes so schemes know how failed and what to do.
+// worse failure should be larger number
+#define UTOPRIMGENWRAPPERRETURNNOFAIL  (UTOPRIMNOFAIL)
+#define UTOPRIMGENWRAPPERRETURNFAILRAD (1)
+#define UTOPRIMGENWRAPPERRETURNFAILMHD (2)
+
+// wrapper for Utoprimgen() that returns non-zero if failed in some way so know can't continue with that method
+// doradonly: ==1: Do only radiative inversion.  ==0: do full inversion.
+// showmessages : 0 or 1 : whether to show messages for issues
+// allowlocalfailurefixandnoreport : 0 or 1 : whether to have inversion avoid report and just use local fix
+// finalstep : whether this is the final step of RK substeps
+// evolvetype :
+// inputtype :
+// U : conserved quantity
+// ptrgeom : geometry pointer
+// pr : primitive (acts as guess for inversion and holds output for U->P)
+// newtonstats: for inversion method report
+static int Utoprimgen_failwrapper(int doradonly, int showmessages, int allowlocalfailurefixandnoreport, int finalstep, int *eomtype, int evolvetype, int inputtype,FTYPE *U,  struct of_geom *ptrgeom, FTYPE *pr, struct of_newtonstats *newtonstats)
+{
+  if(DOOLD){
+    int failreturnallowable=Utoprimgen_failwrapper_old(showmessages,allowlocalfailurefixandnoreport, finalstep, evolvetype, inputtype, U, ptrgeom, pr, newtonstats);
+    return(failreturnallowable);
+  }
+
+
+  int failreturn;
+
+  // defaults
+  failreturn=0;
+
+
+
+  // KORALTODO: 
+  // flag needs to be reset to preexistingfail(gas/rad) is not a failure.  Only use preexisting catches in utoprimgen.c if done with 4-force and report error in pflag and eventually go to the final advance.c inversion.
+  GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)=UTOPRIMNOFAIL;
+  GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL)=UTOPRIMRADNOFAIL;
+  
+
+  PFTYPE *lpflag,*lpflagrad;
+  lpflag=&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL);
+  lpflagrad=&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL);
+
+
+  if(doradonly==1){
+    u2p_rad(showmessages, allowlocalfailurefixandnoreport,GAMMAMAXRADIMPLICITSOLVER,U,pr,ptrgeom,lpflag,lpflagrad);
+  }
+  else{
+    //calculating primitives  
+    // OPTMARK: Should optimize this to  not try to get down to machine precision
+    MYFUN(Utoprimgen(showmessages, allowlocalfailurefixandnoreport, finalstep, eomtype, evolvetype, inputtype, U, ptrgeom, pr, newtonstats),"phys.tools.rad.c:Utoprimgen_failwrapper()", "Utoprimgen", 1);
+    nstroke+=(newtonstats->nstroke);
+    // this can change eomtype
+  }
+
+  // check how inversion did.  If didn't succeed, then check if soft failure and pass.  Else if hard failure have to return didn't work.
+  if(IFUTOPRIMFAILSOFT(*lpflag)){
+    // assume soft failure ok, but reset
+    GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)=UTOPRIMNOFAIL;
+    if(showmessages && debugfail>=2) dualfprintf(fail_file,"Got soft MHD failure inversion failure during Utoprimgen_failwrapper: ijk=%d %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
+  }
+  else if(IFUTOPRIMRADFAIL(*lpflagrad)){
+    // can reduce Newton step if getting failure.
+    // reset pflag for radiation to no failure, but treat here locally
+    GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL)=UTOPRIMRADNOFAIL;
+    if(showmessages && debugfail>=2) dualfprintf(fail_file,"Got some radiation inversion failure during Utoprimgen_failwrapper: ijk=%d %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
+    failreturn=UTOPRIMGENWRAPPERRETURNFAILRAD;
+  }
+  else if( IFUTOPRIMFAIL(*lpflag) || IFUTOPRIMRADFAIL(*lpflagrad) ){
+    // these need to get fixed-up, but can't, so return failure
+    if(showmessages && debugfail>=2) dualfprintf(fail_file,"Got hard failure of inversion (MHD part only considered as hard) in f_implicit_lab(): ijk=%d %d %d : %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,*lpflag,*lpflagrad);
+    failreturn=UTOPRIMGENWRAPPERRETURNFAILMHD;
+  }
+  else{
+    // no failure
+    // dualfprintf(fail_file,"No failure in Utoprimgen_failwrapper: ijk=%d %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
+  }
+  
+
+
+  //DEBUG:
+  if(debugfail>=2 && showmessages){
+    struct of_state q;
+    MYFUN(get_stateforcheckinversion(pr, ptrgeom, &q),"flux.c:fluxcalc()", "get_state()", 1);
+    int outputtype=inputtype;
+    FTYPE Unew[NPR];
+    MYFUN(primtoU(outputtype,pr, &q, ptrgeom, Unew),"step_ch.c:advance()", "primtoU()", 1); // UtoU inside doesn't do anything...therefore for REMOVERESTMASSFROMUU==1, Unew[UU] will have rest-mass included
+    int pliter,pl;
+    PLOOP(pliter,pl) dualfprintf(fail_file,"COMPARE: pl=%d pr=%g U=%g Unew=%g\n",pl,pr[pl],U[pl],Unew[pl]);
+    int jj;
+    DLOOPA(jj) dualfprintf(fail_file,"COMPARE: jj=%d uradcon=%g uradcov=%g\n",jj,q.uradcon[jj],q.uradcov[jj]);
+    DLOOPA(jj) dualfprintf(fail_file,"COMPARE: jj=%d ucon=%g ucov=%g\n",jj,q.ucon[jj],q.ucov[jj]);
+  }
+
+  //DEBUG:
+  if(showmessages || debugfail>=2){
+    static int maxlntries=0,maxnstroke=0;
+    int diff;
+    diff=0;
+    // For RADSHADOW, gets up to 5
+    if(newtonstats->lntries>maxlntries){ maxlntries=newtonstats->lntries; diff=1;}
+    if(newtonstats->nstroke>maxnstroke){ maxnstroke=newtonstats->nstroke; diff=1;}
+    // only report if grew beyond prior maximum
+    if(diff) dualfprintf(fail_file,"newtonsteps: lntries=%d (max=%d) nstroke=%d (max=%d) logerror=%g\n",newtonstats->lntries,maxlntries,newtonstats->nstroke,maxnstroke,newtonstats->lerrx);
+  }
+
+
+  // return failure mode of inversion U->P
+  return(failreturn);
+}
+
+
+
+
 
 
 
@@ -905,12 +918,18 @@ static int f_implicit_lab(int iter, int failreturnallowable, int whichcall, int 
     // 2) trivially invert to get rho
     pp[RHO]= uu0[RHO]/q.ucon[TT];
     //
-    // 3) Apply any fixups, like floors or limit_gamma's.  Won't help reduce error, but even if solution with high fluid gamma, later apply limit_gamma, but then balance between fluid and radiation lost.  So better to see as high error event than accurate high gamma event.
-    int finalstepfixup=0; // treat as if not needing to diagnose, just act.  KORALTODO: Although, Utoprimgen(finalstep) used to get change in fluid primitives.
-    // Note, uu is old, but only used for diagnostics, and don't care about diagnostics in this stepping.
-    fixup1zone(pp,uu, ptrgeom,finalstepfixup);
-    // fix uu[RHO] to be consistent, since uu[RHO] used to get inverted scalars
-    uu[RHO] = pp[RHO]*q.ucon[TT];
+    if(1){
+      // Don't restrict rho or u_g except as by iteration catches.  Don't restrict gamma or gammarad during iterations so can smoothly go out of bounds if required temporarily.
+      // KORALTODO: SUPERGODMARK: causes many more high error - high iteration events.  fixup1zone() has no radiation, so not consistent.  But eventually applied!  Is it due to limit_gamma() or density floors?
+      // 3) Apply any fixups, like floors or limit_gamma's.  Won't help reduce error, but even if solution with high fluid gamma, later apply limit_gamma, but then balance between fluid and radiation lost.  So better to see as high error event than accurate high gamma event.
+      int finalstepfixup=0; // treat as if not needing to diagnose, just act.  KORALTODO: Although, Utoprimgen(finalstep) used to get change in fluid primitives.
+      // Note, uu is old, but only used for diagnostics, and don't care about diagnostics in this stepping.
+      //      fixup1zone(pp,uu, ptrgeom,finalstepfixup);
+
+      //      limit_gamma(GAMMAMAX,GAMMAMAXRAD,pp,NULL,ptrgeom,0);
+      // fix uu[RHO] to be consistent, since uu[RHO] used to get inverted scalars
+      uu[RHO] = pp[RHO]*q.ucon[TT];
+    }
     //
     // 4) Invert other scalars (only uses uu[RHO], not pp[RHO])
     extern int invert_scalars(struct of_geom *ptrgeom, FTYPE *Ugeomfree, FTYPE *pr);
@@ -6163,7 +6182,7 @@ int prad_fftolab(int *whichvel, int *whichcoord, int i, int j, int k, int loc, s
   // NOTEMARK: lpflag=UTOPRIMNOFAIL means accept input pout for velocity to maybe be used in local reductions to fluid frame.
   // u2p_rad() only uses U[URAD0-URAD3]
   // generally u2p_rad() could use all of pout[] except only assigns pout[PRAD0-PRAD3] and doesn't use that for anything except as "static" solution (i.e. uses pin effectively)
-  u2p_rad(showmessages, allowlocalfailurefixandnoreport, U, pout, ptrgeomtouse, &lpflag, &lpflagrad);
+  u2p_rad(showmessages, allowlocalfailurefixandnoreport, GAMMAMAXRAD, U, pout, ptrgeomtouse, &lpflag, &lpflagrad);
 
   //  DLOOPA(jj) dualfprintf(fail_file,"u2p_rad: jj=%d pout=%g\n",jj,pout[PRAD0+jj]);
 
@@ -6479,16 +6498,16 @@ int indices_12(FTYPE A1[NDIM],FTYPE A2[NDIM],struct of_geom *ptrgeom)
 
 
 
-int u2p_rad(int showmessages, int allowlocalfailurefixandnoreport, FTYPE *uu, FTYPE *pin, struct of_geom *ptrgeom,PFTYPE *lpflag, PFTYPE *lpflagrad)
+int u2p_rad(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gammamaxrad, FTYPE *uu, FTYPE *pin, struct of_geom *ptrgeom,PFTYPE *lpflag, PFTYPE *lpflagrad)
 {
-  int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE *uu, FTYPE *pin, struct of_geom *ptrgeom,PFTYPE *lpflag, PFTYPE *lpflagrad);
-  int u2p_rad_orig(int showmessages, int allowlocalfailurefixandnoreport, FTYPE *uu, FTYPE *pin, struct of_geom *ptrgeom,PFTYPE *lpflag, PFTYPE *lpflagrad);
+  int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gammamaxrad, FTYPE *uu, FTYPE *pin, struct of_geom *ptrgeom,PFTYPE *lpflag, PFTYPE *lpflagrad);
+  int u2p_rad_orig(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gammamaxrad, FTYPE *uu, FTYPE *pin, struct of_geom *ptrgeom,PFTYPE *lpflag, PFTYPE *lpflagrad);
   int toreturn;
 
 #if(WHICHU2PRAD==0)
   toreturn=u2p_rad_orig(showmessages, allowlocalfailurefixandnoreport, uu, pin, ptrgeom,lpflag, lpflagrad);
 #else
-  toreturn=u2p_rad_new(showmessages, allowlocalfailurefixandnoreport, uu, pin, ptrgeom,lpflag, lpflagrad);
+  toreturn=u2p_rad_new(showmessages, allowlocalfailurefixandnoreport, gammamaxrad, uu, pin, ptrgeom,lpflag, lpflagrad);
 #endif
 
   return(toreturn);
@@ -6500,7 +6519,7 @@ int u2p_rad(int showmessages, int allowlocalfailurefixandnoreport, FTYPE *uu, FT
 // Like u2p_rad_orig(), but uses Jon's paper draft ZAMO RAD version
 //
 //////////////
-int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE *uu, FTYPE *pin, struct of_geom *ptrgeom,PFTYPE *lpflag, PFTYPE *lpflagrad)
+int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gammamaxrad, FTYPE *uu, FTYPE *pin, struct of_geom *ptrgeom,PFTYPE *lpflag, PFTYPE *lpflagrad)
 {
   static long long int numyvarneg,numyvarbig,numErneg,nummod;
 
@@ -6550,7 +6569,7 @@ int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE *uu
 
   // \gamma_{\rm rad}^2 :  only 1 root
   FTYPE gammasq,gamma;
-  FTYPE gammamax=GAMMAMAXRAD;
+  FTYPE gammamax=gammamaxrad;
   FTYPE gammamaxsq=gammamax*gammamax;
   FTYPE ylimit = 16.0*gammamaxsq*(gammamaxsq-1.0)/((4.0*gammamaxsq-1.0)*(4.0*gammamaxsq-1.0));
   if(yvar<0.0){
@@ -6630,15 +6649,18 @@ int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE *uu
     pin[PRAD2]=urfconrel[2];
     pin[PRAD3]=urfconrel[3];
 
-    // Second, ensure not creating energy in ZAMO frame
-    struct of_state q;
-    get_state_uradconuradcovonly(pin, ptrgeom, &q);
-    FTYPE Rtnu[NDIM];
-    mhd_calc_rad( pin, TT, ptrgeom, &q, Rtnu );
-    //    dualfprintf(fail_file,"Rtnu=%g %g %g %g\n",Rtnu[0],Rtnu[1],Rtnu[2],Rtnu[3]);
-    FTYPE Ernew,Utildesqnew,Utildeconnew;
-    compute_ZAMORAD(&Rtnu[0-URAD0], ptrgeom, &Ernew, &Utildesqnew, &Utildeconnew); // out of range warning ok.
-    Erf = Erf*MIN(1.0,Er/Ernew);
+    if(0){ // causes more problems for implicit solver.
+
+      // Second, ensure not creating energy in ZAMO frame
+      struct of_state q;
+      get_state_uradconuradcovonly(pin, ptrgeom, &q);
+      FTYPE Rtnu[NDIM];
+      mhd_calc_rad( pin, TT, ptrgeom, &q, Rtnu );
+      //    dualfprintf(fail_file,"Rtnu=%g %g %g %g\n",Rtnu[0],Rtnu[1],Rtnu[2],Rtnu[3]);
+      FTYPE Ernew,Utildesqnew,Utildeconnew;
+      compute_ZAMORAD(&Rtnu[0-URAD0], ptrgeom, &Ernew, &Utildesqnew, &Utildeconnew); // out of range warning ok.
+      Erf = Erf*MIN(1.0,Er/Ernew);
+    }
 
     *lpflagrad=UTOPRIMRADFAILCASE3A; // used to detec if modified primitives to not be consistent with inputted uu
 
@@ -6759,7 +6781,7 @@ FTYPE globalpin[NPR];
 
 //
 ///////////////
-int u2p_rad_orig(int showmessages, int allowlocalfailurefixandnoreport, FTYPE *uu, FTYPE *pin, struct of_geom *ptrgeom,PFTYPE *lpflag, PFTYPE *lpflagrad)
+int u2p_rad_orig(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gammamaxrad, FTYPE *uu, FTYPE *pin, struct of_geom *ptrgeom,PFTYPE *lpflag, PFTYPE *lpflagrad)
 {
   int jj,kk;
   FTYPE pp[NPR];
