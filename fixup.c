@@ -970,19 +970,18 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
 
 
 
-
-
-  //////////////////////////
-  // now keep track of modified primitives via conserved quantities
-
-  if(didchangeprim){
-
-
     // assume once we go below floor, all hell will break loose unless we calm the storm by shutting down this zone's relative velocity
     // normal observer velocity
     // i.e. consider this a failure
     //GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)= 1;
 
+
+  //////////////////////////
+  //
+  // now keep track of modified primitives via conserved quantities
+  //
+  //////////////////////////
+  if(didchangeprim){
 
     ///////////////
     //
@@ -994,7 +993,8 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
 
     ///////////////
     //
-    //  now ensure primitive and conserved consistent for RK3 and other methods that use Uf
+    // now ensure primitive and conserved consistent for RK3 and other methods that use Uf
+    // assumes "ucons" is utoinvert in advance.c so it's uf or utempcum when necessary as associated with inversion (internal implicit or external).
     //
     //////////////
     struct of_state qnew;
