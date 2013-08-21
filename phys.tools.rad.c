@@ -1434,7 +1434,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
       //      DIVCONDUP=-100.0*NUMEPSILON;
 
       //      DIVCONDDN=-0.1;
-      DIVCONDDN=-100.0*NUMEPSILON;
+      //      DIVCONDDN=-100.0*NUMEPSILON;
+      DIVCONDDN=0.0;
       DIVCONDUP=DIVCONDDN;
 
       divcond=dissmeasure;
@@ -1530,8 +1531,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
       ACCEPTASNOFAILURE(failreturnentropy)==1 && ACCEPTASNOFAILURE(failreturnenergy)==1 && (errorabsentropy<IMPTRYCONVABS && errorabsenergy>IMPBADENERGY) ||
       //      ACCEPTASNOFAILURE(failreturnentropy)==1 && ACCEPTASNOFAILURE(failreturnenergy)==1 && (BADENERGY(pbenergy[UU],pbentropy[UU]) && (errorabsentropy<IMPOKCONV && errorabsenergy>errorabsentropy)) ||
       //      ACCEPTASNOFAILURE(failreturnentropy)==1 && ACCEPTASNOFAILURE(failreturnenergy)==1 && (BADENERGY2(pbenergy[UU],pbentropy[UU]) && (errorabsentropy<IMPTRYCONVABS && errorabsenergy>IMPTRYCONVABS)) // switch to entropy if suspicious energy solution that looks approximate but mathematica checks suggest are mostly u_g<0 if accurate solution found.
-      ACCEPTASNOFAILURE(failreturnentropy)==1 && ACCEPTASNOFAILURE(failreturnenergy)==1 && (BADENERGY2(pbenergy[UU],pbentropy[UU]) && (errorabsentropy<IMPOKCONV && errorabsenergy<IMPOKCONV)) // switch to entropy if suspicious energy solution that looks approximate but mathematica checks suggest are mostly u_g<0 if accurate solution found.
-||ACCEPTASNOFAILURE(failreturnentropy)==1 && ACCEPTASNOFAILURE(failreturnenergy)==1 && radinvmodenergy==1 && radinvmodentropy==0 && errorabsentropy<IMPOKCONV
+      ACCEPTASNOFAILURE(failreturnentropy)==1 && ACCEPTASNOFAILURE(failreturnenergy)==1 && (BADENERGY2(pbenergy[UU],pbentropy[UU]) && (errorabsentropy<IMPOKCONV && errorabsenergy<IMPOKCONV)) // switch to entropy if ug for energy is smaller, and can trust both energy and entropy ug so can trust that comparison.
+      ||ACCEPTASNOFAILURE(failreturnentropy)==1 && ACCEPTASNOFAILURE(failreturnenergy)==1 && radinvmodenergy==1 && radinvmodentropy==0 && errorabsentropy<IMPOKCONV // avoid energy if it particularly leads to radiation reaching maximum.
       ;
 
     // override to preserve better force balance, as long as energy solution is a good one.
