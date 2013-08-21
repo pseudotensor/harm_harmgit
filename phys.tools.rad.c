@@ -926,7 +926,7 @@ static int f_implicit_lab(int iter, int failreturnallowable, int whichcall, int 
       // Note, uu is old, but only used for diagnostics, and don't care about diagnostics in this stepping.
       //      fixup1zone(pp,uu, ptrgeom,finalstepfixup);
 
-      //      limit_gamma(GAMMAMAX,GAMMAMAXRAD,pp,NULL,ptrgeom,0);
+      //      limit_gamma(GAMMAMAX,GAMMAMAXRADIMPLICITSOLVER,pp,NULL,ptrgeom,0);
       // fix uu[RHO] to be consistent, since uu[RHO] used to get inverted scalars
       uu[RHO] = pp[RHO]*q.ucon[TT];
     }

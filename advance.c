@@ -722,8 +722,8 @@ static int advance_standard(
             // immediate local (i.e. 1-zone) fix
 #if(FIXUPZONES==FIXUP1ZONE)
             // SUPERGODMARK: Below should differentiate beteween whether want negative densities fixed or not, but right now fixup1zone() does all
-            if((STEPOVERNEGU==0)||(STEPOVERNEGRHO==0)||(STEPOVERNEGRHOU==0)||(finalstep)){
-              MYFUN(fixup1zone(MAC(pf,i,j,k),MAC(useducum,i,j,k), ptrgeom,finalstep),"fixup.c:fixup()", "fixup1zone()", 1);
+            if((STEPOVERNEGU==NEGDENSITY_ALWAYSFIXUP)||(STEPOVERNEGRHO==NEGDENSITY_ALWAYSFIXUP)||(STEPOVERNEGRHOU==NEGDENSITY_ALWAYSFIXUP)||(finalstep)){
+              MYFUN(fixup1zone(MAC(pf,i,j,k),MAC(utoinvert,i,j,k), ptrgeom,finalstep),"fixup.c:fixup()", "fixup1zone()", 1);
             }
 #endif
           }// end doing single-point fixups

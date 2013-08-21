@@ -987,11 +987,11 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
   //
   // Only changed mhd quantities with this floor approach, now return pr with prmhd for those MHD quantities.
   // KORALTODO: Did modify prmhd[URAD0] if required, but didn't account for radiation stress-energy yet, so keep below so far.
-  PALLLOOP(pl){
-    if(!(pl==PRAD0 || pl==PRAD1 || pl==PRAD2 || pl==PRAD3)){
-      pr[pl]=prmhd[pl];
-    }
-  }
+  //  PALLLOOP(pl){
+  //    if(!(pl==PRAD0 || pl==PRAD1 || pl==PRAD2 || pl==PRAD3)){
+  //      pr[pl]=prmhd[pl];
+  //    }
+  //  }
   //
   ///////////////
 
@@ -3422,7 +3422,7 @@ int limit_gamma(FTYPE gammamax, FTYPE gammamaxrad, FTYPE*pr, FTYPE *ucons, struc
       pr[URAD3] *= f ;
 
 
-      radgamma=gammamax; // reset radgamma for next check
+      radgamma=gammamaxrad; // reset radgamma for next check
       didchange=1; // indicate did change primitive
     }
   }
