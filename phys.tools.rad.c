@@ -1434,8 +1434,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
     }
     else{
       // force so no machine error issues in switch
-      fracenergy = (divcond-DIVCONDUP)/(DIVCONDDN-DIVCONDUP);
-      if(fracenergy>=1.0) fracenergy=1.0;
+      if(divcond<DIVCONDDN) fracenergy=1.0;
       else fracenergy=0.0;
     }
 
