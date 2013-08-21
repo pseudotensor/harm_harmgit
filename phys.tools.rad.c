@@ -1425,7 +1425,6 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
       }
     }
     else if(DIVERGENCEMETHOD==DIVMETHODPOSTFLUX){
-      DIVCONDDN=-0.1;
       //      DIVCONDDN=-0.01;
       //      DIVCONDDN=-SMALL;
       //      DIVCONDDN=-1E-6;
@@ -1433,6 +1432,9 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
 
       //      DIVCONDUP=-1E-6;
       //      DIVCONDUP=-100.0*NUMEPSILON;
+
+      //      DIVCONDDN=-0.1;
+      DIVCONDDN=-100.0*NUMEPSILON;
       DIVCONDUP=DIVCONDDN;
 
       divcond=dissmeasure;
@@ -1526,8 +1528,10 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
       //       ACCEPTASNOFAILURE(failreturnenergy)==1 && ACCEPTASNOFAILURE(failreturnentropy)==1 && (fracenergy>0.0 && fracenergy<1.0) && (errorabsentropy<=IMPOKCONV && errorabsenergy>IMPOKCONV) ||
       ACCEPTASNOFAILURE(failreturnenergy)==0 && ACCEPTASNOFAILURE(failreturnentropy)==1 ||
       ACCEPTASNOFAILURE(failreturnentropy)==1 && ACCEPTASNOFAILURE(failreturnenergy)==1 && (errorabsentropy<IMPTRYCONVABS && errorabsenergy>IMPBADENERGY) ||
-      ACCEPTASNOFAILURE(failreturnentropy)==1 && ACCEPTASNOFAILURE(failreturnenergy)==1 && (BADENERGY(pbenergy[UU],pbentropy[UU]) && (errorabsentropy<IMPOKCONV && errorabsenergy>errorabsentropy)) ||
-      ACCEPTASNOFAILURE(failreturnentropy)==1 && ACCEPTASNOFAILURE(failreturnenergy)==1 && (BADENERGY2(pbenergy[UU],pbentropy[UU]) && (errorabsentropy<IMPTRYCONVABS && errorabsenergy>IMPTRYCONVABS)) // switch to entropy if suspicious energy solution that looks approximate but mathematica checks suggest are mostly u_g<0 if accurate solution found.
+      //      ACCEPTASNOFAILURE(failreturnentropy)==1 && ACCEPTASNOFAILURE(failreturnenergy)==1 && (BADENERGY(pbenergy[UU],pbentropy[UU]) && (errorabsentropy<IMPOKCONV && errorabsenergy>errorabsentropy)) ||
+      //      ACCEPTASNOFAILURE(failreturnentropy)==1 && ACCEPTASNOFAILURE(failreturnenergy)==1 && (BADENERGY2(pbenergy[UU],pbentropy[UU]) && (errorabsentropy<IMPTRYCONVABS && errorabsenergy>IMPTRYCONVABS)) // switch to entropy if suspicious energy solution that looks approximate but mathematica checks suggest are mostly u_g<0 if accurate solution found.
+      ACCEPTASNOFAILURE(failreturnentropy)==1 && ACCEPTASNOFAILURE(failreturnenergy)==1 && (BADENERGY2(pbenergy[UU],pbentropy[UU]) && (errorabsentropy<IMPOKCONV && errorabsenergy<IMPOKCONV)) // switch to entropy if suspicious energy solution that looks approximate but mathematica checks suggest are mostly u_g<0 if accurate solution found.
+||ACCEPTASNOFAILURE(failreturnentropy)==1 && ACCEPTASNOFAILURE(failreturnenergy)==1 && radinvmodenergy==1 && radinvmodentropy==0 && errorabsentropy<IMPOKCONV
       ;
 
     // override to preserve better force balance, as long as energy solution is a good one.
