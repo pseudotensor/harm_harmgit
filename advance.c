@@ -369,7 +369,7 @@ static int advance_standard(
 
   
     // KORALNOTE: field dUtoU loses previous time uf needed for RK3 and RK4, so need to store it for safe keeping
-    // this oldud is used for B1,B2,B3 and required in cases when CUf[1]!=0.0, as even TVD RK2 method needs.
+    // this oldud is used for B1,B2,B3 and required in cases when CUf[1]!=0.0, as even TVD RK2 method needs because previous Uf used even for updating new Uf.
     olduf=GLOBALPOINT(oldufstore);
     copy_3dnpr_fullloop(uf,olduf);
     

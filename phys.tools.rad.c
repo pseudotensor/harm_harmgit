@@ -470,7 +470,7 @@ static int Utoprimgen_failwrapper(int doradonly, int showmessages, int allowloca
 #define FACTORBADJUMPERROR (1.0E2)
 
 // what tolerance to use for saying can switch to entropy when u_g is suggested to be bad for energy
-#define IMPOKENTROPY (1E-8)
+#define IMPOKCONV (1E-10)
 // tolerance above which say energy solution is probably bad even if not very large error.  These have tended (or nearly 100%) to be cases where actual solution has u_g<0 but harm gets error u_g>0 and error not too large.
 #define IMPBADENERGY (1E-7)
 
@@ -878,66 +878,6 @@ static int f_implicit_lab(int iter, int failreturnallowable, int whichcall, int 
     // not setup
     myexit(92846534);
   }
-#if(0)
- else if(implicititer==QTYPMHD || implicititer==QTYPMHDENERGYONLY || implicititer==QTYPMHDMOMONLY){
-    extern int invert_scalars(struct of_geom *ptrgeom, FTYPE *Ugeomfree, FTYPE *pr);
-    // Have pmhd={ug,uvel1,uvel2,uvel3}
-    // 1) get state (mhd state needed for primtoU) and Umhd, Uentropy [also computes Urad, but overwritten next and not expensive]
-    struct of_state q; get_state(pp, ptrgeom, &q);
-    // 1.5) trivially invert to get rho and other scalars
-    pp[RHO]= uu0[RHO]/q.ucon[TT];
-    invert_scalars(ptrgeom, uu,pp);
-    // trivially invert field
-    PLOOPBONLY(pl) pp[pl] = uu0[pl];
-    // set p[ENTROPY] in case evaluated as a diagnostic.
-    if(ENTROPY>=0) pp[ENTROPY] = pp[UU];
-    // 1.6) save these primitives as original pmhd's
-    FTYPE pporig[NPR]; PLOOP(pliter,pl) pporig[pl]=pp[pl];
-    // 1.7) Do rest of get_state that used rho and other scalars
-    extern int get_state_thermodynamics(struct of_geom *ptrgeom, FTYPE *pr, struct of_state *q);
-    get_state_thermodynamics(ptrgeom, pp, &q);
-    // 2) Compute Umhd and Uentropy [happens to compute old Urad from old pprad, but overwritten next step]
-    primtoU(UNOTHING,pp,&q,ptrgeom, uu);
-    // 3) Get actual Urad(G) via energy conservation (correct even if using entropy as error function, because just computed correct U[ENTROPY] consistent with U[UU].
-    DLOOPA(iv) uu[iotherU[iv]] = uu0[iotherU[iv]] - (uu[irefU[iv]]-uu0[irefU[iv]]);
-    // 4) Do RAD-ONLY Inversion
-    int doradonly=1; failreturn=Utoprimgen_failwrapper(doradonly,showmessages,allowlocalfailurefixandnoreport, finalstep, eomtype, EVOLVEUTOPRIM, UNOTHING, uu, ptrgeom, pp, &newtonstats);
-    //  no need to concern with eomtype in RAD only case.  i.e. eomtype won't change.
-    // 5) Get consistent Urad [also computes Umhd and Uentropy, which is ok]
-    get_state_uradconuradcovonly(pp, ptrgeom, &q); // only changes radiation state, not fluid state, but keeps old q's for fluid state for next step.
-    // fix-up primitives to avoid violent steps in temperature
-#if(RAMESHTRADTGASFIX)
-    if(implicitferr==QTYUMHD){
-      FTYPE Tgasnew=compute_temp_simple(ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p,pp[RHO],pp[UU]);
-      FTYPE Tradnew=calc_LTE_TfromE(pp[PRAD0]);
-      if(iter>1){
-        if(
-           (RAMESHTRADTGASFIX==1 && sign(Tgasnew-Tradnew)!=sign(Tgasold-Tradold))
-           || (RAMESHTRADTGASFIX==2 && sign(Tgasnew-Tradnew)!=sign(Tgasiter1-Traditer1))
-           ){
-          // restrict u_g to have Tgas=Trad
-          pp[UU]=calc_PEQ_ufromTrho(Tradnew,pp[RHO]);
-          Tgasnew=Tradnew;
-        }
-      }
-      if(iter==1){
-        Tgasiter1=Tgasnew;
-        Traditer1=Tradnew;
-      }
-      Tgasold=Tgasnew;
-      Tradold=Tradnew;
-    }
-#endif
-    primtoU(UNOTHING,pp,&q,ptrgeom, uu);
-    // 6) Recover actual iterated pmhd to avoid machine related differences between original pp and pp(U(pp)) for pmhd quantities
-    // This assumes that iterated pmhd is optimal and not modified except by iteration by Newton step, which is currently true.
-    // This gives machine error priority to mhd primitives rather than mhd U's.
-    // below not necessary since don't overwrite pp[non-rad]
-    //PLOOP(pliter,pl) if(!RADPL(pl)) pp[pl]=pporig[pl];
-    PLOOPBONLY(pl) uu[pl]=pp[pl];// overwrite so machine accurate field
-    // now have full primitives and full U including entropy and these are consistent with each other.
-  }
-#else
   else if(implicititer==QTYPMHD || implicititer==QTYPMHDENERGYONLY || implicititer==QTYPMHDMOMONLY){
     // 0) Have pmhd={ug,uvel1,uvel2,uvel3}
     //
@@ -1033,7 +973,6 @@ static int f_implicit_lab(int iter, int failreturnallowable, int whichcall, int 
     //
     // now have full primitives (pp) and full U (uu) including entropy and these (pp and uu) are fully consistent with each other.
   }
-#endif
   else if(implicititer==QTYPRAD || implicititer==QTYPRADENERGYONLY || implicititer==QTYPRADMOMONLY){
     FTYPE pporig[NPR]; PLOOP(pliter,pl) pporig[pl]=pp[pl];
     // Have prad={Erf,uradvel1,uradvel2,uradvel3}
@@ -1345,7 +1284,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
     PLOOP(pliter,pl){
       pbentropy[pl]=pbbackup[pl];
       SCLOOP(sc) dUcompentropy[sc][pl]=dUcompbackup[sc][pl];
-      qentropy=*q;
+      qentropy=qbackup;
     }
     // get fresh start entropy solution
     havebackup=0;
@@ -1359,9 +1298,6 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
     const int NxNOT1[NDIM]={0,N1NOT1,N2NOT1,N3NOT1};
     int dir;
     FTYPE divcond;
-    FTYPE uu0[NPR];
-    FTYPE fracdtuu0=1.0;
-    PLOOP(pliter,pl) uu0[pl]=UFSET(CUf,fracdtuu0*dt,Uiin[pl],Ufin[pl],dUother[pl],0.0);
     FTYPE DIVCONDDN=-BIG,DIVCONDUP=BIG;
 
 
@@ -1416,7 +1352,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
         PLOOP(pliter,pl){
           pbenergy[pl]=pbbackup[pl];
           SCLOOP(sc) dUcompenergy[sc][pl]=dUcompbackup[sc][pl];
-          qenergy=*q;
+          qenergy=qbackup;
         }
       }
       else{
@@ -1450,10 +1386,12 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
     // cases where must use entropy
     //
     /////////////
-    if( divcond>=DIVCONDUP && ACCEPTASNOFAILURE(failreturnentropy)==1 ||
+    if(
+       divcond>=DIVCONDUP && ACCEPTASNOFAILURE(failreturnentropy)==1 ||
+       ACCEPTASNOFAILURE(failreturnenergy)==1 && ACCEPTASNOFAILURE(failreturnentropy)==1 && (divcond>DIVCONDDN && divcond<DIVCONDUP) && (errorabsentropy<=IMPOKCONV && errorabsenergy>IMPOKCONV) ||
        ACCEPTASNOFAILURE(failreturnenergy)==0 && ACCEPTASNOFAILURE(failreturnentropy)==1 ||
        ACCEPTASNOFAILURE(failreturnentropy)==1 && ACCEPTASNOFAILURE(failreturnenergy)==1 && (errorabsentropy<IMPTRYCONVABS && errorabsenergy>IMPBADENERGY) ||
-       ACCEPTASNOFAILURE(failreturnentropy)==1 && ACCEPTASNOFAILURE(failreturnenergy)==1 && (BADENERGY(pbenergy[UU],pbentropy[UU]) && (errorabsentropy<IMPOKENTROPY && errorabsenergy>errorabsentropy)) ||
+       ACCEPTASNOFAILURE(failreturnentropy)==1 && ACCEPTASNOFAILURE(failreturnenergy)==1 && (BADENERGY(pbenergy[UU],pbentropy[UU]) && (errorabsentropy<IMPOKCONV && errorabsenergy>errorabsentropy)) ||
        ACCEPTASNOFAILURE(failreturnentropy)==1 && ACCEPTASNOFAILURE(failreturnenergy)==1 && (BADENERGY2(pbenergy[UU],pbentropy[UU]) && (errorabsentropy<IMPTRYCONVABS && errorabsenergy>IMPTRYCONVABS)) // switch to entropy if suspicious energy solution that looks approximate but mathematica checks suggest are mostly u_g<0 if accurate solution found.
        ){
       //      dualfprintf(fail_file,"USING ENTROPY\n");
@@ -1472,8 +1410,9 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
       f1iters=f1itersentropy+f1itersenergy; // count both since did both
       failreturn=failreturnentropy;
     }
-    // && (errorabsentropy<IMPTRYCONVABS && errorabsenergy<IMPTRYCONVABS)
-    else if(ACCEPTASNOFAILURE(failreturnenergy)==1 && ACCEPTASNOFAILURE(failreturnentropy)==1 && (divcond>DIVCONDDN && divcond<DIVCONDUP)){
+    // 
+    else if(ACCEPTASNOFAILURE(failreturnenergy)==1 && ACCEPTASNOFAILURE(failreturnentropy)==1 && (divcond>DIVCONDDN && divcond<DIVCONDUP) && (errorabsentropy<=IMPOKCONV && errorabsenergy<=IMPOKCONV)){
+      // if allow high energy errors, leads to problems.  So only do interpolation if both have good errors.
       // then interpolate between energy and entropy solution
       // below DIVCONDDN, do only energy
       // above DIVCONDUP, do only entropy
@@ -1486,19 +1425,29 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
 
       PLOOP(pliter,pl){
         pb[pl]=fracenergy*pbenergy[pl] + (1.0-fracenergy)*pbentropy[pl];
-        SCLOOP(sc) dUcomp[sc][pl] = fracenergy*dUcompenergy[sc][pl] + (1.0-fracenergy)*dUcompentropy[sc][pl]; // not really accurate, below fixes this.
       }
       // except choose larger of u_g to avoid using dropped-out energy when partialy using energy.  This allows shocks to also still be accounted for.
       pb[UU] = MAX(pbenergy[UU],pbentropy[UU]);
-      *q=qenergy;
-      if(1||EOMDONOTHING(*eomtype)==0){ // keep as 1|| in case dUcomp used.
+
+      // now get actual interpolated dUcomp
+      if(1){
+        // Always need dUcomp set.  Why?  Because on next substep, TVD RK2/RK3 and RK4 use previous Uf as part of ucum.
         // dUcomp not modified since normal mode is to not do external inversion, otherwise should recompute uu and dUcomp from this modified primitive.
+
+        // get uunew
         get_state(pb, ptrgeom, q);
         FTYPE uunew[NPR];
         primtoU(UNOTHING,pb,q,ptrgeom, uunew);
-        sc = RADSOURCE;
+
+        // get uu0
+        FTYPE uu0[NPR];
+        FTYPE fracdtuu0=1.0;
+        PLOOP(pliter,pl) uu0[pl]=UFSET(CUf,fracdtuu0*dt,Uiin[pl],Ufin[pl],dUother[pl],0.0);
+
+        // get dUcomp
         FTYPE realdt = compute_dt(CUf,dt);
-        PLOOP(pliter,pl) dUcomp[sc][pl] = +(uunew[pl]-uu0[pl])/realdt;
+        sc = RADSOURCE;
+        PLOOP(pliter,pl) dUcomp[sc][pl] = dUcompbackup[sc][pl] + (uunew[pl]-uu0[pl])/realdt;
       }
       usedboth=1;
       noprims=0;
@@ -2996,6 +2945,8 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
           //
           // check and get error for last iteration or any mods from above that are post-iteration
           //
+          // The call to f_implicit_lab() also ensures uu is consistent with new pp
+          //
           ////////////////////////
           int whichcall=1;
           //  eomtypelocal=*eomtype; // re-chose default each time. No, stick with what f1 (last call to f1) chose
@@ -3008,6 +2959,14 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
         }// end if doing final check
         else{
           // kinda risky to rely upon last step but not checking its error
+
+          // since iterated pp or uu but didn't call f_implicit_lab(), uu or pp (respectively) is no longer consistent.
+          // So get uu(pp)
+          struct of_state qcons;
+          get_state(pp, ptrgeom, &qcons);
+          primtoU(UNOTHING,pp,&qcons,ptrgeom, uu);
+
+          // now get error
           int dimtypef=DIMTYPEFCONS; // 0 = conserved R^t_\nu type, 1 = primitive (u,v^i) type, i.e. v^i has no energy density term
           convreturn=f_error_check(showmessages, showmessagesheavy, iter, IMPTRYCONV,realdt,dimtypef,eomtypelocal,dimfactU,f1,f1norm,f1report,Uiin,uu0,uu,ptrgeom);
           convreturnallow=f_error_check(showmessages, showmessagesheavy, iter, IMPALLOWCONV,realdt,dimtypef,eomtypelocal,dimfactU,f1,f1norm,f1report,Uiin,uup,uu,ptrgeom);
