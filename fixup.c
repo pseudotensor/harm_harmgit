@@ -773,8 +773,8 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
     checkfl[UU]=1;
   }
   // KORALTODO: Keep as mhd only for now.
-  //  int DOEVOLVEURAD0=PRAD0>=0 && EOMRADTYPE!=EOMRADNONE;
-  //  if(DOEVOLVEURAD0) checkfl[PRAD0]=1;
+  int DOEVOLVEURAD0=PRAD0>=0 && EOMRADTYPE!=EOMRADNONE;
+  if(DOEVOLVEURAD0) checkfl[PRAD0]=1;
 
 
     
@@ -783,7 +783,7 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
   // Only apply floor if cold or hot GRMHD
   //
   ////////////
-  if(DOEVOLVERHO||DOEVOLVEUU){//||DOEVOLVEURAD0){
+  if(DOEVOLVERHO||DOEVOLVEUU||DOEVOLVEURAD0){
 
 
     //////////////
@@ -794,7 +794,7 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
     set_density_floors(ptrgeom,prmhd,prfloor);
     scalemin[RHO]=RHOMINLIMIT;
     scalemin[UU]=UUMINLIMIT;
-    //    if(PRAD0>=0) scalemin[URAD0]=ERADLIMIT;
+    if(PRAD0>=0) scalemin[URAD0]=ERADLIMIT;
     
     
 
@@ -859,7 +859,7 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
       // get change in primitive quantities
       PALLLOOP(pl) dprmhd[pl]=0.0; // default
       // use ZAMO velocity as velocity of inserted fluid
-      for(pl=RHO;pl<=UU;pl++) dprmhd[pl]=prmhdnew[pl]-prmhd[pl];
+      PALLLOOP(pl) if(pl==RHO || pl==UU || pl==URAD0){ dprmhd[pl]=prmhdnew[pl]-prmhd[pl];}
       set_zamo_velocity(WHICHVEL,ptrgeom,dprmhd);
 
       // get change in conserved quantities
@@ -954,7 +954,7 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
   ////////////////////
 #if(WHICHVEL==VELREL4)
   int docorrectucons=1;
-  didchangeprim=0;
+  //  didchangeprim=0;
 
   failreturn=limit_gamma(GAMMAMAX,GAMMAMAXRAD,prmhd,ucons,ptrgeom,-1);
   if(failreturn>=1) FAILSTATEMENT("fixup.c:fixup()", "limit_gamma()", 1);
@@ -975,25 +975,34 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
   //////////////////////////
   // now keep track of modified primitives via conserved quantities
 
-  //  if(didchangeprim){
-  // assume once we go below floor, all hell will break loose unless we calm the storm by shutting down this zone's relative velocity
-  // normal observer velocity
-  // i.e. consider this a failure
-  //GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)= 1;
-  //  }
+  if(didchangeprim){
 
 
-  ///////////////
-  //
-  // Only changed mhd quantities with this floor approach, now return pr with prmhd for those MHD quantities.
-  // KORALTODO: Did modify prmhd[URAD0] if required, but didn't account for radiation stress-energy yet, so keep below so far.
-  //  PALLLOOP(pl){
-  //    if(!(pl==PRAD0 || pl==PRAD1 || pl==PRAD2 || pl==PRAD3)){
-  //      pr[pl]=prmhd[pl];
-  //    }
-  //  }
-  //
-  ///////////////
+    // assume once we go below floor, all hell will break loose unless we calm the storm by shutting down this zone's relative velocity
+    // normal observer velocity
+    // i.e. consider this a failure
+    //GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)= 1;
+
+
+    ///////////////
+    //
+    // Assign final primitives
+    //
+    ////////////////
+
+    PALLLOOP(pl) pr[pl]=prmhd[pl];
+
+    ///////////////
+    //
+    //  now ensure primitive and conserved consistent for RK3 and other methods that use Uf
+    //
+    //////////////
+    struct of_state qnew;
+    get_state(pr,ptrgeom,&qnew);
+    primtoU(UEVOLVE,pr,&qnew,ptrgeom,ucons);
+  }
+
+
 
   
 
