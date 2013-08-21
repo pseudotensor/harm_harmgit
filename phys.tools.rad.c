@@ -256,7 +256,7 @@ static int Utoprimgen_failwrapper(int doradonly, int showmessages, int allowloca
 
 
 // Chose 1E-4 based upon histogram for implicit solver in RADDONUT problem with field.
-//#define IMPALLOWCONV (1.e-1) // KORALTODO SUPERGODMARK
+//#define IMPALLOWCONV (1.e-1)
 #else
 // RADPULSEPLANAR: below leads to ~5 f1iters and ~7 iters on average
 // RADTUBE NTUBE=31: ~0 f1iters and ~1.5-2 iters
@@ -1348,6 +1348,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
   //////////////////////////////
   //
   // MODEPICKBEST
+  //
+  // KORALTODO: SUPERGODMARK: Need to still think of energy-entropy implicit solver for intermediate regime.  Also, need to add conditions to avoid entropy or energy if Erf<0 or gammarad reaches limit or entropy-based effective absorption opacity is too large."
   //
   //////////////////////////////
   // 1) start with entropy
