@@ -1499,20 +1499,30 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
     //
     /////////////
 
+    int doentropy;
+
+    // KORALTODO: radinvmodenergy and radinvmodentropy conditions.
+    doentropy=
+      fracenergy==0.0 && ACCEPTASNOFAILURE(failreturnentropy)==1 ||
+      //       ACCEPTASNOFAILURE(failreturnenergy)==1 && ACCEPTASNOFAILURE(failreturnentropy)==1 && (fracenergy>0.0 && fracenergy<1.0) && (errorabsentropy<=IMPOKCONV && errorabsenergy>IMPOKCONV) ||
+      ACCEPTASNOFAILURE(failreturnenergy)==0 && ACCEPTASNOFAILURE(failreturnentropy)==1 ||
+      ACCEPTASNOFAILURE(failreturnentropy)==1 && ACCEPTASNOFAILURE(failreturnenergy)==1 && (errorabsentropy<IMPTRYCONVABS && errorabsenergy>IMPBADENERGY) ||
+      ACCEPTASNOFAILURE(failreturnentropy)==1 && ACCEPTASNOFAILURE(failreturnenergy)==1 && (BADENERGY(pbenergy[UU],pbentropy[UU]) && (errorabsentropy<IMPOKCONV && errorabsenergy>errorabsentropy)) ||
+      ACCEPTASNOFAILURE(failreturnentropy)==1 && ACCEPTASNOFAILURE(failreturnenergy)==1 && (BADENERGY2(pbenergy[UU],pbentropy[UU]) && (errorabsentropy<IMPTRYCONVABS && errorabsenergy>IMPTRYCONVABS)) // switch to entropy if suspicious energy solution that looks approximate but mathematica checks suggest are mostly u_g<0 if accurate solution found.
+      ;
+
+    // override to preserve better force balance, as long as energy solution is a good one.
+    // so might use energy even in expanding flows.
+    if(ACCEPTASNOFAILURE(failreturnentropy)==1 && ACCEPTASNOFAILURE(failreturnenergy)==1 && radinvmodenergy==0 && radinvmodentropy==1 && errorabsenergy<IMPOKCONV){
+      doentropy=0;
+    }
+
     /////////////
     //
     // cases where must use entropy
     //
     /////////////
-    if(
-       // KORALTODO: radinvmodenergy and radinvmodentropy conditions.
-       fracenergy==0.0 && ACCEPTASNOFAILURE(failreturnentropy)==1 ||
-       //       ACCEPTASNOFAILURE(failreturnenergy)==1 && ACCEPTASNOFAILURE(failreturnentropy)==1 && (fracenergy>0.0 && fracenergy<1.0) && (errorabsentropy<=IMPOKCONV && errorabsenergy>IMPOKCONV) ||
-       ACCEPTASNOFAILURE(failreturnenergy)==0 && ACCEPTASNOFAILURE(failreturnentropy)==1 ||
-       ACCEPTASNOFAILURE(failreturnentropy)==1 && ACCEPTASNOFAILURE(failreturnenergy)==1 && (errorabsentropy<IMPTRYCONVABS && errorabsenergy>IMPBADENERGY) ||
-       ACCEPTASNOFAILURE(failreturnentropy)==1 && ACCEPTASNOFAILURE(failreturnenergy)==1 && (BADENERGY(pbenergy[UU],pbentropy[UU]) && (errorabsentropy<IMPOKCONV && errorabsenergy>errorabsentropy)) ||
-       ACCEPTASNOFAILURE(failreturnentropy)==1 && ACCEPTASNOFAILURE(failreturnenergy)==1 && (BADENERGY2(pbenergy[UU],pbentropy[UU]) && (errorabsentropy<IMPTRYCONVABS && errorabsenergy>IMPTRYCONVABS)) // switch to entropy if suspicious energy solution that looks approximate but mathematica checks suggest are mostly u_g<0 if accurate solution found.
-       ){
+    if(doentropy){
       //      dualfprintf(fail_file,"USING ENTROPY\n");
       // tell an externals to switch to entropy
       *eomtype=eomtypeentropy; // can be EOMDONOTHING if successful and small enough error
@@ -1589,7 +1599,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
       f1iters=f1itersentropy+f1itersenergy; // count both since did both
       failreturn=failreturnenergy;
     }
-    else if(ACCEPTASNOFAILURE(failreturnenergy)==0 && ACCEPTASNOFAILURE(failreturnentropy)==0){
+    else{
       // just fail.  No source
       // if no source, then will do normal inversion (no change to *eomtype) as if G=0.
       noprims=1;
@@ -1600,10 +1610,6 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
       // KORALTODO: But might want to fail more aggressively and report total failure.  Need to have estimate of whether G was important.
       failreturn=failreturnenergy;
       if(debugfail>=2) dualfprintf(fail_file,"No source: eenergy=%g eentropy=%g ienergy=%d ientropy=%d\n",errorabsenergy,errorabsentropy,itersenergy,itersentropy);
-    }
-    else{
-      dualfprintf(fail_file,"NO CATCH for eompickbest\n");
-      myexit(39473463);
     }
 
   }// end MODEPICKBEST
