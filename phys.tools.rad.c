@@ -63,8 +63,9 @@
 #define IMPTRYCONV (1.e-12)
 #define IMPTRYCONV2 (1.e-12)  // for used implicit solver
 
-#define IMPALLOWCONV (1.e-4)
-#define IMPALLOWCONV2 (1.e-4)
+// too allowing to allow 1E-4 error since often solution is nuts at even errors>1E-8
+#define IMPALLOWCONV (1.e-8)
+#define IMPALLOWCONV2 (1.e-8)
 
 
 // Chose 1E-4 based upon histogram for implicit solver in RADDONUT problem with field.
@@ -295,7 +296,8 @@
 #define WHICHU2PRAD 1
 
 // during implicit solver, don't limit gamma so much as normally.  Otherwise, solution may not be found and solver struggles and leads to high errors and iterations.  If limit gammarad but not gammafluid, then gammafluid can be too high.  If limit both, no solutions can be found.   So just limit afterwards for now.
-#define GAMMAMAXRADIMPLICITSOLVER (1E5)
+//#define GAMMAMAXRADIMPLICITSOLVER (1E5)
+#define GAMMAMAXRADIMPLICITSOLVER (GAMMAMAXRAD) // for radiation, seek actual solution with this limit.  Solver can find solutions, while harder when limiting gamma_{gas} for some reason.
 
 ///////////////////////////////
 //
@@ -319,7 +321,7 @@ static int Utoprimgen_failwrapper_old(int showmessages, int allowlocalfailurefix
 //////// implicit stuff
 static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE dissmeasure, FTYPE *dUother ,FTYPE (*dUcomp)[NPR]);
 
-static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready, int *eomtype, FTYPE fracenergy, int *radinvmod, FTYPE *pb, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother ,FTYPE (*dUcomp)[NPR], FTYPE *errorabs, int *iters, int *f1iters);
+static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready, int *eomtype, FTYPE fracenergy, int *radinvmod, FTYPE *pb, FTYPE *uub, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother ,FTYPE (*dUcomp)[NPR], FTYPE *errorabs, int *iters, int *f1iters);
 
 static int f_implicit_lab(int iter, int failreturnallowable, int whichcall, int showmessages, int allowlocalfailurefixandnoreport, int *eomtype, FTYPE fracenergy, int *radinvmod, FTYPE *pp, FTYPE *uu0,FTYPE *uu,FTYPE localdt, struct of_geom *ptrgeom,  FTYPE *f, FTYPE *fnorm);
 
@@ -330,6 +332,7 @@ static int inverse_11matrix(int sj, int ej, FTYPE a[][NDIM], FTYPE ia[][NDIM]);
 
 static int f_error_check(int showmessages, int showmessagesheavy, int iter, FTYPE conv, FTYPE realdt, int dimtypef, int eomtype, FTYPE fracenergy, FTYPE *dimfactU, FTYPE *f1, FTYPE *f1norm, FTYPE *f1report, FTYPE *Uiin, FTYPE *uu0, FTYPE *uu, struct of_geom *ptrgeom);
 
+static int compute_ZAMORAD(FTYPE *uu, struct of_geom *ptrgeom, FTYPE *Er, FTYPE *Utildesq, FTYPE *Utildecon);
 
 
 static int Utoprimgen_failwrapper(int doradonly, int showmessages, int allowlocalfailurefixandnoreport, int finalstep, int *eomtype, int evolvetype, int inputtype,FTYPE *U,  struct of_geom *ptrgeom, FTYPE *pr, struct of_newtonstats *newtonstats);
@@ -924,7 +927,14 @@ static int f_implicit_lab(int iter, int failreturnallowable, int whichcall, int 
       // 3) Apply any fixups, like floors or limit_gamma's.  Won't help reduce error, but even if solution with high fluid gamma, later apply limit_gamma, but then balance between fluid and radiation lost.  So better to see as high error event than accurate high gamma event.
       int finalstepfixup=0; // treat as if not needing to diagnose, just act.  KORALTODO: Although, Utoprimgen(finalstep) used to get change in fluid primitives.
       // Note, uu is old, but only used for diagnostics, and don't care about diagnostics in this stepping.
-      //      fixup1zone(pp,uu, ptrgeom,finalstepfixup);
+      FTYPE ppfixup[NPR],ppfloor[NPR],uufixup[NPR];
+      PLOOP(pliter,pl){
+        ppfixup[pl]=ppfloor[pl]=pp[pl];
+        uufixup[pl]=uu[pl];
+      }
+      set_density_floors(ptrgeom,ppfixup,ppfloor);
+      //      fixup1zone(ppfloor,uufixup, ptrgeom,finalstepfixup); // too complicated for implicit stepping given how rare shoul be used.
+      if(pp[RHO]<0.0) pp[RHO]=ppfloor[RHO]; // only fix RHO if really went negative.  Not smooth, but avoids problems in difficult regimes.
 
       //      limit_gamma(GAMMAMAX,GAMMAMAXRADIMPLICITSOLVER,pp,NULL,ptrgeom,0);
       // fix uu[RHO] to be consistent, since uu[RHO] used to get inverted scalars
@@ -954,6 +964,12 @@ static int f_implicit_lab(int iter, int failreturnallowable, int whichcall, int 
     //
     // 8) Do RAD-ONLY Inversion (eomtype not used)
     int doradonly=1; failreturn=Utoprimgen_failwrapper(doradonly,showmessages,allowlocalfailurefixandnoreport, finalstep, eomtype, EVOLVEUTOPRIM, UNOTHING, uu, ptrgeom, pp, &newtonstats);
+    // deal with Erf<0 and possibly gammarad caps or E_r<0 issues
+    if(iter<BEGINNORMALSTEPS && pp[PRAD0]<10.0*SMALL){
+      // then can play with Erf in case negative E_r to avoid bad NR due to floor on Erf.
+      pp[PRAD0]=pp[UU]; // set as if similar.
+    }
+
     //  no need to concern with eomtype in RAD only case.  i.e. eomtype won't change.
     if(failreturn>0) *radinvmod=1;
     //
@@ -1197,6 +1213,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
   // piin, Uiin, Ufin, CUf, ptrgeom, dUother don't change, rest can.
   int eomtypelocal;
 
+  FTYPE uub[NPR]; // holds returned uu from implicit solver
+
   FTYPE pbbackup[NPR];
   FTYPE dUcompbackup[NUMSOURCES][NPR];
   struct of_state qbackup;
@@ -1246,7 +1264,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
     didentropyalready=0;
     eomtypelocal=*eomtype;
     fracenergy=1.0;
-    failreturn=koral_source_rad_implicit_mode(havebackup, didentropyalready, &eomtypelocal, fracenergy, &radinvmod, pb, piin, Uiin, Ufin, CUf, ptrgeom, q, dUother ,dUcomp, &errorabs, &iters, &f1iters);
+    failreturn=koral_source_rad_implicit_mode(havebackup, didentropyalready, &eomtypelocal, fracenergy, &radinvmod, pb, uub, piin, Uiin, Ufin, CUf, ptrgeom, q, dUother ,dUcomp, &errorabs, &iters, &f1iters);
     if(ACCEPTASNOFAILURE(failreturn)==0){
       // restore backups in case got contaminated
       PLOOP(pliter,pl){
@@ -1273,7 +1291,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
     didentropyalready=0;
     eomtypelocal=EOMENTROPYGRMHD;
     fracenergy=0.0;
-    failreturn=koral_source_rad_implicit_mode(havebackup, didentropyalready, &eomtypelocal, fracenergy, &radinvmod, pb, piin, Uiin, Ufin, CUf, ptrgeom, q, dUother ,dUcomp, &errorabs, &iters, &f1iters);
+    failreturn=koral_source_rad_implicit_mode(havebackup, didentropyalready, &eomtypelocal, fracenergy, &radinvmod, pb, uub, piin, Uiin, Ufin, CUf, ptrgeom, q, dUother ,dUcomp, &errorabs, &iters, &f1iters);
     if(ACCEPTASNOFAILURE(failreturn)==0){
       // restore backups in case got contaminated
       PLOOP(pliter,pl){
@@ -1308,7 +1326,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
     havebackup=1; // only time this is used is here where we tell energy that we have backup method, so can give up quickly.
     didentropyalready=0;
     fracenergy=1.0;
-    failreturnenergy=koral_source_rad_implicit_mode(havebackup, didentropyalready, &eomtypelocal, fracenergy, &radinvmod, pb, piin, Uiin, Ufin, CUf, ptrgeom, q, dUother ,dUcomp, &errorabsenergy, &itersenergy, &f1itersenergy);
+    failreturnenergy=koral_source_rad_implicit_mode(havebackup, didentropyalready, &eomtypelocal, fracenergy, &radinvmod, pb, uub, piin, Uiin, Ufin, CUf, ptrgeom, q, dUother ,dUcomp, &errorabsenergy, &itersenergy, &f1itersenergy);
 
     if(ACCEPTASNOFAILURE(failreturnenergy)==0 && eomtypecond){
       // if failed with GRMHD or return reported switching to entropy is preferred, then do entropy method
@@ -1323,7 +1341,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
       havebackup=0;
       didentropyalready=0;
       fracenergy=0.0;
-      failreturnentropy=koral_source_rad_implicit_mode(havebackup, didentropyalready, &eomtypelocal, fracenergy, &radinvmod, pb, piin, Uiin, Ufin, CUf, ptrgeom, q, dUother ,dUcomp, &errorabsentropy, &itersentropy, &f1itersentropy);
+      failreturnentropy=koral_source_rad_implicit_mode(havebackup, didentropyalready, &eomtypelocal, fracenergy, &radinvmod, pb, uub, piin, Uiin, Ufin, CUf, ptrgeom, q, dUother ,dUcomp, &errorabsentropy, &itersentropy, &f1itersentropy);
       if(ACCEPTASNOFAILURE(failreturnentropy)==0){
         if(debugfail>=2) dualfprintf(fail_file,"Entropy also failed: energy=%d entropy=%d\n",failreturnenergy,failreturnentropy);
       }
@@ -1389,9 +1407,11 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
     //
     ////////
     int radinvmodentropy=0;
+    int radErfnegentropy=0;
     int failreturnentropy=FAILRETURNGENERAL;// default to fail
     int eomtypeentropy=EOMENTROPYGRMHD;
     FTYPE pbentropy[NPR];
+    FTYPE uubentropy[NPR]; // holds returned uu from implicit solver
     FTYPE dUcompentropy[NUMSOURCES][NPR];
     struct of_state qentropy;
     PLOOP(pliter,pl){
@@ -1403,9 +1423,18 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
     havebackup=0;
     didentropyalready=0;
     fracenergy=0.0;
-    failreturnentropy=koral_source_rad_implicit_mode(havebackup, didentropyalready, &eomtypeentropy, fracenergy, &radinvmodentropy, pbentropy, piin, Uiin, Ufin, CUf, ptrgeom, &qentropy, dUother ,dUcompentropy, &errorabsentropy, &itersentropy, &f1itersentropy);
+    failreturnentropy=koral_source_rad_implicit_mode(havebackup, didentropyalready, &eomtypeentropy, fracenergy, &radinvmodentropy, pbentropy, uubentropy, piin, Uiin, Ufin, CUf, ptrgeom, &qentropy, dUother ,dUcompentropy, &errorabsentropy, &itersentropy, &f1itersentropy);
     // eomtypeentropy can become EOMDONOTHING if this call was successful
 
+    // final check on radiation's physicalness if not failing or placing hard caps during iterations to allow smoother NR behavior
+    if(ACCEPTASNOFAILURE(failreturnentropy)==1){
+      FTYPE Er,Utildesq,Utildecon[NDIM];
+      compute_ZAMORAD(uubentropy, ptrgeom, &Er, &Utildesq, Utildecon);
+      if(Er<=0.0){
+        radErfnegentropy=1;
+        radinvmodentropy=1; // just use this to actually indicate
+      }
+    }
 
     
     // get divcond.  Go over dimensions in case not full 3D.  Just duplicates value as per in flux.c.
@@ -1478,9 +1507,11 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
     // only do energy case if divcond too small or if entropy failed
 
     int radinvmodenergy=0;
+    int radErfnegenergy=0;
     int eomtypeenergy=EOMGRMHD;
     int failreturnenergy=FAILRETURNGENERAL; // default to fail in case energy not to be done at all
     FTYPE pbenergy[NPR];
+    FTYPE uubenergy[NPR]; // holds returned uu from implicit solver
     FTYPE dUcompenergy[NUMSOURCES][NPR];
     struct of_state qenergy;
 
@@ -1506,7 +1537,18 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
         }
       }
 
-      failreturnenergy=koral_source_rad_implicit_mode(havebackup, didentropyalready, &eomtypeenergy, fracenergy, &radinvmodenergy, pbenergy, piin, Uiin, Ufin, CUf, ptrgeom, &qenergy, dUother ,dUcompenergy, &errorabsenergy, &itersenergy, &f1itersenergy);
+      failreturnenergy=koral_source_rad_implicit_mode(havebackup, didentropyalready, &eomtypeenergy, fracenergy, &radinvmodenergy, pbenergy, uubenergy, piin, Uiin, Ufin, CUf, ptrgeom, &qenergy, dUother ,dUcompenergy, &errorabsenergy, &itersenergy, &f1itersenergy);
+
+      // final check on radiation's physicalness if not failing or placing hard caps during iterations to allow smoother NR behavior
+      if(ACCEPTASNOFAILURE(failreturnenergy)==1){
+        FTYPE Er,Utildesq,Utildecon[NDIM];
+        compute_ZAMORAD(uubenergy, ptrgeom, &Er, &Utildesq, Utildecon);
+        if(Er<=0.0){
+          radErfnegenergy=1;
+          radinvmodenergy=1; // used to indicate
+        }
+      }
+     
     }// end if doing GRMHD inversion
     else{
       // if didn't do energy inversion, treat as failure of said inversion
@@ -1782,7 +1824,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
 
 // compute changes to U (both T and R) using implicit method
 // KORALTODO: If doing implicit, should also add geometry source term that can sometimes be stiff.  Would require inverting sparse 8x8 matrix (or maybe 6x6 since only r-\theta for SPC).  Could be important for very dynamic radiative flows.
-static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready, int *eomtype, FTYPE fracenergy, int *radinvmod, FTYPE *pb, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother ,FTYPE (*dUcomp)[NPR], FTYPE *errorabsreturn, int *itersreturn, int *f1itersreturn)
+static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready, int *eomtype, FTYPE fracenergy, int *radinvmod, FTYPE *pb, FTYPE *uub, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother ,FTYPE (*dUcomp)[NPR], FTYPE *errorabsreturn, int *itersreturn, int *f1itersreturn)
 {
   // some geometry stuff to store pre-step instead of for each step.
   int pliter,pl;
@@ -3224,7 +3266,7 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
               if(canbreak==3 && havebackup==0) dualfprintf(fail_file,"Aborted due to error not decreasing fast enough: errorabsf1=%g\n",errorabsf1);
               if(iter>IMPMAXITER && havebackup==0) dualfprintf(fail_file,"iter>IMPMAXITER=%d : iter exceeded in solve_implicit_lab(). nstep=%ld steppart=%d ijk=%d %d %d :  Bad error.\n",IMPMAXITER,nstep,steppart,ptrgeom->i,ptrgeom->j,ptrgeom->k);
               if(notfinite && havebackup==0) dualfprintf(fail_file,"IMPGOTNAN at iter=%d : in solve_implicit_lab(). ijk=%d %d %d :  Bad error.\n",iter,ptrgeom->i,ptrgeom->j,ptrgeom->k);
-              dualfprintf(fail_file,"checkconv=%d havebackup=%d failreturnallowable=%d: %g %g %g %g : %g %g %g %g\n",checkconv,havebackup,failreturnallowable,f1report[erefU[0]],f1report[erefU[1]],f1report[erefU[2]],f1report[erefU[3]],lowestfreportf1[erefU[0]],lowestfreportf1[erefU[1]],lowestfreportf1[erefU[2]],lowestfreportf1[erefU[3]]);
+              if(havebackup==0) dualfprintf(fail_file,"checkconv=%d havebackup=%d failreturnallowable=%d: %g %g %g %g : %g %g %g %g\n",checkconv,havebackup,failreturnallowable,f1report[erefU[0]],f1report[erefU[1]],f1report[erefU[2]],f1report[erefU[3]],lowestfreportf1[erefU[0]],lowestfreportf1[erefU[1]],lowestfreportf1[erefU[2]],lowestfreportf1[erefU[3]]);
               if(1||showmessages){
                 if(havebackup){
                   // don't break, just don't report.
@@ -3321,7 +3363,10 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
     // only use pp if successful with implicit method, since if not successful can be various bad reasons with no good pb
     //
     ////////////////
-    PLOOP(pliter,pl) pb[pl]=pp[pl];
+    PLOOP(pliter,pl){
+      pb[pl]=pp[pl]; // actual solution that's used
+      uub[pl]=uu[pl]; // used for getting whether solution really worked and switching methods, etc.
+    }
 
     // DEBUG:
     //  PLOOP(pliter,pl) dualfprintf(fail_file,"POOP2: pl=%d uu=%21.15g uu0=%21.15g piin=%21.15g pb=%21.15g\n",pl,uu[pl],uu0[pl],piin[pl],pb[pl]);
@@ -3380,7 +3425,7 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
   //////////////
   if(REPORTINSIDE==0){
     //    if(PRODUCTION==0 && NOTACTUALFAILURE(failreturn)==0 || PRODUCTION>0 && NOTBADFAILURE(failreturn)==0){ // catches oscillators at small error but still >tol.
-    if(PRODUCTION==0 && NOTACTUALFAILURE(failreturn)==0 && errorabsf1>=IMPTRYCONVALT || PRODUCTION>0 && NOTBADFAILURE(failreturn)==0){
+    if(PRODUCTION==0 && NOTACTUALFAILURE(failreturn)==0 && errorabsf1>=IMPTRYCONVALT || PRODUCTION>0 && NOTBADFAILURE(failreturn)==0 && nobackup==1){
     //    if(NOTBADFAILURE(failreturn)==0){
       struct of_state qcheck; get_state(pp, ptrgeom, &qcheck);  primtoU(UNOTHING,pp,&qcheck,ptrgeom, uu);
       failnum++; mathematica_report_check(mathfailtype, failnum, gotfirstnofail, eomtypelocal, errorabsf1, iter, realdt, ptrgeom, ppfirst,pp,pb,piin,prtestUiin,prtestUU0,uu0,uu,Uiin,Ufin, CUf, q, dUother);
@@ -6548,7 +6593,6 @@ int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gam
   *lpflagrad=UTOPRIMRADNOFAIL;
 
   FTYPE Er,Utildesq,Utildecon[NDIM];
-  static int compute_ZAMORAD(FTYPE *uu, struct of_geom *ptrgeom, FTYPE *Er, FTYPE *Utildesq, FTYPE *Utildecon);
   compute_ZAMORAD(uu, ptrgeom, &Er, &Utildesq, Utildecon);
   
 
@@ -6556,7 +6600,8 @@ int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gam
   FTYPE Ersq,yvar;
   int didmod=0;
 
-  if(gammamaxrad>0.9*GAMMAMAXRADIMPLICITSOLVER || Er>=SMALL){ // then good solution.  Avoid caps during implicit solver to allow progress on solution in smooth way.
+  //  if(1||gammamaxrad>0.9*GAMMAMAXRADIMPLICITSOLVER || Er>=SMALL){ // then good solution.  Avoid caps during implicit solver to allow progress on solution in smooth way.
+  if(Er>=SMALL){ // then good solution.  Avoid caps during implicit solver to allow progress on solution in smooth way.
     // Er^2
     Ersq=Er*Er;
     // y
@@ -6602,7 +6647,8 @@ int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gam
   FTYPE Erf;
   FTYPE urfconrel[NDIM]={0.0};
   int jj;
-  if(Er>=SMALL){
+  //  if(1||gammamaxrad>0.9*GAMMAMAXRADIMPLICITSOLVER || Er>=SMALL){ // then good solution.  Avoid caps during implicit solver to allow progress on solution in smooth way.
+  if(Er>=SMALL){ // then good solution.  Avoid caps during implicit solver to allow progress on solution in smooth way.
     // now obtain primitives
     FTYPE pr = Er/(4.0*gammasq-1.0);
     // radiation frame energy density
