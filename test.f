@@ -113,9 +113,10 @@ c
       write (14,"(9X,1A)",advance="no")
      &     'HARMEOMTYPE HARMITERMODE'
       write (14,"(2X,1A)",advance="no") 'HARMSTAT'
-      write (14,"(1X,1A)",advance="no") 'RAMSTAT'
+      write (14,"(1X,1A)",advance="no") 'RAMENGSTAT'
       write (14,"(4X,1A)",advance="no") 'RAMENGITER   RAMENERR'
-      write (14,"(19X,1A)") 'RAMENTITER RAMENTERR'
+      write (14,"(11X,1A)",advance="no") 'RAMENTSTAT'
+      write (14,"(5X,1A)") 'RAMENTITER RAMENTERR'
 
       do i=1,1000000
 c      do i=1,1
@@ -126,7 +127,7 @@ c     proceed directly to the entropy equation
          write (14,"(1I10)",advance="no") i
 
          write (13,*)
-         write (13,"(25X,22X,A,22X,A)",advance="no")
+         write (13,"(38X,22X,A,22X,A)",advance="no")
      &        '|rho','|u_g'
          write (13,"(22X,A,22X,A,22X,A,22X,A)",advance="no")
      &        '|u^t','u^1','u^2','u^3|'
@@ -552,10 +553,10 @@ c     Read in data in Jon's new format (181 numbers)
      & iters,errorabs,0
 
          if(errorabs.lt.1E-6) then
-            write (13,"(1X,A)",advance="no") ' GOOD   '
+            write (13,"(1X,A,9X)",advance="no") ' GOOD   '
             write (14,"(1X,A)",advance="no") ' GOOD   '
          else
-            write (13,"(1X,A)",advance="no") '  BAD   '
+            write (13,"(1X,A,9X)",advance="no") '  BAD   '
             write (14,"(1X,A)",advance="no") '  BAD   '
          endif
          
@@ -663,10 +664,10 @@ c     If itermode=1 shows up, then check whether PREVBESTHARMERR was ok/good eno
      &        iters,errorabs,errorabsbestexternal,eomtype,itermode
 
          if(errorabs.lt.1E-6) then
-            write (13,"(1X,A)",advance="no") ' GOOD   '
+            write (13,"(1X,A,9X)",advance="no") ' GOOD   '
             write (14,"(1X,A)",advance="no") ' GOOD   '
          else
-            write (13,"(1X,A)",advance="no") '  BAD   '
+            write (13,"(1X,A,9X)",advance="no") '  BAD   '
             write (14,"(1X,A)",advance="no") '  BAD   '
          endif
          
@@ -1330,6 +1331,7 @@ c   endif guesstype.le.1
 c     Carry out full Newton-Raphson on all four primitives using
 c     Newton-Raphson
 
+      envconv=0
       err4=1.0d8
       call Newton4(prim,iter,iflag,jflag,funcrad1,err4)
       itertot=itertot+iter
@@ -1371,9 +1373,11 @@ c     Newton-Raphson
             write (14,"(1A)",advance="no") '   BAD   '
             write (13,"(1A)",advance="no") '   BAD   '
          endif
-         write (14,*) itereng,erreng,iterent,errent
-         return
-      endif
+
+         engconv=1
+c     commenting below to see entropy even if energy converged.
+c         return
+      else
 
 c     If energy equation does not converge, calculate using the entropy
 c     equation.
@@ -1383,6 +1387,20 @@ c     equation.
       write (*,*) ' Proceed to entropy equation '
       write (*,*)
       write (12,*) ' ERROR: no convergence with energy equation: '
+
+      write (14,"(1A)",advance="no") '   BAD   '
+      write (13,"(1A)",advance="no") '   BAD   '
+
+
+      endif
+
+      if(1.eq.1) then
+         write (14,"(9X,1I3,3X,1E21.15)",advance="no")
+     &        itereng,erreng
+      else
+         write (14,*) itereng,erreng,iterent,errent
+      endif
+
 
 c     Restore saved primitives and do Newton-Raphson with the entropy
 c     equation
@@ -1409,6 +1427,7 @@ c      write (12,*) ' Radiation inversion, u_g only (entropy) '
       itertot=itertot+iter
       iterent=iter
       errent=err4
+      if (iflag.eq.0.and.errent.lt.1E-6) then
       write (*,*)
       write (12,*) ' Radiation inversion, entropy equation ',
      &        iter
@@ -1440,18 +1459,30 @@ c      write (12,*) ' Radiation inversion, u_g only (entropy) '
          write (14,"(1A)",advance="no") '   BAD   '
          write (13,"(1A)",advance="no") '   BAD   '
       endif
-      write (14,*) itereng,erreng,iterent,errent
 
       if (iflag.eq.0.and.errent.lt.1E-6) then
          write (*,*) ' Entropy equation converged: iter ',
      &        iter
          write (*,*) ' primitives: ',(prim(j),j=1,4)
-         return
+c         return
       endif
+
+      else
 
       write (*,*) ' ERROR: no convergence with entropy equation: ',
      &     iter
       write (12,*) ' ERROR: no convergence with entropy equation: '
+
+      write (14,"(1A)",advance="no") '   BAD   '
+      write (13,"(1A)",advance="no") '   BAD   '
+
+      endif
+      
+      if(1.eq.1) then
+         write (14,*) iterent,errent
+      else
+         write (14,*) itereng,erreng,iterent,errent
+      endif
 
 c     We should never reach this point. Unclear what to do in this case!
 c     We could keep the solution or restore the saved primitives.
