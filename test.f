@@ -64,7 +64,7 @@ c     itermax is maximum no. of iterations with u_g, entropy below minimum
 
 c     idatatype=1 means Jon's old data format with 134 numbers
 c     idatatype=2 means Jon's new data format with 181 numbers
-c     idatatype=3 means Jon's new data format with 208 numbers
+c     idatatype=3 means Jon's new data format with 209 numbers
 
 c      write (*,*) ' which type data file? old(1) new(2) '
 c      read (*,*) idatatype
@@ -109,11 +109,12 @@ c
       open (13,file=solfile)
       open (14,file=errfile)
       write (14,"(9X,1A)",advance="no") 'NUM HITER    HARMERR'
-      write (14,"(10X,1A)",advance="no") 'HARMEOMTYPE'
-      write (14,"(1X,1A)",advance="no") 'HARMSTAT'
+      write (14,"(10X,1A)",advance="no")
+     &     'HARMEOMTYPE HARMITERMODE'
+      write (14,"(2X,1A)",advance="no") 'HARMSTAT'
       write (14,"(1X,1A)",advance="no") 'RAMSTAT'
-      write (14,"(3X,1A)",advance="no") 'RAMENGITER RAMENERR'
-      write (14,"(18X,1A)") 'RAMENTITER RAMENTERR'
+      write (14,"(4X,1A)",advance="no") 'RAMENGITER   RAMENERR'
+      write (14,"(19X,1A)") 'RAMENTITER RAMENTERR'
 
       do i=1,1000000
 c      do i=1,1
@@ -612,10 +613,10 @@ c     &        (ugasconp(j),ugascovp(j),j=1,4)
      &        uradconf,uradcovf,ugasconf,ugascovf,
      &        uradconp,uradcovp,ugasconp,ugascovp,Gam,ifinish,errorabs)
 
-c     Read in data in Jon's new format (208 numbers)
+c     Read in data in Jon's new format (209 numbers)
 
       implicit double precision (a-h,o-z)
-      integer eomtype
+      integer eomtype,itermode
       dimension isc(4),gn(4,4),gv(4,4),vgasp(3),vgasf(3),
      &     BBp(4),BBf(4),vradp(3),vradf(3),s(5),
      &     ugasconf(4),ugascovf(4),ugasconp(4),ugascovp(4),
@@ -626,7 +627,7 @@ c     Read in data in Jon's new format (208 numbers)
 
 c         read (11,*,end=10) (isc(j),j=1,4),
          read (11,*,end=10) failtype,myid,failnum,gotfirstnofail,
-     &        eomtype,
+     &        eomtype,itermode,
      &        errorabs,iters,dt,nstep,steppart,Gam,
      &        ((gn(j,k),k=1,4),j=1,4),
      &        ((gv(j,k),k=1,4),j=1,4),
@@ -652,8 +653,8 @@ c         read (11,*,end=10) (isc(j),j=1,4),
 
          write (*,"(A,1X,1F21.15)") 'TEST',ugascovp(4)
 
-         write (14,"(1I5,2X,1E21.15,2X,1I8)",advance="no")
-     &        iters,errorabs,eomtype
+         write (14,"(1I5,2X,1E21.15,2X,1I8,8X,1I1,8X)",advance="no")
+     &        iters,errorabs,eomtype,itermode
 
          if(errorabs.lt.1E-6) then
             write (13,"(1X,A)",advance="no") ' GOOD   '
