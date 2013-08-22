@@ -3953,8 +3953,9 @@ static int f_error_check(int showmessages, int showmessagesheavy, int iter, FTYP
     finb[erefU[ii]]=finnew[erefU[ii]]/fabs((IMPMINABSERROR+MAX(fabs(uu0[iotherU[0]]*dimfactU[iotherU[0]]),fabs(uu0[erefU[0]]*dimfactU[erefU[0]]))));
     finc[erefU[ii]]=finnew[erefU[ii]]/fabs((IMPMINABSERROR+MAX(finnormnew[erefU[ii]],fabs(uu0[erefU[0]]*dimfactU[erefU[0]]))));
     // SMALL was (uu0[iotherU[0]]-Uiin[iotherU[0]])
-    find[erefU[ii]]=finnew[erefU[ii]]/fabs((IMPMINABSERROR+MAX(fabs((SMALL)*dimfactU[erefU[0]]),MAX(finnormnew[erefU[ii]],fabs(uu0[erefU[0]]*dimfactU[erefU[0]])))));
-    //    find[erefU[ii]]=finnew[erefU[ii]]/fabs(finnormnew[erefU[ii]]);
+    // below is bad for entropy where multiply u by T.
+    //    find[erefU[ii]]=finnew[erefU[ii]]/fabs((IMPMINABSERROR+MAX(fabs((SMALL)*dimfactU[erefU[0]]),MAX(finnormnew[erefU[ii]],fabs(uu0[erefU[0]]*dimfactU[erefU[0]])))));
+    find[erefU[ii]]=finnew[erefU[ii]]/fabs(IMPMINABSERROR+finnormnew[erefU[ii]]);
   }
 
   // evaluate error
