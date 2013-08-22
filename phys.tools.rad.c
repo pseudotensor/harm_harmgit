@@ -908,6 +908,8 @@ static int f_implicit_lab(int iter, int failreturnallowable, int whichcall, int 
   }
   else if(implicititer==QTYPMHD || implicititer==QTYPMHDENERGYONLY || implicititer==QTYPMHDMOMONLY){
     // 0) Have pmhd={ug,uvel1,uvel2,uvel3}
+    FTYPE ppbackup[NPR];
+    PLOOP(pliter,pl) ppbackup[pl]=pp[pl];
     //
     // 0.5) trivially invert field
     PLOOPBONLY(pl) pp[pl] = uu0[pl];
@@ -964,10 +966,16 @@ static int f_implicit_lab(int iter, int failreturnallowable, int whichcall, int 
     //
     // 8) Do RAD-ONLY Inversion (eomtype not used)
     int doradonly=1; failreturn=Utoprimgen_failwrapper(doradonly,showmessages,allowlocalfailurefixandnoreport, finalstep, eomtype, EVOLVEUTOPRIM, UNOTHING, uu, ptrgeom, pp, &newtonstats);
-    // deal with Erf<0 and possibly gammarad caps or E_r<0 issues
-    if(iter<BEGINNORMALSTEPS && pp[PRAD0]<10.0*SMALL){
-      // then can play with Erf in case negative E_r to avoid bad NR due to floor on Erf.
-      pp[PRAD0]=pp[UU]; // set as if similar.
+    if(0){
+      // deal with Erf<0 and possibly gammarad caps or E_r<0 issues
+      if(iter<BEGINNORMALSTEPS+4 && pp[PRAD0]<10.0*ERADLIMIT && ppbackup[PRAD0]>10.0*ERADLIMIT){
+        // then can play with Erf in case negative E_r to avoid bad NR due to floor on Erf.
+        PLOOP(pliter,pl) if(RADPL(pl)) pp[pl]=ppbackup[pl]; // only concern is error might coincidentally be small
+        dualfprintf(fail_file,"Caught\n");
+      }
+      if(myid==8){
+        dualfprintf(fail_file,"bob: iter=%d (%d) %g %g (%g)\n",iter,BEGINNORMALSTEPS+4,pp[PRAD0],ppbackup[PRAD0],10.0*ERADLIMIT);
+      }
     }
 
     //  no need to concern with eomtype in RAD only case.  i.e. eomtype won't change.
@@ -2100,6 +2108,8 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
     if(debugfail>=DEBUGLEVELIMPSOLVERMORE && (fabs(ppnew[UU]/pp[UU])>SHOWUGCHANGEDUETOENTROPY || ppnew[UU]<pp[UU]) ) dualfprintf(fail_file,"CHANGE: Fixed entropy (%g vs. %g): guessrho=%g guessug=%g  newug=%g dug=%g\n",specificentropy0,specificentropyE,pp[RHO],pp[UU],ppnew[UU],pp[UU]-ppnew[UU]);
     // modify guess for u_g (start higher than actual solution hopefully)
     pp[UU]=MAX(pp[UU],ppnew[UU]);
+    // piin is sometimes even a bit higher, and want to start high, and helps to avoid lack of convergence issue.
+    pp[UU]=MAX(pp[UU],piin[UU]);
 
     // recompute uu's so consistent (No, uu=uu0 is better approximation)
     //    struct of_state req;
@@ -3425,7 +3435,7 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
   //////////////
   if(REPORTINSIDE==0){
     //    if(PRODUCTION==0 && NOTACTUALFAILURE(failreturn)==0 || PRODUCTION>0 && NOTBADFAILURE(failreturn)==0){ // catches oscillators at small error but still >tol.
-    if(PRODUCTION==0 && NOTACTUALFAILURE(failreturn)==0 && errorabsf1>=IMPTRYCONVALT || PRODUCTION>0 && NOTBADFAILURE(failreturn)==0 && nobackup==1){
+    if(PRODUCTION==0 && NOTACTUALFAILURE(failreturn)==0 && errorabsf1>=IMPTRYCONVALT || PRODUCTION>0 && NOTBADFAILURE(failreturn)==0 && havebackup==0){
     //    if(NOTBADFAILURE(failreturn)==0){
       struct of_state qcheck; get_state(pp, ptrgeom, &qcheck);  primtoU(UNOTHING,pp,&qcheck,ptrgeom, uu);
       failnum++; mathematica_report_check(mathfailtype, failnum, gotfirstnofail, eomtypelocal, errorabsf1, iter, realdt, ptrgeom, ppfirst,pp,pb,piin,prtestUiin,prtestUU0,uu0,uu,Uiin,Ufin, CUf, q, dUother);
@@ -3923,7 +3933,7 @@ static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int sho
           // get dUresid for this offset xjac
           int whichcall=2;
           eomtypelocallocal=*eomtypelocal; // re-default
-          int fakeiter=1; // ok to let Trad and Tgas switch a bit due to small delta to get Jacobian.
+          int fakeiter=iter;
           int radinvmod=0; // ignore, assume normal error check will be where this information is used.
           failreturn=f_implicit_lab(fakeiter,failreturnallowableuse, whichcall,showmessages,allowlocalfailurefixandnoreport, &eomtypelocallocal, fracenergy, &radinvmod, ppjac,uu0,uujac,fracdtG*realdt,ptrgeom,f2[sided],f2norm[sided]);
           if(failreturn){
