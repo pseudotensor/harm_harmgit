@@ -6556,14 +6556,14 @@ int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gam
   FTYPE Ersq,yvar;
   int didmod=0;
 
-  if(Er>=SMALL){ // then good solution
+  if(gammamaxrad>0.9*GAMMAMAXRADIMPLICITSOLVER || Er>=SMALL){ // then good solution.  Avoid caps during implicit solver to allow progress on solution in smooth way.
     // Er^2
     Ersq=Er*Er;
     // y
     yvar = Utildesq / (SMALL+Ersq);
   }
   else{// then bad solution
-    dualfprintf(fail_file,"Er=%26.20g<SMALL=%26.20g yvar=%26.20g Utildesq=%26.20g Ersq=%26.20g\n",Er,SMALL,yvar,Utildesq,Ersq);
+    //dualfprintf(fail_file,"Er=%26.20g<SMALL=%26.20g yvar=%26.20g Utildesq=%26.20g Ersq=%26.20g\n",Er,SMALL,yvar,Utildesq,Ersq);
     Ersq=SMALL;
     yvar = 0.0;
     didmod=1;
@@ -6578,7 +6578,7 @@ int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gam
   FTYPE gammamaxsq=gammamax*gammamax;
   FTYPE ylimit = 16.0*gammamaxsq*(gammamaxsq-1.0)/((4.0*gammamaxsq-1.0)*(4.0*gammamaxsq-1.0));
   if(yvar<0.0){
-    dualfprintf(fail_file,"Er=%26.20g yvar=%26.20g<0.0 Utildesq=%26.20g Ersq=%26.20g\n",Er,yvar,Utildesq,Ersq);
+    //    dualfprintf(fail_file,"Er=%26.20g yvar=%26.20g<0.0 Utildesq=%26.20g Ersq=%26.20g\n",Er,yvar,Utildesq,Ersq);
     yvar=0.0;
     gammasq = 1.0;
     gamma = 1.0;
