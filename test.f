@@ -144,7 +144,7 @@ c     proceed directly to the entropy equation
      &        Ef,Ep,R00i,R00f,R00p,vradf,vradp,R01i,R01f,R01p,
      &        R02i,R02f,R02p,R03i,R03f,R03p,s,si,sf,sp,
      &        uradconf,uradcovf,ugasconf,ugascovf,
-     &        uradconp,uradcovp,ugasconp,ugascovp,ifinish)
+     &        uradconp,uradcovp,ugasconp,ugascovp,ifinish,errorabs)
          Gam=4.d0/3.d0
 
          else if (idatatype.eq.2) then
@@ -155,7 +155,7 @@ c     proceed directly to the entropy equation
      &        Ef,Ep,R00i,R00f,R00p,vradf,vradp,R01i,R01f,R01p,
      &        R02i,R02f,R02p,R03i,R03f,R03p,s,si,sf,sp,
      &        uradconf,uradcovf,ugasconf,ugascovf,
-     &        uradconp,uradcovp,ugasconp,ugascovp,Gam,ifinish)
+     &        uradconp,uradcovp,ugasconp,ugascovp,Gam,ifinish,errorabs)
 
          else if (idatatype.eq.3) then
 
@@ -165,7 +165,7 @@ c     proceed directly to the entropy equation
      &        Ef,Ep,R00i,R00f,R00p,vradf,vradp,R01i,R01f,R01p,
      &        R02i,R02f,R02p,R03i,R03f,R03p,s,si,sf,sp,
      &        uradconf,uradcovf,ugasconf,ugascovf,
-     &        uradconp,uradcovp,ugasconp,ugascovp,Gam,ifinish)
+     &        uradconp,uradcovp,ugasconp,ugascovp,Gam,ifinish,errorabs)
 
          endif
 
@@ -218,10 +218,30 @@ c     Set up initial guess primitives ('p' quantities from prevous time
 c     step). Make sure up is reasonable. If not, reset up to
 c     umin=uminfac*rhop. 
 
-         prim(1)=mymax(up,uminfac*rhop)
-         prim(2)=ugasconp(2)
-         prim(3)=ugasconp(3)
-         prim(4)=ugasconp(4)
+c      CHOOSE to use previous primitve or harm solution as starting point.
+c     0 = use original prims
+c     1 = use harm prims and still do normal Ramesh stages
+c     2 = use harm prims and go straight to 4D iterations to avoid mis-steps
+c         guesstype=0
+         guesstype=2
+c         guesstype=1
+
+         if(guesstype.eq.0.or.errorabs.gt.1E-6) then
+            write(*,*) 'Using original primitives as guess: guesstype='
+     &           ,guesstype
+            prim(1)=mymax(up,uminfac*rhop)
+            prim(2)=ugasconp(2)
+            prim(3)=ugasconp(3)
+            prim(4)=ugasconp(4)
+            guessstype=0
+         else
+            write(*,*) 'Using harm primitives as guess: guesstype='
+     &           ,guesstype
+            prim(1)=mymax(uf,uminfac*rhof)
+            prim(2)=ugasconf(2)
+            prim(3)=ugasconf(3)
+            prim(4)=ugasconf(4)
+         endif
 
          write (*,*) ' prim: ',(prim(j),j=1,4)
 
@@ -254,7 +274,7 @@ c     Carry out initial MHD inversion of the 'i' state
          write (*,*) 
          write (*,*) ' MHD INVERSION OF PRE-RADIATION SOLUTION '
 
-         call MHDinvert(prim,iflag,jflag,ientropy,itertot)
+         call MHDinvert(prim,iflag,jflag,ientropy,itertot,guesstype)
 
 c     MHD inversion done. Update all the relevant quantities
 c     corresponding to the 'i' solution
@@ -325,7 +345,8 @@ c     energy equation using Newton-Raphson
          write (*,*)
          write (*,*) ' SOLVE WITH IMPLICIT RADIATION SOURCE TERM '
 
-         call radsource(prim,iter,iflag,jflag,ientropy,itertot)
+         call radsource(prim,iter,iflag,jflag,ientropy
+     &        ,itertot,guesstype)
          ufinal=prim(1)
 
 c     Radiation inversion done. Calculate relevant quantities
@@ -416,7 +437,7 @@ c     density are unchaned, then calculate the full R^mu_nu
      &        Ef,Ep,R00i,R00f,R00p,vradf,vradp,R01i,R01f,R01p,
      &        R02i,R02f,R02p,R03i,R03f,R03p,s,si,sf,sp,
      &        uradconf,uradcovf,ugasconf,ugascovf,
-     &        uradconp,uradcovp,ugasconp,ugascovp,ifinish)
+     &        uradconp,uradcovp,ugasconp,ugascovp,ifinish,errorabs)
 
 c     Read in data in Jon's old format (134 numbers)
 
@@ -470,6 +491,8 @@ c     &        (ugasconf(j),ugascovf(j),j=1,4),
 c     &        (uradconp(j),uradcovp(j),j=1,4),
 c     &        (ugasconp(j),ugascovp(j),j=1,4)
 c         write (*,*) ' rho: ',rhof,rhop,rhou0i,rhou0f,rhou0p
+
+         errorabs=1.0
          return
 
  10   ifinish=1
@@ -485,7 +508,7 @@ c         write (*,*) ' rho: ',rhof,rhop,rhou0i,rhou0f,rhou0p
      &        Ef,Ep,R00i,R00f,R00p,vradf,vradp,R01i,R01f,R01p,
      &        R02i,R02f,R02p,R03i,R03f,R03p,s,si,sf,sp,
      &        uradconf,uradcovf,ugasconf,ugascovf,
-     &        uradconp,uradcovp,ugasconp,ugascovp,Gam,ifinish)
+     &        uradconp,uradcovp,ugasconp,ugascovp,Gam,ifinish,errorabs)
 
 c     Read in data in Jon's new format (181 numbers)
 
@@ -587,7 +610,7 @@ c     &        (ugasconp(j),ugascovp(j),j=1,4)
      &        Ef,Ep,R00i,R00f,R00p,vradf,vradp,R01i,R01f,R01p,
      &        R02i,R02f,R02p,R03i,R03f,R03p,s,si,sf,sp,
      &        uradconf,uradcovf,ugasconf,ugascovf,
-     &        uradconp,uradcovp,ugasconp,ugascovp,Gam,ifinish)
+     &        uradconp,uradcovp,ugasconp,ugascovp,Gam,ifinish,errorabs)
 
 c     Read in data in Jon's new format (208 numbers)
 
@@ -1076,7 +1099,7 @@ c     Calculate the full tensor R^mu_nu
 
 
 
-      subroutine MHDinvert(prim,iflag,jflag,ientropy,itertot)
+      subroutine MHDinvert(prim,iflag,jflag,ientropy,itertot,guesstype)
 
 c     Given initial primitives prim(4), solves for primitives that
 c     satisfy the initial pre-radiation conserved quantities: rhou0c, s,
@@ -1095,6 +1118,7 @@ c     Ttcovc(4), Rtcovc(4)
       write (*,*)
       write (*,*) ' initial primitives: ',(prim(j),j=1,4)
 
+      if(guesstype.le.1) then
 c     First do one round of Newton-Raphson just on the velocities
 
       call Newton3(prim,iter,iflag,jflag,funcMHD1)
@@ -1113,6 +1137,8 @@ c     Next work only on u_g using the energy equation
       do i=1,4
          primsave(i)=prim(i)
       enddo
+
+      endif
 
 c     Carry out the full Newton-Raphson MHD inversion via the
 c     energy equation
@@ -1177,6 +1203,11 @@ c     equation.
 
 c     Restore saved primitives to post-3+1 solution before proceeding to
 c     solving the entropy equation
+         
+c     Reset jflag
+         jflag=0
+
+            
 
          do i=1,4
             prim(i)=primsave(i)
@@ -1231,7 +1262,7 @@ c     Carry out full Newton-Raphson inversion with the entropy equation
 
 
       subroutine radsource(prim,iter,iflag,jflag,ientropy,
-     &     itertot)
+     &     itertot,guesstype)
 
 c     Given initial primitives prim(4), solves for primitives that
 c     satisfy the post-radiation equations
@@ -1252,6 +1283,8 @@ c     satisfy the post-radiation equations
       write (*,*)
       write (*,*) ' initial primitives: ',(prim(j),j=1,4)
       write (*,*)
+
+      if(guesstype.le.1) then
 
 c     First do one round of Newton-Raphson just on the velocities
 
@@ -1276,6 +1309,8 @@ c     all this and go directly to working with the entropy equation.
       write (*,*)
       write (12,*) ' Radiation inversion, u_g only (energy) '
       if (prim(1).gt.0.d0) primsave(1)=prim(1)
+
+      endif
 
 c     Carry out full Newton-Raphson on all four primitives using
 c     Newton-Raphson
@@ -2086,6 +2121,8 @@ c     Save u, compute rho, ucon, ucov, bcon, bcov, Tmunu
 
       if(rho.lt.0.0.or.isnan(rho)) then
          jflag=1
+      else
+         jflag=0
       endif
 
       call calcbconbcov(BB,ucon,ucov,bcon,bcov,bsq)
@@ -2163,6 +2200,8 @@ c     Save u, compute rho, ucon, ucov, bcon, bcov, Tmunu
 
       if(rho.lt.0.0.or.isnan(rho)) then
          jflag=1
+      else
+         jflag=0
       endif
 
       call calcbconbcov(BB,ucon,ucov,bcon,bcov,bsq)
@@ -2330,6 +2369,8 @@ c     the gas and radiation temperatures
 
       if(Trad.lt.0.0.or.isnan(Trad)) then
          jflag=1
+      else
+         jflag=0
       endif
 
 c     Calculate quantities needed to compute the radiation source term
@@ -2506,6 +2547,8 @@ c      write (*,*) ' ff, es, B4pi: ',ff,es,B4pi
 
       if(Trad.lt.0.0.or.isnan(Trad)) then
          jflag=1
+      else
+         jflag=0
       endif
 
 c     The following side calculation is to estimate quantities that are
