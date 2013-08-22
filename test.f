@@ -64,7 +64,7 @@ c     itermax is maximum no. of iterations with u_g, entropy below minimum
 
 c     idatatype=1 means Jon's old data format with 134 numbers
 c     idatatype=2 means Jon's new data format with 181 numbers
-c     idatatype=3 means Jon's new data format with 209 numbers
+c     idatatype=3 means Jon's new data format with 210 numbers
 
 c      write (*,*) ' which type data file? old(1) new(2) '
 c      read (*,*) idatatype
@@ -109,7 +109,8 @@ c
       open (13,file=solfile)
       open (14,file=errfile)
       write (14,"(9X,1A)",advance="no") 'NUM HITER    HARMERR'
-      write (14,"(10X,1A)",advance="no")
+      write (14,"(11X,1A)",advance="no") 'PREVBESTHARMERR'
+      write (14,"(9X,1A)",advance="no")
      &     'HARMEOMTYPE HARMITERMODE'
       write (14,"(2X,1A)",advance="no") 'HARMSTAT'
       write (14,"(1X,1A)",advance="no") 'RAMSTAT'
@@ -494,6 +495,7 @@ c     &        (ugasconp(j),ugascovp(j),j=1,4)
 c         write (*,*) ' rho: ',rhof,rhop,rhou0i,rhou0f,rhou0p
 
          errorabs=1.0
+         errorabsbestexternal=1.0
          return
 
  10   ifinish=1
@@ -613,7 +615,7 @@ c     &        (ugasconp(j),ugascovp(j),j=1,4)
      &        uradconf,uradcovf,ugasconf,ugascovf,
      &        uradconp,uradcovp,ugasconp,ugascovp,Gam,ifinish,errorabs)
 
-c     Read in data in Jon's new format (209 numbers)
+c     Read in data in Jon's new format (210 numbers)
 
       implicit double precision (a-h,o-z)
       integer eomtype,itermode
@@ -628,7 +630,7 @@ c     Read in data in Jon's new format (209 numbers)
 c         read (11,*,end=10) (isc(j),j=1,4),
          read (11,*,end=10) failtype,myid,failnum,gotfirstnofail,
      &        eomtype,itermode,
-     &        errorabs,iters,dt,nstep,steppart,Gam,
+     &        errorabs,errorabsbestexternal,iters,dt,nstep,steppart,Gam,
      &        ((gn(j,k),k=1,4),j=1,4),
      &        ((gv(j,k),k=1,4),j=1,4),
      &        rhof,scr,rhob,rhop,src,src,rhou0i,rhou0f,rhou0p,
@@ -653,8 +655,12 @@ c         read (11,*,end=10) (isc(j),j=1,4),
 
          write (*,"(A,1X,1F21.15)") 'TEST',ugascovp(4)
 
-         write (14,"(1I5,2X,1E21.15,2X,1I8,8X,1I1,8X)",advance="no")
-     &        iters,errorabs,eomtype,itermode
+c     HARMEOMTYPE=2 is entropy, 3 is energy.  If 3 fails, could have reverted to entropy.
+c     If itermode=0, then in default harm mode, this was not the last attempt for the solver, so just looking at why this strategy failed -- not failure of harm ultimately.
+c     If itermode=1 shows up, then check whether PREVBESTHARMERR was ok/good enough even if not <tol.  If itermode=1 and both current and best error is bad, actually BAD case for harm.
+         write (14,"(1I5,2X,1E21.15,2X,1E21.15,2X,1I8,8X,1I1,8X)"
+     &        ,advance="no")
+     &        iters,errorabs,errorabsbestexternal,eomtype,itermode
 
          if(errorabs.lt.1E-6) then
             write (13,"(1X,A)",advance="no") ' GOOD   '
@@ -1285,6 +1291,11 @@ c     satisfy the post-radiation equations
       write (*,*) ' initial primitives: ',(prim(j),j=1,4)
       write (*,*)
 
+
+      do i=1,4
+         primsave(i)=prim(i)
+      enddo
+
       if(guesstype.le.1) then
 
 c     First do one round of Newton-Raphson just on the velocities
@@ -1313,6 +1324,9 @@ c     all this and go directly to working with the entropy equation.
 
       endif
 
+c   endif guesstype.le.1
+      endif
+
 c     Carry out full Newton-Raphson on all four primitives using
 c     Newton-Raphson
 
@@ -1323,9 +1337,9 @@ c     Newton-Raphson
       erreng=err4
       write (*,*)
       write (12,*) ' Radiation inversion, energy equation ',
-     &        iter
+     &        iter,err4,isnan(erreng)
 
-      if (iflag.eq.0) then
+      if (iflag.eq.0.and.erreng.lt.1E-6) then
          write (*,*) ' Energy equation converged: iter ',
      &        iter
          write (*,*) ' primitives: ',(prim(j),j=1,4)
@@ -1377,7 +1391,6 @@ c     equation
          prim(i)=primsave(i)
       enddo
 
-      endif
 
 c     Next work only on u_g using the entropy equation. Since we are
 c     caurrently using the entropy equation even for the energy equation
@@ -1429,7 +1442,7 @@ c      write (12,*) ' Radiation inversion, u_g only (entropy) '
       endif
       write (14,*) itereng,erreng,iterent,errent
 
-      if (iflag.eq.0) then
+      if (iflag.eq.0.and.errent.lt.1E-6) then
          write (*,*) ' Entropy equation converged: iter ',
      &        iter
          write (*,*) ' primitives: ',(prim(j),j=1,4)
