@@ -232,6 +232,7 @@ int dump_ener(int doener, int dordump, int call_code)
       /////////////////////////
 
       // compute total conserved quantity
+      // SUPERGODMARK: Why is this U_tot,U_tot ?
       if(integrate(NPR,U_tot,U_tot,CONSTYPE,enerregion)>=1) return(1);
 
       // DIRLOOP(dir)

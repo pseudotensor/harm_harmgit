@@ -56,8 +56,8 @@ c     itermax is maximum no. of iterations with u_g, entropy below minimum
       eps=1.d-6
       epsbis=1.d-3
       dvmin=1.d-4
-c      tol=1.d-10
-      tol=1.d-14
+      tol=1.d-10
+c      tol=1.d-14
 c 1E-16 fails to work -- elads to 1E-7 errors, although all primitives seems similar.
 c      tol=1.d-16
       uminfac=1.d-10
@@ -67,7 +67,7 @@ c      tol=1.d-16
 
 c     idatatype=1 means Jon's old data format with 134 numbers
 c     idatatype=2 means Jon's new data format with 181 numbers
-c     idatatype=3 means Jon's new data format with 210 numbers
+c     idatatype=3 means Jon's new data format with 211 numbers
 
 c      write (*,*) ' which type data file? old(1) new(2) '
 c      read (*,*) idatatype
@@ -111,13 +111,13 @@ c
       open (12,file=confile)
       open (13,file=solfile)
       open (14,file=errfile)
-      write (14,"(9X,1A)",advance="no") 'NUM HITER    HARMERR'
-      write (14,"(11X,1A)",advance="no") 'PREVBESTHARMERR'
+      write (14,"(9X,1A)",advance="no") 'NUM HITER HTOTITER HARMERR'
+      write (14,"(15X,1A)",advance="no") 'PREVBESTHARMERR'
       write (14,"(9X,1A)",advance="no")
      &     'HARMEOMTYPE HARMITERMODE'
       write (14,"(2X,1A)",advance="no") 'HARMSTAT'
       write (14,"(1X,1A)",advance="no") 'RAMENGSTAT'
-      write (14,"(4X,1A)",advance="no") 'RAMENGITER   RAMENERR'
+      write (14,"(4X,1A)",advance="no") 'RAMENGITER   RAMENGERR'
       write (14,"(11X,1A)",advance="no") 'RAMENTSTAT'
       write (14,"(5X,1A)") 'RAMENTITER RAMENTERR'
 
@@ -225,14 +225,14 @@ c     step). Make sure up is reasonable. If not, reset up to
 c     umin=uminfac*rhop. 
 
 c      CHOOSE to use previous primitve or harm solution as starting point.
-c     0 = use original prims
+c     0 = use original prims (normal mode)
 c     1 = use harm prims and still do normal Ramesh stages
-c     2 = use harm prims and go straight to 4D iterations to avoid mis-steps
-c         guesstype=0
-         guesstype=2
+c     2 = use harm prims and go straight to 4D iterations to avoid mis-steps (works to get some entropy solutions not otherwise found by Ramesh code, but misses *many* energy solutions even though I'm providing very close guess.)
+         guesstype=0
+c         guesstype=2
 c         guesstype=1
 
-         if(guesstype.eq.0.or.errorabs.gt.1E-6) then
+         if(guesstype.eq.0.or.errorabs.gt.1E-9) then
             write(*,*) 'Using original primitives as guess: guesstype='
      &           ,guesstype
             prim(1)=mymax(up,uminfac*rhop)
@@ -619,10 +619,10 @@ c     &        (ugasconp(j),ugascovp(j),j=1,4)
      &        uradconf,uradcovf,ugasconf,ugascovf,
      &        uradconp,uradcovp,ugasconp,ugascovp,Gam,ifinish,errorabs)
 
-c     Read in data in Jon's new format (210 numbers)
+c     Read in data in Jon's new format (211 numbers)
 
       implicit double precision (a-h,o-z)
-      integer eomtype,itermode
+      integer eomtype,itermode,iters,totaliters
       dimension isc(4),gn(4,4),gv(4,4),vgasp(3),vgasf(3),
      &     BBp(4),BBf(4),vradp(3),vradf(3),s(5),
      &     ugasconf(4),ugascovf(4),ugasconp(4),ugascovp(4),
@@ -634,7 +634,8 @@ c     Read in data in Jon's new format (210 numbers)
 c         read (11,*,end=10) (isc(j),j=1,4),
          read (11,*,end=10) failtype,myid,failnum,gotfirstnofail,
      &        eomtype,itermode,
-     &        errorabs,errorabsbestexternal,iters,dt,nstep,steppart,Gam,
+     &        errorabs,errorabsbestexternal,iters,totaliters,
+     &        dt,nstep,steppart,Gam,
      &        ((gn(j,k),k=1,4),j=1,4),
      &        ((gv(j,k),k=1,4),j=1,4),
      &        rhof,scr,rhob,rhop,src,src,rhou0i,rhou0f,rhou0p,
@@ -662,9 +663,11 @@ c         read (11,*,end=10) (isc(j),j=1,4),
 c     HARMEOMTYPE=2 is entropy, 3 is energy.  If 3 fails, could have reverted to entropy.
 c     If itermode=0, then in default harm mode, this was not the last attempt for the solver, so just looking at why this strategy failed -- not failure of harm ultimately.
 c     If itermode=1 shows up, then check whether PREVBESTHARMERR was ok/good enough even if not <tol.  If itermode=1 and both current and best error is bad, actually BAD case for harm.
-         write (14,"(1I5,2X,1E21.15,2X,1E21.15,2X,1I8,8X,1I1,8X)"
+         write (14,"(1I5,2X,1I5,5X,1E21.15,
+     &         2X,1E21.15,2X,1I8,8X,1I1,8X)"
      &        ,advance="no")
-     &        iters,errorabs,errorabsbestexternal,eomtype,itermode
+     &        iters,totaliters,errorabs,errorabsbestexternal
+     &        ,eomtype,itermode
 
          if(errorabs.lt.1E-6) then
             write (13,"(1X,A,9X)",advance="no") ' GOOD   '
@@ -1527,6 +1530,7 @@ c     niter is the maximum number of Newton-Raphson iterations
 c     iflag=0 means that a good solution was found
 
       niter=100
+c      niter=20
       iflag=0
       jflag=0
 

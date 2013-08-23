@@ -271,9 +271,9 @@ int dump(long dump_cnt)
 {
   MPI_Datatype datatype;
   int whichdump;
-  char fileprefix[MAXFILENAME];
-  char filesuffix[MAXFILENAME];
-  char fileformat[MAXFILENAME];
+  char fileprefix[MAXFILENAME]={'\0'};
+  char filesuffix[MAXFILENAME]={'\0'};
+  char fileformat[MAXFILENAME]={'\0'};
 
 
   trifprintf("begin dumping dump# %ld ... ",dump_cnt);
@@ -658,9 +658,9 @@ int debugdump(long dump_cnt)
 {
   MPI_Datatype datatype;
   int whichdump;
-  char fileprefix[MAXFILENAME];
-  char filesuffix[MAXFILENAME];
-  char fileformat[MAXFILENAME];
+  char fileprefix[MAXFILENAME]={'\0'};
+  char filesuffix[MAXFILENAME]={'\0'};
+  char fileformat[MAXFILENAME]={'\0'};
 
 
   trifprintf("begin dumping debug dump# %ld ... ",dump_cnt);
@@ -713,9 +713,9 @@ int enodebugdump(long dump_cnt)
 {
   MPI_Datatype datatype;
   int whichdump;
-  char fileprefix[MAXFILENAME];
-  char filesuffix[MAXFILENAME];
-  char fileformat[MAXFILENAME];
+  char fileprefix[MAXFILENAME]={'\0'};
+  char filesuffix[MAXFILENAME]={'\0'};
+  char fileformat[MAXFILENAME]={'\0'};
 
 
   trifprintf("begin dumping enodebug dump# %ld ... ",dump_cnt);
@@ -785,9 +785,9 @@ int avgdump(long dump_cnt)
 {
   MPI_Datatype datatype;
   int whichdump;
-  char fileprefix[MAXFILENAME];
-  char filesuffix[MAXFILENAME];
-  char fileformat[MAXFILENAME];
+  char fileprefix[MAXFILENAME]={'\0'};
+  char filesuffix[MAXFILENAME]={'\0'};
+  char fileformat[MAXFILENAME]={'\0'};
  
 
 
@@ -907,9 +907,9 @@ int avg2dump(long dump_cnt)
 {
   MPI_Datatype datatype;
   int whichdump;
-  char fileprefix[MAXFILENAME];
-  char filesuffix[MAXFILENAME];
-  char fileformat[MAXFILENAME];
+  char fileprefix[MAXFILENAME]={'\0'};
+  char filesuffix[MAXFILENAME]={'\0'};
+  char fileformat[MAXFILENAME]={'\0'};
 
 
 
@@ -987,9 +987,9 @@ int gdump(long dump_cnt)
 {
   MPI_Datatype datatype;
   int whichdump;
-  char fileprefix[MAXFILENAME];
-  char filesuffix[MAXFILENAME];
-  char fileformat[MAXFILENAME];
+  char fileprefix[MAXFILENAME]={'\0'};
+  char filesuffix[MAXFILENAME]={'\0'};
+  char fileformat[MAXFILENAME]={'\0'};
  
 
   trifprintf("begin dumping gdump# %ld ... ",dump_cnt);
@@ -1113,9 +1113,9 @@ int fieldlinedump(long dump_cnt)
 {
   MPI_Datatype datatype;
   int whichdump;
-  char fileprefix[MAXFILENAME];
-  char filesuffix[MAXFILENAME];
-  char fileformat[MAXFILENAME];
+  char fileprefix[MAXFILENAME]={'\0'};
+  char filesuffix[MAXFILENAME]={'\0'};
+  char fileformat[MAXFILENAME]={'\0'};
  
 
 
@@ -1330,9 +1330,9 @@ int dissdump(long dump_cnt)
 {
   MPI_Datatype datatype;
   int whichdump;
-  char fileprefix[MAXFILENAME];
-  char filesuffix[MAXFILENAME];
-  char fileformat[MAXFILENAME];
+  char fileprefix[MAXFILENAME]={'\0'};
+  char filesuffix[MAXFILENAME]={'\0'};
+  char fileformat[MAXFILENAME]={'\0'};
 
 
   trifprintf("begin dumping dissdump# %ld ... ",dump_cnt);
@@ -1383,9 +1383,9 @@ int dumpother(long dump_cnt)
 {
   MPI_Datatype datatype;
   int whichdump;
-  char fileprefix[MAXFILENAME];
-  char filesuffix[MAXFILENAME];
-  char fileformat[MAXFILENAME];
+  char fileprefix[MAXFILENAME]={'\0'};
+  char filesuffix[MAXFILENAME]={'\0'};
+  char fileformat[MAXFILENAME]={'\0'};
 
 
   trifprintf("begin dumping dumpother# %ld ... ",dump_cnt);
@@ -1451,9 +1451,9 @@ int fluxdumpdump(long dump_cnt)
 {
   MPI_Datatype datatype;
   int whichdump;
-  char fileprefix[MAXFILENAME];
-  char filesuffix[MAXFILENAME];
-  char fileformat[MAXFILENAME];
+  char fileprefix[MAXFILENAME]={'\0'};
+  char filesuffix[MAXFILENAME]={'\0'};
+  char fileformat[MAXFILENAME]={'\0'};
 
 
   trifprintf("begin dumping fluxdump# %ld ... ",dump_cnt);
@@ -1505,9 +1505,9 @@ int eosdump(long dump_cnt)
 {
   MPI_Datatype datatype;
   int whichdump;
-  char fileprefix[MAXFILENAME];
-  char filesuffix[MAXFILENAME];
-  char fileformat[MAXFILENAME];
+  char fileprefix[MAXFILENAME]={'\0'};
+  char filesuffix[MAXFILENAME]={'\0'};
+  char fileformat[MAXFILENAME]={'\0'};
 
   
   trifprintf("begin dumping eosdump# %ld ... ",dump_cnt);
@@ -1617,9 +1617,9 @@ int raddump(long dump_cnt)
 {
   MPI_Datatype datatype;
   int whichdump;
-  char fileprefix[MAXFILENAME];
-  char filesuffix[MAXFILENAME];
-  char fileformat[MAXFILENAME];
+  char fileprefix[MAXFILENAME]={'\0'};
+  char filesuffix[MAXFILENAME]={'\0'};
+  char fileformat[MAXFILENAME]={'\0'};
 
   
   trifprintf("begin dumping raddump# %ld ... ",dump_cnt);
@@ -1711,7 +1711,9 @@ int raddump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 
   // get 4-force in lab and fluid frame
   FTYPE Gdpl[NPR],Gdabspl[NPR],chi,Tgas;
-  koral_source_rad_calc(pr, ptrgeom, Gdpl, Gdabspl, &chi, &Tgas, &q);
+  int computestate=0;// already computed above
+  int computeentropy=1;
+  koral_source_rad_calc(computestate,computeentropy,pr, ptrgeom, Gdpl, Gdabspl, &chi, &Tgas, &q);
   myset(datatype,Gdpl,PRAD0,NDIM,writebuf); // NDIM
   myset(datatype,Gdabspl,PRAD0,NDIM,writebuf); // NDIM
 
@@ -1777,9 +1779,9 @@ int vpotdump(long dump_cnt)
 {
   MPI_Datatype datatype;
   int whichdump;
-  char fileprefix[MAXFILENAME];
-  char filesuffix[MAXFILENAME];
-  char fileformat[MAXFILENAME];
+  char fileprefix[MAXFILENAME]={'\0'};
+  char filesuffix[MAXFILENAME]={'\0'};
+  char fileformat[MAXFILENAME]={'\0'};
 
 
   trifprintf("begin dumping vpotdump# %ld ... ",dump_cnt);
@@ -1840,9 +1842,9 @@ int failfloordudump(long dump_cnt)
 {
   MPI_Datatype datatype;
   int whichdump;
-  char fileprefix[MAXFILENAME];
-  char filesuffix[MAXFILENAME];
-  char fileformat[MAXFILENAME];
+  char fileprefix[MAXFILENAME]={'\0'};
+  char filesuffix[MAXFILENAME]={'\0'};
+  char fileformat[MAXFILENAME]={'\0'};
 
 
   trifprintf("begin dumping failfloordudump# %ld ... ",dump_cnt);
@@ -1903,9 +1905,9 @@ int fakedump(long dump_cnt)// arg not used
 {
   MPI_Datatype datatype;
   int whichdump;
-  char fileprefix[MAXFILENAME];
-  char filesuffix[MAXFILENAME];
-  char fileformat[MAXFILENAME];
+  char fileprefix[MAXFILENAME]={'\0'};
+  char filesuffix[MAXFILENAME]={'\0'};
+  char fileformat[MAXFILENAME]={'\0'};
 
 
   trifprintf("begin dumping fakedump");

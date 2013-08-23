@@ -6,13 +6,13 @@ int dump_gen(int readwrite, long dump_cnt, int bintxt, int whichdump, MPI_Dataty
 {
   int i = 0, j = 0, k = 0, l = 0, col = 0;
   FILE **fpp;
-  char dfnam[MAXFILENAME];
-  char dfnamreal[MAXFILENAME];
-  char localfileformat[MAXFILENAME];
+  char dfnam[MAXFILENAME]={'\0'};
+  char dfnamreal[MAXFILENAME]={'\0'};
+  char localfileformat[MAXFILENAME]={'\0'};
   void *jonio;
   static void *writebuf; // must be static so ROMIO non-blocking has permenant pointer address for this
-  char truemyidtxt[MAXFILENAME];
-  char filerw[MAXFILENAME];
+  char truemyidtxt[MAXFILENAME]={'\0'};
+  char filerw[MAXFILENAME]={'\0'};
   FILE *headerptr;
   int numfiles,coliter;
   void *setbuf;

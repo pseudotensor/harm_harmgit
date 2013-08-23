@@ -97,6 +97,7 @@ int main(int argc, char *argv[])
 
   trifprintf("proc: %04d : Start computation\n", myid);
 
+  int fakenstep=0;
   onemorestep=reallaststep=0; // global variable set also in step_ch.c
   while (reallaststep==0) {
 
@@ -119,10 +120,11 @@ int main(int argc, char *argv[])
     
     /* restart dump */
     // if(nstep == 130) restart_write(1) ;
-    //    if(nstep==20) break;
+    //if(fakenstep==50) break;
 
 
     nstep++;
+    fakenstep++;
     // restartsteps[whichrestart]=realnstep;
 
 

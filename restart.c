@@ -168,9 +168,9 @@ int restart_write(long dump_cnt)
 {
   MPI_Datatype datatype;
   int whichdump;
-  char fileprefix[MAXFILENAME];
-  char filesuffix[MAXFILENAME];
-  char fileformat[MAXFILENAME];
+  char fileprefix[MAXFILENAME]={'\0'};
+  char filesuffix[MAXFILENAME]={'\0'};
+  char fileformat[MAXFILENAME]={'\0'};
   long truedump_cnt;
 
 
@@ -279,9 +279,9 @@ int restart_read(long dump_cnt)
 {
   MPI_Datatype datatype;
   int whichdump;
-  char fileprefix[MAXFILENAME];
-  char filesuffix[MAXFILENAME];
-  char fileformat[MAXFILENAME];
+  char fileprefix[MAXFILENAME]={'\0'};
+  char filesuffix[MAXFILENAME]={'\0'};
+  char fileformat[MAXFILENAME]={'\0'};
   int bintxt;
 
 
@@ -383,9 +383,9 @@ int restartupperpole_read(long dump_cnt)
 {
   MPI_Datatype datatype;
   int whichdump;
-  char fileprefix[MAXFILENAME];
-  char filesuffix[MAXFILENAME];
-  char fileformat[MAXFILENAME];
+  char fileprefix[MAXFILENAME]={'\0'};
+  char filesuffix[MAXFILENAME]={'\0'};
+  char fileformat[MAXFILENAME]={'\0'};
   int bintxt;
   int restartupperpole_set(void);
 
@@ -536,9 +536,9 @@ int restartupperpole_write(long dump_cnt)
 {
   MPI_Datatype datatype;
   int whichdump;
-  char fileprefix[MAXFILENAME];
-  char filesuffix[MAXFILENAME];
-  char fileformat[MAXFILENAME];
+  char fileprefix[MAXFILENAME]={'\0'};
+  char filesuffix[MAXFILENAME]={'\0'};
+  char fileformat[MAXFILENAME]={'\0'};
   long truedump_cnt;
 
   trifprintf("begin dumping rdumpupperpole# %ld ... ",dump_cnt);
@@ -648,9 +648,9 @@ int restartmetric_write(long dump_cnt)
 {
   MPI_Datatype datatype;
   int whichdump;
-  char fileprefix[MAXFILENAME];
-  char filesuffix[MAXFILENAME];
-  char fileformat[MAXFILENAME];
+  char fileprefix[MAXFILENAME]={'\0'};
+  char filesuffix[MAXFILENAME]={'\0'};
+  char fileformat[MAXFILENAME]={'\0'};
   long truedump_cnt;
 
   trifprintf("begin dumping rmetricdump# %ld ... ",dump_cnt);
@@ -784,9 +784,9 @@ int restartmetric_read(long dump_cnt)
 {
   MPI_Datatype datatype;
   int whichdump;
-  char fileprefix[MAXFILENAME];
-  char filesuffix[MAXFILENAME];
-  char fileformat[MAXFILENAME];
+  char fileprefix[MAXFILENAME]={'\0'};
+  char filesuffix[MAXFILENAME]={'\0'};
+  char fileformat[MAXFILENAME]={'\0'};
   int bintxt;
 
 

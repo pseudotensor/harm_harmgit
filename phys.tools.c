@@ -30,7 +30,7 @@
 int primtoflux(int returntype, FTYPE *pr, struct of_state *q, int dir,
                struct of_geom *geom, FTYPE *flux)
 {
-  int primtoflux_ma(int *returntype, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux, FTYPE *fluxdiag);
+  int primtoflux_ma(int needentropy,int *returntype, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux, FTYPE *fluxdiag);
   int primtoflux_rad(int *returntype, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux);
   int primtoflux_em(int *returntype, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux);
   void UtoU_fromunothing(int returntype,struct of_geom *ptrgeom,FTYPE *Uin, FTYPE *Uout);
@@ -46,7 +46,7 @@ int primtoflux(int returntype, FTYPE *pr, struct of_state *q, int dir,
 
 
   // define MA terms
-  primtoflux_ma(&returntype, pr, q, dir, geom, fluxinputma, &fluxdiag);
+  primtoflux_ma(1,&returntype, pr, q, dir, geom, fluxinputma, &fluxdiag);
   fluxinputma[UU+dir]+=fluxdiag; // add back to normal term
   // add up MA
   PLOOP(pliter,pl) fluxinput[pl] += fluxinputma[pl];
@@ -82,10 +82,10 @@ int primtoflux(int returntype, FTYPE *pr, struct of_state *q, int dir,
 
 
 
-int primtoflux_nonradonly(FTYPE *pr, struct of_state *q, int dir,
+int primtoflux_nonradonly(int needentropy, FTYPE *pr, struct of_state *q, int dir,
                struct of_geom *geom, FTYPE *flux)
 {
-  int primtoflux_ma(int *returntype, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux, FTYPE *fluxdiag);
+  int primtoflux_ma(int needentropy,int *returntype, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux, FTYPE *fluxdiag);
   int primtoflux_em(int *returntype, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux);
   VARSTATIC FTYPE fluxma[NPR],fluxem[NPR];
   VARSTATIC FTYPE fluxdiag;
@@ -99,7 +99,7 @@ int primtoflux_nonradonly(FTYPE *pr, struct of_state *q, int dir,
 
 
   // define MA terms
-  primtoflux_ma(&returntype, pr, q, dir, geom, fluxma, &fluxdiag);
+  primtoflux_ma(needentropy,&returntype, pr, q, dir, geom, fluxma, &fluxdiag);
   fluxma[UU+dir]+=fluxdiag; // add back to normal term
   // add up MA
   PLOOP(pliter,pl) flux[pl] += fluxma[pl];
@@ -153,7 +153,7 @@ int primtoflux_radonly(FTYPE *pr, struct of_state *q, int dir,
 // fluxdir = true flux direction even if passing back conserved quantity (fundir==TT)
 int primtoflux_splitmaem(int returntype, FTYPE *pr, struct of_state *q, int fluxdir, int fundir, struct of_geom *geom, FTYPE *fluxma, FTYPE *fluxem)
 {
-  int primtoflux_ma(int *returntype, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux, FTYPE *fluxdiag);
+  int primtoflux_ma(int needentropy,int *returntype, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux, FTYPE *fluxdiag);
   int primtoflux_rad(int *returntype, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux);
   int primtoflux_em(int *returntype, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux);
   void UtoU_ma_fromunothing(int returntype,struct of_geom *ptrgeom,FTYPE *Uin, FTYPE *Uout);
@@ -168,7 +168,7 @@ int primtoflux_splitmaem(int returntype, FTYPE *pr, struct of_state *q, int flux
   PLOOP(pliter,pl) fluxinputma[pl]=fluxinputrad[pl]=fluxinputem[pl]=0.0;
 
   // define MA terms
-  primtoflux_ma(&returntype, pr, q, fundir, geom, fluxinputma, &fluxdiag);
+  primtoflux_ma(1,&returntype, pr, q, fundir, geom, fluxinputma, &fluxdiag);
 
   // SUPERGODMARK CHANGINGMARK
   // Note that pressure part of flux has 0 conserved quantity associated with it from the point of view of this output and correct HLL/LAXF calculation
@@ -222,7 +222,7 @@ int primtoflux_splitmaem(int returntype, FTYPE *pr, struct of_state *q, int flux
 
 
 // matter only terms (as if B=0)
-int primtoflux_ma(int *returntype, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux, FTYPE *fluxdiag)
+int primtoflux_ma(int needentropy,int *returntype, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux, FTYPE *fluxdiag)
 {
   // sizes: NPR,struct of_state, int, struct of_geom, NPR
   int ynuflux_calc(struct of_geom *ptrgeom, FTYPE *pr, int dir, struct of_state *q, FTYPE *advectedscalarflux, int pnum);
@@ -271,16 +271,18 @@ int primtoflux_ma(int *returntype, FTYPE *pr, struct of_state *q, int dir, struc
 
 
 #if(DOENTROPY!=DONOENTROPY)
+  if(needentropy){
 #if(SPLITNPR)
-  if(nprlist[nprstart]<=ENTROPY && nprlist[nprend]>=ENTROPY)
+    if(nprlist[nprstart]<=ENTROPY && nprlist[nprend]>=ENTROPY)
 #endif
-    entropyflux_calc(pr, dir, q, &flux[ENTROPY]); // fills ENTROPY only
-
-  // below is special for utoprim() 5D version for full entropy evolution and inversion
-  if(*returntype==UENTROPY){
-    flux[UU]=flux[ENTROPY]; // overwrite for utoprim()
-    *fluxdiag = 0.0; // overwrite for utoprim()
-    *returntype=UNOTHING; // reset returntype for UtoU
+      entropyflux_calc(pr, dir, q, &flux[ENTROPY]); // fills ENTROPY only
+    
+    // below is special for utoprim() 5D version for full entropy evolution and inversion
+    if(*returntype==UENTROPY){
+      flux[UU]=flux[ENTROPY]; // overwrite for utoprim()
+      *fluxdiag = 0.0; // overwrite for utoprim()
+      *returntype=UNOTHING; // reset returntype for UtoU
+    }
   }
 
 #endif
@@ -440,7 +442,6 @@ int advectedscalarflux_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *advec
 // flux of specific entropy
 int entropyflux_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *entropyflux)
 {
-  VARSTATIC FTYPE entropy;
 
   // get entropy
   //  entropy_calc(ptrgeom,pr,&entropy); // now done in get_state_thermodynamics()
@@ -1703,7 +1704,7 @@ int get_state(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q)
   int get_state_uconucovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
   int get_state_uradconuradcovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
   int get_state_bconbcovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
-  int get_state_thermodynamics(struct of_geom *ptrgeom, FTYPE *pr, struct of_state *q);
+  int get_state_thermodynamics(int needentropy,struct of_geom *ptrgeom, FTYPE *pr, struct of_state *q);
   int bsq_calc_fromq(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE *bsq);
 
 
@@ -1717,7 +1718,7 @@ int get_state(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q)
 
   bsq_calc_fromq(pr,ptrgeom,q,&(q->bsq));
 
-  get_state_thermodynamics(ptrgeom, pr, q);
+  get_state_thermodynamics(1,ptrgeom, pr, q);
 
   return (0);
 }
@@ -1756,15 +1757,16 @@ int get_state_norad_part1(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q
 
 /* find ucon, ucov, bcon, bcov from primitive variables */
 // when calling get_state, users of this function expect to get q->{ucon,ucov,bcon,bcov,pressure}
-int get_state_norad_part2(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q)
+int get_state_norad_part2(int needentropy, FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q)
 {
-  int get_state_thermodynamics(struct of_geom *ptrgeom, FTYPE *pr, struct of_state *q);
+  int get_state_thermodynamics(int needentropy,struct of_geom *ptrgeom, FTYPE *pr, struct of_state *q);
 
 
-  get_state_thermodynamics(ptrgeom, pr, q);
+  get_state_thermodynamics(needentropy, ptrgeom, pr, q);
 
   return (0);
 }
+
 
 
 // all get_state() things except the field quantities
@@ -1772,7 +1774,7 @@ int get_state_nofield(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q)
 {
   int get_state_uconucovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
   int get_state_uradconuradcovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
-  int get_state_thermodynamics(struct of_geom *ptrgeom, FTYPE *pr, struct of_state *q);
+  int get_state_thermodynamics(int needentropy,struct of_geom *ptrgeom, FTYPE *pr, struct of_state *q);
 
 
   get_state_uconucovonly(pr, ptrgeom, q);
@@ -1781,7 +1783,7 @@ int get_state_nofield(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q)
   get_state_uradconuradcovonly(pr, ptrgeom, q);
 #endif
 
-  get_state_thermodynamics(ptrgeom, pr, q);
+  get_state_thermodynamics(1,ptrgeom, pr, q);
 
   return (0);
 }
@@ -1822,7 +1824,7 @@ int pureget_stateforfluxcalc(FTYPE *pr, struct of_geom *ptrgeom, struct of_state
   int get_state_uconucovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
   int get_state_uradconuradcovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
   int get_state_bconbcovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
-  int get_state_thermodynamics(struct of_geom *ptrgeom, FTYPE *pr, struct of_state *q);
+  int get_state_thermodynamics(int needentropy,struct of_geom *ptrgeom, FTYPE *pr, struct of_state *q);
   int bsq_calc_fromq(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE *bsq);
   int get_state_prims(FTYPE *pr, struct of_state *q);
   int get_state_geom(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
@@ -1855,7 +1857,7 @@ int pureget_stateforfluxcalc(FTYPE *pr, struct of_geom *ptrgeom, struct of_state
 
   bsq_calc_fromq(pr,ptrgeom,q,&(q->bsq));
 
-  get_state_thermodynamics(ptrgeom, pr, q);
+  get_state_thermodynamics(1,ptrgeom, pr, q);
 
 
   return (0);
@@ -1869,7 +1871,7 @@ int pureget_stateforsource(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *
   int get_state_uconucovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
   int get_state_uradconuradcovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
   int get_state_bconbcovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
-  int get_state_thermodynamics(struct of_geom *ptrgeom, FTYPE *pr, struct of_state *q);
+  int get_state_thermodynamics(int needentropy,struct of_geom *ptrgeom, FTYPE *pr, struct of_state *q);
   int bsq_calc_fromq(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE *bsq);
 
 
@@ -1887,7 +1889,7 @@ int pureget_stateforsource(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *
 
   bsq_calc_fromq(pr,ptrgeom,q,&(q->bsq));
 
-  get_state_thermodynamics(ptrgeom, pr, q);
+  get_state_thermodynamics(1,ptrgeom, pr, q);
 
   return (0);
 }
@@ -1899,7 +1901,7 @@ int pureget_stateforinterpline(FTYPE *pr, struct of_geom *ptrgeom, struct of_sta
   int get_state_uconucovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
   int get_state_uradconuradcovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
   int get_state_bconbcovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
-  int get_state_thermodynamics(struct of_geom *ptrgeom, FTYPE *pr, struct of_state *q);
+  int get_state_thermodynamics(int needentropy,struct of_geom *ptrgeom, FTYPE *pr, struct of_state *q);
   int bsq_calc_fromq(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE *bsq);
 
 
@@ -1915,7 +1917,7 @@ int pureget_stateforinterpline(FTYPE *pr, struct of_geom *ptrgeom, struct of_sta
 
   bsq_calc_fromq(pr,ptrgeom,q,&(q->bsq));
 
-  get_state_thermodynamics(ptrgeom, pr, q);
+  get_state_thermodynamics(1,ptrgeom, pr, q);
 
   return (0);
 }
@@ -1927,7 +1929,7 @@ int pureget_stateforglobalwavespeeds(FTYPE *pr, struct of_geom *ptrgeom, struct 
   int get_state_uconucovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
   int get_state_uradconuradcovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
   int get_state_bconbcovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
-  int get_state_thermodynamics(struct of_geom *ptrgeom, FTYPE *pr, struct of_state *q);
+  int get_state_thermodynamics(int needentropy,struct of_geom *ptrgeom, FTYPE *pr, struct of_state *q);
   int bsq_calc_fromq(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE *bsq);
 
 
@@ -1943,7 +1945,7 @@ int pureget_stateforglobalwavespeeds(FTYPE *pr, struct of_geom *ptrgeom, struct 
 
   bsq_calc_fromq(pr,ptrgeom,q,&(q->bsq));
 
-  get_state_thermodynamics(ptrgeom, pr, q);
+  get_state_thermodynamics(1,ptrgeom, pr, q);
 
   return (0);
 }
@@ -1955,7 +1957,7 @@ int pureget_stateforfluxcalcorsource(FTYPE *pr, struct of_geom *ptrgeom, struct 
   int get_state_uconucovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
   int get_state_uradconuradcovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
   int get_state_bconbcovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
-  int get_state_thermodynamics(struct of_geom *ptrgeom, FTYPE *pr, struct of_state *q);
+  int get_state_thermodynamics(int needentropy,struct of_geom *ptrgeom, FTYPE *pr, struct of_state *q);
   int bsq_calc_fromq(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE *bsq);
   int get_state_prims(FTYPE *pr, struct of_state *q);
   int get_state_geom(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
@@ -1988,7 +1990,7 @@ int pureget_stateforfluxcalcorsource(FTYPE *pr, struct of_geom *ptrgeom, struct 
 
   bsq_calc_fromq(pr,ptrgeom,q,&(q->bsq));
 
-  get_state_thermodynamics(ptrgeom, pr, q);
+  get_state_thermodynamics(1,ptrgeom, pr, q);
 
 
   return (0);
@@ -2003,7 +2005,7 @@ int get_stateforUdiss(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q)
   int get_state_uconucovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
   int get_state_uradconuradcovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
   int get_state_bconbcovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
-  int get_state_thermodynamics(struct of_geom *ptrgeom, FTYPE *pr, struct of_state *q);
+  int get_state_thermodynamics(int needentropy,struct of_geom *ptrgeom, FTYPE *pr, struct of_state *q);
   int bsq_calc_fromq(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE *bsq);
 
 
@@ -2019,7 +2021,7 @@ int get_stateforUdiss(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q)
 
   bsq_calc_fromq(pr,ptrgeom,q,&(q->bsq));
 
-  get_state_thermodynamics(ptrgeom, pr, q);
+  get_state_thermodynamics(1,ptrgeom, pr, q);
 
 
   return (0);
@@ -2111,14 +2113,14 @@ int get_state_Blower(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q)
 
 
 // separate function for getting thermodynamical quantities
-int get_state_thermodynamics(struct of_geom *ptrgeom, FTYPE *pr, struct of_state *q)
+int get_state_thermodynamics(int needentropy, struct of_geom *ptrgeom, FTYPE *pr, struct of_state *q)
 {
 
   // does assume ptrgeom or something related set indices for advanced EOSs
   q->pressure = pressure_rho0_u_simple(ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p,pr[RHO],pr[UU]);
 
 #if(DOENTROPY!=DONOENTROPY)
-  entropy_calc(ptrgeom,pr,&(q->entropy));
+  if(needentropy) entropy_calc(ptrgeom,pr,&(q->entropy));
 #endif
 
   return (0);
