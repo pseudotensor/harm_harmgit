@@ -209,9 +209,9 @@
 
 // whether to try again with 10* higher u_g for entropy case since important as backup.
 // Sometimes initial guess for u_g is too low, and when too low very hard for NR to recover.
-#define TRYENTROPYHARDER 1
+#define TRYENTROPYHARDER 0 // FUCK
 
-#define TRYENERGYHARDER 1
+#define TRYENERGYHARDER 0 // FUCK
 
 // whether to get lowest error solution instead of final one.
 #define GETBEST 1
@@ -919,14 +919,14 @@ static int f_implicit(int iter, int failreturnallowable, int whichcall, int show
     // 5) Do rest of get_state that used rho, and other scalars, in case used.
     // This computes pressure (as required for T^t_\mu) and entropy (as required for primtoflux_nonradonly below for entropy flux)
     // KORALTODO: Although, don't need entropy if doing implicitferr==UMHD
-    get_state_norad_part2(needentropy, pp, ptrgeom, q);
+    get_state_norad_part2(needentropy, pp, ptrgeom, q); // where entropy would be computed
 
     //
     // 6) Compute Umhd and Uentropy (keeps Urad as zero, but Urad set next)
     //primtoU(UNOTHING,pp,q,ptrgeom, uu);
     extern int primtoflux_nonradonly(int needentropy, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux);
-    //    primtoflux_nonradonly(needentropy,pp,q,TT,ptrgeom, uu);
-    primtoflux_nonradonly(1,pp,q,TT,ptrgeom, uu);
+    primtoflux_nonradonly(needentropy,pp,q,TT,ptrgeom, uu);
+    //    primtoflux_nonradonly(1,pp,q,TT,ptrgeom, uu); // doesn't actually compute entropy again, just multiplies existing things.
     //
     // 7) Get actual Urad(G) via energy conservation (correct even if using entropy as error function, because just computed correct U[ENTROPY] consistent with U[UU].
     DLOOPA(iv) uu[iotherU[iv]] = uu0[iotherU[iv]] - (uu[irefU[iv]]-uu0[irefU[iv]]);
@@ -1416,6 +1416,9 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
     didentropyalready=0;
     fracenergy=0.0;
 
+
+    PFTYPE lpflagentropybest;
+    PFTYPE lpflagradentropybest;
     int radinvmodentropybest;
     int radErfnegentropybest;
     int failreturnentropybest;
@@ -1430,9 +1433,12 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
     FTYPE dUcompentropy[NUMSOURCES][NPR];
     struct of_state qentropy;
 
-    itermodeentropy=ITERMODENORMAL; // try normal first, since fastest
+    //    itermodeentropy=ITERMODENORMAL; // try normal first, since fastest
+    itermodeentropy=ITERMODESTAGES; // FUCK
 
     // get fresh start entropy solution
+    *lpflag=UTOPRIMNOFAIL;
+    *lpflagrad==UTOPRIMRADNOFAIL;
     radinvmodentropy=0;
     radErfnegentropy=0;
     failreturnentropy=FAILRETURNGENERAL;// default to fail
@@ -1452,6 +1458,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
 
       if(errorabsentropy<errorabsentropybest){
         // store result in case better than latter results
+        lpflagentropybest=*lpflag;
+        lpflagradentropybest=*lpflagrad;
         radinvmodentropybest=radinvmodentropy;
         radErfnegentropybest=radErfnegentropy;
         failreturnentropybest=failreturnentropy;
@@ -1464,6 +1472,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
         }
       }
       // start fresh
+      *lpflag=UTOPRIMNOFAIL;
+      *lpflagrad==UTOPRIMRADNOFAIL;
       radinvmodentropy=0;
       radErfnegentropy=0;
       failreturnentropy=FAILRETURNGENERAL;// default to fail
@@ -1481,6 +1491,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
       // see if want to keep
       if(errorabsentropy<errorabsentropybest){
         // store result in case better than latter results
+        lpflagentropybest=*lpflag;
+        lpflagradentropybest=*lpflagrad;
         radinvmodentropybest=radinvmodentropy;
         radErfnegentropybest=radErfnegentropy;
         failreturnentropybest=failreturnentropy;
@@ -1501,11 +1513,13 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
       }
       else{
         itermodeentropy=ITERMODESTAGES;// only now do stages for entropy
+        // start fresh
+        *lpflag=UTOPRIMNOFAIL;
+        *lpflagrad==UTOPRIMRADNOFAIL;
         radinvmodentropy=0;
         radErfnegentropy=0;
         failreturnentropy=FAILRETURNGENERAL;// default to fail
         eomtypeentropy=EOMENTROPYGRMHD;
-        // start fresh
         PLOOP(pliter,pl){
           pbentropy[pl]=pbbackup[pl];
           SCLOOP(sc) dUcompentropy[sc][pl]=dUcompbackup[sc][pl];
@@ -1519,6 +1533,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
         // see if want to keep
         if(errorabsentropy<errorabsentropybest){
           // store result in case better than latter results
+          lpflagentropybest=*lpflag;
+          lpflagradentropybest=*lpflagrad;
           radinvmodentropybest=radinvmodentropy;
           radErfnegentropybest=radErfnegentropy;
           failreturnentropybest=failreturnentropy;
@@ -1543,6 +1559,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
 
       // use best result from trying harder
       PLOOP(pliter,pl){
+        *lpflag=lpflagentropybest;
+        *lpflagrad=lpflagradentropybest;
         radinvmodentropy=radinvmodentropybest;
         radErfnegentropy=radErfnegentropybest;
         failreturnentropy=failreturnentropybest;
@@ -1645,6 +1663,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
 
     int itermodeenergy=ITERMODENORMAL; // start with normal
 
+    PFTYPE lpflagenergybest;
+    PFTYPE lpflagradenergybest;
     int radinvmodenergybest;
     int radErfnegenergybest;
     int failreturnenergybest;
@@ -1663,6 +1683,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
     if(fracenergy!=0.0 || radinvmodentropy>0 ||  ACTUALHARDORSOFTFAILURE(failreturnentropy)==1){
 
       // start fresh or use entropy as starting point
+      *lpflag=UTOPRIMNOFAIL;
+      *lpflagrad==UTOPRIMRADNOFAIL;
       radinvmodenergy=0;
       radErfnegenergy=0;
       failreturnenergy=FAILRETURNGENERAL; // default to fail in case energy not to be done at all
@@ -1702,6 +1724,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
         // see if want to keep
         if(errorabsenergy<errorabsenergybest){
           // store result in case better than latter results
+          lpflagenergybest=*lpflag;
+          lpflagradenergybest=*lpflagrad;
           radinvmodenergybest=radinvmodenergy;
           radErfnegenergybest=radErfnegenergy;
           failreturnenergybest=failreturnenergy;
@@ -1715,6 +1739,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
         }
 
         // start fresh
+        *lpflag=UTOPRIMNOFAIL;
+        *lpflagrad==UTOPRIMRADNOFAIL;
         radinvmodenergy=0;
         radErfnegenergy=0;
         failreturnenergy=FAILRETURNGENERAL; // default to fail in case energy not to be done at all
@@ -1732,6 +1758,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
         // see if want to keep
         if(errorabsenergy<errorabsenergybest){
           // store result in case better than latter results
+          lpflagenergybest=*lpflag;
+          lpflagradenergybest=*lpflagrad;
           radinvmodenergybest=radinvmodenergy;
           radErfnegenergybest=radErfnegenergy;
           failreturnenergybest=failreturnenergy;
@@ -1755,6 +1783,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
 
         // use best result from trying harder
         PLOOP(pliter,pl){
+          *lpflag=lpflagenergybest;
+          *lpflagrad=lpflagradenergybest;
           radinvmodenergy=radinvmodenergybest;
           radErfnegenergy=radErfnegenergybest;
           failreturnenergy=failreturnenergybest;

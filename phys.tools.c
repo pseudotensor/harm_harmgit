@@ -457,7 +457,7 @@ int entropyflux_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *entropyflux)
 
 
   // DEBUG:
-  //  dualfprintf(fail_file,"entropy=%21.15g dir=%d ucondir=%21.15g\n",entropy,dir,q->ucon[dir]);
+  //dualfprintf(fail_file,"entropy=%21.15g dir=%d ucondir=%21.15g\n",entropy,dir,q->ucon[dir]);
 
   *entropyflux = (q->entropy) * (q->ucon[dir]);
 
