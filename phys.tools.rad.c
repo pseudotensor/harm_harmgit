@@ -1196,6 +1196,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
 
   // set backups that might change and contaminate a fresh start
   // piin, Uiin, Ufin, CUf, ptrgeom, dUother don't change, rest can.
+  int failfinalreturn;
   int eomtypelocal;
 
   FTYPE uub[NPR]; // holds returned uu from implicit solver
@@ -1255,6 +1256,9 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
     whichcap=CAPTYPEBASIC;
     failreturn=koral_source_rad_implicit_mode(havebackup, didentropyalready, &eomtypelocal, whichcap, itermode, fracenergy, &radinvmod, pb, uub, piin, Uiin, Ufin, CUf, ptrgeom, q, dUother ,dUcomp, &errorabs, errorabs, &iters, &f1iters);
     if(ACTUALHARDFAILURE(failreturn)){
+      failfinalreturn=1;
+      *lpflag=UTOPRIMFAILCONV;
+      *lpflagrad=UTOPRIMRADFAILCASE1A;
       // restore backups in case got contaminated
       PLOOP(pliter,pl){
         pb[pl]=pbbackup[pl];
@@ -1263,6 +1267,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
       }
     }
     else{
+      failfinalreturn=0;
       noprims=0;
       *eomtype=eomtypelocal; // can be EOMDONOTHING if successful and small enough error
       usedenergy=1;
@@ -1285,6 +1290,9 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
     whichcap=CAPTYPEBASIC;
     failreturn=koral_source_rad_implicit_mode(havebackup, didentropyalready, &eomtypelocal, whichcap, itermode, fracenergy, &radinvmod, pb, uub, piin, Uiin, Ufin, CUf, ptrgeom, q, dUother ,dUcomp, &errorabs, errorabs, &iters, &f1iters);
     if(ACTUALHARDFAILURE(failreturn)){
+      failfinalreturn=1;
+      *lpflag=UTOPRIMFAILCONV;
+      *lpflagrad=UTOPRIMRADFAILCASE1A;
       // restore backups in case got contaminated
       PLOOP(pliter,pl){
         pb[pl]=pbbackup[pl];
@@ -1293,6 +1301,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
       }
     }
     else{
+      failfinalreturn=0;
       noprims=0;
       *eomtype=eomtypelocal; // can be EOMDONOTHING if successful and small enough error
       usedentropy=1;
@@ -1312,8 +1321,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
     int itersenergy=0,itersentropy=0;
     int f1itersenergy=0,f1itersentropy=0;
     int itermodeenergy,itermodeentropy;
-    int failreturnenergy;
-    int failreturnentropy;
+    int failreturnenergy=FAILRETURNGENERAL;
+    int failreturnentropy=FAILRETURNGENERAL; // default
 
     eomtypelocal=*eomtype;
     havebackup=1; // only time this is used is here where we tell energy that we have backup method, so can give up quickly.
@@ -1342,10 +1351,14 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
       whichcap=CAPTYPEBASIC;
       failreturnentropy=koral_source_rad_implicit_mode(havebackup, didentropyalready, &eomtypelocal, whichcap, itermodeentropy, fracenergy, &radinvmod, pb, uub, piin, Uiin, Ufin, CUf, ptrgeom, q, dUother ,dUcomp, &errorabsentropy, errorabsentropy, &itersentropy, &f1itersentropy);
       if(ACTUALHARDFAILURE(failreturnentropy)){
+        failfinalreturn=1;
+        *lpflag=UTOPRIMFAILCONV;
+        *lpflagrad=UTOPRIMRADFAILCASE1A;
         if(debugfail>=2) dualfprintf(fail_file,"Entropy also failed: energy=%d entropy=%d\n",failreturnenergy,failreturnentropy);
       }
       else{
         // use entropy
+        failfinalreturn=0;
         usedentropy=1;
         noprims=0;
         errorabs=errorabsentropy;
@@ -1358,6 +1371,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
     }
     else{// failreturnenergy==0 or eomtypecond==0
       // can stick with energy
+      failfinalreturn=0;
       usedenergy=1;
       noprims=0;
       errorabs=errorabsenergy;
@@ -1404,6 +1418,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
     // try entropy solution since more often obtainable and can use non-failed result as initial guess.
     //
     ////////
+    PFTYPE lpflagentropy;
+    PFTYPE lpflagradentropy;
     int radinvmodentropy;
     int radErfnegentropy;
     int failreturnentropy;
@@ -1572,8 +1588,15 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
       }
 
     }// end if trying harder
+
+    // store these in case entropy ultimately used
+    lpflagentropy=*lpflag;
+    lpflagradentropy=*lpflagrad;
+
+
     // eomtypeentropy can become EOMDONOTHING if this call was successful
 
+#if(0)
     // final check on radiation's physicalness if not failing or placing hard caps during iterations to allow smoother NR behavior
     //    if(ACTUALHARDFAILURE(failreturnentropy)==0){
     if(ACCEPTASNOFAILURE(failreturnentropy)==1){ // as when uub defined
@@ -1584,7 +1607,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
         radinvmodentropy=UTOPRIMRADFAILCASE1A; // just use this to actually indicate
       }
     }
-
+#endif
     
     // get divcond.  Go over dimensions in case not full 3D.  Just duplicates value as per in flux.c.
     const int NxNOT1[NDIM]={0,N1NOT1,N2NOT1,N3NOT1};
@@ -1646,7 +1669,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
 
 
 
-
+    
 
     ////////////////
     //
@@ -1655,9 +1678,11 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
     ///////////////
     // only do energy case if divcond too small or if entropy failed
 
+    PFTYPE lpflagenergy;
+    PFTYPE lpflagradenergy;
     int radinvmodenergy;
     int radErfnegenergy;
-    int failreturnenergy;
+    int failreturnenergy=FAILRETURNGENERAL; // default
     int eomtypeenergy;
     int whichcapenergy;
 
@@ -1680,7 +1705,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
     struct of_state qenergy;
 
     // Now do energy if would use only energy or if doing interpolation
-    if(fracenergy!=0.0 || radinvmodentropy>0 ||  ACTUALHARDORSOFTFAILURE(failreturnentropy)==1){
+    //    if(fracenergy!=0.0 || radinvmodentropy>0 ||  ACTUALHARDORSOFTFAILURE(failreturnentropy)==1){ // FUCK
+    if(0){
 
       // start fresh or use entropy as starting point
       *lpflag=UTOPRIMNOFAIL;
@@ -1808,12 +1834,17 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
           radinvmodenergy=UTOPRIMRADFAILCASE1A; // used to indicate
         }
       }
+
+      // store these in case energy ultimately used
+      lpflagenergy=*lpflag;
+      lpflagradenergy=*lpflagrad;
      
     }// end if doing GRMHD inversion
     else{
       // if didn't do energy inversion, treat as failure of said inversion
       failreturnenergy=FAILRETURNGENERAL;
     }
+
     
 
     /////////////
@@ -1859,6 +1890,9 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
     if(doentropy){
       //      dualfprintf(fail_file,"USING ENTROPY\n");
       // tell an externals to switch to entropy
+      // store these in case energy ultimately used
+      *lpflag=lpflagentropy;
+      *lpflagrad=lpflagradentropy;
       *eomtype=eomtypeentropy; // can be EOMDONOTHING if successful and small enough error
       // set result as entropy result
       PLOOP(pliter,pl){
@@ -1872,6 +1906,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
       iters=itersentropy+itersenergy; // count both since did both
       f1iters=f1itersentropy+f1itersenergy; // count both since did both
       failreturn=failreturnentropy;
+      failfinalreturn=0;
     }
 #if(0) // No, interpolation of final primitive leads to force imbalance.  Have to include interpolation directly into implicit solver.
     // 
@@ -1915,10 +1950,13 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
       // determine which fail mode dominates
       if(fracenergy>=0.5) failreturn=failreturnenergy;
       else failreturn=failreturnentropy;     
+      failfinalreturn=0;
     }
 #endif
     else if(ACCEPTASNOFAILURE(failreturnenergy)==1){ // automatically also done when fracenergy==1.0 (now, or when also fracenergy>0.0)
       //      dualfprintf(fail_file,"USING ENERGY: errorabsenergy=%g errorabsentropy=%g\n",errorabsenergy,errorabsentropy);
+      *lpflag=lpflagenergy;
+      *lpflagrad=lpflagradenergy;
       *eomtype=eomtypeenergy; // can be EOMDONOTHING if successful
       // set result as energy result
       PLOOP(pliter,pl){
@@ -1932,10 +1970,13 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
       iters=itersentropy+itersenergy; // count both since did both
       f1iters=f1itersentropy+f1itersenergy; // count both since did both
       failreturn=failreturnenergy;
+      failfinalreturn=0;
     }
     else{
       // just fail.  No source
       // if no source, then will do normal inversion (no change to *eomtype) as if G=0.
+      *lpflag=UTOPRIMFAILCONV;
+      *lpflagrad=UTOPRIMRADFAILCASE1A;
       noprims=1;
       errorabs=MIN(errorabsenergy,errorabsentropy); // indicates error that could have had if chose to raise IMPALLOWCONV
       iters=itersentropy+itersenergy; // count both since did both
@@ -1943,25 +1984,13 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
       //      failreturn=0;
       // KORALTODO: But might want to fail more aggressively and report total failure.  Need to have estimate of whether G was important.
       failreturn=failreturnenergy;
+      failfinalreturn=1;
       if(debugfail>=2) dualfprintf(fail_file,"No source: eenergy=%g eentropy=%g ienergy=%d ientropy=%d\n",errorabsenergy,errorabsentropy,itersenergy,itersentropy);
     }
 
   }// end MODEPICKBEST
 
 
-  // DEBUG:
-  //  failreturn=1;
-  //  *eomtype=EOMGRMHD;
-
-
-  int failfinalreturn;
-  // whether failed completely and should have gotten solution, so set as major failure.
-  if(ACCEPTASNOFAILURE(failreturn)==0){
-    *lpflag=UTOPRIMFAILCONV;
-    *lpflagrad=UTOPRIMRADFAILCASE1A;
-    failfinalreturn=1;
-  }
-  else failfinalreturn=0;
 
   // whether set some primitives (implies also failfinalreturn=0)
   if(noprims==0){
@@ -1972,6 +2001,10 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
   }
   
 
+
+  // DEBUG:
+  //  failfinalreturn=1;
+  //  *eomtype=EOMGRMHD;
 
 
 
