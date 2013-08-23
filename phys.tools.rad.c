@@ -39,26 +39,7 @@
 // maximum number of times to (typically) increase EPS in getting Jacobian for implicit scheme.  This might generally override MAXIMPEPS.
 #define MAXJACITER (10)
 
-#if(0)
-// RADPULSEPLANAR: ~5 f1iters and ~8 iters on average
-// RADTUBE NTUBE=31: ~0 f1iters and ~5 iters
-// and each f1iter does 1 inversion, while each iter does 16 inversions!
-// below too hard to get for more realistic problems like RADFLATDISK
-#define IMPTRYCONV (1.e-12)  // for used implicit solver
-#define IMPALLOWCONV (1.e-3)  // for used implicit solver
-#elif(1)
-// 1E-9 is common ok first iteration for RADFLATDISK.  More is too hard.
-// So Choose 1E-8 as good enough solution.
-// KORALNOTE: For current 4D Newton-in-Newton method, 1E-8 leaves log of internal energy as asymmetry with RADDONUT and more diffused edge for one side, while should be sharp on both sides.  <=1E-10 is required to avoid that, but too expensive.  Marginal errors like using 1E-9 lead to hot points due to sharper edge.
 #define IMPTRYCONVHIGHTAU (NUMEPSILON*5.0)  // for used implicit solver
-//#define IMPTRYCONV (NUMEPSILON*100.0)  // for used implicit solver
-//#define IMPTRYCONV (1E-20)  // for used implicit solver
-
-//#define IMPTRYCONV (1.e-8)
-//#define IMPTRYCONV2 (1.e-8)  // for used implicit solver
-// use below is necessary for RADDONUT to be reasonablely indifferent to tolerance.  Is expensive, but later can improve implicit method to avoid that issue.
-//#define IMPTRYCONV (1.e-9)
-//#define IMPTRYCONV2 (1.e-9)  // for used implicit solver
 
 #define IMPTRYCONV (1.e-12)
 #define IMPTRYCONV2 (1.e-12)  // for used implicit solver
@@ -66,16 +47,6 @@
 // too allowing to allow 1E-4 error since often solution is nuts at even errors>1E-8
 #define IMPALLOWCONV (1.e-8)
 #define IMPALLOWCONV2 (1.e-8)
-
-
-// Chose 1E-4 based upon histogram for implicit solver in RADDONUT problem with field.
-//#define IMPALLOWCONV (1.e-1)
-#else
-// RADPULSEPLANAR: below leads to ~5 f1iters and ~7 iters on average
-// RADTUBE NTUBE=31: ~0 f1iters and ~1.5-2 iters
-#define IMPTRYCONV (1.e-6)  // for used implicit solver
-#define IMPALLOWCONV (1.e-3)  // for used implicit solver
-#endif
 
 //#define IMPMAXITER (15) // for used implicit solver // For others
 #define IMPMAXITER (100) // for used implicit solver // for RADDONUT
@@ -247,17 +218,6 @@
 
 // below 1 if reporting cases when MAXITER reached, but allowd error so not otherwise normally reported.
 #define REPORTMAXITERALLOWED (PRODUCTION==0)
-
-//#define REPORTCONVRETURNALLOW (PRODUCTION==0&&0)
-#define REPORTCONVRETURNALLOW (PRODUCTION==0)
-
-#define REPORTSWITCHINCASESHOULDNTHAVESWITCH (PRODUCTION==0&&0)
-
-// whether to report mathematica debug info inside loop, which will show issue even if damping fixed problem.
-#define REPORTINSIDE (PRODUCTION==0&&0)
-
-#define REPORTPREBACKUP (PRODUCTION==0)
-
 
 #define REPORTERFNEG (PRODUCTION==0)
 
@@ -2615,14 +2575,13 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
         eomtypelocal=*eomtype; // re-chose default each time.  If this reduces to a new eomtype, then Jacobian will stick with that for consistency!
         failreturnferr=f_implicit(iter, failreturnallowableuse, whichcall,showmessages, allowlocalfailurefixandnoreport, &eomtypelocal, whichcap, itermode, fracenergy, radinvmod, pp, uu0, uu, fracdtG*realdt, ptrgeom, q, f1, f1norm); // modifies uu and pp
 
-#if(0)
         // f1 error calculation updated non-iterated pp or uu, so store.  Ok to re-store iterated uu and pp as well
         // KORALTODO: This might mess up when f1 backs-up uu and pp
         PLOOP(pliter,pl){
           uup[pl]=uu[pl];
           ppp[pl]=pp[pl];
         }
-#endif
+
 
 #if(0)
         if(pp[PRAD0]<10.0*ERADLIMIT){
@@ -3703,10 +3662,11 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
   //
   //////////////
   if(REPORTINSIDE==0){
-    if(PRODUCTION==0 && NOTACTUALFAILURE(failreturn)==0 || PRODUCTION>0 && NOTBADFAILURE(failreturn)==0){ // catches oscillators at small error but still >tol.
-    //if(REPORTERFNEG && failreturn!=FAILRETURNMODESWITCH && (pp[PRAD0]<10.0*ERADLIMIT || *radinvmod ) || PRODUCTION==0 && NOTACTUALFAILURE(failreturn)==0 && errorabsf1>=trueimptryconvALT || PRODUCTION>0 && NOTBADFAILURE(failreturn)==0 && havebackup==0){
-    //    if(REPORTERFNEG && failreturn!=FAILRETURNMODESWITCH && (pp[PRAD0]<10.0*ERADLIMIT) || PRODUCTION==0 && NOTACTUALFAILURE(failreturn)==0 && errorabsf1>=trueimptryconvALT || PRODUCTION>0 && NOTBADFAILURE(failreturn)==0 && havebackup==0){
-    //    if(NOTBADFAILURE(failreturn)==0){
+    if(PRODUCTION==0 && NOTACTUALFAILURE(failreturn)==0 && errorabsf1>=IMPTRYCONVALT || PRODUCTION>0 && NOTBADFAILURE(failreturn)==0 && havebackup==0){ // as in previous code
+      //    if(PRODUCTION==0 && NOTACTUALFAILURE(failreturn)==0 || PRODUCTION>0 && NOTBADFAILURE(failreturn)==0){ // catches oscillators at small error but still >tol.
+      //if(REPORTERFNEG && failreturn!=FAILRETURNMODESWITCH && (pp[PRAD0]<10.0*ERADLIMIT || *radinvmod ) || PRODUCTION==0 && NOTACTUALFAILURE(failreturn)==0 && errorabsf1>=trueimptryconvALT || PRODUCTION>0 && NOTBADFAILURE(failreturn)==0 && havebackup==0){
+      //    if(REPORTERFNEG && failreturn!=FAILRETURNMODESWITCH && (pp[PRAD0]<10.0*ERADLIMIT) || PRODUCTION==0 && NOTACTUALFAILURE(failreturn)==0 && errorabsf1>=trueimptryconvALT || PRODUCTION>0 && NOTBADFAILURE(failreturn)==0 && havebackup==0){
+      //    if(NOTBADFAILURE(failreturn)==0){
       struct of_state qcheck; get_state(pp, ptrgeom, &qcheck);  primtoU(UNOTHING,pp,&qcheck,ptrgeom, uu);
       failnum++; mathematica_report_check(mathfailtype, failnum, gotfirstnofail, eomtypelocal, itermode, errorabsf1, errorabsbestexternal, iter, totaliters, realdt, ptrgeom, ppfirst,pp,pb,piin,prtestUiin,prtestUU0,uu0,uu,Uiin,Ufin, CUf, q, dUother);
       showdebuglist(debugiter,pppreholdlist,ppposholdlist,f1reportlist,f1list,errorabsf1list,realiterlist,jac00list);
