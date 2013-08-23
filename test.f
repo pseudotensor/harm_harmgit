@@ -56,7 +56,10 @@ c     itermax is maximum no. of iterations with u_g, entropy below minimum
       eps=1.d-6
       epsbis=1.d-3
       dvmin=1.d-4
-      tol=1.d-10
+c      tol=1.d-10
+      tol=1.d-14
+c 1E-16 fails to work -- elads to 1E-7 errors, although all primitives seems similar.
+c      tol=1.d-16
       uminfac=1.d-10
       dlogmax=log(2.d0)
       itermax=3
@@ -1008,17 +1011,23 @@ c     Set up and solve quadratic equation for E
 c     Make sure signs are okay for a physical solution. If not, go to 10
 c     for alternative calculation
 
-      if (aquad*cquad.ge.0.d0.or.disc.lt.0.d0) go to 10
+      if (aquad*cquad.ge.0.d0.or.disc.lt.0.d0) then
+         write(*,*) 'not physical: ',aquad,cquad,disc
+         go to 10
+      endif
 
 c     Use negative sign of discriminant and solve for E and ucon
 
 c      write (*,*) ' negative sign of discriminant '
       E=2.d0*cquad/(-bquad+sqrt(disc))
-c      write (*,*) ' a, b, c, disc, E: ',aquad,bquad,cquad,disc,E
+      write (*,*) ' a, b, c, disc, E: ',aquad,bquad,cquad,disc,E
 
 c     Make sure E is positive. If not, go to 10
 
-      if (E.lt.0.d0) go to 10
+      if (E.lt.0.d0) then
+         write(*,*) 'E is not positive: ',E
+         go to 10
+      endif
 
       ucon(1)=0.5d0*sqrt(3.d0*Rtcon(1)/E-gn(1,1))
       do i=2,4
@@ -1037,9 +1046,9 @@ c     This segment is for problem cases. We set gamma_radiation equal to
 c     its ceiling value and solve for E and u^i without using R^00.
 
  10   ucon(1)=gammaradceiling*sqrt(-gn(1,1))
-c      write (*,*) ' gamma_rad hit ceiling: g^tt, urad^t = ',
-c     &     gn(1,1),ucon(1)
-c      write (*,*) ' Rtcon: ',(Rtcon(j),j=1,4)
+      write (*,*) ' gamma_rad hit ceiling: g^tt, urad^t = ',
+     &     gn(1,1),ucon(1)
+      write (*,*) ' Rtcon: ',(Rtcon(j),j=1,4)
 
       aquad=0.d0
       bquad=0.d0
@@ -1065,7 +1074,7 @@ c     use yet another scheme!
       if (disc.lt.0.d0) go to 30
 
       E=(-bquad-sqrt(disc))/(2.d0*cquad)
-c      write (*,*) ' a, b, c, disc, E: ',aquad,bquad,cquad,disc,E
+      write (*,*) ' a, b, c, disc, E: ',aquad,bquad,cquad,disc,E
 
       do i=2,4
          ucon(i)=(3.d0*Rtcon(i)-E*gn(1,i))/(4.d0*E*ucon(1))
@@ -1087,7 +1096,7 @@ c     Third try! What should we do here?
 
 c     Last-ditch effort. Set radiation velocity equal to gas velocity
 
-c      write (*,*) ' Error: No solution for radiation '
+      write (*,*) ' Error: No solution for radiation '
       do i=1,4
          ucon(i)=ugascon(i)
       enddo
@@ -1517,7 +1526,7 @@ c     four error terms for a given set of primitives.
 c     niter is the maximum number of Newton-Raphson iterations
 c     iflag=0 means that a good solution was found
 
-      niter=20
+      niter=100
       iflag=0
       jflag=0
 
