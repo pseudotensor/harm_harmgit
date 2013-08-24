@@ -1,9 +1,39 @@
+
+
+
+cccccccccccccccccccccccccc
+c
+c As stand-alone program:
+c
+c     To compile/run with debug info, do:
+c         cp ../test.f . ; gfortran -cpp -g -O2 test.f -o test.e ; ./test.e > test.e.out
+
+c     To compile/run with debug info and gdb easy reading, do:
+c         cp ../test.f . ; gfortran -cpp -g -O0 test.f -o test.e ; ./test.e > test.e.out
+c     If crashes, then do:
+c         gdb ./test.e core
+
+c about pre-processor directives:
+c http://gcc.gnu.org/onlinedocs/gfortran/Preprocessing-Options.html
+
+
+cccccccccccccccccccccccccc
+c
+c As harm subroutine
+c
+c  fpp -P test.f > testfpp.f ; f2c -f -P testfpp.f
+c
+
+
+
+
       program testradiation
 c 0 means normal full output
 c 1 means very simple Jon's version of err and sol output
 c 2 means only Jon's err output
-c 3 means no output
-#define PRODUCTION 2
+c 3 means no output or input (harm mode)
+c#define PRODUCTION 2
+#define PRODUCTION 3
       double precision args(211)
 c      args just dummy here, not used except by external call to rameshsolver subroutine
       call rameshsolver(args)
@@ -58,6 +88,7 @@ c     variables with 'final' at the end correspond to the final solution
       character solhead*3,solfile*60
       character errhead*3,errfile*60
       double precision mymax,myabs,mydiv
+		integer myisnan
 
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
@@ -87,8 +118,11 @@ c      tol=1.d-16
 ccccccccccccccccccccccccccccccccccccccccccccccccccc
 c     origintype=0 means read from file
 c     origintype=1 means read from function args as if called by C code using latest number of columns, in which case don't write anything, just pass back result.
-      origintype=0
-
+      if(PRODUCTION==3) then
+         origintype=1
+      else
+         origintype=0
+      endif
 ccccccccccccccccccccccccccccccccccccccccccccccccccc
 c     idatatype=1 means Jon's old data format with 134 numbers
 c     idatatype=2 means Jon's new data format with 181 numbers
@@ -107,16 +141,10 @@ c     iMHD=1 means do initial MHD inversion before radiation
       iproblem=0
 
 
-c     To compile/run with debug info, do:
-c         cp ../test.f . ; gfortran -cpp -g -O2 test.f -o test.e ; ./test.e > test.e.out
-
-c     To compile/run with debug info and gdb easy reading, do:
-c         cp ../test.f . ; gfortran -cpp -g -O0 test.f -o test.e ; ./test.e > test.e.out
-c     If crashes, then do:
-c         gdb ./test.e core
 
 
 
+#if(PRODUCTION<=2)
 c     CHOOSE FILENAME HEAD TO READ
       filehead='fails'
 c      filehead='failsearly'
@@ -133,7 +161,6 @@ c     CAN CHOOSE HEADER FOR OUTPUTS
       errhead='err'
       errfile=errhead//'_'//trim(filehead)//fileext
 c
-#if(PRODUCTION<=2)
       open (11,file=infile)
 #endif
 #if(PRODUCTION<=0)
@@ -475,7 +502,9 @@ c     density are unchaned, then calculate the full R^mu_nu
 
       enddo
 
- 10   problem=iproblem
+ 10   continue
+      problem=iproblem
+
 #if(PRODUCTION==0)
       write (*,*)
       write (*,*)
@@ -1057,10 +1086,10 @@ c     &        (ugasconp(j),ugascovp(j),j=1,4)
          mymax=y
       endif
 
-      if(isNan(x)) then
+      if(myisnan(x).eq.1) then
          mymax=x
       endif
-      if(isNan(y)) then
+      if(myisnan(y).eq.1) then
          mymax=y
       endif
 
@@ -1072,8 +1101,24 @@ c     &        (ugasconp(j),ugascovp(j),j=1,4)
       double precision x
 
       myabs=abs(x)
-      if(isNan(x)) then
+      if(myisnan(x).eq.1) then
          myabs=x
+      endif
+
+      return
+      end
+
+
+      integer function myisnan(x)
+      double precision x
+
+c for C
+      if(x.ne.x) then
+c for fortran
+c      if(isnan(x)) then
+         myisnan=1
+      else
+         myisnan=0
       endif
 
       return
@@ -1091,10 +1136,10 @@ c     &        (ugasconp(j),ugascovp(j),j=1,4)
          mydiv=y
       endif
 
-      if(isNan(x)) then
+      if(myisnan(x).eq.1) then
          mydiv=x
       endif
-      if(isNan(y)) then
+      if(myisnan(y).eq.1) then
          mydiv=y
       endif
 
@@ -1925,6 +1970,7 @@ c     four error terms for a given set of primitives.
       common/conserved/Gam,Gam1,en,en1,rhou0,s,Ttcov,Rtcov,BB,dt
       external func
       double precision mymax,myabs,mydiv
+		integer myisnan
 
 c     niter is the maximum number of Newton-Raphson iterations
 c     iflag=0 means that a good solution was found
@@ -2071,6 +2117,7 @@ c     used.
       common/conserved/Gam,Gam1,en,en1,rhou0,s,Ttcov,Rtcov,BB,dt
       external func
       double precision mymax,myabs,mydiv
+		integer myisnan
 
 c     niter is the maximum number of Newton-Raphson
 c     iterations. Currently we do only one iteration of Newton3.
@@ -2210,6 +2257,7 @@ c     equation without radiation source term
      &     Gcon,Gcov
       external funcMHD,uMHD
       double precision mymax,myabs,mydiv
+		integer myisnan
 
 c     Call funcMHD and obtain basic parameters needed for solving the 1D
 c     energy equation: rho, Ehat
@@ -2633,6 +2681,7 @@ c     without radiation source term using the energy equation
      &     Tmunu,E,Ehat,urcon,urcov,Rmunu,Tgas,Trad,B4pi,gamma,dtau,
      &     Gcon,Gcov
       double precision mymax,myabs,mydiv
+		integer myisnan
 
 c     Save u, compute rho, ucon, ucov, bcon, bcov, Tmunu
 
@@ -2647,7 +2696,7 @@ c     Save u, compute rho, ucon, ucov, bcon, bcov, Tmunu
 
       rho=rhou0/ucon(1) 
 
-      if(rho.lt.0.0.or.isnan(rho)) then
+      if(rho.lt.0.0.or.myisnan(rho).eq.1) then
          jflag=1
       else
          jflag=0
@@ -2718,6 +2767,7 @@ c     without radiation source term using the entropy equation
      &     gammaradceiling,itermax
       common/conserved/Gam,Gam1,en,en1,rhou0,s,Ttcov,Rtcov,BB,dt
       double precision mymax,myabs,mydiv
+		integer myisnan
 
 c     Save u, compute rho, ucon, ucov, bcon, bcov, Tmunu
 
@@ -2732,7 +2782,7 @@ c     Save u, compute rho, ucon, ucov, bcon, bcov, Tmunu
 
       rho=rhou0/ucon(1) 
 
-      if(rho.lt.0.0.or.isnan(rho)) then
+      if(rho.lt.0.0.or.myisnan(rho).eq.1) then
          jflag=1
       else
          jflag=0
@@ -2846,6 +2896,7 @@ c     equation
      &     Tmunu,E,Ehat,urcon,urcov,Rmunu,Tgas,Trad,B4pi,gamma,dtau,
      &     Gcon,Gcov,u0,iuerr
       double precision mymax,myabs,mydiv
+		integer myisnan
 
       ffkap=3.46764d-17
       eskap=5.90799d5
@@ -2917,7 +2968,7 @@ c     the gas and radiation temperatures
       write (*,*) ' Tgas, Trad: ',Tgas,Trad
 #endif
 
-      if(Trad.lt.0.0.or.isnan(Trad)) then
+      if(Trad.lt.0.0.or.myisnan(Trad).eq.1) then
          jflag=1
       else
          jflag=0
@@ -3035,6 +3086,7 @@ c     equation
      &     Tmunu,E,Ehat,urcon,urcov,Rmunu,Tgas,Trad,B4pi,gamma,dtau,
      &     Gcon,Gcov,u0,iuerr
       double precision mymax,myabs,mydiv
+		integer myisnan
 
       ffkap=3.46764d-17
       eskap=5.90799d5
@@ -3113,7 +3165,7 @@ c     Calculate quantities needed to compute the radiation source term
 c      write (*,*) ' ff, es, B4pi: ',ff,es,B4pi
 #endif
 
-      if(Trad.lt.0.0.or.isnan(Trad)) then
+      if(Trad.lt.0.0.or.myisnan(Trad).eq.1) then
          jflag=1
       else
          jflag=0
@@ -3251,6 +3303,7 @@ c     Matrix inversion subroutine 2 from Numerical Recipes
       INTEGER i,imax,j,k
       REAL*8 aamax,dum,sum,vv(NMAX)
       double precision mymax,myabs,mydiv
+		integer myisnan
       d=1.d0
       do 12 i=1,n
         aamax=0.d0
@@ -3327,6 +3380,7 @@ c     Matrix inversion subroutine 2 from Numerical Recipes
       INTEGER j
       REAL*8 df,dx,dxold,f,fh,fl,temp,xh,xl
       double precision mymax,myabs,mydiv
+		integer myisnan
 c      call funcd(x1,fl,df)
 c      call funcd(x2,fh,df)
 #if(PRODUCTION==0)
