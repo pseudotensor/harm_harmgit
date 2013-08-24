@@ -25,17 +25,15 @@
 #if(REALTYPE==FLOATTYPE)
 #define IMPEPSLARGE (1E-4) // on small side
 #define IMPEPSSMALL (1E-4) // on small side
+#define ERRORFORIMPEPSSMALL (1E-5)
 #elif(REALTYPE==DOUBLETYPE)
-//#define IMPEPS (MY1EM5)
-//#define IMPEPS (1E-6) // on small side
-//#define IMPEPS (1E-8) // on small side // but required for doubles to work with RADDONUT
-//#define IMPEPS (1E-8) // on small side // but required for doubles to work with RADDONUT
 #define IMPEPSLARGE (1E-8)
 #define IMPEPSSMALL (1E-10)
-//#define IMPEPSSMALL (1E-8)
+#define ERRORFORIMPEPSSMALL (1E-9)
 #elif(REALTYPE==LONGDOUBLETYPE)
 #define IMPEPSLARGE (1E-8)
 #define IMPEPSSMALL (1E-10)
+#define ERRORFORIMPEPSSMALL (1E-9)
 #endif
 
 // maximum EPS for getting Jacobian
@@ -54,7 +52,7 @@
 #define IMPALLOWCONV2 (1.e-8)
 
 //#define IMPMAXITER (15) // for used implicit solver // For others
-#define IMPMAXITER (100) // for used implicit solver // for RADDONUT
+#define IMPMAXITER (100) // for used implicit solver
 #define IMPMAXITER2 (100) // for used implicit solver
 
 #define IMPMINABSERROR (1E-100) // minimum absolute error (or value) below which don't treat as bad error and just avoid 4-force.  Otherwise will "fail" implicit solver even if impossible to reach smaller relative error due to absolute machine precision issues.
@@ -253,7 +251,7 @@
 
   // whether to change damp factor during this instance.
 #define CHANGEDAMPFACTOR 0
-#define NUMDAMPATTEMPTS 5
+#define NUMDAMPATTEMPTS 3
 
 // error for comparing to sum over all absolute errors
 #define IMPTRYCONVABS ((FTYPE)(NDIM+2)*IMPTRYCONV)
@@ -783,11 +781,6 @@ static int f_implicit(int iter, int failreturnallowable, int whichcall, int show
   define_method(iter, eomtype, itermode, fracenergy, &implicititer, &implicitferr, &BEGINMOMSTEPS, &ENDMOMSTEPS, &BEGINENERGYSTEPS, &ENDENERGYSTEPS, &BEGINNORMALSTEPS);
   get_refUs(&numdims, &startjac, &endjac, &implicititer, &implicitferr, irefU, iotherU, erefU, eotherU, &signgd2, &signgd4, &signgd6, &signgd7);
 
-  static FTYPE Tgasold=0,Tgasiter1=0;
-  static FTYPE Tradold=0,Traditer1=0;
-
-
-
   int pliter, pl;
   int iv;
   struct of_newtonstats newtonstats;
@@ -962,28 +955,6 @@ static int f_implicit(int iter, int failreturnallowable, int whichcall, int show
     get_state_radonly(pp, ptrgeom, q);
     //
     // fix-up primitives to avoid violent steps in temperature
-#if(RAMESHTRADTGASFIX)
-    if(implicitferr==QTYUMHD){
-      FTYPE Tgasnew=compute_temp_simple(ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p,pp[RHO],pp[UU]);
-      FTYPE Tradnew=calc_LTE_TfromE(pp[PRAD0]);
-      if(iter>1){
-        if(
-           (RAMESHTRADTGASFIX==1 && sign(Tgasnew-Tradnew)!=sign(Tgasold-Tradold))
-           || (RAMESHTRADTGASFIX==2 && sign(Tgasnew-Tradnew)!=sign(Tgasiter1-Traditer1))
-           ){
-          // restrict u_g to have Tgas=Trad
-          pp[UU]=calc_PEQ_ufromTrho(Tradnew,pp[RHO]);
-          Tgasnew=Tradnew;
-        }
-      }
-      if(iter==1){
-        Tgasiter1=Tgasnew;
-        Traditer1=Tradnew;
-      }
-      Tgasold=Tgasnew;
-      Tradold=Tradnew;
-    }
-#endif
     //
     // 10) Get new uu[RAD] since original uu[RAD]->pp[RAD] might have had fixups applied and then uu[RAD] no longer consistent.
     // This violates total energy conservation in favor of consistency of radiative quantities between pp and uu
@@ -3096,7 +3067,9 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
         /////////
         //      eomtypelocal=*eomtype; // re-chose default each time.  No, stick with what f1 reduced to for consistency.
         //        dualfprintf(fail_file,"iJ call: iter=%d\n",iter);
-        if(errorabsf1<1E-9) impepsjac=IMPEPSSMALL;
+
+        // assume as error gets small, function becomes linear and can use smaller delta for Jacobian
+        if(errorabsf1<ERRORFORIMPEPSSMALL) impepsjac=IMPEPSSMALL;
         else impepsjac=IMPEPSLARGE;
         int failreturniJ=get_implicit_iJ(failreturnallowableuse, showmessages, showmessagesheavy, allowlocalfailurefixandnoreport, &eomtypelocal, whichcap, itermode, fracenergy, impepsjac, iter, errorabsf1, dimfactU, uu, uup, uu0, pp, ppp, fracdtG, realdt, ptrgeom, q, f1, f1norm, iJ);
 
@@ -4069,10 +4042,10 @@ static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int sho
     // choose:
     //    if(itermode==ITERMODENORMAL) JDIFFTYPE=JDIFFCENTERED; // and only helps rarely and makes 2X slower.
     //    else if(itermode==ITERMODESTAGES) JDIFFTYPE=JDIFFONESIDED; // seems accurate enough
-    //    if(itermode==ITERMODESTAGES) JDIFFTYPE=JDIFFCENTERED; // and only helps rarely and makes 2X slower.
-    //    else if(itermode==ITERMODENORMAL) JDIFFTYPE=JDIFFONESIDED; // seems accurate enough
+    if(itermode==ITERMODESTAGES) JDIFFTYPE=JDIFFCENTERED; // and only helps rarely and makes 2X slower.
+    else if(itermode==ITERMODENORMAL) JDIFFTYPE=JDIFFONESIDED; // seems accurate enough
     //    JDIFFTYPE=JDIFFCENTERED; // and only helps rarely and makes 2X slower.
-    JDIFFTYPE=JDIFFONESIDED; // and only helps rarely and makes 2X slower.
+    //    JDIFFTYPE=JDIFFONESIDED; // and only helps rarely and makes 2X slower.
   }
   else{
     JDIFFTYPE=JDIFFONESIDED;
