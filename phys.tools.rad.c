@@ -15,6 +15,28 @@
 #define COURRADEXPLICIT (0.1) // Effective Courant-like factor for stiff explicit radiation source term.  Required to not only avoid failure of explicit scheme, but also that explicit scheme is really accurate compared to implicit.  E.g., near \tau\sim 1, explicit won't fail with RADPULSEPLANAR but will not give same results as implicit.  So only use explicit if really in optically thin regime.
 
 
+////////////////////////////////////
+#define IMPTRYCONVHIGHTAU (NUMEPSILON*5.0)  // for used implicit solver
+
+// Funny, even 1E-5 does ok with torus, no worse at Erf~SMALL instances.  Also, does ~3 iterations, but not any faster than using 1E-12 with ~6 iterations.
+#define IMPTRYCONV (1.e-12)
+#define IMPTRYCONV2 IMPTRYCONV
+
+// too allowing to allow 1E-4 error since often solution is nuts at even errors>1E-8
+#define IMPALLOWCONV (MAX(IMPTRYCONV,1.e-8))
+#define IMPALLOWCONV2 IMPALLOWCONV
+
+// what tolerance to use for saying can switch to entropy when u_g is suggested to be bad for energy
+#define IMPOKCONV (MAX(IMPTRYCONV,1E-10))
+// tolerance above which say energy solution is probably bad even if not very large error.  These have tended (or nearly 100%) to be cases where actual solution has u_g<0 but harm gets error u_g>0 and error not too large.
+#define IMPBADENERGY (MIN(IMPALLOWCONV,1E-7))
+
+// tolerance above which to continue to try damping
+#define IMPTRYDAMPCONV (5.0*IMPTRYCONVABS)
+
+////////////////////////////////
+
+
 
 // IMPLICIT SOLVER TOLERANCES or DERIVATIVE SIZES
  // for used implicit solver (needs to be chosen more generally.  KORALTODO: 1E-8 too small in general).  Could start out with higher, and allow current checks to avoid inversion failure.
@@ -42,14 +64,7 @@
 // maximum number of times to (typically) increase EPS in getting Jacobian for implicit scheme.  This might generally override MAXIMPEPS.
 #define MAXJACITER (10)
 
-#define IMPTRYCONVHIGHTAU (NUMEPSILON*5.0)  // for used implicit solver
 
-#define IMPTRYCONV (1.e-12)
-#define IMPTRYCONV2 (1.e-12)  // for used implicit solver
-
-// too allowing to allow 1E-4 error since often solution is nuts at even errors>1E-8
-#define IMPALLOWCONV (1.e-8)
-#define IMPALLOWCONV2 (1.e-8)
 
 //#define IMPMAXITER (15) // for used implicit solver // For others
 #define IMPMAXITER (100) // for used implicit solver
@@ -259,14 +274,6 @@
 // factor by which error jumps as indication that u_g stepped to was very bad choice.
 #define FACTORBADJUMPERROR (1.0E2)
 
-// what tolerance to use for saying can switch to entropy when u_g is suggested to be bad for energy
-#define IMPOKCONV (1E-10)
-// tolerance above which say energy solution is probably bad even if not very large error.  These have tended (or nearly 100%) to be cases where actual solution has u_g<0 but harm gets error u_g>0 and error not too large.
-#define IMPBADENERGY (MIN(IMPALLOWCONV,1E-7))
-
-// tolerance above which to continue to try damping
-//#define IMPTRYDAMPCONV (MAX(1.e-8,IMPTRYCONVABS))
-#define IMPTRYDAMPCONV (5.0*IMPTRYCONVABS)
 
 // 0 : old Jon  method
 // 2 : Jon's paper draft method
@@ -2637,7 +2644,7 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
 #if(0)
         if(pp[PRAD0]<10.0*ERADLIMIT){
           // try smaller tolerance
-          trueimptryconv=IMPTRYCONV*1E-4;
+          trueimptryconv=10.0*NUMEPSILON;
           trueimptryconvABS=((FTYPE)(NDIM+2)*trueimptryconv);
           trueimptryconvALT=(MAX(1E-8,trueimptryconvABS));
         }
