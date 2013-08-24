@@ -180,6 +180,7 @@
 //#define DEBUGLEVELIMPSOLVER 2 // which debugfail>=# to use for some common debug stuff
 
 #define DEBUGLEVELIMPSOLVERMORE 3 // which debugfail>=# to use for some common debug stuff
+//#define DEBUGLEVELIMPSOLVERMORE 2 // which debugfail>=# to use for some common debug stuff
 
 // whether to use Ramesh's fix
 // 0, 1, 2
@@ -209,9 +210,9 @@
 
 // whether to try again with 10* higher u_g for entropy case since important as backup.
 // Sometimes initial guess for u_g is too low, and when too low very hard for NR to recover.
-#define TRYENTROPYHARDER 0 // FUCK
+#define TRYENTROPYHARDER 1
 
-#define TRYENERGYHARDER 0 // FUCK
+#define TRYENERGYHARDER 1
 
 // whether to get lowest error solution instead of final one.
 #define GETBEST 1
@@ -284,6 +285,8 @@
 #define CAPTYPEBASIC 0
 #define CAPTYPEFIX1 1
 
+// whether to avoid computing entropy during iterations if not needed
+#define ENTROPYOPT 1
 
 ///////////////////////////////
 //
@@ -809,12 +812,14 @@ static int f_implicit(int iter, int failreturnallowable, int whichcall, int show
 
 
   // optimize whether need to really compute entropy with log/pow so slow
-  int needentropy;
-  if(*eomtype==EOMENTROPYGRMHD || (implicititer==QTYENTROPYUMHDMOMONLY)||(implicititer==QTYENTROPYUMHDENERGYONLY)||(implicititer==QTYENTROPYUMHD || implicititer==QTYENTROPYPMHD) || (implicitferr==QTYENTROPYUMHD || implicitferr==QTYENTROPYUMHDENERGYONLY || implicitferr==QTYENTROPYUMHDMOMONLY) || (fracenergy>0.0 && fracenergy<1.0)){
-    needentropy=1;
+  int needentropy=1; // default get uu[entropy] and q->entropy
+  if(ENTROPYOPT){
+    // whichcall==2 means final check where if wasn't computing entropy during iterations, need at end so next RK substeps have it ready
+    if(whichcall==2 || *eomtype==EOMENTROPYGRMHD || (implicititer==QTYENTROPYUMHDMOMONLY)||(implicititer==QTYENTROPYUMHDENERGYONLY)||(implicititer==QTYENTROPYUMHD || implicititer==QTYENTROPYPMHD) || (implicitferr==QTYENTROPYUMHD || implicitferr==QTYENTROPYUMHDENERGYONLY || implicitferr==QTYENTROPYUMHDMOMONLY) || (fracenergy>0.0 && fracenergy<1.0)){
+      needentropy=1;
+    }
+    else needentropy=0;
   }
-  else needentropy=0;
-  
 
 
 
@@ -925,9 +930,12 @@ static int f_implicit(int iter, int failreturnallowable, int whichcall, int show
     // 6) Compute Umhd and Uentropy (keeps Urad as zero, but Urad set next)
     //primtoU(UNOTHING,pp,q,ptrgeom, uu);
     extern int primtoflux_nonradonly(int needentropy, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux);
-    primtoflux_nonradonly(needentropy,pp,q,TT,ptrgeom, uu);
+    FTYPE uumhd[NPR];
+    primtoflux_nonradonly(needentropy,pp,q,TT,ptrgeom, uumhd); // anything not set is set as zero, which is rad.
+    PLOOP(pliter,pl) if(!RADUPL(pl)) uu[pl]=uumhd[pl];
     //    primtoflux_nonradonly(1,pp,q,TT,ptrgeom, uu); // doesn't actually compute entropy again, just multiplies existing things.
-    //
+    //    if(needentropy==0) uu[ENTROPY]=sqrt(-1.0);
+    
     // 7) Get actual Urad(G) via energy conservation (correct even if using entropy as error function, because just computed correct U[ENTROPY] consistent with U[UU].
     DLOOPA(iv) uu[iotherU[iv]] = uu0[iotherU[iv]] - (uu[irefU[iv]]-uu0[irefU[iv]]);
     //
@@ -982,7 +990,7 @@ static int f_implicit(int iter, int failreturnallowable, int whichcall, int show
     //    primtoU(UNOTHING,pp,q,ptrgeom, uu);
     extern int primtoflux_radonly(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux);
     FTYPE uurad[NPR];
-    primtoflux_radonly(pp,q,TT,ptrgeom, uurad);
+    primtoflux_radonly(pp,q,TT,ptrgeom, uurad); // all non-rad stuff is set to zero.
     // write new uurad's to uu
     PLOOP(pliter,pl) if(RADUPL(pl)) uu[pl]=uurad[pl];
     //
@@ -1092,7 +1100,10 @@ static int f_implicit(int iter, int failreturnallowable, int whichcall, int show
       // get error normalization that involves actual things being differenced
       // KORALNOTE: Use Gdabspl to ensure absolute value over more terms in source in case coincidental cancellation without physical significance.
       fnorm[pl] = 0.5*(fabs(uu[pl]) + fabs(uu0[pl]) + fabs(signgd2 * localdt * Gdabspl[pl]));
+      //      dualfprintf(fail_file,"FOO: %d %d : %g %g : neeed=%d %d uu0=%g\n",pl,iv,f[pl],fnorm[pl],needentropy,*eomtype,uu0[pl]);
     }
+
+
 
     // GET ENTROPY ERROR FUNCTION
     if(needentropy
@@ -1449,8 +1460,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
     FTYPE dUcompentropy[NUMSOURCES][NPR];
     struct of_state qentropy;
 
-    //    itermodeentropy=ITERMODENORMAL; // try normal first, since fastest
-    itermodeentropy=ITERMODESTAGES; // FUCK
+    itermodeentropy=ITERMODENORMAL; // try normal first, since fastest
+    //    itermodeentropy=ITERMODESTAGES;
 
     // get fresh start entropy solution
     *lpflag=UTOPRIMNOFAIL;
@@ -1705,8 +1716,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
     struct of_state qenergy;
 
     // Now do energy if would use only energy or if doing interpolation
-    //    if(fracenergy!=0.0 || radinvmodentropy>0 ||  ACTUALHARDORSOFTFAILURE(failreturnentropy)==1){ // FUCK
-    if(0){
+    if(fracenergy!=0.0 || radinvmodentropy>0 ||  ACTUALHARDORSOFTFAILURE(failreturnentropy)==1){
+    //    if(0){
 
       // start fresh or use entropy as starting point
       *lpflag=UTOPRIMNOFAIL;
@@ -2000,6 +2011,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
     if(pb[PRAD0]<=0.) *lpflagrad = UTOPRIMRADFAILERFNEG;
   }
   
+
 
 
   // DEBUG:
@@ -2398,7 +2410,7 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
     ufromentropy_calc(ptrgeom, entropyE, ppnew);
     ppnew[UU]=ppnew[ENTROPY];
 #define SHOWUGCHANGEDUETOENTROPY (10.0)
-    if(debugfail>=DEBUGLEVELIMPSOLVERMORE && (fabs(ppnew[UU]/pp[UU])>SHOWUGCHANGEDUETOENTROPY || ppnew[UU]<pp[UU]) ) dualfprintf(fail_file,"CHANGE: Fixed entropy (%g vs. %g): guessrho=%g guessug=%g  newug=%g dug=%g\n",specificentropy0,specificentropyE,pp[RHO],pp[UU],ppnew[UU],pp[UU]-ppnew[UU]);
+    if(debugfail>=DEBUGLEVELIMPSOLVERMORE && (fabs(ppnew[UU]/pp[UU])>SHOWUGCHANGEDUETOENTROPY || ppnew[UU]<pp[UU]) ) dualfprintf(fail_file,"CHANGE (%d): Fixed (%g/%g) entropy (%g vs. %g): guessrho=%g guessug=%g  newug=%g dug=%g\n",*eomtype,uu0[ENTROPY],uu0[RHO],specificentropy0,specificentropyE,pp[RHO],pp[UU],ppnew[UU],pp[UU]-ppnew[UU]);
     // modify guess for u_g (start higher than actual solution hopefully)
     pp[UU]=MAX(pp[UU],ppnew[UU]);
     // piin is sometimes even a bit higher, and want to start high, and helps to avoid lack of convergence issue.
@@ -3537,6 +3549,7 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
             if(errorabsbest<errorabsf1 || !isfinite(errorabsf1) ){
               PLOOP(pliter,pl) uu[pl]=bestuu[pl];
               PLOOP(pliter,pl) pp[pl]=bestpp[pl];
+
               errorabsf1=errorabsbest;
               JACLOOPALT(jj,startjac,endjac) f1report[erefU[jj]] = lowestfreportf1[erefU[jj]];
               convreturn=1; JACLOOPALT(jj,startjac,endjac) convreturn*=fabs(f1report[erefU[jj]])<trueimptryconv; // like doing &&
@@ -3651,6 +3664,16 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
 
 
 
+  // have to compute final uu[ENTROPY] if doing entropy optimization where avoid it during iterations if not needed.
+  if(ENTROPYOPT){
+    int needentropy=1;
+    get_state_norad_part2(needentropy, pp, ptrgeom, q); // where entropy would be computed
+    //    get_state(pp, ptrgeom, q);
+    extern int primtoflux_nonradonly(int needentropy, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux);
+    FTYPE uuentropy[NPR];
+    primtoflux_nonradonly(needentropy,pp,q,TT,ptrgeom, uuentropy);
+    uu[ENTROPY]=uuentropy[ENTROPY];
+  }
 
 
   /////////////////////
