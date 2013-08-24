@@ -560,9 +560,12 @@ static int advance_standard(
         flux2dUavg(doother,i,j,k,F1,F2,F3,dUriemann1,dUriemann2,dUriemann3);
         PLOOP(pliter,pl) dUriemann[pl]=dUriemann1[pl]+dUriemann2[pl]+dUriemann3[pl]; // this addition is one type of avg->point mistake
 
-        // save pi before it gets modified in case pf=pi as a pointer.
-        FTYPE piorig[NPR];
-        PALLLOOP(pl) piorig[pl] = MACP0A1(pi,i,j,k,pl);
+        // save pi before it gets modified in case pf=pi or pf=pb as a pointer.
+        FTYPE piorig[NPR],pborig[NPR];
+        PALLLOOP(pl){
+          piorig[pl] = MACP0A1(pi,i,j,k,pl);
+          pborig[pl] = MACP0A1(pb,i,j,k,pl);
+        }
 
 
         /////////////
@@ -582,7 +585,7 @@ static int advance_standard(
         // get state since both source() and dUtodt() need same state
         // From pb, so different than state for Ui(pi)
         // Inside source() might use pb,pf,etc. to get new state.
-        MYFUN(get_stateforsource(MAC(pb,i,j,k), ptrgeom, &qptr2) ,"advance.c:()", "get_state() dir=0", 1);
+        MYFUN(get_stateforsource(pborig, ptrgeom, &qptr2) ,"advance.c:()", "get_state() dir=0", 1);
       
 
         // note that uf and ucum are initialized inside setup_rktimestep() before first substep
@@ -593,7 +596,7 @@ static int advance_standard(
         // find dU(pb)
         // so pf contains updated field at cell center for use in (e.g.) implicit solver that uses inversion P(U)
         // Note that uf[B1,B2,B3] is already updated, but need to pass old uf for RK3/RK4, so use olduf.
-        MYFUN(source(piorig, MAC(pb,i,j,k), MAC(pf,i,j,k), &didreturnpf, &eomtype, ptrgeom, qptr2, MAC(ui,i,j,k), MAC(olduf,i,j,k), CUf, dissmeasure, dUriemann, dUcomp, dUgeom),"step_ch.c:advance()", "source", 1);
+        MYFUN(source(piorig, pborig, MAC(pf,i,j,k), &didreturnpf, &eomtype, ptrgeom, qptr2, MAC(ui,i,j,k), MAC(olduf,i,j,k), CUf, dissmeasure, dUriemann, dUcomp, dUgeom),"step_ch.c:advance()", "source", 1);
         // assumes final dUcomp is nonzero and representative of source term over this timestep
         
 

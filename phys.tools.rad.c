@@ -180,10 +180,6 @@
 #define DEBUGLEVELIMPSOLVERMORE 3 // which debugfail>=# to use for some common debug stuff
 //#define DEBUGLEVELIMPSOLVERMORE 2 // which debugfail>=# to use for some common debug stuff
 
-// whether to use Ramesh's fix
-// 0, 1, 2
-#define RAMESHTRADTGASFIX 0
-
 // how many holds on u_g to apply while stepping velocity.
 #define RAMESHFIXEARLYSTEPS (DOSUBJAC==1 ? 0 : 3) // 3 if used is default
 
