@@ -1,5 +1,23 @@
       program testradiation
+c 0 means normal full output
+c 1 means very simple Jon's version of err and sol output
+c 2 means only Jon's err output
+c 3 means no output
+#define PRODUCTION 2
+      double precision args(211)
+c      args just dummy here, not used except by external call to rameshsolver subroutine
+      call rameshsolver(args)
+      stop
+      end
 
+
+
+
+
+
+
+
+      subroutine rameshsolver(args)
 c     Reads in Jon's error file fails.dat and tests our ideas for
 c     applying the radiation source term
 
@@ -12,8 +30,8 @@ c     variables with 'c' at the end are conserved quantities
 c     corresponding to the problem currently being solved
 
 c     variables with 'final' at the end correspond to the final solution
-
       implicit double precision (a-h,o-z)
+      dimension args(211)
       real*8 itertot
       dimension isc(4),gn(4,4),gv(4,4),hp(4,4),hf(4,4)
       dimension vgasp(3),vgasf(3),B1(5),B2(5),
@@ -58,13 +76,20 @@ c     itermax is maximum no. of iterations with u_g, entropy below minimum
       dvmin=1.d-4
       tol=1.d-10
 c      tol=1.d-14
-c 1E-16 fails to work -- elads to 1E-7 errors, although all primitives seems similar.
+c 1E-16 fails to work -- leads to 1E-7 errors, although all primitives seems similar.
 c      tol=1.d-16
       uminfac=1.d-10
       dlogmax=log(2.d0)
       itermax=3
       gammaradceiling=50.d0
 
+
+ccccccccccccccccccccccccccccccccccccccccccccccccccc
+c     origintype=0 means read from file
+c     origintype=1 means read from function args as if called by C code using latest number of columns, in which case don't write anything, just pass back result.
+      origintype=0
+
+ccccccccccccccccccccccccccccccccccccccccccccccccccc
 c     idatatype=1 means Jon's old data format with 134 numbers
 c     idatatype=2 means Jon's new data format with 181 numbers
 c     idatatype=3 means Jon's new data format with 211 numbers
@@ -73,6 +98,7 @@ c      write (*,*) ' which type data file? old(1) new(2) '
 c      read (*,*) idatatype
       idatatype=3
 
+ccccccccccccccccccccccccccccccccccccccccccccccccccc
 c     iMHD=0 means don't do initial MHD inversion before radiation
 c     iMHD=1 means do initial MHD inversion before radiation
 
@@ -82,10 +108,10 @@ c     iMHD=1 means do initial MHD inversion before radiation
 
 
 c     To compile/run with debug info, do:
-c         cp ../test.f . ; gfortran -g -O2 test.f -o test.e ; ./test.e > test.e.out
+c         cp ../test.f . ; gfortran -cpp -g -O2 test.f -o test.e ; ./test.e > test.e.out
 
 c     To compile/run with debug info and gdb easy reading, do:
-c         cp ../test.f . ; gfortran -g -O0 test.f -o test.e ; ./test.e > test.e.out
+c         cp ../test.f . ; gfortran -cpp -g -O0 test.f -o test.e ; ./test.e > test.e.out
 c     If crashes, then do:
 c         gdb ./test.e core
 
@@ -107,10 +133,19 @@ c     CAN CHOOSE HEADER FOR OUTPUTS
       errhead='err'
       errfile=errhead//'_'//trim(filehead)//fileext
 c
+#if(PRODUCTION<=2)
       open (11,file=infile)
+#endif
+#if(PRODUCTION<=0)
       open (12,file=confile)
+#endif
+#if(PRODUCTION<=1)
       open (13,file=solfile)
+#endif
+#if(PRODUCTION<=2)
       open (14,file=errfile)
+#endif
+#if(PRODUCTION<=2)
       write (14,"(9X,1A)",advance="no") 'NUM HITER HTOTITER HARMERR'
       write (14,"(15X,1A)",advance="no") 'PREVBESTHARMERR'
       write (14,"(9X,1A)",advance="no")
@@ -120,15 +155,17 @@ c
       write (14,"(4X,1A)",advance="no") 'RAMENGITER   RAMENGERR'
       write (14,"(11X,1A)",advance="no") 'RAMENTSTAT'
       write (14,"(5X,1A)") 'RAMENTITER RAMENTERR'
-
+#endif
       do i=1,1000000
 c      do i=1,1
 
 c     If ientropy=0, we will try the energy equation. If it is 1, we
 c     proceed directly to the entropy equation
 
+#if(PRODUCTION<=2)
          write (14,"(1I10)",advance="no") i
-
+#endif
+#if(PRODUCTION<=1)
          write (13,*)
          write (13,"(38X,22X,A,22X,A)",advance="no")
      &        '|rho','|u_g'
@@ -139,7 +176,7 @@ c     proceed directly to the entropy equation
          write (13,"(22X,A,22X,A,22X,A,22X,A)")
      &        '|u^t','u^1','u^2','u^3|'
          write (13,*) ' JON PROBLEM NUMBER: ',i
-
+#endif
          ientropy=0
          
          if (idatatype.eq.1) then
@@ -165,7 +202,8 @@ c     proceed directly to the entropy equation
 
          else if (idatatype.eq.3) then
 
-         call readtype3(dt,gn,gv,rhof,rhop,rhou0i,rhou0f,rhou0p,
+         call readtype3(origintype,args,
+     &        dt,gn,gv,rhof,rhop,rhou0i,rhou0f,rhou0p,
      &        uf,up,T00i,T00f,T00p,vgasf,vgasp,T01i,T01f,T01p,
      &        T02i,T02f,T02p,T03i,T03f,T03p,BBf,BBp,
      &        Ef,Ep,R00i,R00f,R00p,vradf,vradp,R01i,R01f,R01p,
@@ -182,6 +220,7 @@ c     en=polytropic index = 1/Gamma, en1 = n+1
          en=1.d0/Gam1
          en1=en+1.d0
 
+#if(PRODUCTION==0)
 c         write (*,*)
 c         write (*,*) (isc(j),j=1,4),dt,
 c     &        ((gn(j,k),k=1,4),j=1,4),
@@ -203,7 +242,7 @@ c     &        (uradconf(j),uradcovf(j),j=1,4),
 c     &        (ugasconf(j),ugascovf(j),j=1,4),
 c     &        (uradconp(j),uradcovp(j),j=1,4),
 c     &        (ugasconp(j),ugascovp(j),j=1,4)
-         
+#endif         
          if (ifinish.eq.1) go to 10
          iproblem=iproblem+1
 
@@ -214,11 +253,13 @@ c     Calculate b^mu and b_mu for 'p' and 'f'
 
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
+#if(PRODUCTION==0)
          write (*,*)
          write (*,*)
          write (*,*) ' JON PROBLEM NUMBER: ',i
          write (12,*)
          write (12,*) ' JON PROBLEM NUMBER: ',i
+#endif
 
 c     Set up initial guess primitives ('p' quantities from prevous time
 c     step). Make sure up is reasonable. If not, reset up to
@@ -233,23 +274,29 @@ c         guesstype=2
 c         guesstype=1
 
          if(guesstype.eq.0.or.errorabs.gt.1E-9) then
+#if(PRODUCTION==0)
             write(*,*) 'Using original primitives as guess: guesstype='
      &           ,guesstype
+#endif
             prim(1)=mymax(up,uminfac*rhop)
             prim(2)=ugasconp(2)
             prim(3)=ugasconp(3)
             prim(4)=ugasconp(4)
             guessstype=0
          else
+#if(PRODUCTION==0)
             write(*,*) 'Using harm primitives as guess: guesstype='
      &           ,guesstype
+#endif
             prim(1)=mymax(uf,uminfac*rhof)
             prim(2)=ugasconf(2)
             prim(3)=ugasconf(3)
             prim(4)=ugasconf(4)
          endif
 
+#if(PRODUCTION==0)
          write (*,*) ' prim: ',(prim(j),j=1,4)
+#endif
 
 c     Set up conserved quantities 'c' of the current time step ('i'
 c     state). The values go into common block /conserved/
@@ -277,9 +324,10 @@ c     state). The values go into common block /conserved/
 
 c     Carry out initial MHD inversion of the 'i' state
 
+#if(PRODUCTION==0)
          write (*,*) 
          write (*,*) ' MHD INVERSION OF PRE-RADIATION SOLUTION '
-
+#endif       
          call MHDinvert(prim,iflag,jflag,ientropy,itertot,guesstype)
 
 c     MHD inversion done. Update all the relevant quantities
@@ -295,13 +343,14 @@ c     Calculate u, u^0 and rho
          call contocov(ugasconi,ugascovi)
          rhoi=rhou0i/ugasconi(1)
 
+#if(PRODUCTION==0)
 c         write (*,*)
 c         write (*,*) ' final solution: rho, u, u^mu: ',i,
 c     &        rhoi,ui,(ugasconi(j),j=1,4)
-
 c         write (*,*)
 c         write (*,*) ' original T^t_mu: ',(Ttcovc(j),j=1,4)
 c         write (*,*) ' original R^t_mu: ',(Rtcovc(j),j=1,4)
+#endif
 
 c     Calculate b^mu and b_mu, and update T^t_mu and R^t_mu so as to be
 c     consistent with primitives
@@ -322,9 +371,11 @@ c     consistent with primitives
             Rtcovc(j)=Rtcovi(j)
          enddo
 
+#if(PRODUCTION==0)
 c         write (*,*)
 c         write (*,*) ' updated T^t_mu: ',(Ttcovc(j),j=1,4)
 c         write (*,*) ' updated R^t_mu: ',(Rtcovc(j),j=1,4)
+#endif
 
 c     Initial MHD inversion done
 
@@ -333,8 +384,10 @@ c     Initial MHD inversion done
 c     No MHD inversion done. Proceed directly to solve the radiation
 c     problem.
 
+#if(PRODUCTION==0)
          write (*,*) 
          write (*,*) ' SKIP MHD INVERSION OF PRE-RADIATION SOLUTION '
+#endif
 
       endif
 
@@ -348,9 +401,10 @@ c     quantities for the pre-radiation state. For the primitives, use
 c     the 'i' state as the initial guess. Then solve the lab frame
 c     energy equation using Newton-Raphson
 
+#if(PRODUCTION==0)
          write (*,*)
          write (*,*) ' SOLVE WITH IMPLICIT RADIATION SOURCE TERM '
-
+#endif
          call radsource(prim,iter,iflag,jflag,ientropy
      &        ,itertot,guesstype)
          ufinal=prim(1)
@@ -368,10 +422,11 @@ c     corresponding to the final solution
          rhou0final=rhou0c
          rhofinal=rhou0c/ugasconfinal(1)
 
+#if(PRODUCTION==0)
 c         write (*,*)
 c         write (*,*) ' final solution: rho, u, u^mu: ',
 c     &        rhofinal,ufinal,(ugasconfinal(j),j=1,4)
-
+#endif
 c     Update T^mu_nu so as to be consistent with the final
 c     primitives. Adjust R^t_mu so that the total energy and momentum
 c     density are unchaned, then calculate the full R^mu_nu
@@ -394,6 +449,10 @@ c     density are unchaned, then calculate the full R^mu_nu
          call Rmunuinvert(Rtcovfinal,Efinal,uradconfinal,
      &        uradcovfinal,ugasconfinal,Rmunufinal)
 
+         alpha=1.d0/sqrt(-gn(1,1))
+         gammagas=ugasconfinal(1)*alpha
+         gammarad=uradconfinal(1)*alpha
+#if(PRODUCTION==0)
          write (*,*)
          write (*,*)
          write (*,*) ' FINAL SOLUTION: '
@@ -404,37 +463,53 @@ c     density are unchaned, then calculate the full R^mu_nu
          write (*,*) ' rho, u_g, E: ',rhofinal,ufinal,Efinal
          write (*,*) ' ugascon: ',(ugasconfinal(j),j=1,4)
          write (*,*) ' uradcon: ',(uradconfinal(j),j=1,4)
-         alpha=1.d0/sqrt(-gn(1,1))
-         gammagas=ugasconfinal(1)*alpha
-         gammarad=uradconfinal(1)*alpha
          write (*,*) ' gammagas, gammarad: ',gammagas,gammarad
-
+#endif
+#if(PRODUCTION<=1)
          write (13,*) 'RAMESH rho, u_g, u^mu Erf urad^mu: ',rhofinal,
      &        ufinal,
      &        (ugasconfinal(j),j=1,4),
      &        Efinal,
      &        (uradconfinal(j),j=1,4)
+#endif
 
       enddo
 
- 10   write (*,*)
+ 10   problem=iproblem
+#if(PRODUCTION==0)
+      write (*,*)
       write (*,*)
       write (*,*) ' iproblem: ',iproblem
       write (*,*) ' itertot: ',itertot
-      problem=iproblem
       write (*,*) ' iterations per problem: ',itertot/problem
-      close (11)
       write (12,*)
       write (12,*) ' iproblem: ',iproblem
       write (12,*) ' itertot: ',itertot
       write (12,*) ' iterations per problem: ',itertot/problem
       write (*,*)
+#endif
+#if(PRODUCTION<=2)
+      close (11)
+#endif
+#if(PRODUCTION<=0)
       close (12)
+#endif
+#if(PRODUCTION<=1)
       close (13)
+#endif
+#if(PRODUCTION<=2)
       close (14)
-
-      stop
+#endif
       end
+
+
+
+
+
+
+
+
+cccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
 
       subroutine readtype1(dt,gn,gv,rhof,rhop,rhou0i,rhou0f,rhou0p,
@@ -476,6 +551,7 @@ c     Read in data in Jon's old format (134 numbers)
      &        (uradconp(j),uradcovp(j),j=1,4),
      &        (ugasconp(j),ugascovp(j),j=1,4)
 
+#if(PRODUCTION==0)
 c         write (*,*) (isc(j),j=1,4),dt,
 c     &        ((gn(j,k),k=1,4),j=1,4),
 c     &        ((gv(j,k),k=1,4),j=1,4),
@@ -497,7 +573,7 @@ c     &        (ugasconf(j),ugascovf(j),j=1,4),
 c     &        (uradconp(j),uradcovp(j),j=1,4),
 c     &        (ugasconp(j),ugascovp(j),j=1,4)
 c         write (*,*) ' rho: ',rhof,rhop,rhou0i,rhou0f,rhou0p
-
+#endif
          errorabs=1.0
          errorabsbestexternal=1.0
          return
@@ -552,23 +628,34 @@ c     Read in data in Jon's new format (181 numbers)
      &        (uradconp(j),uradcovp(j),j=1,4),
      &        (ugasconp(j),ugascovp(j),j=1,4)
 
+#if(PRODUCTION<=2)
          write (14,"(2X,1I5,2X,1E21.15,2X,1I8)",advance="no")
      & iters,errorabs,0
-
+#endif
          if(errorabs.lt.1E-6) then
+#if(PRODUCTION<=1)
             write (13,"(1X,A,9X)",advance="no") ' GOOD   '
+#endif
+#if(PRODUCTION<=2)
             write (14,"(1X,A)",advance="no") ' GOOD   '
+#endif
          else
+#if(PRODUCTION<=1)
             write (13,"(1X,A,9X)",advance="no") '  BAD   '
+#endif
+#if(PRODUCTION<=2)
             write (14,"(1X,A)",advance="no") '  BAD   '
+#endif
          endif
-         
+        
+#if(PRODUCTION<=1)
          write (13,*) 'HARMJM rho, u_g, u^mu Erf urad^mu: '
      &        ,rhof,uf,
      &        (ugasconf(j),j=1,4),
      &        Ef,
      &        (uradconf(j),j=1,4)
-
+#endif
+#if(PRODUCTION==0)
 c         write (*,*) ' gn: ',((gn(i,j),j=1,4),i=1,4)
 c         write (*,*) ' gv: ',((gv(i,j),j=1,4),i=1,4)
 c         write (*,*) ' rhou0i, rhou0f, rhou0p: ',rhou0i,rhou0f,rhou0p
@@ -602,7 +689,7 @@ c     &        (uradconf(j),uradcovf(j),j=1,4),
 c     &        (ugasconf(j),ugascovf(j),j=1,4),
 c     &        (uradconp(j),uradcovp(j),j=1,4),
 c     &        (ugasconp(j),ugascovp(j),j=1,4)
-
+#endif
          return
 
  10   ifinish=1
@@ -611,7 +698,8 @@ c     &        (ugasconp(j),ugascovp(j),j=1,4)
       end
 
 
-      subroutine readtype3(dt,gn,gv,rhof,rhop,rhou0i,rhou0f,rhou0p,
+      subroutine readtype3(origintype,args,
+     &        dt,gn,gv,rhof,rhop,rhou0i,rhou0f,rhou0p,
      &        uf,up,T00i,T00f,T00p,vgasf,vgasp,T01i,T01f,T01p,
      &        T02i,T02f,T02p,T03i,T03f,T03p,BBf,BBp,
      &        Ef,Ep,R00i,R00f,R00p,vradf,vradp,R01i,R01f,R01p,
@@ -622,6 +710,8 @@ c     &        (ugasconp(j),ugascovp(j),j=1,4)
 c     Read in data in Jon's new format (211 numbers)
 
       implicit double precision (a-h,o-z)
+      integer orgintype
+      dimension args(211)
       integer eomtype,itermode,iters,totaliters
       dimension isc(4),gn(4,4),gv(4,4),vgasp(3),vgasf(3),
      &     BBp(4),BBf(4),vradp(3),vradf(3),s(5),
@@ -631,7 +721,8 @@ c     Read in data in Jon's new format (211 numbers)
 
       ifinish=0
 
-c         read (11,*,end=10) (isc(j),j=1,4),
+      if(origintype.eq.0) then
+c     read (11,*,end=10) (isc(j),j=1,4),
          read (11,*,end=10) failtype,myid,failnum,gotfirstnofail,
      &        eomtype,itermode,
      &        errorabs,errorabsbestexternal,iters,totaliters,
@@ -657,32 +748,260 @@ c         read (11,*,end=10) (isc(j),j=1,4),
      &        (ugasconb(j),ugascovb(j),j=1,4),
      &        (uradconp(j),uradcovp(j),j=1,4),
      &        (ugasconp(j),ugascovp(j),j=1,4)
+      else
+c     then pull from array of doubles from args
+         failtype=args(1)
+         myid=args(2)
+         failnum=args(3)
+         gotfirstnofail=args(4)
+         eomtype=args(5)
+         itermode=args(6)
+         errorabs=args(7)
+         errorabsbestexternal=args(8)
+         iters=args(9)
+         totaliters=args(10)
+         dt=args(11)
+         nstep=args(12)
+         steppart=args(13)
+         Gam=args(14)
+         gn(1,1)=args(15)
+         gn(1,2)=args(16)
+         gn(1,3)=args(17)
+         gn(1,4)=args(18)
+         gn(2,1)=args(19)
+         gn(2,2)=args(20)
+         gn(2,3)=args(21)
+         gn(2,4)=args(22)
+         gn(3,1)=args(23)
+         gn(3,2)=args(24)
+         gn(3,3)=args(25)
+         gn(3,4)=args(26)
+         gn(4,1)=args(27)
+         gn(4,2)=args(28)
+         gn(4,3)=args(29)
+         gn(4,4)=args(30)
+         gv(1,1)=args(31)
+         gv(1,2)=args(32)
+         gv(1,3)=args(33)
+         gv(1,4)=args(34)
+         gv(2,1)=args(35)
+         gv(2,2)=args(36)
+         gv(2,3)=args(37)
+         gv(2,4)=args(38)
+         gv(3,1)=args(39)
+         gv(3,2)=args(40)
+         gv(3,3)=args(41)
+         gv(3,4)=args(42)
+         gv(4,1)=args(43)
+         gv(4,2)=args(44)
+         gv(4,3)=args(45)
+         gv(4,4)=args(46)
+         rhof=args(47)
+         scr=args(48)
+         rhob=args(49)
+         rhop=args(50)
+         src=args(51)
+         src=args(52)
+         rhou0i=args(53)
+         rhou0f=args(54)
+         rhou0p=args(55)
+         uf=args(56)
+         scr=args(57)
+         ub=args(58)
+         up=args(59)
+         src=args(60)
+         src=args(61)
+         T00i=args(62)
+         T00f=args(63)
+         T00p=args(64)
+         vgasf(1)=args(65)
+         scr=args(66)
+         scr=args(67)
+         vgasp(1)=args(68)
+         src=args(69)
+         src=args(70)
+         T01i=args(71)
+         T01f=args(72)
+         T01p=args(73)
+         vgasf(2)=args(74)
+         scr=args(75)
+         scr=args(76)
+         vgasp(2)=args(77)
+         src=args(78)
+         src=args(79)
+         T02i=args(80)
+         T02f=args(81)
+         T02p=args(82)
+         vgasf(3)=args(83)
+         scr=args(84)
+         scr=args(85)
+         vgasp(3)=args(86)
+         src=args(87)
+         src=args(88)
+         T03i=args(89)
+         T03f=args(90)
+         T03p=args(91)
+         BBf(2)=args(92)
+         scr=args(93)
+         scr=args(94)
+         BBp(2)=args(95)
+         src=args(96)
+         src=args(97)
+         scr=args(98)
+         scr=args(99)
+         scr=args(100)
+         BBf(3)=args(101)
+         scr=args(102)
+         scr=args(103)
+         BBp(3)=args(104)
+         src=args(105)
+         src=args(106)
+         scr=args(107)
+         scr=args(108)
+         scr=args(109)
+         BBf(4)=args(110)
+         scr=args(111)
+         scr=args(112)
+         BBp(4)=args(113)
+         src=args(114)
+         src=args(115)
+         scr=args(116)
+         scr=args(117)
+         scr=args(118)
+         Ef=args(119)
+         scr=args(120)
+         Eb=args(121)
+         Ep=args(122)
+         src=args(123)
+         src=args(124)
+         R00i=args(125)
+         R00f=args(126)
+         R00p=args(127)
+         vradf(1)=args(128)
+         scr=args(129)
+         scr=args(130)
+         vradp(1)=args(131)
+         src=args(132)
+         src=args(133)
+         R01i=args(134)
+         R01f=args(135)
+         R01p=args(136)
+         vradf(2)=args(137)
+         scr=args(138)
+         scr=args(139)
+         vradp(2)=args(140)
+         src=args(141)
+         src=args(142)
+         R02i=args(143)
+         R02f=args(144)
+         R02p=args(145)
+         vradf(3)=args(146)
+         scr=args(147)
+         scr=args(148)
+         vradp(3)=args(149)
+         src=args(150)
+         src=args(151)
+         R03i=args(152)
+         R03f=args(153)
+         R03p=args(154)
+         s(1)=args(155)
+         scr=args(156)
+         scr=args(157)
+         s(2)=args(158)
+         src=args(159)
+         src=args(160)
+         si=args(161)
+         sf=args(162)
+         sp=args(163)
+         uradconf(1)=args(164)
+         uradconf(2)=args(165)
+         uradconf(3)=args(166)
+         uradconf(4)=args(167)
+         uradcovf(1)=args(168)
+         uradcovf(2)=args(169)
+         uradcovf(3)=args(170)
+         uradcovf(4)=args(171)
+         ugasconf(1)=args(172)
+         ugasconf(2)=args(173)
+         ugasconf(3)=args(174)
+         ugasconf(4)=args(175)
+         ugascovf(1)=args(176)
+         ugascovf(2)=args(177)
+         ugascovf(3)=args(178)
+         ugascovf(4)=args(179)
+         uradconb(1)=args(180)
+         uradconb(2)=args(181)
+         uradconb(3)=args(182)
+         uradconb(4)=args(183)
+         uradcovb(1)=args(184)
+         uradcovb(2)=args(185)
+         uradcovb(3)=args(186)
+         uradcovb(4)=args(187)
+         ugasconb(1)=args(188)
+         ugasconb(2)=args(189)
+         ugasconb(3)=args(190)
+         ugasconb(4)=args(191)
+         ugascovb(1)=args(192)
+         ugascovb(2)=args(193)
+         ugascovb(3)=args(194)
+         ugascovb(4)=args(195)
+         uradconp(1)=args(196)
+         uradconp(2)=args(197)
+         uradconp(3)=args(198)
+         uradconp(4)=args(199)
+         uradcovp(1)=args(200)
+         uradcovp(2)=args(201)
+         uradcovp(3)=args(202)
+         uradcovp(4)=args(203)
+         ugasconp(1)=args(204)
+         ugasconp(2)=args(205)
+         ugasconp(3)=args(206)
+         ugasconp(4)=args(207)
+         ugascovp(1)=args(208)
+         ugascovp(2)=args(209)
+         ugascovp(3)=args(210)
+         ugascovp(4)=args(211)
+      endif
 
-         write (*,"(A,1X,1F21.15)") 'TEST',ugascovp(4)
 
 c     HARMEOMTYPE=2 is entropy, 3 is energy.  If 3 fails, could have reverted to entropy.
 c     If itermode=0, then in default harm mode, this was not the last attempt for the solver, so just looking at why this strategy failed -- not failure of harm ultimately.
 c     If itermode=1 shows up, then check whether PREVBESTHARMERR was ok/good enough even if not <tol.  If itermode=1 and both current and best error is bad, actually BAD case for harm.
+#if(PRODUCTION==0)
+         write (*,"(A,1X,1F21.15)") 'TEST',ugascovp(4)
+#endif
+#if(PRODUCTION<=2)
          write (14,"(1I5,2X,1I5,5X,1E21.15,
      &         2X,1E21.15,2X,1I8,8X,1I1,8X)"
      &        ,advance="no")
      &        iters,totaliters,errorabs,errorabsbestexternal
      &        ,eomtype,itermode
-
+#endif
          if(errorabs.lt.1E-6) then
+#if(PRODUCTION<=1)
             write (13,"(1X,A,9X)",advance="no") ' GOOD   '
+#endif
+#if(PRODUCTION<=2)
             write (14,"(1X,A)",advance="no") ' GOOD   '
+#endif
          else
+#if(PRODUCTION<=1)
             write (13,"(1X,A,9X)",advance="no") '  BAD   '
+#endif
+#if(PRODUCTION<=2)
             write (14,"(1X,A)",advance="no") '  BAD   '
+#endif
          endif
          
+#if(PRODUCTION<=1)
          write (13,*) 'HARMJM rho, u_g, u^mu Erf urad^mu: '
      &        ,rhof,uf,
      &        (ugasconf(j),j=1,4),
      &        Ef,
      &        (uradconf(j),j=1,4)
+#endif
 
+#if(PRODUCTION==0)
 c         write (*,*) ' gn: ',((gn(i,j),j=1,4),i=1,4)
 c         write (*,*) ' gv: ',((gv(i,j),j=1,4),i=1,4)
 c         write (*,*) ' rhou0i, rhou0f, rhou0p: ',rhou0i,rhou0f,rhou0p
@@ -716,7 +1035,7 @@ c     &        (uradconf(j),uradcovf(j),j=1,4),
 c     &        (ugasconf(j),ugascovf(j),j=1,4),
 c     &        (uradconp(j),uradcovp(j),j=1,4),
 c     &        (ugasconp(j),ugascovp(j),j=1,4)
-
+#endif
          return
 
  10   ifinish=1
@@ -995,9 +1314,10 @@ c     full tensor R^mu_nu
 c     Convert R^0_mu to R^0^mu
 
       call covtocon(Rtcov,Rtcon)
+#if(PRODUCTION==0)
 c      write (*,*) ' Rtcov: ',(Rtcov(i),i=1,4)
 c      write (*,*) ' Rtcon: ',(Rtcon(i),i=1,4)
-
+#endif
 c     Set up and solve quadratic equation for E
 
       aquad=gn(1,1)
@@ -1015,20 +1335,26 @@ c     Make sure signs are okay for a physical solution. If not, go to 10
 c     for alternative calculation
 
       if (aquad*cquad.ge.0.d0.or.disc.lt.0.d0) then
+#if(PRODUCTION==0)
          write(*,*) 'not physical: ',aquad,cquad,disc
+#endif
          go to 10
       endif
 
 c     Use negative sign of discriminant and solve for E and ucon
 
-c      write (*,*) ' negative sign of discriminant '
       E=2.d0*cquad/(-bquad+sqrt(disc))
+#if(PRODUCTION==0)
+c      write (*,*) ' negative sign of discriminant '
       write (*,*) ' a, b, c, disc, E: ',aquad,bquad,cquad,disc,E
+#endif
 
 c     Make sure E is positive. If not, go to 10
 
       if (E.lt.0.d0) then
+#if(PRODUCTION==0)
          write(*,*) 'E is not positive: ',E
+#endif
          go to 10
       endif
 
@@ -1049,10 +1375,11 @@ c     This segment is for problem cases. We set gamma_radiation equal to
 c     its ceiling value and solve for E and u^i without using R^00.
 
  10   ucon(1)=gammaradceiling*sqrt(-gn(1,1))
+#if(PRODUCTION==0)
       write (*,*) ' gamma_rad hit ceiling: g^tt, urad^t = ',
      &     gn(1,1),ucon(1)
       write (*,*) ' Rtcon: ',(Rtcon(j),j=1,4)
-
+#endif
       aquad=0.d0
       bquad=0.d0
       cquad=1.d0+gv(1,1)*ucon(1)*ucon(1)
@@ -1077,20 +1404,24 @@ c     use yet another scheme!
       if (disc.lt.0.d0) go to 30
 
       E=(-bquad-sqrt(disc))/(2.d0*cquad)
+#if(PRODUCTION==0)
       write (*,*) ' a, b, c, disc, E: ',aquad,bquad,cquad,disc,E
-
+#endif
       do i=2,4
          ucon(i)=(3.d0*Rtcon(i)-E*gn(1,i))/(4.d0*E*ucon(1))
       enddo
+#if(PRODUCTION==0)
 c      write (*,*) ' ucon: ',(ucon(i),i=1,4)
-
+#endif
       sum=0.d0
       do i=1,4
       do j=1,4
          sum=sum+gv(i,j)*ucon(i)*ucon(j)
       enddo
       enddo
+#if(PRODUCTION==0)
 c      write (*,*) ' check norm: ',sum
+#endif
       go to 20
 
 c     Third try! What should we do here?
@@ -1099,7 +1430,9 @@ c     Third try! What should we do here?
 
 c     Last-ditch effort. Set radiation velocity equal to gas velocity
 
+#if(PRODUCTION==0)
       write (*,*) ' Error: No solution for radiation '
+#endif
       do i=1,4
          ucon(i)=ugascon(i)
       enddo
@@ -1135,25 +1468,28 @@ c     Ttcovc(4), Rtcovc(4)
      &     BBc,dt
       external funcMHD1,funcMHD2,uMHD1,uMHD2
 
+#if(PRODUCTION==0)
       write (*,*)
       write (*,*) ' initial primitives: ',(prim(j),j=1,4)
-
+#endif
       if(guesstype.le.1) then
 c     First do one round of Newton-Raphson just on the velocities
 
       call Newton3(prim,iter,iflag,jflag,funcMHD1)
       itertot=itertot+iter
+#if(PRODUCTION==0)
       write (12,*) ' MHD inversion, velocities only ',
      &        iter      
       write (*,*)
-
+#endif
 c     Next work only on u_g using the energy equation
 
       call usolveMHD(prim,iter,iflag,jflag,funcMHD1,uMHD1)
+#if(PRODUCTION==0)
       write (*,*) ' usolveMHD done, u: ',prim(1)
       write (*,*)
       write (12,*) ' MHD inversion, u_g only (energy) '
-
+#endif
       do i=1,4
          primsave(i)=prim(i)
       enddo
@@ -1165,13 +1501,16 @@ c     energy equation
 
       err4=1.0d5
       call Newton4(prim,iter,iflag,jflag,funcMHD1,err4)
+#if(PRODUCTION==0)
       write (12,*) ' MHD inversion, energy equation ',
      &     iter
+#endif
       itertot=itertot+iter
 
 c     Check if the iterations converged. If not, re-solve using the
 c     entropy equation.
 
+#if(PRODUCTION==0)
       if (iflag.eq.0) then
          write (*,*)
          write (*,*) ' Energy equation converged: iter ',
@@ -1183,15 +1522,16 @@ c     entropy equation.
      &        iter
          write (*,*) ' switching to entropy equation '
       endif
+#endif
 
       if (iflag.eq.0.and.prim(1).lt.0.d0) then
-
 c     Check if the internal energy is okay. If not, re-solve using the
 c     entropy equation.
-
+#if(PRODUCTION==0)
          write (*,*)
          write (*,*) ' ERROR: u is negative!! '
          write (*,*) ' switching to entropy equation '
+#endif
          iflag=2
 
       else
@@ -1210,10 +1550,12 @@ c     equation.
          entr=log(pressure**en/
      &        rhoi**en1)
          if ((entr-sc/rhou0c).lt.(-dlogmax)) then
+#if(PRODUCTION==0)
             write (*,*)
             write (*,*) ' ERROR: s is too low!! '
             write (*,*) ' (entropy,sc)/(rho u^0): ',entr,sc/rhou0c
             write (*,*) ' switching to entropy equation '
+#endif
             iflag=3
          endif
 
@@ -1237,10 +1579,12 @@ c     Reset jflag
 c     Next work only on u_g using the entropy equation
 
 c      call usolveMHD(prim,iter,iflag,jflag,funcMHD2,uMHD2)
+#if(PRODUCTION==0)
 c      write (*,*)
 c      write (*,*) ' usolveMHD done, u: ',prim(1)
 c      write (*,*)
 c      write (12,*) ' Radiation inversion, u_g only (entropy) '
+#endif
 
 c     Carry out full Newton-Raphson inversion with the entropy equation
 
@@ -1249,25 +1593,33 @@ c     Carry out full Newton-Raphson inversion with the entropy equation
       itertot=itertot+iter
 
       if (iflag.eq.9) then
+#if(PRODUCTION==0)
          write (*,*) ' ERROR: u is negative! '
          write (*,*) ' reverting to previous solution '
+#endif
          do j=1,4
             prim(j)=primsave(j)
          enddo
       else
+#if(PRODUCTION==0)
          write (12,*) ' MHD inversion, entropy equation ',
      &        iter
          write (*,*)
+#endif
       endif
 
       if (iflag.eq.0) then
+#if(PRODUCTION==0)
          write (*,*) ' entropy equation converged: iter ',
      &        iter
          write (*,*) ' primitives: ',(prim(j),j=1,4)
+#endif
       else
+#if(PRODUCTION==0)
          write (*,*) ' ERROR: no convergence with entropy equation ',
      &        iter
          write (*,*) ' reverting to saved solution '
+#endif
          do j=1,4
             prim(j)=primsave(j)
          enddo
@@ -1300,10 +1652,11 @@ c     satisfy the post-radiation equations
       iterent=0
       errent=1.d3
 
+#if(PRODUCTION==0)
       write (*,*)
       write (*,*) ' initial primitives: ',(prim(j),j=1,4)
       write (*,*)
-
+#endif
 
       do i=1,4
          primsave(i)=prim(i)
@@ -1315,9 +1668,11 @@ c     First do one round of Newton-Raphson just on the velocities
 
       call Newton3(prim,iter,iflag,jflag,funcrad1)
       itertot=itertot+iter
+#if(PRODUCTION==0)
       write (12,*) ' Radiation inversion, velocities only ',
      &        iter      
       write (*,*)
+#endif
 
       do i=1,4
          primsave(i)=prim(i)
@@ -1330,9 +1685,11 @@ c     work only on u_g using the energy equation. If ientropy=1, we skip
 c     all this and go directly to working with the entropy equation.
 
       call usolverad(prim,iter,iflag,jflag,funcrad1,uerr1)
+#if(PRODUCTION==0)
       write (*,*) ' usolverad done, u: ',prim(1)
       write (*,*)
       write (12,*) ' Radiation inversion, u_g only (energy) '
+#endif
       if (prim(1).gt.0.d0) primsave(1)=prim(1)
 
       endif
@@ -1349,14 +1706,18 @@ c     Newton-Raphson
       itertot=itertot+iter
       itereng=iter
       erreng=err4
+#if(PRODUCTION==0)
       write (*,*)
       write (12,*) ' Radiation inversion, energy equation ',
      &        iter,err4,isnan(erreng)
+#endif
 
       if (iflag.eq.0.and.erreng.lt.1E-6) then
+#if(PRODUCTION==0)
          write (*,*) ' Energy equation converged: iter ',
      &        iter
          write (*,*) ' primitives: ',(prim(j),j=1,4)
+#endif
          do j=2,4
             ugascon(j)=prim(j)
          enddo
@@ -1370,8 +1731,12 @@ c     Newton-Raphson
      &        .and.prim(4).eq.prim(4)
      &        .and.ugascon(1).eq.ugascon(1)
      &        ) then
+#if(PRODUCTION<=2)
             write (14,"(1A)",advance="no") '  GOOD   '
+#endif
+#if(PRODUCTION<=1)
             write (13,"(1A)",advance="no") '  GOOD   '
+#endif
          else if (erreng.lt.1E-6
      &        .and.prim(1).eq.prim(1)
      &        .and.prim(2).eq.prim(2)
@@ -1379,13 +1744,20 @@ c     Newton-Raphson
      &        .and.prim(4).eq.prim(4)
      &        .and.ugascon(1).eq.ugascon(1)
      &        ) then
+#if(PRODUCTION<=2)
             write (14,"(1A)",advance="no") '   BADNEG'
+#endif
+#if(PRODUCTION<=1)
             write (13,"(1A)",advance="no") '   BADNEG'
+#endif
          else
+#if(PRODUCTION<=2)
             write (14,"(1A)",advance="no") '   BAD   '
+#endif
+#if(PRODUCTION<=1)
             write (13,"(1A)",advance="no") '   BAD   '
+#endif
          endif
-
          engconv=1
 c     commenting below to see entropy even if energy converged.
 c         return
@@ -1394,25 +1766,30 @@ c         return
 c     If energy equation does not converge, calculate using the entropy
 c     equation.
 
-      write (*,*) ' ERROR: no convergence with energy equation: ',
+#if(PRODUCTION==0)
+       write (*,*) ' ERROR: no convergence with energy equation: ',
      &     iter
       write (*,*) ' Proceed to entropy equation '
       write (*,*)
       write (12,*) ' ERROR: no convergence with energy equation: '
-
+#endif
+#if(PRODUCTION<=2)
       write (14,"(1A)",advance="no") '   BAD   '
+#endif
+#if(PRODUCTION<=1)
       write (13,"(1A)",advance="no") '   BAD   '
-
+#endif
 
       endif
 
+#if(PRODUCTION<=2)
       if(1.eq.1) then
-         write (14,"(9X,1I3,3X,1E21.15)",advance="no")
+          write (14,"(9X,1I3,3X,1E21.15)",advance="no")
      &        itereng,erreng
       else
          write (14,*) itereng,erreng,iterent,errent
       endif
-
+#endif
 
 c     Restore saved primitives and do Newton-Raphson with the entropy
 c     equation
@@ -1429,10 +1806,12 @@ c     modify uerr1 to do the proper energy equation, we need this second
 c     round of 1D search using uerr2.
 
 c      call usolverad(prim,iter,iflag,jflag,funcrad2,uerr2)
+#if(PRODUCTION==0)
 c      write (*,*)
 c      write (*,*) ' usolverad done, u: ',prim(1)
 c      write (*,*)
 c      write (12,*) ' Radiation inversion, u_g only (entropy) '
+#endif
 
       err4=1.0d8
       call Newton4(prim,iter,iflag,jflag,funcrad2,err4)
@@ -1440,9 +1819,11 @@ c      write (12,*) ' Radiation inversion, u_g only (entropy) '
       iterent=iter
       errent=err4
       if (iflag.eq.0.and.errent.lt.1E-6) then
+#if(PRODUCTION==0)
       write (*,*)
       write (12,*) ' Radiation inversion, entropy equation ',
      &        iter
+#endif
       do j=2,4
          ugascon(j)=prim(j)
       enddo
@@ -1456,8 +1837,12 @@ c      write (12,*) ' Radiation inversion, u_g only (entropy) '
      &     .and.prim(4).eq.prim(4)
      &     .and.ugascon(1).eq.ugascon(1)
      &     ) then
+#if(PRODUCTION<=2)
          write (14,"(1A)",advance="no") '  GOOD   '
+#endif
+#if(PRODUCTION<=1)
          write (13,"(1A)",advance="no") '  GOOD   '
+#endif
       else if ((erreng.lt.1E-6.or.errent.lt.1E-6)
      &     .and.prim(1).eq.prim(1)
      &     .and.prim(2).eq.prim(2)
@@ -1465,37 +1850,52 @@ c      write (12,*) ' Radiation inversion, u_g only (entropy) '
      &     .and.prim(4).eq.prim(4)
      &     .and.ugascon(1).eq.ugascon(1)
      &     ) then
+#if(PRODUCTION<=2)
          write (14,"(1A)",advance="no") '   BADNEG'
+#endif
+#if(PRODUCTION<=1)
          write (13,"(1A)",advance="no") '   BADNEG'
+#endif
       else
+#if(PRODUCTION<=2)
          write (14,"(1A)",advance="no") '   BAD   '
+#endif
+#if(PRODUCTION<=1)
          write (13,"(1A)",advance="no") '   BAD   '
+#endif
       endif
-
+#if(PRODUCTION==0)
       if (iflag.eq.0.and.errent.lt.1E-6) then
          write (*,*) ' Entropy equation converged: iter ',
      &        iter
          write (*,*) ' primitives: ',(prim(j),j=1,4)
 c         return
       endif
+#endif
 
       else
 
+#if(PRODUCTION==0)
       write (*,*) ' ERROR: no convergence with entropy equation: ',
      &     iter
       write (12,*) ' ERROR: no convergence with entropy equation: '
-
+#endif
+#if(PRODUCTION<=2)
       write (14,"(1A)",advance="no") '   BAD   '
+#endif
+#if(PRODUCTION<=1)
       write (13,"(1A)",advance="no") '   BAD   '
+#endif
 
       endif
       
+#if(PRODUCTION<=2)
       if(1.eq.1) then
          write (14,*) iterent,errent
       else
          write (14,*) itereng,erreng,iterent,errent
       endif
-
+#endif
 c     We should never reach this point. Unclear what to do in this case!
 c     We could keep the solution or restore the saved primitives.
 
@@ -1537,7 +1937,6 @@ c      niter=20
 c     Do Newton-Raphson until err is smaller than tolerance tol
 
       iter=0
-c      write (*,*)
       do i=1,niter
 
 c     Make sure u == prim0(1) is in safe territory
@@ -1545,17 +1944,20 @@ c     Make sure u == prim0(1) is in safe territory
       prim0(1)=mymax(prim0(1),uminfac*rhou0)
 
       call func(prim0,error0,errornorm,err4,err3,iflag,jflag)
+#if(PRODUCTION==0)
       write (*,*) ' Newton-Raphson-4 '
       write (*,*) ' i, primitives, error, errornorm, err4: ',i,
      &     (prim0(j),j=1,4),(error0(j),j=1,4),
      &     (errornorm(j),j=1,4),err4
-
+#endif
 c     iflag=9 means a serious error in the value of u. This can be
 c     tolerated for a few steps (up to iter=itermax). After that, return
 c     with iflag=9.
 
       if (iflag.eq.9.and.iter.ge.itermax) then
+#if(PRODUCTION==0)
          write (*,*) 'Hit iflag=',iflag,'iter=',iter
+#endif
          return
       endif
 
@@ -1563,7 +1965,9 @@ c     If all the four equations give fractional errors less than tol,
 c     return
 
       if (err4.lt.tol) then
+#if(PRODUCTION==0)
          write (*,*) 'Hit err4=',err4
+#endif
          return
       endif
 
@@ -1573,7 +1977,9 @@ c     return
             sum=sum+myabs(prim0(j)-primold(j))
          enddo
          if (sum.eq.0.d0) then
+#if(PRODUCTION==0)
             write (12,*) ' sum = 0! '
+#endif
             return
          endif
       endif
@@ -1600,13 +2006,17 @@ c     the errors.
          prim(j)=prim0(j)+dprim
 
          call func(prim,error,errornorm,err4,err3,iflag,jflag)
+#if(PRODUCTION==0)
 c         write (*,*) ' error: ',j,(error(k),k=1,4)
+#endif
       do k=1,4
          AJac(k,j)=(error(k)-error0(k))/dprim
       enddo
 
       enddo
+#if(PRODUCTION==0)
 c      write (*,*) ' Jacobian: ',((AJac(k,j),j=1,4),k=1,4)
+#endif
 
 c     Invert the Jacobian using subroutines from Numerical Recipes and
 c     compute the shifts to the primitives
@@ -1618,10 +2028,12 @@ c     compute the shifts to the primitives
       endif
       call lubksb(AJac,4,4,indx,error0)
 
+#if(PRODUCTION==0)
 c      do j=1,4
 c         write (*,*) ' j, prim0(j), dprim(j): ',j,prim0(j),
 c     &        error0(j)
 c      enddo
+#endif
 
 c     Apply the Newton-Raphson shifts
 
@@ -1679,15 +2091,16 @@ c     Make sure u == primsave(1) is in safe territory
 c     Do Newton-Raphson until err is less than tolerance tol
 
       iter=0
-c      write (*,*)
       do i=1,100
 
       call func3(primsave,prim30,error30,errornorm
      &        ,err4,err3,iflag,jflag,func)
+#if(PRODUCTION==0)
       write (*,*) ' Newton-Raphson-3 '
       write (*,*) ' iter, primitives, error, errornorm, err3: ',iter,
      &     (prim30(j),j=1,3),(error30(j),j=1,3),
      &     (errornorm(j),j=1,3),err3
+#endif
 
       if (iter.ge.niter) then
          prim0(1)=primsave
@@ -1727,13 +2140,17 @@ c     the errors.
 
          call func3(primsave,prim3,error3,errornorm,
      &        err4,err3,iflag,jflag,func)
+#if(PRODUCTION==0)
 c         write (*,*) ' error: ',j,(error3(k),k=1,3),err3
+#endif
       do k=1,3
          AJac(k,j)=(error3(k)-error30(k))/dprim
       enddo
 
       enddo
+#if(PRODUCTION==0)
 c      write (*,*) ' Jacobian: ',((AJac(k,j),j=1,3),k=1,3)
+#endif
 
 c     Invert the Jacobian using subroutines from Numerical Recipes and
 c     compute the shifts to the primitives
@@ -1745,11 +2162,12 @@ c     compute the shifts to the primitives
       endif
       call lubksb(AJac,3,3,indx,error30)
 
+#if(PRODUCTION==0)
 c      do j=1,3
 c         write (*,*) ' j, prim30(j), dprim(j): ',j,prim0(j),
 c     &        error30(j)
 c      enddo
-
+#endif
 c     Apply the Newton-Raphson shifts
 
       do j=1,3
@@ -1761,7 +2179,9 @@ c     Apply the Newton-Raphson shifts
       enddo
 
       iflag=1
+#if(PRODUCTION==0)
 c      write (*,*) ' too many iterations! '
+#endif
 
       prim0(1)=primsave
       do i=1,3
@@ -1798,13 +2218,17 @@ c     energy equation: rho, Ehat
       call funcMHD(prim,error,errornorm,err4,err3,iflag,jflag)
       rho0=rho
       Ehat0=Ehat
+#if(PRODUCTION==0)
 c      write (*,*) ' usolveMHD: ',(prim(i),i=1,4),rho0,Ehat0
+#endif
 
 c     Calculate initial error
 
       call uMHD(u0,u0,rho0,Ehat0,ffkap,arad,dtau,err0)
+#if(PRODUCTION==0)
       write (*,*) ' Bracketing the solution '
       write (*,*) ' u, err: ',u0,err0
+#endif
 
 c     Decide whether u is too low or too high and search accordingly to
 c     bracket the solution for u
@@ -1819,10 +2243,14 @@ c     bracket the solution for u
            el=er
            ur=2.d0*ur
            call uMHD(ur,u0,rho0,Ehat0,ffkap,arad,dtau,er)
+#if(PRODUCTION==0)
            write (*,*) ' u, err: ',ur,er
+#endif
            if (er.ge.0.d0) go to 10
          enddo
+#if(PRODUCTION==0)
          write (*,*) ' No bracket! '
+#endif
          return
 
       else
@@ -1835,10 +2263,14 @@ c     bracket the solution for u
            er=el
            ul=0.5d0*ul
            call uMHD(ul,u0,rho0,Ehat0,ffkap,arad,dtau,el)
+#if(PRODUCTION==0)
            write (*,*) ' u, err: ',ul,el
+#endif
            if (er.lt.0.d0) go to 10
          enddo
+#if(PRODUCTION==0)
          write (*,*) ' No bracket! '
+#endif
          return
 
       endif
@@ -1846,13 +2278,17 @@ c     bracket the solution for u
 c     Bracketing is done. Now solve for u by bisection
 
  10   continue
+#if(PRODUCTION==0)
       write (*,*)
       write (*,*) ' Solving by bisection '
+#endif
 
       do i=1,50
          umid=0.5d0*(ul+ur)
          call uMHD(umid,u0,rho0,Ehat0,ffkap,arad,dtau,emid)
+#if(PRODUCTION==0)
          write (*,*) ' u, err: ',umid,emid
+#endif
          if (emid.ge.0.d0) then
             ur=umid
             er=emid
@@ -1868,7 +2304,9 @@ c     Bracketing is done. Now solve for u by bisection
       enddo
 
       prim(1)=0.5d0*(ul+ur)
+#if(PRODUCTION==0)
       write (*,*) ' bisection did not converge! '
+#endif
 
       return
       end
@@ -1893,8 +2331,10 @@ c      Gdt=ff*(Ehat-B4pi)*dt
       entropy=rhou0*log((Gam1*u)**en/rho**en1)
       err=entropy-s
 c      err=entropy-s-Gdtau
+#if(PRODUCTION==0)
 c      write (*,*) ' rhou0, rho, u, entropy, s, err: ',
 c     &     rhou0,rho,u,entropy,s,err
+#endif
 
       return
       end
@@ -1953,11 +2393,15 @@ c     energy equation: rho, Ehat
 
 c     Calculate initial error
 
+#if(PRODUCTION==0)
       write (*,*) ' Bracketing solution for u_g '
+#endif
       iuerr=0
       call uuerr(u0,err0,derr)
 c      call uerr(u0,u0,rho0,Ehat0,ffkap,arad,dtau,err0)
+#if(PRODUCTION==0)
 c      write (*,*) ' u, err: ',u0,err0
+#endif
 
 c     Decide whether u is too low or too high and search accordingly to
 c     bracket the solution for u
@@ -1972,10 +2416,14 @@ c     bracket the solution for u
            el=er
            ur=3.d0*ur
            call uuerr(ur,er,derr)
+#if(PRODUCTION==0)
 c           write (*,*) ' u, err: ',ur,er
+#endif
            if (er.ge.0.d0) go to 10
          enddo
+#if(PRODUCTION==0)
          write (*,*) ' No bracket! '
+#endif
          return
 
       else
@@ -1988,10 +2436,14 @@ c           write (*,*) ' u, err: ',ur,er
            er=el
            ul=0.3d0*ul
            call uuerr(ul,el,derr)
+#if(PRODUCTION==0)
 c           write (*,*) ' u, err: ',ul,el
+#endif
            if (el.lt.0.d0) go to 10
          enddo
+#if(PRODUCTION==0)
          write (*,*) ' No bracket! '
+#endif
          return
 
       endif
@@ -2001,20 +2453,26 @@ c     Bracketing is done. Now solve for u using rtsafe
  10   continue
 
       iuerr=1
+#if(PRODUCTION==0)
       write (*,*)
       write (*,*) ' Solving for u_g using rtsafe '
+#endif
 
       uacc=eps*min(ul,ur)
       ugas=rtsafe(uuerr,ul,ur,el,er,uacc)
       prim(1)=ugas
 
+#if(PRODUCTION==0)
 c      write (*,*)
 c      write (*,*) ' Solving for u_g by bisection '
+#endif
 
 c      do i=1,50
 c         umid=0.5d0*(ul+ur)
 c         call uerr(umid,u0,rho0,Ehat0,ffkap,arad,dtau,emid)
+#if(PRODUCTION==0)
 c         write (*,*) ' u, err: ',umid,emid
+#endif
 c         if (emid.ge.0.d0) then
 c            ur=umid
 c            er=emid
@@ -2030,7 +2488,9 @@ c         endif
 c      enddo
 
 c      prim(1)=0.5d0*(ul+ur)
+#if(PRODUCTION==0)
 c      write (*,*) ' bisection did not converge! '
+#endif
 
       return
       end
@@ -2114,7 +2574,9 @@ c     compute the error and its derivative wrt u
 
       c3=ffkap*rho*rho/c1**(3.5d0)
       ff=c3/u**(3.5d0)
+#if(PRODUCTION==0)
 c      write (*,*) ' Tgas, B4pi, ff: ',Tgas,B4pi,ff
+#endif
 
       c4=u0+Ehat0
       Ehat=c4-u
@@ -2123,22 +2585,30 @@ c      write (*,*) ' Tgas, B4pi, ff: ',Tgas,B4pi,ff
 
       entropy=rho*log((Gam1*u)**en/rho**en1)
 
+#if(PRODUCTION==0)
 c      write (*,*) ' Ehat, Gdtau, entropy: ',Ehat,Gdtau,entropy
+#endif
 
       err=entropy-(s/ucon(1))-Gdtau
+#if(PRODUCTION==0)
 c      write (*,*) ' s, ucon(1), err: ',s,ucon(1),err
+#endif
 
       if (iuerr.eq.1) then
 
          derr=(rho*en/u)+3.5d0*c3*dtau*c4*u**(-4.5d0)-
      &        2.5d0*c3*dtau*u**(-3.5d0)+
      &        0.5d0*c3*dtau*c2*u**(-0.5d0)
+#if(PRODUCTION==0)
          write (*,10) u,err,derr
+#endif
  10      format (' u, err, derr: ',3e20.12)
 
       else
 
+#if(PRODUCTION==0)
          write (*,*) ' u, err: ',u,err
+#endif
 
       endif
 
@@ -2205,24 +2675,30 @@ c     Use lab frame energy equation
      &     myabs(Tmunu(1,1))+myabs(Ttcov(1)))))
       err4=mymax(err3,errornorm(1))
 
+#if(PRODUCTION==0)
 c      write (*,*)
 c      write (*,*) ' target Ttcov: ',(Ttcov(i),i=1,4)
 c      write (*,*) ' current Ttcov: ',(Tmunu(1,i),i=1,4)
       write (*,*) 'B error: ',(error(i),i=1,4)
       write (*,*) 'B err3, err4: ',err3,err4
+#endif
 
 c     If u has an unreasonable value, set iflag=9 and reset u
 
       if (u.lt.0.d0) then
          iflag=9
+#if(PRODUCTION==0)
          write (*,*) 'BSet iflag=',iflag
+#endif
       else
          entropy=log((Gam1*u)**en/rho**en1)
          if (entropy.lt.((s/rhou0)-dlogmax)) iflag=9
       endif
       if (iflag.eq.9) prim(1)=mymax(prim(1),uminfac*rho)
 
+#if(PRODUCTION==0)
 c      write (*,*) ' error: ',(error(i),i=1,4),err3
+#endif
 
       return 
       end
@@ -2285,23 +2761,29 @@ c     Use entropy equation
      &     myabs(entropy)+myabs(s))))
       err4=mymax(err3,errornorm(1))
 
+#if(PRODUCTION==0)
 c      write (*,*)
 c      write (*,*) ' target entropy: ',s
 c      write (*,*) ' current entropy: ',entropy
+#endif
 
 c     If u has an unreasonable value, set iflag=9 and reset u
 
       if (prim(1).lt.0.d0) then
          iflag=9
+#if(PRODUCTION==0)
          write (*,*) 'CSet iflag=',iflag
+#endif
          prim(1)=mymax(prim(1),uminfac*rho)
       endif
 
+#if(PRODUCTION==0)
 c      write (*,*) ' primitives: ',(prim(i),i=1,4)
 c      write (*,*) ' target Ttcov: ',(Ttcov(i),i=2,4)
 c      write (*,*) ' current Ttcov: ',(Tmunu(1,i),i=2,4)
       write (*,*) 'A error: ',(error(i),i=1,4)
       write (*,*) 'A err3, err4: ',err3,err4
+#endif
 
       return
       end
@@ -2384,8 +2866,10 @@ c     Calculate u^0 and rho
       call contocov(ucon,ucov)
 
       rho=rhou0/ucon(1) 
+#if(PRODUCTION==0)
 c      write (*,*)
 c      write (*,*) ' rho, u: ',rho,u
+#endif
 
 c     Calculate b^mu, b_mu, bsq
 
@@ -2402,13 +2886,17 @@ c     R^0_mu
          Tt(i)=Tmunu(1,i)
          Rt(i)=Ttcov(i)+Rtcov(i)-Tt(i)
       enddo
+#if(PRODUCTION==0)
 c      write (*,*) ' Tt: ',(Tt(i),i=1,4)
 c      write (*,*) ' Rt: ',(Rt(i),i=1,4)
+#endif
 
 c     Calculate the full R^mu_nu tensor
 
       call Rmunuinvert(Rt,E,urcon,urcov,ucon,Rmunu)
+#if(PRODUCTION==0)
 c      write (*,*) ' E, urcon, urcov: ',E,(urcon(i),urcov(i),i=1,4)
+#endif
 
 c     Calculate radiation energy density in the gas frame \hat{E}, and
 c     the gas and radiation temperatures
@@ -2419,11 +2907,15 @@ c     the gas and radiation temperatures
          Ehat=Ehat+Rmunu(i,j)*ucov(i)*ucon(j)
       enddo
       enddo
+#if(PRODUCTION==0)
       write (*,*) ' \hat{E}: ',Ehat
+#endif
 
       Trad=(Ehat/arad)**(0.25d0)
       Tgas=Gam1*u/rho
+#if(PRODUCTION==0)
       write (*,*) ' Tgas, Trad: ',Tgas,Trad
+#endif
 
       if(Trad.lt.0.0.or.isnan(Trad)) then
          jflag=1
@@ -2436,7 +2928,9 @@ c     Calculate quantities needed to compute the radiation source term
       ff=ffkap*rho*rho/Tgas**(3.5d0)
       es=eskap*rho
       B4pi=arad*Tgas**4
+#if(PRODUCTION==0)
 c      write (*,*) ' ff, es, B4pi: ',ff,es,B4pi
+#endif
 
 c     The following side calculation is to estimate quantities that are
 c     relevant for deciding whether the radiation source term can be
@@ -2453,7 +2947,9 @@ c      dtau=dt/gamma
 
       chi1=ff*dtau*(1.d0+4.d0*B4pi/u)
       chi2=(ff+es)*dtau*(1.d0+Ehat/(rho+Gam*u))
+#if(PRODUCTION==0)
 c      write (*,*) ' chi1, chi2: ',chi1,chi2
+#endif
 
 c     Compute the radiation source term G^mu and G_mu directly in the
 c     lab frame (formula taken from Jon's draft of the paper, with some
@@ -2467,9 +2963,11 @@ c     corrections)
       enddo
 
       call contocov(Gcon,Gcov)
+#if(PRODUCTION==0)
 c      write (*,*)
 c      write (*,*) ' lab Gcon: ',(Gcon(i),i=1,4)
 c      write (*,*) ' lab Gcov: ',(Gcov(i),i=1,4)
+#endif
 
 c     Compute normalized err3 from the three momentum equations and the
 c     normalized err4 from all four equations
@@ -2489,6 +2987,7 @@ c     Calculate error(1) from lab frame energy equation
      &        myabs(Tt(1))+myabs(Ttcov(1)))))
          err4=mymax(err3,errornorm(1))
 
+#if(PRODUCTION==0)
 c      write (*,*)
 c      write (*,*) ' target Ttcov: ',(Ttcov(i),i=1,4)
 c      write (*,*) ' current Ttcov: ',(Tt(i),i=1,4)
@@ -2498,12 +2997,14 @@ c      write (*,*) ' current Ttcov: ',(Tt(i),i=1,4)
       write (*,*) 'C errornorm2: ',
      & (myabs(Gcov(1)*dt)+myabs(Tt(1))+myabs(Ttcov(1)))
       write (*,*) 'C err3, err4: ',err3,err4
-
+#endif
 c     If u has an unreasonable value, set iflag=9 and reset u
 
       if (u.lt.0.d0) then
          iflag=9
+#if(PRODUCTION==0)
          write (*,*) 'DSet iflag=',iflag
+#endif
       else
          entropy=log((Gam1*u)**en/rho**en1)
          if (entropy.lt.((s/rhou0)-dlogmax)) iflag=9
@@ -2545,7 +3046,9 @@ c     to the given primitives: rho, ucon, ucov
       u=prim(1)
       if (prim(1).lt.0.d0) then
          iflag=9
+#if(PRODUCTION==0)
          write (*,*) 'FSet iflag=',iflag
+#endif
       endif
 
       do i=2,4
@@ -2558,8 +3061,10 @@ c     Calculate u^0 and rho
       call contocov(ucon,ucov)
 
       rho=rhou0/ucon(1) 
+#if(PRODUCTION==0)
 c      write (*,*)
 c      write (*,*) ' rho, u: ',rho,u
+#endif
 
 c     Calculate b^mu, b_mu, bsq
 
@@ -2590,18 +3095,23 @@ c     the gas and radiation temperatures
          Ehat=Ehat+Rmunu(i,j)*ucov(i)*ucon(j)
       enddo
       enddo
+#if(PRODUCTION==0)
 c      write (*,*) ' \hat{E}: ',Ehat
-
+#endif
       Trad=(Ehat/arad)**(0.25d0)
       Tgas=Gam1*u/rho
+#if(PRODUCTION==0)
 c      write (*,*) ' Tgas, Trad: ',Tgas,Trad
+#endif
 
 c     Calculate quantities needed to compute the radiation source term
 
       ff=ffkap*rho*rho/Tgas**(3.5d0)
       es=eskap*rho
       B4pi=arad*Tgas**4
+#if(PRODUCTION==0)
 c      write (*,*) ' ff, es, B4pi: ',ff,es,B4pi
+#endif
 
       if(Trad.lt.0.0.or.isnan(Trad)) then
          jflag=1
@@ -2625,7 +3135,9 @@ c      dtau=dt/gamma
 
       chi1=ff*dtau*(1.d0+4.d0*B4pi/u)
       chi2=(ff+es)*dtau*(1.d0+Ehat/(rho+Gam*u))
+#if(PRODUCTION==0)
 c      write (*,*) ' chi1, chi2: ',chi1,chi2
+#endif
 
 c     Compute the radiation source term G^mu and G_mu directly in the
 c     lab frame (formula taken from Jon's draft of the paper, with some
@@ -2639,10 +3151,11 @@ c     corrections)
       enddo
 
       call contocov(Gcon,Gcov)
+#if(PRODUCTION==0)
 c      write (*,*)
 c      write (*,*) ' lab Gcon: ',(Gcon(i),i=1,4)
 c      write (*,*) ' lab Gcov: ',(Gcov(i),i=1,4)
-
+#endif
 c     Compute normalized err3 from the three momentum equations and the
 c     normalized err4 from all four equations
 
@@ -2674,18 +3187,18 @@ c      entropy=ucon(1)*rho*log((Gam1*prim(1))**en/rho**en1)
 c      Gdtau=ff*(Ehat-B4pi)*dtau
 c      Gt=Gdtau
 c      error(1)=entropy-s-Gdtau
-c      write (*,*) ' entropy, s, Gdtau: ',entropy,s,Gdtau
-
       err4=mymax(err3,errornorm(1))
+      u0=prim(1)
+#if(PRODUCTION==0)
+c      write (*,*) ' entropy, s, Gdtau: ',entropy,s,Gdtau
 c      write (*,*) ' error(1), err3, err4 ',error(1),err3,err4
-
 c      write (*,*)
 c      write (*,*) ' target Ttcov: ',(Ttcov(i),i=1,4)
 c      write (*,*) ' current Ttcov: ',(Tt(i),i=1,4)
       write (*,*) 'E error: ',(error(i),i=1,4)
       write (*,*) 'E err3, err4: ',err3,err4
+#endif
 
-      u0=prim(1)
 
       return
       end
@@ -2745,7 +3258,9 @@ c     Matrix inversion subroutine 2 from Numerical Recipes
           if (myabs(a(i,j)).gt.aamax) aamax=myabs(a(i,j))
 11      continue
         if (aamax.eq.0.d0) then
+#if(PRODUCTION==0)
            write (*,*) 'singular matrix in ludcmp'
+#endif
            retval=1
            return
         endif
@@ -2773,7 +3288,9 @@ c     Matrix inversion subroutine 2 from Numerical Recipes
           endif
 16      continue
         if (imax.gt.n) then
+#if(PRODUCTION==0)
            write (*,*) 'Bad imax in ludcmp: ',imax
+#endif
            retval=2
            return
         endif
@@ -2812,8 +3329,10 @@ c     Matrix inversion subroutine 2 from Numerical Recipes
       double precision mymax,myabs,mydiv
 c      call funcd(x1,fl,df)
 c      call funcd(x2,fh,df)
+#if(PRODUCTION==0)
 c      if((fl.gt.0.d0.and.fh.gt.0.d0).or.(fl.lt.0.d0.and.fh.lt.0.d0))
 c     &     write (*,*) 'root is not bracketed in rtsafe! '
+#endif
 c      if(fl.eq.0.d0)then
 c        rtsafe=x1
 c        return
@@ -2858,6 +3377,8 @@ c        return
           xh=rtsafe
         endif
 11    continue
+#if(PRODUCTION==0)
       write (*,*) ' rtsafe has exceeded maximum iterations '
+#endif
       return
       END
