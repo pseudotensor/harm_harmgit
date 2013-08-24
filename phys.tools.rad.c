@@ -2515,7 +2515,6 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
     int convreturnf3limit=0;
     int notholding=1;
 
-
     ////////////////////////////////
     //
     // IMPLICIT LOOP ITSELF
@@ -3746,7 +3745,8 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
   // for checking cases where tau>=1 but still Erf<0
   //  FTYPE tautot[NDIM],tautotmax;
   //  calc_tautot(pp, ptrgeom, tautot, &tautotmax);
-  //  if(tautotmax>1 && pp[PRAD0]<10.0*ERADLIMIT){
+  //  //  if(tautotmax>1 && pp[PRAD0]<10.0*ERADLIMIT){
+  //  if(tautotmax>2 && pp[PRAD0]<10.0*ERADLIMIT){
 
 
   if(PRODUCTION==0 && NOTACTUALFAILURE(failreturn)==0 && errorabsf1>=IMPTRYCONVALT || PRODUCTION>0 && NOTBADFAILURE(failreturn)==0 && havebackup==0){ // as in previous code

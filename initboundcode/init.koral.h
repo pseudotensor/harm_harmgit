@@ -994,7 +994,7 @@ struct Ccoordparams {
 // N1=60 if using 1.5*hor - 40 (or 27.8)
 // N1=70 if using 1.5*hor - 30 (or 27.8)
 #define N1 32
-#define N2 16
+#define N2 32
 #define N3 1
 
 //#define N1 128
