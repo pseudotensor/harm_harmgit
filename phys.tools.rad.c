@@ -4008,8 +4008,23 @@ int mathematica_report_check(int failtype, long long int failnum, int gotfirstno
     // calling f2c generated code, which assumes single array as input of 211 items.
     rameshsolver_(args,resultseng,resultsent);
 
+    FTYPE resultsjon[NUMRESULTS];
+    resultsjon[0] = pp[RHO];
+    resultsjon[1] = pp[UU];
+    resultsjon[2] = qpp.ucon[0];
+    resultsjon[3] = qpp.ucon[1];
+    resultsjon[4] = qpp.ucon[2];
+    resultsjon[5] = qpp.ucon[3];
+    resultsjon[6] = pp[URAD0];
+    resultsjon[7] = qpp.uradcon[0];
+    resultsjon[8] = qpp.uradcon[1];
+    resultsjon[9] = qpp.uradcon[2];
+    resultsjon[10] = qpp.uradcon[3];
+    resultsjon[11] = (FTYPE)failtype;
+    resultsjon[12] = errorabs;
+    resultsjon[13] = (FTYPE)iters;
     for(pl=0;pl<NUMRESULTS;pl++){
-      dualfprintf(fail_file,"ENG: pl=%d resultseng=%g resultsent=%g\n",pl,resultseng[pl],resultsent[pl]);
+      dualfprintf(fail_file,"RAMESH: pl=%d resultseng=%21.15g resultsent=%21.15g | resultsjon=%21.15g\n",pl,resultseng[pl],resultsent[pl],resultsjon[pl]);
     }
 
     /////////////////////////

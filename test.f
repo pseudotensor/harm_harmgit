@@ -22,8 +22,8 @@ c
 c As harm subroutine
 c
 c 1) Set PRODUCTION 3
-c 2) fpp -P test.f > testfpp.f ; f2c -f -P testfpp.f
-c 3) testfpp.c from f2c: MUST remove static in front of variables! 
+c 2) fpp -P test.f > testfpp.temp.f ; f2c -f -P testfpp.temp.f ; sed 's/static//g' testfpp.temp.c > testfpp.c
+c    i.e. testfpp.c from f2c: MUST remove static in front of variables! 
 
 
 c about pre-processor directives:
@@ -1962,8 +1962,6 @@ c     equation.
 
       resultseng(13)=erreng
       resultseng(14)=DBLE(itereng)
-      resultsent(13)=errent
-      resultsent(14)=DBLE(iterent)
 #if(PRODUCTION<=2)
       if(1.eq.1) then
           write (14,"(9X,1I3,3X,1E21.15)",advance="no")
@@ -2079,6 +2077,8 @@ c         return
 
       endif
       
+      resultsent(13)=errent
+      resultsent(14)=DBLE(iterent)
 #if(PRODUCTION<=2)
       if(1.eq.1) then
          write (14,*) iterent,errent
