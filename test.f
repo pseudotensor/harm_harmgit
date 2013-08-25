@@ -5,40 +5,55 @@ cccccccccccccccccccccccccc
 c
 c As stand-alone program:
 c
-c     To compile/run with debug info, do:
-c         cp ../test.f . ; gfortran -cpp -g -O2 test.f -o test.e ; ./test.e > test.e.out
+c     1) Set PRODUCTION 0, 1, or 2
+c     2) To compile only:
+c            gfortran -cpp -g -O2 test.f -o test.e
+c        To compile/run with debug info, do:
+c            cp ../test.f . ; gfortran -cpp -g -O2 test.f -o test.e ; ./test.e > test.e.out
+c        To compile/run with debug info and gdb easy reading, do:
+c            cp ../test.f . ; gfortran -cpp -g -O0 test.f -o test.e ; ./test.e > test.e.out
+c        If crashes, then do:
+c            gdb ./test.e core
 
-c     To compile/run with debug info and gdb easy reading, do:
-c         cp ../test.f . ; gfortran -cpp -g -O0 test.f -o test.e ; ./test.e > test.e.out
-c     If crashes, then do:
-c         gdb ./test.e core
-
-c about pre-processor directives:
-c http://gcc.gnu.org/onlinedocs/gfortran/Preprocessing-Options.html
 
 
 cccccccccccccccccccccccccc
 c
 c As harm subroutine
 c
-c  fpp -P test.f > testfpp.f ; f2c -f -P testfpp.f
+c 1) Set PRODUCTION 3
+c 2) fpp -P test.f > testfpp.f ; f2c -f -P testfpp.f
+c 3) testfpp.c from f2c: MUST remove static in front of variables! 
+
+
+c about pre-processor directives:
+c http://gcc.gnu.org/onlinedocs/gfortran/Preprocessing-Options.html
 c
-
-
-
-
-      program testradiation
 c 0 means normal full output
 c 1 means very simple Jon's version of err and sol output
 c 2 means only Jon's err output
 c 3 means no output or input (harm mode)
+c#define PRODUCTION 0
+c#define PRODUCTION 1
 c#define PRODUCTION 2
 #define PRODUCTION 3
-      double precision args(211)
+
+#define NUMARGS 211
+c 11 vars, failcode, error, iterations
+#define NUMRESULTS 14
+
+#if(PRODUCTION<3)
+      program testradiation
+      double precision args(NUMARGS)
+c results for energy
+      double precision resultseng(NUMRESULTS)
+c results for entropy
+      double precision resultsent(NUMRESULTS)
 c      args just dummy here, not used except by external call to rameshsolver subroutine
-      call rameshsolver(args)
+      call rameshsolver(args,resultseng,resultsent)
       stop
       end
+#endif
 
 
 
@@ -46,8 +61,8 @@ c      args just dummy here, not used except by external call to rameshsolver su
 
 
 
-
-      subroutine rameshsolver(args)
+      subroutine rameshsolver(args
+     &     ,resultseng,resultsent)
 c     Reads in Jon's error file fails.dat and tests our ideas for
 c     applying the radiation source term
 
@@ -61,7 +76,12 @@ c     corresponding to the problem currently being solved
 
 c     variables with 'final' at the end correspond to the final solution
       implicit double precision (a-h,o-z)
+c     inputs
       dimension args(211)
+c     results
+      double precision resultseng(NUMRESULTS)
+      double precision resultsent(NUMRESULTS)
+c     internals
       real*8 itertot
       dimension isc(4),gn(4,4),gv(4,4),hp(4,4),hf(4,4)
       dimension vgasp(3),vgasf(3),B1(5),B2(5),
@@ -73,6 +93,7 @@ c     variables with 'final' at the end correspond to the final solution
      &     Tmunup(4,4),Tmunuf(4,4),Rmunup(4,4),Rmunuf(4,4),
      &     Tmunui(4,4),Rmunui(4,4),Ttcovi(4),Rtcovi(4),
      &     Ttcovc(4),Rtcovc(4),Ttotc(4),prim(4),error(4),
+     &     primeng(4),priment(4),
      &     ugasconfinal(4),ugascovfinal(4),uradconfinal(4),
      &     uradcovfinal(4),bconfinal(4),bcovfinal(4),
      &     Ttcovfinal(4),Rtcovfinal(4),
@@ -88,8 +109,7 @@ c     variables with 'final' at the end correspond to the final solution
       character solhead*3,solfile*60
       character errhead*3,errfile*60
       double precision mymax,myabs,mydiv
-		integer myisnan
-
+      integer myisnan
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
 c     Initialize constants and read in data from Jon's datafile
@@ -183,8 +203,12 @@ c
       write (14,"(11X,1A)",advance="no") 'RAMENTSTAT'
       write (14,"(5X,1A)") 'RAMENTITER RAMENTERR'
 #endif
+
+#if(PRODUCTION==3)
+      do i=1,1
+#else
       do i=1,1000000
-c      do i=1,1
+#endif
 
 c     If ientropy=0, we will try the energy equation. If it is 1, we
 c     proceed directly to the entropy equation
@@ -433,73 +457,53 @@ c     energy equation using Newton-Raphson
          write (*,*) ' SOLVE WITH IMPLICIT RADIATION SOURCE TERM '
 #endif
          call radsource(prim,iter,iflag,jflag,ientropy
-     &        ,itertot,guesstype)
-         ufinal=prim(1)
+     &        ,itertot,guesstype,primeng,priment
+     &        ,resultseng,resultsent)
 
 c     Radiation inversion done. Calculate relevant quantities
-c     corresponding to the final solution
+c     corresponding to the final solutions
+         if(nint(resultseng(12)).eq.0) then
+            call getfinal(resultseng,
+     &     isc,gn,gv,hp,hf,
+     &     vgasp,vgasf,B1,B2,
+     &     BBp,BBf,BBc,vradp,vradf,s,
+     &     ugasconf,ugascovf,ugasconp,ugascovp,
+     &     uradconf,uradcovf,uradconp,uradcovp,
+     &     ugasconi,ugascovi,uradconi,uradcovi,
+     &     bconp,bcovp,bconf,bcovf,bconi,bcovi,
+     &     Tmunup,Tmunuf,Rmunup,Rmunuf,
+     &     Tmunui,Rmunui,Ttcovi,Rtcovi,
+c     prim->primeng
+     &     Ttcovc,Rtcovc,Ttotc,primeng,error,
+     &     primeng,priment,
+     &     ugasconfinal,ugascovfinal,uradconfinal,
+     &     uradcovfinal,bconfinal,bcovfinal,
+     &     Ttcovfinal,Rtcovfinal,
+     &     Tmunufinal,Rmunufinal,rhou0c)
+         endif
+         if(nint(resultsent(12)).eq.0) then
+            call getfinal(resultsent,
+     &     isc,gn,gv,hp,hf,
+     &     vgasp,vgasf,B1,B2,
+     &     BBp,BBf,BBc,vradp,vradf,s,
+     &     ugasconf,ugascovf,ugasconp,ugascovp,
+     &     uradconf,uradcovf,uradconp,uradcovp,
+     &     ugasconi,ugascovi,uradconi,uradcovi,
+     &     bconp,bcovp,bconf,bcovf,bconi,bcovi,
+     &     Tmunup,Tmunuf,Rmunup,Rmunuf,
+     &     Tmunui,Rmunui,Ttcovi,Rtcovi,
+c     prim->priment
+     &     Ttcovc,Rtcovc,Ttotc,priment,error,
+     &     primeng,priment,
+     &     ugasconfinal,ugascovfinal,uradconfinal,
+     &     uradcovfinal,bconfinal,bcovfinal,
+     &     Ttcovfinal,Rtcovfinal,
+     &     Tmunufinal,Rmunufinal,rhou0c)
+        endif
 
-         ufinal=prim(1)
 
-         do j=2,4
-            ugasconfinal(j)=prim(j)
-         enddo
-         call solveu0(ugasconfinal)
-         call contocov(ugasconfinal,ugascovfinal)
-         rhou0final=rhou0c
-         rhofinal=rhou0c/ugasconfinal(1)
 
-#if(PRODUCTION==0)
-c         write (*,*)
-c         write (*,*) ' final solution: rho, u, u^mu: ',
-c     &        rhofinal,ufinal,(ugasconfinal(j),j=1,4)
-#endif
-c     Update T^mu_nu so as to be consistent with the final
-c     primitives. Adjust R^t_mu so that the total energy and momentum
-c     density are unchaned, then calculate the full R^mu_nu
-
-         do j=1,4
-            Ttotc(j)=Ttcovc(j)+Rtcovc(j)
-         enddo
-
-         call calcbconbcov(BBc,ugasconfinal,ugascovfinal,
-     &        bconfinal,bcovfinal,bsqfinal)
-
-         call calcTmunu(rhofinal,ufinal,bsqfinal,Gam,ugasconfinal,
-     &        ugascovfinal,bconfinal,bcovfinal,Tmunufinal)
-
-         do j=1,4
-            Ttcovfinal(j)=Tmunufinal(1,j)
-            Rtcovfinal(j)=Ttotc(j)-Ttcovfinal(j)
-         enddo
-
-         call Rmunuinvert(Rtcovfinal,Efinal,uradconfinal,
-     &        uradcovfinal,ugasconfinal,Rmunufinal)
-
-         alpha=1.d0/sqrt(-gn(1,1))
-         gammagas=ugasconfinal(1)*alpha
-         gammarad=uradconfinal(1)*alpha
-#if(PRODUCTION==0)
-         write (*,*)
-         write (*,*)
-         write (*,*) ' FINAL SOLUTION: '
-         write (*,*)
-         write (*,*) ' conserved rho u^0: ',rhou0final
-         write (*,*) ' conserved T^t_mu: ',(Ttcovfinal(j),j=1,4)
-         write (*,*) ' conserved R^t_mu: ',(Rtcovfinal(j),j=1,4)
-         write (*,*) ' rho, u_g, E: ',rhofinal,ufinal,Efinal
-         write (*,*) ' ugascon: ',(ugasconfinal(j),j=1,4)
-         write (*,*) ' uradcon: ',(uradconfinal(j),j=1,4)
-         write (*,*) ' gammagas, gammarad: ',gammagas,gammarad
-#endif
-#if(PRODUCTION<=1)
-         write (13,*) 'RAMESH rho, u_g, u^mu Erf urad^mu: ',rhofinal,
-     &        ufinal,
-     &        (ugasconfinal(j),j=1,4),
-     &        Efinal,
-     &        (uradconfinal(j),j=1,4)
-#endif
-
+c     enddo below is loop over cases
       enddo
 
  10   continue
@@ -533,6 +537,119 @@ c     density are unchaned, then calculate the full R^mu_nu
 
 
 
+c     Once radiation inversion done, calculate relevant quantities
+c     corresponding to the final solutions
+      subroutine getfinal(results,
+     &     isc,gn,gv,hp,hf,
+     &     vgasp,vgasf,B1,B2,
+     &     BBp,BBf,BBc,vradp,vradf,s,
+     &     ugasconf,ugascovf,ugasconp,ugascovp,
+     &     uradconf,uradcovf,uradconp,uradcovp,
+     &     ugasconi,ugascovi,uradconi,uradcovi,
+     &     bconp,bcovp,bconf,bcovf,bconi,bcovi,
+     &     Tmunup,Tmunuf,Rmunup,Rmunuf,
+     &     Tmunui,Rmunui,Ttcovi,Rtcovi,
+c     prim that's used
+     &     Ttcovc,Rtcovc,Ttotc,prim,error,
+     &     primeng,priment,
+     &     ugasconfinal,ugascovfinal,uradconfinal,
+     &     uradcovfinal,bconfinal,bcovfinal,
+     &     Ttcovfinal,Rtcovfinal,
+     &     Tmunufinal,Rmunufinal,rhou0c)
+      implicit double precision (a-h,o-z)
+      double precision results(NUMRESULTS)
+      dimension isc(4),gn(4,4),gv(4,4),hp(4,4),hf(4,4)
+      double precision vgasp(3),vgasf(3),B1(5),B2(5),
+     &     BBp(4),BBf(4),BBc(4),vradp(3),vradf(3),s(5),
+     &     ugasconf(4),ugascovf(4),ugasconp(4),ugascovp(4),
+     &     uradconf(4),uradcovf(4),uradconp(4),uradcovp(4),
+     &     ugasconi(4),ugascovi(4),uradconi(4),uradcovi(4),
+     &     bconp(4),bcovp(4),bconf(4),bcovf(4),bconi(4),bcovi(4),
+     &     Tmunup(4,4),Tmunuf(4,4),Rmunup(4,4),Rmunuf(4,4),
+     &     Tmunui(4,4),Rmunui(4,4),Ttcovi(4),Rtcovi(4),
+     &     Ttcovc(4),Rtcovc(4),Ttotc(4),prim(4),error(4),
+     &     primeng(4),priment(4),
+     &     ugasconfinal(4),ugascovfinal(4),uradconfinal(4),
+     &     uradcovfinal(4),bconfinal(4),bcovfinal(4),
+     &     Ttcovfinal(4),Rtcovfinal(4),
+     &     Tmunufinal(4,4),Rmunufinal(4,4),rhou0c
+
+      ufinal=prim(1)
+
+      do j=2,4
+         ugasconfinal(j)=prim(j)
+      enddo
+      call solveu0(ugasconfinal)
+      call contocov(ugasconfinal,ugascovfinal)
+      rhou0final=rhou0c
+      rhofinal=rhou0c/ugasconfinal(1)
+
+#if(PRODUCTION==0)
+c     write (*,*)
+c     write (*,*) ' final solution: rho, u, u^mu: ',
+c     &        rhofinal,ufinal,(ugasconfinal(j),j=1,4)
+#endif
+c     Update T^mu_nu so as to be consistent with the final
+c     primitives. Adjust R^t_mu so that the total energy and momentum
+c     density are unchaned, then calculate the full R^mu_nu
+
+      do j=1,4
+         Ttotc(j)=Ttcovc(j)+Rtcovc(j)
+      enddo
+
+      call calcbconbcov(BBc,ugasconfinal,ugascovfinal,
+     &     bconfinal,bcovfinal,bsqfinal)
+
+      call calcTmunu(rhofinal,ufinal,bsqfinal,Gam,ugasconfinal,
+     &     ugascovfinal,bconfinal,bcovfinal,Tmunufinal)
+
+      do j=1,4
+         Ttcovfinal(j)=Tmunufinal(1,j)
+         Rtcovfinal(j)=Ttotc(j)-Ttcovfinal(j)
+      enddo
+
+      call Rmunuinvert(Rtcovfinal,Efinal,uradconfinal,
+     &     uradcovfinal,ugasconfinal,Rmunufinal)
+
+      alpha=1.d0/sqrt(-gn(1,1))
+      gammagas=ugasconfinal(1)*alpha
+      gammarad=uradconfinal(1)*alpha
+#if(PRODUCTION==0)
+      write (*,*)
+      write (*,*)
+      write (*,*) ' FINAL SOLUTION: '
+      write (*,*)
+      write (*,*) ' conserved rho u^0: ',rhou0final
+      write (*,*) ' conserved T^t_mu: ',(Ttcovfinal(j),j=1,4)
+      write (*,*) ' conserved R^t_mu: ',(Rtcovfinal(j),j=1,4)
+      write (*,*) ' rho, u_g, E: ',rhofinal,ufinal,Efinal
+      write (*,*) ' ugascon: ',(ugasconfinal(j),j=1,4)
+      write (*,*) ' uradcon: ',(uradconfinal(j),j=1,4)
+      write (*,*) ' gammagas, gammarad: ',gammagas,gammarad
+#endif
+#if(PRODUCTION<=1)
+      write (13,*) 'RAMESH rho, u_g, u^mu Erf urad^mu: ',rhofinal,
+     &     ufinal,
+     &     (ugasconfinal(j),j=1,4),
+     &     Efinal,
+     &     (uradconfinal(j),j=1,4)
+#endif
+
+c     HARM order
+      results(1) = rhofinal
+      results(2) = ufinal
+      results(3) = ugasconfinal(1)
+      results(4) = ugasconfinal(2)
+      results(5) = ugasconfinal(3)
+      results(6) = ugasconfinal(4)
+      results(7) = Efinal
+      results(8) = uradconfinal(1)
+      results(9) = uradconfinal(2)
+      results(10) = uradconfinal(3)
+      results(11) = uradconfinal(4)
+
+      return
+      end
 
 
 
@@ -559,6 +676,7 @@ c     Read in data in Jon's old format (134 numbers)
 
       ifinish=0
 
+#if(PRODUCTION<=2)
          read (11,*,end=10) (isc(j),j=1,4),dt,
      &        ((gn(j,k),k=1,4),j=1,4),
      &        ((gv(j,k),k=1,4),j=1,4),
@@ -579,6 +697,7 @@ c     Read in data in Jon's old format (134 numbers)
      &        (ugasconf(j),ugascovf(j),j=1,4),
      &        (uradconp(j),uradcovp(j),j=1,4),
      &        (ugasconp(j),ugascovp(j),j=1,4)
+#endif
 
 #if(PRODUCTION==0)
 c         write (*,*) (isc(j),j=1,4),dt,
@@ -633,6 +752,7 @@ c     Read in data in Jon's new format (181 numbers)
 
       ifinish=0
 
+#if(PRODUCTION<=2)
          read (11,*,end=10) (isc(j),j=1,4),
      &        errorabs,iters,dt,nstep,steppart,Gam,
      &        ((gn(j,k),k=1,4),j=1,4),
@@ -656,6 +776,7 @@ c     Read in data in Jon's new format (181 numbers)
      &        (ugasconb(j),ugascovb(j),j=1,4),
      &        (uradconp(j),uradcovp(j),j=1,4),
      &        (ugasconp(j),ugascovp(j),j=1,4)
+#endif
 
 #if(PRODUCTION<=2)
          write (14,"(2X,1I5,2X,1E21.15,2X,1I8)",advance="no")
@@ -750,7 +871,7 @@ c     Read in data in Jon's new format (211 numbers)
 
       ifinish=0
 
-      if(origintype.eq.0) then
+#if(PRODUCTION<=2)
 c     read (11,*,end=10) (isc(j),j=1,4),
          read (11,*,end=10) failtype,myid,failnum,gotfirstnofail,
      &        eomtype,itermode,
@@ -777,7 +898,8 @@ c     read (11,*,end=10) (isc(j),j=1,4),
      &        (ugasconb(j),ugascovb(j),j=1,4),
      &        (uradconp(j),uradcovp(j),j=1,4),
      &        (ugasconp(j),ugascovp(j),j=1,4)
-      else
+#endif
+#if(PRODUCTION==3)
 c     then pull from array of doubles from args
          failtype=args(1)
          myid=args(2)
@@ -990,8 +1112,7 @@ c     then pull from array of doubles from args
          ugascovp(2)=args(209)
          ugascovp(3)=args(210)
          ugascovp(4)=args(211)
-      endif
-
+#endif
 
 c     HARMEOMTYPE=2 is entropy, 3 is energy.  If 3 fails, could have reverted to entropy.
 c     If itermode=0, then in default harm mode, this was not the last attempt for the solver, so just looking at why this strategy failed -- not failure of harm ultimately.
@@ -1112,10 +1233,13 @@ c     &        (ugasconp(j),ugascovp(j),j=1,4)
       integer function myisnan(x)
       double precision x
 
-c for C
+c for C / harm
+#if(PRODUCTION==3)
       if(x.ne.x) then
+#else
 c for fortran
-c      if(isnan(x)) then
+      if(isnan(x)) then
+#endif
          myisnan=1
       else
          myisnan=0
@@ -1679,12 +1803,16 @@ c     Carry out full Newton-Raphson inversion with the entropy equation
 
 
       subroutine radsource(prim,iter,iflag,jflag,ientropy,
-     &     itertot,guesstype)
+     &     itertot,guesstype,primeng,priment,
+     &     resultseng,resultsent)
 
 c     Given initial primitives prim(4), solves for primitives that
 c     satisfy the post-radiation equations
 
       implicit double precision (a-h,o-z)
+      double precision resultseng(NUMRESULTS)
+      double precision resultsent(NUMRESULTS)
+      double precision primeng(4),priment(4)
       real*8 itertot
       dimension prim(4),primsave(4)
       common/accuracy/eps,epsbis,dvmin,tol,uminfac,dlogmax,
@@ -1757,6 +1885,8 @@ c     Newton-Raphson
      &        iter,err4,isnan(erreng)
 #endif
 
+c     default is failed
+      resultseng(12)=1.0d0
       if (iflag.eq.0.and.erreng.lt.1E-6) then
 #if(PRODUCTION==0)
          write (*,*) ' Energy equation converged: iter ',
@@ -1803,10 +1933,12 @@ c     Newton-Raphson
             write (13,"(1A)",advance="no") '   BAD   '
 #endif
          endif
+         resultseng(12)=0.0d0
          engconv=1
 c     commenting below to see entropy even if energy converged.
 c         return
       else
+         resultseng(12)=1.0d0
 
 c     If energy equation does not converge, calculate using the entropy
 c     equation.
@@ -1827,6 +1959,11 @@ c     equation.
 
       endif
 
+
+      resultseng(13)=erreng
+      resultseng(14)=DBLE(itereng)
+      resultsent(13)=errent
+      resultsent(14)=DBLE(iterent)
 #if(PRODUCTION<=2)
       if(1.eq.1) then
           write (14,"(9X,1I3,3X,1E21.15)",advance="no")
@@ -1835,6 +1972,10 @@ c     equation.
          write (14,*) itereng,erreng,iterent,errent
       endif
 #endif
+
+      do i=1,4
+         primeng(i)=prim(i)
+      enddo
 
 c     Restore saved primitives and do Newton-Raphson with the entropy
 c     equation
@@ -1858,6 +1999,8 @@ c      write (*,*)
 c      write (12,*) ' Radiation inversion, u_g only (entropy) '
 #endif
 
+c      default is ent failed
+      resultsent(12)=1.0d0
       err4=1.0d8
       call Newton4(prim,iter,iflag,jflag,funcrad2,err4)
       itertot=itertot+iter
@@ -1918,7 +2061,9 @@ c         return
       endif
 #endif
 
+      resultsent(12)=0.0d0
       else
+      resultsent(12)=1.0d0
 
 #if(PRODUCTION==0)
       write (*,*) ' ERROR: no convergence with entropy equation: ',
@@ -1941,8 +2086,15 @@ c         return
          write (14,*) itereng,erreng,iterent,errent
       endif
 #endif
+
+
+      do i=1,4
+         priment(i)=prim(i)
+      enddo
+
 c     We should never reach this point. Unclear what to do in this case!
 c     We could keep the solution or restore the saved primitives.
+
 
 c      do i=1,4
 c         prim(i)=primsave(i)

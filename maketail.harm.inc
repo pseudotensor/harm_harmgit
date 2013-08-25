@@ -41,7 +41,7 @@ gaussj.c lubksb.c ludcmp.c mnewt.c nrutil.c ranc.c tensor.c tetrad.c \
 utoprimgen.c dudp_calc_3vel.c dudp_calc.c \
 utoprim.orig.c utoprim_2d.c utoprim_1d.c utoprim_1d_opt.c utoprim_ldz.c \
 utoprim_jon.c utoprim_1d_final.c utoprim_2d_final.c utoprim_5d2_final.c \
-freespace.c tau_neededbyharm.c \
+freespace.c tau_neededbyharm.c testfpp.c \
 phys.tools.rad.c
 #END
 
@@ -54,7 +54,7 @@ gaussj.o lubksb.o ludcmp.o mnewt.o nrutil.o ranc.o tensor.o tetrad.o \
 utoprimgen.o dudp_calc_3vel.o dudp_calc.o \
 utoprim.orig.o utoprim_2d.o utoprim_1d.o utoprim_1d_opt.o utoprim_ldz.o \
 utoprim_jon.o utoprim_1d_final.o utoprim_2d_final.o utoprim_5d2_final.o \
-freespace.o tau_neededbyharm.o \
+freespace.o tau_neededbyharm.o testfpp.o \
 phys.tools.rad.o
 #END
 

@@ -24,10 +24,11 @@
 #    mkdir newgrmhdcode ; cd newgrmhdcode ; cp ~/grmhd/ .
 # 2a) run:
 #    sh scripts/double2longdouble.sh ; cd initboundcode ; sh ../scripts/double2longdouble.sh ; cd ..
-# 3) copy back the tau_neededbyharm.c file:
+# 3) copy back the tau_neededbyharm.c and testfpp.c file:
 #    cp <prelongdoubledirectory>/tau_neededbyharm.c .
+#    cp <prelongdoubledirectory>/testfpp.c .
 # e.g.
-#    cp ../tau_neededbyharm.c .
+#    cp ../tau_neededbyharm.c ../testfpp.c .
 # 4) untgz the ldouble.tgz file:
 #    tar xvzf ldouble.tgz
 

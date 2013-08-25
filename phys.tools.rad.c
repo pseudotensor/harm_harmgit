@@ -1,7 +1,36 @@
 #include "decs.h"
 
+//////////////////////////////
+//
+// BEGIN: f2c stuff for Ramesh's solver code in fortran
+//
+//////////////////////////////
+
+// f2c prototype
+#include "f2c.h"
 
 
+#ifdef KR_headers
+//double floor();
+integer i_dnnt(x) doublereal *x;
+#else
+                  //#undef abs
+                  //#include "math.h"
+integer i_dnnt(doublereal *x)
+#endif
+{
+return( (*x)>=0 ?
+	floor(*x + .5) : -floor(.5 - *x) );
+}
+
+#include "testfpp.P"
+// not linking with libf2c since don't want that dependence and conversion doesn't need it since the original code was simple
+
+//////////////////////////////////////////////
+//
+// END: f2c stuff for Ramesh's solver code in fortran
+//
+//////////////////////////////////////////////
 
 
 
@@ -3855,6 +3884,7 @@ int mathematica_report_check(int failtype, long long int failnum, int gotfirstno
   int jj,kk;
   int pliter,pl;
 
+
   if(0){ // old mathematica style
     dualfprintf(fail_file,"FAILINFO: %d %d %lld %d\ndt=%21.15g\n",failtype, myid, failnum, gotfirstnofail,realdt);
     DLOOP(jj,kk) dualfprintf(fail_file,"gn%d%d=%21.15g\n",jj+1,kk+1,ptrgeom->gcon[GIND(jj,kk)]);
@@ -3871,33 +3901,122 @@ int mathematica_report_check(int failtype, long long int failnum, int gotfirstno
     // 2) emacs regexp:  \([0-9]\)e\([-+]*[0-9]+\)   ->   \1*10^(\2)
   }
   else{
+
+    /////////////////////////
+    //
+    // Fix-up some terms to avoid nan or inf in output.
+    //
+    /////////////////////////
+
     if(!isfinite(pp[UU])) pp[UU]=BIG;
     if(!isfinite(pp[ENTROPY])) pp[ENTROPY]=BIG;
     if(!isfinite(errorabs)) errorabs=BIG;
     if(!isfinite(errorabsbestexternal)) errorabsbestexternal=BIG;
+
+    /////////////////////////
+    //
+    // Get state for pp,pb,piin
+    //
+    /////////////////////////
+
+
+    struct of_state qpp;
+    get_state(pp,ptrgeom,&qpp);
+    struct of_state qpb;
+    get_state(pb,ptrgeom,&qpb);
+    struct of_state qpiin;
+    get_state(piin,ptrgeom,&qpiin);
+
+    /////////////////////////
+    //
+    // Output stuff for mathematica
+    //
+    /////////////////////////
+
     // 211 things
     dualfprintf(fail_file,"\nFAILINFO: %d %d %lld %d %d %d %21.15g %21.15g %d %d %21.15g %lld %d %21.15g ",failtype,myid,failnum,gotfirstnofail,eomtypelocal,itermode,errorabs,errorabsbestexternal,iters,totaliters,realdt,nstep,steppart,gam); // 14
     DLOOP(jj,kk) dualfprintf(fail_file,"%21.15g ",ptrgeom->gcon[GIND(jj,kk)]); // 16
     DLOOP(jj,kk) dualfprintf(fail_file,"%21.15g ",ptrgeom->gcov[GIND(jj,kk)]); // 16
     PLOOP(pliter,pl) dualfprintf(fail_file,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g ",pp[pl],ppfirst[pl],pb[pl],piin[pl],prtestUiin[pl],prtestUU0[pl],uu0[pl],uu[pl],Uiin[pl]);  // 9*13
-    struct of_state qpp;
-    get_state(pp,ptrgeom,&qpp);
     if(EOMRADTYPE!=EOMRADNONE) DLOOPA(jj) dualfprintf(fail_file,"%21.15g %21.15g ",qpp.uradcon[jj],qpp.uradcov[jj]); // 4*2=8
     else DLOOPA(jj) dualfprintf(fail_file,"%21.15g %21.15g ",0.0,0.0);
     DLOOPA(jj) dualfprintf(fail_file,"%21.15g %21.15g ",qpp.ucon[jj],qpp.ucov[jj]); // 4*2=8
-    struct of_state qpb;
-    get_state(pb,ptrgeom,&qpb);
     if(EOMRADTYPE!=EOMRADNONE) DLOOPA(jj) dualfprintf(fail_file,"%21.15g %21.15g ",qpb.uradcon[jj],qpb.uradcov[jj]); // 4*2=8
     else dualfprintf(fail_file,"%21.15g %21.15g ",0.0,0.0);
     DLOOPA(jj) dualfprintf(fail_file,"%21.15g %21.15g ",qpb.ucon[jj],qpb.ucov[jj]); // 4*2=8
-    struct of_state qpiin;
-    get_state(piin,ptrgeom,&qpiin);
     if(EOMRADTYPE!=EOMRADNONE) DLOOPA(jj) dualfprintf(fail_file,"%21.15g %21.15g ",qpiin.uradcon[jj],qpiin.uradcov[jj]); // 4*2=8
     else dualfprintf(fail_file,"%21.15g %21.15g ",0.0,0.0);
     DLOOPA(jj) dualfprintf(fail_file,"%21.15g %21.15g ",qpiin.ucon[jj],qpiin.ucov[jj]); // 4*2=8
     dualfprintf(fail_file,"\n");
 
-    /////////////
+
+    /////////////////////////
+    //
+    // Call Ramesh's solver
+    //
+    /////////////////////////
+
+
+    // below things must be same order as in test.f
+#define NUMARGS 211
+    // 11 vars, failcode, error, iterations
+#define NUMRESULTS 14
+
+    // call fortran code
+    doublereal args[NUMARGS];
+    doublereal resultseng[NUMRESULTS]={0},resultsent[NUMRESULTS]={0};
+    int na;
+
+    na=-1;
+    na++; args[na]=failtype;
+    na++; args[na]=myid;
+    na++; args[na]=(doublereal)failnum;
+    na++; args[na]=gotfirstnofail;
+    na++; args[na]=eomtypelocal;
+    na++; args[na]=itermode;
+    na++; args[na]=errorabs;
+    na++; args[na]=errorabsbestexternal;
+    na++; args[na]=iters;
+    na++; args[na]=totaliters;
+    na++; args[na]=realdt;
+    na++; args[na]=(doublereal)nstep;
+    na++; args[na]=steppart;
+    na++; args[na]=gam;
+    DLOOP(jj,kk){ na++; args[na]=ptrgeom->gcon[GIND(jj,kk)];}
+    DLOOP(jj,kk){ na++; args[na]=ptrgeom->gcov[GIND(jj,kk)];}
+    PLOOP(pliter,pl){ na++; args[na]=pp[pl]; na++; args[na]=ppfirst[pl]; na++; args[na]=pb[pl]; na++; args[na]=piin[pl]; na++; args[na]=prtestUiin[pl]; na++; args[na]=prtestUU0[pl]; na++; args[na]=uu0[pl]; na++; args[na]=uu[pl]; na++; args[na]=Uiin[pl]; }
+    if(EOMRADTYPE!=EOMRADNONE) DLOOPA(jj){ na++; args[na]=qpp.uradcon[jj]; na++; args[na]=qpp.uradcov[jj]; }
+    else DLOOPA(jj){ na++; args[na]=0.0; na++; args[na]=0.0; }
+    if(EOMRADTYPE!=EOMRADNONE) DLOOPA(jj){ na++; args[na]=qpp.ucon[jj]; na++; args[na]=qpp.ucov[jj]; }
+    else DLOOPA(jj){ na++; args[na]=0.0; na++; args[na]=0.0; }
+
+    if(EOMRADTYPE!=EOMRADNONE) DLOOPA(jj){ na++; args[na]=qpb.uradcon[jj]; na++; args[na]=qpb.uradcov[jj]; }
+    else DLOOPA(jj){ na++; args[na]=0.0; na++; args[na]=0.0; }
+    if(EOMRADTYPE!=EOMRADNONE) DLOOPA(jj){ na++; args[na]=qpb.ucon[jj]; na++; args[na]=qpb.ucov[jj]; }
+    else DLOOPA(jj){ na++; args[na]=0.0; na++; args[na]=0.0; }
+
+    if(EOMRADTYPE!=EOMRADNONE) DLOOPA(jj){ na++; args[na]=qpiin.uradcon[jj]; na++; args[na]=qpiin.uradcov[jj]; }
+    else DLOOPA(jj){ na++; args[na]=0.0; na++; args[na]=0.0; }
+    if(EOMRADTYPE!=EOMRADNONE) DLOOPA(jj){ na++; args[na]=qpiin.ucon[jj]; na++; args[na]=qpiin.ucov[jj]; }
+    else DLOOPA(jj){ na++; args[na]=0.0; na++; args[na]=0.0; }
+
+    if(na!=NUMARGS-1){
+      dualfprintf(fail_file,"Wrong number of args=%d\n",na);
+      myexit(304583453);
+    }
+
+    // calling f2c generated code, which assumes single array as input of 211 items.
+    rameshsolver_(args,resultseng,resultsent);
+
+    for(pl=0;pl<NUMRESULTS;pl++){
+      dualfprintf(fail_file,"ENG: pl=%d resultseng=%g resultsent=%g\n",pl,resultseng[pl],resultsent[pl]);
+    }
+
+    /////////////////////////
+    //
+    // FAILRETURNABLE
+    //
+    /////////////////////////
     dualfprintf(fail_file,"\nFAILREPEATABLE: %d %d %lld : ",failtype,myid,failnum);
     dualfprintf(fail_file,"dt=%21.15g;CUf[2]=%21.15g;gam=%21.15g;",realdt,CUf[2],gam);
     PLOOP(pliter,pl) dualfprintf(fail_file,"pp[%d]=%21.15g;ppfirst[%d]=%21.15g;pb[%d]=%21.15g;piin[%d]=%21.15g;Uiin[%d]=%21.15g;Ufin[%d]=%21.15g;dUother[%d]=%21.15g;",pl,pp[pl],pl,ppfirst[pl],pl,pb[pl],pl,piin[pl],pl,Uiin[pl],pl,Ufin[pl],pl,dUother[pl]);

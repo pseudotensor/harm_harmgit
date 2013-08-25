@@ -151,7 +151,7 @@ superclean: cleanall
 	rm -rf deps.manypoints.list deps.onepoint.list deps.puredouble.list deps.long.list deps.depsliaison.list deps.depsjoninterp.list
 	rm -rf objsonepoint objsmanypoints objspuredouble onepoint manypoints puredouble
 	rm -rf decs.h mpidecs.h superdecs.h superdecs.pointers.h decs.user.h decs.general.h supermpidecs.h mpidecs.mpi_grmhd_grray_liaison.h rancdecs.h
-	rm -rf freespace.o tau_neededbyharm.o
+	rm -rf freespace.o tau_neededbyharm.o testfpp.o
 	rm -rf depssmcalc depsliaison depsjoninterp deps.depssmcalc.list deps.depsbin2txt.list depsbin2txt
 # below are just links
 	rm -rf global.h defs.h
@@ -460,7 +460,7 @@ $(PREPSMCALC): makefile makehead.inc maketail.inc maketail.ldouble.deps.inc make
 $(FINISH):
 #	rm -rf objsonepoint objsmanypoints objspuredouble
 
-#$(CMD):   	GROUP1 GROUP2 makefile freespace.o tau_neededbyharm.o
+#$(CMD):   	GROUP1 GROUP2 makefile freespace.o tau_neededbyharm.o testfpp.o
 #	echo objsmanypoints: $(OBJSMANYPOINTS)
 #	echo objsonepoint: $(OBJSONEPOINT)
 #	echo objspuredouble: $(OBJSPUREDOUBLE)
@@ -559,6 +559,9 @@ endif
 #tau_neededbyharm.o : tau_neededbyharm.c $(PREP) makefile maketail.inc defs.h defs.general.h
 ##	    $(CC2) $(GCCCFLAGS) -c tau_neededbyharm.c -lm
 ##	    $(CC2) $(GCCCFLAGS) -c tau_neededbyharm.c -lf2c -lm
+#testfpp.o : testfpp.c $(PREP) makefile maketail.inc defs.h defs.general.h
+##	    $(CC2) $(GCCCFLAGS) -c testfpp.c -lm
+##	    $(CC2) $(GCCCFLAGS) -c testfpp.c -lf2c -lm
 
 
 
