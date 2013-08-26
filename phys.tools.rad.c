@@ -904,7 +904,6 @@ static int f_implicit(int iter, int failreturnallowable, int whichcall, int show
     FTYPE GS=0.0; DLOOPA(iv) GS += (-q->ucon[iv]*signgd2*(signgd7*Gddt[iv]))/(Tgaslocal+TEMPMIN); // more accurate than just using entropy from pp and ucon[TT] from state from pp.
     uu[ENTROPY] = uu0[ENTROPY] + signgd6*GS; // KORALTODO SUPERGODMARK: Problem with UMHD,UMHD no matter signgd7.  Ok with URAD,URAD.   Ok with UMHD,ENTROPYUMHD if signgd7 +1 and signgd4 +1.
     // 3) Do MHD+RAD Inversion
-    dualfprintf(fail_file,"CALL1\n");
     int doradonly=0; failreturn=Utoprimgen_failwrapper(doradonly,radinvmod,showmessages,allowlocalfailurefixandnoreport, finalstep, eomtype, whichcap, EVOLVEUTOPRIM, UNOTHING, uu, ptrgeom, pp, &newtonstats);
     // KORALTODO: now can check if actually did eomtype==EOMGRMHD or EOMENTROPYGRMHD or EOMCOLDGRMHD and apply correct error function if using QTYUMHD.
     // 4) now get consistent uu[] based upon actual final primitives.
@@ -918,7 +917,6 @@ static int f_implicit(int iter, int failreturnallowable, int whichcall, int show
     // so iterating U[ENTROPY,U1,U2,U3]
     //    FTYPE uuorig[NPR]; PLOOP(pliter,pl) uuorig[pl]=uu[pl];
     // 1) Do pure ENTROPYMHD inversion to get pmhd
-    dualfprintf(fail_file,"CALL2\n");
     int doradonly=0; int eomtypetemp=EOMENTROPYGRMHD; failreturn=Utoprimgen_failwrapper(doradonly,radinvmod,showmessages,allowlocalfailurefixandnoreport, finalstep, &eomtypetemp, whichcap, EVOLVEUTOPRIM, UNOTHING, uu, ptrgeom, pp, &newtonstats);
     // set eomtype!  So for entire process for this cell, the entropy equations are used.
     *eomtype=EOMENTROPYGRMHD;
@@ -1068,7 +1066,6 @@ static int f_implicit(int iter, int failreturnallowable, int whichcall, int show
     FTYPE GS=0.0; DLOOPA(iv) GS += (-q->ucon[iv]*signgd2*(1.0*Gddt[iv]))/(Tgaslocal+TEMPMIN); // more accurate than just using entropy from pp and ucon[TT] from state from pp.
     uu[ENTROPY] = uu0[ENTROPY] + signgd6*GS;
     // 5) Invert to get pmhd (also does rad inversion, but not expensive so ok)
-    dualfprintf(fail_file,"CALL3\n");
     int doradonly=0; failreturn=Utoprimgen_failwrapper(doradonly,radinvmod,showmessages,allowlocalfailurefixandnoreport, finalstep, eomtype, whichcap, EVOLVEUTOPRIM, UNOTHING, uu, ptrgeom, pp, &newtonstats);
     // KORALTODO: now can check if actually did eomtype==EOMGRMHD or EOMENTROPYGRMHD or EOMCOLDGRMHD and apply correct error function
     // 6) Recover actual iterated prad to avoid machine related differences between original pp and pp(U(pp)) for prad quantities
@@ -2474,7 +2471,6 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
     int finalstep = 1;
     int doradonly=0;
     eomtypelocal=*eomtype; // stick with default choice so far
-    dualfprintf(fail_file,"CALL4: %d %d\n",implicititer,IMPPMHDTYPE(implicititer));
     failreturnallowable=Utoprimgen_failwrapper(doradonly,radinvmod,showmessages,allowlocalfailurefixandnoreport, finalstep, &eomtypelocal, whichcap, EVOLVEUTOPRIM, UNOTHING, Uiin, ptrgeom, prtestUiin, &newtonstats);
     if(failreturnallowable!=UTOPRIMGENWRAPPERRETURNNOFAIL){
       if(showmessages && debugfail>=2) dualfprintf(fail_file,"Utoprimgen_wrapper() says that Uiin is already a problem with %d\n",failreturnallowable);
@@ -2528,7 +2524,6 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
     int finalstep = 1;
     int doradonly=0;
     eomtypelocal=*eomtype; // stick with default choice so far
-    dualfprintf(fail_file,"CALL5\n");
     failreturninversion=Utoprimgen_failwrapper(doradonly,radinvmod,showmessages,allowlocalfailurefixandnoreport, finalstep, &eomtypelocal, whichcap, EVOLVEUTOPRIM, UNOTHING, uu0, ptrgeom, prtestUU0, &newtonstats);
 
     // get pp0(uu0) so uu,uu0 properly associated with pp,pp0
@@ -5110,7 +5105,6 @@ static int source_explicit(int whichsc, int whichradsourcemethod, int methoddtsu
       int whichcap=CAPTYPEBASIC;
       eomtypelocal=*eomtype; // re-default
       int radinvmod=0;
-      dualfprintf(fail_file,"CALL6\n");
       int failutoprim=Utoprimgen_failwrapper(doradonly,&radinvmod,showmessages, allowlocalfailurefixandnoreport, finalstep, &eomtypelocal, whichcap, EVOLVEUTOPRIM, UNOTHING, Unew, ptrgeom, prnew, &newtonstats);
 
       if(failutoprim){
