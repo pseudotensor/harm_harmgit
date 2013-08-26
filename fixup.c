@@ -899,9 +899,17 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
       int showmessages=0; // messages not important if fixup doens't work, unless debugging.
       int allowlocalfailurefixandnoreport=1; 
       int eomtype=EOMDEFAULT;
+
+
       failreturn=Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,&eomtype,OTHERUTOPRIM,UNOTHING,U,ptrgeom,prmhd,&newtonstats);
       // KORALNOTEMARK: Only changing floor related to MHD fluid so far, so no check on failure of radiation inversion.
       badinversion = (failreturn>=1 || IFUTOPRIMFAIL(GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)));
+
+      static long long int utoprimgenfixup=0,utoprimgenfixupbad=0;
+      utoprimgenfixup++;
+      if(badinversion) utoprimgenfixupbad++;
+      if(debugfail>=2) if(utoprimgenfixup%totalzones==0) dualfprintf(fail_file,"UTOPRIMGENFIXUP: %lld (bad=%lld) : %ld %d\n",utoprimgenfixup,utoprimgenfixupbad,nstep,steppart);
+
 
       if(badinversion){
         if(debugfail>=2) dualfprintf(fail_file,"Utoprimgen failed in fixup.c");
@@ -1636,9 +1644,9 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
             //
             //////////////////
             // field is evolved fine, so only average non-field
-            if(radlpflag!=UTOPRIMRADNOFAIL){
+            if(radlpflag==UTOPRIMFAILU2AVG1 || radlpflag==UTOPRIMFAILU2AVG2 || radlpflag==UTOPRIMFAILU2AVG1FROMCOLD || radlpflag==UTOPRIMFAILU2AVG2FROMCOLD || radlpflag==UTOPRIMFAILUPERC || radlpflag==UTOPRIMFAILUNEG && (HANDLEUNEG==1) ){
               startpl=PRAD0;
-              endpl=PRAD3;
+              endpl=PRAD0;
             }
             else{
               // then presume inversion failure with no solution

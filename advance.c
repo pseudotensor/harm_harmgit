@@ -678,6 +678,8 @@ static int advance_standard(
         // Utoprimgen() properly  uses eomtype as potentially changed in source() call
         //
         ////////////////////////////
+
+
         if(finalstep){ // last call, so ucum is cooked and ready to eat!
           // store guess for diss_compute before changed by normal inversion
           PALLLOOP(pl) prbefore[pl]=MACP0A1(pf,i,j,k,pl);
@@ -687,6 +689,7 @@ static int advance_standard(
             eomtypelocal=eomtype;
           }
           else{
+            //            dualfprintf(fail_file,"CUnew[2]=%21.15g\n",CUnew[2]);
             // then Uf is not ucum on finalstep=1, so any prior implicit inversion was not final inversion.
             // So change any do nothing to do something
             if(eomtype==EOMDIDGRMHD) eomtypelocal=EOMGRMHD;

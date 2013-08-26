@@ -2221,6 +2221,21 @@ int ucon_calc_rel4vel_fromuconrel(FTYPE *uconrel, struct of_geom *geom, FTYPE *u
   return(0) ;
 }
 
+
+// find \tilde{u}^\mu from u^\mu
+int uconrel(FTYPE *ucon, FTYPE *uconrel, struct of_geom *geom)
+{
+  VARSTATIC int j ;
+
+  // stored beta as well since otherwise have to use gcon and expensive to look that up from memory if cache-miss
+  SLOOPA(j) uconrel[j] = ucon[j] + ucon[TT]*(geom->beta[j]);
+
+  // hence v^j = uconrel^j/u^t - beta^j
+
+  return(0) ;
+}
+
+
 /* find contravariant four-velocity from the relative 4 velocity */
 int ucon_calc_rel4vel(FTYPE *pr, struct of_geom *geom, FTYPE *ucon, FTYPE *others)
 {
@@ -2758,19 +2773,25 @@ FTYPE signavoidzero(FTYPE a)
 
 
 #ifndef WIN32
+
+#ifndef max
 FTYPE max(FTYPE a, FTYPE b)
 {
   if(a>b) return a;
   else return b;
   // if equal, then above is fine
 }
+#endif
 
+#ifndef min
 FTYPE min(FTYPE a, FTYPE b)
 {
   if(a>b) return b;
   else return a;
   // if equal, then above is fine
 }
+#endif
+
 #endif
 
 // compute speed of light 3-velocity in particular direction assuming other direction velocities fixed

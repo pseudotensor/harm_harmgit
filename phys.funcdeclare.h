@@ -14,6 +14,9 @@ extern int ucon_calc_4vel_bothut(FTYPE *pr, struct of_geom *geom, FTYPE *ucon, F
 extern int ucon_calc_rel4vel_fromuconrel(FTYPE *uconrel, struct of_geom *geom, FTYPE *ucon, FTYPE *others);
 extern int gamma_calc_fromuconrel(FTYPE *uconrel, struct of_geom *geom, FTYPE*gamma, FTYPE *qsq);
 
+extern int uconrel(FTYPE *ucon, FTYPE *uconrel, struct of_geom *geom);
+
+
 #if(RELTYPE==RELEOM)
 
 #if(WHICHVEL==VEL4)

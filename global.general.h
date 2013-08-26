@@ -128,10 +128,20 @@
 // uncomment when wanting to test, and then look at make.log
 //
 #if(0)
-#if(!defined(doublereal))
-typedef double doublereal;
-#endif
+//#if(!defined(doublereal))
+//typedef double doublereal;
+//#endif
+//#if(!defined(integer))
+//typedef int integer;
+//#endif
+//#if(!defined(U_fp))
+//typedef int U_fp;
+//#endif
+//#if(!defined(S_fp))
+//typedef int S_fp;
+//#endif
 #include "utoprim_jon.h" // extra defs
+#include "f2c.h"
 #include "temptempfinalallc.txt"
 #endif
 //
