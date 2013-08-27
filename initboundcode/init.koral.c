@@ -1796,7 +1796,8 @@ int init_defcoord(void)
       RADNT_MINX=1.7; // allows in KSCOORDS
       //      RADNT_MAXX=50.0;
       //      RADNT_MAXX=60.0;
-      RADNT_MAXX=400.0;
+      //      RADNT_MAXX=400.0; // what was using before, but problems at outer radial edge develop after t\sim 5600
+      RADNT_MAXX=1E4;
     }
     else{
       RADNT_MINX=1.8*Rhor;
@@ -1821,9 +1822,13 @@ int init_defcoord(void)
     hslope = 1.04*pow(h_over_r,2.0/3.0);
     //    R0=0.0;
     R0=0.2;
-    //    setRin_withchecks(&Rin);
-    //Rin=1.1;
-    Rin=1.05;
+    if(Rout<1E3){
+      Rin=1.05;
+    }
+    else{
+      Rin=1.1;
+      //      setRin_withchecks(&Rin);
+    }
     
 
   }

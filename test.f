@@ -38,6 +38,9 @@ c#define PRODUCTION 1
 c#define PRODUCTION 2
 #define PRODUCTION 3
 
+c error below which will consider BAD solution and not even compute final solution
+#define FAILLIMIT (1E-6)
+
 #define NUMARGS 211
 c 11 vars, failcode, error, iterations
 #define NUMRESULTS 14
@@ -782,7 +785,7 @@ c     Read in data in Jon's new format (181 numbers)
          write (14,"(2X,1I5,2X,1E21.15,2X,1I8)",advance="no")
      & iters,errorabs,0
 #endif
-         if(errorabs.lt.1E-6) then
+         if(errorabs.lt.FAILLIMIT) then
 #if(PRODUCTION<=1)
             write (13,"(1X,A,9X)",advance="no") ' GOOD   '
 #endif
@@ -1127,7 +1130,7 @@ c     If itermode=1 shows up, then check whether PREVBESTHARMERR was ok/good eno
      &        iters,totaliters,errorabs,errorabsbestexternal
      &        ,eomtype,itermode
 #endif
-         if(errorabs.lt.1E-6) then
+         if(errorabs.lt.FAILLIMIT) then
 #if(PRODUCTION<=1)
             write (13,"(1X,A,9X)",advance="no") ' GOOD   '
 #endif
@@ -1887,7 +1890,7 @@ c     Newton-Raphson
 
 c     default is failed
       resultseng(12)=1.0d0
-      if (iflag.eq.0.and.erreng.lt.1E-6) then
+      if (iflag.eq.0.and.erreng.lt.FAILLIMIT) then
 #if(PRODUCTION==0)
          write (*,*) ' Energy equation converged: iter ',
      &        iter
@@ -1897,7 +1900,7 @@ c     default is failed
             ugascon(j)=prim(j)
          enddo
          call solveu0(ugascon)
-         if (erreng.lt.1E-6
+         if (erreng.lt.FAILLIMIT
      &        .and.prim(1).gt.0.0
      &        .and.jflag.eq.0
      &        .and.prim(1).eq.prim(1)
@@ -1912,7 +1915,7 @@ c     default is failed
 #if(PRODUCTION<=1)
             write (13,"(1A)",advance="no") '  GOOD   '
 #endif
-         else if (erreng.lt.1E-6
+         else if (erreng.lt.FAILLIMIT
      &        .and.prim(1).eq.prim(1)
      &        .and.prim(2).eq.prim(2)
      &        .and.prim(3).eq.prim(3)
@@ -2004,7 +2007,7 @@ c      default is ent failed
       itertot=itertot+iter
       iterent=iter
       errent=err4
-      if (iflag.eq.0.and.errent.lt.1E-6) then
+      if (iflag.eq.0.and.errent.lt.FAILLIMIT) then
 #if(PRODUCTION==0)
       write (*,*)
       write (12,*) ' Radiation inversion, entropy equation ',
@@ -2014,7 +2017,7 @@ c      default is ent failed
          ugascon(j)=prim(j)
       enddo
       call solveu0(ugascon)
-      if ((erreng.lt.1E-6.or.errent.lt.1E-6)
+      if ((erreng.lt.FAILLIMIT.or.errent.lt.FAILLIMIT)
      &     .and.prim(1).gt.0.0
      &     .and.jflag.eq.0
      &     .and.prim(1).eq.prim(1)
@@ -2029,7 +2032,7 @@ c      default is ent failed
 #if(PRODUCTION<=1)
          write (13,"(1A)",advance="no") '  GOOD   '
 #endif
-      else if ((erreng.lt.1E-6.or.errent.lt.1E-6)
+      else if ((erreng.lt.FAILLIMIT.or.errent.lt.FAILLIMIT)
      &     .and.prim(1).eq.prim(1)
      &     .and.prim(2).eq.prim(2)
      &     .and.prim(3).eq.prim(3)
@@ -2051,7 +2054,7 @@ c      default is ent failed
 #endif
       endif
 #if(PRODUCTION==0)
-      if (iflag.eq.0.and.errent.lt.1E-6) then
+      if (iflag.eq.0.and.errent.lt.FAILLIMIT) then
          write (*,*) ' Entropy equation converged: iter ',
      &        iter
          write (*,*) ' primitives: ',(prim(j),j=1,4)
