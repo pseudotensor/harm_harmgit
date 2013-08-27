@@ -4598,8 +4598,8 @@ static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int sho
   // Also add (u_g)^{1/2} \propto (v/c)
   delspace=0.0; SLOOPA(jj) delspace = MAX(delspace,MAX(fabs(predel[jj]) , velmomscale )); // dimensionless-ortho
 
-  // u_g goes like v^2
-  jj=TT; deltime = MAX(fabs(predel[jj]),vsqnorm); // FUCK new -- untested
+  // u_g goes like \rho_0 v^2
+  jj=TT; deltime = MAX(fabs(predel[jj]),MAX(ppp[RHO],pp[RHO])*vsqnorm); // FUCK new -- untested
 
   /////////////////
   // back to actual spatial dimension-space scale for application to x and xjac
