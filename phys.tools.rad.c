@@ -459,7 +459,6 @@ static int Utoprimgen_failwrapper(int doradonly, int *radinvmod, int showmessage
     *radinvmod=(int)(*lpflagrad);
   }
   else{
-    dualfprintf(fail_file,"FUCKCAUGHT: %d\n",*eomtype);
     //calculating primitives  
     // OPTMARK: Should optimize this to  not try to get down to machine precision
     MYFUN(Utoprimgen(showmessages, allowlocalfailurefixandnoreport, finalstep, eomtype, evolvetype, inputtype, U, ptrgeom, pr, newtonstats),"phys.tools.rad.c:Utoprimgen_failwrapper()", "Utoprimgen", 1);
@@ -4414,7 +4413,7 @@ static int f_error_check(int showmessages, int showmessagesheavy, int iter, FTYP
 
 #if(1)
   FTYPE rhoref=MAX(pp[RHO],piin[RHO]);
-  FTYPE fnormspace2 = rhoref*pow(fabs(fnormtime)/rhoref,0.5); // energy term in correct scale with \rho_0(v/c)^1 to get reference in case v\sim 0 FUCK: This assumes rho v term dominates
+  FTYPE fnormspace2 = rhoref*pow(fabs(fnormtime)/rhoref,0.5); // energy term in correct scale with \rho_0(v/c)^1 to get reference in case v\sim 0 FUCKy: This assumes rho v term dominates
   FTYPE fnormtime2=rhoref*pow(fabs(fnormspace/rhoref),2.0); // momentum term in correct scale with \rho_0(v/c)^2 in case E\sim 0.  FUCK: assumes rho v term dominates.
 #else
   FTYPE fakevel = MIN(1.0,fnormspace/(SMALL+fnormtime));
@@ -4442,8 +4441,6 @@ static int f_error_check(int showmessages, int showmessagesheavy, int iter, FTYP
   // get relative errors (keep sign)
   JACLOOPALT(ii,startjac,endjac){
     find[erefU[ii]]=finnew[erefU[ii]]/fabs(IMPMINABSERROR+finnormnew[erefU[ii]]);
-    //if(ii==TT)
-    //    else find[erefU[ii]]=finnew[erefU[ii]]/fabs((IMPMINABSERROR+MAX(fabs((SMALL)*dimfactU[erefU[0]]),MAX(finnormnew[erefU[ii]],fabs(uu0[erefU[0]]*dimfactU[erefU[0]]))))); // FUCK
   }
 
   passedconv=1; JACLOOPFULLERROR(itermode,ii,startjac,endjac) passedconv *= fabs(find[erefU[ii]])<conv;
