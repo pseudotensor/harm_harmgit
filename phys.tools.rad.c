@@ -357,7 +357,7 @@ static int inverse_33matrix(int sj, int ej, FTYPE a[][NDIM], FTYPE ia[][NDIM]);
 static int inverse_11matrix(int sj, int ej, FTYPE a[][NDIM], FTYPE ia[][NDIM]);
 
 
-static int f_error_check(int showmessages, int showmessagesheavy, int iter, FTYPE conv, FTYPE realdt, int dimtypef, int eomtype, int itermode, FTYPE fracenergy, FTYPE *dimfactU, FTYPE *f1, FTYPE *f1norm, FTYPE *f1report, FTYPE *Uiin, FTYPE *uu0, FTYPE *uu, struct of_geom *ptrgeom);
+static int f_error_check(int showmessages, int showmessagesheavy, int iter, FTYPE conv, FTYPE realdt, int dimtypef, int eomtype, int itermode, FTYPE fracenergy, FTYPE *dimfactU, FTYPE *pp, FTYPE *piin, FTYPE *f1, FTYPE *f1norm, FTYPE *f1report, FTYPE *Uiin, FTYPE *uu0, FTYPE *uu, struct of_geom *ptrgeom);
 
 static int compute_ZAMORAD(FTYPE *uu, struct of_geom *ptrgeom, FTYPE *Er, FTYPE *Utildesq, FTYPE *Utildecon);
 
@@ -3069,7 +3069,7 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
       // get error using f1 and f1norm
       //
       //////////////
-      int convreturnf1=f_error_check(showmessages, showmessagesheavy, iter, trueimptryconv,realdt, DIMTYPEFCONS,eomtypelocal ,itermode,fracenergy,dimfactU,f1,f1norm,f1report,Uiin,uu0,uu,ptrgeom);
+      int convreturnf1=f_error_check(showmessages, showmessagesheavy, iter, trueimptryconv,realdt, DIMTYPEFCONS,eomtypelocal ,itermode,fracenergy,dimfactU,pp,piin,f1,f1norm,f1report,Uiin,uu0,uu,ptrgeom);
       // but don't break, since need to iterate a bit first and check |dU/U| and need to see if checkconv==1
       suberrorabsf1=0.0;  JACLOOPSUBERROR(jj,startjac,endjac) suberrorabsf1     += fabs(f1report[erefU[jj]]); // e.g. may only be energy error or only momentum error.
       errorabsf1=0.0;     JACLOOPFULLERROR(itermode,jj,startjac,endjac)      errorabsf1     += fabs(f1report[erefU[jj]]); // always full error.
@@ -3169,7 +3169,7 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
         //
         /////////////////
         FTYPE LOCALPREIMPCONV=MIN(10.0*NUMEPSILON,trueimptryconv); // more strict than later tolerance
-        if(f_error_check(showmessages, showmessagesheavy, iter, LOCALPREIMPCONV,realdt,DIMTYPEFCONS,eomtypelocal,itermode,fracenergy,dimfactU,f1,f1norm,f1report,Uiin, uu0,uu,ptrgeom)){
+        if(f_error_check(showmessages, showmessagesheavy, iter, LOCALPREIMPCONV,realdt,DIMTYPEFCONS,eomtypelocal,itermode,fracenergy,dimfactU,pp,piin,f1,f1norm,f1report,Uiin, uu0,uu,ptrgeom)){
           errorabsf1=0.0;     JACLOOPFULLERROR(itermode,jj,startjac,endjac) errorabsf1     += fabs(f1report[erefU[jj]]);
           if(debugfail>=DEBUGLEVELIMPSOLVERMORE) dualfprintf(fail_file,"Early low error=%g iter=%d\n",errorabsf1,iter);
           //  not failure.
@@ -3621,10 +3621,10 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
             // store error and solution in case eventually lead to max iterations and actually get worse error
             // f_error_check(uu0,uu) is ok to use since it just normalizes error
             int convreturnf3;
-            convreturnf3=f_error_check(showmessages, showmessagesheavy, iter, trueimptryconv,realdt, dimtypef,eomtypelocal ,itermode,fracenergy,dimfactU,f3,f3norm,f3report,Uiin,uu0,uu,ptrgeom);
+            convreturnf3=f_error_check(showmessages, showmessagesheavy, iter, trueimptryconv,realdt, dimtypef,eomtypelocal ,itermode,fracenergy,dimfactU,pp,piin,f3,f3norm,f3report,Uiin,uu0,uu,ptrgeom);
             errorabsf3=0.0;     JACLOOPFULLERROR(itermode,jj,startjac,endjac) errorabsf3     += fabs(f3report[erefU[jj]]);
             // while using f1 for true error, can't do better if f3 error is below near machine precision.
-            convreturnf3limit=f_error_check(showmessages, showmessagesheavy, iter, LOCALPREIMPCONVX,realdt,DIMTYPEFCONS,eomtypelocal,itermode,fracenergy,dimfactU,f3,f3norm,f3report,Uiin, uu0,uu,ptrgeom);
+            convreturnf3limit=f_error_check(showmessages, showmessagesheavy, iter, LOCALPREIMPCONVX,realdt,DIMTYPEFCONS,eomtypelocal,itermode,fracenergy,dimfactU,pp,piin,f3,f3norm,f3report,Uiin, uu0,uu,ptrgeom);
           }
 
           if(POSTNEWTONCONVCHECK==0 || notholding==0){
@@ -3716,8 +3716,8 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
           // radinvmod contains whether radiative inversion modified process.
 
           int dimtypef=DIMTYPEFCONS; // 0 = conserved R^t_\nu type, 1 = primitive (u,v^i) type, i.e. v^i has no energy density term
-          convreturn=f_error_check(showmessages, showmessagesheavy, iter, trueimptryconv,realdt,dimtypef,eomtypelocal,itermode,fracenergy,dimfactU,f1,f1norm,f1report,Uiin,uu0,uu,ptrgeom);
-          convreturnallow=f_error_check(showmessages, showmessagesheavy, iter, IMPALLOWCONV,realdt,dimtypef,eomtypelocal,itermode,fracenergy,dimfactU,f1,f1norm,f1report,Uiin,uup,uu,ptrgeom);
+          convreturn=f_error_check(showmessages, showmessagesheavy, iter, trueimptryconv,realdt,dimtypef,eomtypelocal,itermode,fracenergy,dimfactU,pp,piin,f1,f1norm,f1report,Uiin,uu0,uu,ptrgeom);
+          convreturnallow=f_error_check(showmessages, showmessagesheavy, iter, IMPALLOWCONV,realdt,dimtypef,eomtypelocal,itermode,fracenergy,dimfactU,pp,piin,f1,f1norm,f1report,Uiin,uup,uu,ptrgeom);
           errorabsf1=0.0;     JACLOOPFULLERROR(itermode,jj,startjac,endjac) errorabsf1     += fabs(f1report[erefU[jj]]);
           if(debugfail>=DEBUGLEVELIMPSOLVERMORE) dualfprintf(fail_file,"DOFINALCHECK: convreturn=%d convreturnallow=%d (IMPALLOWCONV=%g) f1report: %g %g %g %g : %g\n",convreturn,convreturnallow,IMPALLOWCONV,f1report[erefU[0]],f1report[erefU[1]],f1report[erefU[2]],f1report[erefU[3]],errorabsf1);
         }// end if doing final check
@@ -3732,8 +3732,8 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
 
           // now get error
           int dimtypef=DIMTYPEFCONS; // 0 = conserved R^t_\nu type, 1 = primitive (u,v^i) type, i.e. v^i has no energy density term
-          convreturn=f_error_check(showmessages, showmessagesheavy, iter, trueimptryconv,realdt,dimtypef,eomtypelocal,itermode,fracenergy,dimfactU,f1,f1norm,f1report,Uiin,uu0,uu,ptrgeom);
-          convreturnallow=f_error_check(showmessages, showmessagesheavy, iter, IMPALLOWCONV,realdt,dimtypef,eomtypelocal,itermode,fracenergy,dimfactU,f1,f1norm,f1report,Uiin,uup,uu,ptrgeom);
+          convreturn=f_error_check(showmessages, showmessagesheavy, iter, trueimptryconv,realdt,dimtypef,eomtypelocal,itermode,fracenergy,dimfactU,pp,piin,f1,f1norm,f1report,Uiin,uu0,uu,ptrgeom);
+          convreturnallow=f_error_check(showmessages, showmessagesheavy, iter, IMPALLOWCONV,realdt,dimtypef,eomtypelocal,itermode,fracenergy,dimfactU,pp,piin,f1,f1norm,f1report,Uiin,uup,uu,ptrgeom);
           errorabsf1=0.0;     JACLOOPFULLERROR(itermode,jj,startjac,endjac) errorabsf1     += fabs(f1report[erefU[jj]]);
         }
 
@@ -4381,7 +4381,7 @@ int get_rameshsolution(int failtype, long long int failnum, int gotfirstnofail, 
 
 // use f and check the error
 // note that eomtype is just integer, not pointer as often case when might want to change eomtype.
-static int f_error_check(int showmessages, int showmessagesheavy, int iter, FTYPE conv, FTYPE realdt, int dimtypef, int eomtype, int itermode, FTYPE fracenergy, FTYPE *dimfactU, FTYPE *fin, FTYPE *finnorm, FTYPE *finreport, FTYPE *Uiin, FTYPE *uu0, FTYPE *uu, struct of_geom *ptrgeom)
+static int f_error_check(int showmessages, int showmessagesheavy, int iter, FTYPE conv, FTYPE realdt, int dimtypef, int eomtype, int itermode, FTYPE fracenergy, FTYPE *dimfactU, FTYPE *pp, FTYPE *piin, FTYPE *fin, FTYPE *finnorm, FTYPE *finreport, FTYPE *Uiin, FTYPE *uu0, FTYPE *uu, struct of_geom *ptrgeom)
 {
   int ii,jj;
 
@@ -4405,18 +4405,19 @@ static int f_error_check(int showmessages, int showmessagesheavy, int iter, FTYP
 
   // replace finnorm -> finnormnew that's already non-dimensionalized
   FTYPE finnormnew[NPR];
-  // Tds\rho_0 u^t \propto (v/c)^2 or higher  \propto \gamma in ultrarel limit
-  // T^t_t + \rho_0 u^t \propto (v/c)^2 or higher  \propto \gamma^2 in ultrarel limit
+  // Tds\rho_0 u^t \propto \rho_0 (v/c)^2 or higher  \propto \gamma in ultrarel limit
+  // T^t_t + \rho_0 u^t \propto \rho_0 (v/c)^2 or higher  \propto \rho_0\gamma^2 in ultrarel limit
   ii=TT; FTYPE fnormtime = fabs(finnorm[erefU[ii]]*dimfactferr[erefU[ii]]);
-  // T^t_i \propto (v/c)^1 or higher  \propto \gamma^2 (v/c) in ultrarel limit
+  // T^t_i \propto \rho_0 (v/c)^1 or higher  \propto \gamma^2 \rho_0 (v/c) in ultrarel limit
   // get spatial contributions as total term so not dominated by small errors in some dimensions
   FTYPE fnormspace=0.0; SLOOPA(ii) fnormspace += fabs(finnorm[erefU[ii]]*dimfactferr[erefU[ii]]);
-  FTYPE fakevel = MIN(1.0,fnormspace/(SMALL+fnormtime));
 
 #if(1)
-  FTYPE fnormspace2 = pow(fabs(fnormtime),0.5); // energy term in correct scale with (v/c)^1 to get reference in case v\sim 0 FUCK: This assumes rho v term dominates
-  FTYPE fnormtime2=pow(fabs(fnormspace),2.0); // momentum term in correct scale with (v/c)^2 in case E\sim 0.  FUCK: assumes rho v term dominates.
+  FTYPE rhoref=MAX(pp[RHO],piin[RHO]);
+  FTYPE fnormspace2 = rhoref*pow(fabs(fnormtime)/rhoref,0.5); // energy term in correct scale with \rho_0(v/c)^1 to get reference in case v\sim 0 FUCK: This assumes rho v term dominates
+  FTYPE fnormtime2=rhoref*pow(fabs(fnormspace/rhoref),2.0); // momentum term in correct scale with \rho_0(v/c)^2 in case E\sim 0.  FUCK: assumes rho v term dominates.
 #else
+  FTYPE fakevel = MIN(1.0,fnormspace/(SMALL+fnormtime));
   FTYPE fnormspace2 = fabs(fnormtime)*fakevel;
   FTYPE fnormtime2 = fabs(fnormspace)/fakevel;
 #endif
