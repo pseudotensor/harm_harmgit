@@ -4554,7 +4554,7 @@ static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int sho
     PLOOP(pliter,pl) upitoup0[pl] = upitoup0P[pl];
     // for velocity, assume ortho-scale is order unity (i.e. v=1.0*c)
     //    velmomscale=1.0; // reference scale considered to be order unity  KORALTODO: Not sure if should use something like T^t_i/T^t_t with denominator something more non-zero-ish.
-    velmomscale=MAX(SMALL,sqrt(fabs(x[UU]))); // u_g\propto (v/c)^2, so this gives \propto (v/c)
+    velmomscale=MAX(SMALL,sqrt(fabs(x[UU])/MAX(ppp[RHO],pp[RHO]))); // u_g/\rho_0\propto (v/c)^2, so this gives \propto (v/c)
   }
 
   //////////////////////////
@@ -4595,7 +4595,7 @@ static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int sho
   //////////
 
   // Add all spatial terms in quasi-orthonormal way
-  // Also add (u_g)^{1/2} \propto (v/c)
+  // Also add (u_g)^{1/2} \propto \rho_0(v/c)
   delspace=0.0; SLOOPA(jj) delspace = MAX(delspace,MAX(fabs(predel[jj]) , velmomscale )); // dimensionless-ortho
 
   // u_g goes like \rho_0 v^2
