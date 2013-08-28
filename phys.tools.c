@@ -2195,7 +2195,8 @@ int ufromentropy_calc(struct of_geom *ptrgeom, FTYPE entropy, FTYPE *pr)
 }
 
 
-/* find contravariant four-velocity from the relative 4 velocity */
+// find u^\mu from \tilde{u}^\mu
+// fill full 4-vector
 // OPTMARK: Before storing \beta, this was the most expensive function over the entire code [determined by avoiding inlining]
 int ucon_calc_rel4vel_fromuconrel(FTYPE *uconrel, struct of_geom *geom, FTYPE *ucon, FTYPE *others)
 {
@@ -2223,6 +2224,7 @@ int ucon_calc_rel4vel_fromuconrel(FTYPE *uconrel, struct of_geom *geom, FTYPE *u
 
 
 // find \tilde{u}^\mu from u^\mu
+// only fill spatial parts so can feed in 3-vector
 int uconrel(FTYPE *ucon, FTYPE *uconrel, struct of_geom *geom)
 {
   VARSTATIC int j ;

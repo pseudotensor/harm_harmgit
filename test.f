@@ -34,9 +34,9 @@ c 1 means very simple Jon's version of err and sol output
 c 2 means only Jon's err output
 c 3 means no output or input (harm mode)
 c#define PRODUCTION 0
-c#define PRODUCTION 1
+#define PRODUCTION 1
 c#define PRODUCTION 2
-#define PRODUCTION 3
+c#define PRODUCTION 3
 
 c error below which will consider BAD solution and not even compute final solution
 #define FAILLIMIT (1E-6)
@@ -80,7 +80,7 @@ c     corresponding to the problem currently being solved
 c     variables with 'final' at the end correspond to the final solution
       implicit double precision (a-h,o-z)
 c     inputs
-      dimension args(211)
+      dimension args(NUMARGS)
 c     results
       double precision resultseng(NUMRESULTS)
       double precision resultsent(NUMRESULTS)
@@ -113,6 +113,7 @@ c     internals
       character errhead*3,errfile*60
       double precision mymax,myabs,mydiv
       integer myisnan
+      integer which,showboth
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
 c     Initialize constants and read in data from Jon's datafile
@@ -465,8 +466,10 @@ c     energy equation using Newton-Raphson
 
 c     Radiation inversion done. Calculate relevant quantities
 c     corresponding to the final solutions
+         showboth=nint(resultseng(12))+nint(resultsent(12))
          if(nint(resultseng(12)).eq.0) then
-            call getfinal(resultseng,
+            which=3
+            call getfinal(which,showboth,resultseng,
      &     isc,gn,gv,hp,hf,
      &     vgasp,vgasf,B1,B2,
      &     BBp,BBf,BBc,vradp,vradf,s,
@@ -485,7 +488,8 @@ c     prim->primeng
      &     Tmunufinal,Rmunufinal,rhou0c)
          endif
          if(nint(resultsent(12)).eq.0) then
-            call getfinal(resultsent,
+            which=2
+            call getfinal(which,showboth,resultsent,
      &     isc,gn,gv,hp,hf,
      &     vgasp,vgasf,B1,B2,
      &     BBp,BBf,BBc,vradp,vradf,s,
@@ -542,7 +546,7 @@ c     enddo below is loop over cases
 
 c     Once radiation inversion done, calculate relevant quantities
 c     corresponding to the final solutions
-      subroutine getfinal(results,
+      subroutine getfinal(which,showboth,results,
      &     isc,gn,gv,hp,hf,
      &     vgasp,vgasf,B1,B2,
      &     BBp,BBf,BBc,vradp,vradf,s,
@@ -560,6 +564,7 @@ c     prim that's used
      &     Ttcovfinal,Rtcovfinal,
      &     Tmunufinal,Rmunufinal,rhou0c)
       implicit double precision (a-h,o-z)
+      integer which,showboth
       double precision results(NUMRESULTS)
       dimension isc(4),gn(4,4),gv(4,4),hp(4,4),hf(4,4)
       double precision vgasp(3),vgasf(3),B1(5),B2(5),
@@ -631,7 +636,11 @@ c     density are unchaned, then calculate the full R^mu_nu
       write (*,*) ' gammagas, gammarad: ',gammagas,gammarad
 #endif
 #if(PRODUCTION<=1)
-      write (13,*) 'RAMESH rho, u_g, u^mu Erf urad^mu: ',rhofinal,
+      if(showboth.eq.0.and.which.eq.2) then
+         write (13,"(18X)",advance="no")
+      endif
+      write (13,*) 'RAMESH(type) rho, u_g, u^mu Erf urad^mu: '
+     &     ,which,rhofinal,
      &     ufinal,
      &     (ugasconfinal(j),j=1,4),
      &     Efinal,
@@ -650,6 +659,13 @@ c     HARM order
       results(9) = uradconfinal(2)
       results(10) = uradconfinal(3)
       results(11) = uradconfinal(4)
+
+c     DEBUG TEST
+c      write (13,*) 'RAMESH2: '
+c     &     ,results(1),results(2),results(3),results(4),results(5)
+c     &     ,results(6),results(7),results(8),results(9),results(10)
+c     &     ,results(11)
+      
 
       return
       end
@@ -752,6 +768,7 @@ c     Read in data in Jon's new format (181 numbers)
      &     ugasconf(4),ugascovf(4),ugasconp(4),ugascovp(4),
      &     uradconf(4),uradcovf(4),uradconp(4),uradcovp(4),
      &     ugasconb(4),ugascovb(4),uradconb(4),uradcovb(4)
+      integer eomtype
 
       ifinish=0
 
@@ -780,6 +797,7 @@ c     Read in data in Jon's new format (181 numbers)
      &        (uradconp(j),uradcovp(j),j=1,4),
      &        (ugasconp(j),ugascovp(j),j=1,4)
 #endif
+         eomtype=0
 
 #if(PRODUCTION<=2)
          write (14,"(2X,1I5,2X,1E21.15,2X,1I8)",advance="no")
@@ -802,7 +820,8 @@ c     Read in data in Jon's new format (181 numbers)
          endif
         
 #if(PRODUCTION<=1)
-         write (13,*) 'HARMJM rho, u_g, u^mu Erf urad^mu: '
+         write (13,*) 'HARMJM(type) rho, u_g, u^mu Erf urad^mu: '
+     &        ,eomtype
      &        ,rhof,uf,
      &        (ugasconf(j),j=1,4),
      &        Ef,
@@ -864,7 +883,7 @@ c     Read in data in Jon's new format (211 numbers)
 
       implicit double precision (a-h,o-z)
       integer orgintype
-      dimension args(211)
+      dimension args(NUMARGS)
       integer eomtype,itermode,iters,totaliters
       dimension isc(4),gn(4,4),gv(4,4),vgasp(3),vgasf(3),
      &     BBp(4),BBf(4),vradp(3),vradf(3),s(5),
@@ -1067,53 +1086,59 @@ c     then pull from array of doubles from args
          si=args(161)
          sf=args(162)
          sp=args(163)
+c con/cov in 1,2,3,4
          uradconf(1)=args(164)
-         uradconf(2)=args(165)
-         uradconf(3)=args(166)
-         uradconf(4)=args(167)
-         uradcovf(1)=args(168)
-         uradcovf(2)=args(169)
-         uradcovf(3)=args(170)
+         uradcovf(1)=args(165)
+         uradconf(2)=args(166)
+         uradcovf(2)=args(167)
+         uradconf(3)=args(168)
+         uradcovf(3)=args(169)
+         uradconf(4)=args(170)
          uradcovf(4)=args(171)
+c
          ugasconf(1)=args(172)
-         ugasconf(2)=args(173)
-         ugasconf(3)=args(174)
-         ugasconf(4)=args(175)
-         ugascovf(1)=args(176)
-         ugascovf(2)=args(177)
-         ugascovf(3)=args(178)
+         ugascovf(1)=args(173)
+         ugasconf(2)=args(174)
+         ugascovf(2)=args(175)
+         ugasconf(3)=args(176)
+         ugascovf(3)=args(177)
+         ugasconf(4)=args(178)
          ugascovf(4)=args(179)
+c
          uradconb(1)=args(180)
-         uradconb(2)=args(181)
-         uradconb(3)=args(182)
-         uradconb(4)=args(183)
-         uradcovb(1)=args(184)
-         uradcovb(2)=args(185)
-         uradcovb(3)=args(186)
+         uradcovb(1)=args(181)
+         uradconb(2)=args(182)
+         uradcovb(2)=args(183)
+         uradconb(3)=args(184)
+         uradcovb(3)=args(185)
+         uradconb(4)=args(186)
          uradcovb(4)=args(187)
+c
          ugasconb(1)=args(188)
-         ugasconb(2)=args(189)
-         ugasconb(3)=args(190)
-         ugasconb(4)=args(191)
-         ugascovb(1)=args(192)
-         ugascovb(2)=args(193)
-         ugascovb(3)=args(194)
+         ugascovb(1)=args(189)
+         ugasconb(2)=args(190)
+         ugascovb(2)=args(191)
+         ugasconb(3)=args(192)
+         ugascovb(3)=args(193)
+         ugasconb(4)=args(194)
          ugascovb(4)=args(195)
+c
          uradconp(1)=args(196)
-         uradconp(2)=args(197)
-         uradconp(3)=args(198)
-         uradconp(4)=args(199)
-         uradcovp(1)=args(200)
-         uradcovp(2)=args(201)
-         uradcovp(3)=args(202)
+         uradcovp(1)=args(197)
+         uradconp(2)=args(198)
+         uradcovp(2)=args(199)
+         uradconp(3)=args(200)
+         uradcovp(3)=args(201)
+         uradconp(4)=args(202)
          uradcovp(4)=args(203)
+c
          ugasconp(1)=args(204)
-         ugasconp(2)=args(205)
-         ugasconp(3)=args(206)
-         ugasconp(4)=args(207)
-         ugascovp(1)=args(208)
-         ugascovp(2)=args(209)
-         ugascovp(3)=args(210)
+         ugascovp(1)=args(205)
+         ugasconp(2)=args(206)
+         ugascovp(2)=args(207)
+         ugasconp(3)=args(208)
+         ugascovp(3)=args(209)
+         ugasconp(4)=args(210)
          ugascovp(4)=args(211)
 #endif
 
@@ -1147,7 +1172,8 @@ c     If itermode=1 shows up, then check whether PREVBESTHARMERR was ok/good eno
          endif
          
 #if(PRODUCTION<=1)
-         write (13,*) 'HARMJM rho, u_g, u^mu Erf urad^mu: '
+         write (13,*) 'HARMJM(type) rho, u_g, u^mu Erf urad^mu: '
+     &        ,eomtype
      &        ,rhof,uf,
      &        (ugasconf(j),j=1,4),
      &        Ef,
@@ -1398,19 +1424,30 @@ c     stress energy tensor T^mu_nu
       p=(Gam-1.d0)*u
       bsq2=0.5d0*bsq
 
+      
       do i=1,4
       do j=1,4
+
+      if (i.eq.1.and.j.eq.1) then
+
+c     Replace T^0_0 -> T^0_0 + rho*u^0                                             
+
+         Tmunu(i,j)=rho*ucon(i)*(1.d0+ucov(j))
+     &        +(u+p+bsq)*ucon(i)*ucov(j)
+     &        +(p+bsq2)*delta(i,j)
+     &        -bcon(i)*bcov(j)
+
+      else
 
          Tmunu(i,j)=(rho+u+p+bsq)*ucon(i)*ucov(j)
      &        +(p+bsq2)*delta(i,j)
      &        -bcon(i)*bcov(j)
 
+      endif
+
       enddo
       enddo
 
-c     Replace T^0_0 -> T^0_0 + rho*u^0
-
-      Tmunu(1,1)=Tmunu(1,1)+rho*ucon(1)
 
       return
       end
@@ -1915,6 +1952,8 @@ c     default is failed
 #if(PRODUCTION<=1)
             write (13,"(1A)",advance="no") '  GOOD   '
 #endif
+         resultseng(12)=0.0d0
+         engconv=1
          else if (erreng.lt.FAILLIMIT
      &        .and.prim(1).eq.prim(1)
      &        .and.prim(2).eq.prim(2)
@@ -1928,6 +1967,9 @@ c     default is failed
 #if(PRODUCTION<=1)
             write (13,"(1A)",advance="no") '   BADNEG'
 #endif
+c     only bad because negative something
+         resultseng(12)=2.0d0
+         engconv=1
          else
 #if(PRODUCTION<=2)
             write (14,"(1A)",advance="no") '   BAD   '
@@ -1935,13 +1977,15 @@ c     default is failed
 #if(PRODUCTION<=1)
             write (13,"(1A)",advance="no") '   BAD   '
 #endif
+c            treat as bad because error not small or nan'ed out
+         resultseng(12)=1.0d0
+         engconv=0
          endif
-         resultseng(12)=0.0d0
-         engconv=1
 c     commenting below to see entropy even if energy converged.
 c         return
       else
          resultseng(12)=1.0d0
+         engconv=0
 
 c     If energy equation does not converge, calculate using the entropy
 c     equation.
@@ -2032,6 +2076,7 @@ c      default is ent failed
 #if(PRODUCTION<=1)
          write (13,"(1A)",advance="no") '  GOOD   '
 #endif
+      resultsent(12)=0.0d0
       else if ((erreng.lt.FAILLIMIT.or.errent.lt.FAILLIMIT)
      &     .and.prim(1).eq.prim(1)
      &     .and.prim(2).eq.prim(2)
@@ -2045,6 +2090,7 @@ c      default is ent failed
 #if(PRODUCTION<=1)
          write (13,"(1A)",advance="no") '   BADNEG'
 #endif
+      resultsent(12)=2.0d0
       else
 #if(PRODUCTION<=2)
          write (14,"(1A)",advance="no") '   BAD   '
@@ -2052,6 +2098,7 @@ c      default is ent failed
 #if(PRODUCTION<=1)
          write (13,"(1A)",advance="no") '   BAD   '
 #endif
+      resultsent(12)=1.0d0
       endif
 #if(PRODUCTION==0)
       if (iflag.eq.0.and.errent.lt.FAILLIMIT) then
@@ -2061,8 +2108,6 @@ c      default is ent failed
 c         return
       endif
 #endif
-
-      resultsent(12)=0.0d0
       else
       resultsent(12)=1.0d0
 
@@ -3189,8 +3234,11 @@ c     normalized err4 from all four equations
 c     Calculate error(1) from lab frame energy equation
 
          error(1)=Tt(1)-Ttcov(1)-Gcov(1)*dt
-         errornorm(1)=myabs(mydiv(error(1),(myabs(Gcov(1)*dt)+
-     &        myabs(Tt(1))+myabs(Ttcov(1)))))
+         errornorm(1)=myabs(mydiv(error(1),
+     &        (myabs(Gcov(1)*dt)
+     &        +myabs(Tt(1))+myabs(Ttcov(1))
+     &        +myabs((Gam*u+bsq)*ucon(1)*ucov(1))
+     &        )))
          err4=mymax(err3,errornorm(1))
 
 #if(PRODUCTION==0)
