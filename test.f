@@ -34,16 +34,16 @@ c 1 means very simple Jon's version of err and sol output
 c 2 means only Jon's err output
 c 3 means no output or input (harm mode)
 c#define PRODUCTION 0
-#define PRODUCTION 1
+c#define PRODUCTION 1
 c#define PRODUCTION 2
-c#define PRODUCTION 3
+#define PRODUCTION 3
 
 c error below which will consider BAD solution and not even compute final solution
 #define FAILLIMIT (1E-6)
 
 #define NUMARGS 211
 c 11 vars, failcode, error, iterations
-#define NUMRESULTS 14
+#define NUMRESULTS 15
 
 #if(PRODUCTION<3)
       program testradiation
@@ -566,6 +566,7 @@ c     prim that's used
       implicit double precision (a-h,o-z)
       integer which,showboth
       double precision results(NUMRESULTS)
+      integer radinvmod
       dimension isc(4),gn(4,4),gv(4,4),hp(4,4),hf(4,4)
       double precision vgasp(3),vgasf(3),B1(5),B2(5),
      &     BBp(4),BBf(4),BBc(4),vradp(3),vradf(3),s(5),
@@ -617,7 +618,7 @@ c     density are unchaned, then calculate the full R^mu_nu
       enddo
 
       call Rmunuinvert(Rtcovfinal,Efinal,uradconfinal,
-     &     uradcovfinal,ugasconfinal,Rmunufinal)
+     &     uradcovfinal,ugasconfinal,Rmunufinal,radinvmod)
 
       alpha=1.d0/sqrt(-gn(1,1))
       gammagas=ugasconfinal(1)*alpha
@@ -659,6 +660,7 @@ c     HARM order
       results(9) = uradconfinal(2)
       results(10) = uradconfinal(3)
       results(11) = uradconfinal(4)
+      results(15) = DBLE(radinvmod)
 
 c     DEBUG TEST
 c      write (13,*) 'RAMESH2: '
@@ -1507,13 +1509,14 @@ c     Calculate Kronecker delta
 
 
 
-      subroutine Rmunuinvert(Rtcov,E,ucon,ucov,ugascon,Rmunu)
+      subroutine Rmunuinvert(Rtcov,E,ucon,ucov,ugascon,Rmunu,radinvmod)
 
 c     Given the row R^t_mu of the radiation tensor, solves for the
 c     radiation frame energy density E and 4-velocity and calculates the
 c     full tensor R^mu_nu
 
       implicit double precision (a-h,o-z)
+      integer radinvmod
       dimension Rtcov(4),Rtcon(4),ucon(4),ucov(4),Rmunu(4,4),
      &     ugascon(4),gn(4,4),gv(4,4)
       common/accuracy/eps,epsbis,dvmin,tol,uminfac,dlogmax,
@@ -1529,6 +1532,9 @@ c      write (*,*) ' Rtcon: ',(Rtcon(i),i=1,4)
 #endif
 c     Set up and solve quadratic equation for E
 
+c     default is no ceiling hit on gamma
+      radinvmod=0
+c      
       aquad=gn(1,1)
       bquad=-2.d0*Rtcon(1)
       cquad=0.d0
@@ -1584,6 +1590,7 @@ c     This segment is for problem cases. We set gamma_radiation equal to
 c     its ceiling value and solve for E and u^i without using R^00.
 
  10   ucon(1)=gammaradceiling*sqrt(-gn(1,1))
+      radinvmod=1
 #if(PRODUCTION==0)
       write (*,*) ' gamma_rad hit ceiling: g^tt, urad^t = ',
      &     gn(1,1),ucon(1)
@@ -2872,7 +2879,9 @@ c     without radiation source term using the energy equation
 
       implicit double precision (a-h,o-z)
       dimension prim(4),error(4),errornorm(4),Ttcov(4),Rtcov(4),BB(4),
-     &     ucon(4),ucov(4),bcon(4),bcov(4),Tmunu(4,4)
+     &     ucon(4),ucov(4),bcon(4),bcov(4),Tmunu(4,4),
+     &     urcon(4),urcov(4),Rmunu(4,4),Gcon(4),Gcov(4)
+      dimension gn(4,4),gv(4,4)
       common/metric/gn,gv
       common/accuracy/eps,epsbis,dvmin,tol,uminfac,dlogmax,
      &     gammaradceiling,itermax
@@ -2962,6 +2971,7 @@ c     without radiation source term using the entropy equation
       implicit double precision (a-h,o-z)
       dimension prim(4),error(4),errornorm(4),Ttcov(4),Rtcov(4),BB(4),
      &     ucon(4),ucov(4),bcon(4),bcov(4),Tmunu(4,4)
+      dimension gn(4,4),gv(4,4)
       common/metric/gn,gv
       common/accuracy/eps,epsbis,dvmin,tol,uminfac,dlogmax,
      &     gammaradceiling,itermax
@@ -3096,7 +3106,8 @@ c     equation
      &     Tmunu,E,Ehat,urcon,urcov,Rmunu,Tgas,Trad,B4pi,gamma,dtau,
      &     Gcon,Gcov,u0,iuerr
       double precision mymax,myabs,mydiv
-		integer myisnan
+      integer myisnan
+      integer radinvmod
 
       ffkap=3.46764d-17
       eskap=5.90799d5
@@ -3144,7 +3155,7 @@ c      write (*,*) ' Rt: ',(Rt(i),i=1,4)
 
 c     Calculate the full R^mu_nu tensor
 
-      call Rmunuinvert(Rt,E,urcon,urcov,ucon,Rmunu)
+      call Rmunuinvert(Rt,E,urcon,urcov,ucon,Rmunu,radinvmod)
 #if(PRODUCTION==0)
 c      write (*,*) ' E, urcon, urcov: ',E,(urcon(i),urcov(i),i=1,4)
 #endif
@@ -3289,7 +3300,8 @@ c     equation
      &     Tmunu,E,Ehat,urcon,urcov,Rmunu,Tgas,Trad,B4pi,gamma,dtau,
      &     Gcon,Gcov,u0,iuerr
       double precision mymax,myabs,mydiv
-		integer myisnan
+      integer myisnan
+      integer radinvmod
 
       ffkap=3.46764d-17
       eskap=5.90799d5
@@ -3339,7 +3351,7 @@ c     R^0_mu
 
 c     Calculate the full R^mu_nu tensor
 
-      call Rmunuinvert(Rt,E,urcon,urcov,ucon,Rmunu)
+      call Rmunuinvert(Rt,E,urcon,urcov,ucon,Rmunu,radinvmod)
 
 c     Calculate radiation energy density in the gas frame \hat{E}, and
 c     the gas and radiation temperatures

@@ -318,7 +318,7 @@ int Utoprimgen(int showmessages, int allowlocalfailurefixandnoreport, int finals
     // normally don't ever do this unless really debugging inversion.
     if(0&&debugfail>=2&&hardfailure){ // DEBUG: only report if hard failure.  Seems when gets negative density or internal energy, jon's inversion is fine.
       // first report info so can check on inversion
-      extern int mathematica_report_check(int failtype, long long int failnum, int gotfirstnofail, int eomtypelocal, int itermode, FTYPE errorabs, FTYPE errorabsbestexternal, int iters, int iterstotal, FTYPE realdt,struct of_geom *ptrgeom, FTYPE *ppfirst, FTYPE *pp, FTYPE *pb, FTYPE *piin, FTYPE *prtestUiin, FTYPE *prtestUU0, FTYPE *uu0, FTYPE *uu, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_state *q, FTYPE *dUother);
+      extern int mathematica_report_check(int radinvmod, int failtype, long long int failnum, int gotfirstnofail, int eomtypelocal, int itermode, FTYPE errorabs, FTYPE errorabsbestexternal, int iters, int iterstotal, FTYPE realdt,struct of_geom *ptrgeom, FTYPE *ppfirst, FTYPE *pp, FTYPE *pb, FTYPE *piin, FTYPE *prtestUiin, FTYPE *prtestUU0, FTYPE *uu0, FTYPE *uu, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_state *q, FTYPE *dUother);
       static long long int failnum=0;
       FTYPE fakedt=0.0; // since no 4-force
       FTYPE fakeCUf[4]={0}; // fake
@@ -326,7 +326,7 @@ int Utoprimgen(int showmessages, int allowlocalfailurefixandnoreport, int finals
       struct of_state *qptr=NULL; // fake
       failnum++;
       // fake ppfirst as pr
-      mathematica_report_check(2, failnum, (int)hotpflag, eomtypelocal, 0, 0.0, 0.0, -1, -1, fakedt, ptrgeom, pr, pr, pr, pr0, pr0, pr0, Ugeomfree0, Ugeomfree, Ugeomfree0, Ugeomfree0, fakeCUf, qptr, dUother);
+      mathematica_report_check(0, 2, failnum, (int)hotpflag, eomtypelocal, 0, 0.0, 0.0, -1, -1, fakedt, ptrgeom, pr, pr, pr, pr0, pr0, pr0, Ugeomfree0, Ugeomfree, Ugeomfree0, Ugeomfree0, fakeCUf, qptr, dUother);
     }
 
 
