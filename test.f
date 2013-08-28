@@ -36,9 +36,9 @@ c 1 means very simple Jon's version of err and sol output
 c 2 means only Jon's err output
 c 3 means no output or input (harm mode)
 c#define PRODUCTION 0
-#define PRODUCTION 1
+c#define PRODUCTION 1
 c#define PRODUCTION 2
-c#define PRODUCTION 3
+#define PRODUCTION 3
 
 c error below which will consider BAD solution and not even compute final solution
 #define FAILLIMIT (1E-6)
@@ -172,8 +172,8 @@ c     iMHD=1 means do initial MHD inversion before radiation
 
 #if(PRODUCTION<=2)
 c     CHOOSE FILENAME HEAD TO READ
-c      filehead='fails'
-      filehead='fails1'
+      filehead='fails'
+c      filehead='fails1'
 c      filehead='failsearly'
 c      
 c     CAN CHOOSE EXTENSION
@@ -327,8 +327,8 @@ c      CHOOSE to use previous primitve or harm solution as starting point.
 c     0 = use original prims (normal mode)
 c     1 = use harm prims and still do normal Ramesh stages
 c     2 = use harm prims and go straight to 4D iterations to avoid mis-steps (works to get some entropy solutions not otherwise found by Ramesh code, but misses *many* energy solutions even though I'm providing very close guess.)
-c         guesstype=0
-         guesstype=2
+         guesstype=0
+c         guesstype=2
 c         guesstype=1
 
          if(guesstype.eq.0.or.errorabs.gt.1E-9) then
@@ -354,10 +354,10 @@ c         guesstype=1
 
 
 c     put any overrides for guesses here
-         prim(1)=1.1081585946596330690836004556281327032809D-8
-         prim(2)=-0.075584957687290353262066821240292555500
-         prim(3)=-0.003678584407270331563545276169512108269
-         prim(4)=0.0923803797665372578214676962826934511966
+c         prim(1)=1.1081585946596330690836004556281327032809D-8
+c         prim(2)=-0.075584957687290353262066821240292555500
+c         prim(3)=-0.003678584407270331563545276169512108269
+c         prim(4)=0.0923803797665372578214676962826934511966
          
 
 
