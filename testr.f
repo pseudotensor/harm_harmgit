@@ -34,7 +34,7 @@ c     variables with 'final' at the end correspond to the final solution
      &     gammaradceiling,itermax
       common/conserved/Gam,Gam1,en,en1,rhou0c,sc,Ttcovc,Rtcovc,
      &     BBc,dt
-      external funcMHD1,funcMHD2,funcrad1
+      external funcMHD1,funcMHD2,funcrad1,funcrad2
 
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
@@ -44,14 +44,14 @@ c     eps is fractional shift in primitives for numerical derivatives
 c     epsbib is fractional accuracy desired in bisection
 c     dvmin: if abs(uconmu)<1d-4 then shift used is dvmin*eps
 c     tol: all fractional errors must be below tol for convergence
-c     uminfac: minimum u_g allowed is uminfrac*rho
+c     uminfac: minimum u_g allowed is uminfac*rho
 c     dlogmax: minimum log() in entropy is log() conserved - dlogmin
 c     itermax is maximum no. of iterations with u_g, entropy below minimum
 
       eps=1.d-6
       epsbis=1.d-3
       dvmin=1.d-4
-      tol=1.d-10
+      tol=1.d-12
       uminfac=1.d-10
       dlogmax=log(2.d0)
       itermax=3
@@ -76,7 +76,8 @@ c     iMHD=1 means do initial MHD inversion before radiation
       open (13,file='solution.dat')
       open (14,file='errors.dat')
 
-      do i=1,10000
+      do i=1,100000
+c      do i=1,1
 
 c     If ientropy=0, we will try the energy equation. If it is 1, we
 c     proceed directly to the entropy equation
@@ -281,13 +282,13 @@ c     corresponding to the final solution
          rhou0final=rhou0c
          rhofinal=rhou0c/ugasconfinal(1)
 
-         write (*,*)
-         write (*,*) ' final solution: rho, u, u^mu: ',
-     &        rhofinal,ufinal,(ugasconfinal(j),j=1,4)
+c         write (*,*)
+c         write (*,*) ' final solution: rho, u, u^mu: ',
+c     &        rhofinal,ufinal,(ugasconfinal(j),j=1,4)
 
 c     Update T^mu_nu so as to be consistent with the final
 c     primitives. Adjust R^t_mu so that the total energy and momentum
-c     density are unchaned, then calculate the full R^mu_nu
+c     density are unchanged, then calculate the full R^mu_nu
 
          do j=1,4
             Ttotc(j)=Ttcovc(j)+Rtcovc(j)
@@ -305,31 +306,40 @@ c     density are unchaned, then calculate the full R^mu_nu
          enddo
 
          call Rmunuinvert(Rtcovfinal,Efinal,uradconfinal,
-     &        uradcovfinal,Rmunufinal)
+     &        uradcovfinal,ugasconfinal,Rmunufinal)
 
+         write (*,*)
+         write (*,*)
+         write (*,*) ' FINAL SOLUTION: '
          write (*,*)
          write (*,*) ' conserved rho u^0: ',rhou0final
          write (*,*) ' conserved T^t_mu: ',(Ttcovfinal(j),j=1,4)
          write (*,*) ' conserved R^t_mu: ',(Rtcovfinal(j),j=1,4)
+         write (*,*) ' rho, u_g, E: ',rhofinal,ufinal,Efinal
+         write (*,*) ' ugascon: ',(ugasconfinal(j),j=1,4)
+         write (*,*) ' uradcon: ',(uradconfinal(j),j=1,4)
+         alpha=1.d0/sqrt(-gn(1,1))
+         gammagas=ugasconfinal(1)*alpha
+         gammarad=uradconfinal(1)*alpha
+         write (*,*) ' gammagas, gammarad: ',gammagas,gammarad
 
-         write (13,*) ' rho, u_g, u^mu urad^mu: ',rhofinal,ufinal,
+         write (13,*) ' rho, u_g, u^mu: ',rhofinal,ufinal,
      &        (ugasconfinal(j),j=1,4)
-     &        (uradconfinal(j),j=1,4)
-c
-c         write (*,*) ' prim: ',(prim(j),j=1,4)
 
       enddo
 
  10   write (*,*)
+      write (*,*)
       write (*,*) ' iproblem: ',iproblem
       write (*,*) ' itertot: ',itertot
       problem=iproblem
       write (*,*) ' iterations per problem: ',itertot/problem
+      close (11)
       write (12,*)
       write (12,*) ' iproblem: ',iproblem
       write (12,*) ' itertot: ',itertot
       write (12,*) ' iterations per problem: ',itertot/problem
-      close (11)
+      write (*,*)
       close (12)
       close (13)
       close (14)
@@ -450,18 +460,21 @@ c     Read in data in Jon's new format (181 numbers)
      &        (uradconp(j),uradcovp(j),j=1,4),
      &        (ugasconp(j),ugascovp(j),j=1,4)
 
-c         write (*,*) ' gn: ',((gn(i,j),j=1,4),i=1,4)
-c         write (*,*) ' gv: ',((gv(i,j),j=1,4),i=1,4)
-c         write (*,*) ' rhou0i, rhou0f, rhou0p: ',rhou0i,rhou0f,rhou0p
-c         write (*,*) ' uf, up, T001, T00f, T00p: ',uf,up,T00i,T00f,T00p
-c         write (*,*) ' ugasconp: ',(ugasconp(j),j=1,4)
-c         write (*,*) ' ugasconf: ',(ugasconf(j),j=1,4)
-c         write (*,*) ' BBp: ',(BBp(j),j=2,4)
-c         write (*,*) ' BBf: ',(BBf(j),j=2,4)
-c         write (*,*) ' Ef, Ep, R00i, R00f, R00p: ',Ef,Ep,R00i,R00f,R00p
-c         write (*,*) ' uradconp: ',(uradconp(j),j=1,4)
-c         write (*,*) ' uradconf: ',(uradconf(j),j=1,4)
-c         write (*,*) ' si, sf, sp: ',si,sf,sp
+         write (*,*) ' gn: ',((gn(i,j),j=1,4),i=1,4)
+         write (*,*) ' gv: ',((gv(i,j),j=1,4),i=1,4)
+         write (*,*) ' rhof, rhop, rhou0i, rhou0f, rhou0p: ',
+     &        rhof,rhop,rhou0i,rhou0f,rhou0p
+         write (*,*) ' uf, up, T00i, T00f, T00p: ',uf,up,T00i,T00f,T00p
+         write (*,*) ' ugasconp: ',(ugasconp(j),j=1,4)
+         write (*,*) ' ugascovp: ',(ugascovp(j),j=1,4)
+         write (*,*) ' ugasconf: ',(ugasconf(j),j=1,4)
+         write (*,*) ' BBp: ',(BBp(j),j=2,4)
+         write (*,*) ' BBf: ',(BBf(j),j=2,4)
+         write (*,*) ' Ef, Ep, R00i, R00f, R00p: ',Ef,Ep,R00i,R00f,R00p
+         write (*,*) ' uradconp: ',(uradconp(j),j=1,4)
+         write (*,*) ' uradcovp: ',(uradcovp(j),j=1,4)
+         write (*,*) ' uradconf: ',(uradconf(j),j=1,4)
+         write (*,*) ' si, sf, sp: ',si,sf,sp
 
 c         write (*,*) (isc(j),j=1,4),dt,
 c     &        ((gn(j,k),k=1,4),j=1,4),
@@ -616,20 +629,30 @@ c     stress energy tensor T^mu_nu
 
       p=(Gam-1.d0)*u
       bsq2=0.5d0*bsq
+c      write (*,*) ' rho, u, bsq: ',rho,u,bsq
 
       do i=1,4
       do j=1,4
+
+      if (i.eq.1.and.j.eq.1) then
+
+c     Replace T^0_0 -> T^0_0 + rho*u^0
+
+         Tmunu(i,j)=rho*ucon(i)*(1.d0+ucov(j))
+     &        +(u+p+bsq)*ucon(i)*ucov(j)
+     &        +(p+bsq2)*delta(i,j)
+     &        -bcon(i)*bcov(j)
+
+      else
 
          Tmunu(i,j)=(rho+u+p+bsq)*ucon(i)*ucov(j)
      &        +(p+bsq2)*delta(i,j)
      &        -bcon(i)*bcov(j)
 
+      endif
+
       enddo
       enddo
-
-c     Replace T^0_0 -> T^0_0 + rho*u^0
-
-      Tmunu(1,1)=Tmunu(1,1)+rho*ucon(1)
 
       return
       end
@@ -689,7 +712,7 @@ c     Calculate Kronecker delta
 
 
 
-      subroutine Rmunuinvert(Rtcov,E,ucon,ucov,Rmunu)
+      subroutine Rmunuinvert(Rtcov,E,ucon,ucov,ugascon,Rmunu)
 
 c     Given the row R^t_mu of the radiation tensor, solves for the
 c     radiation frame energy density E and 4-velocity and calculates the
@@ -697,7 +720,7 @@ c     full tensor R^mu_nu
 
       implicit double precision (a-h,o-z)
       dimension Rtcov(4),Rtcon(4),ucon(4),ucov(4),Rmunu(4,4),
-     &     gn(4,4),gv(4,4)
+     &     ugascon(4),gn(4,4),gv(4,4)
       common/accuracy/eps,epsbis,dvmin,tol,uminfac,dlogmax,
      &     gammaradceiling,itermax
       common/metric/gn,gv
@@ -740,6 +763,8 @@ c     Make sure E is positive. If not, go to 10
       do i=2,4
          ucon(i)=(3.d0*Rtcon(i)-E*gn(1,i))/(4.d0*E*ucon(1))
       enddo
+      gamma=ucon(1)*sqrt(-gn(1,1))
+c      write (*,*) ' gammarad, uconrad: ',gamma,(ucon(i),i=1,4)
 
 c     Make sure the Lorentz factor is below the ceiling. If not go to 10
 
@@ -749,11 +774,13 @@ c     Make sure the Lorentz factor is below the ceiling. If not go to 10
          go to 10
       endif
 
-c     This segment if for problem cases. We set gamma_radiation equal to
+c     This segment is for problem cases. We set gamma_radiation equal to
 c     its ceiling value and solve for E and u^i without using R^00.
 
  10   ucon(1)=gammaradceiling*sqrt(-gn(1,1))
-      write (*,*) ' gamma_rad hit ceiling: urad^1 = ',ucon(1)
+      write (*,*) ' gamma_rad hit ceiling: g^tt, urad^t = ',
+     &     gn(1,1),ucon(1)
+c      write (*,*) ' Rtcon: ',(Rtcon(j),j=1,4)
 
       aquad=0.d0
       bquad=0.d0
@@ -772,6 +799,12 @@ c     its ceiling value and solve for E and u^i without using R^00.
       enddo
 
       disc=bquad*bquad-4.d0*aquad*cquad
+
+c     Check if disc > 0. If not, we have trouble again, and we need to
+c     use yet another scheme!
+
+      if (disc.lt.0.d0) go to 30
+
       E=(-bquad-sqrt(disc))/(2.d0*cquad)
 c      write (*,*) ' a, b, c, disc, E: ',aquad,bquad,cquad,disc,E
 
@@ -787,6 +820,20 @@ c      write (*,*) ' ucon: ',(ucon(i),i=1,4)
       enddo
       enddo
 c      write (*,*) ' check norm: ',sum
+      go to 20
+
+c     Third try! What should we do here?
+
+ 30   continue
+
+c     Last-ditch effort. Set radiation velocity equal to gas velocity
+
+      write (*,*) ' Error: No solution for radiation '
+      do i=1,4
+         ucon(i)=ugascon(i)
+      enddo
+
+      E=3.d0*Rtcon(1)/(4.d0*ucon(1)**2-gn(1,1))
 
 c     Calculate urad_mu
 
@@ -1069,11 +1116,11 @@ c      write (12,*) ' Radiation inversion, u_g only (entropy) '
       write (12,*) ' ERROR: no convergence with entropy equation: '
 
 c     We should never reach this point. Unclear what to do in this case!
-c     Currently we just restore the saved primitives
+c     We could keep the solution or restore the saved primitives.
 
-      do i=1,4
-         prim(i)=primsave(i)
-      enddo
+c      do i=1,4
+c         prim(i)=primsave(i)
+c      enddo
 
       return
       end
@@ -1089,7 +1136,7 @@ c     returned in the same array. func is the function that computes the
 c     four error terms for a given set of primitives.
 
       implicit double precision (a-h,o-z)
-      dimension prim0(4),error0(4),prim(4),error(4),
+      dimension prim0(4),error0(4),errornorm(4),prim(4),error(4),
      &     AJac(4,4),indx(4),Ttcov(4),Rtcov(4),BB(4),
      &     primold(4)
       common/accuracy/eps,epsbis,dvmin,tol,uminfac,dlogmax,
@@ -1113,10 +1160,11 @@ c     Make sure u == prim0(1) is in safe territory
 
       prim0(1)=max(prim0(1),uminfac*rhou0)
 
-      call func(prim0,error0,err4,err3,iflag)
+      call func(prim0,error0,errornorm,err4,err3,iflag)
       write (*,*) ' Newton-Raphson-4 '
-      write (*,*) ' i, primitives, error, err4: ',i,
-     &     (prim0(j),j=1,4),(error0(j),j=1,4),err4
+      write (*,*) ' i, primitives, error, errornorm, err4: ',iter,
+     &     (prim0(j),j=1,4),(error0(j),j=1,4),
+     &     (errornorm(j),j=1,4),err4
 
 c     iflag=9 means a serious error in the value of u. This can be
 c     tolerated for a few steps (up to iter=itermax). After that, return
@@ -1161,7 +1209,7 @@ c     the errors.
          endif
          prim(j)=prim0(j)+dprim
 
-         call func(prim,error,err4,err3,iflag)
+         call func(prim,error,errornorm,err4,err3,iflag)
 c         write (*,*) ' error: ',j,(error(k),k=1,4)
       do k=1,4
          AJac(k,j)=(error(k)-error0(k))/dprim
@@ -1191,6 +1239,16 @@ c     Apply the Newton-Raphson shifts
 
       enddo
 
+c     Make sure u == prim0(1) is in safe territory
+
+      prim0(1)=max(prim0(1),uminfac*rhou0)
+
+      call func(prim0,error0,errornorm,err4,err3,iflag)
+      write (*,*) ' Newton-Raphson-4 '
+      write (*,*) ' i, primitives, error, errornorm, err4: ',i,
+     &     (prim0(j),j=1,4),(error0(j),j=1,4),
+     &     (errornorm(j),j=1,4),err4
+
       iflag=1
 
       return
@@ -1211,7 +1269,7 @@ c     used.
 
       implicit double precision (a-h,o-z)
       dimension prim0(4),prim30(3),error30(3),prim3(3),error3(3),
-     &     AJac(3,3),indx(3),Ttcov(4),Rtcov(4),BB(4)
+     &     AJac(3,3),indx(3),Ttcov(4),Rtcov(4),BB(4),errornorm(3)
       common/accuracy/eps,epsbis,dvmin,tol,uminfac,dlogmax,
      &     gammaradceiling,itermax
       common/conserved/Gam,Gam1,en,en1,rhou0,s,Ttcov,Rtcov,BB,dt
@@ -1221,12 +1279,14 @@ c     niter is the maximum number of Newton-Raphson
 c     iterations. Currently we do only one iteration of Newton3.
 c     iflag=0 measn that a good solution was found
 
+c      niter=5
       niter=1
       iflag=0
 
 c     Make sure u == primsave(1) is in safe territory
 
-      primsave=max(prim0(1),uminfac*rhou0)
+      prim0(1)=max(prim0(1),uminfac*rhou0)
+      primsave=prim0(1)
       do i=1,3
          prim30(i)=prim0(i+1)
       enddo
@@ -1237,12 +1297,19 @@ c     Do Newton-Raphson until err is less than tolerance tol
 c      write (*,*)
       do i=1,100
 
-      call func3(primsave,prim30,error30,err4,err3,iflag,func)
+      call func3(primsave,prim30,error30,errornorm,err4,err3,iflag,func)
       write (*,*) ' Newton-Raphson-3 '
-      write (*,*) ' iter, primitives, error, err3: ',iter,
-     &     (prim30(j),j=1,3),(error30(j),j=1,3),err3
+      write (*,*) ' iter, primitives, error, errornorm, err3: ',iter,
+     &     (prim30(j),j=1,3),(error30(j),j=1,3),
+     &     (errornorm(j),j=1,3),err3
 
-      if (iter.ge.niter) return
+      if (iter.ge.niter) then
+         prim0(1)=primsave
+         do j=1,3
+            prim0(j+1)=prim30(j)
+         enddo
+         return
+      endif
 
 c     If all the three equations give fractional errors less than tol,
 c     return
@@ -1272,7 +1339,8 @@ c     the errors.
          endif
          prim3(j)=prim30(j)+dprim
 
-         call func3(primsave,prim3,error3,err4,err3,iflag,func)
+         call func3(primsave,prim3,error3,errornorm,
+     &        err4,err3,iflag,func)
 c         write (*,*) ' error: ',j,(error3(k),k=1,3),err3
       do k=1,3
          AJac(k,j)=(error3(k)-error30(k))/dprim
@@ -1315,13 +1383,13 @@ c      write (*,*) ' too many iterations! '
 
 
 
-      subroutine usolveMHD(prim,iter,iflad,funcMHD,uMHD)
+      subroutine usolveMHD(prim,iter,iflag,funcMHD,uMHD)
 
 c     Solves a 1D equation for u, using either the energy or entropy
 c     equation without radiation source term
 
       implicit double precision (a-h,o-z)
-      dimension prim(4),error(4),Ttcov(4),Rtcov(4),BB(4),
+      dimension prim(4),error(4),errornorm(4),Ttcov(4),Rtcov(4),BB(4),
      &     ucon(4),ucov(4),bcon(4),bcov(4),Tmunu(4,4),
      &     urcon(4),urcov(4),Rmunu(4,4),Gcon(4),Gcov(4)
       common/accuracy/eps,epsbis,dvmin,tol,uminfac,dlogmax,
@@ -1336,7 +1404,7 @@ c     Call funcMHD and obtain basic parameters needed for solving the 1D
 c     energy equation: rho, Ehat
 
       u0=prim(1)
-      call funcMHD(prim,error,err4,err3,iflag)
+      call funcMHD(prim,error,errornorm,err4,err3,iflag)
       rho0=rho
       Ehat0=Ehat
 c      write (*,*) ' usolveMHD: ',(prim(i),i=1,4),rho0,Ehat0
@@ -1466,7 +1534,7 @@ c      err=entropy-s-Gdtau
 
 
 
-      subroutine usolverad(prim,iter,iflad,funcrad,uerr)
+      subroutine usolverad(prim,iter,iflag,funcrad,uerr)
 
 c     Solves a 1D equation for u, using either the energy or entropy
 c     equation including the radiation source term
@@ -1474,7 +1542,8 @@ c     equation including the radiation source term
       implicit double precision (a-h,o-z)
       dimension prim(4),error(4),Ttcov(4),Rtcov(4),BB(4),
      &     ucon(4),ucov(4),bcon(4),bcov(4),Tmunu(4,4),
-     &     urcon(4),urcov(4),Rmunu(4,4),Gcon(4),Gcov(4)
+     &     urcon(4),urcov(4),Rmunu(4,4),Gcon(4),Gcov(4),
+     &     errornorm(4)
       common/accuracy/eps,epsbis,dvmin,tol,uminfac,dlogmax,
      &     gammaradceiling,itermax
       common/conserved/Gam,Gam1,en,en1,rhou0,s,Ttcov,Rtcov,BB,dt
@@ -1487,7 +1556,7 @@ c     Call funcrad and obtain basic parameters needed for solving the 1D
 c     energy equation: rho, Ehat
 
       u0=prim(1)
-      call funcrad(prim,error,err4,err3,iflag)
+      call funcrad(prim,error,errornorm,err4,err3,iflag)
       rho0=rho
       Ehat0=Ehat
 
@@ -1642,7 +1711,7 @@ c     Compute entropy and compute deviation from conserved entropy
      &     Gcon,Gcov,u0,iuerr
 
 c     The fluid frame error is:
-c        rhou0*ln(p^n/rho^(n+1)) - s - (ffkap*rho^2/T^3.5)*dtau*(Ehat-B4pi)
+c        rho*ln(p^n/rho^(n+1)) - s - (ffkap*rho^2/T^3.5)*dtau*(Ehat-B4pi)
 c     We compute coefficients corresponding to these terms and then
 c     compute the error and its derivative wrt u
 
@@ -1661,13 +1730,16 @@ c      write (*,*) ' Tgas, B4pi, ff: ',Tgas,B4pi,ff
 
       Gdtau=(c3*dtau)*u**(-3.5d0)*(c4-u-c2*u**4)
 
-      entropy=rhou0*log((Gam1*u)**en/rho**en1)
+      entropy=rho*log((Gam1*u)**en/rho**en1)
 
-      err=entropy-s-Gdtau
+c      write (*,*) ' Ehat, Gdtau, entropy: ',Ehat,Gdtau,entropy
+
+      err=entropy-(s/ucon(1))-Gdtau
+c      write (*,*) ' s, ucon(1), err: ',s,ucon(1),err
 
       if (iuerr.eq.1) then
 
-         derr=(rhou0*en/u)+3.5d0*c3*dtau*c4*u**(-4.5d0)-
+         derr=(rho*en/u)+3.5d0*c3*dtau*c4*u**(-4.5d0)-
      &        2.5d0*c3*dtau*u**(-3.5d0)+
      &        0.5d0*c3*dtau*c2*u**(-0.5d0)
          write (*,10) u,err,derr
@@ -1684,13 +1756,13 @@ c      write (*,*) ' Tgas, B4pi, ff: ',Tgas,B4pi,ff
 
 
 
-      subroutine funcMHD1(prim,error,err4,err3,iflag)
+      subroutine funcMHD1(prim,error,errornorm,err4,err3,iflag)
 
 c     This subroutine calculates errors for the MHD inversion problem
 c     without radiation source term using the energy equation
 
       implicit double precision (a-h,o-z)
-      dimension prim(4),error(4),Ttcov(4),Rtcov(4),BB(4),
+      dimension prim(4),error(4),errornorm(4),Ttcov(4),Rtcov(4),BB(4),
      &     ucon(4),ucov(4),bcon(4),bcov(4),Tmunu(4,4)
       common/metric/gn,gv
       common/accuracy/eps,epsbis,dvmin,tol,uminfac,dlogmax,
@@ -1723,15 +1795,17 @@ c     normalized err4 from all four equations
       err3=0.d0
       do i=2,4
          error(i)=Tmunu(1,i)-Ttcov(i)
-         err3=max(err3,abs(error(i)/(abs(error(i))+
-     &        abs(Tmunu(1,i))+abs(Ttcov(i)))))
+         errornorm(i)=abs(error(i)/(abs(error(i))+
+     &        abs(Tmunu(1,i))+abs(Ttcov(i))))
+         err3=max(err3,errornorm(i))
       enddo
 
 c     Use lab frame energy equation
 
       error(1)=Tmunu(1,1)-Ttcov(1)
-      err4=max(err3,abs(error(1)/(abs(error(1))+
-     &     abs(Tmunu(1,1))+abs(Ttcov(1)))))
+      errornorm(1)=abs(error(1)/(abs(error(1))+
+     &     abs(Tmunu(1,1))+abs(Ttcov(1))))
+      err4=max(err3,errornorm(1))
 
 c      write (*,*)
 c      write (*,*) ' target Ttcov: ',(Ttcov(i),i=1,4)
@@ -1756,13 +1830,13 @@ c      write (*,*) ' error: ',(error(i),i=1,4),err3
 
 
 
-      subroutine funcMHD2(prim,error,err4,err3,iflag)
+      subroutine funcMHD2(prim,error,errornorm,err4,err3,iflag)
 
 c     This subroutine calculates errors for the MHD inversion problem
 c     without radiation source term using the entropy equation
 
       implicit double precision (a-h,o-z)
-      dimension prim(4),error(4),Ttcov(4),Rtcov(4),BB(4),
+      dimension prim(4),error(4),errornorm(4),Ttcov(4),Rtcov(4),BB(4),
      &     ucon(4),ucov(4),bcon(4),bcov(4),Tmunu(4,4)
       common/metric/gn,gv
       common/accuracy/eps,epsbis,dvmin,tol,uminfac,dlogmax,
@@ -1792,16 +1866,18 @@ c     normalized err4 from all four equations
       err3=0.d0
       do i=2,4
          error(i)=Tmunu(1,i)-Ttcov(i)
-         err3=max(err3,abs(error(i)/(abs(error(i))+
-     &        abs(Tmunu(1,i))+abs(Ttcov(i)))))
+         errornorm(i)=abs(error(i)/(abs(error(i))+
+     &        abs(Tmunu(1,i))+abs(Ttcov(i))))
+         err3=max(err3,errornorm(i))
       enddo
 
 c     Use entropy equation
 
       entropy=ucon(1)*rho*log((Gam1*u)**en/rho**en1)
       error(1)=entropy-s
-      err4=max(err3,abs(error(1)/(abs(error(1))+
-     &     abs(entropy)+abs(s))))
+      errornorm(1)=abs(error(1)/(abs(error(1))+
+     &     abs(entropy)+abs(s)))
+      err4=max(err3,errornorm(1))
 
 c      write (*,*)
 c      write (*,*) ' target entropy: ',s
@@ -1825,7 +1901,8 @@ c      write (*,*) ' err3, err4: ',err3,err4
 
 
 
-      subroutine func3(primsave,prim3,error3,err4,err3,iflag,func)
+      subroutine func3(primsave,prim3,error3,errornorm3,
+     &     err4,err3,iflag,func)
 
 c     This function is called by Newton3. It takes a 3-array with
 c     primitives prim3(3), transfers the value primsave to prim4(1) and
@@ -1834,7 +1911,8 @@ c     4-array of errors error4(4). Then transfers appropriate elements
 c     to error3(3) and returns this along with overall error err3.
 
       implicit double precision (a-h,o-z)
-      dimension prim3(3),error3(3),prim4(4),error4(4)
+      dimension prim3(3),error3(3),prim4(4),error4(4),
+     &     errornorm4(4),errornorm3(3)
       external func
 
 c     Transfer primsave and prim3(3) to prim4(4)
@@ -1846,12 +1924,13 @@ c     Transfer primsave and prim3(3) to prim4(4)
 
 c     Call appropriate function to calculate error4(4)
 
-      call func(prim4,error4,err4,err3,iflag)
+      call func(prim4,error4,errornorm4,err4,err3,iflag)
 
 c     Transfer the momentum equation errors to error3(3) and return
 
       do i=1,3
          error3(i)=error4(i+1)
+         errornorm3(i)=errornorm4(i+1)
       enddo
 
       return
@@ -1859,14 +1938,14 @@ c     Transfer the momentum equation errors to error3(3) and return
 
 
 
-      subroutine funcrad1(prim,error,err4,err3,iflag)
+      subroutine funcrad1(prim,error,errornorm,err4,err3,iflag)
 
 c     This subroutine calculates errors for the radiation inversion
 c     problem including the radiation source term using the energy
 c     equation
 
       implicit double precision (a-h,o-z)
-      dimension prim(4),error(4),Ttcov(4),Rtcov(4),BB(4),
+      dimension prim(4),error(4),errornorm(4),Ttcov(4),Rtcov(4),BB(4),
      &     ucon(4),ucov(4),bcon(4),bcov(4),Tmunu(4,4),
      &     Tt(4),Rt(4),urcon(4),urcov(4),Rmunu(4,4),
      &     gn(4,4),gv(4,4),Gcon(4),Gcov(4)
@@ -1920,7 +1999,7 @@ c      write (*,*) ' Rt: ',(Rt(i),i=1,4)
 
 c     Calculate the full R^mu_nu tensor
 
-      call Rmunuinvert(Rt,E,urcon,urcov,Rmunu)
+      call Rmunuinvert(Rt,E,urcon,urcov,ucon,Rmunu)
 c      write (*,*) ' E, urcon, urcov: ',E,(urcon(i),urcov(i),i=1,4)
 
 c     Calculate radiation energy density in the gas frame \hat{E}, and
@@ -1932,7 +2011,7 @@ c     the gas and radiation temperatures
          Ehat=Ehat+Rmunu(i,j)*ucov(i)*ucon(j)
       enddo
       enddo
-c      write (*,*) ' \hat{E}: ',Ehat
+c      write (*,*) ' rho, u, \hat{E}: ',rho,u,Ehat
 
       Trad=(Ehat/arad)**(0.25d0)
       Tgas=Gam1*u/rho
@@ -1952,7 +2031,12 @@ c     implicitly.
 
       alpha=1.d0/sqrt(-gn(1,1))
       gamma=ucon(1)*alpha
-      dtau=dt/gamma
+
+c     Decide how to set dtau: either dt/gamma or dt/ucon(1)
+
+c      dtau=dt/gamma
+      dtau=dt/ucon(1)
+
       chi1=ff*dtau*(1.d0+4.d0*B4pi/u)
       chi2=(ff+es)*dtau*(1.d0+Ehat/(rho+Gam*u))
 c      write (*,*) ' chi1, chi2: ',chi1,chi2
@@ -1979,15 +2063,19 @@ c     normalized err4 from all four equations
       err3=0.d0
       do i=2,4
          error(i)=Tt(i)-Ttcov(i)-Gcov(i)*dt
-         err3=max(err3,abs(error(i)/(abs(Gcov(i)*dt)+
-     &        abs(Tt(i))+abs(Ttcov(i)))))
+         errornorm(i)=abs(error(i)/(abs(Gcov(i)*dt)+
+     &        abs(Tt(i))+abs(Ttcov(i))))
+         err3=max(err3,errornorm(i))
       enddo
 
 c     Calculate error(1) from lab frame energy equation
 
          error(1)=Tt(1)-Ttcov(1)-Gcov(1)*dt
-         err4=max(err3,abs(error(1)/(abs(Gcov(1)*dt)+
-     &        abs(Tt(1))+abs(Ttcov(1)))))
+         errornorm(1)=abs(error(1))/(abs(Gcov(1)*dt)+
+c     &        abs(Tt(1))+abs(Ttcov(1)))
+     &        abs(Tt(1))+abs(Ttcov(1))
+     &        +abs((Gam*u+bsq)*ucon(1)*ucov(1)))
+         err4=max(err3,errornorm(1))
 
 c      write (*,*)
 c      write (*,*) ' target Ttcov: ',(Ttcov(i),i=1,4)
@@ -2002,6 +2090,7 @@ c     If u has an unreasonable value, set iflag=9 and reset u
       else
          entropy=log((Gam1*u)**en/rho**en1)
          if (entropy.lt.((s/rhou0)-dlogmax)) iflag=9
+         if (err4.eq.0.0d0) iflag=9
       endif
       if (iflag.eq.9) prim(1)=max(prim(1),uminfac*rho)
 
@@ -2012,14 +2101,14 @@ c     If u has an unreasonable value, set iflag=9 and reset u
 
 
 
-      subroutine funcrad2(prim,error,err4,err3,iflag)
+      subroutine funcrad2(prim,error,errornorm,err4,err3,iflag)
 
 c     This subroutine calculates errors for the radiation inversion
 c     problem including the radiation source term using the entropy
 c     equation
 
       implicit double precision (a-h,o-z)
-      dimension prim(4),error(4),Ttcov(4),Rtcov(4),BB(4),
+      dimension prim(4),error(4),errornorm(4),Ttcov(4),Rtcov(4),BB(4),
      &     ucon(4),ucov(4),bcon(4),bcov(4),Tmunu(4,4),
      &     Tt(4),Rt(4),urcon(4),urcov(4),Rmunu(4,4),
      &     gn(4,4),gv(4,4),Gcon(4),Gcov(4)
@@ -2070,7 +2159,7 @@ c     R^0_mu
 
 c     Calculate the full R^mu_nu tensor
 
-      call Rmunuinvert(Rt,E,urcon,urcov,Rmunu)
+      call Rmunuinvert(Rt,E,urcon,urcov,ucon,Rmunu)
 
 c     Calculate radiation energy density in the gas frame \hat{E}, and
 c     the gas and radiation temperatures
@@ -2100,7 +2189,12 @@ c     explicitly. Currently, all calculations are done implicitly.
 
       alpha=1.d0/sqrt(-gn(1,1))
       gamma=ucon(1)*alpha
-      dtau=dt/gamma
+
+c     Decide how to set dtau: either dt/gamma or dt/ucon(1)
+
+c      dtau=dt/gamma
+      dtau=dt/ucon(1)
+
       chi1=ff*dtau*(1.d0+4.d0*B4pi/u)
       chi2=(ff+es)*dtau*(1.d0+Ehat/(rho+Gam*u))
 c      write (*,*) ' chi1, chi2: ',chi1,chi2
@@ -2127,8 +2221,9 @@ c     normalized err4 from all four equations
       err3=0.d0
       do i=2,4
          error(i)=Tt(i)-Ttcov(i)-Gcov(i)*dt
-         err3=max(err3,abs(error(i)/(abs(Gcov(i)*dt)+
-     &        abs(Tt(i))+abs(Ttcov(i)))))
+         errornorm(i)=abs(error(i)/(abs(Gcov(i)*dt)+
+     &        abs(Tt(i))+abs(Ttcov(i))))
+         err3=max(err3,errornorm(i))
       enddo
 
 c     Calculate error(1) corresponding to the lab frame entropy equation
@@ -2136,17 +2231,21 @@ c     Calculate error(1) corresponding to the lab frame entropy equation
       entropy=ucon(1)*rho*log((Gam1*prim(1))**en/rho**en1)
       Gt=Gcov(1)*dt
       error(1)=entropy-s-Gt
+      errornorm(1)=abs(error(1)/(abs(entropy)+
+     &     abs(s)+abs(Gt)))
 
 c     Alternatively, use the fluid frame entropy equation
 
-c      entropy=ucon(1)*rho*log((Gam1*prim(1))**en/rho**en1)
-c      Gdtau=ff*(Ehat-B4pi)*dtau
-c      Gt=Gdtau
-c      error(1)=entropy-s-Gdtau
+c      Ghatdtau=ff*(Ehat-B4pi)*dtau
+c      entropy=rho*log((Gam1*prim(1))**en/rho**en1)
+c      Gt=Ghatdtau
+c      error(1)=entropy-(s/ucon(1))-Gt
+c      errornorm(1)=abs(error(1)/(abs(entropy)+
+c     &     abs(s/ucon(1))+abs(Gt)))
+
 c      write (*,*) ' entropy, s, Gdtau: ',entropy,s,Gdtau
 
-      err4=max(err3,abs(error(1)/(abs(entropy)+
-     &     abs(s)+abs(Gt))))
+      err4=max(err3,errornorm(1))
 c      write (*,*) ' error(1), err3, err4 ',error(1),err3,err4
 
 c      write (*,*)
