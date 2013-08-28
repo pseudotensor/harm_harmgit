@@ -294,8 +294,6 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE errorabs, struc
 // below 1 if reporting cases when MAXITER reached, but allowd error so not otherwise normally reported.
 #define REPORTMAXITERALLOWED (PRODUCTION==0)
 
-#define REPORTERFNEG (PRODUCTION==0)
-
 // whether to ensure rho and u_g in Jacobian calculation difference do not cross over 0 and stay on same side as origin point.
 #define FORCEJDIFFNOCROSS 1
 
@@ -2366,7 +2364,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
   
 
   if(errorabs>IMPALLOWCONVABS && (usedenergy||usedentropy||usedcold)){
-    dualfprintf(fail_file,"WTF: %g : %d %d %d : %d %d\n",errorabs,usedenergy,usedentropy,usedcold,usedrameshenergy,usedrameshentropy);
+    dualfprintf(fail_file,"WTF2: %g : %d %d %d : %d %d\n",errorabs,usedenergy,usedentropy,usedcold,usedrameshenergy,usedrameshentropy);
   }
 
 
@@ -4149,11 +4147,12 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
 
   //  if(PRODUCTION==0 && NOTACTUALFAILURE(failreturn)==0 && errorabsf1>=IMPTRYCONVALT || PRODUCTION>0 && NOTBADFAILURE(failreturn)==0 && havebackup==0){ // as in previous code
 
-  // for seeing Erf<0 and small errors not tol errors.  
-  ///  if(REPORTERFNEG && failreturn!=FAILRETURNMODESWITCH && (pp[PRAD0]<10.0*ERADLIMIT) || PRODUCTION==0 && NOTACTUALFAILURE(failreturn)==0 || PRODUCTION>0 && NOTBADFAILURE(failreturn)==0 && havebackup==0){
+  // FUCK
+  // for seeing Erf<0 and small errors not tol errors.
+  if(failreturn!=FAILRETURNMODESWITCH && (pp[PRAD0]<10.0*ERADLIMIT) || PRODUCTION==0 && NOTACTUALFAILURE(failreturn)==0 && errorabsf1>=IMPTRYCONVALT || PRODUCTION>0 && NOTBADFAILURE(failreturn)==0 && havebackup==0){
 
   // for catching oscillators at small error but still >tol.
-  if(PRODUCTION==0 && NOTACTUALFAILURE(failreturn)==0 || PRODUCTION>0 && NOTBADFAILURE(failreturn)==0){
+  //  if(PRODUCTION==0 && NOTACTUALFAILURE(failreturn)==0 || PRODUCTION>0 && NOTBADFAILURE(failreturn)==0){
 
 
   //    if(REPORTERFNEG && failreturn!=FAILRETURNMODESWITCH && (pp[PRAD0]<10.0*ERADLIMIT || *radinvmod ) || PRODUCTION==0 && NOTACTUALFAILURE(failreturn)==0 && errorabsf1>=trueimptryconvALT || PRODUCTION>0 && NOTBADFAILURE(failreturn)==0 && havebackup==0){
@@ -4607,7 +4606,8 @@ int get_rameshsolution(int whichcall, int radinvmod, int failtype, long long int
 
 
   // DEBUG and only when real call (for now) and only show if one is not a bad solution
-  if(debugfail>=2 && whichcall>0 && (*failtypeent==0 || *failtypeeng==0)){
+  //  if(debugfail>=2 && whichcall>0 && (*failtypeent==0 || *failtypeeng==0)){ // FUCK
+  if(debugfail>=2 && whichcall==0){ // DEBUGGING Erf~0 solutions
 
     FTYPE resultsjon[NUMRESULTS];
     resultsjon[0] = pp[RHO];
