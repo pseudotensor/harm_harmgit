@@ -276,7 +276,7 @@ int primtoflux_ma(int needentropy,int *returntype, FTYPE *pr, struct of_state *q
 
 
   // GODMARK WTF!  Problems with code (compiling?) with this
-  // if(mhd_calc(pr,dir,geom,q,mhd)>=1)
+  // if(mhd_calc(pr,dir,geom,q,mhd,mhdabs)>=1)
   // FAILSTATEMENT("phys.c:primtoflux()","mhd_calc() dir=1or2",1);
 
   // MHD stress-energy tensor w/ first index up, second index down.
@@ -365,7 +365,7 @@ int primtoflux_em(int *returntype, FTYPE *pr, struct of_state *q, int dir, struc
 
 
   // GODMARK WTF!  Problems with code (compiling?) with this
-  // if(mhd_calc(pr,dir,geom,q,mhd)>=1)
+  // if(mhd_calc(pr,dir,geom,q,mhd,mhdabs)>=1)
   // FAILSTATEMENT("phys.c:primtoflux()","mhd_calc() dir=1or2",1);
 
   // MHD stress-energy tensor w/ first index up, second index down.
@@ -1206,16 +1206,16 @@ void mhd_calc_0_ma(FTYPE *pr, int dir, struct of_state *q, FTYPE *mhd, FTYPE *mh
   // mhd^{dir}_{j} =
   // j=0..3
   DLOOPA(j) mhd[j] = eta * q->ucon[dir] * q->ucov[j];
-  DLOOPA(j) mhdabs[j] = fabs(mhd[j]);
+  if(mhdabs!=NULL) DLOOPA(j) mhdabs[j] = fabs(mhd[j]);
 
   DLOOPA(j) mhddiagpress[j] = 0.0;
 #if(SPLITPRESSURETERMINFLUXMA==0)
   mhd[dir] += ptot;
-  mhdabs[dir] += fabs(ptot);
+  if(mhdabs!=NULL) mhdabs[dir] += fabs(ptot);
 #else
   // below equivalent to ptot * delta(dir,j)
   mhddiagpress[dir] = ptot;
-  mhddiagpressabs[dir] = fabs(ptot);
+  if(mhddiagpressabs!=NULL) mhddiagpressabs[dir] = fabs(ptot);
 #endif
 
 }
@@ -1237,9 +1237,9 @@ void mhd_calc_0_em(FTYPE *pr, int dir, struct of_state *q, FTYPE *mhd, FTYPE *mh
   // j=0..3
   //  DLOOPA(j) mhd[j] = eta * q->ucon[dir] * q->ucov[j] + ptot * delta(dir, j) - q->bcon[dir] * q->bcov[j];
   DLOOPA(j) mhd[j] = eta * q->ucon[dir] * q->ucov[j] - q->bcon[dir] * q->bcov[j];
-  DLOOPA(j) mhdabs[j] = fabs(mhd[j]);
+  if(mhdabs!=NULL) DLOOPA(j) mhdabs[j] = fabs(mhd[j]);
   mhd[dir] += ptot;
-  mhdabs[dir] += fabs(ptot);
+  if(mhdabs!=NULL) mhdabs[dir] += fabs(ptot);
 
 }
 
@@ -1324,20 +1324,20 @@ void mhd_calc_norestmass_ma(FTYPE *pr, int dir, struct of_geom *geom, struct of_
   term1 = (P+u) * q->ucon[dir] *q->ucov[j];
   term2 = rho * q->ucon[dir] * q->ifremoverestplus1ud0elseud0;
   mhd[j] = term1 + term2 ;
-  mhdabs[j] = fabs(term1) + fabs(term2) ;
+  if(mhdabs!=NULL) mhdabs[j] = fabs(term1) + fabs(term2) ;
 
   // T^dir_j
   SLOOPA(j) mhd[j] = eta * q->ucon[dir] * q->ucov[j];
-  SLOOPA(j) mhdabs[j] = fabs(mhd[j]);
+  if(mhdabs!=NULL) SLOOPA(j) mhdabs[j] = fabs(mhd[j]);
 
 #if(SPLITPRESSURETERMINFLUXMA==0)
   // below equivalent to ptot * delta(dir,j)
   mhd[dir] += ptot;
-  mhdabs[dir] += fabs(ptot);
+  if(mhdabs!=NULL) mhdabs[dir] += fabs(ptot);
 #else
   // below equivalent to ptot * delta(dir,j)
   mhddiagpress[dir] = ptot;
-  mhddiagpressabs[dir] = fabs(ptot);
+  if(mhddiagpressabs!=NULL) mhddiagpressabs[dir] = fabs(ptot);
 #endif
 
 
@@ -1416,7 +1416,7 @@ void mhd_calc_primfield_em(FTYPE *pr, int dir, struct of_geom *geom, struct of_s
 #endif
 
 
-  DLOOPA(mu) mhdabs[mu] = fabs(mhd[mu]);
+  if(mhdabs!=NULL) DLOOPA(mu) mhdabs[mu] = fabs(mhd[mu]);
 
 
 

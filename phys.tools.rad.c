@@ -383,7 +383,7 @@ static void showdebuglist(int debugiter, FTYPE (*pppreholdlist)[NPR],FTYPE (*ppp
 int mathematica_report_check(int radinvmod, int failtype, long long int failnum, int gotfirstnofail, int eomtypelocal, int itermode, FTYPE errorabs, FTYPE errorabsbestexternal, int iters, int iterstotal, FTYPE realdt,struct of_geom *ptrgeom, FTYPE *ppfirst, FTYPE *pp, FTYPE *pb, FTYPE *piin, FTYPE *prtestUiin, FTYPE *prtestUU0, FTYPE *uu0, FTYPE *uu, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_state *q, FTYPE *dUother);
 
 // explicit stuff
-static void get_dtsub(int method, FTYPE *pr, struct of_state *q, FTYPE *Ui, FTYPE *Uf, FTYPE *dUother, FTYPE *CUf, FTYPE *Gdpl, FTYPE chi, FTYPE *Gdabspl, struct of_geom *ptrgeom, FTYPE *dtsub);
+static void get_dtsub(int method, FTYPE *pr, struct of_state *q, FTYPE *Ui, FTYPE *Uf, FTYPE *dUother, FTYPE *CUf, FTYPE *Gdpl, FTYPE chi, FTYPE *Gdplabs, struct of_geom *ptrgeom, FTYPE *dtsub);
 static void koral_source_dtsub_rad_calc(int method, FTYPE *pr, FTYPE *Ui, FTYPE *Uf, FTYPE *dUother, FTYPE *CUf, FTYPE *Gdpl, struct of_geom *ptrgeom, FTYPE *dtsub);
 static int source_explicit(int whichsc, int whichradsourcemethod, int methoddtsub,int *eomtype,
                            void (*sourcefunc)(int method, FTYPE *pr, FTYPE *Ui, FTYPE *Uf, FTYPE *dUother, FTYPE *CUf, FTYPE *Gpl, struct of_geom *ptrgeom, FTYPE *dtsub),
@@ -868,7 +868,7 @@ static int f_implicit(int iter, int failreturnallowable, int whichcall, int show
   // initialize counters
   newtonstats.nstroke=newtonstats.lntries=0;
   int finalstep = 1;  //can choose either 1 or 0 depending on whether want floor-like fixups (1) or not (0).  unclear which one would work best since for Newton method to converge might want to allow negative density on the way to the correct solution, on the other hand want to prevent runaway into rho < 0 region and so want floors.
-  FTYPE Gdpl[NPR],Gdabspl[NPR], Tgas;
+  FTYPE Gdpl[NPR],Gdplabs[NPR], Tgas;
   int failreturn;
   FTYPE uuabs[NPR];
 
@@ -876,9 +876,20 @@ static int f_implicit(int iter, int failreturnallowable, int whichcall, int show
   failreturn=0;
   // get primitive (don't change uu0).  This pp is used for inversion guess and to hold final inversion answer.
   //  PLOOP(pliter,pl) pp[pl] = pp0[pl];
-  // initialize Gdpl
-  PLOOP(pliter,pl) Gdpl[pl] = 0.0;
+  // initialize Gdpl and Gdplabs
+  PLOOP(pliter,pl) Gdpl[pl] = Gdplabs[pl] = 0.0;
 
+
+  //////////
+  ///
+  // Assign default value to anything else that may not involve rad or mhd
+  //
+  //////////
+  PLOOP(pliter,pl){
+    uu[pl] = uu0[pl];
+    uuabs[pl] = fabs(uu0[pl]);
+  }
+ 
 
 
 
@@ -1087,6 +1098,12 @@ static int f_implicit(int iter, int failreturnallowable, int whichcall, int show
   }
 
 
+  /////////
+  //
+  // At this point, must have pp, uu, uuabs, and q all consistent and defined
+  //
+  /////////
+
 
 
   ////////////////
@@ -1094,7 +1111,7 @@ static int f_implicit(int iter, int failreturnallowable, int whichcall, int show
   ////////////////
   int computestate=0;// already computed above
   int computeentropy=needentropy;
-  koral_source_rad_calc(computestate,computeentropy,pp, ptrgeom, Gdpl, Gdabspl, NULL, &Tgas, q);
+  koral_source_rad_calc(computestate,computeentropy,pp, ptrgeom, Gdpl, Gdplabs, NULL, &Tgas, q);
 
 
 
@@ -1118,8 +1135,8 @@ static int f_implicit(int iter, int failreturnallowable, int whichcall, int show
       f[pl] = (uu[pl] - uu0[pl]) + (signgd2 * localdt * Gdpl[pl]);
       
       // get error normalization that involves actual things being differenced
-      // KORALNOTE: Use Gdabspl to ensure absolute value over more terms in source in case coincidental cancellation without physical significance.
-      fnorm[pl] = THIRD*(fabs(uuabs[pl]) + fabs(uu[pl]) + fabs(uu0[pl]) + fabs(signgd2 * localdt * Gdabspl[pl]));
+      // KORALNOTE: Use Gdplabs to ensure absolute value over more terms in source in case coincidental cancellation without physical significance.
+      fnorm[pl] = THIRD*(fabs(uuabs[pl]) + fabs(uu[pl]) + fabs(uu0[pl]) + fabs(signgd2 * localdt * Gdplabs[pl]));
     }
 
     //    fracenergy=1.0;
@@ -1130,7 +1147,7 @@ static int f_implicit(int iter, int failreturnallowable, int whichcall, int show
       // error function is T*dS so no actual division by T.  Found in mathematica that this works best in difficult precision cases.
       // require T*dS method with fracenergy method so all same energy scale.
       fentropy[pl] = ((uu[pl] - uu0[pl]) + (signgd4 * localdt * Gdpl[pl]))*Tgas;
-      fnormentropy[pl] = (THIRD*(fabs(uuabs[pl]) + fabs(uu[pl]) + fabs(uu0[pl]) + fabs(signgd4 * localdt * Gdabspl[pl])))*Tgas;
+      fnormentropy[pl] = (THIRD*(fabs(uuabs[pl]) + fabs(uu[pl]) + fabs(uu0[pl]) + fabs(signgd4 * localdt * Gdplabs[pl])))*Tgas;
 
       // Get final interpolated energy-entropy-term error function
       //      dualfprintf(fail_file,"fracenergy=%g fUU=%g fnormUU=%g fE=%g fnormE=%g\n",fracenergy,f[UU],fnorm[UU],fentropy[ENTROPY],fnormentropy[ENTROPY]);
@@ -1150,8 +1167,8 @@ static int f_implicit(int iter, int failreturnallowable, int whichcall, int show
       f[pl] = (uu[pl] - uu0[pl]) + (signgd2 * localdt * Gdpl[pl]);
 
       // get error normalization that involves actual things being differenced
-      // KORALNOTE: Use Gdabspl to ensure absolute value over more terms in source in case coincidental cancellation without physical significance.
-      fnorm[pl] = THIRD*(fabs(uuabs[pl]) + fabs(uu[pl]) + fabs(uu0[pl]) + fabs(signgd2 * localdt * Gdabspl[pl]));
+      // KORALNOTE: Use Gdplabs to ensure absolute value over more terms in source in case coincidental cancellation without physical significance.
+      fnorm[pl] = THIRD*(fabs(uuabs[pl]) + fabs(uu[pl]) + fabs(uu0[pl]) + fabs(signgd2 * localdt * Gdplabs[pl]));
       //      dualfprintf(fail_file,"FOO: %d %d : %g %g : neeed=%d %d uu0=%g\n",pl,iv,f[pl],fnorm[pl],needentropy,*eomtype,uu0[pl]);
     }
 
@@ -1167,7 +1184,7 @@ static int f_implicit(int iter, int failreturnallowable, int whichcall, int show
           // replace original equation with dS*T equation
           // error function is T*dS so no actual division by T.  Found in mathematica that this works best in difficult precision cases.
           f[pl] = ((uu[pl] - uu0[pl]) + (signgd4 * localdt * Gdpl[pl]))*Tgas;
-          fnorm[pl] = (THIRD*(fabs(uuabs[pl]) + fabs(uu[pl]) + fabs(uu0[pl]) + fabs(signgd4 * localdt * Gdabspl[pl])))*Tgas;
+          fnorm[pl] = (THIRD*(fabs(uuabs[pl]) + fabs(uu[pl]) + fabs(uu0[pl]) + fabs(signgd4 * localdt * Gdplabs[pl])))*Tgas;
         }
       }
       // force external inversion or any further processing to use entropy equation instead of energy equation since that's only consistent with our choice here.
@@ -5141,7 +5158,7 @@ static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int sho
 
 
 // get dt for explicit sub-cyclings
-static void get_dtsub(int method, FTYPE *pr, struct of_state *q, FTYPE *Ui, FTYPE *Uf, FTYPE *dUother,  FTYPE *CUf, FTYPE *Gdpl, FTYPE chi, FTYPE *Gdabspl, struct of_geom *ptrgeom, FTYPE *dtsub)
+static void get_dtsub(int method, FTYPE *pr, struct of_state *q, FTYPE *Ui, FTYPE *Uf, FTYPE *dUother,  FTYPE *CUf, FTYPE *Gdpl, FTYPE chi, FTYPE *Gdplabs, struct of_geom *ptrgeom, FTYPE *dtsub)
 {
   int jj;
   int pliter,pl;
@@ -5174,7 +5191,7 @@ static void get_dtsub(int method, FTYPE *pr, struct of_state *q, FTYPE *Ui, FTYP
     PLOOP(pliter,pl) Gddtpl[pl] = Gdpl[pl]*realdt;
   }
   else{
-    PLOOP(pliter,pl) Gddtpl[pl] = Gdabspl[pl]*realdt;
+    PLOOP(pliter,pl) Gddtpl[pl] = Gdplabs[pl]*realdt;
   }
 
 
@@ -6067,7 +6084,7 @@ static void calc_Gd(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYP
 
 
 // get 4-force for all pl's
-void koral_source_rad_calc(int computestate, int computeentropy, FTYPE *pr, struct of_geom *ptrgeom, FTYPE *Gdpl, FTYPE *Gdabspl, FTYPE *chi, FTYPE *Tgas, struct of_state *q)
+void koral_source_rad_calc(int computestate, int computeentropy, FTYPE *pr, struct of_geom *ptrgeom, FTYPE *Gdpl, FTYPE *Gdplabs, FTYPE *chi, FTYPE *Tgas, struct of_state *q)
 {
   int jj;
   int pliter,pl;
@@ -6097,10 +6114,10 @@ void koral_source_rad_calc(int computestate, int computeentropy, FTYPE *pr, stru
   DLOOPA(jj) Gdpl[UU+jj]     = -SIGNGD*Gd[jj];
   DLOOPA(jj) Gdpl[URAD0+jj]  = +SIGNGD*Gd[jj];
 
-  if(Gdabspl!=NULL){
-    PLOOP(pliter,pl) Gdabspl[pl] = 0.0;
-    DLOOPA(jj) Gdabspl[UU+jj]     = Gdabs[jj];
-    DLOOPA(jj) Gdabspl[URAD0+jj]  = Gdabs[jj];
+  if(Gdplabs!=NULL){
+    PLOOP(pliter,pl) Gdplabs[pl] = 0.0;
+    DLOOPA(jj) Gdplabs[UU+jj]     = Gdabs[jj];
+    DLOOPA(jj) Gdplabs[URAD0+jj]  = Gdabs[jj];
   }
 
 #if(DOENTROPY!=DONOENTROPY && ENTROPY!=-100)
@@ -6115,9 +6132,9 @@ void koral_source_rad_calc(int computestate, int computeentropy, FTYPE *pr, stru
     Gdpl[pl] = 0.0;
     DLOOPA(jj) Gdpl[pl] += Gdplentropycontribs[jj];
 
-    if(Gdabspl!=NULL){
-      Gdabspl[pl] = 0.0;
-      DLOOPA(jj) Gdabspl[pl] += fabs(Gdplentropycontribs[jj]);
+    if(Gdplabs!=NULL){
+      Gdplabs[pl] = 0.0;
+      DLOOPA(jj) Gdplabs[pl] += fabs(Gdplentropycontribs[jj]);
     }
   }
 #endif
@@ -6130,17 +6147,17 @@ void koral_source_rad_calc(int computestate, int computeentropy, FTYPE *pr, stru
 // get 4-force and dtsub for all pl's
 static void koral_source_dtsub_rad_calc(int method, FTYPE *pr, FTYPE *Ui, FTYPE *Uf, FTYPE *dUother, FTYPE *CUf, FTYPE *Gdpl, struct of_geom *ptrgeom, FTYPE *dtsub)
 {
-  FTYPE Gdabspl[NPR];
+  FTYPE Gdplabs[NPR];
   FTYPE chi,Tgas;
   struct of_state q;
 
   int computestate=1;
   int computeentropy=1;
-  koral_source_rad_calc(computestate,computeentropy,pr,ptrgeom,Gdpl,Gdabspl,&chi,&Tgas,&q);
+  koral_source_rad_calc(computestate,computeentropy,pr,ptrgeom,Gdpl,Gdplabs,&chi,&Tgas,&q);
 
   if(dtsub!=NULL){
     // then assume expect calculation of dtsub
-    get_dtsub(method, pr, &q, Ui, Uf, dUother, CUf, Gdpl, chi, Gdabspl, ptrgeom, dtsub);
+    get_dtsub(method, pr, &q, Ui, Uf, dUother, CUf, Gdpl, chi, Gdplabs, ptrgeom, dtsub);
   }
   // else "method" can be anything and it doesn't matter
 
