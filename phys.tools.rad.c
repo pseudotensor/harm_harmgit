@@ -1169,7 +1169,7 @@ static int f_implicit(int iter, int failreturnallowable, int whichcall, int show
       // get error normalization that involves actual things being differenced
       // KORALNOTE: Use Gdplabs to ensure absolute value over more terms in source in case coincidental cancellation without physical significance.
       fnorm[pl] = THIRD*(fabs(uuabs[pl]) + fabs(uu[pl]) + fabs(uu0[pl]) + fabs(signgd2 * localdt * Gdplabs[pl]));
-      //      dualfprintf(fail_file,"FOO: %d %d : %g %g : neeed=%d %d uu0=%g\n",pl,iv,f[pl],fnorm[pl],needentropy,*eomtype,uu0[pl]);
+      //      dualfprintf(fail_file,"FOO: %d %d : %g %g : need=%d %d uu0=%g uu=%g uuabs=%g\n",pl,iv,f[pl],fnorm[pl],needentropy,*eomtype,uu0[pl],uu[pl],uuabs[pl]);
     }
 
 

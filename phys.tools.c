@@ -114,7 +114,8 @@ int primtoflux_nonradonly(int needentropy, FTYPE *pr, struct of_state *q, int di
 
   // initialize fluxma and fluxem so individual functions only have to define non-zero terms
   PLOOP(pliter,pl) flux[pl]=fluxma[pl]=fluxem[pl]=0.0;
-  PLOOP(pliter,pl) fluxabs[pl]=fluxmaabs[pl]=fluxemabs[pl]=0.0;
+  PLOOP(pliter,pl) fluxmaabs[pl]=fluxemabs[pl]=0.0;
+  if(fluxabs!=NULL) PLOOP(pliter,pl) fluxabs[pl]=0.0;
   fluxdiag=0.0;
   fluxdiagabs=0.0;
 
@@ -154,7 +155,8 @@ int primtoflux_radonly(FTYPE *pr, struct of_state *q, int dir,
 
 
 
-  PLOOP(pliter,pl) flux[pl]=fluxabs[pl]=fluxrad[pl]=0.0;
+  PLOOP(pliter,pl) flux[pl]=fluxrad[pl]=0.0;
+  if(fluxabs!=NULL) PLOOP(pliter,pl) fluxabs[pl];
 
 
   if(EOMRADTYPE!=EOMRADNONE){
@@ -163,7 +165,7 @@ int primtoflux_radonly(FTYPE *pr, struct of_state *q, int dir,
     // add up RAD
     PLOOP(pliter,pl){
       flux[pl] += fluxrad[pl];
-      fluxabs[pl] += fluxradabs[pl];
+      if(fluxabs!=NULL) fluxabs[pl] += fluxradabs[pl];
     }
   }
 
