@@ -337,9 +337,9 @@ int image(long dump_cnt, int whichpl, int scale, int limits, int vartype)
 {
   MPI_Datatype datatype;
   int whichdump;
-  char fileprefix[MAXFILENAME];
-  char filesuffix[MAXFILENAME];
-  char fileformat[MAXFILENAME];
+  char fileprefix[MAXFILENAME]={'\0'};
+  char filesuffix[MAXFILENAME]={'\0'};
+  char fileformat[MAXFILENAME]={'\0'};
 
 
 #if(USEOPENMP)

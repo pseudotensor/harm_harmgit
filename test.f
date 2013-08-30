@@ -225,7 +225,7 @@ c     proceed directly to the entropy equation
 #endif
 #if(PRODUCTION<=1)
          write (13,*)
-         write (13,"(38X,22X,A,22X,A)",advance="no")
+         write (13,"(48X,22X,A,22X,A)",advance="no")
      &        '|rho','|u_g'
          write (13,"(22X,A,22X,A,22X,A,22X,A)",advance="no")
      &        '|u^t','u^1','u^2','u^3|'

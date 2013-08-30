@@ -8,10 +8,12 @@
 
 
 // fractional error above which inversion is reported on as having made a signficant error
-#if(PRODUCTION)
+#if(PRODUCTION>=2)
 #define CHECKONINVFRAC (1E-1)
-#else
+#elif(PRODUCTION==1)
 #define CHECKONINVFRAC (1E-2)
+#else
+#define CHECKONINVFRAC (1E-7)
 #endif
 
 // whether to fail if check on inversion fails
@@ -50,7 +52,7 @@ int Utoprimgen(int showmessages, int allowlocalfailurefixandnoreport, int finals
   int pl,pliter;
   PFTYPE lpflag,lpflagrad;
   int usedhotinversion,usedentropyinversion,usedcoldinversion,usedffdeinversion;
-  FTYPE pressuremem;
+  FTYPE pressuremem=-1.0;
   FTYPE *pressure=&pressuremem;
   int eomtypelocal;
 
@@ -1087,11 +1089,15 @@ static int check_on_inversion(int usedhotinversion,int usedentropyinversion,int 
     int plcheck;
     PLOOP(pliter,pl){
 
+#if(0)
       if(CHECKONINVERSION==0 && (pl!=PRAD0 && pl!=PRAD1 && pl!=PRAD2 && pl!=PRAD3)) continue; // don't check MHD (non-radiation) inversion if didn't want to
       if(CHECKONINVERSIONRAD==0 && (pl==PRAD0 && pl==PRAD1 && pl==PRAD2 && pl==PRAD3)) continue; // don't check radiation (non-MHD) inversion if didn't want to
 
 
       plcheck=(pl>=RHO)&&(pl<=B3 || pl<=ENTROPY && usedentropyinversion || (*lpflagrad==0)&&(EOMRADTYPE!=EOMRADNONE && (pl==URAD0 || pl==URAD1&&(EOMRADTYPE!=EOMRADEDD) || pl==URAD2&&(EOMRADTYPE!=EOMRADEDD) || pl==URAD3&&(EOMRADTYPE!=EOMRADEDD) )));
+#endif
+      // if fdiff=0.0, then didn't set or no problems
+      plcheck=(fdiff[pl]!=0.0);
 
       if(IFUTOPRIMFAIL(*lpflag) || fdiff[pl]>CHECKONINVFRAC){
         if(
@@ -1167,9 +1173,12 @@ static int check_on_inversion(int usedhotinversion,int usedentropyinversion,int 
 
       DLOOPA(k) dualfprintf(fail_file,"k=%d : q.ucon=%21.15g q.ucov=%21.15g :  q.uradcon=%21.15g q.uradcov=%21.15g  : q.bcon=%21.15g q.bcov=%21.15g\n",k,q.ucon[k],q.ucov[k],q.uradcon[k],q.uradcov[k],q.bcon[k],q.bcov[k]);
 
+#if(0)
+      // not using these anymore, and only set by utoprim_jon.c
       // only really need the below quantities to check on inversion in mathematica
       // Use Eprime_inversion.nb to check on utoprim_jon.c inversion
       for(j=0;j<NUMINVPROPERTY;j++) dualfprintf(fail_file,"%sstr=\"%21.15g\";\n",newtonstats->invpropertytext[j],newtonstats->invproperty[j]);
+#endif
     }
 
   }
