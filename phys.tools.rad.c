@@ -4091,8 +4091,11 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
   }
 
 
-
+  ///////////
+  //
   // have to compute final uu[ENTROPY] if doing entropy optimization where avoid it during iterations if not needed.
+  //
+  ///////////
   if(ENTROPYOPT){
     int needentropy=1;
     get_state_norad_part2(needentropy, pp, ptrgeom, q); // where entropy would be computed
