@@ -3022,14 +3022,36 @@ static int superdebug_utoprim(FTYPE *pr0, FTYPE *pr, struct of_geom *ptrgeom, in
 }
 
 
-
 int set_density_floors_default(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *prfloor)
 {
   struct of_state q;
   FTYPE U[NPR];
+  FTYPE bsq;
+
+  if(rescaletype==2){
+    // to best conserve E and L along magnetic field lines
+    if (get_state(pr, ptrgeom, &q) >= 1)
+      FAILSTATEMENT("fixup.c:set_density_floors()", "get_state() dir=0", 1);
+    
+    MYFUN(primtoU(UDIAG,pr, &q, ptrgeom, U, NULL),"fixup.c:set_density_floors()", "primtoU()", 1);
+  }
+
+  if(rescaletype==4){
+    if(bsq_calc(pr,ptrgeom,&bsq)>=1){
+      dualfprintf(fail_file,"bsq_calc:bsq_calc: failure\n");
+      return(1);
+    }
+  }
+
+  set_density_floors_default_alt(ptrgeom, &q, pr, U, bsq, prfloor);
+
+  return(0);
+}
+
+int set_density_floors_default_alt(struct of_geom *ptrgeom, struct of_state *q, FTYPE *pr, FTYPE *U, FTYPE bsq, FTYPE *prfloor)
+{
   FTYPE Upbinf[NPR];
   FTYPE r,th,X[NDIM],V[NDIM];
-  FTYPE bsq;
   int pl,pliter;
 
   coord_ijk(ptrgeom->i, ptrgeom->j, ptrgeom->k, ptrgeom->p, X);
@@ -3072,11 +3094,6 @@ int set_density_floors_default(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *prfloo
       
 
 
-      // to best conserve E and L along magnetic field lines
-      if (get_state(pr, ptrgeom, &q) >= 1)
-        FAILSTATEMENT("fixup.c:set_density_floors()", "get_state() dir=0", 1);
-
-      MYFUN(primtoU(UDIAG,pr, &q, ptrgeom, U, NULL),"fixup.c:set_density_floors()", "primtoU()", 1);
 
       // now have U[UU] and U[PH]
       // note that U[UU]/(gdet*rho*u^t) is conserved along field lines, even in non-ideal MHD, where A_{\phi} is still a good stream function in non-ideal MHD.
@@ -3088,7 +3105,7 @@ int set_density_floors_default(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *prfloo
       //Upbinf[UU]*=-1.0; // time component has - sign in this -+++ signature code
 
       // could inject mass or enthalpy, we choose mass for now since rho>h typically (except at very edge of torus)
-      prfloor[RHO]=-U[UU]/(ptrgeom->gdet * GAMMAMAX * (q.ucon[TT]));
+      prfloor[RHO]=-U[UU]/(ptrgeom->gdet * GAMMAMAX * (q->ucon[TT]));
       prfloor[UU]=prfloor[RHO]*0.01; // cold injection
 
     }
@@ -3100,10 +3117,6 @@ int set_density_floors_default(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *prfloo
     else if(rescaletype==4){
       // for jet injection with maximum b^2/rho and b^2/u and maximum u/rho
       
-      if(bsq_calc(pr,ptrgeom,&bsq)>=1){
-        dualfprintf(fail_file,"bsq_calc:bsq_calc: failure\n");
-        return(1);
-      }
       prfloor[UU]=MAX(bsq/BSQOULIMIT,zerouuperbaryon*MAX(pr[RHO],SMALL));
       // below uses max of present u and floor u since present u may be too small (or negative!) and then density comparison isn't consistent with final floor between u and rho
       prfloor[RHO]=MAX(MAX(bsq/BSQORHOLIMIT,max(pr[UU],prfloor[UU])/UORHOLIMIT),SMALL);

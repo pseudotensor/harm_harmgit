@@ -986,7 +986,10 @@ static int f_implicit(int iter, int failreturnallowable, int whichcall, int show
         ppfixup[pl]=ppfloor[pl]=pp[pl];
         uufixup[pl]=uu[pl];
       }
-      set_density_floors(ptrgeom,ppfixup,ppfloor);
+      // bsq is accurate using below
+      FTYPE bsq; bsq_calc_fromq(ppfixup, ptrgeom, q, &bsq);
+      // uu isn't exactly like pfixup here, but close enough
+      set_density_floors_alt(ptrgeom, q, ppfixup, uu, bsq, ppfloor);
       //      fixup1zone(ppfloor,uufixup, ptrgeom,finalstepfixup); // too complicated for implicit stepping given how rare shoul be used.
       if(pp[RHO]<0.0) pp[RHO]=ppfloor[RHO]; // only fix RHO if really went negative.  Not smooth, but avoids problems in difficult regimes.
 
@@ -2790,7 +2793,7 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
     //    if(specificentropy0<specificentropyE){
     FTYPE ppnew[NPR]; PLOOP(pliter,pl) ppnew[pl]=pp[pl];
     // no approximation for u_g from entropyE
-    ufromentropy_calc(ptrgeom, entropyE, ppnew);
+    ufromentropy_calc(ptrgeom, entropyE, ppnew); // LEAKNOTE: valgrind says use of uninit here.
     ppnew[UU]=ppnew[ENTROPY];
 #define SHOWUGCHANGEDUETOENTROPY (10.0)
     if(debugfail>=DEBUGLEVELIMPSOLVERMORE && (fabs(ppnew[UU]/pp[UU])>SHOWUGCHANGEDUETOENTROPY || ppnew[UU]<pp[UU]) ) dualfprintf(fail_file,"CHANGE (%d): Fixed (%g/%g) entropy (%g vs. %g): guessrho=%g guessug=%g  newug=%g dug=%g\n",*eomtype,uu0[ENTROPY],uu0[RHO],specificentropy0,specificentropyE,pp[RHO],pp[UU],ppnew[UU],pp[UU]-ppnew[UU]);

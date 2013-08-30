@@ -4251,6 +4251,29 @@ int set_density_floors(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *prfloor)
   return(0);
 }
 
+int set_density_floors_alt(struct of_geom *ptrgeom, struct of_state *q, FTYPE *pr, FTYPE *U, FTYPE bsq, FTYPE *prfloor)
+{
+  int funreturn;
+
+  int pliter,pl;
+  PLOOP(pliter,pl){
+    prfloor[RHO]=RHOMINLIMIT;
+    prfloor[UU]=UUMINLIMIT;
+
+    prfloor[PRAD0]=ERADLIMIT;
+  }
+
+  // default is for spherical flow near BH
+  if(WHICHPROBLEM==RADDONUT){
+    // KORALTODO: floor currently causes injection of hot matter and run-away problems with radiation.
+    funreturn=set_density_floors_default_alt(ptrgeom, q, pr, U, bsq, prfloor);
+
+    if(funreturn!=0) return(funreturn);
+  }
+
+  return(0);
+}
+
 
 
 

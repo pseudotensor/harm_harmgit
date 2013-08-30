@@ -60,6 +60,7 @@ extern int set_zamo_ucovuconplus1ud0(struct of_geom *ptrgeom, FTYPE *ucov, FTYPE
 extern int set_zamo_ucon(struct of_geom *ptrgeom, FTYPE *ucon);
 
 extern int bsq_calc(FTYPE *pr, struct of_geom *geom, FTYPE *b2);
+extern int bsq_calc_fromq(FTYPE *pr, struct of_geom *geom, struct of_state *q, FTYPE *b2);
 extern void b_calc(FTYPE *pr, FTYPE *ucon, FTYPE *b);
 extern void bsq_calc_rel4vel_fromq(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE *bsq);
 
