@@ -36,9 +36,9 @@ c 1 means very simple Jon's version of err and sol output
 c 2 means only Jon's err output
 c 3 means no output or input (harm mode)
 c#define PRODUCTION 0
-c#define PRODUCTION 1
+#define PRODUCTION 1
 c#define PRODUCTION 2
-#define PRODUCTION 3
+c#define PRODUCTION 3
 
 c error below which will consider BAD solution and not even compute final solution
 #define FAILLIMIT (1E-6)
@@ -132,6 +132,7 @@ c     itermax is maximum no. of iterations with u_g, entropy below minimum
       epsbis=1.d-3
       dvmin=1.d-4
       tol=1.d-10
+c      tol=1.d-12
 c      tol=1.d-14
 c 1E-16 fails to work -- leads to 1E-7 errors, although all primitives seems similar.
 c      tol=1.d-16

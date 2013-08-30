@@ -1387,7 +1387,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
     int whichcapenergy,whichcapentropy;
     int trueimpmaxiterenergy,trueimpmaxiterentropy;
     int truenumdampattemptsenergy,truenumdampattemptsentropy;
-    int failreturnenergy=FAILRETURNGENERAL;
+    int failreturnenergy=FAILRETURNGENERAL; // default
     int failreturnentropy=FAILRETURNGENERAL; // default
 
     eomtypelocal=*eomtype;
@@ -1718,7 +1718,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
           radErfnegentropy=0; // not allowed, considered BADNEG type
           itersentropy=itersent;
           errorabsentropy=errorabsent;
-          if(failtypeent || errorabsentropy>IMPALLOWCONVABS){ failreturnentropy=FAILRETURNGENERAL; }
+          if(failtypeent || errorabsentropy>IMPALLOWCONVABS){ failreturnentropy=FAILRETURNGENERAL; eomtypeentropy=EOMENTROPYGRMHD; }
           else if(errorabsentropy<IMPTRYCONVABS){ failreturnentropy=FAILRETURNNOFAIL; eomtypeentropy=EOMDIDENTROPYGRMHD;}
           else{ failreturnentropy=FAILRETURNNOTTOLERROR; eomtypeentropy=EOMDIDENTROPYGRMHD;}
           // END GET RAMESH SOLUTION
@@ -1960,7 +1960,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
         failreturnenergy=FAILRETURNGENERAL; // default to fail in case energy not to be done at all
         eomtypeenergy=EOMGRMHD;
         PLOOP(pliter,pl){
-          pbenergy[pl]=pbbackup[pl];
+          pbenergy[pl]=pbbackup[pl]; // FUCK : should use entropy as guess if good entropy solution
           SCLOOP(sc) dUcompenergy[sc][pl]=dUcompbackup[sc][pl];
         }
         qenergy=qbackup;
@@ -1992,97 +1992,102 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *piin, FTYPE
         if(ACTUALHARDORSOFTFAILURE(failreturnenergy)==0 || failreturnenergy==FAILRETURNMODESWITCH){
           if(debugfail>=2) dualfprintf(fail_file,"Recovered using stages (energy: failreturnenergy=%d): ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d\n",failreturnenergy,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsenergyold,errorabsenergy,itersenergyold,itersenergy);
         }
-        else if(USERAMESH){
+        else{
+          if(USERAMESH){
 
-          if(gotrameshsolution){// then just recall solution
-            PLOOP(pliter,pl){
-              pbenergy[pl]=ppeng[pl];
-              SCLOOP(sc) dUcompenergy[sc][pl]=dUcompeng[sc][pl];
-            }
-            qenergy=qeng;
-            //
-            *lpflag=*lpflagrad=(PFTYPE)failtypeeng; // need better translation
-            radinvmodenergy=radinvmodeng;
-            radErfnegenergy=0; // not allowed, considered BADNEG type
-            itersenergy=iterseng;
-            errorabsenergy=errorabseng;
-            if(failtypeeng || errorabsenergy>IMPALLOWCONVABS){ failreturnenergy=FAILRETURNGENERAL; }
-            else if(errorabsenergy<IMPTRYCONVABS){ failreturnenergy=FAILRETURNNOFAIL; eomtypeenergy=EOMDIDGRMHD;}
-            else{ failreturnenergy=FAILRETURNNOTTOLERROR; eomtypeenergy=EOMDIDGRMHD;}
-          }
-          else{ // else get new ramesh solution
-            FTYPE errorabsforramesh;
-            // start fresh with ramesh
-            if(errorabsenergy>TRYHARDERFEEDGUESSTOL){
-              errorabsforramesh=1.0;
+            if(gotrameshsolution){// then just recall solution
               PLOOP(pliter,pl){
-                pbenergy[pl]=pbbackup[pl];
-                SCLOOP(sc) dUcompeng[sc][pl]=dUcompenergy[sc][pl]=dUcompbackup[sc][pl];
+                pbenergy[pl]=ppeng[pl];
+                SCLOOP(sc) dUcompenergy[sc][pl]=dUcompeng[sc][pl];
               }
-              qenergy=qbackup;
+              qenergy=qeng;
+              //
+              *lpflag=*lpflagrad=(PFTYPE)failtypeeng; // need better translation
+              radinvmodenergy=radinvmodeng;
+              radErfnegenergy=0; // not allowed, considered BADNEG type
+              itersenergy=iterseng;
+              errorabsenergy=errorabseng;
+              if(failtypeeng || errorabsenergy>IMPALLOWCONVABS){ failreturnenergy=FAILRETURNGENERAL; eomtypeenergy=EOMGRMHD; }
+              else if(errorabsenergy<IMPTRYCONVABS){ failreturnenergy=FAILRETURNNOFAIL; eomtypeenergy=EOMDIDGRMHD;}
+              else{ failreturnenergy=FAILRETURNNOTTOLERROR; eomtypeenergy=EOMDIDGRMHD;}
+            }
+            else{ // else get new ramesh solution
+              FTYPE errorabsforramesh;
+              // start fresh with ramesh
+              if(errorabsenergy>TRYHARDERFEEDGUESSTOL){
+                errorabsforramesh=1.0;
+                PLOOP(pliter,pl){
+                  pbenergy[pl]=pbbackup[pl];
+                  SCLOOP(sc) dUcompeng[sc][pl]=dUcompenergy[sc][pl]=dUcompbackup[sc][pl];
+                }
+                qenergy=qbackup;
+              }
+              else{
+                errorabsforramesh=errorabsenergybest;
+                PLOOP(pliter,pl){
+                  pbenergy[pl]=pbenergybest[pl];
+                  SCLOOP(sc) dUcompeng[sc][pl]=dUcompenergy[sc][pl]=dUcompbackup[sc][pl]; // always backup
+                }
+                qenergy=qenergybest;
+              }
+              errorabsenergyold=errorabsenergy;
+              itersenergyold=itersenergy;
+              //
+              // BEGIN GET RAMESH SOLUTION
+              failreturnenergy=FAILRETURNGENERAL;// default to fail
+              eomtypeenergy=EOMGRMHD;
+              int whichcall=eomtypeenergy;
+              get_rameshsolution_wrapper(whichcall, eomtypeenergy, errorabsforramesh, ptrgeom, pbenergy, piin, Uiin, Ufin, dUother, CUf, q, ppeng, ppent, dUcompeng, dUcompent, &qeng, &qent, &failtypeeng, &errorabseng, &iterseng, &radinvmodeng, &failtypeent, &errorabsent, &itersent, &radinvmodent);
+              gotrameshsolution=1; // indicates did at least attempt ramesh soltion call
+              // translate
+              PLOOP(pliter,pl){
+                pbenergy[pl]=ppeng[pl];
+                SCLOOP(sc) dUcompenergy[sc][pl]=dUcompeng[sc][pl];
+              }
+              qenergy=qeng;
+              //
+              *lpflag=*lpflagrad=(PFTYPE)failtypeeng; // need better translation
+              radinvmodenergy=radinvmodeng;
+              radErfnegenergy=0; // not allowed, considered BADNEG type
+              itersenergy=iterseng;
+              errorabsenergy=errorabseng;
+              if(failtypeeng || errorabsenergy>IMPALLOWCONVABS){ failreturnenergy=FAILRETURNGENERAL; eomtypeenergy=EOMGRMHD; }
+              else if(errorabsenergy<IMPTRYCONVABS){ failreturnenergy=FAILRETURNNOFAIL; eomtypeenergy=EOMDIDGRMHD;}
+              else{ failreturnenergy=FAILRETURNNOTTOLERROR; eomtypeenergy=EOMDIDGRMHD;}
+              // END GET RAMESH SOLUTION
+            }// end else if need to get ramesh solution
+
+            // see if want to keep
+            if(errorabsenergy<errorabsenergybest && ACTUALHARDFAILURE(failreturnenergy)==0){// || failreturnenergy==FAILRETURNMODESWITCH){ // no switch mode in ramesh solver yet.
+              if(ACCEPTASNOFAILURE(failreturnenergy)) usedrameshenergy=1; // means will use this actually, not just best yet no good enough
+              // store result in case better than latter results
+              lpflagenergybest=*lpflag;
+              lpflagradenergybest=*lpflagrad;
+              radinvmodenergybest=radinvmodenergy;
+              radErfnegenergybest=radErfnegenergy;
+              failreturnenergybest=failreturnenergy;
+              eomtypeenergybest=eomtypeenergy;
+              errorabsenergybest=errorabsenergy;
+              PLOOP(pliter,pl){
+                pbenergybest[pl]=pbenergy[pl];
+                SCLOOP(sc) dUcompenergybest[sc][pl]=dUcompenergy[sc][pl];
+              }
+              qenergybest=qenergy;
+            }
+
+            // still cost more iters
+            itersenergy+=itersenergyold;
+            if(ACTUALHARDORSOFTFAILURE(failreturnenergy)==0){// || failreturnenergy==FAILRETURNMODESWITCH){
+              if(debugfail>=2) dualfprintf(fail_file,"(energy: failreturnenergy=%d): Recovered using ramesh (%d %d): ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d\n",failreturnenergy,gotrameshsolution,usedrameshenergy,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsenergyold,errorabsenergy,itersenergyold,itersenergy);
             }
             else{
-              errorabsforramesh=errorabsenergybest;
-              PLOOP(pliter,pl){
-                pbenergy[pl]=pbenergybest[pl];
-                SCLOOP(sc) dUcompeng[sc][pl]=dUcompenergy[sc][pl]=dUcompbackup[sc][pl]; // always backup
-              }
-              qenergy=qenergybest;
+              if(debugfail>=2) dualfprintf(fail_file,"Failed to  (energy: failreturnenergy=%d): Recovered using ramesh (%d %d): ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d\n",failreturnenergy,gotrameshsolution,usedrameshenergy,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsenergyold,errorabsenergy,itersenergyold,itersenergy);
             }
-            errorabsenergyold=errorabsenergy;
-            itersenergyold=itersenergy;
-            //
-            // BEGIN GET RAMESH SOLUTION
-            failreturnenergy=FAILRETURNGENERAL;// default to fail
-            eomtypeenergy=EOMGRMHD;
-            int whichcall=eomtypeenergy;
-            get_rameshsolution_wrapper(whichcall, eomtypeenergy, errorabsforramesh, ptrgeom, pbenergy, piin, Uiin, Ufin, dUother, CUf, q, ppeng, ppent, dUcompeng, dUcompent, &qeng, &qent, &failtypeeng, &errorabseng, &iterseng, &radinvmodeng, &failtypeent, &errorabsent, &itersent, &radinvmodent);
-            gotrameshsolution=1; // indicates did at least attempt ramesh soltion call
-            // translate
-            PLOOP(pliter,pl){
-              pbenergy[pl]=ppeng[pl];
-              SCLOOP(sc) dUcompenergy[sc][pl]=dUcompeng[sc][pl];
-            }
-            qenergy=qeng;
-            //
-            *lpflag=*lpflagrad=(PFTYPE)failtypeeng; // need better translation
-            radinvmodenergy=radinvmodeng;
-            radErfnegenergy=0; // not allowed, considered BADNEG type
-            itersenergy=iterseng;
-            errorabsenergy=errorabseng;
-            if(failtypeeng || errorabsenergy>IMPALLOWCONVABS){ failreturnenergy=FAILRETURNGENERAL; }
-            else if(errorabsenergy<IMPTRYCONVABS){ failreturnenergy=FAILRETURNNOFAIL; eomtypeenergy=EOMDIDGRMHD;}
-            else{ failreturnenergy=FAILRETURNNOTTOLERROR; eomtypeenergy=EOMDIDGRMHD;}
-            // END GET RAMESH SOLUTION
-          }// end else if need to get ramesh solution
-
-          // see if want to keep
-          if(errorabsenergy<errorabsenergybest && ACTUALHARDFAILURE(failreturnenergy)==0){// || failreturnenergy==FAILRETURNMODESWITCH){ // no switch mode in ramesh solver yet.
-            if(ACCEPTASNOFAILURE(failreturnenergy)) usedrameshenergy=1; // means will use this actually, not just best yet no good enough
-            // store result in case better than latter results
-            lpflagenergybest=*lpflag;
-            lpflagradenergybest=*lpflagrad;
-            radinvmodenergybest=radinvmodenergy;
-            radErfnegenergybest=radErfnegenergy;
-            failreturnenergybest=failreturnenergy;
-            eomtypeenergybest=eomtypeenergy;
-            errorabsenergybest=errorabsenergy;
-            PLOOP(pliter,pl){
-              pbenergybest[pl]=pbenergy[pl];
-              SCLOOP(sc) dUcompenergybest[sc][pl]=dUcompenergy[sc][pl];
-            }
-            qenergybest=qenergy;
+          }// end if using ramesh
+          else{
+            if(debugfail>=2) dualfprintf(fail_file,"Failed to  (energy: failreturnenergy=%d): Recovered using stages: ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d\n",failreturnenergy,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsenergyold,errorabsenergy,itersenergyold,itersenergy);
           }
-
-          // still cost more iters
-          itersenergy+=itersenergyold;
-          if(ACTUALHARDORSOFTFAILURE(failreturnenergy)==0 || failreturnenergy==FAILRETURNMODESWITCH){
-            if(debugfail>=2) dualfprintf(fail_file,"(energy: failreturnenergy=%d): Recovered using ramesh (%d %d): ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d\n",failreturnenergy,gotrameshsolution,usedrameshenergy,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsenergyold,errorabsenergy,itersenergyold,itersenergy);
-          }
-        }// end if using ramesh
-        else if(ACTUALHARDORSOFTFAILURE(failreturnenergy)==0 || failreturnenergy==FAILRETURNMODESWITCH){
-          if(debugfail>=2) dualfprintf(fail_file,"Failed to  (energy: failreturnenergy=%d): Recovered using ramesh: ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d\n",failreturnenergy,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsenergyold,errorabsenergy,itersenergyold,itersenergy);
-        }// end else if still trying harder
+        }// end else if trying harder
       
         // use best result from trying harder
         *lpflag=lpflagenergybest;
@@ -4602,7 +4607,7 @@ int get_rameshsolution(int whichcall, int radinvmod, int failtype, long long int
   // DEBUG and only when real call (for now) and only show if one is not a bad solution
   //  if(debugfail>=2 && whichcall>0 && (*failtypeent==0 || *failtypeeng==0)){ // FUCK
   //  if(debugfail>=2 && whichcall==0){ // DEBUGGING Erf~0 solutions
-  if(debugfail>=2){ // DEBUGGING Erf~0 solutions
+  if(PRODUCTION==0 && debugfail>=2 && (*failtypeeng==0 || *failtypeent==0)){ // DEBUGGING Erf~0 solutions
 
     FTYPE resultsjon[NUMRESULTS];
     resultsjon[0] = pp[RHO];
@@ -4632,14 +4637,17 @@ int get_rameshsolution(int whichcall, int radinvmod, int failtype, long long int
     compute_ZAMORAD(uu0, ptrgeom, &Er, &Utildesq, Utildecon);
     dualfprintf(fail_file,"RAMESH4: E_r=%21.15g Utildesq=%21.15g Utildecon0=%21.15g Utildecon1=%21.15g Utildecon2=%21.15g Utildecon3=%21.15g\n",Er,Utildesq,Utildecon[0],Utildecon[1],Utildecon[2],Utildecon[3]);
 
-    compute_ZAMORAD(uueng, ptrgeom, &Er, &Utildesq, Utildecon);
-    dualfprintf(fail_file,"RAMESH5: E_r=%21.15g Utildesq=%21.15g Utildecon0=%21.15g Utildecon1=%21.15g Utildecon2=%21.15g Utildecon3=%21.15g\n",Er,Utildesq,Utildecon[0],Utildecon[1],Utildecon[2],Utildecon[3]);
+    if(*failtypeeng==0){
+      compute_ZAMORAD(uueng, ptrgeom, &Er, &Utildesq, Utildecon);
+      dualfprintf(fail_file,"RAMESH5: E_r=%21.15g Utildesq=%21.15g Utildecon0=%21.15g Utildecon1=%21.15g Utildecon2=%21.15g Utildecon3=%21.15g\n",Er,Utildesq,Utildecon[0],Utildecon[1],Utildecon[2],Utildecon[3]);
+    }
 
-    compute_ZAMORAD(uuent, ptrgeom, &Er, &Utildesq, Utildecon);
-    dualfprintf(fail_file,"RAMESH6: E_r=%21.15g Utildesq=%21.15g Utildecon0=%21.15g Utildecon1=%21.15g Utildecon2=%21.15g Utildecon3=%21.15g\n",Er,Utildesq,Utildecon[0],Utildecon[1],Utildecon[2],Utildecon[3]);
+    if(*failtypeent==0){
+      compute_ZAMORAD(uuent, ptrgeom, &Er, &Utildesq, Utildecon);
+      dualfprintf(fail_file,"RAMESH6: E_r=%21.15g Utildesq=%21.15g Utildecon0=%21.15g Utildecon1=%21.15g Utildecon2=%21.15g Utildecon3=%21.15g\n",Er,Utildesq,Utildecon[0],Utildecon[1],Utildecon[2],Utildecon[3]);
+    }
 
-
-  }
+  }// end if DEBUG
 
   return(0);
 }
