@@ -54,20 +54,21 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE errorabs, struc
 // Funny, even 1E-5 does ok with torus, no worse at Erf~SMALL instances.  Also, does ~3 iterations, but not any faster than using 1E-12 with ~6 iterations.
 #define IMPTRYCONV (1.e-12) // works generally to avoid high iterations
 #define IMPTRYCONV2 (1.e-14) // use for high gamma or high tau cases
+// error for comparing to sum over all absolute errors
+#define IMPTRYCONVABS ((FTYPE)(NDIM+2)*IMPTRYCONV)
 
 // too allowing to allow 1E-4 error since often solution is nuts at even errors>1E-8
 #define IMPALLOWCONV (MAX(IMPTRYCONV,1.e-8))
 #define IMPALLOWCONV2 IMPALLOWCONV
+#define IMPALLOWCONVABS ((FTYPE)(NDIM+2)*IMPALLOWCONV)
 
 // what tolerance to use for saying can switch to entropy when u_g is suggested to be bad for energy
 #define IMPOKCONV (MAX(IMPTRYCONV,1E-10))
+#define IMPOKCONVABS ((FTYPE)(NDIM+2)*IMPOKCONV)
+
 // tolerance above which say energy solution is probably bad even if not very large error.  These have tended (or nearly 100%) to be cases where actual solution has u_g<0 but harm gets error u_g>0 and error not too large.
 #define IMPBADENERGY (MIN(IMPALLOWCONV,1E-7))
 
-// error for comparing to sum over all absolute errors
-#define IMPTRYCONVABS ((FTYPE)(NDIM+2)*IMPTRYCONV)
-
-#define IMPALLOWCONVABS ((FTYPE)(NDIM+2)*IMPALLOWCONV)
 
 // whether to abort even the backup if error is not reducing.
 #define ABORTBACKUPIFNOERRORREDUCE 1
@@ -2272,22 +2273,22 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     // KORALTODO: radinvmodenergy and radinvmodntropy conditions.
     doentropy=
       fracenergy==0.0 && ACCEPTASNOFAILURE(failreturnentropy)==1 ||
-      //       ACCEPTASNOFAILURE(failreturnenergy)==1 && ACCEPTASNOFAILURE(failreturnentropy)==1 && (fracenergy>0.0 && fracenergy<1.0) && (errorabsentropy<=IMPOKCONV && errorabsenergy>IMPOKCONV) ||
+      //       ACCEPTASNOFAILURE(failreturnenergy)==1 && ACCEPTASNOFAILURE(failreturnentropy)==1 && (fracenergy>0.0 && fracenergy<1.0) && (errorabsentropy<=IMPOKCONVABS && errorabsenergy>IMPOKCONVABS) ||
       ACCEPTASNOFAILURE(failreturnenergy)==0 && ACCEPTASNOFAILURE(failreturnentropy)==1 ||
       ACCEPTASNOFAILURE(failreturnentropy)==1 && ACCEPTASNOFAILURE(failreturnenergy)==1 && (errorabsentropy<IMPTRYCONVABS && errorabsenergy>IMPBADENERGY) ||
-      //      ACCEPTASNOFAILURE(failreturnentropy)==1 && ACCEPTASNOFAILURE(failreturnenergy)==1 && (BADENERGY(pbenergy[UU],pbentropy[UU]) && (errorabsentropy<IMPOKCONV && errorabsenergy>errorabsentropy)) ||
+      //      ACCEPTASNOFAILURE(failreturnentropy)==1 && ACCEPTASNOFAILURE(failreturnenergy)==1 && (BADENERGY(pbenergy[UU],pbentropy[UU]) && (errorabsentropy<IMPOKCONVABS && errorabsenergy>errorabsentropy)) ||
       //      ACCEPTASNOFAILURE(failreturnentropy)==1 && ACCEPTASNOFAILURE(failreturnenergy)==1 && (BADENERGY2(pbenergy[UU],pbentropy[UU]) && (errorabsentropy<IMPTRYCONVABS && errorabsenergy>IMPTRYCONVABS)) // switch to entropy if suspicious energy solution that looks approximate but mathematica checks suggest are mostly u_g<0 if accurate solution found.
-      ACCEPTASNOFAILURE(failreturnentropy)==1 && ACCEPTASNOFAILURE(failreturnenergy)==1 && (BADENERGY2(pbenergy[UU],pbentropy[UU]) && (errorabsentropy<IMPOKCONV && errorabsenergy<IMPOKCONV)) // switch to entropy if ug for energy is smaller, and can trust both energy and entropy ug so can trust that comparison.
-      ||ACCEPTASNOFAILURE(failreturnentropy)==1 && ACCEPTASNOFAILURE(failreturnenergy)==1 && radinvmodenergy>0 && radinvmodentropy<=0 && errorabsentropy<IMPOKCONV // avoid energy if it particularly leads to radiation reaching maximum gamma or minimum Erf.  Ok to do because if dissipating, that would only normally create more Erf, not less, in optically thin regions where one might worry about switching to entropy.
+      ACCEPTASNOFAILURE(failreturnentropy)==1 && ACCEPTASNOFAILURE(failreturnenergy)==1 && (BADENERGY2(pbenergy[UU],pbentropy[UU]) && (errorabsentropy<IMPOKCONVABS && errorabsenergy<IMPOKCONVABS)) // switch to entropy if ug for energy is smaller, and can trust both energy and entropy ug so can trust that comparison.
+      ||ACCEPTASNOFAILURE(failreturnentropy)==1 && ACCEPTASNOFAILURE(failreturnenergy)==1 && radinvmodenergy>0 && radinvmodentropy<=0 && errorabsentropy<IMPOKCONVABS // avoid energy if it particularly leads to radiation reaching maximum gamma or minimum Erf.  Ok to do because if dissipating, that would only normally create more Erf, not less, in optically thin regions where one might worry about switching to entropy.
       ;
 
     // override to preserve better force balance, as long as energy solution is a good one.
     // so might use energy even in expanding flows.
-    if(ACCEPTASNOFAILURE(failreturnentropy)==1 && ACCEPTASNOFAILURE(failreturnenergy)==1 && radinvmodenergy<=0 && radinvmodentropy>0 && errorabsenergy<IMPOKCONV){
+    if(ACCEPTASNOFAILURE(failreturnentropy)==1 && ACCEPTASNOFAILURE(failreturnenergy)==1 && radinvmodenergy<=0 && radinvmodentropy>0 && errorabsenergy<IMPOKCONVABS){
       doentropy=0;
       if(debugfail>=3) dualfprintf(fail_file,"Went to energy with errorabs=%g because radinvmodentropy=%d with radErfnegentropy=%d with errorabsentropy=%g\n",errorabsenergy,radinvmodentropy,radErfnegentropy,errorabsentropy);
     }
-    if(ACCEPTASNOFAILURE(failreturnentropy)==1 && ACCEPTASNOFAILURE(failreturnenergy)==1 && radinvmodenergy>0 && radinvmodentropy<=0 && errorabsentropy<IMPOKCONV){
+    if(ACCEPTASNOFAILURE(failreturnentropy)==1 && ACCEPTASNOFAILURE(failreturnenergy)==1 && radinvmodenergy>0 && radinvmodentropy<=0 && errorabsentropy<IMPOKCONVABS){
       if(debugfail>=3) dualfprintf(fail_file,"Went to entropy with errorabs=%g because radinvmodenergy=%d with radErfnegenergy=%d with errorabsenergy=%g\n",errorabsentropy,radinvmodenergy,radErfnegenergy,errorabsenergy);
     }
 
