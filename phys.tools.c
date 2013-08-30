@@ -1572,6 +1572,7 @@ int source(FTYPE *pi, FTYPE *pr, FTYPE *pf, int *didreturnpf, int *eomtype, stru
   //
   // Second get physics source terms (using dUother for constraint)
   // get update pre- additional physics
+  // Assumes all quantities are at cell centers
   PLOOP(pliter,pl){
     dUother[pl] = (dUriemann[pl] + dUcomp[GEOMSOURCE][pl])*(ptrgeom->IEOMFUNCNOSINGMAC(pl)); // remove geometry factor for dUother
     // ui is current timestep's ui.
