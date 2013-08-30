@@ -277,10 +277,13 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE errorabs, struc
 #define TRYENERGYHARDER 1
 
 // whether to use ramesh solver as backup
-#define USERAMESH 1 // FUCK
+#define USERAMESH 1
 
 // error below which to feed best guess into Ramesh solver
 #define TRYHARDERFEEDGUESSTOL (1E-6)
+
+// error below which will use entropy as guess for energy if entropy didn't hard fail.
+#define ERRORTOUSEENTROPYFORENERGYGUESS (1E-4)
 
 
 // whether to get lowest error solution instead of final one.
@@ -1546,16 +1549,16 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     didentropyalready=0;
     fracenergy=0.0;
 
-
-    PFTYPE lpflagentropybest;
-    PFTYPE lpflagradentropybest;
-    int radinvmodentropybest;
-    int radErfnegentropybest;
-    int failreturnentropybest;
-    int eomtypeentropybest;
-    FTYPE pbentropybest[NPR];
-    FTYPE dUcompentropybest[NUMSOURCES][NPR]={{BIG}};
-    struct of_state qentropybest;
+    // default in case no best solution with no error below 1.0 that is set as default best
+    PFTYPE lpflagentropybest=1;
+    PFTYPE lpflagradentropybest=1;
+    int radinvmodentropybest=1;
+    int radErfnegentropybest=1;
+    int failreturnentropybest=FAILRETURNGENERAL;
+    int eomtypeentropybest=EOMENTROPYGRMHD;
+    FTYPE pbentropybest[NPR]; PLOOP(pliter,pl) pbentropybest[pl]=pbbackup[pl];
+    FTYPE dUcompentropybest[NUMSOURCES][NPR]={{0.0}};
+    struct of_state qentropybest=*q;
     FTYPE errorabsentropybest=1.0;
 
     FTYPE pbentropy[NPR];
@@ -1900,16 +1903,17 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     int trueimpmaxiterenergy;
     int truenumdampattemptsenergy;
 
-    PFTYPE lpflagenergybest;
-    PFTYPE lpflagradenergybest;
-    int radinvmodenergybest;
-    int radErfnegenergybest;
-    int failreturnenergybest;
-    int eomtypeenergybest;
+    // default is best is fail situation
+    PFTYPE lpflagenergybest=1;
+    PFTYPE lpflagradenergybest=1;
+    int radinvmodenergybest=1;
+    int radErfnegenergybest=1;
+    int failreturnenergybest=FAILRETURNGENERAL;
+    int eomtypeenergybest=EOMGRMHD;
     FTYPE errorabsenergybest=1.0;
-    FTYPE pbenergybest[NPR];
-    FTYPE dUcompenergybest[NUMSOURCES][NPR]={{BIG}};
-    struct of_state qenergybest;
+    FTYPE pbenergybest[NPR]; PLOOP(pliter,pl) pbenergybest[pl]=pbbackup[pl];
+    FTYPE dUcompenergybest[NUMSOURCES][NPR]={{0.0}};
+    struct of_state qenergybest=*q;
 
     FTYPE pbenergy[NPR];
     FTYPE uubenergy[NPR]; // holds returned uu from implicit solver
@@ -1932,9 +1936,18 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       trueimpmaxiterenergy=IMPMAXITERQUICK;
       truenumdampattemptsenergy=NUMDAMPATTEMPTSQUICK;
 
+      // setup solver conditions for existence of backup solutions or entropy solution
       if(ACTUALHARDFAILURE(failreturnentropy)==1){
         havebackup=0; // no entropy solver solution, so no backup.
         didentropyalready=0;
+      }
+      else{
+        havebackup=1; // here havebackup=1 means can break out of energy solver early if issues, since we do have entropy solver solution as backup.
+        didentropyalready=1; // so can use entropy solution as reference for whether to stop energy iteration
+      }
+
+      // setup guess
+      if(ACTUALHARDFAILURE(failreturnentropy)==1 || errorabsentropy>ERRORTOUSEENTROPYFORENERGYGUESS){
         PLOOP(pliter,pl){
           pbenergy[pl]=pbbackup[pl];
           SCLOOP(sc) dUcompenergy[sc][pl]=dUcompbackup[sc][pl];
@@ -1942,16 +1955,14 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
         qenergy=qbackup;
       }
       else{
-        havebackup=1; // here havebackup=1 means can break out of energy solver early if issues, since we do have entropy solver solution as backup.
-        didentropyalready=1; // so can use entropy solution as reference for whether to stop energy iteration
         // then can use entropy as good guess
         PLOOP(pliter,pl){
-          pbenergy[pl]=pbentropy[pl]; // as guess and reference as entropy solution if didentropyalready=1
+          pbenergy[pl]=pbentropy[pl]; // as guess and reference as entropy solution
           SCLOOP(sc) dUcompenergy[sc][pl]=dUcompbackup[sc][pl]; // but start fresh for this since final update.
         }
         qenergy=qentropy; // as guess
       }
-
+      // get energy solution
       failreturnenergy=koral_source_rad_implicit_mode(havebackup, didentropyalready, &eomtypeenergy, whichcapenergy, itermodeenergy, trueimpmaxiterenergy,  truenumdampattemptsenergy, fracenergy, &radinvmodenergy, pbenergy, uubenergy, piin, Uiin, Ufin, CUf, ptrgeom, &qenergy, dUother ,dUcompenergy, &errorabsenergy, errorabsenergybest, &itersenergy, &f1itersenergy);
 
 
@@ -1987,11 +1998,20 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
         radErfnegenergy=0;
         failreturnenergy=FAILRETURNGENERAL; // default to fail in case energy not to be done at all
         eomtypeenergy=EOMGRMHD;
-        PLOOP(pliter,pl){
-          pbenergy[pl]=pbbackup[pl]; // FUCK : should use entropy as guess if good entropy solution
-          SCLOOP(sc) dUcompenergy[sc][pl]=dUcompbackup[sc][pl];
+        if(ACTUALHARDFAILURE(failreturnentropy)==1 || errorabsentropy>ERRORTOUSEENTROPYFORENERGYGUESS){
+          PLOOP(pliter,pl){
+            pbenergy[pl]=pbbackup[pl];
+            SCLOOP(sc) dUcompenergy[sc][pl]=dUcompbackup[sc][pl];
+          }
+          qenergy=qbackup;
         }
-        qenergy=qbackup;
+        else{ // start with entropy
+          PLOOP(pliter,pl){
+            pbenergy[pl]=pbentropy[pl];
+            SCLOOP(sc) dUcompenergy[sc][pl]=dUcompbackup[sc][pl];
+          }
+          qenergy=qentropy;
+        }
         //
         errorabsenergyold=errorabsenergy;
         itersenergyold=itersenergy;
@@ -2044,11 +2064,20 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
               // start fresh with ramesh
               if(errorabsenergy>TRYHARDERFEEDGUESSTOL){
                 errorabsforramesh=1.0;
-                PLOOP(pliter,pl){
-                  pbenergy[pl]=pbbackup[pl];
-                  SCLOOP(sc) dUcompeng[sc][pl]=dUcompenergy[sc][pl]=dUcompbackup[sc][pl];
+                if(ACTUALHARDFAILURE(failreturnentropy)==1 || errorabsentropy>ERRORTOUSEENTROPYFORENERGYGUESS){
+                  PLOOP(pliter,pl){
+                    pbenergy[pl]=pbbackup[pl];
+                    SCLOOP(sc) dUcompeng[sc][pl]=dUcompenergy[sc][pl]=dUcompbackup[sc][pl];
+                  }
+                  qenergy=qbackup;
                 }
-                qenergy=qbackup;
+                else{
+                  PLOOP(pliter,pl){
+                    pbenergy[pl]=pbentropy[pl];
+                    SCLOOP(sc) dUcompeng[sc][pl]=dUcompenergy[sc][pl]=dUcompbackup[sc][pl];
+                  }
+                  qenergy=qentropy;
+                }
               }
               else{
                 errorabsforramesh=errorabsenergybest;
