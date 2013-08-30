@@ -2433,52 +2433,54 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
 
 
-  ////////////////
-  //
-  // static counter for diagnosing issues
-  //
-  ////////////////
+  if(PRODUCTION==0 && debugfail>=2){
+
+
+    ////////////////
+    //
+    // static counter for diagnosing issues
+    //
+    ////////////////
 #define NUMNUMHIST (20)
 
-  static long long int numenergy=0;
-  static long long int numentropy=0;
-  static long long int numboth=0;
-  static long long int numcold=0;
-  static long long int numbad=0;
-  static long long int numramesh=0;
-  static long long int numrameshenergy=0;
-  static long long int numrameshentropy=0;
+    static long long int numenergy=0;
+    static long long int numentropy=0;
+    static long long int numboth=0;
+    static long long int numcold=0;
+    static long long int numbad=0;
+    static long long int numramesh=0;
+    static long long int numrameshenergy=0;
+    static long long int numrameshentropy=0;
 
-  static long long int numimplicits=0;
-  static long long int numoff1iter=0,numofiter=0;
-  static long long int numhisterr[NUMNUMHIST]={0}; // histogram of error for implicit solver to be reported infrequently
-  static long long int numhistiter[IMPMAXITER+1]={0}; // histogram of error for implicit solver to be reported infrequently
+    static long long int numimplicits=0;
+    static long long int numoff1iter=0,numofiter=0;
+    static long long int numhisterr[NUMNUMHIST]={0}; // histogram of error for implicit solver to be reported infrequently
+    static long long int numhistiter[IMPMAXITER+1]={0}; // histogram of error for implicit solver to be reported infrequently
 
-  // static counter for diagnosing issues
-  static long long int totalnumenergy=0;
-  static long long int totalnumentropy=0;
-  static long long int totalnumcold=0;
-  static long long int totalnumboth=0;
-  static long long int totalnumbad=0;
-  static long long int totalnumramesh=0;
-  static long long int totalnumrameshenergy=0;
-  static long long int totalnumrameshentropy=0;
+    // static counter for diagnosing issues
+    static long long int totalnumenergy=0;
+    static long long int totalnumentropy=0;
+    static long long int totalnumcold=0;
+    static long long int totalnumboth=0;
+    static long long int totalnumbad=0;
+    static long long int totalnumramesh=0;
+    static long long int totalnumrameshenergy=0;
+    static long long int totalnumrameshentropy=0;
 
-  static long long int totalnumimplicits=0;
-  static long long int totalnumoff1iter=0,totalnumofiter=0;
-  static long long int totalnumhisterr[NUMNUMHIST]={0}; // histogram of error for implicit solver to be reported infrequently
-  static long long int totalnumhistiter[IMPMAXITER+1]={0}; // histogram of error for implicit solver to be reported infrequently
+    static long long int totalnumimplicits=0;
+    static long long int totalnumoff1iter=0,totalnumofiter=0;
+    static long long int totalnumhisterr[NUMNUMHIST]={0}; // histogram of error for implicit solver to be reported infrequently
+    static long long int totalnumhistiter[IMPMAXITER+1]={0}; // histogram of error for implicit solver to be reported infrequently
 
 
-  ////////////////////
-  //
-  // Do some diagnostics and reporting.  Done if ACCEPTASNOFAILURE(failreturn)==0 or not.
-  //
-  // KORALNOTE: If set IMPALLOWCONV to be smaller, energy solution can be then invalidated (while previously would have been used because it has no u_g issue) and go to entropy can succeed, and then appears that fewer low-energy events.
-  // But then no FAILINFO will be reported to check why energy got high error!
-  //
-  //////////////////////
-  if(debugfail>=2){
+    ////////////////////
+    //
+    // Do some diagnostics and reporting.  Done if ACCEPTASNOFAILURE(failreturn)==0 or not.
+    //
+    // KORALNOTE: If set IMPALLOWCONV to be smaller, energy solution can be then invalidated (while previously would have been used because it has no u_g issue) and go to entropy can succeed, and then appears that fewer low-energy events.
+    // But then no FAILINFO will be reported to check why energy got high error!
+    //
+    //////////////////////
 
     // simple counters
     numimplicits++;
