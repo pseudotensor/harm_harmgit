@@ -2264,7 +2264,14 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     /////////////
     //
     // see if should use the entropy solution
-    // only use entropy if energy failed, or energy predicts smaller u_g while having also larger error in solution and energy has larger than desired error.  Avoids larger error entropy cases messing up solution.
+    //
+    // Conditions to use entropy include:
+    // 1) dissmeasure says should avoid energy
+    // 2) energy failed
+    // 3) energy predicts smaller u_g than entropy
+    // 4) error in energy is large
+    // 5) etc.
+    // but keep changing conditions as learn more..
     //
     /////////////
 
