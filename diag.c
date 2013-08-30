@@ -2328,13 +2328,13 @@ int diss_compute(int evolvetype, int inputtype, FTYPE *U, struct of_geom *ptrgeo
 
 
     //    if (get_stateforUdiss(prother[DISSSIMPLEINVCO], ptrgeom, &qsimple) >= 1) FAILSTATEMENT("utoprim.c:utoprim()", "get_state()", 1);
-    if (primtoU(UNOTHING, prother[DISSSIMPLEINVCO], &qenergy, ptrgeom, Uother[DISSSIMPLEINVLAB2]) >= 1) FAILSTATEMENT("utoprim.c:utoprim()", "primtoU()", 1);
+    if (primtoU(UNOTHING, prother[DISSSIMPLEINVCO], &qenergy, ptrgeom, Uother[DISSSIMPLEINVLAB2], NULL) >= 1) FAILSTATEMENT("utoprim.c:utoprim()", "primtoU()", 1);
 
 
     if(IFUTOPRIMNOFAILORFIXED(otherfail) && AVOIDFULLINVERSION==0){
       // if didn't fail, then setup qfull and conserved quantity associated with fullinv version of primitive
       //      if (get_stateforUdiss(prother[DISSFULLINVCO], ptrgeom, &qfull) >= 1) FAILSTATEMENT("utoprim.c:utoprim()", "get_state()", 1);
-      if (primtoU(UNOTHING, prother[DISSFULLINVCO], &qenergy, ptrgeom, Uother[DISSFULLINVLAB2]) >= 1) FAILSTATEMENT("utoprim.c:utoprim()", "primtoU()", 1);
+      if (primtoU(UNOTHING, prother[DISSFULLINVCO], &qenergy, ptrgeom, Uother[DISSFULLINVLAB2], NULL) >= 1) FAILSTATEMENT("utoprim.c:utoprim()", "primtoU()", 1);
     }
     else{
       PALLLOOP(pl) Uother[DISSFULLINVLAB2][pl]=Uother[DISSSIMPLEINVLAB2][pl];
@@ -2344,7 +2344,7 @@ int diss_compute(int evolvetype, int inputtype, FTYPE *U, struct of_geom *ptrgeo
     
 
     // get state for final energy primitive
-    if (primtoU(UNOTHING, pr, &qenergy, ptrgeom, Uenergy) >= 1) FAILSTATEMENT("utoprim.c:utoprim()", "primtoU()", 1);
+    if (primtoU(UNOTHING, pr, &qenergy, ptrgeom, Uenergy, NULL) >= 1) FAILSTATEMENT("utoprim.c:utoprim()", "primtoU()", 1);
 
     ///////////////////
     //
@@ -2546,7 +2546,7 @@ int diss_compute(int evolvetype, int inputtype, FTYPE *U, struct of_geom *ptrgeo
   if(DOENOFLUX!=NOENOFLUX){
     //    primtoUcons=UENTROPY; // not UENTROPY since this doesn't have gdet factor!
     if (get_stateforUdiss(pr, ptrgeom, &q) >= 1) FAILSTATEMENT("utoprim.c:utoprim()", "get_state()", 1);
-    if (primtoU(UEVOLVE, pr, &q, ptrgeom, Unew) >= 1) FAILSTATEMENT("utoprim.c:utoprim()", "primtoU()", 1);
+    if (primtoU(UEVOLVE, pr, &q, ptrgeom, Unew, NULL) >= 1) FAILSTATEMENT("utoprim.c:utoprim()", "primtoU()", 1);
     U[ENTROPY] = Unew[ENTROPY]; // now conserved entropy is consistent with real primitive state
   }
   // this is done automatically if doing NOENOFLUX since U is obtained again from new primitives.

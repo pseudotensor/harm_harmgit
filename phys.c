@@ -141,9 +141,9 @@ int source_conn(FTYPE *pr, struct of_geom *ptrgeom,
   VARSTATIC FTYPE mhd[NDIM][NDIM];
   VARSTATIC FTYPE mhdrad[NDIM][NDIM];
   VARSTATIC FTYPE flux[NDIM][NPR];
-  int primtofullflux(int returntype, FTYPE *pr, struct of_state *q, struct of_geom *ptrgeom, FTYPE (*flux)[NPR]);
-  void mhd_calc_0(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, FTYPE *mhd);
-  void mhd_calc(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, FTYPE *mhd);
+  int primtofullflux(int returntype, FTYPE *pr, struct of_state *q, struct of_geom *ptrgeom, FTYPE (*flux)[NPR], FTYPE (*fluxabs)[NPR]);
+  void mhd_calc_0(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, FTYPE *mhd, FTYPE *mhdabs);
+  void mhd_calc(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, FTYPE *mhd, FTYPE *mhdabs);
   VARSTATIC int myii,myjj,mykk;
 
 
@@ -165,16 +165,16 @@ int source_conn(FTYPE *pr, struct of_geom *ptrgeom,
     //
     // notice that mhd_calc_0 is used, which includes rest-mass since connection coefficient source term has rest-mass.  The rest-mass was only subtracted out of conserved quantity and flux term.
     // SUPERGODMARK: problem in non-rel gravity for below term
-    //DLOOPA(j)  mhd_calc_0(pr, j, ptrgeom, q, mhd[j]);
+    //DLOOPA(j)  mhd_calc_0(pr, j, ptrgeom, q, mhd[j], NULL);
     // 
 
 
     // Get MHD stress-energy tensor
-    DLOOPA(j) mhd_calc(pr, j, ptrgeom, q, mhd[j]);
+    DLOOPA(j) mhd_calc(pr, j, ptrgeom, q, mhd[j], NULL);
 
     // Get radiation stress-energy tensor (separate fluid from MHD fluid)
     if(EOMRADTYPE!=EOMRADNONE){
-      DLOOPA(j) mhd_calc_rad(pr, j, ptrgeom, q, mhdrad[j]);
+      DLOOPA(j) mhd_calc_rad(pr, j, ptrgeom, q, mhdrad[j], NULL);
     }
 
 
@@ -245,7 +245,7 @@ int source_conn(FTYPE *pr, struct of_geom *ptrgeom,
     // conn2_j = (d_x^j(\ln(f/\detg)))
 
     // deal with second connection.  Now can use general flux as defined by primtofullflux since all EOMs operate similarly with respect to second connection
-    primtofullflux(UEVOLVE,pr,q,ptrgeom,flux); // returns with geometry prefactor (f F^j_\nu)
+    primtofullflux(UEVOLVE,pr,q,ptrgeom,flux,NULL); // returns with geometry prefactor (f F^j_\nu)
 
 
     // todo = whether that EOM has the NOGDET form.  If so, then need 2nd connection.  Do this instead of different connection2 for each EOM since each spatial component is actually the same.

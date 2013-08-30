@@ -210,8 +210,8 @@ static void func_5d2(FTYPE prguess[], FTYPE dxm[], FTYPE resid[], FTYPE (*jac)[N
 #endif
 
   // Find the conserved variables associated with the current guess for the primitive variables:
-  //  failreturn=primtoU(pr, &q, ptrlgeom, U_curr);
-  primtoU(UNOTHING,pr, &q, ptrlgeom, U_curr); // returns without geometric factors
+  //  failreturn=primtoU(pr, &q, ptrlgeom, U_curr, NULL);
+  primtoU(UNOTHING,pr, &q, ptrlgeom, U_curr, NULL); // returns without geometric factors
 #if(!OPTIMIZED)
   if(failreturn>=1)
     FAILSTATEMENTVOID("utoprim.c:usrfun2()", "get_state()",1);
@@ -433,8 +433,8 @@ static FTYPE res_sq_5d( FTYPE x[] )
 #endif
 
   // Find the conserved variables associated with the current guess for the primitive variables:
-  //  failreturn=primtoU(pr, &q, ptrlgeom, U_curr);
-  primtoU(UNOTHING,pr, &q, ptrlgeom, U_curr);
+  //  failreturn=primtoU(pr, &q, ptrlgeom, U_curr, NULL);
+  primtoU(UNOTHING,pr, &q, ptrlgeom, U_curr, NULL);
 #if(!OPTIMIZED)
   if(failreturn>=1)
     FAILSTATEMENT("res_sq_5d()", "primtoU()", 1);

@@ -1547,7 +1547,7 @@ static int compute_phi_self_gravity_simple(FTYPE (*pb)[NSTORE2][NSTORE3][NPR])
 
     // get MHD stress-tensor in PRIMECOORDS
     MYFUN(get_state(MAC(pb,i,j,k), ptrgeom, &q) ,"phys.c:source()", "get_state() dir=0", 1);
-    DLOOPA(jj) mhd_calc_0(MAC(pb,i,j,k), jj, ptrgeom, &q, mhdprime[jj]); // includes rest-mass
+    DLOOPA(jj) mhd_calc_0(MAC(pb,i,j,k), jj, ptrgeom, &q, mhdprime[jj], NULL); // includes rest-mass
 
     // now need to convert from PRIMECOORDS to MCOORD (for use natively with spherical polar coorindates to determine metric)
     DLOOP(jj,kk) mhdnative[jj][kk] = mhdprime[jj][kk];
@@ -2796,7 +2796,7 @@ int get_rhoref(int i, int j, int k, FTYPE (*pb)[NSTORE2][NSTORE3][NPR], FTYPE *r
   //  matrix_inverse(PRIMECOORDS, dxdxp,idxdxp);
   
   MYFUN(get_state(MAC(pb,i,j,k), ptrgeom, &q) ,"phys.c:source()", "get_state() dir=0", 1);
-  DLOOPA(jj) mhd_calc_0(MAC(pb,i,j,k), jj, ptrgeom, &q, mhd[jj]); // includes rest-mass
+  DLOOPA(jj) mhd_calc_0(MAC(pb,i,j,k), jj, ptrgeom, &q, mhd[jj], NULL); // includes rest-mass
   
   // now need to convert from PRIMECOORDS to MCOORD
   metptomet_simple_Tud(dxdxp,idxdxp,mhd);

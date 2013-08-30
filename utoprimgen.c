@@ -972,7 +972,7 @@ static int check_on_inversion(int usedhotinversion,int usedentropyinversion,int 
     //
     /////////////
     MYFUN(get_stateforcheckinversion(pr, ptrgeom, &q),"flux.c:fluxcalc()", "get_state()", 1);
-    MYFUN(primtoU(UNOTHING,pr, &q, ptrgeom, Unew),"step_ch.c:advance()", "primtoU()", 1); // UtoU inside doesn't do anything...therefore for REMOVERESTMASSFROMUU==1, Unew[UU] will have rest-mass included
+    MYFUN(primtoU(UNOTHING,pr, &q, ptrgeom, Unew, NULL),"step_ch.c:advance()", "primtoU()", 1); // UtoU inside doesn't do anything...therefore for REMOVERESTMASSFROMUU==1, Unew[UU] will have rest-mass included
 
 
     /////////////
@@ -1231,10 +1231,10 @@ static int compare_ffde_inversions(int showmessages, int allowlocalfailurefixand
   // now get conserved quantity from pr to check
   // find U(p)
   MYFUN(get_state(pr, ptrgeom, &q),"step_ch.c:advance()", "get_state()", 1);
-  MYFUN(primtoU(UNOTHING,pr, &q, ptrgeom, Upr),"step_ch.c:advance()", "primtoU()", 1);
+  MYFUN(primtoU(UNOTHING,pr, &q, ptrgeom, Upr, NULL),"step_ch.c:advance()", "primtoU()", 1);
 
   MYFUN(get_state(prother, ptrgeom, &q),"step_ch.c:advance()", "get_state()", 1);
-  MYFUN(primtoU(UNOTHING,prother, &q, ptrgeom, Uprother),"step_ch.c:advance()", "primtoU()", 1);
+  MYFUN(primtoU(UNOTHING,prother, &q, ptrgeom, Uprother, NULL),"step_ch.c:advance()", "primtoU()", 1);
 
 
   // now compare
@@ -1332,7 +1332,7 @@ static int debug_utoprimgen(PFTYPE *lpflag, FTYPE *pr0, FTYPE *pr, struct of_geo
 #endif
 
     MYFUN(get_state(pr, ptrgeom, &q),"flux.c:fluxcalc()", "get_state()", 1);
-    MYFUN(primtoU(UNOTHING,pr, &q, ptrgeom, Unew),"step_ch.c:advance()", "primtoU()", 1); // UtoU inside doesn't do anything...therefore for REMOVERESTMASSFROMUU==1, Unew[UU] will have rest-mass included
+    MYFUN(primtoU(UNOTHING,pr, &q, ptrgeom, Unew, NULL),"step_ch.c:advance()", "primtoU()", 1); // UtoU inside doesn't do anything...therefore for REMOVERESTMASSFROMUU==1, Unew[UU] will have rest-mass included
 
     for(k=0;k<4;k++){
       dualfprintf(fail_file,"q.ucon[%d]=%21.15g q.ucov[%d]=%21.15g q.bcon[%d]=%21.15g q.bcov[%d]=%21.15g\n",k,q.ucon[k],k,q.ucov[k],k,q.bcon[k],k,q.bcov[k]);
@@ -1614,7 +1614,7 @@ int Utoprimdiss(int showmessages, int allowlocalfailurefixandnoreport, int evolv
   // now get conserved quantity from pr to check
   // find U(p)
   //  MYFUN(get_state(pr, ptrgeom, &q),"step_ch.c:advance()", "get_state()", 1);
-  //  MYFUN(primtoU(UNOTHING,pr, &q, ptrgeom, Unew),"step_ch.c:advance()", "primtoU()", 1);
+  //  MYFUN(primtoU(UNOTHING,pr, &q, ptrgeom, Unew, NULL),"step_ch.c:advance()", "primtoU()", 1);
   
   
   //  if(0&& *otherpflag){
@@ -1904,7 +1904,7 @@ int primtoUloop(FTYPE (*prim)[NSTORE2][NSTORE3][NPR],FTYPE (*U)[NSTORE2][NSTORE3
     MYFUN(get_state(MAC(prim,i,j,k), ptrgeom, &q),"step_ch.c:primtoUloop()", "get_state()", 1);
     get_geometry(i, j, k, CENT, ptrgeom);
     // forward calculate U(p)
-    MYFUN(primtoU(UEVOLVE,MAC(prim,i,j,k), &q, ptrgeom, MAC(U,i,j,k)),"step_ch.c:primtoUloop()", "primtoU()", 1);
+    MYFUN(primtoU(UEVOLVE,MAC(prim,i,j,k), &q, ptrgeom, MAC(U,i,j,k), NULL),"step_ch.c:primtoUloop()", "primtoU()", 1);
   }
   return(0);
 }
@@ -1929,7 +1929,7 @@ void filterffde(int i, int j, int k, FTYPE *pr)
   // now filter velocity
   get_geometry(i,j,k,CENT,ptrgeom);
   get_state(pr,ptrgeom,&q);
-  primtoU(UNOTHING,pr,&q,ptrgeom,U);
+  primtoU(UNOTHING,pr,&q,ptrgeom,U, NULL);
 
   //  Utoprim_ffde(U,ptrgeom,prout); // no need for initial guess since analytic inversion
   int eomtype=EOMDEFAULT;

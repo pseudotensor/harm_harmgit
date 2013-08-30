@@ -90,7 +90,7 @@ int Utoprim_ldz(FTYPE *U, struct of_geom *ptrgeom, PFTYPE *lpflag, FTYPE *pr, FT
   /*
     if (get_state(pr0, ptrgeom, &q) >= 1)
     FAILSTATEMENT("utoprim.c:utoprim()", "get_state()", 1);
-    if (primtoU(NOTHING,pr0, &q, ptrgeom, Ustart) >= 1)
+    if (primtoU(NOTHING,pr0, &q, ptrgeom, Ustart, NULL) >= 1)
     FAILSTATEMENT("utoprim_ldz.c:utoprim()", "primtoU()", 1);
   
 

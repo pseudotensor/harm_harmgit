@@ -45,7 +45,7 @@ void compute_preprocess(int outputvartypelocal, FILE *gdumpfile, int h, int i, i
   FTYPE s_fvar;
   FTYPE *fvar=&s_fvar;
   extern int Mcon_calc(FTYPE *pr, struct of_state *q, FTYPE (*Mcon)[NDIM]); // in phys.tools.c
-  extern void mhd_calc_ma(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, FTYPE *mhd, FTYPE *mhddiagpress);
+  extern void mhd_calc_ma(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, FTYPE *mhd, FTYPE *mhdabs, FTYPE *mhddiagpress, FTYPE *mhddiagpressabs);
 
 
 
@@ -363,7 +363,7 @@ void compute_preprocess(int outputvartypelocal, FILE *gdumpfile, int h, int i, i
     // TODO  GODMARK: in phys.tools.c, may need to split it or something since too many dependencies
     // dF^{\mu\nu}
     //    Mcon_calc(pr,&q,dFuu); // used to get *true Bortho* and Omega_F, etc.
-    //    mhd_calc_ma(pr, TT, &geom, &q, &flux[UU], &fluxdiagpress[UU]); // fills flux[UU->U3] and fluxdiagonal[UU->U3]
+    //    mhd_calc_ma(pr, TT, &geom, &q, &flux[UU], NULL, &fluxdiagpress[UU], NULL); // fills flux[UU->U3] and fluxdiagonal[UU->U3]
 
 
 

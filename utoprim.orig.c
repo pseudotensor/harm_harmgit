@@ -242,7 +242,7 @@ int Utoprim(int whichcons, FTYPE *U, struct of_geom *ptrgeom, PFTYPE *lpflag, FT
       FAILSTATEMENT("utoprim.c:utoprim()", "get_state()", 1);
     //    PLOOP(pliter,pl) dualfprintf(fail_file,"good guess: pr=%21.15g\n",pr[pl]);
   }
-  if (primtoU(primtoUcons,pr, &q, ptrgeom, Ustart) >= 1)
+  if (primtoU(primtoUcons,pr, &q, ptrgeom, Ustart, NULL) >= 1)
     FAILSTATEMENT("utoprim.c:utoprim()", "primtoU()", 1);
   // now we have U(pr)
 
@@ -754,7 +754,7 @@ int usrfun(FTYPE *U_target,FTYPE *pr0,int numnormterms,int whichcons, int primto
     if(failreturn>=1)
       FAILSTATEMENT("utoprim.c:usrfun()", "get_state()", 1);
 
-    failreturn=primtoU(primtoUcons,pr, &q, ptrgeom, U);
+    failreturn=primtoU(primtoUcons,pr, &q, ptrgeom, U, NULL);
 
     // DEBUG:
     //    dualfprintf(fail_file,"nprlist: %d %d %d %d\n",nprstart,nprend,nprlist[nprstart],nprlist[nprend]);

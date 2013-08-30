@@ -1193,7 +1193,7 @@ int fieldline_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
     
   }
 
-  MYFUN(primtoflux(UDIAG,GLOBALMAC(pdump,i,j,k), &q, RR, ptrgeom, FL),"step_ch.c:fluxcalc()", "primtoflux_calc() dir=1/2 l", RR);
+  MYFUN(primtoflux(UDIAG,GLOBALMAC(pdump,i,j,k), &q, RR, ptrgeom, FL, NULL),"step_ch.c:fluxcalc()", "primtoflux_calc() dir=1/2 l", RR);
 
 
   //////////////////////////

@@ -32,16 +32,16 @@ int faildebug1(int numnormterms, int whichcons, FTYPE *U_target, FTYPE *EOSextra
 
   if (get_state(pr0, ptrgeom, &q) >= 1)
     FAILSTATEMENT("utoprim.c:utoprim()", "get_state()", 2);
-  if (primtoU(UNOTHING,pr0, &q, ptrgeom, Ustart) >= 1)
+  if (primtoU(UNOTHING,pr0, &q, ptrgeom, Ustart, NULL) >= 1)
     FAILSTATEMENT("utoprim.c:utoprim()", "primtoU()", 2);
   
-  mhd_calc(pr0,0, ptrgeom, &q, mhd[0]);
-  mhd_calc(pr0,1, ptrgeom, &q, mhd[1]);
-  mhd_calc(pr0,2, ptrgeom, &q, mhd[2]);
-  mhd_calc(pr0,3, ptrgeom, &q, mhd[3]);
-  primtoflux(UNOTHING,pr0, &q, 1,ptrgeom, flux[0]);
-  primtoflux(UNOTHING,pr0, &q, 2,ptrgeom, flux[1]);
-  primtoflux(UNOTHING,pr0, &q, 3,ptrgeom, flux[2]);
+  mhd_calc(pr0,0, ptrgeom, &q, mhd[0], NULL);
+  mhd_calc(pr0,1, ptrgeom, &q, mhd[1], NULL);
+  mhd_calc(pr0,2, ptrgeom, &q, mhd[2], NULL);
+  mhd_calc(pr0,3, ptrgeom, &q, mhd[3], NULL);
+  primtoflux(UNOTHING,pr0, &q, 1,ptrgeom, flux[0], NULL);
+  primtoflux(UNOTHING,pr0, &q, 2,ptrgeom, flux[1], NULL);
+  primtoflux(UNOTHING,pr0, &q, 3,ptrgeom, flux[2], NULL);
   PLOOP(pliter,pl) Uwithgeom[pl]=Ustart[pl]*ptrgeom->EOMFUNCMAC(pl);
   FTYPE CUf[4]={1.0};
   int didreturnpf=0;
@@ -239,16 +239,16 @@ int faildebug2(int numnormterms, int whichcons, FTYPE *U_target, FTYPE *EOSextra
 
   if (get_state(pr0, ptrgeom, &q) >= 1)
     FAILSTATEMENT("utoprim.c:utoprim()", "get_state()", 2);
-  if (primtoU(UNOTHING,pr0, &q, ptrgeom, Ustart) >= 1)
+  if (primtoU(UNOTHING,pr0, &q, ptrgeom, Ustart, NULL) >= 1)
     FAILSTATEMENT("utoprim.c:utoprim()", "primtoU()", 2);
   
-  mhd_calc(pr0,0, ptrgeom, &q, mhd[0]);
-  mhd_calc(pr0,1, ptrgeom, &q, mhd[1]);
-  mhd_calc(pr0,2, ptrgeom, &q, mhd[2]);
-  mhd_calc(pr0,3, ptrgeom, &q, mhd[3]);
-  primtoflux(UNOTHING,pr0, &q, 1,ptrgeom, flux[0]);
-  primtoflux(UNOTHING,pr0, &q, 2,ptrgeom, flux[1]);
-  primtoflux(UNOTHING,pr0, &q, 3,ptrgeom, flux[2]);
+  mhd_calc(pr0,0, ptrgeom, &q, mhd[0], NULL);
+  mhd_calc(pr0,1, ptrgeom, &q, mhd[1], NULL);
+  mhd_calc(pr0,2, ptrgeom, &q, mhd[2], NULL);
+  mhd_calc(pr0,3, ptrgeom, &q, mhd[3], NULL);
+  primtoflux(UNOTHING,pr0, &q, 1,ptrgeom, flux[0], NULL);
+  primtoflux(UNOTHING,pr0, &q, 2,ptrgeom, flux[1], NULL);
+  primtoflux(UNOTHING,pr0, &q, 3,ptrgeom, flux[2], NULL);
   PLOOP(pliter,pl) Uwithgeom[pl]=Ustart[pl]*ptrgeom->EOMFUNCMAC(pl);
   FTYPE CUf[4]={1.0};
   int didreturnpf=0;

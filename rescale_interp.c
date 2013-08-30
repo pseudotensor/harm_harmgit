@@ -137,7 +137,7 @@ int rescale(int which, int dir, FTYPE *pr, struct of_geom *ptrgeom,FTYPE *p2inte
 
   if(which==1){ // rescale before interpolation
     MYFUN(get_state(pr, ptrgeom, &q),"interp.c:rescale()", "get_state()", 1);
-    MYFUN(primtoU(UDIAG,pr, &q, ptrgeom, p2interp),"interp.c:rescale()", "primtoU()", 1);
+    MYFUN(primtoU(UDIAG,pr, &q, ptrgeom, p2interp, NULL),"interp.c:rescale()", "primtoU()", 1);
   }
   else if(which==-1){ // unrescale after interpolation
     struct of_newtonstats newtonstats;  

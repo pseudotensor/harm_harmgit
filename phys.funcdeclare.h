@@ -4,7 +4,7 @@ extern int sourcephysics(FTYPE *pi, FTYPE *ph, FTYPE *pf, int *didreturnpf, int 
 
 extern void postdt(void);
 extern int primtoU(int returntype, FTYPE *p, struct of_state *q, struct of_geom *geom,
-                   FTYPE *U);
+                   FTYPE *U, FTYPE *Uabs);
 
 extern int ucon_calc_3vel(FTYPE *pr, struct of_geom *geom, FTYPE *ucon, FTYPE *others);
 extern int ucon_calc_rel4vel(FTYPE *pr, struct of_geom *geom, FTYPE *ucon, FTYPE *others);
@@ -157,7 +157,7 @@ extern void compute_and_store_fluxstatecent(FTYPE (*pr)[NSTORE2][NSTORE3][NPR]);
 
 
 extern int primtoflux(int returntype, FTYPE *pa, struct of_state *q, int dir,
-                      struct of_geom *geom, FTYPE *fl);
+                      struct of_geom *geom, FTYPE *fl, FTYPE *flabs);
 extern int primtoflux_splitmaem(int returntype, FTYPE *pa, struct of_state *q, int fluxdir, int fundir, struct of_geom *geom, FTYPE *flma, FTYPE *flem);
 
 

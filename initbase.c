@@ -2771,7 +2771,7 @@ int pi2Uavg(int *fieldfrompotential, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE
 
       // find U(p)
       MYFUN(get_state(MAC(prim,i,j,k), ptrgeom, &q),"initbasec:pi2Uavg()", "get_state()", 1);
-      MYFUN(primtoU(UEVOLVE,MAC(prim,i,j,k), &q, ptrgeom, Utemp),"initbase.c:pi2Uavg()", "primtoU()", 1);
+      MYFUN(primtoU(UEVOLVE,MAC(prim,i,j,k), &q, ptrgeom, Utemp, NULL),"initbase.c:pi2Uavg()", "primtoU()", 1);
 
       PLOOPNOB1(pl) MACP0A1(Upoint,i,j,k,pl)=Utemp[pl];
       PLOOPNOB2(pl) MACP0A1(Upoint,i,j,k,pl)=Utemp[pl];

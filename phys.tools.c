@@ -28,40 +28,54 @@
 // see UtoU and source_conn()
 // Note that if MAXWELL==PRIMMAXWELL then primtoflux doesn't use b^\mu or b_\mu (bcon and bcov)
 int primtoflux(int returntype, FTYPE *pr, struct of_state *q, int dir,
-               struct of_geom *geom, FTYPE *flux)
+               struct of_geom *geom, FTYPE *flux, FTYPE *fluxabs)
 {
-  int primtoflux_ma(int needentropy,int *returntype, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux, FTYPE *fluxdiag);
-  int primtoflux_rad(int *returntype, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux);
-  int primtoflux_em(int *returntype, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux);
+  int primtoflux_ma(int needentropy,int *returntype, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux, FTYPE *fluxabs, FTYPE *fluxdiag, FTYPE *fluxdiagabs);
+  int primtoflux_rad(int *returntype, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux, FTYPE *fluxabs);
+  int primtoflux_em(int *returntype, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux, FTYPE *fluxabs);
   void UtoU_fromunothing(int returntype,struct of_geom *ptrgeom,FTYPE *Uin, FTYPE *Uout);
   VARSTATIC FTYPE fluxinput[NPR],fluxinputma[NPR],fluxinputrad[NPR],fluxinputem[NPR];
+  VARSTATIC FTYPE fluxinputabs[NPR],fluxinputmaabs[NPR],fluxinputradabs[NPR],fluxinputemabs[NPR];
   VARSTATIC FTYPE fluxdiag;
+  VARSTATIC FTYPE fluxdiagabs;
   VARSTATIC int pl,pliter;
 
 
 
   // initialize fluxinputma and fluxinputem so individual functions only have to define non-zero terms
   PLOOP(pliter,pl) fluxinput[pl]=fluxinputma[pl]=fluxinputrad[pl]=fluxinputem[pl]=0.0;
+  PLOOP(pliter,pl) fluxinputabs[pl]=fluxinputmaabs[pl]=fluxinputradabs[pl]=fluxinputemabs[pl]=0.0;
   fluxdiag=0.0;
 
 
   // define MA terms
-  primtoflux_ma(1,&returntype, pr, q, dir, geom, fluxinputma, &fluxdiag);
+  primtoflux_ma(1,&returntype, pr, q, dir, geom, fluxinputma, fluxinputmaabs, &fluxdiag, &fluxdiagabs);
   fluxinputma[UU+dir]+=fluxdiag; // add back to normal term
+  fluxinputmaabs[UU+dir]+=fluxdiagabs; // add back to normal term
   // add up MA
-  PLOOP(pliter,pl) fluxinput[pl] += fluxinputma[pl];
+  PLOOP(pliter,pl){
+    fluxinput[pl] += fluxinputma[pl];
+    fluxinputabs[pl] += fluxinputmaabs[pl];
+  }
 
   if(EOMRADTYPE!=EOMRADNONE){
     // define RAD terms
-    primtoflux_rad(&returntype, pr, q, dir, geom, fluxinputrad);
+    primtoflux_rad(&returntype, pr, q, dir, geom, fluxinputrad, fluxinputradabs);
     // add up RAD
-    PLOOP(pliter,pl) fluxinput[pl] += fluxinputrad[pl];
+    PLOOP(pliter,pl){
+      fluxinput[pl] += fluxinputrad[pl];
+      fluxinputabs[pl] += fluxinputradabs[pl];
+    }
   }
 
   // define EM terms
-  primtoflux_em(&returntype, pr, q, dir, geom, fluxinputem);
+  primtoflux_em(&returntype, pr, q, dir, geom, fluxinputem, fluxinputemabs);
   // add up EM
-  PLOOP(pliter,pl) fluxinput[pl] += fluxinputem[pl];
+  PLOOP(pliter,pl){
+    fluxinput[pl] += fluxinputem[pl];
+    fluxinputabs[pl] += fluxinputemabs[pl];
+  }
+
 
   // DEBUG:
   //  if((fabs(pr[U1])>1.0 || fabs(fluxinput[U1])>1.0) && (geom->i==10 || geom->i==9 || geom->i==11)&&(geom->k==0 || geom->k==-1 || geom->k==1)) PALLLOOP(pl) dualfprintf(fail_file,"ALLBEFORE: ijk=%d %d %d : pl=%d pr=%g flux=%21.15g\n",geom->i,geom->j,geom->k,pl,pr[pl],fluxinput[pl]);
@@ -70,6 +84,9 @@ int primtoflux(int returntype, FTYPE *pr, struct of_state *q, int dir,
   // convert from UNOTHING->returntype
   // notice that geometry comes after subtractions/additions of EOMs
   UtoU_fromunothing(returntype,geom,fluxinput,flux);
+  if(fluxabs!=NULL) UtoU_fromunothing(returntype,geom,fluxinputabs,fluxabs);
+
+
 
   // DEBUG:
   //  PALLLOOP(pl) dualfprintf(fail_file,"ALLAFTER: pl=%d flux=%21.15g\n",pl,flux[pl]);
@@ -83,31 +100,42 @@ int primtoflux(int returntype, FTYPE *pr, struct of_state *q, int dir,
 
 
 int primtoflux_nonradonly(int needentropy, FTYPE *pr, struct of_state *q, int dir,
-               struct of_geom *geom, FTYPE *flux)
+               struct of_geom *geom, FTYPE *flux, FTYPE *fluxabs)
 {
-  int primtoflux_ma(int needentropy,int *returntype, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux, FTYPE *fluxdiag);
-  int primtoflux_em(int *returntype, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux);
+  int primtoflux_ma(int needentropy,int *returntype, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux, FTYPE *fluxabs, FTYPE *fluxdiag, FTYPE *fluxdiagabs);
+  int primtoflux_em(int *returntype, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux, FTYPE *fluxabs);
   VARSTATIC FTYPE fluxma[NPR],fluxem[NPR];
+  VARSTATIC FTYPE fluxmaabs[NPR],fluxemabs[NPR];
   VARSTATIC FTYPE fluxdiag;
+  VARSTATIC FTYPE fluxdiagabs;
   VARSTATIC int pl,pliter;
   int returntype=UNOTHING;
 
 
   // initialize fluxma and fluxem so individual functions only have to define non-zero terms
   PLOOP(pliter,pl) flux[pl]=fluxma[pl]=fluxem[pl]=0.0;
+  PLOOP(pliter,pl) fluxabs[pl]=fluxmaabs[pl]=fluxemabs[pl]=0.0;
   fluxdiag=0.0;
+  fluxdiagabs=0.0;
 
 
   // define MA terms
-  primtoflux_ma(needentropy,&returntype, pr, q, dir, geom, fluxma, &fluxdiag);
+  primtoflux_ma(needentropy,&returntype, pr, q, dir, geom, fluxma, fluxmaabs, &fluxdiag, &fluxdiagabs);
   fluxma[UU+dir]+=fluxdiag; // add back to normal term
+  fluxmaabs[UU+dir]+=fluxdiagabs; // add back to normal term
   // add up MA
-  PLOOP(pliter,pl) flux[pl] += fluxma[pl];
+  PLOOP(pliter,pl){
+    flux[pl] += fluxma[pl];
+    if(fluxabs!=NULL) fluxabs[pl] += fluxmaabs[pl];
+  }
 
   // define EM terms
-  primtoflux_em(&returntype, pr, q, dir, geom, fluxem);
+  primtoflux_em(&returntype, pr, q, dir, geom, fluxem, fluxemabs);
   // add up EM
-  PLOOP(pliter,pl) flux[pl] += fluxem[pl];
+  PLOOP(pliter,pl){
+    flux[pl] += fluxem[pl];
+    if(fluxabs!=NULL) fluxabs[pl] += fluxemabs[pl];
+  }
 
   // returns UNOTHING form
 
@@ -115,24 +143,28 @@ int primtoflux_nonradonly(int needentropy, FTYPE *pr, struct of_state *q, int di
 }
 
 int primtoflux_radonly(FTYPE *pr, struct of_state *q, int dir,
-               struct of_geom *geom, FTYPE *flux)
+               struct of_geom *geom, FTYPE *flux, FTYPE *fluxabs)
 {
-  int primtoflux_rad(int *returntype, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux);
+  int primtoflux_rad(int *returntype, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux, FTYPE *fluxabs);
   VARSTATIC FTYPE fluxrad[NPR];
+  VARSTATIC FTYPE fluxradabs[NPR];
   VARSTATIC FTYPE fluxdiag;
   VARSTATIC int pl,pliter;
   int returntype=UNOTHING;
 
 
 
-  PLOOP(pliter,pl) flux[pl]=fluxrad[pl]=0.0;
+  PLOOP(pliter,pl) flux[pl]=fluxabs[pl]=fluxrad[pl]=0.0;
 
 
   if(EOMRADTYPE!=EOMRADNONE){
     // define RAD terms
-    primtoflux_rad(&returntype, pr, q, dir, geom, fluxrad);
+    primtoflux_rad(&returntype, pr, q, dir, geom, fluxrad, fluxradabs);
     // add up RAD
-    PLOOP(pliter,pl) flux[pl] += fluxrad[pl];
+    PLOOP(pliter,pl){
+      flux[pl] += fluxrad[pl];
+      fluxabs[pl] += fluxradabs[pl];
+    }
   }
 
   // returns UNOTHING form
@@ -153,9 +185,9 @@ int primtoflux_radonly(FTYPE *pr, struct of_state *q, int dir,
 // fluxdir = true flux direction even if passing back conserved quantity (fundir==TT)
 int primtoflux_splitmaem(int returntype, FTYPE *pr, struct of_state *q, int fluxdir, int fundir, struct of_geom *geom, FTYPE *fluxma, FTYPE *fluxem)
 {
-  int primtoflux_ma(int needentropy,int *returntype, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux, FTYPE *fluxdiag);
-  int primtoflux_rad(int *returntype, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux);
-  int primtoflux_em(int *returntype, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux);
+  int primtoflux_ma(int needentropy,int *returntype, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux, FTYPE *fluxabs, FTYPE *fluxdiag, FTYPE *fluxdiagabs);
+  int primtoflux_rad(int *returntype, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux, FTYPE *fluxabs);
+  int primtoflux_em(int *returntype, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux, FTYPE *fluxabs);
   void UtoU_ma_fromunothing(int returntype,struct of_geom *ptrgeom,FTYPE *Uin, FTYPE *Uout);
   void UtoU_rad_fromunothing(int returntype,struct of_geom *ptrgeom,FTYPE *Uin, FTYPE *Uout);
   void UtoU_em_fromunothing(int returntype,struct of_geom *ptrgeom,FTYPE *Uin, FTYPE *Uout);
@@ -168,7 +200,7 @@ int primtoflux_splitmaem(int returntype, FTYPE *pr, struct of_state *q, int flux
   PLOOP(pliter,pl) fluxinputma[pl]=fluxinputrad[pl]=fluxinputem[pl]=0.0;
 
   // define MA terms
-  primtoflux_ma(1,&returntype, pr, q, fundir, geom, fluxinputma, &fluxdiag);
+  primtoflux_ma(1,&returntype, pr, q, fundir, geom, fluxinputma, NULL, &fluxdiag, NULL);
 
   // SUPERGODMARK CHANGINGMARK
   // Note that pressure part of flux has 0 conserved quantity associated with it from the point of view of this output and correct HLL/LAXF calculation
@@ -200,7 +232,7 @@ int primtoflux_splitmaem(int returntype, FTYPE *pr, struct of_state *q, int flux
   if(EOMRADTYPE!=EOMRADNONE){
 
     // define RAD terms (as separate fluid from MHD fluid)
-    primtoflux_rad(&returntype, pr, q, fundir, geom, fluxinputrad);
+    primtoflux_rad(&returntype, pr, q, fundir, geom, fluxinputrad, NULL);
 
     //  UtoU_rad(UNOTHING,returntype,geom,fluxinputrad,fluxrad);
     UtoU_rad_fromunothing(returntype,geom,fluxinputrad,fluxrad);
@@ -209,7 +241,7 @@ int primtoflux_splitmaem(int returntype, FTYPE *pr, struct of_state *q, int flux
   }
 
   // define EM terms
-  primtoflux_em(&returntype, pr, q, fundir, geom, fluxinputem);
+  primtoflux_em(&returntype, pr, q, fundir, geom, fluxinputem, NULL);
   //  UtoU_em(UNOTHING,returntype,geom,fluxinputem,fluxem);
   UtoU_em_fromunothing(returntype,geom,fluxinputem,fluxem);
 
@@ -222,14 +254,15 @@ int primtoflux_splitmaem(int returntype, FTYPE *pr, struct of_state *q, int flux
 
 
 // matter only terms (as if B=0)
-int primtoflux_ma(int needentropy,int *returntype, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux, FTYPE *fluxdiag)
+int primtoflux_ma(int needentropy,int *returntype, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux, FTYPE *fluxabs, FTYPE *fluxdiag, FTYPE *fluxdiagabs)
 {
   // sizes: NPR,struct of_state, int, struct of_geom, NPR
-  int ynuflux_calc(struct of_geom *ptrgeom, FTYPE *pr, int dir, struct of_state *q, FTYPE *advectedscalarflux, int pnum);
-  int ylflux_calc(struct of_geom *ptrgeom, FTYPE *pr, int dir, struct of_state *q, FTYPE *advectedscalarflux, int pnum);
-  int massflux_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *massflux);
-  int entropyflux_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *entropyflux);
+  int ynuflux_calc(struct of_geom *ptrgeom, FTYPE *pr, int dir, struct of_state *q, FTYPE *advectedscalarflux, FTYPE *advectedscalarfluxabs, int pnum);
+  int ylflux_calc(struct of_geom *ptrgeom, FTYPE *pr, int dir, struct of_state *q, FTYPE *advectedscalarflux, FTYPE *advectedscalarfluxabs, int pnum);
+  int massflux_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *massflux, FTYPE *massfluxabs);
+  int entropyflux_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *entropyflux, FTYPE *entropyfluxabs);
   VARSTATIC FTYPE fluxdiagpress[NPR]; // temp var
+  VARSTATIC FTYPE fluxdiagpressabs[NPR]; // temp var
   VARSTATIC int pl,pliter;
 
   // USE of SPLITNPR here is simplified for speed
@@ -239,7 +272,7 @@ int primtoflux_ma(int needentropy,int *returntype, FTYPE *pr, struct of_state *q
 #if(SPLITNPR)
   if(nprlist[nprstart]<=RHO && nprlist[nprend]>=RHO)
 #endif
-    massflux_calc(pr, dir, q, &flux[RHO]); // fills RHO only
+    massflux_calc(pr, dir, q, &flux[RHO], &fluxabs[RHO]); // fills RHO only
 
 
   // GODMARK WTF!  Problems with code (compiling?) with this
@@ -251,8 +284,9 @@ int primtoflux_ma(int needentropy,int *returntype, FTYPE *pr, struct of_state *q
   if(nprlist[nprstart]<=UU && nprlist[nprend]>=U3)
 #endif
     {
-      mhd_calc_ma(pr, dir, geom, q, &flux[UU], &fluxdiagpress[UU]); // fills flux[UU->U3] and fluxdiagonal[UU->U3]
+      mhd_calc_ma(pr, dir, geom, q, &flux[UU], &fluxabs[UU], &fluxdiagpress[UU], &fluxdiagpressabs[UU]); // fills flux[UU->U3] and fluxdiagonal[UU->U3]
       *fluxdiag = fluxdiagpress[UU+dir];
+      if(fluxdiagabs!=NULL) *fluxdiagabs = fluxdiagpressabs[UU+dir];
     }
 
 
@@ -260,13 +294,13 @@ int primtoflux_ma(int needentropy,int *returntype, FTYPE *pr, struct of_state *q
 #if(SPLITNPR)
   if(nprlist[nprstart]<=YL && nprlist[nprend]>=YL)
 #endif
-    ylflux_calc(geom,pr, dir, q, &flux[YL],YL); // fills YL only
+    ylflux_calc(geom,pr, dir, q, &flux[YL], &fluxabs[YL],YL); // fills YL only
 #endif
 #if(DOYNU!=DONOYNU)
 #if(SPLITNPR)
   if(nprlist[nprstart]<=YNU && nprlist[nprend]>=YNU)
 #endif
-    ynuflux_calc(geom, pr, dir, q, &flux[YNU],YNU); // fills YNU only
+    ynuflux_calc(geom, pr, dir, q, &flux[YNU], &fluxabs[YNU],YNU); // fills YNU only
 #endif
 
 
@@ -275,11 +309,12 @@ int primtoflux_ma(int needentropy,int *returntype, FTYPE *pr, struct of_state *q
 #if(SPLITNPR)
     if(nprlist[nprstart]<=ENTROPY && nprlist[nprend]>=ENTROPY)
 #endif
-      entropyflux_calc(pr, dir, q, &flux[ENTROPY]); // fills ENTROPY only
+      entropyflux_calc(pr, dir, q, &flux[ENTROPY], &fluxabs[ENTROPY]); // fills ENTROPY only
     
     // below is special for utoprim() 5D version for full entropy evolution and inversion
     if(*returntype==UENTROPY){
       flux[UU]=flux[ENTROPY]; // overwrite for utoprim()
+      fluxabs[UU]=fluxabs[ENTROPY]; // overwrite for utoprim()
       *fluxdiag = 0.0; // overwrite for utoprim()
       *returntype=UNOTHING; // reset returntype for UtoU
     }
@@ -298,7 +333,7 @@ int primtoflux_ma(int needentropy,int *returntype, FTYPE *pr, struct of_state *q
 
 
 // radiation terms (as if rho=u=p=0)
-int primtoflux_rad(int *returntype, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux)
+int primtoflux_rad(int *returntype, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux, FTYPE *fluxabs)
 {
 
   // Radiation stress-energy tensor w/ first index up, second index down.
@@ -307,7 +342,7 @@ int primtoflux_rad(int *returntype, FTYPE *pr, struct of_state *q, int dir, stru
 #endif
 
   if(EOMRADTYPE!=EOMRADNONE){
-    mhd_calc_rad(pr, dir, geom, q, &flux[URAD0]); // fills URAD0->URAD3
+    mhd_calc_rad(pr, dir, geom, q, &flux[URAD0], &fluxabs[URAD0]); // fills URAD0->URAD3
   }
   // else don't fill flux[RAD0->RAD3] since assume entries don't exist
 
@@ -317,12 +352,12 @@ int primtoflux_rad(int *returntype, FTYPE *pr, struct of_state *q, int dir, stru
 
 
 // electromagnetic terms (as if rho=u=p=0)
-int primtoflux_em(int *returntype, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux)
+int primtoflux_em(int *returntype, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux, FTYPE *fluxabs)
 {
   // sizes: NPR,struct of_state, int, struct of_geom, NPR
   //  FTYPE dualf[NDIM];
-  //  int massflux_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *massflux);
-  //  int advectedscalarflux_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *advectedscalarflux, int pnum);
+  //  int massflux_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *massflux, FTYPE *massfluxabs);
+  //  int advectedscalarflux_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *advectedscalarflux, FTYPE *advectedscalarfluxabs, int pnum);
 
 
   // USE of SPLITNPR here is simplified for speed
@@ -337,14 +372,14 @@ int primtoflux_em(int *returntype, FTYPE *pr, struct of_state *q, int dir, struc
 #if(SPLITNPR)
   if(nprlist[nprstart]<=UU && nprlist[nprend]>=U3)
 #endif
-    mhd_calc_em(pr, dir, geom, q, &flux[UU]); // fills UU->U3
+    mhd_calc_em(pr, dir, geom, q, &flux[UU], &fluxabs[UU]); // fills UU->U3
 
 
 
 #if(SPLITNPR)
   if(nprlist[nprstart]<=B1 && nprlist[nprend]>=B3)
 #endif
-    dualfaradayspatial_calc(pr,dir,q,&flux[B1]); // fills B1->B3
+    dualfaradayspatial_calc(pr,dir,q,&flux[B1],&fluxabs[B1]); // fills B1->B3
 
 
 #if(DEBUGNSBH)
@@ -359,10 +394,11 @@ int primtoflux_em(int *returntype, FTYPE *pr, struct of_state *q, int dir, struc
 }
 
 
-int massflux_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *massflux)
+int massflux_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *massflux, FTYPE *massfluxabs)
 {
   /* particle number flux */
   *massflux = pr[RHO] * q->ucon[dir];
+  *massfluxabs=fabs(*massflux);
 
   // DEBUG:
   //  dualfprintf(fail_file,"massflux: %d %21.15g %21.15g\n",dir,pr[RHO],q->ucon[dir]);
@@ -372,14 +408,15 @@ int massflux_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *massflux)
 
 
 // flux associated with Y_L variable
-int ylflux_calc(struct of_geom *ptrgeom, FTYPE *pr, int dir, struct of_state *q, FTYPE *advectedscalarflux, int pnum)
+int ylflux_calc(struct of_geom *ptrgeom, FTYPE *pr, int dir, struct of_state *q, FTYPE *advectedscalarflux, FTYPE *advectedscalarfluxabs, int pnum)
 {
-  int massflux_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *massflux);
+  int massflux_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *massflux, FTYPE *massfluxabs);
   VARSTATIC FTYPE massflux;
+  VARSTATIC FTYPE massfluxabs;
   FTYPE prforadvect;
 
   // get mass flux
-  massflux_calc(pr, dir, q, &massflux);
+  massflux_calc(pr, dir, q, &massflux, &massfluxabs);
 
 #if(WHICHEOS==KAZFULL)
   yl2advect_kazfull(GLOBALMAC(EOSextraglobal,ptrgeom->i,ptrgeom->j,ptrgeom->k),pr[YL],pr[YNU],&prforadvect);
@@ -390,20 +427,22 @@ int ylflux_calc(struct of_geom *ptrgeom, FTYPE *pr, int dir, struct of_state *q,
   // get flux associated with Y_L
   *advectedscalarflux = prforadvect * massflux;
 
+  *advectedscalarfluxabs = fabs(*advectedscalarflux);
+
   return(0);
 }
 
 
 // flux asociated with Ynu variable
-int ynuflux_calc(struct of_geom *ptrgeom, FTYPE *pr, int dir, struct of_state *q, FTYPE *advectedscalarflux, int pnum)
+int ynuflux_calc(struct of_geom *ptrgeom, FTYPE *pr, int dir, struct of_state *q, FTYPE *advectedscalarflux, FTYPE *advectedscalarfluxabs, int pnum)
 {
-  int massflux_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *massflux);
-  VARSTATIC FTYPE massflux;
+  int massflux_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *massflux, FTYPE *massfluxabs);
+  VARSTATIC FTYPE massflux, massfluxabs;
   FTYPE prforadvect;
 
 
   // get mass flux
-  massflux_calc(pr, dir, q, &massflux);
+  massflux_calc(pr, dir, q, &massflux, &massfluxabs);
 
 #if(WHICHEOS==KAZFULL)
   ynu2advect_kazfull(GLOBALMAC(EOSextraglobal,ptrgeom->i,ptrgeom->j,ptrgeom->k),pr[YL],pr[YNU],&prforadvect);
@@ -414,16 +453,19 @@ int ynuflux_calc(struct of_geom *ptrgeom, FTYPE *pr, int dir, struct of_state *q
   // get flux associated with Y_\nu
   *advectedscalarflux = prforadvect * massflux;
 
+  *advectedscalarfluxabs = fabs(*advectedscalarflux);
+
   return(0);
 }
 
 
 
 // flux of scalar
-int advectedscalarflux_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *advectedscalarflux, int pnum)
+int advectedscalarflux_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *advectedscalarflux, FTYPE *advectedscalarfluxabs, int pnum)
 {
-  int massflux_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *massflux);
+  int massflux_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *massflux, FTYPE *massfluxabs);
   VARSTATIC FTYPE massflux;
+  VARSTATIC FTYPE massfluxabs;
 
   /* yl/ynu/etc. per unit rest-mass flux */
 
@@ -431,8 +473,9 @@ int advectedscalarflux_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *advec
   // d/d\tau(entropy/rho)=0
   // -> \nabla_\mu(entropy u^\mu)=0
 
-  massflux_calc(pr, dir, q, &massflux);
+  massflux_calc(pr, dir, q, &massflux, &massfluxabs);
   *advectedscalarflux = pr[pnum] * massflux;
+  *advectedscalarfluxabs = fabs(*advectedscalarflux);
 
   return(0);
 }
@@ -440,7 +483,7 @@ int advectedscalarflux_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *advec
 
 
 // flux of specific entropy
-int entropyflux_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *entropyflux)
+int entropyflux_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *entropyflux, FTYPE *entropyfluxabs)
 {
 
   // get entropy
@@ -461,6 +504,8 @@ int entropyflux_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *entropyflux)
 
   *entropyflux = (q->entropy) * (q->ucon[dir]);
 
+  *entropyfluxabs = fabs(*entropyflux);
+
   return(0);
 }
 
@@ -468,7 +513,7 @@ int entropyflux_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *entropyflux)
 
 
 // spatial part of dualfaraday
-int dualfaradayspatial_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *dualf)
+int dualfaradayspatial_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *dualf, FTYPE *dualfabs)
 {
   VARSTATIC FTYPE dualffull[NDIM];
 
@@ -477,6 +522,11 @@ int dualfaradayspatial_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *dualf
   dualf[0]=dualffull[1];
   dualf[1]=dualffull[2];
   dualf[2]=dualffull[3];
+
+  dualfabs[0]=fabs(dualf[0]);
+  dualfabs[1]=fabs(dualf[1]);
+  dualfabs[2]=fabs(dualf[2]);
+
 
   return(0);
 
@@ -579,13 +629,13 @@ int Mcon_calc(FTYPE *pr, struct of_state *q, FTYPE (*Mcon)[NDIM])
 
 // returns entire space-time(NDIM in size) / EOM(NPR in size) matrix
 int primtofullflux(int returntype, FTYPE *pr, struct of_state *q,
-                   struct of_geom *ptrgeom, FTYPE (*flux)[NPR])
+                   struct of_geom *ptrgeom, FTYPE (*flux)[NPR], FTYPE (*fluxabs)[NPR])
 {
   VARSTATIC int j;
   
   // j=0,1,2,3 corresponding to U^j_\nu , where \nu corresponds to all EOMs and j to space-time for each
   // 1 stands for obey nprlist
-  DLOOPA(j) primtoflux(returntype,pr,q,j,ptrgeom,flux[j]);
+  DLOOPA(j) primtoflux(returntype,pr,q,j,ptrgeom,flux[j],fluxabs[j]);
 
   return(0);
 }
@@ -593,9 +643,10 @@ int primtofullflux(int returntype, FTYPE *pr, struct of_state *q,
 
 /* calculate "conserved" quantities */
 int primtoU(int returntype, FTYPE *pr, struct of_state *q, struct of_geom *geom,
-            FTYPE *U)
+            FTYPE *U,
+            FTYPE *Uabs)
 {
-  MYFUN(primtoflux(returntype,pr, q, 0, geom, U) ,"phys.c:primtoU()", "primtoflux_calc() dir=0", 1);
+  MYFUN(primtoflux(returntype,pr, q, 0, geom, U, Uabs) ,"phys.c:primtoU()", "primtoflux_calc() dir=0", 1);
 
   return (0);
 }
@@ -1045,15 +1096,15 @@ void vbtopr(FTYPE *vcon,FTYPE *bcon,struct of_geom *geom, FTYPE *pr)
 
 /* MHD stress tensor, with first index up, second index down */
 // mhd^dir_j
-void mhd_calc(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, FTYPE *mhd)
+void mhd_calc(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, FTYPE *mhd, FTYPE *mhdabs)
 {
-  void mhd_calc_0(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, FTYPE *mhd);
-  void mhd_calc_norestmass(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, FTYPE *mhd);
+  void mhd_calc_0(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, FTYPE *mhd, FTYPE *mhdabs);
+  void mhd_calc_norestmass(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, FTYPE *mhd, FTYPE *mhdabs);
 
 #if(REMOVERESTMASSFROMUU==2)
-  mhd_calc_norestmass(pr, dir, geom, q, mhd);
+  mhd_calc_norestmass(pr, dir, geom, q, mhd, mhdabs);
 #else
-  mhd_calc_0(pr, dir, geom, q, mhd);
+  mhd_calc_0(pr, dir, geom, q, mhd, mhdabs);
 #endif
 
 }
@@ -1061,30 +1112,30 @@ void mhd_calc(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, FTYP
 /* MHD stress tensor, with first index up, second index down */
 // mhd^dir_j
 // understood that mhddiagpress only contains non-zero element on mhddiagpress[dir] and all others should be 0.0
-void mhd_calc_ma(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, FTYPE *mhd, FTYPE *mhddiagpress)
+void mhd_calc_ma(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, FTYPE *mhd, FTYPE *mhdabs, FTYPE *mhddiagpress, FTYPE *mhddiagpressabs)
 {
-  void mhd_calc_0_ma(FTYPE *pr, int dir, struct of_state *q, FTYPE *mhd, FTYPE *mhddiagpress);
-  void mhd_calc_norestmass_ma(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, FTYPE *mhd, FTYPE *mhddiagpress);
+  void mhd_calc_0_ma(FTYPE *pr, int dir, struct of_state *q, FTYPE *mhd, FTYPE *mhdabs, FTYPE *mhddiagpress, FTYPE *mhddiagpressabs);
+  void mhd_calc_norestmass_ma(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, FTYPE *mhd, FTYPE *mhdabs, FTYPE *mhddiagpress, FTYPE *mhddiagpressabs);
 
 #if(REMOVERESTMASSFROMUU==2)
-  mhd_calc_norestmass_ma(pr, dir, geom, q, mhd, mhddiagpress);
+  mhd_calc_norestmass_ma(pr, dir, geom, q, mhd, mhdabs, mhddiagpress, mhddiagpressabs);
 #else
-  mhd_calc_0_ma(pr, dir, q, mhd, mhddiagpress);
+  mhd_calc_0_ma(pr, dir, q, mhd, mhdabs, mhddiagpress, mhddiagpressabs);
 #endif
 
 }
 
 /* MHD stress tensor, with first index up, second index down */
 // mhd^dir_j
-void mhd_calc_em(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, FTYPE *mhd)
+void mhd_calc_em(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, FTYPE *mhd, FTYPE *mhdabs)
 {
-  void mhd_calc_0_em(FTYPE *pr, int dir, struct of_state *q, FTYPE *mhd);
-  void mhd_calc_primfield_em(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, FTYPE *mhd);
+  void mhd_calc_0_em(FTYPE *pr, int dir, struct of_state *q, FTYPE *mhd, FTYPE *mhdabs);
+  void mhd_calc_primfield_em(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, FTYPE *mhd, FTYPE *mhdabs);
 
 #if(MAXWELL==GENMAXWELL)
-  mhd_calc_0_em(pr, dir, q, mhd);
+  mhd_calc_0_em(pr, dir, q, mhd, mhdabs);
 #elif(MAXWELL==PRIMMAXWELL)
-  mhd_calc_primfield_em(pr, dir, geom, q, mhd);
+  mhd_calc_primfield_em(pr, dir, geom, q, mhd, mhdabs);
 #else
 #error No such MAXWELL
 #endif
@@ -1103,30 +1154,31 @@ void mhd_calc_em(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, F
 
 
 /* MHD stress tensor, with first index up, second index down */
-void mhd_calc_0(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, FTYPE *mhd)
+void mhd_calc_0(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, FTYPE *mhd, FTYPE *mhdabs)
 {
-  void mhd_calc_0_ma(FTYPE *pr, int dir, struct of_state *q, FTYPE *mhd, FTYPE *mhddiagpress);
-  //  void mhd_calc_rad(FTYPE *pr, int dir, struct of_geom *ptrgeom, struct of_state *q, FTYPE *radstressdir);
-  void mhd_calc_em(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, FTYPE *mhd);
+  void mhd_calc_0_ma(FTYPE *pr, int dir, struct of_state *q, FTYPE *mhd, FTYPE *mhdabs, FTYPE *mhddiagpress, FTYPE *mhddiagpressabs);
+  void mhd_calc_em(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, FTYPE *mhd, FTYPE *mhdabs);
   VARSTATIC int j;
-  VARSTATIC FTYPE mhdma[NDIM],mhdem[NDIM];//,mhdrad[NDIM]
+  VARSTATIC FTYPE mhdma[NDIM],mhdem[NDIM];
+  VARSTATIC FTYPE mhdmaabs[NDIM],mhdemabs[NDIM];
   VARSTATIC FTYPE mhddiagpress[NDIM];
+  VARSTATIC FTYPE mhddiagpressabs[NDIM];
 
 
-  mhd_calc_0_ma(pr, dir, q, mhdma,mhddiagpress);
-  //  mhd_calc_rad(pr, dir, geom, q, mhdrad); // DUH, wrong
-  mhd_calc_em(pr, dir, geom, q, mhdem);
+  mhd_calc_0_ma(pr, dir, q, mhdma, mhdmaabs, mhddiagpress, mhddiagpressabs);
+  mhd_calc_em(pr, dir, geom, q, mhdem, mhdemabs);
 
   
   // add up MA+EM (no RAD here in T because R kept as separate fluid)
-  DLOOPA(j) mhd[j] = (mhdma[j] + mhddiagpress[j]) + mhdem[j]; // + mhdrad[j]
+  DLOOPA(j) mhd[j] = (mhdma[j] + mhddiagpress[j]) + mhdem[j];
+  if(mhdabs!=NULL) DLOOPA(j) mhdabs[j] = (mhdmaabs[j] + mhddiagpressabs[j]) + mhdemabs[j];
 
 }
 
 
 
 /* MHD stress tensor, with first index up, second index down */
-void mhd_calc_0_ma(FTYPE *pr, int dir, struct of_state *q, FTYPE *mhd, FTYPE *mhddiagpress)
+void mhd_calc_0_ma(FTYPE *pr, int dir, struct of_state *q, FTYPE *mhd, FTYPE *mhdabs, FTYPE *mhddiagpress, FTYPE *mhddiagpressabs)
 {
   VARSTATIC int j;
   VARSTATIC FTYPE rho, u, P, w, eta, ptot;
@@ -1154,20 +1206,23 @@ void mhd_calc_0_ma(FTYPE *pr, int dir, struct of_state *q, FTYPE *mhd, FTYPE *mh
   // mhd^{dir}_{j} =
   // j=0..3
   DLOOPA(j) mhd[j] = eta * q->ucon[dir] * q->ucov[j];
+  DLOOPA(j) mhdabs[j] = fabs(mhd[j]);
 
   DLOOPA(j) mhddiagpress[j] = 0.0;
 #if(SPLITPRESSURETERMINFLUXMA==0)
   mhd[dir] += ptot;
+  mhdabs[dir] += fabs(ptot);
 #else
   // below equivalent to ptot * delta(dir,j)
   mhddiagpress[dir] = ptot;
+  mhddiagpressabs[dir] = fabs(ptot);
 #endif
 
 }
 
 
 // EM part of stress-energy tensor
-void mhd_calc_0_em(FTYPE *pr, int dir, struct of_state *q, FTYPE *mhd)
+void mhd_calc_0_em(FTYPE *pr, int dir, struct of_state *q, FTYPE *mhd, FTYPE *mhdabs)
 {
   VARSTATIC int j;
   VARSTATIC FTYPE r, u, P, w, bsq, eta, ptot;
@@ -1182,7 +1237,9 @@ void mhd_calc_0_em(FTYPE *pr, int dir, struct of_state *q, FTYPE *mhd)
   // j=0..3
   //  DLOOPA(j) mhd[j] = eta * q->ucon[dir] * q->ucov[j] + ptot * delta(dir, j) - q->bcon[dir] * q->bcov[j];
   DLOOPA(j) mhd[j] = eta * q->ucon[dir] * q->ucov[j] - q->bcon[dir] * q->bcov[j];
+  DLOOPA(j) mhdabs[j] = fabs(mhd[j]);
   mhd[dir] += ptot;
+  mhdabs[dir] += fabs(ptot);
 
 }
 
@@ -1192,22 +1249,24 @@ void mhd_calc_0_em(FTYPE *pr, int dir, struct of_state *q, FTYPE *mhd)
 // also avoids catastrophic cancellation in field due to using 4-field.  Instead derive stress tensor from 3-velocity and 3-field usinc Mcon_calc()
 // seems to work to avoid catastrophic cancellation with field, but maybe should use WHICHVEL=RELVEL4 directly?  GODMARK
 // T^dir_\mu
-void mhd_calc_norestmass(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, FTYPE *mhd)
+void mhd_calc_norestmass(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, FTYPE *mhd, FTYPE *mhdabs)
 {
-  void mhd_calc_norestmass_ma(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, FTYPE *mhdma, FTYPE *mhddiagpress);
-  void mhd_calc_em(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, FTYPE *mhdem);
+  void mhd_calc_norestmass_ma(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, FTYPE *mhdma, FTYPE *mhdmaabs, FTYPE *mhddiagpress, FTYPE *mhddiagpressabs);
+  void mhd_calc_em(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, FTYPE *mhdem, FTYPE *mhdemabs);
   VARSTATIC FTYPE mhdma[NDIM];
-  //  VARSTATIC FTYPE mhdrad[NDIM];
   VARSTATIC FTYPE mhdem[NDIM];
+  VARSTATIC FTYPE mhdmaabs[NDIM];
+  VARSTATIC FTYPE mhdemabs[NDIM];
   VARSTATIC int j;
   VARSTATIC FTYPE mhddiagpress[NDIM];
+  VARSTATIC FTYPE mhddiagpressabs[NDIM];
 
-  mhd_calc_norestmass_ma(pr, dir, geom, q, mhdma, mhddiagpress);
-  //  mhd_calc_rad(pr, dir, geom, q, mhdrad);
-  mhd_calc_em(pr, dir, geom, q, mhdem);
+  mhd_calc_norestmass_ma(pr, dir, geom, q, mhdma, mhdmaabs, mhddiagpress, mhddiagpressabs);
+  mhd_calc_em(pr, dir, geom, q, mhdem, mhdemabs);
 
   // add up MA and RAD and EM parts
-  DLOOPA(j) mhd[j] = (mhdma[j] + mhddiagpress[j]) + mhdem[j]; // + mhdrad[j]
+  DLOOPA(j) mhd[j] = (mhdma[j] + mhddiagpress[j]) + mhdem[j];
+  if(mhdabs!=NULL) DLOOPA(j) mhdabs[j] = (mhdmaabs[j] + mhddiagpressabs[j]) + mhdemabs[j];
 
 }
 
@@ -1218,7 +1277,7 @@ void mhd_calc_norestmass(FTYPE *pr, int dir, struct of_geom *geom, struct of_sta
 // also avoids catastrophic cancellation in field due to using 4-field.  Instead derive stress tensor from 3-velocity and 3-field usinc Mcon_calc()
 // seems to work to avoid catastrophic cancellation with field, but maybe should use WHICHVEL=RELVEL4 directly?  GODMARK
 // T^dir_\mu
-void mhd_calc_norestmass_ma(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, FTYPE *mhd, FTYPE *mhddiagpress)
+void mhd_calc_norestmass_ma(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, FTYPE *mhd, FTYPE *mhdabs, FTYPE *mhddiagpress, FTYPE *mhddiagpressabs)
 {
   VARSTATIC int j;
   VARSTATIC FTYPE rho, u, P, w, bsq, eta, ptot;
@@ -1259,15 +1318,26 @@ void mhd_calc_norestmass_ma(FTYPE *pr, int dir, struct of_geom *geom, struct of_
 
   DLOOPA(j) mhddiagpress[j] = 0.0;
 
-  j=0; mhd[j] = (P+u) * q->ucon[dir] *q->ucov[j] + rho * q->ucon[dir] * q->ifremoverestplus1ud0elseud0 ;
+  // T^dir_0
+  j=0;
+  FTYPE term1,term2;
+  term1 = (P+u) * q->ucon[dir] *q->ucov[j];
+  term2 = rho * q->ucon[dir] * q->ifremoverestplus1ud0elseud0;
+  mhd[j] = term1 + term2 ;
+  mhdabs[j] = fabs(term1) + fabs(term2) ;
+
+  // T^dir_j
   SLOOPA(j) mhd[j] = eta * q->ucon[dir] * q->ucov[j];
+  SLOOPA(j) mhdabs[j] = fabs(mhd[j]);
 
 #if(SPLITPRESSURETERMINFLUXMA==0)
   // below equivalent to ptot * delta(dir,j)
   mhd[dir] += ptot;
+  mhdabs[dir] += fabs(ptot);
 #else
   // below equivalent to ptot * delta(dir,j)
   mhddiagpress[dir] = ptot;
+  mhddiagpressabs[dir] = fabs(ptot);
 #endif
 
 
@@ -1289,7 +1359,7 @@ void mhd_calc_norestmass_ma(FTYPE *pr, int dir, struct of_geom *geom, struct of_
 // seems to work to avoid catastrophic cancellation with field, but maybe should use WHICHVEL=RELVEL4 directly?  GODMARK
 // T^dir_\mu
 // SHOULD NOT USE b^\mu b_\mu here
-void mhd_calc_primfield_em(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, FTYPE *mhd)
+void mhd_calc_primfield_em(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, FTYPE *mhd, FTYPE *mhdabs)
 {
   int Mcon_calc(FTYPE *pr, struct of_state *q, FTYPE (*Mcon)[NDIM]);
   void ffdestresstensor_dir(int dir, FTYPE (*Mcon)[NDIM], struct of_geom *geom, FTYPE *TEMdir);
@@ -1344,6 +1414,9 @@ void mhd_calc_primfield_em(FTYPE *pr, int dir, struct of_geom *geom, struct of_s
   DLOOPA(mu) mhd[mu] *= oneovergammasq ;
 
 #endif
+
+
+  DLOOPA(mu) mhdabs[mu] = fabs(mhd[mu]);
 
 
 
@@ -1516,7 +1589,7 @@ int source(FTYPE *pi, FTYPE *pr, FTYPE *pf, int *didreturnpf, int *eomtype, stru
       // KORALTODO SUPERGODMARK: This means need advance.c source() to have uf as previous field uf, not updated uf from dUriemann *and* not tempucum for finalstep=1
       dUother[pl]=dUfromUFSET(CUf,dt,Ugeomfreei[pl],Ugeomfreef[pl],pf[pl]);
       // Also, update "guess" pr with new field, since pr is used as default guess and want field to be correct.  So pr is no longer what computed flux.
-      pr[pl]=pf[pl];
+      //      pr[pl]=pf[pl]; // only for implicit schemes, and handle this inside koral_source_rad_implicit() now.
     }
     // now sourcephysics() call will have all CENT quantities
   }

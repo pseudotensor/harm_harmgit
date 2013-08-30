@@ -1,5 +1,5 @@
 
-extern void mhd_calc_rad(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, FTYPE *radstressdir);
+extern void mhd_calc_rad(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, FTYPE *radstressdir, FTYPE *radstressdirabs);
 extern FTYPE my_min(FTYPE a, FTYPE b);
 extern FTYPE my_sign(FTYPE x);
 extern int inverse_44matrix(FTYPE a[][4], FTYPE ia[][4]);

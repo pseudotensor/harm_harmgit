@@ -164,8 +164,8 @@ int p2SFUevolve(int dir, int isleftright, FTYPE *p, struct of_geom *ptrgeom, str
   //  }
 
 
-  MYFUN(primtoflux(UEVOLVE,p, *ptrstate, dir, ptrgeom, F),"flux.c:p2SFUevolve()","primtoflux_calc() dir=1/2 l", 1);
-  MYFUN(primtoflux(UEVOLVE,p, *ptrstate, TT, ptrgeom, U),"flux.c:p2SFUevolve()", "primtoflux_calc() dir=l0", 1);
+  MYFUN(primtoflux(UEVOLVE,p, *ptrstate, dir, ptrgeom, F, NULL),"flux.c:p2SFUevolve()","primtoflux_calc() dir=1/2 l", 1);
+  MYFUN(primtoflux(UEVOLVE,p, *ptrstate, TT, ptrgeom, U, NULL),"flux.c:p2SFUevolve()", "primtoflux_calc() dir=l0", 1);
 
   return(0);
 }
@@ -601,7 +601,7 @@ int forceflux_compute(int dir,struct of_geom *geom, FTYPE *cmin, FTYPE *cmax, FT
   if(doforceflux){
     ptrstate=&state; // default
     MYFUN(get_stateforfluxcalc(dir,ISMIDDLE, pmid, geom, &ptrstate),"flux.c:flux_compute()", "get_state()", 1);
-    MYFUN(primtoflux(UEVOLVE, pmid, ptrstate, dir, geom, fmid),"flux.c:flux_compute()","primtoflux_calc() dir=1/2 l", 1);
+    MYFUN(primtoflux(UEVOLVE, pmid, ptrstate, dir, geom, fmid, NULL),"flux.c:flux_compute()","primtoflux_calc() dir=1/2 l", 1);
     
     // compute FORCE flux
     //    PLOOP(pliter,pl) F[pl] = FORCECOMPUTE(cforce,U_l[pl],U_r[pl],F_l[pl],fmid[pl],F_r[pl]);
@@ -1059,10 +1059,10 @@ int musta1flux_compute(int dir,struct of_geom *geom, FTYPE *cmin_l, FTYPE *cmin_
 
     // get fluxes (state used for vchar() below so need full state)
     MYFUN(get_state(p_l, geom, ptrstate_l),"flux.c:flux_compute()", "get_state()", 1);
-    MYFUN(primtoflux(UEVOLVE, p_l, ptrstate_l, dir, geom, F_l),"flux.c:flux_compute()","primtoflux_calc() dir=1/2 l", 1);
+    MYFUN(primtoflux(UEVOLVE, p_l, ptrstate_l, dir, geom, F_l, NULL),"flux.c:flux_compute()","primtoflux_calc() dir=1/2 l", 1);
 
     MYFUN(get_state(p_r, geom, ptrstate_r),"flux.c:flux_compute()", "get_state()", 1);
-    MYFUN(primtoflux(UEVOLVE, p_r, ptrstate_r, dir, geom, F_r),"flux.c:flux_compute()","primtoflux_calc() dir=1/2 l", 1);
+    MYFUN(primtoflux(UEVOLVE, p_r, ptrstate_r, dir, geom, F_r, NULL),"flux.c:flux_compute()","primtoflux_calc() dir=1/2 l", 1);
 
     // now have p_l, p_r, U_l, U_r, F_l, F_r
 
@@ -1293,7 +1293,7 @@ int musta2flux_compute(int dir,struct of_geom *geom, FTYPE *cmin_l, FTYPE *cmin_
       // get corrected centered fluxes (state needed for vchar() so need full state)
       ptrstate=&state; // default
       MYFUN(get_state(pnow, geom, ptrstate),"flux.c:flux_compute()", "get_state()", 1);
-      MYFUN(primtoflux(UEVOLVE, pnow, ptrstate, dir, geom, Fnow),"flux.c:flux_compute()","primtoflux_calc() dir=1/2 l", 1);
+      MYFUN(primtoflux(UEVOLVE, pnow, ptrstate, dir, geom, Fnow, NULL),"flux.c:flux_compute()","primtoflux_calc() dir=1/2 l", 1);
       // now have p, U, F at center again
 
       // get min and max wave speeds

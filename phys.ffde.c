@@ -589,7 +589,7 @@ int diss_account(int modified, FTYPE *Fit,FTYPE *U, struct of_geom *geom,FTYPE*p
 {
   int j;
   void FitUtoT(FTYPE *Fit,FTYPE *U,struct of_geom *geom, FTYPE (*T)[NDIM]);
-  extern int primtoU(int returntype, FTYPE *pr, struct of_state *q, struct of_geom *geom,FTYPE *U);
+  extern int primtoU(int returntype, FTYPE *pr, struct of_state *q, struct of_geom *geom,FTYPE *U, FTYPE *Uabs);
   struct of_state q;
   FTYPE T[NDIM][NDIM];
   FTYPE Ui[NPR],Uf[NPR];
@@ -605,7 +605,7 @@ int diss_account(int modified, FTYPE *Fit,FTYPE *U, struct of_geom *geom,FTYPE*p
   
   // get final energy-momentum and field
   MYFUN(get_state(pr, geom, &q),"phys.ffde.c:Utoprim_ffde()", "get_state()", 1);
-  primtoU(UDIAG,pr,&q,geom,Uf);
+  primtoU(UDIAG,pr,&q,geom,Uf, NULL);
   Uf[RHO]=0.0;
 
 #if(ACCOUNTNONCONS)
@@ -1445,7 +1445,7 @@ void get_state_ffde(FTYPE pr[NPR], struct of_geom *geom, struct of_state *q)
 // i.e.
 // get_geometry()
 // get_state
-// mhd_calc(pr,dir,geom,q,mhd) where T^{dir}_j is returned
+// mhd_calc(pr,dir,geom,q,mhd,NULL) where T^{dir}_j is returned
 //
 
 
@@ -1642,12 +1642,12 @@ void testffdeinversion(void)
   get_geometry(itest,jtest,ktest,CENT,ptrgeom);
   get_state(prin,ptrgeom,&q);
 
-  primtoU(UNOTHING,prin,&q,ptrgeom,U);
+  primtoU(UNOTHING,prin,&q,ptrgeom,U, NULL);
   Utoprim_ffde(U,ptrgeom,prout); // no need for initial guess since analytic inversion
 
   PLOOP(pliter,pl) prin[pl]=prout[pl];
 
-  primtoU(UNOTHING,prin,&q,ptrgeom,U);
+  primtoU(UNOTHING,prin,&q,ptrgeom,U, NULL);
   Utoprim_ffde(U,ptrgeom,prout); // no need for initial guess since analytic inversion
 
   // just compare pr in and pr out.
@@ -1663,7 +1663,7 @@ void testffdeinversion(void)
 
   get_geometry(i,j,k,CENT,ptrgeom);
   get_state(prin,ptrgeom,&q);
-  primtoU(UNOTHING,prin,&q,ptrgeom,U);
+  primtoU(UNOTHING,prin,&q,ptrgeom,U, NULL);
   Utoprim_ffde(U,ptrgeom,prout); // no need for initial guess since analytic inversion
 
   // just compare pr in and pr out.
@@ -1679,7 +1679,7 @@ void testffdeinversion(void)
 
   get_geometry(i,j,k,CENT,ptrgeom);
   get_state(prin,ptrgeom,&q);
-  primtoU(UNOTHING,prin,&q,ptrgeom,U);
+  primtoU(UNOTHING,prin,&q,ptrgeom,U, NULL);
 
   PLOOP(pliter,pl) dualfprintf(fail_file,"U[%d]=%21.15g\n",pl,U[pl]);
   Utoprim_ffde(U,ptrgeom,prout); // no need for initial guess since analytic inversion
@@ -1724,7 +1724,7 @@ void testffdeinversion(void)
               get_geometry(i,j,k,CENT,ptrgeom);
 
               if(get_state(prin,ptrgeom,&q)>=1) dualfprintf(fail_file,"getstate failure in realtest\n");
-              if(primtoU(UNOTHING,prin,&q,ptrgeom,U)>=1) dualfprintf(fail_file,"primtoU failure in realtest\n");
+              if(primtoU(UNOTHING,prin,&q,ptrgeom,U, NULL)>=1) dualfprintf(fail_file,"primtoU failure in realtest\n");
        
               Utoprim_ffde(U,ptrgeom,prout); // no need for initial guess since analytic inversion
 
@@ -1732,7 +1732,7 @@ void testffdeinversion(void)
 
               // only clean solution to test
               get_state(prin,ptrgeom,&q);
-              primtoU(UNOTHING,prin,&q,ptrgeom,U);
+              primtoU(UNOTHING,prin,&q,ptrgeom,U, NULL);
        
               Utoprim_ffde(U,ptrgeom,prout); // no need for initial guess since analytic inversion
 
@@ -1799,7 +1799,7 @@ void testffdeinversion(void)
 
   if(get_state(prin,ptrgeom,&q)>=1) dualfprintf(fail_file,"getstate failure in realtest\n");
   DLOOPA(pl) dualfprintf(fail_file,"1 uu[%d]=%21.15g\n",k,q.ucon[pl]);
-  if(primtoU(UNOTHING,prin,&q,ptrgeom,U)>=1) dualfprintf(fail_file,"primtoU failure in realtest\n");
+  if(primtoU(UNOTHING,prin,&q,ptrgeom,U, NULL)>=1) dualfprintf(fail_file,"primtoU failure in realtest\n");
        
   Utoprim_ffde(U,ptrgeom,prout); // no need for initial guess since analytic inversion
   for(pl=U1;pl<=B3;pl++) dualfprintf(fail_file,"prold[%d]=%21.15g  prnew[%d]=%21.15g :: %21.15g\n",pl,prin[pl],pl,prout[pl],(prin[pl]-prout[pl])/prin[pl]); 
@@ -1809,7 +1809,7 @@ void testffdeinversion(void)
   // only clean solution to test
   get_state(prin,ptrgeom,&q);
   DLOOPA(k) dualfprintf(fail_file,"2 uu[%d]=%21.15g\n",k,q.ucon[pl]);
-  primtoU(UNOTHING,prin,&q,ptrgeom,U);
+  primtoU(UNOTHING,prin,&q,ptrgeom,U, NULL);
        
   Utoprim_ffde(U,ptrgeom,prout); // no need for initial guess since analytic inversion
 

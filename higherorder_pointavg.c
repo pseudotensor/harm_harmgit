@@ -3209,7 +3209,7 @@ FTYPE limit_fluxc2a_prim_change(
 
       // find U(pr)
       MYFUN(get_state(MAC(pr,i1,j1,k1), ptrgeom, &q),"flux.c:fluxcalc()", "get_state()", 1);
-      MYFUN(primtoU(UEVOLVE,MAC(pr,i1,j1,k1), &q, ptrgeom, Upoint),"step_ch.c:advance()", "primtoU()", 1);
+      MYFUN(primtoU(UEVOLVE,MAC(pr,i1,j1,k1), &q, ptrgeom, Upoint, NULL),"step_ch.c:advance()", "primtoU()", 1);
 
 
       //2. add delta_u[0..1] to it

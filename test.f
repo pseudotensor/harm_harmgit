@@ -24,7 +24,7 @@ c
 c As harm subroutine
 c
 c 1) Set PRODUCTION 3
-c 2) fpp -P test.f > testfpp.temp.f ; f2c -Wall -f -P testfpp.temp.f ; sed 's/static//g' testfpp.temp.c > testfpp.c
+c 2) fpp -P test.f > testfpp.temp.f ; f2c -Wall -f -P testfpp.temp.f ; sed 's/static//g' testfpp.temp.c > testfpp.c ;sed 's/static//g' testfpp.temp.P > testfpp.P
 c    i.e. testfpp.c from f2c: MUST remove static in front of variables! 
 
 
@@ -36,9 +36,9 @@ c 1 means very simple Jon's version of err and sol output
 c 2 means only Jon's err output
 c 3 means no output or input (harm mode)
 c#define PRODUCTION 0
-#define PRODUCTION 1
+c#define PRODUCTION 1
 c#define PRODUCTION 2
-c#define PRODUCTION 3
+#define PRODUCTION 3
 
 c error below which will consider BAD solution and not even compute final solution
 #define FAILLIMIT (1E-6)

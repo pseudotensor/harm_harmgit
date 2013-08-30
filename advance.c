@@ -540,7 +540,7 @@ static int advance_standard(
         // force use of primitive to set Ui since otherwise wherever corrected/changed primitive (in fixup, etc.) then would have to change conserved quantity, while same since both are point values
         // only field for staggered method is special point value at faces that needs to come from conserved quantity
         MYFUN(get_state(MAC(pi,i,j,k), ptrgeom, qptr),"step_ch.c:advance()", "get_state()", 1);
-        MYFUN(primtoU(UEVOLVE,MAC(pi,i,j,k), qptr, ptrgeom, Uitemp),"step_ch.c:advance()", "primtoU()", 1);
+        MYFUN(primtoU(UEVOLVE,MAC(pi,i,j,k), qptr, ptrgeom, Uitemp, NULL),"step_ch.c:advance()", "primtoU()", 1);
 
         if(FLUXB==FLUXCTSTAG || DOENOFLUX != NOENOFLUX ){
           // then field version of ui[] is stored as "conserved" value at FACE, not CENT
@@ -1382,7 +1382,7 @@ static int advance_standard_orig(
         // force use of primitive to set Ui since otherwise wherever corrected/changed primitive (in fixup, etc.) then would have to change conserved quantity, while same since both are point values
         // only field for staggered method is special point value at faces that needs to come from conserved quantity
         MYFUN(get_state(MAC(pi,i,j,k), ptrgeom, qptr),"step_ch.c:advance()", "get_state()", 1);
-        MYFUN(primtoU(UEVOLVE,MAC(pi,i,j,k), qptr, ptrgeom, Uitemp),"step_ch.c:advance()", "primtoU()", 1);
+        MYFUN(primtoU(UEVOLVE,MAC(pi,i,j,k), qptr, ptrgeom, Uitemp, NULL),"step_ch.c:advance()", "primtoU()", 1);
 
         if(FLUXB==FLUXCTSTAG || DOENOFLUX != NOENOFLUX ){
           // then field version of ui[] is stored as "conserved" value at FACE, not CENT
@@ -3286,7 +3286,7 @@ int set_dt(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], SFTYPE *dt)
 #if(LIMITDTWITHSOURCETERM)
 
       // conserved quantity without geometry
-      MYFUN(primtoU(UEVOLVE, MAC(prim,i,j,k), &state, ptrgeom, U),"step_ch.c:advance()", "primtoU()", 1);
+      MYFUN(primtoU(UEVOLVE, MAC(prim,i,j,k), &state, ptrgeom, U, NULL),"step_ch.c:advance()", "primtoU()", 1);
       PLOOP(pliter,pl) Ugeomfree[pl] = U[pl]*(ptrgeom->IEOMFUNCNOSINGMAC(pl));
 
       // get source term
@@ -3665,7 +3665,7 @@ static int dUtodt(struct of_geom *ptrgeom, struct of_state *qaddr, FTYPE *pr, FT
   }
 
   // conserved quantity without geometry
-  MYFUN(primtoU(UEVOLVE, pr, qaddr, ptrgeom, U),"step_ch.c:advance()", "primtoU()", 1);
+  MYFUN(primtoU(UEVOLVE, pr, qaddr, ptrgeom, U, NULL),"step_ch.c:advance()", "primtoU()", 1);
   PLOOP(pliter,pl) Ugeomfree[pl] = U[pl]*(ptrgeom->IEOMFUNCNOSINGMAC(pl));
 
 

@@ -528,14 +528,14 @@ int diag_fixup(int docorrectucons, FTYPE *pr0, FTYPE *pr, FTYPE *ucons, struct o
     // before any changes
     failreturn=get_state(pr0,ptrgeom,&q);
     if(failreturn>=1) dualfprintf(fail_file,"get_state(1) failed in fixup.c, why???\n");
-    failreturn=primtoU(UDIAG,pr0,&q,ptrgeom,Uicent);
+    failreturn=primtoU(UDIAG,pr0,&q,ptrgeom,Uicent, NULL);
     if(failreturn>=1) dualfprintf(fail_file,"primtoU(1) failed in fixup.c, why???\n");
  
 
     // after any changes
     failreturn=get_state(pr,ptrgeom,&q);
     if(failreturn>=1) dualfprintf(fail_file,"get_state(2) failed in fixup.c, why???\n");
-    failreturn=primtoU(UDIAG,pr,&q,ptrgeom,Ufcent);
+    failreturn=primtoU(UDIAG,pr,&q,ptrgeom,Ufcent, NULL);
     if(failreturn>=1) dualfprintf(fail_file,"primtoU(2) failed in fixup.c, why???\n");
 
     // if Uicent and Ufcent are both from pi and pf at CENT, then B1,B2,B3 entries are agreeably located even for FLUXB==FLUXCTSTAG
@@ -599,7 +599,7 @@ int diag_fixup_Ui_pf(int docorrectucons, FTYPE *Uievolve, FTYPE *pf, struct of_g
 
     failreturn=get_state(pf,ptrgeom,&q);
     if(failreturn>=1) dualfprintf(fail_file,"get_state(2) failed in fixup.c, why???\n");
-    failreturn=primtoU(UDIAG,pf,&q,ptrgeom,Ufcent);
+    failreturn=primtoU(UDIAG,pf,&q,ptrgeom,Ufcent, NULL);
     if(failreturn>=1) dualfprintf(fail_file,"primtoU(2) failed in fixup.c, why???\n");
 
 
@@ -853,7 +853,7 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
       // compute original conserved quantities
       failreturn=get_state(prmhd,ptrgeom,&q);
       if(failreturn>=1) dualfprintf(fail_file,"get_state(1) failed in fixup.c, why???\n");
-      failreturn=primtoU(UNOTHING,prmhd,&q,ptrgeom,U);
+      failreturn=primtoU(UNOTHING,prmhd,&q,ptrgeom,U, NULL);
       if(failreturn>=1) dualfprintf(fail_file,"primtoU(1) failed in fixup.c, why???\n");
 
       // get change in primitive quantities
@@ -864,7 +864,7 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
 
       // get change in conserved quantities
       failreturn=get_state(dprmhd,ptrgeom,&dq);
-      failreturn=primtoU(UNOTHING,dprmhd,&dq,ptrgeom,dU);
+      failreturn=primtoU(UNOTHING,dprmhd,&dq,ptrgeom,dU, NULL);
       if(failreturn>=1) dualfprintf(fail_file,"primtoU(2) failed in fixup.c, why???\n");
 
 
@@ -1007,7 +1007,7 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
     //////////////
     struct of_state qnew;
     get_state(pr,ptrgeom,&qnew);
-    primtoU(UEVOLVE,pr,&qnew,ptrgeom,ucons);
+    primtoU(UEVOLVE,pr,&qnew,ptrgeom,ucons, NULL);
   }
 
 
@@ -2296,7 +2296,7 @@ static int fixuputoprim_accounting(int i, int j, int k, PFTYPE mhdlpflag, PFTYPE
         //     }
      
         MYFUN(get_state(MAC(pv,i,j,k), ptrgeom, &q),"fixup.c:fixup_utoprim()", "get_state()", 1);
-        MYFUN(primtoU(UEVOLVE,MAC(pv,i,j,k), &q, ptrgeom, MAC(ucons,i,j,k)),"fixup.c:fixup_utoprim()", "primtoU()", 1);
+        MYFUN(primtoU(UEVOLVE,MAC(pv,i,j,k), &q, ptrgeom, MAC(ucons,i,j,k), NULL),"fixup.c:fixup_utoprim()", "primtoU()", 1);
       }
     }
 
@@ -2991,13 +2991,13 @@ static int superdebug_utoprim(FTYPE *pr0, FTYPE *pr, struct of_geom *ptrgeom, in
     // before any changes
     failreturn=get_state(pr0,ptrgeom,&q);
     if(failreturn>=1) dualfprintf(fail_file,"get_state(1) failed in fixup.c, why???\n");
-    failreturn=primtoU(UDIAG,pr0,&q,ptrgeom,Ui);
+    failreturn=primtoU(UDIAG,pr0,&q,ptrgeom,Ui, NULL);
     if(failreturn>=1) dualfprintf(fail_file,"primtoU(1) failed in fixup.c, why???\n");
     
     // after any changes
     failreturn=get_state(pr,ptrgeom,&q);
     if(failreturn>=1) dualfprintf(fail_file,"get_state(2) failed in fixup.c, why???\n");
-    failreturn=primtoU(UDIAG,pr,&q,ptrgeom,Uf);
+    failreturn=primtoU(UDIAG,pr,&q,ptrgeom,Uf, NULL);
     if(failreturn>=1) dualfprintf(fail_file,"primtoU(2) failed in fixup.c, why???\n");
 
 
@@ -3076,7 +3076,7 @@ int set_density_floors_default(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *prfloo
       if (get_state(pr, ptrgeom, &q) >= 1)
         FAILSTATEMENT("fixup.c:set_density_floors()", "get_state() dir=0", 1);
 
-      MYFUN(primtoU(UDIAG,pr, &q, ptrgeom, U),"fixup.c:set_density_floors()", "primtoU()", 1);
+      MYFUN(primtoU(UDIAG,pr, &q, ptrgeom, U, NULL),"fixup.c:set_density_floors()", "primtoU()", 1);
 
       // now have U[UU] and U[PH]
       // note that U[UU]/(gdet*rho*u^t) is conserved along field lines, even in non-ideal MHD, where A_{\phi} is still a good stream function in non-ideal MHD.

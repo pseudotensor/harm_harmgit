@@ -915,7 +915,7 @@ int constotal(int enerregion, SFTYPE *vars)
         get_geometry(i,j,k,CENT,ptrgeom) ;
         if(!failed){
           if(get_state(GLOBALMAC(pdump,i,j,k),ptrgeom,&q)>=1) return(1);
-          if(primtoU(UDIAG,GLOBALMAC(pdump,i,j,k),&q,ptrgeom,U)>=1) return(1);
+          if(primtoU(UDIAG,GLOBALMAC(pdump,i,j,k),&q,ptrgeom,U, NULL)>=1) return(1);
         }
         PLOOP(pliter,pl){
           ftemp[pl]=U[pl]*dVF;
