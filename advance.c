@@ -679,6 +679,22 @@ static int advance_standard(
         //
         ////////////////////////////
 
+        // if doing inversion, then check if should use entropy or energy if originally assuming should use energy
+        if(EOMDONOTHING(eomtype)==0){
+          // then doing inversion in next section of code (final step or not)
+          if(EOMRADTYPE==EOMRADNONE){
+            if(eomtype==EOMDEFAULT) eomtype=EOMTYPE;
+            if(eomtype==EOMGRMHD){
+              // Then should use entropy if (e.g.) dissmeasure>0 and energy if dissmeasure<0 as in implicit solver currently.
+              if(dissmeasure>0.0) eomtype=EOMENTROPYGRMHD;
+              else  eomtype=EOMGRMHD;
+            }
+          }
+          else{
+            // KORALTODO: Then radiation failed to invert.  Could call Utoprimgen() with each entropy and energy and repeat selection process.
+          }
+        }
+
 
         if(finalstep){ // last call, so ucum is cooked and ready to eat!
           // store guess for diss_compute before changed by normal inversion
@@ -696,7 +712,7 @@ static int advance_standard(
             else if(eomtype==EOMDIDENTROPYGRMHD) eomtypelocal=EOMENTROPYGRMHD;
             else if(eomtype==EOMDIDCOLDGRMHD) eomtypelocal=EOMCOLDGRMHD;
             else if(eomtype==EOMDIDFFDE) eomtypelocal=EOMFFDE;
-            else eomtypelocal=eomtype; // force eomtype
+            else eomtypelocal=eomtype;
           }
 
           MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,&eomtypelocal,EVOLVEUTOPRIM,UEVOLVE,MAC(myupoint,i,j,k), ptrgeom, MAC(pf,i,j,k),&newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
