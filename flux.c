@@ -1978,10 +1978,10 @@ void compute_and_store_fluxstatecent(FTYPE (*pr)[NSTORE2][NSTORE3][NPR])
           }// end if doing dir
         }//end over dir loop
 
-#if(RADSHOCKFLAT&&EOMRADTYPE!=EOMRADNONE) // KORAL
         // set geometry for centered zone to be updated
         struct of_geom geomdontuse;
         struct of_geom *ptrgeom=&geomdontuse;
+#if(RADSHOCKFLAT&&EOMRADTYPE!=EOMRADNONE) // KORAL
         get_geometry(i, j, k, CENT, ptrgeom);
         gotgeometry=1;
 

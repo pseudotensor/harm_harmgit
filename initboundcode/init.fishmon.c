@@ -1134,6 +1134,16 @@ int set_density_floors(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *prfloor)
   return(0);
 }
 
+int set_density_floors_alt(struct of_geom *ptrgeom, struct of_state *q, FTYPE *pr, FTYPE *U, FTYPE bsq, FTYPE *prfloor)
+{
+  int funreturn;
+  
+  funreturn=set_density_floors_default_alt(ptrgeom, q, pr, U, bsq, prfloor);
+  if(funreturn!=0) return(funreturn);
+
+  return(0);
+}
+
 
 
 

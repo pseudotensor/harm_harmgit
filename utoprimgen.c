@@ -149,7 +149,7 @@ int Utoprimgen(int showmessages, int allowlocalfailurefixandnoreport, int finals
   //    PLOOP(pliter,pl) dualfprintf(fail_file,"PRIMUTOPRIMGEN0(%d): pl=%d pp=%21.15g uu=%21.15g\n",*eomtype,pl,pr[pl],Ugeomfree[pl]);
   //  }
 
-  static long long int didnothing=0,didsomething=0;
+  static long long int didnothing=0,didsomething=0,didentropy=0,didenergy=0,didcold=0;
   ///////////////
   if(EOMDONOTHING(*eomtype)){
 
@@ -185,9 +185,13 @@ int Utoprimgen(int showmessages, int allowlocalfailurefixandnoreport, int finals
     else if(*eomtype==EOMDIDCOLDGRMHD) eomtypelocal=EOMCOLDGRMHD;
     else if(*eomtype==EOMDIDFFDE) eomtypelocal=EOMFFDE;
     else eomtypelocal=*eomtype; // force eomtype
+    
+    if(*eomtype==EOMGRMHD) didenergy++;
+    if(*eomtype==EOMENTROPYGRMHD) didentropy++;
+    if(*eomtype==EOMCOLDGRMHD) didcold++;
 
     didsomething++;
-    if(debugfail>=2) if(didsomething%totalzones==0) dualfprintf(fail_file,"DIDSOMETHING: %lld : %ld %d : eomtype=%d -> eomtypelocal=%d\n",didsomething,nstep,steppart,*eomtype,eomtypelocal);
+    if(debugfail>=2) if(didsomething%totalzones==0) dualfprintf(fail_file,"DIDSOMETHING: %lld : %ld %d : eomtype=%d -> eomtypelocal=%d : dids: %lld %lld %lld\n",didsomething,nstep,steppart,*eomtype,eomtypelocal,didenergy,didentropy,didcold);
   }
 
 
