@@ -686,6 +686,7 @@ static int advance_standard(
             if(eomtype==EOMDEFAULT) eomtype=EOMTYPE;
             if(eomtype==EOMGRMHD){
               // Then should use entropy if (e.g.) dissmeasure>0 and energy if dissmeasure<0 as in implicit solver currently.
+              // GODMARK: If want even more accuracy like in radiation implicit solver, then have to do both entropy and energy and use entropy when u_g[energy]<u_g[entropy], or revert to entropy when energy fails or has high error, etc.
               if(dissmeasure>0.0) eomtype=EOMENTROPYGRMHD;
               else  eomtype=EOMGRMHD;
             }
