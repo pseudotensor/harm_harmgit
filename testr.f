@@ -322,6 +322,8 @@ c     density are unchanged, then calculate the full R^mu_nu
          gammagas=ugasconfinal(1)*alpha
          gammarad=uradconfinal(1)*alpha
          write (*,*) ' gammagas, gammarad: ',gammagas,gammarad
+         write (*,*)
+         write (*,*)
 
          write (13,*) ' rho, u_g, u^mu: ',rhofinal,ufinal,
      &        (ugasconfinal(j),j=1,4)
@@ -733,7 +735,7 @@ c     Convert R^0_mu to R^0^mu
 c      write (*,*) ' Rtcov: ',(Rtcov(i),i=1,4)                                  
 c      write (*,*) ' Rtcon: ',(Rtcon(i),i=1,4)                                  
 
-c     Calculate ZAMO four velocity eta_mu and eta^mu                            
+c     Calculate lapse alpha and ZAMO four velocity eta_mu and eta^mu
 
       alphasq=1.d0/(-gn(1,1))
       alpha=sqrt(alphasq)
@@ -745,21 +747,10 @@ c     Calculate ZAMO four velocity eta_mu and eta^mu
 
       call covtocon(etacov,etacon)
 
-c     Set up and solve quadratic equation for u^t                               
-
-      Rsqr=0.d0
-      do i=1,4
-      do j=1,4
-         Rsqr=Rsqr+gv(i,j)*Rtcon(i)*Rtcon(j)
-      enddo
-      enddo
-      write (*,*) ' Rsqr, R00: ',Rsqr,Rtcon(1)
-
       if (Rtcon(1).lt.0.d0) then
 
-c     If R^tt < 0, then we have an unphysical situation. Assume that the        
-c     radiation is at rest in the ZAMO frame and give it a very small           
-c     energy density.                                                           
+c     Check if R^tt is positive. If not, set energy density to a very
+c     small value and set 4-velocity equal to ZAMO velocity.
 
          ucon(1)=1.d0/alpha
          ucon(2)=etacon(2)
@@ -770,11 +761,29 @@ c     energy density.
 
          write (*,*) ' R^tt<0: ucon, E ',(ucon(i),i=1,4),E
 
-      elseif (Rsqr.gt.0.d0) then
+      else
 
-c     If R^tt > 0, but |R|^2 is also > 0, we again have an unphysical           
-c     situation. Assume that radiation is at rest in the ZAMO frame, and        
-c     solve for the corresponding radiation energy density.                     
+c     Compute |R|^2, xisqr=|R|^2*g^tt/(R^tt)^2, and xisqrceiling.  Check
+c     which regime we are in and choose appropriate solution.
+
+      Rsqr=0.d0
+      do i=1,4
+      do j=1,4
+         Rsqr=Rsqr+gv(i,j)*Rtcon(i)*Rtcon(j)
+      enddo
+      enddo
+
+      xisqr=Rsqr*gn(1,1)/Rtcon(1)**2
+      gc=gammaradceiling
+      xisqrc=(8.d0*gc**2+1.d0)/(16.d0*gc**4-8.d0*gc**2+1.d0)
+
+      write (*,*) ' R00, Rsqr, xisqr, xisqrceiling: ',
+     &     Rtcon(1),Rsqr,xisqr,xisqrc
+
+      if (xisqr.ge.1.d0) then
+
+c     If xisqr>=1, set gammarad=1, solve for E, and obtain remaining
+c     urad^i.
 
          ucon(1)=1.d0/alpha
          ucon(2)=etacon(2)
@@ -783,37 +792,59 @@ c     solve for the corresponding radiation energy density.
 
          E=3.d0*Rtcon(1)/(4.d0*ucon(1)**2+gn(1,1))
 
-         write (*,*) ' R^tt<0, |R|^2>0: ucon, E ',(ucon(i),i=1,4),E
+         write (*,*) ' xisqr>=1: ucon, E ',(ucon(i),i=1,4),E
+
+      elseif (xisqr.le.xisqrc) then
+
+c     If xisqr<=xisqrceiling, set gammarad=gammaradceiling and compute
+c     the rest of the solution using our old method
+
+      ucon(1)=gammaradceiling*sqrt(-gn(1,1))
+
+         aquad=0.d0
+         bquad=0.d0
+         cquad=1.d0+gv(1,1)*ucon(1)*ucon(1)
+         do i=2,4
+            bquad=bquad+1.5d0*gv(1,i)*Rtcon(i)
+            cquad=cquad-0.5d0*gv(1,i)*gn(1,i)
+         do j=2,4
+            aquad=aquad+9.d0*gv(i,j)*Rtcon(i)*Rtcon(j)/
+     &        (16.d0*ucon(1)*ucon(1))
+            bquad=bquad-3.d0*gv(i,j)*(Rtcon(i)*gn(1,j)+
+     &        Rtcon(j)*gn(1,i))/(16.d0*ucon(1)*ucon(1))
+            cquad=cquad+gv(i,j)*gn(1,i)*gn(1,j)/
+     &        (16.d0*ucon(1)*ucon(1))
+         enddo
+         enddo
+
+         disc=bquad*bquad-4.d0*aquad*cquad
+         E=(-bquad-sqrt(disc))/(2.d0*cquad)
+         write (*,*) ' a, b, c, disc, E: ',aquad,bquad,cquad,disc,E
+
+         do i=2,4
+            ucon(i)=(3.d0*Rtcon(i)-E*gn(1,i))/(4.d0*E*ucon(1))
+         enddo
+
+         write (*,*) ' xisqr<=xisqrceil: ucon, E ',(ucon(i),i=1,4),E
 
       else
 
-c     We have a physically valid situation: R^tt > 0, |R|^2 < 0. Solve          
-c     quadratic equation for (u^t)^2.                                           
+c     We have a physically valid situation with xisqr within the
+c     acceptable range. Calculate the solution.
 
-      aquad=16.d0*Rsqr
-      bquad=8.d0*(Rsqr*gn(1,1)+Rtcon(1)**2)
-      cquad=Rsqr*gn(1,1)**2-Rtcon(1)**2*gn(1,1)
-      disc=bquad*bquad-4.d0*aquad*cquad
-      u0sqr=(-bquad-sqrt(disc))/(2.d0*aquad)
+         gammaradsqr=((1.d0+xisqr)+sqrt(1.d0+3.d0*xisqr))/
+     &        (4.d0*xisqr)
 
-c     If gammarad > ceiling, rest to ceiling value.                             
+         ucon(1)=sqrt(gammaradsqr)/alpha
+         E=3.d0*Rtcon(1)/(4.d0*ucon(1)**2+gn(1,1))
 
-      if (u0sqr.gt.gammaradceiling**2/alphasqr) then
-         u0sqr=gammaradceiling**2/alphasqr
+         do i=2,4
+            ucon(i)=(3.d0*Rtcon(i)-E*gn(1,i))/(4.d0*E*ucon(1))
+         enddo
+
+         write (*,*) ' physical solution: ucon, E ',(ucon(i),i=1,4),E
+
       endif
-
-c     Calculate E and the remaining velocity components.                        
-
-      E=3.d0*Rtcon(1)/(4.d0*u0sqr+gn(1,1))
-      write (*,*) ' aquad, bquad, cquad, disc, u0sqr: ',
-     &     aquad,bquad,cquad,disc,u0sqr
-
-      ucon(1)=sqrt(u0sqr)
-      do i=2,4
-         ucon(i)=(3.d0*Rtcon(i)-E*gn(1,i))/(4.d0*E*ucon(1))
-      enddo
-
-      write (*,*) ' Radiation solution: ucon, E: ',(ucon(i),i=1,4),E
 
       endif
 
@@ -828,9 +859,7 @@ c     Check if the 4-velocity is properly normalized
       write (*,*) ' check norm: ',sum
 
 c     Calculate the full tensor R^mu_nu                                         
-
       call contocov(ucon,ucov)
-
       call calcRmunu(E,ucon,ucov,Rmunu)
 
       return
