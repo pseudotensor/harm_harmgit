@@ -305,7 +305,7 @@ c     density are unchanged, then calculate the full R^mu_nu
             Rtcovfinal(j)=Ttotc(j)-Ttcovfinal(j)
          enddo
 
-         call Rmunuinvert(Rtcovfinal,Efinal,uradconfinal,
+         call Rmunuinvertnew(Rtcovfinal,Efinal,uradconfinal,
      &        uradcovfinal,ugasconfinal,Rmunufinal)
 
          write (*,*)
@@ -712,7 +712,133 @@ c     Calculate Kronecker delta
 
 
 
-      subroutine Rmunuinvert(Rtcov,E,ucon,ucov,ugascon,Rmunu)
+      subroutine Rmunuinvertnew(Rtcov,E,ucon,ucov,ugascon,Rmunu)
+
+c     Given the row R^t_mu of the radiation tensor, solves for the              
+c     radiation frame 4-velocity u^mu and energy density E and then             
+c     calculates the full tensor R^mu_nu                                        
+
+      implicit double precision (a-h,o-z)
+      dimension Rtcov(4),Rtcon(4),ucon(4),ucov(4),Rmunu(4,4),
+     &     ugascon(4),gn(4,4),gv(4,4),etacov(4),etacon(4)
+      common/accuracy/eps,epsbis,dvmin,tol,uminfac,dlogmax,
+     &     gammaradceiling,itermax
+      common/metric/gn,gv
+
+      arad=1.18316d17
+
+c     Convert R^0_mu to R^0^mu                                                  
+
+      call covtocon(Rtcov,Rtcon)
+c      write (*,*) ' Rtcov: ',(Rtcov(i),i=1,4)                                  
+c      write (*,*) ' Rtcon: ',(Rtcon(i),i=1,4)                                  
+
+c     Calculate ZAMO four velocity eta_mu and eta^mu                            
+
+      alphasq=1.d0/(-gn(1,1))
+      alpha=sqrt(alphasq)
+
+      etacov(1)=-alpha
+      etacov(2)=0.d0
+      etacov(3)=0.d0
+      etacov(4)=0.d0
+
+      call covtocon(etacov,etacon)
+
+c     Set up and solve quadratic equation for u^t                               
+
+      Rsqr=0.d0
+      do i=1,4
+      do j=1,4
+         Rsqr=Rsqr+gv(i,j)*Rtcon(i)*Rtcon(j)
+      enddo
+      enddo
+      write (*,*) ' Rsqr, R00: ',Rsqr,Rtcon(1)
+
+      if (Rtcon(1).lt.0.d0) then
+
+c     If R^tt < 0, then we have an unphysical situation. Assume that the        
+c     radiation is at rest in the ZAMO frame and give it a very small           
+c     energy density.                                                           
+
+         ucon(1)=1.d0/alpha
+         ucon(2)=etacon(2)
+         ucon(3)=etacon(3)
+         ucon(4)=etacon(4)
+
+         E=arad*1.d-36
+
+         write (*,*) ' R^tt<0: ucon, E ',(ucon(i),i=1,4),E
+
+      elseif (Rsqr.gt.0.d0) then
+
+c     If R^tt > 0, but |R|^2 is also > 0, we again have an unphysical           
+c     situation. Assume that radiation is at rest in the ZAMO frame, and        
+c     solve for the corresponding radiation energy density.                     
+
+         ucon(1)=1.d0/alpha
+         ucon(2)=etacon(2)
+         ucon(3)=etacon(3)
+         ucon(4)=etacon(4)
+
+         E=3.d0*Rtcon(1)/(4.d0*ucon(1)**2+gn(1,1))
+
+         write (*,*) ' R^tt<0, |R|^2>0: ucon, E ',(ucon(i),i=1,4),E
+
+      else
+
+c     We have a physically valid situation: R^tt > 0, |R|^2 < 0. Solve          
+c     quadratic equation for (u^t)^2.                                           
+
+      aquad=16.d0*Rsqr
+      bquad=8.d0*(Rsqr*gn(1,1)+Rtcon(1)**2)
+      cquad=Rsqr*gn(1,1)**2-Rtcon(1)**2*gn(1,1)
+      disc=bquad*bquad-4.d0*aquad*cquad
+      u0sqr=(-bquad-sqrt(disc))/(2.d0*aquad)
+
+c     If gammarad > ceiling, rest to ceiling value.                             
+
+      if (u0sqr.gt.gammaradceiling**2/alphasqr) then
+         u0sqr=gammaradceiling**2/alphasqr
+      endif
+
+c     Calculate E and the remaining velocity components.                        
+
+      E=3.d0*Rtcon(1)/(4.d0*u0sqr+gn(1,1))
+      write (*,*) ' aquad, bquad, cquad, disc, u0sqr: ',
+     &     aquad,bquad,cquad,disc,u0sqr
+
+      ucon(1)=sqrt(u0sqr)
+      do i=2,4
+         ucon(i)=(3.d0*Rtcon(i)-E*gn(1,i))/(4.d0*E*ucon(1))
+      enddo
+
+      write (*,*) ' Radiation solution: ucon, E: ',(ucon(i),i=1,4),E
+
+      endif
+
+c     Check if the 4-velocity is properly normalized                            
+
+      sum=0.d0
+      do i=1,4
+      do j=1,4
+         sum=sum+gv(i,j)*ucon(i)*ucon(j)
+      enddo
+      enddo
+      write (*,*) ' check norm: ',sum
+
+c     Calculate the full tensor R^mu_nu                                         
+
+      call contocov(ucon,ucov)
+
+      call calcRmunu(E,ucon,ucov,Rmunu)
+
+      return
+      end
+
+
+
+      subroutine Rmunuinvertold(Rtcov,E,ucon,ucov,ugascon,Rmunu)
 
 c     Given the row R^t_mu of the radiation tensor, solves for the
 c     radiation frame energy density E and 4-velocity and calculates the
@@ -1999,7 +2125,7 @@ c      write (*,*) ' Rt: ',(Rt(i),i=1,4)
 
 c     Calculate the full R^mu_nu tensor
 
-      call Rmunuinvert(Rt,E,urcon,urcov,ucon,Rmunu)
+      call Rmunuinvertnew(Rt,E,urcon,urcov,ucon,Rmunu)
 c      write (*,*) ' E, urcon, urcov: ',E,(urcon(i),urcov(i),i=1,4)
 
 c     Calculate radiation energy density in the gas frame \hat{E}, and
@@ -2159,7 +2285,7 @@ c     R^0_mu
 
 c     Calculate the full R^mu_nu tensor
 
-      call Rmunuinvert(Rt,E,urcon,urcov,ucon,Rmunu)
+      call Rmunuinvertnew(Rt,E,urcon,urcov,ucon,Rmunu)
 
 c     Calculate radiation energy density in the gas frame \hat{E}, and
 c     the gas and radiation temperatures

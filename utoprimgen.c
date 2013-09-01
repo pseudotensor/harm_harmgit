@@ -186,9 +186,9 @@ int Utoprimgen(int showmessages, int allowlocalfailurefixandnoreport, int finals
     else if(*eomtype==EOMDIDFFDE) eomtypelocal=EOMFFDE;
     else eomtypelocal=*eomtype; // force eomtype
     
-    if(*eomtype==EOMGRMHD) didenergy++;
-    if(*eomtype==EOMENTROPYGRMHD) didentropy++;
-    if(*eomtype==EOMCOLDGRMHD) didcold++;
+    if(eomtypelocal==EOMGRMHD) didenergy++;
+    if(eomtypelocal==EOMENTROPYGRMHD) didentropy++;
+    if(eomtypelocal==EOMCOLDGRMHD) didcold++;
 
     didsomething++;
     if(debugfail>=2) if(didsomething%totalzones==0) dualfprintf(fail_file,"DIDSOMETHING: %lld : %ld %d : eomtype=%d -> eomtypelocal=%d : dids: %lld %lld %lld\n",didsomething,nstep,steppart,*eomtype,eomtypelocal,didenergy,didentropy,didcold);
