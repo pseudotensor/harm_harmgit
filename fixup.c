@@ -202,7 +202,7 @@ int fixup(int stage,FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ucons)[NSTORE2][N
 
     /* limit gamma wrt normal observer */
 #if(WHICHVEL==VELREL4)
-    if(limit_gamma(GAMMAMAX,GAMMAMAXRAD,MAC(pv,i,j,k),MAC(ucons,i,j,k), ptrgeom,-1)>=1)  // need general accounting for entire routine.
+    if(limit_gamma(0,GAMMAMAX,GAMMAMAXRAD,MAC(pv,i,j,k),MAC(ucons,i,j,k), ptrgeom,-1)>=1)  // need general accounting for entire routine.
       FAILSTATEMENT("fixup.c:fixup()", "limit_gamma()", 1);
 #endif
   }
@@ -946,7 +946,7 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
   //
   ///////////////////////////////
   if(didchangeprim&&FLOORDIAGS){// FLOORDIAGS includes fail diags
-    int docorrectucons=1;
+    int docorrectucons=0;
     int doingmhdfixup=1;
     diag_fixup(docorrectucons,prdiag, prmhd, ucons, ptrgeom, finalstep,doingmhdfixup,COUNTFLOORACT);
     // now prdiag=prmhd as far as diag_fixup() is concerned, so next changes are new changes (i.e. don't cumulative w.r.t. pr0 multiple times, since that (relative to prmhd each time) would add each prior change to each next change)
@@ -961,10 +961,10 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
   //
   ////////////////////
 #if(WHICHVEL==VELREL4)
-  int docorrectucons=1;
+  int docorrectucons=0;
   //  didchangeprim=0;
 
-  failreturn=limit_gamma(GAMMAMAX,GAMMAMAXRAD,prmhd,ucons,ptrgeom,-1);
+  failreturn=limit_gamma(docorrectucons,GAMMAMAX,GAMMAMAXRAD,prmhd,ucons,ptrgeom,-1);
   if(failreturn>=1) FAILSTATEMENT("fixup.c:fixup()", "limit_gamma()", 1);
   if(failreturn==-1) didchangeprim=1;
 
@@ -1005,9 +1005,15 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
     // assumes "ucons" is utoinvert in advance.c so it's uf or utempcum when necessary as associated with inversion (internal implicit or external).
     //
     //////////////
+    // FUCK: this and/or use of utoinvert instead of useducum in advance.c causes problems.
+    // here's where we correct ucons
+    docorrectucons=1;
     struct of_state qnew;
     get_state(pr,ptrgeom,&qnew);
     primtoU(UEVOLVE,pr,&qnew,ptrgeom,ucons, NULL);
+
+    return(-1); // -1 means made changes
+
   }
 
 
@@ -1577,7 +1583,7 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
                 /////////////
      
 #if(WHICHVEL==VELREL4)
-                if(limit_gamma(gamma,GAMMAMAXRAD,MAC(pv,i,j,k),MAC(ucons,i,j,k),ptrgeom,-1)>=1) FAILSTATEMENT("fixup.c:fixup()", "limit_gamma()", 2);
+                if(limit_gamma(0,gamma,GAMMAMAXRAD,MAC(pv,i,j,k),MAC(ucons,i,j,k),ptrgeom,-1)>=1) FAILSTATEMENT("fixup.c:fixup()", "limit_gamma()", 2);
 
                 if(debugfail>=3){
                   if(limitedgamma){
@@ -1754,7 +1760,7 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
                 /////////////
      
 #if(WHICHVEL==VELREL4)
-                if(limit_gamma(gamma,GAMMAMAXRAD,&MACP0A1(pv,i,j,k,URAD1-U1),MAC(ucons,i,j,k),ptrgeom,-1)>=1) FAILSTATEMENT("fixup.c:fixup()", "limit_gamma()", 2);
+                if(limit_gamma(0,gamma,GAMMAMAXRAD,&MACP0A1(pv,i,j,k,URAD1-U1),MAC(ucons,i,j,k),ptrgeom,-1)>=1) FAILSTATEMENT("fixup.c:fixup()", "limit_gamma()", 2);
 
                 if(debugfail>=3){
                   if(limitedgamma){
@@ -2916,7 +2922,7 @@ static int fixup_nogood(int startpl, int endpl, int i, int j, int k, FTYPE (*pv)
     // thus not sure what to do. (should have gotten correct U in first place! -- that's what you should do)
     //
     // limit_gamma?  Could also reset v completely to normal observer
-    // if(limit_gamma(1.0,MAC(pv,i,j,k),ptrgeom,-1)>=1)
+    // if(limit_gamma(0,1.0,MAC(pv,i,j,k),ptrgeom,-1)>=1)
     //   FAILSTATEMENT("fixup.c:fixup_utoprim()", "limit_gamma()", 1);
 
     // average out densities
@@ -3304,7 +3310,7 @@ int get_bsqflags(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR])
 #define DO_CONSERVE_D 0
 
 // limit \gamma=\alpha u^t and u^t
-int limit_gamma(FTYPE gammamax, FTYPE gammamaxrad, FTYPE*pr, FTYPE *ucons, struct of_geom *ptrgeom,int finalstep)
+int limit_gamma(int docorrectucons, FTYPE gammamax, FTYPE gammamaxrad, FTYPE*pr, FTYPE *ucons, struct of_geom *ptrgeom,int finalstep)
 {
   FTYPE f,gamma,pref;
   FTYPE qsq;
@@ -3514,7 +3520,7 @@ int limit_gamma(FTYPE gammamax, FTYPE gammamaxrad, FTYPE*pr, FTYPE *ucons, struc
     FTYPE prdiag[NPR];
     PLOOP(pliter,pl) prdiag[pl]=pr0[pl];
     int doingmhdfixup=1;
-    diag_fixup(1,prdiag, pr, ucons, ptrgeom, finalstep,doingmhdfixup,COUNTLIMITGAMMAACT);
+    diag_fixup(docorrectucons,prdiag, pr, ucons, ptrgeom, finalstep,doingmhdfixup,COUNTLIMITGAMMAACT);
     PLOOP(pliter,pl) prdiag[pl]=pr[pl];
     return(-1);// indicates did change primitive
   }

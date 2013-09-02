@@ -186,10 +186,13 @@ static int advance_standard(
   int *localenerpos;
   int jj;
   FTYPE (*utoinvert)[NSTORE2][NSTORE3][NPR];
+  FTYPE *utoinvert1;
   FTYPE (*tempucum)[NSTORE2][NSTORE3][NPR];
   FTYPE (*useducum)[NSTORE2][NSTORE3][NPR];
+  FTYPE *useducum1;
   FTYPE (*preupoint)[NSTORE2][NSTORE3][NPR];
   FTYPE (*myupoint)[NSTORE2][NSTORE3][NPR];
+  FTYPE *myupoint1;
   FTYPE (*myupointuf)[NSTORE2][NSTORE3][NPR];
   FTYPE (*olduf)[NSTORE2][NSTORE3][NPR];
   int whichpltoavg[NPR];
@@ -469,7 +472,7 @@ static int advance_standard(
       }
       else{
         // then no need for separate myupointuf, so just point to same space
-        myupointuf=GLOBALPOINT(upointglobal);
+        myupointuf=myupoint;
       }
 
 
@@ -627,12 +630,13 @@ static int advance_standard(
         /////////////
         //        PLOOP(pliter,pl) globalgeom[pl]=ptrgeom->gdet;
         // ok to use "uf" here instead of "olduf" since field is not done here.
-        dUtoU(doother,i,j,k,ptrgeom->p,dUgeom, dUriemann, CUf, CUnew, MAC(ui,i,j,k), MAC(uf,i,j,k), MAC(tempucum,i,j,k));
+        FTYPE ufconsider[NPR],tempucumconsider[NPR];
+        PLOOP(pliter,pl){
+          ufconsider[pl]=MACP0A1(olduf,i,j,k,pl);
+          tempucumconsider[pl]=MACP0A1(tempucum,i,j,k,pl);
+        }
+        dUtoU(doother,i,j,k,ptrgeom->p,dUgeom, dUriemann, CUf, CUnew, MAC(ui,i,j,k), ufconsider, tempucumconsider);
 
-        //        if(nstep==4 && steppart==0){
-        //          pl=RHO;
-        //          dualfprintf(fail_file,"PRIMPOSTIMPLICITDU: dUgeom=%21.15g dUriemann=%21.15g ui=%21.15g uf=%21.15g tempucum=%21.15g\n",dUgeom[pl],dUriemann[pl],MACP0A1(ui,i,j,k,pl),MACP0A1(uf,i,j,k,pl),MACP0A1(tempucum,i,j,k,pl));
-        //        }
 
         ////////////////////////////
         // Choose what to invert
@@ -641,20 +645,26 @@ static int advance_standard(
           // invert ucum on final step
           utoinvert = tempucum;
           useducum=tempucum;
+
+          utoinvert1 = tempucumconsider;
+          useducum1 = tempucumconsider;
         }
         else{
           // invert uf on substeps
           utoinvert = uf; // should always be uf, not olduf.
           // tempucum just cumulates for now
           useducum=tempucum;
+
+          utoinvert1 = ufconsider;
+          useducum1 = tempucumconsider;
         }
+        //        if(FLUXB==FLUXCTSTAG){
+        //          // copy over evolved field.  If finalstep=1, then myupoint contains ucum field as required.  Else has uf field as required.
+        //          PLOOPBONLY(pl) utoinvert1[pl] = MACP0A1(myupoint,i,j,k,pl);
+        //        } // else already there as point centered quantity
 
-        //        if(nstep==4 && steppart==0){
-        //          PLOOP(pliter,pl) dualfprintf(fail_file,"PRIMPOSTIMPLICIT(%d,%g): pl=%d pf=%21.15g uu=%21.15g\n",eomtype,fluxdt,pl,MACP0A1(pf,i,j,k,pl),MACP0A1(utoinvert,i,j,k,pl)/ptrgeom->gdet);
-        //        }
 
-
-
+#if(0)
         ////////////////////////////
         // setup myupoint to invert
         ////////////////////////////
@@ -666,11 +676,8 @@ static int advance_standard(
           // utoinvert never reassigned from global a_utoinvert assignment since if here not doing FLUXCTSTAG
           myupoint=utoinvert;
         }
-
-        //        if(nstep==4 && steppart==0){
-        //          PLOOP(pliter,pl) dualfprintf(fail_file,"PRIMPOSTIMPLICIT2(%d,%g): pl=%d pf=%21.15g uu=%21.15g\n",eomtype,fluxdt,pl,MACP0A1(pf,i,j,k,pl),MACP0A1(myupoint,i,j,k,pl)/ptrgeom->gdet);
-        //        }
-
+        myupoint1=utoinvert1;
+#endif
 
         ////////////////////////////
         // INVERT [loop only over "centered" cells]
@@ -716,18 +723,18 @@ static int advance_standard(
             else eomtypelocal=eomtype;
           }
 
-          MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,&eomtypelocal,EVOLVEUTOPRIM,UEVOLVE,MAC(myupoint,i,j,k), ptrgeom, MAC(pf,i,j,k),&newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
+          MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,&eomtypelocal,EVOLVEUTOPRIM,UEVOLVE,utoinvert1, ptrgeom, MAC(pf,i,j,k),&newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
           nstroke+=newtonstats.nstroke; newtonstats.nstroke=newtonstats.lntries=0;
           
           
 #if(DODISS||DODISSVSR)
           // then see what entropy inversion would give
-          diss_compute(EVOLVEUTOPRIM,UEVOLVE,MAC(myupoint,i,j,k),ptrgeom,prbefore,MAC(pf,i,j,k),&newtonstats);
+          diss_compute(EVOLVEUTOPRIM,UEVOLVE,utoinvert1,ptrgeom,prbefore,MAC(pf,i,j,k),&newtonstats);
 #endif
           
         }
         else{ // otherwise still iterating on primitives
-          MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,&eomtype,EVOLVEUTOPRIM,UEVOLVE,MAC(myupoint,i,j,k), ptrgeom, MAC(pf,i,j,k),&newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
+          MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,&eomtype,EVOLVEUTOPRIM,UEVOLVE,utoinvert1, ptrgeom, MAC(pf,i,j,k),&newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
           nstroke+=newtonstats.nstroke; newtonstats.nstroke=newtonstats.lntries=0;
         }
 
@@ -746,10 +753,29 @@ static int advance_standard(
 #if(FIXUPZONES==FIXUP1ZONE)
             // SUPERGODMARK: Below should differentiate beteween whether want negative densities fixed or not, but right now fixup1zone() does all
             if((STEPOVERNEGU==NEGDENSITY_ALWAYSFIXUP)||(STEPOVERNEGRHO==NEGDENSITY_ALWAYSFIXUP)||(STEPOVERNEGRHOU==NEGDENSITY_ALWAYSFIXUP)||(finalstep)){
-              MYFUN(fixup1zone(MAC(pf,i,j,k),MAC(utoinvert,i,j,k), ptrgeom,finalstep),"fixup.c:fixup()", "fixup1zone()", 1);
-            }
+              FTYPE utoinvertlocal[NPR];
+              PLOOP(pliter,pl) utoinvertlocal[pl] = utoinvert1[pl];
+              int didfixup=fixup1zone(MAC(pf,i,j,k),utoinvertlocal, ptrgeom,finalstep);
+              if(didfixup==-1){
+                // now deal with differences, which are all due to changes in dUriemann
+                PLOOP(pliter,pl) dUriemann[pl] += (utoinvertlocal[pl]-utoinvert1[pl]);
+                // now get new uf (which should be consistent with utoinvertlocal) and ucum (which needs adjusting using this new dUriemann)
+                PLOOP(pliter,pl){
+                  ufconsider[pl]=MACP0A1(olduf,i,j,k,pl);
+                  tempucumconsider[pl]=MACP0A1(tempucum,i,j,k,pl);
+                }
+                dUtoU(doother,i,j,k,ptrgeom->p,dUgeom, dUriemann, CUf, CUnew, MAC(ui,i,j,k), ufconsider, tempucumconsider);
+              } // if did fixup
+            }// if might do fixups
 #endif
           }// end doing single-point fixups
+
+
+        // now save if either fixup or not
+        PLOOP(pliter,pl){
+          MACP0A1(uf,i,j,k,pl)=ufconsider[pl];
+          MACP0A1(tempucum,i,j,k,pl)=tempucumconsider[pl];
+        }
       
             
       

@@ -997,7 +997,7 @@ static int f_implicit(int iter, int failreturnallowable, int whichcall, int show
       //      fixup1zone(ppfloor,uufixup, ptrgeom,finalstepfixup); // too complicated for implicit stepping given how rare shoul be used.
       if(pp[RHO]<0.0) pp[RHO]=ppfloor[RHO]; // only fix RHO if really went negative.  Not smooth, but avoids problems in difficult regimes.
 
-      //      limit_gamma(GAMMAMAX,GAMMAMAXRADIMPLICITSOLVER,pp,NULL,ptrgeom,0);
+      //      limit_gamma(0,GAMMAMAX,GAMMAMAXRADIMPLICITSOLVER,pp,NULL,ptrgeom,0);
       // fix uu[RHO] to be consistent, since uu[RHO] used to get inverted scalars
       uu[RHO] = pp[RHO]*q->ucon[TT];
     }

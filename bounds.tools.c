@@ -493,7 +493,7 @@ int bound_x1dn_outflow_simple(
 #elif(WHICHVEL==VELREL4)
                 get_geometry(i,j,k,dirprim[U1],ptrgeom[U1]) ;
                 inflow_check_rel4vel(1,MAC(prim,i,j,k),NULL,ptrgeom[U1],0) ;
-                if(limit_gamma(GAMMAMAX,GAMMAMAXRAD,MAC(prim,i,j,k),NULL,ptrgeom[U1],0)>=1)
+                if(limit_gamma(0,GAMMAMAX,GAMMAMAXRAD,MAC(prim,i,j,k),NULL,ptrgeom[U1],0)>=1)
                   FAILSTATEMENT("bounds.c:bound_prim()", "limit_gamma()", 1);
 #endif 
               }
@@ -618,7 +618,7 @@ int bound_x1up_outflow_simple(
 #elif(WHICHVEL==VELREL4)
                 get_geometry(i,j,k,dirprim[U1],ptrgeom[U1]) ;
                 inflow_check_rel4vel(1,MAC(prim,i,j,k),NULL,ptrgeom[U1],0) ;
-                if(limit_gamma(GAMMAMAX,GAMMAMAXRAD,MAC(prim,i,j,k),NULL,ptrgeom[U1], 0)>=1)
+                if(limit_gamma(0,GAMMAMAX,GAMMAMAXRAD,MAC(prim,i,j,k),NULL,ptrgeom[U1], 0)>=1)
                   FAILSTATEMENT("bounds.c:bound_prim()", "limit_gamma()", 2);
 #endif 
               }// end over i
@@ -800,7 +800,7 @@ int bound_x1dn_outflow(
 #elif(WHICHVEL==VELREL4)
                 get_geometry(i,j,k,dirprim[U1],ptrgeom[U1]) ;
                 inflow_check_rel4vel(1,MAC(prim,i,j,k),NULL,ptrgeom[U1],0) ;
-                if(limit_gamma(GAMMAMAX,GAMMAMAXRAD,MAC(prim,i,j,k),NULL,ptrgeom[U1],0)>=1)
+                if(limit_gamma(0,GAMMAMAX,GAMMAMAXRAD,MAC(prim,i,j,k),NULL,ptrgeom[U1],0)>=1)
                   FAILSTATEMENT("bounds.c:bound_prim()", "limit_gamma()", 1);
 #endif 
               }
@@ -976,7 +976,7 @@ int bound_x1up_outflow(
 #elif(WHICHVEL==VELREL4)
                 get_geometry(i,j,k,dirprim[U1],ptrgeom[U1]) ;
                 inflow_check_rel4vel(1,MAC(prim,i,j,k),NULL,ptrgeom[U1],0) ;
-                if(limit_gamma(GAMMAMAX,GAMMAMAXRAD,MAC(prim,i,j,k),NULL,ptrgeom[U1], 0)>=1)
+                if(limit_gamma(0,GAMMAMAX,GAMMAMAXRAD,MAC(prim,i,j,k),NULL,ptrgeom[U1], 0)>=1)
                   FAILSTATEMENT("bounds.c:bound_prim()", "limit_gamma()", 2);
 #endif 
               }// end over i
@@ -1218,7 +1218,7 @@ int bound_x2dn_outflow_simple(
 #elif(WHICHVEL==VELREL4)
                 get_geometry(i,j,k,dirprim[U2],ptrgeom[U2]) ;
                 inflow_check_rel4vel(2,MAC(prim,i,j,k),NULL,ptrgeom[U2],0) ;
-                if(limit_gamma(GAMMAMAX,GAMMAMAXRAD,MAC(prim,i,j,k),NULL,ptrgeom[U2],0)>=1)
+                if(limit_gamma(0,GAMMAMAX,GAMMAMAXRAD,MAC(prim,i,j,k),NULL,ptrgeom[U2],0)>=1)
                   FAILSTATEMENT("bounds.c:bound_prim()", "limit_gamma()", 1);
 #endif 
               }
@@ -1340,7 +1340,7 @@ int bound_x2up_outflow_simple(
 #elif(WHICHVEL==VELREL4)
                 get_geometry(i,j,k,dirprim[U2],ptrgeom[U2]) ;
                 inflow_check_rel4vel(2,MAC(prim,i,j,k),NULL,ptrgeom[U2],0) ;
-                if(limit_gamma(GAMMAMAX,GAMMAMAXRAD,MAC(prim,i,j,k),NULL,ptrgeom[U2], 0)>=1)
+                if(limit_gamma(0,GAMMAMAX,GAMMAMAXRAD,MAC(prim,i,j,k),NULL,ptrgeom[U2], 0)>=1)
                   FAILSTATEMENT("bounds.c:bound_prim()", "limit_gamma()", 2);
 #endif 
               }// end over i
@@ -2218,7 +2218,7 @@ int bound_x3dn_outflow_simple(
 #elif(WHICHVEL==VELREL4)
                 get_geometry(i,j,k,dirprim[U3],ptrgeom[U3]) ;
                 inflow_check_rel4vel(3,MAC(prim,i,j,k),NULL,ptrgeom[U3],0) ;
-                if(limit_gamma(GAMMAMAX,GAMMAMAXRAD,MAC(prim,i,j,k),NULL,ptrgeom[U3],0)>=1)
+                if(limit_gamma(0,GAMMAMAX,GAMMAMAXRAD,MAC(prim,i,j,k),NULL,ptrgeom[U3],0)>=1)
                   FAILSTATEMENT("bounds.c:bound_prim()", "limit_gamma()", 1);
 #endif 
               }
@@ -2340,7 +2340,7 @@ int bound_x3up_outflow_simple(
 #elif(WHICHVEL==VELREL4)
                 get_geometry(i,j,k,dirprim[U3],ptrgeom[U3]) ;
                 inflow_check_rel4vel(3,MAC(prim,i,j,k),NULL,ptrgeom[U3],0) ;
-                if(limit_gamma(GAMMAMAX,GAMMAMAXRAD,MAC(prim,i,j,k),NULL,ptrgeom[U3], 0)>=1)
+                if(limit_gamma(0,GAMMAMAX,GAMMAMAXRAD,MAC(prim,i,j,k),NULL,ptrgeom[U3], 0)>=1)
                   FAILSTATEMENT("bounds.c:bound_prim()", "limit_gamma()", 2);
 #endif 
               }// end over i
@@ -4331,11 +4331,11 @@ int poledeath(int whichx2,
               gammavaluelimit = GAMMAPOLEOUTGOING*pow(V[pl][RR]/GAMMAPOLEOUTGOINGRADIUS,GAMMAPOLEOUTGOINGPOWER);
             }
 
-            limit_gamma(gammavaluelimit,GAMMAMAXRAD,MAC(prim,i,j,k),NULL,ptrgeom[pl],-1);
+            limit_gamma(0,gammavaluelimit,GAMMAMAXRAD,MAC(prim,i,j,k),NULL,ptrgeom[pl],-1);
             madechange++;
           }
           else{
-            limit_gamma(GAMMAPOLEINGOING,GAMMAMAXRAD,MAC(prim,i,j,k),NULL,ptrgeom[pl],-1);
+            limit_gamma(0,GAMMAPOLEINGOING,GAMMAMAXRAD,MAC(prim,i,j,k),NULL,ptrgeom[pl],-1);
             madechange++;
           }
 
