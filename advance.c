@@ -658,10 +658,10 @@ static int advance_standard(
           utoinvert1 = ufconsider;
           useducum1 = tempucumconsider;
         }
-        //        if(FLUXB==FLUXCTSTAG){
-        //          // copy over evolved field.  If finalstep=1, then myupoint contains ucum field as required.  Else has uf field as required.
-        //          PLOOPBONLY(pl) utoinvert1[pl] = MACP0A1(myupoint,i,j,k,pl);
-        //        } // else already there as point centered quantity
+        if(FLUXB==FLUXCTSTAG){
+          // copy over evolved field.  If finalstep=1, then myupoint contains ucum field as required.  Else has uf field as required.
+          PLOOPBONLY(pl) utoinvert1[pl] = MACP0A1(myupoint,i,j,k,pl);
+        } // else already there as point centered quantity
 
 
 #if(0)
@@ -773,8 +773,11 @@ static int advance_standard(
 
         // now save if either fixup or not
         PLOOP(pliter,pl){
-          MACP0A1(uf,i,j,k,pl)=ufconsider[pl];
-          MACP0A1(tempucum,i,j,k,pl)=tempucumconsider[pl];
+          // only save if not already updated uf and tempucum separately
+          if(doother==DOALLPL || doother==DONONBPL && BPL(pl)==0 || doother==DOBPL && BPL(pl)==1){
+            MACP0A1(uf,i,j,k,pl)=ufconsider[pl];
+            MACP0A1(tempucum,i,j,k,pl)=tempucumconsider[pl];
+          }
         }
       
             
