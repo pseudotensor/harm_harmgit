@@ -686,24 +686,29 @@ static int advance_standard(
         //
         ////////////////////////////
 
+        /////////////////
+        //
         // if doing inversion, then check if should use entropy or energy if originally assuming should use energy
+        //
+        /////////////////
         if(EOMDONOTHING(eomtype)==0){
           // then doing inversion in next section of code (final step or not)
-          if(EOMRADTYPE==EOMRADNONE){
-            if(eomtype==EOMDEFAULT) eomtype=EOMTYPE;
-            if(eomtype==EOMGRMHD){
-              // Then should use entropy if (e.g.) dissmeasure>0 and energy if dissmeasure<0 as in implicit solver currently.
-              // GODMARK: If want even more accuracy like in radiation implicit solver, then have to do both entropy and energy and use entropy when u_g[energy]<u_g[entropy], or revert to entropy when energy fails or has high error, etc.
-              if(dissmeasure>0.0) eomtype=EOMENTROPYGRMHD;
-              else  eomtype=EOMGRMHD;
-            }
-          }
-          else{
-            // KORALTODO: Then radiation failed to invert.  Could call Utoprimgen() with each entropy and energy and repeat selection process.
+          if(eomtype==EOMDEFAULT) eomtype=EOMTYPE; // not necessary to set, except for next conditional
+          if(eomtype==EOMGRMHD){
+            // Then should use entropy if (e.g.) dissmeasure>0 and energy if dissmeasure<0 as in implicit solver currently.
+            // GODMARK: If want even more accuracy like in radiation implicit solver, then have to do both entropy and energy and use entropy when u_g[energy]<u_g[entropy], or revert to entropy when energy fails or has high error, etc.
+            if(dissmeasure>0.0) eomtype=EOMENTROPYGRMHD;
+            else  eomtype=EOMGRMHD;
+            // FUCK: Could call Utoprimgen() with each entropy and energy and repeat selection process.
           }
         }
 
 
+        /////////////////
+        //
+        // Setup and Do inversion
+        //
+        /////////////////
         if(finalstep){ // last call, so ucum is cooked and ready to eat!
           // store guess for diss_compute before changed by normal inversion
           PALLLOOP(pl) prbefore[pl]=MACP0A1(pf,i,j,k,pl);
@@ -713,7 +718,6 @@ static int advance_standard(
             eomtypelocal=eomtype;
           }
           else{
-            //            dualfprintf(fail_file,"CUnew[2]=%21.15g\n",CUnew[2]);
             // then Uf is not ucum on finalstep=1, so any prior implicit inversion was not final inversion.
             // So change any do nothing to do something
             if(eomtype==EOMDIDGRMHD) eomtypelocal=EOMGRMHD;
@@ -722,27 +726,26 @@ static int advance_standard(
             else if(eomtype==EOMDIDFFDE) eomtypelocal=EOMFFDE;
             else eomtypelocal=eomtype;
           }
+        }
+        else eomtypelocal=eomtype;
 
-          MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,&eomtypelocal,EVOLVEUTOPRIM,UEVOLVE,utoinvert1, ptrgeom, MAC(pf,i,j,k),&newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
-          nstroke+=newtonstats.nstroke; newtonstats.nstroke=newtonstats.lntries=0;
+        MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,&eomtypelocal,EVOLVEUTOPRIM,UEVOLVE,utoinvert1, ptrgeom, MAC(pf,i,j,k),&newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
+        nstroke+=newtonstats.nstroke; newtonstats.nstroke=newtonstats.lntries=0;
           
           
 #if(DODISS||DODISSVSR)
+        if(finalstep){
           // then see what entropy inversion would give
           diss_compute(EVOLVEUTOPRIM,UEVOLVE,utoinvert1,ptrgeom,prbefore,MAC(pf,i,j,k),&newtonstats);
+        }
 #endif
           
-        }
-        else{ // otherwise still iterating on primitives
-          MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,&eomtype,EVOLVEUTOPRIM,UEVOLVE,utoinvert1, ptrgeom, MAC(pf,i,j,k),&newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
-          nstroke+=newtonstats.nstroke; newtonstats.nstroke=newtonstats.lntries=0;
-        }
-
-        
         
         
         ////////////////////////////
-        // Do fixup1zone
+        //
+        // Do fixup1zone and adjust dUriemann, uf, and tempucum
+        //
         ////////////////////////////
 #if(SPLITNPR)
         // don't update metric if only doing B1-B3
@@ -771,7 +774,13 @@ static int advance_standard(
           }// end doing single-point fixups
 
 
-        // now save if either fixup or not
+        
+        
+        /////////////////
+        //
+        // Save results to uf and tempucum (whether fixup or not)
+        //
+        //////////////////
         PLOOP(pliter,pl){
           // only save if not already updated uf and tempucum separately
           if(doother==DOALLPL || doother==DONONBPL && BPL(pl)==0 || doother==DOBPL && BPL(pl)==1){
@@ -783,7 +792,9 @@ static int advance_standard(
             
       
         /////////////////////////////////////
+        //
         // get timestep limit from acceleration
+        //
         /////////////////////////////////////
 #if(LIMITDTWITHSOURCETERM)
 #if(SPLITNPR)
@@ -830,9 +841,14 @@ static int advance_standard(
 
 
 
+
+
 #if(PRODUCTION==0)
   trifprintf( "#0m");
 #endif
+
+
+
  
     
   /////////////////////////////////////////////
@@ -855,6 +871,8 @@ static int advance_standard(
         }
     }// end if doing metric substepping
   }
+
+
 
 
 
@@ -884,6 +902,7 @@ static int advance_standard(
 #endif
 
 
+
   ///////////////////////////////////////
   //
   // Copy over tempucum -> ucum per pl to account for staggered field
@@ -894,6 +913,8 @@ static int advance_standard(
     // copy tempucum -> ucum
     copy_tempucum_finalucum(DOALLPL,Uconsevolveloop,tempucum,ucum); // fill-in all pl's for storage and for next step.
   }
+
+
 
 
   /////////////////////////////////
@@ -911,6 +932,7 @@ static int advance_standard(
       fixup(stage,pf,useducum,finalstep);
 #endif  
     }
+
 
 
   /////////////////////////////////
