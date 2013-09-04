@@ -2615,7 +2615,8 @@ int limit_3vel_ffde(FTYPE *Bcon, struct of_geom *geom, FTYPE *vcon, FTYPE *pr)
   newtonstats.nstroke=newtonstats.lntries=0;
   int finalstep=1; // doesn't matter for ffde
   int eomtype=EOMDEFAULT;
-  MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,&eomtype,EVOLVEUTOPRIM,UNOTHING,U, geom, pr,&newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
+  FTYPE dissmeasure=-1.0; // assume trying energy ok
+  MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,&eomtype,EVOLVEUTOPRIM,UNOTHING,U, NULL, geom, dissmeasure, pr, pr,&newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
   //  nstroke+=newtonstats.nstroke; newtonstats.nstroke=newtonstats.lntries=0;
 
 

@@ -3983,9 +3983,13 @@ static int general_newton_raphson(int showmessages, PFTYPE *lpflag, int eomtype,
 
 
     // DEBUG:
-    //    if(myid==5 && nstep==1 && steppart==0 && ifileglobal==19 && jfileglobal==15){
-    //      for(it=0;it<n;it++) dualfprintf(fail_file,"lntries=%d after funcd: x[%d]=%26.20g dx[%d]=%26.20g errx=%26.20g diddamp=%d dampfactor=%26.20g didcycle=%d\n",(int)(newtonstats->lntries),it,x[it],it,dx[it],errx,diddamp,DAMPFACTOR[it],didcycle);
-    //    }
+#if(0)
+    if(nstep>=26070){
+      if(1||myid==5 && nstep==1 && steppart==0 && ifileglobal==19 && jfileglobal==15){
+        for(it=0;it<n;it++) dualfprintf(fail_file,"lntries=%d after funcd: x[%d]=%26.20g dx[%d]=%26.20g errx=%26.20g diddamp=%d dampfactor=%26.20g didcycle=%d : %g %g %g %g %g %g %g %g %g\n",(int)(newtonstats->lntries),it,x[it],it,dx[it],errx,diddamp,DAMPFACTOR[it],didcycle,wglobal[2],Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc);
+      }
+    }
+#endif
 
 #if(CRAZYDEBUG&&DEBUGINDEX)
     // DEBUG:
@@ -4180,7 +4184,7 @@ static int general_newton_raphson(int showmessages, PFTYPE *lpflag, int eomtype,
               x[id]=x_older[id]; // since current W is what gave bad residual and already saved it into x_old[0]
               dx[id]=dx_old[id]; // new dx is probably messed up (didn't yet save dx[0], so use dx_old[0]
 #if(PRODUCTION==0)
-              if(showmessages&&debugfail>=2) dualfprintf(fail_file,"resetW: nstep=%ld steppart=%d :: lntries=%d :: id=%d :: x=%21.15g dx=%21.15g : x/D=%21.15g DAMPFACTOR=%21.15g errx=%21.15g\n",nstep,steppart,(int)(newtonstats->lntries),id,x[id],dx[id],x[id]/D,DAMPFACTOR[id],newtonstats->lerrx);
+              if(showmessages&&debugfail>=3) dualfprintf(fail_file,"resetW: nstep=%ld steppart=%d :: lntries=%d :: id=%d :: x=%21.15g dx=%21.15g : x/D=%21.15g DAMPFACTOR=%21.15g errx=%21.15g eomtype=%d\n",nstep,steppart,(int)(newtonstats->lntries),id,x[id],dx[id],x[id]/D,DAMPFACTOR[id],newtonstats->lerrx,eomtype);
 #endif
               // SUPERGODMARK: Noticed that if Mathematica solution can be found but gives utsq<0 then this damping leads to nearly circular loop till max iterations.
               diddamp=1;
@@ -4525,7 +4529,11 @@ static int general_newton_raphson(int showmessages, PFTYPE *lpflag, int eomtype,
       bin_newt_data( errx, n_iter, 0, 0 );
 #endif
 
-      if(debugfail>=2) dualfprintf(fail_file,"fabs(errx)=%21.15g > MIN_NEWT_TOL=%21.15g n=%d n_iter=%d lntries=%d\n",fabs(errx),MIN_NEWT_TOL,n,n_iter,newtonstats->lntries);
+      if(debugfail>=2){
+        dualfprintf(fail_file,"fabs(errx)=%21.15g > MIN_NEWT_TOL=%21.15g n=%d n_iter=%d lntries=%d eomtype=%d\n",fabs(errx),MIN_NEWT_TOL,n,n_iter,newtonstats->lntries,eomtype);
+        //        if(DEBUGINDEX) dualfprintf(fail_file,"i=%d j=%d part=%d step=%ld :: n_iter=%d :: errx=%21.15g minerr=%21.15g :: x[0]=%21.15g dx[0]=%21.15g wglobal0=%21.15g\n",ifileglobal,jfileglobal,steppart,nstep,n_iter,errx,MIN_NEWT_TOL,x[0],dx[0],wglobal[0]);
+      }
+
 
 
 #if(!OPTIMIZED)

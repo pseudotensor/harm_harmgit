@@ -144,7 +144,8 @@ int rescale(int which, int dir, FTYPE *pr, struct of_geom *ptrgeom,FTYPE *p2inte
     int showmessages=1;
     int allowlocalfailurefixandnoreport=1;
     int eomtype=EOMDEFAULT;
-    MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, 0, &eomtype,OTHERUTOPRIM,UDIAG,p2interp, ptrgeom, pr,&newtonstats),"interp.c:rescale()", "Utoprimgen", 1);
+    FTYPE dissmeasure=-1.0; // assume energy inversion ok
+    MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, 0, &eomtype,OTHERUTOPRIM,UDIAG,p2interp, NULL, ptrgeom, dissmeasure, pr, pr,&newtonstats),"interp.c:rescale()", "Utoprimgen", 1);
   }
   else{
     dualfprintf(fail_file,"rescale(): no such rescale type! which=%d\n",which);

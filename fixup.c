@@ -728,7 +728,7 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
   FTYPE prdiag[NPR];
   FTYPE pr0[NPR];
   FTYPE prmhdnew[NPR];
-  FTYPE U[NPR];
+  FTYPE U[NPR],U0[NPR];
   int checkfl[NPR];
   int failreturn;
   int didchangeprim;
@@ -856,6 +856,9 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
       failreturn=primtoU(UNOTHING,prmhd,&q,ptrgeom,U, NULL);
       if(failreturn>=1) dualfprintf(fail_file,"primtoU(1) failed in fixup.c, why???\n");
 
+      // store original U
+      PLOOP(pliter,pl) U0[pl]=U[pl];
+
       // get change in primitive quantities
       PALLLOOP(pl) dprmhd[pl]=0.0; // default
       // use ZAMO velocity as velocity of inserted fluid
@@ -887,7 +890,12 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
 
       // get final new conserved quantity
       PALLLOOP(pl) U[pl]+=dU[pl];
-
+      // except, if fixed-up u_g or rho because <0, then just set entropy.
+      // If u_g>0 and rho>0, then assume entropy adjustment also ok.
+      //      if((prmhd[UU]<=0.0 || prmhd[RHO]<=0.0) && ENTROPY>0) U[ENTROPY] = U0[ENTROPY];
+      // assume this adjustment is energy-only based.
+      // must do this because otherwise if u_g<0 or rho<0, then entropy is ill-defined, and here assume floor always activated related to too small u_g or rho so that entropy would be badly defined or ill-defined.
+      if(ENTROPY>=0) U[ENTROPY] = U0[ENTROPY];
 
 
       // pr finally changes here
@@ -899,9 +907,13 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
       int showmessages=0; // messages not important if fixup doens't work, unless debugging.
       int allowlocalfailurefixandnoreport=1; 
       int eomtype=EOMDEFAULT;
+      FTYPE dissmeasure=-1.0; // assume energy try ok
 
+      newtonstats.nstroke=newtonstats.lntries=0;
+      failreturn=Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,&eomtype,OTHERUTOPRIM,UNOTHING,U,&q, ptrgeom,dissmeasure,prmhd,prmhd,&newtonstats);
+      // have to add since takes effort.s
+      nstroke+=newtonstats.nstroke; newtonstats.nstroke=newtonstats.lntries=0;
 
-      failreturn=Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,&eomtype,OTHERUTOPRIM,UNOTHING,U,ptrgeom,prmhd,&newtonstats);
       // KORALNOTEMARK: Only changing floor related to MHD fluid so far, so no check on failure of radiation inversion.
       badinversion = (failreturn>=1 || IFUTOPRIMFAIL(GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)));
 

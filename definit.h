@@ -32,6 +32,13 @@
 // whether to try cold inversion if entropy fails
 #define ENTROPY2COLD 1
 
+// whether to try HOT inversion if entropy fails
+#define ENTROPY2HOT 1
+
+#define PICKBESTHOT 1 // whether to pick best of entropy or energy
+#define BADENERGY(ugenergy,ugentropy) ((ugenergy) < 0.5*(ugentropy))
+#define BADENERGY2(ugenergy,ugentropy) ((ugenergy) < (ugentropy))
+
 // which method to store divergence condition
 #define DIVMETHODPREFLUX 0
 #define DIVMETHODPOSTFLUX 1

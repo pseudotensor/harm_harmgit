@@ -860,7 +860,7 @@
 
 // see failfloorcount counter
 #define COUNTNOTHING -1
-#define NUMFAILFLOORFLAGS 15
+#define NUMFAILFLOORFLAGS 16
 //  mnemonics
 #define COUNTUTOPRIMFAILCONV 0 // if failed to converge
 #define COUNTFLOORACT 1 // if floor activated
@@ -873,10 +873,11 @@
 #define COUNTUPERC 8 // see fixup_checksolution()
 #define COUNTENTROPY 9
 #define COUNTCOLD 10
-#define COUNTEOSLOOKUPFAIL 11
-#define COUNTBOUND1 12 // see bounds.tools.c (used when boundary code actually affects active zone values)
-#define COUNTBOUND2 13
-#define COUNTONESTEP 14
+#define COUNTHOT 11
+#define COUNTEOSLOOKUPFAIL 12
+#define COUNTBOUND1 13 // see bounds.tools.c (used when boundary code actually affects active zone values)
+#define COUNTBOUND2 14
+#define COUNTONESTEP 15
 
 
 // below 3 used to indicate when eos lookup failure shouldn't report failure since (e.g.) was not at a particular grid location

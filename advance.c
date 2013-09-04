@@ -691,17 +691,9 @@ static int advance_standard(
         // if doing inversion, then check if should use entropy or energy if originally assuming should use energy
         //
         /////////////////
-        if(EOMDONOTHING(eomtype)==0){
-          // then doing inversion in next section of code (final step or not)
-          if(eomtype==EOMDEFAULT) eomtype=EOMTYPE; // not necessary to set, except for next conditional
-          if(eomtype==EOMGRMHD){
-            // Then should use entropy if (e.g.) dissmeasure>0 and energy if dissmeasure<0 as in implicit solver currently.
-            // GODMARK: If want even more accuracy like in radiation implicit solver, then have to do both entropy and energy and use entropy when u_g[energy]<u_g[entropy], or revert to entropy when energy fails or has high error, etc.
-            if(dissmeasure>0.0) eomtype=EOMENTROPYGRMHD;
-            else  eomtype=EOMGRMHD;
-            // FUCK: Could call Utoprimgen() with each entropy and energy and repeat selection process.
-          }
-        }
+        int eomtypelocal;
+        eomtypelocal=eomtype;
+
 
 
         /////////////////
@@ -713,23 +705,23 @@ static int advance_standard(
           // store guess for diss_compute before changed by normal inversion
           PALLLOOP(pl) prbefore[pl]=MACP0A1(pf,i,j,k,pl);
 
-          int eomtypelocal;
           if(CUnew[2]==1.0){
-            eomtypelocal=eomtype;
+            // then use original eomtypelocal
           }
           else{
             // then Uf is not ucum on finalstep=1, so any prior implicit inversion was not final inversion.
             // So change any do nothing to do something
-            if(eomtype==EOMDIDGRMHD) eomtypelocal=EOMGRMHD;
-            else if(eomtype==EOMDIDENTROPYGRMHD) eomtypelocal=EOMENTROPYGRMHD;
-            else if(eomtype==EOMDIDCOLDGRMHD) eomtypelocal=EOMCOLDGRMHD;
-            else if(eomtype==EOMDIDFFDE) eomtypelocal=EOMFFDE;
-            else eomtypelocal=eomtype;
+            if(eomtypelocal==EOMDIDGRMHD) eomtypelocal=EOMGRMHD;
+            else if(eomtypelocal==EOMDIDENTROPYGRMHD) eomtypelocal=EOMENTROPYGRMHD;
+            else if(eomtypelocal==EOMDIDCOLDGRMHD) eomtypelocal=EOMCOLDGRMHD;
+            else if(eomtypelocal==EOMDIDFFDE) eomtypelocal=EOMFFDE;
           }
         }
-        else eomtypelocal=eomtype;
 
-        MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,&eomtypelocal,EVOLVEUTOPRIM,UEVOLVE,utoinvert1, ptrgeom, MAC(pf,i,j,k),&newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
+
+
+        // actual inversion
+        MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,&eomtypelocal,EVOLVEUTOPRIM,UEVOLVE,utoinvert1, qptr2, ptrgeom, dissmeasure, piorig, MAC(pf,i,j,k),&newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
         nstroke+=newtonstats.nstroke; newtonstats.nstroke=newtonstats.lntries=0;
           
           
@@ -788,6 +780,7 @@ static int advance_standard(
             MACP0A1(tempucum,i,j,k,pl)=tempucumconsider[pl];
           }
         }
+
       
             
       
@@ -1787,7 +1780,8 @@ static int advance_standard_orig(
         // store guess for diss_compute before changed by normal inversion
         PALLLOOP(pl) prbefore[pl]=MACP0A1(pf,i,j,k,pl);
 
-        MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,&eomtype,EVOLVEUTOPRIM,UEVOLVE,MAC(myupoint,i,j,k), ptrgeom, MAC(pf,i,j,k),&newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
+        FTYPE dissmeasure=-1.0; // assume energy try ok
+        MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,&eomtype,EVOLVEUTOPRIM,UEVOLVE,MAC(myupoint,i,j,k), NULL, ptrgeom, dissmeasure, MAC(pi,i,j,k), MAC(pf,i,j,k),&newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
         nstroke+=newtonstats.nstroke; newtonstats.nstroke=newtonstats.lntries=0;
 
 
@@ -1798,7 +1792,8 @@ static int advance_standard_orig(
  
       }
       else{ // otherwise still iterating on primitives
-        MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,&eomtype,EVOLVEUTOPRIM,UEVOLVE,MAC(myupoint,i,j,k), ptrgeom, MAC(pf,i,j,k),&newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
+        FTYPE dissmeasure=-1.0; // assume energy try ok
+        MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,&eomtype,EVOLVEUTOPRIM,UEVOLVE,MAC(myupoint,i,j,k), NULL, ptrgeom, dissmeasure, MAC(pi,i,j,k), MAC(pf,i,j,k),&newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
         nstroke+=newtonstats.nstroke; newtonstats.nstroke=newtonstats.lntries=0;
       }
 
@@ -2545,7 +2540,8 @@ static int advance_finitevolume(
   
 
       // invert point U-> point p
-      MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,&eomtype,EVOLVEUTOPRIM, UEVOLVE, MAC(myupoint,i,j,k), ptrgeom, MAC(pf,i,j,k),&newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
+      int dissmeasure=-1.0; // assume ok to try energy
+      MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,&eomtype,EVOLVEUTOPRIM, UEVOLVE, MAC(myupoint,i,j,k), NULL, ptrgeom, dissmeasure, MAC(pi,i,j,k), MAC(pf,i,j,k),&newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
       nstroke+=newtonstats.nstroke; newtonstats.nstroke=newtonstats.lntries=0;
 
       //If using a high order scheme, need to choose whether to trust the point value
@@ -2751,7 +2747,8 @@ static int check_point_vs_average(int timeorder, int numtimeorders, PFTYPE *lpfl
     //make a copy of the initial guess so that not to modify the original pb's
     PLOOP(pliter,pl) pavg[pl] = pb[pl];
     //invert the average U -> "average" p
-    MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,&eomtype,EVOLVEUTOPRIM, UEVOLVE, uavg, ptrgeom, pavg,newtonstats),"step_ch.c:advance()", "Utoprimgen", 3);
+    int dissmeasure=-1.0; // assume ok to try energy
+    MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,&eomtype,EVOLVEUTOPRIM, UEVOLVE, uavg, NULL, ptrgeom, dissmeasure, pavg, pavg,newtonstats),"step_ch.c:advance()", "Utoprimgen", 3);
 
     invert_from_average_flag = GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL);
 
@@ -2818,7 +2815,8 @@ static int check_point_vs_average(int timeorder, int numtimeorders, PFTYPE *lpfl
       //make a copy of the initial guess so that not to modify the original pb's
       PLOOP(pliter,pl) pf[pl] = pb[pl];
       //invert the average U -> "average" p
-      MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,&eomtype,EVOLVEUTOPRIM, UEVOLVE, uavg, ptrgeom, pf,newtonstats),"step_ch.c:advance()", "Utoprimgen", 3);
+      int dissmeasure=-1.0; // assume ok to try energy
+      MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,&eomtype,EVOLVEUTOPRIM, UEVOLVE, uavg, NULL, ptrgeom, dissmeasure, pb, pf,newtonstats),"step_ch.c:advance()", "Utoprimgen", 3);
       //      invert_from_average_flag = lpflag[FLAGUTOPRIMFAIL];
 
 
@@ -2827,7 +2825,7 @@ static int check_point_vs_average(int timeorder, int numtimeorders, PFTYPE *lpfl
       //      lpflag[FLAGUTOPRIMFAIL] = invert_from_average_flag;
 
       //old code:
-      //MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,&eomtype,EVOLVEUTOPRIM, UEVOLVE, avg, ptrgeom, pf,&newtonstats),"step_ch.c:advance()", "Utoprimgen", 2);
+      //MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,&eomtype,EVOLVEUTOPRIM, UEVOLVE, avg, NULL, ptrgeom, dissmeasure, pb, pf,&newtonstats),"step_ch.c:advance()", "Utoprimgen", 2);
 
       frac_avg_used = 1.0; //reverted to the average value
 

@@ -572,18 +572,19 @@ int forceflux_compute(int dir,struct of_geom *geom, FTYPE *cmin, FTYPE *cmax, FT
   PLOOP(pliter,pl) pmid[pl]=0.5*(p_l[pl]+p_r[pl]);
   // get primitive pmid(umid)
   int eomtype=EOMDEFAULT;
-  MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, 0, &eomtype,EVOLVEUTOPRIM,UEVOLVE, umid, geom, pmid,&newtonstats),"flux.c:flux_compute()", "Utoprimgen", 1);
+  FTYPE dissmeasure=-1.0; // assume energy try ok
+  MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, 0, &eomtype,EVOLVEUTOPRIM,UEVOLVE, umid, NULL, geom, dissmeasure, pmid, pmid,&newtonstats),"flux.c:flux_compute()", "Utoprimgen", 1);
   doforceflux=1;
   if(GLOBALMACP0A1(pflag,geom->i,geom->j,geom->k,FLAGUTOPRIMFAIL)){
     if(debugfail>=1) dualfprintf(fail_file,"Failed to find inversion for FORCEFLUX, trying p_l : nstep=%ld t=%21.15g i=%d j=%d k=%d\n",nstep,t,geom->i,geom->j,geom->k);
     PLOOP(pliter,pl) pmid[pl]=p_l[pl];
     // get primitive pmid(umid)
-    MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, 0, &eomtype,EVOLVEUTOPRIM,UEVOLVE, umid, geom, pmid,&newtonstats),"flux.c:flux_compute()", "Utoprimgen", 1);
+    MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, 0, &eomtype,EVOLVEUTOPRIM,UEVOLVE, umid, NULL, geom, dissmeasure, pmid, pmid,&newtonstats),"flux.c:flux_compute()", "Utoprimgen", 1);
     if(GLOBALMACP0A1(pflag,geom->i,geom->j,geom->k,FLAGUTOPRIMFAIL)){
       if(debugfail>=1) dualfprintf(fail_file,"Failed to find inversion for FORCEFLUX, trying p_r : nstep=%ld t=%21.15g i=%d j=%d k=%d\n",nstep,t,geom->i,geom->j,geom->k);
       PLOOP(pliter,pl) pmid[pl]=p_r[pl];
       // get primitive pmid(umid)
-      MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, 0, &eomtype,EVOLVEUTOPRIM,UEVOLVE, umid, geom, pmid,&newtonstats),"flux.c:flux_compute()", "Utoprimgen", 1);
+      MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, 0, &eomtype,EVOLVEUTOPRIM,UEVOLVE, umid, NULL, geom, dissmeasure, pmid, pmid,&newtonstats),"flux.c:flux_compute()", "Utoprimgen", 1);
       if(GLOBALMACP0A1(pflag,geom->i,geom->j,geom->k,FLAGUTOPRIMFAIL)){
         if(debugfail>=1) dualfprintf(fail_file,"No initial guess worked, rejecting FORCEFLUX method : nstep=%ld t=%21.15g i=%d j=%d k=%d\n",nstep,t,geom->i,geom->j,geom->k);
         doforceflux=0;
@@ -1043,14 +1044,15 @@ int musta1flux_compute(int dir,struct of_geom *geom, FTYPE *cmin_l, FTYPE *cmin_
     // invert to get p_l p_r so can get F_l F_r and U_l U_r
     // get new primitive p_l
     int eomtype=EOMDEFAULT;
-    MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, 0, &eomtype,EVOLVEUTOPRIM,UEVOLVE, U_l, geom, p_l,&newtonstats),"flux.c:mustaflux_compute()", "Utoprimgen", 1);
+    FTYPE dissmeasure=-1.0; // assume energy try ok
+    MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, 0, &eomtype,EVOLVEUTOPRIM,UEVOLVE, U_l, ptrstate_l, geom, dissmeasure, p_l, p_l,&newtonstats),"flux.c:mustaflux_compute()", "Utoprimgen", 1);
     if(GLOBALMACP0A1(pflag,geom->i,geom->j,geom->k,FLAGUTOPRIMFAIL)){
       if(debugfail>=1) dualfprintf(fail_file,"Failed to find inversion for MUSTAFORCEFLUX(left): nstep=%ld t=%21.15g i=%d j=%d k=%d\n",nstep,t,geom->i,geom->j,geom->k);
       domustaflux=0;
       break;
     }
     // get new primitive p_r
-    MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, 0, &eomtype,EVOLVEUTOPRIM,UEVOLVE, U_r, geom, p_r,&newtonstats),"flux.c:mustaflux_compute()", "Utoprimgen", 1);
+    MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, 0, &eomtype,EVOLVEUTOPRIM,UEVOLVE, U_r, ptrstate_r, geom, dissmeasure, p_r, p_r,&newtonstats),"flux.c:mustaflux_compute()", "Utoprimgen", 1);
     if(GLOBALMACP0A1(pflag,geom->i,geom->j,geom->k,FLAGUTOPRIMFAIL)){
       if(debugfail>=1) dualfprintf(fail_file,"Failed to find inversion for MUSTAFORCEFLUX(right): nstep=%ld t=%21.15g i=%d j=%d k=%d\n",nstep,t,geom->i,geom->j,geom->k);
       domustaflux=0;
@@ -1282,7 +1284,8 @@ int musta2flux_compute(int dir,struct of_geom *geom, FTYPE *cmin_l, FTYPE *cmin_
 
       // get new primitive pnow from Unow
       int eomtype=EOMDEFAULT;
-      MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, 0, &eomtype,EVOLVEUTOPRIM,UEVOLVE, Unow, geom, pnow,&newtonstats),"flux.c:mustaflux_compute()", "Utoprimgen", 1);
+      FTYPE dissmeasure=-1.0; // assume energy try ok
+      MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, 0, &eomtype,EVOLVEUTOPRIM,UEVOLVE, Unow, NULL, geom, dissmeasure, pnow, pnow,&newtonstats),"flux.c:mustaflux_compute()", "Utoprimgen", 1);
       if(GLOBALMACP0A1(pflag,geom->i,geom->j,geom->k,FLAGUTOPRIMFAIL)){
         if(debugfail>=1) dualfprintf(fail_file,"Failed to find inversion for MUSTAFORCEFLUX(right): nstep=%ld t=%21.15g i=%d j=%d k=%d\n",nstep,t,geom->i,geom->j,geom->k);
         domustaflux=0;
