@@ -124,7 +124,7 @@
 //
 // test declarations
 // see checkexterns.sh
-// comment below 3 lines when not wanting to test
+// comment below when not wanting to test
 // uncomment when wanting to test, and then look at make.log
 //
 #if(0)
