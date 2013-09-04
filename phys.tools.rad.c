@@ -2731,10 +2731,12 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
   /////////////////////////////
   //
   // Fix u_g so entropy not smaller than guess
+  // Only do this if u_g is just guess and is being solved for.
+  // When eomtype==EOMCOLDGRMHD, then u_g is static so shouldn't modify as if was guess.
   //
   /////////////////////////////
 
-  if(ENTROPYFIXGUESS){
+  if(ENTROPYFIXGUESS && *eomtype!=EOMCOLDGRMHD){
     entropyfixguess(q, ptrgeom, uu0, pp);
     // piin is sometimes even a bit higher, and want to start high, and helps to avoid lack of convergence issue.
     pp[UU]=MAX(pp[UU],piin[UU]);
