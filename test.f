@@ -51,7 +51,9 @@ c     WHICHVEL should be set same as in harm
 #define WHICHVEL VELREL4
 
 c error below which will consider BAD solution and not even compute final solution
-#define FAILLIMIT (1E-6)
+c#define FAILLIMIT (1E-6)
+c Choose actual harm choice even if pretty strict.
+#define FAILLIMIT (1E-8)
 
 #define NUMARGS 211
 c 11 vars, failcode, error, iterations

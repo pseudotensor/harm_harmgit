@@ -1017,7 +1017,6 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
     // assumes "ucons" is utoinvert in advance.c so it's uf or utempcum when necessary as associated with inversion (internal implicit or external).
     //
     //////////////
-    // FUCK: this and/or use of utoinvert instead of useducum in advance.c causes problems.
     // here's where we correct ucons
     docorrectucons=1;
     struct of_state qnew;

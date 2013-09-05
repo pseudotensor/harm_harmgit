@@ -1073,10 +1073,6 @@ static int f_implicit(int iter, int failreturnallowable, int whichcall, int show
     //
     // now have full primitives (pp) and full U (uu) including entropy and these (pp and uu) are fully consistent with each other.
 
-    // FUCK
-    //    get_state(pp, ptrgeom, q);
-    //    primtoU(UNOTHING,pp,q,ptrgeom, uu, uuabs);
-
   }
   else if(implicititer==QTYPRAD || implicititer==QTYPRADENERGYONLY || implicititer==QTYPRADMOMONLY){
     FTYPE pporig[NPR]; PLOOP(pliter,pl) pporig[pl]=pp[pl];
@@ -4103,7 +4099,6 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
 
   if(PRODUCTION==0 && NOTACTUALFAILURE(failreturn)==0 && errorabsf1>=IMPTRYCONVALT || PRODUCTION>0 && NOTBADFAILURE(failreturn)==0 && havebackup==0){ // as in previous code
 
-  // FUCK
   // for seeing Erf<0 and small errors not tol errors.
   //  if(failreturn!=FAILRETURNMODESWITCH && (pp[PRAD0]<10.0*ERADLIMIT) || PRODUCTION==0 && NOTACTUALFAILURE(failreturn)==0 && errorabsf1>=IMPTRYCONVALT || PRODUCTION>0 && NOTBADFAILURE(failreturn)==0 && havebackup==0){
 
@@ -4587,9 +4582,9 @@ int get_rameshsolution(int whichcall, int radinvmod, int failtype, long long int
 
 
   // DEBUG and only when real call (for now) and only show if one is not a bad solution
-  //  if(debugfail>=2 && whichcall>0 && (*failtypeent==0 || *failtypeeng==0)){ // FUCK
+  if(debugfail>=2 && whichcall>0 && (*failtypeent==0 || *failtypeeng==0)){ // NORMAL
   //  if(debugfail>=2 && whichcall==0){ // DEBUGGING Erf~0 solutions
-  if(PRODUCTION==0 && debugfail>=2 && (*failtypeeng==0 || *failtypeent==0)){ // DEBUGGING Erf~0 solutions
+  //  if(PRODUCTION==0 && debugfail>=2 && (*failtypeeng==0 || *failtypeent==0)){ // DEBUGGING Erf~0 solutions
 
     FTYPE resultsjon[NUMRESULTS];
     resultsjon[0] = pp[RHO];
@@ -4679,7 +4674,7 @@ static int f_error_check(int showmessages, int showmessagesheavy, int iter, FTYP
 
 #if(1)
   FTYPE rhoref=MAX(pp[RHO],piin[RHO]);
-  FTYPE fnormspace2 = rhoref*pow(fabs(fnormtime)/rhoref,0.5); // energy term in correct scale with \rho_0(v/c)^1 to get reference in case v\sim 0 FUCKy: This assumes rho v term dominates
+  FTYPE fnormspace2 = rhoref*pow(fabs(fnormtime)/rhoref,0.5); // energy term in correct scale with \rho_0(v/c)^1 to get reference in case v\sim 0 FUCK: This assumes rho v term dominates
   FTYPE fnormtime2=rhoref*pow(fabs(fnormspace/rhoref),2.0); // momentum term in correct scale with \rho_0(v/c)^2 in case E\sim 0.  FUCK: assumes rho v term dominates.
 #else
   FTYPE fakevel = MIN(1.0,fnormspace/(SMALL+fnormtime));
@@ -4866,7 +4861,7 @@ static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int sho
   delspace=0.0; SLOOPA(jj) delspace = MAX(delspace,MAX(fabs(predel[jj]) , velmomscale )); // dimensionless-ortho
 
   // u_g goes like \rho_0 v^2
-  jj=TT; deltime = MAX(fabs(predel[jj]),MAX(ppp[RHO],pp[RHO])*vsqnorm); // FUCK new -- untested
+  jj=TT; deltime = MAX(fabs(predel[jj]),MAX(ppp[RHO],pp[RHO])*vsqnorm);
 
   /////////////////
   // back to actual spatial dimension-space scale for application to x and xjac
