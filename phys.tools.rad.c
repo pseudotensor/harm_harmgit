@@ -4393,6 +4393,9 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE errorabs, struc
   return(0);
 }
 
+//#define WHICHVELRAMESH VEL4 // should be same as WHICHVEL in test.f
+#define WHICHVELRAMESH VELREL4 // should be same as WHICHVEL in test.f
+
 int get_rameshsolution(int whichcall, int radinvmod, int failtype, long long int failnum, int gotfirstnofail, int eomtypelocal, int itermode, FTYPE errorabs, FTYPE errorabsbestexternal, int iters, int totaliters, FTYPE realdt, struct of_geom *ptrgeom, FTYPE *pp, FTYPE *pb, FTYPE *piin, FTYPE *uu0, FTYPE *uu, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_state *q, FTYPE *ppeng, FTYPE *ppent, FTYPE *uueng, FTYPE *uuent, struct of_state *qeng, struct of_state *qent, int *failtypeeng, FTYPE *errorabseng, int *iterseng, int *radinvmodeng, int *failtypeent, FTYPE *errorabsent, int *itersent, int *radinvmodent)
 {
   //  int failtype=1;
@@ -4420,7 +4423,7 @@ int get_rameshsolution(int whichcall, int radinvmod, int failtype, long long int
 
 
   // KORALTODO: Ramesh can't handle inside ergosphere yet until he iterates \tilde{u}'s 
-  if(WHICHVEL==VEL4 && ptrgeom->gcov[GIND(TT,TT)]>=0.0){
+  if(WHICHVELRAMESH==VEL4 && ptrgeom->gcov[GIND(TT,TT)]>=0.0){
     dualfprintf(fail_file,"Wanted to call ramesh, but inside ergosphere\n");
     *failtypeeng = 1;
     *radinvmodent = 0;
@@ -4438,8 +4441,6 @@ int get_rameshsolution(int whichcall, int radinvmod, int failtype, long long int
     /////////////////////////
     //
     // Call Ramesh's solver
-    //
-    // Now assume WHICHVEL in test.f is set same as in harm.
     //
     /////////////////////////
 
@@ -4502,7 +4503,7 @@ int get_rameshsolution(int whichcall, int radinvmod, int failtype, long long int
       // return solution in harm format
       ppeng[RHO] = resultseng[0];
       ppeng[UU] = ppeng[ENTROPY] = resultseng[1];
-      if(WHICHVEL==VEL4){
+      if(WHICHVELRAMESH==VEL4){
         uconeng[0] = resultseng[2];
         uconeng[1] = resultseng[3];
         uconeng[2] = resultseng[4];
@@ -4513,7 +4514,7 @@ int get_rameshsolution(int whichcall, int radinvmod, int failtype, long long int
         SLOOPA(jj) ppeng[UU+jj] = resultseng[2+jj];
       }
       ppeng[URAD0] = resultseng[6];
-      if(WHICHVEL==VEL4){
+      if(WHICHVELRAMESH==VEL4){
         uradconeng[0] = resultseng[7];
         uradconeng[1] = resultseng[8];
         uradconeng[2] = resultseng[9];
@@ -4543,7 +4544,7 @@ int get_rameshsolution(int whichcall, int radinvmod, int failtype, long long int
       FTYPE uconent[NDIM],uradconent[NDIM];
       ppent[RHO] = resultsent[0];
       ppent[UU] = ppent[ENTROPY] = resultsent[1];
-      if(WHICHVEL==VEL4){
+      if(WHICHVELRAMESH==VEL4){
         uconent[0] = resultsent[2];
         uconent[1] = resultsent[3];
         uconent[2] = resultsent[4];
@@ -4554,7 +4555,7 @@ int get_rameshsolution(int whichcall, int radinvmod, int failtype, long long int
         SLOOPA(jj) ppent[UU+jj] = resultsent[2+jj];
       }
       ppent[URAD0] = resultsent[6];
-      if(WHICHVEL==VEL4){
+      if(WHICHVELRAMESH==VEL4){
         uradconent[0] = resultsent[7];
         uradconent[1] = resultsent[8];
         uradconent[2] = resultsent[9];
@@ -4589,7 +4590,7 @@ int get_rameshsolution(int whichcall, int radinvmod, int failtype, long long int
     FTYPE resultsjon[NUMRESULTS];
     resultsjon[0] = pp[RHO];
     resultsjon[1] = pp[UU];
-    if(WHICHVEL==VEL4){
+    if(WHICHVELRAMESH==VEL4){
       resultsjon[2] = q->ucon[0];
       resultsjon[3] = q->ucon[1];
       resultsjon[4] = q->ucon[2];
@@ -4599,7 +4600,7 @@ int get_rameshsolution(int whichcall, int radinvmod, int failtype, long long int
       SLOOPA(jj) resultsjon[2+jj] = pp[UU+jj];
     }
     resultsjon[6] = pp[URAD0];
-    if(WHICHVEL==VEL4){
+    if(WHICHVELRAMESH==VEL4){
       resultsjon[7] = q->uradcon[0];
       resultsjon[8] = q->uradcon[1];
       resultsjon[9] = q->uradcon[2];

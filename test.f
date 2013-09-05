@@ -49,6 +49,7 @@ c 2 : iterate relative 4-velocities \tilde{u}^i = prim(2,3,4) ("")
 
 c     WHICHVEL should be set same as in harm
 #define WHICHVEL VELREL4
+c#define WHICHVEL VEL4
 
 c error below which will consider BAD solution and not even compute final solution
 c#define FAILLIMIT (1E-6)
@@ -774,10 +775,10 @@ c     HARM order
          results(10) = uradconfinal(3)
          results(11) = uradconfinal(4)
       else if(WHICHVEL.eq.VELREL4) then
-         results(3) = turadconfinal(1)
-         results(4) = turadconfinal(2)
-         results(5) = turadconfinal(3)
-         results(6) = turadconfinal(4)
+         results(8) = turadconfinal(1)
+         results(9) = turadconfinal(2)
+         results(10) = turadconfinal(3)
+         results(11) = turadconfinal(4)
       else
          stop
       endif         
