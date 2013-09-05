@@ -1,3 +1,15 @@
+core
+testfpp.P
+testfpp.c
+testfpp.f
+testfpp.temp.P
+testfpp.temp.c
+testfpp.temp.f
+test.e
+puredouble
+objspuredouble
+objspuredouble.cmd.list
+deps.puredouble.list
 bin2txt
 deps.depsbin2txt.list
 depsbin2txt
