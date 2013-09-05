@@ -4425,7 +4425,7 @@ int get_rameshsolution(int whichcall, int radinvmod, int failtype, long long int
 
 
   // KORALTODO: Ramesh can't handle inside ergosphere yet until he iterates \tilde{u}'s 
-  if(ptrgeom->gcov[GIND(TT,TT)]>=0.0){
+  if(WHICHVEL==VEL4 && ptrgeom->gcov[GIND(TT,TT)]>=0.0){
     dualfprintf(fail_file,"Wanted to call ramesh, but inside ergosphere\n");
     *failtypeeng = 1;
     *radinvmodent = 0;
@@ -4443,6 +4443,8 @@ int get_rameshsolution(int whichcall, int radinvmod, int failtype, long long int
     /////////////////////////
     //
     // Call Ramesh's solver
+    //
+    // Now assume WHICHVEL in test.f is set same as in harm.
     //
     /////////////////////////
 
@@ -4505,17 +4507,27 @@ int get_rameshsolution(int whichcall, int radinvmod, int failtype, long long int
       // return solution in harm format
       ppeng[RHO] = resultseng[0];
       ppeng[UU] = ppeng[ENTROPY] = resultseng[1];
-      uconeng[0] = resultseng[2];
-      uconeng[1] = resultseng[3];
-      uconeng[2] = resultseng[4];
-      uconeng[3] = resultseng[5];
-      uconrel(uconeng,&ppeng[UU],ptrgeom); // get \tilde{u}^i
+      if(WHICHVEL==VEL4){
+        uconeng[0] = resultseng[2];
+        uconeng[1] = resultseng[3];
+        uconeng[2] = resultseng[4];
+        uconeng[3] = resultseng[5];
+        uconrel(uconeng,&ppeng[UU],ptrgeom); // get \tilde{u}^i
+      }
+      else{
+        SLOOPA(jj) ppeng[UU+jj] = resultseng[2+jj];
+      }
       ppeng[URAD0] = resultseng[6];
-      uradconeng[0] = resultseng[7];
-      uradconeng[1] = resultseng[8];
-      uradconeng[2] = resultseng[9];
-      uradconeng[3] = resultseng[10];
-      uconrel(uradconeng,&ppeng[URAD0],ptrgeom); // get \tilde{u}^i_{\rm rad}
+      if(WHICHVEL==VEL4){
+        uradconeng[0] = resultseng[7];
+        uradconeng[1] = resultseng[8];
+        uradconeng[2] = resultseng[9];
+        uradconeng[3] = resultseng[10];
+        uconrel(uradconeng,&ppeng[URAD0],ptrgeom); // get \tilde{u}^i_{\rm rad}
+      }
+      else{
+        SLOOPA(jj) ppeng[URAD0+jj] = resultseng[7+jj];
+      }
       // get full state (thermo and other stuff needed)
       get_state(ppeng,ptrgeom,qeng);
       primtoU(UNOTHING,ppeng, qeng, ptrgeom, uueng, NULL);
@@ -4536,17 +4548,27 @@ int get_rameshsolution(int whichcall, int radinvmod, int failtype, long long int
       FTYPE uconent[NDIM],uradconent[NDIM];
       ppent[RHO] = resultsent[0];
       ppent[UU] = ppent[ENTROPY] = resultsent[1];
-      uconent[0] = resultsent[2];
-      uconent[1] = resultsent[3];
-      uconent[2] = resultsent[4];
-      uconent[3] = resultsent[5];
-      uconrel(uconent,&ppent[UU],ptrgeom); // get \tilde{u}^i
+      if(WHICHVEL==VEL4){
+        uconent[0] = resultsent[2];
+        uconent[1] = resultsent[3];
+        uconent[2] = resultsent[4];
+        uconent[3] = resultsent[5];
+        uconrel(uconent,&ppent[UU],ptrgeom); // get \tilde{u}^i
+      }
+      else{
+        SLOOPA(jj) ppent[UU+jj] = resultsent[2+jj];
+      }
       ppent[URAD0] = resultsent[6];
-      uradconent[0] = resultsent[7];
-      uradconent[1] = resultsent[8];
-      uradconent[2] = resultsent[9];
-      uradconent[3] = resultsent[10];
-      uconrel(uradconent,&ppent[URAD0],ptrgeom); // get \tilde{u}^i_{\rm rad}
+      if(WHICHVEL==VEL4){
+        uradconent[0] = resultsent[7];
+        uradconent[1] = resultsent[8];
+        uradconent[2] = resultsent[9];
+        uradconent[3] = resultsent[10];
+        uconrel(uradconent,&ppent[URAD0],ptrgeom); // get \tilde{u}^i_{\rm rad}
+      }
+      else{
+        SLOOPA(jj) ppent[URAD0+jj] = resultsent[7+jj];
+      }
       // get full state (thermo and other stuff needed)
       get_state(ppent,ptrgeom,qent);
       primtoU(UNOTHING,ppent, qent, ptrgeom, uuent, NULL);
@@ -4572,15 +4594,25 @@ int get_rameshsolution(int whichcall, int radinvmod, int failtype, long long int
     FTYPE resultsjon[NUMRESULTS];
     resultsjon[0] = pp[RHO];
     resultsjon[1] = pp[UU];
-    resultsjon[2] = q->ucon[0];
-    resultsjon[3] = q->ucon[1];
-    resultsjon[4] = q->ucon[2];
-    resultsjon[5] = q->ucon[3];
+    if(WHICHVEL==VEL4){
+      resultsjon[2] = q->ucon[0];
+      resultsjon[3] = q->ucon[1];
+      resultsjon[4] = q->ucon[2];
+      resultsjon[5] = q->ucon[3];
+    }
+    else{
+      SLOOPA(jj) resultsjon[2+jj] = pp[UU+jj];
+    }
     resultsjon[6] = pp[URAD0];
-    resultsjon[7] = q->uradcon[0];
-    resultsjon[8] = q->uradcon[1];
-    resultsjon[9] = q->uradcon[2];
-    resultsjon[10] = q->uradcon[3];
+    if(WHICHVEL==VEL4){
+      resultsjon[7] = q->uradcon[0];
+      resultsjon[8] = q->uradcon[1];
+      resultsjon[9] = q->uradcon[2];
+      resultsjon[10] = q->uradcon[3];
+    }
+    else{
+      SLOOPA(jj) resultsjon[7+jj] = pp[URAD0+jj];
+    }
     resultsjon[11] = (FTYPE)failtype;
     resultsjon[12] = errorabs;
     resultsjon[13] = (FTYPE)iters;

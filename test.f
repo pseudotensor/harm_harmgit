@@ -40,6 +40,16 @@ c#define PRODUCTION 1
 c#define PRODUCTION 2
 #define PRODUCTION 3
 
+#define VEL4 0
+#define VEL3 1
+#define VELREL4 2
+c 0 : iterate 4-velocities u^i=prim(2,3,4) (radiation is inverted separately and values for u^i_{rad} computed separately)
+c 1 : iterate 3-velocities (not used)
+c 2 : iterate relative 4-velocities \tilde{u}^i = prim(2,3,4) ("")
+
+c     WHICHVEL should be set same as in harm
+#define WHICHVEL VELREL4
+
 c error below which will consider BAD solution and not even compute final solution
 #define FAILLIMIT (1E-6)
 
@@ -89,8 +99,8 @@ c     results
 c     internals
       real*8 itertot
       dimension isc(4),gn(4,4),gv(4,4),hp(4,4),hf(4,4)
-      dimension vgasp(3),vgasf(3),B1(5),B2(5),
-     &     BBp(4),BBf(4),BBc(4),vradp(3),vradf(3),s(5),
+      dimension vgasp(4),vgasf(4),B1(5),B2(5),
+     &     BBp(4),BBf(4),BBc(4),vradp(4),vradf(4),s(5),
      &     ugasconf(4),ugascovf(4),ugasconp(4),ugascovp(4),
      &     uradconf(4),uradcovf(4),uradconp(4),uradcovp(4),
      &     ugasconi(4),ugascovi(4),uradconi(4),uradcovi(4),
@@ -131,11 +141,9 @@ c     itermax is maximum no. of iterations with u_g, entropy below minimum
       eps=1.d-6
       epsbis=1.d-3
       dvmin=1.d-4
-      tol=1.d-10
-c      tol=1.d-12
-c      tol=1.d-14
-c 1E-16 fails to work -- leads to 1E-7 errors, although all primitives seems similar.
-c      tol=1.d-16
+c      tol=1.d-10
+c     harm-like error
+      tol=1.d-12
       uminfac=1.d-10
       dlogmax=log(2.d0)
       itermax=3
@@ -225,16 +233,31 @@ c     proceed directly to the entropy equation
          write (14,"(1I10)",advance="no") i
 #endif
 #if(PRODUCTION<=1)
-         write (13,*)
-         write (13,"(48X,22X,A,22X,A)",advance="no")
-     &        '|rho','|u_g'
-         write (13,"(22X,A,22X,A,22X,A,22X,A)",advance="no")
-     &        '|u^t','u^1','u^2','u^3|'
-         write (13,"(22X,A)",advance="no")
-     &        '|Erf'
-         write (13,"(22X,A,22X,A,22X,A,22X,A)")
-     &        '|u^t','u^1','u^2','u^3|'
-         write (13,*) ' JON PROBLEM NUMBER: ',i
+         if(WHICHVEL.eq.VEL4) then
+            write (13,*)
+            write (13,"(54X,22X,A,22X,A)",advance="no")
+     &           '|rho','|u_g'
+            write (13,"(22X,A,22X,A,22X,A,22X,A)",advance="no")
+     &           '|u^t','u^1','u^2','u^3|'
+            write (13,"(22X,A)",advance="no")
+     &           '|Erf'
+            write (13,"(22X,A,22X,A,22X,A,22X,A)")
+     &           '|u^t','u^1','u^2','u^3|'
+            write (13,*) ' JON PROBLEM NUMBER: ',i
+         else if(WHICHVEL.eq.VELREL4) then
+            write (13,*)
+            write (13,"(54X,22X,A,22X,A)",advance="no")
+     &           '|rho','|u_g'
+            write (13,"(22X,A,22X,A,22X,A,22X,A)",advance="no")
+     &           '|tu^t','tu^1','tu^2','tu^3|'
+            write (13,"(22X,A)",advance="no")
+     &           '|Erf'
+            write (13,"(22X,A,22X,A,22X,A,22X,A)")
+     &           '|tu^t','tu^1','tu^2','tu^3|'
+            write (13,*) ' JON PROBLEM NUMBER: ',i            
+         else
+            stop
+         endif
 #endif
          ientropy=0
          
@@ -279,6 +302,13 @@ c     en=polytropic index = 1/Gamma, en1 = n+1
          en=1.d0/Gam1
          en1=en+1.d0
 
+c      set \tilde{u}^t=0
+         vgasf(1)=0.0d0
+         vgasp(1)=0.0d0
+         vradf(1)=0.0d0
+         vradp(1)=0.0d0
+         
+
 #if(PRODUCTION==0)
 c         write (*,*)
 c         write (*,*) (isc(j),j=1,4),dt,
@@ -286,16 +316,16 @@ c     &        ((gn(j,k),k=1,4),j=1,4),
 c     &        ((gv(j,k),k=1,4),j=1,4),
 c     &        rhof,rhop,rhou0i,rhou0f,rhou0p,
 c     &        uf,up,T00i,T00f,T00p,
-c     &        vgasf(1),vgasp(1),T01i,T01f,T01p,
-c     &        vgasf(2),vgasp(2),T02i,T02f,T02p,
-c     &        vgasf(3),vgasp(3),T03i,T03f,T03p,
+c     &        vgasf(2),vgasp(2),T01i,T01f,T01p,
+c     &        vgasf(3),vgasp(3),T02i,T02f,T02p,
+c     &        vgasf(4),vgasp(4),T03i,T03f,T03p,
 c     &        BBf(2),BBp(2),scr,scr,scr,
 c     &        BBf(3),BBp(3),scr,scr,scr,
 c     &        BBf(4),BBp(4),scr,scr,scr,
 c     &        Ef,Ep,R00i,R00f,R00p,
-c     &        vradf(1),vradp(1),R01i,R01f,R01p,
-c     &        vradf(2),vradp(2),R02i,R02f,R02p,
-c     &        vradf(3),vradp(3),R03i,R03f,R03p,
+c     &        vradf(2),vradp(2),R01i,R01f,R01p,
+c     &        vradf(3),vradp(3),R02i,R02f,R02p,
+c     &        vradf(4),vradp(4),R03i,R03f,R03p,
 c     &        (s(j),j=1,2),si,sf,sp,
 c     &        (uradconf(j),uradcovf(j),j=1,4),
 c     &        (ugasconf(j),ugascovf(j),j=1,4),
@@ -338,9 +368,17 @@ c         guesstype=1
      &           ,guesstype
 #endif
             prim(1)=mymax(up,uminfac*rhop)
-            prim(2)=ugasconp(2)
-            prim(3)=ugasconp(3)
-            prim(4)=ugasconp(4)
+            if(WHICHVEL.eq.VEL4) then
+               prim(2)=ugasconp(2)
+               prim(3)=ugasconp(3)
+               prim(4)=ugasconp(4)
+            else if(WHICHVEL.eq.VELREL4) then
+               prim(2)=vgasp(2)
+               prim(3)=vgasp(3)
+               prim(4)=vgasp(4)               
+            else
+               stop
+            endif
             guessstype=0
          else
 #if(PRODUCTION==0)
@@ -348,9 +386,17 @@ c         guesstype=1
      &           ,guesstype
 #endif
             prim(1)=mymax(uf,uminfac*rhof)
-            prim(2)=ugasconf(2)
-            prim(3)=ugasconf(3)
-            prim(4)=ugasconf(4)
+            if(WHICHVEL.eq.VEL4) then
+               prim(2)=ugasconf(2)
+               prim(3)=ugasconf(3)
+               prim(4)=ugasconf(4)
+            else if(WHICHVEL.eq.VELREL4) then
+               prim(2)=vgasf(2)
+               prim(3)=vgasf(3)
+               prim(4)=vgasf(4)
+            else
+               stop
+            endif
          endif
 
 
@@ -405,10 +451,7 @@ c     corresponding to the 'i' solution
 c     Calculate u, u^0 and rho
 
          ui=prim(1)
-         do j=2,4
-            ugasconi(j)=prim(j)
-         enddo
-         call solveu0(ugasconi)
+         call solveucon(prim,ugasconi)
          call contocov(ugasconi,ugascovi)
          rhoi=rhou0i/ugasconi(1)
 
@@ -582,8 +625,8 @@ c     prim that's used
       double precision results(NUMRESULTS)
       integer radinvmod
       dimension isc(4),gn(4,4),gv(4,4),hp(4,4),hf(4,4)
-      double precision vgasp(3),vgasf(3),B1(5),B2(5),
-     &     BBp(4),BBf(4),BBc(4),vradp(3),vradf(3),s(5),
+      double precision vgasp(4),vgasf(4),B1(5),B2(5),
+     &     BBp(4),BBf(4),BBc(4),vradp(4),vradf(4),s(5),
      &     ugasconf(4),ugascovf(4),ugasconp(4),ugascovp(4),
      &     uradconf(4),uradcovf(4),uradconp(4),uradcovp(4),
      &     ugasconi(4),ugascovi(4),uradconi(4),uradcovi(4),
@@ -599,6 +642,8 @@ c     prim that's used
       double precision error0(4),errornorm(4),err4,err3
       integer iflag,jflag
       integer fixcons
+      double precision turadconfinal(4)
+      double precision tugasconfinal(4)
 
 #if(PRODUCTION==0)
       write (*,*)
@@ -607,11 +652,7 @@ c     prim that's used
 #endif
 
       ufinal=prim(1)
-
-      do j=2,4
-         ugasconfinal(j)=prim(j)
-      enddo
-      call solveu0(ugasconfinal)
+      call solveucon(prim,ugasconfinal)
       call contocov(ugasconfinal,ugascovfinal)
       rhou0final=rhou0c
       rhofinal=rhou0c/ugasconfinal(1)
@@ -675,30 +716,69 @@ c      Check on final error
       endif
 #endif
 
+      if(WHICHVEL.eq.VELREL4) then
+c     get \tilde{u}^\mu_{\rm rad}
+         call uconrel(uradconfinal,turadconfinal)
+c     get \tilde{u}^\mu_{\rm gas}
+         call uconrel(ugasconfinal,tugasconfinal)
+      endif
+
+
 #if(PRODUCTION<=1)
       if(showboth.eq.0.and.which.eq.2) then
          write (13,"(18X)",advance="no")
       endif
+      if(WHICHVEL.eq.VEL4) then
       write (13,*) 'RAMESH(type) rho, u_g, u^mu Erf urad^mu: '
      &     ,which,rhofinal,
      &     ufinal,
      &     (ugasconfinal(j),j=1,4),
      &     Efinal,
      &     (uradconfinal(j),j=1,4)
+      else if(WHICHVEL.eq.VELREL4) then
+      write (13,*) 'RAMESH(type) rho, u_g, tu^mu Erf turad^mu: '
+     &     ,which,rhofinal,
+     &     ufinal,
+     &     (tugasconfinal(j),j=1,4),
+     &     Efinal,
+     &     (turadconfinal(j),j=1,4)
+      else
+         stop
+      endif
+
+
 #endif
 
 c     HARM order
       results(1) = rhofinal
       results(2) = ufinal
-      results(3) = ugasconfinal(1)
-      results(4) = ugasconfinal(2)
-      results(5) = ugasconfinal(3)
-      results(6) = ugasconfinal(4)
+      if(WHICHVEL.eq.VEL4) then
+         results(3) = ugasconfinal(1)
+         results(4) = ugasconfinal(2)
+         results(5) = ugasconfinal(3)
+         results(6) = ugasconfinal(4)
+      else if(WHICHVEL.eq.VELREL4) then
+         results(3) = tugasconfinal(1)
+         results(4) = tugasconfinal(2)
+         results(5) = tugasconfinal(3)
+         results(6) = tugasconfinal(4)
+      else
+         stop
+      endif
       results(7) = Efinal
-      results(8) = uradconfinal(1)
-      results(9) = uradconfinal(2)
-      results(10) = uradconfinal(3)
-      results(11) = uradconfinal(4)
+      if(WHICHVEL.eq.VEL4) then
+         results(8) = uradconfinal(1)
+         results(9) = uradconfinal(2)
+         results(10) = uradconfinal(3)
+         results(11) = uradconfinal(4)
+      else if(WHICHVEL.eq.VELREL4) then
+         results(3) = turadconfinal(1)
+         results(4) = turadconfinal(2)
+         results(5) = turadconfinal(3)
+         results(6) = turadconfinal(4)
+      else
+         stop
+      endif         
       results(15) = DBLE(radinvmod)
 
 c     DEBUG TEST
@@ -729,8 +809,8 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccc
 c     Read in data in Jon's old format (134 numbers)
 
       implicit double precision (a-h,o-z)
-      dimension isc(4),gn(4,4),gv(4,4),vgasp(3),vgasf(3),
-     &     BBp(4),BBf(4),vradp(3),vradf(3),s(5),
+      dimension isc(4),gn(4,4),gv(4,4),vgasp(4),vgasf(4),
+     &     BBp(4),BBf(4),vradp(4),vradf(4),s(5),
      &     ugasconf(4),ugascovf(4),ugasconp(4),ugascovp(4),
      &     uradconf(4),uradcovf(4),uradconp(4),uradcovp(4)
 
@@ -742,16 +822,16 @@ c     Read in data in Jon's old format (134 numbers)
      &        ((gv(j,k),k=1,4),j=1,4),
      &        rhof,rhop,rhou0i,rhou0f,rhou0p,
      &        uf,up,T00i,T00f,T00p,
-     &        vgasf(1),vgasp(1),T01i,T01f,T01p,
-     &        vgasf(2),vgasp(2),T02i,T02f,T02p,
-     &        vgasf(3),vgasp(3),T03i,T03f,T03p,
+     &        vgasf(2),vgasp(2),T01i,T01f,T01p,
+     &        vgasf(3),vgasp(3),T02i,T02f,T02p,
+     &        vgasf(4),vgasp(4),T03i,T03f,T03p,
      &        BBf(2),BBp(2),scr,scr,scr,
      &        BBf(3),BBp(3),scr,scr,scr,
      &        BBf(4),BBp(4),scr,scr,scr,
      &        Ef,Ep,R00i,R00f,R00p,
-     &        vradf(1),vradp(1),R01i,R01f,R01p,
-     &        vradf(2),vradp(2),R02i,R02f,R02p,
-     &        vradf(3),vradp(3),R03i,R03f,R03p,
+     &        vradf(2),vradp(2),R01i,R01f,R01p,
+     &        vradf(3),vradp(3),R02i,R02f,R02p,
+     &        vradf(4),vradp(4),R03i,R03f,R03p,
      &        (s(j),j=1,2),si,sf,sp,
      &        (uradconf(j),uradcovf(j),j=1,4),
      &        (ugasconf(j),ugascovf(j),j=1,4),
@@ -765,16 +845,16 @@ c     &        ((gn(j,k),k=1,4),j=1,4),
 c     &        ((gv(j,k),k=1,4),j=1,4),
 c     &        rhof,rhop,rhou0i,rhou0f,rhou0p,
 c     &        uf,up,T00i,T00f,T00p,
-c     &        vgasf(1),vgasp(1),T01i,T01f,T01p,
-c     &        vgasf(2),vgasp(2),T02i,T02f,T02p,
-c     &        vgasf(3),vgasp(3),T03i,T03f,T03p,
+c     &        vgasf(2),vgasp(2),T01i,T01f,T01p,
+c     &        vgasf(3),vgasp(3),T02i,T02f,T02p,
+c     &        vgasf(4),vgasp(4),T03i,T03f,T03p,
 c     &        BBf(2),BBp(2),scr,scr,scr,
 c     &        BBf(3),BBp(3),scr,scr,scr,
 c     &        BBf(4),BBp(4),scr,scr,scr,
 c     &        Ef,Ep,R00i,R00f,R00p,
-c     &        vradf(1),vradp(1),R01i,R01f,R01p,
-c     &        vradf(2),vradp(2),R02i,R02f,R02p,
-c     &        vradf(3),vradp(3),R03i,R03f,R03p,
+c     &        vradf(2),vradp(2),R01i,R01f,R01p,
+c     &        vradf(3),vradp(3),R02i,R02f,R02p,
+c     &        vradf(4),vradp(4),R03i,R03f,R03p,
 c     &        (s(j),j=1,2),si,sf,sp,
 c     &        (uradconf(j),uradcovf(j),j=1,4),
 c     &        (ugasconf(j),ugascovf(j),j=1,4),
@@ -804,8 +884,8 @@ c         write (*,*) ' rho: ',rhof,rhop,rhou0i,rhou0f,rhou0p
 c     Read in data in Jon's new format (181 numbers)
 
       implicit double precision (a-h,o-z)
-      dimension isc(4),gn(4,4),gv(4,4),vgasp(3),vgasf(3),
-     &     BBp(4),BBf(4),vradp(3),vradf(3),s(5),
+      dimension isc(4),gn(4,4),gv(4,4),vgasp(4),vgasf(4),
+     &     BBp(4),BBf(4),vradp(4),vradf(4),s(5),
      &     ugasconf(4),ugascovf(4),ugasconp(4),ugascovp(4),
      &     uradconf(4),uradcovf(4),uradconp(4),uradcovp(4),
      &     ugasconb(4),ugascovb(4),uradconb(4),uradcovb(4)
@@ -820,16 +900,16 @@ c     Read in data in Jon's new format (181 numbers)
      &        ((gv(j,k),k=1,4),j=1,4),
      &        rhof,scr,rhob,rhop,rhou0i,rhou0f,rhou0p,
      &        uf,scr,ub,up,T00i,T00f,T00p,
-     &        vgasf(1),scr,scr,vgasp(1),T01i,T01f,T01p,
-     &        vgasf(2),scr,scr,vgasp(2),T02i,T02f,T02p,
-     &        vgasf(3),scr,scr,vgasp(3),T03i,T03f,T03p,
+     &        vgasf(2),scr,scr,vgasp(2),T01i,T01f,T01p,
+     &        vgasf(3),scr,scr,vgasp(3),T02i,T02f,T02p,
+     &        vgasf(4),scr,scr,vgasp(4),T03i,T03f,T03p,
      &        BBf(2),scr,scr,BBp(2),scr,scr,scr,
      &        BBf(3),scr,scr,BBp(3),scr,scr,scr,
      &        BBf(4),scr,scr,BBp(4),scr,scr,scr,
      &        Ef,scr,Eb,Ep,R00i,R00f,R00p,
-     &        vradf(1),scr,scr,vradp(1),R01i,R01f,R01p,
-     &        vradf(2),scr,scr,vradp(2),R02i,R02f,R02p,
-     &        vradf(3),scr,scr,vradp(3),R03i,R03f,R03p,
+     &        vradf(2),scr,scr,vradp(2),R01i,R01f,R01p,
+     &        vradf(3),scr,scr,vradp(3),R02i,R02f,R02p,
+     &        vradf(4),scr,scr,vradp(4),R03i,R03f,R03p,
      &        s(1),scr,scr,s(2),si,sf,sp,
      &        (uradconf(j),uradcovf(j),j=1,4),
      &        (ugasconf(j),ugascovf(j),j=1,4),
@@ -861,12 +941,23 @@ c     Read in data in Jon's new format (181 numbers)
          endif
         
 #if(PRODUCTION<=1)
+      if(WHICHVEL.eq.VEL4) then
          write (13,*) 'HARMJM(type) rho, u_g, u^mu Erf urad^mu: '
      &        ,eomtype
      &        ,rhof,uf,
      &        (ugasconf(j),j=1,4),
      &        Ef,
      &        (uradconf(j),j=1,4)
+      else if(WHICHVEL.eq.VELREL4) then
+         write (13,*) 'HARMJM(type) rho, u_g, tu^mu Erf turad^mu: '
+     &        ,eomtype
+     &        ,rhof,uf,
+     &        (vgasf(j),j=1,4),
+     &        Ef,
+     &        (vradf(j),j=1,4)
+      else
+         stop
+      endif
 #endif
 #if(PRODUCTION==0)
 c         write (*,*) ' gn: ',((gn(i,j),j=1,4),i=1,4)
@@ -887,16 +978,16 @@ c     &        ((gn(j,k),k=1,4),j=1,4),
 c     &        ((gv(j,k),k=1,4),j=1,4),
 c     &        rhof,rhop,rhou0i,rhou0f,rhou0p,
 c     &        uf,up,T00i,T00f,T00p,
-c     &        vgasf(1),vgasp(1),T01i,T01f,T01p,
-c     &        vgasf(2),vgasp(2),T02i,T02f,T02p,
-c     &        vgasf(3),vgasp(3),T03i,T03f,T03p,
+c     &        vgasf(2),vgasp(2),T01i,T01f,T01p,
+c     &        vgasf(3),vgasp(3),T02i,T02f,T02p,
+c     &        vgasf(4),vgasp(4),T03i,T03f,T03p,
 c     &        BBf(2),BBp(2),scr,scr,scr,
 c     &        BBf(3),BBp(3),scr,scr,scr,
 c     &        BBf(4),BBp(4),scr,scr,scr,
 c     &        Ef,Ep,R00i,R00f,R00p,
-c     &        vradf(1),vradp(1),R01i,R01f,R01p,
-c     &        vradf(2),vradp(2),R02i,R02f,R02p,
-c     &        vradf(3),vradp(3),R03i,R03f,R03p,
+c     &        vradf(2),vradp(2),R01i,R01f,R01p,
+c     &        vradf(3),vradp(3),R02i,R02f,R02p,
+c     &        vradf(4),vradp(4),R03i,R03f,R03p,
 c     &        (s(j),j=1,2),si,sf,sp,
 c     &        (uradconf(j),uradcovf(j),j=1,4),
 c     &        (ugasconf(j),ugascovf(j),j=1,4),
@@ -926,8 +1017,8 @@ c     Read in data in Jon's new format (211 numbers)
       integer orgintype
       dimension args(NUMARGS)
       integer eomtype,itermode,iters,totaliters
-      dimension isc(4),gn(4,4),gv(4,4),vgasp(3),vgasf(3),
-     &     BBp(4),BBf(4),vradp(3),vradf(3),s(5),
+      dimension isc(4),gn(4,4),gv(4,4),vgasp(4),vgasf(4),
+     &     BBp(4),BBf(4),vradp(4),vradf(4),s(5),
      &     ugasconf(4),ugascovf(4),ugasconp(4),ugascovp(4),
      &     uradconf(4),uradcovf(4),uradconp(4),uradcovp(4),
      &     ugasconb(4),ugascovb(4),uradconb(4),uradcovb(4)
@@ -944,16 +1035,16 @@ c     read (11,*,end=10) (isc(j),j=1,4),
      &        ((gv(j,k),k=1,4),j=1,4),
      &        rhof,scr,rhob,rhop,src,src,rhou0i,rhou0f,rhou0p,
      &        uf,scr,ub,up,src,src,T00i,T00f,T00p,
-     &        vgasf(1),scr,scr,vgasp(1),src,src,T01i,T01f,T01p,
-     &        vgasf(2),scr,scr,vgasp(2),src,src,T02i,T02f,T02p,
-     &        vgasf(3),scr,scr,vgasp(3),src,src,T03i,T03f,T03p,
+     &        vgasf(2),scr,scr,vgasp(2),src,src,T01i,T01f,T01p,
+     &        vgasf(3),scr,scr,vgasp(3),src,src,T02i,T02f,T02p,
+     &        vgasf(4),scr,scr,vgasp(4),src,src,T03i,T03f,T03p,
      &        BBf(2),scr,scr,BBp(2),src,src,scr,scr,scr,
      &        BBf(3),scr,scr,BBp(3),src,src,scr,scr,scr,
      &        BBf(4),scr,scr,BBp(4),src,src,scr,scr,scr,
      &        Ef,scr,Eb,Ep,src,src,R00i,R00f,R00p,
-     &        vradf(1),scr,scr,vradp(1),src,src,R01i,R01f,R01p,
-     &        vradf(2),scr,scr,vradp(2),src,src,R02i,R02f,R02p,
-     &        vradf(3),scr,scr,vradp(3),src,src,R03i,R03f,R03p,
+     &        vradf(2),scr,scr,vradp(2),src,src,R01i,R01f,R01p,
+     &        vradf(3),scr,scr,vradp(3),src,src,R02i,R02f,R02p,
+     &        vradf(4),scr,scr,vradp(4),src,src,R03i,R03f,R03p,
      &        s(1),scr,scr,s(2),src,src,si,sf,sp,
      &        (uradconf(j),uradcovf(j),j=1,4),
      &        (ugasconf(j),ugascovf(j),j=1,4),
@@ -1028,28 +1119,28 @@ c     then pull from array of doubles from args
          T00i=args(62)
          T00f=args(63)
          T00p=args(64)
-         vgasf(1)=args(65)
+         vgasf(2)=args(65)
          scr=args(66)
          scr=args(67)
-         vgasp(1)=args(68)
+         vgasp(2)=args(68)
          src=args(69)
          src=args(70)
          T01i=args(71)
          T01f=args(72)
          T01p=args(73)
-         vgasf(2)=args(74)
+         vgasf(3)=args(74)
          scr=args(75)
          scr=args(76)
-         vgasp(2)=args(77)
+         vgasp(3)=args(77)
          src=args(78)
          src=args(79)
          T02i=args(80)
          T02f=args(81)
          T02p=args(82)
-         vgasf(3)=args(83)
+         vgasf(4)=args(83)
          scr=args(84)
          scr=args(85)
-         vgasp(3)=args(86)
+         vgasp(4)=args(86)
          src=args(87)
          src=args(88)
          T03i=args(89)
@@ -1091,28 +1182,28 @@ c     then pull from array of doubles from args
          R00i=args(125)
          R00f=args(126)
          R00p=args(127)
-         vradf(1)=args(128)
+         vradf(2)=args(128)
          scr=args(129)
          scr=args(130)
-         vradp(1)=args(131)
+         vradp(2)=args(131)
          src=args(132)
          src=args(133)
          R01i=args(134)
          R01f=args(135)
          R01p=args(136)
-         vradf(2)=args(137)
+         vradf(3)=args(137)
          scr=args(138)
          scr=args(139)
-         vradp(2)=args(140)
+         vradp(3)=args(140)
          src=args(141)
          src=args(142)
          R02i=args(143)
          R02f=args(144)
          R02p=args(145)
-         vradf(3)=args(146)
+         vradf(4)=args(146)
          scr=args(147)
          scr=args(148)
-         vradp(3)=args(149)
+         vradp(4)=args(149)
          src=args(150)
          src=args(151)
          R03i=args(152)
@@ -1213,12 +1304,23 @@ c     If itermode=1 shows up, then check whether PREVBESTHARMERR was ok/good eno
          endif
          
 #if(PRODUCTION<=1)
+      if(WHICHVEL.eq.VEL4) then
          write (13,*) 'HARMJM(type) rho, u_g, u^mu Erf urad^mu: '
      &        ,eomtype
      &        ,rhof,uf,
      &        (ugasconf(j),j=1,4),
      &        Ef,
      &        (uradconf(j),j=1,4)
+      else if(WHICHVEL.eq.VELREL4) then
+         write (13,*) 'HARMJM(type) rho, u_g, tu^mu Erf turad^mu: '
+     &        ,eomtype
+     &        ,rhof,uf,
+     &        (vgasf(j),j=1,4),
+     &        Ef,
+     &        (vradf(j),j=1,4)
+      else
+         stop
+      endif
 #endif
 
 #if(PRODUCTION==0)
@@ -1240,16 +1342,16 @@ c     &        ((gn(j,k),k=1,4),j=1,4),
 c     &        ((gv(j,k),k=1,4),j=1,4),
 c     &        rhof,rhop,rhou0i,rhou0f,rhou0p,
 c     &        uf,up,T00i,T00f,T00p,
-c     &        vgasf(1),vgasp(1),T01i,T01f,T01p,
-c     &        vgasf(2),vgasp(2),T02i,T02f,T02p,
-c     &        vgasf(3),vgasp(3),T03i,T03f,T03p,
+c     &        vgasf(2),vgasp(2),T01i,T01f,T01p,
+c     &        vgasf(3),vgasp(3),T02i,T02f,T02p,
+c     &        vgasf(4),vgasp(4),T03i,T03f,T03p,
 c     &        BBf(2),BBp(2),scr,scr,scr,
 c     &        BBf(3),BBp(3),scr,scr,scr,
 c     &        BBf(4),BBp(4),scr,scr,scr,
 c     &        Ef,Ep,R00i,R00f,R00p,
-c     &        vradf(1),vradp(1),R01i,R01f,R01p,
-c     &        vradf(2),vradp(2),R02i,R02f,R02p,
-c     &        vradf(3),vradp(3),R03i,R03f,R03p,
+c     &        vradf(2),vradp(2),R01i,R01f,R01p,
+c     &        vradf(3),vradp(3),R02i,R02f,R02p,
+c     &        vradf(4),vradp(4),R03i,R03f,R03p,
 c     &        (s(j),j=1,2),si,sf,sp,
 c     &        (uradconf(j),uradcovf(j),j=1,4),
 c     &        (ugasconf(j),ugascovf(j),j=1,4),
@@ -1341,7 +1443,56 @@ c for fortran
       end
 
 
-      subroutine solveu0 (con)
+
+      subroutine solveucon (prim,con)
+
+c     Calculates full u^\mu given the primitives
+
+      implicit double precision (a-h,o-z)
+      dimension con(4), tcon(4), gn(4,4),gv(4,4)
+      dimension prim(4)
+      common/metric/gn,gv
+
+      if(WHICHVEL.eq.VEL4) then
+         do j=2,4
+            con(j)=prim(j)
+         enddo
+         call solveu0old(con)
+      else if(WHICHVEL.eq.VELREL4) then
+         tcon(1)=0.0d0
+         do j=2,4
+            tcon(j)=prim(j)
+         enddo         
+         call solveu0new(tcon,con)
+      else
+         stop
+      endif
+
+      return
+      end
+
+
+      subroutine uconrel (con,tcon)
+
+c     Calculates \tilde{u}^i from full u^\mu
+
+      implicit double precision (a-h,o-z)
+      dimension con(4), tcon(4), gn(4,4),gv(4,4)
+      common/metric/gn,gv
+
+c     \alpha = 1/sqrt(-g^{tt})
+      alphalapse = 1.0/sqrt(abs(-gn(1,1)))
+
+      tcon(1)=0.0d0
+      do j=2,4
+         tcon(j) = con(j) + con(1)* (gn(1,j)*alphalapse*alphalapse)
+      enddo
+
+      return
+      end
+
+
+      subroutine solveu0old (con)
 
 c     Calculates u^0 given the other three components of the 4-velocity,
 c     u^1, u^2, u^3
@@ -1361,6 +1512,42 @@ c     u^1, u^2, u^3
       enddo
          
       con(1)=(-bu0-sqrt(bu0*bu0-4.d0*au0*cu0))/(2.d0*au0)
+
+      return
+      end
+
+
+      subroutine solveu0new (tcon,con)
+
+c     Calculates u^\mu given \tilde{u}^i
+
+      implicit double precision (a-h,o-z)
+      double precision qsq,gamma,alphalapse
+      dimension tcon(4),con(4), gn(4,4),gv(4,4)
+      common/metric/gn,gv
+
+c      q^2 = \tilde{u}^\mu \tilde{u}^\nu g_{\mu\nu} and \tilde{u}^t=0
+      tcon(1)=0.0
+      qsq = 0.0
+      do j=2,4
+         do k=2,4
+            qsq = qsq + gv(j,k)*tcon(j)*tcon(k)
+         enddo
+      enddo
+
+c     \gamma = \sqrt{1+q^2}
+      gamma = sqrt(1.0+qsq)
+c     \alpha = 1/sqrt(-g^{tt})
+      alphalapse = 1.0/sqrt(abs(-gn(1,1)))
+
+c     u^t = \gamma/\alpha
+      con(1) = gamma/alphalapse
+
+c     u^j = \tilde{u}^j - u^t \beta^j
+      do j=2,4
+         con(j) = tcon(j) - con(1)* (gn(1,j)*alphalapse*alphalapse)
+      enddo
+
 
       return
       end
@@ -1547,8 +1734,26 @@ c     Calculate Kronecker delta
       end
 
 
-
       subroutine Rmunuinvert(Rtcov,E,ucon,ucov,ugascon,Rmunu,radinvmod)
+      implicit double precision (a-h,o-z)
+      integer radinvmod
+      dimension Rtcov(4),Rtcon(4),ucon(4),ucov(4),Rmunu(4,4),
+     &     ugascon(4),gn(4,4),gv(4,4)
+      common/accuracy/eps,epsbis,dvmin,tol,uminfac,dlogmax,
+     &     gammaradceiling,itermax
+      common/metric/gn,gv
+
+c      call Rmunuinvert0(Rtcov,E,ucon,ucov,ugascon,Rmunu,radinvmod)
+      call Rmunuinvert1(Rtcov,E,ucon,ucov,ugascon,Rmunu,radinvmod)
+
+
+      return
+      end
+
+
+
+c     Old routine
+      subroutine Rmunuinvert0(Rtcov,E,ucon,ucov,ugascon,Rmunu,radinvmod)
 
 c     Given the row R^t_mu of the radiation tensor, solves for the
 c     radiation frame energy density E and 4-velocity and calculates the
@@ -1707,6 +1912,181 @@ c     Calculate the full tensor R^mu_nu
 
 
 
+c     New routine
+      subroutine Rmunuinvert1(Rtcov,E,ucon,ucov,ugascon,Rmunu,radinvmod)
+
+c     Given the row R^t_mu of the radiation tensor, solves for the              
+c     radiation frame 4-velocity u^mu and energy density E and then             
+c     calculates the full tensor R^mu_nu                                        
+
+      implicit double precision (a-h,o-z)
+      integer radinvmod
+      dimension Rtcov(4),Rtcon(4),ucon(4),ucov(4),Rmunu(4,4),
+     &     ugascon(4),gn(4,4),gv(4,4),etacov(4),etacon(4)
+      common/accuracy/eps,epsbis,dvmin,tol,uminfac,dlogmax,
+     &     gammaradceiling,itermax
+      common/metric/gn,gv
+
+c     default is no ceiling hit on gamma
+      radinvmod=0
+
+      arad=1.18316d17
+
+c     Convert R^0_mu to R^0^mu                                                  
+
+      call covtocon(Rtcov,Rtcon)
+c      write (*,*) ' Rtcov: ',(Rtcov(i),i=1,4)                                  
+c      write (*,*) ' Rtcon: ',(Rtcon(i),i=1,4)                                  
+
+c     Calculate lapse alpha and ZAMO four velocity eta_mu and eta^mu
+
+      alphasq=1.d0/(-gn(1,1))
+      alpha=sqrt(alphasq)
+
+      etacov(1)=-alpha
+      etacov(2)=0.d0
+      etacov(3)=0.d0
+      etacov(4)=0.d0
+
+      call covtocon(etacov,etacon)
+
+      if (Rtcon(1).lt.0.d0) then
+
+c     Check if R^tt is positive. If not, set energy density to a very
+c     small value and set 4-velocity equal to ZAMO velocity.
+
+         ucon(1)=1.d0/alpha
+         ucon(2)=etacon(2)
+         ucon(3)=etacon(3)
+         ucon(4)=etacon(4)
+
+         E=arad*1.d-36
+
+#if(PRODUCTION<=0)
+         write (*,*) ' R^tt<0: ucon, E ',(ucon(i),i=1,4),E
+#endif
+
+      else
+
+c     Compute |R|^2, xisqr=|R|^2*g^tt/(R^tt)^2, and xisqrceiling.  Check
+c     which regime we are in and choose appropriate solution.
+
+      Rsqr=0.d0
+      do i=1,4
+      do j=1,4
+         Rsqr=Rsqr+gv(i,j)*Rtcon(i)*Rtcon(j)
+      enddo
+      enddo
+
+      xisqr=Rsqr*gn(1,1)/Rtcon(1)**2
+      gc=gammaradceiling
+      xisqrc=(8.d0*gc**2+1.d0)/(16.d0*gc**4-8.d0*gc**2+1.d0)
+
+#if(PRODUCTION<=0)
+      write (*,*) ' R00, Rsqr, xisqr, xisqrceiling: ',
+     &     Rtcon(1),Rsqr,xisqr,xisqrc
+#endif
+
+      if (xisqr.ge.1.d0) then
+         radinvmod=1
+
+c     If xisqr>=1, set gammarad=1, solve for E, and obtain remaining
+c     urad^i.
+
+         ucon(1)=1.d0/alpha
+         ucon(2)=etacon(2)
+         ucon(3)=etacon(3)
+         ucon(4)=etacon(4)
+
+         E=3.d0*Rtcon(1)/(4.d0*ucon(1)**2+gn(1,1))
+
+#if(PRODUCTION<=0)
+         write (*,*) ' xisqr>=1: ucon, E ',(ucon(i),i=1,4),E
+#endif
+
+      elseif (xisqr.le.xisqrc) then
+
+c     If xisqr<=xisqrceiling, set gammarad=gammaradceiling and compute
+c     the rest of the solution using our old method
+         radinvmod=1
+
+         ucon(1)=gammaradceiling*sqrt(-gn(1,1))
+
+         aquad=0.d0
+         bquad=0.d0
+         cquad=1.d0+gv(1,1)*ucon(1)*ucon(1)
+         do i=2,4
+            bquad=bquad+1.5d0*gv(1,i)*Rtcon(i)
+            cquad=cquad-0.5d0*gv(1,i)*gn(1,i)
+         do j=2,4
+            aquad=aquad+9.d0*gv(i,j)*Rtcon(i)*Rtcon(j)/
+     &        (16.d0*ucon(1)*ucon(1))
+            bquad=bquad-3.d0*gv(i,j)*(Rtcon(i)*gn(1,j)+
+     &        Rtcon(j)*gn(1,i))/(16.d0*ucon(1)*ucon(1))
+            cquad=cquad+gv(i,j)*gn(1,i)*gn(1,j)/
+     &        (16.d0*ucon(1)*ucon(1))
+         enddo
+         enddo
+
+         disc=bquad*bquad-4.d0*aquad*cquad
+         E=(-bquad-sqrt(disc))/(2.d0*cquad)
+#if(PRODUCTION<=0)
+         write (*,*) ' a, b, c, disc, E: ',aquad,bquad,cquad,disc,E
+#endif
+
+         do i=2,4
+            ucon(i)=(3.d0*Rtcon(i)-E*gn(1,i))/(4.d0*E*ucon(1))
+         enddo
+
+#if(PRODUCTION<=0)
+         write (*,*) ' xisqr<=xisqrceil: ucon, E ',(ucon(i),i=1,4),E
+#endif
+
+      else
+
+c     We have a physically valid situation with xisqr within the
+c     acceptable range. Calculate the solution.
+
+         gammaradsqr=((1.d0+xisqr)+sqrt(1.d0+3.d0*xisqr))/
+     &        (4.d0*xisqr)
+
+         ucon(1)=sqrt(gammaradsqr)/alpha
+         E=3.d0*Rtcon(1)/(4.d0*ucon(1)**2+gn(1,1))
+
+         do i=2,4
+            ucon(i)=(3.d0*Rtcon(i)-E*gn(1,i))/(4.d0*E*ucon(1))
+         enddo
+
+#if(PRODUCTION<=0)
+         write (*,*) ' physical solution: ucon, E ',(ucon(i),i=1,4),E
+#endif
+
+      endif
+
+      endif
+
+#if(PRODUCTION<=0)
+c     Check if the 4-velocity is properly normalized                            
+      sum=0.d0
+      do i=1,4
+      do j=1,4
+         sum=sum+gv(i,j)*ucon(i)*ucon(j)
+      enddo
+      enddo
+
+      write (*,*) ' check norm: ',sum
+#endif
+
+c     Calculate the full tensor R^mu_nu                                         
+      call contocov(ucon,ucov)
+      call calcRmunu(E,ucon,ucov,Rmunu)
+
+      return
+      end
+
+
+
+
       subroutine MHDinvert(prim,iflag,jflag,ientropy,itertot,guesstype)
 
 c     Given initial primitives prim(4), solves for primitives that
@@ -1801,11 +2181,7 @@ c     Check if entropy looks okay. If not, re-solve using the entropy
 c     equation.
 
          pressure=Gam1*prim(1)
-
-         do j=2,4
-            ucon(j)=prim(j)
-         enddo
-         call solveu0(ucon)
+         call solveucon(prim,ucon)
          rhoi=rhou0c/ucon(1)
 
          entr=log(pressure**en/
@@ -1985,10 +2361,8 @@ c     default is failed
      &        iter
          write (*,*) ' primitives: ',(prim(j),j=1,4)
 #endif
-         do j=2,4
-            ugascon(j)=prim(j)
-         enddo
-         call solveu0(ugascon)
+         call solveucon(prim,ugascon)
+
          if (erreng.lt.FAILLIMIT
      &        .and.prim(1).gt.0.0
      &        .and.jflag.eq.0
@@ -2109,10 +2483,7 @@ c      default is ent failed
       write (12,*) ' Radiation inversion, entropy equation ',
      &        iter
 #endif
-      do j=2,4
-         ugascon(j)=prim(j)
-      enddo
-      call solveu0(ugascon)
+      call solveucon(prim,ugascon)
       if ((erreng.lt.FAILLIMIT.or.errent.lt.FAILLIMIT)
      &     .and.prim(1).gt.0.0
      &     .and.jflag.eq.0
@@ -2940,12 +3311,7 @@ c     without radiation source term using the energy equation
 c     Save u, compute rho, ucon, ucov, bcon, bcov, Tmunu
 
       u=prim(1)
-
-      do i=2,4
-         ucon(i)=prim(i)
-      enddo
-
-      call solveu0(ucon)
+      call solveucon(prim,ucon)
       call contocov(ucon,ucov)
 
       rho=rhou0/ucon(1) 
@@ -3027,12 +3393,7 @@ c     without radiation source term using the entropy equation
 c     Save u, compute rho, ucon, ucov, bcon, bcov, Tmunu
 
       u=prim(1)
-
-      do i=2,4
-         ucon(i)=prim(i)
-      enddo
-
-      call solveu0(ucon)
+      call solveucon(prim,ucon)
       call contocov(ucon,ucov)
 
       rho=rhou0/ucon(1) 
@@ -3162,14 +3523,8 @@ c     Save u and solve for lab frame conserved quantities corresponding
 c     to the given primitives: rho, ucon, ucov
 
       u=prim(1)
-
-      do i=2,4
-         ucon(i)=prim(i)
-      enddo
-
 c     Calculate u^0 and rho
-
-      call solveu0(ucon)
+      call solveucon(prim,ucon)
       call contocov(ucon,ucov)
 
       rho=rhou0/ucon(1) 
@@ -3369,13 +3724,8 @@ c     to the given primitives: rho, ucon, ucov
 #endif
       endif
 
-      do i=2,4
-         ucon(i)=prim(i)
-      enddo
-
 c     Calculate u^0 and rho
-
-      call solveu0(ucon)
+      call solveucon(prim,ucon)
       call contocov(ucon,ucov)
 
       rho=rhou0/ucon(1) 
@@ -3572,6 +3922,7 @@ c     Matrix inversion subroutine 2 from Numerical Recipes
       double precision mymax,myabs,mydiv
       integer myisnan
       d=1.d0
+      imax=-100
       do 12 i=1,n
         aamax=0.d0
         do 11 j=1,n
@@ -3607,7 +3958,7 @@ c     Matrix inversion subroutine 2 from Numerical Recipes
             aamax=dum
           endif
 16      continue
-        if (imax.gt.n) then
+        if (imax.gt.n.or.imax.lt.1.or.imax.eq.-100) then
 #if(PRODUCTION==0)
            write (*,*) 'Bad imax in ludcmp: ',imax
 #endif
