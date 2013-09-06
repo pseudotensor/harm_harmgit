@@ -54,9 +54,10 @@ c#define WHICHVEL VEL4
 c error below which will consider BAD solution and not even compute final solution
 c#define FAILLIMIT (1E-6)
 c Choose actual harm choice even if pretty strict.
-#define FAILLIMIT (1E-8)
+c#define FAILLIMIT (1E-8)
+#define FAILLIMIT (tolallow)
 
-#define NUMARGS 211
+#define NUMARGS (211+11)
 c 11 vars, failcode, error, iterations
 #define NUMRESULTS 15
 
@@ -120,7 +121,10 @@ c     internals
       common/accuracy/eps,epsbis,dvmin,tol,uminfac,dlogmax,
      &     gammaradceiling,itermax
       common/conserved/Gam,Gam1,en,en1,rhou0c,sc,Ttcovc,Rtcovc,
-     &     BBc,dt
+     &     BBc,dt,
+     &     FNUMARGSHARM,FNUMRESULTSHARM,WHICHVELRAMESHHARM,
+     &     GAMMAMAXRAD,ERADLIMIT,toltry,tolallow,
+     &     ARAD_CODE,OKAPPA_ES_CODE11,OKAPPA_FF_CODE11,OKAPPA_BF_CODE11
       external funcMHD1,funcMHD2,funcrad1,funcrad2
       character filehead*30,fileext*4,infile*60
       character conhead*3,confile*60
@@ -131,26 +135,6 @@ c     internals
       integer which,showboth
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
-c     Initialize constants and read in data from Jon's datafile
-
-c     eps is fractional shift in primitives for numerical derivatives
-c     epsbib is fractional accuracy desired in bisection
-c     dvmin: if abs(uconmu)<1d-4 then shift used is dvmin*eps
-c     tol: all fractional errors must be below tol for convergence
-c     uminfac: minimum u_g allowed is uminfrac*rho
-c     dlogmax: minimum log() in entropy is log() conserved - dlogmin
-c     itermax is maximum no. of iterations with u_g, entropy below minimum
-
-      eps=1.d-6
-      epsbis=1.d-3
-      dvmin=1.d-4
-c      tol=1.d-10
-c     harm-like error
-      tol=1.d-12
-      uminfac=1.d-10
-      dlogmax=log(2.d0)
-      itermax=3
-      gammaradceiling=50.d0
 
 
 ccccccccccccccccccccccccccccccccccccccccccccccccccc
@@ -164,7 +148,7 @@ c     origintype=1 means read from function args as if called by C code using la
 ccccccccccccccccccccccccccccccccccccccccccccccccccc
 c     idatatype=1 means Jon's old data format with 134 numbers
 c     idatatype=2 means Jon's new data format with 181 numbers
-c     idatatype=3 means Jon's new data format with 211 numbers
+c     idatatype=3 means Jon's new data format with 211+11 numbers
 
 c      write (*,*) ' which type data file? old(1) new(2) '
 c      read (*,*) idatatype
@@ -180,6 +164,7 @@ c     iMHD=1 means do initial MHD inversion before radiation
 
 
 
+c     Read in data from Jon's datafile
 
 
 #if(PRODUCTION<=2)
@@ -266,37 +251,83 @@ c     proceed directly to the entropy equation
          
          if (idatatype.eq.1) then
 
-         call readtype1(dt,gn,gv,rhof,rhop,rhou0i,rhou0f,rhou0p,
+         call readtype1(gn,gv,rhof,rhop,rhou0i,rhou0f,rhou0p,
      &        uf,up,T00i,T00f,T00p,vgasf,vgasp,T01i,T01f,T01p,
      &        T02i,T02f,T02p,T03i,T03f,T03p,BBf,BBp,
      &        Ef,Ep,R00i,R00f,R00p,vradf,vradp,R01i,R01f,R01p,
      &        R02i,R02f,R02p,R03i,R03f,R03p,s,si,sf,sp,
      &        uradconf,uradcovf,ugasconf,ugascovf,
      &        uradconp,uradcovp,ugasconp,ugascovp,ifinish,errorabs)
+         FNUMARGSHARM=NUMARGS
+         FNUMRESULTSHARM=NUMRESULTS
+         WHICHVELRAMESHHARM=WHICHVEL
          Gam=4.d0/3.d0
+         GAMMAMAXRAD=50.0d0
+         ERADLIMIT=10.0D0*1d-300
+         toltry=1d-12
+         tolallow=1d-8
+         ARAD_CODE=1.18316d17
+         OKAPPA_ES_CODE11=5.90799d5
+         OKAPPA_FF_CODE11=3.46764d-17
+         OKAPPA_BF_CODE11=6.93528d-15
 
          else if (idatatype.eq.2) then
 
-         call readtype2(dt,gn,gv,rhof,rhop,rhou0i,rhou0f,rhou0p,
+         call readtype2(gn,gv,rhof,rhop,rhou0i,rhou0f,rhou0p,
      &        uf,up,T00i,T00f,T00p,vgasf,vgasp,T01i,T01f,T01p,
      &        T02i,T02f,T02p,T03i,T03f,T03p,BBf,BBp,
      &        Ef,Ep,R00i,R00f,R00p,vradf,vradp,R01i,R01f,R01p,
      &        R02i,R02f,R02p,R03i,R03f,R03p,s,si,sf,sp,
      &        uradconf,uradcovf,ugasconf,ugascovf,
-     &        uradconp,uradcovp,ugasconp,ugascovp,Gam,ifinish,errorabs)
+     &        uradconp,uradcovp,ugasconp,ugascovp,ifinish,errorabs)
+
+         FNUMARGSHARM=NUMARGS
+         FNUMRESULTSHARM=NUMRESULTS
+         WHICHVELRAMESHHARM=WHICHVEL
+c         Gam=4.d0/3.d0
+         GAMMAMAXRAD=50.0d0
+         ERADLIMIT=10.0D0*1D-300
+         toltry=1d-12
+         tolallow=1d-8
+         ARAD_CODE=1.18316d17
+         OKAPPA_ES_CODE11=5.90799d5
+         OKAPPA_FF_CODE11=3.46764d-17
+         OKAPPA_BF_CODE11=6.93528d-15
 
          else if (idatatype.eq.3) then
 
          call readtype3(origintype,args,
-     &        dt,gn,gv,rhof,rhop,rhou0i,rhou0f,rhou0p,
+     &        gn,gv,rhof,rhop,rhou0i,rhou0f,rhou0p,
      &        uf,up,T00i,T00f,T00p,vgasf,vgasp,T01i,T01f,T01p,
      &        T02i,T02f,T02p,T03i,T03f,T03p,BBf,BBp,
      &        Ef,Ep,R00i,R00f,R00p,vradf,vradp,R01i,R01f,R01p,
      &        R02i,R02f,R02p,R03i,R03f,R03p,s,si,sf,sp,
      &        uradconf,uradcovf,ugasconf,ugascovf,
-     &        uradconp,uradcovp,ugasconp,ugascovp,Gam,ifinish,errorabs)
+     &        uradconp,uradcovp,ugasconp,ugascovp,ifinish,errorabs)
 
          endif
+
+c     Initialize constants and read in data from Jon's datafile
+
+c     eps is fractional shift in primitives for numerical derivatives
+c     epsbib is fractional accuracy desired in bisection
+c     dvmin: if abs(uconmu)<1d-4 then shift used is dvmin*eps
+c     tol: all fractional errors must be below tol for convergence
+c     uminfac: minimum u_g allowed is uminfrac*rho
+c     dlogmax: minimum log() in entropy is log() conserved - dlogmin
+c     itermax is maximum no. of iterations with u_g, entropy below minimum
+
+         eps=1.d-6
+         epsbis=1.d-3
+         dvmin=1.d-4
+c     tol=1.d-10
+c     harm-like error
+         tol=toltry
+         uminfac=1.d-10
+         dlogmax=log(2.d0)
+         itermax=3
+         gammaradceiling=GAMMAMAXRAD
+
 
 c     Gam=adiabatic index Gamma, Gam1=Gamma-1
 c     en=polytropic index = 1/Gamma, en1 = n+1
@@ -801,7 +832,7 @@ c     &     ,results(11)
 cccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
 
-      subroutine readtype1(dt,gn,gv,rhof,rhop,rhou0i,rhou0f,rhou0p,
+      subroutine readtype1(gn,gv,rhof,rhop,rhou0i,rhou0f,rhou0p,
      &        uf,up,T00i,T00f,T00p,vgasf,vgasp,T01i,T01f,T01p,
      &        T02i,T02f,T02p,T03i,T03f,T03p,BBf,BBp,
      &        Ef,Ep,R00i,R00f,R00p,vradf,vradp,R01i,R01f,R01p,
@@ -867,6 +898,7 @@ c         write (*,*) ' rho: ',rhof,rhop,rhou0i,rhou0f,rhou0p
 #endif
          errorabs=1.0
          errorabsbestexternal=1.0
+         tolallow=1E-8
          return
 
  10   ifinish=1
@@ -876,13 +908,13 @@ c         write (*,*) ' rho: ',rhof,rhop,rhou0i,rhou0f,rhou0p
 
 
 
-      subroutine readtype2(dt,gn,gv,rhof,rhop,rhou0i,rhou0f,rhou0p,
+      subroutine readtype2(gn,gv,rhof,rhop,rhou0i,rhou0f,rhou0p,
      &        uf,up,T00i,T00f,T00p,vgasf,vgasp,T01i,T01f,T01p,
      &        T02i,T02f,T02p,T03i,T03f,T03p,BBf,BBp,
      &        Ef,Ep,R00i,R00f,R00p,vradf,vradp,R01i,R01f,R01p,
      &        R02i,R02f,R02p,R03i,R03f,R03p,s,si,sf,sp,
      &        uradconf,uradcovf,ugasconf,ugascovf,
-     &        uradconp,uradcovp,ugasconp,ugascovp,Gam,ifinish,errorabs)
+     &        uradconp,uradcovp,ugasconp,ugascovp,ifinish,errorabs)
 
 c     Read in data in Jon's new format (181 numbers)
 
@@ -892,6 +924,12 @@ c     Read in data in Jon's new format (181 numbers)
      &     ugasconf(4),ugascovf(4),ugasconp(4),ugascovp(4),
      &     uradconf(4),uradcovf(4),uradconp(4),uradcovp(4),
      &     ugasconb(4),ugascovb(4),uradconb(4),uradcovb(4)
+      dimension Ttcovc(4),Rtcovc(4),BBc(4)
+      common/conserved/Gam,Gam1,en,en1,rhou0c,sc,Ttcovc,Rtcovc,
+     &     BBc,dt,
+     &     FNUMARGSHARM,FNUMRESULTSHARM,WHICHVELRAMESHHARM,
+     &     GAMMAMAXRAD,ERADLIMIT,toltry,tolallow,
+     &     ARAD_CODE,OKAPPA_ES_CODE11,OKAPPA_FF_CODE11,OKAPPA_BF_CODE11
       integer eomtype
 
       ifinish=0
@@ -922,6 +960,7 @@ c     Read in data in Jon's new format (181 numbers)
      &        (ugasconp(j),ugascovp(j),j=1,4)
 #endif
          eomtype=0
+         tolallow=1E-8
 
 #if(PRODUCTION<=2)
          write (14,"(2X,1I5,2X,1E21.15,2X,1I8)",advance="no")
@@ -1006,15 +1045,15 @@ c     &        (ugasconp(j),ugascovp(j),j=1,4)
 
 
       subroutine readtype3(origintype,args,
-     &        dt,gn,gv,rhof,rhop,rhou0i,rhou0f,rhou0p,
+     &        gn,gv,rhof,rhop,rhou0i,rhou0f,rhou0p,
      &        uf,up,T00i,T00f,T00p,vgasf,vgasp,T01i,T01f,T01p,
      &        T02i,T02f,T02p,T03i,T03f,T03p,BBf,BBp,
      &        Ef,Ep,R00i,R00f,R00p,vradf,vradp,R01i,R01f,R01p,
      &        R02i,R02f,R02p,R03i,R03f,R03p,s,si,sf,sp,
      &        uradconf,uradcovf,ugasconf,ugascovf,
-     &        uradconp,uradcovp,ugasconp,ugascovp,Gam,ifinish,errorabs)
+     &        uradconp,uradcovp,ugasconp,ugascovp,ifinish,errorabs)
 
-c     Read in data in Jon's new format (211 numbers)
+c     Read in data in Jon's new format (211+11 numbers)
 
       implicit double precision (a-h,o-z)
       integer orgintype
@@ -1025,15 +1064,27 @@ c     Read in data in Jon's new format (211 numbers)
      &     ugasconf(4),ugascovf(4),ugasconp(4),ugascovp(4),
      &     uradconf(4),uradcovf(4),uradconp(4),uradcovp(4),
      &     ugasconb(4),ugascovb(4),uradconb(4),uradcovb(4)
+      dimension Ttcovc(4),Rtcovc(4),BBc(4)
+      common/conserved/Gam,Gam1,en,en1,rhou0c,sc,Ttcovc,Rtcovc,
+     &     BBc,dt,
+     &     FNUMARGSHARM,FNUMRESULTSHARM,WHICHVELRAMESHHARM,
+     &     GAMMAMAXRAD,ERADLIMIT,toltry,tolallow,
+     &     ARAD_CODE,OKAPPA_ES_CODE11,OKAPPA_FF_CODE11,OKAPPA_BF_CODE11
+      integer na
 
       ifinish=0
 
 #if(PRODUCTION<=2)
 c     read (11,*,end=10) (isc(j),j=1,4),
-         read (11,*,end=10) failtype,myid,failnum,gotfirstnofail,
+         read (11,*,end=10) ,
+         FNUMARGSHARM,FNUMRESULTSHARM,WHICHVELRAMESHHARM,
+     &        failtype,myid,failnum,gotfirstnofail,
      &        eomtype,itermode,
      &        errorabs,errorabsbestexternal,iters,totaliters,
      &        dt,nstep,steppart,Gam,
+     &        GAMMAMAXRAD,ERADLIMIT,toltry,tolallow,
+     &        ARAD_CODE,
+     &        OKAPPA_ES_CODE11,OKAPPA_FF_CODE11,OKAPPA_BF_CODE11
      &        ((gn(j,k),k=1,4),j=1,4),
      &        ((gv(j,k),k=1,4),j=1,4),
      &        rhof,scr,rhob,rhop,src,src,rhou0i,rhou0f,rhou0p,
@@ -1058,223 +1109,466 @@ c     read (11,*,end=10) (isc(j),j=1,4),
 #endif
 #if(PRODUCTION==3)
 c     then pull from array of doubles from args
-         failtype=args(1)
-         myid=args(2)
-         failnum=args(3)
-         gotfirstnofail=args(4)
-         eomtype=args(5)
-         itermode=args(6)
-         errorabs=args(7)
-         errorabsbestexternal=args(8)
-         iters=args(9)
-         totaliters=args(10)
-         dt=args(11)
-         nstep=args(12)
-         steppart=args(13)
-         Gam=args(14)
-         gn(1,1)=args(15)
-         gn(1,2)=args(16)
-         gn(1,3)=args(17)
-         gn(1,4)=args(18)
-         gn(2,1)=args(19)
-         gn(2,2)=args(20)
-         gn(2,3)=args(21)
-         gn(2,4)=args(22)
-         gn(3,1)=args(23)
-         gn(3,2)=args(24)
-         gn(3,3)=args(25)
-         gn(3,4)=args(26)
-         gn(4,1)=args(27)
-         gn(4,2)=args(28)
-         gn(4,3)=args(29)
-         gn(4,4)=args(30)
-         gv(1,1)=args(31)
-         gv(1,2)=args(32)
-         gv(1,3)=args(33)
-         gv(1,4)=args(34)
-         gv(2,1)=args(35)
-         gv(2,2)=args(36)
-         gv(2,3)=args(37)
-         gv(2,4)=args(38)
-         gv(3,1)=args(39)
-         gv(3,2)=args(40)
-         gv(3,3)=args(41)
-         gv(3,4)=args(42)
-         gv(4,1)=args(43)
-         gv(4,2)=args(44)
-         gv(4,3)=args(45)
-         gv(4,4)=args(46)
-         rhof=args(47)
-         scr=args(48)
-         rhob=args(49)
-         rhop=args(50)
-         src=args(51)
-         src=args(52)
-         rhou0i=args(53)
-         rhou0f=args(54)
-         rhou0p=args(55)
-         uf=args(56)
-         scr=args(57)
-         ub=args(58)
-         up=args(59)
-         src=args(60)
-         src=args(61)
-         T00i=args(62)
-         T00f=args(63)
-         T00p=args(64)
-         vgasf(2)=args(65)
-         scr=args(66)
-         scr=args(67)
-         vgasp(2)=args(68)
-         src=args(69)
-         src=args(70)
-         T01i=args(71)
-         T01f=args(72)
-         T01p=args(73)
-         vgasf(3)=args(74)
-         scr=args(75)
-         scr=args(76)
-         vgasp(3)=args(77)
-         src=args(78)
-         src=args(79)
-         T02i=args(80)
-         T02f=args(81)
-         T02p=args(82)
-         vgasf(4)=args(83)
-         scr=args(84)
-         scr=args(85)
-         vgasp(4)=args(86)
-         src=args(87)
-         src=args(88)
-         T03i=args(89)
-         T03f=args(90)
-         T03p=args(91)
-         BBf(2)=args(92)
-         scr=args(93)
-         scr=args(94)
-         BBp(2)=args(95)
-         src=args(96)
-         src=args(97)
-         scr=args(98)
-         scr=args(99)
-         scr=args(100)
-         BBf(3)=args(101)
-         scr=args(102)
-         scr=args(103)
-         BBp(3)=args(104)
-         src=args(105)
-         src=args(106)
-         scr=args(107)
-         scr=args(108)
-         scr=args(109)
-         BBf(4)=args(110)
-         scr=args(111)
-         scr=args(112)
-         BBp(4)=args(113)
-         src=args(114)
-         src=args(115)
-         scr=args(116)
-         scr=args(117)
-         scr=args(118)
-         Ef=args(119)
-         scr=args(120)
-         Eb=args(121)
-         Ep=args(122)
-         src=args(123)
-         src=args(124)
-         R00i=args(125)
-         R00f=args(126)
-         R00p=args(127)
-         vradf(2)=args(128)
-         scr=args(129)
-         scr=args(130)
-         vradp(2)=args(131)
-         src=args(132)
-         src=args(133)
-         R01i=args(134)
-         R01f=args(135)
-         R01p=args(136)
-         vradf(3)=args(137)
-         scr=args(138)
-         scr=args(139)
-         vradp(3)=args(140)
-         src=args(141)
-         src=args(142)
-         R02i=args(143)
-         R02f=args(144)
-         R02p=args(145)
-         vradf(4)=args(146)
-         scr=args(147)
-         scr=args(148)
-         vradp(4)=args(149)
-         src=args(150)
-         src=args(151)
-         R03i=args(152)
-         R03f=args(153)
-         R03p=args(154)
-         s(1)=args(155)
-         scr=args(156)
-         scr=args(157)
-         s(2)=args(158)
-         src=args(159)
-         src=args(160)
-         si=args(161)
-         sf=args(162)
-         sp=args(163)
+         na=0
+c
+         na=na+1
+         FNUMARGSHARM=args(na)
+         na=na+1
+         FNUMRESULTSHARM=args(na)
+         na=na+1
+         WHICHVELRAMESHHARM=args(na)
+         na=na+1
+c
+         failtype=args(na)
+         na=na+1
+         myid=args(na)
+         na=na+1
+         failnum=args(na)
+         na=na+1
+         gotfirstnofail=args(na)
+         na=na+1
+         eomtype=args(na)
+         na=na+1
+         itermode=args(na)
+         na=na+1
+         errorabs=args(na)
+         na=na+1
+         errorabsbestexternal=args(na)
+         na=na+1
+         iters=args(na)
+         na=na+1
+         totaliters=args(na)
+         na=na+1
+         dt=args(na)
+         na=na+1
+         nstep=args(na)
+         na=na+1
+         steppart=args(na)
+         na=na+1
+         Gam=args(na)
+         na=na+1
+c
+         GAMMAMAXRAD=args(na)
+         na=na+1
+         ERADLIMIT=args(na)
+         na=na+1
+         toltry=args(na)
+         na=na+1
+         tolallow=args(na)
+         na=na+1
+         ARAD_CODE=args(na)
+         na=na+1
+         OKAPPA_ES_CODE11=args(na)
+         na=na+1
+         OKAPPA_FF_CODE11=args(na)
+         na=na+1
+         OKAPPA_BF_CODE11=args(na)
+c
+         na=na+1
+         gn(1,1)=args(na)
+         na=na+1
+         gn(1,2)=args(na)
+         na=na+1
+         gn(1,3)=args(na)
+         na=na+1
+         gn(1,4)=args(na)
+         na=na+1
+         gn(2,1)=args(na)
+         na=na+1
+         gn(2,2)=args(na)
+         na=na+1
+         gn(2,3)=args(na)
+         na=na+1
+         gn(2,4)=args(na)
+         na=na+1
+         gn(3,1)=args(na)
+         na=na+1
+         gn(3,2)=args(na)
+         na=na+1
+         gn(3,3)=args(na)
+         na=na+1
+         gn(3,4)=args(na)
+         na=na+1
+         gn(4,1)=args(na)
+         na=na+1
+         gn(4,2)=args(na)
+         na=na+1
+         gn(4,3)=args(na)
+         na=na+1
+         gn(4,4)=args(na)
+         na=na+1
+         gv(1,1)=args(na)
+         na=na+1
+         gv(1,2)=args(na)
+         na=na+1
+         gv(1,3)=args(na)
+         na=na+1
+         gv(1,4)=args(na)
+         na=na+1
+         gv(2,1)=args(na)
+         na=na+1
+         gv(2,2)=args(na)
+         na=na+1
+         gv(2,3)=args(na)
+         na=na+1
+         gv(2,4)=args(na)
+         na=na+1
+         gv(3,1)=args(na)
+         na=na+1
+         gv(3,2)=args(na)
+         na=na+1
+         gv(3,3)=args(na)
+         na=na+1
+         gv(3,4)=args(na)
+         na=na+1
+         gv(4,1)=args(na)
+         na=na+1
+         gv(4,2)=args(na)
+         na=na+1
+         gv(4,3)=args(na)
+         na=na+1
+         gv(4,4)=args(na)
+         na=na+1
+         rhof=args(na)
+         na=na+1
+         scr=args(na)
+         na=na+1
+         rhob=args(na)
+         na=na+1
+         rhop=args(na)
+         na=na+1
+         src=args(na)
+         na=na+1
+         src=args(na)
+         na=na+1
+         rhou0i=args(na)
+         na=na+1
+         rhou0f=args(na)
+         na=na+1
+         rhou0p=args(na)
+         na=na+1
+         uf=args(na)
+         na=na+1
+         scr=args(na)
+         na=na+1
+         ub=args(na)
+         na=na+1
+         up=args(na)
+         na=na+1
+         src=args(na)
+         na=na+1
+         src=args(na)
+         na=na+1
+         T00i=args(na)
+         na=na+1
+         T00f=args(na)
+         na=na+1
+         T00p=args(na)
+         na=na+1
+         vgasf(2)=args(na)
+         na=na+1
+         scr=args(na)
+         na=na+1
+         scr=args(na)
+         na=na+1
+         vgasp(2)=args(na)
+         na=na+1
+         src=args(na)
+         na=na+1
+         src=args(na)
+         na=na+1
+         T01i=args(na)
+         na=na+1
+         T01f=args(na)
+         na=na+1
+         T01p=args(na)
+         na=na+1
+         vgasf(3)=args(na)
+         na=na+1
+         scr=args(na)
+         na=na+1
+         scr=args(na)
+         na=na+1
+         vgasp(3)=args(na)
+         na=na+1
+         src=args(na)
+         na=na+1
+         src=args(na)
+         na=na+1
+         T02i=args(na)
+         na=na+1
+         T02f=args(na)
+         na=na+1
+         T02p=args(na)
+         na=na+1
+         vgasf(4)=args(na)
+         na=na+1
+         scr=args(na)
+         na=na+1
+         scr=args(na)
+         na=na+1
+         vgasp(4)=args(na)
+         na=na+1
+         src=args(na)
+         na=na+1
+         src=args(na)
+         na=na+1
+         T03i=args(na)
+         na=na+1
+         T03f=args(na)
+         na=na+1
+         T03p=args(na)
+         na=na+1
+         BBf(2)=args(na)
+         na=na+1
+         scr=args(na)
+         na=na+1
+         scr=args(na)
+         na=na+1
+         BBp(2)=args(na)
+         na=na+1
+         src=args(na)
+         na=na+1
+         src=args(na)
+         na=na+1
+         scr=args(na)
+         na=na+1
+         scr=args(na)
+         na=na+1
+         scr=args(na)
+         na=na+1
+         BBf(3)=args(na)
+         na=na+1
+         scr=args(na)
+         na=na+1
+         scr=args(na)
+         na=na+1
+         BBp(3)=args(na)
+         na=na+1
+         src=args(na)
+         na=na+1
+         src=args(na)
+         na=na+1
+         scr=args(na)
+         na=na+1
+         scr=args(na)
+         na=na+1
+         scr=args(na)
+         na=na+1
+         BBf(4)=args(na)
+         na=na+1
+         scr=args(na)
+         na=na+1
+         scr=args(na)
+         na=na+1
+         BBp(4)=args(na)
+         na=na+1
+         src=args(na)
+         na=na+1
+         src=args(na)
+         na=na+1
+         scr=args(na)
+         na=na+1
+         scr=args(na)
+         na=na+1
+         scr=args(na)
+         na=na+1
+         Ef=args(na)
+         na=na+1
+         scr=args(na)
+         na=na+1
+         Eb=args(na)
+         na=na+1
+         Ep=args(na)
+         na=na+1
+         src=args(na)
+         na=na+1
+         src=args(na)
+         na=na+1
+         R00i=args(na)
+         na=na+1
+         R00f=args(na)
+         na=na+1
+         R00p=args(na)
+         na=na+1
+         vradf(2)=args(na)
+         na=na+1
+         scr=args(na)
+         na=na+1
+         scr=args(na)
+         na=na+1
+         vradp(2)=args(na)
+         na=na+1
+         src=args(na)
+         na=na+1
+         src=args(na)
+         na=na+1
+         R01i=args(na)
+         na=na+1
+         R01f=args(na)
+         na=na+1
+         R01p=args(na)
+         na=na+1
+         vradf(3)=args(na)
+         na=na+1
+         scr=args(na)
+         na=na+1
+         scr=args(na)
+         na=na+1
+         vradp(3)=args(na)
+         na=na+1
+         src=args(na)
+         na=na+1
+         src=args(na)
+         na=na+1
+         R02i=args(na)
+         na=na+1
+         R02f=args(na)
+         na=na+1
+         R02p=args(na)
+         na=na+1
+         vradf(4)=args(na)
+         na=na+1
+         scr=args(na)
+         na=na+1
+         scr=args(na)
+         na=na+1
+         vradp(4)=args(na)
+         na=na+1
+         src=args(na)
+         na=na+1
+         src=args(na)
+         na=na+1
+         R03i=args(na)
+         na=na+1
+         R03f=args(na)
+         na=na+1
+         R03p=args(na)
+         na=na+1
+         s(1)=args(na)
+         na=na+1
+         scr=args(na)
+         na=na+1
+         scr=args(na)
+         na=na+1
+         s(2)=args(na)
+         na=na+1
+         src=args(na)
+         na=na+1
+         src=args(na)
+         na=na+1
+         si=args(na)
+         na=na+1
+         sf=args(na)
+         na=na+1
+         sp=args(na)
 c con/cov in 1,2,3,4
-         uradconf(1)=args(164)
-         uradcovf(1)=args(165)
-         uradconf(2)=args(166)
-         uradcovf(2)=args(167)
-         uradconf(3)=args(168)
-         uradcovf(3)=args(169)
-         uradconf(4)=args(170)
-         uradcovf(4)=args(171)
+         na=na+1
+         uradconf(1)=args(na)
+         na=na+1
+         uradcovf(1)=args(na)
+         na=na+1
+         uradconf(2)=args(na)
+         na=na+1
+         uradcovf(2)=args(na)
+         na=na+1
+         uradconf(3)=args(na)
+         na=na+1
+         uradcovf(3)=args(na)
+         na=na+1
+         uradconf(4)=args(na)
+         na=na+1
+         uradcovf(4)=args(na)
 c
-         ugasconf(1)=args(172)
-         ugascovf(1)=args(173)
-         ugasconf(2)=args(174)
-         ugascovf(2)=args(175)
-         ugasconf(3)=args(176)
-         ugascovf(3)=args(177)
-         ugasconf(4)=args(178)
-         ugascovf(4)=args(179)
+         na=na+1
+         ugasconf(1)=args(na)
+         na=na+1
+         ugascovf(1)=args(na)
+         na=na+1
+         ugasconf(2)=args(na)
+         na=na+1
+         ugascovf(2)=args(na)
+         na=na+1
+         ugasconf(3)=args(na)
+         na=na+1
+         ugascovf(3)=args(na)
+         na=na+1
+         ugasconf(4)=args(na)
+         na=na+1
+         ugascovf(4)=args(na)
 c
-         uradconb(1)=args(180)
-         uradcovb(1)=args(181)
-         uradconb(2)=args(182)
-         uradcovb(2)=args(183)
-         uradconb(3)=args(184)
-         uradcovb(3)=args(185)
-         uradconb(4)=args(186)
-         uradcovb(4)=args(187)
+         na=na+1
+         uradconb(1)=args(na)
+         na=na+1
+         uradcovb(1)=args(na)
+         na=na+1
+         uradconb(2)=args(na)
+         na=na+1
+         uradcovb(2)=args(na)
+         na=na+1
+         uradconb(3)=args(na)
+         na=na+1
+         uradcovb(3)=args(na)
+         na=na+1
+         uradconb(4)=args(na)
+         na=na+1
+         uradcovb(4)=args(na)
 c
-         ugasconb(1)=args(188)
-         ugascovb(1)=args(189)
-         ugasconb(2)=args(190)
-         ugascovb(2)=args(191)
-         ugasconb(3)=args(192)
-         ugascovb(3)=args(193)
-         ugasconb(4)=args(194)
-         ugascovb(4)=args(195)
+         na=na+1
+         ugasconb(1)=args(na)
+         na=na+1
+         ugascovb(1)=args(na)
+         na=na+1
+         ugasconb(2)=args(na)
+         na=na+1
+         ugascovb(2)=args(na)
+         na=na+1
+         ugasconb(3)=args(na)
+         na=na+1
+         ugascovb(3)=args(na)
+         na=na+1
+         ugasconb(4)=args(na)
+         na=na+1
+         ugascovb(4)=args(na)
 c
-         uradconp(1)=args(196)
-         uradcovp(1)=args(197)
-         uradconp(2)=args(198)
-         uradcovp(2)=args(199)
-         uradconp(3)=args(200)
-         uradcovp(3)=args(201)
-         uradconp(4)=args(202)
-         uradcovp(4)=args(203)
+         na=na+1
+         uradconp(1)=args(na)
+         na=na+1
+         uradcovp(1)=args(na)
+         na=na+1
+         uradconp(2)=args(na)
+         na=na+1
+         uradcovp(2)=args(na)
+         na=na+1
+         uradconp(3)=args(na)
+         na=na+1
+         uradcovp(3)=args(na)
+         na=na+1
+         uradconp(4)=args(na)
+         na=na+1
+         uradcovp(4)=args(na)
 c
-         ugasconp(1)=args(204)
-         ugascovp(1)=args(205)
-         ugasconp(2)=args(206)
-         ugascovp(2)=args(207)
-         ugasconp(3)=args(208)
-         ugascovp(3)=args(209)
-         ugasconp(4)=args(210)
-         ugascovp(4)=args(211)
+         na=na+1
+         ugasconp(1)=args(na)
+         na=na+1
+         ugascovp(1)=args(na)
+         na=na+1
+         ugasconp(2)=args(na)
+         na=na+1
+         ugascovp(2)=args(na)
+         na=na+1
+         ugasconp(3)=args(na)
+         na=na+1
+         ugascovp(3)=args(na)
+         na=na+1
+         ugasconp(4)=args(na)
+         na=na+1
+         ugascovp(4)=args(na)
+c
+         if(na.ne.NUMARGS) then
+            write(*,*) 'Wrong number of args'
+            stop
+         endif
 #endif
 
 c     HARMEOMTYPE=2 is entropy, 3 is energy.  If 3 fails, could have reverted to entropy.
@@ -1929,11 +2223,17 @@ c     calculates the full tensor R^mu_nu
       common/accuracy/eps,epsbis,dvmin,tol,uminfac,dlogmax,
      &     gammaradceiling,itermax
       common/metric/gn,gv
+      dimension Ttcovc(4),Rtcovc(4),BBc(4)
+      common/conserved/Gam,Gam1,en,en1,rhou0c,sc,Ttcovc,Rtcovc,
+     &     BBc,dt,
+     &     FNUMARGSHARM,FNUMRESULTSHARM,WHICHVELRAMESHHARM,
+     &     GAMMAMAXRAD,ERADLIMIT,toltry,tolallow,
+     &     ARAD_CODE,OKAPPA_ES_CODE11,OKAPPA_FF_CODE11,OKAPPA_BF_CODE11
 
 c     default is no ceiling hit on gamma
       radinvmod=0
 
-      arad=1.18316d17
+c      arad=1.18316d17
 
 c     Convert R^0_mu to R^0^mu                                                  
 
@@ -1963,7 +2263,8 @@ c     small value and set 4-velocity equal to ZAMO velocity.
          ucon(3)=etacon(3)
          ucon(4)=etacon(4)
 
-         E=arad*1.d-36
+         E = ERADLIMIT
+c         E=arad*1.d-36
 
 #if(PRODUCTION<=0)
          write (*,*) ' R^tt<0: ucon, E ',(ucon(i),i=1,4),E
@@ -2103,7 +2404,10 @@ c     Ttcovc(4), Rtcovc(4)
       common/accuracy/eps,epsbis,dvmin,tol,uminfac,dlogmax,
      &     gammaradceiling,itermax
       common/conserved/Gam,Gam1,en,en1,rhou0c,sc,Ttcovc,Rtcovc,
-     &     BBc,dt
+     &     BBc,dt,
+     &     FNUMARGSHARM,FNUMRESULTSHARM,WHICHVELRAMESHHARM,
+     &     GAMMAMAXRAD,ERADLIMIT,toltry,tolallow,
+     &     ARAD_CODE,OKAPPA_ES_CODE11,OKAPPA_FF_CODE11,OKAPPA_BF_CODE11
       external funcMHD1,funcMHD2,uMHD1,uMHD2
 
 #if(PRODUCTION==0)
@@ -2288,6 +2592,12 @@ c     satisfy the post-radiation equations
       dimension prim(4),primsave(4)
       common/accuracy/eps,epsbis,dvmin,tol,uminfac,dlogmax,
      &     gammaradceiling,itermax
+      dimension Ttcovc(4),Rtcovc(4),BBc(4)
+      common/conserved/Gam,Gam1,en,en1,rhou0c,sc,Ttcovc,Rtcovc,
+     &     BBc,dt,
+     &     FNUMARGSHARM,FNUMRESULTSHARM,WHICHVELRAMESHHARM,
+     &     GAMMAMAXRAD,ERADLIMIT,toltry,tolallow,
+     &     ARAD_CODE,OKAPPA_ES_CODE11,OKAPPA_FF_CODE11,OKAPPA_BF_CODE11
       external funcrad1,funcrad2,uerr1,uerr2
       dimension ugascon(4)
 
@@ -2593,7 +2903,10 @@ c     four error terms for a given set of primitives.
      &     primold(4)
       common/accuracy/eps,epsbis,dvmin,tol,uminfac,dlogmax,
      &     gammaradceiling,itermax
-      common/conserved/Gam,Gam1,en,en1,rhou0,s,Ttcov,Rtcov,BB,dt
+      common/conserved/Gam,Gam1,en,en1,rhou0,s,Ttcov,Rtcov,BB,dt,
+     &     FNUMARGSHARM,FNUMRESULTSHARM,WHICHVELRAMESHHARM,
+     &     GAMMAMAXRAD,ERADLIMIT,toltry,tolallow,
+     &     ARAD_CODE,OKAPPA_ES_CODE11,OKAPPA_FF_CODE11,OKAPPA_BF_CODE11
       external func
       double precision mymax,myabs,mydiv
       integer myisnan
@@ -2740,7 +3053,10 @@ c     used.
      &     AJac(3,3),indx(3),Ttcov(4),Rtcov(4),BB(4),errornorm(3)
       common/accuracy/eps,epsbis,dvmin,tol,uminfac,dlogmax,
      &     gammaradceiling,itermax
-      common/conserved/Gam,Gam1,en,en1,rhou0,s,Ttcov,Rtcov,BB,dt
+      common/conserved/Gam,Gam1,en,en1,rhou0,s,Ttcov,Rtcov,BB,dt,
+     &     FNUMARGSHARM,FNUMRESULTSHARM,WHICHVELRAMESHHARM,
+     &     GAMMAMAXRAD,ERADLIMIT,toltry,tolallow,
+     &     ARAD_CODE,OKAPPA_ES_CODE11,OKAPPA_FF_CODE11,OKAPPA_BF_CODE11
       external func
       double precision mymax,myabs,mydiv
       integer myisnan
@@ -2877,7 +3193,10 @@ c     equation without radiation source term
      &     urcon(4),urcov(4),Rmunu(4,4),Gcon(4),Gcov(4)
       common/accuracy/eps,epsbis,dvmin,tol,uminfac,dlogmax,
      &     gammaradceiling,itermax
-      common/conserved/Gam,Gam1,en,en1,rhou0,s,Ttcov,Rtcov,BB,dt
+      common/conserved/Gam,Gam1,en,en1,rhou0,s,Ttcov,Rtcov,BB,dt,
+     &     FNUMARGSHARM,FNUMRESULTSHARM,WHICHVELRAMESHHARM,
+     &     GAMMAMAXRAD,ERADLIMIT,toltry,tolallow,
+     &     ARAD_CODE,OKAPPA_ES_CODE11,OKAPPA_FF_CODE11,OKAPPA_BF_CODE11
       common/funcMHDd/ffkap,eskap,arad,ucon,ucov,rho,bcon,bcov,bsq,
      &     Tmunu,E,Ehat,urcon,urcov,Rmunu,Tgas,Trad,B4pi,gamma,dtau,
      &     Gcon,Gcov
@@ -2994,7 +3313,10 @@ c     radiation source term. Currently, this has the entropy equation.
 
       implicit double precision (a-h,o-z)
       dimension Ttcov(4),Rtcov(4),BB(4)
-      common/conserved/Gam,Gam1,en,en1,rhou0,s,Ttcov,Rtcov,BB,dt
+      common/conserved/Gam,Gam1,en,en1,rhou0,s,Ttcov,Rtcov,BB,dt,
+     &     FNUMARGSHARM,FNUMRESULTSHARM,WHICHVELRAMESHHARM,
+     &     GAMMAMAXRAD,ERADLIMIT,toltry,tolallow,
+     &     ARAD_CODE,OKAPPA_ES_CODE11,OKAPPA_FF_CODE11,OKAPPA_BF_CODE11
 
 c     Compute entropy and compute deviation from conserved entropy
       
@@ -3022,7 +3344,10 @@ c     radiation source term.
 
       implicit double precision (a-h,o-z)
       dimension Ttcov(4),Rtcov(4),BB(4)
-      common/conserved/Gam,Gam1,en,en1,rhou0,s,Ttcov,Rtcov,BB,dt
+      common/conserved/Gam,Gam1,en,en1,rhou0,s,Ttcov,Rtcov,BB,dt,
+     &     FNUMARGSHARM,FNUMRESULTSHARM,WHICHVELRAMESHHARM,
+     &     GAMMAMAXRAD,ERADLIMIT,toltry,tolallow,
+     &     ARAD_CODE,OKAPPA_ES_CODE11,OKAPPA_FF_CODE11,OKAPPA_BF_CODE11
       
 c     Compute entropy and compute deviation from conserved entropy
       
@@ -3051,7 +3376,10 @@ c     equation including the radiation source term
      &     errornorm(4)
       common/accuracy/eps,epsbis,dvmin,tol,uminfac,dlogmax,
      &     gammaradceiling,itermax
-      common/conserved/Gam,Gam1,en,en1,rhou0,s,Ttcov,Rtcov,BB,dt
+      common/conserved/Gam,Gam1,en,en1,rhou0,s,Ttcov,Rtcov,BB,dt,
+     &     FNUMARGSHARM,FNUMRESULTSHARM,WHICHVELRAMESHHARM,
+     &     GAMMAMAXRAD,ERADLIMIT,toltry,tolallow,
+     &     ARAD_CODE,OKAPPA_ES_CODE11,OKAPPA_FF_CODE11,OKAPPA_BF_CODE11
       common/funcradd/ffkap,eskap,arad,ucon,ucov,rho,bcon,bcov,bsq,
      &     Tmunu,E,Ehat,urcon,urcov,Rmunu,Tgas,Trad,B4pi,gamma,dtau,
      &     Gcon,Gcov,u0,iuerr
@@ -3179,7 +3507,10 @@ c     entropy equation.
 
       implicit double precision (a-h,o-z)
       dimension Ttcov(4),Rtcov(4),BB(4)
-      common/conserved/Gam,Gam1,en,en1,rhou0,s,Ttcov,Rtcov,BB,dt
+      common/conserved/Gam,Gam1,en,en1,rhou0,s,Ttcov,Rtcov,BB,dt,
+     &     FNUMARGSHARM,FNUMRESULTSHARM,WHICHVELRAMESHHARM,
+     &     GAMMAMAXRAD,ERADLIMIT,toltry,tolallow,
+     &     ARAD_CODE,OKAPPA_ES_CODE11,OKAPPA_FF_CODE11,OKAPPA_BF_CODE11
 
 c     Compute entropy and compute deviation from conserved entropy
       
@@ -3205,7 +3536,10 @@ c     including the radiation source term
 
       implicit double precision (a-h,o-z)
       dimension Ttcov(4),Rtcov(4),BB(4)
-      common/conserved/Gam,Gam1,en,en1,rhou0,s,Ttcov,Rtcov,BB,dt
+      common/conserved/Gam,Gam1,en,en1,rhou0,s,Ttcov,Rtcov,BB,dt,
+     &     FNUMARGSHARM,FNUMRESULTSHARM,WHICHVELRAMESHHARM,
+     &     GAMMAMAXRAD,ERADLIMIT,toltry,tolallow,
+     &     ARAD_CODE,OKAPPA_ES_CODE11,OKAPPA_FF_CODE11,OKAPPA_BF_CODE11
       
 c     Compute entropy and compute deviation from conserved entropy
 
@@ -3230,7 +3564,10 @@ c     Compute entropy and compute deviation from conserved entropy
       dimension Ttcov(4),Rtcov(4),BB(4),ucon(4),ucov(4),bcon(4),
      &     bcov(4),Tmunu(4,4),urcon(4),urcov(4),Rmunu(4,4),Gcon(4),
      &     Gcov(4)
-      common/conserved/Gam,Gam1,en,en1,rhou0,s,Ttcov,Rtcov,BB,dt
+      common/conserved/Gam,Gam1,en,en1,rhou0,s,Ttcov,Rtcov,BB,dt,
+     &     FNUMARGSHARM,FNUMRESULTSHARM,WHICHVELRAMESHHARM,
+     &     GAMMAMAXRAD,ERADLIMIT,toltry,tolallow,
+     &     ARAD_CODE,OKAPPA_ES_CODE11,OKAPPA_FF_CODE11,OKAPPA_BF_CODE11
       common/funcradd/ffkap,eskap,arad,ucon,ucov,rho,bcon,bcov,bsq,
      &     Tmunu,E,Ehat0,urcon,urcov,Rmunu,Tgas,Trad,B4pi,gamma,dtau,
      &     Gcon,Gcov,u0,iuerr
@@ -3304,7 +3641,10 @@ c     without radiation source term using the energy equation
       common/metric/gn,gv
       common/accuracy/eps,epsbis,dvmin,tol,uminfac,dlogmax,
      &     gammaradceiling,itermax
-      common/conserved/Gam,Gam1,en,en1,rhou0,s,Ttcov,Rtcov,BB,dt
+      common/conserved/Gam,Gam1,en,en1,rhou0,s,Ttcov,Rtcov,BB,dt,
+     &     FNUMARGSHARM,FNUMRESULTSHARM,WHICHVELRAMESHHARM,
+     &     GAMMAMAXRAD,ERADLIMIT,toltry,tolallow,
+     &     ARAD_CODE,OKAPPA_ES_CODE11,OKAPPA_FF_CODE11,OKAPPA_BF_CODE11
       common/funcMHDd/ffkap,eskap,arad,ucon,ucov,rho,bcon,bcov,bsq,
      &     Tmunu,E,Ehat,urcon,urcov,Rmunu,Tgas,Trad,B4pi,gamma,dtau,
      &     Gcon,Gcov
@@ -3389,7 +3729,10 @@ c     without radiation source term using the entropy equation
       common/metric/gn,gv
       common/accuracy/eps,epsbis,dvmin,tol,uminfac,dlogmax,
      &     gammaradceiling,itermax
-      common/conserved/Gam,Gam1,en,en1,rhou0,s,Ttcov,Rtcov,BB,dt
+      common/conserved/Gam,Gam1,en,en1,rhou0,s,Ttcov,Rtcov,BB,dt,
+     &     FNUMARGSHARM,FNUMRESULTSHARM,WHICHVELRAMESHHARM,
+     &     GAMMAMAXRAD,ERADLIMIT,toltry,tolallow,
+     &     ARAD_CODE,OKAPPA_ES_CODE11,OKAPPA_FF_CODE11,OKAPPA_BF_CODE11
       double precision mymax,myabs,mydiv
       integer myisnan
 
@@ -3510,7 +3853,10 @@ c     equation
       common/metric/gn,gv
       common/accuracy/eps,epsbis,dvmin,tol,uminfac,dlogmax,
      &     gammaradceiling,itermax
-      common/conserved/Gam,Gam1,en,en1,rhou0,s,Ttcov,Rtcov,BB,dt
+      common/conserved/Gam,Gam1,en,en1,rhou0,s,Ttcov,Rtcov,BB,dt,
+     &     FNUMARGSHARM,FNUMRESULTSHARM,WHICHVELRAMESHHARM,
+     &     GAMMAMAXRAD,ERADLIMIT,toltry,tolallow,
+     &     ARAD_CODE,OKAPPA_ES_CODE11,OKAPPA_FF_CODE11,OKAPPA_BF_CODE11
       common/funcradd/ffkap,eskap,arad,ucon,ucov,rho,bcon,bcov,bsq,
      &     Tmunu,E,Ehat,urcon,urcov,Rmunu,Tgas,Trad,B4pi,gamma,dtau,
      &     Gcon,Gcov,u0,iuerr
@@ -3518,9 +3864,13 @@ c     equation
       integer myisnan
       integer radinvmod
 
-      ffkap=3.46764d-17
-      eskap=5.90799d5
-      arad=1.18316d17
+c      ffkap=3.46764d-17
+c      eskap=5.90799d5
+c      arad=1.18316d17
+
+      ffkap=OKAPPA_FF_CODE11
+      eskap=OKAPPA_ES_CODE11
+      arad=ARAD_CODE
 
 c     Save u and solve for lab frame conserved quantities corresponding
 c     to the given primitives: rho, ucon, ucov
@@ -3704,7 +4054,10 @@ c     equation
      &     Tt(4),Rt(4),urcon(4),urcov(4),Rmunu(4,4),
      &     gn(4,4),gv(4,4),Gcon(4),Gcov(4)
       common/metric/gn,gv
-      common/conserved/Gam,Gam1,en,en1,rhou0,s,Ttcov,Rtcov,BB,dt
+      common/conserved/Gam,Gam1,en,en1,rhou0,s,Ttcov,Rtcov,BB,dt,
+     &     FNUMARGSHARM,FNUMRESULTSHARM,WHICHVELRAMESHHARM,
+     &     GAMMAMAXRAD,ERADLIMIT,toltry,tolallow,
+     &     ARAD_CODE,OKAPPA_ES_CODE11,OKAPPA_FF_CODE11,OKAPPA_BF_CODE11
       common/funcradd/ffkap,eskap,arad,ucon,ucov,rho,bcon,bcov,bsq,
      &     Tmunu,E,Ehat,urcon,urcov,Rmunu,Tgas,Trad,B4pi,gamma,dtau,
      &     Gcon,Gcov,u0,iuerr
@@ -3712,9 +4065,13 @@ c     equation
       integer myisnan
       integer radinvmod
 
-      ffkap=3.46764d-17
-      eskap=5.90799d5
-      arad=1.18316d17
+c      ffkap=3.46764d-17
+c      eskap=5.90799d5
+c      arad=1.18316d17
+
+      ffkap=OKAPPA_FF_CODE11
+      eskap=OKAPPA_ES_CODE11
+      arad=ARAD_CODE
 
 c     Save u and solve for lab frame conserved quantities corresponding
 c     to the given primitives: rho, ucon, ucov

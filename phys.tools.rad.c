@@ -4192,150 +4192,6 @@ static void showdebuglist(int debugiter, FTYPE (*pppreholdlist)[NPR],FTYPE (*ppp
 
 
 
-#define RETURNIMPLICITFAIL 0
-#define RETURNIMPLICITTRY 1
-#define RETURNIMPLICITALLOW 2
-#define RETURNIMPLICITFAILALLOW 3
-
-
-int mathematica_report_check(int radinvmod, int failtype, long long int failnum, int gotfirstnofail, int eomtypelocal, int itermode, FTYPE errorabs, FTYPE errorabsbestexternal, int iters, int totaliters, FTYPE realdt,struct of_geom *ptrgeom, FTYPE *ppfirst, FTYPE *pp, FTYPE *pb, FTYPE *piin, FTYPE *prtestUiin, FTYPE *prtestUU0, FTYPE *uu0, FTYPE *uu, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_state *q, FTYPE *dUother)
-{
-  int jj,kk;
-  int pliter,pl;
-
-
-  if(0){ // old mathematica style
-    dualfprintf(fail_file,"FAILINFO: %d %d %lld %d\ndt=%21.15g\n",failtype, myid, failnum, gotfirstnofail,realdt);
-    DLOOP(jj,kk) dualfprintf(fail_file,"gn%d%d=%21.15g\n",jj+1,kk+1,ptrgeom->gcon[GIND(jj,kk)]);
-    DLOOP(jj,kk) dualfprintf(fail_file,"gv%d%d=%21.15g\n",jj+1,kk+1,ptrgeom->gcov[GIND(jj,kk)]);
-    // shows first pp(uu0)
-    PLOOP(pliter,pl) dualfprintf(fail_file,"pp%d=%21.15g\npb%d=%21.15g\nuu0%d=%21.15g\nuu%d=%21.15g\nuui%d=%21.15g\n",pl,pp[pl],pl,pb[pl],pl,uu0[pl],pl,uu[pl],pl,Uiin[pl]);
-    struct of_state qreport;
-    get_state(pp,ptrgeom,&qreport);
-    if(EOMRADTYPE!=EOMRADNONE) DLOOPA(jj) dualfprintf(fail_file,"uradcon%d=%21.15g\nuradcov%d=%21.15g\n",jj,qreport.uradcon[jj],jj,qreport.uradcov[jj]);
-    else DLOOPA(jj) dualfprintf(fail_file,"uradcon%d=%21.15g\nuradcov%d=%21.15g\n",jj,0.0,jj,0.0);
-    DLOOPA(jj) dualfprintf(fail_file,"ucon%d=%21.15g\nucov%d=%21.15g\n",jj,qreport.ucon[jj],jj,qreport.ucov[jj]);
-    // then do:
-    // 1) grep -A 134 --text FAILINFO 0_fail.out.grmhd* > fails.txt
-    // 2) emacs regexp:  \([0-9]\)e\([-+]*[0-9]+\)   ->   \1*10^(\2)
-  }
-  else{
-
-    /////////////////////////
-    //
-    // Fix-up some terms to avoid nan or inf in output.
-    //
-    /////////////////////////
-
-    if(!isfinite(pp[UU])) pp[UU]=BIG;
-    if(!isfinite(pp[ENTROPY])) pp[ENTROPY]=BIG;
-    if(!isfinite(errorabs)) errorabs=BIG;
-    if(!isfinite(errorabsbestexternal)) errorabsbestexternal=BIG;
-
-    /////////////////////////
-    //
-    // Get state for pp,pb,piin
-    //
-    /////////////////////////
-
-
-    struct of_state qpp;
-    get_state(pp,ptrgeom,&qpp);
-    struct of_state qpb;
-    get_state(pb,ptrgeom,&qpb);
-    struct of_state qpiin;
-    get_state(piin,ptrgeom,&qpiin);
-
-    /////////////////////////
-    //
-    // Output stuff for mathematica
-    //
-    /////////////////////////
-
-    // 211 things
-    dualfprintf(fail_file,"\nFAILINFO: %d %d %lld %d %d %d %21.15g %21.15g %d %d %21.15g %lld %d %21.15g ",failtype,myid,failnum,gotfirstnofail,eomtypelocal,itermode,errorabs,errorabsbestexternal,iters,totaliters,realdt,nstep,steppart,gam); // 14
-    DLOOP(jj,kk) dualfprintf(fail_file,"%21.15g ",ptrgeom->gcon[GIND(jj,kk)]); // 16
-    DLOOP(jj,kk) dualfprintf(fail_file,"%21.15g ",ptrgeom->gcov[GIND(jj,kk)]); // 16
-    PLOOP(pliter,pl) dualfprintf(fail_file,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g ",pp[pl],ppfirst[pl],pb[pl],piin[pl],prtestUiin[pl],prtestUU0[pl],uu0[pl],uu[pl],Uiin[pl]);  // 9*13
-    if(EOMRADTYPE!=EOMRADNONE) DLOOPA(jj) dualfprintf(fail_file,"%21.15g %21.15g ",qpp.uradcon[jj],qpp.uradcov[jj]); // 4*2=8
-    else DLOOPA(jj) dualfprintf(fail_file,"%21.15g %21.15g ",0.0,0.0);
-    DLOOPA(jj) dualfprintf(fail_file,"%21.15g %21.15g ",qpp.ucon[jj],qpp.ucov[jj]); // 4*2=8
-    if(EOMRADTYPE!=EOMRADNONE) DLOOPA(jj) dualfprintf(fail_file,"%21.15g %21.15g ",qpb.uradcon[jj],qpb.uradcov[jj]); // 4*2=8
-    else dualfprintf(fail_file,"%21.15g %21.15g ",0.0,0.0);
-    DLOOPA(jj) dualfprintf(fail_file,"%21.15g %21.15g ",qpb.ucon[jj],qpb.ucov[jj]); // 4*2=8
-    if(EOMRADTYPE!=EOMRADNONE) DLOOPA(jj) dualfprintf(fail_file,"%21.15g %21.15g ",qpiin.uradcon[jj],qpiin.uradcov[jj]); // 4*2=8
-    else dualfprintf(fail_file,"%21.15g %21.15g ",0.0,0.0);
-    DLOOPA(jj) dualfprintf(fail_file,"%21.15g %21.15g ",qpiin.ucon[jj],qpiin.ucov[jj]); // 4*2=8
-    dualfprintf(fail_file,"\n");
-
-
-
-    // get ramesh solution
-    int whichcall=0; // debug call
-    FTYPE ppeng[NPR]={0},ppent[NPR]={0},errorabseng=BIG,errorabsent=BIG;
-    FTYPE uueng[NPR]={0},uuent[NPR]={0};
-    int failtypeeng=1,failtypeent=1,iterseng=IMPMAXITER,itersent=IMPMAXITER, radinvmodeng=-1, radinvmodent=-1;
-    struct of_state qeng=*q,qent=*q;
-    get_rameshsolution(whichcall, radinvmod, failtype, failnum,  gotfirstnofail,  eomtypelocal,  itermode, errorabs, errorabsbestexternal,  iters,  totaliters,realdt, ptrgeom, pp, pb, piin, uu0, uu, Uiin, Ufin, CUf, q, ppeng, ppent, uueng, uuent, &qeng, &qent, &failtypeeng, &errorabseng, &iterseng, &radinvmodeng, &failtypeent, &errorabsent, &itersent, &radinvmodent);
-
-
-
-    /////////////////////////
-    //
-    // FAILRETURNABLE
-    //
-    /////////////////////////
-    dualfprintf(fail_file,"\nFAILREPEATABLE: %d %d %lld : ",failtype,myid,failnum);
-    dualfprintf(fail_file,"dt=%21.15g;CUf[2]=%21.15g;gam=%21.15g;",realdt,CUf[2],gam);
-    PLOOP(pliter,pl) dualfprintf(fail_file,"pp[%d]=%21.15g;ppfirst[%d]=%21.15g;pb[%d]=%21.15g;piin[%d]=%21.15g;Uiin[%d]=%21.15g;Ufin[%d]=%21.15g;dUother[%d]=%21.15g;",pl,pp[pl],pl,ppfirst[pl],pl,pb[pl],pl,piin[pl],pl,Uiin[pl],pl,Ufin[pl],pl,dUother[pl]);
-     // ptrgeom stuff
-    DLOOP(jj,kk) dualfprintf(fail_file,"ptrgeom->gcov[GIND(%d,%d)]=%21.15g;ptrgeom->gcon[GIND(%d,%d)]=%21.15g;",jj,kk,ptrgeom->gcov[GIND(jj,kk)],jj,kk,ptrgeom->gcon[GIND(jj,kk)]);
-    DLOOPA(jj) dualfprintf(fail_file,"ptrgeom->gcovpert[%d]=%21.15g;ptrgeom->beta[%d]=%21.15g;",jj,ptrgeom->gcovpert[jj],jj,ptrgeom->beta[jj]);
-    dualfprintf(fail_file,"ptrgeom->alphalapse=%21.15g;ptrgeom->betasqoalphasq=%21.15g;ptrgeom->gdet=%21.15g;ptrgeom->igdetnosing=%21.15g;ptrgeom->i=%d;ptrgeom->j=%d;ptrgeom->k=%d;ptrgeom->p=%d;",ptrgeom->alphalapse,ptrgeom->betasqoalphasq,ptrgeom->gdet,ptrgeom->igdetnosing,ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p);
-    if(q!=NULL){
-      DLOOPA(jj) dualfprintf(fail_file,"q->ucon[%d]=%21.15g;q->ucov[%d]=%21.15g;",jj,q->ucon[jj],jj,q->ucov[jj]);
-      if(EOMRADTYPE!=EOMRADNONE) DLOOPA(jj) dualfprintf(fail_file,"q->uradcon[%d]=%21.15g;q->uradcov[%d]=%21.15g;",jj,q->uradcon[jj],jj,q->uradcov[jj]);
-      else DLOOPA(jj) dualfprintf(fail_file,"q->uradcon[%d]=%21.15g;q->uradcov[%d]=%21.15g;",jj,0.0,jj,0.0);
-      dualfprintf(fail_file,"q->pressure=%21.15g;q->entropy=%21.15g;q->ifremoverestplus1ud0elseud0=%21.15g;",q->pressure,q->entropy,q->ifremoverestplus1ud0elseud0);
-    }
-    dualfprintf(fail_file,"\n");
-    
-
-    // then do:
-    // 1) grep -h --text FAILINFO 0_fail.out.grmhd* | sed 's/FAILINFO: //g'| sort -T ./ -r -g -k 7 > fails.txt
-    //
-    // or:
-    // grep -h --text FAILINFO 0_fail.out.grmhd* | grep -v "FAILINFO: 100" |grep -v "FAILINFO: 80"| sed 's/FAILINFO: //g' | sort -T ./ -r -g -k 7 > failshigherror.txt ; head -100 failshigherror.txt > failshigherror100.txt
-    //
-
-    // grep --text BAD 0_fail.out.grmhd.00*|wc -l ;  grep FAILINFO 0_fail.out.grmhd.00*|wc -l ; grep MAXF1 0_fail.out.grmhd.00*| wc -l ; grep MAXITER 0_fail.out.grmhd.00*|wc -l ; grep "also failed" 0_fail.out.grmhd.00*|wc -l 
-
-    // TO CHECK ON DAMPING:
-    //     grep -i "Damping worked" 0_fail.out.grmhd.00*|wc -l ; grep -i "Damping failed" 0_fail.out.grmhd.00*|wc -l
-
-    //   see if any MAXF1ITER: less -S fails.txt| awk '{print $1}'|sort|less
-
-    // 2) Choose numfails in below mathematica script
-
-    // 3) ~/bin/math < /data/jon/harm_math/solveimplicit_superwrapper.m
-    // or:  nohup ~/bin/math < /data/jon/harm_math/solveimplicit_superwrapper.m &> math.out &
-    // or: preferred:  ~/bin/math < /data/jon/harm_math/solveimplicit_superwrapper.m &> math.out &
-
-    // 4) grep 0Good math.out
-    // if any Good's appear, mathematica found solution when harm did not.  Fix it!
-
-    // If any appear in  grep 0WGood math.out   , then precision issue with long doubles in harm even.
-
-    // If any appear in  grep 0MGood math.out   , then gammamax case should work!
-
-    // 5) More advanced version of #4.  Use check.sh script:
-    // bash /data/jon/harmgit/scripts/check.sh math.out .  Gives overall report.
-  }
-
-
-
-  return(0);
-}
 
 
 
@@ -4422,9 +4278,9 @@ int get_rameshsolution(int whichcall, int radinvmod, int failtype, long long int
   doublereal resultseng[NUMRESULTS]={0},resultsent[NUMRESULTS]={0};
 
 
-  // KORALTODO: Ramesh can't handle inside ergosphere yet until he iterates \tilde{u}'s 
-  if(WHICHVELRAMESH==VEL4 && ptrgeom->gcov[GIND(TT,TT)]>=0.0){
-    dualfprintf(fail_file,"Wanted to call ramesh, but inside ergosphere\n");
+  if(WHICHVELRAMESH==VEL4 && ptrgeom->gcov[GIND(TT,TT)]>=0.0 || WHICHEOS!=IDEALGAS){
+    // KORALTODO SUPERGODMARK: Also only can use ramesh if lambda cooling only includes kappaff inverse and only normal ff and es opacities.
+    if(WHICHVELRAMESH==VEL4 && ptrgeom->gcov[GIND(TT,TT)]>=0.0) dualfprintf(fail_file,"Wanted to call ramesh, but inside ergosphere\n");
     *failtypeeng = 1;
     *radinvmodent = 0;
     *errorabseng = BIG;
@@ -4447,13 +4303,16 @@ int get_rameshsolution(int whichcall, int radinvmod, int failtype, long long int
 
     // below things must be same order as in test.f
     // MUST BE SAME AS IN test.f code
-#define NUMARGS 211
+#define NUMARGS (211+11)
 
     // call fortran code
     doublereal args[NUMARGS]={0};
     int na;
 
     na=-1;
+    na++; args[na]=(doublereal)NUMARGS;
+    na++; args[na]=(doublereal)NUMRESULTS;
+    na++; args[na]=(doublereal)WHICHVELRAMESH;
     na++; args[na]=(doublereal)failtype;
     na++; args[na]=(doublereal)myid;
     na++; args[na]=(doublereal)failnum;
@@ -4468,6 +4327,14 @@ int get_rameshsolution(int whichcall, int radinvmod, int failtype, long long int
     na++; args[na]=(doublereal)nstep;
     na++; args[na]=(doublereal)steppart;
     na++; args[na]=gam;
+    na++; args[na]=GAMMAMAXRAD;
+    na++; args[na]=ERADLIMIT;
+    na++; args[na]=IMPTRYCONVABS;
+    na++; args[na]=IMPALLOWCONVABS;
+    na++; args[na]=ARAD_CODE;
+    na++; args[na]=KAPPA_ES_CODE(1.0,1.0);
+    na++; args[na]=KAPPA_FF_CODE(1.0,1.0);
+    na++; args[na]=KAPPA_BF_CODE(1.0,1.0);
     DLOOP(jj,kk){ na++; args[na]=ptrgeom->gcon[GIND(jj,kk)];}
     DLOOP(jj,kk){ na++; args[na]=ptrgeom->gcov[GIND(jj,kk)];}
     PLOOP(pliter,pl){ na++; args[na]=pp[pl]; na++; args[na]=ppfirst[pl]; na++; args[na]=pb[pl]; na++; args[na]=piin[pl]; na++; args[na]=prtestUiin[pl]; na++; args[na]=prtestUU0[pl]; na++; args[na]=uu0[pl]; na++; args[na]=uu[pl]; na++; args[na]=Uiin[pl]; }
@@ -4636,6 +4503,151 @@ int get_rameshsolution(int whichcall, int radinvmod, int failtype, long long int
     }
 
   }// end if DEBUG
+
+  return(0);
+}
+
+
+
+int mathematica_report_check(int radinvmod, int failtype, long long int failnum, int gotfirstnofail, int eomtypelocal, int itermode, FTYPE errorabs, FTYPE errorabsbestexternal, int iters, int totaliters, FTYPE realdt,struct of_geom *ptrgeom, FTYPE *ppfirst, FTYPE *pp, FTYPE *pb, FTYPE *piin, FTYPE *prtestUiin, FTYPE *prtestUU0, FTYPE *uu0, FTYPE *uu, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_state *q, FTYPE *dUother)
+{
+  int jj,kk;
+  int pliter,pl;
+
+
+  if(0){ // old mathematica style
+    dualfprintf(fail_file,"FAILINFO: %d %d %lld %d\ndt=%21.15g\n",failtype, myid, failnum, gotfirstnofail,realdt);
+    DLOOP(jj,kk) dualfprintf(fail_file,"gn%d%d=%21.15g\n",jj+1,kk+1,ptrgeom->gcon[GIND(jj,kk)]);
+    DLOOP(jj,kk) dualfprintf(fail_file,"gv%d%d=%21.15g\n",jj+1,kk+1,ptrgeom->gcov[GIND(jj,kk)]);
+    // shows first pp(uu0)
+    PLOOP(pliter,pl) dualfprintf(fail_file,"pp%d=%21.15g\npb%d=%21.15g\nuu0%d=%21.15g\nuu%d=%21.15g\nuui%d=%21.15g\n",pl,pp[pl],pl,pb[pl],pl,uu0[pl],pl,uu[pl],pl,Uiin[pl]);
+    struct of_state qreport;
+    get_state(pp,ptrgeom,&qreport);
+    if(EOMRADTYPE!=EOMRADNONE) DLOOPA(jj) dualfprintf(fail_file,"uradcon%d=%21.15g\nuradcov%d=%21.15g\n",jj,qreport.uradcon[jj],jj,qreport.uradcov[jj]);
+    else DLOOPA(jj) dualfprintf(fail_file,"uradcon%d=%21.15g\nuradcov%d=%21.15g\n",jj,0.0,jj,0.0);
+    DLOOPA(jj) dualfprintf(fail_file,"ucon%d=%21.15g\nucov%d=%21.15g\n",jj,qreport.ucon[jj],jj,qreport.ucov[jj]);
+    // then do:
+    // 1) grep -A 134 --text FAILINFO 0_fail.out.grmhd* > fails.txt
+    // 2) emacs regexp:  \([0-9]\)e\([-+]*[0-9]+\)   ->   \1*10^(\2)
+  }
+  else{
+
+    /////////////////////////
+    //
+    // Fix-up some terms to avoid nan or inf in output.
+    //
+    /////////////////////////
+
+    if(!isfinite(pp[UU])) pp[UU]=BIG;
+    if(!isfinite(pp[ENTROPY])) pp[ENTROPY]=BIG;
+    if(!isfinite(errorabs)) errorabs=BIG;
+    if(!isfinite(errorabsbestexternal)) errorabsbestexternal=BIG;
+
+    /////////////////////////
+    //
+    // Get state for pp,pb,piin
+    //
+    /////////////////////////
+
+
+    struct of_state qpp;
+    get_state(pp,ptrgeom,&qpp);
+    struct of_state qpb;
+    get_state(pb,ptrgeom,&qpb);
+    struct of_state qpiin;
+    get_state(piin,ptrgeom,&qpiin);
+
+    /////////////////////////
+    //
+    // Output stuff for mathematica
+    //
+    /////////////////////////
+
+    // 211+11 things
+    dualfprintf(fail_file,"\nFAILINFO: ");
+    dualfprintf(fail_file,"%d %d %d ",NUMARGS,NUMRESULTS,WHICHVELRAMESH); // 3
+    dualfprintf(fail_file,"%d %d %lld %d %d %d %21.15g %21.15g %d %d %21.15g %lld %d %21.15g ",failtype,myid,failnum,gotfirstnofail,eomtypelocal,itermode,errorabs,errorabsbestexternal,iters,totaliters,realdt,nstep,steppart,gam); // 14
+    dualfprintf(fail_file,"%21.15g %21.15g %21.15g %21.15g ",GAMMAMAXRAD,ERADLIMIT,IMPTRYCONVABS,IMPALLOWCONVABS); // 4
+    dualfprintf(fail_file,"%21.15g %21.15g %21.15g %21.15g ",ARAD_CODE,KAPPA_ES_CODE(1.0,1.0),KAPPA_FF_CODE(1.0,1.0),KAPPA_BF_CODE(1.0,1.0)); // 4
+    DLOOP(jj,kk) dualfprintf(fail_file,"%21.15g ",ptrgeom->gcon[GIND(jj,kk)]); // 16
+    DLOOP(jj,kk) dualfprintf(fail_file,"%21.15g ",ptrgeom->gcov[GIND(jj,kk)]); // 16
+    PLOOP(pliter,pl) dualfprintf(fail_file,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g ",pp[pl],ppfirst[pl],pb[pl],piin[pl],prtestUiin[pl],prtestUU0[pl],uu0[pl],uu[pl],Uiin[pl]);  // 9*13
+    if(EOMRADTYPE!=EOMRADNONE) DLOOPA(jj) dualfprintf(fail_file,"%21.15g %21.15g ",qpp.uradcon[jj],qpp.uradcov[jj]); // 4*2=8
+    else DLOOPA(jj) dualfprintf(fail_file,"%21.15g %21.15g ",0.0,0.0);
+    DLOOPA(jj) dualfprintf(fail_file,"%21.15g %21.15g ",qpp.ucon[jj],qpp.ucov[jj]); // 4*2=8
+    if(EOMRADTYPE!=EOMRADNONE) DLOOPA(jj) dualfprintf(fail_file,"%21.15g %21.15g ",qpb.uradcon[jj],qpb.uradcov[jj]); // 4*2=8
+    else dualfprintf(fail_file,"%21.15g %21.15g ",0.0,0.0);
+    DLOOPA(jj) dualfprintf(fail_file,"%21.15g %21.15g ",qpb.ucon[jj],qpb.ucov[jj]); // 4*2=8
+    if(EOMRADTYPE!=EOMRADNONE) DLOOPA(jj) dualfprintf(fail_file,"%21.15g %21.15g ",qpiin.uradcon[jj],qpiin.uradcov[jj]); // 4*2=8
+    else dualfprintf(fail_file,"%21.15g %21.15g ",0.0,0.0);
+    DLOOPA(jj) dualfprintf(fail_file,"%21.15g %21.15g ",qpiin.ucon[jj],qpiin.ucov[jj]); // 4*2=8
+    dualfprintf(fail_file,"\n");
+
+
+
+    // get ramesh solution
+    int whichcall=0; // debug call
+    FTYPE ppeng[NPR]={0},ppent[NPR]={0},errorabseng=BIG,errorabsent=BIG;
+    FTYPE uueng[NPR]={0},uuent[NPR]={0};
+    int failtypeeng=1,failtypeent=1,iterseng=IMPMAXITER,itersent=IMPMAXITER, radinvmodeng=-1, radinvmodent=-1;
+    struct of_state qeng=*q,qent=*q;
+    get_rameshsolution(whichcall, radinvmod, failtype, failnum,  gotfirstnofail,  eomtypelocal,  itermode, errorabs, errorabsbestexternal,  iters,  totaliters,realdt, ptrgeom, pp, pb, piin, uu0, uu, Uiin, Ufin, CUf, q, ppeng, ppent, uueng, uuent, &qeng, &qent, &failtypeeng, &errorabseng, &iterseng, &radinvmodeng, &failtypeent, &errorabsent, &itersent, &radinvmodent);
+
+
+
+    /////////////////////////
+    //
+    // FAILRETURNABLE
+    //
+    /////////////////////////
+    dualfprintf(fail_file,"\nFAILREPEATABLE: %d %d %lld : ",failtype,myid,failnum);
+    dualfprintf(fail_file,"dt=%21.15g;CUf[2]=%21.15g;gam=%21.15g;",realdt,CUf[2],gam);
+    PLOOP(pliter,pl) dualfprintf(fail_file,"pp[%d]=%21.15g;ppfirst[%d]=%21.15g;pb[%d]=%21.15g;piin[%d]=%21.15g;Uiin[%d]=%21.15g;Ufin[%d]=%21.15g;dUother[%d]=%21.15g;",pl,pp[pl],pl,ppfirst[pl],pl,pb[pl],pl,piin[pl],pl,Uiin[pl],pl,Ufin[pl],pl,dUother[pl]);
+     // ptrgeom stuff
+    DLOOP(jj,kk) dualfprintf(fail_file,"ptrgeom->gcov[GIND(%d,%d)]=%21.15g;ptrgeom->gcon[GIND(%d,%d)]=%21.15g;",jj,kk,ptrgeom->gcov[GIND(jj,kk)],jj,kk,ptrgeom->gcon[GIND(jj,kk)]);
+    DLOOPA(jj) dualfprintf(fail_file,"ptrgeom->gcovpert[%d]=%21.15g;ptrgeom->beta[%d]=%21.15g;",jj,ptrgeom->gcovpert[jj],jj,ptrgeom->beta[jj]);
+    dualfprintf(fail_file,"ptrgeom->alphalapse=%21.15g;ptrgeom->betasqoalphasq=%21.15g;ptrgeom->gdet=%21.15g;ptrgeom->igdetnosing=%21.15g;ptrgeom->i=%d;ptrgeom->j=%d;ptrgeom->k=%d;ptrgeom->p=%d;",ptrgeom->alphalapse,ptrgeom->betasqoalphasq,ptrgeom->gdet,ptrgeom->igdetnosing,ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p);
+    if(q!=NULL){
+      DLOOPA(jj) dualfprintf(fail_file,"q->ucon[%d]=%21.15g;q->ucov[%d]=%21.15g;",jj,q->ucon[jj],jj,q->ucov[jj]);
+      if(EOMRADTYPE!=EOMRADNONE) DLOOPA(jj) dualfprintf(fail_file,"q->uradcon[%d]=%21.15g;q->uradcov[%d]=%21.15g;",jj,q->uradcon[jj],jj,q->uradcov[jj]);
+      else DLOOPA(jj) dualfprintf(fail_file,"q->uradcon[%d]=%21.15g;q->uradcov[%d]=%21.15g;",jj,0.0,jj,0.0);
+      dualfprintf(fail_file,"q->pressure=%21.15g;q->entropy=%21.15g;q->ifremoverestplus1ud0elseud0=%21.15g;",q->pressure,q->entropy,q->ifremoverestplus1ud0elseud0);
+    }
+    dualfprintf(fail_file,"\n");
+    
+
+    // then do:
+    // 1) grep -h --text FAILINFO 0_fail.out.grmhd* | sed 's/FAILINFO: //g'| sort -T ./ -r -g -k 7 > fails.txt
+    //
+    // or:
+    // grep -h --text FAILINFO 0_fail.out.grmhd* | grep -v "FAILINFO: 100" |grep -v "FAILINFO: 80"| sed 's/FAILINFO: //g' | sort -T ./ -r -g -k 7 > failshigherror.txt ; head -100 failshigherror.txt > failshigherror100.txt
+    //
+
+    // grep --text BAD 0_fail.out.grmhd.00*|wc -l ;  grep FAILINFO 0_fail.out.grmhd.00*|wc -l ; grep MAXF1 0_fail.out.grmhd.00*| wc -l ; grep MAXITER 0_fail.out.grmhd.00*|wc -l ; grep "also failed" 0_fail.out.grmhd.00*|wc -l 
+
+    // TO CHECK ON DAMPING:
+    //     grep -i "Damping worked" 0_fail.out.grmhd.00*|wc -l ; grep -i "Damping failed" 0_fail.out.grmhd.00*|wc -l
+
+    //   see if any MAXF1ITER: less -S fails.txt| awk '{print $1}'|sort|less
+
+    // 2) Choose numfails in below mathematica script
+
+    // 3) ~/bin/math < /data/jon/harm_math/solveimplicit_superwrapper.m
+    // or:  nohup ~/bin/math < /data/jon/harm_math/solveimplicit_superwrapper.m &> math.out &
+    // or: preferred:  ~/bin/math < /data/jon/harm_math/solveimplicit_superwrapper.m &> math.out &
+
+    // 4) grep 0Good math.out
+    // if any Good's appear, mathematica found solution when harm did not.  Fix it!
+
+    // If any appear in  grep 0WGood math.out   , then precision issue with long doubles in harm even.
+
+    // If any appear in  grep 0MGood math.out   , then gammamax case should work!
+
+    // 5) More advanced version of #4.  Use check.sh script:
+    // bash /data/jon/harmgit/scripts/check.sh math.out .  Gives overall report.
+  }
+
+
 
   return(0);
 }
