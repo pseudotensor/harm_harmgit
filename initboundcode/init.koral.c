@@ -2021,7 +2021,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 
 // assume KAPPA defines fraction of FF opacity
 #define KAPPAUSER(rho,T) (rho*KAPPA*KAPPA_FF_CODE(rho,T))
-// assume KAPPAES defines fractoin of ES opacity
+// assume KAPPAES defines fraction of ES opacity
 #define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_CODE(rho,T))
 
 
@@ -2052,7 +2052,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 
 // assume KAPPA defines fraction of FF opacity
 //#define KAPPAUSER(rho,T) (rho*KAPPA*KAPPA_FF_CODE(rho,T))
-// assume KAPPAES defines fractoin of ES opacity
+// assume KAPPAES defines fraction of ES opacity
 //#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_CODE(rho,T))
 
 #define KAPPAES (1E3) // takes VERY long time with sub-cycling, but works.
@@ -2074,7 +2074,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 
 // assume KAPPA defines fraction of FF opacity
 #define KAPPAUSER(rho,T) (rho*KAPPA*KAPPA_FF_CODE(rho,T))
-// assume KAPPAES defines fractoin of ES opacity
+// assume KAPPAES defines fraction of ES opacity
 #define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_CODE(rho,T))
 
 
@@ -2096,7 +2096,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 
 // assume KAPPA defines fraction of FF opacity
 #define KAPPAUSER(rho,T) (rho*KAPPA*KAPPA_FF_CODE(rho,T))
-// assume KAPPAES defines fractoin of ES opacity
+// assume KAPPAES defines fraction of ES opacity
 #define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_CODE(rho,T))
 
 
@@ -2159,7 +2159,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 
 // assume KAPPA defines fraction of FF opacity
 #define KAPPAUSER(rho,T) (rho*KAPPA*KAPPA_FF_CODE(rho,T))
-// assume KAPPAES defines fractoin of ES opacity
+// assume KAPPAES defines fraction of ES opacity
 #define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_CODE(rho,T))
 
 
@@ -2174,7 +2174,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 
 // assume KAPPA defines fraction of FF opacity
 #define KAPPAUSER(rho,T) (rho*KAPPA*KAPPA_FF_CODE(rho,T))
-// assume KAPPAES defines fractoin of ES opacity
+// assume KAPPAES defines fraction of ES opacity
 #define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_CODE(rho,T))
 
 
@@ -2189,7 +2189,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 
 // assume KAPPA defines fraction of FF opacity
 #define KAPPAUSER(rho,T) (rho*KAPPA*KAPPA_FF_CODE(rho,T))
-// assume KAPPAES defines fractoin of ES opacity
+// assume KAPPAES defines fraction of ES opacity
 #define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_CODE(rho,T))
 
 
@@ -2204,7 +2204,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 
 // assume KAPPA defines fraction of FF opacity
 #define KAPPAUSER(rho,T) (rho*KAPPA*KAPPA_FF_CODE(rho,T))
-// assume KAPPAES defines fractoin of ES opacity
+// assume KAPPAES defines fraction of ES opacity
 #define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_CODE(rho,T))
 
 
@@ -2229,7 +2229,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 
 // assume KAPPA defines fraction of FF opacity
 #define KAPPAUSER(rho,T) (rho*KAPPA*KAPPA_FF_CODE(rho,T))
-// assume KAPPAES defines fractoin of ES opacity
+// assume KAPPAES defines fraction of ES opacity
 #define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_CODE(rho,T))
 
 
@@ -2244,7 +2244,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 
 // assume KAPPA defines fraction of FF opacity
 #define KAPPAUSER(rho,T) (rho*KAPPA*KAPPA_FF_CODE(rho,T))
-// assume KAPPAES defines fractoin of ES opacity
+// assume KAPPAES defines fraction of ES opacity
 #define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_CODE(rho,T))
 
 
@@ -2270,7 +2270,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 // KORALTODO: Put a lower limit on T~1E4K so not overly wrongly opaque in spots where u_g->0 anomologously?
 // assume KAPPA defines fraction of FF opacity
 #define KAPPAUSER(rho,T) (rho*KAPPA*KAPPA_FF_CODE(rho,T+TEMPMIN))
-// assume KAPPAES defines fractoin of ES opacity
+// assume KAPPAES defines fraction of ES opacity
 #define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_CODE(rho,T))
 
 

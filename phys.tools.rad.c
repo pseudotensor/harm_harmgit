@@ -4332,9 +4332,10 @@ int get_rameshsolution(int whichcall, int radinvmod, int failtype, long long int
     na++; args[na]=IMPTRYCONVABS;
     na++; args[na]=IMPALLOWCONVABS;
     na++; args[na]=ARAD_CODE;
-    na++; args[na]=KAPPA_ES_CODE(1.0,1.0);
-    na++; args[na]=KAPPA_FF_CODE(1.0,1.0);
-    na++; args[na]=KAPPA_BF_CODE(1.0,1.0);
+    // so as really code uses:
+    na++; args[na]=calc_kappaes_user(1.0,1.0,0,0,0);
+    na++; args[na]=calc_kappa_user(1.0,1.0,0,0,0);
+    na++; args[na]=0.0;
     DLOOP(jj,kk){ na++; args[na]=ptrgeom->gcon[GIND(jj,kk)];}
     DLOOP(jj,kk){ na++; args[na]=ptrgeom->gcov[GIND(jj,kk)];}
     PLOOP(pliter,pl){ na++; args[na]=pp[pl]; na++; args[na]=ppfirst[pl]; na++; args[na]=pb[pl]; na++; args[na]=piin[pl]; na++; args[na]=prtestUiin[pl]; na++; args[na]=prtestUU0[pl]; na++; args[na]=uu0[pl]; na++; args[na]=uu[pl]; na++; args[na]=Uiin[pl]; }
@@ -4568,7 +4569,8 @@ int mathematica_report_check(int radinvmod, int failtype, long long int failnum,
     dualfprintf(fail_file,"%d %d %d ",NUMARGS,NUMRESULTS,WHICHVELRAMESH); // 3
     dualfprintf(fail_file,"%d %d %lld %d %d %d %21.15g %21.15g %d %d %21.15g %lld %d %21.15g ",failtype,myid,failnum,gotfirstnofail,eomtypelocal,itermode,errorabs,errorabsbestexternal,iters,totaliters,realdt,nstep,steppart,gam); // 14
     dualfprintf(fail_file,"%21.15g %21.15g %21.15g %21.15g ",GAMMAMAXRAD,ERADLIMIT,IMPTRYCONVABS,IMPALLOWCONVABS); // 4
-    dualfprintf(fail_file,"%21.15g %21.15g %21.15g %21.15g ",ARAD_CODE,KAPPA_ES_CODE(1.0,1.0),KAPPA_FF_CODE(1.0,1.0),KAPPA_BF_CODE(1.0,1.0)); // 4
+    //    dualfprintf(fail_file,"%21.15g %21.15g %21.15g %21.15g ",ARAD_CODE,KAPPA_ES_CODE(1.0,1.0),KAPPA_FF_CODE(1.0,1.0),KAPPA_BF_CODE(1.0,1.0)); // 4
+    dualfprintf(fail_file,"%21.15g %21.15g %21.15g %21.15g ",ARAD_CODE,calc_kappaes_user(1.0,1.0,0,0,0),calc_kappa_user(1.0,1.0,0,0,0),0.0); // 4
     DLOOP(jj,kk) dualfprintf(fail_file,"%21.15g ",ptrgeom->gcon[GIND(jj,kk)]); // 16
     DLOOP(jj,kk) dualfprintf(fail_file,"%21.15g ",ptrgeom->gcov[GIND(jj,kk)]); // 16
     PLOOP(pliter,pl) dualfprintf(fail_file,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g ",pp[pl],ppfirst[pl],pb[pl],piin[pl],prtestUiin[pl],prtestUU0[pl],uu0[pl],uu[pl],Uiin[pl]);  // 9*13
