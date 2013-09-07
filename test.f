@@ -36,9 +36,9 @@ c 1 means very simple Jon's version of err and sol output
 c 2 means only Jon's err output
 c 3 means no output or input (harm mode)
 c#define PRODUCTION 0
-c#define PRODUCTION 1
+#define PRODUCTION 1
 c#define PRODUCTION 2
-#define PRODUCTION 3
+c#define PRODUCTION 3
 
 #define VEL4 0
 #define VEL3 1
@@ -336,11 +336,6 @@ c     en=polytropic index = 1/Gamma, en1 = n+1
          en=1.d0/Gam1
          en1=en+1.d0
 
-c      set \tilde{u}^t=0
-         vgasf(1)=0.0d0
-         vgasp(1)=0.0d0
-         vradf(1)=0.0d0
-         vradp(1)=0.0d0
          
 
 #if(PRODUCTION==0)
@@ -899,6 +894,11 @@ c         write (*,*) ' rho: ',rhof,rhop,rhou0i,rhou0f,rhou0p
          errorabs=1.0
          errorabsbestexternal=1.0
          tolallow=1E-8
+c      set \tilde{u}^t=0
+         vgasf(1)=0.0d0
+         vgasp(1)=0.0d0
+         vradf(1)=0.0d0
+         vradp(1)=0.0d0
          return
 
  10   ifinish=1
@@ -961,6 +961,11 @@ c     Read in data in Jon's new format (181 numbers)
 #endif
          eomtype=0
          tolallow=1E-8
+c      set \tilde{u}^t=0
+         vgasf(1)=0.0d0
+         vgasp(1)=0.0d0
+         vradf(1)=0.0d0
+         vradp(1)=0.0d0
 
 #if(PRODUCTION<=2)
          write (14,"(2X,1I5,2X,1E21.15,2X,1I8)",advance="no")
@@ -1077,14 +1082,14 @@ c     Read in data in Jon's new format (211+11 numbers)
 #if(PRODUCTION<=2)
 c     read (11,*,end=10) (isc(j),j=1,4),
          read (11,*,end=10) ,
-         FNUMARGSHARM,FNUMRESULTSHARM,WHICHVELRAMESHHARM,
+     &     FNUMARGSHARM,FNUMRESULTSHARM,WHICHVELRAMESHHARM,
      &        failtype,myid,failnum,gotfirstnofail,
      &        eomtype,itermode,
      &        errorabs,errorabsbestexternal,iters,totaliters,
      &        dt,nstep,steppart,Gam,
      &        GAMMAMAXRAD,ERADLIMIT,toltry,tolallow,
      &        ARAD_CODE,
-     &        OKAPPA_ES_CODE11,OKAPPA_FF_CODE11,OKAPPA_BF_CODE11
+     &        OKAPPA_ES_CODE11,OKAPPA_FF_CODE11,OKAPPA_BF_CODE11,
      &        ((gn(j,k),k=1,4),j=1,4),
      &        ((gv(j,k),k=1,4),j=1,4),
      &        rhof,scr,rhob,rhop,src,src,rhou0i,rhou0f,rhou0p,
@@ -1570,6 +1575,14 @@ c
             stop
          endif
 #endif
+
+
+c      set \tilde{u}^t=0
+         vgasf(1)=0.0d0
+         vgasp(1)=0.0d0
+         vradf(1)=0.0d0
+         vradp(1)=0.0d0
+
 
 c     HARMEOMTYPE=2 is entropy, 3 is energy.  If 3 fails, could have reverted to entropy.
 c     If itermode=0, then in default harm mode, this was not the last attempt for the solver, so just looking at why this strategy failed -- not failure of harm ultimately.

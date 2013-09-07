@@ -1347,7 +1347,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     errorabs=1.0;
     fracenergy=1.0;
     itermode=ITERMODESTAGES;
-    whichcap=CAPTYPEBASIC;
+    whichcap=CAPTYPEFIX1;
     failreturn=koral_source_rad_implicit_mode(havebackup, didentropyalready, &eomtypelocal, whichcap, itermode, trueimpmaxiter,  truenumdampattempts, fracenergy, dissmeasure, &radinvmod, pb, uub, piin, Uiin, Ufin, CUf, ptrgeom, q, dUother ,dUcomp, &errorabs, errorabs, &iters, &f1iters);
     if(ACTUALHARDFAILURE(failreturn)){
       failfinalreturn=1;
@@ -1381,7 +1381,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     errorabs=1.0;
     fracenergy=0.0;
     itermode=ITERMODESTAGES;
-    whichcap=CAPTYPEBASIC;
+    whichcap=CAPTYPEFIX1;
     failreturn=koral_source_rad_implicit_mode(havebackup, didentropyalready, &eomtypelocal, whichcap, itermode, trueimpmaxiter,  truenumdampattempts, fracenergy, dissmeasure, &radinvmod, pb, uub, piin, Uiin, Ufin, CUf, ptrgeom, q, dUother ,dUcomp, &errorabs, errorabs, &iters, &f1iters);
     if(ACTUALHARDFAILURE(failreturn)){
       failfinalreturn=1;
@@ -1427,7 +1427,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     fracenergy=1.0;
     errorabsenergy=1.0;
     itermodeenergy=ITERMODESTAGES;
-    whichcapenergy=CAPTYPEBASIC;
+    whichcapenergy=CAPTYPEFIX1;
     trueimpmaxiterenergy=IMPMAXITER;
     truenumdampattemptsenergy=NUMDAMPATTEMPTS;
     failreturnenergy=koral_source_rad_implicit_mode(havebackup, didentropyalready, &eomtypelocal, whichcapenergy, itermodeenergy, trueimpmaxiterenergy,  truenumdampattemptsenergy, fracenergy, dissmeasure, &radinvmod, pb, uub, piin, Uiin, Ufin, CUf, ptrgeom, q, dUother ,dUcomp, &errorabsenergy, errorabsenergy, &itersenergy, &f1itersenergy);
@@ -1447,7 +1447,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       fracenergy=0.0;
       errorabsentropy=1.0;
       itermodeentropy=ITERMODESTAGES;
-      whichcapentropy=CAPTYPEBASIC;
+      whichcapentropy=CAPTYPEFIX1;
       trueimpmaxiterentropy=IMPMAXITER;
       truenumdampattemptsentropy=NUMDAMPATTEMPTS;
       failreturnentropy=koral_source_rad_implicit_mode(havebackup, didentropyalready, &eomtypelocal, whichcapentropy, itermodeentropy, trueimpmaxiterentropy,  truenumdampattemptsentropy, fracenergy, dissmeasure, &radinvmod, pb, uub, piin, Uiin, Ufin, CUf, ptrgeom, q, dUother ,dUcomp, &errorabsentropy, errorabsentropy, &itersentropy, &f1itersentropy);
@@ -1577,7 +1577,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     failreturnentropy=FAILRETURNGENERAL;// default to fail
     eomtypeentropy=EOMENTROPYGRMHD;
     errorabsentropy=1.0;
-    whichcapentropy=CAPTYPEBASIC;
+    whichcapentropy=CAPTYPEFIX1;
     trueimpmaxiterentropy=IMPMAXITERQUICK;
     truenumdampattemptsentropy=NUMDAMPATTEMPTSQUICK;
     PLOOP(pliter,pl){
@@ -1873,7 +1873,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       radErfnegenergy=0;
       failreturnenergy=FAILRETURNGENERAL; // default to fail in case energy not to be done at all
       eomtypeenergy=EOMGRMHD;
-      whichcapenergy=CAPTYPEBASIC;
+      whichcapenergy=CAPTYPEFIX1;
       errorabsenergy=1.0;
       trueimpmaxiterenergy=IMPMAXITERQUICK;
       truenumdampattemptsenergy=NUMDAMPATTEMPTSQUICK;
@@ -2161,7 +2161,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       radErfnegcold=0;
       failreturncold=FAILRETURNGENERAL; // default to fail in case cold not to be done at all
       eomtypecold=EOMCOLDGRMHD;
-      whichcapcold=CAPTYPEBASIC;
+      whichcapcold=CAPTYPEFIX1;
       errorabscold=1.0;
       FTYPE fracenergycold=0.0;
       FTYPE errorabscoldbest=1.0;
@@ -4465,6 +4465,7 @@ int get_rameshsolution(int whichcall, int radinvmod, int failtype, long long int
       resultsjon[5] = q->ucon[3];
     }
     else{
+      resultsjon[2] = 0.0;
       SLOOPA(jj) resultsjon[2+jj] = pp[UU+jj];
     }
     resultsjon[6] = pp[URAD0];
@@ -4475,6 +4476,7 @@ int get_rameshsolution(int whichcall, int radinvmod, int failtype, long long int
       resultsjon[10] = q->uradcon[3];
     }
     else{
+      resultsjon[7]=0.0;
       SLOOPA(jj) resultsjon[7+jj] = pp[URAD0+jj];
     }
     resultsjon[11] = (FTYPE)failtype;
@@ -5461,7 +5463,7 @@ static int source_explicit(int whichsc, int whichradsourcemethod, int methoddtsu
       // initialize counters
       newtonstats.nstroke=newtonstats.lntries=0;
       int doradonly=0;
-      int whichcap=CAPTYPEBASIC;
+      int whichcap=CAPTYPEFIX1;
       eomtypelocal=*eomtype; // re-default
       int radinvmod=0;
       FTYPE dissmeasure=-1.0; // assume ok to try energy
@@ -5705,7 +5707,7 @@ static int source_explicit(int whichsc, int whichradsourcemethod, int methoddtsu
     newtonstats.nstroke=newtonstats.lntries=0;
     int doradonly=0;
     eomtypelocal=*eomtype; // re-default
-    int whichcap=CAPTYPEBASIC;
+    int whichcap=CAPTYPEFIX1;
     int radinvmod=0;
     FTYPE dissmeasure=-1.0; // assume ok to try energy
     int failutoprim=Utoprimgen_failwrapper(doradonly,&radinvmod,showmessages, allowlocalfailurefixandnoreport, finalstep, &eomtypelocal, whichcap, EVOLVEUTOPRIM, UNOTHING, Unew, q, ptrgeom, dissmeasure, prnew, &newtonstats);
@@ -6901,7 +6903,7 @@ int prad_fftolab(int *whichvel, int *whichcoord, int i, int j, int k, int loc, s
   // NOTEMARK: lpflag=UTOPRIMNOFAIL means accept input pout for velocity to maybe be used in local reductions to fluid frame.
   // u2p_rad() only uses U[URAD0-URAD3]
   // generally u2p_rad() could use all of pout[] except only assigns pout[PRAD0-PRAD3] and doesn't use that for anything except as "static" solution (i.e. uses pin effectively)
-  u2p_rad(showmessages, allowlocalfailurefixandnoreport, GAMMAMAXRAD, CAPTYPEBASIC, U, pout, ptrgeomtouse, &lpflag, &lpflagrad);
+  u2p_rad(showmessages, allowlocalfailurefixandnoreport, GAMMAMAXRAD, CAPTYPEFIX1, U, pout, ptrgeomtouse, &lpflag, &lpflagrad);
 
   //  DLOOPA(jj) dualfprintf(fail_file,"u2p_rad: jj=%d pout=%g\n",jj,pout[PRAD0+jj]);
 
@@ -7227,8 +7229,8 @@ int u2p_rad(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gammama
 #if(WHICHU2PRAD==0)
   toreturn=u2p_rad_orig(showmessages, allowlocalfailurefixandnoreport, uu, pin, ptrgeom,lpflag, lpflagrad);
 #else
-  //  toreturn=u2p_rad_new(showmessages, allowlocalfailurefixandnoreport, gammamaxrad, whichcap, uu, pin, ptrgeom,lpflag, lpflagrad);
-  toreturn=u2p_rad_new_pre(showmessages, allowlocalfailurefixandnoreport, gammamaxrad, uu, pin, ptrgeom,lpflag, lpflagrad);
+  toreturn=u2p_rad_new(showmessages, allowlocalfailurefixandnoreport, gammamaxrad, whichcap, uu, pin, ptrgeom,lpflag, lpflagrad);
+  //  toreturn=u2p_rad_new_pre(showmessages, allowlocalfailurefixandnoreport, gammamaxrad, uu, pin, ptrgeom,lpflag, lpflagrad);
 #endif
 
   return(toreturn);
@@ -7467,22 +7469,25 @@ int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gam
 
   FTYPE yvar;
   int didmod=0;
+  int didmodEr=0,didmody=0;
 
   ///////////////////
   //
   // Get y
   //
   ///////////////////
-  if(Er>=SMALL){ // then good solution.  Avoid caps during implicit solver to allow progress on solution in smooth way.
+  if(Er>ERADLIMIT){ // then good solution.  Avoid caps during implicit solver to allow progress on solution in smooth way.
     // E_r^2
     FTYPE Ersq=Er*Er;
     // y
-    yvar = Utildesq / (SMALL+Ersq);
+    yvar = Utildesq / (ERADLIMIT*ERADLIMIT+Ersq);
   }
   else{// then bad solution
     //    dualfprintf(fail_file,"Er=%26.20g<SMALL=%26.20g yvar=%26.20g Utildesq=%26.20g Ersq=%26.20g\n",Er,SMALL,yvar,Utildesq,Ersq);
+    Er=ERADLIMIT;
     yvar = ylimit; // used
     didmod=1;
+    didmodEr=1;
     numErneg++;
   }
 
@@ -7492,60 +7497,74 @@ int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gam
   // Get \gamma and \gamma^2 from y
   //
   ///////////////////
+  FTYPE Erf,pr;
   if(yvar<0.0){
     //    dualfprintf(fail_file,"Er=%26.20g yvar=%26.20g<0.0 Utildesq=%26.20g Ersq=%26.20g\n",Er,yvar,Utildesq,Ersq);
     gammasq = 1.0;
     gamma = 1.0;
-    didmod=1;
+    if(didmodEr) didmod=didmody=1;
+    //    didmod=1; // assume when y<0 that don't need to modify how Erf computed (i.e. Er is ok)
     numyvarneg++;
+    pr = Er/(4.0*gammasq-1.0);
+    // radiation frame energy density
+    Erf = pr/(4.0/3.0-1.0);
   }
   else if(yvar>ylimit){ // beyond gamma limit, then rescale gamma
     gammasq = gammamaxsq;
     gamma = gammamax;
     didmod=1;
+    didmody=1;
     numyvarbig++;
+
+    pr = Er/(4.0*gammasq-1.0);
+    // radiation frame energy density
+    Erf = pr/(4.0/3.0-1.0);
     //    dualfprintf(fail_file,"yvar=%g>%g Ersq=%g gamma=%g\n",yvar,ylimit,Ersq,gamma);
   }
   else{ // normal solution
     gammasq = (2.0 - yvar + sqrt(4.0-3.0*yvar))/ (4.0*(1.0-yvar));
     gamma=sqrt(gammasq);
-    //    dualfprintf(fail_file,"yvar=%g Ersq=%g gamma=%g\n",yvar,Ersq,gamma);
+
+    pr = Er/(4.0*gammasq-1.0);
+    // radiation frame energy density
+    Erf = pr/(4.0/3.0-1.0);
   }
+
+
 
   ///////////////////
   //
   // Get uconrel and Erf from gamma,gammasq, and Utildecon
   //
   ///////////////////
-  FTYPE Erf;
   FTYPE urfconrel[NDIM]={0.0};
   int jj;
   //  if(1||gammamaxrad>0.9*GAMMAMAXRADIMPLICITSOLVER || Er>=SMALL){ // then good solution.  Avoid caps during implicit solver to allow progress on solution in smooth way.
-  if(Er>=SMALL){ // then good solution.  Avoid caps during implicit solver to allow progress on solution in smooth way.
-    // now obtain primitives
-    FTYPE pr = Er/(4.0*gammasq-1.0);
-    // radiation frame energy density
-    Erf = pr/(4.0/3.0-1.0);
-    
+  if(didmody==0 && didmodEr==0){ // then good solution
+   
     // radiation frame relativity 4-velocity
     SLOOPA(jj) urfconrel[jj] = gamma*(Utildecon[jj]/(4.0*pr*gammasq));
 
-    if(didmod){
-      // Get resulting gamma
-      FTYPE gammanew,qsqnew;
-      gamma_calc_fromuconrel(&pin[URAD1-1],ptrgeom,&gammanew,&qsqnew);
-      //    dualfprintf(fail_file,"didmod: gamma=%g gammanew=%g\n",gamma,gammanew);
-
-      // rescale, assuming want to be gamma that chose in previous section
-      if(gammanew>1.0){
-        FTYPE fvar=sqrt((gammasq-1.0)/(gammanew*gammanew-1.0));
-        SLOOPA(jj) urfconrel[jj] *= fvar;
-      }
-      //    dualfprintf(fail_file,"urfconrel=%g %g %g\n",urfconrel[1],urfconrel[2],urfconrel[3]);
-    }
+    //if(startpos[1]+ptrgeom->i==131 && startpos[2]+ptrgeom->j==19) dualfprintf(fail_file,"0didmod=%d : urfconrel=%g %g %g : %g : pr=%g Er=%g Ersq=%g yvar=%g Utildesq=%g\n",didmod,urfconrel[1],urfconrel[2],urfconrel[3],gamma,pr,Er,Er*Er,yvar,Utildesq);
   }
-  else{ // fixes in case Erf<SMALL
-    didmod=1;
+  else if(0&&didmody==1 && didmodEr==0){ // then good solution and just rescale gamma. // No, avoid, since need to handle Er and Erf if gamma changes alot.
+    // Get resulting gamma
+    FTYPE gammanew,qsqnew;
+    gamma_calc_fromuconrel(&pin[URAD1-1],ptrgeom,&gammanew,&qsqnew);
+    //    dualfprintf(fail_file,"didmod: gamma=%g gammanew=%g\n",gamma,gammanew);
+
+    // rescale, assuming want to be gamma that chose in previous section
+    if(gammanew>1.0){
+      FTYPE fvar=sqrt((gammasq-1.0)/(gammanew*gammanew-1.0));
+      SLOOPA(jj) urfconrel[jj] *= fvar;
+    }
+    else{
+      SLOOPA(jj) urfconrel[jj] *= 0.0;
+    }
+
+    //    if(startpos[1]+ptrgeom->i==131 && startpos[2]+ptrgeom->j==19) dualfprintf(fail_file,"didmod=%d : urfconrel=%g %g %g : %g %g\n",didmod,urfconrel[1],urfconrel[2],urfconrel[3],gamma,gammanew);
+  }
+  else{ // fixes in case when Er<ERADLIMIT (whether or not y is modified)
     if(whichcap==CAPTYPEFIX1){
 
       // If E_r<0, then can't trust E_r and Erf is arbitrary.  Choose instead first urfconrel to be maximum gamma as pointed in same 4-velocity direction as from Utildecon over previous Erf or u_g just to set scale
@@ -7556,7 +7575,7 @@ int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gam
       // now get gamma for this fake urfconrel that is so-far only very roughly expected to be correct.
       FTYPE gammanew,qsqnew;
       gamma_calc_fromuconrel(urfconrel,ptrgeom,&gammanew,&qsqnew);
-      //    dualfprintf(fail_file,"gamma=%g gammanew=%g\n",gamma,gammanew);
+      //      dualfprintf(fail_file,"gamma=%g gammanew=%g Utildeabs=%g : %g %g %g\n",gamma,gammanew,Utildeabs,Utildecon[1],Utildecon[2],Utildecon[3]);
 
       // rescale, assuming want to be gammamax
       if(gammanew>1.0){
@@ -7564,7 +7583,7 @@ int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gam
         SLOOPA(jj) urfconrel[jj] *= fvar;
         // verify
         gamma_calc_fromuconrel(urfconrel,ptrgeom,&gammanew,&qsqnew);
-        //      dualfprintf(fail_file,"VERIFY: gamma=%g\n",gamma);
+        //dualfprintf(fail_file,"VERIFY: gamma=%g fvar=%g\n",gamma,fvar);
         gamma=gammanew;
         gammasq=gammanew*gammanew;
         qsq=qsqnew;
@@ -7576,12 +7595,14 @@ int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gam
         qsq=0.0;
       }
 
-      FTYPE utildesq=1.0+qsq;
-      FTYPE pr=gamma*Utildesq/(4.0*gammasq) / (utildesq);
+      //FTYPE utildesq=1.0+qsq;
+      //pr=gamma*Utildesq/(4.0*gammasq) / (utildesq);
+
+      // This determination of Er and pr connects continuously with y<=ylimit case no matter what original Er was.
+      Er = sqrt(fabs(Utildesq)/ylimit);
+      pr=Er/(4.0*gammasq-1.0);
       // Get Erf
       Erf = pr/(4.0/3.0-1.0);
-
-      didmod=1;
     }// endif capfixtype1
     else if(whichcap==CAPTYPEBASIC){
       // This just rejects entire radiative solution and makes it up.  Bit extreme, but works.  But leaves Erf having lowest values in spots where radiation just slightly went beyond speed of light.
@@ -7590,7 +7611,6 @@ int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gam
       gamma=1.0;
       // radiation frame relativity 4-velocity
       SLOOPA(jj) urfconrel[jj] = 0.0;
-      didmod=1;
     }
     else{
       dualfprintf(fail_file,"No such whichcap=%d\n",whichcap);
@@ -7598,6 +7618,10 @@ int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gam
     }
   }
 
+  //  if(startpos[1]+ptrgeom->i==131 && startpos[2]+ptrgeom->j==19){
+  //    dualfprintf(fail_file,"AFTER urfconrel=%g %g %g : %g\n",urfconrel[1],urfconrel[2],urfconrel[3],gamma);
+  //  dualfprintf(fail_file,"AFTER2 urfconrel2=%g %g %g : %g\n",urfconrel[1]*sqrt(fabs(ptrgeom->gcov[GIND(1,1)])),urfconrel[2]*sqrt(fabs(ptrgeom->gcov[GIND(2,2)])),urfconrel[3]*sqrt(fabs(ptrgeom->gcov[GIND(3,3)])),gamma);
+  // }
 
 
   /////////////////
