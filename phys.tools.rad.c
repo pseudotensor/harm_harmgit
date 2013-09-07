@@ -4691,8 +4691,8 @@ static int f_error_check(int showmessages, int showmessagesheavy, int iter, FTYP
 
 #if(1)
   FTYPE rhoref=MAX(pp[RHO],piin[RHO]);
-  FTYPE fnormspace2 = rhoref*pow(fabs(fnormtime)/rhoref,0.5); // energy term in correct scale with \rho_0(v/c)^1 to get reference in case v\sim 0 FUCK: This assumes rho v term dominates
-  FTYPE fnormtime2=rhoref*pow(fabs(fnormspace/rhoref),2.0); // momentum term in correct scale with \rho_0(v/c)^2 in case E\sim 0.  FUCK: assumes rho v term dominates.
+  FTYPE fnormspace2 = rhoref*pow(fabs(fnormtime)/rhoref,0.5); // energy term in correct scale with \rho_0(v/c)^1 to get reference in case v\sim 0 NOTE: This assumes rho v term dominates
+  FTYPE fnormtime2=rhoref*pow(fabs(fnormspace/rhoref),2.0); // momentum term in correct scale with \rho_0(v/c)^2 in case E\sim 0.  NOTE: assumes rho v term dominates.
 #else
   FTYPE fakevel = MIN(1.0,fnormspace/(SMALL+fnormtime));
   FTYPE fnormspace2 = fabs(fnormtime)*fakevel;
@@ -6185,14 +6185,32 @@ static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYP
 
 
 #if(0)
-// get R^t_t u^t + (R^t_t u^t u_t)u^t and avoid catastrophic cancellation
+
+  // Ru^\mu = R^\mu_\nu u^\nu
+  // Ruu = R^a_b u_a u^b
+
+  // Ruuu^\mu = Ru^\mu + Ruu u^\mu
+  //          = R^\mu_c u^c + R^a_b u_a u^b u^\mu
+
+  // Ruuu^t = R^t_t u^t + R^t_t u_t u^t u^t   + R^t_i u^i   + R^i_t u_i u^t u^t + R^t_j u_t u^j u^t
+
+  // Ruuu^t = R^t_t u^t (1 + u_t u^t)         + Rus + Ruuss
+
+  // (1 + u_t u^t) = 1 + u^t (u^t g_{tt} + u^i g_{ti}) = 1+ u^t^2 g_{tt} + u^t u^i g_{ti} = 1 - (\gamma/\alpha)^2 (-g_{tt}) + u^t u^i g_{ti}
+
+  // = 1 - (\gamma/\alpha)^2 (-(1 + g_{tt} -1)) = 1 - (\gamma/\alpha)^2 + (\gamma/\alpha)^2 (1+g_{tt})
+
+  // 
+
+  // get R^t_t u^t + (R^t_t u^t u_t)u^t and avoid catastrophic cancellation
   FTYPE Ruuss=0.; DLOOP(i,j) if(i!=TT && j!=TT) Ruuss+=Rij[i][j]*ucov[i]*ucon[j];
   // FUCK: Check again.
   FTYPE fact=(-ptrgeom->gcov[GIND(TT,TT)])*(-ptrgeom->gcon[GIND(TT,TT)]);
   FTYPE fact2=1.0-fact;
   FTYPE utildecon[NDIM]={0.0,pp[URAD1],pp[URAD2],pp[URAD3]};
   FTYPE utsq = 0.0,utildecov[NDIM]; lower_vec(utildecon,ptrgeom,utildecov); SLOOPA(j) utsq+=utildecon[j]*utildecov[j];
-  FTYPE Rut=Rij[TT][TT]*ucon[TT] * ( fact2 - utsq*fact + ucon[TT]*(ucon[1]*ptrgeom->gcov[GIND(TT,1)]+ucon[2]*ptrgeom->gcov[GIND(TT,2)]+ucon[3]*ptrgeom->gcov[GIND(TT,3)]));
+  FTYPE ucontucovt = ( fact2 - utsq*fact + ucon[TT]*(ucon[1]*ptrgeom->gcov[GIND(TT,1)]+ucon[2]*ptrgeom->gcov[GIND(TT,2)]+ucon[3]*ptrgeom->gcov[GIND(TT,3)]));
+  FTYPE Rut=Rij[TT][TT]*ucon[TT] * ucontucovt;
   FTYPE Rus;
 #endif
 
@@ -6202,10 +6220,10 @@ static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYP
 #if(1)
     Ruuu=(Ru + Ruu*ucon[i]);
 #else
-    if(i>TT) Ruuu=(Ru + Ruu*ucon[i]);
+    if(i!=TT) Ruuu=(Ru + Ruu*ucon[i]);
     else{
       Rus=0.; DLOOPA(j) if(j!=TT) Rus+=Rij[i][j]*ucon[j];
-      Ruuu=Ruuss+Rus + Rut;
+      Ruuu=Ruuss + Rus + Rut;
     }
 #endif
 
@@ -7364,8 +7382,12 @@ int u2p_rad_new_pre(int showmessages, int allowlocalfailurefixandnoreport, FTYPE
     //    dualfprintf(fail_file,"gamma=%g gammanew=%g\n",gamma,gammanew);
 
     // rescale, assuming want to be gamma
+    FTYPE fvar=sqrt((gamma*gamma-1.0)/(gammanew*gammanew-1.0));
     if(gamma<gammanew && gammanew>1.0){
-      SLOOPA(jj) urfconrel[jj] *= sqrt((gamma*gamma-1.0)/(gammanew*gammanew-1.0));
+      SLOOPA(jj) urfconrel[jj] *= fvar;
+    }
+    else{
+      SLOOPA(jj) urfconrel[jj] *= 0.0;
     }
     //    dualfprintf(fail_file,"urfconrel=%g %g %g\n",urfconrel[1],urfconrel[2],urfconrel[3]);
 
@@ -7547,29 +7569,12 @@ int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gam
 
     //if(startpos[1]+ptrgeom->i==131 && startpos[2]+ptrgeom->j==19) dualfprintf(fail_file,"0didmod=%d : urfconrel=%g %g %g : %g : pr=%g Er=%g Ersq=%g yvar=%g Utildesq=%g\n",didmod,urfconrel[1],urfconrel[2],urfconrel[3],gamma,pr,Er,Er*Er,yvar,Utildesq);
   }
-  else if(0&&didmody==1 && didmodEr==0){ // then good solution and just rescale gamma. // No, avoid, since need to handle Er and Erf if gamma changes alot.
-    // Get resulting gamma
-    FTYPE gammanew,qsqnew;
-    gamma_calc_fromuconrel(&pin[URAD1-1],ptrgeom,&gammanew,&qsqnew);
-    //    dualfprintf(fail_file,"didmod: gamma=%g gammanew=%g\n",gamma,gammanew);
-
-    // rescale, assuming want to be gamma that chose in previous section
-    if(gammanew>1.0){
-      FTYPE fvar=sqrt((gammasq-1.0)/(gammanew*gammanew-1.0));
-      SLOOPA(jj) urfconrel[jj] *= fvar;
-    }
-    else{
-      SLOOPA(jj) urfconrel[jj] *= 0.0;
-    }
-
-    //    if(startpos[1]+ptrgeom->i==131 && startpos[2]+ptrgeom->j==19) dualfprintf(fail_file,"didmod=%d : urfconrel=%g %g %g : %g %g\n",didmod,urfconrel[1],urfconrel[2],urfconrel[3],gamma,gammanew);
-  }
   else{ // fixes in case when Er<ERADLIMIT (whether or not y is modified)
     if(whichcap==CAPTYPEFIX1){
 
       // If E_r<0, then can't trust E_r and Erf is arbitrary.  Choose instead first urfconrel to be maximum gamma as pointed in same 4-velocity direction as from Utildecon over previous Erf or u_g just to set scale
       // Get urfconrel in same direction as Utildecon
-      FTYPE Utildeabs=sqrt(fabs(Utildesq));
+      FTYPE Utildeabs=sqrt(fabs(Utildesq))+fabs(Er)+ERADLIMIT;
       SLOOPA(jj) urfconrel[jj] = Utildecon[jj]/Utildeabs;
 
       // now get gamma for this fake urfconrel that is so-far only very roughly expected to be correct.
@@ -7583,7 +7588,7 @@ int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gam
         SLOOPA(jj) urfconrel[jj] *= fvar;
         // verify
         gamma_calc_fromuconrel(urfconrel,ptrgeom,&gammanew,&qsqnew);
-        //dualfprintf(fail_file,"VERIFY: gamma=%g fvar=%g\n",gamma,fvar);
+        //dualfprintf(fail_file,"VERIFY: gamma=%g gammanew=%g fvar=%g\n",gamma,gammanew,fvar);
         gamma=gammanew;
         gammasq=gammanew*gammanew;
         qsq=qsqnew;
@@ -7599,18 +7604,39 @@ int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gam
       //pr=gamma*Utildesq/(4.0*gammasq) / (utildesq);
 
       // This determination of Er and pr connects continuously with y<=ylimit case no matter what original Er was.
-      Er = sqrt(fabs(Utildesq)/ylimit);
+      Er = ERADLIMIT + sqrt(fabs(Utildesq)/ylimit);
       pr=Er/(4.0*gammasq-1.0);
       // Get Erf
       Erf = pr/(4.0/3.0-1.0);
     }// endif capfixtype1
     else if(whichcap==CAPTYPEBASIC){
-      // This just rejects entire radiative solution and makes it up.  Bit extreme, but works.  But leaves Erf having lowest values in spots where radiation just slightly went beyond speed of light.
-      // However, this is most reasonable since if E_r<0, that means radiative energy is in another cell.  If fill this cell with gammamax version of Erf using Utildesq, then adding energy, and situation can blow-up fast.
-      Erf = ERADLIMIT;
-      gamma=1.0;
-      // radiation frame relativity 4-velocity
-      SLOOPA(jj) urfconrel[jj] = 0.0;
+
+
+      if(didmodEr){
+        // This just rejects entire radiative solution and makes it up.  Bit extreme, but works.  But leaves Erf having lowest values in spots where radiation just slightly went beyond speed of light.
+        // However, this is most reasonable since if E_r<0, that means radiative energy is in another cell.  If fill this cell with gammamax version of Erf using Utildesq, then adding energy, and situation can blow-up fast.
+        Erf = ERADLIMIT;
+        gamma=1.0;
+        // radiation frame relativity 4-velocity
+        SLOOPA(jj) urfconrel[jj] = 0.0;
+      }
+      else{
+        // Get resulting gamma and fix \tilde{u}^i, but don't modify Erf.
+        FTYPE gammanew,qsqnew;
+        gamma_calc_fromuconrel(&pin[URAD1-1],ptrgeom,&gammanew,&qsqnew);
+        //    dualfprintf(fail_file,"didmod: gamma=%g gammanew=%g\n",gamma,gammanew);
+        
+        // rescale, assuming want to be gamma that chose in previous section
+        if(gammanew>1.0){
+          FTYPE fvar=sqrt((gammasq-1.0)/(gammanew*gammanew-1.0));
+          SLOOPA(jj) urfconrel[jj] *= fvar;
+        }
+        else{
+          SLOOPA(jj) urfconrel[jj] *= 0.0;
+        }
+
+        //    if(startpos[1]+ptrgeom->i==131 && startpos[2]+ptrgeom->j==19) dualfprintf(fail_file,"didmod=%d : urfconrel=%g %g %g : %g %g\n",didmod,urfconrel[1],urfconrel[2],urfconrel[3],gamma,gammanew);
+      }
     }
     else{
       dualfprintf(fail_file,"No such whichcap=%d\n",whichcap);
