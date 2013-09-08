@@ -2575,7 +2575,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     // i=j=k=0 just to show infrequently
     if(debugfail>=2 && (ptrgeom->i==0 && ptrgeom->j==0  && ptrgeom->k==0)) dualfprintf(fail_file,"numimplicits=%lld numenergy=%lld numentropy=%lld numboth=%lld numcold=%lld numbad=%lld numramesh=%lld numrameshenergy=%lld numrameshentropy=%lld averagef1iter=%g averageiter=%g\n",numimplicits,numenergy,numentropy,numboth,numcold,numbad,numramesh,numrameshenergy,numrameshentropy,(FTYPE)numoff1iter/(FTYPE)numimplicits,(FTYPE)numofiter/(FTYPE)numimplicits);
     
-    numhisterr[MAX(MIN((int)(-log10l(errorabs)),NUMNUMHIST-1),0)]++;
+    numhisterr[MAX(MIN((int)(-log10l(SMALL+errorabs)),NUMNUMHIST-1),0)]++;
     numhistiter[MAX(MIN(iters,IMPMAXITER),0)]++;
 #define HISTREPORTSTEP (20)
     if(nstep%HISTREPORTSTEP==0 && ptrgeom->i==0 && ptrgeom->j==0 && ptrgeom->k==0){
@@ -3017,6 +3017,7 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
     int convreturnf3limit=0;
     int notholding=1;
     FTYPE DAMPFACTOR;
+    int earlylowerror;
 
     ////////////////////////////////
     //
@@ -3052,6 +3053,7 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
       canbreak=0; // reset each start of iteration
       convreturnf3limit=0;
       notholding=1; // default is no hold
+      earlylowerror=0;
 
     
       if(iter>10){ // KORALTODO: improve upon this later.  Only matters if not doing PMHD method
@@ -3450,6 +3452,7 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
         FTYPE LOCALPREIMPCONV=MIN(10.0*NUMEPSILON,trueimptryconv); // more strict than later tolerance
         FTYPE LOCALPREIMPCONVABS=(FTYPE)(NDIM+2)*LOCALPREIMPCONV; // more strict than later tolerance
         if(f_error_check(showmessages, showmessagesheavy, iter, LOCALPREIMPCONV,LOCALPREIMPCONVABS,realdt,DIMTYPEFCONS,eomtypelocal,itermode,fracenergy,dissmeasure,dimfactU,pp,piin,f1,f1norm,f1report,Uiin, uu0,uu,ptrgeom,&errorabsf1)){
+          earlylowerror=1;
           if(debugfail>=DEBUGLEVELIMPSOLVERMORE) dualfprintf(fail_file,"Early low error=%g iter=%d\n",errorabsf1,iter);
           //  not failure.
           break;
@@ -3971,7 +3974,8 @@ static int koral_source_rad_implicit_mode(int havebackup, int didentropyalready,
     //
     ///////////////
     int failreturnf=0;
-    if(failreturn==0){
+    if(failreturn==0 && earlylowerror==0){
+
 
       int fakeiter;
       for(fakeiter=0;fakeiter<=0;fakeiter++){
