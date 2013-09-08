@@ -36,9 +36,9 @@ c 1 means very simple Jon's version of err and sol output
 c 2 means only Jon's err output
 c 3 means no output or input (harm mode)
 c#define PRODUCTION 0
-#define PRODUCTION 1
+c#define PRODUCTION 1
 c#define PRODUCTION 2
-c#define PRODUCTION 3
+#define PRODUCTION 3
 
 #define VEL4 0
 #define VEL3 1
@@ -3002,6 +3002,7 @@ c     the errors.
             dprim=dvmin*eps
          endif
          prim(j)=prim0(j)+dprim
+c         prim(j)=prim0(j)-myabs(dprim)
 
          call func(prim,error,errornorm,err4,err3,iflag,jflag)
 #if(PRODUCTION==0)
@@ -3139,6 +3140,7 @@ c     the errors.
             dprim=dvmin*eps
          endif
          prim3(j)=prim30(j)+dprim
+c         prim3(j)=prim30(j)-myabs(dprim)
 
          call func3(primsave,prim3,error3,errornorm,
      &        err4,err3,iflag,jflag,func)

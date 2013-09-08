@@ -1193,7 +1193,7 @@ static int check_on_inversion(int usedhotinversion,int usedentropyinversion,int 
 {
   int badinversion,badinversionfail;
   int badinversionrad,badinversionfailrad;
-  FTYPE Unormalnew[NPR],Unormalold[NPR];
+  FTYPE Unormalnew[NPR],Unormalnewabs[NPR],Unormalold[NPR];
   FTYPE fdiff[NPR];
   struct of_state q;
   int pl,pliter;
@@ -1237,7 +1237,8 @@ static int check_on_inversion(int usedhotinversion,int usedentropyinversion,int 
     //
     /////////////
     MYFUN(get_stateforcheckinversion(pr, ptrgeom, &q),"flux.c:fluxcalc()", "get_state()", 1);
-    MYFUN(primtoU(UNOTHING,pr, &q, ptrgeom, Unew, NULL),"step_ch.c:advance()", "primtoU()", 1); // UtoU inside doesn't do anything...therefore for REMOVERESTMASSFROMUU==1, Unew[UU] will have rest-mass included
+    FTYPE Unewabs[NPR];
+    MYFUN(primtoU(UNOTHING,pr, &q, ptrgeom, Unew, Unewabs),"step_ch.c:advance()", "primtoU()", 1); // UtoU inside doesn't do anything...therefore for REMOVERESTMASSFROMUU==1, Unew[UU] will have rest-mass included
 
 
     /////////////
@@ -1249,6 +1250,7 @@ static int check_on_inversion(int usedhotinversion,int usedentropyinversion,int 
     PLOOP(pliter,pl){
       Unormalold[pl] = Uold[pl];
       Unormalnew[pl] = Unew[pl];
+      Unormalnewabs[pl] = Unewabs[pl];
     }      
 
 #if(REMOVERESTMASSFROMUU==2)
@@ -1257,12 +1259,14 @@ static int check_on_inversion(int usedhotinversion,int usedentropyinversion,int 
     // In the limit as v->0, this can be compared against the normalized version of the U_i terms
     Unormalold[UU] = Uold[UU];
     Unormalnew[UU] = Unew[UU];
+    Unormalnewabs[UU] = Unewabs[UU];
 
     // No longer doing below, just use gcon or gcov to get correct dimensional comparison
     // now deal with momentum terms and correct for geometry so all U_i's are comparable
     // (\rho+u+p)\gamma u_i -> (\rho+u+p)\gamma^2 v^2
     //    SLOOPA(jj) Unormalold[UU+jj] = Uold[UU+jj]*(q.ucon[jj]/q.ucon[TT]);
     //    SLOOPA(jj) Unormalnew[UU+jj] = Unew[UU+jj]*(q.ucon[jj]/q.ucon[TT]);
+    //    SLOOPA(jj) Unormalnewabs[UU+jj] = Unewabs[UU+jj]*(q.ucon[jj]/q.ucon[TT]);
 #endif
 
 
@@ -1310,9 +1314,9 @@ static int check_on_inversion(int usedhotinversion,int usedentropyinversion,int 
       //      Unormalnew[pl]*=ptrgeom->gdet;
       //      Unormalold[pl]*=ptrgeom->gdet;
       if(pl==RHO || pl==UU || pl==URAD0&&(*lpflagrad==0)){
-        errornorm=(fabs(Unormalnew[pl])+fabs(Unormalold[pl])+SMALL);
+        errornorm=(fabs(Unormalnewabs[pl])+fabs(Unormalnew[pl])+fabs(Unormalold[pl])+SMALL);
         // KORALTODO: when URAD0<<UU, can't expect radiation error to be small relative to only itself when interaction between radiation and fluid. 
-        if(pl==URAD0) errornorm+=(fabs(Unormalnew[UU])+fabs(Unormalold[UU])+SMALL);
+        if(pl==URAD0) errornorm+=(fabs(Unormalnewabs[UU])+fabs(Unormalnew[UU])+fabs(Unormalold[UU])+SMALL);
         fdiff[pl] = fabs(Unormalnew[pl]-Unormalold[pl])/errornorm;
       }
       else if(pl==ENTROPY){
@@ -1321,32 +1325,46 @@ static int check_on_inversion(int usedhotinversion,int usedentropyinversion,int 
         //        fdiff[pl] = fabs(exp(Unormalnew[pl]/(SMALL+fabs(Unormalnew[RHO])))-exp(Unormalold[pl]/(SMALL+fabs(Unormalold[RHO]))))/errornorm;
         // TdS / (TdS + E)
         FTYPE Tgas=compute_temp_simple(ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p,pr[RHO],pr[UU]);
-        errornorm=fabs(Tgas)*(fabs(Unormalnew[pl])+fabs(Unormalold[pl])+SMALL) + (fabs(Unormalnew[UU])+fabs(Unormalold[UU])+SMALL);
+        errornorm=fabs(Tgas)*(fabs(Unormalnewabs[pl])+fabs(Unormalnew[pl])+fabs(Unormalold[pl])+SMALL) + (fabs(Unormalnewabs[UU])+fabs(Unormalnew[UU])+fabs(Unormalold[UU])+SMALL);
         fdiff[pl] = fabs(Unormalnew[pl]-Unormalold[pl])/errornorm;
       }
       else if(pl==U1 || pl==U2 || pl==U3){
 
-        errornorm  = THIRD*(fabs(Unormalnew[U1]*sqrt(fabs(ptrgeom->gcon[GIND(1,1)]))) + fabs(Unormalold[U1]*sqrt(fabs(ptrgeom->gcon[GIND(1,1)]))) + fabs(Unormalnew[U2]*sqrt(fabs(ptrgeom->gcon[GIND(2,2)])))+fabs(Unormalold[U2]*sqrt(fabs(ptrgeom->gcon[GIND(2,2)])))+fabs(Unormalnew[U3]*sqrt(fabs(ptrgeom->gcon[GIND(3,3)])))+fabs(Unormalold[U3]*sqrt(fabs(ptrgeom->gcon[GIND(3,3)]))));
+        errornorm  = THIRD*THIRD*(
+                                  +(fabs(Unormalnewabs[U1]) + fabs(Unormalnew[U1]) + fabs(Unormalold[U1]))*sqrt(fabs(ptrgeom->gcon[GIND(1,1)]))
+                                  +(fabs(Unormalnewabs[U2]) + fabs(Unormalnew[U2]) + fabs(Unormalold[U2]))*sqrt(fabs(ptrgeom->gcon[GIND(2,2)]))
+                                  +(fabs(Unormalnewabs[U3]) + fabs(Unormalnew[U3]) + fabs(Unormalold[U3]))*sqrt(fabs(ptrgeom->gcon[GIND(3,3)]))
+                                  );
 #if(REMOVERESTMASSFROMUU==2)
         // only valid comparison if rest-mass taken out of energy term and modify U_i term to be comparable with U_t term
-        errornorm = MAX(errornorm,0.5*(fabs(Unormalold[UU])+fabs(Unormalnew[UU])));
+        errornorm = MAX(errornorm,THIRD*(fabs(Unormalold[UU])+fabs(Unormalnew[UU])+fabs(Unormalnewabs[UU])));
 #endif
-     
         fdiff[pl] = sqrt(fabs(ptrgeom->gcon[GIND(pl-UU,pl-UU)]))*fabs(Unormalnew[pl]-Unormalold[pl]) / (errornorm+SMALL);
 
       }
       else if( (pl==URAD1 || pl==URAD2 || pl==URAD3)&&(*lpflagrad==0) ){
         //        errornorm  = THIRD*(fabs(Unormalnew[URAD1])+fabs(Unormalold[URAD1])+fabs(Unormalnew[URAD2])+fabs(Unormalold[URAD2])+fabs(Unormalnew[URAD3])+fabs(Unormalold[URAD3]));
-        errornorm  = THIRD*(fabs(Unormalnew[URAD1]*sqrt(fabs(ptrgeom->gcon[GIND(1,1)])))+fabs(Unormalold[URAD1]*sqrt(fabs(ptrgeom->gcon[GIND(1,1)])))+fabs(Unormalnew[URAD2]*sqrt(fabs(ptrgeom->gcon[GIND(2,2)])))+fabs(Unormalold[URAD2]*sqrt(fabs(ptrgeom->gcon[GIND(2,2)])))+fabs(Unormalnew[URAD3]*sqrt(fabs(ptrgeom->gcon[GIND(3,3)])))+fabs(Unormalold[URAD3]*sqrt(fabs(ptrgeom->gcon[GIND(3,3)]))));
+        errornorm  = THIRD*THIRD*(
+                                  +(fabs(Unormalnewabs[URAD1]) + fabs(Unormalnew[URAD1]) + fabs(Unormalold[URAD1]))*sqrt(fabs(ptrgeom->gcon[GIND(1,1)]))
+                                  +(fabs(Unormalnewabs[URAD2]) + fabs(Unormalnew[URAD2]) + fabs(Unormalold[URAD2]))*sqrt(fabs(ptrgeom->gcon[GIND(2,2)]))
+                                  +(fabs(Unormalnewabs[URAD3]) + fabs(Unormalnew[URAD3]) + fabs(Unormalold[URAD3]))*sqrt(fabs(ptrgeom->gcon[GIND(3,3)]))
+                                  );
         // KORALTODO: when URAD0<<UU, can't expect radiation error to be small relative to only itself when interaction between radiation and fluid. 
-        errornorm  += THIRD*(fabs(Unormalnew[U1]*sqrt(fabs(ptrgeom->gcon[GIND(1,1)])))+fabs(Unormalold[U1]*sqrt(fabs(ptrgeom->gcon[GIND(1,1)])))+fabs(Unormalnew[U2]*sqrt(fabs(ptrgeom->gcon[GIND(2,2)])))+fabs(Unormalold[U2]*sqrt(fabs(ptrgeom->gcon[GIND(2,2)])))+fabs(Unormalnew[U3]*sqrt(fabs(ptrgeom->gcon[GIND(3,3)])))+fabs(Unormalold[U3]*sqrt(fabs(ptrgeom->gcon[GIND(3,3)]))));
-        errornorm = MAX(errornorm,0.5*(fabs(Unormalold[URAD0])+fabs(Unormalnew[URAD0])));
+        errornorm  += THIRD*THIRD*(
+                                  +(fabs(Unormalnewabs[U1]) + fabs(Unormalnew[U1]) + fabs(Unormalold[U1]))*sqrt(fabs(ptrgeom->gcon[GIND(1,1)]))
+                                  +(fabs(Unormalnewabs[U2]) + fabs(Unormalnew[U2]) + fabs(Unormalold[U2]))*sqrt(fabs(ptrgeom->gcon[GIND(2,2)]))
+                                  +(fabs(Unormalnewabs[U3]) + fabs(Unormalnew[U3]) + fabs(Unormalold[U3]))*sqrt(fabs(ptrgeom->gcon[GIND(3,3)]))
+                                  );
+        errornorm = MAX(errornorm,0.5*(fabs(Unormalold[URAD0])+fabs(Unormalnew[URAD0])+fabs(Unormalnewabs[URAD0])));
 
         fdiff[pl] = sqrt(fabs(ptrgeom->gcon[GIND(pl-URAD0,pl-URAD0)]))*fabs(Unormalnew[pl]-Unormalold[pl]) / (errornorm+SMALL);
       }
       else if(pl==B1 || pl==B2 || pl==B3){
-
-        errornorm  = THIRD*(fabs(Unormalnew[B1]*sqrt(fabs(ptrgeom->gcov[GIND(1,1)])))+fabs(Unormalold[B1]*sqrt(fabs(ptrgeom->gcov[GIND(1,1)])))+fabs(Unormalnew[B2]*sqrt(fabs(ptrgeom->gcov[GIND(2,2)])))+fabs(Unormalold[B2]*sqrt(fabs(ptrgeom->gcov[GIND(2,2)])))+fabs(Unormalnew[B3]*sqrt(fabs(ptrgeom->gcov[GIND(3,3)])))+fabs(Unormalold[B3]*sqrt(fabs(ptrgeom->gcov[GIND(3,3)]))));
+        errornorm  = THIRD*THIRD*(
+                                  +(fabs(Unormalnewabs[B1]) + fabs(Unormalnew[B1]) + fabs(Unormalold[B1]))*sqrt(fabs(ptrgeom->gcon[GIND(1,1)]))
+                                  +(fabs(Unormalnewabs[B2]) + fabs(Unormalnew[B2]) + fabs(Unormalold[B2]))*sqrt(fabs(ptrgeom->gcon[GIND(2,2)]))
+                                  +(fabs(Unormalnewabs[B3]) + fabs(Unormalnew[B3]) + fabs(Unormalold[B3]))*sqrt(fabs(ptrgeom->gcon[GIND(3,3)]))
+                                  );
         fdiff[pl] = sqrt(fabs(ptrgeom->gcov[GIND(pl-B1+1,pl-B1+1)]))*fabs(Unormalnew[pl]-Unormalold[pl]) / (errornorm+KINDASMALL); // for field order 1E-100 or less, geometry division and multiplication causes this to shift in value by order unity.
       }
     }
