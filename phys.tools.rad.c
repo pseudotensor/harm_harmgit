@@ -1649,7 +1649,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       failreturnentropy=koral_source_rad_implicit_mode(havebackup, didentropyalready, &eomtypeentropy, whichcapentropy, itermodeentropy, trueimpmaxiterentropy,  truenumdampattemptsentropy, fracenergy, dissmeasure, &radinvmodentropy, pbentropy, uubentropy, piin, Uiin, Ufin, CUf, ptrgeom, &qentropy, dUother ,dUcompentropy, &errorabsentropy, errorabsentropybest, &itersentropy, &f1itersentropy);
 
       // see if want to keep
-      if((errorabsentropy<errorabsentropybest && (radinvmodentropy==0 || radinvmodentropybest==1 && radinvmodentropy==1) || radinvmodentropybest==1 && radinvmodentropy==0 && (errorabsentropy<errorabsentropybest||errorabsentropy<IMPOKCONVABS)) && ACTUALHARDFAILURE(failreturnentropy)==0){
+      if((errorabsentropy<errorabsentropybest && (radinvmodentropy==0 || radinvmodentropybest==1 && radinvmodentropy==1) || radinvmodentropybest==1 && radinvmodentropy==0 && (errorabsentropy<errorabsentropybest||errorabsentropy<IMPOKCONVABS) || radinvmodentropybest==0 && radinvmodentropy==1 && (errorabsentropybest>IMPOKCONVABS && errorabsentropy<IMPOKCONVABS)) && ACTUALHARDFAILURE(failreturnentropy)==0){
         // store result in case better than latter results
         lpflagentropybest=*lpflag;
         lpflagradentropybest=*lpflagrad;
@@ -1713,7 +1713,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       failreturnentropy=koral_source_rad_implicit_mode(havebackup, didentropyalready, &eomtypeentropy, whichcapentropy, itermodeentropy, trueimpmaxiterentropy,  truenumdampattemptsentropy, fracenergy, dissmeasure, &radinvmodentropy, pbentropy, uubentropy, piin, Uiin, Ufin, CUf, ptrgeom, &qentropy, dUother ,dUcompentropy, &errorabsentropy, errorabsentropybest, &itersentropy, &f1itersentropy);
 
       // see if want to keep
-      if((errorabsentropy<errorabsentropybest && (radinvmodentropy==0 || radinvmodentropybest==1 && radinvmodentropy==1) || radinvmodentropybest==1 && radinvmodentropy==0 && (errorabsentropy<errorabsentropybest||errorabsentropy<IMPOKCONVABS)) && ACTUALHARDFAILURE(failreturnentropy)==0){
+      if((errorabsentropy<errorabsentropybest && (radinvmodentropy==0 || radinvmodentropybest==1 && radinvmodentropy==1) || radinvmodentropybest==1 && radinvmodentropy==0 && (errorabsentropy<errorabsentropybest||errorabsentropy<IMPOKCONVABS) || radinvmodentropybest==0 && radinvmodentropy==1 && (errorabsentropybest>IMPOKCONVABS && errorabsentropy<IMPOKCONVABS)) && ACTUALHARDFAILURE(failreturnentropy)==0){
         // store result in case better than latter results
         lpflagentropybest=*lpflag;
         lpflagradentropybest=*lpflagrad;
@@ -1777,7 +1777,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       failreturnentropy=koral_source_rad_implicit_mode(havebackup, didentropyalready, &eomtypeentropy, whichcapentropy, itermodeentropy, trueimpmaxiterentropy,  truenumdampattemptsentropy, fracenergy, dissmeasure, &radinvmodentropy, pbentropy, uubentropy, piin, Uiin, Ufin, CUf, ptrgeom, &qentropy, dUother ,dUcompentropy, &errorabsentropy, errorabsentropybest, &itersentropy, &f1itersentropy);
 
       // see if want to keep
-      if((errorabsentropy<errorabsentropybest && (radinvmodentropy==0 || radinvmodentropybest==1 && radinvmodentropy==1) || radinvmodentropybest==1 && radinvmodentropy==0 && (errorabsentropy<errorabsentropybest||errorabsentropy<IMPOKCONVABS)) && ACTUALHARDFAILURE(failreturnentropy)==0){
+      if((errorabsentropy<errorabsentropybest && (radinvmodentropy==0 || radinvmodentropybest==1 && radinvmodentropy==1) || radinvmodentropybest==1 && radinvmodentropy==0 && (errorabsentropy<errorabsentropybest||errorabsentropy<IMPOKCONVABS) || radinvmodentropybest==0 && radinvmodentropy==1 && (errorabsentropybest>IMPOKCONVABS && errorabsentropy<IMPOKCONVABS)) && ACTUALHARDFAILURE(failreturnentropy)==0){
         // store result in case better than latter results
         lpflagentropybest=*lpflag;
         lpflagradentropybest=*lpflagrad;
@@ -1854,7 +1854,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       //
 
       // see if want to keep
-      if((errorabsentropy<errorabsentropybest && (radinvmodentropy==0 || radinvmodentropybest==1 && radinvmodentropy==1) || radinvmodentropybest==1 && radinvmodentropy==0 && (errorabsentropy<errorabsentropybest||errorabsentropy<IMPOKCONVABS)) && ACTUALHARDFAILURE(failreturnentropy)==0){
+      if((errorabsentropy<errorabsentropybest && (radinvmodentropy==0 || radinvmodentropybest==1 && radinvmodentropy==1) || radinvmodentropybest==1 && radinvmodentropy==0 && (errorabsentropy<errorabsentropybest||errorabsentropy<IMPOKCONVABS) || radinvmodentropybest==0 && radinvmodentropy==1 && (errorabsentropybest>IMPOKCONVABS && errorabsentropy<IMPOKCONVABS)) && ACTUALHARDFAILURE(failreturnentropy)==0){
         if(ACCEPTASNOFAILURE(failreturnentropy)) usedrameshentropy=1; // means will use this actually, not just best yet no good enough
         // store result in case better than latter results
         lpflagentropybest=*lpflag;
@@ -2058,7 +2058,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
         // see if want to keep
         //        if(errorabsenergy<errorabsenergybest && ACTUALHARDFAILURE(failreturnenergy)==0 || failreturnenergy==FAILRETURNMODESWITCH){
-        if((errorabsenergy<errorabsenergybest && (radinvmodenergy==0 || radinvmodenergybest==1 && radinvmodenergy==1) || radinvmodenergybest==1 && radinvmodenergy==0 && (errorabsenergy<errorabsenergybest||errorabsenergy<IMPOKCONVABS)) && ACTUALHARDFAILURE(failreturnenergy)==0 || failreturnenergy==FAILRETURNMODESWITCH){
+        //        if((errorabsenergy<errorabsenergybest && (radinvmodenergy==0 || radinvmodenergybest==1 && radinvmodenergy==1) || radinvmodenergybest==1 && radinvmodenergy==0 && (errorabsenergy<errorabsenergybest||errorabsenergy<IMPOKCONVABS)) && ACTUALHARDFAILURE(failreturnenergy)==0 || failreturnenergy==FAILRETURNMODESWITCH){
+        if((errorabsenergy<errorabsenergybest && (radinvmodenergy==0 || radinvmodenergybest==1 && radinvmodenergy==1) || radinvmodenergybest==1 && radinvmodenergy==0 && (errorabsenergy<errorabsenergybest||errorabsenergy<IMPOKCONVABS) || radinvmodenergybest==0 && radinvmodenergy==1 && (errorabsenergybest>IMPOKCONVABS && errorabsenergy<IMPOKCONVABS)) && ACTUALHARDFAILURE(failreturnenergy)==0){
           // store result in case better than latter results
           lpflagenergybest=*lpflag;
           lpflagradenergybest=*lpflagrad;
@@ -2125,7 +2126,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
         // see if want to keep
         //        if(errorabsenergy<errorabsenergybest && ACTUALHARDFAILURE(failreturnenergy)==0 || failreturnenergy==FAILRETURNMODESWITCH){
-        if((errorabsenergy<errorabsenergybest && (radinvmodenergy==0 || radinvmodenergybest==1 && radinvmodenergy==1) || radinvmodenergybest==1 && radinvmodenergy==0 && (errorabsenergy<errorabsenergybest||errorabsenergy<IMPOKCONVABS)) && ACTUALHARDFAILURE(failreturnenergy)==0 || failreturnenergy==FAILRETURNMODESWITCH){
+        //        if((errorabsenergy<errorabsenergybest && (radinvmodenergy==0 || radinvmodenergybest==1 && radinvmodenergy==1) || radinvmodenergybest==1 && radinvmodenergy==0 && (errorabsenergy<errorabsenergybest||errorabsenergy<IMPOKCONVABS)) && ACTUALHARDFAILURE(failreturnenergy)==0 || failreturnenergy==FAILRETURNMODESWITCH){
+        if((errorabsenergy<errorabsenergybest && (radinvmodenergy==0 || radinvmodenergybest==1 && radinvmodenergy==1) || radinvmodenergybest==1 && radinvmodenergy==0 && (errorabsenergy<errorabsenergybest||errorabsenergy<IMPOKCONVABS) || radinvmodenergybest==0 && radinvmodenergy==1 && (errorabsenergybest>IMPOKCONVABS && errorabsenergy<IMPOKCONVABS)) && ACTUALHARDFAILURE(failreturnenergy)==0){
           // store result in case better than latter results
           lpflagenergybest=*lpflag;
           lpflagradenergybest=*lpflagrad;
@@ -2231,7 +2233,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
         // see if want to keep
         //        if(errorabsenergy<errorabsenergybest && ACTUALHARDFAILURE(failreturnenergy)==0){// || failreturnenergy==FAILRETURNMODESWITCH){ // no switch mode in ramesh solver yet.
-        if((errorabsenergy<errorabsenergybest && (radinvmodenergy==0 || radinvmodenergybest==1 && radinvmodenergy==1) || radinvmodenergybest==1 && radinvmodenergy==0 && (errorabsenergy<errorabsenergybest||errorabsenergy<IMPOKCONVABS)) && ACTUALHARDFAILURE(failreturnenergy)==0){
+        //        if((errorabsenergy<errorabsenergybest && (radinvmodenergy==0 || radinvmodenergybest==1 && radinvmodenergy==1) || radinvmodenergybest==1 && radinvmodenergy==0 && (errorabsenergy<errorabsenergybest||errorabsenergy<IMPOKCONVABS)) && ACTUALHARDFAILURE(failreturnenergy)==0){
+        if((errorabsenergy<errorabsenergybest && (radinvmodenergy==0 || radinvmodenergybest==1 && radinvmodenergy==1) || radinvmodenergybest==1 && radinvmodenergy==0 && (errorabsenergy<errorabsenergybest||errorabsenergy<IMPOKCONVABS) || radinvmodenergybest==0 && radinvmodenergy==1 && (errorabsenergybest>IMPOKCONVABS && errorabsenergy<IMPOKCONVABS)) && ACTUALHARDFAILURE(failreturnenergy)==0){
           if(ACCEPTASNOFAILURE(failreturnenergy)) usedrameshenergy=1; // means will use this actually, not just best yet no good enough
           // store result in case better than latter results
           lpflagenergybest=*lpflag;
