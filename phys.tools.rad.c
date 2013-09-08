@@ -7530,7 +7530,7 @@ int u2p_rad_new_pre(int showmessages, int allowlocalfailurefixandnoreport, FTYPE
 
     // rescale, assuming want to be gamma
     FTYPE fvar=sqrt((gamma*gamma-1.0)/(gammanew*gammanew-1.0));
-    if(gamma<gammanew && gammanew>1.0){
+    if(gammanew>1.0){
       SLOOPA(jj) urfconrel[jj] *= fvar;
     }
     else{

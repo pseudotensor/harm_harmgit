@@ -378,28 +378,28 @@ int Utoprimgen(int showmessages, int allowlocalfailurefixandnoreport, int finals
     ///////////////////
     if(HOT2ENTROPY && (hotpflag>0 || PICKBESTHOT)){
 
-
       entropytried=tryentropyinversion(showmessages, allowlocalfailurefixandnoreport,finalstep, hotpflag, PICKBESTHOT, pi, pr0, pr, pressure, Ugeomfree, Ugeomfree0, qptr, ptrgeom,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
-      PLOOP(pliter,pl) entropypr[pl]=pr[pl];
+      if(entropytried){
+        PLOOP(pliter,pl) entropypr[pl]=pr[pl];
 
-      // get failure flag
-      entropypflag=GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL);
-      entropyradinvmod=GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL);
-      entropyhardfailure=(IFUTOPRIMFAIL(entropypflag) && IFUTOPRIMFAILSOFT(entropypflag)==0);
+        // get failure flag
+        entropypflag=GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL);
+        entropyradinvmod=GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL);
+        entropyhardfailure=(IFUTOPRIMFAIL(entropypflag) && IFUTOPRIMFAILSOFT(entropypflag)==0);
 
-      if(!entropyhardfailure){
-        // report back that used this
-        *eomtype=EOMENTROPYGRMHD;
+        if(!entropyhardfailure){
+          // report back that used this
+          *eomtype=EOMENTROPYGRMHD;
         
-        usedhotinversion=0;
-        usedentropyinversion=1;
-        usedcoldinversion=0;
-        usedffdeinversion=0;
+          usedhotinversion=0;
+          usedentropyinversion=1;
+          usedcoldinversion=0;
+          usedffdeinversion=0;
         
-        // check entropy inversion if inversion thinks it was successful
-        check_on_inversion(usedhotinversion,usedentropyinversion,usedcoldinversion,usedffdeinversion,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr0, pr, pressure, ptrgeom, Uold, Unew,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
+          // check entropy inversion if inversion thinks it was successful
+          check_on_inversion(usedhotinversion,usedentropyinversion,usedcoldinversion,usedffdeinversion,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr0, pr, pressure, ptrgeom, Uold, Unew,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
+        }
       }
-
       
     }
 
@@ -412,26 +412,27 @@ int Utoprimgen(int showmessages, int allowlocalfailurefixandnoreport, int finals
     if(HOT2COLD && (entropypflag>0 && hotpflag>0) ){
 
       coldtried=trycoldinversion(showmessages, allowlocalfailurefixandnoreport,finalstep, hotpflag, 0, pi, pr0, pr, pressure, Ugeomfree, Ugeomfree0, qptr, ptrgeom,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
-      PLOOP(pliter,pl) coldpr[pl]=pr[pl];
+      if(coldtried){
+        PLOOP(pliter,pl) coldpr[pl]=pr[pl];
 
-      // get failure flag
-      coldpflag=GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL);
-      coldradinvmod=GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL);
-      coldhardfailure=(IFUTOPRIMFAIL(coldpflag) && IFUTOPRIMFAILSOFT(coldpflag)==0);
+        // get failure flag
+        coldpflag=GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL);
+        coldradinvmod=GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL);
+        coldhardfailure=(IFUTOPRIMFAIL(coldpflag) && IFUTOPRIMFAILSOFT(coldpflag)==0);
 
-      if(!coldhardfailure){
-        usedhotinversion=0;
-        usedentropyinversion=0;
-        usedcoldinversion=1;
-        usedffdeinversion=0;
+        if(!coldhardfailure){
+          usedhotinversion=0;
+          usedentropyinversion=0;
+          usedcoldinversion=1;
+          usedffdeinversion=0;
         
-        // report back that used this
-        *eomtype=EOMCOLDGRMHD;
+          // report back that used this
+          *eomtype=EOMCOLDGRMHD;
         
-        // check cold inversion if inversion thinks it was successful
-        check_on_inversion(usedhotinversion,usedentropyinversion,usedcoldinversion,usedffdeinversion,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr0, pr, pressure, ptrgeom, Uold, Unew,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
+          // check cold inversion if inversion thinks it was successful
+          check_on_inversion(usedhotinversion,usedentropyinversion,usedcoldinversion,usedffdeinversion,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr0, pr, pressure, ptrgeom, Uold, Unew,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
+        }
       }
-
 
     }
 
@@ -496,26 +497,27 @@ int Utoprimgen(int showmessages, int allowlocalfailurefixandnoreport, int finals
     if(ENTROPY2HOT && (entropypflag>0&&PICKBESTHOT==0 || PICKBESTHOT&&(entropypflag>0&&fracenergy==0.0 || fracenergy!=0.0))){
 
       hottried=tryhotinversion(showmessages, allowlocalfailurefixandnoreport,finalstep, entropypflag, PICKBESTHOT, pi, pr0, pr, pressure, Ugeomfree, Ugeomfree0, qptr, ptrgeom,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
-      PLOOP(pliter,pl) hotpr[pl]=pr[pl];
-
-         // get failure flag
-      hotpflag=GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL);
-      hotradinvmod=GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL);
-      hothardfailure=(IFUTOPRIMFAIL(hotpflag) && IFUTOPRIMFAILSOFT(hotpflag)==0);
-      if(!hothardfailure){
-
-        // report back that used this
-        *eomtype=EOMGRMHD;
-
-        // check on hot inversion if it thinks it was successful
-        usedhotinversion=1;
-        usedentropyinversion=0;
-        usedcoldinversion=0;
-        usedffdeinversion=0;
-        // check on hot inversion
-        check_on_inversion(usedhotinversion,usedentropyinversion,usedcoldinversion,usedffdeinversion,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr0, pr, pressure, ptrgeom, Uold, Unew,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
+      if(hottried){
+        PLOOP(pliter,pl) hotpr[pl]=pr[pl];
+        
+        // get failure flag
+        hotpflag=GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL);
+        hotradinvmod=GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL);
+        hothardfailure=(IFUTOPRIMFAIL(hotpflag) && IFUTOPRIMFAILSOFT(hotpflag)==0);
+        if(!hothardfailure){
+          
+          // report back that used this
+          *eomtype=EOMGRMHD;
+          
+          // check on hot inversion if it thinks it was successful
+          usedhotinversion=1;
+          usedentropyinversion=0;
+          usedcoldinversion=0;
+          usedffdeinversion=0;
+          // check on hot inversion
+          check_on_inversion(usedhotinversion,usedentropyinversion,usedcoldinversion,usedffdeinversion,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr0, pr, pressure, ptrgeom, Uold, Unew,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
+        }
       }
-
 
     }
 
@@ -527,25 +529,26 @@ int Utoprimgen(int showmessages, int allowlocalfailurefixandnoreport, int finals
     ///////////////////
     if(ENTROPY2COLD && (entropypflag>0 && hotpflag>0) ){
       coldtried=trycoldinversion(showmessages, allowlocalfailurefixandnoreport,finalstep, entropypflag, 0, pi, pr0, pr, pressure, Ugeomfree, Ugeomfree0, qptr, ptrgeom,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
-      PLOOP(pliter,pl) coldpr[pl]=pr[pl];
+      if(coldtried){
+        PLOOP(pliter,pl) coldpr[pl]=pr[pl];
 
-      coldpflag=GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL);
-      coldradinvmod=GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL);
-      coldhardfailure=(IFUTOPRIMFAIL(coldpflag) && IFUTOPRIMFAILSOFT(coldpflag)==0);
+        coldpflag=GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL);
+        coldradinvmod=GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL);
+        coldhardfailure=(IFUTOPRIMFAIL(coldpflag) && IFUTOPRIMFAILSOFT(coldpflag)==0);
 
-      if(!coldhardfailure){
-        // report back that used this
-        *eomtype=EOMCOLDGRMHD;
+        if(!coldhardfailure){
+          // report back that used this
+          *eomtype=EOMCOLDGRMHD;
 
-        usedhotinversion=0;
-        usedentropyinversion=0;
-        usedcoldinversion=1;
-        usedffdeinversion=0;
+          usedhotinversion=0;
+          usedentropyinversion=0;
+          usedcoldinversion=1;
+          usedffdeinversion=0;
 
-        // check cold inversion
-        check_on_inversion(usedhotinversion,usedentropyinversion,usedcoldinversion,usedffdeinversion,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr0, pr, pressure, ptrgeom, Uold, Unew,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
+          // check cold inversion
+          check_on_inversion(usedhotinversion,usedentropyinversion,usedcoldinversion,usedffdeinversion,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr0, pr, pressure, ptrgeom, Uold, Unew,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
+        }
       }
-
     }
 
     
@@ -795,7 +798,8 @@ int tryhotinversion(int showmessages, int allowlocalfailurefixandnoreport, int f
       Ugeomfree[pl]=Ugeomfree0[pl];
 
       // setup input guess and other already-inverted solutions
-      prhot[pl]=pr0[pl];
+      if(badfailure==0 && forcetry) prhot[pl]=prentropy[pl]; // then use entropy as guess
+      else prhot[pl]=pr0[pl];
     }
 
     /////////////////////////////////////////////////////////
@@ -872,7 +876,7 @@ int tryhotinversion(int showmessages, int allowlocalfailurefixandnoreport, int f
 
 
 
-  return(0);
+  return(triedhot);
 }
 
 
@@ -923,7 +927,8 @@ int tryentropyinversion(int showmessages, int allowlocalfailurefixandnoreport, i
       Ugeomfree[pl]=Ugeomfree0[pl];
 
       // setup input guess and other already-inverted solutions
-      prentropy[pl]=pr0[pl];
+      if(forcetry && badfailure==0) prentropy[pl]=prhot[pl]; // use hot as guess since hot was actually good
+      else prentropy[pl]=pr0[pl];
     }
     
     /////////////////////////////////////////////////////////
@@ -936,10 +941,13 @@ int tryentropyinversion(int showmessages, int allowlocalfailurefixandnoreport, i
       prentropy[UU]=MAX(fabs(prentropy[UU]),fabs(pi[UU]));
     }
     
+    // setup as if full entropy evolution
+    int whichentropy=EVOLVEFULLENTROPY;
     // get entropy evolution inversion
-    Utoprimgen_pick(showmessages, allowlocalfailurefixandnoreport, UTOPRIMJONNONRELCOMPAT, eomtypelocal, EVOLVENOENTROPY, Ugeomfree, ptrgeom, &entropypflag, prentropy,pressure,newtonstats, lpflagrad);
+    // EVOLVENOENTROPY
+    Utoprimgen_pick(showmessages, allowlocalfailurefixandnoreport, UTOPRIMJONNONRELCOMPAT, eomtypelocal, whichentropy, Ugeomfree, ptrgeom, &entropypflag, prentropy,pressure,newtonstats, lpflagrad);
 
-    
+
     ///////////////////////////////////
     //
     // check if entropy solution is good
@@ -1307,9 +1315,14 @@ static int check_on_inversion(int usedhotinversion,int usedentropyinversion,int 
         if(pl==URAD0) errornorm+=(fabs(Unormalnew[UU])+fabs(Unormalold[UU])+SMALL);
         fdiff[pl] = fabs(Unormalnew[pl]-Unormalold[pl])/errornorm;
       }
-      else if(pl==ENTROPY){// can be + or -, so use positive definite exp(S/rho)=exp(s) version
-        errornorm=(fabs(exp(Unormalnew[pl]/(SMALL+fabs(Unormalnew[RHO]))))+fabs(exp(Unormalold[pl]/(SMALL+fabs(Unormalold[RHO]))))+SMALL);
-        fdiff[pl] = fabs(exp(Unormalnew[pl]/(SMALL+fabs(Unormalnew[RHO])))-exp(Unormalold[pl]/(SMALL+fabs(Unormalold[RHO]))))/errornorm;
+      else if(pl==ENTROPY){
+        // can be + or -, so use positive definite exp(S/rho)=exp(s) version
+        //        errornorm=(fabs(exp(Unormalnew[pl]/(SMALL+fabs(Unormalnew[RHO]))))+fabs(exp(Unormalold[pl]/(SMALL+fabs(Unormalold[RHO]))))+SMALL);
+        //        fdiff[pl] = fabs(exp(Unormalnew[pl]/(SMALL+fabs(Unormalnew[RHO])))-exp(Unormalold[pl]/(SMALL+fabs(Unormalold[RHO]))))/errornorm;
+        // TdS / (TdS + E)
+        FTYPE Tgas=compute_temp_simple(ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p,pr[RHO],pr[UU]);
+        errornorm=fabs(Tgas)*(fabs(Unormalnew[pl])+fabs(Unormalold[pl])+SMALL) + (fabs(Unormalnew[UU])+fabs(Unormalold[UU])+SMALL);
+        fdiff[pl] = fabs(Unormalnew[pl]-Unormalold[pl])/errornorm;
       }
       else if(pl==U1 || pl==U2 || pl==U3){
 

@@ -3984,11 +3984,11 @@ static int general_newton_raphson(int showmessages, PFTYPE *lpflag, int eomtype,
 
     // DEBUG:
 #if(0)
-    if(nstep>=26070){
-      if(1||myid==5 && nstep==1 && steppart==0 && ifileglobal==19 && jfileglobal==15){
-        for(it=0;it<n;it++) dualfprintf(fail_file,"lntries=%d after funcd: x[%d]=%26.20g dx[%d]=%26.20g errx=%26.20g diddamp=%d dampfactor=%26.20g didcycle=%d : %g %g %g %g %g %g %g %g %g\n",(int)(newtonstats->lntries),it,x[it],it,dx[it],errx,diddamp,DAMPFACTOR[it],didcycle,wglobal[2],Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc);
-      }
-    }
+    //    if(nstep>=26070){
+    //      if(1||myid==5 && nstep==1 && steppart==0 && ifileglobal==19 && jfileglobal==15){
+    for(it=0;it<n;it++) dualfprintf(fail_file,"lntries=%d after funcd: x[%d]=%26.20g dx[%d]=%26.20g f=%26.20g df=%26.20g errx=%26.20g diddamp=%d dampfactor=%26.20g didcycle=%d : %g %g %g %g %g %g %g %g %g\n",(int)(newtonstats->lntries),it,x[it],it,dx[it],f,df,errx,diddamp,DAMPFACTOR[it],didcycle,wglobal[2],Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc);
+        //      }
+        //    }
 #endif
 
 #if(CRAZYDEBUG&&DEBUGINDEX)
@@ -4259,6 +4259,15 @@ static int general_newton_raphson(int showmessages, PFTYPE *lpflag, int eomtype,
         }
       }
 
+      /////
+      //
+      // undo damping if no longer damping
+      // Otherwise too slow eventually, and otherwise error based upon dx thinks error is much smaller than really is.
+      //
+      /////
+      for( id = 0; id < n ; id++) {
+        if(diddamp==0) DAMPFACTOR[id]=MIN(1.0,2.0*DAMPFACTOR[id]);
+      }
 
 
 #if(CRAZYDEBUG&&DEBUGINDEX)

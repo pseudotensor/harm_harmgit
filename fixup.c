@@ -910,7 +910,9 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
       FTYPE dissmeasure=-1.0; // assume energy try ok
 
       newtonstats.nstroke=newtonstats.lntries=0;
+      //      dualfprintf(fail_file,"BEFORE FIXUPUTOPRIMGEN\n");
       failreturn=Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,&eomtype,OTHERUTOPRIM,UNOTHING,U,&q, ptrgeom,dissmeasure,prmhd,prmhd,&newtonstats);
+      //      dualfprintf(fail_file,"AFTER FIXUPUTOPRIMGEN\n");
       // have to add since takes effort.s
       nstroke+=newtonstats.nstroke; newtonstats.nstroke=newtonstats.lntries=0;
 
