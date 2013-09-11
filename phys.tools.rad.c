@@ -1217,12 +1217,12 @@ static int f_implicit(int iter, int failreturnallowable, int whichcall, int show
   // At this point, even if first iteration, know whether source term is what contributes to changes in uu.
   // If no absolute force to machine precision for each absolute uu, then implicit stepping can be avoided.
   // Even if inversions led to no consistent inversion (e.g. raditive inversion uses ceilings and so uu!=uu0 even for G=0), the below is correct.
+  // This even accounts for case where entropy or energy suggest need implicit
+  // This even accounts for when RAD quantities or MHD quantities differ on whether need explicit, since go over all pl always.
   //
-  // FUCK: This should be overridden if using gas but for rad the below check suggests one should do implicit or visa versa.
   ////////
   *goexplicit=1;
-  JACLOOPALT(iv,startjac,endjac){
-    pl=erefU[iv];
+  PLOOP(pliter,pl){
     if(Gallabs[pl]+uuallabs[pl]==uuallabs[pl]){
       // then no change
     }
