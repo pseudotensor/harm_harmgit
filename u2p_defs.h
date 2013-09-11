@@ -82,7 +82,7 @@
 // even 1 extra iteration fixes this problem for that test
 // let's do 2 extra for precise inversion
 #define EXTRA_NEWT_ITER 2
-#define EXTRA_NEWT_ITER_ULTRAREL 4
+#define EXTRA_NEWT_ITER_ULTRAREL 2
 #else
 // always do 1 extra to avoid error estimate issues as above
 #define EXTRA_NEWT_ITER 1
