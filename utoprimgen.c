@@ -376,7 +376,7 @@ int Utoprimgen(int showmessages, int allowlocalfailurefixandnoreport, int finals
     // If hot GRMHD failed or gets suspicious solution, revert to entropy GRMHD if solution
     // If radiation, then this redoes radiation inversion since entropy would give new velocity and local corrections in u2p_rad() might use velocity.
     ///////////////////
-    if(HOT2ENTROPY && (hotpflag>0 || whichmethod==MODEPICKBEST)){
+    if(HOT2ENTROPY && (hotpflag>0 && whichmethod==MODEPICKREVERT || whichmethod==MODEPICKBEST)){
 
       entropytried=tryentropyinversion(showmessages, allowlocalfailurefixandnoreport,finalstep, hotpflag, whichmethod==MODEPICKBEST, whichcap, pi, pr0, pr, pressure, Ugeomfree, Ugeomfree0, qptr, ptrgeom,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
       if(entropytried){
@@ -492,9 +492,9 @@ int Utoprimgen(int showmessages, int allowlocalfailurefixandnoreport, int finals
     ////////////////////
     //  If entropy GRMHD failed or gets suspicious solution, revert to hot GRMHD
     ///////////////////
-    //    if(ENTROPY2HOT && (entropypflag>0 || (whichmethod==MODEPICKBEST))){
+    //    if(ENTROPY2HOT && (entropypflag>0 && whichmethod==MODEPICKREVERT || (whichmethod==MODEPICKBEST))){
     // below is consistent with hot entropy forced when fracenergy=0.0 as long as entropy didn't fail to invert.
-    if(ENTROPY2HOT && (entropypflag>0&&whichmethod!=MODEPICKBEST || (whichmethod==MODEPICKBEST)&&(entropypflag>0&&fracenergy==0.0 || fracenergy!=0.0))){
+    if(ENTROPY2HOT && (entropypflag>0 && whichmethod==MODEPICKREVERT || (whichmethod==MODEPICKBEST)&&(entropypflag>0&&fracenergy==0.0 || fracenergy!=0.0))){
 
       hottried=tryhotinversion(showmessages, allowlocalfailurefixandnoreport,finalstep, entropypflag, (whichmethod==MODEPICKBEST), whichcap, pi, pr0, pr, pressure, Ugeomfree, Ugeomfree0, qptr, ptrgeom,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
       if(hottried){

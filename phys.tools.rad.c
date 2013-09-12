@@ -316,9 +316,8 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE errorabs, struc
 
 
 // whether to use EOMDONOTHING if error is good enough.
-// 1: check if should do nothing (GODMARK: Not sure this makes sense with fracenergy method)
-// 2: always avoid external inversion (so no longer can do cold MHD, but cold MHD in \tau\gtrsim 1 places is very bad).  Or avoid energy switching to entropy, which also is bad.
-#define SWITCHTODONOTHING 2
+// 1: always avoid external inversion (so no longer can do cold MHD, but cold MHD in \tau\gtrsim 1 places is very bad).  Or avoid energy switching to entropy, which also is bad.
+#define SWITCHTODONOTHING 1
 
   // whether to change damp factor during this instance.
 #define CHANGEDAMPFACTOR 1
@@ -1179,37 +1178,6 @@ static int f_implicit(int iter, int failreturnallowable, int whichcall, int show
       f[UU] = fracenergy*fabs(f[UU]) + (1.0-fracenergy)*fabs(f[ENTROPY]);
       fnorm[UU] = fracenergy*fnorm[UU] + (1.0-fracenergy)*fnorm[ENTROPY];
     }
-
-
-    // KORALTODO: SUPERGODMARK: If using new fracenergy method, any external inversion would require fracenergy method as well.  For now, only RK4 requires external inversion and don't use RK4, but just stick to entropy if ever revert to external inversion
-    // force external inversion or any further processing to use entropy equation instead of energy equation since that's only consistent with our choice here.
-    // assume if got here with UMHD, then each implicit step for computing f1 tries to revert back to UMHD.
-    *eomtype=EOMENTROPYGRMHD;
-  }
-  else{
-
-    // GET ENTROPY ERROR FUNCTION
-    if(needentropy
-       || implicitferr==QTYUMHD && *eomtype==EOMENTROPYGRMHD && SWITCHTOENTROPYIFCHANGESTOENTROPY){ // risky perhaps.
-      // force external inversion or any further processing to use entropy equation instead of energy equation since that's only consistent with our choice here.
-      *eomtype=EOMENTROPYGRMHD;
-      // assume if got here with UMHD, then each implicit step for computing f1 tries to revert back to UMHD.
-
-      //      dualfprintf(fail_file,"NEEDENTROPY: %d : %d : %g %g : %d\n",needentropy,*eomtype,f[ENTROPY],fnorm[ENTROPY],erefU[TT]);
-
-    }
-  }
-
-
-  if(implicitferr==QTYUMHD || implicitferr==QTYUMHDENERGYONLY || implicitferr==QTYUMHDMOMONLY){
-    // force external inversion or any further processing to first try to use energy equation since that's only consistent with our choice here.
-    // No, UMHD inversion call still might have reduced to entropy during 1D MHD inversion, and then should really have used entropy error function for consistency.  But that's not what one has chosen.  But, we can switch if that was the case.  This is done above.  So if here, then really sticking with EOMGRMHD.
-    *eomtype=EOMGRMHD;
-   
-  }
-  else if(implicitferr==QTYURAD || implicitferr==QTYURADENERGYONLY || implicitferr==QTYURADMOMONLY){
-    // URAD method forces no specific constraint on eomtype other than what came out of MHD inversion stage.
-    // i.e. *eomtype=*eomtype and is can be either energy or entropy equation and that's fine.
   }
 
 
@@ -3002,7 +2970,8 @@ static int koral_source_rad_implicit_mode(int modprim, int havebackup, int diden
 
   // no need to worry about RAD failure if not iterating rad quantities
   // As stated above, with new rad inversion, seems ok to temporarily hit ceiling.
-  if(IMPMHDTYPE(implicititer)||1) failreturnallowable=UTOPRIMGENWRAPPERRETURNFAILRAD;
+  // With tests like RADTUBE, can't allow radiative inversion cieling else dies.  While with tests like RADPULSE, fastest to converge to good solution with allowing hitting the ceiling.  So mixed issue.
+  if(IMPMHDTYPE(implicititer)) failreturnallowable=UTOPRIMGENWRAPPERRETURNFAILRAD;
   else failreturnallowable=UTOPRIMNOFAIL;
   //  if(IMPMHDTYPE(implicititer)) failreturnallowable=UTOPRIMGENWRAPPERRETURNFAILRAD;
   //  else failreturnallowable=UTOPRIMNOFAIL;
@@ -4489,21 +4458,7 @@ static int koral_source_rad_implicit_mode(int modprim, int havebackup, int diden
 
 
 
-    if(SWITCHTODONOTHING==1){
-      // can further just choose to avoid inversion entirely since this step fully inverted (even if somewhat inaccurately) all parts used in advance.c:
-      // especially for entropy inversion, no need to be very accurate as normal inversion does, since no need to have exact entropy conservation, unlike desirable to have exact energy conservation.
-      if(errorabsf1<=trueimptryconvabs){// risky unless put in error condition
-        // more general case when can just avoid external entropy inversion
-        if(*eomtype==EOMENTROPYGRMHD && SWITCHTOENTROPYIFCHANGESTOENTROPY || (implicitferr==QTYENTROPYUMHD || implicitferr==QTYENTROPYUMHDENERGYONLY || implicitferr==QTYENTROPYUMHDMOMONLY)){
-          *eomtype=EOMDIDENTROPYGRMHD;
-        }
-    
-        if(*eomtype==EOMGRMHD){
-          *eomtype=EOMDIDGRMHD;
-        }
-      }
-    }
-    else if(SWITCHTODONOTHING==2){
+    if(SWITCHTODONOTHING){
       // always do nothing, so entropy won't try to revert to cold.
       if(EOMENTROPYGRMHD) *eomtype=EOMDIDENTROPYGRMHD;
       if(EOMCOLDGRMHD) *eomtype=EOMDIDCOLDGRMHD;
@@ -5052,7 +5007,7 @@ int mathematica_report_check(int radinvmod, int failtype, long long int failnum,
     
 
     // then do:
-    // 1) grep -h --text FAILINFO 0_fail.out.grmhd* | sed 's/FAILINFO: //g'| sort -T ./ -r -g -k 7 > fails.txt
+    // 1) grep -h --text FAILINFO 0_fail.out.grmhd* | sed 's/FAILINFO: //g'| sort -T ./ -r -g -k 10 > fails.txt
     //
     // or:
     // grep -h --text FAILINFO 0_fail.out.grmhd* | grep -v "FAILINFO: 100" |grep -v "FAILINFO: 80"| sed 's/FAILINFO: //g' | sort -T ./ -r -g -k 7 > failshigherror.txt ; head -100 failshigherror.txt > failshigherror100.txt
