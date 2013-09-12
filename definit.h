@@ -35,7 +35,6 @@
 // whether to try HOT inversion if entropy fails
 #define ENTROPY2HOT 1
 
-#define PICKBESTHOT 1 // whether to pick best of entropy or energy
 #define BADENERGY(ugenergy,ugentropy) ((ugenergy) < 0.5*(ugentropy))
 #define BADENERGY2(ugenergy,ugentropy) ((ugenergy) < (ugentropy))
 

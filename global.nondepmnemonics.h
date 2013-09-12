@@ -196,6 +196,20 @@
 #define EOMENTROPYGRMHD 2
 #define EOMGRMHD 3
 
+// mode for inversion
+#define MODEDEFAULT -1
+#define MODEENERGY 0
+#define MODEENTROPY 1
+#define MODESWITCH 2
+#define MODEPICKBEST 3
+
+// which cap type to place in rad inversion
+#define CAPTYPEBASIC 0
+#define CAPTYPEFIX1 1
+
+// whether to ensure specific entropy no smaller than guess
+#define ENTROPYFIXGUESS 1
+
 
 
 // macros for defining which fluxcalc method to use in flux.c

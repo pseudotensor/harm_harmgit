@@ -721,7 +721,9 @@ static int advance_standard(
 
 
         // actual inversion
-        MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,&eomtypelocal,EVOLVEUTOPRIM,UEVOLVE,utoinvert1, qptr2, ptrgeom, dissmeasure, piorig, MAC(pf,i,j,k),&newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
+        int whichcap=CAPTYPEFIX1;
+        int whichmethod=MODEPICKBEST; // try to choose best option for this "external" inversion
+        MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,&eomtypelocal,whichcap,whichmethod,EVOLVEUTOPRIM,UEVOLVE,utoinvert1, qptr2, ptrgeom, dissmeasure, piorig, MAC(pf,i,j,k),&newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
         nstroke+=newtonstats.nstroke; newtonstats.nstroke=newtonstats.lntries=0;
           
           
@@ -1024,7 +1026,7 @@ static FTYPE compute_dissmeasure(int i, int j, int k, int loc, FTYPE *CUf, FTYPE
       dUnondiss[specialfrom]=(uftemp[plsp] - uitemp[plsp]);
       dUdiss[specialfrom]=dUdissplusnondiss[specialfrom] - dUnondiss[specialfrom];
             
-      norm[specialfrom]=(fabs(dUdiss[specialfrom])+fabs(dUnondiss[specialfrom]));
+      norm[specialfrom]=SMALL+(fabs(dUdiss[specialfrom])+fabs(dUnondiss[specialfrom]));
     }
 
     // get actual norm that's over multiple components for the magentic field
@@ -1032,7 +1034,7 @@ static FTYPE compute_dissmeasure(int i, int j, int k, int loc, FTYPE *CUf, FTYPE
     PLOOPSPECIALONLY(plsp,NSPECIAL){
       specialfrom=plspeciallist[plsp-NPR];
       if(specialfrom==RHO || specialfrom==UU){
-        actualnorm[specialfrom]=norm[specialfrom];
+        actualnorm[specialfrom] = SMALL + norm[specialfrom];
       }
       else if(specialfrom==B1 || specialfrom==B2 || specialfrom==B3){
         // for magnetic field, actualnorm is computed as:
@@ -1042,7 +1044,7 @@ static FTYPE compute_dissmeasure(int i, int j, int k, int loc, FTYPE *CUf, FTYPE
         int jj;
         SLOOPA(jj){
           pl=B1+jj-1;
-          actualnorm[specialfrom] += (fabs(dUdiss[pl]*dUdiss[pl])+fabs(dUnondiss[pl]*dUnondiss[pl]));
+          actualnorm[specialfrom] += SMALL+(fabs(dUdiss[pl]*dUdiss[pl])+fabs(dUnondiss[pl]*dUnondiss[pl]));
         }
         actualnorm[specialfrom] += fabs(dUdiss[UU]) + fabs(dUnondiss[UU]); // add energy as reference for normalization to avoid weak magnetic fields suggesting strong dissipation.  GODMARK: But, kinda risky, because nominally want to use energy to capture any field dissipation, not just when the field is important to total energy dissipation.
         //  But much better than (say) using total energy density as reference.  We  use actual energy dissipation as reference.  So if reconnection is at all important to total dissipation, it will be accounted for.  When total energy dissipation is dominated by non-reconnection, that missed dissipation is a small correction.
@@ -1072,6 +1074,10 @@ static FTYPE compute_dissmeasure(int i, int j, int k, int loc, FTYPE *CUf, FTYPE
         // special use of square of dUdiss: dUdiss^2(B1,B2,B3)/actualnorm
         dissmeasurepl[specialfrom] = -signdiss*(sign(dUdiss[specialfrom])*dUdiss[specialfrom]*dUdiss[specialfrom])/actualnorm[specialfrom];
       }
+
+      //      dualfprintf(fail_file,"plsp=%d specialfrom=%d dissmeasurepl=%g\n",plsp,specialfrom,dissmeasurepl[specialfrom]);
+
+      //    dualfprintf(fail_file,"DISS (ijk=%d %d %d): (%d %d) ui=%g %g : uf=%g %g : dUdiss=%g dUnondiss=%g : dU1=%g %g : dU2=%g %g : dissmeasure=%g\n",i,j,k,specialfrom,plsp,uitemp[specialfrom],uitemp[plsp],uftemp[specialfrom],uftemp[plsp],dUdiss,dUnondiss,dUriemann1temp[specialfrom]*CUf[2]*dt,dUriemann1temp[plsp]*CUf[2]*dt,dUriemann2temp[specialfrom]*CUf[2]*dt,dUriemann2temp[plsp]*CUf[2]*dt,dissmeasure);
     }
 
     ///////////
@@ -1091,7 +1097,8 @@ static FTYPE compute_dissmeasure(int i, int j, int k, int loc, FTYPE *CUf, FTYPE
       dissmeasure=MIN(dissmeasure,dissmeasurepl[B3]);
     }
 
-    //          dualfprintf(fail_file,"DISS: ui=%g %g : uf=%g %g : dUdiss=%g dUnondiss=%g : dU1=%g %g : dU2=%g %g : dissmeasure=%g\n",uitemp[specialfrom],uitemp[specialfrom],uftemp[specialfrom],uftemp[specialfrom],dUdiss,dUnondiss,dUriemann1temp[specialfrom]*CUf[2]*dt,dUriemann1temp[specialfrom]*CUf[2]*dt,dUriemann2temp[specialfrom]*CUf[2]*dt,dUriemann2temp[specialfrom]*CUf[2]*dt,dissmeasure);
+
+
   }
 
   return(dissmeasure);
@@ -1781,7 +1788,9 @@ static int advance_standard_orig(
         PALLLOOP(pl) prbefore[pl]=MACP0A1(pf,i,j,k,pl);
 
         FTYPE dissmeasure=-1.0; // assume energy try ok
-        MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,&eomtype,EVOLVEUTOPRIM,UEVOLVE,MAC(myupoint,i,j,k), NULL, ptrgeom, dissmeasure, MAC(pi,i,j,k), MAC(pf,i,j,k),&newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
+        int whichcap=CAPTYPEFIX1;
+        int whichmethod=MODEPICKBEST; // try to choose best option for this "external" inversion
+        MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,&eomtype,whichcap,whichmethod,EVOLVEUTOPRIM,UEVOLVE,MAC(myupoint,i,j,k), NULL, ptrgeom, dissmeasure, MAC(pi,i,j,k), MAC(pf,i,j,k),&newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
         nstroke+=newtonstats.nstroke; newtonstats.nstroke=newtonstats.lntries=0;
 
 
@@ -1793,7 +1802,9 @@ static int advance_standard_orig(
       }
       else{ // otherwise still iterating on primitives
         FTYPE dissmeasure=-1.0; // assume energy try ok
-        MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,&eomtype,EVOLVEUTOPRIM,UEVOLVE,MAC(myupoint,i,j,k), NULL, ptrgeom, dissmeasure, MAC(pi,i,j,k), MAC(pf,i,j,k),&newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
+        int whichcap=CAPTYPEFIX1;
+        int whichmethod=MODEPICKBEST; // try to choose best option for this "external" inversion
+        MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,&eomtype,whichcap,whichmethod,EVOLVEUTOPRIM,UEVOLVE,MAC(myupoint,i,j,k), NULL, ptrgeom, dissmeasure, MAC(pi,i,j,k), MAC(pf,i,j,k),&newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
         nstroke+=newtonstats.nstroke; newtonstats.nstroke=newtonstats.lntries=0;
       }
 
@@ -2541,7 +2552,9 @@ static int advance_finitevolume(
 
       // invert point U-> point p
       int dissmeasure=-1.0; // assume ok to try energy
-      MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,&eomtype,EVOLVEUTOPRIM, UEVOLVE, MAC(myupoint,i,j,k), NULL, ptrgeom, dissmeasure, MAC(pi,i,j,k), MAC(pf,i,j,k),&newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
+      int whichcap=CAPTYPEFIX1;
+      int whichmethod=MODEPICKBEST; // try to choose best option for this "external" inversion
+      MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,&eomtype,whichcap,whichmethod,EVOLVEUTOPRIM, UEVOLVE, MAC(myupoint,i,j,k), NULL, ptrgeom, dissmeasure, MAC(pi,i,j,k), MAC(pf,i,j,k),&newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
       nstroke+=newtonstats.nstroke; newtonstats.nstroke=newtonstats.lntries=0;
 
       //If using a high order scheme, need to choose whether to trust the point value
@@ -2748,7 +2761,9 @@ static int check_point_vs_average(int timeorder, int numtimeorders, PFTYPE *lpfl
     PLOOP(pliter,pl) pavg[pl] = pb[pl];
     //invert the average U -> "average" p
     int dissmeasure=-1.0; // assume ok to try energy
-    MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,&eomtype,EVOLVEUTOPRIM, UEVOLVE, uavg, NULL, ptrgeom, dissmeasure, pavg, pavg,newtonstats),"step_ch.c:advance()", "Utoprimgen", 3);
+    int whichcap=CAPTYPEFIX1;
+    int whichmethod=MODEPICKBEST; // try to choose best option for this "external" inversion
+    MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,&eomtype,whichcap,whichmethod,EVOLVEUTOPRIM, UEVOLVE, uavg, NULL, ptrgeom, dissmeasure, pavg, pavg,newtonstats),"step_ch.c:advance()", "Utoprimgen", 3);
 
     invert_from_average_flag = GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL);
 
@@ -2816,7 +2831,9 @@ static int check_point_vs_average(int timeorder, int numtimeorders, PFTYPE *lpfl
       PLOOP(pliter,pl) pf[pl] = pb[pl];
       //invert the average U -> "average" p
       int dissmeasure=-1.0; // assume ok to try energy
-      MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,&eomtype,EVOLVEUTOPRIM, UEVOLVE, uavg, NULL, ptrgeom, dissmeasure, pb, pf,newtonstats),"step_ch.c:advance()", "Utoprimgen", 3);
+      int whichcap=CAPTYPEFIX1;
+      int whichmethod=MODEPICKBEST; // try to choose best option for this "external" inversion
+      MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,&eomtype,whichcap,whichmethod,EVOLVEUTOPRIM, UEVOLVE, uavg, NULL, ptrgeom, dissmeasure, pb, pf,newtonstats),"step_ch.c:advance()", "Utoprimgen", 3);
       //      invert_from_average_flag = lpflag[FLAGUTOPRIMFAIL];
 
 

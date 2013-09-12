@@ -267,8 +267,6 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE errorabs, struc
 //#define SWITCHTOENTROPYIFCHANGESTOENTROPY (*implicitferr==QTYUMHD ? 0 : 1)
 #define SWITCHTOENTROPYIFCHANGESTOENTROPY (0)
 
-// whether to ensure specific entropy no smaller than guess
-#define ENTROPYFIXGUESS 1
 
 // whether to try again with 10* higher u_g for entropy case since important as backup.
 // Sometimes initial guess for u_g is too low, and when too low very hard for NR to recover.
@@ -341,8 +339,6 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE errorabs, struc
 //#define GAMMAMAXRADIMPLICITSOLVER (1E5)
 #define GAMMAMAXRADIMPLICITSOLVER (GAMMAMAXRAD) // for radiation, seek actual solution with this limit.  Solver can find solutions, while harder when limiting gamma_{gas} for some reason.
 
-#define CAPTYPEBASIC 0
-#define CAPTYPEFIX1 1
 
 // whether to avoid computing entropy during iterations if not needed
 #define ENTROPYOPT 1
@@ -474,7 +470,8 @@ static int Utoprimgen_failwrapper(int doradonly, int *radinvmod, int showmessage
   else{
     //calculating primitives  
     // OPTMARK: Should optimize this to  not try to get down to machine precision
-    MYFUN(Utoprimgen(showmessages, allowlocalfailurefixandnoreport, finalstep, eomtype, evolvetype, inputtype, U, qptr, ptrgeom, dissmeasure, pr, pr, newtonstats),"phys.tools.rad.c:Utoprimgen_failwrapper()", "Utoprimgen", 1);
+    int whichmethod=MODEDEFAULT; // means don't change method from eomtype.
+    MYFUN(Utoprimgen(showmessages, allowlocalfailurefixandnoreport, finalstep, eomtype, whichcap, whichmethod, evolvetype, inputtype, U, qptr, ptrgeom, dissmeasure, pr, pr, newtonstats),"phys.tools.rad.c:Utoprimgen_failwrapper()", "Utoprimgen", 1);
     //    MYFUN(Utoprimgen(showmessages, allowlocalfailurefixandnoreport, finalstep, eomtype, evolvetype, inputtype, U, NULL, ptrgeom, dissmeasure, pr, pr, newtonstats),"phys.tools.rad.c:Utoprimgen_failwrapper()", "Utoprimgen", 1);
     *radinvmod=0;  //KORALTODO: Not using method that needs this call, so for now don't pass radinvmod through to Utoprimgen().
     nstroke+=(newtonstats->nstroke);
@@ -1288,10 +1285,6 @@ static FTYPE compute_dt(FTYPE *CUf, FTYPE dtin)
 #define SWITCHGOODIDEAFAILURE(failreturn) (failreturn==FAILRETURNGENERAL || failreturn==FAILRETURNJACISSUE || failreturn==FAILRETURNNOTTOLERROR || failreturn==FAILRETURNMODESWITCH)
 
 
-#define MODEENERGY 0
-#define MODEENTROPY 1
-#define MODESWITCH 2
-#define MODEPICKBEST 3
 
 // choose to switch to entropy only if energy fails or gives u_g<0.  Or choose to always do both and use best solution.
 #define MODEMETHOD MODEPICKBEST
@@ -1371,7 +1364,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
   //
   //////////////////////////////
 
-  if(MODEMETHOD==MODEENERGY && eomtypecond){
+  if(MODEMETHOD==MODEENERGY && eomtypecond || MODEMETHOD==MODEDEFAULT && *eomtype==EOMGRMHD){
     havebackup=0;
     didentropyalready=0;
     eomtypelocal=*eomtype;
@@ -1416,7 +1409,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
   //
   //////////////////////////////
 
-  if(MODEMETHOD==MODEENTROPY || eomtypecond==0){
+  if(MODEMETHOD==MODEENTROPY || eomtypecond==0 || MODEMETHOD==MODEDEFAULT && *eomtype==EOMENTROPYGRMHD){
     havebackup=0;
     didentropyalready=0;
     eomtypelocal=EOMENTROPYGRMHD;

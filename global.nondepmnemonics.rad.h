@@ -5,6 +5,7 @@
 #define EOMRADEDDWITHFLUX 2 // fake Edd with extra flux (KORALTODO, using Fragile 2012 paper inversion -- simple to do)
 #define EOMRADM1CLOSURE 3 // M1 Closure
 
+
 // KORAL
 #define BOOSTGRIDPOS (NDIM) // CENT,FACE1,FACE2,FACE3 == assumes they are 0,1,2,3
 #define BOOSTDIRS (2)

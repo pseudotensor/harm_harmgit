@@ -2240,7 +2240,9 @@ int get_primitive_centerlocation(int *locpl, int *whichpltoavg, int interporflux
         // set guess
         PALLLOOP(pl) MACP0A1(prim_goodlocation,i,j,k,pl)=MACP0A1(primreal,i,j,k,pl);
         FTYPE dissmeasure=-1.0; // assume energy try ok
-        MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, 0, &eomtype,EVOLVEUTOPRIM, UEVOLVE, MAC(U,i,j,k), NULL, ptrgeom, dissmeasure, MAC(prim_goodlocation,i,j,k), MAC(prim_goodlocation,i,j,k),&newtonstats),"interpline.c:avg2cen_interp()", "Utoprimgen", 1);
+        int whichcap=CAPTYPEFIX1;
+        int whichmethod=MODEDEFAULT;
+        MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, 0, &eomtype,whichcap,whichmethod,EVOLVEUTOPRIM, UEVOLVE, MAC(U,i,j,k), NULL, ptrgeom, dissmeasure, MAC(prim_goodlocation,i,j,k), MAC(prim_goodlocation,i,j,k),&newtonstats),"interpline.c:avg2cen_interp()", "Utoprimgen", 1);
         // if problem with inversion, then reduce to using primreal
         if(GLOBALMACP0A1(pflag,i,j,k,FLAGUTOPRIMFAIL)) PALLLOOP(pl) MACP0A1(prim_goodlocation,i,j,k,pl)=MACP0A1(primreal,i,j,k,pl);
         // pflag will be reset by real inversion routine in advance.c before used elsewhere
@@ -3224,7 +3226,9 @@ FTYPE limit_fluxc2a_prim_change(
    
       int eomtype=EOMDEFAULT;
       FTYPE dissmeasure=-1.0; // assume energy try ok
-      MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, 0, &eomtype,EVOLVEUTOPRIM, UEVOLVE, Upoint_updated, &q, ptrgeom, dissmeasure, pr_updated, pr_updated,&newtonstats),"flux.c:fluxcalc()", "Utoprimgen", 1);
+      int whichcap=CAPTYPEFIX1;
+      int whichmethod=MODEDEFAULT;
+      MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, 0, &eomtype,whichcap,whichmethod,EVOLVEUTOPRIM, UEVOLVE, Upoint_updated, &q, ptrgeom, dissmeasure, pr_updated, pr_updated,&newtonstats),"flux.c:fluxcalc()", "Utoprimgen", 1);
 
       pflag_current = GLOBALMACP0A1(pflag,i1,j1,k1,FLAGUTOPRIMFAIL);  //backup the new inversion flag
       GLOBALMACP0A1(pflag,i1,j1,k1,FLAGUTOPRIMFAIL) = pflag_backup;   //restore the inversion flag
