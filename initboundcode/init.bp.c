@@ -978,7 +978,8 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
   FTYPE rpow2=0.0;
   FTYPE FIELDROT=0.0;
   FTYPE hpow=2.0;
-  FTYPE RBREAK=60.0;
+#define RBREAK_MACRO (60.0)
+  FTYPE RBREAK=RBREAK_MACRO;
 
 
   if(l==2){// A_\theta
@@ -1709,7 +1710,7 @@ int user2_get_maxes(int eqslice, FTYPE *parms, FTYPE (*prim)[NSTORE2][NSTORE3][N
       r=V[1];
       th=V[2];
       
-      if((r>rinlocal)&&(fabs(th-M_PI*0.5)<10.0*M_PI*dx[2]*hslope)){
+      if((r<0.9*RBREAK_MACRO)&&(r>rinlocal)&&(fabs(th-M_PI*0.5)<10.0*M_PI*dx[2]*hslope)){
         gotnormal=1;
         if (bsq_calc(MAC(prim,i,j,k), ptrgeom, &bsq_ij) >= 1) FAILSTATEMENT("init.c:init()", "bsq_calc()", 1);
         if (bsq_ij > bsq_max[0])      bsq_max[0] = bsq_ij;
