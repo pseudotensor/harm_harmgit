@@ -216,7 +216,7 @@ int init_grid(void)
   if(totalsize[1]<32) Rout=50.0;
   else if(totalsize[1]<=64) Rout=1.E3;
   else Rout=1.E5;
-  //Rout=1.E4; // MAVARA tilttest used this
+  Rout=1.E4; // MAVARA tilttest used this
 #endif
 
  
@@ -315,7 +315,7 @@ int init_global(void)
   // ener period
   DTdumpgen[ENERDUMPTYPE] = 2.0;
   /* image file frequ., in units of M */
-  DTdumpgen[IMAGEDUMPTYPE] = 5.0; // was 2.0
+  DTdumpgen[IMAGEDUMPTYPE] = 2.0; // was 5 after 2.0
   // fieldline locked to images so can overlay
   DTdumpgen[FIELDLINEDUMPTYPE] = DTdumpgen[IMAGEDUMPTYPE];
 
@@ -330,7 +330,7 @@ int init_global(void)
   tf = 4000.0;
 #elif(WHICHPROBLEM==THINBP)
 /* output choices */
-  tf = 100000.0;
+  tf = 1000000.0;
 #elif(WHICHPROBLEM==THICKDISK)
   /* output choices */
   tf = 1.3E4*2.0;
@@ -977,7 +977,7 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
   //  FTYPE FIELDROT=M_PI*0.5;
   FTYPE rpow2=0.0;
   FTYPE FIELDROT=0.0;
-  FTYPE hpow=4.0; // MAVARANOTE originally 2.0
+  FTYPE hpow=14.0; // MAVARANOTE originally 2.0
   FTYPE RBREAK=60.0;
 
 
