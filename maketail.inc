@@ -264,7 +264,12 @@ $(PREP): $(PREPDEP)
 	# create new dependencies file
 	for fil in `cat puredouble` ; do  echo $$fil.c ; ( $(MMCOMP) -c -MM $$fil.c >> deps.puredouble.list &) ; done
 	#
-
+ 	############################################
+	#below is for fortran bits
+ 	############################################
+	fpp -P test.f > testfpp.temp.f ; f2c -Wall -f -P testfpp.temp.f ; sed 's/static//g' testfpp.temp.c > testfpp.c ;sed 's/static//g' testfpp.temp.P > testfpp.P
+    #
+    
 
 ########################
 #
