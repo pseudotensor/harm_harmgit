@@ -7673,7 +7673,7 @@ int u2p_rad(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gammama
   int toreturn;
 
 #if(WHICHU2PRAD==0)
-  toreturn=u2p_rad_orig(showmessages, allowlocalfailurefixandnoreport, uu, pin, ptrgeom,lpflag, lpflagrad);
+  toreturn=u2p_rad_orig(showmessages, allowlocalfailurefixandnoreport, gammamaxrad, uu, pin, ptrgeom,lpflag, lpflagrad);
 #else
   // u2p_rad_new() has some issues.  Slows code, leads to more bad failures, but maybe ok?
   // below keeps at least Utilde^i the same upon hitting limits.  Also works better for RADPULSE compared to "pre" version that just hits hard vel=0 cap.
