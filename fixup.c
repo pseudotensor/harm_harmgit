@@ -744,6 +744,7 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
   PFTYPE oldmhdpflag,oldradpflag;
 
 
+  return(0);
   
   // assign general floor variables
   // whether to check floor condition
@@ -3342,7 +3343,7 @@ int limit_gamma(int docorrectucons, FTYPE gammamax, FTYPE gammamaxrad, FTYPE*pr,
   int k=ptrgeom->k;
   int loc=ptrgeom->p;
 
-
+  return(0);
 
 
   // assume didn't change primitives
@@ -4231,7 +4232,7 @@ int inflow_check_rel4vel(int dir, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrge
 
 // only correct for polar axis at both inner and outer x2/theta grid edge.
 // OPENMPOPTMARK: Could optimize this, but not using it currently
-void fix_flux(FTYPE (*pb)[NSTORE2][NSTORE3][NPR],FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL])
+void fix_flux(FTYPE (*pb)[NSTORE2][NSTORE3][NPR],FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR])
 {
   int i,j,k,pl ;
   FTYPE sth ;

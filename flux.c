@@ -41,9 +41,9 @@ int fluxcalc(int stage,
              FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],
              FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],
              FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
-             FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL], 
-             FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL], 
-             FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL], 
+             FTYPE (*F1)[NSTORE2][NSTORE3][NPR], 
+             FTYPE (*F2)[NSTORE2][NSTORE3][NPR], 
+             FTYPE (*F3)[NSTORE2][NSTORE3][NPR], 
              FTYPE *CUf,
              FTYPE *CUnew,
              SFTYPE fluxdt,
@@ -53,24 +53,24 @@ int fluxcalc(int stage,
              FTYPE *ndt3
              )
 {
-  int fluxcalc_flux(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], int *Nvec, FTYPE (*dqvec[NDIM])[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*fluxvecEM[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE CUf, SFTYPE time, FTYPE *ndtvec[NDIM], struct of_loop *cent2faceloop);
-  void fix_flux(FTYPE (*pr)[NSTORE2][NSTORE3][NPR],FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL]) ;
+  int fluxcalc_flux(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], int *Nvec, FTYPE (*dqvec[NDIM])[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR], FTYPE (*fluxvecEM[NDIM])[NSTORE2][NSTORE3][NPR], FTYPE CUf, SFTYPE time, FTYPE *ndtvec[NDIM], struct of_loop *cent2faceloop);
+  void fix_flux(FTYPE (*pr)[NSTORE2][NSTORE3][NPR],FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR]) ;
   FTYPE (*dqvec[NDIM])[NSTORE2][NSTORE3][NPR2INTERP];
-  FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL];
-  FTYPE (*fluxvecEM[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL];
-  FTYPE (**ptrfluxvec)[NSTORE2][NSTORE3][NPR+NSPECIAL];
+  FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR];
+  FTYPE (*fluxvecEM[NDIM])[NSTORE2][NSTORE3][NPR];
+  FTYPE (**ptrfluxvec)[NSTORE2][NSTORE3][NPR];
   FTYPE *ndtvec[NDIM];
   int Nvec[NDIM];
-  int flux_point2avg(int stage, int whichmaorem, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*fluxvecother[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL]);
+  int flux_point2avg(int stage, int whichmaorem, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR], FTYPE (*fluxvecother[NDIM])[NSTORE2][NSTORE3][NPR]);
   void preinterp_flux_point2avg(void);
   int i,j,k;
   int pl,pliter;
   int dir;
-  int fluxEM2flux4EMF(int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*fluxvecEM[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL]);
-  int fluxsum(int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*fluxvecEM[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL]);
-  int cleanup_fluxes(int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL]);
-  int zero_out_fluxes(int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL]);
-  int zero_out_emf_fluxes(int *Nvec, FTYPE (*fluxvecem[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL]);
+  int fluxEM2flux4EMF(int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR], FTYPE (*fluxvecEM[NDIM])[NSTORE2][NSTORE3][NPR]);
+  int fluxsum(int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR], FTYPE (*fluxvecEM[NDIM])[NSTORE2][NSTORE3][NPR]);
+  int cleanup_fluxes(int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR]);
+  int zero_out_fluxes(int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR]);
+  int zero_out_emf_fluxes(int *Nvec, FTYPE (*fluxvecem[NDIM])[NSTORE2][NSTORE3][NPR]);
 
   // face2faceloop[dir=facedir] and face2cornloop[EMFdir=edgedir][EMFodir1][EMFodir2]
   // face2centloop separately used during separate part of advance()
@@ -347,7 +347,7 @@ int fluxcalc(int stage,
 // ensure fluxes only exist on well-defined computational box
 // makes advance.c, GRIDSECTIONING, and adaptive time-stepping easier to code for
 // Note that the branch prediction penalty for these conditions inside the LOOP is low since just zero out nearby memory elements
-int cleanup_fluxes(int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL])
+int cleanup_fluxes(int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR])
 {
 
 
@@ -471,7 +471,7 @@ int cleanup_fluxes(int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPEC
 
 // zero-out fluxes in COMPFULLLOOP so advance.c updates all possible quantities and does so with simple non-conditional code
 // it's ok to zero-out beyond standard+-1 box a bit.  Just ensure zero out enough
-int zero_out_fluxes(int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL])
+int zero_out_fluxes(int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR])
 {
 
 #pragma omp parallel 
@@ -500,7 +500,7 @@ int zero_out_fluxes(int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPE
 // zero-out fluxes that correspond to EMFs if evolving/tracking A_i since want boundary values to be plottable in SM or whatever
 // This is  necessary since also use fluxes for other purposes in-between steps
 // GODMARK: If in BCs have partial EMF and not full EMF for updating A_i, then may also cause A_i to appear funny
-int zero_out_emf_fluxes(int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL])
+int zero_out_emf_fluxes(int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR])
 {
 
 #pragma omp parallel 
@@ -529,7 +529,7 @@ int zero_out_emf_fluxes(int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+
 
 
 // fill EM version if necessary when having new CT EMFs
-int fluxEM2flux4EMF(int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*fluxvecEM[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL])
+int fluxEM2flux4EMF(int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR], FTYPE (*fluxvecEM[NDIM])[NSTORE2][NSTORE3][NPR])
 {
 
 #pragma omp parallel 
@@ -558,7 +558,7 @@ int fluxEM2flux4EMF(int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPE
 }
 
 // sums MA and EM fluxes
-int fluxsum_old(int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*fluxvecEM[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL])
+int fluxsum_old(int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR], FTYPE (*fluxvecEM[NDIM])[NSTORE2][NSTORE3][NPR])
 {
 
 #pragma omp parallel 
@@ -588,7 +588,7 @@ int fluxsum_old(int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL
 
 
 // sums MA (with FLUXSPLITMA(dir) containing flux[UU+dir] component) and EM fluxes
-int fluxsum(int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*fluxvecEM[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL])
+int fluxsum(int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR], FTYPE (*fluxvecEM[NDIM])[NSTORE2][NSTORE3][NPR])
 {
 
 
@@ -637,9 +637,9 @@ int fluxsum(int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL], F
 
 
 // wrapper for CENT_to_FACE1,2,3 used to compute flux at face
-int fluxcalc_flux(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], int *Nvec, FTYPE (*dqvec[NDIM])[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*fluxvecEM[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE CUf, SFTYPE time, FTYPE *ndtvec[NDIM], struct of_loop *cent2faceloop)
+int fluxcalc_flux(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], int *Nvec, FTYPE (*dqvec[NDIM])[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR], FTYPE (*fluxvecEM[NDIM])[NSTORE2][NSTORE3][NPR], FTYPE CUf, SFTYPE time, FTYPE *ndtvec[NDIM], struct of_loop *cent2faceloop)
 {
-  int fluxcalc_flux_1d(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], int dir, SFTYPE time, int is, int ie, int js, int je, int ks, int ke, int idel, int jdel, int kdel, int face, FTYPE (*dq)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*F)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*FEM)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE CUf, FTYPE *ndt, struct of_loop *cent2faceloop, int *didassigngetstatecentdata );
+  int fluxcalc_flux_1d(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], int dir, SFTYPE time, int is, int ie, int js, int je, int ks, int ke, int idel, int jdel, int kdel, int face, FTYPE (*dq)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*F)[NSTORE2][NSTORE3][NPR], FTYPE (*FEM)[NSTORE2][NSTORE3][NPR], FTYPE CUf, FTYPE *ndt, struct of_loop *cent2faceloop, int *didassigngetstatecentdata );
   int dir;
   int idel, jdel, kdel, face;
   int is, ie, js, je, ks, ke;
@@ -778,12 +778,12 @@ int fluxcalc_flux(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[
 
 // wrapper for different standard 1-D flux calculators
 // 1-D interpolate and get flux for that direction (assumes purely 1-D Riemann problem)
-int fluxcalc_flux_1d(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], int dir, SFTYPE time, int is, int ie, int js, int je, int ks, int ke, int idel, int jdel, int kdel, int face, FTYPE (*dq)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*F)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*FEM)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE CUf, FTYPE *ndt, struct of_loop *cent2faceloop, int *didassigngetstatecentdata )
+int fluxcalc_flux_1d(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], int dir, SFTYPE time, int is, int ie, int js, int je, int ks, int ke, int idel, int jdel, int kdel, int face, FTYPE (*dq)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*F)[NSTORE2][NSTORE3][NPR], FTYPE (*FEM)[NSTORE2][NSTORE3][NPR], FTYPE CUf, FTYPE *ndt, struct of_loop *cent2faceloop, int *didassigngetstatecentdata )
 {
-  int fluxcalc_standard(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], int dir, SFTYPE time, int is, int ie, int js, int je, int ks, int ke, int idel, int jdel, int kdel, int face, FTYPE (*dq)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*F)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*FEM)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE CUf, FTYPE *ndt, struct of_loop *cent2faceloop, int *didassigngetstatecentdata);
-  int fluxcalc_standard_4fluxctstag(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], int dir, SFTYPE time, int is, int ie, int js, int je, int ks, int ke, int idel, int jdel, int kdel, int face, FTYPE (*dq)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*F)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*FEM)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE CUf, FTYPE *ndt, struct of_loop *cent2faceloop, int *didassigngetstatecentdata);
+  int fluxcalc_standard(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], int dir, SFTYPE time, int is, int ie, int js, int je, int ks, int ke, int idel, int jdel, int kdel, int face, FTYPE (*dq)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*F)[NSTORE2][NSTORE3][NPR], FTYPE (*FEM)[NSTORE2][NSTORE3][NPR], FTYPE CUf, FTYPE *ndt, struct of_loop *cent2faceloop, int *didassigngetstatecentdata);
+  int fluxcalc_standard_4fluxctstag(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], int dir, SFTYPE time, int is, int ie, int js, int je, int ks, int ke, int idel, int jdel, int kdel, int face, FTYPE (*dq)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*F)[NSTORE2][NSTORE3][NPR], FTYPE (*FEM)[NSTORE2][NSTORE3][NPR], FTYPE CUf, FTYPE *ndt, struct of_loop *cent2faceloop, int *didassigngetstatecentdata);
 
-  //  int fluxcalc_fluxspliteno(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], int dir, int is, int ie, int js, int je, int ks, int ke, int idel, int jdel, int kdel, int face, FTYPE (*F)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*FEM)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE *ndt);
+  //  int fluxcalc_fluxspliteno(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], int dir, int is, int ie, int js, int je, int ks, int ke, int idel, int jdel, int kdel, int face, FTYPE (*F)[NSTORE2][NSTORE3][NPR], FTYPE (*FEM)[NSTORE2][NSTORE3][NPR], FTYPE *ndt);
   int Nvec[NDIM];
   int i,j,k,pl,pliter;
   int odir1,odir2;
@@ -913,7 +913,7 @@ void rescale_calc_full(int dir,FTYPE (*pr)[NSTORE2][NSTORE3][NPR],FTYPE (*p2inte
 
 
 // original flux calculator that gets F in "dir".  At end global pleft,pright,dq also set and if STOREWAVESPEEDS>0 then wavespeeds stored globally
-int fluxcalc_standard(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], int dir, SFTYPE time,int is, int ie, int js, int je, int ks, int ke, int idel, int jdel, int kdel, int face, FTYPE (*dq)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*F)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*FEM)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE CUf, FTYPE *ndt, struct of_loop *cent2faceloop, int *didassigngetstatecentdata)
+int fluxcalc_standard(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], int dir, SFTYPE time,int is, int ie, int js, int je, int ks, int ke, int idel, int jdel, int kdel, int face, FTYPE (*dq)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*F)[NSTORE2][NSTORE3][NPR], FTYPE (*FEM)[NSTORE2][NSTORE3][NPR], FTYPE CUf, FTYPE *ndt, struct of_loop *cent2faceloop, int *didassigngetstatecentdata)
 {
   void slope_lim(int dointerpolation, int realisinterp, int dir, int idel, int jdel, int kdel, FTYPE (*primreal)[NSTORE2][NSTORE3][NPR], FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*dq)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP], struct of_loop *cent2faceloop);
   int getplpr(int dir, SFTYPE time, int idel, int jdel, int kdel, int i, int j, int k, struct of_geom *geom, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*dq)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE *p2interp_l, FTYPE *p2interp_r, FTYPE *p_l, FTYPE *p_r);
@@ -1256,7 +1256,7 @@ void do_noninterpolation_dimension(int whichfluxcalc, int dointerpolation,  int 
 // standard (non-field flux) calculation but setup to store results of interpolation so can be used for fluxctstag calculation
 // set pl_ct and pr_ct with FACE interpolations from CENT (including field face from pstagscratch[])
 // At end global pleft,pright,dq also set and if STOREWAVESPEEDS>0 then wavespeeds stored globally
-int fluxcalc_standard_4fluxctstag(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], int dir, SFTYPE time, int is, int ie, int js, int je, int ks, int ke, int idel, int jdel, int kdel, int face, FTYPE (*dq)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*F)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*FEM)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE CUf, FTYPE *ndt, struct of_loop *cent2faceloop, int *didassigngetstatecentdata)
+int fluxcalc_standard_4fluxctstag(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], int dir, SFTYPE time, int is, int ie, int js, int je, int ks, int ke, int idel, int jdel, int kdel, int face, FTYPE (*dq)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*F)[NSTORE2][NSTORE3][NPR], FTYPE (*FEM)[NSTORE2][NSTORE3][NPR], FTYPE CUf, FTYPE *ndt, struct of_loop *cent2faceloop, int *didassigngetstatecentdata)
 {
   int interpolate_prim_cent2face(int stage, int realisinterp, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], int dir, SFTYPE time, int is, int ie, int js, int je, int ks, int ke, int idel, int jdel, int kdel, int face, FTYPE (*dq)[NSTORE2][NSTORE3][NPR2INTERP], struct of_loop *cent2faceloop);
   //  int odir1,odir2;
@@ -1885,38 +1885,39 @@ void compute_and_store_fluxstatecent(FTYPE (*pr)[NSTORE2][NSTORE3][NPR])
   
     int imod,jmod,kmod;
 
+    DIMENLOOP(dir){
+      if(NxNOT1[dir]){
+
 #pragma omp parallel
-    {
-      int gotgeometry=0;
-      int i,j,k,l;
-      int pl;
-      OPENMP3DLOOPVARSDEFINE;
-      //    FTYPE *primptr[MAXNPR]; // number of pointers
-      FTYPE *velptr,*ptotptr;
-      //    FTYPE a_primstencil[MAXNPR][MAXSPACEORDER];
-      FTYPE a_velstencil[MAXSPACEORDER],a_ptotstencil[MAXSPACEORDER]; // Shouldn't need anymore than 10      
+        {
+          int gotgeometry=0;
+          int i,j,k,l;
+          int pl;
+          OPENMP3DLOOPVARSDEFINE;
+          //    FTYPE *primptr[MAXNPR]; // number of pointers
+          FTYPE *velptr,*ptotptr;
+          //    FTYPE a_primstencil[MAXNPR][MAXSPACEORDER];
+          FTYPE a_velstencil[MAXSPACEORDER],a_ptotstencil[MAXSPACEORDER]; // Shouldn't need anymore than 10      
 
 
-      // shift pointer
-      //    PALLREALLOOP(pl){
-      //      primptr[pl] = a_primstencil[pl] - startorderi;
-      //    }
-      velptr = a_velstencil - startorderi;
-      ptotptr = a_ptotstencil - startorderi;
+          // shift pointer
+          //    PALLREALLOOP(pl){
+          //      primptr[pl] = a_primstencil[pl] - startorderi;
+          //    }
+          velptr = a_velstencil - startorderi;
+          ptotptr = a_ptotstencil - startorderi;
 
 
-      //            if(dir==1) OPENMP3DLOOPSETUPFULLINOUT2DIR1;
-      //            if(dir==2) OPENMP3DLOOPSETUPFULLINOUT2DIR2;
-      //            if(dir==3) OPENMP3DLOOPSETUPFULLINOUT2DIR3;
-      OPENMP3DLOOPSETUPFULL;
+          if(dir==1) OPENMP3DLOOPSETUPFULLINOUT2DIR1;
+          if(dir==2) OPENMP3DLOOPSETUPFULLINOUT2DIR2;
+          if(dir==3) OPENMP3DLOOPSETUPFULLINOUT2DIR3;
+          //      OPENMP3DLOOPSETUPFULL;
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
-      OPENMP3DLOOPBLOCK{
-        OPENMP3DLOOPBLOCK2IJK(i,j,k);
+          OPENMP3DLOOPBLOCK{
+            OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
-        FTYPE radshock={0},mhdshock={0}; // KORALTODO: Not used yet, but can be roughly used to pull-over multiple dimensions for shock indicator
+            FTYPE radshock={0},mhdshock={0}; // KORALTODO: Not used yet, but can be roughly used to pull-over multiple dimensions for shock indicator
         
-        DIMENLOOP(dir){
-          if(NxNOT1[dir]){
             
             
             // extract stencil of data for Ficalc()
@@ -1925,14 +1926,14 @@ void compute_and_store_fluxstatecent(FTYPE (*pr)[NSTORE2][NSTORE3][NPR])
               jmod=j+(dir==2)*l;
               kmod=k+(dir==3)*l;
 
-              imod=MAX(-N1BND,imod);
-              imod=MIN(N1-1+N1BND,imod);
+              //              imod=MAX(-N1BND,imod);
+              //              imod=MIN(N1-1+N1BND,imod);
 
-              jmod=MAX(-N2BND,jmod);
-              jmod=MIN(N2-1+N2BND,jmod);
+              //              jmod=MAX(-N2BND,jmod);
+              //              jmod=MIN(N2-1+N2BND,jmod);
 
-              kmod=MAX(-N3BND,kmod);
-              kmod=MIN(N3-1+N3BND,kmod);
+              //              kmod=MAX(-N3BND,kmod);
+              //              kmod=MIN(N3-1+N3BND,kmod);
 
 
               // PALLREALLOOP(pl) primptr[pl][l] = MACP0A1(pr,imod,jmod,kmod,pl);
@@ -1944,8 +1945,9 @@ void compute_and_store_fluxstatecent(FTYPE (*pr)[NSTORE2][NSTORE3][NPR])
             //      GLOBALMACP0A1(shockindicatorarray,i,j,k,SHOCKPLDIR1+dir-1)=Ficalc(dir,&velptr[0],&ptotptr[0],&primptr[0]);
             GLOBALMACP1A0(shockindicatorarray,SHOCKPLDIR1+dir-1,i,j,k)=Fi=Ficalc(dir,&velptr[0],&ptotptr[0]);
             if(DIVERGENCEMETHOD==DIVMETHODPREFLUX){
-              GLOBALMACP1A0(shockindicatorarray,DIVPLDIR1+dir-1,i,j,k)=Divcalc(dir,Fi,&velptr[0],&ptotptr[0]);
+              //              GLOBALMACP1A0(shockindicatorarray,DIVPLDIR1+dir-1,i,j,k)=Divcalc(dir,Fi,&velptr[0],&ptotptr[0]);
             }
+            dualfprintf(fail_file,"i=%d Fi=%g\n",i,Fi);
 
             if(RADSHOCKFLAT&&EOMRADTYPE!=EOMRADNONE){
               // extract stencil of data for Ficalc()
@@ -1972,96 +1974,16 @@ void compute_and_store_fluxstatecent(FTYPE (*pr)[NSTORE2][NSTORE3][NPR])
               FTYPE Firad;
               GLOBALMACP1A0(shockindicatorarray,SHOCKRADPLDIR1+dir-1,i,j,k)=Firad=Ficalc(dir,&velptr[0],&ptotptr[0]);
               if(DIVERGENCEMETHOD==DIVMETHODPREFLUX){
-                GLOBALMACP1A0(shockindicatorarray,DIVRADPLDIR1+dir-1,i,j,k)=Divcalc(dir,Firad,&velptr[0],&ptotptr[0]);
+                //                GLOBALMACP1A0(shockindicatorarray,DIVRADPLDIR1+dir-1,i,j,k)=Divcalc(dir,Firad,&velptr[0],&ptotptr[0]);
               }
+              dualfprintf(fail_file,"i=%d Firad=%g\n",i,Firad);
             }// end if doing radiation
-          }// end if doing dir
-        }//end over dir loop
-
-        // set geometry for centered zone to be updated
-        struct of_geom geomdontuse;
-        struct of_geom *ptrgeom=&geomdontuse;
-#if(RADSHOCKFLAT&&EOMRADTYPE!=EOMRADNONE) // KORAL
-        get_geometry(i, j, k, CENT, ptrgeom);
-        gotgeometry=1;
-
-        // use maximum shock indicator if optically thick
-        // KORALTODO: using tau here, but tau is only over a cell.  If resolution changes, different tau, yet physics is the same.  How to manage?
-        // KORALNOTE: Need this because radiation can be escaping from shock, so radiation itself is not converging, while still sufficient for MHD shock conditions.
-        FTYPE tautot[NDIM],tautotmax;
-        calc_tautot(&MACP0A1(pr,i,j,k,0), ptrgeom, tautot, &tautotmax);
-
-        DIMENLOOP(dir){
-          if(NxNOT1[dir]){
-            GLOBALMACP1A0(shockindicatorarray,SHOCKPLDIR1+dir-1,i,j,k) = MAX(MIN(tautotmax,1.0)*GLOBALMACP1A0(shockindicatorarray,SHOCKRADPLDIR1+dir-1,i,j,k),GLOBALMACP1A0(shockindicatorarray,SHOCKPLDIR1+dir-1,i,j,k));
-            GLOBALMACP1A0(shockindicatorarray,SHOCKRADPLDIR1+dir-1,i,j,k) = MAX(MIN(tautotmax,1.0)*GLOBALMACP1A0(shockindicatorarray,SHOCKPLDIR1+dir-1,i,j,k),GLOBALMACP1A0(shockindicatorarray,SHOCKRADPLDIR1+dir-1,i,j,k));
-
-            if(DIVERGENCEMETHOD==DIVMETHODPREFLUX){
-              // don't consider radiation divergence, and certainly  not as if shock indiator value.
-              //            GLOBALMACP1A0(shockindicatorarray,DIVPLDIR1+dir-1,i,j,k) = MAX(MIN(tautotmax,1.0)*GLOBALMACP1A0(shockindicatorarray,DIVRADPLDIR1+dir-1,i,j,k),GLOBALMACP1A0(shockindicatorarray,DIVPLDIR1+dir-1,i,j,k));
-              //            GLOBALMACP1A0(shockindicatorarray,DIVRADPLDIR1+dir-1,i,j,k) = MAX(MIN(tautotmax,1.0)*GLOBALMACP1A0(shockindicatorarray,DIVPLDIR1+dir-1,i,j,k),GLOBALMACP1A0(shockindicatorarray,DIVRADPLDIR1+dir-1,i,j,k));
-            }
-          }
-        }
-#endif
+          }// end 3D loop
+        }// end parallel region
+      }// end if doing dir
+    }//end over dir loop
 
 
-        ////////
-        //
-        // compute best indication that entropy equation should be used based upon smoothness of flow
-        //
-        /////////
-
-        if(DIVERGENCEMETHOD==DIVMETHODPREFLUX){
-
-          // set geometry for centered zone to be updated
-          if(gotgeometry==0) get_geometry(i, j, k, CENT, ptrgeom);
-
-          // first see which divergence is largest in absolute terms accounting for dimensions
-          FTYPE divcond=-1.0,absdivcond=0.0; // 0.0 here is crucial as reference for divergent flow
-          FTYPE divcondtest[NDIM],absdivcondtest;
-          int largestdir=-1;
-          DIMENLOOP(dir){
-            if(NxNOT1[dir]){
-              if(VLINEWITHGDETRHO==0){
-                divcondtest[dir]=GLOBALMACP1A0(shockindicatorarray,DIVPLDIR1+dir-1,i,j,k)/(sqrt(fabs(ptrgeom->gcon[GIND(dir,dir)])));
-              }
-              else{
-                divcondtest[dir]=GLOBALMACP1A0(shockindicatorarray,DIVPLDIR1+dir-1,i,j,k)/(sqrt(fabs(ptrgeom->gcon[GIND(dir,dir)]))*ptrgeom->gdet);
-              }
-              absdivcondtest=fabs(divcondtest[dir]);
-              if(absdivcondtest>absdivcond){
-                largestdir=dir;
-                absdivcond=absdivcondtest;
-                divcond=divcondtest[dir];
-              }
-            }
-          }
-          // ensure largest divergence dominates
-          DIMENLOOP(dir){
-            if(NxNOT1[dir]){
-#define MAXSHOCK (0.1)
-#define FACTORBIGDIV (10.0)
-              // only consider fluid, since if optically thick already accounted for radiation in this indicator
-              if(GLOBALMACP1A0(shockindicatorarray,SHOCKPLDIR1+dir-1,i,j,k)>MAXSHOCK){
-                divcond=-BIG;
-              }
-              // check that divergence is some factor more than convergence in any other direction
-              if(dir!=largestdir && fabs(divcond)<FACTORBIGDIV*fabs(divcondtest[dir]) && divcondtest[dir]<0.0){
-                divcond=-BIG;
-              }
-            }
-          }
-          // divcond now holds divergence condition for largest divergent part of flow.  Replace all dimensions with this uni-dimensional condition
-          DIMENLOOP(dir){
-            if(NxNOT1[dir]){
-              GLOBALMACP1A0(shockindicatorarray,DIVPLDIR1+dir-1,i,j,k)=divcond;
-            }
-          }
-        }// end if(DIVERGENCEMETHOD==DIVMETHODPREFLUX)
-
-      }// end 3D loop
-    }// end parallel region
 
 
 
@@ -2486,9 +2408,9 @@ int fluxcalc_donor
  FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],
  FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],
  FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
- FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL], 
- FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL], 
- FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL], 
+ FTYPE (*F1)[NSTORE2][NSTORE3][NPR], 
+ FTYPE (*F2)[NSTORE2][NSTORE3][NPR], 
+ FTYPE (*F3)[NSTORE2][NSTORE3][NPR], 
  FTYPE CUf,
  FTYPE fluxdt,
  FTYPE *ndt1,
@@ -3095,10 +3017,10 @@ int fluxcalc_donor
     }
   }
 
-  FTYPE (**ptrfluxvec)[NSTORE2][NSTORE3][NPR+NSPECIAL];
-  FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL];
+  FTYPE (**ptrfluxvec)[NSTORE2][NSTORE3][NPR];
+  FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR];
   int Nvec[NDIM];
-  int cleanup_fluxes(int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL]);
+  int cleanup_fluxes(int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR]);
 
   fluxvec[1]=F1;
   fluxvec[2]=F2;

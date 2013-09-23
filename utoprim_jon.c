@@ -10,7 +10,7 @@
 // 0 = no debug indexes set
 // 1 = set global (file scope) index for debugging
 //     OPENMPMARK: This is not thread safe!, so only set to 1 if not using more than one OpenMP thread.
-#define DEBUGINDEX 0
+#define DEBUGINDEX 1
 
 #if(DEBUGINDEX)
 // 
@@ -149,7 +149,6 @@ int Utoprim_jon_nonrelcompat_inputnorestmass(int showmessages, int eomtype, FTYP
   int whicheos;
   int pliter;
 
-  //  showmessages=1; // FORCE
 
   // DEBUG:
   //  PLOOP(pliter,pl) dualfprintf(fail_file,"%d %d %d : pl=%d U=%21.15g\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,pl,U[pl]);
@@ -1030,7 +1029,7 @@ static int set_guess_Wp(int showmessages, PFTYPE *lpflag, int eomtype, FTYPE *pr
 
 
   //  if((nstep==4)&&(ptrgeom->i==0)&&(ptrgeom->j==47)){
-  //  dualfprintf(fail_file,"utsq=%g p=%g w=%g W_last=%g Wp_last=%g\n",utsq,p,w,*W_last,*Wp_last);
+  // dualfprintf(fail_file,"utsq=%g p=%g w=%g W_last=%g Wp_last=%g\n",utsq,p,w,*W_last,*Wp_last);
   //    exit(0);
   //  }
 
@@ -1086,16 +1085,15 @@ static int set_guess_Wp(int showmessages, PFTYPE *lpflag, int eomtype, FTYPE *pr
       Ss0=0.0;
     }
 
-#define FRACSs0 (0.5) // want to have initial entropy not too far below previous entropy value
-    if(utsq>=0.0 && utsq==utsq && isfinite(utsq) && (Ss==Ss && isfinite(Ss) && Ss>=Ss0-FRACSs0*fabs(Ss0))){
+    if(utsq>=0.0 && utsq==utsq && isfinite(utsq) && (Ss==Ss && isfinite(Ss) && Ss>Ss0)){
       // if utsq=nan or inf, will fail to reach here
       // if Ss=nan or inf, will fail to reach here
-      if(numattemptstofixguess>0) if(showmessages && debugfail>=3) dualfprintf(fail_file,"GOOD Initial guess #%d/%d [i=%d j=%d k=%d] for W=%21.15g Wp=%21.15g Wp/D=%21.15g gives bad utsq=%21.15g Ss=%21.15g D=%21.15g u=%21.15g p=%21.15g gamma=%21.15g Ss0=%21.15g\n",numattemptstofixguess,MAXNUMGUESSCHANGES,ptrgeom->i,ptrgeom->j,ptrgeom->k,*W_last,*Wp_last,*Wp_last/D,utsq,Ss,D,u,p,gamma,Ss0);
+      if(numattemptstofixguess>0) if(showmessages && debugfail>=2) dualfprintf(fail_file,"GOOD Initial guess #%d/%d [i=%d j=%d k=%d] for W=%21.15g Wp=%21.15g Wp/D=%21.15g gives bad utsq=%21.15g Ss=%21.15g D=%21.15g u=%21.15g p=%21.15g gamma=%21.15g Ss0=%21.15g\n",numattemptstofixguess,MAXNUMGUESSCHANGES,ptrgeom->i,ptrgeom->j,ptrgeom->k,*W_last,*Wp_last,*Wp_last/D,utsq,Ss,D,u,p,gamma,Ss0);
       break;
     }
     else{
 #if(PRODUCTION==0)
-      if(showmessages && debugfail>=3) dualfprintf(fail_file,"Initial guess #%d/%d [i=%d j=%d k=%d] for W=%21.15g Wp=%21.15g Wp/D=%21.15g gives bad utsq=%21.15g Ss=%21.15g D=%21.15g u=%21.15g p=%21.15g gamma=%21.15g Ss0=%21.15g\n",numattemptstofixguess,MAXNUMGUESSCHANGES,ptrgeom->i,ptrgeom->j,ptrgeom->k,*W_last,*Wp_last,*Wp_last/D,utsq,Ss,D,u,p,gamma,Ss0);
+      if(showmessages && debugfail>=2) dualfprintf(fail_file,"Initial guess #%d/%d [i=%d j=%d k=%d] for W=%21.15g Wp=%21.15g Wp/D=%21.15g gives bad utsq=%21.15g Ss=%21.15g D=%21.15g u=%21.15g p=%21.15g gamma=%21.15g Ss0=%21.15g\n",numattemptstofixguess,MAXNUMGUESSCHANGES,ptrgeom->i,ptrgeom->j,ptrgeom->k,*W_last,*Wp_last,*Wp_last/D,utsq,Ss,D,u,p,gamma,Ss0);
 #endif
 
 
@@ -1107,9 +1105,7 @@ static int set_guess_Wp(int showmessages, PFTYPE *lpflag, int eomtype, FTYPE *pr
 
       if(numattemptstofixguess>0){
         // then cold fix was not enough:
-        //#define FACTORSHIFT (10.0) // bit much
-#define FACTORSHIFT (2.0)
-        *Wp_last = MAX(MAX(fabs(*Wp_last)*FACTORSHIFT,NUMEPSILON*100.0*fabs(D)),KINDASMALL);
+        *Wp_last = MAX(MAX(fabs(*Wp_last)*10.0,NUMEPSILON*100.0*fabs(D)),KINDASMALL);
       }
 
       // set new W
@@ -1132,7 +1128,7 @@ static int set_guess_Wp(int showmessages, PFTYPE *lpflag, int eomtype, FTYPE *pr
 
 
   // DEBUG:
-  //  dualfprintf(fail_file,"DEBUG: %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",utsq,rho0,u,p,bsq,*Wp_last,wglobal[2]);
+  //dualfprintf(fail_file,"DEBUG: %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",utsq,rho0,u,p,bsq,*Wp_last,wglobal[2]);
   //int pl; PALLLOOP(pl) dualfprintf(fail_file,"DEBUG2: prim[%d]=%21.15g\n",pl,prim[pl]);
   //  int jjm,kkm; DLOOP(jjm,kkm) dualfprintf(fail_file,"DEBUG3: gcov=%21.15g gcon=%21.15g\n",ptrgeom->gcov[GIND(jjm,kkm)],ptrgeom->gcon[GIND(jjm,kkm)]);
   //for(pl=FIRSTEOSGLOBAL;pl<=LASTEOSGLOBAL;pl++) dualfprintf(fail_file,"DEBUG3: EOSextra[%d]=%21.15g\n",pl,EOSextra[pl]);
@@ -3983,13 +3979,8 @@ static int general_newton_raphson(int showmessages, PFTYPE *lpflag, int eomtype,
 
 
     // DEBUG:
-#if(0)
-    //    if(nstep>=26070){
-    //      if(1||myid==5 && nstep==1 && steppart==0 && ifileglobal==19 && jfileglobal==15){
-    for(it=0;it<n;it++) dualfprintf(fail_file,"lntries=%d after funcd: x[%d]=%26.20g dx[%d]=%26.20g f=%26.20g df=%26.20g errx=%26.20g diddamp=%d dampfactor=%26.20g didcycle=%d : %g %g %g %g %g %g %g %g %g\n",(int)(newtonstats->lntries),it,x[it],it,dx[it],f,df,errx,diddamp,DAMPFACTOR[it],didcycle,wglobal[2],Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc);
-        //      }
-        //    }
-#endif
+    //    for(it=0;it<n;it++) dualfprintf(fail_file,"lntries=%d after funcd: x[%d]=%26.20g dx[%d]=%26.20g errx=%26.20g diddamp=%d dampfactor=%26.20g didcycle=%d eomtype=%d\n",(int)(newtonstats->lntries),it,x[it],it,dx[it],errx,diddamp,DAMPFACTOR[it],didcycle,eomtype);
+
 
 #if(CRAZYDEBUG&&DEBUGINDEX)
     // DEBUG:
@@ -4184,7 +4175,8 @@ static int general_newton_raphson(int showmessages, PFTYPE *lpflag, int eomtype,
               x[id]=x_older[id]; // since current W is what gave bad residual and already saved it into x_old[0]
               dx[id]=dx_old[id]; // new dx is probably messed up (didn't yet save dx[0], so use dx_old[0]
 #if(PRODUCTION==0)
-              if(showmessages&&debugfail>=3) dualfprintf(fail_file,"resetW: nstep=%ld steppart=%d :: lntries=%d :: id=%d :: x=%21.15g dx=%21.15g : x/D=%21.15g DAMPFACTOR=%21.15g errx=%21.15g eomtype=%d\n",nstep,steppart,(int)(newtonstats->lntries),id,x[id],dx[id],x[id]/D,DAMPFACTOR[id],newtonstats->lerrx,eomtype);
+              if(1||showmessages&&debugfail>=2) dualfprintf(fail_file,"resetW: nstep=%ld steppart=%d :: lntries=%d :: id=%d :: x=%21.15g dx=%21.15g : x/D=%21.15g DAMPFACTOR=%21.15g errx=%21.15g ifileglobal=%d eomtype=%d\n",nstep,steppart,(int)(newtonstats->lntries),id,x[id],dx[id],x[id]/D,DAMPFACTOR[id],newtonstats->lerrx,ifileglobal,eomtype);
+              myexit(666);
 #endif
               // SUPERGODMARK: Noticed that if Mathematica solution can be found but gives utsq<0 then this damping leads to nearly circular loop till max iterations.
               diddamp=1;
@@ -4259,15 +4251,6 @@ static int general_newton_raphson(int showmessages, PFTYPE *lpflag, int eomtype,
         }
       }
 
-      /////
-      //
-      // undo damping if no longer damping
-      // Otherwise too slow eventually, and otherwise error based upon dx thinks error is much smaller than really is.
-      //
-      /////
-      for( id = 0; id < n ; id++) {
-        if(diddamp==0) DAMPFACTOR[id]=MIN(1.0,2.0*DAMPFACTOR[id]);
-      }
 
 
 #if(CRAZYDEBUG&&DEBUGINDEX)
@@ -4431,7 +4414,7 @@ static int general_newton_raphson(int showmessages, PFTYPE *lpflag, int eomtype,
 
 
 
-  //  dualfprintf(fail_file,"n_iter=%d\n",n_iter);
+
 
 
 
@@ -4538,11 +4521,7 @@ static int general_newton_raphson(int showmessages, PFTYPE *lpflag, int eomtype,
       bin_newt_data( errx, n_iter, 0, 0 );
 #endif
 
-      if(debugfail>=2){
-        dualfprintf(fail_file,"fabs(errx)=%21.15g > MIN_NEWT_TOL=%21.15g n=%d n_iter=%d lntries=%d eomtype=%d\n",fabs(errx),MIN_NEWT_TOL,n,n_iter,newtonstats->lntries,eomtype);
-        //        if(DEBUGINDEX) dualfprintf(fail_file,"i=%d j=%d part=%d step=%ld :: n_iter=%d :: errx=%21.15g minerr=%21.15g :: x[0]=%21.15g dx[0]=%21.15g wglobal0=%21.15g\n",ifileglobal,jfileglobal,steppart,nstep,n_iter,errx,MIN_NEWT_TOL,x[0],dx[0],wglobal[0]);
-      }
-
+      if(debugfail>=2) dualfprintf(fail_file,"fabs(errx)=%21.15g > MIN_NEWT_TOL=%21.15g n=%d n_iter=%d lntries=%d\n",fabs(errx),MIN_NEWT_TOL,n,n_iter,newtonstats->lntries);
 
 
 #if(!OPTIMIZED)

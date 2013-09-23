@@ -42,7 +42,7 @@
 #define DIVMETHODPREFLUX 0
 #define DIVMETHODPOSTFLUX 1
 
-#define DIVERGENCEMETHOD 1 // choose, but normally 1 for best results.
+#define DIVERGENCEMETHOD -1 // choose, but normally 1 for best results.
 
 
 // *NUMBER* OF DIMENSIONS FOR COMPUTATION

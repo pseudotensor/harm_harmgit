@@ -11,10 +11,10 @@ static int get_truesize(int dir, int boundvartype);
 
 
 // boundvartype specifies whether to bound scalar or to bound vector that is only needed to be bound along that direction
-int bound_mpi_dir(int boundstage, int finalstep, int whichdir, int boundvartype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
+int bound_mpi_dir(int boundstage, int finalstep, int whichdir, int boundvartype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
 {
   FTYPE (*prim2bound[NDIM])[NSTORE2][NSTORE3][NPR];
-  FTYPE (*flux2bound[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL];
+  FTYPE (*flux2bound[NDIM])[NSTORE2][NSTORE3][NPR];
   FTYPE (*vpot2bound[NDIM])[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3];
   int dir;
 #if(DEBUG)
@@ -256,7 +256,7 @@ int bound_mpi_dir(int boundstage, int finalstep, int whichdir, int boundvartype,
 
 
 // packs data for shipment
-void pack(int dir, int boundvartype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*flux)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*workbc)[COMPDIM * 2][NMAXBOUND * NBIGBND * NBIGSM])
+void pack(int dir, int boundvartype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*flux)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*workbc)[COMPDIM * 2][NMAXBOUND * NBIGBND * NBIGSM])
 {
   // dir=direction sending
   int i,j,k;
@@ -433,7 +433,7 @@ void recvwait(int dir,MPI_Request *requests)
     ,dirgenset[boundvartype][dir][DIRNUMPR]
 
 
-void unpack(int dir, int boundvartype, FTYPE (*workbc)[COMPDIM * 2][NMAXBOUND * NBIGBND * NBIGSM],FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*flux)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
+void unpack(int dir, int boundvartype, FTYPE (*workbc)[COMPDIM * 2][NMAXBOUND * NBIGBND * NBIGSM],FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*flux)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
 {
   // dir is direction receiving from
   int i,j,k;
@@ -495,9 +495,9 @@ void sendwait(int dir,MPI_Request *requests)
 
 
 // bound all directions
-int bound_mpi(int boundstage, int finalstep, int fakedir, int boundvartype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
+int bound_mpi(int boundstage, int finalstep, int fakedir, int boundvartype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
 {
-  int bound_mpi_dir(int boundstage, int finalstep, int whichdir, int boundvartype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3]);
+  int bound_mpi_dir(int boundstage, int finalstep, int whichdir, int boundvartype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3]);
   int whichdir;
 
   // separate pre-post recv and intermediate user bound and then final other MPI stuff -- implies TAG space is globally separated for these MPI calls and any MPI stuff done by user!

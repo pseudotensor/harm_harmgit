@@ -25,7 +25,8 @@
 #define REPORTCYCLE (10)
 
 // whether to fix u_g using entropy conserved quantity, if available.
-#define ENTROPYFIXGUESSEXTERNAL (ENTROPYFIXGUESS)
+//#define ENTROPYFIXGUESSEXTERNAL (ENTROPYFIXGUESS)
+#define ENTROPYFIXGUESSEXTERNAL (0)
 
 
 static int negdensitycheck(int finalstep, FTYPE *prim, PFTYPE *pflag);
@@ -70,7 +71,7 @@ int Utoprimgen(int showmessages, int allowlocalfailurefixandnoreport, int finals
 
 
   // DEBUG:
-  //  dualfprintf(fail_file,"Doing inversion for ijk=%d %d %d nstep=%ld steppart=%d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart);
+  dualfprintf(fail_file,"Doing inversion for ijk=%d %d %d nstep=%ld steppart=%d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart);
 
 
  
@@ -377,6 +378,7 @@ int Utoprimgen(int showmessages, int allowlocalfailurefixandnoreport, int finals
     // If radiation, then this redoes radiation inversion since entropy would give new velocity and local corrections in u2p_rad() might use velocity.
     ///////////////////
     if(HOT2ENTROPY && (hotpflag>0 && whichmethod==MODEPICKREVERT || whichmethod==MODEPICKBEST)){
+      dualfprintf(fail_file,"Trying entropy: %d %d\n",hotpflag,whichmethod);
 
       entropytried=tryentropyinversion(showmessages, allowlocalfailurefixandnoreport,finalstep, hotpflag, whichmethod==MODEPICKBEST, whichcap, pi, pr0, pr, pressure, Ugeomfree, Ugeomfree0, qptr, ptrgeom,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
       if(entropytried){
@@ -2054,7 +2056,8 @@ int Utoprimgen_pick(int showmessages, int allowlocalfailurefixandnoreport, int w
 
   // KORAL
   // NOTEMARK: u2p_rad() uses pr, which will have updated velocities in case radiation inversion wants to use fluid frame reduction.  But need to know if got good solution, so pass that flag to u2p_rad()
-  if(EOMRADTYPE!=EOMRADNONE) u2p_rad(showmessages, allowlocalfailurefixandnoreport, GAMMAMAXRAD, whichcap, Ugeomfree,pr,ptrgeom,lpflag,lpflagrad);
+  //  if(EOMRADTYPE!=EOMRADNONE) u2p_rad(showmessages, allowlocalfailurefixandnoreport, GAMMAMAXRAD, whichcap, Ugeomfree,pr,ptrgeom,lpflag,lpflagrad);
+  if(EOMRADTYPE!=EOMRADNONE) u2p_rad(showmessages, allowlocalfailurefixandnoreport, Ugeomfree,pr,ptrgeom,lpflag,lpflagrad);
   //*lpflagrad=0; // test that check_on_inversion triggered where velocity limiter applies
 
 
@@ -2287,7 +2290,7 @@ int set_fracenergy(int i, int j, int k, FTYPE dissmeasure, FTYPE *fracenergy)
     DIMENLOOP(dir){
       if(NxNOT1[dir]){
         // problems when V small
-        divcond=GLOBALMACP1A0(shockindicatorarray,DIVPLDIR1+dir-1,i,j,k);
+        //        divcond=GLOBALMACP1A0(shockindicatorarray,DIVPLDIR1+dir-1,i,j,k);
       }
     }
   }

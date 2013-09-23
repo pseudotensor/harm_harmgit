@@ -603,7 +603,7 @@ void copy_3d_onepl_fullloop_nowait(int pl, FTYPE (*source)[NSTORE2][NSTORE3][NPR
 
 // general purpose copy machine for 3D arrays with only size NPR appended onto the end of array
 // put as function because then wrap-up OpenMP stuff
-void init_3dnpr_flux(int is, int ie, int js, int je, int ks, int ke,FTYPE initvalue, FTYPE (*dest)[NSTORE2][NSTORE3][NPR+NSPECIAL])
+void init_3dnpr_flux(int is, int ie, int js, int je, int ks, int ke,FTYPE initvalue, FTYPE (*dest)[NSTORE2][NSTORE3][NPR])
 {
 
 
@@ -668,7 +668,7 @@ void init_3dnpr_fullloop(FTYPE initvalue, FTYPE (*dest)[NSTORE2][NSTORE3][NPR])
 }
 
 
-void init_3dnpr_fullloop_flux(FTYPE initvalue, FTYPE (*dest)[NSTORE2][NSTORE3][NPR+NSPECIAL])
+void init_3dnpr_fullloop_flux(FTYPE initvalue, FTYPE (*dest)[NSTORE2][NSTORE3][NPR])
 {
   int is=-N1BND;
   int ie=N1-1+N1BND;
