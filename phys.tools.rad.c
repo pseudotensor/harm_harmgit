@@ -317,13 +317,13 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE errorabs, struc
 
 // whether to use EOMDONOTHING if error is good enough.
 // 1: always avoid external inversion (so no longer can do cold MHD, but cold MHD in \tau\gtrsim 1 places is very bad).  Or avoid energy switching to entropy, which also is bad.
-#define SWITCHTODONOTHING 1
+#define SWITCHTODONOTHING 0
 
   // whether to change damp factor during this instance.
 #define CHANGEDAMPFACTOR 1
 #define NUMDAMPATTEMPTS 3
 
-#define NUMDAMPATTEMPTSQUICK 1
+#define NUMDAMPATTEMPTSQUICK 3
 
 
 // factor by which error jumps as indication that u_g stepped to was very bad choice.
@@ -843,7 +843,7 @@ static void get_refUs(int *numdims, int *startjac, int *endjac, int *implicitite
 
 //        failreturnferr=f_implicit(iter, failreturnallowableuse, whichcall,showmessages, allowlocalfailurefixandnoreport, &eomtypelocal, whichcap, itermode, fracenergy, dissmeasure, radinvmod, pp, uu0, uu, fracdtG*realdt, ptrgeom, q, f1, f1norm, &goexplicit); // modifies uu and pp
 
-static int f_implicit(int iter, int failreturnallowable, int whichcall, int showmessages, int allowlocalfailurefixandnoreport, int *eomtype, int whichcap, int itermode, FTYPE fracenergy, FTYPE dissmeasure, int *radinvmod, FTYPE *pp, FTYPE *uu0,FTYPE *uu,FTYPE localdt, struct of_geom *ptrgeom, struct of_state *q,  FTYPE *fpl, FTYPE *fplnorm, int *goexplicit)
+static int f_implicit(int iter, int failreturnallowable, int whichcall, int showmessages, int allowlocalfailurefixandnoreport, int *eomtype, int whichcap, int itermode, FTYPE fracenergy, FTYPE dissmeasure, int *radinvmod, FTYPE *pp0, FTYPE *uu0,FTYPE *uu,FTYPE localdt, struct of_geom *ptrgeom, struct of_state *q,  FTYPE *fpl, FTYPE *fplnorm, int *goexplicit)
 //static int f_implicit_lab(int failreturnallowable, int whichcall, int showmessages, int allowlocalfailurefixandnoreport, FTYPE *pp0, FTYPE *uu0,FTYPE *uu,FTYPE localdt, struct of_geom *ptrgeom,  FTYPE *f, FTYPE *fnorm)
 {
   //  FTYPE pp[NPR];
@@ -855,6 +855,9 @@ static int f_implicit(int iter, int failreturnallowable, int whichcall, int show
   newtonstats.nstroke=newtonstats.lntries=0;
   int finalstep = 1;  //can choose either 1 or 0 depending on whether want floor-like fixups (1) or not (0).  unclear which one would work best since for Newton method to converge might want to allow negative density on the way to the correct solution, on the other hand want to prevent runaway into rho < 0 region and so want floors.
 
+
+  FTYPE pp[NPR];
+  PLOOP(pliter,pl) pp[pl]=pp0[pl];
 
   // get primitive (don't change uu0).  This pp is used for inversion guess and to hold final inversion answer.
   //  PLOOP(pliter,pl) pp[pl] = pp0[pl];
@@ -898,6 +901,8 @@ static int f_implicit(int iter, int failreturnallowable, int whichcall, int show
 
   // save better guess for later inversion (including this inversion above) from this inversion
   //  PLOOP(pliter,pl) pp0[pl]=pp[pl];
+
+  PLOOP(pliter,pl) pp0[pl]=pp[pl];
 
 
   FTYPE sign[NPR],extrafactor[NPR];
@@ -1591,6 +1596,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
   }
 
 
+  if(failfinalreturn!=0) dualfprintf(fail_file,"BOG\n");
 
   return(failfinalreturn);
 }
@@ -1922,7 +1928,7 @@ static int koral_source_rad_implicit_mode(int modprim, int havebackup, int diden
   //
   ////////////////
   int dampattempt;
-  for(dampattempt=0;dampattempt<NUMDAMPATTEMPTS;dampattempt++){
+  for(dampattempt=0;dampattempt<truenumdampattempts;dampattempt++){
     FTYPE DAMPFACTOR0;
     // dampattempt>0 refers to any attempt beyond the very first.  Uses iter from end of region inside this loop.
     if(dampattempt>0 && (errorabsf1<IMPTRYDAMPCONV && ACCEPTASNOFAILURE(failreturn) || failreturn==FAILRETURNMODESWITCH) ){ // try damping if any bad failure or not desired tolerance when damping
@@ -3212,6 +3218,8 @@ static int koral_source_rad_implicit_mode(int modprim, int havebackup, int diden
     PLOOP(pliter,pl) radsource[pl] = +(uu[pl]-uu0[pl])/realdt;
     // KORALNOTE: Could re-enforce energy conservation here, but would be inconsistenet with how applied error function.
     PLOOPBONLY(pl) radsource[pl]  = 0.0; // force to machine accuracy
+
+    DLOOPA(ii) radsource[UU+ii] = -radsource[URAD0+ii]; // force energy conservation
 
 
     // OLD, but misses rho changes due to u^t changes:
@@ -5237,8 +5245,8 @@ int koral_source_rad(int whichradsourcemethod, FTYPE *piin, FTYPE *pb, FTYPE *pf
     else if(failimplicit==0){
       // no failure in implicit, then just return
       // and if did implicit, then better pf guess
-      PLOOP(pliter,pl) pf[pl]=pborig[pl];
-      *didreturnpf=1;
+      //PLOOP(pliter,pl) pf[pl]=pborig[pl];
+      *didreturnpf=0;
     }
     else{
       *didreturnpf=0;
@@ -5522,52 +5530,14 @@ static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYP
   FTYPE Ruu=0.; DLOOP(i,j) Ruu+=Rij[i][j]*ucov[i]*ucon[j];
 
 
-#if(0)
 
-  // Ru^\mu = R^\mu_\nu u^\nu
-  // Ruu = R^a_b u_a u^b
-
-  // Ruuu^\mu = Ru^\mu + Ruu u^\mu
-  //          = R^\mu_c u^c + R^a_b u_a u^b u^\mu
-
-  // Ruuu^t = R^t_t u^t + R^t_t u_t u^t u^t   + R^t_i u^i   + R^i_t u_i u^t u^t + R^t_j u_t u^j u^t
-
-  // Ruuu^t = R^t_t u^t (1 + u_t u^t)         + Rus + Ruuss
-
-  // (1 + u_t u^t) = 1 + u^t (u^t g_{tt} + u^i g_{ti}) = 1+ u^t^2 g_{tt} + u^t u^i g_{ti} = 1 - (\gamma/\alpha)^2 (-g_{tt}) + u^t u^i g_{ti}
-
-  // = 1 - (\gamma/\alpha)^2 (-(1 + g_{tt} -1)) = 1 - (\gamma/\alpha)^2 + (\gamma/\alpha)^2 (1+g_{tt})
-
-  // 
-
-  // get R^t_t u^t + (R^t_t u^t u_t)u^t and avoid catastrophic cancellation
-  FTYPE Ruuss=0.; DLOOP(i,j) if(i!=TT && j!=TT) Ruuss+=Rij[i][j]*ucov[i]*ucon[j];
-  // FUCK: Check again.
-  FTYPE fact=(-ptrgeom->gcov[GIND(TT,TT)])*(-ptrgeom->gcon[GIND(TT,TT)]);
-  FTYPE fact2=1.0-fact;
-  FTYPE utildecon[NDIM]={0.0,pp[URAD1],pp[URAD2],pp[URAD3]};
-  FTYPE utsq = 0.0,utildecov[NDIM]; lower_vec(utildecon,ptrgeom,utildecov); SLOOPA(j) utsq+=utildecon[j]*utildecov[j];
-  FTYPE ucontucovt = ( fact2 - utsq*fact + ucon[TT]*(ucon[1]*ptrgeom->gcov[GIND(TT,1)]+ucon[2]*ptrgeom->gcov[GIND(TT,2)]+ucon[3]*ptrgeom->gcov[GIND(TT,3)]));
-  FTYPE Rut=Rij[TT][TT]*ucon[TT] * ucontucovt;
-  FTYPE Rus;
-#endif
-
-  FTYPE Ru,Ruuu,term1,term2,term3;
+  FTYPE Ru,term1,term2,term3;
   DLOOPA(i){
     Ru=0.; DLOOPA(j) Ru+=Rij[i][j]*ucon[j];
-#if(1)
-    Ruuu=(Ru + Ruu*ucon[i]);
-#else
-    if(i!=TT) Ruuu=(Ru + Ruu*ucon[i]);
-    else{
-      Rus=0.; DLOOPA(j) if(j!=TT) Rus+=Rij[i][j]*ucon[j];
-      Ruuu=Ruuss + Rus + Rut;
-    }
-#endif
 
     // group by independent terms
     term1 = -(kappa*Ru + lambda*ucon[i]);
-    term2 = -kappaes*Ruuu;
+    term2 = -kappaes*(Ru + Ruu*ucon[i]);
 
     // actual source term
     //    Gu[i]=-chi*Ru - (kappaes*Ruu + lambda)*ucon[i];
@@ -5777,12 +5747,8 @@ void mhd_calc_rad(FTYPE *pr, int dir, struct of_geom *ptrgeom, struct of_state *
     }
   }
   else if(EOMRADTYPE==EOMRADM1CLOSURE){
-    DLOOPA(jj){
-      term1[jj]=THIRD*pr[PRAD0]*(4.0*q->uradcon[dir]*q->uradcov[jj]);
-      term2[jj]=THIRD*pr[PRAD0]*(delta(dir,jj));
-      radstressdir[jj]=term1[jj]+term2[jj];
-      if(radstressdirabs!=NULL) radstressdirabs[jj]=fabs(term1[jj])+fabs(term2[jj]);
-    }
+    DLOOPA(jj) radstressdir[jj]=THIRD*pr[PRAD0]*(4.0*q->uradcon[dir]*q->uradcov[jj] + delta(dir,jj));
+
   }
   else{
     // mhd_calc_rad() called with no condition in phys.tools.c and elsewhere, and just fills normal tempo-spatial components (not RAD0->RAD3), so need to ensure zero.
@@ -7729,11 +7695,6 @@ static int get_m1closure_urfconrel(int showmessages, int allowlocalfailurefixand
 
     SLOOPA(jj) urfconrel[jj] = alpha * (Avcon[jj] + 1./3.*Erf*ptrgeom->gcon[GIND(0,jj)]*(4.0*gammarel2-1.0) )/(4./3.*Erf*gammarel);
 
-#if(0)
-    //    if(Erf<ERADLIMIT) Erf=ERADLIMIT; // case when velocity fine and probably just Erf slightly negative
-    //    if(Erf<ERADLIMIT) Erf=MAX(NUMEPSILON*fabs(Erf),ERADLIMIT); // case when velocity fine and probably just Erf slightly negative
-    if(Erf<ERADLIMIT) Erf=Erf0; // case when velocity fine and probably just Erf slightly negative
-#endif
 
     *Erfreturn=Erf; // pass back new Erf to pointer
     return(0);
@@ -7799,48 +7760,7 @@ static int get_m1closure_urfconrel(int showmessages, int allowlocalfailurefixand
     // catch bad issue for when using fast or slow will be bad because probably momentum is bad if inverted energy
     if(Avcovorig[TT]>0.0){
       SLOOPA(jj) urfconrel[jj]=0.0;
-      //dualfprintf(fail_file,"THIS ONE1\n");
     }
-    else if(Avcov[TT]>0.0){
-      //      Erf=ERADLIMIT;
-      Erf=Erf0;
-      SLOOPA(jj) urfconrel[jj]=0.0;
-      //dualfprintf(fail_file,"THIS ONE2\n");
-    }
-    else{
-      //    Erf=ERADLIMIT;
-      //    Erf=MAX(MIN(Erf,Erforig),ERADLIMIT);
-      if(gammarel2orig>=1.0 && isfinite(gammarel2orig) && isfinite(Erforig)){
-        Erf=MAX(MIN(Erf,Erforig),Erf0);
-        //        Erf=ERADLIMIT;
-        //        dualfprintf(fail_file,"THIS ONE3\n");
-      }
-#define AVCOVRELDIFFALLOWED 1E-2 // KORALTODO: only use new "cold" solution if relatively close Avcov.
-      else if(fabs(Avcovorig[TT]-Avcov[TT])/fabs(fabs(Avcovorig[TT])+fabs(Avcov[TT]))<AVCOVRELDIFFALLOWED ){
-        //dualfprintf(fail_file,"THIS ONE4\n");
-        Erf=MAX(MIN(Erf,Erf*(-Avcovorig[TT])/(SMALL+fabs(-Avcov[TT]))),Erf0);
-        Erf=MAX(MIN(Erf,Erf*(-Avcov[TT])/(SMALL+fabs(-Avcovorig[TT]))),Erf0);
-        //dualfprintf(fail_file,"nstep=%ld steppart=%d ijk=%d %d %d : Erforig=%g Erf=%g urfconrel=%g %g %g : Avcovorig=%g Avcov=%g\n",nstep,steppart,ptrgeom->i,ptrgeom->j,ptrgeom->k,Erforig,Erf,urfconrel[1],urfconrel[2],urfconrel[3],Avcovorig[0],Avcov[0]);
-        //        Erf=6E-15;
-      }
-      else{
-        //dualfprintf(fail_file,"THIS ONE5\n");
-        Erf=Erf0;
-      }
-#if(0)
-      // for RADBEAM2DKSVERT, very tricky and very sensitive (i.e. whether really fails) at coordinate singularity.
-      //      if(gammarel2orig<1.0){
-      //      if(gammarel2orig<0.5){
-      if(gammarel2orig<=0.0){
-        dualfprintf(fail_file,"THIS ONE6\n");
-        Erf=Erf0;
-        //        Erf=ERADLIMIT;
-      }
-#endif
-    }
-    
-    //    dualfprintf(fail_file,"JONVSOLEK: usingfast=%d Avconfast: %g %g %g %g : Avconslow: %g %g %g %g : Erffast=%g Erfslow=%g urfconfast=%g %g %g urfconslow=%g %g %g\n",usingfast,Avconfast[0],Avconfast[1],Avconfast[2],Avconfast[3],Avconslow[0],Avconslow[1],Avconslow[2],Avconslow[3],Erffast,Erfslow,urfconrelfast[1],urfconrelfast[2],urfconrelfast[3],urfconrelslow[1],urfconrelslow[2],urfconrelslow[3]);
-    
 
     // report
     if(1||allowlocalfailurefixandnoreport==0) *lpflagrad=UTOPRIMRADFAILCASE1A;
@@ -7856,30 +7776,6 @@ static int get_m1closure_urfconrel(int showmessages, int allowlocalfailurefixand
   SLOOPA(jj) pp[PRAD1+jj-1] = urfconrel[jj];
 
 
-#if(0)
-  // normally don't ever do this unless really debugging inversion.
-  //  if((ptrgeom->j==14 || ptrgeom->j==13 || ptrgeom->j==15) &&nstep>=195){// || *lpflagrad!=0 && debugfail>=2){
-  if(nstep>=223){
-  //  if(0&&nstep>=223){// || *lpflagrad!=0 && debugfail>=2){
-    // first report info so can check on inversion
-    static long long int failnum=0;
-    FTYPE fakedt=0.0; // since no 4-force
-    FTYPE fakeCUf[4]={0}; // fake
-    FTYPE dUother[NPR]={0};// fake
-    struct of_state *qptr=NULL; // fake
-    failnum++;
-    globalpin[ENTROPY]=0.0;
-    globaluu[ENTROPY]=0.0;
-    pp[ENTROPY]=0.0;
-
-    globalpin[PRAD0] = Erf;
-    SLOOPA(jj) globalpin[PRAD1+jj-1] = urfconrel[jj];
-
-    // ppfirst is faked as pp
-    mathematica_report_check(0, 3, failnum, *lpflagrad, BIG, -1, -1, fakedt, ptrgeom, pp, pp, pp, globalpin, globalpin, globalpin, globaluu, globaluu, globaluu, globaluu, fakeCUf, qptr, dUother);
-  }
-  //  if(nstep==224) exit(0);
-#endif
 
 #if(0)
   // KORALTODO: Problems when tau<<1 and gamma->gammamax
