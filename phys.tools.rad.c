@@ -5543,6 +5543,7 @@ static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int sho
 
     }
 
+#if(0)
     // more general normalization
     FTYPE norm=0.0;
     int numnormterms=0;
@@ -5558,7 +5559,7 @@ static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int sho
     JAC2DLOOP(ii,jj,startjac,endjac) J[erefU[ii]][irefU[jj]]*=norm;
 
     dualfprintf(fail_file,"norm=%g\n",norm);
-
+#endif
     /////////////////////
     //
     //invert Jacobian
@@ -5586,7 +5587,11 @@ static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int sho
     
     // copy back inverse matrix from sub-version
     JAC2DLOOP(ii,jj,startjac,endjac){
+#if(0)
       iJ[irefU[ii]][erefU[jj]]=iJsub[ii][jj]/norm; // iJsub has been transposed from input Jsub, so iJsub[irefU][erefU]
+#else
+      iJ[irefU[ii]][erefU[jj]]=iJsub[ii][jj];
+#endif
       // dualfprintf(fail_file,"NEW: ii=%d jj=%d iJ=%g\n",ii,jj,iJ[irefU[ii]][erefU[jj]]);
     }
 
