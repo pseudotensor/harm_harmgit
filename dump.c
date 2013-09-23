@@ -1713,14 +1713,14 @@ int raddump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
   FTYPE Gdpl[NPR],Gdabspl[NPR],chi,Tgas;
   int computestate=0;// already computed above
   int computeentropy=1;
-  koral_source_rad_calc(computestate,computeentropy,pr, ptrgeom, Gdpl, Gdabspl, &chi, &Tgas, &q);
+  //  koral_source_rad_calc(computestate,computeentropy,pr, ptrgeom, Gdpl, Gdabspl, &chi, &Tgas, &q);
   myset(datatype,Gdpl,PRAD0,NDIM,writebuf); // NDIM
   myset(datatype,Gdabspl,PRAD0,NDIM,writebuf); // NDIM
 
   // get lambda
   FTYPE lambda;
   //  FTYPE Tgas=calc_PEQ_Tfromurho(pr[UU],pr[RHO]);
-  calc_rad_lambda(pr, ptrgeom, kappa, kappaes, Tgas, &lambda);
+  //  calc_rad_lambda(pr, ptrgeom, kappa, kappaes, Tgas, &lambda);
   myset(datatype,&lambda,0,1,writebuf); // 1
 
   // get Erf [assuming LTE]
