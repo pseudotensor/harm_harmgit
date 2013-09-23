@@ -743,7 +743,7 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
   int badinversion;
   PFTYPE oldmhdpflag,oldradpflag;
 
-
+  //  return(0);
   
   // assign general floor variables
   // whether to check floor condition
@@ -3342,7 +3342,7 @@ int limit_gamma(int docorrectucons, FTYPE gammamax, FTYPE gammamaxrad, FTYPE*pr,
   int k=ptrgeom->k;
   int loc=ptrgeom->p;
 
-
+  //  return(0);
 
 
   // assume didn't change primitives
