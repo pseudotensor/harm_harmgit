@@ -1779,8 +1779,8 @@ static int koral_source_rad_implicit_mode(int modprim, int havebackup, int diden
   FTYPE prtestUiin[NPR];
   PLOOP(pliter,pl) prtestUiin[pl]=piin[pl]; // initial guess (should be easy with piin=ppin(Uiin))
 
-  //#define GETDEFAULTFAILURESTATE 1 // 1 was normal before.
-#define GETDEFAULTFAILURESTATE (IMPPMHDTYPE(implicititer)==0 && 0) // with new rad inversion scheme, seems to push through without issue to just let hit gamma ceiling temporarily -- even with RADPULSEPLANAR
+#define GETDEFAULTFAILURESTATE 1 // 1 was normal before.
+  //#define GETDEFAULTFAILURESTATE (IMPPMHDTYPE(implicititer)==0 && 0) // with new rad inversion scheme, seems to push through without issue to just let hit gamma ceiling temporarily -- even with RADPULSEPLANAR
   // Otherwise, takes *many* iterations, not just f1iters, to get solution.  Even though that was old code state that was working, not required now.
 
 
