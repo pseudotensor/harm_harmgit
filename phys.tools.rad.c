@@ -785,8 +785,16 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
   }
 
   // do new
-  int return1=koral_source_rad_implicit_old(eomtype, pb, pf, piin, Uiin, Ufin, CUf, ptrgeom, q, dissmeasure, dUother ,dUcomp);
-  //int return2=koral_source_rad_implicit_new(eomtype, pb, pf, piin, Uiin, Ufin, CUf, ptrgeom, q, dissmeasure, dUother ,dUcomp);
+  //int return1=koral_source_rad_implicit_old(eomtype, pb, pf, piin, Uiin, Ufin, CUf, ptrgeom, q, dissmeasure, dUother ,dUcomp);
+  FTYPE pbnew[NPR];
+  FTYPE dUcompnew[NUMSOURCES][NPR];
+  struct of_state qnew;
+  PLOOP(pliter,pl){
+    pbnew[pl]=pb[pl];
+    SCLOOP(sc) dUcompnew[sc][pl]=dUcomp[sc][pl];
+    qnew=*q;
+  }
+  int return2=koral_source_rad_implicit_new(eomtype, pbnew, pf, piin, Uiin, Ufin, CUf, ptrgeom, &qnew, dissmeasure, dUother ,dUcompnew);
 
   // restore and do old
   PLOOP(pliter,pl){
@@ -795,10 +803,14 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     *q=qbackup;
   }
 
-  int return2=koral_source_rad_implicit_new(eomtype, pb, pf, piin, Uiin, Ufin, CUf, ptrgeom, q, dissmeasure, dUother ,dUcomp);
-  return(return2);
-  //  int return1=koral_source_rad_implicit_old(eomtype, pb, pf, piin, Uiin, Ufin, CUf, ptrgeom, q, dissmeasure, dUother ,dUcomp);
-  //  return(return1);
+  //  int return2=koral_source_rad_implicit_new(eomtype, pb, pf, piin, Uiin, Ufin, CUf, ptrgeom, q, dissmeasure, dUother ,dUcomp);
+  //  return(return2);
+  int return1=koral_source_rad_implicit_old(eomtype, pb, pf, piin, Uiin, Ufin, CUf, ptrgeom, q, dissmeasure, dUother ,dUcomp);
+
+  // before return, compare results
+  PLOOP(pliter,pl) dualfprintf(fail_file,"pl=%d : pb=%21.15g %21.15g : dUcomp=%21.15g %21.15g\n",pl,pb[pl],pbnew[pl],dUcomp[RADSOURCE][pl],dUcompnew[RADSOURCE][pl]);
+
+  return(return1);
 
 
 }
