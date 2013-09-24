@@ -3147,8 +3147,12 @@ static int koral_source_rad_implicit_mode(int modprim, int havebackup, int diden
       iter=debugiter=0;
       failreturn=FAILRETURNNOFAIL; // default is no failure
       mathfailtype=-1; // indicates not set
-      PLOOP(pliter,pl){
-        uu0[pl]=uu0dampbackup[pl];
+      {
+        PLOOP(pliter,pl) uu0[pl]=uu0dampbackup[pl];
+        FTYPE uuiterback[NPR];
+        PLOOP(pliter,pl) uuiterback[pl] = uu[pl]; // hold actual iterated quantities
+        PLOOP(pliter,pl) uu[pl] = uu0[pl]; // "iterate" non-iterated quantities
+        JACLOOP(ii,startjac,endjac) uu[irefU[ii]] = uuiterback[irefU[ii]]; // overwrite with actual previous step for iterated quantities
       }
       if(errorabsf1<TRYHARDERFEEDGUESSTOL){
         // then keep pp and uu as better starting point
@@ -3430,6 +3434,12 @@ static int koral_source_rad_implicit_mode(int modprim, int havebackup, int diden
 
           // get uu0 (which may be changing)
           PLOOP(pliter,pl) uu0[pl]=UFSET(CUf,fracdtuu0*dt,Uiin[pl],Ufin[pl],dUother[pl],0.0);
+          {
+            FTYPE uuiterback[NPR];
+            PLOOP(pliter,pl) uuiterback[pl] = uu[pl]; // hold actual iterated quantities
+            PLOOP(pliter,pl) uu[pl] = uu0[pl]; // "iterate" non-iterated quantities
+            JACLOOP(ii,startjac,endjac) uu[irefU[ii]] = uuiterback[irefU[ii]]; // overwrite with actual previous step for iterated quantities
+          }
           // KORALNOTE: pp0 not used, setting uu0 above fixes error function where only uu0 is needed.
 
 
@@ -4166,6 +4176,12 @@ static int koral_source_rad_implicit_mode(int modprim, int havebackup, int diden
         fracdtuu0*=RADDAMPUNDELTA;
         fracdtuu0=MIN(1.0,fracdtuu0);
         PLOOP(pliter,pl) uu0[pl]=UFSET(CUf,fracdtuu0*dt,Uiin[pl],Ufin[pl],dUother[pl],0.0); // modifies uu0
+        {
+          FTYPE uuiterback[NPR];
+          PLOOP(pliter,pl) uuiterback[pl] = uu[pl]; // hold actual iterated quantities
+          PLOOP(pliter,pl) uu[pl] = uu0[pl]; // "iterate" non-iterated quantities
+          JACLOOP(ii,startjac,endjac) uu[irefU[ii]] = uuiterback[irefU[ii]]; // overwrite with actual previous step for iterated quantities
+        }
         // KORALNOTE: No need to get pp0, since never used.  uu0 only used in error function.
       }
       ////////////////////////////////////////////////////////////////////////////
@@ -4440,6 +4456,9 @@ static int koral_source_rad_implicit_mode(int modprim, int havebackup, int diden
     PLOOP(pliter,pl) radsource[pl] = +(uu[pl]-uu0[pl])/realdt;
     // KORALNOTE: Could re-enforce energy conservation here, but would be inconsistenet with how applied error function.
     PLOOPBONLY(pl) radsource[pl]  = 0.0; // force to machine accuracy
+
+    
+    //    DLOOPA(ii) radsource[iotherU[ii]] = -radsource[erefU[ii]]; // force energy conservation (NOTEMARK: Unsure if optimal since loop iterates and might break this for good reason -- e.g. no exactly valid corresponding MHD solution if iterating URAD)
 
 
     // OLD, but misses rho changes due to u^t changes:
