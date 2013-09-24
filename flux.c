@@ -1742,6 +1742,9 @@ void compute_and_store_fluxstate(int dimen, int isleftright, int i, int j, int k
 
 }
 
+
+#define TAUTOTMAXSWITCH (0.5)
+
 // compute and store get_state() data for centered state
 void compute_and_store_fluxstatecent(FTYPE (*pr)[NSTORE2][NSTORE3][NPR])
 {
@@ -1820,16 +1823,19 @@ void compute_and_store_fluxstatecent(FTYPE (*pr)[NSTORE2][NSTORE3][NPR])
 
 
       // get total MHD pressure
-      MACP1A0(shocktemparray,SHOCKPLSTOREPTOT,i,j,k)=GLOBALMAC(fluxstatecent,i,j,k).pressure + 0.5*GLOBALMAC(fluxstatecent,i,j,k).bsq;
+      FTYPE pmhd=GLOBALMAC(fluxstatecent,i,j,k).pressure + 0.5*GLOBALMAC(fluxstatecent,i,j,k).bsq;
+      MACP1A0(shocktemparray,SHOCKPLSTOREPTOT,i,j,k)=pmhd;
 
 #if(RADSHOCKFLAT&&EOMRADTYPE!=EOMRADNONE) // KORAL
-      MACP1A0(shocktemparray,SHOCKRADPLSTOREPTOT,i,j,k) = (4.0/3.0-1.0)*MACP0A1(pr,i,j,k,PRAD0);  // KORALNOTE: recall pressure just along diagonal and no velocity in R^\mu_\nu
+      FTYPE prad=(4.0/3.0-1.0)*MACP0A1(pr,i,j,k,PRAD0);  // KORALNOTE: recall pressure just along diagonal and no velocity in R^\mu_\nu
+      MACP1A0(shocktemparray,SHOCKRADPLSTOREPTOT,i,j,k) = prad;
 
       // add radiation pressure to total pressure if optically thick
       FTYPE tautot[NDIM],tautotmax;
       calc_tautot(&MACP0A1(pr,i,j,k,0), ptrgeom, tautot, &tautotmax);
 
-      MACP1A0(shocktemparray,SHOCKPLSTOREPTOT,i,j,k) += MIN(tautotmax,1.0)*MACP1A0(shocktemparray,SHOCKRADPLSTOREPTOT,i,j,k);
+      MACP1A0(shocktemparray,SHOCKPLSTOREPTOT,i,j,k) += MIN(tautotmax/TAUTOTMAXSWITCH,1.0)*prad;
+      MACP1A0(shocktemparray,SHOCKRADPLSTOREPTOT,i,j,k) += MIN(tautotmax/TAUTOTMAXSWITCH,1.0)*pmhd;
 #endif
 
 #endif // end if STORESHOCKINDICATOR
@@ -1942,7 +1948,9 @@ void compute_and_store_fluxstatecent(FTYPE (*pr)[NSTORE2][NSTORE3][NPR])
       
             FTYPE Fi;
             //      GLOBALMACP0A1(shockindicatorarray,i,j,k,SHOCKPLDIR1+dir-1)=Ficalc(dir,&velptr[0],&ptotptr[0],&primptr[0]);
-            GLOBALMACP1A0(shockindicatorarray,SHOCKPLDIR1+dir-1,i,j,k)=Fi=Ficalc(dir,&velptr[0],&ptotptr[0]);
+            Fi=Ficalc(dir,&velptr[0],&ptotptr[0]);
+            //            Fi=1.0;
+            GLOBALMACP1A0(shockindicatorarray,SHOCKPLDIR1+dir-1,i,j,k)=Fi;
             if(DIVERGENCEMETHOD==DIVMETHODPREFLUX){
               GLOBALMACP1A0(shockindicatorarray,DIVPLDIR1+dir-1,i,j,k)=Divcalc(dir,Fi,&velptr[0],&ptotptr[0]);
             }
@@ -1970,7 +1978,10 @@ void compute_and_store_fluxstatecent(FTYPE (*pr)[NSTORE2][NSTORE3][NPR])
                 
               //      GLOBALMACP0A1(shockindicatorarray,i,j,k,SHOCKRADPLDIR1+dir-1)=Ficalc(dir,&velptr[0],&ptotptr[0],&primptr[0]);
               FTYPE Firad;
-              GLOBALMACP1A0(shockindicatorarray,SHOCKRADPLDIR1+dir-1,i,j,k)=Firad=Ficalc(dir,&velptr[0],&ptotptr[0]);
+              Firad=Ficalc(dir,&velptr[0],&ptotptr[0]);
+              //              Firad*=2.0;
+              //              Firad=MIN(1.0,Firad);
+              GLOBALMACP1A0(shockindicatorarray,SHOCKRADPLDIR1+dir-1,i,j,k)=Firad;
               if(DIVERGENCEMETHOD==DIVMETHODPREFLUX){
                 GLOBALMACP1A0(shockindicatorarray,DIVRADPLDIR1+dir-1,i,j,k)=Divcalc(dir,Firad,&velptr[0],&ptotptr[0]);
               }
@@ -1993,13 +2004,17 @@ void compute_and_store_fluxstatecent(FTYPE (*pr)[NSTORE2][NSTORE3][NPR])
 
         DIMENLOOP(dir){
           if(NxNOT1[dir]){
-            GLOBALMACP1A0(shockindicatorarray,SHOCKPLDIR1+dir-1,i,j,k) = MAX(MIN(tautotmax,1.0)*GLOBALMACP1A0(shockindicatorarray,SHOCKRADPLDIR1+dir-1,i,j,k),GLOBALMACP1A0(shockindicatorarray,SHOCKPLDIR1+dir-1,i,j,k));
-            GLOBALMACP1A0(shockindicatorarray,SHOCKRADPLDIR1+dir-1,i,j,k) = MAX(MIN(tautotmax,1.0)*GLOBALMACP1A0(shockindicatorarray,SHOCKPLDIR1+dir-1,i,j,k),GLOBALMACP1A0(shockindicatorarray,SHOCKRADPLDIR1+dir-1,i,j,k));
+            FTYPE Firad=GLOBALMACP1A0(shockindicatorarray,SHOCKRADPLDIR1+dir-1,i,j,k);
+            FTYPE Fi=GLOBALMACP1A0(shockindicatorarray,SHOCKPLDIR1+dir-1,i,j,k);
+            FTYPE Fiswitch =MIN(tautotmax/TAUTOTMAXSWITCH,1.0);
+
+            GLOBALMACP1A0(shockindicatorarray,SHOCKPLDIR1+dir-1,i,j,k) = Fiswitch*MIN(1.0,Firad+Fi) + (1.0-Fiswitch)*Fi;
+            GLOBALMACP1A0(shockindicatorarray,SHOCKRADPLDIR1+dir-1,i,j,k) = Fiswitch*MIN(1.0,Firad+Fi) + (1.0-Fiswitch)*Firad;
 
             if(DIVERGENCEMETHOD==DIVMETHODPREFLUX){
               // don't consider radiation divergence, and certainly  not as if shock indiator value.
-              //            GLOBALMACP1A0(shockindicatorarray,DIVPLDIR1+dir-1,i,j,k) = MAX(MIN(tautotmax,1.0)*GLOBALMACP1A0(shockindicatorarray,DIVRADPLDIR1+dir-1,i,j,k),GLOBALMACP1A0(shockindicatorarray,DIVPLDIR1+dir-1,i,j,k));
-              //            GLOBALMACP1A0(shockindicatorarray,DIVRADPLDIR1+dir-1,i,j,k) = MAX(MIN(tautotmax,1.0)*GLOBALMACP1A0(shockindicatorarray,DIVPLDIR1+dir-1,i,j,k),GLOBALMACP1A0(shockindicatorarray,DIVRADPLDIR1+dir-1,i,j,k));
+              //            GLOBALMACP1A0(shockindicatorarray,DIVPLDIR1+dir-1,i,j,k) = MAX(MIN(tautotmax/TAUTOTMAXSWITCH,1.0)*GLOBALMACP1A0(shockindicatorarray,DIVRADPLDIR1+dir-1,i,j,k),GLOBALMACP1A0(shockindicatorarray,DIVPLDIR1+dir-1,i,j,k));
+              //            GLOBALMACP1A0(shockindicatorarray,DIVRADPLDIR1+dir-1,i,j,k) = MAX(MIN(tautotmax/TAUTOTMAXSWITCH,1.0)*GLOBALMACP1A0(shockindicatorarray,DIVPLDIR1+dir-1,i,j,k),GLOBALMACP1A0(shockindicatorarray,DIVRADPLDIR1+dir-1,i,j,k));
             }
           }
         }
