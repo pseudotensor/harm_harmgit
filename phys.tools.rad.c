@@ -3512,35 +3512,23 @@ static int koral_source_rad_implicit_mode(int modprim, int havebackup, int diden
       //
       /////////
       checkconv=1;
-      changeotherdt=1;
       ////////////////////////////////////////////////////////////////////////////
       //    if(fracuup!=1.0){
       //      if(fabs(fracuup-1.0)>10.0*NUMEPSILON){
       if(fracuup<1.0){
         // try increasing amount of uu or pp used
-        fracuup*=RADDAMPUNDELTA;
-        fracuup=MIN(1.0,fracuup);
         checkconv=0;
-        changeotherdt=0; // ensure fracuup back to 1.0 first before reverting others.
       }
       ////////////////////////////////////////////////////////////////////////////
       //    if(fracdtuu0!=1.0){
       //      if(fabs(fracdtuu0-1.0)>10.0*NUMEPSILON && changeotherdt){
-      if(fracdtuu0<1.0 && changeotherdt){
-        // try increasing uu0 away from Uiin to account for full dUother
-        fracdtuu0*=RADDAMPUNDELTA;
-        fracdtuu0=MIN(1.0,fracdtuu0);
-        PLOOP(pliter,pl) uu0[pl]=UFSET(CUf,fracdtuu0*dt,Uiin[pl],Ufin[pl],dUother[pl],0.0); // modifies uu0
-        // KORALNOTE: No need to get pp0, since never used.  uu0 only used in error function.
+      if(fracdtuu0<1.0){
         checkconv=0;
       }
       ////////////////////////////////////////////////////////////////////////////
       //    if(fracdtG!=1.0){
       //      if(fabs(fracdtG-1.0)>10.0*NUMEPSILON && changeotherdt){
       if(fracdtG<1.0 && changeotherdt){
-        // try increasing amount of G applied
-        fracdtG*=RADDAMPUNDELTA;
-        fracdtG=MIN(1.0,fracdtG);
         checkconv=0;
       }      
       ////////////////////////////////////////////////////////////////////////////
@@ -4150,6 +4138,45 @@ static int koral_source_rad_implicit_mode(int modprim, int havebackup, int diden
 
   
       }// end if finite
+
+
+
+      /////////
+      //
+      // revert any backups if ok to do so
+      //
+      // NOTEMARK: Can only modify uu0 or frac's after they are used consistently to get f1, iJ, take step, and check convergence with error function
+      //
+      /////////
+      changeotherdt=1;
+      ////////////////////////////////////////////////////////////////////////////
+      //    if(fracuup!=1.0){
+      //      if(fabs(fracuup-1.0)>10.0*NUMEPSILON){
+      if(fracuup<1.0){
+        // try increasing amount of uu or pp used
+        fracuup*=RADDAMPUNDELTA;
+        fracuup=MIN(1.0,fracuup);
+        changeotherdt=0; // ensure fracuup back to 1.0 first before reverting others.
+      }
+      ////////////////////////////////////////////////////////////////////////////
+      //    if(fracdtuu0!=1.0){
+      //      if(fabs(fracdtuu0-1.0)>10.0*NUMEPSILON && changeotherdt){
+      if(fracdtuu0<1.0 && changeotherdt){
+        // try increasing uu0 away from Uiin to account for full dUother
+        fracdtuu0*=RADDAMPUNDELTA;
+        fracdtuu0=MIN(1.0,fracdtuu0);
+        PLOOP(pliter,pl) uu0[pl]=UFSET(CUf,fracdtuu0*dt,Uiin[pl],Ufin[pl],dUother[pl],0.0); // modifies uu0
+        // KORALNOTE: No need to get pp0, since never used.  uu0 only used in error function.
+      }
+      ////////////////////////////////////////////////////////////////////////////
+      //    if(fracdtG!=1.0){
+      //      if(fabs(fracdtG-1.0)>10.0*NUMEPSILON && changeotherdt){
+      if(fracdtG<1.0 && changeotherdt){
+        // try increasing amount of G applied
+        fracdtG*=RADDAMPUNDELTA;
+        fracdtG=MIN(1.0,fracdtG);
+      }      
+
 
 
       /////////
