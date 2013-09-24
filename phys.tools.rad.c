@@ -314,9 +314,9 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE errorabs, struc
 
   // whether to change damp factor during this instance.
 #define CHANGEDAMPFACTOR 1
-#define NUMDAMPATTEMPTS 3
+#define NUMDAMPATTEMPTS 1
 
-#define NUMDAMPATTEMPTSQUICK 3
+#define NUMDAMPATTEMPTSQUICK 1
 
 
 // factor by which error jumps as indication that u_g stepped to was very bad choice.
@@ -932,11 +932,12 @@ static int koral_source_rad_implicit_old(int *eomtype, FTYPE *pin, FTYPE *pf, FT
       failreturnallowable=UTOPRIMGENWRAPPERRETURNFAILRAD;
     }
 
+#if(0)
     // cautious first step to get reasonable error measurement. Allows often only 1 iteration to get sufficiently small error, while DAMPFACTOR=1 would already go beyond point where error actually increases.
     if(iter==1){
       DAMPFACTOR=0.37;
     }
-
+#endif
 
 #if(0)
     // KORALTODO: improve on this later.
@@ -1196,6 +1197,7 @@ static int koral_source_rad_implicit_old(int *eomtype, FTYPE *pin, FTYPE *pf, FT
     errorabs=0.0;     DLOOPA(jj) errorabs     += fabs(f3report[jj]);
 
 
+#if(0)
     // DAMP CONTROL
     if(iter==1){
       // un-damp first step, but still don't go back to 1.0.
@@ -1204,7 +1206,7 @@ static int koral_source_rad_implicit_old(int *eomtype, FTYPE *pin, FTYPE *pf, FT
 #define LOWESTDAMP (0.05)
     // see if need to damp, but don't damp below some point.
     if(errorabs>errorabsp && DAMPFACTOR>LOWESTDAMP) DAMPFACTOR*=0.5;
-  
+#endif
 
 
     // check convergence
@@ -2014,6 +2016,7 @@ static int koral_source_rad_implicit_mode(int modprim, int havebackup, int diden
         failreturnallowable=failreturnallowableuse=UTOPRIMGENWRAPPERRETURNFAILRAD;
       }
 
+#if(0)
       if(CHANGEDAMPFACTOR&&trueimpmaxiter==IMPMAXITERQUICK && iter>IMPMAXITERQUICK/2){
         DAMPFACTOR=0.5*DAMPFACTOR0;
       }
@@ -2021,12 +2024,15 @@ static int koral_source_rad_implicit_mode(int modprim, int havebackup, int diden
         DAMPFACTOR=0.5*DAMPFACTOR0;
       }
       else DAMPFACTOR=DAMPFACTOR0;
+#endif
+      DAMPFACTOR=DAMPFACTOR0;
 
+#if(0)
       // cautious first step to get reasonable error measurement. Allows often only 1 iteration to get sufficiently small error, while DAMPFACTOR=1 would already go beyond point where error actually increases.
       if(iter==1){
         DAMPFACTOR=0.37;
       }
-
+#endif
 
       ///////////
       //
@@ -2340,7 +2346,7 @@ static int koral_source_rad_implicit_mode(int modprim, int havebackup, int diden
         FTYPE LOCALPREIMPCONV=MIN(10.0*NUMEPSILON,trueimptryconv); // more strict than later tolerance
         FTYPE LOCALPREIMPCONVABS=(FTYPE)(NDIM+2)*LOCALPREIMPCONV; // more strict than later tolerance
         if(f_error_check(showmessages, showmessagesheavy, iter, LOCALPREIMPCONV,LOCALPREIMPCONVABS,realdt,DIMTYPEFCONS,eomtypelocal,itermode,fracenergy,dissmeasure,dimfactU,pp,piin,f1,f1norm,f1report,Uiin, uu0,uu,ptrgeom,&errorabsf1)){
-          earlylowerror=1;
+          //          earlylowerror=1;
         }
 
         //////////////
@@ -2542,7 +2548,7 @@ static int koral_source_rad_implicit_mode(int modprim, int havebackup, int diden
   
       }// end if finite
 
-      
+#if(0)
       // DAMP CONTROL
       if(iter==1){
         // un-damp first step, but still don't go back to 1.0.
@@ -2551,7 +2557,7 @@ static int koral_source_rad_implicit_mode(int modprim, int havebackup, int diden
 #define LOWESTDAMP (0.05)
       // see if need to damp, but don't damp below some point.
       if(errorabsf1>errorabspf1[0] && DAMPFACTOR>LOWESTDAMP) DAMPFACTOR*=0.5;
-
+#endif
 
       /////////
       // see if took too many Newton steps or not finite results
@@ -2733,7 +2739,7 @@ static int koral_source_rad_implicit_mode(int modprim, int havebackup, int diden
     // KORALNOTE: Could re-enforce energy conservation here, but would be inconsistenet with how applied error function.
     PLOOPBONLY(pl) radsource[pl]  = 0.0; // force to machine accuracy
 
-    DLOOPA(ii) radsource[UU+ii] = -radsource[URAD0+ii]; // force energy conservation
+    //    DLOOPA(ii) radsource[UU+ii] = -radsource[URAD0+ii]; // force energy conservation
 
 
     // OLD, but misses rho changes due to u^t changes:
