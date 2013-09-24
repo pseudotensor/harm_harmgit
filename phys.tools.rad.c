@@ -240,12 +240,7 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE errorabs, struc
 #define NUMPRIORERRORS 5
 #define PRIORERRORCHANGEREQUIRED (0.5) // damping is included below when used
 
-// whether to store steps for primitive and so debug max iteration cases
-#define DEBUGMAXITER 1
 
-// 0: show primitive
-// 1: show u^\mu and urad^\mu
-#define DEBUGMAXITERVELOCITY 1
 
 #define DEBUGLEVELIMPSOLVER 3 // which debugfail>=# to use for some common debug stuff
 //#define DEBUGLEVELIMPSOLVER 2 // which debugfail>=# to use for some common debug stuff
@@ -375,7 +370,6 @@ static void get_refUs(int *numdims, int *startjac, int *endjac, int *implicitite
 
 
 // debug stuff
-static void showdebuglist(int debugiter, FTYPE (*pppreholdlist)[NPR],FTYPE (*ppposholdlist)[NPR],FTYPE (*f1reportlist)[NDIM],FTYPE (*f1list)[NDIM],FTYPE *errorabsf1list, int *realiterlist, FTYPE *jac00list);
 int mathematica_report_check(int radinvmod, int failtype, long long int failnum, int gotfirstnofail, int eomtypelocal, int itermode, FTYPE errorabs, FTYPE errorabsbestexternal, int iters, int iterstotal, FTYPE realdt,struct of_geom *ptrgeom, FTYPE *ppfirst, FTYPE *pp, FTYPE *pb, FTYPE *piin, FTYPE *prtestUiin, FTYPE *prtestUU0, FTYPE *uu0, FTYPE *uu, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_state *q, FTYPE *dUother);
 
 // explicit stuff
@@ -1666,23 +1660,6 @@ static int koral_source_rad_implicit_mode(int modprim, int havebackup, int diden
   FTYPE pborig[NPR];
   PLOOP(pliter,pl) pborig[pl]=pb[pl];
 
-#if(DEBUGMAXITER)
-  FTYPE pppreholdlist[IMPMAXITER+2][NPR]={{0}}; // for debug
-  FTYPE ppposholdlist[IMPMAXITER+2][NPR]={{0}}; // for debug
-  FTYPE f1reportlist[IMPMAXITER+2][NDIM]={{0}}; // for debug
-  FTYPE f1list[IMPMAXITER+2][NDIM]={{0}}; // for debug
-  FTYPE errorabsf1list[IMPMAXITER+2]={0}; // for debug
-  int realiterlist[IMPMAXITER+2]={{-1}}; // for debug
-  FTYPE jac00list[IMPMAXITER+2]={{BIG}}; // for debug
-#else
-  FTYPE (*pppreholdlist)[NPR];
-  FTYPE (*ppposholdlist)[NPR];
-  FTYPE (*f1reportlist)[NDIM];
-  FTYPE (*f1list)[NDIM];
-  FTYPE *errorabsf1list;
-  int *realiterlist;
-  FTYPE *jac00list;
-#endif
 
   FTYPE uu0[NPR],uup[NPR],uupp[NPR],uuppp[NPR],uu[NPR],uuporig[NPR],uu0orig[NPR],bestuu[NPR];
   FTYPE pp0[NPR],ppp[NPR],pppp[NPR],ppppp[NPR],pp[NPR],ppporig[NPR],pp0orig[NPR],bestpp[NPR];
@@ -1979,25 +1956,6 @@ static int koral_source_rad_implicit_mode(int modprim, int havebackup, int diden
     }
 
 
-    // setup debug so can see starting guess
-    if(DEBUGMAXITER&& dampattempt==0){
-      int iterlist=0;
-      PLOOP(pliter,pl) pppreholdlist[iterlist][pl]=pp[pl];
-      PLOOP(pliter,pl) ppposholdlist[iterlist][pl]=pp[pl];
-      if(DEBUGMAXITERVELOCITY==1){
-        SLOOPA(jj){
-          pppreholdlist[iterlist][U1+jj-1]=q->ucon[jj];
-          pppreholdlist[iterlist][URAD1+jj-1]=q->uradcon[jj];
-          ppposholdlist[iterlist][U1+jj-1]=q->ucon[jj];
-          ppposholdlist[iterlist][URAD1+jj-1]=q->uradcon[jj];
-        }
-      }
-      DLOOPA(jj) f1reportlist[iterlist][jj]=BIG;
-      DLOOPA(jj) f1list[iterlist][jj]=BIG;
-      errorabsf1list[iterlist]=BIG;
-      realiterlist[iterlist]=-1;
-      jac00list[iterlist]=BIG;
-    }
     // DEBUG:
     *errorabsreturn=BIG;
 
@@ -2365,24 +2323,6 @@ static int koral_source_rad_implicit_mode(int modprim, int havebackup, int diden
 
 
 
-      // DEBUG STUFF
-      if(DEBUGMAXITER&& dampattempt==0){
-        PLOOP(pliter,pl) pppreholdlist[debugiter][pl]=pp[pl]; // just default dummy value in case break
-        PLOOP(pliter,pl) ppposholdlist[debugiter][pl]=pp[pl]; // just default dummy value in case break
-        if(DEBUGMAXITERVELOCITY==1){
-          SLOOPA(jj){
-            pppreholdlist[debugiter][U1+jj-1]=q->ucon[jj];
-            pppreholdlist[debugiter][URAD1+jj-1]=q->uradcon[jj];
-            ppposholdlist[debugiter][U1+jj-1]=q->ucon[jj];
-            ppposholdlist[debugiter][URAD1+jj-1]=q->uradcon[jj];
-          }
-        }
-        JACLOOPALT(jj,startjac,endjac) f1reportlist[debugiter][jj]=f1report[erefU[jj]];
-        JACLOOPALT(jj,startjac,endjac) f1list[debugiter][jj]=f1[erefU[jj]];
-        errorabsf1list[debugiter]=errorabsf1;
-        realiterlist[debugiter]=iter;
-        jac00list[debugiter]=BIG; // just default dummy value in case break
-      }
 
 
 
@@ -2426,19 +2366,6 @@ static int koral_source_rad_implicit_mode(int modprim, int havebackup, int diden
           //          pp[erefU[0]] = ppp[erefU[0]] = pppp[erefU[0]] = 0.5*(fabs(ppppp[erefU[0]]));
           pp[erefU[0]] = ppp[erefU[0]] = 0.5*fabs(pppp[erefU[0]]);
           // update debug with modifications
-          if(DEBUGMAXITER&& dampattempt==0){
-            PLOOP(pliter,pl) pppreholdlist[debugiter][pl]=pp[pl];
-            PLOOP(pliter,pl) ppposholdlist[debugiter][pl]=pp[pl];
-            if(DEBUGMAXITERVELOCITY==1){
-              SLOOPA(jj){
-                pppreholdlist[debugiter][U1+jj-1]=q->ucon[jj];
-                pppreholdlist[debugiter][URAD1+jj-1]=q->uradcon[jj];
-                ppposholdlist[debugiter][U1+jj-1]=q->ucon[jj];
-                ppposholdlist[debugiter][URAD1+jj-1]=q->uradcon[jj];
-              }
-            }
-            jac00list[debugiter]=iJ[irefU[0]][erefU[0]];
-          }
           // need to get new error function so can take step based upon this as reference!
           continue; // head to start of loop to iter++ and get new error function.
         }
@@ -2677,18 +2604,6 @@ static int koral_source_rad_implicit_mode(int modprim, int havebackup, int diden
 
 
           
-          // DEBUG: store steps in case hit max iter and want to debug
-          if(DEBUGMAXITER&& dampattempt==0){
-            PLOOP(pliter,pl) pppreholdlist[debugiter][pl]=pp[pl];
-            if(DEBUGMAXITERVELOCITY==1){
-              SLOOPA(jj){
-                pppreholdlist[debugiter][U1+jj-1]=q->ucon[jj];
-                pppreholdlist[debugiter][URAD1+jj-1]=q->uradcon[jj];
-              }
-            }
-            jac00list[debugiter]=iJ[irefU[0]][erefU[0]];
-          }
-
 
 
 
@@ -2797,17 +2712,6 @@ static int koral_source_rad_implicit_mode(int modprim, int havebackup, int diden
             holdingaspositive=0;
           }
 
-
-          // DEBUG: store steps in case hit max iter and want to debug
-          if(DEBUGMAXITER&& dampattempt==0){
-            PLOOP(pliter,pl) ppposholdlist[debugiter][pl]=pp[pl];
-            if(DEBUGMAXITERVELOCITY==1){
-              SLOOPA(jj){
-                ppposholdlist[debugiter][U1+jj-1]=q->ucon[jj];
-                ppposholdlist[debugiter][URAD1+jj-1]=q->uradcon[jj];
-              }
-            }
-          }
 
 
           // determine if holding so post-newton checks know.
@@ -3225,54 +3129,6 @@ static int koral_source_rad_implicit_mode(int modprim, int havebackup, int diden
 
 
 
-
-
-
-
-// 0 : full
-// 1: optimal
-#define DEBUGMAXMODE 1
-
-// DEBUGMAXITER stuff
-static void showdebuglist(int debugiter, FTYPE (*pppreholdlist)[NPR],FTYPE (*ppposholdlist)[NPR],FTYPE (*f1reportlist)[NDIM],FTYPE (*f1list)[NDIM],FTYPE *errorabsf1list, int *realiterlist, FTYPE *jac00list)
-{
-
-  if(DEBUGMAXITER==0) return;
-
-  int listiter;
-  if(DEBUGMAXMODE==0) dualfprintf(fail_file,"%3s : %3s : %21s %21s %21s %21s %21s %21s %21s %21s %21s : %21s %21s %21s %21s %21s %21s %21s %21s %21s : %21s %21s %21s %21s : %21s : %21s\n","li","ri","rho","ug","v1","v2","v3","Erf","vr1","vr2","vr3","rho","ug","v1","v2","v3","Erf","vr1","vr2","vr3","f1rep0","f1rep1","f1rep2","f1rep3","errorabs","umin");
-  else if(DEBUGMAXMODE==1) dualfprintf(fail_file,"%3s : %3s : %21s %21s %21s %21s %21s %21s %21s %21s %21s : %21s %21s : %21s %21s %21s %21s : %21s %21s %21s %21s : %21s : %21s : %21s\n","li","ri","rho","ug","v1","v2","v3","Erf","vr1","vr2","vr3","rho","ug","f10","f11","f12","f13","f1rep0","f1rep1","f1rep2","f1rep3","errorabs","umin","jac00");
-
-  for(listiter=0;listiter<=debugiter;listiter++){
-    FTYPE umin=calc_PEQ_ufromTrho(TEMPMIN,pppreholdlist[listiter][RHO]);
-    if(DEBUGMAXMODE==0){
-      // full, but excessive
-      dualfprintf(fail_file
-                  ,"%3d : %3d : %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g : %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g : %21.15g %21.15g %21.15g %21.15g : %21.15g : %21.15g\n"
-                  ,listiter,realiterlist[listiter]
-                  ,pppreholdlist[listiter][RHO],pppreholdlist[listiter][UU],pppreholdlist[listiter][U1],pppreholdlist[listiter][U2],pppreholdlist[listiter][U3],pppreholdlist[listiter][PRAD0],pppreholdlist[listiter][PRAD1],pppreholdlist[listiter][PRAD2],pppreholdlist[listiter][PRAD3]
-                  ,ppposholdlist[listiter][RHO],ppposholdlist[listiter][UU],ppposholdlist[listiter][U1],ppposholdlist[listiter][U2],ppposholdlist[listiter][U3],ppposholdlist[listiter][PRAD0],ppposholdlist[listiter][PRAD1],ppposholdlist[listiter][PRAD2],ppposholdlist[listiter][PRAD3]
-                  ,f1reportlist[listiter][0],f1reportlist[listiter][1],f1reportlist[listiter][2],f1reportlist[listiter][3]
-                  ,errorabsf1list[listiter]
-                  ,umin
-                  );
-    }
-    else if(DEBUGMAXMODE==1){
-      // optimal
-      dualfprintf(fail_file
-                  ,"%3d : %3d : %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g : %21.15g %21.15g : %21.15g %21.15g %21.15g %21.15g : %21.15g %21.15g %21.15g %21.15g : %21.15g : %21.15g : %21.15g\n"
-                  ,listiter,realiterlist[listiter]
-                  ,pppreholdlist[listiter][RHO],pppreholdlist[listiter][UU],pppreholdlist[listiter][U1],pppreholdlist[listiter][U2],pppreholdlist[listiter][U3],pppreholdlist[listiter][PRAD0],pppreholdlist[listiter][PRAD1],pppreholdlist[listiter][PRAD2],pppreholdlist[listiter][PRAD3]
-                  ,ppposholdlist[listiter][RHO],ppposholdlist[listiter][UU]
-                  ,f1list[listiter][0],f1list[listiter][1],f1list[listiter][2],f1list[listiter][3]
-                  ,f1reportlist[listiter][0],f1reportlist[listiter][1],f1reportlist[listiter][2],f1reportlist[listiter][3]
-                  ,errorabsf1list[listiter]
-                  ,umin,jac00list[listiter]
-                );
-    }
-  }// end listiter loop
-
-}
 
 
 
