@@ -3148,11 +3148,7 @@ static int koral_source_rad_implicit_mode(int modprim, int havebackup, int diden
       failreturn=FAILRETURNNOFAIL; // default is no failure
       mathfailtype=-1; // indicates not set
       {
-        PLOOP(pliter,pl) uu0[pl]=uu0dampbackup[pl];
-        FTYPE uuiterback[NPR];
-        PLOOP(pliter,pl) uuiterback[pl] = uu[pl]; // hold actual iterated quantities
-        PLOOP(pliter,pl) uu[pl] = uu0[pl]; // "iterate" non-iterated quantities
-        JACLOOP(ii,startjac,endjac) uu[irefU[ii]] = uuiterback[irefU[ii]]; // overwrite with actual previous step for iterated quantities
+        //        PLOOP(pliter,pl) uu0[pl]=uu0dampbackup[pl];
       }
       if(errorabsf1<TRYHARDERFEEDGUESSTOL){
         // then keep pp and uu as better starting point
@@ -3161,6 +3157,7 @@ static int koral_source_rad_implicit_mode(int modprim, int havebackup, int diden
         PLOOP(pliter,pl){
           pp[pl]=ppdampbackup[pl];
           uu[pl]=uudampbackup[pl];
+          uu0[pl]=uu0dampbackup[pl];
         }
       }
 
