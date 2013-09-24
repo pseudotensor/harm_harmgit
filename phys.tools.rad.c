@@ -345,6 +345,11 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE errorabs, struc
 
 
 //////// implicit stuff
+
+static int koral_source_rad_implicit_old(int *eomtype, FTYPE *pin, FTYPE *pf, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE dissmeasure, FTYPE *dUother ,FTYPE (*dUcomp)[NPR]);
+static int koral_source_rad_implicit_new(int *eomtype, FTYPE *pin, FTYPE *pf, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE dissmeasure, FTYPE *dUother ,FTYPE (*dUcomp)[NPR]);
+
+
 static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE dissmeasure, FTYPE *dUother ,FTYPE (*dUcomp)[NPR]);
 
 static int koral_source_rad_implicit_mode(int modprim, int havebackup, int didentropyalready, int *eomtype, int whichcap, int itermode, int trueimpmaxiter, int truenumdampattempts, FTYPE fracenergy, FTYPE dissmeasure, int *radinvmod, FTYPE *pb, FTYPE *uub, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother ,FTYPE (*dUcomp)[NPR], FTYPE *errorabs, FTYPE errorabsbestexternal, int *iters, int *f1iters);
@@ -765,7 +770,34 @@ static FTYPE compute_dt(FTYPE *CUf, FTYPE dtin)
 
 
 
+static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE dissmeasure, FTYPE *dUother ,FTYPE (*dUcomp)[NPR])
+{
+  int sc;
+  int pliter,pl;
 
+  FTYPE pbbackup[NPR];
+  FTYPE dUcompbackup[NUMSOURCES][NPR];
+  struct of_state qbackup;
+  PLOOP(pliter,pl){
+    pbbackup[pl]=pb[pl];
+    SCLOOP(sc) dUcompbackup[sc][pl]=dUcomp[sc][pl];
+    qbackup=*q;
+  }
+
+  // do new
+  int return2=koral_source_rad_implicit_new(eomtype, pb, pf, piin, Uiin, Ufin, CUf, ptrgeom, q, dissmeasure, dUother ,dUcomp);
+
+  // restore and do old
+  PLOOP(pliter,pl){
+    pb[pl]=pbbackup[pl];
+    SCLOOP(sc) dUcomp[sc][pl]=dUcompbackup[sc][pl];
+    *q=qbackup;
+  }
+
+  int return1=koral_source_rad_implicit_old(eomtype, pb, pf, piin, Uiin, Ufin, CUf, ptrgeom, q, dissmeasure, dUother ,dUcomp);
+  return(return1);
+
+}
 
 
 // compute changes to U (both T and R) using implicit method
@@ -1363,7 +1395,7 @@ static int koral_source_rad_implicit_old(int *eomtype, FTYPE *pin, FTYPE *pf, FT
 
 // wrapper for mode method
 //static int koral_source_rad_implicit_new(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE dissmeasure, FTYPE *dUother ,FTYPE (*dUcomp)[NPR])
-static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE dissmeasure, FTYPE *dUother ,FTYPE (*dUcomp)[NPR])
+static int koral_source_rad_implicit_new(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE dissmeasure, FTYPE *dUother ,FTYPE (*dUcomp)[NPR])
 {
   int pliter,pl;
   int sc;
@@ -2369,8 +2401,8 @@ static int koral_source_rad_implicit_mode(int modprim, int havebackup, int diden
 
         if(earlylowerror){
           if(debugfail>=DEBUGLEVELIMPSOLVERMORE) dualfprintf(fail_file,"Early low error=%g iter=%d\n",errorabsf1,iter);
-          //  not failure.
-          break;
+                    //  not failure.
+          // break;
         }
 
 
@@ -2515,7 +2547,7 @@ static int koral_source_rad_implicit_mode(int modprim, int havebackup, int diden
             convreturnf3limit=(errorabsf3<LOCALPREIMPCONVXABS);
           }
 
-          if(POSTNEWTONCONVCHECK==0 || notholding==0){
+          if(POSTNEWTONCONVCHECK==0 || notholding==0||1){
             convreturnf3limit=0;
           }
 
@@ -2526,7 +2558,7 @@ static int koral_source_rad_implicit_mode(int modprim, int havebackup, int diden
           // then can check convergence: using f1 and f3limit
           //
           /////////////////
-          if(convreturnf1 || convreturnf3limit || canbreak){
+          if((convreturnf1 || convreturnf3limit || canbreak)){
             if(debugfail>=DEBUGLEVELIMPSOLVERMORE){
               if(convreturnf3limit && debugfail>=3){
                 dualfprintf(fail_file,"f3limit good\n");
