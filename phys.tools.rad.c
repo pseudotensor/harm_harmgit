@@ -785,7 +785,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
   }
 
   // do new
-  int return2=koral_source_rad_implicit_new(eomtype, pb, pf, piin, Uiin, Ufin, CUf, ptrgeom, q, dissmeasure, dUother ,dUcomp);
+  int return1=koral_source_rad_implicit_old(eomtype, pb, pf, piin, Uiin, Ufin, CUf, ptrgeom, q, dissmeasure, dUother ,dUcomp);
+  //int return2=koral_source_rad_implicit_new(eomtype, pb, pf, piin, Uiin, Ufin, CUf, ptrgeom, q, dissmeasure, dUother ,dUcomp);
 
   // restore and do old
   PLOOP(pliter,pl){
@@ -794,8 +795,11 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     *q=qbackup;
   }
 
-  int return1=koral_source_rad_implicit_old(eomtype, pb, pf, piin, Uiin, Ufin, CUf, ptrgeom, q, dissmeasure, dUother ,dUcomp);
-  return(return1);
+  int return2=koral_source_rad_implicit_new(eomtype, pb, pf, piin, Uiin, Ufin, CUf, ptrgeom, q, dissmeasure, dUother ,dUcomp);
+  return(return2);
+  //  int return1=koral_source_rad_implicit_old(eomtype, pb, pf, piin, Uiin, Ufin, CUf, ptrgeom, q, dissmeasure, dUother ,dUcomp);
+  //  return(return1);
+
 
 }
 
