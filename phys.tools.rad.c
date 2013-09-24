@@ -698,7 +698,7 @@ static int f_implicit(int iter, int failreturnallowable, int whichcall, int show
   //  PLOOP(pliter,pl) dualfprintf(fail_file,"pl=%d uu=%21.15g pp=%21.15g\n",pl,uu[pl],pp[pl]);
   failreturn=Utoprimgen_failwrapper(0,radinvmod,showmessages,allowlocalfailurefixandnoreport, finalstep, eomtype,whichcap,EVOLVEUTOPRIM, UNOTHING, uu, q, ptrgeom, dissmeasure,pp, &newtonstats);
   if(failreturn && failreturn>failreturnallowable){
-    if(showmessages && debugfail>=2) dualfprintf(fail_file,"Utoprimgen_wrapper() failed, must return out of f_implicit_lab(): %d vs. %d\n",failreturn,failreturnallowable);
+    if(showmessages && debugfail>=2||1) dualfprintf(fail_file,"Utoprimgen_wrapper() failed, must return out of f_implicit_lab(): %d vs. %d\n",failreturn,failreturnallowable);
     return(failreturn);
   }
 
@@ -741,7 +741,7 @@ static int f_implicit(int iter, int failreturnallowable, int whichcall, int show
       fplnorm[pl]=fnorm[iv];
     }
   }
-  //  PLOOP(pliter,pl) dualfprintf(fail_file,"FUCK: pl=%d uu0=%21.15g uu=%21.15g Gdpl=%21.15g f=%21.15g fnorm=%21.15g\n",pl,uu0[pl],uu[pl],sign[pl]*localdt*Gdpl[pl],fpl[pl],fplnorm[pl]);
+  PLOOP(pliter,pl) dualfprintf(fail_file,"FUCK: pl=%d uu0=%21.15g uu=%21.15g Gdpl=%21.15g f=%21.15g fnorm=%21.15g\n",pl,uu0[pl],uu[pl],sign[pl]*localdt*Gdpl[pl],fpl[pl],fplnorm[pl]);
 
 
   //  PLOOP(pliter,pl) dualfprintf(fail_file,"i=%d pl=%d uu=%g pp=%g\n",ptrgeom->i,pl,uu[pl],pp[pl]);
@@ -795,6 +795,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     qnew=*q;
   }
   int return2=koral_source_rad_implicit_new(eomtype, pbnew, pf, piin, Uiin, Ufin, CUf, ptrgeom, &qnew, dissmeasure, dUother ,dUcompnew);
+  if(return2!=0) dualfprintf(fail_file,"BADNEW\n");
 
   // restore and do old
   PLOOP(pliter,pl){
@@ -809,6 +810,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
   // before return, compare results
   PLOOP(pliter,pl) dualfprintf(fail_file,"pl=%d : pb=%21.15g %21.15g : dUcomp=%21.15g %21.15g\n",pl,pb[pl],pbnew[pl],dUcomp[RADSOURCE][pl],dUcompnew[RADSOURCE][pl]);
+
+  if(return2!=0) myexit(666);
 
   return(return1);
 
@@ -1184,6 +1187,8 @@ static int koral_source_rad_implicit_old(int *eomtype, FTYPE *pin, FTYPE *pf, FT
         }
       }
 
+
+
       /////////
       //
       // assign new uu
@@ -1191,7 +1196,11 @@ static int koral_source_rad_implicit_old(int *eomtype, FTYPE *pin, FTYPE *pf, FT
       /////////
       PLOOP(pliter,pl) uu[pl]=uu0[pl];
       DLOOPA(ii) uu[ii+URAD0]=x[ii];
-    
+
+      DLOOPA(ii) dualfprintf(fail_file,"OLDSTEP(%d): ii=%d uup=%21.15g -> uu=%21.15g using uu0=%21.15g fracdtuu0=%g\n",iter,ii,uup[URAD0+ii],uu[URAD0+ii],uu0[URAD0+ii],fracdtuu0);
+      PLOOP(pliter,pl) dualfprintf(fail_file,"using pl=%d pp=%21.15g\n",pl,pinuse[pl]);
+      DLOOP(ii,jj) dualfprintf(fail_file,"ii=%d jj=%d iJ=%21.15g f1=%21.15g\n",ii,jj,iJ[ii][jj],f1[jj]);
+
     
       if(showmessagesheavy){
         dualfprintf(fail_file,"POSTDX: uu: %g %g %g %g : uup=%g %g %g %g\n",uu[URAD0],uu[URAD1],uu[URAD2],uu[URAD3],uup[URAD0],uup[URAD1],uup[URAD2],uup[URAD3]);
@@ -2165,13 +2174,14 @@ static int koral_source_rad_implicit_mode(int modprim, int havebackup, int diden
           return(-1);
         }
 
+#if(0)
         // f1 error calculation updated non-iterated pp or uu, so store.  Ok to re-store iterated uu and pp as well
         // KORALTODO: This might mess up when f1 backs-up uu and pp
         PLOOP(pliter,pl){
           uup[pl]=uu[pl];
           ppp[pl]=pp[pl];
         }
-
+#endif
 
 #if(0)
         if(pp[PRAD0]<10.0*ERADLIMIT){
@@ -2332,9 +2342,6 @@ static int koral_source_rad_implicit_mode(int modprim, int havebackup, int diden
       //    if(fracuup!=1.0){
       //      if(fabs(fracuup-1.0)>10.0*NUMEPSILON){
       if(fracuup<1.0){
-        // try increasing amount of uu or pp used
-        fracuup*=RADDAMPUNDELTA;
-        fracuup=MIN(1.0,fracuup);
         checkconv=0;
         changeotherdt=0; // ensure fracuup back to 1.0 first before reverting others.
       }
@@ -2342,20 +2349,12 @@ static int koral_source_rad_implicit_mode(int modprim, int havebackup, int diden
       //    if(fracdtuu0!=1.0){
       //      if(fabs(fracdtuu0-1.0)>10.0*NUMEPSILON && changeotherdt){
       if(fracdtuu0<1.0 && changeotherdt){
-        // try increasing uu0 away from Uiin to account for full dUother
-        fracdtuu0*=RADDAMPUNDELTA;
-        fracdtuu0=MIN(1.0,fracdtuu0);
-        PLOOP(pliter,pl) uu0[pl]=UFSET(CUf,fracdtuu0*dt,Uiin[pl],Ufin[pl],dUother[pl],0.0); // modifies uu0
-        // KORALNOTE: No need to get pp0, since never used.  uu0 only used in error function.
         checkconv=0;
       }
       ////////////////////////////////////////////////////////////////////////////
       //    if(fracdtG!=1.0){
       //      if(fabs(fracdtG-1.0)>10.0*NUMEPSILON && changeotherdt){
       if(fracdtG<1.0 && changeotherdt){
-        // try increasing amount of G applied
-        fracdtG*=RADDAMPUNDELTA;
-        fracdtG=MIN(1.0,fracdtG);
         checkconv=0;
       }      
       ////////////////////////////////////////////////////////////////////////////
@@ -2503,6 +2502,10 @@ static int koral_source_rad_implicit_mode(int modprim, int havebackup, int diden
         PLOOP(pliter,pl) uu[pl] = uup[pl];
         JAC2DLOOP(ii,jj,startjac,endjac) uu[irefU[ii]] -= DAMPFACTOR*iJ[irefU[ii]][erefU[jj]]*f1[erefU[jj]];
 
+        DLOOPA(ii) dualfprintf(fail_file,"NEWSTEP(%d): ii=%d uup=%21.15g -> uu=%21.15g using uu0=%21.15g fracdtuu0=%g\n",iter,ii,uup[irefU[ii]],uu[irefU[ii]],uu0[irefU[ii]],fracdtuu0);
+        PLOOP(pliter,pl) dualfprintf(fail_file,"using pl=%d pp=%21.15g\n",pl,pp[pl]);
+        DLOOP(ii,jj) dualfprintf(fail_file,"ii=%d jj=%d iJ=%21.15g f1=%21.15g irefU=%d erefU=%d df=%g\n",ii,jj,iJ[irefU[ii]][erefU[jj]],f1[erefU[jj]],irefU[ii],erefU[jj],DAMPFACTOR);
+
         if(POSTNEWTONCONVCHECK==2){
           // check if any actual changes in primitives.  If none, then have to stop.
           FTYPE diffuu=0.0,sumuu=0.0;
@@ -2606,6 +2609,43 @@ static int koral_source_rad_implicit_mode(int modprim, int havebackup, int diden
       // see if need to damp, but don't damp below some point.
       if(errorabsf1>errorabspf1[0] && DAMPFACTOR>LOWESTDAMP) DAMPFACTOR*=0.5;
 #endif
+
+
+
+      /////////
+      //
+      // see if should check convergence or check how solution is behaving.
+      //
+      /////////
+      changeotherdt=1;
+      ////////////////////////////////////////////////////////////////////////////
+      //    if(fracuup!=1.0){
+      //      if(fabs(fracuup-1.0)>10.0*NUMEPSILON){
+      if(fracuup<1.0){
+        // try increasing amount of uu or pp used
+        fracuup*=RADDAMPUNDELTA;
+        fracuup=MIN(1.0,fracuup);
+        changeotherdt=0; // ensure fracuup back to 1.0 first before reverting others.
+      }
+      ////////////////////////////////////////////////////////////////////////////
+      //    if(fracdtuu0!=1.0){
+      //      if(fabs(fracdtuu0-1.0)>10.0*NUMEPSILON && changeotherdt){
+      if(fracdtuu0<1.0 && changeotherdt){
+        // try increasing uu0 away from Uiin to account for full dUother
+        fracdtuu0*=RADDAMPUNDELTA;
+        fracdtuu0=MIN(1.0,fracdtuu0);
+        PLOOP(pliter,pl) uu0[pl]=UFSET(CUf,fracdtuu0*dt,Uiin[pl],Ufin[pl],dUother[pl],0.0); // modifies uu0
+        // KORALNOTE: No need to get pp0, since never used.  uu0 only used in error function.
+      }
+      ////////////////////////////////////////////////////////////////////////////
+      //    if(fracdtG!=1.0){
+      //      if(fabs(fracdtG-1.0)>10.0*NUMEPSILON && changeotherdt){
+      if(fracdtG<1.0 && changeotherdt){
+        // try increasing amount of G applied
+        fracdtG*=RADDAMPUNDELTA;
+        fracdtG=MIN(1.0,fracdtG);
+      }      
+
 
       /////////
       // see if took too many Newton steps or not finite results
@@ -3189,6 +3229,8 @@ static int f_error_check(int showmessages, int showmessagesheavy, int iter, FTYP
   return(0);
 }
 
+//        int failreturniJ=get_implicit_iJ(failreturnallowableuse, showmessages, showmessagesheavy, allowlocalfailurefixandnoreport, &eomtypelocal, whichcap, itermode, fracenergy, dissmeasure, impepsjac, iter, errorabsf1, dimfactU, uu, uup, uu0, pp, ppp, fracdtG, realdt, ptrgeom, q, f1, f1norm, iJ);
+
 
 // calculating approximate Jacobian: dUresid(dUrad,G(Urad))/dUrad = dy(x)/dx
 // then compute inverse Jacobian
@@ -3240,6 +3282,8 @@ static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int sho
         int goexplicit=0;
         int eomtypelocallocal=*eomtypelocal;
         FTYPE fpl2[NPR],fpl2norm[NPR];
+        dualfprintf(fail_file,"f_implicit1: %d %d %d %d %d %d %d %d %g %g %d\n",iter,failreturnallowableuse, whichcall,showmessages,allowlocalfailurefixandnoreport, eomtypelocallocal, whichcap, itermode, fracenergy, dissmeasure, radinvmod);
+        PLOOP(pliter,pl) dualfprintf(fail_file,"f_implicit2: pl=%d : %g %g %g %g\n",pl,pinjac[pl],uu0[pl],uu[pl],fracdtG*realdt); //,ptrgeom,q, fpl2,fpl2norm,&goexplicit
         failreturn=f_implicit(iter,failreturnallowableuse, whichcall,showmessages,allowlocalfailurefixandnoreport, &eomtypelocallocal, whichcap, itermode, fracenergy, dissmeasure, &radinvmod, pinjac,uu0,uu,fracdtG*realdt,ptrgeom,q, fpl2,fpl2norm,&goexplicit);
         DLOOPA(ii){
           f2[ii]=fpl2[URAD0+ii];
@@ -3279,7 +3323,7 @@ static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int sho
 
 
       if(debugfail>=2){
-        DLOOPA(ii) if(showmessagesheavy || !isfinite(J[ii][jj])){
+        DLOOPA(ii) if(1||showmessagesheavy || !isfinite(J[ii][jj])){
           dualfprintf(fail_file,"JAC: uu: %26.20g %26.20g %26.20g %26.20g : uup=%26.20g %26.20g %26.20g %26.20g (del=%26.20g localIMPEPS=%26.20g)\n",uu[URAD0],uu[URAD1],uu[URAD2],uu[URAD3],uup[URAD0],uup[URAD1],uup[URAD2],uup[URAD3],del,localIMPEPS);
           dualfprintf(fail_file,"i=%d jj=%d f2: %26.20g %26.20g %26.20g %26.20g\n",ptrgeom->i,jj,f2[0],f2[1],f2[2],f2[3]);
           dualfprintf(fail_file,"JISNAN: %d %d : %26.20g : %26.20g %26.20g : %26.20g %26.20g\n",ii,jj,J[ii][jj],f2[ii],f1[ii],uu[jj+URAD0],uup[jj+URAD0]);
@@ -3313,7 +3357,7 @@ static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int sho
       iJ[URAD0+ii][URAD0+jj]=iJsub[ii][jj];
     }
     {
-      //      int iii,jjj; DLOOP(iii,jjj) dualfprintf(fail_file,"J[%d][%d]=%26.20g iJsub=%26.20g\n",iii,jjj,J[iii][jjj],iJsub[iii][jjj]);
+      int iii,jjj; DLOOP(iii,jjj) dualfprintf(fail_file,"J[%d][%d]=%26.20g iJsub=%26.20g\n",iii,jjj,J[iii][jjj],iJsub[iii][jjj]);
     }
 
 
