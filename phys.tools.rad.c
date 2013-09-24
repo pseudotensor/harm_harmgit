@@ -2326,53 +2326,6 @@ static int koral_source_rad_implicit_mode(int modprim, int havebackup, int diden
 
 
 
-      ////////////////
-      //
-      // If error dropped below tolerance for this sub-matrix iteration mode, then continue to next level.
-      //
-      /////////////////
-      // check if energy only iteration has error that has dropped below tolerance, then can move on to 
-      if(itermode==ITERMODESTAGES && iter>=BEGINMOMSTEPS && iter<=ENDMOMSTEPS){
-        if(fabs(f1report[irefU[1]])<trueimptryconv && fabs(f1report[irefU[2]])<trueimptryconv && fabs(f1report[irefU[3]])<trueimptryconv){
-          if(iter<=ENDMOMSTEPS){ iter=BEGINENERGYSTEPS-1; continue;} // force as if already doing energy steps.  If already next iteration is to be this energy step, then no skipping needed.
-        }
-      }
-      // check if energy only iteration has error that has dropped below tolerance, then can move on to 
-      if(itermode==ITERMODESTAGES && iter>=BEGINENERGYSTEPS && iter<=ENDENERGYSTEPS){
-        //        if(f1report[irefU[0]]==BIG){ dualfprintf(fail_file,"FUDGE\n"); }
-        // SUPERGODMARK: valgrind says belw is undefined, but don't see it.
-        if(fabs(f1report[irefU[0]])<trueimptryconv){
-          if(iter<=ENDENERGYSTEPS){ iter=BEGINFULLSTEPS-1; continue;} // force as if already doing normal steps.  If already next iteration is to be normal step, no need to skip.
-        }
-      }
-
-
-
-
-
-
-
-      ///////////////////////////
-      //
-      //  PRE NEWTON ADJUSTMENTS
-      //
-      ///////////////////////////
-
-      // check if doing energy stepping and error jumped up too much
-      if(iter>=BEGINENERGYSTEPS && iter<=ENDENERGYSTEPS || iter>=BEGINFULLSTEPS && iter<=ENDFULLSTEPS){// now all steps beyond energy
-        if(fabs(f1[erefU[0]]/f1p[erefU[0]])>FACTORBADJUMPERROR && fabs(f1report[erefU[0]])>trueimptryconv){
-          // then pseudo-bisect (between zero and previous ok error case
-          if(debugfail>=DEBUGLEVELIMPSOLVER) dualfprintf(fail_file,"pseudo-bisect: iter=%d f1=%g f1p=%g pp=%g ppp=%g  pppp=%g  ppppp=%g\n",iter,f1[erefU[0]],f1p[erefU[0]],pp[erefU[0]],ppp[erefU[0]],pppp[erefU[0]],ppppp[erefU[0]]);
-          //          pp[erefU[0]] = ppp[erefU[0]] = pppp[erefU[0]] = 0.5*(fabs(ppppp[erefU[0]]));
-          pp[erefU[0]] = ppp[erefU[0]] = 0.5*fabs(pppp[erefU[0]]);
-          // update debug with modifications
-          // need to get new error function so can take step based upon this as reference!
-          continue; // head to start of loop to iter++ and get new error function.
-        }
-      }
-
-
-
 
 
       // only check convergence or check the properties of the solution if checkconv==1
@@ -2412,76 +2365,6 @@ static int koral_source_rad_implicit_mode(int modprim, int havebackup, int diden
           if(debugfail>=DEBUGLEVELIMPSOLVERMORE) dualfprintf(fail_file,"Early low error=%g iter=%d\n",errorabsf1,iter);
           //  not failure.
           break;
-        }
-
-
-        // check if error repeatedly rises
-        // do this even if damping, since damping should only help get continuous reduction in error.
-        if(NUMNOERRORREDUCE && iter>=BEGINNORMALSTEPS){
-          if(iter>NUMNOERRORREDUCE0 && suberrorabsf1>trueimptryconvabs){ // no need to do this if actually error is below desired tolerance,  hence second argument
-            if(suberrorabsf1>=errorabspf1[0]) counterrorrose++;
-            int allowedtoabort=(havebackup || ABORTBACKUPIFNOERRORREDUCE==1 && suberrorabsf1<trueimptryconvalt);
-            if(counterrorrose>=NUMNOERRORREDUCE && allowedtoabort){ // would be risky to do abort if don't have backup, even if enter into limit cycle.
-
-              if(itermode==ITERMODESTAGES && iter>=BEGINMOMSTEPS && iter<=ENDMOMSTEPS){
-                if(iter<=ENDMOMSTEPS){ iter=BEGINENERGYSTEPS-1; continue;} // force as if already doing energy steps.  If already next iteration is to be this energy step, then no skipping needed.
-              }// end if doing momentum steps and error not decreasing fast enough, then skip to energy steps
-              else if(itermode==ITERMODESTAGES && iter>=BEGINENERGYSTEPS && iter<=ENDENERGYSTEPS){
-                if(iter<=ENDENERGYSTEPS){ iter=BEGINFULLSTEPS-1; continue;} // force as if already doing normal steps.  If already next iteration is to be normal step, no need to skip.
-              }// end if doing energy steps and error not decreasing fast enough, then skip to normal steps
-              else{// else if normal step
-
-                if(havebackup){
-                  failreturn=FAILRETURNMODESWITCH; mathfailtype=80;
-                  if(debugfail>=DEBUGLEVELIMPSOLVER) dualfprintf(fail_file,"SWITCHING MODE: Detected did not decrease error %d times at iter=%d : suberrorabsf1=%g errorabspf1=%g\n",counterrorrose,iter,suberrorabsf1,errorabspf1[0]);
-                  // if want to ensure should have gotten solution, should still report
-                }
-                else{
-                  // then aborting due to error alone even without backup
-                  canbreak=2;
-                  mathfailtype=81;
-                  if(debugfail>=DEBUGLEVELIMPSOLVER) dualfprintf(fail_file,"Aborting even without backup because error oscillated (iter=%d) and suberrorabsf1=%g errorabsf1=%g\n",iter,suberrorabsf1,errorabsf1);
-                  // no failure or switch.
-                }
-                break;
-              }
-            }// end if normal step
-          }
-        }      
-
-
-        // check if error isn't decreasing enough for be interesting
-        // but don't check on error if holding on u_g>0 since error can be bad until settle to near root.
-        // and don't do this check if damping, since if damping really want to try harder.
-        if(NUMPRIORERRORS>0 && holdingaspositive==0 && dampattempt==0){
-          if(priorerrorscount>=NUMPRIORERRORSITER0){
-            FTYPE erroraverage=0.0; int numerroraverage=0;
-            for(itererror=1;itererror<MIN(priorerrorscount,NUMPRIORERRORS);itererror++){ erroraverage += errorabspf1[itererror]; numerroraverage++;} erroraverage/=((FTYPE)numerroraverage);
-            FTYPE changerequired;
-            if(dampattempt==0) changerequired=PRIORERRORCHANGEREQUIRED;
-            else if(dampattempt==1) changerequired=0.7;
-            else if(dampattempt==2) changerequired=0.8;
-            else if(dampattempt==3) changerequired=0.9;
-            else changerequired=0.95;
-            if(suberrorabsf1/erroraverage>changerequired && suberrorabsf1>trueimptryconvabs){
-
-              if(itermode==ITERMODESTAGES && iter>=BEGINMOMSTEPS && iter<=ENDMOMSTEPS){
-                if(iter<=ENDMOMSTEPS){ iter=BEGINENERGYSTEPS-1; continue;} // force as if already doing energy steps.  If already next iteration is to be this energy step, then no skipping needed.
-              }// end if doing momentum steps and error not decreasing fast enough, then skip to energy steps
-              else if(itermode==ITERMODESTAGES && iter>=BEGINENERGYSTEPS && iter<=ENDENERGYSTEPS){
-                if(iter<=ENDENERGYSTEPS){ iter=BEGINFULLSTEPS-1; continue;} // force as if already doing normal steps.  If already next iteration is to be normal step, no need to skip.
-              }// end if doing energy steps and error not decreasing fast enough, then skip to normal steps
-              else{
-                canbreak=3;
-                if(debugfail>=DEBUGLEVELIMPSOLVER){
-                  dualfprintf(fail_file,"Error is not decreasing sufficiently fast: iter=%d priorerrorscount=%d suberrorabsf1=%g\n",iter,priorerrorscount,suberrorabsf1);
-                  for(itererror=1;itererror<MIN(priorerrorscount,NUMPRIORERRORS);itererror++) dualfprintf(fail_file,"errorabspf1[%d]=%g\n",itererror,errorabspf1[itererror]);
-                }
-                break;
-              }// end if doing normal steps and error not decreasing fast enough
-            }// end if error not decreasing enough and also higher than desired tolerance in error
-          }// end if enough prior errors to make average measurement of past error
-          priorerrorscount++;
         }
 
 
@@ -2563,219 +2446,22 @@ static int koral_source_rad_implicit_mode(int modprim, int havebackup, int diden
         /////////
 
 
-        //////////////
-        //
-        // ITERATING U
-        //
-        ///////////////
-        if(IMPUTYPE(implicititer)){
-          PLOOP(pliter,pl) uu[pl] = uup[pl];
-          JAC2DLOOP(ii,jj,startjac,endjac) uu[irefU[ii]] -= DAMPFACTOR*iJ[irefU[ii]][erefU[jj]]*f1[erefU[jj]];
+        PLOOP(pliter,pl) uu[pl] = uup[pl];
+        JAC2DLOOP(ii,jj,startjac,endjac) uu[irefU[ii]] -= DAMPFACTOR*iJ[irefU[ii]][erefU[jj]]*f1[erefU[jj]];
 
-          if(POSTNEWTONCONVCHECK==2){
-            // check if any actual changes in primitives.  If none, then have to stop.
-            FTYPE diffuu=0.0,sumuu=0.0;
-            PLOOP(pliter,pl){
-              diffuu += fabs(uu[pl]-uup[pl]);
-              sumuu += fabs(uu[pl])+fabs(uup[pl]);
-            }
-            if(diffuu<DIFFXLIMIT*sumuu){
-              convreturnf3limit=1;
-            }
+        if(POSTNEWTONCONVCHECK==2){
+          // check if any actual changes in primitives.  If none, then have to stop.
+          FTYPE diffuu=0.0,sumuu=0.0;
+          PLOOP(pliter,pl){
+            diffuu += fabs(uu[pl]-uup[pl]);
+            sumuu += fabs(uu[pl])+fabs(uup[pl]);
           }
-
-          if(showmessagesheavy) dualfprintf(fail_file,"POSTDX: uu: %g %g %g %g : uup=%g %g %g %g\n",uu[irefU[0]],uu[irefU[1]],uu[irefU[2]],uu[irefU[3]],uup[irefU[0]],uup[irefU[1]],uup[irefU[2]],uup[irefU[3]]);
-        }// end iterating U
-
-
-        //////////////
-        //
-        // ITERATING P
-        //
-        ///////////////
-        else if(IMPPTYPE(implicititer)){
-
-          PLOOP(pliter,pl) pp[pl]=ppp[pl];
-          JAC2DLOOP(ii,jj,startjac,endjac){
-            pp[irefU[ii]] -= DAMPFACTOR*iJ[irefU[ii]][erefU[jj]]*f1[erefU[jj]];
-            if(debugfail>=DEBUGLEVELIMPSOLVERMORE) dualfprintf(fail_file,"added to ppp=%21.15g ii=%d jj=%d irefU=%d an amount of negative %21.15g\n",ppp[irefU[ii]],ii,jj,irefU[ii],DAMPFACTOR*iJ[irefU[ii]][erefU[jj]]*f1[erefU[jj]]);
+          if(diffuu<DIFFXLIMIT*sumuu){
+            convreturnf3limit=1;
           }
+        }
 
-
-
-          
-
-
-
-          ///////////////////////////
-          //
-          //  POST NEWTON ADJUSTMENTS
-          //
-          ///////////////////////////
-
-
-          // HOLD TT-iterated quantity or momentum-iterated quantity in initial steps
-          if(RAMESHFIXEARLYSTEPS){
-            // RAMESH  HOLD
-            if(iter<RAMESHFIXEARLYSTEPS) pp[irefU[0]]=ppp[irefU[0]]; // don't trust first Newton step in u_g, Erf, or S
-            else if(iter==RAMESHFIXEARLYSTEPS) SLOOPA(jj) pp[irefU[jj]]=ppp[irefU[jj]]; // don't trust second Newton step in velocity-momentum.
-
-            if(pp[RHO]<=0.0||pp[UU]<=0.0){
-              if(debugfail>=DEBUGLEVELIMPSOLVERMORE) dualfprintf(fail_file,"Detected negative rho=%21.15g ug=%21.15g\n",iter,pp[RHO],pp[UU]);
-            }
-          }// end Ramesh hold
-
-
-
-
-          // check if u_g<0.  Do even if RAMESHFIXEARLYSTEPS going or even if checkconv==0
-          int eomcond=(eomtypelocal==EOMGRMHD || eomtypelocal==EOMDEFAULT && EOMDEFAULT==EOMGRMHD);
-          //          FTYPE umin=10.0*calc_PEQ_ufromTrho(TEMPMIN,fabs(pp[RHO]));
-          if(pp[irefU[0]]<=0.0 && (IMPPTYPE(implicititer)&&implicititer!=QTYENTROPYPMHD)){ // don't consider implicititer==QTYENTROPYPMHD since S can be positive or negative.  Would only be unphysical or absolute-limited if the related u_g<0 or rho<0.
-            if(JONHOLDPOS){
-#if(1)
-              holdingaspositive=0; // default
-              if(countholdpositive<NUMHOLDTIMES){
-                if(debugfail>=DEBUGLEVELIMPSOLVER) dualfprintf(fail_file,"HOLDING: Detected unphysical iter=%d countholdpositive=%d : pp[irefU[0]]=%g : ijknstepsteppart=%d %d %d %ld %d\n",iter,countholdpositive,pp[irefU[0]],ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart);
-                //pp[irefU[0]]=MAX(100.0*NUMEPSILON*fabs(pp[RHO]),fabs(ppp[irefU[0]])); // hold as positive -- ppp might be too large so hold might be too aggressive to be useful.
-                //                if(gotbest) umin=MAX(umin,0.5*fabs(pp[UU])); // override with last best version of u_g, because using very minimum leads to jump in behavior. // causes problems, leads to many high error events.
-                //pp[irefU[0]]=umin; // hold as positive.
-                pp[irefU[0]]=0.5*fabs(ppp[irefU[0]]); // just drop by half of positive value of *previous* value, not of negative value.
-                countholdpositive++;
-                holdingaspositive=1;
-              }
-#else
-#define NUMITERHOLD (eomcond ? 2 : 4)
-              if(holdingaspositive==0 || holdingaspositive==1 && iter<iterhold+NUMITERHOLD){
-                if(debugfail>=DEBUGLEVELIMPSOLVER) dualfprintf(fail_file,"HOLDING: Detected unphysical iter=%d iterhold+NUMITERHOLD=%d holdingaspositive=%d : pp[irefU[0]]=%g : ijknstepsteppart=%d %d %d %ld %d\n",iter,iterhold+NUMITERHOLD,holdingaspositive,pp[irefU[0]],ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart);
-                if(holdingaspositive==0) iterhold=iter;
-                //              else holdingaspositive=1;
-                holdingaspositive=1;
-                //                pp[irefU[0]]=100.0*NUMEPSILON*fabs(pp[RHO]); // hold as positive just one iteration
-                //                if(gotbest) umin=MAX(umin,0.5*fabs(pp[UU])); // override with last best version of u_g, because using very minimum leads to jump in behavior. // causes problems, leads to many high error events.
-                //pp[irefU[0]]=umin; // hold as positive
-                pp[irefU[0]]=0.5*fabs(ppp[irefU[0]]); // just drop by half of positive value of *previous* value, not of negative value.
-              }
-#endif
-
-              else{// then exceeding hold attempts
-
-                // if pre-normal step, skip to next type of step because non-normal step seems to want wrong/bad u_g anyways.
-                if(itermode==ITERMODESTAGES && iter>=BEGINMOMSTEPS && iter<=ENDMOMSTEPS){
-                  // revert to previous stepping's u_g, since using modified u_g (after u_g<0) should be bad.
-                  PLOOP(pliter,pl){
-                    pp[pl] = pppriorsteptype[pl];
-                    uu[pl] = uupriorsteptype[pl];
-                  }                    
-                  iter=BEGINENERGYSTEPS-1;
-                  continue;
-                }
-                else if(itermode==ITERMODESTAGES && iter>=BEGINENERGYSTEPS && iter<=ENDENERGYSTEPS){
-                  // revert previous stepping's u_g, since using modified u_g (after u_g<0) should be bad.
-                  PLOOP(pliter,pl){
-                    pp[pl] = pppriorsteptype[pl];
-                    uu[pl] = uupriorsteptype[pl];
-                  }                    
-                  iter=BEGINFULLSTEPS-1;
-                  continue;
-                }
-                else{// else doing normal steps
-                  pp[irefU[0]]=0.5*fabs(ppp[irefU[0]]); // just drop by half of positive value of *previous* value, not of negative value.
-                  if(havebackup){
-                    failreturn=FAILRETURNMODESWITCH; mathfailtype=90;
-                    if(debugfail>=DEBUGLEVELIMPSOLVERMORE) dualfprintf(fail_file,"SWITCHING MODE: Detected bad u_g\n");
-                    break;
-                  }
-                  else{
-                    // then full failure
-                    failreturn=FAILRETURNGENERAL; mathfailtype=10;
-                    break;
-                  }
-                }// end else normal step
-              } // if beyond hold counts allowed
-            } // end if JONHOLDPOS
-            else{//  not using JONHOLDPOS
-              // if pre-normal step, skip to next type of step because non-normal step may have wrong u_g anyways.
-              if(itermode==ITERMODESTAGES && iter>=BEGINMOMSTEPS && iter<=ENDMOMSTEPS){ iter=BEGINENERGYSTEPS-1;    continue;    }
-              else if(itermode==ITERMODESTAGES && iter>=BEGINENERGYSTEPS && iter<=ENDENERGYSTEPS){ iter=BEGINFULLSTEPS-1;   continue; }
-              else{// else doing normal steps
-                if(havebackup){
-                  failreturn=FAILRETURNMODESWITCH; mathfailtype=90;
-                  if(debugfail>=DEBUGLEVELIMPSOLVERMORE) dualfprintf(fail_file,"SWITCHING MODE: Detected unphysical pp[irefU[0]]: iter=%d\n",iter);
-                  break;
-                }
-              }
-            }// else if not using JONHOLDPOS
-          }// end if u_g<0 and iterating primitives
-          else{
-            // if u_g>0, not holding.
-            holdingaspositive=0;
-          }
-
-
-
-          // determine if holding so post-newton checks know.
-          notholding=(RAMESHFIXEARLYSTEPS && iter>=RAMESHFIXEARLYSTEPS || RAMESHFIXEARLYSTEPS==0) && (JONHOLDPOS && holdingaspositive==0 || JONHOLDPOS==0);
-
-
-
-          ///////////////////////////
-          //
-          //  POST NEWTON CHECKS
-          //
-          ///////////////////////////
-
-
-          // only do post-newton checks if checking convergence allowed
-          if(checkconv==1){
-
-            // check if energy u_g too often bad compared to entropy u_g
-            // assume this is only done after 
-            if(RAMESHSTOPENERGYIFTOOOFTENBELOWENTROPY){
-              if((implicititer==QTYPMHD || implicititer==QTYPMHDENERGYONLY)  && didentropyalready){
-                if(notholding==1 || implicititer==QTYPMHD){ // if holding on energy equation, don't  use this u_g check.  But, if normal steps, then ignore holding and assume holding means u_g bad if on normal steps.
-                  if(BADENERGY(pp[irefU[0]],pborig[irefU[0]])) countbadenergy++;
-                  if(countbadenergy>=RAMESHSTOPENERGYIFTOOOFTENBELOWENTROPY){
-
-                    // if pre-normal step, skip to next type of step because non-normal step may have wrong u_g anyways.
-                    if(itermode==ITERMODESTAGES && iter>=BEGINMOMSTEPS && iter<=ENDMOMSTEPS){ iter=BEGINENERGYSTEPS-1;    continue;    }
-                    else if(itermode==ITERMODESTAGES && iter>=BEGINENERGYSTEPS && iter<=ENDENERGYSTEPS){ iter=BEGINFULLSTEPS-1;   continue; }
-                    else{// else doing normal steps
-                      // "switch" to entropy by just stopping trying to get energy solution
-                      failreturn=FAILRETURNMODESWITCH; mathfailtype=100;
-                      if(debugfail>=DEBUGLEVELIMPSOLVER) dualfprintf(fail_file,"SWITCHING MODE: Detected entropy u_g preferred consistently: iter=%d: %g %g\n",iter,pp[irefU[0]],pborig[irefU[0]]);
-                      break;
-                    }
-                  }// end if normal step
-                }//end if at point where iterations can be considered
-              }// whether have information necessary to check
-            }// whether to check u_g energy vs. entropy
-
-
-
-            if(POSTNEWTONCONVCHECK==2 && notholding==1){
-              // check if any actual changes in primitives.  If none, then have to stop.
-              FTYPE diffpp=0.0,sumpp=0.0;
-              PLOOP(pliter,pl){
-                diffpp += fabs(pp[pl]-ppp[pl]);
-                sumpp += fabs(pp[pl])+fabs(ppp[pl]);
-              }
-              if(diffpp<DIFFXLIMIT*sumpp){
-                convreturnf3limit=1;
-              }
-            }
-          }// end if checkconv==1
-
-
-
-
-          if(showmessagesheavy) dualfprintf(fail_file,"POSTDX: pp: %g %g %g %g : ppp=%g %g %g %g\n",pp[irefU[0]],pp[irefU[1]],pp[irefU[2]],pp[irefU[3]],ppp[irefU[0]],ppp[irefU[1]],ppp[irefU[2]],ppp[irefU[3]]);
-
-
-
-        }// end if iterating primitves
-
-
+        if(showmessagesheavy) dualfprintf(fail_file,"POSTDX: uu: %g %g %g %g : uup=%g %g %g %g\n",uu[irefU[0]],uu[irefU[1]],uu[irefU[2]],uu[irefU[3]],uup[irefU[0]],uup[irefU[1]],uup[irefU[2]],uup[irefU[3]]);
    
 
 
