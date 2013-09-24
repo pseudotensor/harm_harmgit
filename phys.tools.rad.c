@@ -286,12 +286,8 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE errorabs, struc
 #define ERRORTOUSEENTROPYFORENERGYGUESS (1E-4)
 
 
-// whether to get lowest error solution instead of final one.
-#define GETBEST 0
 
 
-// need to do final check since get f1 and then do step.
-#define DOFINALCHECK 1
 
 
 // below 1 if reporting cases when MAXITER reached, but allowd error so not otherwise normally reported.
@@ -341,8 +337,6 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE errorabs, struc
 #define GAMMAMAXRADIMPLICITSOLVER (GAMMAMAXRAD) // for radiation, seek actual solution with this limit.  Solver can find solutions, while harder when limiting gamma_{gas} for some reason.
 
 
-// whether to avoid computing entropy during iterations if not needed
-#define ENTROPYOPT 0
 
 ///////////////////////////////
 //
@@ -783,7 +777,7 @@ static FTYPE compute_dt(FTYPE *CUf, FTYPE dtin)
 // compute changes to U (both T and R) using implicit method
 // KORALTODO: If doing implicit, should also add geometry source term that can sometimes be stiff.  Would require inverting sparse 8x8 matrix (or maybe 6x6 since only r-\theta for SPC).  Could be important for very dynamic radiative flows.
 //static int koral_source_rad_implicit(FTYPE *pin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother ,FTYPE (*dUcomp)[NPR])
-static int koral_source_rad_implicit(int *eomtype, FTYPE *pin, FTYPE *pf, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE dissmeasure, FTYPE *dUother ,FTYPE (*dUcomp)[NPR])
+static int koral_source_rad_implicit_old(int *eomtype, FTYPE *pin, FTYPE *pf, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE dissmeasure, FTYPE *dUother ,FTYPE (*dUcomp)[NPR])
 {
   int i1,i2,i3,iv,ii,jj,kk,pliter,sc;
   FTYPE iJ[NDIM][NDIM];
@@ -1372,7 +1366,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pin, FTYPE *pf, FTYPE 
 
 
 // wrapper for mode method
-static int koral_source_rad_implicit_new(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE dissmeasure, FTYPE *dUother ,FTYPE (*dUcomp)[NPR])
+//static int koral_source_rad_implicit_new(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE dissmeasure, FTYPE *dUother ,FTYPE (*dUcomp)[NPR])
+static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE dissmeasure, FTYPE *dUother ,FTYPE (*dUcomp)[NPR])
 {
   int pliter,pl;
   int sc;
@@ -1713,22 +1708,6 @@ static int koral_source_rad_implicit_mode(int modprim, int havebackup, int diden
   
   int doingitsomecpu=0;
   int doingit=0;
-#if(0)
-  if(nstep==15 && steppart==0 && ptrgeom->i==6 && ptrgeom->j==8 && ptrgeom->k==0){
-    doingitsomecpu=1;
-    if(myid==0){ // so similar situation and grid at least
-      dualfprintf(fail_file,"DOINGIT\n");
-      doingit=1;
-
-      ///////////
-      // insert FAILRETURN data here.
-      ///////////
-
-      showmessages=showmessagesheavy=1;
-    }// end on doing it core
-  }
-
-#endif
 
 
 
@@ -1864,7 +1843,7 @@ static int koral_source_rad_implicit_mode(int modprim, int havebackup, int diden
   PLOOP(pliter,pl) prtestUU0[pl]=pb[pl]; // initial guess
 
   // KORALTODO: Need to check if UFSET with no dUother fails.  How it fails, must allow since can do nothing better.  This avoids excessive attempts to get good solution without that failure!  Should speed-up things.  But what about error recovery?  If goes from CASE to no case!
-  if(USEDUINRADUPDATE==2){
+  if(1||USEDUINRADUPDATE==2){
     // uu0 will hold original vector of conserved
     // here original means U[before fluxes, geometry, etc.] + dU[due to fluxes, geometry, etc. already applied and included in dUother]
     // This is required for stiff source term so immediately have balance between fluxes+geometry+radiation.  Otherwise, radiation diffuses.
@@ -2106,6 +2085,11 @@ static int koral_source_rad_implicit_mode(int modprim, int havebackup, int diden
         DAMPFACTOR=0.5*DAMPFACTOR0;
       }
       else DAMPFACTOR=DAMPFACTOR0;
+
+      // cautious first step to get reasonable error measurement. Allows often only 1 iteration to get sufficiently small error, while DAMPFACTOR=1 would already go beyond point where error actually increases.
+      if(iter==1){
+        DAMPFACTOR=0.37;
+      }
 
 
       ///////////
@@ -2804,14 +2788,7 @@ static int koral_source_rad_implicit_mode(int modprim, int havebackup, int diden
                 }
                 else{// else doing normal steps
                   pp[irefU[0]]=0.5*fabs(ppp[irefU[0]]); // just drop by half of positive value of *previous* value, not of negative value.
-                  if(DOFINALCHECK){
-                    if(debugfail>=DEBUGLEVELIMPSOLVER) dualfprintf(fail_file,"Unable to hold off u_g<0, setting canbreak=1 and letting finalchecks confirm error is good or bad.  iter=%d\n",iter);
-                    canbreak=1; // just break since might be good (or at least allowable) error still.  Let final error check handle this.
-                    // not fail.
-                    mathfailtype=89;
-                    break;
-                  }
-                  else if(havebackup){
+                  if(havebackup){
                     failreturn=FAILRETURNMODESWITCH; mathfailtype=90;
                     if(debugfail>=DEBUGLEVELIMPSOLVERMORE) dualfprintf(fail_file,"SWITCHING MODE: Detected bad u_g\n");
                     break;
@@ -2997,6 +2974,16 @@ static int koral_source_rad_implicit_mode(int modprim, int havebackup, int diden
   
       }// end if finite
 
+      
+      // DAMP CONTROL
+      if(iter==1){
+        // un-damp first step, but still don't go back to 1.0.
+        DAMPFACTOR=0.7;
+      }
+#define LOWESTDAMP (0.05)
+      // see if need to damp, but don't damp below some point.
+      if(errorabsf1>errorabspf1[0] && DAMPFACTOR>LOWESTDAMP) DAMPFACTOR*=0.5;
+
 
       /////////
       // see if took too many Newton steps or not finite results
@@ -3039,27 +3026,7 @@ static int koral_source_rad_implicit_mode(int modprim, int havebackup, int diden
 
         int convreturn=1,convreturnallow=1; // default is solution is acceptable.
 
-
-        if(DOFINALCHECK){
-          //////////////////////////
-          //
-          // check and get error for last iteration or any mods from above that are post-iteration
-          //
-          // The call to f_implicit() also ensures uu is consistent with new pp
-          //
-          ////////////////////////
-          int whichcall=2;
-          //  eomtypelocal=*eomtype; // re-chose default each time. No, stick with what f1 (last call to f1) chose
-          int goexplicitfake; // not used here
-          failreturnf=f_implicit(iter,failreturnallowableuse, whichcall,showmessages, allowlocalfailurefixandnoreport, &eomtypelocal, whichcap, itermode, fracenergy, dissmeasure, radinvmod, pp, uu0, uu, fracdtG*realdt, ptrgeom, q, f1, f1norm, &goexplicitfake); // modifies uu and pp and q
-          // radinvmod contains whether radiative inversion modified process.
-
-          int dimtypef=DIMTYPEFCONS; // 0 = conserved R^t_\nu type, 1 = primitive (u,v^i) type, i.e. v^i has no energy density term
-          convreturn=f_error_check(showmessages, showmessagesheavy, iter, trueimptryconv,trueimptryconvabs,realdt,dimtypef,eomtypelocal,itermode,fracenergy,dissmeasure,dimfactU,pp,piin,f1,f1norm,f1report,Uiin,uu0,uu,ptrgeom,&errorabsf1);
-          convreturnallow=(errorabsf1<IMPALLOWCONVABS);
-          if(debugfail>=DEBUGLEVELIMPSOLVERMORE) dualfprintf(fail_file,"DOFINALCHECK: convreturn=%d convreturnallow=%d (IMPALLOWCONV=%g) f1report: %g %g %g %g : %g\n",convreturn,convreturnallow,IMPALLOWCONV,f1report[erefU[0]],f1report[erefU[1]],f1report[erefU[2]],f1report[erefU[3]],errorabsf1);
-        }// end if doing final check
-        else{
+        if(1){
           // kinda risky to rely upon last step but not checking its error
 
           if(IMPPTYPE(implicititer)){
@@ -3078,34 +3045,6 @@ static int koral_source_rad_implicit_mode(int modprim, int havebackup, int diden
 
 
 
-        if(GETBEST){
-      
-          if(gotbest){
-            // f1-based
-            // using old uu,uup, but probably ok since just helps normalize error
-            errorabsf1=0.0;     JACLOOPFULLERROR(itermode,jj,startjac,endjac) errorabsf1     += fabs(f1report[erefU[jj]]);
-
-            // f1 based
-            // see if should revert to prior best
-            errorabsbest=0.0; JACLOOPFULLERROR(itermode,jj,startjac,endjac) errorabsbest += fabs(lowestfreportf1[erefU[jj]]);
-            if(errorabsbest<errorabsf1 || !isfinite(errorabsf1) ){
-              PLOOP(pliter,pl) uu[pl]=bestuu[pl];
-              PLOOP(pliter,pl) pp[pl]=bestpp[pl];
-
-              JACLOOPALT(jj,startjac,endjac) f1report[erefU[jj]] = lowestfreportf1[erefU[jj]];
-              convreturn=1; JACLOOPFULLERROR(itermode,jj,startjac,endjac) convreturn*=fabs(f1report[erefU[jj]])<trueimptryconv; // like doing &&
-              convreturnallow=1; JACLOOPFULLERROR(itermode,jj,startjac,endjac) convreturnallow*=fabs(f1report[erefU[jj]])<IMPALLOWCONV; // like doing &&
-              if(showmessages && debugfail>=DEBUGLEVELIMPSOLVERMORE) dualfprintf(fail_file,"Using best: %g %g\n",errorabsf1,errorabsbest);
-              if(debugfail>=DEBUGLEVELIMPSOLVERMORE) dualfprintf(fail_file,"GETBEST: convreturn=%d convreturnallow=%d (IMPALLOWCONV=%g) f1report: %g %g %g %g : %g\n",convreturn,convreturnallow,IMPALLOWCONV,f1report[erefU[0]],f1report[erefU[1]],f1report[erefU[2]],f1report[erefU[3]],errorabsf1);
-            }
-            else{
-              PLOOP(pliter,pl) bestuu[pl]=uu[pl];
-              PLOOP(pliter,pl) bestpp[pl]=pp[pl];
-              errorabsbest=errorabsf1;
-              if(debugfail>=DEBUGLEVELIMPSOLVERMORE) dualfprintf(fail_file,"gotbest=%d but errorabsbest=%g while errorabsf1=%g\n",gotbest,errorabsbest,errorabsf1);
-            }
-          }
-        }// end GETBEST
 
 
 
@@ -3196,12 +3135,6 @@ static int koral_source_rad_implicit_mode(int modprim, int havebackup, int diden
     }// end if failreturn==0 originally
 
 
-    // get best failreturn
-    if(GETBEST){
-      if(gotbest){
-        failreturnbest=failreturn;
-      }
-    }
 
 
     // estimate effective work based on iterations done for each equation type
@@ -3213,34 +3146,6 @@ static int koral_source_rad_implicit_mode(int modprim, int havebackup, int diden
     if(debugfail>=2) dualfprintf(fail_file,"Damping failed to avoid max iterations (but error might have dropped): failreturn=%d dampattempt=%d eomtypelocal=%d *eomtype=%d\n",failreturn,dampattempt,eomtypelocal,*eomtype);
   }
 
-  ///////////
-  //
-  // Once damping done, ensure choose best over all damp tries
-  //
-  ///////////
-  if(GETBEST){
-    if(gotbest){
-      PLOOP(pliter,pl) uu[pl]=bestuu[pl];
-      PLOOP(pliter,pl) pp[pl]=bestpp[pl];
-      errorabsf1=errorabsbest;
-      failreturn=failreturnbest;
-    }
-  }
-
-  ///////////
-  //
-  // have to compute final uu[ENTROPY] if doing entropy optimization where avoid it during iterations if not needed.
-  //
-  ///////////
-  if(ENTROPYOPT){
-    int needentropy=1;
-    get_state_norad_part2(needentropy, pp, ptrgeom, q); // where entropy would be computed
-    //    get_state(pp, ptrgeom, q);
-    extern int primtoflux_nonradonly(int needentropy, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux, FTYPE *fluxabs);
-    FTYPE uuentropy[NPR];
-    primtoflux_nonradonly(needentropy,pp,q,TT,ptrgeom, uuentropy, NULL);
-    uu[ENTROPY]=uuentropy[ENTROPY];
-  }
 
 
 
