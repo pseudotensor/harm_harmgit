@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
+	<false/>
+	<key>IDESourceControlProjectIdentifier</key>
+	<string>448F13D4-0981-4537-BC78-BC37BA7DDFBC</string>
+	<key>IDESourceControlProjectName</key>
+	<string>HARM</string>
+	<key>IDESourceControlProjectOriginsDictionary</key>
+	<dict>
+		<key>F333E7EE-4ED8-4F9C-827B-F18BEB6135EE</key>
+		<string>ssh://git.assembla.com/harmcode.git</string>
+	</dict>
+	<key>IDESourceControlProjectPath</key>
+	<string>HARM/HARM.xcodeproj/project.xcworkspace</string>
+	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
+	<dict>
+		<key>F333E7EE-4ED8-4F9C-827B-F18BEB6135EE</key>
+		<string>../../..</string>
+	</dict>
+	<key>IDESourceControlProjectURL</key>
+	<string>ssh://git.assembla.com/harmcode.git</string>
+	<key>IDESourceControlProjectVersion</key>
+	<integer>110</integer>
+	<key>IDESourceControlProjectWCCIdentifier</key>
+	<string>F333E7EE-4ED8-4F9C-827B-F18BEB6135EE</string>
+	<key>IDESourceControlProjectWCConfigurations</key>
+	<array>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>F333E7EE-4ED8-4F9C-827B-F18BEB6135EE</string>
+			<key>IDESourceControlWCCName</key>
+			<string>harm</string>
+		</dict>
+	</array>
+</dict>
+</plist>
