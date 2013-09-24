@@ -2008,8 +2008,8 @@ void compute_and_store_fluxstatecent(FTYPE (*pr)[NSTORE2][NSTORE3][NPR])
             FTYPE Fi=GLOBALMACP1A0(shockindicatorarray,SHOCKPLDIR1+dir-1,i,j,k);
             FTYPE Fiswitch =MIN(tautotmax/TAUTOTMAXSWITCH,1.0);
 
-            GLOBALMACP1A0(shockindicatorarray,SHOCKPLDIR1+dir-1,i,j,k) = Fiswitch*MIN(1.0,Firad+Fi) + (1.0-Fiswitch)*Fi;
-            GLOBALMACP1A0(shockindicatorarray,SHOCKRADPLDIR1+dir-1,i,j,k) = Fiswitch*MIN(1.0,Firad+Fi) + (1.0-Fiswitch)*Firad;
+            GLOBALMACP1A0(shockindicatorarray,SHOCKPLDIR1+dir-1,i,j,k) = Fiswitch*MIN(1.0,MAX(Firad,Fi)) + (1.0-Fiswitch)*Fi;
+            GLOBALMACP1A0(shockindicatorarray,SHOCKRADPLDIR1+dir-1,i,j,k) = Fiswitch*MIN(1.0,MAX(Firad,Fi)) + (1.0-Fiswitch)*Firad;
 
             if(DIVERGENCEMETHOD==DIVMETHODPREFLUX){
               // don't consider radiation divergence, and certainly  not as if shock indiator value.
