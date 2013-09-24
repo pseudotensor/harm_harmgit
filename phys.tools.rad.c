@@ -1884,28 +1884,6 @@ static int koral_source_rad_implicit_mode(int modprim, int havebackup, int diden
 
 
 
-  /////////////////////////////
-  //
-  // Fix u_g so entropy not smaller than guess
-  // Only do this if u_g is just guess and is being solved for.
-  // When eomtype==EOMCOLDGRMHD, then u_g is static so shouldn't modify as if was guess.
-  //
-  /////////////////////////////
-
-  if(*eomtype!=EOMCOLDGRMHD && IMPMHDTYPE(implicititer)==1){
-    if(ENTROPYFIXGUESS){
-      entropyfixguess(q, ptrgeom, uu0, pp);
-      // piin is sometimes even a bit higher, and want to start high, and helps to avoid lack of convergence issue.
-      pp[UU]=MAX(pp[UU],piin[UU]);
-    }
-    
-    if(modprim==1){
-      pp[UU]=10.0*MAX(pp[UU],piin[UU]); // raise u_g a bit.
-    }
-  }
-  
-
-
 
 
 
@@ -3143,7 +3121,7 @@ static int koral_source_rad_implicit_mode(int modprim, int havebackup, int diden
 
   }// end loop over damping
   if(dampattempt==NUMDAMPATTEMPTS){
-    if(debugfail>=2) dualfprintf(fail_file,"Damping failed to avoid max iterations (but error might have dropped): failreturn=%d dampattempt=%d eomtypelocal=%d *eomtype=%d\n",failreturn,dampattempt,eomtypelocal,*eomtype);
+    //    if(debugfail>=2) dualfprintf(fail_file,"Damping failed to avoid max iterations (but error might have dropped): failreturn=%d dampattempt=%d eomtypelocal=%d *eomtype=%d\n",failreturn,dampattempt,eomtypelocal,*eomtype);
   }
 
 
@@ -3221,39 +3199,6 @@ static int koral_source_rad_implicit_mode(int modprim, int havebackup, int diden
   }// end if didn't fail, so can set final solution.
 
  
-
-
-  //////////////
-  //
-  // report any bad failure (using previously set mathfailtype value)
-  //
-  //////////////
-
-  // for checking cases where tau>=1 but still Erf<0
-  //  FTYPE tautot[NDIM],tautotmax;
-  //  calc_tautot(pp, ptrgeom, tautot, &tautotmax);
-  //  //  if(tautotmax>1 && pp[PRAD0]<10.0*ERADLIMIT){
-  //  if(tautotmax>2 && pp[PRAD0]<10.0*ERADLIMIT){
-
-
-  if(PRODUCTION==0 && NOTACTUALFAILURE(failreturn)==0 && errorabsf1>=IMPTRYCONVALT || PRODUCTION>0 && NOTBADFAILURE(failreturn)==0 && havebackup==0){ // as in previous code
-
-  // for seeing Erf<0 and small errors not tol errors.
-  //  if(failreturn!=FAILRETURNMODESWITCH && (pp[PRAD0]<10.0*ERADLIMIT) || PRODUCTION==0 && NOTACTUALFAILURE(failreturn)==0 && errorabsf1>=IMPTRYCONVALT || PRODUCTION>0 && NOTBADFAILURE(failreturn)==0 && havebackup==0){
-
-  // for catching oscillators at small error but still >tol.
-  //  if(PRODUCTION==0 && NOTACTUALFAILURE(failreturn)==0 || PRODUCTION>0 && NOTBADFAILURE(failreturn)==0){
-
-
-  //    if(REPORTERFNEG && failreturn!=FAILRETURNMODESWITCH && (pp[PRAD0]<10.0*ERADLIMIT || *radinvmod ) || PRODUCTION==0 && NOTACTUALFAILURE(failreturn)==0 && errorabsf1>=trueimptryconvalt || PRODUCTION>0 && NOTBADFAILURE(failreturn)==0 && havebackup==0){
-  //  if(REPORTERFNEG && failreturn!=FAILRETURNMODESWITCH && (pp[PRAD0]<10.0*ERADLIMIT) || PRODUCTION==0 && NOTACTUALFAILURE(failreturn)==0 && errorabsf1>=trueimptryconvalt || PRODUCTION>0 && NOTBADFAILURE(failreturn)==0 && havebackup==0){
-    //    if(NOTBADFAILURE(failreturn)==0){
-    struct of_state qcheck; get_state(pp, ptrgeom, &qcheck);  primtoU(UNOTHING,pp,&qcheck,ptrgeom, uu, NULL);
-    failnum++; mathematica_report_check(*radinvmod, mathfailtype, failnum, gotfirstnofail, eomtypelocal, itermode, errorabsf1, errorabsbestexternal, iter, totaliters, realdt, ptrgeom, ppfirst,pp,pb,piin,prtestUiin,prtestUU0,uu0,uu,Uiin,Ufin, CUf, q, dUother);
-    int usedebugiter=debugiteratteempts[0];
-    showdebuglist(usedebugiter,pppreholdlist,ppposholdlist,f1reportlist,f1list,errorabsf1list,realiterlist,jac00list);
-  }
-
 
 
 
