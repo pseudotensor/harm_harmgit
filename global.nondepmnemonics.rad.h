@@ -53,6 +53,8 @@
 // KORALTODO SUPERGODMARK: Turn this on and rest all tests and see if makes worse or better.  Makes things worse at failure boundary.  Leads to very bad results for (e.g.) RADDONUT.
 
 
+// what \tau to imply mhd fluid ang rad gas are coupled enough to say single fluid as far as shock detectors or dissipation measures.
+#define TAUTOTMAXSWITCH (0.5)
 
 
 

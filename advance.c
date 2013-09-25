@@ -27,7 +27,7 @@ static int asym_compute_2(FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
 
 static FTYPE fractional_diff( FTYPE a, FTYPE b );
 
-static FTYPE compute_dissmeasure(int i, int j, int k, int loc, FTYPE *CUf, FTYPE *CUnew, FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE *Ui,  FTYPE *Uf, FTYPE *tempucum);
+static FTYPE compute_dissmeasure(int i, int j, int k, int loc, FTYPE *pr, struct of_geom *ptrgeom, FTYPE *CUf, FTYPE *CUnew, FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE *Ui,  FTYPE *Uf, FTYPE *tempucum);
 
 
 // AVG_2_POINT functions:
@@ -594,7 +594,7 @@ static int advance_standard(
         // note that uf and ucum are initialized inside setup_rktimestep() before first substep
 
         // get dissmeasure
-        FTYPE dissmeasure=compute_dissmeasure(i,j,k,ptrgeom->p,CUf, CUnew, F1, F2, F3, MAC(ui,i,j,k),MAC(olduf,i,j,k), MAC(tempucum,i,j,k));
+        FTYPE dissmeasure=compute_dissmeasure(i,j,k,ptrgeom->p,MAC(pf,i,j,k),ptrgeom,CUf, CUnew, F1, F2, F3, MAC(ui,i,j,k),MAC(olduf,i,j,k), MAC(tempucum,i,j,k));
 
         // find dU(pb)
         // so pf contains updated field at cell center for use in (e.g.) implicit solver that uses inversion P(U)
@@ -958,7 +958,7 @@ static int advance_standard(
 
 
 // compute dissipation measure for determining if can use entropy equations of motion or must use energy equations of motion
-static FTYPE compute_dissmeasure(int i, int j, int k, int loc, FTYPE *CUf, FTYPE *CUnew, FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE *ui,  FTYPE *uf, FTYPE *tempucum)
+static FTYPE compute_dissmeasure(int i, int j, int k, int loc, FTYPE *pr, struct of_geom *ptrgeom, FTYPE *CUf, FTYPE *CUnew, FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE *ui,  FTYPE *uf, FTYPE *tempucum)
 {
   FTYPE dissmeasure;
   int pliter,pl;
@@ -977,8 +977,8 @@ static FTYPE compute_dissmeasure(int i, int j, int k, int loc, FTYPE *CUf, FTYPE
     //
     int plsp;
     int specialfrom;
-#if(NSPECIAL==5)
-    int plspeciallist[NSPECIAL]={SPECIALPL1,SPECIALPL2,SPECIALPL3,SPECIALPL4,SPECIALPL5};
+#if(NSPECIAL==6)
+    int plspeciallist[NSPECIAL]={SPECIALPL1,SPECIALPL2,SPECIALPL3,SPECIALPL4,SPECIALPL5,SPECIALPL6};
 #elif(NSPECIAL==2)
     int plspeciallist[NSPECIAL]={SPECIALPL1,SPECIALPL2};
 #elif(NSPECIAL==1)
@@ -1050,6 +1050,9 @@ static FTYPE compute_dissmeasure(int i, int j, int k, int loc, FTYPE *CUf, FTYPE
         //  But much better than (say) using total energy density as reference.  We  use actual energy dissipation as reference.  So if reconnection is at all important to total dissipation, it will be accounted for.  When total energy dissipation is dominated by non-reconnection, that missed dissipation is a small correction.
         // But, because total energy dissipation is less trustable due to average vs. point issue in general creating artificial heating or cooling, this is a bit less trustable as even a normalization.
       }
+      else if(specialfrom==URAD0){
+        actualnorm[specialfrom] = SMALL + norm[specialfrom];
+      }
     }
     
     /////////////
@@ -1064,9 +1067,10 @@ static FTYPE compute_dissmeasure(int i, int j, int k, int loc, FTYPE *CUf, FTYPE
       if(specialfrom==RHO) signdiss=+1.0; // dUdiss>0 means adding density due to dissipation (i.e. convergence, not divergence)
       else if(specialfrom==UU) signdiss=-1.0; // dUdiss<0 means adding energy due to dissipation (i.e. dissipation)
       else if(specialfrom==B1 || specialfrom==B2 || specialfrom==B3) signdiss=-1.0; // dUdiss<0 means lost magentic energy due to dissipation (i.e. dissipation)
+      else if(specialfrom==URAD0) signdiss=-1.0; // dUdiss<0 means adding energy due to dissipation (i.e. dissipation)
 
       // get dissmeasure, which is normalized dUdiss with correct sign
-      if(specialfrom==RHO || specialfrom==UU){
+      if(specialfrom==RHO || specialfrom==UU || specialfrom==URAD0){
         // standard dUdiss/actualnorm
         dissmeasurepl[specialfrom] = -signdiss*(dUdiss[specialfrom])/actualnorm[specialfrom];
       }
@@ -1090,11 +1094,21 @@ static FTYPE compute_dissmeasure(int i, int j, int k, int loc, FTYPE *CUf, FTYPE
     }
     // Can't trust energy, since average vs. point issue itself leads to erreoneous apparent dissipation (which when using energy equation alone is what leads to inappropriate heating in divergent flows, as well as inappropriate cooling in divergent flows, often in stripes in u_g due to sensitivity to higher-order interpolation schemes like PPM).
     //          dissmeasure=dissmeasurepl[SPECIALPL2];
-    else if(NSPECIAL==5){
+    else if(NSPECIAL>=6){
       // can't trust energy, but density doesn't account for magnetic energy.  So use density for shocks and magnetic energy flux for reconnection.
       dissmeasure=MIN(dissmeasurepl[SPECIALPL1],dissmeasurepl[B1]);
       dissmeasure=MIN(dissmeasure,dissmeasurepl[B2]);
       dissmeasure=MIN(dissmeasure,dissmeasurepl[B3]);
+
+      if(SPECIALPL6>=0){
+        // add radiation pressure to total pressure if optically thick
+        FTYPE tautot[NDIM],tautotmax;
+        calc_tautot(pr, ptrgeom, tautot, &tautotmax);
+
+        FTYPE dissswitch=MIN(tautotmax/TAUTOTMAXSWITCH,1.0);
+
+        dissmeasure = MIN(dissmeasure,dissmeasurepl[SPECIALPL6])*dissswitch + dissmeasure*(1.0-dissswitch);
+      }
     }
 
 

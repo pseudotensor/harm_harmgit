@@ -324,6 +324,10 @@ int flux_compute(int i, int j, int k, int dir, struct of_geom *geom, FTYPE *cmin
     plsp=NPR+4;
     F[plsp] = 0.5 * (F_l[SPECIALPL5] + F_r[SPECIALPL5]);
   }
+  if(NSPECIAL>=6){
+    plsp=NPR+5;
+    F[plsp] = 0.5 * (F_l[SPECIALPL6] + F_r[SPECIALPL6]);
+  }
 
 
   //////////////////

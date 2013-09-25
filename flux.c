@@ -1743,7 +1743,6 @@ void compute_and_store_fluxstate(int dimen, int isleftright, int i, int j, int k
 }
 
 
-#define TAUTOTMAXSWITCH (0.5)
 
 // compute and store get_state() data for centered state
 void compute_and_store_fluxstatecent(FTYPE (*pr)[NSTORE2][NSTORE3][NPR])
