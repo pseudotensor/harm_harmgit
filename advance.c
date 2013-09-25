@@ -1096,9 +1096,14 @@ static FTYPE compute_dissmeasure(int i, int j, int k, int loc, FTYPE *pr, struct
     //          dissmeasure=dissmeasurepl[SPECIALPL2];
     else if(NSPECIAL>=6){
       // can't trust energy, but density doesn't account for magnetic energy.  So use density for shocks and magnetic energy flux for reconnection.
-      dissmeasure=MIN(dissmeasurepl[SPECIALPL1],dissmeasurepl[B1]);
-      dissmeasure=MIN(dissmeasure,dissmeasurepl[B2]);
-      dissmeasure=MIN(dissmeasure,dissmeasurepl[B3]);
+      dissmeasure=dissmeasurepl[SPECIALPL1];
+
+      FTYPE dissmeasurefield=dissmeasurepl[B1];
+      dissmeasurefield=MIN(dissmeasurefield,dissmeasurepl[B2]);
+      dissmeasurefield=MIN(dissmeasurefield,dissmeasurepl[B3]);
+      
+      // add field dissipation measure, but only account if above machine error (i.e. relative to total energy as defined above)
+      dissmeasure=MIN(dissmeasure,10.0*NUMEPSILON+dissmeasurefield);
 
       if(SPECIALPL6>=0){
         // add radiation pressure to total pressure if optically thick
