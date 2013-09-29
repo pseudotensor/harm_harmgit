@@ -173,10 +173,12 @@ endif
 ifeq ($(USEOSX),1)
 GSLCFLAGS=`gsl-config --cflags`
 GSLLIB=`gsl-config --libs`
-MCC=/usr/bin/mpicc ${GSLCFLAGS}
+MCC=mpicc ${GSLCFLAGS}
 USEGCC=1
 ECHOSWITCH=
 USELAPACK=0
+USEMCCSWITCH=0
+USEMCCSWITCHFORGCC=0
 endif
 
 endif    
@@ -303,7 +305,7 @@ endif
 ifeq ($(USEOSX),1)
 GSLCFLAGS=`gsl-config --cflags`
 GSLLIB=`gsl-config --libs`
-MCC=/usr/bin/mpicc ${GSLCFLAGS}
+MCC=mpicc ${GSLCFLAGS}
 endif
 
 
