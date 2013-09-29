@@ -6,7 +6,271 @@
 	objectVersion = 46;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		0C2216F117F8E045005FD46E /* global.depmnemonics.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C16ADF817F25E7A00E6BA4C /* global.depmnemonics.h */; };
+		0C2216F217F8E045005FD46E /* global.depmnemonics.rad.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C16ADF917F25E7A00E6BA4C /* global.depmnemonics.rad.h */; };
+		0C2216F317F8E045005FD46E /* global.funcdeclare.rad.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C16ADFA17F25E7A00E6BA4C /* global.funcdeclare.rad.h */; };
+		0C2216F417F8E045005FD46E /* global.nondepmnemonics.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C16ADFB17F25E7A00E6BA4C /* global.nondepmnemonics.h */; };
+		0C2216F517F8E045005FD46E /* global.nondepmnemonics.rad.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C16ADFC17F25E7A00E6BA4C /* global.nondepmnemonics.rad.h */; };
+		0C2216F617F8E045005FD46E /* gslincludes.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C16ADFD17F25E7A00E6BA4C /* gslincludes.h */; };
+		0C2216F717F8E045005FD46E /* koral.mdefs.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C16ADFE17F25E7A00E6BA4C /* koral.mdefs.h */; };
+		0C2216F817F8E045005FD46E /* mympi.global.depmnemonics.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C16ADFF17F25E7A00E6BA4C /* mympi.global.depmnemonics.h */; };
+		0C2216F917F8E045005FD46E /* mympi.global.nondepmnemonics.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C16AE0017F25E7A00E6BA4C /* mympi.global.nondepmnemonics.h */; };
+		0C2216FA17F8E045005FD46E /* phys.tools.rad.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C16AE0117F25E7A00E6BA4C /* phys.tools.rad.c */; };
+		0C2216FB17F8E045005FD46E /* set_arrays_multidimen.rad.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C16AE0217F25E7A00E6BA4C /* set_arrays_multidimen.rad.c */; };
+		0C2216FC17F8E045005FD46E /* superdefs.pointers.rad.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C16AE0317F25E7A00E6BA4C /* superdefs.pointers.rad.h */; };
+		0C2216FD17F8E045005FD46E /* superdefs.rad.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C16AE0417F25E7A00E6BA4C /* superdefs.rad.h */; };
+		0C2216FE17F8E045005FD46E /* tetlapack_func_doubleonly.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C16AE0517F25E7A00E6BA4C /* tetlapack_func_doubleonly.c */; };
+		0C2216FF17F8E045005FD46E /* advance.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAE8B17F25D170006BF56 /* advance.c */; };
+		0C22170017F8E045005FD46E /* bcucof.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAE8C17F25D170006BF56 /* bcucof.c */; };
+		0C22170117F8E045005FD46E /* bcuint.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAE8D17F25D170006BF56 /* bcuint.c */; };
+		0C22170217F8E045005FD46E /* bin2txt.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAE8E17F25D170006BF56 /* bin2txt.c */; };
+		0C22170317F8E045005FD46E /* boundmpi.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAE8F17F25D170006BF56 /* boundmpi.c */; };
+		0C22170417F8E045005FD46E /* boundmpiint.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAE9017F25D170006BF56 /* boundmpiint.c */; };
+		0C22170517F8E045005FD46E /* bounds.funcdeclare.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAE9117F25D170006BF56 /* bounds.funcdeclare.h */; };
+		0C22170617F8E045005FD46E /* bounds.tools.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAE9217F25D170006BF56 /* bounds.tools.c */; };
+		0C22170717F8E045005FD46E /* boundsflux.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAE9317F25D170006BF56 /* boundsflux.c */; };
+		0C22170817F8E045005FD46E /* boundsint.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAE9417F25D170006BF56 /* boundsint.c */; };
+		0C22170917F8E045005FD46E /* boundsvpot.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAE9517F25D170006BF56 /* boundsvpot.c */; };
+		0C22170A17F8E045005FD46E /* broydn.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAE9617F25D170006BF56 /* broydn.c */; };
+		0C22170B17F8E045005FD46E /* coldeos.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAE9717F25D170006BF56 /* coldeos.c */; };
+		0C22170C17F8E045005FD46E /* coord.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAE9817F25D170006BF56 /* coord.c */; };
+		0C22170D17F8E045005FD46E /* coord.funcdeclare.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAE9917F25D170006BF56 /* coord.funcdeclare.h */; };
+		0C22170E17F8E045005FD46E /* coord.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAE9A17F25D170006BF56 /* coord.h */; };
+		0C22170F17F8E045005FD46E /* copyandinit_functions.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAE9B17F25D170006BF56 /* copyandinit_functions.c */; };
+		0C22171017F8E045005FD46E /* copyandinit_functions.funcdeclare.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAE9C17F25D170006BF56 /* copyandinit_functions.funcdeclare.h */; };
+		0C22171117F8E045005FD46E /* definit.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAE9D17F25D170006BF56 /* definit.h */; };
+		0C22171217F8E045005FD46E /* defs.general.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAE9E17F25D170006BF56 /* defs.general.h */; };
+		0C22171317F8E045005FD46E /* defs.grmhd.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAE9F17F25D170006BF56 /* defs.grmhd.h */; };
+		0C22171417F8E045005FD46E /* defs.jon_interp.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAEA017F25D170006BF56 /* defs.jon_interp.h */; };
+		0C22171517F8E045005FD46E /* defs.liaison.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAEA117F25D170006BF56 /* defs.liaison.h */; };
+		0C22171617F8E045005FD46E /* defs.user.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAEA217F25D170006BF56 /* defs.user.h */; };
+		0C22171717F8E045005FD46E /* diag.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAEA317F25D170006BF56 /* diag.c */; };
+		0C22171817F8E045005FD46E /* diag.funcdeclare.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAEA417F25D170006BF56 /* diag.funcdeclare.h */; };
+		0C22171917F8E045005FD46E /* dudp_calc_3vel.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAEA517F25D170006BF56 /* dudp_calc_3vel.c */; };
+		0C22171A17F8E045005FD46E /* dudp_calc.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAEA617F25D170006BF56 /* dudp_calc.c */; };
+		0C22171B17F8E045005FD46E /* dump_ener.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAEA717F25D170006BF56 /* dump_ener.c */; };
+		0C22171C17F8E045005FD46E /* dump.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAEA817F25D170006BF56 /* dump.c */; };
+		0C22171D17F8E045005FD46E /* dumpgen.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAEA917F25D170006BF56 /* dumpgen.c */; };
+		0C22171E17F8E045005FD46E /* eos.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAEAA17F25D170006BF56 /* eos.c */; };
+		0C22171F17F8E045005FD46E /* eos.funcdeclare.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAEAB17F25D170006BF56 /* eos.funcdeclare.h */; };
+		0C22172017F8E045005FD46E /* f2c.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAEAC17F25D170006BF56 /* f2c.h */; };
+		0C22172117F8E045005FD46E /* fail.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAEAD17F25D170006BF56 /* fail.c */; };
+		0C22172217F8E045005FD46E /* fdjac.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAEAE17F25D170006BF56 /* fdjac.c */; };
+		0C22172317F8E045005FD46E /* fixup.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAEAF17F25D170006BF56 /* fixup.c */; };
+		0C22172417F8E045005FD46E /* fixup.funcdeclare.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAEB017F25D170006BF56 /* fixup.funcdeclare.h */; };
+		0C22172517F8E045005FD46E /* flux.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAEB117F25D170006BF56 /* flux.c */; };
+		0C22172617F8E045005FD46E /* flux.funcdeclare.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAEB217F25D170006BF56 /* flux.funcdeclare.h */; };
+		0C22172717F8E045005FD46E /* flux.mergedc2ea2cmethod.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAEB317F25D170006BF56 /* flux.mergedc2ea2cmethod.c */; };
+		0C22172817F8E045005FD46E /* fluxcompute.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAEB417F25D170006BF56 /* fluxcompute.c */; };
+		0C22172917F8E045005FD46E /* fluxct.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAEB517F25D170006BF56 /* fluxct.c */; };
+		0C22172A17F8E045005FD46E /* fluxctstag.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAEB617F25D170006BF56 /* fluxctstag.c */; };
+		0C22172B17F8E045005FD46E /* fluxvpot.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAEB717F25D170006BF56 /* fluxvpot.c */; };
+		0C22172C17F8E045005FD46E /* fluxvpot.funcdeclare.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAEB817F25D170006BF56 /* fluxvpot.funcdeclare.h */; };
+		0C22172D17F8E045005FD46E /* fmin.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAEB917F25D170006BF56 /* fmin.c */; };
+		0C22172E17F8E045005FD46E /* freespace.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAEBA17F25D170006BF56 /* freespace.c */; };
+		0C22172F17F8E045005FD46E /* gaussj.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAEBB17F25D170006BF56 /* gaussj.c */; };
+		0C22173017F8E045005FD46E /* generatenprs.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAEBC17F25D170006BF56 /* generatenprs.c */; };
+		0C22173117F8E045005FD46E /* geodesic.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAEBD17F25D170006BF56 /* geodesic.c */; };
+		0C22173217F8E045005FD46E /* global.bounds.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAEBE17F25D170006BF56 /* global.bounds.h */; };
+		0C22173317F8E045005FD46E /* global.comploops.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAEBF17F25D170006BF56 /* global.comploops.h */; };
+		0C22173417F8E045005FD46E /* global.depnmemonics.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAEC017F25D170006BF56 /* global.depnmemonics.h */; };
+		0C22173517F8E045005FD46E /* global.dump.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAEC117F25D170006BF56 /* global.dump.h */; };
+		0C22173617F8E045005FD46E /* global.fieldmacros.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAEC217F25D170006BF56 /* global.fieldmacros.h */; };
+		0C22173717F8E045005FD46E /* global.funcdeclare.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAEC317F25D170006BF56 /* global.funcdeclare.h */; };
+		0C22173817F8E045005FD46E /* global.funcdeclare.user.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAEC417F25D170006BF56 /* global.funcdeclare.user.h */; };
+		0C22173917F8E045005FD46E /* global.general.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAEC517F25D170006BF56 /* global.general.h */; };
+		0C22173A17F8E045005FD46E /* global.gridsectioning.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAEC617F25D170006BF56 /* global.gridsectioning.h */; };
+		0C22173B17F8E045005FD46E /* global.grmhd.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAEC717F25D170006BF56 /* global.grmhd.h */; };
+		0C22173C17F8E045005FD46E /* global.inits.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAEC817F25D170006BF56 /* global.inits.h */; };
+		0C22173D17F8E045005FD46E /* global.jon_interp.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAEC917F25D170006BF56 /* global.jon_interp.h */; };
+		0C22173E17F8E045005FD46E /* global.liaison.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAECA17F25D170006BF56 /* global.liaison.h */; };
+		0C22173F17F8E045005FD46E /* global.loops.boundaries.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAECB17F25D170006BF56 /* global.loops.boundaries.h */; };
+		0C22174017F8E045005FD46E /* global.loops.diagnostics.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAECC17F25D170006BF56 /* global.loops.diagnostics.h */; };
+		0C22174117F8E045005FD46E /* global.loops.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAECD17F25D170006BF56 /* global.loops.h */; };
+		0C22174217F8E045005FD46E /* global.loops.manypoints.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAECE17F25D170006BF56 /* global.loops.manypoints.h */; };
+		0C22174317F8E045005FD46E /* global.loops.manypoints1d.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAECF17F25D170006BF56 /* global.loops.manypoints1d.h */; };
+		0C22174417F8E045005FD46E /* global.loops.perpoint.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAED017F25D170006BF56 /* global.loops.perpoint.h */; };
+		0C22174517F8E045005FD46E /* global.mpi_grmhd_grray_liaison.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAED117F25D170006BF56 /* global.mpi_grmhd_grray_liaison.h */; };
+		0C22174617F8E045005FD46E /* global.nondepnmemonics.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAED217F25D170006BF56 /* global.nondepnmemonics.h */; };
+		0C22174717F8E045005FD46E /* global.openmploops.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAED317F25D170006BF56 /* global.openmploops.h */; };
+		0C22174817F8E045005FD46E /* global.openmpthreadprivates.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAED417F25D170006BF56 /* global.openmpthreadprivates.h */; };
+		0C22174917F8E045005FD46E /* global.other.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAED517F25D170006BF56 /* global.other.h */; };
+		0C22174A17F8E045005FD46E /* global.realdef.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAED617F25D170006BF56 /* global.realdef.h */; };
+		0C22174B17F8E045005FD46E /* global.stepch.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAED717F25D170006BF56 /* global.stepch.h */; };
+		0C22174C17F8E045005FD46E /* global.storage.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAED817F25D170006BF56 /* global.storage.h */; };
+		0C22174D17F8E045005FD46E /* global.structs.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAED917F25D170006BF56 /* global.structs.h */; };
+		0C22174E17F8E045005FD46E /* global.variousmacros.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAEDA17F25D170006BF56 /* global.variousmacros.h */; };
+		0C22174F17F8E045005FD46E /* grbpwf99eos.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAEDB17F25D170006BF56 /* grbpwf99eos.c */; };
+		0C22175017F8E045005FD46E /* higherorder_pointavg.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAEDF17F25D170006BF56 /* higherorder_pointavg.c */; };
+		0C22175117F8E045005FD46E /* idealgaseos.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAEE017F25D170006BF56 /* idealgaseos.c */; };
+		0C22175217F8E045005FD46E /* image.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAEE117F25D170006BF56 /* image.c */; };
+		0C22175317F8E045005FD46E /* init.readdata.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAEE217F25D170006BF56 /* init.readdata.c */; };
+		0C22175417F8E045005FD46E /* init.tools.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAEE317F25D170006BF56 /* init.tools.c */; };
+		0C22175517F8E045005FD46E /* init.torus.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAEE417F25D170006BF56 /* init.torus.h */; };
+		0C22175617F8E045005FD46E /* initbase.boundloop.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAEE517F25D170006BF56 /* initbase.boundloop.c */; };
+		0C22175717F8E045005FD46E /* initbase.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAEE617F25D170006BF56 /* initbase.c */; };
+		0C22175817F8E045005FD46E /* initbase.enerregions.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAEE717F25D170006BF56 /* initbase.enerregions.c */; };
+		0C22175917F8E045005FD46E /* initbase.funcdeclare.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAEE817F25D170006BF56 /* initbase.funcdeclare.h */; };
+		0C22175A17F8E045005FD46E /* initbase.gridsectioning.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAEE917F25D170006BF56 /* initbase.gridsectioning.c */; };
+		0C22175B17F8E045005FD46E /* initbase.tools.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAEEA17F25D170006BF56 /* initbase.tools.c */; };
+		0C22175C17F8E045005FD46E /* interpline.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAEEB17F25D170006BF56 /* interpline.c */; };
+		0C22175D17F8E045005FD46E /* interpline.jmono.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAEEC17F25D170006BF56 /* interpline.jmono.c */; };
+		0C22175E17F8E045005FD46E /* interpline.mono.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAEED17F25D170006BF56 /* interpline.mono.c */; };
+		0C22175F17F8E045005FD46E /* interpline.para.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAEEE17F25D170006BF56 /* interpline.para.c */; };
+		0C22176017F8E045005FD46E /* interpline.smono_static.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAEEF17F25D170006BF56 /* interpline.smono_static.h */; };
+		0C22176117F8E045005FD46E /* interpline.smono.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAEF017F25D170006BF56 /* interpline.smono.c */; };
+		0C22176217F8E045005FD46E /* interpline.smono.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAEF117F25D170006BF56 /* interpline.smono.h */; };
+		0C22176317F8E045005FD46E /* interppoint.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAEF217F25D170006BF56 /* interppoint.c */; };
+		0C22176417F8E045005FD46E /* interppoint.para.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAEF317F25D170006BF56 /* interppoint.para.c */; };
+		0C22176517F8E045005FD46E /* jon_interp_computepreprocess.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAEF417F25D170006BF56 /* jon_interp_computepreprocess.c */; };
+		0C22176617F8E045005FD46E /* jon_interp_filter.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAEF517F25D170006BF56 /* jon_interp_filter.c */; };
+		0C22176717F8E045005FD46E /* jon_interp_interpolationitself.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAEF617F25D170006BF56 /* jon_interp_interpolationitself.c */; };
+		0C22176817F8E045005FD46E /* jon_interp_mnewt.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAEF717F25D170006BF56 /* jon_interp_mnewt.c */; };
+		0C22176917F8E045005FD46E /* jon_interp_newt.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAEF817F25D170006BF56 /* jon_interp_newt.c */; };
+		0C22176A17F8E045005FD46E /* jon_interp.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAEF917F25D170006BF56 /* jon_interp.c */; };
+		0C22176B17F8E045005FD46E /* kazfulleos_eosfunctions.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAEFA17F25D170006BF56 /* kazfulleos_eosfunctions.c */; };
+		0C22176C17F8E045005FD46E /* kazfulleos_lookuptable_interpolation.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAEFB17F25D170006BF56 /* kazfulleos_lookuptable_interpolation.c */; };
+		0C22176D17F8E045005FD46E /* kazfulleos_read_setup_eostable.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAEFC17F25D170006BF56 /* kazfulleos_read_setup_eostable.c */; };
+		0C22176E17F8E045005FD46E /* kazfulleos_set_arrays.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAEFD17F25D170006BF56 /* kazfulleos_set_arrays.c */; };
+		0C22176F17F8E045005FD46E /* kazfulleos.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAEFE17F25D170006BF56 /* kazfulleos.c */; };
+		0C22177017F8E045005FD46E /* kazfulleos.decsglobalprivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAEFF17F25D170006BF56 /* kazfulleos.decsglobalprivate.h */; };
+		0C22177117F8E045005FD46E /* kazfulleos.defs.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAF0017F25D170006BF56 /* kazfulleos.defs.h */; };
+		0C22177217F8E045005FD46E /* kazfulleos.defsglobalprivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAF0117F25D170006BF56 /* kazfulleos.defsglobalprivate.h */; };
+		0C22177317F8E045005FD46E /* kazfulleos.eostablesdefs.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAF0217F25D170006BF56 /* kazfulleos.eostablesdefs.h */; };
+		0C22177417F8E045005FD46E /* kazfulleos.global.eosextra.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAF0317F25D170006BF56 /* kazfulleos.global.eosextra.h */; };
+		0C22177517F8E045005FD46E /* kazfulleos.global.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAF0417F25D170006BF56 /* kazfulleos.global.h */; };
+		0C22177617F8E045005FD46E /* kazfulleos.global.tablecolumnsizes.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAF0517F25D170006BF56 /* kazfulleos.global.tablecolumnsizes.h */; };
+		0C22177717F8E045005FD46E /* kazfulleos.global.tablesizes.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAF0617F25D170006BF56 /* kazfulleos.global.tablesizes.h */; };
+		0C22177817F8E045005FD46E /* kazfulleos.superdecs.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAF0717F25D170006BF56 /* kazfulleos.superdecs.h */; };
+		0C22177917F8E045005FD46E /* kazfulleos.superdefs.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAF0817F25D170006BF56 /* kazfulleos.superdefs.h */; };
+		0C22177A17F8E045005FD46E /* liaison_set_arrays.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAF0917F25D170006BF56 /* liaison_set_arrays.c */; };
+		0C22177B17F8E045005FD46E /* liaison.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAF0A17F25D170006BF56 /* liaison.c */; };
+		0C22177C17F8E045005FD46E /* lnsrch.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAF0C17F25D170006BF56 /* lnsrch.c */; };
+		0C22177D17F8E045005FD46E /* lubksb.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAF0E17F25D170006BF56 /* lubksb.c */; };
+		0C22177E17F8E045005FD46E /* ludcmp.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAF0F17F25D170006BF56 /* ludcmp.c */; };
+		0C22177F17F8E045005FD46E /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAF1017F25D170006BF56 /* main.c */; };
+		0C22178017F8E045005FD46E /* math.tools.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAF1717F25D170006BF56 /* math.tools.c */; };
+		0C22178117F8E045005FD46E /* metric_selfgravity_or_evolvemetric.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAF1817F25D170006BF56 /* metric_selfgravity_or_evolvemetric.c */; };
+		0C22178217F8E045005FD46E /* metric_selfgravity_or_evolvemetric.funcdeclare.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAF1917F25D170006BF56 /* metric_selfgravity_or_evolvemetric.funcdeclare.h */; };
+		0C22178317F8E045005FD46E /* metric.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAF1A17F25D170006BF56 /* metric.c */; };
+		0C22178417F8E045005FD46E /* metric.funcdeclare.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAF1B17F25D170006BF56 /* metric.funcdeclare.h */; };
+		0C22178517F8E045005FD46E /* metric.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAF1C17F25D170006BF56 /* metric.h */; };
+		0C22178617F8E045005FD46E /* metric.tools.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAF1D17F25D170006BF56 /* metric.tools.c */; };
+		0C22178717F8E045005FD46E /* metric.tools.funcdeclare.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAF1E17F25D170006BF56 /* metric.tools.funcdeclare.h */; };
+		0C22178817F8E045005FD46E /* mignoneeos.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAF1F17F25D170006BF56 /* mignoneeos.c */; };
+		0C22178917F8E045005FD46E /* mnewt.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAF2017F25D170006BF56 /* mnewt.c */; };
+		0C22178A17F8E045005FD46E /* mpi_fileio.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAF2117F25D170006BF56 /* mpi_fileio.c */; };
+		0C22178B17F8E045005FD46E /* mpi_fprintfs.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAF2217F25D170006BF56 /* mpi_fprintfs.c */; };
+		0C22178C17F8E045005FD46E /* mpi_fprintfs.funcdeclare.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAF2317F25D170006BF56 /* mpi_fprintfs.funcdeclare.h */; };
+		0C22178D17F8E045005FD46E /* mpi_grmhd_grray_liaison.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAF2417F25D170006BF56 /* mpi_grmhd_grray_liaison.c */; };
+		0C22178E17F8E045005FD46E /* mpi_init_grmhd.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAF2517F25D170006BF56 /* mpi_init_grmhd.c */; };
+		0C22178F17F8E045005FD46E /* mpi_init.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAF2617F25D170006BF56 /* mpi_init.c */; };
+		0C22179017F8E045005FD46E /* mpi_set_arrays.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAF2717F25D170006BF56 /* mpi_set_arrays.c */; };
+		0C22179117F8E045005FD46E /* mpidefs.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAF2817F25D170006BF56 /* mpidefs.h */; };
+		0C22179217F8E045005FD46E /* mpidefs.mpi_grmhd_grray_liaison.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAF2917F25D170006BF56 /* mpidefs.mpi_grmhd_grray_liaison.h */; };
+		0C22179317F8E045005FD46E /* mympi.definit.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAF2A17F25D170006BF56 /* mympi.definit.h */; };
+		0C22179417F8E045005FD46E /* mympi.global.depnmemonics.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAF2B17F25D170006BF56 /* mympi.global.depnmemonics.h */; };
+		0C22179517F8E045005FD46E /* mympi.global.funcdeclare.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAF2C17F25D170006BF56 /* mympi.global.funcdeclare.h */; };
+		0C22179617F8E045005FD46E /* mympi.global.loops.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAF2D17F25D170006BF56 /* mympi.global.loops.h */; };
+		0C22179717F8E045005FD46E /* mympi.global.nondepnmemonics.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAF2E17F25D170006BF56 /* mympi.global.nondepnmemonics.h */; };
+		0C22179817F8E045005FD46E /* mympi.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAF2F17F25D170006BF56 /* mympi.h */; };
+		0C22179917F8E045005FD46E /* mympi.simulbccalcstuff.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAF3017F25D170006BF56 /* mympi.simulbccalcstuff.h */; };
+		0C22179A17F8E045005FD46E /* mytime.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAF3117F25D170006BF56 /* mytime.c */; };
+		0C22179B17F8E045005FD46E /* mytime.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAF3217F25D170006BF56 /* mytime.h */; };
+		0C22179C17F8E045005FD46E /* nrutil.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAF3317F25D170006BF56 /* nrutil.c */; };
+		0C22179D17F8E045005FD46E /* nrutil.funcdeclare.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAF3417F25D170006BF56 /* nrutil.funcdeclare.h */; };
+		0C22179E17F8E045005FD46E /* NRUTIL.H in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAF3517F25D170006BF56 /* NRUTIL.H */; };
+		0C22179F17F8E045005FD46E /* nrutil2.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAF3617F25D170006BF56 /* nrutil2.c */; };
+		0C2217A017F8E045005FD46E /* para_and_paraenohybrid.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAF3717F25D170006BF56 /* para_and_paraenohybrid.h */; };
+		0C2217A117F8E045005FD46E /* paraenohybrid.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAF3817F25D170006BF56 /* paraenohybrid.c */; };
+		0C2217A217F8E045005FD46E /* phys.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAF3917F25D170006BF56 /* phys.c */; };
+		0C2217A317F8E045005FD46E /* phys.coldgrmhd.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAF3A17F25D170006BF56 /* phys.coldgrmhd.c */; };
+		0C2217A417F8E045005FD46E /* phys.ffde.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAF3B17F25D170006BF56 /* phys.ffde.c */; };
+		0C2217A517F8E045005FD46E /* phys.funcdeclare.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAF3C17F25D170006BF56 /* phys.funcdeclare.h */; };
+		0C2217A617F8E045005FD46E /* phys.tools.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAF3D17F25D170006BF56 /* phys.tools.c */; };
+		0C2217A717F8E045005FD46E /* phys.tools.funcdeclare.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAF3E17F25D170006BF56 /* phys.tools.funcdeclare.h */; };
+		0C2217A817F8E045005FD46E /* qrdcmp.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAF3F17F25D170006BF56 /* qrdcmp.c */; };
+		0C2217A917F8E045005FD46E /* qrupdt.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAF4017F25D170006BF56 /* qrupdt.c */; };
+		0C2217AA17F8E045005FD46E /* ranc.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAF4117F25D170006BF56 /* ranc.c */; };
+		0C2217AB17F8E045005FD46E /* rancdefs.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAF4217F25D170006BF56 /* rancdefs.h */; };
+		0C2217AC17F8E045005FD46E /* reconstructeno_defs.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAF4317F25D170006BF56 /* reconstructeno_defs.h */; };
+		0C2217AD17F8E045005FD46E /* reconstructeno_global.funcdeclare.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAF4417F25D170006BF56 /* reconstructeno_global.funcdeclare.h */; };
+		0C2217AE17F8E045005FD46E /* reconstructeno_global.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAF4517F25D170006BF56 /* reconstructeno_global.h */; };
+		0C2217AF17F8E045005FD46E /* reconstructeno_set_arrays.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAF4617F25D170006BF56 /* reconstructeno_set_arrays.c */; };
+		0C2217B017F8E045005FD46E /* reconstructeno_staticfuncs_constvars.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAF4717F25D170006BF56 /* reconstructeno_staticfuncs_constvars.h */; };
+		0C2217B117F8E045005FD46E /* reconstructeno_superdefs.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAF4817F25D170006BF56 /* reconstructeno_superdefs.h */; };
+		0C2217B217F8E045005FD46E /* reconstructeno.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAF4917F25D170006BF56 /* reconstructeno.c */; };
+		0C2217B317F8E045005FD46E /* reconstructeno.debug.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAF4A17F25D170006BF56 /* reconstructeno.debug.c */; };
+		0C2217B417F8E045005FD46E /* reconstructeno.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAF4B17F25D170006BF56 /* reconstructeno.h */; };
+		0C2217B517F8E045005FD46E /* reconstructeno.weightmin.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAF4C17F25D170006BF56 /* reconstructeno.weightmin.c */; };
+		0C2217B617F8E045005FD46E /* rescale_interp.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAF4D17F25D170006BF56 /* rescale_interp.c */; };
+		0C2217B717F8E045005FD46E /* restart.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAF4E17F25D170006BF56 /* restart.c */; };
+		0C2217B817F8E045005FD46E /* restart.checks.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAF4F17F25D170006BF56 /* restart.checks.c */; };
+		0C2217B917F8E045005FD46E /* restart.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAF5017F25D170006BF56 /* restart.h */; };
+		0C2217BA17F8E045005FD46E /* restart.rebeccaoldcode.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAF5117F25D170006BF56 /* restart.rebeccaoldcode.c */; };
+		0C2217BB17F8E045005FD46E /* rotate.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAF5217F25D170006BF56 /* rotate.c */; };
+		0C2217BC17F8E045005FD46E /* rsolv.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAF5317F25D170006BF56 /* rsolv.c */; };
+		0C2217BD17F8E045005FD46E /* set_arrays_multidimen.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAF5417F25D170006BF56 /* set_arrays_multidimen.c */; };
+		0C2217BE17F8E045005FD46E /* set_arrays_perpoint_perline.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAF5517F25D170006BF56 /* set_arrays_perpoint_perline.c */; };
+		0C2217BF17F8E045005FD46E /* set_arrays.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAF5617F25D170006BF56 /* set_arrays.c */; };
+		0C2217C017F8E045005FD46E /* set_grid.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAF5717F25D170006BF56 /* set_grid.c */; };
+		0C2217C117F8E045005FD46E /* set_grid.funcdeclare.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAF5817F25D170006BF56 /* set_grid.funcdeclare.h */; };
+		0C2217C217F8E045005FD46E /* smcalc.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAF5917F25D170006BF56 /* smcalc.c */; };
+		0C2217C317F8E045005FD46E /* sources.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAF5A17F25D170006BF56 /* sources.c */; };
+		0C2217C417F8E045005FD46E /* step_ch.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAF5B17F25D180006BF56 /* step_ch.c */; };
+		0C2217C517F8E045005FD46E /* superdefs.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAF5C17F25D180006BF56 /* superdefs.h */; };
+		0C2217C617F8E045005FD46E /* superdefs.liaison.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAF5D17F25D180006BF56 /* superdefs.liaison.h */; };
+		0C2217C717F8E045005FD46E /* superdefs.pointers.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAF5E17F25D180006BF56 /* superdefs.pointers.h */; };
+		0C2217C817F8E045005FD46E /* supermpidefs.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAF5F17F25D180006BF56 /* supermpidefs.h */; };
+		0C2217C917F8E045005FD46E /* SwapEndian.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAF6017F25D180006BF56 /* SwapEndian.h */; };
+		0C2217CA17F8E045005FD46E /* tau_neededbyharm.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAF6217F25D180006BF56 /* tau_neededbyharm.c */; };
+		0C2217CB17F8E045005FD46E /* tensor.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAF6417F25D180006BF56 /* tensor.c */; };
+		0C2217CC17F8E045005FD46E /* tetrad.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAF6517F25D180006BF56 /* tetrad.c */; };
+		0C2217CD17F8E045005FD46E /* tetrad.funcdeclare.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAF6617F25D180006BF56 /* tetrad.funcdeclare.h */; };
+		0C2217CE17F8E045005FD46E /* transforms.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAF6717F25D180006BF56 /* transforms.c */; };
+		0C2217CF17F8E045005FD46E /* transforms.funcdeclare.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAF6817F25D180006BF56 /* transforms.funcdeclare.h */; };
+		0C2217D017F8E045005FD46E /* u2p_defs.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAF6917F25D180006BF56 /* u2p_defs.h */; };
+		0C2217D117F8E045005FD46E /* u2p_util.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAF6A17F25D180006BF56 /* u2p_util.c */; };
+		0C2217D217F8E045005FD46E /* utoprim_1d_final.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAF6C17F25D180006BF56 /* utoprim_1d_final.c */; };
+		0C2217D317F8E045005FD46E /* utoprim_1d_opt.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAF6D17F25D180006BF56 /* utoprim_1d_opt.c */; };
+		0C2217D417F8E045005FD46E /* utoprim_1d_opt.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAF6E17F25D180006BF56 /* utoprim_1d_opt.h */; };
+		0C2217D517F8E045005FD46E /* utoprim_1d.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAF6F17F25D180006BF56 /* utoprim_1d.c */; };
+		0C2217D617F8E045005FD46E /* utoprim_1d.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAF7017F25D180006BF56 /* utoprim_1d.h */; };
+		0C2217D717F8E045005FD46E /* utoprim_1d2d.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAF7117F25D180006BF56 /* utoprim_1d2d.h */; };
+		0C2217D817F8E045005FD46E /* utoprim_2d_final.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAF7217F25D180006BF56 /* utoprim_2d_final.c */; };
+		0C2217D917F8E045005FD46E /* utoprim_2d.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAF7317F25D180006BF56 /* utoprim_2d.c */; };
+		0C2217DA17F8E045005FD46E /* utoprim_2d.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAF7417F25D180006BF56 /* utoprim_2d.h */; };
+		0C2217DB17F8E045005FD46E /* utoprim_5d2_final.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAF7517F25D180006BF56 /* utoprim_5d2_final.c */; };
+		0C2217DC17F8E045005FD46E /* utoprim_jon_eos.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAF7617F25D180006BF56 /* utoprim_jon_eos.c */; };
+		0C2217DD17F8E045005FD46E /* utoprim_jon.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAF7717F25D180006BF56 /* utoprim_jon.c */; };
+		0C2217DE17F8E045005FD46E /* utoprim_jon.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAF7817F25D180006BF56 /* utoprim_jon.h */; };
+		0C2217DF17F8E045005FD46E /* utoprim_ldz.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAF7917F25D180006BF56 /* utoprim_ldz.c */; };
+		0C2217E017F8E045005FD46E /* utoprim.orig.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAF7A17F25D180006BF56 /* utoprim.orig.c */; };
+		0C2217E117F8E045005FD46E /* utoprim.orig.debug.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAF7B17F25D180006BF56 /* utoprim.orig.debug.c */; };
+		0C2217E217F8E045005FD46E /* utoprimgen.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAF7C17F25D180006BF56 /* utoprimgen.c */; };
+		0C2217E317F8E045005FD46E /* utoprimgen.funcdeclare.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAF7D17F25D180006BF56 /* utoprimgen.funcdeclare.h */; };
+		0C2217E417F8E045005FD46E /* vchar.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAF7E17F25D180006BF56 /* vchar.c */; };
+		0C2217E517F8E045005FD46E /* wavespeeds.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2DAF7F17F25D180006BF56 /* wavespeeds.c */; };
+		0C2217E617F8E045005FD46E /* wavespeeds.funcdeclare.h in Headers */ = {isa = PBXBuildFile; fileRef = 0C2DAF8017F25D180006BF56 /* wavespeeds.funcdeclare.h */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
+		0C16ADF817F25E7A00E6BA4C /* global.depmnemonics.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = global.depmnemonics.h; path = ../global.depmnemonics.h; sourceTree = "<group>"; };
+		0C16ADF917F25E7A00E6BA4C /* global.depmnemonics.rad.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = global.depmnemonics.rad.h; path = ../global.depmnemonics.rad.h; sourceTree = "<group>"; };
+		0C16ADFA17F25E7A00E6BA4C /* global.funcdeclare.rad.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = global.funcdeclare.rad.h; path = ../global.funcdeclare.rad.h; sourceTree = "<group>"; };
+		0C16ADFB17F25E7A00E6BA4C /* global.nondepmnemonics.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = global.nondepmnemonics.h; path = ../global.nondepmnemonics.h; sourceTree = "<group>"; };
+		0C16ADFC17F25E7A00E6BA4C /* global.nondepmnemonics.rad.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = global.nondepmnemonics.rad.h; path = ../global.nondepmnemonics.rad.h; sourceTree = "<group>"; };
+		0C16ADFD17F25E7A00E6BA4C /* gslincludes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = gslincludes.h; path = ../gslincludes.h; sourceTree = "<group>"; };
+		0C16ADFE17F25E7A00E6BA4C /* koral.mdefs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = koral.mdefs.h; path = ../koral.mdefs.h; sourceTree = "<group>"; };
+		0C16ADFF17F25E7A00E6BA4C /* mympi.global.depmnemonics.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mympi.global.depmnemonics.h; path = ../mympi.global.depmnemonics.h; sourceTree = "<group>"; };
+		0C16AE0017F25E7A00E6BA4C /* mympi.global.nondepmnemonics.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mympi.global.nondepmnemonics.h; path = ../mympi.global.nondepmnemonics.h; sourceTree = "<group>"; };
+		0C16AE0117F25E7A00E6BA4C /* phys.tools.rad.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = phys.tools.rad.c; path = ../phys.tools.rad.c; sourceTree = "<group>"; };
+		0C16AE0217F25E7A00E6BA4C /* set_arrays_multidimen.rad.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = set_arrays_multidimen.rad.c; path = ../set_arrays_multidimen.rad.c; sourceTree = "<group>"; };
+		0C16AE0317F25E7A00E6BA4C /* superdefs.pointers.rad.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = superdefs.pointers.rad.h; path = ../superdefs.pointers.rad.h; sourceTree = "<group>"; };
+		0C16AE0417F25E7A00E6BA4C /* superdefs.rad.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = superdefs.rad.h; path = ../superdefs.rad.h; sourceTree = "<group>"; };
+		0C16AE0517F25E7A00E6BA4C /* tetlapack_func_doubleonly.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = tetlapack_func_doubleonly.c; path = ../tetlapack_func_doubleonly.c; sourceTree = "<group>"; };
+		0C2216EC17F8C57A005FD46E /* libDummy.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libDummy.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		0C2DAE8B17F25D170006BF56 /* advance.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = advance.c; path = ../advance.c; sourceTree = "<group>"; };
 		0C2DAE8C17F25D170006BF56 /* bcucof.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = bcucof.c; path = ../bcucof.c; sourceTree = "<group>"; };
 		0C2DAE8D17F25D170006BF56 /* bcuint.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = bcuint.c; path = ../bcuint.c; sourceTree = "<group>"; };
@@ -255,10 +519,42 @@
 		0C2DAF8017F25D180006BF56 /* wavespeeds.funcdeclare.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = wavespeeds.funcdeclare.h; path = ../wavespeeds.funcdeclare.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXFrameworksBuildPhase section */
+		0C2216E917F8C57A005FD46E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
 /* Begin PBXGroup section */
+		0C2216ED17F8C57A005FD46E /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				0C2216EC17F8C57A005FD46E /* libDummy.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		0C2DAE8017F25B3F0006BF56 = {
 			isa = PBXGroup;
 			children = (
+				0C16ADF817F25E7A00E6BA4C /* global.depmnemonics.h */,
+				0C16ADF917F25E7A00E6BA4C /* global.depmnemonics.rad.h */,
+				0C16ADFA17F25E7A00E6BA4C /* global.funcdeclare.rad.h */,
+				0C16ADFB17F25E7A00E6BA4C /* global.nondepmnemonics.h */,
+				0C16ADFC17F25E7A00E6BA4C /* global.nondepmnemonics.rad.h */,
+				0C16ADFD17F25E7A00E6BA4C /* gslincludes.h */,
+				0C16ADFE17F25E7A00E6BA4C /* koral.mdefs.h */,
+				0C16ADFF17F25E7A00E6BA4C /* mympi.global.depmnemonics.h */,
+				0C16AE0017F25E7A00E6BA4C /* mympi.global.nondepmnemonics.h */,
+				0C16AE0117F25E7A00E6BA4C /* phys.tools.rad.c */,
+				0C16AE0217F25E7A00E6BA4C /* set_arrays_multidimen.rad.c */,
+				0C16AE0317F25E7A00E6BA4C /* superdefs.pointers.rad.h */,
+				0C16AE0417F25E7A00E6BA4C /* superdefs.rad.h */,
+				0C16AE0517F25E7A00E6BA4C /* tetlapack_func_doubleonly.c */,
 				0C2DAE8B17F25D170006BF56 /* advance.c */,
 				0C2DAE8C17F25D170006BF56 /* bcucof.c */,
 				0C2DAE8D17F25D170006BF56 /* bcuint.c */,
@@ -505,10 +801,135 @@
 				0C2DAF7E17F25D180006BF56 /* vchar.c */,
 				0C2DAF7F17F25D180006BF56 /* wavespeeds.c */,
 				0C2DAF8017F25D180006BF56 /* wavespeeds.funcdeclare.h */,
+				0C2216ED17F8C57A005FD46E /* Products */,
 			);
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		0C2216EA17F8C57A005FD46E /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0C22173717F8E045005FD46E /* global.funcdeclare.h in Headers */,
+				0C22170E17F8E045005FD46E /* coord.h in Headers */,
+				0C22177317F8E045005FD46E /* kazfulleos.eostablesdefs.h in Headers */,
+				0C2217B017F8E045005FD46E /* reconstructeno_staticfuncs_constvars.h in Headers */,
+				0C2217AE17F8E045005FD46E /* reconstructeno_global.h in Headers */,
+				0C22179117F8E045005FD46E /* mpidefs.h in Headers */,
+				0C22179817F8E045005FD46E /* mympi.h in Headers */,
+				0C2216F917F8E045005FD46E /* mympi.global.nondepmnemonics.h in Headers */,
+				0C22174217F8E045005FD46E /* global.loops.manypoints.h in Headers */,
+				0C2217C717F8E045005FD46E /* superdefs.pointers.h in Headers */,
+				0C22179717F8E045005FD46E /* mympi.global.nondepnmemonics.h in Headers */,
+				0C2217C517F8E045005FD46E /* superdefs.h in Headers */,
+				0C22171117F8E045005FD46E /* definit.h in Headers */,
+				0C22177217F8E045005FD46E /* kazfulleos.defsglobalprivate.h in Headers */,
+				0C22170D17F8E045005FD46E /* coord.funcdeclare.h in Headers */,
+				0C22174417F8E045005FD46E /* global.loops.perpoint.h in Headers */,
+				0C2217B417F8E045005FD46E /* reconstructeno.h in Headers */,
+				0C2216FD17F8E045005FD46E /* superdefs.rad.h in Headers */,
+				0C2217D617F8E045005FD46E /* utoprim_1d.h in Headers */,
+				0C22171817F8E045005FD46E /* diag.funcdeclare.h in Headers */,
+				0C22172017F8E045005FD46E /* f2c.h in Headers */,
+				0C22177517F8E045005FD46E /* kazfulleos.global.h in Headers */,
+				0C22171617F8E045005FD46E /* defs.user.h in Headers */,
+				0C2216F517F8E045005FD46E /* global.nondepmnemonics.rad.h in Headers */,
+				0C22173D17F8E045005FD46E /* global.jon_interp.h in Headers */,
+				0C2217DE17F8E045005FD46E /* utoprim_jon.h in Headers */,
+				0C22177417F8E045005FD46E /* kazfulleos.global.eosextra.h in Headers */,
+				0C22174817F8E045005FD46E /* global.openmpthreadprivates.h in Headers */,
+				0C22173917F8E045005FD46E /* global.general.h in Headers */,
+				0C22178717F8E045005FD46E /* metric.tools.funcdeclare.h in Headers */,
+				0C22179517F8E045005FD46E /* mympi.global.funcdeclare.h in Headers */,
+				0C22174D17F8E045005FD46E /* global.structs.h in Headers */,
+				0C22170517F8E045005FD46E /* bounds.funcdeclare.h in Headers */,
+				0C2217AC17F8E045005FD46E /* reconstructeno_defs.h in Headers */,
+				0C22179D17F8E045005FD46E /* nrutil.funcdeclare.h in Headers */,
+				0C22177917F8E045005FD46E /* kazfulleos.superdefs.h in Headers */,
+				0C2217C617F8E045005FD46E /* superdefs.liaison.h in Headers */,
+				0C22174317F8E045005FD46E /* global.loops.manypoints1d.h in Headers */,
+				0C22173C17F8E045005FD46E /* global.inits.h in Headers */,
+				0C22177117F8E045005FD46E /* kazfulleos.defs.h in Headers */,
+				0C22179217F8E045005FD46E /* mpidefs.mpi_grmhd_grray_liaison.h in Headers */,
+				0C2216F717F8E045005FD46E /* koral.mdefs.h in Headers */,
+				0C22179617F8E045005FD46E /* mympi.global.loops.h in Headers */,
+				0C22171317F8E045005FD46E /* defs.grmhd.h in Headers */,
+				0C2217C817F8E045005FD46E /* supermpidefs.h in Headers */,
+				0C2216F117F8E045005FD46E /* global.depmnemonics.h in Headers */,
+				0C22172C17F8E045005FD46E /* fluxvpot.funcdeclare.h in Headers */,
+				0C22171F17F8E045005FD46E /* eos.funcdeclare.h in Headers */,
+				0C2216FC17F8E045005FD46E /* superdefs.pointers.rad.h in Headers */,
+				0C22177017F8E045005FD46E /* kazfulleos.decsglobalprivate.h in Headers */,
+				0C2217B917F8E045005FD46E /* restart.h in Headers */,
+				0C22172617F8E045005FD46E /* flux.funcdeclare.h in Headers */,
+				0C22173517F8E045005FD46E /* global.dump.h in Headers */,
+				0C22173617F8E045005FD46E /* global.fieldmacros.h in Headers */,
+				0C2217A017F8E045005FD46E /* para_and_paraenohybrid.h in Headers */,
+				0C22179B17F8E045005FD46E /* mytime.h in Headers */,
+				0C22178C17F8E045005FD46E /* mpi_fprintfs.funcdeclare.h in Headers */,
+				0C22174917F8E045005FD46E /* global.other.h in Headers */,
+				0C22174617F8E045005FD46E /* global.nondepnmemonics.h in Headers */,
+				0C22173A17F8E045005FD46E /* global.gridsectioning.h in Headers */,
+				0C22174C17F8E045005FD46E /* global.storage.h in Headers */,
+				0C22176217F8E045005FD46E /* interpline.smono.h in Headers */,
+				0C2217AB17F8E045005FD46E /* rancdefs.h in Headers */,
+				0C22178417F8E045005FD46E /* metric.funcdeclare.h in Headers */,
+				0C2217AD17F8E045005FD46E /* reconstructeno_global.funcdeclare.h in Headers */,
+				0C22171517F8E045005FD46E /* defs.liaison.h in Headers */,
+				0C22178517F8E045005FD46E /* metric.h in Headers */,
+				0C22177817F8E045005FD46E /* kazfulleos.superdecs.h in Headers */,
+				0C2217A717F8E045005FD46E /* phys.tools.funcdeclare.h in Headers */,
+				0C22179E17F8E045005FD46E /* NRUTIL.H in Headers */,
+				0C22171417F8E045005FD46E /* defs.jon_interp.h in Headers */,
+				0C22176017F8E045005FD46E /* interpline.smono_static.h in Headers */,
+				0C22175517F8E045005FD46E /* init.torus.h in Headers */,
+				0C2217C117F8E045005FD46E /* set_grid.funcdeclare.h in Headers */,
+				0C22174717F8E045005FD46E /* global.openmploops.h in Headers */,
+				0C2216F617F8E045005FD46E /* gslincludes.h in Headers */,
+				0C2216F817F8E045005FD46E /* mympi.global.depmnemonics.h in Headers */,
+				0C22173E17F8E045005FD46E /* global.liaison.h in Headers */,
+				0C22171017F8E045005FD46E /* copyandinit_functions.funcdeclare.h in Headers */,
+				0C2217D717F8E045005FD46E /* utoprim_1d2d.h in Headers */,
+				0C22179417F8E045005FD46E /* mympi.global.depnmemonics.h in Headers */,
+				0C22178217F8E045005FD46E /* metric_selfgravity_or_evolvemetric.funcdeclare.h in Headers */,
+				0C2216F217F8E045005FD46E /* global.depmnemonics.rad.h in Headers */,
+				0C2217E317F8E045005FD46E /* utoprimgen.funcdeclare.h in Headers */,
+				0C2217D017F8E045005FD46E /* u2p_defs.h in Headers */,
+				0C2216F417F8E045005FD46E /* global.nondepmnemonics.h in Headers */,
+				0C22173817F8E045005FD46E /* global.funcdeclare.user.h in Headers */,
+				0C22172417F8E045005FD46E /* fixup.funcdeclare.h in Headers */,
+				0C22179917F8E045005FD46E /* mympi.simulbccalcstuff.h in Headers */,
+				0C2217E617F8E045005FD46E /* wavespeeds.funcdeclare.h in Headers */,
+				0C22173B17F8E045005FD46E /* global.grmhd.h in Headers */,
+				0C2216F317F8E045005FD46E /* global.funcdeclare.rad.h in Headers */,
+				0C2217DA17F8E045005FD46E /* utoprim_2d.h in Headers */,
+				0C22174B17F8E045005FD46E /* global.stepch.h in Headers */,
+				0C2217CD17F8E045005FD46E /* tetrad.funcdeclare.h in Headers */,
+				0C22173417F8E045005FD46E /* global.depnmemonics.h in Headers */,
+				0C22173317F8E045005FD46E /* global.comploops.h in Headers */,
+				0C22171217F8E045005FD46E /* defs.general.h in Headers */,
+				0C2217CF17F8E045005FD46E /* transforms.funcdeclare.h in Headers */,
+				0C22177617F8E045005FD46E /* kazfulleos.global.tablecolumnsizes.h in Headers */,
+				0C22174E17F8E045005FD46E /* global.variousmacros.h in Headers */,
+				0C22173217F8E045005FD46E /* global.bounds.h in Headers */,
+				0C22174517F8E045005FD46E /* global.mpi_grmhd_grray_liaison.h in Headers */,
+				0C22175917F8E045005FD46E /* initbase.funcdeclare.h in Headers */,
+				0C2217A517F8E045005FD46E /* phys.funcdeclare.h in Headers */,
+				0C22177717F8E045005FD46E /* kazfulleos.global.tablesizes.h in Headers */,
+				0C22174A17F8E045005FD46E /* global.realdef.h in Headers */,
+				0C22179317F8E045005FD46E /* mympi.definit.h in Headers */,
+				0C22174017F8E045005FD46E /* global.loops.diagnostics.h in Headers */,
+				0C2217C917F8E045005FD46E /* SwapEndian.h in Headers */,
+				0C2217D417F8E045005FD46E /* utoprim_1d_opt.h in Headers */,
+				0C22173F17F8E045005FD46E /* global.loops.boundaries.h in Headers */,
+				0C2217B117F8E045005FD46E /* reconstructeno_superdefs.h in Headers */,
+				0C22174117F8E045005FD46E /* global.loops.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
 
 /* Begin PBXLegacyTarget section */
 		0C2DAE8517F25B3F0006BF56 /* HARM */ = {
@@ -527,6 +948,26 @@
 		};
 /* End PBXLegacyTarget section */
 
+/* Begin PBXNativeTarget section */
+		0C2216EB17F8C57A005FD46E /* Dummy */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 0C2216F017F8C57A005FD46E /* Build configuration list for PBXNativeTarget "Dummy" */;
+			buildPhases = (
+				0C2216E817F8C57A005FD46E /* Sources */,
+				0C2216E917F8C57A005FD46E /* Frameworks */,
+				0C2216EA17F8C57A005FD46E /* Headers */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Dummy;
+			productName = Dummy;
+			productReference = 0C2216EC17F8C57A005FD46E /* libDummy.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+/* End PBXNativeTarget section */
+
 /* Begin PBXProject section */
 		0C2DAE8117F25B3F0006BF56 /* Project object */ = {
 			isa = PBXProject;
@@ -542,15 +983,179 @@
 				en,
 			);
 			mainGroup = 0C2DAE8017F25B3F0006BF56;
+			productRefGroup = 0C2216ED17F8C57A005FD46E /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
 				0C2DAE8517F25B3F0006BF56 /* HARM */,
+				0C2216EB17F8C57A005FD46E /* Dummy */,
 			);
 		};
 /* End PBXProject section */
 
+/* Begin PBXSourcesBuildPhase section */
+		0C2216E817F8C57A005FD46E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0C22178F17F8E045005FD46E /* mpi_init.c in Sources */,
+				0C2217E217F8E045005FD46E /* utoprimgen.c in Sources */,
+				0C2217DC17F8E045005FD46E /* utoprim_jon_eos.c in Sources */,
+				0C22175617F8E045005FD46E /* initbase.boundloop.c in Sources */,
+				0C22177C17F8E045005FD46E /* lnsrch.c in Sources */,
+				0C22176117F8E045005FD46E /* interpline.smono.c in Sources */,
+				0C2216FF17F8E045005FD46E /* advance.c in Sources */,
+				0C2217BE17F8E045005FD46E /* set_arrays_perpoint_perline.c in Sources */,
+				0C2217AF17F8E045005FD46E /* reconstructeno_set_arrays.c in Sources */,
+				0C22176617F8E045005FD46E /* jon_interp_filter.c in Sources */,
+				0C2217CA17F8E045005FD46E /* tau_neededbyharm.c in Sources */,
+				0C22176717F8E045005FD46E /* jon_interp_interpolationitself.c in Sources */,
+				0C22178017F8E045005FD46E /* math.tools.c in Sources */,
+				0C22175017F8E045005FD46E /* higherorder_pointavg.c in Sources */,
+				0C22170317F8E045005FD46E /* boundmpi.c in Sources */,
+				0C2217E017F8E045005FD46E /* utoprim.orig.c in Sources */,
+				0C22176517F8E045005FD46E /* jon_interp_computepreprocess.c in Sources */,
+				0C22173017F8E045005FD46E /* generatenprs.c in Sources */,
+				0C22175417F8E045005FD46E /* init.tools.c in Sources */,
+				0C22176317F8E045005FD46E /* interppoint.c in Sources */,
+				0C2217E117F8E045005FD46E /* utoprim.orig.debug.c in Sources */,
+				0C2217B517F8E045005FD46E /* reconstructeno.weightmin.c in Sources */,
+				0C22172A17F8E045005FD46E /* fluxctstag.c in Sources */,
+				0C2217B617F8E045005FD46E /* rescale_interp.c in Sources */,
+				0C22175E17F8E045005FD46E /* interpline.mono.c in Sources */,
+				0C22175317F8E045005FD46E /* init.readdata.c in Sources */,
+				0C22172E17F8E045005FD46E /* freespace.c in Sources */,
+				0C2217DB17F8E045005FD46E /* utoprim_5d2_final.c in Sources */,
+				0C2217C417F8E045005FD46E /* step_ch.c in Sources */,
+				0C22170417F8E045005FD46E /* boundmpiint.c in Sources */,
+				0C22175D17F8E045005FD46E /* interpline.jmono.c in Sources */,
+				0C2217B217F8E045005FD46E /* reconstructeno.c in Sources */,
+				0C2217E517F8E045005FD46E /* wavespeeds.c in Sources */,
+				0C22171A17F8E045005FD46E /* dudp_calc.c in Sources */,
+				0C22174F17F8E045005FD46E /* grbpwf99eos.c in Sources */,
+				0C22178317F8E045005FD46E /* metric.c in Sources */,
+				0C22175217F8E045005FD46E /* image.c in Sources */,
+				0C2217D317F8E045005FD46E /* utoprim_1d_opt.c in Sources */,
+				0C2217BC17F8E045005FD46E /* rsolv.c in Sources */,
+				0C22176417F8E045005FD46E /* interppoint.para.c in Sources */,
+				0C22170B17F8E045005FD46E /* coldeos.c in Sources */,
+				0C22178117F8E045005FD46E /* metric_selfgravity_or_evolvemetric.c in Sources */,
+				0C2217A417F8E045005FD46E /* phys.ffde.c in Sources */,
+				0C22175B17F8E045005FD46E /* initbase.tools.c in Sources */,
+				0C22171D17F8E045005FD46E /* dumpgen.c in Sources */,
+				0C22179C17F8E045005FD46E /* nrutil.c in Sources */,
+				0C22175117F8E045005FD46E /* idealgaseos.c in Sources */,
+				0C2217C017F8E045005FD46E /* set_grid.c in Sources */,
+				0C22178917F8E045005FD46E /* mnewt.c in Sources */,
+				0C22175C17F8E045005FD46E /* interpline.c in Sources */,
+				0C22172817F8E045005FD46E /* fluxcompute.c in Sources */,
+				0C22176B17F8E045005FD46E /* kazfulleos_eosfunctions.c in Sources */,
+				0C22178617F8E045005FD46E /* metric.tools.c in Sources */,
+				0C22171B17F8E045005FD46E /* dump_ener.c in Sources */,
+				0C22178D17F8E045005FD46E /* mpi_grmhd_grray_liaison.c in Sources */,
+				0C2216FA17F8E045005FD46E /* phys.tools.rad.c in Sources */,
+				0C22172B17F8E045005FD46E /* fluxvpot.c in Sources */,
+				0C22176C17F8E045005FD46E /* kazfulleos_lookuptable_interpolation.c in Sources */,
+				0C22179017F8E045005FD46E /* mpi_set_arrays.c in Sources */,
+				0C2217A917F8E045005FD46E /* qrupdt.c in Sources */,
+				0C22172217F8E045005FD46E /* fdjac.c in Sources */,
+				0C22170117F8E045005FD46E /* bcuint.c in Sources */,
+				0C22172F17F8E045005FD46E /* gaussj.c in Sources */,
+				0C2217A617F8E045005FD46E /* phys.tools.c in Sources */,
+				0C22178B17F8E045005FD46E /* mpi_fprintfs.c in Sources */,
+				0C2217DF17F8E045005FD46E /* utoprim_ldz.c in Sources */,
+				0C22177B17F8E045005FD46E /* liaison.c in Sources */,
+				0C22176817F8E045005FD46E /* jon_interp_mnewt.c in Sources */,
+				0C22177E17F8E045005FD46E /* ludcmp.c in Sources */,
+				0C22178817F8E045005FD46E /* mignoneeos.c in Sources */,
+				0C22179F17F8E045005FD46E /* nrutil2.c in Sources */,
+				0C22173117F8E045005FD46E /* geodesic.c in Sources */,
+				0C2217BB17F8E045005FD46E /* rotate.c in Sources */,
+				0C22171917F8E045005FD46E /* dudp_calc_3vel.c in Sources */,
+				0C22175F17F8E045005FD46E /* interpline.para.c in Sources */,
+				0C22172117F8E045005FD46E /* fail.c in Sources */,
+				0C22177A17F8E045005FD46E /* liaison_set_arrays.c in Sources */,
+				0C2217AA17F8E045005FD46E /* ranc.c in Sources */,
+				0C2217C217F8E045005FD46E /* smcalc.c in Sources */,
+				0C22175717F8E045005FD46E /* initbase.c in Sources */,
+				0C22170717F8E045005FD46E /* boundsflux.c in Sources */,
+				0C22170817F8E045005FD46E /* boundsint.c in Sources */,
+				0C22170A17F8E045005FD46E /* broydn.c in Sources */,
+				0C22170617F8E045005FD46E /* bounds.tools.c in Sources */,
+				0C2217A317F8E045005FD46E /* phys.coldgrmhd.c in Sources */,
+				0C22175817F8E045005FD46E /* initbase.enerregions.c in Sources */,
+				0C22175A17F8E045005FD46E /* initbase.gridsectioning.c in Sources */,
+				0C22172D17F8E045005FD46E /* fmin.c in Sources */,
+				0C22170017F8E045005FD46E /* bcucof.c in Sources */,
+				0C2216FB17F8E045005FD46E /* set_arrays_multidimen.rad.c in Sources */,
+				0C2217D217F8E045005FD46E /* utoprim_1d_final.c in Sources */,
+				0C22177D17F8E045005FD46E /* lubksb.c in Sources */,
+				0C22178E17F8E045005FD46E /* mpi_init_grmhd.c in Sources */,
+				0C2217D517F8E045005FD46E /* utoprim_1d.c in Sources */,
+				0C2217BF17F8E045005FD46E /* set_arrays.c in Sources */,
+				0C22179A17F8E045005FD46E /* mytime.c in Sources */,
+				0C22172317F8E045005FD46E /* fixup.c in Sources */,
+				0C2217B717F8E045005FD46E /* restart.c in Sources */,
+				0C2217CB17F8E045005FD46E /* tensor.c in Sources */,
+				0C2217DD17F8E045005FD46E /* utoprim_jon.c in Sources */,
+				0C2217CC17F8E045005FD46E /* tetrad.c in Sources */,
+				0C22170217F8E045005FD46E /* bin2txt.c in Sources */,
+				0C2216FE17F8E045005FD46E /* tetlapack_func_doubleonly.c in Sources */,
+				0C22176D17F8E045005FD46E /* kazfulleos_read_setup_eostable.c in Sources */,
+				0C2217BA17F8E045005FD46E /* restart.rebeccaoldcode.c in Sources */,
+				0C22171717F8E045005FD46E /* diag.c in Sources */,
+				0C2217B817F8E045005FD46E /* restart.checks.c in Sources */,
+				0C22172517F8E045005FD46E /* flux.c in Sources */,
+				0C2217A217F8E045005FD46E /* phys.c in Sources */,
+				0C22176E17F8E045005FD46E /* kazfulleos_set_arrays.c in Sources */,
+				0C22176A17F8E045005FD46E /* jon_interp.c in Sources */,
+				0C22176917F8E045005FD46E /* jon_interp_newt.c in Sources */,
+				0C2217A117F8E045005FD46E /* paraenohybrid.c in Sources */,
+				0C22172917F8E045005FD46E /* fluxct.c in Sources */,
+				0C22170F17F8E045005FD46E /* copyandinit_functions.c in Sources */,
+				0C22176F17F8E045005FD46E /* kazfulleos.c in Sources */,
+				0C2217D117F8E045005FD46E /* u2p_util.c in Sources */,
+				0C2217D817F8E045005FD46E /* utoprim_2d_final.c in Sources */,
+				0C22170917F8E045005FD46E /* boundsvpot.c in Sources */,
+				0C2217CE17F8E045005FD46E /* transforms.c in Sources */,
+				0C22178A17F8E045005FD46E /* mpi_fileio.c in Sources */,
+				0C2217A817F8E045005FD46E /* qrdcmp.c in Sources */,
+				0C2217E417F8E045005FD46E /* vchar.c in Sources */,
+				0C2217BD17F8E045005FD46E /* set_arrays_multidimen.c in Sources */,
+				0C22172717F8E045005FD46E /* flux.mergedc2ea2cmethod.c in Sources */,
+				0C22171E17F8E045005FD46E /* eos.c in Sources */,
+				0C22177F17F8E045005FD46E /* main.c in Sources */,
+				0C22170C17F8E045005FD46E /* coord.c in Sources */,
+				0C22171C17F8E045005FD46E /* dump.c in Sources */,
+				0C2217C317F8E045005FD46E /* sources.c in Sources */,
+				0C2217D917F8E045005FD46E /* utoprim_2d.c in Sources */,
+				0C2217B317F8E045005FD46E /* reconstructeno.debug.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
 /* Begin XCBuildConfiguration section */
+		0C2216EE17F8C57A005FD46E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				EXECUTABLE_PREFIX = lib;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		0C2216EF17F8C57A005FD46E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				EXECUTABLE_PREFIX = lib;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 		0C2DAE8617F25B3F0006BF56 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -643,6 +1248,14 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		0C2216F017F8C57A005FD46E /* Build configuration list for PBXNativeTarget "Dummy" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0C2216EE17F8C57A005FD46E /* Debug */,
+				0C2216EF17F8C57A005FD46E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
 		0C2DAE8417F25B3F0006BF56 /* Build configuration list for PBXProject "HARM" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -659,6 +1272,7 @@
 				0C2DAE8A17F25B3F0006BF56 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
