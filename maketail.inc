@@ -267,7 +267,8 @@ $(PREP): $(PREPDEP)
  	############################################
 	#below is for fortran bits
  	############################################
-	fpp -P test.f > testfpp.temp.f ; f2c -Wall -f -P testfpp.temp.f ; sed 's/static//g' testfpp.temp.c > testfpp.c ;sed 's/static//g' testfpp.temp.P > testfpp.P
+	#Sasha added the two seds that cleaned up after fpp (remove stray characters "&" and "f" at the beginning of lines)
+	fpp -P test.f > testfpp.temp1.f ; sed 's/^f.*$$//g' testfpp.temp1.f | sed 's/^\&.*$$//g' > testfpp.temp.f; f2c -Wall -f -P testfpp.temp.f ; sed 's/static//g' testfpp.temp.c > testfpp.c ;sed 's/static//g' testfpp.temp.P > testfpp.P
     #
     
 
