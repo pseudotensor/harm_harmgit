@@ -1571,7 +1571,9 @@ c
          ugascovp(4)=args(na)
 c
          if(na.ne.NUMARGS) then
+#if(PRODUCTION==0)
             write(*,*) 'Wrong number of args'
+#endif
             stop
          endif
 #endif
