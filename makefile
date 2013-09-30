@@ -424,7 +424,8 @@ CFLAGSPRENONPRECISE=-O0 $(DFLAGS)
 #CFLAGS = -Wall -O0
 #CFLAGS = -O6 -g
 #CFLAGS = -O0 -pg -g
-LDFLAGS = -lm $(LAPACKLDFLAGS) ${GSLLIB}
+#Sasha added -lf2c in order to link against f2c libraries needed by testfpp.o
+LDFLAGS = -lm $(LAPACKLDFLAGS) ${GSLLIB} -lf2c
 # -l$(LAPACKLIB) -l$(BLASLIB)  -L/usr/lib/gcc-lib/i386-redhat-linux/2.96/ -l$(F2CLIB) 
 
 #CC = cc
