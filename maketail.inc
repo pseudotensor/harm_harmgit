@@ -224,8 +224,8 @@ $(PREP): $(PREPDEP)
 	for fil in `cat onepoint` ; do echo ${ECHOSWITCH} $$fil.o :\\n\\t$(CC) $(CFLAGSNONPRECISE) -c $$fil.c $(LDFLAGS) >> objsonepoint.cmd.list ; done
 	# remove old depenedencies file and create
 	rm -rf deps.onepoint.list ; touch deps.onepoint.list
-	# create new dependencies file
-	for fil in `cat onepoint` ; do  echo $$fil.c ; ( $(MMCOMP) -c -MM $$fil.c >> deps.onepoint.list &) ; done
+	# create new dependencies file #Sasha removed background processing because caused output from parallel threads to be mixed up
+	for fil in `cat onepoint` ; do  echo $$fil.c ; $(MMCOMP) -c -MM $$fil.c >> deps.onepoint.list ; done
 	#
 	#
  	############################################
@@ -241,8 +241,8 @@ $(PREP): $(PREPDEP)
 	for fil in `cat manypoints` ; do echo ${ECHOSWITCH} $$fil.o :\\n\\t$(CC) $(CFLAGS) -c $$fil.c $(LDFLAGS) >> objsmanypoints.cmd.list ; done
 	# remove old depenedencies file and create
 	rm -rf deps.manypoints.list ; touch deps.manypoints.list
-	# create new dependencies file
-	for fil in `cat manypoints` ; do  echo $$fil.c ; ($(MMCOMP) -c -MM $$fil.c >> deps.manypoints.list &) ; done
+	# create new dependencies file#Sasha removed background processing because caused output from parallel threads to be mixed up
+	for fil in `cat manypoints` ; do  echo $$fil.c ; $(MMCOMP) -c -MM $$fil.c >> deps.manypoints.list ; done
 	echo	$(OBJSMANYPOINTS) > $(PREP)
 	#
 	# wait for background processes
@@ -261,8 +261,8 @@ $(PREP): $(PREPDEP)
 	for fil in `cat puredouble` ; do echo ${ECHOSWITCH} $$fil.o :\\n\\t$(CC) $(CFLAGSNONPRECISENOLONG) -c $$fil.c $(LDFLAGS) >> objspuredouble.cmd.list ; done
 	# remove old depenedencies file and create
 	rm -rf deps.puredouble.list ; touch deps.puredouble.list
-	# create new dependencies file
-	for fil in `cat puredouble` ; do  echo $$fil.c ; ( $(MMCOMP) -c -MM $$fil.c >> deps.puredouble.list &) ; done
+	# create new dependencies file#Sasha removed background processing because caused output from parallel threads to be mixed up
+	for fil in `cat puredouble` ; do  echo $$fil.c ; $(MMCOMP) -c -MM $$fil.c >> deps.puredouble.list ; done
 	#
  	############################################
 	#below is for fortran bits
