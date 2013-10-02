@@ -22,7 +22,7 @@ extern int bound_pflag(int boundstage, int finalstep, SFTYPE boundtime, PFTYPE (
 
 extern int bound_flux(int boundstage, int finalstep, SFTYPE boundtime, int boundvartype, FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL], int doboundmpi);
 
-extern int bound_vpot(int boundstage, int finalstep, SFTYPE boundtime, int boundvartype, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], int doboundmpi);
+extern int bound_vpot(int boundstage, int finalstep, SFTYPE boundtime, int boundvartype, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], int doboundmpi, int doboundnonmpi);
 
 // user bounds:
 extern int bound_prim_user_dir(int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);

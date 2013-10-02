@@ -455,7 +455,8 @@ int init(int *argc, char **argv[])
       int boundvartype=BOUNDVPOTTYPE;
       int finalstep=1; // assume user wants to know if initial conserved quants changed
       int doboundmpi=1;
-      bound_vpot(STAGEM1, finalstep, t, boundvartype, GLOBALPOINT(vpotarrayglobal),doboundmpi);
+      int doboundnonmpi=1;
+      bound_vpot(STAGEM1, finalstep, t, boundvartype, GLOBALPOINT(vpotarrayglobal),doboundmpi,doboundnonmpi);
     }
 
 

@@ -392,7 +392,15 @@ int init_vpot(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTO
   // often user just uses init_vpot2field() unless not always using vector potential
   init_vpot2field_user(t, A,prim,pstag,ucons,Bhat);  // t is ok since always t=tstart
 
-
+  // in case user perturbs vpot, need to ensure ghost cells updated.
+  if(1){
+    int boundvartype=BOUNDVPOTTYPE;
+    int finalstep=0; // assume user wants to know if initial conserved quants changed
+    int doboundmpi=1;
+    int doboundnonmpi=0;
+    bound_vpot(STAGEM1, finalstep, t, boundvartype, vpot, doboundmpi, doboundnonmpi);
+  }
+  
 
 
   return(0);

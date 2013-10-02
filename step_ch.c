@@ -1812,7 +1812,7 @@ int bound_flux(int boundstage, int finalstep, SFTYPE boundtime, int boundvartype
 
 
 // used when restarting in initbase.c
-int bound_vpot(int boundstage, int finalstep, SFTYPE boundtime, int boundvartype, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], int doboundmpi)
+int bound_vpot(int boundstage, int finalstep, SFTYPE boundtime, int boundvartype, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], int doboundmpi, int doboundnonmpi)
 {
   int dir;
 
@@ -1834,10 +1834,11 @@ int bound_vpot(int boundstage, int finalstep, SFTYPE boundtime, int boundvartype
 
 
   // real boundary zones
-  if((boundstage==STAGE0)||(boundstage==STAGEM1)){
-    MYFUN(bound_vpot_user(boundstage, finalstep, boundtime, boundvartype,vpot),"step_ch.c:bound_vpot()", "bound_vpot_user()", 1);
-  }// end if stage0 or stagem1
-
+  if(doboundnonmpi){
+    if((boundstage==STAGE0)||(boundstage==STAGEM1)){
+      MYFUN(bound_vpot_user(boundstage, finalstep, boundtime, boundvartype,vpot),"step_ch.c:bound_vpot()", "bound_vpot_user()", 1);
+    }// end if stage0 or stagem1
+  }
 
   if(doboundmpi){
     MYFUN(bound_mpi(boundstage, finalstep, +1, boundvartype, NULL, NULL, NULL, NULL, vpot),"step_ch.c:bound_flux()", "bound_mpi()", 1);

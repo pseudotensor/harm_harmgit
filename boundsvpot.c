@@ -36,7 +36,7 @@ int dosetbc[COMPDIM*2];
 int bound_vpot_user(int boundstage, int finalstep, SFTYPE boundtime, int boundvartype, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
 {
 
-  // nothing for now.  Assume don't need vpot in ghost cells.
+  // nothing for now.  Assume don't need vpot in ghost cells.  Or assume set true ghost cells and just getting MPI cells set.
 
   return (0);
 }
