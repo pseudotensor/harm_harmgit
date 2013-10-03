@@ -1798,6 +1798,16 @@ void compute_and_store_fluxstatecent(FTYPE (*pr)[NSTORE2][NSTORE3][NPR])
       // get state
       pureget_stateforfluxcalcorsource(MAC(pr,i,j,k),ptrgeom,&GLOBALMAC(fluxstatecent,i,j,k));
 
+      //      FTYPE flux[NDIM];
+      //      mhd_calc(MAC(pr,i,j,k),TT,ptrgeom,&GLOBALMAC(fluxstatecent,i,j,k),flux,NULL);
+
+#if(RADSHOCKFLAT&&EOMRADTYPE!=EOMRADNONE) // KORAL
+      // get true directional energy flux instead of fake flux
+      //      FTYPE fluxrad[NDIM];
+      //      mhd_calc_rad(MAC(pr,i,j,k),TT,ptrgeom,&GLOBALMAC(fluxstatecent,i,j,k),fluxrad,NULL);
+#endif
+
+
 #if(STORESHOCKINDICATOR)
       // see more details in interpline.c:get_V_and_P()
 
@@ -1807,14 +1817,18 @@ void compute_and_store_fluxstatecent(FTYPE (*pr)[NSTORE2][NSTORE3][NPR])
 #if(VLINEWITHGDETRHO==0)
           MACP1A0(shocktemparray,SHOCKPLSTOREVEL1+dir-1,i,j,k)=MACP0A1(pr,i,j,k,UU+dir);
 #else
-          MACP1A0(shocktemparray,SHOCKPLSTOREVEL1+dir-1,i,j,k)=(ptrgeom->gdet)*MACP0A1(pr,i,j,k,RHO)*(GLOBALMAC(fluxstatecent,i,j,k).ucon[dir]);
+          //MACP1A0(shocktemparray,SHOCKPLSTOREVEL1+dir-1,i,j,k)=(ptrgeom->gdet)*MACP0A1(pr,i,j,k,RHO)*(GLOBALMAC(fluxstatecent,i,j,k).ucon[dir]);
+          MACP1A0(shocktemparray,SHOCKPLSTOREVEL1+dir-1,i,j,k)=(ptrgeom->gdet)*(GLOBALMAC(fluxstatecent,i,j,k).ucon[dir]);
+          //          MACP1A0(shocktemparray,SHOCKPLSTOREVEL1+dir-1,i,j,k) = (ptrgeom->gdet)*(-flux[dir]);
 #endif
           
 #if(RADSHOCKFLAT&&EOMRADTYPE!=EOMRADNONE) // KORAL
 #if(VLINEWITHGDETRHO==0)
           MACP1A0(shocktemparray,SHOCKRADPLSTOREVEL1+dir-1,i,j,k) = MACP0A1(pr,i,j,k,URAD0+dir);
 #else
-          MACP1A0(shocktemparray,SHOCKRADPLSTOREVEL1+dir-1,i,j,k) = (ptrgeom->gdet)*MACP0A1(pr,i,j,k,URAD0)*(GLOBALMAC(fluxstatecent,i,j,k).uradcon[dir]);
+          //MACP1A0(shocktemparray,SHOCKRADPLSTOREVEL1+dir-1,i,j,k) = (ptrgeom->gdet)*MACP0A1(pr,i,j,k,URAD0)*(GLOBALMAC(fluxstatecent,i,j,k).uradcon[dir]);
+          MACP1A0(shocktemparray,SHOCKRADPLSTOREVEL1+dir-1,i,j,k) = (ptrgeom->gdet)*(GLOBALMAC(fluxstatecent,i,j,k).uradcon[dir]);
+          //MACP1A0(shocktemparray,SHOCKRADPLSTOREVEL1+dir-1,i,j,k) = (ptrgeom->gdet)*(-fluxrad[dir]);
 #endif
 #endif
         }
@@ -1949,12 +1963,24 @@ void compute_and_store_fluxstatecent(FTYPE (*pr)[NSTORE2][NSTORE3][NPR])
             //      GLOBALMACP0A1(shockindicatorarray,i,j,k,SHOCKPLDIR1+dir-1)=Ficalc(dir,&velptr[0],&ptotptr[0],&primptr[0]);
             Fi=Ficalc(dir,&velptr[0],&ptotptr[0]);
             //            Fi=1.0;
+            if(NSPECIAL>=1&&0){
+              FTYPE dissit=fabs(GLOBALMACP0A1(dissmeasurearray,i,j,k,1));
+              dissit = MAX(0.0,MIN(1,2*(dissit-0.3)));
+              Fi=MIN(1.0,MAX(Fi,dissit));
+            }
+            if(steppart>0) Fi=MAX(Fi,GLOBALMACP1A0(shockindicatorarray,SHOCKPLDIR1+dir-1,i,j,k));
             GLOBALMACP1A0(shockindicatorarray,SHOCKPLDIR1+dir-1,i,j,k)=Fi;
 
             // DEBUG
             if(DODISSMEASURE){
               GLOBALMACP0A1(dissmeasurearray,i,j,k,NSPECIAL+1+dir-1)=GLOBALMACP1A0(shockindicatorarray,SHOCKPLDIR1+dir-1,i,j,k);
             }
+            //            if(i==399){
+            //              for(l=startorderi;l<=endorderi;l++){
+            //                dualfprintf(fail_file,"GAS: l=%d vel=%g ptot=%g\n",l,velptr[l],ptotptr[l]);
+            //              }                
+            //            }
+
 
             if(DIVERGENCEMETHOD==DIVMETHODPREFLUX){
               GLOBALMACP1A0(shockindicatorarray,DIVPLDIR1+dir-1,i,j,k)=Divcalc(dir,Fi,&velptr[0],&ptotptr[0]);
@@ -1986,12 +2012,26 @@ void compute_and_store_fluxstatecent(FTYPE (*pr)[NSTORE2][NSTORE3][NPR])
               Firad=Ficalc(dir,&velptr[0],&ptotptr[0]);
               //              Firad*=2.0;
               //              Firad=MIN(1.0,Firad);
+              if(NSPECIAL>=6&&0){
+                FTYPE dissit=fabs(GLOBALMACP0A1(dissmeasurearray,i,j,k,5));
+                dissit = MAX(0.0,MIN(1,2*(dissit-0.3)));
+                Firad=MIN(1.0,MAX(Firad,dissit));
+              }
+              if(steppart>0) Firad=MAX(Firad,GLOBALMACP1A0(shockindicatorarray,SHOCKRADPLDIR1+dir-1,i,j,k));
               GLOBALMACP1A0(shockindicatorarray,SHOCKRADPLDIR1+dir-1,i,j,k)=Firad;
 
-            // DEBUG
-            if(DODISSMEASURE){
-              GLOBALMACP0A1(dissmeasurearray,i,j,k,NSPECIAL+1+3+dir-1)=GLOBALMACP1A0(shockindicatorarray,SHOCKRADPLDIR1+dir-1,i,j,k);
-            }
+              //DEBUG
+              //              dualfprintf(fail_file,"nstep=%ld steppart=%d i=%d dir=%d Fi=%g Firad=%g\n",nstep,steppart,i,dir,Fi,Firad);
+              //              if(i==399){
+              //                for(l=startorderi;l<=endorderi;l++){
+              //                  dualfprintf(fail_file,"RAD: l=%d vel=%g ptot=%g\n",l,velptr[l],ptotptr[l]);
+              //                }                
+              //              }
+
+              // DEBUG
+              if(DODISSMEASURE){
+                GLOBALMACP0A1(dissmeasurearray,i,j,k,NSPECIAL+1+3+dir-1)=GLOBALMACP1A0(shockindicatorarray,SHOCKRADPLDIR1+dir-1,i,j,k);
+              }
 
 
               if(DIVERGENCEMETHOD==DIVMETHODPREFLUX){
@@ -2022,6 +2062,8 @@ void compute_and_store_fluxstatecent(FTYPE (*pr)[NSTORE2][NSTORE3][NPR])
 
             GLOBALMACP1A0(shockindicatorarray,SHOCKPLDIR1+dir-1,i,j,k) = Fiswitch*MIN(1.0,MAX(Firad,Fi)) + (1.0-Fiswitch)*Fi;
             GLOBALMACP1A0(shockindicatorarray,SHOCKRADPLDIR1+dir-1,i,j,k) = Fiswitch*MIN(1.0,MAX(Firad,Fi)) + (1.0-Fiswitch)*Firad;
+
+
 
             if(DIVERGENCEMETHOD==DIVMETHODPREFLUX){
               // don't consider radiation divergence, and certainly  not as if shock indiator value.
