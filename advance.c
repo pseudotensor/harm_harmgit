@@ -1130,7 +1130,7 @@ static FTYPE compute_dissmeasure(int i, int j, int k, int loc, FTYPE *pr, struct
 
   }
 
-
+  dissmeasure=-1.0; // force use of energy unless energy fails.
 
   return(dissmeasure);
 }
