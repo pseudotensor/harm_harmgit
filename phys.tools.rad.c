@@ -1625,9 +1625,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
   //    If both succeeded, use entropy if u_g[entropy]>2*u_g[energy]
 
   // NEW ORDER (because entropy dies too much in shocks and takes too many trials)
-  // 1) Try energy with QTYPMHD, try quickly with no damping, ITERMODENORMAL
-  // 2) If #1 fails or gives radinv=1, try energy with QTYURAD, same quick test.
-  // 3) Then do normal sequence switching between QTYPMHD and QTYURAD trials for each case in the sequence.
+  // 1) Try energy with QTYPMHD, QTYURAD, QTYPRAD.  Try quickly with no damping, ITERMODENORMAL.  Only try URAD/PRAD if PMHD fails or gives radinv=1
+  // 2) Following #1, but then use ITERMODESTAGES, damping, higher uu if applicable.
 
 
 
