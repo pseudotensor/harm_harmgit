@@ -257,6 +257,8 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE errorabs, struc
 // whether to apply Jon's hold on u_g or rho from going negative
 #define JONHOLDPOS 1
 
+#define NEWJONHOLDPOS 1 // FUCK: WORKING ON IT
+
 // number of times allowed to hold u_g as positive
 #define NUMHOLDTIMES 6
 
@@ -320,7 +322,7 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE errorabs, struc
 #define SWITCHTODONOTHING 1
 
   // whether to change damp factor during this instance.
-#define CHANGEDAMPFACTOR 1
+#define CHANGEDAMPFACTOR 0 // bit risky to set to 1 since changing DAMPFACTOR for no good reason limits ability to converge at normal rate.
 #define NUMDAMPATTEMPTS 3
 
 #define NUMDAMPATTEMPTSQUICK 1
@@ -3950,10 +3952,44 @@ static int koral_source_rad_implicit_mode(int modprim, int havebackup, int diden
         ///////////////
         else if(IMPPTYPE(implicititer)){
 
-          PLOOP(pliter,pl) pp[pl]=ppp[pl];
-          JAC2DLOOP(ii,jj,startjac,endjac){
-            pp[irefU[ii]] -= DAMPFACTOR*iJ[irefU[ii]][erefU[jj]]*f1[erefU[jj]];
-            if(debugfail>=DEBUGLEVELIMPSOLVERMORE) dualfprintf(fail_file,"added to ppp=%21.15g ii=%d jj=%d irefU=%d an amount of negative %21.15g\n",ppp[irefU[ii]],ii,jj,irefU[ii],DAMPFACTOR*iJ[irefU[ii]][erefU[jj]]*f1[erefU[jj]]);
+          if(NEWJONHOLDPOS==0){
+            PLOOP(pliter,pl) pp[pl]=ppp[pl];
+            JAC2DLOOP(ii,jj,startjac,endjac){
+              pp[irefU[ii]] -= DAMPFACTOR*iJ[irefU[ii]][erefU[jj]]*f1[erefU[jj]];
+              if(debugfail>=DEBUGLEVELIMPSOLVERMORE) dualfprintf(fail_file,"added to ppp=%21.15g ii=%d jj=%d irefU=%d an amount of negative %21.15g\n",ppp[irefU[ii]],ii,jj,irefU[ii],DAMPFACTOR*iJ[irefU[ii]][erefU[jj]]*f1[erefU[jj]]);
+            }
+          }
+          else{
+            // if u_g<0, then shift entire jacobian to make smaller changes
+
+            FTYPE dpp[NPR]={0.0};
+            PLOOP(pliter,pl) pp[pl]=ppp[pl];
+            JAC2DLOOP(ii,jj,startjac,endjac){
+              dpp[irefU[ii]] += -DAMPFACTOR*iJ[irefU[ii]][erefU[jj]]*f1[erefU[jj]];
+              if(debugfail>=DEBUGLEVELIMPSOLVERMORE) dualfprintf(fail_file,"added to ppp=%21.15g ii=%d jj=%d irefU=%d an amount of negative %21.15g\n",ppp[irefU[ii]],ii,jj,irefU[ii],DAMPFACTOR*iJ[irefU[ii]][erefU[jj]]*f1[erefU[jj]]);
+            }
+            JACLOOP(ii,startjac,endjac){
+              pp[irefU[ii]] += dpp[irefU[ii]];
+            }
+
+            if(startjac==0){
+              ii=0;
+              if(pp[irefU[ii]]<=0.0){
+#if(0)
+                FTYPE ppbad[NPR];
+                PLOOP(pliter,pl) ppbad[pl]=pp[pl];
+                // rescale iJ so u_g -> u_g0/2 instead
+                PLOOP(pliter,pl) pp[pl]=ppp[pl];
+                FTYPE REDAMP=fabs(+0.5*ppp[UU]/dpp[UU])*DAMPFACTOR; // FUCK: inverted damp.
+                JAC2DLOOP(ii,jj,startjac,endjac){
+                  pp[irefU[ii]] += REDAMP*iJ[irefU[ii]][erefU[jj]]*f1[erefU[jj]];
+                }
+#else
+                pp[irefU[ii]]=ppp[irefU[ii]]; // super hold, works just as well as inverted damp.
+#endif
+              }
+            }
+
           }
 
 
