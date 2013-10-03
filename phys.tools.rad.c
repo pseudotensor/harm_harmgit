@@ -92,8 +92,8 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE errorabs, struc
 #define IMPEPSSMALL (1E-4) // on small side
 #define ERRORFORIMPEPSSMALL (1E-5)
 #elif(REALTYPE==DOUBLETYPE)
-#define IMPEPSLARGE (1E-8)
-#define IMPEPSSMALL (1E-10)
+#define IMPEPSLARGE (1E-6)
+#define IMPEPSSMALL (1E-7)
 //#define IMPEPSSMALL (1E-8)
 #define ERRORFORIMPEPSSMALL (1E-9)
 #elif(REALTYPE==LONGDOUBLETYPE)
@@ -5402,8 +5402,10 @@ static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int sho
     PLOOP(pliter,pl) upitoup0[pl] = upitoup0P[pl];
     // for velocity, assume ortho-scale is order unity (i.e. v=1.0*c)
     //    velmomscale=1.0; // reference scale considered to be order unity  KORALTODO: Not sure if should use something like T^t_i/T^t_t with denominator something more non-zero-ish.
-    if(IMPMHDTYPE(implicititer)) velmomscale=MAX(SMALL,sqrt(fabs(x[UU])/MAX(ppp[RHO],pp[RHO]))); // u_g/\rho_0\propto (v/c)^2, so this gives \propto (v/c)
+    if(IMPMHDTYPE(implicititer)) velmomscale=MAX(SMALL,sqrt(fabs(x[UU])/MAX(ppp[RHO],pp[RHO]))); // u_g/\rho_0\propto (v/c)^2, so this gives \propto (v/c) .  Leads to more problems for RADTUBE
     else velmomscale=1.0; // FUCK
+
+    velmomscale=1.0; // FUCK
   }
 
   //////////////////////////
@@ -5450,7 +5452,8 @@ static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int sho
   //FUCK: Needs to improve and be more general
   if(IMPPMHDTYPE(implicititer)){
     // u_g goes like \rho_0 v^2
-    jj=TT; deltime = MAX(fabs(predel[jj]),MAX(ppp[RHO],pp[RHO])*vsqnorm);
+    //jj=TT; deltime = MAX(fabs(predel[jj]),MAX(ppp[RHO],pp[RHO])*vsqnorm); // FUCK : Leads to more problems for RADTUBE
+    jj=TT; deltime = fabs(predel[jj]);
   }
   else if(IMPPTYPE(implicititer)){
     jj=TT; deltime = fabs(predel[jj]);
