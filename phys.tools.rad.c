@@ -1626,7 +1626,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
   // NEW ORDER (because entropy dies too much in shocks and takes too many trials)
   // 1) Try energy with QTYPMHD, try quickly with no damping, ITERMODENORMAL
-  // 2) If #1 fails, try energy with QTYURAD, same quick test.
+  // 2) If #1 fails or gives radinv=1, try energy with QTYURAD, same quick test.
   // 3) Then do normal sequence switching between QTYPMHD and QTYURAD trials for each case in the sequence.
 
 
@@ -1786,333 +1786,127 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     //
     /////////////
     if(fracenergy!=0.0 || radinvmodentropy>0 ||  ACTUALHARDORSOFTFAILURE(failreturnentropy)==1 || goexplicitentropy==1){
-      //
-      itermodeenergy=ITERMODENORMAL; // start with normal
-      baseitermethodenergy=QTYPMHD;
-      whichcapenergy=CAPTYPEFIX1;
-      trueimpmaxiterenergy=IMPMAXITERQUICK;
-      truenumdampattemptsenergy=NUMDAMPATTEMPTSQUICK;
-      //
-      // start fresh or use entropy as starting point
-      *lpflag=UTOPRIMNOFAIL;
-      *lpflagrad=UTOPRIMRADNOFAIL;
-      radinvmodenergy=0;
-      radErfnegenergy=0;
-      failreturnenergy=FAILRETURNGENERAL; // default to fail in case energy not to be done at all
-      eomtypeenergy=EOMGRMHD;
-      errorabsenergy=1.0;
 
-      // setup solver conditions for existence of backup solutions or entropy solution
-      if(ACTUALHARDFAILURE(failreturnentropy)==1){
-        havebackup=0; // no entropy solver solution, so no backup.
-        didentropyalready=0;
-      }
-      else{
-        havebackup=1; // here havebackup=1 means can break out of energy solver early if issues, since we do have entropy solver solution as backup.
-        didentropyalready=1; // so can use entropy solution as reference for whether to stop energy iteration
-      }
 
-      // setup guess
-      if(ACTUALHARDFAILURE(failreturnentropy)==1 || errorabsentropy>ERRORTOUSEENTROPYFORENERGYGUESS){
-        PLOOP(pliter,pl){
-          pbenergy[pl]=pbbackup[pl];
-          SCLOOP(sc) dUcompenergy[sc][pl]=dUcompbackup[sc][pl];
-        }
-        qenergy=qbackup;
-      }
-      else{
-        // then can use entropy as good guess
-        PLOOP(pliter,pl){
-          pbenergy[pl]=pbentropy[pl]; // as guess and reference as entropy solution
-          SCLOOP(sc) dUcompenergy[sc][pl]=dUcompbackup[sc][pl]; // but start fresh for this since final update.
-        }
-        qenergy=qentropy; // as guess
-      }
-      // get energy solution
-      failreturnenergy=koral_source_rad_implicit_mode(0,havebackup, didentropyalready, &eomtypeenergy, whichcapenergy, itermodeenergy, baseitermethodenergy, trueimpmaxiterenergy,  truenumdampattemptsenergy, fracenergy, dissmeasure, &radinvmodenergy, pbenergy, uubenergy, piin, Uiin, Ufin, CUf, ptrgeom, &qenergy, dUother ,dUcompenergy, &errorabsenergy, errorabsenergybest, &itersenergy, &f1itersenergy);
+      // quickly try QTYPMHD then QTYURAD
+      int tryphase1;
+#define NUMPHASES (TRYENERGYHARDER ? 4 : 2)
+      for(tryphase1=0;tryphase1<NUMPHASES;tryphase1++){
 
-      if(failreturnenergy==FAILRETURNGOEXPLICIT){
-        lpflagenergybest=*lpflag;
-        lpflagradenergybest=*lpflagrad;
-        radinvmodenergybest=radinvmodenergy;
-        radErfnegenergybest=radErfnegenergy;
-        failreturnenergybest=failreturnenergy;
-        eomtypeenergybest=EOMGRMHD;
-        goexplicitenergybest=1;
-      }
-      else{
-        // see if want to keep (first keep)
-        if(errorabsenergy<errorabsenergybest){
-          // store result in case better than latter results
-          lpflagenergybest=*lpflag;
-          lpflagradenergybest=*lpflagrad;
-          radinvmodenergybest=radinvmodenergy;
-          radErfnegenergybest=radErfnegenergy;
-          failreturnenergybest=failreturnenergy;
-          eomtypeenergybest=eomtypeenergy;
-          goexplicitenergybest=0;
-          errorabsenergybest=errorabsenergy;
-          PLOOP(pliter,pl){
-            pbenergybest[pl]=pbenergy[pl];
-            SCLOOP(sc) dUcompenergybest[sc][pl]=dUcompenergy[sc][pl];
+        if(radinvmodenergybest!=0 || ACTUALHARDORSOFTFAILURE(failreturnenergy) && failreturn!=FAILRETURNMODESWITCH){
+
+          errorabsenergyold=errorabsenergy;
+          itersenergyold=itersenergy;
+          //
+          whichcapenergy=CAPTYPEFIX1;
+          if(tryphase1%2==0) baseitermethodenergy=QTYPMHD; // try PMHD
+          else{
+            baseitermethodenergy=QTYURAD; // go to URAD
+            //        baseitermethodenergy=QTYPRAD; // go to PRAD (works almost as well as URAD)
           }
-          qenergybest=qenergy;
-        }
-      }
 
-      
-
-
-
-      // try QTYURAD
-      if(radinvmodenergybest!=0 || ACTUALHARDORSOFTFAILURE(failreturnenergy) && failreturn!=FAILRETURNMODESWITCH){
-
-        errorabsenergyold=errorabsenergy;
-        itersenergyold=itersenergy;
-        //
-        whichcapenergy=CAPTYPEFIX1;
-        itermodeenergy=ITERMODENORMAL;
-        baseitermethodenergy=QTYURAD; // go to URAD
-        //        baseitermethodenergy=QTYPRAD; // go to PRAD (works almost as well as URAD)
-        trueimpmaxiterenergy=IMPMAXITERQUICK;
-        truenumdampattemptsenergy=NUMDAMPATTEMPTSQUICK;
-        //
-        // start fresh
-        *lpflag=UTOPRIMNOFAIL;
-        *lpflagrad=UTOPRIMRADNOFAIL;
-        radinvmodenergy=0;
-        radErfnegenergy=0;
-        failreturnenergy=FAILRETURNGENERAL; // default to fail in case energy not to be done at all
-        eomtypeenergy=EOMGRMHD;
-        if(ACTUALHARDFAILURE(failreturnentropy)==1 || errorabsentropy>ERRORTOUSEENTROPYFORENERGYGUESS){
-          PLOOP(pliter,pl){
-            pbenergy[pl]=pbbackup[pl];
-            SCLOOP(sc) dUcompenergy[sc][pl]=dUcompbackup[sc][pl];
+          if(tryphase1<=1){
+            itermodeenergy=ITERMODENORMAL;
+            trueimpmaxiterenergy=IMPMAXITERQUICK;
+            truenumdampattemptsenergy=NUMDAMPATTEMPTSQUICK;
           }
-          qenergy=qbackup;
-        }
-        else{ // start with entropy
-          PLOOP(pliter,pl){
-            pbenergy[pl]=pbentropy[pl];
-            SCLOOP(sc) dUcompenergy[sc][pl]=dUcompbackup[sc][pl];
+          else{
+            itermodeenergy=ITERMODESTAGES; // go to stages
+            trueimpmaxiterenergy=IMPMAXITER;
+            truenumdampattemptsenergy=NUMDAMPATTEMPTS;
           }
-          qenergy=qentropy;
-        }
-        //
-        // try again with higher u_g
-        int modprim;
-        if(havebackup==0) modprim=1;
-        failreturnenergy=koral_source_rad_implicit_mode(modprim,havebackup, didentropyalready, &eomtypeenergy, whichcapenergy, itermodeenergy, baseitermethodenergy, trueimpmaxiterenergy,  truenumdampattemptsenergy, fracenergy, dissmeasure, &radinvmodenergy, pbenergy, uubenergy, piin, Uiin, Ufin, CUf, ptrgeom, &qenergy, dUother ,dUcompenergy, &errorabsenergy, errorabsenergybest, &itersenergy, &f1itersenergy);
 
-        if(failreturnenergy==FAILRETURNGOEXPLICIT){
-          lpflagenergybest=*lpflag;
-          lpflagradenergybest=*lpflagrad;
-          radinvmodenergybest=radinvmodenergy;
-          radErfnegenergybest=radErfnegenergy;
-          failreturnenergybest=failreturnenergy;
-          eomtypeenergybest=EOMGRMHD;
-          goexplicitenergybest=1;
-        }
-        else{
-          // see if want to keep
-          //        if(errorabsenergy<errorabsenergybest && ACTUALHARDFAILURE(failreturnenergy)==0 || failreturnenergy==FAILRETURNMODESWITCH){
-          //        if((errorabsenergy<errorabsenergybest && (radinvmodenergy==0 || radinvmodenergybest==1 && radinvmodenergy==1) || radinvmodenergybest==1 && radinvmodenergy==0 && (errorabsenergy<errorabsenergybest||errorabsenergy<IMPOKCONVABS)) && ACTUALHARDFAILURE(failreturnenergy)==0 || failreturnenergy==FAILRETURNMODESWITCH){
-          if((errorabsenergy<errorabsenergybest && (radinvmodenergy==0 || radinvmodenergybest==1 && radinvmodenergy==1) || radinvmodenergybest==1 && radinvmodenergy==0 && (errorabsenergy<errorabsenergybest||errorabsenergy<IMPOKCONVABS) || radinvmodenergybest==0 && radinvmodenergy==1 && (errorabsenergybest>IMPOKCONVABS && errorabsenergy<IMPOKCONVABS)) && ACTUALHARDFAILURE(failreturnenergy)==0){
-            // store result in case better than latter results
+          //
+          // start fresh
+          *lpflag=UTOPRIMNOFAIL;
+          *lpflagrad=UTOPRIMRADNOFAIL;
+          radinvmodenergy=0;
+          radErfnegenergy=0;
+          failreturnenergy=FAILRETURNGENERAL; // default to fail in case energy not to be done at all
+          eomtypeenergy=EOMGRMHD;
+          errorabsenergy=1.0;
+        
+          // setup solver conditions for existence of backup solutions or entropy solution
+          if(ACTUALHARDFAILURE(failreturnentropy)==1){
+            havebackup=0; // no entropy solver solution, so no backup.
+            didentropyalready=0;
+          }
+          else{
+            havebackup=1; // here havebackup=1 means can break out of energy solver early if issues, since we do have entropy solver solution as backup.
+            didentropyalready=1; // so can use entropy solution as reference for whether to stop energy iteration
+          }
+
+          // setup guess
+          if(ACTUALHARDFAILURE(failreturnentropy)==1 || errorabsentropy>ERRORTOUSEENTROPYFORENERGYGUESS){
+            PLOOP(pliter,pl){
+              pbenergy[pl]=pbbackup[pl];
+              SCLOOP(sc) dUcompenergy[sc][pl]=dUcompbackup[sc][pl];
+            }
+            qenergy=qbackup;
+          }
+          else{ // start with entropy
+            PLOOP(pliter,pl){
+              pbenergy[pl]=pbentropy[pl];
+              SCLOOP(sc) dUcompenergy[sc][pl]=dUcompbackup[sc][pl];
+            }
+            qenergy=qentropy;
+          }
+          //
+          // try again with higher u_g
+          int modprim;
+          if(havebackup==0 && tryphase1>=2) modprim=1;
+          failreturnenergy=koral_source_rad_implicit_mode(modprim,havebackup, didentropyalready, &eomtypeenergy, whichcapenergy, itermodeenergy, baseitermethodenergy, trueimpmaxiterenergy,  truenumdampattemptsenergy, fracenergy, dissmeasure, &radinvmodenergy, pbenergy, uubenergy, piin, Uiin, Ufin, CUf, ptrgeom, &qenergy, dUother ,dUcompenergy, &errorabsenergy, errorabsenergybest, &itersenergy, &f1itersenergy);
+
+          if(failreturnenergy==FAILRETURNGOEXPLICIT){
             lpflagenergybest=*lpflag;
             lpflagradenergybest=*lpflagrad;
             radinvmodenergybest=radinvmodenergy;
             radErfnegenergybest=radErfnegenergy;
             failreturnenergybest=failreturnenergy;
-            eomtypeenergybest=eomtypeenergy;
-            goexplicitenergybest=0;
-            errorabsenergybest=errorabsenergy;
-            PLOOP(pliter,pl){
-              pbenergybest[pl]=pbenergy[pl];
-              SCLOOP(sc) dUcompenergybest[sc][pl]=dUcompenergy[sc][pl];
+            eomtypeenergybest=EOMGRMHD;
+            goexplicitenergybest=1;
+          }
+          else{
+            // see if want to keep
+            //        if(errorabsenergy<errorabsenergybest && ACTUALHARDFAILURE(failreturnenergy)==0 || failreturnenergy==FAILRETURNMODESWITCH){
+            //        if((errorabsenergy<errorabsenergybest && (radinvmodenergy==0 || radinvmodenergybest==1 && radinvmodenergy==1) || radinvmodenergybest==1 && radinvmodenergy==0 && (errorabsenergy<errorabsenergybest||errorabsenergy<IMPOKCONVABS)) && ACTUALHARDFAILURE(failreturnenergy)==0 || failreturnenergy==FAILRETURNMODESWITCH){
+            if((errorabsenergy<errorabsenergybest && (radinvmodenergy==0 || radinvmodenergybest==1 && radinvmodenergy==1) || radinvmodenergybest==1 && radinvmodenergy==0 && (errorabsenergy<errorabsenergybest||errorabsenergy<IMPOKCONVABS) || radinvmodenergybest==0 && radinvmodenergy==1 && (errorabsenergybest>IMPOKCONVABS && errorabsenergy<IMPOKCONVABS)) && ACTUALHARDFAILURE(failreturnenergy)==0){
+              // store result in case better than latter results
+              lpflagenergybest=*lpflag;
+              lpflagradenergybest=*lpflagrad;
+              radinvmodenergybest=radinvmodenergy;
+              radErfnegenergybest=radErfnegenergy;
+              failreturnenergybest=failreturnenergy;
+              eomtypeenergybest=eomtypeenergy;
+              goexplicitenergybest=0;
+              errorabsenergybest=errorabsenergy;
+              PLOOP(pliter,pl){
+                pbenergybest[pl]=pbenergy[pl];
+                SCLOOP(sc) dUcompenergybest[sc][pl]=dUcompenergy[sc][pl];
+              }
+              qenergybest=qenergy;
             }
-            qenergybest=qenergy;
           }
-        }
 
-        // still cost more iters
-        itersenergy+=itersenergyold;
+          // still cost more iters
+          itersenergy+=itersenergyold;
 
-        if(ACTUALHARDORSOFTFAILURE(failreturnenergy)==0 || failreturnenergy==FAILRETURNMODESWITCH){
-          if(debugfail>=2) dualfprintf(fail_file,"Recovered using RAD (energy: failreturnenergy=%d): ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d\n",failreturnenergy,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsenergyold,errorabsenergy,itersenergyold,itersenergy);
-        }
-        else{
-          if(debugfail>=2) dualfprintf(fail_file,"Failed to: Recovered using RAD (energy: failreturnenergy=%d): ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d\n",failreturnenergy,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsenergyold,errorabsenergy,itersenergyold,itersenergy);
-        }
-      }
-
-
-
-
-      // see if want to try harder
-      if(TRYENERGYHARDER && ACTUALHARDORSOFTFAILURE(failreturnenergy) && failreturn!=FAILRETURNMODESWITCH){
-        errorabsenergyold=errorabsenergy;
-        itersenergyold=itersenergy;
-        //
-        whichcapenergy=CAPTYPEFIX1;
-        itermodeenergy=ITERMODESTAGES; // go to stages
-        baseitermethodenergy=QTYPMHD;
-        trueimpmaxiterenergy=IMPMAXITER;
-        truenumdampattemptsenergy=NUMDAMPATTEMPTS;
-        //
-        // start fresh
-        *lpflag=UTOPRIMNOFAIL;
-        *lpflagrad=UTOPRIMRADNOFAIL;
-        radinvmodenergy=0;
-        radErfnegenergy=0;
-        failreturnenergy=FAILRETURNGENERAL; // default to fail in case energy not to be done at all
-        eomtypeenergy=EOMGRMHD;
-        if(ACTUALHARDFAILURE(failreturnentropy)==1 || errorabsentropy>ERRORTOUSEENTROPYFORENERGYGUESS){
-          PLOOP(pliter,pl){
-            pbenergy[pl]=pbbackup[pl];
-            SCLOOP(sc) dUcompenergy[sc][pl]=dUcompbackup[sc][pl];
-          }
-          qenergy=qbackup;
-        }
-        else{ // start with entropy
-          PLOOP(pliter,pl){
-            pbenergy[pl]=pbentropy[pl];
-            SCLOOP(sc) dUcompenergy[sc][pl]=dUcompbackup[sc][pl];
-          }
-          qenergy=qentropy;
-        }
-        //
-        // try again with higher u_g
-        int modprim;
-        if(havebackup==0) modprim=1;
-        failreturnenergy=koral_source_rad_implicit_mode(modprim,havebackup, didentropyalready, &eomtypeenergy, whichcapenergy, itermodeenergy, baseitermethodenergy, trueimpmaxiterenergy,  truenumdampattemptsenergy, fracenergy, dissmeasure, &radinvmodenergy, pbenergy, uubenergy, piin, Uiin, Ufin, CUf, ptrgeom, &qenergy, dUother ,dUcompenergy, &errorabsenergy, errorabsenergybest, &itersenergy, &f1itersenergy);
-
-        if(failreturnenergy==FAILRETURNGOEXPLICIT){
-          lpflagenergybest=*lpflag;
-          lpflagradenergybest=*lpflagrad;
-          radinvmodenergybest=radinvmodenergy;
-          radErfnegenergybest=radErfnegenergy;
-          failreturnenergybest=failreturnenergy;
-          eomtypeenergybest=EOMGRMHD;
-          goexplicitenergybest=1;
-        }
-        else{
-          // see if want to keep
-          //        if(errorabsenergy<errorabsenergybest && ACTUALHARDFAILURE(failreturnenergy)==0 || failreturnenergy==FAILRETURNMODESWITCH){
-          //        if((errorabsenergy<errorabsenergybest && (radinvmodenergy==0 || radinvmodenergybest==1 && radinvmodenergy==1) || radinvmodenergybest==1 && radinvmodenergy==0 && (errorabsenergy<errorabsenergybest||errorabsenergy<IMPOKCONVABS)) && ACTUALHARDFAILURE(failreturnenergy)==0 || failreturnenergy==FAILRETURNMODESWITCH){
-          if((errorabsenergy<errorabsenergybest && (radinvmodenergy==0 || radinvmodenergybest==1 && radinvmodenergy==1) || radinvmodenergybest==1 && radinvmodenergy==0 && (errorabsenergy<errorabsenergybest||errorabsenergy<IMPOKCONVABS) || radinvmodenergybest==0 && radinvmodenergy==1 && (errorabsenergybest>IMPOKCONVABS && errorabsenergy<IMPOKCONVABS)) && ACTUALHARDFAILURE(failreturnenergy)==0){
-            // store result in case better than latter results
-            lpflagenergybest=*lpflag;
-            lpflagradenergybest=*lpflagrad;
-            radinvmodenergybest=radinvmodenergy;
-            radErfnegenergybest=radErfnegenergy;
-            failreturnenergybest=failreturnenergy;
-            eomtypeenergybest=eomtypeenergy;
-            goexplicitenergybest=0;
-            errorabsenergybest=errorabsenergy;
-            PLOOP(pliter,pl){
-              pbenergybest[pl]=pbenergy[pl];
-              SCLOOP(sc) dUcompenergybest[sc][pl]=dUcompenergy[sc][pl];
+          if(tryphase1>0){
+            if(ACTUALHARDORSOFTFAILURE(failreturnenergy)==0 || failreturnenergy==FAILRETURNMODESWITCH){
+              if(debugfail>=2) dualfprintf(fail_file,"Recovered using RAD (energy: failreturnenergy=%d): ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d\n",failreturnenergy,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsenergyold,errorabsenergy,itersenergyold,itersenergy);
             }
-            qenergybest=qenergy;
-          }
-        }
-
-        // still cost more iters
-        itersenergy+=itersenergyold;
-
-        if(ACTUALHARDORSOFTFAILURE(failreturnenergy)==0 || failreturnenergy==FAILRETURNMODESWITCH){
-          if(debugfail>=2) dualfprintf(fail_file,"Recovered using stages (energy: failreturnenergy=%d): ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d\n",failreturnenergy,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsenergyold,errorabsenergy,itersenergyold,itersenergy);
-        }
-        else{
-          if(debugfail>=2) dualfprintf(fail_file,"Failed to: Recovered using stages (energy: failreturnenergy=%d): ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d\n",failreturnenergy,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsenergyold,errorabsenergy,itersenergyold,itersenergy);
-        }
-      }
-
-
-#if(0)
-      // see if want to try harder (captypebasic)
-      if(TRYENERGYHARDER && ACTUALHARDORSOFTFAILURE(failreturnenergy) && failreturn!=FAILRETURNMODESWITCH){
-        errorabsenergyold=errorabsenergy;
-        itersenergyold=itersenergy;
-        //
-        whichcapenergy=CAPTYPEBASIC;
-        itermodeenergy=ITERMODESTAGES; // go to stages
-        baseitermethodenergy=QTYPMHD;
-        trueimpmaxiterenergy=IMPMAXITER;
-        truenumdampattemptsenergy=NUMDAMPATTEMPTS;
-        //
-        // start fresh
-        *lpflag=UTOPRIMNOFAIL;
-        *lpflagrad=UTOPRIMRADNOFAIL;
-        radinvmodenergy=0;
-        radErfnegenergy=0;
-        failreturnenergy=FAILRETURNGENERAL; // default to fail in case energy not to be done at all
-        eomtypeenergy=EOMGRMHD;
-        if(ACTUALHARDFAILURE(failreturnentropy)==1 || errorabsentropy>ERRORTOUSEENTROPYFORENERGYGUESS){
-          PLOOP(pliter,pl){
-            pbenergy[pl]=pbbackup[pl];
-            SCLOOP(sc) dUcompenergy[sc][pl]=dUcompbackup[sc][pl];
-          }
-          qenergy=qbackup;
-        }
-        else{ // start with entropy
-          PLOOP(pliter,pl){
-            pbenergy[pl]=pbentropy[pl];
-            SCLOOP(sc) dUcompenergy[sc][pl]=dUcompbackup[sc][pl];
-          }
-          qenergy=qentropy;
-        }
-        //
-        // try again with higher u_g
-        int modprim;
-        if(havebackup==0) modprim=1;
-        failreturnenergy=koral_source_rad_implicit_mode(modprim,havebackup, didentropyalready, &eomtypeenergy, whichcapenergy, itermodeenergy, baseitermethodenergy, trueimpmaxiterenergy,  truenumdampattemptsenergy, fracenergy, dissmeasure, &radinvmodenergy, pbenergy, uubenergy, piin, Uiin, Ufin, CUf, ptrgeom, &qenergy, dUother ,dUcompenergy, &errorabsenergy, errorabsenergybest, &itersenergy, &f1itersenergy);
-
-        if(failreturnenergy==FAILRETURNGOEXPLICIT){
-          lpflagenergybest=*lpflag;
-          lpflagradenergybest=*lpflagrad;
-          radinvmodenergybest=radinvmodenergy;
-          radErfnegenergybest=radErfnegenergy;
-          failreturnenergybest=failreturnenergy;
-          eomtypeenergybest=EOMGRMHD;
-          goexplicitenergybest=1;
-        }
-        else{
-
-          // see if want to keep
-          //        if(errorabsenergy<errorabsenergybest && ACTUALHARDFAILURE(failreturnenergy)==0 || failreturnenergy==FAILRETURNMODESWITCH){
-          //        if((errorabsenergy<errorabsenergybest && (radinvmodenergy==0 || radinvmodenergybest==1 && radinvmodenergy==1) || radinvmodenergybest==1 && radinvmodenergy==0 && (errorabsenergy<errorabsenergybest||errorabsenergy<IMPOKCONVABS)) && ACTUALHARDFAILURE(failreturnenergy)==0 || failreturnenergy==FAILRETURNMODESWITCH){
-          if((errorabsenergy<errorabsenergybest && (radinvmodenergy==0 || radinvmodenergybest==1 && radinvmodenergy==1) || radinvmodenergybest==1 && radinvmodenergy==0 && (errorabsenergy<errorabsenergybest||errorabsenergy<IMPOKCONVABS) || radinvmodenergybest==0 && radinvmodenergy==1 && (errorabsenergybest>IMPOKCONVABS && errorabsenergy<IMPOKCONVABS)) && ACTUALHARDFAILURE(failreturnenergy)==0){
-            // store result in case better than latter results
-            lpflagenergybest=*lpflag;
-            lpflagradenergybest=*lpflagrad;
-            radinvmodenergybest=radinvmodenergy;
-            radErfnegenergybest=radErfnegenergy;
-            failreturnenergybest=failreturnenergy;
-            eomtypeenergybest=eomtypeenergy;
-            goexplicitenergybest=0;
-            errorabsenergybest=errorabsenergy;
-            PLOOP(pliter,pl){
-              pbenergybest[pl]=pbenergy[pl];
-              SCLOOP(sc) dUcompenergybest[sc][pl]=dUcompenergy[sc][pl];
+            else{
+              if(debugfail>=2) dualfprintf(fail_file,"Failed to: Recovered using RAD (energy: failreturnenergy=%d): ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d\n",failreturnenergy,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsenergyold,errorabsenergy,itersenergyold,itersenergy);
             }
-            qenergybest=qenergy;
           }
-        }
+
+        }// end if doing _mode() call
+      }// end over try loop
 
 
-        // still cost more iters
-        itersenergy+=itersenergyold;
 
-        if(ACTUALHARDORSOFTFAILURE(failreturnenergy)==0 || failreturnenergy==FAILRETURNMODESWITCH){
-          if(debugfail>=2) dualfprintf(fail_file,"Recovered using stages captypebasic (energy: failreturnenergy=%d): ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d\n",failreturnenergy,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsenergyold,errorabsenergy,itersenergyold,itersenergy);
-        }
-        else{
-          if(debugfail>=2) dualfprintf(fail_file,"Failed to: Recovered using stages captypebasic (energy: failreturnenergy=%d): ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d\n",failreturnenergy,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsenergyold,errorabsenergy,itersenergyold,itersenergy);
-        }
-      }
-#endif
+
+
 
 
 
@@ -2476,81 +2270,6 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       }
 
 
-#if(0)
-      if(TRYENTROPYHARDER && ACTUALHARDORSOFTFAILURE(failreturnentropy)){ // if trying harder with higher u_g but itermode stages and CAPTYPEBASIC
-        errorabsentropyold=errorabsentropy;
-        itersentropyold=itersentropy;
-        //
-        itermodeentropy=ITERMODESTAGES;// only now do stages for entropy
-        baseitermethodentropy=QTYPMHD;
-        whichcapentropy=CAPTYPEBASIC;
-        truenumdampattemptsentropy=NUMDAMPATTEMPTS;
-        trueimpmaxiterentropy=IMPMAXITER;
-        //
-        // start fresh
-        *lpflag=UTOPRIMNOFAIL;
-        *lpflagrad=UTOPRIMRADNOFAIL;
-        radinvmodentropy=0;
-        radErfnegentropy=0;
-        failreturnentropy=FAILRETURNGENERAL;// default to fail
-        eomtypeentropy=EOMENTROPYGRMHD;
-        if(errorabsentropy>TRYHARDERFEEDGUESSTOL){
-          PLOOP(pliter,pl){
-            pbentropy[pl]=pbbackup[pl];
-            SCLOOP(sc) dUcompentropy[sc][pl]=dUcompbackup[sc][pl];
-          }
-          qentropy=qbackup;
-        }
-        else{
-          PLOOP(pliter,pl){
-            pbentropy[pl]=pbentropybest[pl];
-            SCLOOP(sc) dUcompentropy[sc][pl]=dUcompbackup[sc][pl]; // always backup
-          }
-          qentropy=qentropybest;
-        }
-        // try again with higher u_g
-        int modprim=1;
-        failreturnentropy=koral_source_rad_implicit_mode(modprim,havebackup, didentropyalready, &eomtypeentropy, whichcapentropy, itermodeentropy, baseitermethodentropy, trueimpmaxiterentropy,  truenumdampattemptsentropy, fracenergy, dissmeasure, &radinvmodentropy, pbentropy, uubentropy, piin, Uiin, Ufin, CUf, ptrgeom, &qentropy, dUother ,dUcompentropy, &errorabsentropy, errorabsentropybest, &itersentropy, &f1itersentropy);
-
-        if(failreturnentropy==FAILRETURNGOEXPLICIT){
-          lpflagentropybest=*lpflag;
-          lpflagradentropybest=*lpflagrad;
-          radinvmodentropybest=radinvmodentropy;
-          radErfnegentropybest=radErfnegentropy;
-          failreturnentropybest=failreturnentropy;
-          eomtypeentropybest=EOMENTROPYGRMHD;
-          goexplicitentropybest=1;
-        }
-        else{
-          // see if want to keep
-          if((errorabsentropy<errorabsentropybest && (radinvmodentropy==0 || radinvmodentropybest==1 && radinvmodentropy==1) || radinvmodentropybest==1 && radinvmodentropy==0 && (errorabsentropy<errorabsentropybest||errorabsentropy<IMPOKCONVABS) || radinvmodentropybest==0 && radinvmodentropy==1 && (errorabsentropybest>IMPOKCONVABS && errorabsentropy<IMPOKCONVABS)) && ACTUALHARDFAILURE(failreturnentropy)==0){
-            // store result in case better than latter results
-            lpflagentropybest=*lpflag;
-            lpflagradentropybest=*lpflagrad;
-            radinvmodentropybest=radinvmodentropy;
-            radErfnegentropybest=radErfnegentropy;
-            failreturnentropybest=failreturnentropy;
-            eomtypeentropybest=eomtypeentropy;
-            goexplicitentropybest=0;
-            errorabsentropybest=errorabsentropy;
-            PLOOP(pliter,pl){
-              pbentropybest[pl]=pbentropy[pl];
-              SCLOOP(sc) dUcompentropybest[sc][pl]=dUcompentropy[sc][pl];
-            }
-            qentropybest=qentropy;
-          }
-        }
-        // still cost more iters
-        itersentropy+=itersentropyold;
-
-        if(ACTUALHARDORSOFTFAILURE(failreturnentropy)==0){
-          if(debugfail>=2) dualfprintf(fail_file,"Recovered using higher u_g with stages and captypebasic: ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsentropyold,errorabsentropy,itersentropyold,itersentropy);
-        }
-        else{
-          if(debugfail>=2) dualfprintf(fail_file,"Failed to: Recovered using higher u_g with stages and captypebasic: ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsentropyold,errorabsentropy,itersentropyold,itersentropy);
-        }// else if didn't recover at all
-      }
-#endif
 
 
       if(TRYENTROPYHARDER && ACTUALHARDORSOFTFAILURE(failreturnentropy) && USERAMESH){ // try ramesh
