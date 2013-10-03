@@ -743,6 +743,10 @@ static void define_method(int iter, int *eomtype, int itermode, FTYPE fracenergy
     myexit(938463653);
   }
 
+  // TESTING:
+  //*implicititer=(QTYURAD); // choice
+  //*implicitferr=(QTYURAD); // choice
+
 
 }
 
@@ -1675,9 +1679,17 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     //////////////
     failreturnentropy=FAILRETURNGENERAL; // default to fail in case energy not to be done at all
     errorabsentropy=1.0;
+    radinvmodentropy=1;
+    goexplicitentropy=0;
+    qentropy=qbackup;
+    qent=qbackup;
 
     failreturnenergy=FAILRETURNGENERAL; // default to fail in case energy not to be done at all
     errorabsenergy=1.0;
+    radinvmodenergy=1;
+    goexplicitenergy=0;
+    qenergy=qbackup;
+    qeng=qbackup;
 
 
 
@@ -3053,7 +3065,8 @@ static int koral_source_rad_implicit_mode(int modprim, int havebackup, int diden
   // no need to worry about RAD failure if not iterating rad quantities
   // As stated above, with new rad inversion, seems ok to temporarily hit ceiling.
   // With tests like RADTUBE, can't allow radiative inversion cieling else dies.  While with tests like RADPULSE, fastest to converge to good solution with allowing hitting the ceiling.  So mixed issue.
-  if(IMPMHDTYPE(implicititer)) failreturnallowable=UTOPRIMGENWRAPPERRETURNFAILRAD;
+  // With RADTUBE and QTYPMHD, must also avoid rad failure if possible to avoid lack of solution, hence &&0 below.
+  if(IMPMHDTYPE(implicititer)&&0) failreturnallowable=UTOPRIMGENWRAPPERRETURNFAILRAD;
   else failreturnallowable=UTOPRIMNOFAIL;
   //  if(IMPMHDTYPE(implicititer)) failreturnallowable=UTOPRIMGENWRAPPERRETURNFAILRAD;
   //  else failreturnallowable=UTOPRIMNOFAIL;
