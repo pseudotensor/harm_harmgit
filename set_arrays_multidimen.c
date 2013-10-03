@@ -429,8 +429,28 @@ void set_arrays_multidimen()
 
 #if(DOFLOORDIAG)
   GLOBALPOINT(failfloordu) = (FTYPE PTRMACP0A1(failfloordu,N1M,N2M,N3M,NPR)) (&(BASEMACP0A1(failfloordu,N1BND,N2BND,N3BND,0)));
-  FULLLOOP  PALLLOOP(pl) GLOBALMACP0A1(failfloordu,i,j,k,pl)=valueinit;
+  FULLLOOP{
+    PALLLOOP(pl) GLOBALMACP0A1(failfloordu,i,j,k,pl)=valueinit;
+  }
 #endif
+
+  GLOBALPOINT(dissmeasurearray) = (FTYPE PTRMACP0A1(dissmeasurearray,N1M,N2M,N3M,NSPECIAL+1+3*2)) (&(BASEMACP0A1(dissmeasurearray,N1BND,N2BND,N3BND,0)));
+  FULLLOOP{
+    for(pl=0;pl<NSPECIAL+1+3*2;pl++) GLOBALMACP0A1(dissmeasurearray,i,j,k,pl)=valueinit;
+    // for dump to be clean for unused things
+    if(N1==1){
+      dir=1; pl=NSPECIAL+1+dir-1; GLOBALMACP0A1(dissmeasurearray,i,j,k,pl)=0.0;
+      dir=1; pl=NSPECIAL+1+3+dir-1; GLOBALMACP0A1(dissmeasurearray,i,j,k,pl)=0.0;
+    }
+    if(N2==1){
+      dir=2; pl=NSPECIAL+1+dir-1; GLOBALMACP0A1(dissmeasurearray,i,j,k,pl)=0.0;
+      dir=2; pl=NSPECIAL+1+3+dir-1; GLOBALMACP0A1(dissmeasurearray,i,j,k,pl)=0.0;
+    }
+    if(N3==1){
+      dir=3; pl=NSPECIAL+1+dir-1; GLOBALMACP0A1(dissmeasurearray,i,j,k,pl)=0.0;
+      dir=3; pl=NSPECIAL+1+3+dir-1; GLOBALMACP0A1(dissmeasurearray,i,j,k,pl)=0.0;
+    }
+  }
 
 
   ////////////////////////////////////////////////

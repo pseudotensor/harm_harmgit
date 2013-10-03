@@ -1950,6 +1950,12 @@ void compute_and_store_fluxstatecent(FTYPE (*pr)[NSTORE2][NSTORE3][NPR])
             Fi=Ficalc(dir,&velptr[0],&ptotptr[0]);
             //            Fi=1.0;
             GLOBALMACP1A0(shockindicatorarray,SHOCKPLDIR1+dir-1,i,j,k)=Fi;
+
+            // DEBUG
+            if(DODISSMEASURE){
+              GLOBALMACP0A1(dissmeasurearray,i,j,k,NSPECIAL+1+dir-1)=GLOBALMACP1A0(shockindicatorarray,SHOCKPLDIR1+dir-1,i,j,k);
+            }
+
             if(DIVERGENCEMETHOD==DIVMETHODPREFLUX){
               GLOBALMACP1A0(shockindicatorarray,DIVPLDIR1+dir-1,i,j,k)=Divcalc(dir,Fi,&velptr[0],&ptotptr[0]);
             }
@@ -1981,6 +1987,13 @@ void compute_and_store_fluxstatecent(FTYPE (*pr)[NSTORE2][NSTORE3][NPR])
               //              Firad*=2.0;
               //              Firad=MIN(1.0,Firad);
               GLOBALMACP1A0(shockindicatorarray,SHOCKRADPLDIR1+dir-1,i,j,k)=Firad;
+
+            // DEBUG
+            if(DODISSMEASURE){
+              GLOBALMACP0A1(dissmeasurearray,i,j,k,NSPECIAL+1+3+dir-1)=GLOBALMACP1A0(shockindicatorarray,SHOCKRADPLDIR1+dir-1,i,j,k);
+            }
+
+
               if(DIVERGENCEMETHOD==DIVMETHODPREFLUX){
                 GLOBALMACP1A0(shockindicatorarray,DIVRADPLDIR1+dir-1,i,j,k)=Divcalc(dir,Firad,&velptr[0],&ptotptr[0]);
               }

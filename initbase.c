@@ -1097,7 +1097,11 @@ int pre_init(int *argc, char **argv[])
 
   // start du diag_fixup() sum
   // full loop since user may choose to count something in boundary zones
-  if(DOFLOORDIAG) FULLLOOP PALLLOOP(pl) GLOBALMACP0A1(failfloordu,i,j,k,pl)=0.0;
+  if(DOFLOORDIAG){
+    FULLLOOP{
+      PALLLOOP(pl) GLOBALMACP0A1(failfloordu,i,j,k,pl)=0.0;
+    }
+  }
 
 #if(CALCFARADAYANDCURRENTS)
   // zero out jcon since outer boundaries not set ever since j^\mu involves spatial derivatives that don't exist outside a certain point

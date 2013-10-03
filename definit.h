@@ -35,8 +35,8 @@
 // whether to try HOT inversion if entropy fails
 #define ENTROPY2HOT 1
 
-#define BADENERGY(ugenergy,ugentropy) ((ugenergy) < 0.5*(ugentropy))
-#define BADENERGY2(ugenergy,ugentropy) ((ugenergy) < (ugentropy))
+#define BADENERGYMAC(ugenergy,ugentropy) ((ugenergy) < 0.5*(ugentropy))
+#define BADENERGY2MAC(ugenergy,ugentropy) ((ugenergy) < (ugentropy))
 
 // which method to store divergence condition
 #define DIVMETHODPREFLUX 0
@@ -398,6 +398,8 @@
 
 
 #define DODISS 0
+
+#define DODISSMEASURE 1
 
 // see diag_source()
 #define DOLUMVSR 0

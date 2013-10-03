@@ -36,9 +36,9 @@
 
    6) dump.c : follow examples from here (dump() uses dump_header() and dump_content()).  One must define the header and content function and the wrapper (3 functions) or use an existing header function
 
-   7) diag.c : follow example of "dump", dumpc, tlastdump, etc.
+   7) diag.c : follow example of "dump", dumpc, tlastdump, etc.  E.g. follow DISSDUMPTYPE and repeat for new entry.  Two parts of code.
 
-   8) init.c : DTdumpgen, dumpcntgen, and other things.
+   8) init.c : DTdumpgen, dumpcntgen, and other things.  Unless default over array works.
 
    9) global.dump.h : add global prototypes
 
@@ -187,6 +187,7 @@ void init_dnumcolumns_dnumversion(void)
   extern void set_eosdump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
   extern void set_raddump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
   extern void set_vpotdump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
+  extern void set_dissmeasuredump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
   extern void set_failfloordudump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
 
   extern void set_rupperpoledump_read_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
@@ -242,6 +243,8 @@ void init_dnumcolumns_dnumversion(void)
   set_vpotdump_content_dnumcolumns_dnumversion(&dnumcolumns[VPOTDUMPTYPE],&dnumversion[VPOTDUMPTYPE]);
   // failfloordudump
   set_failfloordudump_content_dnumcolumns_dnumversion(&dnumcolumns[FAILFLOORDUDUMPTYPE],&dnumversion[FAILFLOORDUDUMPTYPE]);
+  // dissmeasuredump
+  set_dissmeasuredump_content_dnumcolumns_dnumversion(&dnumcolumns[DISSMEASUREDUMPTYPE],&dnumversion[DISSMEASUREDUMPTYPE]);
 
   // rdump (must come after all normal dumps since dnumcolumns used by restart to store other things needed up restart that are dealt with also above)
   // rupperpoledump
@@ -701,7 +704,8 @@ int debug_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 
   // NOTEMARK: see also restart.c since this is added to restart 
   myset(datatype,GLOBALMAC(failfloorcount,i,j,k),0,2*NUMTSCALES*NUMFAILFLOORFLAGS,writebuf);
-    
+
+  
   return(0);
 }
 
@@ -1870,7 +1874,7 @@ void set_failfloordudump_content_dnumcolumns_dnumversion(int *numcolumns, int *n
 {
 
   if(DOFLOORDIAG){
-    *numcolumns=NPR;
+    *numcolumns=NPR; // normal dU from floor
   }
   else *numcolumns=0;
 
@@ -1896,7 +1900,57 @@ int failfloordudump_content(int i, int j, int k, MPI_Datatype datatype,void *wri
 
 
 
+int dissmeasuredump(long dump_cnt)
+{
+  MPI_Datatype datatype;
+  int whichdump;
+  char fileprefix[MAXFILENAME]={'\0'};
+  char filesuffix[MAXFILENAME]={'\0'};
+  char fileformat[MAXFILENAME]={'\0'};
 
+
+  trifprintf("begin dumping dissmeasuredump# %ld ... ",dump_cnt);
+
+  whichdump=DISSMEASUREDUMPTYPE;
+  datatype=MPI_FTYPE;
+  strcpy(fileprefix,"dumps/dissmeasuredump");
+  strcpy(fileformat,"%04ld");
+  strcpy(filesuffix,"");
+  
+  if(dump_gen(WRITEFILE,dump_cnt,binaryoutput,whichdump,datatype,fileprefix,fileformat,filesuffix,dump_header,dissmeasuredump_content)>=1) return(1);
+
+  trifprintf("end dumping dissmeasuredump# %ld ... ",dump_cnt);
+
+
+  return(0);
+  
+}
+
+
+void set_dissmeasuredump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
+{
+
+  if(DODISSMEASURE){
+    *numcolumns=NSPECIAL+1; // dissmeasurepl and dissmeasure
+    *numcolumns+=3*2; // Fi for each direction and gas/rad
+  }
+  else *numcolumns=0;
+
+  // Version number:
+  *numversion=0;
+
+}
+
+
+
+int dissmeasuredump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
+{
+
+  // NOTEMARK: see also restart.c since this is added to restart 
+  myset(datatype,&GLOBALMAC(dissmeasurearray,i,j,k),0,NSPECIAL+1+3*2,writebuf);
+
+  return (0);
+}
 
 
 

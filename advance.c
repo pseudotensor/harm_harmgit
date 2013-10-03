@@ -1082,6 +1082,12 @@ static FTYPE compute_dissmeasure(int i, int j, int k, int loc, FTYPE *pr, struct
       //      dualfprintf(fail_file,"plsp=%d specialfrom=%d dissmeasurepl=%g\n",plsp,specialfrom,dissmeasurepl[specialfrom]);
 
       //    dualfprintf(fail_file,"DISS (ijk=%d %d %d): (%d %d) ui=%g %g : uf=%g %g : dUdiss=%g dUnondiss=%g : dU1=%g %g : dU2=%g %g : dissmeasure=%g\n",i,j,k,specialfrom,plsp,uitemp[specialfrom],uitemp[plsp],uftemp[specialfrom],uftemp[plsp],dUdiss,dUnondiss,dUriemann1temp[specialfrom]*CUf[2]*dt,dUriemann1temp[plsp]*CUf[2]*dt,dUriemann2temp[specialfrom]*CUf[2]*dt,dUriemann2temp[plsp]*CUf[2]*dt,dissmeasure);
+
+      // DEBUG
+      if(DODISSMEASURE){
+        GLOBALMACP0A1(dissmeasurearray,i,j,k,plsp-NPR)=dissmeasurepl[specialfrom];
+      }
+
     }
 
     ///////////
@@ -1116,9 +1122,15 @@ static FTYPE compute_dissmeasure(int i, int j, int k, int loc, FTYPE *pr, struct
       }
     }
 
+    if(NSPECIAL>0 && DODISSMEASURE){
+      // DEBUG
+      GLOBALMACP0A1(dissmeasurearray,ptrgeom->i,ptrgeom->j,ptrgeom->k,NSPECIAL)=dissmeasure;
+    }
 
 
   }
+
+
 
   return(dissmeasure);
 }

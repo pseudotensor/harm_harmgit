@@ -314,9 +314,12 @@ CTYPE BASEMACP0A3(failfloorcount,N1M,N2M,N3M,2,NUMTSCALES,NUMFAILFLOORFLAGS); //
 
 /* for debug */
 #if(DOFLOORDIAG)
-CTYPE BASEMACP0A1(failfloordu,N1M,N2M,N3M,NPR); // change in conserved quantities due to number of failures and floor adjustments for each zone
+FTYPE BASEMACP0A1(failfloordu,N1M,N2M,N3M,NPR); // change in conserved quantities due to number of failures and floor adjustments for each zone
 #endif
 
+#if(DODISSMEASURE)
+FTYPE BASEMACP0A1(dissmeasurearray,N1M,N2M,N3M,NSPECIAL+1+3*2); // change in conserved quantities due to number of failures and floor adjustments for each zone
+#endif
 
 ////////////////////////////////////////////////
 //

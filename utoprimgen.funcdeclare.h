@@ -16,7 +16,9 @@ extern int Utoprim_5d2_final(FTYPE *U, struct of_geom *geom, PFTYPE *lpflag, FTY
 
 extern int Utoprimdiss(int showmessages, int allowlocalfailurefixandnoreport, int evolvetype, int inputtype, FTYPE *U,  struct of_geom *ptrgeom, FTYPE *pr, PFTYPE *otherfail, struct of_newtonstats *newtonstats, PFTYPE *lpflag);
 
-extern int whetherdoentropy(FTYPE fracenergy, int entropynotfail, int energynotfail, int radinvmodentropy, int radinvmodenergy, FTYPE tryerror, FTYPE okerror, FTYPE baderror, FTYPE entropyerror, FTYPE energyerror, FTYPE *entropypr, FTYPE *energypr);
+extern int badenergy(struct of_geom *ptrgeom, FTYPE *prenergy, FTYPE *prentropy);
+
+extern int whetherdoentropy(struct of_geom *ptrgeom, FTYPE fracenergy, int entropynotfail, int energynotfail, int radinvmodentropy, int radinvmodenergy, FTYPE tryerror, FTYPE okerror, FTYPE baderror, FTYPE entropyerror, FTYPE energyerror, FTYPE *entropypr, FTYPE *energypr);
 
 extern int set_fracenergy(int i, int j, int k, FTYPE dissmeasure, FTYPE *fracenergy);
 

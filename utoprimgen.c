@@ -637,7 +637,7 @@ int Utoprimgen(int showmessages, int allowlocalfailurefixandnoreport, int finals
     // then based upon conditions, choose best result
     // KORALTODO: Fake errors -- assumes these inversions always get lowest error desired.
     int doentropy;
-    doentropy=whetherdoentropy(fracenergy, !entropyhardfailure, !hothardfailure, entropyradinvmod, hotradinvmod, 1E-16, 1E-9, 1E-10, 1E-18, 1E-18, entropypr, hotpr);
+    doentropy=whetherdoentropy(ptrgeom, fracenergy, !entropyhardfailure, !hothardfailure, entropyradinvmod, hotradinvmod, 1E-16, 1E-9, 1E-10, 1E-18, 1E-18, entropypr, hotpr);
 
     if(doentropy){
       PLOOP(pliter,pl) pr[pl]=entropypr[pl];
@@ -2237,8 +2237,33 @@ void filterffde(int i, int j, int k, FTYPE *pr)
 }
 
 
+// return 0 if energy solution good.  return 1 if energy solution bad and should use entropy solution.
+// check based upon u_g or based upon specific entropy
+int badenergy(struct of_geom *ptrgeom, FTYPE *energypr, FTYPE *entropypr)
+{
+  
+  //  return(BADENERGYMAC(energypr[UU],entropypr[UU]));
+  //  return(BADENERGY2MAC(energypr[UU],entropypr[UU]));
+
+  // energy solution's specific entropy
+  FTYPE entropy;
+
+  entropy_calc(ptrgeom,energypr,&entropy);
+  FTYPE Sspecenergy=entropy/energypr[RHO];
+
+  entropy_calc(ptrgeom,entropypr,&entropy);
+  FTYPE Sspecentropy=entropy/entropypr[RHO];
+
+  if(Sspecenergy>=Sspecentropy) return(0);
+  else return(1);
+
+
+
+}
+
+
 // decide whether can/should do entropy
-int whetherdoentropy(FTYPE fracenergy, int entropynotfail, int energynotfail, int radinvmodentropy, int radinvmodenergy, FTYPE tryerror, FTYPE okerror, FTYPE baderror, FTYPE entropyerror, FTYPE energyerror, FTYPE *entropypr, FTYPE *energypr)
+int whetherdoentropy(struct of_geom *ptrgeom, FTYPE fracenergy, int entropynotfail, int energynotfail, int radinvmodentropy, int radinvmodenergy, FTYPE tryerror, FTYPE okerror, FTYPE baderror, FTYPE entropyerror, FTYPE energyerror, FTYPE *entropypr, FTYPE *energypr)
 {
   int doentropy=0;
 
@@ -2248,9 +2273,9 @@ int whetherdoentropy(FTYPE fracenergy, int entropynotfail, int energynotfail, in
     //       energynotfail==1 && entropynotfail==1 && (fracenergy>0.0 && fracenergy<1.0) && (entropyerror<=okerror && energyerror>okerror) ||
     energynotfail==0 && entropynotfail==1 ||
     entropynotfail==1 && energynotfail==1 && (entropyerror<tryerror && energyerror>baderror) ||
-    //      entropynotfail==1 && energynotfail==1 && (BADENERGY(energypr[UU],entropypr[UU]) && (entropyerror<okerror && energyerror>entropyerror)) ||
-    //      entropynotfail==1 && energynotfail==1 && (BADENERGY2(energypr[UU],entropypr[UU]) && (entropyerror<tryerror && energyerror>tryerror)) // switch to entropy if suspicious energy solution that looks approximate but mathematica checks suggest are mostly u_g<0 if accurate solution found.
-    entropynotfail==1 && energynotfail==1 && (BADENERGY2(energypr[UU],entropypr[UU]) && (entropyerror<okerror && energyerror<okerror)) // switch to entropy if ug for energy is smaller, and can trust both energy and entropy ug so can trust that comparison.
+    //      entropynotfail==1 && energynotfail==1 && (badenergy(ptrgeom,energypr,entropypr) && (entropyerror<okerror && energyerror>entropyerror)) ||
+    //      entropynotfail==1 && energynotfail==1 && (badenergy(ptrgeom,energypr,entropypr) && (entropyerror<tryerror && energyerror>tryerror)) // switch to entropy if suspicious energy solution that looks approximate but mathematica checks suggest are mostly u_g<0 if accurate solution found.
+    entropynotfail==1 && energynotfail==1 && (badenergy(ptrgeom,energypr,entropypr) && (entropyerror<okerror && energyerror<okerror)) // switch to entropy if ug for energy is smaller, and can trust both energy and entropy ug so can trust that comparison.
     ||entropynotfail==1 && energynotfail==1 && radinvmodenergy>0 && radinvmodentropy<=0 && entropyerror<okerror // avoid energy if it particularly leads to radiation reaching maximum gamma or minimum Erf.  Ok to do because if dissipating, that would only normally create more Erf, not less, in optically thin regions where one might worry about switching to entropy.
     ;
 

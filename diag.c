@@ -96,6 +96,7 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
   // ENERDUMPTYPE : not standard spatial dump file and not standard prototype
   dumpfuncgen[ENERDUMPTYPE]=NULL;
   dumpfuncgen[RADDUMPTYPE]=&raddump;
+  dumpfuncgen[DISSMEASUREDUMPTYPE]=&dissmeasuredump;
   if(USEMPI && USEROMIO==1 && MPIVERSION==2){
     // then do restart-like dumping of fakedump so ROMIO non-blocking writes are eventually put to disk on reasonable timestep scale.
     dumpfuncgen[FAKEDUMPTYPE]=&fakedump;
@@ -768,6 +769,12 @@ static int get_dodumps(int call_code, int firsttime, SFTYPE localt, long localns
     dodumpgen[RADDUMPTYPE]=1;
   }
   else dodumpgen[RADDUMPTYPE]=0;
+
+  // DISSMEASUREDUMPTYPE
+  if((dnumcolumns[DISSMEASUREDUMPTYPE]>0)&&( ((DODUMPDIAG)&&(DODIAGEVERYSUBSTEP||((localt!=tlastgen[DISSMEASUREDUMPTYPE])&&(localt >= tdumpgen[DISSMEASUREDUMPTYPE] || (RESTARTMODE&&dofaildump&&(localnstep>=steptofaildump)) || call_code==FINAL_OUT ))) )  )){
+    dodumpgen[DISSMEASUREDUMPTYPE]=1;
+  }
+  else dodumpgen[DISSMEASUREDUMPTYPE]=0;
   
   
   // FAKEDUMPTYPE

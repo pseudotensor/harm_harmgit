@@ -2506,7 +2506,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     //
     /////////////
 
-    int doentropy=whetherdoentropy(fracenergy, ACCEPTASNOFAILURE(failreturnentropy),ACCEPTASNOFAILURE(failreturnenergy), radinvmodentropy, radinvmodenergy, IMPTRYCONVABS, IMPOKCONVABS, IMPBADENERGY, errorabsentropy, errorabsenergy, pbentropy, pbenergy);
+    int doentropy=whetherdoentropy(ptrgeom, fracenergy, ACCEPTASNOFAILURE(failreturnentropy),ACCEPTASNOFAILURE(failreturnenergy), radinvmodentropy, radinvmodenergy, IMPTRYCONVABS, IMPOKCONVABS, IMPBADENERGY, errorabsentropy, errorabsenergy, pbentropy, pbenergy);
     if(goexplicitentropy==1) doentropy=0; // override
 
 
@@ -4024,7 +4024,7 @@ static int koral_source_rad_implicit_mode(int modprim, int havebackup, int diden
             if(RAMESHSTOPENERGYIFTOOOFTENBELOWENTROPY){
               if((implicititer==QTYPMHD || implicititer==QTYPMHDENERGYONLY)  && didentropyalready){
                 if(notholding==1 || implicititer==QTYPMHD){ // if holding on energy equation, don't  use this u_g check.  But, if normal steps, then ignore holding and assume holding means u_g bad if on normal steps.
-                  if(BADENERGY(pp[irefU[0]],pborig[irefU[0]])) countbadenergy++;
+                  if(badenergy(ptrgeom,pp,pborig)) countbadenergy++;
                   if(countbadenergy>=RAMESHSTOPENERGYIFTOOOFTENBELOWENTROPY){
 
                     // if pre-normal step, skip to next type of step because non-normal step may have wrong u_g anyways.
