@@ -5405,7 +5405,10 @@ static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int sho
     if(IMPMHDTYPE(implicititer)) velmomscale=MAX(SMALL,sqrt(fabs(x[UU])/MAX(ppp[RHO],pp[RHO]))); // u_g/\rho_0\propto (v/c)^2, so this gives \propto (v/c) .  Leads to more problems for RADTUBE
     else velmomscale=1.0; // FUCK
 
-    velmomscale=1.0; // FUCK
+    // limit
+    velmomscale=MIN(1.0,velmomscale);
+
+    //    velmomscale=1.0; // FUCK
   }
 
   //////////////////////////
@@ -5438,6 +5441,8 @@ static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int sho
       vsqnorm += fabs(x[irefU[jj]]*upitoup0[irefU[jj]])*fabs(x[irefU[jj]]*upitoup0[irefU[jj]]);
     }
   }
+  // limit
+  vsqnorm=MIN(1.0,vsqnorm);
 
   ///////////
   // form delspace that absorbs all spatial values into a single dimensionless scale to avoid one dimensions smallness causing issues.
@@ -5452,8 +5457,8 @@ static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int sho
   //FUCK: Needs to improve and be more general
   if(IMPPMHDTYPE(implicititer)){
     // u_g goes like \rho_0 v^2
-    //jj=TT; deltime = MAX(fabs(predel[jj]),MAX(ppp[RHO],pp[RHO])*vsqnorm); // FUCK : Leads to more problems for RADTUBE
-    jj=TT; deltime = fabs(predel[jj]);
+    jj=TT; deltime = MAX(fabs(predel[jj]),MAX(ppp[RHO],pp[RHO])*vsqnorm); // FUCK : Leads to more problems for RADTUBE
+    //jj=TT; deltime = fabs(predel[jj]);
   }
   else if(IMPPTYPE(implicititer)){
     jj=TT; deltime = fabs(predel[jj]);
