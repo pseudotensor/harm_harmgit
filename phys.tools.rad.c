@@ -1793,7 +1793,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 #define NUMPHASES (TRYENERGYHARDER ? 4 : 2)
       for(tryphase1=0;tryphase1<NUMPHASES;tryphase1++){
 
-        if(radinvmodenergybest!=0 || ACTUALHARDORSOFTFAILURE(failreturnenergy) && failreturn!=FAILRETURNMODESWITCH){
+        // consider radinvmod only if error bad for original approach.  Avoids excessive attempts when should hit radiative ceiling and error is small.
+        if(radinvmodenergybest!=0 && tryphase1%2==1 || ACTUALHARDORSOFTFAILURE(failreturnenergy) && failreturn!=FAILRETURNMODESWITCH){
 
           errorabsenergyold=errorabsenergy;
           itersenergyold=itersenergy;
