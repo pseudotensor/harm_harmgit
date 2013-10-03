@@ -1790,23 +1790,21 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
       // quickly try QTYPMHD then QTYURAD
       int tryphase1;
-#define NUMPHASES (TRYENERGYHARDER ? 4 : 2)
+#define NUMPHASES (TRYENERGYHARDER ? 6 : 3)
       for(tryphase1=0;tryphase1<NUMPHASES;tryphase1++){
 
         // consider radinvmod only if error bad for original approach.  Avoids excessive attempts when should hit radiative ceiling and error is small.
-        if(radinvmodenergybest!=0 && tryphase1%2==1 || ACTUALHARDORSOFTFAILURE(failreturnenergy) && failreturn!=FAILRETURNMODESWITCH){
+        if(radinvmodenergybest!=0 && tryphase1%3!=0 || ACTUALHARDORSOFTFAILURE(failreturnenergy) && failreturn!=FAILRETURNMODESWITCH){
 
           errorabsenergyold=errorabsenergy;
           itersenergyold=itersenergy;
           //
           whichcapenergy=CAPTYPEFIX1;
-          if(tryphase1%2==0) baseitermethodenergy=QTYPMHD; // try PMHD
-          else{
-            baseitermethodenergy=QTYURAD; // go to URAD
-            //        baseitermethodenergy=QTYPRAD; // go to PRAD (works almost as well as URAD)
-          }
+          if(tryphase1%3==0) baseitermethodenergy=QTYPMHD; // try PMHD
+          else if(tryphase1%3==1) baseitermethodenergy=QTYURAD; // go to URAD
+          else if(tryphase1%3==2) baseitermethodenergy=QTYPRAD; // go to PRAD (works almost as well as URAD)
 
-          if(tryphase1<=1){
+          if(tryphase1<3){
             itermodeenergy=ITERMODENORMAL;
             trueimpmaxiterenergy=IMPMAXITERQUICK;
             truenumdampattemptsenergy=NUMDAMPATTEMPTSQUICK;
@@ -1854,8 +1852,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
           }
           //
           // try again with higher u_g
-          int modprim;
-          if(havebackup==0 && tryphase1>=2) modprim=1;
+          int modprim=0;
+          if(havebackup==0 && tryphase1>=3) modprim=1;
           failreturnenergy=koral_source_rad_implicit_mode(modprim,havebackup, didentropyalready, &eomtypeenergy, whichcapenergy, itermodeenergy, baseitermethodenergy, trueimpmaxiterenergy,  truenumdampattemptsenergy, fracenergy, dissmeasure, &radinvmodenergy, pbenergy, uubenergy, piin, Uiin, Ufin, CUf, ptrgeom, &qenergy, dUother ,dUcompenergy, &errorabsenergy, errorabsenergybest, &itersenergy, &f1itersenergy);
 
           if(failreturnenergy==FAILRETURNGOEXPLICIT){
