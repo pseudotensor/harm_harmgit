@@ -1819,7 +1819,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       int truenumdampattemptslist[NUMPHASES]={NUMDAMPATTEMPTSQUICK,NUMDAMPATTEMPTSQUICK,NUMDAMPATTEMPTSQUICK,NUMDAMPATTEMPTS,NUMDAMPATTEMPTS,NUMDAMPATTEMPTS};
       int modprimlist[NUMPHASES]={0,0,0,1,1,1};
       int checkradinvlist[NUMPHASES]={0,1,1,0,1,1};
-      int eomtypelist[NUMPHASES]={EOMGRMHD,EOMGRMHD,EOMGRMHD,EOMGRMHD};
+      int eomtypelist[NUMPHASES]={EOMGRMHD,EOMGRMHD,EOMGRMHD,EOMGRMHD,EOMGRMHD,EOMGRMHD};
 #else
       int baseitermethodlist[NUMPHASES]={QTYPMHD,QTYURAD,QTYPRAD};
       int itermodelist[NUMPHASES]={ITERMODESTAGES,ITERMODESTAGES,ITERMODESTAGES};
@@ -1827,7 +1827,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       int truenumdampattemptslist[NUMPHASES]={NUMDAMPATTEMPTS,NUMDAMPATTEMPTS,NUMDAMPATTEMPTS};
       int modprimlist[NUMPHASES]={0,0,0};
       int checkradinvlist[NUMPHASES]={0,1,1};
-      int eomtypelist[NUMPHASES]={EOMGRMHD,EOMGRMHD};
+      int eomtypelist[NUMPHASES]={EOMGRMHD,EOMGRMHD,EOMGRMHD};
 #endif
 
       for(tryphase1=0;tryphase1<NUMPHASES;tryphase1++){
@@ -1839,6 +1839,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
           itersenergyold=itersenergy;
           //
           whichcapenergy=CAPTYPEFIX1;
+          //whichcapenergy=CAPTYPEBASIC;
           baseitermethodenergy=baseitermethodlist[tryphase1];
           itermodeenergy=itermodelist[tryphase1];
           trueimpmaxiterenergy=trueimpmaxiterlist[tryphase1];
@@ -1898,14 +1899,18 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
             radinvmodenergybest=radinvmodenergy;
             radErfnegenergybest=radErfnegenergy;
             failreturnenergybest=failreturnenergy;
-            eomtypeenergybest=EOMGRMHD;
+            eomtypeenergybest=eomtypelist[tryphase1];
             goexplicitenergybest=1;
           }
           else{
             // see if want to keep
             //        if(errorabsenergy<errorabsenergybest && ACTUALHARDFAILURE(failreturnenergy)==0 || failreturnenergy==FAILRETURNMODESWITCH){
-            //        if((errorabsenergy<errorabsenergybest && (radinvmodenergy==0 || radinvmodenergybest==1 && radinvmodenergy==1) || radinvmodenergybest==1 && radinvmodenergy==0 && (errorabsenergy<errorabsenergybest||errorabsenergy<IMPOKCONVABS)) && ACTUALHARDFAILURE(failreturnenergy)==0 || failreturnenergy==FAILRETURNMODESWITCH){
-            if((errorabsenergy<errorabsenergybest && (radinvmodenergy==0 || radinvmodenergybest==1 && radinvmodenergy==1) || radinvmodenergybest==1 && radinvmodenergy==0 && (errorabsenergy<errorabsenergybest||errorabsenergy<IMPOKCONVABS) || radinvmodenergybest==0 && radinvmodenergy==1 && (errorabsenergybest>IMPOKCONVABS && errorabsenergy<IMPOKCONVABS)) && ACTUALHARDFAILURE(failreturnenergy)==0){
+            //        if((errorabsenergy<errorabsenergybest && (radinvmodenergy==0 || radinvmodenergybest && radinvmodenergy) || radinvmodenergybest && radinvmodenergy==0 && (errorabsenergy<errorabsenergybest||errorabsenergy<IMPOKCONVABS)) && ACTUALHARDFAILURE(failreturnenergy)==0 || failreturnenergy==FAILRETURNMODESWITCH){
+            if(
+               (
+                errorabsenergy<errorabsenergybest && (radinvmodenergy==0 || radinvmodenergybest && radinvmodenergy) || radinvmodenergybest && radinvmodenergy==0 && (errorabsenergy<errorabsenergybest||errorabsenergy<IMPOKCONVABS) || radinvmodenergybest==0 && radinvmodenergy && (errorabsenergybest>IMPOKCONVABS && errorabsenergy<IMPOKCONVABS)
+                )
+               && ACTUALHARDFAILURE(failreturnenergy)==0){
               // store result in case better than latter results
               lpflagenergybest=*lpflag;
               lpflagradenergybest=*lpflagrad;
@@ -1928,12 +1933,13 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
           if(tryphase1>0){
             if(ACTUALHARDORSOFTFAILURE(failreturnenergy)==0 || failreturnenergy==FAILRETURNMODESWITCH){
-              if(debugfail>=2) dualfprintf(fail_file,"Recovered using tryphase1=%d (energy: failreturnenergy=%d): ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d\n",tryphase1,failreturnenergy,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsenergyold,errorabsenergy,itersenergyold,itersenergy);
+              if(debugfail>=2) dualfprintf(fail_file,"Recovered using tryphase1=%d (energy: failreturnenergy=%d radinvmod=%d): ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d\n",tryphase1,failreturnenergy,radinvmodenergy,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsenergyold,errorabsenergy,itersenergyold,itersenergy);
             }
             else{
-              if(debugfail>=2) dualfprintf(fail_file,"Failed to: Recovered using tryphase1=%d (energy: failreturnenergy=%d): ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d\n",tryphase1,failreturnenergy,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsenergyold,errorabsenergy,itersenergyold,itersenergy);
+              if(debugfail>=2) dualfprintf(fail_file,"Failed to: Recovered using tryphase1=%d (energy: failreturnenergy=%d radinvmod=%d): ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d\n",tryphase1,failreturnenergy,radinvmodenergy,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsenergyold,errorabsenergy,itersenergyold,itersenergy);
             }
           }
+
 
         }// end if doing _mode() call
       }// end over try loop
@@ -2022,8 +2028,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
         // see if want to keep
         //        if(errorabsenergy<errorabsenergybest && ACTUALHARDFAILURE(failreturnenergy)==0){// || failreturnenergy==FAILRETURNMODESWITCH){ // no switch mode in ramesh solver yet.
-        //        if((errorabsenergy<errorabsenergybest && (radinvmodenergy==0 || radinvmodenergybest==1 && radinvmodenergy==1) || radinvmodenergybest==1 && radinvmodenergy==0 && (errorabsenergy<errorabsenergybest||errorabsenergy<IMPOKCONVABS)) && ACTUALHARDFAILURE(failreturnenergy)==0){
-        if((errorabsenergy<errorabsenergybest && (radinvmodenergy==0 || radinvmodenergybest==1 && radinvmodenergy==1) || radinvmodenergybest==1 && radinvmodenergy==0 && (errorabsenergy<errorabsenergybest||errorabsenergy<IMPOKCONVABS) || radinvmodenergybest==0 && radinvmodenergy==1 && (errorabsenergybest>IMPOKCONVABS && errorabsenergy<IMPOKCONVABS)) && ACTUALHARDFAILURE(failreturnenergy)==0){
+        //        if((errorabsenergy<errorabsenergybest && (radinvmodenergy==0 || radinvmodenergybest && radinvmodenergy) || radinvmodenergybest && radinvmodenergy==0 && (errorabsenergy<errorabsenergybest||errorabsenergy<IMPOKCONVABS)) && ACTUALHARDFAILURE(failreturnenergy)==0){
+        if((errorabsenergy<errorabsenergybest && (radinvmodenergy==0 || radinvmodenergybest && radinvmodenergy) || radinvmodenergybest && radinvmodenergy==0 && (errorabsenergy<errorabsenergybest||errorabsenergy<IMPOKCONVABS) || radinvmodenergybest==0 && radinvmodenergy && (errorabsenergybest>IMPOKCONVABS && errorabsenergy<IMPOKCONVABS)) && ACTUALHARDFAILURE(failreturnenergy)==0){
           if(ACCEPTASNOFAILURE(failreturnenergy)) usedrameshenergy=1; // means will use this actually, not just best yet no good enough
           // store result in case better than latter results
           lpflagenergybest=*lpflag;
@@ -2083,7 +2089,6 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       // if didn't do energy inversion, treat as failure of said inversion
       failreturnenergy=FAILRETURNGENERAL;
     }
-
 
 
 
@@ -2189,7 +2194,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
           }
           else{
             // see if want to keep
-            if((errorabsentropy<errorabsentropybest && (radinvmodentropy==0 || radinvmodentropybest==1 && radinvmodentropy==1) || radinvmodentropybest==1 && radinvmodentropy==0 && (errorabsentropy<errorabsentropybest||errorabsentropy<IMPOKCONVABS) || radinvmodentropybest==0 && radinvmodentropy==1 && (errorabsentropybest>IMPOKCONVABS && errorabsentropy<IMPOKCONVABS)) && ACTUALHARDFAILURE(failreturnentropy)==0){
+            if((errorabsentropy<errorabsentropybest && (radinvmodentropy==0 || radinvmodentropybest && radinvmodentropy) || radinvmodentropybest && radinvmodentropy==0 && (errorabsentropy<errorabsentropybest||errorabsentropy<IMPOKCONVABS) || radinvmodentropybest==0 && radinvmodentropy && (errorabsentropybest>IMPOKCONVABS && errorabsentropy<IMPOKCONVABS)) && ACTUALHARDFAILURE(failreturnentropy)==0){
               // store result in case better than latter results
               lpflagentropybest=*lpflag;
               lpflagradentropybest=*lpflagrad;
@@ -2211,10 +2216,10 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
           itersentropy+=itersentropyold;
 
           if(ACTUALHARDORSOFTFAILURE(failreturnentropy)==0){
-            if(debugfail>=2) dualfprintf(fail_file,"Recovered using tryphase1=%d: ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d\n",tryphase1,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsentropyold,errorabsentropy,itersentropyold,itersentropy);
+            if(debugfail>=2) dualfprintf(fail_file,"Recovered using tryphase1=%d (entropy): ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d\n",tryphase1,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsentropyold,errorabsentropy,itersentropyold,itersentropy);
           }
           else{
-            if(debugfail>=2) dualfprintf(fail_file,"Failed to: Recovered using tryphase1=%d: ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d\n",tryphase1,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsentropyold,errorabsentropy,itersentropyold,itersentropy);
+            if(debugfail>=2) dualfprintf(fail_file,"Failed to: Recovered using tryphase1=%d (entropy): ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d\n",tryphase1,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsentropyold,errorabsentropy,itersentropyold,itersentropy);
           }
 
         }// done trying harder
@@ -2291,7 +2296,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
           //
         }// end else if need to get ramesh solution
         // see if want to keep
-        if((errorabsentropy<errorabsentropybest && (radinvmodentropy==0 || radinvmodentropybest==1 && radinvmodentropy==1) || radinvmodentropybest==1 && radinvmodentropy==0 && (errorabsentropy<errorabsentropybest||errorabsentropy<IMPOKCONVABS) || radinvmodentropybest==0 && radinvmodentropy==1 && (errorabsentropybest>IMPOKCONVABS && errorabsentropy<IMPOKCONVABS)) && ACTUALHARDFAILURE(failreturnentropy)==0){
+        if((errorabsentropy<errorabsentropybest && (radinvmodentropy==0 || radinvmodentropybest && radinvmodentropy) || radinvmodentropybest && radinvmodentropy==0 && (errorabsentropy<errorabsentropybest||errorabsentropy<IMPOKCONVABS) || radinvmodentropybest==0 && radinvmodentropy && (errorabsentropybest>IMPOKCONVABS && errorabsentropy<IMPOKCONVABS)) && ACTUALHARDFAILURE(failreturnentropy)==0){
           if(ACCEPTASNOFAILURE(failreturnentropy)) usedrameshentropy=1; // means will use this actually, not just best yet no good enough
           // store result in case better than latter results
           lpflagentropybest=*lpflag;
@@ -2310,10 +2315,10 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
         // still cost more iters
         itersentropy+=itersentropyold;
         if(ACTUALHARDORSOFTFAILURE(failreturnentropy)==0){
-          if(debugfail>=2) dualfprintf(fail_file,"Recovered using ramesh(%d): ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d\n",failtypeent,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsentropyold,errorabsentropy,itersentropyold,itersentropy);
+          if(debugfail>=2) dualfprintf(fail_file,"Recovered using ramesh(%d) (entropy): ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d\n",failtypeent,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsentropyold,errorabsentropy,itersentropyold,itersentropy);
         }
         else{
-          if(debugfail>=2) dualfprintf(fail_file,"Failed to: Recovered using ramesh(%d): ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d\n",failtypeent,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsentropyold,errorabsentropy,itersentropyold,itersentropy);
+          if(debugfail>=2) dualfprintf(fail_file,"Failed to: Recovered using ramesh(%d) (entropy): ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d\n",failtypeent,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsentropyold,errorabsentropy,itersentropyold,itersentropy);
         }
       }
 
@@ -5469,15 +5474,17 @@ static int get_implicit_iJ(int failreturnallowableuse, int showmessages, int sho
       if(debugfail>=2){
         JACLOOP(ii,startjac,endjac){
           if(showmessagesheavy || !isfinite(J[erefU[ii]][irefU[jj]])){
-            dualfprintf(fail_file,"JISNAN: iter=%d startjac=%d endjac=%d ii=%d jj=%d irefU[jj]=%d erefU[ii]=%d : xjac[0]: %21.15g :  xjac[1]: %21.15g : x=%21.15g (del=%21.15g localIMPEPS=%21.15g) : f2[0]=%21.15g f2[1]=%21.15g J=%21.15g\n",
+            dualfprintf(fail_file,"JISNAN: iter=%d startjac=%d endjac=%d ii=%d jj=%d irefU[jj]=%d erefU[ii]=%d : xjac[0]: %21.15g :  xjac[1]: %21.15g : x=%21.15g (del=%21.15g localIMPEPS=%21.15g) : f2[0]=%21.15g f2[1]=%21.15g J=%21.15g : f2norm[0]=%21.15g f2norm[1]=%21.15g\n",
                         iter,startjac,endjac,
                         ii,jj,irefU[jj],erefU[ii],
                         xjac[0][irefU[jj]],
                         xjac[1][irefU[jj]],
                         x[irefU[jj]],
                         del,localIMPEPS,
-                        f2[0][erefU[ii]],f2[1][erefU[ii]],J[erefU[ii]][irefU[jj]]
+                        f2[0][erefU[ii]],f2[1][erefU[ii]],J[erefU[ii]][irefU[jj]],
+                        f2norm[0][erefU[ii]],f2norm[1][erefU[ii]]
                         );
+            PLOOP(pliter,pl) dualfprintf(fail_file,"JISNAN2: pl=%d ppjac=%21.15g uu0=%21.15g uujac=%21.15g\n",pl,ppjac[pl],uu0[pl],uujac[pl]);
           }
         }
       }
@@ -7707,12 +7714,12 @@ int u2p_rad(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gammama
   int toreturn;
 
 #if(WHICHU2PRAD==0)
-  toreturn=u2p_rad_orig(showmessages, allowlocalfailurefixandnoreport, uu, pin, ptrgeom,lpflag, lpflagrad);
+  toreturn=u2p_rad_orig(showmessages, allowlocalfailurefixandnoreport, gammamaxrad, uu, pin, ptrgeom,lpflag, lpflagrad);
 #else
   // u2p_rad_new() has some issues.  Slows code, leads to more bad failures, but maybe ok?
   // below keeps at least Utilde^i the same upon hitting limits.  Also works better for RADPULSE compared to "pre" version that just hits hard vel=0 cap.
   toreturn=u2p_rad_new(showmessages, allowlocalfailurefixandnoreport, gammamaxrad, whichcap, uu, pin, ptrgeom,lpflag, lpflagrad);
-  //  toreturn=u2p_rad_new_pre(showmessages, allowlocalfailurefixandnoreport, gammamaxrad, uu, pin, ptrgeom,lpflag, lpflagrad);
+  //toreturn=u2p_rad_new_pre(showmessages, allowlocalfailurefixandnoreport, gammamaxrad, uu, pin, ptrgeom,lpflag, lpflagrad);
 #endif
 
   return(toreturn);
@@ -8072,6 +8079,13 @@ int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gam
       pr=Er/(4.0*gammasq-1.0);
       // Get Erf
       Erf = pr/(4.0/3.0-1.0);
+
+      // override if Er<0 originally since otherwise out of control rise in Erf
+      if(didmodEr){
+        Er = ERADLIMIT;
+        Erf = ERADLIMIT;
+      }
+
     }// endif capfixtype1
     else if(whichcap==CAPTYPEBASIC){
 
