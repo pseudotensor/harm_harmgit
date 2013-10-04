@@ -1790,30 +1790,38 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       // quickly try QTYPMHD then QTYURAD
       int tryphase1;
 #define NUMPHASES (TRYENERGYHARDER ? 6 : 3)
+
+#if(TRYENERGYHARDER)
+      int baseitermethodlist[NUMPHASES]={QTYPMHD,QTYURAD,QTYPRAD,QTYPMHD,QTYURAD,QTYPRAD};
+      int itermodelist[NUMPHASES]={ITERMODENORMAL,ITERMODENORMAL,ITERMODENORMAL,ITERMODESTAGES,ITERMODESTAGES,ITERMODESTAGES};
+      int trueimpmaxiterlist[NUMPHASES]={IMPMAXITERQUICK,IMPMAXITERQUICK,IMPMAXITERQUICK,IMPMAXITER,IMPMAXITER,IMPMAXITER};
+      int truenumdampattemptslist[NUMPHASES]={NUMDAMPATTEMPTSQUICK,NUMDAMPATTEMPTSQUICK,NUMDAMPATTEMPTSQUICK,NUMDAMPATTEMPTS,NUMDAMPATTEMPTS,NUMDAMPATTEMPTS};
+      int modprimlist[NUMPHASES]={0,0,0,1,1,1};
+      int checkradinvlist[NUMPHASES]={0,1,1,0,1,1};
+#else
+      int baseitermethodlist[NUMPHASES]={QTYPMHD,QTYURAD,QTYPRAD};
+      int itermodelist[NUMPHASES]={ITERMODESTAGES,ITERMODESTAGES,ITERMODESTAGES};
+      int trueimpmaxiterlist[NUMPHASES]={IMPMAXITER,IMPMAXITER,IMPMAXITER};
+      int truenumdampattemptslist[NUMPHASES]={NUMDAMPATTEMPTS,NUMDAMPATTEMPTS,NUMDAMPATTEMPTS};
+      int modprimlist[NUMPHASES]={0,0,0};
+      int checkradinvlist[NUMPHASES]={0,1,1};
+#endif
+
       for(tryphase1=0;tryphase1<NUMPHASES;tryphase1++){
 
         // consider radinvmod only if error bad for original approach.  Avoids excessive attempts when should hit radiative ceiling and error is small.
-        if(radinvmodenergybest!=0 && tryphase1%3!=0 || ACTUALHARDORSOFTFAILURE(failreturnenergy) && failreturn!=FAILRETURNMODESWITCH){
+        if(radinvmodenergybest!=0 && checkradinvlist[tryphase1] || ACTUALHARDORSOFTFAILURE(failreturnenergy) && failreturn!=FAILRETURNMODESWITCH){
 
           errorabsenergyold=errorabsenergy;
           itersenergyold=itersenergy;
           //
           whichcapenergy=CAPTYPEFIX1;
-          if(tryphase1%3==0) baseitermethodenergy=QTYPMHD; // try PMHD
-          else if(tryphase1%3==1) baseitermethodenergy=QTYURAD; // go to URAD
-          else if(tryphase1%3==2) baseitermethodenergy=QTYPRAD; // go to PRAD (works almost as well as URAD)
-
-          if(tryphase1<3){
-            itermodeenergy=ITERMODENORMAL;
-            trueimpmaxiterenergy=IMPMAXITERQUICK;
-            truenumdampattemptsenergy=NUMDAMPATTEMPTSQUICK;
-          }
-          else{
-            itermodeenergy=ITERMODESTAGES; // go to stages
-            trueimpmaxiterenergy=IMPMAXITER;
-            truenumdampattemptsenergy=NUMDAMPATTEMPTS;
-          }
-
+          baseitermethodenergy=baseitermethodlist[tryphase1];
+          itermodeenergy=itermodelist[tryphase1];
+          trueimpmaxiterenergy=trueimpmaxiterlist[tryphase1];
+          truenumdampattemptsenergy=truenumdampattemptslist[tryphase1];
+          int modprim=0;
+          if(havebackup==0) modprim=modprimlist[tryphase1];
           //
           // start fresh
           *lpflag=UTOPRIMNOFAIL;
@@ -1850,9 +1858,6 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
             qenergy=qentropy;
           }
           //
-          // try again with higher u_g
-          int modprim=0;
-          if(havebackup==0 && tryphase1>=3) modprim=1;
           failreturnenergy=koral_source_rad_implicit_mode(modprim,havebackup, didentropyalready, &eomtypeenergy, whichcapenergy, itermodeenergy, baseitermethodenergy, trueimpmaxiterenergy,  truenumdampattemptsenergy, fracenergy, dissmeasure, &radinvmodenergy, pbenergy, uubenergy, piin, Uiin, Ufin, CUf, ptrgeom, &qenergy, dUother ,dUcompenergy, &errorabsenergy, errorabsenergybest, &itersenergy, &f1itersenergy);
 
           if(failreturnenergy==FAILRETURNGOEXPLICIT){
