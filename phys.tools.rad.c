@@ -1795,6 +1795,31 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
 
 
+    //////
+    //
+    // check if should re-order method attempt list in case where radiative energy dominates
+    //
+    //////
+    // set uu0
+    FTYPE fracdtuu0=1.0;
+    FTYPE uu0[NPR];
+    PLOOP(pliter,pl) uu0[pl]=UFSET(CUf,fracdtuu0*dt,Uiin[pl],Ufin[pl],dUother[pl],0.0);
+    // check
+    static FTYPE sqrtnumepsilon;
+    static int firsttimeset=1;
+    if(firsttimeset){
+      sqrtnumepsilon=pow(NUMEPSILON,2.0/3.0);
+      firsttimeset=0;
+    }
+    int raddominates=0;
+    if(pb[UU]<sqrtnumepsilon*pb[URAD0] || uu0[UU]<sqrtnumepsilon*uu0[URAD0]){
+      raddominates=1;
+    }
+    else{
+      raddominates=0;
+    }
+
+
 
 
     /////////////
@@ -1830,6 +1855,25 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       int eomtypelist[NUMPHASES]={EOMGRMHD,EOMGRMHD,EOMGRMHD};
 #endif
 
+      // reorder method if desired
+      if(raddominates){
+        if(TRYENERGYHARDER){
+          baseitermethodlist[0]=QTYURAD;
+          baseitermethodlist[1]=QTYPRAD;
+          baseitermethodlist[2]=QTYPMHD;
+          baseitermethodlist[3]=QTYURAD;
+          baseitermethodlist[4]=QTYPRAD;
+          baseitermethodlist[5]=QTYPMHD;
+        }
+        else{
+          baseitermethodlist[0]=QTYURAD;
+          baseitermethodlist[1]=QTYPRAD;
+          baseitermethodlist[2]=QTYPMHD;
+        }
+      }
+
+
+      // ENERGY PHASE LOOP
       for(tryphase1=0;tryphase1<NUMPHASES;tryphase1++){
 
         // consider radinvmod only if error bad for original approach.  Avoids excessive attempts when should hit radiative ceiling and error is small.
@@ -1931,7 +1975,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
           // still cost more iters
           itersenergy+=itersenergyold;
 
-          if(tryphase1>0){
+          if(tryphase1>0||1){
             if(ACTUALHARDORSOFTFAILURE(failreturnenergy)==0 || failreturnenergy==FAILRETURNMODESWITCH){
               if(debugfail>=2) dualfprintf(fail_file,"Recovered using tryphase1=%d (energy: failreturnenergy=%d radinvmod=%d): ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d\n",tryphase1,failreturnenergy,radinvmodenergy,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsenergyold,errorabsenergy,itersenergyold,itersenergy);
             }
