@@ -1086,6 +1086,16 @@ int init_global(void)
     //    DODIAGEVERYSUBSTEP = 1;
 
   }
+  
+  if(WHICHPROBLEM==KOMI){
+    
+    //lim[1]=lim[2]=lim[3]=MINM;
+    lim[1]=lim[2]=lim[3]=MC;
+    cour=0.8;
+    cooling=NOCOOLING;
+    gam=gamideal=4./3.;
+    
+  }
 
 
   /*************************************************/
