@@ -763,6 +763,14 @@ static void define_method(int iter, int *eomtype, int itermode, int baseitermeth
           *implicititer=(QTYENTROPYUMHDMOMONLY);
           *implicitferr=(QTYENTROPYUMHDMOMONLY);
         }
+        else if(baseitermethod==QTYURAD){
+          *implicititer=(QTYURADMOMONLY); // choice
+          *implicitferr=(QTYURADMOMONLY); // choice
+        }
+        else if(baseitermethod==QTYPRAD){
+          *implicititer=(QTYPRADMOMONLY); // choice
+          *implicitferr=(QTYURADMOMONLY); // choice
+        }
       }
       else if(iter>=*BEGINENERGYSTEPS && iter<=*ENDENERGYSTEPS){
         if(baseitermethod==QTYPMHD){
@@ -772,6 +780,14 @@ static void define_method(int iter, int *eomtype, int itermode, int baseitermeth
         else if(baseitermethod==QTYENTROPYUMHD){
           *implicititer=(QTYENTROPYUMHDENERGYONLY);
           *implicitferr=(QTYENTROPYUMHDENERGYONLY);
+        }
+        else if(baseitermethod==QTYURAD){
+          *implicititer=(QTYURADENERGYONLY); // choice
+          *implicitferr=(QTYURADENERGYONLY); // choice
+        }
+        else if(baseitermethod==QTYPRAD){
+          *implicititer=(QTYPRADENERGYONLY); // choice
+          *implicitferr=(QTYURADENERGYONLY);
         }
       }
       else if(iter>=*BEGINFULLSTEPS && iter<=*ENDFULLSTEPS){
@@ -785,9 +801,17 @@ static void define_method(int iter, int *eomtype, int itermode, int baseitermeth
           *implicititer=(QTYENTROPYUMHD);
           *implicitferr=(QTYENTROPYUMHD);
         }
+        else if(baseitermethod==QTYURAD){
+          *implicititer=(QTYURAD); // choice
+          *implicitferr=(QTYURAD); // choice
+        }
+        else if(baseitermethod==QTYPRAD){
+          *implicititer=(QTYPRAD); // choice
+          *implicitferr=(QTYURAD);
+        }
       }
       else if(PRODUCTION==0){
-        dualfprintf(fail_file,"B Not setup for iter=%d %d %d %g : %d %d : %d %d : %d %d\n",iter, *eomtype, itermode, fracenergy, *BEGINMOMSTEPS, *ENDMOMSTEPS, *BEGINENERGYSTEPS, *ENDENERGYSTEPS, *BEGINFULLSTEPS, *ENDFULLSTEPS, *BEGINNORMALSTEPS);
+        dualfprintf(fail_file,"B Not setup for iter=%d %d %d %g : %d %d : %d %d : %d %d : %d\n",iter, *eomtype, itermode, fracenergy, *BEGINMOMSTEPS, *ENDMOMSTEPS, *BEGINENERGYSTEPS, *ENDENERGYSTEPS, *BEGINFULLSTEPS, *ENDFULLSTEPS, *BEGINNORMALSTEPS,baseitermethod);
         myexit(3498346458);
       }
     }
@@ -799,6 +823,14 @@ static void define_method(int iter, int *eomtype, int itermode, int baseitermeth
       else if(baseitermethod==QTYENTROPYUMHD){
         *implicititer=(QTYENTROPYUMHD);
         *implicitferr=(QTYENTROPYUMHD);
+      }
+      else if(baseitermethod==QTYURAD){
+        *implicititer=(QTYURAD); // choice
+        *implicitferr=(QTYURAD); // choice
+      }
+      else if(baseitermethod==QTYPRAD){
+        *implicititer=(QTYPRAD); // choice
+        *implicitferr=(QTYURAD);
       }
     }
   }
@@ -1971,6 +2003,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       // ENERGY PHASE LOOP
       for(tryphase1=0;tryphase1<NUMPHASES;tryphase1++){
 
+        //        dualfprintf(fail_file,"TRYING: tryphase1=%d : %d %d %d\n",tryphase1,gasextremedominates,radextremedominates,baseitermethodlist[tryphase1]);
+
         // skip rest of not trying harder
         if(TRYENERGYHARDER==0 && tryphase1>=NUMPHASES/2) continue;
 
@@ -1978,9 +2012,14 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
         if(gasextremedominates && baseitermethodlist[tryphase1]==QTYPMHD) continue;
         if(radextremedominates && (baseitermethodlist[tryphase1]==QTYURAD || baseitermethodlist[tryphase1]==QTYPRAD)) continue;
 
+        //        dualfprintf(fail_file,"MAYBEREALLYTRYING: tryphase1=%d : %d %d %d\n",tryphase1,radinvmodenergybest,checkradinvlist[tryphase1],failreturnenergybest);
+
 
         // consider radinvmod only if error bad for original approach.  Avoids excessive attempts when should hit radiative ceiling and error is small.
-        if(radinvmodenergybest!=0 && checkradinvlist[tryphase1] || ACTUALHARDORSOFTFAILURE(failreturnenergy) && failreturnenergy!=FAILRETURNMODESWITCH){
+        if(radinvmodenergybest!=0 && checkradinvlist[tryphase1] || ACTUALHARDORSOFTFAILURE(failreturnenergybest) && failreturnenergybest!=FAILRETURNMODESWITCH){
+
+          //          dualfprintf(fail_file,"REALLYTRYING: tryphase1=%d\n",tryphase1);
+
 
           errorabsenergyold=errorabsenergy;
           itersenergyold=itersenergy;
@@ -2291,16 +2330,17 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
         if(radextremedominates && (baseitermethodlist[tryphase1]==QTYURAD || baseitermethodlist[tryphase1]==QTYPRAD)) continue;
 
         // consider radinvmod only if error bad for original approach.  Avoids excessive attempts when should hit radiative ceiling and error is small.
-        if(radinvmodentropybest!=0 && checkradinvlist[tryphase1] || ACTUALHARDORSOFTFAILURE(failreturnentropy) && failreturnentropy!=FAILRETURNMODESWITCH){
+        if(radinvmodentropybest!=0 && checkradinvlist[tryphase1] || ACTUALHARDORSOFTFAILURE(failreturnentropybest) && failreturnentropybest!=FAILRETURNMODESWITCH){
+
 
           itersentropyold=itersentropy;
           errorabsentropyold=errorabsentropy;
           //
           whichcapentropy=CAPTYPEFIX1;
-          baseitermethodenergy=baseitermethodlist[tryphase1];
-          itermodeenergy=itermodelist[tryphase1];
-          trueimpmaxiterenergy=trueimpmaxiterlist[tryphase1];
-          truenumdampattemptsenergy=truenumdampattemptslist[tryphase1];
+          baseitermethodentropy=baseitermethodlist[tryphase1];
+          itermodeentropy=itermodelist[tryphase1];
+          trueimpmaxiterentropy=trueimpmaxiterlist[tryphase1];
+          truenumdampattemptsentropy=truenumdampattemptslist[tryphase1];
           int modprim=0;
           if(havebackup==0) modprim=modprimlist[tryphase1];
           //
@@ -2338,7 +2378,9 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
             qentropy=qenergy;
           }
           //
-          failreturnentropy=koral_source_rad_implicit_mode(modprim,havebackup, didentropyalready, &eomtypeentropy, whichcapentropy, itermodeentropy, baseitermethodentropy, trueimpmaxiterentropy,  truenumdampattemptsentropy, fracenergy, dissmeasure, &radinvmodentropy, pbentropy, uubentropy, piin, Uiin, Ufin, CUf, ptrgeom, &qentropy, dUother ,dUcompentropy, &errorabsentropy, errorabsentropybest, &itersentropy, &f1itersentropy);
+          //
+          FTYPE fracenergyentropy=0;
+          failreturnentropy=koral_source_rad_implicit_mode(modprim,havebackup, didentropyalready, &eomtypeentropy, whichcapentropy, itermodeentropy, baseitermethodentropy, trueimpmaxiterentropy,  truenumdampattemptsentropy, fracenergyentropy, dissmeasure, &radinvmodentropy, pbentropy, uubentropy, piin, Uiin, Ufin, CUf, ptrgeom, &qentropy, dUother ,dUcompentropy, &errorabsentropy, errorabsentropybest, &itersentropy, &f1itersentropy);
 
           if(failreturnentropy==FAILRETURNGOEXPLICIT){
             lpflagentropybest=*lpflag;
@@ -2346,7 +2388,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
             radinvmodentropybest=radinvmodentropy;
             radErfnegentropybest=radErfnegentropy;
             failreturnentropybest=failreturnentropy;
-            eomtypeentropybest=EOMENTROPYGRMHD;
+            eomtypeentropybest=eomtypelist[tryphase1];
             goexplicitentropybest=1;
           }
           else{
@@ -2373,10 +2415,10 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
           itersentropy+=itersentropyold;
 
           if(ACTUALHARDORSOFTFAILURE(failreturnentropy)==0){
-            if(debugfail>=2) dualfprintf(fail_file,"Recovered using tryphase1=%d (entropy): ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d\n",tryphase1,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsentropyold,errorabsentropy,itersentropyold,itersentropy);
+            if(debugfail>=2) dualfprintf(fail_file,"Recovered using tryphase1=%d (entropy: %d): ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d\n",tryphase1,failreturnentropy,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsentropyold,errorabsentropy,itersentropyold,itersentropy);
           }
           else{
-            if(debugfail>=2) dualfprintf(fail_file,"Failed to: Recovered using tryphase1=%d (entropy): ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d\n",tryphase1,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsentropyold,errorabsentropy,itersentropyold,itersentropy);
+            if(debugfail>=2) dualfprintf(fail_file,"Failed to: Recovered using tryphase1=%d (entropy: %d): ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d\n",tryphase1,failreturnentropy,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsentropyold,errorabsentropy,itersentropyold,itersentropy);
           }
 
         }// done trying harder
@@ -2386,7 +2428,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
 
 
-      if(TRYENTROPYHARDER && ACTUALHARDORSOFTFAILURE(failreturnentropy) && USERAMESH){ // try ramesh
+      if(TRYENTROPYHARDER && ACTUALHARDORSOFTFAILURE(failreturnentropy) && USERAMESH && gasextremedominates==0){ // try ramesh
         errorabsentropyold=errorabsentropy;
         itersentropyold=itersentropy;
         goexplicitentropy=0; // doesn't check, so force implicit
@@ -2922,6 +2964,9 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 // KORALTODO: If doing implicit, should also add geometry source term that can sometimes be stiff.  Would require inverting sparse 8x8 matrix (or maybe 6x6 since only r-\theta for SPC).  Could be important for very dynamic radiative flows.
 static int koral_source_rad_implicit_mode(int modprim, int havebackup, int didentropyalready, int *eomtype, int whichcap, int itermode, int baseitermethod, int trueimpmaxiter, int truenumdampattempts, FTYPE fracenergy, FTYPE dissmeasure, int *radinvmod, FTYPE *pb, FTYPE *uub, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother ,FTYPE (*dUcomp)[NPR], FTYPE *errorabsreturn, FTYPE errorabsbestexternal, int *itersreturn, int *f1itersreturn)
 {
+
+
+
   // some geometry stuff to store pre-step instead of for each step.
   int pliter,pl;
   int jjdim;
@@ -4336,7 +4381,6 @@ static int koral_source_rad_implicit_mode(int modprim, int havebackup, int diden
         fracdtG*=RADDAMPUNDELTA;
         fracdtG=MIN(1.0,fracdtG);
       }      
-
 
 
       /////////
@@ -7880,7 +7924,7 @@ int u2p_rad(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gammama
 #else
   // u2p_rad_new() has some issues.  Slows code, leads to more bad failures, but maybe ok?
   // below keeps at least Utilde^i the same upon hitting limits.  Also works better for RADPULSE compared to "pre" version that just hits hard vel=0 cap.
-  // below has problem with RADBEAMFLAT....well, actually that was before uu vs. uualt fix in f_implicit().  So seems dangerous at least, and need energy conservation check or something so reduce to _pre() if bad.
+  // below has problem with RADBEAMFLAT....well, actually that was before uu vs. uualt fix in f_implicit().  So seems dangerous at least, and need energy conservation check or something so reduce to _pre() if bad. (FUCK)
   toreturn=u2p_rad_new(showmessages, allowlocalfailurefixandnoreport, gammamaxrad, whichcap, uu, pin, ptrgeom,lpflag, lpflagrad);
   //
   //toreturn=u2p_rad_new_pre(showmessages, allowlocalfailurefixandnoreport, gammamaxrad, uu, pin, ptrgeom,lpflag, lpflagrad);
