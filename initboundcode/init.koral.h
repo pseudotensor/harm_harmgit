@@ -503,7 +503,7 @@ struct Ccoordparams {
 #define RADCYLBEAMCARTBC 213
 #define HORIZONOUTFLOWSTATIC 214
 #define OUTFLOWSTATIC 215
-
+#define KOMI 300
 
 ///////////////////////////////
 //problem choice
@@ -530,6 +530,7 @@ struct Ccoordparams {
 //#define WHICHPROBLEM RADCYLBEAM
 //#define WHICHPROBLEM RADBEAM2DKSVERT
 //#define WHICHPROBLEM RADCYLBEAMCART
+#define WHICHPROBLEM KOM1
 
 
 
