@@ -225,7 +225,9 @@ $(PREP): $(PREPDEP)
 	# remove old depenedencies file and create
 	rm -rf deps.onepoint.list ; touch deps.onepoint.list
 	# create new dependencies file
-	for fil in `cat onepoint` ; do  echo $$fil.c ; ( $(MMCOMP) -c -MM $$fil.c >> deps.onepoint.list &) ; done
+	for fil in `cat onepoint` ; do  echo $$fil.c ; ( $(MMCOMP) -c -MM $$fil.c > $$fil.deps.onepoint.list &) ; done
+	wait; 
+	for fil in `cat onepoint` ; do  (cat $$fil.deps.onepoint.list >> deps.onepoint.list) ; done
 	#
 	#
  	############################################
@@ -242,7 +244,9 @@ $(PREP): $(PREPDEP)
 	# remove old depenedencies file and create
 	rm -rf deps.manypoints.list ; touch deps.manypoints.list
 	# create new dependencies file
-	for fil in `cat manypoints` ; do  echo $$fil.c ; ($(MMCOMP) -c -MM $$fil.c >> deps.manypoints.list &) ; done
+	for fil in `cat manypoints` ; do  echo $$fil.c ; ($(MMCOMP) -c -MM $$fil.c > $$fil.deps.manypoints.list &) ; done
+	wait; 
+	for fil in `cat onepoint` ; do  (cat $$fil.deps.onepoint.list >> deps.manypoints.list) ; done
 	echo	$(OBJSMANYPOINTS) > $(PREP)
 	#
 	# wait for background processes
@@ -262,12 +266,15 @@ $(PREP): $(PREPDEP)
 	# remove old depenedencies file and create
 	rm -rf deps.puredouble.list ; touch deps.puredouble.list
 	# create new dependencies file
-	for fil in `cat puredouble` ; do  echo $$fil.c ; ( $(MMCOMP) -c -MM $$fil.c >> deps.puredouble.list &) ; done
+	for fil in `cat puredouble` ; do  echo $$fil.c ; ( $(MMCOMP) -c -MM $$fil.c > $$fil.deps.puredouble.list &) ; done
+	wait; 
+	for fil in `cat onepoint` ; do  (cat $$fil.deps.onepoint.list >> deps.puredouble.list) ; done
 	#
  	############################################
 	#below is for fortran bits
  	############################################
-	fpp -P test.f > testfpp.temp.f ; f2c -Wall -f -P testfpp.temp.f ; sed 's/static//g' testfpp.temp.c > testfpp.c ;sed 's/static//g' testfpp.temp.P > testfpp.P
+	#Sasha added the two seds that cleaned up after fpp (remove stray characters "&" and "f" at the beginning of lines)
+	fpp -P test.f > testfpp.temp1.f ; sed 's/^f.*$$//g' testfpp.temp1.f | sed 's/^\&.*$$//g' > testfpp.temp.f; f2c -Wall -f -P testfpp.temp.f ; sed 's/static//g' testfpp.temp.c > testfpp.c ;sed 's/static//g' testfpp.temp.P > testfpp.P
     #
     
 
