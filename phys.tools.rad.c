@@ -334,7 +334,7 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE errorabs, struc
 
 // 0 : old Jon  method
 // 2 : Jon's paper draft method
-#define WHICHU2PRAD 1
+#define WHICHU2PRAD 0
 
 // during implicit solver, don't limit gamma so much as normally.  Otherwise, solution may not be found and solver struggles and leads to high errors and iterations.  If limit gammarad but not gammafluid, then gammafluid can be too high.  If limit both, no solutions can be found.   So just limit afterwards for now.
 //#define GAMMAMAXRADIMPLICITSOLVER (1E5)
