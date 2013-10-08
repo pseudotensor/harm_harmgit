@@ -3472,6 +3472,8 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
   if(WHICHPROBLEM==KOMIPROBLEM){
     FTYPE pleft[NPR], pright[NPR], P;
     FTYPE dxdxp[NDIM][NDIM];
+    FTYPE x = V[1];
+    
     dxdxprim_ijk(0, 0, 0, CENT, dxdxp);
     
     
@@ -3479,7 +3481,6 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
     PALLLOOP(pl) pleft[pl] = 0.;
     PALLLOOP(pl) pright[pl] = 0.;
     
-    x = V[1];
     
     //fast shock
     if(WHICHKOMI==1){
@@ -3519,20 +3520,20 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
       pleft[UU] = P/(gam-1);
       
       //right state
-      pright[U1] = .9571;
-      pright[U2] = −0.6822;
+      pright[U1] =  .9571;
+      pright[U2] = -0.6822;
       pright[U3] =  0.0;
       pright[B1] = 10.0;
       pright[B2] = 14.49;
       pright[B3] =  0.0;
-      P = 55.36
+      P = 55.36;
       pright[RHO] = 3.323;
       pright[UU] = P/(gam-1);
     }
     //fast switch-off rarefaction
     else if(WHICHKOMI==3){
       //left state
-      pleft[U1] = −2.0;
+      pleft[U1] = -2.0;
       pleft[U2] =  0.0;
       pleft[U3] =  0.0;
       pleft[B1] = 2.0;
@@ -3543,8 +3544,8 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
       pleft[UU] = P/(gam-1);
       
       //right state
-      pright[U1] = −0.212;
-      pright[U2] = −0.590;
+      pright[U1] = -0.212;
+      pright[U2] = -0.590;
       pright[U3] =  0.0;
       pright[B1] =  2.0;
       pright[B2] =  4.710;
@@ -3556,8 +3557,8 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
     //slow switch-on rarefaction
     else if(WHICHKOMI==4){
       //left state
-      pleft[U1] = −0.765;
-      pleft[U2] = −1.386;
+      pleft[U1] = -0.765;
+      pleft[U2] = -1.386;
       pleft[U3] =  0.0;
       pleft[B1] = 1.0;
       pleft[B2] = 1.022;
@@ -3683,7 +3684,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
     
     
     *whichvel=VEL4;
-    *whichcoord=CARTMINKMETRIC2;
+    *whichcoord=MCOORD;
     
     return(0);
     
