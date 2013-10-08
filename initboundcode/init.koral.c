@@ -236,7 +236,7 @@ int set_fieldfrompotential(int *fieldfrompotential)
   PLOOPBONLY(pl) fieldfrompotential[pl-B1+1]=1;
   
   //In the case of Komissarov's tests, set up the field directly in all cases
-  if( WHICHPROBLEM==KOMI ){
+  if( WHICHPROBLEM==KOMIPROBLEM ){
     PLOOPBONLY(pl) fieldfrompotential[pl-B1+1]=0;
   }
 
@@ -1092,7 +1092,7 @@ int init_global(void)
 
   }
   
-  if(WHICHPROBLEM==KOMI){
+  if(WHICHPROBLEM==KOMIPROBLEM){
     
     //lim[1]=lim[2]=lim[3]=MINM;
     lim[1]=lim[2]=lim[3]=MC;
@@ -1729,7 +1729,7 @@ int init_defcoord(void)
   /*************************************************/
   /*************************************************/
   /*************************************************/
-  if(WHICHPROBLEM==KOMI){
+  if(WHICHPROBLEM==KOMIPROBLEM){
     FTYPE xl, xc, xr;
     a=0.0; // no spin in case use MCOORD=KSCOORDS
     
@@ -2356,7 +2356,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 
 #endif
 
-#if(WHICHPROBLEM==KOMI)
+#if(WHICHPROBLEM==KOMIPROBLEM)
 
 #define KAPPAUSER(rho,T) (0.)
 #define KAPPAESUSER(rho,T) (0.)
@@ -3305,7 +3305,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
 
   /*************************************************/
   /*************************************************/
-  if(WHICHPROBLEM==KOMI){
+  if(WHICHPROBLEM==KOMIPROBLEM){
     FTYPE pleft[NPR], pright[NPR], P;
     
     //zero out initial conditions
