@@ -908,7 +908,7 @@ struct Ccoordparams {
 #define WHICHRADSOURCEMETHOD SOURCEMETHODNONE
 
 
-//choose which Komissarov's test number to use (1 thought 9)
+//choose which Komissarov's test number to use (1 through 9)
 #define WHICHKOMI 1
 
 #define N2 1
