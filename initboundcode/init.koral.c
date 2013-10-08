@@ -1996,7 +1996,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
     trifprintf("END check_rmin\n");
   }
 
-  if(1){
+  if(0){
     // check that singularities are properly represented by code
     trifprintf("BEGIN check_spc_singularities_user\n");
     // SUPERGODMARK: Goes very slowly sometimes randomly for unknown reasons.
