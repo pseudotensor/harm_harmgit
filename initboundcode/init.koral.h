@@ -530,7 +530,7 @@ struct Ccoordparams {
 //#define WHICHPROBLEM RADCYLBEAM
 //#define WHICHPROBLEM RADBEAM2DKSVERT
 //#define WHICHPROBLEM RADCYLBEAMCART
-#define WHICHPROBLEM KOM1
+#define WHICHPROBLEM KOMI
 
 
 
@@ -896,6 +896,53 @@ struct Ccoordparams {
 
 #endif
 
+#if(WHICHPROBLEM==KOMI)
+
+#define MCOORD CARTMINKMETRIC2
+#undef EOMTYPE
+#define EOMTYPE EOMGRMHD
+//#define EOMTYPE EOMCOLDGRMHD
+#undef EOMRADTYPE
+#define EOMRADTYPE EOMRADNONE // EOMRADM1CLOSURE
+#undef WHICHRADSOURCEMETHOD
+#define WHICHRADSOURCEMETHOD SOURCEMETHODNONE
+
+
+//choose which Komissarov's test number to use (1 thought 9)
+#define WHICHKOMI 1
+
+#define N2 1
+#define N3 1
+
+#if(WHICHKOMI==1)
+#define N1 40
+
+#elif(WHICHKOMI==2)
+#define N1 200
+
+#elif(WHICHKOMI==3)
+#define N1 150
+
+#elif(WHICHKOMI==4)
+#define N1 150
+
+#elif(WHICHKOMI==5)
+#define N1 200
+
+#elif(WHICHKOMI==6)
+#define N1 200
+
+#elif(WHICHKOMI==7)
+#define N1 400
+
+#elif(WHICHKOMI==8)
+#define N1 500
+
+#elif(WHICHKOMI==9)
+#define N1 200
+
+#endif
+#endif
 
 //****************************************//
 //****************************************//
