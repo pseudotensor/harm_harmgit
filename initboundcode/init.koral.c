@@ -249,6 +249,11 @@ int set_fieldfrompotential(int *fieldfrompotential)
 
   // default (assume all fields are from potential)
   PLOOPBONLY(pl) fieldfrompotential[pl-B1+1]=1;
+  
+  //In the case of Komissarov's tests, set up the field directly in all cases
+  if( WHICHPROBLEM==KOMI ){
+    PLOOPBONLY(pl) fieldfrompotential[pl-B1+1]=0;
+  }
 
 
   return(0);
@@ -1151,20 +1156,56 @@ int init_global(void)
     cooling=NOCOOLING;
     gam=gamideal=4./3.;
 
-    BCtype[X1UP]=PERIODIC;
-    BCtype[X1DN]=PERIODIC;
+    BCtype[X1UP]=OUTFLOW;
+    BCtype[X1DN]=OUTFLOW;
     BCtype[X2UP]=PERIODIC;
     BCtype[X2DN]=PERIODIC;
     BCtype[X3UP]=PERIODIC;
     BCtype[X3DN]=PERIODIC;
     
-    int idt;
-    for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=0.5;
-    
     DTr = 100; //number of time steps for restart dumps
     
+    //set final time
     
-    tf = 50.0; //final time
+    //fast shock
+    if(WHICHKOMI==1){
+      tf = 2.5;
+    }
+    //slow shock
+    else if(WHICHKOMI==2){
+      tf = 2.0;
+    }
+    //fast switch-off rarefaction
+    else if(WHICHKOMI==3){
+      tf = 1.0;
+    }
+    //slow switch-on rarefaction
+    else if(WHICHKOMI==4){
+      tf = 2.0;
+    }
+    //alfven wave
+    else if(WHICHKOMI==5){
+      tf = 2.0;
+    }
+    //compound wave
+    else if(WHICHKOMI==6){
+      tf = 1.5;  //also 0.1 and 0.75 are other times
+    }
+    //Shock tube 1
+    else if(WHICHKOMI==7){
+      tf = 1.0;
+    }
+    //Shock tube 2
+    else if(WHICHKOMI==8){
+      tf = 1.0;
+    }
+    //Collision
+    else if(WHICHKOMI==9){
+      tf = 1.22;
+    }
+
+    int idt;
+    for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=0.1*tf;
 
   }
 
@@ -1759,18 +1800,72 @@ int init_defcoord(void)
   /*************************************************/
   /*************************************************/
   if(WHICHPROBLEM==KOMI){
+    FTYPE xl, xc, xr;
     a=0.0; // no spin in case use MCOORD=KSCOORDS
     
     defcoord = UNIFORMCOORDS;
-    Rin_array[1]=0;
+    
+    //fast shock
+    if(WHICHKOMI==1){
+      xl = -1.0;
+      xc =  0.0;
+      xr =  1.0;
+    }
+    //slow shock
+    else if(WHICHKOMI==2){
+      xl = -0.5;
+      xc =  0.0;
+      xr =  1.5;
+    }
+    //fast switch-off rarefaction
+    else if(WHICHKOMI==3){
+      xl = -1.0;
+      xc =  0.0;
+      xr =  1.0;
+    }
+    //slow switch-on rarefaction
+    else if(WHICHKOMI==4){
+      xl = -1.0;
+      xc =  0.0;
+      xr =  1.0;
+    }
+    //alfven wave
+    else if(WHICHKOMI==5){
+      //not done as requires solution
+    }
+    //compound wave
+    else if(WHICHKOMI==6){
+      //not done as requires solution
+    }
+    //Shock tube 1
+    else if(WHICHKOMI==7){
+      xl = -1.0;
+      xc =  0.0;
+      xr =  1.0;
+    }
+    //Shock tube 2
+    else if(WHICHKOMI==8){
+      xl = -1.0;
+      xc =  0.0;
+      xr =  1.0;
+    }
+    //Collision
+    else if(WHICHKOMI==9){
+      xl = -1.0;
+      xc =  0.0;
+      xr =  1.0;
+    }
+
+    Rin_array[1]=xl;
     Rin_array[2]=0;
     Rin_array[3]=0;
     
-    Rout_array[1]=1.0;
+    Rout_array[1]=xr;
     Rout_array[2]=1.0;
     Rout_array[3]=1.0;
-    
+
   }
+
   /*************************************************/
   /*************************************************/
   /*************************************************/
@@ -3322,61 +3417,212 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
   /*************************************************/
   /*************************************************/
   if(WHICHPROBLEM==KOMI){
+    FTYPE pleft[NPR], pright[NPR], P;
     
-    FTYPE rho,ERAD,uint,Fx,Fy,Fz;
-    FTYPE vx;
-    FTYPE xx,yy,zz;
-    coord(i, j, k, CENT, X);
-    bl_coord(X, V);
-    xx=V[1];
-    yy=V[2];
-    zz=V[3];
+    //zero out initial conditions
+    PALLLOOP(pl) pleft[pl] = 0.;
+    PALLLOOP(pl) pright[pl] = 0.;
     
+    x = V[1];
     
-    // default
-    Fx=Fy=Fz=0.0;
-    
-    
-    FTYPE time=0.;
-    
-    pr[RHO] = rho;
-    pr[UU] = uint;
-    pr[U1] = vx ; // vx is 3-velocity
-    pr[U2] = 0 ;
-    pr[U3] = 0 ;
-    
-    // just define some field
-    pr[B1]=0.0;
-    pr[B2]=0.0;
-    pr[B3]=0.0;
+    //fast shock
+    if(WHICHKOMI==1){
+      //left state
+      pleft[U1] = 25.0;
+      pleft[U2] =  0.0;
+      pleft[U3] =  0.0;
+      pleft[B1] = 20.0;
+      pleft[B2] = 25.02;
+      pleft[B3] =  0.0;
+      P = 1.0;
+      pleft[RHO] = 1.;
+      pleft[UU] = P/(gam-1);
+
+      //right state
+      pright[U1] = 1.091;
+      pright[U2] =  0.3923;
+      pright[U3] =  0.0;
+      pright[B1] = 20.0;
+      pright[B2] = 49.0;
+      pright[B3] =  0.0;
+      P = 367.5;
+      pright[RHO] = 25.48;
+      pright[UU] = P/(gam-1);
+    }
+    //slow shock
+    else if(WHICHKOMI==2){
+      //left state
+      pleft[U1] = 1.53;
+      pleft[U2] =  0.0;
+      pleft[U3] =  0.0;
+      pleft[B1] = 10.0;
+      pleft[B2] = 18.28;
+      pleft[B3] = 0.0;
+      P = 10.0;
+      pleft[RHO] = 1.;
+      pleft[UU] = P/(gam-1);
+      
+      //right state
+      pright[U1] = .9571;
+      pright[U2] = −0.6822;
+      pright[U3] =  0.0;
+      pright[B1] = 10.0;
+      pright[B2] = 14.49;
+      pright[B3] =  0.0;
+      P = 55.36
+      pright[RHO] = 3.323;
+      pright[UU] = P/(gam-1);
+    }
+    //fast switch-off rarefaction
+    else if(WHICHKOMI==3){
+      //left state
+      pleft[U1] = −2.0;
+      pleft[U2] =  0.0;
+      pleft[U3] =  0.0;
+      pleft[B1] = 2.0;
+      pleft[B2] = 0.0;
+      pleft[B3] = 0.0;
+      P = 1.0;
+      pleft[RHO] = 0.1;
+      pleft[UU] = P/(gam-1);
+      
+      //right state
+      pright[U1] = −0.212;
+      pright[U2] = −0.590;
+      pright[U3] =  0.0;
+      pright[B1] =  2.0;
+      pright[B2] =  4.710;
+      pright[B3] =  0.0;
+      P = 10.0;
+      pright[RHO] = 0.562;
+      pright[UU] = P/(gam-1);
+    }
+    //slow switch-on rarefaction
+    else if(WHICHKOMI==4){
+      //left state
+      pleft[U1] = −0.765;
+      pleft[U2] = −1.386;
+      pleft[U3] =  0.0;
+      pleft[B1] = 1.0;
+      pleft[B2] = 1.022;
+      pleft[B3] = 0.0;
+      P = 0.1;
+      pleft[RHO] = 1.78e-3;
+      pleft[UU] = P/(gam-1);
+      
+      //right state
+      pright[U1] =  0.0;
+      pright[U2] =  0.0;
+      pright[U3] =  0.0;
+      pright[B1] =  1.0;
+      pright[B2] =  0.0;
+      pright[B3] =  0.0;
+      P = 1.0;
+      pright[RHO] = 1.0;
+      pright[UU] = P/(gam-1);
+    }
+    //alfven wave
+    else if(WHICHKOMI==5){
+      //not done as requires solution
+    }
+    //compound wave
+    else if(WHICHKOMI==6){
+      //not done as requires solution
+    }
+    //Shock tube 1
+    else if(WHICHKOMI==7){
+      //left state
+      pleft[U1] =  0.0;
+      pleft[U2] =  0.0;
+      pleft[U3] =  0.0;
+      pleft[B1] = 1.0;
+      pleft[B2] = 0.0;
+      pleft[B3] = 0.0;
+      P = 1000.0;
+      pleft[RHO] = 1.0;
+      pleft[UU] = P/(gam-1);
+      
+      //right state
+      pright[U1] =  0.0;
+      pright[U2] =  0.0;
+      pright[U3] =  0.0;
+      pright[B1] =  1.0;
+      pright[B2] =  0.0;
+      pright[B3] =  0.0;
+      P = 1.0;
+      pright[RHO] = 0.1;
+      pright[UU] = P/(gam-1);
+    }
+    //Shock tube 2
+    else if(WHICHKOMI==8){
+      //left state
+      pleft[U1] =  0.0;
+      pleft[U2] =  0.0;
+      pleft[U3] =  0.0;
+      pleft[B1] = 0.0;
+      pleft[B2] = 20.0;
+      pleft[B3] = 0.0;
+      P = 30.;
+      pleft[RHO] = 1.0;
+      pleft[UU] = P/(gam-1);
+      
+      //right state
+      pright[U1] =  0.0;
+      pright[U2] =  0.0;
+      pright[U3] =  0.0;
+      pright[B1] =  0.0;
+      pright[B2] =  0.0;
+      pright[B3] =  0.0;
+      P = 1.0;
+      pright[RHO] = 0.1;
+      pright[UU] = P/(gam-1);
+    }
+    //Collision
+    else if(WHICHKOMI==9){
+      //left state
+      pleft[U1] =  5.0;
+      pleft[U2] =  0.0;
+      pleft[U3] =  0.0;
+      pleft[B1] = 10.0;
+      pleft[B2] = 10.0;
+      pleft[B3] = 0.0;
+      P = 1.0;
+      pleft[RHO] = 1.0;
+      pleft[UU] = P/(gam-1);
+      
+      //right state
+      pright[U1] = -5.0;
+      pright[U2] =  0.0;
+      pright[U3] =  0.0;
+      pright[B1] =  10.0;
+      pright[B2] = -10.0;
+      pright[B3] =  0.0;
+      P = 1.0;
+      pright[RHO] = 1.0;
+      pright[UU] = P/(gam-1);
+    }
+
+    if (x<=0) {
+      PALLLOOP(pl) pr[pl] = pleft[pl];
+    }
+    else if (x>0) {
+      PALLLOOP(pl) pr[pl] = pright[pl];
+    }
     
     if(FLUXB==FLUXCTSTAG){
-      // assume pstag later defined really using vector potential or directly assignment of B3 in axisymmetry
+      //can ignore half a cell shift for B1: it does not change across the interface so does not matter
       PLOOPBONLY(pl) pstag[pl]=pr[pl];
     }
     
     
-    
-    pr[PRAD0] = 0 ; // so triggers failure if used
+    pr[PRAD0] = 0 ;
     pr[PRAD1] = 0 ;
     pr[PRAD2] = 0 ;
     pr[PRAD3] = 0 ;
     
-    //E, F^i in orthonormal fluid frame
-    FTYPE pradffortho[NPR];
-    pradffortho[PRAD0] = ERAD;
-    pradffortho[PRAD1] = Fx;
-    pradffortho[PRAD2] = Fy;
-    pradffortho[PRAD3] = Fz;
     
-    
-    // Transform these fluid frame E,F^i to lab frame coordinate basis primitives
-    *whichvel=VEL3;
+    *whichvel=VEL4;
     *whichcoord=CARTMINKMETRIC2;
-    prad_fforlab(whichvel, whichcoord, FF2LAB, i,j,k,CENT,NULL, pradffortho, pr, pr);
-    
-    //  PLOOPRADONLY(pl) dualfprintf(fail_file,"FOO1: i=%d pl=%d pr=%g\n",ptrgeomreal->i,pl,pr[pl]);
-    
     
     return(0);
     
