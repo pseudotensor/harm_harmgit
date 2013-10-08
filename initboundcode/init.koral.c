@@ -1150,7 +1150,22 @@ int init_global(void)
     cour=0.8;
     cooling=NOCOOLING;
     gam=gamideal=4./3.;
+
+    BCtype[X1UP]=PERIODIC;
+    BCtype[X1DN]=PERIODIC;
+    BCtype[X2UP]=PERIODIC;
+    BCtype[X2DN]=PERIODIC;
+    BCtype[X3UP]=PERIODIC;
+    BCtype[X3DN]=PERIODIC;
     
+    int idt;
+    for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=0.5;
+    
+    DTr = 100; //number of time steps for restart dumps
+    
+    
+    tf = 50.0; //final time
+
   }
 
 
@@ -1740,6 +1755,22 @@ int init_defcoord(void)
 
   }
 
+  /*************************************************/
+  /*************************************************/
+  /*************************************************/
+  if(WHICHPROBLEM==KOMI){
+    a=0.0; // no spin in case use MCOORD=KSCOORDS
+    
+    defcoord = UNIFORMCOORDS;
+    Rin_array[1]=0;
+    Rin_array[2]=0;
+    Rin_array[3]=0;
+    
+    Rout_array[1]=1.0;
+    Rout_array[2]=1.0;
+    Rout_array[3]=1.0;
+    
+  }
   /*************************************************/
   /*************************************************/
   /*************************************************/
@@ -2366,6 +2397,12 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 
 #endif
 
+#if(WHICHPROBLEM==KOMI)
+
+#define KAPPAUSER(rho,T) (0.)
+#define KAPPAESUSER(rho,T) (0.)
+
+#endif
 
 #if(WHICHPROBLEM==RADBONDI)
 
@@ -3335,6 +3372,69 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
   }
 
 
+  /*************************************************/
+  /*************************************************/
+  if(WHICHPROBLEM==KOMI){
+    
+    FTYPE rho,ERAD,uint,Fx,Fy,Fz;
+    FTYPE vx;
+    FTYPE xx,yy,zz;
+    coord(i, j, k, CENT, X);
+    bl_coord(X, V);
+    xx=V[1];
+    yy=V[2];
+    zz=V[3];
+    
+    
+    // default
+    Fx=Fy=Fz=0.0;
+    
+    
+    FTYPE time=0.;
+    
+    pr[RHO] = rho;
+    pr[UU] = uint;
+    pr[U1] = vx ; // vx is 3-velocity
+    pr[U2] = 0 ;
+    pr[U3] = 0 ;
+    
+    // just define some field
+    pr[B1]=0.0;
+    pr[B2]=0.0;
+    pr[B3]=0.0;
+    
+    if(FLUXB==FLUXCTSTAG){
+      // assume pstag later defined really using vector potential or directly assignment of B3 in axisymmetry
+      PLOOPBONLY(pl) pstag[pl]=pr[pl];
+    }
+    
+    
+    
+    pr[PRAD0] = 0 ; // so triggers failure if used
+    pr[PRAD1] = 0 ;
+    pr[PRAD2] = 0 ;
+    pr[PRAD3] = 0 ;
+    
+    //E, F^i in orthonormal fluid frame
+    FTYPE pradffortho[NPR];
+    pradffortho[PRAD0] = ERAD;
+    pradffortho[PRAD1] = Fx;
+    pradffortho[PRAD2] = Fy;
+    pradffortho[PRAD3] = Fz;
+    
+    
+    // Transform these fluid frame E,F^i to lab frame coordinate basis primitives
+    *whichvel=VEL3;
+    *whichcoord=CARTMINKMETRIC2;
+    prad_fforlab(whichvel, whichcoord, FF2LAB, i,j,k,CENT,NULL, pradffortho, pr, pr);
+    
+    //  PLOOPRADONLY(pl) dualfprintf(fail_file,"FOO1: i=%d pl=%d pr=%g\n",ptrgeomreal->i,pl,pr[pl]);
+    
+    
+    return(0);
+    
+    
+  }
 
 
 
