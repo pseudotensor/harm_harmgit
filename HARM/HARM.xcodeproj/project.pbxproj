@@ -959,7 +959,7 @@
 			buildPhases = (
 			);
 			buildToolPath = /usr/bin/make;
-			buildWorkingDirectory = "$(PROJECT_DIR)/../run";
+			buildWorkingDirectory = "$(PROJECT_DIR)/../";
 			dependencies = (
 			);
 			name = HARM;
