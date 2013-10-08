@@ -3418,6 +3418,9 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
   /*************************************************/
   if(WHICHPROBLEM==KOMIPROBLEM){
     FTYPE pleft[NPR], pright[NPR], P;
+    FTYPE dxdxp[NDIM][NDIM];
+    dxdxprim_ijk(0, 0, 0, CENT, dxdxp);
+    
     
     //zero out initial conditions
     PALLLOOP(pl) pleft[pl] = 0.;
@@ -3607,6 +3610,11 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
     }
     else if (x>0) {
       PALLLOOP(pl) pr[pl] = pright[pl];
+    }
+    
+    //convert magnetic field components into code coordinates
+    for(pl=1; pl <= 3; pl++) {
+      pr[pl-1+B1] *= dxdxp[pl][pl];
     }
     
     if(FLUXB==FLUXCTSTAG){
