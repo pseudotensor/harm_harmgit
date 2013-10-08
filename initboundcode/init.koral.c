@@ -1136,7 +1136,7 @@ int init_global(void)
 
   }
   
-  if(WHICHPROBLEM==KOMIPROBLEM){
+#if(WHICHPROBLEM==KOMIPROBLEM)
     
     //lim[1]=lim[2]=lim[3]=MINM;
     lim[1]=lim[2]=lim[3]=MC;
@@ -1195,7 +1195,7 @@ int init_global(void)
     int idt;
     for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=0.1*tf;
 
-  }
+#endif
 
 
   /*************************************************/
@@ -1778,7 +1778,7 @@ int init_defcoord(void)
   /*************************************************/
   /*************************************************/
   /*************************************************/
-  if(WHICHPROBLEM==KOMIPROBLEM){
+#if(WHICHPROBLEM==KOMIPROBLEM)
     FTYPE xl, xc, xr;
     a=0.0; // no spin in case use MCOORD=KSCOORDS
     
@@ -1843,7 +1843,7 @@ int init_defcoord(void)
     Rout_array[2]=1.0;
     Rout_array[3]=1.0;
 
-  }
+#endif
 
   /*************************************************/
   /*************************************************/
@@ -3358,7 +3358,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
 
   /*************************************************/
   /*************************************************/
-  if(WHICHPROBLEM==KOMIPROBLEM){
+#if(WHICHPROBLEM==KOMIPROBLEM)
     FTYPE pleft[NPR], pright[NPR], P;
     FTYPE dxdxp[NDIM][NDIM];
     FTYPE x = V[1];
@@ -3578,7 +3578,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
     return(0);
     
     
-  }
+#endif
 
 
 
