@@ -246,7 +246,7 @@ $(PREP): $(PREPDEP)
 	# create new dependencies file
 	for fil in `cat manypoints` ; do  echo $$fil.c ; ($(MMCOMP) -c -MM $$fil.c > $$fil.deps.manypoints.list &) ; done
 	wait; 
-	for fil in `cat manypoints` ; do  (cat $$fil.deps.onepoint.list >> deps.manypoints.list) ; done
+	for fil in `cat manypoints` ; do  (cat $$fil.deps.manypoints.list >> deps.manypoints.list) ; done
 	echo	$(OBJSMANYPOINTS) > $(PREP)
 	#
 	# wait for background processes
@@ -268,7 +268,7 @@ $(PREP): $(PREPDEP)
 	# create new dependencies file
 	for fil in `cat puredouble` ; do  echo $$fil.c ; ( $(MMCOMP) -c -MM $$fil.c > $$fil.deps.puredouble.list &) ; done
 	wait; 
-	for fil in `cat onepoint` ; do  (cat $$fil.deps.onepoint.list >> deps.puredouble.list) ; done
+	for fil in `cat puredouble` ; do  (cat $$fil.deps.puredouble.list >> deps.puredouble.list) ; done
 	#
  	############################################
 	#below is for fortran bits
