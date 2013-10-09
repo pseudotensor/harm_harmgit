@@ -1228,8 +1228,8 @@ static int check_on_inversion(int usedhotinversion,int usedentropyinversion,int 
 
 
 
-  //  if(1 || !(*lpflag)){ // only report if not failure
-  if(!(*lpflag)){ // only report if not failure
+  //  if(1 || !(*lpflag)){ // only report if not failure and not fixup (in which case U might differ)
+  if(*lpflag==0 || *lpflagrad==0){ // only report if not failure and not fixup (in which case U might differ)
 
     /////////////
     //
@@ -1297,7 +1297,7 @@ static int check_on_inversion(int usedhotinversion,int usedentropyinversion,int 
 
       //(EOMRADTYPE==EOMRADNONE && (pl==URAD0 || pl==URAD1 || pl==URAD2 || pl==URAD3)) || // no need to check pl if no such pl's
       // lpflagrad: Checks that if u2p placed limiter on p (e.g. velocity), then should skip this check since won't be accurate inversion
-      if(EOMRADTYPE!=EOMRADNONE && (*lpflagrad==1)) continue;
+      if(EOMRADTYPE!=EOMRADNONE && (*lpflagrad!=0)) continue;
       // If doing Eddington approximation, actually ignore conserved flux evolution.
       if(EOMRADTYPE==EOMRADEDD && (pl==URAD1 || pl==URAD2 || pl==URAD3)) continue;
 

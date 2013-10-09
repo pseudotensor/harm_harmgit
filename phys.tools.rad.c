@@ -333,8 +333,8 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE errorabs, struc
 
 
 // 0 : old Jon  method
-// 2 : Jon's paper draft method
-#define WHICHU2PRAD 0
+// 1 : Jon's paper draft method
+#define WHICHU2PRAD 1
 
 // during implicit solver, don't limit gamma so much as normally.  Otherwise, solution may not be found and solver struggles and leads to high errors and iterations.  If limit gammarad but not gammafluid, then gammafluid can be too high.  If limit both, no solutions can be found.   So just limit afterwards for now.
 //#define GAMMAMAXRADIMPLICITSOLVER (1E5)
@@ -7615,15 +7615,26 @@ int prad_fftolab(int *whichvel, int *whichcoord, int i, int j, int k, int loc, s
 
   // DEBUG:
   if(lpflag!=UTOPRIMNOFAIL || lpflagrad!=UTOPRIMRADNOFAIL){ // DEBUG with 1||
-    dualfprintf(fail_file,"Failed to invert during prad_fftolab().  Assuming fixups won't be applied: %d %d\n",lpflag,lpflagrad);
-    dualfprintf(fail_file,"ijk=%d %d %d : %d\n",ptrgeomtouse->i,ptrgeomtouse->j,ptrgeomtouse->k,ptrgeomtouse->p);
-    PLOOP(pliter,pl) dualfprintf(fail_file,"pl=%d pin=%g U=%g\n",pl,pin[pl],U[pl]);
-    DLOOPA(jj) dualfprintf(fail_file,"jj=%d ucon=%g\n",jj,ucon[jj]);
-    DLOOP(jj,kk) dualfprintf(fail_file,"jj=%d kk=%d Rijff=%g Rijlab=%g\n",jj,kk,Rijff[jj][kk],Rijlab[jj][kk]);
-    DLOOP(jj,kk) dualfprintf(fail_file,"jj=%d kk=%d gcov=%g gcon=%g\n",jj,kk,ptrgeomtouse->gcov[GIND(jj,kk)],ptrgeomtouse->gcon[GIND(jj,kk)]);
-    PLOOP(pliter,pl) dualfprintf(fail_file,"pl=%d pout=%g\n",pl,pout[pl]);
-    myexit(189235);
-    // KORALTODO: Check whether really succeeded?  Need to call fixups?  Probably, but need per-cell fixup.  Hard to do if other cells not even set yet as in ICs.  Should probably include fixup process during initbase.c stuff.
+    // allows fixups to be applied, such as gamma radiation limiting
+    if(lpflag>UTOPRIMNOFAIL || lpflagrad>UTOPRIMRADNOFAIL){ // DEBUG with 1||
+      if(debugfail>=2){
+        dualfprintf(fail_file,"Failed to invert during prad_fftolab().  Assuming fixups won't be applied: %d %d\n",lpflag,lpflagrad);
+        dualfprintf(fail_file,"ijk=%d %d %d : %d\n",ptrgeomtouse->i,ptrgeomtouse->j,ptrgeomtouse->k,ptrgeomtouse->p);
+        PLOOP(pliter,pl) dualfprintf(fail_file,"pl=%d pin=%g U=%g\n",pl,pin[pl],U[pl]);
+        DLOOPA(jj) dualfprintf(fail_file,"jj=%d ucon=%g\n",jj,ucon[jj]);
+        DLOOP(jj,kk) dualfprintf(fail_file,"jj=%d kk=%d Rijff=%g Rijlab=%g\n",jj,kk,Rijff[jj][kk],Rijlab[jj][kk]);
+        DLOOP(jj,kk) dualfprintf(fail_file,"jj=%d kk=%d gcov=%g gcon=%g\n",jj,kk,ptrgeomtouse->gcov[GIND(jj,kk)],ptrgeomtouse->gcon[GIND(jj,kk)]);
+        PLOOP(pliter,pl) dualfprintf(fail_file,"pl=%d pout=%g\n",pl,pout[pl]);
+      }
+      myexit(189235);
+      // KORALTODO: Check whether really succeeded?  Need to call fixups?  Probably, but need per-cell fixup.  Hard to do if other cells not even set yet as in ICs.  Should probably include fixup process during initbase.c stuff.
+    }
+    else{
+      if(debugfail>=2){
+        dualfprintf(fail_file,"Fixups applied during invert during prad_fftolab(): %d %d\n",lpflag,lpflagrad);
+        dualfprintf(fail_file,"ijk=%d %d %d : %d\n",ptrgeomtouse->i,ptrgeomtouse->j,ptrgeomtouse->k,ptrgeomtouse->p);
+      }
+    }
   }
 
 
@@ -7922,12 +7933,8 @@ int u2p_rad(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gammama
 #if(WHICHU2PRAD==0)
   toreturn=u2p_rad_orig(showmessages, allowlocalfailurefixandnoreport, gammamaxrad, uu, pin, ptrgeom,lpflag, lpflagrad);
 #else
-  // u2p_rad_new() has some issues.  Slows code, leads to more bad failures, but maybe ok?
-  // below keeps at least Utilde^i the same upon hitting limits.  Also works better for RADPULSE compared to "pre" version that just hits hard vel=0 cap.
-  // below has problem with RADBEAMFLAT....well, actually that was before uu vs. uualt fix in f_implicit().  So seems dangerous at least, and need energy conservation check or something so reduce to _pre() if bad. (FUCK)
+  //  toreturn=u2p_rad_new_pre(showmessages, allowlocalfailurefixandnoreport, gammamaxrad, uu, pin, ptrgeom,lpflag, lpflagrad);
   toreturn=u2p_rad_new(showmessages, allowlocalfailurefixandnoreport, gammamaxrad, whichcap, uu, pin, ptrgeom,lpflag, lpflagrad);
-  //
-  //toreturn=u2p_rad_new_pre(showmessages, allowlocalfailurefixandnoreport, gammamaxrad, uu, pin, ptrgeom,lpflag, lpflagrad);
 #endif
 
   return(toreturn);
@@ -8121,7 +8128,8 @@ int u2p_rad_new_pre(int showmessages, int allowlocalfailurefixandnoreport, FTYPE
   }
   else{
     // CASE reductions (so set as no failure so fixups don't operate -- but might also want to turn off CHECKINVERSIONRAD else that routine won't know when to ignore bad U->P->U cases.)
-    *lpflagrad=UTOPRIMRADNOFAIL;
+    if(*lpflagrad==0) *lpflagrad=UTOPRIMRADNOFAIL;
+    else *lpflagrad=UTOPRIMRADFAILFIXEDUTOPRIMRAD; //UTOPRIMRADNOFAIL;
   }
 
   return 0;
@@ -8251,47 +8259,61 @@ int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gam
   else{ // fixes in case when Er<ERADLIMIT (whether or not y is modified)
     if(whichcap==CAPTYPEFIX1){
 
-      // If E_r<0, then can't trust E_r and Erf is arbitrary.  Choose instead first urfconrel to be maximum gamma as pointed in same 4-velocity direction as from Utildecon over previous Erf or u_g just to set scale
-      // Get urfconrel in same direction as Utildecon
-      FTYPE Utildeabs=sqrt(fabs(Utildesq))+fabs(Er)+ERADLIMIT;
-      SLOOPA(jj) urfconrel[jj] = Utildecon[jj]/Utildeabs;
-
-      // now get gamma for this fake urfconrel that is so-far only very roughly expected to be correct.
-      FTYPE gammanew,qsqnew;
-      gamma_calc_fromuconrel(urfconrel,ptrgeom,&gammanew,&qsqnew);
-      //      dualfprintf(fail_file,"gamma=%g gammanew=%g Utildeabs=%g : %g %g %g\n",gamma,gammanew,Utildeabs,Utildecon[1],Utildecon[2],Utildecon[3]);
-
-      // rescale, assuming want to be gammamax
-      if(gammanew>1.0){
-        FTYPE fvar=sqrt((gammamax*gammamax-1.0)/(gammanew*gammanew-1.0));
-        SLOOPA(jj) urfconrel[jj] *= fvar;
-        // verify
-        gamma_calc_fromuconrel(urfconrel,ptrgeom,&gammanew,&qsqnew);
-        //dualfprintf(fail_file,"VERIFY: gamma=%g gammanew=%g fvar=%g\n",gamma,gammanew,fvar);
-        gamma=gammanew;
-        gammasq=gammanew*gammanew;
-        qsq=qsqnew;
-      }
-      else{
-        SLOOPA(jj) urfconrel[jj] *= 0.0;
-        gamma=1.0;
-        gammasq=1.0;
-        qsq=0.0;
-      }
-
-      //FTYPE utildesq=1.0+qsq;
-      //pr=gamma*Utildesq/(4.0*gammasq) / (utildesq);
-
-      // This determination of Er and pr connects continuously with y<=ylimit case no matter what original Er was.
-      Er = ERADLIMIT + sqrt(fabs(Utildesq)/ylimit);
-      pr=Er/(4.0*gammasq-1.0);
-      // Get Erf
-      Erf = pr/(4.0/3.0-1.0);
-
       // override if Er<0 originally since otherwise out of control rise in Erf
       if(didmodEr){
         Er = ERADLIMIT;
         Erf = ERADLIMIT;
+        gamma=1.0;
+        // radiation frame relativity 4-velocity
+        SLOOPA(jj) urfconrel[jj] = 0.0;
+        // If E_r<0, then can't trust E_r and Erf is arbitrary.  Choose instead first urfconrel to be maximum gamma as pointed in same 4-velocity direction as from Utildecon over previous Erf or u_g just to set scale
+        // But better to not trust to avoid run-away energy creation
+      }
+      else{
+        if(yvar<1.0){
+          // below sticks to what would end up like normal velocity scale.
+          SLOOPA(jj) urfconrel[jj] = gamma*(Utildecon[jj]/(4.0*pr*gammasq));
+        }
+        else{
+          // if yvar>=1.0, then can't trust that gamma will rescale urfconrel into proper gamma>>1 range, so force.
+          // Get urfconrel in same direction as Utildecon
+          FTYPE Utildeabs=sqrt(fabs(Utildesq))+fabs(Er)+ERADLIMIT;
+          SLOOPA(jj) urfconrel[jj] = gamma*Utildecon[jj]/Utildeabs; // gives something that gives back ~gamma when using gamma_calc_fromuconrel()
+        }
+
+        // now get gamma for this fake urfconrel that is so-far only very roughly expected to be correct.
+        FTYPE gammanew,qsqnew;
+        gamma_calc_fromuconrel(urfconrel,ptrgeom,&gammanew,&qsqnew);
+        //      dualfprintf(fail_file,"gamma=%g gammanew=%g Utildeabs=%g : %g %g %g\n",gamma,gammanew,Utildeabs,Utildecon[1],Utildecon[2],Utildecon[3]);
+
+        // rescale, assuming want to be gammamax
+        if(gammanew>1.0){
+          FTYPE fvar=sqrt((gammamax*gammamax-1.0)/(gammanew*gammanew-1.0));
+          SLOOPA(jj) urfconrel[jj] *= fvar;
+          // verify
+          gamma_calc_fromuconrel(urfconrel,ptrgeom,&gammanew,&qsqnew);
+          //dualfprintf(fail_file,"VERIFY: gamma=%g gammanew=%g fvar=%g\n",gamma,gammanew,fvar);
+          gamma=gammanew;
+          gammasq=gammanew*gammanew;
+          qsq=qsqnew;
+        }
+        else{
+          SLOOPA(jj) urfconrel[jj] *= 0.0;
+          gamma=1.0;
+          gammasq=1.0;
+          qsq=0.0;
+        }
+
+        if(0){ // don't use, just trust Er>0.  Kinda works to set to if(1), but leads to some artifacts near where suddenly R^t_t would give different result for Er.
+          //FTYPE utildesq=1.0+qsq;
+          //pr=gamma*Utildesq/(4.0*gammasq) / (utildesq);
+          
+          // This determination of Er and pr connects continuously with y<=ylimit case no matter what original Er was.
+          Er = ERADLIMIT + sqrt(fabs(Utildesq)/ylimit);
+          pr=Er/(4.0*gammasq-1.0);
+          // Get Erf
+          Erf = pr/(4.0/3.0-1.0);
+        }
       }
 
     }// endif capfixtype1
@@ -8307,6 +8329,9 @@ int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gam
         SLOOPA(jj) urfconrel[jj] = 0.0;
       }
       else{
+        // radiation frame relativity 4-velocity (using pr>0 and chosen gamma,gammasq)
+        SLOOPA(jj) urfconrel[jj] = gamma*(Utildecon[jj]/(4.0*pr*gammasq));
+
         // Get resulting gamma and fix \tilde{u}^i, but don't modify Erf.
         FTYPE gammanew,qsqnew;
         gamma_calc_fromuconrel(&pin[URAD1-1],ptrgeom,&gammanew,&qsqnew);
@@ -8320,6 +8345,12 @@ int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gam
         else{
           SLOOPA(jj) urfconrel[jj] *= 0.0;
         }
+
+        // don't modify Erf if E_r was positive so that only had to rescale y (even if rescaled down from y>1 or gamma^2<0)
+        //        pr = Er/(4.0*gammanew*gammanew-1.0);
+        //        // radiation frame energy density
+        //        Erf = pr/(4.0/3.0-1.0);
+
 
         //    if(startpos[1]+ptrgeom->i==131 && startpos[2]+ptrgeom->j==19) dualfprintf(fail_file,"didmod=%d : urfconrel=%g %g %g : %g %g\n",didmod,urfconrel[1],urfconrel[2],urfconrel[3],gamma,gammanew);
       }
@@ -8369,7 +8400,8 @@ int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gam
   }
   else{
     // CASE reductions (so set as no failure so fixups don't operate -- but might also want to turn off CHECKINVERSIONRAD else that routine won't know when to ignore bad U->P->U cases.)
-    *lpflagrad=UTOPRIMRADNOFAIL;
+    if(*lpflagrad==0) *lpflagrad=UTOPRIMRADNOFAIL;
+    else *lpflagrad=UTOPRIMRADFAILFIXEDUTOPRIMRAD; //UTOPRIMRADNOFAIL;
   }
 
   return 0;
@@ -8576,7 +8608,8 @@ int u2p_rad_orig(int showmessages, int allowlocalfailurefixandnoreport, FTYPE ga
   }
   else{
     // CASE reductions (so set as no failure so fixups don't operate -- but might also want to turn off CHECKINVERSIONRAD else that routine won't know when to ignore bad U->P->U cases.)
-    *lpflagrad=UTOPRIMRADNOFAIL;
+    if(*lpflagrad==0) *lpflagrad=UTOPRIMRADNOFAIL;
+    else *lpflagrad=UTOPRIMRADFAILFIXEDUTOPRIMRAD; //UTOPRIMRADNOFAIL;
   }
 
   return 0;

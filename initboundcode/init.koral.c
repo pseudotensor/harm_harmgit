@@ -335,8 +335,8 @@ int init_global(void)
   //  ERADLIMIT=UUMIN; // set same for now
   ERADLIMIT=UUMINLIMIT; // seems fine.
   // maximum radiation frame lorentz factor
-  GAMMAMAXRAD=10000.0;
-  //  GAMMAMAXRAD=100.0;
+  //GAMMAMAXRAD=10000.0; // problems with PARA or TIMEORDER=3 for NLEFT=0.99999 with RADBEAM2D, so stick to gammamax=100 in general unless for test.
+  GAMMAMAXRAD=100.0;
 
 
 
@@ -1340,8 +1340,13 @@ int init_global(void)
     }
 
     int idt;
-    for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=1.0;
-    //    for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=0.1;
+    if(WHICHPROBLEM==RADCYLBEAMCART){
+      for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=10.0;
+    }
+    else{
+      for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=1.0;
+      //    for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=0.1;
+    }
 
     DTr = 100; //number of time steps for restart dumps
     // tf = 100*DTdumpgen[0]; // 100 dumps(?)

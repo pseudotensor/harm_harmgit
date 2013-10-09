@@ -924,7 +924,8 @@ static int advance_standard(
 #endif
     {
 #if(FIXUPZONES==FIXUPALLZONES)
-      fixup(stage,pf,useducum,finalstep);
+      //      fixup(stage,pf,useducum,finalstep); // GODMARK: if want to correct useducum, then have to be more careful like when doing fixup1zone()
+      fixup(stage,pf,utoinvert,finalstep);
 #endif  
     }
 

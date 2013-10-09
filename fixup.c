@@ -794,7 +794,7 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
     set_density_floors(ptrgeom,prmhd,prfloor);
     scalemin[RHO]=RHOMINLIMIT;
     scalemin[UU]=UUMINLIMIT;
-    if(PRAD0>=0) scalemin[URAD0]=ERADLIMIT;
+    if(URAD0>=0) scalemin[URAD0]=ERADLIMIT;
     
     
 
@@ -877,7 +877,7 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
       else if(FIXUPTYPE==2){
         // then don't allow momentum to change regardless of meaning for implied rho,u
         dU[U1]=dU[U2]=dU[U3]=0.0;
-        dU[URAD0]=dU[URAD1]=dU[URAD2]=dU[URAD3]=0.0;
+        if(URAD0>=0) dU[URAD0]=dU[URAD1]=dU[URAD2]=dU[URAD3]=0.0;
 
         pl=UU;
         if ( checkfl[pl]&&(prfloor[pl] > prmhd[pl]) ){
