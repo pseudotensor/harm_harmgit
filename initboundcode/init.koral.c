@@ -1160,10 +1160,10 @@ int init_global(void)
     cooling=NOCOOLING;
     gam=gamideal=4./3.;
 
-    BCtype[X1UP]=OUTFLOW;
-    BCtype[X1DN]=OUTFLOW;
-    BCtype[X2UP]=PERIODIC;
-    BCtype[X2DN]=PERIODIC;
+    BCtype[X1UP]=FREEOUTFLOW;
+    BCtype[X1DN]=FREEOUTFLOW;
+    BCtype[X2UP]=OUTFLOW;
+    BCtype[X2DN]=OUTFLOW;
     BCtype[X3UP]=PERIODIC;
     BCtype[X3DN]=PERIODIC;
     
