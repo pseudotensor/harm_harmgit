@@ -218,7 +218,11 @@ int prepre_init_specific_init(void)
     periodicx1=periodicx2=0;
     periodicx3=1;
   }
-
+  else if(WHICHPROBLEM==KOMIPROBLEM){
+    periodicx1=0;
+    periodicx2=periodicx3=1;
+  }
+  
   // Also: SET USEROMIO to 0 or 1 in mympi.definit.h (needs to be 0 for TEXTOUTPUT)
   binaryoutput=TEXTOUTPUT;
 
