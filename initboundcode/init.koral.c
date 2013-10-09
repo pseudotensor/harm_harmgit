@@ -3577,7 +3577,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
     
     
     *whichvel=VEL4;
-    *whichcoord=MCOORD;
+    *whichcoord=CARTMINKMETRIC2;
     
     return(0);
     
