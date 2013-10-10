@@ -213,7 +213,7 @@ $(PREP): $(PREPDEP)
 	rm -rf deps.onepoint.list ; touch deps.onepoint.list
 	# create new dependencies file
 	for fil in `cat onepoint` ; do  echo $$fil.c ; $(MMCOMP) -c -MM $$fil.c > $$fil.deps.onepoint.list & done; wait; 
-	for fil in `cat onepoint` ; do  (cat $$fil.deps.onepoint.list >> deps.onepoint.list) ; done
+	for fil in `cat onepoint` ; do  (cat $$fil.deps.onepoint.list >> deps.onepoint.list) ; done ; wait
 	#
 	#
  	############################################

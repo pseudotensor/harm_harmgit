@@ -755,7 +755,7 @@ static int advance_standard(
               int didfixup=fixup1zone(MAC(pf,i,j,k),utoinvertlocal, ptrgeom,finalstep);
               if(didfixup==-1){
                 // now deal with differences, which are all due to changes in dUriemann
-                PLOOP(pliter,pl) dUriemann[pl] += (utoinvertlocal[pl]-utoinvert1[pl]);
+                PLOOP(pliter,pl) dUriemann[pl] += (utoinvertlocal[pl]-utoinvert1[pl])/(CUf[2]*dt);
                 // now get new uf (which should be consistent with utoinvertlocal) and ucum (which needs adjusting using this new dUriemann)
                 PLOOP(pliter,pl){
                   ufconsider[pl]=MACP0A1(olduf,i,j,k,pl);
@@ -781,6 +781,8 @@ static int advance_standard(
             MACP0A1(uf,i,j,k,pl)=ufconsider[pl];
             MACP0A1(tempucum,i,j,k,pl)=tempucumconsider[pl];
 
+#if(1) // maybe ok
+ // something wrong with this, makes RADBEAM2D fail to work even with GAMMAMAXRAD=100 -- by dump=40, prad0 goes nuts at boundary where radiation hits.
             // Ensure iterated U and fixed-up U from fixup1zone() don't leave URAD0 or UU below physical floor.  Ensures remains physical, as also important for RK3-type methods that use Uf from previous step to get new step's Uf.
             // KORALTODO SUPERGODMARK: Should have function call to check U
             if(pl==URAD0){
@@ -797,6 +799,7 @@ static int advance_standard(
                 if(-MACP0A1(tempucum,i,j,k,pl)<=0.0) MACP0A1(tempucum,i,j,k,pl)=-UUMINLIMIT;
               }
             }
+#endif
 
           }
         }

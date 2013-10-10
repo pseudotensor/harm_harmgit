@@ -354,7 +354,8 @@ int init_global(void)
   //    cour=0.1;
   //    cour=0.5;
   //    cour=0.9; // works fine, but 0.8 more generally good.  Although sometimes cour=0.9 actually gives a bit smoother solution.
-  cour=0.8;
+  //  cour=0.8;
+  cour=0.49999; // 0.8 is too unstable for RADBEAM2D with curved flow relative to grid.
 
   //  fluxmethod=HLLFLUX; // fails to work with radiation for RADDONUT.
 
@@ -1996,7 +1997,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
     trifprintf("END check_rmin\n");
   }
 
-  if(0){
+  if(1){
     // check that singularities are properly represented by code
     trifprintf("BEGIN check_spc_singularities_user\n");
     // SUPERGODMARK: Goes very slowly sometimes randomly for unknown reasons.

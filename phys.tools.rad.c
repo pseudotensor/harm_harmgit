@@ -7983,7 +7983,7 @@ int u2p_rad(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gammama
 #if(WHICHU2PRAD==0)
   toreturn=u2p_rad_orig(showmessages, allowlocalfailurefixandnoreport, gammamaxrad, uu, pin, ptrgeom,lpflag, lpflagrad);
 #else
-  //  toreturn=u2p_rad_new_pre(showmessages, allowlocalfailurefixandnoreport, gammamaxrad, uu, pin, ptrgeom,lpflag, lpflagrad);
+  //toreturn=u2p_rad_new_pre(showmessages, allowlocalfailurefixandnoreport, gammamaxrad, uu, pin, ptrgeom,lpflag, lpflagrad);
   toreturn=u2p_rad_new(showmessages, allowlocalfailurefixandnoreport, gammamaxrad, whichcap, uu, pin, ptrgeom,lpflag, lpflagrad);
 #endif
 
@@ -8310,6 +8310,7 @@ int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gam
     if(whichcap==CAPTYPEFIX1){
 
       // override if Er<0 originally since otherwise out of control rise in Erf
+      //      if(didmodEr || yvar<-NUMEPSILON || yvar>=2.0){
       if(didmodEr){
         Er = ERADLIMIT;
         Erf = ERADLIMIT;
@@ -8320,29 +8321,35 @@ int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gam
         // But better to not trust to avoid run-away energy creation
       }
       else{
-        if(yvar<1.0){
+        //        if(yvar<1.0&&0||1){
+        if(yvar<1.0&&0){
           // below sticks to what would end up like normal velocity scale.
           SLOOPA(jj) urfconrel[jj] = gamma*(Utildecon[jj]/(4.0*pr*gammasq));
+          if(yvar>=1.0) SLOOPA(jj) urfconrel[jj]*=gamma; // fake to pretend very high gamma that we are coming from.          
         }
         else{
           // if yvar>=1.0, then can't trust that gamma will rescale urfconrel into proper gamma>>1 range, so force.
           // Get urfconrel in same direction as Utildecon
-          FTYPE Utildeabs=sqrt(fabs(Utildesq))+fabs(Er)+ERADLIMIT;
+          FTYPE Utildeabs=0.5*(sqrt(fabs(Utildesq))+fabs(Er)+ERADLIMIT);
           SLOOPA(jj) urfconrel[jj] = gamma*Utildecon[jj]/Utildeabs; // gives something that gives back ~gamma when using gamma_calc_fromuconrel()
         }
 
         // now get gamma for this fake urfconrel that is so-far only very roughly expected to be correct.
         FTYPE gammanew,qsqnew;
         gamma_calc_fromuconrel(urfconrel,ptrgeom,&gammanew,&qsqnew);
-        //      dualfprintf(fail_file,"gamma=%g gammanew=%g Utildeabs=%g : %g %g %g\n",gamma,gammanew,Utildeabs,Utildecon[1],Utildecon[2],Utildecon[3]);
+        //        if(gammanew<gammamax || gammanew<10.0){
+        //        if(gammanew<10.0 || gammanew>1000.0){
+        //          dualfprintf(fail_file,"gamma=%g gammanew=%g %g %g %g\n",gamma,gammanew,Utildecon[1],Utildecon[2],Utildecon[3]);
+        //        }
 
         // rescale, assuming want to be gammamax
         if(gammanew>1.0){
           FTYPE fvar=sqrt((gammamax*gammamax-1.0)/(gammanew*gammanew-1.0));
           SLOOPA(jj) urfconrel[jj] *= fvar;
           // verify
+          FTYPE gammaneworig=gammanew;
           gamma_calc_fromuconrel(urfconrel,ptrgeom,&gammanew,&qsqnew);
-          //dualfprintf(fail_file,"VERIFY: gamma=%g gammanew=%g fvar=%g\n",gamma,gammanew,fvar);
+          //          dualfprintf(fail_file,"VERIFY: gamma=%g gammanew=%g->%g fvar=%g\n",gamma,gammaneworig,gammanew,fvar);
           gamma=gammanew;
           gammasq=gammanew*gammanew;
           qsq=qsqnew;
@@ -8354,7 +8361,7 @@ int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gam
           qsq=0.0;
         }
 
-        if(0){ // don't use, just trust Er>0.  Kinda works to set to if(1), but leads to some artifacts near where suddenly R^t_t would give different result for Er.
+        if(yvar>=1.0-100.0*NUMEPSILON){ // don't use, just trust Er>0.  Kinda works to set to if(1), but leads to some artifacts near where suddenly R^t_t would give different result for Er.
           //FTYPE utildesq=1.0+qsq;
           //pr=gamma*Utildesq/(4.0*gammasq) / (utildesq);
           
@@ -8362,7 +8369,10 @@ int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gam
           Er = ERADLIMIT + sqrt(fabs(Utildesq)/ylimit);
           pr=Er/(4.0*gammasq-1.0);
           // Get Erf
+          FTYPE Erforig=Erf;
           Erf = pr/(4.0/3.0-1.0);
+
+          if(Erforig<Erf) Erf=Erforig;
         }
       }
 
