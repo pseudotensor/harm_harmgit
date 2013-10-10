@@ -983,10 +983,6 @@ static void get_refUs(int *numdims, int *startjac, int *endjac, int *implicitite
 
 static int f_implicit(int iter, int failreturnallowable, int whichcall, int showmessages, int showmessagesheavy, int allowlocalfailurefixandnoreport, int *eomtype, int whichcap, int itermode, int baseitermethod, FTYPE fracenergy, FTYPE dissmeasure, int *radinvmod, FTYPE conv, FTYPE convabs, FTYPE realdt, int dimtypef, FTYPE *dimfactU, FTYPE *pp, FTYPE *piin, FTYPE *Uiin, FTYPE *uu0,FTYPE *uu,FTYPE localdt, struct of_geom *ptrgeom, struct of_state *q,  FTYPE *f, FTYPE *fnorm, FTYPE *freport, int *goexplicit, FTYPE *errorabs, int *convreturn)
 {
-  // setup method and signs
-  int numdims,startjac,endjac,implicititer,implicitferr,BEGINMOMSTEPS,ENDMOMSTEPS,BEGINENERGYSTEPS,ENDENERGYSTEPS,BEGINFULLSTEPS,ENDFULLSTEPS,BEGINNORMALSTEPS,irefU[NDIM],iotherU[NDIM],erefU[NDIM],eotherU[NDIM],signgd2,signgd4,signgd6,signgd7;
-  define_method(iter, eomtype, itermode, baseitermethod, fracenergy, dissmeasure, &implicititer, &implicitferr, &BEGINMOMSTEPS, &ENDMOMSTEPS, &BEGINENERGYSTEPS, &ENDENERGYSTEPS, &BEGINFULLSTEPS, &ENDFULLSTEPS, &BEGINNORMALSTEPS);
-  get_refUs(&numdims, &startjac, &endjac, &implicititer, &implicitferr, irefU, iotherU, erefU, eotherU, &signgd2, &signgd4, &signgd6, &signgd7);
 
   int pliter, pl;
   int iv;
@@ -1013,6 +1009,18 @@ static int f_implicit(int iter, int failreturnallowable, int whichcall, int show
     ppalt[pl]=ppbackup[pl]=pp[pl];
     uualt[pl]=uubackup[pl]=uu[pl];
   }
+
+
+
+
+  /////////
+  //
+  // setup method and signs
+  //
+  ////////
+  int numdims,startjac,endjac,implicititer,implicitferr,BEGINMOMSTEPS,ENDMOMSTEPS,BEGINENERGYSTEPS,ENDENERGYSTEPS,BEGINFULLSTEPS,ENDFULLSTEPS,BEGINNORMALSTEPS,irefU[NDIM],iotherU[NDIM],erefU[NDIM],eotherU[NDIM],signgd2,signgd4,signgd6,signgd7;
+  define_method(iter, eomtype, itermode, baseitermethod, fracenergy, dissmeasure, &implicititer, &implicitferr, &BEGINMOMSTEPS, &ENDMOMSTEPS, &BEGINENERGYSTEPS, &ENDENERGYSTEPS, &BEGINFULLSTEPS, &ENDFULLSTEPS, &BEGINNORMALSTEPS);
+  get_refUs(&numdims, &startjac, &endjac, &implicititer, &implicitferr, irefU, iotherU, erefU, eotherU, &signgd2, &signgd4, &signgd6, &signgd7);
 
 
 
@@ -1418,6 +1426,28 @@ static int f_implicit(int iter, int failreturnallowable, int whichcall, int show
 #else
   *goexplicit=0;
 #endif
+
+
+
+
+  ///////////
+  //
+  // check which baseitermethod we should really be using
+  //
+  /////////
+  FTYPE rdU[NPR];
+  //  PLOOP(pliter,pl) rdU[pl]=Gallabs[pl]/uuallabs[pl];
+  PLOOP(pliter,pl) rdU[pl]=(uu[pl]-uu0[pl])/uuallabs[pl];
+  // if dU[UU] changes relatively near machine precision, then could be fake change induced by machine precision errors.  Then actual real evolution of URAD? would be destroyed by those machine errors.
+  // For iter=1, using initial guess's uu.  But by second iteration, have used Jacobian to move iterates.  If dU[UU]/U[UU] near machine precision but dU[URAD0]/U[URAD0] far from it, then should use radiation iterate.
+  if(iter>1){
+    if(rdU[UU]<rdU[URAD0] && baseitermethod==QTYPMHD){
+      dualfprintf(fail_file,"Should switch base to QTYURAD or QTYPRAD\n");
+    }
+    if(rdU[UU]>rdU[URAD0] && (baseitermethod==QTYURAD||baseitermethod==QTYPRAD)){
+      dualfprintf(fail_file,"Should switch base to QTYPMHD\n");
+    }
+  }
 
 
 
@@ -1917,13 +1947,19 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
     //////
     //
-    // check if should re-order method attempt list in case where radiative energy dominates
+    // check if should re-order method attempt list in case where primary evolving quantity is radiation.
+    //
+    // assume at this stage that radiation primarily evolves if Erf sufficiently large compared to u_g or changes in URAD0 are sufficiently large
     //
     //////
     // set uu0
     FTYPE fracdtuu0=1.0;
-    FTYPE uu0[NPR];
-    PLOOP(pliter,pl) uu0[pl]=UFSET(CUf,fracdtuu0*dt,Uiin[pl],Ufin[pl],dUother[pl],0.0);
+    FTYPE uu0[NPR],dUtot[NPR],rdUtot[NPR];
+    PLOOP(pliter,pl){
+      uu0[pl]=UFSET(CUf,fracdtuu0*dt,Uiin[pl],Ufin[pl],dUother[pl],0.0); // initial+flux value of U
+      dUtot[pl] = uu0[pl]-Uiin[pl]; // absolute change due to flux-advection step
+      rdUtot[pl] = fabs(uu0[pl]-Uiin[pl])/(fabs(uu0[pl])+fabs(Uiin[pl])); // relative change to energy due to flux-advection step
+    }
     // check
     static FTYPE sqrtnumepsilon;
     static int firsttimeset=1;
@@ -1931,37 +1967,39 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       sqrtnumepsilon=pow(NUMEPSILON,2.0/3.0);
       firsttimeset=0;
     }
-    int raddominates=0;
-    if(pb[UU]<sqrtnumepsilon*pb[URAD0] || (-uu0[UU])<sqrtnumepsilon*(-uu0[URAD0])){
-      raddominates=1;
+    int radprimaryevolves=0;
+    if(pb[UU]<sqrtnumepsilon*pb[URAD0] || fabs(dUtot[UU])<sqrtnumepsilon*fabs(dUtot[URAD0])){
+      radprimaryevolves=1;
     }
     else{
-      raddominates=0;
+      radprimaryevolves=0;
     }
-    int radextremedominates=0;
-    if(pb[UU]<10.0*NUMEPSILON*pb[URAD0] || (-uu0[UU])<10.0*NUMEPSILON*(-uu0[URAD0])){
-      radextremedominates=1;
-    }
-    else{
-      radextremedominates=0;
-    }
-    int gasdominates=0;
-    if(raddominates==0 && (pb[URAD0]<sqrtnumepsilon*pb[UU] || (-uu0[URAD0])<sqrtnumepsilon*(-uu0[UU]))){
-      gasdominates=1;
+    int radextremeprimaryevolves=0;
+    if(fabs(dUtot[UU])<10.0*NUMEPSILON*fabs(dUtot[URAD0])){
+      radextremeprimaryevolves=1;
     }
     else{
-      gasdominates=0;
+      radextremeprimaryevolves=0;
     }
-    int gasextremedominates=0;
-    if(radextremedominates==0 && raddominates==0 && (pb[URAD0]<10.0*NUMEPSILON*pb[UU] || (-uu0[URAD0])<10.0*NUMEPSILON*(-uu0[UU]))){
-      gasextremedominates=1;
+    int gasprimaryevolves=0;
+    //    if(radprimaryevolves==0 && (pb[URAD0]<sqrtnumepsilon*pb[UU] || (-uu0[URAD0])<sqrtnumepsilon*(-uu0[UU]))){
+    //    if(pb[URAD0]<sqrtnumepsilon*pb[UU] || fabs(dUtot[URAD0])<sqrtnumepsilon*fabs(dUtot[UU])){
+    if(radprimaryevolves==0 && pb[URAD0]<sqrtnumepsilon*pb[UU] || fabs(dUtot[URAD0])<sqrtnumepsilon*fabs(dUtot[UU])){
+      gasprimaryevolves=1;
     }
     else{
-      gasextremedominates=0;
+      gasprimaryevolves=0;
+    }
+    int gasextremeprimaryevolves=0;
+    if(radprimaryevolves==0 && radextremeprimaryevolves==0 && fabs(dUtot[URAD0])<10.0*NUMEPSILON*fabs(dUtot[UU])){
+      gasextremeprimaryevolves=1;
+    }
+    else{
+      gasextremeprimaryevolves=0;
     }
 
     // DEBUG:
-    //    dualfprintf(fail_file,"DOMINATES: %d %d %d %d : %g %g %g %g\n",raddominates,radextremedominates,gasdominates,gasextremedominates,pb[UU],pb[URAD0],-uu0[UU],-uu0[URAD0]);
+    dualfprintf(fail_file,"PRIMARYEVOLVES: %d %d %d %d : pb=%g %g uu0=%g %g dUtot=%g %g\n",radprimaryevolves,radextremeprimaryevolves,gasprimaryevolves,gasextremeprimaryevolves,pb[UU],pb[URAD0],-uu0[UU],-uu0[URAD0],dUtot[UU],dUtot[URAD0]);
 
     /////////////
     //
@@ -1990,7 +2028,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       // KORALNOTE: radinv check would nominally catch if PMHD method failed due to machine errors in GAS leading to huge changes in RAD leading to E_r<0 or gamma>gammaradmax, but might as well use desired method first.
       // normal checkradinvlist will catch if prad method doesn't lead to radinv but urad method does.
       // normal checkradinvlist will catch if somehow rad method leads to radinv but gas method doesn't.
-      if(gasdominates){
+      if(radprimaryevolves){
         tryphase1=-1;
         tryphase1++; baseitermethodlist[tryphase1]=QTYURAD; modprimlist[tryphase1]=0;
         tryphase1++; baseitermethodlist[tryphase1]=QTYPRAD; modprimlist[tryphase1]=0;
@@ -2003,14 +2041,14 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       // ENERGY PHASE LOOP
       for(tryphase1=0;tryphase1<NUMPHASES;tryphase1++){
 
-        //        dualfprintf(fail_file,"TRYING: tryphase1=%d : %d %d %d\n",tryphase1,gasextremedominates,radextremedominates,baseitermethodlist[tryphase1]);
+        //        dualfprintf(fail_file,"TRYING: tryphase1=%d : %d %d %d\n",tryphase1,gasextremeprimaryevolves,radextremeprimaryevolves,baseitermethodlist[tryphase1]);
 
         // skip rest of not trying harder
         if(TRYENERGYHARDER==0 && tryphase1>=NUMPHASES/2) continue;
 
         // avoid method in case very non-dominant since then would give errorneous (critically bad even) results.  If methods that can use fail, have to revert to entropy or fixups.
-        if(gasextremedominates && baseitermethodlist[tryphase1]==QTYPMHD) continue;
-        if(radextremedominates && (baseitermethodlist[tryphase1]==QTYURAD || baseitermethodlist[tryphase1]==QTYPRAD)) continue;
+        if(radextremeprimaryevolves && baseitermethodlist[tryphase1]==QTYPMHD) continue;
+        if(gasextremeprimaryevolves && (baseitermethodlist[tryphase1]==QTYURAD || baseitermethodlist[tryphase1]==QTYPRAD)) continue;
 
         //        dualfprintf(fail_file,"MAYBEREALLYTRYING: tryphase1=%d : %d %d %d\n",tryphase1,radinvmodenergybest,checkradinvlist[tryphase1],failreturnenergybest);
 
@@ -2116,14 +2154,14 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
           // still cost more iters
           itersenergy+=itersenergyold;
+          
+          int noproblem=(ACTUALHARDORSOFTFAILURE(failreturnenergy)==0 || failreturnenergy==FAILRETURNMODESWITCH);
 
-          if(tryphase1>0){
-            if(ACTUALHARDORSOFTFAILURE(failreturnenergy)==0 || failreturnenergy==FAILRETURNMODESWITCH){
-              if(debugfail>=2) dualfprintf(fail_file,"Recovered using tryphase1=%d (energy: failreturnenergy=%d radinvmod=%d): ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d\n",tryphase1,failreturnenergy,radinvmodenergy,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsenergyold,errorabsenergy,itersenergyold,itersenergy);
-            }
-            else{
-              if(debugfail>=2) dualfprintf(fail_file,"Failed to: Recovered using tryphase1=%d (energy: failreturnenergy=%d radinvmod=%d): ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d\n",tryphase1,failreturnenergy,radinvmodenergy,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsenergyold,errorabsenergy,itersenergyold,itersenergy);
-            }
+          if(tryphase1>0 && noproblem){
+            if(debugfail>=2) dualfprintf(fail_file,"Recovered using tryphase1=%d (energy: failreturnenergy=%d radinvmod=%d): ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d\n",tryphase1,failreturnenergy,radinvmodenergy,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsenergyold,errorabsenergy,itersenergyold,itersenergy);
+          }
+          if(noproblem==0){
+            if(debugfail>=2) dualfprintf(fail_file,"Failed to: <Recovered> using tryphase1=%d (energy: failreturnenergy=%d radinvmod=%d): ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d\n",tryphase1,failreturnenergy,radinvmodenergy,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsenergyold,errorabsenergy,itersenergyold,itersenergy);
           }
 
 
@@ -2138,7 +2176,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
 
       // see if want to try harder
-      if(TRYENERGYHARDER && ACTUALHARDORSOFTFAILURE(failreturnenergy) && failreturn!=FAILRETURNMODESWITCH && USERAMESH && gasextremedominates==0){
+      if(TRYENERGYHARDER && ACTUALHARDORSOFTFAILURE(failreturnenergy) && failreturn!=FAILRETURNMODESWITCH && USERAMESH && radextremeprimaryevolves==0){
         errorabsenergyold=errorabsenergy;
         itersenergyold=itersenergy;
         goexplicitenergy=0; // force since no explicit check
@@ -2307,7 +2345,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       int checkradinvlist[NUMPHASESENT]={0,1,1,1,0,1,1,1};
       int eomtypelist[NUMPHASESENT]={EOMENTROPYGRMHD,EOMENTROPYGRMHD,EOMENTROPYGRMHD,EOMENTROPYGRMHD,EOMENTROPYGRMHD,EOMENTROPYGRMHD,EOMENTROPYGRMHD,EOMENTROPYGRMHD};
 
-      if(gasdominates){
+      if(radprimaryevolves){
         tryphase1=-1;
         tryphase1++; baseitermethodlist[tryphase1]=QTYURAD;  modprimlist[tryphase1]=0;
         tryphase1++; baseitermethodlist[tryphase1]=QTYPRAD; modprimlist[tryphase1]=0;
@@ -2326,8 +2364,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
         if(TRYENTROPYHARDER==0 && tryphase1>=NUMPHASESENT/2) continue;
 
         // avoid method in case very non-dominant since then would give errorneous (critically bad even) results.  If methods that can use fail, have to revert to entropy or fixups.
-        if(gasextremedominates && (baseitermethodlist[tryphase1]==QTYPMHD || baseitermethodlist[tryphase1]==QTYENTROPYUMHD) ) continue;
-        if(radextremedominates && (baseitermethodlist[tryphase1]==QTYURAD || baseitermethodlist[tryphase1]==QTYPRAD)) continue;
+        if(radextremeprimaryevolves && (baseitermethodlist[tryphase1]==QTYPMHD || baseitermethodlist[tryphase1]==QTYENTROPYUMHD) ) continue;
+        if(gasextremeprimaryevolves && (baseitermethodlist[tryphase1]==QTYURAD || baseitermethodlist[tryphase1]==QTYPRAD)) continue;
 
         // consider radinvmod only if error bad for original approach.  Avoids excessive attempts when should hit radiative ceiling and error is small.
         if(radinvmodentropybest!=0 && checkradinvlist[tryphase1] || ACTUALHARDORSOFTFAILURE(failreturnentropybest) && failreturnentropybest!=FAILRETURNMODESWITCH){
@@ -2414,11 +2452,13 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
           // regardless, still cost more iters
           itersentropy+=itersentropyold;
 
-          if(ACTUALHARDORSOFTFAILURE(failreturnentropy)==0){
+          int noproblem=ACTUALHARDORSOFTFAILURE(failreturnentropy)==0;
+
+          if(tryphase1>0 && noproblem){
             if(debugfail>=2) dualfprintf(fail_file,"Recovered using tryphase1=%d (entropy: %d): ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d\n",tryphase1,failreturnentropy,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsentropyold,errorabsentropy,itersentropyold,itersentropy);
           }
-          else{
-            if(debugfail>=2) dualfprintf(fail_file,"Failed to: Recovered using tryphase1=%d (entropy: %d): ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d\n",tryphase1,failreturnentropy,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsentropyold,errorabsentropy,itersentropyold,itersentropy);
+          if(noproblem==0){
+            if(debugfail>=2) dualfprintf(fail_file,"Failed to: <Recovered> using tryphase1=%d (entropy: %d): ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d\n",tryphase1,failreturnentropy,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsentropyold,errorabsentropy,itersentropyold,itersentropy);
           }
 
         }// done trying harder
@@ -2428,7 +2468,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
 
 
-      if(TRYENTROPYHARDER && ACTUALHARDORSOFTFAILURE(failreturnentropy) && USERAMESH && gasextremedominates==0){ // try ramesh
+      if(TRYENTROPYHARDER && ACTUALHARDORSOFTFAILURE(failreturnentropy) && USERAMESH && radextremeprimaryevolves==0){ // try ramesh
         errorabsentropyold=errorabsentropy;
         itersentropyold=itersentropy;
         goexplicitentropy=0; // doesn't check, so force implicit
@@ -5283,6 +5323,7 @@ int mathematica_report_check(int radinvmod, int failtype, long long int failnum,
 static int f_error_check(int showmessages, int showmessagesheavy, int iter, FTYPE conv, FTYPE convabs, FTYPE realdt, int dimtypef, int eomtype, int itermode, int baseitermethod, FTYPE fracenergy, FTYPE dissmeasure, FTYPE *dimfactU, FTYPE *pp, FTYPE *piin, FTYPE *fin, FTYPE *finnorm, FTYPE *finreport, FTYPE *Uiin, FTYPE *uu0, FTYPE *uu, struct of_geom *ptrgeom, FTYPE *errorabs)
 {
   int ii,jj;
+  int pliter,pl;
 
   // setup method and signs
   int numdims,startjac,endjac,implicititer,implicitferr,BEGINMOMSTEPS,ENDMOMSTEPS,BEGINENERGYSTEPS,ENDENERGYSTEPS,BEGINFULLSTEPS,ENDFULLSTEPS,BEGINNORMALSTEPS,irefU[NDIM],iotherU[NDIM],erefU[NDIM],eotherU[NDIM],signgd2,signgd4,signgd6,signgd7;
@@ -5298,8 +5339,17 @@ static int f_error_check(int showmessages, int showmessagesheavy, int iter, FTYP
   // get error
   // NOTE: use of gcov[ii,ii] so comparable dimensionally to fin[erefU[ii]] and finnorm[erefU[ii]] that are like R^t_\nu and so need sqrt(gcon[nu,nu]) multiplied on them.  This ensures error is non-dimensional (or, really only ^t dimensional)
   FTYPE dimfactferr[NPR];
-  if(dimtypef==DIMTYPEFCONS) DLOOPA(ii) dimfactferr[erefU[ii]]=dimfactU[erefU[ii]]; // assume fin and finnorm are conservative or source (R^t_\nu form)
-  else DLOOPA(ii) dimfactferr[erefU[ii]]=1.0/dimfactU[erefU[ii]]; // assume fin and finnorm are primitve (u,vel^i form)
+  PLOOP(pliter,pl) dimfactferr[pl]=dimfactU[pl]; // default
+  if(dimtypef==DIMTYPEFCONS){
+    // assume fin and finnorm are conservative or source (R^t_\nu form)
+    DLOOPA(ii) dimfactferr[erefU[ii]]=dimfactU[erefU[ii]];
+    DLOOPA(ii) dimfactferr[eotherU[ii]]=dimfactU[eotherU[ii]];
+  }
+  else{
+    // assume fin and finnorm are primitve (u,vel^i form)
+    DLOOPA(ii) dimfactferr[erefU[ii]]=1.0/dimfactU[erefU[ii]];
+    DLOOPA(ii) dimfactferr[eotherU[ii]]=1.0/dimfactU[eotherU[ii]];
+  }
 
   // replace finnorm -> finnormnew that's already non-dimensionalized
   FTYPE finnormnew[NPR];
@@ -5336,14 +5386,14 @@ static int f_error_check(int showmessages, int showmessagesheavy, int iter, FTYP
 
   // get non-dimensionalized fin
   FTYPE finnew[NPR];
-  DLOOPA(ii) finnew[erefU[ii]]=fin[erefU[ii]]*dimfactferr[erefU[ii]];
+  PLOOP(pliter,pl) finnew[pl]=fin[pl]*dimfactferr[pl];
 
   // get relative errors (keep sign)
-  JACLOOPALT(ii,startjac,endjac){
-    finreport[erefU[ii]]=finnew[erefU[ii]]/fabs(IMPMINABSERROR+finnormnew[erefU[ii]]);
-  }
+  //  JACLOOPALT(ii,startjac,endjac)
+  PLOOP(pliter,pl) finreport[pl]=finnew[pl]/fabs(IMPMINABSERROR+fabs(finnormnew[pl]));
 
-  // get absolute error over all terms
+  // get absolute error over all (baseitermethod)-iterated terms
+  // NOTE: the SUBJACJ methods directly use freport[] as needed, not errorabs or passedconv
   *errorabs=0.0;
   JACLOOPFULLERROR(itermode,jj,startjac,endjac)      *errorabs     += fabs(finreport[erefU[jj]]); // always full error.
 
@@ -5369,7 +5419,7 @@ static int f_error_check(int showmessages, int showmessagesheavy, int iter, FTYP
     // report if didn't pass
     if(PRODUCTION==0&&showmessagesheavy){
       dualfprintf(fail_file,"POSTFIN (conv=%21.15g): uu: %21.15g %21.15g %21.15g %21.15g : uu0=%21.15g %21.15g %21.15g %21.15g\n",conv,uu[irefU[0]],uu[irefU[1]],uu[irefU[2]],uu[irefU[3]],uu0[irefU[0]],uu0[irefU[1]],uu0[irefU[2]],uu0[irefU[3]]);
-      DLOOPA(ii) dualfprintf(fail_file,"iii=%d fin=%21.15g finnorm=%21.15g\n",ii,fin[erefU[ii]],finnorm[erefU[ii]]);
+      PLOOP(pliter,pl) dualfprintf(fail_file,"iii=%d fin=%21.15g finnorm=%21.15g\n",ii,fin[pl],finnorm[pl]);
       dualfprintf(fail_file,"nstep=%ld steppart=%d dt=%g i=%d iter=%d : %g %g %g %g\n",nstep,steppart,dt,ptrgeom->i,iter,finreport[erefU[0]],finreport[erefU[1]],finreport[erefU[2]],finreport[erefU[3]]);
     }
     return(0);

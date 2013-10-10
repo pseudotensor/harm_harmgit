@@ -780,6 +780,24 @@ static int advance_standard(
           if(doother==DOALLPL || doother==DONONBPL && BPL(pl)==0 || doother==DOBPL && BPL(pl)==1){
             MACP0A1(uf,i,j,k,pl)=ufconsider[pl];
             MACP0A1(tempucum,i,j,k,pl)=tempucumconsider[pl];
+
+            // Ensure iterated U and fixed-up U from fixup1zone() don't leave URAD0 or UU below physical floor.  Ensures remains physical, as also important for RK3-type methods that use Uf from previous step to get new step's Uf.
+            // KORALTODO SUPERGODMARK: Should have function call to check U
+            if(pl==URAD0){
+              if(-MACP0A1(uf,i,j,k,URAD0)<=0.0) MACP0A1(uf,i,j,k,URAD0)=-ERADLIMIT;
+              if(-MACP0A1(tempucum,i,j,k,URAD0)<=0.0) MACP0A1(tempucum,i,j,k,URAD0)=-ERADLIMIT;
+            }
+            if(pl==UU){
+              if(REMOVERESTMASSFROMUU==2){
+                if(MACP0A1(uf,i,j,k,RHO)-MACP0A1(uf,i,j,k,pl)<=0.0) MACP0A1(uf,i,j,k,pl)=-MACP0A1(uf,i,j,k,RHO)-UUMINLIMIT;
+                if(MACP0A1(tempucum,i,j,k,RHO)-MACP0A1(tempucum,i,j,k,pl)<=0.0) MACP0A1(tempucum,i,j,k,pl)=-MACP0A1(tempucum,i,j,k,RHO)-UUMINLIMIT;
+              }
+              else{
+                if(-MACP0A1(uf,i,j,k,pl)<=0.0) MACP0A1(uf,i,j,k,pl)=-UUMINLIMIT;
+                if(-MACP0A1(tempucum,i,j,k,pl)<=0.0) MACP0A1(tempucum,i,j,k,pl)=-UUMINLIMIT;
+              }
+            }
+
           }
         }
 
