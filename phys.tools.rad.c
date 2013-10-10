@@ -1443,6 +1443,7 @@ static int f_implicit(int iter, int failreturnallowable, int whichcall, int show
   /////////
   FTYPE rdU[NPR];
   //  PLOOP(pliter,pl) rdU[pl]=Gallabs[pl]/uuallabs[pl];
+  // Note that we use uu-uu0 since that's exactly what's pushed into other non-iterated set of equations.
   PLOOP(pliter,pl) rdU[pl]=(uu[pl]-uu0[pl])/uuallabs[pl];
   // if dU[UU] changes relatively near machine precision, then could be fake change induced by machine precision errors.  Then actual real evolution of URAD? would be destroyed by those machine errors.
   // For iter=1, using initial guess's uu.  But by second iteration, have used Jacobian to move iterates.  If dU[UU]/U[UU] near machine precision but dU[URAD0]/U[URAD0] far from it, then should use radiation iterate.
@@ -1974,14 +1975,14 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       firsttimeset=0;
     }
     int radprimaryevolves=0;
-    if(pb[UU]<sqrtnumepsilon*pb[URAD0] || fabs(dUtot[UU])<sqrtnumepsilon*fabs(dUtot[URAD0])){
+    if(fabs(rdUtot[UU])<sqrtnumepsilon*fabs(rdUtot[URAD0]) || fabs(uu0[URAD0])<sqrtnumepsilon*fabs(uu0[UU])){
       radprimaryevolves=1;
     }
     else{
       radprimaryevolves=0;
     }
     int radextremeprimaryevolves=0;
-    if(fabs(dUtot[UU])<10.0*NUMEPSILON*fabs(dUtot[URAD0])){
+    if(fabs(rdUtot[UU])<10.0*NUMEPSILON*fabs(dUtot[URAD0]) || fabs(uu0[URAD0])<10.0*NUMEPSILON*fabs(uu0[UU])){
       radextremeprimaryevolves=1;
     }
     else{
@@ -1990,14 +1991,14 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     int gasprimaryevolves=0;
     //    if(radprimaryevolves==0 && (pb[URAD0]<sqrtnumepsilon*pb[UU] || (-uu0[URAD0])<sqrtnumepsilon*(-uu0[UU]))){
     //    if(pb[URAD0]<sqrtnumepsilon*pb[UU] || fabs(dUtot[URAD0])<sqrtnumepsilon*fabs(dUtot[UU])){
-    if(radprimaryevolves==0 && pb[URAD0]<sqrtnumepsilon*pb[UU] || fabs(dUtot[URAD0])<sqrtnumepsilon*fabs(dUtot[UU])){
+    if(radprimaryevolves==0 && (fabs(rdUtot[URAD0])<sqrtnumepsilon*fabs(rdUtot[UU]) || fabs(uu0[UU])<sqrtnumepsilon*fabs(uu0[URAD0]))){
       gasprimaryevolves=1;
     }
     else{
       gasprimaryevolves=0;
     }
     int gasextremeprimaryevolves=0;
-    if(radprimaryevolves==0 && radextremeprimaryevolves==0 && fabs(dUtot[URAD0])<10.0*NUMEPSILON*fabs(dUtot[UU])){
+    if(radprimaryevolves==0 && radextremeprimaryevolves==0 && (fabs(rdUtot[URAD0])<10.0*NUMEPSILON*fabs(dUtot[UU]) || fabs(uu0[UU])<10.0*NUMEPSILON*fabs(uu0[URAD0]))){
       gasextremeprimaryevolves=1;
     }
     else{
@@ -2005,7 +2006,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     }
 
     // DEBUG:
-    //    dualfprintf(fail_file,"PRIMARYEVOLVES: %d %d %d %d : pb=%g %g uu0=%g %g dUtot=%g %g\n",radprimaryevolves,radextremeprimaryevolves,gasprimaryevolves,gasextremeprimaryevolves,pb[UU],pb[URAD0],-uu0[UU],-uu0[URAD0],dUtot[UU],dUtot[URAD0]);
+    //    dualfprintf(fail_file,"PRIMARYEVOLVES: %d %d %d %d : pb=%g %g uu0=%g %g dUtot=%g %g : sqrtnumepsilon=%g\n",radprimaryevolves,radextremeprimaryevolves,gasprimaryevolves,gasextremeprimaryevolves,pb[UU],pb[URAD0],-uu0[UU],-uu0[URAD0],dUtot[UU],dUtot[URAD0],sqrtnumepsilon);
 
     /////////////
     //
