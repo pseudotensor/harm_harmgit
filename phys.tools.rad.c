@@ -1589,7 +1589,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     fracenergy=1.0;
     itermode=ITERMODESTAGES;
     baseitermethod=QTYPMHD;
-    whichcap=CAPTYPEFIX1;
+    whichcap=CAPTYPEBASIC;
     failreturn=koral_source_rad_implicit_mode(0,havebackup, didentropyalready, &eomtypelocal, whichcap, itermode, baseitermethod, trueimpmaxiter,  truenumdampattempts, fracenergy, dissmeasure, &radinvmod, pb, uub, piin, Uiin, Ufin, CUf, ptrgeom, q, dUother ,dUcomp, &errorabs, errorabs, &iters, &f1iters);
     if(ACTUALHARDFAILURE(failreturn)){
       failfinalreturn=1;
@@ -1634,7 +1634,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     errorabs=1.0;
     fracenergy=0.0;
     itermode=ITERMODESTAGES;
-    whichcap=CAPTYPEFIX1;
+    whichcap=CAPTYPEBASIC;
     baseitermethod=QTYPMHD;
     failreturn=koral_source_rad_implicit_mode(0,havebackup, didentropyalready, &eomtypelocal, whichcap, itermode, baseitermethod, trueimpmaxiter,  truenumdampattempts, fracenergy, dissmeasure, &radinvmod, pb, uub, piin, Uiin, Ufin, CUf, ptrgeom, q, dUother ,dUcomp, &errorabs, errorabs, &iters, &f1iters);
     if(ACTUALHARDFAILURE(failreturn)){
@@ -1693,7 +1693,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     fracenergy=1.0;
     errorabsenergy=1.0;
     itermodeenergy=ITERMODESTAGES;
-    whichcapenergy=CAPTYPEFIX1;
+    whichcapenergy=CAPTYPEBASIC;
     trueimpmaxiterenergy=IMPMAXITER;
     truenumdampattemptsenergy=NUMDAMPATTEMPTS;
     baseitermethodenergy=QTYPMHD;
@@ -1714,7 +1714,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       fracenergy=0.0;
       errorabsentropy=1.0;
       itermodeentropy=ITERMODESTAGES;
-      whichcapentropy=CAPTYPEFIX1;
+      whichcapentropy=CAPTYPEBASIC;
       trueimpmaxiterentropy=IMPMAXITER;
       truenumdampattemptsentropy=NUMDAMPATTEMPTS;
       baseitermethodentropy=QTYPMHD;
@@ -2069,7 +2069,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
           errorabsenergyold=errorabsenergy;
           itersenergyold=itersenergy;
           //
-          whichcapenergy=CAPTYPEFIX1;
+          whichcapenergy=CAPTYPEBASIC;
           //whichcapenergy=CAPTYPEBASIC;
           baseitermethodenergy=baseitermethodlist[tryphase1];
           itermodeenergy=itermodelist[tryphase1];
@@ -2381,7 +2381,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
           itersentropyold=itersentropy;
           errorabsentropyold=errorabsentropy;
           //
-          whichcapentropy=CAPTYPEFIX1;
+          whichcapentropy=CAPTYPEBASIC;
           baseitermethodentropy=baseitermethodlist[tryphase1];
           itermodeentropy=itermodelist[tryphase1];
           trueimpmaxiterentropy=trueimpmaxiterlist[tryphase1];
@@ -2631,7 +2631,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
     if(ACCEPTASNOFAILURE(failreturnenergy)==0 && ACCEPTASNOFAILURE(failreturnentropy)==0){
       failreturncold=FAILRETURNGENERAL; // if doing cold, default is fail.
-      int whichcapcold=CAPTYPEFIX1;
+      int whichcapcold=CAPTYPEBASIC;
       int itermodecold=ITERMODECOLD;
       int baseitermethodcold=QTYPMHD;
       int trueimpmaxitercold=IMPMAXITER;
@@ -6204,7 +6204,7 @@ static int source_explicit(int whichsc, int whichradsourcemethod, int methoddtsu
       // initialize counters
       newtonstats.nstroke=newtonstats.lntries=0;
       int doradonly=0;
-      int whichcap=CAPTYPEFIX1;
+      int whichcap=CAPTYPEBASIC;
       eomtypelocal=*eomtype; // re-default
       int radinvmod=0;
       FTYPE dissmeasure=-1.0; // assume ok to try energy
@@ -6448,7 +6448,7 @@ static int source_explicit(int whichsc, int whichradsourcemethod, int methoddtsu
     newtonstats.nstroke=newtonstats.lntries=0;
     int doradonly=0;
     eomtypelocal=*eomtype; // re-default
-    int whichcap=CAPTYPEFIX1;
+    int whichcap=CAPTYPEBASIC;
     int radinvmod=0;
     FTYPE dissmeasure=-1.0; // assume ok to try energy
     int failutoprim=Utoprimgen_failwrapper(doradonly,&radinvmod,showmessages, allowlocalfailurefixandnoreport, finalstep, &eomtypelocal, whichcap, EVOLVEUTOPRIM, UNOTHING, Unew, q, ptrgeom, dissmeasure, prnew, &newtonstats);
@@ -7667,7 +7667,7 @@ int prad_fftolab(int *whichvel, int *whichcoord, int i, int j, int k, int loc, s
   // NOTEMARK: lpflag=UTOPRIMNOFAIL means accept input pout for velocity to maybe be used in local reductions to fluid frame.
   // u2p_rad() only uses U[URAD0-URAD3]
   // generally u2p_rad() could use all of pout[] except only assigns pout[PRAD0-PRAD3] and doesn't use that for anything except as "static" solution (i.e. uses pin effectively)
-  u2p_rad(showmessages, allowlocalfailurefixandnoreport, GAMMAMAXRAD, CAPTYPEFIX1, U, pout, ptrgeomtouse, &lpflag, &lpflagrad);
+  u2p_rad(showmessages, allowlocalfailurefixandnoreport, GAMMAMAXRAD, CAPTYPEBASIC, U, pout, ptrgeomtouse, &lpflag, &lpflagrad);
 
   //  DLOOPA(jj) dualfprintf(fail_file,"u2p_rad: jj=%d pout=%g\n",jj,pout[PRAD0+jj]);
 

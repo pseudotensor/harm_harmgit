@@ -721,7 +721,7 @@ static int advance_standard(
 
 
         // actual inversion
-        int whichcap=CAPTYPEFIX1;
+        int whichcap=CAPTYPEBASIC;
         int whichmethod=MODEPICKBEST; // try to choose best option for this "external" inversion
         MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,&eomtypelocal,whichcap,whichmethod,EVOLVEUTOPRIM,UEVOLVE,utoinvert1, qptr2, ptrgeom, dissmeasure, piorig, MAC(pf,i,j,k),&newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
         nstroke+=newtonstats.nstroke; newtonstats.nstroke=newtonstats.lntries=0;
@@ -1841,7 +1841,7 @@ static int advance_standard_orig(
         PALLLOOP(pl) prbefore[pl]=MACP0A1(pf,i,j,k,pl);
 
         FTYPE dissmeasure=-1.0; // assume energy try ok
-        int whichcap=CAPTYPEFIX1;
+        int whichcap=CAPTYPEBASIC;
         int whichmethod=MODEPICKBEST; // try to choose best option for this "external" inversion
         MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,&eomtype,whichcap,whichmethod,EVOLVEUTOPRIM,UEVOLVE,MAC(myupoint,i,j,k), NULL, ptrgeom, dissmeasure, MAC(pi,i,j,k), MAC(pf,i,j,k),&newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
         nstroke+=newtonstats.nstroke; newtonstats.nstroke=newtonstats.lntries=0;
@@ -1855,7 +1855,7 @@ static int advance_standard_orig(
       }
       else{ // otherwise still iterating on primitives
         FTYPE dissmeasure=-1.0; // assume energy try ok
-        int whichcap=CAPTYPEFIX1;
+        int whichcap=CAPTYPEBASIC;
         int whichmethod=MODEPICKBEST; // try to choose best option for this "external" inversion
         MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,&eomtype,whichcap,whichmethod,EVOLVEUTOPRIM,UEVOLVE,MAC(myupoint,i,j,k), NULL, ptrgeom, dissmeasure, MAC(pi,i,j,k), MAC(pf,i,j,k),&newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
         nstroke+=newtonstats.nstroke; newtonstats.nstroke=newtonstats.lntries=0;
@@ -2605,7 +2605,7 @@ static int advance_finitevolume(
 
       // invert point U-> point p
       int dissmeasure=-1.0; // assume ok to try energy
-      int whichcap=CAPTYPEFIX1;
+      int whichcap=CAPTYPEBASIC;
       int whichmethod=MODEPICKBEST; // try to choose best option for this "external" inversion
       MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,&eomtype,whichcap,whichmethod,EVOLVEUTOPRIM, UEVOLVE, MAC(myupoint,i,j,k), NULL, ptrgeom, dissmeasure, MAC(pi,i,j,k), MAC(pf,i,j,k),&newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
       nstroke+=newtonstats.nstroke; newtonstats.nstroke=newtonstats.lntries=0;
@@ -2814,7 +2814,7 @@ static int check_point_vs_average(int timeorder, int numtimeorders, PFTYPE *lpfl
     PLOOP(pliter,pl) pavg[pl] = pb[pl];
     //invert the average U -> "average" p
     int dissmeasure=-1.0; // assume ok to try energy
-    int whichcap=CAPTYPEFIX1;
+    int whichcap=CAPTYPEBASIC;
     int whichmethod=MODEPICKBEST; // try to choose best option for this "external" inversion
     MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,&eomtype,whichcap,whichmethod,EVOLVEUTOPRIM, UEVOLVE, uavg, NULL, ptrgeom, dissmeasure, pavg, pavg,newtonstats),"step_ch.c:advance()", "Utoprimgen", 3);
 
@@ -2884,7 +2884,7 @@ static int check_point_vs_average(int timeorder, int numtimeorders, PFTYPE *lpfl
       PLOOP(pliter,pl) pf[pl] = pb[pl];
       //invert the average U -> "average" p
       int dissmeasure=-1.0; // assume ok to try energy
-      int whichcap=CAPTYPEFIX1;
+      int whichcap=CAPTYPEBASIC;
       int whichmethod=MODEPICKBEST; // try to choose best option for this "external" inversion
       MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,&eomtype,whichcap,whichmethod,EVOLVEUTOPRIM, UEVOLVE, uavg, NULL, ptrgeom, dissmeasure, pb, pf,newtonstats),"step_ch.c:advance()", "Utoprimgen", 3);
       //      invert_from_average_flag = lpflag[FLAGUTOPRIMFAIL];

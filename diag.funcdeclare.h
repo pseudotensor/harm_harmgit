@@ -35,7 +35,8 @@ extern void frdotout(void);
 extern void appendener(FILE* ener_file,SFTYPE (*pdot_tot)[NPR],SFTYPE*fladd_tot,SFTYPE*sourceadd_tot);
 
 extern void divbmaxavg(FTYPE (*p)[NSTORE2][NSTORE3][NPR],FTYPE*ptrdivbmax,FTYPE*ptrdivbavg);
-extern void gettotal(int numvars, SFTYPE* vars[],int*sizes,SFTYPE*vars_tot[]);
+extern void gettotal(int doall, int numvars, SFTYPE* vars[],int*sizes,SFTYPE*vars_tot[]);
+extern void getalltotal(int numvars, SFTYPE* vars[],int*sizes,SFTYPE*vars_tot[]);
 extern void gettotali(int numvars, int* vars[],int*sizes,int*vars_tot[]);
 extern int constotal(int enerregion, SFTYPE *vars_tot);
 extern int integrate(int numelements, SFTYPE * var,SFTYPE *var_tot,int type, int enerregion);

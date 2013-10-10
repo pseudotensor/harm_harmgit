@@ -751,11 +751,11 @@ void setrestart(int*appendold)
  * totalptrs[0]=pdot;  totalsizes[0]=NPR; totaloptrs[0]=pdot;
  * totalptrs[1]=fladd; totalsizes[1]=NPR; totaloptrs[1]=fladd_tot;
  * PLOOP(pliter,pl){ totalptrs[2+pl]=&U_tot[pl]; totalsizes[pl]=1;}
- * gettotal(numptrs,totalptrs,totaloptrs,totalsizes);
+ * gettotal(0,numptrs,totalptrs,totaloptrs,totalsizes);
  *
  */
 
-void gettotal(int numvars, SFTYPE* vars[],int*sizes,SFTYPE*vars_tot[])
+void gettotal(int doall, int numvars, SFTYPE* vars[],int*sizes,SFTYPE*vars_tot[])
 {
   int j,k;
   SFTYPE *ptrsend;
@@ -799,7 +799,8 @@ void gettotal(int numvars, SFTYPE* vars[],int*sizes,SFTYPE*vars_tot[])
         ptrsend = &vars[k][0];
       }
 
-      MPI_Reduce(ptrsend, &vars_tot[k][0], sizes[k], MPI_SFTYPE, MPI_SUM, MPIid[0], MPI_COMM_GRMHD);
+      if(doall==0) MPI_Reduce(ptrsend, &vars_tot[k][0], sizes[k], MPI_SFTYPE, MPI_SUM, MPIid[0], MPI_COMM_GRMHD);
+      else MPI_Allreduce(ptrsend, &vars_tot[k][0], sizes[k], MPI_SFTYPE, MPI_SUM, MPI_COMM_GRMHD);
 
       // free malloc'ed memory
       if(didmalloc) free(ptrsend);
@@ -999,30 +1000,31 @@ int integrate(int numelements, SFTYPE * var,SFTYPE *var_tot,int type, int enerre
   case CONSTYPE:
     if(constotal(enerregion,var)>=1) return(1);
     totalsizes[0]=numelements;
-    gettotal(1,&var,totalsizes,&var_tot); // if only 1 object, then just send address
+    gettotal(0,1,&var,totalsizes,&var_tot); // if only 1 object, then just send address
     break;
     // below not used or deprecated
     //  case CONSTYPE2:
     //    if(constotal2(enerregion,var)>=1) return(1);
     //    totalsizes[0]=1;
-    //    gettotal(1,&var,totalsizes,&var_tot); // if only 1 object, then just send address
+    //    gettotal(0,1,&var,totalsizes,&var_tot); // if only 1 object, then just send address
     //    break;
   case SURFACETYPE:
   case CUMULATIVETYPE:
     totalsizes[0]=numelements;
-    gettotal(1,&var,totalsizes,&var_tot);
+    gettotal(0,1,&var,totalsizes,&var_tot);
     break;
   case CUMULATIVETYPE2:
     // CUMULATIVETYPE2 for 1 data object per ii
     totalsizes[0]=1; // GODMARK: don't see point in this since just ignore numelements
-    gettotal(1,&var,totalsizes,&var_tot);
+    gettotal(0,1,&var,totalsizes,&var_tot);
     // this case makes no sense currently, so fail
     myexit(4983463);
     break;
   case CUMULATIVETYPE3:
-    // this type not used right now
-    totalsizes[0]=1;
-    getalltotal(1,&var,totalsizes,&var_tot);
+    // Like CUMULATIVETYPE, but put result in all cores.
+    totalsizes[0]=numelements;
+    //    getalltotal(1,&var,totalsizes,&var_tot);
+    gettotal(1,1,&var,totalsizes,&var_tot);
     break;
   default:
     dualfprintf(fail_file,"No defined type=%d in integrate\n",type);

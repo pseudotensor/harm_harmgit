@@ -908,7 +908,7 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
       int allowlocalfailurefixandnoreport=1; 
       int eomtype=EOMDEFAULT;
       FTYPE dissmeasure=-1.0; // assume energy try ok
-      int whichcap=CAPTYPEFIX1;
+      int whichcap=CAPTYPEBASIC;
       int whichmethod=MODEDEFAULT;
 
       newtonstats.nstroke=newtonstats.lntries=0;

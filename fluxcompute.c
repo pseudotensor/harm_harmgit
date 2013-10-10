@@ -577,7 +577,7 @@ int forceflux_compute(int dir,struct of_geom *geom, FTYPE *cmin, FTYPE *cmax, FT
   // get primitive pmid(umid)
   int eomtype=EOMDEFAULT;
   FTYPE dissmeasure=-1.0; // assume energy try ok
-  int whichcap=CAPTYPEFIX1;
+  int whichcap=CAPTYPEBASIC;
   int whichmethod=MODEDEFAULT;
   MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, 0, &eomtype,whichcap,whichmethod,EVOLVEUTOPRIM,UEVOLVE, umid, NULL, geom, dissmeasure, pmid, pmid,&newtonstats),"flux.c:flux_compute()", "Utoprimgen", 1);
   doforceflux=1;
@@ -1051,7 +1051,7 @@ int musta1flux_compute(int dir,struct of_geom *geom, FTYPE *cmin_l, FTYPE *cmin_
     // get new primitive p_l
     int eomtype=EOMDEFAULT;
     FTYPE dissmeasure=-1.0; // assume energy try ok
-    int whichcap=CAPTYPEFIX1;
+    int whichcap=CAPTYPEBASIC;
     int whichmethod=MODEDEFAULT; 
     MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, 0, &eomtype,whichcap,whichmethod,EVOLVEUTOPRIM,UEVOLVE, U_l, ptrstate_l, geom, dissmeasure, p_l, p_l,&newtonstats),"flux.c:mustaflux_compute()", "Utoprimgen", 1);
     if(GLOBALMACP0A1(pflag,geom->i,geom->j,geom->k,FLAGUTOPRIMFAIL)){
@@ -1293,7 +1293,7 @@ int musta2flux_compute(int dir,struct of_geom *geom, FTYPE *cmin_l, FTYPE *cmin_
       // get new primitive pnow from Unow
       int eomtype=EOMDEFAULT;
       FTYPE dissmeasure=-1.0; // assume energy try ok
-      int whichcap=CAPTYPEFIX1;
+      int whichcap=CAPTYPEBASIC;
       int whichmethod=MODEDEFAULT;
       MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, 0, &eomtype,whichcap,whichmethod,EVOLVEUTOPRIM,UEVOLVE, Unow, NULL, geom, dissmeasure, pnow, pnow,&newtonstats),"flux.c:mustaflux_compute()", "Utoprimgen", 1);
       if(GLOBALMACP0A1(pflag,geom->i,geom->j,geom->k,FLAGUTOPRIMFAIL)){

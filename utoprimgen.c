@@ -1507,7 +1507,7 @@ static int compare_ffde_inversions(int showmessages, int allowlocalfailurefixand
   struct of_state q;
   int Utoprimgen_pick(int showmessages, int allowlocalfailurefixandnoreport, int which, int eomtype, int whichcap, int parameter, FTYPE *Ugeomfree, struct of_geom *ptrgeom, PFTYPE *lpflag, FTYPE *pr, FTYPE *pressure, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad);
   int eomtypelocal=EOMTYPE; // as chosen before introduced eomtypelocal
-  int whichcap=CAPTYPEFIX1;
+  int whichcap=CAPTYPEBASIC;
 
   Utoprimgen_pick(showmessages, allowlocalfailurefixandnoreport, UTOPRIMFFDE, eomtypelocal, whichcap, EVOLVENOENTROPY, Ugeomfree, ptrgeom, &GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr, pressure, newtonstats,lpflagrad);
 
@@ -1849,7 +1849,7 @@ int Utoprimdiss(int showmessages, int allowlocalfailurefixandnoreport, int evolv
   FTYPE *pressure=&pressuremem;
   int Utoprimgen_pick(int showmessages, int allowlocalfailurefixandnoreport, int which, int eomtype, int whichcap, int parameter, FTYPE *Ugeomfree, struct of_geom *ptrgeom, PFTYPE *lpflag, FTYPE *pr, FTYPE *pressure, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad);
   int eomtypelocal=EOMTYPE; // as chosen before introduced eomtypelocal
-  int whichcap=CAPTYPEFIX1;
+  int whichcap=CAPTYPEBASIC;
 
 
 
@@ -2173,7 +2173,7 @@ int Utoprimloop(FTYPE (*U)[NSTORE2][NSTORE3][NPR],FTYPE (*prim)[NSTORE2][NSTORE3
     // invert True U->p
     int eomtype=EOMDEFAULT;
     FTYPE dissmeasure=-1.0; // then assume always energy since no info here.
-    int whichcap=CAPTYPEFIX1;
+    int whichcap=CAPTYPEBASIC;
     int whichmethod=MODEDEFAULT;
     MYFUN(Utoprimgen(showmessages, allowlocalfailurefixandnoreport,0,&eomtype,whichcap,whichmethod,EVOLVEUTOPRIM,UEVOLVE,MAC(U,i,j,k), NULL, ptrgeom, dissmeasure, MAC(prim,i,j,k), MAC(prim,i,j,k),newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
   }
@@ -2224,7 +2224,7 @@ void filterffde(int i, int j, int k, FTYPE *pr)
   //  Utoprim_ffde(U,ptrgeom,prout); // no need for initial guess since analytic inversion
   int eomtype=EOMDEFAULT;
   FTYPE dissmeasure=-1.0; // assume energy inversion ok
-  int whichcap=CAPTYPEFIX1;
+  int whichcap=CAPTYPEBASIC;
   int whichmethod=MODEDEFAULT;
   Utoprimgen(showmessages, allowlocalfailurefixandnoreport, finalstep, &eomtype,whichcap,whichmethod,EVOLVEUTOPRIM,UNOTHING,U,NULL,ptrgeom,dissmeasure,pr,prout,&newtonstats);
 
