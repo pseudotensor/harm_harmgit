@@ -1073,7 +1073,7 @@ static int f_implicit(int iter, int failreturnallowable, int whichcall, int show
     PLOOP(pliter,pl) uualt[pl] = uu[pl];
     DLOOPA(iv) uualt[irefU[iv]] = uubackup[irefU[iv]];
     if(implicititer==QTYURAD || implicititer==QTYURADENERGYONLY || implicititer==QTYURADMOMONLY){
-      radinvmodalt=0; // if iterating URAD, then ignore radinvmod==1 for alternative error
+      radinvmodalt=0; // if iterating URAD, then ignore radinvmod==1 for alternative error but need to still use new primitives.
       if(failreturn==UTOPRIMGENWRAPPERRETURNFAILRAD) failreturnalt=UTOPRIMGENWRAPPERRETURNNOFAIL; // only change failure if only rad failure
     }
   }
@@ -1375,7 +1375,13 @@ static int f_implicit(int iter, int failreturnallowable, int whichcall, int show
 
 
   if(errorabsalt<*errorabs){
+    //dualfprintf(fail_file,"UsingALT\n");
+
     // then switch to use falt.
+    // This typically controls what uu is used for the error
+    // Eventually want uu to be consistent with pp
+    // But allow for possible iteration upon uualt, so want to keep uu=uualt even though not consistent with pp
+    // So have to fix uu(pp) once iterations are done.
     PLOOP(pliter,pl){
       uu[pl]=uualt[pl];
       pp[pl]=ppalt[pl];
@@ -1999,7 +2005,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     }
 
     // DEBUG:
-    dualfprintf(fail_file,"PRIMARYEVOLVES: %d %d %d %d : pb=%g %g uu0=%g %g dUtot=%g %g\n",radprimaryevolves,radextremeprimaryevolves,gasprimaryevolves,gasextremeprimaryevolves,pb[UU],pb[URAD0],-uu0[UU],-uu0[URAD0],dUtot[UU],dUtot[URAD0]);
+    //    dualfprintf(fail_file,"PRIMARYEVOLVES: %d %d %d %d : pb=%g %g uu0=%g %g dUtot=%g %g\n",radprimaryevolves,radextremeprimaryevolves,gasprimaryevolves,gasextremeprimaryevolves,pb[UU],pb[URAD0],-uu0[UU],-uu0[URAD0],dUtot[UU],dUtot[URAD0]);
 
     /////////////
     //
@@ -4652,21 +4658,35 @@ static int koral_source_rad_implicit_mode(int modprim, int havebackup, int diden
     }
   }
 
-  ///////////
-  //
-  // have to compute final uu[ENTROPY] if doing entropy optimization where avoid it during iterations if not needed.
-  //
-  ///////////
-  if(ENTROPYOPT){
-    int needentropy=1;
-    get_state_norad_part2(needentropy, pp, ptrgeom, q); // where entropy would be computed
-    //    get_state(pp, ptrgeom, q);
-    extern int primtoflux_nonradonly(int needentropy, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux, FTYPE *fluxabs);
-    FTYPE uuentropy[NPR];
-    primtoflux_nonradonly(needentropy,pp,q,TT,ptrgeom, uuentropy, NULL);
-    uu[ENTROPY]=uuentropy[ENTROPY];
-  }
 
+
+  ///////
+  //
+  // In general, uu might still not be uu=uu(pp) because might have used uualt in f_implicit()
+  // But now that done with determining which solution we want to use with what error, now make consistent.
+  // This needs to come *before* radsource or dUcomp is computed using uu, because uualt was only for error and not actual value that we want to fix-up to no longer require uualt in sense of making U change enough to be like primitive p.
+  //
+  ///////
+  get_state(pp, ptrgeom, q);
+  primtoU(UNOTHING,pp,q,ptrgeom, uu, NULL);
+
+
+  if(0){ // no longer do this since do above full primtoU
+    ///////////
+    //
+    // have to compute final uu[ENTROPY] if doing entropy optimization where avoid it during iterations if not needed.
+    //
+    ///////////
+    if(ENTROPYOPT){
+      int needentropy=1;
+      get_state_norad_part2(needentropy, pp, ptrgeom, q); // where entropy would be computed
+      //    get_state(pp, ptrgeom, q);
+      extern int primtoflux_nonradonly(int needentropy, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux, FTYPE *fluxabs);
+      FTYPE uuentropy[NPR];
+      primtoflux_nonradonly(needentropy,pp,q,TT,ptrgeom, uuentropy, NULL);
+      uu[ENTROPY]=uuentropy[ENTROPY];
+    }
+  }
 
 
   /////////////////////
