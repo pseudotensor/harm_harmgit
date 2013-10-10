@@ -225,8 +225,7 @@ $(PREP): $(PREPDEP)
 	# remove old depenedencies file and create
 	rm -rf deps.onepoint.list ; touch deps.onepoint.list
 	# create new dependencies file
-	for fil in `cat onepoint` ; do  echo $$fil.c ; ( $(MMCOMP) -c -MM $$fil.c > $$fil.deps.onepoint.list &) ; done
-	wait; 
+	for fil in `cat onepoint` ; do  echo $$fil.c ; $(MMCOMP) -c -MM $$fil.c > $$fil.deps.onepoint.list & done; wait; 
 	for fil in `cat onepoint` ; do  (cat $$fil.deps.onepoint.list >> deps.onepoint.list) ; done
 	#
 	#
@@ -244,8 +243,7 @@ $(PREP): $(PREPDEP)
 	# remove old depenedencies file and create
 	rm -rf deps.manypoints.list ; touch deps.manypoints.list
 	# create new dependencies file
-	for fil in `cat manypoints` ; do  echo $$fil.c ; ($(MMCOMP) -c -MM $$fil.c > $$fil.deps.manypoints.list &) ; done
-	wait; 
+	for fil in `cat manypoints` ; do  echo $$fil.c ; $(MMCOMP) -c -MM $$fil.c > $$fil.deps.manypoints.list & done; wait; 
 	for fil in `cat manypoints` ; do  (cat $$fil.deps.manypoints.list >> deps.manypoints.list) ; done
 	echo	$(OBJSMANYPOINTS) > $(PREP)
 	#
@@ -266,8 +264,7 @@ $(PREP): $(PREPDEP)
 	# remove old depenedencies file and create
 	rm -rf deps.puredouble.list ; touch deps.puredouble.list
 	# create new dependencies file
-	for fil in `cat puredouble` ; do  echo $$fil.c ; ( $(MMCOMP) -c -MM $$fil.c > $$fil.deps.puredouble.list &) ; done
-	wait; 
+	for fil in `cat puredouble` ; do  echo $$fil.c ; $(MMCOMP) -c -MM $$fil.c > $$fil.deps.puredouble.list & done; wait; 
 	for fil in `cat puredouble` ; do  (cat $$fil.deps.puredouble.list >> deps.puredouble.list) ; done
 	#
  	############################################
