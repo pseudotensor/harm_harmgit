@@ -1836,6 +1836,10 @@ int init_defcoord(void)
       //      setRin_withchecks(&Rin);
     }
     
+    if(totalsize[1]<32*4){
+      dualfprintf(fail_file,"RADDONUT setup for 128x64 with that grid\n");
+      myexit(28634693);
+    }
 
   }
 
