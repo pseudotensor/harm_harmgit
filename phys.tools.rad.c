@@ -1971,7 +1971,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     static FTYPE sqrtnumepsilon;
     static int firsttimeset=1;
     if(firsttimeset){
-      sqrtnumepsilon=pow(NUMEPSILON,2.0/3.0);
+      //      sqrtnumepsilon=pow(NUMEPSILON,2.0/3.0);
+      sqrtnumepsilon=1E-1; // playing -- required for RADBONDI to be fast by using QTYURAD method first as QTYPMHD method fails more.
       firsttimeset=0;
     }
     int radprimaryevolves=0;
