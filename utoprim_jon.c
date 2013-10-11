@@ -99,9 +99,9 @@ static void my_lnsrch(int eomtype, int n, FTYPE xold[], FTYPE fold, FTYPE g[], F
 // Newton checks:
 static int newt_repeatcheck(int n, FTYPE errx, FTYPE errx_old, FTYPE errx_oldest, FTYPE *dx, FTYPE *dx_old, FTYPE *x, FTYPE *x_old, FTYPE *x_older, FTYPE *x_olderer);
 static int newt_cyclecheck(int n, FTYPE errx, FTYPE errx_old, FTYPE errx_oldest, FTYPE *dx, FTYPE *dx_old, FTYPE *x, FTYPE *x_old, FTYPE *x_older, FTYPE *x_olderer);
-static int newt_errorcheck(FTYPE errx, FTYPE x0, FTYPE *wglobal);
-static int newt_extracheck(FTYPE errx, FTYPE x0, FTYPE *wglobal);
-static void bin_newt_data( FTYPE errx, int niters, int conv_type, int print_now  ) ;
+static int newt_errorcheck(int n, FTYPE NEWT_TOL_VAR, FTYPE NEWT_TOL_ULTRAREL_VAR, FTYPE errx, FTYPE x0, FTYPE dx0, FTYPE *x, FTYPE *dx, FTYPE *wglobal);
+static int newt_extracheck(int n, int EXTRA_NEWT_ITER_VAR, int EXTRA_NEWT_ITER_ULTRAREL_VAR, FTYPE errx, FTYPE x0, FTYPE dx0, FTYPE *x, FTYPE *dx, FTYPE *wglobal);
+static void bin_newt_data(FTYPE MAX_NEWT_ITER_VAR, FTYPE errx, int niters, int conv_type, int print_now  ) ;
 
 static void validate_x(void (*ptr_validate_x)(FTYPE x[NEWT_DIM], FTYPE x0[NEWT_DIM], FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra),FTYPE x[NEWT_DIM], FTYPE x0[NEWT_DIM], FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra);
 static void check_on_inversion(int showmessages, FTYPE *prim, FTYPE *U, struct of_geom *ptrgeom, FTYPE Wp, FTYPE *Qtcon, FTYPE *Bcon, FTYPE *Bcov, int retval, FTYPE *wglobal, FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra, struct of_newtonstats *newtonstats);
@@ -997,7 +997,7 @@ static int set_guess_Wp(int showmessages, PFTYPE *lpflag, int eomtype, FTYPE *pr
 
 
 
-
+  //  dualfprintf(fail_file,"Wlast=%g Wplast=%g\n",*W_last,*Wp_last);
   
   //  *wglobal=w+bsq; // used to validate normalized version of W
   
@@ -1005,18 +1005,23 @@ static int set_guess_Wp(int showmessages, PFTYPE *lpflag, int eomtype, FTYPE *pr
   //SUPERGODMARK: what if in nonrel case rho0 is identically zero? looks like rel. case but it's not (need rhorel for non-rel case)
   if( JONGENNEWTSTUFF &&   gammasq * etaabs >= (wglobal[2])  ){
     // RIGHT
+
   
     ////////////////// WRONG
     //  if( JONGENNEWTSTUFF && (w+bsq)*gammasq >= GAMMASQCHECKRESID ) { // WRONG
     ///////////////// WRONG
 
-    if(coldgrhd(lpflag, Qtsq, D, &Wpcoldhd)) Wpcoldhd=*Wp_last; // if failed to get coldGRHD Wp, then just use Wp_last
+    int gotcold=0;
+    if(coldgrhd(lpflag, Qtsq, D, &Wpcoldhd)){
+      Wpcoldhd=*Wp_last; // if failed to get coldGRHD Wp, then just use Wp_last
+      gotcold=1;
+    }
     
     //  *wglobal=MAX(MAX(Wpcoldhd,*Wp_last),Wpabs); // used to validate normalized version of W -- accurate for cold GRHD
     *wglobal= MAX(MAX(Wpcoldhd,*Wp_last),Wpabs); // used to validate normalized version of W -- accurate for cold GRHD
     //*wglobal=Wpabs;
     
-    *Wp_last=MAX(2.0*Wpcoldhd,*Wp_last); // use cold HD to upgrade Wp if needed
+    if(gotcold) *Wp_last=MAX(2.0*Wpcoldhd,*Wp_last); // use cold HD to upgrade Wp if needed.  Don't upgrade from cold if just set to Wp_last from guess.
 
     // fudge
     //    *Wp_last = *W_last;
@@ -1059,6 +1064,7 @@ static int set_guess_Wp(int showmessages, PFTYPE *lpflag, int eomtype, FTYPE *pr
 
 
      
+  //  dualfprintf(fail_file,"MID: Wlast=%g Wplast=%g\n",*W_last,*Wp_last);
 
 
 #define MAXNUMGUESSCHANGES (1000)
@@ -1090,7 +1096,7 @@ static int set_guess_Wp(int showmessages, PFTYPE *lpflag, int eomtype, FTYPE *pr
     if(utsq>=0.0 && utsq==utsq && isfinite(utsq) && (Ss==Ss && isfinite(Ss) && Ss>=Ss0-FRACSs0*fabs(Ss0))){
       // if utsq=nan or inf, will fail to reach here
       // if Ss=nan or inf, will fail to reach here
-      if(numattemptstofixguess>0) if(showmessages && debugfail>=3) dualfprintf(fail_file,"GOOD Initial guess #%d/%d [i=%d j=%d k=%d] for W=%21.15g Wp=%21.15g Wp/D=%21.15g gives bad utsq=%21.15g Ss=%21.15g D=%21.15g u=%21.15g p=%21.15g gamma=%21.15g Ss0=%21.15g\n",numattemptstofixguess,MAXNUMGUESSCHANGES,ptrgeom->i,ptrgeom->j,ptrgeom->k,*W_last,*Wp_last,*Wp_last/D,utsq,Ss,D,u,p,gamma,Ss0);
+      if(numattemptstofixguess>0) if(1||showmessages && debugfail>=3) dualfprintf(fail_file,"GOOD Initial guess #%d/%d [i=%d j=%d k=%d] for W=%21.15g Wp=%21.15g Wp/D=%21.15g gives bad utsq=%21.15g Ss=%21.15g D=%21.15g u=%21.15g p=%21.15g gamma=%21.15g Ss0=%21.15g\n",numattemptstofixguess,MAXNUMGUESSCHANGES,ptrgeom->i,ptrgeom->j,ptrgeom->k,*W_last,*Wp_last,*Wp_last/D,utsq,Ss,D,u,p,gamma,Ss0);
       break;
     }
     else{
@@ -1129,6 +1135,7 @@ static int set_guess_Wp(int showmessages, PFTYPE *lpflag, int eomtype, FTYPE *pr
   }
 
 
+  //  dualfprintf(fail_file,"NEW: Wlast=%g Wplast=%g\n",*W_last,*Wp_last);
 
 
   // DEBUG:
@@ -3931,6 +3938,39 @@ static int general_newton_raphson(int showmessages, PFTYPE *lpflag, int eomtype,
 
 
 
+  //////////
+  //
+  // use inputs from newtonstats that sets up iterations
+  // see global.structs.h: of_newtonstats{}
+  //
+  /////////
+  FTYPE NEWT_TOL_VAR;
+  if(newtonstats->tryconv>0.0 && newtonstats->tryconv>NEWT_TOL) NEWT_TOL_VAR=newtonstats->tryconv;
+  else NEWT_TOL_VAR=NEWT_TOL;
+
+  FTYPE NEWT_TOL_ULTRAREL_VAR;
+  if(newtonstats->tryconvultrarel>0.0 && newtonstats->tryconvultrarel>NEWT_TOL_ULTRAREL) NEWT_TOL_ULTRAREL_VAR=newtonstats->tryconvultrarel;
+  else NEWT_TOL_ULTRAREL_VAR=NEWT_TOL_ULTRAREL;
+
+  FTYPE MIN_NEWT_TOL_VAR;
+  if(newtonstats->mintryconv>0.0 && newtonstats->mintryconv>MIN_NEWT_TOL) MIN_NEWT_TOL_VAR=newtonstats->mintryconv;
+  else MIN_NEWT_TOL_VAR=MIN_NEWT_TOL;
+
+  FTYPE MAX_NEWT_ITER_VAR;
+  if(newtonstats->maxiter>=0 && newtonstats->maxiter<MAX_NEWT_ITER) MAX_NEWT_ITER_VAR=newtonstats->maxiter;
+  else MAX_NEWT_ITER_VAR=MAX_NEWT_ITER;
+
+  int EXTRA_NEWT_ITER_VAR;
+  if(newtonstats->extra_newt_iter>=0 && newtonstats->extra_newt_iter<EXTRA_NEWT_ITER) EXTRA_NEWT_ITER_VAR=newtonstats->extra_newt_iter;
+  else EXTRA_NEWT_ITER_VAR=EXTRA_NEWT_ITER;
+
+  int EXTRA_NEWT_ITER_ULTRAREL_VAR;
+  if(newtonstats->extra_newt_iter_ultrarel>=0 && newtonstats->extra_newt_iter_ultrarel<EXTRA_NEWT_ITER_ULTRAREL) EXTRA_NEWT_ITER_ULTRAREL_VAR=newtonstats->extra_newt_iter_ultrarel;
+  else EXTRA_NEWT_ITER_ULTRAREL_VAR=EXTRA_NEWT_ITER_ULTRAREL;
+
+
+
+
   // pick version of validate_x depending upon scheme
   pick_validate_x(eomtype, &ptr_validate_x);
 
@@ -3986,7 +4026,7 @@ static int general_newton_raphson(int showmessages, PFTYPE *lpflag, int eomtype,
 #if(0)
     //    if(nstep>=26070){
     //      if(1||myid==5 && nstep==1 && steppart==0 && ifileglobal==19 && jfileglobal==15){
-    for(it=0;it<n;it++) dualfprintf(fail_file,"lntries=%d after funcd: x[%d]=%26.20g dx[%d]=%26.20g f=%26.20g df=%26.20g errx=%26.20g diddamp=%d dampfactor=%26.20g didcycle=%d : %g %g %g %g %g %g %g %g %g\n",(int)(newtonstats->lntries),it,x[it],it,dx[it],f,df,errx,diddamp,DAMPFACTOR[it],didcycle,wglobal[2],Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc);
+    for(it=0;it<n;it++) dualfprintf(fail_file,"lntries=%d after funcd: x[%d]=%26.20g dx[%d]=%26.20g f=%26.20g df=%26.20g errx=%26.20g (%26.20g %26.20g) diddamp=%d dampfactor=%26.20g didcycle=%d : %g %g %g %g %g %g %g %g %g\n",(int)(newtonstats->lntries),it,x[it],it,dx[it],f,df,errx,NEWT_TOL_VAR,NEWT_TOL_ULTRAREL_VAR,diddamp,DAMPFACTOR[it],didcycle,wglobal[2],Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc);
         //      }
         //    }
 #endif
@@ -4345,7 +4385,7 @@ static int general_newton_raphson(int showmessages, PFTYPE *lpflag, int eomtype,
     /* Check to see if we're in a infinite loop with error function: */
     /****************************************/
 #if( CHECK_FOR_STALL )
-    if( ( (errx_old == errx) || (errx_oldest == errx) ) && (errx <= MIN_NEWT_TOL) )  errx = -errx;
+    if( ( (errx_old == errx) || (errx_oldest == errx) ) && (errx <= MIN_NEWT_TOL_VAR) )  errx = -errx;
 #endif 
 
     /****************************************/
@@ -4392,7 +4432,7 @@ static int general_newton_raphson(int showmessages, PFTYPE *lpflag, int eomtype,
 
     
     // see if reached tolerance
-    if(newt_errorcheck(errx, x[0],  wglobal) && (doing_extra == 0) && (newt_extracheck(errx,x[0],wglobal) > 0) ) {
+    if(newt_errorcheck(n, NEWT_TOL_VAR, NEWT_TOL_ULTRAREL_VAR, errx, x[0],  dx[0], x, dx, wglobal) && (doing_extra == 0) && (newt_extracheck(n, EXTRA_NEWT_ITER_VAR, EXTRA_NEWT_ITER_ULTRAREL_VAR, errx,x[0],dx[0],x, dx, wglobal) > 0) ) {
       doing_extra = 1;
     }
 
@@ -4405,7 +4445,7 @@ static int general_newton_raphson(int showmessages, PFTYPE *lpflag, int eomtype,
 
     if( doing_extra == 1 ) i_extra++ ;
 
-    if( (newt_errorcheck(errx, x[0],  wglobal)&&(doing_extra == 0)) || (i_extra > newt_extracheck(errx,x[0],wglobal)) || (n_iter >= (MAX_NEWT_ITER-1)) ) {
+    if( (newt_errorcheck(n, NEWT_TOL_VAR, NEWT_TOL_ULTRAREL_VAR, errx, x[0],  dx[0],x,dx, wglobal)&&(doing_extra == 0)) || (i_extra > newt_extracheck(n, EXTRA_NEWT_ITER_VAR, EXTRA_NEWT_ITER_ULTRAREL_VAR, errx,x[0],dx[0],x,dx,wglobal)) || (n_iter >= (MAX_NEWT_ITER_VAR-1)) ) {
       keep_iterating = 0;
     }
 
@@ -4422,7 +4462,7 @@ static int general_newton_raphson(int showmessages, PFTYPE *lpflag, int eomtype,
     if(CRAZYNEWCHECK){
       //    if(ifileglobal==0 && jfileglobal==63 && nstep==12 && steppart==0){
       //    if(ifileglobal==0 && jfileglobal==0 && nstep==0 && steppart==0){
-      dualfprintf(fail_file,"i=%d j=%d part=%d step=%ld :: n_iter=%d :: errx=%21.15g minerr=%21.15g :: x[0]=%21.15g dx[0]=%21.15g wglobal0=%21.15g\n",ifileglobal,jfileglobal,steppart,nstep,n_iter,errx,MIN_NEWT_TOL,x[0],dx[0],wglobal[0]);
+      dualfprintf(fail_file,"i=%d j=%d part=%d step=%ld :: n_iter=%d :: errx=%21.15g minerr=%21.15g :: x[0]=%21.15g dx[0]=%21.15g wglobal0=%21.15g\n",ifileglobal,jfileglobal,steppart,nstep,n_iter,errx,MIN_NEWT_TOL_VAR,x[0],dx[0],wglobal[0]);
     }
     //  }
 #endif
@@ -4486,9 +4526,9 @@ static int general_newton_raphson(int showmessages, PFTYPE *lpflag, int eomtype,
 #endif
 
 
-  if(newt_errorcheck(errx, x[0],  wglobal) ){
+  if(newt_errorcheck(n, NEWT_TOL_VAR, NEWT_TOL_ULTRAREL_VAR, errx, x[0],  dx[0], x,dx,wglobal) ){
 #if(DOHISTOGRAM)
-    bin_newt_data( errx, n_iter, 2, 0 );
+    bin_newt_data(MAX_NEWT_ITER_VAR, errx, n_iter, 2, 0 );
 #endif
 #if(!OPTIMIZED)
     if(ltrace2) {
@@ -4504,9 +4544,9 @@ static int general_newton_raphson(int showmessages, PFTYPE *lpflag, int eomtype,
 
 
 
-  if( (fabs(errx) <= MIN_NEWT_TOL) && newt_errorcheck(errx, x[0],  wglobal) ){
+  if( (fabs(errx) <= MIN_NEWT_TOL_VAR) && newt_errorcheck(n, NEWT_TOL_VAR, NEWT_TOL_ULTRAREL_VAR, errx, x[0],  dx[0], x,dx,wglobal) ){
 #if(DOHISTOGRAM)
-    bin_newt_data( errx, n_iter, 1, 0 );
+    bin_newt_data(MAX_NEWT_ITER_VAR, errx, n_iter, 1, 0 );
 #endif
 #if(!OPTIMIZED)
     if(ltrace2) {
@@ -4532,15 +4572,15 @@ static int general_newton_raphson(int showmessages, PFTYPE *lpflag, int eomtype,
 
 
 
-  if( fabs(errx) > MIN_NEWT_TOL){
+  if( fabs(errx) > MIN_NEWT_TOL_VAR){
     if( (do_line_search != USE_LINE_SEARCH) || (USE_LINE_SEARCH < 0) ) { 
 #if(DOHISTOGRAM)
-      bin_newt_data( errx, n_iter, 0, 0 );
+      bin_newt_data(MAX_NEWT_ITER_VAR, errx, n_iter, 0, 0 );
 #endif
 
       if(debugfail>=2){
-        dualfprintf(fail_file,"fabs(errx)=%21.15g > MIN_NEWT_TOL=%21.15g n=%d n_iter=%d lntries=%d eomtype=%d\n",fabs(errx),MIN_NEWT_TOL,n,n_iter,newtonstats->lntries,eomtype);
-        //        if(DEBUGINDEX) dualfprintf(fail_file,"i=%d j=%d part=%d step=%ld :: n_iter=%d :: errx=%21.15g minerr=%21.15g :: x[0]=%21.15g dx[0]=%21.15g wglobal0=%21.15g\n",ifileglobal,jfileglobal,steppart,nstep,n_iter,errx,MIN_NEWT_TOL,x[0],dx[0],wglobal[0]);
+        dualfprintf(fail_file,"fabs(errx)=%21.15g > MIN_NEWT_TOL_VAR=%21.15g n=%d n_iter=%d lntries=%d eomtype=%d\n",fabs(errx),MIN_NEWT_TOL_VAR,n,n_iter,newtonstats->lntries,eomtype);
+        //        if(DEBUGINDEX) dualfprintf(fail_file,"i=%d j=%d part=%d step=%ld :: n_iter=%d :: errx=%21.15g minerr=%21.15g :: x[0]=%21.15g dx[0]=%21.15g wglobal0=%21.15g\n",ifileglobal,jfileglobal,steppart,nstep,n_iter,errx,MIN_NEWT_TOL_VAR,x[0],dx[0],wglobal[0]);
       }
 
 
@@ -4575,7 +4615,7 @@ static int general_newton_raphson(int showmessages, PFTYPE *lpflag, int eomtype,
       for( id = 0; id < n ; id++)  x[id] = x_orig[id] ;
       //      dualfprintf(fail_file,"gnr retval3 = %4i \n", retval2); 
 
-      if(debugfail>=2) dualfprintf(fail_file,"fabs(errx) > MIN_NEWT_TOL: n_iter=%d lntries=%d\n",n_iter,newtonstats->lntries);
+      if(debugfail>=2) dualfprintf(fail_file,"fabs(errx) > MIN_NEWT_TOL_VAR: n_iter=%d lntries=%d\n",n_iter,newtonstats->lntries);
 
       return( retval2 );
     }
@@ -4596,18 +4636,23 @@ static int general_newton_raphson(int showmessages, PFTYPE *lpflag, int eomtype,
 
 
 // see if meet tolerance
-static int newt_errorcheck(FTYPE errx, FTYPE x0, FTYPE *wglobal)
+static int newt_errorcheck(int n, FTYPE NEWT_TOL_VAR, FTYPE NEWT_TOL_ULTRAREL_VAR, FTYPE errx, FTYPE x0, FTYPE dx0, FTYPE *x, FTYPE *dx, FTYPE *wglobal)
 {
 
   int ultrarel=0;
 
   ultrarel=( (fabs(wglobal[1])>wglobal[2]) || (fabs(x0)>wglobal[2]) );
 
+  // see if dx's are too small to matter, despite condition on errx.
+  int dxsmallcount=0;
+  int iter;
+  for(iter=0;iter<n;iter++) dxsmallcount += (fabs(dx[iter])<NUMEPSILON*x[iter]);
+
   if(!ultrarel){
-    return(fabs(errx) <= NEWT_TOL);
+    return(fabs(errx) <= NEWT_TOL_VAR || dxsmallcount==n);
   }
   else{
-    return(fabs(errx) <= NEWT_TOL_ULTRAREL);
+    return(fabs(errx) <= NEWT_TOL_ULTRAREL_VAR || dxsmallcount==n);
   }
 }
 
@@ -4656,7 +4701,7 @@ static int newt_cyclecheck(int n, FTYPE errx, FTYPE errx_old, FTYPE errx_oldest,
 }
 
 // see if done with extra iterations
-static int newt_extracheck(FTYPE errx, FTYPE x0, FTYPE *wglobal)
+static int newt_extracheck(int n, int EXTRA_NEWT_ITER_VAR, int EXTRA_NEWT_ITER_ULTRAREL_VAR, FTYPE errx, FTYPE x0, FTYPE dx0, FTYPE *x, FTYPE *dx, FTYPE *wglobal)
 {
 
   int ultrarel=0;
@@ -4664,10 +4709,10 @@ static int newt_extracheck(FTYPE errx, FTYPE x0, FTYPE *wglobal)
   ultrarel=( (fabs(wglobal[1])>wglobal[2]) || (fabs(x0)>wglobal[2]) );
 
   if(!ultrarel){
-    return(EXTRA_NEWT_ITER);
+    return(EXTRA_NEWT_ITER_VAR);
   }
   else{
-    return(EXTRA_NEWT_ITER_ULTRAREL);
+    return(EXTRA_NEWT_ITER_ULTRAREL_VAR);
   }
 }
 
@@ -4815,7 +4860,7 @@ static void my_lnsrch(int eomtype, int n, FTYPE xold[], FTYPE fold, FTYPE g[], F
 
 
 #define N_CONV_TYPES 3
-#define N_NITER_BINS (MAX_NEWT_ITER + 3)
+#define N_NITER_BINS (MAX_NEWT_ITER + 3) // want to use MAX_NEWT_ITER_VAR, but not fixed, so constrain to be less.
 #define NBINS 200
 
 /**************************************************** 
@@ -4835,7 +4880,7 @@ static void my_lnsrch(int eomtype, int n, FTYPE xold[], FTYPE fold, FTYPE g[], F
 *****************************************************/
 
 // OPENMPMARK: Not thread safe due to use of static variables, but not used except for debugging
-static void bin_newt_data( FTYPE errx, int niters, int conv_type, int print_now  ) {
+static void bin_newt_data(FTYPE MAX_NEWT_ITER_VAR, FTYPE errx, int niters, int conv_type, int print_now  ) {
 
   
   /* General variables */

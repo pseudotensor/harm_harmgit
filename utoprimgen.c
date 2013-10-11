@@ -2212,7 +2212,7 @@ void filterffde(int i, int j, int k, FTYPE *pr)
   FTYPE U[NPR];
   struct of_state q;
   //  int Utoprim_ffde(FTYPE *U, struct of_geom *geom, FTYPE *pr)  ;
-  struct of_newtonstats newtonstats;
+  struct of_newtonstats newtonstats; setnewtonstatsdefault(&newtonstats);
   int finalstep=0;
   int showmessages=1;
   int allowlocalfailurefixandnoreport=1;
@@ -2410,3 +2410,20 @@ int entropyfixguess(struct of_state *q, struct of_geom *ptrgeom, FTYPE *uu, FTYP
 
   return(0);
 }
+
+
+
+// set defaults for of_newtonstats structure for "inputs" that can be used by utoprim_jon.c's general_newton_raphson()
+int setnewtonstatsdefault(struct of_newtonstats *newtonstats)
+{
+
+  newtonstats->tryconv=-1.0;
+  newtonstats->tryconvultrarel=-1.0;
+  newtonstats->mintryconv=-1.0;
+  newtonstats->maxiter=-1;
+  newtonstats->extra_newt_iter=-1;
+  newtonstats->extra_newt_iter_ultrarel=-1;
+
+  return(0);
+}
+

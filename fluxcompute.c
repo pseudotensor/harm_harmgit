@@ -559,7 +559,7 @@ int forceflux_compute(int dir,struct of_geom *geom, FTYPE *cmin, FTYPE *cmax, FT
   FTYPE vminorig[NPR], vmaxorig[NPR];
   FTYPE cminreal[NPR], cmaxreal[NPR];
   int hllflux_compute(int dir,struct of_geom *geom, FTYPE *cmin, FTYPE *cmax, FTYPE *ctop, FTYPE *p_l, FTYPE *p_r, FTYPE *U_l, FTYPE *U_r,FTYPE *F_l,FTYPE *F_r, FTYPE *F); 
-  struct of_newtonstats newtonstats;
+  struct of_newtonstats newtonstats; setnewtonstatsdefault(&newtonstats);
   int showmessages=1;
   int allowlocalfailurefixandnoreport=1; 
 
@@ -670,7 +670,7 @@ int mustaflux_compute(int dir,struct of_geom *geom, FTYPE *cmin_l, FTYPE *cmin_r
   FTYPE shockstrength;
   FTYPE rarestrength;
   FTYPE contactstrength;
-  struct of_newtonstats newtonstats;
+  struct of_newtonstats newtonstats; setnewtonstatsdefault(&newtonstats);
   int showmessages=1;
   int allowlocalfailurefixandnoreport=1; 
 
@@ -814,7 +814,7 @@ int musta1flux_compute(int dir,struct of_geom *geom, FTYPE *cmin_l, FTYPE *cmin_
   int pllargest;
   FTYPE fracl[NPR],fracr[NPR];
   FTYPE mustaf;
-  struct of_newtonstats newtonstats;
+  struct of_newtonstats newtonstats; setnewtonstatsdefault(&newtonstats);
   FTYPE cminmhd,cmaxmhd,ctopmhd;
   FTYPE cminrad,cmaxrad,ctoprad;
   FTYPE cminrad2,cmaxrad2,ctoprad2;
@@ -1144,7 +1144,7 @@ int musta2flux_compute(int dir,struct of_geom *geom, FTYPE *cmin_l, FTYPE *cmin_
   FTYPE otherF[NPR];
   int mustacellloop;
   int ms,me;
-  struct of_newtonstats newtonstats;
+  struct of_newtonstats newtonstats; setnewtonstatsdefault(&newtonstats);
   int showmessages=1;
   int allowlocalfailurefixandnoreport=1; 
 

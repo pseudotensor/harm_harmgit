@@ -46,3 +46,5 @@ extern int entropyfixguess(struct of_state *q, struct of_geom *ptrgeom, FTYPE *u
 extern int sp_stress_calc(FTYPE *pr, FTYPE (*tens_matt)[NDIM],
                           FTYPE (*tens_em)[NDIM], FTYPE *b,
                           FTYPE *ucon);
+
+extern int setnewtonstatsdefault(struct of_newtonstats *newtonstats);

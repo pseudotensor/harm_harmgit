@@ -276,11 +276,19 @@ struct of_loop {
 };
 
 struct of_newtonstats {
+  // outputs
   FTYPE lerrx;
   int lntries;
   int nstroke;
   FTYPE invproperty[NUMINVPROPERTY];
   char invpropertytext[NUMINVPROPERTY][10];
+  // inputs
+  FTYPE tryconv; // default is from u2p_defs.h: NEWT_TOL
+  FTYPE tryconvultrarel; // default is from u2p_defs.h: NEWT_TOL_ULTRAREL
+  FTYPE mintryconv; // default is from u2p_defs.h: MIN_NEWT_TOL
+  int maxiter; // default is from u2p_defs.h: MAX_NEWT_ITER
+  int extra_newt_iter; //  EXTRA_NEWT_ITER
+  int extra_newt_iter_ultrarel; // EXTRA_NEWT_ITER_ULTRAREL
 };
 
 struct of_trueijkp {

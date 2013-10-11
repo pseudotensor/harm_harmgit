@@ -2210,7 +2210,7 @@ int get_primitive_centerlocation(int *locpl, int *whichpltoavg, int interporflux
   //Utoprimgen is already declared in global.h
   struct of_geom geomdontuse;
   struct of_geom *ptrgeom=&geomdontuse;
-  struct of_newtonstats newtonstats;
+  struct of_newtonstats newtonstats; setnewtonstatsdefault(&newtonstats);
   int showmessages=1;
   int allowlocalfailurefixandnoreport=1; 
 
@@ -3153,7 +3153,7 @@ FTYPE limit_fluxc2a_prim_change(
   struct of_geom *ptrgeom=&geomdontuse;
   struct of_state q; //atch
   extern FTYPE limit_prim_correction( FTYPE fractional_difference_threshold, struct of_geom *geom, FTYPE *pin, FTYPE *pout );
-  struct of_newtonstats newtonstats;
+  struct of_newtonstats newtonstats; setnewtonstatsdefault(&newtonstats);
   int showmessages=1;
   int allowlocalfailurefixandnoreport=1;
 

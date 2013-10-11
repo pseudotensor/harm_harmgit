@@ -2610,7 +2610,7 @@ int limit_3vel_ffde(FTYPE *Bcon, struct of_geom *geom, FTYPE *vcon, FTYPE *pr)
   //  Utoprim_ffde(U, geom, pr);
   int showmessages=1;
   int allowlocalfailurefixandnoreport=1;
-  struct of_newtonstats newtonstats; // not pointer
+  struct of_newtonstats newtonstats; setnewtonstatsdefault(&newtonstats);
   // initialize counters
   newtonstats.nstroke=newtonstats.lntries=0;
   int finalstep=1; // doesn't matter for ffde

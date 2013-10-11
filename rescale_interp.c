@@ -140,7 +140,7 @@ int rescale(int which, int dir, FTYPE *pr, struct of_geom *ptrgeom,FTYPE *p2inte
     MYFUN(primtoU(UDIAG,pr, &q, ptrgeom, p2interp, NULL),"interp.c:rescale()", "primtoU()", 1);
   }
   else if(which==-1){ // unrescale after interpolation
-    struct of_newtonstats newtonstats;  
+    struct of_newtonstats newtonstats;   setnewtonstatsdefault(&newtonstats);
     int showmessages=1;
     int allowlocalfailurefixandnoreport=1;
     int eomtype=EOMDEFAULT;

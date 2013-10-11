@@ -517,7 +517,7 @@ static int advance_standard(
 
       // for inversion
       FTYPE prbefore[NPR];
-      struct of_newtonstats newtonstats; // not pointer
+      struct of_newtonstats newtonstats; setnewtonstatsdefault(&newtonstats);
       int showmessages=1;
       int allowlocalfailurefixandnoreport=1; // allow local fixups
       // initialize counters
@@ -1810,7 +1810,7 @@ static int advance_standard_orig(
     struct of_geom geomdontuse;
     struct of_geom *ptrgeom=&geomdontuse;
     FTYPE prbefore[NPR];
-    struct of_newtonstats newtonstats; // not pointer
+    struct of_newtonstats newtonstats;  setnewtonstatsdefault(&newtonstats);
     int showmessages=1;
     int allowlocalfailurefixandnoreport=1; // allow local fixups
 
@@ -2573,7 +2573,7 @@ static int advance_finitevolume(
     FTYPE prbefore[NPR];
     struct of_geom geomdontuse;
     struct of_geom *ptrgeom=&geomdontuse;
-    struct of_newtonstats newtonstats;
+    struct of_newtonstats newtonstats; setnewtonstatsdefault(&newtonstats);
     int showmessages=1;
     int allowlocalfailurefixandnoreport=1; // allow local fixups
     

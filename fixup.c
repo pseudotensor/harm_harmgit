@@ -903,7 +903,7 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
       oldmhdpflag=GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL);
       oldradpflag=GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL);
 
-      struct of_newtonstats newtonstats;
+      struct of_newtonstats newtonstats; setnewtonstatsdefault(&newtonstats);
       int showmessages=0; // messages not important if fixup doens't work, unless debugging.
       int allowlocalfailurefixandnoreport=1; 
       int eomtype=EOMDEFAULT;
