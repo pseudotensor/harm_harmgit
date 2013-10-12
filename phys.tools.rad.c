@@ -9,6 +9,16 @@
 // f2c prototype
 #include "f2c.h"
 
+#ifdef KR_headers
+double d_sign(a,b) doublereal *a, *b;
+#else
+double d_sign(doublereal *a, doublereal *b)
+#endif
+{
+double x;
+x = (*a >= 0 ? *a : - *a);
+return( *b >= 0 ? x : -x);
+}
 
 #ifdef KR_headers
 //double floor();
@@ -1610,6 +1620,7 @@ static FTYPE compute_dt(FTYPE *CUf, FTYPE dtin)
 //#define MODEMETHOD MODESWITCH
 //#define MODEMETHOD MODEENERGY
 //#define MODEMETHOD MODEENTROPY
+//#define MODEMETHOD MODEENERGYRAMESH
 
 
 // wrapper for mode method
@@ -1771,6 +1782,82 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       usedexplicitgood=1;
     }
   }
+
+
+
+
+
+  if(MODEMETHOD==MODEENERGYRAMESH&&USERAMESH){
+    // these ramesh solutions are here so both entropy and energy can have chance to fill them.
+    int gotrameshsolution=0;
+    FTYPE ppeng[NPR]={0},ppent[NPR]={0},errorabseng=1.0,errorabsent=1.0;
+    int failtypeeng=1,failtypeent=1,iterseng=IMPMAXITER,itersent=IMPMAXITER,radinvmodeng=-1,radinvmodent=-1;
+    struct of_state qeng, qent;
+    qeng=qbackup;
+    qent=qbackup;
+    FTYPE dUcompeng[NUMSOURCES][NPR],dUcompent[NUMSOURCES][NPR];
+
+
+    goexplicit=0; // force since no explicit check
+    FTYPE errorabsforramesh;
+    errorabsforramesh=1.0;
+    PLOOP(pliter,pl){
+      pb[pl]=pbbackup[pl];
+      SCLOOP(sc) dUcompeng[sc][pl]=dUcomp[sc][pl]=dUcompbackup[sc][pl];
+    }
+    *q=qbackup;
+    //
+    // BEGIN GET RAMESH SOLUTION
+    failreturn=FAILRETURNGENERAL;// default to fail
+    *eomtype=EOMGRMHD;
+    int whichcall=eomtype;
+    get_rameshsolution_wrapper(whichcall, *eomtype, errorabsforramesh, ptrgeom, pb, piin, Uiin, Ufin, dUother, CUf, q, ppeng, ppent, dUcompeng, dUcompent, &qeng, &qent, &failtypeeng, &errorabseng, &iterseng, &radinvmodeng, &failtypeent, &errorabsent, &itersent, &radinvmodent);
+    gotrameshsolution=1; // indicates did at least attempt ramesh soltion call
+    // translate
+    PLOOP(pliter,pl){
+      pb[pl]=ppeng[pl];
+      SCLOOP(sc) dUcomp[sc][pl]=dUcompeng[sc][pl];
+    }
+    *q=qeng;
+    //
+    *lpflag=*lpflagrad=(PFTYPE)failtypeeng; // need better translation
+    radinvmod=radinvmodeng;
+    //    radErfneg=0; // not allowed, considered BADNEG type
+    iters=iterseng;
+    errorabs=errorabseng;
+    if(failtypeeng || errorabs>IMPALLOWCONVABS){
+      failfinalreturn=1;
+      failreturn=FAILRETURNGENERAL; *eomtype=EOMGRMHD;
+      // restore backups in case got contaminated
+      PLOOP(pliter,pl){
+        pb[pl]=pbbackup[pl];
+        SCLOOP(sc) dUcomp[sc][pl]=dUcompbackup[sc][pl];
+      }
+      *q=qbackup;
+      goexplicit=0;
+      usedimplicit=1;
+    }
+    else if(errorabs<IMPTRYCONVABS){
+      failfinalreturn=0;
+      failreturn=FAILRETURNNOFAIL;
+      noprims=0;
+      *eomtype=EOMDIDGRMHD;
+      usedenergy=1;
+      goexplicit=0;
+      usedimplicit=1;
+    }
+    else{
+      failreturn=FAILRETURNNOTTOLERROR; *eomtype=EOMDIDGRMHD;
+      failfinalreturn=1;
+      noprims=1;
+      *eomtype=EOMGRMHD;
+      usedenergy=1;
+      goexplicit=0;
+      usedimplicit=1;
+    }
+    // END GET RAMESH SOLUTION
+  }
+
 
 
 

@@ -52,14 +52,16 @@ c     WHICHVEL should be set same as in harm
 c#define WHICHVEL VEL4
 
 c error below which will consider BAD solution and not even compute final solution
-c#define FAILLIMIT (1E-6)
+c#define FAILLIMIT (1D-6)
 c Choose actual harm choice even if pretty strict.
-c#define FAILLIMIT (1E-8)
+c#define FAILLIMIT (1D-8)
 #define FAILLIMIT (tolallow)
 
 #define NUMARGS (211+11)
 c 11 vars, failcode, error, iterations
 #define NUMRESULTS 15
+
+#define SMALL (1D-300)
 
 #if(PRODUCTION<3)
       program testradiation
@@ -1736,7 +1738,9 @@ c for fortran
       double precision function mydiv(x,y)
       double precision x,y
 
-      mydiv=x/y
+      double precision myabs
+c     Avoid division by zero
+      mydiv=x*dsign(1.0d0,y)/(SMALL+myabs(y))
       if(x.ne.x) then
          mydiv=x
       endif
@@ -3692,7 +3696,7 @@ c     normalized err4 from all four equations
       err3=0.d0
       do i=2,4
          error(i)=Tmunu(1,i)-Ttcov(i)
-         errornorm(i)=myabs(mydiv(error(i),(myabs(error(i))+
+         errornorm(i)=SMALL+myabs(mydiv(error(i),(myabs(error(i))+
      &        myabs(Tmunu(1,i))+myabs(Ttcov(i)))))
          err3=mymax(err3,errornorm(i))
       enddo
@@ -3700,7 +3704,7 @@ c     normalized err4 from all four equations
 c     Use lab frame energy equation
 
       error(1)=Tmunu(1,1)-Ttcov(1)
-      errornorm(1)=myabs(mydiv(error(1),(myabs(error(1))+
+      errornorm(1)=SMALL+myabs(mydiv(error(1),(myabs(error(1))+
      &     myabs(Tmunu(1,1))+myabs(Ttcov(1)))))
       err4=mymax(err3,errornorm(1))
 
@@ -3777,7 +3781,7 @@ c     normalized err4 from all four equations
       err3=0.d0
       do i=2,4
          error(i)=Tmunu(1,i)-Ttcov(i)
-         errornorm(i)=myabs(mydiv(error(i),(myabs(error(i))+
+         errornorm(i)=SMALL+myabs(mydiv(error(i),(myabs(error(i))+
      &        myabs(Tmunu(1,i))+myabs(Ttcov(i)))))
          err3=mymax(err3,errornorm(i))
       enddo
@@ -3786,7 +3790,7 @@ c     Use entropy equation
 
       entropy=ucon(1)*rho*log((Gam1*u)**en/rho**en1)
       error(1)=entropy-s
-      errornorm(1)=myabs(mydiv(error(1),(myabs(error(1))+
+      errornorm(1)=SMALL+myabs(mydiv(error(1),(myabs(error(1))+
      &     myabs(entropy)+myabs(s))))
       err4=mymax(err3,errornorm(1))
 
@@ -4013,7 +4017,7 @@ c     normalized err4 from all four equations
       err3=0.d0
       do i=2,4
          error(i)=Tt(i)-Ttcov(i)-Gcov(i)*dt
-         errornorm(i)=myabs(mydiv(error(i),(myabs(Gcov(i)*dt)+
+         errornorm(i)=SMALL+myabs(mydiv(error(i),(myabs(Gcov(i)*dt)+
      &        myabs(Tt(i))+myabs(Ttcov(i)))))
          err3=mymax(err3,errornorm(i))
       enddo
@@ -4207,7 +4211,7 @@ c     normalized err4 from all four equations
       err3=0.d0
       do i=2,4
          error(i)=Tt(i)-Ttcov(i)-Gcov(i)*dt
-         errornorm(i)=myabs(mydiv(error(i),(myabs(Gcov(i)*dt)+
+         errornorm(i)=SMALL+myabs(mydiv(error(i),(myabs(Gcov(i)*dt)+
      &        myabs(Tt(i))+myabs(Ttcov(i)))))
          err3=mymax(err3,errornorm(i))
       enddo
@@ -4217,13 +4221,13 @@ c     Calculate error(1) corresponding to the lab frame entropy equation
       entropy=ucon(1)*rho*log((Gam1*prim(1))**en/rho**en1)
       Gt=Gcov(1)*dt
       error(1)=entropy-s-Gt
-      errornorm(1)=myabs(mydiv(error(1),(myabs(entropy)+
+      errornorm(1)=SMALL+myabs(mydiv(error(1),(myabs(entropy)+
      &     myabs(s)+myabs(Gt))))
 
 c      entropy=rho*log((Gam1*prim(1))**en/rho**en1)
 c      Gt=Ghatdtau
 c      error(1)=entropy-(s/ucon(1))-Gt
-c      errornorm(1)=myabs(mydiv(error(1),(myabs(entropy)+
+c      errornorm(1)=SMALL+myabs(mydiv(error(1),(myabs(entropy)+
 c     &     myabs(s/ucon(1))+myabs(Gt))))
 
 c     Alternatively, use the fluid frame entropy equation

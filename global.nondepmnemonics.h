@@ -203,6 +203,7 @@
 #define MODESWITCH 2
 #define MODEPICKREVERT 3
 #define MODEPICKBEST 4
+#define MODEENERGYRAMESH 5
 
 // which cap type to place in rad inversion
 #define CAPTYPEBASIC 0
