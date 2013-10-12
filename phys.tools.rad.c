@@ -1705,6 +1705,13 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     baseitermethod=QTYPMHD;
     //itermode=ITERMODENORMAL;
     //    baseitermethod=QTYURAD;
+
+    // NOTES: ITERMODESTAGES with QTYPMHD always goes to damp and sometimes fails with RADTUBE.  Lots of Jsub issues, etc.  Probably not right.  Compared to ramesh code, settles on different u -- far too large even though error in f1[0] small.
+    // Actually, if don't switch to PRAD, goes kinda ok with only 2 early failures, but needs to damp every time.  Can't be right.  So 2 issues.  Very broad iteration tail.
+
+    // but, ITERMODESTAGES with QTYURAD does fine, even if takes more iterations.
+    // but, ITERMODESTAGES with QTYPRAD does kinda ok, 6 early bads and ~20 damps, but then settles.
+
     whichcap=CAPTYPEBASIC;
     failreturn=koral_source_rad_implicit_mode(1,0,havebackup, didentropyalready, &eomtypelocal, whichcap, itermode, &baseitermethod, trueimpmaxiter,  truenumdampattempts, fracenergy, dissmeasure, &radinvmod, pb, uub, piin, Uiin, Ufin, CUf, ptrgeom, q, dUother ,dUcomp, &errorabs, errorabs, &iters, &f1iters);
     if(ACTUALHARDFAILURE(failreturn)){
