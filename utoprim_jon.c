@@ -4708,11 +4708,19 @@ static int newt_extracheck(int n, int EXTRA_NEWT_ITER_VAR, int EXTRA_NEWT_ITER_U
 
   ultrarel=( (fabs(wglobal[1])>wglobal[2]) || (fabs(x0)>wglobal[2]) );
 
-  if(!ultrarel){
-    return(EXTRA_NEWT_ITER_VAR);
-  }
+  // see if dx's are too small to matter, despite condition on errx.
+  int dxsmallcount=0;
+  int iter;
+  for(iter=0;iter<n;iter++) dxsmallcount += (fabs(dx[iter])<NUMEPSILON*x[iter]);
+
+  if(dxsmallcount) return(0);
   else{
-    return(EXTRA_NEWT_ITER_ULTRAREL_VAR);
+    if(!ultrarel){
+      return(EXTRA_NEWT_ITER_VAR);
+    }
+    else{
+      return(EXTRA_NEWT_ITER_ULTRAREL_VAR);
+    }
   }
 }
 

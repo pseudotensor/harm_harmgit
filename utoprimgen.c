@@ -33,12 +33,12 @@ static int check_on_inversion(int usedhotinversion,int usedentropyinversion,int 
 static int debug_utoprimgen(PFTYPE *lpflag, FTYPE *pr0, FTYPE *pr, struct of_geom *ptrgeom, FTYPE *Uold, FTYPE *Unew);
 static int compare_ffde_inversions(int showmessages, int allowlocalfailurefixandnoreport, PFTYPE *lpflag, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, struct of_geom *ptrgeom, FTYPE *Ugeomfree0, FTYPE*Ugeomfree, FTYPE *Uold, FTYPE *Unew, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad);
 
-static int tryhotinversion(int showmessages, int allowlocalfailurefixandnoreport, int finalstep, PFTYPE oldpflag, int forcetry, int whichcap, FTYPE *pi, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, FTYPE *Ugeomfree, FTYPE *Ugeomfree0, struct of_state *qptr, struct of_geom *ptrgeom, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad);
-static int tryentropyinversion(int showmessages, int allowlocalfailurefixandnoreport, int finalstep, PFTYPE oldpflag, int forcetry, int whichcap, FTYPE *pi, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, FTYPE *Ugeomfree, FTYPE *Ugeomfree0, struct of_state *qptr, struct of_geom *ptrgeom, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad);
-static int trycoldinversion(int showmessages, int allowlocalfailurefixandnoreport, int finalstep, PFTYPE oldpflag, int forcetry, int whichcap, FTYPE *pi, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, FTYPE *Ugeomfree, FTYPE *Ugeomfree0, struct of_state *qptr, struct of_geom *ptrgeom, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad);
+static int tryhotinversion(int showmessages, int allowlocalfailurefixandnoreport, int finalstep, PFTYPE oldpflag, int forcetry, int whichcap, int modprim, FTYPE *pi, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, FTYPE *Ugeomfree, FTYPE *Ugeomfree0, struct of_state *qptr, struct of_geom *ptrgeom, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad);
+static int tryentropyinversion(int showmessages, int allowlocalfailurefixandnoreport, int finalstep, PFTYPE oldpflag, int forcetry, int whichcap, int modprim, FTYPE *pi, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, FTYPE *Ugeomfree, FTYPE *Ugeomfree0, struct of_state *qptr, struct of_geom *ptrgeom, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad);
+static int trycoldinversion(int showmessages, int allowlocalfailurefixandnoreport, int finalstep, PFTYPE oldpflag, int forcetry, int whichcap, int modprim, FTYPE *pi, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, FTYPE *Ugeomfree, FTYPE *Ugeomfree0, struct of_state *qptr, struct of_geom *ptrgeom, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad);
 
 
-int Utoprimgen(int showmessages, int allowlocalfailurefixandnoreport, int finalstep, int *eomtype, int whichcap, int whichmethod, int evolvetype, int inputtype,FTYPE *U, struct of_state *qptr,  struct of_geom *ptrgeom, FTYPE dissmeasure, FTYPE *pi, FTYPE *pr, struct of_newtonstats *newtonstats)
+int Utoprimgen(int showmessages, int allowlocalfailurefixandnoreport, int finalstep, int *eomtype, int whichcap, int whichmethod, int modprim, int evolvetype, int inputtype,FTYPE *U, struct of_state *qptr,  struct of_geom *ptrgeom, FTYPE dissmeasure, FTYPE *pi, FTYPE *pr, struct of_newtonstats *newtonstats)
 {
   // debug
   int i, j, k;
@@ -316,7 +316,7 @@ int Utoprimgen(int showmessages, int allowlocalfailurefixandnoreport, int finals
     /////////////////////////////////////////////////////////
     // If just using pr/pr0 for guess, then fixup
     ////////////////////////////////////////////////////////
-    if(ENTROPYFIXGUESSEXTERNAL){
+    if(ENTROPYFIXGUESSEXTERNAL && modprim==1){
       // qptr is not final qptr, just previous from "pi" or at best "pb"
       entropyfixguess(qptr, ptrgeom, Ugeomfree, pr);
       // also get highest out of current "flux" and "initial" step parts.
@@ -378,7 +378,7 @@ int Utoprimgen(int showmessages, int allowlocalfailurefixandnoreport, int finals
     ///////////////////
     if(HOT2ENTROPY && (hotpflag>0 && whichmethod==MODEPICKREVERT || whichmethod==MODEPICKBEST)){
 
-      entropytried=tryentropyinversion(showmessages, allowlocalfailurefixandnoreport,finalstep, hotpflag, whichmethod==MODEPICKBEST, whichcap, pi, pr0, pr, pressure, Ugeomfree, Ugeomfree0, qptr, ptrgeom,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
+      entropytried=tryentropyinversion(showmessages, allowlocalfailurefixandnoreport,finalstep, hotpflag, whichmethod==MODEPICKBEST, whichcap, modprim, pi, pr0, pr, pressure, Ugeomfree, Ugeomfree0, qptr, ptrgeom,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
       if(entropytried){
         PLOOP(pliter,pl) entropypr[pl]=pr[pl];
 
@@ -411,7 +411,7 @@ int Utoprimgen(int showmessages, int allowlocalfailurefixandnoreport, int finals
     ///////////////////
     if(HOT2COLD && (entropypflag>0 && hotpflag>0) ){
 
-      coldtried=trycoldinversion(showmessages, allowlocalfailurefixandnoreport,finalstep, hotpflag, 0, whichcap, pi, pr0, pr, pressure, Ugeomfree, Ugeomfree0, qptr, ptrgeom,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
+      coldtried=trycoldinversion(showmessages, allowlocalfailurefixandnoreport,finalstep, hotpflag, 0, whichcap, modprim, pi, pr0, pr, pressure, Ugeomfree, Ugeomfree0, qptr, ptrgeom,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
       if(coldtried){
         PLOOP(pliter,pl) coldpr[pl]=pr[pl];
 
@@ -455,7 +455,7 @@ int Utoprimgen(int showmessages, int allowlocalfailurefixandnoreport, int finals
     /////////////////////////////////////////////////////////
     // If just using pr/pr0 for guess, then fixup
     ////////////////////////////////////////////////////////
-    if(ENTROPYFIXGUESSEXTERNAL){
+    if(ENTROPYFIXGUESSEXTERNAL && modprim==1){
       // qptr is not final qptr, just previous from "pi" or at best "pb"
       entropyfixguess(qptr, ptrgeom, Ugeomfree, pr);
       // also get highest out of current "flux" and "initial" step parts.
@@ -496,7 +496,7 @@ int Utoprimgen(int showmessages, int allowlocalfailurefixandnoreport, int finals
     // below is consistent with hot entropy forced when fracenergy=0.0 as long as entropy didn't fail to invert.
     if(ENTROPY2HOT && (entropypflag>0 && whichmethod==MODEPICKREVERT || (whichmethod==MODEPICKBEST)&&(entropypflag>0&&fracenergy==0.0 || fracenergy!=0.0))){
 
-      hottried=tryhotinversion(showmessages, allowlocalfailurefixandnoreport,finalstep, entropypflag, (whichmethod==MODEPICKBEST), whichcap, pi, pr0, pr, pressure, Ugeomfree, Ugeomfree0, qptr, ptrgeom,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
+      hottried=tryhotinversion(showmessages, allowlocalfailurefixandnoreport,finalstep, entropypflag, (whichmethod==MODEPICKBEST), whichcap, modprim, pi, pr0, pr, pressure, Ugeomfree, Ugeomfree0, qptr, ptrgeom,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
       if(hottried){
         PLOOP(pliter,pl) hotpr[pl]=pr[pl];
         
@@ -528,7 +528,7 @@ int Utoprimgen(int showmessages, int allowlocalfailurefixandnoreport, int finals
     //  This is the same trycoldinversion() as for HOT2COLD
     ///////////////////
     if(ENTROPY2COLD && (entropypflag>0 && hotpflag>0) ){
-      coldtried=trycoldinversion(showmessages, allowlocalfailurefixandnoreport,finalstep, entropypflag, 0, whichcap, pi, pr0, pr, pressure, Ugeomfree, Ugeomfree0, qptr, ptrgeom,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
+      coldtried=trycoldinversion(showmessages, allowlocalfailurefixandnoreport,finalstep, entropypflag, 0, whichcap, modprim, pi, pr0, pr, pressure, Ugeomfree, Ugeomfree0, qptr, ptrgeom,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
       if(coldtried){
         PLOOP(pliter,pl) coldpr[pl]=pr[pl];
 
@@ -766,7 +766,7 @@ int Utoprimgen(int showmessages, int allowlocalfailurefixandnoreport, int finals
 
 
 // try hot inversion of entropy one fails
-int tryhotinversion(int showmessages, int allowlocalfailurefixandnoreport, int finalstep, PFTYPE oldpflag, int forcetry, int whichcap, FTYPE *pi, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, FTYPE *Ugeomfree, FTYPE *Ugeomfree0, struct of_state *qptr, struct of_geom *ptrgeom, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad)
+int tryhotinversion(int showmessages, int allowlocalfailurefixandnoreport, int finalstep, PFTYPE oldpflag, int forcetry, int whichcap, int modprim, FTYPE *pi, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, FTYPE *Ugeomfree, FTYPE *Ugeomfree0, struct of_state *qptr, struct of_geom *ptrgeom, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad)
 {
   int triedhot=0;
   int pl;
@@ -805,7 +805,7 @@ int tryhotinversion(int showmessages, int allowlocalfailurefixandnoreport, int f
     /////////////////////////////////////////////////////////
     // If just using pr/pr0 for guess, then fixup
     ////////////////////////////////////////////////////////
-    if(ENTROPYFIXGUESSEXTERNAL){
+    if(ENTROPYFIXGUESSEXTERNAL && modprim==1){
       // qptr is not final qptr, just previous from "pi" or at best "pb"
       entropyfixguess(qptr, ptrgeom, Ugeomfree, prhot);
       // also get highest out of current "flux" and "initial" step parts.
@@ -892,7 +892,7 @@ int tryhotinversion(int showmessages, int allowlocalfailurefixandnoreport, int f
 #define USEENTROPYIFHOTFAILCONV 1
 
 // try entropy inversion of hot one fails
-int tryentropyinversion(int showmessages, int allowlocalfailurefixandnoreport, int finalstep, PFTYPE hotpflag, int forcetry, int whichcap, FTYPE *pi, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, FTYPE *Ugeomfree, FTYPE *Ugeomfree0, struct of_state *qptr, struct of_geom *ptrgeom, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad)
+int tryentropyinversion(int showmessages, int allowlocalfailurefixandnoreport, int finalstep, PFTYPE hotpflag, int forcetry, int whichcap, int modprim, FTYPE *pi, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, FTYPE *Ugeomfree, FTYPE *Ugeomfree0, struct of_state *qptr, struct of_geom *ptrgeom, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad)
 {
   int triedentropy=0;
   int pl;
@@ -934,7 +934,7 @@ int tryentropyinversion(int showmessages, int allowlocalfailurefixandnoreport, i
     /////////////////////////////////////////////////////////
     // If just using pr/pr0 for guess, then fixup
     ////////////////////////////////////////////////////////
-    if(ENTROPYFIXGUESSEXTERNAL){
+    if(ENTROPYFIXGUESSEXTERNAL && modprim==1){
       // qptr is not final qptr, just previous from "pi" or at best "pb"
       entropyfixguess(qptr, ptrgeom, Ugeomfree, prentropy);
       // also get highest out of current "flux" and "initial" step parts.
@@ -1049,7 +1049,7 @@ int tryentropyinversion(int showmessages, int allowlocalfailurefixandnoreport, i
 #define USECOLDIFHOTFAILCONV 1
 
 // try cold inversion of hot one fails
-int trycoldinversion(int showmessages, int allowlocalfailurefixandnoreport, int finalstep, PFTYPE oldpflag, int forcetry, int whichcap, FTYPE *pi, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, FTYPE *Ugeomfree, FTYPE *Ugeomfree0, struct of_state *qptr, struct of_geom *ptrgeom, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad)
+int trycoldinversion(int showmessages, int allowlocalfailurefixandnoreport, int finalstep, PFTYPE oldpflag, int forcetry, int whichcap, int modprim, FTYPE *pi, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, FTYPE *Ugeomfree, FTYPE *Ugeomfree0, struct of_state *qptr, struct of_geom *ptrgeom, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad)
 {
   int triedcold;
   int pl;
@@ -2176,7 +2176,8 @@ int Utoprimloop(FTYPE (*U)[NSTORE2][NSTORE3][NPR],FTYPE (*prim)[NSTORE2][NSTORE3
     FTYPE dissmeasure=-1.0; // then assume always energy since no info here.
     int whichcap=CAPTYPEBASIC;
     int whichmethod=MODEDEFAULT;
-    MYFUN(Utoprimgen(showmessages, allowlocalfailurefixandnoreport,0,&eomtype,whichcap,whichmethod,EVOLVEUTOPRIM,UEVOLVE,MAC(U,i,j,k), NULL, ptrgeom, dissmeasure, MAC(prim,i,j,k), MAC(prim,i,j,k),newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
+    int modprim=0;
+    MYFUN(Utoprimgen(showmessages, allowlocalfailurefixandnoreport,0,&eomtype,whichcap,whichmethod,modprim,EVOLVEUTOPRIM,UEVOLVE,MAC(U,i,j,k), NULL, ptrgeom, dissmeasure, MAC(prim,i,j,k), MAC(prim,i,j,k),newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
   }
   return(0);
 }
@@ -2227,7 +2228,8 @@ void filterffde(int i, int j, int k, FTYPE *pr)
   FTYPE dissmeasure=-1.0; // assume energy inversion ok
   int whichcap=CAPTYPEBASIC;
   int whichmethod=MODEDEFAULT;
-  Utoprimgen(showmessages, allowlocalfailurefixandnoreport, finalstep, &eomtype,whichcap,whichmethod,EVOLVEUTOPRIM,UNOTHING,U,NULL,ptrgeom,dissmeasure,pr,prout,&newtonstats);
+  int modprim=0;
+  Utoprimgen(showmessages, allowlocalfailurefixandnoreport, finalstep, &eomtype,whichcap,whichmethod,modprim,EVOLVEUTOPRIM,UNOTHING,U,NULL,ptrgeom,dissmeasure,pr,prout,&newtonstats);
 
   PALLLOOP(pl) pr[pl]=prout[pl];
   // kill densities
@@ -2367,7 +2369,7 @@ int set_fracenergy(int i, int j, int k, FTYPE dissmeasure, FTYPE *fracenergy)
 // better guess using entropy information
 int entropyfixguess(struct of_state *q, struct of_geom *ptrgeom, FTYPE *uu, FTYPE *pp)
 {
-  if(ENTROPY>=0){
+  if(ENTROPY>=0 && isfinite(pp[ENTROPY]) && isfinite(uu[ENTROPY]) ){
     int pliter,pl;
 
     struct of_state qlocal;

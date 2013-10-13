@@ -494,8 +494,8 @@ static int Utoprimgen_failwrapper(int doradonly, int *radinvmod, int showmessage
     //calculating primitives  
     // OPTMARK: Should optimize this to  not try to get down to machine precision
     int whichmethod=MODEDEFAULT; // means don't change method from eomtype.
-    MYFUN(Utoprimgen(showmessages, allowlocalfailurefixandnoreport, finalstep, eomtype, whichcap, whichmethod, evolvetype, inputtype, U, qptr, ptrgeom, dissmeasure, pr, pr, newtonstats),"phys.tools.rad.c:Utoprimgen_failwrapper()", "Utoprimgen", 1);
-    //    MYFUN(Utoprimgen(showmessages, allowlocalfailurefixandnoreport, finalstep, eomtype, evolvetype, inputtype, U, NULL, ptrgeom, dissmeasure, pr, pr, newtonstats),"phys.tools.rad.c:Utoprimgen_failwrapper()", "Utoprimgen", 1);
+    int modprim=0;
+    MYFUN(Utoprimgen(showmessages, allowlocalfailurefixandnoreport, finalstep, eomtype, whichcap, whichmethod, modprim, evolvetype, inputtype, U, qptr, ptrgeom, dissmeasure, pr, pr, newtonstats),"phys.tools.rad.c:Utoprimgen_failwrapper()", "Utoprimgen", 1);
     *radinvmod=0;  //KORALTODO: Not using method that needs this call, so for now don't pass radinvmod through to Utoprimgen().
     nstroke+=(newtonstats->nstroke);
     // this can change eomtype
@@ -1083,11 +1083,32 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
     // this preserves machine accurate conservation instead of applying 4-force on each fluid and radiation separately that can accumulate errors
     FTYPE Gddt[NDIM]; DLOOPA(iv) Gddt[iv]=(uu[irefU[iv]]-uu0[irefU[iv]]);
     DLOOPA(iv) uu[iotherU[iv]] = uu0[iotherU[iv]] - Gddt[iv];
+    // reject what radiation says gas should be if forced into T^t_t<0 regime.
+    int badchange=0;
+    if(implicititer==QTYURAD || implicititer==QTYURADENERGYONLY || implicititer==QTYURADMOMONLY){
+      if(
+         REMOVERESTMASSFROMUU==2 && (uu[RHO]-uu[iotherU[0]]<=0.0)
+         ||REMOVERESTMASSFROMUU!=2 && (-uu[iotherU[0]]<=0.0)
+         ){
+        badchange=1;
+      }
+    }
+    if(implicititer==QTYUMHD || implicititer==QTYUMHDENERGYONLY || implicititer==QTYUMHDMOMONLY){
+      if(-uu[iotherU[0]]<=0.0){
+        badchange=1;
+      }
+    }
+    if(badchange){ // FUCK : Hit floor instead?  How to make explicit make sense?
+      DLOOPA(iv) uu[iotherU[iv]] = uu0[iotherU[iv]];
+    }
     // 2) Get estimated U[entropy]
     // mathematica has Sc = Sc0 + dt *GS with GS = -u.G/T
     FTYPE Tgaslocal=compute_temp_simple(ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p,pp[RHO],pp[UU]);
     get_state(pp, ptrgeom, q);
-    FTYPE GS=0.0; DLOOPA(iv) GS += (-q->ucon[iv]*signgd2*(signgd7*Gddt[iv]))/(Tgaslocal+TEMPMIN); // more accurate than just using entropy from pp and ucon[TT] from state from pp.
+    FTYPE GS=0.0;
+    if(badchange==0){
+      DLOOPA(iv) GS += (-q->ucon[iv]*signgd2*(signgd7*Gddt[iv]))/(Tgaslocal+TEMPMIN); // more accurate than just using entropy from pp and ucon[TT] from state from pp.
+    }
     uu[ENTROPY] = uu0[ENTROPY] + signgd6*GS; // KORALTODO SUPERGODMARK: Problem with UMHD,UMHD no matter signgd7.  Ok with URAD,URAD.   Ok with UMHD,ENTROPYUMHD if signgd7 +1 and signgd4 +1.
     // 3) Do MHD+RAD Inversion
     //    PLOOP(pliter,pl) dualfprintf(fail_file,"BEFORE: pl=%d pr=%g\n",pl,pp[pl]);
@@ -1565,8 +1586,9 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
         // At iter=1, U->p->G can give G=0, while dUrad=-dUgas can still lead to changes that upon next iteration lead to G!=0.
         *goexplicit=1;
         PLOOP(pliter,pl) if(fabs(Gallabs[pl])>NUMEPSILON*fabs(uuallabs[pl])) *goexplicit=0;
-        if(fabs(ratchangeRtt*uu[URAD0])>NUMEPSILON*fabs(uuallabs[pl])) *goexplicit=0;
-        if(fabs(ratchangeRtt*uu0[URAD0])>NUMEPSILON*fabs(uuallabs[pl])) *goexplicit=0;
+        pl=URAD0;
+        if(fabs(ratchangeRtt*uu[pl])>NUMEPSILON*fabs(uuallabs[pl])) *goexplicit=0;
+        if(fabs(ratchangeRtt*uu0[pl])>NUMEPSILON*fabs(uuallabs[pl])) *goexplicit=0;
         //  if(*goexplicit) dualfprintf(fail_file,"Went explicit\n");
         //  else dualfprintf(fail_file,"Stayed implicit\n");
       }
