@@ -3559,7 +3559,7 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
     else{
       // control factor by which step Newton's method.
       DAMPFACTOR0=1.0/pow(2.0,(FTYPE)(dampattempt));
-      if(dampattempt>0) if(debugfail>=2) dualfprintf(fail_file,"Trying dampattempt=%d DAMPFACTOR0=%g failreturn=%d errorabsf1=%g iter=%d\n",dampattempt,DAMPFACTOR0,failreturn,errorabsf1,iter);
+      if(dampattempt>0) if(debugfail>=2) dualfprintf(fail_file,"Trying dampattempt=%d DAMPFACTOR0=%g failreturn=%d errorabsf1=%g iter=%d ijk=%d %d %d\n",dampattempt,DAMPFACTOR0,failreturn,errorabsf1,iter,ptrgeom->i,ptrgeom->j,ptrgeom->k);
 
       // start fresh
       iter=debugiter=0;
@@ -4042,32 +4042,45 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
       //
       ///////////////////////////
 
+#define ERRORJUMPCHECK 1 // whether to check if error jumps up, between last and current step, in irefU[0] -- u_g for QTYPMHD method.  If so, backs-up step a bit for all quantities iterated and try to get error again
+#define BUFFERITER 2 // how many iterations to wait until start to check how error is doing.  When switching iteration methods, error will often rise initially in f1[0], but that's ok.
       // check if doing energy stepping and error jumped up too much
-      if(iter>=BEGINENERGYSTEPS && iter<=ENDENERGYSTEPS || iter>=BEGINFULLSTEPS && iter<=ENDFULLSTEPS){// now all steps beyond energy
-        if(fabs(f1[erefU[0]]/f1p[erefU[0]])>FACTORBADJUMPERROR && fabs(f1report[erefU[0]])>trueimptryconv){
-          // then pseudo-bisect (between zero and previous ok error case
-          if(debugfail>=DEBUGLEVELIMPSOLVER) dualfprintf(fail_file,"pseudo-bisect: iter=%d f1=%g f1p=%g pp=%g ppp=%g  pppp=%g  ppppp=%g\n",iter,f1[erefU[0]],f1p[erefU[0]],pp[erefU[0]],ppp[erefU[0]],pppp[erefU[0]],ppppp[erefU[0]]);
-          //          pp[erefU[0]] = ppp[erefU[0]] = pppp[erefU[0]] = 0.5*(fabs(ppppp[erefU[0]]));
-          pp[erefU[0]] = ppp[erefU[0]] = 0.5*fabs(pppp[erefU[0]]);
-          // update debug with modifications
-          if(DEBUGMAXITER&& dampattempt==0){
-            PLOOP(pliter,pl) pppreholdlist[debugiter][pl]=pp[pl];
-            PLOOP(pliter,pl) ppposholdlist[debugiter][pl]=pp[pl];
-            if(DEBUGMAXITERVELOCITY==1){
-              SLOOPA(jj){
-                pppreholdlist[debugiter][U1+jj-1]=q->ucon[jj];
-                pppreholdlist[debugiter][URAD1+jj-1]=q->uradcon[jj];
-                ppposholdlist[debugiter][U1+jj-1]=q->ucon[jj];
-                ppposholdlist[debugiter][URAD1+jj-1]=q->uradcon[jj];
-              }
+      if(ERRORJUMPCHECK){
+        if(iter>=BEGINENERGYSTEPS+BUFFERITER && iter<=ENDENERGYSTEPS || iter>=BEGINFULLSTEPS+BUFFERITER && iter<=ENDFULLSTEPS){// now all steps beyond energy
+          if(fabs(f1[erefU[0]]/f1p[erefU[0]])>FACTORBADJUMPERROR && fabs(f1report[erefU[0]])>trueimptryconv){
+            // then pseudo-bisect (between zero and previous ok error case)
+            if(debugfail>=DEBUGLEVELIMPSOLVER) dualfprintf(fail_file,"pseudo-bisect: iter=%d f1=%g f1p=%g pp=%g ppp=%g  pppp=%g  ppppp=%g\n",iter,f1[erefU[0]],f1p[erefU[0]],pp[irefU[0]],ppp[irefU[0]],pppp[irefU[0]],ppppp[irefU[0]]);
+            if(0){
+              // doens't make sense in general
+              //          pp[irefU[0]] = ppp[irefU[0]] = pppp[irefU[0]] = 0.5*(fabs(ppppp[irefU[0]]));
+              pp[irefU[0]] = ppp[irefU[0]] = 0.5*fabs(pppp[irefU[0]]);
+              uu[irefU[0]] = uup[irefU[0]] = 0.5*fabs(uupp[irefU[0]]);
             }
-            jac00list[debugiter]=iJ[irefU[0]][erefU[0]];
+            else{
+              // half-way between current (pp and ppp are same current primitve) and last primitive
+              // uu and pp won't be consistent, but when get to f_implicit(), as continue forces, this will be done.
+              PLOOP(pliter,pl) pp[pl] = 0.5*(pppp[pl]+ppp[pl]);
+              PLOOP(pliter,pl) uu[pl] = 0.5*(uupp[pl]+uup[pl]);
+            }
+            // update debug with modifications
+            if(DEBUGMAXITER&& dampattempt==0){
+              PLOOP(pliter,pl) pppreholdlist[debugiter][pl]=pp[pl];
+              PLOOP(pliter,pl) ppposholdlist[debugiter][pl]=pp[pl];
+              if(DEBUGMAXITERVELOCITY==1){
+                SLOOPA(jj){
+                  pppreholdlist[debugiter][U1+jj-1]=q->ucon[jj];
+                  pppreholdlist[debugiter][URAD1+jj-1]=q->uradcon[jj];
+                  ppposholdlist[debugiter][U1+jj-1]=q->ucon[jj];
+                  ppposholdlist[debugiter][URAD1+jj-1]=q->uradcon[jj];
+                }
+              }
+              jac00list[debugiter]=iJ[irefU[0]][erefU[0]];
+            }
+            // need to get new error function so can take step based upon this as reference!
+            continue; // head to start of loop to iter++ and get new error function.
           }
-          // need to get new error function so can take step based upon this as reference!
-          continue; // head to start of loop to iter++ and get new error function.
         }
       }
-
 
 
 
