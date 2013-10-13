@@ -1337,9 +1337,6 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
   //
   /////////
   // only check if not in Jacobian or final check
-
-  // NOT WORKING -- maybe because need to deal with uu0 that only occurs on iter=1
-  // Still doesn't work even if use ppppp as ppprev, so going back to first step's value for some cases.  So must be iter issue.
   if(allowbaseitermethodswitch && whichcall==FIMPLICITCALLTYPEF1){//FIMPLICITCALLTYPEJAC
 
     int doswitchbaseitermethod=0;
@@ -1494,52 +1491,53 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
   // Used in case optically thin and no interaction between RAD and GAS and radiation hits ceiling/floor and then must treat as ok since no force balance will help since no G and dUgas from dUrad will be wrong (and if u_g<<Erf, then would wrongly affect gas despite actually G<<U -- and if u_g>>Erf would no effect on gas be caused by that happening).
   //
   ////////
-  if(whichcall==FIMPLICITCALLTYPEF1 && (iter==1 && tautotmax<NUMEPSILON)){//FIMPLICITCALLTYPEJAC
-    // Have to check if really small error for alternative error, since otherwise f1iter loop won't work.
-    // Only check on iter==1 since if moved beyond iter=1, then must be relevant 4-force.  Only check if f1iter>1 because for f1iter=1 4-force is not set yet.
+  if(0){ // purpose of this is equivalent to whether one can go explicit, but overly complicated and if reduces to using alternative when not desired, then not energy-momentum conserving
+    if(whichcall==FIMPLICITCALLTYPEF1 && (iter==1 && tautotmax<NUMEPSILON) && failreturn<=UTOPRIMGENWRAPPERRETURNFAILRAD){//FIMPLICITCALLTYPEJAC
+      // Have to check if really small error for alternative error, since otherwise f1iter loop won't work.
+      // Only check on iter==1 since if moved beyond iter=1, then must be relevant 4-force.  Only check if f1iter>1 because for f1iter=1 4-force is not set yet.
 
-    // have to check if unmodified iterated quantities actually have smaller error, in which case probably U->P->Unew led to Unew different from U for iterated quantities due to no normal solution without fixups.  When gas~rad in energy density, the other compnent can abosorb that error, but in limit that (say) RAD<<GAS, then dRAD won't register to GAS values and RAD will never converge if iterated on.
-    FTYPE errorabsalt;
-    FTYPE faltreport[NPR];
-    int convreturnalt=f_error_check(showmessages, showmessagesheavy, iter, conv, convabs, realdt, dimtypef,*eomtype ,itermode,*baseitermethod,fracenergy,dissmeasure,dimfactU,pp,piin,falt,fnorm,faltreport,Uiin,uu0,uualt,ptrgeom,&errorabsalt);
+      // have to check if unmodified iterated quantities actually have smaller error, in which case probably U->P->Unew led to Unew different from U for iterated quantities due to no normal solution without fixups.  When gas~rad in energy density, the other compnent can abosorb that error, but in limit that (say) RAD<<GAS, then dRAD won't register to GAS values and RAD will never converge if iterated on.
+      FTYPE errorabsalt;
+      FTYPE faltreport[NPR];
+      int convreturnalt=f_error_check(showmessages, showmessagesheavy, iter, conv, convabs, realdt, dimtypef,*eomtype ,itermode,*baseitermethod,fracenergy,dissmeasure,dimfactU,pp,piin,falt,fnorm,faltreport,Uiin,uu0,uualt,ptrgeom,&errorabsalt);
 
-    //  if(nstep>=32 && nstep<=46){
-    //    PLOOP(pliter,pl) dualfprintf(fail_file,"DEBUGIT: wc=%d iter=%d pl=%d uu0=%21.15g uu=%21.15g uualt=%21.15g Gdpl=%21.15g f=%21.15g falt=%21.15g errorabs=%21.15g errorabsalt=%21.15g radinvmod=%d radinvmodalt=%d failreturn=%d\n",whichcall,iter,pl,uu0[pl],uu[pl],uualt[pl],sign[pl]*localdt*Gdpl[pl],f[pl],falt[pl],*errorabs,errorabsalt,*radinvmod,radinvmodalt,failreturn);
-    //  }
+      //  if(nstep>=32 && nstep<=46){
+      //    PLOOP(pliter,pl) dualfprintf(fail_file,"DEBUGIT: wc=%d iter=%d pl=%d uu0=%21.15g uu=%21.15g uualt=%21.15g Gdpl=%21.15g f=%21.15g falt=%21.15g errorabs=%21.15g errorabsalt=%21.15g radinvmod=%d radinvmodalt=%d failreturn=%d\n",whichcall,iter,pl,uu0[pl],uu[pl],uualt[pl],sign[pl]*localdt*Gdpl[pl],f[pl],falt[pl],*errorabs,errorabsalt,*radinvmod,radinvmodalt,failreturn);
+      //  }
 
 
 
-    // see if alternative error is smaller *and* in converged limit.  Catches cases when optically thin and ok that hits radiation ceiling.
-    if(errorabsalt<*errorabs && convreturnalt==1){
-      //dualfprintf(fail_file,"UsingALT\n");
+      // see if alternative error is smaller *and* in converged limit.  Catches cases when optically thin and ok that hits radiation ceiling.
+      if(errorabsalt<*errorabs && convreturnalt==1){
+        //dualfprintf(fail_file,"UsingALT\n");
 
-      // then switch to use falt.
-      // This typically controls what uu is used for the error
-      // Eventually want uu to be consistent with pp
-      // But allow for possible iteration upon uualt, so want to keep uu=uualt even though not consistent with pp
-      // So have to fix uu(pp) once iterations are done.
-      PLOOP(pliter,pl){
-        uu[pl]=uualt[pl];
-        pp[pl]=ppalt[pl];
-        f[pl]=falt[pl];
-        freport[pl]=faltreport[pl];
+        // then switch to use falt.
+        // This typically controls what uu is used for the error
+        // Eventually want uu to be consistent with pp
+        // But allow for possible iteration upon uualt, so want to keep uu=uualt even though not consistent with pp
+        // So have to fix uu(pp) once iterations are done.
+        PLOOP(pliter,pl){
+          uu[pl]=uualt[pl];
+          pp[pl]=ppalt[pl];
+          f[pl]=falt[pl];
+          freport[pl]=faltreport[pl];
+        }
+        if(IMPUTYPE(implicititer)){
+          // q based upon primitives, so if uu-method, then stuck with that q
+        }
+        else{
+          // get new q(ppalt) now q(pp)
+          get_state(pp, ptrgeom, q);
+          // get new uu(ppalt) now uu(pp)
+          primtoU(UNOTHING,pp,q,ptrgeom, uu, uuabs);
+        }
+        *convreturn=convreturnalt;
+        *errorabs=errorabsalt;
+        *radinvmod=radinvmodalt;
+        failreturn=failreturnalt;
       }
-      if(IMPUTYPE(implicititer)){
-        // q based upon primitives, so if uu-method, then stuck with that q
-      }
-      else{
-        // get new q(ppalt) now q(pp)
-        get_state(pp, ptrgeom, q);
-        // get new uu(ppalt) now uu(pp)
-        primtoU(UNOTHING,pp,q,ptrgeom, uu, uuabs);
-      }
-      *convreturn=convreturnalt;
-      *errorabs=errorabsalt;
-      *radinvmod=radinvmodalt;
-      failreturn=failreturnalt;
     }
   }
-
 
 
 
@@ -1552,30 +1550,27 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
   // This even accounts for when RAD quantities or MHD quantities differ on whether need explicit, since go over all pl always.
   //
   // NO: Apparently guess can lead to small G, but next iteration may not.  But generally iterations can slowly grow G, so can't use any iter condition either.
+  // Ok, if iter=1, then check both tau and G (not either, but both) and also ensure only rad inversion changes, no gas inversion changes/issues/failures.
   ////////
-  if(0  &&  whichcall==FIMPLICITCALLTYPEF1){//FIMPLICITCALLTYPEJAC)
+  *goexplicit=0; // default
 #define ITERCHECKEXPLICITSAFE 1 // iteration by which assume G has settled and can test if can go explicit.
-    if(iter>ITERCHECKEXPLICITSAFE || iter==1 && tautotmax<NUMEPSILON){
-      // iter>1 so at least have estimate of G even if not great.
-      // At iter=1, U->p->G can give G=0, while dUrad=-dUgas can still lead to changes that upon next iteration lead to G!=0.
-      *goexplicit=1;
-      PLOOP(pliter,pl){
-        if(Gallabs[pl]+uuallabs[pl]==uuallabs[pl]){
-          // then no change
-        }
-        else{
-          *goexplicit=0;
-        }
-      }  
-      //  if(*goexplicit) dualfprintf(fail_file,"Went explicit\n");
-      //  else dualfprintf(fail_file,"Stayed implicit\n");
+  if(1){
+    if(whichcall==FIMPLICITCALLTYPEF1){//FIMPLICITCALLTYPEJAC)
+
+      FTYPE ucon0=q->ucon[TT]; // what enters G for dR^t_t/R^t_t from time part
+      FTYPE ratchangeRtt=SMALL+fabs(chieff * ucon0 * ucon0 * realdt * 1.0); // 1.0 = c (2nd term with chi instead of kappaes to be sever and account for B-based term)
+
+      if( (iter>ITERCHECKEXPLICITSAFE || iter==1 && tautotmax<NUMEPSILON ) && failreturn<=UTOPRIMGENWRAPPERRETURNFAILRAD){
+        // iter>1 so at least have estimate of G even if not great.
+        // At iter=1, U->p->G can give G=0, while dUrad=-dUgas can still lead to changes that upon next iteration lead to G!=0.
+        *goexplicit=1;
+        PLOOP(pliter,pl) if(fabs(Gallabs[pl])>NUMEPSILON*fabs(uuallabs[pl])) *goexplicit=0;
+        if(fabs(ratchangeRtt*uu[URAD0])>NUMEPSILON*fabs(uuallabs[pl])) *goexplicit=0;
+        if(fabs(ratchangeRtt*uu0[URAD0])>NUMEPSILON*fabs(uuallabs[pl])) *goexplicit=0;
+        //  if(*goexplicit) dualfprintf(fail_file,"Went explicit\n");
+        //  else dualfprintf(fail_file,"Stayed implicit\n");
+      }
     }
-    else{
-      *goexplicit=0;
-    }
-  }
-  else{
-    *goexplicit=0;
   }
 
 
@@ -3510,7 +3505,7 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
     }
   }
   else{
-    // then (not recommended) just using Uiin as uu0 .  KORALNOTE: But uu0 reset later anyways.
+    // then (not recommended) just using Uiin as uu0 .  KORALNOTE: uu0 reset later, but intermediates would use this uu0.
     PLOOP(pliter,pl){
       uu[pl] = uu0[pl] = Uiin[pl];
       ppfirst[pl] = pp[pl] = pp0[pl] = piin[pl];
@@ -3985,7 +3980,7 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
         }
   
         // diagnose
-        if(showmessagesheavy) JACLOOPALT(ii,startjac,endjac) dualfprintf(fail_file,"i=%d ii=%d erefU[ii]=%d f1=%g\n",ptrgeom->i,ii,erefU[ii],f1[erefU[ii]]);
+        if(showmessagesheavy) PLOOP(pliter,pl) dualfprintf(fail_file,"i=%d ii=%d pl=%d f1=%g\n",ptrgeom->i,ii,pl,f1[pl]);
       }// else if f1 calculation didn't fail.
 
 
@@ -4034,7 +4029,11 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
       //////////////
       //      int convreturnf1=f_error_check(showmessages, showmessagesheavy, iter, trueimptryconv, trueimptryconvabs, realdt, DIMTYPEFCONS,eomtypelocal ,itermode,*baseitermethod,fracenergy,dissmeasure,dimfactU,pp,piin,f1,f1norm,f1report,Uiin,uu0,uu,ptrgeom,&errorabsf1);
       // but don't break, since need to iterate a bit first and check |dU/U| and need to see if checkconv==1
-      suberrorabsf1=0.0;  JACLOOPSUBERROR(jj,startjac,endjac) suberrorabsf1     += fabs(f1report[erefU[jj]]); // e.g. may only be energy error or only momentum error.
+      FTYPE numsub=0;
+      suberrorabsf1=0.0;  JACLOOPSUBERROR(jj,startjac,endjac){
+        suberrorabsf1     += fabs(f1report[erefU[jj]]); // e.g. may only be energy error or only momentum error.
+        numsub += 1.0;
+      }
 
 
 
@@ -4066,7 +4065,10 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
       /////////////////
       // check if energy only iteration has error that has dropped below tolerance, then can move on to 
       if(itermode==ITERMODESTAGES && iter>=BEGINMOMSTEPS && iter<=ENDMOMSTEPS){
-        if(fabs(f1report[irefU[1]])<trueimptryconv && fabs(f1report[irefU[2]])<trueimptryconv && fabs(f1report[irefU[3]])<trueimptryconv){
+        FTYPE errorabs3=0.0; int testi;
+        for(testi=1;testi<=3;testi++) errorabs3 += fabs(f1report[irefU[testi]]);
+        FTYPE errorneed=((FTYPE)(3+2)*trueimptryconv);
+        if(errorabs3<errorneed){
           if(iter<=ENDMOMSTEPS){ iter=BEGINENERGYSTEPS-1; continue;} // force as if already doing energy steps.  If already next iteration is to be this energy step, then no skipping needed.
           // continue assumes not triggered when iter>trueimpmaxiter
         }
@@ -4075,7 +4077,10 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
       if(itermode==ITERMODESTAGES && iter>=BEGINENERGYSTEPS && iter<=ENDENERGYSTEPS){
         //        if(f1report[irefU[0]]==BIG){ dualfprintf(fail_file,"FUDGE\n"); }
         // SUPERGODMARK: valgrind says belw is undefined, but don't see it.
-        if(fabs(f1report[irefU[0]])<trueimptryconv){
+        FTYPE errorabs1=0.0; int testi;
+        for(testi=1;testi<=1;testi++) errorabs1 += fabs(f1report[irefU[testi]]);
+        FTYPE errorneed=((FTYPE)(1+2)*trueimptryconv);
+        if(errorabs1<errorneed){
           if(iter<=ENDENERGYSTEPS){ iter=BEGINFULLSTEPS-1; continue;} // force as if already doing normal steps.  If already next iteration is to be normal step, no need to skip.
           // continue assumes not triggered when iter>trueimpmaxiter
         }
@@ -4175,8 +4180,8 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
         if(errorabsbest>errorabsf1 && isfinite(errorabsf1) && (itermode==ITERMODECOLD || pp[RHO]>0.0 && pp[UU]>0.0 && pp[PRAD0]>0.0)){
           PLOOP(pliter,pl) bestuu[pl]=uu[pl];
           PLOOP(pliter,pl) bestpp[pl]=pp[pl];
+          PLOOP(pliter,pl) lowestfreportf1[pl]=f1report[pl];
           errorabsbest=errorabsf1;
-          JACLOOPALT(jj,startjac,endjac) lowestfreportf1[erefU[jj]]=f1report[erefU[jj]];
           gotbest=1;
         }
 
@@ -4191,9 +4196,11 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
         // check if error repeatedly rises
         // do this even if damping, since damping should only help get continuous reduction in error.
         if(NUMNOERRORREDUCE && iter>=BEGINNORMALSTEPS){
-          if(iter>NUMNOERRORREDUCE0 && suberrorabsf1>trueimptryconvabs){ // no need to do this if actually error is below desired tolerance,  hence second argument
+          FTYPE errorneed=((FTYPE)(numsub+2)*trueimptryconv);
+          FTYPE errorneedalt=(MAX(1E-8,errorneed));
+          if(iter>NUMNOERRORREDUCE0 && suberrorabsf1>errorneed){ // no need to do this if actually error is below desired tolerance,  hence second argument
             if(suberrorabsf1>=errorabspf1[0]) counterrorrose++;
-            int allowedtoabort=(havebackup || ABORTBACKUPIFNOERRORREDUCE==1 && suberrorabsf1<trueimptryconvalt);
+            int allowedtoabort=(havebackup || ABORTBACKUPIFNOERRORREDUCE==1 && suberrorabsf1<errorneedalt);
             if(counterrorrose>=NUMNOERRORREDUCE && allowedtoabort){ // would be risky to do abort if don't have backup, even if enter into limit cycle.
 
               if(itermode==ITERMODESTAGES && iter>=BEGINMOMSTEPS && iter<=ENDMOMSTEPS){
@@ -4236,7 +4243,8 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
             else if(dampattempt==2) changerequired=0.8;
             else if(dampattempt==3) changerequired=0.9;
             else changerequired=0.95;
-            if(suberrorabsf1/erroraverage>changerequired && suberrorabsf1>trueimptryconvabs){
+            FTYPE errorneed=((FTYPE)(numsub+2)*trueimptryconv);
+            if(suberrorabsf1/erroraverage>changerequired && suberrorabsf1>errorneed){
 
               if(itermode==ITERMODESTAGES && iter>=BEGINMOMSTEPS && iter<=ENDMOMSTEPS){
                 if(iter<=ENDMOMSTEPS){ iter=BEGINENERGYSTEPS-1; continue;} // force as if already doing energy steps.  If already next iteration is to be this energy step, then no skipping needed.
@@ -4793,7 +4801,7 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
           // radinvmod contains whether radiative inversion modified process.
 
           //          convreturn=f_error_check(showmessages, showmessagesheavy, iter, trueimptryconv,trueimptryconvabs,realdt,dimtypef,eomtypelocal,itermode,*baseitermethod,fracenergy,dissmeasure,dimfactU,pp,piin,f1,f1norm,f1report,Uiin,uu0,uu,ptrgeom,&errorabsf1);
-          convreturnallow=(errorabsf1<IMPALLOWCONVABS);
+          convreturnallow=(errorabsf1<trueimpallowconvabs);
           if(debugfail>=DEBUGLEVELIMPSOLVERMORE) dualfprintf(fail_file,"DOFINALCHECK: convreturn=%d convreturnallow=%d (IMPALLOWCONV=%g) f1report: %g %g %g %g : %g\n",convreturn,convreturnallow,IMPALLOWCONV,f1report[erefU[0]],f1report[erefU[1]],f1report[erefU[2]],f1report[erefU[3]],errorabsf1);
         }// end if doing final check
         else{
@@ -4810,7 +4818,7 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
           // now get error
           int dimtypef=DIMTYPEFCONS; // 0 = conserved R^t_\nu type, 1 = primitive (u,v^i) type, i.e. v^i has no energy density term
           convreturn=f_error_check(showmessages, showmessagesheavy, iter, trueimptryconv, trueimptryconvabs,realdt,dimtypef,eomtypelocal,itermode,*baseitermethod,fracenergy,dissmeasure,dimfactU,pp,piin,f1,f1norm,f1report,Uiin,uu0,uu,ptrgeom,&errorabsf1);
-          convreturnallow=(errorabsf1<IMPALLOWCONVABS);
+          convreturnallow=(errorabsf1<trueimpallowconvabs);
         }
 
 
@@ -4820,18 +4828,19 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
           if(gotbest){
             // f1-based
             // using old uu,uup, but probably ok since just helps normalize error
-            errorabsf1=0.0;     JACLOOPFULLERROR(itermode,jj,startjac,endjac) errorabsf1     += fabs(f1report[erefU[jj]]);
-
-            // f1 based
-            // see if should revert to prior best
+            errorabsf1=0.0;   JACLOOPFULLERROR(itermode,jj,startjac,endjac) errorabsf1   += fabs(f1report[erefU[jj]]);
             errorabsbest=0.0; JACLOOPFULLERROR(itermode,jj,startjac,endjac) errorabsbest += fabs(lowestfreportf1[erefU[jj]]);
+
+            // see if should revert to prior best
             if(errorabsbest<errorabsf1 || !isfinite(errorabsf1) ){
               PLOOP(pliter,pl) uu[pl]=bestuu[pl];
               PLOOP(pliter,pl) pp[pl]=bestpp[pl];
+              errorabsf1=errorabsbest;
+              PLOOP(pliter,pl) f1report[pl] = lowestfreportf1[pl];
 
-              JACLOOPALT(jj,startjac,endjac) f1report[erefU[jj]] = lowestfreportf1[erefU[jj]];
-              convreturn=1; JACLOOPFULLERROR(itermode,jj,startjac,endjac) convreturn*=fabs(f1report[erefU[jj]])<trueimptryconv; // like doing &&
-              convreturnallow=1; JACLOOPFULLERROR(itermode,jj,startjac,endjac) convreturnallow*=fabs(f1report[erefU[jj]])<IMPALLOWCONV; // like doing &&
+              // get whether converged
+              convreturn=(errorabsf1<trueimptryconvabs);
+              convreturnallow=(errorabsf1<trueimpallowconvabs);
               if(showmessages && debugfail>=DEBUGLEVELIMPSOLVERMORE) dualfprintf(fail_file,"Using best: %g %g\n",errorabsf1,errorabsbest);
               if(debugfail>=DEBUGLEVELIMPSOLVERMORE) dualfprintf(fail_file,"GETBEST: convreturn=%d convreturnallow=%d (IMPALLOWCONV=%g) f1report: %g %g %g %g : %g\n",convreturn,convreturnallow,IMPALLOWCONV,f1report[erefU[0]],f1report[erefU[1]],f1report[erefU[2]],f1report[erefU[3]],errorabsf1);
             }
@@ -5083,10 +5092,10 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
   //  if(tautotmax>2 && pp[PRAD0]<10.0*ERADLIMIT){
 
 
-  if(PRODUCTION==0 && NOTACTUALFAILURE(failreturn)==0 && errorabsf1>=IMPTRYCONVALT || PRODUCTION>0 && NOTBADFAILURE(failreturn)==0 && havebackup==0){ // as in previous code
+  if(PRODUCTION==0 && NOTACTUALFAILURE(failreturn)==0 && errorabsf1>=trueimptryconvalt || PRODUCTION>0 && NOTBADFAILURE(failreturn)==0 && havebackup==0){ // as in previous code
 
   // for seeing Erf<0 and small errors not tol errors.
-  //  if(failreturn!=FAILRETURNMODESWITCH && (pp[PRAD0]<10.0*ERADLIMIT) || PRODUCTION==0 && NOTACTUALFAILURE(failreturn)==0 && errorabsf1>=IMPTRYCONVALT || PRODUCTION>0 && NOTBADFAILURE(failreturn)==0 && havebackup==0){
+  //  if(failreturn!=FAILRETURNMODESWITCH && (pp[PRAD0]<10.0*ERADLIMIT) || PRODUCTION==0 && NOTACTUALFAILURE(failreturn)==0 && errorabsf1>=trueimptryconvalt || PRODUCTION>0 && NOTBADFAILURE(failreturn)==0 && havebackup==0){
 
   // for catching oscillators at small error but still >tol.
   //  if(PRODUCTION==0 && NOTACTUALFAILURE(failreturn)==0 || PRODUCTION>0 && NOTBADFAILURE(failreturn)==0){
@@ -5704,16 +5713,19 @@ static int f_error_check(int showmessages, int showmessagesheavy, int iter, FTYP
 #endif
   //  dualfprintf(fail_file,"fnormspacetime: %g %g %g %g: uu0=%g fakevel=%g\n",fnormspace,fnormspace2,fnormtime,fnormtime2,fabs(uu0[erefU[0]]*dimfactU[erefU[0]]),fakevel);
 #else
-  FTYPE fnormspace2 = fnormtime; // maybe ok
+  // These suggest that velocity can be no better than NUMEPSILON*c=NUMEPSILON, but non-rel velocities can be much smaller.  But with rad inversion, v^i comes from mixed-up R^t_\mu -- catastrophic cancellation issue.  What about MHD?
+  FTYPE fnormspace2 = fnormtime; // maybe ok SUPERGODMARK -- problem for very small non-rel velocities. FUCK
   FTYPE fnormtime2 = fnormtime; // no problem with this since now include absolute sum version
+  FTYPE fnormspaceother2 = fnormtimeother; // maybe ok SUPERGODMARK -- problem for very small non-rel velocities. FUCK
+  FTYPE fnormtimeother2 = fnormtimeother; // no problem with this since now include absolute sum version
 #endif
 
   // now assign
   PLOOP(pliter,pl) finnormnew[pl] = finnorm[pl]; // default
   ii=TT; finnormnew[erefU[ii]] = fnormtime + fnormtime2;
-  SLOOPA(ii) finnormnew[erefU[ii]] = fnormspace;
-  ii=TT; finnormnew[eotherU[ii]] = fnormtimeother;
-  SLOOPA(ii) finnormnew[eotherU[ii]] = fnormspaceother;
+  SLOOPA(ii) finnormnew[erefU[ii]] = fnormspace + fnormspace2;
+  ii=TT; finnormnew[eotherU[ii]] = fnormtimeother + fnormtimeother2;
+  SLOOPA(ii) finnormnew[eotherU[ii]] = fnormspaceother + fnormspaceother2;
 
 
   // get non-dimensionalized fin
