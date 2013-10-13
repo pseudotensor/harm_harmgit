@@ -2170,8 +2170,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     static FTYPE sqrtnumepsilon;
     static int firsttimeset=1;
     if(firsttimeset){
-      //      sqrtnumepsilon=pow(NUMEPSILON,2.0/3.0);
-      sqrtnumepsilon=1E-1; // playing -- required for RADBONDI to be fast by using QTYURAD method first as QTYPMHD method fails more.
+      sqrtnumepsilon=pow(NUMEPSILON,2.0/3.0);
+      //      sqrtnumepsilon=1E-1; // playing -- required for RADBONDI to be fast by using QTYURAD method first as QTYPMHD method fails more.
       firsttimeset=0;
     }
     int radprimaryevolves=0;
@@ -2365,10 +2365,10 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
           int noproblem=(ACTUALHARDORSOFTFAILURE(failreturnenergy)==0 || failreturnenergy==FAILRETURNMODESWITCH);
 
           if(tryphase1>0 && noproblem){
-            if(debugfail>=2) dualfprintf(fail_file,"Recovered using tryphase1=%d (energy: failreturnenergy=%d radinvmod=%d): ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d\n",tryphase1,failreturnenergy,radinvmodenergy,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsenergyold,errorabsenergy,itersenergyold,itersenergy);
+            if(debugfail>=2) dualfprintf(fail_file,"Recovered using tryphase1=%d (energy: failreturnenergy=%d radinvmod=%d): ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d baseitermethod=%d\n",tryphase1,failreturnenergy,radinvmodenergy,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsenergyold,errorabsenergy,itersenergyold,itersenergy,baseitermethodenergy);
           }
           if(noproblem==0){
-            if(debugfail>=2) dualfprintf(fail_file,"Failed to: <Recovered> using tryphase1=%d (energy: failreturnenergy=%d radinvmod=%d): ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d\n",tryphase1,failreturnenergy,radinvmodenergy,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsenergyold,errorabsenergy,itersenergyold,itersenergy);
+            if(debugfail>=2) dualfprintf(fail_file,"Failed to: <Recovered> using tryphase1=%d (energy: failreturnenergy=%d radinvmod=%d): ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d baseitermethod=%d\n",tryphase1,failreturnenergy,radinvmodenergy,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsenergyold,errorabsenergy,itersenergyold,itersenergy,baseitermethodenergy);
           }
 
 
@@ -3458,11 +3458,19 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
     }
   }
   else if(USEDUINRADUPDATE==1){
-    // Uiin or piin for iterated quantities (assume will change) and uu0,pb for non-iterated (assume won't change)
-    // But here, just set all same
+    // bad choice for non-iterated quantities, like uu[RHO] should be uu0[RHO]
+
+    // iterated, so keep as initial (i.e. previous full solution, not just initial+flux)
     PLOOP(pliter,pl){
-      uu[pl] = uu0[pl];
-      ppfirst[pl] = pp[pl] = pp0[pl] = pb[pl];
+      uu[pl] = Uiin[pl];
+      ppfirst[pl] = pp[pl] = pp0[pl] = piin[pl];
+    }
+    // non-iterated, so keep as initial+flux (since all there is)
+    PLOOP(pliter,pl){
+      if(!(pl>=UU && pl<=U3 || RADPL(pl) || pl==ENTROPY)){
+        uu[pl] = uu0[pl];
+        ppfirst[pl] = pp[pl] = pp0[pl] = pb[pl];
+      }
     }
   }
   else if(USEDUINRADUPDATE==0){
@@ -3580,6 +3588,8 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
       }
 
     }
+
+
 
 
 
