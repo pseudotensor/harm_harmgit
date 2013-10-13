@@ -3037,7 +3037,7 @@ static void func_Eprime_opt(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE (*jac)[N
   ////////////////
   // PERFORMANCEMARK: Tested code with and without these type of if/else (all of them in utoprim_jon.c) and all rest used by func_Eprime() and found only changed performance from 7% of CPU to 6.90% CPU.  Not interesting change
   FTYPE Eprime,dEprimedWp;
-  if(utsq<UTSQNEGLIMIT || utsq!=utsq){ // also checks if nan
+  if(gammasq<0.0 || utsq<UTSQNEGLIMIT || utsq!=utsq){ // also checks if nan
     Eprime=-VERYBIG; // force residual to be large and negative so indicates a problem
     dEprimedWp=0.0; // indicates a problem
 
@@ -3263,7 +3263,7 @@ static void func_Sc_opt(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE (*jac)[NEWT_
   ////////////////
   // PERFORMANCEMARK: Tested code with and without these type of if/else (all of them in utoprim_jon.c) and all rest used by func_Eprime() and found only changed performance from 7% of CPU to 6.90% CPU.  Not interesting change
   FTYPE Scprime,dScprimedWp;
-  if(utsq<UTSQNEGLIMIT || utsq!=utsq){ // also checks if nan
+  if(gammasq<0.0 || utsq<UTSQNEGLIMIT || utsq!=utsq){ // also checks if nan
     Scprime=-VERYBIG; // force residual to be large and negative so indicates a problem
     dScprimedWp=0.0; // indicates a problem
 

@@ -1092,14 +1092,22 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
          ){
         badchange=1;
       }
+      // can also go bad when momentum exceeds energy, but more complicated check for GRMHD -- so just do inversion
     }
     if(implicititer==QTYUMHD || implicititer==QTYUMHDENERGYONLY || implicititer==QTYUMHDMOMONLY){
       if(-uu[iotherU[0]]<=0.0){
         badchange=1;
       }
+      // inversion will catch when momentum exceeds energy.
     }
-    if(badchange){ // FUCK : Hit floor instead?  How to make explicit make sense?
-      DLOOPA(iv) uu[iotherU[iv]] = uu0[iotherU[iv]];
+    // "revert" uu and ignore 4-force if badchange and just fail directly without expense of inversion.
+    if(badchange && iter==1){
+      // if first iteration, assume guess as (e.g.) Uiin, but can now change to uu0.
+      PLOOP(pliter,pl) uu[pl] = uu0[pl];
+    }
+    else if(badchange){
+      // only change other to uubackup (i.e. before 4-force applied)
+      DLOOPA(iv) uu[iotherU[iv]] = uubackup[iotherU[iv]];
     }
     // 2) Get estimated U[entropy]
     // mathematica has Sc = Sc0 + dt *GS with GS = -u.G/T
@@ -1113,6 +1121,8 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
     // 3) Do MHD+RAD Inversion
     //    PLOOP(pliter,pl) dualfprintf(fail_file,"BEFORE: pl=%d pr=%g\n",pl,pp[pl]);
     int doradonly=0; failreturn=Utoprimgen_failwrapper(doradonly,radinvmod,showmessages,allowlocalfailurefixandnoreport, finalstep, eomtype, whichcap, EVOLVEUTOPRIM, UNOTHING, uu, q, ptrgeom, dissmeasure, pp, &newtonstats);
+    // When failreturn==UTOPRIMGENWRAPPERRETURNFAILMHD, Utoprimgen() passes back pp as initial guess, and when u(pp) is computed below, effectively didn't move uu[gas] away from uu0[gas]
+    if(badchange) failreturn==UTOPRIMGENWRAPPERRETURNFAILMHD; // indicate that messed-up MHD inversion, without having to do the inversion.
     //    PLOOP(pliter,pl) dualfprintf(fail_file,"AFTER: pl=%d pr=%g\n",pl,pp[pl]);
     if(debugfail>=3) dualfprintf(fail_file,"NEWTON: %d : ijk=%d %d %d : %d %g\n",iter,ptrgeom->i,ptrgeom->j,ptrgeom->k,newtonstats.lntries,newtonstats.lerrx);
     radinvmodalt=*radinvmod; // default
@@ -3507,9 +3517,14 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
   else if(USEDUINRADUPDATE==1){
     // bad choice for non-iterated quantities, like uu[RHO] should be uu0[RHO]
 
+    // use tau as guess for which guess is best
+    FTYPE tautot[NDIM],tautotmax;
+    calc_tautot(pp, ptrgeom, tautot, &tautotmax);
+
     // iterated, so keep as initial (i.e. previous full solution, not just initial+flux)
     PLOOP(pliter,pl){
-      uu[pl] = Uiin[pl];
+      if(tautotmax>=1.0) uu[pl] = Uiin[pl]; // assume somewhat static and Uiin is best guess
+      else uu[pl] = uu0[pl]; // assume dynamic and should use full uu0 to avoid pushing any errors into other fluid component.
       ppfirst[pl] = pp[pl] = pp0[pl] = piin[pl];
     }
     // non-iterated, so keep as initial+flux (since all there is)
@@ -3519,6 +3534,9 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
         ppfirst[pl] = pp[pl] = pp0[pl] = pb[pl];
       }
     }
+
+
+
   }
   else if(USEDUINRADUPDATE==0){
     // bad choice for non-iterated quantities, like uu[RHO] should be uu0[RHO]
