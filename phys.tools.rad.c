@@ -2933,7 +2933,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
 
     // check if doing implicit (don't care about cold check)
-    if(goexplicitentropy==0 || goexplicitenergy==0){
+    if(goexplicitentropy==0 && goexplicitenergy==0){
       usedimplicit=1;
 
       /////////////
@@ -3015,14 +3015,14 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
 
     if(usedimplicit==0){// No source either because goexplicitenergy==1 && goexplicitentropy==1 or failed
-      if(goexplicitenergy==1 && goexplicitentropy==1 || *lpflagrad>UTOPRIMRADNOFAIL && *lpflag==UTOPRIMNOFAIL){ // then assume just radinvmod (i.e. any radiation failure is always fixable), so revert to explicit if couldn't find solution.
+      if(goexplicitenergy==1 || goexplicitentropy==1 || *lpflagrad>UTOPRIMRADNOFAIL && *lpflag==UTOPRIMNOFAIL){ // then assume just radinvmod (i.e. any radiation failure is always fixable), so revert to explicit if couldn't find solution.
         *lpflag=UTOPRIMNOFAIL;
         *lpflagrad=UTOPRIMRADNOFAIL;
         noprims=1;
         failfinalreturn=1;
         *eomtype=EOMDEFAULT;
         if(debugfail>=3) dualfprintf(fail_file,"Went explicit: eenergy=%g eentropy=%g ienergy=%d ientropy=%d\n",errorabsenergy,errorabsentropy,itersenergy,itersentropy);
-        if(goexplicitenergy==1 && goexplicitentropy==1){ usedexplicitgood=1; failfinalreturn=-1;}
+        if(goexplicitenergy==1 || goexplicitentropy==1){ usedexplicitgood=1; failfinalreturn=-1;}
         else{ usedexplicitkindabad=1; failfinalreturn=1;} // FUCK: might want to treat as actual failure if QTYPMHD mode since lpflag never set.
       }
       else{ // actual failure
@@ -3049,7 +3049,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     } // end if using implicit solution
 
 
-    if(*eomtype>=0) dualfprintf(fail_file,"WTF: %d %d %d : %d : %d : %d\n",failreturnentropy,failreturnenergy,failreturncold,failfinalreturn,noprims,*eomtype);
+    if(*eomtype>=0 && failreturnenergy>=0 && failreturnentropy>=0 && failreturncold>=0) dualfprintf(fail_file,"WTF: %d %d %d : %d : %d : %d\n",failreturnentropy,failreturnenergy,failreturncold,failfinalreturn,noprims,*eomtype);
 
   }// end MODEPICKBEST
 
