@@ -272,7 +272,7 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE errorabs, struc
 // whether to apply Jon's hold on u_g or rho from going negative
 #define JONHOLDPOS 1
 
-#define NEWJONHOLDPOS 1 // FUCK: WORKING ON IT
+#define NEWJONHOLDPOS 0 // FUCK: WORKING ON IT
 
 // number of times allowed to hold u_g as positive
 #define NUMHOLDTIMES 6
@@ -337,7 +337,7 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE errorabs, struc
 #define SWITCHTODONOTHING 1
 
   // whether to change damp factor during this instance.
-#define CHANGEDAMPFACTOR 0 // bit risky to set to 1 since changing DAMPFACTOR for no good reason limits ability to converge at normal rate.
+#define CHANGEDAMPFACTOR 2 // bit risky to set to 1 since changing DAMPFACTOR for no good reason limits ability to converge at normal rate.
 #define NUMDAMPATTEMPTS 3
 
 #define NUMDAMPATTEMPTSQUICK 1
@@ -3552,7 +3552,7 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
     // dampattempt>0 refers to any attempt beyond the very first.  Uses iter from end of region inside this loop.
     if(dampattempt>0 && (errorabsf1<IMPTRYDAMPCONV && ACCEPTASNOFAILURE(failreturn) || failreturn==FAILRETURNMODESWITCH) ){ // try damping if any bad failure or not desired tolerance when damping
       if(dampattempt>=2 && failreturn!=FAILRETURNMODESWITCH){ // dampattempt>=2 refers to attempts with at least 1 damp attempt
-        if(debugfail>=2) dualfprintf(fail_file,"Damping worked to reach desired tolerance: errorabsf1=%g (IMPTRYDAMPCONV=%g), so should have lower error: dampattempt=%d iter=%d\n",errorabsf1,IMPTRYDAMPCONV,dampattempt,iter);
+        if(debugfail>=2) dualfprintf(fail_file,"Damping worked to reach desired tolerance: errorabsf1=%g (IMPTRYDAMPCONV=%g), so should have lower error: dampattempt=%d iter=%d ijk=%d %d %d\n",errorabsf1,IMPTRYDAMPCONV,dampattempt,iter,ptrgeom->i,ptrgeom->j,ptrgeom->k);
       }
       break; // if didn't hit problem, so no need to damp since got tolerance requested or returned because will just switch to another scheme.
     }
@@ -3635,6 +3635,7 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
     int notholding=1;
     FTYPE DAMPFACTOR;
     int earlylowerror;
+    int numjumpchecks=0;
 
     ////////////////////////////////
     //
@@ -3678,13 +3679,22 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
         failreturnallowable=failreturnallowableuse=UTOPRIMGENWRAPPERRETURNFAILRAD;
       }
 
-      if(CHANGEDAMPFACTOR&&trueimpmaxiter==IMPMAXITERQUICK && iter>IMPMAXITERQUICK/2){
-        DAMPFACTOR=0.5*DAMPFACTOR0;
+      if(CHANGEDAMPFACTOR==1){
+        if(trueimpmaxiter==IMPMAXITERQUICK && iter>IMPMAXITERQUICK/2){
+          DAMPFACTOR=0.5*DAMPFACTOR0;
+        }
+        else if(trueimpmaxiter==IMPMAXITER && iter>MIN(IMPMAXITER/2,20)){
+          DAMPFACTOR=0.5*DAMPFACTOR0;
+        }
+        else DAMPFACTOR=DAMPFACTOR0;
       }
-      else if(CHANGEDAMPFACTOR&&trueimpmaxiter==IMPMAXITER && iter>MIN(IMPMAXITER/2,20)){
-        DAMPFACTOR=0.5*DAMPFACTOR0;
+      else if(CHANGEDAMPFACTOR==2){
+        if(itermode==ITERMODESTAGES && iter==BEGINMOMSTEPS) DAMPFACTOR=0.5*DAMPFACTOR0; else DAMPFACTOR=DAMPFACTOR0;
+        if(itermode==ITERMODESTAGES && iter==BEGINENERGYSTEPS) DAMPFACTOR=0.5*DAMPFACTOR0; else DAMPFACTOR=DAMPFACTOR0;
+        if(itermode==ITERMODESTAGES && iter==BEGINFULLSTEPS) DAMPFACTOR=0.5*DAMPFACTOR0; else DAMPFACTOR=DAMPFACTOR0;
       }
       else DAMPFACTOR=DAMPFACTOR0;
+      
 
 
       ///////////
@@ -4019,6 +4029,7 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
       if(itermode==ITERMODESTAGES && iter>=BEGINMOMSTEPS && iter<=ENDMOMSTEPS){
         if(fabs(f1report[irefU[1]])<trueimptryconv && fabs(f1report[irefU[2]])<trueimptryconv && fabs(f1report[irefU[3]])<trueimptryconv){
           if(iter<=ENDMOMSTEPS){ iter=BEGINENERGYSTEPS-1; continue;} // force as if already doing energy steps.  If already next iteration is to be this energy step, then no skipping needed.
+          // continue assumes not triggered when iter>trueimpmaxiter
         }
       }
       // check if energy only iteration has error that has dropped below tolerance, then can move on to 
@@ -4027,6 +4038,7 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
         // SUPERGODMARK: valgrind says belw is undefined, but don't see it.
         if(fabs(f1report[irefU[0]])<trueimptryconv){
           if(iter<=ENDENERGYSTEPS){ iter=BEGINFULLSTEPS-1; continue;} // force as if already doing normal steps.  If already next iteration is to be normal step, no need to skip.
+          // continue assumes not triggered when iter>trueimpmaxiter
         }
       }
 
@@ -4043,11 +4055,16 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
       ///////////////////////////
 
 #define ERRORJUMPCHECK 1 // whether to check if error jumps up, between last and current step, in irefU[0] -- u_g for QTYPMHD method.  If so, backs-up step a bit for all quantities iterated and try to get error again
-#define BUFFERITER 2 // how many iterations to wait until start to check how error is doing.  When switching iteration methods, error will often rise initially in f1[0], but that's ok.
+#define BUFFERITER 0 // how many iterations to wait until start to check how error is doing.  When switching iteration methods, error will often rise initially in f1[0], but that's ok.  But can temper jump by bridging used pp,uu, so ok to keep as 0 perhaps.
       // check if doing energy stepping and error jumped up too much
-      if(ERRORJUMPCHECK){
+#define NUMJUMPCHECKSMAX 5 // must limit, else if really drops-out and can't help, need to just accept.
+      if(ERRORJUMPCHECK && numjumpchecks<NUMJUMPCHECKSMAX){
         if(iter>=BEGINENERGYSTEPS+BUFFERITER && iter<=ENDENERGYSTEPS || iter>=BEGINFULLSTEPS+BUFFERITER && iter<=ENDFULLSTEPS){// now all steps beyond energy
-          if(fabs(f1[erefU[0]]/f1p[erefU[0]])>FACTORBADJUMPERROR && fabs(f1report[erefU[0]])>trueimptryconv){
+          if(
+             (fabs(f1[erefU[0]]/f1p[erefU[0]])>FACTORBADJUMPERROR && fabs(f1report[erefU[0]])>trueimptryconv)
+             || (pp[URAD0]<10.0*ERADLIMIT)
+             || (pp[UU]<10.0*UUMINLIMIT)
+             ){
             // then pseudo-bisect (between zero and previous ok error case)
             if(debugfail>=DEBUGLEVELIMPSOLVER) dualfprintf(fail_file,"pseudo-bisect: iter=%d f1=%g f1p=%g pp=%g ppp=%g  pppp=%g  ppppp=%g\n",iter,f1[erefU[0]],f1p[erefU[0]],pp[irefU[0]],ppp[irefU[0]],pppp[irefU[0]],ppppp[irefU[0]]);
             if(0){
@@ -4077,7 +4094,14 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
               jac00list[debugiter]=iJ[irefU[0]][erefU[0]];
             }
             // need to get new error function so can take step based upon this as reference!
-            continue; // head to start of loop to iter++ and get new error function.
+            if(iter>trueimpmaxiter){
+              if(debugfail>=DEBUGLEVELIMPSOLVERMORE) dualfprintf(fail_file,"iter=%d>%d\n",iter,trueimpmaxiter);
+            }
+            else{
+              // continue assumes not triggered when iter>trueimpmaxiter
+              numjumpchecks++;
+              if(numjumpchecks<NUMJUMPCHECKSMAX) continue; // head to start of loop to iter++ and get new error function.
+            }
           }
         }
       }
@@ -4883,7 +4907,7 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
 
   }// end loop over damping
   if(dampattempt==truenumdampattempts && truenumdampattempts>1){
-    if(debugfail>=2) dualfprintf(fail_file,"Damping failed to avoid max iterations (but error might have dropped): failreturn=%d dampattempt=%d eomtypelocal=%d *eomtype=%d\n",failreturn,dampattempt,eomtypelocal,*eomtype);
+    if(debugfail>=2) dualfprintf(fail_file,"Damping failed to avoid max iterations (but error might have dropped: %21.15g): failreturn=%d dampattempt=%d eomtypelocal=%d *eomtype=%d\n",errorabsf1,failreturn,dampattempt,eomtypelocal,*eomtype);
   }
 
   ///////////
