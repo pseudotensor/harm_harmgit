@@ -1489,7 +1489,9 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int failreturnall
 
 
 
-  if(errorabsalt<*errorabs){
+  // see if alternative error is smaller *and* in converged limit.  Catches cases when optically thin and ok that hits radiation ceiling.
+  // Have to check if really small error for alternative error, since otherwise f1iter loop won't work.
+  if(errorabsalt<*errorabs && convreturnalt==1){
     //dualfprintf(fail_file,"UsingALT\n");
 
     // then switch to use falt.
