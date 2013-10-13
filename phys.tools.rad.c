@@ -3691,7 +3691,7 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
       else if(CHANGEDAMPFACTOR==2){
         if(itermode==ITERMODESTAGES && iter==BEGINMOMSTEPS) DAMPFACTOR=0.5*DAMPFACTOR0; else DAMPFACTOR=DAMPFACTOR0;
         if(itermode==ITERMODESTAGES && iter==BEGINENERGYSTEPS) DAMPFACTOR=0.5*DAMPFACTOR0; else DAMPFACTOR=DAMPFACTOR0;
-        if(itermode==ITERMODESTAGES && iter==BEGINFULLSTEPS) DAMPFACTOR=0.5*DAMPFACTOR0; else DAMPFACTOR=DAMPFACTOR0;
+        if(itermode==ITERMODESTAGES && iter==BEGINFULLSTEPS) DAMPFACTOR=0.25*DAMPFACTOR0; else DAMPFACTOR=DAMPFACTOR0; // 0.25 to be very careful since can change energy too much when suddenly turning back on momentum
       }
       else DAMPFACTOR=DAMPFACTOR0;
       
@@ -4076,8 +4076,8 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
             else{
               // half-way between current (pp and ppp are same current primitve) and last primitive
               // uu and pp won't be consistent, but when get to f_implicit(), as continue forces, this will be done.
-              PLOOP(pliter,pl) pp[pl] = 0.5*(pppp[pl]+ppp[pl]);
-              PLOOP(pliter,pl) uu[pl] = 0.5*(uupp[pl]+uup[pl]);
+              PLOOP(pliter,pl) pp[pl] = 0.75*pppp[pl] + 0.25*ppp[pl];
+              PLOOP(pliter,pl) uu[pl] = 0.75*uupp[pl] + 0.25*uup[pl];
             }
             // update debug with modifications
             if(DEBUGMAXITER&& dampattempt==0){
@@ -4907,7 +4907,7 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
 
   }// end loop over damping
   if(dampattempt==truenumdampattempts && truenumdampattempts>1){
-    if(debugfail>=2) dualfprintf(fail_file,"Damping failed to avoid max iterations (but error might have dropped: %21.15g): failreturn=%d dampattempt=%d eomtypelocal=%d *eomtype=%d\n",errorabsf1,failreturn,dampattempt,eomtypelocal,*eomtype);
+    if(debugfail>=2) dualfprintf(fail_file,"Damping failed to avoid max iterations (but error might have dropped: %21.15g): failreturn=%d dampattempt=%d eomtypelocal=%d *eomtype=%d ijk=%d %d %d\n",errorabsf1,failreturn,dampattempt,eomtypelocal,*eomtype,ptrgeom->i,ptrgeom->j,ptrgeom->k);
   }
 
   ///////////
