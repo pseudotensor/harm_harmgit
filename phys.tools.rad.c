@@ -1581,7 +1581,8 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
       FTYPE ucon0=q->ucon[TT]; // what enters G for dR^t_t/R^t_t from time part
       FTYPE ratchangeRtt=SMALL+fabs(chieff * ucon0 * ucon0 * realdt * 1.0); // 1.0 = c (2nd term with chi instead of kappaes to be sever and account for B-based term)
 
-      if( (iter>ITERCHECKEXPLICITSAFE || iter==1 && tautotmax<NUMEPSILON ) && failreturn<=UTOPRIMGENWRAPPERRETURNFAILRAD){
+      //      if( (iter>ITERCHECKEXPLICITSAFE || iter==1 && tautotmax<NUMEPSILON ) && failreturn<=UTOPRIMGENWRAPPERRETURNFAILRAD){
+      if( (iter>ITERCHECKEXPLICITSAFE || iter==1 && tautotmax<NUMEPSILON ) ){
         // iter>1 so at least have estimate of G even if not great.
         // At iter=1, U->p->G can give G=0, while dUrad=-dUgas can still lead to changes that upon next iteration lead to G!=0.
         *goexplicit=1;
