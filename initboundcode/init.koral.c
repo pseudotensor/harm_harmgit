@@ -77,6 +77,18 @@ FTYPE RADATM_FRATIO;
 FTYPE RADATM_RHOAMB;
 FTYPE RADATM_TAMB;
 
+FTYPE RADSHADOW_NLEFT;
+FTYPE RADSHADOW_ANGLE;
+FTYPE RADSHADOW_TLEFTOTAMB;
+FTYPE RADSHADOW_BEAMY;
+
+FTYPE RADDBLSHADOW_NLEFT;
+FTYPE RADDBLSHADOW_ANGLE;
+FTYPE RADDBLSHADOW_TLEFTOTAMB;
+FTYPE RADDBLSHADOW_BEAMY;
+
+
+
 
 int RADWAVE_NWAVE;
 int RADWAVE_NUMERO;
@@ -580,6 +592,15 @@ int init_global(void)
     cooling=KORAL;
     ARAD_CODE=1E7*1E-5*(2.5E-9/7.115025791e-10); // tuned so radiation energy flux puts in something much higher than ambient, while initial ambient radiation energy density lower than ambient gas internal energy.
 
+    RADSHADOW_NLEFT=0.99999;
+    RADSHADOW_ANGLE=0.0;
+    RADSHADOW_TLEFTOTAMB=100.0;
+    RADSHADOW_BEAMY=0.3;
+
+    // avoid hitting gamma ceiling
+    GAMMAMAXRAD=MAX(GAMMAMAXRAD,2.0*1.0/sqrt(1.0-RADSHADOW_NLEFT*RADSHADOW_NLEFT));
+
+
     BCtype[X1UP]=FREEOUTFLOW;
     BCtype[X1DN]=RADSHADOWINFLOW;
     BCtype[X2UP]=PERIODIC;
@@ -616,6 +637,26 @@ int init_global(void)
     // ARAD_CODE=1E-30;
     //    ARAD_CODE=1E7*1E-5*(2.5E-9/7.115025791e-10); // tuned so radiation energy flux puts in something much higher than ambient, while initial ambient radiation energy density lower than ambient gas internal energy.
     ARAD_CODE=1E7*1E-5*1E-10*(6E-9/1.7E-25); // tuned so radiation energy flux puts in something much higher than ambient, while initial ambient radiation energy density lower than ambient gas internal energy.  And also similar value as in Figure 11 koral paper plot.  As long as prad0<<u and prad0<<rho, solution is independent of ARAD because 4-force off radiation on the fluid is negligible.  Then kappa just sets what rho becomes \tau\sim 1 and nothing about the fluid is affected.
+
+
+
+    //    NLEFT=0.99999; // Works well with MINM (only 49 total failures at relatively early time for otherwise default setup).  very hard on code -- only MINM with jon choice for CASES works.
+    //    NLEFT=0.99; // koral paper
+    //NLEFT=0.999; // latest koral
+    //  NLEFT=0.7;
+    //  NLEFT=0.93;
+   
+    //    angle=0.4; // koral paper
+    //    angle=0.3; // latest koral
+
+    RADDBLSHADOW_NLEFT=0.99;
+    RADDBLSHADOW_ANGLE=0.4;
+    RADDBLSHADOW_TLEFTOTAMB=100.0;
+    RADDBLSHADOW_BEAMY=0.3;
+
+    // avoid hitting gamma ceiling
+    GAMMAMAXRAD=MAX(GAMMAMAXRAD,2.0*1.0/sqrt(1.0-RADSHADOW_NLEFT*RADSHADOW_NLEFT));
+
 
     BCtype[X1UP]=FREEOUTFLOW;
     BCtype[X1DN]=RADSHADOWINFLOW;

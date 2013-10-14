@@ -991,25 +991,29 @@ int bound_radshadowinflow(int dir,
   FTYPE BLOBW=0.22;
   FTYPE RHOBLOB=1.e3;
   //
-  FTYPE NLEFT,angle;
+  extern FTYPE RADSHADOW_NLEFT,RADSHADOW_ANGLE;
+  extern FTYPE RADSHADOW_TLEFTOTAMB;
+  extern FTYPE RADSHADOW_BEAMY;
+
+  extern FTYPE RADDBLSHADOW_NLEFT,RADDBLSHADOW_ANGLE;
+  extern FTYPE RADDBLSHADOW_TLEFTOTAMB;
+  extern FTYPE RADDBLSHADOW_BEAMY;
+
+  FTYPE NLEFT,angle,TLEFT,BEAMY;
+
   if(WHICHPROBLEM==RADSHADOW){
-    NLEFT=0.99999;
-    angle=0.0;
+    NLEFT=RADSHADOW_NLEFT;
+    angle=RADSHADOW_ANGLE;
+    TLEFT=TAMB*RADSHADOW_TLEFTOTAMB;
+    BEAMY=RADSHADOW_BEAMY;
   }
   else if(WHICHPROBLEM==RADDBLSHADOW){
-    //    NLEFT=0.99999; // Works well with MINM (only 49 total failures at relatively early time for otherwise default setup).  very hard on code -- only MINM with jon choice for CASES works.
-    NLEFT=0.99; // koral paper
-    //NLEFT=0.999; // latest koral
-    //  NLEFT=0.7;
-    //  NLEFT=0.93;
-   
-    angle=0.4; // koral paper
-    //    angle=0.3; // latest koral
+    NLEFT=RADDBLSHADOW_NLEFT;
+    angle=RADDBLSHADOW_ANGLE;
+    TLEFT=TAMB*RADDBLSHADOW_TLEFTOTAMB;
+    BEAMY=RADDBLSHADOW_BEAMY;
   }
-  //
-  FTYPE TLEFT=TAMB*100.0;
 
-  FTYPE BEAMY=0.3;
 
 #pragma omp parallel  // assume don't require EOS
   {
