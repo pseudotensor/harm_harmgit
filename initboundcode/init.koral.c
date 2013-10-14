@@ -336,6 +336,7 @@ int init_global(void)
   ERADLIMIT=UUMINLIMIT; // seems fine.
   // maximum radiation frame lorentz factor
   //GAMMAMAXRAD=10000.0; // problems with PARA or TIMEORDER=3 for NLEFT=0.99999 with RADBEAM2D, so stick to gammamax=100 in general unless for test.
+  // NOTE: Even PARA,TO=3 can handle cartesian beams like RADBEAM2D or RADSHADOW without problems, but if injection gamma > GAMMAMAXRAD, then that limiting process causes problems currently.  Looking into it.
   GAMMAMAXRAD=100.0;
 
 
