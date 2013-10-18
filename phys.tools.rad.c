@@ -1121,6 +1121,31 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
     // 3) Do MHD+RAD Inversion
     //    PLOOP(pliter,pl) dualfprintf(fail_file,"BEFORE: pl=%d pr=%g\n",pl,pp[pl]);
     int doradonly=0; failreturn=Utoprimgen_failwrapper(doradonly,radinvmod,showmessages,allowlocalfailurefixandnoreport, finalstep, eomtype, whichcap, EVOLVEUTOPRIM, UNOTHING, uu, q, ptrgeom, dissmeasure, pp, &newtonstats);
+
+    if(failreturn==UTOPRIMGENWRAPPERRETURNFAILRAD && whichcall==FIMPLICITCALLTYPEJAC){
+      // then try other uu, even if total energy is not conserved, better than raditive failure leading to problems or innacuracy.
+      PLOOP(pliter,pl) uu[pl] = uuprev[pl];
+      doradonly=1; failreturn=Utoprimgen_failwrapper(doradonly,radinvmod,showmessages,allowlocalfailurefixandnoreport, finalstep, eomtype, whichcap, EVOLVEUTOPRIM, UNOTHING, uu, q, ptrgeom, dissmeasure, pp, &newtonstats);
+      if(failreturn==UTOPRIMGENWRAPPERRETURNNOFAIL){
+        int jjj;
+        //        DLOOPA(jjj) dualfprintf(fail_file,"DIDIT: jjj=%d uu=%21.15g\n",jjj,uu[URAD0+jjj]);
+      }
+      else{
+        //        dualfprintf(fail_file,"DIDITNOT\n");      
+        int jjj;
+        SLOOPA(jjj){
+          uu[URAD0+jjj]*=0.1;
+        }
+        //        DLOOPA(jjj) dualfprintf(fail_file,"trying: jjj=%d uu=%21.15g\n",jjj,uu[URAD0+jjj]);
+        doradonly=1; failreturn=Utoprimgen_failwrapper(doradonly,radinvmod,showmessages,allowlocalfailurefixandnoreport, finalstep, eomtype, whichcap, EVOLVEUTOPRIM, UNOTHING, uu, q, ptrgeom, dissmeasure, pp, &newtonstats);
+        //doradonly=1; failreturn=Utoprimgen_failwrapper(doradonly,radinvmod,showmessages,allowlocalfailurefixandnoreport, finalstep, eomtype, whichcap, EVOLVEUTOPRIM, UNOTHING, uu0, q, ptrgeom, dissmeasure, pp, &newtonstats);
+        //        if(failreturn==UTOPRIMGENWRAPPERRETURNNOFAIL) dualfprintf(fail_file,"DIDIT02\n");
+        //        else dualfprintf(fail_file,"DIDITNOT02\n");      
+      }
+    }
+
+
+
     // When failreturn==UTOPRIMGENWRAPPERRETURNFAILMHD, Utoprimgen() passes back pp as initial guess, and when u(pp) is computed below, effectively didn't move uu[gas] away from uu0[gas]
     if(badchange) failreturn==UTOPRIMGENWRAPPERRETURNFAILMHD; // indicate that messed-up MHD inversion, without having to do the inversion.
     //    PLOOP(pliter,pl) dualfprintf(fail_file,"AFTER: pl=%d pr=%g\n",pl,pp[pl]);
@@ -1481,7 +1506,7 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
     // KORALNOTE: Use Gdplabs to ensure absolute value over more terms in source in case coincidental cancellation without physical significance.
     uuallabs[pl] = THIRD*(fabs(uuabs[pl]) + fabs(uu[pl]) + fabs(uu0[pl]))*extrafactor[pl];
     Gallabs[pl] = fabs(sign[pl] * localdt * Gdplabs[pl])*extrafactor[pl];
-    fnorm[pl] = uuabs[pl] + Gallabs[pl];
+    fnorm[pl] = uuallabs[pl] + Gallabs[pl];
   }
 
 
@@ -5882,11 +5907,49 @@ static int get_implicit_iJ(int allowbaseitermethodswitch, int failreturnallowabl
   // v^i / sqrt(g^{ii}) = vortho^i
   SLOOPA(jj) upitoup0P[UU+jj] =upitoup0P[URAD0+jj] = 1.0/dimfactU[UU+jj];
 
+
+  /////////
+  //
+  // use uucopy as uu instead of modifying uu in case uu needs adjusting
+  //
+  /////////
+  FTYPE uucopy[NPR],ppcopy[NPR];
+  PLOOP(pliter,pl){
+    uucopy[pl]=uu[pl];
+    ppcopy[pl]=pp[pl];
+  }
+
+#define MAXSIGN(x,y) (fabs(x)>fabs(y) ? (x) : (y))
+#define MINSIGN(x,y) (fabs(x)<fabs(y) ? (x) : (y))
+
+  ////////
+  //
+  // check whether origin point is too small relative to uu0
+  //
+  ////////
+  //  JACLOOP(jj,startjac,endjac){
+  DLOOPA(jj){ // so all related U's are changed.
+    //    if(fabs(uucopy[irefU[jj]])<100.0*NUMEPSILON*fabs(uu0[irefU[jj]])){
+    // then set "floor" on uucopy used for Jacobian because otherwise uu is unresolved by f_implicit() error function
+    uucopy[irefU[jj]]=MAXSIGN(MAXSIGN(uucopy[irefU[jj]],100.0*NUMEPSILON*uu0[irefU[jj]]),100.0*NUMEPSILON*uup[irefU[jj]]);
+    // modify associated pp in reasonable way in case P method since otherwise error will be unresolved using that p associated with that uu
+    // only modify primitives associated with those conserved quantities (i.e. gas uu and pp or rad uu and pp)
+    ppcopy[irefU[jj]]=MAXSIGN(MAXSIGN(ppcopy[irefU[jj]],100.0*NUMEPSILON*piin[irefU[jj]]),100.0*NUMEPSILON*ppp[irefU[jj]]);
+  }
+
+
+
+  ///////////
+  //
+  // setup origin point for difference
+  //
+  ///////////
+
   // U
   if(IMPUTYPE(implicititer)){
-    PLOOP(pliter,pl) x[pl]=uu[pl];
+    PLOOP(pliter,pl) x[pl]=uucopy[pl];
     PLOOP(pliter,pl) xp[pl]=uup[pl];
-    PLOOP(pliter,pl) xjac[0][pl]=xjac[1][pl]=xjacalt[pl]=uu[pl];
+    PLOOP(pliter,pl) xjac[0][pl]=xjac[1][pl]=xjacalt[pl]=uucopy[pl];
     PLOOP(pliter,pl) upitoup0[pl] = upitoup0U[pl];
     // velmomscale is set such that when (e.g.) T^t_i is near zero, we use T^t_t as reference since we consider T^t_i/T^t_t to be velocity scale that is up to order unity.
     //    velmomscale=pow(fabs(x[irefU[TT]]*upitoup0[irefU[TT]]),1.5);
@@ -5894,13 +5957,13 @@ static int get_implicit_iJ(int allowbaseitermethodswitch, int failreturnallowabl
   }
   // P
   else if(IMPPTYPE(implicititer)){
-    PLOOP(pliter,pl) x[pl]=pp[pl];
+    PLOOP(pliter,pl) x[pl]=ppcopy[pl];
     PLOOP(pliter,pl) xp[pl]=ppp[pl];
-    PLOOP(pliter,pl) xjac[0][pl]=xjac[1][pl]=xjacalt[pl]=pp[pl];
+    PLOOP(pliter,pl) xjac[0][pl]=xjac[1][pl]=xjacalt[pl]=ppcopy[pl];
     PLOOP(pliter,pl) upitoup0[pl] = upitoup0P[pl];
     // for velocity, assume ortho-scale is order unity (i.e. v=1.0*c)
     //    velmomscale=1.0; // reference scale considered to be order unity  KORALTODO: Not sure if should use something like T^t_i/T^t_t with denominator something more non-zero-ish.
-    if(IMPMHDTYPE(implicititer)) velmomscale=MAX(SMALL,sqrt(fabs(x[UU])/MAX(ppp[RHO],pp[RHO]))); // u_g/\rho_0\propto (v/c)^2, so this gives \propto (v/c) .  Leads to more problems for RADTUBE
+    if(IMPMHDTYPE(implicititer)) velmomscale=MAX(SMALL,sqrt(fabs(x[UU])/MAX(ppp[RHO],ppcopy[RHO]))); // u_g/\rho_0\propto (v/c)^2, so this gives \propto (v/c) .  Leads to more problems for RADTUBE
     else velmomscale=1.0; // FUCK
 
     // limit
@@ -5955,7 +6018,7 @@ static int get_implicit_iJ(int allowbaseitermethodswitch, int failreturnallowabl
   //FUCK: Needs to improve and be more general
   if(IMPPMHDTYPE(implicititer)){
     // u_g goes like \rho_0 v^2
-    jj=TT; deltime = MAX(fabs(predel[jj]),MAX(ppp[RHO],pp[RHO])*vsqnorm); // FUCK : Leads to more problems for RADTUBE
+    jj=TT; deltime = MAX(fabs(predel[jj]),MAX(ppp[RHO],ppcopy[RHO])*vsqnorm); // FUCK : Leads to more problems for RADTUBE
     //jj=TT; deltime = fabs(predel[jj]);
   }
   else if(IMPPTYPE(implicititer)){
@@ -6020,16 +6083,41 @@ static int get_implicit_iJ(int allowbaseitermethodswitch, int failreturnallowabl
          
           // origin point
           PLOOP(pliter,pl) xjac[sided][pl]=xjacalt[pl]=x[pl];
-          
+
+         
           if(JDIFFTYPE==JDIFFONESIDED && sided==1){
-            // then choose direction so that decrease u_g and decreases magnitude of \gamma
-            if(x[irefU[jj]]>0.0){
-              xjac[sided][irefU[jj]]=x[irefU[jj]] + signside*del;
-              xjacalt[irefU[jj]]=x[irefU[jj]] - signside*del;
+            if(*baseitermethod==QTYPMHD || *baseitermethod==QTYPRAD){
+              // then choose direction so that decrease u_g and decreases magnitude of \gamma
+              if(x[irefU[jj]]>0.0){
+                xjac[sided][irefU[jj]]=x[irefU[jj]] + signside*del;
+                xjacalt[irefU[jj]]=x[irefU[jj]] - signside*del;
+              }
+              else{
+                xjac[sided][irefU[jj]]=x[irefU[jj]] - signside*del;
+                xjacalt[irefU[jj]]=x[irefU[jj]] + signside*del;
+              }
             }
-            else{
-              xjac[sided][irefU[jj]]=x[irefU[jj]] - signside*del;
-              xjacalt[irefU[jj]]=x[irefU[jj]] + signside*del;
+            else if(*baseitermethod==QTYURAD){
+              // ensure R^t_t decreases so Erf doesn't drop out
+              if(x[irefU[jj]]>0.0){
+                xjac[sided][irefU[jj]]=x[irefU[jj]] + signside*del*(jj==TT ? -1.0 : 1.0);
+                xjacalt[irefU[jj]]=x[irefU[jj]] - signside*del*(jj==TT ? -1.0 : 1.0);
+              }
+              else{
+                xjac[sided][irefU[jj]]=x[irefU[jj]] - signside*del*(jj==TT ? -1.0 : 1.0);
+                xjacalt[irefU[jj]]=x[irefU[jj]] + signside*del*(jj==TT ? -1.0 : 1.0);
+              }
+            }
+            else if(*baseitermethod==QTYUMHD){
+              // STILL for this method, ensure R^t_t decreases so Erf doesn't drop out
+              if(x[irefU[jj]]>0.0){
+                xjac[sided][irefU[jj]]=x[irefU[jj]] - signside*del*(jj==TT ? -1.0 : 1.0);
+                xjacalt[irefU[jj]]=x[irefU[jj]] + signside*del*(jj==TT ? -1.0 : 1.0);
+              }
+              else{
+                xjac[sided][irefU[jj]]=x[irefU[jj]] + signside*del*(jj==TT ? -1.0 : 1.0);
+                xjacalt[irefU[jj]]=x[irefU[jj]] - signside*del*(jj==TT ? -1.0 : 1.0);
+              }
             }
           }
           else{
@@ -6044,12 +6132,12 @@ static int get_implicit_iJ(int allowbaseitermethodswitch, int failreturnallowabl
             PLOOP(pliter,pl){
               uujac[pl]=xjac[sided][pl];
               uujacalt[pl]=xjacalt[pl];
-              ppjac[pl]=ppjacalt[pl]=pp[pl];
+              ppjac[pl]=ppjacalt[pl]=ppcopy[pl];
             }
           }
           else if(IMPPTYPE(implicititer)){
             PLOOP(pliter,pl){
-              uujac[pl]=uujacalt[pl]=uu[pl];
+              uujac[pl]=uujacalt[pl]=uucopy[pl];
               ppjac[pl]=xjac[sided][pl];
               ppjacalt[pl]=xjacalt[pl];
             }
@@ -6087,8 +6175,9 @@ static int get_implicit_iJ(int allowbaseitermethodswitch, int failreturnallowabl
           //          dualfprintf(fail_file,"iJ calls f_implicit: iter=%d\n",iter);
           int goexplicitfake; // in Jacobian, so don't try to abort.
           int convreturnf2;
+          int whichcapnew=CAPTYPEFIX2; // so Erf stays well-defined even if innaccurate a bit.  So J stays well-defined so iJ doesn't nan-out
           //          PLOOP(pliter,pl) dualfprintf(fail_file,"pl=%d ppjac=%21.15g uu0=%21.15g uujac=%21.15g\n",pl,ppjac[pl],uu0[pl],uujac[pl]);
-          failreturn=f_implicit(allowbaseitermethodswitch, fakeiter,fakef1iter,failreturnallowableuse, whichcall,localIMPEPS,showmessages,showmessagesheavy, allowlocalfailurefixandnoreport, &eomtypelocallocal, whichcap,itermode, baseitermethod, fracenergy, dissmeasure, &radinvmod, trueimptryconv, trueimptryconvabs, trueimpallowconvabs, trueimpmaxiter, realdt, dimtypef, dimfactU, ppjacalt, ppjac,piin,uujacalt, Uiin,uu0,uujac,fracdtG*realdt,ptrgeom,&qjac,f2[sided],f2norm[sided],f2report[sided], &goexplicitfake, &errorabsf2, &convreturnf2);
+          failreturn=f_implicit(allowbaseitermethodswitch, fakeiter,fakef1iter,failreturnallowableuse, whichcall,localIMPEPS,showmessages,showmessagesheavy, allowlocalfailurefixandnoreport, &eomtypelocallocal, whichcapnew,itermode, baseitermethod, fracenergy, dissmeasure, &radinvmod, trueimptryconv, trueimptryconvabs, trueimpallowconvabs, trueimpmaxiter, realdt, dimtypef, dimfactU, ppjacalt, ppjac,piin,uujacalt, Uiin,uu0,uujac,fracdtG*realdt,ptrgeom,&qjac,f2[sided],f2norm[sided],f2report[sided], &goexplicitfake, &errorabsf2, &convreturnf2);
           if(failreturn){
             if(showmessages&& debugfail>=2) dualfprintf(fail_file,"f_implicit for f2 failed: jj=%d.  Trying smaller localIMPEPS=%g (giving del=%g) to %g\n",jj,localIMPEPS,del,localIMPEPS*FRACIMPEPSCHANGE);
             localIMPEPS*=FRACIMPEPSCHANGE;
@@ -6124,8 +6213,14 @@ static int get_implicit_iJ(int allowbaseitermethodswitch, int failreturnallowabl
 
       // debug info
       if(debugfail>=2){
+        int badcond=0;
         JACLOOP(ii,startjac,endjac){
-          if(showmessagesheavy || !isfinite(J[erefU[ii]][irefU[jj]])){
+          if(showmessagesheavy || !isfinite(J[erefU[ii]][irefU[jj]])|| fabs(J[erefU[jj]][irefU[jj]])<SMALL  ) {
+            badcond++;
+          }
+        }
+        if(badcond){
+          JACLOOP(ii,startjac,endjac){
             dualfprintf(fail_file,"JISNAN: iter=%d startjac=%d endjac=%d ii=%d jj=%d irefU[jj]=%d erefU[ii]=%d : xjac[0]: %21.15g :  xjac[1]: %21.15g : x=%21.15g (del=%21.15g localIMPEPS=%21.15g) : f2[0]=%21.15g f2[1]=%21.15g J=%21.15g : f2norm[0]=%21.15g f2norm[1]=%21.15g\n",
                         iter,startjac,endjac,
                         ii,jj,irefU[jj],erefU[ii],
@@ -6136,10 +6231,15 @@ static int get_implicit_iJ(int allowbaseitermethodswitch, int failreturnallowabl
                         f2[0][erefU[ii]],f2[1][erefU[ii]],J[erefU[ii]][irefU[jj]],
                         f2norm[0][erefU[ii]],f2norm[1][erefU[ii]]
                         );
-            PLOOP(pliter,pl) dualfprintf(fail_file,"JISNAN2: pl=%d ppjac=%21.15g uu0=%21.15g uujac=%21.15g\n",pl,ppjac[pl],uu0[pl],uujac[pl]);
           }
-        }
-      }
+          JACLOOP(ii,startjac,endjac){
+            dualfprintf(fail_file,"NEW: ii=%d jj=%d J=%21.15g : %21.15g %21.15g : %21.15g %21.15g\n",ii,jj,J[erefU[ii]][irefU[jj]], f2[1][erefU[ii]],f2[0][erefU[ii]],xjac[1][irefU[jj]],xjac[0][irefU[jj]]);
+          }
+          PLOOP(pliter,pl) dualfprintf(fail_file,"JISNAN2: pl=%d ppjac=%21.15g uu0=%21.15g uujac=%21.15g\n",pl,ppjac[pl],uu0[pl],uujac[pl]);
+          JACLOOP(ii,startjac,endjac) dualfprintf(fail_file,"ii=%d uucopy=%21.15g uu=%21.15g\n",ii,uucopy[irefU[ii]],uu[irefU[ii]]);
+        }//end if badcond>0
+      }//end debug
+
 
     }
     
@@ -8703,11 +8803,11 @@ int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gam
     //if(startpos[1]+ptrgeom->i==131 && startpos[2]+ptrgeom->j==19) dualfprintf(fail_file,"0didmod=%d : urfconrel=%g %g %g : %g : pr=%g Er=%g Ersq=%g yvar=%g Utildesq=%g\n",didmod,urfconrel[1],urfconrel[2],urfconrel[3],gamma,pr,Er,Er*Er,yvar,Utildesq);
   }
   else{ // fixes in case when Er<ERADLIMIT (whether or not y is modified)
-    if(whichcap==CAPTYPEFIX1){
+    if(whichcap==CAPTYPEFIX1 || whichcap==CAPTYPEFIX2){
 
       // override if Er<0 originally since otherwise out of control rise in Erf
       //      if(didmodEr || yvar<-NUMEPSILON || yvar>=2.0){
-      if(didmodEr){
+      if(didmodEr && whichcap==CAPTYPEFIX1){
         Er = ERADLIMIT;
         Erf = ERADLIMIT;
         gamma=1.0;
@@ -8757,7 +8857,9 @@ int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gam
           qsq=0.0;
         }
 
-        if(yvar>=1.0-100.0*NUMEPSILON){ // don't use, just trust Er>0.  Kinda works to set to if(1), but leads to some artifacts near where suddenly R^t_t would give different result for Er.
+
+        // Get Er independent of R^t_t when hit limits when wanting Jacobian, so Jacobian doesn't NAN-out when taking differences and drop-outs in Erf lead to err function dominated by uu0 (and less often, G) and unaffected by the uu we are changing.
+        if(whichcap==CAPTYPEFIX2 || yvar>=1.0-100.0*NUMEPSILON){ // don't use, just trust Er>0.  Kinda works to set to if(1), but leads to some artifacts near where suddenly R^t_t would give different result for Er.
           //FTYPE utildesq=1.0+qsq;
           //pr=gamma*Utildesq/(4.0*gammasq) / (utildesq);
           
@@ -8768,7 +8870,8 @@ int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gam
           FTYPE Erforig=Erf;
           Erf = pr/(4.0/3.0-1.0);
 
-          if(Erforig<Erf) Erf=Erforig;
+          // only modify Erf if really used as solution, not just Jacobian
+          if(Erforig<Erf && whichcap==CAPTYPEFIX1) Erf=Erforig;
         }
       }
 

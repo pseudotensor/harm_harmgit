@@ -208,6 +208,7 @@
 // which cap type to place in rad inversion
 #define CAPTYPEBASIC 0
 #define CAPTYPEFIX1 1
+#define CAPTYPEFIX2 2
 
 // whether to ensure specific entropy no smaller than guess
 #define ENTROPYFIXGUESS 1
