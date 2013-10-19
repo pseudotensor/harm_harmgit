@@ -179,7 +179,8 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE errorabs, struc
 //SPACETIMESUBSPLITTIMEMHDRAD // TAUSUPPRESS
 // SPACETIMESUBSPLITTIMEMHDRAD  //  SPACETIMESUBSPLITMHDRAD // SPACETIMESUBSPLITSUPERALL // TAUSUPPRESS
 
-
+// whether to get pb(uu0) instead of using pb that was used to compute F(pb).  Better guess to use pb(uu0) in optically thin regions.
+#define GETRADINVFROMUU0FORPB 1
 
 // whether to use dUriemann and dUgeom or other dU's sitting in dUother for radiation update
 // -1 : use Uiin,piin
@@ -3497,6 +3498,22 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
 
 
 
+  if(GETRADINVFROMUU0FORPB){
+    // get better version of pb that agrees with uu0.  This is only good for optically thin region, so best used with USEDUINRADUPDATE==1 for general optical depths.
+    struct of_newtonstats newtonstats; setnewtonstatsdefault(&newtonstats);
+    // initialize counters
+    newtonstats.nstroke=newtonstats.lntries=0;
+    int finalstep = 1;
+    int doradonly=1;
+    eomtypelocal=*eomtype; // stick with default choice so far
+    FTYPE prtest[NPR];
+    PLOOP(pliter,pl) prtest[pl]=pb[pl];
+    failreturnallowable=Utoprimgen_failwrapper(doradonly,radinvmod,showmessages,allowlocalfailurefixandnoreport, finalstep, &eomtypelocal, whichcap, EVOLVEUTOPRIM, UNOTHING, uu0, q, ptrgeom, dissmeasure, prtest, &newtonstats);
+    if(failreturnallowable==UTOPRIMGENWRAPPERRETURNNOFAIL){
+      PLOOP(pliter,pl) if(RADPL(pl)) pb[pl]=prtest[pl];
+    }
+  }
+
 
 
   /////////////////////
@@ -3540,8 +3557,6 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
     }
   }
   else if(USEDUINRADUPDATE==1){
-
-    // TODONOTE: Noticed that while this works with URAD method, with PRAD method fails miserably.  Also, no matter this or ==2, must not reset GAMMAMAXRAD to max() in init.c, else failure horrifically.  Means, while solution should exist, at high gamma PRAD method is unable to find solution....figure this out...
 
 
     // use tau as guess for which guess is best
