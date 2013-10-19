@@ -3542,6 +3542,11 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
   else if(USEDUINRADUPDATE==1){
     // bad choice for non-iterated quantities, like uu[RHO] should be uu0[RHO]
 
+
+
+    // TODONOTE: Noticed that while this works with URAD method, with PRAD method fails miserably.  Also, no matter this or ==2, must not reset GAMMAMAXRAD to max() in init.c, else failure horrifically.  Means, while solution should exist, at high gamma PRAD method is unable to find solution....figure this out...
+
+
     // use tau as guess for which guess is best
     FTYPE tautot[NDIM],tautotmax;
     calc_tautot(pp, ptrgeom, tautot, &tautotmax);
