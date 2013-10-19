@@ -3540,9 +3540,6 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
     }
   }
   else if(USEDUINRADUPDATE==1){
-    // bad choice for non-iterated quantities, like uu[RHO] should be uu0[RHO]
-
-
 
     // TODONOTE: Noticed that while this works with URAD method, with PRAD method fails miserably.  Also, no matter this or ==2, must not reset GAMMAMAXRAD to max() in init.c, else failure horrifically.  Means, while solution should exist, at high gamma PRAD method is unable to find solution....figure this out...
 
@@ -3553,9 +3550,14 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
 
     // iterated, so keep as initial (i.e. previous full solution, not just initial+flux)
     PLOOP(pliter,pl){
-      if(tautotmax>=1.0) uu[pl] = Uiin[pl]; // assume somewhat static and Uiin is best guess
-      else uu[pl] = uu0[pl]; // assume dynamic and should use full uu0 to avoid pushing any errors into other fluid component.
-      ppfirst[pl] = pp[pl] = pp0[pl] = piin[pl];
+      if(tautotmax>=1.0){
+        uu[pl] = Uiin[pl]; // assume somewhat static and Uiin is best guess
+        ppfirst[pl] = pp[pl] = pp0[pl] = piin[pl];
+      }
+      else{
+        uu[pl] = uu0[pl]; // assume dynamic and should use full uu0 to avoid pushing any errors into other fluid component.
+        ppfirst[pl] = pp[pl] = pp0[pl] = pb[pl];
+      }
     }
     // non-iterated, so keep as initial+flux (since all there is)
     PLOOP(pliter,pl){
