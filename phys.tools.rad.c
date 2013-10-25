@@ -38,7 +38,7 @@ return( (*x)>=0 ?
 
 int get_rameshsolution(int whichcall, int radinvmod, int failtype, long long int failnum, int gotfirstnofail, int eomtypelocal, int itermode, int baseitermethod, FTYPE errorabs, FTYPE errorabsbestexternal, int iters, int totaliters, FTYPE realdt, struct of_geom *ptrgeom, FTYPE *pp, FTYPE *pb, FTYPE *piin, FTYPE *uu0, FTYPE *uu, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_state *q, FTYPE *ppeng, FTYPE *ppent, FTYPE *uueng, FTYPE *uuent, struct of_state *qeng, struct of_state *qent, int *failtypeeng, FTYPE *errorabseng, int *iterseng, int *radinvmodeng, int *failtypeent, FTYPE *errorabsent, int *itersent, int *radinvmodent);
 
-int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE errorabs, struct of_geom *ptrgeom, FTYPE *pp, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *dUother, FTYPE *CUf, struct of_state *q, FTYPE *ppeng, FTYPE *ppent, FTYPE (*dUcompeng)[NPR], FTYPE (*dUcompent)[NPR], struct of_state *qeng, struct of_state *qent, int *failtypeeng, FTYPE *errorabseng, int *iterseng, int *radinvmodeng, int *failtypeent, FTYPE *errorabsent, int *itersent, int *radinvmodent);
+int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE errorabs, struct of_geom *ptrgeom, FTYPE *pp, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *dUother, FTYPE *CUf, struct of_state *q, FTYPE *ppeng, FTYPE *ppent, FTYPE *uueng, FTYPE *uuent, FTYPE (*dUcompeng)[NPR], FTYPE (*dUcompent)[NPR], struct of_state *qeng, struct of_state *qent, int *failtypeeng, FTYPE *errorabseng, int *iterseng, int *radinvmodeng, int *failtypeent, FTYPE *errorabsent, int *itersent, int *radinvmodent);
 
 //////////////////////////////////////////////
 //
@@ -882,6 +882,7 @@ static void define_method(int iter, int *eomtype, int itermode, int baseitermeth
 
 #define JACLOOP(jj,startjj,endjj) for(jj=startjj;jj<=endjj;jj++)
 #define JACLOOPALT(jj,startjj,endjj) DLOOPA(jj) //for(jj=startjj;jj<=endjj;jj++) // for those things might or might not want to do all terms
+#define JACLOOPSUPERFULL(pliter,pl,eomtype) PLOOP(pliter,pl) if(pl!=ENTROPY && pl!=UU || eomtype==EOMENTROPYGRMHD && pl==ENTROPY || eomtype==EOMGRMHD && pl==UU)
 #define JACLOOPFULLERROR(itermode,jj,startjj,endjj) for(jj=(itermode==ITERMODECOLD ? startjj : 0);jj<=(itermode==ITERMODECOLD ? endjj : NDIM-1);jj++)
 #define JACLOOPSUBERROR(jj,startjj,endjj) JACLOOP(jj,startjj,endjj)
 #define JACLOOP2D(ii,jj,startjj,endjj) JACLOOP(ii,startjj,endjj) JACLOOP(jj,startjj,endjj)
@@ -1733,24 +1734,58 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
   int failfinalreturn;
   int eomtypelocal;
 
-  // for implicit scheme, set pf->pb in case pf contains final time information like the magnetic field
-  PLOOP(pliter,pl){
-    pb[pl] = pf[pl];
-  }
-  // but we end up modifying pb, not pf.
 
+
+  /////////
+  //
+  // Setup pb and uub that hold final primitive and conserved solutions
+  //
+  /////////
+
+  //////
+  // set full uu0
+  FTYPE fracdtuu0=1.0;
+  FTYPE uu0[NPR],dUtot[NPR],rdUtot[NPR];
+  PLOOP(pliter,pl){
+    uu0[pl]=UFSET(CUf,fracdtuu0*dt,Uiin[pl],Ufin[pl],dUother[pl],0.0); // initial+flux value of U
+    dUtot[pl] = uu0[pl]-Uiin[pl]; // absolute change due to flux-advection step
+    rdUtot[pl] = fabs(uu0[pl]-Uiin[pl])/(fabs(uu0[pl])+fabs(Uiin[pl])); // relative change to energy due to flux-advection step
+  }
+
+  // but we end up modifying pb, not pf.
   FTYPE uub[NPR]; // holds returned uu from implicit solver
+  // for implicit scheme, set pf->pb in case pf contains final time information like the magnetic field
+  // at this point, pb=pf was used to compute Flux(pb=pf), while uu0 is result of that flux.  Best for optically thin regime, but better guess limits used in actual solver.
+  PLOOP(pliter,pl){
+    pb[pl] = pf[pl]; // piin[pl];
+    uub[pl] = uu0[pl]; //Uiin[pl];  // at this point, best approximation can make, but do better in solver itself
+  }
+
+
+
+  ////////////
+  //
+  // setup backup's for reversions of starting guess or solution
+  //
+  ///////////
   FTYPE pbbackup[NPR];
+  FTYPE uubbackup[NPR];
   FTYPE dUcompbackup[NUMSOURCES][NPR];
   struct of_state qbackup;
   PLOOP(pliter,pl){
-    pbbackup[pl]=pb[pl];
-    SCLOOP(sc) dUcompbackup[sc][pl]=dUcomp[sc][pl];
-    qbackup=*q;
+    pbbackup[pl]=pb[pl];  // at this point, best approximation can make, but do better in solver itself
+    uubbackup[pl]=uub[pl]; // at this point, best approximation can make, but do better in solver itself
+    SCLOOP(sc) dUcompbackup[sc][pl]=dUcomp[sc][pl]; // stores dUcomp so far computed from other physical terms
   }
+  qbackup=*q;  // at this point, best approximation can make, but do better in solver itself
 
+
+  ////////
+  //
   // It's up to inversion method to set failure flags, not utoprimgen() that just checks them mostly (it might modify them based upon doing reductions).
   // setup pflags
+  //
+  ////////
   PFTYPE *lpflag,*lpflagrad;
   lpflag=&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL);
   lpflagrad=&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL);
@@ -1758,7 +1793,12 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
   *lpflag=UTOPRIMNOFAIL;
   *lpflagrad=UTOPRIMRADNOFAIL;
 
+
+  //////
+  //
   // default is didn't get good primitives.  Similar, but slightly different from, failreturn
+  //
+  //////
   failreturn=1;
   noprims=1;
   usedenergy=0;
@@ -1767,11 +1807,16 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
   usedcold=0;
   usedimplicit=0;
 
+
   // whether doing energy at all
   int eomtypecond=(*eomtype==EOMGRMHD || *eomtype==EOMDEFAULT && EOMTYPE==EOMGRMHD);
 
 
+  /////////
+  //
   // diags
+  //
+  ////////
   FTYPE errorabs; // either over iterated pl or full relavant pl
   int iters=0;
   int f1iters=0;
@@ -1783,6 +1828,12 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
   int trueimpmaxiter=IMPMAXITER;
   int truenumdampattempts=NUMDAMPATTEMPTS;
   int goexplicit;
+
+
+
+
+
+
 
   //////////////////////////////
   //
@@ -1816,6 +1867,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       // restore backups in case got contaminated
       PLOOP(pliter,pl){
         pb[pl]=pbbackup[pl];
+        uub[pl]=uubbackup[pl];
         SCLOOP(sc) dUcomp[sc][pl]=dUcompbackup[sc][pl];
       }
       *q=qbackup;
@@ -1862,6 +1914,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       // restore backups in case got contaminated
       PLOOP(pliter,pl){
         pb[pl]=pbbackup[pl];
+        uub[pl]=uubbackup[pl];
         SCLOOP(sc) dUcomp[sc][pl]=dUcompbackup[sc][pl];
       }
       *q=qbackup;
@@ -1895,6 +1948,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     FTYPE ppeng[NPR]={0},ppent[NPR]={0},errorabseng=1.0,errorabsent=1.0;
     int failtypeeng=1,failtypeent=1,iterseng=IMPMAXITER,itersent=IMPMAXITER,radinvmodeng=-1,radinvmodent=-1;
     struct of_state qeng, qent;
+    FTYPE uueng[NPR]={0.0},uuent[NPR]={0.0};
     qeng=qbackup;
     qent=qbackup;
     FTYPE dUcompeng[NUMSOURCES][NPR],dUcompent[NUMSOURCES][NPR];
@@ -1905,6 +1959,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     errorabsforramesh=1.0;
     PLOOP(pliter,pl){
       pb[pl]=pbbackup[pl];
+      uub[pl]=uubbackup[pl];
       SCLOOP(sc) dUcompeng[sc][pl]=dUcomp[sc][pl]=dUcompbackup[sc][pl];
     }
     *q=qbackup;
@@ -1913,11 +1968,12 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     failreturn=FAILRETURNGENERAL;// default to fail
     *eomtype=EOMGRMHD;
     int whichcall=eomtype;
-    get_rameshsolution_wrapper(whichcall, *eomtype, errorabsforramesh, ptrgeom, pb, piin, Uiin, Ufin, dUother, CUf, q, ppeng, ppent, dUcompeng, dUcompent, &qeng, &qent, &failtypeeng, &errorabseng, &iterseng, &radinvmodeng, &failtypeent, &errorabsent, &itersent, &radinvmodent);
+    get_rameshsolution_wrapper(whichcall, *eomtype, errorabsforramesh, ptrgeom, pb, piin, Uiin, Ufin, dUother, CUf, q, ppeng, ppent, uueng, uuent, dUcompeng, dUcompent, &qeng, &qent, &failtypeeng, &errorabseng, &iterseng, &radinvmodeng, &failtypeent, &errorabsent, &itersent, &radinvmodent);
     gotrameshsolution=1; // indicates did at least attempt ramesh soltion call
     // translate
     PLOOP(pliter,pl){
       pb[pl]=ppeng[pl];
+      uub[pl]=uueng[pl];
       SCLOOP(sc) dUcomp[sc][pl]=dUcompeng[sc][pl];
     }
     *q=qeng;
@@ -1933,6 +1989,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       // restore backups in case got contaminated
       PLOOP(pliter,pl){
         pb[pl]=pbbackup[pl];
+        uub[pl]=uubbackup[pl];
         SCLOOP(sc) dUcomp[sc][pl]=dUcompbackup[sc][pl];
       }
       *q=qbackup;
@@ -1999,6 +2056,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       // restore backups for fresh start
       PLOOP(pliter,pl){
         pb[pl]=pbbackup[pl];
+        uub[pl]=uubbackup[pl];
         SCLOOP(sc) dUcomp[sc][pl]=dUcompbackup[sc][pl];
       }
       *q=qbackup;
@@ -2105,23 +2163,6 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
   int gotrameshsolution=0,usedrameshenergy=0,usedrameshentropy=0;
   if(MODEMETHOD==MODEPICKBEST && eomtypecond){
 
-    // these ramesh solutions are here so both entropy and energy can have chance to fill them.
-    FTYPE ppeng[NPR]={0},ppent[NPR]={0},errorabseng=1.0,errorabsent=1.0;
-    int failtypeeng=1,failtypeent=1,iterseng=IMPMAXITER,itersent=IMPMAXITER,radinvmodeng=-1,radinvmodent=-1;
-    struct of_state qeng, qent;
-    FTYPE dUcompeng[NUMSOURCES][NPR],dUcompent[NUMSOURCES][NPR];
-
-
-    FTYPE errorabsenergy=1.0,errorabsentropy=1.0,errorabscold=1.0;
-    int itersenergy=0,itersentropy=0,iterscold=0;
-    int f1itersenergy=0,f1itersentropy=0,f1iterscold=0;
-
-    int goexplicitentropy,goexplicitenergy,goexplicitcold;
-
-
-
-
-
 
 
     /////////
@@ -2129,44 +2170,55 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     // ENTROPY VARIABLES
     //
     ////////
-    PFTYPE lpflagentropy;
-    PFTYPE lpflagradentropy;
-    int radinvmodentropy;
-    int radErfnegentropy;
-    int failreturnentropy;
-    int eomtypeentropy;
-    int whichcapentropy;
 
+    // choices per attempt
     int itermodeentropy=ITERMODENORMAL; // start with normal
     int baseitermethodentropy=QTYPMHD; // default
     int trueimpmaxiterentropy;
     int truenumdampattemptsentropy;
+    int whichcapentropy;
 
+    // hold error and iterations from last attempt
     FTYPE errorabsentropyold;
     int itersentropyold;
+    // hold iterations for total entropy attempts
+    int itersentropy=0;
+    int f1itersentropy=0;
 
-
+    // set that no entropy backup yet.
     havebackup=0;
     didentropyalready=0;
     fracenergy=0.0;
 
     // default in case no best solution with no error below 1.0 that is set as default best
+
+    // holds best entropy solution
+    FTYPE pbentropybest[NPR]; PLOOP(pliter,pl) pbentropybest[pl]=pbbackup[pl];
+    FTYPE uubentropybest[NPR]; PLOOP(pliter,pl) uubentropybest[pl]=uubbackup[pl];
+    FTYPE dUcompentropybest[NUMSOURCES][NPR]; PLOOP(pliter,pl) SCLOOP(sc) dUcompentropybest[sc][pl]=dUcompbackup[sc][pl];
+    struct of_state qentropybest=qbackup;
     PFTYPE lpflagentropybest=1;
     PFTYPE lpflagradentropybest=1;
     int radinvmodentropybest=1;
     int radErfnegentropybest=1;
     int failreturnentropybest=FAILRETURNGENERAL;
     int eomtypeentropybest=EOMENTROPYGRMHD;
-    FTYPE pbentropybest[NPR]; PLOOP(pliter,pl) pbentropybest[pl]=pbbackup[pl];
-    FTYPE dUcompentropybest[NUMSOURCES][NPR]={{0.0}};
-    struct of_state qentropybest=*q;
     FTYPE errorabsentropybest=1.0;
     int goexplicitentropybest=0;
 
+    // holds latest entropy solution
     FTYPE pbentropy[NPR];
     FTYPE uubentropy[NPR]; // holds returned uu from implicit solver
     FTYPE dUcompentropy[NUMSOURCES][NPR]={{BIG}};
-    struct of_state qentropy;
+    struct of_state qentropy=qbackup;
+    PFTYPE lpflagentropy=1;
+    PFTYPE lpflagradentropy=1;
+    int radinvmodentropy=1;
+    int radErfnegentropy=1;
+    int failreturnentropy=FAILRETURNGENERAL;  // default to fail in case energy not to be done at all
+    int eomtypeentropy=EOMENTROPYGRMHD;
+    FTYPE errorabsentropy=1.0; // default is high error
+    int goexplicitentropy=0;
 
 
 
@@ -2186,23 +2238,28 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     // ENERGY VARIABLES
     //
     ////////
+
+    // hold old error and iterations
     FTYPE errorabsenergyold;
     int itersenergyold;
 
+    // latest energy iterations
+    int itersenergy=0;
+    int f1itersenergy=0;
 
-    PFTYPE lpflagenergy;
-    PFTYPE lpflagradenergy;
-    int radinvmodenergy;
-    int radErfnegenergy;
-    int failreturnenergy=FAILRETURNGENERAL; // default
-    int eomtypeenergy;
-    int whichcapenergy;
-
+    // setting for each attempt
     int itermodeenergy=ITERMODENORMAL; // start with normal
     int baseitermethodenergy=QTYPMHD; // default
     int trueimpmaxiterenergy;
     int truenumdampattemptsenergy;
+    int whichcapenergy;
 
+
+    // holds best result from implicit solver
+    FTYPE pbenergybest[NPR]; PLOOP(pliter,pl) pbenergybest[pl]=pbbackup[pl];
+    FTYPE uubenergybest[NPR]; PLOOP(pliter,pl) uubenergybest[pl]=uubbackup[pl];
+    FTYPE dUcompenergybest[NUMSOURCES][NPR];  PLOOP(pliter,pl) SCLOOP(sc) dUcompenergybest[sc][pl]=dUcompbackup[sc][pl];
+    struct of_state qenergybest=qbackup;
     // default is best is fail situation
     PFTYPE lpflagenergybest=1;
     PFTYPE lpflagradenergybest=1;
@@ -2211,38 +2268,44 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     int failreturnenergybest=FAILRETURNGENERAL;
     int eomtypeenergybest=EOMGRMHD;
     FTYPE errorabsenergybest=1.0;
-    FTYPE pbenergybest[NPR]; PLOOP(pliter,pl) pbenergybest[pl]=pbbackup[pl];
-    FTYPE dUcompenergybest[NUMSOURCES][NPR]={{0.0}};
-    struct of_state qenergybest=*q;
     int goexplicitenergybest=0;
 
+    // holds result from implicit solver
     FTYPE pbenergy[NPR];
-    FTYPE uubenergy[NPR]; // holds returned uu from implicit solver
+    FTYPE uubenergy[NPR];
     FTYPE dUcompenergy[NUMSOURCES][NPR]={{BIG}};
-    struct of_state qenergy;
+    struct of_state qenergy=qbackup;
+    PFTYPE lpflagenergy=1;
+    PFTYPE lpflagradenergy=1;
+    int radinvmodenergy=1;
+    int radErfnegenergy=1;
+    int failreturnenergy=FAILRETURNGENERAL; // default
+    int eomtypeenergy=EOMGRMHD;
+    FTYPE errorabsenergy=1.0;
+    int goexplicitenergy=0;
 
 
 
-
-
-    //////////////
+    /////////
     //
-    // default settings
+    // RAMESH VARIABLES AND DEFAULTS
     //
-    //////////////
-    failreturnentropy=FAILRETURNGENERAL; // default to fail in case energy not to be done at all
-    errorabsentropy=1.0;
-    radinvmodentropy=1;
-    goexplicitentropy=0;
-    qentropy=qbackup;
-    qent=qbackup;
+    // these ramesh solutions are here so both entropy and energy can have chance to fill them.
+    //
+    /////////
+    FTYPE ppeng[NPR],ppent[NPR];
+    FTYPE uueng[NPR],uuent[NPR];
+    FTYPE dUcompeng[NUMSOURCES][NPR],dUcompent[NUMSOURCES][NPR];
+    PLOOP(pliter,pl){
+      ppeng[pl]=ppent[pl]=pbbackup[pl];
+      uueng[pl]=uuent[pl]=uubbackup[pl];
+      SCLOOP(sc) dUcompeng[sc][pl]=dUcompent[sc][pl]=dUcompbackup[sc][pl];
+    }
+    struct of_state qeng=qbackup, qent=qbackup;
+    FTYPE errorabseng=1.0,errorabsent=1.0;
+    int failtypeeng=1,failtypeent=1,iterseng=IMPMAXITER,itersent=IMPMAXITER,radinvmodeng=-1,radinvmodent=-1;
 
-    failreturnenergy=FAILRETURNGENERAL; // default to fail in case energy not to be done at all
-    errorabsenergy=1.0;
-    radinvmodenergy=1;
-    goexplicitenergy=0;
-    qenergy=qbackup;
-    qeng=qbackup;
+
 
 
 
@@ -2252,15 +2315,6 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     //
     // assume at this stage that radiation primarily evolves if Erf sufficiently large compared to u_g or changes in URAD0 are sufficiently large
     //
-    //////
-    // set uu0
-    FTYPE fracdtuu0=1.0;
-    FTYPE uu0[NPR],dUtot[NPR],rdUtot[NPR];
-    PLOOP(pliter,pl){
-      uu0[pl]=UFSET(CUf,fracdtuu0*dt,Uiin[pl],Ufin[pl],dUother[pl],0.0); // initial+flux value of U
-      dUtot[pl] = uu0[pl]-Uiin[pl]; // absolute change due to flux-advection step
-      rdUtot[pl] = fabs(uu0[pl]-Uiin[pl])/(fabs(uu0[pl])+fabs(Uiin[pl])); // relative change to energy due to flux-advection step
-    }
     // check
     static FTYPE sqrtnumepsilon;
     static int firsttimeset=1;
@@ -2302,6 +2356,12 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
     // DEBUG:
     //    dualfprintf(fail_file,"PRIMARYEVOLVES: %d %d %d %d : pb=%g %g uu0=%g %g dUtot=%g %g : sqrtnumepsilon=%g\n",radprimaryevolves,radextremeprimaryevolves,gasprimaryevolves,gasextremeprimaryevolves,pb[UU],pb[URAD0],-uu0[UU],-uu0[URAD0],dUtot[UU],dUtot[URAD0],sqrtnumepsilon);
+
+
+
+
+
+
 
     /////////////
     //
@@ -2394,27 +2454,33 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
           // setup guess
           if(ACTUALHARDFAILURE(failreturnentropy)==1 || errorabsentropy>ERRORTOUSEENTROPYFORENERGYGUESS){
-            if(errorabsenergyold>TRYHARDERFEEDGUESSTOL){
+            if(errorabsenergybest>TRYHARDERFEEDGUESSTOL){
               PLOOP(pliter,pl){
                 pbenergy[pl]=pbbackup[pl];
+                uubenergy[pl]=uubbackup[pl];
                 SCLOOP(sc) dUcompenergy[sc][pl]=dUcompbackup[sc][pl];
               }
               qenergy=qbackup;
+              errorabsenergy=1.0;
             }
             else{
               PLOOP(pliter,pl){
                 pbenergy[pl]=pbenergybest[pl];
+                uubenergy[pl]=uubenergybest[pl];
                 SCLOOP(sc) dUcompenergy[sc][pl]=dUcompbackup[sc][pl];
               }
               qenergy=qenergybest;
+              errorabsenergy=errorabsenergybest;
             }
           }
           else{ // start with entropy
             PLOOP(pliter,pl){
               pbenergy[pl]=pbentropy[pl];
+              uubenergy[pl]=uubentropy[pl];
               SCLOOP(sc) dUcompenergy[sc][pl]=dUcompbackup[sc][pl];
             }
             qenergy=qentropy;
+            errorabsenergy=errorabsentropy; // assume error estimate only used to decide if guess is used, not if converged with energy
           }
           //
           failreturnenergy=koral_source_rad_implicit_mode(0,modprim,havebackup, didentropyalready, &eomtypeenergy, whichcapenergy, itermodeenergy, &baseitermethodenergy, trueimpmaxiterenergy,  truenumdampattemptsenergy, fracenergy, dissmeasure, &radinvmodenergy, pbenergy, uubenergy, piin, Uiin, Ufin, CUf, ptrgeom, &qenergy, dUother ,dUcompenergy, &errorabsenergy, errorabsenergybest, &itersenergy, &f1itersenergy);
@@ -2448,6 +2514,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
               errorabsenergybest=errorabsenergy;
               PLOOP(pliter,pl){
                 pbenergybest[pl]=pbenergy[pl];
+                uubenergybest[pl]=uubenergy[pl];
                 SCLOOP(sc) dUcompenergybest[sc][pl]=dUcompenergy[sc][pl];
               }
               qenergybest=qenergy;
@@ -2486,6 +2553,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
         if(gotrameshsolution){// then just recall solution
           PLOOP(pliter,pl){
             pbenergy[pl]=ppeng[pl];
+            uubenergy[pl]=uueng[pl];
             SCLOOP(sc) dUcompenergy[sc][pl]=dUcompeng[sc][pl];
           }
           qenergy=qeng;
@@ -2503,40 +2571,48 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
           FTYPE errorabsforramesh;
           // start fresh with ramesh
           if(errorabsenergy>TRYHARDERFEEDGUESSTOL){
-            errorabsforramesh=1.0;
             if(ACTUALHARDFAILURE(failreturnentropy)==1 || errorabsentropy>ERRORTOUSEENTROPYFORENERGYGUESS){
               PLOOP(pliter,pl){
                 pbenergy[pl]=pbbackup[pl];
+                uubenergy[pl]=uubbackup[pl];
                 SCLOOP(sc) dUcompeng[sc][pl]=dUcompenergy[sc][pl]=dUcompbackup[sc][pl];
               }
               qenergy=qbackup;
+              errorabseng=1.0;
+              errorabsforramesh=1.0;
             }
             else{
               PLOOP(pliter,pl){
                 pbenergy[pl]=pbentropy[pl];
+                uubenergy[pl]=uubentropy[pl];
                 SCLOOP(sc) dUcompeng[sc][pl]=dUcompenergy[sc][pl]=dUcompbackup[sc][pl];
               }
               qenergy=qentropy;
+              errorabseng=errorabsentropybest;
+              errorabsforramesh=1.0;
             }
           }
           else{
-            errorabsforramesh=errorabsenergybest;
             PLOOP(pliter,pl){
               pbenergy[pl]=pbenergybest[pl];
+              uubenergy[pl]=uubenergybest[pl];
               SCLOOP(sc) dUcompeng[sc][pl]=dUcompenergy[sc][pl]=dUcompbackup[sc][pl]; // always backup
             }
             qenergy=qenergybest;
+            errorabseng=errorabsenergybest;
+            errorabsforramesh=errorabsenergybest;
           }
           //
           // BEGIN GET RAMESH SOLUTION
           failreturnenergy=FAILRETURNGENERAL;// default to fail
           eomtypeenergy=EOMGRMHD;
           int whichcall=eomtypeenergy;
-          get_rameshsolution_wrapper(whichcall, eomtypeenergy, errorabsforramesh, ptrgeom, pbenergy, piin, Uiin, Ufin, dUother, CUf, q, ppeng, ppent, dUcompeng, dUcompent, &qeng, &qent, &failtypeeng, &errorabseng, &iterseng, &radinvmodeng, &failtypeent, &errorabsent, &itersent, &radinvmodent);
+          get_rameshsolution_wrapper(whichcall, eomtypeenergy, errorabsforramesh, ptrgeom, pbenergy, piin, Uiin, Ufin, dUother, CUf, q, ppeng, ppent, uueng, uuent, dUcompeng, dUcompent, &qeng, &qent, &failtypeeng, &errorabseng, &iterseng, &radinvmodeng, &failtypeent, &errorabsent, &itersent, &radinvmodent);
           gotrameshsolution=1; // indicates did at least attempt ramesh soltion call
           // translate
           PLOOP(pliter,pl){
             pbenergy[pl]=ppeng[pl];
+            uubenergy[pl]=uueng[pl];
             SCLOOP(sc) dUcompenergy[sc][pl]=dUcompeng[sc][pl];
           }
           qenergy=qeng;
@@ -2567,6 +2643,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
           errorabsenergybest=errorabsenergy;
           PLOOP(pliter,pl){
             pbenergybest[pl]=pbenergy[pl];
+            uubenergybest[pl]=uubenergy[pl];
             SCLOOP(sc) dUcompenergybest[sc][pl]=dUcompenergy[sc][pl];
           }
           qenergybest=qenergy;
@@ -2585,9 +2662,12 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
       
 
+
+
+
       ///////////
       //
-      // use best result from trying harder
+      // use best result from trying harder over all energy attempts
       //
       ///////////
       *lpflag=lpflagenergybest;
@@ -2599,6 +2679,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       errorabsenergy=errorabsenergybest;
       PLOOP(pliter,pl){
         pbenergy[pl]=pbenergybest[pl];
+        uubenergy[pl]=uubenergybest[pl];
         SCLOOP(sc) dUcompenergy[sc][pl]=dUcompenergybest[sc][pl];
       }
       qenergy=qenergybest;
@@ -2695,19 +2776,23 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
           //
           // setup guess
           if(ACTUALHARDFAILURE(failreturnenergy)==1 || errorabsenergy>ERRORTOUSEENTROPYFORENERGYGUESS){
-            if(errorabsentropyold>TRYHARDERFEEDGUESSTOL){
+            if(errorabsentropybest>TRYHARDERFEEDGUESSTOL){
               PLOOP(pliter,pl){
                 pbentropy[pl]=pbbackup[pl];
+                uubentropy[pl]=uubbackup[pl];
                 SCLOOP(sc) dUcompentropy[sc][pl]=dUcompbackup[sc][pl];
               }
               qentropy=qbackup;
+              errorabsentropy=1.0;
             }
             else{
               PLOOP(pliter,pl){
                 pbentropy[pl]=pbentropybest[pl];
+                uubentropy[pl]=uubentropybest[pl];
                 SCLOOP(sc) dUcompentropy[sc][pl]=dUcompbackup[sc][pl];
               }
               qentropy=qentropybest;
+              errorabsentropy=errorabsentropybest;
             }
           }
           else{ // start with energy
@@ -2716,6 +2801,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
               SCLOOP(sc) dUcompentropy[sc][pl]=dUcompbackup[sc][pl];
             }
             qentropy=qenergy;
+            errorabsentropy=errorabsenergybest; // just for setting guess, not accepted error for entropy
           }
           //
           //
@@ -2745,6 +2831,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
               errorabsentropybest=errorabsentropy;
               PLOOP(pliter,pl){
                 pbentropybest[pl]=pbentropy[pl];
+                uubentropybest[pl]=uubentropy[pl];
                 SCLOOP(sc) dUcompentropybest[sc][pl]=dUcompentropy[sc][pl];
                 qentropybest=qentropy;
               }
@@ -2779,6 +2866,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
         if(gotrameshsolution){// then just recall solution
           PLOOP(pliter,pl){
             pbenergy[pl]=ppeng[pl];
+            uubenergy[pl]=uueng[pl];
             SCLOOP(sc) dUcompenergy[sc][pl]=dUcompeng[sc][pl];
           }
           qenergy=qeng;
@@ -2796,31 +2884,35 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
           FTYPE errorabsforramesh;
           // start fresh with ramesh
           if(errorabsentropy>TRYHARDERFEEDGUESSTOL){
-            errorabsforramesh=1.0;
             PLOOP(pliter,pl){
               pbentropy[pl]=pbbackup[pl];
+              uubentropy[pl]=uubbackup[pl];
               SCLOOP(sc) dUcompent[sc][pl]=dUcompentropy[sc][pl]=dUcompbackup[sc][pl];
             }
             qentropy=qbackup;
+            errorabsent=1.0;
+            errorabsforramesh=1.0;
           }
           else{
-            errorabsforramesh=errorabsentropybest;
             PLOOP(pliter,pl){
               pbentropy[pl]=pbentropybest[pl];
               SCLOOP(sc) dUcompent[sc][pl]=dUcompentropy[sc][pl]=dUcompbackup[sc][pl]; // always backup
             }
             qentropy=qentropybest;
+            errorabsforramesh=errorabsentropybest;
+            errorabsent=errorabsentropybest;
           }
           //
           // BEGIN GET RAMESH SOLUTION
           failreturnentropy=FAILRETURNGENERAL;// default to fail
           eomtypeentropy=EOMENTROPYGRMHD;
           int whichcall=eomtypeentropy; // real entropy call
-          get_rameshsolution_wrapper(whichcall, eomtypeentropy, errorabsforramesh, ptrgeom, pbentropy, piin, Uiin, Ufin, dUother, CUf, q, ppeng, ppent, dUcompeng, dUcompent, &qeng, &qent, &failtypeeng, &errorabseng, &iterseng, &radinvmodeng, &failtypeent, &errorabsent, &itersent, &radinvmodent);
+          get_rameshsolution_wrapper(whichcall, eomtypeentropy, errorabsforramesh, ptrgeom, pbentropy, piin, Uiin, Ufin, dUother, CUf, q, ppeng, ppent, uueng, uuent, dUcompeng, dUcompent, &qeng, &qent, &failtypeeng, &errorabseng, &iterseng, &radinvmodeng, &failtypeent, &errorabsent, &itersent, &radinvmodent);
           gotrameshsolution=1; // indicates did at least attempt ramesh solution call
           // translate
           PLOOP(pliter,pl){
             pbentropy[pl]=ppent[pl];
+            uubentropy[pl]=uuent[pl];
             SCLOOP(sc) dUcompentropy[sc][pl]=dUcompent[sc][pl];
           }
           qentropy=qent;
@@ -2849,6 +2941,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
           errorabsentropybest=errorabsentropy;
           PLOOP(pliter,pl){
             pbentropybest[pl]=pbentropy[pl];
+            uubentropybest[pl]=uubentropy[pl];
             SCLOOP(sc) dUcompentropybest[sc][pl]=dUcompentropy[sc][pl];
           }
           qentropybest=qentropy;
@@ -2878,6 +2971,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       errorabsentropy=errorabsentropybest;
       PLOOP(pliter,pl){
         pbentropy[pl]=pbentropybest[pl];
+        uubentropy[pl]=uubentropybest[pl];
         SCLOOP(sc) dUcompentropy[sc][pl]=dUcompentropybest[sc][pl];
       }
       qentropy=qentropybest;
@@ -2897,7 +2991,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
 
 
-
+  
 
 
 
@@ -2912,17 +3006,30 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     //////////////////////    
 
 
+    /////////
+    //
+    // COLD VARIABLES
+    //
+    ////////
+
+    // holds iterations
+    int iterscold=0;
+    int f1iterscold=0;
+
+    // implicit cold solution held in these variables
+    FTYPE pbcold[NPR];
+    FTYPE uubcold[NPR]; // holds returned uu from implicit solver
+    FTYPE dUcompcold[NUMSOURCES][NPR];
+    struct of_state qcold;
     PFTYPE lpflagcold;
     PFTYPE lpflagradcold;
     int radinvmodcold;
     int radErfnegcold;
     int failreturncold=0; // default is didn't do or fail on cold
     int eomtypecold;
+    FTYPE errorabscold=1.0;
+    int goexplicitcold;
 
-    FTYPE pbcold[NPR];
-    FTYPE uubcold[NPR]; // holds returned uu from implicit solver
-    FTYPE dUcompcold[NUMSOURCES][NPR];
-    struct of_state qcold;
 
     if(ACCEPTASNOFAILURE(failreturnenergy)==0 && ACCEPTASNOFAILURE(failreturnentropy)==0){
       failreturncold=FAILRETURNGENERAL; // if doing cold, default is fail.
@@ -2949,6 +3056,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       didentropyalready=0;
       PLOOP(pliter,pl){
         pbcold[pl]=pbbackup[pl];
+        uubcold[pl]=uubbackup[pl];
         if(0){
           // but force cold setup
           pbcold[UU]=UUMINLIMIT;
@@ -2958,8 +3066,10 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
           // try just using static u_g and solving momentum equation as if not changing.
         }
         SCLOOP(sc) dUcompcold[sc][pl]=dUcompbackup[sc][pl];
-        qcold=qbackup;
       }
+      qcold=qbackup;
+      errorabscold=1.0;
+
 
       failreturncold=koral_source_rad_implicit_mode(0,0,havebackup, didentropyalready, &eomtypecold, whichcapcold, itermodecold, &baseitermethodcold, trueimpmaxitercold, truenumdampattemptscold, fracenergycold, dissmeasure, &radinvmodcold, pbcold, uubcold, piin, Uiin, Ufin, CUf, ptrgeom, &qcold, dUother ,dUcompcold, &errorabscold, errorabscoldbest, &iterscold, &f1iterscold);
 
@@ -3022,6 +3132,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
         // set result as entropy result
         PLOOP(pliter,pl){
           pb[pl]=pbentropy[pl];
+          uub[pl]=uubentropy[pl];
           SCLOOP(sc) dUcomp[sc][pl]=dUcompentropy[sc][pl];
           *q=qentropy;
         }
@@ -3041,6 +3152,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
         // set result as energy result
         PLOOP(pliter,pl){
           pb[pl]=pbenergy[pl];
+          uub[pl]=uubenergy[pl];
           SCLOOP(sc) dUcomp[sc][pl]=dUcompenergy[sc][pl];
           *q=qenergy;
         }
@@ -3060,6 +3172,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
         // set result as cold result
         PLOOP(pliter,pl){
           pb[pl]=pbcold[pl];
+          uub[pl]=uubcold[pl];
           SCLOOP(sc) dUcomp[sc][pl]=dUcompcold[sc][pl];
           *q=qcold;
         }
@@ -3108,6 +3221,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       // set prims and dU, but shouldn't be used
       PLOOP(pliter,pl){
         pb[pl]=pbbackup[pl];
+        uub[pl]=uubbackup[pl];
         SCLOOP(sc) dUcomp[sc][pl]=dUcompbackup[sc][pl];
         *q=qbackup;
       }
@@ -4313,7 +4427,7 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
         //
         //////////////
         errorabsbest[0]=0.0; JACLOOPFULLERROR(itermode,jj,startjac,endjac) errorabsbest[0] += fabs(lowestfreportf1[erefU[jj]]);
-        errorabsbest[1]=0.0; PLOOP(pliter,pl) errorabsbest[1] += fabs(lowestfreportf1[pl]);
+        errorabsbest[1]=0.0; JACLOOPSUPERFULL(pliter,pl,*eomtype) errorabsbest[1] += fabs(lowestfreportf1[pl]);
         if(errorabsbest[WHICHERROR]>errorabsf1[WHICHERROR] && isfinite(errorabsf1[WHICHERROR]) && (itermode==ITERMODECOLD || pp[RHO]>0.0 && pp[UU]>0.0 && pp[PRAD0]>0.0)){
           PLOOP(pliter,pl) bestuu[pl]=uu[pl];
           PLOOP(pliter,pl) bestpp[pl]=pp[pl];
@@ -4968,12 +5082,14 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
             // f1-based
             // using old uu,uup, but probably ok since just helps normalize error
             errorabsf1[0]=0.0;   JACLOOPFULLERROR(itermode,jj,startjac,endjac) errorabsf1[0]   += fabs(f1report[erefU[jj]]);
-            errorabsf1[1]=0.0;   PLOOP(pliter,pl) errorabsf1[1]   += fabs(f1report[pl]);
+            errorabsf1[1]=0.0;   JACLOOPSUPERFULL(pliter,pl,*eomtype)  errorabsf1[1]   += fabs(f1report[pl]);
             errorabsbest[0]=0.0; JACLOOPFULLERROR(itermode,jj,startjac,endjac) errorabsbest[0] += fabs(lowestfreportf1[erefU[jj]]);
-            errorabsbest[1]=0.0; PLOOP(pliter,pl) errorabsbest[1] += fabs(lowestfreportf1[pl]);
+            errorabsbest[1]=0.0; JACLOOPSUPERFULL(pliter,pl,*eomtype)  errorabsbest[1] += fabs(lowestfreportf1[pl]);
 
             // see if should revert to prior best
             if(errorabsbest[WHICHERROR]<errorabsf1[WHICHERROR] || !isfinite(errorabsf1[WHICHERROR]) ){
+              if(showmessages && debugfail>=DEBUGLEVELIMPSOLVERMORE) dualfprintf(fail_file,"Using best: %g %g : %g %g\n",errorabsf1[0],errorabsf1[1],errorabsbest[0],errorabsbest[1]);
+
               PLOOP(pliter,pl) uu[pl]=bestuu[pl];
               PLOOP(pliter,pl) pp[pl]=bestpp[pl];
               errorabsf1[0]=errorabsbest[0];
@@ -4983,15 +5099,14 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
               // get whether converged
               convreturn=(errorabsf1[WHICHERROR]<trueimptryconvabs);
               convreturnallow=(errorabsf1[WHICHERROR]<trueimpallowconvabs);
-              if(showmessages && debugfail>=DEBUGLEVELIMPSOLVERMORE) dualfprintf(fail_file,"Using best: %g %g : %g %g\n",errorabsf1[0],errorabsf1[1],errorabsbest[0],errorabsbest[1]);
               if(debugfail>=DEBUGLEVELIMPSOLVERMORE) dualfprintf(fail_file,"GETBEST: convreturn=%d convreturnallow=%d (IMPALLOWCONV=%g) f1report: %g %g %g %g : %g %g\n",convreturn,convreturnallow,IMPALLOWCONV,f1report[erefU[0]],f1report[erefU[1]],f1report[erefU[2]],f1report[erefU[3]],errorabsf1[0],errorabsf1[1]);
             }
             else{
+              if(debugfail>=DEBUGLEVELIMPSOLVERMORE) dualfprintf(fail_file,"gotbest=%d but errorabsbest=%g %g while errorabsf1=%g %g\n",gotbest,errorabsbest[0],errorabsbest[1],errorabsf1[0],errorabsf1[1]);
               PLOOP(pliter,pl) bestuu[pl]=uu[pl];
               PLOOP(pliter,pl) bestpp[pl]=pp[pl];
               errorabsbest[0]=errorabsf1[0];
               errorabsbest[1]=errorabsf1[1];
-              if(debugfail>=DEBUGLEVELIMPSOLVERMORE) dualfprintf(fail_file,"gotbest=%d but errorabsbest=%g %g while errorabsf1=%g %g\n",gotbest,errorabsbest[0],errorabsbest[1],errorabsf1[0],errorabsf1[1]);
             }
           }
         }// end GETBEST
@@ -5341,7 +5456,7 @@ static void showdebuglist(int debugiter, FTYPE (*pppreholdlist)[NPR],FTYPE (*ppp
 
 
                              
-int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE errorabs, struct of_geom *ptrgeom, FTYPE *pp, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *dUother, FTYPE *CUf, struct of_state *q, FTYPE *ppeng, FTYPE *ppent, FTYPE (*dUcompeng)[NPR], FTYPE (*dUcompent)[NPR], struct of_state *qeng, struct of_state *qent, int *failtypeeng, FTYPE *errorabseng, int *iterseng, int *radinvmodeng, int *failtypeent, FTYPE *errorabsent, int *itersent, int *radinvmodent)
+int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE errorabs, struct of_geom *ptrgeom, FTYPE *pp, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *dUother, FTYPE *CUf, struct of_state *q, FTYPE *ppeng, FTYPE *ppent, FTYPE *uueng, FTYPE *uuent, FTYPE (*dUcompeng)[NPR], FTYPE (*dUcompent)[NPR], struct of_state *qeng, struct of_state *qent, int *failtypeeng, FTYPE *errorabseng, int *iterseng, int *radinvmodeng, int *failtypeent, FTYPE *errorabsent, int *itersent, int *radinvmodent)
 {
   // BEGIN get ramesh solution
   int radinvmod=0; // fake
@@ -5359,7 +5474,7 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE errorabs, struc
   int pliter,pl;
   PLOOP(pliter,pl) uu0[pl]=UFSET(CUf,fracdtuu0*dt,Uiin[pl],Ufin[pl],dUother[pl],0.0);
   FTYPE uu[NPR]; // not used except when doing diagnostics in ramesh code
-  FTYPE uueng[NPR],uuent[NPR]; // filled with answer if successful
+  //  FTYPE uueng[NPR],uuent[NPR]; // filled with answer if successful
   //
   get_rameshsolution(whichcall, radinvmod, failreturnentropy, failnum,  gotfirstnofail,  eomtype,  itermode, baseitermethod, errorabs, errorabs, iters, iters, realdt, ptrgeom, pp, pp, piin, uu0, uu, Uiin, Ufin, CUf, q, ppeng, ppent, uueng, uuent, qeng, qent, failtypeeng, errorabseng, iterseng, radinvmodeng, failtypeent, errorabsent, itersent, radinvmodent);
   //
@@ -5891,7 +6006,7 @@ static int f_error_check(int showmessages, int showmessagesheavy, int iter, FTYP
   JACLOOPFULLERROR(itermode,jj,startjac,endjac)      *errorabs     += fabs(finreport[erefU[jj]]); // always full error.
 
   // completely full relevant error
-  *errorallabs=0.0;  PLOOP(pliter,pl) if(pl!=ENTROPY && eomtype!=EOMENTROPYGRMHD || eomtype==EOMENTROPYGRMHD) *errorallabs += fabs(finreport[pl]);
+  *errorallabs=0.0; JACLOOPSUPERFULL(pliter,pl,eomtype) *errorallabs += fabs(finreport[pl]);
 
   //////////////
   //
@@ -5903,7 +6018,7 @@ static int f_error_check(int showmessages, int showmessagesheavy, int iter, FTYP
       passedconv=1; JACLOOPFULLERROR(itermode,ii,startjac,endjac) passedconv *= fabs(finreport[erefU[ii]])<conv;
     }
     else if(whicherror==1){
-      passedconv=1; PLOOP(pliter,pl) passedconv *= fabs(finreport[pl])<conv;
+      passedconv=1; JACLOOPSUPERFULL(pliter,pl,eomtype) passedconv *= fabs(finreport[pl])<conv;
     }
   }
   else{ // new way, so easier to test outside with single number
