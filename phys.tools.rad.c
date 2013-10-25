@@ -1,3 +1,6 @@
+
+
+// include globals
 #include "decs.h"
 
 //////////////////////////////
@@ -305,7 +308,7 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE errorabs, struc
 #define TRYENERGYHARDER 1
 
 // whether to use ramesh solver as backup
-#define USERAMESH 1 // FUCK: Can only use if QTYPMHD method used.  URAD will mess up if Erf<<ug.
+#define USERAMESH 1
 
 // error below which to feed best guess into Ramesh solver
 #define TRYHARDERFEEDGUESSTOL (1E-6)
@@ -1533,7 +1536,7 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
   // NR1992 Eq. 16.6.16: y_{n+1} = y_n + h f(y_{n+1}) , so error function is f = (y_{n+1} - y_n) - h f(y_{n+1})
   // i.e. f->0 as change in conserved quantity approaches the updated value of 4-force
   if(0){
-    if(fracenergy>0.0 && fracenergy<1.0){ // NOT USED!  FUCK
+    if(fracenergy>0.0 && fracenergy<1.0){ // NOT USED!
       // then erefU=UU is set as default error term, so add entropy to this.
 
       FTYPE fentropy[NPR];
@@ -2467,6 +2470,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
               }
               qenergy=qbackup;
               errorabsenergy=1.0;
+              radinvmodenergy=1;
             }
             else{
               PLOOP(pliter,pl){
@@ -2476,6 +2480,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
               }
               qenergy=qenergybest;
               errorabsenergy=errorabsenergybest;
+              radinvmodenergy=radinvmodenergybest;
             }
           }
           else{ // start with entropy
@@ -2486,6 +2491,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
             }
             qenergy=qentropy;
             errorabsenergy=errorabsentropy; // assume error estimate only used to decide if guess is used, not if converged with energy
+            radinvmodenergy=radinvmodentropy;
           }
           //
           failreturnenergy=koral_source_rad_implicit_mode(0,modprim,havebackup, didentropyalready, &eomtypeenergy, whichcapenergy, itermodeenergy, &baseitermethodenergy, trueimpmaxiterenergy,  truenumdampattemptsenergy, fracenergy, dissmeasure, &radinvmodenergy, pbenergy, uubenergy, piin, Uiin, Ufin, CUf, ptrgeom, &qenergy, dUother ,dUcompenergy, &errorabsenergy, errorabsenergybest, &itersenergy, &f1itersenergy);
@@ -2585,6 +2591,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
               qenergy=qbackup;
               errorabseng=1.0;
               errorabsforramesh=1.0;
+              radinvmodeng=1;
             }
             else{
               PLOOP(pliter,pl){
@@ -2595,6 +2602,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
               qenergy=qentropy;
               errorabseng=errorabsentropybest;
               errorabsforramesh=1.0;
+              radinvmodeng=radinvmodentropybest;
             }
           }
           else{
@@ -2606,6 +2614,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
             qenergy=qenergybest;
             errorabseng=errorabsenergybest;
             errorabsforramesh=errorabsenergybest;
+            radinvmodeng=radinvmodenergybest;
           }
           //
           // BEGIN GET RAMESH SOLUTION
@@ -2789,6 +2798,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
               }
               qentropy=qbackup;
               errorabsentropy=1.0;
+              radinvmodentropy=1;
             }
             else{
               PLOOP(pliter,pl){
@@ -2798,6 +2808,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
               }
               qentropy=qentropybest;
               errorabsentropy=errorabsentropybest;
+              radinvmodentropy=radinvmodentropybest;
             }
           }
           else{ // start with energy
@@ -2806,7 +2817,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
               SCLOOP(sc) dUcompentropy[sc][pl]=dUcompbackup[sc][pl];
             }
             qentropy=qenergy;
-            errorabsentropy=errorabsenergybest; // just for setting guess, not accepted error for entropy
+            errorabsentropy=errorabsenergy; // just for setting guess, not accepted error for entropy
+            radinvmodentropy=radinvmodenergy;
           }
           //
           //
@@ -2897,6 +2909,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
             qentropy=qbackup;
             errorabsent=1.0;
             errorabsforramesh=1.0;
+            radinvmodent=1;
           }
           else{
             PLOOP(pliter,pl){
@@ -2906,6 +2919,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
             qentropy=qentropybest;
             errorabsforramesh=errorabsentropybest;
             errorabsent=errorabsentropybest;
+            radinvmodent=radinvmodentropybest;
           }
           //
           // BEGIN GET RAMESH SOLUTION
@@ -2960,6 +2974,9 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
           if(debugfail>=2) dualfprintf(fail_file,"Failed to: Recovered using ramesh(%d) (entropy): ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d\n",failtypeent,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsentropyold,errorabsentropy,itersentropyold,itersentropy);
         }
       }
+
+
+
 
 
       ////////////
@@ -3764,8 +3781,8 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
 
 
   if(USEINPUTASGUESSIFERRORSMALL){
-    if(*errorabsreturn<TRYHARDERFEEDGUESSTOL){
-      // then override with previous solution as the new guess
+    // if error small enough and no fixups used with the radative inversion, override guess to use previous solution as the new guess
+    if(*errorabsreturn<TRYHARDERFEEDGUESSTOL && *radinvmod==0){
       PLOOP(pliter,pl){
         pp[pl] = pp0[pl] = ppfirst[pl] = pb[pl]; // not just F(pb) anymore, holds better guess
         uu[pl] = uub[pl]; // not just Uiin or uu0 anymore, holds better guess
@@ -4665,7 +4682,7 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
                 PLOOP(pliter,pl) ppbad[pl]=pp[pl];
                 // rescale iJ so u_g -> u_g0/2 instead (or for Erf)
                 PLOOP(pliter,pl) pp[pl]=ppp[pl];
-                FTYPE REDAMP=fabs(+0.5*ppp[UU]/dpp[UU])*DAMPFACTOR; // FUCK: inverted damp.
+                FTYPE REDAMP=fabs(+0.5*ppp[UU]/dpp[UU])*DAMPFACTOR; // KORALTOD: inverted damp.  Sometimes works, sometimes bad.
                 JACLOOP2D(ii,jj,startjac,endjac){
                   pp[irefU[ii]] += REDAMP*iJ[irefU[ii]][erefU[jj]]*f1[erefU[jj]];
                 }
@@ -5525,7 +5542,7 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE errorabs, struc
 //#define WHICHVELRAMESH VEL4 // should be same as WHICHVEL in test.f
 #define WHICHVELRAMESH VELREL4 // should be same as WHICHVEL in test.f
 
-int get_rameshsolution(int whichcall, int radinvmod, int failtype, long long int failnum, int gotfirstnofail, int eomtypelocal, int itermode, int baseitermethod, FTYPE errorabs, FTYPE errorabsbestexternal, int iters, int totaliters, FTYPE realdt, struct of_geom *ptrgeom, FTYPE *pp, FTYPE *pb, FTYPE *piin, FTYPE *uu0, FTYPE *uu, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_state *q, FTYPE *ppeng, FTYPE *ppent, FTYPE *uueng, FTYPE *uuent, struct of_state *qeng, struct of_state *qent, int *failtypeeng, FTYPE *errorabseng, int *iterseng, int *radinvmodeng, int *failtypeent, FTYPE *errorabsent, int *itersent, int *radinvmodent)
+int get_rameshsolution(int whichcallramesh, int radinvmod, int failtype, long long int failnum, int gotfirstnofail, int eomtypelocal, int itermode, int baseitermethod, FTYPE errorabs, FTYPE errorabsbestexternal, int iters, int totaliters, FTYPE realdt, struct of_geom *ptrgeom, FTYPE *pp, FTYPE *pb, FTYPE *piin, FTYPE *uu0, FTYPE *uu, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_state *q, FTYPE *ppeng, FTYPE *ppent, FTYPE *uueng, FTYPE *uuent, struct of_state *qeng, struct of_state *qent, int *failtypeeng, FTYPE *errorabseng, int *iterseng, int *radinvmodeng, int *failtypeent, FTYPE *errorabsent, int *itersent, int *radinvmodent)
 {
   //  int failtype=1;
   //  long long int failnum=0;
@@ -5720,12 +5737,103 @@ int get_rameshsolution(int whichcall, int radinvmod, int failtype, long long int
     if(*failtypeent) *errorabsent = BIG;
   }
 
-  // FUCK: Double check ramesh error with f_error_check()
+  //////////
+  //
+  // Double check ramesh error with f_error_check() or f_implicit().  Also uses error as consistent with harm -- i.e. total error if WHICHERROR==1
+  //
+  //////////
+  int failreturnferr;
+  int allowbaseitermethodswitch=0;
+  int fakeiter=1;
+  int fakef1iter=-1;
+  int failreturnallowableuse=0;
+  int whichcall=FIMPLICITCALLTYPEFINALCHECK;
+  FTYPE impepsjac=0;
+  int showmessages=0;
+  int showmessagesheavy=0;
+  int allowlocalfailurefixandnoreport=0;
+  //int &eomtypelocal;
+  int whichcap=CAPTYPEBASIC;
+  //  int itermode;
+  //  int baseitermethod;
+  FTYPE fracenergy=1.0;
+  FTYPE dissmeasure=-1.0;
+  radinvmod=radinvmodeng; // default
+  FTYPE trueimptryconv=IMPTRYCONV;
+  FTYPE trueimptryconvabs=IMPTRYCONVABS;
+  FTYPE trueimpallowconvabs=IMPALLOWCONVABS;
+  int trueimpmaxiter=IMPMAXITER;
+  //  FTYPE realdt;
+  int dimtypef=DIMTYPEFCONS;
+  // some geometry stuff to store pre-step instead of for each step.
+  int jjdim;
+  FTYPE dimfactU[NPR];
+  PLOOP(pliter,pl) dimfactU[pl]=1.0; // default
+  DLOOPA(jjdim) dimfactU[UU+jjdim]=dimfactU[URAD0+jjdim]=sqrt(fabs(ptrgeom->gcon[GIND(jjdim,jjdim)]));
+  SLOOPA(jjdim) dimfactU[B1+jjdim-1] = 1.0/dimfactU[U1+jjdim-1];
+  FTYPE ppppp[NPR];
+  //  FTYPE pp[NPR];
+  //  FTYPE piin[NPR];
+  FTYPE uuppp[NPR];
+  //FTYPE Uiin[NPR];
+  //  FTYPE uu0[NPR];
+  //  FTYPE uu[NPR];
+  FTYPE fracdtG=1.0;
+  //FTYPE ptrgeom;
+  //FTYPE q;
+  FTYPE f1[NPR];
+  FTYPE f1norm[NPR];
+  FTYPE f1report[NPR];
+  int goexplicit=0;
+  FTYPE errorabsf1[NUMERRORTYPES];
+  // WHICHERROR;
+  int convreturnf1;
+
+
+  if(*failtypeeng==0){
+    ////////
+    //
+    // test ppeng
+    //
+    ////////
+    PLOOP(pliter,pl){
+      ppppp[pl] = pp[pl] = ppeng[pl];
+      uuppp[pl] = uu[pl] = uueng[pl];
+    }
+ 
+    failreturnferr=f_implicit(allowbaseitermethodswitch, fakeiter, fakef1iter, failreturnallowableuse, whichcall, impepsjac, showmessages, showmessagesheavy, allowlocalfailurefixandnoreport, &eomtypelocal, whichcap, itermode, &baseitermethod, fracenergy, dissmeasure, &radinvmod, trueimptryconv, trueimptryconvabs, trueimpallowconvabs, trueimpmaxiter, realdt, dimtypef, dimfactU, ppppp, pp, piin, uuppp, Uiin, uu0, uu, fracdtG*realdt, ptrgeom, q, f1, f1norm, f1report, &goexplicit, &errorabsf1[0], &errorabsf1[1], WHICHERROR, &convreturnf1); // modifies uu and pp, f1poret, goexplicit, errorabsf1[0,1], convreturnf1
+    // translate result
+    //  *qeng=*q; // already done
+    *failtypeeng=failreturnferr; // trust my error report
+    *errorabseng=errorabsf1[WHICHERROR]; // trust my error measure
+    *radinvmodeng=radinvmod; // trust my rad inv check
+  }
+
+  if(*failtypeent==0){
+    ////////
+    //
+    // test ppent
+    //
+    ////////
+    PLOOP(pliter,pl){
+      ppppp[pl] = pp[pl] = ppent[pl];
+      uuppp[pl] = uu[pl] = uuent[pl];
+    }
+ 
+    failreturnferr=f_implicit(allowbaseitermethodswitch, fakeiter, fakef1iter, failreturnallowableuse, whichcall, impepsjac, showmessages, showmessagesheavy, allowlocalfailurefixandnoreport, &eomtypelocal, whichcap, itermode, &baseitermethod, fracenergy, dissmeasure, &radinvmod, trueimptryconv, trueimptryconvabs, trueimpallowconvabs, trueimpmaxiter, realdt, dimtypef, dimfactU, ppppp, pp, piin, uuppp, Uiin, uu0, uu, fracdtG*realdt, ptrgeom, q, f1, f1norm, f1report, &goexplicit, &errorabsf1[0], &errorabsf1[1], WHICHERROR, &convreturnf1); // modifies uu and pp, f1poret, goexplicit, errorabsf1[0,1], convreturnf1
+    // translate result
+    //  *qent=*q; // already done
+    *failtypeent=failreturnferr; // trust my error report
+    *errorabsent=errorabsf1[WHICHERROR]; // trust my error measure
+    *radinvmodent=radinvmod; // trust my rad inv check
+  }
+
+  
 
 
   // DEBUG and only when real call (for now) and only show if one is not a bad solution
-  if(debugfail>=2 && whichcall>0 && (*failtypeent==0 || *failtypeeng==0)){ // NORMAL
-  //  if(debugfail>=2 && whichcall==0){ // DEBUGGING Erf~0 solutions
+  if(debugfail>=2 && whichcallramesh>0 && (*failtypeent==0 || *failtypeeng==0)){ // NORMAL
+  //  if(debugfail>=2 && whichcallramesh==0){ // DEBUGGING Erf~0 solutions
   //  if(PRODUCTION==0 && debugfail>=2 && (*failtypeeng==0 || *failtypeent==0)){ // DEBUGGING Erf~0 solutions
 
     FTYPE resultsjon[NUMRESULTS];
