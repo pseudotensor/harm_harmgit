@@ -178,6 +178,12 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE errorabs, struc
 
 #define WHICHSPACETIMESUBSPLIT TAUSUPPRESS // only tausuppress works in general.
 
+// determine which error will use when deciding if converged or not.
+// If only use iterated, then rest can be large error, and that's not desired.  So generally should use WHICHERROR 1
+#define NUMERRORTYPES 2 // 0: over iterated   1: over all relevant terms
+#define WHICHERROR 1 // choose, but generally should be 1.
+
+
 //SPACETIMESUBSPLITTIMEMHDRAD // TAUSUPPRESS
 // SPACETIMESUBSPLITTIMEMHDRAD  //  SPACETIMESUBSPLITMHDRAD // SPACETIMESUBSPLITSUPERALL // TAUSUPPRESS
 
@@ -192,6 +198,9 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE errorabs, struc
 // 3: use uu0,puu0 [initial+flux U and p] // costly since needs inversion, and probably no better than 1
 #define USEDUINRADUPDATE 1
 
+// whether to use inputted uub, and pb as guess if errorabsreturn inputted is small enough
+// makes sense in general only if WHICHERROR=1
+#define USEINPUTASGUESSIFERRORSMALL (WHICHERROR==1)
 
 
 #define GAMMASMALLLIMIT (1.0-1E-10) // at what point above which assume gamma^2=1.0
@@ -363,10 +372,6 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE errorabs, struc
 // whether to avoid computing entropy during iterations if not needed
 #define ENTROPYOPT 1
 
-// determine which error will use when deciding if converged or not.
-// If only use iterated, then rest can be large error, and that's not desired.  So generally should use WHICHERROR 1
-#define NUMERRORTYPES 2 // 0: over iterated   1: over all relevant terms
-#define WHICHERROR 1 // choose, but generally should be 1.
 
 
 ///////////////////////////////
@@ -3741,17 +3746,6 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
       }
     }
 
-
-    if(*errorabsreturn<TRYHARDERFEEDGUESSTOL){
-      // then override with previous solution as the new guess
-      PLOOP(pliter,pl){
-        pp[pl] = pb[pl]; // not just F(pb) anymore, holds better guess
-        uu[pl] = uub[pl]; // not just Uiin or uu0 anymore, holds better guess
-      }
-    }
-
-
-
   }
   else if(USEDUINRADUPDATE==0){
     // bad choice for non-iterated quantities, like uu[RHO] should be uu0[RHO]
@@ -3768,6 +3762,16 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
     }
   }  
 
+
+  if(USEINPUTASGUESSIFERRORSMALL){
+    if(*errorabsreturn<TRYHARDERFEEDGUESSTOL){
+      // then override with previous solution as the new guess
+      PLOOP(pliter,pl){
+        pp[pl] = pp0[pl] = ppfirst[pl] = pb[pl]; // not just F(pb) anymore, holds better guess
+        uu[pl] = uub[pl]; // not just Uiin or uu0 anymore, holds better guess
+      }
+    }
+  }
 
 
   /////////////////////////////
