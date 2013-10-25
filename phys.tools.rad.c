@@ -3742,6 +3742,15 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
     }
 
 
+    if(*errorabsreturn<TRYHARDERFEEDGUESSTOL){
+      // then override with previous solution as the new guess
+      PLOOP(pliter,pl){
+        pp[pl] = pb[pl]; // not just F(pb) anymore, holds better guess
+        uu[pl] = uub[pl]; // not just Uiin or uu0 anymore, holds better guess
+      }
+    }
+
+
 
   }
   else if(USEDUINRADUPDATE==0){
