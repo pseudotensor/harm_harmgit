@@ -156,7 +156,7 @@ int primtoflux_radonly(FTYPE *pr, struct of_state *q, int dir,
 
 
   PLOOP(pliter,pl) flux[pl]=fluxrad[pl]=0.0;
-  if(fluxabs!=NULL) PLOOP(pliter,pl) fluxabs[pl];
+  if(fluxabs!=NULL) PLOOP(pliter,pl) fluxabs[pl]=0.0;
 
 
   if(EOMRADTYPE!=EOMRADNONE){

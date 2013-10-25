@@ -154,6 +154,8 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE errorabs, struc
 
 #define TAUFAILLIMIT (2.0/3.0) // at what \tau below which to assume "failure1" in u2p_rad() means should be moving at gammamax rather than not moving.
 
+#define TAUSWITCHPBVSPIIN (2.0/3.0) // at what \tau to switch using pb(uu0) vs. piin(Uiin).
+
 
 // whether to revert to sub-cycle explicit if implicit fails.  Only alternative is die.
 #define IMPLICITREVERTEXPLICIT 0 // problem.  Not a good idea. -- should try implicit again, starting out with more damping.
@@ -631,12 +633,14 @@ static void define_method(int iter, int *eomtype, int itermode, int baseitermeth
     myexit(938463651);
   }
 
-  if(fracenergy>0.0 && fracenergy<1.0){
-    // override as "energy" method, so erefU[TT]=UU to keep things simple and avoid confusions as to where error function is put and avoid duplicates.
-    if(EOMTYPE==EOMGRMHD) eomtypelocal=EOMTYPE;
-    else if(PRODUCTION==0){
-      dualfprintf(fail_file,"Shouldn't be in define_method with fracenergy=%g and EOMTYPE=%d\n",fracenergy,EOMTYPE);
-      myexit(2875346346);
+  if(0){
+    if(fracenergy>0.0 && fracenergy<1.0){
+      // override as "energy" method, so erefU[TT]=UU to keep things simple and avoid confusions as to where error function is put and avoid duplicates.
+      if(EOMTYPE==EOMGRMHD) eomtypelocal=EOMTYPE;
+      else if(PRODUCTION==0){
+        dualfprintf(fail_file,"Shouldn't be in define_method with fracenergy=%g and EOMTYPE=%d\n",fracenergy,EOMTYPE);
+        myexit(2875346346);
+      }
     }
   }
 
@@ -1026,9 +1030,9 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
  
 
   int finalstep = 1;  //can choose either 1 or 0 depending on whether want floor-like fixups (1) or not (0).  unclear which one would work best since for Newton method to converge might want to allow negative density on the way to the correct solution, on the other hand want to prevent runaway into rho < 0 region and so want floors.
-  FTYPE Gdpl[NPR],Gdplabs[NPR], Tgas;
+  FTYPE Gdpl[NPR]={0.0},Gdplabs[NPR]={0.0}, Tgas={0.0};
   int failreturn;
-  FTYPE uuabs[NPR];
+  FTYPE uuabs[NPR]={0.0};
 
   // default is no failure
   failreturn=0;
@@ -1039,8 +1043,8 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
   //
   /////////
   struct of_state qbackup;
-  FTYPE ppbackup[NPR],uubackup[NPR];
-  FTYPE ppalt[NPR],uualt[NPR];
+  FTYPE ppbackup[NPR],uubackup[NPR]={0.0};
+  FTYPE ppalt[NPR]={0.0},uualt[NPR]={0.0};
   int radinvmodbackup,radinvmodalt,failreturnalt;
   PLOOP(pliter,pl){
     ppalt[pl]=ppbackup[pl]=pp[pl];
@@ -1516,21 +1520,22 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
   // compute difference vector between original and new 4-force's effect on conserved radiative quantities
   // NR1992 Eq. 16.6.16: y_{n+1} = y_n + h f(y_{n+1}) , so error function is f = (y_{n+1} - y_n) - h f(y_{n+1})
   // i.e. f->0 as change in conserved quantity approaches the updated value of 4-force
-  if(fracenergy>0.0 && fracenergy<1.0){ // NOT USED!  FUCK
-    // then erefU=UU is set as default error term, so add entropy to this.
+  if(0){
+    if(fracenergy>0.0 && fracenergy<1.0){ // NOT USED!  FUCK
+      // then erefU=UU is set as default error term, so add entropy to this.
 
-    FTYPE fentropy[NPR];
-    FTYPE fnormentropy[NPR];
+      FTYPE fentropy[NPR];
+      FTYPE fnormentropy[NPR];
 
-    //    fracenergy=1.0;
-    if(startjac==TT){
-      // Get final interpolated energy-entropy-term error function
-      //      dualfprintf(fail_file,"fracenergy=%g fUU=%g fnormUU=%g fE=%g fnormE=%g\n",fracenergy,f[UU],fnorm[UU],fentropy[ENTROPY],fnormentropy[ENTROPY]);
-      f[UU] = fracenergy*fabs(f[UU]) + (1.0-fracenergy)*fabs(f[ENTROPY]);
-      fnorm[UU] = fracenergy*fnorm[UU] + (1.0-fracenergy)*fnorm[ENTROPY];
+      //    fracenergy=1.0;
+      if(startjac==TT){
+        // Get final interpolated energy-entropy-term error function
+        //      dualfprintf(fail_file,"fracenergy=%g fUU=%g fnormUU=%g fE=%g fnormE=%g\n",fracenergy,f[UU],fnorm[UU],fentropy[ENTROPY],fnormentropy[ENTROPY]);
+        f[UU] = fracenergy*fabs(f[UU]) + (1.0-fracenergy)*fabs(f[ENTROPY]);
+        fnorm[UU] = fracenergy*fnorm[UU] + (1.0-fracenergy)*fnorm[ENTROPY];
+      }
     }
   }
-
 
 
   ///////
@@ -3498,27 +3503,58 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
 
 
 
+
+  /////////////////////
+  //
+  // Get p(uu0) for radiative guess for pb that is used in optically thin regime when USEDUINRADUPDATE==1
+  //
+  // get better version of pb that agrees with uu0.  This is only good for optically thin region, so best used with USEDUINRADUPDATE==1 for general optical depths.
+  //
+  // Getting prad(uu0_{rad parts}) is only relevant for PRAD method.  All other methods overwrite the radiative pb and pp.
+  //
+  //////////////////////
   if(GETRADINVFROMUU0FORPB){
-    // get better version of pb that agrees with uu0.  This is only good for optically thin region, so best used with USEDUINRADUPDATE==1 for general optical depths.
+
     struct of_newtonstats newtonstats; setnewtonstatsdefault(&newtonstats);
     // initialize counters
     newtonstats.nstroke=newtonstats.lntries=0;
+    // set inputs for errors, maxiters, etc.
+    newtonstats.tryconv=IMPTRYCONV;
+    newtonstats.tryconvultrarel=IMPTRYCONV*1E-1; // just bit smaller, not as extreme as default
+    newtonstats.mintryconv=IMPTRYCONVABS;
+    newtonstats.maxiter=trueimpmaxiter;
+    newtonstats.extra_newt_iter=0;
+    newtonstats.extra_newt_iter_ultrarel=1;
+    //
     int finalstep = 1;
-    int doradonly=1;
+    int doradonly=0;
+    if(*baseitermethod==QTYPRAD){
+      doradonly=1;
+    }
+    else doradonly=0;
     eomtypelocal=*eomtype; // stick with default choice so far
     FTYPE prtest[NPR];
+    int whichcapnew=CAPTYPEFIX2; // so Erf doesn't drop out for guess.
     PLOOP(pliter,pl) prtest[pl]=pb[pl];
-    failreturnallowable=Utoprimgen_failwrapper(doradonly,radinvmod,showmessages,allowlocalfailurefixandnoreport, finalstep, &eomtypelocal, whichcap, EVOLVEUTOPRIM, UNOTHING, uu0, q, ptrgeom, dissmeasure, prtest, &newtonstats);
-    if(failreturnallowable==UTOPRIMGENWRAPPERRETURNNOFAIL){
+    failreturnallowable=Utoprimgen_failwrapper(doradonly,radinvmod,showmessages,allowlocalfailurefixandnoreport, finalstep, &eomtypelocal, whichcapnew, EVOLVEUTOPRIM, UNOTHING, uu0, q, ptrgeom, dissmeasure, prtest, &newtonstats);
+    if(*baseitermethod==QTYPRAD && (1||failreturnallowable==UTOPRIMGENWRAPPERRETURNNOFAIL)){ // 1|| so assigns if failed or not, because with CAPTYEPFIX2 won't give dropped-out answer.
       PLOOP(pliter,pl) if(RADPL(pl)) pb[pl]=prtest[pl];
+    }
+    else if(*baseitermethod==QTYPMHD && (failreturnallowable==UTOPRIMGENWRAPPERRETURNNOFAIL)){
+      PLOOP(pliter,pl) if(RADPL(pl)) pb[pl]=prtest[pl];
+    }
+    else{
+      // then just leave pb as pb.
     }
   }
 
 
 
+
+
   /////////////////////
   //
-  // see if uu0->p possible and desired
+  // see if uu0->p possible and desired.  Or just assign pp,pb,uu in terms of piin,Uiin,uu0 (based possibly upon optical depth).
   //
   //////////////////////
   FTYPE prtestUU0[NPR];
@@ -3561,11 +3597,11 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
 
     // use tau as guess for which guess is best
     FTYPE tautot[NDIM],tautotmax;
-    calc_tautot(pp, ptrgeom, tautot, &tautotmax);
+    calc_tautot(pb, ptrgeom, tautot, &tautotmax);
 
     // iterated, so keep as initial (i.e. previous full solution, not just initial+flux)
     PLOOP(pliter,pl){
-      if(tautotmax>=1.0){
+      if(tautotmax>=TAUSWITCHPBVSPIIN){
         uu[pl] = Uiin[pl]; // assume somewhat static and Uiin is best guess
         ppfirst[pl] = pp[pl] = pp0[pl] = piin[pl];
       }
