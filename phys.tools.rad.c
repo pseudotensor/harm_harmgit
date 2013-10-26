@@ -6452,6 +6452,10 @@ static int get_implicit_iJ(int allowbaseitermethodswitch, int failreturnallowabl
                 xjacalt[irefU[jj]]=x[irefU[jj]] - signside*del*(jj==TT ? -1.0 : 1.0);
               }
             }
+            else{
+              xjac[sided][irefU[jj]]=x[irefU[jj]] + signside*del;
+              xjacalt[irefU[jj]]=x[irefU[jj]] - signside*del;
+            }
           }
           else{
             // offset xjac (KORALTODO: How to ensure this doesn't have machine precision problems or is good enough difference?)

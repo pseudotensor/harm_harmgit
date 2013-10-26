@@ -13,7 +13,7 @@
 #elif(PRODUCTION==1)
 #define CHECKONINVFRAC (1E-2)
 #else
-#define CHECKONINVFRAC (1E-7)
+#define CHECKONINVFRAC (MAX(1E-7,newtonstats->tryconv*1E3)) // can't check if didn't ask for large error.
 #endif
 
 // whether to fail if check on inversion fails
