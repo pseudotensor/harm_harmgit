@@ -513,7 +513,8 @@ static int Utoprimgen_failwrapper(int doradonly, int *radinvmod, int showmessage
     int whichmethod=MODEDEFAULT; // means don't change method from eomtype.
     int modprim=0;
     MYFUN(Utoprimgen(showmessages, allowlocalfailurefixandnoreport, finalstep, eomtype, whichcap, whichmethod, modprim, evolvetype, inputtype, U, qptr, ptrgeom, dissmeasure, pr, pr, newtonstats),"phys.tools.rad.c:Utoprimgen_failwrapper()", "Utoprimgen", 1);
-    *radinvmod=0;  //KORALTODO: Not using method that needs this call, so for now don't pass radinvmod through to Utoprimgen().
+    *radinvmod=(int)(*lpflagrad);
+    //    *radinvmod=0;  //KORALTODO: Not using method that needs this call, so for now don't pass radinvmod through to Utoprimgen().
     nstroke+=(newtonstats->nstroke);
     // this can change eomtype
   }

@@ -1324,9 +1324,10 @@ static int check_on_inversion(int usedhotinversion,int usedentropyinversion,int 
         //        errornorm=(fabs(exp(Unormalnew[pl]/(SMALL+fabs(Unormalnew[RHO]))))+fabs(exp(Unormalold[pl]/(SMALL+fabs(Unormalold[RHO]))))+SMALL);
         //        fdiff[pl] = fabs(exp(Unormalnew[pl]/(SMALL+fabs(Unormalnew[RHO])))-exp(Unormalold[pl]/(SMALL+fabs(Unormalold[RHO]))))/errornorm;
         // TdS / (TdS + E)
-        FTYPE Tgas=compute_temp_simple(ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p,pr[RHO],pr[UU]);
-        errornorm=fabs(Tgas)*(fabs(Unormalnewabs[pl])+fabs(Unormalnew[pl])+fabs(Unormalold[pl])+SMALL) + (fabs(Unormalnewabs[UU])+fabs(Unormalnew[UU])+fabs(Unormalold[UU])+SMALL);
-        fdiff[pl] = fabs(Unormalnew[pl]-Unormalold[pl])/errornorm;
+        FTYPE Tgasnew=compute_temp_simple(ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p,pr[RHO],pr[UU]);
+        FTYPE Tgasold=compute_temp_simple(ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p,pr0[RHO],pr0[UU]);
+        errornorm=(fabs(Tgasnew)+fabs(Tgasold))*(fabs(Unormalnewabs[pl])+fabs(Unormalnew[pl])+fabs(Unormalold[pl])+SMALL) + (fabs(Unormalnewabs[UU])+fabs(Unormalnew[UU])+fabs(Unormalold[UU])+SMALL);
+        fdiff[pl] = (fabs(Tgasnew)+fabs(Tgasold))*fabs(Unormalnew[pl]-Unormalold[pl])/errornorm;
       }
       else if(pl==U1 || pl==U2 || pl==U3){
 

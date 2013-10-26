@@ -33,9 +33,8 @@ static int vsqgtr1(FTYPE W,FTYPE Bsq,FTYPE QdotBsq, FTYPE Qtsq);
 static FTYPE vsq_calc(FTYPE W, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra);
 static FTYPE dvsq_dW(FTYPE W, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra);
 static FTYPE Eprime_Wp(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra);
-static FTYPE Psq_Wp(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra);
+static int Psq_Wp(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra, FTYPE *resid, FTYPE *norm);
 static FTYPE dPsqdWp_Wp(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra);
-static FTYPE Psq_Wp(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra);
 static FTYPE utsq_calc(FTYPE W, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra);
 static FTYPE gammasq_calc_W(FTYPE W, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra);
 static FTYPE utsq_calc(FTYPE W, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra);
@@ -74,21 +73,21 @@ static int find_root_1D_gen_Sc(int showmessages, PFTYPE *lpflag, int eomtype, FT
 
 // Newton methods:
 static int general_newton_raphson(int showmessages, PFTYPE *lpflag, int eomtype, FTYPE x[], int n, int do_line_search,
-                                  void (*funcd) (FTYPE [], FTYPE [], FTYPE [], FTYPE [][NEWT_DIM], FTYPE *, FTYPE *, int, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra), 
+                                  void (*funcd) (FTYPE [], FTYPE [], FTYPE [], FTYPE [], FTYPE [][NEWT_DIM], FTYPE *, FTYPE *, int, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra), 
                                   FTYPE (*res_func) (FTYPE [], FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra), FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra, struct of_newtonstats *newtonstats);
 
-static void func_1d_orig(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE (*jac)[NEWT_DIM], FTYPE *f, FTYPE *df, int n, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra);
+static void func_1d_orig(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE norm[], FTYPE (*jac)[NEWT_DIM], FTYPE *f, FTYPE *df, int n, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra);
 static FTYPE res_sq_1d_orig( FTYPE [], FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra);
-static void func_1d_orig_scn(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE (*jac)[NEWT_DIM], FTYPE *f, FTYPE *df, int n, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra);
+static void func_1d_orig_scn(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE norm[], FTYPE (*jac)[NEWT_DIM], FTYPE *f, FTYPE *df, int n, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra);
 static FTYPE res_sq_1d_orig_scn( FTYPE [], FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra);
-static void func_1d_orig(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE (*jac)[NEWT_DIM], FTYPE *f, FTYPE *df, int n, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra);
+static void func_1d_orig(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE norm[], FTYPE (*jac)[NEWT_DIM], FTYPE *f, FTYPE *df, int n, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra);
 static FTYPE res_sq_1d_orig( FTYPE [], FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra);
-static void func_1d_orig(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE (*jac)[NEWT_DIM], FTYPE *f, FTYPE *df, int n, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra);
+static void func_1d_orig(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE norm[], FTYPE (*jac)[NEWT_DIM], FTYPE *f, FTYPE *df, int n, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra);
 static FTYPE res_sq_1d_orig( FTYPE [] , FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra);
-static void func_1d_orig(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE (*jac)[NEWT_DIM], FTYPE *f, FTYPE *df, int n, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra);
+static void func_1d_orig(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE norm[], FTYPE (*jac)[NEWT_DIM], FTYPE *f, FTYPE *df, int n, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra);
 static FTYPE res_sq_1d_orig( FTYPE [] , FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra);
-static  void func_vsq(   FTYPE [], FTYPE [], FTYPE [], FTYPE [][NEWT_DIM], FTYPE *f, FTYPE *df, int n, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra);
-static  void func_vsq2(   FTYPE [], FTYPE [], FTYPE [], FTYPE [][NEWT_DIM], FTYPE *f, FTYPE *df, int n, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra);
+static  void func_vsq(   FTYPE [], FTYPE [], FTYPE [], FTYPE [], FTYPE [][NEWT_DIM], FTYPE *f, FTYPE *df, int n, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra);
+static  void func_vsq2(   FTYPE [], FTYPE [], FTYPE [], FTYPE [], FTYPE [][NEWT_DIM], FTYPE *f, FTYPE *df, int n, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra);
 static  FTYPE  res_sq_vsq( FTYPE [], FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra);
 static  FTYPE  res_sq_vsq2( FTYPE [] , FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra);
 static int x1_of_x0(FTYPE x0, FTYPE *x1, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra);
@@ -1974,9 +1973,8 @@ static FTYPE dPsqdWp_Wp_old(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE
 // new version without poles
 // returns actually W^2 P^2
 // Note that this does NOT use Qdotn or Qdotnp (from energy equation) so works for entropy evolution too
-static FTYPE Psq_Wp(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
+static int Psq_Wp(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra, FTYPE *resid, FTYPE *norm)
 {
-  FTYPE result;
   FTYPE S,W,W2,DoW,SoW;
   FTYPE Y;
 
@@ -1985,9 +1983,10 @@ static FTYPE Psq_Wp(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq
   W2 = W*W;
   S = QdotB;
 
-  result = -Qtsq*W2 + Wp*(D+W)*(W2 + Bsq*Y) - Y*S*S;
+  *resid = -Qtsq*W2 + Wp*(D+W)*(W2 + Bsq*Y) - Y*S*S;
+  *norm = fabs(Qtsq*W2) + fabs(Wp*(D+W)*(W2)) + fabs(Wp*(D+W)*(Bsq*Y)) + fabs(Y*S*S);
 
-  return(result);
+  return(0);
 
 }
 
@@ -2022,9 +2021,8 @@ static FTYPE dPsqdWp_Wp(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE Qdo
 
 // 0 = -E' + E'[Wp] for hot GRMHD (can be used for cold GRMHD too)
 // while this has poles near bad roots, the E\propto Wp for ultra relativistic case, so easy to find root
-static FTYPE Eprime_Wp_unopt(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
+static int Eprime_Wp_unopt(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra, FTYPE *resid, FTYPE *norm)
 {
-  FTYPE result;
   FTYPE X,X2,W;
   FTYPE utsq;
   FTYPE p_tmp;
@@ -2041,18 +2039,20 @@ static FTYPE Eprime_Wp_unopt(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYP
   // PERFORMANCEMARK: Tested code with and without these type of if/else (all of them in utoprim_jon.c) and all rest used by func_Eprime_unopt() and found only changed performance from 7% of CPU to 6.90% CPU.  Not interesting change
 
   if(utsq<UTSQNEGLIMIT || utsq!=utsq){ // also checks if nan
-    result=-VERYBIG; // force residual to be large and negative so indicates a problem
+    *resid=-VERYBIG; // force residual to be large and negative so indicates a problem
+    *norm=-VERYBIG;
   }
   else{
     p_tmp=pressure_Wp_utsq(whicheos,EOSextra,Wp,D,utsq);
     
     // Note that -E'=Qdotnp
-    result = Qdotnp + Wp - p_tmp + 0.5*Bsq + 0.5*(Bsq*Qtsq-QdotBsq)/X2;
+    *resid = Qdotnp + Wp - p_tmp + 0.5*Bsq + 0.5*(Bsq*Qtsq-QdotBsq)/X2;
+    *norm = fabs(Qdotnp) + fabs(Wp) + fabs(p_tmp) + fabs(0.5*Bsq) + fabs(0.5*(Bsq*Qtsq)/X2) + fabs(0.5*(QdotBsq)/X2);
 
-    if(p_tmp!=p_tmp || result!=result) result=-VERYBIG; // indicates still problem
+    if(p_tmp!=p_tmp || *resid!=*resid) *resid=-VERYBIG; // indicates still problem
   }
 
-  return(result);
+  return(0);
 
 }
 
@@ -2225,9 +2225,8 @@ static FTYPE Sc_Wp_old(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE Qdot
 
 // 0 = Wp(-Sc + Sc[Wp]) for entropy GRMHD
 // Noticed that original residual behaves like log(Wp) near the root, so that the derivative shoots too far.  Multiplying by Wp solves that problem.
-static FTYPE Sc_Wp_unopt(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
+static int Sc_Wp_unopt(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra, FTYPE *resid, FTYPE *norm)
 {
-  FTYPE result;
   FTYPE W;
   FTYPE utsq;
   FTYPE Ss_tmp;
@@ -2238,20 +2237,22 @@ static FTYPE Sc_Wp_unopt(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE Qd
 
 
   if(utsq<UTSQNEGLIMIT || utsq!=utsq){ // also checks if nan
-    result=-VERYBIG; // force residual to be large and negative so indicates a problem
+    *resid=-VERYBIG; // force residual to be large and negative so indicates a problem
+    *norm=-VERYBIG; // force residual to be large and negative so indicates a problem
   }
   else{
     Ss_tmp=Ss_Wp_utsq(whicheos,EOSextra,Wp,D,utsq);
     
-    result = Wp*(-Sc + D*Ss_tmp);
+    *resid = Wp*(-Sc + D*Ss_tmp);
+    *norm = fabs(Wp)*fabs(Sc) + fabs(Wp)*fabs(D*Ss_tmp);
 
-    if(Ss_tmp!=Ss_tmp || result!=result) result=-VERYBIG; // indicates still problem
+    if(Ss_tmp!=Ss_tmp || *resid!=*resid) *resid=-VERYBIG; // indicates still problem
   }
 
   // DEBUG:
-  //  dualfprintf(fail_file,"Sc_Wp_unopt: Wp=%21.15g W=%21.15g D=%21.15g utsq=%21.15g :: Ss_tmp=%21.15g result=%21.15g Sc=%21.15g\n",Wp,W,D,utsq,Ss_tmp,result,Sc);
+  //  dualfprintf(fail_file,"Sc_Wp_unopt: Wp=%21.15g W=%21.15g D=%21.15g utsq=%21.15g :: Ss_tmp=%21.15g *resid=%21.15g Sc=%21.15g\n",Wp,W,D,utsq,Ss_tmp,*resid,Sc);
 
-  return(result);
+  return(0);
 
 }
 
@@ -2540,7 +2541,7 @@ static void validate_x(void (*ptr_validate_x)(FTYPE x[NEWT_DIM], FTYPE x0[NEWT_D
 /**************************************************** 
 *****************************************************/
 
-static void func_1d_orig(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE (*jac)[NEWT_DIM], FTYPE *f, FTYPE *df, int n, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
+static void func_1d_orig(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE norm[], FTYPE (*jac)[NEWT_DIM], FTYPE *f, FTYPE *df, int n, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
 {
   FTYPE vsq,vsqfake,gamma,gamma_sq,rho0,w,W,Wp,drdW,dpdW,Wsq,p_tmp, dvsq,dp1,dp2,a_term,ap_term ;
   FTYPE X,X2,X3;
@@ -2617,6 +2618,13 @@ static void func_1d_orig(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE (*jac)[NEWT
       - 0.5*QdotBsq/Wsq
       + Qdotnp
       - p_tmp;
+
+    norm[0] = 
+      + fabs(Wp)
+      + fabs(0.5 * Bsq * ( 1. + vsq ))
+      + fabs(0.5*QdotBsq/Wsq)
+      + fabs(Qdotnp)
+      + fabs(p_tmp);
     
     jac[0][0] = drdW = 1. - dpdW + QdotBsq/(Wsq*W) + 0.5*Bsq*dvsq;
     
@@ -2633,6 +2641,7 @@ static void func_1d_orig(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE (*jac)[NEWT
 #elif(1)  // JON:
     
     resid[0] = Qdotnp + Wp - p_tmp + 0.5*Bsq + (Bsq*Qtsq - QdotBsq)/X2;
+    norm[0] = fabs(Qdotnp) + fabs(Wp) + fabs(p_tmp) + fabs(0.5*Bsq) + fabs((Bsq*Qtsq)/X2) + fabs((QdotBsq)/X2);
     
     jac[0][0] = drdW = 1. - dpdW + (Bsq*Qtsq - QdotBsq)/X3*(-2.0);
     
@@ -2658,6 +2667,7 @@ static void func_1d_orig(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE (*jac)[NEWT
   }
   else{ // indicate failure for this 1-D method since depends on v^2 or \tilde{u}^2 to be well-defined as a function of W'
     resid[0]=-VERYBIG;
+    norm[0]=-VERYBIG;
     jac[0][0]=0.0;
     dx[0]=0.0;
     *f=-VERYBIG;
@@ -2676,7 +2686,7 @@ static void func_1d_orig(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE (*jac)[NEWT
 
 static FTYPE res_sq_1d_orig(FTYPE x[], FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
 {
-  FTYPE vsq,W,Wp,Wsq,p_tmp,resid[1];
+  FTYPE vsq,W,Wp,Wsq,p_tmp,resid[1],norm[1];
   FTYPE vsqfake;
   FTYPE X,X2;
   //  FTYPE dv = 1.0e-10;
@@ -2736,14 +2746,23 @@ static FTYPE res_sq_1d_orig(FTYPE x[], FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYP
       + Qdotnp
       - p_tmp;
 
+    norm[0] = 
+      + fabs(Wp)
+      + fabs(0.5 * Bsq * ( 1. + vsq ))
+      + fabs(0.5*QdotBsq/Wsq)
+      + fabs(Qdotnp)
+      + fabs(p_tmp);
+
 #elif(1)  // JON:
 
     resid[0] = Qdotnp + Wp - p_tmp + 0.5*Bsq + (Bsq*Qtsq - QdotBsq)/X2;
+    norm[0] = fabs(Qdotnp) + fabs(Wp) + fabs(p_tmp) + fabs(0.5*Bsq) + fabs((Bsq*Qtsq)/X2) + fabs((QdotBsq)/X2);
 
 #endif
   }
   else{
     resid[0]=-VERYBIG;
+    norm[0]=-VERYBIG;
   }
 
 
@@ -2763,7 +2782,7 @@ static FTYPE res_sq_1d_orig(FTYPE x[], FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYP
 //
 /////////////////////////////////
 
-static void func_1d_orig_scn(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE (*jac)[NEWT_DIM], FTYPE *f, FTYPE *df, int n, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
+static void func_1d_orig_scn(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE norm[], FTYPE (*jac)[NEWT_DIM], FTYPE *f, FTYPE *df, int n, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
 {
   FTYPE vsq,vsqfake,gamma,gamma_sq,rho0,w,W,drdW,dpdW,Wsq,p_tmp, dvsq,dp1,dp2,a_term,ap_term ;
   //  FTYPE dv = 1.0e-10;
@@ -2823,6 +2842,13 @@ static void func_1d_orig_scn(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE (*jac)[
     + Qdotn
     - p_tmp;
 
+  norm[0] = 
+    + fabs(W )
+    + fabs(0.5 * Bsq * ( 1. + vsq ))
+    + fabs(0.5*QdotBsq/Wsq)
+    + fabs(Qdotn)
+    + fabs(p_tmp);
+
   jac[0][0] = drdW = 1. - dpdW + QdotBsq/(Wsq*W) + 0.5*Bsq*dvsq;
 
   //  resid[0] = 
@@ -2859,7 +2885,7 @@ static void func_1d_orig_scn(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE (*jac)[
 
 static FTYPE res_sq_1d_orig_scn(FTYPE x[], FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
 {
-  FTYPE vsq,vsqfake,W,Wsq,p_tmp,resid[1];
+  FTYPE vsq,vsqfake,W,Wsq,p_tmp,resid[1],norm[1];
   //  FTYPE dv = 1.0e-10;
   const int ltrace = 0;
 
@@ -2904,6 +2930,13 @@ static FTYPE res_sq_1d_orig_scn(FTYPE x[], FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,
     + Qdotn
     - p_tmp;
 
+  norm[0] = 
+    + fabs(W)
+    + fabs(0.5 * Bsq * ( 1. + vsq ))
+    + fabs(0.5*QdotBsq/Wsq)
+    + fabs(Qdotn)
+    + fabs(p_tmp);
+
   return(  0.5*resid[0]*resid[0] );
 
 
@@ -2916,7 +2949,7 @@ static FTYPE res_sq_1d_orig_scn(FTYPE x[], FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,
 
 
 // unoptimized vresion of func_Eprime
-static void func_Eprime_unopt(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE (*jac)[NEWT_DIM], FTYPE *f, FTYPE *df, int n, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
+static void func_Eprime_unopt(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE norm[], FTYPE (*jac)[NEWT_DIM], FTYPE *f, FTYPE *df, int n, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
 {
   FTYPE drdW;
   //  FTYPE dv = 1.0e-10;
@@ -2926,7 +2959,7 @@ static void func_Eprime_unopt(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE (*jac)
 
   Wp = x[0];
 
-  resid[0] = Eprime_Wp_unopt(Wp, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra);
+  Eprime_Wp_unopt(Wp, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra, &resid[0], &norm[0]);
   jac[0][0] = drdW = dEprimedWp_unopt(Wp, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra);
 
 
@@ -2945,10 +2978,10 @@ static void func_Eprime_unopt(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE (*jac)
 static FTYPE res_sq_Eprime_unopt(FTYPE x[], FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
 {
   FTYPE Wp;
-  FTYPE resid;
+  FTYPE resid,norm;
 
   Wp = x[0];
-  resid = Eprime_Wp_unopt(Wp, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra);
+  Eprime_Wp_unopt(Wp, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra, &resid, &norm);
 
   return(  0.5*resid*resid );
 
@@ -3010,7 +3043,7 @@ static void get_kinetics_part2(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FT
 
 // optimized version of func_Eprime()
 // optimized in sense that minimizes extra kinetic calculations AND EOS lookups
-static void func_Eprime_opt(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE (*jac)[NEWT_DIM], FTYPE *f, FTYPE *df, int n, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
+static void func_Eprime_opt(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE norm[], FTYPE (*jac)[NEWT_DIM], FTYPE *f, FTYPE *df, int n, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
 {
   //  FTYPE dv = 1.0e-10;
   const int ltrace = 0;
@@ -3042,6 +3075,7 @@ static void func_Eprime_opt(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE (*jac)[N
     dEprimedWp=0.0; // indicates a problem
 
     resid[0]=Eprime;
+    norm[0]=Eprime;
     jac[0][0]=dEprimedWp;
     dx[0] = VERYBIG;
     *f = 0.5*(Eprime*Eprime);
@@ -3066,6 +3100,7 @@ static void func_Eprime_opt(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE (*jac)[N
     //
     /////////////////
     Eprime = Qdotnp + Wp - pofchi + 0.5*Bsq + 0.5*(Bsq*Qtsq-QdotBsq)/X2;
+    FTYPE normEprime = fabs(Qdotnp) + fabs(Wp) + fabs(pofchi) + fabs(0.5*Bsq) + fabs(0.5*(Bsq*Qtsq)/X2) + fabs(0.5*(QdotBsq)/X2);
 
 
     if(pofchi!=pofchi || Eprime!=Eprime) Eprime=-VERYBIG; // indicates still problem
@@ -3112,6 +3147,7 @@ static void func_Eprime_opt(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE (*jac)[N
     //
     ///////////////////////
     resid[0]=Eprime;
+    norm[0]=normEprime;
     jac[0][0]=dEprimedWp;
     dx[0] = -Eprime/dEprimedWp;
     *f = 0.5*(Eprime*Eprime);
@@ -3147,9 +3183,10 @@ static FTYPE res_sq_Eprime_opt(FTYPE x[], FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,F
   FTYPE f,df; // dummy, return value not used
   int n=1; // true for this residual
   FTYPE resid[NEWT_DIM];
+  FTYPE norm[NEWT_DIM];
 
   // just call func_Eprime_opt() since more optimized than before -- could optimize further but don't often or at all use this function
-  func_Eprime_opt(x, dx, resid, jac, &f, &df, n, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc, whicheos, EOSextra);
+  func_Eprime_opt(x, dx, resid, norm, jac, &f, &df, n, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc, whicheos, EOSextra);
 
   return(  0.5*resid[0]*resid[0] );
 
@@ -3160,7 +3197,7 @@ static FTYPE res_sq_Eprime_opt(FTYPE x[], FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,F
 
 
 // not that this is well-optimized.  Psq_Wp() and dPsqdWp_Wp() don't use subfunctions like "_unopt" versions for hot and entropy inversions.  Also no EOS functions to call.
-static void func_Psq(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE (*jac)[NEWT_DIM], FTYPE *f, FTYPE *df, int n, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
+static void func_Psq(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE norm[], FTYPE (*jac)[NEWT_DIM], FTYPE *f, FTYPE *df, int n, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
 {
   FTYPE drdW,Wp;
   //  FTYPE dv = 1.0e-10;
@@ -3170,7 +3207,7 @@ static void func_Psq(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE (*jac)[NEWT_DIM
   Wp = x[0];
 
 
-  resid[0] = Psq_Wp(Wp, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra);
+  Psq_Wp(Wp, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra, &resid[0], &norm[0]);
   jac[0][0] = drdW = dPsqdWp_Wp(Wp, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra);
 
 
@@ -3185,10 +3222,10 @@ static void func_Psq(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE (*jac)[NEWT_DIM
 static FTYPE res_sq_Psq(FTYPE x[], FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
 {
   FTYPE Wp;
-  FTYPE resid;
+  FTYPE resid,norm;
 
   Wp = x[0];
-  resid = Psq_Wp(Wp, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra);
+  Psq_Wp(Wp, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra, &resid, &norm);
 
   return(  0.5*resid*resid );
 
@@ -3197,7 +3234,7 @@ static FTYPE res_sq_Psq(FTYPE x[], FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE Qd
 
 
 
-static void func_Sc_unopt(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE (*jac)[NEWT_DIM], FTYPE *f, FTYPE *df, int n, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
+static void func_Sc_unopt(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE norm[], FTYPE (*jac)[NEWT_DIM], FTYPE *f, FTYPE *df, int n, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
 {
   FTYPE drdW;
   //  FTYPE dv = 1.0e-10;
@@ -3207,7 +3244,7 @@ static void func_Sc_unopt(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE (*jac)[NEW
 
   Wp = x[0];
 
-  resid[0] = Sc_Wp_unopt(Wp, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra);
+  Sc_Wp_unopt(Wp, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra, &resid[0], &norm[0]);
   jac[0][0] = drdW = dScdWp_unopt(Wp, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra);
 
 
@@ -3225,10 +3262,10 @@ static void func_Sc_unopt(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE (*jac)[NEW
 static FTYPE res_sq_Sc_unopt(FTYPE x[], FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
 {
   FTYPE Wp;
-  FTYPE resid;
+  FTYPE resid,norm;
 
   Wp = x[0];
-  resid = Sc_Wp_unopt(Wp, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra);
+  Sc_Wp_unopt(Wp, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra, &resid, &norm);
 
   return(  0.5*resid*resid );
 
@@ -3238,7 +3275,7 @@ static FTYPE res_sq_Sc_unopt(FTYPE x[], FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTY
 
 // optimized version of func_Sc()
 // very similar to optimized version of func_Eprime() but different "getall_forinversion()" call and different residual and derivative
-static void func_Sc_opt(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE (*jac)[NEWT_DIM], FTYPE *f, FTYPE *df, int n, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
+static void func_Sc_opt(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE norm[], FTYPE (*jac)[NEWT_DIM], FTYPE *f, FTYPE *df, int n, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
 {
 
 
@@ -3268,6 +3305,7 @@ static void func_Sc_opt(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE (*jac)[NEWT_
     dScprimedWp=0.0; // indicates a problem
 
     resid[0]=Scprime;
+    norm[0]=Scprime;
     jac[0][0]=dScprimedWp;
     dx[0] = -Scprime/dScprimedWp;
     *f = 0.5*(Scprime*Scprime);
@@ -3292,6 +3330,7 @@ static void func_Sc_opt(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE (*jac)[NEWT_
     /////////////////
     // old residual
     Scprime = -Sc + D*Ssofchi;
+    FTYPE Scprimenorm = fabs(Sc) + fabs(D*Ssofchi);
 
     // new residual (problem near Wp=0 of course that could diverge to Wp=0 and be wrong solution. Was using this "new" residual to help reach solution faster, but in general doesn't help so much and hurts since sometimes with tabulated EOS reaches Wp=0 and results in bad inversion.)
     // Also, for tabulated EOS, new residual more complicated and error doesn't drop.  Even though old residual has many iterations like new residual, at least old residual has very small error.  This is probably because derivative is not exactly consistent with function in the tabulated EOS yet both are used in the derivative expression.
@@ -3340,6 +3379,7 @@ static void func_Sc_opt(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE (*jac)[NEWT_
     //
     ///////////////////////
     resid[0]=Scprime;
+    norm[0]=Scprimenorm;
     jac[0][0]=dScprimedWp;
     dx[0] = -Scprime/dScprimedWp;
     *f = 0.5*(Scprime*Scprime);
@@ -3360,9 +3400,10 @@ static FTYPE res_sq_Sc_opt(FTYPE x[], FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE
   FTYPE f,df; // dummy, return value not used
   int n=1; // true for this residual
   FTYPE resid[NEWT_DIM];
+  FTYPE norm[NEWT_DIM];
 
   // just call func_Eprime_opt() since more optimized than before -- could optimize further but don't often or at all use this function
-  func_Sc_opt(x, dx, resid, jac, &f, &df, n, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc, whicheos, EOSextra);
+  func_Sc_opt(x, dx, resid, norm, jac, &f, &df, n, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc, whicheos, EOSextra);
 
   return(  0.5*resid[0]*resid[0] );
 
@@ -3385,7 +3426,7 @@ static FTYPE res_sq_Sc_opt(FTYPE x[], FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE
 returns residual  of vsq-1
 **********************************************************/
 
-static void func_vsq(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE (*jac)[NEWT_DIM], FTYPE *f, FTYPE *df, int n, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
+static void func_vsq(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE norm[], FTYPE (*jac)[NEWT_DIM], FTYPE *f, FTYPE *df, int n, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
 {
 
   
@@ -3437,6 +3478,9 @@ static void func_vsq(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE (*jac)[NEWT_DIM
   resid[0]  = Qtsq - vsq*(Bsq + W)*(Bsq + W) + (QdotBsq*(Bsq + 2*W))/Wsq;
   resid[1]  = -Qdotnp - (Bsq*(1 + vsq))/2. + QdotBsq/(2.*Wsq) - Wp + p_tmp;
 
+  norm[0]  = fabs(Qtsq) + fabs(vsq*(Bsq + W)*(Bsq + W)) + fabs((QdotBsq*(Bsq + 2*W))/Wsq);
+  norm[1]  = fabs(Qdotnp) + fabs((Bsq*(1 + vsq))/2.) + fabs(QdotBsq/(2.*Wsq)) + fabs(Wp) + fabs(p_tmp);
+
   *df = -resid[0]*resid[0] - resid[1]*resid[1];
 
   *f = -0.5 * ( *df );
@@ -3455,7 +3499,7 @@ static void func_vsq(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE (*jac)[NEWT_DIM
 
 /**********************************************************/
 
-static void func_vsq2(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE (*jac)[NEWT_DIM], FTYPE *f, FTYPE *df, int n, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
+static void func_vsq2(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE norm[], FTYPE (*jac)[NEWT_DIM], FTYPE *f, FTYPE *df, int n, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
 {
 
   
@@ -3508,8 +3552,10 @@ static void func_vsq2(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE (*jac)[NEWT_DI
   t4 = t3*t3;
   t9 = 1/Wsq;
   t11 = Qtsq-vsq*t4+QdotBsq*(Bsq+2.0*W)*t9;
+  FTYPE t11norm = fabs(Qtsq)+fabs(vsq*t4)+fabs(QdotBsq*(Bsq+2.0*W)*t9);
   t16 = QdotBsq*t9;
   t18 = -Qdotnp-0.5*Bsq*(1.0+vsq)+0.5*t16-Wp+p_tmp;
+  FTYPE t18norm = fabs(Qdotnp)+fabs(0.5*Bsq*(1.0+vsq))+fabs(0.5*t16)+fabs(Wp)+fabs(p_tmp);
   //t18 = -Qdotn-0.5*Bsq*(1.0+vsq)+0.5*t16-W+p_tmp;
   t21 = 1/t3;
   t23 = 1/W;
@@ -3533,6 +3579,8 @@ static void func_vsq2(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE (*jac)[NEWT_DI
   jac[1][1] = t2;
   resid[0] = t11;
   resid[1] = t18;
+  norm[0] = t11norm;
+  norm[1] = t18norm;
 
   *df = -resid[0]*resid[0] - resid[1]*resid[1];
 
@@ -3567,7 +3615,7 @@ static FTYPE res_sq_vsq(FTYPE x[], FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE Qd
 
   
   FTYPE  W, Wp, vsq, Wsq, p_tmp, dPdvsq, dPdW, temp, detJ,tmp2,tmp3;
-  FTYPE  resid[2];
+  FTYPE  resid[2],norm[2];
   const int ltrace = 0;
 
 
@@ -3587,6 +3635,9 @@ static FTYPE res_sq_vsq(FTYPE x[], FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE Qd
 
   resid[0]  = Qtsq - vsq*(Bsq + W)*(Bsq + W) + (QdotBsq*(Bsq + 2*W))/Wsq;
   resid[1]  = -Qdotnp - (Bsq*(1 + vsq))/2. + QdotBsq/(2.*Wsq) - Wp + p_tmp;
+
+  norm[0]  = fabs(Qtsq) + fabs(vsq*(Bsq + W)*(Bsq + W)) + fabs((QdotBsq*(Bsq + 2*W))/Wsq);
+  norm[1]  = fabs(Qdotnp) + fabs((Bsq*(1 + vsq))/2.) + fabs(QdotBsq/(2.*Wsq)) + fabs(Wp) + fabs(p_tmp);
 
 
   tmp3 = 0.5 * ( resid[0]*resid[0] + resid[1]*resid[1] ) ;
@@ -3610,7 +3661,7 @@ static FTYPE res_sq_vsq2(FTYPE x[], FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE Q
 {
 
   FTYPE  W, Wp, vsq, Wsq, p_tmp, dPdvsq, dPdW, temp, detJ,tmp2,tmp3;
-  FTYPE  resid[2];
+  FTYPE  resid[2],norm[2];
   FTYPE t3, t4 ;
   FTYPE t9 ;
   FTYPE t11;
@@ -3636,10 +3687,14 @@ static FTYPE res_sq_vsq2(FTYPE x[], FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE Q
   t4 = t3*t3;//
   t9 = 1/Wsq;  //
   t11 = Qtsq-vsq*t4+QdotBsq*(Bsq+2.0*W)*t9; //
+  FTYPE t11norm = fabs(Qtsq)+fabs(vsq*t4)+fabs(QdotBsq*(Bsq+2.0*W)*t9); //
   t16 = QdotBsq*t9;//
   t18 = -Qdotnp-0.5*Bsq*(1.0+vsq)+0.5*t16-Wp+p_tmp;//
+  FTYPE t18norm = fabs(Qdotnp)+fabs(0.5*Bsq*(1.0+vsq))+fabs(0.5*t16)+fabs(Wp)+fabs(p_tmp);//
   resid[0] = t11;
   resid[1] = t18;
+  norm[0] = t11norm;
+  norm[1] = t18norm;
 
   tmp3 = 0.5 * ( resid[0]*resid[0] + resid[1]*resid[1] ) ;
   
@@ -3911,10 +3966,10 @@ static int find_root_2D_gen(int showmessages, PFTYPE *lpflag, int eomtype, FTYPE
 
 *****************************************************************/
 static int general_newton_raphson(int showmessages, PFTYPE *lpflag, int eomtype, FTYPE x[], int n, int do_line_search,
-                                  void (*funcd) (FTYPE [], FTYPE [], FTYPE [], FTYPE [][NEWT_DIM], FTYPE *, FTYPE *, int, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra), 
+                                  void (*funcd) (FTYPE [], FTYPE [], FTYPE [], FTYPE [], FTYPE [][NEWT_DIM], FTYPE *, FTYPE *, int, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra), 
                                   FTYPE (*res_func) (FTYPE [], FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra), FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra, struct of_newtonstats *newtonstats)
 {
-  FTYPE f, f_old, df, df_old, dx[NEWT_DIM], dx_old[NEWT_DIM], x_old[NEWT_DIM], x_older[NEWT_DIM], x_olderer[NEWT_DIM], resid[NEWT_DIM], jac[NEWT_DIM][NEWT_DIM];
+  FTYPE f, f_old, df, df_old, dx[NEWT_DIM], dx_old[NEWT_DIM], x_old[NEWT_DIM], x_older[NEWT_DIM], x_olderer[NEWT_DIM], resid[NEWT_DIM], norm[NEWT_DIM], jac[NEWT_DIM][NEWT_DIM];
   FTYPE errx, errx_old, errx_oldest, x_orig[NEWT_DIM];
   int    n_iter, id, jd, i_extra, doing_extra;
   FTYPE randtmp, tmp;
@@ -4018,7 +4073,7 @@ static int general_newton_raphson(int showmessages, PFTYPE *lpflag, int eomtype,
 
 
     /* returns with new dx, f, df */
-    (*funcd) (x, dx, resid, jac, &f, &df, n, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra);
+    (*funcd) (x, dx, resid, norm, jac, &f, &df, n, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra);
 
 
 
@@ -4063,7 +4118,6 @@ static int general_newton_raphson(int showmessages, PFTYPE *lpflag, int eomtype,
     /* Save old values before calculating the new: */
     errx_oldest = errx_old;
     errx_old = errx;
-    newtonstats->lerrx=errx;
     errx = 0.;
     f_old = f;
     for( id = 0; id < n ; id++) {
@@ -4233,7 +4287,7 @@ static int general_newton_raphson(int showmessages, PFTYPE *lpflag, int eomtype,
         } // end loop over id's
         if(diddamp){
           // Ensure this newly chosen "old" value gives reasonable result
-          (*funcd) (x, dx, resid, jac, &f, &df, n, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra);  /* returns with new dx, f, df */
+          (*funcd) (x, dx, resid, norm, jac, &f, &df, n, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra);  /* returns with new dx, f, df */
           for(id=0;id<n;id++){
             if(resid[id] <=-VERYBIG || jac[0][id]==0.0 ){ // then went too far such that v^2<0 or \tilde{u}^2<0 or Ss=nan or inf
 #if(PRODUCTION==0)
@@ -4370,6 +4424,13 @@ static int general_newton_raphson(int showmessages, PFTYPE *lpflag, int eomtype,
     }
     errx /= 1.*n;
 #endif
+
+
+    //dualfprintf(fail_file,"x[0]=%21.15g dx[0]=%21.15g df/f=%21.15g errx=%21.15g out of %21.15g or %21.15g\n",x[0],dx[0],df/f,errx,NEWT_TOL_VAR,newtonstats->tryconv);
+
+
+    // save errx for information/debug purposes
+    newtonstats->lerrx=errx;
 
 
     /****************************************/
