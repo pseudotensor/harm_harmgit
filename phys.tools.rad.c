@@ -891,7 +891,7 @@ static void define_method(int iter, int *eomtype, int itermode, int baseitermeth
 
 #define JACLOOP(jj,startjj,endjj) for(jj=startjj;jj<=endjj;jj++)
 #define JACLOOPALT(jj,startjj,endjj) DLOOPA(jj) //for(jj=startjj;jj<=endjj;jj++) // for those things might or might not want to do all terms
-#define JACLOOPSUPERFULL(pliter,pl,eomtype) PLOOP(pliter,pl) if(pl!=ENTROPY && pl!=UU || eomtype==EOMENTROPYGRMHD && pl==ENTROPY || eomtype==EOMGRMHD && pl==UU)
+#define JACLOOPSUPERFULL(pliter,pl,eomtype) PLOOP(pliter,pl) if(pl!=ENTROPY && pl!=UU || eomtype==EOMENTROPYGRMHD && pl==ENTROPY || eomtype==EOMGRMHD && pl==UU) // over f's, not primitives.
 #define JACLOOPFULLERROR(itermode,jj,startjj,endjj) for(jj=(itermode==ITERMODECOLD ? startjj : 0);jj<=(itermode==ITERMODECOLD ? endjj : NDIM-1);jj++)
 #define JACLOOPSUBERROR(jj,startjj,endjj) JACLOOP(jj,startjj,endjj)
 #define JACLOOP2D(ii,jj,startjj,endjj) JACLOOP(ii,startjj,endjj) JACLOOP(jj,startjj,endjj)
@@ -929,7 +929,7 @@ static void get_refUs(int *numdims, int *startjac, int *endjac, int *implicitite
   }
   else if(*implicititer==QTYURAD || *implicititer==QTYPRAD){
     *numdims=NDIM;
-    *signgd7= (-1.0);
+    *signgd7= (+1.0); // required to make URAD method work for (e.g.) RADSHADOW if using Gddt-based GS
     DLOOPA(jj) irefU[jj]=URAD0+jj;
     DLOOPA(jj) iotherU[jj]=UU+jj;
     *startjac=0; *endjac=NDIM-1;
@@ -1132,11 +1132,23 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
     }
     // 2) Get estimated U[entropy]
     // mathematica has Sc = Sc0 + dt *GS with GS = -u.G/T
-    FTYPE Tgaslocal=compute_temp_simple(ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p,pp[RHO],pp[UU]);
-    get_state(pp, ptrgeom, q);
     FTYPE GS=0.0;
+    FTYPE Tgaslocal=0.0;
     if(badchange==0){
-      DLOOPA(iv) GS += (-q->ucon[iv]*signgd2*(signgd7*Gddt[iv]))/(Tgaslocal+TEMPMIN); // more accurate than just using entropy from pp and ucon[TT] from state from pp.
+      if(0){
+        FTYPE Tgaslocal=compute_temp_simple(ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p,pp[RHO],pp[UU]);
+        get_state(pp, ptrgeom, q);
+        DLOOPA(iv) GS += (-q->ucon[iv]*signgd2*(signgd7*Gddt[iv]))/(Tgaslocal+TEMPMIN); // maybe more accurate than just using entropy from pp and ucon[TT] from state from pp.
+      }
+      else{
+        // Get GS completely consisent with primitives, in case using entropy error function, because then shouldn't use Gddt[TT] related to energy equation.
+        // Below rad inv may not be completely necessary, but not too expensive, so ok.
+        int doradonly=1; failreturn=Utoprimgen_failwrapper(doradonly,radinvmod,showmessages,allowlocalfailurefixandnoreport, finalstep, eomtype, whichcap, EVOLVEUTOPRIM, UNOTHING, uu, q, ptrgeom, dissmeasure, pp, &newtonstats);
+        int computestate=1;
+        int computeentropy=1;
+        koral_source_rad_calc(computestate,computeentropy,pp, ptrgeom, Gdpl, Gdplabs, NULL, &Tgaslocal, q);
+        GS = -signgd4 * localdt * Gdpl[ENTROPY]/(signgd6); // Consistent with uu = uu0 + signgd6*GS and how used when getting error function later
+      }
     }
     uu[ENTROPY] = uu0[ENTROPY] + signgd6*GS; // KORALTODO SUPERGODMARK: Problem with UMHD,UMHD no matter signgd7.  Ok with URAD,URAD.   Ok with UMHD,ENTROPYUMHD if signgd7 +1 and signgd4 +1.
     // 3) Do MHD+RAD Inversion
@@ -1375,10 +1387,22 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
     DLOOPA(iv) uu[iotherU[iv]] = uu0[iotherU[iv]] - Gddt[iv];
     // uu0[RHO] doesn't change
     // 4) Estimate U[ENTROPY](G) using old rho,u
-    FTYPE Tgaslocal=compute_temp_simple(ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p,pp[RHO],pp[UU]);
     // UNSURE what to do, since blows up either way:
     //    FTYPE GS=0.0; DLOOPA(iv) GS += (-q->ucon[iv]*signgd2*(signgd7*Gddt[iv]))/(Tgaslocal+TEMPMIN); // more accurate than just using entropy from pp and ucon[TT] from state from pp.
-    FTYPE GS=0.0; DLOOPA(iv) GS += (-q->ucon[iv]*signgd2*(1.0*Gddt[iv]))/(Tgaslocal+TEMPMIN); // more accurate than just using entropy from pp and ucon[TT] from state from pp.
+    FTYPE GS=0.0;
+    FTYPE Tgaslocal;
+    if(0){
+      Tgaslocal=compute_temp_simple(ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p,pp[RHO],pp[UU]);
+      DLOOPA(iv) GS += (-q->ucon[iv]*signgd2*(signgd7*Gddt[iv]))/(Tgaslocal+TEMPMIN); // more accurate than just using entropy from pp and ucon[TT] from state from pp.
+    }
+    else{
+      // Get GS completely consisent with primitives, in case using entropy error function, because then shouldn't use Gddt[TT] related to energy equation.
+      // Below rad inv may not be completely necessary, but not too expensive, so ok.
+      int computestate=0; // already computed above
+      int computeentropy=1;
+      koral_source_rad_calc(computestate,computeentropy,pp, ptrgeom, Gdpl, Gdplabs, NULL, &Tgaslocal, q);
+      GS = -signgd4 * localdt * Gdpl[ENTROPY]/(signgd6); // so uu = uu0 + signgd6*GS is consistent with how Gdpl included in error function later.
+    }
     uu[ENTROPY] = uu0[ENTROPY] + signgd6*GS;
     // 5) Invert to get pmhd (also does rad inversion, but not expensive so ok)
     int doradonly=0; failreturn=Utoprimgen_failwrapper(doradonly,radinvmod,showmessages,allowlocalfailurefixandnoreport, finalstep, eomtype, whichcap, EVOLVEUTOPRIM, UNOTHING, uu, q, ptrgeom, dissmeasure, pp, &newtonstats);
@@ -1511,7 +1535,7 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
     sign[pl]=signgd4;
     // replace original equation with dS*T equation
     // error function is T*dS so no actual division by T.  Found in mathematica that this works best in difficult precision cases.
-    extrafactor[pl]=fabs(Tgas);
+    extrafactor[pl]=fabs(Tgas)+TEMPMIN;
   }
 
   // get f, uuallabs, Gallabs, and fnorm
@@ -1906,7 +1930,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
   //
   //////////////////////////////
 
-  if(MODEMETHOD==MODEENTROPY || eomtypecond==0 || MODEMETHOD==MODEDEFAULT && *eomtype==EOMENTROPYGRMHD){
+  if(MODEMETHOD==MODEENTROPY || MODEMETHOD==MODEDEFAULT && *eomtype==EOMENTROPYGRMHD){
     havebackup=0;
     didentropyalready=0;
     eomtypelocal=EOMENTROPYGRMHD;
@@ -2170,7 +2194,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
 
   int gotrameshsolution=0,usedrameshenergy=0,usedrameshentropy=0;
-  if(MODEMETHOD==MODEPICKBEST && eomtypecond){
+  if(MODEMETHOD==MODEPICKBEST){
 
 
 
@@ -2328,19 +2352,19 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     static FTYPE sqrtnumepsilon;
     static int firsttimeset=1;
     if(firsttimeset){
-      sqrtnumepsilon=pow(NUMEPSILON,2.0/3.0);
+      sqrtnumepsilon=10.0*pow(NUMEPSILON,1.0/3.0);
       //      sqrtnumepsilon=1E-1; // playing -- required for RADBONDI to be fast by using QTYURAD method first as QTYPMHD method fails more.
       firsttimeset=0;
     }
     int radprimaryevolves=0;
-    if(fabs(rdUtot[UU])<sqrtnumepsilon*fabs(rdUtot[URAD0]) || fabs(uu0[URAD0])<sqrtnumepsilon*fabs(uu0[UU])){
+    if(fabs(rdUtot[UU])<sqrtnumepsilon*fabs(rdUtot[URAD0]) || fabs(uu0[URAD0])<sqrtnumepsilon*fabs(uu0[UU]) || fabs(pb[URAD0])<sqrtnumepsilon*fabs(pb[UU])){
       radprimaryevolves=1;
     }
     else{
       radprimaryevolves=0;
     }
     int radextremeprimaryevolves=0;
-    if(fabs(rdUtot[UU])<10.0*NUMEPSILON*fabs(dUtot[URAD0]) || fabs(uu0[URAD0])<10.0*NUMEPSILON*fabs(uu0[UU])){
+    if(fabs(rdUtot[UU])<10.0*NUMEPSILON*fabs(dUtot[URAD0]) || fabs(uu0[URAD0])<10.0*NUMEPSILON*fabs(uu0[UU]) || fabs(pb[URAD0])<10.0*NUMEPSILON*fabs(pb[UU])){
       radextremeprimaryevolves=1;
     }
     else{
@@ -2380,7 +2404,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     // also check energy if entropy thinks we should do explicit
     //
     /////////////
-    if(fracenergy!=0.0 || radinvmodentropy>0 ||  ACTUALHARDORSOFTFAILURE(failreturnentropy)==1 || goexplicitentropy==1){
+    if(eomtypecond && (fracenergy!=0.0 || radinvmodentropy>0 ||  ACTUALHARDORSOFTFAILURE(failreturnentropy)==1 || goexplicitentropy==1)){
 
 
       // quickly try QTYPMHD then QTYURAD
@@ -2723,7 +2747,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
 
 
-    if(ACTUALHARDFAILURE(failreturnenergy)==1){
+    if(eomtypecond==0 || ACTUALHARDFAILURE(failreturnenergy)==1){
       //////////////////////////////////
       //
       // GET ENTROPY (currently, only if failure for energy solver)
@@ -3373,7 +3397,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
 
     // i=j=k=0 just to show infrequently
-    if(debugfail>=2 && (ptrgeom->i==0 && ptrgeom->j==0  && ptrgeom->k==0)) dualfprintf(fail_file,"numimplicits=%lld numexplicitsgood=%lld numexplicitskindabad=%lld numexplicitsbad=%lld numenergy=%lld numentropy=%lld numboth=%lld numcold=%lld numbad=%lld numramesh=%lld numrameshenergy=%lld numrameshentropy=%lld averagef1iter=%g averageiter=%g\n",numimplicits,numexplicitsgood,numexplicitskindabad,numexplicitsbad,numenergy,numentropy,numboth,numcold,numbad,numramesh,numrameshenergy,numrameshentropy,(FTYPE)numoff1iter/(SMALL+(FTYPE)numimplicits),(FTYPE)numofiter/(SMALL+(FTYPE)numimplicits));
+    if(debugfail>=2 && (ptrgeom->i==0 && ptrgeom->j==0  && ptrgeom->k==0)) dualfprintf(fail_file,"nstep=%ld numimplicits=%lld numexplicitsgood=%lld numexplicitskindabad=%lld numexplicitsbad=%lld numenergy=%lld numentropy=%lld numboth=%lld numcold=%lld numbad=%lld numramesh=%lld numrameshenergy=%lld numrameshentropy=%lld averagef1iter=%g averageiter=%g\n",nstep,numimplicits,numexplicitsgood,numexplicitskindabad,numexplicitsbad,numenergy,numentropy,numboth,numcold,numbad,numramesh,numrameshenergy,numrameshentropy,(FTYPE)numoff1iter/(SMALL+(FTYPE)numimplicits),(FTYPE)numofiter/(SMALL+(FTYPE)numimplicits));
     
     numhisterr[MAX(MIN((int)(-log10l(SMALL+errorabs)),NUMNUMHIST-1),0)]++;
     numhistiter[MAX(MIN(iters,IMPMAXITER),0)]++;
@@ -3413,7 +3437,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       }
       if(myid==MPIid[0]){
         // i=j=k=0 just to show infrequently
-        if(debugfail>=2 && (ptrgeom->i==0 && ptrgeom->j==0  && ptrgeom->k==0)&&steppart==0) trifprintf("totalnumimplicits=%lld totalnumexplicitsgood=%lld totalnumexplicitskindabad=%lld totalnumexplicitsbad=%lld totalnumenergy=%lld totalnumentropy=%lld totalnumboth=%lld totalnumcold=%lld totalnumbad=%lld totalnumramesh=%lld totalnumrameshenergy=%lld totalnumrameshentropy=%lld totalaveragef1iter=%g totalaverageiter=%g\n",totalnumimplicits,totalnumexplicitsgood,totalnumexplicitskindabad,totalnumexplicitsbad,totalnumenergy,totalnumentropy,totalnumboth,totalnumcold,totalnumbad,totalnumramesh,totalnumrameshenergy,totalnumrameshentropy,(FTYPE)totalnumoff1iter/(SMALL+(FTYPE)totalnumimplicits),(FTYPE)totalnumofiter/(SMALL+(FTYPE)totalnumimplicits));
+        if(debugfail>=2 && (ptrgeom->i==0 && ptrgeom->j==0  && ptrgeom->k==0)&&steppart==0) trifprintf("nstep=%ld totalnumimplicits=%lld totalnumexplicitsgood=%lld totalnumexplicitskindabad=%lld totalnumexplicitsbad=%lld totalnumenergy=%lld totalnumentropy=%lld totalnumboth=%lld totalnumcold=%lld totalnumbad=%lld totalnumramesh=%lld totalnumrameshenergy=%lld totalnumrameshentropy=%lld totalaveragef1iter=%g totalaverageiter=%g\n",nstep,totalnumimplicits,totalnumexplicitsgood,totalnumexplicitskindabad,totalnumexplicitsbad,totalnumenergy,totalnumentropy,totalnumboth,totalnumcold,totalnumbad,totalnumramesh,totalnumrameshenergy,totalnumrameshentropy,(FTYPE)totalnumoff1iter/(SMALL+(FTYPE)totalnumimplicits),(FTYPE)totalnumofiter/(SMALL+(FTYPE)totalnumimplicits));
 
         if(nstep%HISTREPORTSTEP==0 && ptrgeom->i==0 && ptrgeom->j==0 && ptrgeom->k==0&&steppart==0){
           int histi;

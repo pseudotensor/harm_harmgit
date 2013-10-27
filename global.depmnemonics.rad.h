@@ -70,7 +70,8 @@
 /////////////////////
 
 // while avoids singular behavior, can make inversion unable to reach solution and get locked in cycles due to bad Jacobian, etc.
-#define TEMPMINKELVIN (1.0E+2) // Kelvin
+//#define TEMPMINKELVIN (1.0E+2) // Kelvin // Problem with consistency in error function and entropy estimate for URAD method.
+#define TEMPMINKELVIN (1.0E-10) // Kelvin
 #define TEMPMIN (TEMPMINKELVIN/TEMPBAR) // Code units
 
 
