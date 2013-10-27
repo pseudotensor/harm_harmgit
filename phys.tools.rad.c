@@ -891,7 +891,7 @@ static void define_method(int iter, int *eomtype, int itermode, int baseitermeth
 
 #define JACLOOP(jj,startjj,endjj) for(jj=startjj;jj<=endjj;jj++)
 #define JACLOOPALT(jj,startjj,endjj) DLOOPA(jj) //for(jj=startjj;jj<=endjj;jj++) // for those things might or might not want to do all terms
-#define JACLOOPSUPERFULL(pliter,pl,eomtype) PLOOP(pliter,pl) if(pl!=ENTROPY && pl!=UU || eomtype==EOMENTROPYGRMHD && pl==ENTROPY || eomtype==EOMGRMHD && pl==UU) // over f's, not primitives.
+#define JACLOOPSUPERFULL(pliter,pl,eomtype) PLOOP(pliter,pl) if(pl!=ENTROPY && pl!=UU && pl!=URAD0 || eomtype==EOMENTROPYGRMHD && (pl==ENTROPY || pl==URAD0) || eomtype==EOMGRMHD && (pl==UU||pl==URAD0)) // over f's, not primitives.
 #define JACLOOPFULLERROR(itermode,jj,startjj,endjj) for(jj=(itermode==ITERMODECOLD ? startjj : 0);jj<=(itermode==ITERMODECOLD ? endjj : NDIM-1);jj++)
 #define JACLOOPSUBERROR(jj,startjj,endjj) JACLOOP(jj,startjj,endjj)
 #define JACLOOP2D(ii,jj,startjj,endjj) JACLOOP(ii,startjj,endjj) JACLOOP(jj,startjj,endjj)
@@ -3064,72 +3064,99 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     int f1iterscold=0;
 
     // implicit cold solution held in these variables
-    FTYPE pbcold[NPR];
-    FTYPE uubcold[NPR]; // holds returned uu from implicit solver
-    FTYPE dUcompcold[NUMSOURCES][NPR];
-    struct of_state qcold;
-    PFTYPE lpflagcold;
-    PFTYPE lpflagradcold;
-    int radinvmodcold;
-    int radErfnegcold;
-    int failreturncold=0; // default is didn't do or fail on cold
-    int eomtypecold;
+    FTYPE pbcold[NPR]; PLOOP(pliter,pl) pbcold[pl]=pbbackup[pl];
+    FTYPE uubcold[NPR];  PLOOP(pliter,pl) uubcold[pl]=uubbackup[pl]; // holds returned uu from implicit solver
+    FTYPE dUcompcold[NUMSOURCES][NPR]; PLOOP(pliter,pl) SCLOOP(sc) dUcompcold[sc][pl]=dUcompbackup[sc][pl];
+    struct of_state qcold=qbackup;
+    PFTYPE lpflagcold=1;
+    PFTYPE lpflagradcold=1;
+    int radinvmodcold=1;
+    int radErfnegcold=1;
+    int failreturncold=FAILRETURNGENERAL; // default to fail in case cold not to be done at all
+    int eomtypecold=EOMCOLDGRMHD;
     FTYPE errorabscold=1.0;
-    int goexplicitcold;
+    int goexplicitcold=0;
 
 
     if(ACCEPTASNOFAILURE(failreturnenergy)==0 && ACCEPTASNOFAILURE(failreturnentropy)==0){
-      failreturncold=FAILRETURNGENERAL; // if doing cold, default is fail.
-      int whichcapcold=CAPTYPEBASIC;
-      int itermodecold=ITERMODECOLD;
-      int baseitermethodcold=QTYPMHD;
-      int trueimpmaxitercold=IMPMAXITER;
-      int truenumdampattemptscold=NUMDAMPATTEMPTS;
+
+      //////
+      //
+      // measure whether flow really cold enough to even use cold inversion
+      //
+      /////
+      int iscoldflow;
+
+      int jj;
+      FTYPE usq=0.0;  SLOOPA(jj) usq+=q->ucon[1]*q->ucov[1];
+      FTYPE ucovgas[NDIM],ucovrad[NDIM];
+      DLOOPA(jj) ucovgas[jj]=uu0[UU+jj];
+      DLOOPA(jj) ucovrad[jj]=uu0[URAD0+jj];
+      FTYPE ucongas[NDIM],uconrad[NDIM];
+      raise_vec(ucovgas,ptrgeom,ucongas);
+      raise_vec(ucovrad,ptrgeom,uconrad);
+      FTYPE ugas=0.0;  SLOOPA(jj) ugas+=ucovgas[jj]*ucongas[jj];
+      FTYPE urad=0.0;  SLOOPA(jj) urad+=ucovrad[jj]*uconrad[jj];
+#define COLDFACTOR (0.1)
+      iscoldflow = (pb[UU]<COLDFACTOR*pb[RHO]*fabs(usq) && fabs(ucongas[TT]*ucovgas[TT])<COLDFACTOR*fabs(ugas) && fabs(uconrad[TT]*ucovrad[TT])<COLDFACTOR*fabs(urad));
+
+      iscoldflow=1;
+
+      //      dualfprintf(fail_file,"iscoldflow: %d : ug=%21.15g Erf=%21.15g rhovsq=%21.15g : Esqgas=%21.15g usqgas=%21.15g Esqrad=%21.15g usqrad=%21.15g\n",iscoldflow,pb[UU],pb[URAD0],pb[RHO]*fabs(usq),fabs(ucongas[TT]*ucovgas[TT]),fabs(ugas),fabs(uconrad[TT]*ucovrad[TT]),fabs(urad));
+
+
+      // if flow is cold, do inversion
+      if(iscoldflow==1){
+
+
+        failreturncold=FAILRETURNGENERAL; // if doing cold, default is fail.
+        int whichcapcold=CAPTYPEBASIC;
+        int itermodecold=ITERMODECOLD;
+        int baseitermethodcold=QTYPMHD;
+        int trueimpmaxitercold=IMPMAXITER;
+        int truenumdampattemptscold=NUMDAMPATTEMPTS;
       
 
-      // start fresh or use entropy as starting point
-      *lpflag=UTOPRIMNOFAIL;
-      *lpflagrad=UTOPRIMRADNOFAIL;
-      radinvmodcold=0;
-      radErfnegcold=0;
-      failreturncold=FAILRETURNGENERAL; // default to fail in case cold not to be done at all
-      eomtypecold=EOMCOLDGRMHD;
-      goexplicitcold=0;
-      errorabscold=1.0;
-      FTYPE fracenergycold=0.0;
-      FTYPE errorabscoldbest=1.0;
+        // start fresh or use entropy as starting point
+        *lpflag=UTOPRIMNOFAIL;
+        *lpflagrad=UTOPRIMRADNOFAIL;
+        radinvmodcold=0;
+        radErfnegcold=0;
+        failreturncold=FAILRETURNGENERAL; // default to fail in case cold not to be done at all
+        eomtypecold=EOMCOLDGRMHD;
+        goexplicitcold=0;
+        errorabscold=1.0;
+        FTYPE fracenergycold=0.0;
+        FTYPE errorabscoldbest=1.0;
 
-      havebackup=0; // no backup since entropy and energy failed
-      didentropyalready=0;
-      PLOOP(pliter,pl){
-        pbcold[pl]=pbbackup[pl];
-        uubcold[pl]=uubbackup[pl];
-        if(0){
-          // but force cold setup
-          pbcold[UU]=UUMINLIMIT;
-          pbcold[URAD0]=ERADLIMIT;
+        havebackup=0; // no backup since entropy and energy failed
+        didentropyalready=0;
+        PLOOP(pliter,pl){
+          pbcold[pl]=pbbackup[pl];
+          uubcold[pl]=uubbackup[pl];
+          if(0){
+            // but force cold setup
+            pbcold[UU]=UUMINLIMIT;
+            pbcold[URAD0]=ERADLIMIT;
+          }
+          else{
+            // try just using static u_g and solving momentum equation as if not changing.
+          }
+          SCLOOP(sc) dUcompcold[sc][pl]=dUcompbackup[sc][pl];
         }
-        else{
-          // try just using static u_g and solving momentum equation as if not changing.
-        }
-        SCLOOP(sc) dUcompcold[sc][pl]=dUcompbackup[sc][pl];
-      }
-      qcold=qbackup;
-      errorabscold=1.0;
+        qcold=qbackup;
+        errorabscold=1.0;
 
 
-      failreturncold=koral_source_rad_implicit_mode(0,0,havebackup, didentropyalready, &eomtypecold, whichcapcold, itermodecold, &baseitermethodcold, trueimpmaxitercold, truenumdampattemptscold, fracenergycold, dissmeasure, &radinvmodcold, pbcold, uubcold, piin, Uiin, Ufin, CUf, ptrgeom, &qcold, dUother ,dUcompcold, &errorabscold, errorabscoldbest, &iterscold, &f1iterscold);
+        failreturncold=koral_source_rad_implicit_mode(0,0,havebackup, didentropyalready, &eomtypecold, whichcapcold, itermodecold, &baseitermethodcold, trueimpmaxitercold, truenumdampattemptscold, fracenergycold, dissmeasure, &radinvmodcold, pbcold, uubcold, piin, Uiin, Ufin, CUf, ptrgeom, &qcold, dUother ,dUcompcold, &errorabscold, errorabscoldbest, &iterscold, &f1iterscold);
 
-      if(failreturncold==FAILRETURNGOEXPLICIT) goexplicitcold=1;
-      // store these in case cold ultimately used
-      lpflagcold=*lpflag;
-      lpflagradcold=*lpflagrad;
+        if(failreturncold==FAILRETURNGOEXPLICIT) goexplicitcold=1;
+        // store these in case cold ultimately used
+        lpflagcold=*lpflag;
+        lpflagradcold=*lpflagrad;
 
-    }
-    else{
-      failreturncold=FAILRETURNGENERAL; // default to fail in case cold not to be done at all
-    }
-
+      }// end if cold flow
+    }// end if not failure
 
 
 
