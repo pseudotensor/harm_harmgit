@@ -2363,8 +2363,9 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     static FTYPE sqrtnumepsilon;
     static int firsttimeset=1;
     if(firsttimeset){
-      sqrtnumepsilon=10.0*pow(NUMEPSILON,1.0/3.0);
+      //      sqrtnumepsilon=10.0*pow(NUMEPSILON,1.0/3.0);
       //      sqrtnumepsilon=1E-1; // playing -- required for RADBONDI to be fast by using QTYURAD method first as QTYPMHD method fails more.
+      sqrtnumepsilon=MIN(1.0,10.0*NUMEPSILON/IMPTRYCONV);
       firsttimeset=0;
     }
     int radprimaryevolves=0;
@@ -2759,7 +2760,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
 
 
-    if(eomtypecond==0 || ACTUALHARDFAILURE(failreturnenergy)==1){
+    if(pbenergy[UU]<=0.0 || eomtypecond==0 || ACTUALHARDFAILURE(failreturnenergy)==1){
       //////////////////////////////////
       //
       // GET ENTROPY (currently, only if failure for energy solver)
@@ -2826,7 +2827,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
           errorabsentropy=1.0;
           //
           // setup guess
-          if(ACTUALHARDFAILURE(failreturnenergy)==1 || errorabsenergy>ERRORTOUSEENTROPYFORENERGYGUESS){
+          if(ACTUALHARDFAILURE(failreturnenergy)==1 || errorabsenergy>ERRORTOUSEENTROPYFORENERGYGUESS || pbenergy[UU]<=0.0){
             if(errorabsentropybest>TRYHARDERFEEDGUESSTOL){
               PLOOP(pliter,pl){
                 pbentropy[pl]=pbbackup[pl];
