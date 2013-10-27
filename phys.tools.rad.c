@@ -3100,7 +3100,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 #define COLDFACTOR (0.1)
       iscoldflow = (pb[UU]<COLDFACTOR*pb[RHO]*fabs(usq) && fabs(ucongas[TT]*ucovgas[TT])<COLDFACTOR*fabs(ugas) && fabs(uconrad[TT]*ucovrad[TT])<COLDFACTOR*fabs(urad));
 
-      iscoldflow=1;
+      //      iscoldflow=1;
 
       //      dualfprintf(fail_file,"iscoldflow: %d : ug=%21.15g Erf=%21.15g rhovsq=%21.15g : Esqgas=%21.15g usqgas=%21.15g Esqrad=%21.15g usqrad=%21.15g\n",iscoldflow,pb[UU],pb[URAD0],pb[RHO]*fabs(usq),fabs(ucongas[TT]*ucovgas[TT]),fabs(ugas),fabs(uconrad[TT]*ucovrad[TT]),fabs(urad));
 
