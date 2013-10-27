@@ -891,7 +891,7 @@ static void define_method(int iter, int *eomtype, int itermode, int baseitermeth
 
 #define JACLOOP(jj,startjj,endjj) for(jj=startjj;jj<=endjj;jj++)
 #define JACLOOPALT(jj,startjj,endjj) DLOOPA(jj) //for(jj=startjj;jj<=endjj;jj++) // for those things might or might not want to do all terms
-#define JACLOOPSUPERFULL(pliter,pl,eomtype) PLOOP(pliter,pl) if(pl!=ENTROPY && pl!=UU && pl!=URAD0 || eomtype==EOMENTROPYGRMHD && (pl==ENTROPY || pl==URAD0) || eomtype==EOMGRMHD && (pl==UU||pl==URAD0)) // over f's, not primitives.
+#define JACLOOPSUPERFULL(pliter,pl,eomtype) PLOOP(pliter,pl) if(pl!=ENTROPY && pl!=UU && pl!=URAD0 || (eomtype==EOMDEFAULT && EOMTYPE==EOMENTROPYGRMHD || eomtype==EOMENTROPYGRMHD || eomtype==EOMDIDENTROPYGRMHD) && (pl==ENTROPY || pl==URAD0) || (eomtype==EOMDEFAULT && EOMTYPE==EOMGRMHD || eomtype==EOMGRMHD || eomtype==EOMDIDGRMHD) && (pl==UU||pl==URAD0)) // over f's, not primitives.
 #define JACLOOPFULLERROR(itermode,jj,startjj,endjj) for(jj=(itermode==ITERMODECOLD ? startjj : 0);jj<=(itermode==ITERMODECOLD ? endjj : NDIM-1);jj++)
 #define JACLOOPSUBERROR(jj,startjj,endjj) JACLOOP(jj,startjj,endjj)
 #define JACLOOP2D(ii,jj,startjj,endjj) JACLOOP(ii,startjj,endjj) JACLOOP(jj,startjj,endjj)
@@ -1031,12 +1031,23 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
   // initialize counters
   newtonstats.nstroke=newtonstats.lntries=0;
   // set inputs for errors, maxiters, etc.
-  newtonstats.tryconv=convabs;
-  newtonstats.tryconvultrarel=convabs*1E-1; // just bit smaller, not as extreme as default
+#define ITERMHDINVTRYHARDER 5
+  if(iter>=ITERMHDINVTRYHARDER || whichcall==FIMPLICITCALLTYPEFINALCHECK){
+    // try lowest error allowed, may be raised a bit in MHD inversion code.
+    newtonstats.tryconv=NUMEPSILON;
+    newtonstats.tryconvultrarel=NUMEPSILON;
+    newtonstats.extra_newt_iter=1; // KORALNOTE: apparently should keep this as >=1 to ensure error really drops
+    newtonstats.extra_newt_iter_ultrarel=2; // KORALNOTE: apparently should keep this as >=1 to ensure error really drops
+  }
+  else{
+    // KORALNOTE: If make newtonstats.tryconv~convabs, then if convabs~1E-12, then MHD inversion may return error~1E-10 in terms of how measured with f_error_check(), so must try harder than expected.
+    newtonstats.tryconv=convabs*1E-2;
+    newtonstats.tryconvultrarel=convabs*1E-2; // just bit smaller, not as extreme as default
+    newtonstats.extra_newt_iter=1; // KORALNOTE: apparently should keep this as >=1 to ensure error really drops
+    newtonstats.extra_newt_iter_ultrarel=1; // KORALNOTE: apparently should keep this as >=1 to ensure error really drops
+  }
   newtonstats.mintryconv=allowconvabs;
   newtonstats.maxiter=maxiter;
-  newtonstats.extra_newt_iter=0;
-  newtonstats.extra_newt_iter_ultrarel=1;
   // override with less strict error for Jacobian calculation
   if(whichcall==FIMPLICITCALLTYPEJAC){
     newtonstats.tryconv=MAX(impeps*1E-2,newtonstats.tryconv);
@@ -1136,7 +1147,7 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
     FTYPE Tgaslocal=0.0;
     if(badchange==0){
       if(0){
-        FTYPE Tgaslocal=compute_temp_simple(ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p,pp[RHO],pp[UU]);
+        Tgaslocal=compute_temp_simple(ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p,pp[RHO],pp[UU]);
         get_state(pp, ptrgeom, q);
         DLOOPA(iv) GS += (-q->ucon[iv]*signgd2*(signgd7*Gddt[iv]))/(Tgaslocal+TEMPMIN); // maybe more accurate than just using entropy from pp and ucon[TT] from state from pp.
       }
@@ -1734,9 +1745,9 @@ static FTYPE compute_dt(FTYPE *CUf, FTYPE dtin)
 #define FAILRETURNNOTTOLERROR 4
 
 #define ACCEPTASNOFAILURE(failreturn) (failreturn==FAILRETURNNOFAIL || failreturn==FAILRETURNNOTTOLERROR || failreturn==FAILRETURNGOEXPLICIT)
-//#define GOODNOFAILURE(failreturn) (failreturn==FAILRETURNNOFAIL)
-#define NOTACTUALFAILURE(failreturn) (failreturn==FAILRETURNNOFAIL || failreturn==FAILRETURNMODESWITCH)
-#define NOTBADFAILURE(failreturn) (failreturn==FAILRETURNNOFAIL || failreturn==FAILRETURNMODESWITCH  || failreturn==FAILRETURNNOTTOLERROR)
+//#define GOODNOFAILURE(failreturn) (failreturn==FAILRETURNNOFAIL || failreturn==FAILRETURNGOEXPLICIT)
+#define NOTACTUALFAILURE(failreturn) (failreturn==FAILRETURNNOFAIL || failreturn==FAILRETURNMODESWITCH || failreturn==FAILRETURNGOEXPLICIT)
+#define NOTBADFAILURE(failreturn) (failreturn==FAILRETURNNOFAIL || failreturn==FAILRETURNMODESWITCH  || failreturn==FAILRETURNNOTTOLERROR || failreturn==FAILRETURNGOEXPLICIT)
 
 #define ACTUALHARDFAILURE(failreturn) (failreturn==FAILRETURNGENERAL || failreturn==FAILRETURNJACISSUE)
 #define ACTUALHARDORSOFTFAILURE(failreturn) (failreturn==FAILRETURNGENERAL || failreturn==FAILRETURNJACISSUE || failreturn==FAILRETURNNOTTOLERROR)
@@ -2449,6 +2460,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
 
         // consider radinvmod only if error bad for original approach.  Avoids excessive attempts when should hit radiative ceiling and error is small.
+        // KORALTODO: KORALNOTE: If explicit was triggered (failreturnenergy) then could move on, but go ahead and test using other methods in case radinvmod!=0 can be avoided.
         if(radinvmodenergybest!=0 && checkradinvlist[tryphase1] || ACTUALHARDORSOFTFAILURE(failreturnenergybest) && failreturnenergybest!=FAILRETURNMODESWITCH){
 
           //          dualfprintf(fail_file,"REALLYTRYING: tryphase1=%d\n",tryphase1);
