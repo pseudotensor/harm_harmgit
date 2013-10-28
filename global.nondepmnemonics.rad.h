@@ -23,6 +23,19 @@
 #define TYPEUCON (0)
 #define TYPEUCOV (1)
 
+// array indices for prioritermethod
+#define NUMPRIORITERMETHODINDEX 7
+#define PRIORITERMETHODNOTSET -1
+#define BASEITERMETHODINDEX 0
+#define ITERMODEINDEX 1
+#define IMPMAXITERINDEX 2
+#define NUMDAMPINDEX 3
+#define MODPRIMINDEX 4
+#define CHECKRADINVINDEX 5
+#define EOMTYPEINDEX 6
+
+
+
 //relele.c
 // same as dot(a,b) in global.variousmacros.h
 //#define dot(A,B) (A[0]*B[0]+A[1]*B[1]+A[2]*B[2]+A[3]*B[3])

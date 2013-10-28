@@ -1766,6 +1766,11 @@ static FTYPE compute_dt(FTYPE *CUf, FTYPE dtin)
 // wrapper for mode method
 static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE dissmeasure, FTYPE *dUother ,FTYPE (*dUcomp)[NPR])
 {
+  int i=ptrgeom->i;
+  int j=ptrgeom->j;
+  int k=ptrgeom->k;
+  int p=ptrgeom->p;
+
   int pliter,pl;
   int sc;
 
@@ -2408,6 +2413,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
 
 
+
     /////////////
     //
     // GET ENERGY
@@ -2416,6 +2422,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     // also check energy if entropy thinks we should do explicit
     //
     /////////////
+    //    if(GLOBALMACP0A1(prioritermethod,i,j,k,EOMINDEX) == EOMGRMHD || GLOBALMACP0A1(prioritermethod,i,j,k,EOMINDEX) == PRIORITERMETHODNOTSET && eomtypecond && (fracenergy!=0.0 || radinvmodentropy>0 ||  ACTUALHARDORSOFTFAILURE(failreturnentropy)==1 || goexplicitentropy==1)){
     if(eomtypecond && (fracenergy!=0.0 || radinvmodentropy>0 ||  ACTUALHARDORSOFTFAILURE(failreturnentropy)==1 || goexplicitentropy==1)){
 
 
@@ -2435,13 +2442,24 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       // KORALNOTE: radinv check would nominally catch if PMHD method failed due to machine errors in GAS leading to huge changes in RAD leading to E_r<0 or gamma>gammaradmax, but might as well use desired method first.
       // normal checkradinvlist will catch if prad method doesn't lead to radinv but urad method does.
       // normal checkradinvlist will catch if somehow rad method leads to radinv but gas method doesn't.
-      if(radprimaryevolves){
+      if(radprimaryevolves && GLOBALMACP0A1(prioritermethod,i,j,k,BASEITERMETHODINDEX) == PRIORITERMETHODNOTSET
+         ||  GLOBALMACP0A1(prioritermethod,i,j,k,BASEITERMETHODINDEX) == QTYURAD
+         ){
         tryphase1=-1;
         tryphase1++; baseitermethodlist[tryphase1]=QTYURAD; modprimlist[tryphase1]=0;
         tryphase1++; baseitermethodlist[tryphase1]=QTYPRAD; modprimlist[tryphase1]=0;
         tryphase1++; baseitermethodlist[tryphase1]=QTYPMHD; modprimlist[tryphase1]=0;
         tryphase1++; baseitermethodlist[tryphase1]=QTYURAD; modprimlist[tryphase1]=0;
         tryphase1++; baseitermethodlist[tryphase1]=QTYPRAD; modprimlist[tryphase1]=0;
+        tryphase1++; baseitermethodlist[tryphase1]=QTYPMHD; modprimlist[tryphase1]=1;
+      }
+      if(GLOBALMACP0A1(prioritermethod,i,j,k,BASEITERMETHODINDEX) == QTYPRAD){
+        tryphase1=-1;
+        tryphase1++; baseitermethodlist[tryphase1]=QTYPRAD; modprimlist[tryphase1]=0;
+        tryphase1++; baseitermethodlist[tryphase1]=QTYURAD; modprimlist[tryphase1]=0;
+        tryphase1++; baseitermethodlist[tryphase1]=QTYPMHD; modprimlist[tryphase1]=0;
+        tryphase1++; baseitermethodlist[tryphase1]=QTYPRAD; modprimlist[tryphase1]=0;
+        tryphase1++; baseitermethodlist[tryphase1]=QTYURAD; modprimlist[tryphase1]=0;
         tryphase1++; baseitermethodlist[tryphase1]=QTYPMHD; modprimlist[tryphase1]=1;
       }
 
@@ -2542,6 +2560,11 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
             failreturnenergybest=failreturnenergy;
             eomtypeenergybest=eomtypelist[tryphase1];
             goexplicitenergybest=1;
+
+            // save which method ended up using
+            int prioriter; for(prioriter=0;prioriter<NUMPRIORITERMETHODINDEX;prioriter++){
+              GLOBALMACP0A1(prioritermethod,i,j,k,prioriter) = PRIORITERMETHODNOTSET; // back to unknown
+            }
           }
           else{
             // see if want to keep
@@ -2567,6 +2590,15 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
                 SCLOOP(sc) dUcompenergybest[sc][pl]=dUcompenergy[sc][pl];
               }
               qenergybest=qenergy;
+
+              // save which method ended up using
+              GLOBALMACP0A1(prioritermethod,i,j,k,BASEITERMETHODINDEX) = baseitermethodlist[tryphase1];
+              GLOBALMACP0A1(prioritermethod,i,j,k,ITERMODEINDEX) = itermodelist[tryphase1];
+              GLOBALMACP0A1(prioritermethod,i,j,k,IMPMAXITERINDEX) = trueimpmaxiterlist[tryphase1];
+              GLOBALMACP0A1(prioritermethod,i,j,k,NUMDAMPINDEX) = truenumdampattemptslist[tryphase1];
+              GLOBALMACP0A1(prioritermethod,i,j,k,MODPRIMINDEX) = modprimlist[tryphase1];
+              GLOBALMACP0A1(prioritermethod,i,j,k,CHECKRADINVINDEX) = checkradinvlist[tryphase1];
+              GLOBALMACP0A1(prioritermethod,i,j,k,EOMTYPEINDEX) = eomtypelist[tryphase1];
             }
           }
 
@@ -2699,6 +2731,16 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
             SCLOOP(sc) dUcompenergybest[sc][pl]=dUcompenergy[sc][pl];
           }
           qenergybest=qenergy;
+
+          // save which method ended up using
+          GLOBALMACP0A1(prioritermethod,i,j,k,BASEITERMETHODINDEX) = QTYPMHD;
+          GLOBALMACP0A1(prioritermethod,i,j,k,ITERMODEINDEX) = ITERMODESTAGES;
+          GLOBALMACP0A1(prioritermethod,i,j,k,IMPMAXITERINDEX) = IMPMAXITER;
+          GLOBALMACP0A1(prioritermethod,i,j,k,NUMDAMPINDEX) = NUMDAMPATTEMPTSQUICK;
+          GLOBALMACP0A1(prioritermethod,i,j,k,MODPRIMINDEX) = 0;
+          GLOBALMACP0A1(prioritermethod,i,j,k,CHECKRADINVINDEX) = 1;
+          GLOBALMACP0A1(prioritermethod,i,j,k,EOMTYPEINDEX) = EOMGRMHD;
+
         }
 
         // still cost more iters
@@ -2741,6 +2783,9 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       lpflagenergy=*lpflag;
       lpflagradenergy=*lpflagrad;
 
+      
+
+
 
      
     }// end if doing GRMHD inversion
@@ -2780,15 +2825,28 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       int checkradinvlist[NUMPHASESENT]={0,1,1,1,0,1,1,1};
       int eomtypelist[NUMPHASESENT]={EOMENTROPYGRMHD,EOMENTROPYGRMHD,EOMENTROPYGRMHD,EOMENTROPYGRMHD,EOMENTROPYGRMHD,EOMENTROPYGRMHD,EOMENTROPYGRMHD,EOMENTROPYGRMHD};
 
-      if(radprimaryevolves){
+      if(radprimaryevolves && GLOBALMACP0A1(prioritermethod,i,j,k,BASEITERMETHODINDEX) == PRIORITERMETHODNOTSET
+         ||  GLOBALMACP0A1(prioritermethod,i,j,k,BASEITERMETHODINDEX) == QTYURAD
+         ){
         tryphase1=-1;
-        tryphase1++; baseitermethodlist[tryphase1]=QTYURAD;  modprimlist[tryphase1]=0;
-        tryphase1++; baseitermethodlist[tryphase1]=QTYPRAD; modprimlist[tryphase1]=0;
-        tryphase1++; baseitermethodlist[tryphase1]=QTYPMHD; modprimlist[tryphase1]=0;
+        tryphase1++; baseitermethodlist[tryphase1]=QTYURAD;        modprimlist[tryphase1]=0;
+        tryphase1++; baseitermethodlist[tryphase1]=QTYPRAD;        modprimlist[tryphase1]=0;
+        tryphase1++; baseitermethodlist[tryphase1]=QTYPMHD;        modprimlist[tryphase1]=0;
         tryphase1++; baseitermethodlist[tryphase1]=QTYENTROPYUMHD; modprimlist[tryphase1]=0;
-        tryphase1++; baseitermethodlist[tryphase1]=QTYURAD; modprimlist[tryphase1]=0;
-        tryphase1++; baseitermethodlist[tryphase1]=QTYPRAD; modprimlist[tryphase1]=0;
-        tryphase1++; baseitermethodlist[tryphase1]=QTYPMHD; modprimlist[tryphase1]=1;
+        tryphase1++; baseitermethodlist[tryphase1]=QTYURAD;        modprimlist[tryphase1]=0;
+        tryphase1++; baseitermethodlist[tryphase1]=QTYPRAD;        modprimlist[tryphase1]=0;
+        tryphase1++; baseitermethodlist[tryphase1]=QTYPMHD;        modprimlist[tryphase1]=1;
+        tryphase1++; baseitermethodlist[tryphase1]=QTYENTROPYUMHD; modprimlist[tryphase1]=0;
+      }
+      if(GLOBALMACP0A1(prioritermethod,i,j,k,BASEITERMETHODINDEX) == QTYPRAD){
+        tryphase1=-1;
+        tryphase1++; baseitermethodlist[tryphase1]=QTYPRAD;        modprimlist[tryphase1]=0;
+        tryphase1++; baseitermethodlist[tryphase1]=QTYURAD;        modprimlist[tryphase1]=0;
+        tryphase1++; baseitermethodlist[tryphase1]=QTYPMHD;        modprimlist[tryphase1]=0;
+        tryphase1++; baseitermethodlist[tryphase1]=QTYENTROPYUMHD; modprimlist[tryphase1]=0;
+        tryphase1++; baseitermethodlist[tryphase1]=QTYPRAD;        modprimlist[tryphase1]=0;
+        tryphase1++; baseitermethodlist[tryphase1]=QTYURAD;        modprimlist[tryphase1]=0;
+        tryphase1++; baseitermethodlist[tryphase1]=QTYPMHD;        modprimlist[tryphase1]=1;
         tryphase1++; baseitermethodlist[tryphase1]=QTYENTROPYUMHD; modprimlist[tryphase1]=0;
       }
 
@@ -2871,6 +2929,11 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
             failreturnentropybest=failreturnentropy;
             eomtypeentropybest=eomtypelist[tryphase1];
             goexplicitentropybest=1;
+
+            // save which method ended up using
+            int prioriter; for(prioriter=0;prioriter<NUMPRIORITERMETHODINDEX;prioriter++){
+              GLOBALMACP0A1(prioritermethod,i,j,k,prioriter) = PRIORITERMETHODNOTSET; // back to unknown
+            }
           }
           else{
             // see if want to keep
@@ -2888,8 +2951,18 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
                 pbentropybest[pl]=pbentropy[pl];
                 uubentropybest[pl]=uubentropy[pl];
                 SCLOOP(sc) dUcompentropybest[sc][pl]=dUcompentropy[sc][pl];
-                qentropybest=qentropy;
               }
+              qentropybest=qentropy;
+
+              // save which method ended up using
+              GLOBALMACP0A1(prioritermethod,i,j,k,BASEITERMETHODINDEX) = baseitermethodlist[tryphase1];
+              GLOBALMACP0A1(prioritermethod,i,j,k,ITERMODEINDEX) = itermodelist[tryphase1];
+              GLOBALMACP0A1(prioritermethod,i,j,k,IMPMAXITERINDEX) = trueimpmaxiterlist[tryphase1];
+              GLOBALMACP0A1(prioritermethod,i,j,k,NUMDAMPINDEX) = truenumdampattemptslist[tryphase1];
+              GLOBALMACP0A1(prioritermethod,i,j,k,MODPRIMINDEX) = modprimlist[tryphase1];
+              GLOBALMACP0A1(prioritermethod,i,j,k,CHECKRADINVINDEX) = checkradinvlist[tryphase1];
+              GLOBALMACP0A1(prioritermethod,i,j,k,EOMTYPEINDEX) = eomtypelist[tryphase1];
+
             }
           }
 
@@ -3002,6 +3075,16 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
             SCLOOP(sc) dUcompentropybest[sc][pl]=dUcompentropy[sc][pl];
           }
           qentropybest=qentropy;
+
+          // save which method ended up using
+          GLOBALMACP0A1(prioritermethod,i,j,k,BASEITERMETHODINDEX) = QTYPMHD;
+          GLOBALMACP0A1(prioritermethod,i,j,k,ITERMODEINDEX) = ITERMODESTAGES;
+          GLOBALMACP0A1(prioritermethod,i,j,k,IMPMAXITERINDEX) = IMPMAXITER;
+          GLOBALMACP0A1(prioritermethod,i,j,k,NUMDAMPINDEX) = NUMDAMPATTEMPTSQUICK;
+          GLOBALMACP0A1(prioritermethod,i,j,k,MODPRIMINDEX) = 0;
+          GLOBALMACP0A1(prioritermethod,i,j,k,CHECKRADINVINDEX) = 1;
+          GLOBALMACP0A1(prioritermethod,i,j,k,EOMTYPEINDEX) = EOMENTROPYGRMHD;
+
         }
         // still cost more iters
         itersentropy+=itersentropyold;
@@ -3168,6 +3251,16 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
         lpflagcold=*lpflag;
         lpflagradcold=*lpflagrad;
 
+        // save which method ended up using
+        GLOBALMACP0A1(prioritermethod,i,j,k,BASEITERMETHODINDEX) = QTYPMHD;
+        GLOBALMACP0A1(prioritermethod,i,j,k,ITERMODEINDEX) = ITERMODECOLD;
+        GLOBALMACP0A1(prioritermethod,i,j,k,IMPMAXITERINDEX) = IMPMAXITER;
+        GLOBALMACP0A1(prioritermethod,i,j,k,NUMDAMPINDEX) = NUMDAMPATTEMPTS;
+        GLOBALMACP0A1(prioritermethod,i,j,k,MODPRIMINDEX) = 0;
+        GLOBALMACP0A1(prioritermethod,i,j,k,CHECKRADINVINDEX) = 1;
+        GLOBALMACP0A1(prioritermethod,i,j,k,EOMTYPEINDEX) = EOMCOLDGRMHD;
+
+
       }// end if cold flow
     }// end if not failure
 
@@ -3230,6 +3323,9 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
         f1iters=f1itersentropy+f1itersenergy; // count both since did both
         failreturn=failreturnentropy;
         failfinalreturn=0;
+
+        GLOBALMACP0A1(prioritermethod,i,j,k,EOMTYPEINDEX) == EOMENTROPYGRMHD;
+
       }
       else if(ACCEPTASNOFAILURE(failreturnenergy)==1){ // automatically also done when fracenergy==1.0 (now, or when also fracenergy>0.0)
         //      dualfprintf(fail_file,"USING ENERGY: errorabsenergy=%g errorabsentropy=%g\n",errorabsenergy,errorabsentropy);
@@ -3250,6 +3346,9 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
         f1iters=f1itersentropy+f1itersenergy; // count both since did both
         failreturn=failreturnenergy;
         failfinalreturn=0;
+
+        GLOBALMACP0A1(prioritermethod,i,j,k,EOMTYPEINDEX) == EOMGRMHD;
+
       }
       else if(ACCEPTASNOFAILURE(failreturncold)==1){
         //      dualfprintf(fail_file,"USING COLD: errorabscold=%g errorabsentropy=%g\n",errorabscold,errorabsentropy);
@@ -3277,9 +3376,15 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
         // only keep u_g and Erf static as backup
         pbcold[UU]=pbbackup[UU];
         pbcold[URAD0]=pbbackup[URAD0]; 
+
+        GLOBALMACP0A1(prioritermethod,i,j,k,EOMTYPEINDEX) == EOMCOLDGRMHD;
+
       }
       else{ // force even if was default
         usedimplicit=0;
+
+        GLOBALMACP0A1(prioritermethod,i,j,k,EOMTYPEINDEX) == EOMDEFAULT;
+
       }
     }
 
@@ -3292,12 +3397,15 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
         noprims=1;
         failfinalreturn=1;
         *eomtype=EOMDEFAULT;
+        GLOBALMACP0A1(prioritermethod,i,j,k,EOMTYPEINDEX) == *eomtype;
+
         if(debugfail>=3) dualfprintf(fail_file,"Went explicit: eenergy=%g eentropy=%g ienergy=%d ientropy=%d\n",errorabsenergy,errorabsentropy,itersenergy,itersentropy);
         if(goexplicitenergy==1 || goexplicitentropy==1){ usedexplicitgood=1; failfinalreturn=-1;}
         else{ usedexplicitkindabad=1; failfinalreturn=1;} // FUCK: might want to treat as actual failure if QTYPMHD mode since lpflag never set.
       }
       else{ // actual failure
         // if no source, then will do normal inversion (no change to *eomtype) as if G=0.
+        GLOBALMACP0A1(prioritermethod,i,j,k,EOMTYPEINDEX) == *eomtype;
         *lpflag=UTOPRIMFAILCONV;
         *lpflagrad=UTOPRIMRADFAILCASE1A;
         errorabs=MIN(errorabsenergy,errorabsentropy); // indicates error that could have had if chose to raise IMPALLOWCONV
@@ -3327,11 +3435,10 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
 
 
-
-
-
-
-
+  // DEBUG:
+  //  int prioriter; for(prioriter=0;prioriter<NUMPRIORITERMETHODINDEX;prioriter++){
+  //    dualfprintf(fail_file,"INDEX: prioriter=%d : %d\n",prioriter,GLOBALMACP0A1(prioritermethod,i,j,k,prioriter));
+  //  }
 
 
 
@@ -3383,6 +3490,16 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     static long long int numrameshenergy=0;
     static long long int numrameshentropy=0;
 
+    static long long int numqtypmhd=0;
+    static long long int numqtyumhd=0;
+    static long long int numqtyprad=0;
+    static long long int numqtyurad=0;
+    static long long int numqtyentropyumhd=0;
+    static long long int numqtyentropypmhd=0;
+    static long long int numitermodenormal=0;
+    static long long int numitermodestages=0;
+    static long long int numitermodecold=0;
+
     static long long int numimplicits=0;
     static long long int numexplicitsgood=0;
     static long long int numexplicitskindabad=0;
@@ -3390,6 +3507,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     static long long int numoff1iter=0,numofiter=0;
     static long long int numhisterr[NUMNUMHIST]={0}; // histogram of error for implicit solver to be reported infrequently
     static long long int numhistiter[IMPMAXITER+1]={0}; // histogram of error for implicit solver to be reported infrequently
+    //    static long long int numindex[NUMPRIORITERMETHODINDEX]={0};
 
     // static counter for diagnosing issues
     static long long int totalnumenergy=0;
@@ -3401,6 +3519,17 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     static long long int totalnumrameshenergy=0;
     static long long int totalnumrameshentropy=0;
 
+    static long long int totalnumqtypmhd=0;
+    static long long int totalnumqtyumhd=0;
+    static long long int totalnumqtyprad=0;
+    static long long int totalnumqtyurad=0;
+    static long long int totalnumqtyentropyumhd=0;
+    static long long int totalnumqtyentropypmhd=0;
+    static long long int totalnumitermodenormal=0;
+    static long long int totalnumitermodestages=0;
+    static long long int totalnumitermodecold=0;
+
+
     static long long int totalnumimplicits=0;
     static long long int totalnumexplicitsgood=0;
     static long long int totalnumexplicitskindabad=0;
@@ -3408,6 +3537,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     static long long int totalnumoff1iter=0,totalnumofiter=0;
     static long long int totalnumhisterr[NUMNUMHIST]={0}; // histogram of error for implicit solver to be reported infrequently
     static long long int totalnumhistiter[IMPMAXITER+1]={0}; // histogram of error for implicit solver to be reported infrequently
+    //    static long long int totalnumindex[NUMPRIORITERMETHODINDEX]={0};
 
 
     ////////////////////
@@ -3435,9 +3565,26 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     numrameshenergy+=usedrameshenergy;
     numrameshentropy+=usedrameshentropy;
 
+    //        GLOBALMACP0A1(prioritermethod,i,j,k,BASEITERMETHODINDEX) = QTYPMHD;
+    //        GLOBALMACP0A1(prioritermethod,i,j,k,ITERMODEINDEX) = ITERMODECOLD;
+    //        GLOBALMACP0A1(prioritermethod,i,j,k,IMPMAXITERINDEX) = IMPMAXITER;
+    //        GLOBALMACP0A1(prioritermethod,i,j,k,NUMDAMPINDEX) = NUMDAMPATTEMPTS;
+    //        GLOBALMACP0A1(prioritermethod,i,j,k,MODPRIMINDEX) = 0;
+    //        GLOBALMACP0A1(prioritermethod,i,j,k,CHECKRADINVINDEX) = 1;
+    //        GLOBALMACP0A1(prioritermethod,i,j,k,EOMTYPEINDEX) = EOMCOLDGRMHD;
+    numqtypmhd += (GLOBALMACP0A1(prioritermethod,i,j,k,BASEITERMETHODINDEX) == QTYPMHD);
+    numqtyumhd += (GLOBALMACP0A1(prioritermethod,i,j,k,BASEITERMETHODINDEX) == QTYUMHD);
+    numqtyprad += (GLOBALMACP0A1(prioritermethod,i,j,k,BASEITERMETHODINDEX) == QTYPRAD);
+    numqtyurad += (GLOBALMACP0A1(prioritermethod,i,j,k,BASEITERMETHODINDEX) == QTYURAD);
+    numqtyentropyumhd += (GLOBALMACP0A1(prioritermethod,i,j,k,BASEITERMETHODINDEX) == QTYENTROPYUMHD);
+    numqtyentropypmhd += (GLOBALMACP0A1(prioritermethod,i,j,k,BASEITERMETHODINDEX) == QTYENTROPYPMHD);
+    numitermodenormal += (GLOBALMACP0A1(prioritermethod,i,j,k,ITERMODEINDEX) == ITERMODENORMAL);
+    numitermodestages += (GLOBALMACP0A1(prioritermethod,i,j,k,ITERMODEINDEX) == ITERMODESTAGES);
+    numitermodecold += (GLOBALMACP0A1(prioritermethod,i,j,k,ITERMODEINDEX) == ITERMODECOLD);
+
 
     // i=j=k=0 just to show infrequently
-    if(debugfail>=2 && (ptrgeom->i==0 && ptrgeom->j==0  && ptrgeom->k==0)) dualfprintf(fail_file,"nstep=%ld numimplicits=%lld numexplicitsgood=%lld numexplicitskindabad=%lld numexplicitsbad=%lld numenergy=%lld numentropy=%lld numboth=%lld numcold=%lld numbad=%lld numramesh=%lld numrameshenergy=%lld numrameshentropy=%lld averagef1iter=%g averageiter=%g\n",nstep,numimplicits,numexplicitsgood,numexplicitskindabad,numexplicitsbad,numenergy,numentropy,numboth,numcold,numbad,numramesh,numrameshenergy,numrameshentropy,(FTYPE)numoff1iter/(SMALL+(FTYPE)numimplicits),(FTYPE)numofiter/(SMALL+(FTYPE)numimplicits));
+    if(debugfail>=2 && (ptrgeom->i==0 && ptrgeom->j==0  && ptrgeom->k==0)) dualfprintf(fail_file,"nstep=%ld numimplicits=%lld numexplicitsgood=%lld numexplicitskindabad=%lld numexplicitsbad=%lld numenergy=%lld numentropy=%lld numboth=%lld numcold=%lld numbad=%lld numramesh=%lld numrameshenergy=%lld numrameshentropy=%lld averagef1iter=%g averageiter=%g  : numqtypmhd=%d numqtyumhd=%d numqtyprad=%d numqtyurad=%d numqtyentropyumhd=%d numqtyentropypmhd=%d numitermodenormal=%d numitermodestages=%d numitermodecold=%d\n",nstep,numimplicits,numexplicitsgood,numexplicitskindabad,numexplicitsbad,numenergy,numentropy,numboth,numcold,numbad,numramesh,numrameshenergy,numrameshentropy,(FTYPE)numoff1iter/(SMALL+(FTYPE)numimplicits),(FTYPE)numofiter/(SMALL+(FTYPE)numimplicits),numqtypmhd,numqtyumhd,numqtyprad,numqtyurad,numqtyentropyumhd,numqtyentropypmhd,numitermodenormal,numitermodestages,numitermodecold);
     
     numhisterr[MAX(MIN((int)(-log10l(SMALL+errorabs)),NUMNUMHIST-1),0)]++;
     numhistiter[MAX(MIN(iters,IMPMAXITER),0)]++;
@@ -3472,12 +3619,22 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
         MPI_Reduce(&numrameshenergy, &totalnumrameshenergy, 1, MPI_LONG_LONG_INT, MPI_SUM, MPIid[0], MPI_COMM_GRMHD);
         MPI_Reduce(&numrameshentropy, &totalnumrameshentropy, 1, MPI_LONG_LONG_INT, MPI_SUM, MPIid[0], MPI_COMM_GRMHD);
 
+        MPI_Reduce(&numqtypmhd, &totalnumqtypmhd, 1, MPI_LONG_LONG_INT, MPI_SUM, MPIid[0], MPI_COMM_GRMHD);
+        MPI_Reduce(&numqtyumhd, &totalnumqtyumhd, 1, MPI_LONG_LONG_INT, MPI_SUM, MPIid[0], MPI_COMM_GRMHD);
+        MPI_Reduce(&numqtyprad, &totalnumqtyprad, 1, MPI_LONG_LONG_INT, MPI_SUM, MPIid[0], MPI_COMM_GRMHD);
+        MPI_Reduce(&numqtyurad, &totalnumqtyurad, 1, MPI_LONG_LONG_INT, MPI_SUM, MPIid[0], MPI_COMM_GRMHD);
+        MPI_Reduce(&numqtyentropyumhd, &totalnumqtyentropyumhd, 1, MPI_LONG_LONG_INT, MPI_SUM, MPIid[0], MPI_COMM_GRMHD);
+        MPI_Reduce(&numqtyentropypmhd, &totalnumqtyentropypmhd, 1, MPI_LONG_LONG_INT, MPI_SUM, MPIid[0], MPI_COMM_GRMHD);
+        MPI_Reduce(&numitermodenormal, &totalnumitermodenormal, 1, MPI_LONG_LONG_INT, MPI_SUM, MPIid[0], MPI_COMM_GRMHD);
+        MPI_Reduce(&numitermodestages, &totalnumitermodestages, 1, MPI_LONG_LONG_INT, MPI_SUM, MPIid[0], MPI_COMM_GRMHD);
+
         MPI_Reduce(numhisterr, totalnumhisterr, NUMNUMHIST, MPI_LONG_LONG_INT, MPI_SUM, MPIid[0], MPI_COMM_GRMHD);
         MPI_Reduce(numhistiter, totalnumhistiter, IMPMAXITER+1, MPI_LONG_LONG_INT, MPI_SUM, MPIid[0], MPI_COMM_GRMHD);
       }
       if(myid==MPIid[0]){
         // i=j=k=0 just to show infrequently
-        if(debugfail>=2 && (ptrgeom->i==0 && ptrgeom->j==0  && ptrgeom->k==0)&&steppart==0) trifprintf("nstep=%ld totalnumimplicits=%lld totalnumexplicitsgood=%lld totalnumexplicitskindabad=%lld totalnumexplicitsbad=%lld totalnumenergy=%lld totalnumentropy=%lld totalnumboth=%lld totalnumcold=%lld totalnumbad=%lld totalnumramesh=%lld totalnumrameshenergy=%lld totalnumrameshentropy=%lld totalaveragef1iter=%g totalaverageiter=%g\n",nstep,totalnumimplicits,totalnumexplicitsgood,totalnumexplicitskindabad,totalnumexplicitsbad,totalnumenergy,totalnumentropy,totalnumboth,totalnumcold,totalnumbad,totalnumramesh,totalnumrameshenergy,totalnumrameshentropy,(FTYPE)totalnumoff1iter/(SMALL+(FTYPE)totalnumimplicits),(FTYPE)totalnumofiter/(SMALL+(FTYPE)totalnumimplicits));
+        if(debugfail>=2 && (ptrgeom->i==0 && ptrgeom->j==0  && ptrgeom->k==0)) dualfprintf(fail_file,"nstep=%ld totalnumimplicits=%lld totalnumexplicitsgood=%lld totalnumexplicitskindabad=%lld totalnumexplicitsbad=%lld totalnumenergy=%lld totalnumentropy=%lld totalnumboth=%lld totalnumcold=%lld totalnumbad=%lld totalnumramesh=%lld totalnumrameshenergy=%lld totalnumrameshentropy=%lld averagef1iter=%g averageiter=%g  : totalnumqtypmhd=%d totalnumqtyumhd=%d totalnumqtyprad=%d totalnumqtyurad=%d totalnumqtyentropyumhd=%d totalnumqtyentropypmhd=%d totalnumitermodenormal=%d totalnumitermodestages=%d totalnumitermodecold=%d\n",nstep,totalnumimplicits,totalnumexplicitsgood,totalnumexplicitskindabad,totalnumexplicitsbad,totalnumenergy,totalnumentropy,totalnumboth,totalnumcold,totalnumbad,totalnumramesh,totalnumrameshenergy,totalnumrameshentropy,(FTYPE)totalnumoff1iter/(SMALL+(FTYPE)totalnumimplicits),(FTYPE)totalnumofiter/(SMALL+(FTYPE)totalnumimplicits),totalnumqtypmhd,totalnumqtyumhd,totalnumqtyprad,totalnumqtyurad,totalnumqtyentropyumhd,totalnumqtyentropypmhd,totalnumitermodenormal,totalnumitermodestages,totalnumitermodecold);
+        //        if(debugfail>=2 && (ptrgeom->i==0 && ptrgeom->j==0  && ptrgeom->k==0)&&steppart==0) trifprintf("nstep=%ld totalnumimplicits=%lld totalnumexplicitsgood=%lld totalnumexplicitskindabad=%lld totalnumexplicitsbad=%lld totalnumenergy=%lld totalnumentropy=%lld totalnumboth=%lld totalnumcold=%lld totalnumbad=%lld totalnumramesh=%lld totalnumrameshenergy=%lld totalnumrameshentropy=%lld totalaveragef1iter=%g totalaverageiter=%g\n",nstep,totalnumimplicits,totalnumexplicitsgood,totalnumexplicitskindabad,totalnumexplicitsbad,totalnumenergy,totalnumentropy,totalnumboth,totalnumcold,totalnumbad,totalnumramesh,totalnumrameshenergy,totalnumrameshentropy,(FTYPE)totalnumoff1iter/(SMALL+(FTYPE)totalnumimplicits),(FTYPE)totalnumofiter/(SMALL+(FTYPE)totalnumimplicits));
 
         if(nstep%HISTREPORTSTEP==0 && ptrgeom->i==0 && ptrgeom->j==0 && ptrgeom->k==0&&steppart==0){
           int histi;
