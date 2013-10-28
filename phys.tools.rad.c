@@ -39,9 +39,9 @@ return( (*x)>=0 ?
 #include "testfpp.P"
 // not linking with libf2c since don't want that dependence and conversion doesn't need it since the original code was simple
 
-int get_rameshsolution(int whichcall, int radinvmod, int failtype, long long int failnum, int gotfirstnofail, int eomtypelocal, int itermode, int baseitermethod, FTYPE errorabs, FTYPE errorabsbestexternal, int iters, int totaliters, FTYPE realdt, struct of_geom *ptrgeom, FTYPE *pp, FTYPE *pb, FTYPE *piin, FTYPE *uu0, FTYPE *uu, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_state *q, FTYPE *ppeng, FTYPE *ppent, FTYPE *uueng, FTYPE *uuent, struct of_state *qeng, struct of_state *qent, int *failtypeeng, FTYPE *errorabseng, int *iterseng, int *radinvmodeng, int *failtypeent, FTYPE *errorabsent, int *itersent, int *radinvmodent);
+int get_rameshsolution(int whichcall, int radinvmod, int failtype, long long int failnum, int gotfirstnofail, int eomtypelocal, int itermode, int baseitermethod, FTYPE *errorabs, FTYPE *errorabsbestexternal, int iters, int totaliters, FTYPE realdt, struct of_geom *ptrgeom, FTYPE *pp, FTYPE *pb, FTYPE *piin, FTYPE *uu0, FTYPE *uu, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_state *q, FTYPE *ppeng, FTYPE *ppent, FTYPE *uueng, FTYPE *uuent, struct of_state *qeng, struct of_state *qent, int *failtypeeng, FTYPE *errorabseng, int *iterseng, int *radinvmodeng, int *failtypeent, FTYPE *errorabsent, int *itersent, int *radinvmodent);
 
-int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE errorabs, struct of_geom *ptrgeom, FTYPE *pp, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *dUother, FTYPE *CUf, struct of_state *q, FTYPE *ppeng, FTYPE *ppent, FTYPE *uueng, FTYPE *uuent, FTYPE (*dUcompeng)[NPR], FTYPE (*dUcompent)[NPR], struct of_state *qeng, struct of_state *qent, int *failtypeeng, FTYPE *errorabseng, int *iterseng, int *radinvmodeng, int *failtypeent, FTYPE *errorabsent, int *itersent, int *radinvmodent);
+int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE *errorabs, struct of_geom *ptrgeom, FTYPE *pp, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *dUother, FTYPE *CUf, struct of_state *q, FTYPE *ppeng, FTYPE *ppent, FTYPE *uueng, FTYPE *uuent, FTYPE (*dUcompeng)[NPR], FTYPE (*dUcompent)[NPR], struct of_state *qeng, struct of_state *qent, int *failtypeeng, FTYPE *errorabseng, int *iterseng, int *radinvmodeng, int *failtypeent, FTYPE *errorabsent, int *itersent, int *radinvmodent);
 
 //////////////////////////////////////////////
 //
@@ -391,7 +391,7 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE errorabs, struc
 //////// implicit stuff
 static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE dissmeasure, FTYPE *dUother ,FTYPE (*dUcomp)[NPR]);
 
-static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int modprim, int havebackup, int didentropyalready, int *eomtype, int whichcap, int itermode, int *baseitermethod, int trueimpmaxiter, int truenumdampattempts, FTYPE fracenergy, FTYPE dissmeasure, int *radinvmod, FTYPE *pb, FTYPE *uub, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother ,FTYPE (*dUcomp)[NPR], FTYPE *errorabs, FTYPE errorabsbestexternal, int *iters, int *f1iters);
+static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int modprim, int havebackup, int didentropyalready, int *eomtype, int whichcap, int itermode, int *baseitermethod, int trueimpmaxiter, int truenumdampattempts, FTYPE fracenergy, FTYPE dissmeasure, int *radinvmod, FTYPE *pb, FTYPE *uub, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother ,FTYPE (*dUcomp)[NPR], FTYPE *errorabs, FTYPE *errorabsbestexternal, int *iters, int *f1iters);
 
 static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int failreturnallowable, int whichcall, FTYPE impeps, int showmessages, int showmessagesheavy, int allowlocalfailurefixandnoreport, int *eomtype, int whichcap, int itermode, int *baseitermethod, FTYPE fracenergy, FTYPE dissmeasure, int *radinvmod, FTYPE conv, FTYPE convabs, FTYPE allowconvabs, int maxiter, FTYPE realdt, int dimtypef, FTYPE *dimfactU, FTYPE *ppprev, FTYPE *pp, FTYPE *piin, FTYPE *uuprev, FTYPE *Uiin, FTYPE *uu0,FTYPE *uu,FTYPE localdt, struct of_geom *ptrgeom, struct of_state *q,  FTYPE *f, FTYPE *fnorm, FTYPE *freport, int *goexplicit, FTYPE *errorabs, FTYPE *errorallabs, int whicherror, int *convreturn);
 
@@ -417,7 +417,7 @@ static void get_refUs(int *numdims, int *startjac, int *endjac, int *implicitite
 
 // debug stuff
 static void showdebuglist(int debugiter, FTYPE (*pppreholdlist)[NPR],FTYPE (*ppposholdlist)[NPR],FTYPE (*f1reportlist)[NDIM],FTYPE (*f1list)[NDIM],FTYPE *errorabsf1list,FTYPE *errorallabsf1list, int *realiterlist, FTYPE *jac00list);
-int mathematica_report_check(int radinvmod, int failtype, long long int failnum, int gotfirstnofail, int eomtypelocal, int itermode, int baseitermethod, FTYPE errorabs, FTYPE errorabsbestexternal, int iters, int iterstotal, FTYPE realdt,struct of_geom *ptrgeom, FTYPE *ppfirst, FTYPE *pp, FTYPE *pb, FTYPE *piin, FTYPE *prtestUiin, FTYPE *prtestUU0, FTYPE *uu0, FTYPE *uu, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_state *q, FTYPE *dUother);
+int mathematica_report_check(int radinvmod, int failtype, long long int failnum, int gotfirstnofail, int eomtypelocal, int itermode, int baseitermethod, FTYPE *errorabs, FTYPE *errorabsbestexternal, int iters, int iterstotal, FTYPE realdt,struct of_geom *ptrgeom, FTYPE *ppfirst, FTYPE *pp, FTYPE *pb, FTYPE *piin, FTYPE *prtestUiin, FTYPE *prtestUU0, FTYPE *uu0, FTYPE *uu, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_state *q, FTYPE *dUother);
 
 // explicit stuff
 static void get_dtsub(int method, FTYPE *pr, struct of_state *q, FTYPE *Ui, FTYPE *Uf, FTYPE *dUother, FTYPE *CUf, FTYPE *Gdpl, FTYPE chi, FTYPE *Gdplabs, struct of_geom *ptrgeom, FTYPE *dtsub);
@@ -1866,7 +1866,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
   // diags
   //
   ////////
-  FTYPE errorabs; // either over iterated pl or full relavant pl
+  FTYPE errorabs[NUMERRORTYPES]; // 0: over iterated pl and 1: over full relavant pl
   int iters=0;
   int f1iters=0;
   FTYPE fracenergy;
@@ -1894,7 +1894,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     havebackup=0;
     didentropyalready=0;
     eomtypelocal=*eomtype;
-    errorabs=1.0;
+    errorabs[0]=errorabs[1]=1.0;
     fracenergy=1.0;
     itermode=ITERMODESTAGES;
     baseitermethod=QTYPMHD;
@@ -1908,7 +1908,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     // but, ITERMODESTAGES with QTYPRAD does kinda ok, 6 early bads and ~20 damps, but then settles.
 
     whichcap=CAPTYPEBASIC;
-    failreturn=koral_source_rad_implicit_mode(1,0,havebackup, didentropyalready, &eomtypelocal, whichcap, itermode, &baseitermethod, trueimpmaxiter,  truenumdampattempts, fracenergy, dissmeasure, &radinvmod, pb, uub, piin, Uiin, Ufin, CUf, ptrgeom, q, dUother ,dUcomp, &errorabs, errorabs, &iters, &f1iters);
+    failreturn=koral_source_rad_implicit_mode(1,0,havebackup, didentropyalready, &eomtypelocal, whichcap, itermode, &baseitermethod, trueimpmaxiter,  truenumdampattempts, fracenergy, dissmeasure, &radinvmod, pb, uub, piin, Uiin, Ufin, CUf, ptrgeom, q, dUother ,dUcomp, errorabs, errorabs, &iters, &f1iters);
     if(ACTUALHARDFAILURE(failreturn)){
       failfinalreturn=1;
       *lpflag=UTOPRIMFAILCONV;
@@ -1950,12 +1950,12 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     havebackup=0;
     didentropyalready=0;
     eomtypelocal=EOMENTROPYGRMHD;
-    errorabs=1.0;
+    errorabs[0]=errorabs[1]=1.0;
     fracenergy=0.0;
     itermode=ITERMODESTAGES;
     whichcap=CAPTYPEBASIC;
     baseitermethod=QTYPMHD;
-    failreturn=koral_source_rad_implicit_mode(1,0,havebackup, didentropyalready, &eomtypelocal, whichcap, itermode, &baseitermethod, trueimpmaxiter,  truenumdampattempts, fracenergy, dissmeasure, &radinvmod, pb, uub, piin, Uiin, Ufin, CUf, ptrgeom, q, dUother ,dUcomp, &errorabs, errorabs, &iters, &f1iters);
+    failreturn=koral_source_rad_implicit_mode(1,0,havebackup, didentropyalready, &eomtypelocal, whichcap, itermode, &baseitermethod, trueimpmaxiter,  truenumdampattempts, fracenergy, dissmeasure, &radinvmod, pb, uub, piin, Uiin, Ufin, CUf, ptrgeom, q, dUother ,dUcomp, errorabs, errorabs, &iters, &f1iters);
     if(ACTUALHARDFAILURE(failreturn)){
       failfinalreturn=1;
       *lpflag=UTOPRIMFAILCONV;
@@ -1994,7 +1994,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
   if(MODEMETHOD==MODEENERGYRAMESH&&USERAMESH){
     // these ramesh solutions are here so both entropy and energy can have chance to fill them.
     int gotrameshsolution=0;
-    FTYPE ppeng[NPR]={0},ppent[NPR]={0},errorabseng=1.0,errorabsent=1.0;
+    FTYPE ppeng[NPR]={0},ppent[NPR]={0},errorabseng[NUMERRORTYPES]={1.0},errorabsent[NUMERRORTYPES]={1.0};
     int failtypeeng=1,failtypeent=1,iterseng=IMPMAXITER,itersent=IMPMAXITER,radinvmodeng=-1,radinvmodent=-1;
     struct of_state qeng, qent;
     FTYPE uueng[NPR]={0.0},uuent[NPR]={0.0};
@@ -2004,8 +2004,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
 
     goexplicit=0; // force since no explicit check
-    FTYPE errorabsforramesh;
-    errorabsforramesh=1.0;
+    FTYPE errorabsforramesh[NUMERRORTYPES]={1.0};
     PLOOP(pliter,pl){
       pb[pl]=pbbackup[pl];
       uub[pl]=uubbackup[pl];
@@ -2017,7 +2016,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     failreturn=FAILRETURNGENERAL;// default to fail
     *eomtype=EOMGRMHD;
     int whichcall=eomtype;
-    get_rameshsolution_wrapper(whichcall, *eomtype, errorabsforramesh, ptrgeom, pb, piin, Uiin, Ufin, dUother, CUf, q, ppeng, ppent, uueng, uuent, dUcompeng, dUcompent, &qeng, &qent, &failtypeeng, &errorabseng, &iterseng, &radinvmodeng, &failtypeent, &errorabsent, &itersent, &radinvmodent);
+    get_rameshsolution_wrapper(whichcall, *eomtype, errorabsforramesh, ptrgeom, pb, piin, Uiin, Ufin, dUother, CUf, q, ppeng, ppent, uueng, uuent, dUcompeng, dUcompent, &qeng, &qent, &failtypeeng, errorabseng, &iterseng, &radinvmodeng, &failtypeent, errorabsent, &itersent, &radinvmodent);
     gotrameshsolution=1; // indicates did at least attempt ramesh soltion call
     // translate
     PLOOP(pliter,pl){
@@ -2031,8 +2030,9 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     radinvmod=radinvmodeng;
     //    radErfneg=0; // not allowed, considered BADNEG type
     iters=iterseng;
-    errorabs=errorabseng;
-    if(failtypeeng || errorabs>IMPALLOWCONVABS){
+    errorabs[0]=errorabseng[0];
+    errorabs[1]=errorabseng[1];
+    if(failtypeeng || errorabs[WHICHERROR]>IMPALLOWCONVABS){
       failfinalreturn=1;
       failreturn=FAILRETURNGENERAL; *eomtype=EOMGRMHD;
       // restore backups in case got contaminated
@@ -2045,7 +2045,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       goexplicit=0;
       usedimplicit=1;
     }
-    else if(errorabs<IMPTRYCONVABS){
+    else if(errorabs[WHICHERROR]<IMPTRYCONVABS){
       failfinalreturn=0;
       failreturn=FAILRETURNNOFAIL;
       noprims=0;
@@ -2076,7 +2076,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
   //////////////////////////////
 
   if(MODEMETHOD==MODESWITCH && eomtypecond){
-    FTYPE errorabsenergy=1.0,errorabsentropy=1.0;
+    FTYPE errorabsenergy[NUMERRORTYPES]={1.0},errorabsentropy[NUMERRORTYPES]={1.0};
     int itersenergy=0,itersentropy=0;
     int f1itersenergy=0,f1itersentropy=0;
     int itermodeenergy,itermodeentropy;
@@ -2091,13 +2091,13 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     havebackup=1; // only time this is used is here where we tell energy that we have backup method, so can give up quickly.
     didentropyalready=0;
     fracenergy=1.0;
-    errorabsenergy=1.0;
+    errorabsenergy[0]=errorabsenergy[1]=1.0;
     itermodeenergy=ITERMODESTAGES;
     whichcapenergy=CAPTYPEBASIC;
     trueimpmaxiterenergy=IMPMAXITER;
     truenumdampattemptsenergy=NUMDAMPATTEMPTS;
     baseitermethodenergy=QTYPMHD;
-    failreturnenergy=koral_source_rad_implicit_mode(1,0,havebackup, didentropyalready, &eomtypelocal, whichcapenergy, itermodeenergy, &baseitermethodenergy, trueimpmaxiterenergy,  truenumdampattemptsenergy, fracenergy, dissmeasure, &radinvmod, pb, uub, piin, Uiin, Ufin, CUf, ptrgeom, q, dUother ,dUcomp, &errorabsenergy, errorabsenergy, &itersenergy, &f1itersenergy);
+    failreturnenergy=koral_source_rad_implicit_mode(1,0,havebackup, didentropyalready, &eomtypelocal, whichcapenergy, itermodeenergy, &baseitermethodenergy, trueimpmaxiterenergy,  truenumdampattemptsenergy, fracenergy, dissmeasure, &radinvmod, pb, uub, piin, Uiin, Ufin, CUf, ptrgeom, q, dUother ,dUcomp, errorabsenergy, errorabsenergy, &itersenergy, &f1itersenergy);
 
     if(SWITCHGOODIDEAFAILURE(failreturn) && eomtypecond){
       // if failed with GRMHD or return reported switching to entropy is preferred, then do entropy method
@@ -2113,13 +2113,13 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       havebackup=0;
       didentropyalready=0;
       fracenergy=0.0;
-      errorabsentropy=1.0;
+      errorabsentropy[0]=errorabsentropy[1]=1.0;
       itermodeentropy=ITERMODESTAGES;
       whichcapentropy=CAPTYPEBASIC;
       trueimpmaxiterentropy=IMPMAXITER;
       truenumdampattemptsentropy=NUMDAMPATTEMPTS;
       baseitermethodentropy=QTYPMHD;
-      failreturnentropy=koral_source_rad_implicit_mode(1,0,havebackup, didentropyalready, &eomtypelocal, whichcapentropy, itermodeentropy, &baseitermethodentropy, trueimpmaxiterentropy,  truenumdampattemptsentropy, fracenergy, dissmeasure, &radinvmod, pb, uub, piin, Uiin, Ufin, CUf, ptrgeom, q, dUother ,dUcomp, &errorabsentropy, errorabsentropy, &itersentropy, &f1itersentropy);
+      failreturnentropy=koral_source_rad_implicit_mode(1,0,havebackup, didentropyalready, &eomtypelocal, whichcapentropy, itermodeentropy, &baseitermethodentropy, trueimpmaxiterentropy,  truenumdampattemptsentropy, fracenergy, dissmeasure, &radinvmod, pb, uub, piin, Uiin, Ufin, CUf, ptrgeom, q, dUother ,dUcomp, errorabsentropy, errorabsentropy, &itersentropy, &f1itersentropy);
       if(ACTUALHARDFAILURE(failreturnentropy)){
         failfinalreturn=1;
         *lpflag=UTOPRIMFAILCONV;
@@ -2133,7 +2133,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
         failfinalreturn=0;
         usedentropy=1;
         noprims=0;
-        errorabs=errorabsentropy;
+        errorabs[0]=errorabsentropy[0];
+        errorabs[1]=errorabsentropy[1];
         iters=itersentropy;
         f1iters=f1itersentropy;
         // tell an externals to switch to entropy
@@ -2157,7 +2158,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       failfinalreturn=0;
       usedenergy=1;
       noprims=0;
-      errorabs=errorabsenergy;
+      errorabs[0]=errorabsenergy[0];
+      errorabs[1]=errorabsenergy[1];
       iters=itersenergy;
       f1iters=f1itersenergy;
       // switch to whatever solver suggested if didn't meet go-entropy condition
@@ -2228,7 +2230,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     int whichcapentropy;
 
     // hold error and iterations from last attempt
-    FTYPE errorabsentropyold;
+    FTYPE errorabsentropyold[NUMERRORTYPES]={1.0};
     int itersentropyold;
     // hold iterations for total entropy attempts
     int itersentropy=0;
@@ -2252,7 +2254,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     int radErfnegentropybest=1;
     int failreturnentropybest=FAILRETURNGENERAL;
     int eomtypeentropybest=EOMENTROPYGRMHD;
-    FTYPE errorabsentropybest=1.0;
+    FTYPE errorabsentropybest[NUMERRORTYPES]={1.0};
     int goexplicitentropybest=0;
 
     // holds latest entropy solution
@@ -2266,7 +2268,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     int radErfnegentropy=1;
     int failreturnentropy=FAILRETURNGENERAL;  // default to fail in case energy not to be done at all
     int eomtypeentropy=EOMENTROPYGRMHD;
-    FTYPE errorabsentropy=1.0; // default is high error
+    FTYPE errorabsentropy[NUMERRORTYPES]={1.0}; // default is high error
     int goexplicitentropy=0;
 
 
@@ -2289,7 +2291,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     ////////
 
     // hold old error and iterations
-    FTYPE errorabsenergyold;
+    FTYPE errorabsenergyold[NUMERRORTYPES]={1.0};
     int itersenergyold;
 
     // latest energy iterations
@@ -2316,7 +2318,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     int radErfnegenergybest=1;
     int failreturnenergybest=FAILRETURNGENERAL;
     int eomtypeenergybest=EOMGRMHD;
-    FTYPE errorabsenergybest=1.0;
+    FTYPE errorabsenergybest[NUMERRORTYPES]={1.0};
     int goexplicitenergybest=0;
 
     // holds result from implicit solver
@@ -2330,7 +2332,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     int radErfnegenergy=1;
     int failreturnenergy=FAILRETURNGENERAL; // default
     int eomtypeenergy=EOMGRMHD;
-    FTYPE errorabsenergy=1.0;
+    FTYPE errorabsenergy[NUMERRORTYPES]={1.0};
     int goexplicitenergy=0;
 
 
@@ -2351,7 +2353,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       SCLOOP(sc) dUcompeng[sc][pl]=dUcompent[sc][pl]=dUcompbackup[sc][pl];
     }
     struct of_state qeng=qbackup, qent=qbackup;
-    FTYPE errorabseng=1.0,errorabsent=1.0;
+    FTYPE errorabseng[NUMERRORTYPES]={1.0},errorabsent[NUMERRORTYPES]={1.0};
     int failtypeeng=1,failtypeent=1,iterseng=IMPMAXITER,itersent=IMPMAXITER,radinvmodeng=-1,radinvmodent=-1;
 
 
@@ -2365,16 +2367,18 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     // assume at this stage that radiation primarily evolves if Erf sufficiently large compared to u_g or changes in URAD0 are sufficiently large
     //
     // check
-    static FTYPE sqrtnumepsilon;
+    static FTYPE sqrtnumepsilon1;
+    static FTYPE sqrtnumepsilon2;
     static int firsttimeset=1;
     if(firsttimeset){
       //      sqrtnumepsilon=10.0*pow(NUMEPSILON,1.0/3.0);
       //      sqrtnumepsilon=1E-1; // playing -- required for RADBONDI to be fast by using QTYURAD method first as QTYPMHD method fails more.
-      sqrtnumepsilon=MIN(1.0,10.0*NUMEPSILON/IMPTRYCONV);
+      sqrtnumepsilon1=MIN(1.0,10.0*NUMEPSILON/IMPTRYCONV);
+      sqrtnumepsilon2=pow(NUMEPSILON,1.0/3.0);
       firsttimeset=0;
     }
     int radprimaryevolves=0;
-    if(fabs(rdUtot[UU])<sqrtnumepsilon*fabs(rdUtot[URAD0]) || fabs(uu0[URAD0])<sqrtnumepsilon*fabs(uu0[UU]) || fabs(pb[URAD0])<sqrtnumepsilon*fabs(pb[UU])){
+    if(fabs(rdUtot[UU])<sqrtnumepsilon1*fabs(rdUtot[URAD0]) || fabs(uu0[URAD0])<sqrtnumepsilon1*fabs(uu0[UU]) || fabs(pb[URAD0])<sqrtnumepsilon1*fabs(pb[UU])){
       radprimaryevolves=1;
     }
     else{
@@ -2388,16 +2392,16 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       radextremeprimaryevolves=0;
     }
     int gasprimaryevolves=0;
-    //    if(radprimaryevolves==0 && (pb[URAD0]<sqrtnumepsilon*pb[UU] || (-uu0[URAD0])<sqrtnumepsilon*(-uu0[UU]))){
-    //    if(pb[URAD0]<sqrtnumepsilon*pb[UU] || fabs(dUtot[URAD0])<sqrtnumepsilon*fabs(dUtot[UU])){
-    if(radprimaryevolves==0 && (fabs(rdUtot[URAD0])<sqrtnumepsilon*fabs(rdUtot[UU]) || fabs(uu0[UU])<sqrtnumepsilon*fabs(uu0[URAD0]))){
+    //    if(radprimaryevolves==0 && (pb[URAD0]<sqrtnumepsilon2*pb[UU] || (-uu0[URAD0])<sqrtnumepsilon2*(-uu0[UU]))){
+    //    if(pb[URAD0]<sqrtnumepsilon2*pb[UU] || fabs(dUtot[URAD0])<sqrtnumepsilon2*fabs(dUtot[UU])){
+    if(radprimaryevolves==0 && (fabs(rdUtot[URAD0])<sqrtnumepsilon2*fabs(rdUtot[UU]) || fabs(uu0[UU])<sqrtnumepsilon2*fabs(uu0[URAD0]) || fabs(pb[UU])<sqrtnumepsilon2*fabs(pb[URAD0]) )){
       gasprimaryevolves=1;
     }
     else{
       gasprimaryevolves=0;
     }
     int gasextremeprimaryevolves=0;
-    if(radprimaryevolves==0 && radextremeprimaryevolves==0 && (fabs(rdUtot[URAD0])<10.0*NUMEPSILON*fabs(dUtot[UU]) || fabs(uu0[UU])<10.0*NUMEPSILON*fabs(uu0[URAD0]))){
+    if(radprimaryevolves==0 && radextremeprimaryevolves==0 && (fabs(rdUtot[URAD0])<10.0*NUMEPSILON*fabs(dUtot[UU]) || fabs(uu0[UU])<10.0*NUMEPSILON*fabs(uu0[URAD0]) || fabs(pb[UU])<10.0*NUMEPSILON*fabs(pb[URAD0]) )){
       gasextremeprimaryevolves=1;
     }
     else{
@@ -2405,7 +2409,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     }
 
     // DEBUG:
-    //    dualfprintf(fail_file,"PRIMARYEVOLVES: %d %d %d %d : pb=%g %g uu0=%g %g dUtot=%g %g : sqrtnumepsilon=%g\n",radprimaryevolves,radextremeprimaryevolves,gasprimaryevolves,gasextremeprimaryevolves,pb[UU],pb[URAD0],-uu0[UU],-uu0[URAD0],dUtot[UU],dUtot[URAD0],sqrtnumepsilon);
+    //    dualfprintf(fail_file,"PRIMARYEVOLVES: %d %d %d %d : pb=%g %g uu0=%g %g dUtot=%g %g : sqrtnumepsilon1=%g sqrtnumepsilon2=%g\n",radprimaryevolves,radextremeprimaryevolves,gasprimaryevolves,gasextremeprimaryevolves,pb[UU],pb[URAD0],-uu0[UU],-uu0[URAD0],dUtot[UU],dUtot[URAD0],sqrtnumepsilon1,sqrtnumepsilon2);
 
 
 
@@ -2442,25 +2446,27 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       // KORALNOTE: radinv check would nominally catch if PMHD method failed due to machine errors in GAS leading to huge changes in RAD leading to E_r<0 or gamma>gammaradmax, but might as well use desired method first.
       // normal checkradinvlist will catch if prad method doesn't lead to radinv but urad method does.
       // normal checkradinvlist will catch if somehow rad method leads to radinv but gas method doesn't.
-      if(radprimaryevolves && GLOBALMACP0A1(prioritermethod,i,j,k,BASEITERMETHODINDEX) == PRIORITERMETHODNOTSET
-         ||  GLOBALMACP0A1(prioritermethod,i,j,k,BASEITERMETHODINDEX) == QTYURAD
-         ){
-        tryphase1=-1;
-        tryphase1++; baseitermethodlist[tryphase1]=QTYURAD; modprimlist[tryphase1]=0;
-        tryphase1++; baseitermethodlist[tryphase1]=QTYPRAD; modprimlist[tryphase1]=0;
-        tryphase1++; baseitermethodlist[tryphase1]=QTYPMHD; modprimlist[tryphase1]=0;
-        tryphase1++; baseitermethodlist[tryphase1]=QTYURAD; modprimlist[tryphase1]=0;
-        tryphase1++; baseitermethodlist[tryphase1]=QTYPRAD; modprimlist[tryphase1]=0;
-        tryphase1++; baseitermethodlist[tryphase1]=QTYPMHD; modprimlist[tryphase1]=1;
-      }
-      if(GLOBALMACP0A1(prioritermethod,i,j,k,BASEITERMETHODINDEX) == QTYPRAD){
-        tryphase1=-1;
-        tryphase1++; baseitermethodlist[tryphase1]=QTYPRAD; modprimlist[tryphase1]=0;
-        tryphase1++; baseitermethodlist[tryphase1]=QTYURAD; modprimlist[tryphase1]=0;
-        tryphase1++; baseitermethodlist[tryphase1]=QTYPMHD; modprimlist[tryphase1]=0;
-        tryphase1++; baseitermethodlist[tryphase1]=QTYPRAD; modprimlist[tryphase1]=0;
-        tryphase1++; baseitermethodlist[tryphase1]=QTYURAD; modprimlist[tryphase1]=0;
-        tryphase1++; baseitermethodlist[tryphase1]=QTYPMHD; modprimlist[tryphase1]=1;
+      if(gasprimaryevolves==0){ // if gas primary evolves, then keep original order because PMHD is fastest method.
+        if(radprimaryevolves && GLOBALMACP0A1(prioritermethod,i,j,k,BASEITERMETHODINDEX) == PRIORITERMETHODNOTSET
+           ||  GLOBALMACP0A1(prioritermethod,i,j,k,BASEITERMETHODINDEX) == QTYURAD
+           ){
+          tryphase1=-1;
+          tryphase1++; baseitermethodlist[tryphase1]=QTYURAD; modprimlist[tryphase1]=0;
+          tryphase1++; baseitermethodlist[tryphase1]=QTYPRAD; modprimlist[tryphase1]=0;
+          tryphase1++; baseitermethodlist[tryphase1]=QTYPMHD; modprimlist[tryphase1]=0;
+          tryphase1++; baseitermethodlist[tryphase1]=QTYURAD; modprimlist[tryphase1]=0;
+          tryphase1++; baseitermethodlist[tryphase1]=QTYPRAD; modprimlist[tryphase1]=0;
+          tryphase1++; baseitermethodlist[tryphase1]=QTYPMHD; modprimlist[tryphase1]=1;
+        }
+        if(GLOBALMACP0A1(prioritermethod,i,j,k,BASEITERMETHODINDEX) == QTYPRAD){
+          tryphase1=-1;
+          tryphase1++; baseitermethodlist[tryphase1]=QTYPRAD; modprimlist[tryphase1]=0;
+          tryphase1++; baseitermethodlist[tryphase1]=QTYURAD; modprimlist[tryphase1]=0;
+          tryphase1++; baseitermethodlist[tryphase1]=QTYPMHD; modprimlist[tryphase1]=0;
+          tryphase1++; baseitermethodlist[tryphase1]=QTYPRAD; modprimlist[tryphase1]=0;
+          tryphase1++; baseitermethodlist[tryphase1]=QTYURAD; modprimlist[tryphase1]=0;
+          tryphase1++; baseitermethodlist[tryphase1]=QTYPMHD; modprimlist[tryphase1]=1;
+        }
       }
 
       // ENERGY PHASE LOOP
@@ -2485,7 +2491,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
           //          dualfprintf(fail_file,"REALLYTRYING: tryphase1=%d\n",tryphase1);
 
 
-          errorabsenergyold=errorabsenergy;
+          errorabsenergyold[0]=errorabsenergy[0];
+          errorabsenergyold[1]=errorabsenergy[1];
           itersenergyold=itersenergy;
           //
           whichcapenergy=CAPTYPEBASIC;
@@ -2504,7 +2511,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
           radErfnegenergy=0;
           failreturnenergy=FAILRETURNGENERAL; // default to fail in case energy not to be done at all
           eomtypeenergy=eomtypelist[tryphase1];
-          errorabsenergy=1.0;
+          errorabsenergy[0]=errorabsenergy[1]=1.0;
         
           // setup solver conditions for existence of backup solutions or entropy solution
           if(ACTUALHARDFAILURE(failreturnentropy)==1){
@@ -2517,15 +2524,15 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
           }
 
           // setup guess
-          if(ACTUALHARDFAILURE(failreturnentropy)==1 || errorabsentropy>ERRORTOUSEENTROPYFORENERGYGUESS){
-            if(errorabsenergybest>TRYHARDERFEEDGUESSTOL){
+          if(ACTUALHARDFAILURE(failreturnentropy)==1 || errorabsentropy[WHICHERROR]>ERRORTOUSEENTROPYFORENERGYGUESS){
+            if(errorabsenergybest[WHICHERROR]>TRYHARDERFEEDGUESSTOL){
               PLOOP(pliter,pl){
                 pbenergy[pl]=pbbackup[pl];
                 uubenergy[pl]=uubbackup[pl];
                 SCLOOP(sc) dUcompenergy[sc][pl]=dUcompbackup[sc][pl];
               }
               qenergy=qbackup;
-              errorabsenergy=1.0;
+              errorabsenergy[0]=errorabsenergy[1]=1.0;
               radinvmodenergy=1;
             }
             else{
@@ -2535,7 +2542,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
                 SCLOOP(sc) dUcompenergy[sc][pl]=dUcompbackup[sc][pl];
               }
               qenergy=qenergybest;
-              errorabsenergy=errorabsenergybest;
+              errorabsenergy[0]=errorabsenergybest[0];
+              errorabsenergy[1]=errorabsenergybest[1];
               radinvmodenergy=radinvmodenergybest;
             }
           }
@@ -2546,11 +2554,12 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
               SCLOOP(sc) dUcompenergy[sc][pl]=dUcompbackup[sc][pl];
             }
             qenergy=qentropy;
-            errorabsenergy=errorabsentropy; // assume error estimate only used to decide if guess is used, not if converged with energy
+            errorabsenergy[0]=errorabsentropy[0]; // assume error estimate only used to decide if guess is used, not if converged with energy
+            errorabsenergy[1]=errorabsentropy[1]; // assume error estimate only used to decide if guess is used, not if converged with energy
             radinvmodenergy=radinvmodentropy;
           }
           //
-          failreturnenergy=koral_source_rad_implicit_mode(0,modprim,havebackup, didentropyalready, &eomtypeenergy, whichcapenergy, itermodeenergy, &baseitermethodenergy, trueimpmaxiterenergy,  truenumdampattemptsenergy, fracenergy, dissmeasure, &radinvmodenergy, pbenergy, uubenergy, piin, Uiin, Ufin, CUf, ptrgeom, &qenergy, dUother ,dUcompenergy, &errorabsenergy, errorabsenergybest, &itersenergy, &f1itersenergy);
+          failreturnenergy=koral_source_rad_implicit_mode(0,modprim,havebackup, didentropyalready, &eomtypeenergy, whichcapenergy, itermodeenergy, &baseitermethodenergy, trueimpmaxiterenergy,  truenumdampattemptsenergy, fracenergy, dissmeasure, &radinvmodenergy, pbenergy, uubenergy, piin, Uiin, Ufin, CUf, ptrgeom, &qenergy, dUother ,dUcompenergy, errorabsenergy, errorabsenergybest, &itersenergy, &f1itersenergy);
 
           if(failreturnenergy==FAILRETURNGOEXPLICIT){
             lpflagenergybest=*lpflag;
@@ -2568,11 +2577,11 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
           }
           else{
             // see if want to keep
-            //        if(errorabsenergy<errorabsenergybest && ACTUALHARDFAILURE(failreturnenergy)==0 || failreturnenergy==FAILRETURNMODESWITCH){
-            //        if((errorabsenergy<errorabsenergybest && (radinvmodenergy==0 || radinvmodenergybest && radinvmodenergy) || radinvmodenergybest && radinvmodenergy==0 && (errorabsenergy<errorabsenergybest||errorabsenergy<IMPOKCONVABS)) && ACTUALHARDFAILURE(failreturnenergy)==0 || failreturnenergy==FAILRETURNMODESWITCH){
+            //        if(errorabsenergy[WHICHERROR]<errorabsenergybest[WHICHERROR] && ACTUALHARDFAILURE(failreturnenergy)==0 || failreturnenergy==FAILRETURNMODESWITCH){
+            //        if((errorabsenergy[WHICHERROR]<errorabsenergybest[WHICHERROR] && (radinvmodenergy==0 || radinvmodenergybest && radinvmodenergy) || radinvmodenergybest && radinvmodenergy==0 && (errorabsenergy[WHICHERROR]<errorabsenergybest[WHICHERROR]||errorabsenergy[WHICHERROR]<IMPOKCONVABS)) && ACTUALHARDFAILURE(failreturnenergy)==0 || failreturnenergy==FAILRETURNMODESWITCH){
             if(
                (
-                errorabsenergy<errorabsenergybest && (radinvmodenergy==0 || radinvmodenergybest && radinvmodenergy) || radinvmodenergybest && radinvmodenergy==0 && (errorabsenergy<errorabsenergybest||errorabsenergy<IMPOKCONVABS) || radinvmodenergybest==0 && radinvmodenergy && (errorabsenergybest>IMPOKCONVABS && errorabsenergy<IMPOKCONVABS)
+                errorabsenergy[WHICHERROR]<errorabsenergybest[WHICHERROR] && (radinvmodenergy==0 || radinvmodenergybest && radinvmodenergy) || radinvmodenergybest && radinvmodenergy==0 && (errorabsenergy[WHICHERROR]<errorabsenergybest[WHICHERROR]||errorabsenergy[WHICHERROR]<IMPOKCONVABS) || radinvmodenergybest==0 && radinvmodenergy && (errorabsenergybest[WHICHERROR]>IMPOKCONVABS && errorabsenergy[WHICHERROR]<IMPOKCONVABS)
                 )
                && ACTUALHARDFAILURE(failreturnenergy)==0){
               // store result in case better than latter results
@@ -2583,7 +2592,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
               failreturnenergybest=failreturnenergy;
               eomtypeenergybest=eomtypeenergy;
               goexplicitenergybest=0;
-              errorabsenergybest=errorabsenergy;
+              errorabsenergybest[0]=errorabsenergy[0];
+              errorabsenergybest[1]=errorabsenergy[1];
               PLOOP(pliter,pl){
                 pbenergybest[pl]=pbenergy[pl];
                 uubenergybest[pl]=uubenergy[pl];
@@ -2608,10 +2618,10 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
           int noproblem=(ACTUALHARDORSOFTFAILURE(failreturnenergy)==0 || failreturnenergy==FAILRETURNMODESWITCH);
 
           if(tryphase1>0 && noproblem){
-            if(debugfail>=2) dualfprintf(fail_file,"Recovered using tryphase1=%d (energy: failreturnenergy=%d radinvmod=%d): ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d baseitermethod=%d\n",tryphase1,failreturnenergy,radinvmodenergy,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsenergyold,errorabsenergy,itersenergyold,itersenergy,baseitermethodenergy);
+            if(debugfail>=2) dualfprintf(fail_file,"Recovered using tryphase1=%d (energy: failreturnenergy=%d radinvmod=%d): ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d baseitermethod=%d\n",tryphase1,failreturnenergy,radinvmodenergy,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsenergyold[WHICHERROR],errorabsenergy[WHICHERROR],itersenergyold,itersenergy,baseitermethodenergy);
           }
           if(noproblem==0){
-            if(debugfail>=2) dualfprintf(fail_file,"Failed to: <Recovered> using tryphase1=%d (energy: failreturnenergy=%d radinvmod=%d): ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d baseitermethod=%d\n",tryphase1,failreturnenergy,radinvmodenergy,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsenergyold,errorabsenergy,itersenergyold,itersenergy,baseitermethodenergy);
+            if(debugfail>=2) dualfprintf(fail_file,"Failed to: <Recovered> using tryphase1=%d (energy: failreturnenergy=%d radinvmod=%d): ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d baseitermethod=%d\n",tryphase1,failreturnenergy,radinvmodenergy,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsenergyold[WHICHERROR],errorabsenergy[WHICHERROR],itersenergyold,itersenergy,baseitermethodenergy);
           }
 
 
@@ -2627,7 +2637,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
       // see if want to try harder
       if(TRYENERGYHARDER && ACTUALHARDORSOFTFAILURE(failreturnenergy) && failreturn!=FAILRETURNMODESWITCH && USERAMESH && radextremeprimaryevolves==0){
-        errorabsenergyold=errorabsenergy;
+        errorabsenergyold[0]=errorabsenergy[0];
+        errorabsenergyold[1]=errorabsenergy[1];
         itersenergyold=itersenergy;
         goexplicitenergy=0; // force since no explicit check
         //
@@ -2643,24 +2654,25 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
           radinvmodenergy=radinvmodeng;
           radErfnegenergy=0; // not allowed, considered BADNEG type
           itersenergy=iterseng;
-          errorabsenergy=errorabseng;
-          if(failtypeeng || errorabsenergy>IMPALLOWCONVABS){ failreturnenergy=FAILRETURNGENERAL; eomtypeenergy=EOMGRMHD; }
-          else if(errorabsenergy<IMPTRYCONVABS){ failreturnenergy=FAILRETURNNOFAIL; eomtypeenergy=EOMDIDGRMHD;}
+          errorabsenergy[0]=errorabseng[0];
+          errorabsenergy[1]=errorabseng[1];
+          if(failtypeeng || errorabsenergy[WHICHERROR]>IMPALLOWCONVABS){ failreturnenergy=FAILRETURNGENERAL; eomtypeenergy=EOMGRMHD; }
+          else if(errorabsenergy[WHICHERROR]<IMPTRYCONVABS){ failreturnenergy=FAILRETURNNOFAIL; eomtypeenergy=EOMDIDGRMHD;}
           else{ failreturnenergy=FAILRETURNNOTTOLERROR; eomtypeenergy=EOMDIDGRMHD;}
         }
         else{ // else get new ramesh solution
-          FTYPE errorabsforramesh;
+          FTYPE errorabsforramesh[NUMERRORTYPES]={1.0};
           // start fresh with ramesh
-          if(errorabsenergy>TRYHARDERFEEDGUESSTOL){
-            if(ACTUALHARDFAILURE(failreturnentropy)==1 || errorabsentropy>ERRORTOUSEENTROPYFORENERGYGUESS){
+          if(errorabsenergy[WHICHERROR]>TRYHARDERFEEDGUESSTOL){
+            if(ACTUALHARDFAILURE(failreturnentropy)==1 || errorabsentropy[WHICHERROR]>ERRORTOUSEENTROPYFORENERGYGUESS){
               PLOOP(pliter,pl){
                 pbenergy[pl]=pbbackup[pl];
                 uubenergy[pl]=uubbackup[pl];
                 SCLOOP(sc) dUcompeng[sc][pl]=dUcompenergy[sc][pl]=dUcompbackup[sc][pl];
               }
               qenergy=qbackup;
-              errorabseng=1.0;
-              errorabsforramesh=1.0;
+              errorabseng[0]=errorabseng[1]=1.0;
+              errorabsforramesh[0]=errorabsforramesh[1]=1.0;
               radinvmodeng=1;
             }
             else{
@@ -2670,8 +2682,9 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
                 SCLOOP(sc) dUcompeng[sc][pl]=dUcompenergy[sc][pl]=dUcompbackup[sc][pl];
               }
               qenergy=qentropy;
-              errorabseng=errorabsentropybest;
-              errorabsforramesh=1.0;
+              errorabseng[0]=errorabsentropybest[0];
+              errorabseng[1]=errorabsentropybest[1];
+              errorabsforramesh[0]=errorabsforramesh[1]=1.0;
               radinvmodeng=radinvmodentropybest;
             }
           }
@@ -2682,8 +2695,10 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
               SCLOOP(sc) dUcompeng[sc][pl]=dUcompenergy[sc][pl]=dUcompbackup[sc][pl]; // always backup
             }
             qenergy=qenergybest;
-            errorabseng=errorabsenergybest;
-            errorabsforramesh=errorabsenergybest;
+            errorabseng[0]=errorabsenergybest[0];
+            errorabseng[1]=errorabsenergybest[1];
+            errorabsforramesh[0]=errorabsenergybest[0];
+            errorabsforramesh[1]=errorabsenergybest[1];
             radinvmodeng=radinvmodenergybest;
           }
           //
@@ -2691,7 +2706,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
           failreturnenergy=FAILRETURNGENERAL;// default to fail
           eomtypeenergy=EOMGRMHD;
           int whichcall=eomtypeenergy;
-          get_rameshsolution_wrapper(whichcall, eomtypeenergy, errorabsforramesh, ptrgeom, pbenergy, piin, Uiin, Ufin, dUother, CUf, q, ppeng, ppent, uueng, uuent, dUcompeng, dUcompent, &qeng, &qent, &failtypeeng, &errorabseng, &iterseng, &radinvmodeng, &failtypeent, &errorabsent, &itersent, &radinvmodent);
+          get_rameshsolution_wrapper(whichcall, eomtypeenergy, errorabsforramesh, ptrgeom, pbenergy, piin, Uiin, Ufin, dUother, CUf, q, ppeng, ppent, uueng, uuent, dUcompeng, dUcompent, &qeng, &qent, &failtypeeng, errorabseng, &iterseng, &radinvmodeng, &failtypeent, errorabsent, &itersent, &radinvmodent);
           gotrameshsolution=1; // indicates did at least attempt ramesh soltion call
           // translate
           PLOOP(pliter,pl){
@@ -2705,17 +2720,18 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
           radinvmodenergy=radinvmodeng;
           radErfnegenergy=0; // not allowed, considered BADNEG type
           itersenergy=iterseng;
-          errorabsenergy=errorabseng;
-          if(failtypeeng || errorabsenergy>IMPALLOWCONVABS){ failreturnenergy=FAILRETURNGENERAL; eomtypeenergy=EOMGRMHD; }
-          else if(errorabsenergy<IMPTRYCONVABS){ failreturnenergy=FAILRETURNNOFAIL; eomtypeenergy=EOMDIDGRMHD;}
+          errorabsenergy[0]=errorabseng[0];
+          errorabsenergy[1]=errorabseng[1];
+          if(failtypeeng || errorabsenergy[WHICHERROR]>IMPALLOWCONVABS){ failreturnenergy=FAILRETURNGENERAL; eomtypeenergy=EOMGRMHD; }
+          else if(errorabsenergy[WHICHERROR]<IMPTRYCONVABS){ failreturnenergy=FAILRETURNNOFAIL; eomtypeenergy=EOMDIDGRMHD;}
           else{ failreturnenergy=FAILRETURNNOTTOLERROR; eomtypeenergy=EOMDIDGRMHD;}
           // END GET RAMESH SOLUTION
         }// end else if need to get ramesh solution
 
         // see if want to keep
-        //        if(errorabsenergy<errorabsenergybest && ACTUALHARDFAILURE(failreturnenergy)==0){// || failreturnenergy==FAILRETURNMODESWITCH){ // no switch mode in ramesh solver yet.
-        //        if((errorabsenergy<errorabsenergybest && (radinvmodenergy==0 || radinvmodenergybest && radinvmodenergy) || radinvmodenergybest && radinvmodenergy==0 && (errorabsenergy<errorabsenergybest||errorabsenergy<IMPOKCONVABS)) && ACTUALHARDFAILURE(failreturnenergy)==0){
-        if((errorabsenergy<errorabsenergybest && (radinvmodenergy==0 || radinvmodenergybest && radinvmodenergy) || radinvmodenergybest && radinvmodenergy==0 && (errorabsenergy<errorabsenergybest||errorabsenergy<IMPOKCONVABS) || radinvmodenergybest==0 && radinvmodenergy && (errorabsenergybest>IMPOKCONVABS && errorabsenergy<IMPOKCONVABS)) && ACTUALHARDFAILURE(failreturnenergy)==0){
+        //        if(errorabsenergy[WHICHERROR]<errorabsenergybest[WHICHERROR] && ACTUALHARDFAILURE(failreturnenergy)==0){// || failreturnenergy==FAILRETURNMODESWITCH){ // no switch mode in ramesh solver yet.
+        //        if((errorabsenergy[WHICHERROR]<errorabsenergybest[WHICHERROR] && (radinvmodenergy==0 || radinvmodenergybest && radinvmodenergy) || radinvmodenergybest && radinvmodenergy==0 && (errorabsenergy[WHICHERROR]<errorabsenergybest[WHICHERROR]||errorabsenergy[WHICHERROR]<IMPOKCONVABS)) && ACTUALHARDFAILURE(failreturnenergy)==0){
+        if((errorabsenergy[WHICHERROR]<errorabsenergybest[WHICHERROR] && (radinvmodenergy==0 || radinvmodenergybest && radinvmodenergy) || radinvmodenergybest && radinvmodenergy==0 && (errorabsenergy[WHICHERROR]<errorabsenergybest[WHICHERROR]||errorabsenergy[WHICHERROR]<IMPOKCONVABS) || radinvmodenergybest==0 && radinvmodenergy && (errorabsenergybest[WHICHERROR]>IMPOKCONVABS && errorabsenergy[WHICHERROR]<IMPOKCONVABS)) && ACTUALHARDFAILURE(failreturnenergy)==0){
           if(ACCEPTASNOFAILURE(failreturnenergy)) usedrameshenergy=1; // means will use this actually, not just best yet no good enough
           // store result in case better than latter results
           lpflagenergybest=*lpflag;
@@ -2724,7 +2740,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
           radErfnegenergybest=radErfnegenergy;
           failreturnenergybest=failreturnenergy;
           eomtypeenergybest=eomtypeenergy;
-          errorabsenergybest=errorabsenergy;
+          errorabsenergybest[0]=errorabsenergy[0];
+          errorabsenergybest[1]=errorabsenergy[1];
           PLOOP(pliter,pl){
             pbenergybest[pl]=pbenergy[pl];
             uubenergybest[pl]=uubenergy[pl];
@@ -2747,10 +2764,10 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
         itersenergy+=itersenergyold;
 
         if(ACTUALHARDORSOFTFAILURE(failreturnenergy)==0){// || failreturnenergy==FAILRETURNMODESWITCH){
-          if(debugfail>=2) dualfprintf(fail_file,"(energy: failreturnenergy=%d): Recovered using ramesh (%d %d): ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d\n",failreturnenergy,gotrameshsolution,usedrameshenergy,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsenergyold,errorabsenergy,itersenergyold,itersenergy);
+          if(debugfail>=2) dualfprintf(fail_file,"(energy: failreturnenergy=%d): Recovered using ramesh (%d %d): ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d\n",failreturnenergy,gotrameshsolution,usedrameshenergy,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsenergyold[WHICHERROR],errorabsenergy[WHICHERROR],itersenergyold,itersenergy);
         }
         else{
-          if(debugfail>=2) dualfprintf(fail_file,"Failed to  (energy: failreturnenergy=%d): Recovered using ramesh (%d %d): ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d\n",failreturnenergy,gotrameshsolution,usedrameshenergy,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsenergyold,errorabsenergy,itersenergyold,itersenergy);
+          if(debugfail>=2) dualfprintf(fail_file,"Failed to  (energy: failreturnenergy=%d): Recovered using ramesh (%d %d): ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d\n",failreturnenergy,gotrameshsolution,usedrameshenergy,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsenergyold[WHICHERROR],errorabsenergy[WHICHERROR],itersenergyold,itersenergy);
         }
       }// end if using ramesh
 
@@ -2770,7 +2787,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       radErfnegenergy=radErfnegenergybest;
       failreturnenergy=failreturnenergybest;
       eomtypeenergy=eomtypeenergybest;
-      errorabsenergy=errorabsenergybest;
+      errorabsenergy[0]=errorabsenergybest[0];
+      errorabsenergy[1]=errorabsenergybest[1];
       PLOOP(pliter,pl){
         pbenergy[pl]=pbenergybest[pl];
         uubenergy[pl]=uubenergybest[pl];
@@ -2825,31 +2843,32 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       int checkradinvlist[NUMPHASESENT]={0,1,1,1,0,1,1,1};
       int eomtypelist[NUMPHASESENT]={EOMENTROPYGRMHD,EOMENTROPYGRMHD,EOMENTROPYGRMHD,EOMENTROPYGRMHD,EOMENTROPYGRMHD,EOMENTROPYGRMHD,EOMENTROPYGRMHD,EOMENTROPYGRMHD};
 
-      if(radprimaryevolves && GLOBALMACP0A1(prioritermethod,i,j,k,BASEITERMETHODINDEX) == PRIORITERMETHODNOTSET
-         ||  GLOBALMACP0A1(prioritermethod,i,j,k,BASEITERMETHODINDEX) == QTYURAD
-         ){
-        tryphase1=-1;
-        tryphase1++; baseitermethodlist[tryphase1]=QTYURAD;        modprimlist[tryphase1]=0;
-        tryphase1++; baseitermethodlist[tryphase1]=QTYPRAD;        modprimlist[tryphase1]=0;
-        tryphase1++; baseitermethodlist[tryphase1]=QTYPMHD;        modprimlist[tryphase1]=0;
-        tryphase1++; baseitermethodlist[tryphase1]=QTYENTROPYUMHD; modprimlist[tryphase1]=0;
-        tryphase1++; baseitermethodlist[tryphase1]=QTYURAD;        modprimlist[tryphase1]=0;
-        tryphase1++; baseitermethodlist[tryphase1]=QTYPRAD;        modprimlist[tryphase1]=0;
-        tryphase1++; baseitermethodlist[tryphase1]=QTYPMHD;        modprimlist[tryphase1]=1;
-        tryphase1++; baseitermethodlist[tryphase1]=QTYENTROPYUMHD; modprimlist[tryphase1]=0;
+      if(gasprimaryevolves==0){ // if gas primary evolves, then keep original order because PMHD is fastest method.
+        if(radprimaryevolves && GLOBALMACP0A1(prioritermethod,i,j,k,BASEITERMETHODINDEX) == PRIORITERMETHODNOTSET
+           ||  GLOBALMACP0A1(prioritermethod,i,j,k,BASEITERMETHODINDEX) == QTYURAD
+           ){
+          tryphase1=-1;
+          tryphase1++; baseitermethodlist[tryphase1]=QTYURAD;        modprimlist[tryphase1]=0;
+          tryphase1++; baseitermethodlist[tryphase1]=QTYPRAD;        modprimlist[tryphase1]=0;
+          tryphase1++; baseitermethodlist[tryphase1]=QTYPMHD;        modprimlist[tryphase1]=0;
+          tryphase1++; baseitermethodlist[tryphase1]=QTYENTROPYUMHD; modprimlist[tryphase1]=0;
+          tryphase1++; baseitermethodlist[tryphase1]=QTYURAD;        modprimlist[tryphase1]=0;
+          tryphase1++; baseitermethodlist[tryphase1]=QTYPRAD;        modprimlist[tryphase1]=0;
+          tryphase1++; baseitermethodlist[tryphase1]=QTYPMHD;        modprimlist[tryphase1]=1;
+          tryphase1++; baseitermethodlist[tryphase1]=QTYENTROPYUMHD; modprimlist[tryphase1]=0;
+        }
+        if(GLOBALMACP0A1(prioritermethod,i,j,k,BASEITERMETHODINDEX) == QTYPRAD){
+          tryphase1=-1;
+          tryphase1++; baseitermethodlist[tryphase1]=QTYPRAD;        modprimlist[tryphase1]=0;
+          tryphase1++; baseitermethodlist[tryphase1]=QTYURAD;        modprimlist[tryphase1]=0;
+          tryphase1++; baseitermethodlist[tryphase1]=QTYPMHD;        modprimlist[tryphase1]=0;
+          tryphase1++; baseitermethodlist[tryphase1]=QTYENTROPYUMHD; modprimlist[tryphase1]=0;
+          tryphase1++; baseitermethodlist[tryphase1]=QTYPRAD;        modprimlist[tryphase1]=0;
+          tryphase1++; baseitermethodlist[tryphase1]=QTYURAD;        modprimlist[tryphase1]=0;
+          tryphase1++; baseitermethodlist[tryphase1]=QTYPMHD;        modprimlist[tryphase1]=1;
+          tryphase1++; baseitermethodlist[tryphase1]=QTYENTROPYUMHD; modprimlist[tryphase1]=0;
+        }
       }
-      if(GLOBALMACP0A1(prioritermethod,i,j,k,BASEITERMETHODINDEX) == QTYPRAD){
-        tryphase1=-1;
-        tryphase1++; baseitermethodlist[tryphase1]=QTYPRAD;        modprimlist[tryphase1]=0;
-        tryphase1++; baseitermethodlist[tryphase1]=QTYURAD;        modprimlist[tryphase1]=0;
-        tryphase1++; baseitermethodlist[tryphase1]=QTYPMHD;        modprimlist[tryphase1]=0;
-        tryphase1++; baseitermethodlist[tryphase1]=QTYENTROPYUMHD; modprimlist[tryphase1]=0;
-        tryphase1++; baseitermethodlist[tryphase1]=QTYPRAD;        modprimlist[tryphase1]=0;
-        tryphase1++; baseitermethodlist[tryphase1]=QTYURAD;        modprimlist[tryphase1]=0;
-        tryphase1++; baseitermethodlist[tryphase1]=QTYPMHD;        modprimlist[tryphase1]=1;
-        tryphase1++; baseitermethodlist[tryphase1]=QTYENTROPYUMHD; modprimlist[tryphase1]=0;
-      }
-
 
       for(tryphase1=0;tryphase1<NUMPHASESENT;tryphase1++){
 
@@ -2865,7 +2884,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
 
           itersentropyold=itersentropy;
-          errorabsentropyold=errorabsentropy;
+          errorabsentropyold[0]=errorabsentropy[0];
+          errorabsentropyold[1]=errorabsentropy[1];
           //
           whichcapentropy=CAPTYPEBASIC;
           baseitermethodentropy=baseitermethodlist[tryphase1];
@@ -2882,18 +2902,18 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
           radErfnegentropy=0;
           failreturnentropy=FAILRETURNGENERAL;// default to fail
           eomtypeentropy=eomtypelist[tryphase1];
-          errorabsentropy=1.0;
+          errorabsentropy[0]=errorabsentropy[1]=1.0;
           //
           // setup guess
-          if(ACTUALHARDFAILURE(failreturnenergy)==1 || errorabsenergy>ERRORTOUSEENTROPYFORENERGYGUESS || pbenergy[UU]<=0.0){
-            if(errorabsentropybest>TRYHARDERFEEDGUESSTOL){
+          if(ACTUALHARDFAILURE(failreturnenergy)==1 || errorabsenergy[WHICHERROR]>ERRORTOUSEENTROPYFORENERGYGUESS || pbenergy[UU]<=0.0){
+            if(errorabsentropybest[WHICHERROR]>TRYHARDERFEEDGUESSTOL){
               PLOOP(pliter,pl){
                 pbentropy[pl]=pbbackup[pl];
                 uubentropy[pl]=uubbackup[pl];
                 SCLOOP(sc) dUcompentropy[sc][pl]=dUcompbackup[sc][pl];
               }
               qentropy=qbackup;
-              errorabsentropy=1.0;
+              errorabsentropy[0]=errorabsentropy[1]=1.0;
               radinvmodentropy=1;
             }
             else{
@@ -2903,7 +2923,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
                 SCLOOP(sc) dUcompentropy[sc][pl]=dUcompbackup[sc][pl];
               }
               qentropy=qentropybest;
-              errorabsentropy=errorabsentropybest;
+              errorabsentropy[0]=errorabsentropybest[0];
+              errorabsentropy[1]=errorabsentropybest[1];
               radinvmodentropy=radinvmodentropybest;
             }
           }
@@ -2913,13 +2934,14 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
               SCLOOP(sc) dUcompentropy[sc][pl]=dUcompbackup[sc][pl];
             }
             qentropy=qenergy;
-            errorabsentropy=errorabsenergy; // just for setting guess, not accepted error for entropy
+            errorabsentropy[0]=errorabsenergy[0]; // just for setting guess, not accepted error for entropy
+            errorabsentropy[1]=errorabsenergy[1]; // just for setting guess, not accepted error for entropy
             radinvmodentropy=radinvmodenergy;
           }
           //
           //
           FTYPE fracenergyentropy=0;
-          failreturnentropy=koral_source_rad_implicit_mode(0,modprim,havebackup, didentropyalready, &eomtypeentropy, whichcapentropy, itermodeentropy, &baseitermethodentropy, trueimpmaxiterentropy,  truenumdampattemptsentropy, fracenergyentropy, dissmeasure, &radinvmodentropy, pbentropy, uubentropy, piin, Uiin, Ufin, CUf, ptrgeom, &qentropy, dUother ,dUcompentropy, &errorabsentropy, errorabsentropybest, &itersentropy, &f1itersentropy);
+          failreturnentropy=koral_source_rad_implicit_mode(0,modprim,havebackup, didentropyalready, &eomtypeentropy, whichcapentropy, itermodeentropy, &baseitermethodentropy, trueimpmaxiterentropy,  truenumdampattemptsentropy, fracenergyentropy, dissmeasure, &radinvmodentropy, pbentropy, uubentropy, piin, Uiin, Ufin, CUf, ptrgeom, &qentropy, dUother ,dUcompentropy, errorabsentropy, errorabsentropybest, &itersentropy, &f1itersentropy);
 
           if(failreturnentropy==FAILRETURNGOEXPLICIT){
             lpflagentropybest=*lpflag;
@@ -2937,7 +2959,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
           }
           else{
             // see if want to keep
-            if((errorabsentropy<errorabsentropybest && (radinvmodentropy==0 || radinvmodentropybest && radinvmodentropy) || radinvmodentropybest && radinvmodentropy==0 && (errorabsentropy<errorabsentropybest||errorabsentropy<IMPOKCONVABS) || radinvmodentropybest==0 && radinvmodentropy && (errorabsentropybest>IMPOKCONVABS && errorabsentropy<IMPOKCONVABS)) && ACTUALHARDFAILURE(failreturnentropy)==0){
+            if((errorabsentropy[WHICHERROR]<errorabsentropybest[WHICHERROR] && (radinvmodentropy==0 || radinvmodentropybest && radinvmodentropy) || radinvmodentropybest && radinvmodentropy==0 && (errorabsentropy[WHICHERROR]<errorabsentropybest[WHICHERROR]||errorabsentropy[WHICHERROR]<IMPOKCONVABS) || radinvmodentropybest==0 && radinvmodentropy && (errorabsentropybest[WHICHERROR]>IMPOKCONVABS && errorabsentropy[WHICHERROR]<IMPOKCONVABS)) && ACTUALHARDFAILURE(failreturnentropy)==0){
               // store result in case better than latter results
               lpflagentropybest=*lpflag;
               lpflagradentropybest=*lpflagrad;
@@ -2946,7 +2968,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
               failreturnentropybest=failreturnentropy;
               eomtypeentropybest=eomtypeentropy;
               goexplicitentropybest=0;
-              errorabsentropybest=errorabsentropy;
+              errorabsentropybest[0]=errorabsentropy[0];
+              errorabsentropybest[1]=errorabsentropy[1];
               PLOOP(pliter,pl){
                 pbentropybest[pl]=pbentropy[pl];
                 uubentropybest[pl]=uubentropy[pl];
@@ -2972,10 +2995,10 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
           int noproblem=ACTUALHARDORSOFTFAILURE(failreturnentropy)==0;
 
           if(tryphase1>0 && noproblem){
-            if(debugfail>=2) dualfprintf(fail_file,"Recovered using tryphase1=%d (entropy: %d): ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d\n",tryphase1,failreturnentropy,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsentropyold,errorabsentropy,itersentropyold,itersentropy);
+            if(debugfail>=2) dualfprintf(fail_file,"Recovered using tryphase1=%d (entropy: %d): ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d\n",tryphase1,failreturnentropy,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsentropyold[WHICHERROR],errorabsentropy[WHICHERROR],itersentropyold,itersentropy);
           }
           if(noproblem==0){
-            if(debugfail>=2) dualfprintf(fail_file,"Failed to: <Recovered> using tryphase1=%d (entropy: %d): ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d\n",tryphase1,failreturnentropy,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsentropyold,errorabsentropy,itersentropyold,itersentropy);
+            if(debugfail>=2) dualfprintf(fail_file,"Failed to: <Recovered> using tryphase1=%d (entropy: %d): ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d\n",tryphase1,failreturnentropy,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsentropyold[WHICHERROR],errorabsentropy[WHICHERROR],itersentropyold,itersentropy);
           }
 
         }// done trying harder
@@ -2986,7 +3009,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
 
       if(TRYENTROPYHARDER && ACTUALHARDORSOFTFAILURE(failreturnentropy) && USERAMESH && radextremeprimaryevolves==0){ // try ramesh
-        errorabsentropyold=errorabsentropy;
+        errorabsentropyold[0]=errorabsentropy[0];
+        errorabsentropyold[1]=errorabsentropy[1];
         itersentropyold=itersentropy;
         goexplicitentropy=0; // doesn't check, so force implicit
         //
@@ -3003,23 +3027,24 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
           radinvmodenergy=radinvmodeng;
           radErfnegenergy=0; // not allowed, considered BADNEG type
           itersenergy=iterseng;
-          errorabsenergy=errorabseng;
-          if(failtypeeng || errorabsenergy>IMPALLOWCONVABS){ failreturnenergy=FAILRETURNGENERAL; eomtypeenergy=EOMGRMHD; }
-          else if(errorabsenergy<IMPTRYCONVABS){ failreturnenergy=FAILRETURNNOFAIL; eomtypeenergy=EOMDIDGRMHD;}
+          errorabsenergy[0]=errorabseng[0];
+          errorabsenergy[1]=errorabseng[1];
+          if(failtypeeng || errorabsenergy[WHICHERROR]>IMPALLOWCONVABS){ failreturnenergy=FAILRETURNGENERAL; eomtypeenergy=EOMGRMHD; }
+          else if(errorabsenergy[WHICHERROR]<IMPTRYCONVABS){ failreturnenergy=FAILRETURNNOFAIL; eomtypeenergy=EOMDIDGRMHD;}
           else{ failreturnenergy=FAILRETURNNOTTOLERROR; eomtypeenergy=EOMDIDGRMHD;}
         }
         else{ // else get new ramesh solution
-          FTYPE errorabsforramesh;
+          FTYPE errorabsforramesh[NUMERRORTYPES]={1.0};
           // start fresh with ramesh
-          if(errorabsentropy>TRYHARDERFEEDGUESSTOL){
+          if(errorabsentropy[WHICHERROR]>TRYHARDERFEEDGUESSTOL){
             PLOOP(pliter,pl){
               pbentropy[pl]=pbbackup[pl];
               uubentropy[pl]=uubbackup[pl];
               SCLOOP(sc) dUcompent[sc][pl]=dUcompentropy[sc][pl]=dUcompbackup[sc][pl];
             }
             qentropy=qbackup;
-            errorabsent=1.0;
-            errorabsforramesh=1.0;
+            errorabsent[0]=errorabsent[1]=1.0;
+            errorabsforramesh[0]=errorabsforramesh[1]=1.0;
             radinvmodent=1;
           }
           else{
@@ -3028,8 +3053,10 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
               SCLOOP(sc) dUcompent[sc][pl]=dUcompentropy[sc][pl]=dUcompbackup[sc][pl]; // always backup
             }
             qentropy=qentropybest;
-            errorabsforramesh=errorabsentropybest;
-            errorabsent=errorabsentropybest;
+            errorabsforramesh[0]=errorabsentropybest[0];
+            errorabsforramesh[1]=errorabsentropybest[1];
+            errorabsent[0]=errorabsentropybest[0];
+            errorabsent[1]=errorabsentropybest[1];
             radinvmodent=radinvmodentropybest;
           }
           //
@@ -3037,7 +3064,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
           failreturnentropy=FAILRETURNGENERAL;// default to fail
           eomtypeentropy=EOMENTROPYGRMHD;
           int whichcall=eomtypeentropy; // real entropy call
-          get_rameshsolution_wrapper(whichcall, eomtypeentropy, errorabsforramesh, ptrgeom, pbentropy, piin, Uiin, Ufin, dUother, CUf, q, ppeng, ppent, uueng, uuent, dUcompeng, dUcompent, &qeng, &qent, &failtypeeng, &errorabseng, &iterseng, &radinvmodeng, &failtypeent, &errorabsent, &itersent, &radinvmodent);
+          get_rameshsolution_wrapper(whichcall, eomtypeentropy, errorabsforramesh, ptrgeom, pbentropy, piin, Uiin, Ufin, dUother, CUf, q, ppeng, ppent, uueng, uuent, dUcompeng, dUcompent, &qeng, &qent, &failtypeeng, errorabseng, &iterseng, &radinvmodeng, &failtypeent, errorabsent, &itersent, &radinvmodent);
           gotrameshsolution=1; // indicates did at least attempt ramesh solution call
           // translate
           PLOOP(pliter,pl){
@@ -3051,15 +3078,16 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
           radinvmodentropy=radinvmodent;
           radErfnegentropy=0; // not allowed, considered BADNEG type
           itersentropy=itersent;
-          errorabsentropy=errorabsent;
-          if(failtypeent || errorabsentropy>IMPALLOWCONVABS){ failreturnentropy=FAILRETURNGENERAL; eomtypeentropy=EOMENTROPYGRMHD; }
-          else if(errorabsentropy<IMPTRYCONVABS){ failreturnentropy=FAILRETURNNOFAIL; eomtypeentropy=EOMDIDENTROPYGRMHD;}
+          errorabsentropy[0]=errorabsent[0];
+          errorabsentropy[1]=errorabsent[1];
+          if(failtypeent || errorabsentropy[WHICHERROR]>IMPALLOWCONVABS){ failreturnentropy=FAILRETURNGENERAL; eomtypeentropy=EOMENTROPYGRMHD; }
+          else if(errorabsentropy[WHICHERROR]<IMPTRYCONVABS){ failreturnentropy=FAILRETURNNOFAIL; eomtypeentropy=EOMDIDENTROPYGRMHD;}
           else{ failreturnentropy=FAILRETURNNOTTOLERROR; eomtypeentropy=EOMDIDENTROPYGRMHD;}
           // END GET RAMESH SOLUTION
           //
         }// end else if need to get ramesh solution
         // see if want to keep
-        if((errorabsentropy<errorabsentropybest && (radinvmodentropy==0 || radinvmodentropybest && radinvmodentropy) || radinvmodentropybest && radinvmodentropy==0 && (errorabsentropy<errorabsentropybest||errorabsentropy<IMPOKCONVABS) || radinvmodentropybest==0 && radinvmodentropy && (errorabsentropybest>IMPOKCONVABS && errorabsentropy<IMPOKCONVABS)) && ACTUALHARDFAILURE(failreturnentropy)==0){
+        if((errorabsentropy[WHICHERROR]<errorabsentropybest[WHICHERROR] && (radinvmodentropy==0 || radinvmodentropybest && radinvmodentropy) || radinvmodentropybest && radinvmodentropy==0 && (errorabsentropy[WHICHERROR]<errorabsentropybest[WHICHERROR]||errorabsentropy[WHICHERROR]<IMPOKCONVABS) || radinvmodentropybest==0 && radinvmodentropy && (errorabsentropybest[WHICHERROR]>IMPOKCONVABS && errorabsentropy[WHICHERROR]<IMPOKCONVABS)) && ACTUALHARDFAILURE(failreturnentropy)==0){
           if(ACCEPTASNOFAILURE(failreturnentropy)) usedrameshentropy=1; // means will use this actually, not just best yet no good enough
           // store result in case better than latter results
           lpflagentropybest=*lpflag;
@@ -3068,7 +3096,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
           radErfnegentropybest=radErfnegentropy;
           failreturnentropybest=failreturnentropy;
           eomtypeentropybest=eomtypeentropy;
-          errorabsentropybest=errorabsentropy;
+          errorabsentropybest[0]=errorabsentropy[0];
+          errorabsentropybest[1]=errorabsentropy[1];
           PLOOP(pliter,pl){
             pbentropybest[pl]=pbentropy[pl];
             uubentropybest[pl]=uubentropy[pl];
@@ -3089,10 +3118,10 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
         // still cost more iters
         itersentropy+=itersentropyold;
         if(ACTUALHARDORSOFTFAILURE(failreturnentropy)==0){
-          if(debugfail>=2) dualfprintf(fail_file,"Recovered using ramesh(%d) (entropy): ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d\n",failtypeent,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsentropyold,errorabsentropy,itersentropyold,itersentropy);
+          if(debugfail>=2) dualfprintf(fail_file,"Recovered using ramesh(%d) (entropy): ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d\n",failtypeent,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsentropyold[WHICHERROR],errorabsentropy[WHICHERROR],itersentropyold,itersentropy);
         }
         else{
-          if(debugfail>=2) dualfprintf(fail_file,"Failed to: Recovered using ramesh(%d) (entropy): ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d\n",failtypeent,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsentropyold,errorabsentropy,itersentropyold,itersentropy);
+          if(debugfail>=2) dualfprintf(fail_file,"Failed to: Recovered using ramesh(%d) (entropy): ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d\n",failtypeent,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsentropyold[WHICHERROR],errorabsentropy[WHICHERROR],itersentropyold,itersentropy);
         }
       }
 
@@ -3111,7 +3140,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       radErfnegentropy=radErfnegentropybest;
       failreturnentropy=failreturnentropybest;
       eomtypeentropy=eomtypeentropybest;
-      errorabsentropy=errorabsentropybest;
+      errorabsentropy[0]=errorabsentropybest[0];
+      errorabsentropy[1]=errorabsentropybest[1];
       PLOOP(pliter,pl){
         pbentropy[pl]=pbentropybest[pl];
         uubentropy[pl]=uubentropybest[pl];
@@ -3170,7 +3200,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     int radErfnegcold=1;
     int failreturncold=FAILRETURNGENERAL; // default to fail in case cold not to be done at all
     int eomtypecold=EOMCOLDGRMHD;
-    FTYPE errorabscold=1.0;
+    FTYPE errorabscold[NUMERRORTYPES]={1.0};
     int goexplicitcold=0;
 
 
@@ -3221,9 +3251,9 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
         failreturncold=FAILRETURNGENERAL; // default to fail in case cold not to be done at all
         eomtypecold=EOMCOLDGRMHD;
         goexplicitcold=0;
-        errorabscold=1.0;
+        errorabscold[0]=errorabscold[1]=1.0;
         FTYPE fracenergycold=0.0;
-        FTYPE errorabscoldbest=1.0;
+        FTYPE errorabscoldbest[NUMERRORTYPES]={1.0};
 
         havebackup=0; // no backup since entropy and energy failed
         didentropyalready=0;
@@ -3241,10 +3271,10 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
           SCLOOP(sc) dUcompcold[sc][pl]=dUcompbackup[sc][pl];
         }
         qcold=qbackup;
-        errorabscold=1.0;
+        errorabscold[0]=errorabscold[1]=1.0;
 
 
-        failreturncold=koral_source_rad_implicit_mode(0,0,havebackup, didentropyalready, &eomtypecold, whichcapcold, itermodecold, &baseitermethodcold, trueimpmaxitercold, truenumdampattemptscold, fracenergycold, dissmeasure, &radinvmodcold, pbcold, uubcold, piin, Uiin, Ufin, CUf, ptrgeom, &qcold, dUother ,dUcompcold, &errorabscold, errorabscoldbest, &iterscold, &f1iterscold);
+        failreturncold=koral_source_rad_implicit_mode(0,0,havebackup, didentropyalready, &eomtypecold, whichcapcold, itermodecold, &baseitermethodcold, trueimpmaxitercold, truenumdampattemptscold, fracenergycold, dissmeasure, &radinvmodcold, pbcold, uubcold, piin, Uiin, Ufin, CUf, ptrgeom, &qcold, dUother ,dUcompcold, errorabscold, errorabscoldbest, &iterscold, &f1iterscold);
 
         if(failreturncold==FAILRETURNGOEXPLICIT) goexplicitcold=1;
         // store these in case cold ultimately used
@@ -3289,7 +3319,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     //
     /////////////
 
-    int doentropy=whetherdoentropy(ptrgeom, fracenergy, ACCEPTASNOFAILURE(failreturnentropy),ACCEPTASNOFAILURE(failreturnenergy), radinvmodentropy, radinvmodenergy, IMPTRYCONVABS, IMPOKCONVABS, IMPBADENERGY, errorabsentropy, errorabsenergy, pbentropy, pbenergy);
+    int doentropy=whetherdoentropy(ptrgeom, fracenergy, ACCEPTASNOFAILURE(failreturnentropy),ACCEPTASNOFAILURE(failreturnenergy), radinvmodentropy, radinvmodenergy, IMPTRYCONVABS, IMPOKCONVABS, IMPBADENERGY, errorabsentropy[WHICHERROR], errorabsenergy[WHICHERROR], pbentropy, pbenergy);
     if(goexplicitentropy==1) doentropy=0; // override
 
 
@@ -3318,7 +3348,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
         }
         usedentropy=1;
         noprims=0;
-        errorabs=errorabsentropy;
+        errorabs[0]=errorabsentropy[0];
+        errorabs[1]=errorabsentropy[1];
         iters=itersentropy+itersenergy; // count both since did both
         f1iters=f1itersentropy+f1itersenergy; // count both since did both
         failreturn=failreturnentropy;
@@ -3328,7 +3359,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
       }
       else if(ACCEPTASNOFAILURE(failreturnenergy)==1){ // automatically also done when fracenergy==1.0 (now, or when also fracenergy>0.0)
-        //      dualfprintf(fail_file,"USING ENERGY: errorabsenergy=%g errorabsentropy=%g\n",errorabsenergy,errorabsentropy);
+        //      dualfprintf(fail_file,"USING ENERGY: errorabsenergy=%g errorabsentropy=%g\n",errorabsenergy[WHICHERROR],errorabsentropy[WHICHERROR]);
         *lpflag=lpflagenergy;
         *lpflagrad=lpflagradenergy;
         *eomtype=eomtypeenergy; // can be EOMDONOTHING if successful
@@ -3341,7 +3372,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
         }
         usedenergy=1;
         noprims=0;
-        errorabs=errorabsenergy;
+        errorabs[0]=errorabsenergy[0];
+        errorabs[1]=errorabsenergy[1];
         iters=itersentropy+itersenergy; // count both since did both
         f1iters=f1itersentropy+f1itersenergy; // count both since did both
         failreturn=failreturnenergy;
@@ -3351,7 +3383,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
       }
       else if(ACCEPTASNOFAILURE(failreturncold)==1){
-        //      dualfprintf(fail_file,"USING COLD: errorabscold=%g errorabsentropy=%g\n",errorabscold,errorabsentropy);
+        //      dualfprintf(fail_file,"USING COLD: errorabscold=%g errorabsentropy=%g\n",errorabscold[WHICHERROR],errorabsentropy[WHICHERROR]);
         *lpflag=lpflagcold;
         *lpflagrad=lpflagradcold;
         *eomtype=eomtypecold; // can be EOMDONOTHING if successful
@@ -3364,7 +3396,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
         }
         usedcold=1;
         noprims=0;
-        errorabs=errorabscold;
+        errorabs[0]=errorabscold[0];
+        errorabs[1]=errorabscold[1];
         iters=itersentropy+itersenergy+iterscold; // count all since did all
         f1iters=f1itersentropy+f1itersenergy+f1iterscold; // ""
         failreturn=failreturncold;
@@ -3399,7 +3432,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
         *eomtype=EOMDEFAULT;
         GLOBALMACP0A1(prioritermethod,i,j,k,EOMTYPEINDEX) == *eomtype;
 
-        if(debugfail>=3) dualfprintf(fail_file,"Went explicit: eenergy=%g eentropy=%g ienergy=%d ientropy=%d\n",errorabsenergy,errorabsentropy,itersenergy,itersentropy);
+        if(debugfail>=3) dualfprintf(fail_file,"Went explicit: eenergy=%g eentropy=%g ienergy=%d ientropy=%d\n",errorabsenergy[WHICHERROR],errorabsentropy[WHICHERROR],itersenergy,itersentropy);
         if(goexplicitenergy==1 || goexplicitentropy==1){ usedexplicitgood=1; failfinalreturn=-1;}
         else{ usedexplicitkindabad=1; failfinalreturn=1;} // FUCK: might want to treat as actual failure if QTYPMHD mode since lpflag never set.
       }
@@ -3408,8 +3441,16 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
         GLOBALMACP0A1(prioritermethod,i,j,k,EOMTYPEINDEX) == *eomtype;
         *lpflag=UTOPRIMFAILCONV;
         *lpflagrad=UTOPRIMRADFAILCASE1A;
-        errorabs=MIN(errorabsenergy,errorabsentropy); // indicates error that could have had if chose to raise IMPALLOWCONV
-        if(debugfail>=2) dualfprintf(fail_file,"No source: eenergy=%g eentropy=%g ienergy=%d ientropy=%d\n",errorabsenergy,errorabsentropy,itersenergy,itersentropy);
+        if(errorabsenergy[WHICHERROR]<errorabsentropy[WHICHERROR]){
+          // indicates error that could have had if chose to raise IMPALLOWCONV
+          errorabs[0]=errorabsenergy[0];
+          errorabs[1]=errorabsenergy[1];
+        }
+        else{
+          errorabs[0]=errorabsentropy[0];
+          errorabs[1]=errorabsentropy[1];
+        }
+        if(debugfail>=2) dualfprintf(fail_file,"No source: eenergy=%g eentropy=%g ienergy=%d ientropy=%d\n",errorabsenergy[WHICHERROR],errorabsentropy[WHICHERROR],itersenergy,itersentropy);
         failfinalreturn=1;
         usedexplicitbad=1;
       }
@@ -3462,8 +3503,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
 
   
-  if(PRODUCTION==0&&errorabs>IMPALLOWCONVABS && (usedenergy||usedentropy||usedcold)){
-    dualfprintf(fail_file,"WTF2: %g : %d %d %d : %d %d\n",errorabs,usedenergy,usedentropy,usedcold,usedrameshenergy,usedrameshentropy);
+  if(PRODUCTION==0&&errorabs[WHICHERROR]>IMPALLOWCONVABS && (usedenergy||usedentropy||usedcold)){
+    dualfprintf(fail_file,"WTF2: %g : %d %d %d : %d %d\n",errorabs[WHICHERROR],usedenergy,usedentropy,usedcold,usedrameshenergy,usedrameshentropy);
     myexit(666);
   }
 
@@ -3586,7 +3627,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     // i=j=k=0 just to show infrequently
     if(debugfail>=2 && (ptrgeom->i==0 && ptrgeom->j==0  && ptrgeom->k==0)) dualfprintf(fail_file,"nstep=%ld numimplicits=%lld numexplicitsgood=%lld numexplicitskindabad=%lld numexplicitsbad=%lld : numenergy=%lld numentropy=%lld numboth=%lld numcold=%lld : numbad=%lld : numramesh=%lld numrameshenergy=%lld numrameshentropy=%lld : averagef1iter=%g averageiter=%g  : numqtypmhd=%d numqtyumhd=%d numqtyprad=%d numqtyurad=%d numqtyentropyumhd=%d numqtyentropypmhd=%d numitermodenormal=%d numitermodestages=%d numitermodecold=%d\n",nstep,numimplicits,numexplicitsgood,numexplicitskindabad,numexplicitsbad,numenergy,numentropy,numboth,numcold,numbad,numramesh,numrameshenergy,numrameshentropy,(FTYPE)numoff1iter/(SMALL+(FTYPE)numimplicits),(FTYPE)numofiter/(SMALL+(FTYPE)numimplicits),numqtypmhd,numqtyumhd,numqtyprad,numqtyurad,numqtyentropyumhd,numqtyentropypmhd,numitermodenormal,numitermodestages,numitermodecold);
     
-    numhisterr[MAX(MIN((int)(-log10l(SMALL+errorabs)),NUMNUMHIST-1),0)]++;
+    numhisterr[MAX(MIN((int)(-log10l(SMALL+errorabs[WHICHERROR])),NUMNUMHIST-1),0)]++;
     numhistiter[MAX(MIN(iters,IMPMAXITER),0)]++;
 #define HISTREPORTSTEP (20)
     if(nstep%HISTREPORTSTEP==0 && ptrgeom->i==0 && ptrgeom->j==0 && ptrgeom->k==0){
@@ -3661,7 +3702,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
 // compute changes to U (both T and R) using implicit method
 // KORALTODO: If doing implicit, should also add geometry source term that can sometimes be stiff.  Would require inverting sparse 8x8 matrix (or maybe 6x6 since only r-\theta for SPC).  Could be important for very dynamic radiative flows.
-static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int modprim, int havebackup, int didentropyalready, int *eomtype, int whichcap, int itermode, int *baseitermethod, int trueimpmaxiter, int truenumdampattempts, FTYPE fracenergy, FTYPE dissmeasure, int *radinvmod, FTYPE *pb, FTYPE *uub, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother ,FTYPE (*dUcomp)[NPR], FTYPE *errorabsreturn, FTYPE errorabsbestexternal, int *itersreturn, int *f1itersreturn)
+static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int modprim, int havebackup, int didentropyalready, int *eomtype, int whichcap, int itermode, int *baseitermethod, int trueimpmaxiter, int truenumdampattempts, FTYPE fracenergy, FTYPE dissmeasure, int *radinvmod, FTYPE *pb, FTYPE *uub, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother ,FTYPE (*dUcomp)[NPR], FTYPE *errorabsreturn, FTYPE *errorabsbestexternal, int *itersreturn, int *f1itersreturn)
 {
 
 
@@ -3711,7 +3752,7 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
   FTYPE pppriorsteptype[NPR],uupriorsteptype[NPR];
 
   FTYPE radsource[NPR], deltas[NPR]; 
-  extern int mathematica_report_check(int radinvmod, int failtype, long long int failnum, int gotfirstnofail, int eomtypelocal, int itermode, int baseitermethod, FTYPE errorabs, FTYPE errorabsbestexternal, int iters, int iterstotal, FTYPE realdt,struct of_geom *ptrgeom, FTYPE *ppfirst, FTYPE *pp, FTYPE *pb, FTYPE *piin, FTYPE *prtestUiin, FTYPE *prtestUU0, FTYPE *uu0, FTYPE *uu, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_state *q, FTYPE *dUother);
+  extern int mathematica_report_check(int radinvmod, int failtype, long long int failnum, int gotfirstnofail, int eomtypelocal, int itermode, int baseitermethod, FTYPE *errorabs, FTYPE *errorabsbestexternal, int iters, int iterstotal, FTYPE realdt,struct of_geom *ptrgeom, FTYPE *ppfirst, FTYPE *pp, FTYPE *pb, FTYPE *piin, FTYPE *prtestUiin, FTYPE *prtestUU0, FTYPE *uu0, FTYPE *uu, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_state *q, FTYPE *dUother);
   int mathfailtype;
 
 
@@ -4003,7 +4044,7 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
 
   if(USEINPUTASGUESSIFERRORSMALL){
     // if error small enough and no fixups used with the radative inversion, override guess to use previous solution as the new guess
-    if(*errorabsreturn<TRYHARDERFEEDGUESSTOL && *radinvmod==0){
+    if(errorabsreturn[WHICHERROR]<TRYHARDERFEEDGUESSTOL && *radinvmod==0){
       PLOOP(pliter,pl){
         pp[pl] = pp0[pl] = ppfirst[pl] = pb[pl]; // not just F(pb) anymore, holds better guess
         uu[pl] = uub[pl]; // not just Uiin or uu0 anymore, holds better guess
@@ -4155,7 +4196,7 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
       jac00list[iterlist]=BIG;
     }
     // DEBUG:
-    *errorabsreturn=BIG;
+    errorabsreturn[0]=errorabsreturn[1]=BIG;
 
     // whether holding as positive and outher counts
     int holdingaspositive=0,iterhold=0;
@@ -5619,7 +5660,7 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
   //  if(REPORTERFNEG && failreturn!=FAILRETURNMODESWITCH && (pp[PRAD0]<10.0*ERADLIMIT) || PRODUCTION==0 && NOTACTUALFAILURE(failreturn)==0 && errorabsf1[WHICHERROR]>=trueimptryconvalt || PRODUCTION>0 && NOTBADFAILURE(failreturn)==0 && havebackup==0){
     //    if(NOTBADFAILURE(failreturn)==0){
     struct of_state qcheck; get_state(pp, ptrgeom, &qcheck);  primtoU(UNOTHING,pp,&qcheck,ptrgeom, uu, NULL);
-    failnum++; mathematica_report_check(*radinvmod, mathfailtype, failnum, gotfirstnofail, eomtypelocal, itermode, *baseitermethod, errorabsf1[WHICHERROR], errorabsbestexternal, iter, totaliters, realdt, ptrgeom, ppfirst,pp,pb,piin,prtestUiin,prtestUU0,uu0,uu,Uiin,Ufin, CUf, q, dUother);
+    failnum++; mathematica_report_check(*radinvmod, mathfailtype, failnum, gotfirstnofail, eomtypelocal, itermode, *baseitermethod, errorabsf1, errorabsbestexternal, iter, totaliters, realdt, ptrgeom, ppfirst,pp,pb,piin,prtestUiin,prtestUU0,uu0,uu,Uiin,Ufin, CUf, q, dUother);
     int usedebugiter=debugiteratteempts[0];
     showdebuglist(usedebugiter,pppreholdlist,ppposholdlist,f1reportlist,f1list,errorabsf1list,errorallabsf1list,realiterlist,jac00list);
   }
@@ -5634,7 +5675,8 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
   ////////////////
 
   // report error no matter whether got solution or not.
-  *errorabsreturn=errorabsf1[WHICHERROR];
+  errorabsreturn[0]=errorabsf1[0];
+  errorabsreturn[1]=errorabsf1[1];
 
   // report iters not matter what the error.
   *itersreturn=totaliters;
@@ -5707,7 +5749,7 @@ static void showdebuglist(int debugiter, FTYPE (*pppreholdlist)[NPR],FTYPE (*ppp
 
 
                              
-int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE errorabs, struct of_geom *ptrgeom, FTYPE *pp, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *dUother, FTYPE *CUf, struct of_state *q, FTYPE *ppeng, FTYPE *ppent, FTYPE *uueng, FTYPE *uuent, FTYPE (*dUcompeng)[NPR], FTYPE (*dUcompent)[NPR], struct of_state *qeng, struct of_state *qent, int *failtypeeng, FTYPE *errorabseng, int *iterseng, int *radinvmodeng, int *failtypeent, FTYPE *errorabsent, int *itersent, int *radinvmodent)
+int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE *errorabs, struct of_geom *ptrgeom, FTYPE *pp, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *dUother, FTYPE *CUf, struct of_state *q, FTYPE *ppeng, FTYPE *ppent, FTYPE *uueng, FTYPE *uuent, FTYPE (*dUcompeng)[NPR], FTYPE (*dUcompent)[NPR], struct of_state *qeng, struct of_state *qent, int *failtypeeng, FTYPE *errorabseng, int *iterseng, int *radinvmodeng, int *failtypeent, FTYPE *errorabsent, int *itersent, int *radinvmodent)
 {
   // BEGIN get ramesh solution
   int radinvmod=0; // fake
@@ -5716,7 +5758,7 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE errorabs, struc
   int failnum=0,gotfirstnofail=0;
   int itermode=ITERMODENORMAL,iters=0;
   int baseitermethod=QTYPMHD;
-  FTYPE errorabsbestexternal=BIG;
+  FTYPE errorabsbestexternal[2]={BIG};
   // itersentropy is last, but might feed in best
   FTYPE realdt = compute_dt(CUf,dt);
   // get uu0
@@ -5763,7 +5805,7 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE errorabs, struc
 //#define WHICHVELRAMESH VEL4 // should be same as WHICHVEL in test.f
 #define WHICHVELRAMESH VELREL4 // should be same as WHICHVEL in test.f
 
-int get_rameshsolution(int whichcallramesh, int radinvmod, int failtype, long long int failnum, int gotfirstnofail, int eomtypelocal, int itermode, int baseitermethod, FTYPE errorabs, FTYPE errorabsbestexternal, int iters, int totaliters, FTYPE realdt, struct of_geom *ptrgeom, FTYPE *pp, FTYPE *pb, FTYPE *piin, FTYPE *uu0, FTYPE *uu, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_state *q, FTYPE *ppeng, FTYPE *ppent, FTYPE *uueng, FTYPE *uuent, struct of_state *qeng, struct of_state *qent, int *failtypeeng, FTYPE *errorabseng, int *iterseng, int *radinvmodeng, int *failtypeent, FTYPE *errorabsent, int *itersent, int *radinvmodent)
+int get_rameshsolution(int whichcallramesh, int radinvmod, int failtype, long long int failnum, int gotfirstnofail, int eomtypelocal, int itermode, int baseitermethod, FTYPE *errorabs, FTYPE *errorabsbestexternal, int iters, int totaliters, FTYPE realdt, struct of_geom *ptrgeom, FTYPE *pp, FTYPE *pb, FTYPE *piin, FTYPE *uu0, FTYPE *uu, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_state *q, FTYPE *ppeng, FTYPE *ppent, FTYPE *uueng, FTYPE *uuent, struct of_state *qeng, struct of_state *qent, int *failtypeeng, FTYPE *errorabseng, int *iterseng, int *radinvmodeng, int *failtypeent, FTYPE *errorabsent, int *itersent, int *radinvmodent)
 {
   //  int failtype=1;
   //  long long int failnum=0;
@@ -5794,11 +5836,11 @@ int get_rameshsolution(int whichcallramesh, int radinvmod, int failtype, long lo
     if(WHICHVELRAMESH==VEL4 && ptrgeom->gcov[GIND(TT,TT)]>=0.0) dualfprintf(fail_file,"Wanted to call ramesh, but inside ergosphere\n");
     *failtypeeng = 1;
     *radinvmodent = 0;
-    *errorabseng = BIG;
+    errorabseng[0] = errorabseng[1] = BIG;
     *iterseng = 0;
     *failtypeent = 1;
     *radinvmodent = 0;
-    *errorabsent = BIG;
+    errorabsent[0] = errorabsent[1] = BIG;
     *itersent = 0;
     for(pl=0;pl<NUMRESULTS;pl++) resultseng[pl]=resultsent[pl]=-1.0;
     PLOOP(pliter,pl) ppeng[pl]=ppent[pl]=-1.0;
@@ -5830,8 +5872,8 @@ int get_rameshsolution(int whichcallramesh, int radinvmod, int failtype, long lo
     na++; args[na]=(doublereal)gotfirstnofail;
     na++; args[na]=(doublereal)eomtypelocal;
     na++; args[na]=(doublereal)itermode;
-    na++; args[na]=errorabs;
-    na++; args[na]=errorabsbestexternal;
+    na++; args[na]=errorabs[WHICHERROR];
+    na++; args[na]=errorabsbestexternal[WHICHERROR];
     na++; args[na]=(doublereal)iters;
     na++; args[na]=(doublereal)totaliters;
     na++; args[na]=realdt;
@@ -5909,12 +5951,12 @@ int get_rameshsolution(int whichcallramesh, int radinvmod, int failtype, long lo
       extern int invert_scalars(struct of_geom *ptrgeom, FTYPE *Ugeomfree, FTYPE *pr);
       invert_scalars(ptrgeom, uueng,ppeng);
     }
-    *errorabseng = resultseng[12];
+    errorabseng[0] = resultseng[12];
     *iterseng = (int)resultseng[13];
     *radinvmodeng = (int)resultseng[14];
 
     // override ramesh error in case meaningless, if there is a failure.
-    if(*failtypeeng) *errorabseng = BIG;
+    if(*failtypeeng) errorabseng[0] = BIG;
 
     // return solution in harm format
     *failtypeent = (int)resultsent[11];
@@ -5950,13 +5992,15 @@ int get_rameshsolution(int whichcallramesh, int radinvmod, int failtype, long lo
       extern int invert_scalars(struct of_geom *ptrgeom, FTYPE *Ugeomfree, FTYPE *pr);
       invert_scalars(ptrgeom, uuent,ppent);
     }
-    *errorabsent = resultsent[12];
+    errorabsent[0] = resultsent[12];
     *itersent = (int)resultsent[13];
     *radinvmodent = (int)resultsent[14];
 
     // override ramesh error in case meaningless, if there is a failure.
-    if(*failtypeent) *errorabsent = BIG;
+    if(*failtypeent) errorabsent[0] = BIG;
   }
+
+
 
   //////////
   //
@@ -6026,7 +6070,8 @@ int get_rameshsolution(int whichcallramesh, int radinvmod, int failtype, long lo
     // translate result
     //  *qeng=*q; // already done
     *failtypeeng=failreturnferr; // trust my error report
-    *errorabseng=errorabsf1[WHICHERROR]; // trust my error measure
+    errorabseng[0]=errorabsf1[0]; // trust my error measure
+    errorabseng[1]=errorabsf1[1]; // trust my error measure
     *radinvmodeng=radinvmod; // trust my rad inv check
   }
 
@@ -6045,7 +6090,8 @@ int get_rameshsolution(int whichcallramesh, int radinvmod, int failtype, long lo
     // translate result
     //  *qent=*q; // already done
     *failtypeent=failreturnferr; // trust my error report
-    *errorabsent=errorabsf1[WHICHERROR]; // trust my error measure
+    errorabsent[0]=errorabsf1[0]; // trust my error measure
+    errorabsent[1]=errorabsf1[1]; // trust my error measure
     *radinvmodent=radinvmod; // trust my rad inv check
   }
 
@@ -6082,7 +6128,7 @@ int get_rameshsolution(int whichcallramesh, int radinvmod, int failtype, long lo
       SLOOPA(jj) resultsjon[7+jj] = pp[URAD0+jj];
     }
     resultsjon[11] = (FTYPE)failtype;
-    resultsjon[12] = errorabs;
+    resultsjon[12] = errorabs[WHICHERROR];
     resultsjon[13] = (FTYPE)iters;
     resultsjon[14] = radinvmod;
 
@@ -6114,7 +6160,7 @@ int get_rameshsolution(int whichcallramesh, int radinvmod, int failtype, long lo
 
 
 
-int mathematica_report_check(int radinvmod, int failtype, long long int failnum, int gotfirstnofail, int eomtypelocal, int itermode, int baseitermethod, FTYPE errorabs, FTYPE errorabsbestexternal, int iters, int totaliters, FTYPE realdt,struct of_geom *ptrgeom, FTYPE *ppfirst, FTYPE *pp, FTYPE *pb, FTYPE *piin, FTYPE *prtestUiin, FTYPE *prtestUU0, FTYPE *uu0, FTYPE *uu, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_state *q, FTYPE *dUother)
+int mathematica_report_check(int radinvmod, int failtype, long long int failnum, int gotfirstnofail, int eomtypelocal, int itermode, int baseitermethod, FTYPE *errorabs, FTYPE *errorabsbestexternal, int iters, int totaliters, FTYPE realdt,struct of_geom *ptrgeom, FTYPE *ppfirst, FTYPE *pp, FTYPE *pb, FTYPE *piin, FTYPE *prtestUiin, FTYPE *prtestUU0, FTYPE *uu0, FTYPE *uu, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_state *q, FTYPE *dUother)
 {
   int jj,kk;
   int pliter,pl;
@@ -6145,8 +6191,10 @@ int mathematica_report_check(int radinvmod, int failtype, long long int failnum,
 
     if(!isfinite(pp[UU])) pp[UU]=BIG;
     if(!isfinite(pp[ENTROPY])) pp[ENTROPY]=BIG;
-    if(!isfinite(errorabs)) errorabs=BIG;
-    if(!isfinite(errorabsbestexternal)) errorabsbestexternal=BIG;
+    if(!isfinite(errorabs[0])) errorabs[0]=BIG;
+    if(!isfinite(errorabs[1])) errorabs[1]=BIG;
+    if(!isfinite(errorabsbestexternal[0])) errorabsbestexternal[0]=BIG;
+    if(!isfinite(errorabsbestexternal[1])) errorabsbestexternal[1]=BIG;
 
     /////////////////////////
     //
@@ -6171,7 +6219,7 @@ int mathematica_report_check(int radinvmod, int failtype, long long int failnum,
     // 211+11 things
     dualfprintf(fail_file,"\nFAILINFO: ");
     dualfprintf(fail_file,"%d %d %d ",NUMARGS,NUMRESULTS,WHICHVELRAMESH); // 3
-    dualfprintf(fail_file,"%d %d %lld %d %d %d %21.15g %21.15g %d %d %21.15g %lld %d %21.15g ",failtype,myid,failnum,gotfirstnofail,eomtypelocal,itermode,errorabs,errorabsbestexternal,iters,totaliters,realdt,nstep,steppart,gam); // 14
+    dualfprintf(fail_file,"%d %d %lld %d %d %d %21.15g %21.15g %d %d %21.15g %lld %d %21.15g ",failtype,myid,failnum,gotfirstnofail,eomtypelocal,itermode,errorabs[WHICHERROR],errorabsbestexternal[WHICHERROR],iters,totaliters,realdt,nstep,steppart,gam); // 14
     dualfprintf(fail_file,"%21.15g %21.15g %21.15g %21.15g ",GAMMAMAXRAD,ERADLIMIT,IMPTRYCONVABS,IMPALLOWCONVABS); // 4
     //    dualfprintf(fail_file,"%21.15g %21.15g %21.15g %21.15g ",ARAD_CODE,KAPPA_ES_CODE(1.0,1.0),KAPPA_FF_CODE(1.0,1.0),KAPPA_BF_CODE(1.0,1.0)); // 4
     dualfprintf(fail_file,"%21.15g %21.15g %21.15g %21.15g ",ARAD_CODE,calc_kappaes_user(1.0,1.0,0,0,0),calc_kappa_user(1.0,1.0,0,0,0),0.0); // 4
@@ -6193,11 +6241,11 @@ int mathematica_report_check(int radinvmod, int failtype, long long int failnum,
 
     // get ramesh solution
     int whichcall=0; // debug call
-    FTYPE ppeng[NPR]={0},ppent[NPR]={0},errorabseng=BIG,errorabsent=BIG;
+    FTYPE ppeng[NPR]={0},ppent[NPR]={0},errorabseng[NUMERRORTYPES]={BIG},errorabsent[NUMERRORTYPES]={BIG};
     FTYPE uueng[NPR]={0},uuent[NPR]={0};
     int failtypeeng=1,failtypeent=1,iterseng=IMPMAXITER,itersent=IMPMAXITER, radinvmodeng=-1, radinvmodent=-1;
     struct of_state qeng=*q,qent=*q;
-    get_rameshsolution(whichcall, radinvmod, failtype, failnum,  gotfirstnofail,  eomtypelocal,  itermode, baseitermethod, errorabs, errorabsbestexternal,  iters,  totaliters,realdt, ptrgeom, pp, pb, piin, uu0, uu, Uiin, Ufin, CUf, q, ppeng, ppent, uueng, uuent, &qeng, &qent, &failtypeeng, &errorabseng, &iterseng, &radinvmodeng, &failtypeent, &errorabsent, &itersent, &radinvmodent);
+    get_rameshsolution(whichcall, radinvmod, failtype, failnum,  gotfirstnofail,  eomtypelocal,  itermode, baseitermethod, errorabs, errorabsbestexternal,  iters,  totaliters,realdt, ptrgeom, pp, pb, piin, uu0, uu, Uiin, Ufin, CUf, q, ppeng, ppent, uueng, uuent, &qeng, &qent, &failtypeeng, errorabseng, &iterseng, &radinvmodeng, &failtypeent, errorabsent, &itersent, &radinvmodent);
 
 
 
