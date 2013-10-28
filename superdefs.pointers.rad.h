@@ -2,6 +2,8 @@
 // KORAL
 FTYPE PTRDEFGLOBALMETMACP2A2(tlab2ortho,BOOSTGRIDPOS,BOOSTDIRS,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3,NDIM,NDIM);
 
+int PTRDEFGLOBALMACP0A1(prioritermethod,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3,NDIM);
+
 
 
 //FTYPE *u,*x,*xb,*du,*ut1,*ut2,*ut3,*ut4,*ut0,*u_bak,*u_step1,*u_step2,*u_step3,*u_step4,*ahdx,*ahdy,*ahdz,*aradx,*arady,*aradz,

@@ -26,4 +26,16 @@ void set_arrays_multidimen_rad(void)
 #endif
 
 
+
+#if(EOMRADTYPE!=EOMRADNONE)
+  GLOBALPOINT(prioritermethod) = 
+    (int PTRMACP0A1(prioritermethod,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3,NDIM)) 
+    (&(BASEMACP0A1(prioritermethod,N1BND,N2BND,N3BND,0)));
+  int oo;
+  FULLLOOP DLOOPA(oo){
+    GLOBALMACP0A1(prioritermethod,i,j,k,oo) = valueinit;
+  }
+#endif
+
+
 }
