@@ -191,6 +191,7 @@
 #define EOMDIDGRMHD -2
 #define EOMDONOTHING(eomtype) (eomtype<=EOMDIDGRMHD)
 #define EOMDEFAULT -1 // choose to do default behavior without any forced EOM
+#define NUMEOMTYPES 4
 #define EOMFFDE 0
 #define EOMCOLDGRMHD 1
 #define EOMENTROPYGRMHD 2
@@ -203,7 +204,9 @@
 #define MODESWITCH 2
 #define MODEPICKREVERT 3
 #define MODEPICKBEST 4
-#define MODEENERGYRAMESH 5
+#define MODEPICKBESTSIMPLE 5
+#define MODEPICKBESTSIMPLE2 6
+#define MODEENERGYRAMESH 7
 
 // which cap type to place in rad inversion
 #define CAPTYPEBASIC 0

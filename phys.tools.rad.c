@@ -301,11 +301,6 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE *errorabs, stru
 #define SWITCHTOENTROPYIFCHANGESTOENTROPY (0)
 
 
-// whether to try again with 10* higher u_g for entropy case since important as backup.
-// Sometimes initial guess for u_g is too low, and when too low very hard for NR to recover.
-#define TRYENTROPYHARDER 1
-
-#define TRYENERGYHARDER 1
 
 // whether to use ramesh solver as backup
 #define USERAMESH 1
@@ -1756,7 +1751,9 @@ static FTYPE compute_dt(FTYPE *CUf, FTYPE dtin)
 
 
 // choose to switch to entropy only if energy fails or gives u_g<0.  Or choose to always do both and use best solution.
-#define MODEMETHOD MODEPICKBEST
+#define MODEMETHOD MODEPICKBEST // general switching method
+//#define MODEMETHOD MODEPICKBESTSIMPLE // switches with only PMHD method
+//#define MODEMETHOD MODEPICKBESTSIMPLE2 // switches with all methods but no ITERMODESTAGES attempted
 //#define MODEMETHOD MODESWITCH
 //#define MODEMETHOD MODEENERGY
 //#define MODEMETHOD MODEENTROPY
@@ -1858,7 +1855,18 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
 
   // whether doing energy at all
-  int eomtypecond=(*eomtype==EOMGRMHD || *eomtype==EOMDEFAULT && EOMTYPE==EOMGRMHD);
+  int eomtypecond[NUMEOMTYPES];
+  eomtypecond[EOMFFDE]=(*eomtype==EOMFFDE || *eomtype==EOMDEFAULT && EOMTYPE==EOMFFDE);
+  eomtypecond[EOMCOLDGRMHD]=(*eomtype==EOMCOLDGRMHD || *eomtype==EOMDEFAULT && EOMTYPE==EOMCOLDGRMHD);
+  eomtypecond[EOMENTROPYGRMHD]=(*eomtype==EOMENTROPYGRMHD || *eomtype==EOMDEFAULT && EOMTYPE==EOMENTROPYGRMHD);
+  eomtypecond[EOMGRMHD]=(*eomtype==EOMGRMHD || *eomtype==EOMDEFAULT && EOMTYPE==EOMGRMHD);
+  int testeom,counteom=0;
+  for(testeom=0;testeom<NUMEOMTYPES;testeom++) if(eomtypecond[testeom]) counteom++;
+  if(counteom>1){
+    dualfprintf(fail_file,"Too many default eomtypeconds\n");
+    for(testeom=0;testeom<NUMEOMTYPES;testeom++) dualfprintf(fail_file,"%d %d\n",testeom,eomtypecond[testeom]);
+    myexit(843968364);
+  }
 
 
   /////////
@@ -1890,7 +1898,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
   //
   //////////////////////////////
 
-  if(MODEMETHOD==MODEENERGY && eomtypecond || MODEMETHOD==MODEDEFAULT && *eomtype==EOMGRMHD){
+  if(MODEMETHOD==MODEENERGY && eomtypecond[EOMGRMHD]==1 || MODEMETHOD==MODEDEFAULT && *eomtype==EOMGRMHD){
     havebackup=0;
     didentropyalready=0;
     eomtypelocal=*eomtype;
@@ -2075,7 +2083,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
   //
   //////////////////////////////
 
-  if(MODEMETHOD==MODESWITCH && eomtypecond){
+  if(MODEMETHOD==MODESWITCH && eomtypecond[EOMGRMHD]==1){
     FTYPE errorabsenergy[NUMERRORTYPES]={1.0},errorabsentropy[NUMERRORTYPES]={1.0};
     int itersenergy=0,itersentropy=0;
     int f1itersenergy=0,f1itersentropy=0;
@@ -2099,7 +2107,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     baseitermethodenergy=QTYPMHD;
     failreturnenergy=koral_source_rad_implicit_mode(1,0,havebackup, didentropyalready, &eomtypelocal, whichcapenergy, itermodeenergy, &baseitermethodenergy, trueimpmaxiterenergy,  truenumdampattemptsenergy, fracenergy, dissmeasure, &radinvmod, pb, uub, piin, Uiin, Ufin, CUf, ptrgeom, q, dUother ,dUcomp, errorabsenergy, errorabsenergy, &itersenergy, &f1itersenergy);
 
-    if(SWITCHGOODIDEAFAILURE(failreturn) && eomtypecond){
+    if(SWITCHGOODIDEAFAILURE(failreturn) && eomtypecond[EOMGRMHD]){
       // if failed with GRMHD or return reported switching to entropy is preferred, then do entropy method
       eomtypelocal=EOMENTROPYGRMHD;
       // restore backups for fresh start
@@ -2153,7 +2161,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
         usedexplicitgood=1;
       }
     }
-    else if(failreturnenergy>=0){// failreturnenergy==0 or eomtypecond==0
+    else if(failreturnenergy>=0){// failreturnenergy==0 or eomtypecond[EOMGRMHD]==0
       // can stick with energy
       failfinalreturn=0;
       usedenergy=1;
@@ -2194,7 +2202,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
   //////////////////////////////
   //
-  // MODEPICKBEST
+  // MODEPICKBEST / MODEPICKBESTSIMPLE / MODEPICKBESTSIMPLE2
   //
   // KORALTODO: SUPERGODMARK: Need to still think of energy-entropy implicit solver for intermediate regime.  Also, need to add conditions to avoid entropy or energy if Erf<0 or gammarad reaches limit or entropy-based effective absorption opacity is too large."
   //
@@ -2212,7 +2220,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
 
   int gotrameshsolution=0,usedrameshenergy=0,usedrameshentropy=0;
-  if(MODEMETHOD==MODEPICKBEST){
+  if(MODEMETHOD==MODEPICKBEST || MODEMETHOD==MODEPICKBESTSIMPLE  || MODEMETHOD==MODEPICKBESTSIMPLE2){
 
 
 
@@ -2413,8 +2421,16 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
 
 
-
-
+    /////////
+    //
+    // store prior itermethod, before we change it.
+    //
+    /////////
+    int prioritermethodlist[NUMPRIORITERMETHODINDEX];
+    int oo;
+    for(oo=0;oo<NUMPRIORITERMETHODINDEX;oo++){
+      prioritermethodlist[oo]=GLOBALMACP0A1(prioritermethod,i,j,k,oo);
+    }
 
 
 
@@ -2426,15 +2442,15 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     // also check energy if entropy thinks we should do explicit
     //
     /////////////
-    //    if(GLOBALMACP0A1(prioritermethod,i,j,k,EOMINDEX) == EOMGRMHD || GLOBALMACP0A1(prioritermethod,i,j,k,EOMINDEX) == PRIORITERMETHODNOTSET && eomtypecond && (fracenergy!=0.0 || radinvmodentropy>0 ||  ACTUALHARDORSOFTFAILURE(failreturnentropy)==1 || goexplicitentropy==1)){
-    if(eomtypecond && (fracenergy!=0.0 || radinvmodentropy>0 ||  ACTUALHARDORSOFTFAILURE(failreturnentropy)==1 || goexplicitentropy==1)){
+    //    if(prioritermethodlist[EOMINDEX] == EOMGRMHD || prioritermethodlist[EOMINDEX] == PRIORITERMETHODNOTSET && eomtypecond[EOMGRMHD] && (fracenergy!=0.0 || radinvmodentropy>0 ||  ACTUALHARDORSOFTFAILURE(failreturnentropy)==1 || goexplicitentropy==1)){
+    if(eomtypecond[EOMGRMHD] && (fracenergy!=0.0 || radinvmodentropy>0 ||  ACTUALHARDORSOFTFAILURE(failreturnentropy)==1 || goexplicitentropy==1)){
 
 
       // quickly try QTYPMHD then QTYURAD
       int tryphase1;
 #define NUMPHASES (6)
 
-      int baseitermethodlist[NUMPHASES]={QTYPMHD,QTYURAD,QTYPRAD,QTYPMHD,QTYURAD,QTYPRAD}; int whichfirstpmhd=0;
+      int baseitermethodlist[NUMPHASES]={QTYPMHD,QTYURAD,QTYPRAD,QTYPMHD,QTYURAD,QTYPRAD}; int whichfirstpmhd=0,whichfirsturad=1,whichfirstprad=2;
       int itermodelist[NUMPHASES]={ITERMODENORMAL,ITERMODENORMAL,ITERMODENORMAL,ITERMODESTAGES,ITERMODESTAGES,ITERMODESTAGES};
       int trueimpmaxiterlist[NUMPHASES]={IMPMAXITERQUICK,IMPMAXITERQUICK,IMPMAXITERQUICK,IMPMAXITER,IMPMAXITER,IMPMAXITER};
       int truenumdampattemptslist[NUMPHASES]={NUMDAMPATTEMPTSQUICK,NUMDAMPATTEMPTSQUICK,NUMDAMPATTEMPTSQUICK,NUMDAMPATTEMPTS,NUMDAMPATTEMPTS,NUMDAMPATTEMPTS};
@@ -2451,21 +2467,21 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       // normal checkradinvlist will catch if prad method doesn't lead to radinv but urad method does.
       // normal checkradinvlist will catch if somehow rad method leads to radinv but gas method doesn't.
       if(gasprimaryevolves==0){ // if gas primary evolves, then keep original order because PMHD is fastest method.
-        if(radprimaryevolves && GLOBALMACP0A1(prioritermethod,i,j,k,BASEITERMETHODINDEX) == PRIORITERMETHODNOTSET
-           ||  GLOBALMACP0A1(prioritermethod,i,j,k,BASEITERMETHODINDEX) == QTYURAD
+        if(radprimaryevolves && prioritermethodlist[BASEITERMETHODINDEX] == PRIORITERMETHODNOTSET
+           ||  prioritermethodlist[BASEITERMETHODINDEX] == QTYURAD
            ){
           tryphase1=-1;
-          tryphase1++; baseitermethodlist[tryphase1]=QTYURAD; modprimlist[tryphase1]=0;
-          tryphase1++; baseitermethodlist[tryphase1]=QTYPRAD; modprimlist[tryphase1]=0;
+          tryphase1++; baseitermethodlist[tryphase1]=QTYURAD; modprimlist[tryphase1]=0; whichfirsturad=tryphase1;
+          tryphase1++; baseitermethodlist[tryphase1]=QTYPRAD; modprimlist[tryphase1]=0; whichfirstprad=tryphase1;
           tryphase1++; baseitermethodlist[tryphase1]=QTYPMHD; modprimlist[tryphase1]=0; whichfirstpmhd=tryphase1;
           tryphase1++; baseitermethodlist[tryphase1]=QTYURAD; modprimlist[tryphase1]=0;
           tryphase1++; baseitermethodlist[tryphase1]=QTYPRAD; modprimlist[tryphase1]=0;
           tryphase1++; baseitermethodlist[tryphase1]=QTYPMHD; modprimlist[tryphase1]=1;
         }
-        if(GLOBALMACP0A1(prioritermethod,i,j,k,BASEITERMETHODINDEX) == QTYPRAD){
+        if(prioritermethodlist[BASEITERMETHODINDEX] == QTYPRAD){
           tryphase1=-1;
-          tryphase1++; baseitermethodlist[tryphase1]=QTYPRAD; modprimlist[tryphase1]=0;
-          tryphase1++; baseitermethodlist[tryphase1]=QTYURAD; modprimlist[tryphase1]=0;
+          tryphase1++; baseitermethodlist[tryphase1]=QTYPRAD; modprimlist[tryphase1]=0; whichfirstprad=tryphase1;
+          tryphase1++; baseitermethodlist[tryphase1]=QTYURAD; modprimlist[tryphase1]=0; whichfirsturad=tryphase1;
           tryphase1++; baseitermethodlist[tryphase1]=QTYPMHD; modprimlist[tryphase1]=0; whichfirstpmhd=tryphase1;
           tryphase1++; baseitermethodlist[tryphase1]=QTYPRAD; modprimlist[tryphase1]=0;
           tryphase1++; baseitermethodlist[tryphase1]=QTYURAD; modprimlist[tryphase1]=0;
@@ -2473,13 +2489,19 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
         }
       }
 
+
+
+
       // ENERGY PHASE LOOP
       for(tryphase1=0;tryphase1<NUMPHASES;tryphase1++){
 
         //        dualfprintf(fail_file,"TRYING: tryphase1=%d : %d %d %d\n",tryphase1,gasextremeprimaryevolves,radextremeprimaryevolves,baseitermethodlist[tryphase1]);
 
-        // skip rest of not trying harder
-        if(TRYENERGYHARDER==0 && tryphase1>=NUMPHASES/2) continue;
+        // pick best simple method avoids all solvers except PMHD
+        if(MODEMETHOD==MODEPICKBESTSIMPLE && baseitermethodlist[tryphase1]!=QTYPMHD) continue;
+
+        // pick best simple 2 method avoids all itermodestages methods
+        if(MODEMETHOD==MODEPICKBESTSIMPLE2 && itermodelist[tryphase1]==ITERMODESTAGES) continue;
 
         // avoid method in case very non-dominant since then would give errorneous (critically bad even) results.  If methods that can use fail, have to revert to entropy or fixups.
         if(radextremeprimaryevolves && baseitermethodlist[tryphase1]==QTYPMHD) continue;
@@ -2490,6 +2512,23 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
           // then should skip this case and rely upon radiative solvers
           continue;
         }
+
+        if(baseitermethodlist[tryphase1]==QTYURAD && errorabslist[whichfirsturad][0]<IMPTRYCONV && errorabslist[whichfirsturad][1]>IMPTRYCONV && WHICHERROR==1){
+          // then should skip this case and rely upon pmhd or prad
+          continue;
+        }
+
+        if(baseitermethodlist[tryphase1]==QTYPRAD && errorabslist[whichfirstprad][0]<IMPTRYCONV && errorabslist[whichfirstprad][1]>IMPTRYCONV && WHICHERROR==1){
+          // then should skip this case and rely upon pmhd or urad
+          continue;
+        }
+
+
+        //        if(prioritermethodlist[EOMTYPEINDEX]==EOMENTROPYGRMHD && itermodelist[tryphase1]==ITERMODESTAGES && errorabsenergybest[0]<IMPTRYCONV && errorabsenergybest[1]>IMPTRYCONV && WHICHERROR==1){
+        //          // then assume went through all ITERMODENORMAL cases and best error had good iteration tolerance, but best error has bad total error, and previous solution was entropy, so skip itermodestages.
+        //          // this assumes ITERMODESTAGES is expensive and should only do if ........
+        //          continue;
+        //        }
 
 
         //        dualfprintf(fail_file,"MAYBEREALLYTRYING: tryphase1=%d : %d %d %d\n",tryphase1,radinvmodenergybest,checkradinvlist[tryphase1],failreturnenergybest);
@@ -2632,6 +2671,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
           
           int noproblem=(ACTUALHARDORSOFTFAILURE(failreturnenergy)==0 || failreturnenergy==FAILRETURNMODESWITCH);
 
+          
           if(tryphase1>0 && noproblem){
             if(debugfail>=2) dualfprintf(fail_file,"Recovered using tryphase1=%d (energy: failreturnenergy=%d radinvmod=%d): ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d baseitermethod=%d\n",tryphase1,failreturnenergy,radinvmodenergy,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsenergyold[WHICHERROR],errorabsenergy[WHICHERROR],itersenergyold,itersenergy,baseitermethodenergy);
           }
@@ -2639,8 +2679,10 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
             if(debugfail>=2) dualfprintf(fail_file,"Failed to: <Recovered> using tryphase1=%d (energy: failreturnenergy=%d radinvmod=%d): ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d baseitermethod=%d\n",tryphase1,failreturnenergy,radinvmodenergy,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsenergyold[WHICHERROR],errorabsenergy[WHICHERROR],itersenergyold,itersenergy,baseitermethodenergy);
           }
 
-
+         
         }// end if doing _mode() call
+
+
       }// end over try loop
 
 
@@ -2652,8 +2694,9 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
       // see if want to try harder
       if(
-         (TRYENERGYHARDER && ACTUALHARDORSOFTFAILURE(failreturnenergy) && failreturn!=FAILRETURNMODESWITCH && USERAMESH && radextremeprimaryevolves==0)
-         && !(errorabslist[whichfirstpmhd][0]<IMPTRYCONV && errorabslist[whichfirstpmhd][1]>IMPTRYCONV)
+         !(MODEMETHOD==MODEPICKBESTSIMPLE2) // Ramesh method is like stages, so avoid if simple2 method
+         && (ACTUALHARDORSOFTFAILURE(failreturnenergy) && failreturn!=FAILRETURNMODESWITCH && USERAMESH && radextremeprimaryevolves==0)
+         && !(errorabslist[whichfirstpmhd][0]<IMPTRYCONV && errorabslist[whichfirstpmhd][1]>IMPTRYCONV) // avoid ramesh (pmhd-type) method if already did it and got iterate-small error.
          ){
         errorabsenergyold[0]=errorabsenergy[0];
         errorabsenergyold[1]=errorabsenergy[1];
@@ -2836,12 +2879,10 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
 
 
-
-
-
-
-
-    if(pbenergy[UU]<=0.0 || eomtypecond==0 || ACTUALHARDFAILURE(failreturnenergy)==1){
+    if(
+       eomtypecond[EOMENTROPYGRMHD]==1
+       || (pbenergy[UU]<=0.0 && ACCEPTASNOFAILURE(failreturnenergy)==1 || ACTUALHARDFAILURE(failreturnenergy)==1)
+       ){
       //////////////////////////////////
       //
       // GET ENTROPY (currently, only if failure for energy solver)
@@ -2853,7 +2894,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       int tryphase1;
 #define NUMPHASESENT (8)
 
-      int baseitermethodlist[NUMPHASESENT]={QTYPMHD,QTYENTROPYUMHD,QTYURAD,QTYPRAD,QTYPMHD,QTYENTROPYUMHD,QTYURAD,QTYPRAD}; int whichfirstpmhd=0;
+      int baseitermethodlist[NUMPHASESENT]={QTYPMHD,QTYENTROPYUMHD,QTYURAD,QTYPRAD,QTYPMHD,QTYENTROPYUMHD,QTYURAD,QTYPRAD}; int whichfirstpmhd=0,whichfirstentropyumhd=1,whichfirsturad=2,whichfirstprad=3;
       int itermodelist[NUMPHASESENT]={ITERMODENORMAL,ITERMODENORMAL,ITERMODENORMAL,ITERMODENORMAL,ITERMODESTAGES,ITERMODESTAGES,ITERMODESTAGES,ITERMODESTAGES};
       int trueimpmaxiterlist[NUMPHASESENT]={IMPMAXITERQUICK,IMPMAXITERQUICK,IMPMAXITERQUICK,IMPMAXITERQUICK,IMPMAXITER,IMPMAXITER,IMPMAXITER,IMPMAXITER};
       int truenumdampattemptslist[NUMPHASESENT]={NUMDAMPATTEMPTSQUICK,NUMDAMPATTEMPTSQUICK,NUMDAMPATTEMPTS,NUMDAMPATTEMPTS};
@@ -2866,25 +2907,25 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       FTYPE radinvmodlist[NUMPHASES]={1.0};
 
       if(gasprimaryevolves==0){ // if gas primary evolves, then keep original order because PMHD is fastest method.
-        if(radprimaryevolves && GLOBALMACP0A1(prioritermethod,i,j,k,BASEITERMETHODINDEX) == PRIORITERMETHODNOTSET
-           ||  GLOBALMACP0A1(prioritermethod,i,j,k,BASEITERMETHODINDEX) == QTYURAD
+        if(radprimaryevolves && prioritermethodlist[BASEITERMETHODINDEX] == PRIORITERMETHODNOTSET
+           ||  prioritermethodlist[BASEITERMETHODINDEX] == QTYURAD
            ){
           tryphase1=-1;
-          tryphase1++; baseitermethodlist[tryphase1]=QTYURAD;        modprimlist[tryphase1]=0;
-          tryphase1++; baseitermethodlist[tryphase1]=QTYPRAD;        modprimlist[tryphase1]=0;
+          tryphase1++; baseitermethodlist[tryphase1]=QTYURAD;        modprimlist[tryphase1]=0; whichfirsturad=tryphase1;
+          tryphase1++; baseitermethodlist[tryphase1]=QTYPRAD;        modprimlist[tryphase1]=0; whichfirstprad=tryphase1;
           tryphase1++; baseitermethodlist[tryphase1]=QTYPMHD;        modprimlist[tryphase1]=0; whichfirstpmhd=tryphase1;
-          tryphase1++; baseitermethodlist[tryphase1]=QTYENTROPYUMHD; modprimlist[tryphase1]=0;
+          tryphase1++; baseitermethodlist[tryphase1]=QTYENTROPYUMHD; modprimlist[tryphase1]=0; whichfirstentropyumhd=tryphase1;
           tryphase1++; baseitermethodlist[tryphase1]=QTYURAD;        modprimlist[tryphase1]=0;
           tryphase1++; baseitermethodlist[tryphase1]=QTYPRAD;        modprimlist[tryphase1]=0;
           tryphase1++; baseitermethodlist[tryphase1]=QTYPMHD;        modprimlist[tryphase1]=1;
           tryphase1++; baseitermethodlist[tryphase1]=QTYENTROPYUMHD; modprimlist[tryphase1]=0;
         }
-        if(GLOBALMACP0A1(prioritermethod,i,j,k,BASEITERMETHODINDEX) == QTYPRAD){
+        if(prioritermethodlist[BASEITERMETHODINDEX] == QTYPRAD){
           tryphase1=-1;
-          tryphase1++; baseitermethodlist[tryphase1]=QTYPRAD;        modprimlist[tryphase1]=0;
-          tryphase1++; baseitermethodlist[tryphase1]=QTYURAD;        modprimlist[tryphase1]=0;
+          tryphase1++; baseitermethodlist[tryphase1]=QTYPRAD;        modprimlist[tryphase1]=0; whichfirstprad=tryphase1;
+          tryphase1++; baseitermethodlist[tryphase1]=QTYURAD;        modprimlist[tryphase1]=0; whichfirsturad=tryphase1;
           tryphase1++; baseitermethodlist[tryphase1]=QTYPMHD;        modprimlist[tryphase1]=0; whichfirstpmhd=tryphase1;
-          tryphase1++; baseitermethodlist[tryphase1]=QTYENTROPYUMHD; modprimlist[tryphase1]=0;
+          tryphase1++; baseitermethodlist[tryphase1]=QTYENTROPYUMHD; modprimlist[tryphase1]=0; whichfirstentropyumhd=tryphase1;
           tryphase1++; baseitermethodlist[tryphase1]=QTYPRAD;        modprimlist[tryphase1]=0;
           tryphase1++; baseitermethodlist[tryphase1]=QTYURAD;        modprimlist[tryphase1]=0;
           tryphase1++; baseitermethodlist[tryphase1]=QTYPMHD;        modprimlist[tryphase1]=1;
@@ -2894,8 +2935,11 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
       for(tryphase1=0;tryphase1<NUMPHASESENT;tryphase1++){
 
-        // skip rest of not trying harder
-        if(TRYENTROPYHARDER==0 && tryphase1>=NUMPHASESENT/2) continue;
+        // pick best simple method avoids all solvers except PMHD
+        if(MODEMETHOD==MODEPICKBESTSIMPLE && baseitermethodlist[tryphase1]!=QTYPMHD) continue;
+
+        // pick best simple 2 method avoids all itermodestages methods
+        if(MODEMETHOD==MODEPICKBESTSIMPLE2 && itermodelist[tryphase1]==ITERMODESTAGES) continue;
 
         // avoid method in case very non-dominant since then would give errorneous (critically bad even) results.  If methods that can use fail, have to revert to entropy or fixups.
         if(radextremeprimaryevolves && (baseitermethodlist[tryphase1]==QTYPMHD || baseitermethodlist[tryphase1]==QTYENTROPYUMHD) ) continue;
@@ -2906,6 +2950,23 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
           // then should skip this case and rely upon radiative solvers
           continue;
         }
+
+        if(baseitermethodlist[tryphase1]==QTYENTROPYUMHD && errorabslist[whichfirstentropyumhd][0]<IMPTRYCONV && errorabslist[whichfirstentropyumhd][1]>IMPTRYCONV && WHICHERROR==1){
+          // then should skip this case and rely upon others
+          continue;
+        }
+
+        if(baseitermethodlist[tryphase1]==QTYURAD && errorabslist[whichfirsturad][0]<IMPTRYCONV && errorabslist[whichfirsturad][1]>IMPTRYCONV && WHICHERROR==1){
+          // then should skip this case and rely upon others
+          continue;
+        }
+
+        if(baseitermethodlist[tryphase1]==QTYPRAD && errorabslist[whichfirstprad][0]<IMPTRYCONV && errorabslist[whichfirstprad][1]>IMPTRYCONV && WHICHERROR==1){
+          // then should skip this case and rely upon others
+          continue;
+        }
+
+
 
 
         // consider radinvmod only if error bad for original approach.  Avoids excessive attempts when should hit radiative ceiling and error is small.
@@ -3042,7 +3103,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
 
       if(
-         TRYENTROPYHARDER && ACTUALHARDORSOFTFAILURE(failreturnentropy) && USERAMESH && radextremeprimaryevolves==0
+         !(MODEMETHOD==MODEPICKBESTSIMPLE2) // Ramesh method is like stages, so avoid if simple2 method
+         && ACTUALHARDORSOFTFAILURE(failreturnentropy) && USERAMESH && radextremeprimaryevolves==0
          && !(errorabslist[whichfirstpmhd][0]<IMPTRYCONV && errorabslist[whichfirstpmhd][1]>IMPTRYCONV)
          ){ // try ramesh
         errorabsentropyold[0]=errorabsentropy[0];
@@ -3240,7 +3302,12 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     int goexplicitcold=0;
 
 
-    if(ACCEPTASNOFAILURE(failreturnenergy)==0 && ACCEPTASNOFAILURE(failreturnentropy)==0){
+    // try cold if energy and entropy both failed or the successfully converged versions gave u_g<=0.0
+    if( 
+       (pbenergy[UU]<=0.0 && ACCEPTASNOFAILURE(failreturnenergy)==1 || ACCEPTASNOFAILURE(failreturnenergy)==0)
+       &&
+       (pbentropy[UU]<=0.0 && ACCEPTASNOFAILURE(failreturnentropy)==1 || ACCEPTASNOFAILURE(failreturnentropy)==0)
+        ){
 
       //////
       //
@@ -3391,7 +3458,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
         failreturn=failreturnentropy;
         failfinalreturn=0;
 
-        GLOBALMACP0A1(prioritermethod,i,j,k,EOMTYPEINDEX) == EOMENTROPYGRMHD;
+        // save
+        GLOBALMACP0A1(prioritermethod,i,j,k,EOMTYPEINDEX) = EOMENTROPYGRMHD;
 
       }
       else if(ACCEPTASNOFAILURE(failreturnenergy)==1){ // automatically also done when fracenergy==1.0 (now, or when also fracenergy>0.0)
@@ -3415,7 +3483,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
         failreturn=failreturnenergy;
         failfinalreturn=0;
 
-        GLOBALMACP0A1(prioritermethod,i,j,k,EOMTYPEINDEX) == EOMGRMHD;
+        // save
+        GLOBALMACP0A1(prioritermethod,i,j,k,EOMTYPEINDEX) = EOMGRMHD;
 
       }
       else if(ACCEPTASNOFAILURE(failreturncold)==1){
@@ -3446,13 +3515,15 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
         pbcold[UU]=pbbackup[UU];
         pbcold[URAD0]=pbbackup[URAD0]; 
 
-        GLOBALMACP0A1(prioritermethod,i,j,k,EOMTYPEINDEX) == EOMCOLDGRMHD;
+        // save
+        GLOBALMACP0A1(prioritermethod,i,j,k,EOMTYPEINDEX) = EOMCOLDGRMHD;
 
       }
       else{ // force even if was default
         usedimplicit=0;
 
-        GLOBALMACP0A1(prioritermethod,i,j,k,EOMTYPEINDEX) == EOMDEFAULT;
+        // save
+        GLOBALMACP0A1(prioritermethod,i,j,k,EOMTYPEINDEX) = EOMDEFAULT;
 
       }
     }
@@ -3508,7 +3579,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
     if(*eomtype>=0 && failreturnenergy>=0 && failreturnentropy>=0 && failreturncold>=0) dualfprintf(fail_file,"WTF: %d %d %d : %d : %d : %d\n",failreturnentropy,failreturnenergy,failreturncold,failfinalreturn,noprims,*eomtype);
 
-  }// end MODEPICKBEST
+  }// end MODEPICKBEST || MODEPICKBESTSIMPLE || MODEPICKBESTSIMPLE2
 
 
 
