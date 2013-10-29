@@ -2239,6 +2239,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
     // hold error and iterations from last attempt
     FTYPE errorabsentropyold[NUMERRORTYPES]={1.0};
+    int radinvmodentropyold=1;
     int itersentropyold;
     // hold iterations for total entropy attempts
     int itersentropy=0;
@@ -2300,6 +2301,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
     // hold old error and iterations
     FTYPE errorabsenergyold[NUMERRORTYPES]={1.0};
+    int radinvmodenergyold=1;
     int itersenergyold;
 
     // latest energy iterations
@@ -2508,6 +2510,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
         if(gasextremeprimaryevolves && (baseitermethodlist[tryphase1]==QTYURAD || baseitermethodlist[tryphase1]==QTYPRAD)) continue;
 
         // If already tried QTYPMHD and that got error(0)<tol but error(1)>tol, then skip QTYPMHD with stages since should switch to QTYURAD or QTYPRAD because STAGES won't improve on error(1) if error(0)<tol.
+        // independent of radinvmod.  If ==0 or ==1, still should skip if error in that condition.
         if(baseitermethodlist[tryphase1]==QTYPMHD && errorabslist[whichfirstpmhd][0]<IMPTRYCONV && errorabslist[whichfirstpmhd][1]>IMPTRYCONV && WHICHERROR==1){
           // then should skip this case and rely upon radiative solvers
           continue;
@@ -2543,6 +2546,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
           errorabsenergyold[0]=errorabsenergy[0];
           errorabsenergyold[1]=errorabsenergy[1];
+          radinvmodenergyold=radinvmodenergy;
           itersenergyold=itersenergy;
           //
           whichcapenergy=CAPTYPEBASIC;
@@ -2673,7 +2677,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
           
           if(tryphase1>0 && noproblem){
-            if(debugfail>=2) dualfprintf(fail_file,"Recovered using tryphase1=%d (energy: failreturnenergy=%d radinvmod=%d): ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d baseitermethod=%d\n",tryphase1,failreturnenergy,radinvmodenergy,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsenergyold[WHICHERROR],errorabsenergy[WHICHERROR],itersenergyold,itersenergy,baseitermethodenergy);
+            if(debugfail>=2) dualfprintf(fail_file,"Recovered using tryphase1=%d (energy: failreturnenergy=%d radinvmod=%d -> %d): ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d baseitermethod=%d\n",tryphase1,failreturnenergy,radinvmodenergyold,radinvmodenergy,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsenergyold[WHICHERROR],errorabsenergy[WHICHERROR],itersenergyold,itersenergy,baseitermethodenergy);
           }
           if(noproblem==0){
             if(debugfail>=2) dualfprintf(fail_file,"Failed to: <Recovered> using tryphase1=%d (energy: failreturnenergy=%d radinvmod=%d): ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d baseitermethod=%d\n",tryphase1,failreturnenergy,radinvmodenergy,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsenergyold[WHICHERROR],errorabsenergy[WHICHERROR],itersenergyold,itersenergy,baseitermethodenergy);
@@ -2700,6 +2704,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
          ){
         errorabsenergyold[0]=errorabsenergy[0];
         errorabsenergyold[1]=errorabsenergy[1];
+        radinvmodenergyold=radinvmodenergy;
         itersenergyold=itersenergy;
         goexplicitenergy=0; // force since no explicit check
         //
@@ -2976,6 +2981,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
           itersentropyold=itersentropy;
           errorabsentropyold[0]=errorabsentropy[0];
           errorabsentropyold[1]=errorabsentropy[1];
+          radinvmodentropyold=radinvmodentropy;
           //
           whichcapentropy=CAPTYPEBASIC;
           baseitermethodentropy=baseitermethodlist[tryphase1];
@@ -3089,10 +3095,10 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
           int noproblem=ACTUALHARDORSOFTFAILURE(failreturnentropy)==0;
 
           if(tryphase1>0 && noproblem){
-            if(debugfail>=2) dualfprintf(fail_file,"Recovered using tryphase1=%d (entropy: %d): ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d\n",tryphase1,failreturnentropy,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsentropyold[WHICHERROR],errorabsentropy[WHICHERROR],itersentropyold,itersentropy);
+            if(debugfail>=2) dualfprintf(fail_file,"Recovered using tryphase1=%d (entropy: %d radinvmod=%d -> %d): ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d\n",tryphase1,failreturnentropy,radinvmodentropyold,radinvmodentropy,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsentropyold[WHICHERROR],errorabsentropy[WHICHERROR],itersentropyold,itersentropy);
           }
           if(noproblem==0){
-            if(debugfail>=2) dualfprintf(fail_file,"Failed to: <Recovered> using tryphase1=%d (entropy: %d): ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d\n",tryphase1,failreturnentropy,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsentropyold[WHICHERROR],errorabsentropy[WHICHERROR],itersentropyold,itersentropy);
+            if(debugfail>=2) dualfprintf(fail_file,"Failed to: <Recovered> using tryphase1=%d (entropy: %d radinvmod=%d -> %d): ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d\n",tryphase1,failreturnentropy,radinvmodentropyold,radinvmodentropy,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsentropyold[WHICHERROR],errorabsentropy[WHICHERROR],itersentropyold,itersentropy);
           }
 
         }// done trying harder
@@ -3109,6 +3115,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
          ){ // try ramesh
         errorabsentropyold[0]=errorabsentropy[0];
         errorabsentropyold[1]=errorabsentropy[1];
+        radinvmodentropyold=radinvmodentropy;
         itersentropyold=itersentropy;
         goexplicitentropy=0; // doesn't check, so force implicit
         //
@@ -3216,10 +3223,10 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
         // still cost more iters
         itersentropy+=itersentropyold;
         if(ACTUALHARDORSOFTFAILURE(failreturnentropy)==0){
-          if(debugfail>=2) dualfprintf(fail_file,"Recovered using ramesh(%d) (entropy): ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d\n",failtypeent,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsentropyold[WHICHERROR],errorabsentropy[WHICHERROR],itersentropyold,itersentropy);
+          if(debugfail>=2) dualfprintf(fail_file,"Recovered using ramesh(%d) (entropy: radinvmod=%d -> %d): ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d\n",failtypeent,radinvmodentropyold,radinvmodentropy,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsentropyold[WHICHERROR],errorabsentropy[WHICHERROR],itersentropyold,itersentropy);
         }
         else{
-          if(debugfail>=2) dualfprintf(fail_file,"Failed to: Recovered using ramesh(%d) (entropy): ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d\n",failtypeent,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsentropyold[WHICHERROR],errorabsentropy[WHICHERROR],itersentropyold,itersentropy);
+          if(debugfail>=2) dualfprintf(fail_file,"Failed to: Recovered using ramesh(%d) (entropy: radinvmod=%d -> %d): ijknstepsteppart=%d %d %d %ld %d : error: %21.15g->%21.15g iters: %d->%d\n",failtypeent,radinvmodentropyold,radinvmodentropy,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart,errorabsentropyold[WHICHERROR],errorabsentropy[WHICHERROR],itersentropyold,itersentropy);
         }
       }
 
