@@ -100,12 +100,18 @@ FTYPE RADWAVE_DRRE;
 FTYPE RADWAVE_DRIM;
 FTYPE RADWAVE_DVRE;
 FTYPE RADWAVE_DVIM;
+FTYPE RADWAVE_DV2RE;
+FTYPE RADWAVE_DV2IM;
+FTYPE RADWAVE_DB2RE;
+FTYPE RADWAVE_DB2IM;
 FTYPE RADWAVE_DURE;
 FTYPE RADWAVE_DUIM;
 FTYPE RADWAVE_DERE;
 FTYPE RADWAVE_DEIM;
 FTYPE RADWAVE_DFRE;
 FTYPE RADWAVE_DFIM;
+FTYPE RADWAVE_DF2RE;
+FTYPE RADWAVE_DF2IM;
 FTYPE RADWAVE_OMRE;
 FTYPE RADWAVE_OMIM;
 FTYPE RADWAVE_DTOUT1;
@@ -1058,6 +1064,31 @@ int init_global(void)
         RADWAVE_DTOUT1=1.e-2;
       }
 
+      if(RADWAVE_NUMERO==1001){
+        RADWAVE_PP=0.1;
+        RADWAVE_CC=10.;
+        RADWAVE_KAPPA=0.1;
+        RADWAVE_DRRE=1e-3;
+        RADWAVE_DRIM=0.;
+        RADWAVE_DVRE=0.000160251;
+        RADWAVE_DVIM=7.23831e-7;
+        RADWAVE_DV2RE=-0.0000979544;
+        RADWAVE_DV2IM=9.83679e-7;
+        RADWAVE_DURE=0.0000151984;
+        RADWAVE_DUIM=4.81575e-7;
+        RADWAVE_DB2RE=0.000162344;
+        RADWAVE_DB2IM=-8.96662e-7;
+        RADWAVE_DERE=1.48421e-9;
+        RADWAVE_DEIM=6.06322e-8;
+        RADWAVE_DFRE=-3.95433e-7;
+        RADWAVE_DFIM=8.51051e-8;
+        RADWAVE_DF2RE=2.3668e-7;
+        RADWAVE_DF2IM=2.11182e-8;
+        RADWAVE_OMRE=1.00689;
+        RADWAVE_OMIM=0.00454797;
+        RADWAVE_DTOUT1=1.e-2;
+      }
+
       RADWAVE_RHOZERO=1.;
       RADWAVE_KK=2.*Pi;
       RADWAVE_UINT=((1./RADWAVE_CC/RADWAVE_CC)*RADWAVE_RHOZERO/gam/(gam-1.-1./RADWAVE_CC/RADWAVE_CC)) ; // to get proper sound speed
@@ -1131,6 +1162,24 @@ int init_global(void)
       RADWAVE_ERADFACTOR=.5;
       RADWAVE_GASFACTOR=.5;
     }
+
+//    if(RADWAVE_NWAVE==5){ //fast radiation-modified magnetosonic waves #1001 //Sasha
+//      FLUXDISSIPATION=(0.0);
+//      RADWAVE_PP=0.1;
+//      RADWAVE_CC=10.;
+//      RADWAVE_DTOUT1=(.005*RADWAVE_CC);
+//      RADWAVE_VX=0.;
+//      RADWAVE_RHOZERO=1.;
+//      RADWAVE_AAA=1.e-1;
+//      RADWAVE_KK=2.*Pi;
+//      RADWAVE_UINT=(1./RADWAVE_CC/RADWAVE_CC)*RADWAVE_RHOZERO/gam/(gam-1.-1./RADWAVE_CC/RADWAVE_CC);
+//      RADWAVE_TEMP=calc_PEQ_Tfromurho(RADWAVE_UINT,RADWAVE_RHOZERO);
+//      ARAD_CODE=(RADWAVE_PP*(gam-1.)*RADWAVE_UINT/RADWAVE_TEMP/RADWAVE_TEMP/RADWAVE_TEMP/RADWAVE_TEMP);
+//      RADWAVE_ERAD=calc_LTE_EfromT(RADWAVE_TEMP);
+//      RADWAVE_KAPPA=0.1;
+//      RADWAVE_ERADFACTOR=.5;
+//      RADWAVE_GASFACTOR=.5;
+//    }
 
 
     BCtype[X1UP]=PERIODIC;
@@ -1860,11 +1909,11 @@ int init_defcoord(void)
       xr =  1.0;
     }
 
-    Rin_array[1]=xl;
+    Rin = Rin_array[1]=xl;
     Rin_array[2]=0;
     Rin_array[3]=0;
     
-    Rout_array[1]=xr;
+    Rout = Rout_array[1]=xr;
     Rout_array[2]=1.0;
     Rout_array[3]=1.0;
 
@@ -3322,8 +3371,8 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
   /*************************************************/
   if(WHICHPROBLEM==RADWAVE){
 
-    FTYPE rho,ERAD,uint,Fx,Fy,Fz;
-    FTYPE vx;
+    FTYPE rho,ERAD,uint,Fx,Fy,Fz,Bx=0,By=0;
+    FTYPE vx,vy=0;
     FTYPE xx,yy,zz;
     coord(i, j, k, CENT, X);
     bl_coord(X, V);
@@ -3353,6 +3402,31 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
       Fx=0. + RADWAVE_ERAD*RADWAVE_DFRE*exp(-RADWAVE_OMIM*time)*(cos(RADWAVE_OMRE*time-RADWAVE_KK*xx)-RADWAVE_DFIM/RADWAVE_DFRE*sin(RADWAVE_OMRE*time-RADWAVE_KK*xx));
       Fz=Fy=0.;
 
+      //rho=RADWAVE_RHOZERO;
+      //uint=RADWAVE_UINT;
+      //ERAD=RADWAVE_ERAD;
+      //vx=0;
+      //Fx=0.;
+    }
+
+    if(RADWAVE_NWAVE==1001){
+      
+      //printf("RHOZERO = %g\nUINT = %g\nT = %g\nERAD = %g\nARAD = %g\n",RADWAVE_RHOZERO,RADWAVE_UINT,RADWAVE_TEMP,RADWAVE_ERAD,ARAD_RAD_CODE);getchar();
+      
+      
+      rho=RADWAVE_RHOZERO*(1+RADWAVE_DRRE*exp(-RADWAVE_OMIM*time)*(cos(RADWAVE_OMRE*time-RADWAVE_KK*xx)-RADWAVE_DRIM/RADWAVE_DRRE*sin(RADWAVE_OMRE*time-RADWAVE_KK*xx)));
+      //FTYPE RADWAVE_DURE=RADWAVE_DPRE/(gam-1.); FTYPE RADWAVE_DUIM=RADWAVE_DPIM/(gam-1.);
+      uint=RADWAVE_UINT*(1.+RADWAVE_DURE*exp(-RADWAVE_OMIM*time)*(cos(RADWAVE_OMRE*time-RADWAVE_KK*xx)-RADWAVE_DUIM/RADWAVE_DURE*sin(RADWAVE_OMRE*time-RADWAVE_KK*xx))) ;
+      FTYPE cs=1/RADWAVE_CC;
+      vx=0. + RADWAVE_DVRE*exp(-RADWAVE_OMIM*time)*(cos(RADWAVE_OMRE*time-RADWAVE_KK*xx)-RADWAVE_DVIM/RADWAVE_DVRE*sin(RADWAVE_OMRE*time-RADWAVE_KK*xx)) ; //RADWAVE_DVRE absolute!
+      vy=0. + RADWAVE_DV2RE*exp(-RADWAVE_OMIM*time)*(cos(RADWAVE_OMRE*time-RADWAVE_KK*xx)-RADWAVE_DV2IM/RADWAVE_DV2RE*sin(RADWAVE_OMRE*time-RADWAVE_KK*xx)) ; //RADWAVE_DVRE absolute!
+      Bx=1.;
+      By=0. + RADWAVE_DB2RE*exp(-RADWAVE_OMIM*time)*(cos(RADWAVE_OMRE*time-RADWAVE_KK*xx)-RADWAVE_DB2IM/RADWAVE_DB2RE*sin(RADWAVE_OMRE*time-RADWAVE_KK*xx)) ; //RADWAVE_DVRE absolute!
+      ERAD=RADWAVE_ERAD*(1+RADWAVE_DERE*exp(-RADWAVE_OMIM*time)*(cos(RADWAVE_OMRE*time-RADWAVE_KK*xx)-RADWAVE_DEIM/RADWAVE_DERE*sin(RADWAVE_OMRE*time-RADWAVE_KK*xx)));
+      Fx=0. + RADWAVE_ERAD*RADWAVE_DFRE*exp(-RADWAVE_OMIM*time)*(cos(RADWAVE_OMRE*time-RADWAVE_KK*xx)-RADWAVE_DFIM/RADWAVE_DFRE*sin(RADWAVE_OMRE*time-RADWAVE_KK*xx));
+      Fy=0. + RADWAVE_ERAD*RADWAVE_DFRE*exp(-RADWAVE_OMIM*time)*(cos(RADWAVE_OMRE*time-RADWAVE_KK*xx)-RADWAVE_DF2IM/RADWAVE_DF2RE*sin(RADWAVE_OMRE*time-RADWAVE_KK*xx));
+      Fz=0.;
+      
       //rho=RADWAVE_RHOZERO;
       //uint=RADWAVE_UINT;
       //ERAD=RADWAVE_ERAD;
@@ -3403,12 +3477,12 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
     pr[RHO] = rho;
     pr[UU] = uint;
     pr[U1] = vx ; // vx is 3-velocity
-    pr[U2] = 0 ;    
+    pr[U2] = vy ;
     pr[U3] = 0 ;
 
     // just define some field
-    pr[B1]=0.0;
-    pr[B2]=0.0;
+    pr[B1]=Bx;
+    pr[B2]=By;
     pr[B3]=0.0;
   
     if(FLUXB==FLUXCTSTAG){
@@ -3451,11 +3525,13 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
 #if(WHICHPROBLEM==KOMIPROBLEM)
     FTYPE pleft[NPR], pright[NPR], P;
     FTYPE dxdxp[NDIM][NDIM];
-    FTYPE x = V[1];
+    FTYPE x;
     
+    coord(i, j, k, CENT, X);
+    bl_coord(X, V);
     dxdxprim_ijk(0, 0, 0, CENT, dxdxp);
-    
-    
+    x = V[1];
+  
     //zero out initial conditions
     PALLLOOP(pl) pleft[pl] = 0.;
     PALLLOOP(pl) pright[pl] = 0.;
@@ -3646,10 +3722,10 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
     }
     
     //convert magnetic field components into code coordinates
-    for(pl=1; pl <= 3; pl++) {
-      pr[pl-1+B1] *= dxdxp[pl][pl];
-    }
-    
+//    for(pl=1; pl <= 3; pl++) {
+//      pr[pl-1+B1] /= dxdxp[pl][pl];
+//    }
+  
     if(FLUXB==FLUXCTSTAG){
       //can ignore half a cell shift for B1: it does not change across the interface so does not matter
       PLOOPBONLY(pl) pstag[pl]=pr[pl];
