@@ -195,7 +195,7 @@
 //#define FULLOUTPUT MAXBND // TESTING BCs
 #define FULLOUTPUT 0
 
-#define MAILWHENDONE 1
+#define MAILWHENDONE 0
 #define MAILFROMREMOTE 0
 #define REMOTEHOST "relativity.cfa.harvard.edu"
 #define EMAILADDRESS "jmckinney@cfa.harvard.edu"
@@ -514,7 +514,7 @@ struct Ccoordparams {
 //#define WHICHPROBLEM RADPULSE
 //#define WHICHPROBLEM RADPULSEPLANAR
 //#define WHICHPROBLEM RADPULSE3D
-#define WHICHPROBLEM RADTUBE
+//#define WHICHPROBLEM RADTUBE
 //#define WHICHPROBLEM RADSHADOW
 //#define WHICHPROBLEM RADDBLSHADOW
 //#define WHICHPROBLEM ATMSTATIC
