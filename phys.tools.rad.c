@@ -383,11 +383,13 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE *errorabs, stru
 #define USECAPTYPEFIX2FORF1 1
 // "" for final check.
 #define USECAPTYPEFIX2FORFINALCHECK 1
-// whether to avoid including URAD0 in total error when hitting radinvmod=1.  If using CAPTYPEFIX2FORF1=1, then can't get error better than what CAPTYPEFIX2 provides for non-URAD0 terms.
+// whether to avoid including URAD0 in total error when hitting radinvmod!=0.  If using CAPTYPEFIX2FORF1=1, then can't get error better than what CAPTYPEFIX2 provides for non-URAD0 terms.
 #define AVOIDURAD0IFRADINVMODANDPMHDMETHOD (USECAPTYPEFIX2FORF1!=0)
 // whether to avoid back-tracing f1 calculation if rad inv hits cap, just push through if ==1.
 #define TREATRADINVCAPASNONFAILUREFORPMHDMETHOD (USECAPTYPEFIX2FORF1!=0)
 
+// whether to just let PMHD fail and try it first no matter whether primary considerations say otherwise.
+#define LETPMHDFAIL 1
 
 ///////////////////////////////
 //
@@ -1775,6 +1777,8 @@ static FTYPE compute_dt(FTYPE *CUf, FTYPE dtin)
 #define ACTUALHARDORSOFTFAILURE(failreturn) (failreturn==FAILRETURNGENERAL || failreturn==FAILRETURNJACISSUE || failreturn==FAILRETURNNOTTOLERROR)
 #define SWITCHGOODIDEAFAILURE(failreturn) (failreturn==FAILRETURNGENERAL || failreturn==FAILRETURNJACISSUE || failreturn==FAILRETURNNOTTOLERROR || failreturn==FAILRETURNMODESWITCH)
 
+#define RADINVBAD(radinvmod) (radinvmod==UTOPRIMRADFAILERFNEG || radinvmod==UTOPRIMRADFAILBAD1)
+#define RADINVOK(radinvmod) (RADINVBAD(radinvmod)==0)
 
 
 // choose to switch to entropy only if energy fails or gives u_g<0.  Or choose to always do both and use best solution.
@@ -2280,7 +2284,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     FTYPE errorabsentropyold[NUMERRORTYPES];
     set_array(errorabsentropyold,NUMERRORTYPES,MPI_FTYPE,1.0);
 
-    int radinvmodentropyold=1;
+    int radinvmodentropyold=UTOPRIMRADFAILBAD1;
     int itersentropyold;
     // hold iterations for total entropy attempts
     int itersentropy=0;
@@ -2300,7 +2304,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     struct of_state qentropybest=qbackup;
     PFTYPE lpflagentropybest=1;
     PFTYPE lpflagradentropybest=1;
-    int radinvmodentropybest=1;
+    int radinvmodentropybest=UTOPRIMRADFAILBAD1;
     int radErfnegentropybest=1;
     int failreturnentropybest=FAILRETURNGENERAL;
     int eomtypeentropybest=EOMENTROPYGRMHD;
@@ -2315,7 +2319,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     struct of_state qentropy=qbackup;
     PFTYPE lpflagentropy=1;
     PFTYPE lpflagradentropy=1;
-    int radinvmodentropy=1;
+    int radinvmodentropy=UTOPRIMRADFAILBAD1;
     int radErfnegentropy=1;
     int failreturnentropy=FAILRETURNGENERAL;  // default to fail in case energy not to be done at all
     int eomtypeentropy=EOMENTROPYGRMHD;
@@ -2345,7 +2349,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     // hold old error and iterations
     FTYPE errorabsenergyold[NUMERRORTYPES];
     set_array(errorabsenergyold,NUMERRORTYPES,MPI_FTYPE,1.0);
-    int radinvmodenergyold=1;
+    int radinvmodenergyold=UTOPRIMRADFAILBAD1;
     int itersenergyold;
 
     // latest energy iterations
@@ -2369,7 +2373,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     // default is best is fail situation
     PFTYPE lpflagenergybest=1;
     PFTYPE lpflagradenergybest=1;
-    int radinvmodenergybest=1;
+    int radinvmodenergybest=UTOPRIMRADFAILBAD1;
     int radErfnegenergybest=1;
     int failreturnenergybest=FAILRETURNGENERAL;
     int eomtypeenergybest=EOMGRMHD;
@@ -2385,7 +2389,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     struct of_state qenergy=qbackup;
     PFTYPE lpflagenergy=1;
     PFTYPE lpflagradenergy=1;
-    int radinvmodenergy=1;
+    int radinvmodenergy=UTOPRIMRADFAILBAD1;
     int radErfnegenergy=1;
     int failreturnenergy=FAILRETURNGENERAL; // default
     int eomtypeenergy=EOMGRMHD;
@@ -2414,7 +2418,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     FTYPE errorabseng[NUMERRORTYPES],errorabsent[NUMERRORTYPES];
     set_array(errorabseng,NUMERRORTYPES,MPI_FTYPE,1.0);
     set_array(errorabsent,NUMERRORTYPES,MPI_FTYPE,1.0);
-    int failtypeeng=1,failtypeent=1,iterseng=IMPMAXITER,itersent=IMPMAXITER,radinvmodeng=-1,radinvmodent=-1;
+    int failtypeeng=1,failtypeent=1,iterseng=IMPMAXITER,itersent=IMPMAXITER,radinvmodeng=UTOPRIMRADFAILBAD1,radinvmodent=UTOPRIMRADFAILBAD1;
 
 
 
@@ -2468,11 +2472,23 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       gasextremeprimaryevolves=0;
     }
 
+    if(LETPMHDFAIL){
+      // just let pmhd fail or use total error in way that is setup now...
+      // still allow extreme catches
+      radprimaryevolves=0;
+      gasprimaryevolves=0;
+    }
+
     if(MODEMETHOD==MODEPICKBESTSIMPLE){
       // forcing PMHD method, so must use gas
       radprimaryevolves=radextremeprimaryevolves=0;
       gasprimaryevolves=gasextremeprimaryevolves=1;
     }
+
+
+
+
+
 
     // DEBUG:
     //    dualfprintf(fail_file,"PRIMARYEVOLVES: %d %d %d %d : pb=%g %g uu0=%g %g dUtot=%g %g : sqrtnumepsilon1=%g sqrtnumepsilon2=%g\n",radprimaryevolves,radextremeprimaryevolves,gasprimaryevolves,gasextremeprimaryevolves,pb[UU],pb[URAD0],-uu0[UU],-uu0[URAD0],dUtot[UU],dUtot[URAD0],sqrtnumepsilon1,sqrtnumepsilon2);
@@ -2500,8 +2516,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     // also check energy if entropy thinks we should do explicit
     //
     /////////////
-    //    if(prioritermethodlist[EOMINDEX] == EOMGRMHD || prioritermethodlist[EOMINDEX] == PRIORITERMETHODNOTSET && eomtypecond[EOMGRMHD] && (fracenergy!=0.0 || radinvmodentropy>0 ||  ACTUALHARDORSOFTFAILURE(failreturnentropy)==1 || goexplicitentropy==1)){
-    if(eomtypecond[EOMGRMHD] && (fracenergy!=0.0 || radinvmodentropy>0 ||  ACTUALHARDORSOFTFAILURE(failreturnentropy)==1 || goexplicitentropy==1)){
+    //    if(prioritermethodlist[EOMINDEX] == EOMGRMHD || prioritermethodlist[EOMINDEX] == PRIORITERMETHODNOTSET && eomtypecond[EOMGRMHD] && (fracenergy!=0.0 || RADINVBAD(radinvmodentropy) ||  ACTUALHARDORSOFTFAILURE(failreturnentropy)==1 || goexplicitentropy==1)){
+    if(eomtypecond[EOMGRMHD] && (fracenergy!=0.0 || RADINVBAD(radinvmodentropy) ||  ACTUALHARDORSOFTFAILURE(failreturnentropy)==1 || goexplicitentropy==1)){
 
 
       // quickly try QTYPMHD then QTYURAD
@@ -2521,7 +2537,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       FTYPE errorabslist[NUMPHASES][NUMERRORTYPES];
       set_array(errorabslist,NUMPHASES*NUMERRORTYPES,MPI_FTYPE,1.0);
       int radinvmodlist[NUMPHASES];
-      set_array(radinvmodlist,NUMPHASES,MPI_INT,1);
+      set_array(radinvmodlist,NUMPHASES,MPI_INT,UTOPRIMRADFAILBAD1);
 
       // reorder method if desired
       // KORALNOTE: radinv check would nominally catch if PMHD method failed due to machine errors in GAS leading to huge changes in RAD leading to E_r<0 or gamma>gammaradmax, but might as well use desired method first.
@@ -2603,7 +2619,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
         // consider radinvmod only if error bad for original approach.  Avoids excessive attempts when should hit radiative ceiling and error is small.
         // KORALTODO: KORALNOTE: If explicit was triggered (failreturnenergy) then could move on, but go ahead and test using other methods in case radinvmod!=0 can be avoided.
-        if(radinvmodenergybest!=0 && checkradinvlist[tryphase1] || ACTUALHARDORSOFTFAILURE(failreturnenergybest) && failreturnenergybest!=FAILRETURNMODESWITCH){
+        //radinvmodenergybest!=0
+        if(RADINVBAD(radinvmodenergybest) && checkradinvlist[tryphase1] || ACTUALHARDORSOFTFAILURE(failreturnenergybest) && failreturnenergybest!=FAILRETURNMODESWITCH){
           if(firsttryphase1used==-1) firsttryphase1used=tryphase1;
 
           //          dualfprintf(fail_file,"REALLYTRYING: tryphase1=%d\n",tryphase1);
@@ -2653,7 +2670,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
               }
               qenergy=qbackup;
               errorabsenergy[0]=errorabsenergy[1]=1.0;
-              radinvmodenergy=1;
+              radinvmodenergy=UTOPRIMRADFAILBAD1;
             }
             else{
               PLOOP(pliter,pl){
@@ -2702,10 +2719,10 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
           else{
             // see if want to keep
             //        if(errorabsenergy[WHICHERROR]<errorabsenergybest[WHICHERROR] && ACTUALHARDFAILURE(failreturnenergy)==0 || failreturnenergy==FAILRETURNMODESWITCH){
-            //        if((errorabsenergy[WHICHERROR]<errorabsenergybest[WHICHERROR] && (radinvmodenergy==0 || radinvmodenergybest && radinvmodenergy) || radinvmodenergybest && radinvmodenergy==0 && (errorabsenergy[WHICHERROR]<errorabsenergybest[WHICHERROR]||errorabsenergy[WHICHERROR]<IMPOKCONVABS)) && ACTUALHARDFAILURE(failreturnenergy)==0 || failreturnenergy==FAILRETURNMODESWITCH){
+            //        if((errorabsenergy[WHICHERROR]<errorabsenergybest[WHICHERROR] && (RADINVBAD(radinvmodenergy)==0 || RADINVBAD(radinvmodenergybest) && RADINVBAD(radinvmodenergy)) || RADINVBAD(radinvmodenergybest) && RADINVBAD(radinvmodenergy)==0 && (errorabsenergy[WHICHERROR]<errorabsenergybest[WHICHERROR]||errorabsenergy[WHICHERROR]<IMPOKCONVABS)) && ACTUALHARDFAILURE(failreturnenergy)==0 || failreturnenergy==FAILRETURNMODESWITCH){
             if(
                (
-                errorabsenergy[WHICHERROR]<errorabsenergybest[WHICHERROR] && (radinvmodenergy==0 || radinvmodenergybest && radinvmodenergy) || radinvmodenergybest && radinvmodenergy==0 && (errorabsenergy[WHICHERROR]<errorabsenergybest[WHICHERROR]||errorabsenergy[WHICHERROR]<IMPOKCONVABS) || radinvmodenergybest==0 && radinvmodenergy && (errorabsenergybest[WHICHERROR]>IMPOKCONVABS && errorabsenergy[WHICHERROR]<IMPOKCONVABS)
+                errorabsenergy[WHICHERROR]<errorabsenergybest[WHICHERROR] && (RADINVBAD(radinvmodenergy)==0 || RADINVBAD(radinvmodenergybest) && RADINVBAD(radinvmodenergy)) || RADINVBAD(radinvmodenergybest) && RADINVBAD(radinvmodenergy)==0 && (errorabsenergy[WHICHERROR]<errorabsenergybest[WHICHERROR]||errorabsenergy[WHICHERROR]<IMPOKCONVABS) || RADINVBAD(radinvmodenergybest)==0 && RADINVBAD(radinvmodenergy) && (errorabsenergybest[WHICHERROR]>IMPOKCONVABS && errorabsenergy[WHICHERROR]<IMPOKCONVABS)
                 )
                && ACTUALHARDFAILURE(failreturnenergy)==0){
               // store result in case better than latter results
@@ -2807,7 +2824,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
               qenergy=qbackup;
               errorabseng[0]=errorabseng[1]=1.0;
               errorabsforramesh[0]=errorabsforramesh[1]=1.0;
-              radinvmodeng=1;
+              radinvmodeng=UTOPRIMRADFAILBAD1;
             }
             else{
               PLOOP(pliter,pl){
@@ -2864,8 +2881,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
         // see if want to keep
         //        if(errorabsenergy[WHICHERROR]<errorabsenergybest[WHICHERROR] && ACTUALHARDFAILURE(failreturnenergy)==0){// || failreturnenergy==FAILRETURNMODESWITCH){ // no switch mode in ramesh solver yet.
-        //        if((errorabsenergy[WHICHERROR]<errorabsenergybest[WHICHERROR] && (radinvmodenergy==0 || radinvmodenergybest && radinvmodenergy) || radinvmodenergybest && radinvmodenergy==0 && (errorabsenergy[WHICHERROR]<errorabsenergybest[WHICHERROR]||errorabsenergy[WHICHERROR]<IMPOKCONVABS)) && ACTUALHARDFAILURE(failreturnenergy)==0){
-        if((errorabsenergy[WHICHERROR]<errorabsenergybest[WHICHERROR] && (radinvmodenergy==0 || radinvmodenergybest && radinvmodenergy) || radinvmodenergybest && radinvmodenergy==0 && (errorabsenergy[WHICHERROR]<errorabsenergybest[WHICHERROR]||errorabsenergy[WHICHERROR]<IMPOKCONVABS) || radinvmodenergybest==0 && radinvmodenergy && (errorabsenergybest[WHICHERROR]>IMPOKCONVABS && errorabsenergy[WHICHERROR]<IMPOKCONVABS)) && ACTUALHARDFAILURE(failreturnenergy)==0){
+        //        if((errorabsenergy[WHICHERROR]<errorabsenergybest[WHICHERROR] && (RADINVBAD(radinvmodenergy)==0 || RADINVBAD(radinvmodenergybest) && RADINVBAD(radinvmodenergy)) || RADINVBAD(radinvmodenergybest) && RADINVBAD(radinvmodenergy)==0 && (errorabsenergy[WHICHERROR]<errorabsenergybest[WHICHERROR]||errorabsenergy[WHICHERROR]<IMPOKCONVABS)) && ACTUALHARDFAILURE(failreturnenergy)==0){
+        if((errorabsenergy[WHICHERROR]<errorabsenergybest[WHICHERROR] && (RADINVBAD(radinvmodenergy)==0 || RADINVBAD(radinvmodenergybest) && RADINVBAD(radinvmodenergy)) || RADINVBAD(radinvmodenergybest) && RADINVBAD(radinvmodenergy)==0 && (errorabsenergy[WHICHERROR]<errorabsenergybest[WHICHERROR]||errorabsenergy[WHICHERROR]<IMPOKCONVABS) || RADINVBAD(radinvmodenergybest)==0 && RADINVBAD(radinvmodenergy) && (errorabsenergybest[WHICHERROR]>IMPOKCONVABS && errorabsenergy[WHICHERROR]<IMPOKCONVABS)) && ACTUALHARDFAILURE(failreturnenergy)==0){
           if(ACCEPTASNOFAILURE(failreturnenergy)) usedrameshenergy=1; // means will use this actually, not just best yet no good enough
           // store result in case better than latter results
           lpflagenergybest=*lpflag;
@@ -2980,7 +2997,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       FTYPE errorabslist[NUMPHASES][NUMERRORTYPES];
       set_array(errorabslist,NUMPHASES*NUMERRORTYPES,MPI_FTYPE,1.0);
       int radinvmodlist[NUMPHASES];
-      set_array(radinvmodlist,NUMPHASES,MPI_INT,1.0);
+      set_array(radinvmodlist,NUMPHASES,MPI_INT,UTOPRIMRADFAILBAD1);
 
       if(gasprimaryevolves==0){ // if gas primary evolves, then keep original order because PMHD is fastest method.
         if(radprimaryevolves && prioritermethodlist[BASEITERMETHODINDEX] == PRIORITERMETHODNOTSET
@@ -3052,7 +3069,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
 
         // consider radinvmod only if error bad for original approach.  Avoids excessive attempts when should hit radiative ceiling and error is small.
-        if(radinvmodentropybest!=0 && checkradinvlist[tryphase1] || ACTUALHARDORSOFTFAILURE(failreturnentropybest) && failreturnentropybest!=FAILRETURNMODESWITCH){
+        if(RADINVBAD(radinvmodentropybest) && checkradinvlist[tryphase1] || ACTUALHARDORSOFTFAILURE(failreturnentropybest) && failreturnentropybest!=FAILRETURNMODESWITCH){
           if(firsttryphase1used==-1) firsttryphase1used=tryphase1;
 
 
@@ -3089,7 +3106,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
               }
               qentropy=qbackup;
               errorabsentropy[0]=errorabsentropy[1]=1.0;
-              radinvmodentropy=1;
+              radinvmodentropy=UTOPRIMRADFAILBAD1;
             }
             else{
               PLOOP(pliter,pl){
@@ -3138,7 +3155,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
           }
           else{
             // see if want to keep
-            if((errorabsentropy[WHICHERROR]<errorabsentropybest[WHICHERROR] && (radinvmodentropy==0 || radinvmodentropybest && radinvmodentropy) || radinvmodentropybest && radinvmodentropy==0 && (errorabsentropy[WHICHERROR]<errorabsentropybest[WHICHERROR]||errorabsentropy[WHICHERROR]<IMPOKCONVABS) || radinvmodentropybest==0 && radinvmodentropy && (errorabsentropybest[WHICHERROR]>IMPOKCONVABS && errorabsentropy[WHICHERROR]<IMPOKCONVABS)) && ACTUALHARDFAILURE(failreturnentropy)==0){
+            if((errorabsentropy[WHICHERROR]<errorabsentropybest[WHICHERROR] && (RADINVBAD(radinvmodentropy)==0 || RADINVBAD(radinvmodentropybest) && RADINVBAD(radinvmodentropy)) || RADINVBAD(radinvmodentropybest) && RADINVBAD(radinvmodentropy)==0 && (errorabsentropy[WHICHERROR]<errorabsentropybest[WHICHERROR]||errorabsentropy[WHICHERROR]<IMPOKCONVABS) || RADINVBAD(radinvmodentropybest)==0 && RADINVBAD(radinvmodentropy) && (errorabsentropybest[WHICHERROR]>IMPOKCONVABS && errorabsentropy[WHICHERROR]<IMPOKCONVABS)) && ACTUALHARDFAILURE(failreturnentropy)==0){
               // store result in case better than latter results
               lpflagentropybest=*lpflag;
               lpflagradentropybest=*lpflagrad;
@@ -3231,7 +3248,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
             qentropy=qbackup;
             errorabsent[0]=errorabsent[1]=1.0;
             errorabsforramesh[0]=errorabsforramesh[1]=1.0;
-            radinvmodent=1;
+            radinvmodent=UTOPRIMRADFAILBAD1;
           }
           else{
             PLOOP(pliter,pl){
@@ -3273,7 +3290,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
           //
         }// end else if need to get ramesh solution
         // see if want to keep
-        if((errorabsentropy[WHICHERROR]<errorabsentropybest[WHICHERROR] && (radinvmodentropy==0 || radinvmodentropybest && radinvmodentropy) || radinvmodentropybest && radinvmodentropy==0 && (errorabsentropy[WHICHERROR]<errorabsentropybest[WHICHERROR]||errorabsentropy[WHICHERROR]<IMPOKCONVABS) || radinvmodentropybest==0 && radinvmodentropy && (errorabsentropybest[WHICHERROR]>IMPOKCONVABS && errorabsentropy[WHICHERROR]<IMPOKCONVABS)) && ACTUALHARDFAILURE(failreturnentropy)==0){
+        if((errorabsentropy[WHICHERROR]<errorabsentropybest[WHICHERROR] && (RADINVBAD(radinvmodentropy)==0 || RADINVBAD(radinvmodentropybest) && RADINVBAD(radinvmodentropy)) || RADINVBAD(radinvmodentropybest) && RADINVBAD(radinvmodentropy)==0 && (errorabsentropy[WHICHERROR]<errorabsentropybest[WHICHERROR]||errorabsentropy[WHICHERROR]<IMPOKCONVABS) || RADINVBAD(radinvmodentropybest)==0 && RADINVBAD(radinvmodentropy) && (errorabsentropybest[WHICHERROR]>IMPOKCONVABS && errorabsentropy[WHICHERROR]<IMPOKCONVABS)) && ACTUALHARDFAILURE(failreturnentropy)==0){
           if(ACCEPTASNOFAILURE(failreturnentropy)) usedrameshentropy=1; // means will use this actually, not just best yet no good enough
           // store result in case better than latter results
           lpflagentropybest=*lpflag;
@@ -3382,7 +3399,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     struct of_state qcold=qbackup;
     PFTYPE lpflagcold=1;
     PFTYPE lpflagradcold=1;
-    int radinvmodcold=1;
+    int radinvmodcold=UTOPRIMRADFAILBAD1;
     int radErfnegcold=1;
     int failreturncold=FAILRETURNGENERAL; // default to fail in case cold not to be done at all
     int eomtypecold=EOMCOLDGRMHD;
@@ -4253,7 +4270,7 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
 
   if(USEINPUTASGUESSIFERRORSMALL){
     // if error small enough and no fixups used with the radative inversion, override guess to use previous solution as the new guess
-    if(errorabsreturn[WHICHERROR]<TRYHARDERFEEDGUESSTOL && radinvmodorig==0){
+    if(errorabsreturn[WHICHERROR]<TRYHARDERFEEDGUESSTOL && RADINVBAD(radinvmodorig)==0){
       PLOOP(pliter,pl){
         pp[pl] = pp0[pl] = ppfirst[pl] = pb[pl]; // not just F(pb) anymore, holds better guess
         uu[pl] = uub[pl]; // not just Uiin or uu0 anymore, holds better guess
@@ -4322,7 +4339,7 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
   FTYPE errorabsbest[NUMERRORTYPES];
   set_array(errorabsbest,NUMERRORTYPES,MPI_FTYPE,BIG);
   int failreturnbest=FAILRETURNGENERAL;
-  int radinvmodbest=1;
+  int radinvmodbest=UTOPRIMRADFAILBAD1;
 
 
   ////////////////
@@ -5761,7 +5778,7 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
   // But, in general, for QTYPMHD methods, might have use CAPTYPEFIX2 or CAPTYPEFIX1, but should use whichcap (probably CAPTYPEBASIC) to be conservative on value of Erf in general.  So while converged", could have avoided URAD0 error in total error for QTYPMHD methods.  So recover whichcap result before moving onto setting dUcomp.
   //
   ////////
-  if(*radinvmod!=0 && IMPMHDTYPEBASE(*baseitermethod)==1){
+  if(RADINVBAD(*radinvmod) && IMPMHDTYPEBASE(*baseitermethod)==1){
     int whichcall=FIMPLICITCALLTYPEFINALCHECK2; // KEY CHOICE IS THIS, which will use whichcap
     int goexplicitfake;
     int dimtypef=DIMTYPEFCONS; // 0 = conserved R^t_\nu type, 1 = primitive (u,v^i) type, i.e. v^i has no energy density term
@@ -5908,7 +5925,7 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
   //  if(PRODUCTION==0 && NOTACTUALFAILURE(failreturn)==0 || PRODUCTION>0 && NOTBADFAILURE(failreturn)==0){
 
 
-  //    if(REPORTERFNEG && failreturn!=FAILRETURNMODESWITCH && (pp[PRAD0]<10.0*ERADLIMIT || *radinvmod ) || PRODUCTION==0 && NOTACTUALFAILURE(failreturn)==0 && errorabsf1[WHICHERROR]>=trueimptryconvalt || PRODUCTION>0 && NOTBADFAILURE(failreturn)==0 && havebackup==0){
+  //    if(REPORTERFNEG && failreturn!=FAILRETURNMODESWITCH && (pp[PRAD0]<10.0*ERADLIMIT || RADINVBAD(*radinvmod) ) || PRODUCTION==0 && NOTACTUALFAILURE(failreturn)==0 && errorabsf1[WHICHERROR]>=trueimptryconvalt || PRODUCTION>0 && NOTBADFAILURE(failreturn)==0 && havebackup==0){
   //  if(REPORTERFNEG && failreturn!=FAILRETURNMODESWITCH && (pp[PRAD0]<10.0*ERADLIMIT) || PRODUCTION==0 && NOTACTUALFAILURE(failreturn)==0 && errorabsf1[WHICHERROR]>=trueimptryconvalt || PRODUCTION>0 && NOTBADFAILURE(failreturn)==0 && havebackup==0){
     //    if(NOTBADFAILURE(failreturn)==0){
     struct of_state qcheck; get_state(pp, ptrgeom, &qcheck);  primtoU(UNOTHING,pp,&qcheck,ptrgeom, uu, NULL);
@@ -6508,7 +6525,7 @@ int mathematica_report_check(int radinvmod, int failtype, long long int failnum,
     set_array(errorabsent,NUMERRORTYPES,MPI_FTYPE,BIG);
 
     FTYPE uueng[NPR]={0},uuent[NPR]={0};
-    int failtypeeng=1,failtypeent=1,iterseng=IMPMAXITER,itersent=IMPMAXITER, radinvmodeng=-1, radinvmodent=-1;
+    int failtypeeng=1,failtypeent=1,iterseng=IMPMAXITER,itersent=IMPMAXITER, radinvmodeng=UTOPRIMRADFAILBAD1, radinvmodent=UTOPRIMRADFAILBAD1;
     struct of_state qeng=*q,qent=*q;
     get_rameshsolution(whichcall, radinvmod, failtype, failnum,  gotfirstnofail,  eomtypelocal,  itermode, baseitermethod, errorabs, errorabsbestexternal,  iters,  totaliters,realdt, ptrgeom, pp, pb, piin, uu0, uu, Uiin, Ufin, CUf, q, ppeng, ppent, uueng, uuent, &qeng, &qent, &failtypeeng, errorabseng, &iterseng, &radinvmodeng, &failtypeent, errorabsent, &itersent, &radinvmodent);
 
@@ -9459,7 +9476,7 @@ int u2p_rad_new_pre(int showmessages, int allowlocalfailurefixandnoreport, FTYPE
     gamma=1.0;
     // radiation frame relativity 4-velocity
     SLOOPA(jj) urfconrel[jj] = 0.0;
-    didmod=1; *lpflagrad=UTOPRIMRADFAILCASE3A; // used to detect if modified primitives to not be consistent with inputted uu
+    didmod=1; *lpflagrad=UTOPRIMRADFAILERFNEG; // used to detect if modified primitives to not be consistent with inputted uu
   }
 
 
@@ -9813,7 +9830,12 @@ int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gam
   // make sure E_r no larger than starting value
   if(didmod==1){
     nummod++;
-    *lpflagrad=UTOPRIMRADFAILCASE3A; // used to detec if modified primitives to not be consistent with inputted uu
+    if(didmodEr){
+      *lpflagrad=UTOPRIMRADFAILERFNEG; // used to detec if modified primitives to not be consistent with inputted uu
+    }
+    else{
+      *lpflagrad=UTOPRIMRADFAILCASE2A; // used to detec if modified primitives to not be consistent with inputted uu
+    }
   }
 
 
