@@ -191,7 +191,12 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE *errorabs, stru
 // SPACETIMESUBSPLITTIMEMHDRAD  //  SPACETIMESUBSPLITMHDRAD // SPACETIMESUBSPLITSUPERALL // TAUSUPPRESS
 
 // whether to get pb(uu0) instead of using pb that was used to compute F(pb).  Better guess to use pb(uu0) in optically thin regions.
-#define GETRADINVFROMUU0FORPB 1
+// : 0 don't
+// : 1 do for RAD and MHD methods under all cases
+// : 2 do only for RAD methods
+// : 3 do for both methods but only for STAGES for MHD methods
+//#define GETRADINVFROMUU0FORPB 3 // makes use more ITERMODESTAGES
+#define GETRADINVFROMUU0FORPB 1  // might be expensive of uu0 has no solution for the MHD inversion.
 
 // whether to use dUriemann and dUgeom or other dU's sitting in dUother for radiation update
 // -1 : use Uiin,piin
@@ -4100,7 +4105,7 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
   // Getting prad(uu0_{rad parts}) is only relevant for PRAD method.  All other methods overwrite the radiative pb and pp.
   //
   //////////////////////
-  if(GETRADINVFROMUU0FORPB){
+  if(GETRADINVFROMUU0FORPB==1 || GETRADINVFROMUU0FORPB==2 && IMPRADTYPEBASE(*baseitermethod) || GETRADINVFROMUU0FORPB==3 && (IMPRADTYPEBASE(*baseitermethod) || IMPMHDTYPEBASE(*baseitermethod) && itermode==ITERMODESTAGES)){
 
     struct of_newtonstats newtonstats; setnewtonstatsdefault(&newtonstats);
     // initialize counters
