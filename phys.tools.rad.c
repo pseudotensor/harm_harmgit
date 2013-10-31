@@ -2454,6 +2454,12 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       gasextremeprimaryevolves=0;
     }
 
+    if(MODEMETHOD==MODEPICKBESTSIMPLE){
+      // forcing PMHD method, so must use gas
+      radprimaryevolves=radextremeprimaryevolves=0;
+      gasprimaryevolves=gasextremeprimaryevolves=1;
+    }
+
     // DEBUG:
     //    dualfprintf(fail_file,"PRIMARYEVOLVES: %d %d %d %d : pb=%g %g uu0=%g %g dUtot=%g %g : sqrtnumepsilon1=%g sqrtnumepsilon2=%g\n",radprimaryevolves,radextremeprimaryevolves,gasprimaryevolves,gasextremeprimaryevolves,pb[UU],pb[URAD0],-uu0[UU],-uu0[URAD0],dUtot[UU],dUtot[URAD0],sqrtnumepsilon1,sqrtnumepsilon2);
 
@@ -5726,7 +5732,7 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
   // But, in general, for QTYPMHD methods, might have use CAPTYPEFIX2 or CAPTYPEFIX1, but should use whichcap (probably CAPTYPEBASIC) to be conservative on value of Erf in general.  So while converged", could have avoided URAD0 error in total error for QTYPMHD methods.  So recover whichcap result before moving onto setting dUcomp.
   //
   ////////
-  if(*radinvmod!=0 && IMPMHDTYPEBASE(baseitermethod)==1){
+  if(*radinvmod!=0 && IMPMHDTYPEBASE(*baseitermethod)==1){
     int whichcall=FIMPLICITCALLTYPEFINALCHECK2; // KEY CHOICE IS THIS, which will use whichcap
     int goexplicitfake;
     int dimtypef=DIMTYPEFCONS; // 0 = conserved R^t_\nu type, 1 = primitive (u,v^i) type, i.e. v^i has no energy density term
