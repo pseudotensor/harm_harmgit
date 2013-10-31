@@ -55,3 +55,4 @@ extern int addremovefromnpr(int doadd, int *whichpltoavg, int *ifnotavgthencopy,
 
 extern int addremovefromanynpr(int doadd, int *whichpltoavg, int *ifnotavgthencopy, int *anynprstart, int *anynprend, int *anynprlist, int *nprlocalstart, int *nprlocalend, int *nprlocallist, FTYPE (*in)[NSTORE2][NSTORE3][NPR], FTYPE (*out)[NSTORE2][NSTORE3][NPR]);
 
+extern void set_array(void *inbufptr, int num, MPI_Datatype datatype, long double value);

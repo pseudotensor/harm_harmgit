@@ -3008,3 +3008,32 @@ int assert_func( int is_bad_val, char *s, ... )
 }
 
 
+// just set an array to some default value (like memset)
+void set_array(void *inbufptr, int num, MPI_Datatype datatype, long double value)
+{
+  void *bufptr=NULL;
+  long double *buf16;
+  double *buf8;
+  float *buf4;
+  unsigned char *buf1;
+  int *buf4i;
+  long long int *buf8i;
+
+  long double *inbuf16;
+  double *inbuf8;
+  float *inbuf4;
+  unsigned char *inbuf1;
+  int *inbuf4i;
+  long long int *inbuf8i;
+
+  int sizeofdatatype=getsizeofdatatype(datatype);
+  
+  int i;
+  if(datatype==MPI_UNSIGNED_CHAR){ buf1=(unsigned char *)bufptr; inbuf1=(unsigned char *)inbufptr;  for(i=0;i<num;i++) inbuf1[i]=(unsigned char)value; }
+  else if(datatype==MPI_FLOAT){ buf4=(float *)bufptr; inbuf4=(float *)inbufptr;  for(i=0;i<num;i++) inbuf4[i]=(float)value; }
+  else if(datatype==MPI_DOUBLE){ buf8=(double*)bufptr; inbuf8=(double*)inbufptr; for(i=0;i<num;i++) inbuf8[i]=(double)value; }
+  else if(datatype==MPI_LONG_DOUBLE){ buf16=(long double*)bufptr; inbuf16=(long double*)inbufptr;  for(i=0;i<num;i++) inbuf16[i]=(long double)value; }
+  else if(datatype==MPI_INT){ buf4i=(int *)bufptr; inbuf4i=(int *)inbufptr;  for(i=0;i<num;i++) inbuf4i[i]=(int)value; }
+  else if(datatype==MPI_LONG_LONG_INT){ buf8i=(long long int *)bufptr; inbuf8i=(long long int *)inbufptr;  for(i=0;i<num;i++) inbuf8i[i]=(long long int) value; }
+
+}
