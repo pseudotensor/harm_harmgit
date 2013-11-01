@@ -372,7 +372,7 @@ int user1_init_primitives(int inittype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FT
   // at this point densities are still standard, so just send "prim"
   trifprintf("Normalize densities\n");
   normalize_densities(prim);
-
+  trifprintf("Done with Normalize densities\n");
 
 
 
@@ -463,6 +463,8 @@ int user1_init_primitives(int inittype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FT
   //
   /////////////////////////////// 
 #if(1)
+  extern int calc_da3vsr(FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
+  calc_da3vsr(prim);
   init_vpot(prim,pstag,ucons,vpot,Bhat,F1,F2,F3,Atemp);
   normalize_field(prim,pstag,ucons,vpot,Bhat); // normalizes p and pstag and unew and vpot if tracked
 #else

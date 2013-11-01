@@ -798,7 +798,7 @@ void gettotal(int numvars, SFTYPE* vars[],int*sizes,SFTYPE*vars_tot[])
         ptrsend = &vars[k][0];
       }
 
-      MPI_Reduce(ptrsend, &vars_tot[k][0], sizes[k], MPI_SFTYPE, MPI_SUM, MPIid[0], MPI_COMM_GRMHD);
+      MPI_Allreduce(ptrsend, &vars_tot[k][0], sizes[k], MPI_SFTYPE, MPI_SUM, MPI_COMM_GRMHD); // MAVARANOTE changed to Allreduce from Reduce to try implementing Jon's changes above into getalltotal quickly for testing
 
       // free malloc'ed memory
       if(didmalloc) free(ptrsend);
@@ -1020,7 +1020,7 @@ int integrate(int numelements, SFTYPE * var,SFTYPE *var_tot,int type, int enerre
     break;
   case CUMULATIVETYPE3:
     // this type not used right now
-    totalsizes[0]=1;
+    totalsizes[0]=numelements;
     getalltotal(1,&var,totalsizes,&var_tot);
     break;
   default:

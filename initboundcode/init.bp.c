@@ -46,6 +46,12 @@ static FTYPE taper_func_exp(FTYPE R,FTYPE rin) ;  // MAVARA added June 3 2013
 static FTYPE nz_func(FTYPE R) ;   // MARKNOTE torus calculation
 //static FTYPE taper_func_exp(FTYPE R,FTYPE rin) ;
 
+int calc_da3vsr(FTYPE (*prim)[NSTORE2][NSTORE3][NPR]); // For setting beta const as a function of r at initial conditions                                 
+static SFTYPE *da3vsr;
+static SFTYPE *da3vsr_copy;
+static SFTYPE *da3vsr_tot;
+static SFTYPE *da3vsr_integrated;
+
 FTYPE normglobal;
 int inittypeglobal; // for bounds to communicate detail of what doing
 
@@ -466,7 +472,7 @@ $6 = 1536
   trifprintf("BEGIN check_spc_singularities_user\n");
   // SUPERGODMARK: Goes very slowly sometimes randomly for unknown reasons.
   dualfprintf(fail_file,"WARNING: check_spc_singularities_user() oddly stalls sometimes...\n");
-  check_spc_singularities_user();
+  //check_spc_singularities_user(); // MAVARANOTE: have sometimes commented out!
   trifprintf("END check_spc_singularities_user\n");
   dualfprintf(fail_file,"WARNUNG: done with check_spc_singularities_user(), but it sometimes stalls or goes very very slow for no apparently good reason.  E.g., on NAUTILUS with -O0, very slow checks.  But just putting dualfprintf before and after the above call leads to quick finish.");
 
@@ -746,7 +752,6 @@ int init_dsandvels_bpthin(int *whichvel, int*whichcoord, int i, int j, int k, FT
   //FTYPE dxdxp[NDIM][NDIM];
 
 
-
   coord(i, j, k, CENT, X);
   bl_coord(X, V);
   r=V[1];
@@ -791,7 +796,7 @@ int init_dsandvels_bpthin(int *whichvel, int*whichcoord, int i, int j, int k, FT
     S = 1./(H*H*nz) ;
     cs = H*nz ;
 
-    rho = (S/sqrt(2.*M_PI*H*H)) * exp(-z*z/(2.*H*H)) * taper_func_exp(R,rin)  * ( 1.0 - R*R/((pow(R,1.5) + a)*(pow(R,1.5) + a)) )  ;
+    rho = (S/sqrt(2.*M_PI*H*H)) * exp(-z*z/(2.*H*H)) * taper_func_exp(R,rin) * ( 1.0 - R*R/((pow(R,1.5) + a)*(pow(R,1.5) + a)))  ;
     u = rho*cs*cs/(gam - 1.) ;
     ur = 0. ;
     uh = 0. ;
@@ -802,11 +807,11 @@ int init_dsandvels_bpthin(int *whichvel, int*whichcoord, int i, int j, int k, FT
     
     
     pr[RHO] = rho ;
-    pr[UU] = u * (1. + randfact * (ranc(0,0) - 0.5));
+    pr[UU] = u ;//* (1. + randfact * (ranc(0,0) - 0.5));
 
     pr[U1] = ur ;
     pr[U2] = uh ;    
-    pr[U3] = SLOWFAC * up;
+    pr[U3] = SLOWFAC * up ; //* (1. + randfact * (ranc(0,0) - 0.5));
 
     if(FLUXB==FLUXCTSTAG){
       PLOOPBONLY(pl) pstag[pl]=pr[pl]=0.0;
@@ -915,7 +920,7 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
   FTYPE r,th,ph;
   FTYPE vpot;
   FTYPE setblandfordfield(FTYPE r, FTYPE th);
-
+  FTYPE idxdxp[NDIM][NDIM];
 
 #define FRACAPHICUT 0.2
       //#define FRACAPHICUT 0.1
@@ -977,7 +982,7 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
   //  FTYPE FIELDROT=M_PI*0.5;
   FTYPE rpow2=0.0;
   FTYPE FIELDROT=0.0;
-  FTYPE hpow=2.0;
+  FTYPE hpow=4.0;
 #define RBREAK_MACRO (60.0)
   FTYPE RBREAK=RBREAK_MACRO;
 
@@ -994,8 +999,8 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
       vpot += -(pow(r,rpow)*pow(sin(th),hpow)*sin(FIELDROT)*sin(ph));
     }
     if(FIELDTYPE==DISKVERTBP){
-      if(r<RBREAK) vpot += -(pow(r,rpow)*pow(sin(th),hpow)*sin(FIELDROT)*sin(ph));
-      else if(r>=RBREAK) vpot += -((pow(RBREAK,rpow)/pow(RBREAK,rpow2)*pow(r,rpow2))*pow(sin(th),hpow)*sin(FIELDROT)*sin(ph));
+      if(r<RBREAK) vpot += - (pow(r,rpow)*pow(sin(th),hpow)*sin(FIELDROT)*sin(ph));
+      else if(r>=RBREAK) vpot += - ((pow(RBREAK,rpow)/pow(RBREAK,rpow2)*pow(r,rpow2))*pow(sin(th),hpow)*sin(FIELDROT)*sin(ph));
     }
 
 
@@ -1021,8 +1026,10 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
  
     if(FIELDTYPE==DISKVERTBP){
       //vpot += 0.5*pow(r,rpow)*sin(th)*sin(th) ;
-      if(r<RBREAK) vpot += pow(r,rpow)*pow(sin(th),hpow)*(cos(FIELDROT) - cos(ph)*cot(th)*sin(FIELDROT));
-      else if(r>=RBREAK) vpot += (pow(RBREAK,rpow)/pow(RBREAK,rpow2)*pow(r,rpow2))*pow(sin(th),hpow)*(cos(FIELDROT) - cos(ph)*cot(th)*sin(FIELDROT));
+      
+      idxdxprim_ijk(i, j, k, FACE2, idxdxp);                                                                                                           
+      if(r<RBREAK) vpot += - da3vsr_integrated[startpos[1]+i] * idxdxp[3][3] * pow(sin(th),hpow)*(cos(FIELDROT) - cos(ph)*cot(th)*sin(FIELDROT));
+      else if(r>=RBREAK) vpot += - da3vsr_integrated[startpos[1]+i] * idxdxp[3][3]* pow(sin(th),hpow)*(cos(FIELDROT) - cos(ph)*cot(th)*sin(FIELDROT));
     }
 
     /* field-in-disk version */
@@ -1484,6 +1491,16 @@ static FTYPE taper_func_exp(FTYPE R,FTYPE rin)  // MAVARA added June 3 2013
 
 }
 
+static FTYPE taper_func(FTYPE R,FTYPE rin)  // MAVARA added back September 16 2013
+{
+
+  if(R <= rin)
+    return(0.) ;
+  else
+    return(1. - pow((rin / R),1.5)) ;
+
+}
+
 
 // Setup problem-dependent grid sectioning
 int theproblem_set_enerregiondef(int forceupdate, int timeorder, int numtimeorders, long int thenstep, FTYPE thetime, int (*enerregiondef)[NDIM] )
@@ -1653,7 +1670,7 @@ int coolfunc_user(FTYPE h_over_r, FTYPE *pr, struct of_geom *geom, struct of_sta
 	Yscaling = (gam-1.)*e/(Tfix);
 
 
-	if(t > 0. && dt < taucool/Wcirc  && Yscaling > 1.0 ) {
+	if(t > 0. && dt < taucool/Wcirc  && Yscaling > 1.0 && R > Rhor) {
 
 	  dUcool = - Wcirc * u * sqrt( Yscaling - 1.) * photoncapture ;
 	  //	  dUcool=-u*(Wcirc/taucool)*log(enk/enk0)*photoncapture;
@@ -1710,7 +1727,7 @@ int user2_get_maxes(int eqslice, FTYPE *parms, FTYPE (*prim)[NSTORE2][NSTORE3][N
       r=V[1];
       th=V[2];
       
-      if((r<0.9*RBREAK_MACRO)&&(r>rinlocal)&&(fabs(th-M_PI*0.5)<10.0*M_PI*dx[2]*hslope)){
+      if((r*sin(th)<0.9*RBREAK_MACRO)&&(r*sin(th)>RBREAK_MACRO/2.0)&&(fabs(th-M_PI*0.5)<10.0*M_PI*dx[2]*hslope)){
         gotnormal=1;
         if (bsq_calc(MAC(prim,i,j,k), ptrgeom, &bsq_ij) >= 1) FAILSTATEMENT("init.c:init()", "bsq_calc()", 1);
         if (bsq_ij > bsq_max[0])      bsq_max[0] = bsq_ij;
@@ -1761,6 +1778,95 @@ int user2_get_maxes(int eqslice, FTYPE *parms, FTYPE (*prim)[NSTORE2][NSTORE3][N
   mpimax(pg_max);
   mpimin(beta_min);
 
+
+  return(0);
+
+}
+
+int calc_da3vsr(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
+{
+  int ii,jj=0,kk=0;
+  FTYPE X[NDIM],V[NDIM],r,th;
+  FTYPE dxdxp[NDIM][NDIM];
+  FTYPE ucon[NDIM];
+  FTYPE others[NUMOTHERSTATERESULTS];
+  struct of_geom geomdontuse;
+  struct of_geom *ptrgeom=&geomdontuse;
+
+  trifprintf("Starting calc_da3vsr \n");
+  da3vsr=(SFTYPE*)malloc(ncpux1*N1*sizeof(SFTYPE)); // add test to see if these work                                                                        
+  da3vsr_copy=(SFTYPE*)malloc(ncpux1*N1*sizeof(SFTYPE)); // add test to see if these work                                                                        
+  da3vsr_tot=(SFTYPE*)malloc(ncpux1*N1*sizeof(SFTYPE));
+  da3vsr_integrated=(SFTYPE*)malloc(ncpux1*N1*sizeof(SFTYPE));
+  int count = 0;
+  if(da3vsr_tot==NULL){
+    dualfprintf(fail_file,"Couldn't open lumvsr_tot memory \n");
+    myexit(1);
+  }
+
+  printf("Check 1\n");
+  //trifprintf("startpos[2]==totalsize[2]/2: %g ",startpos[2]==totalsize[2]/2 );
+                                                                                                                                                        
+  for(ii=0; ii<N1; ii++) {                                                                                                                                
+                                                                                                                                                          
+    if(mycpupos[2]==ncpux2/2 && ncpux2>1 || ncpux2==1){//|| startpos[2]==totalsize[2]/2 ) {  //&& !(startpos[1]==0 && ii==0)                                                                                       
+      //printf("Getting called 1");
+      count++;
+      if(ncpux2==1) jj = N2/2-1;
+      //bl_coord_ijk_2(ii, jj, kk, FACE2, X, V);                                                                                                            
+      coord(ii, jj, kk, FACE2, X);
+      bl_coord(X, V);
+      get_geometry(ii, jj, kk, FACE2, ptrgeom);                                                                                                           
+      r=V[1];                                                                                                                                             
+      th=V[2];                                                                                                                                            
+      ucon_calc(MAC(prim,ii,jj,kk),ptrgeom,ucon, others);                                                                                                 
+      dxdxprim_ijk(ii, jj, kk, FACE2, dxdxp);                                                                                                           
+      if(r*sin(th)>=rin && r*sin(th)<60) {
+	da3vsr[startpos[1]+ii] = - ptrgeom->gdet * dx[1] / sqrt(ptrgeom->gcov[GIND(2,2)]) * pow(.1,.5) * ucon[TT] * sqrt( (gam - 1.0) * MACP0A1(prim,ii,jj,kk,UU) ) ; 
+      }
+      else {//if(startpos[2]==totalsize[2]/2) 
+	da3vsr[startpos[1]+ii] = 0.0 ;
+	printf("Getting called  %d", ii);
+      } // the if(r < RBREAK_MACRO) above means that when I integrate through to get all the A_3 values at the end of this$
+    }
+    else{ 
+      da3vsr[startpos[1]+ii] = 0.0;
+    }                                                                                                                                                   
+    
+                                                                                                                                                          
+    //   da3vsr_tot[startpos[1]+ii] = 0.0;                                                                                                                
+    // if(integrate(ncpux1*N1,&lumvsr[0],&lumvsr_tot[0],CUMULATIVETYPE,enerregion)>=1) return(1);                                                         
+  }                                                                                                                                                    
+  
+  printf("count: %d \n",count);
+
+  sleep(5);
+  
+  FTYPE startval = 0.1;
+  /*
+  for(ii=0; ii<N1; ii++) {
+    if(mycpupos[2]==ncpux2/2 && ncpux2>1  || ncpux2==1 ) 
+      da3vsr[startpos[1]+ii] = startval ; //(totalsize[2]/2)
+    else
+      da3vsr[startpos[1]+ii] = 0.0;
+  }
+  */  
+  //for(ii=0; ii<ncpux1*N1; ii++) da3vsr_tot[ii] = 0.0;
+  printf("Check 1\n core pos(x,y): %d, %d",mycpupos[1], mycpupos[2]);
+  printf("Check 2\n");
+  for(ii=0; ii<ncpux1*N1; ii++) printf("valuein %d : %21.15g \n", ii, da3vsr[ii]);
+  int testtest;
+  for(ii=0; ii<ncpux1*N1; ii++) da3vsr_copy[ii]=da3vsr[ii];
+  testtest = integrate(ncpux1*N1,&da3vsr[0],&da3vsr_tot[0], CUMULATIVETYPE, 0);
+  if( testtest> 0) trifprintf("HELLLLLLOOOOOOOOOOOOOOOO") ; // 0 is just a filler for an integer$
+  printf("Check 3\n core id: %d",myid);
+  for(ii=0; ii<ncpux1*N1; ii++) printf("valueout %d : %21.15g \n", ii, da3vsr_tot[ii]);
+  da3vsr_integrated[0] = 0.0 ;  
+  //for(ii=0; ii<N1*ncpux1; ii++) da3vsr_tot[ii] = 0.1 ;
+  for(ii=1; ii<N1*ncpux1; ii++) da3vsr_integrated[ii] = da3vsr_integrated[ii-1] + da3vsr_tot[ii-1] ;
+  for(ii=0; ii<ncpux1*N1; ii++) trifprintf("value %d : %21.15g \n", ii, da3vsr_integrated[ii]); // NOTE THIS IS NOTE THE INTEGRATED VALUE!!!!!
+  
+  trifprintf("Ending calc_da3vsr Totalsize[2]=%d \n", totalsize[2]);
 
   return(0);
 
