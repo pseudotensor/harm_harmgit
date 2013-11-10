@@ -87,6 +87,10 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE *errorabs, stru
 // tolerance above which say energy solution is probably bad even if not very large error.  These have tended (or nearly 100%) to be cases where actual solution has u_g<0 but harm gets error u_g>0 and error not too large.
 #define IMPBADENERGY (MIN(IMPALLOWCONV,1E-7))
 
+// how many iterations before we try harder to get better 1D MHD inversion solution
+#define ITERMHDINVTRYHARDER 5
+#define MINTRYCONVFORMHDINVERSION (1E-4) // assume not failure if got down to this much. -- don't have to be related to implicit allowance.
+
 
 // whether to abort even the backup if error is not reducing.
 #define ABORTBACKUPIFNOERRORREDUCE 1
@@ -1068,7 +1072,6 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
   // initialize counters
   newtonstats.nstroke=newtonstats.lntries=0;
   // set inputs for errors, maxiters, etc.
-#define ITERMHDINVTRYHARDER 5
   if(iter>=ITERMHDINVTRYHARDER || whichcall==FIMPLICITCALLTYPEFINALCHECK || whichcall==FIMPLICITCALLTYPEFINALCHECK2){
     // try lowest error allowed, may be raised a bit in MHD inversion code.
     // min between normal desired error and iterated-quantity error.  This seeks low error if iterated got low error, while avoids excessive attempt if not.
@@ -1084,7 +1087,8 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
     newtonstats.extra_newt_iter=1; // KORALNOTE: apparently should keep this as >=1 to ensure error really drops
     newtonstats.extra_newt_iter_ultrarel=1; // KORALNOTE: apparently should keep this as >=1 to ensure error really drops
   }
-  newtonstats.mintryconv=allowconvabs;
+  //  newtonstats.mintryconv=allowconvabs;
+  newtonstats.mintryconv=MINTRYCONVFORMHDINVERSION;
   newtonstats.maxiter=maxiter;
   // override with less strict error for Jacobian calculation
   if(whichcall==FIMPLICITCALLTYPEJAC){
@@ -4324,7 +4328,7 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
     newtonstats.tryconvultrarel=1E-2*MAX(trueimptryconv,IMPOKCONVCONSTFORDEFAULT);
     newtonstats.extra_newt_iter=1;
     newtonstats.extra_newt_iter_ultrarel=2;
-    newtonstats.mintryconv=IMPALLOWCONVCONSTFORDEFAULT;
+    newtonstats.mintryconv=MINTRYCONVFORMHDINVERSION;//IMPALLOWCONVCONSTFORDEFAULT;
     newtonstats.maxiter=MIN(trueimpmaxiter,IMPMAXITERFORDEFAULT);
     //
     int finalstep = 1;
@@ -4380,7 +4384,7 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
       // set inputs for errors, maxiters, etc.
       newtonstats.tryconv=trueimptryconv;
       newtonstats.tryconvultrarel=trueimptryconv*1E-1; // just bit smaller, not as extreme as default
-      newtonstats.mintryconv=IMPALLOWCONV;
+      newtonstats.mintryconv=MINTRYCONVFORMHDINVERSION; //IMPALLOWCONV;
       newtonstats.maxiter=trueimpmaxiter;
       newtonstats.extra_newt_iter=0;
       newtonstats.extra_newt_iter_ultrarel=1;
@@ -4394,7 +4398,7 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
       newtonstats.tryconvultrarel=1E-2*MAX(trueimptryconv,IMPOKCONVCONSTFORDEFAULT);
       newtonstats.extra_newt_iter=1;
       newtonstats.extra_newt_iter_ultrarel=2;
-      newtonstats.mintryconv=IMPALLOWCONVCONSTFORDEFAULT;
+      newtonstats.mintryconv=MINTRYCONVFORMHDINVERSION; //IMPALLOWCONVCONSTFORDEFAULT;
       newtonstats.maxiter=MIN(trueimpmaxiter,IMPMAXITERFORDEFAULT);
       //
     }
@@ -4463,7 +4467,7 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
       newtonstats.tryconvultrarel=1E-2*MAX(trueimptryconv,IMPOKCONVCONSTFORDEFAULT);
       newtonstats.extra_newt_iter=1;
       newtonstats.extra_newt_iter_ultrarel=2;
-      newtonstats.mintryconv=IMPALLOWCONVCONSTFORDEFAULT;
+      newtonstats.mintryconv=MINTRYCONVFORMHDINVERSION; //IMPALLOWCONVCONSTFORDEFAULT;
       newtonstats.maxiter=MIN(trueimpmaxiter,IMPMAXITERFORDEFAULT);
     }
     //
