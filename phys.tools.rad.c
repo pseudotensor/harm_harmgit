@@ -1,4 +1,4 @@
-
+// KORALTODO: B Not setup for iter=0 2 1 0 : 1 2 : 3 13 : 14 200 : 14
 
 // include globals
 #include "decs.h"
@@ -1161,7 +1161,21 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
     else needentropy=0;
   }
 
-
+  //1) Reorder URAD method so:
+  // a) URAD
+  // b) URAD->PRAD
+  // c) Re-get URAD(PRAD) in case floors/ceilings
+  // d) Apply relative 4-force condition using this new URAD -> UGAS
+  // e) UGAS->PGAS
+  // f) Re-get UGAS(PGAS) in case floors/celings/failures/errors/etc.
+  //
+  // As long as MHD doesn't fail, then even if RAD hits ceilings, the solution will be in relative force balance. -- i.e. total energy-momentum conservation will hold despite change in URAD.
+  //
+  // Right now, I use pre-corrected URAD to get dUrad -> dUgas, so if rad hits ceilings while gas does not, then relative force balance is lost when could have been maintained.
+  //
+  // Need to have Utoprimgen() call without doing radiation inversion to save time .. doradonly=-1 ?
+  //
+  // BUT, if hit radinvmod with change in energy, then change in U would be dumped into GAS even if gas<<rad or tau\sim 0.
 
   if(
      implicititer==QTYUMHD || implicititer==QTYUMHDENERGYONLY || implicititer==QTYUMHDMOMONLY
@@ -1829,6 +1843,9 @@ static FTYPE compute_dt(FTYPE *CUf, FTYPE dtin)
 //#define MODEMETHOD MODEENERGY
 //#define MODEMETHOD MODEENTROPY
 //#define MODEMETHOD MODEENERGYRAMESH
+
+
+// KORALTODOMAYBE: average good neighbor if can.  only use alternative backup if no good neighbor.
 
 
 // wrapper for mode method
