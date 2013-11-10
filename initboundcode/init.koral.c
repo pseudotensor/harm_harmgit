@@ -310,6 +310,15 @@ int post_init_specific_init(void)
     }
   }
 
+
+  // override anything set by restart file.
+#if(PRODUCTION==0)
+  debugfail=2;
+#else
+  debugfail=0;
+#endif
+
+
   return(0);
 }
 

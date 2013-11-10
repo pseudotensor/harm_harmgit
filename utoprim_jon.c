@@ -1095,7 +1095,7 @@ static int set_guess_Wp(int showmessages, PFTYPE *lpflag, int eomtype, FTYPE *pr
     if(utsq>=0.0 && utsq==utsq && isfinite(utsq) && (Ss==Ss && isfinite(Ss) && Ss>=Ss0-FRACSs0*fabs(Ss0))){
       // if utsq=nan or inf, will fail to reach here
       // if Ss=nan or inf, will fail to reach here
-      if(numattemptstofixguess>0) if(1||showmessages && debugfail>=3) dualfprintf(fail_file,"GOOD Initial guess #%d/%d [i=%d j=%d k=%d] for W=%21.15g Wp=%21.15g Wp/D=%21.15g gives bad utsq=%21.15g Ss=%21.15g D=%21.15g u=%21.15g p=%21.15g gamma=%21.15g Ss0=%21.15g\n",numattemptstofixguess,MAXNUMGUESSCHANGES,ptrgeom->i,ptrgeom->j,ptrgeom->k,*W_last,*Wp_last,*Wp_last/D,utsq,Ss,D,u,p,gamma,Ss0);
+      if(numattemptstofixguess>0) if(showmessages && debugfail>=3) dualfprintf(fail_file,"GOOD Initial guess #%d/%d [i=%d j=%d k=%d] for W=%21.15g Wp=%21.15g Wp/D=%21.15g gives bad utsq=%21.15g Ss=%21.15g D=%21.15g u=%21.15g p=%21.15g gamma=%21.15g Ss0=%21.15g\n",numattemptstofixguess,MAXNUMGUESSCHANGES,ptrgeom->i,ptrgeom->j,ptrgeom->k,*W_last,*Wp_last,*Wp_last/D,utsq,Ss,D,u,p,gamma,Ss0);
       break;
     }
     else{
@@ -3990,7 +3990,7 @@ static int general_newton_raphson(int showmessages, PFTYPE *lpflag, int eomtype,
   int diddamp=0;
   int didcycle=0;
   void (*ptr_validate_x)(FTYPE x[NEWT_DIM], FTYPE x0[NEWT_DIM], FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra);
-
+  int newtoniter;
 
 
   //////////
@@ -4024,6 +4024,13 @@ static int general_newton_raphson(int showmessages, PFTYPE *lpflag, int eomtype,
   else EXTRA_NEWT_ITER_ULTRAREL_VAR=EXTRA_NEWT_ITER_ULTRAREL;
 
 
+  // setup error list
+  FTYPE dxlist[MAX_NEWT_ITER+EXTRA_NEWT_ITER_ULTRAREL+EXTRA_NEWT_ITER],errorlist[MAX_NEWT_ITER+EXTRA_NEWT_ITER_ULTRAREL+EXTRA_NEWT_ITER];
+  int listi;
+  for(listi=0;listi<MAX_NEWT_ITER+EXTRA_NEWT_ITER_ULTRAREL+EXTRA_NEWT_ITER;listi++){
+    dxlist[listi]=errorlist[listi]=BIG;
+  }
+
 
 
   // pick version of validate_x depending upon scheme
@@ -4053,10 +4060,10 @@ static int general_newton_raphson(int showmessages, PFTYPE *lpflag, int eomtype,
   //
   /////////////////////////////////////////////////////////
   keep_iterating = 1;
+  newtoniter=0;
   while( keep_iterating ) { 
     (newtonstats->nstroke)++;
     (newtonstats->lntries)++;
-
 
     if((int)(newtonstats->lntries) > ITERDAMPSTART && diddamp==0 && didcycle==0){
       for( id = 0; id < n ; id++) DAMPFACTOR[id]=0.5; // Jon's mod: try to catch bad closed loop cycles that can occur, e.g., when cubic type behavior
@@ -4075,13 +4082,21 @@ static int general_newton_raphson(int showmessages, PFTYPE *lpflag, int eomtype,
     /* returns with new dx, f, df */
     (*funcd) (x, dx, resid, norm, jac, &f, &df, n, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra);
 
+    
+    id=0; if(resid[id] <=-VERYBIG || jac[0][id]==0.0){
+      // get error and dx
+      dxlist[newtoniter]=0.0;
+      for(it=0;it<n;it++) dxlist[newtoniter] = MAX(dxlist[newtoniter],fabs(dx[it]));
+      for(it=0;it<n;it++) errorlist[newtoniter] += (1.0/n)*(fabs(resid[it])/fabs(norm[it]));
+      newtoniter++;
+    }
 
 
     // DEBUG:
 #if(0)
     //    if(nstep>=26070){
     //      if(1||myid==5 && nstep==1 && steppart==0 && ifileglobal==19 && jfileglobal==15){
-    for(it=0;it<n;it++) dualfprintf(fail_file,"lntries=%d after funcd: x[%d]=%26.20g dx[%d]=%26.20g f=%26.20g df=%26.20g errx=%26.20g (%26.20g %26.20g) diddamp=%d dampfactor=%26.20g didcycle=%d : %g %g %g %g %g %g %g %g %g\n",(int)(newtonstats->lntries),it,x[it],it,dx[it],f,df,errx,NEWT_TOL_VAR,NEWT_TOL_ULTRAREL_VAR,diddamp,DAMPFACTOR[it],didcycle,wglobal[2],Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc);
+    for(it=0;it<n;it++) dualfprintf(fail_file,"lntries=%d after funcd: x[%d]=%26.20g dx[%d]=%26.20g f=%26.20g df=%26.20g errx=%26.20g trueerror=%26.20g (%26.20g %26.20g) diddamp=%d dampfactor=%26.20g didcycle=%d : %g %g %g %g %g %g %g %g %g\n",(int)(newtonstats->lntries),it,x[it],it,dx[it],f,df,errx,resid[it]/norm[it],NEWT_TOL_VAR,NEWT_TOL_ULTRAREL_VAR,diddamp,DAMPFACTOR[it],didcycle,wglobal[2],Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc);
         //      }
         //    }
 #endif
@@ -4509,6 +4524,32 @@ static int general_newton_raphson(int showmessages, PFTYPE *lpflag, int eomtype,
     if( (newt_errorcheck(n, NEWT_TOL_VAR, NEWT_TOL_ULTRAREL_VAR, errx, x[0],  dx[0],x,dx, wglobal)&&(doing_extra == 0)) || (i_extra > newt_extracheck(n, EXTRA_NEWT_ITER_VAR, EXTRA_NEWT_ITER_ULTRAREL_VAR, errx,x[0],dx[0],x,dx,wglobal)) || (n_iter >= (MAX_NEWT_ITER_VAR-1)) ) {
       keep_iterating = 0;
     }
+
+
+    // check if error is not dropping sufficiently
+#define CHECKDECREASE0 5
+#define CHECKDECREASEAVGNUM 3 // should be less than CHECKDECREASE0
+#define CHECKDECFACTOR (0.5) // i.e. should drop by this factor compared to older average
+    if(0&&newtoniter>CHECKDECREASE0){ // too aggressive, causes no solutions more often when could have gotten solution
+      int ci;
+      FTYPE avgerror;
+      avgerror=0.0;
+      for(ci=0;ci<CHECKDECREASEAVGNUM;ci++) if(errorlist[newtoniter-CHECKDECREASE0+ci]!=1.0) avgerror += errorlist[newtoniter-CHECKDECREASE0+ci]; // GODMARK: uses debug info
+      avgerror/=(CHECKDECREASEAVGNUM);
+      FTYPE currenterror;
+      currenterror=errorlist[newtoniter];
+      //
+      // check both errors to ensure they are decreasing
+      int cond=(currenterror>CHECKDECFACTOR*avgerror);
+      if(cond){
+        keep_iterating=0;
+        if(debugfail>=2) dualfprintf(fail_file,"Error not decreasing properly: currenterror=%g avgerror=%g\n",currenterror,avgerror);
+      }// end if current error too large compared to older average error
+    }// end if large enough iterations so can check how error is trending, to avoid many iterations when error is not dropping enough to matter.
+
+
+
+
 
 
 

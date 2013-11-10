@@ -148,7 +148,9 @@ int rescale(int which, int dir, FTYPE *pr, struct of_geom *ptrgeom,FTYPE *p2inte
     int whichcap=CAPTYPEBASIC;
     int whichmethod=MODEDEFAULT;
     int modprim=0;
-    MYFUN(Utoprimgen(showmessages,allowlocalfailurefixandnoreport, 0, &eomtype,whichcap,whichmethod,modprim,OTHERUTOPRIM,UDIAG,p2interp, NULL, ptrgeom, dissmeasure, pr, pr,&newtonstats),"interp.c:rescale()", "Utoprimgen", 1);
+    int checkoninversiongas=CHECKONINVERSION;
+    int checkoninversionrad=CHECKONINVERSIONRAD;
+    MYFUN(Utoprimgen(showmessages,checkoninversiongas,checkoninversionrad,allowlocalfailurefixandnoreport, 0, &eomtype,whichcap,whichmethod,modprim,OTHERUTOPRIM,UDIAG,p2interp, NULL, ptrgeom, dissmeasure, pr, pr,&newtonstats),"interp.c:rescale()", "Utoprimgen", 1);
   }
   else{
     dualfprintf(fail_file,"rescale(): no such rescale type! which=%d\n",which);

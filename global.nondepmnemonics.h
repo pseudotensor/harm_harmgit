@@ -490,6 +490,8 @@
 #define FKE 9
 
 
+#define CHECKONINVERSIONDEFAULT (-1)
+
 // number of inversion quantities to report when inversion fails if CHECKONINVERSION = 1
 // See utoprim_jon.c:check_on_inversion()
 #define NUMINVPROPERTY 13

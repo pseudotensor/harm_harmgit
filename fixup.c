@@ -903,7 +903,6 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
       oldmhdpflag=GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL);
       oldradpflag=GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL);
 
-      struct of_newtonstats newtonstats; setnewtonstatsdefault(&newtonstats);
       int showmessages=0; // messages not important if fixup doens't work, unless debugging.
       int allowlocalfailurefixandnoreport=1; 
       int eomtype=EOMDEFAULT;
@@ -911,10 +910,32 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
       int whichcap=CAPTYPEBASIC;
       int whichmethod=MODEDEFAULT;
       int modprim=0;
+      int checkoninversiongas=CHECKONINVERSION;
+      int checkoninversionrad=CHECKONINVERSIONRAD;
 
-      newtonstats.nstroke=newtonstats.lntries=0;
+      struct of_newtonstats newtonstats; setnewtonstatsdefault(&newtonstats);
+      if(0){
+        newtonstats.nstroke=newtonstats.lntries=0;
+      }
+      else{
+        ////////
+        // be quick about checking this
+        newtonstats.nstroke=newtonstats.lntries=0;
+        // set inputs for errors, maxiters, etc.
+#define IMPTRYCONVCONSTFORFX (1E-6)
+#define IMPOKCONVCONSTFORFX (1E-4)
+#define IMPALLOWCONVCONSTFORFX (1E-3)
+#define IMPMAXITERFORFX (10)
+        newtonstats.tryconv=1E-2*MAX(IMPTRYCONVCONSTFORFX,IMPOKCONVCONSTFORFX);
+        newtonstats.tryconvultrarel=1E-2*MAX(IMPTRYCONVCONSTFORFX,IMPOKCONVCONSTFORFX);
+        newtonstats.extra_newt_iter=1;
+        newtonstats.extra_newt_iter_ultrarel=2;
+        newtonstats.mintryconv=IMPALLOWCONVCONSTFORFX;
+        newtonstats.maxiter=IMPMAXITERFORFX;
+        //
+      }
       //      dualfprintf(fail_file,"BEFORE FIXUPUTOPRIMGEN\n");
-      failreturn=Utoprimgen(showmessages,allowlocalfailurefixandnoreport, finalstep,&eomtype,whichcap,whichmethod,modprim,OTHERUTOPRIM,UNOTHING,U,&q, ptrgeom,dissmeasure,prmhd,prmhd,&newtonstats);
+      failreturn=Utoprimgen(showmessages,checkoninversiongas,checkoninversionrad,allowlocalfailurefixandnoreport, finalstep,&eomtype,whichcap,whichmethod,modprim,OTHERUTOPRIM,UNOTHING,U,&q, ptrgeom,dissmeasure,prmhd,prmhd,&newtonstats);
       //      dualfprintf(fail_file,"AFTER FIXUPUTOPRIMGEN\n");
       // have to add since takes effort.s
       nstroke+=newtonstats.nstroke; newtonstats.nstroke=newtonstats.lntries=0;

@@ -114,6 +114,10 @@ int main(int argc, char *argv[])
 
     step_ch_full(truestep,GLOBALPOINT(pglobal),GLOBALPOINT(pstagglobal),GLOBALPOINT(unewglobal),GLOBALPOINT(vpotarrayglobal),GLOBALPOINT(Bhatglobal),GLOBALPOINT(gp_l),GLOBALPOINT(gp_r),GLOBALPOINT(F1),GLOBALPOINT(F2),GLOBALPOINT(F3),GLOBALPOINT(emf),GLOBALPOINT(ulastglobal));
 
+    if(nstep%10 && PRODUCTION==0){
+      dualfprintf(fail_file,"nstroke: %ld\n",nstroke);
+    }
+
     // get total number of inversion steps
     mpiisum0(&nstroke,0);
 
