@@ -1372,21 +1372,24 @@ int init_global(void)
       BCtype[X1DN]=HORIZONOUTFLOW; // although more specific extrapolation based upon solution might work better
 
       if(WHICHPROBLEM==RADNT || WHICHPROBLEM==RADFLATDISK) BCtype[X1UP]=RADNTBC; // inflow analytic
-      else BCtype[X1UP]=RADNTBC; // inflow analytic
-      //else BCtype[X1UP]=FIXEDUSEPANALYTIC; // fixed analytic // little silly for most of outer boundary, so avoid // KORALTODO: Also causes hellish problems with solution and implicit solver at the X1UP boundary surface (not just near torus)
+      else if(WHICHPROBLEM==RADDONUT){
+        //        BCtype[X1UP]=RADNTBC; // inflow analytic
+        //else BCtype[X1UP]=FIXEDUSEPANALYTIC; // fixed analytic // little silly for most of outer boundary, so avoid // KORALTODO: Also causes hellish problems with solution and implicit solver at the X1UP boundary surface (not just near torus)
+        BCtype[X1UP]=HORIZONOUTFLOW;
+        //      BCtype[X1DN]=OUTFLOW;
+        //      BCtype[X1UP]=OUTFLOW;
+      }
       
       if(WHICHPROBLEM==RADFLATDISK)  BCtype[X2DN]=ASYMM; // if non-zero Rin_array[2]
-      else BCtype[X2DN]=POLARAXIS; // assumes Rin_array[2]=0
+      else if(WHICHPROBLEM==RADNT || WHICHPROBLEM==RADDONUT){
+        BCtype[X2DN]=POLARAXIS; // assumes Rin_array[2]=0
+      }
       
       if(WHICHPROBLEM==RADNT || WHICHPROBLEM==RADFLATDISK) BCtype[X2UP]=RADNTBC; // disk condition (with ASYMM done first)
-      else BCtype[X2UP]=ASYMM; // with donut, let free, so ASYMM condition across equator
-
-      BCtype[X1DN]=HORIZONOUTFLOW;
-      BCtype[X1UP]=HORIZONOUTFLOW;
-      //      BCtype[X1DN]=OUTFLOW;
-      //      BCtype[X1UP]=OUTFLOW;
-      BCtype[X2UP]=POLARAXIS; // assumes Rin_array[2]=pi
-      BCtype[X2DN]=POLARAXIS; // assumes Rin_array[2]=0
+      else  if(WHICHPROBLEM==RADDONUT){
+        //        BCtype[X2UP]=ASYMM; // with donut, let free, so ASYMM condition across equator (hemisphere)
+        BCtype[X2UP]=POLARAXIS; // assumes Rin_array[2]=pi (full sphere)
+      }
 
       BCtype[X3UP]=PERIODIC;
       BCtype[X3DN]=PERIODIC;
