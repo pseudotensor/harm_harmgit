@@ -39,7 +39,7 @@ USECCC=0
 USEORANGE=0
 USENERSC=0
 USEKRAKEN=0
-USEKRAKENICC=0
+USEKRAKENICC=0   # best to use for Kraken
 USETACCLONESTAR4=0
 USETACCLONESTAR=0
 USETACCRANGER=0
@@ -71,6 +71,21 @@ else
 ifeq ($(HOSTNAME),physics-179)
 USEICCINTEL=1
 $(warning USEICCINTEL is $(USEICCINTEL))
+else ifeq ($(HOSTNAME),krakenpf1)
+USEKRAKENICC=1
+$(warning USEKRAKENICC is $(USEKRAKENICC))
+else ifeq ($(HOSTNAME),krakenpf2)
+USEKRAKENICC=1
+$(warning USEKRAKENICC is $(USEKRAKENICC))
+else ifeq ($(HOSTNAME),krakenpf3)
+USEKRAKENICC=1
+$(warning USEKRAKENICC is $(USEKRAKENICC))
+else ifeq ($(HOSTNAME),krakenpf4)
+USEKRAKENICC=1
+$(warning USEKRAKENICC is $(USEKRAKENICC))
+else ifeq ($(HOSTNAME),krakenpf5)
+USEKRAKENICC=1
+$(warning USEKRAKENICC is $(USEKRAKENICC))
 else ifeq ($(HOSTNAME),ki-rh42)
 USEICCINTEL=1
 $(warning USEICCINTEL is $(USEICCINTEL))
@@ -273,7 +288,8 @@ endif
 
 
 # choice for below
-USEGSL=1
+# For Kraken, choose USEGSL=0 and comment-out #include "gslincludes.h" in global.general.h : Kraken doesn't have newer GSL that's required (missing gsl/gsl_odeiv2.h) and anyways has compile time issue for some reason.
+USEGSL=0
 #
 ########################
 

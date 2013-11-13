@@ -54,6 +54,9 @@
 //#endif
 
 
+// value pulled-in from compile time
+#define USEGSL (USINGGSL)
+
 
 // define how many values in table
 #define NRANC 64

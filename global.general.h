@@ -4,8 +4,11 @@
 #include <string.h>
 #include <float.h>
 
-// only used for EOMRADTYPE==EOMRADM1CLOSURE
+
+#if(USINGGSL)
+// only used for EOMRADTYPE==EOMRADM1CLOSURE -- but not currently at all
 #include "gslincludes.h"
+#endif
 
 #ifdef _OPENMP
 #include <omp.h>

@@ -8,6 +8,9 @@
 ##CFLAGSGCCOTHER= -O2 -m128bit-long-double -Wall -Wuninitialized -fno-builtin -DUSINGICC=0
 ##CFLAGSOTHER= -O3 -long-double -unroll -Wall -Wuninitialized -fno-builtin -DUSINGICC=0
 
+# set some constants
+ONE=1
+ZERO=0
 
 
 ########################
@@ -258,7 +261,10 @@ $(PREP): $(PREPDEP)
 	#below is for fortran bits
  	############################################
 	#Sasha added the two seds that cleaned up after fpp (remove stray characters "&" and "f" at the beginning of lines)
+ifeq ($(USEKRAKEN),$(ZERO))
 	fpp -P test.f > testfpp.temp1.f ; sed 's/^f.*$$//g' testfpp.temp1.f | sed 's/^\&.*$$//g' > testfpp.temp.f; f2c -Wall -f -P testfpp.temp.f ; sed 's/static//g' testfpp.temp.c > testfpp.c ;sed 's/static//g' testfpp.temp.P > testfpp.P
+endif
+    # otherwise assume created testfpp.P and testfpp.c on another computer and copied to Kraken
     #
     
 

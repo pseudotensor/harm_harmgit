@@ -4146,7 +4146,7 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
       SSS=rin*0.5;
       TTT=0.28;
       fact2=sin(log(r/SSS)/TTT);
-      fact2=1.0;
+      fact2=1.0; // forces to avoid flipping.
 
       if (q > 0.)      vpot += fact1*fact2;
       //      if (q > 0.)      vpot += q*q;

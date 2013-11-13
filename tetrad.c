@@ -1059,7 +1059,12 @@ void vecX2vecVortho(int concovtype, struct of_geom *ptrgeom, FTYPE *veclab, FTYP
 FTYPE Root(FTYPE a, FTYPE b, FTYPE c, FTYPE d, FTYPE *roots, int *numroots)
 {
   FTYPE x0=BIG,x1=BIG,x2=BIG;
+#if(USINGGSL)
   int failreturn = gsl_poly_solve_cubic(b/a,c/a,d/a,&x0,&x1,&x2);
+#else
+  dualfprintf(fail_file,"Shouldn't be here with no GSL\n");
+  myexit(562525);
+#endif
   if(x1==BIG){ // then only 1 root
     *numroots=1;
   }

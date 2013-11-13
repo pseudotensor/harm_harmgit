@@ -41,12 +41,20 @@ if [ $CUE_HOST_PROMPT = kraken ]; then
     module unload PrgEnv-pgi/3.1.72
     module load PrgEnv-intel/3.1.72
 
+# GSL
+    module load cue-gsl
+    module load gsl
+# below not created for some reason on kraken
+    export GSL_LIB=${GSL_DIR}/lib/
+    export GSLLIB=${GSL_DIR}/lib/
+    # below is so harm will use gsl-config to create GSLCFLAGS
+    export PATH=$PATH:${GSL_DIR}/bin/
+
     module unload python/2.6
     module load python/2.7.1-cnl # has to be specifically this 2.7 version or else compute node complains that not compiled for compute nodes (because this library is  on lustre as required)
     export MKL_DYNAMIC=FALSE
     export MKL_NUM_THREADS=8
     export MPLCONFIGDIR=/lustre/scratch/$USER/matplotlibdir/
-
 
     #export MPICH_UNEX_BUFFER_SIZE=1073741824
     #export MPICH_UNEX_BUFFER_SIZE=1073741824
