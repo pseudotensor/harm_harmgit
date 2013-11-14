@@ -977,14 +977,14 @@ static void get_refUs(int *numdims, int *startjac, int *endjac, int *implicitite
   }
   else if(*implicititer==QTYURADENERGYONLY || *implicititer==QTYPRADENERGYONLY){
     *numdims=NDIM;
-    *signgd7= (-1.0);
+    *signgd7= (+1.0);
     DLOOPA(jj) irefU[jj]=URAD0+jj;
     DLOOPA(jj) iotherU[jj]=UU+jj;
     *startjac=0; *endjac=0;
   }
   else if(*implicititer==QTYURADMOMONLY || *implicititer==QTYPRADMOMONLY){
     *numdims=NDIM;
-    *signgd7= (-1.0);
+    *signgd7= (+1.0);
     DLOOPA(jj) irefU[jj]=URAD0+jj;
     DLOOPA(jj) iotherU[jj]=UU+jj;
     *startjac=1; *endjac=3;
@@ -1220,7 +1220,7 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
       if(0){
         Tgaslocal=compute_temp_simple(ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p,pp[RHO],pp[UU]);
         get_state(pp, ptrgeom, q);
-        DLOOPA(iv) GS += (-q->ucon[iv]*signgd2*(signgd7*Gddt[iv]))/(Tgaslocal+TEMPMIN); // maybe more accurate than just using entropy from pp and ucon[TT] from state from pp.
+        DLOOPA(iv) GS += (-q->ucon[iv]*signgd2*(signgd7*Gddt[iv]))/(Tgaslocal+TEMPMIN); // maybe more accurate than just using entropy from pp and ucon[TT] from state from pp. FUCK: Can't be right that this is the same (signgd2=signgd7=1) for both URAD and UMHD methods.
       }
       else{
         // Get GS completely consisent with primitives, in case using entropy error function, because then shouldn't use Gddt[TT] related to energy equation.
@@ -3608,7 +3608,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       int iscoldflow;
 
       int jj;
-      FTYPE usq=0.0;  SLOOPA(jj) usq+=q->ucon[1]*q->ucov[1];
+      FTYPE usq=0.0;  SLOOPA(jj) usq+=q->ucon[jj]*q->ucov[jj];
       FTYPE ucovgas[NDIM],ucovrad[NDIM];
       DLOOPA(jj) ucovgas[jj]=uu0[UU+jj];
       DLOOPA(jj) ucovrad[jj]=uu0[URAD0+jj];
@@ -3618,7 +3618,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       FTYPE ugas=0.0;  SLOOPA(jj) ugas+=ucovgas[jj]*ucongas[jj];
       FTYPE urad=0.0;  SLOOPA(jj) urad+=ucovrad[jj]*uconrad[jj];
 #define COLDFACTOR (0.1)
-      iscoldflow = (pb[UU]<COLDFACTOR*pb[RHO]*fabs(usq) && fabs(ucongas[TT]*ucovgas[TT])<COLDFACTOR*fabs(ugas) && fabs(uconrad[TT]*ucovrad[TT])<COLDFACTOR*fabs(urad));
+      iscoldflow = (pb[UU]<COLDFACTOR*pb[RHO]*fabs(usq) && pb[RHO]*fabs(ucongas[TT]*ucovgas[TT])<COLDFACTOR*fabs(ugas) && pb[RHO]*fabs(uconrad[TT]*ucovrad[TT])<COLDFACTOR*fabs(urad));
 
       //      iscoldflow=1;
 
@@ -4031,7 +4031,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
     // i=j=k=0 just to show infrequently
     if(debugfail>=2 && (ptrgeom->i==0 && ptrgeom->j==0  && ptrgeom->k==0)){
-      dualfprintf(fail_file,"nstep=%ld numimplicits=%lld numexplicitsgood=%lld numexplicitskindabad=%lld numexplicitsbad=%lld : numenergy=%lld numentropy=%lld numboth=%lld numcold=%lld : numbad=%lld : numramesh=%lld numrameshenergy=%lld numrameshentropy=%lld : averagef1iter=%g averageiter=%g  : numqtypmhd=%d numqtyumhd=%d numqtyprad=%d numqtyurad=%d numqtyentropyumhd=%d numqtyentropypmhd=%d numitermodenormal=%d numitermodestages=%d numitermodecold=%d\n",nstep,numimplicits,numexplicitsgood,numexplicitskindabad,numexplicitsbad,numenergy,numentropy,numboth,numcold,numbad,numramesh,numrameshenergy,numrameshentropy,(FTYPE)numoff1iter/(SMALL+(FTYPE)numimplicits),(FTYPE)numofiter/(SMALL+(FTYPE)numimplicits),numqtypmhd,numqtyumhd,numqtyprad,numqtyurad,numqtyentropyumhd,numqtyentropypmhd,numitermodenormal,numitermodestages,numitermodecold);
+      dualfprintf(fail_file,"nstep=%ld numimplicits=%lld numexplicitsgood=%lld numexplicitskindabad=%lld numexplicitsbad=%lld : numenergy=%lld numentropy=%lld numboth=%lld numcold=%lld : numbad=%lld : numramesh=%lld numrameshenergy=%lld numrameshentropy=%lld : averagef1iter=%g averageiter=%g  : numqtypmhd=%lld numqtyumhd=%lld numqtyprad=%lld numqtyurad=%lld numqtyentropyumhd=%lld numqtyentropypmhd=%lld numitermodenormal=%lld numitermodestages=%lld numitermodecold=%lld\n",nstep,numimplicits,numexplicitsgood,numexplicitskindabad,numexplicitsbad,numenergy,numentropy,numboth,numcold,numbad,numramesh,numrameshenergy,numrameshentropy,(FTYPE)numoff1iter/(SMALL+(FTYPE)numimplicits),(FTYPE)numofiter/(SMALL+(FTYPE)numimplicits),numqtypmhd,numqtyumhd,numqtyprad,numqtyurad,numqtyentropyumhd,numqtyentropypmhd,numitermodenormal,numitermodestages,numitermodecold);
       // counters for which method was *attempted* even if not used
       int oo;
       dualfprintf(fail_file,"tryenergy: ");
@@ -4098,7 +4098,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
         MPI_Reduce(tryphaselistcold, totaltryphaselistcold, NUMPHASESCOLD, MPI_LONG_LONG_INT, MPI_SUM, MPIid[0], MPI_COMM_GRMHD);
       }
       if(myid==MPIid[0]){// only show result on one core that got the final result     
-        dualfprintf(fail_file,"nstep=%ld totalnumimplicits=%lld totalnumexplicitsgood=%lld totalnumexplicitskindabad=%lld totalnumexplicitsbad=%lld : totalnumenergy=%lld totalnumentropy=%lld totalnumboth=%lld totalnumcold=%lld : totalnumbad=%lld : totalnumramesh=%lld totalnumrameshenergy=%lld totalnumrameshentropy=%lld : totalaveragef1iter=%g totalaverageiter=%g  : totalnumqtypmhd=%d totalnumqtyumhd=%d totalnumqtyprad=%d totalnumqtyurad=%d totalnumqtyentropyumhd=%d totalnumqtyentropypmhd=%d totalnumitermodenormal=%d totalnumitermodestages=%d totalnumitermodecold=%d\n",nstep,totalnumimplicits,totalnumexplicitsgood,totalnumexplicitskindabad,totalnumexplicitsbad,totalnumenergy,totalnumentropy,totalnumboth,totalnumcold,totalnumbad,totalnumramesh,totalnumrameshenergy,totalnumrameshentropy,(FTYPE)totalnumoff1iter/(SMALL+(FTYPE)totalnumimplicits),(FTYPE)totalnumofiter/(SMALL+(FTYPE)totalnumimplicits),totalnumqtypmhd,totalnumqtyumhd,totalnumqtyprad,totalnumqtyurad,totalnumqtyentropyumhd,totalnumqtyentropypmhd,totalnumitermodenormal,totalnumitermodestages,totalnumitermodecold);
+        dualfprintf(fail_file,"nstep=%ld totalnumimplicits=%lld totalnumexplicitsgood=%lld totalnumexplicitskindabad=%lld totalnumexplicitsbad=%lld : totalnumenergy=%lld totalnumentropy=%lld totalnumboth=%lld totalnumcold=%lld : totalnumbad=%lld : totalnumramesh=%lld totalnumrameshenergy=%lld totalnumrameshentropy=%lld : totalaveragef1iter=%g totalaverageiter=%g  : totalnumqtypmhd=%lld totalnumqtyumhd=%lld totalnumqtyprad=%lld totalnumqtyurad=%lld totalnumqtyentropyumhd=%lld totalnumqtyentropypmhd=%lld totalnumitermodenormal=%lld totalnumitermodestages=%lld totalnumitermodecold=%lld\n",nstep,totalnumimplicits,totalnumexplicitsgood,totalnumexplicitskindabad,totalnumexplicitsbad,totalnumenergy,totalnumentropy,totalnumboth,totalnumcold,totalnumbad,totalnumramesh,totalnumrameshenergy,totalnumrameshentropy,(FTYPE)totalnumoff1iter/(SMALL+(FTYPE)totalnumimplicits),(FTYPE)totalnumofiter/(SMALL+(FTYPE)totalnumimplicits),totalnumqtypmhd,totalnumqtyumhd,totalnumqtyprad,totalnumqtyurad,totalnumqtyentropyumhd,totalnumqtyentropypmhd,totalnumitermodenormal,totalnumitermodestages,totalnumitermodecold);
         // counters for which method was *attempted* even if not used
         int oo;
         dualfprintf(fail_file,"totaltryenergy: ");
@@ -8927,7 +8927,7 @@ int vchar_rad(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYP
 // get lab-frame 3-velocity for radiative emission in radiative frame
 static int simplefast_rad(int dir, struct of_geom *geom,struct of_state *q, FTYPE vrad2,FTYPE *vmin, FTYPE *vmax)
 {
-  extern int simplefast(int dir, struct of_geom *geom,struct of_state *q, FTYPE cms2,FTYPE *vmin, FTYPE *vmax);
+  extern int simplefast(int whichcall, int dir, struct of_geom *geom,struct of_state *q, FTYPE cms2,FTYPE *vmin, FTYPE *vmax);
 
   //need to substitute ucon,ucov with uradcon,uradcov to fool simplefast
   FTYPE ucon[NDIM],ucov[NDIM];
@@ -8940,7 +8940,7 @@ static int simplefast_rad(int dir, struct of_geom *geom,struct of_state *q, FTYP
   }
 
   //calculating vmin, vmax
-  simplefast(dir,geom,q,vrad2,vmin,vmax);
+  simplefast(0, dir,geom,q,vrad2,vmin,vmax); // simplefast(0) means first call rather than an resursive attempt.
 
   //restoring gas 4-velocities
   DLOOPA(ii){
@@ -9255,7 +9255,7 @@ static int inverse_33matrix(int sj, int ej, FTYPE a[][NDIM], FTYPE ia[][NDIM])
   ia[sj+2][sj+2] =  (a[sj+0][sj+0]*a[sj+1][sj+1]-a[sj+1][sj+0]*a[sj+0][sj+1])*idet;
 
   if(!isfinite(det) || !isfinite(idet)){
-    dualfprintf(fail_file,"inverse_33matrix got singular det=%g idet=%g\n",det,idet);
+    if(debugfail>=2) dualfprintf(fail_file,"inverse_33matrix got singular det=%g idet=%g\n",det,idet);
     return(1); // indicates failure
     //    myexit(13235);
   }
@@ -9277,7 +9277,7 @@ static int inverse_11matrix(int sj, int ej, FTYPE a[][NDIM], FTYPE ia[][NDIM])
   ia[sj][sj]=1.0/a[sj][sj];
 
   if(!isfinite(ia[sj][sj])){
-    dualfprintf(fail_file,"inverse 1x1 zero or nan\n",a[sj][sj]);
+    if(debugfail>=2) dualfprintf(fail_file,"inverse 1x1 zero or nan\n",a[sj][sj]);
     return(1); // indicates failure
     //    myexit(13235);
   }
@@ -9501,7 +9501,7 @@ int prad_fftolab(int *whichvel, int *whichcoord, int i, int j, int k, int loc, s
   // for fluid
   ucon_calc_whichvel(VELREL4,pout,ptrgeomtouse,uconback,othersback);
   ucon2pr(*whichvel,uconback,ptrgeomtouse,pout);
-  // KORALTODO: for radiation (always returned as VELREL4 so far.
+  // KORALTODO: for radiation (always returned as VELREL4 so far).
   ucon_calc_whichvel(VELREL4,&pout[URAD1-U1],ptrgeomtouse,uconback,othersback);
   ucon2pr(*whichvel,uconback,ptrgeomtouse,&pout[URAD1-U1]);
 
@@ -9823,6 +9823,11 @@ int u2p_rad(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gammama
   int u2p_rad_orig(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gammamaxrad, FTYPE *uu, FTYPE *pin, struct of_geom *ptrgeom,PFTYPE *lpflag, PFTYPE *lpflagrad);
   int u2p_rad_new_pre(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gammamaxrad, FTYPE *uu, FTYPE *pin, struct of_geom *ptrgeom,PFTYPE *lpflag, PFTYPE *lpflagrad);
   int toreturn;
+  int pliter,pl;
+  FTYPE prorig[NPR];
+
+  // store orig
+  PLOOP(pliter,pl) prorig[pl] = pin[pl];
 
 #if(WHICHU2PRAD==0)
   toreturn=u2p_rad_orig(showmessages, allowlocalfailurefixandnoreport, gammamaxrad, uu, pin, ptrgeom,lpflag, lpflagrad);
@@ -9830,6 +9835,11 @@ int u2p_rad(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gammama
   //toreturn=u2p_rad_new_pre(showmessages, allowlocalfailurefixandnoreport, gammamaxrad, uu, pin, ptrgeom,lpflag, lpflagrad);
   toreturn=u2p_rad_new(showmessages, allowlocalfailurefixandnoreport, gammamaxrad, whichcap, uu, pin, ptrgeom,lpflag, lpflagrad);
 #endif
+
+  if(!finite(pin[URAD0]) || !finite(pin[URAD1]) || !finite(pin[URAD2]) || !finite(pin[URAD3])){
+    dualfprintf(fail_file,"u2p_rad() generated nan result\n");
+    PLOOP(pliter,pl) dualfprintf(fail_file,"u2p_rad: pl=%d prorig=%21.15g pin=%21.15g\n",pl,prorig[pl],pin[pl]);
+  }
 
   return(toreturn);
 }

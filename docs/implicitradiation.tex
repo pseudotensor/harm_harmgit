@@ -1,0 +1,386 @@
+\documentclass[12pt,preprint]{aastex}                         
+%\documentclass[manuscript]{aastex}                           
+%\documentstyle[aasms4]{article}                              
+%\documentstyle[12pt,aaspp4]{article}                         
+\begin{document}                                              
+
+\def\bE{\bar{E}}
+\def\bR{\bar{R}}
+\def\bu{\bar{u}}
+
+\title{Handling the Radiation Source Term Numerically}
+
+%\author{}
+\section{Notation and Statement of the Problem}
+
+Let's start with some notation. In the lab frame, let the gas and
+radiation stress-energy tensors after advection and geometrical source
+terms have been applied be given by $T'^\mu_\nu$ and $R'^\mu_\nu$,
+i.e., with primes on the symbols. Correspondingly, let the gas density
+and internal energy at this stage of the calculation be $\rho'$, $u'$,
+the gas four velocity in the lab frame be $u'^\mu_g$, the radiation
+energy density be $E'_r$ and the radiation frame four velocity in the
+lab frame be $u'^\mu_r$. For simplicity, let us ignore the magnetic
+field.
+
+We wish to apply the radiation source term $G_\nu$ and solve for the
+final values of the various quantities. Let us describe this final
+state without primes: $T^\mu_\nu$, $R^\mu_\nu$, $\rho$, $u$,
+$u^\mu_g$, $E_r$, $u^\mu_r$. 
+
+Since the continuity equation does not involve radiation, we have one
+invariant quantity:
+\begin{equation}
+\rho' u'^0_g = \rho u^0_g = {\rm invariant}.
+\label{rho}
+\end{equation}
+For the remaining eight quantities --- $u$, $u^i_g$, $E_r$, $u^i_r$
+--- we have the following eight equations:
+\begin{equation}
+T^0_\nu-T'^0_\nu = G_\nu \Delta t = -R^0_\nu+R'^0_\nu,
+\label{labT}
+\end{equation}
+where $\Delta t$ is the time step in the lab frame.  The above version
+of the equations corresponds to an implicit computation, where the
+radiation source term $G_\nu$ is computed based on the unprimed final
+solution. In the easier explicit version, we would use $G'_\nu$.
+
+The source term is defined in the gas rest frame. For the implicit
+computation, we go to an orthonormal frame in which the gas is at
+rest.  In this frame, which we identify with a ``widehat'', we have
+\begin{eqnarray}
+\widehat{G}^0 &=& \kappa_{\rm abs}(\widehat{E}-4\pi B), \label{G0} \\
+\widehat{G}^i &=& \chi_{\rm tot}\widehat{F}^i, \label{Gi}
+\end{eqnarray}
+where $\widehat{E}$ is the radiation energy density in the gas frame,
+and $\widehat{F}^i$ is the radiation flux vector in the same
+frame. The four-vector $G_\nu$ in eq (\ref{labT}) is calculated by
+transforming $\widehat{G}_\nu$ from the orthonormal gas frame to the
+lab frame.
+
+\section{Gas Frame vs Lab Frame}
+
+Consider the following set of equations in the gas frame,
+\begin{equation}
+\widehat{T}^0_\nu-\widehat{T}'^0_\nu = \widehat{G}_\nu \Delta \tau = 
+-\widehat{R}^0_\nu+\widehat{R}'^0_\nu,
+\label{gasT}
+\end{equation}
+where $\Delta \tau$ corresponds to a small interval of the gas proper
+time. In the gas frame, we know that the gas four velocity takes the
+simple form $\widehat{u}^0_g=1$, $\widehat{u}^i_g=0$. Thus, we can
+rewrite equations (\ref{gasT}) more generally as
+\begin{equation}
+\widehat{T}^\mu_\nu-\widehat{T}'^\mu_\nu = \widehat{G}_\nu
+\widehat{u}^\mu_g\Delta \tau =
+-\widehat{R}^\mu_\nu+\widehat{R}'^\mu_\nu.
+\label{gasT2}
+\end{equation}
+This equation is in covariant form, so it is equally valid in the lab
+frame:
+\begin{equation}
+T^\mu_\nu-T'^\mu_\nu = G_\nu u^\mu_g\Delta \tau =
+-R^\mu_\nu+R'^\mu_\nu.
+\label{labT2}
+\end{equation}
+Setting $\mu=0$ in these equations and comparing with eqs
+(\ref{labT}), we see that they are identical provided
+\begin{equation}
+\Delta t = u^0_g \Delta \tau,
+\label{tau}
+\end{equation}
+i.e., just the standard Lorentz transformation of time between frames.
+
+The point of the above exercise is simply to demonstrate that
+equations (\ref{labT}) and equations (\ref{gasT}) are completely
+equivalent. We could solve all eight equations in the lab frame, or
+all eight equations in the gas frame, or solve the $\nu=0$ pieces of
+(\ref{gasT}) in the gas frame and the $\nu=i$ pieces of (\ref{labT})
+in the lab frame, or any other combination of the equations.
+
+\section{Towards a More Stable Numerical Algorithm}
+
+Why is the previous analysis important? The source term
+$\widehat{G}_\nu$ has the nasty property that its time and space
+components can differ enormously in magnitude. Because of the very
+steep dependence of $\kappa_{\rm abs}$ on the gas temperature $T_g$
+($\equiv p/\rho = (\Gamma-1)u/\rho$), it is not unusual for
+$\kappa_{\rm abs}$ to be eight orders of magnitude smaller than
+$\chi_{\rm tot}$. This is no big deal in the fluid frame because the
+two opacities appear in different equations. The energy equation
+becomes even nicer if we follow the usual replacement trick
+\begin{equation}
+\widehat{T}^0_0 \to \widehat{T}^0_0+\rho \widehat{u}^0_g, \qquad
+\widehat{T}'^0_0 \to \widehat{T}'^0_0+\rho' \widehat{u}'^0_g.
+\end{equation}
+Thus, the two energy equations in the gas frame are very well-behaved
+and should provide the necessary information to solve for $u$ and
+$E_r$, while the six momentum equations will have the information to
+solve for the gas and radiation momentum densities. The latter could
+be done either in the lab frame or the fluid frame, but it is safest
+to solve the two energy equations in the fluid frame.
+
+What is wrong with solving all the equations in the lab frame? Because
+$\widehat{G}_\nu$ is defined in the moving gas frame, by the time we
+transform to the lab frame, all the $\kappa_{\rm abs}$ and $\chi_{\rm
+  tot}$ terms will get mixed together. If the gas is moving reasonably
+quickly, say $\beta_g \sim 0.1$, and $\chi_{\rm tot}/\kappa_{\rm abs}
+\gg 1$, say $10^8$, there will be a huge hit in precision. It is much
+better to avoid this hit by simply solving the energy equation in the
+gas frame.
+
+Normally, even with this loss of precision, the Newton-Raphson method
+would be okay. It may limp a bit, but it would not produce a crazy
+solution. In the present case, we have a second problem. Because
+$\kappa_{\rm abs}$ has a weird temperature dependence, or equivalently
+$u$-dependence, when the value of $u$ goes a little astray during the
+iteration, there is a chance for things to diverge rapidly. In RN's
+opinion, this is a particularly serious problem when one works in the
+lab frame, where $\chi_{\rm tot}$ mucks up the energy equation.
+
+Here then is the recommendation:
+\begin{enumerate}
+\item
+When applying the radiation source term, either solve all eight
+equations in the fluid frame (eqs \ref{gasT} with $\Delta \tau$ given
+by eq \ref{tau}), or use the two energy equations in the fluid frame
+($\nu=0$ in eqs \ref{gasT}) and the six momentum equations in the lab
+frame ($\nu=i$ in eqs \ref{labT}).
+
+\item
+As a further safeguard, during the iterations, do not let the gas
+temperature $T_g$ and the radiation temperature $T_r \equiv
+(\widehat{E}_r/a_{\rm rad})^{1/4}$ to cross each other. That is, make
+sure at each step of the Newton-Raphson that $(T_g-T_r)$ has the same
+sign as $(T'_g-T'_r)$. This may not be essential, but it will help a
+lot to tame the wild behavior of $\kappa_{\rm abs}$.
+
+\end{enumerate}
+
+The above changes are likely to solve (again in RN's opinion) a large
+fraction of the current problems in HARMRAD. Even if the first
+recommendation does not meet with the approval of team members, there
+is nothing lost by introducing the second recommendation into the
+current code. It will certainly cause no harm, and it might already
+(even without following the first recommendation) solve a lot of
+problems.
+
+A simpler but slightly inaccurate version of this approach, based on
+entropy, was described in a previous note.
+
+\section{Numerical Implementation}
+
+In terms of numerical implementation, note that the primed tensors,
+$T'^\mu_\nu$ and $R'^\mu_\nu$, are already available. The eight
+unknowns are $u$, $u^i_g$, $E_r$, $u^i_r$.  Given a set of values for
+these unknowns, we can calculate $\rho$, $T^\mu_\nu$, $R^\mu_\nu$.
+
+Let us suppose we plan to work with the two energy equations in the
+fluid frame, viz.,
+\begin{equation}
+\widehat{T}^0_0-\widehat{T}'^0_0 = -\kappa_{\rm abs}(\widehat{E}-4\pi B)
+\Delta\tau= -\widehat{R}^0_0+\widehat{R}'^0_0.
+\label{gasT00}
+\end{equation}
+The term $\widehat{T}^0_0$ is very straightforward,
+\begin{equation}
+\widehat{T}^0_0 + \rho \widehat{u}^0_g = u + b^2/2,
+\end{equation}
+where we have included the contribution of the magnetic energy
+density, the various other $T$s and $R$s are similarly easily
+calculated, e.g.,
+\begin{equation}
+\widehat{R}^0_0 = R^\mu_\nu u^\nu_g (u_g)_\mu, ~~{\rm etc.},
+\end{equation}
+while $\widehat{E}=-\widehat{R}^0_0$. Thus it is possible to compute
+all the terms in the energy equations (\ref{gasT00}) without requiring
+tetrads or orthonormal frames.
+
+While everything that has been written so far is in terms of eight
+unknowns and eight equations, actually there are effectively only four
+unknowns. This is because, once we write down $T^\mu_\nu$ in terms of
+the four gas-primitives $u$, $u^i_g$, we can immediately calculate the
+radiation tensor $R^\mu_\nu$:
+\begin{equation}
+R^\mu_\nu = R'^\mu_\nu + T'^\mu_\nu - T^\mu_\nu,
+\end{equation}
+and invert to obtain the radiation primitives. The converse is also
+true.  Nevertheless, solving even the resulting four non-linear
+equations for the four unknowns is a major problem. In fact, when we
+include magnetic fields, there are additional unknowns and certain
+analytical simplifications that help in the pure hydro problem are
+lost. 
+
+A dumb, brute-force approach is to compute the local Jacobian of the
+non-linear equations via numerical derivatives and to use the
+Newton-Raphson method.  Jon has developed more sophisticated schemes
+which reduce the nine-dimensional magnetized gas problem to five or
+even four dimensions. Moreover, by computing the Jacobian
+analytically, he expects the accuracy to be greatly improved. How well
+these ideas will translate to the fluid-frame version of the energy
+equations discussed here is unclear.  One should probably try the
+basic brute-force method first before doing anything fancy.
+
+\section{Explicit vs Implicit Solution}
+
+It would be helpful to know when we should apply the full power of the
+implicit method and when it is sufficient to simply carry out an
+explicit time step. The following simplified analysis provides an
+answer.
+
+Let us consider an explicit calculation. We assume that we have
+completed the advection and other non-radiative updates and have
+calculated the tensors $T'^\mu_\nu$ and $R'^\mu_\nu$ and the conserved
+density $\rho' u'^0_g$. Since in an explicit calculation everything is
+referenced to this base state, it is not necessary to retain primes,
+so we will drop the primes hereafter. Then, in the explicit approach,
+the updates to the two tensors are given by
+\begin{equation}
+\Delta T^0_\nu = G_\nu \Delta t = -\Delta R^0_\nu.
+\end{equation}
+Equally well, we can write this in the fluid frame of the base state
+as
+\begin{equation}
+\Delta \widehat{T}^0_\nu = \widehat{G}_\nu \Delta \tau = -\Delta
+\widehat{R}^0_\nu.
+\end{equation}
+
+In the fluid frame, the gas has density $\rho$ (recall we decided to
+drop primes), internal energy $u$, pressure $p=(\Gamma-1)u$. By
+definition, the gas is not moving. The radiation, of course, will in
+general be moving and will have an energy density $\widehat{E}$ and
+radiation flux $\widehat{F}^i$.  Let us orient our axes so that the
+radiative flux is parallel to the 1-axis. As a result of the
+interaction between the gas and the radiation, the gas will be pushed
+in the 1-direction and will acquire a velocity $\Delta\beta_g$. Its
+internal energy, or temperature, will also change because of
+absorption or emission of radiation. 
+
+In the spirit of linearization, which is basic to the Newton-Raphson
+method, $\Delta\beta_g$ can be assumed to be small and higher order
+terms like $(\Delta\beta_g)^2$ can be ignored. Assuming further that
+$\rho$ remains unchanged (I think this is okay but it bears thinking),
+we thus have very simple expressions for the components of $\Delta
+\widehat{T}^0_\nu$:
+\begin{eqnarray}
+\Delta \widehat{T}^0_0 = \widehat{G}_0\Delta\tau &\to& -\Delta u =
+-\kappa_{\rm abs} (\widehat{E}-4\pi B)\Delta \tau, \\ \Delta
+\widehat{T}^0_1 = \widehat{G}_1 \Delta\tau &\to&
+(\rho+u+p)\Delta\beta_g = \chi_{\rm tot} \widehat{F}_1\Delta \tau.
+\end{eqnarray}
+The solution for the shifts is
+\begin{eqnarray}
+\Delta u &=& \kappa_{\rm abs}\Delta\tau (\widehat{E}-4\pi B),
+\\ \Delta \beta_g &=& \chi_{\rm tot}\Delta\tau
+\left(\frac{\widehat{E}}{ \rho+u+p}\right) \beta_r,
+\end{eqnarray}
+where we have assumed that the radiation frame moves slowly with
+respect to the gas frame and hence written the velocity $\beta_r$ 
+of this frame as
+\begin{equation}
+\beta_r = \widehat{F}_1 / \widehat{E}.
+\end{equation} 
+
+The two radiation equations are equally simple:
+\begin{eqnarray}
+\Delta \widehat{R}^0_0 = -\widehat{G}_0\Delta\tau &\to& \Delta
+\widehat{E} = -\kappa_{\rm abs} (\widehat{E}-4\pi B)\Delta \tau,
+\\ \Delta \widehat{R}^0_1 = -\widehat{G}_1 \Delta\tau &\to& 
+\Delta \widehat{F}_1 \equiv \widehat{E} \Delta\beta_r = -\chi_{\rm tot}
+\widehat{F}_1 \Delta \tau.
+\end{eqnarray}
+The quantity $\Delta\beta_r$ in the second equation is defined as
+\begin{equation}
+\Delta\beta_r \equiv \Delta\widehat{F}_1/\widehat{E}.
+\end{equation}
+It is a measure of how much the radiation frame velocity is changed as
+a result of the explicit update to the solution. Solving the two
+radiation equations gives
+\begin{eqnarray}
+\Delta \widehat{E} &=& -\kappa_{\rm abs}\Delta\tau (\widehat{E}-4\pi
+B), \\ \Delta \beta_r &=& -\chi_{\rm tot}\Delta\tau \beta_r.
+\end{eqnarray}
+We thus have the complete solution for the updates under the explicit
+scheme.  Now we want to know whether this solution is safe and when it
+must be replaced by the more elaborate implicit solution. We use a
+physically motivated criterion to answer this.
+
+The interaction between gas and radiation is basically a relaxation
+process. Consider first the energy equations. If the radiation energy
+density $\widehat{E}$ exceeds the blackbody energy density $4\pi B$,
+then the gas gets heated up and the radiation energy density
+decreases. The converse is similarly true. Thus, the two quantities
+$\widehat{E}$ and $4\pi B$ are pushed towards each other, as verified
+by looking at the signs of the solutions for $\Delta u$ and
+$\Delta\widehat{E}$. Physically, because we are dealing with a
+relaxation process, $\widehat{E}$ and $4\pi B$ cannot cross each
+other. The explicit method, however, being a local linearized
+representation of the problem, knows nothing about this global
+constraint, so it will sometimes produce large shifts which cause the
+two energy densities to cross. We want to avoid this.  Therefore, a
+simple criterion for the validity of the explicit solution is that it
+should not cause crossing. This requirement is quantified as follows.
+
+Recall that the gas temperature is given by $T_g
+=(\Gamma-1)u/\rho$. Thus, the shift in $4\pi B$ caused by the explicit
+step is
+\begin{equation}
+\Delta(4\pi B) = \Delta(a_{\rm rad}T_g^4) =  \frac{16\pi B}{u} \Delta u.
+\end{equation}
+The net shift in $(\widehat{E}-4\pi B)$ is then estimated to be
+\begin{equation}
+|\Delta(\widehat{E}-4\pi B)| = \kappa_{\rm abs}\Delta\tau\left(1+
+\frac{16\pi B}{u}\right)(\widehat{E}-4\pi B).
+\end{equation}
+For stability of the explicit scheme, we want the left hand side to be
+no more than some fraction $\zeta$ ($<1$) of $(\widehat{E}-4\pi
+B)$. Thus, we obtain the following criterion:
+\begin{equation}
+{\rm Criterion~1:}\qquad
+\kappa_{\rm abs}\Delta\tau\left(1+ \frac{16\pi B}{u}\right) < \zeta.
+\label{crit1}
+\end{equation}
+
+The momentum equation is again a relaxation process.  If the radiation
+is moving towards the positive 1-direction ($\beta_r>0$), then the gas
+acquires a positive velocity ($\Delta\beta_g>0$), while the radiation
+velocity decreases ($\Delta\beta_r <0$). The two frames thus approach
+each other, but they cannot cross. However, as in the previous case,
+the explicit scheme does not know about this condition.  Therefore, a
+second criterion is that $\Delta\beta_g-\Delta\beta_r$ should be less
+than $\zeta$ times $\beta_r$. This gives the following second
+criterion:
+\begin{equation}
+{\rm Criterion~2:}\qquad
+\chi_{\rm tot}\Delta\tau\left(1+ \frac{\widehat{E}}{\rho+u+p}\right) < \zeta.
+\label{crit2}
+\end{equation}
+When both criteria (\ref{crit1}) and (\ref{crit2}) are satisfied, we
+expect the explicit scheme to be well-behaved. However, if either or
+both are violated, we should switch to the implicit scheme.
+
+What value of $\zeta$ should we choose? Any value less than unity is
+probably fine. However, we made several approximations in our
+analysis, so it may be good to be conservative.  A value of
+$\zeta=0.5$ is probably sufficient, while $\zeta=0.1$ should be quite
+safe.
+
+An interesting sidelight of the above analysis is that, apart from the
+obvious factors $\kappa_{\rm abs}\Delta\tau$ and $\chi_{\rm
+  tot}\Delta\tau$, two other factors turn out to be important: $16\pi
+B/u$ and $\widehat{E}/(\rho+u+p)$. This gives a clue to the behavior
+of the equations. Consider the energy equation first. When $16\pi B
+\gg u$, the explicit shift acts primarily on the gas (through $u$) and
+has only a small effect on the radiation ($\widehat{E}$). In this
+limit, it is preferable to use $u$ as our primary primitive variable
+and to solve for $\widehat{E}$ in terms of it, rather than the other
+way round.  On the other hand, if $16\pi B \ll u$, then it is better
+to use $\widehat{E}$ as the primary primitive and treat $u$ as a
+derived quantity.  In the case of the momentum equation, the critical
+ratio is $\widehat{E}/(\rho+u+p)$. If $\widehat{E} \gg (\rho+u+p)$,
+there is a large velocity shift in the gas and a negligible velocity
+shift in the radiation. We should, therefore, treat $\beta_g$ as our
+primary primitive. In the opposite limit, we should treat $\beta_r$ as
+the primary primitive.
+
+\end{document}

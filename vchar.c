@@ -35,7 +35,7 @@ int vchar(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *v
 {
   FTYPE vgmax,vgmin,ctsq;
   FTYPE bsq, WW, EF, va2, cs2, cms2, rho, u, P;
-  int simplefast(int dir, struct of_geom *geom,struct of_state *q, FTYPE cms2,FTYPE *vmin, FTYPE *vmax);
+  int simplefast(int whichcall, int dir, struct of_geom *geom,struct of_state *q, FTYPE cms2,FTYPE *vmin, FTYPE *vmax);
   int realfast(int dir, struct of_geom *geom,struct of_state *q, FTYPE EF,FTYPE cs2,FTYPE cms2,FTYPE va2,FTYPE *ucon,FTYPE *bcon,FTYPE *gcon,FTYPE *vmin,FTYPE *vmax);
   int boundary_smoother(struct of_geom *ptrgeom, FTYPE *vmax, FTYPE *vmin, int *ignorecourant);
   extern int limitv3(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *v);
@@ -159,7 +159,7 @@ int vchar(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *v
     }
   }
   else if(TRUEFAST==0){
-    if(simplefast(dir,geom, q, cms2,vmin,vmax)>=1){
+    if(simplefast(0, dir,geom, q, cms2,vmin,vmax)>=1){
       dualfprintf(fail_file,"vchar.c: simplefast() failed\n");
       dualfprintf(fail_file,"simplefast() failed : dir=%d :\n bsq=%21.15g\n rho=%21.15g\n u=%21.15g\n WW=%21.15g\n EF=%21.15g\n va2=%21.15g\n cs2=%21.15g\n cms2=%21.15g\n",dir,bsq,rho,u,WW,EF,va2,cs2,cms2);
       return(1);
@@ -172,7 +172,7 @@ int vchar(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *v
   if(realfast(dir,geom,q,EF,cs2,cms2,va2,q->ucon,q->bcon,geom->gcon,vmin,vmax)>=1) return(1);
   stderrfprintf("%d %d\n",geom->i,geom->j);
   stderrfprintf("rf: vmax=%21.15g vmin=%21.15g\n",*vmax,*vmin);
-  if(simplefast(dir,geom, q, cms2,vmin,vmax)>=1) return(1);
+  if(simplefast(0, dir,geom, q, cms2,vmin,vmax)>=1) return(1);
   stderrfprintf("sf: vmax=%21.15g vmin=%21.15g\n",*vmax,*vmin);
 #endif
 
@@ -260,7 +260,7 @@ int boundary_smoother(struct of_geom *geom, FTYPE *vmax, FTYPE *vmin, int *ignor
 
 #define USESASHAREWRITE 1 // whether to use WHAM form that avoids catastrophic cancellation in non-rel and ultra-rel regimes.
 
-int simplefast(int dir,struct of_geom *geom, struct of_state *q, FTYPE cms2,FTYPE *vmin, FTYPE *vmax)
+int simplefast(int whichcall, int dir,struct of_geom *geom, struct of_state *q, FTYPE cms2,FTYPE *vmin, FTYPE *vmax)
 {
   FTYPE discr;
   FTYPE Acov[NDIM], Bcov[NDIM], Acon[NDIM], Bcon[NDIM];
@@ -406,11 +406,28 @@ int simplefast(int dir,struct of_geom *geom, struct of_state *q, FTYPE cms2,FTYP
 #else
     dualfprintf(fail_file,"vm=%21.15g vp=%21.15g discr=%21.15g A=%21.15g B=%21.15g\n",vm,vp,discr,A,B);
 #endif
-    dualfprintf(fail_file,"i=%d j=%d k=%d p=%d\n",geom->i,geom->j,geom->k,geom->p);
+    dualfprintf(fail_file,"i=%d j=%d k=%d p=%d nstep=%ld steppart=%d\n",geom->i,geom->j,geom->k,geom->p,nstep,steppart);
     dualfprintf(fail_file,"cms2=%21.15g\n",cms2);
     dualfprintf(fail_file,"dir=%d g=%21.15g uu0=%21.15g uu1=%21.15g uu2=%21.15g uu3=%21.15g\n",dir,geom->gdet,q->ucon[TT],q->ucon[RR],q->ucon[TH],q->ucon[PH]);
     dualfprintf(fail_file,"vmin=%21.15g vmax=%21.15g\n",vm,vp);
     //    myexit(10001); // hard failure so look back and see what's wrong with code
+
+    if(finite(cms2) && whichcall==0){
+      // best that can do is assume ZAMO relative 4-velocity with inputted cms2
+      FTYPE prbackup[NPR];
+      set_zamo_velocity(WHICHVEL,geom,prbackup);
+      struct of_state qbackup;
+      get_state(prbackup,geom,&qbackup);
+      simplefast(1, dir,geom, &qbackup, cms2,vmin, vmax); // simplefast(1)
+      if( (!isfinite(vm)) || (!isfinite(vp)) ){
+        dualfprintf(fail_file,"Backup vchar still failed\n");
+      }
+    }
+    else{
+      // then really nothing can do
+    }
+
+
     return(1); // yes, hard failure, but need trace information
   }
 

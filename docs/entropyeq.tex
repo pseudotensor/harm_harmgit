@@ -1,0 +1,58 @@
+\documentclass[12pt,preprint]{aastex}                         
+%\documentclass[manuscript]{aastex}                           
+%\documentstyle[aasms4]{article}                              
+%\documentstyle[12pt,aaspp4]{article}                         
+\begin{document}                                              
+
+\def\bE{\bar{E}}
+\def\bR{\bar{R}}
+\def\bu{\bar{u}}
+
+\title{Reduction to Entropy Equation}
+
+%\author{}
+GRMHD codes occasionally have difficulties handling the energy
+equation. One then uses entropy evolution as a backup. When we have
+only gas and magnetic fields, the entropy equation is
+straightforward. The gas entropy per unit mass is
+\begin{equation}
+s_{\rm gas} = \frac{k}{(\gamma-1)m}\ln \left(\frac{p}{\rho^\gamma}\right)
+=\frac{k}{m}\ln \left(\frac{p^n}{\rho^{n+1}}\right),
+\qquad \gamma = 1+\frac{1}{n},
+\end{equation}
+and the entropy per unit volume is
+\begin{equation}
+S_{\rm gas} = \rho s_{\rm gas},
+\end{equation}
+where $p$ and $\rho$ are measured in the gas rest frame. For entropy
+evolution, we say that the gas entropy per unit mass is conserved
+(temporarily ignoring shocks and reconnection), hence
+\begin{equation}
+\frac{ds_{\rm gas}}{d\tau} = 0, \quad {\rm i.e.}\quad
+\left(\rho s_{\rm gas} u^\mu \right)_{;\mu} = 0.
+\end{equation}
+
+In the case of radiation hydrodynamics or radiation MHD, the gas
+entropy is no longer conserved because there is energy transfer
+between gas and radiation. In the fluid rest frame, let $\hat{E}_{\rm
+  rad}$ be the total radiation energy density, $\hat{B}$ be the
+frequency integrated blackbody intensity corresponding to the
+temperature $T_{\rm gas}$ of the gas, and $\kappa$ be the frequency-integrated
+absorption opacity coefficient. Then, gas entropy evolution in the
+fluid frame is described by
+\begin{equation}
+T_{\rm gas}\frac{ds_{\rm gas}}{d\tau} = \frac{dQ_{\rm gas}}{d\tau} = \kappa
+(c\hat{E}_{\rm rad}-4\pi\hat{B}).
+\end{equation}
+In four notation we write this as ({\bf correct?})
+\begin{equation}
+\left(\rho s_{\rm gas} u^\mu \right)_{;\mu} = 
+\frac{\rho\kappa (c\hat{E}_{\rm rad}-4\pi\hat{B})}{T_{\rm gas}}.
+\end{equation}
+
+The entropy equation for the radiation is slightly more complicated
+since there are two terms on the rhs: (i) energy transfer from/to the
+gas (rhs of eq.~4 with the opposite sign), and (ii) energy gain due to
+radiation flow: $-\vec{\nabla}\cdot\hat{\vec{F}}_{\rm rad}$.
+
+\end{document}                                   

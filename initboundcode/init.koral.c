@@ -220,7 +220,10 @@ int prepre_init_specific_init(void)
   }
 
   // Also: SET USEROMIO to 0 or 1 in mympi.definit.h (needs to be 0 for TEXTOUTPUT)
-  binaryoutput=TEXTOUTPUT;
+  if(PRODUCTION==0){
+    binaryoutput=TEXTOUTPUT;
+    // KRAKEN: comment out above.  And change mympi.definit.h's USEROMIO 0 to 1 for the "choice" version.
+  }
 
   return(0);
 
@@ -3720,7 +3723,33 @@ int get_full_donut(int whichvel, int whichcoord, int opticallythick, FTYPE *pp,F
     ////////////////// STAGE2C
 
     //ph dimension
-    Fz=0.; // fluid frame Fz
+    //    Fz=0.; // fluid frame Fz
+    Xtemp1[0]=X[0];
+    Xtemp1[1]=1.0*X[1];
+    Xtemp1[2]=1.0*X[2];
+    Xtemp1[3]=1.01*X[3];
+    bl_coord(Xtemp1,Vtemp1); // only needed for Vtemp1[3] for phi in donut_analytical_solution()
+    gset_X(getprim,whichcoordreal,i,j,k,NOWHERE,Xtemp1,ptrgeomt);
+
+    anret=donut_analytical_solution(opticallythick, pptemp,Xtemp1,Vtemp1,ptrgeomt,velunused);
+    if(anret<0) anretmin=-1;
+    E1=pptemp[PRAD0]; // fluid frame E1
+
+    Xtemp2[0]=X[0];
+    Xtemp2[1]=1.0*X[1];
+    Xtemp2[2]=1.0*X[2];
+    Xtemp2[3]=0.99*X[3];
+    bl_coord(Xtemp2,Vtemp2); // only needed for Vtemp2[3] for phi in donut_analytical_solution()
+    gset_X(getprim,whichcoordreal,i,j,k,NOWHERE,Xtemp2,ptrgeomt);
+
+    anret=donut_analytical_solution(opticallythick, pptemp,Xtemp2,Vtemp2,ptrgeomt,velunused);
+    if(anret<0) anretmin=-1;
+    E2=pptemp[PRAD0]; // fluid frame E2
+
+    // fluid frame Fz
+    Fz=-THIRD*(E2-E1)/((Vtemp2[3]-Vtemp1[3])*sqrt(fabs(ptrgeombl->gcov[GIND(3,3)])))/chi;
+    dualfprintf(fail_file,"E2=%g E1=%g Fz=%g\n",E2,E1,Fz);
+
 
 
     ////////////////// STAGE3
@@ -3729,13 +3758,14 @@ int get_full_donut(int whichvel, int whichcoord, int opticallythick, FTYPE *pp,F
       Fx=Fy=Fz=0.;
     }
     else{
-      FTYPE MAXFOE=0.99;
+      FTYPE MAXFOE=0.70; // KORALTODO: SUPERGODMARK: Kraken failed with this set to 0.99 where hit 3vel calculation with disc=+1E-16.  So just marginal beyond v=c, but with 0.99 why did that happen?
       FTYPE Fl=sqrt(Fx*Fx+Fy*Fy+Fz*Fz);
       if(Fl>MAXFOE*E){
         Fx=Fx/Fl*MAXFOE*E;
         Fy=Fy/Fl*MAXFOE*E;
         Fz=Fz/Fl*MAXFOE*E;
-        dualfprintf(fail_file,"limited: Fl=%g E=%g Fx=%g Fy=%g Fz=%g\n",Fl,E,Fx,Fy,Fz);
+        FTYPE Flnew=sqrt(Fx*Fx+Fy*Fy+Fz*Fz);
+        dualfprintf(fail_file,"limited: Fl=%g E=%g Fx=%g Fy=%g Fz=%g : Flnew=%g\n",Fl,E,Fx,Fy,Fz,Flnew);
       }
     }
 
