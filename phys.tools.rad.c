@@ -3906,6 +3906,24 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
 
 
+
+  // check if uncaught nan/inf
+  int uncaughtnan=0;
+  PLOOP(pliter,pl){
+    if(!isfinite(pb[pl])) uncaughtnan++;
+    if(!isfinite(pf[pl])) uncaughtnan++;
+
+  }
+  if(uncaughtnan){
+    dualfprintf(fail_file,"implicit solver generated nan result and it wasn't caught\n");
+    PLOOP(pliter,pl) dualfprintf(fail_file,"1implicit solver: pl=%d pb=%21.15g pf=%21.15g dU=%21.15g\n",pl,pb[pl],pf[pl],dUcomp[RADSOURCE][pl]);
+    int jj;
+    DLOOPA(jj) dualfprintf(fail_file,"2implicit solver: jj=%d ucon=%21.15g ucov=%21.15g uradcon=%21.15g uradcov=%21.15g\n",jj,q->ucon[jj],q->ucov[jj],q->uradcon[jj],q->uradcov[jj]);
+  }
+
+
+
+
   
   if(PRODUCTION==0&&errorabs[WHICHERROR]>IMPALLOWCONVCONSTABS && (usedenergy||usedentropy||usedcold)){
     dualfprintf(fail_file,"WTF2: %g : %d %d %d : %d %d\n",errorabs[WHICHERROR],usedenergy,usedentropy,usedcold,usedrameshenergy,usedrameshentropy);
