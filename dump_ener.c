@@ -1020,7 +1020,7 @@ int integrate(int numelements, SFTYPE * var,SFTYPE *var_tot,int type, int enerre
     break;
   case CUMULATIVETYPE3:
     // this type not used right now
-    totalsizes[0]=1;
+    totalsizes[0]=numelements;
     getalltotal(1,&var,totalsizes,&var_tot);
     break;
   default:

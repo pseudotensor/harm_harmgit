@@ -1247,7 +1247,7 @@ int init_defglobal(void)
   UUMINLIMIT =SMALL;
 
   // limit of B^2/rho if using that flag
-  BSQORHOLIMIT=1E2;
+  BSQORHOLIMIT=5E2; // MAVARA changed from 1E2 on Sept 18, 2013
   BSQOULIMIT=1E3;
   UORHOLIMIT=1E3;
   GAMMADAMP=5.0;
