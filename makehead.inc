@@ -145,7 +145,7 @@ endif
 # OpenMP CHOICE
 #
 ########################
-USEOPENMP=0
+USEOPENMP=1
 
 
 
