@@ -2120,7 +2120,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     // BEGIN GET RAMESH SOLUTION
     failreturn=FAILRETURNGENERAL;// default to fail
     *eomtype=EOMGRMHD;
-    int whichcall=eomtype;
+    int whichcall=*eomtype;
     get_rameshsolution_wrapper(whichcall, *eomtype, errorabsforramesh, ptrgeom, pb, piin, Uiin, Ufin, dUother, CUf, q, ppeng, ppent, uueng, uuent, dUcompeng, dUcompent, &qeng, &qent, &failtypeeng, errorabseng, &iterseng, &radinvmodeng, &failtypeent, errorabsent, &itersent, &radinvmodent);
     gotrameshsolution=1; // indicates did at least attempt ramesh soltion call
     // translate
@@ -3908,19 +3908,43 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
 
   // check if uncaught nan/inf
-  int uncaughtnan=0;
+  int caughtnan=0;
   PLOOP(pliter,pl){
-    if(!isfinite(pb[pl])) uncaughtnan++;
-    if(!isfinite(pf[pl])) uncaughtnan++;
-
+    if(!isfinite(pb[pl])) caughtnan++;
+    if(!isfinite(pf[pl])) caughtnan++;
+    if(!isfinite(uub[pl])) caughtnan++;
+    if(!isfinite(dUcomp[RADSOURCE][pl])) caughtnan++;
   }
-  if(uncaughtnan){
-    dualfprintf(fail_file,"implicit solver generated nan result and it wasn't caught\n");
-    PLOOP(pliter,pl) dualfprintf(fail_file,"1implicit solver: pl=%d pb=%21.15g pf=%21.15g dU=%21.15g\n",pl,pb[pl],pf[pl],dUcomp[RADSOURCE][pl]);
-    int jj;
-    DLOOPA(jj) dualfprintf(fail_file,"2implicit solver: jj=%d ucon=%21.15g ucov=%21.15g uradcon=%21.15g uradcov=%21.15g\n",jj,q->ucon[jj],q->ucov[jj],q->uradcon[jj],q->uradcov[jj]);
-  }
+  if(caughtnan){
+    // Doesn't seem to happen, even on Kraken
+    if(debugfail>=2){
+      dualfprintf(fail_file,"implicit solver generated nan result and it wasn't caught\n");
+      PLOOP(pliter,pl) dualfprintf(fail_file,"1implicit solver: pl=%d pb=%21.15g pf=%21.15g dU=%21.15g\n",pl,pb[pl],pf[pl],dUcomp[RADSOURCE][pl]);
+      int jj;
+      DLOOPA(jj) dualfprintf(fail_file,"2implicit solver: jj=%d ucon=%21.15g ucov=%21.15g uradcon=%21.15g uradcov=%21.15g\n",jj,q->ucon[jj],q->ucov[jj],q->uradcon[jj],q->uradcov[jj]);
+    }
 
+    // choose as bad solution
+
+    // if no source, then will do normal inversion (no change to *eomtype) as if G=0.
+    GLOBALMACP0A1(prioritermethod,i,j,k,EOMTYPEINDEX) == *eomtype;
+    *lpflag=UTOPRIMFAILCONV;
+    *lpflagrad=UTOPRIMRADFAILCASE1A;
+    if(debugfail>=2) dualfprintf(fail_file,"No sourceNAN\n");
+    failfinalreturn=1;
+    usedexplicitbad=1;
+  
+    // set prims and dU, but shouldn't be used
+    PLOOP(pliter,pl){
+      pb[pl]=pbbackup[pl];
+      uub[pl]=uubbackup[pl];
+      SCLOOP(sc) dUcomp[sc][pl]=dUcompbackup[sc][pl];
+      *q=qbackup;
+    }
+    noprims=1;
+    //      failreturn=0;
+  }
+  
 
 
 
@@ -6373,16 +6397,17 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
 
 
   // check if uncaught nan/inf
-  int uncaughtnan=0;
+  int caughtnan=0;
   PLOOP(pliter,pl){
-    if(!isfinite(pb[pl])) uncaughtnan++;
-    if(!isfinite(uub[pl])) uncaughtnan++;
-    if(!isfinite(dUcomp[RADSOURCE][pl])) uncaughtnan++;
+    if(!isfinite(pb[pl])) caughtnan++;
+    if(!isfinite(uub[pl])) caughtnan++;
+    if(!isfinite(dUcomp[RADSOURCE][pl])) caughtnan++;
   }
-  if(!isfinite(errorabsreturn[0])) uncaughtnan++;  
-  if(!isfinite(errorabsreturn[1])) uncaughtnan++;  
+  if(!isfinite(errorabsreturn[0])) caughtnan++;  
+  if(!isfinite(errorabsreturn[1])) caughtnan++;  
 
-  if(uncaughtnan){
+  if(caughtnan){
+    // this doesn't seem to be hit even on Kraken
     if(debugfail>=2){
       dualfprintf(fail_file,"per mode implicit solver generated nan result and it wasn't caught\n");
       dualfprintf(fail_file,"per mode implicit solver: %d %d %d %d %d %d %d %d : %g %g %g : %d %d : %g %g : %d\n",allowbaseitermethodswitch, modprim, havebackup, didentropyalready, *eomtype, whichcap, itermode, *baseitermethod, trueimptryconv, trueimpokconv, trueimpallowconv, trueimpmaxiter, truenumdampattempts, fracenergy, dissmeasure, *radinvmod);
@@ -6796,7 +6821,7 @@ int get_rameshsolution(int whichcallramesh, int radinvmod, int failtype, long lo
   //  int baseitermethod;
   FTYPE fracenergy=1.0;
   FTYPE dissmeasure=-1.0;
-  radinvmod=radinvmodeng; // default
+  radinvmod=*radinvmodeng; // default
   FTYPE trueimptryconv=IMPTRYCONV;
   FTYPE trueimptryconvabs=IMPTRYCONVABS;
   FTYPE trueimpallowconvabs=IMPALLOWCONVCONSTABS;
@@ -7670,14 +7695,20 @@ static int get_implicit_iJ(int allowbaseitermethodswitch, int failreturnallowabl
     }
 
 
+    if(failreturn){
+
     // debug:
-    if(debugfail>=2 && failreturn){
-      dualfprintf(fail_file,"Tried to invert Jacobian with %d %d %d %d : %g %g %g : %g %g %g : %d %d : %g %g : %d : %g %g\n",*eomtypelocal, whichcap, itermode, *baseitermethod, fracenergy, dissmeasure, impepsjac, trueimptryconv, trueimptryconvabs, trueimpallowconvabs, trueimpmaxiter, iter, errorabs, errorallabs, whicherror,fracdtG,realdt);
-      PLOOP(pliter,pl) dualfprintf(fail_file,"1Tried: pl=%d Uiin=%g uu=%g uup=%g uu0=%g piin=%g pp=%g ppp=%g f1=%g f1norm=%g\n", Uiin[pl], uu[pl], uup[pl], uu0[pl], piin[pl], pp[pl], ppp[pl], f1[pl], f1norm[pl]);
-      JACLOOP2D(ii,jj,startjac,endjac){
-        dualfprintf(fail_file,"2Tried: ii=%d jj=%d (%d %d) : iJ=%g\n",ii,jj,startjac,endjac,iJsub[ii][jj]);
+      if(debugfail>=2){
+        dualfprintf(fail_file,"Tried to invert Jacobian with %d %d %d %d : %g %g %g : %g %g %g : %d %d : %g %g : %d : %g %g\n",*eomtypelocal, whichcap, itermode, *baseitermethod, fracenergy, dissmeasure, impepsjac, trueimptryconv, trueimptryconvabs, trueimpallowconvabs, trueimpmaxiter, iter, errorabs, errorallabs, whicherror,fracdtG,realdt);
+        PLOOP(pliter,pl) dualfprintf(fail_file,"1Tried: pl=%d Uiin=%g uu=%g uup=%g uu0=%g piin=%g pp=%g ppp=%g f1=%g f1norm=%g\n", pl, Uiin[pl], uu[pl], uup[pl], uu0[pl], piin[pl], pp[pl], ppp[pl], f1[pl], f1norm[pl]);
+        JACLOOP2D(ii,jj,startjac,endjac){
+          dualfprintf(fail_file,"2Tried: ii=%d jj=%d (%d %d) : j=%g iJ=%g\n",ii,jj,startjac,endjac,Jsub[ii][jj],iJsub[ii][jj]);
+        }
       }
-    }
+
+      // act on failure?
+
+    }// end if failreturn!=0
 
 
 
@@ -9881,6 +9912,32 @@ int u2p_rad(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gammama
   int pliter,pl;
   FTYPE prorig[NPR];
 
+
+  ///////////////
+  //
+  // CHECK if should abort inversion attempt if already dropped-out value in uu
+  //
+  //////////////
+  if(0){
+    // put in a catch for when inputted uu[URAD0] has dropped-out already and don't try to invert.
+    if(fabs(uu[URAD0]<=2.0*10.0*ERADLIMIT)){ // often 10*ERADLIMIT is used to set as above ERADLIMIT, so here a higher catch is 2*10*ERADLIMIT
+      // force to be reasonable
+      // currently always return WHICHVEL=VELREL4, so just set to floor values
+      pin[URAD0]=ERADLIMIT;
+      int jj;
+      SLOOPA(jj) pin[URAD1+jj-1] = 0.0;
+      return(0);
+    }
+  }
+
+
+  ///////////////
+  //
+  // NORMAL ATTEMPT where we compute inversion
+  //
+  //////////////
+
+
   // store orig
   PLOOP(pliter,pl) prorig[pl] = pin[pl];
 
@@ -9891,10 +9948,30 @@ int u2p_rad(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gammama
   toreturn=u2p_rad_new(showmessages, allowlocalfailurefixandnoreport, gammamaxrad, whichcap, uu, pin, ptrgeom,lpflag, lpflagrad);
 #endif
 
+  int caughtnan=0;
   if(!finite(pin[URAD0]) || !finite(pin[URAD1]) || !finite(pin[URAD2]) || !finite(pin[URAD3])){
-    dualfprintf(fail_file,"u2p_rad() generated nan result\n");
-    PLOOP(pliter,pl) dualfprintf(fail_file,"u2p_rad: pl=%d prorig=%21.15g pin=%21.15g\n",pl,prorig[pl],pin[pl]);
+    // FUCK: Shouldn't happen, but does on Kraken
+    caughtnan=1;
   }
+
+  if(caughtnan){
+
+    if(debugfail>=2){
+      dualfprintf(fail_file,"u2p_rad() generated nan result: %d %d %g %d\n",showmessages, allowlocalfailurefixandnoreport, gammamaxrad, whichcap);
+      PLOOP(pliter,pl) dualfprintf(fail_file,"u2p_rad: pl=%d prorig=%21.15g uu=%21.15g pin=%21.15g\n",pl,prorig[pl],uu[pl],pin[pl]);
+    }
+
+
+    if(0){ // if doing iterations, need to let fail with nan so aborts and stops trying right away.  Otherwise huge waste.
+      // force to be reasonable
+      // currently always return WHICHVEL=VELREL4, so just set to floor values
+      pin[URAD0]=ERADLIMIT;
+      int jj;
+      SLOOPA(jj) pin[URAD1+jj-1] = 0.0;
+    }
+
+  }
+
 
   return(toreturn);
 }
