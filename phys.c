@@ -593,12 +593,12 @@ void current_precalc(int which, struct of_geom *geom, struct of_state *q, FTYPE 
 
     // assume got here when DT==dt/2 and geom and state set at zone center
     // first save old calculation
-    if((WHICHCURRENTCALC==0)||(WHICHCURRENTCALC==2)){ // then need to save 2 times
+    if((WHICHCURRENTCALC==CURRENTCALC0)||(WHICHCURRENTCALC==CURRENTCALC2)){ // then need to save 2 times
       faraday[4][0]=faraday[0][0];
       faraday[4][1]=faraday[0][1];
       faraday[4][2]=faraday[0][2];
     }
-    else if(WHICHCURRENTCALC==1){ // then need to save 3 times and have [4] as 2 times ago
+    else if(WHICHCURRENTCALC==CURRENTCALC1){ // then need to save 3 times and have [4] as 2 times ago
       // 2 times ago
       faraday[4][0]=faraday[5][0];
       faraday[4][1]=faraday[5][1];
