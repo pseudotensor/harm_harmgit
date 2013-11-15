@@ -3618,7 +3618,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       FTYPE ugas=0.0;  SLOOPA(jj) ugas+=ucovgas[jj]*ucongas[jj];
       FTYPE urad=0.0;  SLOOPA(jj) urad+=ucovrad[jj]*uconrad[jj];
 #define COLDFACTOR (0.1)
-      iscoldflow = (pb[UU]<COLDFACTOR*pb[RHO]*fabs(usq) && pb[RHO]*fabs(ucongas[TT]*ucovgas[TT])<COLDFACTOR*fabs(ugas) && pb[RHO]*fabs(uconrad[TT]*ucovrad[TT])<COLDFACTOR*fabs(urad));
+      iscoldflow = (pb[UU]<COLDFACTOR*pb[RHO]*fabs(usq) && fabs(ucongas[TT]*ucovgas[TT])<COLDFACTOR*fabs(ugas) && fabs(uconrad[TT]*ucovrad[TT])<COLDFACTOR*fabs(urad));
 
       //      iscoldflow=1;
 
@@ -9962,7 +9962,7 @@ int u2p_rad(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gammama
     }
 
 
-    if(0){ // if doing iterations, need to let fail with nan so aborts and stops trying right away.  Otherwise huge waste.
+    if(0){ // FUCK: if doing iterations, need to let fail with nan so aborts and stops trying right away.  Otherwise huge waste.
       // force to be reasonable
       // currently always return WHICHVEL=VELREL4, so just set to floor values
       pin[URAD0]=ERADLIMIT;
