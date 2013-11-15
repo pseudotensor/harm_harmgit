@@ -6371,6 +6371,32 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
 
 
 
+
+  // check if uncaught nan/inf
+  int uncaughtnan=0;
+  PLOOP(pliter,pl){
+    if(!isfinite(pb[pl])) uncaughtnan++;
+    if(!isfinite(uub[pl])) uncaughtnan++;
+    if(!isfinite(dUcomp[RADSOURCE][pl])) uncaughtnan++;
+  }
+  if(!isfinite(errorabsreturn[0])) uncaughtnan++;  
+  if(!isfinite(errorabsreturn[1])) uncaughtnan++;  
+
+  if(uncaughtnan){
+    if(debugfail>=2){
+      dualfprintf(fail_file,"per mode implicit solver generated nan result and it wasn't caught\n");
+      dualfprintf(fail_file,"per mode implicit solver: %d %d %d %d %d %d %d %d : %g %g %g : %d %d : %g %g : %d\n",allowbaseitermethodswitch, modprim, havebackup, didentropyalready, *eomtype, whichcap, itermode, *baseitermethod, trueimptryconv, trueimpokconv, trueimpallowconv, trueimpmaxiter, truenumdampattempts, fracenergy, dissmeasure, *radinvmod);
+      PLOOP(pliter,pl) dualfprintf(fail_file,"0implicit solver: pl=%d Uiin=%21.15g dUother=%21.15g dU=%21.15g\n",pl,Uiin[pl],dUother[pl],dUcomp[RADSOURCE][pl]);
+      PLOOP(pliter,pl) dualfprintf(fail_file,"1implicit solver: pl=%d pb=%21.15g piin=%21.15g Ufin=%21.15g dU=%21.15g uub=%21.15g\n",pl,pb[pl],piin[pl],Ufin[pl],dUcomp[RADSOURCE][pl],uub[pl]);
+      int jjj;
+      DLOOPA(jjj) dualfprintf(fail_file,"2implicit solver: jj=%d ucon=%21.15g ucov=%21.15g uradcon=%21.15g uradcov=%21.15g\n",jj,q->ucon[jj],q->ucov[jj],q->uradcon[jj],q->uradcov[jj]);
+    }
+    // reset solution as bad error, so conditions don't get confused by nan always giving false
+    errorabsreturn[0]=1.0;
+    errorabsreturn[1]=1.0;
+
+    failreturn=FAILRETURNGENERAL;
+  }
  
 
 
@@ -7642,6 +7668,17 @@ static int get_implicit_iJ(int allowbaseitermethodswitch, int failreturnallowabl
       iJ[irefU[ii]][erefU[jj]]=iJsub[ii][jj]; // iJsub has been transposed from input Jsub, so iJsub[irefU][erefU]
       // dualfprintf(fail_file,"NEW: ii=%d jj=%d iJ=%g\n",ii,jj,iJ[irefU[ii]][erefU[jj]]);
     }
+
+
+    // debug:
+    if(debugfail>=2 && failreturn){
+      dualfprintf(fail_file,"Tried to invert Jacobian with %d %d %d %d : %g %g %g : %g %g %g : %d %d : %g %g : %d : %g %g\n",*eomtypelocal, whichcap, itermode, *baseitermethod, fracenergy, dissmeasure, impepsjac, trueimptryconv, trueimptryconvabs, trueimpallowconvabs, trueimpmaxiter, iter, errorabs, errorallabs, whicherror,fracdtG,realdt);
+      PLOOP(pliter,pl) dualfprintf(fail_file,"1Tried: pl=%d Uiin=%g uu=%g uup=%g uu0=%g piin=%g pp=%g ppp=%g f1=%g f1norm=%g\n", Uiin[pl], uu[pl], uup[pl], uu0[pl], piin[pl], pp[pl], ppp[pl], f1[pl], f1norm[pl]);
+      JACLOOP2D(ii,jj,startjac,endjac){
+        dualfprintf(fail_file,"2Tried: ii=%d jj=%d (%d %d) : iJ=%g\n",ii,jj,startjac,endjac,iJsub[ii][jj]);
+      }
+    }
+
 
 
     /////////////////////////////////////
