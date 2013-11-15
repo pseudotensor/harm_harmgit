@@ -419,8 +419,12 @@ int simplefast(int whichcall, int dir,struct of_geom *geom, struct of_state *q, 
       struct of_state qbackup;
       get_state(prbackup,geom,&qbackup);
       simplefast(1, dir,geom, &qbackup, cms2,vmin, vmax); // simplefast(1)
-      if( (!isfinite(vm)) || (!isfinite(vp)) ){
+      if( (!isfinite(*vmin)) || (!isfinite(*vmax)) ){
         dualfprintf(fail_file,"Backup vchar still failed\n");
+      }
+      else{
+        vm=*vmin;
+        vp=*vmax;
       }
     }
     else{
