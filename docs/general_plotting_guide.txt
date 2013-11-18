@@ -331,6 +331,40 @@ nohup ./batch_makemovielocal_${thedir}.sh &
 
 
 
+
+8b) Additional notes on running on Kraken:
+
+Can use parallel=2 for optimal speed.  This uses code makemoviec instead of the bash script makemovie.sh.  One still uses the same makeallmovie.sh script/calls, but some edits may be required:
+
+a) makeallmovie.sh : Change dircollect and dirruns to "rad1" or the name of your run/runs.
+
+b) makeallmovie.sh : Change numkeep to number of files want to keep, e.g., 2200
+
+c) makeallmovie.sh : Ensure in system=5 kraken section have set parallel=2 .
+
+d) makeallmovie.sh : Change default "factor" and keepfilesstart and keepfilesend if desired.  Or add entry for your model name ("$thedir" section in this bash script).
+
+e) Ensure makemoviec can compile when doing makeallmovie.sh:
+i) cd ~/py/scripts
+ii) set #define USEPYTHON (0) in jon_makemovie_programstartc.c
+iii) make
+
+f) Edit ~/py/scripts/makemovie.sh for kraken section to be how long run should be, how many cores, etc.  Can add "$modelname" entry for jobsuffix, needed if have multiple jobs
+
+i) At least edit default for kraken sections.  Set timetot, numcorespernode (which will be total cores), memtot (estimating how much memory per core needed as well as overhead), then in kraken's parllel 2 section, only have to set plot part.
+
+j) Edit ~/py/mread/__init__.py :
+
+i) Set USENAUTILUS 0
+ii) Set use2dglobal=False near end of file in main()
+ii) Probably need OLDQTYMEMMEM=0 in same location in main()
+iii) anywhere modelname exists, check if need to add new entry for your model.
+
+k) Now can run makeallmovie as above.
+
+
+
+
 9) Going even simpler (but with less obvious ways to get something to output)
 one can use python or ipython directly.
 
