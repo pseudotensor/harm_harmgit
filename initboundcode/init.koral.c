@@ -1177,6 +1177,12 @@ int init_global(void)
 
     RADBONDI_TESTNO=2;
 
+    if(RADBONDI_TESTNO==0){ // E1T6 (#1 in koral Table 5)
+      RADBONDI_PRADGAS=1.2e-4/RHOBAR;
+      RADBONDI_TGAS0=1e6/TEMPBAR;
+      RADBONDI_MDOTPEREDD=1.;
+    }
+
     if(RADBONDI_TESTNO==1){ // E10T5 (#2 in koral Table 5 and #1 in Fragile paper)
       RADBONDI_PRADGAS=1.2e-7/RHOBAR;
       RADBONDI_TGAS0=1e5/TEMPBAR;
@@ -1197,7 +1203,7 @@ int init_global(void)
 
     // koral skips E30T6 that is #6 in Fragile paper
 
-    if(RADBONDI_TESTNO==4){ // E10T7 (#4 in koral Table 5 and #7 in Fragile paper)
+    if(RADBONDI_TESTNO==4){ // E100T6 (#5 in koral Table 5 and #7 in Fragile paper)
       RADBONDI_PRADGAS=1.2e-5/RHOBAR; // note koral paper has 1.2E-4 that is wrong.
       RADBONDI_TGAS0=1e6/TEMPBAR;
       RADBONDI_MDOTPEREDD=100.;
