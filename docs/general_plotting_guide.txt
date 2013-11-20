@@ -363,6 +363,10 @@ iii) anywhere modelname exists, check if need to add new entry for your model.
 k) Now can run makeallmovie as above.
 
 
+l) I noticed Kraken used to have latex/gs/gv installed, but now doesn't.  Only Nautilus has it, and Nautilus can't be used anymore.  One has to, as a user, install latex.  E.g. from http://www.tug.org/texlive/quickinstall.html .  Use wget to get the tarball for unix, follow instructions about untaring (i.e. tar xvzf ...), and run the install program in the directory created by the tarball (./install-tl).  One just changes the installation directory to be /lustre/scratch/$USER/... instead of /usr/local/...  and change installation paths to be ~/bin ~/share/man ~/share/lib . 
+
+
+
 
 
 9) Going even simpler (but with less obvious ways to get something to output)
