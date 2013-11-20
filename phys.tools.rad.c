@@ -36,6 +36,54 @@ return( (*x)>=0 ?
 	floor(*x + .5) : -floor(.5 - *x) );
 }
 
+
+#ifdef KR_headers
+extern void f_exit();
+int s_stop(s, n) char *s; ftnlen n;
+#else
+#undef abs
+#undef min
+#undef max
+#include "stdlib.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
+#ifdef __cplusplus
+extern "C" {
+#endif
+void f_exit(void);
+
+int s_stop(char *s, ftnlen n)
+#endif
+{
+int i;
+
+if(n > 0)
+	{
+	fprintf(stderr, "STOP ");
+	for(i = 0; i<n ; ++i)
+		putc(*s++, stderr);
+	fprintf(stderr, " statement executed\n");
+	}
+#ifdef NO_ONEXIT
+f_exit();
+#endif
+exit(0);
+
+/* We cannot avoid (useless) compiler diagnostics here:		*/
+/* some compilers complain if there is no return statement,	*/
+/* and others complain that this one cannot be reached.		*/
+
+return 0; /* NOT REACHED */
+}
+#ifdef __cplusplus
+}
+#endif
+#ifdef __cplusplus
+}
+#endif
+
+
 #include "testfpp.P"
 // not linking with libf2c since don't want that dependence and conversion doesn't need it since the original code was simple
 
@@ -64,7 +112,7 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE *errorabs, stru
 ////////////////////////////////////
 #define IMPTRYCONVHIGHTAU (NUMEPSILON*5.0)  // for used implicit solver
 
-// Funny, even 1E-5 does ok with torus, no worse at Erf~SMALL instances.  Also, does ~3 iterations, but not any faster than using 1E-12 with ~6 iterations.
+// Funny, even 1E-5 does ok with torus, no worse at Erf~ERADLIMIT instances.  Also, does ~3 iterations, but not any faster than using 1E-12 with ~6 iterations.
 #define IMPTRYCONV (1.e-12) // works generally to avoid high iterations
 #define IMPTRYCONVQUICK (1.e-9) // less greedy so doesn't slow things down so much.
 // error for comparing to sum over all absolute errors
@@ -7883,14 +7931,14 @@ static void get_dtsub(int method, FTYPE *pr, struct of_state *q, FTYPE *Ui, FTYP
     // account for case where effect on fluid is more than on radiation (where above would only account for effect on radiation)
 
     // first compare to original U
-    jj=TT; Umhd=SMALL+fabs(U[UU+jj]);
+    jj=TT; Umhd=UUMINLIMIT+fabs(U[UU+jj]);
     jj=TT; Urad=fabs(U[URAD0+jj]);
     idtsub=MAX(idtsub,idtsub0*Urad/Umhd);
 
     //    dualfprintf(fail_file,"i=%d dtsub1=%g (realdt=%g)\n",ptrgeom->i,1/idtsub,realdt);
        
     // also compare against changed U=U0
-    jj=TT; Umhd=SMALL+fabs(U0[UU+jj]);
+    jj=TT; Umhd=UUMINLIMIT+fabs(U0[UU+jj]);
     jj=TT; Urad=fabs(U0[URAD0+jj]);
     idtsub=MAX(idtsub,idtsub0*Urad/Umhd);
 
@@ -7906,10 +7954,10 @@ static void get_dtsub(int method, FTYPE *pr, struct of_state *q, FTYPE *Ui, FTYP
     DLOOPA(jj) Urad += fabs(U[URAD0+jj]*U[URAD0+jj]*ptrgeom->gcon[GIND(jj,jj)]);
     DLOOPA(jj) Gmhd += fabs(Gddtpl[UU+jj]*Gddtpl[UU+jj]*ptrgeom->gcon[GIND(jj,jj)]);
     DLOOPA(jj) Grad += fabs(Gddtpl[URAD0+jj]*Gddtpl[URAD0+jj]*ptrgeom->gcon[GIND(jj,jj)]);
-    iUmhd=1.0/(fabs(Umhd)+SMALL);
-    iUrad=1.0/(fabs(Urad)+SMALL);
-    idtsub=SMALL+fabs(Gmhd*iUmhd);
-    idtsub=MAX(idtsub,SMALL+fabs(Grad*iUrad));
+    iUmhd=1.0/(fabs(Umhd)+UUMINLIMIT);
+    iUrad=1.0/(fabs(Urad)+UUMINLIMIT);
+    idtsub=UUMINLIMIT+fabs(Gmhd*iUmhd);
+    idtsub=MAX(idtsub,UUMINLIMIT+fabs(Grad*iUrad));
     idtsub=sqrt(idtsub);
 
     //    if(1||realdt/(COURRADEXPLICIT/idtsub)>1.0) dualfprintf(fail_file,"UMHD: Umhdrad=%g %g : G=%g %g %g %g : Gmhdrad= %g %g :: iUmhdrad=%g %g ::: dtsub=%g realdt/dtsub=%g\n",Umhd,Urad,Gddtpl[UU],Gddtpl[U1],Gddtpl[U2],Gddtpl[U3],Gmhd,Grad,iUmhd,iUrad,COURRADEXPLICIT/idtsub,realdt/(COURRADEXPLICIT/idtsub));
@@ -7928,10 +7976,10 @@ static void get_dtsub(int method, FTYPE *pr, struct of_state *q, FTYPE *Ui, FTYP
     jj=TT;     Gtmhd += fabs(Gddtpl[UU+jj]*Gddtpl[UU+jj]*ptrgeom->gcon[GIND(jj,jj)]);
     SLOOPA(jj) Gsrad += fabs(Gddtpl[URAD0+jj]*Gddtpl[URAD0+jj]*ptrgeom->gcon[GIND(jj,jj)]);
     jj=TT;     Gtrad += fabs(Gddtpl[URAD0+jj]*Gddtpl[URAD0+jj]*ptrgeom->gcon[GIND(jj,jj)]);
-    iUsmhd=1.0/(fabs(Usmhd)+SMALL);
-    iUtmhd=1.0/(fabs(Utmhd)+SMALL);
-    iUsrad=1.0/(fabs(Usrad)+SMALL);
-    iUtrad=1.0/(fabs(Utrad)+SMALL);
+    iUsmhd=1.0/(fabs(Usmhd)+UUMINLIMIT);
+    iUtmhd=1.0/(fabs(Utmhd)+UUMINLIMIT);
+    iUsrad=1.0/(fabs(Usrad)+UUMINLIMIT);
+    iUtrad=1.0/(fabs(Utrad)+UUMINLIMIT);
     idtsubs=SMALL+fabs(Gsmhd*iUsmhd);
     idtsubs=MAX(idtsubs,SMALL+fabs(Gsrad*iUsrad));
     idtsubt=SMALL+fabs(Gtmhd*iUtmhd);
@@ -7948,8 +7996,8 @@ static void get_dtsub(int method, FTYPE *pr, struct of_state *q, FTYPE *Ui, FTYP
       Urad = fabs(U[URAD0+jj]*U[URAD0+jj]*ptrgeom->gcon[GIND(jj,jj)]);
       Gmhd = fabs(Gddtpl[UU+jj]*Gddtpl[UU+jj]*ptrgeom->gcon[GIND(jj,jj)]);
       Grad = fabs(Gddtpl[URAD0+jj]*Gddtpl[URAD0+jj]*ptrgeom->gcon[GIND(jj,jj)]);
-      iUmhd=1.0/(fabs(Umhd)+SMALL);
-      iUrad=1.0/(fabs(Urad)+SMALL);
+      iUmhd=1.0/(fabs(Umhd)+UUMINLIMIT);
+      iUrad=1.0/(fabs(Urad)+UUMINLIMIT);
       idtsub=MAX(idtsub,SMALL+fabs(Gmhd*iUmhd));
       idtsub=MAX(idtsub,SMALL+fabs(Grad*iUrad));
     }
@@ -7963,8 +8011,8 @@ static void get_dtsub(int method, FTYPE *pr, struct of_state *q, FTYPE *Ui, FTYP
       Urad = fabs(U[URAD0+jj]*U[URAD0+jj]*ptrgeom->gcon[GIND(jj,jj)]);
       Gmhd = fabs(Gddtpl[UU+jj]*Gddtpl[UU+jj]*ptrgeom->gcon[GIND(jj,jj)]);
       Grad = fabs(Gddtpl[URAD0+jj]*Gddtpl[URAD0+jj]*ptrgeom->gcon[GIND(jj,jj)]);
-      iUmhd=1.0/(fabs(Umhd)+SMALL);
-      iUrad=1.0/(fabs(Urad)+SMALL);
+      iUmhd=1.0/(fabs(Umhd)+UUMINLIMIT);
+      iUrad=1.0/(fabs(Urad)+UUMINLIMIT);
       idtsub=MAX(idtsub,SMALL+fabs(Gmhd*iUmhd));
       idtsub=MAX(idtsub,SMALL+fabs(Grad*iUrad));
     }
@@ -7977,8 +8025,8 @@ static void get_dtsub(int method, FTYPE *pr, struct of_state *q, FTYPE *Ui, FTYP
     DLOOPA(jj) Urad += fabs(U[URAD0+jj]*U[URAD0+jj]*ptrgeom->gcon[GIND(jj,jj)]);
     DLOOPA(jj) Gmhd += fabs(Gddtpl[UU+jj]*Gddtpl[UU+jj]*ptrgeom->gcon[GIND(jj,jj)]);
     DLOOPA(jj) Grad += fabs(Gddtpl[URAD0+jj]*Gddtpl[URAD0+jj]*ptrgeom->gcon[GIND(jj,jj)]);
-    iUmhd=1.0/(fabs(Umhd)+SMALL);
-    iUrad=1.0/(fabs(Urad)+SMALL);
+    iUmhd=1.0/(fabs(Umhd)+UUMINLIMIT);
+    iUrad=1.0/(fabs(Urad)+UUMINLIMIT);
     idtsub=MAX(idtsub,SMALL+fabs(Gmhd*iUmhd));
     idtsub=MAX(idtsub,SMALL+fabs(Grad*iUrad));
 
@@ -7998,10 +8046,10 @@ static void get_dtsub(int method, FTYPE *pr, struct of_state *q, FTYPE *Ui, FTYP
     jj=TT;     Gtmhd += fabs(Gddtpl[UU+jj]*Gddtpl[UU+jj]*ptrgeom->gcon[GIND(jj,jj)]);
     SLOOPA(jj) Gsrad += fabs(Gddtpl[URAD0+jj]*Gddtpl[URAD0+jj]*ptrgeom->gcon[GIND(jj,jj)]);
     jj=TT;     Gtrad += fabs(Gddtpl[URAD0+jj]*Gddtpl[URAD0+jj]*ptrgeom->gcon[GIND(jj,jj)]);
-    iUsmhd=1.0/(fabs(Usmhd)+SMALL);
-    iUtmhd=1.0/(fabs(Utmhd)+SMALL);
-    iUsrad=1.0/(fabs(Usrad)+SMALL);
-    iUtrad=1.0/(fabs(Utrad)+SMALL);
+    iUsmhd=1.0/(fabs(Usmhd)+UUMINLIMIT);
+    iUtmhd=1.0/(fabs(Utmhd)+UUMINLIMIT);
+    iUsrad=1.0/(fabs(Usrad)+UUMINLIMIT);
+    iUtrad=1.0/(fabs(Utrad)+UUMINLIMIT);
     idtsub=SMALL;
     idtsub=MAX(idtsub,SMALL+fabs(Gsmhd*iUsmhd));
     idtsub=MAX(idtsub,SMALL+fabs(Gsrad*iUsrad));
@@ -8903,7 +8951,7 @@ static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYP
   }
 
   // really a chi-effective that also includes lambda term in case cooling unrelated to absorption
-  *chieffreturn=chi + lambda/(SMALL+fabs(pp[PRAD0])); // if needed
+  *chieffreturn=chi + lambda/(ERADLIMIT+fabs(pp[PRAD0])); // if needed
 
 
 }
@@ -10014,16 +10062,16 @@ int u2p_rad_new_pre(int showmessages, int allowlocalfailurefixandnoreport, FTYPE
   FTYPE Ersq,yvar;
   int didmod=0;
 
-  //  if(1||gammamaxrad>0.9*GAMMAMAXRADIMPLICITSOLVER || Er>=SMALL){ // then good solution.  Avoid caps during implicit solver to allow progress on solution in smooth way.
-  if(Er>=SMALL){ // then good solution.  Avoid caps during implicit solver to allow progress on solution in smooth way.
+  //  if(1||gammamaxrad>0.9*GAMMAMAXRADIMPLICITSOLVER || Er>=ERADLIMIT){ // then good solution.  Avoid caps during implicit solver to allow progress on solution in smooth way.
+  if(Er>=ERADLIMIT){ // then good solution.  Avoid caps during implicit solver to allow progress on solution in smooth way.
     // Er^2
     Ersq=Er*Er;
     // y
-    yvar = Utildesq / (SMALL+Ersq);
+    yvar = Utildesq / (ERADLIMIT*ERADLIMIT + Ersq); // ERADLIMIT*ERADLIMIT better be machine representable in case Ersq is not.
   }
   else{// then bad solution
-    //    dualfprintf(fail_file,"Er=%26.20g<SMALL=%26.20g yvar=%26.20g Utildesq=%26.20g Ersq=%26.20g\n",Er,SMALL,yvar,Utildesq,Ersq);
-    Ersq=SMALL;
+    //    dualfprintf(fail_file,"Er=%26.20g<ERADLIMIT=%26.20g yvar=%26.20g Utildesq=%26.20g Ersq=%26.20g\n",Er,ERADLIMIT,yvar,Utildesq,Ersq);
+    Ersq=ERADLIMIT*ERADLIMIT;
     yvar = 0.0;
     didmod=1;
     numErneg++;
@@ -10061,8 +10109,8 @@ int u2p_rad_new_pre(int showmessages, int allowlocalfailurefixandnoreport, FTYPE
   FTYPE Erf;
   FTYPE urfconrel[NDIM]={0.0};
   int jj;
-  //  if(1||gammamaxrad>0.9*GAMMAMAXRADIMPLICITSOLVER || Er>=SMALL){ // then good solution.  Avoid caps during implicit solver to allow progress on solution in smooth way.
-  if(Er>=SMALL){ // then good solution.  Avoid caps during implicit solver to allow progress on solution in smooth way.
+  //  if(1||gammamaxrad>0.9*GAMMAMAXRADIMPLICITSOLVER || Er>=ERADLIMIT){ // then good solution.  Avoid caps during implicit solver to allow progress on solution in smooth way.
+  if(Er>=ERADLIMIT){ // then good solution.  Avoid caps during implicit solver to allow progress on solution in smooth way.
     // now obtain primitives
     FTYPE pr = Er/(4.0*gammasq-1.0);
     // radiation frame energy density
@@ -10228,7 +10276,7 @@ int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gam
     yvar = Utildesq / (ERADLIMIT*ERADLIMIT+Ersq);
   }
   else{// then bad solution
-    //    dualfprintf(fail_file,"Er=%26.20g<SMALL=%26.20g yvar=%26.20g Utildesq=%26.20g Ersq=%26.20g\n",Er,SMALL,yvar,Utildesq,Ersq);
+    //    dualfprintf(fail_file,"Er=%26.20g<ERADLIMIT=%26.20g yvar=%26.20g Utildesq=%26.20g Ersq=%26.20g\n",Er,ERADLIMIT,yvar,Utildesq,Ersq);
     Er=ERADLIMIT;
     yvar = ylimit; // used
     didmod=1;
@@ -10284,7 +10332,7 @@ int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gam
   ///////////////////
   FTYPE urfconrel[NDIM]={0.0};
   int jj;
-  //  if(1||gammamaxrad>0.9*GAMMAMAXRADIMPLICITSOLVER || Er>=SMALL){ // then good solution.  Avoid caps during implicit solver to allow progress on solution in smooth way.
+  //  if(1||gammamaxrad>0.9*GAMMAMAXRADIMPLICITSOLVER || Er>=ERADLIMIT){ // then good solution.  Avoid caps during implicit solver to allow progress on solution in smooth way.
   if(didmody==0 && didmodEr==0){ // then good solution
    
     // radiation frame relativity 4-velocity
@@ -11251,8 +11299,8 @@ static int get_m1closure_urfconrel(int showmessages, int allowlocalfailurefixand
 #define AVCOVRELDIFFALLOWED 1E-2 // KORALTODO: only use new "cold" solution if relatively close Avcov.
       else if(fabs(Avcovorig[TT]-Avcov[TT])/fabs(fabs(Avcovorig[TT])+fabs(Avcov[TT]))<AVCOVRELDIFFALLOWED ){
         //dualfprintf(fail_file,"THIS ONE4\n");
-        Erf=MAX(MIN(Erf,Erf*(-Avcovorig[TT])/(SMALL+fabs(-Avcov[TT]))),Erf0);
-        Erf=MAX(MIN(Erf,Erf*(-Avcov[TT])/(SMALL+fabs(-Avcovorig[TT]))),Erf0);
+        Erf=MAX(MIN(Erf,Erf*(-Avcovorig[TT])/(ERADLIMIT+fabs(-Avcov[TT]))),Erf0);
+        Erf=MAX(MIN(Erf,Erf*(-Avcov[TT])/(ERADLIMIT+fabs(-Avcovorig[TT]))),Erf0);
         //dualfprintf(fail_file,"nstep=%ld steppart=%d ijk=%d %d %d : Erforig=%g Erf=%g urfconrel=%g %g %g : Avcovorig=%g Avcov=%g\n",nstep,steppart,ptrgeom->i,ptrgeom->j,ptrgeom->k,Erforig,Erf,urfconrel[1],urfconrel[2],urfconrel[3],Avcovorig[0],Avcov[0]);
         //        Erf=6E-15;
       }

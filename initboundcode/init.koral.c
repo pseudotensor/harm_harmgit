@@ -1744,8 +1744,15 @@ int init_defcoord(void)
     // KORALTODO: 2.5 to 2E4 in paper
     //    RADBONDI_MINX=3.5;
     //    RADBONDI_MAXX=2e3;
-    RADBONDI_MINX=2.5;
-    RADBONDI_MAXX=2e4;
+
+    if(MCOORD==KSCOORDS){
+      RADBONDI_MINX=1.9; // few cells inside horizon // 1.9 good for N1=512
+      RADBONDI_MAXX=2e4;
+    }
+    else{
+      RADBONDI_MINX=2.5;
+      RADBONDI_MAXX=2e4;
+    }
 
     //#define LOGXGRID
     //    FTYPE LOGPAR1=2.2;
@@ -1753,7 +1760,27 @@ int init_defcoord(void)
 
     // defcoord = UNIFORMCOORDS;
     defcoord = LOGRUNITH; // Uses R0, Rin, Rout and Rin_array,Rout_array for 2,3 directions
-    R0=2.2;
+
+
+    if(RADBONDI_TESTNO==1){
+      if(MCOORD==KSCOORDS){
+        RADBONDI_MINX=1.9; // few cells inside horizon // 1.9 good for N1=512
+      }
+      else{
+        RADBONDI_MINX=2.5;
+      }
+      R0=(1.85/1.9)*RADBONDI_MINX; // due to cold temp, energy equation evolution requires (with PARA) more cells near BH.  Something like MP5 (that does some avg->point conversions) as in Koral wouldn't need to do that.
+      // also may require not so large tolerance, but so far not limiting solution like energy equation does.
+    }
+    else{
+      // normal MINX ok.
+      R0=0.9*RADBONDI_MINX;
+      // can reduce noise in u_g in solutions if use larger R0.
+    }
+
+
+
+
     Rin=RADBONDI_MINX;
     Rout=RADBONDI_MAXX;
 
@@ -1761,6 +1788,16 @@ int init_defcoord(void)
     Rout_array[2]=1.01*Pi/2.;
     Rin_array[3]=-1.;
     Rout_array[3]=1.;
+
+    if(R0>=RADBONDI_MINX){
+      dualfprintf(fail_file,"Must have R0=%g < RADBONDI_MINX=%g\n",R0,RADBONDI_MINX);
+      myexit(243532469);
+    }
+
+    Rhor=rhor_calc(0);
+    if(RADBONDI_MINX>Rhor && MCOORD==KSCOORDS){
+      dualfprintf(fail_file,"WARNING: Have boundary oustide horizon in KS coords\n");
+    }
 
 
   }
