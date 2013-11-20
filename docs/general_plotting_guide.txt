@@ -370,6 +370,7 @@ tar xvzf install-tl-unx.tar.gz
 cd 
 ./install-tl
 # choose paths as user paths as mentioned above.
+# *must* choose /lustre/scratch/$USER/... type path, so can access on compute nodes that have no access to $HOME
 # wait 1.5-2 hours to complete download/install process.
 
 m) I also noticed gs is not available.  Get it from http://www.ghostscript.com/download/gsdnld.html and follow installation instructions at (e.g.) http://ghostscript.com/doc/7.07/Install.htm , like:
@@ -387,6 +388,10 @@ cd ghostscript-9.10/
 ./configure --prefix=$HOME/
 make
 make install
+
+# for gs, copy binary to /lustre/scratch/$USER/... type path, so can access on compute nodes that have no access to $HOME .
+
+Ensure environmentfiles/kraken/setuppython27 has PATH and PYTHONPATH with the path where the binary for "latex" and "gs" are located.
 
 
 

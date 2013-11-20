@@ -4,11 +4,13 @@
 module unload PrgEnv-intel
 module load PrgEnv-gnu
 module unload python/2.6
-module unload python/2.7.1-cnl
-module load python/2.7.1
+module unload python/2.7.1
+module load python/2.7.1-cnl # have to use this specific lustre-installed version
 export MKL_DYNAMIC=FALSE
 export MKL_NUM_THREADS=8
-export PYTHONPATH=$HOME/py:$PYTHONPATH
+export PYTHONPATH=$HOME/py:$PYTHONPATH:$HOME/bin/:/lustre/scratch/jmckinne/texlive/2013/bin/x86_64-linux/:/lustre/scratch/jmckinne/gs/
+export PATH=$PATH:$HOME/bin/::/lustre/scratch/jmckinne/texlive/2013/bin/x86_64-linux/:/lustre/scratch/jmckinne/gs/
+export MPLCONFIGDIR=/lustre/scratch/jmckinne/matplotlibdir/
 
 # now ready to use current version of python that is compiled with gnu
 
