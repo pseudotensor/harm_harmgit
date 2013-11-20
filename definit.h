@@ -661,7 +661,7 @@
 #define COMPUTEFRDOT 0
 
 // whether to compute faraday and currents and output them to dumps
-#define CALCFARADAYANDCURRENTS 1
+#define CALCFARADAYANDCURRENTS 0 // FUCK: Some memory leak maybe because Kraken crashes if this is 1.  Didn't crash before, so unsure what's wrong.  core dump gives some info, but not much.
 
 #define WHICHCURRENTCALC CURRENTCALC1
 
