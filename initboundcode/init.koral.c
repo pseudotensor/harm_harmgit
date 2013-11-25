@@ -1094,7 +1094,7 @@ int init_global(void)
 
       if(RADWAVE_NUMERO==1001){
         RADWAVE_RHOFAC=0.001;
-        RADWAVE_B0=0.1;
+        RADWAVE_B0=0.100759;
         RADWAVE_PP=0.1;
         RADWAVE_CC=10.;
         RADWAVE_KAPPA=0.1;
