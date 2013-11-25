@@ -96,6 +96,7 @@ FTYPE RADWAVE_PP;
 FTYPE RADWAVE_CC;
 FTYPE RADWAVE_KAPPA;
 FTYPE RADWAVE_RHOFAC;
+FTYPE RADWAVE_B0;
 FTYPE RADWAVE_DRRE;
 FTYPE RADWAVE_DRIM;
 FTYPE RADWAVE_DVRE;
@@ -985,7 +986,7 @@ int init_global(void)
     //    RADWAVE_NWAVE=2; // GOOD
     //    RADWAVE_NWAVE=3; // GOOD
     //    RADWAVE_NWAVE=4; // gets noisy in prad1 by t~30 with MINM or MC  -- check koral when Olek makes it work.  KORALTODO
-    RADWAVE_NUMERO=1001; // GOOD
+    RADWAVE_NUMERO=101; // GOOD
     //RADWAVE_NUMERO=41; // OK if don't use check if can do explicit.  So use this to show how should more generally improve the tau based suppression check!  But, DAMPS significantly! Smaller IMPCONV doesn't help.  Check with koral KORALTODO.  MC doesn't help/change much.
     //RADWAVE_NUMERO=1; // wierd jello oscillations in prad0, and no wave motion -- like in koral though.  KORALTODO.  With only implicit, jello is different (smaller IMPCONV doesn't help and larger IMPEPS doesn't help).
 
@@ -1064,8 +1065,36 @@ int init_global(void)
         RADWAVE_DTOUT1=1.e-2;
       }
 
+      if(RADWAVE_NUMERO==101){ //sound wave
+        RADWAVE_RHOFAC=0.001;
+        RADWAVE_B0=0;
+        RADWAVE_PP=0.01;
+        RADWAVE_CC=10.;
+        RADWAVE_KAPPA=1e-6;
+        RADWAVE_DRRE=1e-3*RADWAVE_RHOFAC;
+        RADWAVE_DRIM=0.*RADWAVE_RHOFAC;
+        RADWAVE_DVRE=0.0001*RADWAVE_RHOFAC;
+        RADWAVE_DVIM=0*RADWAVE_RHOFAC;
+        RADWAVE_DV2RE=0*RADWAVE_RHOFAC;
+        RADWAVE_DV2IM=0*RADWAVE_RHOFAC;
+        RADWAVE_DURE=0.0000152284*RADWAVE_RHOFAC;
+        RADWAVE_DUIM=0*RADWAVE_RHOFAC;
+        RADWAVE_DB2RE=0*RADWAVE_RHOFAC;
+        RADWAVE_DB2IM=0*RADWAVE_RHOFAC;
+        RADWAVE_DERE=1e-1*RADWAVE_RHOFAC;
+        RADWAVE_DEIM=0*RADWAVE_RHOFAC;
+        RADWAVE_DFRE=0*RADWAVE_RHOFAC;
+        RADWAVE_DFIM=0*RADWAVE_RHOFAC;
+        RADWAVE_DF2RE=0*RADWAVE_RHOFAC;
+        RADWAVE_DF2IM=0*RADWAVE_RHOFAC;
+        RADWAVE_OMRE=0.628319;
+        RADWAVE_OMIM=0;
+        RADWAVE_DTOUT1=2*M_PI/RADWAVE_OMRE/10.;
+      }
+
       if(RADWAVE_NUMERO==1001){
         RADWAVE_RHOFAC=0.001;
+        RADWAVE_B0=0.1;
         RADWAVE_PP=0.1;
         RADWAVE_CC=10.;
         RADWAVE_KAPPA=0.1;
@@ -1200,7 +1229,7 @@ int init_global(void)
     if(RADWAVE_VX==0.0) tf = MAX(100.0*RADWAVE_DTOUT1,5.0/RADWAVE_CC);
     else tf = MAX(100.0*RADWAVE_DTOUT1,5.0/MIN(RADWAVE_VX,RADWAVE_CC));
 
-    if(RADWAVE_NWAVE==5&&RADWAVE_NUMERO==1001){
+    if(RADWAVE_NWAVE==5&&(RADWAVE_NUMERO==1001||RADWAVE_NUMERO==101)){
       tf = 11.*RADWAVE_DTOUT1;
     }
 
@@ -3389,22 +3418,22 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
       //Fx=0.;
     }
 
-    if(RADWAVE_NWAVE==5 && RADWAVE_NUMERO==1001){
+    if(RADWAVE_NWAVE==5 && (RADWAVE_NUMERO==1001||RADWAVE_NUMERO==101)){
       
       //printf("RHOZERO = %g\nUINT = %g\nT = %g\nERAD = %g\nARAD = %g\n",RADWAVE_RHOZERO,RADWAVE_UINT,RADWAVE_TEMP,RADWAVE_ERAD,ARAD_RAD_CODE);getchar();
       
       
       rho=RADWAVE_RHOZERO*(1+RADWAVE_DRRE*exp(-RADWAVE_OMIM*time)*(cos(RADWAVE_OMRE*time-RADWAVE_KK*xx)-RADWAVE_DRIM/RADWAVE_DRRE*sin(RADWAVE_OMRE*time-RADWAVE_KK*xx)));
       //FTYPE RADWAVE_DURE=RADWAVE_DPRE/(gam-1.); FTYPE RADWAVE_DUIM=RADWAVE_DPIM/(gam-1.);
-      uint=RADWAVE_UINT*(1.+RADWAVE_DURE*exp(-RADWAVE_OMIM*time)*(cos(RADWAVE_OMRE*time-RADWAVE_KK*xx)-RADWAVE_DUIM/RADWAVE_DURE*sin(RADWAVE_OMRE*time-RADWAVE_KK*xx))) ;
+      uint=RADWAVE_UINT+RADWAVE_DURE*exp(-RADWAVE_OMIM*time)*(cos(RADWAVE_OMRE*time-RADWAVE_KK*xx)-RADWAVE_DUIM/RADWAVE_DURE*sin(RADWAVE_OMRE*time-RADWAVE_KK*xx)) ;
       FTYPE cs=1/RADWAVE_CC;
       vx=0. + RADWAVE_DVRE*exp(-RADWAVE_OMIM*time)*(cos(RADWAVE_OMRE*time-RADWAVE_KK*xx)-RADWAVE_DVIM/RADWAVE_DVRE*sin(RADWAVE_OMRE*time-RADWAVE_KK*xx)) ; //RADWAVE_DVRE absolute!
       vy=0. + RADWAVE_DV2RE*exp(-RADWAVE_OMIM*time)*(cos(RADWAVE_OMRE*time-RADWAVE_KK*xx)-RADWAVE_DV2IM/RADWAVE_DV2RE*sin(RADWAVE_OMRE*time-RADWAVE_KK*xx)) ; //RADWAVE_DVRE absolute!
-      Bx=.1;
-      By=0. + RADWAVE_DB2RE*exp(-RADWAVE_OMIM*time)*(cos(RADWAVE_OMRE*time-RADWAVE_KK*xx)-RADWAVE_DB2IM/RADWAVE_DB2RE*sin(RADWAVE_OMRE*time-RADWAVE_KK*xx)) ; //RADWAVE_DVRE absolute!
-      ERAD=RADWAVE_ERAD*(1+RADWAVE_DERE*exp(-RADWAVE_OMIM*time)*(cos(RADWAVE_OMRE*time-RADWAVE_KK*xx)-RADWAVE_DEIM/RADWAVE_DERE*sin(RADWAVE_OMRE*time-RADWAVE_KK*xx)));
-      Fx=0. + RADWAVE_ERAD*RADWAVE_DFRE*exp(-RADWAVE_OMIM*time)*(cos(RADWAVE_OMRE*time-RADWAVE_KK*xx)-RADWAVE_DFIM/RADWAVE_DFRE*sin(RADWAVE_OMRE*time-RADWAVE_KK*xx));
-      Fy=0. + RADWAVE_ERAD*RADWAVE_DF2RE*exp(-RADWAVE_OMIM*time)*(cos(RADWAVE_OMRE*time-RADWAVE_KK*xx)-RADWAVE_DF2IM/RADWAVE_DF2RE*sin(RADWAVE_OMRE*time-RADWAVE_KK*xx));
+      Bx=RADWAVE_B0;
+      By=RADWAVE_B0 + RADWAVE_DB2RE*exp(-RADWAVE_OMIM*time)*(cos(RADWAVE_OMRE*time-RADWAVE_KK*xx)-RADWAVE_DB2IM/RADWAVE_DB2RE*sin(RADWAVE_OMRE*time-RADWAVE_KK*xx)) ; //RADWAVE_DVRE absolute!
+      ERAD=RADWAVE_ERAD+RADWAVE_DERE*exp(-RADWAVE_OMIM*time)*(cos(RADWAVE_OMRE*time-RADWAVE_KK*xx)-RADWAVE_DEIM/RADWAVE_DERE*sin(RADWAVE_OMRE*time-RADWAVE_KK*xx));
+      Fx=0. + RADWAVE_DFRE*exp(-RADWAVE_OMIM*time)*(cos(RADWAVE_OMRE*time-RADWAVE_KK*xx)-RADWAVE_DFIM/RADWAVE_DFRE*sin(RADWAVE_OMRE*time-RADWAVE_KK*xx));
+      Fy=0. + RADWAVE_DF2RE*exp(-RADWAVE_OMIM*time)*(cos(RADWAVE_OMRE*time-RADWAVE_KK*xx)-RADWAVE_DF2IM/RADWAVE_DF2RE*sin(RADWAVE_OMRE*time-RADWAVE_KK*xx));
       Fz=0.;
       
       //rho=RADWAVE_RHOZERO;
