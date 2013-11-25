@@ -495,7 +495,7 @@ int user1_init_primitives(int inittype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FT
   //
   /////////////////////////////// 
 
-#if(WHICHPROBLEM==KOMIPROBLEM)
+#if(WHICHPROBLEM==KOMIPROBLEM || WHICHPROBLEM==RADWAVE)
   trifprintf("KOMIPROBLEM: leaving magnetic field as it is -- SASFIX\n");  //somehow B[2] is zeroed out if don't do this
 #elif(1)
   trifprintf("init_vpot #1\n");
