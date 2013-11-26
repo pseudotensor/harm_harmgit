@@ -986,7 +986,7 @@ int init_global(void)
     //    RADWAVE_NWAVE=2; // GOOD
     //    RADWAVE_NWAVE=3; // GOOD
     //    RADWAVE_NWAVE=4; // gets noisy in prad1 by t~30 with MINM or MC  -- check koral when Olek makes it work.  KORALTODO
-    RADWAVE_NUMERO=101; // GOOD
+    RADWAVE_NUMERO=110; // GOOD
     //RADWAVE_NUMERO=41; // OK if don't use check if can do explicit.  So use this to show how should more generally improve the tau based suppression check!  But, DAMPS significantly! Smaller IMPCONV doesn't help.  Check with koral KORALTODO.  MC doesn't help/change much.
     //RADWAVE_NUMERO=1; // wierd jello oscillations in prad0, and no wave motion -- like in koral though.  KORALTODO.  With only implicit, jello is different (smaller IMPCONV doesn't help and larger IMPEPS doesn't help).
 
@@ -1088,6 +1088,33 @@ int init_global(void)
         RADWAVE_DF2RE=0*RADWAVE_RHOFAC;
         RADWAVE_DF2IM=0*RADWAVE_RHOFAC;
         RADWAVE_OMRE=0.628319;
+        RADWAVE_OMIM=0;
+        RADWAVE_DTOUT1=2*M_PI/RADWAVE_OMRE/10.;
+      }
+
+      if(RADWAVE_NUMERO==110){ //fast magnetosonic wave
+        RADWAVE_RHOFAC=0.001;
+        RADWAVE_B0=0.100759;
+        RADWAVE_PP=0.01;
+        RADWAVE_CC=10.;
+        RADWAVE_KAPPA=1e-6;
+        RADWAVE_DRRE=1e-3*RADWAVE_RHOFAC;
+        RADWAVE_DRIM=0.*RADWAVE_RHOFAC;
+        RADWAVE_DVRE=0.000160294*RADWAVE_RHOFAC;
+        RADWAVE_DVIM=0*RADWAVE_RHOFAC;
+        RADWAVE_DV2RE=-0.0000979087*RADWAVE_RHOFAC;
+        RADWAVE_DV2IM=0*RADWAVE_RHOFAC;
+        RADWAVE_DURE=0.0000152284*RADWAVE_RHOFAC;
+        RADWAVE_DUIM=0*RADWAVE_RHOFAC;
+        RADWAVE_DB2RE=0.000162303*RADWAVE_RHOFAC;
+        RADWAVE_DB2IM=0*RADWAVE_RHOFAC;
+        RADWAVE_DERE=0*RADWAVE_RHOFAC;
+        RADWAVE_DEIM=0*RADWAVE_RHOFAC;
+        RADWAVE_DFRE=0*RADWAVE_RHOFAC;
+        RADWAVE_DFIM=0*RADWAVE_RHOFAC;
+        RADWAVE_DF2RE=0*RADWAVE_RHOFAC;
+        RADWAVE_DF2IM=0*RADWAVE_RHOFAC;
+        RADWAVE_OMRE=1.00716;
         RADWAVE_OMIM=0;
         RADWAVE_DTOUT1=2*M_PI/RADWAVE_OMRE/10.;
       }
@@ -1229,7 +1256,7 @@ int init_global(void)
     if(RADWAVE_VX==0.0) tf = MAX(100.0*RADWAVE_DTOUT1,5.0/RADWAVE_CC);
     else tf = MAX(100.0*RADWAVE_DTOUT1,5.0/MIN(RADWAVE_VX,RADWAVE_CC));
 
-    if(RADWAVE_NWAVE==5&&(RADWAVE_NUMERO==1001||RADWAVE_NUMERO==101)){
+    if(RADWAVE_NWAVE==5&&(RADWAVE_NUMERO==1001||RADWAVE_NUMERO==101||RADWAVE_NUMERO==110)){
       tf = 11.*RADWAVE_DTOUT1;
     }
 
@@ -3470,7 +3497,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
       //Fx=0.;
     }
 
-    if(RADWAVE_NWAVE==5 && (RADWAVE_NUMERO==1001||RADWAVE_NUMERO==101)){
+    if(RADWAVE_NWAVE==5 && (RADWAVE_NUMERO==1001||RADWAVE_NUMERO==101||RADWAVE_NUMERO==110)){
       
       //printf("RHOZERO = %g\nUINT = %g\nT = %g\nERAD = %g\nARAD = %g\n",RADWAVE_RHOZERO,RADWAVE_UINT,RADWAVE_TEMP,RADWAVE_ERAD,ARAD_RAD_CODE);getchar();
       
