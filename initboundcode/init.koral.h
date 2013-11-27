@@ -909,7 +909,7 @@ struct Ccoordparams {
 
 
 //choose which Komissarov's test number to use (1 through 9)
-#define WHICHKOMI 1
+#define WHICHKOMI 2
 
 #define N2 1
 #define N3 1
