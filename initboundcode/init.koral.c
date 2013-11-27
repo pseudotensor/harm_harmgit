@@ -1089,7 +1089,7 @@ int init_global(void)
     }
 
     if(RADWAVE_NWAVE==3){ //radiative density wave advected with the gas
-      FLUXDISSIPATION=(0.0);
+      //      FLUXDISSIPATION=(0.0);
       RADWAVE_PP=10.;
       RADWAVE_CC=1.e6;
       RADWAVE_VX=1.e-2;
@@ -1106,7 +1106,7 @@ int init_global(void)
 
 
     if(RADWAVE_NWAVE==4){ //sound wave with radiation, set up without the phase shifts etc.
-      FLUXDISSIPATION=(0.0);
+      //      FLUXDISSIPATION=(0.0);
       RADWAVE_PP=1.;
       RADWAVE_CC=1.e2;
       RADWAVE_DTOUT1=(.005*RADWAVE_CC);

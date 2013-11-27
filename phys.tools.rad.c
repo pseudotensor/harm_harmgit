@@ -6061,10 +6061,37 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
 
 
 
-
-
-
-
+    ////////////
+    //
+    // once done iterating, regardless of result or failure, need to ensure non-iterated quantities are normal
+    //
+    /////////////
+    fracdtuu0=1.0;
+    //
+    PLOOP(pliter,pl) uu0[pl]=UFSET(CUf,fracdtuu0*dt,Uiin[pl],Ufin[pl],dUother[pl],0.0); // modifies uu0
+    PLOOP(pliter,pl){
+      if(!(pl>=UU && pl<=U3 || RADPL(pl) || pl==ENTROPY)){
+        uu[pl] = uu0[pl];
+      }
+    }
+    // regardless, invert non-iterated quantities
+    // 1) trivially invert field
+    PLOOPBONLY(pl) bestpp[pl]=bestuu[pl]=pp[pl] = uu0[pl];
+    // 2) trivially invert to get rho assuming q up-to-date
+    //    pp[RHO]= uu0[RHO]/q->ucon[TT]; // q might not be up-to-date
+    // 3) Invert other scalars (only uses uu[RHO], not pp[RHO])
+    extern int invert_scalars(struct of_geom *ptrgeom, FTYPE *Ugeomfree, FTYPE *pr);
+    invert_scalars(ptrgeom, uu,pp);
+    PLOOP(pliter,pl){
+      if(pl!=RHO && pl<UU && pl>U3 && pl<B1 && pl>B3 & RADPL(pl)==0 && pl!=ENTROPY){
+        bestpp[pl]=pp[pl];
+        bestuu[pl]=uu[pl];
+      }
+    }
+    //
+    // end trivial inversion
+    //
+    //////////////
 
   
 
@@ -6079,6 +6106,10 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
     if(failreturn==0 && earlylowerror==0){ // still check if lowitererror==1 because might have best total error at another iter.
 
 
+      // if didn't fail, shouldn't need to set fracdtuu0=1, but do so just in caes.
+      fracdtuu0=1.0;
+
+
       int fakeiter;
       for(fakeiter=0;fakeiter<=0;fakeiter++){
 
@@ -6089,6 +6120,8 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
           //////////////////////////
           //
           // check and get error for last iteration or any mods from above that are post-iteration
+          //
+          // uses final uu0 with fracdtuu0=1 to ensure really updated non-iterated quantities correctly
           //
           // The call to f_implicit() also ensures uu is consistent with new pp
           //
