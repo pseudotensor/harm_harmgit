@@ -13,3 +13,4 @@ done
 
 git fetch --all
 git pull --all
+git fetch origin --tags
