@@ -3979,7 +3979,6 @@ int donut_analytical_solution(int opticallythick, FTYPE *pp,FTYPE *X, FTYPE *V,s
 
 
 
-
 #define NOFIELD -1
 #define DISK1FIELD 0
 #define DISK2FIELD 1
@@ -3990,21 +3989,31 @@ int donut_analytical_solution(int opticallythick, FTYPE *pp,FTYPE *X, FTYPE *V,s
 #define TOROIDALFIELD 6
 #define OHSUGAFIELD 7
 
-#if(WHICHPROBLEM==RADDONUT)
+int set_fieldtype(void)
+{
+  int FIELDTYPE;
 
-#if(RADNT_DONUTTYPE==DONUTOLEK)
-#define FIELDTYPE DISK2FIELD
-#elif(RADNT_DONUTTYPE==DONUTOHSUGA)
-#define FIELDTYPE OHSUGAFIELD
-#else
-#define FIELDTYPE DISK2FIELD // default
-//#define FIELDTYPE DISK1FIELD
-#endif
+  if(WHICHPROBLEM==RADDONUT){
 
-#else
-#define FIELDTYPE NOFIELD
-#endif
+    if(RADNT_DONUTTYPE==DONUTOLEK){
+      FIELDTYPE=VERTFIELD; // DISK2VERT//DISK2FIELD
+      //FIELDTYPE=DISK2FIELD;
+    }
+    else if(RADNT_DONUTTYPE==DONUTOHSUGA){
+      FIELDTYPE=OHSUGAFIELD;
+    }
+    else{
+      FIELDTYPE=VERTFIELD;
+        //FIELDTYPE=DISK2FIELD; // default
+        //FIELDTYPE=DISK1FIELD;
+    }
+  }
+  else{
+    FIELDTYPE=NOFIELD;
+  }
 
+  return(FIELDTYPE);
+}
 
 
 
@@ -4076,6 +4085,9 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
   FTYPE r,th,ph;
   FTYPE vpot;
   FTYPE setblandfordfield(FTYPE r, FTYPE th);
+
+  int set_fieldtype(void);
+  int FIELDTYPE=set_fieldtype();
 
 
   //#define FRACAPHICUT 0.1
@@ -4303,6 +4315,9 @@ int get_maxes(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *bsq_max, FTYPE *ptot_
   int funreturn;
   int eqslice;
   FTYPE parms[MAXPASSPARMS];
+
+  int set_fieldtype(void);
+  int FIELDTYPE=set_fieldtype();
   
   if(FIELDTYPE==VERTFIELD || FIELDTYPE==BLANDFORDQUAD){
     eqslice=1;
