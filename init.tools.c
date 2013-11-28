@@ -598,7 +598,7 @@ int user1_init_vpot2field_user(SFTYPE time, int *fieldfrompotential, FTYPE (*A)[
 
   // Can override vector potential choice for some field components, like B3 in axisymmetry
   // see init.sasha.c
-  if(fieldfrompotential[B1]==1 && fieldfrompotential[B2]==1 && fieldfrompotential[B3]==1){
+  if(fieldfrompotential[1]==1 && fieldfrompotential[2]==1 && fieldfrompotential[3]==1){
     ////////////////////
     //
     // copy back
@@ -613,7 +613,7 @@ int user1_init_vpot2field_user(SFTYPE time, int *fieldfrompotential, FTYPE (*A)[
     int loc;
     FULLLOOP{
       PLOOPBONLY(pl){
-        if(fieldfrompotential[pl]==1){
+        if(fieldfrompotential[pl-B1+1]==1){
           MACP0A1(prim,i,j,k,pl) =  GLOBALMACP0A1(ptemparray,i,j,k,pl);
         }
         else{
