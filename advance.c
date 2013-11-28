@@ -988,6 +988,8 @@ static FTYPE compute_dissmeasure(int i, int j, int k, int loc, FTYPE *pr, struct
   FTYPE dissmeasure;
   int pliter,pl;
 
+  //  return(-1.0);
+
   if(NSPECIAL>0){
     FTYPE dUgeomtemp[NPR+NSPECIAL];
     FTYPE uitemp[NPR+NSPECIAL];
@@ -1002,14 +1004,25 @@ static FTYPE compute_dissmeasure(int i, int j, int k, int loc, FTYPE *pr, struct
     //
     int plsp;
     int specialfrom;
+    int truenspecial=0;
 #if(NSPECIAL==6)
+
+#if(EOMRADTYPE!=EOMRADNONE)
+    int plspeciallist[NSPECIAL]={SPECIALPL1,SPECIALPL2,SPECIALPL3,SPECIALPL4,SPECIALPL5};
+    truenspecial=5;
+#else
     int plspeciallist[NSPECIAL]={SPECIALPL1,SPECIALPL2,SPECIALPL3,SPECIALPL4,SPECIALPL5,SPECIALPL6};
+    truenspecial=NSPECIAL;
+#endif
+
 #elif(NSPECIAL==2)
     int plspeciallist[NSPECIAL]={SPECIALPL1,SPECIALPL2};
+    truenspecial=NSPECIAL;
 #elif(NSPECIAL==1)
     int plspeciallist[NSPECIAL]={SPECIALPL1};
+    truenspecial=NSPECIAL;
 #endif
-    PLOOPSPECIALONLY(plsp,NSPECIAL){
+    PLOOPSPECIALONLY(plsp,truenspecial){
       specialfrom=plspeciallist[plsp-NPR];
       dUgeomtemp[plsp]=0.0;
       uitemp[plsp] = uitemp[specialfrom];
@@ -1022,9 +1035,9 @@ static FTYPE compute_dissmeasure(int i, int j, int k, int loc, FTYPE *pr, struct
     // get flux update for all NPR and NSEPCIAL quantities
     flux2dUavg(DOSPECIALPL,i,j,k,F1,F2,F3,dUriemann1temp,dUriemann2temp,dUriemann3temp);
     //
-    // get dUriemann for NPR and NSPECIAL quantities
+    // get dUriemann for NPR and truenspecial quantities
     PLOOP(pliter,pl) dUriemanntemp[pl]=dUriemann1temp[pl]+dUriemann2temp[pl]+dUriemann3temp[pl];
-    PLOOPSPECIALONLY(plsp,NSPECIAL){
+    PLOOPSPECIALONLY(plsp,truenspecial){
       dUriemanntemp[plsp]=dUriemann1temp[plsp]+dUriemann2temp[plsp]+dUriemann3temp[plsp];
     }
     // Get final U for NPR and NSPECIAL quantities
@@ -1045,7 +1058,7 @@ static FTYPE compute_dissmeasure(int i, int j, int k, int loc, FTYPE *pr, struct
     FTYPE dissmeasurepl[NPR];
     FTYPE signdiss;
     FTYPE norm[NPR];
-    PLOOPSPECIALONLY(plsp,NSPECIAL){
+    PLOOPSPECIALONLY(plsp,truenspecial){
       specialfrom=plspeciallist[plsp-NPR];
       dUdissplusnondiss[specialfrom]=(uftemp[specialfrom] - uitemp[specialfrom]);
       dUnondiss[specialfrom]=(uftemp[plsp] - uitemp[plsp]);
@@ -1056,7 +1069,7 @@ static FTYPE compute_dissmeasure(int i, int j, int k, int loc, FTYPE *pr, struct
 
     // get actual norm that's over multiple components for the magentic field
     FTYPE actualnorm[NPR];
-    PLOOPSPECIALONLY(plsp,NSPECIAL){
+    PLOOPSPECIALONLY(plsp,truenspecial){
       specialfrom=plspeciallist[plsp-NPR];
       if(specialfrom==RHO || specialfrom==UU){
         actualnorm[specialfrom] = SMALL + norm[specialfrom];
@@ -1085,7 +1098,7 @@ static FTYPE compute_dissmeasure(int i, int j, int k, int loc, FTYPE *pr, struct
     // compute dissmeasure for each quantity using actualnorm
     //
     /////////////
-    PLOOPSPECIALONLY(plsp,NSPECIAL){
+    PLOOPSPECIALONLY(plsp,truenspecial){
       specialfrom=plspeciallist[plsp-NPR];
 
       // set sign in front of dissmeasure
@@ -1120,12 +1133,12 @@ static FTYPE compute_dissmeasure(int i, int j, int k, int loc, FTYPE *pr, struct
     // Choose which *total* dissipation measurement to use.  Must somehow combine different original equations of motion into a single measure since energy vs. entropy changes involve energy equation that combines both shocks and reconnection.
     //
     ///////////
-    if(NSPECIAL==1){
+    if(truenspecial==1){
       dissmeasure=dissmeasurepl[SPECIALPL1];
     }
     // Can't trust energy, since average vs. point issue itself leads to erreoneous apparent dissipation (which when using energy equation alone is what leads to inappropriate heating in divergent flows, as well as inappropriate cooling in divergent flows, often in stripes in u_g due to sensitivity to higher-order interpolation schemes like PPM).
     //          dissmeasure=dissmeasurepl[SPECIALPL2];
-    else if(NSPECIAL>=6){
+    else if(truenspecial>=5){
       // can't trust energy, but density doesn't account for magnetic energy.  So use density for shocks and magnetic energy flux for reconnection.
       dissmeasure=dissmeasurepl[SPECIALPL1];
 
@@ -1136,7 +1149,7 @@ static FTYPE compute_dissmeasure(int i, int j, int k, int loc, FTYPE *pr, struct
       // add field dissipation measure, but only account if above machine error (i.e. relative to total energy as defined above)
       dissmeasure=MIN(dissmeasure,10.0*NUMEPSILON+dissmeasurefield);
 
-      if(SPECIALPL6>=0){
+      if(truenspecial>=6 && SPECIALPL6>=0){
         // add radiation pressure to total pressure if optically thick
         FTYPE tautot[NDIM],tautotmax;
         calc_tautot(pr, ptrgeom, tautot, &tautotmax);
@@ -1147,7 +1160,7 @@ static FTYPE compute_dissmeasure(int i, int j, int k, int loc, FTYPE *pr, struct
       }
     }
 
-    if(NSPECIAL>0 && DODISSMEASURE){
+    if(truenspecial>0 && DODISSMEASURE){
       // DEBUG
       GLOBALMACP0A1(dissmeasurearray,ptrgeom->i,ptrgeom->j,ptrgeom->k,NSPECIAL)=dissmeasure;
     }
