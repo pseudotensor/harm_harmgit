@@ -715,7 +715,7 @@ int diag_fixup_U(int docorrectucons, FTYPE *Ui, FTYPE *Uf, FTYPE *ucons, struct 
 #define FIXUPTYPE 1
 
 // finalstep==0 is non-accounting, finalstep==1 is accounting
-int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
+int fixup1zone(FTYPE *pr, FTYPE *uconsinput, struct of_geom *ptrgeom, int finalstep)
 {
   int pliter,pl;
   int ip, jp, im, jm;
@@ -744,7 +744,13 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
   PFTYPE oldmhdpflag,oldradpflag;
 
 
-  
+
+  // store ucons and only change if needed (and handle avoidance of B1,B2,B3 in case ucons points to unewglobal staggered field, while here we operate on centers)
+  FTYPE ucons[NPR];
+  PLOOP(pliter,pl) ucons[pl]=uconsinput[pl];
+
+
+
   // assign general floor variables
   // whether to check floor condition
   PALLLOOP(pl){
@@ -1047,12 +1053,21 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
     docorrectucons=1;
     struct of_state qnew;
     get_state(pr,ptrgeom,&qnew);
+
     primtoU(UEVOLVE,pr,&qnew,ptrgeom,ucons, NULL);
 
     return(-1); // -1 means made changes
 
   }
 
+
+  // copy over ucons result in case changed.
+  PLOOP(pliter,pl){
+    // if staggered field, avoid modifying field since at FACEs, not CENT where pr lives.
+    if(BPL(pl)==0 && FLUXB==FLUXCTSTAG || FLUXB==FLUXCTTOTH){
+      uconsinput[pl] = ucons[pl];
+    }
+  }
 
 
   
