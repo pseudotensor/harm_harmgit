@@ -3945,6 +3945,13 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     if((pb[RHO]<=0.)&&(pb[UU]<0.))  *lpflag= UTOPRIMFAILRHOUNEG;
     if(pb[PRAD0]<=0.) *lpflagrad = UTOPRIMRADFAILERFNEG;
   }
+
+
+  // force field to evolve as directly.
+  PLOOPBONLY(pl){
+    pf[pl]=pb[pl]=uu0[pl];
+    dUcomp[RADSOURCE][pl]=0.0; // always has to be.
+  }
   
 
 

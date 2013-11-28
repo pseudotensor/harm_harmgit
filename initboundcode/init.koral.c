@@ -2429,7 +2429,7 @@ int init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2
 
 
 
-
+// When setting primitives, put conditionals around PRAD? or URAD? variables to if want to be able to set EOMRADTYPE to EOMRADNONE and have work as non-radiation problem
 int init_dsandvels(int inittype, int pos, int *whichvel, int*whichcoord, SFTYPE time, int i, int j, int k, FTYPE *pr, FTYPE *pstag)
 {
   int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr, FTYPE *pstag);
@@ -2475,11 +2475,12 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
       PLOOPBONLY(pl) pstag[pl]=pr[pl];
     }
 
-
-    pr[URAD0] = 1./RHOBAR; // i.e. c^2 * 1g/cm^3 of energy density
-    pr[URAD1] = 0 ;
-    pr[URAD2] = 0 ;    
-    pr[URAD3] = 0 ;
+    if(PRAD0>=0){
+      pr[URAD0] = 1./RHOBAR; // i.e. c^2 * 1g/cm^3 of energy density
+      pr[URAD1] = 0 ;
+      pr[URAD2] = 0 ;    
+      pr[URAD3] = 0 ;
+    }
 
     *whichvel=WHICHVEL;
     *whichcoord=CARTMINKMETRIC2;
@@ -2516,7 +2517,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
 
 
 
-    if(1){
+    if(PRAD0>=0){
       // new way: correctly transform -- also how koral currently setup
       //E, F^i in orthonormal fluid frame
       FTYPE pradffortho[NPR];
@@ -2531,12 +2532,16 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
       *whichcoord=MCOORD;
       prad_fforlab(whichvel, whichcoord, FF2LAB, i,j,k,CENT,NULL,pradffortho,pr, pr);
     }
-    else if(0){
+    else if(PRAD0>=0){
       // old way: don't transform, leave as radiation frame E.
       pr[PRAD0] = RADBEAMFLAT_ERAD;
       pr[PRAD1] = 0 ;
       pr[PRAD2] = 0 ;    
       pr[PRAD3] = 0 ;
+      *whichvel=WHICHVEL;
+      *whichcoord=MCOORD;
+    }
+    else{
       *whichvel=WHICHVEL;
       *whichcoord=MCOORD;
     }
@@ -2609,10 +2614,12 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
     FTYPE Fx,Fy,Fz;
     Fx=Fy=Fz=0.0;
 
-    pr[URAD0] = ERAD ;
-    pr[URAD1] = Fx ;
-    pr[URAD2] = Fy ;    
-    pr[URAD3] = Fz ;
+    if(PRAD0>=0){
+      pr[URAD0] = ERAD ;
+      pr[URAD1] = Fx ;
+      pr[URAD2] = Fy ;    
+      pr[URAD3] = Fz ;
+    }
 
     // KORALTODO: no transformation, but only because tuned units to be like koral and so ERAD gives same value and also because no Flux.   Also, would give same result as assuming in fluid frame because vfluid=0 here and F=0 here.
 
@@ -2672,26 +2679,32 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
       PLOOPBONLY(pl) pstag[pl]=pr[pl];
     }
 
-    pr[PRAD0] = 0 ; // so triggers failure if used
-    pr[PRAD1] = 0 ;
-    pr[PRAD2] = 0 ;    
-    pr[PRAD3] = 0 ;
-
-
-    //E, F^i in orthonormal fluid frame
-    FTYPE pradffortho[NPR];
-    pradffortho[PRAD0] = ERAD;
-    pradffortho[PRAD1] = Fx;
-    pradffortho[PRAD2] = Fy;
-    pradffortho[PRAD3] = Fz;
-
-
-    // Transform these fluid frame E,F^i to lab frame coordinate basis primitives
     *whichvel=VEL4;
     *whichcoord=CARTMINKMETRIC2;
-    prad_fforlab(whichvel, whichcoord, FF2LAB, i,j,k,CENT,NULL,pradffortho,pr, pr);
 
-    //  PLOOPRADONLY(pl) dualfprintf(fail_file,"FOO1: i=%d pl=%d pr=%g\n",ptrgeomreal->i,pl,pr[pl]);
+    if(PRAD0>=0){
+      pr[PRAD0] = 0 ; // so triggers failure if used
+      pr[PRAD1] = 0 ;
+      pr[PRAD2] = 0 ;    
+      pr[PRAD3] = 0 ;
+    
+
+
+      //E, F^i in orthonormal fluid frame
+      FTYPE pradffortho[NPR];
+      pradffortho[PRAD0] = ERAD;
+      pradffortho[PRAD1] = Fx;
+      pradffortho[PRAD2] = Fy;
+      pradffortho[PRAD3] = Fz;
+
+
+      // Transform these fluid frame E,F^i to lab frame coordinate basis primitives
+      prad_fforlab(whichvel, whichcoord, FF2LAB, i,j,k,CENT,NULL,pradffortho,pr, pr);
+
+      //  PLOOPRADONLY(pl) dualfprintf(fail_file,"FOO1: i=%d pl=%d pr=%g\n",ptrgeomreal->i,pl,pr[pl]);
+
+    }
+
 
   
     return(0);
@@ -2758,25 +2771,28 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
       PLOOPBONLY(pl) pstag[pl]=pr[pl];
     }
 
-
-    pr[PRAD0] = 0 ; // so triggers failure if used
-    pr[PRAD1] = 0 ;
-    pr[PRAD2] = 0 ;    
-    pr[PRAD3] = 0 ;
-
-    //E, F^i in orthonormal fluid frame
-    FTYPE pradffortho[NPR];
-    pradffortho[PRAD0] = ERAD;
-    pradffortho[PRAD1] = Fx;
-    pradffortho[PRAD2] = Fy;
-    pradffortho[PRAD3] = Fz;
-
-    // Transform these fluid frame E,F^i to lab frame coordinate basis primitives
     *whichvel=VEL4;
     *whichcoord=CARTMINKMETRIC2;
-    prad_fforlab(whichvel, whichcoord, FF2LAB, i,j,k,CENT,NULL,pradffortho,pr, pr);
-   
-    // PLOOP(pliter,pl) dualfprintf(fail_file,"pl=%d pr=%g\n",pl,pr[pl]);
+    
+
+    if(PRAD0>=0){
+      pr[PRAD0] = 0 ; // so triggers failure if used
+      pr[PRAD1] = 0 ;
+      pr[PRAD2] = 0 ;    
+      pr[PRAD3] = 0 ;
+
+      //E, F^i in orthonormal fluid frame
+      FTYPE pradffortho[NPR];
+      pradffortho[PRAD0] = ERAD;
+      pradffortho[PRAD1] = Fx;
+      pradffortho[PRAD2] = Fy;
+      pradffortho[PRAD3] = Fz;
+
+      // Transform these fluid frame E,F^i to lab frame coordinate basis primitives
+      prad_fforlab(whichvel, whichcoord, FF2LAB, i,j,k,CENT,NULL,pradffortho,pr, pr);
+      // PLOOP(pliter,pl) dualfprintf(fail_file,"pl=%d pr=%g\n",pl,pr[pl]);
+      
+    }
 
 
     return(0);
@@ -2894,20 +2910,22 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
       PLOOPBONLY(pl) pstag[pl]=pr[pl];
     }
 
-    pr[PRAD0] = ERADAMB;
-    pr[PRAD1] = 0.0 ; // static in VEL4
-    pr[PRAD2] = 0.0 ;    
-    pr[PRAD3] = 0.0 ;
+    if(PRAD0>=0){
+      pr[PRAD0] = ERADAMB;
+      pr[PRAD1] = 0.0 ; // static in VEL4
+      pr[PRAD2] = 0.0 ;    
+      pr[PRAD3] = 0.0 ;
 
-    //E, F^i in orthonormal fluid frame
-    FTYPE pradffortho[NPR];
-    pradffortho[PRAD0] = ERADAMB;
-    pradffortho[PRAD1] = Fx;
-    pradffortho[PRAD2] = Fy;
-    pradffortho[PRAD3] = Fz;
+      //E, F^i in orthonormal fluid frame
+      FTYPE pradffortho[NPR];
+      pradffortho[PRAD0] = ERADAMB;
+      pradffortho[PRAD1] = Fx;
+      pradffortho[PRAD2] = Fy;
+      pradffortho[PRAD3] = Fz;
 
-    // Transform these fluid frame E,F^i to lab frame coordinate basis primitives
-    prad_fforlab(whichvel, whichcoord, FF2LAB, i,j,k,CENT,NULL,pradffortho,pr, pr);
+      // Transform these fluid frame E,F^i to lab frame coordinate basis primitives
+      prad_fforlab(whichvel, whichcoord, FF2LAB, i,j,k,CENT,NULL,pradffortho,pr, pr);
+    }
 
     return(0);
   }
@@ -2960,12 +2978,13 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
     }
 
 
-    // pr[PRAD0] = ERADLIMIT;
-    pr[PRAD0] = uint*1E-20;
-    pr[PRAD1] = uradx ;
-    pr[PRAD2] = urady ;    
-    pr[PRAD3] = uradz ;
-
+    if(PRAD0>=0){
+      // pr[PRAD0] = ERADLIMIT;
+      pr[PRAD0] = uint*1E-20;
+      pr[PRAD1] = uradx ;
+      pr[PRAD2] = urady ;    
+      pr[PRAD3] = uradz ;
+    }
     // no transformations required since only setting fluid-frame E that is PRAD0 itself. (i.e. urad(xyz)=0 and ufluid=0)
 
     // *whichvel=WHICHVEL;
@@ -3064,40 +3083,46 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
     }
 
 
-    pr[PRAD0] = 0 ; // so triggers failure if used
-    pr[PRAD1] = 0 ;
-    pr[PRAD2] = 0 ;    
-    pr[PRAD3] = 0 ;
-
-    //E, F^i in orthonormal fluid frame
-    FTYPE pradffortho[NPR];
-    pradffortho[PRAD0] = ERAD;
-    pradffortho[PRAD1] = Fx;
-    pradffortho[PRAD2] = Fy;
-    pradffortho[PRAD3] = Fz;
-
-    // Transform these fluid frame E,F^i to lab frame coordinate basis primitives
     *whichvel=VEL4;
     *whichcoord=MCOORD;
-    prad_fforlab(whichvel, whichcoord, FF2LAB, i,j,k,CENT,NULL,pradffortho, pr, pr);
 
-    if(0){ // DEBUG
+    if(PRAD0>=0){
+      pr[PRAD0] = 0 ; // so triggers failure if used
+      pr[PRAD1] = 0 ;
+      pr[PRAD2] = 0 ;    
+      pr[PRAD3] = 0 ;
 
-      // get metric grid geometry for these ICs
-      int getprim=0;
-      struct of_geom geomrealdontuse;
-      struct of_geom *ptrgeomreal=&geomrealdontuse;
-      gset(getprim,*whichcoord,i,j,k,ptrgeomreal);
+      //E, F^i in orthonormal fluid frame
+      FTYPE pradffortho[NPR];
+      pradffortho[PRAD0] = ERAD;
+      pradffortho[PRAD1] = Fx;
+      pradffortho[PRAD2] = Fy;
+      pradffortho[PRAD3] = Fz;
 
-      dualfprintf(fail_file,"AFTER: i=%d rho=%Lg uint=%Lg vx=%Lg ERAD=%Lg uradx=%Lg\n",i,pr[RHO]*RHOBAR,pr[UU]*UBAR,pr[U1]*sqrtl(ptrgeomreal->gcov[GIND(1,1)])*VBAR,pr[URAD0]*UBAR,pr[URAD1]*sqrtl(ptrgeomreal->gcov[GIND(1,1)])*VBAR);
+      // Transform these fluid frame E,F^i to lab frame coordinate basis primitives
+      prad_fforlab(whichvel, whichcoord, FF2LAB, i,j,k,CENT,NULL,pradffortho, pr, pr);
+
+      if(0){ // DEBUG
+
+        // get metric grid geometry for these ICs
+        int getprim=0;
+        struct of_geom geomrealdontuse;
+        struct of_geom *ptrgeomreal=&geomrealdontuse;
+        gset(getprim,*whichcoord,i,j,k,ptrgeomreal);
+
+        dualfprintf(fail_file,"AFTER: i=%d rho=%Lg uint=%Lg vx=%Lg ERAD=%Lg uradx=%Lg\n",i,pr[RHO]*RHOBAR,pr[UU]*UBAR,pr[U1]*sqrtl(ptrgeomreal->gcov[GIND(1,1)])*VBAR,pr[URAD0]*UBAR,pr[URAD1]*sqrtl(ptrgeomreal->gcov[GIND(1,1)])*VBAR);
+      }
+
+      // compared to koral, this is how koral would get CGS:
+      // fprintf(stderr,"i=%d f=%g p0=%g KKK=%Lg C3=%g rho=%g uint=%g Fx=%g ERAD=%g : kappaesperrho=%g \n",ix,f,endenGU2CGS(p0),endenGU2CGS(KKK)/powl(rhoGU2CGS(1.0),GAMMA),C3,rhoGU2CGS(pp[0]),endenGU2CGS(pp[1]),fluxGU2CGS(Fx), endenGU2CGS(E) , kappaGU2CGS(KAPPAES));
+      // fprintf(stderr,"AFTER: i=%d rho=%g uint=%g vx=%g ERAD=%g uradx=%g\n",ix,rhoGU2CGS(pp[0]),endenGU2CGS(pp[1]),velGU2CGS(pp[2]),endenGU2CGS(pp[6]),velGU2CGS(pp[7]));
+
+
     }
 
 
 
 
-    // compared to koral, this is how koral would get CGS:
-    // fprintf(stderr,"i=%d f=%g p0=%g KKK=%Lg C3=%g rho=%g uint=%g Fx=%g ERAD=%g : kappaesperrho=%g \n",ix,f,endenGU2CGS(p0),endenGU2CGS(KKK)/powl(rhoGU2CGS(1.0),GAMMA),C3,rhoGU2CGS(pp[0]),endenGU2CGS(pp[1]),fluxGU2CGS(Fx), endenGU2CGS(E) , kappaGU2CGS(KAPPAES));
-    // fprintf(stderr,"AFTER: i=%d rho=%g uint=%g vx=%g ERAD=%g uradx=%g\n",ix,rhoGU2CGS(pp[0]),endenGU2CGS(pp[1]),velGU2CGS(pp[2]),endenGU2CGS(pp[6]),velGU2CGS(pp[7]));
 
 
 
@@ -3129,11 +3154,13 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
     }
 
 
-    // direct assignments since simple
-    pr[PRAD0] = 1.0;
-    pr[PRAD1] = 0 ;
-    pr[PRAD2] = 0 ;    
-    pr[PRAD3] = 0 ;
+    if(PRAD0>=0){
+      // direct assignments since simple
+      pr[PRAD0] = 1.0;
+      pr[PRAD1] = 0 ;
+      pr[PRAD2] = 0 ;    
+      pr[PRAD3] = 0 ;
+    }
 
     // no transformations required since only setting fluid-frame E that is PRAD0 itself since ufluid=F=0
 
@@ -3244,26 +3271,27 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
     }
 
 
-
-    pr[PRAD0] = 0 ; // so triggers failure if used
-    pr[PRAD1] = 0 ;
-    pr[PRAD2] = 0 ;    
-    pr[PRAD3] = 0 ;
-
-    //E, F^i in orthonormal fluid frame
-    FTYPE pradffortho[NPR];
-    pradffortho[PRAD0] = ERAD;
-    pradffortho[PRAD1] = Fx;
-    pradffortho[PRAD2] = Fy;
-    pradffortho[PRAD3] = Fz;
-
-
-    // Transform these fluid frame E,F^i to lab frame coordinate basis primitives
     *whichvel=VEL3;
     *whichcoord=CARTMINKMETRIC2;
-    prad_fforlab(whichvel, whichcoord, FF2LAB, i,j,k,CENT,NULL, pradffortho, pr, pr);
 
-    //  PLOOPRADONLY(pl) dualfprintf(fail_file,"FOO1: i=%d pl=%d pr=%g\n",ptrgeomreal->i,pl,pr[pl]);
+    if(PRAD0>=0){
+      pr[PRAD0] = 0 ; // so triggers failure if used
+      pr[PRAD1] = 0 ;
+      pr[PRAD2] = 0 ;    
+      pr[PRAD3] = 0 ;
+
+      //E, F^i in orthonormal fluid frame
+      FTYPE pradffortho[NPR];
+      pradffortho[PRAD0] = ERAD;
+      pradffortho[PRAD1] = Fx;
+      pradffortho[PRAD2] = Fy;
+      pradffortho[PRAD3] = Fz;
+
+
+      // Transform these fluid frame E,F^i to lab frame coordinate basis primitives
+      prad_fforlab(whichvel, whichcoord, FF2LAB, i,j,k,CENT,NULL, pradffortho, pr, pr);
+      //  PLOOPRADONLY(pl) dualfprintf(fail_file,"FOO1: i=%d pl=%d pr=%g\n",ptrgeomreal->i,pl,pr[pl]);
+    }
 
  
     return(0);
@@ -3342,42 +3370,44 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
       PLOOPBONLY(pl) pstag[pl]=pr[pl];
     }
 
-
-    pr[PRAD0] = ERAD;
-    pr[PRAD1] = 0 ;
-    pr[PRAD2] = 0 ;    
-    pr[PRAD3] = 0 ;
-
-
-    pr[PRAD0] = 0 ; // so triggers failure if used
-    pr[PRAD1] = 0 ;
-    pr[PRAD2] = 0 ;    
-    pr[PRAD3] = 0 ;
-
-    //E, F^i in orthonormal fluid frame
-    FTYPE pradffortho[NPR];
-    pradffortho[PRAD0] = ERAD;
-    pradffortho[PRAD1] = Fx;
-    pradffortho[PRAD2] = Fy;
-    pradffortho[PRAD3] = Fz;
-
-
-    if(0){//DEBUG:
-      dualfprintf(fail_file,"i=%d rho=%g uint=%g ERAD=%g\n",i,rho,uint,ERAD);
-      
-      dualfprintf(fail_file,"i=%d rho=%g uint=%g ERAD=%g\n",i,rho*RHOBAR,uint*UBAR,ERAD*UBAR);
-    }
-
-
-    // Transform these fluid frame E,F^i to lab frame coordinate basis primitives
+    
     //    *whichvel=VEL3;
     *whichvel=VEL4;
-    prad_fforlab(whichvel, whichcoord, FF2LAB, i,j,k,CENT,ptrgeomreal, pradffortho, pr, pr);
 
-    if(0){ // DEBUG
-      dualfprintf(fail_file,"AFTER: i=%d rho=%Lg uint=%Lg vx=%Lg ERAD=%Lg uradx=%Lg\n",i,pr[RHO]*RHOBAR,pr[UU]*UBAR,pr[U1]*sqrtl(ptrgeomreal->gcov[GIND(1,1)])*VBAR,pr[URAD0]*UBAR,pr[URAD1]*sqrtl(ptrgeomreal->gcov[GIND(1,1)])*VBAR);
+    if(PRAD0>=0){
+      pr[PRAD0] = ERAD;
+      pr[PRAD1] = 0 ;
+      pr[PRAD2] = 0 ;    
+      pr[PRAD3] = 0 ;
+
+
+      pr[PRAD0] = 0 ; // so triggers failure if used
+      pr[PRAD1] = 0 ;
+      pr[PRAD2] = 0 ;    
+      pr[PRAD3] = 0 ;
+
+      //E, F^i in orthonormal fluid frame
+      FTYPE pradffortho[NPR];
+      pradffortho[PRAD0] = ERAD;
+      pradffortho[PRAD1] = Fx;
+      pradffortho[PRAD2] = Fy;
+      pradffortho[PRAD3] = Fz;
+
+
+      if(0){//DEBUG:
+        dualfprintf(fail_file,"i=%d rho=%g uint=%g ERAD=%g\n",i,rho,uint,ERAD);
+      
+        dualfprintf(fail_file,"i=%d rho=%g uint=%g ERAD=%g\n",i,rho*RHOBAR,uint*UBAR,ERAD*UBAR);
+      }
+
+
+      // Transform these fluid frame E,F^i to lab frame coordinate basis primitives
+      prad_fforlab(whichvel, whichcoord, FF2LAB, i,j,k,CENT,ptrgeomreal, pradffortho, pr, pr);
+
+      if(0){ // DEBUG
+        dualfprintf(fail_file,"AFTER: i=%d rho=%Lg uint=%Lg vx=%Lg ERAD=%Lg uradx=%Lg\n",i,pr[RHO]*RHOBAR,pr[UU]*UBAR,pr[U1]*sqrtl(ptrgeomreal->gcov[GIND(1,1)])*VBAR,pr[URAD0]*UBAR,pr[URAD1]*sqrtl(ptrgeomreal->gcov[GIND(1,1)])*VBAR);
+      }
     }
-
 
     return(0);
   }
@@ -3416,32 +3446,35 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
     }
 
 
-    pr[PRAD0] = 0 ; // so triggers failure if used
-    pr[PRAD1] = 0 ;
-    pr[PRAD2] = 0 ;    
-    pr[PRAD3] = 0 ;
-
-    //E, F^i in orthonormal fluid frame
-    FTYPE pradffortho[NPR];
-    pradffortho[PRAD0] = RADDOT_LTEFACTOR*calc_LTE_Efromurho(pr[RHO],pr[UU]);
-    pradffortho[PRAD1] = 0;
-    pradffortho[PRAD2] = 0;
-    pradffortho[PRAD3] = 0;
-
-    if(startpos[1]+i==RADDOT_IDOT && startpos[2]+j==RADDOT_JDOT && startpos[3]+k==RADDOT_KDOT){
-      //      dualfprintf(fail_file,"GOT INITIAL DOT\n");
-      if(N1==1) pradffortho[PRAD0] *= RADDOT_F1;
-      else{
-        pradffortho[PRAD0]*=RADDOT_F2;
-        pradffortho[PRAD2]=RADDOT_FYDOT*pradffortho[PRAD0];
-      }
-    }// end if DOT
-
-
-    // Transform these fluid frame E,F^i to lab frame coordinate basis primitives
     *whichvel=VEL4;
     *whichcoord=MCOORD;
-    prad_fforlab(whichvel, whichcoord, FF2LAB, i,j,k,CENT,NULL, pradffortho, pr, pr);
+
+    if(PRAD0>=0){
+      pr[PRAD0] = 0 ; // so triggers failure if used
+      pr[PRAD1] = 0 ;
+      pr[PRAD2] = 0 ;    
+      pr[PRAD3] = 0 ;
+
+      //E, F^i in orthonormal fluid frame
+      FTYPE pradffortho[NPR];
+      pradffortho[PRAD0] = RADDOT_LTEFACTOR*calc_LTE_Efromurho(pr[RHO],pr[UU]);
+      pradffortho[PRAD1] = 0;
+      pradffortho[PRAD2] = 0;
+      pradffortho[PRAD3] = 0;
+
+      if(startpos[1]+i==RADDOT_IDOT && startpos[2]+j==RADDOT_JDOT && startpos[3]+k==RADDOT_KDOT){
+        //      dualfprintf(fail_file,"GOT INITIAL DOT\n");
+        if(N1==1) pradffortho[PRAD0] *= RADDOT_F1;
+        else{
+          pradffortho[PRAD0]*=RADDOT_F2;
+          pradffortho[PRAD2]=RADDOT_FYDOT*pradffortho[PRAD0];
+        }
+      }// end if DOT
+
+      
+      // Transform these fluid frame E,F^i to lab frame coordinate basis primitives
+      prad_fforlab(whichvel, whichcoord, FF2LAB, i,j,k,CENT,NULL, pradffortho, pr, pr);
+    }
 
     return(0);
   }
@@ -3494,48 +3527,59 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
     // set as in fluid frame
     FTYPE pradffortho[NPR],pradfforthoatm[NPR];
     if(1){
-
-      // choose atmosphere level of radiation
-      pradfforthoatm[PRAD0]=RADNT_ERADATMMIN*pow(r/RADNT_ROUT,-2.5);
-      pradfforthoatm[PRAD1]=0;
-      pradfforthoatm[PRAD2]=0;
-      pradfforthoatm[PRAD3]=0;
-
-      // copy as backup or atmosphere
-      pradffortho[PRAD0]=pradfforthoatm[PRAD0];
-      pradffortho[PRAD1]=pradfforthoatm[PRAD1];
-      pradffortho[PRAD2]=pradfforthoatm[PRAD2];
-      pradffortho[PRAD3]=pradfforthoatm[PRAD3];
+      
+      if(PRAD0>=0){
+        // choose atmosphere level of radiation
+        pradfforthoatm[PRAD0]=RADNT_ERADATMMIN*pow(r/RADNT_ROUT,-2.5);
+        pradfforthoatm[PRAD1]=0;
+        pradfforthoatm[PRAD2]=0;
+        pradfforthoatm[PRAD3]=0;
+        
+        // copy as backup or atmosphere
+        pradffortho[PRAD0]=pradfforthoatm[PRAD0];
+        pradffortho[PRAD1]=pradfforthoatm[PRAD1];
+        pradffortho[PRAD2]=pradfforthoatm[PRAD2];
+        pradffortho[PRAD3]=pradfforthoatm[PRAD3];
+      }
 
 
       // So donut already has ambient in whichvel whichcoord, now get donut
       if(WHICHPROBLEM==RADDONUT){
+
         // donut expects fluid frame values in pr.  JCM sets as output in fluid frame so use same conversion below.
-        pr[PRAD0]=pradffortho[PRAD0];
-        pr[PRAD1]=pradffortho[PRAD1];
-        pr[PRAD2]=pradffortho[PRAD2];
-        pr[PRAD3]=pradffortho[PRAD3];
+        if(PRAD0>=0){
+          pr[PRAD0]=pradffortho[PRAD0];
+          pr[PRAD1]=pradffortho[PRAD1];
+          pr[PRAD2]=pradffortho[PRAD2];
+          pr[PRAD3]=pradffortho[PRAD3];
+        }
         
 
         // ADD DONUT
         returndonut=get_full_donut(*whichvel,*whichcoord,RADDONUT_OPTICALLYTHICKTORUS, pr,X,V,ptrgeomreal);  
      
-        // donut returns fluid frame orthonormal values for radiation in pp
-        pradffortho[PRAD0]=pr[PRAD0];
-        pradffortho[PRAD1]=pr[PRAD1];
-        pradffortho[PRAD2]=pr[PRAD2];
-        pradffortho[PRAD3]=pr[PRAD3];
+        if(PRAD0>=0){
+          // donut returns fluid frame orthonormal values for radiation in pp
+          pradffortho[PRAD0]=pr[PRAD0];
+          pradffortho[PRAD1]=pr[PRAD1];
+          pradffortho[PRAD2]=pr[PRAD2];
+          pradffortho[PRAD3]=pr[PRAD3];
+          
+          //dualfprintf(fail_file,"CHECK: ijk=%d %d %d : %g %g %g %g\n",i,j,k,pradffortho[PRAD0],pradffortho[PRAD1],pradffortho[PRAD2],pradffortho[PRAD3]);
+        }
 
-        //dualfprintf(fail_file,"CHECK: ijk=%d %d %d : %g %g %g %g\n",i,j,k,pradffortho[PRAD0],pradffortho[PRAD1],pradffortho[PRAD2],pradffortho[PRAD3]);
      
       }
 
-      // Transform these fluid frame E,F^i to lab frame coordinate basis primitives
-      prad_fforlab(whichvel, whichcoord, FF2LAB, i,j,k,CENT,ptrgeomreal, pradffortho, pr, pr);
-      
-      if(debugfail>=2 && returndonut==0 && pradfforthoatm[PRAD0]>pradffortho[PRAD0]){
-        dualfprintf(fail_file,"WARNING: Torus radiation pressure below atmosphere.\n");
-        dualfprintf(fail_file,"CHECKPOST: ijk=%d %d %d : %g %g %g %g\n",i,j,k,pr[PRAD0],pr[PRAD1],pr[PRAD2],pr[PRAD3]);
+
+      if(PRAD0>=0){
+        // Transform these fluid frame E,F^i to lab frame coordinate basis primitives
+        prad_fforlab(whichvel, whichcoord, FF2LAB, i,j,k,CENT,ptrgeomreal, pradffortho, pr, pr);
+        
+        if(debugfail>=2 && returndonut==0 && pradfforthoatm[PRAD0]>pradffortho[PRAD0]){
+          dualfprintf(fail_file,"WARNING: Torus radiation pressure below atmosphere.\n");
+          dualfprintf(fail_file,"CHECKPOST: ijk=%d %d %d : %g %g %g %g\n",i,j,k,pr[PRAD0],pr[PRAD1],pr[PRAD2],pr[PRAD3]);
+        }
       }
 
 
@@ -3551,11 +3595,15 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
 
     }
     else{
-      // like latest koral that assumes radiation frame is zamo and RADNT_ERADATMMIN is actually in that frame, so no transformation for E
-      // So this is somewhat inconsistent with boundary conditions
-      // KORAL:
-      pr[PRAD0] = RADNT_ERADATMMIN; // assumed as lab-frame ZAMO frame value
-      set_zamo_velocity(*whichvel,ptrgeomreal,&pr[URAD1-U1]); // only sets URAD1-URAD3 to zamo
+
+
+      if(PRAD0>=0){
+        // like latest koral that assumes radiation frame is zamo and RADNT_ERADATMMIN is actually in that frame, so no transformation for E
+        // So this is somewhat inconsistent with boundary conditions
+        // KORAL:
+        pr[PRAD0] = RADNT_ERADATMMIN; // assumed as lab-frame ZAMO frame value
+        set_zamo_velocity(*whichvel,ptrgeomreal,&pr[URAD1-U1]); // only sets URAD1-URAD3 to zamo
+      }
     }
 
     //    dualfprintf(fail_file,"returning: whichvel=%d whichcoord=%d\n",*whichvel,*whichcoord);
@@ -3653,10 +3701,12 @@ int get_full_donut(int whichvel, int whichcoord, int opticallythick, FTYPE *pp,F
     ///////////////// STAGE1
     rho=pp[RHO];
     uint=pp[UU];
-    E=pp[PRAD0];
-    Fx=pp[PRAD1];
-    Fy=pp[PRAD2];
-    Fz=pp[PRAD3];
+    if(PRAD0>=0){
+      E=pp[PRAD0];
+      Fx=pp[PRAD1];
+      Fy=pp[PRAD2];
+      Fz=pp[PRAD3];
+    }
 
     //3-velocity in BL transformed to whichcoord (which is what ptrgeom is in)
     FTYPE Vr=vel[RR];
@@ -3695,7 +3745,7 @@ int get_full_donut(int whichvel, int whichcoord, int opticallythick, FTYPE *pp,F
 
     FTYPE Vtemp1[NDIM],Vtemp2[NDIM];
     FTYPE Xtemp1[NDIM],Xtemp2[NDIM];
-    FTYPE pptemp[NPR],E1,E2;
+    FTYPE pptemp[NPR],E1=0,E2=0;
     PLOOP(pliter,pl) pptemp[pl]=pp[pl];
     int anretmin=0;
     struct of_geom geomtdontuse;
@@ -3715,7 +3765,9 @@ int get_full_donut(int whichvel, int whichcoord, int opticallythick, FTYPE *pp,F
 
     anret=donut_analytical_solution(opticallythick, pptemp,Xtemp1,Vtemp1,ptrgeomt,velunused);
     if(anret<0) anretmin=-1;
-    E1=pptemp[PRAD0]; // fluid frame E
+    if(PRAD0>=0){
+      E1=pptemp[PRAD0]; // fluid frame E
+    }
 
     Xtemp2[0]=X[0];
     Xtemp2[1]=.99*X[1];
@@ -3726,7 +3778,9 @@ int get_full_donut(int whichvel, int whichcoord, int opticallythick, FTYPE *pp,F
 
     anret=donut_analytical_solution(opticallythick, pptemp,Xtemp2,Vtemp2,ptrgeomt,velunused);
     if(anret<0) anretmin=-1;
-    E2=pptemp[PRAD0]; // fluid frame E
+    if(PRAD0>=0){ 
+      E2=pptemp[PRAD0]; // fluid frame E
+    }
 
     // fluid frame Fx
     //    Fx=(E2-E1)/(.02*V[1]*(ptrgeombl->gcov[GIND(1,1)]))/chi/3.;
@@ -3745,7 +3799,9 @@ int get_full_donut(int whichvel, int whichcoord, int opticallythick, FTYPE *pp,F
 
     anret=donut_analytical_solution(opticallythick, pptemp,Xtemp1,Vtemp1,ptrgeomt,velunused);
     if(anret<0) anretmin=-1;
-    E1=pptemp[PRAD0]; // fluid frame E1
+    if(PRAD0>=0){ 
+      E1=pptemp[PRAD0]; // fluid frame E1
+    }
 
     Xtemp2[0]=X[0];
     Xtemp2[1]=1.0*X[1];
@@ -3756,7 +3812,9 @@ int get_full_donut(int whichvel, int whichcoord, int opticallythick, FTYPE *pp,F
 
     anret=donut_analytical_solution(opticallythick, pptemp,Xtemp2,Vtemp2,ptrgeomt,velunused);
     if(anret<0) anretmin=-1;
-    E2=pptemp[PRAD0]; // fluid frame E2
+    if(PRAD0>=0){ 
+      E2=pptemp[PRAD0]; // fluid frame E2
+    }
 
     // fluid frame Fy
     //    Fy=(E2-E1)/(.02*V[2]*(ptrgeombl->gcov[GIND(2,2)]))/chi/3.;
@@ -3776,7 +3834,9 @@ int get_full_donut(int whichvel, int whichcoord, int opticallythick, FTYPE *pp,F
 
     anret=donut_analytical_solution(opticallythick, pptemp,Xtemp1,Vtemp1,ptrgeomt,velunused);
     if(anret<0) anretmin=-1;
-    E1=pptemp[PRAD0]; // fluid frame E1
+    if(PRAD0>=0){ 
+      E1=pptemp[PRAD0]; // fluid frame E1
+    }
 
     Xtemp2[0]=X[0];
     Xtemp2[1]=1.0*X[1];
@@ -3787,7 +3847,9 @@ int get_full_donut(int whichvel, int whichcoord, int opticallythick, FTYPE *pp,F
 
     anret=donut_analytical_solution(opticallythick, pptemp,Xtemp2,Vtemp2,ptrgeomt,velunused);
     if(anret<0) anretmin=-1;
-    E2=pptemp[PRAD0]; // fluid frame E2
+    if(PRAD0>=0){ 
+      E2=pptemp[PRAD0]; // fluid frame E2
+    }
 
     // fluid frame Fz
     Fz=-THIRD*(E2-E1)/((Vtemp2[3]-Vtemp1[3])*sqrt(fabs(ptrgeombl->gcov[GIND(3,3)])))/chi;
@@ -3812,10 +3874,13 @@ int get_full_donut(int whichvel, int whichcoord, int opticallythick, FTYPE *pp,F
       }
     }
 
-    //saving ff values to pp[] (so any function using this function should know pp has fluid frame orthonormal values in pp[PRAD0-PRAD3] as was in the input as well.
-    pp[PRAD1]=Fx;
-    pp[PRAD2]=Fy;
-    pp[PRAD3]=Fz;
+
+    if(PRAD0>=0){ 
+      //saving ff values to pp[] (so any function using this function should know pp has fluid frame orthonormal values in pp[PRAD0-PRAD3] as was in the input as well.
+      pp[PRAD1]=Fx;
+      pp[PRAD2]=Fy;
+      pp[PRAD3]=Fz;
+    }
 
 
     return(0);
@@ -3967,11 +4032,13 @@ int donut_analytical_solution(int opticallythick, FTYPE *pp,FTYPE *X, FTYPE *V,s
   }
   dualfprintf(fail_file,"rhodonut4=%g uint=%g T4=%g\n",rho,uint,T4);
 
-  // fluid frame orthonormal values for radiation
-  pp[PRAD0]=E;
-  pp[PRAD1]=Fx;
-  pp[PRAD2]=Fy;
-  pp[PRAD3]=Fz;
+  if(PRAD0>=0){ 
+    // fluid frame orthonormal values for radiation
+    pp[PRAD0]=E;
+    pp[PRAD1]=Fx;
+    pp[PRAD2]=Fy;
+    pp[PRAD3]=Fz;
+  }
 
   return 0;
 }
@@ -4390,7 +4457,9 @@ int set_density_floors(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *prfloor)
     prfloor[RHO]=RHOMINLIMIT;
     prfloor[UU]=UUMINLIMIT;
 
-    prfloor[PRAD0]=ERADLIMIT;
+    if(PRAD0>=0){ 
+      prfloor[PRAD0]=ERADLIMIT;
+    }
   }
 
   // default is for spherical flow near BH
@@ -4413,7 +4482,9 @@ int set_density_floors_alt(struct of_geom *ptrgeom, struct of_state *q, FTYPE *p
     prfloor[RHO]=RHOMINLIMIT;
     prfloor[UU]=UUMINLIMIT;
 
-    prfloor[PRAD0]=ERADLIMIT;
+    if(PRAD0>=0){ 
+      prfloor[PRAD0]=ERADLIMIT;
+    }
   }
 
   // default is for spherical flow near BH
