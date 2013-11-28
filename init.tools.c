@@ -596,13 +596,44 @@ int user1_init_vpot2field_user(SFTYPE time, int *fieldfrompotential, FTYPE (*A)[
   // Can override vector potential choice for some field components, like B3 in axisymmetry
   // see init.sasha.c
 
-  ////////////////////
-  //
-  // copy back
-  // don't override
-  //
-  ////////////////////
-  copy_3d_fieldonly_fullloop(GLOBALPOINT(ptemparray),prim);
+  // Can override vector potential choice for some field components, like B3 in axisymmetry
+  // see init.sasha.c
+  if(fieldfrompotential[B1]==1 && fieldfrompotential[B2]==1 && fieldfrompotential[B2]==1){
+    ////////////////////
+    //
+    // copy back
+    // don't override
+    //
+    ////////////////////
+    copy_3d_fieldonly_fullloop(GLOBALPOINT(ptemparray),prim);
+  }
+  else{
+    struct of_geom geomdontuse;
+    struct of_geom *ptrgeom=&geomdontuse;
+    int loc;
+    FULLLOOP{
+      PLOOPBONLY(pl){
+        if(fieldfrompotential[pl]==1){
+          MACP0A1(prim,i,j,k,pl) =  GLOBALMACP0A1(ptemparray,i,j,k,pl);
+        }
+        else{
+          if(FLUXB==FLUXCTSTAG) loc=FACE1+(B1-1);
+          else loc=CENT;
+          get_geometry(i,j,k,loc,ptrgeom);
+          if(pstag!=NULL){
+            MACP0A1(pstag,i,j,k,pl) =  MACP0A1(prim,i,j,k,pl); // don't use pstag since vpot2field() overwrites pstag.  Ok, since assume user only avoids vpot if constant in 1D.
+          }
+          if(ucons!=NULL){
+            MACP0A1(ucons,i,j,k,pl) =  ptrgeom->EOMFUNCMAC(pl) * MACP0A1(prim,i,j,k,pl); // don't use pstag since vpot2field() overwrites pstag.  Ok, since assume user only avoids vpot if constant in 1D.
+            //            dualfprintf(fail_file,"i=%d pl=%d pstag=%g ucons=%g\n",i,pl,MACP0A1(pstag,i,j,k,pl),MACP0A1(ucons,i,j,k,pl));
+          }
+          if(Bhat!=NULL){
+            MACP0A1(Bhat,i,j,k,pl) =  ptrgeom->EOMFUNCMAC(pl) * MACP0A1(pstag,i,j,k,pl);
+          }
+        }
+      }
+    }
+  }
 
   return(toreturn);
 

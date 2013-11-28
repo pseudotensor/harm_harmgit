@@ -1727,19 +1727,19 @@ int assignrough_primitive_pstag(int i,int j, int k, FTYPE (*p)[NSTORE2][NSTORE3]
     dir=1; pl=B1;
     MACP0A1(pstag,i,j,k,pl)=0.5*(MACP0A1(p,i,j,k,pl)+MACP0A1(p,myim1,j,k,pl));
     get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgeomf[dir]);
-    MACP0A1(ucons,i,j,k,B1-1+dir)=MACP0A1(pstag,i,j,k,B1)*ptrgeomf[dir]->IEOMFUNCNOSINGMAC(pl);
+    MACP0A1(ucons,i,j,k,B1-1+dir)=MACP0A1(pstag,i,j,k,pl)*ptrgeomf[dir]->IEOMFUNCNOSINGMAC(pl);
 
     // do FACE2 for B2
     dir=2; pl=B2;
     MACP0A1(pstag,i,j,k,pl)=0.5*(MACP0A1(p,i,j,k,pl)+MACP0A1(p,i,myjm1,k,pl));
     get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgeomf[dir]);
-    MACP0A1(ucons,i,j,k,B1-1+dir)=MACP0A1(pstag,i,j,k,B1)*ptrgeomf[dir]->IEOMFUNCNOSINGMAC(pl);
+    MACP0A1(ucons,i,j,k,B1-1+dir)=MACP0A1(pstag,i,j,k,pl)*ptrgeomf[dir]->IEOMFUNCNOSINGMAC(pl);
 
     // do FACE3 for B3
     dir=3; pl=B3;
-    MACP0A1(pstag,i,j,k,B2)=0.5*(MACP0A1(p,i,j,k,pl)+MACP0A1(p,i,j,mykm1,pl));
+    MACP0A1(pstag,i,j,k,pl)=0.5*(MACP0A1(p,i,j,k,pl)+MACP0A1(p,i,j,mykm1,pl));
     get_geometry_gdetonly(i, j, k, FACE1-1+dir, ptrgeomf[dir]);
-    MACP0A1(ucons,i,j,k,B1-1+dir)=MACP0A1(pstag,i,j,k,B1)*ptrgeomf[dir]->IEOMFUNCNOSINGMAC(pl);
+    MACP0A1(ucons,i,j,k,B1-1+dir)=MACP0A1(pstag,i,j,k,pl)*ptrgeomf[dir]->IEOMFUNCNOSINGMAC(pl);
 
   }
 
