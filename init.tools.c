@@ -598,7 +598,7 @@ int user1_init_vpot2field_user(SFTYPE time, int *fieldfrompotential, FTYPE (*A)[
 
   // Can override vector potential choice for some field components, like B3 in axisymmetry
   // see init.sasha.c
-  if(fieldfrompotential[B1]==1 && fieldfrompotential[B2]==1 && fieldfrompotential[B2]==1){
+  if(fieldfrompotential[B1]==1 && fieldfrompotential[B2]==1 && fieldfrompotential[B3]==1){
     ////////////////////
     //
     // copy back
