@@ -472,7 +472,7 @@ int diag_fixup_allzones(int truestep, int finalstep, FTYPE (*pf)[NSTORE2][NSTORE
 // this modifies unew if on finalstep to be consistent with floor-limited primitive
 // diagnostics only for actions on conservative quantities
 // assume COUNT types are of PFTYPE
-int diag_fixup(int docorrectucons, FTYPE *pr0, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep, int doingmhdfixup, int whocalled)
+int diag_fixup(int docorrectucons, FTYPE *pr0, FTYPE *pr, FTYPE *uconsinput, struct of_geom *ptrgeom, int finalstep, int doingmhdfixup, int whocalled)
 {
   struct of_state q;
   FTYPE Uicent[NPR],Ufcent[NPR];
@@ -481,8 +481,13 @@ int diag_fixup(int docorrectucons, FTYPE *pr0, FTYPE *pr, FTYPE *ucons, struct o
   FTYPE deltaUavg[NPR],Uiavg[NPR];
   FTYPE Uprefixup[NPR],Upostfixup[NPR];
   int docorrectuconslocal;
+  int pliter,pl;
 
-
+  // store ucons and only change if needed (and handle avoidance of B1,B2,B3 in case ucons points to unewglobal staggered field, while here we operate on centers)
+  FTYPE ucons[NPR];
+  if(uconsinput!=NULL){
+    PLOOP(pliter,pl) ucons[pl]=uconsinput[pl];
+  }
 
 #if(DOSUPERDEBUG)
   superdebug_utoprim(pr0,pr,ptrgeom,whocalled);
@@ -545,6 +550,18 @@ int diag_fixup(int docorrectucons, FTYPE *pr0, FTYPE *pr, FTYPE *ucons, struct o
     diag_fixup_dUandaccount(Uicent, Ufcent, ucons, ptrgeom, finalstep, whocalled, docorrectuconslocal);
 
 
+    if(uconsinput!=NULL){
+      
+      // copy over ucons result in case changed.
+      PLOOP(pliter,pl){
+        // if staggered field, avoid modifying field since at FACEs, not CENT where pr lives.
+        if(BPL(pl)==0 && FLUXB==FLUXCTSTAG || FLUXB==FLUXCTTOTH){
+          uconsinput[pl] = ucons[pl];
+        }
+      }
+    }
+
+
   }// end if finalstep>0
 
 
@@ -562,11 +579,13 @@ int diag_fixup(int docorrectucons, FTYPE *pr0, FTYPE *pr, FTYPE *ucons, struct o
 int diag_fixup_Ui_pf(int docorrectucons, FTYPE *Uievolve, FTYPE *pf, struct of_geom *ptrgeom, int finalstep, int whocalled)
 {
   struct of_state q;
-  FTYPE Ufcent[NPR],Uicent[NPR],ucons[NPR];
+  FTYPE Ufcent[NPR],Uicent[NPR],uconsinput[NPR],ucons[NPR];
   int failreturn;
   int pliter,pl,enerregion;
   void UtoU(int inputtype, int returntype,struct of_geom *ptrgeom,FTYPE *Uin, FTYPE *Uout);
   int docorrectuconslocal;
+
+
 
 
 
@@ -627,6 +646,14 @@ int diag_fixup_Ui_pf(int docorrectucons, FTYPE *Uievolve, FTYPE *pf, struct of_g
     diag_fixup_dUandaccount(Uicent, Ufcent, ucons, ptrgeom, finalstep, whocalled, docorrectuconslocal);
 
 
+    // copy over ucons result in case changed.
+    PLOOP(pliter,pl){
+      // if staggered field, avoid modifying field since at FACEs, not CENT where pr lives.
+      if(BPL(pl)==0 && FLUXB==FLUXCTSTAG || FLUXB==FLUXCTTOTH){
+        uconsinput[pl] = ucons[pl];
+      }
+    }
+
 
   }// end if finalstep>0
 
@@ -643,7 +670,7 @@ int diag_fixup_Ui_pf(int docorrectucons, FTYPE *Uievolve, FTYPE *pf, struct of_g
 // only called on final step of RK once unew is defined since only on final step is unew modified if floor encountered
 // ONLY used by phys.ffde.c inversion routine when E^2>B^2
 // Assume Ui and Uf in UDIAG form
-int diag_fixup_U(int docorrectucons, FTYPE *Ui, FTYPE *Uf, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep,int whocalled)
+int diag_fixup_U(int docorrectucons, FTYPE *Ui, FTYPE *Uf, FTYPE *uconsinput, struct of_geom *ptrgeom, int finalstep,int whocalled)
 {
   FTYPE Uicent[NPR],Ufcent[NPR];
   struct of_state q;
@@ -652,6 +679,12 @@ int diag_fixup_U(int docorrectucons, FTYPE *Ui, FTYPE *Uf, FTYPE *ucons, struct 
   void UtoU(int inputtype, int returntype,struct of_geom *ptrgeom,FTYPE *Uin, FTYPE *Uout);
   int docorrectuconslocal;
 
+
+  // store ucons and only change if needed (and handle avoidance of B1,B2,B3 in case ucons points to unewglobal staggered field, while here we operate on centers)
+  FTYPE ucons[NPR];
+  if(uconsinput!=NULL){
+    PLOOP(pliter,pl) ucons[pl]=uconsinput[pl];
+  }
 
   // count whocalled diag_fixup()
   count_whocalled(ptrgeom, finalstep, whocalled);
@@ -699,8 +732,19 @@ int diag_fixup_U(int docorrectucons, FTYPE *Ui, FTYPE *Uf, FTYPE *ucons, struct 
     // Get deltaUavg[] and also modify ucons if required and should
     diag_fixup_dUandaccount(Uicent, Ufcent, ucons, ptrgeom, finalstep, whocalled, docorrectuconslocal);
 
+    if(uconsinput!=NULL){
+      // copy over ucons result in case changed.
+      PLOOP(pliter,pl){
+        // if staggered field, avoid modifying field since at FACEs, not CENT where pr lives.
+        if(BPL(pl)==0 && FLUXB==FLUXCTSTAG || FLUXB==FLUXCTTOTH){
+          uconsinput[pl] = ucons[pl];
+        }
+      }
+    }
+
 
   }
+
 
 
 
@@ -747,8 +791,9 @@ int fixup1zone(FTYPE *pr, FTYPE *uconsinput, struct of_geom *ptrgeom, int finals
 
   // store ucons and only change if needed (and handle avoidance of B1,B2,B3 in case ucons points to unewglobal staggered field, while here we operate on centers)
   FTYPE ucons[NPR];
-  PLOOP(pliter,pl) ucons[pl]=uconsinput[pl];
-
+  if(uconsinput!=NULL){
+    PLOOP(pliter,pl) ucons[pl]=uconsinput[pl];
+  }
 
 
   // assign general floor variables
@@ -1061,11 +1106,13 @@ int fixup1zone(FTYPE *pr, FTYPE *uconsinput, struct of_geom *ptrgeom, int finals
   }
 
 
-  // copy over ucons result in case changed.
-  PLOOP(pliter,pl){
-    // if staggered field, avoid modifying field since at FACEs, not CENT where pr lives.
-    if(BPL(pl)==0 && FLUXB==FLUXCTSTAG || FLUXB==FLUXCTTOTH){
-      uconsinput[pl] = ucons[pl];
+  if(uconsinput!=NULL){
+    // copy over ucons result in case changed.
+    PLOOP(pliter,pl){
+      // if staggered field, avoid modifying field since at FACEs, not CENT where pr lives.
+      if(BPL(pl)==0 && FLUXB==FLUXCTSTAG || FLUXB==FLUXCTTOTH){
+        uconsinput[pl] = ucons[pl];
+      }
     }
   }
 
@@ -2112,7 +2159,7 @@ static int fixup_negdensities(int whicheomset, int *fixed, int startpl, int endp
 #define ADJUSTCONSERVEDQUANTITY 0
 
 // ACCOUNTING (under any circumstance, static or average)
-static int fixuputoprim_accounting(int i, int j, int k, PFTYPE mhdlpflag, PFTYPE radlpflag, PFTYPE (*lpflag)[NSTORE2][NSTORE3][NUMPFLAGS],FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ptoavg)[NSTORE2][NSTORE3][NPR], struct of_geom *ptrgeom, FTYPE *pr0, FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], int finalstep)
+static int fixuputoprim_accounting(int i, int j, int k, PFTYPE mhdlpflag, PFTYPE radlpflag, PFTYPE (*lpflag)[NSTORE2][NSTORE3][NUMPFLAGS],FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ptoavg)[NSTORE2][NSTORE3][NPR], struct of_geom *ptrgeom, FTYPE *pr0, FTYPE (*uconsinput)[NSTORE2][NSTORE3][NPR], int finalstep)
 {
   PFTYPE mhdutoprimfailtype,radutoprimfailtype;
   int doadjustcons;
@@ -2122,6 +2169,12 @@ static int fixuputoprim_accounting(int i, int j, int k, PFTYPE mhdlpflag, PFTYPE
   int pliter,pl;
 
 
+
+  // store ucons and only change if needed (and handle avoidance of B1,B2,B3 in case ucons points to unewglobal staggered field, while here we operate on centers)
+  FTYPE ucons[NPR];
+  if(uconsinput!=NULL){
+    PLOOP(pliter,pl) ucons[pl]=MACP0A1(uconsinput,i,j,k,pl);
+  }
 
   //////////////////////
   //
@@ -2326,7 +2379,7 @@ static int fixuputoprim_accounting(int i, int j, int k, PFTYPE mhdlpflag, PFTYPE
     FTYPE prdiag[NPR],pr[NPR];
     PLOOP(pliter,pl) prdiag[pl]=pr0[pl];
     int doingmhdfixup=(mhdutoprimfailtype!=-1); // diag_fixup() accounting diagnostics part doesn't have radiation yet
-    diag_fixup(docorrectucons,prdiag, MAC(pv,i,j,k), MAC(ucons,i,j,k), ptrgeom, finalstep, doingmhdfixup, (int)mhdutoprimfailtype); // do corrections in general, but only include accounting for MHD case so far (KORALTODO, not too crucial, just diags).
+    diag_fixup(docorrectucons,prdiag, MAC(pv,i,j,k), ucons, ptrgeom, finalstep, doingmhdfixup, (int)mhdutoprimfailtype); // do corrections in general, but only include accounting for MHD case so far (KORALTODO, not too crucial, just diags).
     PLOOP(pliter,pl) prdiag[pl]=MACP0A1(pv,i,j,k,pl);
 
     ////////////////
@@ -2354,10 +2407,19 @@ static int fixuputoprim_accounting(int i, int j, int k, PFTYPE mhdlpflag, PFTYPE
         //     }
      
         MYFUN(get_state(MAC(pv,i,j,k), ptrgeom, &q),"fixup.c:fixup_utoprim()", "get_state()", 1);
-        MYFUN(primtoU(UEVOLVE,MAC(pv,i,j,k), &q, ptrgeom, MAC(ucons,i,j,k), NULL),"fixup.c:fixup_utoprim()", "primtoU()", 1);
+        MYFUN(primtoU(UEVOLVE,MAC(pv,i,j,k), &q, ptrgeom, ucons, NULL),"fixup.c:fixup_utoprim()", "primtoU()", 1);
       }
     }
 
+    // copy over ucons result in case changed.
+    if(uconsinput!=NULL){
+      PLOOP(pliter,pl){
+        // if staggered field, avoid modifying field since at FACEs, not CENT where pr lives.
+        if(BPL(pl)==0 && FLUXB==FLUXCTSTAG || FLUXB==FLUXCTTOTH){
+          MACP0A1(uconsinput,i,j,k,pl) = ucons[pl];
+        }
+      }
+    }
 
   }// end if mhdutoprimfailtype!=-1 || radutoprimfailtype!=-1
 
