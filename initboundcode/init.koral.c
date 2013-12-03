@@ -1538,7 +1538,7 @@ int init_global(void)
     //    GAMMAMAXRAD=1000.0; // Koral limits for this problem.
     GAMMAMAXRAD=50.0L; // Koral limits for this problem.
     GAMMAMAXRADFAIL=50.0L;
-    GAMMAMAX=25.0L; // MHD
+    GAMMAMAX=50.0L; // MHD
 
     if(WHICHPROBLEM==RADCYLBEAM){
       //      BCtype[X1DN]=ASYMM;
