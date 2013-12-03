@@ -262,7 +262,7 @@ int set_fieldfrompotential(int *fieldfrompotential)
   PLOOPBONLY(pl) fieldfrompotential[pl-B1+1]=1;
   
   //In the case of Komissarov's tests, set up the field directly in all cases
-  if( WHICHPROBLEM==KOMIPROBLEM ){
+  if( WHICHPROBLEM==KOMIPROBLEM || WHICHPROBLEM == RADWAVE){
     PLOOPBONLY(pl) fieldfrompotential[pl-B1+1]=0;
   }
 
