@@ -1779,15 +1779,40 @@ int init_defcoord(void)
     }
 
 
-
-
-    Rin=RADBONDI_MINX;
-    Rout=RADBONDI_MAXX;
-
     Rin_array[2]=.99*Pi/2.;
     Rout_array[2]=1.01*Pi/2.;
     Rin_array[3]=-1.;
     Rout_array[3]=1.;
+
+
+    if(0){
+      ///////////
+      // 2D MAGBONDI TEST
+      RADBONDI_MINX=1.9;
+      RADBONDI_MAXX=2e4;
+      //    RADBONDI_MAXX=2e2;
+      R0=1.88;
+      Rin_array[2]=0.0;
+      Rout_array[2]=Pi;
+    }
+
+    if(0){
+      if(RADBONDI_TESTNO==3){
+        // normal 1D non-MAG BONDI=3 test that ran for paper
+        RADBONDI_MINX=2.5;
+        RADBONDI_MAXX=2e4;
+        R0=2.2;
+        Rin_array[2]=.99*Pi/2.;
+        Rout_array[2]=1.01*Pi/2.;
+      }
+    }
+
+
+    //////////// nothing else to set for RADBONDI
+
+    Rin=RADBONDI_MINX;
+    Rout=RADBONDI_MAXX;
+
 
     if(R0>=RADBONDI_MINX){
       dualfprintf(fail_file,"Must have R0=%g < RADBONDI_MINX=%g\n",R0,RADBONDI_MINX);
@@ -4055,6 +4080,7 @@ int donut_analytical_solution(int opticallythick, FTYPE *pp,FTYPE *X, FTYPE *V,s
 #define BLANDFORDQUAD 5
 #define TOROIDALFIELD 6
 #define OHSUGAFIELD 7
+#define MONOPOLAR 8
 
 int set_fieldtype(void)
 {
@@ -4074,6 +4100,10 @@ int set_fieldtype(void)
       FIELDTYPE=DISK2FIELD; // default
       //FIELDTYPE=DISK1FIELD;
     }
+  }
+  else if(WHICHPROBLEM==RADBONDI){
+    //FIELDTYPE=MONOPOLAR; // for mag bondi
+    FIELDTYPE=NOFIELD;
   }
   else{
     FIELDTYPE=NOFIELD;
@@ -4261,6 +4291,11 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
     }
 
 
+    if(FIELDTYPE==MONOPOLAR){
+      vpot += (1.0-cos(th));
+    }
+
+
     /* field-in-disk version */
     if(FIELDTYPE==DISK1FIELD || FIELDTYPE==DISK1VERT){
       q = rho_av / rhomax - 0.2;
@@ -4407,13 +4442,15 @@ int normalize_field(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2
 {
   int funreturn;
 
-  if(WHICHPROBLEM==RADDONUT){
+  int set_fieldtype(void);
+  int FIELDTYPE=set_fieldtype();
+
+  if(FIELDTYPE!=NOFIELD){
     dualfprintf(fail_file,"DID NORM FIELD\n");
     
     funreturn=user1_normalize_field(beta, prim, pstag, ucons, vpot, Bhat);
     if(funreturn!=0) return(funreturn);
-  }
-  
+  }  
  
   return(0);
 
