@@ -41,6 +41,8 @@ if [ $CUE_HOST_PROMPT = kraken ]; then
     module unload PrgEnv-pgi/3.1.72
     module load PrgEnv-intel/3.1.72
 
+# imagemagick
+    module load imagemagick/6.6.9-1
 # GSL
     module load cue-gsl
     module load gsl
