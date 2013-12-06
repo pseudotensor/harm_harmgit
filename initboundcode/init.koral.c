@@ -1300,11 +1300,11 @@ int init_global(void)
       tf = 2.0;
     }
     //alfven wave
-    else if(WHICHKOMI==5){
+    else if(WHICHKOMI==5){ //not done
       tf = 2.0;
     }
     //compound wave
-    else if(WHICHKOMI==6){
+    else if(WHICHKOMI==6){ //not done
       tf = 1.5;  //also 0.1 and 0.75 are other times
     }
     //Shock tube 1
