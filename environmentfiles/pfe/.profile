@@ -52,7 +52,7 @@ module load git/1.7.7.4
 
 SRCDIR=/nobackup/jmckinn2/tarballs/
 BASE=/nobackup/jmckinn2/
-export PYTHONPATH=$BASE/lib/python/:$BASE/py/
+export PYTHONPATH=$BASE/lib/python/:$BASE/py/:$HOME/py/
 export PATH=$BASE/bin:$PATH
 export PYTHON_LIB=$BASE/lib/
 export PYTHON_INC=$BASE/include/python2.7/
