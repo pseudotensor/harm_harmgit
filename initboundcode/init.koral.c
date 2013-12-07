@@ -1957,13 +1957,13 @@ int init_defcoord(void)
     else if(WHICHKOMI==7){
       xl = -1.0;
       xc =  0.0;
-      xr =  1.0;
+      xr =  1.5;
     }
     //Shock tube 2
     else if(WHICHKOMI==8){
-      xl = -1.0;
+      xl = -1.2;
       xc =  0.0;
-      xr =  1.0;
+      xr =  1.2;
     }
     //Collision
     else if(WHICHKOMI==9){
