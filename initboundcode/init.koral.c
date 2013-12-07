@@ -986,7 +986,7 @@ int init_global(void)
     //    RADWAVE_NWAVE=2; // GOOD
     //    RADWAVE_NWAVE=3; // GOOD
     //    RADWAVE_NWAVE=4; // gets noisy in prad1 by t~30 with MINM or MC  -- check koral when Olek makes it work.  KORALTODO
-    RADWAVE_NUMERO=110; // GOOD
+    RADWAVE_NUMERO=1001;
     //RADWAVE_NUMERO=41; // OK if don't use check if can do explicit.  So use this to show how should more generally improve the tau based suppression check!  But, DAMPS significantly! Smaller IMPCONV doesn't help.  Check with koral KORALTODO.  MC doesn't help/change much.
     //RADWAVE_NUMERO=1; // wierd jello oscillations in prad0, and no wave motion -- like in koral though.  KORALTODO.  With only implicit, jello is different (smaller IMPCONV doesn't help and larger IMPEPS doesn't help).
 
