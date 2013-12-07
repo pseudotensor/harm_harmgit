@@ -393,6 +393,9 @@ make install
 
 Ensure environmentfiles/kraken/setuppython27 has PATH and PYTHONPATH with the path where the binary for "latex" and "gs" are located.
 
+Good idea to tgz-ball the latex and gs stuff and copied to ranch so not purged.
+
+
 
 
 9) Going even simpler (but with less obvious ways to get something to output)
