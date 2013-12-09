@@ -3255,8 +3255,17 @@ int set_density_floors_default_alt(struct of_geom *ptrgeom, struct of_state *q, 
         // Then also temporarily set UORHOLIMIT to 1.0 or some limiting thing
         FTYPE UORHOLIMITTEMP=1.0; // choose
         FTYPE TRESTART=5930; // choose
-        FTYPE TRESTARTE=5922; // choose
-        if(t<TRESTART){
+        FTYPE TRESTARTE=5921; // choose
+        FTYPE BSQORHOLIMITTEMP=BSQORHOLIMIT*1000.0;
+        int POLESIZEE=4;
+        int POLESIZE=3;
+        if(t<TRESTARTE && ISSPCMCOORD(MCOORD) && (startpos[2]+j<POLESIZEE || startpos[2]+j>totalsize[2]-1-POLESIZEE)){
+          // temporarily allow much higher field due to very early adjustments in field near pole.  This avoids dumping mass into the pole at learly times.
+	  // But don't let u_g respond to field at all
+          prfloor[RHO]=MAX(bsq/BSQORHOLIMITTEMP,SMALL);
+          prfloor[UU]=MAX(MIN(pr[UU],UORHOLIMITTEMP*prfloor[RHO]),SMALL);
+        }
+        else if(t<TRESTART){
           //          if(t<TRESTARTE && ISSPCMCOORD(MCOORD) && (startpos[2]+j<=1 || startpos[2]+j>=totalsize[2]-2)){
           //            // don't allow floor injection of mass density related to u/rho during very early phase
           //            prfloor[RHO]=MAX(bsq/BSQORHOLIMIT);
@@ -3268,19 +3277,21 @@ int set_density_floors_default_alt(struct of_geom *ptrgeom, struct of_state *q, 
           prfloor[RHO]=MAX(bsq/BSQORHOLIMIT,SMALL);
           prfloor[UU]=MAX(MIN(pr[UU],UORHOLIMITTEMP*prfloor[RHO]),SMALL);
         }
-        else if(ISSPCMCOORD(MCOORD) && (startpos[2]+j<=1 || startpos[2]+j>=totalsize[2]-2)){
+        else if(ISSPCMCOORD(MCOORD) && (startpos[2]+j<POLESIZE || startpos[2]+j>totalsize[2]-1-POLESIZE)){
           prfloor[RHO]=MAX(bsq/BSQORHOLIMIT,SMALL);
           // still limit u near pole
           prfloor[UU]=MAX(MIN(pr[UU],UORHOLIMITTEMP*prfloor[RHO]),SMALL);
         }
         else{
-          prfloor[UU]=MAX(bsq/BSQOULIMIT,zerouuperbaryon*MAX(pr[RHO],SMALL));
-          prfloor[RHO]=MAX(MAX(bsq/BSQORHOLIMIT,prfloor[UU]/UORHOLIMIT),SMALL);
+	  prfloor[RHO]=MAX(bsq/BSQORHOLIMIT,SMALL);
+	  prfloor[UU]=MAX(bsq/BSQOULIMIT,zerouuperbaryon*MAX(prfloor[RHO],SMALL));
+	  prfloor[UU]=MAX(MIN(MAX(pr[UU],prfloor[UU]),UORHOLIMIT*prfloor[RHO]),SMALL);
         }
       }
       else{
-        prfloor[UU]=MAX(bsq/BSQOULIMIT,zerouuperbaryon*MAX(pr[RHO],SMALL));
-        prfloor[RHO]=MAX(MAX(bsq/BSQORHOLIMIT,prfloor[UU]/UORHOLIMIT),SMALL);
+	prfloor[RHO]=MAX(bsq/BSQORHOLIMIT,SMALL);
+	prfloor[UU]=MAX(bsq/BSQOULIMIT,zerouuperbaryon*MAX(prfloor[RHO],SMALL));
+	prfloor[UU]=MAX(MIN(MAX(pr[UU],prfloor[UU]),UORHOLIMIT*prfloor[RHO]),SMALL);
       }
 
 
