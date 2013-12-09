@@ -3248,27 +3248,42 @@ int set_density_floors_default_alt(struct of_geom *ptrgeom, struct of_state *q, 
     else if(rescaletype==4){
       // for jet injection with maximum b^2/rho and b^2/u and maximum u/rho
       
-      prfloor[UU]=MAX(bsq/BSQOULIMIT,zerouuperbaryon*MAX(pr[RHO],SMALL));
       // below uses max of present u and floor u since present u may be too small (or negative!) and then density comparison isn't consistent with final floor between u and rho
-      prfloor[RHO]=MAX(MAX(bsq/BSQORHOLIMIT,max(pr[UU],prfloor[UU])/UORHOLIMIT),SMALL);
 
       if(0 && RESTARTMODE==1){ // not on by default  // choose
         // temporarily used to restart if cleaned field or increased resolution of field, because in high b^2/rho or b^2/u regions, the field dissipation due to small-scale structure in the field leads to heating that can become relativistic and disrupt the solution
         // Then also temporarily set UORHOLIMIT to 1.0 or some limiting thing
         FTYPE UORHOLIMITTEMP=1.0; // choose
         FTYPE TRESTART=5930; // choose
+        FTYPE TRESTARTE=5922; // choose
         if(t<TRESTART){
-          prfloor[RHO]=MAX(bsq/BSQORHOLIMIT,max(pr[UU],prfloor[UU]));
-          prfloor[UU]=MIN(prfloor[UU],UORHOLIMITTEMP*prfloor[RHO]);
+          //          if(t<TRESTARTE && ISSPCMCOORD(MCOORD) && (startpos[2]+j<=1 || startpos[2]+j>=totalsize[2]-2)){
+          //            // don't allow floor injection of mass density related to u/rho during very early phase
+          //            prfloor[RHO]=MAX(bsq/BSQORHOLIMIT);
+          //            prfloor[UU]=MIN(pr[UU],UORHOLIMITTEMP*prfloor[RHO]);
+          //          }
+          //          else{
+          //          }
+          // don't allow floor injection of mass density related to u/rho during very early phase
+          prfloor[RHO]=MAX(bsq/BSQORHOLIMIT,SMALL);
+          prfloor[UU]=MAX(MIN(pr[UU],UORHOLIMITTEMP*prfloor[RHO]),SMALL);
         }
         else if(ISSPCMCOORD(MCOORD) && (startpos[2]+j<=1 || startpos[2]+j>=totalsize[2]-2)){
+          prfloor[RHO]=MAX(bsq/BSQORHOLIMIT,SMALL);
           // still limit u near pole
-          prfloor[UU]=MIN(prfloor[UU],UORHOLIMITTEMP*prfloor[RHO]);
+          prfloor[UU]=MAX(MIN(pr[UU],UORHOLIMITTEMP*prfloor[RHO]),SMALL);
         }
         else{
-          prfloor[RHO]=MAX(MAX(bsq/BSQORHOLIMIT,max(pr[UU],prfloor[UU])/UORHOLIMIT),SMALL);
+          prfloor[UU]=MAX(bsq/BSQOULIMIT,zerouuperbaryon*MAX(pr[RHO],SMALL));
+          prfloor[RHO]=MAX(MAX(bsq/BSQORHOLIMIT,prfloor[UU]/UORHOLIMIT),SMALL);
         }
       }
+      else{
+        prfloor[UU]=MAX(bsq/BSQOULIMIT,zerouuperbaryon*MAX(pr[RHO],SMALL));
+        prfloor[RHO]=MAX(MAX(bsq/BSQORHOLIMIT,prfloor[UU]/UORHOLIMIT),SMALL);
+      }
+
+
 
     }// end rescaletype==4
   }
