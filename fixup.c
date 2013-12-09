@@ -1015,6 +1015,16 @@ int fixup1zone(FTYPE *pr, FTYPE *uconsinput, struct of_geom *ptrgeom, int finals
 #endif
 
 
+      // get min or max of comoving and ZAMO frame versions of densities
+      // generally trying to keep atmosphere non-relativistic
+      //      pl=RHO;   prmhd[pl]=MIN(prmhd[pl],prmhdnew[pl]);
+      // get larger of rho
+      pl=RHO;   prmhd[pl]=MAX(prmhd[pl],prmhdnew[pl]);
+      // get smallest of two
+      pl=UU;    prmhd[pl]=MIN(prmhd[pl],prmhdnew[pl]);
+      pl=URAD0; prmhd[pl]=MIN(prmhd[pl],prmhdnew[pl]);
+
+
     }// end if didchangeprim
 
   }// end if cold or hot GRMHD
@@ -3173,6 +3183,7 @@ int set_density_floors_default_alt(struct of_geom *ptrgeom, struct of_state *q, 
   FTYPE Upbinf[NPR];
   FTYPE r,th,X[NDIM],V[NDIM];
   int pl,pliter;
+  int i=ptrgeom->i,j=ptrgeom->j,k=ptrgeom->k,p=ptrgeom->p;
 
   coord_ijk(ptrgeom->i, ptrgeom->j, ptrgeom->k, ptrgeom->p, X);
   bl_coord_ijk(ptrgeom->i, ptrgeom->j, ptrgeom->k, ptrgeom->p, V);
@@ -3240,7 +3251,26 @@ int set_density_floors_default_alt(struct of_geom *ptrgeom, struct of_state *q, 
       prfloor[UU]=MAX(bsq/BSQOULIMIT,zerouuperbaryon*MAX(pr[RHO],SMALL));
       // below uses max of present u and floor u since present u may be too small (or negative!) and then density comparison isn't consistent with final floor between u and rho
       prfloor[RHO]=MAX(MAX(bsq/BSQORHOLIMIT,max(pr[UU],prfloor[UU])/UORHOLIMIT),SMALL);
-    }
+
+      if(0 && RESTARTMODE==1){ // not on by default  // choose
+        // temporarily used to restart if cleaned field or increased resolution of field, because in high b^2/rho or b^2/u regions, the field dissipation due to small-scale structure in the field leads to heating that can become relativistic and disrupt the solution
+        // Then also temporarily set UORHOLIMIT to 1.0 or some limiting thing
+        FTYPE UORHOLIMITTEMP=1.0; // choose
+        FTYPE TRESTART=5930; // choose
+        if(t<TRESTART){
+          prfloor[RHO]=MAX(bsq/BSQORHOLIMIT,max(pr[UU],prfloor[UU]));
+          prfloor[UU]=MIN(prfloor[UU],UORHOLIMITTEMP*prfloor[RHO]);
+        }
+        else if(ISSPCMCOORD(MCOORD) && (startpos[2]+j<=1 || startpos[2]+j>=totalsize[2]-2)){
+          // still limit u near pole
+          prfloor[UU]=MIN(prfloor[UU],UORHOLIMITTEMP*prfloor[RHO]);
+        }
+        else{
+          prfloor[RHO]=MAX(MAX(bsq/BSQORHOLIMIT,max(pr[UU],prfloor[UU])/UORHOLIMIT),SMALL);
+        }
+      }
+
+    }// end rescaletype==4
   }
   else{
     prfloor[RHO] = RHOMIN*pow(r, -2.0);

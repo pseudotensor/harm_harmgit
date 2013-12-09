@@ -1570,7 +1570,7 @@ int bound_uavg(int boundstage, int finalstep, SFTYPE boundtime, int boundvartype
 
 
   // for now only worry about bounding staggered fields since that's what can do given "general" boundary condition code
-  if(DOENOFLUX != NOENOFLUX){
+  if(1||DOENOFLUX != NOENOFLUX){
 
     // CHANGINGMARK: DEBUG:
     // can modify for diag call if choose to avoid if outflow condition

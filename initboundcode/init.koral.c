@@ -4081,6 +4081,7 @@ int donut_analytical_solution(int opticallythick, FTYPE *pp,FTYPE *X, FTYPE *V,s
 #define TOROIDALFIELD 6
 #define OHSUGAFIELD 7
 #define MONOPOLAR 8
+#define OLEKFIELD 9
 
 int set_fieldtype(void)
 {
@@ -4293,6 +4294,10 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
 
     if(FIELDTYPE==MONOPOLAR){
       vpot += (1.0-cos(th));
+    }
+
+    if(FIELDTYPE==OLEKFIELD){
+      vpot += MAX(pow(r,4.0)*pow(rho_av,2.0)*1E40-0.02,0.0)*pow(sin(th),4.0);
     }
 
 

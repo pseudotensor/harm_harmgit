@@ -235,7 +235,8 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
       // bound GLOBALPOINT(udump) (unew) so divb can be computed at MPI boundaries (still real boundaries won't be computed correctly for OUTFLOW types)
       // Notice only need to bound 1 cell layer (BOUNDPRIMSIMPLETYPE) since divb computation only will need 1 extra cell
       int fakedir=0;
-      bound_mpi(STAGEM1,finalstep,fakedir,BOUNDPRIMSIMPLETYPE,GLOBALPOINT(udump),NULL,NULL,NULL,NULL);
+      //bound_mpi(STAGEM1,finalstep,fakedir,BOUNDPRIMSIMPLETYPE,GLOBALPOINT(udump),NULL,NULL,NULL,NULL);
+      bound_mpi(STAGEM1,finalstep,fakedir,BOUNDPSTAGSIMPLETYPE,GLOBALPOINT(udump),NULL,NULL,NULL,NULL); // for staggered field
     }
   }
   

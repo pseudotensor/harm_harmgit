@@ -3037,3 +3037,50 @@ void set_array(void *inbufptr, int num, MPI_Datatype datatype, long double value
   else if(datatype==MPI_LONG_LONG_INT){ buf8i=(long long int *)bufptr; inbuf8i=(long long int *)inbufptr;  for(i=0;i<num;i++) inbuf8i[i]=(long long int) value; }
 
 }
+
+
+void debugdivb(void)
+{
+
+  // HACK:
+  bound_uavg(STAGEM1, 1, t, BOUNDPRIMTYPE, GLOBALPOINT(unewglobal),GLOBALPOINT(unewglobal), GLOBALPOINT(unewglobal),1);
+  //      bound_mpi(STAGEM1,1,0,BOUNDPRIMSIMPLETYPE,GLOBALPOINT(udump),NULL,NULL,NULL,NULL);
+  //bound_mpi(STAGEM1,1,0,BOUNDPRIMSIMPLETYPE,GLOBALPOINT(unewglobal),NULL,NULL,NULL,NULL);
+
+  struct of_geom geomdontuse;
+  struct of_geom *ptrgeom=&geomdontuse;
+  int i,j,k;
+  FULLLOOP{
+    get_geometry(i,j,k,FACE1,ptrgeom);
+    GLOBALMACP0A1(pstagglobal,i,j,k,B1)=GLOBALMACP0A1(unewglobal,i,j,k,B1)/ptrgeom->gdet;
+    get_geometry(i,j,k,FACE2,ptrgeom);
+    GLOBALMACP0A1(pstagglobal,i,j,k,B2)=GLOBALMACP0A1(unewglobal,i,j,k,B2)/ptrgeom->gdet;
+    get_geometry(i,j,k,FACE3,ptrgeom);
+    GLOBALMACP0A1(pstagglobal,i,j,k,B3)=GLOBALMACP0A1(unewglobal,i,j,k,B3)/ptrgeom->gdet;
+  }
+
+  //    dualfprintf(fail_file,"MONKEY: %g\n",GLOBALMACP0A1(unewglobal,0,32,4,B2));
+  //    dualfprintf(fail_file,"PIECE2: %g\n",GLOBALMACP0A1(unewglobal,62,0,30,B2));
+
+  //    FULLLOOP{
+  //      if(i==62&&j==0&&k==30 || i==63&&j==0&&k==30) dualfprintf(fail_file,"KILLGODB1: %d %d %g\n",i,k,GLOBALMACP0A1(unewglobal,i,j,k,B1));
+  //      if(i==62&&j==0&&k==30 || i==62&&j==1&&k==30) dualfprintf(fail_file,"KILLGODB2: %d %d %g\n",i,k,GLOBALMACP0A1(unewglobal,i,j,k,B2));
+  //      if(i==62&&j==0&&k==30 || i==62&&j==0&&k==31) dualfprintf(fail_file,"KILLGODB3: %d %d %g\n",i,k,GLOBALMACP0A1(unewglobal,i,j,k,B3));
+  //}
+
+  FTYPE divbmax=0,divbavg=0;
+  divbmaxavg(GLOBALPOINT(pdump),&divbmax,&divbavg);
+  dualfprintf(fail_file,"GOD0: %g %g\n",divbmax,divbavg);
+  int finalstep=0; // only for diagnostics, no accounting.
+  FTYPE localt=t;
+  bound_allprim(STAGEM1,finalstep, localt,GLOBALPOINT(pdump),GLOBALPOINT(pstagdump),GLOBALPOINT(udump), USEMPI);
+  //  dualfprintf(fail_file,"MONKEY1.2: %g\n",GLOBALMACP0A1(unewglobal,0,32,4,B2));
+  int fakedir=0;
+  bound_mpi(STAGEM1,finalstep,fakedir,BOUNDPSTAGSIMPLETYPE,GLOBALPOINT(udump),NULL,NULL,NULL,NULL);
+  //  dualfprintf(fail_file,"MONKEY1.3: %g\n",GLOBALMACP0A1(unewglobal,0,32,4,B2));
+  divbmaxavg(GLOBALPOINT(pdump),&divbmax,&divbavg);
+  dualfprintf(fail_file,"GOD1: %g %g\n",divbmax,divbavg);
+
+
+
+}

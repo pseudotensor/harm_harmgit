@@ -998,6 +998,7 @@ void ustag2pstag(int dir, int i, int j, int k, FTYPE (*ustag)[NSTORE2][NSTORE3][
   set_igdetsimple(ptrgdetgeomf[dir]);
   igdetgnosing = ptrgdetgeomf[dir]->igdetnosing;
 
+
   MACP0A1(pstag,i,j,k,pl)  = MACP0A1(ustag,i,j,k,pl)*igdetgnosing;
 
 

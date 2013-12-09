@@ -693,6 +693,11 @@ void divbmaxavg(FTYPE (*prim)[NSTORE2][NSTORE3][NPR],FTYPE*ptrdivbmax,FTYPE*ptrd
 
 
   LOOPDIVB { // diagonostic loop // OPENMPOPTMARK: Could optimize this, but not frequently done
+
+    // avoid measuring divb=0 where don't treat fluxes
+    if(ISSPCMCOORD(MCOORD) && (startpos[1]+i>=totalsize[1]-1 || startpos[1]+i<0) ) continue;
+    
+
     // doesn't need geom, just use global gdet
     // GODMARK: use of globals (for diagnostic this is probably ok)
     setfdivb(&divb, prim, GLOBALPOINT(pstagdump), GLOBALPOINT(udump), GLOBALPOINT(Bhatdump), i, j, k); // udump set externally GODMARK
