@@ -400,9 +400,16 @@ int init(int *argc, char **argv[])
     if(pre_fixup(STAGEM1,GLOBALPOINT(pglobal))>=1) FAILSTATEMENT("initbase.c:init()", "pre_fixup()", 1);
     trifprintf("after pre_fixup() during restart: proc=%04d\n",myid);
 
+
     trifprintf("before fixup() during restart: proc=%04d\n",myid);
     if(fixup(STAGEM1,GLOBALPOINT(pglobal),GLOBALPOINT(unewglobal),0)>=1)  FAILSTATEMENT("initbase.c:init()", "fixup()", 1);
     trifprintf("after fixup() during restart: proc=%04d\n",myid);
+
+
+    // DEBUG: in case restart and need to fix-up things
+    //void debugfixup(void);
+    //    debugfixup();
+
 
     {
       int finalstep=1; // assume user wants to know if initial conserved quants changed
@@ -3081,6 +3088,46 @@ void debugdivb(void)
   divbmaxavg(GLOBALPOINT(pdump),&divbmax,&divbavg);
   dualfprintf(fail_file,"GOD1: %g %g\n",divbmax,divbavg);
 
+
+
+}
+
+
+
+// hack to get rid of bad region at large distances when restarted
+void debugfixup(void)
+{
+  int i,j,k;
+  //    struct of_geom geomdontuse;
+  //    struct of_geom *ptrgeom=&geomdontuse;
+  FTYPE X[NDIM],V[NDIM];
+  FTYPE *prfix,*ufix;
+  int jjj;
+  FULLLOOP{
+    prfix=&GLOBALMACP0A1(pglobal,i,j,k,0);
+    ufix=&GLOBALMACP0A1(unewglobal,i,j,k,0);
+
+    // get geometry for center pre-interpolated values
+    //get_geometry(i, j, k, CENT, ptrgeom);
+    bl_coord_ijk_2(i,j,k,CENT,X, V) ;
+
+    if(V[1]>300.0 && V[2]<0.075){
+
+      prfix[RHO] = RHOMIN*pow(V[1],-2.0);
+
+      prfix[UU]= MIN(prfix[RHO],prfix[UU]); // no more than u/rho=1
+      ufix[UU]=MAX(-prfix[UU],ufix[UU]);
+
+      ufix[ENTROPY] = ufix[UU];
+      ufix[ENTROPY] = MAX(0.0001,MIN(ufix[ENTROPY],1.0)); // like u/rho=1
+
+      prfix[URAD0] = MIN(MIN(prfix[RHO],prfix[URAD0]),prfix[UU]); // no more than Erf/rho=1 and Erf/u=1
+      ufix[URAD0]=MAX(-prfix[URAD0],ufix[URAD0]);
+
+      SLOOPA(jjj) ufix[U1+jjj-1]=prfix[U1+jjj-1] = 0.0;
+      SLOOPA(jjj) ufix[URAD1+jjj-1]=prfix[URAD1+jjj-1] = 0.0;
+    }
+  }
 
 
 }

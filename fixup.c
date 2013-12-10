@@ -3253,11 +3253,11 @@ int set_density_floors_default_alt(struct of_geom *ptrgeom, struct of_state *q, 
       if(0 && RESTARTMODE==1){ // not on by default  // choose
         // temporarily used to restart if cleaned field or increased resolution of field, because in high b^2/rho or b^2/u regions, the field dissipation due to small-scale structure in the field leads to heating that can become relativistic and disrupt the solution
         // Then also temporarily set UORHOLIMIT to 1.0 or some limiting thing
-        FTYPE UORHOLIMITTEMP=1.0; // choose
+        FTYPE UORHOLIMITTEMP=0.5; // choose
         FTYPE TRESTART=5930; // choose
         FTYPE TRESTARTE=5921; // choose
-        FTYPE BSQORHOLIMITTEMP=BSQORHOLIMIT*1000.0;
-        int POLESIZEE=4;
+        FTYPE BSQORHOLIMITTEMP=BSQORHOLIMIT*2.0;
+        int POLESIZEE=8;
         int POLESIZE=3;
         if(t<TRESTARTE && ISSPCMCOORD(MCOORD) && (startpos[2]+j<POLESIZEE || startpos[2]+j>totalsize[2]-1-POLESIZEE)){
           // temporarily allow much higher field due to very early adjustments in field near pole.  This avoids dumping mass into the pole at learly times.
