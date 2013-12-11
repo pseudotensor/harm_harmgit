@@ -1,0 +1,47 @@
+NOTES:
+
+1) I didn't have to modify harm, just retuned the existing scripts.
+
+2) Sometimes simulations start on Kraken and don't do anything because of a node issue.  This won't protect against just wasting that computer time, but at least only a 24-hour block is wasted.  And anyways one wouldn't catch such a situation unless one watched manually during early start period of simulation.
+
+The new scripts are in the masterharm branch as:
+
+batches/batches.dependencylist.txt [this file]
+batches/batch.qsub.kraken.rada0b
+batches/krakenrestartsustain_rad1.sh
+batches/makebatches.sh
+batches/submitdeplist.sh
+
+These are a "base" set.  Here's what one does to modify them for your
+own use. I assume you've not already started any jobs for the first
+few steps, which one can skip partially:
+
+1) Rename batch.qsub.kraken.rada0b such that "rada0" is replaced by your model name. Something short.  Or start from your batch and add the features in this new batch.
+
+2) Edit the batch.qsub.kraken.rada0b type file for your
+a) system
+b) user
+c) core configuration and total cores.
+d) DIRFILE
+e) etc.
+
+Primarily new feature, edit:
+a) sh krakenrestartsustain_rad1.sh 0 0 2 rada0 rada0 a b
+
+Edit this so "2" there is your system type as described int that file.  If no system, figure out which system is most similar or create new code.
+
+Change "rada0" to your model name
+
+"a b" assumes your original directory was $RUNDIR/modelname{a} .  If not, figure out how to adjust.
+
+b) If first time running job, set firstrun=1, else as zero.
+
+2) Edit makebatches.sh and replace "rada0" with your model name.  This again assumes already started "a" run and just going to "b" run.
+
+3) Edit submitdeplist.sh and replace "rada0" with your model name.  This is currently setup as if "a" already completed so no dependency for first qsub, but code is there to show how would do it if "a" is still running by specifying first JOBID.
+
+4) Run submitdeplist.sh: sh submitdeplist.sh .
+
+This will queue first submitted job, and put on hold the rest until *anything* happens to that older job.  That is, things continue if failed or succeeded.
+
+
