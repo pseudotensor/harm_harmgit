@@ -1092,6 +1092,33 @@ int init_global(void)
         RADWAVE_DTOUT1=2*M_PI/RADWAVE_OMRE/10.;
       }
 
+      if(RADWAVE_NUMERO==104){ //rad. modified sound wave
+        RADWAVE_RHOFAC=0.001;
+        RADWAVE_B0=0;
+        RADWAVE_PP=0.1;
+        RADWAVE_CC=10.;
+        RADWAVE_KAPPA=0.1;
+        RADWAVE_DRRE=1e-3*RADWAVE_RHOFAC;
+        RADWAVE_DRIM=0.*RADWAVE_RHOFAC;
+        RADWAVE_DVRE=0.0000997992*RADWAVE_RHOFAC;
+        RADWAVE_DVIM=2.55207e-6*RADWAVE_RHOFAC;
+        RADWAVE_DV2RE=0*RADWAVE_RHOFAC;
+        RADWAVE_DV2IM=0*RADWAVE_RHOFAC;
+        RADWAVE_DURE=0.0000151557*RADWAVE_RHOFAC;
+        RADWAVE_DUIM=7.69693e-7*RADWAVE_RHOFAC;
+        RADWAVE_DB2RE=0*RADWAVE_RHOFAC;
+        RADWAVE_DB2IM=0*RADWAVE_RHOFAC;
+        RADWAVE_DERE=1.33148e-10*RADWAVE_RHOFAC;
+        RADWAVE_DEIM=3.60017e-8*RADWAVE_RHOFAC;
+        RADWAVE_DFRE=-2.52471e-7*RADWAVE_RHOFAC;
+        RADWAVE_DFIM=7.40041e-8*RADWAVE_RHOFAC;
+        RADWAVE_DF2RE=0*RADWAVE_RHOFAC;
+        RADWAVE_DF2IM=0*RADWAVE_RHOFAC;
+        RADWAVE_OMRE=0.627057;
+        RADWAVE_OMIM=0.0160351;
+        RADWAVE_DTOUT1=2*M_PI/RADWAVE_OMRE/10.;
+      }
+
       if(RADWAVE_NUMERO==110){ //fast magnetosonic wave
         RADWAVE_RHOFAC=0.001;
         RADWAVE_B0=0.100759;
@@ -1146,7 +1173,16 @@ int init_global(void)
         RADWAVE_DTOUT1=2*M_PI/RADWAVE_OMRE/10.;
       }
 
-      if(RADWAVE_NUMERO==1001 || RADWAVE_NUMERO==1101 || RADWAVE_NUMERO==1002 || RADWAVE_NUMERO==1102){
+      RADWAVE_RHOZERO=1.;
+      RADWAVE_KK=2.*Pi;
+      RADWAVE_UINT=((1./RADWAVE_CC/RADWAVE_CC)*RADWAVE_RHOZERO/gam/(gam-1.-1./RADWAVE_CC/RADWAVE_CC)) ; // to get proper sound speed
+      RADWAVE_TEMP=(calc_PEQ_Tfromurho(RADWAVE_UINT,RADWAVE_RHOZERO)) ; // temperature from rho and uint
+      ARAD_CODE=((3.*RADWAVE_PP*(gam-1.)*RADWAVE_UINT/RADWAVE_TEMP/RADWAVE_TEMP/RADWAVE_TEMP/RADWAVE_TEMP)); //to get the proper radiation to gas pressure ratio, PP=4 sig T^4 / P
+      RADWAVE_ERAD=(calc_LTE_EfromT(RADWAVE_TEMP)) ; // to get thermal equilibrium, E=4 sig T^4
+      
+      dualfprintf(fail_file,"RADWAVE_RHOZERO=%g, RADWAVE_KK=%g, RADWAVE_UINT=%g, RADWAVE_TEMP=%g, ARAD_CODE=%g, RADWAVE_ERAD=%21.15g\n",
+                  RADWAVE_RHOZERO, RADWAVE_KK, RADWAVE_UINT, RADWAVE_TEMP, ARAD_CODE, RADWAVE_ERAD);
+      if(RADWAVE_NUMERO==104 || RADWAVE_NUMERO==110 || RADWAVE_NUMERO==101 || RADWAVE_NUMERO==1001 || RADWAVE_NUMERO==1101 || RADWAVE_NUMERO==1002 || RADWAVE_NUMERO==1102){
         FILE *out;
         if((out=fopen("radtestparams.dat","wt"))==NULL){
           dualfprintf(fail_file,"Couldn't write radtestparams.dat file\n");
@@ -1214,19 +1250,10 @@ int init_global(void)
                   RADWAVE_OMIM,
                   RADWAVE_DTOUT1
                   );
-	  fclose(out);
+          fclose(out);
         }
       }
-      
-      RADWAVE_RHOZERO=1.;
-      RADWAVE_KK=2.*Pi;
-      RADWAVE_UINT=((1./RADWAVE_CC/RADWAVE_CC)*RADWAVE_RHOZERO/gam/(gam-1.-1./RADWAVE_CC/RADWAVE_CC)) ; // to get proper sound speed
-      RADWAVE_TEMP=(calc_PEQ_Tfromurho(RADWAVE_UINT,RADWAVE_RHOZERO)) ; // temperature from rho and uint
-      ARAD_CODE=((3.*RADWAVE_PP*(gam-1.)*RADWAVE_UINT/RADWAVE_TEMP/RADWAVE_TEMP/RADWAVE_TEMP/RADWAVE_TEMP)); //to get the proper radiation to gas pressure ratio, PP=4 sig T^4 / P
-      RADWAVE_ERAD=(calc_LTE_EfromT(RADWAVE_TEMP)) ; // to get thermal equilibrium, E=4 sig T^4
-      
-      dualfprintf(fail_file,"RADWAVE_RHOZERO=%g, RADWAVE_KK=%g, RADWAVE_UINT=%g, RADWAVE_TEMP=%g, ARAD_CODE=%g, RADWAVE_ERAD=%21.15g\n",
-                  RADWAVE_RHOZERO, RADWAVE_KK, RADWAVE_UINT, RADWAVE_TEMP, ARAD_CODE, RADWAVE_ERAD);
+
     }
 
 
@@ -1328,7 +1355,7 @@ int init_global(void)
     if(RADWAVE_VX==0.0) tf = MAX(100.0*RADWAVE_DTOUT1,5.0/RADWAVE_CC);
     else tf = MAX(100.0*RADWAVE_DTOUT1,5.0/MIN(RADWAVE_VX,RADWAVE_CC));
 
-    if(RADWAVE_NWAVE==5&&(RADWAVE_NUMERO==1001||RADWAVE_NUMERO==101||RADWAVE_NUMERO==110)){
+    if(RADWAVE_NWAVE==5&&(RADWAVE_NUMERO==1001||RADWAVE_NUMERO==101||RADWAVE_NUMERO==104||RADWAVE_NUMERO==110)){
       tf = 11.*RADWAVE_DTOUT1;
     }
 
@@ -3569,7 +3596,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
       //Fx=0.;
     }
 
-    if(RADWAVE_NWAVE==5 && (RADWAVE_NUMERO==1001||RADWAVE_NUMERO==101||RADWAVE_NUMERO==110)){
+    if(RADWAVE_NWAVE==5 && (RADWAVE_NUMERO==1001||RADWAVE_NUMERO==101||RADWAVE_NUMERO==104||RADWAVE_NUMERO==110)){
       
       //printf("RHOZERO = %g\nUINT = %g\nT = %g\nERAD = %g\nARAD = %g\n",RADWAVE_RHOZERO,RADWAVE_UINT,RADWAVE_TEMP,RADWAVE_ERAD,ARAD_RAD_CODE);getchar();
       
