@@ -1146,6 +1146,68 @@ int init_global(void)
         RADWAVE_DTOUT1=2*M_PI/RADWAVE_OMRE/10.;
       }
 
+      if(RADWAVE_NUMERO==1001 || RADWAVE_NUMERO==1101 || RADWAVE_NUMERO==1002 || RADWAVE_NUMERO==1102){
+        FILE *out;
+        if((out=fopen("radtestparams.dat","wt"))==NULL){
+          dualfprintf(fail_file,"Couldn't write radtestparams.dat file\n");
+          myexit(1);
+        }
+        else{
+          fprintf(out,"#%21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s\n",
+                  "RADWAVE_RHOFAC",
+                  "RADWAVE_B0",
+                  "RADWAVE_PP",
+                  "RADWAVE_CC",
+                  "RADWAVE_KAPPA",
+                  "RADWAVE_DRRE",
+                  "RADWAVE_DRIM",
+                  "RADWAVE_DVRE",
+                  "RADWAVE_DVIM",
+                  "RADWAVE_DV2RE",
+                  "RADWAVE_DV2IM",
+                  "RADWAVE_DURE",
+                  "RADWAVE_DUIM",
+                  "RADWAVE_DB2RE",
+                  "RADWAVE_DB2IM",
+                  "RADWAVE_DERE",
+                  "RADWAVE_DEIM",
+                  "RADWAVE_DFRE",
+                  "RADWAVE_DFIM",
+                  "RADWAVE_DF2RE",
+                  "RADWAVE_DF2IM",
+                  "RADWAVE_OMRE",
+                  "RADWAVE_OMIM",
+                  "RADWAVE_DTOUT1" );
+          fprintf(out,"#%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",
+                  RADWAVE_RHOFAC,
+                  RADWAVE_B0,
+                  RADWAVE_PP,
+                  RADWAVE_CC,
+                  RADWAVE_KAPPA,
+                  RADWAVE_DRRE,
+                  RADWAVE_DRIM,
+                  RADWAVE_DVRE,
+                  RADWAVE_DVIM,
+                  RADWAVE_DV2RE,
+                  RADWAVE_DV2IM,
+                  RADWAVE_DURE,
+                  RADWAVE_DUIM,
+                  RADWAVE_DB2RE,
+                  RADWAVE_DB2IM,
+                  RADWAVE_DERE,
+                  RADWAVE_DEIM,
+                  RADWAVE_DFRE,
+                  RADWAVE_DFIM,
+                  RADWAVE_DF2RE,
+                  RADWAVE_DF2IM,
+                  RADWAVE_OMRE,
+                  RADWAVE_OMIM,
+                  RADWAVE_DTOUT1
+                  );
+	  fclose(out);
+        }
+      }
+      
       RADWAVE_RHOZERO=1.;
       RADWAVE_KK=2.*Pi;
       RADWAVE_UINT=((1./RADWAVE_CC/RADWAVE_CC)*RADWAVE_RHOZERO/gam/(gam-1.-1./RADWAVE_CC/RADWAVE_CC)) ; // to get proper sound speed
