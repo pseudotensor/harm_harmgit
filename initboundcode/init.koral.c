@@ -1153,7 +1153,12 @@ int init_global(void)
           myexit(1);
         }
         else{
-          fprintf(out,"#%21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s\n",
+          fprintf(out,"#%20s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s\n",
+                  "RADWAVE_RHOZERO",
+                  "RADWAVE_KK",
+                  "RADWAVE_UINT",
+                  "RADWAVE_ERAD",
+                  "RADWAVE_DRRE",
                   "RADWAVE_RHOFAC",
                   "RADWAVE_B0",
                   "RADWAVE_PP",
@@ -1178,7 +1183,12 @@ int init_global(void)
                   "RADWAVE_OMRE",
                   "RADWAVE_OMIM",
                   "RADWAVE_DTOUT1" );
-          fprintf(out,"#%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",
+          fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",
+                  RADWAVE_RHOZERO,
+                  RADWAVE_KK,
+                  RADWAVE_UINT,
+                  RADWAVE_ERAD,
+                  RADWAVE_DRRE,
                   RADWAVE_RHOFAC,
                   RADWAVE_B0,
                   RADWAVE_PP,
