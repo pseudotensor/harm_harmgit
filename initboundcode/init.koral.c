@@ -1094,7 +1094,7 @@ int init_global(void)
       }
 
       if(RADWAVE_NUMERO==104){ //rad. modified sound wave
-        RADWAVE_RHOFAC=0.001;
+        RADWAVE_RHOFAC=100.;
         RADWAVE_B0=0;
         RADWAVE_PP=0.1;
         RADWAVE_CC=10.;
