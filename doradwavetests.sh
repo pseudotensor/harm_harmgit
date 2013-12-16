@@ -1,11 +1,12 @@
 #!/bin/bash
-for i in 1001
+name="radwave"
+for i in 104
 do
     echo "Doing test #${i}..."
-    for n in 32 64 #128 256 512
+    for n in 32 64 #128 #256 512
     do
         cd ~/Research/code/harm
-        dirname=tests/radwave${i}_${n}
+        dirname=tests/$name${i}_${n}
         mkdir -p tests
         mkdir -p $dirname
 	#choose test
@@ -14,13 +15,13 @@ do
 	#choose resolution
         cat initboundcode/init.koral.h | sed "s/N1 [0-9 ]*\/\/RADWAVE/N1 $n   \/\/RADWAVE/g" > $dirname/init.koral.h
         cp $dirname/init.koral.h initboundcode/init.koral.h
-        echo "Compiling test #${i} using ${n} cells: radwave${i}_${n} ..."
+        echo "Compiling test #${i} using ${n} cells: $name${i}_${n} ..."
         make superclean &> $dirname/compile_log.txt
         make prep &> $dirname/compile_log.txt
         make -j 4 &> $dirname/compile_log.txt
         cp grmhd $dirname
         cd $dirname
-        echo "Running test #${i} using ${n} cells: radwave${i}_${n} ..."
+        echo "Running test #${i} using ${n} cells: $name${i}_${n} ..."
         ./grmhd 1 1 1  &> run_log.txt
      done
 done
