@@ -1884,12 +1884,12 @@ static FTYPE compute_dt(FTYPE *CUf, FTYPE dtin)
 
 
 // choose to switch to entropy only if energy fails or gives u_g<0.  Or choose to always do both and use best solution.
-#define MODEMETHOD MODEPICKBEST // general switching method
+//#define MODEMETHOD MODEPICKBEST // general switching method
 //#define MODEMETHOD MODEPICKBESTSIMPLE // switches with only PMHD method
 //#define MODEMETHOD MODEPICKBESTSIMPLE2 // switches with all methods but no ITERMODESTAGES attempted
 //#define MODEMETHOD MODESWITCH
 //#define MODEMETHOD MODEENERGY
-//#define MODEMETHOD MODEENTROPY
+#define MODEMETHOD MODEENTROPY
 //#define MODEMETHOD MODEENERGYRAMESH
 
 
@@ -2045,10 +2045,10 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     eomtypelocal=*eomtype;
     errorabs[0]=errorabs[1]=1.0;
     fracenergy=1.0;
-    itermode=ITERMODESTAGES;
-    baseitermethod=QTYPMHD;
-    //itermode=ITERMODENORMAL;
-    //    baseitermethod=QTYURAD;
+    //itermode=ITERMODESTAGES;
+    //baseitermethod=QTYPMHD;
+    itermode=ITERMODENORMAL;
+    baseitermethod=QTYURAD;
 
     // NOTES: ITERMODESTAGES with QTYPMHD always goes to damp and sometimes fails with RADTUBE.  Lots of Jsub issues, etc.  Probably not right.  Compared to ramesh code, settles on different u -- far too large even though error in f1[0] small.
     // Actually, if don't switch to PRAD, goes kinda ok with only 2 early failures, but needs to damp every time.  Can't be right.  So 2 issues.  Very broad iteration tail.
