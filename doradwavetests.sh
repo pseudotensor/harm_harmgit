@@ -3,9 +3,9 @@ name="radwave"
 for i in 1 10 11 104 105 1001 1101 1002 1102
 do
     echo "Doing test #${i}..."
-    for n in 32 64 128 256 512
+    for n in 8 16 32 64 128 256 512
     do
-        cd ~/Research/code/harm
+        cd ~/code/harm
         dirname=tests/$name${i}_${n}
         mkdir -p tests
         mkdir -p $dirname
