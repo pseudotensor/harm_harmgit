@@ -23,6 +23,8 @@ do
         cd $dirname
         echo "Running (in the background) test #${i} using ${n} cells: $name${i}_${n} ..."
         ./grmhd 1 1 1  &> run_log.txt &
-     done
+    done
+    #wait for all tests at different resolutions to complete
+    wait 
 done
 echo "Done!"
