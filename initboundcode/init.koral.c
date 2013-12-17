@@ -3670,7 +3670,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
       //Fx=0.;
     }
 
-    if(RADWAVE_NWAVE==5 && (RADWAVE_NUMERO==1001||RADWAVE_NUMERO==101||RADWAVE_NUMERO==104||RADWAVE_NUMERO==110)){
+    if(RADWAVE_NWAVE==5){
       
       //printf("RHOZERO = %g\nUINT = %g\nT = %g\nERAD = %g\nARAD = %g\n",RADWAVE_RHOZERO,RADWAVE_UINT,RADWAVE_TEMP,RADWAVE_ERAD,ARAD_RAD_CODE);getchar();
       
