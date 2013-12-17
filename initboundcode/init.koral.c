@@ -386,8 +386,8 @@ int init_global(void)
   //////////////////
   // overrides for more detailed problem dependence
   //  TIMEORDER=2; // no need for 4 unless higher-order or cold collapse problem.
-  //  TIMEORDER=4;
-  TIMEORDER=3; // more smooth accurate solution than TIMEORDER=4 or 2 (midpoint or TVD)
+  TIMEORDER=4;
+  //TIMEORDER=3; // more smooth accurate solution than TIMEORDER=4 or 2 (midpoint or TVD)
   //TIMEORDER=2;
   //lim[1]=lim[2]=lim[3]=DONOR;
   //lim[1]=lim[2]=lim[3]=MINM;
