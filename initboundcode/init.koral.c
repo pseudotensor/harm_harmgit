@@ -1256,7 +1256,7 @@ int init_global(void)
       
       dualfprintf(fail_file,"RADWAVE_RHOZERO=%g, RADWAVE_KK=%g, RADWAVE_UINT=%g, RADWAVE_TEMP=%g, ARAD_CODE=%g, RADWAVE_ERAD=%21.15g\n",
                   RADWAVE_RHOZERO, RADWAVE_KK, RADWAVE_UINT, RADWAVE_TEMP, ARAD_CODE, RADWAVE_ERAD);
-      if(RADWAVE_NUMERO==104 || RADWAVE_NUMERO==110 || RADWAVE_NUMERO==101 || RADWAVE_NUMERO==1001 || RADWAVE_NUMERO==1101 || RADWAVE_NUMERO==1002 || RADWAVE_NUMERO==1102){
+      if(RADWAVE_NWAVE==5){
         FILE *out;
         if((out=fopen("radtestparams.dat","wt"))==NULL){
           dualfprintf(fail_file,"Couldn't write radtestparams.dat file\n");
@@ -1429,7 +1429,7 @@ int init_global(void)
     if(RADWAVE_VX==0.0) tf = MAX(100.0*RADWAVE_DTOUT1,5.0/RADWAVE_CC);
     else tf = MAX(100.0*RADWAVE_DTOUT1,5.0/MIN(RADWAVE_VX,RADWAVE_CC));
 
-    if(RADWAVE_NWAVE==5&&(RADWAVE_NUMERO==1001||RADWAVE_NUMERO==101||RADWAVE_NUMERO==104||RADWAVE_NUMERO==110)){
+    if(RADWAVE_NWAVE==5){
       tf = 1.1*2*M_PI/RADWAVE_OMRE;
     }
 
