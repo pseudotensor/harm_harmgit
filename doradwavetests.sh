@@ -1,9 +1,9 @@
 #!/bin/bash
 name="radwave"
-for i in 104
+for i in 1 10 11 104 105 1001 1101 1002 1102
 do
     echo "Doing test #${i}..."
-    for n in 32 64 #128 #256 512
+    for n in 32 64 128 256 512
     do
         cd ~/Research/code/harm
         dirname=tests/$name${i}_${n}
@@ -21,8 +21,8 @@ do
         make -j 4 &> $dirname/compile_log.txt
         cp grmhd $dirname
         cd $dirname
-        echo "Running test #${i} using ${n} cells: $name${i}_${n} ..."
-        ./grmhd 1 1 1  &> run_log.txt
+        echo "Running (in the background) test #${i} using ${n} cells: $name${i}_${n} ..."
+        ./grmhd 1 1 1  &> run_log.txt &
      done
 done
 echo "Done!"
