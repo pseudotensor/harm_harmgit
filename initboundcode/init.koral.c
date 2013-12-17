@@ -1193,7 +1193,7 @@ int init_global(void)
         RADWAVE_DTOUT1=2*M_PI/RADWAVE_OMRE/10.;
       }
       
-      if(RADWAVE_NUMERO==1002){ //radiation-modified fast magnetosonic
+      if(RADWAVE_NUMERO==1002){ //radiation-modified fast magnetosonic, opt THICK
         RADWAVE_RHOFAC=0.001;
         RADWAVE_B0=0.10075854437197568;
         RADWAVE_PP=10;
@@ -1220,7 +1220,7 @@ int init_global(void)
         RADWAVE_DTOUT1=2*M_PI/RADWAVE_OMRE/10.;
       }
 
-      if(RADWAVE_NUMERO==1102){ //radiation-modified slow magnetosonic
+      if(RADWAVE_NUMERO==1102){ //radiation-modified slow magnetosonic, opt THICK
         RADWAVE_RHOFAC=0.001;
         RADWAVE_B0=0.10075854437197568;
         RADWAVE_PP=10;
