@@ -233,7 +233,7 @@ int prepre_init_specific_init(void)
   
   // Also: SET USEROMIO to 0 or 1 in mympi.definit.h (needs to be 0 for TEXTOUTPUT)
   if(PRODUCTION==0){
-    binaryoutput=TEXTOUTPUT;
+    //binaryoutput=TEXTOUTPUT;
     // KRAKEN: comment out above.  And change mympi.definit.h's USEROMIO 0 to 1 for the "choice" version.
   }
 
