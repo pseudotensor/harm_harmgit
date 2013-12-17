@@ -92,6 +92,7 @@ FTYPE RADDBLSHADOW_BEAMY;
 
 int RADWAVE_NWAVE;
 int RADWAVE_NUMERO;
+int RADWAVE_WAVETYPE;
 FTYPE RADWAVE_PP;
 FTYPE RADWAVE_CC;
 FTYPE RADWAVE_KAPPA;
@@ -1005,6 +1006,7 @@ int init_global(void)
     if(RADWAVE_NWAVE==5){ //sound wave with radiation set up according to Jiang+12
 
       if(RADWAVE_NUMERO==1) { // sound wave
+        RADWAVE_WAVETYPE=0;  //sound wave
         RADWAVE_RHOFAC=0.001;
         RADWAVE_B0=0.;
         RADWAVE_PP=0.01;
@@ -1032,6 +1034,7 @@ int init_global(void)
       }
       
       if(RADWAVE_NUMERO==10) { // fast magnetosonic wave
+        RADWAVE_WAVETYPE=2;  //fast
         RADWAVE_RHOFAC=0.001;
         RADWAVE_B0=0.10075854437197568;
         RADWAVE_PP=0.01;
@@ -1059,6 +1062,7 @@ int init_global(void)
       }
       
       if(RADWAVE_NUMERO==11) { // slow magnetosonic wave
+        RADWAVE_WAVETYPE=1;  //slow
         RADWAVE_RHOFAC=0.001;
         RADWAVE_B0=0.10075854437197568;
         RADWAVE_PP=0.01;
@@ -1085,7 +1089,8 @@ int init_global(void)
         RADWAVE_DTOUT1=2*M_PI/RADWAVE_OMRE/10.;
       }
       
-      if(RADWAVE_NUMERO==104) { // radiation-modified sound wave
+      if(RADWAVE_NUMERO==101) { // radiation-modified sound wave
+        RADWAVE_WAVETYPE=0;  //sound
         RADWAVE_RHOFAC=0.001;
         RADWAVE_B0=0.;
         RADWAVE_PP=0.1;
@@ -1112,7 +1117,8 @@ int init_global(void)
         RADWAVE_DTOUT1=2*M_PI/RADWAVE_OMRE/10.;
       }
 
-      if(RADWAVE_NUMERO==105) { // radiation-modified sound wave
+      if(RADWAVE_NUMERO==102) { // radiation-modified sound wave
+        RADWAVE_WAVETYPE=0;  //sound
         RADWAVE_RHOFAC=0.001;
         RADWAVE_B0=0.;
         RADWAVE_PP=10;
@@ -1140,6 +1146,7 @@ int init_global(void)
       }
       
       if(RADWAVE_NUMERO==1001){ //radiation-modified fast magnetosonic
+        RADWAVE_WAVETYPE=2;  //fast
         RADWAVE_RHOFAC=0.001;
         RADWAVE_B0=0.10075854437197568;
         RADWAVE_PP=0.1;
@@ -1167,6 +1174,7 @@ int init_global(void)
       }
       
       if(RADWAVE_NUMERO==1101){ //radiation-modified slow magnetosonic
+        RADWAVE_WAVETYPE=1;  //slow
         RADWAVE_RHOFAC=0.001;
         RADWAVE_B0=0.10075854437197568;
         RADWAVE_PP=0.1;
@@ -1194,6 +1202,7 @@ int init_global(void)
       }
       
       if(RADWAVE_NUMERO==1002){ //radiation-modified fast magnetosonic, opt THICK
+        RADWAVE_WAVETYPE=2;  //fast
         RADWAVE_RHOFAC=0.001;
         RADWAVE_B0=0.10075854437197568;
         RADWAVE_PP=10;
@@ -1221,6 +1230,7 @@ int init_global(void)
       }
 
       if(RADWAVE_NUMERO==1102){ //radiation-modified slow magnetosonic, opt THICK
+        RADWAVE_WAVETYPE=1;  //slow
         RADWAVE_RHOFAC=0.001;
         RADWAVE_B0=0.10075854437197568;
         RADWAVE_PP=10;
@@ -1263,7 +1273,7 @@ int init_global(void)
           myexit(1);
         }
         else{
-          fprintf(out,"#%20s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s\n",
+          fprintf(out,"#%20s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s\n",
                   "RADWAVE_RHOZERO",
                   "RADWAVE_KK",
                   "RADWAVE_UINT",
@@ -1292,8 +1302,9 @@ int init_global(void)
                   "RADWAVE_DF2IM",
                   "RADWAVE_OMRE",
                   "RADWAVE_OMIM",
-                  "RADWAVE_DTOUT1" );
-          fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",
+                  "RADWAVE_DTOUT1",
+                  "RADWAVE_WAVETYPE");
+          fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",
                   RADWAVE_RHOZERO,
                   RADWAVE_KK,
                   RADWAVE_UINT,
@@ -1322,7 +1333,8 @@ int init_global(void)
                   RADWAVE_DF2IM,
                   RADWAVE_OMRE,
                   RADWAVE_OMIM,
-                  RADWAVE_DTOUT1
+                  RADWAVE_DTOUT1,
+                  RADWAVE_WAVETYPE
                   );
           fclose(out);
         }
