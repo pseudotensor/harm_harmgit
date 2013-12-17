@@ -18,13 +18,14 @@ do
         echo "Compiling test #${i} using ${n} cells: $name${i}_${n} ..."
         make superclean &> $dirname/compile_log.txt
         make prep &> $dirname/compile_log.txt
-        make -j 4 &> $dirname/compile_log.txt
+        make -j 16 &> $dirname/compile_log.txt
         cp grmhd $dirname
         cd $dirname
         echo "Running (in the background) test #${i} using ${n} cells: $name${i}_${n} ..."
         ./grmhd 1 1 1  &> run_log.txt &
     done
-    #wait for all tests at different resolutions to complete
-    wait 
 done
+echo "Waiting for all background processes to finish..."
+#wait for all tests at different resolutions to complete
+wait 
 echo "Done!"
