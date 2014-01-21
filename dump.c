@@ -1966,6 +1966,8 @@ int fakedump(long dump_cnt)// arg not used
 
   trifprintf("begin dumping fakedump");
 
+  //  return(0); // Kraken had problems with this when computing and dumping currents.
+
   whichdump=FAKEDUMPTYPE;
   datatype=MPI_FTYPE;
   strcpy(fileprefix,"dumps/fakedump");

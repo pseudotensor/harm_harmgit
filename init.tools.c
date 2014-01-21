@@ -822,14 +822,16 @@ int user1_get_maxes(int eqslice, FTYPE *parms, FTYPE (*prim)[NSTORE2][NSTORE3][N
   FTYPE dxdxp[NDIM][NDIM];
   FTYPE r,th;
   int gotnormal;
-  FTYPE rin;
+  FTYPE rin,rout;
   int loc;
 
   
   
 
   rin=parms[0];
-
+  rout=parms[1];
+  if(rout<=rin) rout=100.0; // default
+  dualfprintf(fail_file,"rin=%g rout=%g\n",rin,rout);
 
   bsq_max[0] = SMALL;
   ptot_max[0]= 0.;
@@ -847,7 +849,7 @@ int user1_get_maxes(int eqslice, FTYPE *parms, FTYPE (*prim)[NSTORE2][NSTORE3][N
 
     if(eqslice){
       
-      if((r>rin)&&(fabs(th-M_PI*0.5)<4.0*M_PI*dx[2]*hslope)){
+      if((r>rin&&r<rout)&&(fabs(th-M_PI*0.5)<4.0*M_PI*dx[2]*hslope)){
         gotnormal=1;
         if (bsq_calc(MAC(prim,i,j,k), ptrgeom, &bsq_ij) >= 1) FAILSTATEMENT("init.c:init()", "bsq_calc()", 1);
         if (bsq_ij > bsq_max[0])      bsq_max[0] = bsq_ij;
@@ -866,7 +868,7 @@ int user1_get_maxes(int eqslice, FTYPE *parms, FTYPE (*prim)[NSTORE2][NSTORE3][N
     }
     else{
       
-      if(r>rin){
+      if(r>rin && r<rout){
 
         gotnormal=1;
         if (bsq_calc(MAC(prim,i,j,k), ptrgeom, &bsq_ij) >= 1) FAILSTATEMENT("init.c:init()", "bsq_calc()", 1);

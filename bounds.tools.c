@@ -3457,103 +3457,6 @@ int poledeath(int whichx2,
 
 
 
-  //////////////////
-  //
-  // setup loop ranges
-  //
-  //////////////////
-
-  // note that doesn't matter the order of the j-loop since always using reference value (so for loop doesn't need change in <= to >=)
-  if(whichx2==X2DN){
-
-    jstep=-1; // direction of j loop, so starts with active cells in case modify boundary cells as dependent upon active cells.
-
-    rj0 = POLEDEATH;
-    rjtest = rj0+DEATHEXPANDAMOUNT; // used to ensure near pole the density doesn't drop suddenly
-    poleloc = 0;
-    poleloccent = 0;
-    // for POLEDEATH==2, then deathjs,je=-2,-1,0,1 as required for CENT quantities rj=2
-    deathjs0 = 0-POLEDEATH;
-    deathje0 = 0+POLEDEATH-1;
-
-    deathjstest = deathjs0-DEATHEXPANDAMOUNT;
-    deathjetest = deathje0+DEATHEXPANDAMOUNT;
-    if(deathjstest<inoutlohi[POINTDOWN][POINTDOWN][2]) deathjstest=inoutlohi[POINTDOWN][POINTDOWN][2];
-    if(deathjetest<inoutlohi[POINTDOWN][POINTDOWN][2]) deathjetest=inoutlohi[POINTDOWN][POINTDOWN][2];
-
-    // assume for POLEDEATH==1 that B2 set correctly as 0 on pole and only do something if POLEDEATH>1
-    // if POLEDEATH==2 then B2 set at  -1,0,1 and will correctly set B2 to 0 at pole rj=2
-    rjstag0 = rj0;
-    deathstagjs0 = 0-POLEDEATH+1;
-    deathstagje0 = 0+POLEDEATH-1;
-
-    rjstagtest = rjtest;
-    deathstagjstest = deathstagjs0-DEATHEXPANDAMOUNT;
-    deathstagjetest = deathstagje0+DEATHEXPANDAMOUNT;
-    if(deathstagjstest<inoutlohi[POINTDOWN][POINTDOWN][2]) deathstagjstest=inoutlohi[POINTDOWN][POINTDOWN][2];
-    if(deathstagjetest<inoutlohi[POINTDOWN][POINTDOWN][2]) deathstagjetest=inoutlohi[POINTDOWN][POINTDOWN][2];
-
-    // assumes velocity is always CENT
-    gammadeathjs=0-POLEGAMMADEATH;
-    gammadeathje=0+POLEGAMMADEATH-1;
-    if(gammadeathjs<inoutlohi[POINTDOWN][POINTDOWN][2]) gammadeathjs=inoutlohi[POINTDOWN][POINTDOWN][2];
-    if(gammadeathje<inoutlohi[POINTDOWN][POINTDOWN][2]) gammadeathje=inoutlohi[POINTDOWN][POINTDOWN][2];
-
-    // NO, don't do below.  Since poledeath called after MPI, need to set ghost cells as consistent with how active cells would have been set by other part of grid or other CPUs
-    //    if(special3dspc){
-    //      // then assume poledeath called *after* MPI (so have full and correct information across pole), so only should modify active cells and not boundary cells
-    //      deathjs0 = 0;
-    //      deathjstest = 0;
-    //      deathstagjs0 = 0;
-    //      deathstagjstest = 0;
-    //      gammadeathjs=0;
-    //    }
-
-  }
-  else if(whichx2==X2UP){
-    rj0=N2-1-POLEDEATH;
-    rjtest = rj0-DEATHEXPANDAMOUNT;
-    poleloc=N2;
-    poleloccent=N2-1;
-    // if POLEDEATH==2 then CENTs set at N2-2,N2-1,N2,N2+1 rj=N2-3
-    deathjs0 = N2-1+1-POLEDEATH;
-    deathje0 = N2-1+POLEDEATH;
-
-    deathjstest = deathjs0-DEATHEXPANDAMOUNT;
-    deathjetest = deathje0+DEATHEXPANDAMOUNT;
-    if(deathjstest>inoutlohi[POINTUP][POINTUP][2]) deathjstest=inoutlohi[POINTUP][POINTUP][2];
-    if(deathjetest>inoutlohi[POINTUP][POINTUP][2]) deathjetest=inoutlohi[POINTUP][POINTUP][2];
-
-    // if POLEDEATH==2, then B2 is set at N2-1,N2,N2+1 rj=N2-3
-    if(dirprim[B2]==FACE2) rjstag0=N2-POLEDEATH;
-    else if(dirprim[B2]==CENT) rjstag0=rj0;
-    deathstagjs0 = N2+1-POLEDEATH;
-    deathstagje0 = N2-1+POLEDEATH;
-
-    rjstagtest = rjtest;
-    deathstagjstest = deathstagjs0-DEATHEXPANDAMOUNT;
-    deathstagjetest = deathstagje0+DEATHEXPANDAMOUNT;
-    if(deathstagjstest>inoutlohi[POINTUP][POINTUP][2]) deathstagjstest=inoutlohi[POINTUP][POINTUP][2];
-    if(deathstagjetest>inoutlohi[POINTUP][POINTUP][2]) deathstagjetest=inoutlohi[POINTUP][POINTUP][2];
-
-
-    // assumes velocity is always CENT .  If POLEDEATH==2, N2-2,N2-1,N2,N2+1
-    gammadeathjs = N2-1+1-POLEGAMMADEATH;
-    gammadeathje = N2-1+POLEGAMMADEATH;
-    if(gammadeathjs>inoutlohi[POINTUP][POINTUP][2]) gammadeathjs=inoutlohi[POINTUP][POINTUP][2];
-    if(gammadeathje>inoutlohi[POINTUP][POINTUP][2]) gammadeathje=inoutlohi[POINTUP][POINTUP][2];
-
-
-    //    if(special3dspc){
-    //      // then assume poledeath called *after* MPI (so have full and correct information across pole), so only should modify active cells and not boundary cells
-    //      deathje0 = N2-1;
-    //      deathjetest = N2-1;
-    //      deathstagje0 = N2-1;
-    //      deathstagjetest = N2-1;
-    //      gammadeathje=N2-1;
-    //    }
-
-  }
   
 
 
@@ -3578,6 +3481,129 @@ int poledeath(int whichx2,
     OPENMPBCLOOPBLOCK{
       OPENMPBCLOOPBLOCK2IJKLOOPX2DIR(i,k);
 
+
+
+  //////////////////
+  //
+  // setup loop ranges
+  //
+  //////////////////
+
+  int poledeathreal,polegammadeathreal;
+  FTYPE Vtemp[NDIM];
+  // note that doesn't matter the order of the j-loop since always using reference value (so for loop doesn't need change in <= to >=)
+  if(whichx2==X2DN){
+
+    bl_coord_ijk(i,0,k,CENT,Vtemp);
+    if(Vtemp[1]>300.0){
+      poledeathreal=N2BND;
+      polegammadeathreal=N2BND;
+    }
+    else{
+      poledeathreal=POLEDEATH;
+      polegammadeathreal=POLEGAMMADEATH;
+    }
+
+
+    jstep=-1; // direction of j loop, so starts with active cells in case modify boundary cells as dependent upon active cells.
+
+    rj0 = poledeathreal;
+    rjtest = rj0+DEATHEXPANDAMOUNT; // used to ensure near pole the density doesn't drop suddenly
+    poleloc = 0;
+    poleloccent = 0;
+    // for poledeathreal==2, then deathjs,je=-2,-1,0,1 as required for CENT quantities rj=2
+    deathjs0 = 0-poledeathreal;
+    deathje0 = 0+poledeathreal-1;
+
+    deathjstest = deathjs0-DEATHEXPANDAMOUNT;
+    deathjetest = deathje0+DEATHEXPANDAMOUNT;
+    if(deathjstest<inoutlohi[POINTDOWN][POINTDOWN][2]) deathjstest=inoutlohi[POINTDOWN][POINTDOWN][2];
+    if(deathjetest<inoutlohi[POINTDOWN][POINTDOWN][2]) deathjetest=inoutlohi[POINTDOWN][POINTDOWN][2];
+
+    // assume for poledeathreal==1 that B2 set correctly as 0 on pole and only do something if poledeathreal>1
+    // if poledeathreal==2 then B2 set at  -1,0,1 and will correctly set B2 to 0 at pole rj=2
+    rjstag0 = rj0;
+    deathstagjs0 = 0-poledeathreal+1;
+    deathstagje0 = 0+poledeathreal-1;
+
+    rjstagtest = rjtest;
+    deathstagjstest = deathstagjs0-DEATHEXPANDAMOUNT;
+    deathstagjetest = deathstagje0+DEATHEXPANDAMOUNT;
+    if(deathstagjstest<inoutlohi[POINTDOWN][POINTDOWN][2]) deathstagjstest=inoutlohi[POINTDOWN][POINTDOWN][2];
+    if(deathstagjetest<inoutlohi[POINTDOWN][POINTDOWN][2]) deathstagjetest=inoutlohi[POINTDOWN][POINTDOWN][2];
+
+    // assumes velocity is always CENT
+    gammadeathjs=0-polegammadeathreal;
+    gammadeathje=0+polegammadeathreal-1;
+    if(gammadeathjs<inoutlohi[POINTDOWN][POINTDOWN][2]) gammadeathjs=inoutlohi[POINTDOWN][POINTDOWN][2];
+    if(gammadeathje<inoutlohi[POINTDOWN][POINTDOWN][2]) gammadeathje=inoutlohi[POINTDOWN][POINTDOWN][2];
+
+    // NO, don't do below.  Since poledeath called after MPI, need to set ghost cells as consistent with how active cells would have been set by other part of grid or other CPUs
+    //    if(special3dspc){
+    //      // then assume poledeath called *after* MPI (so have full and correct information across pole), so only should modify active cells and not boundary cells
+    //      deathjs0 = 0;
+    //      deathjstest = 0;
+    //      deathstagjs0 = 0;
+    //      deathstagjstest = 0;
+    //      gammadeathjs=0;
+    //    }
+
+  }
+  else if(whichx2==X2UP){
+
+    bl_coord_ijk(i,N2BND,k,CENT,Vtemp);
+    if(Vtemp[1]>300.0){
+      poledeathreal=N2BND;
+      polegammadeathreal=N2BND;
+    }
+    else{
+      poledeathreal=POLEDEATH;
+      polegammadeathreal=POLEGAMMADEATH;
+    }
+
+    rj0=N2-1-poledeathreal;
+    rjtest = rj0-DEATHEXPANDAMOUNT;
+    poleloc=N2;
+    poleloccent=N2-1;
+    // if poledeathreal==2 then CENTs set at N2-2,N2-1,N2,N2+1 rj=N2-3
+    deathjs0 = N2-1+1-poledeathreal;
+    deathje0 = N2-1+poledeathreal;
+
+    deathjstest = deathjs0-DEATHEXPANDAMOUNT;
+    deathjetest = deathje0+DEATHEXPANDAMOUNT;
+    if(deathjstest>inoutlohi[POINTUP][POINTUP][2]) deathjstest=inoutlohi[POINTUP][POINTUP][2];
+    if(deathjetest>inoutlohi[POINTUP][POINTUP][2]) deathjetest=inoutlohi[POINTUP][POINTUP][2];
+
+    // if poledeathreal==2, then B2 is set at N2-1,N2,N2+1 rj=N2-3
+    if(dirprim[B2]==FACE2) rjstag0=N2-poledeathreal;
+    else if(dirprim[B2]==CENT) rjstag0=rj0;
+    deathstagjs0 = N2+1-poledeathreal;
+    deathstagje0 = N2-1+poledeathreal;
+
+    rjstagtest = rjtest;
+    deathstagjstest = deathstagjs0-DEATHEXPANDAMOUNT;
+    deathstagjetest = deathstagje0+DEATHEXPANDAMOUNT;
+    if(deathstagjstest>inoutlohi[POINTUP][POINTUP][2]) deathstagjstest=inoutlohi[POINTUP][POINTUP][2];
+    if(deathstagjetest>inoutlohi[POINTUP][POINTUP][2]) deathstagjetest=inoutlohi[POINTUP][POINTUP][2];
+
+
+    // assumes velocity is always CENT .  If POLEDEATH==2, N2-2,N2-1,N2,N2+1
+    gammadeathjs = N2-1+1-polegammadeathreal;
+    gammadeathje = N2-1+polegammadeathreal;
+    if(gammadeathjs>inoutlohi[POINTUP][POINTUP][2]) gammadeathjs=inoutlohi[POINTUP][POINTUP][2];
+    if(gammadeathje>inoutlohi[POINTUP][POINTUP][2]) gammadeathje=inoutlohi[POINTUP][POINTUP][2];
+
+
+    //    if(special3dspc){
+    //      // then assume poledeath called *after* MPI (so have full and correct information across pole), so only should modify active cells and not boundary cells
+    //      deathje0 = N2-1;
+    //      deathjetest = N2-1;
+    //      deathstagje0 = N2-1;
+    //      deathstagjetest = N2-1;
+    //      gammadeathje=N2-1;
+    //    }
+
+  }
 
 
 
@@ -4285,6 +4311,134 @@ int poledeath(int whichx2,
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
       OPENMPBCLOOPBLOCK{
         OPENMPBCLOOPBLOCK2IJKLOOPX2DIR(i,k);
+
+
+  //////////////////
+  //
+  // setup loop ranges
+  //
+  //////////////////
+
+
+        //////////////////////////////////////
+        // BELOW JUST COPY OF ABOVE
+  int poledeathreal,polegammadeathreal;
+  FTYPE Vtemp[NDIM];
+  // note that doesn't matter the order of the j-loop since always using reference value (so for loop doesn't need change in <= to >=)
+  if(whichx2==X2DN){
+
+    bl_coord_ijk(i,0,k,CENT,Vtemp);
+    if(Vtemp[1]>300.0){
+      poledeathreal=N2BND;
+      polegammadeathreal=N2BND;
+    }
+    else{
+      poledeathreal=POLEDEATH;
+      polegammadeathreal=POLEGAMMADEATH;
+    }
+
+
+    jstep=-1; // direction of j loop, so starts with active cells in case modify boundary cells as dependent upon active cells.
+
+    rj0 = poledeathreal;
+    rjtest = rj0+DEATHEXPANDAMOUNT; // used to ensure near pole the density doesn't drop suddenly
+    poleloc = 0;
+    poleloccent = 0;
+    // for poledeathreal==2, then deathjs,je=-2,-1,0,1 as required for CENT quantities rj=2
+    deathjs0 = 0-poledeathreal;
+    deathje0 = 0+poledeathreal-1;
+
+    deathjstest = deathjs0-DEATHEXPANDAMOUNT;
+    deathjetest = deathje0+DEATHEXPANDAMOUNT;
+    if(deathjstest<inoutlohi[POINTDOWN][POINTDOWN][2]) deathjstest=inoutlohi[POINTDOWN][POINTDOWN][2];
+    if(deathjetest<inoutlohi[POINTDOWN][POINTDOWN][2]) deathjetest=inoutlohi[POINTDOWN][POINTDOWN][2];
+
+    // assume for poledeathreal==1 that B2 set correctly as 0 on pole and only do something if poledeathreal>1
+    // if poledeathreal==2 then B2 set at  -1,0,1 and will correctly set B2 to 0 at pole rj=2
+    rjstag0 = rj0;
+    deathstagjs0 = 0-poledeathreal+1;
+    deathstagje0 = 0+poledeathreal-1;
+
+    rjstagtest = rjtest;
+    deathstagjstest = deathstagjs0-DEATHEXPANDAMOUNT;
+    deathstagjetest = deathstagje0+DEATHEXPANDAMOUNT;
+    if(deathstagjstest<inoutlohi[POINTDOWN][POINTDOWN][2]) deathstagjstest=inoutlohi[POINTDOWN][POINTDOWN][2];
+    if(deathstagjetest<inoutlohi[POINTDOWN][POINTDOWN][2]) deathstagjetest=inoutlohi[POINTDOWN][POINTDOWN][2];
+
+    // assumes velocity is always CENT
+    gammadeathjs=0-polegammadeathreal;
+    gammadeathje=0+polegammadeathreal-1;
+    if(gammadeathjs<inoutlohi[POINTDOWN][POINTDOWN][2]) gammadeathjs=inoutlohi[POINTDOWN][POINTDOWN][2];
+    if(gammadeathje<inoutlohi[POINTDOWN][POINTDOWN][2]) gammadeathje=inoutlohi[POINTDOWN][POINTDOWN][2];
+
+    // NO, don't do below.  Since poledeath called after MPI, need to set ghost cells as consistent with how active cells would have been set by other part of grid or other CPUs
+    //    if(special3dspc){
+    //      // then assume poledeath called *after* MPI (so have full and correct information across pole), so only should modify active cells and not boundary cells
+    //      deathjs0 = 0;
+    //      deathjstest = 0;
+    //      deathstagjs0 = 0;
+    //      deathstagjstest = 0;
+    //      gammadeathjs=0;
+    //    }
+        //////////////////////////////////////
+
+  }
+  else if(whichx2==X2UP){
+
+    bl_coord_ijk(i,N2BND,k,CENT,Vtemp);
+    if(Vtemp[1]>300.0){
+      poledeathreal=N2BND;
+      polegammadeathreal=N2BND;
+    }
+    else{
+      poledeathreal=POLEDEATH;
+      polegammadeathreal=POLEGAMMADEATH;
+    }
+
+    rj0=N2-1-poledeathreal;
+    rjtest = rj0-DEATHEXPANDAMOUNT;
+    poleloc=N2;
+    poleloccent=N2-1;
+    // if poledeathreal==2 then CENTs set at N2-2,N2-1,N2,N2+1 rj=N2-3
+    deathjs0 = N2-1+1-poledeathreal;
+    deathje0 = N2-1+poledeathreal;
+
+    deathjstest = deathjs0-DEATHEXPANDAMOUNT;
+    deathjetest = deathje0+DEATHEXPANDAMOUNT;
+    if(deathjstest>inoutlohi[POINTUP][POINTUP][2]) deathjstest=inoutlohi[POINTUP][POINTUP][2];
+    if(deathjetest>inoutlohi[POINTUP][POINTUP][2]) deathjetest=inoutlohi[POINTUP][POINTUP][2];
+
+    // if poledeathreal==2, then B2 is set at N2-1,N2,N2+1 rj=N2-3
+    if(dirprim[B2]==FACE2) rjstag0=N2-poledeathreal;
+    else if(dirprim[B2]==CENT) rjstag0=rj0;
+    deathstagjs0 = N2+1-poledeathreal;
+    deathstagje0 = N2-1+poledeathreal;
+
+    rjstagtest = rjtest;
+    deathstagjstest = deathstagjs0-DEATHEXPANDAMOUNT;
+    deathstagjetest = deathstagje0+DEATHEXPANDAMOUNT;
+    if(deathstagjstest>inoutlohi[POINTUP][POINTUP][2]) deathstagjstest=inoutlohi[POINTUP][POINTUP][2];
+    if(deathstagjetest>inoutlohi[POINTUP][POINTUP][2]) deathstagjetest=inoutlohi[POINTUP][POINTUP][2];
+
+
+    // assumes velocity is always CENT .  If POLEDEATH==2, N2-2,N2-1,N2,N2+1
+    gammadeathjs = N2-1+1-polegammadeathreal;
+    gammadeathje = N2-1+polegammadeathreal;
+    if(gammadeathjs>inoutlohi[POINTUP][POINTUP][2]) gammadeathjs=inoutlohi[POINTUP][POINTUP][2];
+    if(gammadeathje>inoutlohi[POINTUP][POINTUP][2]) gammadeathje=inoutlohi[POINTUP][POINTUP][2];
+
+
+    //    if(special3dspc){
+    //      // then assume poledeath called *after* MPI (so have full and correct information across pole), so only should modify active cells and not boundary cells
+    //      deathje0 = N2-1;
+    //      deathjetest = N2-1;
+    //      deathstagje0 = N2-1;
+    //      deathstagjetest = N2-1;
+    //      gammadeathje=N2-1;
+    //    }
+
+  }
+        //////////////////////////////////////
 
 
         for (j = gammadeathjs; j <= gammadeathje; j++) { // currently not multiple-point dependent, so normal j loop is fine

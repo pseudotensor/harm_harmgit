@@ -243,6 +243,7 @@ void set_coord_parms_nodeps(int defcoordlocal)
 
     // for theta2
     h0=0.3; // inner-radial "hslope" for theta2
+    //h0=0.1; // inner-radial "hslope" for theta2 // for thinner disks, change this.
     // GODMARK: Note that this overwrites above njet!
     njet=1.0; // power \theta_j \propto r^{-njet}
 
@@ -1167,8 +1168,17 @@ void bl_coord(FTYPE *X, FTYPE *V)
 #else
     // RAMESH BASED
     // myhslope here is h2 in MCAF paper
-    // h0 here is h3 in MCAF paper
-    myhslope=h0 + pow( (V[1]-rsjet3)/r0jet3 , njet);
+    //    // h0 here is h3 in MCAF paper
+    //FTYPE njetvsr;
+    //if(V[1]<rbr) njetvsr=njet;
+    //    else njetvsr=njet/(V[1])*rbr;
+    //else njetvsr=
+    //njetvsr=njet;
+    
+    if(V[1]<rbr){
+      myhslope=h0 + pow( (V[1]-rsjet3)/r0jet3 , njet);
+    }
+    else myhslope=h0 + pow( (rbr-rsjet3)/r0jet3 , njet);
 
     // determine theta2
     if(X[2]>1.0) myx2=2.0-X[2];
@@ -1182,7 +1192,10 @@ void bl_coord(FTYPE *X, FTYPE *V)
 
     // determine theta0
     // JET3COORDS-based:
-    myhslope=2.0-Qjet*pow(V[1]/r1jet,-njet*(0.5+1.0/M_PI*atan(V[1]/r0jet-rsjet/r0jet)));
+    if(V[1]<rbr){
+      myhslope=2.0-Qjet*pow(V[1]/r1jet,-njet*(0.5+1.0/M_PI*atan(V[1]/r0jet-rsjet/r0jet)));
+    }
+    else myhslope=2.0-Qjet*pow(rbr/r1jet,-njet*(0.5+1.0/M_PI*atan(rbr/r0jet-rsjet/r0jet)));
     // myhslope here is h0 in MCAF paper
     th0 = M_PI * X[2] + ((1. - myhslope) * 0.5) * mysin(2. * M_PI * X[2]);
 

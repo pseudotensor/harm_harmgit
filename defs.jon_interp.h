@@ -159,6 +159,7 @@ FTYPE *fvec;
 int nrerrorflag;
 FTYPE Rchop;
 
+
 /////////////////////////////
 // memory stuff
 //
@@ -174,6 +175,9 @@ FTYPE (*GLOBALPOINT(idxdxpstore))[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTO
 
 FTYPE (*GLOBALPOINT(Xstore))[NSTORE1+SHIFTSTORE1*3][NSTORE2+SHIFTSTORE2*3][NSTORE3+SHIFTSTORE3*3][NDIM];
 FTYPE (*GLOBALPOINT(Vstore))[NSTORE1+SHIFTSTORE1*3][NSTORE2+SHIFTSTORE2*3][NSTORE3+SHIFTSTORE3*3][NDIM];
+
+//FTYPE (*GLOBALPOINT(tlab2ortho))[BOOSTGRIDPOS][BOOSTDIRS][NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3][NDIM][NDIM];
+FTYPE (*GLOBALPOINT(tlab2ortho))[BOOSTDIRS][NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3][NDIM][NDIM];
 
 // Note these below memory things are not affected by global.storage.h since created instead of as global arrays
 // So this code presumes [h][i][j][k] format always and is not optimized for arbitrary storage mapping

@@ -769,7 +769,7 @@ BIN2TXTLIBS1=$(BIN2TXTLIBS)
 BIN2TXTLIBS2=$(BIN2TXTLIBS)
 
 # below for ki-rh39 and likeness
-BIN2TXTLIBS=-I/home/jmckinne/include/ -L/home/jmckinne/lib/ -lmfhdf -ldf -ljpeg -lz -lv5d
+BIN2TXTLIBS=-I/home/jon/include/ -L/home/jon/lib/ -lmfhdf -ldf -ljpeg -lz -lv5d
 BIN2TXTLIBS1=$(BIN2TXTLIBS)
 BIN2TXTLIBS2=$(BIN2TXTLIBS)
 # must also change #include "hdf" stuff to have the forward hdf/ removed

@@ -1487,7 +1487,7 @@ static void vec2vecortho(int concovtype, FTYPE V[],  FTYPE *gcov,  FTYPE (*dxdxp
 
 
   // get tetrad (uses dxdxp so that tetrcov and tetrcon and eigenvalues are using V metric not X metric)
-  primcoord=1; // tells to use dxdxp to make simpler
+  int primcoord=1; // tells to use dxdxp to make simpler
   tetr_func_frommetric(primcoord, dxdxp, gcov, tetrcov, tetrcon, eigenvalues);
 
   // DEBUG
@@ -1909,3 +1909,54 @@ void bcon_calc(FTYPE *pr, FTYPE *ucon, FTYPE *ucov, FTYPE *bcon)
 
 
 
+void raise_vec(FTYPE *ucov, struct of_geom *geom, FTYPE *ucon)
+{
+
+  ucon[0] = geom->gcon[GIND(0,0)]*ucov[0]
+    + geom->gcon[GIND(0,1)]*ucov[1]
+    + geom->gcon[GIND(0,2)]*ucov[2]
+    + geom->gcon[GIND(0,3)]*ucov[3] ;
+  ucon[1] = geom->gcon[GIND(0,1)]*ucov[0]
+    + geom->gcon[GIND(1,1)]*ucov[1]
+    + geom->gcon[GIND(1,2)]*ucov[2]
+    + geom->gcon[GIND(1,3)]*ucov[3] ;
+  ucon[2] = geom->gcon[GIND(0,2)]*ucov[0]
+    + geom->gcon[GIND(1,2)]*ucov[1]
+    + geom->gcon[GIND(2,2)]*ucov[2]
+    + geom->gcon[GIND(2,3)]*ucov[3] ;
+  ucon[3] = geom->gcon[GIND(0,3)]*ucov[0]
+    + geom->gcon[GIND(1,3)]*ucov[1]
+    + geom->gcon[GIND(2,3)]*ucov[2]
+    + geom->gcon[GIND(3,3)]*ucov[3] ;
+
+  return ;
+}
+
+
+void lower_vec(FTYPE *ucon, struct of_geom *geom, FTYPE *ucov)
+{
+  ucov[0] = geom->gcov[GIND(0,0)]*ucon[0]
+    + geom->gcov[GIND(0,1)]*ucon[1]
+    + geom->gcov[GIND(0,2)]*ucon[2]
+    + geom->gcov[GIND(0,3)]*ucon[3] ;
+  ucov[1] = geom->gcov[GIND(0,1)]*ucon[0]
+    + geom->gcov[GIND(1,1)]*ucon[1]
+    + geom->gcov[GIND(1,2)]*ucon[2]
+    + geom->gcov[GIND(1,3)]*ucon[3]
+    ;
+  ucov[2] = geom->gcov[GIND(0,2)]*ucon[0]
+    + geom->gcov[GIND(1,2)]*ucon[1]
+    + geom->gcov[GIND(2,2)]*ucon[2]
+#if(DOMIXTHETAPHI)
+    + geom->gcov[GIND(2,3)]*ucon[3]
+#endif
+    ;
+  ucov[3] = geom->gcov[GIND(0,3)]*ucon[0]
+    + geom->gcov[GIND(1,3)]*ucon[1]
+#if(DOMIXTHETAPHI)
+    + geom->gcov[GIND(2,3)]*ucon[2]
+#endif
+    + geom->gcov[GIND(3,3)]*ucon[3] ;
+
+  return ;
+}

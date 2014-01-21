@@ -34,6 +34,19 @@ int inittypeglobal; // for bounds to communicate detail of what doing
 //#define THETAROTMETRIC (0.5*0.7)
 #define THETAROTMETRIC (0.0)
 
+#define NOFIELD -1
+#define DISK1FIELD 0
+#define DISK2FIELD 1
+#define VERTFIELD 2
+#define DISK1VERT 3
+#define DISK2VERT 4
+#define BLANDFORDQUAD 5
+#define TOROIDALFIELD 6
+#define OHSUGAFIELD 7
+#define MONOPOLAR 8
+#define OLEKFIELD 9
+#define FIELDJONMAD 10
+
 
 
 // NOTE on units:
@@ -653,22 +666,27 @@ int init_global(void)
 
 
 
-    //    NLEFT=0.99999; // Works well with MINM (only 49 total failures at relatively early time for otherwise default setup).  very hard on code -- only MINM with jon choice for CASES works.
-    //    NLEFT=0.99; // koral paper
-    //NLEFT=0.999; // latest koral
-    //  NLEFT=0.7;
-    //  NLEFT=0.93;
+    //    RADDBLSHADOW_NLEFT=0.99999; // Works well with MINM (only 49 total failures at relatively early time for otherwise default setup).  very hard on code -- only MINM with jon choice for CASES works.
+    //    RADDBLSHADOW_NLEFT=0.99; // koral paper
+    //    RADDBLSHADOW_NLEFT=0.999; // latest koral (ok to use, weak oscillations with LAXF)
+    //  fluxmethod=HLLFLUX; // smaller oscillations even at 0.99999
+
+
+    //  RADDBLSHADOW_NLEFT=0.7;
+    //  RADDBLSHADOW_NLEFT=0.93;
    
     //    angle=0.4; // koral paper
     //    angle=0.3; // latest koral
 
-    RADDBLSHADOW_NLEFT=0.99;
+    //    RADDBLSHADOW_NLEFT=0.99; // what's in HARMRAD
+    //    RADDBLSHADOW_NLEFT=0.99999; // works but noisy
+    RADDBLSHADOW_NLEFT=0.999;
     RADDBLSHADOW_ANGLE=0.4;
     RADDBLSHADOW_TLEFTOTAMB=100.0;
     RADDBLSHADOW_BEAMY=0.3;
 
     // avoid hitting gamma ceiling
-    GAMMAMAXRAD=MAX(GAMMAMAXRAD,2.0*1.0/sqrt(1.0-RADSHADOW_NLEFT*RADSHADOW_NLEFT));
+    GAMMAMAXRAD=MAX(GAMMAMAXRAD,2.0*1.0/sqrt(1.0-RADDBLSHADOW_NLEFT*RADDBLSHADOW_NLEFT));
 
 
     BCtype[X1UP]=FREEOUTFLOW;
@@ -730,18 +748,23 @@ int init_global(void)
     BCtype[X3DN]=RADBEAM2DBEAMINFLOW;
 
 
+
     FTYPE DTOUT1;
     if (RADBEAM2D_BEAMNO==1){
-      DTOUT1=.1; //dt for basic output
+      tf = 10.0*(M_PI*0.5)*3.0; //final time
+      DTOUT1=tf/100.0; //dt for basic output
     }
     else if (RADBEAM2D_BEAMNO==2){
-      DTOUT1=.4; //dt for basic output
+      tf = 10.0*(M_PI*0.5)*6.0; //final time
+      DTOUT1=tf/100.0; //dt for basic output
     }
     else if (RADBEAM2D_BEAMNO==3){
-      DTOUT1=1.; //dt for basic output
+      tf = 10.0*(M_PI*0.5)*15.0; //final time
+      DTOUT1=tf/100.0; //dt for basic output
     }
     else if (RADBEAM2D_BEAMNO==4){
-      DTOUT1=.25; //dt for basic output
+      tf = 10.0*(M_PI*0.5)*40.0; //final time
+      DTOUT1=tf/100.0; //dt for basic output
     }
 
     int idt;
@@ -749,7 +772,6 @@ int init_global(void)
     //    for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=0.001; // testing
 
     DTr = 100; //number of time steps for restart dumps
-    tf = 20.0; //final time
 
     //    DODIAGEVERYSUBSTEP = 1;
 
@@ -1053,7 +1075,7 @@ int init_global(void)
       RADWAVE_KK=2.*Pi;
       RADWAVE_UINT=((1./RADWAVE_CC/RADWAVE_CC)*RADWAVE_RHOZERO/gam/(gam-1.-1./RADWAVE_CC/RADWAVE_CC)) ; // to get proper sound speed
       RADWAVE_TEMP=(calc_PEQ_Tfromurho(RADWAVE_UINT,RADWAVE_RHOZERO)) ; // temperature from rho and uint
-      ARAD_CODE=((RADWAVE_PP*(gam-1.)*RADWAVE_UINT/RADWAVE_TEMP/RADWAVE_TEMP/RADWAVE_TEMP/RADWAVE_TEMP)); //to get the proper radiation to gas pressure ratio, PP=4 sig T^4 / P
+      ARAD_CODE=((3.0*RADWAVE_PP*(gam-1.)*RADWAVE_UINT/RADWAVE_TEMP/RADWAVE_TEMP/RADWAVE_TEMP/RADWAVE_TEMP)); //to get the proper radiation to gas pressure ratio, PP=4 sig T^4 / P
       RADWAVE_ERAD=(calc_LTE_EfromT(RADWAVE_TEMP)) ; // to get thermal equilibrium, E=4 sig T^4
     }
 
@@ -1070,7 +1092,7 @@ int init_global(void)
       RADWAVE_KK=2.*Pi;
       RADWAVE_UINT=(1./RADWAVE_CC/RADWAVE_CC)*RADWAVE_RHOZERO/gam/(gam-1.-1./RADWAVE_CC/RADWAVE_CC);
       RADWAVE_TEMP=calc_PEQ_Tfromurho(RADWAVE_UINT,RADWAVE_RHOZERO);
-      ARAD_CODE=(RADWAVE_PP*(gam-1.)*RADWAVE_UINT/RADWAVE_TEMP/RADWAVE_TEMP/RADWAVE_TEMP/RADWAVE_TEMP);
+      ARAD_CODE=(3.0*RADWAVE_PP*(gam-1.)*RADWAVE_UINT/RADWAVE_TEMP/RADWAVE_TEMP/RADWAVE_TEMP/RADWAVE_TEMP);
     }
 
     if(RADWAVE_NWAVE==2){ //hydro sound wave
@@ -1085,7 +1107,7 @@ int init_global(void)
       RADWAVE_KK=2.*Pi;
       RADWAVE_UINT=(1./RADWAVE_CC/RADWAVE_CC)*RADWAVE_RHOZERO/gam/(gam-1.-1./RADWAVE_CC/RADWAVE_CC);
       RADWAVE_TEMP=calc_PEQ_Tfromurho(RADWAVE_UINT,RADWAVE_RHOZERO);
-      ARAD_CODE=(RADWAVE_PP*(gam-1.)*RADWAVE_UINT/RADWAVE_TEMP/RADWAVE_TEMP/RADWAVE_TEMP/RADWAVE_TEMP);
+      ARAD_CODE=(3.0*RADWAVE_PP*(gam-1.)*RADWAVE_UINT/RADWAVE_TEMP/RADWAVE_TEMP/RADWAVE_TEMP/RADWAVE_TEMP);
     }
 
     if(RADWAVE_NWAVE==3){ //radiative density wave advected with the gas
@@ -1099,7 +1121,7 @@ int init_global(void)
       RADWAVE_KK=2.*Pi;
       RADWAVE_UINT=(1./RADWAVE_CC/RADWAVE_CC)*RADWAVE_RHOZERO/gam/(gam-1.-1./RADWAVE_CC/RADWAVE_CC);
       RADWAVE_TEMP=calc_PEQ_Tfromurho(RADWAVE_UINT,RADWAVE_RHOZERO);
-      ARAD_CODE=(RADWAVE_PP*(gam-1.)*RADWAVE_UINT/RADWAVE_TEMP/RADWAVE_TEMP/RADWAVE_TEMP/RADWAVE_TEMP);
+      ARAD_CODE=(3.0*RADWAVE_PP*(gam-1.)*RADWAVE_UINT/RADWAVE_TEMP/RADWAVE_TEMP/RADWAVE_TEMP/RADWAVE_TEMP);
       RADWAVE_ERAD=calc_LTE_EfromT(RADWAVE_TEMP);
       RADWAVE_KAPPAES=10.;
     }
@@ -1116,7 +1138,7 @@ int init_global(void)
       RADWAVE_KK=2.*Pi;
       RADWAVE_UINT=(1./RADWAVE_CC/RADWAVE_CC)*RADWAVE_RHOZERO/gam/(gam-1.-1./RADWAVE_CC/RADWAVE_CC);
       RADWAVE_TEMP=calc_PEQ_Tfromurho(RADWAVE_UINT,RADWAVE_RHOZERO);
-      ARAD_CODE=(RADWAVE_PP*(gam-1.)*RADWAVE_UINT/RADWAVE_TEMP/RADWAVE_TEMP/RADWAVE_TEMP/RADWAVE_TEMP);
+      ARAD_CODE=(3.0*RADWAVE_PP*(gam-1.)*RADWAVE_UINT/RADWAVE_TEMP/RADWAVE_TEMP/RADWAVE_TEMP/RADWAVE_TEMP);
       RADWAVE_ERAD=calc_LTE_EfromT(RADWAVE_TEMP);
       RADWAVE_KAPPA=100.;
       RADWAVE_ERADFACTOR=.5;
@@ -1294,19 +1316,52 @@ int init_global(void)
     // gas (not radiation) EOS \gamma value:
     gam=gamideal=5.0/3.0; // Ohsuga choice, assumes pairs not important.
 
+    FTYPE gamtorus;
+
 
     /////////////////////////////////////
     // DONUT TYPE and PARAMETERS
     if(RADNT_DONUTTYPE==DONUTOLEK){
-      //    RADNT_RHODONUT=1E-5;
-      RADNT_RHODONUT=3.0; // gives 0.26 final density peak if RAD_ELL=3.5
-      //RADNT_RHODONUT = KORAL2HARMRHO(1.0); // equivalent to koral's non-normalization
-      //    RADNT_ELL=4.5; // torus specific angular momentum
-      RADNT_ELL=4.5; // torus specific angular momentum
-      RADNT_UTPOT=0.9999999; // scales rin for donut
-      RADNT_KKK=1.e-1 * (1.0/pow(RADNT_RHODONUT,gam-1.0)); // no effect with the scaling with density put in.
+
+
+
+      if(1){
+        RADDONUT_OPTICALLYTHICKTORUS=1; // otherwise, pressure only from gas.
+        // Mdot~135Ledd/c^2
+        //
+        if(RADDONUT_OPTICALLYTHICKTORUS==1) gamtorus=4.0/3.0; // then should be as if gam=4/3 so radiation supports torus properly at t=0
+        else gamtorus=gam;
+
+        //    RADNT_RHODONUT=1E-5;
+        RADNT_RHODONUT=3.0; // gives 0.26 final density peak if RAD_ELL=3.5
+        //RADNT_RHODONUT = KORAL2HARMRHO(1.0); // equivalent to koral's non-normalization
+        //    RADNT_ELL=4.5; // torus specific angular momentum
+        RADNT_ELL=4.5; // torus specific angular momentum
+        RADNT_UTPOT=0.9999999; // scales rin for donut
+        RADNT_KKK=1.e-1 * (1.0/pow(RADNT_RHODONUT,gamtorus-1.0)); // no effect with the scaling with density put in.
+      }
+
+
+      if(0){
+        // THIN DISK with Mdot~7Ledd/c^2
+        RADDONUT_OPTICALLYTHICKTORUS=0; // otherwise, pressure only from gas.
+        
+        if(RADDONUT_OPTICALLYTHICKTORUS==1) gamtorus=4.0/3.0; // then should be as if gam=4/3 so radiation supports torus properly at t=0
+        else gamtorus=gam;
+        
+        RADNT_RHODONUT=3.0/2E4; // gives 0.26 final density peak if RAD_ELL=3.5
+        RADNT_ELL=4.5; // torus specific angular momentum
+        RADNT_UTPOT=0.9999999; // scales rin for donut
+        RADNT_KKK=1.e-1 * ((gamtorus-1.0)/(gamtorus)/pow(RADNT_RHODONUT,gamtorus-1.0)); // no effect with the scaling with density put in.
+      }
+      
     }
     else{
+      RADDONUT_OPTICALLYTHICKTORUS=1; // otherwise, pressure only from gas.
+      
+      if(RADDONUT_OPTICALLYTHICKTORUS==1) gamtorus=4.0/3.0; // then should be as if gam=4/3 so radiation supports torus properly at t=0
+      else gamtorus=gam;
+      
       RADNT_RHODONUT=1E-2; // actual torus maximum density
       RADNT_DONUTRADPMAX=20.0; // radius of pressure maximum
       RADNT_HOVERR=0.5; // H/R\sim c_s/v_K at torus pressure maximum
@@ -1409,14 +1464,15 @@ int init_global(void)
       for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=10.0;
     }
     else{
-      for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=1.0;
+      //      for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=1.0;
+      for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=4.0;
       //    for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=0.1;
     }
 
     DTr = 100; //number of time steps for restart dumps
     // tf = 100*DTdumpgen[0]; // 100 dumps(?)
     //    tf = 2000*DTdumpgen[0]; // koral in default setup does 1000 dumps
-    tf = 1E4;
+    tf = 1E5;
 
     //    DODIAGEVERYSUBSTEP = 1;
 
@@ -1605,7 +1661,8 @@ int init_defcoord(void)
     Rout_array[2]=1.01*M_PI*0.5;
 
     Rin_array[3]=0.0;
-    Rout_array[3]=M_PI*0.25;
+    //    Rout_array[3]=M_PI*0.25;
+    Rout_array[3]=M_PI*0.5;
 
  
   }
@@ -1914,7 +1971,7 @@ int init_defcoord(void)
     //    a=0.0; // no spin in case use MCOORD=KSCOORDS
 
     // metric stuff first
-    a = 0.9375 ;
+    a = 0.8 ;
     
     if(ALLOWMETRICROT){
       THETAROT = THETAROTMETRIC; // defines metric generally
@@ -1950,8 +2007,13 @@ int init_defcoord(void)
     defcoord=JET6COORDS;
     //defcoord=LOGRUNITH;
     Rhor=rhor_calc(0);
+
+
     //  hslope = 0.3;
     hslope = 1.04*pow(h_over_r,2.0/3.0);
+    // NOTEMARK: Should change h0 in coord.c from h0=0.3 to h0=0.1 or something for thin disks
+
+
     //    R0=0.0;
     R0=0.2;
     if(Rout<1E3){
@@ -2083,12 +2145,27 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
   Risco=rmso_calc(PROGRADERISCO);
 
 
+
+  int set_fieldtype(void);
+  int FIELDTYPE=set_fieldtype();
+  
+
+
   // defaults
   //  beta = 10.0*4.0;
-  beta = 100.0;
+  //  beta=100.0; // was used for rada0.94 etc.
+  beta = 10.0;
   randfact = 0.1;
   //  rin=10.0;
-  rin=6.0;
+
+  rin=6.0; // default
+  if(FIELDTYPE==DISK2FIELD){
+    //rin=6.0; // old setting
+    rin=12.0;
+  }
+  if(FIELDTYPE==FIELDJONMAD){
+    rin=9.0;
+  }
 
 
 
@@ -2127,7 +2204,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
     trifprintf("END check_rmin\n");
   }
 
-  if(1){
+  if(0){
     // check that singularities are properly represented by code
     trifprintf("BEGIN check_spc_singularities_user\n");
     // SUPERGODMARK: Goes very slowly sometimes randomly for unknown reasons.
@@ -2846,7 +2923,12 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
     //    RADBEAM2D_NLEFT=0.95; // >~0.95 and code fails with SPCMINKMETRIC for BEAMNO=1
     //    RADBEAM2D_NLEFT=0.99; // testing GODMARK KORALTODO
     //RADBEAM2D_NLEFT=0.999; // code
-    RADBEAM2D_NLEFT=0.99999; // paper  // major problems with SPCMINKMETRIC
+    //    RADBEAM2D_NLEFT=0.99999; // paper  // major problems with SPCMINKMETRIC
+    RADBEAM2D_NLEFT=0.9999; // works with harmrad paper setup with PPM
+
+    // avoid hitting gamma ceiling
+    GAMMAMAXRAD=MAX(GAMMAMAXRAD,4.0*1.0/sqrt(1.0-RADBEAM2D_NLEFT*RADBEAM2D_NLEFT));
+
 
     if (RADBEAM2D_BEAMNO==1){
       RADBEAM2D_BEAML=2.9;
@@ -3032,7 +3114,27 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
     RADATM_THINRADATM=1;
     //    RADATM_FERATIO=.99999; // koral code
     RADATM_FERATIO=.99; // koral paper
-    RADATM_FRATIO=.1; // 1 = edd limit.  They ran 1E-10, 0.1, 0.5, 1.0.
+
+    // avoid hitting gamma ceiling
+    GAMMAMAXRAD=MAX(GAMMAMAXRAD,2.0*1.0/sqrt(1.0-RADATM_FERATIO*RADATM_FERATIO));
+
+
+#define WHICHRADATM 0 // 0,1,2,3
+
+    if(WHICHRADATM==0){
+      RADATM_FRATIO=1E-10; // 1 = edd limit.  They ran 1E-10, 0.1, 0.5, 1.0.
+    }
+    if(WHICHRADATM==1){
+      RADATM_FRATIO=.1; // 1 = edd limit.  They ran 1E-10, 0.1, 0.5, 1.0.
+    }
+    if(WHICHRADATM==2){
+      RADATM_FRATIO=.5; // 1 = edd limit.  They ran 1E-10, 0.1, 0.5, 1.0.
+    }
+    if(WHICHRADATM==3){
+      RADATM_FRATIO=1.0; // 1 = edd limit.  They ran 1E-10, 0.1, 0.5, 1.0.
+    }
+
+
     RADATM_RHOAMB=1E-15/RHOBAR; // 1E-15 is in cgs
     RADATM_TAMB=1.e6/TEMPBAR;
 
@@ -3135,11 +3237,11 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
         struct of_geom *ptrgeomreal=&geomrealdontuse;
         gset(getprim,*whichcoord,i,j,k,ptrgeomreal);
 
-        dualfprintf(fail_file,"AFTER: i=%d rho=%Lg uint=%Lg vx=%Lg ERAD=%Lg uradx=%Lg\n",i,pr[RHO]*RHOBAR,pr[UU]*UBAR,pr[U1]*sqrtl(ptrgeomreal->gcov[GIND(1,1)])*VBAR,pr[URAD0]*UBAR,pr[URAD1]*sqrtl(ptrgeomreal->gcov[GIND(1,1)])*VBAR);
+        dualfprintf(fail_file,"AFTER: i=%d rho=%g uint=%g vx=%g ERAD=%g uradx=%g\n",i,pr[RHO]*RHOBAR,pr[UU]*UBAR,pr[U1]*sqrt(ptrgeomreal->gcov[GIND(1,1)])*VBAR,pr[URAD0]*UBAR,pr[URAD1]*sqrt(ptrgeomreal->gcov[GIND(1,1)])*VBAR);
       }
 
       // compared to koral, this is how koral would get CGS:
-      // fprintf(stderr,"i=%d f=%g p0=%g KKK=%Lg C3=%g rho=%g uint=%g Fx=%g ERAD=%g : kappaesperrho=%g \n",ix,f,endenGU2CGS(p0),endenGU2CGS(KKK)/powl(rhoGU2CGS(1.0),GAMMA),C3,rhoGU2CGS(pp[0]),endenGU2CGS(pp[1]),fluxGU2CGS(Fx), endenGU2CGS(E) , kappaGU2CGS(KAPPAES));
+      // fprintf(stderr,"i=%d f=%g p0=%g KKK=%g C3=%g rho=%g uint=%g Fx=%g ERAD=%g : kappaesperrho=%g \n",ix,f,endenGU2CGS(p0),endenGU2CGS(KKK)/powl(rhoGU2CGS(1.0),GAMMA),C3,rhoGU2CGS(pp[0]),endenGU2CGS(pp[1]),fluxGU2CGS(Fx), endenGU2CGS(E) , kappaGU2CGS(KAPPAES));
       // fprintf(stderr,"AFTER: i=%d rho=%g uint=%g vx=%g ERAD=%g uradx=%g\n",ix,rhoGU2CGS(pp[0]),endenGU2CGS(pp[1]),velGU2CGS(pp[2]),endenGU2CGS(pp[6]),velGU2CGS(pp[7]));
 
 
@@ -3430,7 +3532,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
       prad_fforlab(whichvel, whichcoord, FF2LAB, i,j,k,CENT,ptrgeomreal, pradffortho, pr, pr);
 
       if(0){ // DEBUG
-        dualfprintf(fail_file,"AFTER: i=%d rho=%Lg uint=%Lg vx=%Lg ERAD=%Lg uradx=%Lg\n",i,pr[RHO]*RHOBAR,pr[UU]*UBAR,pr[U1]*sqrtl(ptrgeomreal->gcov[GIND(1,1)])*VBAR,pr[URAD0]*UBAR,pr[URAD1]*sqrtl(ptrgeomreal->gcov[GIND(1,1)])*VBAR);
+        dualfprintf(fail_file,"AFTER: i=%d rho=%g uint=%g vx=%g ERAD=%g uradx=%g\n",i,pr[RHO]*RHOBAR,pr[UU]*UBAR,pr[U1]*sqrt(ptrgeomreal->gcov[GIND(1,1)])*VBAR,pr[URAD0]*UBAR,pr[URAD1]*sqrt(ptrgeomreal->gcov[GIND(1,1)])*VBAR);
       }
     }
 
@@ -3956,6 +4058,7 @@ int donut_analytical_solution(int opticallythick, FTYPE *pp,FTYPE *X, FTYPE *V,s
 
     FTYPE h=-1./ut;
     FTYPE eps=(h-1.)/gamtorus;
+    // from P=K rho^gamma
     rho=pow(eps*(gamtorus-1.)/RADNT_KKK,1./(gamtorus-1.));
     uint=rho*eps;
     pt = uint * (gamtorus-1.0); // torus pressure
@@ -4071,17 +4174,6 @@ int donut_analytical_solution(int opticallythick, FTYPE *pp,FTYPE *X, FTYPE *V,s
 
 
 
-#define NOFIELD -1
-#define DISK1FIELD 0
-#define DISK2FIELD 1
-#define VERTFIELD 2
-#define DISK1VERT 3
-#define DISK2VERT 4
-#define BLANDFORDQUAD 5
-#define TOROIDALFIELD 6
-#define OHSUGAFIELD 7
-#define MONOPOLAR 8
-#define OLEKFIELD 9
 
 int set_fieldtype(void)
 {
@@ -4092,6 +4184,10 @@ int set_fieldtype(void)
     if(RADNT_DONUTTYPE==DONUTOLEK){
       //FIELDTYPE=VERTFIELD; // DISK2VERT//DISK2FIELD
       FIELDTYPE=DISK2FIELD;
+
+      //FIELDTYPE=OLEKFIELD;
+      //FIELDTYPE=FIELDJONMAD;
+
     }
     else if(RADNT_DONUTTYPE==DONUTOHSUGA){
       FIELDTYPE=OHSUGAFIELD;
@@ -4109,6 +4205,7 @@ int set_fieldtype(void)
   else{
     FIELDTYPE=NOFIELD;
   }
+
 
   return(FIELDTYPE);
 }
@@ -4188,9 +4285,16 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
   int FIELDTYPE=set_fieldtype();
 
 
+
+  FTYPE  FRACAPHICUT;
+
+  
   //#define FRACAPHICUT 0.1
-#define FRACAPHICUT 0.05
-  //#define FRACAPHICUT 0.1
+  if(FIELDTYPE==DISK2FIELD){
+    FRACAPHICUT=0.2; // for weak field
+    //    FRACAPHICUT=0.001; // for disk-filling field that is more MAD like
+  }
+  
 
 
 
@@ -4300,6 +4404,27 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
       vpot += MAX(pow(r,4.0)*pow(rho_av,2.0)*1E40-0.02,0.0)*pow(sin(th),4.0);
     }
 
+#define JONMADHPOW (4.0)
+
+    if(FIELDTYPE==FIELDJONMAD){
+      if(r>=9.3 && r<300.0){
+        vpot += MAX(pow(r-9.3,rpow)*1E40-0.02,0.0)*(pow(sin(th),1+JONMADHPOW));
+      }
+      else if(r>=300.0){
+        // to go monopolar
+        vpot += MAX(pow(300-9.3,rpow)*1E40-0.02,0.0)*(pow(sin(th),1+JONMADHPOW/(r/300)));
+      }
+      if(V[2]<1E-5 || V[2]>M_PI-1E-5){
+        vpot=0;
+      }
+
+
+
+    }
+
+
+
+
 
     /* field-in-disk version */
     if(FIELDTYPE==DISK1FIELD || FIELDTYPE==DISK1VERT){
@@ -4323,7 +4448,9 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
       //#define FRACAPHICUT 0.1
 
       //      q = (rho_av / rhomax - FRACAPHICUT);
-      q = (p_av / ptotmax - FRACAPHICUT);
+      //      q = (p_av / ptotmax - FRACAPHICUT); // was used for rada0.94, etc. models.
+      q = (p_av / ptotmax*1E30 - FRACAPHICUT);
+      if(rho_av/rhomax-FRACAPHICUT<0) q=0;
 
       //#define QPOWER 0.5
 #define QPOWER (1.0)
@@ -4426,14 +4553,21 @@ int get_maxes(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *bsq_max, FTYPE *ptot_
   int set_fieldtype(void);
   int FIELDTYPE=set_fieldtype();
   
-  if(FIELDTYPE==VERTFIELD || FIELDTYPE==BLANDFORDQUAD){
+  if(FIELDTYPE==VERTFIELD || FIELDTYPE==BLANDFORDQUAD || FIELDTYPE==DISK2FIELD || FIELDTYPE==FIELDJONMAD){
     eqslice=1;
   }
   else{
     eqslice=0;
   }
 
-  parms[0]=rin;
+  if(FIELDTYPE==FIELDJONMAD){
+    parms[0]=12;
+    parms[1]=20.0;
+  }
+  else{
+    parms[0]=rin;
+    parms[1]=100.0;
+  }
 
   funreturn=user1_get_maxes(eqslice, parms,prim, bsq_max, ptot_max, beta_min);
   if(funreturn!=0) return(funreturn);

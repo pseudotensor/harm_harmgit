@@ -86,6 +86,9 @@ $(warning USEKRAKENICC is $(USEKRAKENICC))
 else ifeq ($(HOSTNAME),krakenpf5)
 USEKRAKENICC=1
 $(warning USEKRAKENICC is $(USEKRAKENICC))
+else ifeq ($(HOSTNAME),krakenpf6)
+USEKRAKENICC=1
+$(warning USEKRAKENICC is $(USEKRAKENICC))
 else ifeq ($(HOSTNAME),ki-rh42)
 USEICCINTEL=1
 $(warning USEICCINTEL is $(USEICCINTEL))

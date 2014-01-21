@@ -931,7 +931,11 @@ int bound_x1dn_radbeamflatinflow(
                 dxdxprim_ijk(i, j, k, CENT, dxdxp);
 
                 // like koral
-                FTYPE uradx=ERADINJ*RADBEAMFLAT_FRATIO;
+                //                FTYPE uradx=ERADINJ*RADBEAMFLAT_FRATIO;
+
+                // fix:
+                FTYPE uradx=1.0/sqrt(1.0 - RADBEAMFLAT_FRATIO*RADBEAMFLAT_FRATIO); // radiation 4-velocity
+
 
                 pr[URAD0] = ERADINJ;
                 pr[URAD1] = uradx/dxdxp[1][1];
@@ -1429,7 +1433,9 @@ int bound_radbeam2dbeaminflow(int dir,
             FTYPE beamshape=exp(-pow(V[1]-beamcenter,powbeam)/(2.0*pow(beamhalfwidth,powbeam)))*RADBEAM2D_IFBEAM;
 
 
-            if(1){
+#define INJECTINFLUIDFRAME 0 // need beam to go out as designed, not with fluid, so usually 0
+
+            if(INJECTINFLUIDFRAME){
               //E, F^i in orthonormal fluid frame
               FTYPE Fx,Fy,Fz;
               // default flux
@@ -1463,7 +1469,7 @@ int bound_radbeam2dbeaminflow(int dir,
 #endif
 
             }
-            else if(0){
+            else{
 
               int whichvel;
               whichvel=VEL4;

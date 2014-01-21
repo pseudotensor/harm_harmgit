@@ -20,8 +20,10 @@
 # new instructions:
 #------------------
 # for real trig/etc long doubles
+# 0) Be in some code directory that one wants to convert
+#
 # 1) setup code dir
-#    mkdir newgrmhdcode ; cd newgrmhdcode ; cp ~/grmhd/ .
+#    mkdir newgrmhdcode ; cd newgrmhdcode ; cp -a ~/grmhd/ .
 # 2a) run:
 #    sh scripts/double2longdouble.sh ; cd initboundcode ; sh ../scripts/double2longdouble.sh ; cd ..
 # 3) copy back the tau_neededbyharm.c and testfpp.c file:

@@ -156,6 +156,9 @@
 #undef DOGRIDSECTIONING
 #define DOGRIDSECTIONING 0
 
+#undef STORETLAB2ORTHO
+#define STORETLAB2ORTHO 0
+
 #undef N0
 #undef N1
 #undef N2
@@ -432,3 +435,7 @@ extern void infile_tostartofdata(FILE **infilelocal);
 extern void output2file_perpointcoli_postinterpolation(unsigned char newimagelocal, FTYPE newdatalocal);
 
 extern void output2file_perpoint_postinterpolation(int which, int h, int i, int j, int k, unsigned char *newimagelocal, FTYPE *newdatalocal);
+
+extern void raise_vec(FTYPE *ucov, struct of_geom *geom, FTYPE *ucon);
+
+extern void lower_vec(FTYPE *ucon, struct of_geom *geom, FTYPE *ucov);

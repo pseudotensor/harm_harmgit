@@ -177,13 +177,14 @@
 #undef DOPOLEDEATH
 #undef DOPOLESMOOTH
 #undef DOPOLEGAMMADEATH
-#define DOPOLEDEATH 0
-#define DOPOLESMOOTH 0
-#define DOPOLEGAMMADEATH 0
+// needed to avoid random death at pole at large distances when grid focuses on axis and so makes-up information a bit.
+#define DOPOLEDEATH 2
+#define DOPOLESMOOTH 0 // GODMARK: Need to reject outliers
+#define DOPOLEGAMMADEATH 2
 // Note that if DOPOLESMOOTH>=DOPOLEGAMMADEATH or DOPOLESMOOTH>=DOPOLEDEATH, then DOPOLEGAMMADEATH or DOPOLEDEATH do nothing -- they are overwritten by DOPOLESMOOTH.
 
 #undef IF3DSPCTHENMPITRANSFERATPOLE
-#define IF3DSPCTHENMPITRANSFERATPOLE 1
+#define IF3DSPCTHENMPITRANSFERATPOLE 0 // need to reject outliers and use full 3D info before this is used again.  Otherwise (more) problems at r>rbr when hyperexpoential grid is used.
 
 #define PERCELLDT 0
 #define COMPDIM 3
@@ -514,7 +515,7 @@ struct Ccoordparams {
 //#define WHICHPROBLEM RADPULSE
 //#define WHICHPROBLEM RADPULSEPLANAR
 //#define WHICHPROBLEM RADPULSE3D
-#define WHICHPROBLEM RADTUBE
+//#define WHICHPROBLEM RADTUBE
 //#define WHICHPROBLEM RADSHADOW
 //#define WHICHPROBLEM RADDBLSHADOW
 //#define WHICHPROBLEM ATMSTATIC
@@ -526,7 +527,7 @@ struct Ccoordparams {
 //#define WHICHPROBLEM RADDOT
 //#define WHICHPROBLEM RADNT
 //#define WHICHPROBLEM RADFLATDISK
-//#define WHICHPROBLEM RADDONUT
+#define WHICHPROBLEM RADDONUT
 //#define WHICHPROBLEM RADCYLBEAM
 //#define WHICHPROBLEM RADBEAM2DKSVERT
 //#define WHICHPROBLEM RADCYLBEAMCART
@@ -757,7 +758,8 @@ struct Ccoordparams {
 // KORALNOTE: Paper says 30x60 for rin-rout and phi=0..pi/2, which is same as 30x30 for rin-rout and phi=0..pi/4 as setup in koral
 #define N1 30
 #define N2 1
-#define N3 30
+//#define N3 30
+#define N3 60 // so like koral paper.
 
 // can choose any spherical polar coordinate system
 #if(WHICHPROBLEM==RADBEAM2D)
@@ -998,8 +1000,8 @@ struct Ccoordparams {
 // N1=30 if using log coords from r=1.7 to r=50
 // N1=60 if using 1.5*hor - 40 (or 27.8)
 // N1=70 if using 1.5*hor - 30 (or 27.8)
-#define N1 32
-#define N2 32
+#define N1 128
+#define N2 64
 #define N3 1
 
    //#define N1 128
