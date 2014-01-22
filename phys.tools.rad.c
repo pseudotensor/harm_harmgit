@@ -1,4 +1,34 @@
+////////////////////////////////////////////////////////
 // KORALTODO: B Not setup for iter=0 2 1 0 : 1 2 : 3 13 : 14 200 : 14
+
+
+// KORALTODO:
+
+// average good neighbor if can.  only use alternative backup if no good neighbor?
+
+/* 1) Reorder URAD method so: */
+
+/* a) URAD */
+/* b) URAD->PRAD */
+/* c) Re-get URAD(PRAD) in case floors/ceilings */
+/* d) Apply relative 4-force condition using this new URAD -> UGAS */
+/* e) UGAS->PGAS */
+/* f) Re-get UGAS(PGAS) in case floors/celings/failures/errors/etc. */
+
+/* As long as MHD doesn't fail, then even if RAD hits ceilings, the solution will be in relative force balance. -- i.e. total energy-momentum conservation will hold despite change in URAD. */
+
+/* Right now, I use pre-corrected URAD to get dUrad -> dUgas, so if rad hits ceilings while gas does not, then relative force balance is lost when could have been maintained. */
+
+/* Need to have Utoprimgen() call without doing radiation inversion to save time .. doradonly=-1 ? */
+
+/* 2) i THINK RADINVMOD IS NOT BEING SET.  COMPARE FAIL WITH RADINVMOD.  *RADINVMOD VS. RADINVMOD? */
+
+//1) pull from energy density
+
+
+////////////////////////////////////////////////////////
+
+
 
 // include globals
 #include "decs.h"
