@@ -1358,7 +1358,11 @@ int init_global(void)
       if(RADDONUT_OPTICALLYTHICKTORUS==1) gamtorus=4.0/3.0; // then should be as if gam=4/3 so radiation supports torus properly at t=0
       else gamtorus=gam;
       if(1){
-        //RADNT_RHODONUT=1E-2; // NT73 with MBH=10msun, a=0, Mdot=5Ledd/c^2
+        RADNT_RHODONUT=1E-2; // NT73 with MBH=10msun, a=0, Mdot=5Ledd/c^2
+        RADNT_TRADATMMIN = 1.e5/TEMPBAR;
+        RADNT_ERADATMMIN= (calc_LTE_EfromT(RADNT_TRADATMMIN));
+      }
+      if(0){
         RADNT_RHODONUT=1E-10;
         RADNT_TRADATMMIN = 1.e5/TEMPBAR;
         RADNT_ERADATMMIN= (calc_LTE_EfromT(RADNT_TRADATMMIN));
@@ -2241,7 +2245,8 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 
     if(RADNT_DONUTTYPE==DONUTTHINDISK || RADNT_DONUTTYPE==DONUTTHINDISK2){
       rin=0.0;
-      rinfield=1.1*Risco;
+      //      rinfield=1.1*Risco;
+      rinfield=Risco;
       //      beta=1E30;
       beta=10.0;
     }
@@ -4656,7 +4661,7 @@ int donut_analytical_solution(int *whichvel, int *whichcoord, int opticallythick
 
 
 
-    if(usingback==0 && gtau>1E-5){
+    if(usingback==0){// && gtau>1E-10){
       gtau=1.0;
       opticallythick=1;
       //solving for T satisfying P=pgas+prad=bbb T + aaa T^4
