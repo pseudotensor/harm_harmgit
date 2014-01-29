@@ -21,7 +21,7 @@
 #include "decs.h"
 
 static SFTYPE rhomax=0,umax=0,uradmax=0,utotmax=0,pmax=0,pradmax=0,ptotmax=0,bsq_max=0; // OPENMPMARK: These are ok file globals since set using critical construct
-static SFTYPE beta,randfact,rin; // OPENMPMARK: Ok file global since set as constant before used
+static SFTYPE beta,randfact,rin,rinfield; // OPENMPMARK: Ok file global since set as constant before used
 static FTYPE rhodisk;
 static FTYPE nz_func(FTYPE R) ;
 static FTYPE taper_func2(FTYPE R,FTYPE rin, FTYPE rpow) ;
@@ -238,7 +238,7 @@ int prepre_init_specific_init(void)
   }
 
   // Also: SET USEROMIO to 0 or 1 in mympi.definit.h (needs to be 0 for TEXTOUTPUT)
-  if(PRODUCTION==0 || 1){ // SUPERTEMP
+  if(PRODUCTION==0){
     binaryoutput=TEXTOUTPUT;
     // KRAKEN: comment out above.  And change mympi.definit.h's USEROMIO 0 to 1 for the "choice" version.
   }
@@ -2223,23 +2223,25 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
   randfact = 0.1;
   beta=100.0;
   rin=6.0;
+  rinfield=rin;
 
   if(WHICHPROBLEM==RADDONUT){
 
     if(FIELDTYPE==DISK2FIELD){
       //rin=6.0; // old setting
-      rin=12.0;
+      rinfield=rin=12.0;
       //  beta=100.0; // was used for rada0.94 etc.
       beta = 10.0;
     }
     else if(FIELDTYPE==FIELDJONMAD){
       rin=9.0;
+      rinfield=12;
       beta = 10.0;
     }
 
     if(RADNT_DONUTTYPE==DONUTTHINDISK || RADNT_DONUTTYPE==DONUTTHINDISK2){
       rin=0.0;
-      // TEMP:SUPERTEMP
+      rinfield=1.1*Risco;
       //      beta=1E30;
       beta=10.0;
     }
@@ -5159,11 +5161,11 @@ int get_maxes(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *bsq_max, FTYPE *ptot_
   }
 
   if(FIELDTYPE==FIELDJONMAD){
-    parms[0]=12;
+    parms[0]=rinfield;
     parms[1]=20.0;
   }
   else{
-    parms[0]=rin;
+    parms[0]=rinfield;
     parms[1]=100.0;
   }
 
