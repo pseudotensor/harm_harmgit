@@ -238,7 +238,7 @@ int prepre_init_specific_init(void)
   }
 
   // Also: SET USEROMIO to 0 or 1 in mympi.definit.h (needs to be 0 for TEXTOUTPUT)
-  if(PRODUCTION==0 || 1){ // FUCK
+  if(PRODUCTION==0 || 1){ // SUPERTEMP
     binaryoutput=TEXTOUTPUT;
     // KRAKEN: comment out above.  And change mympi.definit.h's USEROMIO 0 to 1 for the "choice" version.
   }
@@ -1332,6 +1332,7 @@ int init_global(void)
       // NOTEMARK: Choose rbr=1E2;
       // NOTEMARK: Choose Qjet=1.9
       // NOTEMARK: htheta=0.1;
+      // NOTEMARK: h0=0.1 instead of h0=0.3
       // NOTEMARK: Force only theta1=th0;
       h_over_r=0.1;
       h_over_r_jet=2.0*h_over_r;
@@ -2238,8 +2239,9 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 
     if(RADNT_DONUTTYPE==DONUTTHINDISK || RADNT_DONUTTYPE==DONUTTHINDISK2){
       rin=0.0;
-      // TEMP:FUCK
-      beta=1E30;
+      // TEMP:SUPERTEMP
+      //      beta=1E30;
+      beta=10.0;
     }
   }
 
@@ -4133,6 +4135,8 @@ int donut_analytical_solution(int *whichvel, int *whichcoord, int opticallythick
     Risco=rmso_calc(PROGRADERISCO);
     R = MAX(Rhor,r*sin(th)) ;
 
+    ////////////////////////////
+    // Set H : disk height
     FTYPE H = h_over_r*R;
     FTYPE Hisco = h_over_r*Risco;
 
@@ -4154,10 +4158,14 @@ int donut_analytical_solution(int *whichvel, int *whichcoord, int opticallythick
     FTYPE z = r*cos(th) ;
     FTYPE zisco = Risco*cos(th) ;
 
-    // simple power-law with Gaussian vertical distribution
-    // below Gaussian for isothermal gas
+    //////////////////////////
+    // SET DENSITY
+    //
+    // simple power-law with some vertical distribution
+    //
     FTYPE rhoisco;
     if(1){
+      // below Gaussian for isothermal gas, but works better for adiabatic EOS too.
       rhoisco=RADNT_RHODONUT * exp(-zisco*zisco/(2.*Hisco*Hisco))*pow(Risco,thindiskrhopow);
       rho=RADNT_RHODONUT * exp(-z*z/(2.*H*H))*pow(r,thindiskrhopow);
     }
@@ -4181,6 +4189,7 @@ int donut_analytical_solution(int *whichvel, int *whichcoord, int opticallythick
       usingback=1;
     }
 
+    //////////////////////////
     // ensure c_s/v_k = (H/R) , which should be violated in the ISCO such that K=P/rho^Gamma=constant but H/R still thins towards the horizon.
     // P = (gamma-1)*u and cs2 = \gamma P/(\rho+u+P)
     FTYPE omegakep=1./(pow(r,1.5) + a);
@@ -4209,6 +4218,7 @@ int donut_analytical_solution(int *whichvel, int *whichcoord, int opticallythick
     FTYPE gppbl=AA*sin(th)*sin(th)/sigma;
     FTYPE uTbl = 1.0/pow(-gttbl-uPhi*uPhi*gppbl,0.5); // \gamma = 1/sqrt(1-v^2) ~ 1/sqrt(1-vphi^2) for BL-coords with u^r=u^\theta=0 in BL coords
 
+    //////////////////////////
     // SET
     if(r>=Risco){
       Vphi=uPhi; // now 3-vel
@@ -4227,7 +4237,8 @@ int donut_analytical_solution(int *whichvel, int *whichcoord, int opticallythick
       Vr=Vh=0.0;
     }
 
-    // TEST
+    //////////////////////////
+    // TEST if velocity gives reasonable u^t
     FTYPE prtest[NPR];
     FTYPE ucontest[NDIM];
     FTYPE others[NUMOTHERSTATERESULTS];
@@ -4241,6 +4252,7 @@ int donut_analytical_solution(int *whichvel, int *whichcoord, int opticallythick
     failed=0; // GLOBAL: reset failure flag since just test
     //if(badut==0) dualfprintf(fail_file,"real ut=%g\n",ucon[TT]);
 
+    // CHECK TEST
     if(usingback==0){
       // CATCH
       //    if(r<Risco || badut){// uT>10.0 || !isfinite(uT) || uTbl>10.0 || !isfinite(uTbl) || uT<1.0-1E-7 || uTbl<1.0-1E-7){
@@ -4277,6 +4289,7 @@ int donut_analytical_solution(int *whichvel, int *whichcoord, int opticallythick
       *whichcoord=BLCOORDS;
     }
 
+    // OVERRIDE
     if(r>1.0*Rhor){
       *whichvel=VEL3;
       *whichcoord=BLCOORDS;
@@ -4308,7 +4321,6 @@ int donut_analytical_solution(int *whichvel, int *whichcoord, int opticallythick
 
 
     //////////
-
     // see if should still use backup non-torus values
     if(usingback==1){
       *whichvel=VELREL4;
@@ -4322,7 +4334,7 @@ int donut_analytical_solution(int *whichvel, int *whichcoord, int opticallythick
       struct of_geom geomreal2dontuse;
       struct of_geom *ptrgeomreal2=&geomreal2dontuse;
       gset(getprim,*whichcoord,i,j,k,ptrgeomreal2);
-      set_zamo_velocity(*whichvel,ptrgeomreal2,ppback); // get KSCOORDS ZAMO
+      set_zamo_velocity(*whichvel,ptrgeomreal2,ppback); // get KSCOORDS ZAMO since original ppback[] might have been (e.g.) BLCOORDS/VEL3
 
       Vr=ppback[U1];
       Vh=ppback[U2];
@@ -4343,9 +4355,9 @@ int donut_analytical_solution(int *whichvel, int *whichcoord, int opticallythick
 
 
     dualfprintf(fail_file,"rhodonut1=%g uint=%g\n",rho,uint);
-    if(fabs(r-Risco)<0.1*Risco && fabs(th-0.5*M_PI)<0.2*h_over_r){
-      dualfprintf(fail_file,"rhodonut5=%g uint=%g : r,th=%g %g usingback=%d RADNT_RHODONUT=%g rhoisco=%g\n",rho,uint,r,th,usingback,RADNT_RHODONUT,rhoisco);
-    }
+    //    if(fabs(r-Risco)<0.1*Risco && fabs(th-0.5*M_PI)<0.2*h_over_r){
+    //      dualfprintf(fail_file,"rhodonut5=%g uint=%g : r,th=%g %g usingback=%d RADNT_RHODONUT=%g rhoisco=%g\n",rho,uint,r,th,usingback,RADNT_RHODONUT,rhoisco);
+    //    }
 
 
   }
