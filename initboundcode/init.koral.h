@@ -484,6 +484,8 @@ struct Ccoordparams {
 #define NODONUT 0
 #define DONUTOLEK 1
 #define DONUTOHSUGA 2
+#define DONUTTHINDISK 3
+#define DONUTTHINDISK2 4
 
 
 ////////////////

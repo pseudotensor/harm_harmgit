@@ -10501,7 +10501,8 @@ int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gam
 
         // Get resulting gamma and fix \tilde{u}^i, but don't modify Erf.
         FTYPE gammanew,qsqnew;
-        gamma_calc_fromuconrel(&pin[URAD1-1],ptrgeom,&gammanew,&qsqnew);
+        //        gamma_calc_fromuconrel(&pin[URAD1-1],ptrgeom,&gammanew,&qsqnew);
+        gamma_calc_fromuconrel(urfconrel,ptrgeom,&gammanew,&qsqnew);
         //    dualfprintf(fail_file,"didmod: gamma=%g gammanew=%g\n",gamma,gammanew);
         
         // rescale, assuming want to be gamma that chose in previous section

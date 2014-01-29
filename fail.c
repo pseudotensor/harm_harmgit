@@ -7,53 +7,61 @@ int fail(int i, int j, int k, int loc, int fail_type)
   // failed use for diag below to avoid bad calculations
   if(whocalleducon==1) return(1);
 
-  dualfprintf(fail_file, "\n\nfail: ti=%d tj=%d tk=%d ft=%d\n",startpos[1]+ i, startpos[2]+j, startpos[3]+k, fail_type);
+  if(failed==-1){
+    // then just test and return(1) sufficient (i.e. no debug info)
+  }
+  else{
 
-  
-  failed = 1 ;
+    dualfprintf(fail_file, "\n\nfail: ti=%d tj=%d tk=%d ft=%d\n",startpos[1]+ i, startpos[2]+j, startpos[3]+k, fail_type);
 
-  switch (fail_type) {
-  case 1:
-    dualfprintf(fail_file, "fail_type=%s\n", FAILSTR01);
-    break;
-  case 2:
-    dualfprintf(fail_file, "fail_type=%s\n", FAILSTR02);
-    break;
-  case 3:
-    dualfprintf(fail_file, "fail_type=%s\n", FAILSTR03);
-    break;
-  case 4:
-    dualfprintf(fail_file, "fail_type=%s\n", FAILSTR04);
-    break;
-  case 5:
-    dualfprintf(fail_file, "fail_type=%s\n", FAILSTR05);
-    break;
-  case 6:
-    dualfprintf(fail_file, "fail_type=%s\n", FAILSTR06);
-    break;
-  case 7:
-    dualfprintf(fail_file, "fail_type=%s\n", FAILSTR07);
-    break;
-  case 8:
-    dualfprintf(fail_file, "fail_type=%s\n", FAILSTR08);
-    break;
-  case 9:
-    dualfprintf(fail_file, "fail_type=%s\n", FAILSTR09);
-    break;
-  default:
-    dualfprintf(fail_file, "fail_type=unknown\n");
-    break;
+
+
+    switch (fail_type) {
+    case 1:
+      dualfprintf(fail_file, "fail_type=%s\n", FAILSTR01);
+      break;
+    case 2:
+      dualfprintf(fail_file, "fail_type=%s\n", FAILSTR02);
+      break;
+    case 3:
+      dualfprintf(fail_file, "fail_type=%s\n", FAILSTR03);
+      break;
+    case 4:
+      dualfprintf(fail_file, "fail_type=%s\n", FAILSTR04);
+      break;
+    case 5:
+      dualfprintf(fail_file, "fail_type=%s\n", FAILSTR05);
+      break;
+    case 6:
+      dualfprintf(fail_file, "fail_type=%s\n", FAILSTR06);
+      break;
+    case 7:
+      dualfprintf(fail_file, "fail_type=%s\n", FAILSTR07);
+      break;
+    case 8:
+      dualfprintf(fail_file, "fail_type=%s\n", FAILSTR08);
+      break;
+    case 9:
+      dualfprintf(fail_file, "fail_type=%s\n", FAILSTR09);
+      break;
+    default:
+      dualfprintf(fail_file, "fail_type=unknown\n");
+      break;
+    }
+
+
+    dualfprintf(fail_file, "failed\n");
+    //  if(area_map(1,FINALTDUMPAREAMAP, 3, i, j, k,GLOBALPOINT(pdump))>=1){}
+    if(area_map(1,FINALTDUMPAREAMAP, NBIGBND, i, j, k,GLOBALPOINT(pdump))>=1){}
+
+
+    // do nothing since never will fail since if failed=1, doesn't do fail-related function calls
+
+    // do not respond here since not in synch with other CPUs.  Use postdt().
+    // set falure flag so code stops
+    failed = 1 ;
   }
 
-
-  dualfprintf(fail_file, "failed\n");
-  //  if(area_map(1,FINALTDUMPAREAMAP, 3, i, j, k,GLOBALPOINT(pdump))>=1){}
-  if(area_map(1,FINALTDUMPAREAMAP, NBIGBND, i, j, k,GLOBALPOINT(pdump))>=1){}
-
-
-  // do nothing since never will fail since if failed=1, doesn't do fail-related function calls
-
-  // do not respond here since not in synch with other CPUs.  Use postdt().
 
   /* for diagnostic and MPI purposes */
   return (1);

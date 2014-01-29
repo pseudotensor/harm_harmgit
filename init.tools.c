@@ -830,7 +830,7 @@ int user1_get_maxes(int eqslice, FTYPE *parms, FTYPE (*prim)[NSTORE2][NSTORE3][N
 
   rin=parms[0];
   rout=parms[1];
-  if(rout<=rin) rout=100.0; // default
+  if(rout<=rin) rout=1.2*rin; // default
   dualfprintf(fail_file,"rin=%g rout=%g\n",rin,rout);
 
   bsq_max[0] = SMALL;

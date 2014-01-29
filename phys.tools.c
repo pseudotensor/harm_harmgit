@@ -2403,9 +2403,11 @@ int gamma_calc_fromuconrel(FTYPE *uconrel, struct of_geom *geom, FTYPE*gamma, FT
       *qsq=0.0;
     }
     else{
-      dualfprintf(fail_file,"gamma_calc failed: i=%d j=%d k=%d qsq=%21.15g\n",geom->i,geom->j,geom->k,*qsq);
-      SLOOPA(j) dualfprintf(fail_file,"uconrel[%d]=%21.15g\n",j,uconrel[j]);
-      DLOOP(j,k) dualfprintf(fail_file,"gcov[%d][%d]=%21.15g\n",j,k,geom->gcov[GIND(j,k)]);
+      if(failed!=-1){
+        dualfprintf(fail_file,"gamma_calc failed: i=%d j=%d k=%d qsq=%21.15g\n",geom->i,geom->j,geom->k,*qsq);
+        SLOOPA(j) dualfprintf(fail_file,"uconrel[%d]=%21.15g\n",j,uconrel[j]);
+        DLOOP(j,k) dualfprintf(fail_file,"gcov[%d][%d]=%21.15g\n",j,k,geom->gcov[GIND(j,k)]);
+      }
       if (fail(geom->i,geom->j,geom->k,geom->p,FAIL_UTCALC_DISCR) >= 1)
         return (1);
     }
@@ -2482,38 +2484,40 @@ int ucon_calc_3vel(FTYPE *pr, struct of_geom *geom, FTYPE *ucon, FTYPE *others)
 
   if (negdiscr > 0.) {
 #if(JONCHECKS)
-    if(whocalleducon==0){
-      // then report on disc
-      dualfprintf(fail_file,"negdisc=%21.15g, should be negative\n",negdiscr);
-      for(k=U1;k<=U3;k++){
-        dualfprintf(fail_file,"uconfailed on pr[%d]=%21.15g\n",k,pr[k]);
-      }
-      bl_coord_ijk_2(geom->i,geom->j,geom->k,geom->p,X, V);
-      dualfprintf(fail_file,"i=%d j=%d k=%d pcurr=%d\nx1=%21.15g x2=%21.15g x3=%21.15g \nV1=%21.15g V2=%21.15g V3=%21.15g \ng=%21.15g\n",startpos[1]+geom->i,startpos[2]+geom->j,startpos[3]+geom->k,geom->p,X[1],X[2],X[3],V[1],V[2],V[3],geom->gdet);
-      dualfprintf(fail_file,"\ngcon\n");
-      dualfprintf(fail_file,"{");
-      for(j=0;j<NDIM;j++){
-        dualfprintf(fail_file,"{");
-        for(k=0;k<NDIM;k++){
-          dualfprintf(fail_file,"%21.15g",geom->gcon[GIND(j,k)]);
-          if(k!=NDIM-1) dualfprintf(fail_file," , ");
+    if(failed!=-1){
+      if(whocalleducon==0){
+        // then report on disc
+        dualfprintf(fail_file,"negdisc=%21.15g, should be negative\n",negdiscr);
+        for(k=U1;k<=U3;k++){
+          dualfprintf(fail_file,"uconfailed on pr[%d]=%21.15g\n",k,pr[k]);
         }
-        dualfprintf(fail_file,"}"); 
-        if(j!=NDIM-1) dualfprintf(fail_file," , ");
-      }
-      dualfprintf(fail_file,"}");
-      dualfprintf(fail_file,"\ngcov\n");
-      dualfprintf(fail_file,"{");
-      for(j=0;j<NDIM;j++){
+        bl_coord_ijk_2(geom->i,geom->j,geom->k,geom->p,X, V);
+        dualfprintf(fail_file,"i=%d j=%d k=%d pcurr=%d\nx1=%21.15g x2=%21.15g x3=%21.15g \nV1=%21.15g V2=%21.15g V3=%21.15g \ng=%21.15g\n",startpos[1]+geom->i,startpos[2]+geom->j,startpos[3]+geom->k,geom->p,X[1],X[2],X[3],V[1],V[2],V[3],geom->gdet);
+        dualfprintf(fail_file,"\ngcon\n");
         dualfprintf(fail_file,"{");
-        for(k=0;k<NDIM;k++){
-          dualfprintf(fail_file,"%21.15g",geom->gcov[GIND(j,k)]);
-          if(k!=NDIM-1) dualfprintf(fail_file," , ");
+        for(j=0;j<NDIM;j++){
+          dualfprintf(fail_file,"{");
+          for(k=0;k<NDIM;k++){
+            dualfprintf(fail_file,"%21.15g",geom->gcon[GIND(j,k)]);
+            if(k!=NDIM-1) dualfprintf(fail_file," , ");
+          }
+          dualfprintf(fail_file,"}"); 
+          if(j!=NDIM-1) dualfprintf(fail_file," , ");
         }
-        dualfprintf(fail_file,"}"); 
-        if(j!=NDIM-1) dualfprintf(fail_file," , ");
+        dualfprintf(fail_file,"}");
+        dualfprintf(fail_file,"\ngcov\n");
+        dualfprintf(fail_file,"{");
+        for(j=0;j<NDIM;j++){
+          dualfprintf(fail_file,"{");
+          for(k=0;k<NDIM;k++){
+            dualfprintf(fail_file,"%21.15g",geom->gcov[GIND(j,k)]);
+            if(k!=NDIM-1) dualfprintf(fail_file," , ");
+          }
+          dualfprintf(fail_file,"}"); 
+          if(j!=NDIM-1) dualfprintf(fail_file," , ");
+        }
+        dualfprintf(fail_file,"}");
       }
-      dualfprintf(fail_file,"}");
     }
 #endif
     if (fail(geom->i,geom->j,geom->k,geom->p,FAIL_UTCALC_DISCR) >= 1)
