@@ -929,3 +929,105 @@
 
 #define DO_ASSERTS 0
 
+
+
+
+
+
+
+
+
+
+//////////////////////////////////////////////
+//
+// this for bounds.tools.c that user might want to change
+//
+//////////////////////////////////////////////
+#define ADJUSTFLUXCT 0 // whether to adjust fluxCT
+
+// GODMARK: something seriously wrong with OUTEREXTRAP=1 (EOMFFDE)
+
+#define DEBUGINOUTLOOPS 0
+
+#define OUTEREXTRAP 3
+// 0: just copy
+// 1: gdet or other extrapolation
+// 2: copy (with rescale())
+// 3: Treat same as HORIZONEXTRAP==3
+
+// how to bound near horizon
+#define HORIZONEXTRAP 3
+// as above and also:
+// 3: jon version
+
+// number of iterations to get v^\phi\sim constant
+#define NUMITERVPHI 5
+
+
+//////////////////////////////
+// number of zones to use pole crushing regularizations
+// to help protect the pole from death blows to the computational grid
+// a sort of crushing regularization
+// causes problems with stability at just beyond pole
+// for field line plots, can just set B^\theta=0 along pole
+#define POLEDEATH (MIN(DOPOLEDEATH,N2BND)) // with expansion by 1 point if detects jumps in densities or Lorentz factor (see poldeath())
+//#define MAXPOLEDEATH N2BND // can't be larger than N2BND
+#define MAXPOLEDEATH (MIN(DOPOLEDEATH+1,N2BND)) // can't be larger than N2BND
+#define DEATHEXPANDAMOUNT 0
+
+#define POLEINTERPTYPE 3 // 0=set uu2=bu2=0, 1=linearly interpolate uu2,bu2  2=interpolate B_\phi into pole  3 =linearly for uu2 unless sucking on pole
+
+
+
+
+
+//////////////////////////////////////////
+// number of zones to enforce Lorentz factor to be small
+// notice that at pole uu1 and uu2 are artificially large and these regions can lead to runaway low densities and so even higher uu1,uu3
+// problem with POLEGAMMADEATH is that at large radius as fluid converges toward pole the fluid stagnates and can fall back at larger angles for no reason -- even for simple torus problem this happens when GAMMAPOLE=1.001
+#define POLEGAMMADEATH (MIN(DOPOLEGAMMADEATH,N2BND))
+// maximum allowed Lorentz factor near the pole (set to something large that should be allowed by solution -- problem and grid dependent)
+//#define GAMMAPOLE (2.0)
+
+#define GAMMAPOLEOUTGOING 1.1 // keep low
+#define GAMMAPOLEOUTGOINGPOWER 1.0
+#define GAMMAPOLEOUTGOINGRADIUS 10.0 // very model dependent
+#define GAMMAPOLEOUTGOINGMAX (5.0)
+#define GAMMAPOLEINGOING GAMMAMAX
+
+#define GAMMARADPOLEOUTGOING 1.1 // keep low
+#define GAMMARADPOLEOUTGOINGPOWER 1.0
+#define GAMMARADPOLEOUTGOINGRADIUS 10.0 // very model dependent
+#define GAMMARADPOLEOUTGOINGMAX (3.0)
+#define GAMMARADPOLEINGOING GAMMAMAXRAD
+
+// factor by which to allow quantities to jump near pole
+#define POLEDENSITYDROPFACTOR 5.0
+#define POLEGAMMAJUMPFACTOR 2.0
+
+
+///////////////////////////////////////////
+// whether to average in radius for poledeath
+#define AVERAGEINRADIUS 0 // not correct  across MPI boundaries since have to shift near boundary yet need that last cell to be consistent with as if no MPI boundary // OPENNPMARK: Also not correct for OpenMP
+#define RADIUSTOSTARTAVERAGING 7 // should be beyond horizon so doesn't diffuse across horizon
+#define RADIUSTOAVOIDRADIALSUCK (2.0*Rhor)
+
+
+// whether if doing full special 3d (i.e. special3dspc==1) that should only do poledeath for inflow
+// 0 : no limit
+// 1 : limit to poledeath acting if radial inflow
+// 2 : limit to poledeath acting on flow within r=RADIUSLIMITPOLEDEATHIN
+// 3 : limit if inflow OR out to r=RADIUSLIMITPOLEDEATHIN (in case inflow only starts near horizon, still poledeath out to that radius
+#define IFLIMITPOLEDEATH 0
+
+// radius within which to use poledeath if have IFLIMITPOLEDEATH==3
+#define RADIUSLIMITPOLEDEATHIN (3.0) // choose r=3M since always close to BH but always slightly outside horizon to help control stability.
+
+// how many zones to use poledeath at outer *physical* edge
+#define IFLIMITPOLEDEATHIOUT (-100)
+
+
+
+///////////////////////////////////////////
+// number of zones to smooth pole
+#define POLESMOOTH (MIN(DOPOLESMOOTH,N2BND))

@@ -15,6 +15,7 @@
 #define JET4COORDS 1300 // since changed for R0SING
 #define JET5COORDS 1400 // exp-exp grid, but not good idea in end
 #define JET6COORDS 1401 // Warp between super-Shafee near BH to normal at large radii
+#define JET6COORDSTHIN 1402 // Warp between super-Shafee near BH to normal at large radii
 #define UNI2LOG 1500
 #define UNIRSINTH2 1600
 #define SJETCOORDS 3000

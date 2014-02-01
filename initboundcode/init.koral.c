@@ -250,10 +250,21 @@ int prepre_init_specific_init(void)
 
 int pre_init_specific_init(void)
 {
-
+  // defaults
   //  h_over_r=0.3;
   h_over_r=0.2;
   h_over_r_jet=2.0*h_over_r;
+
+  if(WHICHPROBLEM==RADDONUT){
+    if(RADNT_DONUTTYPE==DONUTTHINDISK||RADNT_DONUTTYPE==DONUTTHINDISK2){
+      h_over_r=0.02;
+    }
+    else{
+      h_over_r=0.2;
+      h_over_r_jet=2.0*h_over_r;
+    }
+  }
+  
 
 
 

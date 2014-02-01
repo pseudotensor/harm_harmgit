@@ -1024,6 +1024,10 @@ struct Ccoordparams {
 #undef MPERSUN
 #define MPERSUN (10.0*gTILDA) // due to koral fixing MSUNCM, have to do this.
 
+#undef RADIUSMOREDEATH
+#define RADIUSMOREDEATH (300.0)
+
+
 
 #elif(WHICHPROBLEM==RADFLATDISK)
 

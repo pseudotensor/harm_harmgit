@@ -1,102 +1,7 @@
 
 #include "decs.h"
 
-
-
-#define ADJUSTFLUXCT 0 // whether to adjust fluxCT
-
-// GODMARK: something seriously wrong with OUTEREXTRAP=1 (EOMFFDE)
-
-#define DEBUGINOUTLOOPS 0
-
-#define OUTEREXTRAP 3
-// 0: just copy
-// 1: gdet or other extrapolation
-// 2: copy (with rescale())
-// 3: Treat same as HORIZONEXTRAP==3
-
-// how to bound near horizon
-#define HORIZONEXTRAP 3
-// as above and also:
-// 3: jon version
-
-// number of iterations to get v^\phi\sim constant
-#define NUMITERVPHI 5
-
-
-//////////////////////////////
-// number of zones to use pole crushing regularizations
-// to help protect the pole from death blows to the computational grid
-// a sort of crushing regularization
-// causes problems with stability at just beyond pole
-// for field line plots, can just set B^\theta=0 along pole
-#define POLEDEATH (MIN(DOPOLEDEATH,N2BND)) // with expansion by 1 point if detects jumps in densities or Lorentz factor (see poldeath())
-//#define MAXPOLEDEATH N2BND // can't be larger than N2BND
-#define MAXPOLEDEATH (MIN(DOPOLEDEATH+1,N2BND)) // can't be larger than N2BND
-#define DEATHEXPANDAMOUNT 0
-
-#define POLEINTERPTYPE 3 // 0=set uu2=bu2=0, 1=linearly interpolate uu2,bu2  2=interpolate B_\phi into pole  3 =linearly for uu2 unless sucking on pole
-
-
-
-
-//////////////////////////////////////////
-// number of zones to enforce Lorentz factor to be small
-// notice that at pole uu1 and uu2 are artificially large and these regions can lead to runaway low densities and so even higher uu1,uu3
-// problem with POLEGAMMADEATH is that at large radius as fluid converges toward pole the fluid stagnates and can fall back at larger angles for no reason -- even for simple torus problem this happens when GAMMAPOLE=1.001
-#define POLEGAMMADEATH (MIN(DOPOLEGAMMADEATH,N2BND))
-// maximum allowed Lorentz factor near the pole (set to something large that should be allowed by solution -- problem and grid dependent)
-//#define GAMMAPOLE (2.0)
-
-#define GAMMAPOLEOUTGOING 1.1 // keep low
-#define GAMMAPOLEOUTGOINGPOWER 1.0
-#define GAMMAPOLEOUTGOINGRADIUS 10.0 // very model dependent
-#define GAMMAPOLEINGOING GAMMAMAX
-
-// factor by which to allow quantities to jump near pole
-#define POLEDENSITYDROPFACTOR 5.0
-#define POLEGAMMAJUMPFACTOR 2.0
-
-
-///////////////////////////////////////////
-// whether to average in radius for poledeath
-#define AVERAGEINRADIUS 0 // not correct  across MPI boundaries since have to shift near boundary yet need that last cell to be consistent with as if no MPI boundary // OPENNPMARK: Also not correct for OpenMP
-#define RADIUSTOSTARTAVERAGING 7 // should be beyond horizon so doesn't diffuse across horizon
-#define RADIUSTOAVOIDRADIALSUCK (2.0*Rhor)
-
-
-// whether if doing full special 3d (i.e. special3dspc==1) that should only do poledeath for inflow
-// 0 : no limit
-// 1 : limit to poledeath acting if radial inflow
-// 2 : limit to poledeath acting on flow within r=RADIUSLIMITPOLEDEATHIN
-// 3 : limit if inflow OR out to r=RADIUSLIMITPOLEDEATHIN (in case inflow only starts near horizon, still poledeath out to that radius
-#define IFLIMITPOLEDEATH 0
-
-// radius within which to use poledeath if have IFLIMITPOLEDEATH==3
-#define RADIUSLIMITPOLEDEATHIN (3.0) // choose r=3M since always close to BH but always slightly outside horizon to help control stability.
-
-// how many zones to use poledeath at outer *physical* edge
-#define IFLIMITPOLEDEATHIOUT (-100)
-
-
-
-///////////////////////////////////////////
-// number of zones to smooth pole
-#define POLESMOOTH (MIN(DOPOLESMOOTH,N2BND))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+// see definit.h or init.h for some defines here.
 
 
 // X1DN FIXEDUSINGPANALYTIC
@@ -3410,7 +3315,9 @@ int poledeath(int whichx2,
   FTYPE ftemp;
   FTYPE ucon[NDIM];
   FTYPE others[NUMOTHERSTATERESULTS];
-  FTYPE gammavaluelimit;
+  FTYPE uconrad[NDIM];
+  FTYPE othersrad[NUMOTHERSTATERESULTS];
+  FTYPE gammavaluelimit,gammaradvaluelimit;
   int doavginradius[NPR];
   int pl2;
   struct of_geom geomdontuse[NPR];
@@ -3483,127 +3390,127 @@ int poledeath(int whichx2,
 
 
 
-  //////////////////
-  //
-  // setup loop ranges
-  //
-  //////////////////
+      //////////////////
+      //
+      // setup loop ranges
+      //
+      //////////////////
 
-  int poledeathreal,polegammadeathreal;
-  FTYPE Vtemp[NDIM];
-  // note that doesn't matter the order of the j-loop since always using reference value (so for loop doesn't need change in <= to >=)
-  if(whichx2==X2DN){
+      int poledeathreal,polegammadeathreal;
+      FTYPE Vtemp[NDIM];
+      // note that doesn't matter the order of the j-loop since always using reference value (so for loop doesn't need change in <= to >=)
+      if(whichx2==X2DN){
 
-    bl_coord_ijk(i,0,k,CENT,Vtemp);
-    if(Vtemp[1]>300.0){
-      poledeathreal=N2BND;
-      polegammadeathreal=N2BND;
-    }
-    else{
-      poledeathreal=POLEDEATH;
-      polegammadeathreal=POLEGAMMADEATH;
-    }
-
-
-    jstep=-1; // direction of j loop, so starts with active cells in case modify boundary cells as dependent upon active cells.
-
-    rj0 = poledeathreal;
-    rjtest = rj0+DEATHEXPANDAMOUNT; // used to ensure near pole the density doesn't drop suddenly
-    poleloc = 0;
-    poleloccent = 0;
-    // for poledeathreal==2, then deathjs,je=-2,-1,0,1 as required for CENT quantities rj=2
-    deathjs0 = 0-poledeathreal;
-    deathje0 = 0+poledeathreal-1;
-
-    deathjstest = deathjs0-DEATHEXPANDAMOUNT;
-    deathjetest = deathje0+DEATHEXPANDAMOUNT;
-    if(deathjstest<inoutlohi[POINTDOWN][POINTDOWN][2]) deathjstest=inoutlohi[POINTDOWN][POINTDOWN][2];
-    if(deathjetest<inoutlohi[POINTDOWN][POINTDOWN][2]) deathjetest=inoutlohi[POINTDOWN][POINTDOWN][2];
-
-    // assume for poledeathreal==1 that B2 set correctly as 0 on pole and only do something if poledeathreal>1
-    // if poledeathreal==2 then B2 set at  -1,0,1 and will correctly set B2 to 0 at pole rj=2
-    rjstag0 = rj0;
-    deathstagjs0 = 0-poledeathreal+1;
-    deathstagje0 = 0+poledeathreal-1;
-
-    rjstagtest = rjtest;
-    deathstagjstest = deathstagjs0-DEATHEXPANDAMOUNT;
-    deathstagjetest = deathstagje0+DEATHEXPANDAMOUNT;
-    if(deathstagjstest<inoutlohi[POINTDOWN][POINTDOWN][2]) deathstagjstest=inoutlohi[POINTDOWN][POINTDOWN][2];
-    if(deathstagjetest<inoutlohi[POINTDOWN][POINTDOWN][2]) deathstagjetest=inoutlohi[POINTDOWN][POINTDOWN][2];
-
-    // assumes velocity is always CENT
-    gammadeathjs=0-polegammadeathreal;
-    gammadeathje=0+polegammadeathreal-1;
-    if(gammadeathjs<inoutlohi[POINTDOWN][POINTDOWN][2]) gammadeathjs=inoutlohi[POINTDOWN][POINTDOWN][2];
-    if(gammadeathje<inoutlohi[POINTDOWN][POINTDOWN][2]) gammadeathje=inoutlohi[POINTDOWN][POINTDOWN][2];
-
-    // NO, don't do below.  Since poledeath called after MPI, need to set ghost cells as consistent with how active cells would have been set by other part of grid or other CPUs
-    //    if(special3dspc){
-    //      // then assume poledeath called *after* MPI (so have full and correct information across pole), so only should modify active cells and not boundary cells
-    //      deathjs0 = 0;
-    //      deathjstest = 0;
-    //      deathstagjs0 = 0;
-    //      deathstagjstest = 0;
-    //      gammadeathjs=0;
-    //    }
-
-  }
-  else if(whichx2==X2UP){
-
-    bl_coord_ijk(i,N2BND,k,CENT,Vtemp);
-    if(Vtemp[1]>300.0){
-      poledeathreal=N2BND;
-      polegammadeathreal=N2BND;
-    }
-    else{
-      poledeathreal=POLEDEATH;
-      polegammadeathreal=POLEGAMMADEATH;
-    }
-
-    rj0=N2-1-poledeathreal;
-    rjtest = rj0-DEATHEXPANDAMOUNT;
-    poleloc=N2;
-    poleloccent=N2-1;
-    // if poledeathreal==2 then CENTs set at N2-2,N2-1,N2,N2+1 rj=N2-3
-    deathjs0 = N2-1+1-poledeathreal;
-    deathje0 = N2-1+poledeathreal;
-
-    deathjstest = deathjs0-DEATHEXPANDAMOUNT;
-    deathjetest = deathje0+DEATHEXPANDAMOUNT;
-    if(deathjstest>inoutlohi[POINTUP][POINTUP][2]) deathjstest=inoutlohi[POINTUP][POINTUP][2];
-    if(deathjetest>inoutlohi[POINTUP][POINTUP][2]) deathjetest=inoutlohi[POINTUP][POINTUP][2];
-
-    // if poledeathreal==2, then B2 is set at N2-1,N2,N2+1 rj=N2-3
-    if(dirprim[B2]==FACE2) rjstag0=N2-poledeathreal;
-    else if(dirprim[B2]==CENT) rjstag0=rj0;
-    deathstagjs0 = N2+1-poledeathreal;
-    deathstagje0 = N2-1+poledeathreal;
-
-    rjstagtest = rjtest;
-    deathstagjstest = deathstagjs0-DEATHEXPANDAMOUNT;
-    deathstagjetest = deathstagje0+DEATHEXPANDAMOUNT;
-    if(deathstagjstest>inoutlohi[POINTUP][POINTUP][2]) deathstagjstest=inoutlohi[POINTUP][POINTUP][2];
-    if(deathstagjetest>inoutlohi[POINTUP][POINTUP][2]) deathstagjetest=inoutlohi[POINTUP][POINTUP][2];
+        bl_coord_ijk(i,0,k,CENT,Vtemp);
+        if(Vtemp[1]>300.0){
+          poledeathreal=N2BND;
+          polegammadeathreal=N2BND;
+        }
+        else{
+          poledeathreal=POLEDEATH;
+          polegammadeathreal=POLEGAMMADEATH;
+        }
 
 
-    // assumes velocity is always CENT .  If POLEDEATH==2, N2-2,N2-1,N2,N2+1
-    gammadeathjs = N2-1+1-polegammadeathreal;
-    gammadeathje = N2-1+polegammadeathreal;
-    if(gammadeathjs>inoutlohi[POINTUP][POINTUP][2]) gammadeathjs=inoutlohi[POINTUP][POINTUP][2];
-    if(gammadeathje>inoutlohi[POINTUP][POINTUP][2]) gammadeathje=inoutlohi[POINTUP][POINTUP][2];
+        jstep=-1; // direction of j loop, so starts with active cells in case modify boundary cells as dependent upon active cells.
+
+        rj0 = poledeathreal;
+        rjtest = rj0+DEATHEXPANDAMOUNT; // used to ensure near pole the density doesn't drop suddenly
+        poleloc = 0;
+        poleloccent = 0;
+        // for poledeathreal==2, then deathjs,je=-2,-1,0,1 as required for CENT quantities rj=2
+        deathjs0 = 0-poledeathreal;
+        deathje0 = 0+poledeathreal-1;
+
+        deathjstest = deathjs0-DEATHEXPANDAMOUNT;
+        deathjetest = deathje0+DEATHEXPANDAMOUNT;
+        if(deathjstest<inoutlohi[POINTDOWN][POINTDOWN][2]) deathjstest=inoutlohi[POINTDOWN][POINTDOWN][2];
+        if(deathjetest<inoutlohi[POINTDOWN][POINTDOWN][2]) deathjetest=inoutlohi[POINTDOWN][POINTDOWN][2];
+
+        // assume for poledeathreal==1 that B2 set correctly as 0 on pole and only do something if poledeathreal>1
+        // if poledeathreal==2 then B2 set at  -1,0,1 and will correctly set B2 to 0 at pole rj=2
+        rjstag0 = rj0;
+        deathstagjs0 = 0-poledeathreal+1;
+        deathstagje0 = 0+poledeathreal-1;
+
+        rjstagtest = rjtest;
+        deathstagjstest = deathstagjs0-DEATHEXPANDAMOUNT;
+        deathstagjetest = deathstagje0+DEATHEXPANDAMOUNT;
+        if(deathstagjstest<inoutlohi[POINTDOWN][POINTDOWN][2]) deathstagjstest=inoutlohi[POINTDOWN][POINTDOWN][2];
+        if(deathstagjetest<inoutlohi[POINTDOWN][POINTDOWN][2]) deathstagjetest=inoutlohi[POINTDOWN][POINTDOWN][2];
+
+        // assumes velocity is always CENT
+        gammadeathjs=0-polegammadeathreal;
+        gammadeathje=0+polegammadeathreal-1;
+        if(gammadeathjs<inoutlohi[POINTDOWN][POINTDOWN][2]) gammadeathjs=inoutlohi[POINTDOWN][POINTDOWN][2];
+        if(gammadeathje<inoutlohi[POINTDOWN][POINTDOWN][2]) gammadeathje=inoutlohi[POINTDOWN][POINTDOWN][2];
+
+        // NO, don't do below.  Since poledeath called after MPI, need to set ghost cells as consistent with how active cells would have been set by other part of grid or other CPUs
+        //    if(special3dspc){
+        //      // then assume poledeath called *after* MPI (so have full and correct information across pole), so only should modify active cells and not boundary cells
+        //      deathjs0 = 0;
+        //      deathjstest = 0;
+        //      deathstagjs0 = 0;
+        //      deathstagjstest = 0;
+        //      gammadeathjs=0;
+        //    }
+
+      }
+      else if(whichx2==X2UP){
+
+        bl_coord_ijk(i,N2BND,k,CENT,Vtemp);
+        if(Vtemp[1]>300.0){
+          poledeathreal=N2BND;
+          polegammadeathreal=N2BND;
+        }
+        else{
+          poledeathreal=POLEDEATH;
+          polegammadeathreal=POLEGAMMADEATH;
+        }
+
+        rj0=N2-1-poledeathreal;
+        rjtest = rj0-DEATHEXPANDAMOUNT;
+        poleloc=N2;
+        poleloccent=N2-1;
+        // if poledeathreal==2 then CENTs set at N2-2,N2-1,N2,N2+1 rj=N2-3
+        deathjs0 = N2-1+1-poledeathreal;
+        deathje0 = N2-1+poledeathreal;
+
+        deathjstest = deathjs0-DEATHEXPANDAMOUNT;
+        deathjetest = deathje0+DEATHEXPANDAMOUNT;
+        if(deathjstest>inoutlohi[POINTUP][POINTUP][2]) deathjstest=inoutlohi[POINTUP][POINTUP][2];
+        if(deathjetest>inoutlohi[POINTUP][POINTUP][2]) deathjetest=inoutlohi[POINTUP][POINTUP][2];
+
+        // if poledeathreal==2, then B2 is set at N2-1,N2,N2+1 rj=N2-3
+        if(dirprim[B2]==FACE2) rjstag0=N2-poledeathreal;
+        else if(dirprim[B2]==CENT) rjstag0=rj0;
+        deathstagjs0 = N2+1-poledeathreal;
+        deathstagje0 = N2-1+poledeathreal;
+
+        rjstagtest = rjtest;
+        deathstagjstest = deathstagjs0-DEATHEXPANDAMOUNT;
+        deathstagjetest = deathstagje0+DEATHEXPANDAMOUNT;
+        if(deathstagjstest>inoutlohi[POINTUP][POINTUP][2]) deathstagjstest=inoutlohi[POINTUP][POINTUP][2];
+        if(deathstagjetest>inoutlohi[POINTUP][POINTUP][2]) deathstagjetest=inoutlohi[POINTUP][POINTUP][2];
 
 
-    //    if(special3dspc){
-    //      // then assume poledeath called *after* MPI (so have full and correct information across pole), so only should modify active cells and not boundary cells
-    //      deathje0 = N2-1;
-    //      deathjetest = N2-1;
-    //      deathstagje0 = N2-1;
-    //      deathstagjetest = N2-1;
-    //      gammadeathje=N2-1;
-    //    }
+        // assumes velocity is always CENT .  If POLEDEATH==2, N2-2,N2-1,N2,N2+1
+        gammadeathjs = N2-1+1-polegammadeathreal;
+        gammadeathje = N2-1+polegammadeathreal;
+        if(gammadeathjs>inoutlohi[POINTUP][POINTUP][2]) gammadeathjs=inoutlohi[POINTUP][POINTUP][2];
+        if(gammadeathje>inoutlohi[POINTUP][POINTUP][2]) gammadeathje=inoutlohi[POINTUP][POINTUP][2];
 
-  }
+
+        //    if(special3dspc){
+        //      // then assume poledeath called *after* MPI (so have full and correct information across pole), so only should modify active cells and not boundary cells
+        //      deathje0 = N2-1;
+        //      deathjetest = N2-1;
+        //      deathstagje0 = N2-1;
+        //      deathstagjetest = N2-1;
+        //      gammadeathje=N2-1;
+        //    }
+
+      }
 
 
 
@@ -3845,7 +3752,7 @@ int poledeath(int whichx2,
           }
           else doavginradius[pl]=0;
 
-        }
+        }// end pboundloop
 
 
 
@@ -3863,8 +3770,8 @@ int poledeath(int whichx2,
             //////////
             // u1, and u3, average in radius too!
             // copying this means copying \Omega_F in magnetically-dominated regime beyond LC
-            for(pl=U1;pl<=U3;pl++){
-              if(pl==U2) continue;
+            PBOUNDLOOP(pliter,pl) {
+              if(!(pl==U1 || pl==U3 || pl==URAD1 || pl==URAD3)) continue;
   
               if(doavginradius[pl]) MACP0A1(prim,i,j,k,pl) = THIRD*(MACP0A1(prim,rim1,rj,rk,pl)+MACP0A1(prim,ri,rj,rk,pl)+MACP0A1(prim,rip1,rj,rk,pl));
               else MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
@@ -3877,7 +3784,8 @@ int poledeath(int whichx2,
               //////////
               // for densities
               // this helps remove drop-outs in density at high b^2/\rho_0 and high b^2/u
-              for(pl=RHO;pl<=UU;pl++){
+              PBOUNDLOOP(pliter,pl) {
+                if(!(pl==RHO || pl==UU || pl==ENTROPY || pl==URAD0)) continue;
   
                 if(doavginradius[pl]) MACP0A1(prim,i,j,k,pl) = THIRD*(MACP0A1(prim,rim1,rj,rk,pl)+MACP0A1(prim,ri,rj,rk,pl)+MACP0A1(prim,rip1,rj,rk,pl));
                 else MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
@@ -4016,12 +3924,12 @@ int poledeath(int whichx2,
           ///////////////////////////////////
           if(ispstag==0){
             PBOUNDLOOP(pliter,pl){
-              if(pl>=B3+1 && pl<NPRBOUND){
-                if(doavginradius[pl]) ftemp=THIRD*(MACP0A1(prim,rim1,rj,rk,pl) + MACP0A1(prim,ri,rj,rk,pl) + MACP0A1(prim,rip1,rj,rk,pl));
-                else ftemp=MACP0A1(prim,ri,rj,rk,pl);
-                MACP0A1(prim,i,j,k,pl)=ftemp;
-                madechange++;
-              }
+              if(!(pl==RHO || pl==UU || pl==U1 || pl==U2 || pl==U3 || pl==ENTROPY || pl==B1 || pl==B2 || pl==B3 || pl==URAD0 || pl==URAD1 || pl==URAD2 || pl==URAD3)) continue;
+
+              if(doavginradius[pl]) ftemp=THIRD*(MACP0A1(prim,rim1,rj,rk,pl) + MACP0A1(prim,ri,rj,rk,pl) + MACP0A1(prim,rip1,rj,rk,pl));
+              else ftemp=MACP0A1(prim,ri,rj,rk,pl);
+              MACP0A1(prim,i,j,k,pl)=ftemp;
+              madechange++;
             }
           }
 
@@ -4105,157 +4013,177 @@ int poledeath(int whichx2,
  
           if(j>=deathjs && j<=deathje){
             //////////////////////////
-            // U2:
-            pl=U2;
-
-
-            if(special3dspc){
-              // U2 not necessarily anti-symmetric in this case.
-              // This will be kinda odd if POLEDEATH>1 due to comparing non-local regions.
-              // But, for now, POLEDEATH<=1 is set so make sense.
-
-              int jother;
-              FTYPE signD;
-              if(j<N2/2){
-                jother=-1-j;
+            int iteru2;
+            int plrho;
+            for(iteru2=0;iteru2<=1;iteru2++){
+              // U2:
+              if(iteru2==0){
+                pl=U2;
+                plrho=RHO;
               }
-              else{
-                jother=N2-1+(N2-j);
+              else if(iteru2==1){
+                pl=URAD2;
+                plrho=URAD0;
               }
+              if(URAD0<0) continue; // skip of not doing radiation
+              
 
-              if(j>=jother) signD=+1.0;
-              else signD=-1.0;
 
+              if(special3dspc){
+                // U2 not necessarily anti-symmetric in this case.
+                // This will be kinda odd if POLEDEATH>1 due to comparing non-local regions.
+                // But, for now, POLEDEATH<=1 is set so make sense.
 
-              // see if sucking on pole
-              FTYPE rhovjhere,rhovjother,rhovDiff;
-              rhovjhere =MACP0A1(prim,i,j,k,RHO)*MACP0A1mod(prim,i,j,k,U2);
-              rhovjother=MACP0A1(prim,i,jother,k,RHO)*MACP0A1mod(prim,i,jother,k,U2);
-
-              rhovDiff=signD*(rhovjhere-rhovjother);
-              // same gdet, so no need to multiply both by same factor for below test
-              // make change to both simultaneously so that when other j is hit, rhovDiff condition is no longer hit and all is consistent as if separate memory field for entire poledeath before final copy-over to primitive memory space.
-              // But do active grid cells first (determined by DEATHLOOPJ) so diag_fixup() occurs on active region for accounting.
-              if(rhovDiff>0.0){
-                // then sucking on pole
-                // must change active and ghost cells consistently for any number of CPUs
-                // so average-out the suck to zero suck by changing the values equally (as weighted by mass)
-                FTYPE dU2     =-signD*rhovDiff*0.5/MACP0A1(prim,i,j,k,RHO);
-                FTYPE U2jhere = MACP0A1mod(prim,i,j,k,U2);
-                FTYPE U2jother= MACP0A1mod(prim,i,jother,k,U2);
-
-                if( (fabs(U2jhere)>fabs(dU2))&&(fabs(U2jother)>fabs(dU2)) ){
-                  // only change if in both cases we lower the velocity, not increase.
-                  MACP0A1(prim,i,j,k,U2)      += dU2;
-                  MACP0A1(prim,i,jother,k,U2) -= dU2;
-                  madechange++;
+                int jother;
+                FTYPE signD;
+                if(j<N2/2){
+                  jother=-1-j;
                 }
-                else{ // then jhere or jother is changed by an absolute magnitude more than its value, which we want to avoid
-                  // crush a bit only as much as leaves smaller value changed as much as possible without increasing its magnitude
-                  if(fabs(U2jhere)<fabs(U2jother)){
-                    // then drop jhere as closest to fixed value (100% change), and reset jother with same value
-                    MACP0A1(prim,i,j,k,U2) *= -1.0;
-                    MACP0A1(prim,i,jother,k,U2) = MACP0A1(prim,i,j,k,U2);
+                else{
+                  jother=N2-1+(N2-j);
+                }
+
+                if(j>=jother) signD=+1.0;
+                else signD=-1.0;
+
+
+                // see if sucking on pole
+                FTYPE rhovjhere,rhovjother,rhovDiff;
+                rhovjhere =MACP0A1(prim,i,j,k,plrho)*MACP0A1mod(prim,i,j,k,pl);
+                rhovjother=MACP0A1(prim,i,jother,k,plrho)*MACP0A1mod(prim,i,jother,k,pl);
+
+                rhovDiff=signD*(rhovjhere-rhovjother);
+                // same gdet, so no need to multiply both by same factor for below test
+                // make change to both simultaneously so that when other j is hit, rhovDiff condition is no longer hit and all is consistent as if separate memory field for entire poledeath before final copy-over to primitive memory space.
+                // But do active grid cells first (determined by DEATHLOOPJ) so diag_fixup() occurs on active region for accounting.
+                if(rhovDiff>0.0){
+                  // then sucking on pole
+                  // must change active and ghost cells consistently for any number of CPUs
+                  // so average-out the suck to zero suck by changing the values equally (as weighted by mass)
+                  FTYPE dU2     =-signD*rhovDiff*0.5/MACP0A1(prim,i,j,k,plrho);
+                  FTYPE U2jhere = MACP0A1mod(prim,i,j,k,pl);
+                  FTYPE U2jother= MACP0A1mod(prim,i,jother,k,pl);
+
+                  if( (fabs(U2jhere)>fabs(dU2))&&(fabs(U2jother)>fabs(dU2)) ){
+                    // only change if in both cases we lower the velocity, not increase.
+                    MACP0A1(prim,i,j,k,pl)      += dU2;
+                    MACP0A1(prim,i,jother,k,pl) -= dU2;
                     madechange++;
                   }
-                  else{
-                    // then drops down to value matching other side so D=0 in the end still, so still no sucking.
-                    MACP0A1(prim,i,jother,k,U2) *= -1.0;
-                    MACP0A1(prim,i,j,k,U2) = MACP0A1(prim,i,jother,k,U2);
-                    madechange++;
-                  }
-                }// end else abs mag of change is larger than 100% for one of the values
+                  else{ // then jhere or jother is changed by an absolute magnitude more than its value, which we want to avoid
+                    // crush a bit only as much as leaves smaller value changed as much as possible without increasing its magnitude
+                    if(fabs(U2jhere)<fabs(U2jother)){
+                      // then drop jhere as closest to fixed value (100% change), and reset jother with same value
+                      MACP0A1(prim,i,j,k,pl) *= -1.0;
+                      MACP0A1(prim,i,jother,k,pl) = MACP0A1(prim,i,j,k,pl);
+                      madechange++;
+                    }
+                    else{
+                      // then drops down to value matching other side so D=0 in the end still, so still no sucking.
+                      MACP0A1(prim,i,jother,k,pl) *= -1.0;
+                      MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,i,jother,k,pl);
+                      madechange++;
+                    }
+                  }// end else abs mag of change is larger than 100% for one of the values
 
-                //    MACP0A1(prim,i,j,k,U2)      =0.0;
-                //    madechange++;
-                //  MACP0A1(prim,i,jother,k,U2) += +rhovDiff*0.5/MACP0A1(prim,i,jother,k,RHO); // this taken care of by other j in ghost region
+                  //    MACP0A1(prim,i,j,k,pl)      =0.0;
+                  //    madechange++;
+                  //  MACP0A1(prim,i,jother,k,pl) += +rhovDiff*0.5/MACP0A1(prim,i,jother,k,plrho); // this taken care of by other j in ghost region
 
-                // Note that for anti-symmetric U2 (i.e. reflective BCs around pole) this is same as crushing regularization leading to U2->0
+                  // Note that for anti-symmetric U2 (i.e. reflective BCs around pole) this is same as crushing regularization leading to pl->0
+                }
+                else{
+                  // then just enforce linear behavior near pole
+                  // NOT YET
+                }
+
+
               }
               else{
-                // then just enforce linear behavior near pole
-                // NOT YET
-              }
-
-
-            }
-            else{
 
 
 #if(POLEINTERPTYPE==0)
-              // if flow converges toward pole, then this loses information about the velocity and field approaching the pole
-              // anti-symmetric (if reflecting BC at pole) quantities:
-              MACP0A1(prim,i,j,k,pl) = 0.;
-              madechange++;
+                // if flow converges toward pole, then this loses information about the velocity and field approaching the pole
+                // anti-symmetric (if reflecting BC at pole) quantities:
+                MACP0A1(prim,i,j,k,pl) = 0.;
+                madechange++;
 
 #elif(POLEINTERPTYPE==1 || POLEINTERPTYPE==2)
-              // anti-symmetric (if reflecting BC at pole):
-              // assume X[2] goes through 0 at the pole and isn't positive definite
-              if(doavginradius[pl]) ftemp=THIRD*(MACP0A1mod(prim,rim1,rj,rk,pl) + MACP0A1mod(prim,ri,rj,rk,pl) + MACP0A1mod(prim,rip1,rj,rk,pl));
-              else ftemp=MACP0A1mod(prim,ri,rj,rk,pl);
-              MACP0A1(prim,i,j,k,pl) = ftemp + (X[pl][2]-Xr[pl][2])*(ftemp-0.0)/(Xr[pl][2]-X0[2]);
-              madechange++;
+                // anti-symmetric (if reflecting BC at pole):
+                // assume X[2] goes through 0 at the pole and isn't positive definite
+                if(doavginradius[pl]) ftemp=THIRD*(MACP0A1mod(prim,rim1,rj,rk,pl) + MACP0A1mod(prim,ri,rj,rk,pl) + MACP0A1mod(prim,rip1,rj,rk,pl));
+                else ftemp=MACP0A1mod(prim,ri,rj,rk,pl);
+                MACP0A1(prim,i,j,k,pl) = ftemp + (X[pl][2]-Xr[pl][2])*(ftemp-0.0)/(Xr[pl][2]-X0[2]);
+                madechange++;
 
 #elif(POLEINTERPTYPE==3)
 
-              // anti-symmetric (if reflecting BC at pole):
+                // anti-symmetric (if reflecting BC at pole):
 
-              // assume X[2] goes through 0 at the pole and isn't positive definite
+                // assume X[2] goes through 0 at the pole and isn't positive definite
 
-              // choose reference value
-              //  ftemp=THIRD*(MACP0A1mod(prim,rim1,rj,rk,pl) + MACP0A1mod(prim,ri,rj,rk,pl) + MACP0A1mod(prim,rip1,rj,rk,pl));
-              ftemp=MACP0A1mod(prim,ri,rj,rk,pl);
+                // choose reference value
+                //  ftemp=THIRD*(MACP0A1mod(prim,rim1,rj,rk,pl) + MACP0A1mod(prim,ri,rj,rk,pl) + MACP0A1mod(prim,rip1,rj,rk,pl));
+                ftemp=MACP0A1mod(prim,ri,rj,rk,pl);
 
-              if(whichx2==X2DN && ftemp>0.0){
-                // then sucking on \theta=0 pole
-                // try to minimize sucking on pole by finding minimum U2 around
-                for(jj=0;jj<=rj+DEATHEXPANDAMOUNT;jj++) ftemp=MIN(ftemp,MACP0A1mod(prim,ri,jj,rk,pl));
-                if(doavginradius[pl]){
-                  for(jj=0;jj<=rj+DEATHEXPANDAMOUNT;jj++) ftemp=MIN(ftemp,MACP0A1mod(prim,rip1,jj,rk,pl));
-                  for(jj=0;jj<=rj+DEATHEXPANDAMOUNT;jj++) ftemp=MIN(ftemp,MACP0A1mod(prim,rim1,jj,rk,pl));
+                if(whichx2==X2DN && ftemp>0.0){
+                  // then sucking on \theta=0 pole
+                  // try to minimize sucking on pole by finding minimum U2 around
+                  for(jj=0;jj<=rj+DEATHEXPANDAMOUNT;jj++) ftemp=MIN(ftemp,MACP0A1mod(prim,ri,jj,rk,pl));
+                  if(doavginradius[pl]){
+                    for(jj=0;jj<=rj+DEATHEXPANDAMOUNT;jj++) ftemp=MIN(ftemp,MACP0A1mod(prim,rip1,jj,rk,pl));
+                    for(jj=0;jj<=rj+DEATHEXPANDAMOUNT;jj++) ftemp=MIN(ftemp,MACP0A1mod(prim,rim1,jj,rk,pl));
+                  }
+
+                  ftemp=0.0; // try crushing sucking GODMARK
+
+                  // assume ftemp is at reference location
+                  MACP0A1(prim,i,j,k,pl) = ftemp + (X[pl][2]-Xr[pl][2])*(ftemp-0.0)/(Xr[pl][2]-X0[2]);
+                  madechange++;
                 }
+                else if(whichx2==X2UP && ftemp<0.0){
+                  // then sucking on \theta=\pi pole
+                  for(jj=N2-1;jj>=rj-DEATHEXPANDAMOUNT;jj--) ftemp=MAX(ftemp,MACP0A1mod(prim,ri,jj,rk,pl));
+                  if(doavginradius[pl]){
+                    for(jj=N2-1;jj>=rj-DEATHEXPANDAMOUNT;jj--) ftemp=MAX(ftemp,MACP0A1mod(prim,rip1,jj,rk,pl));
+                    for(jj=N2-1;jj>=rj-DEATHEXPANDAMOUNT;jj--) ftemp=MAX(ftemp,MACP0A1mod(prim,rim1,jj,rk,pl));
+                  }
 
-                ftemp=0.0; // try crushing sucking GODMARK
+                  ftemp=0.0; // try crushing sucking GODMARK
 
-                // assume ftemp is at reference location
-                MACP0A1(prim,i,j,k,pl) = ftemp + (X[pl][2]-Xr[pl][2])*(ftemp-0.0)/(Xr[pl][2]-X0[2]);
-                madechange++;
-              }
-              else if(whichx2==X2UP && ftemp<0.0){
-                // then sucking on \theta=\pi pole
-                for(jj=N2-1;jj>=rj-DEATHEXPANDAMOUNT;jj--) ftemp=MAX(ftemp,MACP0A1mod(prim,ri,jj,rk,pl));
-                if(doavginradius[pl]){
-                  for(jj=N2-1;jj>=rj-DEATHEXPANDAMOUNT;jj--) ftemp=MAX(ftemp,MACP0A1mod(prim,rip1,jj,rk,pl));
-                  for(jj=N2-1;jj>=rj-DEATHEXPANDAMOUNT;jj--) ftemp=MAX(ftemp,MACP0A1mod(prim,rim1,jj,rk,pl));
+                  // assume ftemp is at reference location (same formula for both poles)
+                  MACP0A1(prim,i,j,k,pl) = ftemp + (X[pl][2]-Xr[pl][2])*(ftemp-0.0)/(Xr[pl][2]-X0[2]);
+                  madechange++;
                 }
+                else{
+                  // otherwise enforce natural regular linear behavior on U2
+                  if(doavginradius[pl]) ftemp=THIRD*(MACP0A1mod(prim,rim1,rj,rk,pl) + MACP0A1mod(prim,ri,rj,rk,pl) + MACP0A1mod(prim,rip1,rj,rk,pl));
+                  else ftemp=MACP0A1mod(prim,ri,rj,rk,pl);
 
-                ftemp=0.0; // try crushing sucking GODMARK
-
-                // assume ftemp is at reference location (same formula for both poles)
-                MACP0A1(prim,i,j,k,pl) = ftemp + (X[pl][2]-Xr[pl][2])*(ftemp-0.0)/(Xr[pl][2]-X0[2]);
-                madechange++;
-              }
-              else{
-                // otherwise enforce natural regular linear behavior on U2
-                if(doavginradius[pl]) ftemp=THIRD*(MACP0A1mod(prim,rim1,rj,rk,pl) + MACP0A1mod(prim,ri,rj,rk,pl) + MACP0A1mod(prim,rip1,rj,rk,pl));
-                else ftemp=MACP0A1mod(prim,ri,rj,rk,pl);
-
-                MACP0A1(prim,i,j,k,pl) = ftemp + (X[pl][2]-Xr[pl][2])*(ftemp-0.0)/(Xr[pl][2]-X0[2]);
-                madechange++;
-              }
+                  MACP0A1(prim,i,j,k,pl) = ftemp + (X[pl][2]-Xr[pl][2])*(ftemp-0.0)/(Xr[pl][2]-X0[2]);
+                  madechange++;
+                }
 
 #endif // endif POLEINTERPTYPE==3
-            }// end if special3dspc==0
+              }// end if special3dspc==0
 
 
 #if( UTHETAPOLEDEATH )
-            //if interpolated u^\theta, now convert back to u^2
-            dxdxprim_ijk(i, j, k, CENT, dxdxp);
-            MACP0A1(prim,i,j,k,pl) /= dxdxp[1 + (pl-U1)%3][1 + (pl-U1)%3];
-            madechange++;
+              if(pl==U2){
+                //if interpolated u^\theta, now convert back to u^2
+                dxdxprim_ijk(i, j, k, CENT, dxdxp);
+                MACP0A1(prim,i,j,k,pl) /= dxdxp[1 + (pl-U1)%3][1 + (pl-U1)%3];
+                madechange++;
+              }
+              if(pl==URAD2){
+                //if interpolated u^\theta, now convert back to u^2
+                dxdxprim_ijk(i, j, k, CENT, dxdxp);
+                MACP0A1(prim,i,j,k,pl) /= dxdxp[1 + (pl-URAD1)%3][1 + (pl-URAD1)%3];
+                madechange++;
+              }
 #endif
 
-
+            }// over U2 and URAD2
           }// end if correct j range
         }// end if ispstag==0
 
@@ -4313,131 +4241,132 @@ int poledeath(int whichx2,
         OPENMPBCLOOPBLOCK2IJKLOOPX2DIR(i,k);
 
 
-  //////////////////
-  //
-  // setup loop ranges
-  //
-  //////////////////
+        //////////////////
+        //
+        // setup loop ranges
+        //
+        //////////////////
 
 
         //////////////////////////////////////
         // BELOW JUST COPY OF ABOVE
-  int poledeathreal,polegammadeathreal;
-  FTYPE Vtemp[NDIM];
-  // note that doesn't matter the order of the j-loop since always using reference value (so for loop doesn't need change in <= to >=)
-  if(whichx2==X2DN){
+        int poledeathreal,polegammadeathreal;
+        FTYPE Vtemp[NDIM];
+        // note that doesn't matter the order of the j-loop since always using reference value (so for loop doesn't need change in <= to >=)
+        if(whichx2==X2DN){
 
-    bl_coord_ijk(i,0,k,CENT,Vtemp);
-    if(Vtemp[1]>300.0){
-      poledeathreal=N2BND;
-      polegammadeathreal=N2BND;
-    }
-    else{
-      poledeathreal=POLEDEATH;
-      polegammadeathreal=POLEGAMMADEATH;
-    }
-
-
-    jstep=-1; // direction of j loop, so starts with active cells in case modify boundary cells as dependent upon active cells.
-
-    rj0 = poledeathreal;
-    rjtest = rj0+DEATHEXPANDAMOUNT; // used to ensure near pole the density doesn't drop suddenly
-    poleloc = 0;
-    poleloccent = 0;
-    // for poledeathreal==2, then deathjs,je=-2,-1,0,1 as required for CENT quantities rj=2
-    deathjs0 = 0-poledeathreal;
-    deathje0 = 0+poledeathreal-1;
-
-    deathjstest = deathjs0-DEATHEXPANDAMOUNT;
-    deathjetest = deathje0+DEATHEXPANDAMOUNT;
-    if(deathjstest<inoutlohi[POINTDOWN][POINTDOWN][2]) deathjstest=inoutlohi[POINTDOWN][POINTDOWN][2];
-    if(deathjetest<inoutlohi[POINTDOWN][POINTDOWN][2]) deathjetest=inoutlohi[POINTDOWN][POINTDOWN][2];
-
-    // assume for poledeathreal==1 that B2 set correctly as 0 on pole and only do something if poledeathreal>1
-    // if poledeathreal==2 then B2 set at  -1,0,1 and will correctly set B2 to 0 at pole rj=2
-    rjstag0 = rj0;
-    deathstagjs0 = 0-poledeathreal+1;
-    deathstagje0 = 0+poledeathreal-1;
-
-    rjstagtest = rjtest;
-    deathstagjstest = deathstagjs0-DEATHEXPANDAMOUNT;
-    deathstagjetest = deathstagje0+DEATHEXPANDAMOUNT;
-    if(deathstagjstest<inoutlohi[POINTDOWN][POINTDOWN][2]) deathstagjstest=inoutlohi[POINTDOWN][POINTDOWN][2];
-    if(deathstagjetest<inoutlohi[POINTDOWN][POINTDOWN][2]) deathstagjetest=inoutlohi[POINTDOWN][POINTDOWN][2];
-
-    // assumes velocity is always CENT
-    gammadeathjs=0-polegammadeathreal;
-    gammadeathje=0+polegammadeathreal-1;
-    if(gammadeathjs<inoutlohi[POINTDOWN][POINTDOWN][2]) gammadeathjs=inoutlohi[POINTDOWN][POINTDOWN][2];
-    if(gammadeathje<inoutlohi[POINTDOWN][POINTDOWN][2]) gammadeathje=inoutlohi[POINTDOWN][POINTDOWN][2];
-
-    // NO, don't do below.  Since poledeath called after MPI, need to set ghost cells as consistent with how active cells would have been set by other part of grid or other CPUs
-    //    if(special3dspc){
-    //      // then assume poledeath called *after* MPI (so have full and correct information across pole), so only should modify active cells and not boundary cells
-    //      deathjs0 = 0;
-    //      deathjstest = 0;
-    //      deathstagjs0 = 0;
-    //      deathstagjstest = 0;
-    //      gammadeathjs=0;
-    //    }
-        //////////////////////////////////////
-
-  }
-  else if(whichx2==X2UP){
-
-    bl_coord_ijk(i,N2BND,k,CENT,Vtemp);
-    if(Vtemp[1]>300.0){
-      poledeathreal=N2BND;
-      polegammadeathreal=N2BND;
-    }
-    else{
-      poledeathreal=POLEDEATH;
-      polegammadeathreal=POLEGAMMADEATH;
-    }
-
-    rj0=N2-1-poledeathreal;
-    rjtest = rj0-DEATHEXPANDAMOUNT;
-    poleloc=N2;
-    poleloccent=N2-1;
-    // if poledeathreal==2 then CENTs set at N2-2,N2-1,N2,N2+1 rj=N2-3
-    deathjs0 = N2-1+1-poledeathreal;
-    deathje0 = N2-1+poledeathreal;
-
-    deathjstest = deathjs0-DEATHEXPANDAMOUNT;
-    deathjetest = deathje0+DEATHEXPANDAMOUNT;
-    if(deathjstest>inoutlohi[POINTUP][POINTUP][2]) deathjstest=inoutlohi[POINTUP][POINTUP][2];
-    if(deathjetest>inoutlohi[POINTUP][POINTUP][2]) deathjetest=inoutlohi[POINTUP][POINTUP][2];
-
-    // if poledeathreal==2, then B2 is set at N2-1,N2,N2+1 rj=N2-3
-    if(dirprim[B2]==FACE2) rjstag0=N2-poledeathreal;
-    else if(dirprim[B2]==CENT) rjstag0=rj0;
-    deathstagjs0 = N2+1-poledeathreal;
-    deathstagje0 = N2-1+poledeathreal;
-
-    rjstagtest = rjtest;
-    deathstagjstest = deathstagjs0-DEATHEXPANDAMOUNT;
-    deathstagjetest = deathstagje0+DEATHEXPANDAMOUNT;
-    if(deathstagjstest>inoutlohi[POINTUP][POINTUP][2]) deathstagjstest=inoutlohi[POINTUP][POINTUP][2];
-    if(deathstagjetest>inoutlohi[POINTUP][POINTUP][2]) deathstagjetest=inoutlohi[POINTUP][POINTUP][2];
+          bl_coord_ijk(i,0,k,CENT,Vtemp);
+          if(Vtemp[1]>300.0){
+            poledeathreal=N2BND;
+            polegammadeathreal=N2BND;
+          }
+          else{
+            poledeathreal=POLEDEATH;
+            polegammadeathreal=POLEGAMMADEATH;
+          }
 
 
-    // assumes velocity is always CENT .  If POLEDEATH==2, N2-2,N2-1,N2,N2+1
-    gammadeathjs = N2-1+1-polegammadeathreal;
-    gammadeathje = N2-1+polegammadeathreal;
-    if(gammadeathjs>inoutlohi[POINTUP][POINTUP][2]) gammadeathjs=inoutlohi[POINTUP][POINTUP][2];
-    if(gammadeathje>inoutlohi[POINTUP][POINTUP][2]) gammadeathje=inoutlohi[POINTUP][POINTUP][2];
+          jstep=-1; // direction of j loop, so starts with active cells in case modify boundary cells as dependent upon active cells.
+
+          rj0 = poledeathreal;
+          rjtest = rj0+DEATHEXPANDAMOUNT; // used to ensure near pole the density doesn't drop suddenly
+          poleloc = 0;
+          poleloccent = 0;
+          // for poledeathreal==2, then deathjs,je=-2,-1,0,1 as required for CENT quantities rj=2
+          deathjs0 = 0-poledeathreal;
+          deathje0 = 0+poledeathreal-1;
+
+          deathjstest = deathjs0-DEATHEXPANDAMOUNT;
+          deathjetest = deathje0+DEATHEXPANDAMOUNT;
+          if(deathjstest<inoutlohi[POINTDOWN][POINTDOWN][2]) deathjstest=inoutlohi[POINTDOWN][POINTDOWN][2];
+          if(deathjetest<inoutlohi[POINTDOWN][POINTDOWN][2]) deathjetest=inoutlohi[POINTDOWN][POINTDOWN][2];
+
+          // assume for poledeathreal==1 that B2 set correctly as 0 on pole and only do something if poledeathreal>1
+          // if poledeathreal==2 then B2 set at  -1,0,1 and will correctly set B2 to 0 at pole rj=2
+          rjstag0 = rj0;
+          deathstagjs0 = 0-poledeathreal+1;
+          deathstagje0 = 0+poledeathreal-1;
+
+          rjstagtest = rjtest;
+          deathstagjstest = deathstagjs0-DEATHEXPANDAMOUNT;
+          deathstagjetest = deathstagje0+DEATHEXPANDAMOUNT;
+          if(deathstagjstest<inoutlohi[POINTDOWN][POINTDOWN][2]) deathstagjstest=inoutlohi[POINTDOWN][POINTDOWN][2];
+          if(deathstagjetest<inoutlohi[POINTDOWN][POINTDOWN][2]) deathstagjetest=inoutlohi[POINTDOWN][POINTDOWN][2];
+
+          // assumes velocity is always CENT
+          gammadeathjs=0-polegammadeathreal;
+          gammadeathje=0+polegammadeathreal-1;
+          if(gammadeathjs<inoutlohi[POINTDOWN][POINTDOWN][2]) gammadeathjs=inoutlohi[POINTDOWN][POINTDOWN][2];
+          if(gammadeathje<inoutlohi[POINTDOWN][POINTDOWN][2]) gammadeathje=inoutlohi[POINTDOWN][POINTDOWN][2];
+
+          // NO, don't do below.  Since poledeath called after MPI, need to set ghost cells as consistent with how active cells would have been set by other part of grid or other CPUs
+          //    if(special3dspc){
+          //      // then assume poledeath called *after* MPI (so have full and correct information across pole), so only should modify active cells and not boundary cells
+          //      deathjs0 = 0;
+          //      deathjstest = 0;
+          //      deathstagjs0 = 0;
+          //      deathstagjstest = 0;
+          //      gammadeathjs=0;
+          //    }
+          //////////////////////////////////////
+
+        }
+        else if(whichx2==X2UP){
 
 
-    //    if(special3dspc){
-    //      // then assume poledeath called *after* MPI (so have full and correct information across pole), so only should modify active cells and not boundary cells
-    //      deathje0 = N2-1;
-    //      deathjetest = N2-1;
-    //      deathstagje0 = N2-1;
-    //      deathstagjetest = N2-1;
-    //      gammadeathje=N2-1;
-    //    }
+          bl_coord_ijk(i,N2BND,k,CENT,Vtemp);
+          if(Vtemp[1]>RADIUSMOREDEATH){
+            poledeathreal=N2BND;
+            polegammadeathreal=N2BND;
+          }
+          else{
+            poledeathreal=POLEDEATH;
+            polegammadeathreal=POLEGAMMADEATH;
+          }
 
-  }
+          rj0=N2-1-poledeathreal;
+          rjtest = rj0-DEATHEXPANDAMOUNT;
+          poleloc=N2;
+          poleloccent=N2-1;
+          // if poledeathreal==2 then CENTs set at N2-2,N2-1,N2,N2+1 rj=N2-3
+          deathjs0 = N2-1+1-poledeathreal;
+          deathje0 = N2-1+poledeathreal;
+
+          deathjstest = deathjs0-DEATHEXPANDAMOUNT;
+          deathjetest = deathje0+DEATHEXPANDAMOUNT;
+          if(deathjstest>inoutlohi[POINTUP][POINTUP][2]) deathjstest=inoutlohi[POINTUP][POINTUP][2];
+          if(deathjetest>inoutlohi[POINTUP][POINTUP][2]) deathjetest=inoutlohi[POINTUP][POINTUP][2];
+
+          // if poledeathreal==2, then B2 is set at N2-1,N2,N2+1 rj=N2-3
+          if(dirprim[B2]==FACE2) rjstag0=N2-poledeathreal;
+          else if(dirprim[B2]==CENT) rjstag0=rj0;
+          deathstagjs0 = N2+1-poledeathreal;
+          deathstagje0 = N2-1+poledeathreal;
+
+          rjstagtest = rjtest;
+          deathstagjstest = deathstagjs0-DEATHEXPANDAMOUNT;
+          deathstagjetest = deathstagje0+DEATHEXPANDAMOUNT;
+          if(deathstagjstest>inoutlohi[POINTUP][POINTUP][2]) deathstagjstest=inoutlohi[POINTUP][POINTUP][2];
+          if(deathstagjetest>inoutlohi[POINTUP][POINTUP][2]) deathstagjetest=inoutlohi[POINTUP][POINTUP][2];
+
+
+          // assumes velocity is always CENT .  If POLEDEATH==2, N2-2,N2-1,N2,N2+1
+          gammadeathjs = N2-1+1-polegammadeathreal;
+          gammadeathje = N2-1+polegammadeathreal;
+          if(gammadeathjs>inoutlohi[POINTUP][POINTUP][2]) gammadeathjs=inoutlohi[POINTUP][POINTUP][2];
+          if(gammadeathje>inoutlohi[POINTUP][POINTUP][2]) gammadeathje=inoutlohi[POINTUP][POINTUP][2];
+
+
+          //    if(special3dspc){
+          //      // then assume poledeath called *after* MPI (so have full and correct information across pole), so only should modify active cells and not boundary cells
+          //      deathje0 = N2-1;
+          //      deathjetest = N2-1;
+          //      deathstagje0 = N2-1;
+          //      deathstagjetest = N2-1;
+          //      gammadeathje=N2-1;
+          //    }
+
+        }
         //////////////////////////////////////
 
 
@@ -4473,26 +4402,66 @@ int poledeath(int whichx2,
           ///////////
           get_geometry(i, j, k, dirprim[pl], ptrgeom[pl]);
 
-          ucon_calc(MAC(prim,i,j,k),ptrgeom[pl],ucon, others);
+          ucon_calc(&MACP0A1(prim,i,j,k,0),ptrgeom[pl],ucon, others);
+          if(URAD0>=0){
+            ucon_calc(&MACP0A1(prim,i,j,k,URAD1-U1),ptrgeom[pl],uconrad, othersrad);
+          }
           // only limit velocity if outgoing relative to grid (GODMARK: only valid in KS or BL-like coordinates such that u^r>0 means outgoing w.r.t. an observer at infinity)
-          if(ucon[RR]>0.0){
-
+          if(ucon[RR]>0.0||uconrad[RR]>0.0){
+            int didlimit=0;
+            
             bl_coord_ijk_2(i,j,k,dirprim[pl],X[pl],V[pl]);
 
 
             if(V[pl][RR]<=GAMMAPOLEOUTGOINGRADIUS){
               // flat \gamma limit up to GAMMAPOLEOUTGOINGRADIUS
-              gammavaluelimit = GAMMAPOLEOUTGOING;
+              if(ucon[RR]>0.0){
+                didlimit=1;
+                gammavaluelimit = GAMMAPOLEOUTGOING;
+              }
+              else  gammavaluelimit = GAMMAMAX;
+              if(uconrad[RR]>0.0){
+                didlimit=1;
+                gammaradvaluelimit = GAMMARADPOLEOUTGOING;
+              }
+              else  gammaradvaluelimit = GAMMAMAXRAD;
             }
             else{
-              gammavaluelimit = GAMMAPOLEOUTGOING*pow(V[pl][RR]/GAMMAPOLEOUTGOINGRADIUS,GAMMAPOLEOUTGOINGPOWER);
+              if(ucon[RR]>0.0){
+                didlimit=1;
+                gammavaluelimit = GAMMAPOLEOUTGOING*pow(V[pl][RR]/GAMMAPOLEOUTGOINGRADIUS,GAMMAPOLEOUTGOINGPOWER);
+                gammavaluelimit=MIN(gammavaluelimit,GAMMAPOLEOUTGOINGMAX);
+              }
+              else gammavaluelimit=GAMMAMAX;
+              if(uconrad[RR]>0.0){
+                didlimit=1;
+                gammaradvaluelimit = GAMMARADPOLEOUTGOING*pow(V[pl][RR]/GAMMARADPOLEOUTGOINGRADIUS,GAMMARADPOLEOUTGOINGPOWER);
+                gammaradvaluelimit=MIN(gammaradvaluelimit,GAMMARADPOLEOUTGOINGMAX);
+              }
+              else gammaradvaluelimit=GAMMAMAXRAD;
             }
 
-            limit_gamma(0,gammavaluelimit,GAMMAMAXRAD,MAC(prim,i,j,k),NULL,ptrgeom[pl],-1);
-            madechange++;
-          }
+            if(didlimit){
+              //if(j==0 && (ucon[TT]>10 || uconrad[TT]>10)){ // DEBUG
+              //                  dualfprintf(fail_file,"GODHERE1: ur=%g %g : ut=%g %g : limit= %g %g\n",ucon[RR]*sqrt(ptrgeom[pl]->gcov[GIND(RR,RR)]),uconrad[RR]*sqrt(ptrgeom[pl]->gcov[GIND(RR,RR)]),ucon[TT],uconrad[TT],gammavaluelimit,gammaradvaluelimit);
+              //}
+
+              limit_gamma(0,gammavaluelimit,gammaradvaluelimit,MAC(prim,i,j,k),NULL,ptrgeom[pl],-1);
+
+              //              if(j==0 && (ucon[TT]>10 || uconrad[TT]>10)){ // DEBUG
+              //                ucon_calc(&MACP0A1(prim,i,j,k,0),ptrgeom[pl],ucon, others);
+              //                if(URAD0>=0){
+              //                  ucon_calc(&MACP0A1(prim,i,j,k,URAD1-U1),ptrgeom[pl],uconrad, othersrad);
+              //                }
+              //                dualfprintf(fail_file,"GODHERE2: ur=%g %g : ut=%g %g : limit= %g %g\n",ucon[RR]*sqrt(ptrgeom[pl]->gcov[GIND(RR,RR)]),uconrad[RR]*sqrt(ptrgeom[pl]->gcov[GIND(RR,RR)]),ucon[TT],uconrad[TT],gammavaluelimit,gammaradvaluelimit);
+              //              }
+              madechange++;
+            }
+          }// end if u^r>0
           else{
-            limit_gamma(0,GAMMAPOLEINGOING,GAMMAMAXRAD,MAC(prim,i,j,k),NULL,ptrgeom[pl],-1);
+            if(ucon[RR]>0.0 && uconrad[RR]>0.0) limit_gamma(0,GAMMAPOLEINGOING,GAMMARADPOLEINGOING,MAC(prim,i,j,k),NULL,ptrgeom[pl],-1);
+            else if(ucon[RR]>0.0 && uconrad[RR]<=0.0) limit_gamma(0,GAMMAPOLEINGOING,GAMMAMAXRAD,MAC(prim,i,j,k),NULL,ptrgeom[pl],-1);
+            else if(ucon[RR]<=0.0 && uconrad[RR]>0.0) limit_gamma(0,GAMMAMAX,GAMMARADPOLEINGOING,MAC(prim,i,j,k),NULL,ptrgeom[pl],-1);
             madechange++;
           }
 
