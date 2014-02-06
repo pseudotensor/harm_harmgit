@@ -8757,7 +8757,7 @@ int koral_source_rad(int whichradsourcemethod, FTYPE *piin, FTYPE *pb, FTYPE *pf
 //**********************************************************************
 //******* opacities ****************************************************
 //**********************************************************************
-//absorption
+//absorption in 1/cm form
 void calc_kappa(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappa)
 {
 
@@ -8779,7 +8779,7 @@ void calc_kappa(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappa)
   //  dualfprintf(fail_file,"kappaabs=%g\n",*kappa);
 }
 
-//scattering
+//scattering in 1/cm form
 void calc_kappaes(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappaes)
 {  
   extern FTYPE calc_kappaes_user(FTYPE rho, FTYPE T,FTYPE x,FTYPE y,FTYPE z);
@@ -8800,7 +8800,7 @@ void calc_kappaes(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappaes)
   //  dualfprintf(fail_file,"kappaes=%g\n",*kappa);
 }
 
-// get \chi = \kappa_{abs} + \kappa_{es}
+// get \chi = \kappa_{abs} + \kappa_{es} in 1/cm form.
 void calc_chi(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *chi)
 {
   FTYPE kappa,kappaes;
@@ -8810,7 +8810,7 @@ void calc_chi(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *chi)
   *chi=kappa+kappaes;
 }
 
-// get \kappa_{abs} and \kappa_{es}
+// get \kappa_{abs} and \kappa_{es} in \sigma/mass * rho = 1/cm form.
 static void calc_kappa_kappaes(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappa, FTYPE *kappaes, FTYPE *Tgas)
 {
   extern FTYPE calc_kappa_user(FTYPE rho, FTYPE T,FTYPE x,FTYPE y,FTYPE z);
@@ -8865,8 +8865,10 @@ void koral_source_rad_calc(int computestate, int computeentropy, FTYPE *pr, stru
 
   PLOOP(pliter,pl) Gdpl[pl] = 0.0;
   // equal and opposite forces on fluid and radiation due to radiation 4-force
-  // sign of G that goes between Koral determination of G and HARM source term (e.g. positive \lambda is a cooling of the fluid and heating of the photons, and gives G_t>0 so -G_t<0 and adds to R^t_t such that R^t_t - G_t becomes more negative and so more photon energy density)
-  // That is, equation is d_t R^t_t + Gdpl = 0
+  // 
+  //    f[pl] = ((uu[pl] - uu0[pl]) + (sign[pl] * localdt * Gdpl[pl]))*extrafactor[pl]; -> T^t_t[new] = T^t_t[old] - Gdpl[UU] -> dT^t_t = -Gdpl = Gd   and so dR^t_t = -Gdpl = -Gd
+  
+
 #define SIGNGD (1.0)
   // keep SIGNGD as 1.0.  Just apply signgd2 in front of Gdpl in other places.
   // sign fixed-linked as + for URAD0 case.
@@ -8927,6 +8929,8 @@ static void koral_source_dtsub_rad_calc(int method, FTYPE *pr, FTYPE *Ui, FTYPE 
 static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *Gu, FTYPE *Tgas, FTYPE* chieffreturn, FTYPE *Gabs) 
 {
   int i,j,k;
+
+  FTYPE rho=pp[RHO];
   
   //radiative stress tensor in the lab frame
   FTYPE Rij[NDIM][NDIM];
@@ -8953,7 +8957,7 @@ static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYP
   
   // compute contravariant four-force in the lab frame
   
-  //R^a_b u_a u^b
+  //Eradff = R^a_b u_a u^b
   FTYPE Ruu=0.; DLOOP(i,j) Ruu+=Rij[i][j]*ucov[i]*ucon[j];
 
 
@@ -8987,6 +8991,25 @@ static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYP
   FTYPE Rus;
 #endif
 
+#if(DOCOMPTON)
+  // in term2, doesn't change photon energy, so that in scattering-dominated atmospheres, photons move through unchanged by temperature of gas.
+  // Eq A7 in http://adsabs.harvard.edu/abs/2012ApJ...752...18K used first in http://adsabs.harvard.edu/cgi-bin/bib_query?arXiv:0904.4123 as based upon a calculation in http://adsabs.harvard.edu/abs/2000thas.book.....P .
+  // Also interesting for next steps:
+  //1) Conservative form of Kompaneet's equation and dealing with the diffusion term implicitly: http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.13.798 and related: http://www.osti.gov/scitech/biblio/891567 .  We should ensure the 4-force is consistent (numerically and analytically) with what's used in this equation for n.
+  //2) Relativistic corrections:  http://adsabs.harvard.edu/cgi-bin/bib_query?arXiv:1201.5606 and http://adsabs.harvard.edu/abs/2002nmgm.meet.2329S .  It looks like nothing more difficult as far as actually using the expressions in place of non-relativistic version.
+  //One semi-relevant application: http://www.aanda.org/articles/aa/full_html/2009/45/aa12061-09/aa12061-09.html
+  FTYPE Tradff = pow(fabs(Ruu)/ARAD_CODE,0.25);
+  FTYPE preterm3 = -4.0*kappaes*((*Tgas) - Tradff)*Ruu;
+  //  f[pl] = ((uu[pl] - uu0[pl]) + (sign[pl] * localdt * Gdpl[pl]))*extrafactor[pl]; -> T^t_t[new] = T^t_t[old] - Gdpl[UU] -> dT^t_t = -Gdpl[UU] = +Gd[TT]
+  // Ruu>0, so if Tgas>Trad, then preterm3<0.  Then egas should drop.
+  // We have dT^t_t = G_t = Gd_t = -Gdpl_t = preterm3 u_t > 0, so G_t>0 so T^t_t rises so -T^t_t drops so egas drops.
+
+  // 
+#endif
+
+
+  //////////////
+  // LOOP over i
   FTYPE Ru,Ruuu,term1,term2,term3;
   DLOOPA(i){
     Ru=0.; DLOOPA(j) Ru+=Rij[i][j]*ucon[j];
@@ -9003,13 +9026,18 @@ static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYP
     // group by independent terms
     term1 = -(kappa*Ru + lambda*ucon[i]);
     term2 = -kappaes*Ruuu;
+#if(DOCOMPTON)
+    term3 = preterm3*ucon[i];
+#else
+    term3 = 0.0;
+#endif
 
     // actual source term
-    //    Gu[i]=-chi*Ru - (kappaes*Ruu + lambda)*ucon[i];
-    Gu[i] = term1 + term2;
+    //    Gu[i]=-chi*Ru - (kappaes*Ruu + lambda)*ucon[i] + term3;
+    Gu[i] = term1 + term2 + term3;
     
     // absolute magnitude of source term that can be used for estimating importance of 4-force relative to existing conserved quantities to get dtsub.  But don't split kappa terms because if those cancel then physically no contribution.
-    Gabs[i] = fabs(term1) + fabs(term2);
+    Gabs[i] = fabs(term1) + fabs(term2) + fabs(term3);
 
 #if(0)
     // DEBUG:

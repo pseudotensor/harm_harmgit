@@ -74,6 +74,8 @@
 #define TEMPMINKELVIN (1.0E-10) // Kelvin
 #define TEMPMIN (TEMPMINKELVIN/TEMPBAR) // Code units
 
+// whether to do comptonization (upscatter or downscatter)
+#define DOCOMPTON 1
 
 #define OPACITYBAR (LBAR*LBAR/MBAR) // cgs in cm^2/g
 // non-relativistic ES:
