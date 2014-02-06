@@ -1005,6 +1005,7 @@
 #define POLEDENSITYDROPFACTOR 5.0
 #define POLEGAMMAJUMPFACTOR 2.0
 
+#define RADIUSMOREDEATH (300.0)
 
 ///////////////////////////////////////////
 // whether to average in radius for poledeath
