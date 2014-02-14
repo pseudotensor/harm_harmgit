@@ -98,11 +98,19 @@ $(warning USEICCINTEL is $(USEICCINTEL))
 else ifeq ($(HOSTNAME),ki-jmck)
 USEICCINTEL=1
 $(warning USEICCINTEL is $(USEICCINTEL))
+else ifeq ($(HOSTNAME),ubuntu)
+USEICCINTEL=1
+$(warning USEICCINTEL is $(USEICCINTEL))
+else ifeq ($(HOSTNAME),bh00)
+USEICCINTEL=1
+$(warning USEICCINTEL is $(USEICCINTEL))
 else ifeq ($(HOSTNAME),bhjet)
 USEOSX=1
 $(warning USEOSX is $(USEOSX))
 else
-$(error USEcompiler never set!.  Need to choose for your system: $(HOSTNAME) in makehead.inc .)
+#$(error USEcompiler never set!.  Need to choose for your system: $(HOSTNAME) in makehead.inc .)
+USEICCINTEL=1
+$(warning USEICCINTEL is $(USEICCINTEL))
 endif
 
 
