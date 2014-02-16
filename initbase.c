@@ -1221,6 +1221,7 @@ int init_defglobal(void)
     //  lim = PARAFLAT;
     //lim = MC;
     TIMEORDER=4;
+    TIMETYPE=TIMEEXPLICIT;
     // whether/which ENO used to interpolate fluxes
     DOENOFLUX = ENOFINITEVOLUME;
     //DOENOFLUX= NOENOFLUX;
@@ -1241,6 +1242,7 @@ int init_defglobal(void)
     // PARA and TO=4 and HLL not trustable in FFDE so far
     lim[1] = lim[2] = lim[3] = MC;
     TIMEORDER=2;
+    TIMETYPE=TIMEEXPLICIT;
     fluxmethod=LAXFFLUX;
     FLUXB = FLUXCTTOTH;
     UTOPRIMVERSION=UTOPRIM2DFINAL;

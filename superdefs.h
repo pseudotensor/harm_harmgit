@@ -127,7 +127,7 @@ FTYPE BASEMACP1A0(shockindicatorarray,NUMSHOCKPLS,N1M,N2M,N3M);
 ////////////////////////////////////////////////
 
 // below is used within substeps AND across substeps but not across full timesteps
-FTYPE BASEMACP1A1(pk,MAXDTSTAGES,N1M,N2M,N3M,NPR); /* next-step primitives */
+FTYPE BASEMACP1A1(pk,MAXITERDTSTAGES,N1M,N2M,N3M,NPR); /* next-step primitives */
 // for higher order RK time stepping integrations
 FTYPE BASEMACP0A1(unewglobal,N1M,N2M,N3M,NPR); // used across substeps and across full time steps
 FTYPE BASEMACP0A1(ulastglobal,N1M,N2M,N3M,NPR); // used across substeps but not across full time steps

@@ -184,6 +184,7 @@ int user1_init_global(void)
     //  TIMEORDER=2;
     TIMEORDER=4;
     //  TIMEORDER=3;
+    TIMETYPE=TIMEEXPLICIT;
     //  fluxmethod= HLLFLUX;
     fluxmethod= LAXFFLUX; // generally more robust than HLLFLUX for various reasons
   
@@ -198,6 +199,7 @@ int user1_init_global(void)
     // PARA and TO=4 and HLL not trustable in FFDE so far
     lim[1] =lim[2]=lim[3]= MC;
     TIMEORDER=2;
+    TIMETYPE=TIMEEXPLICIT;
 
 
     // below applies to all fluxes

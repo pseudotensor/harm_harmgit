@@ -560,6 +560,36 @@ endif
 
 
 # Intel machine specific
+ifeq ($(USESTAMPEDE),1)
+
+DFLAGS=-DUSINGICC=1  -DUSINGORANGE=0 $(EXTRA)
+LONGDOUBLECOMMAND=-long_double
+
+
+COMP=icc $(DFLAGS) $(OPMPFLAGS)
+
+CFLAGSPRENONPRECISE=-O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll $(PTHREADFLAGS) -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 $(DFLAGS)
+CFLAGSPRE=$(PRECISE) $(CFLAGSPRENONPRECISE)
+
+GCCCFLAGSPRE= -Wall -O2 $(DFLAGS)
+
+
+LDFLAGS=-L/opt/apps/intel/13/composer_xe_2013.2.146/mkl/lib/intel64/ -lm $(LIBPTHREAD) $(LAPACKLDFLAGS) ${GSLLIB}
+LDFLAGSOTHER=
+
+
+
+
+endif
+
+
+
+
+
+
+
+
+# Intel machine specific
 ifeq ($(USEICCINTELNEW),1)
 
 DFLAGS=-DUSINGICC=1  -DUSINGORANGE=0 $(EXTRA)

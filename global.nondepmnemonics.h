@@ -4,9 +4,6 @@
 #include "metric.h"
 #include "coord.h"
 
-// RK-related macros
-// Doesn't even depend upon N?, N?M, or N?BND, etc.
-#include "global.stepch.h"
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -653,7 +650,9 @@
 #define INITSTOPTIME 8
 
 
-#define MAXTIMEORDER 4
+#define MAXTIMEORDER 5 // 5 now needed for EOMRADTYPE!=EOMRADNONE, but only affects memory in that case.
+
+#define NUMDTCUFS (4+MAXTIMEORDER) // see step_ch.c
 
 //#define TIMEORDER 3
 // order of algorithm in time from 1 to 4.
@@ -753,6 +752,9 @@
 #define INTERPPOINTTYPE 0
 #define INTERPLINETYPE 1
 
+
+#define TIMEIMPLICIT 0
+#define TIMEEXPLICIT 1
 
 
 //////////////////////////////////////
@@ -1085,8 +1087,9 @@
 
 
 // allow for pk[0] and pk[1]
-#define MAXDTSTAGES 2
-// maximum number of allowed temporal integration stages
+#define MAXITERDTSTAGES 2
+// maximum number of needed independent memory spots for temporal integration stages
+
 
 
 // time period between dumps for various types of dumps

@@ -19,15 +19,15 @@ static int prepare_globaldt(
 
 //FTYPE globalgeom[NPR];
 static void flux2dUavg(int whichpl, int i, int j, int k, FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE *dUavg1,FTYPE *dUavg2,FTYPE *dUavg3);
-static void dUtoU(int whichpl, int i, int j, int k, int loc, FTYPE *dUgeom, FTYPE *dUriemann, FTYPE *CUf, FTYPE *CUnew, FTYPE *Ui,  FTYPE *uf, FTYPE *ucum);
-static void dUtoU_check(int i, int j, int k, int loc, int pl, FTYPE *dUgeom, FTYPE *dUriemann, FTYPE *CUf, FTYPE *CUnew, FTYPE *Ui,  FTYPE *Uf, FTYPE *ucum);
+static void dUtoU(int stage, int whichpl, int i, int j, int k, int loc, FTYPE *dUgeom, FTYPE (*dUcomp)[NPR], FTYPE *dUriemann, FTYPE *CUf, FTYPE *CUnew, FTYPE *Ui,  FTYPE *uf, FTYPE *ucum);
+static void dUtoU_check(int stage, int i, int j, int k, int loc, int pl, FTYPE *dUgeom, FTYPE (*dUcomp)[NPR], FTYPE *dUriemann, FTYPE *CUf, FTYPE *CUnew, FTYPE *Ui,  FTYPE *Uf, FTYPE *ucum);
 static int asym_compute_1(FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
 static int asym_compute_2(FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
 
 
 static FTYPE fractional_diff( FTYPE a, FTYPE b );
 
-static FTYPE compute_dissmeasure(int i, int j, int k, int loc, FTYPE *pr, struct of_geom *ptrgeom, FTYPE *CUf, FTYPE *CUnew, FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE *Ui,  FTYPE *Uf, FTYPE *tempucum);
+static FTYPE compute_dissmeasure(int stage, int i, int j, int k, int loc, FTYPE *pr, struct of_geom *ptrgeom, FTYPE *CUf, FTYPE *CUnew, FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE *Ui,  FTYPE *Uf, FTYPE *tempucum);
 
 
 // AVG_2_POINT functions:
@@ -399,6 +399,9 @@ static int advance_standard(
         int pl,pliter,i,j,k;
         // zero-out dUgeom in case non-B pl's used.
         FTYPE dUgeom[NPR]={0.0},dUriemann[NPR+NSPECIAL]={0.0},dUriemann1[NPR+NSPECIAL]={0.0},dUriemann2[NPR+NSPECIAL]={0.0},dUriemann3[NPR+NSPECIAL]={0.0};
+        FTYPE dUcomp[NUMSOURCES][NPR];
+        int sc;
+        PLOOP(pliter,pl) SCLOOP(sc) dUcomp[sc][pl]=0.0;
 
 
         /////////////////////////////////////////////////////
@@ -417,7 +420,7 @@ static int advance_standard(
           // Get update
           // ui is itself at FACE as already set
           // this overwrites uf[B1,B2,B3], while need original uf[B1,B2,B3] for some RK methods, so store as olduf outside this loop, already.
-          dUtoU(DOBPL,i,j,k,CENT,dUgeom, dUriemann, CUf, CUnew, MAC(ui,i,j,k), MAC(uf,i,j,k), MAC(tempucum,i,j,k));
+          dUtoU(stage,DOBPL,i,j,k,CENT,dUgeom, dUcomp, dUriemann, CUf, CUnew, MAC(ui,i,j,k), MAC(uf,i,j,k), MAC(tempucum,i,j,k));
         }//end loop
       }// end parallel
 
@@ -594,7 +597,7 @@ static int advance_standard(
         // note that uf and ucum are initialized inside setup_rktimestep() before first substep
 
         // get dissmeasure
-        FTYPE dissmeasure=compute_dissmeasure(i,j,k,ptrgeom->p,MAC(pf,i,j,k),ptrgeom,CUf, CUnew, F1, F2, F3, MAC(ui,i,j,k),MAC(olduf,i,j,k), MAC(tempucum,i,j,k));
+        FTYPE dissmeasure=compute_dissmeasure(stage,i,j,k,ptrgeom->p,MAC(pf,i,j,k),ptrgeom,CUf, CUnew, F1, F2, F3, MAC(ui,i,j,k),MAC(olduf,i,j,k), MAC(tempucum,i,j,k));
 
         // find dU(pb)
         // so pf contains updated field at cell center for use in (e.g.) implicit solver that uses inversion P(U)
@@ -635,7 +638,7 @@ static int advance_standard(
           ufconsider[pl]=MACP0A1(olduf,i,j,k,pl);
           tempucumconsider[pl]=MACP0A1(tempucum,i,j,k,pl);
         }
-        dUtoU(doother,i,j,k,ptrgeom->p,dUgeom, dUriemann, CUf, CUnew, MAC(ui,i,j,k), ufconsider, tempucumconsider);
+        dUtoU(stage,doother,i,j,k,ptrgeom->p,dUgeom, dUcomp, dUriemann, CUf, CUnew, MAC(ui,i,j,k), ufconsider, tempucumconsider);
 
 
         ////////////////////////////
@@ -764,7 +767,7 @@ static int advance_standard(
                   ufconsider[pl]=MACP0A1(olduf,i,j,k,pl);
                   tempucumconsider[pl]=MACP0A1(tempucum,i,j,k,pl);
                 }
-                dUtoU(doother,i,j,k,ptrgeom->p,dUgeom, dUriemann, CUf, CUnew, MAC(ui,i,j,k), ufconsider, tempucumconsider);
+                dUtoU(stage,doother,i,j,k,ptrgeom->p,dUgeom, dUcomp, dUriemann, CUf, CUnew, MAC(ui,i,j,k), ufconsider, tempucumconsider);
               } // if did fixup
             }// if might do fixups
 #endif
@@ -983,7 +986,7 @@ static int advance_standard(
 
 
 // compute dissipation measure for determining if can use entropy equations of motion or must use energy equations of motion
-static FTYPE compute_dissmeasure(int i, int j, int k, int loc, FTYPE *pr, struct of_geom *ptrgeom, FTYPE *CUf, FTYPE *CUnew, FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE *ui,  FTYPE *uf, FTYPE *tempucum)
+static FTYPE compute_dissmeasure(int stage, int i, int j, int k, int loc, FTYPE *pr, struct of_geom *ptrgeom, FTYPE *CUf, FTYPE *CUnew, FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE *ui,  FTYPE *uf, FTYPE *tempucum)
 {
   FTYPE dissmeasure;
   int pliter,pl;
@@ -1041,7 +1044,14 @@ static FTYPE compute_dissmeasure(int i, int j, int k, int loc, FTYPE *pr, struct
       dUriemanntemp[plsp]=dUriemann1temp[plsp]+dUriemann2temp[plsp]+dUriemann3temp[plsp];
     }
     // Get final U for NPR and NSPECIAL quantities
-    dUtoU(DOSPECIALPL,i,j,k,loc,dUgeomtemp, dUriemanntemp, CUf, CUnew, uitemp, uftemp, tempucumtemp);
+    //    FTYPE dUcomptemp[NUMSOURCES][NPR+NSPECIAL];
+    FTYPE dUcomptemp[NUMSOURCES][NPR];
+    int sc;
+    PLOOP(pliter,pl) SCLOOP(sc) dUcomptemp[sc][pl]=0.0;
+    //    PLOOPSPECIALONLY(plsp,truenspecial){
+    //      SCLOOP(sc) dUcomptemp[sc][plsp]=0.0;
+    //    }
+    dUtoU(stage,DOSPECIALPL,i,j,k,loc,dUgeomtemp, dUcomptemp, dUriemanntemp, CUf, CUnew, uitemp, uftemp, tempucumtemp);
 
 
 
@@ -1594,7 +1604,7 @@ static int advance_standard_orig(
       
 
         // Get update
-        dUtoU(DOALLPL, i,j,k,ptrgeom->p,dUgeom, dUriemann, CUf, CUnew, MAC(ui,i,j,k), MAC(uf,i,j,k), MAC(tempucum,i,j,k));
+        dUtoU(stage,DOALLPL, i,j,k,ptrgeom->p,dUgeom, dUcomp, dUriemann, CUf, CUnew, MAC(ui,i,j,k), MAC(uf,i,j,k), MAC(tempucum,i,j,k));
       
       
       
@@ -2396,7 +2406,7 @@ static int advance_finitevolume(
       }
 
       // find uf==Uf and additional terms to ucum
-      dUtoU(DOALLPL, i,j,k,ptrgeom->p,dUgeom, dUriemann, CUf, CUnew, MAC(ui,i,j,k), MAC(uf,i,j,k), MAC(tempucum,i,j,k));
+      dUtoU(stage,DOALLPL, i,j,k,ptrgeom->p,dUgeom, dUcomp, dUriemann, CUf, CUnew, MAC(ui,i,j,k), MAC(uf,i,j,k), MAC(tempucum,i,j,k));
 
 
 
@@ -3218,10 +3228,10 @@ static void flux2dUavg(int whichpl, int i, int j, int k, FTYPE (*F1)[NSTORE2][NS
 
 
 // convert point versions of U_i^{n} and dU -> U_i^{n+1} and other versions
-static void dUtoU(int whichpl, int i, int j, int k, int loc, FTYPE *dUgeom, FTYPE *dUriemann, FTYPE *CUf, FTYPE *CUnew, FTYPE *Ui,  FTYPE *Uf, FTYPE *ucum)
+static void dUtoU(int stage, int whichpl, int i, int j, int k, int loc, FTYPE *dUgeom, FTYPE (*dUcomp)[NPR], FTYPE *dUriemann, FTYPE *CUf, FTYPE *CUnew, FTYPE *Ui,  FTYPE *Uf, FTYPE *ucum)
 {
   int pl,pliter;
-  void dUtoU_check(int i, int j, int k, int loc, int pl, FTYPE *dUgeom, FTYPE *dUriemann, FTYPE *CUf, FTYPE *CUnew, FTYPE *Ui,  FTYPE *Uf, FTYPE *ucum);
+  void dUtoU_check(int stage, int i, int j, int k, int loc, int pl, FTYPE *dUgeom, FTYPE (*dUcomp)[NPR], FTYPE *dUriemann, FTYPE *CUf, FTYPE *CUnew, FTYPE *Ui,  FTYPE *Uf, FTYPE *ucum);
 
   int special;
   if(whichpl==DOSPECIALPL){
@@ -3231,30 +3241,74 @@ static void dUtoU(int whichpl, int i, int j, int k, int loc, FTYPE *dUgeom, FTYP
   else special=0;
 
 
+
+  // get physics non-geometry source terms
+  FTYPE dUrad[NPR+NSPECIAL],dUnonrad[NPR+NSPECIAL]; // NSPECIAL part only used if whichpl==DOSPECIALPL
+  int sc;
+  PALLLOOPSPECIAL(pl,special){
+    dUrad[pl]=0.0; // init as zero
+    // only sc=RADSOURCE is in implicit part, so only separate that out
+    sc=RADSOURCE;
+    if(pl<NPR) dUrad[pl] = dUcomp[sc][pl]; // dUcomp always NPR, but dUrad over full range possible
+
+    // all terms except RADSOURCE
+    dUnonrad[pl] = dUgeom[pl] - dUrad[pl];
+  }
+
+  // initialize dUradall as zero.  Ensure initialized for any possible pl's
+  FTYPE dUradall[NPR][MAXTIMEORDER];
+  int ii,jj;
+  for(ii=0;ii<MAXTIMEORDER;ii++){
+    PLOOP(pliter,pl) dUradall[pl][ii]=0.0;
+    PALLLOOPSPECIAL(pl,special) dUradall[pl][ii]=0.0;
+    PLOOPBONLY(pl) dUradall[pl][ii]=0.0;
+  }
+
+
+  // store physics dU's that could need an implicit treatment
+#if(EOMRADTYPE!=EOMRADNONE)
+  // only non-field case
+  if(whichpl==DOALLPL || whichpl==DONONBPL){
+    PLOOP(pliter,pl){
+      GLOBALMACP1A1(Mradk,stage,i,j,k,pl) = dUrad[pl]; // USE OF GLOBALS // only NPR pl's exist for Mradk
+    }
+      
+    // now assign dUradall for radiation
+    for(ii=0;ii<=stage;ii++){ // stage goes from 0..TIMEORDER-1 inclusive
+      PLOOP(pliter,pl) dUradall[pl][ii] = GLOBALMACP1A1(Mradk,ii,i,j,k,pl); // radiation could affect any pl's, but only NPR pl's exist for Mradk GODMARK -- issue with dissmeasure?
+    }
+  }
+#else
+  // then assume not related to implicit radiation but still done per stage as if explicit
+  ii=stage;
+  PALLLOOPSPECIAL(pl,special) dUradall[pl][ii] = dUrad[pl];
+#endif
+
+
   if(whichpl==DOALLPL){
     // finally assign new Uf and ucum
     // store uf to avoid recomputing U(pf) used later as pb for advance()
-    PALLLOOPSPECIAL(pl,special) Uf[pl] = UFSET(CUf,dt,Ui[pl],Uf[pl],dUriemann[pl],dUgeom[pl]);
+    PALLLOOPSPECIAL(pl,special) Uf[pl] = UFSET(CUf,dt,Ui[pl],Uf[pl],dUriemann[pl],dUnonrad[pl],dUradall[pl]);
     
     
     // how much of Ui, dU, and Uf to keep for final solution
     // ultimately ucum is actual solution used to find final pf
-    PALLLOOPSPECIAL(pl,special) ucum[pl] += UCUMUPDATE(CUnew,dt,Ui[pl],Uf[pl],dUriemann[pl],dUgeom[pl]);
+    PALLLOOPSPECIAL(pl,special) ucum[pl] += UCUMUPDATE(CUnew,dt,Ui[pl],Uf[pl],dUriemann[pl],dUnonrad[pl],dUradall[pl]);
 
 #if(PRODUCTION==0)
     if(FLUXB!=FLUXCTSTAG){// turned off by default for FLUXB==FLUXCTSTAG since even with PRODUCTION==0, FLUXB==FLUXCTSTAG's extended loop causes output at edges.
-      PLOOP(pliter,pl) dUtoU_check(i,j,k,loc,pl, dUgeom, dUriemann, CUf, CUnew, Ui,  Uf, ucum);
+      PLOOP(pliter,pl) dUtoU_check(stage,i,j,k,loc,pl, dUgeom, dUcomp, dUriemann, CUf, CUnew, Ui,  Uf, ucum);
     }
 #endif
 
   }
   else if(whichpl==DOBPL){
-    PLOOPBONLY(pl) Uf[pl] = UFSET(CUf,dt,Ui[pl],Uf[pl],dUriemann[pl],dUgeom[pl]);
-    PLOOPBONLY(pl) ucum[pl] += UCUMUPDATE(CUnew,dt,Ui[pl],Uf[pl],dUriemann[pl],dUgeom[pl]);
+    PLOOPBONLY(pl) Uf[pl] = UFSET(CUf,dt,Ui[pl],Uf[pl],dUriemann[pl],dUnonrad[pl],dUradall[pl]);
+    PLOOPBONLY(pl) ucum[pl] += UCUMUPDATE(CUnew,dt,Ui[pl],Uf[pl],dUriemann[pl],dUnonrad[pl],dUradall[pl]);
   }
   else if(whichpl==DONONBPL){
-    PALLLOOPSPECIAL(pl,special) if(!BPL(pl)) Uf[pl] = UFSET(CUf,dt,Ui[pl],Uf[pl],dUriemann[pl],dUgeom[pl]);
-    PALLLOOPSPECIAL(pl,special) if(!BPL(pl)) ucum[pl] += UCUMUPDATE(CUnew,dt,Ui[pl],Uf[pl],dUriemann[pl],dUgeom[pl]);
+    PALLLOOPSPECIAL(pl,special) if(!BPL(pl)) Uf[pl] = UFSET(CUf,dt,Ui[pl],Uf[pl],dUriemann[pl],dUnonrad[pl],dUradall[pl]);
+    PALLLOOPSPECIAL(pl,special) if(!BPL(pl)) ucum[pl] += UCUMUPDATE(CUnew,dt,Ui[pl],Uf[pl],dUriemann[pl],dUnonrad[pl],dUradall[pl]);
   }
 
   //  if(nstep==4 && steppart==0 && whichpl==DONONBPL){
@@ -3267,7 +3321,7 @@ static void dUtoU(int whichpl, int i, int j, int k, int loc, FTYPE *dUgeom, FTYP
 
 
 // Check result of dUtoU()
-static void dUtoU_check(int i, int j, int k, int loc, int pl, FTYPE *dUgeom, FTYPE *dUriemann, FTYPE *CUf, FTYPE *CUnew, FTYPE *Ui,  FTYPE *Uf, FTYPE *ucum)
+static void dUtoU_check(int stage, int i, int j, int k, int loc, int pl, FTYPE *dUgeom, FTYPE (*dUcomp)[NPR], FTYPE *dUriemann, FTYPE *CUf, FTYPE *CUnew, FTYPE *Ui,  FTYPE *Uf, FTYPE *ucum)
 {
   int showfluxes;
   void show_fluxes(int i, int j, int k, int loc, int pl,FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL]);

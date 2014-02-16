@@ -43,7 +43,7 @@ int faildebug1(int numnormterms, int whichcons, FTYPE *U_target, FTYPE *EOSextra
   primtoflux(UNOTHING,pr0, &q, 2,ptrgeom, flux[1], NULL);
   primtoflux(UNOTHING,pr0, &q, 3,ptrgeom, flux[2], NULL);
   PLOOP(pliter,pl) Uwithgeom[pl]=Ustart[pl]*ptrgeom->EOMFUNCMAC(pl);
-  FTYPE CUf[4]={1.0};
+  FTYPE CUf[NUMDTCUFS]={1.0};
   int didreturnpf=0;
   int eomtype=EOMDEFAULT;
   source(pr0, pr0, pr0, &didreturnpf, &eomtype, ptrgeom, &q, Uwithgeom, Uwithgeom, CUf, 0.0, dUriemann, dUcomp,dU);
@@ -250,7 +250,7 @@ int faildebug2(int numnormterms, int whichcons, FTYPE *U_target, FTYPE *EOSextra
   primtoflux(UNOTHING,pr0, &q, 2,ptrgeom, flux[1], NULL);
   primtoflux(UNOTHING,pr0, &q, 3,ptrgeom, flux[2], NULL);
   PLOOP(pliter,pl) Uwithgeom[pl]=Ustart[pl]*ptrgeom->EOMFUNCMAC(pl);
-  FTYPE CUf[4]={1.0};
+  FTYPE CUf[NUMDTCUFS]={1.0};
   int didreturnpf=0;
   int eomtype=EOMDEFAULT;
   source(pr0, pr0, pr0, &didreturnpf, &eomtype, ptrgeom, &q, Uwithgeom, Uwithgeom, CUf, 0.0, dUriemann, dUcomp,dU);

@@ -1,0 +1,94 @@
+#!/bin/bash
+
+# See: https://www.tacc.utexas.edu/user-services/user-guides/stampede-user-guide
+
+# To run, do: sbatch batch.slurm.kraken.radm2a0.8 
+
+#SBATCH -n 4096              # total number of mpi tasks requested
+#SBATCH -p normal # normal: up to 4096 cores.  
+#SBATCH -t 24:00:00        # run time (hh:mm:ss) - 1.5 hours
+#SBATCH --mail-user=pseudotensor@gmail.com
+#SBATCH --mail-type=begin  # email me when the job starts
+#SBATCH --mail-type=end    # email me when the job finishes
+#SBATCH -A TG-PHY120005
+#SBATCH -J radm2a0.8a
+#SBATCH -o radm2a0.8a.out
+#SBATCH -e radm2a0.8a.err
+
+cd $SCRATCH
+          
+###################
+#
+# setup run
+#
+##################
+#
+export NCPUX1=32
+export NCPUX2=16
+export NCPUX3=8
+export NTOT=4096
+export FILENAME="grmhd"
+export DIRFILE="/home1/01014/tg802609/radm2a0.8/"
+firstrun=1 # choose, 0 for first time, 1 for rest
+
+
+if [ $firstrun -eq 0 ]
+then
+    # setup files
+    cd $DIRFILE
+    # 0 0 means don't modify or sumbit batch job.  Just do copy of rdump and other stuff needed
+    # don't do this the very first time run job.  Just like 1 0 below for aprun, this only happens when restarting
+    sh krakenrestartsustain_rad1.sh 0 0 2 radm2a0.8 radm2a0.8 a b
+fi
+export RUNDIR=$SCRATCH/radm2a0.8a/
+
+#############
+echo "ncpux1 $NCPUX1"
+echo "ncpux2 $NCPUX2"
+echo "ncpux3 $NCPUX3"
+echo "ntot $NTOT"
+echo "filename $FILENAME"
+echo "dirfile $DIRFILE"
+echo "rundir $RUNDIR"
+############################
+#
+# rest shouldn't change
+#
+###############################
+export BEFOREDIR=`pwd`
+mkdir -p $RUNDIR
+cd $RUNDIR
+
+mkdir -p dumps
+mkdir -p images
+
+# get executable and input files from mass storage
+cp $DIRFILE/$FILENAME .
+cp $DIRFILE/*.dat .
+cp $DIRFILE/*.txt .
+
+wait
+chmod u+x $FILENAME
+wait
+
+##################################################
+#
+#    start job
+#
+##################################################
+
+
+date
+
+export MKL_MIC_ENABLE=1
+
+if [ $firstrun -eq 0 ]
+then
+    # restart:
+    ibrun -np $NTOT $RUNDIR/$FILENAME $NCPUX1 $NCPUX2 $NCPUX3 1 0
+else
+    # first start:
+    ibrun -np $NTOT $RUNDIR/$FILENAME $NCPUX1 $NCPUX2 $NCPUX3
+fi
+
+date

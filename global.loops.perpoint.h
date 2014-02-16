@@ -218,7 +218,7 @@
 #define COLLOOP(coliter) for(coliter=0;coliter<numfiles;coliter++)
 
 
-#define DTSTAGELOOP(dtstage) for(dtstage=0;dtstage<MAXDTSTAGES;dtstage++)
+#define DTSTAGELOOP(dtstage) for(dtstage=0;dtstage<MAXITERDTSTAGES;dtstage++)
 
 #define INTERPENOTYPELOOP(interpi) for(interpi=0;interpi<NUMENOINTERPTYPES;interpi++)
 

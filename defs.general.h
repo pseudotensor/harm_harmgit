@@ -125,7 +125,7 @@ int global_enerregiondef[NUMENERREGIONS][NUMUPDOWN][NDIM];
 
 /* global flags */
 int failed;
-int lim[NDIM],fluxmethod,FLUXB,UTOPRIMVERSION,TIMEORDER,DOENOFLUX,avgscheme[NDIM];
+int lim[NDIM],fluxmethod,FLUXB,UTOPRIMVERSION,TIMEORDER,TIMETYPE,DOENOFLUX,avgscheme[NDIM];
 int dofluxreconevolvepointfield,emffixedstencil,extrazones4emf,splitmaem,unewisavg;
 int do_transverse_flux_integration[NPR],do_conserved_integration[NPR],do_source_integration[NPR];
 int useghostplusactive;

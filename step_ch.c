@@ -11,9 +11,9 @@
 static void setup_rktimestep(int truestep, int *numtimeorders,
                              FTYPE (*p)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR],
                              FTYPE (*pk)[NSTORE1][NSTORE2][NSTORE3][NPR],
-                             FTYPE (*pii[4])[NSTORE2][NSTORE3][NPR],FTYPE (*pbb[4])[NSTORE2][NSTORE3][NPR],FTYPE (*pff[4])[NSTORE2][NSTORE3][NPR],
-                             FTYPE (*uii[4])[NSTORE2][NSTORE3][NPR],FTYPE (*uff[4])[NSTORE2][NSTORE3][NPR],FTYPE (*ucum[4])[NSTORE2][NSTORE3][NPR],
-                             FTYPE (*CUf)[4],FTYPE (*Cunew)[4]);
+                             FTYPE (*pii[MAXTIMEORDER])[NSTORE2][NSTORE3][NPR],FTYPE (*pbb[MAXTIMEORDER])[NSTORE2][NSTORE3][NPR],FTYPE (*pff[MAXTIMEORDER])[NSTORE2][NSTORE3][NPR],
+                             FTYPE (*uii[MAXTIMEORDER])[NSTORE2][NSTORE3][NPR],FTYPE (*uff[MAXTIMEORDER])[NSTORE2][NSTORE3][NPR],FTYPE (*ucum[MAXTIMEORDER])[NSTORE2][NSTORE3][NPR],
+                             FTYPE (*CUf)[NUMDTCUFS],FTYPE (*Cunew)[NUMDTCUFS]);
 
 
 
@@ -598,14 +598,23 @@ int step_ch_simplempi(int truestep, int *dumpingnext, FTYPE *fullndt, FTYPE (*pr
   FTYPE (*pb)[NSTORE2][NSTORE3][NPR];
   FTYPE (*pf)[NSTORE2][NSTORE3][NPR];
   FTYPE (*prevpf)[NSTORE2][NSTORE3][NPR];
-  FTYPE (*pii[4])[NSTORE2][NSTORE3][NPR];
-  FTYPE (*pbb[4])[NSTORE2][NSTORE3][NPR];
-  FTYPE (*pff[4])[NSTORE2][NSTORE3][NPR];
-  FTYPE (*uii[4])[NSTORE2][NSTORE3][NPR];
-  FTYPE (*uff[4])[NSTORE2][NSTORE3][NPR];
-  FTYPE (*ucum[4])[NSTORE2][NSTORE3][NPR];
+  FTYPE (*pii[MAXTIMEORDER])[NSTORE2][NSTORE3][NPR];
+  FTYPE (*pbb[MAXTIMEORDER])[NSTORE2][NSTORE3][NPR];
+  FTYPE (*pff[MAXTIMEORDER])[NSTORE2][NSTORE3][NPR];
+  FTYPE (*uii[MAXTIMEORDER])[NSTORE2][NSTORE3][NPR];
+  FTYPE (*uff[MAXTIMEORDER])[NSTORE2][NSTORE3][NPR];
+  FTYPE (*ucum[MAXTIMEORDER])[NSTORE2][NSTORE3][NPR];
   //  FTYPE alphaik[MAXSTAGES][MAXSTAGES],betaik[MAXSTAGES];
-  FTYPE CUf[MAXTIMEORDER][4],Cunew[MAXTIMEORDER][4];
+  FTYPE CUf[MAXTIMEORDER][NUMDTCUFS],Cunew[MAXTIMEORDER][NUMDTCUFS];
+  // initialize CUf and Cunew to be zero
+  int ii,jj;
+  for(ii=0;ii<MAXTIMEORDER;ii++){
+    for(jj=0;jj<NUMDTCUFS;jj++){
+      CUf[ii][jj]=Cunew[ii][jj]=0.0;
+    }
+  }
+
+
   int i, j, k;
   int numtimeorders;
   int timeorder;
@@ -902,12 +911,12 @@ int step_ch_simplempi(int truestep, int *dumpingnext, FTYPE *fullndt, FTYPE (*pr
 
 
 // Obtain initial time of substep, final time of substep, and true dt used for flux conservation that is used to iterate ucum in advance.c
-void get_truetime_fluxdt(int numtimeorders, SFTYPE localdt, FTYPE (*CUf)[4], FTYPE (*Cunew)[4], SFTYPE *fluxdt, SFTYPE *boundtime, SFTYPE *fluxtime, SFTYPE *tstepparti, SFTYPE *tsteppartf)
+void get_truetime_fluxdt(int numtimeorders, SFTYPE localdt, FTYPE (*CUf)[NUMDTCUFS], FTYPE (*Cunew)[NUMDTCUFS], SFTYPE *fluxdt, SFTYPE *boundtime, SFTYPE *fluxtime, SFTYPE *tstepparti, SFTYPE *tsteppartf)
 {
   int timeorder;
   SFTYPE ufdt[MAXTIMEORDER],ucumdt[MAXTIMEORDER];
   SFTYPE oldufdt,olducumdt;
-  FTYPE Ui, dUriemann, dUgeom;
+  FTYPE Ui, dUriemann, dUgeom ;
 
 
   //  NOT YET:
@@ -937,6 +946,7 @@ void get_truetime_fluxdt(int numtimeorders, SFTYPE localdt, FTYPE (*CUf)[4], FTY
   boundtime[0] = 0.0; // initialize
   fluxtime[0] = 0.0; // initialize
   Ui=dUgeom=0.0; // don't care about update from non-flux terms
+  FTYPE dUnongeomall[MAXTIMEORDER]={0.0};
   dUriemann=1.0; // indicates want dt applied on flux update
 
   // loop up to current substep to get current fluxdt
@@ -951,10 +961,10 @@ void get_truetime_fluxdt(int numtimeorders, SFTYPE localdt, FTYPE (*CUf)[4], FTY
     }
 
     // follows dUtoU() in advance.c
-    ufdt[timeorder] = UFSET(CUf[timeorder],localdt,Ui,oldufdt,dUriemann,dUgeom);
+    ufdt[timeorder] = UFSET(CUf[timeorder],localdt,Ui,oldufdt,dUriemann,dUgeom,dUnongeomall);
     // below is NOT += since just want current change, not all prior changes
     // if did +=, then get 1 for timeorder==numtimeorders-1 as required!
-    ucumdt[timeorder] = UCUMUPDATE(Cunew[timeorder],localdt,Ui,ufdt[timeorder],dUriemann,dUgeom);
+    ucumdt[timeorder] = UCUMUPDATE(Cunew[timeorder],localdt,Ui,ufdt[timeorder],dUriemann,dUgeom,dUnongeomall);
 
     // assuming fluxdt used before any calls in advance.c
     // then represents *amount* of flux'ed stuff in time dt
@@ -1074,14 +1084,14 @@ int step_ch_supermpi(int truestep, int *dumpingnext, FTYPE *fullndt, FTYPE (*pri
   FTYPE (*pb)[NSTORE2][NSTORE3][NPR];
   FTYPE (*pf)[NSTORE2][NSTORE3][NPR];
   FTYPE (*prevpf)[NSTORE2][NSTORE3][NPR];
-  FTYPE (*pii[4])[NSTORE2][NSTORE3][NPR];
-  FTYPE (*pbb[4])[NSTORE2][NSTORE3][NPR];
-  FTYPE (*pff[4])[NSTORE2][NSTORE3][NPR];
-  FTYPE (*uii[4])[NSTORE2][NSTORE3][NPR];
-  FTYPE (*uff[4])[NSTORE2][NSTORE3][NPR];
-  FTYPE (*ucum[4])[NSTORE2][NSTORE3][NPR];
+  FTYPE (*pii[MAXTIMEORDER])[NSTORE2][NSTORE3][NPR];
+  FTYPE (*pbb[MAXTIMEORDER])[NSTORE2][NSTORE3][NPR];
+  FTYPE (*pff[MAXTIMEORDER])[NSTORE2][NSTORE3][NPR];
+  FTYPE (*uii[MAXTIMEORDER])[NSTORE2][NSTORE3][NPR];
+  FTYPE (*uff[MAXTIMEORDER])[NSTORE2][NSTORE3][NPR];
+  FTYPE (*ucum[MAXTIMEORDER])[NSTORE2][NSTORE3][NPR];
   //  FTYPE alphaik[MAXSTAGES][MAXSTAGES],betaik[MAXSTAGES];
-  FTYPE CUf[MAXTIMEORDER][4],Cunew[MAXTIMEORDER][4];
+  FTYPE CUf[MAXTIMEORDER][NUMDTCUFS],Cunew[MAXTIMEORDER][NUMDTCUFS];
   int i, j, k, pl, pliter;
   int numtimeorders;
   int finalstep;
@@ -1260,9 +1270,11 @@ int step_ch_supermpi(int truestep, int *dumpingnext, FTYPE *fullndt, FTYPE (*pri
 
 // for the ith stage:
 
-// Uf^i = ulast^i = CUf^{i0} Ui^i + CUf^{i1} ulast^i + CUf^{i2} dU^i
+// Uf^i = ulast^i = CUf^{i0} Ui^i + CUf^{i1} ulast^i + CUf^{i2} dUexplicit^i + CUf^{i4} dUimplicit^i
 
-// unew^i = Cunew^{i0} Ui^i + Cunew^{i1} dU^i + Cunew^{i2} Uf^i [SUPERNOTE: currently only TIMEORDER==4 has final unew different from final uf.  This factis usd in utoprimgen.c to avoid inversion if requested, unless cannot because unew must itself be inverted.]
+// unew^i = Cunew^{i0} Ui^i + Cunew^{i1} dUexplicit^i + Cunew^{i2} Uf^i  + Cunew^{i4} dUimplicit^i
+
+// [SUPERNOTE: currently only TIMEORDER==4 has final unew different from final uf.  This factis usd in utoprimgen.c to avoid inversion if requested, unless cannot because unew must itself be inverted.]
 
 // (how also used) CUf[timeorder][2] : t + dt*CUf[timeorder][3]+ dt*CUf[timeorder][2] = time of pf
 
@@ -1275,136 +1287,296 @@ int step_ch_supermpi(int truestep, int *dumpingnext, FTYPE *fullndt, FTYPE (*pri
 void setup_rktimestep(int truestep, int *numtimeorders,
                       FTYPE (*p)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR],
                       FTYPE (*pk)[NSTORE1][NSTORE2][NSTORE3][NPR],
-                      FTYPE (*pii[4])[NSTORE2][NSTORE3][NPR],FTYPE (*pbb[4])[NSTORE2][NSTORE3][NPR],FTYPE (*pff[4])[NSTORE2][NSTORE3][NPR],
-                      FTYPE (*uii[4])[NSTORE2][NSTORE3][NPR],FTYPE (*uff[4])[NSTORE2][NSTORE3][NPR],FTYPE (*ucum[4])[NSTORE2][NSTORE3][NPR],
-                      FTYPE (*CUf)[4],FTYPE (*Cunew)[4])
+                      FTYPE (*pii[MAXTIMEORDER])[NSTORE2][NSTORE3][NPR],FTYPE (*pbb[MAXTIMEORDER])[NSTORE2][NSTORE3][NPR],FTYPE (*pff[MAXTIMEORDER])[NSTORE2][NSTORE3][NPR],
+                      FTYPE (*uii[MAXTIMEORDER])[NSTORE2][NSTORE3][NPR],FTYPE (*uff[MAXTIMEORDER])[NSTORE2][NSTORE3][NPR],FTYPE (*ucum[MAXTIMEORDER])[NSTORE2][NSTORE3][NPR],
+                      FTYPE (*CUf)[NUMDTCUFS],FTYPE (*Cunew)[NUMDTCUFS])
 {
 
 
+  
+  //////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // EXPLICIT TIME STEPPING
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////
 
 
-  // to avoid special copying of final pff->p, always use p as final pff
-  if(TIMEORDER==4 && truestep){
-    // RK4 stepping
-    *numtimeorders=4;
+  if(TIMETYPE==TIMEEXPLICIT){
 
-    // Ui ulast dU(pb)
-    CUf[0][0]=1.0;  CUf[0][1]=0.0;      CUf[0][2]=0.5;  CUf[0][3] = 0.0;
-    CUf[1][0]=1.0;  CUf[1][1]=0.0;      CUf[1][2]=0.5;  CUf[1][3] = 0.0;
-    CUf[2][0]=1.0;  CUf[2][1]=0.0;      CUf[2][2]=1.0;  CUf[2][3] = 0.0;
-    CUf[3][0]=1.0;  CUf[3][1]=0.0;      CUf[3][2]=1.0;  CUf[3][3] = 0.0;
 
-    // Ui dU(Ub) Uf
-    Cunew[0][0]=1.0;  Cunew[0][1]=1.0/6.0;      Cunew[0][2]=0.0;  Cunew[0][3] = 0.0;
-    Cunew[1][0]=0.0;  Cunew[1][1]=1.0/3.0;      Cunew[1][2]=0.0;  Cunew[1][3] = 0.5;
-    Cunew[2][0]=0.0;  Cunew[2][1]=1.0/3.0;      Cunew[2][2]=0.0;  Cunew[2][3] = 0.5;
-    Cunew[3][0]=0.0;  Cunew[3][1]=1.0/6.0;      Cunew[3][2]=0.0;  Cunew[3][3] = 1.0;
 
-    //primitive values used for initial state, fluxes, final state (where you output)
-    pii[0]=p;    pbb[0]=p;       pff[0]=pk[0]; // produces U1
-    pii[1]=p;    pbb[1]=pk[0];   pff[1]=pk[1]; // produces U2
-    pii[2]=p;    pbb[2]=pk[1];   pff[2]=pk[0]; // produces U3
-    pii[3]=p;    pbb[3]=pk[0];   pff[3]=p; // produces U4 (only dU part used)
+    // to avoid special copying of final pff->p, always use p as final pff
+    if(TIMEORDER==4 && truestep){
+      // RK4 stepping
+      *numtimeorders=4;
+
+      // Ui ulast dUe(pb) <timestuff> dUi(Uf)
+      CUf[0][0]=1.0;  CUf[0][1]=0.0;      CUf[0][2]=0.5;  CUf[0][3] = 0.0;  CUf[0][4+0] = CUf[0][2];
+      CUf[1][0]=1.0;  CUf[1][1]=0.0;      CUf[1][2]=0.5;  CUf[1][3] = 0.0;  CUf[1][4+1] = CUf[1][2];
+      CUf[2][0]=1.0;  CUf[2][1]=0.0;      CUf[2][2]=1.0;  CUf[2][3] = 0.0;  CUf[2][4+2] = CUf[2][2];
+      CUf[3][0]=1.0;  CUf[3][1]=0.0;      CUf[3][2]=1.0;  CUf[3][3] = 0.0;  CUf[3][4+3] = CUf[3][2];
+
+      // Ui dUe(Ub) Uf <timestuff> dUi(Uf)
+      Cunew[0][0]=1.0;  Cunew[0][1]=1.0/6.0;      Cunew[0][2]=0.0;  Cunew[0][3] = 0.0;  Cunew[0][4+0] = Cunew[0][1];
+      Cunew[1][0]=0.0;  Cunew[1][1]=1.0/3.0;      Cunew[1][2]=0.0;  Cunew[1][3] = 0.5;  Cunew[1][4+1] = Cunew[1][1];
+      Cunew[2][0]=0.0;  Cunew[2][1]=1.0/3.0;      Cunew[2][2]=0.0;  Cunew[2][3] = 0.5;  Cunew[2][4+2] = Cunew[2][1];
+      Cunew[3][0]=0.0;  Cunew[3][1]=1.0/6.0;      Cunew[3][2]=0.0;  Cunew[3][3] = 1.0;  Cunew[3][4+3] = Cunew[3][1];
+
+      //primitive values used for initial state, fluxes, final state (where you output)
+      pii[0]=p;    pbb[0]=p;       pff[0]=pk[0]; // produces U1
+      pii[1]=p;    pbb[1]=pk[0];   pff[1]=pk[1]; // produces U2
+      pii[2]=p;    pbb[2]=pk[1];   pff[2]=pk[0]; // produces U3
+      pii[3]=p;    pbb[3]=pk[0];   pff[3]=p; // produces U4 (only dUe part used)
     
-    // GODMARK: use of globals: just scratch anyways
-    uii[0]=GLOBALPOINT(uinitialglobal);  uff[0]=GLOBALPOINT(ulastglobal); ucum[0]=ucons;
-    uii[1]=GLOBALPOINT(uinitialglobal);  uff[1]=GLOBALPOINT(ulastglobal); ucum[1]=ucons;
-    uii[2]=GLOBALPOINT(uinitialglobal);  uff[2]=GLOBALPOINT(ulastglobal); ucum[2]=ucons;
-    uii[3]=GLOBALPOINT(uinitialglobal);  uff[3]=GLOBALPOINT(ulastglobal); ucum[3]=ucons;
+      // GODMARK: use of globals: just scratch anyways
+      uii[0]=GLOBALPOINT(uinitialglobal);  uff[0]=GLOBALPOINT(ulastglobal); ucum[0]=ucons;
+      uii[1]=GLOBALPOINT(uinitialglobal);  uff[1]=GLOBALPOINT(ulastglobal); ucum[1]=ucons;
+      uii[2]=GLOBALPOINT(uinitialglobal);  uff[2]=GLOBALPOINT(ulastglobal); ucum[2]=ucons;
+      uii[3]=GLOBALPOINT(uinitialglobal);  uff[3]=GLOBALPOINT(ulastglobal); ucum[3]=ucons;
 
-    // GODMARK: note that pbstag (staggered field from conserved de-averaging and inversion to primitive no geometry version) is always same memory space and comes from operating on final inverted quantity (ulastglobal or ucons), so just use same quantity for now and avoid adding extra code for pbstag[]
-    //    pbstag[0]=pstagglobal;
-    //    pbstag[1]=pstagglobal;
-    //    pbstag[2]=pstagglobal;
-    //    pbstag[3]=pstagglobal;
+      // GODMARK: note that pbstag (staggered field from conserved de-averaging and inversion to primitive no geometry version) is always same memory space and comes from operating on final inverted quantity (ulastglobal or ucons), so just use same quantity for now and avoid adding extra code for pbstag[]
+      //    pbstag[0]=pstagglobal;
+      //    pbstag[1]=pstagglobal;
+      //    pbstag[2]=pstagglobal;
+      //    pbstag[3]=pstagglobal;
 
-  }
-  else if(TIMEORDER==3  && truestep){
-    // TVD optimal RK3 method as in Shu's report
-    *numtimeorders=3;
+    }
+    else if(TIMEORDER==3  && truestep){
+      // TVD optimal RK3 method as in Shu's report
+      *numtimeorders=3;
     
-    // Ui ulastglobal dU(pb)
-    CUf[0][0]=1.0;      CUf[0][1]=0.0;      CUf[0][2]=1.0;      CUf[0][3] = 0.0;
-    CUf[1][0]=3.0/4.0;  CUf[1][1]=1.0/4.0;  CUf[1][2]=1.0/4.0;  CUf[1][3] = 0.0;
-    CUf[2][0]=1.0/3.0;  CUf[2][1]=2.0/3.0;  CUf[2][2]=2.0/3.0;  CUf[2][3] = 0.0;
+      // Ui ulastglobal dUe(pb) <timestuff> dUi(Uf)
+      CUf[0][0]=1.0;      CUf[0][1]=0.0;      CUf[0][2]=1.0;      CUf[0][3] = 0.0;  CUf[0][4+0] = CUf[0][2];
+      CUf[1][0]=3.0/4.0;  CUf[1][1]=1.0/4.0;  CUf[1][2]=1.0/4.0;  CUf[1][3] = 0.0;  CUf[1][4+1] = CUf[1][2];
+      CUf[2][0]=1.0/3.0;  CUf[2][1]=2.0/3.0;  CUf[2][2]=2.0/3.0;  CUf[2][3] = 0.0;  CUf[2][4+2] = CUf[2][2];
     
-    // Ui dU(Ub) Uf
-    // ucons=U3
-    Cunew[0][0]=0.0;   Cunew[0][1]=0.0;      Cunew[0][2]=0.0;  Cunew[0][3] = 0.0;
-    Cunew[1][0]=0.0;   Cunew[1][1]=0.0;      Cunew[1][2]=0.0;  Cunew[1][3] = 1.0;
-    Cunew[2][0]=0.0;   Cunew[2][1]=0.0;      Cunew[2][2]=1.0;  Cunew[2][3] = 1.0/4.0;
+      // Ui dUe(Ub) Uf <timestuff> dUi(Uf)
+      // ucons=U3
+      Cunew[0][0]=0.0;   Cunew[0][1]=0.0;      Cunew[0][2]=0.0;  Cunew[0][3] = 0.0;     Cunew[0][4+0] = Cunew[0][1];
+      Cunew[1][0]=0.0;   Cunew[1][1]=0.0;      Cunew[1][2]=0.0;  Cunew[1][3] = 1.0;     Cunew[1][4+1] = Cunew[1][1];
+      Cunew[2][0]=0.0;   Cunew[2][1]=0.0;      Cunew[2][2]=1.0;  Cunew[2][3] = 1.0/4.0; Cunew[2][4+2] = Cunew[2][1];
     
-    //always starting the substeps from the initial time
-    pii[0]=p;      pbb[0]=p;       pff[0]=pk[0]; // produces U1
-    pii[1]=p;      pbb[1]=pk[0];   pff[1]=pk[1]; // produces U2
-    pii[2]=p;      pbb[2]=pk[1];   pff[2]=p; // produces U3
+      //always starting the substeps from the initial time
+      pii[0]=p;      pbb[0]=p;       pff[0]=pk[0]; // produces U1
+      pii[1]=p;      pbb[1]=pk[0];   pff[1]=pk[1]; // produces U2
+      pii[2]=p;      pbb[2]=pk[1];   pff[2]=p; // produces U3
 
-    // GODMARK: use of globals: just scratch anyways
-    uii[0]=GLOBALPOINT(uinitialglobal);  uff[0]=GLOBALPOINT(ulastglobal); ucum[0]=ucons;
-    uii[1]=GLOBALPOINT(uinitialglobal);  uff[1]=GLOBALPOINT(ulastglobal); ucum[1]=ucons;
-    uii[2]=GLOBALPOINT(uinitialglobal);  uff[2]=GLOBALPOINT(ulastglobal); ucum[2]=ucons;
+      // GODMARK: use of globals: just scratch anyways
+      uii[0]=GLOBALPOINT(uinitialglobal);  uff[0]=GLOBALPOINT(ulastglobal); ucum[0]=ucons;
+      uii[1]=GLOBALPOINT(uinitialglobal);  uff[1]=GLOBALPOINT(ulastglobal); ucum[1]=ucons;
+      uii[2]=GLOBALPOINT(uinitialglobal);  uff[2]=GLOBALPOINT(ulastglobal); ucum[2]=ucons;
 
-  }
-  else if(TIMEORDER==2  && truestep){
+    }
+    else if(TIMEORDER==2  && truestep){
 #if(0)
-    // midpoint method
+      // midpoint method
 
-    *numtimeorders=2;
+      *numtimeorders=2;
 
-    // old ucons not used for this method (i.e. [?][1]=0)
-    CUf[0][0]=1.0; CUf[0][1]=0.0; CUf[0][2]=0.5; CUf[0][3] = 0.0;
-    CUf[1][0]=1.0; CUf[1][1]=0.0; CUf[1][2]=1.0; CUf[1][3] = 0.0;
+      // old ucons not used for this method (i.e. [?][1]=0)
+      // Ui ulast dUe(pb) <timestuff> dUi(Uf)
+      CUf[0][0]=1.0; CUf[0][1]=0.0; CUf[0][2]=0.5; CUf[0][3] = 0.0;  CUf[0][4+0] = CUf[0][2];
+      CUf[1][0]=1.0; CUf[1][1]=0.0; CUf[1][2]=1.0; CUf[1][3] = 0.0;  CUf[1][4+1] = CUf[1][2];
 
-    // Ui dU(Ub) Uf
-    // ucons=U2
-    Cunew[0][0]=0.0;   Cunew[0][1]=0.0;      Cunew[0][2]=0.0;  Cunew[0][3] = 0.0;
-    Cunew[1][0]=0.0;   Cunew[1][1]=0.0;      Cunew[1][2]=1.0;  Cunew[1][3] = 0.5;
+      // Ui dUe(Ub) Uf <timestuff> dUi(Uf)
+      // ucons=U2
+      Cunew[0][0]=0.0;   Cunew[0][1]=0.0;      Cunew[0][2]=0.0;  Cunew[0][3] = 0.0;  Cunew[0][4+0] = Cunew[0][1];
+      Cunew[1][0]=0.0;   Cunew[1][1]=0.0;      Cunew[1][2]=1.0;  Cunew[1][3] = 0.5;  Cunew[1][4+1] = Cunew[1][1];
 
-    pii[0]=p;    pbb[0]=p;       pff[0]=pk[0];
-    pii[1]=p;    pbb[1]=pk[0];   pff[1]=p;
+      pii[0]=p;    pbb[0]=p;       pff[0]=pk[0];
+      pii[1]=p;    pbb[1]=pk[0];   pff[1]=p;
 
-    // GODMARK: use of globals: just scratch anyways
-    uii[0]=GLOBALPOINT(uinitialglobal);  uff[0]=GLOBALPOINT(ulastglobal); ucum[0]=ucons;
-    uii[1]=GLOBALPOINT(uinitialglobal);  uff[1]=GLOBALPOINT(ulastglobal); ucum[1]=ucons;
+      // GODMARK: use of globals: just scratch anyways
+      uii[0]=GLOBALPOINT(uinitialglobal);  uff[0]=GLOBALPOINT(ulastglobal); ucum[0]=ucons;
+      uii[1]=GLOBALPOINT(uinitialglobal);  uff[1]=GLOBALPOINT(ulastglobal); ucum[1]=ucons;
 
 #else
-    *numtimeorders=2;
-    // TVD RK2 (Chi-Wang Shu 1997 - eq 4.10)
-    // actually less robust than generic midpoint method above
+      *numtimeorders=2;
+      // TVD RK2 (Chi-Wang Shu 1997 - eq 4.10)
+      // actually less robust than generic midpoint method above
 
-    CUf[0][0]=1.0; CUf[0][1]=0.0; CUf[0][2]=1.0; CUf[0][3] = 0.0;
-    CUf[1][0]=0.5; CUf[1][1]=0.5; CUf[1][2]=0.5; CUf[1][3] = 0.0;
+      // Ui ulast dUe(pb) <timestuff> dUi(Uf)
+      CUf[0][0]=1.0; CUf[0][1]=0.0; CUf[0][2]=1.0; CUf[0][3] = 0.0;  CUf[0][4+0] = CUf[0][2];
+      CUf[1][0]=0.5; CUf[1][1]=0.5; CUf[1][2]=0.5; CUf[1][3] = 0.0;  CUf[1][4+1] = CUf[1][2];
 
-    // Ui dU(Ub) Uf
-    // ucons=U2
-    Cunew[0][0]=0.0;   Cunew[0][1]=0.0;      Cunew[0][2]=0.0;   Cunew[0][3] = 0.0;
-    Cunew[1][0]=0.0;   Cunew[1][1]=0.0;      Cunew[1][2]=1.0;   Cunew[1][3] = 1.0;
+      // Ui dUe(Ub) Uf <timestuff> dUi(Uf)
+      // ucons=U2
+      Cunew[0][0]=0.0;   Cunew[0][1]=0.0;      Cunew[0][2]=0.0;   Cunew[0][3] = 0.0;  Cunew[0][4+0] = Cunew[0][1];
+      Cunew[1][0]=0.0;   Cunew[1][1]=0.0;      Cunew[1][2]=1.0;   Cunew[1][3] = 1.0;  Cunew[1][4+1] = Cunew[1][1];
 
-    pii[0]=p;    pbb[0]=p;       pff[0]=pk[0];
-    pii[1]=p;    pbb[1]=pk[0];   pff[1]=p;
+      pii[0]=p;    pbb[0]=p;       pff[0]=pk[0];
+      pii[1]=p;    pbb[1]=pk[0];   pff[1]=p;
 
-    // GODMARK: use of globals: just scratch anyways
-    uii[0]=GLOBALPOINT(uinitialglobal);  uff[0]=GLOBALPOINT(ulastglobal); ucum[0]=ucons;
-    uii[1]=GLOBALPOINT(uinitialglobal);  uff[1]=GLOBALPOINT(ulastglobal); ucum[1]=ucons;
+      // GODMARK: use of globals: just scratch anyways
+      uii[0]=GLOBALPOINT(uinitialglobal);  uff[0]=GLOBALPOINT(ulastglobal); ucum[0]=ucons;
+      uii[1]=GLOBALPOINT(uinitialglobal);  uff[1]=GLOBALPOINT(ulastglobal); ucum[1]=ucons;
 
 #endif
+    }
+    else if(TIMEORDER==1 ||  dt==0.0){ // dt==0.0 case is case when just passing through
+      // Euler method
+      *numtimeorders=1;
+
+      // Ui ulast dUe(pb) <timestuff> dUi(Uf)
+      CUf[0][0]=1.0; CUf[0][1]=0.0; CUf[0][2]=1.0; CUf[0][3] = 0.0;   CUf[0][4] = CUf[0][2];
+
+      // Ui dUe(Ub) Uf <timestuff> dUi(Uf)
+      // ucons=U1
+      Cunew[0][0]=0.0;   Cunew[0][1]=0.0;      Cunew[0][2]=1.0;   Cunew[1][3] = 0.0;     Cunew[1][4] = Cunew[0][1];
+
+      pii[0]=p;    pbb[0]=p;    pff[0]=p;
+
+      // GODMARK: use of globals: just scratch anyways
+      uii[0]=GLOBALPOINT(uinitialglobal);  uff[0]=GLOBALPOINT(ulastglobal); ucum[0]=ucons;
+
+    }
   }
-  else if(TIMEORDER==1 ||  dt==0.0){ // dt==0.0 case is case when just passing through
-    // Euler method
-    *numtimeorders=1;
 
-    CUf[0][0]=1.0; CUf[0][1]=0.0; CUf[0][2]=1.0; CUf[0][3] = 0.0;
 
-    // Ui dU(Ub) Uf
-    // ucons=U1
-    Cunew[0][0]=0.0;   Cunew[0][1]=0.0;      Cunew[0][2]=1.0;   Cunew[1][3] = 0.0;
 
-    pii[0]=p;    pbb[0]=p;    pff[0]=p;
+  //////////////////////////////////////////////////////////////////////////////////////////
+  //
+  // IMPLICIT TIME STEPPING
+  //
+  // First stage is just implicit solution (no flux needed)
+  // Last stage is just flux (no implicit source term needed (i.e. no M[timeorder-1] needed), but geometry or any other explicits still needed)
+  //
+  // to avoid special copying of final pff->p, always use p as final pff
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////
+  if(TIMETYPE==TIMEIMPLICIT){
 
-    // GODMARK: use of globals: just scratch anyways
-    uii[0]=GLOBALPOINT(uinitialglobal);  uff[0]=GLOBALPOINT(ulastglobal); ucum[0]=ucons;
+    if(TIMEORDER==5 && truestep){
+      // IMEX3
+      *numtimeorders=5;
+
+      // Ui ulast dUe(pb) <timestuff> dUi(Uf)
+      CUf[0][0]=1.0;  CUf[0][1]=0.0;      CUf[0][2]=0.5;  CUf[0][3] = 0.0;  CUf[0][4+0] = CUf[0][2];
+      CUf[1][0]=1.0;  CUf[1][1]=0.0;      CUf[1][2]=0.5;  CUf[1][3] = 0.0;  CUf[1][4+1] = CUf[1][2];
+      CUf[2][0]=1.0;  CUf[2][1]=0.0;      CUf[2][2]=1.0;  CUf[2][3] = 0.0;  CUf[2][4+2] = CUf[2][2];
+      CUf[3][0]=1.0;  CUf[3][1]=0.0;      CUf[3][2]=1.0;  CUf[3][3] = 0.0;  CUf[3][4+3] = CUf[3][2];
+      CUf[4][0]=1.0;  CUf[4][1]=0.0;      CUf[4][2]=1.0;  CUf[4][3] = 0.0;  CUf[4][4+4] = CUf[4][2];
+
+      // Ui dUe(Ub) Uf <timestuff> dUi(Uf)
+      Cunew[0][0]=1.0;  Cunew[0][1]=1.0/6.0;      Cunew[0][2]=0.0;  Cunew[0][3] = 0.0;  Cunew[0][4+0] = Cunew[0][1];
+      Cunew[1][0]=0.0;  Cunew[1][1]=1.0/3.0;      Cunew[1][2]=0.0;  Cunew[1][3] = 0.5;  Cunew[1][4+1] = Cunew[1][1];
+      Cunew[2][0]=0.0;  Cunew[2][1]=1.0/3.0;      Cunew[2][2]=0.0;  Cunew[2][3] = 0.5;  Cunew[2][4+2] = Cunew[2][1];
+      Cunew[3][0]=0.0;  Cunew[3][1]=1.0/6.0;      Cunew[3][2]=0.0;  Cunew[3][3] = 1.0;  Cunew[3][4+3] = Cunew[3][1];
+      Cunew[4][0]=0.0;  Cunew[4][1]=1.0/6.0;      Cunew[4][2]=0.0;  Cunew[4][3] = 1.0;  Cunew[4][4+4] = Cunew[4][1];
+
+      //primitive values used for initial state, fluxes, final state (where you output)
+      pii[0]=p;    pbb[0]=p;       pff[0]=pk[0]; // produces U1
+      pii[1]=p;    pbb[1]=pk[0];   pff[1]=pk[1]; // produces U2
+      pii[2]=p;    pbb[2]=pk[1];   pff[2]=pk[0]; // produces U3
+      pii[3]=p;    pbb[3]=pk[0];   pff[3]=pk[1]; // produces U4 (only dUe part used)
+      pii[3]=p;    pbb[3]=pk[1];   pff[3]=p; // produces U4 (only dUe part used)
+    
+      // GODMARK: use of globals: just scratch anyways
+      uii[0]=GLOBALPOINT(uinitialglobal);  uff[0]=GLOBALPOINT(ulastglobal); ucum[0]=ucons;
+      uii[1]=GLOBALPOINT(uinitialglobal);  uff[1]=GLOBALPOINT(ulastglobal); ucum[1]=ucons;
+      uii[2]=GLOBALPOINT(uinitialglobal);  uff[2]=GLOBALPOINT(ulastglobal); ucum[2]=ucons;
+      uii[3]=GLOBALPOINT(uinitialglobal);  uff[3]=GLOBALPOINT(ulastglobal); ucum[3]=ucons;
+
+    }
+    else if(TIMEORDER==4 && truestep){
+      // IMEX2B
+      *numtimeorders=4;
+
+      // Ui ulast dUe(pb) <timestuff> dUi(Uf)
+      CUf[0][0]=1.0;  CUf[0][1]=0.0;      CUf[0][2]=0.5;  CUf[0][3] = 0.0;  CUf[0][4+0] = CUf[0][2];
+      CUf[1][0]=1.0;  CUf[1][1]=0.0;      CUf[1][2]=0.5;  CUf[1][3] = 0.0;  CUf[1][4+1] = CUf[1][2];
+      CUf[2][0]=1.0;  CUf[2][1]=0.0;      CUf[2][2]=1.0;  CUf[2][3] = 0.0;  CUf[2][4+2] = CUf[2][2];
+      CUf[3][0]=1.0;  CUf[3][1]=0.0;      CUf[3][2]=1.0;  CUf[3][3] = 0.0;  CUf[3][4+3] = CUf[3][2];
+
+      // Ui dUe(Ub) Uf <timestuff> dUi(Uf)
+      Cunew[0][0]=1.0;  Cunew[0][1]=1.0/6.0;      Cunew[0][2]=0.0;  Cunew[0][3] = 0.0;  Cunew[0][4+0] = Cunew[0][1];
+      Cunew[1][0]=0.0;  Cunew[1][1]=1.0/3.0;      Cunew[1][2]=0.0;  Cunew[1][3] = 0.5;  Cunew[1][4+1] = Cunew[1][1];
+      Cunew[2][0]=0.0;  Cunew[2][1]=1.0/3.0;      Cunew[2][2]=0.0;  Cunew[2][3] = 0.5;  Cunew[2][4+2] = Cunew[2][1];
+      Cunew[3][0]=0.0;  Cunew[3][1]=1.0/6.0;      Cunew[3][2]=0.0;  Cunew[3][3] = 1.0;  Cunew[3][4+3] = Cunew[3][1];
+
+      //primitive values used for initial state, fluxes, final state (where you output)
+      pii[0]=p;    pbb[0]=p;       pff[0]=pk[0]; // produces U1
+      pii[1]=p;    pbb[1]=pk[0];   pff[1]=pk[1]; // produces U2
+      pii[2]=p;    pbb[2]=pk[1];   pff[2]=pk[0]; // produces U3
+      pii[3]=p;    pbb[3]=pk[0];   pff[3]=p; // produces U4 (only dUe part used)
+    
+      // GODMARK: use of globals: just scratch anyways
+      uii[0]=GLOBALPOINT(uinitialglobal);  uff[0]=GLOBALPOINT(ulastglobal); ucum[0]=ucons;
+      uii[1]=GLOBALPOINT(uinitialglobal);  uff[1]=GLOBALPOINT(ulastglobal); ucum[1]=ucons;
+      uii[2]=GLOBALPOINT(uinitialglobal);  uff[2]=GLOBALPOINT(ulastglobal); ucum[2]=ucons;
+      uii[3]=GLOBALPOINT(uinitialglobal);  uff[3]=GLOBALPOINT(ulastglobal); ucum[3]=ucons;
+
+    }
+    else if(TIMEORDER==3  && truestep){
+      // IMEX2
+      *numtimeorders=3;
+    
+      // Ui ulastglobal dUe(pb) <timestuff> dUi(Uf)
+      CUf[0][0]=1.0;      CUf[0][1]=0.0;      CUf[0][2]=1.0;      CUf[0][3] = 0.0;  CUf[0][4+0] = CUf[0][2];
+      CUf[1][0]=3.0/4.0;  CUf[1][1]=1.0/4.0;  CUf[1][2]=1.0/4.0;  CUf[1][3] = 0.0;  CUf[1][4+1] = CUf[1][2];
+      CUf[2][0]=1.0/3.0;  CUf[2][1]=2.0/3.0;  CUf[2][2]=2.0/3.0;  CUf[2][3] = 0.0;  CUf[2][4+2] = CUf[2][2];
+    
+      // Ui dUe(Ub) Uf <timestuff> dUi(Uf)
+      // ucons=U3
+      Cunew[0][0]=0.0;   Cunew[0][1]=0.0;      Cunew[0][2]=0.0;  Cunew[0][3] = 0.0;     Cunew[0][4+0] = Cunew[0][1];
+      Cunew[1][0]=0.0;   Cunew[1][1]=0.0;      Cunew[1][2]=0.0;  Cunew[1][3] = 1.0;     Cunew[1][4+1] = Cunew[1][1];
+      Cunew[2][0]=0.0;   Cunew[2][1]=0.0;      Cunew[2][2]=1.0;  Cunew[2][3] = 1.0/4.0; Cunew[2][4+2] = Cunew[2][1];
+    
+      //always starting the substeps from the initial time
+      pii[0]=p;      pbb[0]=p;       pff[0]=pk[0]; // produces U1
+      pii[1]=p;      pbb[1]=pk[0];   pff[1]=pk[1]; // produces U2
+      pii[2]=p;      pbb[2]=pk[1];   pff[2]=p; // produces U3
+
+      // GODMARK: use of globals: just scratch anyways
+      uii[0]=GLOBALPOINT(uinitialglobal);  uff[0]=GLOBALPOINT(ulastglobal); ucum[0]=ucons;
+      uii[1]=GLOBALPOINT(uinitialglobal);  uff[1]=GLOBALPOINT(ulastglobal); ucum[1]=ucons;
+      uii[2]=GLOBALPOINT(uinitialglobal);  uff[2]=GLOBALPOINT(ulastglobal); ucum[2]=ucons;
+
+    }
+    else if(TIMEORDER==2  && truestep){
+      // IMEX1B = Backward Euler (1st order implicit, 2nd order explicit)
+      *numtimeorders=2;
+
+      // old ucons not used for this method (i.e. [?][1]=0)
+      // Ui ulast dUe(pb) <timestuff> dUi(Uf)
+      CUf[0][0]=1.0; CUf[0][1]=0.0; CUf[0][2]=0.5; CUf[0][3] = 0.0;  CUf[0][4+0] = CUf[0][2];
+      CUf[1][0]=1.0; CUf[1][1]=0.0; CUf[1][2]=1.0; CUf[1][3] = 0.0;  CUf[1][4+1] = CUf[1][2];
+
+      // Ui dUe(Ub) Uf <timestuff> dUi(Uf)
+      // ucons=U2
+      Cunew[0][0]=0.0;   Cunew[0][1]=0.0;      Cunew[0][2]=0.0;  Cunew[0][3] = 0.0;  Cunew[0][4+0] = Cunew[0][1];
+      Cunew[1][0]=0.0;   Cunew[1][1]=0.0;      Cunew[1][2]=1.0;  Cunew[1][3] = 0.5;  Cunew[1][4+1] = Cunew[1][1];
+
+      pii[0]=p;    pbb[0]=p;       pff[0]=pk[0];
+      pii[1]=p;    pbb[1]=pk[0];   pff[1]=p;
+
+      // GODMARK: use of globals: just scratch anyways
+      uii[0]=GLOBALPOINT(uinitialglobal);  uff[0]=GLOBALPOINT(ulastglobal); ucum[0]=ucons;
+      uii[1]=GLOBALPOINT(uinitialglobal);  uff[1]=GLOBALPOINT(ulastglobal); ucum[1]=ucons;
+    }
+    else if(TIMEORDER==1 ||  dt==0.0){ // dt==0.0 case is case when just passing through
+      // Euler method = IMEX1 (1st order implicit, 1st order explicit)
+      *numtimeorders=1;
+
+      // Ui ulast dUe(pb) <timestuff> dUi(Uf)
+      CUf[0][0]=1.0; CUf[0][1]=0.0; CUf[0][2]=1.0; CUf[0][3] = 0.0;   CUf[0][4] = CUf[0][2];
+
+      // Ui dUe(Ub) Uf <timestuff> dUi(Uf)
+      // ucons=U1
+      Cunew[0][0]=0.0;   Cunew[0][1]=0.0;      Cunew[0][2]=1.0;   Cunew[1][3] = 0.0;     Cunew[1][4] = Cunew[0][1];
+
+      pii[0]=p;    pbb[0]=p;    pff[0]=p;
+
+      // GODMARK: use of globals: just scratch anyways
+      uii[0]=GLOBALPOINT(uinitialglobal);  uff[0]=GLOBALPOINT(ulastglobal); ucum[0]=ucons;
+
+    }
+
 
   }
+  
+
+
 
 }
 

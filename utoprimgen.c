@@ -370,7 +370,7 @@ int Utoprimgen(int showmessages, int checkoninversiongas, int checkoninversionra
       extern int mathematica_report_check(int radinvmod, int failtype, long long int failnum, int gotfirstnofail, int eomtypelocal, int itermode, FTYPE errorabs, FTYPE errorabsbestexternal, int iters, int iterstotal, FTYPE realdt,struct of_geom *ptrgeom, FTYPE *ppfirst, FTYPE *pp, FTYPE *pb, FTYPE *piin, FTYPE *prtestUiin, FTYPE *prtestUU0, FTYPE *uu0, FTYPE *uu, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_state *q, FTYPE *dUother);
       static long long int failnum=0;
       FTYPE fakedt=0.0; // since no 4-force
-      FTYPE fakeCUf[4]={0}; // fake
+      FTYPE fakeCUf[NUMDTCUFS]={0}; // fake
       FTYPE dUother[NPR]={0};// fake
       //      struct of_state *qptr=NULL; // fake
       failnum++;

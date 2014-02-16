@@ -1,0 +1,16 @@
+# run using "source" not "bash" or "sh"
+# i.e. source ~/setuppython27
+
+module unload PrgEnv-intel
+module load PrgEnv-gnu
+module unload python/2.6
+module unload python/2.7.1-cnl
+module load python/2.7.1
+export MKL_DYNAMIC=FALSE
+export MKL_NUM_THREADS=8
+export PYTHONPATH=$HOME/py:$PYTHONPATH
+
+# now ready to use current version of python that is compiled with gnu
+
+
+

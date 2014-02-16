@@ -9,7 +9,7 @@ int BASEMACP0A1(prioritermethod,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3,NUMPRIORITERMET
 
 
 #if(EOMRADTYPE!=EOMRADNONE)
-//FTYPE BASEMACP1A1(Mradk,MAXDTSTAGES,N1M,N2M,N3M,NPR);
-// Mradk[MAXDTSTAGES] to sore M^i from M^0, M^1, etc.
+FTYPE BASEMACP1A1(Mradk,MAXTIMEORDER,N1M,N2M,N3M,NPR);
+// Mradk[MAXTIMEORDER] to sore M^i from M^0, M^1, etc.
 // IMEX requires storing all stages for each stage.
 #endif

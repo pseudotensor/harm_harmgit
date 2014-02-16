@@ -1429,8 +1429,9 @@ int update_vpot(int whichmethod, int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], 
           }
 
           // update like in advance using flux2dUavg() & dUtoU().  But only 1 flux position rather than difference of fluxes.
-          if(vpot!=NULL) MACP1A0(vpot,dir,i,j,k)        = UFSET      (CUf  ,dt,MACP1A0(vpot0,dir,i,j,k),MACP1A0(vpotlast,dir,i,j,k),myemf,0.0); // notice vpotlast[] used here not vpot
-          if(vpotcum!=NULL) MACP1A0(vpotcum,dir,i,j,k) += UCUMUPDATE(CUnew,dt,MACP1A0(vpot0,dir,i,j,k),MACP1A0(vpot,dir,i,j,k)    ,myemf,0.0); // notice vpot[] used here, just like in dUtoU()
+          FTYPE ftemp[MAXTIMEORDER]={0.0};
+          if(vpot!=NULL) MACP1A0(vpot,dir,i,j,k)        = UFSET      (CUf  ,dt,MACP1A0(vpot0,dir,i,j,k),MACP1A0(vpotlast,dir,i,j,k),myemf,0.0,ftemp); // notice vpotlast[] used here not vpot
+          if(vpotcum!=NULL) MACP1A0(vpotcum,dir,i,j,k) += UCUMUPDATE(CUnew,dt,MACP1A0(vpot0,dir,i,j,k),MACP1A0(vpot,dir,i,j,k)    ,myemf,0.0,ftemp); // notice vpot[] used here, just like in dUtoU()
 
 
 #if(DEBUGNSBH)

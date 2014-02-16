@@ -1958,8 +1958,9 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
   // set full uu0
   FTYPE fracdtuu0=1.0;
   FTYPE uu0[NPR],dUtot[NPR],rdUtot[NPR];
+  FTYPE dUnongeomall[MAXTIMEORDER]={0.0};
   PLOOP(pliter,pl){
-    uu0[pl]=UFSET(CUf,fracdtuu0*dt,Uiin[pl],Ufin[pl],dUother[pl],0.0); // initial+flux value of U
+    uu0[pl]=UFSET(CUf,fracdtuu0*dt,Uiin[pl],Ufin[pl],dUother[pl],0.0,dUnongeomall); // initial+flux value of U
     dUtot[pl] = uu0[pl]-Uiin[pl]; // absolute change due to flux-advection step
     rdUtot[pl] = fabs(uu0[pl]-Uiin[pl])/(fabs(uu0[pl])+fabs(Uiin[pl])); // relative change to energy due to flux-advection step
   }
@@ -4419,7 +4420,8 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
   // set uu0 = "initial+flux" contribution to uu
   //
   ////////////////
-  PLOOP(pliter,pl) uu[pl]=uu0[pl]=UFSET(CUf,fracdtuu0*dt,Uiin[pl],Ufin[pl],dUother[pl],0.0);
+  FTYPE dUnongeomall[MAXTIMEORDER]={0.0};
+  PLOOP(pliter,pl) uu[pl]=uu0[pl]=UFSET(CUf,fracdtuu0*dt,Uiin[pl],Ufin[pl],dUother[pl],0.0,dUnongeomall);
 
 
 
@@ -5110,7 +5112,8 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
 
 
           // get uu0 (which may be changing)
-          PLOOP(pliter,pl) uu0[pl]=UFSET(CUf,fracdtuu0*dt,Uiin[pl],Ufin[pl],dUother[pl],0.0);
+          //          FTYPE dUnongeomall[MAXTIMEORDER]={0.0};
+          PLOOP(pliter,pl) uu0[pl]=UFSET(CUf,fracdtuu0*dt,Uiin[pl],Ufin[pl],dUother[pl],0.0,dUnongeomall);
           {
             FTYPE uuiterback[NPR];
             PLOOP(pliter,pl) uuiterback[pl] = uu[pl]; // hold actual iterated quantities
@@ -6059,7 +6062,8 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
         // try increasing uu0 away from Uiin to account for full dUother
         fracdtuu0*=RADDAMPUNDELTA;
         fracdtuu0=MIN(1.0,fracdtuu0);
-        PLOOP(pliter,pl) uu0[pl]=UFSET(CUf,fracdtuu0*dt,Uiin[pl],Ufin[pl],dUother[pl],0.0); // modifies uu0
+        //        FTYPE dUnongeomall[MAXTIMEORDER]={0.0};
+        PLOOP(pliter,pl) uu0[pl]=UFSET(CUf,fracdtuu0*dt,Uiin[pl],Ufin[pl],dUother[pl],0.0,dUnongeomall); // modifies uu0
         {
           FTYPE uuiterback[NPR];
           PLOOP(pliter,pl) uuiterback[pl] = uu[pl]; // hold actual iterated quantities
@@ -6105,7 +6109,8 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
     /////////////
     fracdtuu0=1.0;
     //
-    PLOOP(pliter,pl) uu0[pl]=UFSET(CUf,fracdtuu0*dt,Uiin[pl],Ufin[pl],dUother[pl],0.0); // modifies uu0
+    //    FTYPE dUnongeomall[MAXTIMEORDER]={0.0};
+    PLOOP(pliter,pl) uu0[pl]=UFSET(CUf,fracdtuu0*dt,Uiin[pl],Ufin[pl],dUother[pl],0.0,dUnongeomall); // modifies uu0
     PLOOP(pliter,pl){
       if(!(pl>=UU && pl<=U3 || RADPL(pl) || pl==ENTROPY)){
         uu[pl] = uu0[pl];
@@ -6680,7 +6685,8 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE *errorabs, stru
   FTYPE uu0[NPR];
   FTYPE fracdtuu0=1.0;
   int pliter,pl;
-  PLOOP(pliter,pl) uu0[pl]=UFSET(CUf,fracdtuu0*dt,Uiin[pl],Ufin[pl],dUother[pl],0.0);
+  FTYPE dUnongeomall[MAXTIMEORDER]={0.0};
+  PLOOP(pliter,pl) uu0[pl]=UFSET(CUf,fracdtuu0*dt,Uiin[pl],Ufin[pl],dUother[pl],0.0,dUnongeomall);
   FTYPE uu[NPR]; // not used except when doing diagnostics in ramesh code
   //  FTYPE uueng[NPR],uuent[NPR]; // filled with answer if successful
   //
@@ -7944,7 +7950,8 @@ static void get_dtsub(int method, FTYPE *pr, struct of_state *q, FTYPE *Ui, FTYP
   //
   // get updated uu from dUother in case leads to different result
   FTYPE U0[NPR];
-  PLOOP(pliter,pl) U0[pl]=UFSET(CUf,dt,Ui[pl],Uf[pl],dUother[pl],0.0);
+  FTYPE dUnongeomall[MAXTIMEORDER]={0.0};
+  PLOOP(pliter,pl) U0[pl]=UFSET(CUf,dt,Ui[pl],Uf[pl],dUother[pl],0.0,dUnongeomall);
 
   //  PLOOP(pliter,pl) dualfprintf(fail_file,"pl=%d U0=%g realdt=%g dt=%g Ui=%g Uf=%g dUother=%g\n",pl,U0[pl],realdt,dt,Ui[pl],Uf[pl],dUother[pl]);
 
@@ -8200,7 +8207,8 @@ static int source_explicit(int whichsc, int whichradsourcemethod, int methoddtsu
 
   // get updated U (try getting full update)
   FTYPE fracdtuu0=1.0; // try full uu0 at first
-  PLOOP(pliter,pl) Unew[pl]=Unew0[pl]=UFSET(CUf,fracdtuu0*dt,Uiin[pl],Ufin[pl],dUother[pl],0.0);
+  FTYPE dUnongeomall[MAXTIMEORDER]={0.0};
+  PLOOP(pliter,pl) Unew[pl]=Unew0[pl]=UFSET(CUf,fracdtuu0*dt,Uiin[pl],Ufin[pl],dUother[pl],0.0,dUnongeomall);
 
   // if reversion from implicit, then no choice but to push through CASE radiation errors and hope the reductions there are ok.  Would be worse to have no reversion solution!
   int pushthroughraderror=0;
@@ -8261,7 +8269,8 @@ static int source_explicit(int whichsc, int whichradsourcemethod, int methoddtsu
         }
         else{
           // recompute use of full dU so Unew0 is updated
-          PLOOP(pliter,pl) Unew[pl]=Unew0[pl]=UFSET(CUf,fracdtuu0*dt,Uiin[pl],Ufin[pl],dUother[pl],0.0);
+          //          FTYPE dUnongeomall[MAXTIMEORDER]={0.0};
+          PLOOP(pliter,pl) Unew[pl]=Unew0[pl]=UFSET(CUf,fracdtuu0*dt,Uiin[pl],Ufin[pl],dUother[pl],0.0,dUnongeomall);
           // reset prnew
           PLOOP(pliter,pl) prnew[pl]=pb0[pl]=pb[pl];
         }
@@ -8463,7 +8472,8 @@ static int source_explicit(int whichsc, int whichradsourcemethod, int methoddtsu
     // NOTE: Below sticks to the Unew0 that could use, but not consistent with explicit stepping and leads to erroneous 0-force results.
     //    FTYPE fakefracdtuu0=fracdtuu0;
     FTYPE tempdt= fakefracdtuu0*dt; // uses dt here, because below UFSET() computes "realdt" using CUf internally
-    PLOOP(pliter,pl) Unew0[pl]=UFSET(CUf,tempdt,Uiin[pl],Ufin[pl],dUother[pl],0.0);
+    //    FTYPE dUnongeomall[MAXTIMEORDER]={0.0};
+    PLOOP(pliter,pl) Unew0[pl]=UFSET(CUf,tempdt,Uiin[pl],Ufin[pl],dUother[pl],0.0,dUnongeomall);
     
 
     // get new Unew using 1) current Unew0 (so Unew updates a bit towards final Unew0 as if fracdtuu0=1) and 2) cumulative 4-force so far
@@ -11444,7 +11454,7 @@ static int get_m1closure_urfconrel(int showmessages, int allowlocalfailurefixand
     // first report info so can check on inversion
     static long long int failnum=0;
     FTYPE fakedt=0.0; // since no 4-force
-    FTYPE fakeCUf[4]={0}; // fake
+    FTYPE fakeCUf[NUMDTCUFS]={0}; // fake
     FTYPE dUother[NPR]={0};// fake
     struct of_state *qptr=NULL; // fake
     failnum++;
