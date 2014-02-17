@@ -13,7 +13,7 @@ static void setup_rktimestep(int truestep, int *numtimeorders,
                              FTYPE (*pk)[NSTORE1][NSTORE2][NSTORE3][NPR],
                              FTYPE (*pii[MAXTIMEORDER])[NSTORE2][NSTORE3][NPR],FTYPE (*pbb[MAXTIMEORDER])[NSTORE2][NSTORE3][NPR],FTYPE (*pff[MAXTIMEORDER])[NSTORE2][NSTORE3][NPR],
                              FTYPE (*uii[MAXTIMEORDER])[NSTORE2][NSTORE3][NPR],FTYPE (*uff[MAXTIMEORDER])[NSTORE2][NSTORE3][NPR],FTYPE (*ucum[MAXTIMEORDER])[NSTORE2][NSTORE3][NPR],
-                             FTYPE (*CUf)[NUMDTCUFS],FTYPE (*Cunew)[NUMDTCUFS]);
+                             FTYPE (*CUf)[NUMDTCUFS],FTYPE (*CUnew)[NUMDTCUFS]);
 
 
 
@@ -584,7 +584,7 @@ int step_ch_simplempi(int truestep, int *dumpingnext, FTYPE *fullndt, FTYPE (*pr
               FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL],
               FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
               FTYPE (*ui)[NSTORE2][NSTORE3][NPR],FTYPE (*uf)[NSTORE2][NSTORE3][NPR], FTYPE (*ucum)[NSTORE2][NSTORE3][NPR],
-              FTYPE *CUf,FTYPE *Cunew,SFTYPE fluxdt, SFTYPE boundtime, SFTYPE fluxtime, int timeorder, int numtimeorders, FTYPE *ndt);
+              FTYPE *CUf,FTYPE *CUnew,SFTYPE fluxdt, SFTYPE boundtime, SFTYPE fluxtime, int timeorder, int numtimeorders, FTYPE *ndt);
   
   int pre_advance(int timeorder, int numtimeorders, int finalstep, FTYPE (*pi)[NSTORE2][NSTORE3][NPR],FTYPE (*pb)[NSTORE2][NSTORE3][NPR],FTYPE (*pf)[NSTORE2][NSTORE3][NPR]);
   int asym_compute_2(FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
@@ -605,14 +605,7 @@ int step_ch_simplempi(int truestep, int *dumpingnext, FTYPE *fullndt, FTYPE (*pr
   FTYPE (*uff[MAXTIMEORDER])[NSTORE2][NSTORE3][NPR];
   FTYPE (*ucum[MAXTIMEORDER])[NSTORE2][NSTORE3][NPR];
   //  FTYPE alphaik[MAXSTAGES][MAXSTAGES],betaik[MAXSTAGES];
-  FTYPE CUf[MAXTIMEORDER][NUMDTCUFS],Cunew[MAXTIMEORDER][NUMDTCUFS];
-  // initialize CUf and Cunew to be zero
-  int ii,jj;
-  for(ii=0;ii<MAXTIMEORDER;ii++){
-    for(jj=0;jj<NUMDTCUFS;jj++){
-      CUf[ii][jj]=Cunew[ii][jj]=0.0;
-    }
-  }
+  FTYPE CUf[MAXTIMEORDER][NUMDTCUFS],CUnew[MAXTIMEORDER][NUMDTCUFS];
 
 
   int i, j, k;
@@ -630,7 +623,7 @@ int step_ch_simplempi(int truestep, int *dumpingnext, FTYPE *fullndt, FTYPE (*pr
   // setup time-stepping
   //
   ////////////////////////
-  setup_rktimestep(truestep, &numtimeorders,prim,pstag,ucons,vpot,Bhat,GLOBALPOINT(pk),pii,pbb,pff,uii,uff,ucum,CUf,Cunew);
+  setup_rktimestep(truestep, &numtimeorders,prim,pstag,ucons,vpot,Bhat,GLOBALPOINT(pk),pii,pbb,pff,uii,uff,ucum,CUf,CUnew);
 
 
   /////////////////////////////////////
@@ -638,7 +631,7 @@ int step_ch_simplempi(int truestep, int *dumpingnext, FTYPE *fullndt, FTYPE (*pr
   // Obtain initial time of substep, final time of substep, and true dt used for flux conservation that is used to iterate ucum in advance.c
   //
   /////////////////////////////////////
-  get_truetime_fluxdt(numtimeorders, dt, CUf, Cunew, fluxdt, boundtime, fluxtime, NULL,NULL);
+  get_truetime_fluxdt(numtimeorders, dt, CUf, CUnew, fluxdt, boundtime, fluxtime, NULL,NULL);
 
 
   // global debug tracking var
@@ -766,7 +759,7 @@ int step_ch_simplempi(int truestep, int *dumpingnext, FTYPE *fullndt, FTYPE (*pr
       // advance (field only)
       // Only field parts of pff, uff, and ucum updated
       // on final timeorder, ucum used to get final B that will be used as B for final timeorder for non-field quantities
-      MYFUN(advance(truestep, STAGEM1, pii[timeorder], pbb[timeorder], pff[timeorder], pstag, pl_ct, pr_ct, F1, F2, F3, vpot, uii[timeorder], uff[timeorder], ucum[timeorder], CUf[timeorder], Cunew[timeorder], fluxdt[timeorder], boundtime[timeorder], fluxtime[timeorder], timeorder,numtimeorders,&ndt),"step_ch.c:step_ch_simplempi()", "advance()", 1);
+      MYFUN(advance(truestep, STAGEM1, pii[timeorder], pbb[timeorder], pff[timeorder], pstag, pl_ct, pr_ct, F1, F2, F3, vpot, uii[timeorder], uff[timeorder], ucum[timeorder], CUf[timeorder], CUnew[timeorder], fluxdt[timeorder], boundtime[timeorder], fluxtime[timeorder], timeorder,numtimeorders,&ndt),"step_ch.c:step_ch_simplempi()", "advance()", 1);
 
       // only need to bound field, so control PLOOPMPI
       nprboundstart=0;
@@ -816,7 +809,7 @@ int step_ch_simplempi(int truestep, int *dumpingnext, FTYPE *fullndt, FTYPE (*pr
 
       // advance (non-field quantities)
       // only non-field parts of pff, uff, ucum updated
-      MYFUN(advance(truestep, STAGEM1, pii[timeorder], pbb[timeorder], pff[timeorder], pstag, pl_ct, pr_ct, F1, F2, F3, vpot, uii[timeorder], uff[timeorder], ucum[timeorder], CUf[timeorder], Cunew[timeorder], fluxdt[timeorder], boundtime[timeorder], fluxtime[timeorder], timeorder,numtimeorders,&ndt),"step_ch.c:step_ch_simplempi()", "advance()", 1);
+      MYFUN(advance(truestep, STAGEM1, pii[timeorder], pbb[timeorder], pff[timeorder], pstag, pl_ct, pr_ct, F1, F2, F3, vpot, uii[timeorder], uff[timeorder], ucum[timeorder], CUf[timeorder], CUnew[timeorder], fluxdt[timeorder], boundtime[timeorder], fluxtime[timeorder], timeorder,numtimeorders,&ndt),"step_ch.c:step_ch_simplempi()", "advance()", 1);
 
 
 
@@ -860,7 +853,7 @@ int step_ch_simplempi(int truestep, int *dumpingnext, FTYPE *fullndt, FTYPE (*pr
 
       advancepassnumber=-1; // implies do all things, no split
       // advance (all)
-      MYFUN(advance(truestep, STAGEM1, pii[timeorder], pbb[timeorder], pff[timeorder], pstag, pl_ct, pr_ct, F1, F2, F3, vpot, uii[timeorder], uff[timeorder], ucum[timeorder], CUf[timeorder], Cunew[timeorder], fluxdt[timeorder], boundtime[timeorder], fluxtime[timeorder], timeorder,numtimeorders,&ndt),"step_ch.c:step_ch_simplempi()", "advance()", 1);
+      MYFUN(advance(truestep, STAGEM1, pii[timeorder], pbb[timeorder], pff[timeorder], pstag, pl_ct, pr_ct, F1, F2, F3, vpot, uii[timeorder], uff[timeorder], ucum[timeorder], CUf[timeorder], CUnew[timeorder], fluxdt[timeorder], boundtime[timeorder], fluxtime[timeorder], timeorder,numtimeorders,&ndt),"step_ch.c:step_ch_simplempi()", "advance()", 1);
 
 
 
@@ -911,7 +904,7 @@ int step_ch_simplempi(int truestep, int *dumpingnext, FTYPE *fullndt, FTYPE (*pr
 
 
 // Obtain initial time of substep, final time of substep, and true dt used for flux conservation that is used to iterate ucum in advance.c
-void get_truetime_fluxdt(int numtimeorders, SFTYPE localdt, FTYPE (*CUf)[NUMDTCUFS], FTYPE (*Cunew)[NUMDTCUFS], SFTYPE *fluxdt, SFTYPE *boundtime, SFTYPE *fluxtime, SFTYPE *tstepparti, SFTYPE *tsteppartf)
+void get_truetime_fluxdt(int numtimeorders, SFTYPE localdt, FTYPE (*CUf)[NUMDTCUFS], FTYPE (*CUnew)[NUMDTCUFS], SFTYPE *fluxdt, SFTYPE *boundtime, SFTYPE *fluxtime, SFTYPE *tstepparti, SFTYPE *tsteppartf)
 {
   int timeorder;
   SFTYPE ufdt[MAXTIMEORDER],ucumdt[MAXTIMEORDER];
@@ -964,7 +957,7 @@ void get_truetime_fluxdt(int numtimeorders, SFTYPE localdt, FTYPE (*CUf)[NUMDTCU
     ufdt[timeorder] = UFSET(CUf[timeorder],localdt,Ui,oldufdt,dUriemann,dUgeom,dUnongeomall);
     // below is NOT += since just want current change, not all prior changes
     // if did +=, then get 1 for timeorder==numtimeorders-1 as required!
-    ucumdt[timeorder] = UCUMUPDATE(Cunew[timeorder],localdt,Ui,ufdt[timeorder],dUriemann,dUgeom,dUnongeomall);
+    ucumdt[timeorder] = UCUMUPDATE(CUnew[timeorder],localdt,Ui,ufdt[timeorder],dUriemann,dUgeom,dUnongeomall);
 
     // assuming fluxdt used before any calls in advance.c
     // then represents *amount* of flux'ed stuff in time dt
@@ -1074,7 +1067,7 @@ int step_ch_supermpi(int truestep, int *dumpingnext, FTYPE *fullndt, FTYPE (*pri
               FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL],
               FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
               FTYPE (*ui)[NSTORE2][NSTORE3][NPR],FTYPE (*uf)[NSTORE2][NSTORE3][NPR], FTYPE (*ucum)[NSTORE2][NSTORE3][NPR],
-              FTYPE *CUf,FTYPE *Cunew,SFTYPE fluxdt, SFTYPE boundtime, SFTYPE fluxtime, int timeorder, int numtimeorders, FTYPE *ndt);
+              FTYPE *CUf,FTYPE *CUnew,SFTYPE fluxdt, SFTYPE boundtime, SFTYPE fluxtime, int timeorder, int numtimeorders, FTYPE *ndt);
   int boundstage;
   SFTYPE mydt;
   int stage, stagei,stagef;
@@ -1091,7 +1084,7 @@ int step_ch_supermpi(int truestep, int *dumpingnext, FTYPE *fullndt, FTYPE (*pri
   FTYPE (*uff[MAXTIMEORDER])[NSTORE2][NSTORE3][NPR];
   FTYPE (*ucum[MAXTIMEORDER])[NSTORE2][NSTORE3][NPR];
   //  FTYPE alphaik[MAXSTAGES][MAXSTAGES],betaik[MAXSTAGES];
-  FTYPE CUf[MAXTIMEORDER][NUMDTCUFS],Cunew[MAXTIMEORDER][NUMDTCUFS];
+  FTYPE CUf[MAXTIMEORDER][NUMDTCUFS],CUnew[MAXTIMEORDER][NUMDTCUFS];
   int i, j, k, pl, pliter;
   int numtimeorders;
   int finalstep;
@@ -1107,7 +1100,7 @@ int step_ch_supermpi(int truestep, int *dumpingnext, FTYPE *fullndt, FTYPE (*pri
   // setup time-stepping
   //
   ////////////////////////
-  setup_rktimestep(truestep, &numtimeorders,prim,pstag,ucons,vpot,Bhat,GLOBALPOINT(pk),pii,pbb,pff,uii,uff,ucum,CUf,Cunew);
+  setup_rktimestep(truestep, &numtimeorders,prim,pstag,ucons,vpot,Bhat,GLOBALPOINT(pk),pii,pbb,pff,uii,uff,ucum,CUf,CUnew);
 
 
   /////////////////////////////////////
@@ -1115,7 +1108,7 @@ int step_ch_supermpi(int truestep, int *dumpingnext, FTYPE *fullndt, FTYPE (*pri
   // Obtain initial time of substep, final time of substep, and true dt used for flux conservation that is used to iterate ucum in advance.c
   //
   /////////////////////////////////////
-  get_truetime_fluxdt(numtimeorders, dt, CUf, Cunew, fluxdt, boundtime, fluxtime, NULL, NULL);
+  get_truetime_fluxdt(numtimeorders, dt, CUf, CUnew, fluxdt, boundtime, fluxtime, NULL, NULL);
 
 
 
@@ -1222,7 +1215,7 @@ int step_ch_supermpi(int truestep, int *dumpingnext, FTYPE *fullndt, FTYPE (*pri
       partialstep=timeorder;      
       // not right for numtimeorders==4 // GODMARK
       // advance
-      MYFUN(advance(truestep,-1, pii[timeorder], pbb[timeorder], pff[timeorder], pstag, pl_ct, pr_ct, F1, F2, F3, vpot, uii[timeorder], uff[timeorder], ucum[timeorder],CUf[timeorder], Cunew[timeorder], fluxdt[timeorder], boundtime[timeorder], fluxtime[timeorder], timeorder,numtimeorders,&ndt),"step_ch.c:step_ch_supermpi()", "advance()", 1);
+      MYFUN(advance(truestep,-1, pii[timeorder], pbb[timeorder], pff[timeorder], pstag, pl_ct, pr_ct, F1, F2, F3, vpot, uii[timeorder], uff[timeorder], ucum[timeorder],CUf[timeorder], CUnew[timeorder], fluxdt[timeorder], boundtime[timeorder], fluxtime[timeorder], timeorder,numtimeorders,&ndt),"step_ch.c:step_ch_supermpi()", "advance()", 1);
       // must check before MPI operation (since asymmetries would desynchronize cpus)
       if(stage<STAGE2){
         MYFUN(error_check(1),"step_ch.c", "error_check", 1);
@@ -1272,7 +1265,7 @@ int step_ch_supermpi(int truestep, int *dumpingnext, FTYPE *fullndt, FTYPE (*pri
 
 // Uf^i = ulast^i = CUf^{i0} Ui^i + CUf^{i1} ulast^i + CUf^{i2} dUexplicit^i + CUf^{i4} dUimplicit^i
 
-// unew^i = Cunew^{i0} Ui^i + Cunew^{i1} dUexplicit^i + Cunew^{i2} Uf^i  + Cunew^{i4} dUimplicit^i
+// unew^i = CUnew^{i0} Ui^i + CUnew^{i1} dUexplicit^i + CUnew^{i2} Uf^i  + CUnew^{i4} dUimplicit^i
 
 // [SUPERNOTE: currently only TIMEORDER==4 has final unew different from final uf.  This factis usd in utoprimgen.c to avoid inversion if requested, unless cannot because unew must itself be inverted.]
 
@@ -1280,7 +1273,7 @@ int step_ch_supermpi(int truestep, int *dumpingnext, FTYPE *fullndt, FTYPE (*pri
 
 // CUf[timeorder][3] : t + dt*CUf[timeorder][3] = time of pi
 
-// Cunew[timeorder][3] : t + dt*Cunew[timeorder][3] = approximate time of pb
+// CUnew[timeorder][3] : t + dt*CUnew[timeorder][3] = approximate time of pb
 
 // GODMARK: Currently RK methods all feed pf into pb on next step, so only need one pstag.  In general should have multiple pstag's.
 
@@ -1289,8 +1282,17 @@ void setup_rktimestep(int truestep, int *numtimeorders,
                       FTYPE (*pk)[NSTORE1][NSTORE2][NSTORE3][NPR],
                       FTYPE (*pii[MAXTIMEORDER])[NSTORE2][NSTORE3][NPR],FTYPE (*pbb[MAXTIMEORDER])[NSTORE2][NSTORE3][NPR],FTYPE (*pff[MAXTIMEORDER])[NSTORE2][NSTORE3][NPR],
                       FTYPE (*uii[MAXTIMEORDER])[NSTORE2][NSTORE3][NPR],FTYPE (*uff[MAXTIMEORDER])[NSTORE2][NSTORE3][NPR],FTYPE (*ucum[MAXTIMEORDER])[NSTORE2][NSTORE3][NPR],
-                      FTYPE (*CUf)[NUMDTCUFS],FTYPE (*Cunew)[NUMDTCUFS])
+                      FTYPE (*CUf)[NUMDTCUFS],FTYPE (*CUnew)[NUMDTCUFS])
 {
+
+
+  // initialize CUf and CUnew to be zero
+  int ii,jj;
+  for(ii=0;ii<MAXTIMEORDER;ii++){
+    for(jj=0;jj<NUMDTCUFS;jj++){
+      CUf[ii][jj]=CUnew[ii][jj]=0.0;
+    }
+  }
 
 
   
@@ -1317,10 +1319,10 @@ void setup_rktimestep(int truestep, int *numtimeorders,
       CUf[3][0]=1.0;  CUf[3][1]=0.0;      CUf[3][2]=1.0;  CUf[3][3] = 0.0;  CUf[3][4+3] = CUf[3][2];
 
       // Ui dUe(Ub) Uf <timestuff> dUi(Uf)
-      Cunew[0][0]=1.0;  Cunew[0][1]=1.0/6.0;      Cunew[0][2]=0.0;  Cunew[0][3] = 0.0;  Cunew[0][4+0] = Cunew[0][1];
-      Cunew[1][0]=0.0;  Cunew[1][1]=1.0/3.0;      Cunew[1][2]=0.0;  Cunew[1][3] = 0.5;  Cunew[1][4+1] = Cunew[1][1];
-      Cunew[2][0]=0.0;  Cunew[2][1]=1.0/3.0;      Cunew[2][2]=0.0;  Cunew[2][3] = 0.5;  Cunew[2][4+2] = Cunew[2][1];
-      Cunew[3][0]=0.0;  Cunew[3][1]=1.0/6.0;      Cunew[3][2]=0.0;  Cunew[3][3] = 1.0;  Cunew[3][4+3] = Cunew[3][1];
+      CUnew[0][0]=1.0;  CUnew[0][1]=1.0/6.0;      CUnew[0][2]=0.0;  CUnew[0][3] = 0.0;  CUnew[0][4+0] = CUnew[0][1];
+      CUnew[1][0]=0.0;  CUnew[1][1]=1.0/3.0;      CUnew[1][2]=0.0;  CUnew[1][3] = 0.5;  CUnew[1][4+1] = CUnew[1][1];
+      CUnew[2][0]=0.0;  CUnew[2][1]=1.0/3.0;      CUnew[2][2]=0.0;  CUnew[2][3] = 0.5;  CUnew[2][4+2] = CUnew[2][1];
+      CUnew[3][0]=0.0;  CUnew[3][1]=1.0/6.0;      CUnew[3][2]=0.0;  CUnew[3][3] = 1.0;  CUnew[3][4+3] = CUnew[3][1];
 
       //primitive values used for initial state, fluxes, final state (where you output)
       pii[0]=p;    pbb[0]=p;       pff[0]=pk[0]; // produces U1
@@ -1352,9 +1354,9 @@ void setup_rktimestep(int truestep, int *numtimeorders,
     
       // Ui dUe(Ub) Uf <timestuff> dUi(Uf)
       // ucons=U3
-      Cunew[0][0]=0.0;   Cunew[0][1]=0.0;      Cunew[0][2]=0.0;  Cunew[0][3] = 0.0;     Cunew[0][4+0] = Cunew[0][1];
-      Cunew[1][0]=0.0;   Cunew[1][1]=0.0;      Cunew[1][2]=0.0;  Cunew[1][3] = 1.0;     Cunew[1][4+1] = Cunew[1][1];
-      Cunew[2][0]=0.0;   Cunew[2][1]=0.0;      Cunew[2][2]=1.0;  Cunew[2][3] = 1.0/4.0; Cunew[2][4+2] = Cunew[2][1];
+      CUnew[0][0]=0.0;   CUnew[0][1]=0.0;      CUnew[0][2]=0.0;  CUnew[0][3] = 0.0;     CUnew[0][4+0] = CUnew[0][1];
+      CUnew[1][0]=0.0;   CUnew[1][1]=0.0;      CUnew[1][2]=0.0;  CUnew[1][3] = 1.0;     CUnew[1][4+1] = CUnew[1][1];
+      CUnew[2][0]=0.0;   CUnew[2][1]=0.0;      CUnew[2][2]=1.0;  CUnew[2][3] = 1.0/4.0; CUnew[2][4+2] = CUnew[2][1];
     
       //always starting the substeps from the initial time
       pii[0]=p;      pbb[0]=p;       pff[0]=pk[0]; // produces U1
@@ -1380,8 +1382,8 @@ void setup_rktimestep(int truestep, int *numtimeorders,
 
       // Ui dUe(Ub) Uf <timestuff> dUi(Uf)
       // ucons=U2
-      Cunew[0][0]=0.0;   Cunew[0][1]=0.0;      Cunew[0][2]=0.0;  Cunew[0][3] = 0.0;  Cunew[0][4+0] = Cunew[0][1];
-      Cunew[1][0]=0.0;   Cunew[1][1]=0.0;      Cunew[1][2]=1.0;  Cunew[1][3] = 0.5;  Cunew[1][4+1] = Cunew[1][1];
+      CUnew[0][0]=0.0;   CUnew[0][1]=0.0;      CUnew[0][2]=0.0;  CUnew[0][3] = 0.0;  CUnew[0][4+0] = CUnew[0][1];
+      CUnew[1][0]=0.0;   CUnew[1][1]=0.0;      CUnew[1][2]=1.0;  CUnew[1][3] = 0.5;  CUnew[1][4+1] = CUnew[1][1];
 
       pii[0]=p;    pbb[0]=p;       pff[0]=pk[0];
       pii[1]=p;    pbb[1]=pk[0];   pff[1]=p;
@@ -1401,8 +1403,8 @@ void setup_rktimestep(int truestep, int *numtimeorders,
 
       // Ui dUe(Ub) Uf <timestuff> dUi(Uf)
       // ucons=U2
-      Cunew[0][0]=0.0;   Cunew[0][1]=0.0;      Cunew[0][2]=0.0;   Cunew[0][3] = 0.0;  Cunew[0][4+0] = Cunew[0][1];
-      Cunew[1][0]=0.0;   Cunew[1][1]=0.0;      Cunew[1][2]=1.0;   Cunew[1][3] = 1.0;  Cunew[1][4+1] = Cunew[1][1];
+      CUnew[0][0]=0.0;   CUnew[0][1]=0.0;      CUnew[0][2]=0.0;   CUnew[0][3] = 0.0;  CUnew[0][4+0] = CUnew[0][1];
+      CUnew[1][0]=0.0;   CUnew[1][1]=0.0;      CUnew[1][2]=1.0;   CUnew[1][3] = 1.0;  CUnew[1][4+1] = CUnew[1][1];
 
       pii[0]=p;    pbb[0]=p;       pff[0]=pk[0];
       pii[1]=p;    pbb[1]=pk[0];   pff[1]=p;
@@ -1422,7 +1424,7 @@ void setup_rktimestep(int truestep, int *numtimeorders,
 
       // Ui dUe(Ub) Uf <timestuff> dUi(Uf)
       // ucons=U1
-      Cunew[0][0]=0.0;   Cunew[0][1]=0.0;      Cunew[0][2]=1.0;   Cunew[1][3] = 0.0;     Cunew[1][4] = Cunew[0][1];
+      CUnew[0][0]=0.0;   CUnew[0][1]=0.0;      CUnew[0][2]=1.0;   CUnew[1][3] = 0.0;     CUnew[1][4] = CUnew[0][1];
 
       pii[0]=p;    pbb[0]=p;    pff[0]=p;
 
@@ -1450,32 +1452,38 @@ void setup_rktimestep(int truestep, int *numtimeorders,
       // IMEX3
       *numtimeorders=5;
 
+      static FTYPE imp_alpha=0.24169426078821;
+      static FTYPE imp_beta=0.06042356519705;
+      static FTYPE imp_eta=0.12915286960590;
+
       // Ui ulast dUe(pb) <timestuff> dUi(Uf)
-      CUf[0][0]=1.0;  CUf[0][1]=0.0;      CUf[0][2]=0.5;  CUf[0][3] = 0.0;  CUf[0][4+0] = CUf[0][2];
-      CUf[1][0]=1.0;  CUf[1][1]=0.0;      CUf[1][2]=0.5;  CUf[1][3] = 0.0;  CUf[1][4+1] = CUf[1][2];
-      CUf[2][0]=1.0;  CUf[2][1]=0.0;      CUf[2][2]=1.0;  CUf[2][3] = 0.0;  CUf[2][4+2] = CUf[2][2];
-      CUf[3][0]=1.0;  CUf[3][1]=0.0;      CUf[3][2]=1.0;  CUf[3][3] = 0.0;  CUf[3][4+3] = CUf[3][2];
-      CUf[4][0]=1.0;  CUf[4][1]=0.0;      CUf[4][2]=1.0;  CUf[4][3] = 0.0;  CUf[4][4+4] = CUf[4][2];
+      CUf[0][0]=1.0;     CUf[0][1]=0.0;      CUf[0][2]=0.0;     CUf[0][3] = 0.0;  CUf[0][4+0] = imp_alpha; // M0 no flux step : U0 = [Un] + \alpha dt M0
+      CUf[1][0]=2.0;     CUf[1][1]=-1.0;     CUf[1][2]=0.0;     CUf[1][3] = 0.0;  CUf[1][4+1] = imp_alpha; // M1 no flux step : U1 = [2Un - U0] + \alpha dt M1
+      CUf[2][0]=1.0;     CUf[2][1]=0.0;      CUf[2][2]=1.0;     CUf[2][3] = 0.0;  CUf[2][4+1] = (1.0-imp_alpha);  CUf[2][4+2] = imp_alpha; // M2 and F1 : U2 = [Un + dt F1 + (1-\alpha) dt M1] + \alpha dt M2
+      CUf[3][0]=3.0/4.0; CUf[3][1]=1.0/4.0;  CUf[3][2]=1.0/4.0; CUf[3][3] = 0.0;  CUf[3][4+0] = imp_beta; CUf[3][4+1] = (-1.0+imp_alpha+4.0*imp_eta)/4.0;  CUf[3][4+2] = (2.0-5.0*imp_alpha-4.0*(imp_beta+imp_eta))/4.0; CUf[3][4+3] = imp_alpha; // M3 and F2 : U3 = [(3/4)Un + (1/4)U2 + (dt/4)F2 + \beta dt M0 + (1/4)(-1+\alpha+4\eta) dt M1 + (1/4)(2-5\alpha-4(\beta+\eta)) dt M2] + \alpha dt M3
+      CUf[4][0]=1.0/3.0; CUf[4][1]=2.0/3.0;  CUf[4][2]=2.0/3.0; CUf[4][3] = 0.0;  CUf[4][4+0] = (-2.0*imp_beta/3.0); CUf[4][4+1] = (1.0-4.0*imp_eta)/6.0; CUf[4][4+2] = (-1.0+4.0*imp_alpha+4.0*(imp_beta+imp_eta))/6.0; CUf[4][4+3] = 4.0*(1.0-imp_alpha)/6.0; // F3 : U4 = [(1/3)Un + (2/3)U3 + (2dt/3) F3 + (-2beta dt/3) M0 + (1/6)(1-4\eta) dt M1 + (1/6)(-1 + 4\alpha + 4(\beta+\eta)) dt M2 + (1/6)(4(1-\alpha))dt M3]
 
       // Ui dUe(Ub) Uf <timestuff> dUi(Uf)
-      Cunew[0][0]=1.0;  Cunew[0][1]=1.0/6.0;      Cunew[0][2]=0.0;  Cunew[0][3] = 0.0;  Cunew[0][4+0] = Cunew[0][1];
-      Cunew[1][0]=0.0;  Cunew[1][1]=1.0/3.0;      Cunew[1][2]=0.0;  Cunew[1][3] = 0.5;  Cunew[1][4+1] = Cunew[1][1];
-      Cunew[2][0]=0.0;  Cunew[2][1]=1.0/3.0;      Cunew[2][2]=0.0;  Cunew[2][3] = 0.5;  Cunew[2][4+2] = Cunew[2][1];
-      Cunew[3][0]=0.0;  Cunew[3][1]=1.0/6.0;      Cunew[3][2]=0.0;  Cunew[3][3] = 1.0;  Cunew[3][4+3] = Cunew[3][1];
-      Cunew[4][0]=0.0;  Cunew[4][1]=1.0/6.0;      Cunew[4][2]=0.0;  Cunew[4][3] = 1.0;  Cunew[4][4+4] = Cunew[4][1];
+      // NOTE: Could instead only use final U^{n+1} = U4 as possible for this case and setup above for final step, but current way is more local and really would require less memory (but not implemented to do that)
+      CUnew[0][0]=1.0/3.0; CUnew[0][1]=0.0;          CUnew[0][2]=0.0;     CUnew[0][3] = 0.0;  CUnew[0][4+0] = (-2.0*imp_beta/3.0); // + (1/3)Un + (-2\beta/3) dt M0
+      CUnew[1][0]=0.0;     CUnew[1][1]=0.0;          CUnew[1][2]=0.0;     CUnew[1][3] = 0.0;  CUnew[1][4+1] = (1.0-4.0*imp_eta)/6.0; // + ((1-4\eta)/6) dt M1
+      CUnew[2][0]=0.0;     CUnew[2][1]=0.0;          CUnew[2][2]=0.0;     CUnew[2][3] = 0.0;  CUnew[2][4+2] = (-1.0+4.0*imp_alpha+4.0*(imp_beta+imp_eta))/6.0; // + ( (-1 + 4\alpha + 4(\beta+\eta))/6) dt M2
+      CUnew[3][0]=0.0;     CUnew[3][1]=0.0;          CUnew[3][2]=2.0/3.0; CUnew[3][3] = 0.0;  CUnew[3][4+3] = 4.0*(1.0-imp_alpha)/6.0; // + (2/3)U3 + (4(1-\alpha)/6) dt M3
+      CUnew[4][0]=0.0;     CUnew[4][1]=2.0/3.0;      CUnew[4][2]=0.0;     CUnew[4][3] = 0.0;  CUnew[4][4+4] = 0.0; // + (2/3)dt F3
 
       //primitive values used for initial state, fluxes, final state (where you output)
       pii[0]=p;    pbb[0]=p;       pff[0]=pk[0]; // produces U1
       pii[1]=p;    pbb[1]=pk[0];   pff[1]=pk[1]; // produces U2
       pii[2]=p;    pbb[2]=pk[1];   pff[2]=pk[0]; // produces U3
       pii[3]=p;    pbb[3]=pk[0];   pff[3]=pk[1]; // produces U4 (only dUe part used)
-      pii[3]=p;    pbb[3]=pk[1];   pff[3]=p; // produces U4 (only dUe part used)
+      pii[4]=p;    pbb[4]=pk[1];   pff[4]=p; // produces U5 (only dUe part used)
     
       // GODMARK: use of globals: just scratch anyways
       uii[0]=GLOBALPOINT(uinitialglobal);  uff[0]=GLOBALPOINT(ulastglobal); ucum[0]=ucons;
       uii[1]=GLOBALPOINT(uinitialglobal);  uff[1]=GLOBALPOINT(ulastglobal); ucum[1]=ucons;
       uii[2]=GLOBALPOINT(uinitialglobal);  uff[2]=GLOBALPOINT(ulastglobal); ucum[2]=ucons;
       uii[3]=GLOBALPOINT(uinitialglobal);  uff[3]=GLOBALPOINT(ulastglobal); ucum[3]=ucons;
+      uii[4]=GLOBALPOINT(uinitialglobal);  uff[4]=GLOBALPOINT(ulastglobal); ucum[4]=ucons;
 
     }
     else if(TIMEORDER==4 && truestep){
@@ -1483,16 +1491,17 @@ void setup_rktimestep(int truestep, int *numtimeorders,
       *numtimeorders=4;
 
       // Ui ulast dUe(pb) <timestuff> dUi(Uf)
-      CUf[0][0]=1.0;  CUf[0][1]=0.0;      CUf[0][2]=0.5;  CUf[0][3] = 0.0;  CUf[0][4+0] = CUf[0][2];
-      CUf[1][0]=1.0;  CUf[1][1]=0.0;      CUf[1][2]=0.5;  CUf[1][3] = 0.0;  CUf[1][4+1] = CUf[1][2];
-      CUf[2][0]=1.0;  CUf[2][1]=0.0;      CUf[2][2]=1.0;  CUf[2][3] = 0.0;  CUf[2][4+2] = CUf[2][2];
-      CUf[3][0]=1.0;  CUf[3][1]=0.0;      CUf[3][2]=1.0;  CUf[3][3] = 0.0;  CUf[3][4+3] = CUf[3][2];
+      CUf[0][0]=1.0;     CUf[0][1]=0.0;      CUf[0][2]=0.0;     CUf[0][3] = 0.0;  CUf[0][4+0] = 1.0/4.0;   // M0 no flux step : U0 = [Un] + (dt/4)M0
+      CUf[1][0]=1.0;     CUf[1][1]=0.0;      CUf[1][2]=0.5;     CUf[1][3] = 0.0;  CUf[1][4+1] = 1.0/4.0;   // F0 and M1 : U1 = [Un + (dt/2)F0] + (dt/4)M1
+      CUf[2][0]=0.0;     CUf[2][1]=1.0;      CUf[2][2]=1.0/2.0; CUf[2][3] = 0.0;  CUf[2][4+0] = 1.0/3.0; CUf[2][4+1] = 1.0/12.0; CUf[2][4+2] = 1.0/3.0; // F1 and M2 : U2 = [U1 + (dt/2)F1 + (dt/3)M0 + (dt/12)M1] + (dt/3)M2
+      CUf[3][0]=1.0/3.0; CUf[3][1]=2.0/3.0;  CUf[3][2]=1.0/3.0; CUf[3][3] = 0.0;  CUf[3][4+0] = 1.0/9.0; CUf[3][4+1] = 1.0/9.0;  CUf[3][4+2] = 1.0/9.0; // F2 no new implicit step // U3 = [(1/3)Un + (2/3)U2 + (dt/3)F2 + (dt/9)(M0 + M1 + M2)]
 
       // Ui dUe(Ub) Uf <timestuff> dUi(Uf)
-      Cunew[0][0]=1.0;  Cunew[0][1]=1.0/6.0;      Cunew[0][2]=0.0;  Cunew[0][3] = 0.0;  Cunew[0][4+0] = Cunew[0][1];
-      Cunew[1][0]=0.0;  Cunew[1][1]=1.0/3.0;      Cunew[1][2]=0.0;  Cunew[1][3] = 0.5;  Cunew[1][4+1] = Cunew[1][1];
-      Cunew[2][0]=0.0;  Cunew[2][1]=1.0/3.0;      Cunew[2][2]=0.0;  Cunew[2][3] = 0.5;  Cunew[2][4+2] = Cunew[2][1];
-      Cunew[3][0]=0.0;  Cunew[3][1]=1.0/6.0;      Cunew[3][2]=0.0;  Cunew[3][3] = 1.0;  Cunew[3][4+3] = Cunew[3][1];
+      // NOTE: Could instead only use final U^{n+1} = U3 as possible for this case and setup above for final step, but current way is more local and really would require less memory (but not implemented to do that)
+      CUnew[0][0]=1.0/3.0; CUnew[0][1]=0.0;          CUnew[0][2]=0.0;     CUnew[0][3] = 0.0;  CUnew[0][4+0] = (1.0/9.0);   // + (1/3)Un + (1/9)M0
+      CUnew[1][0]=0.0;     CUnew[1][1]=0.0;          CUnew[1][2]=0.0;     CUnew[1][3] = 0.0;  CUnew[1][4+1] = (1.0/9.0);   // + (1/9)dt M1
+      CUnew[2][0]=0.0;     CUnew[2][1]=0.0;          CUnew[2][2]=2.0/3.0; CUnew[2][3] = 0.0;  CUnew[2][4+2] = (1.0/9.0);   // + (2/3)U2 + (1/9)dt M2
+      CUnew[3][0]=0.0;     CUnew[3][1]=1.0/3.0;      CUnew[3][2]=0.0;     CUnew[3][3] = 0.0;  CUnew[3][4+3] = 0.0;         // + (1/3)dt F2
 
       //primitive values used for initial state, fluxes, final state (where you output)
       pii[0]=p;    pbb[0]=p;       pff[0]=pk[0]; // produces U1
@@ -1510,17 +1519,20 @@ void setup_rktimestep(int truestep, int *numtimeorders,
     else if(TIMEORDER==3  && truestep){
       // IMEX2
       *numtimeorders=3;
-    
+      //      static FTYPE sqrt2=1.414213562373095048802;
+      static FTYPE imp_gamma = 0.2928932188134524755992; // 1.0 - 1.0/sqrt2;
+ 
       // Ui ulastglobal dUe(pb) <timestuff> dUi(Uf)
-      CUf[0][0]=1.0;      CUf[0][1]=0.0;      CUf[0][2]=1.0;      CUf[0][3] = 0.0;  CUf[0][4+0] = CUf[0][2];
-      CUf[1][0]=3.0/4.0;  CUf[1][1]=1.0/4.0;  CUf[1][2]=1.0/4.0;  CUf[1][3] = 0.0;  CUf[1][4+1] = CUf[1][2];
-      CUf[2][0]=1.0/3.0;  CUf[2][1]=2.0/3.0;  CUf[2][2]=2.0/3.0;  CUf[2][3] = 0.0;  CUf[2][4+2] = CUf[2][2];
+      CUf[0][0]=1.0;                            CUf[0][1]=0.0;                            CUf[0][2]=0.0;      CUf[0][3] = 0.0;  CUf[0][4+0] = imp_gamma; // M0 no flux step : U0 = [Un] + \gamma dt M0
+      CUf[1][0]=(3.0*imp_gamma-1.0)/imp_gamma;  CUf[1][1]=(1.0-2.0*imp_gamma)/imp_gamma;  CUf[1][2]=1.0;      CUf[1][3] = 0.0;  CUf[1][4+1] = imp_gamma; // computes F0 and M1 : U1 = [ (1/gamma)(3\gamma-1) Un + (1/\gamma)(1-2\gamma) U0 + dt F0] + \gamma dt M1
+      CUf[2][0]=1.0/2.0;                        CUf[2][1]=1.0/2.0;                        CUf[2][2]=1.0/2.0;  CUf[2][3] = 0.0;  CUf[2][4+0] = imp_gamma; CUf[2][4+1]=(1.0-imp_gamma)/2.0; // F1 no new implicit step : U2 = [(1/2)Un + (1/2)U1 + (dt/2)F1 + \gamma dt M0 + (1/2)(1-\gamma) dt M1]
     
       // Ui dUe(Ub) Uf <timestuff> dUi(Uf)
       // ucons=U3
-      Cunew[0][0]=0.0;   Cunew[0][1]=0.0;      Cunew[0][2]=0.0;  Cunew[0][3] = 0.0;     Cunew[0][4+0] = Cunew[0][1];
-      Cunew[1][0]=0.0;   Cunew[1][1]=0.0;      Cunew[1][2]=0.0;  Cunew[1][3] = 1.0;     Cunew[1][4+1] = Cunew[1][1];
-      Cunew[2][0]=0.0;   Cunew[2][1]=0.0;      Cunew[2][2]=1.0;  Cunew[2][3] = 1.0/4.0; Cunew[2][4+2] = Cunew[2][1];
+      // NOTE: Could instead only use final U^{n+1} = U2 as possible for this case and setup above for final step, but current way is more local and really would require less memory (but not implemented to do that)
+      CUnew[0][0]=0.5;   CUnew[0][1]=0.0;      CUnew[0][2]=0.0;  CUnew[0][3] = 0.0;  CUnew[0][4+0]=imp_gamma;             // + (1/2)Un + dt\gamma M0
+      CUnew[1][0]=0.0;   CUnew[1][1]=0.0;      CUnew[1][2]=0.5;  CUnew[1][3] = 0.0;  CUnew[1][4+1]=(1.0-imp_gamma)/2.0;   // + (1/2)U1 + (1/2)(1-\gamma)M1
+      CUnew[2][0]=0.0;   CUnew[2][1]=1.0/2.0;  CUnew[2][2]=0.0;  CUnew[2][3] = 0.0;                                       // + (1/2)dt F1
     
       //always starting the substeps from the initial time
       pii[0]=p;      pbb[0]=p;       pff[0]=pk[0]; // produces U1
@@ -1544,8 +1556,8 @@ void setup_rktimestep(int truestep, int *numtimeorders,
 
       // Ui dUe(Ub) Uf <timestuff> dUi(Uf)
       // ucons=U2
-      Cunew[0][0]=0.0;   Cunew[0][1]=0.0;      Cunew[0][2]=0.0;  Cunew[0][3] = 0.0;  Cunew[0][4+0] = Cunew[0][1];
-      Cunew[1][0]=0.0;   Cunew[1][1]=0.0;      Cunew[1][2]=1.0;  Cunew[1][3] = 0.5;  Cunew[1][4+1] = Cunew[1][1];
+      CUnew[0][0]=0.0;   CUnew[0][1]=0.0;      CUnew[0][2]=0.0;  CUnew[0][3] = 0.0;  CUnew[0][4+0] = CUnew[0][1];
+      CUnew[1][0]=0.0;   CUnew[1][1]=0.0;      CUnew[1][2]=1.0;  CUnew[1][3] = 0.0;  CUnew[1][4+1] = CUnew[1][1];
 
       pii[0]=p;    pbb[0]=p;       pff[0]=pk[0];
       pii[1]=p;    pbb[1]=pk[0];   pff[1]=p;
@@ -1563,7 +1575,7 @@ void setup_rktimestep(int truestep, int *numtimeorders,
 
       // Ui dUe(Ub) Uf <timestuff> dUi(Uf)
       // ucons=U1
-      Cunew[0][0]=0.0;   Cunew[0][1]=0.0;      Cunew[0][2]=1.0;   Cunew[1][3] = 0.0;     Cunew[1][4] = Cunew[0][1];
+      CUnew[0][0]=0.0;   CUnew[0][1]=0.0;      CUnew[0][2]=1.0;   CUnew[1][3] = 0.0;     CUnew[1][4] = CUnew[0][1];
 
       pii[0]=p;    pbb[0]=p;    pff[0]=p;
 

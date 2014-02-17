@@ -117,9 +117,9 @@ return 0; /* NOT REACHED */
 #include "testfpp.P"
 // not linking with libf2c since don't want that dependence and conversion doesn't need it since the original code was simple
 
-int get_rameshsolution(int whichcall, int radinvmod, int failtype, long long int failnum, int gotfirstnofail, int eomtypelocal, int itermode, int baseitermethod, FTYPE *errorabs, FTYPE *errorabsbestexternal, int iters, int totaliters, FTYPE realdt, struct of_geom *ptrgeom, FTYPE *pp, FTYPE *pb, FTYPE *piin, FTYPE *uu0, FTYPE *uu, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_state *q, FTYPE *ppeng, FTYPE *ppent, FTYPE *uueng, FTYPE *uuent, struct of_state *qeng, struct of_state *qent, int *failtypeeng, FTYPE *errorabseng, int *iterseng, int *radinvmodeng, int *failtypeent, FTYPE *errorabsent, int *itersent, int *radinvmodent);
+int get_rameshsolution(int whichcall, int radinvmod, int failtype, long long int failnum, int gotfirstnofail, int eomtypelocal, int itermode, int baseitermethod, FTYPE *errorabs, FTYPE *errorabsbestexternal, int iters, int totaliters, FTYPE realdt, struct of_geom *ptrgeom, FTYPE *pp, FTYPE *pb, FTYPE *piin, FTYPE *uu0, FTYPE *uu, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, FTYPE *CUimp, struct of_state *q, FTYPE *ppeng, FTYPE *ppent, FTYPE *uueng, FTYPE *uuent, struct of_state *qeng, struct of_state *qent, int *failtypeeng, FTYPE *errorabseng, int *iterseng, int *radinvmodeng, int *failtypeent, FTYPE *errorabsent, int *itersent, int *radinvmodent);
 
-int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE *errorabs, struct of_geom *ptrgeom, FTYPE *pp, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *dUother, FTYPE *CUf, struct of_state *q, FTYPE *ppeng, FTYPE *ppent, FTYPE *uueng, FTYPE *uuent, FTYPE (*dUcompeng)[NPR], FTYPE (*dUcompent)[NPR], struct of_state *qeng, struct of_state *qent, int *failtypeeng, FTYPE *errorabseng, int *iterseng, int *radinvmodeng, int *failtypeent, FTYPE *errorabsent, int *itersent, int *radinvmodent);
+int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE *errorabs, struct of_geom *ptrgeom, FTYPE *pp, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *dUother, FTYPE *CUf, FTYPE *CUimp, struct of_state *q, FTYPE *ppeng, FTYPE *ppent, FTYPE *uueng, FTYPE *uuent, FTYPE (*dUcompeng)[NPR], FTYPE (*dUcompent)[NPR], struct of_state *qeng, struct of_state *qent, int *failtypeeng, FTYPE *errorabseng, int *iterseng, int *radinvmodeng, int *failtypeent, FTYPE *errorabsent, int *itersent, int *radinvmodent);
 
 //////////////////////////////////////////////
 //
@@ -497,9 +497,9 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE *errorabs, stru
 
 
 //////// implicit stuff
-static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE dissmeasure, FTYPE *dUother ,FTYPE (*dUcomp)[NPR]);
+static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, FTYPE *CUimp, struct of_geom *ptrgeom, struct of_state *q, FTYPE dissmeasure, FTYPE *dUother ,FTYPE (*dUcomp)[NPR]);
 
-static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int modprim, int havebackup, int didentropyalready, int *eomtype, int whichcap, int itermode, int *baseitermethod, FTYPE trueimptryconv, FTYPE trueimpokconv, FTYPE trueimpallowconv, int trueimpmaxiter, int truenumdampattempts, FTYPE fracenergy, FTYPE dissmeasure, int *radinvmod, FTYPE *pb, FTYPE *uub, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother ,FTYPE (*dUcomp)[NPR], FTYPE *errorabs, FTYPE *errorabsbestexternal, int *iters, int *f1iters, int *nummhdinvs, int *nummhdsteps);
+static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int modprim, int havebackup, int didentropyalready, int *eomtype, int whichcap, int itermode, int *baseitermethod, FTYPE trueimptryconv, FTYPE trueimpokconv, FTYPE trueimpallowconv, int trueimpmaxiter, int truenumdampattempts, FTYPE fracenergy, FTYPE dissmeasure, int *radinvmod, FTYPE *pb, FTYPE *uub, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, FTYPE *CUimp, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother ,FTYPE (*dUcomp)[NPR], FTYPE *errorabs, FTYPE *errorabsbestexternal, int *iters, int *f1iters, int *nummhdinvs, int *nummhdsteps);
 
 static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int failreturnallowable, int whichcall, FTYPE impeps, int showmessages, int showmessagesheavy, int allowlocalfailurefixandnoreport, int *eomtype, int whichcap, int itermode, int *baseitermethod, FTYPE fracenergy, FTYPE dissmeasure, int *radinvmod, FTYPE conv, FTYPE convabs, FTYPE allowconvabs, int maxiter, FTYPE realdt, int dimtypef, FTYPE *dimfactU, FTYPE *ppprev, FTYPE *pp, FTYPE *piin, FTYPE *uuprev, FTYPE *Uiin, FTYPE *uu0,FTYPE *uu,FTYPE localdt, struct of_geom *ptrgeom, struct of_state *q,  FTYPE *f, FTYPE *fnorm, FTYPE *freport, int *goexplicit, FTYPE *errorabs, FTYPE *errorallabs, int whicherror, int *convreturn, int *nummhdinvsreturn);
 
@@ -526,14 +526,14 @@ static void get_refUs(int *numdims, int *startjac, int *endjac, int *implicitite
 
 // debug stuff
 static void showdebuglist(int debugiter, FTYPE (*pppreholdlist)[NPR],FTYPE (*ppposholdlist)[NPR],FTYPE (*f1reportlist)[NPR],FTYPE (*f1list)[NPR],FTYPE *errorabsf1list,FTYPE *errorallabsf1list, int *realiterlist, FTYPE (*jaclist)[NDIM][NDIM], FTYPE *fracdamplist, int *implicititerlist, int *implicitferrlist);
-int mathematica_report_check(int radinvmod, int failtype, long long int failnum, int gotfirstnofail, int eomtypelocal, int itermode, int baseitermethod, FTYPE *errorabs, FTYPE *errorabsbestexternal, int iters, int iterstotal, FTYPE realdt,struct of_geom *ptrgeom, FTYPE *ppfirst, FTYPE *pp, FTYPE *pb, FTYPE *piin, FTYPE *prtestUiin, FTYPE *prtestUU0, FTYPE *uu0, FTYPE *uu, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_state *q, FTYPE *dUother);
+int mathematica_report_check(int radinvmod, int failtype, long long int failnum, int gotfirstnofail, int eomtypelocal, int itermode, int baseitermethod, FTYPE *errorabs, FTYPE *errorabsbestexternal, int iters, int iterstotal, FTYPE realdt,struct of_geom *ptrgeom, FTYPE *ppfirst, FTYPE *pp, FTYPE *pb, FTYPE *piin, FTYPE *prtestUiin, FTYPE *prtestUU0, FTYPE *uu0, FTYPE *uu, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, FTYPE *CUimp, struct of_state *q, FTYPE *dUother);
 
-// explicit stuff
-static void get_dtsub(int method, FTYPE *pr, struct of_state *q, FTYPE *Ui, FTYPE *Uf, FTYPE *dUother, FTYPE *CUf, FTYPE *Gdpl, FTYPE chi, FTYPE *Gdplabs, struct of_geom *ptrgeom, FTYPE *dtsub);
-static void koral_source_dtsub_rad_calc(int method, FTYPE *pr, FTYPE *Ui, FTYPE *Uf, FTYPE *dUother, FTYPE *CUf, FTYPE *Gdpl, struct of_geom *ptrgeom, FTYPE *dtsub);
+// explicit stuff (uses CUf instead of CUf since even with sub-cycling not implicit)
+static void get_dtsub(int method, FTYPE *pr, struct of_state *q, FTYPE *Ui, FTYPE *Uf, FTYPE *dUother, FTYPE *CUf, FTYPE *CUimp, FTYPE *Gdpl, FTYPE chi, FTYPE *Gdplabs, struct of_geom *ptrgeom, FTYPE *dtsub);
+static void koral_source_dtsub_rad_calc(int method, FTYPE *pr, FTYPE *Ui, FTYPE *Uf, FTYPE *dUother, FTYPE *CUf, FTYPE *CUimp, FTYPE *Gdpl, struct of_geom *ptrgeom, FTYPE *dtsub);
 static int source_explicit(int whichsc, int whichradsourcemethod, int methoddtsub,int *eomtype,
-                           void (*sourcefunc)(int method, FTYPE *pr, FTYPE *Ui, FTYPE *Uf, FTYPE *dUother, FTYPE *CUf, FTYPE *Gpl, struct of_geom *ptrgeom, FTYPE *dtsub),
-                           FTYPE *pb, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother, FTYPE (*dUcomp)[NPR]);
+                           void (*sourcefunc)(int method, FTYPE *pr, FTYPE *Ui, FTYPE *Uf, FTYPE *dUother, FTYPE *CUf, FTYPE *CUimp, FTYPE *Gpl, struct of_geom *ptrgeom, FTYPE *dtsub),
+                           FTYPE *pb, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, FTYPE *CUimp, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother, FTYPE (*dUcomp)[NPR]);
 
 // RAD inversion stuff
 static int get_m1closure_gammarel2_old(int showmessages, struct of_geom *ptrgeom, FTYPE *Avcon, FTYPE *Avcov, FTYPE *gammarel2return, FTYPE *deltareturn, FTYPE *numeratorreturn, FTYPE *divisorreturn);
@@ -551,7 +551,7 @@ static int get_m1closure_urfconrel_olek(int showmessages, int allowlocalfailuref
 static int opacity_interpolated_urfconrel(FTYPE tautotmax, FTYPE *pp,struct of_geom *ptrgeom,FTYPE *Avcon, FTYPE Erf,FTYPE gammarel2,FTYPE *Erfnew, FTYPE *urfconrel);
 
 // general stuff
-static FTYPE compute_dt(FTYPE *CUf, FTYPE dtin);
+static FTYPE compute_dt(int isexplicit, FTYPE *CUf, FTYPE *CUimp, FTYPE dtin);
 
 static void calc_Gd(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *G, FTYPE *Tgas, FTYPE *chieffreturn, FTYPE *Gabs);
 static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *Gu, FTYPE *Tgas, FTYPE *chieffreturn, FTYPE *Gabs);
@@ -1883,12 +1883,21 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
 } 
 
 // compute dt for this sub-step
-static FTYPE compute_dt(FTYPE *CUf, FTYPE dtin)
+static FTYPE compute_dt(int isexplicit, FTYPE *CUf, FTYPE *CUimp, FTYPE dtin)
 {
   // what's applied to source and flux terms to get update (see global.stepch.h and step_ch.c:get_truetime_fluxdt() and step_ch.c:setup_rktimestep()) to get Uf
   // We don't use the ucum update version of dt.  As part of the RK method, the ucum update is separate from the substeps used to get information on updates(?). GODMARK.
-  return(CUf[2]*dtin);
+
+  if(isexplicit==1 || isexplicit==0 && TIMETYPE==TIMEEXPLICIT){
+    return(CUf[2]*dtin);
+  }
+  else{
+    // if TIMETYPE==TIMEIMPLICIT and isexplicit==0, then use implicit dt
+    // [0] because was fed single value at correct current stage.
+    return(CUimp[0]*dtin);
+  }
 }
+
 
 
 
@@ -1927,7 +1936,7 @@ static FTYPE compute_dt(FTYPE *CUf, FTYPE dtin)
 
 
 // wrapper for mode method
-static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE dissmeasure, FTYPE *dUother ,FTYPE (*dUcomp)[NPR])
+static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, FTYPE *CUimp, struct of_geom *ptrgeom, struct of_state *q, FTYPE dissmeasure, FTYPE *dUother ,FTYPE (*dUcomp)[NPR])
 {
   int i=ptrgeom->i;
   int j=ptrgeom->j;
@@ -1942,7 +1951,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
   int usedenergy=0,usedentropy=0,usedboth=0,usedcold=0,usedimplicit=0,usedexplicitgood=0,usedexplicitkindabad=0,usedexplicitbad=0;
 
   // set backups that might change and contaminate a fresh start
-  // piin, Uiin, Ufin, CUf, ptrgeom, dUother don't change, rest can.
+  // piin, Uiin, Ufin, CUf, CUimp, ptrgeom, dUother don't change, rest can.
   int failfinalreturn;
   int eomtypelocal;
 
@@ -1960,7 +1969,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
   FTYPE uu0[NPR],dUtot[NPR],rdUtot[NPR];
   FTYPE dUnongeomall[MAXTIMEORDER]={0.0};
   PLOOP(pliter,pl){
-    uu0[pl]=UFSET(CUf,fracdtuu0*dt,Uiin[pl],Ufin[pl],dUother[pl],0.0,dUnongeomall); // initial+flux value of U
+    uu0[pl]=UFSET(CUf,fracdtuu0*dt,Uiin[pl],Ufin[pl],dUother[pl],0.0,dUnongeomall); // initial+flux value of U.  Only feed in full CUf, not CUimp
     dUtot[pl] = uu0[pl]-Uiin[pl]; // absolute change due to flux-advection step
     rdUtot[pl] = fabs(uu0[pl]-Uiin[pl])/(fabs(uu0[pl])+fabs(Uiin[pl])); // relative change to energy due to flux-advection step
   }
@@ -2088,7 +2097,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     // but, ITERMODESTAGES with QTYPRAD does kinda ok, 6 early bads and ~20 damps, but then settles.
 
     whichcap=CAPTYPEBASIC;
-    failreturn=koral_source_rad_implicit_mode(1,0,havebackup, didentropyalready, &eomtypelocal, whichcap, itermode, &baseitermethod, trueimptryconv, trueimpokconv, trueimpallowconv, trueimpmaxiter,  truenumdampattempts, fracenergy, dissmeasure, &radinvmod, pb, uub, piin, Uiin, Ufin, CUf, ptrgeom, q, dUother ,dUcomp, errorabs, errorabs, &iters, &f1iters, &nummhdinvs, &nummhdsteps);
+    failreturn=koral_source_rad_implicit_mode(1,0,havebackup, didentropyalready, &eomtypelocal, whichcap, itermode, &baseitermethod, trueimptryconv, trueimpokconv, trueimpallowconv, trueimpmaxiter,  truenumdampattempts, fracenergy, dissmeasure, &radinvmod, pb, uub, piin, Uiin, Ufin, CUf, CUimp, ptrgeom, q, dUother ,dUcomp, errorabs, errorabs, &iters, &f1iters, &nummhdinvs, &nummhdsteps);
     if(ACTUALHARDFAILURE(failreturn)){
       failfinalreturn=1;
       *lpflag=UTOPRIMFAILCONV;
@@ -2135,7 +2144,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     itermode=ITERMODESTAGES;
     whichcap=CAPTYPEBASIC;
     baseitermethod=QTYPMHD;
-    failreturn=koral_source_rad_implicit_mode(1,0,havebackup, didentropyalready, &eomtypelocal, whichcap, itermode, &baseitermethod, trueimptryconv, trueimpokconv, trueimpallowconv, trueimpmaxiter,  truenumdampattempts, fracenergy, dissmeasure, &radinvmod, pb, uub, piin, Uiin, Ufin, CUf, ptrgeom, q, dUother ,dUcomp, errorabs, errorabs, &iters, &f1iters, &nummhdinvs, &nummhdsteps);
+    failreturn=koral_source_rad_implicit_mode(1,0,havebackup, didentropyalready, &eomtypelocal, whichcap, itermode, &baseitermethod, trueimptryconv, trueimpokconv, trueimpallowconv, trueimpmaxiter,  truenumdampattempts, fracenergy, dissmeasure, &radinvmod, pb, uub, piin, Uiin, Ufin, CUf, CUimp, ptrgeom, q, dUother ,dUcomp, errorabs, errorabs, &iters, &f1iters, &nummhdinvs, &nummhdsteps);
     if(ACTUALHARDFAILURE(failreturn)){
       failfinalreturn=1;
       *lpflag=UTOPRIMFAILCONV;
@@ -2200,7 +2209,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     failreturn=FAILRETURNGENERAL;// default to fail
     *eomtype=EOMGRMHD;
     int whichcall=*eomtype;
-    get_rameshsolution_wrapper(whichcall, *eomtype, errorabsforramesh, ptrgeom, pb, piin, Uiin, Ufin, dUother, CUf, q, ppeng, ppent, uueng, uuent, dUcompeng, dUcompent, &qeng, &qent, &failtypeeng, errorabseng, &iterseng, &radinvmodeng, &failtypeent, errorabsent, &itersent, &radinvmodent);
+    get_rameshsolution_wrapper(whichcall, *eomtype, errorabsforramesh, ptrgeom, pb, piin, Uiin, Ufin, dUother, CUf, CUimp, q, ppeng, ppent, uueng, uuent, dUcompeng, dUcompent, &qeng, &qent, &failtypeeng, errorabseng, &iterseng, &radinvmodeng, &failtypeent, errorabsent, &itersent, &radinvmodent);
     gotrameshsolution=1; // indicates did at least attempt ramesh soltion call
     // translate
     PLOOP(pliter,pl){
@@ -2292,7 +2301,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     trueimpmaxiterenergy=IMPMAXITERLONG;
     truenumdampattemptsenergy=NUMDAMPATTEMPTS;
     baseitermethodenergy=QTYPMHD;
-    failreturnenergy=koral_source_rad_implicit_mode(1,0,havebackup, didentropyalready, &eomtypelocal, whichcapenergy, itermodeenergy, &baseitermethodenergy, trueimptryconvenergy, trueimpokconvenergy, trueimpallowconvenergy, trueimpmaxiterenergy,  truenumdampattemptsenergy, fracenergy, dissmeasure, &radinvmod, pb, uub, piin, Uiin, Ufin, CUf, ptrgeom, q, dUother ,dUcomp, errorabsenergy, errorabsenergy, &itersenergy, &f1itersenergy, &nummhdinvsenergy, &nummhdstepsenergy);
+    failreturnenergy=koral_source_rad_implicit_mode(1,0,havebackup, didentropyalready, &eomtypelocal, whichcapenergy, itermodeenergy, &baseitermethodenergy, trueimptryconvenergy, trueimpokconvenergy, trueimpallowconvenergy, trueimpmaxiterenergy,  truenumdampattemptsenergy, fracenergy, dissmeasure, &radinvmod, pb, uub, piin, Uiin, Ufin, CUf, CUimp, ptrgeom, q, dUother ,dUcomp, errorabsenergy, errorabsenergy, &itersenergy, &f1itersenergy, &nummhdinvsenergy, &nummhdstepsenergy);
 
     if(SWITCHGOODIDEAFAILURE(failreturn) && eomtypecond[EOMGRMHD]){
       // if failed with GRMHD or return reported switching to entropy is preferred, then do entropy method
@@ -2317,7 +2326,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       trueimpmaxiterentropy=IMPMAXITERLONG;
       truenumdampattemptsentropy=NUMDAMPATTEMPTS;
       baseitermethodentropy=QTYPMHD;
-      failreturnentropy=koral_source_rad_implicit_mode(1,0,havebackup, didentropyalready, &eomtypelocal, whichcapentropy, itermodeentropy, &baseitermethodentropy, trueimptryconventropy, trueimpokconventropy, trueimpallowconventropy, trueimpmaxiterentropy,  truenumdampattemptsentropy, fracenergy, dissmeasure, &radinvmod, pb, uub, piin, Uiin, Ufin, CUf, ptrgeom, q, dUother ,dUcomp, errorabsentropy, errorabsentropy, &itersentropy, &f1itersentropy, &nummhdinvsentropy, &nummhdstepsentropy);
+      failreturnentropy=koral_source_rad_implicit_mode(1,0,havebackup, didentropyalready, &eomtypelocal, whichcapentropy, itermodeentropy, &baseitermethodentropy, trueimptryconventropy, trueimpokconventropy, trueimpallowconventropy, trueimpmaxiterentropy,  truenumdampattemptsentropy, fracenergy, dissmeasure, &radinvmod, pb, uub, piin, Uiin, Ufin, CUf, CUimp, ptrgeom, q, dUother ,dUcomp, errorabsentropy, errorabsentropy, &itersentropy, &f1itersentropy, &nummhdinvsentropy, &nummhdstepsentropy);
       if(ACTUALHARDFAILURE(failreturnentropy)){
         failfinalreturn=1;
         *lpflag=UTOPRIMFAILCONV;
@@ -2891,7 +2900,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
             radinvmodenergy=radinvmodentropy;
           }
           //
-          failreturnenergy=koral_source_rad_implicit_mode(0,modprim,havebackup, didentropyalready, &eomtypeenergy, whichcapenergy, itermodeenergy, &baseitermethodenergy, trueimptryconvenergy, trueimpokconvenergy, trueimpallowconvenergy, trueimpmaxiterenergy,  truenumdampattemptsenergy, fracenergy, dissmeasure, &radinvmodenergy, pbenergy, uubenergy, piin, Uiin, Ufin, CUf, ptrgeom, &qenergy, dUother ,dUcompenergy, errorabsenergy, errorabsenergybest, &itersenergy, &f1itersenergy, &nummhdinvsenergy, &nummhdstepsenergy);
+          failreturnenergy=koral_source_rad_implicit_mode(0,modprim,havebackup, didentropyalready, &eomtypeenergy, whichcapenergy, itermodeenergy, &baseitermethodenergy, trueimptryconvenergy, trueimpokconvenergy, trueimpallowconvenergy, trueimpmaxiterenergy,  truenumdampattemptsenergy, fracenergy, dissmeasure, &radinvmodenergy, pbenergy, uubenergy, piin, Uiin, Ufin, CUf, CUimp, ptrgeom, &qenergy, dUother ,dUcompenergy, errorabsenergy, errorabsenergybest, &itersenergy, &f1itersenergy, &nummhdinvsenergy, &nummhdstepsenergy);
           
           // store error, no matter if using solution or not or even if explicit
           errorabslist[tryphase1][0]=errorabsenergy[0];
@@ -3057,7 +3066,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
           failreturnenergy=FAILRETURNGENERAL;// default to fail
           eomtypeenergy=EOMGRMHD;
           int whichcall=eomtypeenergy;
-          get_rameshsolution_wrapper(whichcall, eomtypeenergy, errorabsforramesh, ptrgeom, pbenergy, piin, Uiin, Ufin, dUother, CUf, q, ppeng, ppent, uueng, uuent, dUcompeng, dUcompent, &qeng, &qent, &failtypeeng, errorabseng, &iterseng, &radinvmodeng, &failtypeent, errorabsent, &itersent, &radinvmodent);
+          get_rameshsolution_wrapper(whichcall, eomtypeenergy, errorabsforramesh, ptrgeom, pbenergy, piin, Uiin, Ufin, dUother, CUf, CUimp, q, ppeng, ppent, uueng, uuent, dUcompeng, dUcompent, &qeng, &qent, &failtypeeng, errorabseng, &iterseng, &radinvmodeng, &failtypeent, errorabsent, &itersent, &radinvmodent);
           gotrameshsolution=1; // indicates did at least attempt ramesh soltion call
           // translate
           PLOOP(pliter,pl){
@@ -3373,7 +3382,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
           //
           //
           FTYPE fracenergyentropy=0;
-          failreturnentropy=koral_source_rad_implicit_mode(0,modprim,havebackup, didentropyalready, &eomtypeentropy, whichcapentropy, itermodeentropy, &baseitermethodentropy, trueimptryconventropy, trueimpokconventropy, trueimpallowconventropy, trueimpmaxiterentropy,  truenumdampattemptsentropy, fracenergyentropy, dissmeasure, &radinvmodentropy, pbentropy, uubentropy, piin, Uiin, Ufin, CUf, ptrgeom, &qentropy, dUother ,dUcompentropy, errorabsentropy, errorabsentropybest, &itersentropy, &f1itersentropy, &nummhdinvsentropy, &nummhdstepsentropy);
+          failreturnentropy=koral_source_rad_implicit_mode(0,modprim,havebackup, didentropyalready, &eomtypeentropy, whichcapentropy, itermodeentropy, &baseitermethodentropy, trueimptryconventropy, trueimpokconventropy, trueimpallowconventropy, trueimpmaxiterentropy,  truenumdampattemptsentropy, fracenergyentropy, dissmeasure, &radinvmodentropy, pbentropy, uubentropy, piin, Uiin, Ufin, CUf, CUimp, ptrgeom, &qentropy, dUother ,dUcompentropy, errorabsentropy, errorabsentropybest, &itersentropy, &f1itersentropy, &nummhdinvsentropy, &nummhdstepsentropy);
 
           // store error, no matter if using solution or not or even if explicit
           errorabslist[tryphase1][0]=errorabsentropy[0];
@@ -3518,7 +3527,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
           failreturnentropy=FAILRETURNGENERAL;// default to fail
           eomtypeentropy=EOMENTROPYGRMHD;
           int whichcall=eomtypeentropy; // real entropy call
-          get_rameshsolution_wrapper(whichcall, eomtypeentropy, errorabsforramesh, ptrgeom, pbentropy, piin, Uiin, Ufin, dUother, CUf, q, ppeng, ppent, uueng, uuent, dUcompeng, dUcompent, &qeng, &qent, &failtypeeng, errorabseng, &iterseng, &radinvmodeng, &failtypeent, errorabsent, &itersent, &radinvmodent);
+          get_rameshsolution_wrapper(whichcall, eomtypeentropy, errorabsforramesh, ptrgeom, pbentropy, piin, Uiin, Ufin, dUother, CUf, CUimp, q, ppeng, ppent, uueng, uuent, dUcompeng, dUcompent, &qeng, &qent, &failtypeeng, errorabseng, &iterseng, &radinvmodeng, &failtypeent, errorabsent, &itersent, &radinvmodent);
           gotrameshsolution=1; // indicates did at least attempt ramesh solution call
           // translate
           PLOOP(pliter,pl){
@@ -3753,7 +3762,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
         errorabscold[0]=errorabscold[1]=1.0;
 
 
-        failreturncold=koral_source_rad_implicit_mode(0,0,havebackup, didentropyalready, &eomtypecold, whichcapcold, itermodecold, &baseitermethodcold, trueimptryconvcold, trueimpokconvcold, trueimpallowconvcold, trueimpmaxitercold, truenumdampattemptscold, fracenergycold, dissmeasure, &radinvmodcold, pbcold, uubcold, piin, Uiin, Ufin, CUf, ptrgeom, &qcold, dUother ,dUcompcold, errorabscold, errorabscoldbest, &iterscold, &f1iterscold, &nummhdinvscold, &nummhdstepscold);
+        failreturncold=koral_source_rad_implicit_mode(0,0,havebackup, didentropyalready, &eomtypecold, whichcapcold, itermodecold, &baseitermethodcold, trueimptryconvcold, trueimpokconvcold, trueimpallowconvcold, trueimpmaxitercold, truenumdampattemptscold, fracenergycold, dissmeasure, &radinvmodcold, pbcold, uubcold, piin, Uiin, Ufin, CUf, CUimp, ptrgeom, &qcold, dUother ,dUcompcold, errorabscold, errorabscoldbest, &iterscold, &f1iterscold, &nummhdinvscold, &nummhdstepscold);
 
         if(failreturncold==FAILRETURNGOEXPLICIT) goexplicitcold=1;
         // store these in case cold ultimately used
@@ -4265,7 +4274,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
 // compute changes to U (both T and R) using implicit method
 // KORALTODO: If doing implicit, should also add geometry source term that can sometimes be stiff.  Would require inverting sparse 8x8 matrix (or maybe 6x6 since only r-\theta for SPC).  Could be important for very dynamic radiative flows.
-static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int modprim, int havebackup, int didentropyalready, int *eomtype, int whichcap, int itermode, int *baseitermethod, FTYPE trueimptryconv, FTYPE trueimpokconv, FTYPE trueimpallowconv, int trueimpmaxiter, int truenumdampattempts, FTYPE fracenergy, FTYPE dissmeasure, int *radinvmod, FTYPE *pb, FTYPE *uub, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother ,FTYPE (*dUcomp)[NPR], FTYPE *errorabsreturn, FTYPE *errorabsbestexternal, int *itersreturn, int *f1itersreturn, int *nummhdinvsreturn, int *nummhdstepsreturn)
+static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int modprim, int havebackup, int didentropyalready, int *eomtype, int whichcap, int itermode, int *baseitermethod, FTYPE trueimptryconv, FTYPE trueimpokconv, FTYPE trueimpallowconv, int trueimpmaxiter, int truenumdampattempts, FTYPE fracenergy, FTYPE dissmeasure, int *radinvmod, FTYPE *pb, FTYPE *uub, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, FTYPE *CUimp, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother ,FTYPE (*dUcomp)[NPR], FTYPE *errorabsreturn, FTYPE *errorabsbestexternal, int *itersreturn, int *f1itersreturn, int *nummhdinvsreturn, int *nummhdstepsreturn)
 {
   int nstrokeorig=nstroke;
   *nummhdinvsreturn=0;
@@ -4327,7 +4336,7 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
   FTYPE pppriorsteptype[NPR],uupriorsteptype[NPR];
 
   FTYPE radsource[NPR], deltas[NPR]; 
-  extern int mathematica_report_check(int radinvmod, int failtype, long long int failnum, int gotfirstnofail, int eomtypelocal, int itermode, int baseitermethod, FTYPE *errorabs, FTYPE *errorabsbestexternal, int iters, int iterstotal, FTYPE realdt,struct of_geom *ptrgeom, FTYPE *ppfirst, FTYPE *pp, FTYPE *pb, FTYPE *piin, FTYPE *prtestUiin, FTYPE *prtestUU0, FTYPE *uu0, FTYPE *uu, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_state *q, FTYPE *dUother);
+  extern int mathematica_report_check(int radinvmod, int failtype, long long int failnum, int gotfirstnofail, int eomtypelocal, int itermode, int baseitermethod, FTYPE *errorabs, FTYPE *errorabsbestexternal, int iters, int iterstotal, FTYPE realdt,struct of_geom *ptrgeom, FTYPE *ppfirst, FTYPE *pp, FTYPE *pb, FTYPE *piin, FTYPE *prtestUiin, FTYPE *prtestUU0, FTYPE *uu0, FTYPE *uu, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, FTYPE *CUimp, struct of_state *q, FTYPE *dUother);
   int mathfailtype;
 
 
@@ -4400,7 +4409,8 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
   // setup implicit iteration procedure and loops
   //
   ///////////////////
-  realdt = compute_dt(CUf,dt);
+  int isexplicit=0;
+  realdt = compute_dt(isexplicit,CUf, CUimp,dt);
   FTYPE fracdtuu0=1.0,fracdtG=1.0,fracuup=1.0; // initially try full realstep step
   FTYPE fracdtuu0p=fracdtuu0;
   FTYPE fracdtuu0pp=fracdtuu0p;
@@ -6578,7 +6588,7 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
   //  if(REPORTERFNEG && failreturn!=FAILRETURNMODESWITCH && (pp[PRAD0]<10.0*ERADLIMIT) || PRODUCTION==0 && NOTACTUALFAILURE(failreturn)==0 && errorabsf1[WHICHERROR]>=trueimptryconvalt || PRODUCTION>0 && NOTBADFAILURE(failreturn)==0 && havebackup==0){
     //    if(NOTBADFAILURE(failreturn)==0){
     struct of_state qcheck; get_state(pp, ptrgeom, &qcheck);  primtoU(UNOTHING,pp,&qcheck,ptrgeom, uu, NULL);
-    failnum++; mathematica_report_check(*radinvmod, mathfailtype, failnum, gotfirstnofail, eomtypelocal, itermode, *baseitermethod, errorabsf1, errorabsbestexternal, iter, totaliters, realdt, ptrgeom, ppfirst,pp,pb,piin,prtestUiin,prtestUU0,uu0,uu,Uiin,Ufin, CUf, q, dUother);
+    failnum++; mathematica_report_check(*radinvmod, mathfailtype, failnum, gotfirstnofail, eomtypelocal, itermode, *baseitermethod, errorabsf1, errorabsbestexternal, iter, totaliters, realdt, ptrgeom, ppfirst,pp,pb,piin,prtestUiin,prtestUU0,uu0,uu,Uiin,Ufin, CUf, CUimp, q, dUother);
     int usedebugiter=debugiteratteempts[0];
     showdebuglist(usedebugiter,pppreholdlist,ppposholdlist,f1reportlist,f1list,errorabsf1list,errorallabsf1list,realiterlist,jaclist,fracdamplist,implicititerlist, implicitferrlist);
 
@@ -6668,7 +6678,7 @@ static void showdebuglist(int debugiter, FTYPE (*pppreholdlist)[NPR],FTYPE (*ppp
 
 
                              
-int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE *errorabs, struct of_geom *ptrgeom, FTYPE *pp, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *dUother, FTYPE *CUf, struct of_state *q, FTYPE *ppeng, FTYPE *ppent, FTYPE *uueng, FTYPE *uuent, FTYPE (*dUcompeng)[NPR], FTYPE (*dUcompent)[NPR], struct of_state *qeng, struct of_state *qent, int *failtypeeng, FTYPE *errorabseng, int *iterseng, int *radinvmodeng, int *failtypeent, FTYPE *errorabsent, int *itersent, int *radinvmodent)
+int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE *errorabs, struct of_geom *ptrgeom, FTYPE *pp, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *dUother, FTYPE *CUf, FTYPE *CUimp, struct of_state *q, FTYPE *ppeng, FTYPE *ppent, FTYPE *uueng, FTYPE *uuent, FTYPE (*dUcompeng)[NPR], FTYPE (*dUcompent)[NPR], struct of_state *qeng, struct of_state *qent, int *failtypeeng, FTYPE *errorabseng, int *iterseng, int *radinvmodeng, int *failtypeent, FTYPE *errorabsent, int *itersent, int *radinvmodent)
 {
   // BEGIN get ramesh solution
   int radinvmod=0; // fake
@@ -6680,7 +6690,8 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE *errorabs, stru
   FTYPE errorabsbestexternal[2];
   set_array(errorabsbestexternal,2,MPI_FTYPE,BIG);
   // itersentropy is last, but might feed in best
-  FTYPE realdt = compute_dt(CUf,dt);
+  int isexplicit=0;
+  FTYPE realdt = compute_dt(isexplicit,CUf, CUimp,dt);
   // get uu0
   FTYPE uu0[NPR];
   FTYPE fracdtuu0=1.0;
@@ -6690,7 +6701,7 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE *errorabs, stru
   FTYPE uu[NPR]; // not used except when doing diagnostics in ramesh code
   //  FTYPE uueng[NPR],uuent[NPR]; // filled with answer if successful
   //
-  get_rameshsolution(whichcall, radinvmod, failreturnentropy, failnum,  gotfirstnofail,  eomtype,  itermode, baseitermethod, errorabs, errorabs, iters, iters, realdt, ptrgeom, pp, pp, piin, uu0, uu, Uiin, Ufin, CUf, q, ppeng, ppent, uueng, uuent, qeng, qent, failtypeeng, errorabseng, iterseng, radinvmodeng, failtypeent, errorabsent, itersent, radinvmodent);
+  get_rameshsolution(whichcall, radinvmod, failreturnentropy, failnum,  gotfirstnofail,  eomtype,  itermode, baseitermethod, errorabs, errorabs, iters, iters, realdt, ptrgeom, pp, pp, piin, uu0, uu, Uiin, Ufin, CUf, CUimp, q, ppeng, ppent, uueng, uuent, qeng, qent, failtypeeng, errorabseng, iterseng, radinvmodeng, failtypeent, errorabsent, itersent, radinvmodent);
   //
   // pp and q are assigned, but external call might just use only *eng and *ent versions of these and other things.
   if(eomtype==EOMGRMHD){
@@ -6726,7 +6737,7 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE *errorabs, stru
 //#define WHICHVELRAMESH VEL4 // should be same as WHICHVEL in test.f
 #define WHICHVELRAMESH VELREL4 // should be same as WHICHVEL in test.f
 
-int get_rameshsolution(int whichcallramesh, int radinvmod, int failtype, long long int failnum, int gotfirstnofail, int eomtypelocal, int itermode, int baseitermethod, FTYPE *errorabs, FTYPE *errorabsbestexternal, int iters, int totaliters, FTYPE realdt, struct of_geom *ptrgeom, FTYPE *pp, FTYPE *pb, FTYPE *piin, FTYPE *uu0, FTYPE *uu, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_state *q, FTYPE *ppeng, FTYPE *ppent, FTYPE *uueng, FTYPE *uuent, struct of_state *qeng, struct of_state *qent, int *failtypeeng, FTYPE *errorabseng, int *iterseng, int *radinvmodeng, int *failtypeent, FTYPE *errorabsent, int *itersent, int *radinvmodent)
+int get_rameshsolution(int whichcallramesh, int radinvmod, int failtype, long long int failnum, int gotfirstnofail, int eomtypelocal, int itermode, int baseitermethod, FTYPE *errorabs, FTYPE *errorabsbestexternal, int iters, int totaliters, FTYPE realdt, struct of_geom *ptrgeom, FTYPE *pp, FTYPE *pb, FTYPE *piin, FTYPE *uu0, FTYPE *uu, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, FTYPE *CUimp, struct of_state *q, FTYPE *ppeng, FTYPE *ppent, FTYPE *uueng, FTYPE *uuent, struct of_state *qeng, struct of_state *qent, int *failtypeeng, FTYPE *errorabseng, int *iterseng, int *radinvmodeng, int *failtypeent, FTYPE *errorabsent, int *itersent, int *radinvmodent)
 {
   //  int failtype=1;
   //  long long int failnum=0;
@@ -7083,7 +7094,7 @@ int get_rameshsolution(int whichcallramesh, int radinvmod, int failtype, long lo
 
 
 
-int mathematica_report_check(int radinvmod, int failtype, long long int failnum, int gotfirstnofail, int eomtypelocal, int itermode, int baseitermethod, FTYPE *errorabs, FTYPE *errorabsbestexternal, int iters, int totaliters, FTYPE realdt,struct of_geom *ptrgeom, FTYPE *ppfirst, FTYPE *pp, FTYPE *pb, FTYPE *piin, FTYPE *prtestUiin, FTYPE *prtestUU0, FTYPE *uu0, FTYPE *uu, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_state *q, FTYPE *dUother)
+int mathematica_report_check(int radinvmod, int failtype, long long int failnum, int gotfirstnofail, int eomtypelocal, int itermode, int baseitermethod, FTYPE *errorabs, FTYPE *errorabsbestexternal, int iters, int totaliters, FTYPE realdt,struct of_geom *ptrgeom, FTYPE *ppfirst, FTYPE *pp, FTYPE *pb, FTYPE *piin, FTYPE *prtestUiin, FTYPE *prtestUU0, FTYPE *uu0, FTYPE *uu, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, FTYPE *CUimp, struct of_state *q, FTYPE *dUother)
 {
   int jj,kk;
   int pliter,pl;
@@ -7172,7 +7183,7 @@ int mathematica_report_check(int radinvmod, int failtype, long long int failnum,
     FTYPE uueng[NPR]={0},uuent[NPR]={0};
     int failtypeeng=1,failtypeent=1,iterseng=IMPMAXITERLONG,itersent=IMPMAXITERLONG, radinvmodeng=UTOPRIMRADFAILBAD1, radinvmodent=UTOPRIMRADFAILBAD1;
     struct of_state qeng=*q,qent=*q;
-    get_rameshsolution(whichcall, radinvmod, failtype, failnum,  gotfirstnofail,  eomtypelocal,  itermode, baseitermethod, errorabs, errorabsbestexternal,  iters,  totaliters,realdt, ptrgeom, pp, pb, piin, uu0, uu, Uiin, Ufin, CUf, q, ppeng, ppent, uueng, uuent, &qeng, &qent, &failtypeeng, errorabseng, &iterseng, &radinvmodeng, &failtypeent, errorabsent, &itersent, &radinvmodent);
+    get_rameshsolution(whichcall, radinvmod, failtype, failnum,  gotfirstnofail,  eomtypelocal,  itermode, baseitermethod, errorabs, errorabsbestexternal,  iters,  totaliters,realdt, ptrgeom, pp, pb, piin, uu0, uu, Uiin, Ufin, CUf, CUimp, q, ppeng, ppent, uueng, uuent, &qeng, &qent, &failtypeeng, errorabseng, &iterseng, &radinvmodeng, &failtypeent, errorabsent, &itersent, &radinvmodent);
 
 
 
@@ -7909,7 +7920,7 @@ static int get_implicit_iJ(int allowbaseitermethodswitch, int failreturnallowabl
 
 
 // get dt for explicit sub-cyclings
-static void get_dtsub(int method, FTYPE *pr, struct of_state *q, FTYPE *Ui, FTYPE *Uf, FTYPE *dUother,  FTYPE *CUf, FTYPE *Gdpl, FTYPE chi, FTYPE *Gdplabs, struct of_geom *ptrgeom, FTYPE *dtsub)
+static void get_dtsub(int method, FTYPE *pr, struct of_state *q, FTYPE *Ui, FTYPE *Uf, FTYPE *dUother,  FTYPE *CUf, FTYPE *CUimp, FTYPE *Gdpl, FTYPE chi, FTYPE *Gdplabs, struct of_geom *ptrgeom, FTYPE *dtsub)
 {
   int jj;
   int pliter,pl;
@@ -7935,7 +7946,8 @@ static void get_dtsub(int method, FTYPE *pr, struct of_state *q, FTYPE *Ui, FTYP
   // The relevant NR1992 is S16.6L on stiff source terms.
 
   // get G*dt that can be compared to Umhd or Urad
-  FTYPE realdt=compute_dt(CUf,dt);
+  int isexplicit=1;
+  FTYPE realdt=compute_dt(isexplicit,CUf, CUimp,dt);
 
   // choose if using actual 4-force or absolutified 4-force
   if(0){
@@ -8161,8 +8173,8 @@ static void get_dtsub(int method, FTYPE *pr, struct of_state *q, FTYPE *Ui, FTYP
 // 5) repeat.
 // Only change dUcomp, and can overwrite prnew, Unew, and qnew since "prepare" function isolated original values already
 static int source_explicit(int whichsc, int whichradsourcemethod, int methoddtsub,int *eomtype,
-                           void (*sourcefunc)(int methoddtsub, FTYPE *pr, FTYPE *Ui, FTYPE *Uf, FTYPE *dUother, FTYPE *CUf, FTYPE *Gpl, struct of_geom *ptrgeom, FTYPE *dtsub),
-                           FTYPE *pb, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother, FTYPE (*dUcomp)[NPR])
+                           void (*sourcefunc)(int methoddtsub, FTYPE *pr, FTYPE *Ui, FTYPE *Uf, FTYPE *dUother, FTYPE *CUf, FTYPE *CUimp, FTYPE *Gpl, struct of_geom *ptrgeom, FTYPE *dtsub),
+                           FTYPE *pb, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, FTYPE *CUimp, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother, FTYPE (*dUcomp)[NPR])
 {
   int pliter, pl;
 
@@ -8295,7 +8307,7 @@ static int source_explicit(int whichsc, int whichradsourcemethod, int methoddtsu
  
   // get dtsubforG (don't use Gpl from this)
   FTYPE dtsubforG;
-  sourcefunc(methoddtsub, prforG, Uiin, Ufin, dUother, CUf, Gpl, ptrgeom, &dtsubforG);
+  sourcefunc(methoddtsub, prforG, Uiin, Ufin, dUother, CUf, CUimp, Gpl, ptrgeom, &dtsubforG);
   //  dualfprintf(fail_file,"dtsubforG=%g\n",dtsubforG);
 
   if(!(whichradsourcemethod==SOURCEMETHODEXPLICIT || whichradsourcemethod==SOURCEMETHODEXPLICITREVERSIONFROMIMPLICIT || whichradsourcemethod==SOURCEMETHODEXPLICITCHECKSFROMIMPLICIT)){
@@ -8314,7 +8326,8 @@ static int source_explicit(int whichsc, int whichradsourcemethod, int methoddtsu
   FTYPE dttrue=0.0,dtcum=0.0;  // cumulative sub-cycle time
   FTYPE dtdiff;
   FTYPE dtsub,dtsubold,dtsubuse;
-  FTYPE realdt=compute_dt(CUf,dt);
+  int isexplicit=1;
+  FTYPE realdt=compute_dt(isexplicit,CUf, CUimp,dt);
   FTYPE fracdtG;
 
   int jj;
@@ -8337,7 +8350,7 @@ static int source_explicit(int whichsc, int whichradsourcemethod, int methoddtsu
     // get 4-force for full pl set
     PLOOP(pliter,pl) Gplprevious[pl]=Gpl[pl];
     // get Gpl and dtsub for sub-cycling
-    sourcefunc(methoddtsub, prnew, Uiin, Ufin, dUother, CUf, Gpl, ptrgeom, &dtsub);
+    sourcefunc(methoddtsub, prnew, Uiin, Ufin, dUother, CUf, CUimp, Gpl, ptrgeom, &dtsub);
     if(itersub==0)  PLOOP(pliter,pl) Gplprevious[pl]=Gpl[pl]; // constant interpolation rather than just using zero for midpoint method
     if(itersub==0 && dtsub>dtsubforG) dtsub=dtsubforG; // ensure initial sub-stepping is not too large due to large state changes not accounted for yet.  Assuming slow safety factor growth in dtsub can occur from then on and that's ok since will catch updated state change to some fraction.
     //    dualfprintf(fail_file,"itersub=%d dtsub=%g\n",itersub,dtsub);
@@ -8534,11 +8547,11 @@ static int source_explicit(int whichsc, int whichradsourcemethod, int methoddtsu
 
 
 
-// General radiation source term calculation
+// General radiation source term calculation (EXTERNALLY called)
 // NOTE: source_explicit() takes as first argument a form of function like general koral_source_rad_calc() .  It doesn't have to be just used for radiation.
 // NOTE: koral_source_rad_implicit() currently only works for radiation where only 4 equations involved since 4-force of rad affects exactly mhd.  So only invert 4x4 matrix.
 // For recursion of other consistencies, should keep koral_source_rad() same function arguments as explicit and implicit functions.  Once make koral_source_rad() general, can use this function as general source function instead of it getting called just for radiation.
-int koral_source_rad(int whichradsourcemethod, FTYPE *piin, FTYPE *pb, FTYPE *pf, int *didreturnpf, int *eomtype, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, struct of_geom *ptrgeom, struct of_state *q, FTYPE dissmeasure, FTYPE *dUother, FTYPE (*dUcomp)[NPR])
+int koral_source_rad(int whichradsourcemethod, FTYPE *piin, FTYPE *pb, FTYPE *pf, int *didreturnpf, int *eomtype, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, FTYPE *CUimp, struct of_geom *ptrgeom, struct of_state *q, FTYPE dissmeasure, FTYPE *dUother, FTYPE (*dUcomp)[NPR])
 {
   int pliter,pl;
   int showmessages=0; // 0 ok if not debugging and think everything works.
@@ -8590,7 +8603,7 @@ int koral_source_rad(int whichradsourcemethod, FTYPE *piin, FTYPE *pb, FTYPE *pf
     int whichsc = RADSOURCE;
     // try explicit (with or without sub-cycling)
     //    dualfprintf(fail_file,"Trying explicit: whichradsourcemethod=%d\n",whichradsourcemethod);
-    int failexplicit=source_explicit(whichsc, whichradsourcemethod,methoddtsub,eomtype,koral_source_dtsub_rad_calc,pborig, piinorig, Uiinorig, Ufinorig, CUf, ptrgeom, qorig, dUother, dUcomp);
+    int failexplicit=source_explicit(whichsc, whichradsourcemethod,methoddtsub,eomtype,koral_source_dtsub_rad_calc,pborig, piinorig, Uiinorig, Ufinorig, CUf, CUimp, ptrgeom, qorig, dUother, dUcomp);
     if(failexplicit==EXPLICITFAILED){
       if(whichradsourcemethod==SOURCEMETHODEXPLICIT || whichradsourcemethod==SOURCEMETHODEXPLICITSUBCYCLE || whichradsourcemethod==SOURCEMETHODEXPLICITREVERSIONFROMIMPLICIT || whichradsourcemethod==SOURCEMETHODEXPLICITSUBCYCLEREVERSIONFROMIMPLICIT){
         // still do explicit anyways, since best can do with the choice of method -- will fail possibly to work if stiff regime, but ok in non-stiff.
@@ -8636,13 +8649,31 @@ int koral_source_rad(int whichradsourcemethod, FTYPE *piin, FTYPE *pb, FTYPE *pf
   //
   /////////////////
   else if(whichradsourcemethod==SOURCEMETHODIMPLICIT){
+
+
+    // If doing implicit, first check if using TIMEIMPLICIT.  If so, then check if CUf CUnew implies no contribution to compute.  If so, return without computation
+    if(TIMETYPE==TIMEIMPLICIT){
+      int doradimplicit = (CUimp[0]!=0.0); // || CUnewimp[0]!=0.0); // assuming M^i only created and added if added to Uf and U^{n+1} at same step.
+      if(doradimplicit){
+        // then return as if successful, but don't assume inversion already done for pf (since not)
+        // NOTE: We don't return explicit version of answer either -- just simply zero.  Since dUcomp already set as zero when initialized, nothing to do. (as if never was doing source term)
+        PLOOP(pliter,pl) pf[pl]=pborig[pl];
+        *didreturnpf=0;
+        return(0);
+      }
+      // then do implicit step
+    }
+    else{
+      // else just follow flux behavior
+    }
+
  
-    int failimplicit=koral_source_rad_implicit(eomtype, pborig, pforig, piinorig, Uiinorig, Ufinorig, CUf, ptrgeom, qorig, dissmeasure, dUother, dUcomp);
+    int failimplicit=koral_source_rad_implicit(eomtype, pborig, pforig, piinorig, Uiinorig, Ufinorig, CUf, CUimp, ptrgeom, qorig, dissmeasure, dUother, dUcomp);
  
     if(failimplicit>0){
       if(IMPLICITREVERTEXPLICIT){ // single level recusive call (to avoid duplicate confusing code)
         // assume if revert from implicit, then need to do sub-cycles
-        int failexplicit=koral_source_rad(SOURCEMETHODEXPLICITSUBCYCLEREVERSIONFROMIMPLICIT, piinorig, pborig, pf, didreturnpf, eomtype, Uiinorig, Ufinorig, CUf, ptrgeom, qorig, dissmeasure, dUother, dUcomp);
+        int failexplicit=koral_source_rad(SOURCEMETHODEXPLICITSUBCYCLEREVERSIONFROMIMPLICIT, piinorig, pborig, pf, didreturnpf, eomtype, Uiinorig, Ufinorig, CUf, CUimp, ptrgeom, qorig, dissmeasure, dUother, dUcomp);
         if(failexplicit==EXPLICITFAILED){
           // nothing else to revert to, but just continue and report
           *didreturnpf=0;
@@ -8702,7 +8733,7 @@ int koral_source_rad(int whichradsourcemethod, FTYPE *piin, FTYPE *pb, FTYPE *pf
 
     // try explicit (or see if no source at all required)
     // Just check using explicit method, since if sub-cycles required then should just do implicit
-    int failreturn=koral_source_rad(SOURCEMETHODEXPLICITCHECKSFROMIMPLICIT, piinorig, pborig, pf, didreturnpf, eomtype, Uiinorig, Ufinorig, CUf, ptrgeom, qorig, dissmeasure, dUother, dUcomp);
+    int failreturn=koral_source_rad(SOURCEMETHODEXPLICITCHECKSFROMIMPLICIT, piinorig, pborig, pf, didreturnpf, eomtype, Uiinorig, Ufinorig, CUf, CUimp, ptrgeom, qorig, dissmeasure, dUother, dUcomp);
 
     // determine if still need to do implicit
     // don't set didreturnpf since already was set
@@ -8729,7 +8760,7 @@ int koral_source_rad(int whichradsourcemethod, FTYPE *piin, FTYPE *pb, FTYPE *pf
       if(showmessagesheavy && debugfail>=2) dualfprintf(fail_file,"NOTE: Had to take implicit step: %d %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
 
       // one-deep recursive call to implicit scheme
-      return(koral_source_rad(SOURCEMETHODIMPLICIT, piinorig, pborig, pf, didreturnpf, eomtype, Uiinorig, Ufinorig, CUf, ptrgeom, qorig, dissmeasure, dUother, dUcomp));
+      return(koral_source_rad(SOURCEMETHODIMPLICIT, piinorig, pborig, pf, didreturnpf, eomtype, Uiinorig, Ufinorig, CUf, CUimp, ptrgeom, qorig, dissmeasure, dUother, dUcomp));
     }// end if doimplicit==1
 
   }
@@ -8916,7 +8947,7 @@ void koral_source_rad_calc(int computestate, int computeentropy, FTYPE *pr, stru
 
 
 // get 4-force and dtsub for all pl's
-static void koral_source_dtsub_rad_calc(int method, FTYPE *pr, FTYPE *Ui, FTYPE *Uf, FTYPE *dUother, FTYPE *CUf, FTYPE *Gdpl, struct of_geom *ptrgeom, FTYPE *dtsub)
+static void koral_source_dtsub_rad_calc(int method, FTYPE *pr, FTYPE *Ui, FTYPE *Uf, FTYPE *dUother, FTYPE *CUf, FTYPE *CUimp, FTYPE *Gdpl, struct of_geom *ptrgeom, FTYPE *dtsub)
 {
   FTYPE Gdplabs[NPR];
   FTYPE chi,Tgas;
@@ -8928,7 +8959,7 @@ static void koral_source_dtsub_rad_calc(int method, FTYPE *pr, FTYPE *Ui, FTYPE 
 
   if(dtsub!=NULL){
     // then assume expect calculation of dtsub
-    get_dtsub(method, pr, &q, Ui, Uf, dUother, CUf, Gdpl, chi, Gdplabs, ptrgeom, dtsub);
+    get_dtsub(method, pr, &q, Ui, Uf, dUother, CUf, CUimp, Gdpl, chi, Gdplabs, ptrgeom, dtsub);
   }
   // else "method" can be anything and it doesn't matter
 
@@ -11455,6 +11486,7 @@ static int get_m1closure_urfconrel(int showmessages, int allowlocalfailurefixand
     static long long int failnum=0;
     FTYPE fakedt=0.0; // since no 4-force
     FTYPE fakeCUf[NUMDTCUFS]={0}; // fake
+    FTYPE fakeCUimp[1]={0}; // fake
     FTYPE dUother[NPR]={0};// fake
     struct of_state *qptr=NULL; // fake
     failnum++;
@@ -11466,7 +11498,7 @@ static int get_m1closure_urfconrel(int showmessages, int allowlocalfailurefixand
     SLOOPA(jj) globalpin[PRAD1+jj-1] = urfconrel[jj];
 
     // ppfirst is faked as pp
-    mathematica_report_check(0, 3, failnum, *lpflagrad, BIG, -1, -1, fakedt, ptrgeom, pp, pp, pp, globalpin, globalpin, globalpin, globaluu, globaluu, globaluu, globaluu, fakeCUf, qptr, dUother);
+    mathematica_report_check(0, 3, failnum, *lpflagrad, BIG, -1, -1, fakedt, ptrgeom, pp, pp, pp, globalpin, globalpin, globalpin, globaluu, globaluu, globaluu, globaluu, fakeCUf, fakeCUimp, qptr, dUother);
   }
   //  if(nstep==224) exit(0);
 #endif

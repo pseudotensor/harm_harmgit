@@ -652,7 +652,9 @@
 
 #define MAXTIMEORDER 5 // 5 now needed for EOMRADTYPE!=EOMRADNONE, but only affects memory in that case.
 
-#define NUMDTCUFS (4+MAXTIMEORDER) // see step_ch.c
+#define NUMPREDTCUFS (4) // see step_ch.c
+// NUMDTCUFS also includes what's necessary for IMEX
+#define NUMDTCUFS (NUMPREDTCUFS+MAXTIMEORDER) // see step_ch.c
 
 //#define TIMEORDER 3
 // order of algorithm in time from 1 to 4.

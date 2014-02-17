@@ -264,6 +264,15 @@ static int advance_standard(
   }
 
 
+  ////////////////////////////////////////////////////////////////////////////////
+  //
+  // whether need to compute flux
+  // only compute flux if flux is added to get Uf or Ucum
+  ////////////////////////////////////////////////////////////////////////////////
+  int doflux = (CUf[2]!=0.0 || CUnew[1]!=0.0); // in reality, only do flux if CUf[2]!=0 as CUnew is just to accumulate to get U^{n+1}
+  // current implicit dt factor
+  // Since we don't pass CUnew[NUMPREDTCUFS+stage], we assume never try to add M^i into U^{n+1} unless computed for current U^i or previous U^i
+  FTYPE *CUimp=&CUf[NUMPREDTCUFS+stage];
 
 
   /////////
@@ -323,7 +332,7 @@ static int advance_standard(
 
 
 
-  if(truestep){ // only do if not just passing through
+  if(doflux && truestep){ // only do if not just passing through
     if(1){
       // NORMAL:
       ndt1=ndt2=ndt3=BIG;
@@ -414,8 +423,11 @@ static int advance_standard(
           OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
           // dUriemann is actually average quantity, but we treat is as a point quantity at the zone center
-          flux2dUavg(DOBPL,i,j,k,F1,F2,F3,dUriemann1,dUriemann2,dUriemann3);
-          PLOOPBONLY(pl) dUriemann[pl]=dUriemann1[pl]+dUriemann2[pl]+dUriemann3[pl]; // this addition is one type of avg->point mistake
+          if(doflux){
+            flux2dUavg(DOBPL,i,j,k,F1,F2,F3,dUriemann1,dUriemann2,dUriemann3);
+            PLOOPBONLY(pl) dUriemann[pl]=dUriemann1[pl]+dUriemann2[pl]+dUriemann3[pl]; // this addition is one type of avg->point mistake
+          }
+          else PLOOPBONLY(pl) dUriemann[pl]=0.0;
 
           // Get update
           // ui is itself at FACE as already set
@@ -451,7 +463,7 @@ static int advance_standard(
       }
 
       // special higher-time-order uf-always calculation of field for when final ucum is different from final uf
-      // if Cunew[2]==1 on final step, then means Uf we compute is same as ucum.
+      // if CUnew[2]==1 on final step, then means Uf we compute is same as ucum.
       if(finalstep==1 && CUnew[2]!=1.0){
 
         // still have to do uf calculation
@@ -563,8 +575,13 @@ static int advance_standard(
         //        }
  
         // dUriemann is actually average quantity, but we treat is as a point quantity at the zone center
-        flux2dUavg(doother,i,j,k,F1,F2,F3,dUriemann1,dUriemann2,dUriemann3);
-        PLOOP(pliter,pl) dUriemann[pl]=dUriemann1[pl]+dUriemann2[pl]+dUriemann3[pl]; // this addition is one type of avg->point mistake
+        if(doflux){
+          flux2dUavg(doother,i,j,k,F1,F2,F3,dUriemann1,dUriemann2,dUriemann3);
+          PLOOP(pliter,pl) dUriemann[pl]=dUriemann1[pl]+dUriemann2[pl]+dUriemann3[pl]; // this addition is one type of avg->point mistake
+        }
+        else{
+          PLOOP(pliter,pl) dUriemann[pl]=0.0;
+        }
 
         // save pi before it gets modified in case pf=pi or pf=pb as a pointer.
         FTYPE piorig[NPR],pborig[NPR];
@@ -597,12 +614,12 @@ static int advance_standard(
         // note that uf and ucum are initialized inside setup_rktimestep() before first substep
 
         // get dissmeasure
-        FTYPE dissmeasure=compute_dissmeasure(stage,i,j,k,ptrgeom->p,MAC(pf,i,j,k),ptrgeom,CUf, CUnew, F1, F2, F3, MAC(ui,i,j,k),MAC(olduf,i,j,k), MAC(tempucum,i,j,k));
+        FTYPE dissmeasure=compute_dissmeasure(stage,i,j,k,ptrgeom->p,MAC(pf,i,j,k),ptrgeom,CUf, CUnew, F1, F2, F3, MAC(ui,i,j,k),MAC(olduf,i,j,k), MAC(tempucum,i,j,k)); // GODMARK:  If doflux==0, then this actually uses old F's.
 
         // find dU(pb)
         // so pf contains updated field at cell center for use in (e.g.) implicit solver that uses inversion P(U)
         // Note that uf[B1,B2,B3] is already updated, but need to pass old uf for RK3/RK4, so use olduf.
-        MYFUN(source(piorig, pborig, MAC(pf,i,j,k), &didreturnpf, &eomtype, ptrgeom, qptr2, MAC(ui,i,j,k), MAC(olduf,i,j,k), CUf, dissmeasure, dUriemann, dUcomp, dUgeom),"step_ch.c:advance()", "source", 1);
+        MYFUN(source(piorig, pborig, MAC(pf,i,j,k), &didreturnpf, &eomtype, ptrgeom, qptr2, MAC(ui,i,j,k), MAC(olduf,i,j,k), CUf, CUimp,dissmeasure, dUriemann, dUcomp, dUgeom),"step_ch.c:advance()", "source", 1);
         // assumes final dUcomp is nonzero and representative of source term over this timestep
         
 
@@ -903,7 +920,7 @@ static int advance_standard(
   // compute flux diagnostics (accurately using all substeps)
   //
   ///////////////////////////////
-  if(truestep){
+  if(doflux && truestep){
     // must come after metric changes that can change where flux surface is since otherwise when flux surface changes, we won't track this substep's flux through the new surface but the old surface (which could even be at r=0 and have no flux)
     // if using unew, then since metric update above uses old unew, need present flux at new horizon surface
 #if(SPLITNPR)
@@ -1319,6 +1336,15 @@ static int advance_standard_orig(
     finalstep=0;
   }
 
+  ////////////////////////////////////////////////////////////////////////////////
+  //
+  // whether need to compute flux
+  // only compute flux if flux is added to get Uf or Ucum
+  ////////////////////////////////////////////////////////////////////////////////
+  int doflux = (CUf[2]!=0.0 || CUnew[1]!=0.0);
+  // current implicit dt factor
+  // Since we don't pass CUnew[NUMPREDTCUFS+stage], we assume never try to add M^i into U^{n+1} unless computed for current U^i or previous U^i
+  FTYPE *CUimp=&CUf[NUMPREDTCUFS+stage];
 
 
 
@@ -1379,7 +1405,7 @@ static int advance_standard_orig(
 
 
 
-  if(truestep){ // only do if not just passing through
+  if(doflux && truestep){ // only do if not just passing through
 
     if(1){
       // NORMAL:
@@ -1542,8 +1568,13 @@ static int advance_standard_orig(
         }
  
         // dUriemann is actually average quantity, but we treat is as a point quantity at the zone center
-        flux2dUavg(DOALLPL,i,j,k,F1,F2,F3,dUriemann1,dUriemann2,dUriemann3);
-        PLOOP(pliter,pl) dUriemann[pl]=dUriemann1[pl]+dUriemann2[pl]+dUriemann3[pl]; // this addition is one type of avg->point mistake
+        if(doflux){
+          flux2dUavg(DOALLPL,i,j,k,F1,F2,F3,dUriemann1,dUriemann2,dUriemann3);
+          PLOOP(pliter,pl) dUriemann[pl]=dUriemann1[pl]+dUriemann2[pl]+dUriemann3[pl]; // this addition is one type of avg->point mistake
+        }
+        else{
+          PLOOP(pliter,pl) dUriemann[pl]=0.0;
+        }
 
 
         /////////////
@@ -1575,7 +1606,7 @@ static int advance_standard_orig(
 
 
         // find dU(pb)
-        MYFUN(source(MAC(pi,i,j,k), MAC(pb,i,j,k), MAC(pf,i,j,k), &didreturnpf, &eomtype, ptrgeom, qptr2, MAC(ui,i,j,k), MAC(uf,i,j,k), CUf, 0.0, dUriemann, dUcomp, dUgeom),"step_ch.c:advance()", "source", 1);
+        MYFUN(source(MAC(pi,i,j,k), MAC(pb,i,j,k), MAC(pf,i,j,k), &didreturnpf, &eomtype, ptrgeom, qptr2, MAC(ui,i,j,k), MAC(uf,i,j,k), CUf, CUimp, 0.0, dUriemann, dUcomp, dUgeom),"step_ch.c:advance()", "source", 1);
         // assumes final dUcomp is nonzero and representative of source term over this timestep
         // KORALTODO: Not using eomtype for this method because outside loop.  Would have to store eomtype in array or something!
  
@@ -1711,7 +1742,7 @@ static int advance_standard_orig(
   // compute flux diagnostics (accurately using all substeps)
   //
   ///////////////////////////////
-  if(truestep){
+  if(doflux && truestep){
     // must come after metric changes that can change where flux surface is since otherwise when flux surface changes, we won't track this substep's flux through the new surface but the old surface (which could even be at r=0 and have no flux)
     // if using unew, then since metric update above uses old unew, need present flux at new horizon surface
 #if(SPLITNPR)
@@ -2105,6 +2136,16 @@ static int advance_finitevolume(
     finalstep=0;
   }
 
+  ////////////////////////////////////////////////////////////////////////////////
+  //
+  // whether need to compute flux
+  // only compute flux if flux is added to get Uf or Ucum
+  ////////////////////////////////////////////////////////////////////////////////
+  int doflux = (CUf[2]!=0.0 || CUnew[1]!=0.0);
+  // current implicit dt factor
+  // Since we don't pass CUnew[NUMPREDTCUFS+stage], we assume never try to add M^i into U^{n+1} unless computed for current U^i or previous U^i
+  FTYPE *CUimp=&CUf[NUMPREDTCUFS+stage];
+
   /////////
   //
   // set dt4diag for source diagnostics
@@ -2170,7 +2211,7 @@ static int advance_finitevolume(
   trifprintf( "#0f");
 #endif
 
-  if(truestep){
+  if(doflux && truestep){
     ndt1=ndt2=ndt3=BIG;
     // pb used here on a stencil, so if pb=pf or pb=pi in pointers, shouldn't change pi or pf yet -- don't currently
     MYFUN(fluxcalc(stage,initialstep,finalstep,pb,pstag,pl_ct, pr_ct, vpot,F1,F2,F3,CUf,CUnew,fluxdt,fluxtime,&ndt1,&ndt2,&ndt3),"advance.c:advance_standard_orig()", "fluxcalcall", 1);
@@ -2261,12 +2302,17 @@ static int advance_finitevolume(
 
 
         // dUriemann is volume averaged quantity (here this calcuation is done in case want to limit sources)
-        flux2dUavg(DOALLPL,i,j,k,F1,F2,F3,dUriemann1,dUriemann2,dUriemann3);
-        PLOOP(pliter,pl) dUriemann[pl]=dUriemann1[pl]+dUriemann2[pl]+dUriemann3[pl]; // this addition is entirely consistent with point->averages
+        if(doflux){
+          flux2dUavg(DOALLPL,i,j,k,F1,F2,F3,dUriemann1,dUriemann2,dUriemann3);
+          PLOOP(pliter,pl) dUriemann[pl]=dUriemann1[pl]+dUriemann2[pl]+dUriemann3[pl]; // this addition is entirely consistent with point->averages
+        }
+        else{
+          PLOOP(pliter,pl) dUriemann[pl]=0.0;
+        }
 
      
         // get source term (point source, don't use to update diagnostics)
-        MYFUN(source(MAC(pi,i,j,k), MAC(pb,i,j,k), MAC(pf,i,j,k), &didreturnpf, &eomtype, ptrgeom, qptr, MAC(ui,i,j,k), MAC(uf,i,j,k), CUf, 0.0, dUriemann, dUcomp, MAC(dUgeomarray,i,j,k)),"step_ch.c:advance()", "source", 1);
+        MYFUN(source(MAC(pi,i,j,k), MAC(pb,i,j,k), MAC(pf,i,j,k), &didreturnpf, &eomtype, ptrgeom, qptr, MAC(ui,i,j,k), MAC(uf,i,j,k), CUf, CUimp, 0.0, dUriemann, dUcomp, MAC(dUgeomarray,i,j,k)),"step_ch.c:advance()", "source", 1);
       }// end COMPZLOOP
 
 
@@ -2395,8 +2441,13 @@ static int advance_finitevolume(
     
 
         // dUriemann is volume averaged quantity
-        flux2dUavg(DOALLPL,i,j,k,F1,F2,F3,dUriemann1,dUriemann2,dUriemann3);
-        PLOOP(pliter,pl) dUriemann[pl]=dUriemann1[pl]+dUriemann2[pl]+dUriemann3[pl]; // this addition is entirely consistent with point->averages
+        if(doflux){
+          flux2dUavg(DOALLPL,i,j,k,F1,F2,F3,dUriemann1,dUriemann2,dUriemann3);
+          PLOOP(pliter,pl) dUriemann[pl]=dUriemann1[pl]+dUriemann2[pl]+dUriemann3[pl]; // this addition is entirely consistent with point->averages
+        }
+        else{
+          PLOOP(pliter,pl) dUriemann[pl]=0.0;
+        }
       }
       else{
         PLOOP(pliter,pl){
@@ -2414,7 +2465,7 @@ static int advance_finitevolume(
       // SUPERGODMARK: no longer have access to dUcomp : NEED TO FIX
       // below is correct, but excessive
       // get source term again in order to have dUcomp (NEED TO FIX)
-      MYFUN(source(MAC(pi,i,j,k), MAC(pb,i,j,k), MAC(pf,i,j,k), &didreturnpf, &eomtype, ptrgeom, qptr, MAC(ui,i,j,k), MAC(uf,i,j,k), CUf, 0.0, dUriemann, dUcomp, &fdummy),"step_ch.c:advance()", "source", 2);
+      MYFUN(source(MAC(pi,i,j,k), MAC(pb,i,j,k), MAC(pf,i,j,k), &didreturnpf, &eomtype, ptrgeom, qptr, MAC(ui,i,j,k), MAC(uf,i,j,k), CUf, CUimp, 0.0, dUriemann, dUcomp, &fdummy),"step_ch.c:advance()", "source", 2);
 
 
       dUtodt(ptrgeom, qptr, MAC(pb,i,j,k), dUgeom, dUriemann, dUcomp[GEOMSOURCE], &accdt_ij, &gravitydt_ij);
@@ -2490,7 +2541,7 @@ static int advance_finitevolume(
   // compute flux diagnostics (accurately using all substeps)
   //
   ///////////////////////////////
-  if(truestep){
+  if(doflux && truestep){
     // must come after metric changes that can change where flux surface is since otherwise when flux surface changes, we won't track this substep's flux through the new surface but the old surface (which could even be at r=0 and have no flux)
     // if using unew, then since metric update above uses old unew, need present flux at new horizon surface
 #if(SPLITNPR)
@@ -3513,11 +3564,13 @@ int set_dt(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], SFTYPE *dt)
       // get source term
       // GODMARK: here dUriemann=0, although in reality this setting of dt is related to the constraint trying to make
       PLOOP(pliter,pl) dUriemann[pl]=0.0;
-      FTYPE CUf=0.0; // no update yet!
+      FTYPE CUf[NUMDTCUFS]={0.0}; // no update yet!
+      int stage=0; // fake stage
+      FTYPE *CUimp=&CUf[NUMPREDTCUFS+stage];
       // modifies prim() to be closer to final, which is ok here.
       // setup default eomtype
       int eomtype=EOMDEFAULT;
-      MYFUN(source(MAC(prim,i,j,k), MAC(prim,i,j,k), MAC(prim,i,j,k), &didreturnpf, &eomtype, ptrgeom, &state, U, U, CUf, 0.0, dUriemann, dUcomp, dUgeom),"advance.c:set_dt()", "source", 1);
+      MYFUN(source(MAC(prim,i,j,k), MAC(prim,i,j,k), MAC(prim,i,j,k), &didreturnpf, &eomtype, ptrgeom, &state, U, U, CUf, CUimp, 0.0, dUriemann, dUcomp, dUgeom),"advance.c:set_dt()", "source", 1);
 
       // get dt limit
       compute_dt_fromsource(ptrgeom,&state,MAC(prim,i,j,k), Ugeomfree, dUgeom, dUcomp[GEOMSOURCE], &tempaccdt, &tempgravitydt);

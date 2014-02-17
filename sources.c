@@ -4,12 +4,12 @@
 
 // Ugeomfree and dUother are in UNOTHING form (or UEVOLVE without geometry)
 // pf might be modified so better approximation to final update, so easier on Utoprimgen() to get inversion.
-int sourcephysics(FTYPE *pi, FTYPE *pr, FTYPE *pf, int *didreturnpf, int *eomtype, struct of_geom *ptrgeom, struct of_state *q, FTYPE *Ugeomfreei, FTYPE *Ugeomfreef, FTYPE *CUf, FTYPE dissmeasure, FTYPE *dUother, FTYPE (*dUcomp)[NPR])
+int sourcephysics(FTYPE *pi, FTYPE *pr, FTYPE *pf, int *didreturnpf, int *eomtype, struct of_geom *ptrgeom, struct of_state *q, FTYPE *Ugeomfreei, FTYPE *Ugeomfreef, FTYPE *CUf, FTYPE *CUimp, FTYPE dissmeasure, FTYPE *dUother, FTYPE (*dUcomp)[NPR])
 {
   int coolfunc_thindisk(FTYPE h_over_r, FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q,FTYPE (*dUcomp)[NPR]);
   int coolfunc_neutrino(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q,FTYPE (*dUcomp)[NPR]);
   int coolfunc_rebecca_thindisk(FTYPE h_over_r, FTYPE *pr, struct of_geom *geom, struct of_state *q,FTYPE (*dUcomp)[NPR]);
-  extern int koral_source_rad(int whichsourcemethod, FTYPE *pi, FTYPE *pr, FTYPE *pf, int *didreturnpf, int *eomtype, FTYPE *Ui, FTYPE *Uf, FTYPE *CUf, struct of_geom *geom, struct of_state *q, FTYPE dissmeasure, FTYPE *dUother, FTYPE (*dUcomp)[NPR]);
+  extern int koral_source_rad(int whichsourcemethod, FTYPE *pi, FTYPE *pr, FTYPE *pf, int *didreturnpf, int *eomtype, FTYPE *Ui, FTYPE *Uf, FTYPE *CUf, FTYPE *CUimp, struct of_geom *geom, struct of_state *q, FTYPE dissmeasure, FTYPE *dUother, FTYPE (*dUcomp)[NPR]);
 
   //default
   *didreturnpf=0;
@@ -31,7 +31,7 @@ int sourcephysics(FTYPE *pi, FTYPE *pr, FTYPE *pf, int *didreturnpf, int *eomtyp
     return(coolfunc_rebecca_thindisk(h_over_r, pr, ptrgeom, q,dUcomp));
   }
   else if(cooling==KORAL){
-    return(koral_source_rad(WHICHRADSOURCEMETHOD, pi, pr, pf, didreturnpf, eomtype, Ugeomfreei, Ugeomfreef, CUf, ptrgeom, q, dissmeasure, dUother, dUcomp));
+    return(koral_source_rad(WHICHRADSOURCEMETHOD, pi, pr, pf, didreturnpf, eomtype, Ugeomfreei, Ugeomfreef, CUf, CUimp, ptrgeom, q, dissmeasure, dUother, dUcomp));
   }
   else{
     // random physics
