@@ -329,6 +329,70 @@ chmod a+x ./batch_makemovielocal_${thedir}.sh
 nohup ./batch_makemovielocal_${thedir}.sh &
 
 
++
++8b) Additional notes on running on Kraken:
++
++Can use parallel=2 for optimal speed.  This uses code makemoviec instead of the bash script makemovie.sh.  One still uses the same m
++
++a) makeallmovie.sh : Change dircollect and dirruns to "rad1" or the name of your run/runs.
++
++b) makeallmovie.sh : Change numkeep to number of files want to keep, e.g., 2200
++
++c) makeallmovie.sh : Ensure in system=5 kraken section have set parallel=2 .
++
++d) makeallmovie.sh : Change default "factor" and keepfilesstart and keepfilesend if desired.  Or add entry for your model name ("$th
++
++e) Ensure makemoviec can compile when doing makeallmovie.sh:
++i) cd ~/py/scripts
++ii) set #define USEPYTHON (0) in jon_makemovie_programstartc.c
++iii) make
++
++f) Edit ~/py/scripts/makemovie.sh for kraken section to be how long run should be, how many cores, etc.  Can add "$modelname" entry 
++
++i) At least edit default for kraken sections.  Set timetot, numcorespernode (which will be total cores), memtot (estimating how much
++
++j) Edit ~/py/mread/__init__.py :
++
++i) Set USENAUTILUS 0
++ii) Set use2dglobal=False near end of file in main()
++ii) Probably need OLDQTYMEMMEM=0 in same location in main()
++iii) anywhere modelname exists, check if need to add new entry for your model.
++
++k) Now can run makeallmovie as above.
++
++
++l) I noticed Kraken used to have latex and gs installed, but now doesn't.  Only Nautilus has it, and Nautilus can't be used anymore.
++
++wget http://mirror.ctan.org/systems/texlive/tlnet/install-tl-unx.tar.gz
++tar xvzf install-tl-unx.tar.gz
++cd 
++./install-tl
++# choose paths as user paths as mentioned above.
++# *must* choose /lustre/scratch/$USER/... type path, so can access on compute nodes that have no access to $HOME
++# wait 1.5-2 hours to complete download/install process.
++
++m) I also noticed gs is not available.  Get it from http://www.ghostscript.com/download/gsdnld.html and follow installation instruct
++
++#http://www.ghostscript.com/download/gsdnld.html
++wget http://downloads.ghostscript.com/public/binaries/ghostscript-9.10-linux-x86_64.tgz
++tar xvzf ghostscript-9.10-linux-x86_64.tgz
++cd ghostscript-9.10-linux-x86_64/
++# run it and/or link it to your home directory
++
++#or for a general system:
++wget http://downloads.ghostscript.com/public/ghostscript-9.10.tar.gz
++tar xvzf ghostscript-9.10.tar.gz
++cd ghostscript-9.10/
++./configure --prefix=$HOME/
++make
++make install
++
++# for gs, copy binary to /lustre/scratch/$USER/... type path, so can access on compute nodes that have no access to $HOME .
++
++Ensure environmentfiles/kraken/setuppython27 has PATH and PYTHONPATH with the path where the binary for "latex" and "gs" are located
++
++
++
 
 
 9) Going even simpler (but with less obvious ways to get something to output)

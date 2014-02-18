@@ -118,7 +118,8 @@ int advance(int truestep, int stage, FTYPE (*pi)[NSTORE2][NSTORE3][NPR],FTYPE (*
     dualfprintf(fail_file,"No such DOENOFLUX=%d\n",DOENOFLUX);
     myexit(1);
   }
-
+  extern void debugfixupaltdeath(void);
+  debugfixupaltdeath();
 
   return(0);
 
@@ -2703,4 +2704,7 @@ static int dUtodt(struct of_geom *ptrgeom, struct of_state *qaddr, FTYPE *pr, FT
   return(0);
 
 }
+
+
+
 

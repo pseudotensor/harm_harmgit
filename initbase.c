@@ -2903,3 +2903,81 @@ int assert_func( int is_bad_val, char *s, ... )
 }
 
 
+
+void debugfixupaltdeath(void)
+{
+  // hack to get rid of bad region at large distances when restarted
+  int i,j,k;
+  struct of_geom geomdontuse;
+  struct of_geom *ptrgeom=&geomdontuse;
+  FTYPE X[NDIM],V[NDIM];
+  FTYPE *prfix,*ufix;
+  int jjj;
+  FULLLOOP{
+    prfix=&GLOBALMACP0A1(pglobal,i,j,k,0);
+    ufix=&GLOBALMACP0A1(unewglobal,i,j,k,0);
+
+    // get geometry for center pre-interpolated values
+    get_geometry(i, j, k, CENT, ptrgeom);
+    bl_coord_ijk_2(i,j,k,CENT,X, V) ;
+
+    FTYPE bsq=0.0;
+    bsq_calc_general(prfix,ptrgeom,&bsq);
+
+    if(0){
+      if(V[1]>60.0){
+	limit_gamma(0,1.5,GAMMAMAXRAD,prfix,NULL,ptrgeom,-1);
+
+	prfix[UU]= MIN(prfix[RHO],prfix[UU]); // no more than u/rho=1
+	ufix[UU]=MAX(-prfix[UU],ufix[UU]);
+      }
+    }
+
+    if(0){
+      if(V[1]>60.0 && bsq/prfix[RHO]>1.0){
+	prfix[UU]= MIN(prfix[RHO],prfix[UU]); // no more than u/rho=1
+	ufix[UU]=MAX(-prfix[UU],ufix[UU]);
+
+	ufix[ENTROPY] = ufix[UU];
+	ufix[ENTROPY] = MAX(0.0001,MIN(ufix[ENTROPY],1.0)); // like u/rho=1
+
+	prfix[URAD0] = MIN(MIN(prfix[RHO],prfix[URAD0]),prfix[UU]); // no more than Erf/rho=1 and Erf/u=1
+	ufix[URAD0]=MAX(-prfix[URAD0],ufix[URAD0]);
+
+	limit_gamma(0,1.5,GAMMAMAXRAD,prfix,NULL,ptrgeom,-1);
+
+      }
+    }
+    if(1){
+      //    if(V[1]>600.0 && (V[2]>M_PI*0.5*1.1 || V[2]<M_PI*0.5*0.9) ){
+      if(V[1]>6E1 ){
+      
+	//prfix[RHO] = 1E-10*pow(V[1]/500.0,-1.5);
+
+	prfix[UU]= MIN(prfix[RHO],prfix[UU]); // no more than u/rho=1
+	ufix[UU]=MAX(-prfix[UU],ufix[UU]);
+
+	ufix[ENTROPY] = ufix[UU];
+	ufix[ENTROPY] = MAX(0.0001,MIN(ufix[ENTROPY],1.0)); // like u/rho=1
+
+	//prfix[URAD0] = 2E-10*pow(V[1]/500.0,-1.5);
+	//prfix[URAD0] = MIN(MIN(prfix[RHO],prfix[URAD0]),prfix[UU]); // no more than Erf/rho=1 and Erf/u=1
+	//ufix[URAD0]=MAX(-prfix[URAD0],ufix[URAD0]);
+
+	//      limit_gamma(0,1.5,GAMMAMAXRAD,prfix,NULL,ptrgeom,-1);
+	limit_gamma(0,1.5,prfix,NULL,ptrgeom,-1);
+
+	if(ufix[U1]<0.0) ufix[U1]=0.0;
+	//      ufix[U2]=ufix[U3]=0.0;
+
+	//if(ufix[URAD1]<0.0) ufix[URAD1]=0.0;
+	//      ufix[URAD2]=ufix[URAD3]=0.0;
+
+	//      SLOOPA(jjj) ufix[U1+jjj-1]=prfix[U1+jjj-1] = 0.0;
+	//SLOOPA(jjj) ufix[URAD1+jjj-1]=prfix[URAD1+jjj-1] = 0.0;
+      }
+    }
+  }
+
+
+}

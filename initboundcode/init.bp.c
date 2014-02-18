@@ -22,7 +22,7 @@
 #define MAXPASSPARMS 10
 
 //#define THETAROTMETRIC (0.5*0.7)
-#define USER_THETAROTMETRIC (0.0)
+#define USER_THETAROTMETRIC (0.19739556) // arctan(0.2) = 0.19739556
 #define USER_THETAROTPRIMITIVES (0.0) // probably want to choose 0, so initial conditions are as if no tilt
 
 #define NORMALTORUS 0 // note I use randfact=5.e-1 for 3D model with perturbations
@@ -200,7 +200,7 @@ int init_grid(void)
   
   // metric stuff first
 
-  a = 0.5; //9375 ;
+  a = 0.0; //9375 ;
 
   
 
@@ -320,9 +320,9 @@ int init_global(void)
   for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=50.0;
 
   // ener period
-  DTdumpgen[ENERDUMPTYPE] = 2.0;
+  DTdumpgen[ENERDUMPTYPE] = 5.0;
   /* image file frequ., in units of M */
-  DTdumpgen[IMAGEDUMPTYPE] = 2.0; // was 5 after 2.0
+  DTdumpgen[IMAGEDUMPTYPE] = 5.0; // was 5 after 2.0
   // fieldline locked to images so can overlay
   DTdumpgen[FIELDLINEDUMPTYPE] = DTdumpgen[IMAGEDUMPTYPE];
 
@@ -398,7 +398,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
   //rin = (1. + h_over_r)*Risco;
   rin = Risco;
   rinfield = 10.0;
-  beta = 8.e1 ;
+  beta = 1.6e2;
   randfact = 2.e-1; //4.e-2;
   //  fieldnormalizemin = 3. * Risco;
 #elif(WHICHPROBLEM==THICKDISK)
@@ -798,7 +798,7 @@ int init_dsandvels_bpthin(int *whichvel, int*whichcoord, int i, int j, int k, FT
     S = 1./(H*H*nz) ;
     cs = H*nz ;
 
-    rho = (S/sqrt(2.*M_PI*H*H)) * exp(-z*z/(2.*H*H)) * taper_func(R,rin, 1.0) * ( 1.0 - R*R/((pow(R,1.5) + a)*(pow(R,1.5) + a)) )  ;// taper_func(R,rin,-1.0) ;
+    rho = (S/sqrt(2.*M_PI*H*H)) * (pow(R/rin,3./2-0.6)) * exp(-z*z/(2.*H*H)) * taper_func(R,rin, 2.0) * ( 1.0 - R*R/((pow(R,1.5) + a)*(pow(R,1.5) + a)) )  ;// taper_func(R,rin,-1.0) ;
     u = rho*cs*cs/(gam - 1.) ;
     ur = 0. ;
     uh = 0. ;
@@ -809,7 +809,7 @@ int init_dsandvels_bpthin(int *whichvel, int*whichcoord, int i, int j, int k, FT
     
     
     pr[RHO] = rho ;
-    pr[UU] = u * (1. + (1.+3.*(rin/R)*(rin/R))*randfact * (ranc(0,0) - 0.5));
+    pr[UU] = u * (1. +randfact * (ranc(0,0) - 0.5));
 
     pr[U1] = ur ;
     pr[U2] = uh ;    
@@ -984,7 +984,7 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
   //  FTYPE FIELDROT=M_PI*0.5;
   FTYPE rpow2=0.0;
   FTYPE FIELDROT=0.0;
-  FTYPE hpow=4.0; // MAVARANOTE originally 2.0
+  FTYPE hpow=2.0; // MAVARANOTE originally 2.0
 #define RBREAK_MACRO (60.0)
   FTYPE RBREAK=RBREAK_MACRO;
 
@@ -1536,7 +1536,7 @@ static FTYPE taper_func(FTYPE R,FTYPE rin, FTYPE rpow)
   if(R < rin)
     return(0.) ;
   else
-    return(pow( 1.-pow(0.95*rin/R,0.5) , 1.)) ; // was  3 and 2 for powers before 11/10/2012 MAVARA
+    return(pow( 1.-pow(0.95*rin/R,rpow) , 1.)) ; // was  3 and 2 for powers before 11/10/2012 MAVARA
 }
 
 static FTYPE taper_funcB(FTYPE R,FTYPE rin, FTYPE rpow)
@@ -1715,9 +1715,9 @@ int coolfunc_user(FTYPE h_over_r, FTYPE *pr, struct of_geom *geom, struct of_sta
 	Yscaling = (gam-1.)*e/(Tfix);
 
 
-	if(t > 0. && dt < taucool/Wcirc  && Yscaling > 1.0 && r > Rhor) {
+	if(t > 0. && dt < taucool/Wcirc  && Yscaling > 1.0 && r > Rhor ) {
 
-	  dUcool = - Wcirc * u * sqrt( Yscaling - 1.) * photoncapture * 0.1; // MAVARA temporarily added 0.1 factor to slow cooling to see if it makes a difference on 11/10/2013
+	  dUcool = - Wcirc * u * sqrt( Yscaling - 1.) * photoncapture ; // MAVARA temporarily added 0.1 factor to slow cooling to see if it makes a difference on 11/10/2013
 	  //	  dUcool=-u*(Wcirc/taucool)*log(enk/enk0)*photoncapture;
 	}
         else{
@@ -1920,7 +1920,7 @@ int calc_da3vsr(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
       ucon_calc(MAC(prim,ii,jj,kk),ptrgeom,ucon, others);                                                                                                 
       dxdxprim_ijk(ii, jj, kk, FACE2, dxdxp);                                                                                                           
       if(r*sin(th)>=rin && r*sin(th) < RBREAK_MACRO) {
-	da3vsr[startpos[1]+ii] = - taper_func(r*sin(th), rin, 1.0) * ptrgeom->gdet * dx[1] / sqrt(ptrgeom->gcov[GIND(2,2)]) * pow(.1,.5) * ucon[TT] * sqrt( (gam - 1.0) * MACP0A1(prim,ii,jj,kk,UU) ) ; //- ptrgeom->gdet * dx[1] / sqrt(ptrgeom->gcov[GIND(2,2)]) * pow(.1,.5) * ucon[TT] * sqrt( (gam - 1.0) * MACP0A1(prim,ii,jj,kk,UU) )  ; 
+	da3vsr[startpos[1]+ii] = - taper_func(r*sin(th), rin, 3.0) * ptrgeom->gdet * dx[1] / sqrt(ptrgeom->gcov[GIND(2,2)]) * pow(.1,.5) * ucon[TT] * sqrt( (gam - 1.0) * MACP0A1(prim,ii,jj,kk,UU) ) ; //- ptrgeom->gdet * dx[1] / sqrt(ptrgeom->gcov[GIND(2,2)]) * pow(.1,.5) * ucon[TT] * sqrt( (gam - 1.0) * MACP0A1(prim,ii,jj,kk,UU) )  ; 
       }
       else {//if(startpos[2]==totalsize[2]/2) 
 	da3vsr[startpos[1]+ii] = 0.0 ;
