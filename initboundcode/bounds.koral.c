@@ -191,6 +191,69 @@ int bound_staticset(int dir,
 
 
 
+
+// put the below in your bounds.c function at the top before the above call to that function.
+void debugfixupaltdeath_bc(void)
+{
+  // hack to get rid of bad region at large distances (e.g. when restarted)
+  int i,j,k;
+  struct of_geom geomdontuse;
+  struct of_geom *ptrgeom=&geomdontuse;
+  FTYPE X[NDIM],V[NDIM];
+  FTYPE *prfix,*ufix;
+  int jjj;
+
+
+  FULLLOOP{
+    prfix=&GLOBALMACP0A1(pglobal,i,j,k,0);
+    ufix=&GLOBALMACP0A1(unewglobal,i,j,k,0);
+  
+    // get geometry for center pre-interpolated values
+    get_geometry(i, j, k, CENT, ptrgeom);
+    bl_coord_ijk_2(i,j,k,CENT,X, V) ;
+  
+    FTYPE bsq=0.0;
+    bsq_calc(prfix,ptrgeom,&bsq);
+
+
+    FTYPE Rbadout=OUTERDEATHRADIUS; //MIN(500.0,0.5*Rout);
+    
+ 
+    if(V[1]>Rbadout ){
+       
+      //prfix[RHO] = 1E-10*pow(V[1]/500.0,-1.5);
+  
+      prfix[UU]= MIN(prfix[RHO],prfix[UU]); // no more than u/rho=1
+      ufix[UU]=MAX(-prfix[UU],ufix[UU]);
+  
+      ufix[ENTROPY] = ufix[UU];
+      ufix[ENTROPY] = MAX(0.0001,MIN(ufix[ENTROPY],1.0)); // like u/rho=1
+  
+      //prfix[URAD0] = 2E-10*pow(V[1]/500.0,-1.5);
+      prfix[URAD0] = MIN(MIN(prfix[RHO],prfix[URAD0]),prfix[UU]); // no more than Erf/rho=1 and Erf/u=1
+      ufix[URAD0]=MAX(-prfix[URAD0],ufix[URAD0]);
+  
+      //      limit_gamma(0,1.5,GAMMAMAXRAD,prfix,NULL,ptrgeom,-1);
+      limit_gamma(0,OUTERDEATHGAMMAMAX,OUTERDEATHGAMMAMAXRAD,prfix,NULL,ptrgeom,-1);
+
+
+ 
+      if(ufix[U1]<0.0) ufix[U1]=0.0;
+      //      ufix[U2]=ufix[U3]=0.0;
+  
+      if(ufix[URAD1]<0.0) ufix[URAD1]=0.0;
+      //      ufix[URAD2]=ufix[URAD3]=0.0;
+  
+      //      SLOOPA(jjj) ufix[U1+jjj-1]=prfix[U1+jjj-1] = 0.0;
+      //SLOOPA(jjj) ufix[URAD1+jjj-1]=prfix[URAD1+jjj-1] = 0.0;
+    }
+  }
+}
+  
+  
+
+
+
 /* bound array containing entire set of primitive variables */
 
 
@@ -210,6 +273,12 @@ int bound_prim_user_dir(int boundstage, int finalstep, SFTYPE boundtime, int whi
   //  dualfprintf(fail_file,"start bound_prim\n"); // CHANGINGMARK
   bound_prim_user_general(boundstage, finalstep, boundtime, whichdir, boundvartype, BOUNDPRIMLOC, dirprim, prim);
   //  dualfprintf(fail_file,"end bound_prim\n"); // CHANGINGMARK
+
+  if(WHICHPROBLEM==RADDONUT && OUTERDEATH==1){
+    if(whichdir==1){// assumes always calls whichdir==1, which is true if N1>1
+      debugfixupaltdeath_bc();
+    }
+  }
 
   return(0);
 }

@@ -525,11 +525,14 @@ int init_global(void)
     gam=gamideal=4.0/3.0; // koral now
     cooling=KORAL;
 
-    RADBEAMFLAT_FRATIO=0.995; // koral at some point.
-    //    RADBEAMFLAT_FRATIO=0.99995; // vradx
+    //    RADBEAMFLAT_FRATIO=0.995; // koral at some point.
+    RADBEAMFLAT_FRATIO=0.99995;
     RADBEAMFLAT_ERAD=1./RHOBAR; // 1g/cm^3 worth of energy density in radiation
     RADBEAMFLAT_RHO=1./RHOBAR; // 1g/cm^3
     RADBEAMFLAT_UU=0.1/RHOBAR; // 0.1g/cm^3 worth of energy density in fluid
+
+    // avoid hitting gamma ceiling
+    GAMMAMAXRAD=MAX(GAMMAMAXRAD,2.0*1.0/sqrt(1.0-RADBEAMFLAT_FRATIO*RADBEAMFLAT_FRATIO));
 
 
     BCtype[X1UP]=OUTFLOW;

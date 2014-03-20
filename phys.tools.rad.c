@@ -8593,10 +8593,12 @@ int koral_source_rad(int whichradsourcemethod, FTYPE *piin, FTYPE *pb, FTYPE *pf
   /////////////////
   if(whichradsourcemethod==SOURCEMETHODEXPLICIT || whichradsourcemethod==SOURCEMETHODEXPLICITSUBCYCLE || whichradsourcemethod==SOURCEMETHODEXPLICITREVERSIONFROMIMPLICIT || whichradsourcemethod==SOURCEMETHODEXPLICITSUBCYCLEREVERSIONFROMIMPLICIT || whichradsourcemethod==SOURCEMETHODEXPLICITCHECKSFROMIMPLICIT || whichradsourcemethod==SOURCEMETHODEXPLICITSUBCYCLECHECKSFROMIMPLICIT){
 
+
     if(TIMETYPE==TIMEIMPLICIT){
       dualfprintf(fail_file,"Makes no sense to do explicit source (with or without subcycling) and IMEX stepping\n");
       myexit(937453984);
     }
+    
 
 
     int methoddtsub;
@@ -8661,6 +8663,9 @@ int koral_source_rad(int whichradsourcemethod, FTYPE *piin, FTYPE *pb, FTYPE *pf
     if(TIMETYPE==TIMEIMPLICIT){
       int doradimplicit = (CUimp[0]!=0.0); // || CUnewimp[0]!=0.0); // assuming M^i only created and added if added to Uf and U^{n+1} at same step.
       if(doradimplicit){
+        // then continue and do implicit solution and compute_dt() will use CUimp[]
+      }
+      else{
         // then return as if successful, but don't assume inversion already done for pf (since not)
         // NOTE: We don't return explicit version of answer either -- just simply zero.  Since dUcomp already set as zero when initialized, nothing to do. (as if never was doing source term)
         PLOOP(pliter,pl) pf[pl]=pborig[pl];

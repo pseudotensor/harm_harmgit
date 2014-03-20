@@ -332,10 +332,10 @@ static int advance_standard(
 
 
 
+  ndt1=ndt2=ndt3=BIG; // if doflux==0 or truestep==0, then setting ndt=BIG means doesn't affect any other sub-steps or steps that are trying to set dt as minimum over sub-step dt's.
   if(doflux && truestep){ // only do if not just passing through
     if(1){
       // NORMAL:
-      ndt1=ndt2=ndt3=BIG;
       // pb used here on a stencil, so if pb=pf or pb=pi in pointers, shouldn't change pi or pf yet -- don't currently
       MYFUN(fluxcalc(stage,initialstep,finalstep,pb,pstag,pl_ct, pr_ct, vpot,F1,F2,F3,CUf,CUnew,fluxdt,fluxtime,&ndt1,&ndt2,&ndt3),"advance.c:advance_standard()", "fluxcalcall", 1);
     }
@@ -1405,11 +1405,11 @@ static int advance_standard_orig(
 
 
 
+  ndt1=ndt2=ndt3=BIG;
   if(doflux && truestep){ // only do if not just passing through
 
     if(1){
       // NORMAL:
-      ndt1=ndt2=ndt3=BIG;
       // pb used here on a stencil, so if pb=pf or pb=pi in pointers, shouldn't change pi or pf yet -- don't currently
       MYFUN(fluxcalc(stage,initialstep,finalstep,pb,pstag,pl_ct, pr_ct, vpot,F1,F2,F3,CUf,CUnew,fluxdt,fluxtime,&ndt1,&ndt2,&ndt3),"advance.c:advance_standard_orig()", "fluxcalcall", 1);
     }
@@ -2211,8 +2211,8 @@ static int advance_finitevolume(
   trifprintf( "#0f");
 #endif
 
+  ndt1=ndt2=ndt3=BIG;
   if(doflux && truestep){
-    ndt1=ndt2=ndt3=BIG;
     // pb used here on a stencil, so if pb=pf or pb=pi in pointers, shouldn't change pi or pf yet -- don't currently
     MYFUN(fluxcalc(stage,initialstep,finalstep,pb,pstag,pl_ct, pr_ct, vpot,F1,F2,F3,CUf,CUnew,fluxdt,fluxtime,&ndt1,&ndt2,&ndt3),"advance.c:advance_standard_orig()", "fluxcalcall", 1);
   }
