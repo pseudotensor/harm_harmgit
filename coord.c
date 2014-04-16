@@ -276,10 +276,10 @@ void set_coord_parms_nodeps(int defcoordlocal)
 
     //radial hyperexponential grid
     //    npow2=4.0; //power exponent
-    bp_npow2=10.0; //5.0; // 10.0;    // MARKNOTE set to 10.0 before using BP values //power exponent
+    bp_npow2=2.0; //10.0; //5.0; // 10.0;    // MARKNOTE set to 10.0 before using BP values //power exponent
     bp_cpow2=1.0; //exponent prefactor (the larger it is, the more hyperexponentiation is)
     //    rbr = 1E3;  //radius at which hyperexponentiation kicks in
-    bp_rbr = 50.0;  //radius at which hyperexponentiation kicks in
+    bp_rbr = 120.0;  //radius at which hyperexponentiation kicks in
 
 
 
@@ -308,13 +308,13 @@ void set_coord_parms_nodeps(int defcoordlocal)
     }
 
     // for switches from normal theta to ramesh theta
-    bp_rs=60.0; // shift
-    bp_r0=20.0; // divisor
+    bp_rs=120.0; // shift
+    bp_r0=48.0; // divisor
  
     // for theta1
     //    hslope=0.3 ; // resolve inner-radial region near equator
-    bp_r0jet3=20.0; // divisor
-    bp_rsjet3=0.0; // subtractor
+    bp_r0jet3=200.0; // divisor
+    bp_rsjet3=0.0; //MAVARANOTE0.0; // subtractor
 
     // for theta2
     bp_h0=0.1; // inner-radial "hslope" for theta2
@@ -1341,14 +1341,18 @@ void bl_coord(FTYPE *X, FTYPE *V)
     // RAMESH BASED
     // myhslope here is h2 in MCAF paper
     // h0 here is h3 in MCAF paper
+    //if(V[1] > bp_rsjet3){
     myhslope=bp_h0 + pow( (V[1]-bp_rsjet3)/bp_r0jet3 , bp_njet);
-
+    //}
+    /*else {
+    myhslope=bp_h0;
+    }*/
     // determine theta2
     if(X[2]>1.0) myx2=2.0-X[2];
     else if(X[2]<0.0) myx2=-X[2];
     else myx2=X[2];
 
-    th2 = 0.5*M_PI*(1.0 + atan(myhslope*(myx2-0.5))/atan(myhslope*0.5));
+    th2 = M_PI*.5*(.23*(2.0*myx2-1.0) + (1.0-.23)*pow(2.0*myx2-1,3.0)+1.0);
 
     if(X[2]>1.0) th2=2.0*M_PI-th2;
     else if(X[2]<0.0) th2=-th2;
@@ -1363,7 +1367,7 @@ void bl_coord(FTYPE *X, FTYPE *V)
     //    th0 = M_PI * .5 * (1. + (1.-((1. - myhslope) * 0.5))*(2.*X[2]-1.) + ((1. - myhslope) * 0.5)*pow(2.*X[2]-1.,9) ) ; // MARKTODODONE  switched to poly type from Noble+ 2010 on June 10, 2013
     FTYPE xi=((1. - myhslope) * 0.5);
     //  th0 = M_PI * .5 * (1. + (1.-xi)*(2.*X[2]-1.) + xi*pow(2.*X[2]-1.,9) ) ; // MARKTODODONE  switched to poly type from Noble+ 2010 on June 10, 2013
-    th0 = M_PI * .5 * (myhslope*(2.0*X[2]-1.0) + (1.0-myhslope)*pow(2.0*X[2]-1.0,9.0)+1.);
+    th0 = M_PI * .5 * (.2*(2.0*X[2]-1.0) + (1.0-.2)*pow(2.0*X[2]-1.0,9.0)+1.);
 
     // determine switches (only function of radius and not x2 or theta)
     switch0 = 0.5+1.0/M_PI*atan((V[1]-bp_rs)/bp_r0); // switch in .nb file

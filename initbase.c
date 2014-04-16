@@ -2924,30 +2924,6 @@ void debugfixupaltdeath(void)
     FTYPE bsq=0.0;
     bsq_calc_general(prfix,ptrgeom,&bsq);
 
-    if(0){
-      if(V[1]>60.0){
-	limit_gamma(0,1.5,GAMMAMAXRAD,prfix,NULL,ptrgeom,-1);
-
-	prfix[UU]= MIN(prfix[RHO],prfix[UU]); // no more than u/rho=1
-	ufix[UU]=MAX(-prfix[UU],ufix[UU]);
-      }
-    }
-
-    if(0){
-      if(V[1]>60.0 && bsq/prfix[RHO]>1.0){
-	prfix[UU]= MIN(prfix[RHO],prfix[UU]); // no more than u/rho=1
-	ufix[UU]=MAX(-prfix[UU],ufix[UU]);
-
-	ufix[ENTROPY] = ufix[UU];
-	ufix[ENTROPY] = MAX(0.0001,MIN(ufix[ENTROPY],1.0)); // like u/rho=1
-
-	prfix[URAD0] = MIN(MIN(prfix[RHO],prfix[URAD0]),prfix[UU]); // no more than Erf/rho=1 and Erf/u=1
-	ufix[URAD0]=MAX(-prfix[URAD0],ufix[URAD0]);
-
-	limit_gamma(0,1.5,GAMMAMAXRAD,prfix,NULL,ptrgeom,-1);
-
-      }
-    }
     if(1){
       //    if(V[1]>600.0 && (V[2]>M_PI*0.5*1.1 || V[2]<M_PI*0.5*0.9) ){
       if(V[1]>6E1 ){
@@ -2965,7 +2941,7 @@ void debugfixupaltdeath(void)
 	//ufix[URAD0]=MAX(-prfix[URAD0],ufix[URAD0]);
 
 	//      limit_gamma(0,1.5,GAMMAMAXRAD,prfix,NULL,ptrgeom,-1);
-	limit_gamma(0,1.5,prfix,NULL,ptrgeom,-1);
+	limit_gamma(2.0,prfix,NULL,ptrgeom,-1);
 
 	if(ufix[U1]<0.0) ufix[U1]=0.0;
 	//      ufix[U2]=ufix[U3]=0.0;
