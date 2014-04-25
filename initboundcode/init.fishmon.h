@@ -387,6 +387,17 @@ struct Ccoordparams {
 }  coordparams;
 
 
+#undef OUTERDEATH
+//#define OUTERDEATH 1
+// defaults
+#define OUTERDEATH 1
+#define OUTERDEATHRADIUS (500.0)
+#define OUTERDEATHGAMMAMAX (6.0)
+#define OUTERDEATHGAMMAMAXRAD (50.0)
+
+
+
+
 // problem-dependent code activation
 #undef USERRESETREGION
 #define USERRESETREGION 0

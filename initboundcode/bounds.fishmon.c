@@ -22,6 +22,13 @@ int bound_prim_user_dir(int boundstage, int finalstep, SFTYPE boundtime, int whi
   bound_prim_user_general(boundstage, finalstep, boundtime, whichdir, boundvartype, BOUNDPRIMLOC, dirprim, prim);
   //  dualfprintf(fail_file,"end bound_prim\n"); // CHANGINGMARK
 
+  if(OUTERDEATH==1){
+    if(whichdir==1 && boundvartype!=BOUNDPSTAGTYPE && boundvartype!=BOUNDPSTAGSIMPLETYPE){// assumes always calls whichdir==1, which is true if N1>1
+      extern void debugfixupaltdeath_bc(FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
+      debugfixupaltdeath_bc(prim);
+    }
+  }
+
   return(0);
 }
 
