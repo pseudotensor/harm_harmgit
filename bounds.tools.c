@@ -4407,11 +4407,23 @@ int poledeath(int whichx2,
             ucon_calc(&MACP0A1(prim,i,j,k,URAD1-U1),ptrgeom[pl],uconrad, othersrad);
           }
           // only limit velocity if outgoing relative to grid (GODMARK: only valid in KS or BL-like coordinates such that u^r>0 means outgoing w.r.t. an observer at infinity)
-          if(ucon[RR]>0.0||uconrad[RR]>0.0){
-            int didlimit=0;
-            
-            bl_coord_ijk_2(i,j,k,dirprim[pl],X[pl],V[pl]);
+          //          if(ucon[RR]>0.0||uconrad[RR]>0.0){
 
+          // get V[RR]
+          bl_coord_ijk_2(i,j,k,dirprim[pl],X[pl],V[pl]);
+
+
+          // check if did limit
+          int didlimit=0;
+
+          /////////////
+          //
+          // FLUID
+          //
+          /////////////
+          gammavaluelimit = GAMMAMAX; // default is no limit
+
+          if(V[pl][RR]>GAMMAPOLEOUTGOINGRADIUSIN){
 
             if(V[pl][RR]<=GAMMAPOLEOUTGOINGRADIUS){
               // flat \gamma limit up to GAMMAPOLEOUTGOINGRADIUS
@@ -4419,55 +4431,98 @@ int poledeath(int whichx2,
                 didlimit=1;
                 gammavaluelimit = GAMMAPOLEOUTGOING;
               }
-              else  gammavaluelimit = GAMMAMAX;
-              if(uconrad[RR]>0.0){
+              else if(ucon[RR]<0.0){
                 didlimit=1;
-                gammaradvaluelimit = GAMMARADPOLEOUTGOING;
+                gammavaluelimit = GAMMAPOLEINGOINGOUT;
               }
-              else  gammaradvaluelimit = GAMMAMAXRAD;
+              else  gammavaluelimit = GAMMAMAX;
+
             }
             else{
-              if(ucon[RR]>0.0){
+              if(1||ucon[RR]>0.0){ // both ingoing and outgoing components limited in same way
                 didlimit=1;
                 gammavaluelimit = GAMMAPOLEOUTGOING*pow(V[pl][RR]/GAMMAPOLEOUTGOINGRADIUS,GAMMAPOLEOUTGOINGPOWER);
                 gammavaluelimit=MIN(gammavaluelimit,GAMMAPOLEOUTGOINGMAX);
               }
               else gammavaluelimit=GAMMAMAX;
-              if(uconrad[RR]>0.0){
-                didlimit=1;
-                gammaradvaluelimit = GAMMARADPOLEOUTGOING*pow(V[pl][RR]/GAMMARADPOLEOUTGOINGRADIUS,GAMMARADPOLEOUTGOINGPOWER);
-                gammaradvaluelimit=MIN(gammaradvaluelimit,GAMMARADPOLEOUTGOINGMAX);
-              }
-              else gammaradvaluelimit=GAMMAMAXRAD;
+
             }
 
-            if(didlimit){
-              //if(j==0 && (ucon[TT]>10 || uconrad[TT]>10)){ // DEBUG
-              //                  dualfprintf(fail_file,"GODHERE1: ur=%g %g : ut=%g %g : limit= %g %g\n",ucon[RR]*sqrt(ptrgeom[pl]->gcov[GIND(RR,RR)]),uconrad[RR]*sqrt(ptrgeom[pl]->gcov[GIND(RR,RR)]),ucon[TT],uconrad[TT],gammavaluelimit,gammaradvaluelimit);
-              //}
-
-              limit_gamma(0,gammavaluelimit,gammaradvaluelimit,MAC(prim,i,j,k),NULL,ptrgeom[pl],-1);
-
-              //              if(j==0 && (ucon[TT]>10 || uconrad[TT]>10)){ // DEBUG
-              //                ucon_calc(&MACP0A1(prim,i,j,k,0),ptrgeom[pl],ucon, others);
-              //                if(URAD0>=0){
-              //                  ucon_calc(&MACP0A1(prim,i,j,k,URAD1-U1),ptrgeom[pl],uconrad, othersrad);
-              //                }
-              //                dualfprintf(fail_file,"GODHERE2: ur=%g %g : ut=%g %g : limit= %g %g\n",ucon[RR]*sqrt(ptrgeom[pl]->gcov[GIND(RR,RR)]),uconrad[RR]*sqrt(ptrgeom[pl]->gcov[GIND(RR,RR)]),ucon[TT],uconrad[TT],gammavaluelimit,gammaradvaluelimit);
-              //              }
-              madechange++;
-            }
           }// end if u^r>0
           else{
-            if(ucon[RR]>0.0 && uconrad[RR]>0.0) limit_gamma(0,GAMMAPOLEINGOING,GAMMARADPOLEINGOING,MAC(prim,i,j,k),NULL,ptrgeom[pl],-1);
-            else if(ucon[RR]>0.0 && uconrad[RR]<=0.0) limit_gamma(0,GAMMAPOLEINGOING,GAMMAMAXRAD,MAC(prim,i,j,k),NULL,ptrgeom[pl],-1);
-            else if(ucon[RR]<=0.0 && uconrad[RR]>0.0) limit_gamma(0,GAMMAMAX,GAMMARADPOLEINGOING,MAC(prim,i,j,k),NULL,ptrgeom[pl],-1);
+            didlimit=1;
+            gammavaluelimit=GAMMAPOLEINGOING;
+          }
+
+
+
+          /////////////
+          //
+          // RADIATION
+          //
+          /////////////
+          gammaradvaluelimit = GAMMAMAXRAD; // default is no limit
+
+          if(URAD0>=0){
+            if(V[pl][RR]>GAMMARADPOLEOUTGOINGRADIUSIN){
+              
+              if(V[pl][RR]<=GAMMARADPOLEOUTGOINGRADIUS){
+
+                if(uconrad[RR]>0.0){
+                  didlimit=1;
+                  gammaradvaluelimit = GAMMARADPOLEOUTGOING;
+                }
+                else if(uconrad[RR]<0.0){
+                  didlimit=1;
+                  gammaradvaluelimit = GAMMARADPOLEINGOINGOUT;
+                }
+                else  gammaradvaluelimit = GAMMAMAXRAD;
+              }
+              else{
+                if(1||uconrad[RR]>0.0){ // both ingoing and outgoing components limited in same way
+                  didlimit=1;
+                  gammaradvaluelimit = GAMMARADPOLEOUTGOING*pow(V[pl][RR]/GAMMARADPOLEOUTGOINGRADIUS,GAMMARADPOLEOUTGOINGPOWER);
+                  gammaradvaluelimit=MIN(gammaradvaluelimit,GAMMARADPOLEOUTGOINGMAX);
+                }
+                else gammaradvaluelimit=GAMMAMAXRAD;
+              }
+            }// end if u^r>0
+            else{
+              didlimit=1;
+              gammaradvaluelimit=GAMMARADPOLEINGOING;
+            }
+          }
+
+
+          //////////////////
+          //
+          // Limit gamma's
+          //
+          //////////////////
+          if(didlimit){
+            //if(j==0 && (ucon[TT]>10 || uconrad[TT]>10)){ // DEBUG
+            //                  dualfprintf(fail_file,"GODHERE1: ur=%g %g : ut=%g %g : limit= %g %g\n",ucon[RR]*sqrt(ptrgeom[pl]->gcov[GIND(RR,RR)]),uconrad[RR]*sqrt(ptrgeom[pl]->gcov[GIND(RR,RR)]),ucon[TT],uconrad[TT],gammavaluelimit,gammaradvaluelimit);
+            //}
+
+            limit_gamma(0,gammavaluelimit,gammaradvaluelimit,MAC(prim,i,j,k),NULL,ptrgeom[pl],-1);
+
+            //              if(j==0 && (ucon[TT]>10 || uconrad[TT]>10)){ // DEBUG
+            //                ucon_calc(&MACP0A1(prim,i,j,k,0),ptrgeom[pl],ucon, others);
+            //                if(URAD0>=0){
+            //                  ucon_calc(&MACP0A1(prim,i,j,k,URAD1-U1),ptrgeom[pl],uconrad, othersrad);
+            //                }
+            //                dualfprintf(fail_file,"GODHERE2: ur=%g %g : ut=%g %g : limit= %g %g\n",ucon[RR]*sqrt(ptrgeom[pl]->gcov[GIND(RR,RR)]),uconrad[RR]*sqrt(ptrgeom[pl]->gcov[GIND(RR,RR)]),ucon[TT],uconrad[TT],gammavaluelimit,gammaradvaluelimit);
+            //              }
             madechange++;
           }
 
 
 
-
+          //////////////////
+          //
+          // Accounting for gamma changes
+          //
+          //////////////////
           if(madechange&&candodiag){
             ///////////
             //

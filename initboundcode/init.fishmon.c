@@ -1044,6 +1044,7 @@ int get_maxes(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *bsq_max, FTYPE *pg_ma
   }
 
   parms[0]=rin;
+  parms[1]=100.0;
 
   funreturn=user1_get_maxes(eqslice, parms,prim, bsq_max, pg_max, beta_min);
   if(funreturn!=0) return(funreturn);

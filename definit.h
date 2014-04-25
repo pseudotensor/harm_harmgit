@@ -990,14 +990,18 @@
 //#define GAMMAPOLE (2.0)
 
 #define GAMMAPOLEOUTGOING 1.1 // keep low
-#define GAMMAPOLEOUTGOINGPOWER 1.0
-#define GAMMAPOLEOUTGOINGRADIUS 10.0 // very model dependent
+#define GAMMAPOLEINGOINGOUT 1.3 // keep low
+#define GAMMAPOLEOUTGOINGPOWER 0.1 // keep low unless know will grow alot
+#define GAMMAPOLEOUTGOINGRADIUS 6.0 // very model dependent
+#define GAMMAPOLEOUTGOINGRADIUSIN 4.0 // very model dependent
 #define GAMMAPOLEOUTGOINGMAX (5.0)
 #define GAMMAPOLEINGOING GAMMAMAX
 
-#define GAMMARADPOLEOUTGOING 1.1 // keep low
-#define GAMMARADPOLEOUTGOINGPOWER 1.0
-#define GAMMARADPOLEOUTGOINGRADIUS 10.0 // very model dependent
+#define GAMMARADPOLEOUTGOING 1.3 // keep low
+#define GAMMARADPOLEINGOINGOUT 1.7 // keep low
+#define GAMMARADPOLEOUTGOINGPOWER 0.5
+#define GAMMARADPOLEOUTGOINGRADIUS 6.0 // very model dependent
+#define GAMMARADPOLEOUTGOINGRADIUSIN 4.0 // very model dependent
 #define GAMMARADPOLEOUTGOINGMAX (3.0)
 #define GAMMARADPOLEINGOING GAMMAMAXRAD
 
