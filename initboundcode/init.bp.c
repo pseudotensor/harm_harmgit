@@ -202,7 +202,7 @@ int init_grid(void)
   
   // metric stuff first
 
-  a = 0.5; //9375 ;
+  a = 0.0; //9375 ;
 
   
 
@@ -281,7 +281,7 @@ int init_global(void)
   //  rescaletype=1;
   rescaletype=4;
   BSQORHOLIMIT=1E2; // may have to make smaller if problems
-  BSQOULIMIT=1E4;
+  BSQOULIMIT=1E5;
   UORHOLIMIT=1E2;
   // JCM: Have to choose below so that Mdot from atmosphere is not important compared to true Mdot for thin disk.
   RHOMIN = 1E-4;
@@ -400,7 +400,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
   //rin = (1. + h_over_r)*Risco;
   rin = Risco;
   rinfield = 10.0;
-  beta = 1.6e2;
+  beta = 2.e2;
   randfact = 2.e-1; //4.e-2;
   //  fieldnormalizemin = 3. * Risco;
 #elif(WHICHPROBLEM==THICKDISK)
@@ -804,18 +804,18 @@ int init_dsandvels_bpthin(int *whichvel, int*whichcoord, int i, int j, int k, FT
     S = 1./(H*H*nz) ;
     cs = H*nz ;
 
-    rho = (S/sqrt(2.*M_PI*H*H)) * (pow(R/rin,3./2-0.6)) * exp(-z*z/(2.*H*H)) * taper_func(R,rin, 2.0) ; //* ( 1.0 - R*R/((pow(R,1.5) + a)*(pow(R,1.5) + a)) )  ;// taper_func(R,rin,-1.0) ;
+    rho = (S/sqrt(2.*M_PI*H*H)) * (pow(R/rin,3./2-0.6)) * exp(-z*z/(2.*H*H)) ; //* taper_func(R,rin, 5.0) ; //* ( 1.0 - R*R/((pow(R,1.5) + a)*(pow(R,1.5) + a)) )  ;// taper_func(R,rin,-1.0) ;
     u = rho*cs*cs/(gam - 1.) ;
     ur = 0. ;
     uh = 0. ;
-    up = 1./(pow(r,1.5) + a) ;     // MARKNOTE  angular, not linear
+    up = 1./(pow(r,1.5) + a) /1000.;     // MARKNOTE  angular, not linear
     // solution for 3-vel
 
 
     
     
     pr[RHO] = rho ;
-    pr[UU] = u * (1. +randfact * (ranc(0,0) - 0.5));
+    pr[UU] = u ; //* (1. +randfact * (ranc() - 0.5));
 
     pr[U1] = ur ;
     pr[U2] = uh ;    
@@ -988,12 +988,12 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
   FTYPE rpow;
   rpow=3.0/4.0; // Using rpow=1 leads to quite strong field at large radius, and for standard atmosphere will lead to \sigma large at all radii, which is very difficult to deal with -- especially with grid sectioning where outer moving wall keeps opening up highly magnetized region
   //  FTYPE FIELDROT=M_PI*0.5;
-  FTYPE rpow2=0.1; //3.0/4.0; // has two meanings. was originally used for, as below, some power outside the break radius. now hijacked for field radial dependence inside rtransition.
+  FTYPE rpow2=0.2; //.1 abandoned on april 20, 2014 due to too much flux on BH when taper function in rho removed; //3.0/4.0; // has two meanings. was originally used for, as below, some power outside the break radius. now hijacked for field radial dependence inside rtransition.
   FTYPE FIELDROT=0.0;
   FTYPE hpow=2.0; // MAVARANOTE originally 2.0
 #define RBREAK_MACRO (100000.0)
   FTYPE RBREAK=RBREAK_MACRO;
-#define RTRANSITION_MACRO (12.0)
+#define RTRANSITION_MACRO (12.0) 
   FTYPE RTRANSITION=RTRANSITION_MACRO; 
 
 
@@ -1031,6 +1031,10 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
 	else if(r>=RTRANSITION && r<RBREAK) vpot += -  da3vsr_integrated[startpos[1]+i]  * pow(sin(th),hpow)*sin(FIELDROT)*sin(ph);
 	else if(r>=RBREAK) vpot += -  da3vsr_integrated[startpos[1]+i] * pow(sin(th),hpow)*sin(FIELDROT)*sin(ph); 
 	else vpot += 0.0 ; //-  pow(1.5/tempstore_tot[0],rpow2) * da3vsr_integrated[startpos[1]+i] * pow(sin(th),hpow)*sin(FIELDROT)*sin(ph); //MAVARATEMP was 0.0 normally
+      }
+      else if(0){
+	if(r<RTRANSITION) vpot += RTRANSITION/10.;
+	else vpot +=  pow(r/500.,4.2) * pow(sin(th),hpow)*sin(FIELDROT)*sin(ph);
       }
       else {
 	vpot += 0.0;
@@ -1080,6 +1084,10 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
 	else if(r>=RTRANSITION && r<RBREAK) vpot += da3vsr_integrated[startpos[1]+i] * pow(sin(th),hpow)*(cos(FIELDROT) - cos(ph)*cot(th)*sin(FIELDROT));
 	else if(r>=RBREAK) vpot += da3vsr_integrated[startpos[1]+i]  * pow(sin(th),hpow)*(cos(FIELDROT) - cos(ph)*cot(th)*sin(FIELDROT));
 	else vpot += 0.0; //pow(1.5/tempstore_tot[0],rpow2) * da3vsr_integrated[startpos[1]+i] * pow(sin(th),hpow)*(cos(FIELDROT) - cos(ph)*cot(th)*sin(FIELDROT));
+      }
+      else if(0){
+	if(r<RTRANSITION) vpot += -RTRANSITION/10.;
+	else vpot += - pow(r/500.,4.2) * pow(sin(th),hpow)*(cos(FIELDROT) - cos(ph)*cot(th)*sin(FIELDROT));
       }
       else {
 	vpot += 0.0;
@@ -1908,10 +1916,11 @@ int calc_da3vsr(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
   da3vsr=(SFTYPE*)malloc(ncpux1*N1*sizeof(SFTYPE)); // add test to see if these work                                                                        
   da3vsr_tot=(SFTYPE*)malloc(ncpux1*N1*sizeof(SFTYPE));
   da3vsr_integrated=(SFTYPE*)malloc((ncpux1*N1)*sizeof(SFTYPE));
-  tempstore=(SFTYPE*)malloc(2*sizeof(SFTYPE)); // add test to see if these work                                                                        
-  tempstore_tot=(SFTYPE*)malloc(2*sizeof(SFTYPE));
+  tempstore=(SFTYPE*)malloc(3*sizeof(SFTYPE)); // add test to see if these work                                                                        
+  tempstore_tot=(SFTYPE*)malloc(3*sizeof(SFTYPE));
   tempstore[0]=0.0;
   tempstore[1]=0.0;
+  tempstore[2]=0.0;
   FTYPE startval;
 
   if(da3vsr_tot==NULL){
@@ -1929,13 +1938,16 @@ int calc_da3vsr(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
     if(mycpupos[3] == 0 && (mycpupos[2]==ncpux2/2 && ncpux2>1 || ncpux2==1)){//|| startpos[2]==totalsize[2]/2 ) {  //&& !(startpos[1]==0 && ii==0)                                                                                       
       printf("Getting called 1");
 
-      if(ncpux2==1) jj = N2/2-1;
+      if(ncpux2==1) jj = N2/2; // MAVARACHANGE?
       //bl_coord_ijk_2(ii, jj, kk, FACE2, X, V);                                
       coord(ii, jj, kk, CORN3, XX); // USING THIS TO MAKE SURE i have the same if statement below as I do when I set the pot.
       coord(ii, jj, kk, FACE2, X);
       bl_coord(X, V);
       bl_coord(XX, VV);
-      get_geometry(ii, jj, kk, FACE2, ptrgeom);                                                                                                           
+      get_geometry(ii, jj, kk, FACE2, ptrgeom);                                                                             
+      //gset_genloc(1,BLCOORDS,ii,jj,kk,FACE2,ptrgeom);
+      //gset_genloc(int getprim, int whichcoord, int i, int j, int k, int loc, struct of_geom *ptrgeom)
+
       r=V[1];   
       rr=VV[1];
       th=V[2];  
@@ -1944,23 +1956,30 @@ int calc_da3vsr(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 
       ucon_calc(MAC(prim,ii,jj,kk),ptrgeom,ucon, others);                                                                                                 
       idxdxprim_ijk(ii, jj, kk, CORN3, idxdxp);                                                                                                           
-      dxdxprim_ijk(ii, jj, kk, CORN3, dxdxp);                                                                                                           
+      dxdxprim_ijk(ii, jj, kk, CORN3, dxdxp);                                                                          
+                                 
       if(rr>=RTRANSITION_MACRO && rr < RBREAK_MACRO) {
 	if(tempstore[0] > 0.1 && tempstore[1] < 0.1) {
 	  tempstore[1] = rr; 
 	  printf("rr tempstore[1]: %21.15g , at tracking= %d \n",rr,trackingticker);
 	  trackingticker++;
 	}
-	if(tempstore[0] <0.1 && startval<=RTRANSITION_MACRO) { //trackingticker == 0 && rr< RBREAK_MACRO/2. && rr<(RTRANSITION_MACRO*1.2) ) {
+	if(tempstore[0] <0.1 && startval<=RTRANSITION_MACRO) { //this if is true if r of ii=o for this core was <= RTRANSITION and rr and reached > RTRANSITION as well...only happens on the right single core. //trackingticker == 0 && rr< RBREAK_MACRO/2. && rr<(RTRANSITION_MACRO*1.2) ) {
 	  Rtransition=rr;
 	  tempstore[0]=rr;
+	  tempstore[2] = - ptrgeom->gdet * idxdxp[3][3] * dx[1] * ucon[TT] / sqrt(ptrgeom->gcov[GIND(2,2)]) * sqrt( (2./beta) * (gam - 1.0) * MACP0A1(prim,ii,jj,kk,UU) ) ;
 	  printf("rr tempstore[0]: %21.15g , at tracking= %d \n",rr,trackingticker);
 	  trackingticker++;
 	}
 
-	da3vsr[startpos[1]+ii] = - ptrgeom->gdet * idxdxp[3][3] * dx[1] / sqrt(ptrgeom->gcov[GIND(2,2)]) * ucon[TT] * sqrt( (gam - 1.0) * MACP0A1(prim,ii,jj,kk,UU) ) ; //- ptrgeom->gdet * dx[1] / sqrt(ptrgeom->gcov[GIND(2,2)]) * pow(.1,.5) * ucon[TT] * sqrt( (gam - 1.0) * MACP0A1(prim,ii,jj,kk,UU) )  ; 
+	da3vsr[startpos[1]+ii] = - ptrgeom->gdet * idxdxp[3][3] * dx[1] * ucon[TT] / sqrt(ptrgeom->gcov[GIND(2,2)]) * sqrt( (2./beta) * (gam - 1.0) * MACP0A1(prim,ii,jj,kk,UU) ) ; //- ptrgeom->gdet * idxdxp[3][3] * dx[1] / sqrt(ptrgeom->gcov[GIND(2,2)]) * ucon[TT] * sqrt( (2./beta) * (gam - 1.0) * MACP0A1(prim,ii,jj,kk,UU) ) ; //- ptrgeom->gdet * dxdxp[1][1] * dx[1] / sqrt(ptrgeom->gcov[GIND(2,2)]) /r * sqrt( (2./beta) * (gam - 1.0) * MACP0A1(prim,ii,jj,kk,UU) ) ; //- ptrgeom->gdet * dx[1] / sqrt(ptrgeom->gcov[GIND(2,2)]) * pow(.1,.5) * ucon[TT] * sqrt( (gam - 1.0) * MACP0A1(prim,ii,jj,kk,UU) )  ; 
 	printf("idxdxp[3][3] checkval: %21.15g , at r= %21.15g \n",idxdxp[3][3],rr);
+	printf("idxdxp[2][2] checkval: %21.15g , at r= %21.15g \n",idxdxp[2][2],rr);
 	printf("idxdxp[1][1] checkval: %21.15g , at r= %21.15g \n",idxdxp[1][1],rr);
+	printf("sqrt(ptrgeom->gcov[GIND(2,2)]) checkval: %21.15g , at r= %21.15g \n",sqrt(ptrgeom->gcov[GIND(2,2)]),rr);
+	printf("ucon[TT] checkval: %21.15g , at r= %21.15g \n",ucon[TT],rr);
+	printf("ucon[TT] checkval: %21.15g , at r= %21.15g \n",ucon[TT],rr);
+	printf("ptrgeom->gdet checkval: %21.15g , at r= %21.15g \n",ptrgeom->gdet,rr);
       }
       else {//if(startpos[2]==totalsize[2]/2) 
 	da3vsr[startpos[1]+ii] = 0.0 ;
@@ -1980,7 +1999,7 @@ int calc_da3vsr(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
     // if(integrate(ncpux1*N1,&lumvsr[0],&lumvsr_tot[0],CUMULATIVETYPE,enerregion)>=1) return(1);                                                         
   }                                                                                                                                                    
   
-  sleep(5);
+  sleep(10);
   
 
   /*
@@ -1997,32 +2016,46 @@ int calc_da3vsr(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
   for(ii=0; ii<ncpux1*N1; ii++) printf("valuein %d : %21.15g \n", ii, da3vsr[ii]);
   
   if(integrate(ncpux1*N1,&da3vsr[0],&da3vsr_tot[0], CUMULATIVETYPE3, 0) > 0) trifprintf("Failed to perform integrate() across cpus. \n") ; // 0 is just a filler for an integer$
+  sleep(10);
   printf("Check 3\n core id: %d",myid);
   for(ii=0; ii<ncpux1*N1; ii++) printf("valueout %d : %21.15g \n", ii, da3vsr_tot[ii]);
+  for(ii=0; ii<ncpux1*N1; ii++) trifprintf("da3vsr_tot %d : %21.15g \n", ii, da3vsr_tot[ii]);
 
-  /////// Want to capture and reset idxdxp[3][3] value which was stored in 0th position of da3vsr_tot
-
-  sleep(2);
+  sleep(10);
   if(integrate(3,&tempstore[0],&tempstore_tot[0], CUMULATIVETYPE3, 0) > 0) trifprintf("Failed to perform integrate() across cpus. \n") ;
-  trifprintf("Ending values of tempstore0 and tempstore 1 = %21.15g   %21.15g \n", tempstore_tot[0], tempstore_tot[1]);
+  trifprintf("Ending values of tempstore0 and tempstore 1 , and 2 = %21.15g   %21.15g  %21.15g \n", tempstore_tot[0], tempstore_tot[1],tempstore_tot[2]);
 
-  da3vsr_integrated[0] = 0.0 ;  
+
   //for(ii=0; ii<N1*ncpux1; ii++) da3vsr_tot[ii] = 0.1 ;
-  for(ii=1; ii<N1*ncpux1; ii++) da3vsr_integrated[ii] = da3vsr_integrated[ii-1] + da3vsr_tot[ii-1] ; //need to go to ii=N1*ncpux1 to get outer boundary? MAVARACHANGED da3vsr_tot[ii-1] to ii on 19/2/2014...skipping cell before?
+  da3vsr_integrated[0] = -0.26 ; //tempstore_tot[2] ; //tempstore_tot[2]*(1./(pow(tempstore_tot[1]/tempstore_tot[0],.3)-1.0)) ; // had to wait to set this once tempstores to be sent to all processors
+  for(ii=1; ii<N1*ncpux1; ii++) da3vsr_integrated[ii] = da3vsr_integrated[ii-1] + da3vsr_tot[ii-1] ;
+  /*for(ii=1; ii<N1*ncpux1; ii++){
+    if(da3vsr_tot[ii-1] > -0.00000001){ 
+      da3vsr_integrated[ii] = da3vsr_integrated[0] ;} //MAVARAFIX this is a BAD way to check to see if the value has changed - FIX!!
+    else {
+      da3vsr_integrated[ii] = da3vsr_integrated[ii-1] + da3vsr_tot[ii-1] ; }//need to go to ii=N1*ncpux1 to get outer boundary? MAVARACHANGED da3vsr_tot[ii-1] to ii on 19/2/2014...skipping cell before?
+      }*/
   for(ii=0; ii<ncpux1*N1; ii++) trifprintf("value %d : %21.15g \n", ii, da3vsr_integrated[ii]);
 
+  
+
+  // /*became outdated on april 25th 2014 when I added the above sections to exactly match A_phi form on each side of RTRANSITION by exactly matching them at tempstore[0]
   //////////////////////////////////////
   /////////// Finds value of potential at transition radius and sets all values in da3vsr_integrated previous to that to that value  
   ii=0;
-  while(da3vsr_integrated[ii]<0.000001 && da3vsr_integrated[ii]>-0.000001) ii++;
+  while(da3vsr_integrated[ii]<da3vsr_integrated[0]+.000001 && da3vsr_integrated[ii]>da3vsr_integrated[0]-0.000001) ii++;
   int  ioffirstpast_rtransition=ii-1;
   printf("ioffirstpast_rtransition= %d \n",ioffirstpast_rtransition);
   FTYPE temp1 = da3vsr_integrated[ioffirstpast_rtransition];
   FTYPE temp2 = da3vsr_integrated[ioffirstpast_rtransition+1];
-  for(ii=0; ii<ncpux1*N1; ii++) da3vsr_integrated[ii] = da3vsr_integrated[ii] + (1./(pow(tempstore_tot[1]/tempstore_tot[0],.1)-1.0)) * (temp2-temp1) ; // I don't need to divide by dr since I'm setting the delta A of Ain and Aout equal to each other, so the dr's or dx's would cancel anyway   ;(da3vsr_integrated[ncpux1*N1+1] - da3vsr_integrated[ncpux1*N1]); 
-  printf("value added to pot = %21.15g \n",(1./(pow(tempstore_tot[1]/tempstore_tot[0],.1)-1.0)) * (da3vsr_integrated[ioffirstpast_rtransition+1]-da3vsr_integrated[ioffirstpast_rtransition])) ;
+  // /for(ii=0; ii<=ioffirstpast_rtransition; ii++){ da3vsr_integrated[ii] = da3vsr_integrated[ii] + (1./(pow(tempstore_tot[1]/tempstore_tot[0],.3)-1.0)) * (temp2-temp1) ;} // I don't need to divide by dr since I'm setting the delta A of Ain and Aout equal to each other, so the dr's or dx's would cancel anyway   ;(da3vsr_integrated[ncpux1*N1+1] - da3vsr_integrated[ncpux1*N1]); 
+  
+  // /for(ii=ioffirstpast_rtransition+1; ii<ncpux1*N1; ii++){ da3vsr_integrated[ii] = da3vsr_integrated[ii] * (1./(pow(tempstore_tot[1]/tempstore_tot[0],.3)-1.0)) ;} // was paired with above line // / etc.*****
+  
+  printf("value added to pot = %21.15g \n",(1./(pow(tempstore_tot[1]/tempstore_tot[0],.3)-1.0)) * (da3vsr_integrated[ioffirstpast_rtransition+1]-da3vsr_integrated[ioffirstpast_rtransition])) ;
+  /////*/
   //for(ii=ioffirstpast_rtransition; ii<N1*ncpux1; ii++) da3vsr_integrated[ii] = da3vsr_integrated[ii] + (temp1/.2+temp2);  // MAVARANOTE here I multiple by rpow2 = .1 so that when I divide by it later when using the functional form of vpot_<rtransition the edges at the transition of vpot forms line up
-
+  
   for(ii=0; ii<ncpux1*N1; ii++) if(mycpupos[1]==0 && mycpupos[2]==0) trifprintf("value %d : %21.15g \n", ii, da3vsr_integrated[ii]);
   ///////////
 

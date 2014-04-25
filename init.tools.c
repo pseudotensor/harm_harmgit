@@ -466,7 +466,7 @@ int user1_init_primitives(int inittype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FT
   extern int calc_da3vsr(FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
   calc_da3vsr(prim);
   init_vpot(prim,pstag,ucons,vpot,Bhat,F1,F2,F3,Atemp);
-  normalize_field(prim,pstag,ucons,vpot,Bhat); // normalizes p and pstag and unew and vpot if tracked
+  //normalize_field(prim,pstag,ucons,vpot,Bhat); // normalizes p and pstag and unew and vpot if tracked
 #else
   // no field
   init_zero_field(prim,pstag,ucons,vpot,Bhat);

@@ -72,7 +72,7 @@ static FTYPE torusrmax_loc;
 static FTYPE ntheta,htheta,rsjet2,r0jet2,rsjet3,r0jet3; // and rs,r0
 
 // for defcoord=BPTHIN1
-static FTYPE bp_npow,bp_r1jet,bp_njet1,bp_njet,bp_r0jet,bp_rsjet,bp_Qjet, bp_ntheta,bp_htheta,bp_rsjet2,bp_r0jet2,bp_rsjet3,bp_r0jet3, bp_rs, bp_r0,bp_npow2,bp_cpow2,bp_rbr,bp_x1br, bp_h0; 
+static FTYPE bp_npow,bp_r1jet,bp_njet1,bp_njet,bp_r0jet,bp_rsjet,bp_Qjet, bp_ntheta,bp_htheta,bp_rsjet2,bp_r0jet2,bp_rsjet3,bp_r0jet3, bp_rs, bp_r0,bp_rsinner,bp_r0inner,bp_npow2,bp_cpow2,bp_rbr,bp_x1br, bp_h0; 
 
 // for defcoord=PULSARCOORDS
 static FTYPE hinner,houter;
@@ -311,6 +311,10 @@ void set_coord_parms_nodeps(int defcoordlocal)
     bp_rs=120.0; // shift
     bp_r0=48.0; // divisor
  
+    // for switches from innermost region of disk (inside horizon) to regular disk to increase timestep set by smallest vertical cell size
+    bp_rsinner=3.0;
+    bp_r0inner=1.0;
+
     // for theta1
     //    hslope=0.3 ; // resolve inner-radial region near equator
     bp_r0jet3=200.0; // divisor
@@ -723,7 +727,7 @@ void write_coord_parms(int defcoordlocal)
 	fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",npow,r1jet,njet,r0jet,rsjet,Qjet,ntheta,htheta,rsjet2,r0jet2,rsjet3,r0jet3,rs,r0,npow2,cpow2,rbr,x1br);
       }
       else if (defcoordlocal == BPTHIN1) {
-	fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",bp_npow,bp_r1jet,bp_njet,bp_r0jet,bp_rsjet,bp_Qjet,bp_ntheta,bp_htheta,bp_rsjet2,bp_r0jet2,bp_rsjet3,bp_r0jet3,bp_rs,bp_r0,bp_npow2,bp_cpow2,bp_rbr,bp_x1br);   // MARKTODO   add bp_h0? and add bp_njet1
+	fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",bp_npow,bp_r1jet,bp_njet,bp_r0jet,bp_rsjet,bp_Qjet,bp_ntheta,bp_htheta,bp_rsjet2,bp_r0jet2,bp_rsjet3,bp_r0jet3,bp_rs,bp_r0,bp_rsinner,bp_r0inner,bp_npow2,bp_cpow2,bp_rbr,bp_x1br);   // MARKTODO   add bp_h0? and add bp_njet1
       }
       else if (defcoordlocal == JET5COORDS) {
 	fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",AAAA,AAA,BBB,DDD,ii0,CCCC,Rj);
@@ -825,7 +829,7 @@ void read_coord_parms(int defcoordlocal)
 	fscanf(in,HEADER18IN,&npow,&r1jet,&njet,&r0jet,&rsjet,&Qjet,&ntheta,&htheta,&rsjet2,&r0jet2,&rsjet3,&r0jet3,&rs,&r0,&npow2,&cpow2,&rbr,&x1br);
       }
       else if (defcoordlocal == BPTHIN1) {
-	fscanf(in,HEADER18IN,&bp_npow,&bp_r1jet,&bp_njet,&bp_r0jet,&bp_rsjet,&bp_Qjet,&bp_ntheta,&bp_htheta,&bp_rsjet2,&bp_r0jet2,&bp_rsjet3,&bp_r0jet3,&bp_rs,&bp_r0,&bp_npow2,&bp_cpow2,&bp_rbr,&bp_x1br);
+	fscanf(in,HEADER18IN,&bp_npow,&bp_r1jet,&bp_njet,&bp_r0jet,&bp_rsjet,&bp_Qjet,&bp_ntheta,&bp_htheta,&bp_rsjet2,&bp_r0jet2,&bp_rsjet3,&bp_r0jet3,&bp_rs,&bp_r0,&bp_rsinner,&bp_r0inner,&bp_npow2,&bp_cpow2,&bp_rbr,&bp_x1br);
       }
       else if (defcoordlocal == JET5COORDS) {
 	fscanf(in,HEADER7IN,&AAAA,&AAA,&BBB,&DDD,&ii0,&CCCC,&Rj);
@@ -979,6 +983,8 @@ void read_coord_parms(int defcoordlocal)
     MPI_Bcast(&bp_r0jet3, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
     MPI_Bcast(&bp_rs, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
     MPI_Bcast(&bp_r0, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&bp_rsinner, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&bp_r0inner, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
     MPI_Bcast(&bp_npow2, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
     MPI_Bcast(&bp_cpow2, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
     MPI_Bcast(&bp_rbr, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
@@ -1054,7 +1060,7 @@ void bl_coord(FTYPE *X, FTYPE *V)
   FTYPE BB,CC;
   FTYPE myhslope1,myhslope2,myhslope;
   FTYPE flip1,flip2;
-  FTYPE th0,th2,switch0,switch2;
+  FTYPE th0,th2,switch0,switch2,switchinner0,switchinner2;
   FTYPE r,dtheta2dx1,dtheta2dx2,dtheta0dx2,dtheta0dx1,dswitch0dr,dswitch2dr;
   FTYPE X0;
   // for defcoord=JET5COORDS
@@ -1367,7 +1373,11 @@ void bl_coord(FTYPE *X, FTYPE *V)
     //    th0 = M_PI * .5 * (1. + (1.-((1. - myhslope) * 0.5))*(2.*X[2]-1.) + ((1. - myhslope) * 0.5)*pow(2.*X[2]-1.,9) ) ; // MARKTODODONE  switched to poly type from Noble+ 2010 on June 10, 2013
     FTYPE xi=((1. - myhslope) * 0.5);
     //  th0 = M_PI * .5 * (1. + (1.-xi)*(2.*X[2]-1.) + xi*pow(2.*X[2]-1.,9) ) ; // MARKTODODONE  switched to poly type from Noble+ 2010 on June 10, 2013
-    th0 = M_PI * .5 * (.2*(2.0*X[2]-1.0) + (1.0-.2)*pow(2.0*X[2]-1.0,9.0)+1.);
+    switchinner0 = 0.5+1.0/M_PI*atan((V[1]-bp_rsinner)/bp_r0inner); // switch in .nb file
+    switchinner2 = 0.5-1.0/M_PI*atan((V[1]-bp_rsinner)/bp_r0inner); // switchi in .nb file
+    
+    if(X[2]>=.5) th0 = switchinner0*(M_PI * .5 * (.2*(2.0*X[2]-1.0) + (1.0-.2)*pow(2.0*X[2]-1.0,9.0)+1.) ) + switchinner2*( M_PI * .5 * (.2*(bp_rsinner/V[1])*(2.0*X[2]-1.0) + (1.0-.2*(bp_rsinner/V[1]))*pow(fabs(2.0*X[2]-1.0),9.0*(bp_rsinner/V[1]))+1.) ) ;
+    else th0 = switchinner0*(M_PI * .5 * (.2*(2.0*X[2]-1.0) + (1.0-.2)*pow(2.0*X[2]-1.0,9.0)+1.) ) + switchinner2*( M_PI * .5 * (.2*(bp_rsinner/V[1])*(2.0*X[2]-1.0) - (1.0-.2*(bp_rsinner/V[1]))*pow(fabs(2.0*X[2]-1.0),9.0*(bp_rsinner/V[1]))+1.) ) ;     // split to > or < .5 to account for sign in pow()
 
     // determine switches (only function of radius and not x2 or theta)
     switch0 = 0.5+1.0/M_PI*atan((V[1]-bp_rs)/bp_r0); // switch in .nb file
