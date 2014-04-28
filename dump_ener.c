@@ -985,7 +985,7 @@ int counttotal(int enerregion, CTYPE *vars, int num)
   // see restart.c and restart_read_defs_new()
   i=-N1NOT1;
   j=-N2NOT1;
-  k=-MN3NOT1;
+  k=-N3NOT1;
   for(variter=0;variter<num;variter++) vars[variter] += GLOBALMACP0A3(failfloorcount,i,j,k,0,0,variter) ;
 
 
