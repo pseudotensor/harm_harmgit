@@ -3195,7 +3195,7 @@ void debugfixupmad(void)
     bl_coord_ijk_2(i,j,k,CENT,X, V) ;
 
     FTYPE bsq=0.0;
-    bsq_calc_general(prfix,ptrgeom,&bsq);
+    bsq_calc(prfix,ptrgeom,&bsq);
 
 
     if(V[1]>60.0){
@@ -3257,7 +3257,7 @@ void debugfixupalt1(void)
     bl_coord_ijk_2(i,j,k,CENT,X, V) ;
 
     FTYPE bsq=0.0;
-    bsq_calc_general(prfix,ptrgeom,&bsq);
+    bsq_calc(prfix,ptrgeom,&bsq);
 
     if(0){
     if(V[1]>60.0){
@@ -3335,7 +3335,7 @@ void debugfixupaltdeath(void)
     bl_coord_ijk_2(i,j,k,CENT,X, V) ;
 
     FTYPE bsq=0.0;
-    bsq_calc_general(prfix,ptrgeom,&bsq);
+    bsq_calc(prfix,ptrgeom,&bsq);
 
     if(0){
     if(V[1]>60.0){

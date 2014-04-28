@@ -5520,7 +5520,7 @@ void debugfixupaltdeath_bc(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
     ufix=&GLOBALMACP0A1(unewglobal,i,j,k,0);
   
     // get geometry for center pre-interpolated values
-    //    get_geometry(i, j, k, CENT, ptrgeom);
+    get_geometry(i, j, k, CENT, ptrgeom);
     bl_coord_ijk_2(i,j,k,CENT,X, V) ;
   
     //    FTYPE bsq=0.0;
