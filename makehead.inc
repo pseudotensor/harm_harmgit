@@ -69,7 +69,8 @@ else
 ####################
 
 ifeq ($(HOSTNAME),physics-179)
-USEICCINTEL=1
+#USEICCINTEL=1
+USEGCC=1
 $(warning USEICCINTEL is $(USEICCINTEL))
 else ifeq ($(HOSTNAME),krakenpf1)
 USEKRAKENICC=1

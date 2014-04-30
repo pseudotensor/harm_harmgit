@@ -348,7 +348,8 @@ endif
 
 
 ifeq ($(USEOPENMP),1)
-	OPMPFLAGS=-openmp
+#	OPMPFLAGS=-openmp
+	OPMPFLAGS=-fopenmp
 else
 	OPMPFLAGS=
 endif
@@ -387,7 +388,7 @@ LONGDOUBLECOMMAND=-m128bit-long-double
 DFLAGS=-DUSINGICC=0 -DUSINGORANGE=0 $(EXTRA)
 
 
-COMP=gcc $(DFLAGS)
+COMP=gcc $(DFLAGS) $(OPMPFLAGS)
 # COMP=gcc3
 
 # gcc type flags
