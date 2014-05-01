@@ -5333,7 +5333,7 @@ void check_spc_singularities_user(void)
   int needzero;
   int singfound;
   int nonsingfound;
-  int numlocs,indloc,loc;
+  int numlocs=NPG,indloc,loc;
   int pl,pliter;
   LOCALMETRICTEMPVARS;
   int doprintout;

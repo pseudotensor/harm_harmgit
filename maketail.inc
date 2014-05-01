@@ -565,6 +565,10 @@ endif
 ##	    $(CC2) $(GCCCFLAGS) -c testfpp.c -lm
 ##	    $(CC2) $(GCCCFLAGS) -c testfpp.c -lf2c -lm
 
+# Might generally want to compile with -lf2c, unless sure have all needed functions.
+#If getting "undefined reference to MAIN__", can fix by either 
+#    making sure that you're linking to libf2c.a and not libf2c.so, 
+#    or adding option "-u MAIN__" to linker.
 
 
 

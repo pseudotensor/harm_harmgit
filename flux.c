@@ -1884,7 +1884,6 @@ void compute_and_store_fluxstatecent(FTYPE (*pr)[NSTORE2][NSTORE3][NPR])
 
   {// begin block
 
-    int dir;
 
 
 #if(STORESHOCKINDICATOR)
@@ -1902,10 +1901,11 @@ void compute_and_store_fluxstatecent(FTYPE (*pr)[NSTORE2][NSTORE3][NPR])
     endorderi   = - startorderi;
 
   
-    int imod,jmod,kmod;
 
 #pragma omp parallel
     {
+      int dir;
+      int imod,jmod,kmod;
       int gotgeometry=0;
       int i,j,k,l;
       int pl;
