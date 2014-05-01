@@ -279,7 +279,7 @@ void set_coord_parms_nodeps(int defcoordlocal)
     bp_npow2=2.0; //10.0; //5.0; // 10.0;    // MARKNOTE set to 10.0 before using BP values //power exponent
     bp_cpow2=1.0; //exponent prefactor (the larger it is, the more hyperexponentiation is)
     //    rbr = 1E3;  //radius at which hyperexponentiation kicks in
-    bp_rbr = 120.0;  //radius at which hyperexponentiation kicks in
+    bp_rbr = 200.0;  //radius at which hyperexponentiation kicks in
 
 
 
@@ -309,11 +309,11 @@ void set_coord_parms_nodeps(int defcoordlocal)
 
     // for switches from normal theta to ramesh theta
     bp_rs=120.0; // shift
-    bp_r0=48.0; // divisor
+    bp_r0=96.0; // divisor
  
     // for switches from innermost region of disk (inside horizon) to regular disk to increase timestep set by smallest vertical cell size
     bp_rsinner=3.0;
-    bp_r0inner=1.0;
+    bp_r0inner=1.0; //maybe 1.0 is too quick? not really same problem as outer radii I suppose since it just flattens off;
 
     // for theta1
     //    hslope=0.3 ; // resolve inner-radial region near equator
@@ -1376,9 +1376,10 @@ void bl_coord(FTYPE *X, FTYPE *V)
     switchinner0 = 0.5+1.0/M_PI*atan((V[1]-bp_rsinner)/bp_r0inner); // switch in .nb file
     switchinner2 = 0.5-1.0/M_PI*atan((V[1]-bp_rsinner)/bp_r0inner); // switchi in .nb file
     
-    if(X[2]>=.5) th0 = switchinner0*(M_PI * .5 * (.2*(2.0*X[2]-1.0) + (1.0-.2)*pow(2.0*X[2]-1.0,9.0)+1.) ) + switchinner2*( M_PI * .5 * (.2*(bp_rsinner/V[1])*(2.0*X[2]-1.0) + (1.0-.2*(bp_rsinner/V[1]))*pow(fabs(2.0*X[2]-1.0),9.0*(bp_rsinner/V[1]))+1.) ) ;
+    th0 = M_PI * .5 * (.2*(2.0*X[2]-1.0) + (1.0-.2)*pow(2.0*X[2]-1.0,9.0)+1.) ;
+    /*    if(X[2]>=.5) th0 = switchinner0*(M_PI * .5 * (.2*(2.0*X[2]-1.0) + (1.0-.2)*pow(2.0*X[2]-1.0,9.0)+1.) ) + switchinner2*( M_PI * .5 * (.2*(bp_rsinner/V[1])*(2.0*X[2]-1.0) + (1.0-.2*(bp_rsinner/V[1]))*pow(fabs(2.0*X[2]-1.0),9.0*(bp_rsinner/V[1]))+1.) ) ;
     else th0 = switchinner0*(M_PI * .5 * (.2*(2.0*X[2]-1.0) + (1.0-.2)*pow(2.0*X[2]-1.0,9.0)+1.) ) + switchinner2*( M_PI * .5 * (.2*(bp_rsinner/V[1])*(2.0*X[2]-1.0) - (1.0-.2*(bp_rsinner/V[1]))*pow(fabs(2.0*X[2]-1.0),9.0*(bp_rsinner/V[1]))+1.) ) ;     // split to > or < .5 to account for sign in pow()
-
+    */
     // determine switches (only function of radius and not x2 or theta)
     switch0 = 0.5+1.0/M_PI*atan((V[1]-bp_rs)/bp_r0); // switch in .nb file
     switch2 = 0.5-1.0/M_PI*atan((V[1]-bp_rs)/bp_r0); // switchi in .nb file

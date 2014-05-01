@@ -202,7 +202,7 @@ int init_grid(void)
   
   // metric stuff first
 
-  a = 0.1; //9375 ;
+  a = 0.5; //9375 ;
 
   
 
@@ -400,7 +400,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
   //rin = (1. + h_over_r)*Risco;
   rin = Risco;
   rinfield = 10.0;
-  beta = 1.6e2;
+  beta = 1.5e2;
   randfact = 2.e-1; //4.e-2;
   //  fieldnormalizemin = 3. * Risco;
 #elif(WHICHPROBLEM==THICKDISK)
@@ -807,7 +807,7 @@ int init_dsandvels_bpthin(int *whichvel, int*whichcoord, int i, int j, int k, FT
     cs = H*nz ;
 
     rho = (S/sqrt(2.*M_PI*H*H)) * (pow(R/rin,3./2+UGPOW)) * exp(-z*z/(2.*H*H)) * taper_func(R,rin, 3.0) ; //* ( 1.0 - R*R/((pow(R,1.5) + a)*(pow(R,1.5) + a)) )  ;// taper_func(R,rin,-1.0) ;
-    u = rho*cs*cs/(gam) ;
+    u = rho*cs*cs/(gam - 1.) ;
     ur = 0. ;
     uh = 0. ;
     up = 1./(pow(r,1.5) + a) ;     // MARKNOTE  angular, not linear
@@ -2032,7 +2032,9 @@ int calc_da3vsr(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 
 
   //for(ii=0; ii<N1*ncpux1; ii++) da3vsr_tot[ii] = 0.1 ;
-  da3vsr_integrated[0] = tempstore_tot[2] ; //tempstore_tot[2] ; //tempstore_tot[2]*(1./(pow(tempstore_tot[1]/tempstore_tot[0],.3)-1.0)) ; // had to wait to set this once tempstores to be sent to all processors
+  da3vsr_integrated[0] = tempstore_tot[2] ;
+  //do{ da3vsr_integrated[0] = tempstore_tot[2] - da3vsr_tot[ii]; //this is better but the do-while loop can hang if the switch happens on the bound of a cpu-domain
+  //}while(da3vsr_tot[0]<0.000001 && da3vsr_tot[ii]>-0.000001); //MAVARACHANGE testing only - not efficient //tempstore_tot[2] ; //tempstore_tot[2]*(1./(pow(tempstore_tot[1]/tempstore_tot[0],.3)-1.0)) ; // had to wait to set this once tempstores to be sent to all processors
   for(ii=1; ii<N1*ncpux1; ii++) da3vsr_integrated[ii] = da3vsr_integrated[ii-1] + da3vsr_tot[ii-1] ;
   /*for(ii=1; ii<N1*ncpux1; ii++){
     if(da3vsr_tot[ii-1] > -0.00000001){ 
