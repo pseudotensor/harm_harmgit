@@ -130,6 +130,7 @@ int dofluxreconevolvepointfield,emffixedstencil,extrazones4emf,splitmaem,unewisa
 int do_transverse_flux_integration[NPR],do_conserved_integration[NPR],do_source_integration[NPR];
 int useghostplusactive;
 FTYPE defcon;
+int global_preinterpolate;
 
 /* diagnostics */
 // don't track this separately in other regions except global region

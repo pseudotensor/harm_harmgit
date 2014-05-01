@@ -78,6 +78,9 @@ void pre_interpolate_and_advance(FTYPE (*pb)[NSTORE2][NSTORE3][NPR])
 #endif
 
 
+  // indicate to any needed piece of code that computed pre-interpolates if needed.
+  global_preinterpolate=1;
+
 }
 
 

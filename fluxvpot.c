@@ -264,6 +264,18 @@ int vpot2field(SFTYPE time, FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2]
 
 
 
+
+  ////////////////
+  //
+  // Before ucons->{upoint,ppoint} that involves interpolation, need to make sure setup pre-interpolates if haven't already.
+  // Uses pglobal like initbase.c consistent with first calculation of pre_interpolation
+  //
+  /////////////////
+
+  if(STORESHOCKINDICATOR==1 && global_preinterpolate==0){
+    pre_interpolate_and_advance(GLOBALPOINT(pglobal));
+  }
+
   ////////////////
   //
   // convert average or quasi-deaveraged field to point field (ulast and pfield)

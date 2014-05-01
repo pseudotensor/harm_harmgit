@@ -813,8 +813,8 @@ int jet_set_enerregiondef(int initialcall, int timeorder, int numtimeorders, lon
     ftemp=50.0;
     //    ftemp=5.0;
 
-
-    DTdumpgen[FAILFLOORDUDUMPTYPE]=DTdumpgen[RESTARTDUMPTYPE]=DTdumpgen[RESTARTMETRICDUMPTYPE]=DTdumpgen[GRIDDUMPTYPE]=DTdumpgen[DEBUGDUMPTYPE]=DTdumpgen[ENODEBUGDUMPTYPE]=DTdumpgen[DISSDUMPTYPE]=DTdumpgen[OTHERDUMPTYPE]=DTdumpgen[FLUXDUMPTYPE]=DTdumpgen[EOSDUMPTYPE]=DTdumpgen[VPOTDUMPTYPE]=DTdumpgen[DISSDUMPTYPE]=DTdumpgen[FLUXDUMPTYPE]=DTdumpgen[OTHERDUMPTYPE]=DTdumpgen[EOSDUMPTYPE]=DTdumpgen[VPOTDUMPTYPE]=DTdumpgen[MAINDUMPTYPE] = ftemp;
+    int idt;
+    for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=ftemp;
     DTdumpgen[AVG1DUMPTYPE]=DTdumpgen[AVG2DUMPTYPE]= DTdumpgen[MAINDUMPTYPE];
     DTdumpgen[ENERDUMPTYPE] = DTdumpgen[MAINDUMPTYPE]/10.0;
     DTdumpgen[IMAGEDUMPTYPE] = DTdumpgen[ENERDUMPTYPE];

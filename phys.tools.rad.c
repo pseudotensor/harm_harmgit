@@ -4332,7 +4332,7 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
   int implicititerlist[IMPMAXITERLONG+2]={0}; // for debug
   int implicitferrlist[IMPMAXITERLONG+2]={0}; // for debug
 #define NUMFRACDAMP 10
-  FTYPE fracdamplist[NUMFRACDAMP]={{0}};
+  FTYPE fracdamplist[NUMFRACDAMP]={0};
 
 #else
   FTYPE (*pppreholdlist)[NPR];

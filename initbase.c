@@ -755,6 +755,9 @@ int prepre_init(void)
   horizoni=-200;
   horizoncpupos1=-1;
 
+  // other global flags
+  failed=0;
+  global_preinterpolate=0;
 
   if(WHICHVEL==VEL3){
     jonchecks=1; // whether to include jon's checks to make sure u^t real and some rho/u limits throughout code
