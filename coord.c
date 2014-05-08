@@ -1060,7 +1060,7 @@ void bl_coord(FTYPE *X, FTYPE *V)
   FTYPE BB,CC;
   FTYPE myhslope1,myhslope2,myhslope;
   FTYPE flip1,flip2;
-  FTYPE th0,th2,switch0,switch2,switchinner0,switchinner2;
+  FTYPE th0,th2,switch0,switch2,switchinner0,switchinner2,thetasign,x2temp;
   FTYPE r,dtheta2dx1,dtheta2dx2,dtheta0dx2,dtheta0dx1,dswitch0dr,dswitch2dr;
   FTYPE X0;
   // for defcoord=JET5COORDS
@@ -1377,14 +1377,18 @@ void bl_coord(FTYPE *X, FTYPE *V)
     switchinner2 = 0.5-1.0/M_PI*atan((V[1]-bp_rsinner)/bp_r0inner); // switchi in .nb file
     
     //th0 = M_PI * .5 * (.2*(2.0*X[2]-1.0) + (1.0-.2)*pow(2.0*X[2]-1.0,9.0)+1.) ;
-    if(V[1]<20.){
-    if(X[2]>=.5) 
-      th0 = switchinner0*(M_PI * .5 * (.2*(2.0*X[2]-1.0) + (1.0-.2)*pow(2.0*X[2]-1.0,9.0)+1.) ) + switchinner2*( M_PI * .5 * (.2*(bp_rsinner/V[1])*(2.0*X[2]-1.0) + (1.0-.2*(bp_rsinner/V[1]))*pow(fabs(2.0*X[2]-1.0),9.0*(bp_rsinner/V[1]))+1.) ) ;
-    else
-      th0 = switchinner0*(M_PI * .5 * (.2*(2.0*X[2]-1.0) + (1.0-.2)*pow(2.0*X[2]-1.0,9.0)+1.) ) + switchinner2*( M_PI * .5 * (.2*(bp_rsinner/V[1])*(2.0*X[2]-1.0) - (1.0-.2*(bp_rsinner/V[1]))*pow(fabs(2.0*X[2]-1.0),9.0*(bp_rsinner/V[1]))+1.) ) ;     // split to > or < .5 to account for sign in pow()
+    if(X[2]>=.5){
+      thetasign=+1.0;
+      x2temp=X[2];
+	}
+    else {
+      thetasign=-1.0;
+      x2temp=1.0-X[2];
     }
-    else 
-      th0 = M_PI * .5 * (.2*(2.0*X[2]-1.0) + (1.0-.2)*pow(2.0*X[2]-1.0,9.0)+1.) ;
+    th0 = switchinner0*(M_PI * .5 * (.2*(2.0*X[2]-1.0) + (1.0-.2)*pow(2.0*X[2]-1.0,9.0)+1.) ) + switchinner2*( M_PI * .5 * (.2*(bp_rsinner/V[1])*(2.0*X[2]-1.0) +thetasign*(1.0-.2*(bp_rsinner/V[1]))*pow(2.0*x2temp-1.0,9.0*(bp_rsinner/V[1]))+1.) ) ;
+      
+    // th0 = M_PI * .5 * (.2*(2.0*X[2]-1.0) + (1.0-.2)*pow(2.0*X[2]-1.0,9.0)+1.) ;
+    
     // determine switches (only function of radius and not x2 or theta)
     switch0 = 0.5+1.0/M_PI*atan((V[1]-bp_rs)/bp_r0); // switch in .nb file
     switch2 = 0.5-1.0/M_PI*atan((V[1]-bp_rs)/bp_r0); // switchi in .nb file

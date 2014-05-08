@@ -466,7 +466,8 @@ int user1_init_primitives(int inittype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FT
   extern int calc_da3vsr(FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
   calc_da3vsr(prim);
   init_vpot(prim,pstag,ucons,vpot,Bhat,F1,F2,F3,Atemp);
-  //normalize_field(prim,pstag,ucons,vpot,Bhat); // normalizes p and pstag and unew and vpot if tracked
+  normalize_field(prim,pstag,ucons,vpot,Bhat); // normalizes p and pstag and unew and vpot if tracked //MAVARACHANGE
+
 #else
   // no field
   init_zero_field(prim,pstag,ucons,vpot,Bhat);
@@ -498,7 +499,7 @@ int user1_init_primitives(int inittype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FT
   if(fixup(STAGEM1,prim,ucons,0)>=1) FAILSTATEMENT("init.c:init()", "fixup()", 1);
 #endif
 
-  {
+  { //MAVARACHECK what is this {} associated with?
     int finalstep=1; //  modifies initial ucum-like-primitives
     if (bound_allprim(STAGEM1,finalstep,0.0,prim,pstag,ucons, USEMPI) >= 1) FAILSTATEMENT("init.c:init()", "bound_allprim()", 1);
   }
