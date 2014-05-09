@@ -1060,7 +1060,7 @@ void bl_coord(FTYPE *X, FTYPE *V)
   FTYPE BB,CC;
   FTYPE myhslope1,myhslope2,myhslope;
   FTYPE flip1,flip2;
-  FTYPE th0,th2,switch0,switch2,switchinner0,switchinner2,thetasign,x2temp;
+  FTYPE th0,th0toprint,th2,switch0,switch2,switchinner0,switchinner2,thetasign,x2temp;
   FTYPE r,dtheta2dx1,dtheta2dx2,dtheta0dx2,dtheta0dx1,dswitch0dr,dswitch2dr;
   FTYPE X0;
   // for defcoord=JET5COORDS
@@ -1384,9 +1384,11 @@ void bl_coord(FTYPE *X, FTYPE *V)
     else {
       thetasign=-1.0;
       x2temp=1.0-X[2];
+      th0toprint = M_PI - (     switchinner0*(M_PI * .5 * (.2*(2.0*x2temp-1.0) + (1.0-.2)*pow(2.0*x2temp-1.0,9.0*bp_rsinner/V[1])+1.) ) + switchinner2*( M_PI * .5 * (.2*(bp_rsinner/V[1])*(2.0*x2temp-1.0) -(1.0-.2*(bp_rsinner/V[1]))*pow((2.0*x2temp-1.0),9.0*bp_rsinner/V[1])+1.) )   +    			        switchinner0*(M_PI * .5 * (.2*(2.0*X[2]-1.0) + (1.0-.2)*pow(2.0*X[2]-1.0,9.0*bp_rsinner/V[1])+1.) ) + switchinner2*( M_PI * .5 * (.2*(bp_rsinner/V[1])*(2.0*X[2]-1.0) +(1.0-.2*(bp_rsinner/V[1]))*pow((2.0*x2temp-1.0),9.0*bp_rsinner/V[1])+1.) )      ); // should be 0 if the theta values are really symmetric about pi/2 
     }
-    th0 = switchinner0*(M_PI * .5 * (.2*(2.0*X[2]-1.0) + (1.0-.2)*pow(2.0*X[2]-1.0,9.0)+1.) ) + switchinner2*( M_PI * .5 * (.2*(bp_rsinner/V[1])*(2.0*X[2]-1.0) +thetasign*(1.0-.2*(bp_rsinner/V[1]))*pow(2.0*x2temp-1.0,9.0*(bp_rsinner/V[1]))+1.) ) ;
-      
+    th0 = switchinner0*(M_PI * .5 * (.2*(2.0*X[2]-1.0) + (1.0-.2)*pow(2.0*X[2]-1.0,9.0)+1.) ) + switchinner2*( M_PI * .5 * (.2*(bp_rsinner/V[1])*(2.0*X[2]-1.0) +thetasign*(1.0-.2*(bp_rsinner/V[1]))*pow(2.0*x2temp-1.0,9.0)+1.) ) ; //9.0*(bp_rsinner/V[1]))+1.) ) ;
+    //    if(X[2]>=0.5 && (mycpupos[2]==ncpux2/2 && ncpux2>1 || ncpux2==1)) printf("at radius %21.15g and X[2] = %21.15g the diff is %21.15e\n",V[1],X[2],th0toprint);
+
     // th0 = M_PI * .5 * (.2*(2.0*X[2]-1.0) + (1.0-.2)*pow(2.0*X[2]-1.0,9.0)+1.) ;
     
     // determine switches (only function of radius and not x2 or theta)
