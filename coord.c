@@ -276,10 +276,10 @@ void set_coord_parms_nodeps(int defcoordlocal)
 
     //radial hyperexponential grid
     //    npow2=4.0; //power exponent
-    bp_npow2=2.0; //10.0; //5.0; // 10.0;    // MARKNOTE set to 10.0 before using BP values //power exponent
+    bp_npow2=4.0; //10.0; //5.0; // 10.0;    // MARKNOTE set to 10.0 before using BP values //power exponent
     bp_cpow2=1.0; //exponent prefactor (the larger it is, the more hyperexponentiation is)
     //    rbr = 1E3;  //radius at which hyperexponentiation kicks in
-    bp_rbr = 200.0;  //radius at which hyperexponentiation kicks in
+    bp_rbr = 150.0;  //radius at which hyperexponentiation kicks in
 
 
 
@@ -308,12 +308,12 @@ void set_coord_parms_nodeps(int defcoordlocal)
     }
 
     // for switches from normal theta to ramesh theta
-    bp_rs=120.0; // shift
-    bp_r0=48.0; // divisor
+    bp_rs=100.0; // shift
+    bp_r0=40.0; // divisor
  
     // for switches from innermost region of disk (inside horizon) to regular disk to increase timestep set by smallest vertical cell size
-    bp_rsinner=4.0;
-    bp_r0inner=1.5; //maybe 1.0 is too quick? not really same problem as outer radii I suppose since it just flattens off;
+    bp_rsinner=3.0;
+    bp_r0inner=1.0; //maybe 1.0 is too quick? not really same problem as outer radii I suppose since it just flattens off;
 
     // for theta1
     //    hslope=0.3 ; // resolve inner-radial region near equator
@@ -1373,8 +1373,8 @@ void bl_coord(FTYPE *X, FTYPE *V)
     //    th0 = M_PI * .5 * (1. + (1.-((1. - myhslope) * 0.5))*(2.*X[2]-1.) + ((1. - myhslope) * 0.5)*pow(2.*X[2]-1.,9) ) ; // MARKTODODONE  switched to poly type from Noble+ 2010 on June 10, 2013
     FTYPE xi=((1. - myhslope) * 0.5);
     //  th0 = M_PI * .5 * (1. + (1.-xi)*(2.*X[2]-1.) + xi*pow(2.*X[2]-1.,9) ) ; // MARKTODODONE  switched to poly type from Noble+ 2010 on June 10, 2013
-    switchinner0 = 0.5+1.0/M_PI*atan((V[1]-bp_rsinner)/bp_r0inner); // switch in .nb file
-    switchinner2 = 0.5-1.0/M_PI*atan((V[1]-bp_rsinner)/bp_r0inner); // switchi in .nb file
+    //switchinner0 = 0.5+1.0/M_PI*atan((V[1]-bp_rsinner)/bp_r0inner); // switch in .nb file
+    //switchinner2 = 0.5-1.0/M_PI*atan((V[1]-bp_rsinner)/bp_r0inner); // switchi in .nb file
     
     //th0 = M_PI * .5 * (.2*(2.0*X[2]-1.0) + (1.0-.2)*pow(2.0*X[2]-1.0,9.0)+1.) ;
     if(X[2]>=.5){
@@ -1384,9 +1384,8 @@ void bl_coord(FTYPE *X, FTYPE *V)
     else {
       thetasign=-1.0;
       x2temp=1.0-X[2];
-      th0toprint = M_PI - (     switchinner0*(M_PI * .5 * (.2*(2.0*x2temp-1.0) + (1.0-.2)*pow(2.0*x2temp-1.0,9.0*bp_rsinner/V[1])+1.) ) + switchinner2*( M_PI * .5 * (.2*(bp_rsinner/V[1])*(2.0*x2temp-1.0) -(1.0-.2*(bp_rsinner/V[1]))*pow((2.0*x2temp-1.0),9.0*bp_rsinner/V[1])+1.) )   +    			        switchinner0*(M_PI * .5 * (.2*(2.0*X[2]-1.0) + (1.0-.2)*pow(2.0*X[2]-1.0,9.0*bp_rsinner/V[1])+1.) ) + switchinner2*( M_PI * .5 * (.2*(bp_rsinner/V[1])*(2.0*X[2]-1.0) +(1.0-.2*(bp_rsinner/V[1]))*pow((2.0*x2temp-1.0),9.0*bp_rsinner/V[1])+1.) )      ); // should be 0 if the theta values are really symmetric about pi/2 
     }
-    th0 = switchinner0*(M_PI * .5 * (.2*(2.0*X[2]-1.0) + (1.0-.2)*pow(2.0*X[2]-1.0,9.0)+1.) ) + switchinner2*( M_PI * .5 * (.2*(bp_rsinner/V[1])*(2.0*X[2]-1.0) +thetasign*(1.0-.2*(bp_rsinner/V[1]))*pow(2.0*x2temp-1.0,9.0)+1.) ) ; //9.0*(bp_rsinner/V[1]))+1.) ) ;
+    th0 = M_PI * .5 * (.2*(1.+bp_rsinner/V[1])*(2.0*X[2]-1.0) +thetasign*(1.0-.2*(1.+bp_rsinner/V[1]))*pow(2.0*x2temp-1.0,9.0*(1.+bp_rsinner/V[1]))+1.) ; 
     //    if(X[2]>=0.5 && (mycpupos[2]==ncpux2/2 && ncpux2>1 || ncpux2==1)) printf("at radius %21.15g and X[2] = %21.15g the diff is %21.15e\n",V[1],X[2],th0toprint);
 
     // th0 = M_PI * .5 * (.2*(2.0*X[2]-1.0) + (1.0-.2)*pow(2.0*X[2]-1.0,9.0)+1.) ;
