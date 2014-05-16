@@ -799,6 +799,8 @@ EXCLUDE_SYMBOLS        = *quasivsq* \
                          mks_source_conn \
                          Utoprim_ldz Utoprim_2d Utoprim_1d Utoprim_1d_opt Utoprim_1d_final Utoprim_2d_final \
                          \
+                         *gridsection* *enerregion* sethorizonflux* find_horizon check_spc_singularities_user *placeongrid BASEMET* *activesection* mathematica_report_check get_ramesh_solution set_fracenergy choose_limiter \
+                         \
 addlink \
 appendener \
 avg2_content \
@@ -1579,7 +1581,9 @@ wmrho0_compute_vsq \
 wvsq_solv_ldz \
 x1_of_x0 \
 yl2advect_kazfull \
-ynu2advect_kazfull
+ynu2advect_kazfull \
+\
+
 
                                                         
 

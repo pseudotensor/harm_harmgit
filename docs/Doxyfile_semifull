@@ -379,7 +379,8 @@ EXTRACT_PACKAGE        = NO
 # If the EXTRACT_STATIC tag is set to YES all static members of a file
 # will be included in the documentation.
 
-EXTRACT_STATIC         = NO
+#EXTRACT_STATIC         = NO
+EXTRACT_STATIC         = YES
 
 # If the EXTRACT_LOCAL_CLASSES tag is set to YES classes (and structs)
 # defined locally in source files will be included in the documentation.
@@ -665,7 +666,7 @@ WARN_LOGFILE           =
 # directories like "/usr/src/myproject". Separate the files or directories
 # with spaces.
 
-INPUT                  = /data/jon//harmgit /data/jon/harmgit/initboundcode/
+INPUT                  = /data/jon//harmgit /data/jon/harmgit/initboundcode/init.koral.c  /data/jon/harmgit/initboundcode/init.koral.h  /data/jon/harmgit/initboundcode/bounds.koral.c
 
 # This tag can be used to specify the character encoding of the source files
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding, which is
@@ -729,7 +730,7 @@ RECURSIVE              = NO
 # Note that relative paths are relative to the directory from which doxygen is
 # run.
 
-EXCLUDE= bin2txt.c bcucof.c bcuint.c broydn.c coldeos.c dudp_calc_3vel.c dudp_calc.c fdjac.c flux.mergedc2ea2cmethod.c fmin.c gaussj.c generatenprs.c geodesic.c grbpwf99eos.c higherorder_pointavg.c interpline.jmono.c interpline.mono.c interpline.smono.c jon_interp.c jon_interp_computepreprocess.c jon_interp_filter.c jon_interp_interpolationitself.c jon_interp_mnewt.c jon_interp_newt.c kazfulleos.c kazfulleos_eosfunctions.c kazfulleos_lookuptable_interpolation.c kazfulleos_read_setup_eostable.c kazfulleos_set_arrays.c lnsrch.c lubksb.c ludcmp.c metric_selfgravity_or_evolvemetric.c mignoneeos.c mnewt.c nrutil2.c nrutil.c paraenohybrid.c phys.coldgrmhd.c phys.ffde.c phys.tools.rad.notused.c qrdcmp.c qrupdt.c ranc.c reconstructeno.c reconstructeno.debug.c reconstructeno_set_arrays.c reconstructeno.weightmin.c restart.rebeccaoldcode.c rotate.c rsolv.c smcalc.c tau_neededbyharm.c tensor.c testfpp.c testfpp.temp.c utoprim_1d.c utoprim_1d_final.c utoprim_1d_opt.c utoprim_2d.c utoprim_2d_final.c utoprim_5d2_final.c utoprim_ldz.c utoprim.orig.c utoprim.orig.debug.c defs.jon_interp.h global.jon_interp.h kazfulleos.* metric_selfgravity_or_evolvemetric.funcdeclare.h mympi.simulbccalcstuff.h nrutil.funcdeclare.h rancdecs.h rancdefs.h reconstructeno*.h SwapEndian.h utoprim_1d2d.h utoprim_1d.h utoprim_1d_opt.h utoprim_2d.h
+EXCLUDE= bin2txt.c bcucof.c bcuint.c broydn.c coldeos.c dudp_calc_3vel.c dudp_calc.c fdjac.c flux.mergedc2ea2cmethod.c fmin.c gaussj.c generatenprs.c geodesic.c grbpwf99eos.c higherorder_pointavg.c interpline.jmono.c interpline.mono.c interpline.smono.c jon_interp.c jon_interp_computepreprocess.c jon_interp_filter.c jon_interp_interpolationitself.c jon_interp_mnewt.c jon_interp_newt.c kazfulleos.c kazfulleos_eosfunctions.c kazfulleos_lookuptable_interpolation.c kazfulleos_read_setup_eostable.c kazfulleos_set_arrays.c lnsrch.c lubksb.c ludcmp.c metric_selfgravity_or_evolvemetric.c mignoneeos.c mnewt.c nrutil2.c nrutil.c paraenohybrid.c phys.coldgrmhd.c phys.ffde.c phys.tools.rad.notused.c qrdcmp.c qrupdt.c ranc.c reconstructeno.c reconstructeno.debug.c reconstructeno_set_arrays.c reconstructeno.weightmin.c restart.rebeccaoldcode.c rotate.c rsolv.c smcalc.c tau_neededbyharm.c tensor.c testfpp.c testfpp.temp.c utoprim_1d.c utoprim_1d_final.c utoprim_1d_opt.c utoprim_2d.c utoprim_2d_final.c utoprim_5d2_final.c utoprim_ldz.c utoprim.orig.c utoprim.orig.debug.c defs.jon_interp.h global.jon_interp.h kazfulleos.* metric_selfgravity_or_evolvemetric.funcdeclare.h mympi.simulbccalcstuff.h nrutil.funcdeclare.h rancdecs.h rancdefs.h reconstructeno*.h SwapEndian.h utoprim_1d2d.h utoprim_1d.h utoprim_1d_opt.h utoprim_2d.h test.f testfpp.f testfpp.temp1.f testfpp.temp.f testr.f
 
 
 # http://stackoverflow.com/questions/1570917/extracting-c-c-function-prototypes
@@ -783,7 +784,7 @@ EXCLUDE_SYMBOLS        = *quasivsq* \
                          fixup_checksolution \
                          u2p_rad_orig \
                          report_systeminfo isLittleEndian machineEndianness \
-                         csc cot mycos mysin contmod mysign myround \
+                         csc cot mycos mysin contmod mysign myround arctanmath fix_hp\
                          dxdxp_analytic \
                          donothing \
                          nrerror free_dmatrix dmatrix \
@@ -794,10 +795,11 @@ EXCLUDE_SYMBOLS        = *quasivsq* \
                          filterffde \
                          gocheck \
                          Divcalc \
-                         compute_vorticity compute_currents_t0 current_doprecalc current_precalc setdivb \
+                         compute_vorticity compute_currents_t0 current_doprecalc current_precalc current_calc* setdivb \
                          boundary_smoother limitv3 realfast sol quarticsol \
                          mks_source_conn \
                          Utoprim_ldz Utoprim_2d Utoprim_1d Utoprim_1d_opt Utoprim_1d_final Utoprim_2d_final \
+                         *gridsection* *enerregion* sethorizonflux* find_horizon check_spc_singularities_user *placeongrid BASEMET* *activesection* mathematica_report_check get_ramesh_solution set_fracenergy choose_limiter groupvel \
                          \
 addlink \
 appendener \
@@ -1579,7 +1581,14 @@ wmrho0_compute_vsq \
 wvsq_solv_ldz \
 x1_of_x0 \
 yl2advect_kazfull \
-ynu2advect_kazfull
+ynu2advect_kazfull \
+\
+check_bnd_num report_bound_loop parainitchecks get_num_bnd_zones_used addremovefromanynpr setjetflux set_drsing diag_fixup* diag_* para2 para3 csslope parajon mcsteeppl get_mcsteep_dqs Utoprimgen_compare u2p_rad_new_pre mhd_calc_0 set_rvsr* evolve_withvpot compute_EOS_parms flux_ct* advance_finitevolume bound_flux *toth* isnan mymax mydiv inverse_* newton* *debug* bound_pflag* fix_flux compute_dt_fromsource lngdet* symmetrize* *withsymm* *checkmono* source_explicit *dtsub* set_idxvol mks_* set_conn_cart* set_conn_cyl* *unigravity* *htmetric* *cartmink* *interpX* *ks_bh* *ks_jp1* *ks_tov* *bl_tov* *spcmink* *cylmink* musta* forceflux* check_pr inflow_check* *atmosphere* hllflux* asym_compute_2 evolve_vpotgeneral *splitmaem* *roe*  *_old *eomfunc* *blmetric*  \
+\
+*_mpi* *mpi_* *MPI* *_mpi_* *myid* get_bsqflags \
+\
+*_idealgas set_defaults* set_file* set_default* compute_qdot_idealgas rhor_calc rmso_calc set_fieldtype icoord_round copy_3d_onepl copy_3d_onepl_fullloop copy_3dnpr copy_3dpftype_special* copy_3d_fieldonly_fullloop settrueglobalregion set_numbnd set_boundloop orders_set get_inversion_startendindices  set_fieldfrompotential set_interp_* get_state_vcon* get_state_Blower lower_vec get_state_bconbcovonly get_state_thermodynamics calc_kappa* compute_temp* set_primgridpos paraflatten para4gen parasteep etaicalc paracont parasteepgen pr_contact* get_limit* get_loop* set_interp* Ficalc ftilde compute_and_* get_4velterms dfridr ucon2pr getconsts pr2ucon metptomet_axisym mettometp_axisym get_4velterms blcoordsimple check_rmin get_3velterm fix_primitive* convert_U* set_points* invert_scalars gamma_calc limit_gamma set_density_floors* *tryagain* *badenergy* *fixguess* *_simple *UtoU* pi2Uavg user1_init_conservatives raise_vec lower_vec Mcon_calc lower_A qsq_calc pickeos_eomtype compute_entropy compute_u_from_entropy fixup1zone fixup rescale* whetherdoentropy \
+orders_set interp_loop_set setflux settrueglobal* getall_forinversion* set_primgridpos initeos_eomtype *placeongrid* *extrasprocessed* general_average *allextras* *fixup* bound_vpot* restart* fixup_utoprim* copy_vpot2flux init_3dnpr* bound_uavg pre_interpolate* get_stag_* flux2dU* *dissmeasure* prepare* set_normal* show_fluxes* ucum_check cleanup* zero_out* dUtodt adjust_vpot make_delta setup_delta gset* set_fieldfrom* fix_prim* *rescale* check_point* fluxsum get_flux_* set_arrays_per* *ramesh* leftrightcompute do_non* copy_* get_odirs get_numdirs* set_location* adjust_* *fullloop* diag_* copy_* setup_XlXh icoord define_method *error_check* *failwrapper* *ffde* negdensity* tryhot* trycold* tryentropy* setnewton*  choose_flux remapdq remapplpr set_zamo* vofx* dsyev_ dsyevr_ recompute_fluxpositions set_dt get_truetime_fluxdt getplpr set_plpr check_plpr compute_metricquantities* matrix_inverse_* *singcheck* *sing_check*  *_ijk_* getp2interp* set_array* 
 
                                                         
 
