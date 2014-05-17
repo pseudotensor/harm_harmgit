@@ -1386,7 +1386,7 @@ int get_extrasprocessed_kazfull(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *ex
 {
   FTYPE quant1,quant2;
   // assume all tables have same number of extras or else this doesn't make sense in general
-  FTYPE tempk,kbtk,rho0,u,H,ye,ynu;
+  FTYPE tempk,kbtk,rho0,u,HH,ye,ynu;
   int numextrasreturn,ei;
   FTYPE compute_temp_kazfull(FTYPE *EOSextra, FTYPE rho0, FTYPE u);
   FTYPE unue0,unuebar0,unumu0,
@@ -1441,7 +1441,7 @@ int get_extrasprocessed_kazfull(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *ex
     //    pr[RHO]=3853528593.7105;
     //    pr[RHO]=3199267137.79737;
 
-    // ensure H is fixed to desired value or comment-out compute_Hglobal() call or assume read-in H is good if only looking at first iteration
+    // ensure HH is fixed to desired value or comment-out compute_Hglobal() call or assume read-in HH is good if only looking at first iteration
     //    EOSextra[HGLOBAL];
 #endif
 
@@ -1560,7 +1560,7 @@ int get_extrasprocessed_kazfull(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *ex
         // ynu is really Ynu0 that is from table lookup EOSextra[]
         ynu=qarray[YNUINDEP];
       }
-      H=qarray[HINDEP]; // "H" IS used
+      HH=qarray[HINDEP]; // "HH" IS used
 
 
 
@@ -1596,14 +1596,14 @@ int get_extrasprocessed_kazfull(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *ex
         // 2) Run stellar model generation and ensure first output of last iterated DEBUG output (choose tauiter largest for first set of iterations) is same!
         // 3) Run normal table generation ensure first output of last iterated DEBUG output is same as stellar model.  This confirms stellar model and non-stellar model agree!
         // 4) Copy last iterated result of tau_calc.f's DEBUG output into below structures with units conversions.  
-        // 5) Ensure that compute_Hglobal() is commented out so H calculation is not tested
+        // 5) Ensure that compute_Hglobal() is commented out so HH calculation is not tested
         // 6) Run HARM with this debug enabled and ensure processed outputs are consistent with stellar model generated DEBUG output
         //
         // for:
         // rhob=3698268044.70451d0
         // tk=8183138022.48367d0
         // ye=0.428493d0
-        // H=0.38730771092310503125D+00008 (only used if stellar model, but processed quantities outputted for non-stellar model use it if you reset hcm (say) inside kazloopfunctions.f to be hcm = that quantity)
+        // HH=0.38730771092310503125D+00008 (only used if stellar model, but processed quantities outputted for non-stellar model use it if you reset hcm (say) inside kazloopfunctions.f to be hcm = that quantity)
         // ynu=0.17028260300336636375E-00005 (only used if non-stellar model)
         // corresponding to:
         // ynu0=0.22703249033971029114E-00001
@@ -1614,7 +1614,7 @@ int get_extrasprocessed_kazfull(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *ex
         // extras  3.016208725417535E-009  1.780829277244639E-012  1.528763546663606E-008  1.252471070958565E-012  2.059938688437184E-009  1.314454808328260E-014  2.216369121583122E-009  1.040427344997658E-012  1.119680705812048E-008  7.376261380268049E-013  1.295212495261131E-009  1.099750846149906E-014  2.347702471508822E+026  6.181553876798139E+023  2.968941988288588E+025  5.074545552259924E+031  1.819268265786567E+029  8.338413581438167E+030   447251700.050036        20472315.5009781        3745028921.52609        3110006084.82794       1.117103214733134E+032  4.509919232490958E+028
         // processed   105624263274.740       1.257885287985835E+025  -2621445.40148080       7.332395341431752E-003  1.291919461573330E-003  3.101466000046774E+022  1.033822000015591E+022  3.660157476625981E+028  1.702826030033664E-006 3.759437713997883E-006  7.900220549935097E-006  7.918298450837450E-006  5.769081621748609E-006
         //
-        // HELM table at the same H (hacking kazloopfunctions.f so processed are computed with correct H) and choosing now Ynu0
+        // HELM table at the same HH (hacking kazloopfunctions.f so processed are computed with correct HH) and choosing now Ynu0
         //DEBUGFORHARM          23
         // extras  3.029339808920773E-009  1.602331902357635E-012  1.526768710185669E-008  1.257764285610078E-012  2.070317784546204E-009  1.310244034191246E-014  2.225741157400276E-009  9.353057661507511E-013  1.118029406428476E-008  7.374187614331142E-013  1.301632093683409E-009  1.084654641234010E-014  2.347694110104187E+026  6.181583853271378E+023  2.968941988288588E+025  5.074530210927057E+031  1.819277066697600E+029  8.338413581438167E+030   444961299.277883        20299760.1914007        3704290004.96078        3070417217.24895       1.016747562660904E+032  5.408080673791758E+028
         // processed   106785894260.181       1.132284286057749E+025  -2355920.25380538       7.394723355957793E-003  1.291919461573330E-003  2.793097681097268E+022  9.310325603657561E+021  3.296240345778634E+028  1.530676100627289E-006  3.076387364051629E-006  7.905717444283695E-006  7.925421990296669E-006  5.795089261262683E-006
@@ -1859,14 +1859,14 @@ int get_extrasprocessed_kazfull(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *ex
       //
       // Compute "processed" quantities from "extra" quantities
       //
-      // Comput per direction associated with H
+      // Comput per direction associated with HH
       //
       //////////////
 
 
       for(hi=0;hi<NUMHDIRECTIONS;hi++){
         // now process neutrino variables into final form
-        H = EOSextra[vartypeheightarray[hi+1]]; // vartypeheightarray[] index starts at 1
+        HH = EOSextra[vartypeheightarray[hi+1]]; // vartypeheightarray[] index starts at 1
 
         if(doall){
 
@@ -1878,7 +1878,7 @@ int get_extrasprocessed_kazfull(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *ex
             // rhob/mb should be a number density, and mb*rate/cc should be in rhounit*rate
             // this means if rho0 in c^2 units, then mb should be too
             // Note that Ynuthermal0 is not based upon optical depth, so below just repeats its calculation.
-            computefinal_fromhcm__(&Ccode,&mbwithrhounit,&rho0,&kbtk,&H,
+            computefinal_fromhcm__(&Ccode,&mbwithrhounit,&rho0,&kbtk,&HH,
                                    &unue0,&unuebar0,&unumu0,
                                    &qtautnueohcm,&qtautnuebarohcm,&qtautmuohcm,
                                    &qtauanueohcm,&qtauanuebarohcm,&qtauamuohcm,
@@ -1900,13 +1900,13 @@ int get_extrasprocessed_kazfull(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *ex
         else{// else if not doall
           // DEBUG:
           // dualfprintf(fail_file,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",qtautnueohcm,qtauanueohcm,qtautnuebarohcm,qtauanuebarohcm,qtautmuohcm,qtauamuohcm,unue0,unuebar0,unumu0);
-          // dualfprintf(fail_file,"CCODE: :: %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",Ccode,mbwithrhounit,rho0,kbtk,H,unue0,unuebar0,unumu0,qtautnueohcm,qtautnuebarohcm,qtautmuohcm,qtauanueohcm,qtauanuebarohcm,qtauamuohcm);
+          // dualfprintf(fail_file,"CCODE: :: %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",Ccode,mbwithrhounit,rho0,kbtk,HH,unue0,unuebar0,unumu0,qtautnueohcm,qtautnuebarohcm,qtautmuohcm,qtauanueohcm,qtauanuebarohcm,qtauamuohcm);
           // dualfprintf(fail_file,"mb[cgs]=%21.15g T[K] = %21.15g\n",mbwithrhounit*Munit/Vunit/Vunit,kbtk*energyunit/kb);
 
           if(!notintable){
             // get rho_nu, p_nu, s_nu from extras
             computefinal_justdensities_fromhcm__(&Ccode,&mbwithrhounit,
-                                                 &rho0,&kbtk,&H,
+                                                 &rho0,&kbtk,&HH,
                                                  &unue0,&unuebar0,&unumu0,
                                                  &qtautnueohcm,&qtautnuebarohcm,&qtautmuohcm,
                                                  &qtauanueohcm,&qtauanuebarohcm,&qtauamuohcm,
@@ -2053,7 +2053,7 @@ int get_extrasprocessed_kazfull(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *ex
 
 
 
-  // assumes this is computed every timestep (or substep) or at least on some timescale that H changes
+  // assumes this is computed every timestep (or substep) or at least on some timescale that HH changes
   static void compute_upsnu_global(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
   {
     FTYPE rho0,u;
@@ -2117,7 +2117,7 @@ int get_extrasprocessed_kazfull(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *ex
 
 
 
-  // assumes this is computed every timestep (or substep) or at least on some timescale that H changes
+  // assumes this is computed every timestep (or substep) or at least on some timescale that HH changes
   static void compute_ynu0_upsnu_global(FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
   {
     FTYPE rho0,u;
@@ -2224,7 +2224,7 @@ int get_extrasprocessed_kazfull(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *ex
     FTYPE ynu0older=EOSextra[YNU0OLDGLOBAL];
     FTYPE ynuold=processed[YNULOCAL];
     FTYPE ynuolder=EOSextra[YNUOLDGLOBAL];
-    FTYPE odRdYnu0,R,errR;
+    FTYPE odRdYnu0,Rvar,errR;
 
 
 
@@ -2245,9 +2245,9 @@ int get_extrasprocessed_kazfull(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *ex
 
     // TAKE NEWTON STEP:
     // In general, Newton's method is:
-    // Resid = R = (-Ynu[new] + Ynu[Ynu0old])
+    // Resid = Rvar = (-Ynu[new] + Ynu[Ynu0old])
     // damp = starts at 1.0 and can decrease to avoid jumping too far (e.g. out of table)
-    // dYnu0 = -damp*R/(dR/dYnu0)
+    // dYnu0 = -damp*Rvar/(dR/dYnu0)
     // But dR/dYnu0 = dYnu[Ynu0old]/dYnu0 \approx (Ynu[Ynu0old] - Ynu[Ynu0older])/(Ynu0old-Ynu0older)
     // So dYnu0 = damp*(Ynu[new] - Ynu[Ynu0old])*(Ynu0old-Ynu0older)/(Ynu[Ynu0old] - Ynu[Ynu0older])
     // So need to store Ynu0older and Ynu[Ynu0older].  Have at first Ynu0old and computed above Ynu[Ynu0old]
@@ -2258,10 +2258,10 @@ int get_extrasprocessed_kazfull(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *ex
   
     //    damp=1.0;
     damp=0.20;
-    R = (-pr[YNU] + ynuold);
-    errR = fabs(R/(fabs(pr[YNU])+fabs(ynuold)+SMALL));
+    Rvar = (-pr[YNU] + ynuold);
+    errR = fabs(Rvar/(fabs(pr[YNU])+fabs(ynuold)+SMALL));
 
-    if((int)EOSextra[IGLOBAL]==0) dualfprintf(fail_file,"MARK: steppart=%d nstep=%ld R=%21.15g errR=%21.15g\n",steppart,nstep,R,errR);
+    if((int)EOSextra[IGLOBAL]==0) dualfprintf(fail_file,"MARK: steppart=%d nstep=%ld Rvar=%21.15g errR=%21.15g\n",steppart,nstep,Rvar,errR);
 
     if(errR<0.05){
       // don't try to do better if already accurate to less than 5%
@@ -2287,7 +2287,7 @@ int get_extrasprocessed_kazfull(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *ex
       }
 
       // iterate
-      EOSextra[YNU0GLOBAL] += -damp*R*odRdYnu0;
+      EOSextra[YNU0GLOBAL] += -damp*Rvar*odRdYnu0;
 
       if((int)EOSextra[IGLOBAL]==0) dualfprintf(fail_file,"MARK: odRdYnu0=%21.15g ynu0old=%21.15g ynu0older=%21.15g : ynuold=%21.15g ynuolder=%21.15g : finalYnu0=%21.15g\n",odRdYnu0,ynu0old,ynu0older,ynuold,ynuolder,EOSextra[YNU0GLOBAL]);
       
@@ -2318,7 +2318,7 @@ int get_extrasprocessed_kazfull(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *ex
   {
     int ii,jj,kk,pp;
     int j;
-    FTYPE X[NDIM],V[NDIM],r,th,R;
+    FTYPE X[NDIM],V[NDIM],r,th,Rcyl;
     FTYPE du;
     FTYPE rho,u,ye,yl,ynu;
     FTYPE cofactor;
@@ -2358,7 +2358,7 @@ int get_extrasprocessed_kazfull(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *ex
 
     r=V[1];
     th=V[2];
-    R = r*sin(th) ;
+    Rcyl = r*sin(th) ;
 
 
 

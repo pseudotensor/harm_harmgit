@@ -35,14 +35,14 @@
 
 
 
-static int get_eos_fromlookup(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichtablesubtype, int *iffun, int whichindep, FTYPE quant1, int *vartypearraylocal, FTYPEEOS *indexarray, FTYPEEOS *answers, int *badlookups);
+static int get_eos_fromlookup(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichtablesubtype, int *iffun, int whichindep, FTYPE quant1, int *vartypearraylocal, FTYPEEOS *indexarrayvar, FTYPEEOS *answers, int *badlookups);
 
 
-static int get_eos_fromlookup_nearest_dumb(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichtablesubtype, int *iffun, int whichindep, FTYPE quant1, int *vartypearraylocal, FTYPEEOS *indexarray, FTYPEEOS *answers, int *badlookups);
-static int get_eos_fromlookup_nearest(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichtablesubtype, int *iffun, int whichindep, FTYPE quant1, int *vartypearraylocal, FTYPEEOS *indexarray, FTYPEEOS *answers, int *badlookups);
-static int get_eos_fromlookup_linear(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichtablesubtype, int *iffun, int whichindep, FTYPE quant1, int *vartypearraylocal, FTYPEEOS *indexarray, FTYPEEOS *answers, int *badlookups);
-static int get_eos_fromlookup_parabolicone(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichtablesubtype, int *iffun, int whichindep, FTYPE quant1, int *vartypearraylocal, FTYPEEOS *indexarray, FTYPEEOS *answers, int *badlookups);
-static int get_eos_fromlookup_parabolicfull(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichtablesubtype, int *iffun, int whichindep, FTYPE quant1, int *vartypearraylocal, FTYPEEOS *indexarray, FTYPEEOS *answers, int *badlookups);
+static int get_eos_fromlookup_nearest_dumb(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichtablesubtype, int *iffun, int whichindep, FTYPE quant1, int *vartypearraylocal, FTYPEEOS *indexarrayvar, FTYPEEOS *answers, int *badlookups);
+static int get_eos_fromlookup_nearest(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichtablesubtype, int *iffun, int whichindep, FTYPE quant1, int *vartypearraylocal, FTYPEEOS *indexarrayvar, FTYPEEOS *answers, int *badlookups);
+static int get_eos_fromlookup_linear(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichtablesubtype, int *iffun, int whichindep, FTYPE quant1, int *vartypearraylocal, FTYPEEOS *indexarrayvar, FTYPEEOS *answers, int *badlookups);
+static int get_eos_fromlookup_parabolicone(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichtablesubtype, int *iffun, int whichindep, FTYPE quant1, int *vartypearraylocal, FTYPEEOS *indexarrayvar, FTYPEEOS *answers, int *badlookups);
+static int get_eos_fromlookup_parabolicfull(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichtablesubtype, int *iffun, int whichindep, FTYPE quant1, int *vartypearraylocal, FTYPEEOS *indexarrayvar, FTYPEEOS *answers, int *badlookups);
 
 static void get_arrays_eostable_direct(int whichd, int whichdegen, int whichtable, int whichtablesubtype, int *iffun, int mmm, int lll, int kkk, int jjj, int iii, FTYPEEOS *values);
 static void get_arrays_eostable_direct_temperature(int whichd, int whichtable, int mmm, int lll, int kkk, int jjj, int iii, FTYPEEOS *values);
@@ -56,7 +56,7 @@ static void get_arrays_eostable_direct_temperature(int whichd, int whichtable, i
 
 
 // General EOS interpolation wrapper
-static int get_eos_fromlookup(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichtablesubtype, int *iffun, int whichindep, FTYPE quant1, int *vartypearraylocal, FTYPEEOS *indexarray, FTYPEEOS *answers, int *badlookups)
+static int get_eos_fromlookup(int repeatedeos, int tabledimen, int degentable, int whichtablevar, int whichtablesubtype, int *iffun, int whichindep, FTYPE quant1, int *vartypearraylocal, FTYPEEOS *indexarrayvar, FTYPEEOS *answers, int *badlookups)
 {
   int failreturn;
   int whichd;
@@ -72,32 +72,32 @@ static int get_eos_fromlookup(int repeatedeos, int tabledimen, int degentable, i
 #if(0)
   // neartest dumb for normal table
   if(degentable==0){
-    failreturn=get_eos_fromlookup_nearest_dumb(repeatedeos,tabledimen, degentable, whichtable, whichtablesubtype, iffun, whichindep, quant1, vartypearraylocal, indexarray,answers,badlookups);
+    failreturn=get_eos_fromlookup_nearest_dumb(repeatedeos,tabledimen, degentable, whichtablevar, whichtablesubtype, iffun, whichindep, quant1, vartypearraylocal, indexarrayvar,answers,badlookups);
   }
   else{
     // linear
-    failreturn=get_eos_fromlookup_linear(repeatedeos,tabledimen,degentable, whichtable, whichtablesubtype, iffun, whichindep, quant1, vartypearraylocal, indexarray,answers,badlookups);
+    failreturn=get_eos_fromlookup_linear(repeatedeos,tabledimen,degentable, whichtablevar, whichtablesubtype, iffun, whichindep, quant1, vartypearraylocal, indexarrayvar,answers,badlookups);
   }
 #elif(0)
   // nearest dumb for all
-  failreturn=get_eos_fromlookup_nearest_dumb(repeatedeos,tabledimen,degentable, whichtable, whichtablesubtype, iffun, whichindep, quant1, vartypearraylocal, indexarray,answers,badlookups);
+  failreturn=get_eos_fromlookup_nearest_dumb(repeatedeos,tabledimen,degentable, whichtablevar, whichtablesubtype, iffun, whichindep, quant1, vartypearraylocal, indexarrayvar,answers,badlookups);
 #elif(0)
   // nearest
-  failreturn=get_eos_fromlookup_nearest(repeatedeos,tabledimen,degentable, whichtable, whichtablesubtype, iffun, whichindep, quant1, vartypearraylocal, indexarray,answers,badlookups);
+  failreturn=get_eos_fromlookup_nearest(repeatedeos,tabledimen,degentable, whichtablevar, whichtablesubtype, iffun, whichindep, quant1, vartypearraylocal, indexarrayvar,answers,badlookups);
 
 #elif(0)
 
   // linear
-  failreturn=get_eos_fromlookup_linear(repeatedeos,tabledimen,degentable, whichtable, whichtablesubtype, iffun, whichindep, quant1, vartypearraylocal, indexarray,answers,badlookups);
+  failreturn=get_eos_fromlookup_linear(repeatedeos,tabledimen,degentable, whichtablevar, whichtablesubtype, iffun, whichindep, quant1, vartypearraylocal, indexarrayvar,answers,badlookups);
 
 #elif(1)
 
   // parabolic for one quantity, but linear for rest
-  failreturn=get_eos_fromlookup_parabolicone(repeatedeos,tabledimen,degentable, whichtable, whichtablesubtype, iffun, whichindep, quant1, vartypearraylocal, indexarray,answers,badlookups);
+  failreturn=get_eos_fromlookup_parabolicone(repeatedeos,tabledimen,degentable, whichtablevar, whichtablesubtype, iffun, whichindep, quant1, vartypearraylocal, indexarrayvar,answers,badlookups);
 
 #elif(0)
   // parabolic for all quantities
-  failreturn=get_eos_fromlookup_parabolicfull(repeatedeos,tabledimen,degentable, whichtable, whichtablesubtype, iffun, whichindep, quant1, vartypearraylocal, indexarray,answers,badlookups);
+  failreturn=get_eos_fromlookup_parabolicfull(repeatedeos,tabledimen,degentable, whichtablevar, whichtablesubtype, iffun, whichindep, quant1, vartypearraylocal, indexarrayvar,answers,badlookups);
 #endif
 
   // return whether really bad failure
@@ -114,7 +114,7 @@ static int get_eos_fromlookup(int repeatedeos, int tabledimen, int degentable, i
 // full parabolic interpolation
 // Uses globals so can make them thread safe instead of using static's that are not
 // Assumes H is not a dependent dimension as for whichdatatype==4
-static int get_eos_fromlookup_parabolicfull(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichtablesubtype, int *iffun, int whichindep, FTYPE quant1, int *vartypearraylocal, FTYPEEOS *indexarray, FTYPEEOS *answers, int *badlookups)
+static int get_eos_fromlookup_parabolicfull(int repeatedeos, int tabledimen, int degentable, int whichtablevar, int whichtablesubtype, int *iffun, int whichindep, FTYPE quant1, int *vartypearraylocal, FTYPEEOS *indexarrayvar, FTYPEEOS *answers, int *badlookups)
 {
 
   INDEXPARAMETERSLOCALDEFS;
@@ -155,7 +155,7 @@ static int get_eos_fromlookup_parabolicfull(int repeatedeos, int tabledimen, int
   // get number of columns possible for this whichtablesubtype
   //
   ///////////////
-  numcols = get_numcols(whichtable,whichtablesubtype);
+  numcols = get_numcols(whichtablevar,whichtablesubtype);
 
 
 
@@ -165,10 +165,10 @@ static int get_eos_fromlookup_parabolicfull(int repeatedeos, int tabledimen, int
   // store index within table
   //
   ///////////////
-  ieos=indexarray[1];
-  jeos=indexarray[2];
-  keos=indexarray[3];
-  leos=indexarray[4];
+  ieos=indexarrayvar[1];
+  jeos=indexarrayvar[2];
+  keos=indexarrayvar[3];
+  leos=indexarrayvar[4];
   meos=0;
 
 
@@ -211,24 +211,24 @@ static int get_eos_fromlookup_parabolicfull(int repeatedeos, int tabledimen, int
     kazii=ROUND2INT(ieos); //ii=(int)ieos; // round instead when doing parabolic interpolation with 3 points
     // limit to within table
     if(kazii<1) kazii=1; // 0 is minimum
-    if(kazii>tablesize[whichtable][vartypearraylocal[1]]-2) kazii=tablesize[whichtable][vartypearraylocal[1]]-2; // N-1 is maximum
+    if(kazii>tablesize[whichtablevar][vartypearraylocal[1]]-2) kazii=tablesize[whichtablevar][vartypearraylocal[1]]-2; // N-1 is maximum
 
     kazjj=ROUND2INT(jeos); //kazjj=(int)jeos; // round instead when doing parabolic interpolation with 3 points
     // limit to within table
     if(degentable==0){
       if(kazjj<1) kazjj=1; // 0 is minimum
-      if(kazjj>tablesize[whichtable][whichindep]-2) kazjj=tablesize[whichtable][whichindep]-2; // N-1 is maximum
+      if(kazjj>tablesize[whichtablevar][whichindep]-2) kazjj=tablesize[whichtablevar][whichindep]-2; // N-1 is maximum
     }
 
     kazkk=ROUND2INT(keos); //kazkk=(int)keos; // round instead when doing parabolic interpolation with 3 points
     // limit to within table
     if(kazkk<1) kazkk=1; // 0 is minimum
-    if(kazkk>tablesize[whichtable][vartypearraylocal[3]]-2) kazkk=tablesize[whichtable][vartypearraylocal[3]]-2; // N-1 is maximum
+    if(kazkk>tablesize[whichtablevar][vartypearraylocal[3]]-2) kazkk=tablesize[whichtablevar][vartypearraylocal[3]]-2; // N-1 is maximum
 
     kazll=ROUND2INT(leos); //kazll=(int)leos; // round instead when doing parabolic interpolation with 3 points
     // limit to within table
     if(kazll<1) kazll=1; // 0 is minimum
-    if(kazll>tablesize[whichtable][vartypearraylocal[4]]-2) kazll=tablesize[whichtable][vartypearraylocal[4]]-2; // N-1 is maximum
+    if(kazll>tablesize[whichtablevar][vartypearraylocal[4]]-2) kazll=tablesize[whichtablevar][vartypearraylocal[4]]-2; // N-1 is maximum
 
     kazmm=0;
 
@@ -242,33 +242,33 @@ static int get_eos_fromlookup_parabolicfull(int repeatedeos, int tabledimen, int
 
     // set range of loops for different table types
     // tabledimen overrules table type (i.e. take section out of fuller table -- assumed to be 0 index)
-    // GODMARK: these things couuld be stored as functions of whichtable/degentable/tabledimen
-    if(tablesize[whichtable][vartypearraylocal[1]]==1) { kazstartiii=kazendiii=0; } // kazll will be 0
-    else if(tablesize[whichtable][vartypearraylocal[1]]==2) { kazstartiii=0; kazendiii=1;} // kazll will be 0
-    else if(tablesize[whichtable][vartypearraylocal[1]]>2) { kazstartiii=-1; kazendiii=1;}
+    // GODMARK: these things couuld be stored as functions of whichtablevar/degentable/tabledimen
+    if(tablesize[whichtablevar][vartypearraylocal[1]]==1) { kazstartiii=kazendiii=0; } // kazll will be 0
+    else if(tablesize[whichtablevar][vartypearraylocal[1]]==2) { kazstartiii=0; kazendiii=1;} // kazll will be 0
+    else if(tablesize[whichtablevar][vartypearraylocal[1]]>2) { kazstartiii=-1; kazendiii=1;}
 
-    if(degentable==1 || tablesize[whichtable][vartypearraylocal[2]]==1) {kazstartjjj=kazendjjj=0;}
-    else if(tablesize[whichtable][vartypearraylocal[2]]==2) { kazstartjjj=0; kazendjjj=1;}
-    else if(tablesize[whichtable][vartypearraylocal[2]]>2) { kazstartjjj=-1; kazendjjj=1;}
+    if(degentable==1 || tablesize[whichtablevar][vartypearraylocal[2]]==1) {kazstartjjj=kazendjjj=0;}
+    else if(tablesize[whichtablevar][vartypearraylocal[2]]==2) { kazstartjjj=0; kazendjjj=1;}
+    else if(tablesize[whichtablevar][vartypearraylocal[2]]>2) { kazstartjjj=-1; kazendjjj=1;}
 
-    if(tablesize[whichtable][vartypearraylocal[3]]==1) {kazstartkkk=kazendkkk=0;}
-    else if(tablesize[whichtable][vartypearraylocal[3]]==2){ kazstartkkk=0; kazendkkk=1;}
-    else if(tablesize[whichtable][vartypearraylocal[3]]>2){ kazstartkkk=-1; kazendkkk=1;}
+    if(tablesize[whichtablevar][vartypearraylocal[3]]==1) {kazstartkkk=kazendkkk=0;}
+    else if(tablesize[whichtablevar][vartypearraylocal[3]]==2){ kazstartkkk=0; kazendkkk=1;}
+    else if(tablesize[whichtablevar][vartypearraylocal[3]]>2){ kazstartkkk=-1; kazendkkk=1;}
      
-    if(tablesize[whichtable][vartypearraylocal[4]]==1) {kazstartlll=kazendlll=0;}
-    else if(tablesize[whichtable][vartypearraylocal[4]]==2){ kazstartlll=0; kazendlll=1;}
-    else if(tablesize[whichtable][vartypearraylocal[4]]>2){ kazstartlll=-1; kazendlll=1;}
+    if(tablesize[whichtablevar][vartypearraylocal[4]]==1) {kazstartlll=kazendlll=0;}
+    else if(tablesize[whichtablevar][vartypearraylocal[4]]==2){ kazstartlll=0; kazendlll=1;}
+    else if(tablesize[whichtablevar][vartypearraylocal[4]]>2){ kazstartlll=-1; kazendlll=1;}
 
-    if(tablesize[whichtable][vartypearraylocal[5]]==1) {kazstartmmm=kazendmmm=0;}
-    else if(tablesize[whichtable][vartypearraylocal[5]]==2){ kazstartmmm=0; kazendmmm=1;}
-    else if(tablesize[whichtable][vartypearraylocal[5]]>2){ kazstartmmm=-1; kazendmmm=1;}
+    if(tablesize[whichtablevar][vartypearraylocal[5]]==1) {kazstartmmm=kazendmmm=0;}
+    else if(tablesize[whichtablevar][vartypearraylocal[5]]==2){ kazstartmmm=0; kazendmmm=1;}
+    else if(tablesize[whichtablevar][vartypearraylocal[5]]>2){ kazstartmmm=-1; kazendmmm=1;}
 
     // avoid using data beyond table by shifting starting point and essentially extrapolating
-    if(kazii+kazendiii>=tablesize[whichtable][vartypearraylocal[1]]){ kazii=tablesize[whichtable][vartypearraylocal[1]]-1-kazendiii; }
-    if(kazjj+kazendjjj>=tablesize[whichtable][vartypearraylocal[2]]){ kazjj=tablesize[whichtable][vartypearraylocal[2]]-1-kazendjjj; }
-    if(kazkk+kazendkkk>=tablesize[whichtable][vartypearraylocal[3]]){ kazkk=tablesize[whichtable][vartypearraylocal[3]]-1-kazendkkk; }
-    if(kazll+kazendlll>=tablesize[whichtable][vartypearraylocal[4]]){ kazll=tablesize[whichtable][vartypearraylocal[4]]-1-kazendlll; }
-    if(kazmm+kazendmmm>=tablesize[whichtable][vartypearraylocal[5]]){ kazmm=tablesize[whichtable][vartypearraylocal[5]]-1-kazendmmm; }
+    if(kazii+kazendiii>=tablesize[whichtablevar][vartypearraylocal[1]]){ kazii=tablesize[whichtablevar][vartypearraylocal[1]]-1-kazendiii; }
+    if(kazjj+kazendjjj>=tablesize[whichtablevar][vartypearraylocal[2]]){ kazjj=tablesize[whichtablevar][vartypearraylocal[2]]-1-kazendjjj; }
+    if(kazkk+kazendkkk>=tablesize[whichtablevar][vartypearraylocal[3]]){ kazkk=tablesize[whichtablevar][vartypearraylocal[3]]-1-kazendkkk; }
+    if(kazll+kazendlll>=tablesize[whichtablevar][vartypearraylocal[4]]){ kazll=tablesize[whichtablevar][vartypearraylocal[4]]-1-kazendlll; }
+    if(kazmm+kazendmmm>=tablesize[whichtablevar][vartypearraylocal[5]]){ kazmm=tablesize[whichtablevar][vartypearraylocal[5]]-1-kazendmmm; }
 
 
   }
@@ -295,7 +295,7 @@ static int get_eos_fromlookup_parabolicfull(int repeatedeos, int tabledimen, int
 #if(CHECKIFVALIDEOSDATA)
     if(degentable==0){
       // don't use values of table that have no inversion to temperature
-      get_arrays_eostable_direct_temperature(whichdegenfun,whichtable,kazmm+mmm,kazll+lll,kazkk+kkk,kazjj+jjj,kazii+iii,&tempcheck);
+      get_arrays_eostable_direct_temperature(whichdegenfun,whichtablevar,kazmm+mmm,kazll+lll,kazkk+kkk,kazjj+jjj,kazii+iii,&tempcheck);
     }
     if(degentable==1 || tempcheck>invalidtempcode) // Avoid invalid inversions if T>Tbad, but only deal with temperature if degentable==0
 #else
@@ -304,7 +304,7 @@ static int get_eos_fromlookup_parabolicfull(int repeatedeos, int tabledimen, int
         {
 
           // get value
-          get_arrays_eostable_direct(whichdegenfun,degentable,whichtable,whichtablesubtype,iffun,kazmm+mmm,kazll+lll,kazkk+kkk,kazjj+jjj,kazii+iii,tempanswers);
+          get_arrays_eostable_direct(whichdegenfun,degentable,whichtablevar,whichtablesubtype,iffun,kazmm+mmm,kazll+lll,kazkk+kkk,kazjj+jjj,kazii+iii,tempanswers);
 
 
           // non-pipelined section
@@ -662,7 +662,7 @@ static int get_eos_fromlookup_parabolicfull(int repeatedeos, int tabledimen, int
 
 
 // linear for all but one quantity
-static int get_eos_fromlookup_parabolicone(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichtablesubtype, int *iffun, int whichindep, FTYPE quant1, int *vartypearraylocal, FTYPEEOS *indexarray, FTYPEEOS *answers, int *badlookups)
+static int get_eos_fromlookup_parabolicone(int repeatedeos, int tabledimen, int degentable, int whichtablevar, int whichtablesubtype, int *iffun, int whichindep, FTYPE quant1, int *vartypearraylocal, FTYPEEOS *indexarrayvar, FTYPEEOS *answers, int *badlookups)
 {
 
   INDEXPARAMETERSLOCALDEFS;
@@ -695,7 +695,7 @@ static int get_eos_fromlookup_parabolicone(int repeatedeos, int tabledimen, int 
 
 
   // get number of columns possible for this whichtablesubtype
-  numcols = get_numcols(whichtable,whichtablesubtype);
+  numcols = get_numcols(whichtablevar,whichtablesubtype);
 
 
 
@@ -719,11 +719,11 @@ static int get_eos_fromlookup_parabolicone(int repeatedeos, int tabledimen, int 
   // Store grid position within EOS table
   //
   ///////////
-  ieos=indexarray[1];
-  jeos=indexarray[2];
-  keos=indexarray[3];
-  leos=indexarray[4];
-  meos=indexarray[5];
+  ieos=indexarrayvar[1];
+  jeos=indexarrayvar[2];
+  keos=indexarrayvar[3];
+  leos=indexarrayvar[4];
+  meos=indexarrayvar[5];
 
 
   ///////////
@@ -769,7 +769,7 @@ static int get_eos_fromlookup_parabolicone(int repeatedeos, int tabledimen, int 
     //
     // Also set range of loops for different table types
     // tabledimen overrules table type (i.e. take section out of fuller table -- assumed to be 0 index)
-    // GODMARK: these things couuld be stored as functions of whichtable/degentable/tabledimen
+    // GODMARK: these things couuld be stored as functions of whichtablevar/degentable/tabledimen
     //
     //////////////////////
     //
@@ -780,20 +780,20 @@ static int get_eos_fromlookup_parabolicone(int repeatedeos, int tabledimen, int 
       kazii=ROUND2INT(ieos); //kazii=(int)ieos; // round instead when doing parabolic interpolation with 3 points
       // limit to within table
       if(kazii<1) kazii=1; // 0 is minimum
-      if(kazii>tablesize[whichtable][vartypearraylocal[1]]-2) kazii=tablesize[whichtable][vartypearraylocal[1]]-2; // N-1 is maximum
+      if(kazii>tablesize[whichtablevar][vartypearraylocal[1]]-2) kazii=tablesize[whichtablevar][vartypearraylocal[1]]-2; // N-1 is maximum
 
       // set range of loops for different table types
       // tabledimen overrules table type (i.e. take section out of fuller table -- assumed to be 0 index)
-      // GODMARK: these things couuld be stored as functions of whichtable/degentable/tabledimen
-      if(tablesize[whichtable][vartypearraylocal[1]]==1) { kazstartiii=kazendiii=0; } // kazll will be 0
-      else if(tablesize[whichtable][vartypearraylocal[1]]==2) { kazstartiii=0; kazendiii=1;} // kazll will be 0
-      else if(tablesize[whichtable][vartypearraylocal[1]]>2) { kazstartiii=-1; kazendiii=1;}
+      // GODMARK: these things couuld be stored as functions of whichtablevar/degentable/tabledimen
+      if(tablesize[whichtablevar][vartypearraylocal[1]]==1) { kazstartiii=kazendiii=0; } // kazll will be 0
+      else if(tablesize[whichtablevar][vartypearraylocal[1]]==2) { kazstartiii=0; kazendiii=1;} // kazll will be 0
+      else if(tablesize[whichtablevar][vartypearraylocal[1]]>2) { kazstartiii=-1; kazendiii=1;}
     }
     else{
       kazii=(int)ieos;
 
       kazstartiii=0;
-      if(tablesize[whichtable][vartypearraylocal[1]]!=1) kazendiii=1;
+      if(tablesize[whichtablevar][vartypearraylocal[1]]!=1) kazendiii=1;
       else kazendiii=0;
     }
 
@@ -803,17 +803,17 @@ static int get_eos_fromlookup_parabolicone(int repeatedeos, int tabledimen, int 
       // limit to within table
       if(kazjj<1) kazjj=1; // 0 is minimum
       // was whichindep for vartypearraylocal[2]
-      if(kazjj>tablesize[whichtable][vartypearraylocal[2]]-2) kazjj=tablesize[whichtable][vartypearraylocal[2]]-2; // N-1 is maximum
+      if(kazjj>tablesize[whichtablevar][vartypearraylocal[2]]-2) kazjj=tablesize[whichtablevar][vartypearraylocal[2]]-2; // N-1 is maximum
 
-      if(degentable==1 || tablesize[whichtable][vartypearraylocal[2]]==1) {kazstartjjj=kazendjjj=0;}
-      else if(tablesize[whichtable][vartypearraylocal[2]]==2) { kazstartjjj=0; kazendjjj=1;}
-      else if(tablesize[whichtable][vartypearraylocal[2]]>2) { kazstartjjj=-1; kazendjjj=1;}
+      if(degentable==1 || tablesize[whichtablevar][vartypearraylocal[2]]==1) {kazstartjjj=kazendjjj=0;}
+      else if(tablesize[whichtablevar][vartypearraylocal[2]]==2) { kazstartjjj=0; kazendjjj=1;}
+      else if(tablesize[whichtablevar][vartypearraylocal[2]]>2) { kazstartjjj=-1; kazendjjj=1;}
     }
     else{
       kazjj=(int)jeos;
 
       kazstartjjj=0;
-      if(degentable==0 && tablesize[whichtable][vartypearraylocal[2]]!=1) kazendjjj=1;
+      if(degentable==0 && tablesize[whichtablevar][vartypearraylocal[2]]!=1) kazendjjj=1;
       else kazendjjj=0;
     }
 
@@ -822,17 +822,17 @@ static int get_eos_fromlookup_parabolicone(int repeatedeos, int tabledimen, int 
       kazkk=ROUND2INT(keos);
       // limit to within table
       if(kazkk<1) kazkk=1; // 0 is minimum
-      if(kazkk>tablesize[whichtable][vartypearraylocal[3]]-2) kazkk=tablesize[whichtable][vartypearraylocal[3]]-2; // N-1 is maximum
+      if(kazkk>tablesize[whichtablevar][vartypearraylocal[3]]-2) kazkk=tablesize[whichtablevar][vartypearraylocal[3]]-2; // N-1 is maximum
 
-      if(tablesize[whichtable][vartypearraylocal[3]]==1) {kazstartkkk=kazendkkk=0;}
-      else if(tablesize[whichtable][vartypearraylocal[3]]==2){ kazstartkkk=0; kazendkkk=1;}
-      else if(tablesize[whichtable][vartypearraylocal[3]]>2){ kazstartkkk=-1; kazendkkk=1;}
+      if(tablesize[whichtablevar][vartypearraylocal[3]]==1) {kazstartkkk=kazendkkk=0;}
+      else if(tablesize[whichtablevar][vartypearraylocal[3]]==2){ kazstartkkk=0; kazendkkk=1;}
+      else if(tablesize[whichtablevar][vartypearraylocal[3]]>2){ kazstartkkk=-1; kazendkkk=1;}
     }
     else{
       kazkk=(int)keos;
 
       kazstartkkk=0;
-      if(tablesize[whichtable][vartypearraylocal[3]]!=1) kazendkkk=1;
+      if(tablesize[whichtablevar][vartypearraylocal[3]]!=1) kazendkkk=1;
       else kazendkkk=0;
     }
 
@@ -841,17 +841,17 @@ static int get_eos_fromlookup_parabolicone(int repeatedeos, int tabledimen, int 
       kazll=ROUND2INT(leos);
       // limit to within table
       if(kazll<1) kazll=1; // 0 is minimum
-      if(kazll>tablesize[whichtable][vartypearraylocal[4]]-2) kazll=tablesize[whichtable][vartypearraylocal[4]]-2; // N-1 is maximum
+      if(kazll>tablesize[whichtablevar][vartypearraylocal[4]]-2) kazll=tablesize[whichtablevar][vartypearraylocal[4]]-2; // N-1 is maximum
 
-      if(tablesize[whichtable][vartypearraylocal[4]]==1) {kazstartlll=kazendlll=0;}
-      else if(tablesize[whichtable][vartypearraylocal[4]]==2){ kazstartlll=0; kazendlll=1;}
-      else if(tablesize[whichtable][vartypearraylocal[4]]>2){ kazstartlll=-1; kazendlll=1;}
+      if(tablesize[whichtablevar][vartypearraylocal[4]]==1) {kazstartlll=kazendlll=0;}
+      else if(tablesize[whichtablevar][vartypearraylocal[4]]==2){ kazstartlll=0; kazendlll=1;}
+      else if(tablesize[whichtablevar][vartypearraylocal[4]]>2){ kazstartlll=-1; kazendlll=1;}
     }
     else{
       kazll=(int)leos;
 
       kazstartlll=0;
-      if(tablesize[whichtable][vartypearraylocal[4]]!=1) kazendlll=1;
+      if(tablesize[whichtablevar][vartypearraylocal[4]]!=1) kazendlll=1;
       else kazendlll=0;
     }
 
@@ -860,17 +860,17 @@ static int get_eos_fromlookup_parabolicone(int repeatedeos, int tabledimen, int 
       kazmm=ROUND2INT(meos);
       // limit to within table
       if(kazmm<1) kazmm=1; // 0 is minimum
-      if(kazmm>tablesize[whichtable][vartypearraylocal[5]]-2) kazmm=tablesize[whichtable][vartypearraylocal[5]]-2; // N-1 is maximum
+      if(kazmm>tablesize[whichtablevar][vartypearraylocal[5]]-2) kazmm=tablesize[whichtablevar][vartypearraylocal[5]]-2; // N-1 is maximum
 
-      if(tablesize[whichtable][vartypearraylocal[5]]==1) {kazstartmmm=kazendmmm=0;}
-      else if(tablesize[whichtable][vartypearraylocal[5]]==2){ kazstartmmm=0; kazendmmm=1;}
-      else if(tablesize[whichtable][vartypearraylocal[5]]>2){ kazstartmmm=-1; kazendmmm=1;}
+      if(tablesize[whichtablevar][vartypearraylocal[5]]==1) {kazstartmmm=kazendmmm=0;}
+      else if(tablesize[whichtablevar][vartypearraylocal[5]]==2){ kazstartmmm=0; kazendmmm=1;}
+      else if(tablesize[whichtablevar][vartypearraylocal[5]]>2){ kazstartmmm=-1; kazendmmm=1;}
     }
     else{
       kazmm=(int)meos;
 
       kazstartmmm=0;
-      if(tablesize[whichtable][vartypearraylocal[5]]!=1) kazendmmm=1;
+      if(tablesize[whichtablevar][vartypearraylocal[5]]!=1) kazendmmm=1;
       else kazendmmm=0;
     }
 
@@ -882,11 +882,11 @@ static int get_eos_fromlookup_parabolicone(int repeatedeos, int tabledimen, int 
     // avoid using data beyond table by shifting starting point and essentially extrapolating
     //
     /////////////////////
-    if(kazii+kazendiii>=tablesize[whichtable][vartypearraylocal[1]]){ kazii=tablesize[whichtable][vartypearraylocal[1]]-1-kazendiii; }
-    if(kazjj+kazendjjj>=tablesize[whichtable][vartypearraylocal[2]]){ kazjj=tablesize[whichtable][vartypearraylocal[2]]-1-kazendjjj; }
-    if(kazkk+kazendkkk>=tablesize[whichtable][vartypearraylocal[3]]){ kazkk=tablesize[whichtable][vartypearraylocal[3]]-1-kazendkkk; }
-    if(kazll+kazendlll>=tablesize[whichtable][vartypearraylocal[4]]){ kazll=tablesize[whichtable][vartypearraylocal[4]]-1-kazendlll; }
-    if(kazmm+kazendmmm>=tablesize[whichtable][vartypearraylocal[5]]){ kazmm=tablesize[whichtable][vartypearraylocal[5]]-1-kazendmmm; }
+    if(kazii+kazendiii>=tablesize[whichtablevar][vartypearraylocal[1]]){ kazii=tablesize[whichtablevar][vartypearraylocal[1]]-1-kazendiii; }
+    if(kazjj+kazendjjj>=tablesize[whichtablevar][vartypearraylocal[2]]){ kazjj=tablesize[whichtablevar][vartypearraylocal[2]]-1-kazendjjj; }
+    if(kazkk+kazendkkk>=tablesize[whichtablevar][vartypearraylocal[3]]){ kazkk=tablesize[whichtablevar][vartypearraylocal[3]]-1-kazendkkk; }
+    if(kazll+kazendlll>=tablesize[whichtablevar][vartypearraylocal[4]]){ kazll=tablesize[whichtablevar][vartypearraylocal[4]]-1-kazendlll; }
+    if(kazmm+kazendmmm>=tablesize[whichtablevar][vartypearraylocal[5]]){ kazmm=tablesize[whichtablevar][vartypearraylocal[5]]-1-kazendmmm; }
 
     kazdi[1]=ieos-(FTYPEEOS)kazii;
     kazdi[0]=1.0-kazdi[1];
@@ -968,7 +968,7 @@ static int get_eos_fromlookup_parabolicone(int repeatedeos, int tabledimen, int 
 #if(CHECKIFVALIDEOSDATA)
     if(degentable==0){
       // don't use values of table that have no inversion to temperature
-      get_arrays_eostable_direct_temperature(whichdegenfun,whichtable,kazmm+mmm,kazll+lll,kazkk+kkk,kazjj+jjj,kazii+iii,&tempcheck);
+      get_arrays_eostable_direct_temperature(whichdegenfun,whichtablevar,kazmm+mmm,kazll+lll,kazkk+kkk,kazjj+jjj,kazii+iii,&tempcheck);
     }
     //    dualfprintf(fail_file,"temp=%21.15g\n",tempcheck);
     if(degentable==1 || tempcheck>invalidtempcode) // Avoid invalid inversions if T>Tbad, but only deal with temperature if degentable==0
@@ -978,7 +978,7 @@ static int get_eos_fromlookup_parabolicone(int repeatedeos, int tabledimen, int 
         {
 
           // get value
-          get_arrays_eostable_direct(whichdegenfun,degentable,whichtable,whichtablesubtype,iffun,kazmm+mmm,kazll+lll,kazkk+kkk,kazjj+jjj,kazii+iii,tempanswers);
+          get_arrays_eostable_direct(whichdegenfun,degentable,whichtablevar,whichtablesubtype,iffun,kazmm+mmm,kazll+lll,kazkk+kkk,kazjj+jjj,kazii+iii,tempanswers);
 
           // get distance
           if(paravar==1)      dist = kazdj[jjj]*kazdk[kkk]*kazdl[lll]*kazdm[mmm]; // dist for kazi
@@ -1063,7 +1063,7 @@ static int get_eos_fromlookup_parabolicone(int repeatedeos, int tabledimen, int 
     // never found good temperature, so look up nearest_dumb()
     // GODMARK: Could instead reduce from parabolic to lower order since using nearest_dumb() is probably a bad idea
     if(badany){
-      get_eos_fromlookup_nearest_dumb(repeatedeos, tabledimen, degentable, whichtable, whichtablesubtype, localiffun, whichindep, quant1, vartypearraylocal, indexarray, tempanswers, localbadlookups); // this can overwrite default localbadlookups from 0->1
+      get_eos_fromlookup_nearest_dumb(repeatedeos, tabledimen, degentable, whichtablevar, whichtablesubtype, localiffun, whichindep, quant1, vartypearraylocal, indexarrayvar, tempanswers, localbadlookups); // this can overwrite default localbadlookups from 0->1
 
       // do offset and logify, but only if badlookup before but goodlookup from nearest_dumb()
       for(coli=0;coli<numcols;coli++){
@@ -1145,7 +1145,7 @@ static int get_eos_fromlookup_parabolicone(int repeatedeos, int tabledimen, int 
 
 
 // full 5D linear interpolation
-static int get_eos_fromlookup_linear(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichtablesubtype, int *iffun, int whichindep, FTYPE quant1, int *vartypearraylocal, FTYPEEOS *indexarray, FTYPEEOS *answers, int *badlookups)
+static int get_eos_fromlookup_linear(int repeatedeos, int tabledimen, int degentable, int whichtablevar, int whichtablesubtype, int *iffun, int whichindep, FTYPE quant1, int *vartypearraylocal, FTYPEEOS *indexarrayvar, FTYPEEOS *answers, int *badlookups)
 {
 
   INDEXPARAMETERSLOCALDEFS;
@@ -1164,14 +1164,14 @@ static int get_eos_fromlookup_linear(int repeatedeos, int tabledimen, int degent
 
 
   // get number of columns possible for this whichtablesubtype
-  numcols = get_numcols(whichtable,whichtablesubtype);
+  numcols = get_numcols(whichtablevar,whichtablesubtype);
 
 
-  ieos=indexarray[1];
-  jeos=indexarray[2];
-  keos=indexarray[3];
-  leos=indexarray[4];
-  meos=indexarray[5];
+  ieos=indexarrayvar[1];
+  jeos=indexarrayvar[2];
+  keos=indexarrayvar[3];
+  leos=indexarrayvar[4];
+  meos=indexarrayvar[5];
   
 
 
@@ -1197,29 +1197,29 @@ static int get_eos_fromlookup_linear(int repeatedeos, int tabledimen, int degent
 
     // set range of loops for different table types
     // tabledimen overrules table type (i.e. take section out of fuller table -- assumed to be 0 index)
-    // GODMARK: these things couuld be stored as functions of whichtable/degentable/tabledimen
-    if(tablesize[whichtable][vartypearraylocal[1]]!=1) kazendiii=1;
+    // GODMARK: these things couuld be stored as functions of whichtablevar/degentable/tabledimen
+    if(tablesize[whichtablevar][vartypearraylocal[1]]!=1) kazendiii=1;
     else kazendiii=0;
 
-    if(degentable==0 && tablesize[whichtable][vartypearraylocal[2]]!=1) kazendjjj=1;
+    if(degentable==0 && tablesize[whichtablevar][vartypearraylocal[2]]!=1) kazendjjj=1;
     else kazendjjj=0;
 
-    if(tablesize[whichtable][vartypearraylocal[3]]!=1) kazendkkk=1;
+    if(tablesize[whichtablevar][vartypearraylocal[3]]!=1) kazendkkk=1;
     else kazendkkk=0;
     
-    if(tablesize[whichtable][vartypearraylocal[4]]!=1) kazendlll=1;
+    if(tablesize[whichtablevar][vartypearraylocal[4]]!=1) kazendlll=1;
     else kazendlll=0;
 
-    if(tablesize[whichtable][vartypearraylocal[5]]!=1) kazendmmm=1;
+    if(tablesize[whichtablevar][vartypearraylocal[5]]!=1) kazendmmm=1;
     else kazendmmm=0;
 
 
     // avoid using data beyond table by shifting starting point and essentially extrapolating
-    if(kazii+kazendiii>=tablesize[whichtable][vartypearraylocal[1]]){ kazii=tablesize[whichtable][vartypearraylocal[1]]-1-kazendiii; }
-    if(kazjj+kazendjjj>=tablesize[whichtable][vartypearraylocal[2]]){ kazjj=tablesize[whichtable][vartypearraylocal[2]]-1-kazendjjj; }
-    if(kazkk+kazendkkk>=tablesize[whichtable][vartypearraylocal[3]]){ kazkk=tablesize[whichtable][vartypearraylocal[3]]-1-kazendkkk; }
-    if(kazll+kazendlll>=tablesize[whichtable][vartypearraylocal[4]]){ kazll=tablesize[whichtable][vartypearraylocal[4]]-1-kazendlll; }
-    if(kazmm+kazendmmm>=tablesize[whichtable][vartypearraylocal[5]]){ kazmm=tablesize[whichtable][vartypearraylocal[5]]-1-kazendmmm; }
+    if(kazii+kazendiii>=tablesize[whichtablevar][vartypearraylocal[1]]){ kazii=tablesize[whichtablevar][vartypearraylocal[1]]-1-kazendiii; }
+    if(kazjj+kazendjjj>=tablesize[whichtablevar][vartypearraylocal[2]]){ kazjj=tablesize[whichtablevar][vartypearraylocal[2]]-1-kazendjjj; }
+    if(kazkk+kazendkkk>=tablesize[whichtablevar][vartypearraylocal[3]]){ kazkk=tablesize[whichtablevar][vartypearraylocal[3]]-1-kazendkkk; }
+    if(kazll+kazendlll>=tablesize[whichtablevar][vartypearraylocal[4]]){ kazll=tablesize[whichtablevar][vartypearraylocal[4]]-1-kazendlll; }
+    if(kazmm+kazendmmm>=tablesize[whichtablevar][vartypearraylocal[5]]){ kazmm=tablesize[whichtablevar][vartypearraylocal[5]]-1-kazendmmm; }
 
 
  
@@ -1284,7 +1284,7 @@ static int get_eos_fromlookup_linear(int repeatedeos, int tabledimen, int degent
 #if(CHECKIFVALIDEOSDATA)
     if(degentable==0){
       // don't use values of table that have no inversion to temperature
-      get_arrays_eostable_direct_temperature(whichdegenfun,whichtable,kazmm+mmm,kazll+lll,kazkk+kkk,kazjj+jjj,kazii+iii,&tempcheck);
+      get_arrays_eostable_direct_temperature(whichdegenfun,whichtablevar,kazmm+mmm,kazll+lll,kazkk+kkk,kazjj+jjj,kazii+iii,&tempcheck);
     }
     if(degentable==1 || tempcheck>invalidtempcode) // Avoid invalid inversions if T>Tbad, but only deal with temperature if degentable==0
 #else
@@ -1292,7 +1292,7 @@ static int get_eos_fromlookup_linear(int repeatedeos, int tabledimen, int degent
 #endif
         {
           // get value
-          get_arrays_eostable_direct(whichdegenfun,degentable,whichtable,whichtablesubtype,iffun,kazmm+mmm,kazll+lll,kazkk+kkk,kazjj+jjj,kazii+iii,tempanswers);
+          get_arrays_eostable_direct(whichdegenfun,degentable,whichtablevar,whichtablesubtype,iffun,kazmm+mmm,kazll+lll,kazkk+kkk,kazjj+jjj,kazii+iii,tempanswers);
 
 
           // get distance to value
@@ -1367,7 +1367,7 @@ static int get_eos_fromlookup_linear(int repeatedeos, int tabledimen, int degent
         if(debugfail>=2){
           dualfprintf(fail_file,"No valid data points in table despite within table.\n");
           dualfprintf(fail_file,"kaz=%d %d %d %d : %d %d : %d %d : %d %d : %d %d : %d %d\n",kazii,kazjj,kazkk,kazll,kazstartiii,kazendiii,kazstartjjj,kazendjjj,kazstartkkk,kazendkkk,kazstartlll,kazendlll,kazstartmmm,kazendmmm);
-          dualfprintf(fail_file,"%d %d %d %d %d X %d %21.15g X X X X\n",repeatedeos, tabledimen, degentable, whichtable, whichtablesubtype, whichindep, quant1);
+          dualfprintf(fail_file,"%d %d %d %d %d X %d %21.15g X X X X\n",repeatedeos, tabledimen, degentable, whichtablevar, whichtablesubtype, whichindep, quant1);
 
           dualfprintf(fail_file,"coli=%d tempanswers=%21.15g\n",coli,tempanswers[coli]);
 
@@ -1399,7 +1399,7 @@ static int get_eos_fromlookup_linear(int repeatedeos, int tabledimen, int degent
   // DEBUG:
   //  if(whichtablesubtype==SUBTYPEEXTRA){
   //    dualfprintf(fail_file,"kaz=%d %d %d %d %d : %d %d : %d %d : %d %d : %d %d : %d %d\n",kazii,kazjj,kazkk,kazll,kazmm,kazstartiii,kazendiii,kazstartjjj,kazendjjj,kazstartkkk,kazendkkk,kazstartlll,kazendlll,kazstartmmm,kazendmmm);
-  //    dualfprintf(fail_file,"%d %d %d %d %d X %d %21.15g X X X X\n",repeatedeos, tabledimen, degentable, whichtable, whichtablesubtype, whichindep, quant1);
+  //    dualfprintf(fail_file,"%d %d %d %d %d X %d %21.15g X X X X\n",repeatedeos, tabledimen, degentable, whichtablevar, whichtablesubtype, whichindep, quant1);
   //  }
 
 
@@ -1422,7 +1422,7 @@ static int get_eos_fromlookup_linear(int repeatedeos, int tabledimen, int degent
 
 
 // nearest neighbor interpolation but caution to temperature defined or not
-static int get_eos_fromlookup_nearest(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichtablesubtype, int *iffun, int whichindep, FTYPE quant1, int *vartypearraylocal, FTYPEEOS *indexarray, FTYPEEOS *answers, int *badlookups)
+static int get_eos_fromlookup_nearest(int repeatedeos, int tabledimen, int degentable, int whichtablevar, int whichtablesubtype, int *iffun, int whichindep, FTYPE quant1, int *vartypearraylocal, FTYPEEOS *indexarrayvar, FTYPEEOS *answers, int *badlookups)
 {
 
   INDEXPARAMETERSLOCALDEFS;
@@ -1438,14 +1438,14 @@ static int get_eos_fromlookup_nearest(int repeatedeos, int tabledimen, int degen
   int gotgood;
 
   // get number of columns possible for this whichtablesubtype
-  numcols = get_numcols(whichtable,whichtablesubtype);
+  numcols = get_numcols(whichtablevar,whichtablesubtype);
 
 
-  ieos=indexarray[1];
-  jeos=indexarray[2];
-  keos=indexarray[3];
-  leos=indexarray[4];
-  meos=indexarray[5];
+  ieos=indexarrayvar[1];
+  jeos=indexarrayvar[2];
+  keos=indexarrayvar[3];
+  leos=indexarrayvar[4];
+  meos=indexarrayvar[5];
 
 
 
@@ -1491,14 +1491,14 @@ static int get_eos_fromlookup_nearest(int repeatedeos, int tabledimen, int degen
 #if(CHECKIFVALIDEOSDATA)
   if(degentable==0){
     // don't use values of table that have no inversion to temperature
-    get_arrays_eostable_direct_temperature(whichdegenfun,whichtable,kazmm,kazll,kazkk,kazjj,kazii,&tempcheck);
+    get_arrays_eostable_direct_temperature(whichdegenfun,whichtablevar,kazmm,kazll,kazkk,kazjj,kazii,&tempcheck);
   }
   if(degentable==1 || tempcheck>invalidtempcode) // Avoid invalid inversions if T>Tbad, but only deal with temperature if degentable==0
 #else
     if(1)
 #endif
       {
-        get_arrays_eostable_direct(whichdegenfun,degentable,whichtable,whichtablesubtype,iffun,kazmm,kazll,kazkk,kazjj,kazii,answers);
+        get_arrays_eostable_direct(whichdegenfun,degentable,whichtablevar,whichtablesubtype,iffun,kazmm,kazll,kazkk,kazjj,kazii,answers);
 
 
         for(coli=0;coli<numcols;coli++) {
@@ -1541,28 +1541,28 @@ static int get_eos_fromlookup_nearest(int repeatedeos, int tabledimen, int degen
 
       // set range of loops for different table types
       // tabledimen overrules table type (i.e. take section out of fuller table -- assumed to be 0 index)
-      // GODMARK: these things couuld be stored as functions of whichtable/degentable/tabledimen
-      if(tablesize[whichtable][vartypearraylocal[1]]!=1) kazendiii=1;
+      // GODMARK: these things couuld be stored as functions of whichtablevar/degentable/tabledimen
+      if(tablesize[whichtablevar][vartypearraylocal[1]]!=1) kazendiii=1;
       else kazendiii=0;
 
-      if(degentable==0 && tablesize[whichtable][vartypearraylocal[2]]!=1) kazendjjj=1;
+      if(degentable==0 && tablesize[whichtablevar][vartypearraylocal[2]]!=1) kazendjjj=1;
       else kazendjjj=0;
 
-      if(tablesize[whichtable][vartypearraylocal[3]]!=1) kazendkkk=1;
+      if(tablesize[whichtablevar][vartypearraylocal[3]]!=1) kazendkkk=1;
       else kazendkkk=0;
     
-      if(tablesize[whichtable][vartypearraylocal[4]]!=1) kazendlll=1;
+      if(tablesize[whichtablevar][vartypearraylocal[4]]!=1) kazendlll=1;
       else kazendlll=0;
 
-      if(tablesize[whichtable][vartypearraylocal[5]]!=1) kazendmmm=1;
+      if(tablesize[whichtablevar][vartypearraylocal[5]]!=1) kazendmmm=1;
       else kazendmmm=0;
 
       // avoid using data beyond table by shifting starting point and essentially extrapolating
-      if(kazii+kazendiii>=tablesize[whichtable][vartypearraylocal[1]]){ kazii=tablesize[whichtable][vartypearraylocal[1]]-1-kazendiii; }
-      if(kazjj+kazendjjj>=tablesize[whichtable][vartypearraylocal[2]]){ kazjj=tablesize[whichtable][vartypearraylocal[2]]-1-kazendjjj; }
-      if(kazkk+kazendkkk>=tablesize[whichtable][vartypearraylocal[3]]){ kazkk=tablesize[whichtable][vartypearraylocal[3]]-1-kazendkkk; }
-      if(kazll+kazendlll>=tablesize[whichtable][vartypearraylocal[4]]){ kazll=tablesize[whichtable][vartypearraylocal[4]]-1-kazendlll; }
-      if(kazmm+kazendmmm>=tablesize[whichtable][vartypearraylocal[5]]){ kazmm=tablesize[whichtable][vartypearraylocal[5]]-1-kazendmmm; }
+      if(kazii+kazendiii>=tablesize[whichtablevar][vartypearraylocal[1]]){ kazii=tablesize[whichtablevar][vartypearraylocal[1]]-1-kazendiii; }
+      if(kazjj+kazendjjj>=tablesize[whichtablevar][vartypearraylocal[2]]){ kazjj=tablesize[whichtablevar][vartypearraylocal[2]]-1-kazendjjj; }
+      if(kazkk+kazendkkk>=tablesize[whichtablevar][vartypearraylocal[3]]){ kazkk=tablesize[whichtablevar][vartypearraylocal[3]]-1-kazendkkk; }
+      if(kazll+kazendlll>=tablesize[whichtablevar][vartypearraylocal[4]]){ kazll=tablesize[whichtablevar][vartypearraylocal[4]]-1-kazendlll; }
+      if(kazmm+kazendmmm>=tablesize[whichtablevar][vartypearraylocal[5]]){ kazmm=tablesize[whichtablevar][vartypearraylocal[5]]-1-kazendmmm; }
 
     }
 
@@ -1575,14 +1575,14 @@ static int get_eos_fromlookup_nearest(int repeatedeos, int tabledimen, int degen
 #if(CHECKIFVALIDEOSDATA)
       if(degentable==0){
         // don't use values of table that have no inversion to temperature
-        get_arrays_eostable_direct_temperature(whichdegenfun,whichtable,kazmm,kazll,kazkk,kazjj,kazii,&tempcheck);
+        get_arrays_eostable_direct_temperature(whichdegenfun,whichtablevar,kazmm,kazll,kazkk,kazjj,kazii,&tempcheck);
       }
       if(degentable==1 || tempcheck>invalidtempcode) // Avoid invalid inversions if T>Tbad, but only deal with temperature if degentable==0
 #else
         if(1)
 #endif
           {
-            get_arrays_eostable_direct(whichdegenfun,degentable,whichtable,whichtablesubtype,iffun,kazmm,kazll,kazkk,kazjj,kazii,answers);
+            get_arrays_eostable_direct(whichdegenfun,degentable,whichtablevar,whichtablesubtype,iffun,kazmm,kazll,kazkk,kazjj,kazii,answers);
 
             for(coli=0;coli<numcols;coli++){
               if(iffun[coli]){
@@ -1643,7 +1643,7 @@ static int get_eos_fromlookup_nearest(int repeatedeos, int tabledimen, int degen
 // nearest neighbor interpolation with no temperature check
 // note that kazii-...-kazmm are globals in kazfulleos.defsglobalprivate.h
 // They are globals because need to do repeated lookup that is multi-thread safe, so each thread as a global version of these
-static int get_eos_fromlookup_nearest_dumb(int repeatedeos, int tabledimen, int degentable, int whichtable, int whichtablesubtype, int *iffun, int whichindep, FTYPE quant1, int *vartypearraylocal, FTYPEEOS *indexarray, FTYPEEOS *answers, int *badlookups)
+static int get_eos_fromlookup_nearest_dumb(int repeatedeos, int tabledimen, int degentable, int whichtablevar, int whichtablesubtype, int *iffun, int whichindep, FTYPE quant1, int *vartypearraylocal, FTYPEEOS *indexarrayvar, FTYPEEOS *answers, int *badlookups)
 {
 
   INDEXPARAMETERSLOCALDEFS;
@@ -1655,7 +1655,7 @@ static int get_eos_fromlookup_nearest_dumb(int repeatedeos, int tabledimen, int 
 
 
   // get number of columns possible for this whichtablesubtype
-  numcols = get_numcols(whichtable,whichtablesubtype);
+  numcols = get_numcols(whichtablevar,whichtablesubtype);
 
   // definition consistent with numerical assignments of indeces of arrays
   whichdegenfun = whichindep-1;
@@ -1668,26 +1668,26 @@ static int get_eos_fromlookup_nearest_dumb(int repeatedeos, int tabledimen, int 
   if(1||repeatedeos==0){
 
 #if(0)
-    kazii=(int)indexarray[1];
-    kazjj=(int)indexarray[2];
-    kazkk=(int)indexarray[3];
-    kazll=(int)indexarray[4];
-    kazmm=(int)indexarray[5];
+    kazii=(int)indexarrayvar[1];
+    kazjj=(int)indexarrayvar[2];
+    kazkk=(int)indexarrayvar[3];
+    kazll=(int)indexarrayvar[4];
+    kazmm=(int)indexarrayvar[5];
 #else
     // if only choosing 1 value, then choose rounded version
-    kazii=ROUND2INT(indexarray[1]);
-    kazjj=ROUND2INT(indexarray[2]);
-    kazkk=ROUND2INT(indexarray[3]);
-    kazll=ROUND2INT(indexarray[4]);
-    kazmm=ROUND2INT(indexarray[5]);
+    kazii=ROUND2INT(indexarrayvar[1]);
+    kazjj=ROUND2INT(indexarrayvar[2]);
+    kazkk=ROUND2INT(indexarrayvar[3]);
+    kazll=ROUND2INT(indexarrayvar[4]);
+    kazmm=ROUND2INT(indexarrayvar[5]);
 #endif
 
 
-    if(kazii>=tablesize[whichtable][vartypearraylocal[1]]) kazii=tablesize[whichtable][vartypearraylocal[1]]-1;
-    if(kazjj>=tablesize[whichtable][vartypearraylocal[2]]) kazjj=tablesize[whichtable][vartypearraylocal[2]]-1;
-    if(kazkk>=tablesize[whichtable][vartypearraylocal[3]]) kazkk=tablesize[whichtable][vartypearraylocal[3]]-1;
-    if(kazll>=tablesize[whichtable][vartypearraylocal[4]]) kazll=tablesize[whichtable][vartypearraylocal[4]]-1;
-    if(kazmm>=tablesize[whichtable][vartypearraylocal[5]]) kazmm=tablesize[whichtable][vartypearraylocal[5]]-1;
+    if(kazii>=tablesize[whichtablevar][vartypearraylocal[1]]) kazii=tablesize[whichtablevar][vartypearraylocal[1]]-1;
+    if(kazjj>=tablesize[whichtablevar][vartypearraylocal[2]]) kazjj=tablesize[whichtablevar][vartypearraylocal[2]]-1;
+    if(kazkk>=tablesize[whichtablevar][vartypearraylocal[3]]) kazkk=tablesize[whichtablevar][vartypearraylocal[3]]-1;
+    if(kazll>=tablesize[whichtablevar][vartypearraylocal[4]]) kazll=tablesize[whichtablevar][vartypearraylocal[4]]-1;
+    if(kazmm>=tablesize[whichtablevar][vartypearraylocal[5]]) kazmm=tablesize[whichtablevar][vartypearraylocal[5]]-1;
   }
 
   // overrides (must be placed outside if(repeatedeos==0) conditional so always done since kazendlll,kazendmmm, etc. are stored per whichd and not also per whichtablesubtype
@@ -1697,7 +1697,7 @@ static int get_eos_fromlookup_nearest_dumb(int repeatedeos, int tabledimen, int 
 
 
   // get value
-  get_arrays_eostable_direct(whichdegenfun,degentable,whichtable,whichtablesubtype,iffun,kazmm,kazll,kazkk,kazjj,kazii,answers);
+  get_arrays_eostable_direct(whichdegenfun,degentable,whichtablevar,whichtablesubtype,iffun,kazmm,kazll,kazkk,kazjj,kazii,answers);
 
 
   for(coli=0;coli<numcols;coli++) localbadlookups[coli]=1; // default to bad
@@ -1724,7 +1724,7 @@ static int get_eos_fromlookup_nearest_dumb(int repeatedeos, int tabledimen, int 
   // DEBUG:
   //  if(whichtablesubtype==SUBTYPESTANDARD||whichtablesubtype==SUBTYPEDEGEN){
   //    for(coli=0;coli<numcols;coli++) if(iffun[coli]) dualfprintf(fail_file,"kazii=%d kazjj=%d kazkk=%d kazll=%d kazmm=%d whichtablesubtype=%d answers[coli=%d]=%21.15g bad=%d\n",kazii,kazjj,kazkk,kazll,kazmm,whichtablesubtype,coli,answers[coli],badlookups[coli]);
-  //    dualfprintf(fail_file,"%d %d %d %d %d %d %21.15g\n",repeatedeos, tabledimen, degentable, whichtable, whichtablesubtype, whichindep, quant1);
+  //    dualfprintf(fail_file,"%d %d %d %d %d %d %21.15g\n",repeatedeos, tabledimen, degentable, whichtablevar, whichtablesubtype, whichindep, quant1);
   //  }
   
   
@@ -1738,12 +1738,12 @@ static int get_eos_fromlookup_nearest_dumb(int repeatedeos, int tabledimen, int 
 
 
 //#define thiseostable(name,fun,index5,index4,index3,index2,index1) EOSMAC(name,fun,index5,index4,index3,index2,index1)
-//#define index2array(name,fun) name[fun][indexarray[5]][indexarray[4]][indexarray[3]][indexarray[2]][indexarray[1]]
+//#define index2array(name,fun) name[fun][indexarrayvar[5]][indexarrayvar[4]][indexarrayvar[3]][indexarrayvar[2]][indexarrayvar[1]]
 
 
 // kinda like get_arrays_eostable() but directly grab multiple columns of data from a given table subtype
 // simple and simplezoom table code is just copy-paste from full table with fulltable->simpletable and fulltable->simplezoomtable
-static void get_arrays_eostable_direct(int whichd, int whichdegen, int whichtable, int whichtablesubtype, int *iffun, int mmm, int lll, int kkk, int jjj, int iii, FTYPEEOS *values)
+static void get_arrays_eostable_direct(int whichd, int whichdegen, int whichtablevar, int whichtablesubtype, int *iffun, int mmm, int lll, int kkk, int jjj, int iii, FTYPEEOS *values)
 {
   int numcols,coli;
   //  int whichdlocal;
@@ -1772,7 +1772,7 @@ static void get_arrays_eostable_direct(int whichd, int whichdegen, int whichtabl
 
 
   // get number of columns possible for this whichtablesubtype
-  numcols = get_numcols(whichtable,whichtablesubtype);
+  numcols = get_numcols(whichtablevar,whichtablesubtype);
   //  whichdlocal = whichdintablesubtype[whichtablesubtype]; // could ensure that whichd==whichdlocal for non-degen and non-temp
 
 
@@ -1781,10 +1781,10 @@ static void get_arrays_eostable_direct(int whichd, int whichdegen, int whichtabl
   if(0){
   }
 #if(ALLOWFULLTABLE==1)
-  else if(whichtable==FULLTABLE||whichtable==FULLTABLEEXTRA){
+  else if(whichtablevar==FULLTABLE||whichtablevar==FULLTABLEEXTRA){
     if(whichdegen==ISNOTDEGENTABLE){
       // degentable not dealt with here
-      if(whichtable==FULLTABLE){
+      if(whichtablevar==FULLTABLE){
         // assume whichtablesubtype==SUBTYPEEXTRA is not reached if WHICHDATATYPEGENERAL==4 (controlled by which_eostable())
         if(whichtablesubtype==SUBTYPESTANDARD){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eosfulltablestandard,0,mmm,lll,kkk,jjj,iii,coli);}
         else if(whichtablesubtype==SUBTYPEGUESS){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eosfulltableguess,0,mmm,lll,kkk,jjj,iii,coli);}
@@ -1799,7 +1799,7 @@ static void get_arrays_eostable_direct(int whichd, int whichdegen, int whichtabl
         // in principle can request degen data directly, so allow this
         else if(whichtablesubtype==SUBTYPEDEGEN){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eosfulltabledegen,whichd,mmm,lll,kkk,jjj,iii,coli);} // whichd used
       }
-      else if(whichtable==FULLTABLEEXTRA){
+      else if(whichtablevar==FULLTABLEEXTRA){
         // reach here if WHICHDATATYPEGENERAL==4 and want extras(controlled by which_eostable())
         if(whichtablesubtype==SUBTYPEEXTRA){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eosfulltableextra,0,mmm,lll,kkk,jjj,iii,coli);}
         // in principle can request degen data directly, so allow this
@@ -1809,20 +1809,20 @@ static void get_arrays_eostable_direct(int whichd, int whichdegen, int whichtabl
     }
     else{
       // then ignore whichtablesubtype
-      if(whichtable==FULLTABLE){
+      if(whichtablevar==FULLTABLE){
         for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eosfulltabledegen,whichd,mmm,lll,kkk,jjj,iii,coli); // whichd used
       }
-      else if(whichtable==FULLTABLEEXTRA){
+      else if(whichtablevar==FULLTABLEEXTRA){
         for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eosfulltableextradegen,whichd,mmm,lll,kkk,jjj,iii,coli); // whichd used
       }
     }// end else if degentable      
   }// end if fulltable
 #endif
 #if(ALLOWSIMPLETABLE==1)
-  else if(whichtable==SIMPLETABLE||whichtable==SIMPLETABLEEXTRA){
+  else if(whichtablevar==SIMPLETABLE||whichtablevar==SIMPLETABLEEXTRA){
     if(whichdegen==ISNOTDEGENTABLE){
       // degentable not dealt with here
-      if(whichtable==SIMPLETABLE){
+      if(whichtablevar==SIMPLETABLE){
         // assume whichtablesubtype==SUBTYPEEXTRA is not reached if WHICHDATATYPEGENERAL==4 (controlled by which_eostable())
         if(whichtablesubtype==SUBTYPESTANDARD){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimpletablestandard,0,mmm,lll,kkk,jjj,iii,coli);}
         else if(whichtablesubtype==SUBTYPEGUESS){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimpletableguess,0,mmm,lll,kkk,jjj,iii,coli);}
@@ -1837,7 +1837,7 @@ static void get_arrays_eostable_direct(int whichd, int whichdegen, int whichtabl
         // in principle can request degen data directly, so allow this
         else if(whichtablesubtype==SUBTYPEDEGEN){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimpletabledegen,whichd,mmm,lll,kkk,jjj,iii,coli);} // whichd used
       }
-      else if(whichtable==SIMPLETABLEEXTRA){
+      else if(whichtablevar==SIMPLETABLEEXTRA){
         // reach here if WHICHDATATYPEGENERAL==4 and want extras(controlled by which_eostable())
         if(whichtablesubtype==SUBTYPEEXTRA){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimpletableextra,0,mmm,lll,kkk,jjj,iii,coli);}
         // in principle can request degen data directly, so allow this
@@ -1847,20 +1847,20 @@ static void get_arrays_eostable_direct(int whichd, int whichdegen, int whichtabl
     }
     else{
       // then ignore whichtablesubtype
-      if(whichtable==SIMPLETABLE){
+      if(whichtablevar==SIMPLETABLE){
         for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimpletabledegen,whichd,mmm,lll,kkk,jjj,iii,coli); // whichd used
       }
-      else if(whichtable==SIMPLETABLEEXTRA){
+      else if(whichtablevar==SIMPLETABLEEXTRA){
         for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimpletableextradegen,whichd,mmm,lll,kkk,jjj,iii,coli); // whichd used
       }
     }// end else if degentable      
   }// end if simpletable
 #endif
 #if(ALLOWSIMPLEZOOMTABLE==1)
-  else if(whichtable==SIMPLEZOOMTABLE||whichtable==SIMPLEZOOMEXTRATABLE){
+  else if(whichtablevar==SIMPLEZOOMTABLE||whichtablevar==SIMPLEZOOMEXTRATABLE){
     if(whichdegen==ISNOTDEGENTABLE){
       // degentable not dealt with here
-      if(whichtable==SIMPLEZOOMTABLE){
+      if(whichtablevar==SIMPLEZOOMTABLE){
         // assume whichtablesubtype==SUBTYPEEXTRA is not reached if WHICHDATATYPEGENERAL==4 (controlled by which_eostable())
         if(whichtablesubtype==SUBTYPESTANDARD){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimplezoomtablestandard,0,mmm,lll,kkk,jjj,iii,coli);}
         else if(whichtablesubtype==SUBTYPEGUESS){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimplezoomtableguess,0,mmm,lll,kkk,jjj,iii,coli);}
@@ -1875,7 +1875,7 @@ static void get_arrays_eostable_direct(int whichd, int whichdegen, int whichtabl
         // in principle can request degen data directly, so allow this
         else if(whichtablesubtype==SUBTYPEDEGEN){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimplezoomtabledegen,whichd,mmm,lll,kkk,jjj,iii,coli);} // whichd used
       }
-      else if(whichtable==SIMPLEZOOMEXTRATABLE){
+      else if(whichtablevar==SIMPLEZOOMEXTRATABLE){
         // reach here if WHICHDATATYPEGENERAL==4 and want extras(controlled by which_eostable())
         if(whichtablesubtype==SUBTYPEEXTRA){ for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimplezoomtableextra,0,mmm,lll,kkk,jjj,iii,coli);}
         // in principle can request degen data directly, so allow this
@@ -1885,10 +1885,10 @@ static void get_arrays_eostable_direct(int whichd, int whichdegen, int whichtabl
     }
     else{
       // then ignore whichtablesubtype
-      if(whichtable==SIMPLEZOOMTABLE){
+      if(whichtablevar==SIMPLEZOOMTABLE){
         for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimplezoomtabledegen,whichd,mmm,lll,kkk,jjj,iii,coli); // whichd used
       }
-      else if(whichtable==SIMPLEZOOMEXTRATABLE){
+      else if(whichtablevar==SIMPLEZOOMEXTRATABLE){
         for(coli=0;coli<numcols;coli++) if(iffun[coli]) values[coli]=EOSMAC(eossimplezoomtableextradegen,whichd,mmm,lll,kkk,jjj,iii,coli); // whichd used
       }
     }// end else if degentable      
@@ -1906,7 +1906,7 @@ static void get_arrays_eostable_direct(int whichd, int whichdegen, int whichtabl
 
 // like get_arrays_eostable_direct(), but only for temperature that ignores associated variable actually looking up
 // memory accessed using "coli" not "whichfun" which keeps code in kazfulleos_set_arrays.c simpler (before I included FIRSTEOS??? offsets)
-static void get_arrays_eostable_direct_temperature(int whichd, int whichtable, int mmm, int lll, int kkk, int jjj, int iii, FTYPEEOS *values)
+static void get_arrays_eostable_direct_temperature(int whichd, int whichtablevar, int mmm, int lll, int kkk, int jjj, int iii, FTYPEEOS *values)
 {
   int numcols,coli;
 
@@ -1920,34 +1920,34 @@ static void get_arrays_eostable_direct_temperature(int whichd, int whichtable, i
 
 
   // get number of columns possible for this whichtablesubtype
-  numcols = get_numcols(whichtable,SUBTYPETEMP);
+  numcols = get_numcols(whichtablevar,SUBTYPETEMP);
 
 
   if(0){
   }
 #if(ALLOWFULLTABLE==1)
-  else if(whichtable==FULLTABLE){
+  else if(whichtablevar==FULLTABLE){
     for(coli=0;coli<numcols;coli++) values[coli]=EOSMAC(eosfulltabletemp,whichd,mmm,lll,kkk,jjj,iii,coli);
   }// end if fulltable
-  else if(whichtable==FULLTABLEEXTRA){
+  else if(whichtablevar==FULLTABLEEXTRA){
     for(coli=0;coli<numcols;coli++) values[coli]=EOSMAC(eosfulltableextratemp,whichd,mmm,lll,kkk,jjj,iii,coli);
   }// end if fulltableextra
 #endif
   // simple table is just copy-paste from full table with fulltable->simpletable
 #if(ALLOWSIMPLETABLE==1)
-  else if(whichtable==SIMPLETABLE){
+  else if(whichtablevar==SIMPLETABLE){
     for(coli=0;coli<numcols;coli++) values[coli]=EOSMAC(eossimpletabletemp,whichd,mmm,lll,kkk,jjj,iii,coli);
   }// end if simpletable
-  else if(whichtable==SIMPLETABLEEXTRA){
+  else if(whichtablevar==SIMPLETABLEEXTRA){
     for(coli=0;coli<numcols;coli++) values[coli]=EOSMAC(eossimpletableextratemp,whichd,mmm,lll,kkk,jjj,iii,coli);
   }// end if simpletableextra
 #endif
   // simplezoom table is just copy-paste from full table with fulltable->simplezoomtable
 #if(ALLOWSIMPLEZOOMTABLE==1)
-  else if(whichtable==SIMPLEZOOMTABLE){
+  else if(whichtablevar==SIMPLEZOOMTABLE){
     for(coli=0;coli<numcols;coli++) values[coli]=EOSMAC(eossimplezoomtabletemp,whichd,mmm,lll,kkk,jjj,iii,coli);
   }// end if simplezoomtable
-  else if(whichtable==SIMPLEZOOMEXTRATABLE){
+  else if(whichtablevar==SIMPLEZOOMEXTRATABLE){
     for(coli=0;coli<numcols;coli++) values[coli]=EOSMAC(eossimplezoomtableextratemp,whichd,mmm,lll,kkk,jjj,iii,coli);
   }// end if simplezoomextratable
 #endif

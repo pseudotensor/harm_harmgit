@@ -254,11 +254,11 @@ FTYPE compute_dspecificSdwmrho0_wmrho0_mignone(FTYPE *EOSextra, FTYPE rho0, FTYP
 // p(rho0, w-rho0 = u+p)
 FTYPE pressure_wmrho0_mignone(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
 {
-  FTYPE Q,delta,delta2;
+  FTYPE QQ,delta,delta2;
   FTYPE pressure;
 
-  Q=wmrho0/rho0;
-  delta=9.0/25.0*wmrho0*(2.0+Q);
+  QQ=wmrho0/rho0;
+  delta=9.0/25.0*wmrho0*(2.0+QQ);
   delta2=delta/rho0;
 
   pressure=(5.0/8.0)*(wmrho0 - delta/(1.0+sqrt(1.0+delta2)));
@@ -283,14 +283,14 @@ static FTYPE u_wmrho0_mignone(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
 // 1 / (d(u+p)/dp)
 FTYPE compute_idwmrho0dp_mignone_old(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
 {
-  FTYPE Q,delta,delta2;
+  FTYPE QQ,delta,delta2;
   FTYPE ddeltadwmrho0,idwmrho0dp;
 
-  Q=wmrho0/rho0;
-  delta=9.0/25.0*wmrho0*(2.0+Q);
+  QQ=wmrho0/rho0;
+  delta=9.0/25.0*wmrho0*(2.0+QQ);
   delta2=delta/rho0;
   
-  ddeltadwmrho0=18.0/25.0*(1.0+Q);
+  ddeltadwmrho0=18.0/25.0*(1.0+QQ);
 
   idwmrho0dp = 5.0/16.0*(2.0-ddeltadwmrho0/sqrt(1.0+delta2));
 

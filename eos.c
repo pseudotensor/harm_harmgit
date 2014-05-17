@@ -1,29 +1,31 @@
 #include "decs.h"
 
+/*! \file eos.c
+  \brief Equation of State general functions
 
-
-////////////////////////////
-//
-// IMPLEMENT EOS
-//
-// u_rho0_p : used by initial conditions
-//
-// u_rho0_T : used by initial conditions
-//
-// pressure_rho0_u : used by inversion for initial guess and by rest of code to set pressure as functions of rho0 and u
-// 
-// dpdu_rho0_u  dpdrho0_rho0_u : used by sources or other such derivatives
-//
-// cs2_compute : used by vchar.c for characteristics
-//
-// pressure_wmrho0 : used by inversion
-//
-// compute_idwmrho0dp : used by 2D inversion
-//
-//
-// compute_entropy and compute_u_from_entropy : used by entropy evolution and inversion
-//
-////////////////////////////
+  ////////////////////////////
+  //
+  // IMPLEMENT EOS
+  //
+  // u_rho0_p : used by initial conditions
+  //
+  // u_rho0_T : used by initial conditions
+  //
+  // pressure_rho0_u : used by inversion for initial guess and by rest of code to set pressure as functions of rho0 and u
+  // 
+  // dpdu_rho0_u  dpdrho0_rho0_u : used by sources or other such derivatives
+  //
+  // cs2_compute : used by vchar.c for characteristics
+  //
+  // pressure_wmrho0 : used by inversion
+  //
+  // compute_idwmrho0dp : used by 2D inversion
+  //
+  //
+  // compute_entropy and compute_u_from_entropy : used by entropy evolution and inversion
+  //
+  ////////////////////////////
+  */
 
 
 #define OLDCALC 0
@@ -60,63 +62,63 @@
 //
 //////////////////////////////////////////////////
 
-// p(rho0, u) (needed to get initial guess for W)
+/// p(rho0, u) (needed to get initial guess for W)
 FTYPE pressure_rho0_u(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 {
   return( (*(ptr_pressure_rho0_u[whicheos]))(EOSextra,rho0,u) );
 }
 
-// u(rho0, p) (used for initial conditions)
+/// u(rho0, p) (used for initial conditions)
 FTYPE u_rho0_p(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE p)
 {
   return( (*(ptr_u_rho0_p[whicheos]))(EOSextra,rho0,p) );
 }
 
-// u(rho0, T) (used for initial conditions)
+/// u(rho0, T) (used for initial conditions)
 FTYPE u_rho0_T(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE T)
 {
   return( (*(ptr_u_rho0_T[whicheos]))(EOSextra,rho0,T) );
 }
 
-// dp(rho0, u)/du
+/// dp(rho0, u)/du
 FTYPE dpdu_rho0_u(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 {
   return( (*(ptr_dpdu_rho0_u[whicheos]))(EOSextra,rho0,u) );
 }
 
-// dp(rho0, u)/drho0
+/// dp(rho0, u)/drho0
 FTYPE dpdrho0_rho0_u(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 {
   return( (*(ptr_dpdrho0_rho0_u[whicheos]))(EOSextra,rho0,u) );
 }
 
-// sound speed squared (for vchar.c)
+/// sound speed squared (for vchar.c)
 FTYPE cs2_compute(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 {
   return( (*(ptr_cs2_compute[whicheos]))(EOSextra,rho0,u) );
 }
 
-// entropy as function of rho0 and internal energy (u)
-// S(rho0,u)
+/// entropy as function of rho0 and internal energy (u)
+/// S(rho0,u)
 FTYPE compute_entropy(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 {
   return( (*(ptr_compute_entropy[whicheos]))(EOSextra,rho0,u) );
 }
 
-// u(rho0,S)
+/// u(rho0,S)
 FTYPE compute_u_from_entropy(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE entropy)
 {
   return( (*(ptr_compute_u_from_entropy[whicheos]))(EOSextra,rho0,entropy) );
 }
 
-// used for dudp_calc
+/// used for dudp_calc
 FTYPE compute_dSdrho(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 {
   return( (*(ptr_compute_dSdrho[whicheos]))(EOSextra,rho0,u) );
 }
 
 
-// used for dudp_calc
+/// used for dudp_calc
 FTYPE compute_dSdu(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 {
   return( (*(ptr_compute_dSdu[whicheos]))(EOSextra,rho0,u) );
@@ -125,20 +127,20 @@ FTYPE compute_dSdu(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 
 
 
-// specific entropy as function of rho0 and internal energy (wmrho0)
-// specificS(rho0,wmrho0)
+/// specific entropy as function of rho0 and internal energy (wmrho0)
+/// specificS(rho0,wmrho0)
 FTYPE compute_specificentropy_wmrho0(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
 {
   return( (*(ptr_compute_specificentropy_wmrho0[whicheos]))(EOSextra,rho0,wmrho0) );
 }
 
-// used for utoprim_jon entropy inversion
+/// used for utoprim_jon entropy inversion
 FTYPE compute_dspecificSdrho_wmrho0(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
 {
   return( (*(ptr_compute_dspecificSdrho_wmrho0[whicheos]))(EOSextra,rho0,wmrho0) );
 }
 
-// used for utoprim_jon entropy inversion
+/// used for utoprim_jon entropy inversion
 FTYPE compute_dspecificSdwmrho0_wmrho0(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
 {
   return( (*(ptr_compute_dspecificSdwmrho0_wmrho0[whicheos]))(EOSextra,rho0,wmrho0) );
@@ -147,84 +149,91 @@ FTYPE compute_dspecificSdwmrho0_wmrho0(int whicheos, FTYPE *EOSextra, FTYPE rho0
 
 
 
-// p(rho0, w-rho0 = u+p)
+/// p(rho0, w-rho0 = u+p)
 FTYPE pressure_wmrho0(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
 {
   return( (*(ptr_pressure_wmrho0[whicheos]))(EOSextra,rho0,wmrho0) );
 }
 
 
-// 1 / (d(u+p)/dp) holding rho0 fixed
+/// 1 / (d(u+p)/dp) holding rho0 fixed
 FTYPE compute_idwmrho0dp(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
 {
   return( (*(ptr_compute_idwmrho0dp[whicheos]))(EOSextra,rho0,wmrho0) );
 }
 
 
-// 1 / (drho0/dp) holding wmrho0 fixed
+/// 1 / (drho0/dp) holding wmrho0 fixed
 FTYPE compute_idrho0dp(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
 {
   return( (*(ptr_compute_idrho0dp[whicheos]))(EOSextra,rho0,wmrho0) );
 }
 
 
-// radiation rate
+/// radiation rate
 FTYPE compute_qdot(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 {
   return( (*(ptr_compute_qdot[whicheos]))(EOSextra,rho0,u) );
 }
 
-
+/// compute source terms for EOS
 int compute_sources_EOS(int whicheos, FTYPE *EOSextra, FTYPE *pr, struct of_geom *geom, struct of_state *q, FTYPE *Ui, FTYPE *dUother, FTYPE(*dUcomp)[NPR])
 {
   return( (*(ptr_compute_sources_EOS[whicheos]))(EOSextra,pr, geom, q, Ui, dUother, dUcomp));
 }
 
 
-
+/// compute any and all extra quantities for the EOS
 void compute_allextras(int whicheos, int justnum, FTYPE *EOSextra, FTYPE rho0, FTYPE u, int *numextrasreturn, FTYPE *extras)
 {
   (*(ptr_compute_allextras[whicheos]))(justnum,EOSextra,rho0,u,numextrasreturn,extras);
   return;
 }
 
+/// compute all extras *and* processed quantities for this EOS
 int get_extrasprocessed(int whicheos, int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *extras, FTYPE *processed)
 {
   return((*(ptr_get_extrasprocessed[whicheos]))(doall,EOSextra,pr,extras,processed));
 }
 
 
-
+/// compute temperature
 FTYPE compute_temp(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 {
   return( (*(ptr_compute_temp[whicheos]))(EOSextra,rho0,u) );
 }
 
-
+/// compute EOS parameters
 void compute_EOS_parms(int whicheos, FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 {
   (*(ptr_compute_EOS_parms[whicheos]))(EOSextra,prim);
 }
 
+/// compute EOS all parameters 
 void compute_EOS_parms_full(int whicheos, FTYPE (*EOSextra)[NSTORE2][NSTORE3][NUMEOSGLOBALS], FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 {
   (*(ptr_compute_EOS_parms_full[whicheos]))(EOSextra,prim);
 }
 
+/// store EOS parameters
 void store_EOS_parms(int whicheos, int numparms, FTYPE *EOSextra, FTYPE *parlist)
 {
   (*(ptr_store_EOS_parms[whicheos]))(numparms,EOSextra,parlist);
 }
+
+/// get EOS parameters
 void get_EOS_parms(int whicheos, int*numparms, FTYPE *EOSextra, FTYPE *parlist)
 {
   (*(ptr_get_EOS_parms[whicheos]))(numparms, EOSextra, parlist);
 }
 
+/// fix primitives for this eos
 void fix_primitive_eos_scalars(int whicheos, FTYPE *EOSextra, FTYPE *pr)
 {
   (*(ptr_fix_primitive_eos_scalars[whicheos]))(EOSextra, pr);
 }
 
+/// get all quantities needed for inversion of conserved -> primitive
 void getall_forinversion(int whicheos, int eomtype, int whichd, FTYPE *EOSextra, FTYPE quant1, FTYPE quant2, FTYPE *fun, FTYPE *dfunofrho, FTYPE *dfunofu)
 {
   return( (*(ptr_getall_forinversion[whicheos]))(eomtype, whichd, EOSextra,quant1,quant2,fun,dfunofrho,dfunofu) );
@@ -238,8 +247,8 @@ void getall_forinversion(int whicheos, int eomtype, int whichd, FTYPE *EOSextra,
 //
 
 
-// old function
-// p(rho0,w)
+/// old function
+/// p(rho0,w)
 FTYPE pressure_rho0_w(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE w)
 {
   FTYPE wmrho0=w-rho0;
@@ -252,7 +261,7 @@ FTYPE pressure_rho0_w(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE w)
 }
 
 
-// pick EOMTYPE for EOS
+/// pick EOMTYPE for EOS
 int pickeos_eomtype(int whicheosinput, int whicheom, int *whicheosoutput)
 {
   //COLDEOS
@@ -290,7 +299,7 @@ int pickeos_eomtype(int whicheosinput, int whicheom, int *whicheosoutput)
 
 
 
-// setup array of pointers to point to different EOSs so can access later without use of global variables.  For OpenMP global vars would have to be threadprivate since each thread may use a different EOS, and using threadprivate is very slow.
+/// setup array of pointers to point to different EOSs so can access later without use of global variables.  For OpenMP global vars would have to be threadprivate since each thread may use a different EOS, and using threadprivate is very slow.
 int initeos_eomtype(void)
 {
   int whicheos;
