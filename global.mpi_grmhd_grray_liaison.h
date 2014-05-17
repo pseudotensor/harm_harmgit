@@ -1,6 +1,6 @@
 
 /*! \file global.mpi_grmhd_grray_liaison.h
-    \brief Fundamental code that chooses to do HARM or LIAISON
+    \brief global definitions/macros that does LIAISON to connect Broderick ray tracing code and HARM
 
 
 
