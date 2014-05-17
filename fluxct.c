@@ -1,37 +1,40 @@
 
 #include "decs.h"
 
-////////////////////////////////
-//
-// Notes on sign conventions:
-//
-///////////////////////////////
+/*! \file fluxct.c
+  \brief TOTH CT method for preserving divb=0 (FLUXB==FLUXCTTOTH)
 
-// flux part is just average of same emf term at 4 different edge locations of (B^2 v^1 - B^1 v^2)
-//    COMPEMFZLOOP{
-//COMPCOMPLOOPINFP1{ // constrain or control better? GODMARK
-// B^i = \dF^{it}
-// E_i = - [ijk] v^j B^k  , such that (\detg B^i),t = - (\detg(B^i v^j - B^j v^i)),j = - (\detg [ijk] E_k),j = ([ijk] emf[k]),j
+  ////////////////////////////////
+  //
+  // Notes on sign conventions:
+  //
+  ///////////////////////////////
+
+  // flux part is just average of same emf term at 4 different edge locations of (B^2 v^1 - B^1 v^2)
+  //    COMPEMFZLOOP{
+  //COMPCOMPLOOPINFP1{ // constrain or control better? GODMARK
+  // B^i = \dF^{it}
+  // E_i = - [ijk] v^j B^k  , such that (\detg B^i),t = - (\detg(B^i v^j - B^j v^i)),j = - (\detg [ijk] E_k),j = ([ijk] emf[k]),j
       
-// -> E_1 = v^3 B^2 - v^2 B^3
-// -> E_2 = v^1 B^3 - v^3 B^1
-// -> E_3 = v^2 B^1 - v^1 B^2
+  // -> E_1 = v^3 B^2 - v^2 B^3
+  // -> E_2 = v^1 B^3 - v^3 B^1
+  // -> E_3 = v^2 B^1 - v^1 B^2
 
-// emf[i] = - \detg E_i
+  // emf[i] = - \detg E_i
 
-// And notice that Fj[Bi] = \dF^{ij} = B^i v^j - B^j v^i , where j=dir
+  // And notice that Fj[Bi] = \dF^{ij} = B^i v^j - B^j v^i , where j=dir
 
-// so:
-// emf_1 = B^3 v^2 - B^2 v^3 = F2[B3] or -F3[B2]
-// emf_2 = B^1 v^3 - B^3 v^1 = F3[B1] or -F1[B3]
-// emf_3 = B^2 v^1 - B^1 v^2 = F1[B2] or -F2[B1]
+  // so:
+  // emf_1 = B^3 v^2 - B^2 v^3 = F2[B3] or -F3[B2]
+  // emf_2 = B^1 v^3 - B^3 v^1 = F3[B1] or -F1[B3]
+  // emf_3 = B^2 v^1 - B^1 v^2 = F1[B2] or -F2[B1]
 
-// Notice only 6 independent ways.  The diagonal terms vanish (e.g. Fi[Bi]=0).
+  // Notice only 6 independent ways.  The diagonal terms vanish (e.g. Fi[Bi]=0).
+  */
 
 
-
-// compute field at CENT from vector potential A at CORN1,2,3
-// assumes normal field p
+/// compute field at CENT from vector potential A at CORN1,2,3
+/// assumes normal field p
 int vpot2field_centeredfield(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],FTYPE (*pfield)[NSTORE2][NSTORE3][NPR],FTYPE (*ufield)[NSTORE2][NSTORE3][NPR])
 {
   int Nvec[NDIM];
@@ -184,7 +187,7 @@ int vpot2field_centeredfield(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2
 
 
 
-// compute flux for FLUXCTTOTH method
+/// compute flux for FLUXCTTOTH method
 int flux_ct(int stage,
             int initialstep, int finalstep,
             FTYPE (*pb)[NSTORE2][NSTORE3][NPR], FTYPE (*emf)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*vconemf)[NSTORE2][NSTORE3][NDIM-1], FTYPE (*dq1)[NSTORE2][NSTORE3][NPR], FTYPE (*dq2)[NSTORE2][NSTORE3][NPR], FTYPE (*dq3)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], int *Nvec, FTYPE *CUf, FTYPE *CUnew, SFTYPE fluxdt, SFTYPE fluxtime)
@@ -235,8 +238,8 @@ int flux_ct(int stage,
 
 
 
-
-// OPENMPMARK: Apparently the below loops are expensive due to OpenMP overhead.  Using static schedule helps overhead a bit
+/// Compute TOTH EMF
+/// OPENMPMARK: Apparently the below loops are expensive due to OpenMP overhead.  Using static schedule helps overhead a bit
 int flux_ct_computeemf(int stage, FTYPE (*pb)[NSTORE2][NSTORE3][NPR], FTYPE (*emf)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*vconemf)[NSTORE2][NSTORE3][NDIM-1], FTYPE (*dq1)[NSTORE2][NSTORE3][NPR], FTYPE (*dq2)[NSTORE2][NSTORE3][NPR], FTYPE (*dq3)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL])
 {
   // full-type geometry below
@@ -645,8 +648,8 @@ int flux_ct_computeemf(int stage, FTYPE (*pb)[NSTORE2][NSTORE3][NPR], FTYPE (*em
 
 
 
-
-// OPENMPMARK: Apparently the below loops are expensive due to OpenMP overhead.  Using static schedule helps overhead a bit
+/// Compute "diffusive corrections" to avoid field loop boost type issue
+/// OPENMPMARK: Apparently the below loops are expensive due to OpenMP overhead.  Using static schedule helps overhead a bit
 int flux_ct_diffusivecorrections(int stage, FTYPE (*pb)[NSTORE2][NSTORE3][NPR], FTYPE (*emf)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*vconemf)[NSTORE2][NSTORE3][NDIM-1], FTYPE (*dq1)[NSTORE2][NSTORE3][NPR], FTYPE (*dq2)[NSTORE2][NSTORE3][NPR], FTYPE (*dq3)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL])
 {
   // full-type geometry below
@@ -1153,8 +1156,8 @@ int flux_ct_diffusivecorrections(int stage, FTYPE (*pb)[NSTORE2][NSTORE3][NPR], 
 
 
 
-
-// OPENMPMARK: Apparently the below loops are expensive due to OpenMP overhead.  Using static schedule helps overhead a bit
+/// TOTH: EMF->FLUX
+/// OPENMPMARK: Apparently the below loops are expensive due to OpenMP overhead.  Using static schedule helps overhead a bit
 int flux_ct_emf2flux(int stage, FTYPE (*pb)[NSTORE2][NSTORE3][NPR], FTYPE (*emf)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*vconemf)[NSTORE2][NSTORE3][NDIM-1], FTYPE (*dq1)[NSTORE2][NSTORE3][NPR], FTYPE (*dq2)[NSTORE2][NSTORE3][NPR], FTYPE (*dq3)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL])
 {
   // full-type geometry below

@@ -1,9 +1,14 @@
 #include <stdio.h>
-
 #include "global.realdef.h"
 #include "global.nondepmnemonics.h"
 #include "definit.h"
 #include "init.h"
+
+
+/* \file generatenprs.c
+   \brief Generates various code files needed for HARM code
+ */
+
 
 // upper limit of number of MAXNPR
 #define SUPERMAXNPR 15

@@ -3,14 +3,12 @@
 /*! \file dump.c
      \brief file dumping
 
-// mpi.h has following datatypes corresponding to the C types
-// pick one per dump file. (no per column types yet)
-// same for image.c
-// same for restart.c
-*/
+     // mpi.h has following datatypes corresponding to the C types
+     // pick one per dump file. (no per column types yet)
+     // same for image.c
+     // same for restart.c
 
 
-/*
   #define MPI_CHAR           ((MPI_Datatype)1)
   #define MPI_UNSIGNED_CHAR  ((MPI_Datatype)2)
   #define MPI_BYTE           ((MPI_Datatype)3)
@@ -24,11 +22,10 @@
   #define MPI_DOUBLE         ((MPI_Datatype)11)
   #define MPI_LONG_DOUBLE    ((MPI_Datatype)12)
   #define MPI_LONG_LONG_INT  ((MPI_Datatype)13)
-*/
 
 
 
-/* Follow these steps to create a new dump file
+// Follow these steps to create a new dump file
 
    1) defs.???.h: create the storage variable if needed
 
@@ -55,7 +52,7 @@
 
 
 
-
+/// initialize/get-ready for dumping
 int init_dumps(void)
 {
 
@@ -92,7 +89,7 @@ int init_dumps(void)
   return(0);
 }
 
-
+/// output all npr-type info to files
 void output_nprlist_info(void)
 {
   int pliter,pl;
@@ -173,7 +170,7 @@ void output_nprlist_info(void)
 
 
 
-// setup number of columns per dump file (see dumpgen.c or dump.c for how used)
+/// setup number of columns per dump file (see dumpgen.c or dump.c for how used)
 void init_dnumcolumns_dnumversion(void)
 {
   char tempdumpnamelist[NUMDUMPTYPES][MAXFILENAME]=MYDUMPNAMELIST;
@@ -275,7 +272,7 @@ void init_dnumcolumns_dnumversion(void)
 
 
 
-
+/// Primary full dump file outputted usually not too frequently
 int dump(long dump_cnt)
 {
   MPI_Datatype datatype;
@@ -308,7 +305,7 @@ int dump(long dump_cnt)
 
 
 
-/////// output the symmetry information to the fail file; symmetrizes w.r.t. i == j
+/// output the symmetry information to the fail file; symmetrizes w.r.t. i == j
 void writesyminfo( void )
 {
   int i, j;
@@ -318,7 +315,7 @@ void writesyminfo( void )
 
 }
 
-
+/// Primary full dump file header
 int dump_header(int whichdump, int whichdumpversion, int numcolumnsvar, int bintxt, FILE *headerptr)
 {
   int dump_header_general(int whichdump, int whichdumpversion, int numcolumnsvar, long localrealnstep, SFTYPE localdt, int bintxt, FILE *headerptr);
@@ -330,6 +327,7 @@ int dump_header(int whichdump, int whichdumpversion, int numcolumnsvar, int bint
 
 }
 
+/// fluxdump header
 int fluxdump_header(int whichdump, int whichdumpversion, int numcolumnsvar, int bintxt, FILE *headerptr)
 {
   int dump_header_general(int whichdump, int whichdumpversion, int numcolumnsvar, long localrealnstep, SFTYPE localdt, int bintxt, FILE *headerptr);
@@ -341,6 +339,7 @@ int fluxdump_header(int whichdump, int whichdumpversion, int numcolumnsvar, int 
 
 }
 
+/// general dump header (used for full dumps and other dumps)
 int dump_header_general(int whichdump, int whichdumpversion, int numcolumnsvar, long localrealnstep, SFTYPE localdt, int bintxt, FILE *headerptr)
 {
   int realtotalsize[NDIM];
@@ -432,7 +431,7 @@ int dump_header_general(int whichdump, int whichdumpversion, int numcolumnsvar, 
 
 
 
-// number of columns for dump file
+/// number of columns for dump file
 void set_dump_content_dnumcolumns_dnumversion(int *numcolumnsvar, int *numversion)
 {
 
@@ -465,6 +464,7 @@ void set_dump_content_dnumcolumns_dnumversion(int *numcolumnsvar, int *numversio
 
 
 
+/// Primary full dump file contents
 int dump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 {
   int pl,pliter;
@@ -662,7 +662,7 @@ int dump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 
 
 
-
+/// debug dump
 int debugdump(long dump_cnt)
 {
   MPI_Datatype datatype;
@@ -689,7 +689,7 @@ int debugdump(long dump_cnt)
 
 }
 
-
+/// debug dump content number
 extern void set_debug_content_dnumcolumns_dnumversion(int *numcolumnsvar, int *numversion)
 {
 
@@ -703,6 +703,7 @@ extern void set_debug_content_dnumcolumns_dnumversion(int *numcolumnsvar, int *n
 
 }
 
+/// debug dump contents
 int debug_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 {
   // could also make everything FTYPE and convert like for normal i,j dump file
@@ -718,7 +719,7 @@ int debug_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 
 
 
-
+/// eno debug dump
 int enodebugdump(long dump_cnt)
 {
   MPI_Datatype datatype;
@@ -747,7 +748,7 @@ int enodebugdump(long dump_cnt)
 }
 
 
-
+/// eno debug dump content number
 void set_enodebug_content_dnumcolumns_dnumversion(int *numcolumnsvar, int *numversion)
 {
 
@@ -763,7 +764,7 @@ void set_enodebug_content_dnumcolumns_dnumversion(int *numcolumnsvar, int *numve
 
 }
 
-
+/// eno debug dump content
 int enodebug_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 {
   // could also make everything FTYPE and convert like for normal i,j dump file
@@ -773,7 +774,7 @@ int enodebug_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
   return(0);
 }
 
-
+/// eno debug dump header
 int eno_dump_header(int whichdump, int whichdumpversion, int numcolumnsvar, int bintxt, FILE *headerptr)
 {
   int dump_header_general(int whichdump, int whichdumpversion, int numcolumnsvar, long localrealnstep, SFTYPE localdt, int bintxt, FILE *headerptr);
@@ -790,7 +791,7 @@ int eno_dump_header(int whichdump, int whichdumpversion, int numcolumnsvar, int 
 
 
 
-
+/// time-average data dump
 int avgdump(long dump_cnt)
 {
   MPI_Datatype datatype;
@@ -818,7 +819,7 @@ int avgdump(long dump_cnt)
 
 }
 
-
+/// time-average data dump content list
 void set_avg_content_dnumcolumns_dnumversion(int *numcolumnsvar, int *numversion)
 {
 
@@ -852,7 +853,7 @@ void set_avg_content_dnumcolumns_dnumversion(int *numcolumnsvar, int *numversion
 }
 
 
-
+/// time-average data dump contents
 int avg_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 {
   int pl = 0, l = 0, col = 0;
@@ -912,7 +913,7 @@ int avg_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 
 }
 
-
+/// 2nd time-average dump
 int avg2dump(long dump_cnt)
 {
   MPI_Datatype datatype;
@@ -940,6 +941,7 @@ int avg2dump(long dump_cnt)
 
 }
 
+/// 2nd time-average dump contents number
 void set_avg2_content_dnumcolumns_dnumversion(int *numcolumnsvar, int *numversion)
 {
 
@@ -956,6 +958,7 @@ void set_avg2_content_dnumcolumns_dnumversion(int *numcolumnsvar, int *numversio
 
 }
 
+/// 2nd time-average dump contents
 int avg2_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 {
   int pl = 0, l = 0, col = 0;
@@ -993,6 +996,8 @@ int avg2_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 }
 
 
+
+/// grid dump
 int gdump(long dump_cnt)
 {
   MPI_Datatype datatype;
@@ -1019,7 +1024,7 @@ int gdump(long dump_cnt)
 }
 
 
-
+/// grid dump contents number
 extern void set_gdump_content_dnumcolumns_dnumversion(int *numcolumnsvar, int *numversion)
 {
 
@@ -1036,7 +1041,7 @@ extern void set_gdump_content_dnumcolumns_dnumversion(int *numcolumnsvar, int *n
 }
 
 
-
+/// grid dump contents
 int gdump_content(int i, int j, int k, MPI_Datatype datatype, void *writebuf)
 {
   int pl = 0, l = 0, m = 0, n = 0, col = 0;
@@ -1118,7 +1123,7 @@ int gdump_content(int i, int j, int k, MPI_Datatype datatype, void *writebuf)
 }
 
 
-
+/// Primary quick(but sufficient) dump (originally used for showing field lines move)
 int fieldlinedump(long dump_cnt)
 {
   MPI_Datatype datatype;
@@ -1147,7 +1152,7 @@ int fieldlinedump(long dump_cnt)
 
 }
 
-
+/// fieldline data dump content number
 extern void set_fieldline_content_dnumcolumns_dnumversion(int *numcolumnsvar, int *numversion)
 {
   if(DOFIELDLINE){
@@ -1161,7 +1166,7 @@ extern void set_fieldline_content_dnumcolumns_dnumversion(int *numcolumnsvar, in
 
 }
 
-
+/// fieldline data dump contents
 int fieldline_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 {
   int pl = 0, l = 0, col = 0;
@@ -1335,7 +1340,7 @@ int fieldline_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 
 
 
-
+/// dissipation dump
 int dissdump(long dump_cnt)
 {
   MPI_Datatype datatype;
@@ -1362,7 +1367,7 @@ int dissdump(long dump_cnt)
   
 }
 
-
+/// dissipation dump contents number
 void set_dissdump_content_dnumcolumns_dnumversion(int *numcolumnsvar, int *numversion)
 {
 
@@ -1377,7 +1382,7 @@ void set_dissdump_content_dnumcolumns_dnumversion(int *numcolumnsvar, int *numve
 }
 
 
-
+/// dissipation dump contents
 int dissdump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 {
 
@@ -1388,7 +1393,7 @@ int dissdump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 }
 
 
-
+/// other dump stuff
 int dumpother(long dump_cnt)
 {
   MPI_Datatype datatype;
@@ -1419,7 +1424,7 @@ int dumpother(long dump_cnt)
   
 }
 
-
+/// other dump stuff contents number
 void set_dumpother_content_dnumcolumns_dnumversion(int *numcolumnsvar, int *numversion)
 {
 
@@ -1434,7 +1439,7 @@ void set_dumpother_content_dnumcolumns_dnumversion(int *numcolumnsvar, int *numv
 
 }
 
-
+/// other dump stuff contents
 int dumpother_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 {
   int pl,pliter;
@@ -1456,7 +1461,7 @@ int dumpother_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 
 
 
-
+/// flux (usually for debug) dump
 int fluxdumpdump(long dump_cnt)
 {
   MPI_Datatype datatype;
@@ -1483,6 +1488,7 @@ int fluxdumpdump(long dump_cnt)
   
 }
 
+/// flux dump contents number
 void set_fluxdump_content_dnumcolumns_dnumversion(int *numcolumnsvar, int *numversion)
 {
 
@@ -1498,7 +1504,7 @@ void set_fluxdump_content_dnumcolumns_dnumversion(int *numcolumnsvar, int *numve
 }
 
 
-
+/// flux dump contents
 int fluxdump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 {
   int pl,pliter;
@@ -1510,7 +1516,7 @@ int fluxdump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 
 
 
-// dump stuff related specially to EOS
+/// dump stuff related specially to EOS
 int eosdump(long dump_cnt)
 {
   MPI_Datatype datatype;
@@ -1542,6 +1548,7 @@ int eosdump(long dump_cnt)
 }
 
 
+/// dump stuff related specially to EOS -- contents number
 void set_eosdump_content_dnumcolumns_dnumversion(int *numcolumnsvar, int *numversion)
 {
 
@@ -1559,7 +1566,7 @@ void set_eosdump_content_dnumcolumns_dnumversion(int *numcolumnsvar, int *numver
 
 }
 
-
+/// dump stuff related specially to EOS -- contents
 int eosdump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 {
   FTYPE rho,u;
@@ -1622,7 +1629,7 @@ int eosdump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 
 
 
-// dump stuff related specially to RAD
+/// dump stuff related specially to RAD
 int raddump(long dump_cnt)
 {
   MPI_Datatype datatype;
@@ -1653,7 +1660,7 @@ int raddump(long dump_cnt)
   
 }
 
-
+/// rad dump contents number
 void set_raddump_content_dnumcolumns_dnumversion(int *numcolumnsvar, int *numversion)
 {
 
@@ -1666,7 +1673,7 @@ void set_raddump_content_dnumcolumns_dnumversion(int *numcolumnsvar, int *numver
 
 }
 
-
+/// rad dump contents
 int raddump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 {
   int loc=CENT;
@@ -1784,7 +1791,7 @@ int raddump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 
 
 
-
+/// Vector potential dump
 int vpotdump(long dump_cnt)
 {
   MPI_Datatype datatype;
@@ -1812,7 +1819,7 @@ int vpotdump(long dump_cnt)
 }
 
 
-
+/// Vector potential dump contents number
 void set_vpotdump_content_dnumcolumns_dnumversion(int *numcolumnsvar, int *numversion)
 {
 
@@ -1828,7 +1835,7 @@ void set_vpotdump_content_dnumcolumns_dnumversion(int *numcolumnsvar, int *numve
 
 }
 
-
+/// Vector potential dump contents
 int vpotdump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 {
   int jj;
@@ -1847,7 +1854,7 @@ int vpotdump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 
 
 
-
+/// failure and floor dU dump
 int failfloordudump(long dump_cnt)
 {
   MPI_Datatype datatype;
@@ -1875,7 +1882,7 @@ int failfloordudump(long dump_cnt)
 }
 
 
-
+/// failfloor dump content number
 void set_failfloordudump_content_dnumcolumns_dnumversion(int *numcolumnsvar, int *numversion)
 {
 
@@ -1891,7 +1898,7 @@ void set_failfloordudump_content_dnumcolumns_dnumversion(int *numcolumnsvar, int
 
 }
 
-
+/// failfloor dump contents
 int failfloordudump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 {
   int pl;
@@ -1905,7 +1912,7 @@ int failfloordudump_content(int i, int j, int k, MPI_Datatype datatype,void *wri
 
 
 
-
+/// dissipation measure dump
 int dissmeasuredump(long dump_cnt)
 {
   MPI_Datatype datatype;
@@ -1932,7 +1939,7 @@ int dissmeasuredump(long dump_cnt)
   
 }
 
-
+/// dissipation measure dump contents number
 void set_dissmeasuredump_content_dnumcolumns_dnumversion(int *numcolumnsvar, int *numversion)
 {
 
@@ -1948,7 +1955,7 @@ void set_dissmeasuredump_content_dnumcolumns_dnumversion(int *numcolumnsvar, int
 }
 
 
-
+/// dissipation measure dump contents
 int dissmeasuredump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 {
 
@@ -1960,7 +1967,8 @@ int dissmeasuredump_content(int i, int j, int k, MPI_Datatype datatype,void *wri
 
 
 
-// fake dump so can push out data in case still in MPI=2 delayed writing buffer
+/// fake dump so can push out data in case still in MPI=2 delayed writing buffer
+/// Kraken had problems with this when computing and dumping currents.
 int fakedump(long dump_cnt)// arg not used
 {
   MPI_Datatype datatype;
@@ -1990,7 +1998,7 @@ int fakedump(long dump_cnt)// arg not used
 }
 
 
-
+// fake dump content number
 int fakedump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 {
   int jj;
@@ -2001,6 +2009,7 @@ int fakedump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 }
 
 
+// fake dump header
 int fakedump_header(int whichdump, int whichdumpversion, int numcolumnsvar,int bintxt, FILE *headerptr)
 {
   int fake;

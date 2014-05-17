@@ -1,7 +1,7 @@
 #include "decs.h"
 
-/*! \file dump.c
-  \brief Data dump
+/*! \file dumpgen.c
+  \brief General Data dump functions
 
   Data dump functions controlling how header + block of 3D data is outputted
 */

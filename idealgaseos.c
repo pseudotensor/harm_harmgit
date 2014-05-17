@@ -1,9 +1,12 @@
-// IDEAL GAS EOS
+/*! \file idealgaseos.c
+  \brief IDEAL GAS EOS functions
 
-// see entropy_new_inversion.nb
+  // P = (\GAMMA -1) u
+  // h = 1+\Gamma_r \Theta  ; \Theta=p/\rho_0  \Gamma_r = (\GAMMA/(\GAMMA-1))
+  // see entropy_new_inversion.nb
+*/
 
-// P = (\GAMMA -1) u
-// h = 1+\Gamma_r \Theta  ; \Theta=p/\rho_0  \Gamma_r = (\GAMMA/(\GAMMA-1))
+
 
 #define GAMMA (gamideal)
 
@@ -15,7 +18,7 @@
 static FTYPE compute_inside_entropy_wmrho0_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
 
 
-// p(rho0, u) (needed to get initial guess for W)
+/// p(rho0, u) (needed to get initial guess for W)
 FTYPE pressure_rho0_u_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 {
 #if(OLDCALC)
@@ -26,31 +29,31 @@ FTYPE pressure_rho0_u_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 
 }
 
-// u(rho0, p) (used for initial conditions)
+/// u(rho0, p) (used for initial conditions)
 FTYPE u_rho0_p_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE p)
 {
   return(p/GAMMAM1) ;
 }
 
-// u(rho0, T) (used for initial conditions)
+/// u(rho0, T) (used for initial conditions)
 FTYPE u_rho0_T_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE T)
 {
   return((rho0*T)/GAMMAM1) ;
 }
 
-// dp(rho0, u)/du
+/// dp(rho0, u)/du
 FTYPE dpdu_rho0_u_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 {
   return(GAMMAM1) ;
 }
 
-// dp(rho0, u)/drho0
+/// dp(rho0, u)/drho0
 FTYPE dpdrho0_rho0_u_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 {
   return(0.0) ;
 }
 
-// sound speed squared (for vchar.c)
+/// sound speed squared (for vchar.c)
 FTYPE cs2_compute_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 {
   FTYPE pressure;
@@ -67,14 +70,14 @@ FTYPE cs2_compute_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 
 }
 
-// The resulting entropy is an entropy per unit volume.
-// The dimensionless specific entropy per baryon (or per gram really) would be this entropy divided by \rho_0
-// In general, entropy density often comes in units of erg/K/cc.  If one divides by k_b one gets 1/cc.  If one divides by n_b, one gets a dimensionless entropy per baryon.  If one divides by instead \rho_0=m_b n_b, one gets a entropy per baryon in per baryon rest-mass.
-// The prefactor constant doesn't matter for entropy evolution/inversion or sound speed evaluations as long as everything is self-consistent.
-//
-// entropy (in energy/volume) as function of rho0 and internal energy (u)
-// Sden(rho0,u)
-// entropy density = \rho\ln( p^n/\rho^{n+1} )
+/// The resulting entropy is an entropy per unit volume.
+/// The dimensionless specific entropy per baryon (or per gram really) would be this entropy divided by \rho_0
+/// In general, entropy density often comes in units of erg/K/cc.  If one divides by k_b one gets 1/cc.  If one divides by n_b, one gets a dimensionless entropy per baryon.  If one divides by instead \rho_0=m_b n_b, one gets a entropy per baryon in per baryon rest-mass.
+/// The prefactor constant doesn't matter for entropy evolution/inversion or sound speed evaluations as long as everything is self-consistent.
+///
+/// entropy (in energy/volume) as function of rho0 and internal energy (u)
+/// Sden(rho0,u)
+/// entropy density = \rho\ln( p^n/\rho^{n+1} )
 FTYPE compute_entropy_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 {
   FTYPE pressure_rho0_u_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE u);
@@ -112,7 +115,7 @@ FTYPE compute_entropy_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 
 }
 
-// u(rho0,Sden = U[ENTROPY]/U[RHO]*pr[RHO])
+/// u(rho0,Sden = U[ENTROPY]/U[RHO]*pr[RHO])
 FTYPE compute_u_from_entropy_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE entropy)
 {
   FTYPE rho,ie,pressure;
@@ -134,7 +137,7 @@ FTYPE compute_u_from_entropy_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE entropy
 
 
 
-// local aux function
+/// local aux function
 static FTYPE compute_inside_entropy_wmrho0_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
 {
   FTYPE pressure,indexn,insideentropy;
@@ -155,8 +158,8 @@ static FTYPE compute_inside_entropy_wmrho0_idealgas(FTYPE *EOSextra, FTYPE rho0,
 
 
 
-// used for dudp_calc
-// dSden/drho0
+/// used for dudp_calc
+/// dSden/drho0
 FTYPE compute_dSdrho_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 {
   FTYPE indexn;
@@ -176,8 +179,8 @@ FTYPE compute_dSdrho_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 }
 
 
-// used for dudp_calc
-// dSden/du
+/// used for dudp_calc
+/// dSden/du
 FTYPE compute_dSdu_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 {
   FTYPE indexn;
@@ -192,9 +195,9 @@ FTYPE compute_dSdu_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 
 }
 
-// entropy as function of rho0 and internal energy (u)
-// Sden(rho0,\chi=u+p)
-// entropy density = \rho\ln( p^n/\rho^{n+1} )
+/// entropy as function of rho0 and internal energy (u)
+/// Sden(rho0,\chi=u+p)
+/// entropy density = \rho\ln( p^n/\rho^{n+1} )
 FTYPE compute_entropy_wmrho0_idealgas_unused(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
 {
   FTYPE insideentropy,entropy;
@@ -210,9 +213,9 @@ FTYPE compute_entropy_wmrho0_idealgas_unused(FTYPE *EOSextra, FTYPE rho0, FTYPE 
 
 }
 
-// specific entropy as function of rho0 and internal energy (u)
-// Ss(rho0,\chi=u+p)
-// specific entropy = \ln( p^n/\rho^{n+1} )
+/// specific entropy as function of rho0 and internal energy (u)
+/// Ss(rho0,\chi=u+p)
+/// specific entropy = \ln( p^n/\rho^{n+1} )
 FTYPE compute_specificentropy_wmrho0_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
 {
   FTYPE insideentropy,specificentropy;
@@ -228,9 +231,9 @@ FTYPE compute_specificentropy_wmrho0_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE
 
 }
 
-// used for utoprim_jon when doing entropy evolution
-// Because P=(\gamma-1)u, then holding \chi=w-\rho_0 constant is the same as holding u constant
-// dSden/drho0
+/// used for utoprim_jon when doing entropy evolution
+/// Because P=(\gamma-1)u, then holding \chi=w-\rho_0 constant is the same as holding u constant
+/// dSden/drho0
 FTYPE compute_dSdrho_wmrho0_idealgas_unused(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
 {
   FTYPE dSdrho;
@@ -249,7 +252,7 @@ FTYPE compute_dSdrho_wmrho0_idealgas_unused(FTYPE *EOSextra, FTYPE rho0, FTYPE w
 
 }
 
-// dSspecific/drho0
+/// dSspecific/drho0
 FTYPE compute_dspecificSdrho_wmrho0_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
 {
   FTYPE dSdrho;
@@ -266,8 +269,8 @@ FTYPE compute_dspecificSdrho_wmrho0_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE 
 }
 
 
-// used for utoprim_jon when doing entropy evolution
-// dSden/d\chi
+/// used for utoprim_jon when doing entropy evolution
+/// dSden/d\chi
 FTYPE compute_dSdwmrho0_wmrho0_idealgas_unused(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
 {
   FTYPE dSdchi;
@@ -280,8 +283,8 @@ FTYPE compute_dSdwmrho0_wmrho0_idealgas_unused(FTYPE *EOSextra, FTYPE rho0, FTYP
 
 }
 
-// used for utoprim_jon when doing entropy evolution
-// dSspecific/d\chi
+/// used for utoprim_jon when doing entropy evolution
+/// dSspecific/d\chi
 FTYPE compute_dspecificSdwmrho0_wmrho0_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
 {
   FTYPE dSdchi;
@@ -296,27 +299,27 @@ FTYPE compute_dspecificSdwmrho0_wmrho0_idealgas(FTYPE *EOSextra, FTYPE rho0, FTY
 
 
 
-// p(rho0, w-rho0 = u+p)
+/// p(rho0, w-rho0 = u+p)
 FTYPE pressure_wmrho0_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
 {
   return(IGAMMAR*wmrho0) ;
 }
 
-// 1 / (d(u+p)/dp)
+/// 1 / (d(u+p)/dp)
 FTYPE compute_idwmrho0dp_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
 {
   return(GAMMAM1/GAMMA);
 }
 
 
-// 1 / (drho0/dp) holding wmrho0 fixed
+/// 1 / (drho0/dp) holding wmrho0 fixed
 FTYPE compute_idrho0dp_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0)
 {
   return(0.0);
 }
 
 
-// cooling or heating rate
+/// cooling or heating rate
 FTYPE compute_qdot_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 {
   return(0.0);
@@ -362,7 +365,7 @@ int get_extrasprocessed_idealgas(int doall, FTYPE *EOSextra, FTYPE *pr, FTYPE *e
 
 
 
-// temperature
+/// temperature
 FTYPE compute_temp_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 {
   FTYPE temp;
@@ -401,8 +404,8 @@ void fix_primitive_eos_scalars_idealgas(FTYPE *EOSextra, FTYPE *pr)
 }
 
 
-// this could be optimized since redundant calculations
-// worry about missed branch predictions?
+/// this could be optimized since redundant calculations
+/// worry about missed branch predictions?
 void getall_forinversion_idealgas(int eomtype, int whichd, FTYPE *EOSextra, FTYPE quant1, FTYPE quant2, FTYPE *fun, FTYPE *dfunofrho, FTYPE *dfunofu)
 {
 

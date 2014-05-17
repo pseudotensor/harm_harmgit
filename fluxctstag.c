@@ -1,59 +1,59 @@
-
-
-//////////////////
-// all things related to FLUXB==FLUXCTSTAG
-// Except fluxcalc_standard_4fluxctstag() (and its interpolate_prim_cent2face()) that could be generally used to replace standard method
-// and except more general functions with simple FLUXB==FLUXCTSTAG conditions like getplpr()
-// and except functions that call these things, of course
-
 #include "decs.h"
 
 
+/*! \file fluxctstag.c
+  \brief all things related to FLUXB==FLUXCTSTAG
+
+  // Except fluxcalc_standard_4fluxctstag() (and its interpolate_prim_cent2face()) that could be generally used to replace standard method
+  // and except more general functions with simple FLUXB==FLUXCTSTAG conditions like getplpr()
+  // and except functions that call these things, of course
+
+  ///////////////////////////////////////////////////////
+  //
+  // OUTLINE of entire staggered field procedure:
+  //
+  //
+  // 1) init.c has user set A_i at CORN_i (and user can control whether A_i set or B^i set via fieldfrompotential[])
+  // 2) initbase.c computes B^i @ FACE_i and unew=\detg B^i at FACE_i using vpot2field() and B^i and \detg B^i at CENT through interpolation:
+  //   a) Creates higher-order A_i or flux using:
+  //     i) vectorpot_useflux() when using flux
+  //     ii) vectorpot_fluxreconorfvavg() for FV and FLUXRECON methods otherwise
+  //   b) Obtains point field and conserved field using:
+  //     i)  vpot2field_staggeredfield() if higher-order method involves higher-order field evolution
+  //     ii) vpot2field_useflux() if higher-order method involves evolving point fields
+  //   c) Obtains de-averaged point conserved staggered conserved field using deaverage_ustag2pstag()
+  //   d) Interpolates staggered FACE1,2,3 field to CENT using interpolate_pfield_face2cent()
+  // 3) advance.c: Uses Ui=unew, and flux-updates unew and uf, which are used to obtain B^i and \detg B^i at cent:
+  //   a) Computes \detg B^i [ui] at FACE1,2,3 for ui at FACE1,2,3 for field in advance_standard()  (Ui at CENT from pi for non-field)
+  //   b) Computes pstag at FACE1,2,3 from updated unew/uf at FACE1,2,3 using deaverage_ustag2pstag() in advance_standard()
+  //   c) Computes \detg B^i [upoint] at CENT from pstag at FACE1,2,3 using  interpolate_pfield_face2cent() in advance_standard()
+  //
+  // So updating conserved \detg B^i at FACE1,2,3 and keeping pstag consistent with this using de-averaging function
+  // Inversion is peformed on interpolated B^i at CENT obtained from face pstag
 
 
-///////////////////////////////////////////////////////
-//
-// OUTLINE of entire staggered field procedure:
-//
-//
-// 1) init.c has user set A_i at CORN_i (and user can control whether A_i set or B^i set via fieldfrompotential[])
-// 2) initbase.c computes B^i @ FACE_i and unew=\detg B^i at FACE_i using vpot2field() and B^i and \detg B^i at CENT through interpolation:
-//   a) Creates higher-order A_i or flux using:
-//     i) vectorpot_useflux() when using flux
-//     ii) vectorpot_fluxreconorfvavg() for FV and FLUXRECON methods otherwise
-//   b) Obtains point field and conserved field using:
-//     i)  vpot2field_staggeredfield() if higher-order method involves higher-order field evolution
-//     ii) vpot2field_useflux() if higher-order method involves evolving point fields
-//   c) Obtains de-averaged point conserved staggered conserved field using deaverage_ustag2pstag()
-//   d) Interpolates staggered FACE1,2,3 field to CENT using interpolate_pfield_face2cent()
-// 3) advance.c: Uses Ui=unew, and flux-updates unew and uf, which are used to obtain B^i and \detg B^i at cent:
-//   a) Computes \detg B^i [ui] at FACE1,2,3 for ui at FACE1,2,3 for field in advance_standard()  (Ui at CENT from pi for non-field)
-//   b) Computes pstag at FACE1,2,3 from updated unew/uf at FACE1,2,3 using deaverage_ustag2pstag() in advance_standard()
-//   c) Computes \detg B^i [upoint] at CENT from pstag at FACE1,2,3 using  interpolate_pfield_face2cent() in advance_standard()
-//
-// So updating conserved \detg B^i at FACE1,2,3 and keeping pstag consistent with this using de-averaging function
-// Inversion is peformed on interpolated B^i at CENT obtained from face pstag
+  // NOTES:
 
+  // 1) Presently bound pstag because corner regions need EMF and interpolate face to edge so need boundary face values
+  //    For example, for EMF3 we need B1 along dir=2 and B2 along dir=1 so can reconstruct field to corner. This requires (a limited) bounding of pstag.  I don't see a way around this without using CENT to get everything and then violating locality of pstag with the EMFs.
+  // In non-staggered scheme those face values could come from centered values.  Would be inconsistent to do that for stag method, so need to find another way if want to only bound CENT primitives.
+  // 
 
-// NOTES:
+  // 2) Note that boundary conditions are applied to staggered field in logical way similar to CENT field (with one exception).
+  //    For MPI this is correct.  For periodic this is correct.  For reflecting BC this is correct as long as boundary conditions supplied and (for polar axis) \gdetg=0.0 exactly.  For analytical setting of BCs this is correct.  For outflow this is *sufficient* since don't really need to evolve that last cell
+  //    This makes code simpler with this assumption so don't have to extra-evolve the last upper face field value
+  // For FLUXRECON, this means bound_flux() must set upper flux so staggered field is set by boundary conditions
+  // For IF3DSPCTHENMPITRANSFERATPOLE, this is no longer true.  In this case must evolve that outer cell to evolve B2 at outer pole for any-all i,k,myid.
 
-// 1) Presently bound pstag because corner regions need EMF and interpolate face to edge so need boundary face values
-//    For example, for EMF3 we need B1 along dir=2 and B2 along dir=1 so can reconstruct field to corner. This requires (a limited) bounding of pstag.  I don't see a way around this without using CENT to get everything and then violating locality of pstag with the EMFs.
-// In non-staggered scheme those face values could come from centered values.  Would be inconsistent to do that for stag method, so need to find another way if want to only bound CENT primitives.
-// 
-
-// 2) Note that boundary conditions are applied to staggered field in logical way similar to CENT field (with one exception).
-//    For MPI this is correct.  For periodic this is correct.  For reflecting BC this is correct as long as boundary conditions supplied and (for polar axis) \gdetg=0.0 exactly.  For analytical setting of BCs this is correct.  For outflow this is *sufficient* since don't really need to evolve that last cell
-//    This makes code simpler with this assumption so don't have to extra-evolve the last upper face field value
-// For FLUXRECON, this means bound_flux() must set upper flux so staggered field is set by boundary conditions
-// For IF3DSPCTHENMPITRANSFERATPOLE, this is no longer true.  In this case must evolve that outer cell to evolve B2 at outer pole for any-all i,k,myid.
-
-// 3) Note that for some problems the staggered method reaches nearly 0 field so that the normalized divb is erroneously large due to hitting machine errors relative to the dominate field strength evolved.  Maybe should output unnormalized divb too
-//    TOTH doesn't have this problem because diffusion is high enough to keep field value large.  In 0-field regions TOTH generates checkerboard pattern with much higher field values and so divb appears to stay small.
+  // 3) Note that for some problems the staggered method reaches nearly 0 field so that the normalized divb is erroneously large due to hitting machine errors relative to the dominate field strength evolved.  Maybe should output unnormalized divb too
+  //    TOTH doesn't have this problem because diffusion is high enough to keep field value large.  In 0-field regions TOTH generates checkerboard pattern with much higher field values and so divb appears to stay small.
 
 
 
-// 4) If A_\phi\propto r^{-p} \theta^0 near the pole, then B2\propto 1/\theta near the pole.  But that would imply infinite energy density because B2hat \propto 1/\theta as well.
+  // 4) If A_\phi\propto r^{-p} \theta^0 near the pole, then B2\propto 1/\theta near the pole.  But that would imply infinite energy density because B2hat \propto 1/\theta as well.
+
+  */
+
 
 
 
@@ -65,10 +65,10 @@ static void rescale_calc_stagfield_full(int *Nvec, FTYPE (*pstag)[NSTORE2][NSTOR
 
 
 
-// This vpot2field function is for staggered method to evolve quasi-deaveraged fields (i.e. not point fields) when doing higher order
-// compute field at FACE1,2,3 from vector potential A at CORN1,2,3
-// assumes normal field p
-// assume if 1D then along the 1D direction the field doesn't change and input pfield and ufield are already correct and set
+/// This vpot2field function is for staggered method to evolve quasi-deaveraged fields (i.e. not point fields) when doing higher order
+/// compute field at FACE1,2,3 from vector potential A at CORN1,2,3
+/// assumes normal field p
+/// assume if 1D then along the 1D direction the field doesn't change and input pfield and ufield are already correct and set
 int vpot2field_staggeredfield(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],FTYPE (*pfield)[NSTORE2][NSTORE3][NPR],FTYPE (*ufield)[NSTORE2][NSTORE3][NPR])
 {
   int Nvec[NDIM];
@@ -196,10 +196,10 @@ int vpot2field_staggeredfield(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE
 
 
 
-// wrapper for:
-// 1) interpolate FACE 2 CORN
-// 2) loop over dimensions setting field flux dimension-by-dimension using multi-D interpolated CORN quantities
-// At present, original flux as emf is computed like normal flux even if overwritten here, and shouldn't be much more expensive doing that there since primary cost is interpolation whose results are required and used here
+/// wrapper for:
+/// 1) interpolate FACE 2 CORN
+/// 2) loop over dimensions setting field flux dimension-by-dimension using multi-D interpolated CORN quantities
+/// At present, original flux as emf is computed like normal flux even if overwritten here, and shouldn't be much more expensive doing that there since primary cost is interpolation whose results are required and used here
 int fluxcalc_fluxctstag(int stage,
                         int initialstep, int finalstep,
                         FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],
@@ -360,41 +360,37 @@ int fluxcalc_fluxctstag(int stage,
 
 
 
-/////////////////////////
-//
-// use global pbcorninterp and pvcorninterp at CORN1,2,3 to obtain EMFs at CORN1,2,3
-// NO interpolation of quantities (except kinda wavespeeds) done here
-//
-// assumes 2-D Riemann problem
-//
-// When time for flux calculation:
-//
-// 1) Wavespeed calculation:
-//
-//    MACP3A0(wspeed,EOMSETMHD,dir,CMIN/CMAX,i,j,k) : Use global wspeed located at FACE (as computed by flux_standard() and put at FACE by global_vchar())
-//
-//    CMIN,CMAX correspond to left,right going waves at FACEdir
-//    In Del Zanna et al. (2003) equation 43-45, we have
-//    alpha_x^+ = max(0,wspeed[dir corresponding to x][CMAX][index],wspeed[dir corresponding to x][CMAX][index-1 in y direction])
-//    That is, wspeed located at FACE means only need to take max over 2 remaining speeds since already got wspeed by max,min of CENT speeds -- so realy are going over all 4 states for max,min each for each direction
-//
-// 2) Flux calculation
-//
-//    F1[B1]=F2[B2]=F3[B3]=0
-//    F2[B3]=-F3[B2] (+-E1)
-//    F1[B3]=-F3[B1] (+-E2)
-//    F1[B2]=-F2[B1] (+-E3)
-//
-//    So only really 3 fluxes to be set corresponding to EMFs E1,E2,E3.
-//    If 3D, then all fields use E in orthogonal plane (e.g. Bx uses d_2(E3) and d_3(E2), etc.)
-//    If 2D in (say) x-y plane, then B1 only evolves by d_2(E3), B2 only evolves by d_1(E3), and B3 evolves by d_1(E2) and d_2(E1)
-//    If 1D in (say) x-dir, then d_1(E3) evolves B2 and d_1(E2) evolves B3 and B1 doesn't evolve.  Hence if 1-D in x-dir don't need to compute E1
-//    
+/// use global pbcorninterp and pvcorninterp at CORN1,2,3 to obtain EMFs at CORN1,2,3
+/// NO interpolation of quantities (except kinda wavespeeds) done here
+///
+/// assumes 2-D Riemann problem
+///
+/// When time for flux calculation:
+///
+/// 1) Wavespeed calculation:
+///
+///    MACP3A0(wspeed,EOMSETMHD,dir,CMIN/CMAX,i,j,k) : Use global wspeed located at FACE (as computed by flux_standard() and put at FACE by global_vchar())
+///
+///    CMIN,CMAX correspond to left,right going waves at FACEdir
+///    In Del Zanna et al. (2003) equation 43-45, we have
+///    alpha_x^+ = max(0,wspeed[dir corresponding to x][CMAX][index],wspeed[dir corresponding to x][CMAX][index-1 in y direction])
+///    That is, wspeed located at FACE means only need to take max over 2 remaining speeds since already got wspeed by max,min of CENT speeds -- so realy are going over all 4 states for max,min each for each direction
+///
+/// 2) Flux calculation
+///
+///    F1[B1]=F2[B2]=F3[B3]=0
+///    F2[B3]=-F3[B2] (+-E1)
+///    F1[B3]=-F3[B1] (+-E2)
+///    F1[B2]=-F2[B1] (+-E3)
+///
+///    So only really 3 fluxes to be set corresponding to EMFs E1,E2,E3.
+///    If 3D, then all fields use E in orthogonal plane (e.g. Bx uses d_2(E3) and d_3(E2), etc.)
+///    If 2D in (say) x-y plane, then B1 only evolves by d_2(E3), B2 only evolves by d_1(E3), and B3 evolves by d_1(E2) and d_2(E1)
+///    If 1D in (say) x-dir, then d_1(E3) evolves B2 and d_1(E2) evolves B3 and B1 doesn't evolve.  Hence if 1-D in x-dir don't need to compute E1
+///    
 
-// pvcorninterp and pbcorninterp are defined to be used like below initializaiton in set_arrays.c
-//   for(pl2=1;pl2<=COMPDIM;pl2++) for(pl=1;pl<=COMPDIM;pl++) for(m=0;m<NUMCS+1;m++) for(l=0;l<NUMCS;l++)  GLOBALMACP1A3(pvbcorninterp,pl2,i,j,k,pl,m,l)=valueinit;
-
-
+/// pvcorninterp and pbcorninterp are defined to be used like below initializaiton in set_arrays.c
+///   for(pl2=1;pl2<=COMPDIM;pl2++) for(pl=1;pl<=COMPDIM;pl++) for(m=0;m<NUMCS+1;m++) for(l=0;l<NUMCS;l++)  GLOBALMACP1A3(pvbcorninterp,pl2,i,j,k,pl,m,l)=valueinit;
 int fluxcalc_fluxctstag_emf_1d(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], int dir, int odir1, int odir2, int is, int ie, int js, int je, int ks, int ke, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE CUf, struct of_loop (*face2cornloop)[NDIM],
                                //          FTYPE (*pbcorn)[COMPDIM][NUMCS][NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
                                FTYPE (*pvbcorn)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3][COMPDIM][NUMCS+1][NUMCS],
@@ -694,7 +690,7 @@ int fluxcalc_fluxctstag_emf_1d(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], in
 
 
 
-// wrapper for *continuous* interpolation for FACE_to_CENT
+/// wrapper for *continuous* interpolation for FACE_to_CENT
 void slope_lim_continuous_e2z(int realisinterp, int dir, int idel, int jdel, int kdel, FTYPE (*primreal)[NSTORE2][NSTORE3][NPR], FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*dq)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP], struct of_loop *face2centloop)
 {
   extern void slope_lim_linetype_c2e(int realisinterp, int whichprimtype, int interporflux, int dir, int idel, int jdel, int kdel, FTYPE (*primreal)[NSTORE2][NSTORE3][NPR], FTYPE (*stencilvar)[NSTORE2][NSTORE3][NPR], FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP]);
@@ -736,13 +732,13 @@ void slope_lim_continuous_e2z(int realisinterp, int dir, int idel, int jdel, int
 
 
 
-// wrapper for taking staggered conserved field quantity and obtaining centered field quantity
-// upoint enters as stag and leaves as CENT
-// once this function is done we have:
-// 1) pstag will have correct staggered point value
-// 2) upoint (if needed) will be replaced with center conserved value
-// 3) pfield will contain centered field primitive value
-// Note that no averaging or deaveraging occurs in this function -- everything is points
+/// wrapper for taking staggered conserved field quantity and obtaining centered field quantity
+/// upoint enters as stag and leaves as CENT
+/// once this function is done we have:
+/// 1) pstag will have correct staggered point value
+/// 2) upoint (if needed) will be replaced with center conserved value
+/// 3) pfield will contain centered field primitive value
+/// Note that no averaging or deaveraging occurs in this function -- everything is points
 int interpolate_ustag2fieldcent(int stage, SFTYPE boundtime, int timeorder, int numtimeorders, FTYPE (*preal)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],FTYPE (*upoint)[NSTORE2][NSTORE3][NPR],FTYPE (*pcent)[NSTORE2][NSTORE3][NPR])
 {
   int ustagpoint2pstag(FTYPE (*upoint)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR]);
@@ -840,9 +836,9 @@ int interpolate_ustag2fieldcent(int stage, SFTYPE boundtime, int timeorder, int 
 
 #define USTAG2PSTAGCONSTRAINEDLOOP 1 // should be 1
 
-// this function called in initbase.c and during advance()
-// here ustag is point value
-// if dimension doesn't exist, then ustag and pstag are really at CENT effectively
+/// this function called in initbase.c and during advance()
+/// here ustag is point value
+/// if dimension doesn't exist, then ustag and pstag are really at CENT effectively
 int ustagpoint2pstag(FTYPE (*ustag)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR])
 {
   int Nvec[NDIM];
@@ -977,8 +973,8 @@ int ustagpoint2pstag(FTYPE (*ustag)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTOR
 
 
 
-
-// OPTMARK: presume this function gets inlined
+/// U staggered field to P staggered field
+/// OPTMARK: presume this function gets inlined
 void ustag2pstag(int dir, int i, int j, int k, FTYPE (*ustag)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR])
 {
   FTYPE igdetgnosing;
@@ -1028,7 +1024,7 @@ void ustag2pstag(int dir, int i, int j, int k, FTYPE (*ustag)[NSTORE2][NSTORE3][
 
 
 
-// wrapper for rescale() used for staggered field
+/// wrapper for rescale() used for staggered field
 static void rescale_calc_stagfield_full(int *Nvec, FTYPE (*pstag)[NSTORE2][NSTORE3][NPR2INTERP],FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP])
 {
 
@@ -1102,37 +1098,37 @@ static void rescale_calc_stagfield_full(int *Nvec, FTYPE (*pstag)[NSTORE2][NSTOR
 
 
 
-// interpolates field at FACE to field at CENT assuming field along itself is *continuous*
-
-// |=interface
-// i=zone center of ith zone
-//
-// |            |         i                 |
-// |         pstag(i)     i                 |
-// |            |         i                 |
-// |         p2interp(i)  i                 |
-// |            |         i                 |
-// |          dq(i)       i                 |
-// |            |         i                 |
-// |pleft(i)    |     pright(i) pleft(i+1)  |    //  notice odd pleft(i) position
-// |            |         i                 |
-// |            |      p_l p_r              |
-// |            |         i                 |
-// |            |        pcent(i)           |
-// |            |         i                 |
-//
-// exactly correct for arbitrary order since input is pstag (point quantity) and output is ucent,pcent (point quantities)
-// ustag only used to get non-field ucent at end of function... otherwise use pstag
-// ucent has ONLY field values updated since ucent may already contain correct values for other quantities (means if not, then outside this function must set ucent to something before using full quantity set!)
-// this function called in initbase.c and during advance()
-//
-// INPUTS: Nvec, preal, pstag[B1,B2,B3]
-// OUTPUTS: ucent[B1,B2,B3] (if not NULL), pcent[B1,B2,B3], face2centloop
-// TEMPVARS: dqvec(dir,{B1,B2,B3}), prc[B1,B2,B3], pleft[B1,B2,B3], pright[B1,B2,B3]
-// OPENMPOPTMARK: pleft,pright only exist per dir but used for all dirs, so can't use  nowait when involving pleft/pright
-// We don't use wavespeeds here, so don't worry about wspeedtemp being only for one dir
-// 
-//
+/// interpolates field at FACE to field at CENT assuming field along itself is *continuous*
+///
+/// |=interface
+/// i=zone center of ith zone
+///
+/// |            |         i                 |
+/// |         pstag(i)     i                 |
+/// |            |         i                 |
+/// |         p2interp(i)  i                 |
+/// |            |         i                 |
+/// |          dq(i)       i                 |
+/// |            |         i                 |
+/// |pleft(i)    |     pright(i) pleft(i+1)  |    //  notice odd pleft(i) position
+/// |            |         i                 |
+/// |            |      p_l p_r              |
+/// |            |         i                 |
+/// |            |        pcent(i)           |
+/// |            |         i                 |
+///
+/// exactly correct for arbitrary order since input is pstag (point quantity) and output is ucent,pcent (point quantities)
+/// ustag only used to get non-field ucent at end of function... otherwise use pstag
+/// ucent has ONLY field values updated since ucent may already contain correct values for other quantities (means if not, then outside this function must set ucent to something before using full quantity set!)
+/// this function called in initbase.c and during advance()
+///
+/// INPUTS: Nvec, preal, pstag[B1,B2,B3]
+/// OUTPUTS: ucent[B1,B2,B3] (if not NULL), pcent[B1,B2,B3], face2centloop
+/// TEMPVARS: dqvec(dir,{B1,B2,B3}), prc[B1,B2,B3], pleft[B1,B2,B3], pright[B1,B2,B3]
+/// OPENMPOPTMARK: pleft,pright only exist per dir but used for all dirs, so can't use  nowait when involving pleft/pright
+/// We don't use wavespeeds here, so don't worry about wspeedtemp being only for one dir
+/// 
+///
 int interpolate_pfield_face2cent(FTYPE (*preal)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],FTYPE (*ucent)[NSTORE2][NSTORE3][NPR],FTYPE (*pcent)[NSTORE2][NSTORE3][NPR], struct of_loop *face2centloop, FTYPE (*dqvec[NDIM])[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*prc)[NSTORE2][NSTORE3][NPR], FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP], int *Nvec)
 {
   FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP];
@@ -1440,19 +1436,19 @@ int interpolate_pfield_face2cent(FTYPE (*preal)[NSTORE2][NSTORE3][NPR], FTYPE (*
 
 
 
-// slope_lim_face2corn() is provided p2interp and returns pleft/pright
-// differs from slope_lim() by range over which quantities required
-//
-// |=interface
-// i=zone center of ith zone
-//
-// |              |      p2interp(i)   |
-// |         pl(i)|pr(i)    i          |
-// |         Fl(i)|Fr(i)    i          |
-// |         Ul(i)|Ur(i)    i          |
-// |              |pleft(i)   pright(i)|
-// |              |F(i)                |
-//
+/// slope_lim_face2corn() is provided p2interp and returns pleft/pright
+/// differs from slope_lim() by range over which quantities required
+///
+/// |=interface
+/// i=zone center of ith zone
+///
+/// |              |      p2interp(i)   |
+/// |         pl(i)|pr(i)    i          |
+/// |         Fl(i)|Fr(i)    i          |
+/// |         Ul(i)|Ur(i)    i          |
+/// |              |pleft(i)   pright(i)|
+/// |              |F(i)                |
+///
 void slope_lim_face2corn(int realisinterp, int dir, int idel, int jdel, int kdel, FTYPE (*primreal)[NSTORE2][NSTORE3][NPR], FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*dq)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP], struct of_loop *face2cornloop)
 {
   extern void slope_lim_linetype_c2e(int realisinterp, int whichprimtype, int interporflux, int dir, int idel, int jdel, int kdel, FTYPE (*primreal)[NSTORE2][NSTORE3][NPR], FTYPE (*stencilvar)[NSTORE2][NSTORE3][NPR], FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP]);
@@ -1498,122 +1494,121 @@ void slope_lim_face2corn(int realisinterp, int dir, int idel, int jdel, int kdel
 
 
 
-// interpolates certain B and v at FACE1,2,3 to CORN1,2,3
+/// interpolates certain B and v at FACE1,2,3 to CORN1,2,3
+///
+///
+///
+/// MACP1A1(primface_l,dir,i,j,k,pl), etc.
+/// pbinterp[l,r][4 things]
+/// pvinterp[l,r][u,d][4 things]
+///
+/// Interpolation list:
+///
+/// FACE1: B1 -> +-C2 and +-C3   l/r V2 -> lr/+-C3   l/r V3 -> lr/+-C2
+/// FACE2: B2 -> +-C1 and +-C3   l/r V1 -> lr/+-C3   l/r V3 -> lr/+-C1
+/// FACE3: B3 -> +-C1 and +-C2   l/r V1 -> lr/+-C2   l/r V2 -> lr/+-C1
+///
+/// Hence taking primface_{l or r} for field and primface_{l and r} for velocity and obtaining
+/// pfield[l,r][4]
+/// pvelocity[l,r][u,d][4]  where l,r,u,d are determine in some cyclic way for a given quantity
+///
+/// |=interface
+/// i=zone center of ith zone
+/// |            |                     |
+/// |            |                     |
+/// |            |                     |
+/// |            |                     |
+/// |            |                     |
+/// |   i-1,j+1  |        i,j+1        |   i+1,j+1
+/// |   i-1,j    |        i,j          |   i+1,j
+/// |   i-1,j-1  |        i,j-1        |   i+1,j-1
+/// |            |                     |
+/// |            |                     |  ^ dir=2
+///  -> dir=1                              |
+///
+/// All inputs are points and all outputs are points
+///
+///
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/// below from fluxcalc type function:
+///
+///      for(m=0;m<NUMCS;m++) for(l=0;l<NUMCS;l++){
+/// emf[+- in odir1][+- in odir2]
+/// velocity in same positions as emf
+/// for example, emf3[+-x][+-y] = By[+-x]*vx[+-x][+-y] - Bx[+-y]*vy[+-x][+-y]
+/// below requires velocity to be lab-frame 3-velocity consistent with lab-frame 3-field primitive
 
-//
-//
-// MACP1A1(primface_l,dir,i,j,k,pl), etc.
-// pbinterp[l,r][4 things]
-// pvinterp[l,r][u,d][4 things]
-//
-// Interpolation list:
-//
-// FACE1: B1 -> +-C2 and +-C3   l/r V2 -> lr/+-C3   l/r V3 -> lr/+-C2
-// FACE2: B2 -> +-C1 and +-C3   l/r V1 -> lr/+-C3   l/r V3 -> lr/+-C1
-// FACE3: B3 -> +-C1 and +-C2   l/r V1 -> lr/+-C2   l/r V2 -> lr/+-C1
-//
-// Hence taking primface_{l or r} for field and primface_{l and r} for velocity and obtaining
-// pfield[l,r][4]
-// pvelocity[l,r][u,d][4]  where l,r,u,d are determine in some cyclic way for a given quantity
-//
-// |=interface
-// i=zone center of ith zone
-// |            |                     |
-// |            |                     |
-// |            |                     |
-// |            |                     |
-// |            |                     |
-// |   i-1,j+1  |        i,j+1        |   i+1,j+1
-// |   i-1,j    |        i,j          |   i+1,j
-// |   i-1,j-1  |        i,j-1        |   i+1,j-1
-// |            |                     |
-// |            |                     |  ^ dir=2
-//  -> dir=1                              |
-//
-// All inputs are points and all outputs are points
-//
-//
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// below from fluxcalc type function:
-//
-//      for(m=0;m<NUMCS;m++) for(l=0;l<NUMCS;l++){
-// emf[+- in odir1][+- in odir2]
-// velocity in same positions as emf
-// for example, emf3[+-x][+-y] = By[+-x]*vx[+-x][+-y] - Bx[+-y]*vy[+-x][+-y]
-// below requires velocity to be lab-frame 3-velocity consistent with lab-frame 3-field primitive
+/// see fluxct.c for signature definition of EMF and flux
 
-// see fluxct.c for signature definition of EMF and flux
+/// m%3+1 gives next 1->2,2->3,3->1
+/// 3-(4-m)%3 = (dir+1)%3+1 gives previous 1->3,2->1,3->2
+/// so odir1 is forward cyclic
+/// so odir2 is backward cyclic
+///   emf2d[m][l] = 
+///     + MACP1A3(pvbcorn,dir,i,j,k,odir2,NUMCS,m)*MACP1A3(pvbcorn,dir,i,j,k,odir1,m,l) 
+///     - MACP1A3(pvbcorn,dir,i,j,k,odir1,NUMCS,l)*MACP1A3(pvbcorn,dir,i,j,k,odir2,m,l);
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///
+/// pvcorn and pbcorn are defined to be used like below initializaiton in set_arrays.c
+///    for(pl2=1;pl2<=COMPDIM;pl2++) for(pl=1;pl<=COMPDIM;pl++) for(m=0;m<NUMCS+1;m++) for(l=0;l<NUMCS;l++)  GLOBALMACP1A3(pvbcorninterp,pl2,i,j,k,pl,m,l)=valueinit;
+///
 
-// m%3+1 gives next 1->2,2->3,3->1
-// 3-(4-m)%3 = (dir+1)%3+1 gives previous 1->3,2->1,3->2
-// so odir1 is forward cyclic
-// so odir2 is backward cyclic
-//   emf2d[m][l] = 
-//     + MACP1A3(pvbcorn,dir,i,j,k,odir2,NUMCS,m)*MACP1A3(pvbcorn,dir,i,j,k,odir1,m,l) 
-//     - MACP1A3(pvbcorn,dir,i,j,k,odir1,NUMCS,l)*MACP1A3(pvbcorn,dir,i,j,k,odir2,m,l);
-///////////////////////////////////////////////////////////////////////////////////////////////////
-//
-// pvcorn and pbcorn are defined to be used like below initializaiton in set_arrays.c
-//    for(pl2=1;pl2<=COMPDIM;pl2++) for(pl=1;pl<=COMPDIM;pl++) for(m=0;m<NUMCS+1;m++) for(l=0;l<NUMCS;l++)  GLOBALMACP1A3(pvbcorninterp,pl2,i,j,k,pl,m,l)=valueinit;
-//
-
-// JCM: I originally thought the below as 1 would make little sense, because then one would interpolate (e.g.) \detg B1 through the axis when B1 for a non-tilted dipolar field would be constant.  One would be making B1(\theta)\propto \theta near the pole, which requires higher-order interpolation.
-// However, for tilted dipolar fields, B1 and B3 across the pole will necessarily depend upon resolution (see tilteddipole.nb), and B1 can be flat across the pole looking like a bug even if correct.  The interpolation for B1stag -> B1 across the pole will then be poor and reduce near the flat part.
-// But, interpolating \detg B1 avoids this because it relies on A_\phi,\theta that has no glitch.  The \detg smooths it out.
-// This isn't just a numerical issue, it's about how the field is represented.  The flat B1 across the pole is innaccurate to the continuous solution, but one can still have a robust/accurate discrete method.  The flat part can be just fine in general if viewed correctly and treated optimally.
-// 0 : just use direct Bi in transverse interpolation
-// 1 : use \detg Bi in transverse directions
-// 2 : if SPC use B1 in 2-dir and 3-dir .  use \detg B2 in 1-dir and 3-dir  .  use \detg B3 in 1-dir and 2-dir (because B3 generally blows-up at pole while \detg B3 is flat)
+/// JCM: I originally thought the below as 1 would make little sense, because then one would interpolate (e.g.) \detg B1 through the axis when B1 for a non-tilted dipolar field would be constant.  One would be making B1(\theta)\propto \theta near the pole, which requires higher-order interpolation.
+/// However, for tilted dipolar fields, B1 and B3 across the pole will necessarily depend upon resolution (see tilteddipole.nb), and B1 can be flat across the pole looking like a bug even if correct.  The interpolation for B1stag -> B1 across the pole will then be poor and reduce near the flat part.
+/// But, interpolating \detg B1 avoids this because it relies on A_\phi,\theta that has no glitch.  The \detg smooths it out.
+/// This isn't just a numerical issue, it's about how the field is represented.  The flat B1 across the pole is innaccurate to the continuous solution, but one can still have a robust/accurate discrete method.  The flat part can be just fine in general if viewed correctly and treated optimally.
+/// 0 : just use direct Bi in transverse interpolation
+/// 1 : use \detg Bi in transverse directions
+/// 2 : if SPC use B1 in 2-dir and 3-dir .  use \detg B2 in 1-dir and 3-dir  .  use \detg B3 in 1-dir and 2-dir (because B3 generally blows-up at pole while \detg B3 is flat)
 #define INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD 2
-// 1 and 2 don't work for unknown reasons (code eventually crashes due to polar region) for nsdipole problem
+/// 1 and 2 don't work for unknown reasons (code eventually crashes due to polar region) for nsdipole problem
 
-//#define INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELDswitch(facedir,interpdir) (INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==1 || (INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==2 && (ISSPCMCOORD(MCOORD)==0 || ISSPCMCOORD(MCOORD)==1 && (facedir==2&&interpdir==1) || (facedir==3&&(interpdir==1||interpdir==2))))))
+///#define INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELDswitch(facedir,interpdir) (INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==1 || (INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==2 && (ISSPCMCOORD(MCOORD)==0 || ISSPCMCOORD(MCOORD)==1 && (facedir==2&&interpdir==1) || (facedir==3&&(interpdir==1||interpdir==2))))))
 
-// since only store 1 thing to interpolate in any direction, has to be uniform use of \detg per Bi, which works-out to be ok.
-//#define INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELDswitchuni(facedir) (INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==1 || (INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==2 && (ISSPCMCOORD(MCOORD)==0 || ISSPCMCOORD(MCOORD)==1 && (facedir==2||facedir==3))))
+/// since only store 1 thing to interpolate in any direction, has to be uniform use of \detg per Bi, which works-out to be ok.
+///#define INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELDswitchuni(facedir) (INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==1 || (INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==2 && (ISSPCMCOORD(MCOORD)==0 || ISSPCMCOORD(MCOORD)==1 && (facedir==2||facedir==3))))
 
-// B1 along 2 and 3-dir.  3-dir isn't issue as \detg B1 same.  But B1 regular at pole and no sign change.  So shouldn't introduce \detg that would make \detg B1\propto \theta and require obtaining B1 at pole by division by small value.  It would also make cancellation for EMF_3: -v1 B2 + v2 B1 terms harder unless also interpolated \detg v1, but that also wouldn't make sense.
+/// B1 along 2 and 3-dir.  3-dir isn't issue as \detg B1 same.  But B1 regular at pole and no sign change.  So shouldn't introduce \detg that would make \detg B1\propto \theta and require obtaining B1 at pole by division by small value.  It would also make cancellation for EMF_3: -v1 B2 + v2 B1 terms harder unless also interpolated \detg v1, but that also wouldn't make sense.
 
-// Interpolate \detg B2 along 1-dir and 3-dir.  No singularity issue, but may be more accurate to include \detg.
+/// Interpolate \detg B2 along 1-dir and 3-dir.  No singularity issue, but may be more accurate to include \detg.
 
-// Interpolate B3 along 1-dir and 2-dir.  Probably some other interpolation better for 1-dir, but for 2-dir, if interpolate \detg B3 across pole, then would have to interpolate \detg v3 for EMF_1: -v2 B3 + v3 B2 to have consistent cancellation on the polar cut-out.  Otherwise B2 at the pole (which must be regular) would result from wrongly cancelling terms in EMF_1.
+/// Interpolate B3 along 1-dir and 2-dir.  Probably some other interpolation better for 1-dir, but for 2-dir, if interpolate \detg B3 across pole, then would have to interpolate \detg v3 for EMF_1: -v2 B3 + v3 B2 to have consistent cancellation on the polar cut-out.  Otherwise B2 at the pole (which must be regular) would result from wrongly cancelling terms in EMF_1.
 
-// All uses gdet, except for 2-dir only B3 uses gdet.
-//#define INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELDswitchuni(facedir) (INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==1 || (INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==2 && (ISSPCMCOORD(MCOORD)==0 || ISSPCMCOORD(MCOORD)==1 && (facedir==2))))
-
+/// All uses gdet, except for 2-dir only B3 uses gdet.
+///#define INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELDswitchuni(facedir) (INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==1 || (INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==2 && (ISSPCMCOORD(MCOORD)==0 || ISSPCMCOORD(MCOORD)==1 && (facedir==2))))
 #define INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELDswitchuniboth(facedir,interpdir) (INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==1 || (INCLUDEGDETINTRANSVERSEINTERPLATIONOFFIELD==2 && (ISSPCMCOORD(MCOORD)==0 || ISSPCMCOORD(MCOORD)==1 && (facedir==1 && (interpdir==1 || interpdir==3) || facedir==2 && (interpdir==1 || interpdir==3) ||  facedir==3 && (interpdir==1 || interpdir==3)   )))) // GODMARK: Want to allow interpdir==2 with facedir==3, but not working yet.
 
 
 
 
-///////////////////////////////////////////
-//
-// whether to include gdet in velocity
-// NOTEMARK: Don't have full control since precompute with or without gdet factor for *both* interpdir's.  So can't choose differently for each interpdir.
-// Choosing 0 means prior default of nothing done to velocity when interpolating it.
+////////////////////////////////////////////////////////////////
+///
+/// whether to include gdet in velocity
+/// NOTEMARK: Don't have full control since precompute with or without gdet factor for *both* interpdir's.  So can't choose differently for each interpdir.
+/// Choosing 0 means prior default of nothing done to velocity when interpolating it.
 
-// Choose 1 to always use gdet for all velocity components for all interpolation directions.
+/// Choose 1 to always use gdet for all velocity components for all interpolation directions.
 
-// Choosing 2 currently avoids application on v1.  Assumes also interpolate gdet*B2 and gdet*B3 in fluxctstag and in rescale_interp and bounds extrapolations.
-//  Note that odir is always interpdir for velocity, so if only want to ever interpolate uu3 in 2-dir, then that'll never be done here.  Just avoid odir=2 to avoid interpolating v2 across 2-dir.  So that's why have odir==1 || odir==2 for this "2" option.
-//  2 works fine.  Not contentious with any dir==2 since never want to interpolate v2 in 2-dir.
+/// Choosing 2 currently avoids application on v1.  Assumes also interpolate gdet*B2 and gdet*B3 in fluxctstag and in rescale_interp and bounds extrapolations.
+///  Note that odir is always interpdir for velocity, so if only want to ever interpolate uu3 in 2-dir, then that'll never be done here.  Just avoid odir=2 to avoid interpolating v2 across 2-dir.  So that's why have odir==1 || odir==2 for this "2" option.
+///  2 works fine.  Not contentious with any dir==2 since never want to interpolate v2 in 2-dir.
 #define INCLUDEGDETINTRANSVERSEINTERPLATIONOFVELOCITY 0
 
-// e.g. dir=facedir=1 means odir12=23 so v2 and v3 would have gdet applied (v3 crucial for non-axisymmetry near poles).  gdet on v2 is crucial if interpolating gdet*B2 in dir=2 in IFNOTRESCALETHENUSEGDET in interpolate_pfield_face2cent() for choices for field-directed interpolation.
-// e.g. dir=facedir=2 means odir12=13 so v1 and v3 would have gdet applied (v3 crucial for non-axisymmetry near poles).  v1 not crucial.
-// e.g. dir=facedir=3 means odir12=12 so v1 and v2 would have gdet applied (application to v1 and v2 not crucial for non-axisymmetry near poles)
+/// e.g. dir=facedir=1 means odir12=23 so v2 and v3 would have gdet applied (v3 crucial for non-axisymmetry near poles).  gdet on v2 is crucial if interpolating gdet*B2 in dir=2 in IFNOTRESCALETHENUSEGDET in interpolate_pfield_face2cent() for choices for field-directed interpolation.
+/// e.g. dir=facedir=2 means odir12=13 so v1 and v3 would have gdet applied (v3 crucial for non-axisymmetry near poles).  v1 not crucial.
+/// e.g. dir=facedir=3 means odir12=12 so v1 and v2 would have gdet applied (application to v1 and v2 not crucial for non-axisymmetry near poles)
 #define INCLUDEGDETINTRANSVERSEINTERPLATIONOFVELOCITYswitchuniboth(facedir,odir) (INCLUDEGDETINTRANSVERSEINTERPLATIONOFVELOCITY==1 || (INCLUDEGDETINTRANSVERSEINTERPLATIONOFVELOCITY==2 && (ISSPCMCOORD(MCOORD)==0 || ISSPCMCOORD(MCOORD)==1 && (odir==1 || odir==3) )))
 
 
 
 
 
-// INPUTS: Nvec, pr, primface_l[dir], primface_r[dir]
-// OUTPUTS: pbcorn[dir][side], pvcorn[dir][side][side], cent2faceloop, face2cornloop
-// TEMPVARS: prc pleft pright dqvec[dir]
-// OPENMPOPTMARK: prc (used for p2interp in funny way), pleft,pright only exist per dir but used for all dirs, so can't use  nowait when involving pleft/pright/p2interp
-// Note: wavespeeds already stored, so don't worry about wspeedtmp being only 1 dir at a time.  Further, don't use wavespeeds here, only used directly in EMF calculation
-//
+/// INPUTS: Nvec, pr, primface_l[dir], primface_r[dir]
+/// OUTPUTS: pbcorn[dir][side], pvcorn[dir][side][side], cent2faceloop, face2cornloop
+/// TEMPVARS: prc pleft pright dqvec[dir]
+/// OPENMPOPTMARK: prc (used for p2interp in funny way), pleft,pright only exist per dir but used for all dirs, so can't use  nowait when involving pleft/pright/p2interp
+/// Note: wavespeeds already stored, so don't worry about wspeedtmp being only 1 dir at a time.  Further, don't use wavespeeds here, only used directly in EMF calculation
+///
 int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primface_l)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*primface_r)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],
                                //FTYPE (*pbcorn)[COMPDIM][NUMCS][NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],
                                FTYPE (*pvbcorn)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3][COMPDIM][NUMCS+1][NUMCS],
@@ -2352,9 +2347,9 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
 
 
 
-// pure DONOR version:
-// upoint is input staggered updated field that needs to be converted to pstag and then "interpolated" to pcent and upoint that is upon output at CENT
-// To use this, just rename this as without "_donor" and rename normal code to have (e.g.) "_normal" on end of function name.
+/// pure DONOR version:
+/// upoint is input staggered updated field that needs to be converted to pstag and then "interpolated" to pcent and upoint that is upon output at CENT
+/// To use this, just rename this as without "_donor" and rename normal code to have (e.g.) "_normal" on end of function name.
 int interpolate_ustag2fieldcent_donor
 //int interpolate_ustag2fieldcent
 (int stage, SFTYPE boundtime, int timeorder, int numtimeorders, FTYPE (*preal)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],FTYPE (*upoint)[NSTORE2][NSTORE3][NPR],FTYPE (*pcent)[NSTORE2][NSTORE3][NPR])

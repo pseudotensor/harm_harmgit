@@ -1,24 +1,27 @@
 #include "decs.h"
 
+/*! \file fluxvpot.c
+  \brief All things related to vector potential: A_mu
+ */
 
-// get directions for cyclic variables
-// signflux determines signature of relationship between flux and A_i and likewise the EMF_i = -\detg E_i
-// As in fluxct.c:
-// For evolution:
-// d_t A1 = EMF1 = -\detg E1 = F2[B3] = -F3[B2]
-// d_t A2 = EMF2 = -\detg E2 = F3[B1] = -F1[B3]
-// d_t A3 = EMF3 = -\detg E3 = F1[B2] = -F2[B1]
-// 
-// For initialization:
-// A1 = F2[B3] = -F3[B2]
-// A2 = F3[B1] = -F1[B3]
-// A3 = F1[B2] = -F2[B1]
-// \detg B1 = d_2 A3 - d_3 A2
-// \detg B2 = d_3 A1 - d_1 A3
-// \detg B3 = d_1 A2 - d_2 A1
-// 
-// opposite ordering required to be used when F[odir1] doesn't exist because N[odir1]==1
-// Should use signflux when changing between A_i <-> flux
+/// get directions for cyclic variables
+/// signflux determines signature of relationship between flux and A_i and likewise the EMF_i = -\detg E_i
+/// As in fluxct.c:
+/// For evolution:
+/// d_t A1 = EMF1 = -\detg E1 = F2[B3] = -F3[B2]
+/// d_t A2 = EMF2 = -\detg E2 = F3[B1] = -F1[B3]
+/// d_t A3 = EMF3 = -\detg E3 = F1[B2] = -F2[B1]
+/// 
+/// For initialization:
+/// A1 = F2[B3] = -F3[B2]
+/// A2 = F3[B1] = -F1[B3]
+/// A3 = F1[B2] = -F2[B1]
+/// \detg B1 = d_2 A3 - d_3 A2
+/// \detg B2 = d_3 A1 - d_1 A3
+/// \detg B3 = d_1 A2 - d_2 A1
+/// 
+/// opposite ordering required to be used when F[odir1] doesn't exist because N[odir1]==1
+/// Should use signflux when changing between A_i <-> flux
 int get_fluxpldirs(int *Nvec, int dir, int *fluxdir, int* pldir, int *plforflux, FTYPE *signflux)
 {
   int odir1,odir2;
@@ -39,10 +42,10 @@ int get_fluxpldirs(int *Nvec, int dir, int *fluxdir, int* pldir, int *plforflux,
 }
 
 
-// cyclic other dimensions
-// dir=1 odir1=2 odir2=3 so signflux=1 for this ordering
-// dir=2 odir1=3 odir2=1 so signflux=1 for this ordering
-// dir=3 odir1=1 odir2=2 so signflux=1 for this ordering
+/// cyclic other dimensions
+/// dir=1 odir1=2 odir2=3 so signflux=1 for this ordering
+/// dir=2 odir1=3 odir2=1 so signflux=1 for this ordering
+/// dir=3 odir1=1 odir2=2 so signflux=1 for this ordering
 void get_odirs(int dir,int *odir1,int *odir2)
 {
   // m%3+1 gives next 1->2,2->3,3->1
@@ -52,8 +55,8 @@ void get_odirs(int dir,int *odir1,int *odir2)
 }
 
 
-// set locations for vpot or emf and number of independent memory locations for each A_i or E_i to consider
-// GODMARK: Notice the positions loc[][] are only for initializing field, while FLUXCTTOTH evolves A_i really at FACE
+/// set locations for vpot or emf and number of independent memory locations for each A_i or E_i to consider
+/// GODMARK: Notice the positions loc[][] are only for initializing field, while FLUXCTTOTH evolves A_i really at FACE
 int set_location_fluxasemforvpot(int dir, int *numdirs, int *odir1, int *odir2, int *loc)
 {
   int fieldloc[NDIM];
@@ -84,7 +87,7 @@ int set_location_fluxasemforvpot(int dir, int *numdirs, int *odir1, int *odir2, 
 
 }
 
-// set locations for vpot or emf and number of independent memory locations for each A_i or E_i to consider
+/// set locations for vpot or emf and number of independent memory locations for each A_i or E_i to consider
 int get_numdirs_fluxasemforvpot(int *numdirs, int *fieldloc)
 {
 
@@ -148,10 +151,10 @@ int get_numdirs_fluxasemforvpot(int *numdirs, int *fieldloc)
 
 
 
-// assumes normal field p
-// pleft used as temp var if FLUXB==FLUXCTSTAG
-// assigns conserved field in UEVOLVE form (i.e. with gdet always)
-// implicitly Flux F1,F2,F3 are inputted into function
+/// assumes normal field p
+/// pleft used as temp var if FLUXB==FLUXCTSTAG
+/// assigns conserved field in UEVOLVE form (i.e. with gdet always)
+/// implicitly Flux F1,F2,F3 are inputted into function
 int vpot2field(SFTYPE time, FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],FTYPE (*pfield)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*Atemp)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*uconstemp)[NSTORE2][NSTORE3][NPR])
 {
   int i,j,k,pl,pliter;
@@ -302,7 +305,7 @@ int vpot2field(SFTYPE time, FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2]
 
 
 
-// convert conservative U to stag point P and CENT point U and CENT point primitive
+/// convert conservative U to stag point P and CENT point U and CENT point primitive
 int ucons2upointppoint(SFTYPE boundtime, FTYPE (*pfield)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],FTYPE (*unew)[NSTORE2][NSTORE3][NPR],FTYPE (*ulast)[NSTORE2][NSTORE3][NPR],FTYPE (*pcent)[NSTORE2][NSTORE3][NPR])
 {
   int i,j,k,pl,pliter;
@@ -378,9 +381,9 @@ int ucons2upointppoint(SFTYPE boundtime, FTYPE (*pfield)[NSTORE2][NSTORE3][NPR],
 
 
 
-// initialize vector potential given user function
-// assumes normal non-staggered field in pr
-// Notice that if using F (flux), then *location* can be different for (e.g.) F1[B2] and F2[B1] while if using A_3 then no choice in varying positions
+/// initialize vector potential given user function
+/// assumes normal non-staggered field in pr
+/// Notice that if using F (flux), then *location* can be different for (e.g.) F1[B2] and F2[B1] while if using A_3 then no choice in varying positions
 int init_vpot(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*Atemp)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
 {
   FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3];
@@ -421,7 +424,7 @@ int init_vpot(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTO
 
 
 
-// get A_i in PRIMECOORDS for FLUXB==FLUXCTSTAG at CORNi for each A_i, the natural staggered field locations for A_i (i.e. not all same location for all A_i)
+/// get A_i in PRIMECOORDS for FLUXB==FLUXCTSTAG at CORNi for each A_i, the natural staggered field locations for A_i (i.e. not all same location for all A_i)
 int get_vpot_fluxctstag_primecoords(SFTYPE time, int i, int j, int k, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *vpot)
 {
   int dir;
@@ -465,8 +468,8 @@ int get_vpot_fluxctstag_primecoords(SFTYPE time, int i, int j, int k, FTYPE (*pr
 
 
 
-// initialize vector potential given user function
-// assumes normal non-staggered field in pr
+/// initialize vector potential given user function
+/// assumes normal non-staggered field in pr
 int init_vpot_justAcov(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
 {
   int Nvec[NDIM];
@@ -594,9 +597,9 @@ int init_vpot_justAcov(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE 
 
 
 
-// initialize vector potential given user function
-// assumes normal non-staggered field in pr
-// Notice that if using F (flux), then *location* can be different for (e.g.) F1[B2] and F2[B1] while if using A_3 then no choice in varying positions
+/// initialize vector potential given user function
+/// assumes normal non-staggered field in pr
+/// Notice that if using F (flux), then *location* can be different for (e.g.) F1[B2] and F2[B1] while if using A_3 then no choice in varying positions
 int init_vpot_toF(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL])
 {
   int Nvec[NDIM];
@@ -737,8 +740,8 @@ int init_vpot_toF(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+S
 
 
 
-// copy A_i to F_i[B1..B3] -- for use with some field evolution methods during time evolution
-// Note can't just use this in init_vpot() since there F's normally associated with a single A_i might have different positions (e.g. FLUXCTHLL method)
+/// copy A_i to F_i[B1..B3] -- for use with some field evolution methods during time evolution
+/// Note can't just use this in init_vpot() since there F's normally associated with a single A_i might have different positions (e.g. FLUXCTHLL method)
 int copy_vpot2flux(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL])
 {
   FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL];
@@ -818,12 +821,12 @@ int copy_vpot2flux(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+
 
 
 
-// once this function is done, ensure obtain higher-order with test=1102, etc.
-// GODMARK: what about fields in direction with no dimension, like B3 in 2D?  Can't obtain B3 from A_i??
-//          Seems fine B3=A2,1 +-A1,2
-//          What about B1,B2?  Only needs A_3 since don't need B1=A_2,3 and B2=A_1,3 ?  Can I assume those are zero?
-// In 1D only have 0=A1,1 B3=A2,1 and B2=A3,1, so need to be able to obtain B1 somehow -- or just don't change B1 since must be constant in time
-// Note if FLUXCTHLL or FLUXCTTOTH, then no single A_i is evolved, so can't evolve with A_i in that case since field is determined by 2 different versions of A_i that we don't track (nor should!)
+/// once this function is done, ensure obtain higher-order with test=1102, etc.
+/// GODMARK: what about fields in direction with no dimension, like B3 in 2D?  Can't obtain B3 from A_i??
+///          Seems fine B3=A2,1 +-A1,2
+///          What about B1,B2?  Only needs A_3 since don't need B1=A_2,3 and B2=A_1,3 ?  Can I assume those are zero?
+/// In 1D only have 0=A1,1 B3=A2,1 and B2=A3,1, so need to be able to obtain B1 somehow -- or just don't change B1 since must be constant in time
+/// Note if FLUXCTHLL or FLUXCTTOTH, then no single A_i is evolved, so can't evolve with A_i in that case since field is determined by 2 different versions of A_i that we don't track (nor should!)
 int evolve_withvpot(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],FTYPE (*unew)[NSTORE2][NSTORE3][NPR],FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*Atemp)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*uconstemp)[NSTORE2][NSTORE3][NPR])
 {
 
@@ -867,8 +870,8 @@ int evolve_withvpot(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],FTYPE (*ps
 
 
 
-// find divb
-// if higher order method, then must use conserved value U[] assumed to then exist and be used for field
+/// find divb
+/// if higher order method, then must use conserved value U[] assumed to then exist and be used for field
 void setfdivb(FTYPE *divb, FTYPE (*p)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*U)[NSTORE2][NSTORE3][NPR], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR], int i, int j, int k)
 {
 
@@ -927,10 +930,10 @@ void setfdivb(FTYPE *divb, FTYPE (*p)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NST
 
 
 
-// Used with FLUXB==FLUXCTHLL
-// actually uses F1/F2/F3 instead of inputted A[]
-// When using FLUXCTHLL, doesn't preserve divb, but gives correct CENT position of field given face vector potential
-// If flux is really vector potential at corners and vector potential is direction-dependent quasi-deaveraged version
+/// Used with FLUXB==FLUXCTHLL
+/// actually uses F1/F2/F3 instead of inputted A[]
+/// When using FLUXCTHLL, doesn't preserve divb, but gives correct CENT position of field given face vector potential
+/// If flux is really vector potential at corners and vector potential is direction-dependent quasi-deaveraged version
 int vpot2field_useflux(int *fieldloc,FTYPE (*pfield)[NSTORE2][NSTORE3][NPR],FTYPE (*ufield)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL])
 {
   int Nvec[NDIM];
@@ -1111,29 +1114,28 @@ int vpot2field_useflux(int *fieldloc,FTYPE (*pfield)[NSTORE2][NSTORE3][NPR],FTYP
 
 
 
-////////////////////////
-//
-// Evolve A_i (either just updating A_i to be consistent with fluxes/emf, or manipulate A_i/EMFs/Fluxes and then update A_i)
-//
-// Like advance() but for A_i with allowed modifications to either EMF or A_i directly
-//
-// Can evolve with vpot (i.e. could have modified A_i or may want A_i to be machine accurate instead of drifting from B^i)
-// this used to be in post_advance(), but was excessively doing full evolve_withvpot().  But we already adjusted A_i and can now get corrected Fluxes compared to how computed in fluxcalc_fluxctstag.  The flux hasn't yet been used to compute anything, so this correction is in the right location.
-//    if(EVOLVEWITHVPOT){
-// Normally do:
-// a) EMF->A_i
-// b) EMF->F->B in all B's forms (prim,pstag,unew,Bhat).
-// But then if want A_i to be machine error consistent with these B's, need to do A_i->B.  Otherwise, A_i evolution will drift from B's evolution even with same EMFs.
-// In order to avoid repeating A_i->B, can take new and old A_i to create EMF that's used along normal (EMF->F->B) path.  This way one really has (dA_i = A_iold-A_inew)->EMF->F->B.
-// So then don't need to separately adjust EMFs using adjust_fluxctstag_emf(), only have to adjust A_i.  Also solves any inconsistency in how EMF and A_i are modified using adjust_'s.
-// Could decide to only adjust EMFs and not A_i (but then A_i will diverge due to machine error, so haven't solved the original issue -- only solved a redundancy issue).
-// Problem is still there if use dA_i.  B's and A_i will diverge from one another.  Can only have 1 fundamental, or shift fundamental every so often.
-//
-// But if want internal BC solution to be smooth extention (not some fake accurate solution), then need to manipulate A_i directly.  Else staggered B^i interpolation will also be jumpy.
-// So let's shift to A_i every step in post_advance() so A_i controls B^i, but let's reset EMF_i from dA_i so don't have to adjust EMF_i directly and separately from A_i.  Otherwise, unless perfectly  match EMF and A_i, may cause inconsistencies -- for example, in B_CENT computed from B_STAG that's first computed from EMFs, while shifted to A_i only after.  So B_CENT would be inconsistent with new B_STAG from A_i
-//  }
-
-// SUPERGODMARK: Note: By relying upon A_i, one eventually cumulates catastrophic cancellation as (e.g.) dA_2+=EMF_2 dt such that after double precision (10^{14} or so) steps the calculation is totally corrupted.  Long before this, machine errors become larger and larger.
+////////////////////////////////////
+///
+/// Evolve A_i (either just updating A_i to be consistent with fluxes/emf, or manipulate A_i/EMFs/Fluxes and then update A_i)
+///
+/// Like advance() but for A_i with allowed modifications to either EMF or A_i directly
+///
+/// Can evolve with vpot (i.e. could have modified A_i or may want A_i to be machine accurate instead of drifting from B^i)
+/// this used to be in post_advance(), but was excessively doing full evolve_withvpot().  But we already adjusted A_i and can now get corrected Fluxes compared to how computed in fluxcalc_fluxctstag.  The flux hasn't yet been used to compute anything, so this correction is in the right location.
+///    if(EVOLVEWITHVPOT){
+/// Normally do:
+/// a) EMF->A_i
+/// b) EMF->F->B in all B's forms (prim,pstag,unew,Bhat).
+/// But then if want A_i to be machine error consistent with these B's, need to do A_i->B.  Otherwise, A_i evolution will drift from B's evolution even with same EMFs.
+/// In order to avoid repeating A_i->B, can take new and old A_i to create EMF that's used along normal (EMF->F->B) path.  This way one really has (dA_i = A_iold-A_inew)->EMF->F->B.
+/// So then don't need to separately adjust EMFs using adjust_fluxctstag_emf(), only have to adjust A_i.  Also solves any inconsistency in how EMF and A_i are modified using adjust_'s.
+/// Could decide to only adjust EMFs and not A_i (but then A_i will diverge due to machine error, so haven't solved the original issue -- only solved a redundancy issue).
+/// Problem is still there if use dA_i.  B's and A_i will diverge from one another.  Can only have 1 fundamental, or shift fundamental every so often.
+///
+/// But if want internal BC solution to be smooth extention (not some fake accurate solution), then need to manipulate A_i directly.  Else staggered B^i interpolation will also be jumpy.
+/// So let's shift to A_i every step in post_advance() so A_i controls B^i, but let's reset EMF_i from dA_i so don't have to adjust EMF_i directly and separately from A_i.  Otherwise, unless perfectly  match EMF and A_i, may cause inconsistencies -- for example, in B_CENT computed from B_STAG that's first computed from EMFs, while shifted to A_i only after.  So B_CENT would be inconsistent with new B_STAG from A_i
+///  }
+/// SUPERGODMARK: Note: By relying upon A_i, one eventually cumulates catastrophic cancellation as (e.g.) dA_2+=EMF_2 dt such that after double precision (10^{14} or so) steps the calculation is totally corrupted.  Long before this, machine errors become larger and larger.
 int evolve_vpotgeneral(int whichmethod, int stage,
                        int initialstep, int finalstep,
                        FTYPE (*pr)[NSTORE2][NSTORE3][NPR],
@@ -1274,8 +1276,8 @@ int evolve_vpotgeneral(int whichmethod, int stage,
 
 
 
-// wrapper for adjust_fluxctstag_emfs() and adjust_fluxcttoth_emfs()
-// calls user functions
+/// wrapper for adjust_fluxctstag_emfs() and adjust_fluxcttoth_emfs()
+/// calls user functions
 void adjust_emfs(SFTYPE fluxtime, int whichmethod, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*emf)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3] )
 {
 
@@ -1293,8 +1295,8 @@ void adjust_emfs(SFTYPE fluxtime, int whichmethod, FTYPE (*pr)[NSTORE2][NSTORE3]
 
 
 
-// wrapper for adjust_fluxctstag_vpot() and adjust_fluxcttoth_vpot()
-// calls user functions
+/// wrapper for adjust_fluxctstag_vpot() and adjust_fluxcttoth_vpot()
+/// calls user functions
 void adjust_vpot(SFTYPE fluxtime, int whichmethod, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
 {
  
@@ -1311,7 +1313,7 @@ void adjust_vpot(SFTYPE fluxtime, int whichmethod, FTYPE (*pr)[NSTORE2][NSTORE3]
 
 
 
-// update A_i
+/// update A_i
 int update_vpot(int whichmethod, int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*emf)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE *CUf, FTYPE *CUnew, SFTYPE fluxdt,FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],FTYPE (*vpot0)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],FTYPE (*vpotlast)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],FTYPE (*vpotcum)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
 {
   extern int bound_flux_fluxrecon(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL]);
@@ -1474,8 +1476,8 @@ int update_vpot(int whichmethod, int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], 
 
 
 
-// fix EMF_i (in Flux space so ready to be used) from A_i and Aold_i
-// pretty similar to update_vpot(), but inverted assignment.  So removed detailed comments/debug from this function.
+/// fix EMF_i (in Flux space so ready to be used) from A_i and Aold_i
+/// pretty similar to update_vpot(), but inverted assignment.  So removed detailed comments/debug from this function.
 int set_emfflux(int whichmethod, int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*emf)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE *CUf, FTYPE *CUnew, SFTYPE fluxdt,FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],FTYPE (*vpot0)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],FTYPE (*vpotlast)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
 {
   int dir;
@@ -1590,9 +1592,9 @@ int set_emfflux(int whichmethod, int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], 
 
 
 
-// renormalize field using user norm
-// GODMARK: in reality should renormalize A_i and then recompute and can renormalize each A_i independently
-// this type of function assumes renormalizing field energy density in lab-frame
+/// renormalize field using user norm
+/// GODMARK: in reality should renormalize A_i and then recompute and can renormalize each A_i independently
+/// this type of function assumes renormalizing field energy density in lab-frame
 int normalize_field_withnorm(FTYPE norm, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR])
 {
 
@@ -1663,8 +1665,8 @@ int normalize_field_withnorm(FTYPE norm, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], F
 
 
 
-// used when not using vector potential and just assigning conserved quantities as point values from primitives for field
-// uses global p and pstagscratch
+/// used when not using vector potential and just assigning conserved quantities as point values from primitives for field
+/// uses global p and pstagscratch
 int assign_fieldconservatives_pointvalues(FTYPE (*prim)[NSTORE2][NSTORE3][NPR],FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],FTYPE (*ucons)[NSTORE2][NSTORE3][NPR])
 {
 
@@ -1710,8 +1712,8 @@ int assign_fieldconservatives_pointvalues(FTYPE (*prim)[NSTORE2][NSTORE3][NPR],F
 
 
 
-// this assigns rough pstag value from p
-// in case not using vector potential
+/// this assigns rough pstag value from p
+/// in case not using vector potential
 int assignrough_primitive_pstag(int i,int j, int k, FTYPE (*p)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR])
 {
 
@@ -1764,7 +1766,7 @@ int assignrough_primitive_pstag(int i,int j, int k, FTYPE (*p)[NSTORE2][NSTORE3]
 
 
 
-// zero-out field for primitives (and pstag too)
+/// zero-out field for primitives (and pstag too)
 int init_zero_field(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR],FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR])
 {
 
