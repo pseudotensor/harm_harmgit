@@ -1,20 +1,20 @@
 #include "decs.h"
 
+/*! \file copyandinit_functions.c&
+    \brief copy/init arrays
+    //
+    // Various mostly general copy and initialization functions that operate on 3D Loop
+    //
+    /////////////////////////
 
-/////////////////////////
-//
-// Various mostly general copy and initialization functions that operate on 3D Loop
-//
-/////////////////////////
-
-
-
-
+*/
 
 
 
 
-// loop range for inversion or final centered field primitive
+
+
+/// loop range for inversion or final centered field primitive
 void get_inversion_startendindices(int *loop, int *is,int *ie,int *js,int *je,int *ks,int *ke)
 {
 
@@ -73,7 +73,7 @@ void get_inversion_startendindices(int *loop, int *is,int *ie,int *js,int *je,in
 
 }
 
-// determine loop range for ustagpoint2pstag() in fluxctstag.c
+/// determine loop range for ustagpoint2pstag() in fluxctstag.c
 void get_stag_startendindices(int *loop, int dir, int *is,int *ie,int *js,int *je,int *ks,int *ke)
 {
   
@@ -104,21 +104,21 @@ void get_stag_startendindices(int *loop, int dir, int *is,int *ie,int *js,int *j
 
 
 
-// determine loop range for *using* fluxes
-// shifts extra +1 to get field update.
-// Assumes applied to temporary ucum and that final ucum more controlled
-// This forces flux update so face fields included, but final ucum/pf still only updated at center.
-// +SHIFT1/2/3 required in particular for IF3DSPCTHENMPITRANSFERATPOLE.  In all other cases turns out wouldn't have needed this, but still ok to do it in general -- especially for AMR
-// Notes from above:
-// then always use +-1 expanded loop even for inversion
-// This overdoes corner cells for inversion for centered U, but just cycles through existing values so ok
-// Even ok if extends to true boundary cell
-// with cleanup_fluxes() in flux.c so that fluxes are zeroed-out outside well-defined computational box, then *always* update +-1 from "normal" conservatives so that all possible fluxes are accounted in changes due to interior and some exterior cells
-// This way all advance.c is simple and just expanded by 1 cell effectively
-// This allows use of adaptive time-stepping such that surrounding cells are properly updated and keep pace with the effective time of the RK-stepping
-// Also ensures divb=0 and flux conservation under any case since always take into account fluxes through the well-defined computational box
-// must constrain result since this is final centered value of field and only have enough information to be well-defined on the current computational box over a finite range
-// Only expand if on outer edge of not-evolved region in order to (primarily) preserve divb=0
+/// determine loop range for *using* fluxes
+/// shifts extra +1 to get field update.
+/// Assumes applied to temporary ucum and that final ucum more controlled
+/// This forces flux update so face fields included, but final ucum/pf still only updated at center.
+/// +SHIFT1/2/3 required in particular for IF3DSPCTHENMPITRANSFERATPOLE.  In all other cases turns out wouldn't have needed this, but still ok to do it in general -- especially for AMR
+/// Notes from above:
+/// then always use +-1 expanded loop even for inversion
+/// This overdoes corner cells for inversion for centered U, but just cycles through existing values so ok
+/// Even ok if extends to true boundary cell
+/// with cleanup_fluxes() in flux.c so that fluxes are zeroed-out outside well-defined computational box, then *always* update +-1 from "normal" conservatives so that all possible fluxes are accounted in changes due to interior and some exterior cells
+/// This way all advance.c is simple and just expanded by 1 cell effectively
+/// This allows use of adaptive time-stepping such that surrounding cells are properly updated and keep pace with the effective time of the RK-stepping
+/// Also ensures divb=0 and flux conservation under any case since always take into account fluxes through the well-defined computational box
+/// must constrain result since this is final centered value of field and only have enough information to be well-defined on the current computational box over a finite range
+/// Only expand if on outer edge of not-evolved region in order to (primarily) preserve divb=0
 void get_flux_startendindices(int *loop, int *is,int *ie,int *js,int *je,int *ks,int *ke)
 {
 
@@ -151,12 +151,12 @@ void get_flux_startendindices(int *loop, int *is,int *ie,int *js,int *je,int *ks
 
 
 
-// copy tempucum -> ucum so ucum only has updates where wanted for each pl.
-// avoids NaN or out of bounds assignments into ucum (which shows up in, e.g., dump diagnostics)
-// Also ensures that final unewglobal values are only updated within the well-defined computational box
-// Note that inversion U->p is also within well-defined computational box.
-// Note that ustag->pstag occurs in fluxctstag.c in well-defined computational box [with extra face for each B1,B2,B3 as required]
-// So overall prim,pstag,unew are only updated where desired -- no leakage unlike fluxes, temp primitives, and other things.
+/// copy tempucum -> ucum so ucum only has updates where wanted for each pl.
+/// avoids NaN or out of bounds assignments into ucum (which shows up in, e.g., dump diagnostics)
+/// Also ensures that final unewglobal values are only updated within the well-defined computational box
+/// Note that inversion U->p is also within well-defined computational box.
+/// Note that ustag->pstag occurs in fluxctstag.c in well-defined computational box [with extra face for each B1,B2,B3 as required]
+/// So overall prim,pstag,unew are only updated where desired -- no leakage unlike fluxes, temp primitives, and other things.
 void copy_tempucum_finalucum(int whichpl, int *loop, FTYPE (*tempucum)[NSTORE2][NSTORE3][NPR], FTYPE (*ucum)[NSTORE2][NSTORE3][NPR])
 {
 
@@ -278,8 +278,8 @@ void copy_tempucum_finalucum(int whichpl, int *loop, FTYPE (*tempucum)[NSTORE2][
 }
 
 
-// like copy_tempucum_finalucum() but for field only
-// Used for setting up point value of field in advance.c
+/// like copy_tempucum_finalucum() but for field only
+/// Used for setting up point value of field in advance.c
 void copy_tempucum_finalucum_fieldonly(int *loop, FTYPE (*tempucum)[NSTORE2][NSTORE3][NPR], FTYPE (*ucum)[NSTORE2][NSTORE3][NPR])
 {
 
@@ -364,8 +364,8 @@ void copy_tempucum_finalucum_fieldonly(int *loop, FTYPE (*tempucum)[NSTORE2][NST
 
 
 
-// general purpose copy machine for 3D arrays with only size NPR appended onto the end of array
-// put as function because then wrap-up OpenMP stuff
+/// general purpose copy machine for 3D arrays with only size NPR appended onto the end of array
+/// put as function because then wrap-up OpenMP stuff
 void copy_3dnpr(int is, int ie, int js, int je, int ks, int ke,FTYPE (*source)[NSTORE2][NSTORE3][NPR],FTYPE (*dest)[NSTORE2][NSTORE3][NPR])
 {
 
@@ -406,8 +406,8 @@ void copy_3dnpr_fullloop(FTYPE (*source)[NSTORE2][NSTORE3][NPR],FTYPE (*dest)[NS
 
 }
 
-// general purpose copy machine for 3D arrays with only size NPR appended onto the end of array
-// put as function because then wrap-up OpenMP stuff
+/// general purpose copy machine for 3D arrays with only size NPR appended onto the end of array
+/// put as function because then wrap-up OpenMP stuff
 void copy_3d_nofield(int is, int ie, int js, int je, int ks, int ke,FTYPE (*source)[NSTORE2][NSTORE3][NPR],FTYPE (*dest)[NSTORE2][NSTORE3][NPR])
 {
 
@@ -433,8 +433,8 @@ void copy_3d_nofield(int is, int ie, int js, int je, int ks, int ke,FTYPE (*sour
 }
 
 
-// general purpose copy machine for 3D arrays with only size NPR appended onto the end of array
-// put as function because then wrap-up OpenMP stuff
+/// general purpose copy machine for 3D arrays with only size NPR appended onto the end of array
+/// put as function because then wrap-up OpenMP stuff
 void copy_3d_fieldonly(int is, int ie, int js, int je, int ks, int ke,FTYPE (*source)[NSTORE2][NSTORE3][NPR],FTYPE (*dest)[NSTORE2][NSTORE3][NPR])
 {
 
@@ -458,8 +458,8 @@ void copy_3d_fieldonly(int is, int ie, int js, int je, int ks, int ke,FTYPE (*so
 
 }
 
-// general purpose copy machine for 3D arrays with only size NPR appended onto the end of array
-// put as function because then wrap-up OpenMP stuff
+/// general purpose copy machine for 3D arrays with only size NPR appended onto the end of array
+/// put as function because then wrap-up OpenMP stuff
 void copy_3d_fieldonly_fullloop(FTYPE (*source)[NSTORE2][NSTORE3][NPR],FTYPE (*dest)[NSTORE2][NSTORE3][NPR])
 {
   int is=-N1BND;
@@ -476,9 +476,9 @@ void copy_3d_fieldonly_fullloop(FTYPE (*source)[NSTORE2][NSTORE3][NPR],FTYPE (*d
 }
 
 
-// general purpose copy machine for 3D arrays with only size NPR appended onto the end of array
-// put as function because then wrap-up OpenMP stuff
-// Presumes parallel region is outside function
+/// general purpose copy machine for 3D arrays with only size NPR appended onto the end of array
+/// put as function because then wrap-up OpenMP stuff
+/// Presumes parallel region is outside function
 void copy_3d_nofield_nowait(int is, int ie, int js, int je, int ks, int ke,FTYPE (*source)[NSTORE2][NSTORE3][NPR],FTYPE (*dest)[NSTORE2][NSTORE3][NPR])
 {
   int i,j,k,pl,pliter;
@@ -499,9 +499,9 @@ void copy_3d_nofield_nowait(int is, int ie, int js, int je, int ks, int ke,FTYPE
 
 }
 
-// general purpose copy machine for 3D arrays with only size NPR appended onto the end of array
-// put as function because then wrap-up OpenMP stuff
-// Presumes parallel region is outside function
+/// general purpose copy machine for 3D arrays with only size NPR appended onto the end of array
+/// put as function because then wrap-up OpenMP stuff
+/// Presumes parallel region is outside function
 void copy_3d_fieldonly_nowait(int is, int ie, int js, int je, int ks, int ke,FTYPE (*source)[NSTORE2][NSTORE3][NPR],FTYPE (*dest)[NSTORE2][NSTORE3][NPR])
 {
   int i,j,k,pl,pliter;
@@ -521,8 +521,8 @@ void copy_3d_fieldonly_nowait(int is, int ie, int js, int je, int ks, int ke,FTY
 
 }
 
-// general purpose copy machine for 3D arrays with only size NPR appended onto the end of array
-// put as function because then wrap-up OpenMP stuff
+/// general purpose copy machine for 3D arrays with only size NPR appended onto the end of array
+/// put as function because then wrap-up OpenMP stuff
 void copy_3d_onepl(int is, int ie, int js, int je, int ks, int ke, int pl, FTYPE (*source)[NSTORE2][NSTORE3][NPR],FTYPE (*dest)[NSTORE2][NSTORE3][NPR])
 {
 
@@ -546,9 +546,9 @@ void copy_3d_onepl(int is, int ie, int js, int je, int ks, int ke, int pl, FTYPE
 
 }
 
-// general purpose copy machine for 3D arrays with only size NPR appended onto the end of array
-// put as function because then wrap-up OpenMP stuff
-// Presumes parallel region is outside function
+/// general purpose copy machine for 3D arrays with only size NPR appended onto the end of array
+/// put as function because then wrap-up OpenMP stuff
+/// Presumes parallel region is outside function
 void copy_3d_onepl_nowait(int is, int ie, int js, int je, int ks, int ke, int pl, FTYPE (*source)[NSTORE2][NSTORE3][NPR],FTYPE (*dest)[NSTORE2][NSTORE3][NPR])
 {
   int i,j,k;
@@ -568,8 +568,8 @@ void copy_3d_onepl_nowait(int is, int ie, int js, int je, int ks, int ke, int pl
 }
 
 
-// general purpose copy machine for 3D arrays with only size NPR appended onto the end of array
-// put as function because then wrap-up OpenMP stuff
+/// general purpose copy machine for 3D arrays with only size NPR appended onto the end of array
+/// put as function because then wrap-up OpenMP stuff
 void copy_3d_onepl_fullloop(int pl, FTYPE (*source)[NSTORE2][NSTORE3][NPR],FTYPE (*dest)[NSTORE2][NSTORE3][NPR])
 {
   int is=-N1BND;
@@ -584,9 +584,9 @@ void copy_3d_onepl_fullloop(int pl, FTYPE (*source)[NSTORE2][NSTORE3][NPR],FTYPE
 
 }
 
-// general purpose copy machine for 3D arrays with only size NPR appended onto the end of array
-// put as function because then wrap-up OpenMP stuff
-// Presumes parallel region is outside function
+/// general purpose copy machine for 3D arrays with only size NPR appended onto the end of array
+/// put as function because then wrap-up OpenMP stuff
+/// Presumes parallel region is outside function
 void copy_3d_onepl_fullloop_nowait(int pl, FTYPE (*source)[NSTORE2][NSTORE3][NPR],FTYPE (*dest)[NSTORE2][NSTORE3][NPR])
 {
   int is=-N1BND;
@@ -601,8 +601,8 @@ void copy_3d_onepl_fullloop_nowait(int pl, FTYPE (*source)[NSTORE2][NSTORE3][NPR
 
 }
 
-// general purpose copy machine for 3D arrays with only size NPR appended onto the end of array
-// put as function because then wrap-up OpenMP stuff
+/// general purpose copy machine for 3D arrays with only size NPR appended onto the end of array
+/// put as function because then wrap-up OpenMP stuff
 void init_3dnpr_flux(int is, int ie, int js, int je, int ks, int ke,FTYPE initvalue, FTYPE (*dest)[NSTORE2][NSTORE3][NPR+NSPECIAL])
 {
 
@@ -628,6 +628,7 @@ void init_3dnpr_flux(int is, int ie, int js, int je, int ks, int ke,FTYPE initva
 
 }
 
+/// init 3d npr type array
 void init_3dnpr(int is, int ie, int js, int je, int ks, int ke,FTYPE initvalue, FTYPE (*dest)[NSTORE2][NSTORE3][NPR])
 {
 
@@ -653,7 +654,7 @@ void init_3dnpr(int is, int ie, int js, int je, int ks, int ke,FTYPE initvalue, 
 
 }
 
-
+/// init 3d npr type array over full loop
 void init_3dnpr_fullloop(FTYPE initvalue, FTYPE (*dest)[NSTORE2][NSTORE3][NPR])
 {
   int is=-N1BND;
@@ -667,7 +668,7 @@ void init_3dnpr_fullloop(FTYPE initvalue, FTYPE (*dest)[NSTORE2][NSTORE3][NPR])
 
 }
 
-
+/// init 3d npr type array over full loop over flux positions
 void init_3dnpr_fullloop_flux(FTYPE initvalue, FTYPE (*dest)[NSTORE2][NSTORE3][NPR+NSPECIAL])
 {
   int is=-N1BND;
@@ -682,7 +683,7 @@ void init_3dnpr_fullloop_flux(FTYPE initvalue, FTYPE (*dest)[NSTORE2][NSTORE3][N
 }
 
 
-// initialize single pre-component of the vpot type array
+/// initialize single pre-component of the vpot type array
 void init_3dvpot(int is, int ie, int js, int je, int ks, int ke,FTYPE initvalue, FTYPE (*dest)[NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
 {
 
@@ -702,7 +703,7 @@ void init_3dvpot(int is, int ie, int js, int je, int ks, int ke,FTYPE initvalue,
 }
 
 
-// initialize single pre-component of the vpot type array
+/// initialize single pre-component of the vpot type array
 void init_3dvpot_fullloopp1(FTYPE initvalue, FTYPE (*dest)[NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
 {
   int is=-N1BND;
@@ -718,7 +719,7 @@ void init_3dvpot_fullloopp1(FTYPE initvalue, FTYPE (*dest)[NSTORE2+SHIFTSTORE2][
 
 
 
-// initialize single pre-component of the vpot type array
+/// initialize single pre-component of the vpot type array
 void copy_3dvpot(int is, int ie, int js, int je, int ks, int ke, FTYPE (*source)[NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*dest)[NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
 {
 
@@ -738,7 +739,7 @@ void copy_3dvpot(int is, int ie, int js, int je, int ks, int ke, FTYPE (*source)
 }
 
 
-// initialize single pre-component of the vpot type array
+/// initialize single pre-component of the vpot type array
 void copy_3dvpot_fullloopp1(FTYPE (*source)[NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*dest)[NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
 {
   int is=-N1BND;
@@ -752,8 +753,8 @@ void copy_3dvpot_fullloopp1(FTYPE (*source)[NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTST
 
 }
 
-// general purpose copy machine for 3D arrays with only size NPR appended onto the end of array
-// put as function because then wrap-up OpenMP stuff
+/// general purpose copy machine for 3D arrays with only size NPR appended onto the end of array
+/// put as function because then wrap-up OpenMP stuff
 void init_3dnpr_2ptrs(int is, int ie, int js, int je, int ks, int ke,FTYPE initvalue, FTYPE (*dest1)[NSTORE2][NSTORE3][NPR],FTYPE (*dest2)[NSTORE2][NSTORE3][NPR])
 {
 
@@ -780,8 +781,8 @@ void init_3dnpr_2ptrs(int is, int ie, int js, int je, int ks, int ke,FTYPE initv
 
 
 
-// general purpose copy machine for 3D arrays with only size NPR appended onto the end of array
-// put as function because then wrap-up OpenMP stuff
+/// general purpose copy machine for 3D arrays with only size NPR appended onto the end of array
+/// put as function because then wrap-up OpenMP stuff
 void copy_3dnpr_2ptrs(int is, int ie, int js, int je, int ks, int ke,FTYPE (*source)[NSTORE2][NSTORE3][NPR],FTYPE (*dest1)[NSTORE2][NSTORE3][NPR],FTYPE (*dest2)[NSTORE2][NSTORE3][NPR])
 {
 
@@ -811,8 +812,8 @@ void copy_3dnpr_2ptrs(int is, int ie, int js, int je, int ks, int ke,FTYPE (*sou
 
 
 
-// general purpose copy machine for 3D arrays with only size NPR appended onto the end of array
-// put as function because then wrap-up OpenMP stuff
+/// general purpose copy machine for 3D arrays with only size NPR appended onto the end of array
+/// put as function because then wrap-up OpenMP stuff
 void copy_3dpftype_special(int is, int ie, int js, int je, int ks, int ke,PFTYPE (*source)[NSTORE2][NSTORE3][NUMPFLAGS],PFTYPE (*destspecial)[NSTORE2][NSTORE3][NUMFAILPFLAGS])
 {
 
@@ -835,8 +836,8 @@ void copy_3dpftype_special(int is, int ie, int js, int je, int ks, int ke,PFTYPE
 
 }
 
-// general purpose copy machine for 3D arrays with only size NPR appended onto the end of array
-// put as function because then wrap-up OpenMP stuff
+/// general purpose copy machine for 3D arrays with only size NPR appended onto the end of array
+/// put as function because then wrap-up OpenMP stuff
 void copy_3dpftype_special_fullloop(PFTYPE (*source)[NSTORE2][NSTORE3][NUMPFLAGS],PFTYPE (*destspecial)[NSTORE2][NSTORE3][NUMFAILPFLAGS])
 {
   int is=-N1BND;
@@ -864,8 +865,8 @@ void copy_3dpftype_special_fullloop(PFTYPE (*source)[NSTORE2][NSTORE3][NUMPFLAGS
 
 
 
-// general purpose copy machine for 3D arrays with only size NPR appended onto the end of array
-// put as function because then wrap-up OpenMP stuff
+/// general purpose copy machine for 3D arrays with only size NPR appended onto the end of array
+/// put as function because then wrap-up OpenMP stuff
 void copy_3dnpr2interp_2ptrs(int is, int ie, int js, int je, int ks, int ke,FTYPE (*source)[NSTORE2][NSTORE3][NPR2INTERP],FTYPE (*dest1)[NSTORE2][NSTORE3][NPR2INTERP],FTYPE (*dest2)[NSTORE2][NSTORE3][NPR2INTERP])
 {
 
@@ -890,8 +891,8 @@ void copy_3dnpr2interp_2ptrs(int is, int ie, int js, int je, int ks, int ke,FTYP
 
 }
 
-// general purpose copy machine for 3D arrays with only size NPR appended onto the end of array
-// put as function because then wrap-up OpenMP stuff
+/// general purpose copy machine for 3D arrays with only size NPR appended onto the end of array
+/// put as function because then wrap-up OpenMP stuff
 void copy_3dnpr2interp_2ptrs_fullloop(FTYPE (*source)[NSTORE2][NSTORE3][NPR2INTERP],FTYPE (*dest1)[NSTORE2][NSTORE3][NPR2INTERP],FTYPE (*dest2)[NSTORE2][NSTORE3][NPR2INTERP])
 {
   int i,j,k,pl,pliter;
