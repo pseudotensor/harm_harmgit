@@ -10,7 +10,7 @@ static int get_truesize(int dir, int boundvartype);
 
 
 
-// boundvartype specifies whether to bound scalar or to bound vector that is only needed to be bound along that direction
+/// boundvartype specifies whether to bound scalar or to bound vector that is only needed to be bound along that direction
 int bound_mpi_dir(int boundstage, int finalstep, int whichdir, int boundvartype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
 {
   FTYPE (*prim2bound[NDIM])[NSTORE2][NSTORE3][NPR];
@@ -255,7 +255,7 @@ int bound_mpi_dir(int boundstage, int finalstep, int whichdir, int boundvartype,
 
 
 
-// packs data for shipment
+/// packs data for shipment
 void pack(int dir, int boundvartype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*flux)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*workbc)[COMPDIM * 2][NMAXBOUND * NBIGBND * NBIGSM])
 {
   // dir=direction sending
@@ -319,7 +319,7 @@ void pack(int dir, int boundvartype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE
 }
 
 
-
+/// get true size of NPR-type sized objects
 static int get_truesize(int dir, int boundvartype)
 {
   int truesize;
@@ -344,7 +344,7 @@ static int get_truesize(int dir, int boundvartype)
   
 }
 
-
+/// MPI recieve
 void recvonly(int dir, int boundvartype, FTYPE (*workbc)[COMPDIM * 2][NMAXBOUND * NBIGBND * NBIGSM],MPI_Request *requests)
 {
   int truesize;
@@ -361,7 +361,7 @@ void recvonly(int dir, int boundvartype, FTYPE (*workbc)[COMPDIM * 2][NMAXBOUND 
   
 }
 
-
+/// MPI send
 void sendonly(int dir, int boundvartype, FTYPE (*workbc)[COMPDIM * 2][NMAXBOUND * NBIGBND * NBIGSM],MPI_Request *requests)
 {
   int truesize;
@@ -432,7 +432,7 @@ void recvwait(int dir,MPI_Request *requests)
     ,pr                                                                 \
     ,dirgenset[boundvartype][dir][DIRNUMPR]
 
-
+/// unpack data from MPI transfer
 void unpack(int dir, int boundvartype, FTYPE (*workbc)[COMPDIM * 2][NMAXBOUND * NBIGBND * NBIGSM],FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*flux)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
 {
   // dir is direction receiving from
@@ -494,7 +494,7 @@ void sendwait(int dir,MPI_Request *requests)
 
 
 
-// bound all directions
+/// bound all directions
 int bound_mpi(int boundstage, int finalstep, int fakedir, int boundvartype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
 {
   int bound_mpi_dir(int boundstage, int finalstep, int whichdir, int boundvartype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3]);

@@ -4,12 +4,12 @@
 // see definit.h or init.h for some defines here.
 
 
-// X1DN FIXEDUSINGPANALYTIC
-//
+/// X1DN FIXEDUSINGPANALYTIC
+///
 ///////////////////////////
-// Currently assume completely general situation where 
-// only triggers on BCs, but across all CPUs.  Use grid sectioning to enforce per-CPU dependence if desired.  Any other CPUs that have BCs set will have BCs overwritten by MPI routines
-// SUPERGODMARK: Should be able to use set_boundloop()'s result if included FIXED version, but currently it only handles OUTFLOW types for grid sectioning
+/// Currently assume completely general situation where 
+/// only triggers on BCs, but across all CPUs.  Use grid sectioning to enforce per-CPU dependence if desired.  Any other CPUs that have BCs set will have BCs overwritten by MPI routines
+/// SUPERGODMARK: Should be able to use set_boundloop()'s result if included FIXED version, but currently it only handles OUTFLOW types for grid sectioning
 int bound_x1dn_analytic(int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 {
   int i,j,k;
@@ -53,12 +53,12 @@ int bound_x1dn_analytic(int boundstage, int finalstep, SFTYPE boundtime, int whi
 }
 
 
-// X1UP FIXEDUSINGPANALYTIC
-//
-///////////////////////////
-// Currently assume completely general situation where 
-// only triggers on BCs, but across all CPUs.  Use grid sectioning to enforce per-CPU dependence if desired.  Any other CPUs that have BCs set will have BCs overwritten by MPI routines
-// SUPERGODMARK: Should be able to use set_boundloop()'s result if included FIXED version, but currently it only handles OUTFLOW types for grid sectioning
+/// X1UP FIXEDUSINGPANALYTIC
+///
+////////////////////////////
+/// Currently assume completely general situation where 
+/// only triggers on BCs, but across all CPUs.  Use grid sectioning to enforce per-CPU dependence if desired.  Any other CPUs that have BCs set will have BCs overwritten by MPI routines
+/// SUPERGODMARK: Should be able to use set_boundloop()'s result if included FIXED version, but currently it only handles OUTFLOW types for grid sectioning
 int bound_x1up_analytic(int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 {
   int i,j,k;
@@ -101,12 +101,12 @@ int bound_x1up_analytic(int boundstage, int finalstep, SFTYPE boundtime, int whi
 }
 
 
-// X2DN FIXEDUSINGPANALYTIC
-//
-///////////////////////////
-// Currently assume completely general situation where 
-// only triggers on BCs, but across all CPUs.  Use grid sectioning to enforce per-CPU dependence if desired.  Any other CPUs that have BCs set will have BCs overwritten by MPI routines
-// SUPERGODMARK: Should be able to use set_boundloop()'s result if included FIXED version, but currently it only handles OUTFLOW types for grid sectioning
+/// X2DN FIXEDUSINGPANALYTIC
+///
+////////////////////////////
+/// Currently assume completely general situation where 
+/// only triggers on BCs, but across all CPUs.  Use grid sectioning to enforce per-CPU dependence if desired.  Any other CPUs that have BCs set will have BCs overwritten by MPI routines
+/// SUPERGODMARK: Should be able to use set_boundloop()'s result if included FIXED version, but currently it only handles OUTFLOW types for grid sectioning
 int bound_x2dn_analytic(int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 {
   int i,j,k;
@@ -151,12 +151,12 @@ int bound_x2dn_analytic(int boundstage, int finalstep, SFTYPE boundtime, int whi
 }
 
 
-// X2UP FIXEDUSINGPANALYTIC
-//
-///////////////////////////
-// Currently assume completely general situation where 
-// only triggers on BCs, but across all CPUs.  Use grid sectioning to enforce per-CPU dependence if desired.  Any other CPUs that have BCs set will have BCs overwritten by MPI routines
-// SUPERGODMARK: Should be able to use set_boundloop()'s result if included FIXED version, but currently it only handles OUTFLOW types for grid sectioning
+/// X2UP FIXEDUSINGPANALYTIC
+///
+////////////////////////////
+/// Currently assume completely general situation where 
+/// only triggers on BCs, but across all CPUs.  Use grid sectioning to enforce per-CPU dependence if desired.  Any other CPUs that have BCs set will have BCs overwritten by MPI routines
+/// SUPERGODMARK: Should be able to use set_boundloop()'s result if included FIXED version, but currently it only handles OUTFLOW types for grid sectioning
 int bound_x2up_analytic(int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 {
   int i,j,k;
@@ -200,12 +200,12 @@ int bound_x2up_analytic(int boundstage, int finalstep, SFTYPE boundtime, int whi
 
 
 
-// X3DN FIXEDUSINGPANALYTIC
-//
-///////////////////////////
-// Currently assume completely general situation where 
-// only triggers on BCs, but across all CPUs.  Use grid sectioning to enforce per-CPU dependence if desired.  Any other CPUs that have BCs set will have BCs overwritten by MPI routines
-// SUPERGODMARK: Should be able to use set_boundloop()'s result if included FIXED version, but currently it only handles OUTFLOW types for grid sectioning
+/// X3DN FIXEDUSINGPANALYTIC
+///
+////////////////////////////
+/// Currently assume completely general situation where 
+/// only triggers on BCs, but across all CPUs.  Use grid sectioning to enforce per-CPU dependence if desired.  Any other CPUs that have BCs set will have BCs overwritten by MPI routines
+/// SUPERGODMARK: Should be able to use set_boundloop()'s result if included FIXED version, but currently it only handles OUTFLOW types for grid sectioning
 int bound_x3dn_analytic(int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 {
   int i,j,k;
@@ -250,12 +250,12 @@ int bound_x3dn_analytic(int boundstage, int finalstep, SFTYPE boundtime, int whi
 }
 
 
-// X3UP FIXEDUSINGPANALYTIC
-//
-///////////////////////////
-// Currently assume completely general situation where 
-// only triggers on BCs, but across all CPUs.  Use grid sectioning to enforce per-CPU dependence if desired.  Any other CPUs that have BCs set will have BCs overwritten by MPI routines
-// SUPERGODMARK: Should be able to use set_boundloop()'s result if included FIXED version, but currently it only handles OUTFLOW types for grid sectioning
+/// X3UP FIXEDUSINGPANALYTIC
+///
+////////////////////////////
+/// Currently assume completely general situation where 
+/// only triggers on BCs, but across all CPUs.  Use grid sectioning to enforce per-CPU dependence if desired.  Any other CPUs that have BCs set will have BCs overwritten by MPI routines
+/// SUPERGODMARK: Should be able to use set_boundloop()'s result if included FIXED version, but currently it only handles OUTFLOW types for grid sectioning
 int bound_x3up_analytic(int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 {
   int i,j,k;
@@ -299,7 +299,7 @@ int bound_x3up_analytic(int boundstage, int finalstep, SFTYPE boundtime, int whi
 
 
 
-// X1 inner OUTFLOW/FIXEDOUTFLOW
+/// X1 inner OUTFLOW/FIXEDOUTFLOW
 int bound_x1dn_outflow_simple(
                               int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
                               int *inboundloop,
@@ -425,7 +425,7 @@ int bound_x1dn_outflow_simple(
   return(0);
 }
 
-// X1 outer OUTFLOW/FIXEDOUTFLOW
+/// X1 outer OUTFLOW/FIXEDOUTFLOW
 int bound_x1up_outflow_simple(
                               int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
                               int *inboundloop,
@@ -563,7 +563,7 @@ int bound_x1up_outflow_simple(
 
 
 
-// X1 inner OUTFLOW/FIXEDOUTFLOW
+/// X1 inner OUTFLOW/FIXEDOUTFLOW
 int bound_x1dn_outflow(
                        int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
                        int *inboundloop,
@@ -743,7 +743,7 @@ int bound_x1dn_outflow(
 
 
 
-// X1 outer OUTFLOW/FIXEDOUTFLOW
+/// X1 outer OUTFLOW/FIXEDOUTFLOW
 int bound_x1up_outflow(
                        int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
                        int *inboundloop,
@@ -911,7 +911,7 @@ int bound_x1up_outflow(
 
 
 
-// X1 inner R0SING
+/// X1 inner R0SING
 int bound_x1dn_sym(
                    int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
                    int *inboundloop,
@@ -1023,7 +1023,7 @@ int bound_x1dn_sym(
 
 
 
-// X2 inner OUTFLOW/FIXEDOUTFLOW
+/// X2 inner OUTFLOW/FIXEDOUTFLOW
 int bound_x2dn_outflow_simple(
                               int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
                               int *inboundloop,
@@ -1150,7 +1150,7 @@ int bound_x2dn_outflow_simple(
   return(0);
 }
 
-// X2 outer OUTFLOW/FIXEDOUTFLOW
+/// X2 outer OUTFLOW/FIXEDOUTFLOW
 int bound_x2up_outflow_simple(
                               int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
                               int *inboundloop,
@@ -1285,11 +1285,11 @@ int bound_x2up_outflow_simple(
 
 
 
-// X2 inner POLARAXIS
-// with full3d, flip sign of both B2 and B3
-// Flip B2 because ghost cells will then be same sign if pointing in same physical location, and opposite sign if pointing opposite physical location across the pole.
-// Flip B3 because RBhat3\propto \theta (as growing enclosed current from pole) gives Bhat3\propto constant near pole and so Bhat3\propto \theta B3 and so B3\propto \constant 1/\theta.
-// So can either interpolation (e.g.) \detg B3 and \detg v3 and obtain higher-order accuracy near pole.  Or can flip sign of B3 and v3 and keep more stable but still no diffusive term that otherwise B3 and v3 would have due to their sign change across the pole.
+/// X2 inner POLARAXIS
+/// with full3d, flip sign of both B2 and B3
+/// Flip B2 because ghost cells will then be same sign if pointing in same physical location, and opposite sign if pointing opposite physical location across the pole.
+/// Flip B3 because RBhat3\propto \theta (as growing enclosed current from pole) gives Bhat3\propto constant near pole and so Bhat3\propto \theta B3 and so B3\propto \constant 1/\theta.
+/// So can either interpolation (e.g.) \detg B3 and \detg v3 and obtain higher-order accuracy near pole.  Or can flip sign of B3 and v3 and keep more stable but still no diffusive term that otherwise B3 and v3 would have due to their sign change across the pole.
 int bound_x2dn_polaraxis_full3d(
                                 int whichcall,
                                 int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
@@ -1434,7 +1434,7 @@ int bound_x2dn_polaraxis_full3d(
 
 
 
-// X2 inner POLARAXIS
+/// X2 inner POLARAXIS
 int bound_x2dn_polaraxis(
                          int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
                          int *inboundloop,
@@ -1565,7 +1565,7 @@ int bound_x2dn_polaraxis(
 
 
 
-// X2 outer POLARAXIS full3d
+/// X2 outer POLARAXIS full3d
 int bound_x2up_polaraxis_full3d(
                                 int whichcall,
                                 int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
@@ -1702,7 +1702,7 @@ int bound_x2up_polaraxis_full3d(
 
 
 
-// X2 outer POLARAXIS
+/// X2 outer POLARAXIS
 int bound_x2up_polaraxis(
                          int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
                          int *inboundloop,
@@ -1833,7 +1833,7 @@ int bound_x2up_polaraxis(
 
 
 
-// X1 periodic
+/// X1 periodic
 int bound_x1_periodic(
                       int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
                       int *inboundloop,
@@ -1925,7 +1925,7 @@ int bound_x1_periodic(
   return(0);
 }
 
-// X2 inner periodic
+/// X2 inner periodic
 int bound_x2_periodic(
                       int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
                       int *inboundloop,
@@ -2026,7 +2026,7 @@ int bound_x2_periodic(
 
 
 
-// X3 inner OUTFLOW/FIXEDOUTFLOW
+/// X3 inner OUTFLOW/FIXEDOUTFLOW
 int bound_x3dn_outflow_simple(
                               int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
                               int *inboundloop,
@@ -2150,7 +2150,7 @@ int bound_x3dn_outflow_simple(
   return(0);
 }
 
-// X3 outer OUTFLOW/FIXEDOUTFLOW
+/// X3 outer OUTFLOW/FIXEDOUTFLOW
 int bound_x3up_outflow_simple(
                               int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
                               int *inboundloop,
@@ -2289,7 +2289,7 @@ int bound_x3up_outflow_simple(
 
 
 
-// X3 inner periodic
+/// X3 inner periodic
 int bound_x3_periodic(
                       int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
                       int *inboundloop,
@@ -2384,7 +2384,7 @@ int bound_x3_periodic(
 
 
 
-// X1 inner R0SING
+/// X1 inner R0SING
 int bound_x1dn_r0singfixinterior(
                                  int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
                                  int *inboundloop,
@@ -2515,7 +2515,7 @@ int bound_x1dn_r0singfixinterior(
 
 
 
-// Check that boundary conditions were set properly
+/// Check that boundary conditions were set properly
 int bound_checks1(
                   int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
                   int *inboundloop,
@@ -2585,11 +2585,11 @@ int bound_checks1(
 
 
 
-// OPTMARK: all get_geometries, etc. could be simplified if take advantage of fact that only really 2 cases: all CENT or CENT for all except B's.
-// otherwise extrapfunc() and poledeath()'s get_geometry() dominates CPU time when few active cells or many boundary cells
-
-// boundary = X1DN or X1UP
-// assume if ispstag==1 then only doing field part -- otherwise logic would get more complicated
+/// OPTMARK: all get_geometries, etc. could be simplified if take advantage of fact that only really 2 cases: all CENT or CENT for all except B's.
+/// otherwise extrapfunc() and poledeath()'s get_geometry() dominates CPU time when few active cells or many boundary cells
+//
+/// boundary = X1DN or X1UP
+/// assume if ispstag==1 then only doing field part -- otherwise logic would get more complicated
 int extrapfunc(int boundary, int j,int k,
                int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
                int *inboundloop,
@@ -3236,7 +3236,7 @@ int extrapfunc(int boundary, int j,int k,
 #if(0 == UTHETAPOLEDEATH)
 #   define MACP0A1mod(prim,ri,rj,rk,pl) MACP0A1(prim,ri,rj,rk,pl)
 #else
-//average u^\theta=u^2*dxdxp22 as opposed to u^2
+///average u^\theta=u^2*dxdxp22 as opposed to u^2
 static FTYPE MACP0A1mod(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int ri, int rj, int rk, int pl);
 
 static FTYPE MACP0A1mod(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int ri, int rj, int rk, int pl)
@@ -3268,8 +3268,8 @@ static FTYPE MACP0A1mod(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int ri, int rj, in
 
 
 
-// interpolate across pole to remove numerical errors there
-// Note that this function is done over all zones
+/// interpolate across pole to remove numerical errors there
+/// Note that this function is done over all zones
 int poledeath(int whichx2,
               int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
               int *inboundloop,
@@ -4569,9 +4569,9 @@ int poledeath(int whichx2,
 
 #define DEBUGPOLESMOOTH 0
 
-// Average quasi-Cartesian components around the polar axis
-// Note that if special3dspc==1, then bound_x2dn/x2up_polaraxis_full3d() [that calls poledeath() and/or polesmooth()] is called *after* MPI call in bound_prim_user_after_mpi_dir()
-// If special3dspc==0, then not accurately handling polar axis so can't expect polesmooth() to be as effective.
+/// Average quasi-Cartesian components around the polar axis
+/// Note that if special3dspc==1, then bound_x2dn/x2up_polaraxis_full3d() [that calls poledeath() and/or polesmooth()] is called *after* MPI call in bound_prim_user_after_mpi_dir()
+/// If special3dspc==0, then not accurately handling polar axis so can't expect polesmooth() to be as effective.
 int polesmooth(int whichx2,
                int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
                int *inboundloop,
@@ -5079,8 +5079,8 @@ int polesmooth(int whichx2,
 
 
 
-// Toth version (different because emf vs. flux, where emf has extra zone -- otherwise same!
-//reset emf's (E_3) at the boundaries in x1-x2 plane to zero
+/// Toth version (different because emf vs. flux, where emf has extra zone -- otherwise same!
+///reset emf's (E_3) at the boundaries in x1-x2 plane to zero
 void user1_adjust_fluxcttoth_emfs(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*emf)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3] )
 {
   int i, j, k;
@@ -5177,9 +5177,9 @@ void user1_adjust_fluxcttoth_emfs(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][N
   
 }
 
-// NOTEMARK: Sasha's 289ddfa614ac0d10c30b2badff2964aa65853fd6 corrects some bugs.
-// STAG version (different because emf vs. flux, where emf has extra zone -- otherwise same!
-//reset emf's (E_3) at the boundaries in x1-x2 plane to zero
+/// NOTEMARK: Sasha's 289ddfa614ac0d10c30b2badff2964aa65853fd6 corrects some bugs.
+/// STAG version (different because emf vs. flux, where emf has extra zone -- otherwise same!
+///reset emf's (E_3) at the boundaries in x1-x2 plane to zero
 void user1_adjust_fluxctstag_emfs(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL])
 {
   int i, j, k;
@@ -5263,8 +5263,8 @@ void user1_adjust_fluxctstag_emfs(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][N
 
 
 
-// adjust final fluxes
-// NOT USED
+/// adjust final fluxes
+/// NOT USED
 void user1_adjust_final_fluxes(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL])
 {
   int i, j, k;
@@ -5321,11 +5321,11 @@ void user1_adjust_final_fluxes(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR]
 
 
 
-// check that \detg=0 on singularities
-// Don't use |\theta-0|<small number since can be quite small yet not on singularity
-// use integer-based grid position based detection as consistent with bondary conditions
-// Called for fresh and restart run
-// Runs over PLOOP(pliter,pl)
+/// check that \detg=0 on singularities
+/// Don't use |\theta-0|<small number since can be quite small yet not on singularity
+/// use integer-based grid position based detection as consistent with bondary conditions
+/// Called for fresh and restart run
+/// Runs over PLOOP(pliter,pl)
 void check_spc_singularities_user(void)
 {
   int i,j,k;
@@ -5464,9 +5464,9 @@ void check_spc_singularities_user(void)
 
 
 
-// DEBUG special3dspc
-// check matching CPUs have correct information across pole
-// stick in debugspecial3dspc(0, whichdir, ispstag, prim); calls before and after various stages defined through (e.g.) which=0,1,2,3,4,...
+/// DEBUG special3dspc
+/// check matching CPUs have correct information across pole
+/// stick in debugspecial3dspc(0, whichdir, ispstag, prim); calls before and after various stages defined through (e.g.) which=0,1,2,3,4,...
 int debugspecial3dspc(int which, int whichdir, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 {
   int i,j,k,pliter,pl;
@@ -5503,7 +5503,7 @@ int debugspecial3dspc(int which, int whichdir, int ispstag, FTYPE (*prim)[NSTORE
 
 
 
-// put the below in your bounds.c function at the top before the above call to that function.
+/// put the below in your bounds.c function at the top before the above call to that function.
 void debugfixupaltdeath_bc(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 {
   // hack to get rid of bad region at large distances (e.g. when restarted)

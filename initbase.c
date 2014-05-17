@@ -3,7 +3,7 @@
 
 
 
-// Uses globals inside init() because sets memory and sets physics
+/// Uses globals inside init() because sets memory and sets physics
 int init(int *argc, char **argv[])
 {
   extern int prepre_init(void);
@@ -610,7 +610,7 @@ int init(int *argc, char **argv[])
 }
 
 
-// copy over initial solution as analytic solution
+/// copy over initial solution as analytic solution
 int copy_prim2panalytic(FTYPE (*prim)[NSTORE2][NSTORE3][NPR],FTYPE (*panalytic)[NSTORE2][NSTORE3][NPR],FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],FTYPE (*pstaganalytic)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*vpotanalytic)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR], FTYPE (*Bhatanalytic)[NSTORE2][NSTORE3][NPR])
 {
 
@@ -662,8 +662,8 @@ int copy_prim2panalytic(FTYPE (*prim)[NSTORE2][NSTORE3][NPR],FTYPE (*panalytic)[
 }
 
 
-// initialize conserved quantities
-//  if(RESTARTMODE==0)
+/// initialize conserved quantities
+///  if(RESTARTMODE==0)
 void init_all_conservatives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*utemp)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR])
 {
   int pl,pliter;
@@ -681,7 +681,7 @@ void init_all_conservatives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 
 #include "initbase.defaultnprlists.c"
 
-// Called before pre_init() : i.e. before MPI init
+/// Called before pre_init() : i.e. before MPI init
 int prepre_init(void)
 {
   int pl,pliter;
@@ -795,7 +795,7 @@ int prepre_init(void)
 }
 
 
-
+/// set defaults for performance checks
 void set_defaults_performance_checks_prepreinit(void)
 {
 
@@ -826,7 +826,7 @@ void set_defaults_performance_checks_prepreinit(void)
 }
 
 
-
+/// set defaults for performance checks
 void set_defaults_performance_checks_preinit(void)
 {
   // must come after MPI is initialized
@@ -906,7 +906,7 @@ void set_defaults_performance_checks_preinit(void)
 
 
 
-// not used quite yet
+/// not used quite yet
 void set_file_versionnumbers(void)
 {
 
@@ -961,8 +961,8 @@ void set_file_versionnumbers(void)
 
 
 
-// used to setup local versions of lists
-// currently used in interpline.c for NUMPRIMSLOOP()
+/// used to setup local versions of lists
+/// currently used in interpline.c for NUMPRIMSLOOP()
 void  setup_nprlocalist(int whichprimtype, int *nprlocalstart, int *nprlocalend,int *nprlocallist, int *numprims)
 {
   int pl,pliter;
@@ -986,8 +986,8 @@ void  setup_nprlocalist(int whichprimtype, int *nprlocalstart, int *nprlocalend,
 
 
 
-// initialize MPI and other things
-// NO computations should be performed here
+/// initialize MPI and other things
+/// NO computations should be performed here
 int pre_init(int *argc, char **argv[])
 {
   int ii;
@@ -1124,6 +1124,7 @@ int pre_init(int *argc, char **argv[])
   return(0);
 }
 
+/// init default defcoord
 int init_defdefcoord(void)
 {
   // set coordinates
@@ -1132,6 +1133,7 @@ int init_defdefcoord(void)
   return(0);
 }
 
+/// init default grid
 int init_defgrid(void)
 {
   // sets metric
@@ -1154,6 +1156,7 @@ int init_defgrid(void)
 }
 
 
+/// init default global paramters
 int init_defglobal(void)
 {
   int i;
@@ -1397,6 +1400,7 @@ int init_defglobal(void)
 }
 
 
+/// init default constants
 int init_defconsts(void)
 {
 
@@ -1512,7 +1516,7 @@ int init_defconsts(void)
 
 
 
-
+/// post init
 int post_init(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*faraday)[NSTORE2][NSTORE3][NUMCURRENTSLOTS][3])
 {
   int compute_currents_t0(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*faraday)[NSTORE2][NSTORE3][NUMCURRENTSLOTS][3]);
@@ -1573,7 +1577,7 @@ int post_init(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*faraday)[NSTORE2][NS
 }
 
 
-// bounds, etc. use enerpos type stuff that is set by recompute_fluxpositions()
+/// bounds, etc. use enerpos type stuff that is set by recompute_fluxpositions()
 int set_box_grid_parameters(void)
 {
   int faketimeorder,fakenumtimeorders;
@@ -1600,7 +1604,7 @@ int set_box_grid_parameters(void)
 
 }
 
-
+/// compute t=0 currents
 int compute_currents_t0(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*faraday)[NSTORE2][NSTORE3][NUMCURRENTSLOTS][3])
 {
 
@@ -1638,7 +1642,7 @@ int compute_currents_t0(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*faraday)[N
 
 
 
-// set certain arrays to zero for diagnostic purposes (must come after all basic init stuff that sets up grid parms and all other parms)
+/// set certain arrays to zero for diagnostic purposes (must come after all basic init stuff that sets up grid parms and all other parms)
 int init_arrays_before_set_pu(void)
 {
   int i,j,k,pliter,pl;
@@ -1681,7 +1685,7 @@ int init_arrays_before_set_pu(void)
 
 
 
-// after all parameters are set, can call this
+/// after all parameters are set, can call this
 int post_par_set(void)
 {
   int interp_loop_set(void);
@@ -1749,7 +1753,7 @@ int post_par_set(void)
 
 
 
-// check that there are enough boundary zones for interpolation order used
+/// check that there are enough boundary zones for interpolation order used
 void check_bnd_num(void)
 {
   int totalo;
@@ -2272,6 +2276,7 @@ void check_bnd_num(void)
 }
 
 
+/// get number of boundary zones needed/used
 int get_num_bnd_zones_used(int dimen)
 {
   int avgo;
@@ -2328,8 +2333,8 @@ int get_num_bnd_zones_used(int dimen)
 
 
 
-// define range over which various loops go
-// all these should be as if no grid sectioning SECTIONMARK since used in loops that have SHIFTS inside
+/// define range over which various loops go
+/// all these should be as if no grid sectioning SECTIONMARK since used in loops that have SHIFTS inside
 int interp_loop_set(void)
 {
   int avgo[NDIM];
@@ -2694,7 +2699,7 @@ int interp_loop_set(void)
 
 
 
-
+/// get loop ranges
 int get_loop(int pointorlinetype, int interporflux, int dir, struct of_loop *loop)
 {
 
@@ -2706,8 +2711,8 @@ int get_loop(int pointorlinetype, int interporflux, int dir, struct of_loop *loo
 
 
 
-// master interp range function for both point and line methods
-// This particular loop gives back 3D grid range, not line-by-line as in original line type method (so don't use directly in interpline.c!)
+/// master interp range function for both point and line methods
+/// This particular loop gives back 3D grid range, not line-by-line as in original line type method (so don't use directly in interpline.c!)
 int set_interpalltypes_loop_ranges(int pointorlinetype, int interporflux, int dir, int *intdir, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk, int *bs, int *ps, int *pe, int *be)
 {
   int withshifts;
@@ -2756,8 +2761,8 @@ int set_interpalltypes_loop_ranges(int pointorlinetype, int interporflux, int di
 
 
 
-// Uavg is usually unew and Upoint is usually ulast at t=0
-// fieldfrompotential[1,2,3 correspond to B1,B2,B3]
+/// Uavg is usually unew and Upoint is usually ulast at t=0
+/// fieldfrompotential[1,2,3 correspond to B1,B2,B3]
 int pi2Uavg(int *fieldfrompotential, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*Upoint)[NSTORE2][NSTORE3][NPR], FTYPE (*Uavg)[NSTORE2][NSTORE3][NPR])
 {
   extern int initial_averageu_fv(int *fieldfrompotential, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*Upoint)[NSTORE2][NSTORE3][NPR], FTYPE (*Uavg)[NSTORE2][NSTORE3][NPR]);
@@ -2851,7 +2856,7 @@ int pi2Uavg(int *fieldfrompotential, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE
   return(0);
 }
 
-
+/// make needed directories
 void makedirs(void)
 {
 
@@ -2894,7 +2899,7 @@ void makedirs(void)
 
 
 
-// acts on globals, assumes static internals that get recalled upon reentering
+/// acts on globals, assumes static internals that get recalled upon reentering
 int addremovefromnpr(int doadd, int *whichpltoavg, int *ifnotavgthencopy, int *nprlocalstart, int *nprlocalend, int *nprlocallist, FTYPE (*in)[NSTORE2][NSTORE3][NPR], FTYPE (*out)[NSTORE2][NSTORE3][NPR])
 {
   int addremovefromanynpr(int doadd, int *whichpltoavg, int *ifnotavgthencopy, int *anynprstart, int *anynprend, int *anynprlist, int *nprlocalstart, int *nprlocalend, int *nprlocallist, FTYPE (*in)[NSTORE2][NSTORE3][NPR], FTYPE (*out)[NSTORE2][NSTORE3][NPR]);
@@ -2907,7 +2912,7 @@ int addremovefromnpr(int doadd, int *whichpltoavg, int *ifnotavgthencopy, int *n
 
 }
 
-// acts on globals, assumes static internals that get recalled upon reenterin
+/// acts on globals, assumes static internals that get recalled upon reenterin
 int addremovefromanynpr(int doadd, int *whichpltoavg, int *ifnotavgthencopy, int *anynprstart, int *anynprend, int *anynprlist, int *nprlocalstart, int *nprlocalend, int *nprlocallist, FTYPE (*in)[NSTORE2][NSTORE3][NPR], FTYPE (*out)[NSTORE2][NSTORE3][NPR])
 {
   int pl,pliter;
@@ -2970,8 +2975,8 @@ int addremovefromanynpr(int doadd, int *whichpltoavg, int *ifnotavgthencopy, int
 }
 
 
-// used to transform from one coordinate system to PRIMECOORDS
-// when acting on pstag, only relevant for magnetic field part, and in that case if didn't use vector potential to define pstag then assume not too important to get high accuracy, so average field to other positions in simple way
+/// used to transform from one coordinate system to PRIMECOORDS
+/// when acting on pstag, only relevant for magnetic field part, and in that case if didn't use vector potential to define pstag then assume not too important to get high accuracy, so average field to other positions in simple way
 int transform_primitive_vB(int whichvel, int whichcoord, int i,int j, int k, FTYPE (*p)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR])
 {
 
@@ -2984,12 +2989,13 @@ int transform_primitive_vB(int whichvel, int whichcoord, int i,int j, int k, FTY
 
 
 
-
+/// report emtpy
 int assert_func_empty( int is_bad_val, char *s, ... )
 {
   return(is_bad_val);
 }
 
+/// report
 int assert_func( int is_bad_val, char *s, ... )
 {
   va_list arglist;
@@ -3020,7 +3026,7 @@ int assert_func( int is_bad_val, char *s, ... )
 }
 
 
-// just set an array to some default value (like memset)
+/// just set an array to some default value (like memset)
 void set_array(void *inbufptr, int num, MPI_Datatype datatype, long double value)
 {
   void *bufptr=NULL;
@@ -3051,6 +3057,7 @@ void set_array(void *inbufptr, int num, MPI_Datatype datatype, long double value
 }
 
 
+/// debug stuff about divb=0
 void debugdivb(void)
 {
 
@@ -3099,7 +3106,7 @@ void debugdivb(void)
 
 
 
-// hack to get rid of bad region at large distances when restarted
+/// hack to get rid of bad region at large distances when restarted
 void debugfixup(void)
 {
   int i,j,k;
@@ -3137,7 +3144,7 @@ void debugfixup(void)
 
 }
 
-
+/// debug/fixup nonmad if regions going bad
 void debugfixupnonmad(void)
 {
   // hack to get rid of bad region at large distances when restarted
@@ -3180,6 +3187,8 @@ void debugfixupnonmad(void)
 
 
 }
+
+/// debug/fixup mad if regions going bad
 void debugfixupmad(void)
 {
   // hack to get rid of bad region at large distances when restarted
@@ -3242,6 +3251,8 @@ void debugfixupmad(void)
 
 
 }
+
+/// debug/fixup nonmad if regions going bad
 void debugfixupalt1(void)
 {
   // hack to get rid of bad region at large distances when restarted
@@ -3320,6 +3331,7 @@ void debugfixupalt1(void)
 }
 
 
+/// debug/fixup nonmad if regions going bad
 void debugfixupaltdeath(void)
 {
   // hack to get rid of bad region at large distances when restarted

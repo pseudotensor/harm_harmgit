@@ -2,7 +2,7 @@
 
 
 
-// static declarations
+/// static declarations
 static int compute_dt_fromsource(struct of_geom *ptrgeom, struct of_state *state, FTYPE *U, FTYPE *pr, FTYPE *dUevolve, FTYPE *dUgeomevolveUU, FTYPE *dtij, FTYPE *gravitydt);
 static int dUtodt(struct of_geom *ptrgeom, struct of_state *state, FTYPE *pr, FTYPE *dUgeom, FTYPE *dUriemann, FTYPE *dUgeomgravity, FTYPE *accdt, FTYPE *gravitydt);
 static int check_point_vs_average(int timeorder, int numtimeorders, PFTYPE *lpflag, FTYPE *pb, FTYPE *pf, FTYPE *upoint, FTYPE *uavg, struct of_geom *ptrgeom, struct of_newtonstats *newtonstats);
@@ -61,8 +61,8 @@ static int advance_finitevolume(int truestep,int stage, FTYPE (*pi)[NSTORE2][NST
 
 
 
-// things to do before any interpolation or advance step
-// includes pre-computed things for interpolation and advance that (e.g.) aren't required to perform for each interpolation or advance call or portion of a call
+/// things to do before any interpolation or advance step
+/// includes pre-computed things for interpolation and advance that (e.g.) aren't required to perform for each interpolation or advance call or portion of a call
 void pre_interpolate_and_advance(FTYPE (*pb)[NSTORE2][NSTORE3][NPR])
 {
 
@@ -84,16 +84,15 @@ void pre_interpolate_and_advance(FTYPE (*pb)[NSTORE2][NSTORE3][NPR])
 }
 
 
-// pi: initial values at t=t0 to compute Ui
-// pb: values used to compute flux/source
-// pf: solution using flux(pb) from pi's Ui -> Uf
-
-// pi, pb, and pf can all be the same since
-// 1) pb used first on a stencil, not modified, to compute fluxes
-// 2) pf=pi is assigned by value at each zone
-// 3) pf is modified using Utoprim at each zone using pb for sources (to correspond to fluxes which used pb)
-//
-// So in the end only pf is modified at each zone, so the loop changing p at previous (i,j) location doesn't affect the any new location in (i,j)
+/// pi: initial values at t=t0 to compute Ui
+/// pb: values used to compute flux/source
+/// pf: solution using flux(pb) from pi's Ui -> Uf
+/// pi, pb, and pf can all be the same since
+/// 1) pb used first on a stencil, not modified, to compute fluxes
+/// 2) pf=pi is assigned by value at each zone
+/// 3) pf is modified using Utoprim at each zone using pb for sources (to correspond to fluxes which used pb)
+///
+/// So in the end only pf is modified at each zone, so the loop changing p at previous (i,j) location doesn't affect the any new location in (i,j)
 int advance(int truestep, int stage, FTYPE (*pi)[NSTORE2][NSTORE3][NPR],FTYPE (*pb)[NSTORE2][NSTORE3][NPR], FTYPE (*pf)[NSTORE2][NSTORE3][NPR],
             FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],
             FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],
@@ -147,11 +146,11 @@ int advance(int truestep, int stage, FTYPE (*pi)[NSTORE2][NSTORE3][NPR],FTYPE (*
 
 
 
-// this method guarantees conservation of non-sourced conserved quantities when metric is time-dependent
-// this method has updated field staggered method
-// Note that when dt==0.0, assume no fluxing, just take ucum -> ui -> {uf,ucum} and invert.  Used with metric update.
-//
-// NEW: like advance_standard_orig(), but removed debug info and set field "inversion" first so have centered value for source() so have it for any point-use of values like in implicit solver for radiation-fluid interaction.
+/// this method guarantees conservation of non-sourced conserved quantities when metric is time-dependent
+/// this method has updated field staggered method
+/// Note that when dt==0.0, assume no fluxing, just take ucum -> ui -> {uf,ucum} and invert.  Used with metric update.
+///
+/// NEW: like advance_standard_orig(), but removed debug info and set field "inversion" first so have centered value for source() so have it for any point-use of values like in implicit solver for radiation-fluid interaction.
 static int advance_standard(
                             int truestep,
                             int stage,
@@ -1005,7 +1004,7 @@ static int advance_standard(
 
 
 
-// compute dissipation measure for determining if can use entropy equations of motion or must use energy equations of motion
+/// compute dissipation measure for determining if can use entropy equations of motion or must use energy equations of motion
 static FTYPE compute_dissmeasure(int timeorder, int i, int j, int k, int loc, FTYPE *pr, struct of_geom *ptrgeom, FTYPE *CUf, FTYPE *CUnew, FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE *ui,  FTYPE *uf, FTYPE *tempucum)
 {
   FTYPE dissmeasure;
@@ -1219,9 +1218,9 @@ static FTYPE compute_dissmeasure(int timeorder, int i, int j, int k, int loc, FT
 
 
 
-// this method guarantees conservation of non-sourced conserved quantities when metric is time-dependent
-// this method has updated field staggered method
-// Note that when dt==0.0, assume no fluxing, just take ucum -> ui -> {uf,ucum} and invert.  Used with metric update.
+/// this method guarantees conservation of non-sourced conserved quantities when metric is time-dependent
+/// this method has updated field staggered method
+/// Note that when dt==0.0, assume no fluxing, just take ucum -> ui -> {uf,ucum} and invert.  Used with metric update.
 static int advance_standard_orig(
                             int truestep,
                             int stage,
@@ -2018,8 +2017,8 @@ static int advance_standard_orig(
 
 
 
-// finite volume method NOT SETUP FOR CONSISTENT METRIC EVOLUTION YET -- EASY, JUST NOT DOING IT YET -- FOLLOW ABOVE AS EXAMPLE OF WHAT TO DO
-// also not setup for staggered field method
+/// finite volume method NOT SETUP FOR CONSISTENT METRIC EVOLUTION YET -- EASY, JUST NOT DOING IT YET -- FOLLOW ABOVE AS EXAMPLE OF WHAT TO DO
+/// also not setup for staggered field method
 static int advance_finitevolume(
                                 int truestep,
                                 int stage,
@@ -2771,7 +2770,7 @@ static int advance_finitevolume(
 
 
 
-// some dt calculations done at end of each substep
+/// some dt calculations done at end of each substep
 static int prepare_globaldt(
                             int truestep,
                             FTYPE ndt1,FTYPE ndt2,FTYPE ndt3,
@@ -2848,12 +2847,11 @@ static int prepare_globaldt(
 
 
 
-// check whether point conserved quantity inverted successfully to point primitive.
-//   if unsuccessful, then see if want to revert to average conserved quantity and invert that
-//   if Uavg->p unsuccessful, then leave as failure
-// if Upoint->p is good, then check if p from Upoint is much different than p from Uavg.  If so, limit change
-
-// upoint only needed for diagnostics
+/// check whether point conserved quantity inverted successfully to point primitive.
+///   if unsuccessful, then see if want to revert to average conserved quantity and invert that
+///   if Uavg->p unsuccessful, then leave as failure
+/// if Upoint->p is good, then check if p from Upoint is much different than p from Uavg.  If so, limit change
+/// upoint only needed for diagnostics
 static int check_point_vs_average(int timeorder, int numtimeorders, PFTYPE *lpflag, FTYPE *pb, FTYPE *pf, FTYPE *upoint, FTYPE *uavg, struct of_geom *ptrgeom, struct of_newtonstats *newtonstats)
 {
   FTYPE pavg[NPR];  //atch for temporary storage of primitives obtained from inverting the averaged conserved quantities
@@ -3009,9 +3007,9 @@ static int check_point_vs_average(int timeorder, int numtimeorders, PFTYPE *lpfl
 
 #define COMPARE_GAMMA 0
 
-//If density or gamma-factors are different by more than fractional_difference_threshold for states pin & pout, 
-//if different -- correct pout such that it is not more than fractional_difference_threshold away from pin.
-// externally referenced
+///If density or gamma-factors are different by more than fractional_difference_threshold for states pin & pout, 
+///if different -- correct pout such that it is not more than fractional_difference_threshold away from pin.
+/// externally referenced
 FTYPE limit_prim_correction( FTYPE fractional_difference_threshold, struct of_geom *geom, FTYPE *pin, FTYPE *pout )
 {
   FTYPE gammain = 0.0, gammaout = 0.0;
@@ -3088,7 +3086,7 @@ FTYPE limit_prim_correction( FTYPE fractional_difference_threshold, struct of_ge
 
 
 
-//Returns the fractional difference between a & b
+///Returns the fractional difference between a & b
 static FTYPE fractional_diff( FTYPE a, FTYPE b )
 {
   FTYPE frac_diff;
@@ -3123,7 +3121,7 @@ static FTYPE fractional_diff( FTYPE a, FTYPE b )
 
 
 
-// get dUavg
+/// get dUavg
 static void flux2dUavg(int whichpl, int i, int j, int k, FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE *dU1avg,FTYPE *dU2avg,FTYPE *dU3avg)
 {
   FTYPE idx1,idx2,idx3;
@@ -3281,7 +3279,7 @@ static void flux2dUavg(int whichpl, int i, int j, int k, FTYPE (*F1)[NSTORE2][NS
 
 
 
-// convert point versions of U_i^{n} and dU -> U_i^{n+1} and other versions
+/// convert point versions of U_i^{n} and dU -> U_i^{n+1} and other versions
 static void dUtoU(int timeorder, int whichpl, int i, int j, int k, int loc, FTYPE *dUgeom, FTYPE (*dUcomp)[NPR], FTYPE *dUriemann, FTYPE *CUf, FTYPE *CUnew, FTYPE *Ui,  FTYPE *Uf, FTYPE *ucum)
 {
   int pl,pliter;
@@ -3375,7 +3373,7 @@ static void dUtoU(int timeorder, int whichpl, int i, int j, int k, int loc, FTYP
 
 
 
-// Check result of dUtoU()
+/// Check result of dUtoU()
 static void dUtoU_check(int timeorder, int i, int j, int k, int loc, int pl, FTYPE *dUgeom, FTYPE (*dUcomp)[NPR], FTYPE *dUriemann, FTYPE *CUf, FTYPE *CUnew, FTYPE *Ui,  FTYPE *Uf, FTYPE *ucum)
 {
   int showfluxes;
@@ -3404,8 +3402,8 @@ static void dUtoU_check(int timeorder, int i, int j, int k, int loc, int pl, FTY
 }
 
 
-// Check ucum
-// externally referenced.
+/// Check ucum
+/// externally referenced.
 void ucum_check(int i, int j, int k, int loc, int pl, FTYPE *ucum)
 {
   int showfluxes;
@@ -3426,6 +3424,7 @@ void ucum_check(int i, int j, int k, int loc, int pl, FTYPE *ucum)
 
 }
 
+/// debug show fluxes
 static void show_fluxes(int i, int j, int k, int loc, int pl,FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL])
 {
   if(N1>1){
@@ -3442,8 +3441,8 @@ static void show_fluxes(int i, int j, int k, int loc, int pl,FTYPE (*F1)[NSTORE2
 
 
 
-// find global dt.  Useful if needed not during evolution, such as at t=0 or for restarting the run if restarting finished run that has a generally smaller dt than should use (including possibly dt=0)
-// externally referenced
+/// find global dt.  Useful if needed not during evolution, such as at t=0 or for restarting the run if restarting finished run that has a generally smaller dt than should use (including possibly dt=0)
+/// externally referenced
 int set_dt(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], SFTYPE *dt)
 {
   struct of_state state;
@@ -3676,7 +3675,7 @@ int set_dt(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], SFTYPE *dt)
 // but cour=0.8 and GRAVITYCOUR = 0.1 doesn't even work for longsteps!
 #define GRAVITYCOUR (0.1)
 
-// note that dUevolve and dUgeomevolve are really dU/dt (i.e. per unit dt)
+/// note that dUevolve and dUgeomevolve are really dU/dt (i.e. per unit dt)
 static int compute_dt_fromsource(struct of_geom *ptrgeom, struct of_state *state, FTYPE *pr, FTYPE *U, FTYPE *dUevolvedt, FTYPE *dUgeomevolvedt, FTYPE *dtij, FTYPE *gravitydt)
 {
   FTYPE dUevolve[NDIM],dUgeomevolve[NDIM];
@@ -3926,7 +3925,7 @@ static int compute_dt_fromsource(struct of_geom *ptrgeom, struct of_state *state
 
 
 
-// compute dt from full coordinate acceleration
+/// compute dt from full coordinate acceleration
 static int dUtodt(struct of_geom *ptrgeom, struct of_state *qaddr, FTYPE *pr, FTYPE *dUgeom, FTYPE *dUriemann, FTYPE *dUgeomgravity, FTYPE *accdt, FTYPE *gravitydt)
 {
   int pl,pliter;

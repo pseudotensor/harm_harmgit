@@ -1,11 +1,22 @@
 // #include "decs.h"
 #include "defs.h"
 
+/*! \file main.c
+    \brief Main file
+    
+    Includes main() and gocheck()
+*/
 
-// OPENMPMARK: static ok here
+/*! \fn main
+    \brief Main function
+
+    Main function that primarily calls init(), diag(), and step_ch_full() in loop.
+
+*/
 int main(int argc, char *argv[])
 {
   //  extern void testffdeinversion(void);
+  //OPENMPMARK: static ok here
   static SFTYPE comptstart;
   static SFTYPE diagtstart;
 
@@ -208,7 +219,12 @@ int main(int argc, char *argv[])
 
 
 
+/*! \fn gocheck
+    \brief gocheck sees if should stop code
 
+    go.cont or go.go exists and controls stopping behavior of code while it runs.
+
+*/
 int gocheck(int whichlocation)
 {
   static int goend=0; // init to 0

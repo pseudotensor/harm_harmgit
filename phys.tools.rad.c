@@ -43,14 +43,14 @@
 #include "f2c.h"
 
 #ifdef KR_headers
-double d_sign(a,b) doublereal *a, *b;
+double d_sign(aa,bb) doublereal *aa, *bb;
 #else
-double d_sign(doublereal *a, doublereal *b)
+double d_sign(doublereal *aa, doublereal *bb)
 #endif
 {
 double x;
-x = (*a >= 0 ? *a : - *a);
-return( *b >= 0 ? x : -x);
+x = (*aa >= 0 ? *aa : - *aa);
+return( *bb >= 0 ? x : -x);
 }
 
 #ifdef KR_headers
@@ -528,8 +528,8 @@ static int calc_tautot_chieff(FTYPE *pp, FTYPE chieff, struct of_geom *ptrgeom, 
 
 static int get_implicit_iJ(int allowbaseitermethodswitch, int failreturnallowableuse, int showmessages, int showmessagesheavy, int allowlocalfailurefixandnoreport, int *eomtypelocal, int whichcap, int itermode, int *baseitermethod, FTYPE fracenergy, FTYPE dissmeasure, FTYPE impepsjac, FTYPE trueimptryconv, FTYPE trueimptryconvabs, FTYPE trueimpallowconvabs, int trueimpmaxiter, int iter, FTYPE errorabs, FTYPE errorallabs, int whicherror, int dimtypef, FTYPE *dimfactU, FTYPE *Uiin, FTYPE *uu, FTYPE *uup, FTYPE *uu0, FTYPE *piin, FTYPE *pp, FTYPE *ppp, FTYPE fracdtG, FTYPE realdt, struct of_geom *ptrgeom, struct of_state *q, FTYPE *f1, FTYPE *f1norm, FTYPE (*iJ)[NPR], int *nummhdinvsreturn);
 
-static int inverse_33matrix(int sj, int ej, FTYPE a[][NDIM], FTYPE ia[][NDIM]);
-static int inverse_11matrix(int sj, int ej, FTYPE a[][NDIM], FTYPE ia[][NDIM]);
+static int inverse_33matrix(int sj, int ej, FTYPE aa[][NDIM], FTYPE ia[][NDIM]);
+static int inverse_11matrix(int sj, int ej, FTYPE aa[][NDIM], FTYPE ia[][NDIM]);
 
 
 static int f_error_check(int showmessages, int showmessagesheavy, int iter, FTYPE conv, FTYPE convabs, FTYPE realdt, int dimtypef, int eomtype, int radinvmod, int itermode, int baseitermethod, FTYPE fracenergy, FTYPE dissmeasure, FTYPE *dimfactU, FTYPE *pp, FTYPE *piin, FTYPE *f1, FTYPE *f1norm, FTYPE *f1report, FTYPE *Uiin, FTYPE *uu0, FTYPE *uu, struct of_geom *ptrgeom, FTYPE *errorabs, FTYPE *errorallabs, int whicherror);
@@ -8905,10 +8905,10 @@ static void calc_kappa_kappaes(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappa,
 }
 
 // get G_\mu
-static void calc_Gd(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *G, FTYPE *Tgas, FTYPE* chieffreturn, FTYPE *Gabs)
+static void calc_Gd(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *GG, FTYPE *Tgas, FTYPE* chieffreturn, FTYPE *Gabs)
 {
-  calc_Gu(pp, ptrgeom, q, G, Tgas, chieffreturn,Gabs);
-  indices_21(G, G, ptrgeom);
+  calc_Gu(pp, ptrgeom, q, GG, Tgas, chieffreturn,Gabs);
+  indices_21(GG, GG, ptrgeom);
 }
 
 
@@ -9410,10 +9410,10 @@ int calc_Rij_ff(FTYPE *pp, FTYPE Rij[][NDIM])
 
 
 
-FTYPE my_min(FTYPE a, FTYPE b)
+FTYPE my_min(FTYPE aa, FTYPE bb)
 {
-  if(a<b) return a;
-  else return b;
+  if(aa<bb) return aa;
+  else return bb;
 }
 
 FTYPE my_sign(FTYPE x)
@@ -9432,13 +9432,13 @@ FTYPE my_sign(FTYPE x)
 //**********************************************************************
 //inverse 4by4 matrix
 // gives inverse transpose matrix
-int inverse_44matrix(FTYPE a[][NDIM], FTYPE ia[][NDIM])
+int inverse_44matrix(FTYPE aa[][NDIM], FTYPE ia[][NDIM])
 {
   FTYPE mat[16],dst[16];
   int i,j;
   for(i=0;i<4;i++)
     for(j=0;j<4;j++)
-      mat[i*4+j]=a[i][j];
+      mat[i*4+j]=aa[i][j];
 
   FTYPE tmp[12]; FTYPE src[16]; FTYPE det, idet;
   /* transpose matrix */
@@ -9540,22 +9540,22 @@ int inverse_44matrix(FTYPE a[][NDIM], FTYPE ia[][NDIM])
 //**********************************************************************
 //inverse 3by3 matrix
 // gives inverse transpose matrix
-static int inverse_33matrix(int sj, int ej, FTYPE a[][NDIM], FTYPE ia[][NDIM])
+static int inverse_33matrix(int sj, int ej, FTYPE aa[][NDIM], FTYPE ia[][NDIM])
 {
 
-  FTYPE det = +a[sj+0][sj+0]*(a[sj+1][sj+1]*a[sj+2][sj+2]-a[sj+2][sj+1]*a[sj+1][sj+2])
-    -a[sj+0][sj+1]*(a[sj+1][sj+0]*a[sj+2][sj+2]-a[sj+1][sj+2]*a[sj+2][sj+0])
-    +a[sj+0][sj+2]*(a[sj+1][sj+0]*a[sj+2][sj+1]-a[sj+1][sj+1]*a[sj+2][sj+0]);
+  FTYPE det = +aa[sj+0][sj+0]*(aa[sj+1][sj+1]*aa[sj+2][sj+2]-aa[sj+2][sj+1]*aa[sj+1][sj+2])
+    -aa[sj+0][sj+1]*(aa[sj+1][sj+0]*aa[sj+2][sj+2]-aa[sj+1][sj+2]*aa[sj+2][sj+0])
+    +aa[sj+0][sj+2]*(aa[sj+1][sj+0]*aa[sj+2][sj+1]-aa[sj+1][sj+1]*aa[sj+2][sj+0]);
   FTYPE idet = 1.0/det;
-  ia[sj+0][sj+0] =  (a[sj+1][sj+1]*a[sj+2][sj+2]-a[sj+2][sj+1]*a[sj+1][sj+2])*idet;
-  ia[sj+1][sj+0] = -(a[sj+0][sj+1]*a[sj+2][sj+2]-a[sj+0][sj+2]*a[sj+2][sj+1])*idet;
-  ia[sj+2][sj+0] =  (a[sj+0][sj+1]*a[sj+1][sj+2]-a[sj+0][sj+2]*a[sj+1][sj+1])*idet;
-  ia[sj+0][sj+1] = -(a[sj+1][sj+0]*a[sj+2][sj+2]-a[sj+1][sj+2]*a[sj+2][sj+0])*idet;
-  ia[sj+1][sj+1] =  (a[sj+0][sj+0]*a[sj+2][sj+2]-a[sj+0][sj+2]*a[sj+2][sj+0])*idet;
-  ia[sj+2][sj+1] = -(a[sj+0][sj+0]*a[sj+1][sj+2]-a[sj+1][sj+0]*a[sj+0][sj+2])*idet;
-  ia[sj+0][sj+2] =  (a[sj+1][sj+0]*a[sj+2][sj+1]-a[sj+2][sj+0]*a[sj+1][sj+1])*idet;
-  ia[sj+1][sj+2] = -(a[sj+0][sj+0]*a[sj+2][sj+1]-a[sj+2][sj+0]*a[sj+0][sj+1])*idet;
-  ia[sj+2][sj+2] =  (a[sj+0][sj+0]*a[sj+1][sj+1]-a[sj+1][sj+0]*a[sj+0][sj+1])*idet;
+  ia[sj+0][sj+0] =  (aa[sj+1][sj+1]*aa[sj+2][sj+2]-aa[sj+2][sj+1]*aa[sj+1][sj+2])*idet;
+  ia[sj+1][sj+0] = -(aa[sj+0][sj+1]*aa[sj+2][sj+2]-aa[sj+0][sj+2]*aa[sj+2][sj+1])*idet;
+  ia[sj+2][sj+0] =  (aa[sj+0][sj+1]*aa[sj+1][sj+2]-aa[sj+0][sj+2]*aa[sj+1][sj+1])*idet;
+  ia[sj+0][sj+1] = -(aa[sj+1][sj+0]*aa[sj+2][sj+2]-aa[sj+1][sj+2]*aa[sj+2][sj+0])*idet;
+  ia[sj+1][sj+1] =  (aa[sj+0][sj+0]*aa[sj+2][sj+2]-aa[sj+0][sj+2]*aa[sj+2][sj+0])*idet;
+  ia[sj+2][sj+1] = -(aa[sj+0][sj+0]*aa[sj+1][sj+2]-aa[sj+1][sj+0]*aa[sj+0][sj+2])*idet;
+  ia[sj+0][sj+2] =  (aa[sj+1][sj+0]*aa[sj+2][sj+1]-aa[sj+2][sj+0]*aa[sj+1][sj+1])*idet;
+  ia[sj+1][sj+2] = -(aa[sj+0][sj+0]*aa[sj+2][sj+1]-aa[sj+2][sj+0]*aa[sj+0][sj+1])*idet;
+  ia[sj+2][sj+2] =  (aa[sj+0][sj+0]*aa[sj+1][sj+1]-aa[sj+1][sj+0]*aa[sj+0][sj+1])*idet;
 
   if(!isfinite(det) || !isfinite(idet)){
     if(debugfail>=2) dualfprintf(fail_file,"inverse_33matrix got singular det=%g idet=%g\n",det,idet);
@@ -9572,15 +9572,15 @@ static int inverse_33matrix(int sj, int ej, FTYPE a[][NDIM], FTYPE ia[][NDIM])
 //**********************************************************************
 //inverse 1by1 matrix
 // gives inverse transpose matrix (for 1by1, transpose does nothing)
-static int inverse_11matrix(int sj, int ej, FTYPE a[][NDIM], FTYPE ia[][NDIM])
+static int inverse_11matrix(int sj, int ej, FTYPE aa[][NDIM], FTYPE ia[][NDIM])
 {
   // trivial inversion, and can't fail unless divide by zero
   // sj==endjac
 
-  ia[sj][sj]=1.0/a[sj][sj];
+  ia[sj][sj]=1.0/aa[sj][sj];
 
   if(!isfinite(ia[sj][sj])){
-    if(debugfail>=2) dualfprintf(fail_file,"inverse 1x1 zero or nan\n",a[sj][sj]);
+    if(debugfail>=2) dualfprintf(fail_file,"inverse 1x1 zero or nan\n",aa[sj][sj]);
     return(1); // indicates failure
     //    myexit(13235);
   }
@@ -10944,27 +10944,27 @@ static int get_m1closure_gammarel2_old(int showmessages, struct of_geom *ptrgeom
     //the quadratic equation for u^t of the radiation rest frame (urf[0])
     // Formed as solution for solving two equations (R^{t\nu} R^t_\nu(E,ut) and R^{tt}(E,ut)) for ut
     //supposed to provide two roots for (u^t)^2 of opposite signs
-    FTYPE a,b,c;
-    a=16.*gRR;
+    FTYPE aa,b,c;
+    aa=16.*gRR;
     b=8.*(gRR*ptrgeom->gcon[GIND(0,0)]+Avcon[0]*Avcon[0]);
     c=ptrgeom->gcon[GIND(0,0)]*(gRR*ptrgeom->gcon[GIND(0,0)]-Avcon[0]*Avcon[0]);
-    delta=b*b-4.*a*c;
+    delta=b*b-4.*aa*c;
 
     numerator=0.5*(-b-sqrt(delta));
-    divisor=a;
+    divisor=aa;
 
     gamma2=numerator/divisor; // lab-frame gamma^2
     //if unphysical try the other root
     if(gamma2<=0.){
       numerator=0.5*(-b+sqrt(delta));
-      divisor=a;
+      divisor=aa;
       gamma2=  numerator/divisor; 
     }
     
     *numeratorreturn=numerator;
     *divisorreturn=divisor;
   }
-  //    dualfprintf(fail_file,"GAMMA2CHECK: ijk=%d %d %d : %g %g : a=%g b=%g c=%g : delta=%g gRR=%g Avcon0123=%g %g %g %g : gamma2=%g\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,0.5*(-b-sqrt(delta))/a,0.5*(-b+sqrt(delta))/a,a,b,c,delta,gRR,Avcon[0],Avcon[1],Avcon[2],Avcon[3],gamma2);
+  //    dualfprintf(fail_file,"GAMMA2CHECK: ijk=%d %d %d : %g %g : aa=%g b=%g c=%g : delta=%g gRR=%g Avcon0123=%g %g %g %g : gamma2=%g\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,0.5*(-b-sqrt(delta))/aa,0.5*(-b+sqrt(delta))/aa,aa,b,c,delta,gRR,Avcon[0],Avcon[1],Avcon[2],Avcon[3],gamma2);
 
 
   else{

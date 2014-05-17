@@ -1,7 +1,6 @@
 #include "decs.h"
 
-// see boundmpi.c for more comments
-
+/// see boundmpi.c for more comments
 int bound_mpi_int_dir(int boundstage, int finalstep, int whichdir, int boundvartype, PFTYPE (*prim)[NSTORE2][NSTORE3][NUMPFLAGS])
 {
   int dir;
@@ -90,7 +89,7 @@ int bound_mpi_int_dir(int boundstage, int finalstep, int whichdir, int boundvart
 
 #define PACKLOOP_INT(i,j,k,istart,istop,jstart,jstop,kstart,kstop,di,dj,dk) FBOUNDLOOP(pl) SUPERGENLOOP(i,j,k,istart,istop,jstart,jstop,kstart,kstop,di,dj,dk)
 
-// packs data for shipment
+/// packs data for shipment
 void pack_int(int dir, int boundvartype,PFTYPE (*prim)[NSTORE2][NSTORE3][NUMPFLAGS],PFTYPE (*workbc_int)[COMPDIM * 2][NUMPFLAGSBOUND * NBIGBND * NBIGSM])
 {
   // dir=direction sending
@@ -203,8 +202,8 @@ void unpack_int(int dir, int boundvartype,PFTYPE (*workbc_int)[COMPDIM * 2][NUMP
 
 
 
-// fake MPI bound call so fills same locations with fakevalue
-// no actual MPI calls are made -- just uses the same structures for simplicity
+/// fake MPI bound call so fills same locations with fakevalue
+/// no actual MPI calls are made -- just uses the same structures for simplicity
 int bound_mpi_int_fakeutoprimmpiinconsisent(int boundstage, int finalstep, int fakedir, int boundvartype, PFTYPE (*prim)[NSTORE2][NSTORE3][NUMPFLAGS], int fakevalue)
 {
   int dir;
@@ -222,7 +221,7 @@ int bound_mpi_int_fakeutoprimmpiinconsisent(int boundstage, int finalstep, int f
 } 
 
 
-// fake unpack routine that just fills-in MPI boundary cells with fakevalue
+/// fake unpack routine that just fills-in MPI boundary cells with fakevalue
 void unpack_int_fakeutoprimmpiinconsisent(int dir, int boundvartype,PFTYPE (*workbc_int)[COMPDIM * 2][NUMPFLAGSBOUND * NBIGBND * NBIGSM],PFTYPE (*prim)[NSTORE2][NSTORE3][NUMPFLAGS], int fakevalue)
 {
   // dir is direction receiving from
@@ -250,7 +249,7 @@ void unpack_int_fakeutoprimmpiinconsisent(int dir, int boundvartype,PFTYPE (*wor
 
 
 
-// bound all directions
+/// bound all directions
 int bound_mpi_int(int boundstage, int finalstep, int fakedir, int boundvartype, PFTYPE (*prim)[NSTORE2][NSTORE3][NUMPFLAGS])
 {
   int bound_mpi_int_dir(int boundstage, int finalstep, int whichdir, int boundvartype, PFTYPE (*prim)[NSTORE2][NSTORE3][NUMPFLAGS]);
