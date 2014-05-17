@@ -1,7 +1,10 @@
 
 #include "decs.h"
 
-/* diagnostics subroutine */
+/*! \file diag.c
+    \brief diagnostics subroutine
+
+*/
 
 #define DIAGREPORT {trifprintf("t=%21.15g to do: tener=%21.15g (dt=%21.15g): dump_cnt=%ld @ t=%21.15g (dt=%21.15g) : avg_cnt=%ld @ t=%21.15g (dt=%21.15g) : debug_cnt=%ld @ t=%21.15g (dt=%21.15g) : image_cnt=%ld @ t=%21.15g (dt=%21.15g): restart=%d @ nstep=%ld (dt=%ld) dtfake=%ld\n",t,tdumpgen[ENERDUMPTYPE],DTdumpgen[ENERDUMPTYPE],dumpcntgen[MAINDUMPTYPE],tdumpgen[MAINDUMPTYPE],DTdumpgen[MAINDUMPTYPE],dumpcntgen[AVG1DUMPTYPE],tdumpgen[AVG1DUMPTYPE],DTdumpgen[AVG1DUMPTYPE],dumpcntgen[DEBUGDUMPTYPE],tdumpgen[DEBUGDUMPTYPE],DTdumpgen[DEBUGDUMPTYPE],dumpcntgen[IMAGEDUMPTYPE],tdumpgen[IMAGEDUMPTYPE],DTdumpgen[IMAGEDUMPTYPE],whichrestart,nrestart,DTr,DTfake);}
 
@@ -13,16 +16,16 @@ static int get_dodumps(int call_code, int firsttime, SFTYPE localt, long localns
                        ,int *doareamap, int *dodumpgen);
 static int pre_dump(int whichDT, FTYPE t, FTYPE localt, FTYPE *DTdumpgen, long int *dumpcntgen, long long int *dumpcgen, FTYPE *tdumpgen, FILE **dumpcnt_filegen, FTYPE *tlastgen
                     ,int whichrestart, long long int restartc, long long int localrealnstep, long long int nrestart,long DTr, long long int nlastrestart
-                    ,int whichfake, long long int fakec, long long int nfake,long DTfake, long long int nlastfake
+                    ,int whichfakevar, long long int fakec, long long int nfake,long DTfakevar, long long int nlastfake
                     );
 static int post_dump(int whichDT, FTYPE localt, FTYPE *DTdumpgen, long int *dumpcntgen, long long int *dumpcgen, FTYPE *tdumpgen, FILE **dumpcnt_filegen, FTYPE *tlastgen
                      ,long *restartsteps, int *whichrestart, long long int *restartc, long localrealnstep,long long int *nrestart, long DTr, long long int *nlastrestart
-                     ,long *fakesteps, int *whichfake, long long int *fakec, long long int *nfake, long DTfake, long long int *nlastfake
+                     ,long *fakesteps, int *whichfakevar, long long int *fakec, long long int *nfake, long DTfakevar, long long int *nlastfake
                      );
 
 
-
-// OPENMPNOTE: Assume diag() not called by multiple threads, so static's are ok (including firsttime)
+/// main diag() call for diagnostics
+/// OPENMPNOTE: Assume diag() not called by multiple threads, so static's are ok (including firsttime)
 int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
 {
   //////////////////
@@ -536,31 +539,32 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
 
 
 
-
+/// do stuff before dumping
 static int pre_dump(
-                    int whichDT, FTYPE t, FTYPE localt, FTYPE *DTdumpgen, long int *dumpcntgen, long long int *dumpcgen, FTYPE *tdumpgen, FILE **dumpcnt_filegen, FTYPE *tlastgen
-                    ,int whichrestart, long long int restartc, long long int localrealnstep, long long int nrestart,long DTr, long long int nlastrestart
-                    ,int whichfake, long long int fakec, long long int nfake,long DTfake, long long int nlastfake
+                    int whichDT, FTYPE tt, FTYPE localt, FTYPE *DTdumpgenvar, long int *dumpcntgenvar, long long int *dumpcgen, FTYPE *tdumpgen, FILE **dumpcnt_filegen, FTYPE *tlastgen
+                    ,int whichrestartvar, long long int restartc, long long int localrealnstep, long long int nrestart,long DTrvar, long long int nlastrestart
+                    ,int whichfakevar, long long int fakec, long long int nfake,long DTfakevar, long long int nlastfake
                     )
 {
 
   DIAGREPORT;
   if(whichDT==RESTARTDUMPTYPE || whichDT==RESTARTMETRICDUMPTYPE){
     // integer based period
-    trifprintf("dumping: restart: %d localnstep: %ld nlastrestart: %ld nrestart: %ld restartc: %d\n", whichrestart,localrealnstep,nlastrestart,nrestart,restartc);
+    trifprintf("dumping: restart: %d localnstep: %ld nlastrestart: %ld nrestart: %ld restartc: %d\n", whichrestartvar,localrealnstep,nlastrestart,nrestart,restartc);
   }
   else{
-    trifprintf("dumping: dump_cnt=%ld : t=%21.15g tlastdump=%21.15g tdump=%21.15g dumpc=%d\n", dumpcntgen[whichDT],localt,tlastgen[whichDT],tdumpgen[whichDT],dumpcgen[whichDT]);
+    trifprintf("dumping: dump_cnt=%ld : tt=%21.15g tlastdump=%21.15g tdump=%21.15g dumpc=%d\n", dumpcntgenvar[whichDT],localt,tlastgen[whichDT],tdumpgen[whichDT],dumpcgen[whichDT]);
   }
   return(0);
 }
 
 
 
+/// do stuff after dumping
 static int post_dump(
-                     int whichDT, FTYPE localt, FTYPE *DTdumpgen, long int *dumpcntgen, long long int *dumpcgen, FTYPE *tdumpgen, FILE **dumpcnt_filegen, FTYPE *tlastgen
-                     ,long *restartsteps, int *whichrestart, long long int *restartc, long localrealnstep,long long int *nrestart, long DTr, long long int *nlastrestart
-                     ,long *fakesteps, int *whichfake, long long int *fakec, long long int *nfake, long DTfake, long long int *nlastfake
+                     int whichDT, FTYPE localt, FTYPE *DTdumpgenvar, long int *dumpcntgenvar, long long int *dumpcgen, FTYPE *tdumpgen, FILE **dumpcnt_filegen, FTYPE *tlastgen
+                     ,long *restartstepsvar, int *whichrestartvar, long long int *restartc, long localrealnstep,long long int *nrestart, long DTrvar, long long int *nlastrestart
+                     ,long *fakestepsvar, int *whichfakevar, long long int *fakec, long long int *nfake, long DTfakevar, long long int *nlastfake
                      )
 {
   char temps[MAXFILENAME];
@@ -572,34 +576,34 @@ static int post_dump(
     // integer based period
     // 0 1 0 1 0 1 ...
     
-    restartsteps[*whichrestart] = localrealnstep;
-    *whichrestart = !(*whichrestart);
+    restartstepsvar[*whichrestartvar] = localrealnstep;
+    *whichrestartvar = !(*whichrestartvar);
 
     // set "counter"
-    dumpcntgen[whichDT]=(long int)(*whichrestart);
+    dumpcntgenvar[whichDT]=(long int)(*whichrestartvar);
     
     *restartc = 1 + MAX(0,(long long int)(((FTYPE)localrealnstep-(FTYPE)(*nrestart))/((FTYPE)DTr)));
     *nrestart = (ROUND2LONGLONGINT((FTYPE)localrealnstep/((FTYPE)DTr)) + (*restartc)) * DTr;
     *nlastrestart=localrealnstep;
   }
   else if(whichDT==FAKEDUMPTYPE){
-    fakesteps[*whichfake] = localrealnstep;
-    *whichfake = !(*whichfake); // go ahead and oscillate this, even if not used.
+    fakestepsvar[*whichfakevar] = localrealnstep;
+    *whichfakevar = !(*whichfakevar); // go ahead and oscillate this, even if not used.
 
     // set "counter"
-    dumpcntgen[whichDT]=(long int)(*whichfake); // counter not currently used, but ok to set this to something.
+    dumpcntgenvar[whichDT]=(long int)(*whichfakevar); // counter not currently used, but ok to set this to something.
     
-    *fakec = 1 + MAX(0,(long long int)(((FTYPE)localrealnstep-(FTYPE)(*nfake))/((FTYPE)DTfake)));
-    *nfake = (ROUND2LONGLONGINT((FTYPE)localrealnstep/((FTYPE)DTfake)) + (*fakec)) * DTfake;
+    *fakec = 1 + MAX(0,(long long int)(((FTYPE)localrealnstep-(FTYPE)(*nfake))/((FTYPE)DTfakevar)));
+    *nfake = (ROUND2LONGLONGINT((FTYPE)localrealnstep/((FTYPE)DTfakevar)) + (*fakec)) * DTfakevar;
     *nlastfake=localrealnstep;
   }
   else{
     
     // iterate counter
-    dumpcntgen[whichDT]++;
+    dumpcntgenvar[whichDT]++;
     // below is really floor to nearest integer plus 1
-    dumpcgen[whichDT] = 1 + MAX(0,(long long int)((localt-tdumpgen[whichDT])/DTdumpgen[whichDT]));
-    tdumpgen[whichDT] = (ROUND2LONGLONGINT(tdumpgen[whichDT]/DTdumpgen[whichDT]) + dumpcgen[whichDT])*DTdumpgen[whichDT];
+    dumpcgen[whichDT] = 1 + MAX(0,(long long int)((localt-tdumpgen[whichDT])/DTdumpgenvar[whichDT]));
+    tdumpgen[whichDT] = (ROUND2LONGLONGINT(tdumpgen[whichDT]/DTdumpgenvar[whichDT]) + dumpcgen[whichDT])*DTdumpgenvar[whichDT];
     
     // output number of dumps
     sprintf(temps,  "dumps/0_num%d_%s_dumps.dat",whichDT,dumpnamelist[whichDT]);
@@ -607,7 +611,7 @@ static int post_dump(
     sprintf(temps3, "Couldn't close %d %s dumpcnt_file",whichDT,dumpnamelist[whichDT]);
     
     myfopen(temps,"w",temps2,&dumpcnt_filegen[whichDT]);      
-    myfprintf(dumpcnt_filegen[whichDT], "# Number of %d %s dumps\n%ld\n",whichDT,dumpnamelist[whichDT],dumpcntgen[whichDT]);
+    myfprintf(dumpcnt_filegen[whichDT], "# Number of %d %s dumps\n%ld\n",whichDT,dumpnamelist[whichDT],dumpcntgenvar[whichDT]);
     myfclose(&dumpcnt_filegen[whichDT],temps3);
     tlastgen[whichDT]=localt;
   }
@@ -616,7 +620,7 @@ static int post_dump(
   return(0);
 }
 
-
+/// setup whether do each dump type
 static int get_dodumps(int call_code, int firsttime, SFTYPE localt, long localnstep, long localrealnstep, FTYPE *tdumpgen, FTYPE *tlastgen, FTYPE tlastareamap, long long int nlastrestart, long long int nrestart, long long int nlastfake, long long int nfake, int *doareamap, int *dodumpgen)
 {
 
@@ -823,7 +827,7 @@ static int get_dodumps(int call_code, int firsttime, SFTYPE localt, long localns
 
 
 
-
+/// compute asymmetry of data1
 int asym_compute_1(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 {
   int i,j,k;
@@ -883,7 +887,8 @@ int asym_compute_1(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
   return(0);
 }
 
-// for implosion problem
+/// compute asymmetry of data2
+/// for implosion problem
 int asym_compute_2(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 {
   int i,j,k;
@@ -931,10 +936,9 @@ int asym_compute_2(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 
 
 
-// 2D only for now since really only useful for 2D imaging
-
-/* map out region around failure point */
-// OPENMPNOTE: Assume area_map() not called by multiple threads, so static's are ok (including firsttime)
+/// 2D only for now since really only useful for 2D imaging
+/// map out region around failure point
+/// OPENMPNOTE: Assume area_map() not called by multiple threads, so static's are ok (including firsttime)
 int area_map(int call_code, int type, int size, int i, int j, int k, FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 {
   int pl,pliter;
@@ -1111,8 +1115,8 @@ int area_map(int call_code, int type, int size, int i, int j, int k, FTYPE (*pri
 #define JETBSQORHO (3.162)
 
 
-// notice that F1 and F2 have arbitrary eomfunc that must be divided out to get real flux
-// This pureflux function only computes using F1,F2,F3 that can occur on substeps to maintain high accuracy that occurs exactly as consistent with RK method
+/// notice that F1 and F2 have arbitrary eomfunc that must be divided out to get real flux
+/// This pureflux function only computes using F1,F2,F3 that can occur on substeps to maintain high accuracy that occurs exactly as consistent with RK method
 int diag_flux_pureflux(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL], SFTYPE Dt)
 {
   int fluxdir;
@@ -1341,8 +1345,8 @@ int diag_flux_pureflux(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2
 #define JETBSQORHO (3.162)
 
 
-// this computes fluxes (term by term) from primitives
-// expensive so only done each full step.
+/// this computes fluxes (term by term) from primitives
+/// expensive so only done each full step.
 int diag_flux_general(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], SFTYPE Dt)
 {
   int fluxdir;
@@ -1637,8 +1641,8 @@ int diag_flux_general(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], SFTYPE Dt)
 
 #define DEBUGFRLOOP 1
 
-// OPENMPNOTE: Assume frdotout() not called by multiple threads, so static's are ok (including firsttime)
-// write the flux vs. radius
+/// OPENMPNOTE: Assume frdotout() not called by multiple threads, so static's are ok (including firsttime)
+/// write the flux vs. radius
 void frdotout(void)
 {
   int i,j,k,pl,pliter,l;
@@ -1730,7 +1734,7 @@ void frdotout(void)
 
 
 
-
+/// get various vars vs. time and average them in time
 void init_varstavg(void)
 {
   int i,j,k,ii;
@@ -1770,6 +1774,7 @@ void init_varstavg(void)
   }
 }
 
+/// final vars averaged in time
 void final_varstavg(FTYPE IDT)
 {
   int i,j,k,ii;
@@ -1808,7 +1813,7 @@ void final_varstavg(FTYPE IDT)
   }
 }
 
-
+/// set var to be averaged in time
 int set_varstavg(FTYPE tfrac)
 {
   int i,j,k;
@@ -2017,7 +2022,7 @@ int set_varstavg(FTYPE tfrac)
 }
 
 
-// if doavg==1, then assume this is call before dumping
+/// if doavg==1, then assume this is call before dumping
 int average_calc(int doavg)
 {
   static FTYPE lastdt;
@@ -2051,6 +2056,7 @@ int average_calc(int doavg)
 }
 
 
+/// diagnostics of sources
 void diag_source_all(struct of_geom *ptrgeom, FTYPE *dU,SFTYPE Dt)
 {
   int pl,enerregion;
@@ -2092,7 +2098,7 @@ void diag_source_all(struct of_geom *ptrgeom, FTYPE *dU,SFTYPE Dt)
 }
 
 
-// calling this can be expensive, so currently setting ACCURATESOURCEDIAG==0
+/// calling this can be expensive, so currently setting ACCURATESOURCEDIAG==0
 void diag_source_comp(struct of_geom *ptrgeom, FTYPE (*dUcomp)[NPR],SFTYPE Dt)
 {
   int sc,pl,enerregion;
@@ -2182,11 +2188,11 @@ void diag_source_comp(struct of_geom *ptrgeom, FTYPE (*dUcomp)[NPR],SFTYPE Dt)
 // whether to not really do full inversion since can be expensive
 #define AVOIDFULLINVERSION 1
 
-// compute dissipated energy due to (e.g.) shocks and reconnection
-// If not evolving entropy for full&direct evolution, then this function computes entropy update
-// If doing "comparison" then also do dissipation stuff
-// In case if doing dissipation stuff, then can compute dissipation in 2 ways (from inversion or from trivialized inversion)
-// Output both for now so can make comparison
+/// compute dissipated energy due to (e.g.) shocks and reconnection
+/// If not evolving entropy for full&direct evolution, then this function computes entropy update
+/// If doing "comparison" then also do dissipation stuff
+/// In case if doing dissipation stuff, then can compute dissipation in 2 ways (from inversion or from trivialized inversion)
+/// Output both for now so can make comparison
 int diss_compute(int evolvetype, int inputtype, FTYPE *U, struct of_geom *ptrgeom, FTYPE *prbefore, FTYPE *pr, struct of_newtonstats *newtonstats)
 {
   FTYPE prother[NUMDISSVERSIONS][NPR];
