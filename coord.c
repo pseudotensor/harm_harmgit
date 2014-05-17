@@ -1,6 +1,9 @@
 
 #include "decs.h"
 
+/*! \file coord.c
+    \brief User coordinates and other coordinates stuff
+    
 // this file contains all the coordinate dependent
 // parts of the code, except the initial and boundary
 // conditions 
@@ -18,6 +21,7 @@
 // Note that JCM did have the variables set in the right location previously, just didn't have variables defined in right place since wasn't trying to be thread safe.
 // Note that Intel Thread Checker didn't catch multiple thread use of myhslope.
 
+*/
 
 ///////////////////////
 //
@@ -94,7 +98,7 @@ static FTYPE th_npow,th_r1jet,th_njet1,th_njet,th_r0jet,th_rsjet,th_Qjet, th_nth
 
 
 
-// can call when no dependencies
+/// can call when no dependencies
 void set_coord_parms(int defcoordlocal)
 {
 
@@ -106,9 +110,9 @@ void set_coord_parms(int defcoordlocal)
 
 
 
-// Things to set that only depend upon defcoord and nothing else
-// NOTEMARK: By nothing else, that means things like hslope, R0, Rin, or anything else that user might set in init_grid()
-// Otherwise, even if set hslope here for example and then use hslope to set something else, hslope could change and that other parameter would be wrong and coordinates would be mismatched.
+/// Things to set that only depend upon defcoord and nothing else
+/// NOTEMARK: By nothing else, that means things like hslope, R0, Rin, or anything else that user might set in init_grid()
+/// Otherwise, even if set hslope here for example and then use hslope to set something else, hslope could change and that other parameter would be wrong and coordinates would be mismatched.
 void set_coord_parms_nodeps(int defcoordlocal)
 {
 
@@ -491,7 +495,7 @@ void set_coord_parms_nodeps(int defcoordlocal)
 }
 
 
-// stuff that depends upon ANYTHING external that might be set by user in init_grid() or by system in init_defgrid(), like R0, Rin, hslope, h_over_r, etc.
+/// stuff that depends upon ANYTHING external that might be set by user in init_grid() or by system in init_defgrid(), like R0, Rin, hslope, h_over_r, etc.
 void set_coord_parms_deps(int defcoordlocal)
 {
 
@@ -669,7 +673,7 @@ void set_coord_parms_deps(int defcoordlocal)
 
 
 
-
+/// write coordinate parameters
 void write_coord_parms(int defcoordlocal)
 {
   FILE *out;
@@ -768,7 +772,7 @@ void write_coord_parms(int defcoordlocal)
 }
 
 
-
+/// read coordinate parameters
 void read_coord_parms(int defcoordlocal)
 {
   FILE *in;
@@ -1058,7 +1062,7 @@ void read_coord_parms(int defcoordlocal)
 
 
 
-/* Returns boyer-lindquist coordinte of point */
+/// Returns boyer-lindquist coordinte of point
 void bl_coord(FTYPE *X, FTYPE *V)
 {
   extern FTYPE mysin(FTYPE th);
@@ -1750,6 +1754,7 @@ void bl_coord(FTYPE *X, FTYPE *V)
 
 }
 
+/// special v(x) for sjet coordinates
 void vofx_sjetcoords( FTYPE *X, FTYPE *V )
 {
   //for SJETCOORDS
@@ -1838,6 +1843,8 @@ void vofx_sjetcoords( FTYPE *X, FTYPE *V )
   V[3]=2.0*M_PI*X[3];
 }
 
+
+/// theta(x2) special
 FTYPE thetaofx2(FTYPE x2, FTYPE ror0nu)
 {
   FTYPE theta;
@@ -1852,14 +1859,16 @@ FTYPE thetaofx2(FTYPE x2, FTYPE ror0nu)
   }
   return(theta);
 }  
-// Jacobian for dx uniform per dx nonuniform (dx/dr / dx/dr')
-// i.e. Just take d(bl-coord)/d(ksp uniform coord)
-// e.g. dr/dx1 d\theta/dx2
 
-// take note of the ordering of indicies
-// dxdxp[j][k]=dxdxp[mu][nu]=(dx^\mu_{BL}/dx^\nu_{KSP uni})
 
-// should make this numerical like connection, then to conserve CPU, would need all over grid
+/// Jacobian for dx uniform per dx nonuniform (dx/dr / dx/dr')
+/// i.e. Just take d(bl-coord)/d(ksp uniform coord)
+/// e.g. dr/dx1 d\theta/dx2
+///
+/// take note of the ordering of indicies
+/// dxdxp[j][k]=dxdxp[mu][nu]=(dx^\mu_{BL}/dx^\nu_{KSP uni})
+///
+/// should make this numerical like connection, then to conserve CPU, would need all over grid
 void dxdxprim(FTYPE *X, FTYPE *V, FTYPE (*dxdxp)[NDIM])
 {
   void dxdxp_numerical(FTYPE *X, FTYPE (*dxdxp)[NDIM]);
@@ -1899,7 +1908,7 @@ void dxdxprim(FTYPE *X, FTYPE *V, FTYPE (*dxdxp)[NDIM])
 
 
 
-// should make this numerical like connection, then to conserve CPU, would need all over grid
+/// should make this numerical like connection, then to conserve CPU, would need all over grid
 void dxdxp_analytic(FTYPE *X, FTYPE *V, FTYPE (*dxdxp)[NDIM])
 {
   int j,k;
@@ -2316,7 +2325,7 @@ void dxdxp_analytic(FTYPE *X, FTYPE *V, FTYPE (*dxdxp)[NDIM])
 // Diffx[k] enters because DXDELTA is relative to total scale involved, which is Diffx[k], not always 1.0
 #define GENDXDELTA(k) (DXDELTA*Diffx[k])
 
-
+/// numerical derivative of V w.r.t. X
 void dxdxp_numerical(FTYPE *X, FTYPE (*dxdxp)[NDIM])
 {
   int j,k,l;
@@ -2404,13 +2413,15 @@ void dxdxp_numerical(FTYPE *X, FTYPE (*dxdxp)[NDIM])
 }
 
 
-// was using volatile, but not thread safe
+/// was using volatile, but not thread safe
 void donothing(FTYPE *temp)
 {
   *temp=*temp;
 
 }
 
+
+/// get V(X)
 FTYPE blcoordsimple(struct of_geom *ptrgeom, FTYPE*X, int i, int j) // i not used
 {
   FTYPE V[NDIM];
@@ -2426,17 +2437,17 @@ FTYPE blcoordsimple(struct of_geom *ptrgeom, FTYPE*X, int i, int j) // i not use
 
 
 
-// /////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////
 // 
 // Below set X uniform grid -- usually doesn't change.
 // Can usually force startx[1]=startx[2]=0. and dx[1]=1./N1 dx[2]=1./N2
 // 
-// /////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////
 
 
-/* some grid location, dxs */
-// could find this by root finding.  Needed if no obvious bounds
-// alternatively, could always define grid so x1=0..1 and x2=0..1 (likely more reasonable!)
+/// some grid location, dxs
+/// could find this by root finding.  Needed if no obvious bounds
+/// alternatively, could always define grid so x1=0..1 and x2=0..1 (likely more reasonable!)
 void set_points()
 {
   int jj;
@@ -2799,6 +2810,8 @@ void set_points()
 #define FRACN1 (0.1)
 #define ADJUSTFRACT (0.25)
 
+
+/// set i(horizon)
 int setihor(void)
 {
   // set to smaller of either totalsize[1]*0.1 or MAXIHOR
@@ -2807,10 +2820,9 @@ int setihor(void)
 }
 
 
-// there's probably a way to do this in general
-// probably can root find to get this
-
-// set Rin so horizon exactly on FACE1 at i=ihor
+/// there's probably a way to do this in general
+/// probably can root find to get this
+/// set Rin so horizon exactly on FACE1 at i=ihor
 FTYPE setRin(int ihor)
 {
  
@@ -2969,7 +2981,8 @@ FTYPE setRin(int ihor)
 
 
 
-// CENT is default position in degenerate cases
+/// get X(i,j,k)
+/// CENT is default position in degenerate cases
 void coord(int i, int j, int k, int loc, FTYPE *X)
 {
   // as in get_geometry(), these ?global's are used by other routines as a global indicator of where in position space we are so don't have to pass to all subfunctions
@@ -3089,10 +3102,10 @@ void coord(int i, int j, int k, int loc, FTYPE *X)
 }
 
 
-
-// like coord() but does not constrain X when in reduced dimensionality
-// used for infinitesimal differences such as when numerically computing connection or dxdxp's
-// at the moment this function not used since X is defined directly rather than based upon grid
+/// Get X(i,j,k)
+/// like coord() but does not constrain X when in reduced dimensionality
+/// used for infinitesimal differences such as when numerically computing connection or dxdxp's
+/// at the moment this function not used since X is defined directly rather than based upon grid
 void coord_free(int i, int j, int k, int loc, FTYPE *X)
 {
 
@@ -3156,7 +3169,7 @@ void coord_free(int i, int j, int k, int loc, FTYPE *X)
 
 
 
-// identical to coord except declaration using FTYPEs
+/// identical to coord except declaration using FTYPEs
 void coordf(FTYPE i, FTYPE j, FTYPE k, int loc, FTYPE *X)
 {
   //iglobal=ROUND2INT(i);
@@ -3274,7 +3287,7 @@ void coordf(FTYPE i, FTYPE j, FTYPE k, int loc, FTYPE *X)
 }
 
 
-
+/// get i,j,k(X)
 void icoord(FTYPE *X,int loc, int *i, int *j, int *k)
 {
   if(loc == CENT){
@@ -3307,6 +3320,7 @@ void icoord(FTYPE *X,int loc, int *i, int *j, int *k)
 #endif
 
 #if(INCLUDEROUND)
+/// get rounded value of x
 FTYPE round(FTYPE x)
 {
   FTYPE xfloor,xceil;
@@ -3317,6 +3331,7 @@ FTYPE round(FTYPE x)
   else return(xfloor);
 }
 
+/// get rounded value of x
 long int lrint(FTYPE x)
 {
   return((long int)round(x));
@@ -3325,6 +3340,7 @@ long int lrint(FTYPE x)
 
 
 
+/// get rounded value of x
 FTYPE myround(FTYPE x)
 {
 
@@ -3339,6 +3355,7 @@ FTYPE myround(FTYPE x)
 
 
 #if(0)
+/// get rounded value of x
 long int myround2int(FTYPE x)
 {
 
@@ -3354,7 +3371,7 @@ long int myround2int(FTYPE x)
 #define myround2int(x) (ROUND2INT(x))
 #endif
 
-
+/// get i,j,k(X) rounded to integer
 void icoord_round(FTYPE *X,int loc, int *i, int *j, int *k)
 {
   FTYPE myround(FTYPE x);
@@ -3377,8 +3394,8 @@ void icoord_round(FTYPE *X,int loc, int *i, int *j, int *k)
 }
 
 
-
-// dir=X1UP,X1DN,etc.
+/// see if point inside surface
+/// dir=X1UP,X1DN,etc.
 int is_inside_surface(int dir, int ii, int jj, int kk, int pp)
 {
   int is_on_surface(int dir, int ii, int jj, int kk, int pp);
@@ -3411,7 +3428,7 @@ int is_inside_surface(int dir, int ii, int jj, int kk, int pp)
 
 }
 
-
+/// see if point is on surface
 int is_on_surface(int dir, int ii, int jj, int kk, int pp)
 {
   int ijk[NDIM];
@@ -3447,7 +3464,7 @@ int is_on_surface(int dir, int ii, int jj, int kk, int pp)
 // NEVER CALL *_ijk_*() type functions if input i,j,k is meant to be related to total grid that would access beyond stored arrays
 
 
-// normally-used dxdxp[i,j,k]
+/// normally-used dxdxp[i,j,k] = dV/dX
 void dxdxprim_ijk(int i, int j, int k, int loc, FTYPE (*dxdxp)[NDIM])
 {
   int jj,kk;
@@ -3480,7 +3497,7 @@ void dxdxprim_ijk(int i, int j, int k, int loc, FTYPE (*dxdxp)[NDIM])
 }
 
 
-// normally-used dxdxp[i,j,k]
+/// normally-used dxdxp[i,j,k]
 void dxdxprim_ijk_2(struct of_geom *ptrgeom, FTYPE *X, FTYPE *V, FTYPE (*dxdxp)[NDIM])
 {
   int i,j,k,loc;
@@ -3518,7 +3535,7 @@ void dxdxprim_ijk_2(struct of_geom *ptrgeom, FTYPE *X, FTYPE *V, FTYPE (*dxdxp)[
 
 }
 
-
+/// Get (dV/dX)^{-1}
 void idxdxprim(FTYPE (*dxdxp)[NDIM], FTYPE (*idxdxp)[NDIM])
 {
 
@@ -3529,7 +3546,7 @@ void idxdxprim(FTYPE (*dxdxp)[NDIM], FTYPE (*idxdxp)[NDIM])
 
 
 
-// normally-used dxdxp[i,j,k]
+/// normally-used dxdxp[i,j,k]
 void idxdxprim_ijk(int i, int j, int k, int loc, FTYPE (*idxdxp)[NDIM])
 {
   int jj,kk;
@@ -3564,9 +3581,9 @@ void idxdxprim_ijk(int i, int j, int k, int loc, FTYPE (*idxdxp)[NDIM])
 }
 
 
-// normally-used dxdxp[i,j,k]
-// {X,V} -> idxdxp only if ptrgoem->loc=NOWHERE
-// else {ptrgeom->{i,j,k}} -> {X,V,idxdxp}
+/// normally-used dxdxp[i,j,k]
+/// {X,V} -> idxdxp only if ptrgoem->loc=NOWHERE
+/// else {ptrgeom->{i,j,k}} -> {X,V,idxdxp}
 void idxdxprim_ijk_2(struct of_geom *ptrgeom, FTYPE *X, FTYPE *V, FTYPE (*idxdxp)[NDIM])
 {
   int i,j,k,loc;
@@ -3612,8 +3629,8 @@ void idxdxprim_ijk_2(struct of_geom *ptrgeom, FTYPE *X, FTYPE *V, FTYPE (*idxdxp
 
 
 
-// normally-used bl_coord[i,j,k]
-// {i,j,k} -> V only
+/// normally-used bl_coord[i,j,k]
+/// {i,j,k} -> V only
 void bl_coord_ijk(int i, int j, int k, int loc, FTYPE *V)
 {
   int jj;
@@ -3648,9 +3665,9 @@ void bl_coord_ijk(int i, int j, int k, int loc, FTYPE *V)
 
 }
 
-// normally-used bl_coord[i,j,k]
-// {i,j,k} -> {X,V} both if loc!=NOWHERE
-// X -> V if loc==NOWHERE (so reduces to bl_coord(X,V)
+/// normally-used bl_coord[i,j,k]
+/// {i,j,k} -> {X,V} both if loc!=NOWHERE
+/// X -> V if loc==NOWHERE (so reduces to bl_coord(X,V)
 void bl_coord_ijk_2(int i, int j, int k, int loc, FTYPE *X, FTYPE *V)
 {
   int jj;
@@ -3690,8 +3707,8 @@ void bl_coord_ijk_2(int i, int j, int k, int loc, FTYPE *X, FTYPE *V)
 
 }
 
-// normally-used bl_coord[i,j,k]
-// returns both X and V given i,j,k,loc and does NOT try to use stored memory -- presumes could input arbitrary i,j,k not on a single CPU
+/// normally-used bl_coord[i,j,k]
+/// returns both X and V given i,j,k,loc and does NOT try to use stored memory -- presumes could input arbitrary i,j,k not on a single CPU
 void bl_coord_coord(int i, int j, int k, int loc, FTYPE *X, FTYPE *V)
 {
   
@@ -3701,8 +3718,8 @@ void bl_coord_coord(int i, int j, int k, int loc, FTYPE *X, FTYPE *V)
 }
 
 
-// normally-used bl_coord[i,j,k]
-// {i,j,k} -> X only
+/// normally-used bl_coord[i,j,k]
+/// {i,j,k} -> X only
 void coord_ijk(int i, int j, int k, int loc, FTYPE *X)
 {
   int jj;
@@ -3738,8 +3755,8 @@ void coord_ijk(int i, int j, int k, int loc, FTYPE *X)
 
 
 
-//smooth step function: 
-// Ftr = 0 if x < 0, Ftr = 1 if x > 1 and smoothly interps. in btw.
+/// smooth step function: 
+/// Ftr = 0 if x < 0, Ftr = 1 if x > 1 and smoothly interps. in btw.
 FTYPE Ftr( FTYPE x )
 {
   FTYPE res;
@@ -3795,21 +3812,21 @@ FTYPE Fangle( FTYPE x )
   
 }
 
-FTYPE limlin( FTYPE x, FTYPE x0, FTYPE dx, FTYPE y0 )
+FTYPE limlin( FTYPE x, FTYPE x0, FTYPE dxx, FTYPE y0 )
 {
   FTYPE Fangle( FTYPE x );
-  return( y0 - dx * Fangle(-(x-x0)/dx) );
+  return( y0 - dxx * Fangle(-(x-x0)/dxx) );
 }
 
-FTYPE minlin( FTYPE x, FTYPE x0, FTYPE dx, FTYPE y0 )
+FTYPE minlin( FTYPE x, FTYPE x0, FTYPE dxx, FTYPE y0 )
 {
   FTYPE Fangle( FTYPE x );
-  return( y0 + dx * Fangle((x-x0)/dx) );
+  return( y0 + dxx * Fangle((x-x0)/dxx) );
 }
 
 FTYPE mins( FTYPE f1, FTYPE f2, FTYPE df )
 {
-  FTYPE limlin( FTYPE x, FTYPE x0, FTYPE dx, FTYPE y0 );
+  FTYPE limlin( FTYPE x, FTYPE x0, FTYPE dxx, FTYPE y0 );
   return( limlin(f1, f2, df, f2) );
 }
 
@@ -3819,8 +3836,9 @@ FTYPE maxs( FTYPE f1, FTYPE f2, FTYPE df )
   return( -mins(-f1, -f2, df) );
 }
 
-//=mins if dir < 0
-//=maxs if dir >= 0
+
+/// =mins if dir < 0
+/// =maxs if dir >= 0
 FTYPE minmaxs( FTYPE f1, FTYPE f2, FTYPE df, FTYPE dir )
 {
   FTYPE mins( FTYPE f1, FTYPE f2, FTYPE df );
@@ -3839,9 +3857,10 @@ static void to1stquadrant( FTYPE *Xin, FTYPE *Xout, int *ismirrored );
 static FTYPE func1( FTYPE *X0, FTYPE *X,  void (*vofx)(FTYPE*, FTYPE*) );
 static FTYPE func2( FTYPE *X0, FTYPE *X,  void (*vofx)(FTYPE*, FTYPE*) );
 
-//Converts copies Xin to Xout and converts
-//but sets Xout[2] to lie in the 1st quadrant, i.e. Xout[2] \in [-1,0])
-//if the point had to be mirrored
+/// for sjet coords
+///Converts copies Xin to Xout and converts
+///but sets Xout[2] to lie in the 1st quadrant, i.e. Xout[2] \in [-1,0])
+///if the point had to be mirrored
 void to1stquadrant( FTYPE *Xin, FTYPE *Xout, int *ismirrored )
 {
   FTYPE ntimes;
@@ -3868,6 +3887,7 @@ void to1stquadrant( FTYPE *Xin, FTYPE *Xout, int *ismirrored )
   }
 }
 
+/// for sjet coords
 FTYPE sinth0( FTYPE *X0, FTYPE *X, void (*vofx)(FTYPE*, FTYPE*) )
 {
   FTYPE V0[NDIM];
@@ -3886,6 +3906,7 @@ FTYPE sinth0( FTYPE *X0, FTYPE *X, void (*vofx)(FTYPE*, FTYPE*) )
   return( V0[1] * sin(V0[2]) / Vc0[1] );
 }
 
+/// for sjet coords
 FTYPE sinth1in( FTYPE *X0, FTYPE *X, void (*vofx)(FTYPE*, FTYPE*) )
 {
   FTYPE V[NDIM];
@@ -3906,6 +3927,7 @@ FTYPE sinth1in( FTYPE *X0, FTYPE *X, void (*vofx)(FTYPE*, FTYPE*) )
 }
 
 
+/// for sjet coords
 FTYPE th2in( FTYPE *X0, FTYPE *X, void (*vofx)(FTYPE*, FTYPE*) )
 {
   FTYPE V[NDIM];
@@ -3936,11 +3958,12 @@ FTYPE th2in( FTYPE *X0, FTYPE *X, void (*vofx)(FTYPE*, FTYPE*) )
   return( res );
 }
 
-//Adjusts V[2]=theta so that a few innermost cells around the pole
-//become cylindrical
-//ASSUMES: poles are at 
-//            X[2] = -1 and +1, which correspond to
-//            V[2] = 0 and pi
+/// for sjet coords
+///Adjusts V[2]=theta so that a few innermost cells around the pole
+///become cylindrical
+///ASSUMES: poles are at 
+///            X[2] = -1 and +1, which correspond to
+///            V[2] = 0 and pi
 void vofx_cylindrified( FTYPE *Xin, void (*vofx)(FTYPE*, FTYPE*), FTYPE *Vout )
 {
   FTYPE npiovertwos;
@@ -3993,6 +4016,7 @@ void vofx_cylindrified( FTYPE *Xin, void (*vofx)(FTYPE*, FTYPE*), FTYPE *Vout )
   }
 }
 
+/// for sjet coords
 FTYPE func1( FTYPE *X0, FTYPE *X,  void (*vofx)(FTYPE*, FTYPE*) )
 {
   FTYPE V[NDIM];
@@ -4002,6 +4026,7 @@ FTYPE func1( FTYPE *X0, FTYPE *X,  void (*vofx)(FTYPE*, FTYPE*) )
   return( sin(V[2]) ); 
 }
 
+/// for sjet coords
 FTYPE func2( FTYPE *X0, FTYPE *X,  void (*vofx)(FTYPE*, FTYPE*) )
 {
   FTYPE V[NDIM];
