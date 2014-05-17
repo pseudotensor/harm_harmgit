@@ -1,26 +1,34 @@
 
-///////////////
-//
-// Some physical constants (here in dep since might want to change cTILDA and gTILDA per problem)
-//
-///////////////
+/*! \file global.depmnemonics.rad.h
+    \brief RADIATION code definitions of dependent quantities
+
+    // MNEMONICS or other things that should rarely change, or things that on depend on the above items (e.g. if statements, loops, etc.)
+    
+*/
+
+
+////////////////
+///
+/// Some physical constants (here in dep since might want to change cTILDA and gTILDA per problem)
+///
+////////////////
 #define GGG (GGG0/gTILDA) // cgs in cm^3/(kg s^2)
 #define CCCTRUE (CCCTRUE0/cTILDA) // cgs in cm/s
 
-/////////////////////
-//
-// derived constants
-//
-/////////////////////
+//////////////////////
+///
+/// derived constants
+///
+//////////////////////
 #define MSUNCM (GGG*MSUN/(CCCTRUE*CCCTRUE)) // Msun in cm
 
-//////////////////////////
-//
-// Define Length, Time, and Mass (and Temperature) units
-//
-//  (depends upon MPERSUN set by user)
-//
-////////////////////////////
+///////////////////////////
+///
+/// Define Length, Time, and Mass (and Temperature) units
+///
+///  (depends upon MPERSUN set by user)
+///
+/////////////////////////////
 #define LBAR (GGG*MPERSUN*MSUN/(CCCTRUE*CCCTRUE)) // cgs in cm
 #define TBAR (LBAR/CCCTRUE) // cgs in s
 #define VBAR (LBAR/TBAR) // cgs // HARM requires this be CCCTRUE!
@@ -45,7 +53,7 @@
 // Code versions of constants required for radiation interaction
 //
 ////////////////
-// Below to be used in formula for Urad_{code} = arad_{code} * Tcode^4
+/// Below to be used in formula for Urad_{code} = arad_{code} * Tcode^4
 #define ARAD_CODE_DEF (ARAD*(TEMPBAR*TEMPBAR*TEMPBAR*TEMPBAR)/UBAR)
 
 
@@ -69,16 +77,16 @@
 //
 /////////////////////
 
-// while avoids singular behavior, can make inversion unable to reach solution and get locked in cycles due to bad Jacobian, etc.
+/// while avoids singular behavior, can make inversion unable to reach solution and get locked in cycles due to bad Jacobian, etc.
 //#define TEMPMINKELVIN (1.0E+2) // Kelvin // Problem with consistency in error function and entropy estimate for URAD method.
 #define TEMPMINKELVIN (1.0E-10) // Kelvin
 #define TEMPMIN (TEMPMINKELVIN/TEMPBAR) // Code units
 
-// whether to do comptonization (upscatter or downscatter)
+/// whether to do comptonization (upscatter or downscatter)
 #define DOCOMPTON 1
 
 #define OPACITYBAR (LBAR*LBAR/MBAR) // cgs in cm^2/g
-// non-relativistic ES:
+/// non-relativistic ES:
 #define KAPPA_ES_CODE(rhocode,Tcode) (0.2*(1.0+XFACT)/OPACITYBAR)
 #define KAPPA_FF_CODE(rhocode,Tcode) (1.0E23*ZATOM*ZATOM/(MUE*MUI)*((rhocode)*RHOBAR)*pow((Tcode)*TEMPBAR,-7.0/2.0)/OPACITYBAR)
 #define KAPPA_BF_CODE(rhocode,Tcode) (1.0E25*ZATOM*(1.0+XFACT)*((rhocode)*RHOBAR)*pow((Tcode)*TEMPBAR,-7.0/2.0)/OPACITYBAR)

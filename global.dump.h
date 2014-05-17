@@ -1,3 +1,10 @@
+
+/*! \file global.dump.h
+  \brief Function declarations (used globally) for dump.c and dumpgen.c
+ */
+
+
+
 extern int dump_gen(int readwrite, long dump_cnt, int bintxt, int whichdump,MPI_Datatype datatype, char *fileprefix, char *fileformat, char *filesuffix, int (*headerfun) (int whichdump, int whichdumpversion, int numcolumns, int bintxt, FILE*headerptr),int (*content) (int i, int j, int k, MPI_Datatype datatype, void*setbuf));
 
 extern int header1_gen(int accessmemory, int readwrite, int bintxt, int bcasthead, void *ptr, size_t size, char *format, size_t nmemb, MPI_Datatype datatype, FILE *stream);

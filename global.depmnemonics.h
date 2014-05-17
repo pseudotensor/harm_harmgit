@@ -1,19 +1,18 @@
 
+/*! \file global.depmnemonics.h
+    \brief General code definitions of dependent quantities
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-// MNEMONICS or other things that should rarely change, or things that on depend on the above items (e.g. if statements, loops, etc.)
-//
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // MNEMONICS or other things that should rarely change, or things that on depend on the above items (e.g. if statements, loops, etc.)
+    
+*/
 
-// RK-related macros
-// Doesn't even depend upon N?, N?M, or N?BND, etc.  But does depend upon MAXTIMEORDER
+
+/// RK-related macros
+/// Doesn't even depend upon N?, N?M, or N?BND, etc.  But does depend upon MAXTIMEORDER
 #include "global.stepch.h"
 
 
-//equals to unity if the interpolation of gamma is performed and if requested to use prim. reduction
+///equals to unity if the interpolation of gamma is performed and if requested to use prim. reduction
 #define STORE_GAMMA_PRIM_REDUCTION_FRACTION  (WENO_USE_PRIM_REDUCTION && (VARTOINTERP == PRIMTOINTERP_3VEL_GAMMA || VARTOINTERP == PRIMTOINTERP_RHOV_GAMMA || VARTOINTERP == PRIMTOINTERP_3VELREL_GAMMAREL || VARTOINTERP == PRIMTOINTERP_3VELREL_GAMMAREL_DXDXP) )
 
 #if( WENO_USE_PRIM_REDUCTION ) 
@@ -42,28 +41,28 @@
 #endif
 
 
-// whether to check if rho<=0 or u<=0 when restarting.
+/// whether to check if rho<=0 or u<=0 when restarting.
 #if( DOEVOLVERHO||DOEVOLVEUU)
 #define CHECKRHONEGZERORESTART 1
 #else
 #define CHECKRHONEGZERORESTART 0
 #endif
 
-// dump.c's fieldlinedump()
-// CHANGES alot, make sure # is correct!
-// Add 4 radiation terms if doing radiation
+/// dump.c's fieldlinedump()
+/// CHANGES alot, make sure # is correct!
+/// Add 4 radiation terms if doing radiation
 #if( FIELDLINEGDETB == 1)
 #define NUMFIELDLINEQUANTITIES (14 + (1+NDIM)*(EOMRADTYPE!=EOMRADNONE))
-// rho, u, -hu_t, -T^t_t/U0, u^t, v1,v2,v3,B1,B2,B3,gdetB1,gdetB2,gdetB3
-// radiation adds: vrad1,vrad2,vrad3
+/// rho, u, -hu_t, -T^t_t/U0, u^t, v1,v2,v3,B1,B2,B3,gdetB1,gdetB2,gdetB3
+/// radiation adds: vrad1,vrad2,vrad3
 #else
 #define NUMFIELDLINEQUANTITIES (11 + (1+NDIM)*(EOMRADTYPE!=EOMRADNONE))
-// rho, u, -hu_t, -T^t_t/U0, u^t, v1,v2,v3,B1,B2,B3
-// radiation adds: vrad1,vrad2,vrad3
+/// rho, u, -hu_t, -T^t_t/U0, u^t, v1,v2,v3,B1,B2,B3
+/// radiation adds: vrad1,vrad2,vrad3
 #endif
 
 
-// how many sets of EOMs (MHD or MHD+RAD)
+/// how many sets of EOMs (MHD or MHD+RAD)
 #if(EOMRADTYPE!=EOMRADNONE)
 #define NUMTRUEEOMSETS (2)
 //#define NUMEOMSETS (NUMTRUEEOMSETS) // MHD+RAD
@@ -83,7 +82,7 @@
 #define NUMCOND 1
 #endif
 
-// for STORESHOCKINDICATOR
+/// for STORESHOCKINDICATOR
 #define NUMSHOCKPLS (3*(NUMTRUEEOMSETS*NUMCOND))
 #define SHOCKPLDIR1 (0)
 #define SHOCKPLDIR2 (SHOCKPLDIR1+1)
@@ -91,7 +90,7 @@
 #define SHOCKRADPLDIR1 (SHOCKPLDIR3+1)
 #define SHOCKRADPLDIR2 (SHOCKRADPLDIR1+1)
 #define SHOCKRADPLDIR3 (SHOCKRADPLDIR2+1)
-// below only for DIVERGENCEMETHOD==DIVMETHODPREFLUX
+/// below only for DIVERGENCEMETHOD==DIVMETHODPREFLUX
 #define DIVPLDIR1 (SHOCKRADPLDIR3+1)
 #define DIVPLDIR2 (DIVPLDIR1+1)
 #define DIVPLDIR3 (DIVPLDIR2+1)
@@ -99,8 +98,8 @@
 #define DIVRADPLDIR2 (DIVRADPLDIR1+1)
 #define DIVRADPLDIR3 (DIVRADPLDIR2+1)
 
-// for STORESHOCKINDICATOR for temp storage
-// assumes no more than NDIM*NUMTRUEEOMSETS in list!
+/// for STORESHOCKINDICATOR for temp storage
+/// assumes no more than NDIM*NUMTRUEEOMSETS in list!
 #define SHOCKPLSTOREPTOT (0)
 #define SHOCKPLSTOREVEL1 (1)
 #define SHOCKPLSTOREVEL2 (SHOCKPLSTOREVEL1+1)
@@ -112,7 +111,7 @@
 
 #if(DIVERGENCEMETHOD==DIVMETHODPOSTFLUX)
 #define NSPECIAL 6
-// choose SPECIALPL
+/// choose SPECIALPL
 #define SPECIALPL1 RHO
 #define SPECIALPL2 UU
 #define SPECIALPL3 B1
@@ -148,14 +147,14 @@
 #endif
 
 #if(SPLITPRESSURETERMINFLUXMA)
-// where to put gas pressure part of flux that is T^i_i
+/// where to put gas pressure part of flux that is T^i_i
 #define FLUXSPLITPMA(dir) (B1+dir-1) // put in unused magnetic field part
 #else
 #define FLUXSPLITPMA(dir) (-100) // so FLUXSPLITPMA(dir)==pl is always 0
 #endif
 
 #if(SPLITPRESSURETERMINFLUXEM)
-// where to put magnetic pressure part of flux that is T^i_i
+/// where to put magnetic pressure part of flux that is T^i_i
 #define FLUXSPLITPEM(dir) (RHO) // put in unused mass advection part
 #else
 #define FLUXSPLITPEM(dir) (-100) // so FLUXSPLITPEM(dir)==pl is always 0
@@ -169,19 +168,19 @@
 #endif
 
 
-// OPTMARK: Should remove use of b^\mu b_\mu
+/// OPTMARK: Should remove use of b^\mu b_\mu
 #define COMPUTE4FIELDforFLUX (MAXWELL==GENMAXWELL || USEGLOBALWAVE==0)
 
-// OPTMARK: Should remove use of b^\mu b_\mu
+/// OPTMARK: Should remove use of b^\mu b_\mu
 #define COMPUTE4FIELDatALL (COMPUTE4FIELDforFLUX  || LIMITDTWITHSOURCETERM || ANALYTICSOURCE || PLINEWITHFIELD || VLINEWITHGDETRHO || TRUEFAST==1)
 
 
 
 
-// this should be only place eomfunc[] or ieomfuncnosing[] are referred to!
-// special cases: =GLOBALMETMACP1A0(eomfunc,loc,i,j,k);
-// one regexp to use: eomfunc\[\([_\>a-zA-Z0-9+-\ ()]+\)\] -> EOMFUNCMAC(\1)
-// one regexp to use: ieomfuncnosing\[\([_\>a-zA-Z0-9+-\ ()]+\)\] -> IEOMFUNCNOSINGMAC(\1)
+/// this should be only place eomfunc[] or ieomfuncnosing[] are referred to!
+/// special cases: =GLOBALMETMACP1A0(eomfunc,loc,i,j,k);
+/// one regexp to use: eomfunc\[\([_\>a-zA-Z0-9+-\ ()]+\)\] -> EOMFUNCMAC(\1)
+/// one regexp to use: ieomfuncnosing\[\([_\>a-zA-Z0-9+-\ ()]+\)\] -> IEOMFUNCNOSINGMAC(\1)
 #if(WHICHEOM!=WITHGDET)
 #define EOMFUNCNAME eomfunc // requires special care within code -- only used when doing eomfunc_func()
 #define EOMFUNCASSIGN(pl) eomfunc[pl] // requires special care within code -- only used when doing eomfunc_func()#define EOMFUNCPTR eomfuncptr // requires special care within code -- only used when doing eomfunc_func()
@@ -199,25 +198,25 @@
 #endif
 
 
-//used by mpi_init.c for some bound types to set sign of copy for polar BCs
+///used by mpi_init.c for some bound types to set sign of copy for polar BCs
 #define SIGNFLIPGDET (FLIPGDETAXIS==0 ? 1.0 : -1.0)
 
-//used to set sign of U1,B1 across axis
+///used to set sign of U1,B1 across axis
 #define SIGNFLIPU1 (FLIPU1AXIS==0 ? 1.0 : -1.0)
 #define SIGNFLIPB1 (FLIPB1AXIS==0 ? 1.0 : -1.0)
-//used to set sign of U2,B2 across axis
+///used to set sign of U2,B2 across axis
 #define SIGNFLIPU2 (FLIPU2AXIS==0 ? 1.0 : -1.0)
 #define SIGNFLIPB2 (FLIPB2AXIS==0 ? 1.0 : -1.0)
-//used to set sign of U3,B3 across axis
+///used to set sign of U3,B3 across axis
 #define SIGNFLIPU3 (FLIPU3AXIS==0 ? 1.0 : -1.0)
 #define SIGNFLIPB3 (FLIPB3AXIS==0 ? 1.0 : -1.0)
 
 
 
-// setup for various boundary situations
-// so doesn't produce differences in irrelevant directions, whether boundary zones or not
-// mac(?) macros are for use in definitions of other macros since macro with args needs to be directly a function of what's hardcoded, not some "replacement" since nothing is replaced, not to be used inside code for USING a macro.
-// Commented out non-macro versios of (e.g.) im1 since want to enforce correct macro expansion when used with macrofication of array accesses described in global.storage.h
+/// setup for various boundary situations
+/// so doesn't produce differences in irrelevant directions, whether boundary zones or not
+/// mac(?) macros are for use in definitions of other macros since macro with args needs to be directly a function of what's hardcoded, not some "replacement" since nothing is replaced, not to be used inside code for USING a macro.
+/// Commented out non-macro versios of (e.g.) im1 since want to enforce correct macro expansion when used with macrofication of array accesses described in global.storage.h
 
 #if(N1>1)
 //#define im1 (i-1)
@@ -293,7 +292,7 @@
 
 
 
-// x1
+/// x1
 #define SHIFT1 N1NOT1
 #define N1BND MAXBND*N1NOT1
 
@@ -310,8 +309,8 @@
 #define INM1 -SHIFT1
 #define OUTM1 N1-1+SHIFT1
 
-// unlike other loops limits that should reduce to 0 when the N=1 to as if like dimension didn't exist,
-// this one should force loop to not happen at all when N=1 since acts on boundary zones don't exist
+/// unlike other loops limits that should reduce to 0 when the N=1 to as if like dimension didn't exist,
+/// this one should force loop to not happen at all when N=1 since acts on boundary zones don't exist
 #define INBOUNDLO1 (-N1BND)
 #define INBOUNDHI1 (-1)
 
@@ -321,19 +320,19 @@
 //#define INFACEBOUNDLO1 (-N1BND) // (-N1BND+1) // GODMARK: large domain used for easy checking of fluxes after bound_flux().
 //#define INFACEBOUNDHI1 (-1+SHIFT1)
 
-// up to -1 since 0 is actually defined with original primitives
-// generalize (expand) a bit:
+/// up to -1 since 0 is actually defined with original primitives
+/// generalize (expand) a bit:
 #define INFACEBOUNDLO1 (-N1BND)
 #define INFACEBOUNDHI1 (-1)
 
 
-// from N1+1 since N1 is actually defined with original primitives (only true if not FLUXCTSTAG)
-// generalize (expand) a bit:
+/// from N1+1 since N1 is actually defined with original primitives (only true if not FLUXCTSTAG)
+/// generalize (expand) a bit:
 //#define OUTFACEBOUNDLO1 (N1+1)
 #define OUTFACEBOUNDLO1 (N1)
 #define OUTFACEBOUNDHI1 (N1+N1BND-1)
 
-// x2
+/// x2
 #define SHIFT2 N2NOT1
 #define N2BND MAXBND*N2NOT1
 
@@ -350,8 +349,8 @@
 #define INM2 -SHIFT2
 #define OUTM2 N2-1+SHIFT2
 
-// unlike other loops limits that should reduce to 0 when the N=1 to as if like dimension didn't exist,
-// this one should force loop to not happen at all when N=1 since acts on boundary zones don't exist
+/// unlike other loops limits that should reduce to 0 when the N=1 to as if like dimension didn't exist,
+/// this one should force loop to not happen at all when N=1 since acts on boundary zones don't exist
 #define INBOUNDLO2 (-N2BND)
 #define INBOUNDHI2 (-1)
 
@@ -361,19 +360,19 @@
 //#define INFACEBOUNDLO2 (-N2BND)
 //#define INFACEBOUNDHI2 (-1+SHIFT2)
 
-// generalize (expand) a bit:
+/// generalize (expand) a bit:
 //#define INFACEBOUNDLO2 (-N2BND+1)
 #define INFACEBOUNDLO2 (-N2BND)
 #define INFACEBOUNDHI2 (-1)
 
 
-// generalize (expand) a bit:
+/// generalize (expand) a bit:
 //#define OUTFACEBOUNDLO2 (N2+1)
 #define OUTFACEBOUNDLO2 (N2)
 #define OUTFACEBOUNDHI2 (N2+N2BND-1)
 
 
-// x3
+/// x3
 #define SHIFT3 N3NOT1
 #define N3BND MAXBND*N3NOT1
 
@@ -390,8 +389,8 @@
 #define INM3 -SHIFT3
 #define OUTM3 N3-1+SHIFT3
 
-// unlike other loops limits that should reduce to 0 when the N=1 to as if like dimension didn't exist,
-// this one should force loop to not happen at all when N=1 since acts on boundary zones don't exist
+/// unlike other loops limits that should reduce to 0 when the N=1 to as if like dimension didn't exist,
+/// this one should force loop to not happen at all when N=1 since acts on boundary zones don't exist
 #define INBOUNDLO3 (-N3BND)
 #define INBOUNDHI3 (-1)
 
@@ -401,13 +400,13 @@
 //#define INFACEBOUNDLO3 (-N3BND)
 //#define INFACEBOUNDHI3 (-1+SHIFT3)
 
-// generalize (expand) a bit:
+/// generalize (expand) a bit:
 //#define INFACEBOUNDLO3 (-N3BND+1)
 #define INFACEBOUNDLO3 (-N3BND)
 #define INFACEBOUNDHI3 (-1)
 
 
-// generalize (expand) a bit:
+/// generalize (expand) a bit:
 //#define OUTFACEBOUNDLO3 (N3+1)
 #define OUTFACEBOUNDLO3 (N3)
 #define OUTFACEBOUNDHI3 (N3+N3BND-1)
@@ -424,7 +423,7 @@
 #define NBIGBND1 ((N1BND>N2BND) ? N1BND : N2BND)
 #define NBIGBND  ((NBIGBND1>N3BND) ? NBIGBND1 : N3BND)
 
-// N?OFF and N?NOT1 are a bit redundant
+/// N?OFF and N?NOT1 are a bit redundant
 //#define N1OFF (((N1BND>0)&&(N1>1)) ? 1 : 0)
 //#define N2OFF (((N2BND>0)&&(N2>1)) ? 1 : 0)
 //#define N3OFF (((N3BND>0)&&(N3>1)) ? 1 : 0)
@@ -442,14 +441,14 @@
 #define NUMPFLAGSBOUND (1+FLAGUTOPRIMFAIL) // only 0
 #endif
 
-// GODMARK: Could make a volume that is not NBIGBND*NBIGSM but may be smaller?
-// used in init_mpi.c for workbc and workbc_int
+/// GODMARK: Could make a volume that is not NBIGBND*NBIGSM but may be smaller?
+/// used in init_mpi.c for workbc and workbc_int
 
 
-// number of interpolation variables for staggered field method per B and v each
+/// number of interpolation variables for staggered field method per B and v each
 #define NUMCORNINTERP 4
 
-// for wavespeeds.c and fluxcompute.c
+/// for wavespeeds.c and fluxcompute.c
 #define NUMCS 2
 #define CMIN 0
 #define CMAX 1
@@ -467,8 +466,8 @@
 
 
 
-// processed version of npr definition since no immediate evaluation in standard c preprocessor
-// this "global.defnprs.h" is generated by the program generatenprs.c
+/// processed version of npr definition since no immediate evaluation in standard c preprocessor
+/// this "global.defnprs.h" is generated by the program generatenprs.c
 #include "global.defnprs.h"
 
 
@@ -483,16 +482,14 @@
 
 
 
-// cent,face1,face2,face3,corn
-
-
-// NPR*4 = 1 dUgeom and 3 dUriemanns ; 3 directions for F1,F2,F3 and pl pr and F(pl) and F(pr)
+/// cent,face1,face2,face3,corn
+/// NPR*4 = 1 dUgeom and 3 dUriemanns ; 3 directions for F1,F2,F3 and pl pr and F(pl) and F(pr)
 #define NUMFLUXDUMP (NPR*4 + NPR*3*(1+2+2))
 
 
 #if(MODIFYEMFORVPOT==MODIFYVPOT || TRACKVPOT>0 || EVOLVEWITHVPOT>0)
-// 4 space-time directions with only spatial parts used for now
-// vpotarrayglobal holds vpot, vpot0, vpotlast, vpotcum
+/// 4 space-time directions with only spatial parts used for now
+/// vpotarrayglobal holds vpot, vpot0, vpotlast, vpotcum
 #define NUMVPOT (NDIM*4)
 #define NUMVPOTDUMP (NDIM)
 #else
@@ -501,11 +498,10 @@
 #endif
 
 
-// size of certain dumped tavg quantities
-
-// was 29 =>
+/// size of certain dumped tavg quantities
+/// was 29 =>
 #define NUMNORMDUMP (NPR+1+4*4+6) // number of "normal" dump variables
-// for above see diag.c and set_varstavg()
+/// for above see diag.c and set_varstavg()
 #define NUMFARADAY 6
 #define NUMOTHER 1
 #define NUMSTRESSTERMS (NUMFLUXTERMS*NDIM*NDIM)
@@ -517,7 +513,7 @@
 
 
 
-// size of data type used for all floats
+/// size of data type used for all floats
 #define FLOATTYPE 0
 #define DOUBLETYPE 1
 #define LONGDOUBLETYPE 2

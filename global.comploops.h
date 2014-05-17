@@ -1,17 +1,15 @@
+/*! \file global.comploops.h
+  \brief LOOPS (computational and not per-point)
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-// LOOPS (computational and not per-point)
-//
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+ */
+ 
 
-///////////////////
-//
+
+
+
+//////
 // below are each per-spatial-dimension loops used later to contruct a multi-dimensionan loop of any order
-//
-///////////////////
+//////
 
 
 #define NDIMENNOT1(dimen) (NDIMEN(dimen)!=1)
@@ -20,7 +18,7 @@
                                         ind++ )
 
 
-// full loop + 1 (shift away from boundary) on inner edge for comptuing emf or corner quantities
+/// full loop + 1 (shift away from boundary) on inner edge for comptuing emf or corner quantities
 //#define LOOPINFP13 for(k=INFULLP13;k<=OUTFULL3;k++)  //SASMARK SECTIONMARK these three loops not used anywhere anymore?
 //#define LOOPINFP12 for(j=INFULLP12;j<=OUTFULL2;j++)
 //#define LOOPINFP11 for(i=INFULLP11;i<=OUTFULL1;i++)
@@ -38,7 +36,7 @@
 #define COMPLOOPOUTFM11 for(i=INFULL1+SHIFTX1DN;i<=OUTFULLM11+SHIFTX1UP;i++)
 
 
-// these loops used for computational purposes
+/// these loops used for computational purposes
 #define COMPLOOPF3 for(k=INFULL3+SHIFTX3DN;k<=OUTFULL3+SHIFTX3UP;k++)
 #define COMPLOOPF2 for(j=INFULL2+SHIFTX2DN;j<=OUTFULL2+SHIFTX2UP;j++)
 #define COMPLOOPF1 for(i=INFULL1+SHIFTX1DN;i<=OUTFULL1+SHIFTX1UP;i++)
@@ -68,7 +66,7 @@
 #define COMPLOOPF2 for(j=INFULL2+SHIFTX2DN;j<=OUTFULL2+SHIFTX2UP;j++)
 #define COMPLOOPF1 for(i=INFULL1+SHIFTX1DN;i<=OUTFULL1+SHIFTX1UP;i++)
 
-// full loop + 1 on outer edge for emf or corner quantities
+/// full loop + 1 on outer edge for emf or corner quantities
 #define COMPLOOPFP13 for(k=INFULL3+SHIFTX3DN;k<=OUTFULLP13+SHIFTX3UP;k++)
 #define COMPLOOPFP12 for(j=INFULL2+SHIFTX2DN;j<=OUTFULLP12+SHIFTX2UP;j++)
 #define COMPLOOPFP11 for(i=INFULL1+SHIFTX1DN;i<=OUTFULLP11+SHIFTX1UP;i++)
@@ -77,21 +75,21 @@
 
 
 
-///////////////////
-//
-// below are different ways of combining each spatial direction
-//
-// Didn't see way to macrofy the groups of 3 loops, but at least don't have to repeat code for different ORDERSTORAGE!
-//
-///////////////////
+////////////////////
+///
+/// below are different ways of combining each spatial direction
+///
+/// Didn't see way to macrofy the groups of 3 loops, but at least don't have to repeat code for different ORDERSTORAGE!
+///
+////////////////////
 
 
 
-// SECTIONMARK: needs to be limited
+/// SECTIONMARK: needs to be limited
 #define COMPLOOPF LOOPORDER1(COMPLOOPF1,COMPLOOPF2,COMPLOOPF3) LOOPORDER2(COMPLOOPF1,COMPLOOPF2,COMPLOOPF3) LOOPORDER3(COMPLOOPF1,COMPLOOPF2,COMPLOOPF3)
 #define COMPLOOPH LOOPORDER1(COMPLOOPH1,COMPLOOPH2,CPMPLOOPH3) LOOPORDER2(COMPLOOPH1,COMPLOOPH2,CPMPLOOPH3) LOOPORDER3(COMPLOOPH1,COMPLOOPH2,CPMPLOOPH3)
 #define COMPLOOPP1 LOOPORDER1(COMPLOOPP11,COMPLOOPP12,COMPLOOPP13) LOOPORDER2(COMPLOOPP11,COMPLOOPP12,COMPLOOPP13) LOOPORDER3(COMPLOOPP11,COMPLOOPP12,COMPLOOPP13)
-//SASMARK where is COMPLOOPFMH used?
+///SASMARK where is COMPLOOPFMH used?
 #define COMPLOOPFMH LOOPORDER1(CMPLOOPFMH1,CMPLOOPFMH2,CMPLOOPFMH3) LOOPORDER2(CMPLOOPFMH1,CMPLOOPFMH2,CMPLOOPFMH3) LOOPORDER3(CMPLOOPFMH1,CMPLOOPFMH2,CMPLOOPFMH3)
 #define COMPLOOPHMFP LOOPORDER1(CMPLOOPHMFP1,CMPLOOPHMFP2,CMPLOOPHMFP3) LOOPORDER2(CMPLOOPHMFP1,CMPLOOPHMFP2,CMPLOOPHMFP3) LOOPORDER3(CMPLOOPHMFP1,CMPLOOPHMFP2,CMPLOOPHMFP3)
 #define COMPLOOPHP LOOPORDER1(CMPLOOPHP1,CMPLOOPHP2,CMPLOOPHP3) LOOPORDER2(CMPLOOPHP1,CMPLOOPHP2,CMPLOOPHP3) LOOPORDER3(CMPLOOPHP1,CMPLOOPHP2,CMPLOOPHP3)
@@ -99,12 +97,12 @@
 #define COMPLOOPN LOOPORDER1(COMPLOOPN1,COMPLOOPN2,COMPLOOPN3) LOOPORDER2(COMPLOOPN1,COMPLOOPN2,COMPLOOPN3) LOOPORDER3(COMPLOOPN1,COMPLOOPN2,COMPLOOPN3)
 #define COMPFULLLOOP LOOPORDER1(COMPLOOPF1,COMPLOOPF2,COMPLOOPF3) LOOPORDER2(COMPLOOPF1,COMPLOOPF2,COMPLOOPF3) LOOPORDER3(COMPLOOPF1,COMPLOOPF2,COMPLOOPF3)
 
-// SECTIONMARK: leave LOOPF? alone
+/// SECTIONMARK: leave LOOPF? alone
 //#define FULLLOOP LOOPORDER1(LOOPF1,LOOPF2,LOOPF3) LOOPORDER2(LOOPF1,LOOPF2,LOOPF3) LOOPORDER3(LOOPF1,LOOPF2,LOOPF3)
 
-// computing emf for FLUXCT
-// SECTIONMARK: needs to be limited
-// change names too so looks "computational"
+/// computing emf for FLUXCT
+/// SECTIONMARK: needs to be limited
+/// change names too so looks "computational"
 #define COMPLOOPINFP1 LOOPORDER1(COMPLOOPINFP11,COMPLOOPINFP12,COMPLOOPINFP13) LOOPORDER2(COMPLOOPINFP11,COMPLOOPINFP12,COMPLOOPINFP13) LOOPORDER3(COMPLOOPINFP11,COMPLOOPINFP12,COMPLOOPINFP13)
 
 #define COMPLOOPINFP1dir1full LOOPORDER1(COMPLOOPF1,COMPLOOPINFP12,COMPLOOPINFP13) LOOPORDER2(COMPLOOPF1,COMPLOOPINFP12,COMPLOOPINFP13) LOOPORDER3(COMPLOOPF1,COMPLOOPINFP12,COMPLOOPINFP13)
@@ -120,7 +118,7 @@
 #define COMPLOOPINFP1dir12full LOOPORDER1(COMPLOOPF1,COMPLOOPF2,COMPLOOPINFP13) LOOPORDER2(COMPLOOPF1,COMPLOOPF2,COMPLOOPINFP13) LOOPORDER3(COMPLOOPF1,COMPLOOPF2,COMPLOOPINFP13)
 
 
-// computing emf for FLUXCD
+/// computing emf for FLUXCD
 #define COMPLOOPOUTFM1 LOOPORDER1(COMPLOOPOUTFM11,COMPLOOPOUTFM12,COMPLOOPOUTFM13) LOOPORDER2(COMPLOOPOUTFM11,COMPLOOPOUTFM12,COMPLOOPOUTFM13) LOOPORDER3(COMPLOOPOUTFM11,COMPLOOPOUTFM12,COMPLOOPOUTFM13)
 
 #define COMPLOOPOUTFM1dir1full LOOPORDER1(COMPLOOPF1,COMPLOOPOUTFM12,COMPLOOPOUTFM13) LOOPORDER2(COMPLOOPF1,COMPLOOPOUTFM12,COMPLOOPOUTFM13) LOOPORDER3(COMPLOOPF1,COMPLOOPOUTFM12,COMPLOOPOUTFM13)
@@ -130,7 +128,7 @@
 #define COMPLOOPOUTFM1dir3full LOOPORDER1(COMPLOOPOUTFM11,COMPLOOPOUTFM12,COMPLOOPF3) LOOPORDER2(COMPLOOPOUTFM11,COMPLOOPOUTFM12,COMPLOOPF3) LOOPORDER3(COMPLOOPOUTFM11,COMPLOOPOUTFM12,COMPLOOPF3)
 
 
-// larger loop than full for cornered quantities such as emf defined on corners that need to be initialized for boundary condition reasons
+/// larger loop than full for cornered quantities such as emf defined on corners that need to be initialized for boundary condition reasons
 //#define FULLLOOPP1 LOOPORDER1(LOOPFP11,LOOPFP12,LOOPFP13) LOOPORDER2(LOOPFP11,LOOPFP12,LOOPFP13) LOOPORDER3(LOOPFP11,LOOPFP12,LOOPFP13)
 #define COMPFULLLOOPP1 LOOPORDER1(COMPLOOPFP11,COMPLOOPFP12,COMPLOOPFP13) LOOPORDER2(COMPLOOPFP11,COMPLOOPFP12,COMPLOOPFP13) LOOPORDER3(COMPLOOPFP11,COMPLOOPFP12,COMPLOOPFP13)
 
@@ -139,9 +137,9 @@
 #define COMPFULLLOOPP1_13 LOOPORDER1(COMPLOOPFP11,,COMPLOOPFP13) LOOPORDER2(COMPLOOPFP11,,COMPLOOPFP13) LOOPORDER3(COMPLOOPFP11,,COMPLOOPFP13)
 
 
-// divb loop
+/// divb loop
 //#define LOOPDIVB LOOPORDER1(LOOPP11,LOOPP12,LOOPP13) LOOPORDER2(LOOPP11,LOOPP12,LOOPP13) LOOPORDER3(LOOPP11,LOOPP12,LOOPP13)
-// boundary zones may not require divb=0 since proxy for flux
+/// boundary zones may not require divb=0 since proxy for flux
 //#define LOOPDIVB LOOPORDER1(LOOPC1,LOOPC2,LOOPC3) LOOPORDER2(LOOPC1,LOOPC2,LOOPC3) LOOPORDER3(LOOPC1,LOOPC2,LOOPC3)
 #define COMPLOOPDIVB LOOPORDER1(COMPLOOPN1,COMPLOOPN2,COMPLOOPN3) LOOPORDER2(COMPLOOPN1,COMPLOOPN2,COMPLOOPN3) LOOPORDER3(COMPLOOPN1,COMPLOOPN2,COMPLOOPN3)
 
@@ -151,29 +149,29 @@
 
 
 
-///////////////////
-//
-// below are not original multi-D combindations, just renamings that have no control over order of dimensions
-//
-///////////////////
+////////////////////
+///
+/// below are not original multi-D combindations, just renamings that have no control over order of dimensions
+///
+////////////////////
 
 
 #if( SIMULBCCALC <= 0 )  //SASMARK not sure if need to require = -1 or <= 0 
 
-////////////////////////////////////////////
-//
-// normal non-MPI or standard MPI  (was after #include "mympi.h")
-//
-////////////////////////////////////////////
+/////////////////////////////////////////////
+///
+/// normal non-MPI or standard MPI  (was after #include "mympi.h")
+///
+/////////////////////////////////////////////
 
-// SECTIONMARK: needs to be limited
+/// SECTIONMARK: needs to be limited
 #define COMPZLOOP ZSLOOP(0+SHIFTX1DN,N1-1+SHIFTX1UP,0+SHIFTX2DN,N2-1+SHIFTX2UP,0+SHIFTX3DN,N3-1+SHIFTX3UP)
 
-// can use COMPZSLOOP if don't care about extra calculations 
-//SASMARK SECTIONMARK: modified is/ie, etc. globally assuming everything depends on the computational box linearly
+/// can use COMPZSLOOP if don't care about extra calculations 
+///SASMARK SECTIONMARK: modified is/ie, etc. globally assuming everything depends on the computational box linearly
 #define COMPZSLOOP(istart,istop,jstart,jstop,kstart,kstop) ZSLOOP(istart+SHIFTX1DN,istop+SHIFTX1UP,jstart+SHIFTX2DN,jstop+SHIFTX2UP,kstart+SHIFTX3DN,kstop+SHIFTX3UP)
-// these are special loops with very careful calculation ranges to avoid extra calculations
-// but assumes are global variables which are assigned, so remains intact under whatever circumstances needed next
+/// these are special loops with very careful calculation ranges to avoid extra calculations
+/// but assumes are global variables which are assigned, so remains intact under whatever circumstances needed next
 #define COMPFZLOOP(istart,jstart,kstart) COMPZSLOOP(istart,OUTM1,jstart,OUTM2,kstart,OUTM3)  //not used anywhere for SIMULBCCALC == -1
 #define COMPEMFZLOOP COMPZSLOOP(0,OUTM1,0,OUTM2,0,OUTM3)             //not used anywhere at all (only in "//" comments)
 #define COMPPREEMFZLOOP COMPZSLOOP(INM1,OUTM1,INM2,OUTM2,INM3,OUTM3) //not used anywhere at all (only in "//" comments)
@@ -195,11 +193,11 @@
 
 
 
-///////////////////
-//
-// Below are deprecated -- if activate ensure proper general loop behavior as above
-//
-///////////////////
+////////////////////
+///
+/// Below are deprecated -- if activate ensure proper general loop behavior as above
+///
+////////////////////
 
 
 

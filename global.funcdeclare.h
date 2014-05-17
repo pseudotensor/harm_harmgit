@@ -1,13 +1,10 @@
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-// function declarations
-//
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// SPECIAL USE OF PTRDEF: (and in metric.c):
-//  int interpX_gcov(FTYPE *X, struct of_compgeom (*compgeom)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*gcovgrid)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3][SYMMATRIXNDIM], FTYPE (*gcovpertgrid)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3][NDIM], FTYPE *gcov, FTYPE *gcovpert);
+/*! \file global.funcdeclare.h
+  \brief Function declarations (used globally) by entire code
+ */
+
+/// SPECIAL USE OF PTRDEF: (and in metric.c):
+///  int interpX_gcov(FTYPE *X, struct of_compgeom (*compgeom)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*gcovgrid)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3][SYMMATRIXNDIM], FTYPE (*gcovpertgrid)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3][NDIM], FTYPE *gcov, FTYPE *gcovpert);
 int interpX_gcov(FTYPE *X, struct of_compgeom PTRDEFMETMACP1A0(compgeom,FILL,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3), FTYPE PTRDEFMETMACP1A2(gcovgrid,FILL,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3,NDIM,NDIM), FTYPE PTRDEFMETMACP1A1(gcovpertgrid,FILL,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3,NDIM), FTYPE *gcov, FTYPE *gcovpert);
 
 
@@ -64,7 +61,7 @@ extern int error_check(int wherefrom);
 
 extern int find_horizon(int fromwhere);
 
-// initialize DUMP stuff
+/// initialize DUMP stuff
 extern int init_dumps(void);
 extern void output_nprlist_info(void);
 extern void init_dnumcolumns_dnumversion(void);
@@ -83,7 +80,7 @@ extern void *SwapEndian(void* Addr, const int Nb);
 extern void makedirs(void);
 
 
-// DUMP file stuff
+/// DUMP file stuff
 extern int isenoughfreespace(unsigned long long need);
 
 
@@ -116,7 +113,7 @@ extern void interpfun(int interptype, int numpoints, int i, FTYPE pos, FTYPE *xf
 
 
 
-// log file stuff
+/// log file stuff
 #include "mpi_fprintfs.funcdeclare.h"
 
 
@@ -153,17 +150,17 @@ extern void interpfun(int interptype, int numpoints, int i, FTYPE pos, FTYPE *xf
 
 
 
-// interpolation stuff
+/// interpolation stuff
 extern int get_loop(int pointorlinetype, int interporflux, int dir, struct of_loop *loop);
 extern int set_interpalltypes_loop_ranges(int pointorlinetype, int interporflux, int dir, int *intdir, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk, int *bs, int *ps, int *pe, int *be);
 
 
-// line types:
+/// line types:
 extern void set_interp_loop_gen(int withshifts, int interporflux, int dir, int *intdir, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk, int *bs, int *ps, int *pe, int *be);
 //extern void set_interp_loop(int withshifts, int interporflux, int dir, int *intdir, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk, int *bs, int *ps, int *pe, int *be);
 //extern void set_interp_loop_expanded(int withshifts, int interporflux, int dir, int *intdir, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk, int *bs, int *ps, int *pe, int *be);
 
-// point types:
+/// point types:
 extern int set_interppoint_loop_ranges(int interporflux, int dir, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk);
 extern int set_interppoint_loop_ranges_3Dextended(int interporflux, int *maxis, int *maxie, int *maxjs, int *maxje, int *maxks, int *maxke, int *di, int *dj, int *dk);
 extern void set_interppoint_loop_ranges_2D_EMF_formerged(int interporflux, int corner, int odir1, int odir2, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk);
@@ -176,17 +173,17 @@ extern void set_interppoint_loop_expanded(int interporflux, int dir, int *is, in
 #include "fluxvpot.funcdeclare.h"
 
 
-// functions for loop stuff
+/// functions for loop stuff
 extern void  setup_nprlocalist(int whichprimtype, int *nprlocalstart, int *nprlocalend,int *nprlocallist, int *numprims);
 
 #include "nrutil.funcdeclare.h"
 
 
-////////////////////////////////
-////
-//// specialty functions
-////
-////////////////////////////////
+/////////////////////////////////
+/////
+///// specialty functions
+/////
+/////////////////////////////////
 //extern void bondi_solve(FTYPE K, FTYPE gam, FTYPE *Rs, FTYPE *Urs,
 //   FTYPE *Edot);
 //extern FTYPE bondi_trace(FTYPE K, FTYPE gam, FTYPE edotf, FTYPE r,
@@ -249,12 +246,11 @@ extern FTYPE cot(FTYPE arg);
 extern FTYPE csc(FTYPE arg);
 extern FTYPE sec(FTYPE arg);
 
-///////////////////////////////////
-//
-// SUPERLONGDOUBLE declarations
-//
-///////////////////////////////////
-
+////////////////////////////////////
+///
+/// SUPERLONGDOUBLE declarations
+///
+////////////////////////////////////
 #if(SUPERLONGDOUBLE)
 #include "mconf.h"
 extern long double ceill ( long double );

@@ -1,3 +1,11 @@
+
+/*! \file global.bounds.h
+  \brief Function declarations (used globally) for bounds.c
+ */
+
+
+
+
 extern int bound_x1dn_analytic(int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
 extern int bound_x1up_analytic(int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
 
