@@ -1,7 +1,11 @@
 #include "decs.h"
 
+/*! \file dump_ener.c
+  \brief Time-dependence spatially-integrated diagnostics
 
-// OPENMPNOTE: Assume dump_ener() not called by multiple threads, so static's are ok (including firsttime)
+*/
+
+/// OPENMPNOTE: Assume dump_ener() not called by multiple threads, so static's are ok (including firsttime)
 int dump_ener(int doener, int dordump, int call_code)
 {
 
@@ -589,9 +593,9 @@ int dump_ener(int doener, int dordump, int call_code)
 }
 
 
-// used to append into ener.out file.  Needed to locate place within file to begin appending.
-// Old code, probably broken by now -- not used
-void appendener(FILE* ener_file,SFTYPE (*pcum_tot)[NPR],SFTYPE*fladd_tot,SFTYPE *sourceadd_tot)
+/// used to append into ener.out file.  Needed to locate place within file to begin appending.
+/// Old code, probably broken by now -- not used
+void appendener(FILE* ener_file,SFTYPE (*pcum_totvar)[NPR],SFTYPE*fladd_totvar,SFTYPE *sourceadd_totvar)
 {
   int gotit;
   SFTYPE tcheck;
@@ -615,15 +619,15 @@ void appendener(FILE* ener_file,SFTYPE (*pcum_tot)[NPR],SFTYPE*fladd_tot,SFTYPE 
         for (l = 1; l <= NUMENERVAR; l++) {
           if ((l > 3+NPR+COMPDIM*2*NPR) && (l < 3+NPR+2*COMPDIM*2*NPR+NPR)) {
             DIRLOOP(dir) PLOOP(pliter,pl) {
-              fscanf(ener_file, "%lf", &pcum_tot[dir][pl]);
+              fscanf(ener_file, "%lf", &pcum_totvar[dir][pl]);
               l++;
             }
             PLOOP(pliter,pl) {
-              fscanf(ener_file, "%lf", &fladd_tot[pl]);
+              fscanf(ener_file, "%lf", &fladd_totvar[pl]);
               l++;
             }
             PLOOP(pliter,pl) {
-              fscanf(ener_file, "%lf", &sourceadd_tot[pl]);
+              fscanf(ener_file, "%lf", &sourceadd_totvar[pl]);
               l++;
             }
           }
@@ -682,6 +686,7 @@ void appendener(FILE* ener_file,SFTYPE (*pcum_tot)[NPR],SFTYPE*fladd_tot,SFTYPE 
   }
 }
 
+/// Compute divB maximum and average
 void divbmaxavg(FTYPE (*prim)[NSTORE2][NSTORE3][NPR],FTYPE*ptrdivbmax,FTYPE*ptrdivbavg)
 {
   int i,j,k;
@@ -742,24 +747,23 @@ void divbmaxavg(FTYPE (*prim)[NSTORE2][NSTORE3][NPR],FTYPE*ptrdivbmax,FTYPE*ptrd
 
 
 
-
-void setrestart(int*appendold)
+/// set restart mode
+void setrestart(int*appendoldvar)
 {
-  *appendold = 0;
+  *appendoldvar = 0;
   // 0: deal with ener.out manually
   // 1: append automatically (no longer used)
 }
 
-/* gettotal accepts an arbitrary pointer set each of different sizes
- * i.e. one could do:
- * numptrs=2+NPR;
- * totalptrs[0]=pdot;  totalsizes[0]=NPR; totaloptrs[0]=pdot;
- * totalptrs[1]=fladd; totalsizes[1]=NPR; totaloptrs[1]=fladd_tot;
- * PLOOP(pliter,pl){ totalptrs[2+pl]=&U_tot[pl]; totalsizes[pl]=1;}
- * gettotal(0,numptrs,totalptrs,totaloptrs,totalsizes);
- *
- */
 
+/// Compute spatial integral
+/// gettotal accepts an arbitrary pointer set each of different sizes
+/// i.e. one could do:
+/// numptrs=2+NPR;
+/// totalptrs[0]=pdot;  totalsizes[0]=NPR; totaloptrs[0]=pdot;
+/// totalptrs[1]=fladd; totalsizes[1]=NPR; totaloptrs[1]=fladd_tot;
+/// PLOOP(pliter,pl){ totalptrs[2+pl]=&U_tot[pl]; totalsizes[pl]=1;}
+/// gettotal(0,numptrs,totalptrs,totaloptrs,totalsizes);
 void gettotal(int doall, int numvars, SFTYPE* vars[],int*sizes,SFTYPE*vars_tot[])
 {
   int j,k;
@@ -828,7 +832,7 @@ void gettotal(int doall, int numvars, SFTYPE* vars[],int*sizes,SFTYPE*vars_tot[]
 
 
 
-// all CPUs get total
+/// Spatial integral over all CPUs for SFTYPE
 void getalltotal(int numvars, SFTYPE* vars[],int*sizes,SFTYPE*vars_tot[])
 {
   int j,k;
@@ -859,7 +863,7 @@ void getalltotal(int numvars, SFTYPE* vars[],int*sizes,SFTYPE*vars_tot[])
 }
 
 
-
+///  Spatial integral for CTYPE
 void gettotall(int numvars, CTYPE* vars[],int*sizes,CTYPE *vars_tot[])
 {
   int j,k;
@@ -889,7 +893,7 @@ void gettotall(int numvars, CTYPE* vars[],int*sizes,CTYPE *vars_tot[])
 }
 
 
-// each CPU does constotal
+/// Get spatial integral for SFTYPE.  Each CPU does constotal
 int constotal(int enerregion, SFTYPE *vars)
 {
   int i,j,k,pl,pliter;
@@ -934,8 +938,8 @@ int constotal(int enerregion, SFTYPE *vars)
 }
 
 
-// for dissipation (GODMARK: not used currently since keep track of integral and function separately)
-// each CPU does constotal
+/// for dissipation (GODMARK: not used currently since keep track of integral and function separately)
+/// each CPU does constotal
 int constotal2(int enerregion, SFTYPE *vars)
 {
   int i,j,k,pl,pliter;
@@ -962,7 +966,7 @@ int constotal2(int enerregion, SFTYPE *vars)
 
 
 
-// each CPU does counttotal
+/// Get spatial integral for CTYPE.  Each CPU does counttotal
 int counttotal(int enerregion, CTYPE *vars, int num)
 {
   int i,j,k,variter;
@@ -996,6 +1000,7 @@ int counttotal(int enerregion, CTYPE *vars, int num)
 
 #define MAXPTRS 10
 
+/// Integrate/spatial for SFTYPE for different type's for SFTYPE
 int integrate(int numelements, SFTYPE * var,SFTYPE *var_tot,int type, int enerregion)
 {
   SFTYPE *totalptrs[MAXPTRS],*totaloptrs[MAXPTRS];
@@ -1038,6 +1043,8 @@ int integrate(int numelements, SFTYPE * var,SFTYPE *var_tot,int type, int enerre
   return(0);
 }
 
+
+/// Integrate/spatial for SFTYPE for different type's for CTYPE
 int integratel(int numelements, CTYPE * var, CTYPE *var_tot,int type, int enerregion)
 {
   CTYPE *totalptrs[MAXPTRS],*totaloptrs[MAXPTRS];

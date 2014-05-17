@@ -1,9 +1,15 @@
 #include "decs.h"
 
+/*! \file dump.c
+     \brief file dumping
+
 // mpi.h has following datatypes corresponding to the C types
 // pick one per dump file. (no per column types yet)
 // same for image.c
 // same for restart.c
+*/
+
+
 /*
   #define MPI_CHAR           ((MPI_Datatype)1)
   #define MPI_UNSIGNED_CHAR  ((MPI_Datatype)2)
@@ -313,29 +319,29 @@ void writesyminfo( void )
 }
 
 
-int dump_header(int whichdump, int whichdumpversion, int numcolumns, int bintxt, FILE *headerptr)
+int dump_header(int whichdump, int whichdumpversion, int numcolumnsvar, int bintxt, FILE *headerptr)
 {
-  int dump_header_general(int whichdump, int whichdumpversion, int numcolumns, long localrealnstep, SFTYPE localdt, int bintxt, FILE *headerptr);
+  int dump_header_general(int whichdump, int whichdumpversion, int numcolumnsvar, long localrealnstep, SFTYPE localdt, int bintxt, FILE *headerptr);
   int retval;
 
-  retval=dump_header_general(whichdump, whichdumpversion, numcolumns, realnstep,dt, bintxt, headerptr);
+  retval=dump_header_general(whichdump, whichdumpversion, numcolumnsvar, realnstep,dt, bintxt, headerptr);
 
   return(retval);
 
 }
 
-int fluxdump_header(int whichdump, int whichdumpversion, int numcolumns, int bintxt, FILE *headerptr)
+int fluxdump_header(int whichdump, int whichdumpversion, int numcolumnsvar, int bintxt, FILE *headerptr)
 {
-  int dump_header_general(int whichdump, int whichdumpversion, int numcolumns, long localrealnstep, SFTYPE localdt, int bintxt, FILE *headerptr);
+  int dump_header_general(int whichdump, int whichdumpversion, int numcolumnsvar, long localrealnstep, SFTYPE localdt, int bintxt, FILE *headerptr);
   int retval;
 
-  retval=dump_header_general(whichdump, whichdumpversion, numcolumns, fluxdumprealnstep,fluxdumpdt, bintxt, headerptr);
+  retval=dump_header_general(whichdump, whichdumpversion, numcolumnsvar, fluxdumprealnstep,fluxdumpdt, bintxt, headerptr);
 
   return(retval);
 
 }
 
-int dump_header_general(int whichdump, int whichdumpversion, int numcolumns, long localrealnstep, SFTYPE localdt, int bintxt, FILE *headerptr)
+int dump_header_general(int whichdump, int whichdumpversion, int numcolumnsvar, long localrealnstep, SFTYPE localdt, int bintxt, FILE *headerptr)
 {
   int realtotalsize[NDIM];
   FTYPE realstartx[NDIM];
@@ -411,13 +417,13 @@ int dump_header_general(int whichdump, int whichdumpversion, int numcolumns, lon
     fwrite(&ke,sizeof(int),1,headerptr);
     fwrite(&whichdump,sizeof(int),1,headerptr);
     fwrite(&whichdumpversion,sizeof(int),1,headerptr);
-    fwrite(&numcolumns,sizeof(int),1,headerptr);
+    fwrite(&numcolumnsvar,sizeof(int),1,headerptr);
   }
   else{
 #if(REALTYPE==DOUBLETYPE)
-    fprintf(headerptr, "%21.15g %d %d %d %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %ld %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %d %21.15g %21.15g %21.15g %21.15g %d %d %d %d %d %d %d %d %d\n", tsteppartf, realtotalsize[1], realtotalsize[2], realtotalsize[3], realstartx[1], realstartx[2], realstartx[3], dx[1], dx[2], dx[3], localrealnstep,gam,a,R0,Rin,Rout,hslope,localdt,defcoord,MBH,QBH,EP3,THETAROT,is,ie,js,je,ks,ke,whichdump,whichdumpversion,numcolumns);
+    fprintf(headerptr, "%21.15g %d %d %d %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %ld %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %d %21.15g %21.15g %21.15g %21.15g %d %d %d %d %d %d %d %d %d\n", tsteppartf, realtotalsize[1], realtotalsize[2], realtotalsize[3], realstartx[1], realstartx[2], realstartx[3], dx[1], dx[2], dx[3], localrealnstep,gam,a,R0,Rin,Rout,hslope,localdt,defcoord,MBH,QBH,EP3,THETAROT,is,ie,js,je,ks,ke,whichdump,whichdumpversion,numcolumnsvar);
 #elif(REALTYPE==LONGDOUBLETYPE)
-    fprintf(headerptr, "%31.25Lg %d %d %d %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %ld %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %d %31.25Lg %31.25Lg %31.25Lg %31.25Lg %d %d %d %d %d %d %d %d %d\n", tsteppartf, realtotalsize[1], realtotalsize[2], realtotalsize[3], realstartx[1], realstartx[2], realstartx[3], dx[1], dx[2],dx[3],localrealnstep,gam,a,R0,Rin,Rout,hslope,localdt,defcoord,MBH,QBH,EP3,THETAROT,is,ie,js,je,ks,ke,whichdump,whichdumpversion,numcolumns);
+    fprintf(headerptr, "%31.25Lg %d %d %d %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %ld %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %d %31.25Lg %31.25Lg %31.25Lg %31.25Lg %d %d %d %d %d %d %d %d %d\n", tsteppartf, realtotalsize[1], realtotalsize[2], realtotalsize[3], realstartx[1], realstartx[2], realstartx[3], dx[1], dx[2],dx[3],localrealnstep,gam,a,R0,Rin,Rout,hslope,localdt,defcoord,MBH,QBH,EP3,THETAROT,is,ie,js,je,ks,ke,whichdump,whichdumpversion,numcolumnsvar);
 #endif
   }
   fflush(headerptr);
@@ -427,19 +433,19 @@ int dump_header_general(int whichdump, int whichdumpversion, int numcolumns, lon
 
 
 // number of columns for dump file
-void set_dump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
+void set_dump_content_dnumcolumns_dnumversion(int *numcolumnsvar, int *numversion)
 {
 
 
   // always NPRDUMP
-  if(GAMMIEDUMP)  *numcolumns=2*3 + NPRDUMP+NPR + 3 + 1 + 4 * NDIM + 6 + 1
+  if(GAMMIEDUMP)  *numcolumnsvar=2*3 + NPRDUMP+NPR + 3 + 1 + 4 * NDIM + 6 + 1
 #if(CALCFARADAYANDCURRENTS)
                     + NDIM*2
                     + 2*6
 #endif
                     ;
   else{
-    *numcolumns=3*3 + NPRDUMP + 3 + (nprend+1) + 1 + 4 * NDIM + 6 + 1  //replace NPR -> (nprend+1) since nprend, not NPR, controls dumping.  Fixes: DOEXTRAINTERP=1 case
+    *numcolumnsvar=3*3 + NPRDUMP + 3 + (nprend+1) + 1 + 4 * NDIM + 6 + 1  //replace NPR -> (nprend+1) since nprend, not NPR, controls dumping.  Fixes: DOEXTRAINTERP=1 case
 #if(CALCFARADAYANDCURRENTS)
       + NDIM*2
       + 2*6
@@ -447,7 +453,7 @@ void set_dump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
       ;    // 61 total if also doing currents and faraday, 41 otherwise
 
     if(FLUXB==FLUXCTSTAG && 0){ // DEBUG (change corresponding code in dump.c)
-      *numcolumns+= NPR2INTERP*COMPDIM*2 + NPR + COMPDIM*3*2 + COMPDIM*3*2*2;
+      *numcolumnsvar+= NPR2INTERP*COMPDIM*2 + NPR + COMPDIM*3*2 + COMPDIM*3*2*2;
     }
   }
 
@@ -548,7 +554,7 @@ int dump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
   //
   // do the assignments
   //
-  // if you change # of outputted vars, remember to change numcolumns
+  // if you change # of outputted vars, remember to change numcolumnsvar
 
 
   //static
@@ -630,7 +636,7 @@ int dump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
   }
 
 
-  // DEBUG: Also add +3 to numcolumns for this to work
+  // DEBUG: Also add +3 to numcolumnsvar for this to work
   if(0){
     if(FLUXB==FLUXCTSTAG) myset(datatype,GLOBALMAC(pstagdump,i,j,k),B1,3,writebuf);
     else{
@@ -684,13 +690,13 @@ int debugdump(long dump_cnt)
 }
 
 
-extern void set_debug_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
+extern void set_debug_content_dnumcolumns_dnumversion(int *numcolumnsvar, int *numversion)
 {
 
   if(DODEBUG){
-    *numcolumns=2*NUMFAILFLOORFLAGS*NUMTSCALES;
+    *numcolumnsvar=2*NUMFAILFLOORFLAGS*NUMTSCALES;
   }
-  else *numcolumns=0;
+  else *numcolumnsvar=0;
 
   // Version number:
   *numversion=0;
@@ -742,14 +748,14 @@ int enodebugdump(long dump_cnt)
 
 
 
-void set_enodebug_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
+void set_enodebug_content_dnumcolumns_dnumversion(int *numcolumnsvar, int *numversion)
 {
 
   if(DOENODEBUG){
-    //*numcolumns=NUMENODEBUGS;
-    *numcolumns=(3-1)* NUMENOINTERPTYPES * (NPR-4) * NUMENODEBUGS;  //SASMARK2
+    //*numcolumnsvar=NUMENODEBUGS;
+    *numcolumnsvar=(3-1)* NUMENOINTERPTYPES * (NPR-4) * NUMENODEBUGS;  //SASMARK2
   }
-  else *numcolumns=0;
+  else *numcolumnsvar=0;
 
   // Version number:
   *numversion=0;
@@ -768,12 +774,12 @@ int enodebug_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 }
 
 
-int eno_dump_header(int whichdump, int whichdumpversion, int numcolumns, int bintxt, FILE *headerptr)
+int eno_dump_header(int whichdump, int whichdumpversion, int numcolumnsvar, int bintxt, FILE *headerptr)
 {
-  int dump_header_general(int whichdump, int whichdumpversion, int numcolumns, long localrealnstep, SFTYPE localdt, int bintxt, FILE *headerptr);
+  int dump_header_general(int whichdump, int whichdumpversion, int numcolumnsvar, long localrealnstep, SFTYPE localdt, int bintxt, FILE *headerptr);
   int retval;
 
-  retval=dump_header_general(whichdump, whichdumpversion, numcolumns, realnstep,dt, bintxt, headerptr);
+  retval=dump_header_general(whichdump, whichdumpversion, numcolumnsvar, realnstep,dt, bintxt, headerptr);
 
   return(retval);
 } 
@@ -813,11 +819,11 @@ int avgdump(long dump_cnt)
 }
 
 
-void set_avg_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
+void set_avg_content_dnumcolumns_dnumversion(int *numcolumnsvar, int *numversion)
 {
 
   // 36+29+8*2+4*2+2+12*2+96*2=339
-  *numcolumns=3*3 + 1 + NUMNORMDUMP  // (6+1+29=36)
+  *numcolumnsvar=3*3 + 1 + NUMNORMDUMP  // (6+1+29=36)
     + NUMNORMDUMP // |normal terms| (29)
 #if(CALCFARADAYANDCURRENTS)
     + NDIM*2 // jcon/jcov (8)
@@ -835,7 +841,7 @@ void set_avg_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
 
 
   if(DOAVG2){
-    *numcolumns-=224;
+    *numcolumnsvar-=224;
   }
 
   // Version number:
@@ -934,14 +940,14 @@ int avg2dump(long dump_cnt)
 
 }
 
-void set_avg2_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
+void set_avg2_content_dnumcolumns_dnumversion(int *numcolumnsvar, int *numversion)
 {
 
 
   if(DOAVG2){
-    *numcolumns=10 + 224; // otherwise doesn't exist so don't need to set
+    *numcolumnsvar=10 + 224; // otherwise doesn't exist so don't need to set
   }
-  else *numcolumns=0;
+  else *numcolumnsvar=0;
 
   // Version number:
   *numversion=0;
@@ -961,7 +967,7 @@ int avg2_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 
   bl_coord_ijk_2(i, j, k, loc, X,V);
   get_geometry(i, j, k, loc, ptrgeom);
-  // if you change # of outputted vars, remember to change numcolumns above
+  // if you change # of outputted vars, remember to change numcolumnsvar above
 
   if(!GAMMIEDUMP){
     ftemp=(FTYPE)(i+startpos[1]);
@@ -1014,14 +1020,14 @@ int gdump(long dump_cnt)
 
 
 
-extern void set_gdump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
+extern void set_gdump_content_dnumcolumns_dnumversion(int *numcolumnsvar, int *numversion)
 {
 
 
   // 205+4+4*4 currently
-  //*numcolumns=3*3+NDIM*NDIM*NDIM+NPG*NDIM*NDIM*2+NPG+4+4*4;
+  //*numcolumnsvar=3*3+NDIM*NDIM*NDIM+NPG*NDIM*NDIM*2+NPG+4+4*4;
   //NPG was replaced with unity in order to avoid excessive dumping of info (only center info now available)
-  *numcolumns=3*3  +   NDIM*NDIM*NDIM  +   1*NDIM*NDIM*2   +   1  +  NDIM   +   NDIM*NDIM;
+  *numcolumnsvar=3*3  +   NDIM*NDIM*NDIM  +   1*NDIM*NDIM*2   +   1  +  NDIM   +   NDIM*NDIM;
   //t^i x^i V^i,     \Gamma^\mu_{\nu\tau},     g^{\mu\nu} g_{\mu\nu}, \sqrt{-g}, \gamma_\mu, dx^\mu/dx^\nu
 
   // Version number:
@@ -1142,12 +1148,12 @@ int fieldlinedump(long dump_cnt)
 }
 
 
-extern void set_fieldline_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
+extern void set_fieldline_content_dnumcolumns_dnumversion(int *numcolumnsvar, int *numversion)
 {
   if(DOFIELDLINE){
-    *numcolumns=NUMFIELDLINEQUANTITIES;
+    *numcolumnsvar=NUMFIELDLINEQUANTITIES;
   }
-  else *numcolumns=0;
+  else *numcolumnsvar=0;
 
 
   // Version number:
@@ -1204,7 +1210,7 @@ int fieldline_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
   //
   // do the assignments
   //
-  // if you change # of outputted vars, remember to change numcolumns
+  // if you change # of outputted vars, remember to change numcolumnsvar
 
 
 
@@ -1357,13 +1363,13 @@ int dissdump(long dump_cnt)
 }
 
 
-void set_dissdump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
+void set_dissdump_content_dnumcolumns_dnumversion(int *numcolumnsvar, int *numversion)
 {
 
   if(DODISS){
-    *numcolumns=NUMDISSFUNPOS;
+    *numcolumnsvar=NUMDISSFUNPOS;
   }
-  else *numcolumns=0;
+  else *numcolumnsvar=0;
 
   // Version number:
   *numversion=0;
@@ -1414,13 +1420,13 @@ int dumpother(long dump_cnt)
 }
 
 
-void set_dumpother_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
+void set_dumpother_content_dnumcolumns_dnumversion(int *numcolumnsvar, int *numversion)
 {
 
   if(DODUMPOTHER){ // panalytic + numpother quantities
-    *numcolumns=NPR+NUMPOTHER;
+    *numcolumnsvar=NPR+NUMPOTHER;
   }
-  else *numcolumns=0;
+  else *numcolumnsvar=0;
 
   // Version number:
   *numversion=0;
@@ -1477,13 +1483,13 @@ int fluxdumpdump(long dump_cnt)
   
 }
 
-void set_fluxdump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
+void set_fluxdump_content_dnumcolumns_dnumversion(int *numcolumnsvar, int *numversion)
 {
 
   if(FLUXDUMP){ // dU, flux, and ppprimitives for flux
-    *numcolumns=NUMFLUXDUMP;
+    *numcolumnsvar=NUMFLUXDUMP;
   }
-  else *numcolumns=0;
+  else *numcolumnsvar=0;
 
   // Version number:
   *numversion=0;
@@ -1536,15 +1542,15 @@ int eosdump(long dump_cnt)
 }
 
 
-void set_eosdump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
+void set_eosdump_content_dnumcolumns_dnumversion(int *numcolumnsvar, int *numversion)
 {
 
   //#if(WHICHEOS==KAZFULL)
   // all EOSs output same size data so uniform format
   // otherwise have to also put this condition in dump.c when outputting so don't overwrite memory!
-  *numcolumns=MAXPARLIST+1+MAXNUMEXTRAS+MAXPROCESSEDEXTRAS; // 1 is temperature
+  *numcolumnsvar=MAXPARLIST+1+MAXNUMEXTRAS+MAXPROCESSEDEXTRAS; // 1 is temperature
   //#else
-  //  *numcolumns=0;
+  //  *numcolumnsvar=0;
   //#endif
 
   // Version number:
@@ -1574,7 +1580,7 @@ int eosdump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
   //
   // do the assignments
   //
-  // if you change # of outputted vars, remember to change numcolumns
+  // if you change # of outputted vars, remember to change numcolumnsvar
 
 
   ////////////
@@ -1648,11 +1654,11 @@ int raddump(long dump_cnt)
 }
 
 
-void set_raddump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
+void set_raddump_content_dnumcolumns_dnumversion(int *numcolumnsvar, int *numversion)
 {
 
-  if(EOMRADTYPE==EOMRADNONE) *numcolumns=0;
-  else *numcolumns=NDIM*2 + 1+1 + NDIM+1 + NDIM + NDIM*2 + 1 + 1 + 1 + 1 + 1 + 4*3;
+  if(EOMRADTYPE==EOMRADNONE) *numcolumnsvar=0;
+  else *numcolumnsvar=NDIM*2 + 1+1 + NDIM+1 + NDIM + NDIM*2 + 1 + 1 + 1 + 1 + 1 + 4*3;
 
   // Version number:
   *numversion=0;
@@ -1674,7 +1680,7 @@ int raddump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
   //
   // do the assignments
   //
-  // if you change # of outputted vars, remember to change numcolumns
+  // if you change # of outputted vars, remember to change numcolumnsvar
 
 
   // get X,V
@@ -1807,13 +1813,13 @@ int vpotdump(long dump_cnt)
 
 
 
-void set_vpotdump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
+void set_vpotdump_content_dnumcolumns_dnumversion(int *numcolumnsvar, int *numversion)
 {
 
   if(DOVPOTDUMP){
-    *numcolumns=NUMVPOTDUMP;
+    *numcolumnsvar=NUMVPOTDUMP;
   }
-  else *numcolumns=0;
+  else *numcolumnsvar=0;
 
   // Version number:
   *numversion=0;
@@ -1870,13 +1876,13 @@ int failfloordudump(long dump_cnt)
 
 
 
-void set_failfloordudump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
+void set_failfloordudump_content_dnumcolumns_dnumversion(int *numcolumnsvar, int *numversion)
 {
 
   if(DOFLOORDIAG){
-    *numcolumns=NPR; // normal dU from floor
+    *numcolumnsvar=NPR; // normal dU from floor
   }
-  else *numcolumns=0;
+  else *numcolumnsvar=0;
 
   // Version number:
   *numversion=0;
@@ -1927,14 +1933,14 @@ int dissmeasuredump(long dump_cnt)
 }
 
 
-void set_dissmeasuredump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
+void set_dissmeasuredump_content_dnumcolumns_dnumversion(int *numcolumnsvar, int *numversion)
 {
 
   if(DODISSMEASURE){
-    *numcolumns=NSPECIAL+1; // dissmeasurepl and dissmeasure
-    *numcolumns+=3*2; // Fi for each direction and gas/rad
+    *numcolumnsvar=NSPECIAL+1; // dissmeasurepl and dissmeasure
+    *numcolumnsvar+=3*2; // Fi for each direction and gas/rad
   }
-  else *numcolumns=0;
+  else *numcolumnsvar=0;
 
   // Version number:
   *numversion=0;
@@ -1995,7 +2001,7 @@ int fakedump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 }
 
 
-int fakedump_header(int whichdump, int whichdumpversion, int numcolumns,int bintxt, FILE *headerptr)
+int fakedump_header(int whichdump, int whichdumpversion, int numcolumnsvar,int bintxt, FILE *headerptr)
 {
   int fake;
 

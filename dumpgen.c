@@ -1,7 +1,14 @@
 #include "decs.h"
 
+/*! \file dump.c
+  \brief Data dump
+
+  Data dump functions controlling how header + block of 3D data is outputted
+*/
 
 
+/// General dumping function
+/// Used for all dump types for block data output
 int dump_gen(int readwrite, long dump_cnt, int bintxt, int whichdump, MPI_Datatype datatype, char *fileprefix, char *fileformat, char *filesuffix, int (*headerfun) (int whichdump, int whichdumpversion, int numcolumns, int bintxt, FILE*headerptr),int (*setgetcontent) (int i, int j, int k, MPI_Datatype datatype, void*setbuf))
 {
   int i = 0, j = 0, k = 0, l = 0, col = 0;
@@ -442,34 +449,34 @@ int dump_gen(int readwrite, long dump_cnt, int bintxt, int whichdump, MPI_Dataty
 
 
 
-
-// In reading/writing any header one has binary/text format
-// Need single function that read/write in binary/text so have consistent input/output format always
-// also need to Bcast it sometimes
-
-// examples:
-// binary read
-//    fread(&idum1, sizeof(int), 1, headerptr);
-
-// text read:
-//    fscanf(headerptr,"%ld",&DTr);
-
-// Bcast example:
-// MPI_Bcast(&avgscheme[1],1, MPI_INT, MPIid[0], MPI_COMM_GRMHD);
-
-// binary write:
-//    fwrite(&totalsize[1], sizeof(int), 1, headerptr);
-
-// text write:
-//    fprintf(headerptr,"%ld",DTr);
-
-
-// format assumed to have no space at end and will add that if writing
-// assume root=MPIid[0] and MPI_COMM_GRMHD for Bcast
-// readwrite:
-//#define WRITEHEAD 0
-//#define READHEAD 1
-// bintxt: BINARYOUTPUT TEXTOUTPUT only choices -- if mixed then choose text
+/// Output header for any dumping type
+/// In reading/writing any header one has binary/text format
+/// Need single function that read/write in binary/text so have consistent input/output format always
+/// also need to Bcast it sometimes
+///
+/// examples:
+/// binary read
+///    fread(&idum1, sizeof(int), 1, headerptr);
+///
+/// text read:
+///    fscanf(headerptr,"%ld",&DTr);
+///
+/// Bcast example:
+/// MPI_Bcast(&avgscheme[1],1, MPI_INT, MPIid[0], MPI_COMM_GRMHD);
+///
+/// binary write:
+///    fwrite(&totalsize[1], sizeof(int), 1, headerptr);
+///
+/// text write:
+///    fprintf(headerptr,"%ld",DTr);
+///
+///
+/// format assumed to have no space at end and will add that if writing
+/// assume root=MPIid[0] and MPI_COMM_GRMHD for Bcast
+/// readwrite:
+///#define WRITEHEAD 0
+///#define READHEAD 1
+/// bintxt: BINARYOUTPUT TEXTOUTPUT only choices -- if mixed then choose text
 int header1_gen(int accessmemory, int readwrite, int bintxt, int bcasthead, void *ptr, size_t size, char *format, size_t nmemb, MPI_Datatype datatype, FILE *stream)
 {
   void *ptrlocal;
@@ -656,8 +663,8 @@ int header1_gen(int accessmemory, int readwrite, int bintxt, int bcasthead, void
 
 
 
-// check that file read is in right format to avoid error in setup of restart header or data sizes
-int check_fileformat(int readwrite, int bintxt, int whichdump, int numcolumns, int docolsplit, int mpicombine, int sizeofdatatype, FILE *stream)
+/// check that file read is in right format to avoid error in setup of restart header or data sizes
+int check_fileformat(int readwrite, int bintxt, int whichdump, int numcolumnsvar, int docolsplitvar, int mpicombinevar, int sizeofdatatype, FILE *stream)
 {
   long onlyheaderbytesize;
   long uptodatabytesize;
@@ -729,11 +736,11 @@ int check_fileformat(int readwrite, int bintxt, int whichdump, int numcolumns, i
 
 
   // determine number of columns within a file
-  if(docolsplit) truenumcolumns=1;
-  else truenumcolumns=numcolumns;
+  if(docolsplitvar) truenumcolumns=1;
+  else truenumcolumns=numcolumnsvar;
 
   // determine number of words in data section
-  if(mpicombine) datawordnumber=totalsize[1]*totalsize[2]*totalsize[3]*truenumcolumns;
+  if(mpicombinevar) datawordnumber=totalsize[1]*totalsize[2]*totalsize[3]*truenumcolumns;
   else datawordnumber=N1*N2*N3*truenumcolumns;
 
   // determine total bytes in data section
@@ -831,7 +838,7 @@ int check_fileformat(int readwrite, int bintxt, int whichdump, int numcolumns, i
 
 
 
-
+/// move file pointer past line break
 int gopastlinebreak(FILE *stream)
 {
   int mychar;
@@ -849,7 +856,7 @@ int gopastlinebreak(FILE *stream)
   return(0);
 }
 
-
+/// Get word count for data file to ensure correct size instead of assuming correct.
 int get_word_count(long long int databytesize, long long int *wordtotal, FILE *stream)
 {
   unsigned char mychar;
@@ -867,7 +874,7 @@ int get_word_count(long long int databytesize, long long int *wordtotal, FILE *s
   // go through each byte
   for(i=0;i<databytesize;i++){
     // read-in a byte (character) at a time
-    mychar=fgetc(stream);
+    mychar=(unsigned char)fgetc(stream);
 
 
     if(feof(stream)){
