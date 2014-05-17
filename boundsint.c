@@ -1,9 +1,15 @@
 
+/*! \file boundsint.c
+  \brief User Boundary conditions for PFTYPE for pflag type quantities
+
+  // this is the presently used function
+  
+  // Regarding GRID SECTIONING, the pflag can be set using LOOPF's not COMPLOOPF since no benefit in moving where define "real" boundary
+
+*/
+
 #include "decs.h"
 
-// this is the presently used function
-
-// Regarding GRID SECTIONING, the pflag can be set using LOOPF's not COMPLOOPF since no benefit in moving where define "real" boundary
 
 //  needed as global so all subfunctions have it set
 int inboundloop[NDIM];
@@ -14,7 +20,7 @@ int inoutlohi[NUMUPDOWN][NUMUPDOWN][NDIM];
 int riin,riout,rjin,rjout,rkin,rkout;
 int dosetbc[COMPDIM*2];
 
-// only bounds +-1 cell as required for pflags to exist for check_solution() checking and fixup_utoprim() averaging
+/// only bounds +-1 cell as required for pflags to exist for check_solution() checking and fixup_utoprim() averaging
 int bound_pflag_user(int boundstage, int finalstep, SFTYPE boundtime, int boundvartype, PFTYPE (*prim)[NSTORE2][NSTORE3][NUMPFLAGS])
 {
   int i,j,k,pl,pliter;

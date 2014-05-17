@@ -1,4 +1,9 @@
 
+/*! \file copyandinit_functions.funcdeclare.h
+    \brief copy/init array header
+
+*/
+
 extern void init_3dvpot_fullloopp1(FTYPE initvalue, FTYPE (*dest)[NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3]);
 
 extern void init_3dvpot(int is, int ie, int js, int je, int ks, int ke,FTYPE initvalue, FTYPE (*dest)[NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3]);

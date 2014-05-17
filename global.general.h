@@ -1,3 +1,10 @@
+
+/*! \file global.general.h
+    \brief General code definitions with specific order from independent to dependent definitions
+    
+*/
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -6,7 +13,7 @@
 
 
 #if(USINGGSL)
-// only used for EOMRADTYPE==EOMRADM1CLOSURE -- but not currently at all
+/// only used for EOMRADTYPE==EOMRADM1CLOSURE -- but not currently at all
 #include "gslincludes.h"
 #endif
 
@@ -22,13 +29,13 @@
 #include<sys/stat.h>
 #endif
 
-///////////////////
-//
-// pre-global stuff:
-//
-///////////////////
+////////////////////
+///
+/// pre-global stuff:
+///
+////////////////////
 
-// whether doing performance testing (also see pnmhd code)
+/// whether doing performance testing (also see pnmhd code)
 #define DOINGLIAISON 0 // choice of 0 or 1 (should always be 1 for liaison mode and liaison code comilation)
 #define NCSA 0
 #define PERFTEST 0
@@ -38,57 +45,57 @@
 
 
 
-//////////////////
-//
-// GLOBAL STUFF:
-//
-//////////////////
+///////////////////
+///
+/// GLOBAL STUFF:
+///
+///////////////////
 
 
 #ifndef GLOBAL_H
 #define GLOBAL_H
 
-// define FTYPE, SFTYPE, etc.
+/// define FTYPE, SFTYPE, etc.
 #include "global.realdef.h"
 
 
-// all pure nmenomics that don't depend upon anything else but what's inside file
-// Doesn't even depend upon N?, N?M, or N?BND, etc.
+/// all pure nmenomics that don't depend upon anything else but what's inside file
+/// Doesn't even depend upon N?, N?M, or N?BND, etc.
 #include "global.nondepmnemonics.h"
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-// Default global and user choices for various code options that can change for each run without significant modifications
-//
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///
+/// Default global and user choices for various code options that can change for each run without significant modifications
+///
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "kazfulleos.global.h" // KAZ EOS (GODMARK: nothing should be overridden by user)
 
 
-// default values
-// Must not make storage items
+/// default values
+/// Must not make storage items
 #include "definit.h"
 
-// user specific values
-// Must not make storage items
+/// user specific values
+/// Must not make storage items
 #include "init.h"
 
-// OpenMP "threadprivate" related macros
+/// OpenMP "threadprivate" related macros
 #include "global.openmpthreadprivates.h"
 
-// define nmenomics that depend on other mnemonics
-// Must not make storage items
+/// define nmenomics that depend on other mnemonics
+/// Must not make storage items
 #include "global.depmnemonics.h"
 
-// Determines how we store arrays and how we loop
-// Depends upon N?,N?BND,SHIFT? created in global.depmnemonics.h
+/// Determines how we store arrays and how we loop
+/// Depends upon N?,N?BND,SHIFT? created in global.depmnemonics.h
 #include "global.storage.h"
 
-// UP TO THIS POINT SHOULD NOT CREATE MEMORY ITEMS that depend upon grid sizes, since depend upon global.storage.h setting the storage sizes
+/// UP TO THIS POINT SHOULD NOT CREATE MEMORY ITEMS that depend upon grid sizes, since depend upon global.storage.h setting the storage sizes
 
-// loops use ORDERSTORAGE set in definit.h or init.h by user
+/// loops use ORDERSTORAGE set in definit.h or init.h by user
 #include "global.loops.h"
 
 #include "global.variousmacros.h"
@@ -98,61 +105,61 @@
 #include "global.structs.h"
 
 
-// now that all hashes have been defined, get mpi header
+/// now that all hashes have been defined, get mpi header
 #include "mympi.h"
 #include "global.gridsectioning.h"
 #include "global.comploops.h"
 #include "global.openmploops.h"
 
-// all global external function declarations
+/// all global external function declarations
 #include "global.funcdeclare.h"
 
 #include "global.dump.h" // func declarations
 
 #include "global.bounds.h" // func declarations
 
-// some inits function declarations
+/// some inits function declarations
 #include "global.inits.h"
 
 #include "global.other.h"
 
-// put in the below file things not to be converted by double2longdouble.sh
+/// put in the below file things not to be converted by double2longdouble.sh
 #include "unconverted_by_double2longdouble.inc"
 
 #endif// endif for #ifndef GLOBAL_H
 
 
 
-/////////////////////////////////////////
-//
-// test declarations
-// see checkexterns.sh
-// comment below when not wanting to test
-// uncomment when wanting to test, and then look at make.log
-//
+//////////////////////////////////////////
+///
+/// test declarations
+/// see checkexterns.sh
+/// comment below when not wanting to test
+/// uncomment when wanting to test, and then look at make.log
+///
 #if(0)
-//#if(!defined(doublereal))
-//typedef double doublereal;
-//#endif
-//#if(!defined(integer))
-//typedef int integer;
-//#endif
-//#if(!defined(U_fp))
-//typedef int U_fp;
-//#endif
-//#if(!defined(S_fp))
-//typedef int S_fp;
-//#endif
+///#if(!defined(doublereal))
+///typedef double doublereal;
+///#endif
+///#if(!defined(integer))
+///typedef int integer;
+///#endif
+///#if(!defined(U_fp))
+///typedef int U_fp;
+///#endif
+///#if(!defined(S_fp))
+///typedef int S_fp;
+///#endif
 #include "utoprim_jon.h" // extra defs
 #include "f2c.h"
 #include "temptempfinalallc.txt"
 #endif
-//
-//
-/////////////////////////////////////////
+///
+///
+//////////////////////////////////////////
 
 
 
 
-// whether including debug info for NSBH problem
+/// whether including debug info for NSBH problem
 #define DEBUGNSBH 0
