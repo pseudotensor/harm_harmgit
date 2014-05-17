@@ -1,5 +1,11 @@
 #include "decs.h"
 
+/*! \file advance.c
+  \brief Takes RK sub-step
+
+  Takes RK substep by doing 1) flux and source 2) flux+source->dU 3) dU->U 4) U->P
+*/
+
 
 
 /// static declarations

@@ -1,27 +1,33 @@
 
+
 #include "decs.h"
 
-/* bound array containing entire set of primitive variables */
+/*! \file boundsflux.c
+  \brief User Boundary conditions for fluxes
 
-// For fluxes, e.g. F1, assume fluxes exist everywhere -- including j/k boundary zones.  Only i-boundary zones need to be bounded.
-// This assumesCOMPZSLOOP(is,ie,js,je,ks,ke) is over boundary zones in flux.c, which in general to be compatible with any flux method (including finite volume) this is how it should be.
+  Also calls general/frequently-used functions in bounds.tools.c
 
-// With fluxes, only need to bound each dir-flux along that direction (as presently used by ENO-type schemes)
+  // For fluxes, e.g. F1, assume fluxes exist everywhere -- including j/k boundary zones.  Only i-boundary zones need to be bounded.
+  // This assumesCOMPZSLOOP(is,ie,js,je,ks,ke) is over boundary zones in flux.c, which in general to be compatible with any flux method (including finite volume) this is how it should be.
 
-// Assume flux at 0 through N are computed correctly. So only need fluxes in other boundary zones.
-// Self-assigns for 0 or N for simplicity of coding
+  // With fluxes, only need to bound each dir-flux along that direction (as presently used by ENO-type schemes)
 
-// OUTFLOW leaves true edge of boundary unchanged
-// Therefore, if FIXEDOUTFLOW, then extrapolation is always ok.
-// if OUTFLOW, then extrapolation is ok as long as flux is from active zones out of boundary
+  // Assume flux at 0 through N are computed correctly. So only need fluxes in other boundary zones.
+  // Self-assigns for 0 or N for simplicity of coding
 
-// order of outflow extrap
-// 0: none/ copy
-// 1: first order
+  // OUTFLOW leaves true edge of boundary unchanged
+  // Therefore, if FIXEDOUTFLOW, then extrapolation is always ok.
+  // if OUTFLOW, then extrapolation is ok as long as flux is from active zones out of boundary
+
+  // GODMARK: For FLUXCTSTAG method, boundaries of values need (e.g.) F1(B2) = -F2(B1).  In reality I think this means only really need extra bounding of upper N1 or N2 or N3 boundary since lower is fine and real boundary cells are only needed along direction of flux itself.
+
+  */
+
+/// order of outflow extrap
+/// 0: none/ copy
+/// 1: first order
 #define EXTRAP 0 //atch
 
-
-// GODMARK: For FLUXCTSTAG method, boundaries of values need (e.g.) F1(B2) = -F2(B1).  In reality I think this means only really need extra bounding of upper N1 or N2 or N3 boundary since lower is fine and real boundary cells are only needed along direction of flux itself.
 
 
 

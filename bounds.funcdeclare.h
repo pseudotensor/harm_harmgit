@@ -1,3 +1,10 @@
+
+/*! \file bounds.funcdeclare.h
+  \brief Boundary conditions declarations
+
+*/
+
+
 // boundary stuff
 extern void set_boundloop(int boundvartype, int *inboundloop, int*outboundloop, int*innormalloop, int*outnormalloop, int (*inoutlohi)[NUMUPDOWN][NDIM], int *riin, int *riout, int *rjin, int *rjout, int *rkin, int *rkout, int *dosetbc);
 extern int report_bound_loop(void);

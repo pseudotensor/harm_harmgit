@@ -1,4 +1,9 @@
 
+/*! \file coord.funcdeclare.h
+    \brief Coordinates stuff (both user and general)    
+*/
+
+
 extern void set_points(void);
 // coordinate stuff
 extern void set_coord_parms(int defcoordlocal);

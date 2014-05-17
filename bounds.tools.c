@@ -1,4 +1,11 @@
 
+/*! \file bounds.tools.c
+  \brief General or frequenty-used Boundary condition routines
+
+  // Typically these are only called by user code bounds.c
+
+*/
+
 #include "decs.h"
 
 // see definit.h or init.h for some defines here.

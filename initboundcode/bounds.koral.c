@@ -1,4 +1,12 @@
 
+
+/*! \file bounds.c
+  \brief User Boundary conditions
+
+  Also calls general/frequently-used functions in bounds.tools.c
+
+*/
+
 #include "decs.h"
 
 int bound_x1dn_radbeamflatinflow(
@@ -228,7 +236,7 @@ int bound_prim_user_dir(int boundstage, int finalstep, SFTYPE boundtime, int whi
 }
 
 
-// assume single user function takes care of primitive locations
+/// assume single user function takes care of primitive locations
 int bound_pstag_user_dir(int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 {
 
@@ -269,7 +277,7 @@ int bound_pstag_user_dir(int boundstage, int finalstep, SFTYPE boundtime, int wh
 
 
 
-// user boundary routine
+/// user boundary routine
 int bound_prim_user_general(int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int ispstag, int* dirprim, FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 {
   int inboundloop[NDIM];
@@ -609,7 +617,7 @@ int bound_prim_user_general(int boundstage, int finalstep, SFTYPE boundtime, int
 
 
 
-// see interpline.c
+/// see interpline.c
 int apply_bc_line(int nprlocalstart, int nprlocalend, int*nprlocallist, int doinverse, int iterdir, int recontype, int bs, int be, FTYPE (*yin)[2][NBIGM], FTYPE (*yout)[2][NBIGM], FTYPE (*youtpolycoef)[MAXSPACEORDER][NBIGM])
 {
   int flip_y(int nprlocalstart, int nprlocalend, int*nprlocallist, int iterdir, int recontype, int bs, int be, FTYPE (*y)[2][NBIGM]);
@@ -671,8 +679,8 @@ void remapplpr( int dir, int idel, int jdel, int kdel, int i, int j, int k,
 }
 
 
-///Called after the MPI boundary routines
-// many things here are copied from above
+////Called after the MPI boundary routines
+/// many things here are copied from above
 int bound_prim_user_after_mpi_dir(int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 {
   int dirprim[NPR];
@@ -769,15 +777,15 @@ int bound_prim_user_after_mpi_dir(int boundstage, int finalstep, SFTYPE boundtim
 
 
 
-////////////////////////////////////
-//
-//  Koral specific physical boundary conditions
-//
-////////////////////////////////////
+/////////////////////////////////////
+///
+///  Koral specific physical boundary conditions
+///
+/////////////////////////////////////
 
 
 
-// X1 lower for radiation beam injection
+/// X1 lower for radiation beam injection
 int bound_x1dn_radbeamflatinflow(
                                  int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
                                  int *inboundloop,
@@ -981,7 +989,7 @@ int bound_x1dn_radbeamflatinflow(
 
 
 
-// X1 lower for beam injection to create shadow
+/// X1 lower for beam injection to create shadow
 int bound_radshadowinflow(int dir,
                           int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
                           int *inboundloop,
@@ -1293,7 +1301,7 @@ int bound_radshadowinflow(int dir,
 
 
 
-// X3 lower for radiation beam injection
+/// X3 lower for radiation beam injection
 int bound_radbeam2dbeaminflow(int dir,
                               int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
                               int *inboundloop,
@@ -1528,7 +1536,7 @@ int bound_radbeam2dbeaminflow(int dir,
 
 
 
-// X1 upper for inflow
+/// X1 upper for inflow
 int bound_radbeam2dflowinflow(int dir,
                               int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
                               int *inboundloop,
@@ -1715,7 +1723,7 @@ int bound_radbeam2dflowinflow(int dir,
 
 
 
-// X1 lower and upper for RADATM
+/// X1 lower and upper for RADATM
 int bound_radatmbeaminflow(int dir,
                            int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
                            int *inboundloop,
@@ -1979,7 +1987,7 @@ int bound_radatmbeaminflow(int dir,
 
 
 
-// X1 lower and upper X2
+/// X1 lower and upper X2
 int bound_radwallinflow(int dir,
                         int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
                         int *inboundloop,
@@ -2186,7 +2194,7 @@ int bound_radwallinflow(int dir,
 
 
 
-// X1 upper for inflow
+/// X1 upper for inflow
 int bound_radbondiinflow(int dir,
                          int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
                          int *inboundloop,
@@ -2353,7 +2361,7 @@ int bound_radbondiinflow(int dir,
 
 
 
-// on-grid bounding
+/// on-grid bounding
 int bound_raddot(
                  int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
                  int *inboundloop,
@@ -2462,7 +2470,7 @@ int bound_raddot(
 
 
 
-// RADNT
+/// RADNT
 int bound_radnt(int dir,
                 int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
                 int *inboundloop,
@@ -2754,7 +2762,7 @@ int bound_radnt(int dir,
 
 
 
-// X1 inner CYLAXIS
+/// X1 inner CYLAXIS
 int bound_x1dn_cylaxis(
                        int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
                        int *inboundloop,
@@ -2872,7 +2880,7 @@ int bound_x1dn_cylaxis(
 
 
 
-// X1 upper for RADCYLBEAM
+/// X1 upper for RADCYLBEAM
 int bound_x1up_radcylbeam(
                           int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
                           int *inboundloop,
@@ -3016,7 +3024,7 @@ int bound_x1up_radcylbeam(
 
 
 
-// X2 upper for radiation beam injection
+/// X2 upper for radiation beam injection
 int bound_radbeam2dksvertbeaminflow(int dir,
                                     int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
                                     int *inboundloop,
@@ -3289,7 +3297,7 @@ int bound_radbeam2dksvertbeaminflow(int dir,
 
 
 
-// all boundaries for RADCYLBEAMCART
+/// all boundaries for RADCYLBEAMCART
 int bound_radcylbeamcart(int dir,
                          int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
                          int *inboundloop,
@@ -3632,7 +3640,7 @@ int get_radcylbeamcart(int dir, int *dirprim, int ispstag, int ri, int rj, int r
 
 
 
-// X1 upper and lower static
+/// X1 upper and lower static
 int bound_staticset(int dir,
                     int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
                     int *inboundloop,

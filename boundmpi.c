@@ -1,5 +1,13 @@
 #include "decs.h"
 
+
+/*! \file boundmpi.c
+  \brief Boundary conditions using MPI for core-overlapping cells for FTYPE quantities
+
+*/
+
+
+
 #define DEBUG 0
 
 

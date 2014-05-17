@@ -1,7 +1,9 @@
 
 #include "decs.h"
 
-/* bound array containing entire set of primitive variables */
+
+/*! \file boundsvpot.c
+  \brief User Boundary conditions for vector potential
 
 // For fluxes, e.g. F1, assume fluxes exist everywhere -- including j/k boundary zones.  Only i-boundary zones need to be bounded.
 // This assumesCOMPZSLOOP(is,ie,js,je,ks,ke) is over boundary zones in flux.c, which in general to be compatible with any flux method (including finite volume) this is how it should be.
@@ -14,6 +16,7 @@
 // OUTFLOW leaves true edge of boundary unchanged
 // Therefore, if FIXEDOUTFLOW, then extrapolation is always ok.
 // if OUTFLOW, then extrapolation is ok as long as flux is from active zones out of boundary
+*/
 
 // order of outflow extrap
 // 0: none/ copy

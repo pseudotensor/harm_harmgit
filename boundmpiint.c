@@ -1,5 +1,11 @@
 #include "decs.h"
 
+/*! \file boundmpiint.c
+  \brief Boundary conditions using MPI for core-overlapping cells for pflag or other integer quantities
+
+*/
+
+
 /// see boundmpi.c for more comments
 int bound_mpi_int_dir(int boundstage, int finalstep, int whichdir, int boundvartype, PFTYPE (*prim)[NSTORE2][NSTORE3][NUMPFLAGS])
 {
