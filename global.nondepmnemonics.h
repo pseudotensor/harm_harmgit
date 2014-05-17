@@ -1,19 +1,15 @@
-// all things here don't depend on anything else, just names for numbers or purely functional macros
+
+/*! \file global.nondepmnemonics.h
+    \brief General code definitions of independent quantities
+
+    // all things here don't depend on anything else, just names for numbers or purely functional macros
+    // Various physics and model setup parameters that are macros either for performance reasons or since no need to change them at runtime.
+*/
+
 
 
 #include "metric.h"
 #include "coord.h"
-
-
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-// Various physics and model setup parameters that are macros either for performance reasons or since no need to change them at runtime.
-//
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 
 
 
@@ -42,7 +38,7 @@
 #define GCOVI(i,j) (((i)>=(j))*((i)-(j)) + (j))
 #define GCOVJ(i,j) (((i)>=(j))*((j)-(i)) + (i))
 #define GIND(i,j) GCOVJ(i,j)*4 + GCOVI(i,j) - MAX(GCOVJ(i,j),0) - MAX(GCOVJ(i,j)-1,0) - MAX(GCOVJ(i,j)-2,0)
-// must multiply assignments by the below so don't duplicate sums
+/// must multiply assignments by the below so don't duplicate sums
 #define GINDASSIGNFACTOR(i,j) (1.0*((i)>=(j)))
 //#if(PRODUCTION==0)
 //#define GINDASSIGNMAC(name,i,j) (i>=j ? name[GIND(i,j)] : SHOULDNOTREACHHEREEVERBUGYOUHAVE())
@@ -51,22 +47,22 @@
 //#endif
 
 
-// value pulled-in from compile time
+/// value pulled-in from compile time
 #define USEGSL (USINGGSL)
 
 
-// define how many values in table
+/// define how many values in table
 #define NRANC 64
 
 
 
-//////////////////////
-//
-// nmenomics associated with definit.h
-//
-//
-//
-////////////////////////
+///////////////////////
+///
+/// nmenomics associated with definit.h
+///
+///
+///
+/////////////////////////
 #define NUMJETS 2
 #define INNERJET 0
 #define OUTERJET 1
@@ -77,35 +73,35 @@
 #define PERFECTUNSPLIT 2
 
 
-// set enerregion types
+/// set enerregion types
 #define NUMENERREGIONS 8
 
 #define NULLENERREGIONS -2 // indicates avoid processes that operate on this region
 #define ALLENERREGIONS -1 // to indicate not just one region
 #define GLOBALENERREGION 0 // standard computational grid
-// "outside" horizon means r>=r_+
+/// "outside" horizon means r>=r_+
 #define OUTSIDEHORIZONENERREGION 1 // "outside" horizon: i>ihorizon
-// TRUEGLOBAL???? seeks to include all cells that could be active
-// That is, horizon not likely to be at standard boundary edge yet need roughly nbnd cells inside horizon always to evolve there properly, so at least have those active but no less than i=0 itself.  If max(0) part used, then probably issue with number of cells inside boundary, however.
+/// TRUEGLOBAL???? seeks to include all cells that could be active
+/// That is, horizon not likely to be at standard boundary edge yet need roughly nbnd cells inside horizon always to evolve there properly, so at least have those active but no less than i=0 itself.  If max(0) part used, then probably issue with number of cells inside boundary, however.
 #define TRUEGLOBALENERREGION 2 // max(0,ihorizon-nbnd)
 #define TRUEGLOBALWITHBNDENERREGION 3 // outside horizon with boundary cells: max(-nbnd,ihorizon-2*nbnd)
-// ACTIVE??? is directly used by GRIDSECTIONING
+/// ACTIVE??? is directly used by GRIDSECTIONING
 #define ACTIVEREGION 4  // only active computational cells
 #define ACTIVEWITHBNDREGION 5  // ACTIVEREGION+required boundary cells
-// Jet regions:
+/// Jet regions:
 #define INNERJETREGION 6 // lower-\theta jet region
 #define OUTERJETREGION 7 // upper-\theta jet region
 
 
-// for VCHARTYPE
+/// for VCHARTYPE
 #define VERYLOCALVCHAR 0
 #define LOCALVCHAR 1
 #define GLOBALVCHAR 2
 
-// for cour fixed for any dimensional problem, below makes no sense.  When grid-aligned flow in higher dimension, this also makes no sense even for lower cour for the higher dimensions
-// this also might not make sense for relativistic flows when gamma couples all dimensions, so need to treat as if no lowering of dt for nearly grid-aliged relativistic flows
+/// for cour fixed for any dimensional problem, below makes no sense.  When grid-aligned flow in higher dimension, this also makes no sense even for lower cour for the higher dimensions
+/// this also might not make sense for relativistic flows when gamma couples all dimensions, so need to treat as if no lowering of dt for nearly grid-aliged relativistic flows
 #define MINDTSET(dt1,dt2,dt3) (1.0/(1.0/(dt1) + 1.0/(dt2) + 1.0/(dt3)))
-// strict limit (doesn't work in general)
+/// strict limit (doesn't work in general)
 //#define MINDTSET(dt1,dt2,dt3) (MIN(MIN((dt1),(dt2)),(dt3)))
 
 // relativistically inspired (based upon RADBEAMFLAT)
@@ -114,8 +110,8 @@
 //#define MINDTSET(dt1,dt2,dt3) (MIN(MIN((dt1),(dt2)),(dt3))/(FTYPE)(N1NOT1+N2NOT1+N3NOT1))
 
 
-// number of extra things in state that ucon_calc computes
-// right now used for rel4vel storing gamma and qsq to avoid computing multiple times
+/// number of extra things in state that ucon_calc computes
+/// right now used for rel4vel storing gamma and qsq to avoid computing multiple times
 #define NUMOTHERSTATERESULTS 2
 #define OTHERGAMMA 0
 #define OTHERQSQ 1
@@ -123,29 +119,29 @@
 
 #define ERRORCODEBELOWCLEANFINISH 1000
 
-// maximum char size of filenames or directories or commands
+/// maximum char size of filenames or directories or commands
 #define MAXFILENAME 200
-// for longer file names
+/// for longer file names
 #define MAXFILENAMELONG 2000
 
-// return code used to indicate failure of dump_gen() was file not found instead of any other error
+/// return code used to indicate failure of dump_gen() was file not found instead of any other error
 #define FILENOTFOUND 2490834
 
-// for WHICHVEL
-// 0: 4-velocity (leads to ambiguous u^t +- discr part)
-// 1: 3-velocity (unambiguous u^t but interpolation is not constrained to be a good 3-velocity)
-// 2: relative 4-velocity (unambiguous u^t and any interpolation gives good value)
+/// for WHICHVEL
+/// 0: 4-velocity (leads to ambiguous u^t +- discr part)
+/// 1: 3-velocity (unambiguous u^t but interpolation is not constrained to be a good 3-velocity)
+/// 2: relative 4-velocity (unambiguous u^t and any interpolation gives good value)
 #define VEL4 0
 #define VEL3 1
 #define VELREL4 2
 
-// for WHICHEOM
+/// for WHICHEOM
 #define WITHGDET 0
 #define WITHNOGDET 1
 #define WITHSINSQ 2
 
-// This stays naturally, simply consistent with how code evolves conserved quantities.
-// for WHICHEOM
+/// This stays naturally, simply consistent with how code evolves conserved quantities.
+/// for WHICHEOM
 #define NOGDETRHO 0
 #define NOGDETU0 0
 #define NOGDETU1 1 // U1 and U2 are only reasonable choices in SPC
@@ -165,25 +161,25 @@
 
 
 
-// defines how one forms the EM stress-energy tensor
+/// defines how one forms the EM stress-energy tensor
 #define GENMAXWELL 0
 #define PRIMMAXWELL 1
 
 
-// for RELTYPE
+/// for RELTYPE
 #define RELEOM 0
 #define NONRELEOM 1 // NOT FINISHED // NOT RIGHT // NOT NEEDED
-// whether relativistic or nonrelativistic EOMs (speed of light limitation)
+/// whether relativistic or nonrelativistic EOMs (speed of light limitation)
 
-// for EOMTYPE for HYDRO OR MHD ONLY (not radiation)
-// 0 = FF(D)E force-free electrodynamics
-// 1 = cold GRMHD
-// 2 = entropy conservation version of GRMHD
-// 3 = GRMHD
-// for force-free, must turn off:
-// ok now, but effectively setup already the below 2 lines implicitly
-// global.h : FIXUPAFTERINIT, FIXUPAFTERRESTART,CHECKSOLUTION,LIMADJUST,FLUXADJUST
-// global.h FIXUPZONES->FIXUPNOZONES
+/// for EOMTYPE for HYDRO OR MHD ONLY (not radiation)
+/// 0 = FF(D)E force-free electrodynamics
+/// 1 = cold GRMHD
+/// 2 = entropy conservation version of GRMHD
+/// 3 = GRMHD
+/// for force-free, must turn off:
+/// ok now, but effectively setup already the below 2 lines implicitly
+/// global.h : FIXUPAFTERINIT, FIXUPAFTERRESTART,CHECKSOLUTION,LIMADJUST,FLUXADJUST
+/// global.h FIXUPZONES->FIXUPNOZONES
  // do nothing in Utoprimgen() assuming already effectively or actually did the inversion.
 #define EOMDIDFFDE -5
 #define EOMDIDCOLDGRMHD -4
@@ -197,7 +193,7 @@
 #define EOMENTROPYGRMHD 2
 #define EOMGRMHD 3
 
-// mode for inversion
+/// mode for inversion
 #define MODEDEFAULT -1
 #define MODEENERGY 0
 #define MODEENTROPY 1
@@ -208,28 +204,27 @@
 #define MODEPICKBESTSIMPLE2 6
 #define MODEENERGYRAMESH 7
 
-// which cap type to place in rad inversion
+/// which cap type to place in rad inversion
 #define CAPTYPEBASIC 0
 #define CAPTYPEFIX1 1
 #define CAPTYPEFIX2 2
 
-// whether to ensure specific entropy no smaller than guess
+/// whether to ensure specific entropy no smaller than guess
 #define ENTROPYFIXGUESS 1
 
 
 
-// macros for defining which fluxcalc method to use in flux.c
+/// macros for defining which fluxcalc method to use in flux.c
 #define ORIGINALFLUXCALC 0
 #define NEWFLUXCALC 1
 
 
 
+/////////////////////////////
+///
+/// Choices for cooling function
+///
 ////////////////////////////
-//
-// Choices for cooling function
-//
-////////////////////////////
-
 #define NOCOOLING 0
 #define COOLGAMMIETHINDISK 1
 #define COOLEOSGENERAL 2
@@ -237,13 +232,11 @@
 #define KORAL 101
 
 
-////////////////////////////
-//
-// Choices for EOS
-//
-////////////////////////////
-
-
+/////////////////////////////
+///
+/// Choices for EOS
+///
+/////////////////////////////
 #define NUMEOSS 5 // number of EOS types
 
 #define COLDEOS 0
@@ -254,8 +247,8 @@
 
 
 
-// mnenomics
-// for DOENTROPY
+/// mnenomics
+/// for DOENTROPY
 #define DONOENTROPY  0
 #define DOEVOLVEENTROPY 1 // generic activation of entropy variable in conservation laws, etc.
 
@@ -266,19 +259,19 @@
 #define DOEVOLVEYNU 1
 
 
-// for WHICHENTROPYEVOLVE
+/// for WHICHENTROPYEVOLVE
 #define EVOLVENOENTROPY 0
 #define EVOLVESIMPLEENTROPY 1 // should be used with DOENTROPY==DOEVOLVECOMPAREENTOPY
 #define EVOLVEFULLENTROPY 2 // should only be used with DOENTROPY==DOEVOLVEDIRECTENTROPY or DOENTROPY==DOEVOLVECOMPAREENTOPY
 
 
 
-// defines how Utoprimgen is used
+/// defines how Utoprimgen is used
 #define EVOLVEUTOPRIM 0
 #define OTHERUTOPRIM 1
 
 
-// defines data return types for primtoU() and primtoflux()
+/// defines data return types for primtoU() and primtoflux()
 #define UEVOLVE 0
 #define UDIAG 1
 #define UNOTHING 2
@@ -287,52 +280,52 @@
 
 
 
-// for LIMADJUST
-// 0: use fixed limiter
-// 1: use limiter based upon b^2/rho
-// 2: use limiter based upon b^2/u
-// 3: use limiter based upon both b^2/rho or b^2/u
+/// for LIMADJUST
+/// 0: use fixed limiter
+/// 1: use limiter based upon b^2/rho
+/// 2: use limiter based upon b^2/u
+/// 3: use limiter based upon both b^2/rho or b^2/u
 #define LIMITERFIXED 0
 #define LIMITERBSQORHO 1
 #define LIMITERBSQOU 2
 #define LIMITERBSQORHOANDU 3
 
-// for FLUXADJUST
+/// for FLUXADJUST
 #define FLUXFIXED 0 // (see get_bsqflags() in fixup.c)
 #define FLUXBSQORHO 1
 #define FLUXBSQOU 2
 #define FLUXBSQORHOANDU 3
 
 
-// for UTOPRIMFAILRETURNTYPE  --  controls the behaviour of inversion: does allow the return of solutions with negative densities, etc.
+/// for UTOPRIMFAILRETURNTYPE  --  controls the behaviour of inversion: does allow the return of solutions with negative densities, etc.
 #define UTOPRIMRETURNNOTADJUSTED 0
 #define UTOPRIMRETURNADJUSTED 1
 
 
 
-// for UTOPRIMADJUST  -- controls the behaviour of fixups:  UTOPRIMAVG means fix it up, UTOPRIMSTATIC means do not do it
-// 0=just use static solution
-// 1=use average surrounding solution, and if no good surrounding solution use the normal observer velocity with static densities
+/// for UTOPRIMADJUST  -- controls the behaviour of fixups:  UTOPRIMAVG means fix it up, UTOPRIMSTATIC means do not do it
+/// 0=just use static solution
+/// 1=use average surrounding solution, and if no good surrounding solution use the normal observer velocity with static densities
 #define UTOPRIMSTATIC 0
 #define UTOPRIMAVG 1
 
 
-// interpolation function used by init.readdata.c and other code
+/// interpolation function used by init.readdata.c and other code
 #define LINEARTYPE 0
 #define LOGTYPE 1
 #define QUADRATICTYPE 2 // includes limiters to ovoid overshoots and new extremums within 3 point domain
 
 
-// for MODIFYEMFORVPOT
+/// for MODIFYEMFORVPOT
 #define MODIFYEMF 0
 #define MODIFYVPOT 1
 
-////////////////////////////////////////////////
-//
-// Some things related to higher-order interpolations
-//
-////////////////////////////////////////////////
-// used to choose which method interpline.c uses
+/////////////////////////////////////////////////
+///
+/// Some things related to higher-order interpolations
+///
+/////////////////////////////////////////////////
+/// used to choose which method interpline.c uses
 #define NUMENOINTERPTYPES 12
 
 #define NONENOINTERPTYPE 0
@@ -349,7 +342,7 @@
 #define ENOQUASIFIELDFLUXRECONTYPE 11
 
 
-//quantities to interp
+///quantities to interp
 #define ENOSOURCETERM 0
 #define ENOCONSERVED  1
 #define ENOPRIMITIVE  2
@@ -359,22 +352,21 @@
 #define ENOSMOOTHCONSERVED  6
 
 
-// for DOENOFLUX:
+/// for DOENOFLUX:
+/// 0: no ENO flux reconstruction
+/// 1: reconstruct F for finite difference rep. of U
+/// 2 : flux splitting (not done yet)
+/// 3: reconstruct dU for finite volume rep. of U
 #define NOENOFLUX 0
 #define ENOFLUXRECON 1
 #define ENOFLUXSPLIT 2
 #define ENOFINITEVOLUME 3
-// 0: no ENO flux reconstruction
-// 1: reconstruct F for finite difference rep. of U
-// 2 : flux splitting (not done yet)
-// 3: reconstruct dU for finite volume rep. of U
 
-// df and monoindicator sizes for interpline.c and reconstruct.c
-// 0,1,2,3 for paraline and 0,4 for SMONO and 0 (dP) for WENO
+/// df and monoindicator sizes for interpline.c and reconstruct.c
+/// 0,1,2,3 for paraline and 0,4 for SMONO and 0 (dP) for WENO
+/// currently don't need DFCENT2APART, so this is why NUMDFS is 5 and not 6
+/// within calculation NUMDFS is checked so no access to that array element
 #define NUMDFS 5
-// currently don't need DFCENT2APART, so this is why NUMDFS is 5 and not 6
-// within calculation NUMDFS is checked so no access to that array element
-
 #define DFONESIDED 0
 #define DFCENT 1
 #define DFMONO 2
@@ -390,16 +382,16 @@
 
 
 
-////////
-//
-//  possible settings for pass_1d_line() in interpline.c
-//
+/////////
+///
+///  possible settings for pass_1d_line() in interpline.c
+///
 #define WEIGHT_CALC 1
 #define RECON_CALC 2
 #define ALL_CALC (WEIGHT_CALC | RECON_CALC)  //compute everything
 
 
-// defines types of high order interpolations
+/// defines types of high order interpolations
 #define CVT_A2C 0
 #define CVT_C2A 1
 #define CVT_C2L 2
@@ -413,8 +405,8 @@
 
 #define CVT_C2E CVT_C2L //use the same number as CVT_C2L because does not add a new reconstruction type
 
-//0 -- don't do weighs minimization
-// -- do 1st version of weights minimization
+///0 -- don't do weighs minimization
+/// -- do 1st version of weights minimization
 #define NOSPLITA2C 0
 #define MINIMIZE_ALL_WEIGHTS 1
 #define ENERGY_CONTROLS_ALL_WEIGHTS 2 // as below
@@ -425,15 +417,15 @@
 #define CONSTANT_ALL_WEIGHTS 6 // forces MONO and equal weights for all
 
 
-////////
-//
-//  MONOINTERP 
-//
+/////////
+///
+///  MONOINTERP 
+///
 #define NOMONOINTERP 0
 #define JMONOINTERP 1
 #define SMONOINTERP 2
 
-// defines types of input to flux_point2avg()
+/// defines types of input to flux_point2avg()
 #define ISMAONLY 0
 #define ISEMONLY 1
 #define ISMAANDEM 2
@@ -459,15 +451,15 @@
 #define DISSSIMPLEINVLAB2NOMAX 15
 #define DISSFULLINVLAB2NOMAX 16
 #define DISSENTROPYLAB2NOMAX 17
-// failure indicator:
+/// failure indicator:
 #define DISSFAILUREINV 18
 
-// totals:
+/// totals:
 #define NUMDISSVERSIONS 18 // for consistent restart output, this number can't change
 #define NUMDISSFUNPOS (NUMDISSVERSIONS+1)  // includes failure indicator
 
 
-// EMF loop related things
+/// EMF loop related things
 #define NUMPOS4EMF 3
 #define LEFT4EMF 0 // left or -
 #define RIGHT4EMF 1 // right or +
@@ -476,7 +468,7 @@
 #define END4EMF CENT4EMF // which is last value
 
 
-// see interp_loop_set() in initbase.c
+/// see interp_loop_set() in initbase.c
 #define NUMFLUXLOOPNUMBERS 10
 #define FIDEL 0
 #define FJDEL 1
@@ -492,14 +484,14 @@
 
 #define CHECKONINVERSIONDEFAULT (-1)
 
-// number of inversion quantities to report when inversion fails if CHECKONINVERSION = 1
-// See utoprim_jon.c:check_on_inversion()
+/// number of inversion quantities to report when inversion fails if CHECKONINVERSION = 1
+/// See utoprim_jon.c:check_on_inversion()
 #define NUMINVPROPERTY 13
 
-// for WHICHCURRENTCALC
-// 0: original time is on edge and spatial on edge, but spatials are different locations.  old time.
-// 1: all centered in space and all time, present time (best)
-// 2: like 0, but spatially centered (i.e. old time)
+/// for WHICHCURRENTCALC
+/// 0: original time is on edge and spatial on edge, but spatials are different locations.  old time.
+/// 1: all centered in space and all time, present time (best)
+/// 2: like 0, but spatially centered (i.e. old time)
 #define CURRENTCALC0 0
 #define CURRENTCALC1 1
 #define CURRENTCALC2 2
@@ -515,16 +507,16 @@
 #define CURTYPEFARADAY 4
 
 
-// whether and which type of fixups to be used
+/// whether and which type of fixups to be used
 #define FIXUP1ZONE 0
 #define FIXUPALLZONES 1
 #define FIXUPNOZONES 2
 
 
 
-/* mnemonics for flux method (Riemann solver) */
-// ordered from most diffusive to least diffusive, so can back track
-// 0 should be reasonable most diffusive
+/// mnemonics for flux method (Riemann solver)
+/// ordered from most diffusive to least diffusive, so can back track
+/// 0 should be reasonable most diffusive
 #define LAXFFLUX 0
 #define HLLFLUX 1
 #define FORCEFLUX 2
@@ -532,7 +524,7 @@
 #define HLLLAXF1FLUX 4
 
 
-// DIVB constraint method
+/// DIVB constraint method
 #define FLUXCTHLL 0
 #define FLUXCTTOTH 1
 #define FLUXCD 2
@@ -540,48 +532,48 @@
 #define ATHENA2 4
 #define FLUXCTSTAG 5
 /* these are different ways of calculating the EMFs */
-//#define FLUXB FLUXCTTOTH
-// 0: HLL
-// 1: FLUXCT TOTH version (toth 2000 eq. 25)
-// 2: FLUXCD TOTH version (toth 2000 eq. 31)
-// 3: Athena type eq 39
-// 4: Athena type eq 48
-// 5: Jon's staggered grid #1
+///#define FLUXB FLUXCTTOTH
+/// 0: HLL
+/// 1: FLUXCT TOTH version (toth 2000 eq. 25)
+/// 2: FLUXCD TOTH version (toth 2000 eq. 31)
+/// 3: Athena type eq 39
+/// 4: Athena type eq 48
+/// 5: Jon's staggered grid #1
 
-//#define UTOPRIMVERSION 6
-// 0: original gammie 5D method
+///#define UTOPRIMVERSION 6
+/// 0: original gammie 5D method
 #define UTOPRIM5D1 0
-// 1: ldz method
+/// 1: ldz method
 #define UTOPRIMLDZ 1
-// 2: SCN 2D method
+/// 2: SCN 2D method
 #define UTOPRIM2D 2
-// 3: SCN 1D method
+/// 3: SCN 1D method
 #define UTOPRIM1D 3
-// 4: SCN 1D OPTIMIZED method -- not sure if identical to 3 otherwise
+/// 4: SCN 1D OPTIMIZED method -- not sure if identical to 3 otherwise
 #define UTOPRIM1DOPT 4
-// 5: SCN 1D final and optimized
+/// 5: SCN 1D final and optimized
 #define UTOPRIM1DFINAL 5
-// 6: SCN 2D final and optimized and recommended by Scott
+/// 6: SCN 2D final and optimized and recommended by Scott
 #define UTOPRIM2DFINAL 6
-// 7: SCN 5D final -- bit less accurate compared to 1D and 2D
+/// 7: SCN 5D final -- bit less accurate compared to 1D and 2D
 #define UTOPRIM5D2 7
-// 8: Jon 1D/2D final version -- can handle non-rel problems
+/// 8: Jon 1D/2D final version -- can handle non-rel problems
 #define UTOPRIMJONNONRELCOMPAT 8
-// 20: COLDGRMHD
+/// 20: COLDGRMHD
 #define UTOPRIMCOLDGRMHD 20
-// 21: FFDE
+/// 21: FFDE
 #define UTOPRIMFFDE 21
-// 100: use 5D, but compare with ldz in runtime
+/// 100: use 5D, but compare with ldz in runtime
 #define UTOPRIMCOMPARE 100
 
 
-/* mnemonics for slope limiter */
-// ordered from most diffusive to least diffusive, so can start high and go down if needed
-// 0 should be reasonble most diffusive, highest should be least diffusive
+// mnemonics for slope limiter
+/// ordered from most diffusive to least diffusive, so can start high and go down if needed
+/// 0 should be reasonble most diffusive, highest should be least diffusive
 
 #define DONOR 0
 
-// POSINTERPS:
+/// POSINTERPS:
 #define VANL 1
 #define MINM 2
 #define MC      3
@@ -590,7 +582,7 @@
 #define MCSTEEP 6 // uses 3-point limiter, but other features of PARAFLAT
 #define CSSLOPE      7 // not tested/compared against others
 
-// assume here and beyond all higher numbers are using WENO or ENO
+/// assume here and beyond all higher numbers are using WENO or ENO
 #define WENO3 8
 #define WENO4 9
 #define WENO5  10
@@ -614,31 +606,31 @@
 
 #define NUMPOSINTERPS LASTINTERPLINE
 #define NUMNEGINTERPS 4
-// 1+ for DONOR
+/// 1+ for DONOR
 #define NUMINTERPS (1 + NUMPOSINTERPS + NUMNEGINTERPS)
 
 
-// defines limiters that are WENO/ENO
+/// defines limiters that are WENO/ENO
 #define WENOINTERPTYPE(lim) (lim>=FIRSTWENO && lim<=LASTWENO)
 
-// defines limiters that are WENO/ENO
+/// defines limiters that are WENO/ENO
 #define WENOBNDPINTERPTYPE(lim) (lim==WENO5BND || lim==WENO5BNDPLUSMIN)
 
-// defines which limiters are for interpline.c (rest are for interppoint.c)
+/// defines which limiters are for interpline.c (rest are for interppoint.c)
 #define LINEINTERPTYPE(lim) (lim>=FIRSTINTERPLINE && lim<=LASTINTERPLINE)
 
-// negative versions for testing only
+/// negative versions for testing only
 #define NLIM    -1 // no limiter
 #define NLIMCENT    -2 // no limiter
 #define NLIMUP    -3 // no limiter
 #define NLIMDOWN    -4 // no limiter
 
 
-// see orders_set() in initbase.c
+/// see orders_set() in initbase.c
 #define MAXSPACEORDER 15 // maximum number of points in stencil
 //#define MAXSPACESHIFT ((MAXSPACEORDER-1)/2) // center point for symmetric stencil
 
-// for timing
+/// for timing
 #define STARTTIME 0
 #define CHECKTIME 1
 #define SPEEDTIME 2
@@ -653,18 +645,18 @@
 #define MAXTIMEORDER 5 // 5 now needed for EOMRADTYPE!=EOMRADNONE, but only affects memory in that case.
 
 #define NUMPREDTCUFS (4) // see step_ch.c
-// NUMDTCUFS also includes what's necessary for IMEX
+/// NUMDTCUFS also includes what's necessary for IMEX
 #define NUMDTCUFS (NUMPREDTCUFS+MAXTIMEORDER) // see step_ch.c
 
 //#define TIMEORDER 3
-// order of algorithm in time from 1 to 4.
-// TIMEORDER: 1 : single step (Euler method -- error term is 2nd order for smooth flows)
-// TIMEORDER: 2 : 2 steps in halfs (midpoint method -- error term is 3rd order for smooth flows)
-// TIMEORDER: 3 : 4 steps (classic RK3 method -- error term is 4th order for smooth flows)
-// TIMEORDER: 4 : 4 steps (classic RK4 method -- error term is 5th order for smooth flows)
+/// order of algorithm in time from 1 to 4.
+/// TIMEORDER: 1 : single step (Euler method -- error term is 2nd order for smooth flows)
+/// TIMEORDER: 2 : 2 steps in halfs (midpoint method -- error term is 3rd order for smooth flows)
+/// TIMEORDER: 3 : 4 steps (classic RK3 method -- error term is 4th order for smooth flows)
+/// TIMEORDER: 4 : 4 steps (classic RK4 method -- error term is 5th order for smooth flows)
 
 
-// type of method used for source term (generic labels)
+/// type of method used for source term (generic labels)
 #define SOURCEMETHODNONE 0
 #define SOURCEMETHODEXPLICIT 1
 #define SOURCEMETHODEXPLICITSUBCYCLE 2
@@ -676,17 +668,16 @@
 #define SOURCEMETHODEXPLICITSUBCYCLECHECKSFROMIMPLICIT 8
 
 
-// tetrad.c stuff:
+/// tetrad.c stuff:
 #define METRICTETRAD 0
 #define NONMETRICTETRIC 1
 
 
+///////////////////////////////////
+///
+/// which variable to interpolate
+///
 //////////////////////////////////
-//
-// which variable to interpolate
-//
-/////////////////////////////////
-
 #define PRIMTOINTERP -1
 #define PRIMTOINTERP_JONRESCALED1 0
 #define CONSTOINTERP 1
@@ -716,7 +707,7 @@
 #define WENO_REDUCE_TYPE_DEFAULT 0 
 #define WENO_REDUCE_TYPE_PPM 1
 
-// definition of minmod operator
+/// definition of minmod operator
 #define MINMODB(a,b) ( (fabs(a)<fabs(b)) ? (a) : (b) )
 #define MINMOD(a,b) ( ((a)*(b)<=0) ? 0.0 : MINMODB(a,b) )
 //#define MINMOD3( x, y, z )   ( 0.25 * (sign(x) + sign(y)) * (sign(x) + sign(z)) * MIN( MIN(fabs(x), fabs(y)), fabs(z)) )    
@@ -729,12 +720,11 @@
 #define RESTORENPR 1
 
 
-///////////////////////////////
-//
-// parabolic interpolation stuff
-//
 ////////////////////////////////
-
+///
+/// parabolic interpolation stuff
+///
+////////////////////////////////
 #define PARA1 0 // old
 #define PARA2 1 // works
 #define PARA3 2 // broken
@@ -759,11 +749,11 @@
 #define TIMEEXPLICIT 1
 
 
-//////////////////////////////////////
-//
-// PURE mnemonics
-//
-///////////////////////////////////
+///////////////////////////////////////
+///
+/// PURE mnemonics
+///
+////////////////////////////////////
 #define NUMBOUNDTYPES 9
 //
 #define BOUNDPRIMTYPE 0
@@ -777,19 +767,19 @@
 #define BOUNDVPOTSIMPLETYPE 8
 
 
-// ispstag:
+/// ispstag:
 #define BOUNDPRIMLOC 0
 #define BOUNDPSTAGLOC 1
 
 
-// -------------> r
-// |      3    
-// |     1-0   
-// |      2    
-// v         
-// theta      
-// and likewise for 4,5 (4=out,5=in)
-// directions:
+/// -------------> r
+/// |      3    
+/// |     1-0   
+/// |      2    
+/// v         
+/// theta      
+/// and likewise for 4,5 (4=out,5=in)
+/// directions:
 #define X1UP 0
 #define X1DN 1
 #define X2UP 2
@@ -806,21 +796,21 @@
 #define ISRIGHT 1
 #define ISMIDDLE 2 // just macro, not used to access memory space and so why NUMLEFTRIGHT is still 2
 
-// used by doflux[] to see if flux surface on grid or not (each CPU)
+/// used by doflux[] to see if flux surface on grid or not (each CPU)
 #define FLUXNOTONGRID -100
 
 
-// direction (-1,+1) for a given direction as defined above
+/// direction (-1,+1) for a given direction as defined above
 #define DIRSIGN(dir) (1-2*((dir)%2 ))
-// dimension=1,2,3 for given direction defined above
+/// dimension=1,2,3 for given direction defined above
 #define DIMEN(dir) (1+(dir)/2)
 
 #define DIRFROMDIMEN(dimen,dirsign) (( (dirsign==-1) + (dimen - 1) * 2))
 
-// direction (0,1) for a given dir=X1DN,etc.
+/// direction (0,1) for a given dir=X1DN,etc.
 #define POINTFROMDIR(dir) (DIRSIGN(dir)==-1 ? POINTDOWN : POINTUP)
 
-// long double constants
+/// long double constants
 # define M_El           2.7182818284590452353602874713526625L  /* e */
 # define M_LOG2El       1.4426950408889634073599246810018922L  /* log_2 e */
 # define M_LOG10El      0.4342944819032518276511289189166051L  /* log_10 e */
@@ -855,14 +845,14 @@
 #define MAX(a,b) ( ((a) > (b)) ? (a) : (b) )
 #define MIN(a,b) ( ((a) < (b)) ? (a) : (b) )
 #define SIGNSINGLE(a) ( ((a) <0.) ? -1. : 1. )
-// rounds to definite integer (round() returns double and so isn't useful as an integer value)
+/// rounds to definite integer (round() returns double and so isn't useful as an integer value)
 #define ROUND2INT(x) ((int)((x)>0.0 ? (x)+0.5 : (x)-0.5))
 #define ROUND2LONGLONGINT(x) ((long long int)((x)>0.0 ? (x)+0.5 : (x)-0.5))
 
 
-// restart macro stuff
-// or use DODISS, etc. that are 0 or non-zero
-// assume any non-zero will work in code
+/// restart macro stuff
+/// or use DODISS, etc. that are 0 or non-zero
+/// assume any non-zero will work in code
 #define DONOTACCESSMEMORY 0
 
 
@@ -870,7 +860,7 @@
 #define RETROGRADERISCO 1
 
 #define NUMTSCALES 4
-// number of times scales to watch failure rates at
+/// number of times scales to watch failure rates at
 #define ALLTS 0 // full cumulative
 #define ENERTS 1 // cumulative each dump_ener (over all grid)
 #define IMAGETS 2 // cumulative each image dump (full grid)
@@ -878,8 +868,8 @@
 
 
 
-//STEPOVERNEGXXX: possible modes of stepping over occurences of negative densities: controls when to revert to inversion from an average conserved quantity
-//For how these occurences are reported, see fixup.c: DOCOUNTUNEG, etc.
+///STEPOVERNEGXXX: possible modes of stepping over occurences of negative densities: controls when to revert to inversion from an average conserved quantity
+///For how these occurences are reported, see fixup.c: DOCOUNTUNEG, etc.
 #define NEGDENSITY_NEVERFIXUP -1
 #define NEGDENSITY_ALWAYSFIXUP 0
 #define NEGDENSITY_FIXONFULLSTEP 1
@@ -887,10 +877,10 @@
 
 
 
-// see failfloorcount counter
+/// see failfloorcount counter
 #define COUNTNOTHING -1
 #define NUMFAILFLOORFLAGS 16
-//  mnemonics
+///  mnemonics
 #define COUNTUTOPRIMFAILCONV 0 // if failed to converge
 #define COUNTFLOORACT 1 // if floor activated
 #define COUNTLIMITGAMMAACT 2 // if Gamma limiter activated
@@ -909,13 +899,13 @@
 #define COUNTONESTEP 15
 
 
-// below 3 used to indicate when eos lookup failure shouldn't report failure since (e.g.) was not at a particular grid location
+/// below 3 used to indicate when eos lookup failure shouldn't report failure since (e.g.) was not at a particular grid location
 #define AVOIDI -100
 #define AVOIDJ -100
 #define AVOIDK -100
 
-// failure codes for utoprim failures
-// NOTE: PFLAGTYPE is probably "char" so can't use value of pflag beyond -127..127
+/// failure codes for utoprim failures
+/// NOTE: PFLAGTYPE is probably "char" so can't use value of pflag beyond -127..127
 #define NANPFLAG -100 // bad pflag
 #define UTOPRIMFAILFIXEDONESTEP -6
 #define UTOPRIMFAILFIXEDBOUND2 -5
@@ -962,8 +952,8 @@
 
 #define UTOPRIMRADFAILFIXEDUTOPRIMRAD -1
 #define UTOPRIMRADNOFAIL 0 // no radiation inversion failure
-// locally fixed inversion problems (as possible sometimes with radiation):
-// see phys.tools.rad.c:u2p_rad()
+/// locally fixed inversion problems (as possible sometimes with radiation):
+/// see phys.tools.rad.c:u2p_rad()
 #define UTOPRIMRADFAILCASE1A 1 // 
 #define UTOPRIMRADFAILCASE1B 2 //
 #define UTOPRIMRADFAILCASE2A 3 //
@@ -971,10 +961,10 @@
 #define UTOPRIMRADFAILCASE3A 5 //
 #define UTOPRIMRADFAILCASE3B 6 //
 #define UTOPRIMRADFAILERFNEG 7
-// unfixable inversion problems
+/// unfixable inversion problems
 #define UTOPRIMRADFAILBAD1 8 // not used yet
 
-// for radiation terms
+/// for radiation terms
 #define COUNTRADNOTHING -1
 #define NUMRADFAILFLOORFLAGS 2  // no array for storage yet (or maybe ever)
 #define COUNTRADLOCAL 0
@@ -1022,7 +1012,7 @@
 
 
 
-// primitive type
+/// primitive type
 #define CENTEREDPRIM 0
 #define STAGGEREDPRIM 1
 
@@ -1030,20 +1020,20 @@
 #define NDIM 4  /* number of total dimensions.  Never changes */
 #define SYMMATRIXNDIM 10 // total number of independent elements of a symmetric matrix
 
-// flag failures/problems for correction/check in fixup
+/// flag failures/problems for correction/check in fixup
 #define NUMPFLAGS (6)
 
 #define NUMFAILPFLAGS (2)
 
-// FAILURE FLAGS (always should be listed first starting from 0 and NUMFAILPFLAGS should be number of them.
+/// FAILURE FLAGS (always should be listed first starting from 0 and NUMFAILPFLAGS should be number of them.
 
-// the below needs to be bounded since one CPU doesn't know if the other failed, and neighbor failure determines nature of how failure is treated
-// also, bounded values at real boundaries need to identify if bad copy
+/// the below needs to be bounded since one CPU doesn't know if the other failed, and neighbor failure determines nature of how failure is treated
+/// also, bounded values at real boundaries need to identify if bad copy
 #define FLAGUTOPRIMFAIL 0 // changes behavior of fixup() on MHD quantities
 #define FLAGUTOPRIMRADFAIL 1 // changes behavior of fixup() on radiation quantities
 
-// NON-FAILURE FLAGS
-// the below flags are done after bound_prim, and can be determined at any time, so just come after bound.
+/// NON-FAILURE FLAGS
+/// the below flags are done after bound_prim, and can be determined at any time, so just come after bound.
 #define FLAGREALLIM 2 // value of limiter to be used
 #define FLAGBSQORHO 3 // set when B^2/RHO > BSQORHOLIMIT ; currently changes  behavior of slope_lim
 #define FLAGBSQOU 4 // set when B^2/u > BSQOULIMIT
@@ -1053,8 +1043,8 @@
 
 
 #define NUMSOURCES 3
-// these get ADDED UP, not independently treated
-// number of source terms.  Currently includes: 0) geometry, 1) radiative cooling, 2) radiative heating
+/// these get ADDED UP, not independently treated
+/// number of source terms.  Currently includes: 0) geometry, 1) radiative cooling, 2) radiative heating
 #define GEOMSOURCE 0 // SHOULD ALWAYS BE 0 !
 #define RADSOURCE 1
 #define RADSOURCE2 2
@@ -1063,39 +1053,38 @@
 
 
 
-// max number of terms in stress tensor (for term-level flux diagnostic)
+/// max number of terms in stress tensor (for term-level flux diagnostic)
 #define NUMFLUXTERMS (7)
 
 
+///#define NUMENODEBUGS (NPR*(3+ORDERDEBUG*3 + 1 + 2 + ORDERDEBUG*2 + 1))
+/// p p_l p_r  order*3 per point reduce
+/// NPR*3 order*3*NPR   NPR
+/// Uavg Upoint  order*2 per point reduce
+/// NPR*2 order*2*NPR NPR
 #define ORDERDEBUG 3
-//#define NUMENODEBUGS (NPR*(3+ORDERDEBUG*3 + 1 + 2 + ORDERDEBUG*2 + 1))
-// p p_l p_r  order*3 per point reduce
-// NPR*3 order*3*NPR   NPR
-// Uavg Upoint  order*2 per point reduce
-// NPR*2 order*2*NPR NPR
 
-//#define NUMENODEBUGS 21
-// see email
-
-// short switches:
-//1)       SMONO (0,1)
-//2)       WENO5 (0,1)
-//3)       WENO3 (0,1)
-//4)       -> dP/P (0,1)
-//5)       limit c2e/c2a/a2c correction (0,1) through checking the change of the quantity being interpolated
-//6)       limit c2e/c2a/a2c correction (0,1) through checking the change of primitives
-
+///#define NUMENODEBUGS 21
+/// see email
+///
+/// short switches:
+///1)       SMONO (0,1)
+///2)       WENO5 (0,1)
+///3)       WENO3 (0,1)
+///4)       -> dP/P (0,1)
+///5)       limit c2e/c2a/a2c correction (0,1) through checking the change of the quantity being interpolated
+///6)       limit c2e/c2a/a2c correction (0,1) through checking the change of primitives
 #define NUMENODEBUGS 6
 
 
-// allow for pk[0] and pk[1]
+/// maximum number of needed independent memory spots for temporal integration stages
+/// allow for pk[0] and pk[1]
 #define MAXITERDTSTAGES 2
-// maximum number of needed independent memory spots for temporal integration stages
 
 
 
-// time period between dumps for various types of dumps
-// NO, use "DUMPTYPE" names now
+/// time period between dumps for various types of dumps
+/// NO, use "DUMPTYPE" names now
 //#define NUMDTDS 11
 //#define DTDUMP 0
 //#define DTAVG 1
@@ -1113,17 +1102,16 @@
 
 
 
-/* mnemonics for dimensional indices */
+/// mnemonics for dimensional indices
 #define TT 0
 #define RR 1
 #define TH 2
 #define PH 3
 
 
-/* mnemonics for centering of grid functions */
-// GODMARK: is there a way to pick and choose the dimension and number of grid positions?
-/* number of positions on grid for grid 
-   functions */
+///  mnemonics for centering of grid functions 
+/// GODMARK: is there a way to pick and choose the dimension and number of grid positions?
+/// number of positions on grid for grid functions
 #define NPG 8
 #define NOWHERE -1 // tells a function that not necessarily requesting value at a standard grid location (unusual) -- this stores no memroy, so doesn't increase NPG
 #define CENT    0
@@ -1135,12 +1123,12 @@
 #define CORN3 6 // corner in 1-2 plane
 #define CORNT   7 // true corner: full 3D corner (only required for 3D)
 
-// used for primgridpos[]
+/// used for primgridpos[]
 #define NUMPRIMGRIDPOS 2
 #define CENTGRID 0
 #define STAGGRID 1
 
-/* mnemonics for diagnostic calls */
+///  mnemonics for diagnostic calls 
 #define INIT_OUT 0
 #define DUMP_OUT 1
 #define IMAGE_OUT 1
@@ -1148,7 +1136,7 @@
 #define FINAL_OUT 2
 #define FUTURE_OUT      3
 
-// below should not be >=0
+/// below should not be >=0
 #define DOINGFUTUREOUT -100
 
 
@@ -1179,8 +1167,8 @@
 
 
 
-// these dump types also control period of output
-// Period can be controlled for non-spatial dumps such as ENER outputs, in which case dump.c doesn't have to be setup for that type of "DUMPTYPE"
+/// these dump types also control period of output
+/// Period can be controlled for non-spatial dumps such as ENER outputs, in which case dump.c doesn't have to be setup for that type of "DUMPTYPE"
 #define NUMDUMPTYPES 21 // number of dump types listed below
 
 #define IMAGEDUMPTYPE 0
