@@ -1,5 +1,5 @@
 
-/*! \file global.openmpthreadsprivate.h
+/*! \file global.openmpthreadprivates.h
     \brief All macros and definitions related to OpenMP private quantities
 
 // Those variables in defs.general.h (or any global variable) that per-point or per-time may change, so required to make private for OpenMP

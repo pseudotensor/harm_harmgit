@@ -1,3 +1,8 @@
+
+/*! \file global.other.h
+    \brief Other macros and definitions currently reltaed to ENO only
+*/
+
 #if( DO_WENO_DEBUG )
 ///debug atch SASMARK
 FILE *debugfp;

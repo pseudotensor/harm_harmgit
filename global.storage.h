@@ -1,3 +1,7 @@
+
+/*! \file global.storage.h
+    \brief macros and definitions related to storage mapping functions
+
 //////////////
 //
 // Macrofication of storage for multi-dimensional arrays:
@@ -21,63 +25,64 @@
 
 // See kazfulleos.global.h for some non-spatial array macros for general EOS
 
+*/
 
 
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
-//
-// Define N1M, N2M, N3M and other spatial storage related items
-//
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
 
-/* allocated memory uses this for active zones 0-N1-1 and bc beyond that */
+/////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////
+///
+/// Define N1M, N2M, N3M and other spatial storage related items
+///
+/////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////
+///  allocated memory uses this for active zones 0-N1-1 and bc beyond that 
 #define N1M (N1+N1BND*2)
 #define N2M (N2+N2BND*2)
 #define N3M (N3+N3BND*2)
 
 
-/* NBIGM is bigger of N1M and N2M and N3M */
-// not currently used
+///  NBIGM is bigger of N1M and N2M and N3M 
+/// not currently used
 #define NBIG1M ((N1M>N2M) ? N1M : N2M)
 #define NBIGM  ((NBIG1M>N3M) ? NBIG1M : N3M)
 
-// surface areas of sides WITH boundary zones
-// reduces to 0 if that dimension not used
+/// surface areas of sides WITH boundary zones
+/// reduces to 0 if that dimension not used
 #define MAXSURFA1 (N2M*N3M*N1NOT1)
 #define MAXSURFA2 (N1M*N3M*N2NOT1)
 #define MAXSURFA3 (N1M*N2M*N3NOT1)
 
-// maximal surface of boundary exchange
-// notice that this works in any number of dimensions and any N1,N2,N3
-// that is, it reduces correctly when a dimension is degenerate (N=1)
+/// maximal surface of boundary exchange
+/// notice that this works in any number of dimensions and any N1,N2,N3
+/// that is, it reduces correctly when a dimension is degenerate (N=1)
 #define NBIGS1M ((MAXSURFA1>MAXSURFA2) ? MAXSURFA1 : MAXSURFA2)
 #define NBIGSM ((NBIGS1M>MAXSURFA3) ? NBIGS1M : MAXSURFA3)
 
 
-/////////////////////////////////
-////////////////////
-//
-//ORDERSTORAGE
-//   : N1M=NSTORE?,  N2M=NSTORE?,  N3M=NSTORE?
-// 0 :           1             2             3 // standard (original) order
-// 1 :           2             3             1
-// 2 :           3             1             2
-// 3 :           1             3             2
-// 4 :           2             1             3
-// 5 :           3             2             1
-//
-// ORDERSTORAGE==5 is most efficient order for grid extended in radius, less so in \theta, and even less so in \phi
-///////#define ORDERSTORAGE 0 // set in definit.h or init.h
-// here, N1M,N2M,N3M = (r,theta,phi) always for SPC
-// (i,j,k) = (r,theta,\phi) always for SPC
-// But arrays accessed via array[IND1(i,j,k)][IND2(i,j,k)][IND3(i,j,k)]
-// ALL non-array references to i,j,k stay the same.  Only array accesses have changed.
-// Also change LOOP order (e.g. ORDERSTORAGE==5 : LOOPF -> LOOPF3 LOOPF2 LOOPF1)
-// This way (e.g.) coord(i,j,k) and all other such non-array accesses are the same, so little abstract code changes.
-// Only end up changing how arrays are accessed
-// Note that unlike Sasha's mixing of the 1,2,3 directions, this doesn't change (e.g.) r(i) \theta(j) and \phi(k) association.  It only changes how arrays are accessed!  So this doesn't test how different directions are handled in the code.
-// Note that we change the left-hand-side order not the right-hand-side order that should always be 1,2,3 or i,j,k
+//////////////////////////////////
+/////////////////////
+///
+///ORDERSTORAGE
+///   : N1M=NSTORE?,  N2M=NSTORE?,  N3M=NSTORE?
+/// 0 :           1             2             3 // standard (original) order
+/// 1 :           2             3             1
+/// 2 :           3             1             2
+/// 3 :           1             3             2
+/// 4 :           2             1             3
+/// 5 :           3             2             1
+///
+/// ORDERSTORAGE==5 is most efficient order for grid extended in radius, less so in \theta, and even less so in \phi
+////////#define ORDERSTORAGE 0 // set in definit.h or init.h
+/// here, N1M,N2M,N3M = (r,theta,phi) always for SPC
+/// (i,j,k) = (r,theta,\phi) always for SPC
+/// But arrays accessed via array[IND1(i,j,k)][IND2(i,j,k)][IND3(i,j,k)]
+/// ALL non-array references to i,j,k stay the same.  Only array accesses have changed.
+/// Also change LOOP order (e.g. ORDERSTORAGE==5 : LOOPF -> LOOPF3 LOOPF2 LOOPF1)
+/// This way (e.g.) coord(i,j,k) and all other such non-array accesses are the same, so little abstract code changes.
+/// Only end up changing how arrays are accessed
+/// Note that unlike Sasha's mixing of the 1,2,3 directions, this doesn't change (e.g.) r(i) \theta(j) and \phi(k) association.  It only changes how arrays are accessed!  So this doesn't test how different directions are handled in the code.
+/// Note that we change the left-hand-side order not the right-hand-side order that should always be 1,2,3 or i,j,k
 
 
 #define OPENMP3DLOOPBLOCK2IJKSTORAGE0(i,j,k)                    \
@@ -112,7 +117,7 @@
 
 
 #if(ORDERSTORAGE==0)
-// 123
+/// 123
 #define NSTORE1 N1M
 #define NSTORE2 N2M
 #define NSTORE3 N3M
@@ -154,7 +159,7 @@
 
 
 #elif(ORDERSTORAGE==1)
-//231
+///231
 #define NSTORE2 N1M
 #define NSTORE3 N2M
 #define NSTORE1 N3M
@@ -195,7 +200,7 @@
 
 
 #elif(ORDERSTORAGE==2)
-//312
+///312
 #define NSTORE3 N1M
 #define NSTORE1 N2M
 #define NSTORE2 N3M
@@ -236,7 +241,7 @@
 
 
 #elif(ORDERSTORAGE==3)
-//132
+///132
 #define NSTORE1 N1M
 #define NSTORE3 N2M
 #define NSTORE2 N3M
@@ -277,7 +282,7 @@
 
 
 #elif(ORDERSTORAGE==4)
-//213
+///213
 #define NSTORE2 N1M
 #define NSTORE1 N2M
 #define NSTORE3 N3M
@@ -318,7 +323,7 @@
 
 
 #elif(ORDERSTORAGE==5)
-//321
+///321
 #define NSTORE3 N1M
 #define NSTORE2 N2M
 #define NSTORE1 N3M
@@ -361,34 +366,34 @@
 
 #endif
 
-// below doesn't work since #define can't refer to other #'s
-//#define OPENMPLOOPGEN(is,ie,js,je,ks,ke,VARPRIVATE,EXTRAFOR) OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke); \
-//#pragma omp parallel private(VARPRIVATE) OPENMPGLOBALPRIVATEFULL \
-//  {         \
-//#pragma omp for schedule(OPENMPSCHEDULE,OPENMPCHUNKSIZE(blocksize)) EXTRAFOR  \
-//    OPENMP3DLOOPBLOCK{      \
-//      OPENMP3DLOPBLOCK2IJK(i,j,k);
+/// below doesn't work since #define can't refer to other #'s
+///#define OPENMPLOOPGEN(is,ie,js,je,ks,ke,VARPRIVATE,EXTRAFOR) OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke); \
+///#pragma omp parallel private(VARPRIVATE) OPENMPGLOBALPRIVATEFULL \
+///  {         \
+///#pragma omp for schedule(OPENMPSCHEDULE,OPENMPCHUNKSIZE(blocksize)) EXTRAFOR  \
+///    OPENMP3DLOOPBLOCK{      \
+///      OPENMP3DLOPBLOCK2IJK(i,j,k);
 
 
-// Seems I caught everything, but not tested.
-//#if(MCOORD==CARTMINKMETRIC)
-//#error Not setup yet for CARTMINKMETRIC, need to define macros below for metric accesses so uses MET versions of above so correct access (i.e. i=j=k=0 for metric type stuff).  Then ensure those vars (global or not) are everywhere accessed and defined with such macros, including their pointers
-//#endif
+/// Seems I caught everything, but not tested.
+///#if(MCOORD==CARTMINKMETRIC)
+///#error Not setup yet for CARTMINKMETRIC, need to define macros below for metric accesses so uses MET versions of above so correct access (i.e. i=j=k=0 for metric type stuff).  Then ensure those vars (global or not) are everywhere accessed and defined with such macros, including their pointers
+///#endif
 
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
-//
-// Define Macros for dealing with global spatial pointers
-//
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////
+///
+/// Define Macros for dealing with global spatial pointers
+///
+/////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////
 
 
-//See docs regarding # and ## use in C macros as processed by preprocessor: http://gcc.gnu.org/onlinedocs/cpp/Concatenation.html#Concatenation
-// Didn't see how to macrofy a_ and a_s_ so they aren't repeated, but not a big deal since still those defined only here
-// MACP?A? corresponds to P? number of prior array indices and A? to number of after indices
+///See docs regarding # and ## use in C macros as processed by preprocessor: http://gcc.gnu.org/onlinedocs/cpp/Concatenation.html#Concatenation
+/// Didn't see how to macrofy a_ and a_s_ so they aren't repeated, but not a big deal since still those defined only here
+/// MACP?A? corresponds to P? number of prior array indices and A? to number of after indices
 
-// generic macros for a_ or a_s_ prefixes corresponding, respectively, to base or shifted pointers
+/// generic macros for a_ or a_s_ prefixes corresponding, respectively, to base or shifted pointers
 #define GENPOINT(prefix,name) prefix##name
 #define GENMAC(prefix,name,i,j,k) prefix##name[STO1(i,j,k)][STO2(i,j,k)][STO3(i,j,k)]
 #define GENMACP0A0(prefix,name,i,j,k) GENMAC(prefix,name,i,j,k)
@@ -411,9 +416,9 @@
 #define GENMACP1A3(prefix,name,argp1,i,j,k,arga1,arga2,arga3) prefix##name[argp1][STO1(i,j,k)][STO2(i,j,k)][STO3(i,j,k)][arga1][arga2][arga3]
 #define GENMACP0A4(prefix,name,i,j,k,arga1,arga2,arga3,arga4) prefix##name[STO1(i,j,k)][STO2(i,j,k)][STO3(i,j,k)][arga1][arga2][arga3][arga4]
 
-////////////////
-// BASE (a_) wrappers
-// 
+/////////////////
+/// BASE (a_) wrappers
+/// 
 #define BASEPOINT(name) GENPOINT(a_,name)
 #define BASEMAC(name,i,j,k) GENMAC(a_,name,i,j,k)
 #define BASEMACP0A0(name,i,j,k) GENMACP0A0(a_,name,i,j,k)
@@ -436,11 +441,11 @@
 #define BASEMACP1A3(name,argp1,i,j,k,arga1,arga2,arga3) GENMACP1A3(a_,name,argp1,i,j,k,arga1,arga2,arga3)
 #define BASEMACP0A4(name,i,j,k,arga1,arga2,arga3,arga4) GENMACP0A4(a_,name,i,j,k,arga1,arga2,arga3,arga4)
 
-////////////////
-// shifted pointer (a_s_) wrappers
-// Couldn't figure out how to macrofy a_s_ or a_, so when changing have to change all manually
-// If want no header on global array, then just leave as (,name,...) instead of (a_s_,name,...)
-//
+/////////////////
+/// shifted pointer (a_s_) wrappers
+/// Couldn't figure out how to macrofy a_s_ or a_, so when changing have to change all manually
+/// If want no header on global array, then just leave as (,name,...) instead of (a_s_,name,...)
+///
 #define GLOBALPOINT(name) GENPOINT(a_s_,name)
 #define GLOBALMAC(name,i,j,k) GENMAC(a_s_,name,i,j,k)
 #define GLOBALMACP0A0(name,i,j,k) GENMACP0A0(a_s_,name,i,j,k)
@@ -463,10 +468,9 @@
 #define GLOBALMACP1A3(name,argp1,i,j,k,arga1,arga2,arga3) GENMACP1A3(a_s_,name,argp1,i,j,k,arga1,arga2,arga3)
 #define GLOBALMACP0A4(name,i,j,k,arga1,arga2,arga3,arga4) GENMACP0A4(a_s_,name,i,j,k,arga1,arga2,arga3,arga4)
 
-////////////////
-// Access to any non-global pointer (not a_s_):
-// note that ok to have nothing as prefix, but macro using prefix##name assumes prefix is defined even inputted as nothing.
-
+/////////////////
+/// Access to any non-global pointer (not a_s_):
+/// note that ok to have nothing as prefix, but macro using prefix##name assumes prefix is defined even inputted as nothing.
 #define POINT(name) GENPOINT(,name)
 #define MAC(name,i,j,k) GENMAC(,name,i,j,k)
 #define MACP0A0(name,i,j,k) GENMACP0A0(,name,i,j,k)
@@ -489,15 +493,15 @@
 #define MACP1A3(name,argp1,i,j,k,arga1,arga2,arga3) GENMACP1A3(,name,argp1,i,j,k,arga1,arga2,arga3)
 #define MACP0A4(name,i,j,k,arga1,arga2,arga3,arga4) GENMACP0A4(,name,i,j,k,arga1,arga2,arga3,arga4)
 
-////////////////
-// pointer shift header wrappers
-// Originally just did, e.g.,  GLOBALPOINT(pglobal) = (FTYPE (*)[N2M][N3M][NPR]) (&(BASEPOINT(pglobal)[NSTOREBND1][NSTOREBND2][NSTOREBND3][0]));
-// But this exposes the internal storage, so avoid, and easy to avoid
-// Below is same structurly as above, but with name and the first index removed from resulting macro expansion, since that's how pointers are referenced in (e.g.) set_arrays_multidimen.c
-// Force user to input name and all dimensions to structurly consistent with other related macros
-// PTRMAC used for both shifting pointers and defining pointers (with different indicies)
-// Note that we must use DEFDIM1,2,3 since different than STO in behavior when no CARTMINKMETRIC.  When [DEFDIM1(i,j,k)] does not appear, that could be any i,j,k so that's correct.
-// Note we remove (always) first term of array to create its pointer reference
+/////////////////
+/// pointer shift header wrappers
+/// Originally just did, e.g.,  GLOBALPOINT(pglobal) = (FTYPE (*)[N2M][N3M][NPR]) (&(BASEPOINT(pglobal)[NSTOREBND1][NSTOREBND2][NSTOREBND3][0]));
+/// But this exposes the internal storage, so avoid, and easy to avoid
+/// Below is same structurly as above, but with name and the first index removed from resulting macro expansion, since that's how pointers are referenced in (e.g.) set_arrays_multidimen.c
+/// Force user to input name and all dimensions to structurly consistent with other related macros
+/// PTRMAC used for both shifting pointers and defining pointers (with different indicies)
+/// Note that we must use DEFDIM1,2,3 since different than STO in behavior when no CARTMINKMETRIC.  When [DEFDIM1(i,j,k)] does not appear, that could be any i,j,k so that's correct.
+/// Note we remove (always) first term of array to create its pointer reference
 #define PTRMAC(name,i,j,k) (*)[DEFDIM2(i,j,k)][DEFDIM3(i,j,k)]
 #define PTRMACP0A0(name,i,j,k) PTRMAC(name,i,j,k)
 
@@ -519,9 +523,9 @@
 #define PTRMACP1A3(name,argp1,i,j,k,arga1,arga2,arga3) (*)[DEFDIM1(i,j,k)][DEFDIM2(i,j,k)][DEFDIM3(i,j,k)][arga1][arga2][arga3]
 #define PTRMACP0A4(name,i,j,k,arga1,arga2,arga3,arga4) (*)[DEFDIM2(i,j,k)][DEFDIM3(i,j,k)][arga1][arga2][arga3][arga4]
 
-////////////
-// Define pointers to multi-dimen arrays for *global* variables (used in superdefs.pointers.h)
-//
+/////////////
+/// Define pointers to multi-dimen arrays for *global* variables (used in superdefs.pointers.h)
+///
 #define PTRDEFGLOBALMAC(name,i,j,k) (*GLOBALPOINT(name))[DEFDIM2(i,j,k)][DEFDIM3(i,j,k)]
 #define PTRDEFGLOBALMACP0A0(name,i,j,k) PTRDEFGLOBALMAC(name,i,j,k)
 
@@ -543,9 +547,9 @@
 #define PTRDEFGLOBALMACP1A3(name,argp1,i,j,k,arga1,arga2,arga3) (*GLOBALPOINT(name))[DEFDIM1(i,j,k)][DEFDIM2(i,j,k)][DEFDIM3(i,j,k)][arga1][arga2][arga3]
 #define PTRDEFGLOBALMACP0A4(name,i,j,k,arga1,arga2,arga3,arga4) (*GLOBALPOINT(name))[DEFDIM2(i,j,k)][DEFDIM3(i,j,k)][arga1][arga2][arga3][arga4]
 
-////////////
-// Define pointers to multi-dimen arrays for non-global arrays (used in all other places except superdefs.pointers.h)
-//
+/////////////
+/// Define pointers to multi-dimen arrays for non-global arrays (used in all other places except superdefs.pointers.h)
+///
 #define PURENAME(name) GENPOINT(,name)
 #define PTRDEFMAC(name,i,j,k) (*PURENAME(name))[DEFDIM2(i,j,k)][DEFDIM3(i,j,k)]
 #define PTRDEFMACP0A0(name,i,j,k) PTRDEFMAC(name,i,j,k)
@@ -572,8 +576,7 @@
 
 
 
-// METRIC VERSIONS (only written down if required):
-
+/// METRIC VERSIONS (only written down if required):
 #define GENMETMAC(prefix,name,i,j,k) prefix##name[STOMET1(i,j,k)][STOMET2(i,j,k)][STOMET3(i,j,k)]
 #define BASEMETMAC(name,i,j,k) GENMETMAC(a_,name,i,j,k)
 #define GLOBALMETMAC(name,i,j,k) GENMETMAC(a_s_,name,i,j,k)
@@ -614,7 +617,7 @@
 #define PTRDEFGLOBALMETMACP1A2(name,argp1,i,j,k,arga1,arga2) (*GLOBALPOINT(name))[DEFDIMMET1(i,j,k)][DEFDIMMET2(i,j,k)][DEFDIMMET3(i,j,k)][arga1][arga2]
 #define PTRDEFMETMACP1A2(name,argp1,i,j,k,arga1,arga2) (*PURENAME(name))[DEFDIMMET1(i,j,k)][DEFDIMMET2(i,j,k)][DEFDIMMET3(i,j,k)][arga1][arga2]
 
-// P2A0
+/// P2A0
 #define GENMETMACP2A0(prefix,name,argp1,argp2,i,j,k) prefix##name[argp1][argp2][STOMET1(i,j,k)][STOMET2(i,j,k)][STOMET3(i,j,k)]
 #define BASEMETMACP2A0(name,argp1,argp2,i,j,k) GENMETMACP2A0(a_,name,argp1,argp2,i,j,k)
 #define GLOBALMETMACP2A0(name,argp1,argp2,i,j,k) GENMETMACP2A0(a_s_,name,argp1,argp2,i,j,k)
@@ -623,7 +626,7 @@
 #define PTRDEFGLOBALMETMACP2A0(name,argp1,argp2,i,j,k) (*GLOBALPOINT(name))[argp2][DEFDIMMET1(i,j,k)][DEFDIMMET2(i,j,k)][DEFDIMMET3(i,j,k)]
 #define PTRDEFMETMACP2A0(name,argp1,argp2,i,j,k) (*PURENAME(name))[argp2][DEFDIMMET1(i,j,k)][DEFDIMMET2(i,j,k)][DEFDIMMET3(i,j,k)]
 
-// P2A2
+/// P2A2
 #define GENMETMACP2A2(prefix,name,argp1,argp2,i,j,k,arga1,arga2) prefix##name[argp1][argp2][STOMET1(i,j,k)][STOMET2(i,j,k)][STOMET3(i,j,k)][arga1][arga2]
 #define BASEMETMACP2A2(name,argp1,argp2,i,j,k,arga1,arga2) GENMETMACP2A2(a_,name,argp1,argp2,i,j,k,arga1,arga2)
 #define GLOBALMETMACP2A2(name,argp1,argp2,i,j,k,arga1,arga2) GENMETMACP2A2(a_s_,name,argp1,argp2,i,j,k,arga1,arga2)
@@ -640,20 +643,20 @@
 #define PTRDEFGLOBALMETMACP0A3(name,i,j,k,arga1,arga2,arga3) (*GLOBALPOINT(name))[DEFDIMMET2(i,j,k)][DEFDIMMET3(i,j,k)][arga1][arga2][arga3]
 #define PTRDEFMETMACP0A3(name,i,j,k,arga1,arga2,arga3) (*PURENAME(name))[DEFDIMMET2(i,j,k)][DEFDIMMET3(i,j,k)][arga1][arga2][arga3]
 
-// 1) Check with (for each metric variable from (e.g.) superdefs.pointers.h):
-// make superclean ; grep "MAC" *.c *.h | grep "compgeom" | grep -v "METMAC" 
-// Should result in no results for any file except for commented lines or other things on same line
+/// 1) Check with (for each metric variable from (e.g.) superdefs.pointers.h):
+/// make superclean ; grep "MAC" *.c *.h | grep "compgeom" | grep -v "METMAC" 
+/// Should result in no results for any file except for commented lines or other things on same line
 
-// 2) Ensure all METMAC calls are either global or not as should be or not.
-// make superclean ; grep "METMAC" *.c *.h
+/// 2) Ensure all METMAC calls are either global or not as should be or not.
+/// make superclean ; grep "METMAC" *.c *.h
 
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
-//
-// Instructions on how converted code to new form
-//
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////
+///
+/// Instructions on how converted code to new form
+///
+/////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////
 
 
 // Now reference any access to an array using: MAC(simplename,i,j,k) and reference a pointer (e.g. for passing via functions) as GLOBALPOINT(simplename)

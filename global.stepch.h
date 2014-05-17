@@ -1,8 +1,13 @@
 
+/*! \file global.stepch.h
+    \brief macros and definitions related to step_ch (RK stepping)
 
 // how much of Ui, dU, and Uf to keep for final solution
 // ultimately ucum is actual solution used to find final pf
 // Cunew[1]*dt*dU + Cunew[2]*CUf[2]*dt*dU + \Sum_allpriorsubsteps CUf[1]*CUF[2 prior]*dt*dU[prior]
+
+*/
+
 
 #if(MAXTIMEORDER==4)
 #define UFSET(theCUf,thedt,theUi,theUf,thedUriemann,thedUgeom,thedUnongeom) ((theCUf[0])*(theUi) + (theCUf[1])*(theUf) + (theCUf[2])*(thedt)*((thedUriemann)+(thedUgeom))  + (theCUf[NUMPREDTCUFS+0])*(thedt)*(thedUnongeom[0]) + (theCUf[NUMPREDTCUFS+1])*(thedt)*(thedUnongeom[1]) + (theCUf[NUMPREDTCUFS+2])*(thedt)*(thedUnongeom[2]) + (theCUf[NUMPREDTCUFS+3])*(thedt)*(thedUnongeom[3]) )
@@ -15,7 +20,7 @@
 #endif
 
 
-// inverse of above UFSET() (assuming only 1 dU)
+/// inverse of above UFSET() (assuming only 1 dU)
 #define dUfromUFSET(theCUf,thedt,theUi,theUf,theUfnew) ( ((theUfnew) - ((theCUf[0])*(theUi) + (theCUf[1])*(theUf)))/((theCUf[2])*(thedt)) )
 
 
