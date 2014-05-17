@@ -1,4 +1,9 @@
-// fixup stuff
+
+/*! \file fixup.funcdeclare.h
+    \brief Function declarations for fixup.c
+
+*/
+
 
 extern int check_pr(FTYPE *pr, FTYPE *prmodel, FTYPE *ucons, struct of_geom *geom, int modelpos,int finalstep);
 extern int ucon_fix(FTYPE disc, FTYPE AA, FTYPE BB, FTYPE CC,

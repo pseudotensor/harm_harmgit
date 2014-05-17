@@ -1,4 +1,10 @@
-// all fixup stuff only called for non-B advance
+
+/*! \file fixup.c
+    \brief All routines related to fixing up solution when inversion fails or floors on densities are hit
+    // all fixup stuff only called for non-B advance
+
+*/
+
 
 
 #include "decs.h"

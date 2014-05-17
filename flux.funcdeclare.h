@@ -1,4 +1,11 @@
-// stepping
+
+/*! \file flux.funcdeclare.h
+    \brief Function declarations for flux.c
+
+*/
+
+
+/// stepping
 extern int step_ch_full(int truestep,FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR], FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*Atemp)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],FTYPE (*uconstemp)[NSTORE2][NSTORE3][NPR]);
 extern void get_truetime_fluxdt(int numtimeorders, SFTYPE localdt, FTYPE (*CUf)[NUMDTCUFS], FTYPE (*Cunew)[NUMDTCUFS], SFTYPE *fluxdt, SFTYPE *boundtime, SFTYPE *fluxtime, SFTYPE *tstepparti, SFTYPE *tsteppartf);
 

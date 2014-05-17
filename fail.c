@@ -1,4 +1,10 @@
 
+/*! \file fail.c
+    \brief functions to report when failure occurs and code stops
+
+*/
+
+
 #include "decs.h"
 
 /// Called if fail occurs

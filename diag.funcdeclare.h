@@ -1,4 +1,10 @@
 
+/*! \file diag.funcdeclare.h
+    \brief diagnostics subroutine declarations
+
+*/
+
+
 extern int fail(int i, int j, int k, int loc, int fail_type);
 extern void setfailresponse(int restartonfail);
 extern void setrestart(int*appendold);

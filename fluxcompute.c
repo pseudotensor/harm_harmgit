@@ -1,21 +1,26 @@
 
+/*! \file fluxcompute.c
+    \brief Per-point calculations for getting flux.
+    // ideas:
+    // GODMARK: Consider ZIP-average for non-diffusive part of LAXF or HLL flux
+    // Chacon (2004) Computer Physics Communications
+
+*/
+
+
 #include "decs.h"
 
-// ideas:
-// GODMARK: Consider ZIP-average for non-diffusive part of LAXF or HLL flux
-// Chacon (2004) Computer Physics Communications
 
 
 static void diag_fluxdump_1(int dir, int i, int j, int k, FTYPE *p_l, FTYPE *p_r, FTYPE *F_l, FTYPE *F_r);
 
 
+///////////////////////////////////
+///
+/// actually compute the flux and ctop for dt calculation
+///
 //////////////////////////////////
-//
-// actually compute the flux and ctop for dt calculation
-//
-/////////////////////////////////
-
-// actually compute flux from given data
+/// actually compute flux from given data
 int flux_compute_general(int i, int j, int k, int dir, struct of_geom *ptrgeom, FTYPE CUf, FTYPE *p_c, FTYPE *p_l, FTYPE *p_r, FTYPE *F, FTYPE *ctopallptr)
 {
   int flux_compute(int i, int j, int k, int dir, struct of_geom *geom, FTYPE *cminmax_l, FTYPE *cminmax_r, FTYPE *cminmax, FTYPE ctopmhd, FTYPE *cminmaxrad_l, FTYPE *cminmaxrad_r, FTYPE *cminmaxrad, FTYPE ctoprad, FTYPE CUf, FTYPE *p_l, FTYPE *p_r, FTYPE *U_l, FTYPE *U_r, FTYPE *F_l, FTYPE *F_r, FTYPE *F);
@@ -80,9 +85,9 @@ int flux_compute_general(int i, int j, int k, int dir, struct of_geom *ptrgeom, 
 
 
 
-// actually compute flux from given data
-// here F is MA only and FEM is EM only
-// only should be needed for old a2c method
+/// actually compute flux from given data
+/// here F is MA only and FEM is EM only
+/// only should be needed for old a2c method
 int flux_compute_splitmaem(int i, int j, int k, int dir, struct of_geom *ptrgeom, FTYPE CUf, FTYPE *p_c, FTYPE *p_l, FTYPE *p_r, FTYPE *F, FTYPE *FEM, FTYPE *ctopallptr)
 {
   int flux_compute(int i, int j, int k, int dir, struct of_geom *geom, FTYPE *cminmax_l, FTYPE *cminmax_r, FTYPE *cminmax, FTYPE ctopmhd, FTYPE *cminmaxrad_l, FTYPE *cminmaxrad_r, FTYPE *cminmaxrad, FTYPE ctoprad, FTYPE CUf, FTYPE *p_l, FTYPE *p_r, FTYPE *U_l, FTYPE *U_r, FTYPE *F_l, FTYPE *F_r, FTYPE *F);
@@ -152,7 +157,7 @@ int flux_compute_splitmaem(int i, int j, int k, int dir, struct of_geom *ptrgeom
 
 
 
-
+/// P->sate,flux,U
 int p2SFUevolve(int dir, int isleftright, FTYPE *p, struct of_geom *ptrgeom, struct of_state **ptrstate, FTYPE *F, FTYPE *U)
 {
   MYFUN(get_stateforfluxcalc(dir,isleftright, p, ptrgeom, ptrstate),"flux.c:p2SFUevolve", "get_state()", 1);
@@ -171,6 +176,7 @@ int p2SFUevolve(int dir, int isleftright, FTYPE *p, struct of_geom *ptrgeom, str
 }
 
 
+/// P->sate,flux,U for splitmaem method
 int p2SFUevolve_splitmaem(int dir, int isleftright, FTYPE *p, struct of_geom *ptrgeom, struct of_state **ptrstate, FTYPE *F, FTYPE *FEM, FTYPE *U, FTYPE *UEM)
 {
 
@@ -193,7 +199,7 @@ int p2SFUevolve_splitmaem(int dir, int isleftright, FTYPE *p, struct of_geom *pt
 
 
 
-
+/// DEBUG flux store
 void diag_fluxdump_1(int dir, int i, int j, int k, FTYPE *p_l, FTYPE *p_r, FTYPE *F_l, FTYPE *F_r)
 {
   int pl,pliter;
@@ -217,40 +223,40 @@ void diag_fluxdump_1(int dir, int i, int j, int k, FTYPE *p_l, FTYPE *p_r, FTYPE
 
 
 
-// Harten-Lax-van Leer
+/// Harten-Lax-van Leer
 #define HLLCOMPUTE(cmin,cmax,U_l,U_r,F_l,F_r) ((  (cmax * F_l + cmin * F_r) - (FLUXDISSIPATION)*(cmax * cmin) * (U_r - U_l) ) / (cmax + cmin) )
 
-// Lax-Friedrichs with Rusanov wave speed
+/// Lax-Friedrichs with Rusanov wave speed
 #define LAXFCOMPUTE(ctop,U_l,U_r,F_l,F_r) (0.5 * ( (F_l + F_r) - (FLUXDISSIPATION)*ctop * (U_r - U_l) ) )
 //#define LAXFCOMPUTE(ctop,U_l,U_r,F_l,F_r) (0.5 * ( (F_l + F_r) ) )
 //#define LAXFCOMPUTE(ctop,U_l,U_r,F_l,F_r) (0.5 * ( (F_l + F_r) - (FLUXDISSIPATION)*fabs(ctop) * fabs(U_r - U_l) ) )
 //#define LAXFCOMPUTE(ctop,U_l,U_r,F_l,F_r) (0.5 * ( (F_l + F_r) - (FLUXDISSIPATION)*1E-5 * (U_r - U_l) ) )
 
-// Lax-Friedrichs flux
+/// Lax-Friedrichs flux
 #define LFCOMPUTE(crus,U_l,U_r,F_l,F_r) (0.5*( (F_l+F_r) - (FLUXDISSIPATION)*crus*(U_r - U_l)))
 
-// mid-step for 2-step LW-flux
+/// mid-step for 2-step LW-flux
 #define UHALF(crus,U_l, U_r, F_l, F_r) (0.5*((U_l+U_r)-(FLUXDISSIPATION)*(F_r-F_l)/crus))
 
-// 2-step Lax-Wendroff flux
+/// 2-step Lax-Wendroff flux
 #define LWCOMPUTE(crus,U_l,U_r,F_l,Fhalf,F_r) (Fhalf)
 
-// FORCE
+/// FORCE
 #define FORCECOMPUTE(crus,U_l,U_r,F_l,Fhalf,F_r) (0.25*( (F_l+F_r) + 2.0*Fhalf - (FLUXDISSIPATION)*crus*(U_r - U_l)))
 
-// GFORCE // Toro & Titarev JCP 2006
+/// GFORCE // Toro & Titarev JCP 2006
 #define GFORCECOMPUTE(cg,crus,U_l,U_r,F_l,Fhalf,F_r) ( (LWCOMPUTE(crus,U_l,U_r,F_l,Fhalf,F_r) + cg*LFCOMPUTE(crus,U_l,U_r,F_l,F_r))/(1.0+cg) )
 
 
-// use more HLL as f_s from 0 to 1, use more LAXF as f_s from 1 to 0
+/// use more HLL as f_s from 0 to 1, use more LAXF as f_s from 1 to 0
 #define HLLLAXF1(cmin,cmax,ctop,f_s, U_l, U_r, F_l, F_r)  ( HLLCOMPUTE(cmin,cmax,U_l,U_r,F_l,F_r)*f_s + LAXFCOMPUTE(ctop,U_l,U_r,F_l,F_r)*(1.0-f_s) )
 
 
 
 
 
-// actually compute flux from given data
-// GODMARK: right now if splitmaem==1 assumes F is linear in FMA and FEM. In general Riemann solver should return FMA and FEM in parts
+/// actually compute flux from given data
+/// GODMARK: right now if splitmaem==1 assumes F is linear in FMA and FEM. In general Riemann solver should return FMA and FEM in parts
 int flux_compute(int i, int j, int k, int dir, struct of_geom *geom, FTYPE *cminmax_l, FTYPE *cminmax_r, FTYPE *cminmax, FTYPE ctopmhd, FTYPE *cminmaxrad_l, FTYPE *cminmaxrad_r, FTYPE *cminmaxrad, FTYPE ctoprad, FTYPE CUf, FTYPE *p_l, FTYPE *p_r, FTYPE *U_l, FTYPE *U_r, FTYPE *F_l, FTYPE *F_r, FTYPE *F)
 {
   int pl,pliter;
@@ -466,9 +472,10 @@ int flux_compute(int i, int j, int k, int dir, struct of_geom *geom, FTYPE *cmin
 
 
 
-// e.g. double rarefaction Einfelt test (test2 in Liska & Wendroff 2003) leads to F at interface corresponding to negative pressure.  This is supposed to correct for that.  Leads to slightly better solution except for near center
+/// e.g. double rarefaction Einfelt test (test2 in Liska & Wendroff 2003) leads to F at interface corresponding to negative pressure.  This is supposed to correct for that.  Leads to slightly better solution except for near center
 #define USE_CORRECTED_STATES 0
 
+/// compute HLL flux
 int hllflux_compute(int dir,struct of_geom *geom, FTYPE *cmin, FTYPE *cmax, FTYPE *ctop, FTYPE *p_l, FTYPE *p_r, FTYPE *U_l, FTYPE *U_r,FTYPE *F_l,FTYPE *F_r, FTYPE *F)
 {
   int pl,pliter;
@@ -517,8 +524,8 @@ int hllflux_compute(int dir,struct of_geom *geom, FTYPE *cmin, FTYPE *cmax, FTYP
 
 
 #define MUSTACOEF (1.0)
-// exactly 1.0 works good with MUSTAHLL to give stationary contact
-// works good with MUSTAHLL
+/// exactly 1.0 works good with MUSTAHLL to give stationary contact
+/// works good with MUSTAHLL
 
 //#define MUSTACOEF (1.0)
 // HLL+0.9 gives nice and smooth Noh, but blurs stationary contact
@@ -547,7 +554,7 @@ int hllflux_compute(int dir,struct of_geom *geom, FTYPE *cmin, FTYPE *cmax, FTYP
 // does ok with rarefaction, but fails a bit like MUSTAHLL w/ MUSTACOEF=1.0
 // bit more oscillatory in flat region for Noh
 
-
+/// force flux
 int forceflux_compute(int dir,struct of_geom *geom, FTYPE *cmin, FTYPE *cmax, FTYPE *ctop, FTYPE *cforce, FTYPE *p_l, FTYPE *p_r, FTYPE *U_l, FTYPE *U_r,FTYPE *F_l,FTYPE *F_r, FTYPE *F)
 {
   int pl,pliter;
@@ -629,16 +636,16 @@ int forceflux_compute(int dir,struct of_geom *geom, FTYPE *cmin, FTYPE *cmax, FT
 
 
 
-// number of single-cell musta iterations
+/// number of single-cell musta iterations
 #define NUMMUSTAITERS 1
 
-// whether to do mutli-cell version of MUSTA
+/// whether to do mutli-cell version of MUSTA
 #define DOMULTICELL 0
-// number of multicell musta iterations
+/// number of multicell musta iterations
 #define NUMMULTIMUSTAITERS 2 // 1=expensive way to do no musta, 2 minimum for interesting calculation
-// NUMMULTIMUSTAITERS=2 and NUMLOCALCELLS=1 is simplest scheme
-// multicell much much slower than single cell version
-// number of musta cells
+/// NUMMULTIMUSTAITERS=2 and NUMLOCALCELLS=1 is simplest scheme
+/// multicell much much slower than single cell version
+/// number of musta cells
 #define NUMLOCALCELLS 2
 #define MULTIMUSTACOEF (0.9)
 
@@ -658,7 +665,7 @@ int forceflux_compute(int dir,struct of_geom *geom, FTYPE *cmin, FTYPE *cmax, FT
 // whether to limit MUSTA by some fraction of HLL
 #define HLLBOUNDMUSTA 0
 
-
+/// musta flux
 int mustaflux_compute(int dir,struct of_geom *geom, FTYPE *cmin_l, FTYPE *cmin_r, FTYPE *cmax_l, FTYPE *cmax_r, FTYPE *cmin, FTYPE *cmax, FTYPE *ctop, FTYPE *cforce, FTYPE *p_l, FTYPE *p_r, FTYPE *U_l, FTYPE *U_r,FTYPE *F_l,FTYPE *F_r, FTYPE *F)
 {
   int musta1flux_compute(int dir,struct of_geom *geom, FTYPE *cmin_l, FTYPE *cmin_r, FTYPE *cmax_l, FTYPE *cmax_r, FTYPE *cmin, FTYPE *cmax, FTYPE *ctop, FTYPE *cforce, FTYPE *p_l, FTYPE *p_r, FTYPE *U_l, FTYPE *U_r,FTYPE *F_l,FTYPE *F_r, FTYPE *F);
@@ -794,7 +801,7 @@ int mustaflux_compute(int dir,struct of_geom *geom, FTYPE *cmin_l, FTYPE *cmin_r
 
 
 
-// first version of MUSTA flux
+/// first version of MUSTA flux
 int musta1flux_compute(int dir,struct of_geom *geom, FTYPE *cmin_l, FTYPE *cmin_r, FTYPE *cmax_l, FTYPE *cmax_r, FTYPE *cmin, FTYPE *cmax, FTYPE *ctop, FTYPE *cforce, FTYPE *p_l, FTYPE *p_r, FTYPE *U_l, FTYPE *U_r,FTYPE *F_l,FTYPE *F_r, FTYPE *F)
 {
   int forceflux_compute(int dir,struct of_geom *geom, FTYPE *cmin, FTYPE *cmax, FTYPE *ctop, FTYPE *cforce, FTYPE *p_l, FTYPE *p_r, FTYPE *U_l, FTYPE *U_r,FTYPE *F_l,FTYPE *F_r, FTYPE *F);
@@ -1127,7 +1134,7 @@ int musta1flux_compute(int dir,struct of_geom *geom, FTYPE *cmin_l, FTYPE *cmin_
 
 
 
-// second (multi-cell) version of MUSTA flux
+/// second (multi-cell) version of MUSTA flux
 int musta2flux_compute(int dir,struct of_geom *geom, FTYPE *cmin_l, FTYPE *cmin_r, FTYPE *cmax_l, FTYPE *cmax_r, FTYPE *cmin, FTYPE *cmax, FTYPE *ctop, FTYPE *cforce, FTYPE *p_l, FTYPE *p_r, FTYPE *U_l, FTYPE *U_r,FTYPE *F_l,FTYPE *F_r, FTYPE *F)
 {
   int forceflux_compute(int dir,struct of_geom *geom, FTYPE *cmin, FTYPE *cmax, FTYPE *ctop, FTYPE *cforce, FTYPE *p_l, FTYPE *p_r, FTYPE *U_l, FTYPE *U_r,FTYPE *F_l,FTYPE *F_r, FTYPE *F);
@@ -1361,7 +1368,7 @@ int musta2flux_compute(int dir,struct of_geom *geom, FTYPE *cmin_l, FTYPE *cmin_
 
 
 
-// choose flux form
+/// choose flux form
 void choose_flux(int i, int j, int k, int pl, FTYPE *laxffrac,FTYPE *hllfrac)
 {
 #if(FLUXADJUST)

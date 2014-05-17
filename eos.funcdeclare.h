@@ -1,4 +1,14 @@
+
+/*! \file eos.funcdeclare.h
+  \brief Equation of State function declarations
+*/
+
+
+/////
+//
 // some useful wrappers for user simplicity:
+//
+////
 extern FTYPE pressure_rho0_u_simple(int i, int j, int k, int loc, FTYPE rho, FTYPE u);
 extern FTYPE pressure_rho0_u_simple_forcheckinversion(int i, int j, int k, int loc, FTYPE rho, FTYPE u);
 extern FTYPE u_rho0_p_simple(int i, int j, int k, int loc, FTYPE rho, FTYPE p);
@@ -24,7 +34,12 @@ extern FTYPE compute_qdot_simple(int i, int j, int k, int loc, FTYPE rho, FTYPE 
 extern FTYPE dpdrho0_rho0_u_simple(int i, int j, int k, int loc, FTYPE rho, FTYPE u);
 extern FTYPE dpdu_rho0_u_simple(int i, int j, int k, int loc, FTYPE rho, FTYPE u);
 
+
+/////
+//
 // other wrappers
+//
+/////
 extern int ufromentropy_calc(struct of_geom *ptrgeom, FTYPE entropy, FTYPE *pr);
 extern int entropy_calc(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *entropy);
 extern int entropy_calc_forcheckinversion(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *entropy);
@@ -34,7 +49,11 @@ extern int invertentropyflux_calc(struct of_geom *ptrgeom, FTYPE entropyflux,int
 // for old inversion methods:
 extern FTYPE pressure_rho0_w(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE w);
 
+////
+//
 // eos stuff [should be consistent with defs.general.h ptr's and eos.c assignment to pointers and eos.c,idealgaseos.c,etc. versions of those functions.]
+//
+////
 extern int pickeos_eomtype(int whicheosinput, int whicheom, int *whicheosoutput);
 extern int initeos_eomtype(void);
 
@@ -70,8 +89,11 @@ extern void getall_forinversion(int whicheos, int eomtype, int whichd, FTYPE *EO
 
 
 
-
+///
+//
 // SPECIAL KAZ EOS GLOBAL FUNCTIONS:
+//
+///
 extern void initeos_kazfulleos(void);
 extern void read_setup_eostable(void);
 
