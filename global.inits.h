@@ -1,3 +1,8 @@
+
+/*! \file global.inits.h
+  \brief Function declarations (used globally) from init.tools.c
+ */
+
 extern int setRin_withchecks(FTYPE *rin);
 extern int user1_prepre_init_specific_init(void);
 extern int user1_init_conservatives(int *fieldfrompotential, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*Utemp)[NSTORE2][NSTORE3][NPR], FTYPE (*U)[NSTORE2][NSTORE3][NPR]);

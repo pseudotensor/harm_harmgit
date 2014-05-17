@@ -1,6 +1,6 @@
 
 /*! \file global.bounds.h
-  \brief Function declarations (used globally) for bounds.c
+  \brief Function declarations (used globally) from bounds.tools.c
  */
 
 

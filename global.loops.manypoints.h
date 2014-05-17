@@ -1,32 +1,30 @@
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-// LOOPS (not computational, but not per-point.  So still over i,j,k but diagnostic or other).
-//
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/*! \file global.loops.manypoints.h
+    \brief Multi-point loop related definitions/macros
+
+    // LOOPS (not computational, but not per-point.  So still over i,j,k but diagnostic or other).
+    
+*/
+
+//////////////////////////////////////
+//////////////////////////////////////
+///
+/// MOST GENERAL LOOP copy.  While fast, does not allow for control over loop order in memory.
+///
+//////////////////////////////////////
+//////////////////////////////////////
 
 
-/////////////////////////////////////
-/////////////////////////////////////
-//
-// MOST GENERAL LOOP copy.  While fast, does not allow for control over loop order in memory.
-//
-/////////////////////////////////////
-/////////////////////////////////////
-
-
-// Sasha's dad and google say memcopy() and memmove() can be much faster than loop if compiler doesn't recognize this optimization.  So best to force it in simple cases
+/// Sasha's dad and google say memcopy() and memmove() can be much faster than loop if compiler doesn't recognize this optimization.  So best to force it in simple cases
 #define USE_MEMCPY 1
 
-// applies to continugous memory regions (i.e. feed single pointer for source, size of data to copy in its own dimensions)
+/// applies to continugous memory regions (i.e. feed single pointer for source, size of data to copy in its own dimensions)
 #if(USE_MEMCPY)
 // iter not used
 #define GENFORALL(iter,src,dest,numelem) memcpy(dest, src, numelem*sizeof(src[0]))
 #define GENFORALLOVERLAP(iter,src,dest,numelem) memmove(dest, src, numelem*sizeof(src[0]))
 #else
-// assumes iteration is single (i.e. all data from start to finish)
+/// assumes iteration is single (i.e. all data from start to finish)
 #define GENFORALL(iter,src,dest,numelem)        \
   for (iter = 0; iter < numelem; iter++)        \
     {                                           \
@@ -36,41 +34,41 @@
 #endif
 
 
-/////////////////////////////////////
-/////////////////////////////////////
-//
-// Many-point loops (but not computational)
-//
-/////////////////////////////////////
-/////////////////////////////////////
+//////////////////////////////////////
+//////////////////////////////////////
+///
+/// Many-point loops (but not computational)
+///
+//////////////////////////////////////
+//////////////////////////////////////
 
 
 
-///////////////////
-//
-// below are each per-spatial-dimension loops used later to contruct a multi-dimensionan loop of any order
-//
-///////////////////
+////////////////////
+///
+/// below are each per-spatial-dimension loops used later to contruct a multi-dimensionan loop of any order
+///
+////////////////////
 
 
-// these loops used for general purposes
+/// these loops used for general purposes
 #define LOOPF3 for(k=INFULL3;k<=OUTFULL3;k++)
 #define LOOPF2 for(j=INFULL2;j<=OUTFULL2;j++)
 #define LOOPF1 for(i=INFULL1;i<=OUTFULL1;i++)
 
-// only used to initialize emf[]
+/// only used to initialize emf[]
 #define LOOPFPM3 for(k=INFULL3-SHIFT3;k<=OUTFULL3+SHIFT3;k++)
 #define LOOPFPM2 for(j=INFULL2-SHIFT2;j<=OUTFULL2+SHIFT2;j++)
 #define LOOPFPM1 for(i=INFULL1-SHIFT1;i<=OUTFULL1+SHIFT1;i++)
 
 
-// full loop + 1 on outer edge for emf or corner quantities
+/// full loop + 1 on outer edge for emf or corner quantities
 #define LOOPFP13 for(k=INFULL3;k<=OUTFULLP13;k++)
 #define LOOPFP12 for(j=INFULL2;j<=OUTFULLP12;j++)
 #define LOOPFP11 for(i=INFULL1;i<=OUTFULLP11;i++)
 
 
-// full loop + 1 (shift away from boundary) on inner edge for comptuing emf or corner quantities
+/// full loop + 1 (shift away from boundary) on inner edge for comptuing emf or corner quantities
 //#define LOOPINFP13 for(k=INFULLP13;k<=OUTFULL3;k++)
 //#define LOOPINFP12 for(j=INFULLP12;j<=OUTFULL2;j++)
 //#define LOOPINFP11 for(i=INFULLP11;i<=OUTFULL1;i++)
@@ -108,10 +106,10 @@
 #define LOOPINT2 for(j=intix2;j<intox2;j++)
 #define LOOPINT1 for(i=intix1;i<intox1;i++)
 
-// SUPERGEN and GEN are super general and general, but still to be used with only spatial arrays related to spatial (N1,N2,N3) directions in i,j,k.  Can create non-spatial general loop if required
-// PACKLOOP() in boundmpi.c and PACKLOOP_INT() boundmpiint.c uses these correctly since refer to i,j,k in correct order
-// SUPERGENLOOP() as used in interpline.c is correct since always refer to i,j,k in correct order
-// GENLOOP() in diag.c correctly uses i,j,k in order
+/// SUPERGEN and GEN are super general and general, but still to be used with only spatial arrays related to spatial (N1,N2,N3) directions in i,j,k.  Can create non-spatial general loop if required
+/// PACKLOOP() in boundmpi.c and PACKLOOP_INT() boundmpiint.c uses these correctly since refer to i,j,k in correct order
+/// SUPERGENLOOP() as used in interpline.c is correct since always refer to i,j,k in correct order
+/// GENLOOP() in diag.c correctly uses i,j,k in order
 #define SUPERGENLOOP1(i,istart,istop,di) for((i)=(istart);(di>0 ? (i)<=(istop) : (i)>=(istop)); (i)+=(di))
 #define SUPERGENLOOP2(j,jstart,jstop,dj) for((j)=(jstart);(dj>0 ? (j)<=(jstop) : (j)>=(jstop)); (j)+=(dj))
 #define SUPERGENLOOP3(k,kstart,kstop,dk) for((k)=(kstart);(dk>0 ? (k)<=(kstop) : (k)>=(kstop)); (k)+=(dk))
@@ -133,21 +131,21 @@
 
 
 
-///////////////////
-//
-// below are different ways of combining each spatial direction
-//
-///////////////////
+////////////////////
+///
+/// below are different ways of combining each spatial direction
+///
+////////////////////
 
 
 
-// general loop for any indicies
+/// general loop for any indicies
 #define SUPERGENLOOP(i,j,k,istart,istop,jstart,jstop,kstart,kstop,di,dj,dk) LOOPORDER1(SUPERGENLOOP1(i,istart,istop,di),SUPERGENLOOP2(j,jstart,jstop,dj),SUPERGENLOOP3(k,kstart,kstop,dk)) LOOPORDER2(SUPERGENLOOP1(i,istart,istop,di),SUPERGENLOOP2(j,jstart,jstop,dj),SUPERGENLOOP3(k,kstart,kstop,dk)) LOOPORDER3(SUPERGENLOOP1(i,istart,istop,di),SUPERGENLOOP2(j,jstart,jstop,dj),SUPERGENLOOP3(k,kstart,kstop,dk))
-// general loop for any indicies
+/// general loop for any indicies
 #define GENLOOP(i,j,k,istart,istop,jstart,jstop,kstart,kstop) LOOPORDER1(GENLOOP1(i,istart,istop),GENLOOP2(j,jstart,jstop),GENLOOP3(k,kstart,kstop)) LOOPORDER2(GENLOOP1(i,istart,istop),GENLOOP2(j,jstart,jstop),GENLOOP3(k,kstart,kstop)) LOOPORDER3(GENLOOP1(i,istart,istop),GENLOOP2(j,jstart,jstop),GENLOOP3(k,kstart,kstop))
-// general loop, but assumes i,j,k used
+/// general loop, but assumes i,j,k used
 #define ZSLOOP(istart,istop,jstart,jstop,kstart,kstop) LOOPORDER1(ZSLOOP1(istart,istop),ZSLOOP2(jstart,jstop),ZSLOOP3(kstart,kstop)) LOOPORDER2(ZSLOOP1(istart,istop),ZSLOOP2(jstart,jstop),ZSLOOP3(kstart,kstop)) LOOPORDER3(ZSLOOP1(istart,istop),ZSLOOP2(jstart,jstop),ZSLOOP3(kstart,kstop))
-// below used for initialization and such, not a computational issue
+/// below used for initialization and such, not a computational issue
 #define LOOPF LOOPORDER1(LOOPF1,LOOPF2,LOOPF3) LOOPORDER2(LOOPF1,LOOPF2,LOOPF3) LOOPORDER3(LOOPF1,LOOPF2,LOOPF3)
 
 #define LOOPFPM LOOPORDER1(LOOPF1,LOOPFPM2,LOOPFPM3) LOOPORDER2(LOOPFPM1,LOOPFPM2,LOOPFPM3) LOOPORDER3(LOOPFPM1,LOOPFPM2,LOOPFPM3)
@@ -165,11 +163,11 @@
 #define LOOPHP LOOPORDER1(LOOPHP1,LOOPHP2,LOOPHP3) LOOPORDER2(LOOPHP1,LOOPHP2,LOOPHP3) LOOPORDER3(LOOPHP1,LOOPHP2,LOOPHP3)
 #define LOOPC LOOPORDER1(LOOPC1,LOOPC2,LOOPC3) LOOPORDER2(LOOPC1,LOOPC2,LOOPC3) LOOPORDER3(LOOPC1,LOOPC2,LOOPC3)
 #define FULLLOOP LOOPF
-// larger loop than full for cornered quantities such as emf defined on corners that need to be initialized for boundary condition reasons
+/// larger loop than full for cornered quantities such as emf defined on corners that need to be initialized for boundary condition reasons
 #define FULLLOOPP1 LOOPORDER1(LOOPFP11,LOOPFP12,LOOPFP13) LOOPORDER2(LOOPFP11,LOOPFP12,LOOPFP13) LOOPORDER3(LOOPFP11,LOOPFP12,LOOPFP13)
-// divb loop (for diagnostics only)
+/// divb loop (for diagnostics only)
 //#define LOOPDIVB LOOPORDER1(LOOPP11,LOOPP12,LOOPP13) LOOPORDER2(LOOPP11,LOOPP12,LOOPP13) LOOPORDER3(LOOPP11,LOOPP12,LOOPP13)
-// boundary zones may not require divb=0 since proxy for flux
+/// boundary zones may not require divb=0 since proxy for flux
 #define LOOPDIVB LOOPORDER1(LOOPC1,LOOPC2,LOOPC3) LOOPORDER2(LOOPC1,LOOPC2,LOOPC3) LOOPORDER3(LOOPC1,LOOPC2,LOOPC3)
 
 
@@ -180,11 +178,11 @@
 
 
 
-///////////////////
-//
-// below are not original multi-D combindations, just renamings that have no control over order of dimensions
-//
-///////////////////
+////////////////////
+///
+/// below are not original multi-D combindations, just renamings that have no control over order of dimensions
+///
+////////////////////
 #define LOOPFC LOOPF
 #define LOOPHC LOOPH
 #define LOOPFMHPC LOOPFMHP

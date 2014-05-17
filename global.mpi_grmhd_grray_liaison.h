@@ -1,3 +1,9 @@
+
+/*! \file global.mpi_grmhd_grray_liaison.h
+    \brief Fundamental code that chooses to do HARM or LIAISON
+
+
+
 //////////////
 //
 // To use mpi_grmhd_grray_liaison.c code:
@@ -11,7 +17,10 @@
 // 4) Use one of 3 *_globalset() functions below or use local versions as inside grmhd_grray_liaison.c in order to initialize use of code when doing or not doing liaisonmode
 // 5) 
 
-// assumes local code sets USEMPIGRMHD and USEMPIGRRAY
+*/
+
+
+/// assumes local code sets USEMPIGRMHD and USEMPIGRRAY
 #define USEMPINONLIAISON (USEMPIGRMHD&&DOINGGRMHDTYPECODE || USEMPIGRRAY&&DOINGGRRAYTYPECODE) // no choice
 #define USEMPILIAISON (DOINGLIAISON) // can turn off USEMPILIAISON if DOINGLIAISON==1 but want no MPI code for liaison.  However, if DOINGLIAISON==0 then USEMPILIAISON must be 0
 
@@ -19,7 +28,7 @@
 
 
 
-/////// each cpu identifies its binary type in an array
+//////// each cpu identifies its binary type in an array
 #define BINARYNOTYPE 0
 #define BINARYGRMHDTYPE 1
 #define BINARYGRRAYTYPE 2
@@ -30,12 +39,12 @@
 #define MPI_Comm int
 #endif
 
-////////////
-//
-// functions to call if using global variables
-// If want to use local functions, then see inside mpi_grmhd_grray_liaison.c for function declarations
-//
-////////////
+/////////////
+///
+/// functions to call if using global variables
+/// If want to use local functions, then see inside mpi_grmhd_grray_liaison.c for function declarations
+///
+/////////////
 extern void liaison_init_mpi_liaisonmode_globalset(void);
 extern void grmhd_init_mpi_liaisonmode_globalset(void);
 extern void grray_init_mpi_liaisonmode_globalset(void);

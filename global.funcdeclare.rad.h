@@ -1,4 +1,9 @@
 
+/*! \file global.funcdeclare.rad.h
+  \brief Function declarations (used globally) from RADIATION parts of code
+ */
+
+
 extern void mhd_calc_rad(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, FTYPE *radstressdir, FTYPE *radstressdirabs);
 extern FTYPE my_min(FTYPE a, FTYPE b);
 extern FTYPE my_sign(FTYPE x);

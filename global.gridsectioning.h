@@ -1,11 +1,18 @@
-// Sasha related enerregion's to grid sectioning, e.g. NUMENERREGIONS
 
-// See initbase.gridsectioning.c for comments
-// There is no user/problem-dependent code here
+/*! \file global.gridsectioning.h
+  \brief Definitions and macros for grid sectioning
+
+  // Sasha related enerregion's to grid sectioning, e.g. NUMENERREGIONS
+  // See initbase.gridsectioning.c for comments
+  // There is no user/problem-dependent code here
+ */
+
+
+
 
 #if( DOGRIDSECTIONING )
 
-//corrections to be applied to loops
+///corrections to be applied to loops
 #define SHIFTX1DN (enerposreg[ACTIVEREGION][X1DN]-0)
 #define SHIFTX1UP (enerposreg[ACTIVEREGION][X1UP]-(N1-1))
 #define SHIFTX2DN (enerposreg[ACTIVEREGION][X2DN]-0)
@@ -15,7 +22,7 @@
 
 #else
 
-//no sectioning -- zero corrections
+///no sectioning -- zero corrections
 #define SHIFTX1DN (0)
 #define SHIFTX1UP (0)
 #define SHIFTX2DN (0)
@@ -26,7 +33,7 @@
 #endif
 
 
-// Below WITHINACTIVESECTION() applies to only active computed cells not including their used boundary cells
+/// Below WITHINACTIVESECTION() applies to only active computed cells not including their used boundary cells
 #if( DOGRIDSECTIONING )
 #define WITHINACTIVESECTION(ri,rj,rk) ( ri >= enerposreg[ACTIVEREGION][X1DN] && ri <= enerposreg[ACTIVEREGION][X1UP] \
                                         && rj >= enerposreg[ACTIVEREGION][X2DN] && rj <= enerposreg[ACTIVEREGION][X2UP] \
@@ -36,7 +43,7 @@
 #endif
 
 
-// Below WITHINACTIVESECTIONEXPAND1() applies to only active computed cells with +-1 boundary cells.  Used, e.g., for setting timestep since often don't want to set timestep in same region flux is computed since just happens that needed p_l and p_r for CT method where fluxes end up not used
+/// Below WITHINACTIVESECTIONEXPAND1() applies to only active computed cells with +-1 boundary cells.  Used, e.g., for setting timestep since often don't want to set timestep in same region flux is computed since just happens that needed p_l and p_r for CT method where fluxes end up not used
 #if( DOGRIDSECTIONING )
 
 #define WITHINACTIVESECTIONEXPAND1(ri,rj,rk) ( ri >= enerposreg[ACTIVEREGION][X1DN]-SHIFT1 && ri <= enerposreg[ACTIVEREGION][X1UP]+SHIFT1 \
@@ -67,7 +74,7 @@
 #endif
 
 
-// Below WITHINACTIVEWITHBNDSECTION() applies to active computed cells including their used boundary cells
+/// Below WITHINACTIVEWITHBNDSECTION() applies to active computed cells including their used boundary cells
 #if( DOGRIDSECTIONING )
 #define WITHINACTIVEWITHBNDSECTION(ri,rj,rk) ( ri >= enerposreg[ACTIVEWITHBNDREGION][X1DN] && ri <= enerposreg[ACTIVEWITHBNDREGION][X1UP] \
                                                && rj >= enerposreg[ACTIVEWITHBNDREGION][X2DN] && rj <= enerposreg[ACTIVEWITHBNDREGION][X2UP] \
@@ -77,7 +84,7 @@
 #endif
 
 
-// Below WITHINACTIVEWITHBNDSECTION() applies to active computed cells including their used boundary cells
+/// Below WITHINACTIVEWITHBNDSECTION() applies to active computed cells including their used boundary cells
 #if( DOGRIDSECTIONING )
 #define WITHINACTIVESTAGWITHBNDSECTIONX1(ri,rj,rk) ( ri >= enerposreg[ACTIVEWITHBNDREGION][X1DN] && ri <= MIN(1+enerposreg[ACTIVEWITHBNDREGION][X1UP],N1-1+N1BND) \
                                                      && rj >= enerposreg[ACTIVEWITHBNDREGION][X2DN] && rj <= enerposreg[ACTIVEWITHBNDREGION][X2UP] \
@@ -89,7 +96,7 @@
                                                      && rj >= enerposreg[ACTIVEWITHBNDREGION][X2DN] && rj <= enerposreg[ACTIVEWITHBNDREGION][X2UP] \
                                                      && rk >= enerposreg[ACTIVEWITHBNDREGION][X3DN] && rk <= MIN(1+enerposreg[ACTIVEWITHBNDREGION][X3UP],N3-1+N3BND) )
 #else
-// all same
+/// all same
 #define WITHINACTIVESTAGWITHBNDSECTIONX1(ri,rj,rk) (ri >=-N1BND && ri<=N1-1+N1BND && rj>=-N2BND && rj<=N2-1+N2BND && rk>=-N3BND && rk<=N3-1+N3BND )  //always within active section since no sectioning (JCM: No, this is only comp+bnd cells)
 #define WITHINACTIVESTAGWITHBNDSECTIONX2(ri,rj,rk) (ri >=-N1BND && ri<=N1-1+N1BND && rj>=-N2BND && rj<=N2-1+N2BND && rk>=-N3BND && rk<=N3-1+N3BND )  //always within active section since no sectioning (JCM: No, this is only comp+bnd cells)
 #define WITHINACTIVESTAGWITHBNDSECTIONX3(ri,rj,rk) (ri >=-N1BND && ri<=N1-1+N1BND && rj>=-N2BND && rj<=N2-1+N2BND && rk>=-N3BND && rk<=N3-1+N3BND )  //always within active section since no sectioning (JCM: No, this is only comp+bnd cells)
@@ -97,8 +104,8 @@
 
 
 
-// Below WITHINACTIVEBNDSECTION() applies to only the boundary cells of active computed cells
-// Applies to centered quantities
+/// Below WITHINACTIVEBNDSECTION() applies to only the boundary cells of active computed cells
+/// Applies to centered quantities
 #if( DOGRIDSECTIONING )
 #define WITHINACTIVEBNDSECTION(ri,rj,rk) (                              \
                                           (((ri >= enerposreg[ACTIVEWITHBNDREGION][X1DN] && ri < enerposreg[ACTIVEREGION][X1DN]) || (ri <= enerposreg[ACTIVEWITHBNDREGION][X1UP] && ri > enerposreg[ACTIVEREGION][X1UP])) && (rj >= enerposreg[ACTIVEWITHBNDREGION][X2DN] && rj <= enerposreg[ACTIVEWITHBNDREGION][X2UP] && rk >= enerposreg[ACTIVEWITHBNDREGION][X3DN] && rk <= enerposreg[ACTIVEWITHBNDREGION][X3UP])) \
@@ -113,8 +120,8 @@
                                            )
 #endif
 
-// Below WITHINACTIVEBNDSECTION() applies to only the boundary cells of active computed cells
-// Applies to staggered quantities (e.g. i=0 is boundary cell for fixed BCs)
+/// Below WITHINACTIVEBNDSECTION() applies to only the boundary cells of active computed cells
+/// Applies to staggered quantities (e.g. i=0 is boundary cell for fixed BCs)
 #if( DOGRIDSECTIONING )
 #define WITHINACTIVESTAGBNDSECTION(ri,rj,rk) (                          \
                                               (((ri >= enerposreg[ACTIVEWITHBNDREGION][X1DN] && ri <= enerposreg[ACTIVEREGION][X1DN]) || (ri <= enerposreg[ACTIVEWITHBNDREGION][X1UP] && ri > enerposreg[ACTIVEREGION][X1UP])) && (rj >= enerposreg[ACTIVEWITHBNDREGION][X2DN] && rj <= enerposreg[ACTIVEWITHBNDREGION][X2UP] && rk >= enerposreg[ACTIVEWITHBNDREGION][X3DN] && rk <= enerposreg[ACTIVEWITHBNDREGION][X3UP])) \
@@ -137,8 +144,8 @@
 
 
 
-// Below WITHINACTIVEBNDSECTION() applies to only the boundary cells of active computed cells
-// Applies to centered quantities
+/// Below WITHINACTIVEBNDSECTION() applies to only the boundary cells of active computed cells
+/// Applies to centered quantities
 #if( DOGRIDSECTIONING )
 #define WITHINACTIVEBNDSECTIONX1DN(ri,rj,rk) (                          \
                                               ( ri >= enerposreg[ACTIVEWITHBNDREGION][X1DN] && ri < enerposreg[ACTIVEREGION][X1DN] ) && (rj >= enerposreg[ACTIVEWITHBNDREGION][X2DN] && rj <= enerposreg[ACTIVEWITHBNDREGION][X2UP] && rk >= enerposreg[ACTIVEWITHBNDREGION][X3DN] && rk <= enerposreg[ACTIVEWITHBNDREGION][X3UP]) \
@@ -183,8 +190,8 @@
 
 
 
-// Below WITHINACTIVESTAGBNDSECTION() applies to only the boundary cells of active computed cells
-// Applies to staggered quantities (e.g. i=0 is boundary cell for fixed BCs)
+/// Below WITHINACTIVESTAGBNDSECTION() applies to only the boundary cells of active computed cells
+/// Applies to staggered quantities (e.g. i=0 is boundary cell for fixed BCs)
 #if( DOGRIDSECTIONING )
 #define WITHINACTIVESTAGBNDSECTIONX1DN(ri,rj,rk) (                      \
                                                   ( ri >= enerposreg[ACTIVEWITHBNDREGION][X1DN] && ri <= enerposreg[ACTIVEREGION][X1DN] ) && (rj >= enerposreg[ACTIVEWITHBNDREGION][X2DN] && rj <= enerposreg[ACTIVEWITHBNDREGION][X2UP] && rk >= enerposreg[ACTIVEWITHBNDREGION][X3DN] && rk <= enerposreg[ACTIVEWITHBNDREGION][X3UP]) \
@@ -243,13 +250,13 @@ extern int jet_set_enerregiondef(int initialcall, int timeorder, int numtimeorde
 extern int jet_set_myid(void);
 
 
-// general functions to be created by users
+/// general functions to be created by users
 extern int theproblem_set_enerregiondef(int initialcall, int timeorder, int numtimeorders, long int thenstep, FTYPE thetime, int (*enerregiondef)[NDIM]);
 extern int theproblem_set_enerregionupdate(int initialcall, int timeorder, int numtimeorders, long int thenstep, FTYPE thetime, int *updateeverynumsteps, int *everynumsteps);
 extern int theproblem_set_myid(void);
 
 
-// GRIDSECTIONING:
+/// GRIDSECTIONING:
 extern int init_gridsectioning(void);
 extern int bound_gridsectioning(int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], int finalstep);
 extern int findandsetactivesection(int initialcall, int timeorder, int numtimeorders, long int thenstep, FTYPE thetime );

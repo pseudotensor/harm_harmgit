@@ -1,17 +1,14 @@
 
-/////////////////////////////////////
-/////////////////////////////////////
-//
-// DIAGNOSTIC RELATED LOOPS
-//
-/////////////////////////////////////
-/////////////////////////////////////
+/*! \file global.loops.diagnostics.h
+    \brief Diagnostic Loops and definitions/macros
+    // DIAGNOSTIC RELATED LOOPS
+
+*/
 
 
-
-/* want dump output to be ordered in radius first!! */
-// consistent with MPI's use of BUFFERMAP to create buffer for *all* disk writing methods
-// This order should not change for any ORDERSTORAGE, but presumes i,j,k is standard indices for (i.e.) r(i), theta(j), phi(k)
+/// want dump output to be ordered in radius first!!
+/// consistent with MPI's use of BUFFERMAP to create buffer for *all* disk writing methods
+/// This order should not change for any ORDERSTORAGE, but presumes i,j,k is standard indices for (i.e.) r(i), theta(j), phi(k)
 #define DUMPLOOP(istart,istop,jstart,jstop,kstart,kstop)        \
   for(k=kstart;k<=kstop;k++)                                    \
     for(j=jstart;j<=jstop;j++)                                  \
@@ -39,15 +36,15 @@
 #endif
 
 
-// defines whether within the enerregion
-// considered loop-related macro
+/// defines whether within the enerregion
+/// considered loop-related macro
 #define WITHINENERREGION(theenerpos,i,j,k) (i>=theenerpos[X1DN])&&(i<=theenerpos[X1UP])&&(j>=theenerpos[X2DN])&&(j<=theenerpos[X2UP])&&(k>=theenerpos[X3DN])&&(k<=theenerpos[X3UP]) 
 
 
 
 
 
-//#define IMAGELOOP(istart,istop,jstart,jstop,kstart,kstop) for(k=kstart;k<=kstop;k++) for(j=jstart;j<=jstop;j++) for(i=istart;i<=istop;i++)
+///#define IMAGELOOP(istart,istop,jstart,jstop,kstart,kstop) for(k=kstart;k<=kstop;k++) for(j=jstart;j<=jstop;j++) for(i=istart;i<=istop;i++)
 
 //#define OLDIMAGELOOP for(j=N2-1;j>=0;j--) for(i=0;i<N1;i++)
 // nasty 
