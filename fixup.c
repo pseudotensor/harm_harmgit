@@ -15,14 +15,13 @@ static int superdebug_utoprim(FTYPE *pr0, FTYPE *pr, struct of_geom *ptrgeom, in
 
 
 
-/* apply floors to density, internal energy */
-
-// currently called before bound, which assumes bound sets boundary
-// values exactly as wanted without any fixing.
 
 #define JONFIXUP 1 // 0=gammie 1=jon's
 
 #if 0
+/// apply floors to density, internal energy
+/// currently called before bound, which assumes bound sets boundary
+/// values exactly as wanted without any fixing.
 void fixup(int stage,FTYPE (*pv)[NSTORE2][NSTORE3][NPR],int finalstep)
 {
   int i, j, k;
@@ -34,8 +33,8 @@ void fixup(int stage,FTYPE (*pv)[NSTORE2][NSTORE3][NPR],int finalstep)
 }
 #endif
 
-// operations that require synch of boundary zones in MPI, or that require use of boundary zones at all
-// operations that only need to be done inside computational loop
+/// operations that require synch of boundary zones in MPI, or that require use of boundary zones at all
+/// operations that only need to be done inside computational loop
 int pre_fixup(int stage,FTYPE (*pv)[NSTORE2][NSTORE3][NPR])
 {
 
@@ -48,8 +47,8 @@ int pre_fixup(int stage,FTYPE (*pv)[NSTORE2][NSTORE3][NPR])
 
 
 
-// operations that require synch of boundary zones in MPI, or that require use of boundary zones at all
-// this function actually changes primitives
+/// operations that require synch of boundary zones in MPI, or that require use of boundary zones at all
+/// this function actually changes primitives
 int post_fixup(int stageit,int finalstep, SFTYPE boundtime, FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*pbackup)[NSTORE2][NSTORE3][NPR],FTYPE (*ucons)[NSTORE2][NSTORE3][NPR])
 {
   int stage,stagei,stagef;
@@ -125,7 +124,7 @@ int post_fixup(int stageit,int finalstep, SFTYPE boundtime, FTYPE (*pv)[NSTORE2]
 }
 
 
-// this function just reports problems, but doesn't fix them
+/// this function just reports problems, but doesn't fix them
 int post_fixup_nofixup(int stageit, int finalstep, SFTYPE boundtime, FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*pbackup)[NSTORE2][NSTORE3][NPR],FTYPE (*ucons)[NSTORE2][NSTORE3][NPR])
 {
 
@@ -140,6 +139,9 @@ int post_fixup_nofixup(int stageit, int finalstep, SFTYPE boundtime, FTYPE (*pv)
 
 #if(JONFIXUP==1)
 
+/// apply floors to density, internal energy
+/// currently called before bound, which assumes bound sets boundary
+/// values exactly as wanted without any fixing.
 int fixup(int stage,FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], int finalstep)
 {
   int i, j, k;
@@ -158,7 +160,7 @@ int fixup(int stage,FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ucons)[NSTORE2][N
 }
 #else
 
-// GAMMIE OLD FIXUP (not kept up to date)
+/// GAMMIE OLD FIXUP (not kept up to date)
 int fixup(int stage,FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ucons)[NSTORE2][NSTORE3][NPR],int finalstep)
 {
   int i,j,k,pl,pliter;
@@ -214,7 +216,7 @@ int fixup(int stage,FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ucons)[NSTORE2][N
 
 
 
-// choose whether within correctable/diagnosticable region
+/// choose whether within correctable/diagnosticable region
 int diag_fixup_correctablecheck(int docorrectucons, struct of_geom *ptrgeom)
 {
   int is_within_correctable_region;
@@ -254,7 +256,7 @@ int diag_fixup_correctablecheck(int docorrectucons, struct of_geom *ptrgeom)
 
 
 
-// record who called the diag_fixup routine
+/// record who called the diag_fixup routine
 int count_whocalled(struct of_geom *ptrgeom, int finalstep, int whocalled)
 {
   int tscale;
@@ -292,9 +294,9 @@ int count_whocalled(struct of_geom *ptrgeom, int finalstep, int whocalled)
 
 
 
-// compute dU and account
-// Assumes Ui,Uf are UDIAG form
-// Assumes ucons is UEVOLVE form
+/// compute dU and account
+/// Assumes Ui,Uf are UDIAG form
+/// Assumes ucons is UEVOLVE form
 int diag_fixup_dUandaccount(FTYPE *Ui, FTYPE *Uf, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep, int whocalled, int docorrectuconslocal)
 {
   FTYPE dUincell[NPR];
@@ -428,8 +430,8 @@ int diag_fixup_dUandaccount(FTYPE *Ui, FTYPE *Uf, FTYPE *ucons, struct of_geom *
 }
 
 
-// single call in step_ch.c:post_advance() to do all diag_fixup() diagnostic dU stores.  Still allows counts by other diag_fixup calls.
-// for DOONESTEPDUACCOUNTING==1
+/// single call in step_ch.c:post_advance() to do all diag_fixup() diagnostic dU stores.  Still allows counts by other diag_fixup calls.
+/// for DOONESTEPDUACCOUNTING==1
 int diag_fixup_allzones(int truestep, int finalstep, FTYPE (*pf)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR])
 {
 
@@ -467,11 +469,11 @@ int diag_fixup_allzones(int truestep, int finalstep, FTYPE (*pf)[NSTORE2][NSTORE
 
 
 
-// account for changes by tracking conserved quantities
-// accounts for both failures and floor recoveries
-// this modifies unew if on finalstep to be consistent with floor-limited primitive
-// diagnostics only for actions on conservative quantities
-// assume COUNT types are of PFTYPE
+/// account for changes by tracking conserved quantities
+/// accounts for both failures and floor recoveries
+/// this modifies unew if on finalstep to be consistent with floor-limited primitive
+/// diagnostics only for actions on conservative quantities
+/// assume COUNT types are of PFTYPE
 int diag_fixup(int docorrectucons, FTYPE *pr0, FTYPE *pr, FTYPE *uconsinput, struct of_geom *ptrgeom, int finalstep, int doingmhdfixup, int whocalled)
 {
   struct of_state q;
@@ -571,11 +573,11 @@ int diag_fixup(int docorrectucons, FTYPE *pr0, FTYPE *pr, FTYPE *uconsinput, str
 
 
 
-// like diag_fixup(), but input initial conserved quantity as Ui and final primitive as pf
-// Must use this when pi[Ui] doesn't exist and had to use non-hot-MHD inversion.
-// Assumes Ui is like unewglobal, so UEVOLVE type
-// Assume ultimately hot MHD equations are used, so need to get new Uf that'll differ from Ui
-// Also don't know Uf quite yet.
+/// like diag_fixup(), but input initial conserved quantity as Ui and final primitive as pf
+/// Must use this when pi[Ui] doesn't exist and had to use non-hot-MHD inversion.
+/// Assumes Ui is like unewglobal, so UEVOLVE type
+/// Assume ultimately hot MHD equations are used, so need to get new Uf that'll differ from Ui
+/// Also don't know Uf quite yet.
 int diag_fixup_Ui_pf(int docorrectucons, FTYPE *Uievolve, FTYPE *pf, struct of_geom *ptrgeom, int finalstep, int whocalled)
 {
   struct of_state q;
@@ -665,11 +667,11 @@ int diag_fixup_Ui_pf(int docorrectucons, FTYPE *Uievolve, FTYPE *pf, struct of_g
 
 
 
-// account for changes by tracking conserved quantities
-// accounts for both failures and floor recoveries
-// only called on final step of RK once unew is defined since only on final step is unew modified if floor encountered
-// ONLY used by phys.ffde.c inversion routine when E^2>B^2
-// Assume Ui and Uf in UDIAG form
+/// account for changes by tracking conserved quantities
+/// accounts for both failures and floor recoveries
+/// only called on final step of RK once unew is defined since only on final step is unew modified if floor encountered
+/// ONLY used by phys.ffde.c inversion routine when E^2>B^2
+/// Assume Ui and Uf in UDIAG form
 int diag_fixup_U(int docorrectucons, FTYPE *Ui, FTYPE *Uf, FTYPE *uconsinput, struct of_geom *ptrgeom, int finalstep,int whocalled)
 {
   FTYPE Uicent[NPR],Ufcent[NPR];
@@ -753,12 +755,12 @@ int diag_fixup_U(int docorrectucons, FTYPE *Ui, FTYPE *Uf, FTYPE *uconsinput, st
 
 
 
-// 0 = primitive (adds rho,u in comoving frame)
-// 1 = conserved but rho,u added in ZAMO frame
-// 2 = conserved but ignore strict rho,u change for ZAMO frame and instead conserved momentum (doesn't keep desired u/rho, b^2/rho, or b^2/u and so that itself can cause problems
 #define FIXUPTYPE 1
-
-// finalstep==0 is non-accounting, finalstep==1 is accounting
+/// 0 = primitive (adds rho,u in comoving frame)
+/// 1 = conserved but rho,u added in ZAMO frame
+/// 2 = conserved but ignore strict rho,u change for ZAMO frame and instead conserved momentum (doesn't keep desired u/rho, b^2/rho, or b^2/u and so that itself can cause problems
+///
+/// finalstep==0 is non-accounting, finalstep==1 is accounting
 int fixup1zone(FTYPE *pr, FTYPE *uconsinput, struct of_geom *ptrgeom, int finalstep)
 {
   int pliter,pl;
@@ -1141,15 +1143,14 @@ int fixup1zone(FTYPE *pr, FTYPE *uconsinput, struct of_geom *ptrgeom, int finals
 #define ISGAMMACHECK 0
 #define ISUUCHECK 0
 
-// GODMARK: function is 2D right now, but works in 3D, it just uses only x-y plane for checking
-
-// check whether solution seems reasonable
-// useful if b^2/rho\gg 1 or try to approach stationary model where variations in space shouldn't be large zone to zone
-// checks whether u or gamma is much different than surrounding zones.
-// if true, then flag as failure, else reasonable solution and keep
-// can't assume failed zones are reasonably set
-// fixup_checksolution() currently only uses pflag[FLAGUTOPRIMFAIL]
-// KORALNOTEMARK: So far fixup_checksolution() only setup for MHD fluid, but ok since don't use this function anymore (i.e. CHECKSOLUTION set to 0 usually because this function can cause problems).
+/// GODMARK: function is 2D right now, but works in 3D, it just uses only x-y plane for checking
+/// check whether solution seems reasonable
+/// useful if b^2/rho\gg 1 or try to approach stationary model where variations in space shouldn't be large zone to zone
+/// checks whether u or gamma is much different than surrounding zones.
+/// if true, then flag as failure, else reasonable solution and keep
+/// can't assume failed zones are reasonably set
+/// fixup_checksolution() currently only uses pflag[FLAGUTOPRIMFAIL]
+/// KORALNOTEMARK: So far fixup_checksolution() only setup for MHD fluid, but ok since don't use this function anymore (i.e. CHECKSOLUTION set to 0 usually because this function can cause problems).
 int fixup_checksolution(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR],int finalstep)
 {
   //  int inboundloop[NDIM];
@@ -1384,8 +1385,8 @@ int fixup_checksolution(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR],int finals
 // 1: treat as floor issue
 
 
-// fix the bad solution as determined by utoprim() and fixup_checksolution()
-// needs fail flag over -1..N, but uses p at 0..N-1
+/// fix the bad solution as determined by utoprim() and fixup_checksolution()
+/// needs fail flag over -1..N, but uses p at 0..N-1
 int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], int finalstep)
 {
   FTYPE (*ptoavg)[NSTORE2][NSTORE3][NPR];
@@ -1921,8 +1922,8 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
 
 
 
-// fix the bad solution as determined by utoprim() and fixup_checksolution()
-// needs fail flag over -1..N, but uses p at 0..N-1
+/// fix the bad solution as determined by utoprim() and fixup_checksolution()
+/// needs fail flag over -1..N, but uses p at 0..N-1
 int fixup_utoprim_nofixup(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], int finalstep)
 {
   FTYPE (*ptoavg)[NSTORE2][NSTORE3][NPR];
@@ -1989,7 +1990,7 @@ int fixup_utoprim_nofixup(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (
 
 
 
-// fixup negative densities
+/// fixup negative densities
 static int fixup_negdensities(int whicheomset, int *fixed, int startpl, int endpl, int i, int j, int k, PFTYPE lpflag, FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ptoavg)[NSTORE2][NSTORE3][NPR], struct of_geom *ptrgeom, FTYPE *pr0, FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], int finalstep)
 {
   FTYPE prguess[NPR];
@@ -2168,7 +2169,7 @@ static int fixup_negdensities(int whicheomset, int *fixed, int startpl, int endp
 // 2: adjust for all substeps
 #define ADJUSTCONSERVEDQUANTITY 0
 
-// ACCOUNTING (under any circumstance, static or average)
+/// ACCOUNTING (under any circumstance, static or average) when modified quantities due to inversion issue
 static int fixuputoprim_accounting(int i, int j, int k, PFTYPE mhdlpflag, PFTYPE radlpflag, PFTYPE (*lpflag)[NSTORE2][NSTORE3][NUMPFLAGS],FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ptoavg)[NSTORE2][NSTORE3][NPR], struct of_geom *ptrgeom, FTYPE *pr0, FTYPE (*uconsinput)[NSTORE2][NSTORE3][NPR], int finalstep)
 {
   PFTYPE mhdutoprimfailtype,radutoprimfailtype;
@@ -2477,7 +2478,7 @@ static int fixuputoprim_accounting(int i, int j, int k, PFTYPE mhdlpflag, PFTYPE
 #define HOWTOAVG_WHEN_U2AVG MAXUPOSAVG_WHEN_U2AVG
 //#define HOWTOAVG_WHEN_U2AVG CAUSAL_THENMIN_WHEN_U2AVG
 
-// more general averaging procedure that tries to pick best from surrounding good values
+/// more general averaging procedure that tries to pick best from surrounding good values
 static int general_average(int startpl, int endpl, int i, int j, int k, int doingmhd, PFTYPE mhdlpflag, PFTYPE radlpflag, PFTYPE (*lpflagfailorig)[NSTORE2][NSTORE3][NUMFAILPFLAGS],FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ptoavg)[NSTORE2][NSTORE3][NPR], struct of_geom *ptrgeom)
 {
   int doavgcausal,failavglooptype;
@@ -2769,7 +2770,7 @@ static int general_average(int startpl, int endpl, int i, int j, int k, int doin
 
 
 
-// simple average of good surrounding zones
+/// simple average of good surrounding zones
 static int simple_average(int startpl, int endpl, int i, int j, int k,int doingmhd, PFTYPE (*lpflagfailorig)[NSTORE2][NSTORE3][NUMFAILPFLAGS],FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ptoavg)[NSTORE2][NSTORE3][NPR])
 {
   int pl,pliter;
@@ -2982,7 +2983,7 @@ static int simple_average(int startpl, int endpl, int i, int j, int k,int doingm
 #define WHICHPTOUSEWHENNOGOOD 0
 
 
-// how to fixup when no good surrounding values to use
+/// how to fixup when no good surrounding values to use
 static int fixup_nogood(int startpl, int endpl, int i, int j, int k, FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ptoavg)[NSTORE2][NSTORE3][NPR],FTYPE (*pbackup)[NSTORE2][NSTORE3][NPR], struct of_geom *ptrgeom)
 {
   int pl,pliter;
@@ -3081,7 +3082,7 @@ static int fixup_nogood(int startpl, int endpl, int i, int j, int k, FTYPE (*pv)
 
 
 
-// OPENMPNOTE: Assume superdebug_utoprim() not called by multiple threads (i.e. when debugging, not using multiple threads), so static's are ok (including firsttime)
+/// OPENMPNOTE: Assume superdebug_utoprim() not called by multiple threads (i.e. when debugging, not using multiple threads), so static's are ok (including firsttime)
 static int superdebug_utoprim(FTYPE *pr0, FTYPE *pr, struct of_geom *ptrgeom, int whocalled)
 {
   int pl,pliter;
@@ -3151,7 +3152,7 @@ static int superdebug_utoprim(FTYPE *pr0, FTYPE *pr, struct of_geom *ptrgeom, in
   return(0);
 }
 
-
+/// default way to set density floors
 int set_density_floors_default(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *prfloor)
 {
   struct of_state q;
@@ -3178,6 +3179,7 @@ int set_density_floors_default(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *prfloo
   return(0);
 }
 
+/// alternative default way to set density floors
 int set_density_floors_default_alt(struct of_geom *ptrgeom, struct of_state *q, FTYPE *pr, FTYPE *U, FTYPE bsq, FTYPE *prfloor)
 {
   FTYPE Upbinf[NPR];
@@ -3345,6 +3347,7 @@ int set_density_floors_default_alt(struct of_geom *ptrgeom, struct of_state *q, 
 #define FLOORDAMPFRAC (0.1)
 #define NUMBSQFLAGS 5
 
+/// get flags that indicate properties of flow, like bsq/rho
 int get_bsqflags(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR])
 {
   int i,j,k;
@@ -3479,7 +3482,7 @@ int get_bsqflags(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR])
 // So for now just limit velocity ignoring all conservation laws
 #define DO_CONSERVE_D 0
 
-// limit \gamma=\alpha u^t and u^t
+/// limit \gamma=\alpha u^t and u^t
 int limit_gamma(int docorrectucons, FTYPE gammamax, FTYPE gammamaxrad, FTYPE*pr, FTYPE *ucons, struct of_geom *ptrgeom,int finalstep)
 {
   FTYPE f,gamma,pref;
@@ -3711,9 +3714,9 @@ int limit_gamma(int docorrectucons, FTYPE gammamax, FTYPE gammamaxrad, FTYPE*pr,
 #define UTFIX (utobs) //  if failed u^t, then fix to this level to keep normal, or use local value as desired value
 #define GRADIENTFACTOR (.001) // how to set?
 
-// pr is pr to be fixed
-// prmodel is pr that has a model ucon[TT], since we want to interpolate based upon ucon[TT], not just a random one when inside step_ch.c in fluxcalc()
-// prmodel is just pr if in utoprim.c since we want a real change, not just an interpolation, thus will not be used as basis
+/// pr is pr to be fixed
+/// prmodel is pr that has a model ucon[TT], since we want to interpolate based upon ucon[TT], not just a random one when inside step_ch.c in fluxcalc()
+/// prmodel is just pr if in utoprim.c since we want a real change, not just an interpolation, thus will not be used as basis
 int check_pr(FTYPE *pr,FTYPE *prmodel, FTYPE *ucons, struct of_geom *ptrgeom,int modelpos, int finalstep)
 {
 
@@ -3963,7 +3966,8 @@ int check_pr(FTYPE *pr,FTYPE *prmodel, FTYPE *ucons, struct of_geom *ptrgeom,int
 }
 
 
-// GODMARK: check this function for correctness
+/// Check for inflow and modify flow if didn't want inflow (for 4vel)
+/// GODMARK: check this function for correctness
 int inflow_check_4vel(int dir, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
 {
   int ii,jj,kk;
@@ -4114,6 +4118,7 @@ int inflow_check_4vel(int dir, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom,
 }
 
 
+/// Check for inflow and modify flow if didn't want inflow (for 3vel)
 int inflow_check_3vel(int dir, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
 {
 
@@ -4121,6 +4126,7 @@ int inflow_check_3vel(int dir, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom,
 
 }
 
+/// Check for inflow and modify flow if didn't want inflow (for rel4vel)
 // GODMARK: check for correctness
 int inflow_check_rel4vel(int dir, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
 {
@@ -4384,8 +4390,9 @@ int inflow_check_rel4vel(int dir, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrge
 }
  
 
-// only correct for polar axis at both inner and outer x2/theta grid edge.
-// OPENMPOPTMARK: Could optimize this, but not using it currently
+// fixup fluxes
+/// only correct for polar axis at both inner and outer x2/theta grid edge.
+/// OPENMPOPTMARK: Could optimize this, but not using it currently
 void fix_flux(FTYPE (*pb)[NSTORE2][NSTORE3][NPR],FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL])
 {
   int i,j,k,pl ;
@@ -4468,7 +4475,7 @@ void fix_flux(FTYPE (*pb)[NSTORE2][NSTORE3][NPR],FTYPE (*F1)[NSTORE2][NSTORE3][N
 }
 
 
-// counter for EOS table lookup failures
+/// counter for EOS table lookup failures
 void diag_eosfaillookup(int i, int j, int k)
 {
   int whocalled = COUNTEOSLOOKUPFAIL;

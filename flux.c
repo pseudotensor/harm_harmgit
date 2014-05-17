@@ -13,7 +13,7 @@ static void leftrightcompute(int i, int j, int k, int dir, int is, int ie, int j
 
 
 
-// get whether should compute using left/right states
+/// get whether should compute using left/right states
 static void leftrightcompute(int i, int j, int k, int dir, int is, int ie, int js, int je, int ks, int ke, int *computewithleft, int *computewithright)
 {
 
@@ -34,7 +34,7 @@ static void leftrightcompute(int i, int j, int k, int dir, int is, int ie, int j
 
 
 
-// see fluxcompute.c for non-computer science, real physics calculations of flux
+/// see fluxcompute.c for non-computer science, real physics calculations of flux
 int fluxcalc(int stage,
              int initialstep, int finalstep,
              FTYPE (*pr)[NSTORE2][NSTORE3][NPR],
@@ -344,9 +344,9 @@ int fluxcalc(int stage,
 
 
 
-// ensure fluxes only exist on well-defined computational box
-// makes advance.c, GRIDSECTIONING, and adaptive time-stepping easier to code for
-// Note that the branch prediction penalty for these conditions inside the LOOP is low since just zero out nearby memory elements
+/// ensure fluxes only exist on well-defined computational box
+/// makes advance.c, GRIDSECTIONING, and adaptive time-stepping easier to code for
+/// Note that the branch prediction penalty for these conditions inside the LOOP is low since just zero out nearby memory elements
 int cleanup_fluxes(int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL])
 {
 
@@ -469,8 +469,8 @@ int cleanup_fluxes(int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPEC
 
 
 
-// zero-out fluxes in COMPFULLLOOP so advance.c updates all possible quantities and does so with simple non-conditional code
-// it's ok to zero-out beyond standard+-1 box a bit.  Just ensure zero out enough
+/// zero-out fluxes in COMPFULLLOOP so advance.c updates all possible quantities and does so with simple non-conditional code
+/// it's ok to zero-out beyond standard+-1 box a bit.  Just ensure zero out enough
 int zero_out_fluxes(int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL])
 {
 
@@ -497,9 +497,9 @@ int zero_out_fluxes(int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPE
   return(0);
 }
 
-// zero-out fluxes that correspond to EMFs if evolving/tracking A_i since want boundary values to be plottable in SM or whatever
-// This is  necessary since also use fluxes for other purposes in-between steps
-// GODMARK: If in BCs have partial EMF and not full EMF for updating A_i, then may also cause A_i to appear funny
+/// zero-out fluxes that correspond to EMFs if evolving/tracking A_i since want boundary values to be plottable in SM or whatever
+/// This is  necessary since also use fluxes for other purposes in-between steps
+/// GODMARK: If in BCs have partial EMF and not full EMF for updating A_i, then may also cause A_i to appear funny
 int zero_out_emf_fluxes(int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL])
 {
 
@@ -557,7 +557,7 @@ int fluxEM2flux4EMF(int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPE
   return(0);
 }
 
-// sums MA and EM fluxes
+/// sums MA and EM fluxes
 int fluxsum_old(int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*fluxvecEM[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL])
 {
 
@@ -587,7 +587,7 @@ int fluxsum_old(int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL
 }
 
 
-// sums MA (with FLUXSPLITMA(dir) containing flux[UU+dir] component) and EM fluxes
+/// sums MA (with FLUXSPLITMA(dir) containing flux[UU+dir] component) and EM fluxes
 int fluxsum(int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*fluxvecEM[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL])
 {
 
@@ -636,7 +636,7 @@ int fluxsum(int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL], F
 
 
 
-// wrapper for CENT_to_FACE1,2,3 used to compute flux at face
+/// wrapper for CENT_to_FACE1,2,3 used to compute flux at face
 int fluxcalc_flux(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], int *Nvec, FTYPE (*dqvec[NDIM])[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*fluxvecEM[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE CUf, SFTYPE time, FTYPE *ndtvec[NDIM], struct of_loop *cent2faceloop)
 {
   int fluxcalc_flux_1d(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], int dir, SFTYPE time, int is, int ie, int js, int je, int ks, int ke, int idel, int jdel, int kdel, int face, FTYPE (*dq)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*F)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*FEM)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE CUf, FTYPE *ndt, struct of_loop *cent2faceloop, int *didassigngetstatecentdata );
@@ -776,8 +776,8 @@ int fluxcalc_flux(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[
 
 
 
-// wrapper for different standard 1-D flux calculators
-// 1-D interpolate and get flux for that direction (assumes purely 1-D Riemann problem)
+/// wrapper for different standard 1-D flux calculators
+/// 1-D interpolate and get flux for that direction (assumes purely 1-D Riemann problem)
 int fluxcalc_flux_1d(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], int dir, SFTYPE time, int is, int ie, int js, int je, int ks, int ke, int idel, int jdel, int kdel, int face, FTYPE (*dq)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*F)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*FEM)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE CUf, FTYPE *ndt, struct of_loop *cent2faceloop, int *didassigngetstatecentdata )
 {
   int fluxcalc_standard(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], int dir, SFTYPE time, int is, int ie, int js, int je, int ks, int ke, int idel, int jdel, int kdel, int face, FTYPE (*dq)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*F)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*FEM)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE CUf, FTYPE *ndt, struct of_loop *cent2faceloop, int *didassigngetstatecentdata);
@@ -845,7 +845,7 @@ int fluxcalc_flux_1d(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*psta
   
 }
 
-
+/// determine whether interpolating real primitives or substep
 void set_normal_realisinterp(int *realisinterp)
 {
 
@@ -879,7 +879,7 @@ void set_normal_realisinterp(int *realisinterp)
 
 
 
-// wrapper for rescale()
+/// wrapper for rescale()
 void rescale_calc_full(int dir,FTYPE (*pr)[NSTORE2][NSTORE3][NPR],FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR])
 {
 
@@ -912,7 +912,7 @@ void rescale_calc_full(int dir,FTYPE (*pr)[NSTORE2][NSTORE3][NPR],FTYPE (*p2inte
 
 
 
-// original flux calculator that gets F in "dir".  At end global pleft,pright,dq also set and if STOREWAVESPEEDS>0 then wavespeeds stored globally
+/// original flux calculator that gets F in "dir".  At end global pleft,pright,dq also set and if STOREWAVESPEEDS>0 then wavespeeds stored globally
 int fluxcalc_standard(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], int dir, SFTYPE time,int is, int ie, int js, int je, int ks, int ke, int idel, int jdel, int kdel, int face, FTYPE (*dq)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*F)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*FEM)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE CUf, FTYPE *ndt, struct of_loop *cent2faceloop, int *didassigngetstatecentdata)
 {
   void slope_lim(int dointerpolation, int realisinterp, int dir, int idel, int jdel, int kdel, FTYPE (*primreal)[NSTORE2][NSTORE3][NPR], FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*dq)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP], struct of_loop *cent2faceloop);
@@ -1215,9 +1215,9 @@ int fluxcalc_standard(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pst
 
 
 
-// assign global variables needed when not doing certain dimensions
-// For example, to keep algorithm simple, always assume all directions of pl_ct and pr_ct exist, but if doing 2D simulation then we don't fill "left-right" states, so instead we need to compute or assign it so that data exists
-// also for the CTSTAG method, need loop information about going from center to face even if that dimension doesn't exist
+/// assign global variables needed when not doing certain dimensions
+/// For example, to keep algorithm simple, always assume all directions of pl_ct and pr_ct exist, but if doing 2D simulation then we don't fill "left-right" states, so instead we need to compute or assign it so that data exists
+/// also for the CTSTAG method, need loop information about going from center to face even if that dimension doesn't exist
 void do_noninterpolation_dimension(int whichfluxcalc, int dointerpolation,  int realisinterp, int dir, int idel, int jdel, int kdel, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], struct of_loop *cent2faceloop, int *didassigngetstatecentdata)
 {
   int i,j,k;
@@ -1253,9 +1253,9 @@ void do_noninterpolation_dimension(int whichfluxcalc, int dointerpolation,  int 
 
 
 
-// standard (non-field flux) calculation but setup to store results of interpolation so can be used for fluxctstag calculation
-// set pl_ct and pr_ct with FACE interpolations from CENT (including field face from pstagscratch[])
-// At end global pleft,pright,dq also set and if STOREWAVESPEEDS>0 then wavespeeds stored globally
+/// standard (non-field flux) calculation but setup to store results of interpolation so can be used for fluxctstag calculation
+/// set pl_ct and pr_ct with FACE interpolations from CENT (including field face from pstagscratch[])
+/// At end global pleft,pright,dq also set and if STOREWAVESPEEDS>0 then wavespeeds stored globally
 int fluxcalc_standard_4fluxctstag(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], int dir, SFTYPE time, int is, int ie, int js, int je, int ks, int ke, int idel, int jdel, int kdel, int face, FTYPE (*dq)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*F)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*FEM)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE CUf, FTYPE *ndt, struct of_loop *cent2faceloop, int *didassigngetstatecentdata)
 {
   int interpolate_prim_cent2face(int stage, int realisinterp, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], int dir, SFTYPE time, int is, int ie, int js, int je, int ks, int ke, int idel, int jdel, int kdel, int face, FTYPE (*dq)[NSTORE2][NSTORE3][NPR2INTERP], struct of_loop *cent2faceloop);
@@ -1489,8 +1489,8 @@ int fluxcalc_standard_4fluxctstag(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR],
 
 
 
-// normal interpolation of CENT quantities to FACE quantities
-// sets global variables pl_ct and pr_ct to p_l and p_r from interpolations
+/// normal interpolation of CENT quantities to FACE quantities
+/// sets global variables pl_ct and pr_ct to p_l and p_r from interpolations
 int interpolate_prim_cent2face(int stage, int realisinterp, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], int dir, SFTYPE time, int is, int ie, int js, int je, int ks, int ke, int idel, int jdel, int kdel, int face, FTYPE (*dq)[NSTORE2][NSTORE3][NPR2INTERP], struct of_loop *cent2faceloop)
 {
   void slope_lim_cent2face(int dointerpolation, int realisinterp, int dir, int idel, int jdel, int kdel, FTYPE (*primreal)[NSTORE2][NSTORE3][NPR], FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*dq)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP], struct of_loop *cent2faceloop);
@@ -1720,9 +1720,9 @@ int interpolate_prim_cent2face(int stage, int realisinterp, FTYPE (*pr)[NSTORE2]
 
 
 
-// assign one fluxstate to another fluxstate (usually used to assign left->right or visa versa when dimension doesn't exist
-// Note that isleftright(input/output) can only be ISLEFT,ISRIGHT and not ISMIDDLE unless rewrote function to use fluxstatecent, but function not needed anymore
-// GODMARK: no longer using this since store cent and copy it to ISLEFT,ISRIGHT
+/// assign one fluxstate to another fluxstate (usually used to assign left->right or visa versa when dimension doesn't exist
+/// Note that isleftright(input/output) can only be ISLEFT,ISRIGHT and not ISMIDDLE unless rewrote function to use fluxstatecent, but function not needed anymore
+/// GODMARK: no longer using this since store cent and copy it to ISLEFT,ISRIGHT
 void compute_and_store_fluxstate_assign(int dimeninput, int dimenoutput, int isleftrightinput, int isleftrightoutput, int i, int j, int k)
 {
 
@@ -1731,8 +1731,8 @@ void compute_and_store_fluxstate_assign(int dimeninput, int dimenoutput, int isl
 
 }
 
-// compute and store get_state() data for p_l and p_r type objects
-// need to call this whenever compute left-right primitives used for computing flux
+/// compute and store get_state() data for p_l and p_r type objects
+/// need to call this whenever compute left-right primitives used for computing flux
 void compute_and_store_fluxstate(int dimen, int isleftright, int i, int j, int k, struct of_geom *geom, FTYPE *pr)
 {
   int pureget_stateforfluxcalc(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
@@ -1744,7 +1744,7 @@ void compute_and_store_fluxstate(int dimen, int isleftright, int i, int j, int k
 
 
 
-// compute and store get_state() data for centered state
+/// compute and store get_state() data for centered state
 void compute_and_store_fluxstatecent(FTYPE (*pr)[NSTORE2][NSTORE3][NPR])
 {
   int pureget_stateforfluxcalcorsource(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
@@ -2167,7 +2167,7 @@ void compute_and_store_fluxstatecent(FTYPE (*pr)[NSTORE2][NSTORE3][NPR])
 
 
 
-// use dq,pleft,pright to obtain p_l and p_r for CENT to FACE
+/// use dq,pleft,pright to obtain p_l and p_r for CENT to FACE
 int getplpr(int dir, SFTYPE time, int idel, int jdel, int kdel, int i, int j, int k, struct of_geom *ptrgeom, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*dq)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE *p2interp_l, FTYPE *p2interp_r, FTYPE *p_l, FTYPE *p_r)
 {
   void getp2interplr(int dir, int idel, int jdel, int kdel, int i, int j, int k, FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*dq)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE *p2interp_l, FTYPE *p2interp_r);
@@ -2256,7 +2256,7 @@ int getplpr(int dir, SFTYPE time, int idel, int jdel, int kdel, int i, int j, in
 
 
 
-// check that left and right primitives are valid
+/// check that left and right primitives are valid
 int check_plpr(int dir, int i, int j, int k, int idel, int jdel, int kdel, struct of_geom *geom, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE *p_l, FTYPE *p_r)
 {
   int pl,pliter;
@@ -2313,29 +2313,28 @@ int check_plpr(int dir, int i, int j, int k, int idel, int jdel, int kdel, struc
 
 
 
+///
+///
+/// interpolate primitive using slope or just copy pleft/pright into the correct place
+///
+/// |=interface
+/// i=zone center of ith zone
+///
+/// |              |     p2interp(i)    |
+/// |              |       dq(i)        |
+/// |        p_l(i)|p_r(i)   i          |
+/// |              |pleft(i)   pright(i)|
+///
+///
+///
 //////////////////////////////////////
-//
-// interpolate primitive using slope or just copy pleft/pright into the correct place
-//
-// |=interface
-// i=zone center of ith zone
-//
-// |              |     p2interp(i)    |
-// |              |       dq(i)        |
-// |        p_l(i)|p_r(i)   i          |
-// |              |pleft(i)   pright(i)|
-//
-//
-//
-//////////////////////////////////////
-
-// GODMARK: as Sasha mentions, for shifting stencil shouldn't just extrapolate value from non-local values, but use other slope and most LOCAL value to obtain extrapolation.
-
+/// GODMARK: as Sasha mentions, for shifting stencil shouldn't just extrapolate value from non-local values, but use other slope and most LOCAL value to obtain extrapolation.
+///
 void getp2interplr(int dir, int idel, int jdel, int kdel, int i, int j, int k, FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*dq)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE *p2interp_l, FTYPE *p2interp_r)
 {
   FTYPE Xcent[NDIM],Xleft[NDIM];
   FTYPE Vcent[NDIM],Vleft[NDIM];
-  FTYPE rleft,rcent,thleft,thcent;
+  FTYPE rleft,rcenter,thleft,thcent;
   int pl,pliter;
   int locallim;
   int choose_limiter(int dir, int i, int j, int k, int pl);
@@ -2361,7 +2360,7 @@ void getp2interplr(int dir, int idel, int jdel, int kdel, int i, int j, int k, F
     bl_coord_ijk_2(i, j, k, CENT, Xcent,Vcent);
     rleft=Vleft[1];
     thleft=Vleft[2];
-    rcent=Vcent[1];
+    rcenter=Vcent[1];
     thcent=Vcent[2];
 
     PINTERPLOOP(pliter,pl){
@@ -2370,7 +2369,7 @@ void getp2interplr(int dir, int idel, int jdel, int kdel, int i, int j, int k, F
       if((locallim<PARA)&&(LIMADJUST==0)){
         if(rleft>Rhor) p2interp_l[pl] = MACP0A1(p2interp,i - idel,j - jdel,k - kdel,pl) + 0.5 * MACP0A1(dq,i - idel,j - jdel,k - kdel,pl);
         else p2interp_l[pl] = MACP0A1(p2interp,i,j,k,pl) - 0.5 * MACP0A1(dq,i,j,k,pl);
-        if(rcent>Rhor) p2interp_r[pl] = MACP0A1(p2interp,i,j,k,pl) - 0.5 * MACP0A1(dq,i,j,k,pl);
+        if(rcenter>Rhor) p2interp_r[pl] = MACP0A1(p2interp,i,j,k,pl) - 0.5 * MACP0A1(dq,i,j,k,pl);
         else p2interp_r[pl] = MACP0A1(p2interp,i+idel,j+jdel,k+kdel,pl) - 1.5 * MACP0A1(dq,i+idel,j+jdel,k+kdel,pl);
       }
       else{
@@ -2418,7 +2417,7 @@ void getp2interplr(int dir, int idel, int jdel, int kdel, int i, int j, int k, F
 
 
 
-// choose limiter
+/// choose limiter
 int choose_limiter(int dir, int i, int j, int k, int pl)
 {
 #if(LIMADJUST==LIMITERFIXED)
@@ -2447,18 +2446,18 @@ int choose_limiter(int dir, int i, int j, int k, int pl)
 
 
 
-// slope_lim() is provided p2interp and returns pleft/pright
-//
-// |=interface
-// i=zone center of ith zone
-//
-// |              |      p2interp(i)   |
-// |         pl(i)|pr(i)    i          |
-// |         Fl(i)|Fr(i)    i          |
-// |         Ul(i)|Ur(i)    i          |
-// |              |pleft(i)   pright(i)|
-// |              |F(i)                |
-//
+/// slope_lim() is provided p2interp and returns pleft/pright
+///
+/// |=interface
+/// i=zone center of ith zone
+///
+/// |              |      p2interp(i)   |
+/// |         pl(i)|pr(i)    i          |
+/// |         Fl(i)|Fr(i)    i          |
+/// |         Ul(i)|Ur(i)    i          |
+/// |              |pleft(i)   pright(i)|
+/// |              |F(i)                |
+///
 void slope_lim(int dointerpolation, int realisinterp, int dir, int idel, int jdel, int kdel, FTYPE (*primreal)[NSTORE2][NSTORE3][NPR], FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*dq)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP], struct of_loop *cent2faceloop)
 {
   int pl,pliter;
@@ -2486,19 +2485,19 @@ void slope_lim(int dointerpolation, int realisinterp, int dir, int idel, int jde
 
 
 
-// slope_lim_cent2face() is provided p2interp and returns pleft/pright
-// gets interpolations in expanded region for FLUXRECON && FLUXCTSTAG method if updating quasi-deaveraged field instead of point value
-//
-// |=interface
-// i=zone center of ith zone
-//
-// |              |      p2interp(i)   |
-// |         pl(i)|pr(i)    i          |
-// |         Fl(i)|Fr(i)    i          |
-// |         Ul(i)|Ur(i)    i          |
-// |              |pleft(i)   pright(i)|
-// |              |F(i)                |
-//
+/// slope_lim_cent2face() is provided p2interp and returns pleft/pright
+/// gets interpolations in expanded region for FLUXRECON && FLUXCTSTAG method if updating quasi-deaveraged field instead of point value
+///
+/// |=interface
+/// i=zone center of ith zone
+///
+/// |              |      p2interp(i)   |
+/// |         pl(i)|pr(i)    i          |
+/// |         Fl(i)|Fr(i)    i          |
+/// |         Ul(i)|Ur(i)    i          |
+/// |              |pleft(i)   pright(i)|
+/// |              |F(i)                |
+///
 void slope_lim_cent2face(int dointerpolation, int realisinterp, int dir, int idel, int jdel, int kdel, FTYPE (*primreal)[NSTORE2][NSTORE3][NPR], FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*dq)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP], struct of_loop *cent2faceloop)
 {
   int pl,pliter;
@@ -2541,14 +2540,14 @@ void slope_lim_cent2face(int dointerpolation, int realisinterp, int dir, int ide
 
 
 
-// compute donor-based flux, bypassing normal fluxcalc().  Allows one to check consistency.  Or if really want DONOR, then much faster.
-// To use this, remove "_donor" on function name and rename normal function to be with (e.g.) "_normal" on end of function name.
 
 // local corresponding value to global STOREWAVESPEEDS
 #define STOREWAVESPEEDMETHOD 1
 
-// compute donor-based flux, bypassing normal fluxcalc().  Allows one to check consistency.  Or if really want DONOR, then much faster.
-//int fluxcalc
+/// compute donor-based flux, bypassing normal fluxcalc().  Allows one to check consistency.  Or if really want DONOR, then much faster.
+/// To use this, remove "_donor" on function name and rename normal function to be with (e.g.) "_normal" on end of function name.
+/// compute donor-based flux, bypassing normal fluxcalc().  Allows one to check consistency.  Or if really want DONOR, then much faster.
+//DEBUGREPLACEFUNNAME//int fluxcalc
 int fluxcalc_donor
 (int stage,
  FTYPE (*pr)[NSTORE2][NSTORE3][NPR],

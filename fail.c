@@ -1,6 +1,7 @@
 
 #include "decs.h"
 
+/// Called if fail occurs
 int fail(int i, int j, int k, int loc, int fail_type)
 {
 
@@ -67,7 +68,13 @@ int fail(int i, int j, int k, int loc, int fail_type)
   return (1);
 }
 
-// OPENMPNOTE: Assume post_dt() not called by multiple threads, so static's are ok (including firsttime)
+/// check if failure.  If so, then grab restart from 2X ago (since
+/// most previous restart may be too close to fixing problem), and
+/// alter variables (cour) to fix.
+///
+/// assume failure doesn't occur in front of previous failure!
+/// 
+/// OPENMPNOTE: Assume post_dt() not called by multiple threads, so static's are ok (including firsttime)
 void postdt(void)
 {
   static SFTYPE aftertime,beforetime;
@@ -75,11 +82,6 @@ void postdt(void)
   static long beforenstep,afternstep;
   static FTYPE cour0;
   static int didfail;
-  // check if failure.  If so, then grab restart from 2X ago (since
-  // most previous restart may be too close to fixing problem), and
-  // alter variables (cour) to fix.
-
-  // assume failure doesn't occur in front of previous failure!
 
 
   if(firsttime){
@@ -133,10 +135,12 @@ void postdt(void)
   firsttime=0;
 }
 
-void setfailresponse(int restartonfail)
+
+/// Set how will respond to failure
+void setfailresponse(int restartonfailvar)
 {
 
-  if(restartonfail==0){
+  if(restartonfailvar==0){
     steptofaildump=(long)pow(2,30);
     steptofailmap=(long)pow(2,30);
     dofailmap=0;
