@@ -1,6 +1,7 @@
 
 /*! \file flux.c
     \brief Routines for computing fluxes except those special routines directly related to FLUXB==FLUXCTSTAG or FLUXCTTOTH
+
     // OPTMARK: Should redo flux's so that fluxes are accessed by MAC(F1,j,k,i) MAC(F2,k,i,j) MAC(F3,i,j,k) for faster differencing in advance.c
     // Maybe not important
 
