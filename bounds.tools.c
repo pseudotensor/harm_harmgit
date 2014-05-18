@@ -6,6 +6,10 @@
 
 */
 
+/*! \file bounds.c
+  \brief USER boundary condition routines (often calling things in bounds.tools.c)
+*/
+
 #include "decs.h"
 
 // see definit.h or init.h for some defines here.

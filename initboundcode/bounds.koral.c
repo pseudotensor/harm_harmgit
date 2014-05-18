@@ -1,6 +1,6 @@
 
 
-/*! \file bounds.c
+/*! \file bounds.koral.c
   \brief User Boundary conditions
 
   Also calls general/frequently-used functions in bounds.tools.c
