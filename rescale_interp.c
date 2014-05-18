@@ -1,24 +1,21 @@
 
+/*! \file rescale_interp.c
+     \brief Functions that rescale input primitives/conserves for interpolation purposes, and then functions that unrescale the result back to inputted type of quantities
+     // GENERAL PRIMITIVE INTERPOLATION CHANGE OF VARIABLES
+     // GODMARK: really should restrict rescale() to npr2interplist since may operate on quantity didn't want to change
+*/
+
+
 #include "decs.h"
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-//
-// GENERAL PRIMITIVE INTERPOLATION CHANGE OF VARIABLES
-//
-//
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// GODMARK: really should restrict rescale() to npr2interplist since may operate on quantity didn't want to change
-
-
-// notice that input order is always:
-// 2nd arg: true primitive
-// last arg: scaled primitive
-
-// this also allows any fancy remapping, such as characteristic interpolation -- rest of code is setup to allow any remapping as long as you have an inversion
+/// rescale quantities for interpolation
+/// notice that input order is always:
+/// which: 1 = rescale -1 = unrescale
+/// dir: which dimension (1,2,3)
+/// pr: true primitive
+/// p2interp: scaled primitive
+/// this also allows any fancy remapping, such as characteristic interpolation -- rest of code is setup to allow any remapping as long as you have an inversion
 int rescale(int which, int dir, FTYPE *pr, struct of_geom *ptrgeom,FTYPE *p2interp)
 {
   FTYPE scale[NPR2INTERP],r,th,X[NDIM],V[NDIM];

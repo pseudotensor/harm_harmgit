@@ -1,4 +1,9 @@
 
+/*! \file restart.h
+     \brief Function declarations for restart.c
+*/
+
+
 // whether to assume restart file to READ is in old format or not -- assume written format is new
 // note that Rebecca's code never changes number of output primitives (NPRDUMP) unlike Jon's code
 // This means only have to change header information and choose to change read/write as below:

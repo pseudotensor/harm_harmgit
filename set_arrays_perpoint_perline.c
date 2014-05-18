@@ -1,11 +1,15 @@
+/*! \file set_arrays_perpoint_perline.c
+     \brief Sets allocation, pointer shift, and dummy assignment for per-point quantities or 1D arrays
+*/
+
 
 #include "decs.h"
 
 
 
-// all arrays that are not multi-dimensional grid arrays (that have no particular physical direction associated with that direction)
-// set_arrays() includes 1D arrays that are always (say) related to physical dimension like radius.  For example, N1 is always related to radius for SPC.
-// The distinction is made in order to LOOP faster over multi-dimensional arrays
+/// all arrays that are not multi-dimensional grid arrays (that have no particular physical direction associated with that direction)
+/// set_arrays() includes 1D arrays that are always (say) related to physical dimension like radius.  For example, N1 is always related to radius for SPC.
+/// The distinction is made in order to LOOP faster over multi-dimensional arrays
 void set_arrays_perpoint_perline()
 {
   int dissloop;

@@ -1,3 +1,9 @@
+
+/*! \file set_grid.c
+     \brief General initialization of grid (coordinates, metric, connection coefficients, etc.)
+*/
+
+
 #include "decs.h"
 
 
@@ -14,10 +20,10 @@ static void symmetrize_X_V_dxdxp_idxdxp(void);
 static void set_tlab2ortho(void);
 
 
-// not necessary to symmetrize except for testing/debugging asymmetries
+/// not necessary to symmetrize except for testing/debugging asymmetries
 #define ATTEMPTSYMMETRIZATION 0
 
-// translate compgeom to some local quantities at loc,i,j,k
+/// translate compgeom to some local quantities at loc,i,j,k
 int assignmetricstorage_new(struct of_compgeom *mygeom, FTYPE **localgcov, FTYPE **localgcon, FTYPE **localgcovpert, FTYPE **localgdet, FTYPE **localgdetvol, FTYPE **localalphalapse, FTYPE **localbetasqoalphasq, FTYPE **localbeta, FTYPE **localeomfunc)
 {
 
@@ -42,8 +48,8 @@ int assignmetricstorage_new(struct of_compgeom *mygeom, FTYPE **localgcov, FTYPE
 }
 
 
-// old use of arrays: translate compgeom to some local quantities at loc,i,j,k
-// uses globals
+/// old use of arrays: translate compgeom to some local quantities at loc,i,j,k
+/// uses globals
 int assignmetricstorage_old(int loc, int i, int j, int k, FTYPE **localgcov, FTYPE **localgcon, FTYPE **localgcovpert, FTYPE **localgdet, FTYPE **localgdetvol, FTYPE **localalphalapse, FTYPE **localbetasqoalphasq, FTYPE **localbeta, FTYPE **localeomfunc)
 {
 #if(NEWMETRICSTORAGE==0)
@@ -72,8 +78,8 @@ int assignmetricstorage_old(int loc, int i, int j, int k, FTYPE **localgcov, FTY
     return(0);
 }
 
-// old use of arrays: translate compgeom to some local quantities at loc,i,j,k
-// uses globals
+/// old use of arrays: translate compgeom to some local quantities at loc,i,j,k
+/// uses globals
 int assignmetricstorage_oldlast(int loc, int i, int j, int k, FTYPE **localgcov, FTYPE **localgcon, FTYPE **localgcovpert, FTYPE **localgdet, FTYPE **localgdetvol, FTYPE **localalphalapse, FTYPE **localbetasqoalphasq, FTYPE **localbeta, FTYPE **localeomfunc)
 {
 #if(NEWMETRICSTORAGE==0)
@@ -103,15 +109,14 @@ int assignmetricstorage_oldlast(int loc, int i, int j, int k, FTYPE **localgcov,
 
 
 
-// GODMARK: may want to make grid functions explicitly 2D for axisymmetric space-times when in axisymmetry with space-time axis aligned with grid.
-
-// set up all grid functions
-//
-// whichtime: 0: setting initial coordinate and metric quantities.  Can be called many times to solve initial value problem of coupled matter-metric system of equations.  Should NOT be treated as a single call for entire simulation.
-//            1: Setting a future metric such that old metric can be used to compute connection with temporal changes incorporated
-//
-// CUf/Cunew: time-step for substeps used to iterate the metric and store into old metric when can take temporal difference and use as slope for present value of connection calculation
-//
+/// GODMARK: may want to make grid functions explicitly 2D for axisymmetric space-times when in axisymmetry with space-time axis aligned with grid.
+/// set up all grid functions
+///
+/// whichtime: 0: setting initial coordinate and metric quantities.  Can be called many times to solve initial value problem of coupled matter-metric system of equations.  Should NOT be treated as a single call for entire simulation.
+///            1: Setting a future metric such that old metric can be used to compute connection with temporal changes incorporated
+///
+/// CUf/Cunew: time-step for substeps used to iterate the metric and store into old metric when can take temporal difference and use as slope for present value of connection calculation
+///
 void set_grid(int whichtime, FTYPE *CUf, FTYPE *Cunew)
 {
   extern void set_rvsr(void);
@@ -278,7 +283,7 @@ void set_grid(int whichtime, FTYPE *CUf, FTYPE *Cunew)
 
 
 
-// set positional stores
+/// set positional stores
 static void set_position_stores(void)
 {
   extern void dxdxprim(FTYPE *X, FTYPE *V, FTYPE (*dxdxp)[NDIM]);
@@ -393,7 +398,7 @@ static void set_position_stores(void)
 
 
 
-// set positional stores
+/// set positional stores
 static void symmetrize_X_V_dxdxp_idxdxp(void)
 {
 
@@ -560,18 +565,18 @@ static void symmetrize_X_V_dxdxp_idxdxp(void)
 
 
 
+////////////////////
+///
+/// Grid functions that only exist at many locations and are assigned
+/// values on all points INCLUDING another value at the outer edges
+/// so have edge grid data there -- makes setting up certain things
+/// easier
+///
+/// Notice that coord() and bl_coord() work without this.  So those
+/// functions that only require those functions can do without this
+/// extra grid stuff.
+///
 ///////////////////
-//
-// Grid functions that only exist at many locations and are assigned
-// values on all points INCLUDING another value at the outer edges
-// so have edge grid data there -- makes setting up certain things
-// easier
-//
-// Notice that coord() and bl_coord() work without this.  So those
-// functions that only require those functions can do without this
-// extra grid stuff.
-//
-//////////////////
 static void set_grid_metrics(void)
 {
 
@@ -702,7 +707,7 @@ static void set_grid_metrics(void)
 
 
 
-// assumes gcov only raw input (i.e. GCONANALYTIC==0) and symmetrize only gcov so that all resulting quantities should be symmetric
+/// assumes gcov only raw input (i.e. GCONANALYTIC==0) and symmetrize only gcov so that all resulting quantities should be symmetric
 static void set_grid_metrics_withsymmetrization(void)
 {
 
@@ -725,7 +730,7 @@ static void set_grid_metrics_withsymmetrization(void)
 
 
 
-// sets gcov
+/// sets gcov
 static void set_grid_metrics_gcov(void)
 {
 
@@ -942,8 +947,8 @@ static void set_grid_metrics_others(void)
 
 
 
-// symmetrize gcov
-// symmetrize gdet too since gdet calculation depends on ordering of + and - quantities
+/// symmetrize gcov
+/// symmetrize gdet too since gdet calculation depends on ordering of + and - quantities
 static void symmetrize_gcov(void)
 {
 
@@ -1037,12 +1042,12 @@ static void symmetrize_gcov(void)
 }
 
 
+////////////////////
+///
+/// Grid functions that only exist at one location for all grid points
+///
 ///////////////////
-//
-// Grid functions that only exist at one location for all grid points
-//
-//////////////////
-// connection only needed at center, and only has memory on full normal grid (not like gcon/gcov that have extra upper edge)
+/// connection only needed at center, and only has memory on full normal grid (not like gcon/gcov that have extra upper edge)
 static void set_connection(void)
 {
 
@@ -1224,11 +1229,11 @@ static void symmetrize_connection(void)
 
 
 
+////////////////////
+///
+/// Grid functions that only exist at one location AND only on active grid
+///
 ///////////////////
-//
-// Grid functions that only exist at one location AND only on active grid
-//
-//////////////////
 static void set_idxvol(void)
 {
 
@@ -1267,11 +1272,11 @@ static void set_idxvol(void)
 
 
 
+////////////////////
+///
+/// Get tetrads that convert between X-lab frame basis to V-orthonormal basis
+///
 ///////////////////
-//
-// Get tetrads that convert between X-lab frame basis to V-orthonormal basis
-//
-//////////////////
 static void set_tlab2ortho(void)
 {
   struct of_geom geomdontuse;

@@ -1,9 +1,8 @@
 
-//////////////////////////
-//
-// Code to take full step
-//
-//////////////////////////
+/*! \file step_ch.c
+     \brief Code to take full RK step
+*/
+
 
 #include "decs.h"
 
@@ -31,7 +30,7 @@ static int post_advance(int truestep, int *dumpingnext, int timeorder, int numti
 
 
 
-// take full step (called from main.c)
+/// take full step (called from main.c)
 int step_ch_full(int truestep, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR], FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*Atemp)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],FTYPE (*uconstemp)[NSTORE2][NSTORE3][NPR])
 {
   FTYPE fullndt;
@@ -80,7 +79,7 @@ int step_ch_full(int truestep, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pst
 
 
 
-// take step itself
+/// take step itself
 int step_ch(int truestep, int *dumpingnext, FTYPE *fullndt,FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR], FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*Atemp)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],FTYPE (*uconstemp)[NSTORE2][NSTORE3][NPR])
 {
   int step_ch_simplempi(int truestep, int *dumpingnext, FTYPE *fullndt,FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR], FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*Atemp)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],FTYPE (*uconstemp)[NSTORE2][NSTORE3][NPR]);
@@ -101,8 +100,8 @@ int step_ch(int truestep, int *dumpingnext, FTYPE *fullndt,FTYPE (*prim)[NSTORE2
 
 
 
-// things to do before taking a full timestep
-// assume not called when dt==0.0
+/// things to do before taking a full timestep
+/// assume not called when dt==0.0
 int pre_stepch(int *dumpingnext, FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 {
   
@@ -145,8 +144,8 @@ int pre_stepch(int *dumpingnext, FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 
 
 
-// things to do after taking a full timestep
-// assume not called when dt==0.0
+/// things to do after taking a full timestep
+/// assume not called when dt==0.0
 int post_stepch(int *dumpingnext, FTYPE fullndt, FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 {
 
@@ -285,7 +284,7 @@ int post_stepch(int *dumpingnext, FTYPE fullndt, FTYPE (*prim)[NSTORE2][NSTORE3]
 
 
 
-// things to do during substep before advance()
+/// things to do during substep before advance()
 int pre_advance(int timeorder, int numtimeorders, int finalstep, FTYPE (*pi)[NSTORE2][NSTORE3][NPR],FTYPE (*pb)[NSTORE2][NSTORE3][NPR],FTYPE (*pf)[NSTORE2][NSTORE3][NPR])
 {
 
@@ -310,7 +309,7 @@ int pre_advance(int timeorder, int numtimeorders, int finalstep, FTYPE (*pi)[NST
 
 
 
-// things to do after advance()
+/// things to do after advance()
 int post_advance(int truestep, int *dumpingnext, int timeorder, int numtimeorders, int finalstep, SFTYPE boundtime, SFTYPE fluxtime, FTYPE (*pi)[NSTORE2][NSTORE3][NPR],FTYPE (*pb)[NSTORE2][NSTORE3][NPR],FTYPE (*pf)[NSTORE2][NSTORE3][NPR],FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*Atemp)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*uconstemp)[NSTORE2][NSTORE3][NPR])
 {
 
@@ -574,8 +573,8 @@ int post_advance(int truestep, int *dumpingnext, int timeorder, int numtimeorder
 
 
 
-// take full step using normal MPI method
-// This method transfers ALL boundary cells AT ONCE after updating ALL active cells
+/// take full step using normal MPI method
+/// This method transfers ALL boundary cells AT ONCE after updating ALL active cells
 int step_ch_simplempi(int truestep, int *dumpingnext, FTYPE *fullndt, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR], FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*Atemp)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],FTYPE (*uconstemp)[NSTORE2][NSTORE3][NPR])
 {
   int advance(int truestep, int stage, FTYPE (*pi)[NSTORE2][NSTORE3][NPR],FTYPE (*pb)[NSTORE2][NSTORE3][NPR], FTYPE (*pf)[NSTORE2][NSTORE3][NPR],
@@ -903,7 +902,7 @@ int step_ch_simplempi(int truestep, int *dumpingnext, FTYPE *fullndt, FTYPE (*pr
 
 
 
-// Obtain initial time of substep, final time of substep, and true dt used for flux conservation that is used to iterate ucum in advance.c
+/// Obtain initial time of substep, final time of substep, and true dt used for flux conservation that is used to iterate ucum in advance.c
 void get_truetime_fluxdt(int numtimeorders, SFTYPE localdt, FTYPE (*CUf)[NUMDTCUFS], FTYPE (*CUnew)[NUMDTCUFS], SFTYPE *fluxdt, SFTYPE *boundtime, SFTYPE *fluxtime, SFTYPE *tstepparti, SFTYPE *tsteppartf)
 {
   int timeorder;
@@ -1023,42 +1022,39 @@ void get_truetime_fluxdt(int numtimeorders, SFTYPE localdt, FTYPE (*CUf)[NUMDTCU
 
 
 
-// take full step using super MPI method
-//
-// Method 1) 
-// This method transfers SOME boundary cells BETWEEN EACH update of active cells
-// Simplest version:
-// 1) Iterate a layer of size NBND? (Dependent Active = DA) cells that are just inside of ghost cells but are still active cells.  These are needed by other CPUs to do next iteration
-// 2) Start transfer of DA cells to other CPUs
-// 3) Iterate region never used by other CPUs identified as (Super Active = SA) cells
-// 4) See if DA cells finished transfer
-// 5) Once finished, go back to #1 above and repeat.
-//
-// Method 2) 
-// Better version (noted by Sasha and noted as synched with MPI by Jon):  Idea: Keep MPI updates in each dimension and direction in synch with computations
-//  1) See if received THIS core's X1DN data from other X1DN CPU
-//  2) Iterate X1BND (NBND1 X full x2 X full x3) of DA cells on X1DN side
-//  3) Send #2 to X1DN CPU using single X1DN MPI call (already split off like this but just looped over)
-//  4) See if received THIS core's X1UP data from other X1UP CPU
-//  5) Iterate X1BND (NBND1 X full x2 X full x3) of DA cells on X1UP side
-//  6) Send #5 to X1UP CPU using single X1UP MPI call ("")
-//  7) See if received THIS core's X2DN data from other X2DN CPU
-//  8) Iterate X2BND (NBND2 X active x1 X full x3) of DA cells on X2DN side
-//  9) Send #8 to X2DN CPU using single X2DN MPI call ("") -- which only transfers NBND2 X active x1 X full x3 as exactly required
-// 10) See if received THIS core's X2UP data from other X2UP CPU
-// 11) Iterate X2BND (NBND2 X active x1 X full x3) of DA cells on X2UP side
-// 12) Send #11 to X2UP CPU using single X2UP MPI call ("") -- ""
-// 13) See if received THIS core's X3DN data from other X3DN CPU
-// 14) Iterate X3BND (NBND3 X active x1 X active x2) of DA cells on X3DN side
-// 15) Send #14 to X3DN CPU using single X3DN MPI call ("") -- which only transfers NBND3 X active x1 X active x2 as exactly required
-// 16) See if received THIS core's X3UP data from other X3UP CPU
-// 17) Iterate X3BND (NBND3 X active x1 X active x2) of DA cells on X3UP side
-// 18) Send #17 to X3UP CPU using single X3UP MPI call ("") -- ""
-// 19) Iterate SA cells -- no need to check since SA cells are independent of MPI computations.
-// 20) Repeat, but reverse UP and DN labels.  This way correctly first waits for first things should have recieved.  May be minor difference.
-
-
-
+/// take full step using super MPI method
+///
+/// Method 1) 
+/// This method transfers SOME boundary cells BETWEEN EACH update of active cells
+/// Simplest version:
+/// 1) Iterate a layer of size NBND? (Dependent Active = DA) cells that are just inside of ghost cells but are still active cells.  These are needed by other CPUs to do next iteration
+/// 2) Start transfer of DA cells to other CPUs
+/// 3) Iterate region never used by other CPUs identified as (Super Active = SA) cells
+/// 4) See if DA cells finished transfer
+/// 5) Once finished, go back to #1 above and repeat.
+///
+/// Method 2) 
+/// Better version (noted by Sasha and noted as synched with MPI by Jon):  Idea: Keep MPI updates in each dimension and direction in synch with computations
+///  1) See if received THIS core's X1DN data from other X1DN CPU
+///  2) Iterate X1BND (NBND1 X full x2 X full x3) of DA cells on X1DN side
+///  3) Send #2 to X1DN CPU using single X1DN MPI call (already split off like this but just looped over)
+///  4) See if received THIS core's X1UP data from other X1UP CPU
+///  5) Iterate X1BND (NBND1 X full x2 X full x3) of DA cells on X1UP side
+///  6) Send #5 to X1UP CPU using single X1UP MPI call ("")
+///  7) See if received THIS core's X2DN data from other X2DN CPU
+///  8) Iterate X2BND (NBND2 X active x1 X full x3) of DA cells on X2DN side
+///  9) Send #8 to X2DN CPU using single X2DN MPI call ("") -- which only transfers NBND2 X active x1 X full x3 as exactly required
+/// 10) See if received THIS core's X2UP data from other X2UP CPU
+/// 11) Iterate X2BND (NBND2 X active x1 X full x3) of DA cells on X2UP side
+/// 12) Send #11 to X2UP CPU using single X2UP MPI call ("") -- ""
+/// 13) See if received THIS core's X3DN data from other X3DN CPU
+/// 14) Iterate X3BND (NBND3 X active x1 X active x2) of DA cells on X3DN side
+/// 15) Send #14 to X3DN CPU using single X3DN MPI call ("") -- which only transfers NBND3 X active x1 X active x2 as exactly required
+/// 16) See if received THIS core's X3UP data from other X3UP CPU
+/// 17) Iterate X3BND (NBND3 X active x1 X active x2) of DA cells on X3UP side
+/// 18) Send #17 to X3UP CPU using single X3UP MPI call ("") -- ""
+/// 19) Iterate SA cells -- no need to check since SA cells are independent of MPI computations.
+/// 20) Repeat, but reverse UP and DN labels.  This way correctly first waits for first things should have recieved.  May be minor difference.
 int step_ch_supermpi(int truestep, int *dumpingnext, FTYPE *fullndt, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR], FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*Atemp)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],FTYPE (*uconstemp)[NSTORE2][NSTORE3][NPR])
 {
   int advance(int truestep, int stage, FTYPE (*pi)[NSTORE2][NSTORE3][NPR],FTYPE (*pb)[NSTORE2][NSTORE3][NPR], FTYPE (*pf)[NSTORE2][NSTORE3][NPR],
@@ -1260,23 +1256,22 @@ int step_ch_supermpi(int truestep, int *dumpingnext, FTYPE *fullndt, FTYPE (*pri
 
 
 
-
-// for the ith stage:
-
-// Uf^i = ulast^i = CUf^{i0} Ui^i + CUf^{i1} ulast^i + CUf^{i2} dUexplicit^i + CUf^{i4} dUimplicit^i
-
-// unew^i = CUnew^{i0} Ui^i + CUnew^{i1} dUexplicit^i + CUnew^{i2} Uf^i  + CUnew^{i4} dUimplicit^i
-
-// [SUPERNOTE: currently only TIMEORDER==4 has final unew different from final uf.  This factis usd in utoprimgen.c to avoid inversion if requested, unless cannot because unew must itself be inverted.]
-
-// (how also used) CUf[timeorder][2] : t + dt*CUf[timeorder][3]+ dt*CUf[timeorder][2] = time of pf
-
-// CUf[timeorder][3] : t + dt*CUf[timeorder][3] = time of pi
-
-// CUnew[timeorder][3] : t + dt*CUnew[timeorder][3] = approximate time of pb
-
-// GODMARK: Currently RK methods all feed pf into pb on next step, so only need one pstag.  In general should have multiple pstag's.
-
+/// Setup RK steps
+/// for the ith stage:
+///
+/// Uf^i = ulast^i = CUf^{i0} Ui^i + CUf^{i1} ulast^i + CUf^{i2} dUexplicit^i + CUf^{i4} dUimplicit^i
+///
+/// unew^i = CUnew^{i0} Ui^i + CUnew^{i1} dUexplicit^i + CUnew^{i2} Uf^i  + CUnew^{i4} dUimplicit^i
+///
+/// [SUPERNOTE: currently only TIMEORDER==4 has final unew different from final uf.  This factis usd in utoprimgen.c to avoid inversion if requested, unless cannot because unew must itself be inverted.]
+///
+/// (how also used) CUf[timeorder][2] : t + dt*CUf[timeorder][3]+ dt*CUf[timeorder][2] = time of pf
+///
+/// CUf[timeorder][3] : t + dt*CUf[timeorder][3] = time of pi
+///
+/// CUnew[timeorder][3] : t + dt*CUnew[timeorder][3] = approximate time of pb
+///
+/// GODMARK: Currently RK methods all feed pf into pb on next step, so only need one pstag.  In general should have multiple pstag's.
 void setup_rktimestep(int truestep, int *numtimeorders,
                       FTYPE (*p)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR],
                       FTYPE (*pk)[NSTORE1][NSTORE2][NSTORE3][NPR],
@@ -1621,8 +1616,8 @@ void setup_rktimestep(int truestep, int *numtimeorders,
 
 
 
-// normal full bounding during evolution
-// NOTEMARK: Was previously also bounding pstag here, but not necessary since done by calling bound_pstag in fluxctstag.c
+/// normal full bounding during evolution
+/// NOTEMARK: Was previously also bounding pstag here, but not necessary since done by calling bound_pstag in fluxctstag.c
 int bound_evolveprim(int boundstage, int finalstep, SFTYPE boundtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], int doboundmpi)
 {
   int boundvartype=BOUNDPRIMTYPE;
@@ -1646,8 +1641,8 @@ int bound_evolveprim(int boundstage, int finalstep, SFTYPE boundtime, FTYPE (*pr
 }
 
 
-// simple bounding during evolution
-// NOTEMARK: Was previously also bounding pstag here, but not necessary since done by calling bound_pstag in fluxctstag.c
+/// simple bounding during evolution
+/// NOTEMARK: Was previously also bounding pstag here, but not necessary since done by calling bound_pstag in fluxctstag.c
 int bound_beforeevolveprim(int boundstage,int finalstep, SFTYPE boundtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], int doboundmpi)
 {
   int boundvartype=BOUNDPRIMSIMPLETYPE; // tells boundary routines that only bounding 1 layer deep
@@ -1668,7 +1663,7 @@ int bound_beforeevolveprim(int boundstage,int finalstep, SFTYPE boundtime, FTYPE
 
 }
 
-// normal bounding of non-staggered primitives
+/// normal bounding of non-staggered primitives
 int bound_prim(int boundstage, int finalstep, SFTYPE boundtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], int doboundmpi)
 {
   int boundvartype=BOUNDPRIMTYPE;
@@ -1680,7 +1675,7 @@ int bound_prim(int boundstage, int finalstep, SFTYPE boundtime, FTYPE (*prim)[NS
 
 }
 
-// normal bounding of staggered primitives
+/// normal bounding of staggered primitives
 int bound_pstag(int boundstage, int finalstep, SFTYPE boundtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], int doboundmpi)
 {
   int boundvartype=BOUNDPSTAGTYPE;
@@ -1692,7 +1687,7 @@ int bound_pstag(int boundstage, int finalstep, SFTYPE boundtime, FTYPE (*prim)[N
 }
 
 
-// normal bounding of all primitives
+/// normal bounding of all primitives
 int bound_allprim(int boundstage, int finalstep, SFTYPE boundtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], int doboundmpi)
 {
   int boundvartype=BOUNDPRIMTYPE;
@@ -1707,7 +1702,7 @@ int bound_allprim(int boundstage, int finalstep, SFTYPE boundtime, FTYPE (*prim)
 
 
 
-// bound all prims
+/// bound all prims
 int bound_anyallprim(int boundstage, int finalstep, SFTYPE boundtime, int boundvartype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR],int doboundmpi)
 {
   int mystagboundvar;
@@ -1740,7 +1735,7 @@ int bound_anyallprim(int boundstage, int finalstep, SFTYPE boundtime, int boundv
 
 
 
-// bound uavg
+/// bound uavg
 int bound_uavg(int boundstage, int finalstep, SFTYPE boundtime, int boundvartype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], int doboundmpi)
 {
   int mystagboundvar;
@@ -1790,10 +1785,10 @@ int bound_uavg(int boundstage, int finalstep, SFTYPE boundtime, int boundvartype
 
 
 
-// bound any prim type
-// CALLS directly real and MPI boundary functions
-// pstag = pstagglobal
-// ucons = unewglobal
+/// bound any prim type
+/// CALLS directly real and MPI boundary functions
+/// pstag = pstagglobal
+/// ucons = unewglobal
 int bound_anyprim(int boundstage, int finalstep, SFTYPE boundtime, int boundvartype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], int doboundmpi)
 {
   int whichpltoavg[NPR];
@@ -1867,11 +1862,11 @@ int bound_anyprim(int boundstage, int finalstep, SFTYPE boundtime, int boundvart
 }
 
 
-// bound any pstag type
-// CALLS directly real and MPI boundary functions
-// pstag is at FACE1,2,3 for fields, so user bound is different
-// MPI bounding is the same as CENT quantities
-// used when restarting in initbase.c to bound unewglobal for FLUXB==FLUXCTSTAG
+/// bound any pstag type
+/// CALLS directly real and MPI boundary functions
+/// pstag is at FACE1,2,3 for fields, so user bound is different
+/// MPI bounding is the same as CENT quantities
+/// used when restarting in initbase.c to bound unewglobal for FLUXB==FLUXCTSTAG
 int bound_anypstag(int boundstage, int finalstep, SFTYPE boundtime, int boundvartype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], int doboundmpi)
 {
   int pl,pliter;
@@ -1950,10 +1945,10 @@ int bound_anypstag(int boundstage, int finalstep, SFTYPE boundtime, int boundvar
 }
 
 
-// bound any flux type
-// CALLS directly real and MPI boundary functions
-// special bound for flux that only bounds in direction of flux itself (so not full cross-flux information)
-// used for finite difference version of ENO
+/// bound any flux type
+/// CALLS directly real and MPI boundary functions
+/// special bound for flux that only bounds in direction of flux itself (so not full cross-flux information)
+/// used for finite difference version of ENO
 int bound_flux(int boundstage, int finalstep, SFTYPE boundtime, int boundvartype, FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL], int doboundmpi)
 {
   int dir;
@@ -1995,7 +1990,7 @@ int bound_flux(int boundstage, int finalstep, SFTYPE boundtime, int boundvartype
 }
 
 
-// used when restarting in initbase.c
+/// used when restarting in initbase.c
 int bound_vpot(int boundstage, int finalstep, SFTYPE boundtime, int boundvartype, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], int doboundmpi, int doboundnonmpi)
 {
   int dir;
@@ -2038,8 +2033,8 @@ int bound_vpot(int boundstage, int finalstep, SFTYPE boundtime, int boundvartype
 
 
 
-// bound pflag type
-// CALLS directly real and MPI boundary functions
+/// bound pflag type
+/// CALLS directly real and MPI boundary functions
 int bound_pflag(int boundstage, int finalstep, SFTYPE boundtime, PFTYPE (*prim)[NSTORE2][NSTORE3][NUMPFLAGS], int doboundmpi)
 {
   int boundvartype=BOUNDINTTYPE;

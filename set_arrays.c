@@ -1,4 +1,9 @@
 
+/*! \file set_arrays.c
+     \brief Wrapper for setting up (allocation/pointer shifting, dummy assignment) of all per-point, 1D, and multi-D arrays
+*/
+
+
 #include "decs.h"
 
 

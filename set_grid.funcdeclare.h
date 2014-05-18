@@ -1,3 +1,8 @@
+
+/*! \file set_grid.funcdeclare.h
+     \brief function declarations for global use of set_grid.c functions
+*/
+
 // called in restart.c and initbase.c
 extern void set_grid(int whichtime,FTYPE *CUf, FTYPE *Cunew);
 

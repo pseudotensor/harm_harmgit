@@ -735,7 +735,7 @@ init.readdata.c kazfulleos.c                    kazfulleos_eosfunctions.c     ka
 reconstructeno.c        reconstructeno.deps.manypoints.list  reconstructeno.h             reconstructeno_staticfuncs_constvars.h reconstructeno.debug.c  reconstructeno_global.funcdeclare.h  reconstructeno.o             reconstructeno_superdefs.h reconstructeno_defs.h   reconstructeno_global.h              reconstructeno_set_arrays.c  reconstructeno.weightmin.c \
 defs.liaison.h    liaison_set_arrays.c                 superdefs.liaison.h global.liaison.h  liaison.c makefile.liaison.inc maketail.liaison.inc \
 jon_interp.c jon_interp_computepreprocess.c jon_interp_filter.c jon_interp_interpolationitself.c jon_interp_mnewt.c jon_interp_newt.c defs.jon_interp.h global.jon_interp.h maketail.joninterp.inc \
-bin2txt.c makefile.bin2txt.inc maketail.bin2txt.inc smcalc maketail.smcalc.inc
+bin2txt.c makefile.bin2txt.inc maketail.bin2txt.inc smcalc.c maketail.smcalc.inc
 
 
 

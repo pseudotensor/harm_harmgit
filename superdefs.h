@@ -1,7 +1,7 @@
-// superdefs.h : large data structures not needed by liaison code
 
-
-/*
+/*! \file superdefs.general.h
+    \brief Large arrays
+    large data structures not needed by liaison code
 
   to add a new variable:
 
@@ -20,6 +20,8 @@
   6) Use it!
 
 */
+
+
 
 
 // SUPERNOTE: Ensure that name always starts with "BASEMAC??()" so can easily recall that these are the original arrays
@@ -45,14 +47,14 @@
 // Useless: wspeed, fluxvectemp, Fa,Fb,stencilvarptemp, geomcornglobal
 
 
-// memory and pointer shift declarations/definitions used globally in code
+/// memory and pointer shift declarations/definitions used globally in code
 #include "kazfulleos.superdefs.h"
 
 
-// below is always used -- never use as temp
+/// below is always used -- never use as temp
 FTYPE BASEMACP0A1(pglobal,N1M,N2M,N3M,NPR); /* space for primitive vars */
 
-// below is always used -- never use as temp
+/// below is always used -- never use as temp
 #if(ANALYTICMEMORY)
 FTYPE BASEMACP0A1(panalytic,N1M,N2M,N3M,NPR);       /* space for primitive vars */
 #if(FIELDSTAGMEM)
@@ -60,15 +62,15 @@ FTYPE BASEMACP0A1(pstaganalytic,N1M,N2M,N3M,NPR);       /* space for primitive v
 #endif
 #endif
 
-// below is always used -- never use as temp
+/// below is always used -- never use as temp
 #if(NUMPOTHER>0)
 FTYPE BASEMACP1A0(pother,NUMPOTHER,N1M,N2M,N3M); /* space for primitive vars */
 #endif
 
-// arbitrary temporary storage array
+/// arbitrary temporary storage array
 FTYPE BASEMACP0A1(ptemparray,N1M,N2M,N3M,NPR);
 
-// arbitrary temporary storage array
+/// arbitrary temporary storage array
 FTYPE BASEMACP0A1(utemparray,N1M,N2M,N3M,NPR);
 
 #if(DOEVOLVEMETRIC)
@@ -76,7 +78,7 @@ FTYPE BASEMACP0A1(ucumformetric,N1M,N2M,N3M,NPR);
 #endif
 
 
-// emf has extra zone on upper end since corner quantity and some components exist that are needed for cell centered quantities
+/// emf has extra zone on upper end since corner quantity and some components exist that are needed for cell centered quantities
 FTYPE BASEMACP1A0(emf,NDIM*NUMTRUEEOMSETS,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3); /* space for emf and temp vars -- hence why NDIM*NUMTRUEEOMSETS */
 
 #if(STOREFLUXSTATE)
@@ -85,13 +87,13 @@ struct of_state BASEMACP0A0(fluxstatecent,N1M,N2M,N3M); // pb-like (not pi-like)
 #endif
 
 #if(FIELDTOTHMEM)
-// emf and vconemf assumed not used across substeps so can use as temp var
-// below was [COMPDIM] but wanted to use emf as simple temp space for 4D
+/// emf and vconemf assumed not used across substeps so can use as temp var
+/// below was [COMPDIM] but wanted to use emf as simple temp space for 4D
 FTYPE BASEMACP0A1(vconemf,N1M,N2M,N3M,NDIM-1); /* used for Athena EMFs */
 #endif
 
 #if(MODIFYEMFORVPOT==MODIFYVPOT || TRACKVPOT>0 || EVOLVEWITHVPOT>0)
-// vpotarrayglobal holds vpot, vpot0, vpotlast, vpotcum
+/// vpotarrayglobal holds vpot, vpot0, vpotlast, vpotcum
 FTYPE BASEMACP1A0(vpotarrayglobal,NUMVPOT,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3);
 #if(ANALYTICMEMORY)
 FTYPE BASEMACP1A0(vpotanalytic,NDIM,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3);
@@ -99,21 +101,21 @@ FTYPE BASEMACP1A0(vpotanalytic,NDIM,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3);
 #endif
 
 
-// for storing dt over all dimensions before computing minimum dt
+/// for storing dt over all dimensions before computing minimum dt
 #if(PERCELLDT)
 FTYPE BASEMACP0A1(dtijk,N1M,N2M,N3M,COMPDIM);
 #endif
 
 
 #if(STOREWAVESPEEDS>0)
-// below is used within substeps but not across
+/// below is used within substeps but not across
 FTYPE BASEMACP1A1(wspeedtemp,NUMEOMSETS,N1M,N2M,N3M,NUMCS); // temporarily store wspeed in case not just copying but averaging before putting into wspeed array
 FTYPE BASEMACP3A0(wspeed,NUMEOMSETS,COMPDIM,NUMCS,N1M,N2M,N3M); // wave speeds (left/right)
 #endif
 
 
 #if(STORESHOCKINDICATOR)
-// below is used within substeps but not across
+/// below is used within substeps but not across
 FTYPE BASEMACP1A0(shockindicatorarray,NUMSHOCKPLS,N1M,N2M,N3M);
 #endif
 
@@ -124,18 +126,18 @@ FTYPE BASEMACP1A0(shockindicatorarray,NUMSHOCKPLS,N1M,N2M,N3M);
 //
 // TIME-STEPPING
 //
-////////////////////////////////////////////////
+/////////////////////////////////////////////////
 
-// below is used within substeps AND across substeps but not across full timesteps
+/// below is used within substeps AND across substeps but not across full timesteps
 FTYPE BASEMACP1A1(pk,MAXITERDTSTAGES,N1M,N2M,N3M,NPR); /* next-step primitives */
-// for higher order RK time stepping integrations
+/// for higher order RK time stepping integrations
 FTYPE BASEMACP0A1(unewglobal,N1M,N2M,N3M,NPR); // used across substeps and across full time steps
 FTYPE BASEMACP0A1(ulastglobal,N1M,N2M,N3M,NPR); // used across substeps but not across full time steps
 FTYPE BASEMACP0A1(uinitialglobal,N1M,N2M,N3M,NPR); // used across substeps but not across full time steps
 FTYPE BASEMACP0A1(dUgeomarray,N1M,N2M,N3M,NPR); // assume not used across substeps so can use as temp var
 
 #if(HIGHERORDERMEM||FIELDSTAGMEM)
-// below is used within substeps but not across
+/// below is used within substeps but not across
 FTYPE BASEMACP0A1(upointglobal,N1M,N2M,N3M,NPR);
 FTYPE BASEMACP0A1(upointglobaluf,N1M,N2M,N3M,NPR);
 FTYPE BASEMACP0A1(oldufstore,N1M,N2M,N3M,NPR);
@@ -150,68 +152,68 @@ FTYPE BASEMACP0A1(oldufstore,N1M,N2M,N3M,NPR);
 //
 ////////////////////////////////////////////////
 
-// Below F1,F2,F3,F1EM,F2EM,F3EM have extra shift ONLY to have extra memory to avoid seg fault, not to be used for actual calculations!  Hence, pointer to these does NOT have such a shift.  This allows flux_ct() to go over F1,F2,F3 sumes for emf in a single loop rather than multiple loops.
-// For FLUXCTTOTH, need space at bottom, while for FLUXCD need space at top.  So add 2 extra spaces.
+/// Below F1,F2,F3,F1EM,F2EM,F3EM have extra shift ONLY to have extra memory to avoid seg fault, not to be used for actual calculations!  Hence, pointer to these does NOT have such a shift.  This allows flux_ct() to go over F1,F2,F3 sumes for emf in a single loop rather than multiple loops.
+/// For FLUXCTTOTH, need space at bottom, while for FLUXCD need space at top.  So add 2 extra spaces.
 #if(N1>1)
-// below is used within substeps but not across if doing ACCURATEDIAG
+/// below is used within substeps but not across if doing ACCURATEDIAG
 FTYPE BASEMACP0A1(F1,SHIFT1+N1M+SHIFT1,SHIFT2+N2M+SHIFT2,SHIFT3+N3M+SHIFT3,NPR+NSPECIAL); /* fluxes */
 #endif
 #if(N2>1)
-// below is used within substeps but not across if doing ACCURATEDIAG
+/// below is used within substeps but not across if doing ACCURATEDIAG
 FTYPE BASEMACP0A1(F2,SHIFT1+N1M+SHIFT1,SHIFT2+N2M+SHIFT2,SHIFT3+N3M+SHIFT3,NPR+NSPECIAL); /* fluxes */
 #endif
 #if(N3>1)
-// below is used within substeps but not across if doing ACCURATEDIAG
+/// below is used within substeps but not across if doing ACCURATEDIAG
 FTYPE BASEMACP0A1(F3,SHIFT1+N1M+SHIFT1,SHIFT2+N2M+SHIFT2,SHIFT3+N3M+SHIFT3,NPR+NSPECIAL); /* fluxes */
 #endif
 
 #if(SPLITMAEMMEM)
 #if(N1>1)
-// below is used within substeps but not across if doing ACCURATEDIAG
+/// below is used within substeps but not across if doing ACCURATEDIAG
 FTYPE BASEMACP0A1(F1EM,SHIFT1+N1M+SHIFT1,SHIFT2+N2M+SHIFT2,SHIFT3+N3M+SHIFT3,NPR+NSPECIAL); /* fluxes */
 #endif
 #if(N2>1)
-// below is used within substeps but not across if doing ACCURATEDIAG
+/// below is used within substeps but not across if doing ACCURATEDIAG
 FTYPE BASEMACP0A1(F2EM,SHIFT1+N1M+SHIFT1,SHIFT2+N2M+SHIFT2,SHIFT3+N3M+SHIFT3,NPR+NSPECIAL); /* fluxes */
 #endif
 #if(N3>1)
-// below is used within substeps but not across if doing ACCURATEDIAG
+/// below is used within substeps but not across if doing ACCURATEDIAG
 FTYPE BASEMACP0A1(F3EM,SHIFT1+N1M+SHIFT1,SHIFT2+N2M+SHIFT2,SHIFT3+N3M+SHIFT3,NPR+NSPECIAL); /* fluxes */
 #endif
 #endif
 
 
 #if(SPLITNPR||FIELDSTAGMEM)
-// below 2 assume not used across substeps so can use as temp var
+/// below 2 assume not used across substeps so can use as temp var
 FTYPE BASEMACP1A1(gp_l,NDIM-1,N1M,N2M,N3M,NPR2INTERP);
 FTYPE BASEMACP1A1(gp_r,NDIM-1,N1M,N2M,N3M,NPR2INTERP);
 #endif
 
 FTYPE BASEMACP0A1(pleft,N1M,N2M,N3M,NPR2INTERP); /* for parabolic interpolation */
 FTYPE BASEMACP0A1(pright,N1M,N2M,N3M,NPR2INTERP); /* for parabolic interpolation */
-// below is used within substeps but not across
+/// below is used within substeps but not across
 FTYPE BASEMACP0A1(prc,N1M,N2M,N3M,NPR2INTERP); /* rescaled primitives, also used for temporary storage in fixup_utoprim() */
 
 
 
 #if(FIELDSTAGMEM)
-// use unew,ulast,uinitial to store conserved staggered field even for non-finite-volume methods since always available
-// need to set unew/uinitial with staggered field initially at t=0
-// note fixup mods to unew when doing finite volume never change field, so no conflict with staggered use
-// at some point pleft/pright to staggered B field from u(new/last/initial?) so pleft/pright well-defined
-// at some point need to fill p[] with interpolated version of staggered field so p[] well-defined
-// pleftcorn/prightcorn are interpolated from pleft/pright
-// ensure STOREWAVESPEEDS is >0
-// assume need not store separate wavespeed for corn, just use stored wspeed when needed during specific flux calculation (no interpolation)
+/// use unew,ulast,uinitial to store conserved staggered field even for non-finite-volume methods since always available
+/// need to set unew/uinitial with staggered field initially at t=0
+/// note fixup mods to unew when doing finite volume never change field, so no conflict with staggered use
+/// at some point pleft/pright to staggered B field from u(new/last/initial?) so pleft/pright well-defined
+/// at some point need to fill p[] with interpolated version of staggered field so p[] well-defined
+/// pleftcorn/prightcorn are interpolated from pleft/pright
+/// ensure STOREWAVESPEEDS is >0
+/// assume need not store separate wavespeed for corn, just use stored wspeed when needed during specific flux calculation (no interpolation)
 //FTYPE BASEMACP2A0(wspeedcorn,COMPDIM,NUMCS,N1M,N2M,N3M); // wave speeds (left/right) at corner (not true corner)
 FTYPE BASEMACP0A1(pstagglobal,N1M,N2M,N3M,NPR); // for interpolate_pfield_face2cent() -- only contains fields
-// below has more memory than needed for 2nd COMPDIM (can be 2) but leave as 3 for simplicity in accessing array
+/// below has more memory than needed for 2nd COMPDIM (can be 2) but leave as 3 for simplicity in accessing array
 //FTYPE BASEMACP3A0(pbcorninterp,COMPDIM,COMPDIM,NUMCS,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3); // holds field corner interpolations
 FTYPE BASEMACP1A3(pvbcorninterp,COMPDIM,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3,COMPDIM,NUMCS+1,NUMCS); // holds velocity corner interpolations (NUMCS+1) has +1 part that holds old pbcorninterp
 FTYPE BASEMACP1A0(geomcornglobal,COMPDIM,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3); // really for merged method with FLUXCTSTAG
 
 #if(HIGHERORDERMEM)
-// below used to store Bhat that satisfies divBhat=0 for fluxrecon method when evolving point field at higher order since then unew doesn't contain Bhat
+/// below used to store Bhat that satisfies divBhat=0 for fluxrecon method when evolving point field at higher order since then unew doesn't contain Bhat
 FTYPE BASEMACP0A1(Bhatglobal,N1M,N2M,N3M,NPR);
 FTYPE BASEMACP0A1(Bhatanalytic,N1M,N2M,N3M,NPR);
 #endif

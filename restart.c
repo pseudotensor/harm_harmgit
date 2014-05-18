@@ -1,5 +1,9 @@
 
-/* restart functions; restart_init and restart_dump */
+/*! \file restart.c
+     \brief Functions related to restarting code and reading/writing rdump's
+     restart functions; restart_init and restart_dump
+*/
+
 
 #include "decs.h"
 
@@ -18,10 +22,10 @@ int extrarestartfunction_new(void)
 }
 
 
-// This function reads header and data (primitives and conserved quantities)
-// GODMARK: fills in *global* quantities
-// It then outputs restart file for user to check consistency
-// CHANGINGMARK: Note that for evolving metric should really store old metric in restart file
+/// This function reads header and data (primitives and conserved quantities)
+/// GODMARK: fills in *global* quantities
+/// It then outputs restart file for user to check consistency
+/// CHANGINGMARK: Note that for evolving metric should really store old metric in restart file
 int restart_init(int which)
 {
 
@@ -145,9 +149,9 @@ int restart_init(int which)
 
 
 
-// assign any MAC(quantity,i,j,k) that isn't set by restart_read() that want to set so later checks or later computational uses can occur without errors
-// GODMARK: must keep this up to date with what one is evolving not written to dump
-// OPENMPOPTMARK: Assume not important to optimize
+/// assign any MAC(quantity,i,j,k) that isn't set by restart_read() that want to set so later checks or later computational uses can occur without errors
+/// GODMARK: must keep this up to date with what one is evolving not written to dump
+/// OPENMPOPTMARK: Assume not important to optimize
 int restart_process_extra_variables(void)
 {
   int i,j,k;
@@ -205,7 +209,7 @@ int restart_write(long dump_cnt)
 
 
 
-// number of columns for restart
+/// number of columns for restart
 void set_rdump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
 {
 
@@ -229,8 +233,8 @@ void set_rdump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
 }
 
 
-// Note that in initbase.c that many required things are computed during restart setup
-// For example, post_init() calls compute_EOS_parms_full() that fills EOSextraglobal[] if doing WHICHEOS==KAZFULL, so don't have to store that in restart file.
+/// Note that in initbase.c that many required things are computed during restart setup
+/// For example, post_init() calls compute_EOS_parms_full() that fills EOSextraglobal[] if doing WHICHEOS==KAZFULL, so don't have to store that in restart file.
 int rdump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 {
 
@@ -274,7 +278,7 @@ int rdump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 
 
 
-// read restart file
+/// read restart file
 int restart_read(long dump_cnt)
 {
   MPI_Datatype datatype;
@@ -323,7 +327,7 @@ int restart_read(long dump_cnt)
 }
 
 
-// read-restart content
+/// read-restart content
 int rdump_read_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 {
 
@@ -372,13 +376,12 @@ int rdump_read_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf
 
 
 
-// read-restart file with upper pole information for FLUXB==FLUXCTSTAG and special3dspc==1
-// Since both write *and* read full 3D file with j shifted up, read-in puts quantities in correct location, so no remapping needed.
-// All j=N2 values will be overwritten by normal MPI calls, except the last one for mycpupos[2]==ncpux2-1 that will use the read-in values
-// Note that order of normal restart read/write and upperpole read/write doesn't matter since all values are correctly positioned during read-write.
-
-// This is all done because normal MPI fileio routines assume standard j=0..N-1 or j=1..N block, but staggered stuff has j=0..N block for spherical polar coordinates.  No other directions (i.e. i or k) require this.
-// For simplicity, we just output two full 3D files with j shifted.
+/// read-restart file with upper pole information for FLUXB==FLUXCTSTAG and special3dspc==1
+/// Since both write *and* read full 3D file with j shifted up, read-in puts quantities in correct location, so no remapping needed.
+/// All j=N2 values will be overwritten by normal MPI calls, except the last one for mycpupos[2]==ncpux2-1 that will use the read-in values
+/// Note that order of normal restart read/write and upperpole read/write doesn't matter since all values are correctly positioned during read-write.
+/// This is all done because normal MPI fileio routines assume standard j=0..N-1 or j=1..N block, but staggered stuff has j=0..N block for spherical polar coordinates.  No other directions (i.e. i or k) require this.
+/// For simplicity, we just output two full 3D files with j shifted.
 int restartupperpole_read(long dump_cnt)
 {
   MPI_Datatype datatype;
@@ -440,7 +443,7 @@ int restartupperpole_read(long dump_cnt)
 
 
 
-// restart needs to set B2=0 along outer pole if not being used.
+/// restart needs to set B2=0 along outer pole if not being used.
 static int restartupperpole_set(void)
 {
 
@@ -468,7 +471,7 @@ static int restartupperpole_set(void)
 }
 
 
-// read-restart upperpole header
+/// read-restart upperpole header
 int read_restartupperpole_header(int whichdump, int whichdumpversion, int numcolumns, int bintxt, FILE *headerptr)
 {
 
@@ -483,7 +486,7 @@ int read_restartupperpole_header(int whichdump, int whichdumpversion, int numcol
   return(0);
 }
 
-// write-restart upperpole header
+/// write-restart upperpole header
 int write_restartupperpole_header(int whichdump, int whichdumpversion, int numcolumns, int bintxt, FILE *headerptr)
 {
 
@@ -499,7 +502,7 @@ int write_restartupperpole_header(int whichdump, int whichdumpversion, int numco
 }
 
 
-// read-restart upperpole content
+/// read-restart upperpole content
 int rupperpoledump_read_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 {
 
@@ -531,7 +534,7 @@ int rupperpoledump_read_content(int i, int j, int k, MPI_Datatype datatype,void 
 
 
 
-// write-restart file with upper pole information for FLUXB==FLUXCTSTAG and special3dspc==1
+/// write-restart file with upper pole information for FLUXB==FLUXCTSTAG and special3dspc==1
 int restartupperpole_write(long dump_cnt)
 {
   MPI_Datatype datatype;
@@ -568,8 +571,8 @@ int restartupperpole_write(long dump_cnt)
 
 
 
-// read-restart upperpole numcolumns
-// number of columns for restart
+/// read-restart upperpole numcolumns
+/// number of columns for restart
 void set_rupperpoledump_read_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
 {
 
@@ -585,7 +588,7 @@ void set_rupperpoledump_read_content_dnumcolumns_dnumversion(int *numcolumns, in
   *numversion=0;
 }
 
-// write-restart upperpole numcolumns
+/// write-restart upperpole numcolumns
 void set_rupperpoledump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
 {
   extern void set_rupperpoledump_read_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
@@ -597,7 +600,7 @@ void set_rupperpoledump_content_dnumcolumns_dnumversion(int *numcolumns, int *nu
 
 
 
-// write-restart upperpole content
+/// write-restart upperpole content
 int rupperpoledump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 {
 
@@ -642,8 +645,8 @@ int rupperpoledump_content(int i, int j, int k, MPI_Datatype datatype,void *writ
 
 
 
-// write metric restart file
-// This is done to keep track of older time's metric so can take temporal difference to get connection.  Otherwise, restart would be missing the temporal change in metric contribution to the connection.
+/// write metric restart file
+/// This is done to keep track of older time's metric so can take temporal difference to get connection.  Otherwise, restart would be missing the temporal change in metric contribution to the connection.
 int restartmetric_write(long dump_cnt)
 {
   MPI_Datatype datatype;
@@ -689,7 +692,7 @@ void set_rmetricdump_content_dnumcolumns_dnumversion(int *numcolumns, int *numve
 }
 
 
-// must be consistent with dnumcolumns[RESTARTMETRICDUMPTYPE]
+/// must be consistent with dnumcolumns[RESTARTMETRICDUMPTYPE]
 int rmetricdump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 {
   int gridpos;
@@ -827,7 +830,7 @@ int restartmetric_read(long dump_cnt)
 
 
 
-// number of columns
+/// number of columns
 void set_rmetricdump_read_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
 {
 
@@ -855,7 +858,7 @@ void set_rmetricdump_read_content_dnumcolumns_dnumversion(int *numcolumns, int *
 
 }
 
-// almost the same as the write function except here we use myget() instead of myset()
+/// almost the same as the write function except here we use myget() instead of myset()
 int rmetricdump_read_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 {
   int gridpos;
@@ -927,7 +930,7 @@ int rmetricdump_read_content(int i, int j, int k, MPI_Datatype datatype,void *wr
 
 
 
-// headerptr created and only used here OR passed a given pointer
+/// headerptr created and only used here OR passed a given pointer
 int bcast_restart_header(void)
 {
   int readwrite_restart_header(int readwrite, int bintxt, int bcasthead, FILE*headerptr);
@@ -942,7 +945,7 @@ int bcast_restart_header(void)
 }
 
 
-// headerptr created and only used here OR passed a given pointer
+/// headerptr created and only used here OR passed a given pointer
 int read_restart_header_new(int whichdump, int whichdumpversion, int numcolumns, int bintxt, FILE*headerptr)
 {
   int readwrite_restart_header(int readwrite, int bintxt, int bcasthead, FILE*headerptr);
@@ -971,9 +974,9 @@ int write_restart_header_new(int whichdump, int whichdumpversion, int numcolumns
 
 
 
-// here bintxt is only 
-// GODMARK: For super-consistent constant-format restart read/write, need to have maximum sizes for things like NPR, etc. anything that changes in size when changing paramters.  This way can always read other restart files with different parameters
-// GODMARK: But at same time, if parameters change, restart may not be valid if data doesn't exist, so checks are needed then.
+/// here bintxt is only 
+/// GODMARK: For super-consistent constant-format restart read/write, need to have maximum sizes for things like NPR, etc. anything that changes in size when changing paramters.  This way can always read other restart files with different parameters
+/// GODMARK: But at same time, if parameters change, restart may not be valid if data doesn't exist, so checks are needed then.
 int readwrite_restart_header(int readwrite, int bintxt, int bcasthead, FILE*headerptr)
 {
   int ii;
@@ -1313,7 +1316,7 @@ int readwrite_restart_header(int readwrite, int bintxt, int bcasthead, FILE*head
 }
 
 
-// setup global accounting for CPU=0
+/// setup global accounting for CPU=0
 int restart_read_defs_new(void)
 {
   int enerregion;
@@ -1372,9 +1375,9 @@ int restart_read_defs_new(void)
 
 
 ///////////
-//
-// old header functions:
-//
+///
+/// old header functions:
+///
 ///////////
 #include "restart.rebeccaoldcode.c"
 

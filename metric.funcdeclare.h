@@ -1,5 +1,5 @@
 
-/*! \file metric.c
+/*! \file metric.funcdeclare.h
      \brief Function delcarations for global use of functions in metric.c
 */
 

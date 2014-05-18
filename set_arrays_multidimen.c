@@ -1,14 +1,20 @@
+
+/*! \file set_arrays_multidimen.c
+     \brief Sets allocation, pointer shift, and dummy assignment for multi-dimen arrays
+
 // N1M,N2M,N3M here are used correctly w.r.t. global.storage.h
-
-#include "decs.h"
-
 // See also bounds.ns.c [remove simplename=aphifromoutflow or deal with it]
 // See also kazfulleos.c [shift consistently there] simplename=EOSextraglobal
 // See liaison.c : [shift consistently there]
 // Otherwise, all shifts of multi-D arrays should be here [true right now 05/13/09]
+*/
 
-// all arrays that are multi-dimensional that required special reordering considerations when changing ORDERSTORAGE
-// OPENMPOPTMARK: Don't optimize since many different types of arrays
+
+#include "decs.h"
+
+
+/// all arrays that are multi-dimensional that required special reordering considerations when changing ORDERSTORAGE
+/// OPENMPOPTMARK: Don't optimize since many different types of arrays
 void set_arrays_multidimen()
 {
   int i, j, k, pl, pliter, l, m;

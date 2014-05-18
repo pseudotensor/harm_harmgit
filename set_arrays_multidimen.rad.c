@@ -1,3 +1,7 @@
+/*! \file set_arrays_multidimen.rad.c
+     \brief Sets allocation, pointer shift, and dummy assignment for multi-dimen arrays for RADIATION/Koral code
+*/
+
 #include "decs.h"
 
 void set_arrays_multidimen_rad(void)

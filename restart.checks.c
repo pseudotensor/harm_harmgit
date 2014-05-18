@@ -1,3 +1,9 @@
+
+/*! \file restart.checks.c
+     \brief Functions related to checking if restarting was correct/reasonable
+*/
+
+
 #include "decs.h"
 
 
@@ -6,7 +12,7 @@ static int restart_init_point_check_unewglobal(int which, int i, int j, int k);
 static int restart_init_point_check_pstagglobal(int which, int i, int j, int k);
 
 
-// only check basic important inputs from restart dump file
+/// only check basic important inputs from restart dump file
 int restart_init_simple_checks(int which)
 {
   int gotnan;
@@ -44,7 +50,7 @@ int restart_init_simple_checks(int which)
 }
 
 
-// check pglobal
+/// check pglobal
 static int restart_init_point_check_pglobal(int which, int i, int j, int k)
 {
   int pliter,pl;
@@ -65,7 +71,7 @@ static int restart_init_point_check_pglobal(int which, int i, int j, int k)
 }
 
 
-// also check unewglobal for that portion that's used
+/// also check unewglobal for that portion that's used
 static int restart_init_point_check_unewglobal(int which, int i, int j, int k)
 {
   int pliter,pl;
@@ -88,7 +94,7 @@ static int restart_init_point_check_unewglobal(int which, int i, int j, int k)
 }
 
 
-// also check pstagglobal once computed
+/// also check pstagglobal once computed
 static int restart_init_point_check_pstagglobal(int which, int i, int j, int k)
 {
   int pliter,pl;
@@ -117,15 +123,15 @@ static int restart_init_point_check_pstagglobal(int which, int i, int j, int k)
 
 
 
-/////////////////////
-//
-// At this point all grid type parameters should be set as if done with init()
-//
-// Perform some extra checks to ensure restart file read-in is reasonable
-//
-// OPENMPOPTMARK: Don't optimize since many critical regions
-//
-/////////////////////
+//////////////////////
+///
+/// At this point all grid type parameters should be set as if done with init()
+///
+/// Perform some extra checks to ensure restart file read-in is reasonable
+///
+/// OPENMPOPTMARK: Don't optimize since many critical regions
+///
+//////////////////////
 int restart_init_checks(int which, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR])
 {
   char ans[100];

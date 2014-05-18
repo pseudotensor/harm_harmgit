@@ -1,9 +1,16 @@
+
+/*! \file sources.c
+     \brief Source physics and source geometry coordinate factors
+*/
+
+
+
 #include "decs.h"
 
 
 
-// Ugeomfree and dUother are in UNOTHING form (or UEVOLVE without geometry)
-// pf might be modified so better approximation to final update, so easier on Utoprimgen() to get inversion.
+/// Ugeomfree and dUother are in UNOTHING form (or UEVOLVE without geometry)
+/// pf might be modified so better approximation to final update, so easier on Utoprimgen() to get inversion.
 int sourcephysics(FTYPE *pi, FTYPE *pr, FTYPE *pf, int *didreturnpf, int *eomtype, struct of_geom *ptrgeom, struct of_state *q, FTYPE *Ugeomfreei, FTYPE *Ugeomfreef, FTYPE *CUf, FTYPE *CUimp, FTYPE dissmeasure, FTYPE *dUother, FTYPE (*dUcomp)[NPR])
 {
   int coolfunc_thindisk(FTYPE h_over_r, FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q,FTYPE (*dUcomp)[NPR]);
@@ -142,13 +149,13 @@ int coolfunc_thindisk(FTYPE h_over_r, FTYPE *pr, struct of_geom *geom, struct of
 
 
 
-// Rebecca's cooling function:
 
 #define REBECCATHETACOOL       (h_over_r) /* should be same as h_over_r */
 #define REBECCATAUCOOL         (2.0*M_PI)         /* cooling time in number of rotational times : really REBECCATAUCOOL=2*M_PI would be 1 rotational time */
 #define REBECCANOCOOLTHETAFACT     (1.0)           /* this times h_over_r and no more cooling there*/
 
 
+/// Rebecca's cooling function:
 int coolfunc_rebecca_thindisk(FTYPE h_over_r, FTYPE *pr, struct of_geom *geom, struct of_state *q,FTYPE (*dUcomp)[NPR])
 {
   FTYPE X[NDIM],V[NDIM],r,th,R,Wcirc,cs_circ,rho,u,P,w,wcirc,dUcool;
@@ -269,7 +276,7 @@ int coolfunc_rebecca_thindisk(FTYPE h_over_r, FTYPE *pr, struct of_geom *geom, s
 
 
 
-// completely non-functional
+/// completely non-functional
 int coolfunc_neutrino_old(FTYPE *pr, struct of_geom *geom, struct of_state *q,FTYPE (*dUcomp)[NPR])
 {
   FTYPE X[NDIM],V[NDIM],r,th,R,w,rho,u,P,dUcool ;
