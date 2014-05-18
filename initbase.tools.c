@@ -1,8 +1,13 @@
-// things that don't depend upon global quantities or global functions
+
+/*! \file initbase.tools.c
+     \brief Functions that don't depend upon global quantities/functions
+*/
 
 #include <stdio.h>
 #include <stdlib.h>
 
+
+/// report system info
 void report_systeminfo(FILE * fileout)
 {
   int IsLittleEndian(void);
@@ -53,12 +58,10 @@ int IsLittleEndian(void)
   return *(char*)&_TestEndian;
 }
 
-/******************************************************************************
-  FUNCTION: SwapEndian
-  PURPOSE: Swap the byte order of a structure
-  EXAMPLE: float F=123.456;; SWAP_FLOAT(F);
-******************************************************************************/
-
+///
+///  FUNCTION: SwapEndian
+///  PURPOSE: Swap the byte order of a structure
+///  EXAMPLE: float F=123.456;; SWAP_FLOAT(F);
 void *SwapEndian(void* Addr, const int Nb)
 {
   static char Swapped[16];
@@ -105,3 +108,4 @@ void *SwapEndian(void* Addr, const int Nb)
   }
   return (void*)Swapped;
 }
+

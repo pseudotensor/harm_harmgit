@@ -1,4 +1,8 @@
 
+/*! \file initbase.funcdeclare.h
+     \brief function declarations for initbase.c functions used globally
+*/
+
 // initialize stuff
 // specific to init.c's and used in initbase.c and init.c, so leave global
 extern int post_init_specific_init(void);

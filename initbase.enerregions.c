@@ -1,3 +1,9 @@
+
+/*! \file initbase.enerregions.c
+     \brief General initialization of code related to loops over active cells
+*/
+
+
 #include "decs.h"
 
 

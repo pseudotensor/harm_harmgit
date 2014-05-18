@@ -1,18 +1,23 @@
+
+/*! \file math.tools.c
+     \brief functions that don't depend upon any global things
+*/
+
+
 #include "decs.h"
 
 
 #define DO_ASSERTS 0 // similar parameter as in some init.h's
 
+///Description:
+///Constructs a second-order polynomial interpolating the set of points {x#, f#}, #=1..3 and
+///evaluates it at the point x.
+///Interpolation is performed using the standard Lagrange method.
+///Arguments:
+///x_eval -- abscissa of a point where an interpolated value is to be evaluated
+///x1, x2, x3 -- set of abscissas; should all be different; can come in any order
+///f1, f2, f3 -- set of function values at the above abscissas, i.e. f# = f( x# ), # = 1..3
 FTYPE interpn( int order, FTYPE x_eval,  FTYPE x1, FTYPE f1, FTYPE x2, FTYPE f2, FTYPE x3, FTYPE f3, FTYPE x4, FTYPE f4, FTYPE x5, FTYPE f5, FTYPE x6, FTYPE f6 ) 
-//Arguments:
-//x_eval -- abscissa of a point where an interpolated value is to be evaluated
-//x1, x2, x3 -- set of abscissas; should all be different; can come in any order
-//f1, f2, f3 -- set of function values at the above abscissas, i.e. f# = f( x# ), # = 1..3
-
-//Description:
-//Constructs a second-order polynomial interpolating the set of points {x#, f#}, #=1..3 and
-//evaluates it at the point x.
-//Interpolation is performed using the standard Lagrange method.
 {
   int i, j; //iterator through the abscissa points
 #define max_interp_order  6 //should be equal to the number of points input to the function; degree of interpolation is only limited by the number of arguments to the function --
@@ -64,7 +69,7 @@ FTYPE interpn( int order, FTYPE x_eval,  FTYPE x1, FTYPE f1, FTYPE x2, FTYPE f2,
 
 
 
-// round to a certain precision in base 10 to avoid round off errors
+/// round to a certain precision in base 10 to avoid round off errors
 FTYPE roundprecision(FTYPE value, int precision)
 {
   FTYPE fraction,
@@ -81,9 +86,8 @@ FTYPE roundprecision(FTYPE value, int precision)
 }
 
 
-// to use generically (e.g. for parabolic interpolation), call like:
-// interpfun(QUADRATICTYPE,3,1,realposition,array from 0 of positions, array from 0 of values, output of answer);
-
+/// to use generically (e.g. for parabolic interpolation), call like:
+/// interpfun(QUADRATICTYPE,3,1,realposition,array from 0 of positions, array from 0 of values, output of answer);
 void interpfun(int interptype, int numpoints, int i, FTYPE pos, FTYPE *xfun, FTYPE *fun, FTYPE *answer)
 {
   FTYPE slope,intercept;

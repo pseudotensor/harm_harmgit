@@ -1,3 +1,9 @@
+
+/*! \file initbase.boundloop.c
+     \brief General initialization of code related to loops over boundary conditions.
+*/
+
+
 #include "decs.h"
 
 

@@ -1,12 +1,12 @@
 
 
-/*! \file global.various.h
+/*! \file global.variousmacros.h
     \brief macros and definitions related to various things
     // Various macros
 
 */
 
-/*! \file global.gslincludes.h
+/*! \file gslincludes.h
     \brief macros and definitions for GSL library
 
 */

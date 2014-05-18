@@ -1,3 +1,9 @@
+
+/*! \file interpline.smono_static.h
+     \brief Sasha Mono static function declarations to be included elsewhere
+
+*/
+
 static FTYPE transition_function( FTYPE x, FTYPE x1, FTYPE x2 ) ;
 static FTYPE compute_mono_indicator_point_eno5( FTYPE *yin, FTYPE epsilon );
 static FTYPE compute_mono_indicator_average_eno5( FTYPE *yin, FTYPE epsilon );

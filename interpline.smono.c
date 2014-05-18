@@ -1,5 +1,10 @@
-//Possible bugs:
-//if not reset the whole line of monoindicators to zero, asymmetries develop in the implosion test.  Reason unknown. Probably, ps & pe do not cover a large enough region
+
+/*! \file interpline.smono.c
+     \brief Sasha Mono Spatial Interpolation for fluxes based upon providing full 1D line information
+     //Possible bugs:
+     //if not reset the whole line of monoindicators to zero, asymmetries develop in the implosion test.  Reason unknown. Probably, ps & pe do not cover a large enough region
+     */
+
 
 #include "decs.h"
 #include "reconstructeno.h"  
@@ -9,10 +14,9 @@
 
 #define DEFAULTMONOORDER (5)
 
-// GODMARK: Sasha created the MONO flags in a confused way.
-// He set things up so that if DO_SMONO_A2C ==0 then still  DO_SMONO_A2C_CUSP_INDICATOR is used and determines monoindicator (left/right) and value
-// I would assume that if DO_SMONO_A2C==0, then nothing is done
-
+/// GODMARK: Sasha created the MONO flags in a confused way.
+/// He set things up so that if DO_SMONO_A2C ==0 then still  DO_SMONO_A2C_CUSP_INDICATOR is used and determines monoindicator (left/right) and value
+/// I would assume that if DO_SMONO_A2C==0, then nothing is done
 void compute_smonotonicity_line(
                                 int recontype, int whichreduce, int preforder, int pl, int bs, int ps, int pe, int be, 
                                 int *minorder, int *maxorder, int *shift,   
@@ -53,11 +57,11 @@ void compute_polycoef_line(
 }
 
 
-// monoindicator[0]: -1,0,1 for rough, ambiguous, and monotonic
-// monoindicator[1]: whether set cell's left value (or central value, for a2c/c2a reconstruction)
-// monoindicator[2]: whether set cell's right value
-// yout[0][i] is the left interface value for c2e (centered value for a2c & c2a) for grid cell i
-// yout[1][i] is the right interface value for c2e for grid cell i, does not make sense for a2c & c2a
+/// monoindicator[0]: -1,0,1 for rough, ambiguous, and monotonic
+/// monoindicator[1]: whether set cell's left value (or central value, for a2c/c2a reconstruction)
+/// monoindicator[2]: whether set cell's right value
+/// yout[0][i] is the left interface value for c2e (centered value for a2c & c2a) for grid cell i
+/// yout[1][i] is the right interface value for c2e for grid cell i, does not make sense for a2c & c2a
 void compute_smonotonicity_line_split(int setindicator, int setyout,
                                       int recontype, int whichreduce, int preforder, int pl, int bs, int ps, int pe, int be, 
                                       int *minorder, int *maxorder, int *shift,   
@@ -383,7 +387,7 @@ void set_as_rough(int recontype, int i, FTYPE *yin, FTYPE (*yout)[NBIGM], FTYPE 
 
 }
 
-// if not smooth then reduce to simple limiter
+/// if not smooth then reduce to simple limiter
 void set_as_rough_indicator(int recontype, int i, FTYPE (*monoindicator)[NBIGM])
 {
 
@@ -399,7 +403,7 @@ void set_as_rough_indicator(int recontype, int i, FTYPE (*monoindicator)[NBIGM])
 }
 
 
-// if not smooth then reduce to simple limiter
+/// if not smooth then reduce to simple limiter
 void set_as_rough_value(int recontype, int i, FTYPE *yin, FTYPE (*yout)[NBIGM], FTYPE (*youtpolycoef)[NBIGM])
 {
   extern void c2e_simple_limiter(int WHICHLIMITERTOREDUCETO, FTYPE *yin, FTYPE *valueleft, FTYPE *valueright);
@@ -416,13 +420,13 @@ void set_as_rough_value(int recontype, int i, FTYPE *yin, FTYPE (*yout)[NBIGM], 
 
 }
 
-//fits a polynomial through the yin[] averages and returns a value between 0 & 1:
-// 0 - the polynomial fit is non-monotonic or about (within epsilon * ||f||) to become non-monotonic (hence do the full WENO-5 routine for this grid cell)
-// 1 - the polynomial fit is safely monotonic, so can set the WENO-5 weights to be equal to simple weights
-// between 0 & 1 - the larger the number is, the closer the WENO weights should be to the optimal ones.  So, do:
-//                 new_unoptimized_weight = mono_indicator * simple_weight + (1-monoindicator) * old_unoptimized_weight.
-//       NOTE:  only change the unoptimized weights since the weights are req-d to be changed only for the purposes of stencil reduction.
-//              The actual summing up of the full-stencil-based reconstruction and the WENO-5 reconstruction is to be performed in eno_cvt.
+///fits a polynomial through the yin[] averages and returns a value between 0 & 1:
+/// 0 - the polynomial fit is non-monotonic or about (within epsilon * ||f||) to become non-monotonic (hence do the full WENO-5 routine for this grid cell)
+/// 1 - the polynomial fit is safely monotonic, so can set the WENO-5 weights to be equal to simple weights
+/// between 0 & 1 - the larger the number is, the closer the WENO weights should be to the optimal ones.  So, do:
+///                 new_unoptimized_weight = mono_indicator * simple_weight + (1-monoindicator) * old_unoptimized_weight.
+///       NOTE:  only change the unoptimized weights since the weights are req-d to be changed only for the purposes of stencil reduction.
+///              The actual summing up of the full-stencil-based reconstruction and the WENO-5 reconstruction is to be performed in eno_cvt.
 FTYPE compute_mono_indicator_average_eno5( FTYPE *yin, FTYPE epsilon )
 {
 #define MAX_DERA2C 3
@@ -507,13 +511,13 @@ FTYPE compute_mono_indicator_average_eno5( FTYPE *yin, FTYPE epsilon )
   return( monoindicator );
 }
 
-//fits a polynomial through the yin[] points and returns a value between 0 & 1:
-// 0 - the polynomial fit is non-monotonic or about (within epsilon * ||f||) to become non-monotonic (hence do the full WENO-5 routine for this grid cell)
-// 1 - the polynomial fit is safely monotonic, so can set the WENO-5 weights to be equal to simple weights
-// between 0 & 1 - the larger the number is, the closer the WENO weights should be to the optimal ones.  So, do:
-//                 new_unoptimized_weight = mono_indicator * simple_weight + (1-monoindicator) * old_unoptimized_weight.
-//       NOTE:  only change the unoptimized weights since the weights are req-d to be changed only for the purposes of stencil reduction.
-//              The actual summing up of the full-stencil-based reconstruction and the WENO-5 reconstruction is to be performed in eno_cvt.
+///fits a polynomial through the yin[] points and returns a value between 0 & 1:
+/// 0 - the polynomial fit is non-monotonic or about (within epsilon * ||f||) to become non-monotonic (hence do the full WENO-5 routine for this grid cell)
+/// 1 - the polynomial fit is safely monotonic, so can set the WENO-5 weights to be equal to simple weights
+/// between 0 & 1 - the larger the number is, the closer the WENO weights should be to the optimal ones.  So, do:
+///                 new_unoptimized_weight = mono_indicator * simple_weight + (1-monoindicator) * old_unoptimized_weight.
+///       NOTE:  only change the unoptimized weights since the weights are req-d to be changed only for the purposes of stencil reduction.
+///              The actual summing up of the full-stencil-based reconstruction and the WENO-5 reconstruction is to be performed in eno_cvt.
 FTYPE compute_mono_indicator_point_eno5( FTYPE *yin, FTYPE epsilon )
 {
 #define MAX_DERC2E 3
@@ -643,9 +647,9 @@ FTYPE compute_mono_indicator_point_eno5( FTYPE *yin, FTYPE epsilon )
   return( monoindicator );
 }
 
-//returns 0 if x < x1
-//        1 if x > x2
-//        linearly interpolated value if x1 <= x <= x2 
+///returns 0 if x < x1
+///        1 if x > x2
+///        linearly interpolated value if x1 <= x <= x2 
 FTYPE transition_function( FTYPE x, FTYPE x1, FTYPE x2 ) 
 {
   FTYPE val;
@@ -658,9 +662,9 @@ FTYPE transition_function( FTYPE x, FTYPE x1, FTYPE x2 )
 }
 
 
-// uses yin[-2..2]
-// uses df[-1..2] uses out to yin[-2..2]
-// uses ddf[-1..1] uses yin[-2..2]
+/// uses yin[-2..2]
+/// uses df[-1..2] uses out to yin[-2..2]
+/// uses ddf[-1..1] uses yin[-2..2]
 int check_for_cusp_new(FTYPE *yin, FTYPE *df, FTYPE *ddf)
 {
   FTYPE norm;

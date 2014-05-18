@@ -1,30 +1,20 @@
 
+/*! \file interppoint.c
+     \brief Spatial Interpolation for fluxes based upon providing each point
+     // Inefficient compared to interpline.c, but simpler.
+*/
+
 #include "decs.h"
 
 
 
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-//
-// POINTS METHODS
-//
-//
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// whether to send all pl's for access by interpolator (such as for steepening and flattening)
-
-
-
-
-// whether to use contact steepener for reallim=MCSTEEP
+/// whether to send all pl's for access by interpolator (such as for steepening and flattening)
+/// whether to use contact steepener for reallim=MCSTEEP
 #define DOUSEPPMCONTACTSTEEP 1 // used alone is unstable
 #define DOUSEPARAMONOCHECK 1 // above must be used with this
-// using the 2 above, contacts are as steep as with PARA!
+/// using the 2 above, contacts are as steep as with PARA!
 
 #define DOUSEPARAFLAT 1 // avoids oscillations in strong shocks
 
@@ -32,18 +22,18 @@
 
 #define WHICH3POINTLIMT MC
 
-// below not accounted for unless DOINGALLMCSTEEP==1
-// for blast wave (sasha TESTNUMBER==8) actually helps contact but hurts only peak a bit -- contact much better relatively speaking)
+/// below not accounted for unless DOINGALLMCSTEEP==1
+/// for blast wave (sasha TESTNUMBER==8) actually helps contact but hurts only peak a bit -- contact much better relatively speaking)
 #define DQALLOWEXTREMUM 1 // assume USEPARAMONOCHECK enabled if using this!!! (otherwise crazy)
 
 
-// whether to interpolate and enforce steepening on u and rho in consistent way
-// see comments where used first as to why turned off
+/// whether to interpolate and enforce steepening on u and rho in consistent way
+/// see comments where used first as to why turned off
 #define CONNECTUANDRHO (0 && (DOEVOLVERHO&&DOEVOLVEUU))
 
-// whether to interpolate and enforce steepening on B and rho in consistent way
-// Should I turn this off?  Maybe for same reason of U version turned off -- may cause current sheet to spontaneously dissipate -- just use separate steepening
-// Seems to cause lots of problems with MCSTEEP and MHD torus problem -- too much steepening
+/// whether to interpolate and enforce steepening on B and rho in consistent way
+/// Should I turn this off?  Maybe for same reason of U version turned off -- may cause current sheet to spontaneously dissipate -- just use separate steepening
+/// Seems to cause lots of problems with MCSTEEP and MHD torus problem -- too much steepening
 #define CONNECTBANDRHO (0 && (DOEVOLVERHO) )
 
 
@@ -54,14 +44,14 @@
 #endif
 
 
-// whether primreal is p2interp
-// can't assume this is true in general (e.g. for FIELDCTSTAG input is not even complete range)
+/// whether primreal is p2interp
+/// can't assume this is true in general (e.g. for FIELDCTSTAG input is not even complete range)
 //#define YREALISY (RESCALEINTERP==0 || VARTOINTERP==PRIMTOINTERP)
 
 
 
 
-// interpolation with loop over POINTS
+/// interpolation with loop over POINTS
 void slope_lim_pointtype(int interporflux, int realisinterp, int pl, int dir, int idel, int jdel, int kdel, FTYPE (*primreal)[NSTORE2][NSTORE3][NPR], FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*dq)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP])
 {
   void slope_lim_point(int i, int j, int k, int loc, int realisinterp, int dir, int reallim, int pl, int startorderi, int endorderi, FTYPE *yreal, FTYPE*y, FTYPE *dq,FTYPE *left,FTYPE *right);
@@ -255,9 +245,9 @@ void slope_lim_pointtype(int interporflux, int realisinterp, int pl, int dir, in
 
 
 
-// given dir=fluxdir, return ranges for loop over which obtain those interpolated quantities
-// these is,ie,js,je,ks,ke are used inside a loop that has grid section SHIFTS already, so don't add shift here
-// Note that if direction doesn't exist should still return reasonable result that is not out of range (e.g. dir==3 if N3==1 should still give ks=ke=0)
+/// given dir=fluxdir, return ranges for loop over which obtain those interpolated quantities
+/// these is,ie,js,je,ks,ke are used inside a loop that has grid section SHIFTS already, so don't add shift here
+/// Note that if direction doesn't exist should still return reasonable result that is not out of range (e.g. dir==3 if N3==1 should still give ks=ke=0)
 int set_interppoint_loop_ranges(int interporflux, int dir, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk)
 {
   
@@ -312,9 +302,9 @@ int set_interppoint_loop_ranges_3Dextended(int interporflux, int *maxis, int *ma
 }
 
 
-// range over which need CENT cells defined for EMF in plane defined by corner
-// Note that is not like range needed for interpolation itself, which requires for FLUXCTSTAG all off-dir cells for Flux^{dir}
-// Note that corner ranges from i=0..N so consistent with requirements for FLUXBSTAG and IF3DSPCTHENMPITRANSFERATPOLE
+/// range over which need CENT cells defined for EMF in plane defined by corner
+/// Note that is not like range needed for interpolation itself, which requires for FLUXCTSTAG all off-dir cells for Flux^{dir}
+/// Note that corner ranges from i=0..N so consistent with requirements for FLUXBSTAG and IF3DSPCTHENMPITRANSFERATPOLE
 void set_interppoint_loop_ranges_2D_EMF_formerged(int interporflux, int corner, int odir1, int odir2, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk)
 {
   int *myUconsloop;
@@ -386,8 +376,8 @@ void set_interppoint_loop_ranges_2D_EMF_formerged(int interporflux, int corner, 
 
 }
 
-// range over which need CORN cells have geomcorn defined
-// Note that corner ranges from i=0..N so consistent with requirements for FLUXBSTAG and IF3DSPCTHENMPITRANSFERATPOLE
+/// range over which need CORN cells have geomcorn defined
+/// Note that corner ranges from i=0..N so consistent with requirements for FLUXBSTAG and IF3DSPCTHENMPITRANSFERATPOLE
 void set_interppoint_loop_ranges_geomcorn_formerged(int interporflux, int corner, int odir1, int odir2, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk)
 {
   int *myUconsloop;
@@ -460,13 +450,13 @@ void set_interppoint_loop_ranges_geomcorn_formerged(int interporflux, int corner
 }
 
 
-///////////
-// OBSOLETE
-///////////
-// Using set_interppoint_loop_expanded() now for either case
-// Setup loop over region of points
-// very similar to set_interp_loop() in interpline.c
-// off-dir directions have been expanded to account for EMF type calculations
+////////////
+/// OBSOLETE
+////////////
+/// Using set_interppoint_loop_expanded() now for either case
+/// Setup loop over region of points
+/// very similar to set_interp_loop() in interpline.c
+/// off-dir directions have been expanded to account for EMF type calculations
 void set_interppoint_loop(int interporflux, int dir, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk)
 {
 
@@ -530,8 +520,8 @@ void set_interppoint_loop(int interporflux, int dir, int *is, int *ie, int *js, 
 
 
 
-// Setup loop over region of points for finite volume method (or any method that uses extended ghost+active grid)
-// Note that +-SHIFT? gives interpolation at maximal face (i.e. for dir=1 and ncpux1=1, i=0 and i=N1), so consistent with requirements for FLUXBSTAG and IF3DSPCTHENMPITRANSFERATPOLE
+/// Setup loop over region of points for finite volume method (or any method that uses extended ghost+active grid)
+/// Note that +-SHIFT? gives interpolation at maximal face (i.e. for dir=1 and ncpux1=1, i=0 and i=N1), so consistent with requirements for FLUXBSTAG and IF3DSPCTHENMPITRANSFERATPOLE
 void set_interppoint_loop_expanded(int interporflux, int dir, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk)
 {
   int *myUconsloop;
@@ -608,7 +598,7 @@ void set_interppoint_loop_expanded(int interporflux, int dir, int *is, int *ie, 
 
 
 
-// interpolate from a center point to a left/right interface
+/// interpolate from a center point to a left/right interface
 void slope_lim_point(int i, int j, int k, int loc, int realisinterp, int dir, int reallim, int pl, int startorderi, int endorderi, FTYPE *yreal, FTYPE*y, FTYPE *dq,FTYPE *left,FTYPE *right)
 {
   extern void para(FTYPE *y, FTYPE *lout, FTYPE *rout);
@@ -667,7 +657,7 @@ void slope_lim_point(int i, int j, int k, int loc, int realisinterp, int dir, in
 
 }
 
-// interpolate from a center point to a left/right interface
+/// interpolate from a center point to a left/right interface
 void slope_lim_point_allpl(int i, int j, int k, int loc, int realisinterp, int dir,int reallim, int startorderi, int endorderi, FTYPE **yreal, FTYPE **y, FTYPE *dq,FTYPE *left,FTYPE *right)
 {
   extern void parapl(int i, int j, int k, int loc, int realisinterp, int dir, FTYPE **yreal, FTYPE **y, FTYPE *lout, FTYPE *rout);
@@ -765,7 +755,7 @@ void slope_lim_3points(int reallim, FTYPE yl, FTYPE yc, FTYPE yr,FTYPE *dq)
 }
 
 
-// dq1 = 1-sided dq2 = centered
+/// dq1 = 1-sided dq2 = centered
 void get_limit_slopes(int reallim, int extremum, FTYPE *dq1l, FTYPE *dq1r, FTYPE *dq2, FTYPE *dq)
 {
   FTYPE Dqc,Dqp,Dqm,s,theta;
@@ -831,9 +821,9 @@ void get_limit_slopes(int reallim, int extremum, FTYPE *dq1l, FTYPE *dq1r, FTYPE
 
 
 
-// see Mignone & Bodo (2005) astro-ph/0506414 equations 27-31
-// see Colella (1985), Saltzman (1994)
-// second order with 4th order steepeners
+/// see Mignone & Bodo (2005) astro-ph/0506414 equations 27-31
+/// see Colella (1985), Saltzman (1994)
+/// second order with 4th order steepeners
 void csslope(int pl, FTYPE *y, FTYPE *dq)
 {
   FTYPE s, sm, sp;
@@ -888,9 +878,8 @@ void csslope(int pl, FTYPE *y, FTYPE *dq)
 
 
 
-// only test that MCSTEEP fails on is 105 (high relativistic single shock)
-
-// used when lim=MCSTEEP
+/// only test that MCSTEEP fails on is 105 (high relativistic single shock)
+/// used when lim=MCSTEEP
 void mcsteeppl(int i, int j, int k, int loc, int realisinterp, int dir, FTYPE **yrealpl, FTYPE **ypl, FTYPE *loutpl, FTYPE *routpl)
 {
   FTYPE dqpl0[NPR2INTERP][8];
@@ -1135,7 +1124,7 @@ void mcsteeppl(int i, int j, int k, int loc, int realisinterp, int dir, FTYPE **
 
 
 
-// use this to avoid calling slope_lim_3points() so many times
+/// use this to avoid calling slope_lim_3points() so many times
 void get_mcsteep_dqs(int dqrange, FTYPE *y, FTYPE *dq)
 {
   int mm;

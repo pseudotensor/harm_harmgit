@@ -1,3 +1,9 @@
+
+/*! \file metric.tools.c
+     \brief Functions that don't depend upon global behavior of code that are used to compute things related to the metric or coordinates
+
+*/
+
 #include "decs.h"
 
 

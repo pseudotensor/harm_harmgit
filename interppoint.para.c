@@ -1,11 +1,26 @@
 
+/*! \file interppoint.para.c
+     \brief Parabolic/PPM Spatial Interpolation for fluxes based upon providing each point
+     /// parabolic interpolation subroutin  
+     /// ref. Colella && Woodward's paper
+     /// Colella, P., & Woodward, P. R. 1984, J. Comput. Phys., 54, 174-201
+     ///
+     /// using zone-centered value of 5 continuous zones 
+     /// to get left and right value of the middle zone.
+     ///  
+     /// 
+     ///
+     // Latest JCM version is para4()/parapl(): 02/25/08
+
+*/
+
 
 #include "decs.h"
 
 #include "para_and_paraenohybrid.h"
 
 
-
+/// initial checks regarding usability of para method
 void parainitchecks(void)
 {
   int dimen;
@@ -32,24 +47,12 @@ void parainitchecks(void)
 
 }
 
-/*
- * parabolic interpolation subroutin  
- * ref. Colella && Woodward's paper
- * Colella, P., & Woodward, P. R. 1984, J. Comput. Phys., 54, 174-201
- *
- * using zone-centered value of 5 continuous zones 
- * to get left and right value of the middle zone.
- *  
- * 
- */
-
-// Latest JCM version is para4()/parapl(): 02/25/08
 
 
-// lout/rout is left and right sides of cell
-// note how used in step_ch.c to get appropriate interface value
 
-// given by Xiaoyue Guan to Scott Noble on Nov 9, 2004, given to me Jan 7, 2005
+/// lout/rout is left and right sides of cell
+/// note how used in step_ch.c to get appropriate interface value
+/// given by Xiaoyue Guan to Scott Noble on Nov 9, 2004, given to me Jan 7, 2005
 void para(FTYPE *y, FTYPE *lout, FTYPE *rout)
 {
   int mm ;
@@ -101,7 +104,7 @@ void para(FTYPE *y, FTYPE *lout, FTYPE *rout)
 
 
 
-// given by Xiaoyue Guan on Jan 9, 2005
+/// given by Xiaoyue Guan on Jan 9, 2005
 void para2(FTYPE *y, FTYPE *lout, FTYPE *rout)
 {
   int mm ;
@@ -169,8 +172,8 @@ void para2(FTYPE *y, FTYPE *lout, FTYPE *rout)
 
 
 
-// 3rd para from Xiaoyue that she bundled with a new TVD-optimal RK3
-// given on 02/17/2005
+/// 3rd para from Xiaoyue that she bundled with a new TVD-optimal RK3
+/// given on 02/17/2005
 void para3(FTYPE *y, FTYPE *lout, FTYPE *rout)
 {
   int mm ;
@@ -264,7 +267,7 @@ void para3(FTYPE *y, FTYPE *lout, FTYPE *rout)
 
 
 
-// older method that has no failures problem CHANGINGMARK
+/// older method that has no failures problem CHANGINGMARK
 void para4_old(int pl, FTYPE *y, FTYPE *lout, FTYPE *rout)
 {
   int mm ;
@@ -403,8 +406,8 @@ void para4_old(int pl, FTYPE *y, FTYPE *lout, FTYPE *rout)
 
 #define OVERRIDEWITHMINM 1
 
-// Jon's MINM/VANL/MC with parabolic interpolation if 3 dq's would be chosen as centered slope
-// Useful to use cour=0.45 < 0.5 to keep things stable as well
+/// Jon's MINM/VANL/MC with parabolic interpolation if 3 dq's would be chosen as centered slope
+/// Useful to use cour=0.45 < 0.5 to keep things stable as well
 void parajon(int ii, int jj, int kk, int loc, int realisinterp, int dir, int pl, FTYPE *y, FTYPE *lout, FTYPE *rout)
 {
   int mm;
@@ -564,7 +567,7 @@ void parajon(int ii, int jj, int kk, int loc, int realisinterp, int dir, int pl,
 
 
 
-// doesn't use dq
+/// doesn't use dq
 void para4(int realisinterp, int pl, FTYPE *y, FTYPE *lout, FTYPE *rout)
 {
   void para4gen(int realisinterp, int dqrange, int pl, FTYPE *y, FTYPE *lout, FTYPE *rout, FTYPE *dq, int *smooth);
@@ -603,11 +606,11 @@ void para4(int realisinterp, int pl, FTYPE *y, FTYPE *lout, FTYPE *rout)
 #define PARAGENMINMOD(a,b) MINMODB(a,b)
 #endif
 
-// Xiaoyue given on 03/25/05
-// she realized sign error in 1st der's in para3()
-// noted Matt's paper astro-ph/0503420 suggested CW1.6 uses 1/8 rather than 1/6
-// I noticed that Matt uses MC for field variables and PPM+ for hydro variables
-// GODMARK: This step could be done once for entire line of data only once
+/// Xiaoyue given on 03/25/05
+/// she realized sign error in 1st der's in para3()
+/// noted Matt's paper astro-ph/0503420 suggested CW1.6 uses 1/8 rather than 1/6
+/// I noticed that Matt uses MC for field variables and PPM+ for hydro variables
+/// GODMARK: This step could be done once for entire line of data only once
 void para4gen(int realisinterp, int dqrange, int pl, FTYPE *y, FTYPE *lout, FTYPE *rout, FTYPE *dq, int *smooth)
 {
   int mm ;
@@ -872,9 +875,9 @@ void para4gen(int realisinterp, int dqrange, int pl, FTYPE *y, FTYPE *lout, FTYP
 
 
 
-// check if solution locally without discontinuities as indicated by use of central slope within -1,0,+1 for non-RHO and -2..+2 for RHO (helps moving contact)
-// Required for PARA since PARA otherwise is too non-diffusive when reducing to central slopes and activating 3rd order polynomial at faces that has no jumps and no required diffusion for stability.  PARA otherwise has unstable noise moving supersonically in caustic problem
-// Seems to work in general even without special extra smooth switching!
+/// check if solution locally without discontinuities as indicated by use of central slope within -1,0,+1 for non-RHO and -2..+2 for RHO (helps moving contact)
+/// Required for PARA since PARA otherwise is too non-diffusive when reducing to central slopes and activating 3rd order polynomial at faces that has no jumps and no required diffusion for stability.  PARA otherwise has unstable noise moving supersonically in caustic problem
+/// Seems to work in general even without special extra smooth switching!
 void jonparasmooth_compute(int realisinterp, int dqrange, int pl, FTYPE *y, FTYPE *dq1, FTYPE *dq2, FTYPE *lout, FTYPE *rout, int *smooth)
 {
   int usepara=0;
@@ -954,7 +957,7 @@ void jonparasmooth_compute(int realisinterp, int dqrange, int pl, FTYPE *y, FTYP
 
 
 
-// not used right now
+/// not used right now
 void paracont(FTYPE ddq, FTYPE *y, FTYPE *facecont)
 {
   FTYPE avgpointcoef;
@@ -977,8 +980,8 @@ void paracont(FTYPE ddq, FTYPE *y, FTYPE *facecont)
 
 
 
-// PARA starts with continuous 3rd order polynomial (4th order through averages if used) using monotonized slopes for second derivative term
-// facecont[i] = 0.5*(y[i]+y[i-1]) - ddq[i]   where ddq[0] = dq[0]-dq[-1]
+/// PARA starts with continuous 3rd order polynomial (4th order through averages if used) using monotonized slopes for second derivative term
+/// facecont[i] = 0.5*(y[i]+y[i-1]) - ddq[i]   where ddq[0] = dq[0]-dq[-1]
 void paracontsmooth(int pl, FTYPE *y, FTYPE *facecont, int *smooth)
 {
   FTYPE ddqtest[4];
@@ -1065,7 +1068,7 @@ void paracontsmooth(int pl, FTYPE *y, FTYPE *facecont, int *smooth)
 
 
 
-// check monotonicity of parabola
+/// check monotonicity of parabola
 void checkparamonotonicity(int smooth, int dqrange, int pl, FTYPE *y, FTYPE *ddq, FTYPE *dq, FTYPE *lin, FTYPE *rin, FTYPE *lout, FTYPE *rout)
 {
   FTYPE a6COEF;
@@ -1198,7 +1201,7 @@ void checkparamonotonicity(int smooth, int dqrange, int pl, FTYPE *y, FTYPE *ddq
 
 
 
-// used when lim=PARAFLAT
+/// used when lim=PARAFLAT
 void parapl(int i, int j, int k, int loc, int realisinterp, int dir, FTYPE **yrealpl, FTYPE **ypl, FTYPE *loutpl, FTYPE *routpl)
 {
   FTYPE dq0[NPR2INTERP][8];
@@ -1315,7 +1318,7 @@ void parapl(int i, int j, int k, int loc, int realisinterp, int dir, FTYPE **yre
 
 
 
-// PPM FLATTENER formula
+/// PPM FLATTENER formula
 void paraflatten(int dir, int pl, FTYPE *y, FTYPE Fi, FTYPE *l, FTYPE *r)
 {
   // FLASH Equation 49,50
@@ -1326,7 +1329,7 @@ void paraflatten(int dir, int pl, FTYPE *y, FTYPE Fi, FTYPE *l, FTYPE *r)
 
 
 
-// PPM FLATTENER parameter
+/// PPM FLATTENER parameter
 FTYPE ftilde( int dir, int shift, FTYPE *Vabs, FTYPE *Pabs)
 {
   FTYPE Ftilde,Ftilde1,Ftilde2;
@@ -1390,7 +1393,7 @@ FTYPE divftilde( int dir, int shift, FTYPE *Vabs, FTYPE *Pabs)
 }
 
 
-// PPM FLATTENERS (final formula)
+/// PPM FLATTENERS (final formula)
 FTYPE  Ficalc(int dir, FTYPE *V, FTYPE *P)
 {
   FTYPE ftilde( int dir, int shift, FTYPE *P, FTYPE *V);
@@ -1404,8 +1407,8 @@ FTYPE  Ficalc(int dir, FTYPE *V, FTYPE *P)
   return(Fi);
 }
 
-// Jon's divergence condition
-// currently Fi check is redundant
+/// Jon's divergence condition
+/// currently Fi check is redundant
 FTYPE  Divcalc(int dir, FTYPE Fi, FTYPE *V, FTYPE *P)
 {
   FTYPE divftilde( int dir, int shift, FTYPE *Vabs, FTYPE *Pabs);
@@ -1424,9 +1427,9 @@ FTYPE  Divcalc(int dir, FTYPE Fi, FTYPE *V, FTYPE *P)
 
 
 
-// Get pressure
-// Note this is quite inefficient since operating per-point get same pressure for entire line multiple times
-// (SUPERGODMARK: Also no accounting of magnetic field)
+/// Get pressure
+/// Note this is quite inefficient since operating per-point get same pressure for entire line multiple times
+/// (SUPERGODMARK: Also no accounting of magnetic field)
 void getPressure(int whicheom, int i, int j, int k, int loc, FTYPE **yrealpl, FTYPE *P)
 {
   int mm;
@@ -1492,9 +1495,9 @@ void parasteep(int dir, int pl, FTYPE *V, FTYPE *P, FTYPE *y, FTYPE *dq, FTYPE *
 
 
 
-// steepener
-// doesn't use l,r for any calculations, so if steepens fully then initial l,r values don't matter
-// return etai if needed
+/// steepener
+/// doesn't use l,r for any calculations, so if steepens fully then initial l,r values don't matter
+/// return etai if needed
 void parasteepgen(int pl, FTYPE etai, FTYPE *V, FTYPE *P, FTYPE *y, FTYPE *dq, FTYPE *l, FTYPE *r)
 {
   void pr_contact_compute(int pl, FTYPE *y, FTYPE *dq, FTYPE *prld, FTYPE *prrd);
@@ -1537,9 +1540,9 @@ void pr_contact_compute(int pl, FTYPE *y, FTYPE *dq, FTYPE *prld, FTYPE *prrd)
 
 }
 
-// PPM steepener parameter, where etai=1 is steep and etai=0 is normal not steep
-// Acts to modify l and r values so actually nonmonotonic compared to surrounding cells -- This results in diffusion term in HLL or LAXF to actually be an anti-diffusion term causing (e.g. mass) to be sucked back into the cell in order to counter the diffusive flux causing spreading.  In a stationary case the expansive term balances the anti-diffusion term even with jumps at the interface.
-// 
+/// PPM steepener parameter, where etai=1 is steep and etai=0 is normal not steep
+/// Acts to modify l and r values so actually nonmonotonic compared to surrounding cells -- This results in diffusion term in HLL or LAXF to actually be an anti-diffusion term causing (e.g. mass) to be sucked back into the cell in order to counter the diffusive flux causing spreading.  In a stationary case the expansive term balances the anti-diffusion term even with jumps at the interface.
+/// 
 FTYPE etaicalc(int pl, FTYPE *y, FTYPE *V, FTYPE *P)
 {
   FTYPE delta2l,delta2r;

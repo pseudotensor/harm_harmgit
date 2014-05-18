@@ -1,3 +1,9 @@
+
+/*! \file metric.tools.funcdeclare.h
+     \brief Function declarations for global use of things in metric.tools.c
+
+*/
+
 extern int gaussj(FTYPE **tmp, int n, FTYPE **b, int m);
 
 // extern FTYPE delta(int j, int k) ;

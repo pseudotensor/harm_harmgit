@@ -1,21 +1,15 @@
 
+/*! \file interpline.c
+     \brief Spatial Interpolation for fluxes based upon providing full 1D line information
+     // Instead of acting per point, this acts per line to improve memory efficiency.
+*/
+
+
 #include "decs.h"
 
 
 
 
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-//
-// LINE METHODS
-//
-//
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 
@@ -27,7 +21,7 @@
 #endif
 
 
-// NPR2INTERP always larger than NPR, so can use one memory space for both c2e and others
+/// NPR2INTERP always larger than NPR, so can use one memory space for both c2e and others
 #define LINETYPEDEFINES1                                                \
   int bs,be,ps,pe;                                                      \
   int di,dj,dk;                                                         \
@@ -52,19 +46,19 @@
 
 #define GEN3MAC(numypl,pl,numywhich,which,numyi,i) (i + numyi*which + numyi*numywhich*pl)
 
-// below for drho,dP,etai
+/// below for drho,dP,etai
 #define GEN2MAC(numypl,pl,numyi,i) (i + numyi*pl)
-// below for shockindicator, stiffindicator, Pline, Vline, shift, minorder, maxorder
+/// below for shockindicator, stiffindicator, Pline, Vline, shift, minorder, maxorder
 #define GEN1MAC(numyi,i) (i)
 
-// below to be used for yin, yout, yprim, ystencilvar that involve [NPR2INTERP][2][NBIGM] type arrays previously
+/// below to be used for yin, yout, yprim, ystencilvar that involve [NPR2INTERP][2][NBIGM] type arrays previously
 #define YINOUTMAC(numypl,pl,numywhich,which,numyi,i) GEN3MAC(numypl,pl,numywhich,which,numyi,i)
 
 
 
-// For OpenMP must have different memory per thread, so why put inside parallel region
-// However, allocating and deallocating these perijk() is very expensive, so moved back outside perijk() and pass related pointers.
-// OPENMPMARK: Still must allocate within parallel region!  So place this within parallel region.
+/// For OpenMP must have different memory per thread, so why put inside parallel region
+/// However, allocating and deallocating these perijk() is very expensive, so moved back outside perijk() and pass related pointers.
+/// OPENMPMARK: Still must allocate within parallel region!  So place this within parallel region.
 #define LINETYPEDEFINESMEMORY                                   \
   FTYPE a_yin[NPR2INTERP][2][NBIGM];                            \
   FTYPE a_yout[NPR2INTERP][2][NBIGM];                           \
@@ -88,8 +82,8 @@
 
 
 
-// NPR2INTERP always larger than NPR, so can use one memory space for both c2e and others
-// OPENMPMARK: Must define pointers and shift them within parallel region!
+/// NPR2INTERP always larger than NPR, so can use one memory space for both c2e and others
+/// OPENMPMARK: Must define pointers and shift them within parallel region!
 #define LINETYPEDEFINEPOINTERS                          \
   FTYPE (*yin)[2][NBIGM];                               \
   FTYPE (*yout)[2][NBIGM];                              \
@@ -135,7 +129,7 @@
 
 
 
-// shift pointers to account for boundary zones (similar to as in set_arrays.c)
+/// shift pointers to account for boundary zones (similar to as in set_arrays.c)
 #define LINETYPESHIFTS                                                  \
   {yin =(FTYPE (*)[2][NBIGM]) (&(a_yin[0][0][NBIGBND]));                \
     yout=(FTYPE (*)[2][NBIGM]) (&(a_yout[0][0][NBIGBND]));              \
@@ -263,18 +257,18 @@ static void slope_lim_linetype_perijk(
 static void assign_eno_result(int interporflux, int pl, int bs, int ps, int pe, int be, int i, int j, int k, int idel, int jdel, int kdel, FTYPE (*yout)[NBIGM], FTYPE (*result0)[NSTORE2][NSTORE3][NPR], FTYPE (*result1)[NSTORE2][NSTORE3][NPR]);
 
 
-// c2e needed functions
+/// c2e needed functions
 static void get_1d_line_c2e_multipl(int whichquantity, int dir, int interporflux, int bs, int ps, int pe, int be,  int i, int j, int k, FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*yin)[2][NBIGM], struct of_trueijkp *trueijkp);
 static void get_1d_line_c2e(int dir, int interporflux, int pl, int bs, int ps, int pe, int be,  int i, int j, int k, FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP],FTYPE *yin, struct of_trueijkp *trueijkp);
 static void get_1d_line_shockarray(int dir, int interporflux, int bs, int ps, int pe, int be,  int i, int j, int k, FTYPE (*shockarray)[NSTORE1][NSTORE2][NSTORE3], FTYPE (*shockindicator)[NBIGM], struct of_trueijkp *trueijkp);
 
-// below for shock indicator used on quantities with NPR elements
+/// below for shock indicator used on quantities with NPR elements
 static void assign_eno_result_c2e_multipl(int whichprimtype, int interporflux, int bs, int ps, int pe, int be, int i, int j, int k, int idel, int jdel, int kdel, FTYPE (*yout)[2][NBIGM], FTYPE (*result0)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*result1)[NSTORE2][NSTORE3][NPR2INTERP]);
 static void assign_eno_result_c2e(int interporflux, int pl, int bs, int ps, int pe, int be, int i, int j, int k, int idel, int jdel, int kdel, FTYPE (*yout)[NBIGM], FTYPE (*result0)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*result1)[NSTORE2][NSTORE3][NPR2INTERP]);
-//below for an effective $\gamma^2$ of the flow (only hydro since does not include bsq!) SASMARK
+///below for an effective $\gamma^2$ of the flow (only hydro since does not include bsq!) SASMARK
 static void get_1d_line_c2e_gammaeffhydro(int dir, int interporflux, int pl, int bs, int ps, int pe, int be,  int i, int j, int k, int idel, int jdel, int kdel, FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE *yin, struct of_trueijkp *trueijkp);
 
-// interior _perijk() functions:
+/// interior _perijk() functions:
 static void get_df_line_gen_new(int realisinterp, int doingweno, int whichprimtype, int interporflux, int recontype, int dir, int whichreduce, int preforder, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift, FTYPE (*yprim)[2][NBIGM], FTYPE (*yin)[2][NBIGM], FTYPE (*df)[NUMDFS][NBIGM], FTYPE (**drhoptr)[NBIGM], FTYPE (**dPptr)[NBIGM], FTYPE *stiffindicator, FTYPE (*Vline)[NBIGM], FTYPE (*Pline)[NBIGM], struct of_trueijkp *trueijkp);
 static void get_df_line_paraline(int realisinterp, int doingweno, int whichprimtype, int interporflux, int recontype, int dir, int whichreduce, int preforder, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift, FTYPE (*yprim)[2][NBIGM], FTYPE (*yin)[2][NBIGM], FTYPE (*df)[NUMDFS][NBIGM], FTYPE (**drhoptr)[NBIGM], FTYPE (**dPptr)[NBIGM], FTYPE *stiffindicator, FTYPE (*Vline)[NBIGM], FTYPE (*Pline)[NBIGM], struct of_trueijkp *trueijkp);
 static int compute_df_line(int doingweno,int interporflux, int recontype, int whichreduce, int preforder, int pl, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE *yin, FTYPE (*df)[NBIGM]);
@@ -302,7 +296,7 @@ static void set_interp_loop_expanded(int withshifts, int interporflux, int dir, 
 
 
 
-// very similar to slope_lim_linetype, but different number of quantities to handle
+/// very similar to slope_lim_linetype, but different number of quantities to handle
 void slope_lim_linetype_c2e(int realisinterp, int whichprimtype, int interporflux, int dir, int idel, int jdel, int kdel, FTYPE (*primreal)[NSTORE2][NSTORE3][NPR], FTYPE (*stencilvar)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP])
 {
 
@@ -464,7 +458,7 @@ void slope_lim_linetype_c2e(int realisinterp, int whichprimtype, int interporflu
 
 
 
-// interior of main SUPERGENLOOP() inside slope_lim_linetype_c2e()
+/// interior of main SUPERGENLOOP() inside slope_lim_linetype_c2e()
 void slope_lim_linetype_c2e_perijk_precomputeindicators(
                                                         LINETYPEPOINTERSFUNCTIONDECLARE,
                                                         int i, int  j, int k,
@@ -635,7 +629,7 @@ void slope_lim_linetype_c2e_perijk_precomputeindicators(
 
 
 
-// interior of main SUPERGENLOOP() inside slope_lim_linetype_c2e()
+/// interior of main SUPERGENLOOP() inside slope_lim_linetype_c2e()
 void slope_lim_linetype_c2e_perijk(
                                    LINETYPEPOINTERSFUNCTIONDECLARE,
                                    int i, int  j, int k,
@@ -871,9 +865,9 @@ void slope_lim_linetype_c2e_perijk(
 
 
 
-// linetype assumed to return pleft/pright directly since linetype's are usually higher order
-// this function used for primitive interpolation AND for flux interpolation
-// stencil var can be NULL or some pointer.  If a pointer, then should use to assign all stencil-related things
+/// linetype assumed to return pleft/pright directly since linetype's are usually higher order
+/// this function used for primitive interpolation AND for flux interpolation
+/// stencil var can be NULL or some pointer.  If a pointer, then should use to assign all stencil-related things
 void slope_lim_linetype(int whichquantity, int interporflux, int dir, int idel, int jdel, int kdel, FTYPE (*primreal)[NSTORE2][NSTORE3][NPR], FTYPE (*stencilvar)[NSTORE2][NSTORE3][NPR], FTYPE (*p2interpm)[NSTORE2][NSTORE3][NPR], FTYPE (*p2interpp)[NSTORE2][NSTORE3][NPR], FTYPE (*pleft)[NSTORE2][NSTORE3][NPR], FTYPE (*pright)[NSTORE2][NSTORE3][NPR])
 {
   int whichprimtype=whichquantity;
@@ -1043,7 +1037,7 @@ void slope_lim_linetype(int whichquantity, int interporflux, int dir, int idel, 
 
 
 
-// inside of SUPERGENLOOP() in slope_lim_linetype()
+/// inside of SUPERGENLOOP() in slope_lim_linetype()
 void slope_lim_linetype_perijk(
                                LINETYPEPOINTERSFUNCTIONDECLARE,
                                int i, int  j, int k,
@@ -1338,7 +1332,7 @@ void slope_lim_linetype_perijk(
 
 
 
-// get type of reconstruction to perform
+/// get type of reconstruction to perform
 static int get_recon_type(int interporflux)
 {
 
@@ -1359,7 +1353,7 @@ static int get_recon_type(int interporflux)
 
 
 
-// sets preferred order based upon scheme and size of stencil
+/// sets preferred order based upon scheme and size of stencil
 static void set_preforder(int dir, int interporflux, int *preforder, int*whichreduce)
 {
 
@@ -1409,8 +1403,8 @@ static void set_preforder(int dir, int interporflux, int *preforder, int*whichre
 
 
 
-// wrapper for compute_df_line and can be used by both c2e and other methods
-// whichprimtype==ENOPRIMITIVE -> NPR2INTERP type else NPR types
+/// wrapper for compute_df_line and can be used by both c2e and other methods
+/// whichprimtype==ENOPRIMITIVE -> NPR2INTERP type else NPR types
 static void get_df_line_gen(int realisinterp, int doingweno, int whichprimtype, int interporflux, int recontype, int dir, int whichreduce, int preforder, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift, FTYPE (*yprim)[2][NBIGM], FTYPE (*yin)[2][NBIGM], FTYPE (*df)[NUMDFS][NBIGM], FTYPE (**drhoptr)[NBIGM], FTYPE (**dPptr)[NBIGM], FTYPE *stiffindicator)
 {
   int pl,pliter;
@@ -1469,7 +1463,7 @@ static void get_df_line_gen(int realisinterp, int doingweno, int whichprimtype, 
 
 
 
-// wrapper for compute_df_line and can be used by both c2e and other methods
+/// wrapper for compute_df_line and can be used by both c2e and other methods
 static void get_df_line_gen_new(int realisinterp, int doingweno, int whichprimtype, int interporflux, int recontype, int dir, int whichreduce, int preforder, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift, FTYPE (*yprim)[2][NBIGM], FTYPE (*yin)[2][NBIGM], FTYPE (*df)[NUMDFS][NBIGM], FTYPE (**drhoptr)[NBIGM], FTYPE (**dPptr)[NBIGM], FTYPE *stiffindicator, FTYPE (*Vline)[NBIGM], FTYPE (*Pline)[NBIGM], struct of_trueijkp *trueijkp)
 {
   int pl,pliter;
@@ -1535,7 +1529,7 @@ static void get_df_line_gen_new(int realisinterp, int doingweno, int whichprimty
 
 
 
-// wrapper for compute_df_line and can be used by both c2e and other methods
+/// wrapper for compute_df_line and can be used by both c2e and other methods
 static void get_df_line_paraline(int realisinterp, int doingweno, int whichprimtype, int interporflux, int recontype, int dir, int whichreduce, int preforder, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift, FTYPE (*yprim)[2][NBIGM], FTYPE (*yin)[2][NBIGM], FTYPE (*df)[NUMDFS][NBIGM], FTYPE (**drhoptr)[NBIGM], FTYPE (**dPptr)[NBIGM], FTYPE *stiffindicator, FTYPE (*Vline)[NBIGM], FTYPE (*Pline)[NBIGM], struct of_trueijkp *trueijkp)
 {
   int pl,pliter;
@@ -1569,7 +1563,7 @@ static void get_df_line_paraline(int realisinterp, int doingweno, int whichprimt
 
 
 
-// just a wrapper
+/// just a wrapper
 void set_interp_loop_gen(int withshifts, int interporflux, int dir, int *intdir, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk, int *bs, int *ps, int *pe, int *be)
 {
 
@@ -1587,10 +1581,10 @@ void set_interp_loop_gen(int withshifts, int interporflux, int dir, int *intdir,
 
 
 
-// Setup loop over *starting positions* that and define the line of data corresponding to data needed by the given (dir && interporflux) scenario
-// i.e. Define loop over starting positions and range of loop for each starting position
-// Note, function should still return result that is within bounds even for unused directions (e.g. dir==3 should not go out of bounds even if N3==1)
-// Note that interp loop gives output from i=0..N so consistent with requirements for FLUXBSTAG and IF3DSPCTHENMPITRANSFERATPOLE
+/// Setup loop over *starting positions* that and define the line of data corresponding to data needed by the given (dir && interporflux) scenario
+/// i.e. Define loop over starting positions and range of loop for each starting position
+/// Note, function should still return result that is within bounds even for unused directions (e.g. dir==3 should not go out of bounds even if N3==1)
+/// Note that interp loop gives output from i=0..N so consistent with requirements for FLUXBSTAG and IF3DSPCTHENMPITRANSFERATPOLE
 static void set_interp_loop(int withshifts, int interporflux, int dir, int *intdir, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk, int *bs, int *ps, int *pe, int *be)
 {
 
@@ -1780,10 +1774,10 @@ static void set_interp_loop(int withshifts, int interporflux, int dir, int *intd
 
 
 
-// Setup loop over *starting positions* that and define the line of data corresponding to data needed by the given (dir && interporflux) scenario
-// i.e. Define loop over starting positions and range of loop for each starting position
-// This function is for any method using the expanded ghost+ghost/active+active layers
-// Note, function should still return result that is within bounds even for unused directions (e.g. dir==3 should not go out of bounds even if N3==1)
+/// Setup loop over *starting positions* that and define the line of data corresponding to data needed by the given (dir && interporflux) scenario
+/// i.e. Define loop over starting positions and range of loop for each starting position
+/// This function is for any method using the expanded ghost+ghost/active+active layers
+/// Note, function should still return result that is within bounds even for unused directions (e.g. dir==3 should not go out of bounds even if N3==1)
 static void set_interp_loop_expanded(int withshifts, int interporflux, int dir, int *intdir, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk, int *bs, int *ps, int *pe, int *be)
 {
   int dir_exception[NDIM];
@@ -2242,7 +2236,7 @@ static void set_interp_loop_expanded(int withshifts, int interporflux, int dir, 
 
 
 
-// Get 1D line of data so can pass it to ENO scheme (used for c2e only)
+/// Get 1D line of data so can pass it to ENO scheme (used for c2e only)
 static void get_1d_line_c2e_multipl(int whichquantity, int dir, int interporflux, int bs, int ps, int pe, int be,  int i, int j, int k, FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*yin)[2][NBIGM], struct of_trueijkp *trueijkp)
 {
   // for NUMPRIMLOOP:
@@ -2362,7 +2356,7 @@ static void get_1d_line_c2e_multipl(int whichquantity, int dir, int interporflux
 }
 
 
-// Get 1D line of data so can pass it to ENO scheme (used for c2e only)
+/// Get 1D line of data so can pass it to ENO scheme (used for c2e only)
 static void get_1d_line_c2e(int dir, int interporflux, int pl, int bs, int ps, int pe, int be,  int i, int j, int k, FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE *yin, struct of_trueijkp *trueijkp)
 {
   int yiniter;
@@ -2458,7 +2452,7 @@ static void get_1d_line_c2e(int dir, int interporflux, int pl, int bs, int ps, i
 
 }
 
-// Get 1D line of data so can pass it to ENO scheme (used for c2e only)
+/// Get 1D line of data so can pass it to ENO scheme (used for c2e only)
 void get_1d_line_c2e_gammaeffhydro(int dir, int interporflux, int pl, int bs, int ps, int pe, int be,  int i, int j, int k, int idel, int jdel, int kdel, FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE *yin, struct of_trueijkp *trueijkp)
 {
   int num,locali,localj,localk,localloc;
@@ -2567,7 +2561,7 @@ void get_1d_line_c2e_gammaeffhydro(int dir, int interporflux, int pl, int bs, in
 }
 
 
-// Get 1D line of data so can pass it to ENO scheme
+/// Get 1D line of data so can pass it to ENO scheme
 static void get_1d_line(int dir, int interporflux, int pl, int bs, int ps, int pe, int be,  int i, int j, int k, FTYPE (*p2interpm)[NSTORE2][NSTORE3][NPR],FTYPE (*p2interpp)[NSTORE2][NSTORE3][NPR], FTYPE (*yin)[NBIGM], struct of_trueijkp *trueijkp)
 {
   int yiniter;
@@ -2691,7 +2685,7 @@ static void get_1d_line(int dir, int interporflux, int pl, int bs, int ps, int p
 
 
 
-// Get 1D line of data so can pass it to ENO scheme
+/// Get 1D line of data so can pass it to ENO scheme
 static void get_1d_line_shockarray(int dir, int interporflux, int bs, int ps, int pe, int be,  int i, int j, int k, FTYPE (*shockarray)[NSTORE1][NSTORE2][NSTORE3], FTYPE (*shockindicator)[NBIGM], struct of_trueijkp *trueijkp)
 {
   int yiniter;
@@ -2793,8 +2787,8 @@ static void get_1d_line_shockarray(int dir, int interporflux, int bs, int ps, in
 
 
 
-// Figure out shifting of stencil and order of stencil to more closely match with causality
-// (used for both c2e and other routines)
+/// Figure out shifting of stencil and order of stencil to more closely match with causality
+/// (used for both c2e and other routines)
 static void causal_shift_order(int whichprimtype, int interporflux, int dir, int preforder, int bs, int ps, int pe, int be,  int i, int j, int k, int idel, int jdel, int kdel, int *shift, int *minorder, int *maxorder)
 {
   int i3,j3,k3;
@@ -2963,7 +2957,7 @@ static void causal_shift_order(int whichprimtype, int interporflux, int dir, int
 
 
 
-// determine shock indicator (used for both c2e and other routines, only operates on quantities with NPR elements)
+/// determine shock indicator (used for both c2e and other routines, only operates on quantities with NPR elements)
 static int get_V_and_P(int whichprimtype, int interporflux, int dir, int bs, int ps, int pe, int be,  int i, int j, int k, int idel, int jdel, int kdel, FTYPE (*yrealin)[2][NBIGM], FTYPE (*Vline)[NBIGM], FTYPE (*Pline)[NBIGM], struct of_trueijkp *trueijkp)
 {
   int num,locali,localj,localk,localloc;
@@ -3130,7 +3124,7 @@ static int get_V_and_P(int whichprimtype, int interporflux, int dir, int bs, int
 
 
 
-// determine shock indicator (used for both c2e and other routines, only operates on quantities with NPR elements)
+/// determine shock indicator (used for both c2e and other routines, only operates on quantities with NPR elements)
 static int get_shock_indicator(int whichprimtype, int interporflux, int dir, int bs, int ps, int pe, int be,  int i, int j, int k, int idel, int jdel, int kdel, FTYPE (*yprim)[2][NBIGM], FTYPE (*Vline)[NBIGM], FTYPE (*Pline)[NBIGM], FTYPE (*shockindicator)[NBIGM], struct of_trueijkp *trueijkp)
 {
   int i3,j3,k3;
@@ -3281,7 +3275,7 @@ static int get_shock_indicator(int whichprimtype, int interporflux, int dir, int
 
 
 
-// currently only sets density etai, rest are 0 GODMARK
+/// currently only sets density etai, rest are 0 GODMARK
 static int get_contact_indicator(int realisinterp, int whichprimtype, int interporflux, int dir, int bs, int ps, int pe, int be,  int i, int j, int k, int idel, int jdel, int kdel, FTYPE (*yin)[2][NBIGM], FTYPE (*Vline)[NBIGM], FTYPE (*Pline)[NBIGM], FTYPE (*etai)[NUMTRUEEOMSETS][NBIGM])
 {
   int i3,j3,k3;
@@ -3415,7 +3409,7 @@ static int get_contact_indicator(int realisinterp, int whichprimtype, int interp
 
 
 
-// real calculation.  Gets derivatives of input function and passes this to various other function
+/// real calculation.  Gets derivatives of input function and passes this to various other function
 static int compute_df_line(int doingweno,int interporflux, int recontype, int whichreduce, int preforder, int pl, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE *yin, FTYPE (*df)[NBIGM])
 {
   int i;
@@ -3490,8 +3484,8 @@ static int compute_df_line(int doingweno,int interporflux, int recontype, int wh
 }
 
 
-// real calculation.  Gets derivatives of input function and passes this to various other function
-// Only what paraline needs [removed DFCENT2APART and DF2OFONESIDED calculations as compared to compute_df_line()]
+/// real calculation.  Gets derivatives of input function and passes this to various other function
+/// Only what paraline needs [removed DFCENT2APART and DF2OFONESIDED calculations as compared to compute_df_line()]
 static int compute_df_line_paraline(int doingweno,int interporflux, int recontype, int whichreduce, int preforder, int pl, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE *yin, FTYPE (*df)[NBIGM])
 {
   int i;
@@ -3550,7 +3544,7 @@ static int compute_df_line_paraline(int doingweno,int interporflux, int recontyp
 }
 
 
-// Gets df and ddf for MONO if mono will use different yin than computed in above compute_df_line() function
+/// Gets df and ddf for MONO if mono will use different yin than computed in above compute_df_line() function
 static int compute_df_line_formono(int doingweno,int interporflux, int recontype, int whichreduce, int preforder, int pl, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE *yin, FTYPE (*df)[NBIGM])
 {
   int i;
@@ -3585,7 +3579,7 @@ static int compute_df_line_formono(int doingweno,int interporflux, int recontype
 }
 
 
-// returns the improved pressure jump indicators
+/// returns the improved pressure jump indicators
 int compute_df_line_new(int doingweno, int whichprimtype, int interporflux, int recontype, int dir, int whichreduce, int preforder, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE (*yprim)[2][NBIGM], FTYPE *df, FTYPE *stiffindicator, FTYPE (*Vline)[NBIGM], FTYPE (*Pline)[NBIGM], struct of_trueijkp *trueijkp)
 {
   int i;
@@ -3854,8 +3848,8 @@ int compute_df_line_new(int doingweno, int whichprimtype, int interporflux, int 
 
 
 
-// Assign result of ENO operation to final array
-// for c2e
+/// Assign result of ENO operation to final array
+/// for c2e
 static void assign_eno_result_c2e_multipl(int whichquantity, int recontype, int bs, int ps, int pe, int be, int i, int j, int k, int idel, int jdel, int kdel, FTYPE (*yout)[2][NBIGM], FTYPE (*result0)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*result1)[NSTORE2][NSTORE3][NPR2INTERP])
 {
   // for NUMPRIMLOOP:
@@ -3929,8 +3923,8 @@ static void assign_eno_result_c2e_multipl(int whichquantity, int recontype, int 
 
 
 
-// Assign result of ENO operation to final array
-// for c2e
+/// Assign result of ENO operation to final array
+/// for c2e
 static void assign_eno_result_c2e(int recontype, int pl, int bs, int ps, int pe, int be, int i, int j, int k, int idel, int jdel, int kdel, FTYPE (*yout)[NBIGM], FTYPE (*result0)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*result1)[NSTORE2][NSTORE3][NPR2INTERP])
 {
   int l;
@@ -3980,8 +3974,8 @@ static void assign_eno_result_c2e(int recontype, int pl, int bs, int ps, int pe,
 }
 
 
-// Assign result of ENO operation to final array
-// only care about how many outputs
+/// Assign result of ENO operation to final array
+/// only care about how many outputs
 static void assign_eno_result(int recontype, int pl, int bs, int ps, int pe, int be, int i, int j, int k, int idel, int jdel, int kdel, FTYPE (*yout)[NBIGM], FTYPE (*result0)[NSTORE2][NSTORE3][NPR], FTYPE (*result1)[NSTORE2][NSTORE3][NPR])
 {
   int l;

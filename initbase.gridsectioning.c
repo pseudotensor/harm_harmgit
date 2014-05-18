@@ -1,22 +1,28 @@
 
-#include "decs.h"
-
-
-
+/*! \file initbase.gridsectioning.c
+     \brief General initialization of code related to grid sectioning
 
 // USAGEMARK: on using grid sectioning:
 // 1) findandsetactivesection() calls two problem dependent functions.  They specify limits of integration range in terms of absolute grid indicies and the update period.
 // 2) Big jumps issue when exposing new cells. If jump is more than MAXBND, then cells are defined by (e.g.) t=0 data instead of being defined by bounds.c because jumped more than MAXBND and bounds only does MAXBND cells: Solution: User should ensure that jumps are <MAXBND or bound region outside standard boundary region in a reasonable way.
 // 3) Jon version of OUTFLOW -- field divb problem when *adding* grid cells since outflowed field doesn't satisfy divb=0.  Assume not adding and if do then bounds were written specially so added grid cells will have divb=0.
+*/
+
+
+#include "decs.h"
+
+
+
+
 
 
 
 static int check_limitsinbox(FTYPE rlo, FTYPE rhi, int iloabs, int ihiabs, int doreport);
 
 
-// Sets enerregion for ACTIVEREGION
-// Similar to setflux() and other functions, but for ACTIVEREGION/COMPLOOP enerregion.
-// No user/problem-dependent code here
+/// Sets enerregion for ACTIVEREGION
+/// Similar to setflux() and other functions, but for ACTIVEREGION/COMPLOOP enerregion.
+/// No user/problem-dependent code here
 int setgridsectioning(int initialcall, int timeorder, int numtimeorders, long int thenstep, FTYPE thetime )
 {
 
@@ -39,10 +45,10 @@ int setgridsectioning(int initialcall, int timeorder, int numtimeorders, long in
 
 
 
-// initialize grid sectioning
-// if not restarting, then just sets to full grid (at end of init.c real first section set)
-// if restarting, then go ahead and set to section given by global_enerregiondef
-// No user/problem-dependent code here
+/// initialize grid sectioning
+/// if not restarting, then just sets to full grid (at end of init.c real first section set)
+/// if restarting, then go ahead and set to section given by global_enerregiondef
+/// No user/problem-dependent code here
 int init_gridsectioning(void)
 {
   int doprintout;
@@ -90,12 +96,12 @@ int init_gridsectioning(void)
 }
 
 
-// bound non-active region fully
-// needed so RK-stepping has defined primitive at intermediate calculations
-// user could use if(WITHINACTIVESECTION(ri,rj,rk)) to avoid boundary cells being set using undefined non-active cells
-// use FULLLOOP to set original boundary cells to correct value so boundary conditions operate nominally
-// No user/problem-dependent code here
-// OPENMPOPTMARK: Code not used (deprecated), so don't optimize
+/// bound non-active region fully
+/// needed so RK-stepping has defined primitive at intermediate calculations
+/// user could use if(WITHINACTIVESECTION(ri,rj,rk)) to avoid boundary cells being set using undefined non-active cells
+/// use FULLLOOP to set original boundary cells to correct value so boundary conditions operate nominally
+/// No user/problem-dependent code here
+/// OPENMPOPTMARK: Code not used (deprecated), so don't optimize
 int bound_gridsectioning(int primtype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], int finalstep)
 {
   FTYPE (*primsource)[NSTORE2][NSTORE3][NPR];
@@ -242,15 +248,15 @@ int bound_gridsectioning(int primtype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTY
 
 
 
-/// Finds the index of a grid cell that conains a given radius.
-/// Should be called after grid is setup for all cpus.
-/// \param xr (i) radius
-/// \param xi (o) index of a grid cell that contains that radius (relative to current cpu)
-/// \param xcpupos1 (o) index of the cpu that contains that radius
-/// \return 0 on success
-// Somewhat user-dependent since in general might want to find an arbitrary grid index from an arbitrary physical position
-// Notes:
-// 1) BCtype could change in time, so don't assume fixed -- ok so far
+//// Finds the index of a grid cell that conains a given radius.
+//// Should be called after grid is setup for all cpus.
+//// \param xr (i) radius
+//// \param xi (o) index of a grid cell that contains that radius (relative to current cpu)
+//// \param xcpupos1 (o) index of the cpu that contains that radius
+//// \return 0 on success
+/// Somewhat user-dependent since in general might want to find an arbitrary grid index from an arbitrary physical position
+/// Notes:
+/// 1) BCtype could change in time, so don't assume fixed -- ok so far
 int findindexfromradius(FTYPE xr, int *xcpupos1, int *xi)
 {
   int i, j, k, ii;
@@ -387,12 +393,12 @@ int findindexfromradius(FTYPE xr, int *xcpupos1, int *xi)
 
 
 
-// Sets up enerregion when not just initializing.
-// Sets up ACTIVEREGION for grid sectioning
-// Call's user function to get active region boundaries
-// Finally sets-up active region loops
-// No user/problem-dependent code here
-// OPENMPMARK: Assume findandsetactivesection() not called by multiple threads, so ok to  have static and firsttime.
+/// Sets up enerregion when not just initializing.
+/// Sets up ACTIVEREGION for grid sectioning
+/// Call's user function to get active region boundaries
+/// Finally sets-up active region loops
+/// No user/problem-dependent code here
+/// OPENMPMARK: Assume findandsetactivesection() not called by multiple threads, so ok to  have static and firsttime.
 int findandsetactivesection(int initialcall, int timeorder, int numtimeorders, long int thenstep, FTYPE thetime )
 {
   int iloabs, ihiabs;
@@ -501,8 +507,8 @@ int compute_numcompzones(int (*sectiondef)[NDIM], long long int *localnumcompzon
 
 
 
-// Given absolute integer grid positions, determine active loop ranges
-// No user/problem-dependent code here
+/// Given absolute integer grid positions, determine active loop ranges
+/// No user/problem-dependent code here
 int setactivesection(int (*sectiondef)[NDIM], int doprintout)
 {
   int dimen;
@@ -537,17 +543,17 @@ int setactivesection(int (*sectiondef)[NDIM], int doprintout)
 
 
 
-////////////////////////////////////
-//
-// Example user-dependent code
-//
-////////////////////////////////////
+/////////////////////////////////////
+///
+/// Example user-dependent code
+///
+/////////////////////////////////////
 
 
 
 
-// specify grid sectioning for Sasha's wind problem
-// example user-dependent code
+/// specify grid sectioning for Sasha's wind problem
+/// example user-dependent code
 int setsashawind_set_enerregiondef(int initialcall, int timeorder, int numtimeorders, long int thenstep, FTYPE thetime, int (*enerregiondef)[NDIM] )
 {
   int cpupos1lo,cpupos1hi;
@@ -622,7 +628,7 @@ int setsashawind_set_enerregiondef(int initialcall, int timeorder, int numtimeor
 
 
 
-// example Sasha's wind setting of update periods
+/// example Sasha's wind setting of update periods
 int sashawind_set_enerregionupdate(int initialcall, int timeorder, int numtimeorders, long int thenstep, FTYPE thetime, int *updateeverynumsteps, int *everynumsteps)
 {
 
@@ -640,8 +646,8 @@ int sashawind_set_enerregionupdate(int initialcall, int timeorder, int numtimeor
 
 
 
-// specify grid sectioning for Jon's torus problem
-// example user-dependent code
+/// specify grid sectioning for Jon's torus problem
+/// example user-dependent code
 int torus_set_enerregiondef(int initialcall, int timeorder, int numtimeorders, long int thenstep, FTYPE thetime, int (*enerregiondef)[NDIM] )
 {
   int cpupos1lo,cpupos1hi;
@@ -713,8 +719,8 @@ int torus_set_enerregiondef(int initialcall, int timeorder, int numtimeorders, l
 
 
 
-// specify grid sectioning for Jon's torus problem
-// example user-dependent code
+/// specify grid sectioning for Jon's torus problem
+/// example user-dependent code
 int jet_set_enerregiondef(int initialcall, int timeorder, int numtimeorders, long int thenstep, FTYPE thetime, int (*enerregiondef)[NDIM] )
 {
   int cpupos1lo,cpupos1hi;
@@ -952,7 +958,7 @@ int jet_set_enerregiondef(int initialcall, int timeorder, int numtimeorders, lon
 
 
 
-// check whether chosen radii and computed indices suggest should stop calculation
+/// check whether chosen radii and computed indices suggest should stop calculation
 int check_limitsinbox(FTYPE rlo, FTYPE rhi, int iloabs, int ihiabs, int doreport)
 {
 
@@ -1000,8 +1006,8 @@ int check_limitsinbox(FTYPE rlo, FTYPE rhi, int iloabs, int ihiabs, int doreport
 
 
 
-// specify MPI task rank ordering
-// example user-dependent code
+/// specify MPI task rank ordering
+/// example user-dependent code
 int jet_set_myid(void)
 {
   

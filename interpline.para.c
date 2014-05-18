@@ -1,10 +1,15 @@
+
+/*! \file interpline.para.c
+     \brief Parabolic/PPM Spatial Interpolation for fluxes based upon providing full 1D line information
+     // Instead of acting per point, this acts per line to improve memory efficiency.
+*/
 #include "decs.h"
 
 
 #include "para_and_paraenohybrid.h"
 
 
-// This version has pressure with total pressure, which is more correct than point version
+/// This version has pressure with total pressure, which is more correct than point version
 void pass_1d_line_multipl_paraline(int MULTIPLTYPE, int whichquantity, int dir, int do_weight_or_recon, int recontype, int whichreduce, int preforder, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE (*shockindicator)[NBIGM], FTYPE *stiffindicator, FTYPE (*Vline)[NBIGM],  FTYPE (*Pline)[NBIGM], FTYPE (*df)[NUMDFS][NBIGM], FTYPE (*dP)[NBIGM], FTYPE (*etai)[NUMTRUEEOMSETS][NBIGM], FTYPE (*monoindicator)[NUMMONOINDICATORS][NBIGM], FTYPE (*yprim)[2][NBIGM], FTYPE (*ystencilvar)[2][NBIGM], FTYPE (*yin)[2][NBIGM], FTYPE (*yout)[2][NBIGM], FTYPE (*youtpolycoef)[MAXSPACEORDER][NBIGM], struct of_trueijkp *trueijkp)
 {
   int nprlocalstart,nprlocalend;
@@ -160,7 +165,7 @@ void pass_1d_line_multipl_paraline(int MULTIPLTYPE, int whichquantity, int dir, 
 
 
 
-// Pass 1D line to PARALINE scheme
+/// Pass 1D line to PARALINE scheme
 void pass_1d_line_paraline(int whichquantity, int dir, int do_weight_or_recon, int recontype, int whichreduce, int preforder, int pl, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE (*shockindicator)[NBIGM], FTYPE *stiffindicator, FTYPE (*Vline)[NBIGM],  FTYPE (*Pline)[NBIGM], FTYPE (*df)[NBIGM], FTYPE (*dP)[NBIGM], FTYPE (*etai)[NBIGM], FTYPE (*monoindicator)[NBIGM], FTYPE (*yprim)[2][NBIGM], FTYPE (*ystencilvar)[NBIGM], FTYPE (*yin)[NBIGM], FTYPE (*yout)[NBIGM], FTYPE (*youtpolycoef)[NBIGM], struct of_trueijkp *trueijkp)
 {
 
@@ -174,7 +179,7 @@ void pass_1d_line_paraline(int whichquantity, int dir, int do_weight_or_recon, i
 
 
 
-
+/// get para slopes
 void get_limit_slopes_paraline(FTYPE *dq1l, FTYPE *dq1r, FTYPE *dq2, FTYPE *dq)
 {
 

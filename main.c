@@ -1,5 +1,3 @@
-// #include "decs.h"
-#include "defs.h"
 
 /*! \file main.c
     \brief Main file
@@ -7,12 +5,44 @@
     Includes main() and gocheck()
 */
 
-/*! \fn main
-    \brief Main function
 
-    Main function that primarily calls init(), diag(), and step_ch_full() in loop.
+////////////////////////////////////////////////////////////////////////
+//
+////// makefile descriptions
+//
+//////////////////////////////////////
 
+/*! \file makehead.inc
+    \brief Header for makefile.  Sets primary code compile conditionals.
 */
+
+/*! \file maketail.ldouble.deps.inc
+    \brief Tail including dependencies for long double makefile.
+    See scripts/longdouble2double.sh
+*/
+
+/*! \file maketail.ldouble.inc
+    \brief Tail for long double makefile.
+    See scripts/longdouble2double.sh
+*/
+
+/*! \file maketailsuperlong.inc
+    \brief Tail for super long double makefile.
+    See scripts/longdouble2double.sh
+*/
+
+////////////////////////////////////////////////////////////////////////
+
+
+
+
+// #include "decs.h"
+#include "defs.h"
+
+///
+///
+///    Main function that primarily calls init(), diag(), and step_ch_full() in loop.
+///
 int main(int argc, char *argv[])
 {
   //  extern void testffdeinversion(void);

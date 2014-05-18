@@ -1,13 +1,8 @@
-/*************************************************************************
-
-                        Mathematica source file
-
-        Copyright 1986 through 1999 by Wolfram Research Inc.
-
-
-*************************************************************************/
-
-/* C language definitions for use with Mathematica output */
+/*! \file koral.mdefs.h
+  \brief  Mathematica source file
+  C language definitions for use with Mathematica output
+  Could add definitions for Random(), SeedRandom(), etc.
+*/
 
 
 #define Power(x, y) (pow((x), (y)))
@@ -36,6 +31,5 @@
 
 #define Conjugate(x) (x) // assume not complex
 
-/** Could add definitions for Random(), SeedRandom(), etc. **/
 
 

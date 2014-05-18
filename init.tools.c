@@ -1,3 +1,10 @@
+
+
+/*! \file init.tools.c
+     \brief Generalized USER initial conditions routines that can be used for many different (but not all) initial conditions
+*/
+
+
 #include "decs.h"
 
 

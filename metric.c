@@ -1,27 +1,26 @@
 
-#include "decs.h"
+/*! \file metric.c
+     \brief Sets metric in some coordinates based upon metric.h type choice for MCOORD
+// this file includes metric dependent terms, including for initial
+// condition routines for IC coords.
 
-
+// crucially need to setup analytic form of gcov.  All rest can be done numerically or analytically if wanted.
+//  SUPERNOTE: Set DOMIXTHETAPHI to 0 or 1 in definit.h!!
 // self-gravity TODO:
 // http://www.fftw.org/
 // COSMOS++ uses: https://computation.llnl.gov/casc/hypre/software.html
 // http://ciera.northwestern.edu/StarCrash/manual/html/node3.html
 // http://ccfd-jacob.blogspot.com
 // http://farside.ph.utexas.edu/teaching/329/lectures/node60.html
+*/
 
-///////////////////
-//
-//  SUPERNOTE: Set DOMIXTHETAPHI to 0 or 1 in definit.h!!
-//
-///////////////////
+#include "decs.h"
 
-// this file includes metric dependent terms, including for initial
-// condition routines for IC coords.
 
-// crucially need to setup analytic form of gcov.  All rest can be done numerically or analytically if wanted.
 
-// obtain gcov in primcoords of whichcoord type metric/coords
-// here ptrgeom is only expected to contain i,j,k,p location
+
+/// obtain gcov in primcoords of whichcoord type metric/coords
+/// here ptrgeom is only expected to contain i,j,k,p location
 void gcov_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, FTYPE *gcovinfunc, FTYPE *gcovpertinfunc)
 {
   void set_gcov_cylminkmetric    (FTYPE *V, FTYPE *gcovinfunc, FTYPE *gcovpertinfunc);
@@ -350,29 +349,29 @@ void gcov_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, F
 }
 
 
-//Note that mathematica's Arctan[x,y] = C's atan2(y,x) (i.e. args are flipped in order)
+///Note that mathematica's Arctan[x,y] = C's atan2(y,x) (i.e. args are flipped in order)
 FTYPE arctanmath(FTYPE x, FTYPE y)
 {
   return(atan2(y,x));
 }
 
 
+/////////////////
+//// Rotate V[X] (r,thnew,phnew as in bl_coord) to Vmetric (r,th,ph as in set_gcov)
+/// That is, when using rotated metric, we assume metric itself still has Vmetric=r,th,ph, while X is mapped to V=rnew,hnew,phnew.
+/// So input to set_gcov(X,V) needs to then get V->Vmetric before getting gcov(Vmetric).
+///  So real spherical polar coordinates for grid itself is V=rnew,hnew,phnew.
+///
+/// Use this rather than direct transformation(rnew,hnew,phnew) because that expression becomes too complicated in mathematica.  So just take 3 steps:
+/// 1) gcov_func(X,V)
+/// 2) rotate_VtoVmetric(V,Vmetric)
+/// 3) set_gcov...(Vmetric)
+/// 4) transVmetric2V(gcov) (which internally uses rotate_VtoVmetric() to keep expressions simple (i.e. kept in terms of Vmetric)
+///
+/// #2 just accounts for Vmetric[V[X]] as far as assignment of metric values so that X[] grid has used correct values of old/metric r,h,ph
+/// #4 accounts for differentials in metric so that ds^2 is the same.  This is written in terms of V=rnew,hnew,phnew, so can just feed-in V[X].
+///
 ////////////////
-/// Rotate V[X] (r,thnew,phnew as in bl_coord) to Vmetric (r,th,ph as in set_gcov)
-// That is, when using rotated metric, we assume metric itself still has Vmetric=r,th,ph, while X is mapped to V=rnew,hnew,phnew.
-// So input to set_gcov(X,V) needs to then get V->Vmetric before getting gcov(Vmetric).
-//  So real spherical polar coordinates for grid itself is V=rnew,hnew,phnew.
-//
-// Use this rather than direct transformation(rnew,hnew,phnew) because that expression becomes too complicated in mathematica.  So just take 3 steps:
-// 1) gcov_func(X,V)
-// 2) rotate_VtoVmetric(V,Vmetric)
-// 3) set_gcov...(Vmetric)
-// 4) transVmetric2V(gcov) (which internally uses rotate_VtoVmetric() to keep expressions simple (i.e. kept in terms of Vmetric)
-//
-// #2 just accounts for Vmetric[V[X]] as far as assignment of metric values so that X[] grid has used correct values of old/metric r,h,ph
-// #4 accounts for differentials in metric so that ds^2 is the same.  This is written in terms of V=rnew,hnew,phnew, so can just feed-in V[X].
-//
-///////////////
 int rotate_VtoVmetric(int whichcoord, FTYPE *V, FTYPE *Vmetric)
 {
 
@@ -415,7 +414,7 @@ int rotate_VtoVmetric(int whichcoord, FTYPE *V, FTYPE *Vmetric)
 }
 
 
-// put \theta,\phi in positive normal region of \theta,\phi.
+/// put \theta,\phi in positive normal region of \theta,\phi.
 int fix_hp(FTYPE *h, FTYPE *p)
 {
   FTYPE th=*h,ph=*p;
@@ -462,24 +461,24 @@ int fix_hp(FTYPE *h, FTYPE *p)
 
 }
 
-////////////////////////////
-//
-// perform rotation of V (for spherical polar coordinates)
-//
-// This takes input of V=(t,r,h,ph) and gives back Vmetric=(t,r,hnew,phnew)
-// where h,ph are in original metric form and hnew,phnew are rotated versions
-//
-// So since we want X->V to be mapping V=(t,r,hnew,phnew), this is *not* to be used.
-//
-// -----
-//
-// This can be used in (e.g.) __init__.py to have python script take data (in Vnew=V) and obtain Vmetric version
-//
-// 1) transV2Vmetric(gcovnew) gives gcov[original metric]
-// 2) transV2Vmetric(ucon,bcon,ucov,bcov) or transVmetric2V(ucon,bcon,ucov,bcov)
-// 3) Rotate actual spatial positions of data, including metrics, so that again axisymmetric so only have to store 1 phi slice!
-//
-////////////////////////////
+/////////////////////////////
+///
+/// perform rotation of V (for spherical polar coordinates)
+///
+/// This takes input of V=(t,r,h,ph) and gives back Vmetric=(t,r,hnew,phnew)
+/// where h,ph are in original metric form and hnew,phnew are rotated versions
+///
+/// So since we want X->V to be mapping V=(t,r,hnew,phnew), this is *not* to be used.
+///
+/// -----
+///
+/// This can be used in (e.g.) __init__.py to have python script take data (in Vnew=V) and obtain Vmetric version
+///
+/// 1) transV2Vmetric(gcovnew) gives gcov[original metric]
+/// 2) transV2Vmetric(ucon,bcon,ucov,bcov) or transVmetric2V(ucon,bcon,ucov,bcov)
+/// 3) Rotate actual spatial positions of data, including metrics, so that again axisymmetric so only have to store 1 phi slice!
+///
+/////////////////////////////
 int rotate_Vmetric2V(int whichcoord, FTYPE *Vmetric, FTYPE *V)
 {
 
@@ -534,8 +533,8 @@ int rotate_Vmetric2V(int whichcoord, FTYPE *Vmetric, FTYPE *V)
 
 
 
-// interpolate grid-based gcov to arbitrary location
-// used for stored past grid
+/// interpolate grid-based gcov to arbitrary location
+/// used for stored past grid
 int interpX_gcov(FTYPE *X, struct of_compgeom PTRDEFMETMACP1A0(compgeom,FILL,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3), FTYPE PTRDEFMETMACP1A2(gcovgrid,FILL,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3,NDIM,NDIM), FTYPE PTRDEFMETMACP1A1(gcovpertgrid,FILL,N1M+SHIFT1,N2M+SHIFT2,N3M+SHIFT3,NDIM), FTYPE *gcov, FTYPE *gcovpert)
 {
   int i,j,k;
@@ -672,7 +671,7 @@ int interpX_gcov(FTYPE *X, struct of_compgeom PTRDEFMETMACP1A0(compgeom,FILL,N1M
 
 
 
-// obtain prim gcon in primcoords of whichcoord type metric/coords
+/// obtain prim gcon in primcoords of whichcoord type metric/coords
 void gcon_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, FTYPE *gcov, FTYPE *gcon)
 {
   void set_gcon_blmetric(FTYPE *V, FTYPE *gcon);
@@ -738,7 +737,7 @@ void gcon_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, F
 
 
 
-// connection not simply transformed -- so compute directly from final metric (primcoords)
+/// connection not simply transformed -- so compute directly from final metric (primcoords)
 void conn_func(int whichcoord, FTYPE *X, struct of_geom *geom,
                FTYPE (*conn)[NDIM][NDIM],FTYPE *conn2)
 {
@@ -772,10 +771,10 @@ void conn_func(int whichcoord, FTYPE *X, struct of_geom *geom,
 
 
 
-// obtain eomfunc (f_{(\nu)} factor: see how used in connection below and get_geometry())
-// assumes X set before eomfun_func()
-// should allow for DOEVOLVEMETRIC.  Currently WITHGDET and WITHNOGDET are usable with DOEVOLVEMETRIC
-// do ALL-pl (EOMFUNCMAC(pl))
+/// obtain eomfunc (f_{(\nu)} factor: see how used in connection below and get_geometry())
+/// assumes X set before eomfun_func()
+/// should allow for DOEVOLVEMETRIC.  Currently WITHGDET and WITHNOGDET are usable with DOEVOLVEMETRIC
+/// do ALL-pl (EOMFUNCMAC(pl))
 void eomfunc_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, FTYPE *EOMFUNCNAME)
 {
 
@@ -835,23 +834,20 @@ void eomfunc_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X
 
 
 
-///////////////////////////
-//
-// g_{\mu\nu} (always analytic -- returns some coordinate system)
-//
-///////////////////////////
-
-
-
-// needs M, J, and Q
-// M: total M+dM mass of star
-// J: total angular momentum
-// Q: mass quadrapole moment
-// external space-time of slowly rotating star, accurate to second order in $\Omega_{\star}$
-// c=G=1
-// NS mass sheds at v=0.8c (eq 28), allowed approx up to v=0.1c
-// WD mass sheds at v=0.01c, allowed approx up to v=0.001c
-// equally restrictive as measured by ratio of rotational energy to gravitational energy
+////////////////////////////
+///
+/// g_{\mu\nu} (always analytic -- returns some coordinate system)
+///
+////////////////////////////
+/// needs M, J, and Q
+/// M: total M+dM mass of star
+/// J: total angular momentum
+/// Q: mass quadrapole moment
+/// external space-time of slowly rotating star, accurate to second order in $\Omega_{\star}$
+/// c=G=1
+/// NS mass sheds at v=0.8c (eq 28), allowed approx up to v=0.1c
+/// WD mass sheds at v=0.01c, allowed approx up to v=0.001c
+/// equally restrictive as measured by ratio of rotational energy to gravitational energy
 void set_gcov_htmetric(FTYPE *V, FTYPE *gcov, FTYPE *gcovpert)
 {
   FTYPE P2,Q12, Q22;
@@ -998,7 +994,7 @@ void set_gcov_htmetric(FTYPE *V, FTYPE *gcov, FTYPE *gcovpert)
 
 #undef HTMETRICTYPE
 
-// from Berti, White, Maniopoulou, and Bruni (2005)
+/// from Berti, White, Maniopoulou, and Bruni (2005)
 void set_gcov_htmetric_accurate(FTYPE *V, FTYPE *gcov, FTYPE *gcovpert)
 {
   FTYPE M,J,Q;
@@ -1125,8 +1121,8 @@ void set_gcov_htmetric_accurate(FTYPE *V, FTYPE *gcov, FTYPE *gcovpert)
 
 
 
-// Cartesian minkowski
-// (t,x,y,z)
+/// Cartesian minkowski
+/// (t,x,y,z)
 void set_gcov_cartminkmetric(FTYPE *V, FTYPE *gcov, FTYPE *gcovpert)
 {
   
@@ -1160,7 +1156,7 @@ void set_gcov_cartminkmetric(FTYPE *V, FTYPE *gcov, FTYPE *gcovpert)
 }
 
 
-// (t,x,y,z)
+/// (t,x,y,z)
 void set_gcov_unigravity(FTYPE *V, FTYPE *gcov, FTYPE *gcovpert)
 {
 
@@ -1214,7 +1210,7 @@ void set_gcov_unigravity(FTYPE *V, FTYPE *gcov, FTYPE *gcovpert)
 
 
 
-// (t,R,z,\phi)
+/// (t,R,z,\phi)
 void set_gcov_cylminkmetric(FTYPE *V, FTYPE *gcov, FTYPE *gcovpert)
 {
 
@@ -1283,7 +1279,7 @@ void set_gcov_cylminkmetric(FTYPE *V, FTYPE *gcov, FTYPE *gcovpert)
 
 
 
-// (t,r,\theta,\phi)
+/// (t,r,\theta,\phi)
 void set_gcov_spcminkmetric(FTYPE *V, FTYPE *gcov, FTYPE *gcovpert)
 {
   FTYPE r,th;
@@ -1360,9 +1356,9 @@ void set_gcov_spcminkmetric(FTYPE *V, FTYPE *gcov, FTYPE *gcovpert)
 }
 
 
-// (~t,r,\theta,~\phi)
-// mixed KS BH+TOV metric
-// See grmhd-ksksp.nb, grmhd-connectiononly.nb, tov_solution_timedepsol.nb, tov_solution_timeindepsol.nb, ks_from_bl.nb
+/// (~t,r,\theta,~\phi)
+/// mixed KS BH+TOV metric
+/// See grmhd-ksksp.nb, grmhd-connectiononly.nb, tov_solution_timedepsol.nb, tov_solution_timeindepsol.nb, ks_from_bl.nb
 void set_gcov_ks_bh_tov_metric(FTYPE *X, FTYPE *V, FTYPE *gcov, FTYPE *gcovpert)
 {
   FTYPE r,th;
@@ -1459,7 +1455,7 @@ void set_gcov_ks_bh_tov_metric(FTYPE *X, FTYPE *V, FTYPE *gcov, FTYPE *gcovpert)
 }
 
 
-// TOV KS metric wrapper
+/// TOV KS metric wrapper
 void set_gcov_ks_tov_metric(FTYPE *X, FTYPE *V, FTYPE *gcov, FTYPE *gcovpert)
 {
   extern int set_gcov_ks_tov_spcmetric(FTYPE *X, FTYPE *V, FTYPE *gcov, FTYPE *gcovpert, SFTYPE *MOrself, SFTYPE *phiself, SFTYPE *vrsqself);
@@ -1472,7 +1468,7 @@ void set_gcov_ks_tov_metric(FTYPE *X, FTYPE *V, FTYPE *gcov, FTYPE *gcovpert)
 
 }
 
-// TOV KS metric wrapper
+/// TOV KS metric wrapper
 void set_gcov_bl_tov_metric(FTYPE *X, FTYPE *V, FTYPE *gcov, FTYPE *gcovpert)
 {
   extern int set_gcov_bl_tov_spcmetric(FTYPE *X, FTYPE *V, FTYPE *gcov, FTYPE *gcovpert, SFTYPE *MOrself, SFTYPE *phiself, SFTYPE *vrsqself);
@@ -1489,7 +1485,7 @@ void set_gcov_bl_tov_metric(FTYPE *X, FTYPE *V, FTYPE *gcov, FTYPE *gcovpert)
 
 
 
-// (~t,r,\theta,~\phi)
+/// (~t,r,\theta,~\phi)
 void set_gcov_ksmetric(FTYPE *V, FTYPE *gcov, FTYPE *gcovpert)
 {
   FTYPE sth, cth, s2, a2, r2, r2small, r3;
@@ -1602,7 +1598,7 @@ void set_gcov_ksmetric(FTYPE *V, FTYPE *gcov, FTYPE *gcovpert)
 }
 
 
-// Johannsen & Psaltis 2011 metric
+/// Johannsen & Psaltis 2011 metric
 void set_gcov_ks_jp1_metric(FTYPE *V, FTYPE *gcov, FTYPE *gcovpert)
 {
   FTYPE r,th;
@@ -1684,7 +1680,7 @@ void set_gcov_ks_jp1_metric(FTYPE *V, FTYPE *gcov, FTYPE *gcovpert)
 
 
 
-// (t,r,\theta,\phi)
+/// (t,r,\theta,\phi)
 void set_gcov_blmetric(FTYPE *V, FTYPE *gcov, FTYPE *gcovpert)
 {
   FTYPE sth, cth, s2, a2, r2, r2small, r3, DD, mu;
@@ -1789,14 +1785,12 @@ void set_gcov_blmetric(FTYPE *V, FTYPE *gcov, FTYPE *gcovpert)
 }
 
 
-///////////////////////////
-//
-// g^{\mu\nu} (analytic or numerical)
-//
-///////////////////////////
-
-
-// (~t,r,\theta,~\phi)
+////////////////////////////
+///
+/// g^{\mu\nu} (analytic or numerical)
+///
+////////////////////////////
+/// (~t,r,\theta,~\phi)
 void set_gcon_ksmetric(FTYPE *V, FTYPE *gcon)
 {
   FTYPE sth, cth, s2, a2, r2, r2small,r3;
@@ -1880,7 +1874,7 @@ void set_gcon_ksmetric(FTYPE *V, FTYPE *gcon)
 
 }
 
-// (t,r,\theta,\phi)
+/// (t,r,\theta,\phi)
 void set_gcon_blmetric(FTYPE *V, FTYPE *gcon)
 {
   FTYPE sth, cth, s2, a2, r2, r2small, r3, DD, mu;
@@ -1959,13 +1953,11 @@ void set_gcon_blmetric(FTYPE *V, FTYPE *gcon)
 
 }
 
-///////////////////////////
-//
-// CONNECTIONS (numerical or analytic)
-//
-///////////////////////////
-
-
+////////////////////////////
+///
+/// CONNECTIONS (numerical or analytic)
+///
+////////////////////////////
 void set_conn_general(FTYPE *X, struct of_geom *geom,
                       FTYPE (*conn)[NDIM][NDIM],FTYPE *conn2)
 {
@@ -2028,7 +2020,7 @@ void set_conn_cylminkmetric(FTYPE *X, struct of_geom *geom,
   
 }
 
-// only works for X1=R and X2=z
+/// only works for X1=R and X2=z
 void set_conn_cartminkmetric(FTYPE *X, struct of_geom *geom,
                              FTYPE (*conn)[NDIM][NDIM],FTYPE *conn2)
 {
@@ -2140,8 +2132,8 @@ void set_conn_ksmetric(FTYPE *X, struct of_geom *geom,
 
 
 
-// jon's MKS connection (and conn2)
-// only applies to defcoord==LOGRSINTH
+/// jon's MKS connection (and conn2)
+/// only applies to defcoord==LOGRSINTH
 void mks_conn_func(FTYPE *X, struct of_geom *ptrgeom,
                    FTYPE (*conn)[NDIM][NDIM],FTYPE *conn2)
 {
@@ -2810,8 +2802,8 @@ void mks_conn_func_general(FTYPE *X, struct of_geom *geom, FTYPE (*conn)[NDIM][N
 
 
 
-// jon's MKS source in mid-simplified form (used to UPDATE the source)
-// only for ideal EOS (gam)
+/// jon's MKS source in mid-simplified form (used to UPDATE the source)
+/// only for ideal EOS (gam)
 void mks_source_conn(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q,FTYPE *dU)
 {
   int ii,jj,kk;
@@ -3536,8 +3528,8 @@ void mks_source_conn(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q,FTYP
 
 
 
-// GODMARK: remove? Worthless idea? 2D only also.
-// jon's volume diff for uni theta grid and exp r grid (defcoord==LOGRUNITH)
+/// GODMARK: remove? Worthless idea? 2D only also.
+/// jon's volume diff for uni theta grid and exp r grid (defcoord==LOGRUNITH)
 void mks_unitheta_idxvol_func(int i, int j, int k, FTYPE *idxvol)
 {
 
@@ -3630,9 +3622,9 @@ void mks_unitheta_idxvol_func(int i, int j, int k, FTYPE *idxvol)
 }
 
 
-// geometry only contains i,j,k,p
-// only for spherical polar coordinates with negligible relativistic effects
-// only used if GDETVOLDIFF==1
+/// geometry only contains i,j,k,p
+/// only for spherical polar coordinates with negligible relativistic effects
+/// only used if GDETVOLDIFF==1
 void gdetvol_func(struct of_geom *ptrgeom, FTYPE *gdettrue, FTYPE *EOMFUNCNAME, FTYPE *gdetvol)
 {
   int i,j,k,loc;
