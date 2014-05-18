@@ -1,3 +1,8 @@
+
+/*! \file mympi.global.nondepmnemonics.h
+     \brief MPI independent macros/definitions
+*/
+
 // whether to use MPI
 #define USEMPI (USINGMPI) // choice (set through makehead.inc)
 #define USEMPIGRMHD USEMPI // always this way
@@ -64,13 +69,13 @@
 #define SORTED 1
 
 
-// simple algorithm, but eats alot of memory on cpu=0 (unbounded) if doing sorted output
+/// simple algorithm, but eats alot of memory on cpu=0 (unbounded) if doing sorted output
 #define MPICOMBINESIMPLE 0
-// more parallel:
+/// more parallel:
 #define MPICOMBINEMINMEM 1 // homebrew, but buggy on tungsten/mako, no problem on BH cluster -- ever.
 #define MPICOMBINEROMIO 2 // requires romio package
 
-// for various uses (dumping and special boundary/comp interchange routine
+/// for various uses (dumping and special boundary/comp interchange routine
 #define STAGEM1 (-1)
 #define STAGE0 0
 #define STAGE1 1
@@ -81,10 +86,10 @@
 #define STAGE6 6
 #define STAGE7 7
 
-// #define DATADIR "./"
+/// #define DATADIR "./"
 #define DATADIR ""
 
-// extention for data files
+/// extention for data files
 #define DATEXT ".dat"
 #define PAREXT ".par"
 #define INEXT ".in"

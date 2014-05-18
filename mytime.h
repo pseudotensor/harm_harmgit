@@ -1,3 +1,9 @@
+
+/*! \file mytime.h
+     \brief Timing functions (report and diagnostics) declarations and definitions/macros
+*/
+
+
 #ifndef _MYTIME_H
 #define _MYTIME_H
 
@@ -63,16 +69,15 @@ void myustimes2(clock_t *usertime,clock_t *systime);
 
 
 #ifndef WIN32
-
+// 0: old second accurate method for walltime
+// 1: new microsecond accurate method for walltime
+// 2: cpu(user+system) time, accurate to 1/CLOCKS_PER_SECOND seconds, not wall time
+// 3: reports user/system and child user/system times (good for understanding if system is eating lot of your time (i.e. HD or net or whatever hardware device run by kernel))
 #if(PERFTEST==1)
 #define TIMEMETHOD 2 // SUPERMARK
 #else
 #define TIMEMETHOD 1 // used for measurements in wall time
 #endif
-// 0: old second accurate method for walltime
-// 1: new microsecond accurate method for walltime
-// 2: cpu(user+system) time, accurate to 1/CLOCKS_PER_SECOND seconds, not wall time
-// 3: reports user/system and child user/system times (good for understanding if system is eating lot of your time (i.e. HD or net or whatever hardware device run by kernel))
 
 #else
 // can choose TIMEMETHOD == 0,1,2

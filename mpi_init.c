@@ -1,14 +1,20 @@
+
+/*! \file mpi_init.c
+     \brief Initialize MPI functions
+*/
+
+
 #include "decs.h"
 
 
 
 
-////////////////
-//
-// General Initialize MPI
-// Only include non-blocking MPI commands
-//
-////////////////
+/////////////////
+///
+/// General Initialize MPI
+/// Only include non-blocking MPI commands
+///
+/////////////////
 int init_MPI_general(int *argc, char **argv[])
 {
 
@@ -63,8 +69,8 @@ int init_MPI_general(int *argc, char **argv[])
 
 
 
-// general initialization for OpenMP
-// Nothing required before user arguments read-in setting number of threads
+/// general initialization for OpenMP
+/// Nothing required before user arguments read-in setting number of threads
 int init_OPENMP_general(FILE *out)
 {
 
@@ -76,8 +82,8 @@ int init_OPENMP_general(FILE *out)
 
 
 
-// general initialization for OpenMP
-// Nothing required before user arguments read-in setting number of threads
+/// general initialization for OpenMP
+/// Nothing required before user arguments read-in setting number of threads
 int init_OPENMP_sets_fromargs(void)
 {
 
@@ -177,9 +183,9 @@ void init_MPI_setupfilesandgrid(int argc, char *argv[])
 
 
 
-// myargs() reads in arguments for all of GRMHD codes
-// globally reads and sets ncpux1,ncpux2,ncpux3,RESTARTMODE, WHICHFILE for all CPUs
-// also globally sets numprocs and makes sure numprocs makes sense
+/// myargs() reads in arguments for all of GRMHD codes
+/// globally reads and sets ncpux1,ncpux2,ncpux3,RESTARTMODE, WHICHFILE for all CPUs
+/// also globally sets numprocs and makes sure numprocs makes sense
 void myargs(int argc, char *argv[])
 {
   int argi,numargs,numextraargs;
@@ -444,8 +450,8 @@ void set_binarytype(char *binarytype)
 
 
 
-// determine where quantities are located in cent or stag sense w.r.t. direction
-// in reality only should depend upon per dimension not per direction, but eventually this info is accessed by "dir" not "dimen"
+/// determine where quantities are located in cent or stag sense w.r.t. direction
+/// in reality only should depend upon per dimension not per direction, but eventually this info is accessed by "dir" not "dimen"
 void set_primgridpos(void)
 {
   int dir,pl,pliter;
@@ -496,7 +502,7 @@ void set_primgridpos(void)
 
 
 
-// setup per-cpu parameters
+/// setup per-cpu parameters
 void init_placeongrid_gridlocation(void)
 {
   // 3's were COMPDIM, but below code is fixed to require all 3 now
@@ -612,8 +618,8 @@ void init_placeongrid_gridlocation(void)
 
 
 
-// setup inter-CPU grid information for message passing for domain decompsition
-// These thigns only need to be setup by first call to boundary conditions code
+/// setup inter-CPU grid information for message passing for domain decompsition
+/// These thigns only need to be setup by first call to boundary conditions code
 void init_placeongrid_griddecomposition(void)
 {
   // 3's were COMPDIM, but below code is fixed to require all 3 now
@@ -1653,8 +1659,8 @@ int myexit(int call_code)
 
 #if(PRODUCTION<=1)
 
-// note, this may be called in different locations of the code by
-// different CPUs
+/// note, this may be called in different locations of the code by
+/// different CPUs
 int error_check(int wherefrom)
 {
   int i, j, k;
@@ -1699,7 +1705,7 @@ int error_check(int wherefrom)
 
 
 
-// just copied from pnmhd code
+/// just copied from pnmhd code
 #if(0)
 void init_MPIgroup(void)
 {
@@ -1891,7 +1897,7 @@ void init_MPIgroup(void)
 
 
 
-// get number of OpenMP threads expected to operate in real pragma calls
+/// get number of OpenMP threads expected to operate in real pragma calls
 void get_report_openmp_thread_info(FILE * out)
 {
   int tid;

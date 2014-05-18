@@ -1,3 +1,9 @@
+
+/*! \file mympi.global.loops.h
+     \brief MPI loop definitions/macros
+*/
+
+
 // also includes 3 flags: 2 b^2 and 1 utoprim fail flag
 
 #define PLOOPMPIORIG(pr,num) for(pr=0;pr<num;pr++)

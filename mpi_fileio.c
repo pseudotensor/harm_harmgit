@@ -1,15 +1,20 @@
-#include "decs.h"
 
-
+/*! \file mpi_fileio.c
+     \brief Various file input/output using MPI functions
 // Notes:
 //
 // mpicombinetype is global initial user choice for combinetype for MPI
 // truempicombinetype is global system-forced choice for mpicombinetype set during initialization (and so used rest of the time except new initialization where we start fresh).  So "mpiio_final()" also uses truempicombinetype since related to last choice
-
-
 // OPENMPMARK: Assume all calls to MPI file I/O routines are not done by multiple threads.
+*/
+
+#include "decs.h"
 
 
+
+
+
+/// initialize mpiio
 void mpiio_init(int bintxt, int sorted, FILE ** fpptr, long headerbytesize, int which, char *filename, int numcolumns,
                 MPI_Datatype datatype, void **jonioptr, void **writebufptr)
 {
@@ -60,8 +65,8 @@ void mpiio_init(int bintxt, int sorted, FILE ** fpptr, long headerbytesize, int 
 
 
 
-// used to cleanup file writing in non-blocking way
-// should be called before writing if previously wrote and also called at end of calculation to close last file (use fake write to do so)
+/// used to cleanup file writing in non-blocking way
+/// should be called before writing if previously wrote and also called at end of calculation to close last file (use fake write to do so)
 void mpiio_final(int bintxt, int sorted, FILE ** fpptr, long headerbytesize, int which, char *filename, int numcolumns,
                  MPI_Datatype datatype, void **jonioptr, void **writebufptr)
 {
@@ -141,7 +146,7 @@ void mpiio_combine(int bintxt, int sorted,
 #define DEBUGMINMEM 0
 
 
-// this can be made to work without mpi for super-efficient single cpu mode, but not important.  Can still do 1 cpu with MPI and use this!
+/// this can be made to work without mpi for super-efficient single cpu mode, but not important.  Can still do 1 cpu with MPI and use this!
 void mpiio_minmem(int readwrite, int whichdump, int i, int j, int k, int bintxt, int sorted,
                   int numcolumns, MPI_Datatype datatype,
                   FILE ** fp, void *jonio, void *writebuf)
@@ -899,14 +904,13 @@ void mpiio_seperate(int bintxt, int sorted, int stage,
 
 
 
-// NICS Nautilus hints:
-// http://www.nics.tennessee.edu/user-support/mpi-tips-for-cray-xt5
-// http://www.nics.tennessee.edu/io-tips
-
-// filename only needed for INITROMIO
-// operationtype=INITROMIO or WRITECLOSEROMIO
-// mpi io using ROMIO
-// which=WRITEFILE or READFILE
+/// NICS Nautilus hints:
+/// http://www.nics.tennessee.edu/user-support/mpi-tips-for-cray-xt5
+/// http://www.nics.tennessee.edu/io-tips
+/// filename only needed for INITROMIO
+/// operationtype=INITROMIO or WRITECLOSEROMIO
+/// mpi io using ROMIO
+/// which=WRITEFILE or READFILE
 void mpiioromio_init_combine(int operationtype, int which,  long headerbytesize, char *filename, int numcolumns,MPI_Datatype datatype, void **writebufptr,void *writebuf)
 {
   int i;
@@ -1313,7 +1317,7 @@ void mpiioromio_init_combine(int operationtype, int which,  long headerbytesize,
 
 
 
-// size of buffer for MPI writing/reading
+/// size of buffer for MPI writing/reading
 int set_sizeofmemory(int numbuff, int sizeofdatatype, int numcolumns, long long int *sizeofmemory)
 {
   // can't trust that (int)ceil() along will be upper integer
@@ -1361,8 +1365,8 @@ long long int gcountmod(int numcolumns)
 #define DEBUGSINIT 0
 
 
-// initializes memory buffers for MPI combining for all MPI combine types(simple, minmem, romio)
-// mpi io sorted or not
+/// initializes memory buffers for MPI combining for all MPI combine types(simple, minmem, romio)
+/// mpi io sorted or not
 void mpiios_init(int bintxt, int sorted, FILE ** fp, int which, int headerbytesize, char *filename, int numcolumns,
                  MPI_Datatype datatype, void **jonioptr, void **writebufptr)
 {
@@ -2042,7 +2046,7 @@ void mpiiotu_combine(MPI_Datatype datatype, int numcolumns, FILE ** fp, void *wr
 
 }
 
-// fill writebuf with each cpu's data set,using CPU=0 to process the file
+/// fill writebuf with each cpu's data set,using CPU=0 to process the file
 void mpiiotu_seperate(int stage, MPI_Datatype datatype, int numcolumns,
                       FILE ** fp,void *writebuf)
 {
@@ -2205,8 +2209,8 @@ int getsizeofdatatype(MPI_Datatype datatype)
 }
 
 
-// a simple max, assumes local cpu max already found
-// sends results back to all cpus
+/// a simple max, assumes local cpu max already found
+/// sends results back to all cpus
 void mpimax(SFTYPE*maxptr)
 {
   SFTYPE send;
@@ -2218,8 +2222,8 @@ void mpimax(SFTYPE*maxptr)
 }
 
 
-// a simple max, assumes local cpu max already found
-// sends results back to all cpus
+/// a simple max, assumes local cpu max already found
+/// sends results back to all cpus
 void mpiimax(int*maxptr)
 {
   int send;
@@ -2230,8 +2234,8 @@ void mpiimax(int*maxptr)
 #endif
 }
 
-// a simple max, assumes local cpu max already found
-// sends results back to all cpus
+/// a simple max, assumes local cpu max already found
+/// sends results back to all cpus
 void mpiisum(int*sumptr)
 {
   int send;
@@ -2242,8 +2246,8 @@ void mpiisum(int*sumptr)
 #endif
 }
 
-// a simple max, assumes local cpu max already found
-// sends results back to all cpus
+/// a simple max, assumes local cpu max already found
+/// sends results back to all cpus
 void mpiFTYPEsum(FTYPE*sumptr)
 {
   FTYPE send;
@@ -2255,7 +2259,7 @@ void mpiFTYPEsum(FTYPE*sumptr)
 }
 
 
-// as above, but only myid=recvid gets result
+/// as above, but only myid=recvid gets result
 void mpiisum0(int*sumptr, int recvid)
 {
   int send;
@@ -2266,7 +2270,7 @@ void mpiisum0(int*sumptr, int recvid)
 #endif
 }
 
-// as above, but only myid=recvid gets result
+/// as above, but only myid=recvid gets result
 void mpildsum0(long int*sumptr, int recvid)
 {
   long int send;
@@ -2277,8 +2281,8 @@ void mpildsum0(long int*sumptr, int recvid)
 #endif
 }
 
-// a simple max, assumes local cpu max already found
-// sends results back to all cpus
+/// a simple max, assumes local cpu max already found
+/// sends results back to all cpus
 void mpimin(SFTYPE*minptr)
 {
   SFTYPE send;
@@ -2289,8 +2293,8 @@ void mpimin(SFTYPE*minptr)
 #endif
 }
 
-// a simple max, assumes local cpu max already found
-// sends results back to all cpus
+/// a simple max, assumes local cpu max already found
+/// sends results back to all cpus
 void mpifmin(FTYPE*minptr)
 {
   FTYPE send;
@@ -2302,7 +2306,7 @@ void mpifmin(FTYPE*minptr)
 }
 
 
-// only used for images to get min max over whole dumped domain.
+/// only used for images to get min max over whole dumped domain.
 void prminmaxsum(FTYPE (*p)[NSTORE2][NSTORE3][NPR], int start,int nmemb, FTYPE *maxptr, FTYPE*minptr,FTYPE*sumptr)
 {
   long long int i,j,k,pl;
@@ -2348,7 +2352,7 @@ void prminmaxsum(FTYPE (*p)[NSTORE2][NSTORE3][NPR], int start,int nmemb, FTYPE *
 
 
 
-// write to file or MPI buffer
+/// write to file or MPI buffer
 void myfwrite(int bintxt, MPI_Datatype datatype, void *ptr, int start, int nmemb, int i, int j, int k, FILE**stream,void*writebuf)
 {
   long long int pl;
@@ -2453,7 +2457,7 @@ void myfwrite(int bintxt, MPI_Datatype datatype, void *ptr, int start, int nmemb
   }
 }
 
-// same kind of process as myfwrite, see comments there
+/// same kind of process as myfwrite, see comments there
 void myfread(int bintxt, MPI_Datatype datatype, void *ptr, int start, int nmemb, int i, int j, int k, FILE**stream,void*writebuf)
 {
   long long int pl;
@@ -2561,7 +2565,7 @@ void myfread(int bintxt, MPI_Datatype datatype, void *ptr, int start, int nmemb,
 }
 
 
-// sets values between 2 pointers, typically to cumulate values into writebuf array for later use.
+/// sets values between 2 pointers, typically to cumulate values into writebuf array for later use.
 void myset(MPI_Datatype datatype, void *ptr, int start, int nmemb, void*writebuf)
 {
   long long int pl;
@@ -2615,7 +2619,7 @@ void myset(MPI_Datatype datatype, void *ptr, int start, int nmemb, void*writebuf
 
 
 
-// very similar to myset, just switched assignments
+/// very similar to myset, just switched assignments
 void myget(MPI_Datatype datatype, void *ptr, int start, int nmemb, void*writebuf)
 {
   long long int pl;
@@ -2763,11 +2767,10 @@ int init_linklists(void)
 }
 
 
-// setuplinklist() not a user function
-
-// use for mpiminio() functions (see init_mpi.c)
-// Had to convert to long long int for these variables and the blink structure in global.structs.h
-// This was required to deal with a large number of cpus, N1,N2,N3, and number of columns when totalsize[1]*totalsize[2]*totalsize[3]*numcolumns>2GB that is limit for size of signed integer that is default size on many systems
+/// setuplinklist() not a user function
+/// use for mpiminio() functions (see init_mpi.c)
+/// Had to convert to long long int for these variables and the blink structure in global.structs.h
+/// This was required to deal with a large number of cpus, N1,N2,N3, and number of columns when totalsize[1]*totalsize[2]*totalsize[3]*numcolumns>2GB that is limit for size of signed integer that is default size on many systems
 int setuplinklist(int numcolumns,int which)
 {
   long long int gcount,lcount,numlinks;
@@ -2952,7 +2955,7 @@ int setuplinklist(int numcolumns,int which)
   return(0);
 }
 
-// add link for forward-only link list
+/// add link for forward-only link list
 struct blink * addlink(struct blink * clinkptr)
 {
   struct blink *pb;

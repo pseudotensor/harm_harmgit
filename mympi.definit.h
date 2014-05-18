@@ -1,3 +1,10 @@
+
+/*! \file mympi.definit.h
+     \brief Default MPI definitions/macros
+*/
+
+
+
 // 1 = MPI-1
 // 2 = MPI-2 (for non-blocking MPI-IO)
 #define MPIVERSION 2 // choice

@@ -1,24 +1,29 @@
 
+/*! \file physics.c
+     \brief All globally-related physics calculations
+     // THINGS IN HERE ARE NOT PER POINT OR USE GLOBAL VARIABLES or call get_geometry()
+*/
+
+
 #include "decs.h"
 
-// THINGS IN HERE ARE NOT PER POINT OR USE GLOBAL VARIABLES or call get_geometry()
 
 
-// making variables static inside functions made things slower if anything
-// would have thought consruction/destruction operations would be important
-// why static makes slower?
+/// making variables static inside functions made things slower if anything
+/// would have thought consruction/destruction operations would be important
+/// why static makes slower?
 //#define VARSTATIC static
 #define VARSTATIC 
 
 
-// macros to avoid messy function calls or restoring them as i,j,k
+/// macros to avoid messy function calls or restoring them as i,j,k
 #define MYII ptrgeom->i
 #define MYJJ ptrgeom->j
 #define MYKK ptrgeom->k
 
 
-// wrapper for choosing to get state by computing it or from global array
-// notice that ptrgeom->p inputted not used
+/// wrapper for choosing to get state by computing it or from global array
+/// notice that ptrgeom->p inputted not used
 int get_stateforfluxcalc(int dimen, int isleftright, FTYPE *pr, struct of_geom *ptrgeom, struct of_state **qptr)
 {
   int pureget_stateforfluxcalc(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
@@ -47,8 +52,8 @@ int get_stateforfluxcalc(int dimen, int isleftright, FTYPE *pr, struct of_geom *
 }
 
 
-// wrapper for choosing to get state by computing it or from global array
-// pointer assign (overrides the existing default assignment of the pointer address in the calling function, so assumes calling function only uses pointer form subsequently)
+/// wrapper for choosing to get state by computing it or from global array
+/// pointer assign (overrides the existing default assignment of the pointer address in the calling function, so assumes calling function only uses pointer form subsequently)
 int get_stateforsource(FTYPE *pr, struct of_geom *ptrgeom, struct of_state **qptr)
 {
   int pureget_stateforsource(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
@@ -72,8 +77,8 @@ int get_stateforsource(FTYPE *pr, struct of_geom *ptrgeom, struct of_state **qpt
   return (0);
 }
 
-// wrapper for choosing to get state by computing it or from global array
-// pointer assign (overrides the existing default assignment of the pointer address in the calling function, so assumes calling function only uses pointer form subsequently)
+/// wrapper for choosing to get state by computing it or from global array
+/// pointer assign (overrides the existing default assignment of the pointer address in the calling function, so assumes calling function only uses pointer form subsequently)
 int get_stateforinterpline(FTYPE *pr, struct of_geom *ptrgeom, struct of_state **qptr)
 {
   int pureget_stateforinterpline(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
@@ -100,8 +105,8 @@ int get_stateforinterpline(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *
 }
 
 
-// wrapper for choosing to get state by computing it or from global array
-// pointer assign (overrides the existing default assignment of the pointer address in the calling function, so assumes calling function only uses pointer form subsequently)
+/// wrapper for choosing to get state by computing it or from global array
+/// pointer assign (overrides the existing default assignment of the pointer address in the calling function, so assumes calling function only uses pointer form subsequently)
 int get_stateforglobalwavespeeds(FTYPE *pr, struct of_geom *ptrgeom, struct of_state **qptr)
 {
   int pureget_stateforglobalwavespeeds(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
@@ -285,8 +290,8 @@ int source_conn(FTYPE *pr, struct of_geom *ptrgeom,
 
 
 
-/* load local geometry into structure geom */
-// fills struct of_geom with PRIMECOORDS metric data
+/// load local geometry into structure geom
+/// fills struct of_geom with PRIMECOORDS metric data
 #if(NEWMETRICSTORAGE==0)
 void get_geometry_old(int ii, int jj, int kk, int pp, struct of_geom *geom)
 {
@@ -344,8 +349,8 @@ void get_geometry_old(int ii, int jj, int kk, int pp, struct of_geom *geom)
   geom->p = pp;
 }
 
-/* load local geometry into structure geom */
-// fills struct of_geom with PRIMECOORDS metric data
+// load local geometry into structure geom
+/// fills struct of_geom with PRIMECOORDS metric data
 void get_geometry_gdetonly_old(int ii, int jj, int kk, int pp, struct of_geom *geom)
 {
   VARSTATIC int j, k;
@@ -381,8 +386,8 @@ void get_geometry_gdetonly_old(int ii, int jj, int kk, int pp, struct of_geom *g
 }
 
 
-/* load local geometry into structure geom */
-// fills struct of_geom with PRIMECOORDS metric data
+/// load local geometry into structure geom
+/// fills struct of_geom with PRIMECOORDS metric data
 void get_geometry_geomeonly_old(int ii, int jj, int kk, int pp, struct of_geom *geom)
 {
   VARSTATIC int pl,pliter;
@@ -457,8 +462,8 @@ void get_allgeometry(int ii, int jj, int kk, int pp, struct of_allgeom *allgeom,
 }
 
 
-//GLOBALMETMACP1A0(eomfuncarray,pp,ii,jj,kk);
-// stationary factor in equation of motion that multiplies T^\mu_\nu
+///GLOBALMETMACP1A0(eomfuncarray,pp,ii,jj,kk);
+/// stationary factor in equation of motion that multiplies T^\mu_\nu
 void assign_eomfunc(struct of_geom *geom, FTYPE *EOMFUNCNAME)
 {
   int pliter,pl;
@@ -504,7 +509,7 @@ Program terminated with signal 11, Segmentation fault.
 */
 
 
-// setup faraday for either instrinsic use (which==CURTYPEFARADAY) or for computing the currents
+/// setup faraday for either instrinsic use (which==CURTYPEFARADAY) or for computing the currents
 int current_doprecalc(int which, FTYPE (*p)[NSTORE2][NSTORE3][NPR])
 {
 
@@ -575,10 +580,10 @@ int current_doprecalc(int which, FTYPE (*p)[NSTORE2][NSTORE3][NPR])
 }
 
 
-// which: 0: somewhere at half step
-// which: 1: doing flux calculation in x1 direction, full step
-// which: 2: doing flux calculation in x2 direction, full step
-// faraday[0-3][0-3]=[0=mid-time,1=radial edge final time, 2= theta edge final time, 3=old mid-time][whatever 3 things needed to compute relevant current]
+/// which: 0: somewhere at half step
+/// which: 1: doing flux calculation in x1 direction, full step
+/// which: 2: doing flux calculation in x2 direction, full step
+/// faraday[0-3][0-3]=[0=mid-time,1=radial edge final time, 2= theta edge final time, 3=old mid-time][whatever 3 things needed to compute relevant current]
 void current_precalc(int which, struct of_geom *geom, struct of_state *q, FTYPE Dt,FTYPE (*faraday)[3])
 {
   // assume outside loop is like flux, from 0..N in r for r, 0..N in h for h.  And must wait till 2nd timestep before computing the current since need time differences
@@ -658,7 +663,7 @@ void current_precalc(int which, struct of_geom *geom, struct of_state *q, FTYPE 
 }
 
 
-// choose type of current calculation
+/// choose type of current calculation
 void current_calc(FTYPE (*cfaraday)[NSTORE2][NSTORE3][NUMCURRENTSLOTS][3])
 {
   void current_calc_0(FTYPE (*cfaraday)[NSTORE2][NSTORE3][NUMCURRENTSLOTS][3]);
@@ -681,9 +686,9 @@ void current_calc(FTYPE (*cfaraday)[NSTORE2][NSTORE3][NUMCURRENTSLOTS][3])
 
 
 
-// the current is calculated to end up at the zone and time edge
-// point is to have J^t at same time as rest of J's, although different spacial points
-// OPENMPMARK: Assume this function not called by multiple threads
+/// the current is calculated to end up at the zone and time edge
+/// point is to have J^t at same time as rest of J's, although different spacial points
+/// OPENMPMARK: Assume this function not called by multiple threads
 void current_calc_0(FTYPE (*cfaraday)[NSTORE2][NSTORE3][NUMCURRENTSLOTS][3])
 {
   static FTYPE lastdt;
@@ -802,10 +807,10 @@ void current_calc_0(FTYPE (*cfaraday)[NSTORE2][NSTORE3][NUMCURRENTSLOTS][3])
 
 
 
-// the current is calculated to end up at the zone and time edge
-// point is to have J^t at same time as rest of J's and at same spatial location
-// the temporal value of things is obtained at same time of everything else by fitting to parabola in time
-// OPENMPMARK: Assume this function not called by multiple threads
+/// the current is calculated to end up at the zone and time edge
+/// point is to have J^t at same time as rest of J's and at same spatial location
+/// the temporal value of things is obtained at same time of everything else by fitting to parabola in time
+/// OPENMPMARK: Assume this function not called by multiple threads
 void current_calc_1(int which, FTYPE (*cfaraday)[NSTORE2][NSTORE3][NUMCURRENTSLOTS][3])
 {
   static FTYPE lastdt;
@@ -994,10 +999,9 @@ void current_calc_1(int which, FTYPE (*cfaraday)[NSTORE2][NSTORE3][NUMCURRENTSLO
 
 
 
-
-//#define COMPLOOPVORT COMPLOOPP11 COMPLOOPP12 COMPLOOPP13
-
-// use (*p)[][][U1,U2,U3] to obtain (*pvort)[][][whichpl]
+/// compute vorticity
+///#define COMPLOOPVORT COMPLOOPP11 COMPLOOPP12 COMPLOOPP13
+/// use (*p)[][][U1,U2,U3] to obtain (*pvort)[][][whichpl]
 int compute_vorticity(FTYPE (*p)[NSTORE2][NSTORE3][NPR],FTYPE (*pvort)[NSTORE2][NSTORE3][NPR],int whichpl)
 {
 

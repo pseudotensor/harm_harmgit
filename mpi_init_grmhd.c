@@ -1,3 +1,9 @@
+
+/*! \file mpi_init_grmhd.c
+     \brief Initialize MPI functions specifically related to GRMHD code
+*/
+
+
 #include "decs.h"
 
 

@@ -1,3 +1,8 @@
+
+/*! \file mympi.global.funcdeclare.h
+     \brief MPI function declarations to be used globally
+*/
+
 ////////////////////////////////////////////
 //
 // OpenMP and MPI -related function declarations

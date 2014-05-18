@@ -1,6 +1,13 @@
+
+/*! \file mpi_fprintfs.c
+     \brief Various fprintf() calls that account for which core we are on
+     Generally, myid=0 writes general full-core info, while all cores write specific core info
+*/
+
+
 #include "decs.h"
 
-// only to myid==0
+/// only to myid==0
 void myfprintf(FILE* fileptr, char *format, ...)
 {
   va_list arglist;
@@ -24,7 +31,7 @@ void myfprintf(FILE* fileptr, char *format, ...)
 #define va_copy(a,b) (a=b)
 #endif
 
-// prints to stderr(only cpu=0) AND file pointer of choice (all cpus)
+/// prints to stderr(only cpu=0) AND file pointer of choice (all cpus)
 void dualfprintf(FILE* fileptr, char *format, ...)
 {
   va_list arglist,arglistcopy;
@@ -53,7 +60,7 @@ void dualfprintf(FILE* fileptr, char *format, ...)
   va_end(arglist);
 }
 
-// prints to both logfull_file(cpu=0) and log_file(all cpus)
+/// prints to both logfull_file(cpu=0) and log_file(all cpus)
 void logsfprintf(char *format, ...)
 {
   va_list arglist,arglistcopy;
@@ -82,7 +89,7 @@ void logsfprintf(char *format, ...)
 
 
 
-// prints to log_file(all cpus)
+/// prints to log_file(all cpus)
 void logfprintf(char *format, ...)
 {
   va_list arglist,arglistcopy;
@@ -103,7 +110,7 @@ void logfprintf(char *format, ...)
   va_end(arglist);
 }
 
-// prints to logdt_file(all cpus)
+/// prints to logdt_file(all cpus)
 void logdtfprintf(char *format, ...)
 {
   va_list arglist,arglistcopy;
@@ -122,7 +129,7 @@ void logdtfprintf(char *format, ...)
   va_end(arglist);
 }
 
-// prints to stderr if PRODUCTION<=1 for all CPUs but only myid==0 if PRODUCTION>=2
+/// prints to stderr if PRODUCTION<=1 for all CPUs but only myid==0 if PRODUCTION>=2
 void stderrfprintf(char *format, ...)
 {
   va_list arglist,arglistcopy;
@@ -142,7 +149,7 @@ void stderrfprintf(char *format, ...)
   va_end(arglist);
 }
 
-// prints to logfull_file, log_file, and stderr (but only using cpu=0)
+/// prints to logfull_file, log_file, and stderr (but only using cpu=0)
 void trifprintf(char *format, ...)
 {
   va_list arglist, arglistcopy;
@@ -174,7 +181,7 @@ void trifprintf(char *format, ...)
 }
 
 
-// cpu==0 opens a file
+/// cpu==0 opens a file
 void myfopen(char*fname, char*fmt,char*message,FILE**fileptrptr)
 {
   if(myid==0){
@@ -186,7 +193,7 @@ void myfopen(char*fname, char*fmt,char*message,FILE**fileptrptr)
   }
 }
 
-// cpu==0 closes a file
+/// cpu==0 closes a file
 void myfclose(FILE ** fileptrptr,char*message)
 {
   int reterror;

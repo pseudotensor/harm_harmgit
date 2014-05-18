@@ -1,3 +1,8 @@
+
+/*! \file mympi.global.depmnemonics.h
+     \brief MPI dependent macros/definitions
+*/
+
 #if(USEMPI==0)
 
 // still use MPI data type for communicating types to functions

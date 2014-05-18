@@ -1,4 +1,9 @@
 
+/*! \file mpi_fprintfs.funcdeclare.h
+     \brief Function declarations for global use of functions in mpi_fprintfs.c
+*/
+
+
 
 
 // mpi_fprintfs.c:

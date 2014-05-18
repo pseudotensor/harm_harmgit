@@ -1,7 +1,11 @@
 
+/*! \file mpi_set_arrays.c
+     \brief Initialize MPI arrays
+*/
+
 #include "decs.h"
 
-
+// set mpi arrays (both perpoint and multidimen)
 void mpi_set_arrays(void)
 {
   void mpi_set_arrays_multidimen(void);

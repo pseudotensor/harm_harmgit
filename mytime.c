@@ -1,11 +1,15 @@
 
+/*! \file mytime.c
+     \brief Timing functions (report and diagnostics)
+// OPENMPMARK: assume all mytime routines not called by multiple threads
+*/
+
 #include "decs.h"
 
-// OPENMPMARK: assume all mytime routines not called by multiple threads
 
 
 
-// global code timing function
+/// global code timing function
 int timecheck(int whichlocation, SFTYPE comptstart)
 {
   static SFTYPE tlasttime;
@@ -480,9 +484,9 @@ int gettimeofday(struct timeval *tv, struct timezone *tz)
 
 
 
-// check if time to output step/time/dt info
-// setup so can plot in sm
-// doensn't need starting time or nstep
+/// check if time to output step/time/dt info
+/// setup so can plot in sm
+/// doensn't need starting time or nstep
 int output_steptimedt_info(SFTYPE comptstart)
 {
   int i;

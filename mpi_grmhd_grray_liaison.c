@@ -1,4 +1,9 @@
 
+/*! \file mpi_grmhd_grray_liaison.c
+     \brief Genreal MPI hooks to allow GRMHD or GRRAY+GRMHD to run together
+*/
+
+
 #include "decs.h"
 
 
@@ -14,28 +19,28 @@
 
 
 ///////////////
-// declarations
+/// declarations
 static void get_processtypelist(int processtype, MPI_Comm localcomm, int **local_processtypelistlocal, int *local_sizeproclist);
 static void liaison_init_mpi_processtypes(MPI_Comm localcomm, int **processtypelistlocal_world, int *local_sizeproclist);
 static void grmhd_init_mpi_processtypes(MPI_Comm localcomm, int **processtypelistlocal_world, int *local_sizeproclist);
 static void grray_init_mpi_processtypes(MPI_Comm localcomm, int **processtypelistlocal_world, int *local_sizeproclist);
 
 
-// wrapper for liaison code version of get_processtypelist()
+/// wrapper for liaison code version of get_processtypelist()
 void liaison_init_mpi_processtypes(MPI_Comm localcomm, int **processtypelistlocal_world, int *local_sizeproclist)
 {
   get_processtypelist(BINARYLIAISONTYPE,localcomm,processtypelistlocal_world,local_sizeproclist);
 
 }
 
-// wrapper for grmhd code version of get_processtypelist()
+/// wrapper for grmhd code version of get_processtypelist()
 void grmhd_init_mpi_processtypes(MPI_Comm localcomm, int **processtypelistlocal_world, int *local_sizeproclist)
 {
   get_processtypelist(BINARYGRMHDTYPE,localcomm,processtypelistlocal_world,local_sizeproclist);
 
 }
 
-// wrapper for grray code version of get_processtypelist()
+/// wrapper for grray code version of get_processtypelist()
 void grray_init_mpi_processtypes(MPI_Comm localcomm, int **processtypelistlocal_world, int *local_sizeproclist)
 {
   get_processtypelist(BINARYGRRAYTYPE,localcomm,processtypelistlocal_world,local_sizeproclist);
@@ -44,8 +49,8 @@ void grray_init_mpi_processtypes(MPI_Comm localcomm, int **processtypelistlocal_
 
 
 
-// get processor list for a single input processtype per process
-// assumes all processes call this function together
+/// get processor list for a single input processtype per process
+/// assumes all processes call this function together
 void get_processtypelist(int processtype, MPI_Comm localcomm, int **processtypelistlocal, int *sizeproclistlocal)
 {
   int i;
@@ -99,7 +104,7 @@ void get_processtypelist(int processtype, MPI_Comm localcomm, int **processtypel
 /////////////////////////////
 
 
-// declaration
+/// declaration
 static void init_MPI_group_grmhd_grray_liaison(
                                                int *processtypelistlocal_world,int sizeproclistlocal_world,
                                                MPI_Group *MPI_GROUP_WORLD,
@@ -109,9 +114,9 @@ static void init_MPI_group_grmhd_grray_liaison(
 
 
 
-// After MPI_init() this must be called by liaison code
-// assumes global variables used
-// just a wrapper
+/// After MPI_init() this must be called by liaison code
+/// assumes global variables used
+/// just a wrapper
 void liaison_init_mpi_liaisonmode_globalset(void)
 {
   void liaison_init_mpi_liaisonmode(
@@ -152,9 +157,9 @@ void liaison_init_mpi_liaisonmode_globalset(void)
 
 
 
-// After MPI_init() this must be called by grmhd code
-// assumes global variables used
-// just a wrapper
+/// After MPI_init() this must be called by grmhd code
+/// assumes global variables used
+/// just a wrapper
 void grmhd_init_mpi_liaisonmode_globalset(void)
 {
   void grmhd_init_mpi_liaisonmode(
@@ -188,9 +193,9 @@ void grmhd_init_mpi_liaisonmode_globalset(void)
 
 
 
-// After MPI_init() this must be called by grray code
-// assumes global variables used
-// just a wrapper
+/// After MPI_init() this must be called by grray code
+/// assumes global variables used
+/// just a wrapper
 void grray_init_mpi_liaisonmode_globalset(void)
 {
   void grray_init_mpi_liaisonmode(
@@ -224,7 +229,7 @@ void grray_init_mpi_liaisonmode_globalset(void)
 
 
 
-// After MPI_init() this must be called by liaison code if want to avoid global variables
+/// After MPI_init() this must be called by liaison code if want to avoid global variables
 void liaison_init_mpi_liaisonmode(
                                   int **processtypelistlocal_world,int *sizeproclistlocal_world,
                                   int **processtypelistlocal_grmhd_liaison,int *sizeproclistlocal_grmhd_liaison,
@@ -310,7 +315,7 @@ void liaison_init_mpi_liaisonmode(
 
 
 
-// After MPI_init() this must be called by grmhd code if want to avoid global variables
+/// After MPI_init() this must be called by grmhd code if want to avoid global variables
 void grmhd_init_mpi_liaisonmode(
                                 int **processtypelistlocal_world,int *sizeproclistlocal_world,
                                 int **processtypelistlocal_grmhd_liaison,int *sizeproclistlocal_grmhd_liaison,
@@ -383,7 +388,7 @@ void grmhd_init_mpi_liaisonmode(
 
 
 
-// After MPI_init() this must be called by grray code if want to avoid global variables
+/// After MPI_init() this must be called by grray code if want to avoid global variables
 void grray_init_mpi_liaisonmode(
                                 int **processtypelistlocal_world,int *sizeproclistlocal_world,
                                 int **processtypelistlocal_grmhd_liaison,int *sizeproclistlocal_grmhd_liaison,
@@ -459,10 +464,10 @@ void grray_init_mpi_liaisonmode(
 
 
 
-// sub function (that all processes end up calling) in order to determine groups and communicators that split MPI_COMM_WORLD into sub groups
-// create sub groups:
-// 1) GRMHD+LIAISON from MPI_COMM_WORLD
-// 2) GRRAY+LIAISON from MPI_COMM_WORLD
+/// sub function (that all processes end up calling) in order to determine groups and communicators that split MPI_COMM_WORLD into sub groups
+/// create sub groups:
+/// 1) GRMHD+LIAISON from MPI_COMM_WORLD
+/// 2) GRRAY+LIAISON from MPI_COMM_WORLD
 void init_MPI_group_grmhd_grray_liaison(
                                         int *processtypelistlocal,int sizeproclistlocal,
                                         MPI_Group *MPI_GROUP_LOCAL_WORLD,
@@ -558,11 +563,11 @@ void init_MPI_group_grmhd_grray_liaison(
 
 
 
-// create sub groups (only liaison code calls this full function)
-// 1) GRMHD from GRMHD+LIAISON
-// 2) LIAISON_FROM_GRMHD from GRMHD+LIAISON
-// 3) GRRAY from GRRAY+LIAISON
-// 4) LIAISON_FROM_GRRAY from GRRAY+LIAISON
+/// create sub groups (only liaison code calls this full function)
+/// 1) GRMHD from GRMHD+LIAISON
+/// 2) LIAISON_FROM_GRMHD from GRMHD+LIAISON
+/// 3) GRRAY from GRRAY+LIAISON
+/// 4) LIAISON_FROM_GRRAY from GRRAY+LIAISON
 void init_MPI_group_grmhd_grray_liaison_split(
                                               int *processtypelistlocal_grmhd_liaison,int sizeproclistlocal_grmhd_liaison,
                                               int *processtypelistlocal_grray_liaison,int sizeproclistlocal_grray_liaison,
@@ -610,8 +615,8 @@ void init_MPI_group_grmhd_grray_liaison_split(
 
 
 
-// create sub groups (grmhd code and liaison code will call this)
-// 1,2) GRMHD and LIAISON_FROM_GRMHD from GRMHD+LIAISON
+/// create sub groups (grmhd code and liaison code will call this)
+/// 1,2) GRMHD and LIAISON_FROM_GRMHD from GRMHD+LIAISON
 void init_MPI_group_grmhd_liaison_split(
                                         int *processtypelistlocal,int sizeproclistlocal,
                                         MPI_Group *MPI_GROUP_LOCAL_GRMHD_LIAISON, MPI_Comm *MPI_COMM_LOCAL_GRMHD_LIAISON,
@@ -674,8 +679,8 @@ void init_MPI_group_grmhd_liaison_split(
 
 
 
-// create sub groups (grray code and liaison code will call this)
-// 1,2) GRRAY and LIAISON_FROM_GRRAY from GRRAY+LIAISON
+/// create sub groups (grray code and liaison code will call this)
+/// 1,2) GRRAY and LIAISON_FROM_GRRAY from GRRAY+LIAISON
 void init_MPI_group_grray_liaison_split(
                                         int *processtypelistlocal,int sizeproclistlocal,
                                         MPI_Group *MPI_GROUP_LOCAL_GRRAY_LIAISON, MPI_Comm *MPI_COMM_LOCAL_GRRAY_LIAISON,
@@ -752,7 +757,7 @@ void init_MPI_group_grray_liaison_split(
 
 
 
-// method to exit MPI run
+/// method to exit MPI run
 int final_myexit(void)
 {
 #if(USEMPI)
@@ -792,8 +797,8 @@ int final_myexit(void)
 
 
 
-// method to exit MPI run
-// can exit normally for normal uncoupled run
+/// method to exit MPI run
+/// can exit normally for normal uncoupled run
 int final_myexit(void)
 {
 #if(USEMPI)
@@ -820,7 +825,7 @@ int final_myexit(void)
 #if(DOINGLIAISONTYPECODE)
 
 
-// what to do when no MPI or liaison mode but want to set-up liaison
+/// what to do when no MPI or liaison mode but want to set-up liaison
 void liaison_init_mpi_liaisonmode_globalset(void)
 {
 
@@ -868,9 +873,8 @@ void liaison_init_mpi_liaisonmode_globalset(void)
 
 #if(DOINGGRMHDTYPECODE)
 
-// NON-LIAISON GRMHD VERSION
-// Only those things needed by GRMHD code without liaison
-
+/// NON-LIAISON GRMHD VERSION
+/// Only those things needed by GRMHD code without liaison
 void grmhd_init_mpi_liaisonmode_globalset(void)
 {
 
@@ -913,9 +917,8 @@ void grmhd_init_mpi_liaisonmode_globalset(void)
 
 #if(DOINGGRRAYTYPECODE)
 
-// NON-LIAISON GRRAY VERSION
-// Only those things needed by GRRAY code without liaison
-
+/// NON-LIAISON GRRAY VERSION
+/// Only those things needed by GRRAY code without liaison
 void grray_init_mpi_liaisonmode_globalset(void)
 {
 

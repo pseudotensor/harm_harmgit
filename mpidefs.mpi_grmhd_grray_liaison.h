@@ -1,4 +1,8 @@
 
+/*! \file mpidefs.mpi_grmhd_grray_liaison.h
+     \brief Variable definitions for mpi_grmhd_grray_liaison.c
+*/
+
 #if(DOINGLIAISON)
 
 #if(USEMPILIAISON || USEMPIGRMHD)
