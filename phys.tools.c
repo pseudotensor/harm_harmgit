@@ -1,9 +1,12 @@
 
+/*! \file phys.tools.c
+     \brief All locally-related physics calculations
+     // THINGS IN HERE ARE PER-POINT and use only LOCAL variables (no globals)
+     */
 #include "decs.h"
 
 
 
-// THINGS IN HERE ARE PER-POINT and use only LOCAL variables (no globals)
 
 
 // making variables static inside functions made things slower if anything
@@ -22,11 +25,11 @@
 
 
 
-// Calculate fluxes in direction dir and conserved variable U
-// returntype==0 : flux with geometric factor geom->e (used by evolution code)
-// returntype==1 : flux with physical geometry factor geom->gdet (used by diagnostics)
-// see UtoU and source_conn()
-// Note that if MAXWELL==PRIMMAXWELL then primtoflux doesn't use b^\mu or b_\mu (bcon and bcov)
+/// Calculate fluxes in direction dir and conserved variable U
+/// returntype==0 : flux with geometric factor geom->e (used by evolution code)
+/// returntype==1 : flux with physical geometry factor geom->gdet (used by diagnostics)
+/// see UtoU and source_conn()
+/// Note that if MAXWELL==PRIMMAXWELL then primtoflux doesn't use b^\mu or b_\mu (bcon and bcov)
 int primtoflux(int returntype, FTYPE *pr, struct of_state *q, int dir,
                struct of_geom *geom, FTYPE *flux, FTYPE *fluxabs)
 {
@@ -181,10 +184,10 @@ int primtoflux_radonly(FTYPE *pr, struct of_state *q, int dir,
    are always needed together, so there is no point in calculated the
    stress tensor twice */
 
-// returntype==0 : flux with geometric factor geom->e (used by evolution code)
-// returntype==1 : flux with physical geometry factor geom->gdet (used by diagnostics)
-// see UtoU and source_conn()
-// fluxdir = true flux direction even if passing back conserved quantity (fundir==TT)
+/// returntype==0 : flux with geometric factor geom->e (used by evolution code)
+/// returntype==1 : flux with physical geometry factor geom->gdet (used by diagnostics)
+/// see UtoU and source_conn()
+/// fluxdir = true flux direction even if passing back conserved quantity (fundir==TT)
 int primtoflux_splitmaem(int returntype, FTYPE *pr, struct of_state *q, int fluxdir, int fundir, struct of_geom *geom, FTYPE *fluxma, FTYPE *fluxem)
 {
   int primtoflux_ma(int needentropy,int *returntype, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux, FTYPE *fluxabs, FTYPE *fluxdiag, FTYPE *fluxdiagabs);
@@ -255,7 +258,7 @@ int primtoflux_splitmaem(int returntype, FTYPE *pr, struct of_state *q, int flux
 
 
 
-// matter only terms (as if B=0)
+/// matter only terms (as if B=0)
 int primtoflux_ma(int needentropy,int *returntype, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux, FTYPE *fluxabs, FTYPE *fluxdiag, FTYPE *fluxdiagabs)
 {
   // sizes: NPR,struct of_state, int, struct of_geom, NPR
@@ -334,7 +337,7 @@ int primtoflux_ma(int needentropy,int *returntype, FTYPE *pr, struct of_state *q
 
 
 
-// radiation terms (as if rho=u=p=0)
+/// radiation terms (as if rho=u=p=0)
 int primtoflux_rad(int *returntype, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux, FTYPE *fluxabs)
 {
 
@@ -353,7 +356,7 @@ int primtoflux_rad(int *returntype, FTYPE *pr, struct of_state *q, int dir, stru
 }
 
 
-// electromagnetic terms (as if rho=u=p=0)
+/// electromagnetic terms (as if rho=u=p=0)
 int primtoflux_em(int *returntype, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux, FTYPE *fluxabs)
 {
   // sizes: NPR,struct of_state, int, struct of_geom, NPR
@@ -398,7 +401,7 @@ int primtoflux_em(int *returntype, FTYPE *pr, struct of_state *q, int dir, struc
 
 int massflux_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *massflux, FTYPE *massfluxabs)
 {
-  /* particle number flux */
+  //  particle number flux 
   *massflux = pr[RHO] * q->ucon[dir];
   *massfluxabs=fabs(*massflux);
 
@@ -409,7 +412,7 @@ int massflux_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *massflux, FTYPE
 }
 
 
-// flux associated with Y_L variable
+/// flux associated with Y_L variable
 int ylflux_calc(struct of_geom *ptrgeom, FTYPE *pr, int dir, struct of_state *q, FTYPE *advectedscalarflux, FTYPE *advectedscalarfluxabs, int pnum)
 {
   int massflux_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *massflux, FTYPE *massfluxabs);
@@ -435,7 +438,7 @@ int ylflux_calc(struct of_geom *ptrgeom, FTYPE *pr, int dir, struct of_state *q,
 }
 
 
-// flux asociated with Ynu variable
+/// flux asociated with Ynu variable
 int ynuflux_calc(struct of_geom *ptrgeom, FTYPE *pr, int dir, struct of_state *q, FTYPE *advectedscalarflux, FTYPE *advectedscalarfluxabs, int pnum)
 {
   int massflux_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *massflux, FTYPE *massfluxabs);
@@ -462,14 +465,14 @@ int ynuflux_calc(struct of_geom *ptrgeom, FTYPE *pr, int dir, struct of_state *q
 
 
 
-// flux of scalar
+/// flux of scalar
 int advectedscalarflux_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *advectedscalarflux, FTYPE *advectedscalarfluxabs, int pnum)
 {
   int massflux_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *massflux, FTYPE *massfluxabs);
   VARSTATIC FTYPE massflux;
   VARSTATIC FTYPE massfluxabs;
 
-  /* yl/ynu/etc. per unit rest-mass flux */
+  //  yl/ynu/etc. per unit rest-mass flux 
 
   // entropy=entropy per unit volume, where conserved quantity is specific entropy:
   // d/d\tau(entropy/rho)=0
@@ -484,13 +487,13 @@ int advectedscalarflux_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *advec
 
 
 
-// flux of specific entropy
+/// flux of specific entropy
 int entropyflux_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *entropyflux, FTYPE *entropyfluxabs)
 {
 
   // get entropy
   //  entropy_calc(ptrgeom,pr,&entropy); // now done in get_state_thermodynamics()
-  /* entropy per unit rest-mass flux */
+  //  entropy per unit rest-mass flux 
   // entropy=entropy per unit volume, where conserved quantity is specific entropy:
   // d/d\tau(entropy/rho)=0
   // -> \nabla_\mu(entropy u^\mu)=0
@@ -514,7 +517,7 @@ int entropyflux_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *entropyflux,
 
 
 
-// spatial part of dualfaraday
+/// spatial part of dualfaraday
 int dualfaradayspatial_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *dualf, FTYPE *dualfabs)
 {
   VARSTATIC FTYPE dualffull[NDIM];
@@ -536,31 +539,31 @@ int dualfaradayspatial_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *dualf
 
 
 
-// Notation for HARM paper and JCM's GRFFE paper is that:
-// B^\mu = \eta_\nu *F^{\nu\mu} and for lab-frame we chose \eta_\nu={-1,0,0,0}
-//
-// One can then show that b^i u^j - b^j u^i = B^i v^j - B^j v^i where
-// b^\mu = u_\nu *F^{\nu\mu} and v^i = u^i/u^t
-//
-// The form using B^i and v^i avoids catastrophic cancellation because otherwise
-// starting with B^i (as primitive) and converting to b^i leads to u^i u^j (u.B)/u^t term that cancels exactly
-// Since this is quite a high order term, then for highly relativistic flows this causes catastrophic
-// cancellation issues, so this is why we use the primitives directly even if more complicated looking and more expensive to compute stress tensor or maxwell tensor
-//
-// returns \dF^{\mu dir}
-// well, actually returns dualffull[dir], so gives columns instead of rows
+/// Notation for HARM paper and JCM's GRFFE paper is that:
+/// B^\mu = \eta_\nu *F^{\nu\mu} and for lab-frame we chose \eta_\nu={-1,0,0,0}
+///
+/// One can then show that b^i u^j - b^j u^i = B^i v^j - B^j v^i where
+/// b^\mu = u_\nu *F^{\nu\mu} and v^i = u^i/u^t
+///
+/// The form using B^i and v^i avoids catastrophic cancellation because otherwise
+/// starting with B^i (as primitive) and converting to b^i leads to u^i u^j (u.B)/u^t term that cancels exactly
+/// Since this is quite a high order term, then for highly relativistic flows this causes catastrophic
+/// cancellation issues, so this is why we use the primitives directly even if more complicated looking and more expensive to compute stress tensor or maxwell tensor
+///
+/// returns \dF^{\mu dir}
+/// well, actually returns dualffull[dir], so gives columns instead of rows
 int dualfullfaraday_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *dualffull)
 {
 
 #if(MAXWELL==GENMAXWELL)
-  /* dual of Maxwell tensor */
+  //  dual of Maxwell tensor 
   dualffull[0] = q->bcon[0] * q->ucon[dir] - q->bcon[dir] * q->ucon[0];
   dualffull[1] = q->bcon[1] * q->ucon[dir] - q->bcon[dir] * q->ucon[1];
   dualffull[2] = q->bcon[2] * q->ucon[dir] - q->bcon[dir] * q->ucon[2];
   dualffull[3] = q->bcon[3] * q->ucon[dir] - q->bcon[dir] * q->ucon[3];
 #elif(MAXWELL==PRIMMAXWELL)
   if(dir>0){
-    /* dual of Maxwell tensor */
+    //  dual of Maxwell tensor 
     // dir refers to the direction of the derivative of the dualffull
     // B1,B2,B3 refers to LHS of equation dB^i/dt
     // due to antisymmetry, dir==i is 0
@@ -582,8 +585,8 @@ int dualfullfaraday_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *dualfful
 }
 
 
-/* dual of Maxwell tensor */
-// returns \dF^{\mu \nu}
+/// dual of Maxwell tensor
+/// returns \dF^{\mu \nu}
 int Mcon_calc(FTYPE *pr, struct of_state *q, FTYPE (*Mcon)[NDIM])
 {
   VARSTATIC int j,k;
@@ -629,7 +632,7 @@ int Mcon_calc(FTYPE *pr, struct of_state *q, FTYPE (*Mcon)[NDIM])
 
 
 
-// returns entire space-time(NDIM in size) / EOM(NPR in size) matrix
+/// returns entire space-time(NDIM in size) / EOM(NPR in size) matrix
 int primtofullflux(int returntype, FTYPE *pr, struct of_state *q,
                    struct of_geom *ptrgeom, FTYPE (*flux)[NPR], FTYPE (*fluxabs)[NPR])
 {
@@ -643,7 +646,7 @@ int primtofullflux(int returntype, FTYPE *pr, struct of_state *q,
 }
 
 
-/* calculate "conserved" quantities */
+///  calculate "conserved" quantities 
 int primtoU(int returntype, FTYPE *pr, struct of_state *q, struct of_geom *geom,
             FTYPE *U,
             FTYPE *Uabs)
@@ -702,14 +705,14 @@ void UtoU_gen_fromunothing(int whichmaem, int returntype,struct of_geom *ptrgeom
 }
 
 
-// standardized U form is geometry free and 
-// \rho u^t , T^t_\nu , *F^{it}
-// convert one form of U(or component of Flux) to another form
-// UtoU controls meaning of todo and REMOVERESTMASSFROMUU.
-// present order means start with geometry-free EOMs, add/subtract them, THEN geometry is assigned to that list of new EOMs.
-// can choose to change order so that add geometry terms, THEN add/subtract them.  Rest of code shouldn't care (except source_conn()'s first connection)
-// if SPLITNPR, operates on other primitives but only changes Uout, not Uin, so doesn't matter if change all conserved quantities
-// whichmaem == ISEMONLY ISMAONLY ISMAANDEM
+/// standardized U form is geometry free and 
+/// \rho u^t , T^t_\nu , *F^{it}
+/// convert one form of U(or component of Flux) to another form
+/// UtoU controls meaning of todo and REMOVERESTMASSFROMUU.
+/// present order means start with geometry-free EOMs, add/subtract them, THEN geometry is assigned to that list of new EOMs.
+/// can choose to change order so that add geometry terms, THEN add/subtract them.  Rest of code shouldn't care (except source_conn()'s first connection)
+/// if SPLITNPR, operates on other primitives but only changes Uout, not Uin, so doesn't matter if change all conserved quantities
+/// whichmaem == ISEMONLY ISMAONLY ISMAANDEM
 void UtoU_gen_gengdet(int removemass, int whichmaem, int inputtype, int returntype,struct of_geom *ptrgeom,FTYPE *Uin, FTYPE *Uout)
 {
   void UtoU_gen_gengdet_fromunothing(int removemass, int whichmaem, int returntype,struct of_geom *ptrgeom,FTYPE *Ugeomfree, FTYPE *Uout);
@@ -815,7 +818,7 @@ void UtoU_gen_gengdet_fromunothing(int removemass, int whichmaem, int returntype
 
 
 
-// simplified version that assumes WHICHEOM==WITHGDET
+/// simplified version that assumes WHICHEOM==WITHGDET
 void UtoU_gen_allgdet(int removemass, int whichmaem, int inputtype, int returntype,struct of_geom *ptrgeom,FTYPE *Uin, FTYPE *Uout)
 {
   VARSTATIC FTYPE Ugeomfree[NPR];
@@ -992,13 +995,11 @@ void UtoU_em_fromunothing(int returntype,struct of_geom *ptrgeom,FTYPE *Uin, FTY
 
 
 
-// standardized primitive form is assumed to be
-// \rho , u, \tilde{u}^\mu , *F^{it}=B^i
-// where \tilde{u} is relative 4-velocity, as relative to $n_\mu = (-\alpha,0,0,0)$ and $\alpha^2=-1/g^{tt}$.
-
-// For any space-time with no time-like curves this 4-velocity is always single-valued (i.e. unique).  It can also take on any value, so a reasonable primitive quantity.
-
-// convert from one primitive form to another
+/// standardized primitive form is assumed to be
+/// \rho , u, \tilde{u}^\mu , *F^{it}=B^i
+/// where \tilde{u} is relative 4-velocity, as relative to $n_\mu = (-\alpha,0,0,0)$ and $\alpha^2=-1/g^{tt}$.
+/// For any space-time with no time-like curves this 4-velocity is always single-valued (i.e. unique).  It can also take on any value, so a reasonable primitive quantity.
+/// convert from one primitive form to another
 void PtoP(int inputtype, int returntype,struct of_geom *ptrgeom,FTYPE *pin, FTYPE *pout)
 {
   VARSTATIC FTYPE pstandard[NPR];
@@ -1009,7 +1010,7 @@ void PtoP(int inputtype, int returntype,struct of_geom *ptrgeom,FTYPE *pin, FTYP
 }
 
 
-/* calculate magnetic field four-vector */
+/// calculate magnetic field four-vector
 void bcon_calc(FTYPE *pr, FTYPE *ucon, FTYPE *ucov, FTYPE *bcon)
 {
   VARSTATIC int j;
@@ -1021,7 +1022,7 @@ void bcon_calc(FTYPE *pr, FTYPE *ucon, FTYPE *ucov, FTYPE *bcon)
   return;
 }
 
-// inverse of bcon_calc()
+/// inverse of bcon_calc()
 void Bcon_calc(struct of_state *q, FTYPE*B)
 {
   VARSTATIC FTYPE uu0,uu1,uu2,uu3;
@@ -1054,7 +1055,7 @@ void Bcon_calc(struct of_state *q, FTYPE*B)
 }
 
 
-// convert (e^\mu=0 case) b^\mu and (3-velocity in coordinate lab frame) v^\mu to pr
+/// convert (e^\mu=0 case) b^\mu and (3-velocity in coordinate lab frame) v^\mu to pr
 void vbtopr(FTYPE *vcon,FTYPE *bcon,struct of_geom *geom, FTYPE *pr)
 {
   void Bcon_calc(struct of_state *q, FTYPE*B);
@@ -1096,8 +1097,8 @@ void vbtopr(FTYPE *vcon,FTYPE *bcon,struct of_geom *geom, FTYPE *pr)
 
 
 
-/* MHD stress tensor, with first index up, second index down */
-// mhd^dir_j
+/// MHD stress tensor, with first index up, second index down
+/// mhd^dir_j
 void mhd_calc(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, FTYPE *mhd, FTYPE *mhdabs)
 {
   void mhd_calc_0(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, FTYPE *mhd, FTYPE *mhdabs);
@@ -1111,9 +1112,9 @@ void mhd_calc(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, FTYP
 
 }
 
-/* MHD stress tensor, with first index up, second index down */
-// mhd^dir_j
-// understood that mhddiagpress only contains non-zero element on mhddiagpress[dir] and all others should be 0.0
+/// MHD stress tensor, with first index up, second index down
+/// mhd^dir_j
+/// understood that mhddiagpress only contains non-zero element on mhddiagpress[dir] and all others should be 0.0
 void mhd_calc_ma(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, FTYPE *mhd, FTYPE *mhdabs, FTYPE *mhddiagpress, FTYPE *mhddiagpressabs)
 {
   void mhd_calc_0_ma(FTYPE *pr, int dir, struct of_state *q, FTYPE *mhd, FTYPE *mhdabs, FTYPE *mhddiagpress, FTYPE *mhddiagpressabs);
@@ -1127,8 +1128,8 @@ void mhd_calc_ma(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, F
 
 }
 
-/* MHD stress tensor, with first index up, second index down */
-// mhd^dir_j
+/// MHD stress tensor, with first index up, second index down
+/// mhd^dir_j
 void mhd_calc_em(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, FTYPE *mhd, FTYPE *mhdabs)
 {
   void mhd_calc_0_em(FTYPE *pr, int dir, struct of_state *q, FTYPE *mhd, FTYPE *mhdabs);
@@ -1155,7 +1156,7 @@ void mhd_calc_em(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, F
 }
 
 
-/* MHD stress tensor, with first index up, second index down */
+///  MHD stress tensor, with first index up, second index down 
 void mhd_calc_0(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, FTYPE *mhd, FTYPE *mhdabs)
 {
   void mhd_calc_0_ma(FTYPE *pr, int dir, struct of_state *q, FTYPE *mhd, FTYPE *mhdabs, FTYPE *mhddiagpress, FTYPE *mhddiagpressabs);
@@ -1179,7 +1180,7 @@ void mhd_calc_0(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, FT
 
 
 
-/* MHD stress tensor, with first index up, second index down */
+///  MHD stress tensor, with first index up, second index down 
 void mhd_calc_0_ma(FTYPE *pr, int dir, struct of_state *q, FTYPE *mhd, FTYPE *mhdabs, FTYPE *mhddiagpress, FTYPE *mhddiagpressabs)
 {
   VARSTATIC int j;
@@ -1223,7 +1224,7 @@ void mhd_calc_0_ma(FTYPE *pr, int dir, struct of_state *q, FTYPE *mhd, FTYPE *mh
 }
 
 
-// EM part of stress-energy tensor
+/// EM part of stress-energy tensor
 void mhd_calc_0_em(FTYPE *pr, int dir, struct of_state *q, FTYPE *mhd, FTYPE *mhdabs)
 {
   VARSTATIC int j;
@@ -1246,11 +1247,11 @@ void mhd_calc_0_em(FTYPE *pr, int dir, struct of_state *q, FTYPE *mhd, FTYPE *mh
 }
 
 
-/* MHD stress tensor, with first index up, second index down */
-// avoids catastrophic cancellation with rest-mass density due to extracting velocity or internal energy from that conserved energy with order unity term from rest-mass
-// also avoids catastrophic cancellation in field due to using 4-field.  Instead derive stress tensor from 3-velocity and 3-field usinc Mcon_calc()
-// seems to work to avoid catastrophic cancellation with field, but maybe should use WHICHVEL=RELVEL4 directly?  GODMARK
-// T^dir_\mu
+/// MHD stress tensor, with first index up, second index down
+/// avoids catastrophic cancellation with rest-mass density due to extracting velocity or internal energy from that conserved energy with order unity term from rest-mass
+/// also avoids catastrophic cancellation in field due to using 4-field.  Instead derive stress tensor from 3-velocity and 3-field usinc Mcon_calc()
+/// seems to work to avoid catastrophic cancellation with field, but maybe should use WHICHVEL=RELVEL4 directly?  GODMARK
+/// T^dir_\mu
 void mhd_calc_norestmass(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, FTYPE *mhd, FTYPE *mhdabs)
 {
   void mhd_calc_norestmass_ma(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, FTYPE *mhdma, FTYPE *mhdmaabs, FTYPE *mhddiagpress, FTYPE *mhddiagpressabs);
@@ -1274,11 +1275,11 @@ void mhd_calc_norestmass(FTYPE *pr, int dir, struct of_geom *geom, struct of_sta
 
 
 
-/* MHD stress tensor, with first index up, second index down */
-// avoids catastrophic cancellation with rest-mass density due to extracting velocity or internal energy from that conserved energy with order unity term from rest-mass
-// also avoids catastrophic cancellation in field due to using 4-field.  Instead derive stress tensor from 3-velocity and 3-field usinc Mcon_calc()
-// seems to work to avoid catastrophic cancellation with field, but maybe should use WHICHVEL=RELVEL4 directly?  GODMARK
-// T^dir_\mu
+/// MHD stress tensor, with first index up, second index down
+/// avoids catastrophic cancellation with rest-mass density due to extracting velocity or internal energy from that conserved energy with order unity term from rest-mass
+/// also avoids catastrophic cancellation in field due to using 4-field.  Instead derive stress tensor from 3-velocity and 3-field usinc Mcon_calc()
+/// seems to work to avoid catastrophic cancellation with field, but maybe should use WHICHVEL=RELVEL4 directly?  GODMARK
+/// T^dir_\mu
 void mhd_calc_norestmass_ma(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, FTYPE *mhd, FTYPE *mhdabs, FTYPE *mhddiagpress, FTYPE *mhddiagpressabs)
 {
   VARSTATIC int j;
@@ -1355,12 +1356,12 @@ void mhd_calc_norestmass_ma(FTYPE *pr, int dir, struct of_geom *geom, struct of_
 
 
 
-/* MHD stress tensor, with first index up, second index down */
-// avoids catastrophic cancellation with rest-mass density due to extracting velocity or internal energy from that conserved energy with order unity term from rest-mass
-// also avoids catastrophic cancellation in field due to using 4-field.  Instead derive stress tensor from 3-velocity and 3-field usinc Mcon_calc()
-// seems to work to avoid catastrophic cancellation with field, but maybe should use WHICHVEL=RELVEL4 directly?  GODMARK
-// T^dir_\mu
-// SHOULD NOT USE b^\mu b_\mu here
+/// MHD stress tensor, with first index up, second index down
+/// avoids catastrophic cancellation with rest-mass density due to extracting velocity or internal energy from that conserved energy with order unity term from rest-mass
+/// also avoids catastrophic cancellation in field due to using 4-field.  Instead derive stress tensor from 3-velocity and 3-field usinc Mcon_calc()
+/// seems to work to avoid catastrophic cancellation with field, but maybe should use WHICHVEL=RELVEL4 directly?  GODMARK
+/// T^dir_\mu
+/// SHOULD NOT USE b^\mu b_\mu here
 void mhd_calc_primfield_em(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, FTYPE *mhd, FTYPE *mhdabs)
 {
   int Mcon_calc(FTYPE *pr, struct of_state *q, FTYPE (*Mcon)[NDIM]);
@@ -1436,8 +1437,8 @@ void mhd_calc_primfield_em(FTYPE *pr, int dir, struct of_geom *geom, struct of_s
 
 
 
-// plus1ud0=(1+q->ucov[TT])
-// avoids non-relativistic velocitiy issue with machine precision, but introduces relativistic limit problem
+/// plus1ud0=(1+q->ucov[TT])
+/// avoids non-relativistic velocitiy issue with machine precision, but introduces relativistic limit problem
 void compute_1plusud0_old(FTYPE *pr, struct of_geom *geom, struct of_state *q, FTYPE *plus1ud0)
 {
   int j,k;
@@ -1466,11 +1467,11 @@ void compute_1plusud0_old(FTYPE *pr, struct of_geom *geom, struct of_state *q, F
 
 }
 
-// plus1ud0=(1+q->ucov[TT])
-// avoids both non-rel and rel limit issues with machine precision
-// GODMARK: Slow, can one optmize this somehow?
-// This computes 1+u_t , which for nonrelativistic cases is ~0 .  If computed as 1+u_t, then residual will be large error if small residual.
-// old2 is newer than old
+/// plus1ud0=(1+q->ucov[TT])
+/// avoids both non-rel and rel limit issues with machine precision
+/// GODMARK: Slow, can one optmize this somehow?
+/// This computes 1+u_t , which for nonrelativistic cases is ~0 .  If computed as 1+u_t, then residual will be large error if small residual.
+/// old2 is newer than old
 void compute_1plusud0_general(FTYPE *pr, struct of_geom *geom, struct of_state *q, FTYPE *plus1ud0)
 {
   VARSTATIC int j,k;
@@ -1508,7 +1509,7 @@ void compute_1plusud0_general(FTYPE *pr, struct of_geom *geom, struct of_state *
 }
 
 
-// latest method to compute 1+u_t without catastrophic cancellation
+/// latest method to compute 1+u_t without catastrophic cancellation
 void compute_1plusud0_rel4vel(FTYPE *pr, struct of_geom *geom, struct of_state *q, FTYPE *plus1ud0)
 {
   VARSTATIC int j,k;
@@ -1532,9 +1533,9 @@ void compute_1plusud0_rel4vel(FTYPE *pr, struct of_geom *geom, struct of_state *
 }
 
 
-/* add in source terms to equations of motion */
-// ui and dUriemann in UEVOLVE form
-// assume q(pr) so consistent, but p or ui don't yet account for dUriemann!
+/// add in source terms to equations of motion
+/// ui and dUriemann in UEVOLVE form
+/// assume q(pr) so consistent, but p or ui don't yet account for dUriemann!
 int source(FTYPE *pi, FTYPE *pr, FTYPE *pf, int *didreturnpf, int *eomtype, struct of_geom *ptrgeom, struct of_state *q, FTYPE *ui, FTYPE *uf, FTYPE *CUf, FTYPE *CUimp, FTYPE dissmeasure, FTYPE *dUriemann, FTYPE (*dUcomp)[NPR], FTYPE *dU)
 {
   //  double (*)[8]
@@ -1615,13 +1616,13 @@ int source(FTYPE *pi, FTYPE *pr, FTYPE *pf, int *didreturnpf, int *eomtype, stru
   
 
 
-  /* done! */
+  //  done! 
   return (0);
 }
 
 
 
-/* returns b^2 (i.e., twice magnetic pressure) */
+///  returns b^2 (i.e., twice magnetic pressure) 
 int bsq_calc_general(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *bsq)
 {
   VARSTATIC struct of_state q;
@@ -1631,7 +1632,7 @@ int bsq_calc_general(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *bsq)
   return (0);
 }
 
-/* returns b^2 (i.e., twice magnetic pressure) */
+///  returns b^2 (i.e., twice magnetic pressure) 
 int bsq_calc_fromq_general(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE *bsq)
 {
 
@@ -1640,7 +1641,7 @@ int bsq_calc_fromq_general(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *
   return (0);
 }
 
-/* returns b^2 (i.e., twice magnetic pressure) */
+///  returns b^2 (i.e., twice magnetic pressure) 
 int bsq_calc_rel4vel(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *bsq)
 {
   VARSTATIC struct of_state q;
@@ -1775,8 +1776,8 @@ void raise_vec(FTYPE *ucov, struct of_geom *geom, FTYPE *ucon)
 }
 
 
-/* find ucon, ucov, bcon, bcov from primitive variables */
-// when calling get_state, users of this function expect to get q->{ucon,ucov,bcon,bcov,pressure}
+/// find ucon, ucov, bcon, bcov from primitive variables
+/// when calling get_state, users of this function expect to get q->{ucon,ucov,bcon,bcov,pressure}
 int get_state(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q)
 {
   int get_state_uconucovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
@@ -1802,8 +1803,8 @@ int get_state(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q)
 }
 
 
-/* find ucon, ucov, bcon, bcov from primitive variables */
-// when calling get_state, users of this function expect to get q->{ucon,ucov,bcon,bcov,pressure}
+/// find ucon, ucov, bcon, bcov from primitive variables
+/// when calling get_state, users of this function expect to get q->{ucon,ucov,bcon,bcov,pressure}
 int get_state_radonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q)
 {
   int get_state_uradconuradcovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
@@ -1815,8 +1816,8 @@ int get_state_radonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q)
   return (0);
 }
 
-/* find ucon, ucov, bcon, bcov from primitive variables */
-// when calling get_state, users of this function expect to get q->{ucon,ucov,bcon,bcov,pressure}
+/// find ucon, ucov, bcon, bcov from primitive variables
+/// when calling get_state, users of this function expect to get q->{ucon,ucov,bcon,bcov,pressure}
 int get_state_norad_part1(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q)
 {
   int get_state_uconucovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
@@ -1833,8 +1834,8 @@ int get_state_norad_part1(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q
   return (0);
 }
 
-/* find ucon, ucov, bcon, bcov from primitive variables */
-// when calling get_state, users of this function expect to get q->{ucon,ucov,bcon,bcov,pressure}
+/// find ucon, ucov, bcon, bcov from primitive variables
+/// when calling get_state, users of this function expect to get q->{ucon,ucov,bcon,bcov,pressure}
 int get_state_norad_part2(int needentropy, FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q)
 {
   int get_state_thermodynamics(int needentropy,struct of_geom *ptrgeom, FTYPE *pr, struct of_state *q);
@@ -1847,7 +1848,7 @@ int get_state_norad_part2(int needentropy, FTYPE *pr, struct of_geom *ptrgeom, s
 
 
 
-// all get_state() things except the field quantities
+/// all get_state() things except the field quantities
 int get_state_nofield(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q)
 {
   int get_state_uconucovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
@@ -1867,7 +1868,7 @@ int get_state_nofield(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q)
 }
 
 
-// used to check inversion, which has consistent pressure used to get things as functions of \chi instead of u in case of using jon's inversion
+/// used to check inversion, which has consistent pressure used to get things as functions of \chi instead of u in case of using jon's inversion
 int get_stateforcheckinversion(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q)
 {
   int get_state_uconucovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
@@ -1895,8 +1896,8 @@ int get_stateforcheckinversion(FTYPE *pr, struct of_geom *ptrgeom, struct of_sta
 
 
 
-/* find ucon, ucov, bcon, bcov from primitive variables */
-// when calling get_state, users of this function expect to get q->{ucon,ucov,bcon,bcov,pressure,g,e[pl],prim,Blower}
+/// find ucon, ucov, bcon, bcov from primitive variables
+/// when calling get_state, users of this function expect to get q->{ucon,ucov,bcon,bcov,pressure,g,e[pl],prim,Blower}
 int pureget_stateforfluxcalc(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q)
 {
   int get_state_uconucovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
@@ -1942,8 +1943,8 @@ int pureget_stateforfluxcalc(FTYPE *pr, struct of_geom *ptrgeom, struct of_state
 }
 
 
-/* find ucon, ucov, bcon, bcov from primitive variables */
-// when calling get_state, users of this function expect to get q->{ucon,ucov,bcon,bcov,pressure}
+///  find ucon, ucov, bcon, bcov from primitive variables 
+/// when calling get_state, users of this function expect to get q->{ucon,ucov,bcon,bcov,pressure}
 int pureget_stateforsource(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q)
 {
   int get_state_uconucovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
@@ -1972,8 +1973,8 @@ int pureget_stateforsource(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *
   return (0);
 }
 
-/* find ucon, ucov, bcon, bcov from primitive variables */
-// when calling get_state, users of this function expect to get q->{ucon,ucov,bcon,bcov,pressure}
+///  find ucon, ucov, bcon, bcov from primitive variables 
+/// when calling get_state, users of this function expect to get q->{ucon,ucov,bcon,bcov,pressure}
 int pureget_stateforinterpline(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q)
 {
   int get_state_uconucovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
@@ -2000,8 +2001,8 @@ int pureget_stateforinterpline(FTYPE *pr, struct of_geom *ptrgeom, struct of_sta
   return (0);
 }
 
-/* find ucon, ucov, bcon, bcov from primitive variables */
-// when calling get_state, users of this function expect to get q->{ucon,ucov,bcon,bcov,pressure}
+///  find ucon, ucov, bcon, bcov from primitive variables 
+/// when calling get_state, users of this function expect to get q->{ucon,ucov,bcon,bcov,pressure}
 int pureget_stateforglobalwavespeeds(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q)
 {
   int get_state_uconucovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
@@ -2028,8 +2029,8 @@ int pureget_stateforglobalwavespeeds(FTYPE *pr, struct of_geom *ptrgeom, struct 
   return (0);
 }
 
-/* find ucon, ucov, bcon, bcov from primitive variables */
-// when calling get_state, users of this function expect to get q->{ucon,ucov,bcon,bcov,pressure,g,e[pl],prim,Blower}
+///  find ucon, ucov, bcon, bcov from primitive variables 
+/// when calling get_state, users of this function expect to get q->{ucon,ucov,bcon,bcov,pressure,g,e[pl],prim,Blower}
 int pureget_stateforfluxcalcorsource(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q)
 {
   int get_state_uconucovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
@@ -2076,8 +2077,8 @@ int pureget_stateforfluxcalcorsource(FTYPE *pr, struct of_geom *ptrgeom, struct 
 
 
 
-/* find ucon, ucov, bcon, bcov from primitive variables */
-// when calling get_state, users of this function expect to get q->{ucon,ucov,bcon,bcov,pressure}
+///  find ucon, ucov, bcon, bcov from primitive variables 
+/// when calling get_state, users of this function expect to get q->{ucon,ucov,bcon,bcov,pressure}
 int get_stateforUdiss(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q)
 {
   int get_state_uconucovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q);
@@ -2107,7 +2108,7 @@ int get_stateforUdiss(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q)
 
 
 
-/* find ucon, ucov, bcon, bcov from primitive variables */
+///  find ucon, ucov, bcon, bcov from primitive variables 
 int get_state_bconbcovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q)
 {
 
@@ -2120,7 +2121,7 @@ int get_state_bconbcovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *
 }
 
 
-// Get only u^\mu and u_\mu assumine b^\mu and b_\mu not used
+/// Get only u^\mu and u_\mu assumine b^\mu and b_\mu not used
 int get_state_uconucovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q)
 {
   void compute_1plusud0(FTYPE *pr, struct of_geom *geom, struct of_state *q, FTYPE *plus1ud0); // plus1ud0=(1+q->ucov[TT])
@@ -2151,7 +2152,7 @@ int get_state_uconucovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *
 
 
 
-// get v^i and \detg B^i used for EMF computations for FLUXB==FLUXCTSTAG
+/// get v^i and \detg B^i used for EMF computations for FLUXB==FLUXCTSTAG
 int get_state_vcon_gdetBcon_overut(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q)
 {
   int jj;
@@ -2172,7 +2173,7 @@ int get_state_vcon_gdetBcon_overut(FTYPE *pr, struct of_geom *ptrgeom, struct of
 
 
 
-// Get only u^\mu and u_\mu assumine b^\mu and b_\mu not used
+/// Get only u^\mu and u_\mu assumine b^\mu and b_\mu not used
 int get_state_Blower(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q)
 {
   int jj;
@@ -2190,7 +2191,7 @@ int get_state_Blower(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q)
 
 
 
-// separate function for getting thermodynamical quantities
+/// separate function for getting thermodynamical quantities
 int get_state_thermodynamics(int needentropy, struct of_geom *ptrgeom, FTYPE *pr, struct of_state *q)
 {
 
@@ -2206,7 +2207,7 @@ int get_state_thermodynamics(int needentropy, struct of_geom *ptrgeom, FTYPE *pr
 }
 
 
-// separate function for getting thermodynamical quantities
+/// separate function for getting thermodynamical quantities
 int get_state_thermodynamics_forcheckinversion(struct of_geom *ptrgeom, FTYPE *pr, struct of_state *q)
 {
 
@@ -2221,7 +2222,7 @@ int get_state_thermodynamics_forcheckinversion(struct of_geom *ptrgeom, FTYPE *p
 
 }
 
-// separate function for getting primitives
+/// separate function for getting primitives
 int get_state_prims(FTYPE *pr, struct of_state *q)
 {
   int pl,pliter;
@@ -2235,7 +2236,7 @@ int get_state_prims(FTYPE *pr, struct of_state *q)
 
 }
 
-// separate function for getting geometry
+/// separate function for getting geometry
 int get_state_geom(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q)
 {
   int pl,pliter;
@@ -2249,7 +2250,7 @@ int get_state_geom(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q)
 }
 
 
-//ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p
+///ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p
 int invertentropyflux_calc(struct of_geom *ptrgeom, FTYPE entropyflux,int dir, struct of_state *q, FTYPE *pr)
 {
   VARSTATIC FTYPE entropy;
@@ -2261,8 +2262,8 @@ int invertentropyflux_calc(struct of_geom *ptrgeom, FTYPE entropyflux,int dir, s
   return(0);
 }
 
-// u from entropy (uses pr[RHO])
-// wrapper
+/// u from entropy (uses pr[RHO])
+/// wrapper
 int ufromentropy_calc(struct of_geom *ptrgeom, FTYPE entropy, FTYPE *pr)
 {
 
@@ -2273,9 +2274,9 @@ int ufromentropy_calc(struct of_geom *ptrgeom, FTYPE entropy, FTYPE *pr)
 }
 
 
-// find u^\mu from \tilde{u}^\mu
-// fill full 4-vector
-// OPTMARK: Before storing \beta, this was the most expensive function over the entire code [determined by avoiding inlining]
+/// find u^\mu from \tilde{u}^\mu
+/// fill full 4-vector
+/// OPTMARK: Before storing \beta, this was the most expensive function over the entire code [determined by avoiding inlining]
 int ucon_calc_rel4vel_fromuconrel(FTYPE *uconrel, struct of_geom *geom, FTYPE *ucon, FTYPE *others)
 {
   VARSTATIC FTYPE gamma;
@@ -2301,8 +2302,8 @@ int ucon_calc_rel4vel_fromuconrel(FTYPE *uconrel, struct of_geom *geom, FTYPE *u
 }
 
 
-// find \tilde{u}^\mu from u^\mu
-// only fill spatial parts so can feed in 3-vector
+/// find \tilde{u}^\mu from u^\mu
+/// only fill spatial parts so can feed in 3-vector
 int uconrel(FTYPE *ucon, FTYPE *uconrel, struct of_geom *geom)
 {
   VARSTATIC int j ;
@@ -2316,7 +2317,7 @@ int uconrel(FTYPE *ucon, FTYPE *uconrel, struct of_geom *geom)
 }
 
 
-/* find contravariant four-velocity from the relative 4 velocity */
+///  find contravariant four-velocity from the relative 4 velocity 
 int ucon_calc_rel4vel(FTYPE *pr, struct of_geom *geom, FTYPE *ucon, FTYPE *others)
 {
   VARSTATIC FTYPE uconrel[NDIM];
@@ -2359,7 +2360,7 @@ int ucon_calc_whichvel(int whichvel, FTYPE *pr, struct of_geom *geom, FTYPE *uco
 }
 
 
-/* find gamma-factor wrt normal observer */
+///  find gamma-factor wrt normal observer 
 int gamma_calc(FTYPE *pr, struct of_geom *geom, FTYPE*gamma, FTYPE *qsq)
 {
   VARSTATIC FTYPE uconrel[NDIM];
@@ -2387,8 +2388,8 @@ int gamma_calc(FTYPE *pr, struct of_geom *geom, FTYPE*gamma, FTYPE *qsq)
 }
 
 
-/* find gamma-factor wrt normal observer */
-// This function and qsq_calc() have about the same cache miss amount now
+///  find gamma-factor wrt normal observer 
+/// This function and qsq_calc() have about the same cache miss amount now
 int gamma_calc_fromuconrel(FTYPE *uconrel, struct of_geom *geom, FTYPE*gamma, FTYPE *qsq)
 {
   int qsq_calc(FTYPE *uconrel, struct of_geom *geom, FTYPE *qsq);
@@ -2428,8 +2429,8 @@ int gamma_calc_fromuconrel(FTYPE *uconrel, struct of_geom *geom, FTYPE*gamma, FT
 }
 
 
-// get \tilde{u}^i \tilde{u}^j g_{ij}
-// OPTMARK: This is currently the most expensive function [disabled inlining]
+/// get \tilde{u}^i \tilde{u}^j g_{ij}
+/// OPTMARK: This is currently the most expensive function [disabled inlining]
 int qsq_calc(FTYPE *uconrel, struct of_geom *geom, FTYPE *qsq)
 {
   //  VARSTATIC int j,k;
@@ -2458,8 +2459,8 @@ int qsq_calc(FTYPE *uconrel, struct of_geom *geom, FTYPE *qsq)
 
 
 
-/* find contravariant four-velocity */
-//int ucon_calc(FTYPE *pr, struct of_geom *geom, FTYPE *ucon, FTYPE *others)
+///  find contravariant four-velocity 
+///int ucon_calc(FTYPE *pr, struct of_geom *geom, FTYPE *ucon, FTYPE *others)
 int ucon_calc_3vel(FTYPE *pr, struct of_geom *geom, FTYPE *ucon, FTYPE *others)
 {
   VARSTATIC FTYPE negdiscr;
@@ -2533,7 +2534,7 @@ int ucon_calc_3vel(FTYPE *pr, struct of_geom *geom, FTYPE *ucon, FTYPE *others)
 }
 
 
-// 2v^i g_{it} + v^i v^j g_{ij}
+/// 2v^i g_{it} + v^i v^j g_{ij}
 int get_3velterm(FTYPE *vcon, struct of_geom *geom, FTYPE *velterm)
 {
   VARSTATIC int j;
@@ -2558,9 +2559,9 @@ int get_3velterm(FTYPE *vcon, struct of_geom *geom, FTYPE *velterm)
 
 
 
-// for FFDE, check to make sure 3-velocity is good, otherwise will have to limit it
-// Bcon and vcon are code versions
-// returns code primitives such as WHICHVEL for velocity (although coordinates will still be whatever geom was)
+/// for FFDE, check to make sure 3-velocity is good, otherwise will have to limit it
+/// Bcon and vcon are code versions
+/// returns code primitives such as WHICHVEL for velocity (although coordinates will still be whatever geom was)
 int limit_3vel_ffde(FTYPE *Bcon, struct of_geom *geom, FTYPE *vcon, FTYPE *pr)
 {
   int dualf_calc(FTYPE *Bcon, FTYPE *vcon, FTYPE (*dualffull)[NDIM]);
@@ -2639,7 +2640,7 @@ int limit_3vel_ffde(FTYPE *Bcon, struct of_geom *geom, FTYPE *vcon, FTYPE *pr)
 
 
 
-/* find contravariant time component of four-velocity from the 4velocity (3 terms)*/
+///  find contravariant time component of four-velocity from the 4velocity (3 terms)
 int ucon_calc_4vel_bothut(FTYPE *pr, struct of_geom *geom, FTYPE *ucon, FTYPE *ucon2, FTYPE *others)
 {
   VARSTATIC int i,j,k;
@@ -2687,7 +2688,7 @@ int ucon_calc_4vel_bothut(FTYPE *pr, struct of_geom *geom, FTYPE *ucon, FTYPE *u
 }
 
 
-/* find contravariant time component of four-velocity from the 4velocity (3 terms)*/
+///  find contravariant time component of four-velocity from the 4velocity (3 terms)
 int ucon_calc_4vel(FTYPE *pr, struct of_geom *geom, FTYPE *ucon, FTYPE *others)
 {
   VARSTATIC int i,j,k;
@@ -2757,7 +2758,7 @@ int get_4velterms(FTYPE *ucon, struct of_geom *geom, FTYPE *AA, FTYPE *BB, FTYPE
 }
 
 
-/* find contravariant time component of four-velocity from the 4velocity (3 terms)*/
+///  find contravariant time component of four-velocity from the 4velocity (3 terms)
 int ucon_calc_nonrel(FTYPE *pr, struct of_geom *geom, FTYPE *ucon, FTYPE *others)
 {
 
@@ -2786,9 +2787,9 @@ FTYPE taper_func(FTYPE R,FTYPE rin)
 
 
 
-// used Mathematica's MinimumChangePermutations and Signature
-// updown = 0 : down
-// updown = 1 : up
+/// used Mathematica's MinimumChangePermutations and Signature
+/// updown = 0 : down
+/// updown = 1 : up
 FTYPE lc4(int updown, FTYPE detg, int mu,int nu,int kappa,int lambda)
 {
   int i;
@@ -2809,8 +2810,8 @@ FTYPE lc4(int updown, FTYPE detg, int mu,int nu,int kappa,int lambda)
   return(0.0);
 }
 
-// Compute faraday
-// assumes b and u are inputted as bcov&ucov for F^{\mu\nu} and bcon&ucon for F_{\mu\nu}
+/// Compute faraday
+/// assumes b and u are inputted as bcov&ucov for F^{\mu\nu} and bcon&ucon for F_{\mu\nu}
 void faraday_calc(int which, FTYPE *b, FTYPE *u, struct of_geom *geom, FTYPE (*faraday)[NDIM])
 {
   int nu,mu,kappa,lambda;
@@ -2827,10 +2828,9 @@ void faraday_calc(int which, FTYPE *b, FTYPE *u, struct of_geom *geom, FTYPE (*f
 
 
 
-// assumes below get inlined
-
-// much faster than macro using ? :
-// super slow for get_geometry()'s sign() call!
+/// assumes below get inlined
+/// much faster than macro using ? :
+/// super slow for get_geometry()'s sign() call!
 FTYPE sign_bad(FTYPE a)
 {
   if(a>0.0) return 1.0;
@@ -2839,7 +2839,7 @@ FTYPE sign_bad(FTYPE a)
 }
 
 
-// not any faster than above (except when used alot)
+/// not any faster than above (except when used alot)
 FTYPE sign_func(FTYPE a)
 {
 #if(SUPERLONGDOUBLE)
@@ -2850,9 +2850,9 @@ FTYPE sign_func(FTYPE a)
 #endif
 }
 
-// much faster than macro using ? :
-// Generally avoid using, instead do:
-// igdet = sign(geom.gdet)/(fabs(geom.gdet)+SMALL)
+/// much faster than macro using ? :
+/// Generally avoid using, instead do:
+/// igdet = sign(geom.gdet)/(fabs(geom.gdet)+SMALL)
 FTYPE signavoidzero(FTYPE a)
 {
   if(a>0.0) return 1.0;
@@ -2884,8 +2884,8 @@ FTYPE min(FTYPE a, FTYPE b)
 
 #endif
 
-// compute speed of light 3-velocity in particular direction assuming other direction velocities fixed
-// dx^dir/dt assuming other direction's velocities are fixed
+/// compute speed of light 3-velocity in particular direction assuming other direction velocities fixed
+/// dx^dir/dt assuming other direction's velocities are fixed
 int sol(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *vmax, FTYPE *vmin)
 {
   int i,j,k;
@@ -2933,7 +2933,7 @@ int sol(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *vma
 }
 
 
-// limit the 3-velocity to a physically valid velocity (i.e. less than c ), assuming all other velocity directions are the same.
+/// limit the 3-velocity to a physically valid velocity (i.e. less than c ), assuming all other velocity directions are the same.
 int limitv3(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *v)
 {
   FTYPE vmax,vmin;
@@ -2955,9 +2955,9 @@ int limitv3(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE 
   return(0);
 }
 
-// take projection of v onto u, both are 4-vectors
-// vcon=0 or 1 : whether or not ucon (1=true, 0=ucov)
-// same for vresultcon
+/// take projection of v onto u, both are 4-vectors
+/// vcon=0 or 1 : whether or not ucon (1=true, 0=ucov)
+/// same for vresultcon
 void projectionvec(int vcon,int vresultcon, struct of_state *q, struct of_geom *geom,FTYPE *v,FTYPE*vresult)
 {
   FTYPE proj[NDIM][NDIM];
@@ -2983,7 +2983,7 @@ void projectionvec(int vcon,int vresultcon, struct of_state *q, struct of_geom *
 }
 
 
-// g^{tt}+1 accurate for non-rel gravity to order v^2 without machine precision problems
+/// g^{tt}+1 accurate for non-rel gravity to order v^2 without machine precision problems
 void compute_gconttplus1(struct of_geom *geom, FTYPE *gconttplus1)
 {
   int j,k;
@@ -2998,8 +2998,8 @@ void compute_gconttplus1(struct of_geom *geom, FTYPE *gconttplus1)
 
 }
 
-// compute (u^t)^2 - 1 which is v^2 in non-rel regime.
-// Has no non-rel problem and can be used to rescale both non-rel and rel velocities
+/// compute (u^t)^2 - 1 which is v^2 in non-rel regime.
+/// Has no non-rel problem and can be used to rescale both non-rel and rel velocities
 int quasivsq_3vel(FTYPE *vcon, struct of_geom *geom, FTYPE *quasivsq)
 {
   int i,j,k;
@@ -3083,8 +3083,8 @@ int quasivsq_4vel(FTYPE *pr, struct of_geom *geom, FTYPE *quasivsq)
 }
 
 
-// interestingly, this can be negative in some reasonable way if we allow qsq<0, which is a similar idea behind the v^2<0 for 3-velocities
-// but I don't see how to write stress-energy tensor as I did for 3-velocity
+/// interestingly, this can be negative in some reasonable way if we allow qsq<0, which is a similar idea behind the v^2<0 for 3-velocities
+/// but I don't see how to write stress-energy tensor as I did for 3-velocity
 int quasivsq_rel4vel(FTYPE *uconrel, struct of_geom *geom, FTYPE *quasivsq)
 {
   FTYPE alphasq;
@@ -3111,7 +3111,7 @@ int quasivsq_rel4vel(FTYPE *uconrel, struct of_geom *geom, FTYPE *quasivsq)
 }
 
 
-// (u^t)^2 - 1 + (g^{tt} + 1)
+/// (u^t)^2 - 1 + (g^{tt} + 1)
 int quasivsq_compute(FTYPE *pr, struct of_geom *geom, FTYPE *quasivsq)
 {
   int quasivsq_3vel(FTYPE *vcon, struct of_geom *geom, FTYPE *quasivsq);
@@ -3250,7 +3250,7 @@ int limit_quasivsq_rel4vel(FTYPE quasivsqold,FTYPE quasivsqnew,struct of_geom *g
 }
 
 
-// input \Omega_F and B^i (code's version) and get back primitive assuming stationary/axisymmetric flow
+/// input \Omega_F and B^i (code's version) and get back primitive assuming stationary/axisymmetric flow
 int OBtopr_general(FTYPE omegaf,FTYPE *Bccon,struct of_geom *geom, FTYPE *pr)
 {
   int j;
@@ -3291,7 +3291,7 @@ int OBtopr_general(FTYPE omegaf,FTYPE *Bccon,struct of_geom *geom, FTYPE *pr)
 
 
 
-// input \Omega_F, 3-vel along field (scalar quantity really), and B^i (code's version) and get back primitive assuming stationary/axisymmetric flow
+/// input \Omega_F, 3-vel along field (scalar quantity really), and B^i (code's version) and get back primitive assuming stationary/axisymmetric flow
 int OBtopr_general2(FTYPE omegaf, FTYPE v0, FTYPE *Bccon,struct of_geom *geom, FTYPE *pr)
 {
   int j;
@@ -3332,7 +3332,7 @@ int OBtopr_general2(FTYPE omegaf, FTYPE v0, FTYPE *Bccon,struct of_geom *geom, F
 
 }
 
-// input \Omega_F, extra 3-vel along field (scalar quantity really), and B^i (code's version) and get back primitive assuming stationary/axisymmetric flow
+/// input \Omega_F, extra 3-vel along field (scalar quantity really), and B^i (code's version) and get back primitive assuming stationary/axisymmetric flow
 int OBtopr_general3(FTYPE omegaf, FTYPE v0, FTYPE *Bccon,struct of_geom *geom, FTYPE *pr)
 {
   int j;
@@ -3368,7 +3368,7 @@ int OBtopr_general3(FTYPE omegaf, FTYPE v0, FTYPE *Bccon,struct of_geom *geom, F
 
 }
 
-// input \Omega_F, extra 3-vel along the poloidal field (scalar quantity really), and B^i (code's version) and get back primitive assuming stationary/axisymmetric flow
+/// input \Omega_F, extra 3-vel along the poloidal field (scalar quantity really), and B^i (code's version) and get back primitive assuming stationary/axisymmetric flow
 int OBtopr_general3p(FTYPE omegaf, FTYPE v0, FTYPE *Bccon,struct of_geom *geom, FTYPE *pr)
 {
   int j;
@@ -3400,7 +3400,7 @@ int OBtopr_general3p(FTYPE omegaf, FTYPE v0, FTYPE *Bccon,struct of_geom *geom, 
 
 
 
-// input \Omega_F, extra 3-vel along the normal field (scalar quantity really), and B^i (code's version) and get back primitive assuming stationary/axisymmetric flow
+/// input \Omega_F, extra 3-vel along the normal field (scalar quantity really), and B^i (code's version) and get back primitive assuming stationary/axisymmetric flow
 int OBtopr_general3n(FTYPE omegaf, FTYPE v0, FTYPE *Bccon, FTYPE *normalvec,struct of_geom *geom, FTYPE *pr)
 {
   int j;
@@ -3440,13 +3440,13 @@ void ffdestresstensor(FTYPE (*Mcon)[NDIM], struct of_geom *geom, FTYPE (*T)[NDIM
   void lower_A(FTYPE (*Acon)[NDIM], struct of_geom *geom, FTYPE (*Acov)[NDIM]);
 
 
-  FTYPE Mcov[NDIM][NDIM] ; /* covariant Maxwell */
+  FTYPE Mcov[NDIM][NDIM] ; //  covariant Maxwell 
   FTYPE Msq ;
 
-  /* get covariant Maxwell from contravariant */
+  //  get covariant Maxwell from contravariant 
   lower_A(Mcon, geom, Mcov) ;
 
-  /* out with the old */
+  //  out with the old 
   DLOOP(j,k)  T[j][k] = 0. ;
 
   /* in with the new:
@@ -3469,21 +3469,21 @@ void ffdestresstensor(FTYPE (*Mcon)[NDIM], struct of_geom *geom, FTYPE (*T)[NDIM
 }
 
 
-// we use this in order to avoid catastrophic cancellation in the non-rel regime and ultrarel regime
-// give back T^dir_\mu
+/// we use this in order to avoid catastrophic cancellation in the non-rel regime and ultrarel regime
+/// give back T^dir_\mu
 void ffdestresstensor_dir(int dir, FTYPE (*Mcon)[NDIM], struct of_geom *geom, FTYPE *TEMdir)
 {
   int i,j,k ;
   void lower_A(FTYPE (*Acon)[NDIM], struct of_geom *geom, FTYPE (*Acov)[NDIM]);
 
 
-  FTYPE Mcov[NDIM][NDIM] ; /* covariant Maxwell */
+  FTYPE Mcov[NDIM][NDIM] ; //  covariant Maxwell 
   FTYPE Msq ;
 
-  /* get covariant Maxwell from contravariant */
+  //  get covariant Maxwell from contravariant 
   lower_A(Mcon, geom, Mcov) ;
 
-  /* out with the old */
+  //  out with the old 
   DLOOPA(k)  TEMdir[k] = 0. ;
 
   /* in with the new:
@@ -3511,14 +3511,14 @@ void raise_A(FTYPE (*Acov)[NDIM], struct of_geom *geom, FTYPE (*Acon)[NDIM])
   int j,k ;
   FTYPE localgcon[SYMMATRIXNDIM];
 
-  /* out with the old */
+  //  out with the old 
   DLOOP(j,k){
     Acon[j][k] = 0. ;
     // store since use all terms many times -- compiler doesn't do this for some reason
     localgcon[GIND(j,k)]=geom->gcon[GIND(j,k)];
   }
 
-  /* in with the new */
+  //  in with the new 
   DLOOP(j,k) {
     Acon[0][1] += (localgcon[GIND(0,j)])*(localgcon[GIND(1,k)])*Acov[j][k] ;
     Acon[0][2] += (localgcon[GIND(0,j)])*(localgcon[GIND(2,k)])*Acov[j][k] ;
@@ -3546,14 +3546,14 @@ void lower_A(FTYPE (*Acon)[NDIM], struct of_geom *geom, FTYPE (*Acov)[NDIM])
   int j,k ;
   FTYPE localgcov[SYMMATRIXNDIM];
 
-  /* out with the old */
+  //  out with the old 
   DLOOP(j,k){
     Acov[j][k] = 0. ;
     // store since use all terms many times -- compiler doesn't do this for some reason and lower_A() appears to be very costly
     localgcov[GIND(j,k)]=geom->gcov[GIND(j,k)];
   }
 
-  /* in with the new */
+  //  in with the new 
   DLOOP(j,k) {
     Acov[0][1] += (localgcov[GIND(0,j)])*(localgcov[GIND(1,k)])*Acon[j][k] ;
     Acov[0][2] += (localgcov[GIND(0,j)])*(localgcov[GIND(2,k)])*Acon[j][k] ;
@@ -3579,14 +3579,12 @@ void lower_A(FTYPE (*Acon)[NDIM], struct of_geom *geom, FTYPE (*Acov)[NDIM])
 
 
 
-// Maxwell to Faraday
-// which=0 : Mcon -> Fcov (for clean Mcon, Fcov has \detg)
-// which=1 : Mcov -> Fcon (for clean Mcov)
-
-// which=2 : Fcon -> Mcov
-// which=3 : Fcov -> Mcon
-
-// copies faraday_calc() in phys.c
+/// Maxwell to Faraday
+/// which=0 : Mcon -> Fcov (for clean Mcon, Fcov has \detg)
+/// which=1 : Mcov -> Fcon (for clean Mcov)
+/// which=2 : Fcon -> Mcov
+/// which=3 : Fcov -> Mcon
+/// copies faraday_calc() in phys.c
 void MtoF(int which, FTYPE (*invar)[NDIM],struct of_geom *geom, FTYPE (*outvar)[NDIM])
 {
   int nu,mu,kappa,lambda;
@@ -3615,7 +3613,7 @@ void MtoF(int which, FTYPE (*invar)[NDIM],struct of_geom *geom, FTYPE (*outvar)[
 }
 
 
-// Get dual of faraday for given B^i and v^i
+/// Get dual of faraday for given B^i and v^i
 int dualf_calc(FTYPE *Bcon, FTYPE *vcon, FTYPE (*dualffull)[NDIM])
 {
   int j,k;
@@ -3636,7 +3634,7 @@ int dualf_calc(FTYPE *Bcon, FTYPE *vcon, FTYPE (*dualffull)[NDIM])
 }
 
 
-// sets velocity U1-U3 part of primitive to be zamo velocity
+/// sets velocity U1-U3 part of primitive to be zamo velocity
 int set_zamo_velocity(int whichvel, struct of_geom *ptrgeom, FTYPE *pr)
 {
   int jj;
@@ -3710,8 +3708,8 @@ int set_zamo_ucon(struct of_geom *ptrgeom, FTYPE *ucon)
 
 
 
-// entropy wrapper
-// this function should NOT be called by utoprim_jon.c inversion
+/// entropy wrapper
+/// this function should NOT be called by utoprim_jon.c inversion
 int entropy_calc(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *entropy)
 {
   
@@ -3720,8 +3718,8 @@ int entropy_calc(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *entropy)
   return(0);
 }
 
-// entropy wrapper
-// this function should NOT be called by utoprim_jon.c inversion
+/// entropy wrapper
+/// this function should NOT be called by utoprim_jon.c inversion
 int entropy_calc_forcheckinversion(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *entropy)
 {
   
@@ -3732,7 +3730,7 @@ int entropy_calc_forcheckinversion(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *en
 
 
 
-// wrapper [assumed not called by utoprim_jon.c that could change EOS type]
+/// wrapper [assumed not called by utoprim_jon.c that could change EOS type]
 FTYPE pressure_rho0_u_simple(int i, int j, int k, int loc, FTYPE rho, FTYPE u)
 {
 
@@ -3740,8 +3738,8 @@ FTYPE pressure_rho0_u_simple(int i, int j, int k, int loc, FTYPE rho, FTYPE u)
 
 }
 
-// wrapper [assumed not called by utoprim_jon.c that could change EOS type]
-// used for inversion check
+/// wrapper [assumed not called by utoprim_jon.c that could change EOS type]
+/// used for inversion check
 FTYPE pressure_rho0_u_simple_forcheckinversion(int i, int j, int k, int loc, FTYPE rho, FTYPE u)
 {
 
@@ -3756,7 +3754,7 @@ FTYPE pressure_rho0_u_simple_forcheckinversion(int i, int j, int k, int loc, FTY
 
 }
 
-// wrapper [assumed not called by utoprim_jon.c that could change EOS type]
+/// wrapper [assumed not called by utoprim_jon.c that could change EOS type]
 FTYPE u_rho0_p_simple(int i, int j, int k, int loc, FTYPE rho, FTYPE p)
 {
 
@@ -3764,7 +3762,7 @@ FTYPE u_rho0_p_simple(int i, int j, int k, int loc, FTYPE rho, FTYPE p)
 
 }
 
-// wrapper [assumed not called by utoprim_jon.c that could change EOS type]
+/// wrapper [assumed not called by utoprim_jon.c that could change EOS type]
 FTYPE u_rho0_T_simple(int i, int j, int k, int loc, FTYPE rho, FTYPE T)
 {
 
@@ -3772,7 +3770,7 @@ FTYPE u_rho0_T_simple(int i, int j, int k, int loc, FTYPE rho, FTYPE T)
 
 }
 
-// wrapper
+/// wrapper
 FTYPE cs2_compute_simple(int i, int j, int k, int loc, FTYPE rho, FTYPE u)
 {
 
@@ -3780,8 +3778,8 @@ FTYPE cs2_compute_simple(int i, int j, int k, int loc, FTYPE rho, FTYPE u)
 
 }
 
-// wrapper
-// this function should NOT be called by utoprim_jon.c inversion
+/// wrapper
+/// this function should NOT be called by utoprim_jon.c inversion
 FTYPE compute_entropy_simple(int i, int j, int k, int loc, FTYPE rho, FTYPE u)
 {
   FTYPE entropy;
@@ -3803,8 +3801,8 @@ FTYPE compute_entropy_simple(int i, int j, int k, int loc, FTYPE rho, FTYPE u)
 
 }
 
-// wrapper
-// this function should NOT be called by utoprim_jon.c inversion
+/// wrapper
+/// this function should NOT be called by utoprim_jon.c inversion
 FTYPE compute_entropy_simple_forcheckinversion(int i, int j, int k, int loc, FTYPE rho, FTYPE u)
 {
 
@@ -3826,7 +3824,7 @@ FTYPE compute_entropy_simple_forcheckinversion(int i, int j, int k, int loc, FTY
 
 }
 
-// wrapper
+/// wrapper
 void get_EOS_parms_simple(int*numparms, int i, int j, int k, int loc, FTYPE *parlist)
 {
 
@@ -3835,7 +3833,7 @@ void get_EOS_parms_simple(int*numparms, int i, int j, int k, int loc, FTYPE *par
 
 }
 
-// wrapper
+/// wrapper
 void fix_primitive_eos_scalars_simple(int i, int j, int k, int loc, FTYPE *pr)
 {
 
@@ -3860,7 +3858,7 @@ int get_extrasprocessed_simple(int doall, int i, int j, int k, int loc, FTYPE *p
 }
 
 
-// this function should NOT be called by utoprim_jon.c inversion
+/// this function should NOT be called by utoprim_jon.c inversion
 FTYPE compute_u_from_entropy_simple(int i, int j, int k, int loc, FTYPE rho, FTYPE entropy)
 {
 

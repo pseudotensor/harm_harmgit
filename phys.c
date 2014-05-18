@@ -1,5 +1,5 @@
 
-/*! \file physics.c
+/*! \file phys.c
      \brief All globally-related physics calculations
      // THINGS IN HERE ARE NOT PER POINT OR USE GLOBAL VARIABLES or call get_geometry()
 */

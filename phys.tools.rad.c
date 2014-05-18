@@ -1,3 +1,9 @@
+
+/*! \file phys.tools.rad.c
+     \brief All locally-related Koral/RAD physics calculations
+     
+     */
+
 ////////////////////////////////////////////////////////
 // KORALTODO: B Not setup for iter=0 2 1 0 : 1 2 : 3 13 : 14 200 : 14
 
@@ -39,7 +45,7 @@
 //
 //////////////////////////////
 
-// f2c prototype
+/// f2c prototype
 #include "f2c.h"
 
 #ifdef KR_headers
@@ -161,19 +167,19 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE *errorabs, stru
 ////////////////////////////////////
 #define IMPTRYCONVHIGHTAU (NUMEPSILON*5.0)  // for used implicit solver
 
-// Funny, even 1E-5 does ok with torus, no worse at Erf~ERADLIMIT instances.  Also, does ~3 iterations, but not any faster than using 1E-12 with ~6 iterations.
+/// Funny, even 1E-5 does ok with torus, no worse at Erf~ERADLIMIT instances.  Also, does ~3 iterations, but not any faster than using 1E-12 with ~6 iterations.
 #define IMPTRYCONV (1.e-12) // works generally to avoid high iterations
 #define IMPTRYCONVQUICK (1.e-9) // less greedy so doesn't slow things down so much.
-// error for comparing to sum over all absolute errors
+/// error for comparing to sum over all absolute errors
 #define IMPTRYCONVABS ((FTYPE)(NDIM+2)*trueimptryconv)
 
-// what tolerance to use for saying can switch to entropy when u_g is suggested to be bad for energy
+/// what tolerance to use for saying can switch to entropy when u_g is suggested to be bad for energy
 #define IMPOKCONVCONST (1E-9)
 #define IMPOKCONVCONSTABS ((FTYPE)(NDIM+2)*IMPOKCONVCONST)
 #define IMPOKCONV (MAX(trueimptryconv,IMPOKCONVCONST))
 #define IMPOKCONVABS ((FTYPE)(NDIM+2)*IMPOKCONV)
 
-// too allowing to allow 1E-4 error since often solution is nuts at even errors>1E-8
+/// too allowing to allow 1E-4 error since often solution is nuts at even errors>1E-8
 #define IMPALLOWCONVCONST (1.e-7)
 #define IMPALLOWCONVCONSTABS ((FTYPE)(NDIM+2)*IMPALLOWCONVCONST)
 //#define IMPALLOWCONV (MAX(trueimptryconv,IMPALLOWCONVCONST))
@@ -181,31 +187,31 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE *errorabs, stru
 #define IMPALLOWCONV2 (IMPALLOWCONV)
 #define IMPALLOWCONVABS ((FTYPE)(NDIM+2)*IMPALLOWCONV)
 
-// tolerance above which say energy solution is probably bad even if not very large error.  These have tended (or nearly 100%) to be cases where actual solution has u_g<0 but harm gets error u_g>0 and error not too large.
+/// tolerance above which say energy solution is probably bad even if not very large error.  These have tended (or nearly 100%) to be cases where actual solution has u_g<0 but harm gets error u_g>0 and error not too large.
 #define IMPBADENERGY (MIN(IMPALLOWCONV,1E-7))
 
-// how many iterations before we try harder to get better 1D MHD inversion solution
+/// how many iterations before we try harder to get better 1D MHD inversion solution
 #define ITERMHDINVTRYHARDER 5
 #define MINTRYCONVFORMHDINVERSION (1E-4) // assume not failure if got down to this much. -- don't have to be related to implicit allowance.
 
 
-// whether to abort even the backup if error is not reducing.
+/// whether to abort even the backup if error is not reducing.
 #define ABORTBACKUPIFNOERRORREDUCE 1
 #define IMPTRYCONVALT (MAX(1E-8,IMPTRYCONVABS)) // say that if error isn't reducing, ok to abort with this error.   Only time saver, but realistic about likelihood of getting smaller error.
 
-// tolerance above which to continue to try damping
+/// tolerance above which to continue to try damping
 #define IMPTRYDAMPCONV (5.0*IMPTRYCONVABS)
 
 ////////////////////////////////
 
 
 
-// IMPLICIT SOLVER TOLERANCES or DERIVATIVE SIZES
- // for used implicit solver (needs to be chosen more generally.  KORALTODO: 1E-8 too small in general).  Could start out with higher, and allow current checks to avoid inversion failure.
-//#define IMPEPS (1.e-8)
-// use large, and it'll go smaller if no inversion, but can't start out with too small since then Jac will have diag() terms =0
-// KORALTODO: For difficult iterations, there can be solution but Jacobian is too rough and jump around alot in primitive space for small changes in U.  Should really modify IMPEPS in such cases when pr changes alot for such changes in U.
-// roughly (NUMEPSILON)**(1/3) as in NR5.7 on numerical derivatives
+/// IMPLICIT SOLVER TOLERANCES or DERIVATIVE SIZES
+/// for used implicit solver (needs to be chosen more generally.  KORALTODO: 1E-8 too small in general).  Could start out with higher, and allow current checks to avoid inversion failure.
+///#define IMPEPS (1.e-8)
+/// use large, and it'll go smaller if no inversion, but can't start out with too small since then Jac will have diag() terms =0
+/// KORALTODO: For difficult iterations, there can be solution but Jacobian is too rough and jump around alot in primitive space for small changes in U.  Should really modify IMPEPS in such cases when pr changes alot for such changes in U.
+/// roughly (NUMEPSILON)**(1/3) as in NR5.7 on numerical derivatives
 #if(REALTYPE==FLOATTYPE)
 #define IMPEPSLARGE (1E-4) // on small side
 #define IMPEPSSMALL (1E-4) // on small side
@@ -221,10 +227,10 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE *errorabs, stru
 #define ERRORFORIMPEPSSMALL (1E-9)
 #endif
 
-// maximum EPS for getting Jacobian
+/// maximum EPS for getting Jacobian
 #define MAXIMPEPS (0.3)
 
-// maximum number of times to (typically) increase EPS in getting Jacobian for implicit scheme.  This might generally override MAXIMPEPS.
+/// maximum number of times to (typically) increase EPS in getting Jacobian for implicit scheme.  This might generally override MAXIMPEPS.
 #define MAXJACITER (10)
 
 
@@ -236,18 +242,18 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE *errorabs, stru
 
 #define IMPMINABSERROR (1E-100) // minimum absolute error (or value) below which don't treat as bad error and just avoid 4-force.  Otherwise will "fail" implicit solver even if impossible to reach smaller relative error due to absolute machine precision issues.
 
-// 1 : normalize radiation error by only radiation thermal energy
-// 2 : normalize radiation error by max(radiation,gas) thermal energy
-// 3 : normalize using radiation URAD0 but also fnorm from actual f
-// 4 : URAD0, fnorm, and UU
-// normalize error.  Can't expect radiation to be relatively accurate to itself if UU>>URAD0 due to G between them
-// 3 is safest, but more expensive than 4.  4 should be fine for real systems.
+/// 1 : normalize radiation error by only radiation thermal energy
+/// 2 : normalize radiation error by max(radiation,gas) thermal energy
+/// 3 : normalize using radiation URAD0 but also fnorm from actual f
+/// 4 : URAD0, fnorm, and UU
+/// normalize error.  Can't expect radiation to be relatively accurate to itself if UU>>URAD0 due to G between them
+/// 3 is safest, but more expensive than 4.  4 should be fine for real systems.
 #define IMPLICITERRORNORM 4
 
 
 #define MAXSUBCYCLES (2000) // for explicit sub-cycles when doing reversion
 
-// if tries more than this number of sub-cycles, just fail and assume no 4-force since probably due to no actual solution even for implicit scheme due to sitting at radiative failure (e.g. gamma->gammamax or Erf->ERADLIMIT)
+/// if tries more than this number of sub-cycles, just fail and assume no 4-force since probably due to no actual solution even for implicit scheme due to sitting at radiative failure (e.g. gamma->gammamax or Erf->ERADLIMIT)
 #define MAXSUBCYCLESFAIL (MAXSUBCYCLES*100)
 
 
@@ -266,17 +272,17 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE *errorabs, stru
 #define TAUSWITCHPBVSPIIN (2.0/3.0) // at what \tau to switch using pb(uu0) vs. piin(Uiin).
 
 
-// whether to revert to sub-cycle explicit if implicit fails.  Only alternative is die.
+/// whether to revert to sub-cycle explicit if implicit fails.  Only alternative is die.
 #define IMPLICITREVERTEXPLICIT 0 // problem.  Not a good idea. -- should try implicit again, starting out with more damping.
 
-// like SAFE for normal dt step, don't allow explicit substepping to change dt too fast to avoid instabilities.
+/// like SAFE for normal dt step, don't allow explicit substepping to change dt too fast to avoid instabilities.
 #define MAXEXPLICITSUBSTEPCHANGE 1.e-2
 
-// 0 : tau suppression
-// 1 : space-time merged
-// 2 : all space merged but separate from time
-// 3 : full split
-// 4 : split even mhd and rad
+/// 0 : tau suppression
+/// 1 : space-time merged
+/// 2 : all space merged but separate from time
+/// 3 : full split
+/// 4 : split even mhd and rad
 #define TAUSUPPRESS 0 // makes physical sense, but might be wrong in some limits (i.e. Gd can still be large relative), but try to account for lambda as well.
 #define SPACETIMESUBSPLITNONE 1 // DON'T USE! (gets inversion failures because overly aggressive)
 #define SPACETIMESUBSPLITTIME 2 // probably not ok -- need to split off mhd and rad
@@ -287,8 +293,8 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE *errorabs, stru
 
 #define WHICHSPACETIMESUBSPLIT TAUSUPPRESS // only tausuppress works in general.
 
-// determine which error will use when deciding if converged or not.
-// If only use iterated, then rest can be large error, and that's not desired.  So generally should use WHICHERROR 1
+/// determine which error will use when deciding if converged or not.
+/// If only use iterated, then rest can be large error, and that's not desired.  So generally should use WHICHERROR 1
 #define NUMERRORTYPES 2 // 0: over iterated   1: over all relevant terms
 #define WHICHERROR 1 // choose, but generally should be 1.
 
@@ -296,31 +302,31 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE *errorabs, stru
 //SPACETIMESUBSPLITTIMEMHDRAD // TAUSUPPRESS
 // SPACETIMESUBSPLITTIMEMHDRAD  //  SPACETIMESUBSPLITMHDRAD // SPACETIMESUBSPLITSUPERALL // TAUSUPPRESS
 
-// whether to get pb(uu0) instead of using pb that was used to compute F(pb).  Better guess to use pb(uu0) in optically thin regions.
-// : 0 don't
-// : 1 do for RAD and MHD methods under all cases
-// : 2 do only for RAD methods
-// : 3 do for both methods but only for STAGES for MHD methods
+/// whether to get pb(uu0) instead of using pb that was used to compute F(pb).  Better guess to use pb(uu0) in optically thin regions.
+/// : 0 don't
+/// : 1 do for RAD and MHD methods under all cases
+/// : 2 do only for RAD methods
+/// : 3 do for both methods but only for STAGES for MHD methods
 //#define GETRADINVFROMUU0FORPB 3 // makes use more ITERMODESTAGES
 #define GETRADINVFROMUU0FORPB 1  // might be expensive of uu0 has no solution for the MHD inversion.
 
-// whether to use dUriemann and dUgeom or other dU's sitting in dUother for radiation update
-// -1 : use Uiin,piin
-// 0: use Uiin,piin [initial U and initial p] // bad choice to use, e.g., uu0[RHO] should always be used
-// 1: use uu0 for non-iterated U's and pb for non-iterated.  And Uiin's for iterated U's and piin for iterated p's. // balanced choice
-// 2: use uu0,pb [initial+flux U and pb used to get flux] // maybe best for dynamical flows
-// 3: use uu0,puu0 [initial+flux U and p] // costly since needs inversion, and probably no better than 1
+/// whether to use dUriemann and dUgeom or other dU's sitting in dUother for radiation update
+/// -1 : use Uiin,piin
+/// 0: use Uiin,piin [initial U and initial p] // bad choice to use, e.g., uu0[RHO] should always be used
+/// 1: use uu0 for non-iterated U's and pb for non-iterated.  And Uiin's for iterated U's and piin for iterated p's. // balanced choice
+/// 2: use uu0,pb [initial+flux U and pb used to get flux] // maybe best for dynamical flows
+/// 3: use uu0,puu0 [initial+flux U and p] // costly since needs inversion, and probably no better than 1
 #define USEDUINRADUPDATE 1
 
-// whether to use inputted uub, and pb as guess if errorabsreturn inputted is small enough
-// makes sense in general only if WHICHERROR=1
+/// whether to use inputted uub, and pb as guess if errorabsreturn inputted is small enough
+/// makes sense in general only if WHICHERROR=1
 #define USEINPUTASGUESSIFERRORSMALL (WHICHERROR==1)
 
 
 #define GAMMASMALLLIMIT (1.0-1E-10) // at what point above which assume gamma^2=1.0
 
 
-// whether to choose Jon or Olek way of handling u2p_rad inversion failures
+/// whether to choose Jon or Olek way of handling u2p_rad inversion failures
 #define JONCHOICE 0
 #define OLEKCHOICE 1
 
@@ -335,8 +341,8 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE *errorabs, stru
 
 // KORALTODO: The below need to be chosen intelligently
 
-// below this \tau, no source term applied.
-// KORALTODO: Need to fix implicit solver so avoids dU-del in fluid if no radiatoin-fluid interaction, else overestimates effect and inversion failures occur.
+/// below this \tau, no source term applied.
+/// KORALTODO: Need to fix implicit solver so avoids dU-del in fluid if no radiatoin-fluid interaction, else overestimates effect and inversion failures occur.
 #define MINTAUSOURCE (NUMEPSILON)
 
 
@@ -347,9 +353,9 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE *errorabs, stru
 //
 ///////////////////////////////
 
-// whether to do subjac iter-dependent solver.
-// 0 : normal full 4D method
-// 1 : Invert sub Jacobian method
+/// whether to do subjac iter-dependent solver.
+/// 0 : normal full 4D method
+/// 1 : Invert sub Jacobian method
 #define DOSUBJAC 1
 #define ENERGYSIMPLEFACTOR (NDIM) // NDIM=4 times simpler than full step
 
@@ -359,8 +365,8 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE *errorabs, stru
 #define ITERMODECOLD 2
 
 
-////////////
-// for ITERSTAGES
+/////////////
+/// for ITERSTAGES
 #define BEGINMOMSTEPS0 1
 #define ENDMOMSTEPS0 2
 
@@ -375,16 +381,16 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE *errorabs, stru
 
 
 
-// number of prior iterations to see if error has dropped enough to seem relevant
+/// number of prior iterations to see if error has dropped enough to seem relevant
 #define NUMPRIORERRORSITER0 7
 #define NUMPRIORERRORS 5
 #define PRIORERRORCHANGEREQUIRED (0.5) // damping is included below when used
 
-// whether to store steps for primitive and so debug max iteration cases
+/// whether to store steps for primitive and so debug max iteration cases
 #define DEBUGMAXITER 1
 
-// 0: show primitive
-// 1: show u^\mu and urad^\mu
+/// 0: show primitive
+/// 1: show u^\mu and urad^\mu
 #define DEBUGMAXITERVELOCITY 1
 
 #define DEBUGLEVELIMPSOLVER 3 // which debugfail>=# to use for some common debug stuff
@@ -393,19 +399,19 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE *errorabs, stru
 #define DEBUGLEVELIMPSOLVERMORE 3 // which debugfail>=# to use for some common debug stuff
 //#define DEBUGLEVELIMPSOLVERMORE 2 // which debugfail>=# to use for some common debug stuff
 
-// how many holds on u_g to apply while stepping velocity.
+/// how many holds on u_g to apply while stepping velocity.
 #define RAMESHFIXEARLYSTEPS (DOSUBJAC==1 ? 0 : 3) // 3 if used is default
 
-// whether to apply Jon's hold on u_g or rho from going negative
+/// whether to apply Jon's hold on u_g or rho from going negative
 #define JONHOLDPOS 1
 
 #define NEWJONHOLDPOS 0 // FUCK: WORKING ON IT
 
-// number of times allowed to hold u_g as positive
+/// number of times allowed to hold u_g as positive
 #define NUMHOLDTIMES 6
 
 
-// stop iterating energy if pbenergy[UU]<0.5*pbentropy[UU] consistently starting aafter below number of iterations and lasting for 2nd below number of iterations
+/// stop iterating energy if pbenergy[UU]<0.5*pbentropy[UU] consistently starting aafter below number of iterations and lasting for 2nd below number of iterations
 #define RAMESHSTOPENERGYIFTOOOFTENBELOWENTROPY 3
 
 //#define SWITCHTOENTROPYIFCHANGESTOENTROPY (*implicitferr==QTYUMHD ? 0 : 1)
@@ -413,95 +419,95 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE *errorabs, stru
 
 
 
-// whether to use ramesh solver as backup
+/// whether to use ramesh solver as backup
 #define USERAMESH 0 // too slow if used too often, and rarely result really used.
 
-// error below which to feed best guess into next attempt
+/// error below which to feed best guess into next attempt
 #define TRYHARDERFEEDGUESSTOL (1E-4)
 
-// error below which will use entropy as guess for energy if entropy didn't hard fail.
+/// error below which will use entropy as guess for energy if entropy didn't hard fail.
 #define ERRORTOUSEENTROPYFORENERGYGUESS (1E-4)
 
 
-// whether to get lowest error solution instead of final one.
+/// whether to get lowest error solution instead of final one.
 #define GETBEST 1
 
 
-// need to do final check since get f1 and then do step.
+/// need to do final check since get f1 and then do step.
 #define DOFINALCHECK 1
 
 
-// below 1 if reporting cases when MAXITER reached, but allowd error so not otherwise normally reported.
+/// below 1 if reporting cases when MAXITER reached, but allowd error so not otherwise normally reported.
 #define REPORTMAXITERALLOWED (PRODUCTION==0)
 
-// whether to ensure rho and u_g in Jacobian calculation difference do not cross over 0 and stay on same side as origin point.
+/// whether to ensure rho and u_g in Jacobian calculation difference do not cross over 0 and stay on same side as origin point.
 #define FORCEJDIFFNOCROSS 1
 
-// whether to check pp-ppp
-// 1: directly check post pp-ppp relative error and see if changes by LOCALPREIMPCONVX
-// 2: directly check if any changes to pp during Newton step are bigger than DIFFXLIMIT.
+/// whether to check pp-ppp
+/// 1: directly check post pp-ppp relative error and see if changes by LOCALPREIMPCONVX
+/// 2: directly check if any changes to pp during Newton step are bigger than DIFFXLIMIT.
 #define POSTNEWTONCONVCHECK 1
 
-// below which sum of all primitives is taken as no interesting change.
+/// below which sum of all primitives is taken as no interesting change.
 #define DIFFXLIMIT (10.0*NUMEPSILON)
 
 #define LOCALPREIMPCONVX (10.0*NUMEPSILON)
 #define LOCALPREIMPCONVXABS ((FTYPE)(NDIM+2)*LOCALPREIMPCONVX)
 
 
-// number of iterations by which to check (1st) whether after some number of times (2nd) error rose instead of reduced.
+/// number of iterations by which to check (1st) whether after some number of times (2nd) error rose instead of reduced.
 #define NUMNOERRORREDUCE0 (5+BEGINNORMALSTEPS)
 #define NUMNOERRORREDUCE 5
 
 
-// whether to use EOMDONOTHING if error is good enough.
-// 1: always avoid external inversion (so no longer can do cold MHD, but cold MHD in \tau\gtrsim 1 places is very bad).  Or avoid energy switching to entropy, which also is bad.
+/// whether to use EOMDONOTHING if error is good enough.
+/// 1: always avoid external inversion (so no longer can do cold MHD, but cold MHD in \tau\gtrsim 1 places is very bad).  Or avoid energy switching to entropy, which also is bad.
 #define SWITCHTODONOTHING 1
 
-  // whether to change damp factor during this instance.
+/// whether to change damp factor during this instance.
 #define CHANGEDAMPFACTOR 2 // bit risky to set to 1 since changing DAMPFACTOR for no good reason limits ability to converge at normal rate.
 #define NUMDAMPATTEMPTS 3
 
 #define NUMDAMPATTEMPTSQUICK 1
 
 
-// factor by which error jumps as indication that u_g stepped to was very bad choice.
+/// factor by which error jumps as indication that u_g stepped to was very bad choice.
 #define FACTORBADJUMPERROR (1.0E2)
 
 
-// 0 : old Jon  method
-// 1 : Jon's paper draft method
+/// 0 : old Jon  method
+/// 1 : Jon's paper draft method
 #define WHICHU2PRAD 1
 
-// during implicit solver, don't limit gamma so much as normally.  Otherwise, solution may not be found and solver struggles and leads to high errors and iterations.  If limit gammarad but not gammafluid, then gammafluid can be too high.  If limit both, no solutions can be found.   So just limit afterwards for now.
+/// during implicit solver, don't limit gamma so much as normally.  Otherwise, solution may not be found and solver struggles and leads to high errors and iterations.  If limit gammarad but not gammafluid, then gammafluid can be too high.  If limit both, no solutions can be found.   So just limit afterwards for now.
 //#define GAMMAMAXRADIMPLICITSOLVER (1E5)
 #define GAMMAMAXRADIMPLICITSOLVER (GAMMAMAXRAD) // for radiation, seek actual solution with this limit.  Solver can find solutions, while harder when limiting gamma_{gas} for some reason.
 
 
-// whether to avoid computing entropy during iterations if not needed
+/// whether to avoid computing entropy during iterations if not needed
 #define ENTROPYOPT 1
 
-// whether to try using uualt (see f_implicit())
+/// whether to try using uualt (see f_implicit())
 #define ALLOWUSEUUALT 0
 
-// whether to use CAPTYPEFIX2 for f1 (central Jac and error estimate).  Still will use CAPTYPEBASIC for final check, but this allows faster convergence or non-convergence as required.
+/// whether to use CAPTYPEFIX2 for f1 (central Jac and error estimate).  Still will use CAPTYPEBASIC for final check, but this allows faster convergence or non-convergence as required.
 #define USECAPTYPEFIX2FORF1 1
-// "" for final check.
+/// "" for final check.
 #define USECAPTYPEFIX2FORFINALCHECK 1
-// whether to avoid including URAD0 in total error when hitting radinvmod!=0.  If using CAPTYPEFIX2FORF1=1, then can't get error better than what CAPTYPEFIX2 provides for non-URAD0 terms.
+/// whether to avoid including URAD0 in total error when hitting radinvmod!=0.  If using CAPTYPEFIX2FORF1=1, then can't get error better than what CAPTYPEFIX2 provides for non-URAD0 terms.
 #define AVOIDURAD0IFRADINVMODANDPMHDMETHOD (USECAPTYPEFIX2FORF1!=0)
-// whether to avoid back-tracing f1 calculation if rad inv hits cap, just push through if ==1.
+/// whether to avoid back-tracing f1 calculation if rad inv hits cap, just push through if ==1.
 #define TREATRADINVCAPASNONFAILUREFORPMHDMETHOD (USECAPTYPEFIX2FORF1!=0)
 
-// whether to just let PMHD fail and try it first no matter whether primary considerations say otherwise.
+/// whether to just let PMHD fail and try it first no matter whether primary considerations say otherwise.
 #define LETPMHDFAIL 1
 
-// whether to use history of methods to determine current method -- KORALTODO: Needs work.
+/// whether to use history of methods to determine current method -- KORALTODO: Needs work.
 #define USEPRIORITERMETHOD 0
 
-// stop if WHICHERROR is low error
+/// stop if WHICHERROR is low error
 #define STOPIFVERYLOWERROR (1)
-// stop if iter error is low error
+/// stop if iter error is low error
 #define STOPIFITERLOWERROR (0)
 
 ///////////////////////////////
@@ -580,7 +586,7 @@ static int simplefast_rad(int dir, struct of_geom *geom,struct of_state *q, FTYP
 static void calc_kappa_kappaes(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappa, FTYPE *kappaes, FTYPE *Tgas);
 
 
-// f_implicit() call types
+/// f_implicit() call types
 #define FIMPLICITCALLTYPEF1 1
 #define FIMPLICITCALLTYPEFINALCHECK 2
 #define FIMPLICITCALLTYPEJAC 3
@@ -595,23 +601,23 @@ static void calc_kappa_kappaes(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappa,
 #define DIMTYPEFCONS 0
 #define DIMTYPEFPRIM 1
 
-// mnemonics for return modes so schemes know how failed and what to do.
-// worse failure should be larger number
+/// mnemonics for return modes so schemes know how failed and what to do.
+/// worse failure should be larger number
 #define UTOPRIMGENWRAPPERRETURNNOFAIL  (UTOPRIMNOFAIL)
 #define UTOPRIMGENWRAPPERRETURNFAILRAD (1)
 #define UTOPRIMGENWRAPPERRETURNFAILMHD (2)
 
-// wrapper for Utoprimgen() that returns non-zero if failed in some way so know can't continue with that method
-// doradonly: ==1: Do only radiative inversion.  ==0: do full inversion.
-// showmessages : 0 or 1 : whether to show messages for issues
-// allowlocalfailurefixandnoreport : 0 or 1 : whether to have inversion avoid report and just use local fix
-// finalstep : whether this is the final step of RK substeps
-// evolvetype :
-// inputtype :
-// U : conserved quantity
-// ptrgeom : geometry pointer
-// pr : primitive (acts as guess for inversion and holds output for U->P)
-// newtonstats: for inversion method report
+/// wrapper for Utoprimgen() that returns non-zero if failed in some way so know can't continue with that method
+/// doradonly: ==1: Do only radiative inversion.  ==0: do full inversion.
+/// showmessages : 0 or 1 : whether to show messages for issues
+/// allowlocalfailurefixandnoreport : 0 or 1 : whether to have inversion avoid report and just use local fix
+/// finalstep : whether this is the final step of RK substeps
+/// evolvetype :
+/// inputtype :
+/// U : conserved quantity
+/// ptrgeom : geometry pointer
+/// pr : primitive (acts as guess for inversion and holds output for U->P)
+/// newtonstats: for inversion method report
 static int Utoprimgen_failwrapper(int doradonly, int *radinvmod, int showmessages, int checkoninversiongas, int checkoninversionrad, int allowlocalfailurefixandnoreport, int finalstep, int *eomtype, int whichcap, int evolvetype, int inputtype,FTYPE *U,  struct of_state *qptr,  struct of_geom *ptrgeom, FTYPE dissmeasure, FTYPE *pr, struct of_newtonstats *newtonstats)
 {
   int failreturn;
@@ -722,13 +728,11 @@ static int Utoprimgen_failwrapper(int doradonly, int *radinvmod, int showmessage
 
 
 
-//////////////////////////////////////////////////////
-//
-// whether iterate or have as error function: MHD T^t_\nu or RAD R^t_\nu, etc.
-//
-//////////////////////////////////////////////////////
-
-
+///////////////////////////////////////////////////////
+///
+/// whether iterate or have as error function: MHD T^t_\nu or RAD R^t_\nu, etc.
+///
+///////////////////////////////////////////////////////
 #define QTYUMHD 0 // iter or ferr
 #define QTYUMHDENERGYONLY 1 // ferr only for now
 #define QTYUMHDMOMONLY 2 // ferr only for now
@@ -749,28 +753,28 @@ static int Utoprimgen_failwrapper(int doradonly, int *radinvmod, int showmessage
 #define QTYENTROPYPMHDMOMONLY 17 // iter (not used)
 
 
-// P or U types
+/// P or U types
 #define IMPPTYPE(implicititer) (implicititer==QTYPMHD ||implicititer==QTYPMHDENERGYONLY ||implicititer==QTYPMHDMOMONLY || implicititer==QTYPRAD ||implicititer==QTYPRADENERGYONLY ||implicititer==QTYPRADMOMONLY   || implicititer==QTYENTROPYPMHD ||implicititer==QTYENTROPYPMHDENERGYONLY ||implicititer==QTYENTROPYPMHDMOMONLY)
 
 #define IMPUTYPE(implicititer) (implicititer==QTYUMHD ||implicititer==QTYUMHDENERGYONLY ||implicititer==QTYUMHDMOMONLY  || implicititer==QTYURAD ||implicititer==QTYURADENERGYONLY ||implicititer==QTYURADMOMONLY || implicititer==QTYENTROPYUMHD ||implicititer==QTYENTROPYUMHDENERGYONLY ||implicititer==QTYENTROPYUMHDMOMONLY)
 
-// MHD or RAD type
+/// MHD or RAD type
 #define IMPMHDTYPE(implicititer) (implicititer==QTYPMHD ||implicititer==QTYPMHDENERGYONLY ||implicititer==QTYPMHDMOMONLY || implicititer==QTYUMHD ||implicititer==QTYUMHDENERGYONLY ||implicititer==QTYUMHDMOMONLY || implicititer==QTYENTROPYUMHD ||implicititer==QTYENTROPYUMHDENERGYONLY ||implicititer==QTYENTROPYUMHDMOMONLY)
 
 #define IMPRADTYPE(implicititer) (implicititer==QTYPRAD ||implicititer==QTYPRADENERGYONLY ||implicititer==QTYPRADMOMONLY || implicititer==QTYURAD ||implicititer==QTYURADENERGYONLY ||implicititer==QTYURADMOMONLY)
 
-// MHD or RAD baseitermethod types
+/// MHD or RAD baseitermethod types
 #define IMPMHDTYPEBASE(baseitermethod) (baseitermethod==QTYPMHD || baseitermethod==QTYUMHD || baseitermethod==QTYENTROPYUMHD)
 
 #define IMPRADTYPEBASE(baseitermethod) (baseitermethod==QTYPRAD || baseitermethod==QTYURAD)
 
-// PMHD types
+/// PMHD types
 #define IMPPMHDTYPE(implicititer) (implicititer==QTYPMHD ||implicititer==QTYPMHDENERGYONLY ||implicititer==QTYPMHDMOMONLY)
 
 
 
-// set default method
-// can control method per iteration
+/// set default method
+/// can control method per iteration
 static void define_method(int iter, int *eomtype, int itermode, int baseitermethod, FTYPE fracenergy, FTYPE dissmeasure, int *implicititer, int *implicitferr, int *BEGINMOMSTEPS, int *ENDMOMSTEPS, int *BEGINENERGYSTEPS, int *ENDENERGYSTEPS, int *BEGINFULLSTEPS, int *ENDFULLSTEPS, int *BEGINNORMALSTEPS)
 {
   int eomtypelocal=*eomtype; // default, but not changing it so far.
@@ -1142,25 +1146,23 @@ static void get_refUs(int *numdims, int *startjac, int *endjac, int *implicitite
 
 
 
-//uu0 - original cons. qty
-//uu -- current iteration
-//f - (returned) errors
-
-// returns error function for which we seek to be zero using Newton's method, which solves the implicit problem.
-// failreturnallowable : what failure level to allow so that push through and continue despite the failure
-// whichcall : which call to this function
-// showmessages:
-// allowlocalfailurefixandnoreport:
-// pp : primitive (associated with uu) used as guess for inversion as well as for returning inversion result for later quicker inversion
-// uu0 : reference initial conserved quantity representing U_n for implicit problem
-// uu : current conserved quantity representing U_{n+1} that solves implicit problem
-// localdt : timestep for 4-force
-// ptrgeom:
-// f : error function returrned
-// fnorm : norm of error function for esimating relative error in f.
-// 
-// returns: eomtype, radinvmod,pp,uu,q,f,fnorm,freport,goexplicit,errorabs,converturn
-
+///uu0 - original cons. qty
+///uu -- current iteration
+///f - (returned) errors
+/// returns error function for which we seek to be zero using Newton's method, which solves the implicit problem.
+/// failreturnallowable : what failure level to allow so that push through and continue despite the failure
+/// whichcall : which call to this function
+/// showmessages:
+/// allowlocalfailurefixandnoreport:
+/// pp : primitive (associated with uu) used as guess for inversion as well as for returning inversion result for later quicker inversion
+/// uu0 : reference initial conserved quantity representing U_n for implicit problem
+/// uu : current conserved quantity representing U_{n+1} that solves implicit problem
+/// localdt : timestep for 4-force
+/// ptrgeom:
+/// f : error function returrned
+/// fnorm : norm of error function for esimating relative error in f.
+/// 
+/// returns: eomtype, radinvmod,pp,uu,q,f,fnorm,freport,goexplicit,errorabs,converturn
 static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int failreturnallowable, int whichcall, FTYPE impeps, int showmessages, int showmessagesheavy, int allowlocalfailurefixandnoreport, int *eomtype, int whichcap, int itermode, int *baseitermethod, FTYPE fracenergy, FTYPE dissmeasure, int *radinvmod, FTYPE conv, FTYPE convabs, FTYPE allowconvabs, int maxiter, FTYPE realdt, int dimtypef, FTYPE *dimfactU, FTYPE *ppprev, FTYPE *pp, FTYPE *piin, FTYPE *uuprev, FTYPE *Uiin, FTYPE *uu0,FTYPE *uu,FTYPE localdt, struct of_geom *ptrgeom, struct of_state *q,  FTYPE *f, FTYPE *fnorm, FTYPE *freport, int *goexplicit, FTYPE *errorabs, FTYPE *errorallabs, int whicherror, int *convreturn, int *nummhdinvsreturn)
 {
   int pliter, pl;
@@ -1901,7 +1903,7 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
   return(0);
 } 
 
-// compute dt for this sub-step
+/// compute dt for this sub-step
 static FTYPE compute_dt(int isexplicit, FTYPE *CUf, FTYPE *CUimp, FTYPE dtin)
 {
   // what's applied to source and flux terms to get update (see global.stepch.h and step_ch.c:get_truetime_fluxdt() and step_ch.c:setup_rktimestep()) to get Uf
@@ -1941,7 +1943,7 @@ static FTYPE compute_dt(int isexplicit, FTYPE *CUf, FTYPE *CUimp, FTYPE dtin)
 #define RADINVOK(radinvmod) (RADINVBAD(radinvmod)==0)
 
 
-// choose to switch to entropy only if energy fails or gives u_g<0.  Or choose to always do both and use best solution.
+/// choose to switch to entropy only if energy fails or gives u_g<0.  Or choose to always do both and use best solution.
 #define MODEMETHOD MODEPICKBEST // general switching method
 //#define MODEMETHOD MODEPICKBESTSIMPLE // switches with only PMHD method
 //#define MODEMETHOD MODEPICKBESTSIMPLE2 // switches with all methods but no ITERMODESTAGES attempted
@@ -1954,7 +1956,7 @@ static FTYPE compute_dt(int isexplicit, FTYPE *CUf, FTYPE *CUimp, FTYPE dtin)
 // KORALTODOMAYBE: average good neighbor if can.  only use alternative backup if no good neighbor.
 
 
-// wrapper for mode method
+/// wrapper for mode method
 static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, FTYPE *CUimp, struct of_geom *ptrgeom, struct of_state *q, FTYPE dissmeasure, FTYPE *dUother ,FTYPE (*dUcomp)[NPR])
 {
   int i=ptrgeom->i;
@@ -4291,8 +4293,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
 
 
-// compute changes to U (both T and R) using implicit method
-// KORALTODO: If doing implicit, should also add geometry source term that can sometimes be stiff.  Would require inverting sparse 8x8 matrix (or maybe 6x6 since only r-\theta for SPC).  Could be important for very dynamic radiative flows.
+/// compute changes to U (both T and R) using implicit method
+/// KORALTODO: If doing implicit, should also add geometry source term that can sometimes be stiff.  Would require inverting sparse 8x8 matrix (or maybe 6x6 since only r-\theta for SPC).  Could be important for very dynamic radiative flows.
 static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int modprim, int havebackup, int didentropyalready, int *eomtype, int whichcap, int itermode, int *baseitermethod, FTYPE trueimptryconv, FTYPE trueimpokconv, FTYPE trueimpallowconv, int trueimpmaxiter, int truenumdampattempts, FTYPE fracenergy, FTYPE dissmeasure, int *radinvmod, FTYPE *pb, FTYPE *uub, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, FTYPE *CUimp, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother ,FTYPE (*dUcomp)[NPR], FTYPE *errorabsreturn, FTYPE *errorabsbestexternal, int *itersreturn, int *f1itersreturn, int *nummhdinvsreturn, int *nummhdstepsreturn)
 {
   int nstrokeorig=nstroke;
@@ -6636,11 +6638,11 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
 
 
 
-// 0 : full
-// 1: optimal
+/// 0 : full
+/// 1: optimal
 #define DEBUGMAXMODE 1
 
-// DEBUGMAXITER stuff
+/// DEBUGMAXITER stuff
 static void showdebuglist(int debugiter, FTYPE (*pppreholdlist)[NPR],FTYPE (*ppposholdlist)[NPR],FTYPE (*f1reportlist)[NPR],FTYPE (*f1list)[NPR],FTYPE *errorabsf1list,FTYPE *errorallabsf1list, int *realiterlist, FTYPE (*jaclist)[NDIM][NDIM], FTYPE *fracdamplist, int *implicititerlist, int *implicitferrlist)
 {
 
@@ -7264,8 +7266,8 @@ int mathematica_report_check(int radinvmod, int failtype, long long int failnum,
 }
 
 
-// use f and check the error
-// note that eomtype is just integer, not pointer as often case when might want to change eomtype.
+/// use f and check the error
+/// note that eomtype is just integer, not pointer as often case when might want to change eomtype.
 static int f_error_check(int showmessages, int showmessagesheavy, int iter, FTYPE conv, FTYPE convabs, FTYPE realdt, int dimtypef, int eomtype, int radinvmod, int itermode, int baseitermethod, FTYPE fracenergy, FTYPE dissmeasure, FTYPE *dimfactU, FTYPE *pp, FTYPE *piin, FTYPE *fin, FTYPE *finnorm, FTYPE *finreport, FTYPE *Uiin, FTYPE *uu0, FTYPE *uu, struct of_geom *ptrgeom, FTYPE *errorabs, FTYPE *errorallabs, int whicherror)
 {
   int ii,jj;
@@ -7402,8 +7404,8 @@ static int f_error_check(int showmessages, int showmessagesheavy, int iter, FTYP
 
 
 
-// calculating approximate Jacobian: dUresid(dUrad,G(Urad))/dUrad = dy(x)/dx
-// then compute inverse Jacobian
+/// calculating approximate Jacobian: dUresid(dUrad,G(Urad))/dUrad = dy(x)/dx
+/// then compute inverse Jacobian
 static int get_implicit_iJ(int allowbaseitermethodswitch, int failreturnallowableuse, int showmessages, int showmessagesheavy, int allowlocalfailurefixandnoreport, int *eomtypelocal, int whichcap, int itermode, int *baseitermethod, FTYPE fracenergy, FTYPE dissmeasure, FTYPE impepsjac, FTYPE trueimptryconv, FTYPE trueimptryconvabs, FTYPE trueimpallowconvabs, int trueimpmaxiter, int iter, FTYPE errorabs, FTYPE errorallabs, int whicherror, int dimtypef, FTYPE *dimfactU, FTYPE *Uiin, FTYPE *uu, FTYPE *uup, FTYPE *uu0, FTYPE *piin, FTYPE *pp, FTYPE *ppp, FTYPE fracdtG, FTYPE realdt, struct of_geom *ptrgeom, struct of_state *q, FTYPE *f1, FTYPE *f1norm, FTYPE (*iJ)[NPR], int *nummhdinvsreturn)
 {
   int ii,jj;
@@ -7938,7 +7940,7 @@ static int get_implicit_iJ(int allowbaseitermethodswitch, int failreturnallowabl
 
 
 
-// get dt for explicit sub-cyclings
+/// get dt for explicit sub-cyclings
 static void get_dtsub(int method, FTYPE *pr, struct of_state *q, FTYPE *Ui, FTYPE *Uf, FTYPE *dUother,  FTYPE *CUf, FTYPE *CUimp, FTYPE *Gdpl, FTYPE chi, FTYPE *Gdplabs, struct of_geom *ptrgeom, FTYPE *dtsub)
 {
   int jj;
@@ -8184,13 +8186,13 @@ static void get_dtsub(int method, FTYPE *pr, struct of_state *q, FTYPE *Ui, FTYP
 
 #define GETADVANCEDUNEW0FOREXPLICIT 1 // Use this to check if single explicit step was really allowable, but get_dtsub() already uses advanced U.  But chi will be not updated for fluid dUriemann update, so still might want to do this (with proper code changes) in order to get chi good.
 
-// Based upon size of Gd, sub-cycle this force.
-// 1) calc_Gd()
-// 2) locally set dtsub~dt/\tau or whatever it should be
-// 3) update T^t_\nu and R^t_\nu
-// 4) U->P locally
-// 5) repeat.
-// Only change dUcomp, and can overwrite prnew, Unew, and qnew since "prepare" function isolated original values already
+/// Based upon size of Gd, sub-cycle this force.
+/// 1) calc_Gd()
+/// 2) locally set dtsub~dt/\tau or whatever it should be
+/// 3) update T^t_\nu and R^t_\nu
+/// 4) U->P locally
+/// 5) repeat.
+/// Only change dUcomp, and can overwrite prnew, Unew, and qnew since "prepare" function isolated original values already
 static int source_explicit(int whichsc, int whichradsourcemethod, int methoddtsub,int *eomtype,
                            void (*sourcefunc)(int methoddtsub, FTYPE *pr, FTYPE *Ui, FTYPE *Uf, FTYPE *dUother, FTYPE *CUf, FTYPE *CUimp, FTYPE *Gpl, struct of_geom *ptrgeom, FTYPE *dtsub),
                            FTYPE *pb, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, FTYPE *CUimp, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother, FTYPE (*dUcomp)[NPR])
@@ -8566,10 +8568,10 @@ static int source_explicit(int whichsc, int whichradsourcemethod, int methoddtsu
 
 
 
-// General radiation source term calculation (EXTERNALLY called)
-// NOTE: source_explicit() takes as first argument a form of function like general koral_source_rad_calc() .  It doesn't have to be just used for radiation.
-// NOTE: koral_source_rad_implicit() currently only works for radiation where only 4 equations involved since 4-force of rad affects exactly mhd.  So only invert 4x4 matrix.
-// For recursion of other consistencies, should keep koral_source_rad() same function arguments as explicit and implicit functions.  Once make koral_source_rad() general, can use this function as general source function instead of it getting called just for radiation.
+/// General radiation source term calculation (EXTERNALLY called)
+/// NOTE: source_explicit() takes as first argument a form of function like general koral_source_rad_calc() .  It doesn't have to be just used for radiation.
+/// NOTE: koral_source_rad_implicit() currently only works for radiation where only 4 equations involved since 4-force of rad affects exactly mhd.  So only invert 4x4 matrix.
+/// For recursion of other consistencies, should keep koral_source_rad() same function arguments as explicit and implicit functions.  Once make koral_source_rad() general, can use this function as general source function instead of it getting called just for radiation.
 int koral_source_rad(int whichradsourcemethod, FTYPE *piin, FTYPE *pb, FTYPE *pf, int *didreturnpf, int *eomtype, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, FTYPE *CUimp, struct of_geom *ptrgeom, struct of_state *q, FTYPE dissmeasure, FTYPE *dUother, FTYPE (*dUcomp)[NPR])
 {
   int pliter,pl;
@@ -8825,10 +8827,10 @@ int koral_source_rad(int whichradsourcemethod, FTYPE *piin, FTYPE *pb, FTYPE *pf
 
 
 
-//**********************************************************************
-//******* opacities ****************************************************
-//**********************************************************************
-//absorption in 1/cm form
+///**********************************************************************
+///******* opacities ****************************************************
+///**********************************************************************
+///absorption in 1/cm form
 void calc_kappa(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappa)
 {
 
@@ -8850,7 +8852,7 @@ void calc_kappa(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappa)
   //  dualfprintf(fail_file,"kappaabs=%g\n",*kappa);
 }
 
-//scattering in 1/cm form
+///scattering in 1/cm form
 void calc_kappaes(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappaes)
 {  
   extern FTYPE calc_kappaes_user(FTYPE rho, FTYPE T,FTYPE x,FTYPE y,FTYPE z);
@@ -8871,7 +8873,7 @@ void calc_kappaes(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappaes)
   //  dualfprintf(fail_file,"kappaes=%g\n",*kappa);
 }
 
-// get \chi = \kappa_{abs} + \kappa_{es} in 1/cm form.
+/// get \chi = \kappa_{abs} + \kappa_{es} in 1/cm form.
 void calc_chi(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *chi)
 {
   FTYPE kappa,kappaes;
@@ -8881,7 +8883,7 @@ void calc_chi(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *chi)
   *chi=kappa+kappaes;
 }
 
-// get \kappa_{abs} and \kappa_{es} in \sigma/mass * rho = 1/cm form.
+/// get \kappa_{abs} and \kappa_{es} in \sigma/mass * rho = 1/cm form.
 static void calc_kappa_kappaes(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappa, FTYPE *kappaes, FTYPE *Tgas)
 {
   extern FTYPE calc_kappa_user(FTYPE rho, FTYPE T,FTYPE x,FTYPE y,FTYPE z);
@@ -8904,7 +8906,7 @@ static void calc_kappa_kappaes(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappa,
   //  dualfprintf(fail_file,"kappaabs=%g kappaes=%g\n",*kappa,*kappaes);
 }
 
-// get G_\mu
+/// get G_\mu
 static void calc_Gd(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *GG, FTYPE *Tgas, FTYPE* chieffreturn, FTYPE *Gabs)
 {
   calc_Gu(pp, ptrgeom, q, GG, Tgas, chieffreturn,Gabs);
@@ -8913,7 +8915,7 @@ static void calc_Gd(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYP
 
 
 
-// get 4-force for all pl's
+/// get 4-force for all pl's
 void koral_source_rad_calc(int computestate, int computeentropy, FTYPE *pr, struct of_geom *ptrgeom, FTYPE *Gdpl, FTYPE *Gdplabs, FTYPE *chi, FTYPE *Tgas, struct of_state *q)
 {
   int jj;
@@ -8976,7 +8978,7 @@ void koral_source_rad_calc(int computestate, int computeentropy, FTYPE *pr, stru
 }
 
 
-// get 4-force and dtsub for all pl's
+/// get 4-force and dtsub for all pl's
 static void koral_source_dtsub_rad_calc(int method, FTYPE *pr, FTYPE *Ui, FTYPE *Uf, FTYPE *dUother, FTYPE *CUf, FTYPE *CUimp, FTYPE *Gdpl, struct of_geom *ptrgeom, FTYPE *dtsub)
 {
   FTYPE Gdplabs[NPR];
@@ -8996,7 +8998,7 @@ static void koral_source_dtsub_rad_calc(int method, FTYPE *pr, FTYPE *Ui, FTYPE 
 
 }
 
-// compute G^\mu 4-force
+/// compute G^\mu 4-force
 static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *Gu, FTYPE *Tgas, FTYPE* chieffreturn, FTYPE *Gabs) 
 {
   int i,j,k;
@@ -9126,7 +9128,7 @@ static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYP
 }
 
 
-// energy density loss rate integrated over frequency and solid angle
+/// energy density loss rate integrated over frequency and solid angle
 int calc_rad_lambda(FTYPE *pp, struct of_geom *ptrgeom, FTYPE kappa, FTYPE kappaes, FTYPE Tgas, FTYPE *lambda)
 {
 
@@ -9151,7 +9153,7 @@ int calc_rad_lambda(FTYPE *pp, struct of_geom *ptrgeom, FTYPE kappa, FTYPE kappa
 }
 
 
-// compute radiative characteristics as limited by opacity
+/// compute radiative characteristics as limited by opacity
 int vchar_rad(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *vmax, FTYPE *vmin, FTYPE *vmax2, FTYPE *vmin2,int *ignorecourant)
 {
 
@@ -9227,7 +9229,7 @@ int vchar_rad(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYP
   return(0);
 }
 
-// get lab-frame 3-velocity for radiative emission in radiative frame
+/// get lab-frame 3-velocity for radiative emission in radiative frame
 static int simplefast_rad(int dir, struct of_geom *geom,struct of_state *q, FTYPE vrad2,FTYPE *vmin, FTYPE *vmax)
 {
   extern int simplefast(int whichcall, int dir, struct of_geom *geom,struct of_state *q, FTYPE cms2,FTYPE *vmin, FTYPE *vmax);
@@ -9266,7 +9268,7 @@ static int simplefast_rad(int dir, struct of_geom *geom,struct of_state *q, FTYP
 }
 
 
-// Get only u^\mu and u_\mu assumine b^\mu and b_\mu not used
+/// Get only u^\mu and u_\mu assumine b^\mu and b_\mu not used
 int get_state_uradconuradcovonly(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q)
 {
   void compute_1plusud0(FTYPE *pr, struct of_geom *geom, struct of_state *q, FTYPE *plus1ud0); // plus1ud0=(1+q->ucov[TT])
@@ -9294,7 +9296,7 @@ void mhdfull_calc_rad(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FT
   else DLOOP(jj,kk) radstressdir[jj][kk]=0.0; // mhd_calc_rad() called with no condition in phys.tools.c and elsewhere, and just fills normal tempo-spatial components (not RAD0->RAD3), so need to ensure zero.
 }
 
-// compute radiation stres-energy tensor assuming M1 closure
+/// compute radiation stres-energy tensor assuming M1 closure
 void mhd_calc_rad(FTYPE *pr, int dir, struct of_geom *ptrgeom, struct of_state *q, FTYPE *radstressdir, FTYPE *radstressdirabs)
 {
   int jj;
@@ -9329,7 +9331,7 @@ void mhd_calc_rad(FTYPE *pr, int dir, struct of_geom *ptrgeom, struct of_state *
 
 }
 
-// compute fluid frame orthonormal basis radiation stress-energy tensor assuming M1 closure
+/// compute fluid frame orthonormal basis radiation stress-energy tensor assuming M1 closure
 int calc_Rij_ff(FTYPE *pp, FTYPE Rij[][NDIM])
 {
   FTYPE E=pp[PRAD0];
@@ -9427,11 +9429,11 @@ FTYPE my_sign(FTYPE x)
 
 
 
-//**********************************************************************
-//**********************************************************************
-//**********************************************************************
-//inverse 4by4 matrix
-// gives inverse transpose matrix
+///**********************************************************************
+///**********************************************************************
+///**********************************************************************
+///inverse 4by4 matrix
+/// gives inverse transpose matrix
 int inverse_44matrix(FTYPE aa[][NDIM], FTYPE ia[][NDIM])
 {
   FTYPE mat[16],dst[16];
@@ -9535,11 +9537,11 @@ int inverse_44matrix(FTYPE aa[][NDIM], FTYPE ia[][NDIM])
 
 
 
-//**********************************************************************
-//**********************************************************************
-//**********************************************************************
-//inverse 3by3 matrix
-// gives inverse transpose matrix
+///**********************************************************************
+///**********************************************************************
+///**********************************************************************
+///inverse 3by3 matrix
+/// gives inverse transpose matrix
 static int inverse_33matrix(int sj, int ej, FTYPE aa[][NDIM], FTYPE ia[][NDIM])
 {
 
@@ -9567,11 +9569,11 @@ static int inverse_33matrix(int sj, int ej, FTYPE aa[][NDIM], FTYPE ia[][NDIM])
 }
 
 
-//**********************************************************************
-//**********************************************************************
-//**********************************************************************
-//inverse 1by1 matrix
-// gives inverse transpose matrix (for 1by1, transpose does nothing)
+///**********************************************************************
+///**********************************************************************
+///**********************************************************************
+///inverse 1by1 matrix
+/// gives inverse transpose matrix (for 1by1, transpose does nothing)
 static int inverse_11matrix(int sj, int ej, FTYPE aa[][NDIM], FTYPE ia[][NDIM])
 {
   // trivial inversion, and can't fail unless divide by zero
@@ -9592,19 +9594,17 @@ static int inverse_11matrix(int sj, int ej, FTYPE aa[][NDIM], FTYPE ia[][NDIM])
 
 
 
-/*********************************************************************************/
-/****** radiative ortonormal ff primitives (E,F^i) <-> primitives in lab frame  *******/
-// Used only for initial conditions
-/*********************************************************************************/
-// whichvel: input vel type for U1-U3
-// whichcoord: input coord type for both U1-U3 and URAD1-URAD3
-// whichdir: LAB2FF or FF2LAB  . In addition, here lab means HARM-lab different by alpha factor from true lab.
-// i,j,k,loc = standard grid location
-// ptrgeom: any input geometry for the lab frame (ptrgeom could be from MCOORD, PRIMECOORDS, etc.) (same for pin's velocity as well as orthonormal basis)
-//          If ptrgeom==NULL, then use i,j,k,loc to get geometry in whichcoord coordinates
-// pradffortho: radiation primitives (PRAD0-3) should be fluid-frame orthonormal basis values (i.e. E,F in fluid frame orthonormal basis)
-// pin: inputs for primitives (i.e. whichvel for U1-U3 and whichcoord for U1-U3,URAD1-URAD3)
-// pout: outputs for primitives ("")
+/// radiative ortonormal ff primitives (E,F^i) <-> primitives in lab frame
+/// Used only for initial conditions
+/// whichvel: input vel type for U1-U3
+/// whichcoord: input coord type for both U1-U3 and URAD1-URAD3
+/// whichdir: LAB2FF or FF2LAB  . In addition, here lab means HARM-lab different by alpha factor from true lab.
+/// i,j,k,loc = standard grid location
+/// ptrgeom: any input geometry for the lab frame (ptrgeom could be from MCOORD, PRIMECOORDS, etc.) (same for pin's velocity as well as orthonormal basis)
+///          If ptrgeom==NULL, then use i,j,k,loc to get geometry in whichcoord coordinates
+/// pradffortho: radiation primitives (PRAD0-3) should be fluid-frame orthonormal basis values (i.e. E,F in fluid frame orthonormal basis)
+/// pin: inputs for primitives (i.e. whichvel for U1-U3 and whichcoord for U1-U3,URAD1-URAD3)
+/// pout: outputs for primitives ("")
 int prad_fforlab(int *whichvel, int *whichcoord, int whichdir, int i, int j, int k, int loc, struct of_geom *ptrgeom, FTYPE *pradffortho, FTYPE *pin, FTYPE *pout)
 {
 
@@ -9619,8 +9619,8 @@ int prad_fforlab(int *whichvel, int *whichcoord, int whichdir, int i, int j, int
 
 }
 
-// like prad_fforlab() but for only whichdir=LAB2FF
-// used for dumps or diags
+/// like prad_fforlab() but for only whichdir=LAB2FF
+/// used for dumps or diags
 int prad_labtoff(int *whichvel, int *whichcoord, int i, int j, int k, int loc, struct of_geom *ptrgeom, FTYPE *pradffortho, FTYPE *pin, FTYPE *pout)
 {
   int jj;
@@ -9697,8 +9697,8 @@ int prad_labtoff(int *whichvel, int *whichcoord, int i, int j, int k, int loc, s
   return(0);
 }
 
-// like prad_fforlab() but for only whichdir=FF2LAB
-// used for IC
+/// like prad_fforlab() but for only whichdir=FF2LAB
+/// used for IC
 int prad_fftolab(int *whichvel, int *whichcoord, int i, int j, int k, int loc, struct of_geom *ptrgeom, FTYPE *pradffortho, FTYPE *pin, FTYPE *pout)
 {
   FTYPE Rijff[NDIM][NDIM],Rijlab[NDIM][NDIM],U[NPR]={0};
@@ -9850,8 +9850,8 @@ int prad_fftolab(int *whichvel, int *whichcoord, int i, int j, int k, int loc, s
 
 
 
-// for BCs, to take E[radiation frame] and u^i as radiation primitives in whichvel/whichcoord
-// obtains WHICHVEL/PRIMECOORD primitives
+/// for BCs, to take E[radiation frame] and u^i as radiation primitives in whichvel/whichcoord
+/// obtains WHICHVEL/PRIMECOORD primitives
 int primefluid_EVrad_to_primeall(int *whichvel, int *whichcoord, struct of_geom *ptrgeom, FTYPE *pin, FTYPE *pout)
 {
   int pliter,pl;
@@ -9893,10 +9893,10 @@ int primefluid_EVrad_to_primeall(int *whichvel, int *whichcoord, struct of_geom 
 }
 
 
-// Input: start with pin [with fluid in whichvel velocity and whichcoordfluid coordinates (PRIMECOORDS or MCOORD) and radiation as E,F in fluid frame orthonormal basis in whichcoordrad coordinates]
-// Output: pout [with all WHICHVEL PRIMECOORDS and radiation using velocity primitive]
-//
-// Useful for BCs when have (say) VEL3,MCOORD for fluid velocity as well as E,F in ff for radiation and need normal WHICHVEL PRIMECOORDS fluid velocity as well as normal velocity primitive for radiation
+/// Input: start with pin [with fluid in whichvel velocity and whichcoordfluid coordinates (PRIMECOORDS or MCOORD) and radiation as E,F in fluid frame orthonormal basis in whichcoordrad coordinates]
+/// Output: pout [with all WHICHVEL PRIMECOORDS and radiation using velocity primitive]
+///
+/// Useful for BCs when have (say) VEL3,MCOORD for fluid velocity as well as E,F in ff for radiation and need normal WHICHVEL PRIMECOORDS fluid velocity as well as normal velocity primitive for radiation
 int whichfluid_ffrad_to_primeall(int *whichvel, int *whichcoordfluid, int *whichcoordrad, struct of_geom *ptrgeomprimecoords, FTYPE *pradffortho, FTYPE *pin, FTYPE *pout)
 {
   int pliter,pl;
@@ -10008,7 +10008,7 @@ int whichfluid_ffrad_to_primeall(int *whichvel, int *whichcoordfluid, int *which
 /*****************************************************************/
 /*****************************************************************/
 /*****************************************************************/
-// T^ij -> T^i_j
+/// T^ij -> T^i_j
 int indices_2221(FTYPE T1[][NDIM],FTYPE T2[][NDIM], struct of_geom *ptrgeom)
 {
   int i,j,k;
@@ -10037,7 +10037,7 @@ int indices_2221(FTYPE T1[][NDIM],FTYPE T2[][NDIM], struct of_geom *ptrgeom)
   return 0;
 }
 
-// T^i_j -> T^{ij}
+/// T^i_j -> T^{ij}
 int indices_2122(FTYPE T1[][NDIM],FTYPE T2[][NDIM], struct of_geom *ptrgeom)
 {
   int i,j,k;
@@ -10069,7 +10069,7 @@ int indices_2122(FTYPE T1[][NDIM],FTYPE T2[][NDIM], struct of_geom *ptrgeom)
 /*****************************************************************/
 /*****************************************************************/
 /*****************************************************************/
-// A^i -> A^_j
+/// A^i -> A^_j
 int indices_21(FTYPE A1[NDIM],FTYPE A2[NDIM],struct of_geom *ptrgeom)
 {
   int i,j,k;
@@ -10095,7 +10095,7 @@ int indices_21(FTYPE A1[NDIM],FTYPE A2[NDIM],struct of_geom *ptrgeom)
 /*****************************************************************/
 /*****************************************************************/
 /*****************************************************************/
-// A_i -> A^_j
+/// A_i -> A^_j
 int indices_12(FTYPE A1[NDIM],FTYPE A2[NDIM],struct of_geom *ptrgeom)
 {
   int i,j,k;
@@ -10195,11 +10195,11 @@ int u2p_rad(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gammama
 
 
 
+////////////////
+///
+/// Like u2p_rad_orig(), but uses Jon's paper draft ZAMO RAD version
+///
 ///////////////
-//
-// Like u2p_rad_orig(), but uses Jon's paper draft ZAMO RAD version
-//
-//////////////
 int u2p_rad_new_pre(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gammamaxrad, FTYPE *uu, FTYPE *pin, struct of_geom *ptrgeom,PFTYPE *lpflag, PFTYPE *lpflagrad)
 {
   static long long int numyvarneg,numyvarbig,numErneg,nummod;
@@ -10392,11 +10392,11 @@ int u2p_rad_new_pre(int showmessages, int allowlocalfailurefixandnoreport, FTYPE
 }
 
 
+////////////////
+///
+/// Like u2p_rad_orig(), but uses Jon's paper draft ZAMO RAD version
+///
 ///////////////
-//
-// Like u2p_rad_orig(), but uses Jon's paper draft ZAMO RAD version
-//
-//////////////
 int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gammamaxrad, int whichcap, FTYPE *uu, FTYPE *pin, struct of_geom *ptrgeom,PFTYPE *lpflag, PFTYPE *lpflagrad)
 {
   static long long int numyvarneg,numyvarbig,numErneg,nummod;
@@ -10682,7 +10682,7 @@ int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gam
 
 }
 
-// compute ZAMO version of radiation quantities as in paper draft
+/// compute ZAMO version of radiation quantities as in paper draft
 static int compute_ZAMORAD(FTYPE *uu, struct of_geom *ptrgeom, FTYPE *Er, FTYPE *Utildesq, FTYPE *Utildecon)
 {
   int jj,kk;
@@ -10720,35 +10720,6 @@ static int compute_ZAMORAD(FTYPE *uu, struct of_geom *ptrgeom, FTYPE *Er, FTYPE 
   return(0);
 }
 
-//**********************************************************************
-//**********************************************************************
-//basic conserved to primitives solver for radiation
-//uses M1 closure in arbitrary frame/metric
-//**********************************************************************
-//**********************************************************************
-//
-///////////////
-//
-// Invert U->direct Primitive for radiation
-// OLD (i.e. no longer true): (must come after HD or MHD or whatever sets velocity of fluid, because radiation needs to have updated velocity so that can define fluid frame)
-// old code inside utoprimgen.c was:
-//    struct of_state qrad;
-// this uses new pr to get only ucon and ucov
-//get_state_uconucovonly(pr, ptrgeom, &qrad); // OLD
-// get new radiation primitives
-//
-// NEW (currently true): fluid frame no longer needed because go directly from lab-frame conserved quantities to lab-frame primitive quantities.
-//
-//
-// uu: Conserved quantities with URAD0,1,2,3 as radiation conserved quantities
-// pp: primitives with PRAD0,1,2,3 as radiation primitive quantities
-// ptrgeom: Standard pointer to geometry
-// lpflag: see gobal.nondepmnemonics.h .  Tells u2p_rad() if can use/trust fluid velocity.
-// lpflagrad: Should be set to indicate success of u2p_rad() inversion
-//
-// NOTES:
-//
-// Using *lpflag<=UTOPRIMNOFAIL to check for fluid inversion success rather than a SOFTer condition (e.g. no fail or IFUTOPRIMFAILSOFT==1) because only want to trust fluid as reduction of M1 in case where velocity is accurate with non-negative densities.
 
 // 0 or 1
 // generally, should have TRYCOLD=1 as most general way to deal with failure
@@ -10758,8 +10729,36 @@ static int compute_ZAMORAD(FTYPE *uu, struct of_geom *ptrgeom, FTYPE *Er, FTYPE 
 FTYPE globaluu[NPR];
 FTYPE globalpin[NPR];
 
-//
-///////////////
+///
+///
+///basic conserved to primitives solver for radiation
+///uses M1 closure in arbitrary frame/metric
+///
+///
+///
+////////////////
+///
+/// Invert U->direct Primitive for radiation
+/// OLD (i.e. no longer true): (must come after HD or MHD or whatever sets velocity of fluid, because radiation needs to have updated velocity so that can define fluid frame)
+/// old code inside utoprimgen.c was:
+///    struct of_state qrad;
+/// this uses new pr to get only ucon and ucov
+///get_state_uconucovonly(pr, ptrgeom, &qrad); // OLD
+/// get new radiation primitives
+///
+/// NEW (currently true): fluid frame no longer needed because go directly from lab-frame conserved quantities to lab-frame primitive quantities.
+///
+///
+/// uu: Conserved quantities with URAD0,1,2,3 as radiation conserved quantities
+/// pp: primitives with PRAD0,1,2,3 as radiation primitive quantities
+/// ptrgeom: Standard pointer to geometry
+/// lpflag: see gobal.nondepmnemonics.h .  Tells u2p_rad() if can use/trust fluid velocity.
+/// lpflagrad: Should be set to indicate success of u2p_rad() inversion
+///
+/// NOTES:
+///
+/// Using *lpflag<=UTOPRIMNOFAIL to check for fluid inversion success rather than a SOFTer condition (e.g. no fail or IFUTOPRIMFAILSOFT==1) because only want to trust fluid as reduction of M1 in case where velocity is accurate with non-negative densities.
+///
 int u2p_rad_orig(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gammamaxrad, FTYPE *uu, FTYPE *pin, struct of_geom *ptrgeom,PFTYPE *lpflag, PFTYPE *lpflagrad)
 {
   int jj,kk;
@@ -10891,7 +10890,7 @@ int u2p_rad_orig(int showmessages, int allowlocalfailurefixandnoreport, FTYPE ga
 
 
 
-// interpolate between optically thick and thin limits when no u2p_rad() inversion solution
+/// interpolate between optically thick and thin limits when no u2p_rad() inversion solution
 static int opacity_interpolated_urfconrel(FTYPE tautotmax, FTYPE *pp,struct of_geom *ptrgeom,FTYPE *Avcon, FTYPE Erf,FTYPE gammarel2,  FTYPE *Erfnew, FTYPE *urfconrel)
 {
   int jj;
@@ -10928,7 +10927,7 @@ static int opacity_interpolated_urfconrel(FTYPE tautotmax, FTYPE *pp,struct of_g
 
 
 
-// get's gamma^2 for lab-frame gamma
+/// get's gamma^2 for lab-frame gamma
 static int get_m1closure_gammarel2_old(int showmessages, struct of_geom *ptrgeom, FTYPE *Avcon, FTYPE *Avcov, FTYPE *gammarel2return, FTYPE *deltareturn, FTYPE *numeratorreturn, FTYPE *divisorreturn)
 {
   FTYPE gamma2,gammarel2,delta,numerator,divisor;
@@ -11045,7 +11044,7 @@ static int get_m1closure_gammarel2_old(int showmessages, struct of_geom *ptrgeom
 
 
 
-// get's gamma^2 for lab-frame gamma  using Rd and gcon
+/// get's gamma^2 for lab-frame gamma  using Rd and gcon
 static int get_m1closure_gammarel2(int showmessages, struct of_geom *ptrgeom, FTYPE *Avcon, FTYPE *Avcov, FTYPE *gammarel2return, FTYPE *deltareturn, FTYPE *numeratorreturn, FTYPE *divisorreturn)
 {
   FTYPE gamma2,gammarel2,delta,numerator,divisor;
@@ -11141,7 +11140,7 @@ static int get_m1closure_gammarel2(int showmessages, struct of_geom *ptrgeom, FT
 
 
 
-// get Erf
+/// get Erf
 static int get_m1closure_Erf(struct of_geom *ptrgeom, FTYPE *Avcon, FTYPE gammarel2, FTYPE *Erfreturn)
 {
   FTYPE alpha=ptrgeom->alphalapse;
@@ -11159,7 +11158,7 @@ static int get_m1closure_Erf(struct of_geom *ptrgeom, FTYPE *Avcon, FTYPE gammar
 
 
 
-// get contravariant relative 4-velocity in lab frame
+/// get contravariant relative 4-velocity in lab frame
 static int get_m1closure_urfconrel_old(int showmessages, int allowlocalfailurefixandnoreport, struct of_geom *ptrgeom, FTYPE *pp, FTYPE *Avcon, FTYPE *Avcov, FTYPE gammarel2, FTYPE delta, FTYPE numerator, FTYPE divisor, FTYPE *Erfreturn, FTYPE *urfconrel, PFTYPE *lpflag, PFTYPE *lpflagrad)
 {
   FTYPE Erf=*Erfreturn; // get initial Erf
@@ -11339,7 +11338,7 @@ static int get_m1closure_urfconrel_old(int showmessages, int allowlocalfailurefi
 
 
 
-// get contravariant relative 4-velocity in lab frame
+/// get contravariant relative 4-velocity in lab frame
 static int get_m1closure_urfconrel(int showmessages, int allowlocalfailurefixandnoreport, struct of_geom *ptrgeom, FTYPE *pp, FTYPE *Avcon, FTYPE *Avcov, FTYPE gammarel2, FTYPE delta, FTYPE numerator, FTYPE divisor, FTYPE *Erfreturn, FTYPE *urfconrel, PFTYPE *lpflag, PFTYPE *lpflagrad)
 {
   FTYPE Erf=*Erfreturn; // get initial Erf
@@ -11577,7 +11576,7 @@ static int get_m1closure_urfconrel(int showmessages, int allowlocalfailurefixand
 
 
 
-// get contravariant relative 4-velocity in lab frame using Olek's koral choices
+/// get contravariant relative 4-velocity in lab frame using Olek's koral choices
 static int get_m1closure_urfconrel_olek(int showmessages, int allowlocalfailurefixandnoreport, struct of_geom *ptrgeom, FTYPE *pp, FTYPE *Avcon, FTYPE *Avcov, FTYPE gammarel2, FTYPE delta, FTYPE *Erfreturn, FTYPE *urfconrel, PFTYPE *lpflag, PFTYPE *lpflagrad)
 {
   FTYPE Erf=*Erfreturn; // get initial Erf
@@ -11722,7 +11721,7 @@ static int get_m1closure_urfconrel_olek(int showmessages, int allowlocalfailuref
 
 
 
-// get's gamma assuming fixed E rather than using original R^{tt} that we assume is flawed near floor regions.  We want to preserve R^{ti} (i.e momentum)
+/// get's gamma assuming fixed E rather than using original R^{tt} that we assume is flawed near floor regions.  We want to preserve R^{ti} (i.e momentum)
 static int get_m1closure_gammarel2_cold_old(int showmessages, struct of_geom *ptrgeom, FTYPE *Avcon, FTYPE *Avcov, FTYPE *gammarel2return, FTYPE *deltareturn, FTYPE *numeratorreturn, FTYPE *divisorreturn, FTYPE *Erfreturn, FTYPE *urfconrel)
 {
   FTYPE gamma2,gammarel2,delta;
@@ -11929,7 +11928,7 @@ static int get_m1closure_gammarel2_cold_old(int showmessages, struct of_geom *pt
 
 
 
-// get's gamma assuming fixed E rather than using original R^t_t that we assume is flawed near floor regions.  We want to preserve R^t_i (i.e conserved momentum)
+/// get's gamma assuming fixed E rather than using original R^t_t that we assume is flawed near floor regions.  We want to preserve R^t_i (i.e conserved momentum)
 static int get_m1closure_gammarel2_cold(int showmessages, struct of_geom *ptrgeom, FTYPE *Avcon, FTYPE *Avcov, FTYPE *gammarel2return, FTYPE *deltareturn, FTYPE *numeratorreturn, FTYPE *divisorreturn, FTYPE *Erfreturn, FTYPE *urfconrel)
 {
   FTYPE gamma2,gammarel2,delta;
@@ -12066,9 +12065,7 @@ static int get_m1closure_gammarel2_cold(int showmessages, struct of_geom *ptrgeo
 
 
 
-//*********************************************************************
-//******* calculates total opacity over dx[] ***************************
-//**********************************************************************
+/// calculates total opacity over dx[] for given chieff
 int calc_tautot_chieff(FTYPE *pp, FTYPE chieff, struct of_geom *ptrgeom, FTYPE *tautot, FTYPE *tautotmax)
 {
   //xx[0] holds time
@@ -12085,6 +12082,7 @@ int calc_tautot_chieff(FTYPE *pp, FTYPE chieff, struct of_geom *ptrgeom, FTYPE *
 
   return 0;
 }
+/// calculates total opacity over dx[]
 int calc_tautot(FTYPE *pp, struct of_geom *ptrgeom, FTYPE *tautot, FTYPE *tautotmax)
 {
   //xx[0] holds time
@@ -12104,9 +12102,7 @@ int calc_tautot(FTYPE *pp, struct of_geom *ptrgeom, FTYPE *tautot, FTYPE *tautot
   return 0;
 }
 
-//**********************************************************************
-//******* calculates abs opacity over dx[] ***************************
-//**********************************************************************
+/// calculates abs opacity over dx[]
 int calc_tauabs(FTYPE *pp, struct of_geom *ptrgeom, FTYPE *tauabs, FTYPE *tauabsmax)
 {
   FTYPE kappa;
@@ -12129,9 +12125,7 @@ int calc_tauabs(FTYPE *pp, struct of_geom *ptrgeom, FTYPE *tauabs, FTYPE *tauabs
 
 
 
-//**********************************************************************
-//suplementary routines for conversions
-//**********************************************************************
+///suplementary routines for conversions
 FTYPE calc_PEQ_ufromTrho(FTYPE T,FTYPE rho)
 {
   // if use local function function instead of below directly,
@@ -12146,21 +12140,21 @@ FTYPE calc_PEQ_Tfromurho(FTYPE u,FTYPE rho)
   return T;
 }
 
-// E=urad=arad T^4 (this is LTE only if put in T was gas T)
+/// E=urad=arad T^4 (this is LTE only if put in T was gas T)
 FTYPE calc_LTE_EfromT(FTYPE T)
 {
   //  return 4.*SIGMA_RAD*T*T*T*T;
   return (ARAD_CODE*T*T*T*T);
 }
 
-// E=urad=arad T^4 and just solve for T  (this is LTE only if assume resulting T is gas T).  If put in fluid-frame E, then correct T for radiation in fluid frame.
+/// E=urad=arad T^4 and just solve for T  (this is LTE only if assume resulting T is gas T).  If put in fluid-frame E, then correct T for radiation in fluid frame.
 FTYPE calc_LTE_TfromE(FTYPE E )
 {
   //  return sqrt(sqrt((E/4./SIGMA_RAD)));
   return (sqrt(sqrt((E/(SMALL+ARAD_CODE)))));
 }
 
-// This will really give back only LTE E
+/// This will really give back only LTE E
 FTYPE calc_LTE_Efromurho(FTYPE u,FTYPE rho)
 {
   FTYPE T=compute_temp_simple(0, 0, 0, CENT, rho, u);
@@ -12169,7 +12163,7 @@ FTYPE calc_LTE_Efromurho(FTYPE u,FTYPE rho)
 
 
 
-// set velocity based upon ncon and gammamax and return in whichvel format for the ptrgeom geometry/coords
+/// set velocity based upon ncon and gammamax and return in whichvel format for the ptrgeom geometry/coords
 int set_ncon_velocity(int whichvel, FTYPE gammamax, FTYPE *ncon, struct of_geom *ptrgeom, FTYPE *uconwhichvel)
 {
   int ii,jj;

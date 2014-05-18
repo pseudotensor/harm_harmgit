@@ -1,4 +1,6 @@
-// some physics
+/*! \file phys.funcdeclare.h
+     \brief Function declarations for global use of things in phys.c
+*/
 
 extern int sourcephysics(FTYPE *pi, FTYPE *ph, FTYPE *pf, int *didreturnpf, int *eomtype, struct of_geom *geom, struct of_state *q, FTYPE *Ugeomfreei, FTYPE *Ugeomfreef, FTYPE* CUf, FTYPE *CUimp, FTYPE dissmeasure, FTYPE *dUother, FTYPE (*dUcomp)[NPR]);
 

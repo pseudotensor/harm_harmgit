@@ -1,3 +1,8 @@
+
+/*! \file phys.tools.funcdeclare.h
+     \brief Function declarations for global use of things in phys.tools.c
+     */
+
 extern void mhd_calc(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, FTYPE *mhd, FTYPE *mhdabs);
 extern void mhd_calc_0(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, FTYPE *mhd, FTYPE *mhdabs);
 
