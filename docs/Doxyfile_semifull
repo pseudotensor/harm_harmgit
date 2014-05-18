@@ -1600,7 +1600,9 @@ x1_of_x0 \
 yl2advect_kazfull \
 ynu2advect_kazfull \
 \
-check_bnd_num report_bound_loop parainitchecks get_num_bnd_zones_used addremovefromanynpr setjetflux set_drsing diag_fixup* diag_* para2 para3 csslope parajon mcsteeppl get_mcsteep_dqs Utoprimgen_compare u2p_rad_new_pre mhd_calc_0 set_rvsr* evolve_withvpot compute_EOS_parms flux_ct* advance_finitevolume bound_flux *toth* isnan mymax mydiv inverse_* newton* *debug* bound_pflag* fix_flux compute_dt_fromsource lngdet* symmetrize* *withsymm* *checkmono* source_explicit *dtsub* set_idxvol mks_* set_conn_cart* set_conn_cyl* *unigravity* *htmetric* *cartmink* *interpX* *ks_bh* *ks_jp1* *ks_tov* *bl_tov* *spcmink* *cylmink* musta* forceflux* check_pr inflow_check* *atmosphere* hllflux* asym_compute_* evolve_vpotgeneral *splitmaem* *roe*  *_old *eomfunc* *blmetric* check_on_inversion  \
+GLOBALMACP0A1 GLOBALMACP1A0 \
+\
+check_bnd_num report_bound_loop parainitchecks get_num_bnd_zones_used addremovefromanynpr setjetflux set_drsing diag_fixup* diag_* para2 para3 csslope parajon mcsteeppl get_mcsteep_dqs Utoprimgen_compare u2p_rad_new_pre mhd_calc_0 set_rvsr* evolve_withvpot compute_EOS_parms flux_ct* advance_finitevolume bound_flux *toth* isnan mymax mydiv inverse_* newton* *debug* bound_pflag* fix_flux compute_dt_fromsource lngdet* symmetrize* *withsymm* *checkmono* source_explicit *dtsub* set_idxvol mks_* set_conn_cart* set_conn_cyl* *unigravity* *htmetric* *cartmink* *interpX* *ks_bh* *ks_jp1* *ks_tov* *bl_tov* *spcmink* *cylmink* musta* forceflux* check_pr inflow_check* *atmosphere* hllflux* asym_compute_* evolve_vpotgeneral *splitmaem* *roe*  *_old *eomfunc* *blmetric* check_on_inversion step_ch_supermpi  \
 \
 *_mpi* *mpi_* *MPI* *_mpi_* *myid* get_bsqflags \
 \
