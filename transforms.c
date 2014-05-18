@@ -1,3 +1,9 @@
+
+/*! \file transforms.c
+    \brief Coordinate and frame transformation functions
+*/
+
+
 #include "decs.h"
 
 // this file includes all coordinate transformations and velocity transformations
@@ -7,7 +13,7 @@
 // NOTE: When dealing with multiple coordinate geom structures, must keep the PRIMECOORD one separate since repoint pointer to storage of PRIMECOORD geom structure, and using that pointer again afterwards for non-PRIMECOORD or other uses would overwrite PRIMECOORD geom structure values used during evolution and elsewhere when get_geometry() called.
 
 
-// assumes all centered quantities (so for FLUXB==FLUXCTSTAG assumes operates on centered field versions)
+/// assumes all centered quantities (so for FLUXB==FLUXCTSTAG assumes operates on centered field versions)
 int bl2met2metp2v(int whichvel, int whichcoord, FTYPE *pr, int ii, int jj, int kk)
 {
   int loc;
@@ -19,8 +25,8 @@ int bl2met2metp2v(int whichvel, int whichcoord, FTYPE *pr, int ii, int jj, int k
 }
 
 
-// converts whichvel/whichcoord velocity to WHICHVEL/(->MCOORD->PRIMECOORDS)
-// converts field too
+/// converts whichvel/whichcoord velocity to WHICHVEL/(->MCOORD->PRIMECOORDS)
+/// converts field too
 int bl2met2metp2v_genloc(int whichvel, int whichcoord, FTYPE *pr, int ii, int jj, int kk, int loc)
 {
   int k = 0;
@@ -92,7 +98,7 @@ int bl2met2metp2v_genloc(int whichvel, int whichcoord, FTYPE *pr, int ii, int jj
 
 
 
-// converts field only and otherwise like normal function
+/// converts field only and otherwise like normal function
 int bl2met2metp2v_genloc_fieldonly(int whichvel, int whichcoord, FTYPE *pr, int ii, int jj, int kk, int loc)
 {
   int k = 0;
@@ -143,7 +149,7 @@ int bl2met2metp2v_genloc_fieldonly(int whichvel, int whichcoord, FTYPE *pr, int 
 
 
 
-// converts u_\mu in whichcoord to PRIMECOORDS
+/// converts u_\mu in whichcoord to PRIMECOORDS
 int ucov_whichcoord2primecoords(int whichcoord, int ii, int jj, int kk, int loc, FTYPE *ucov)
 {
   int k = 0;
@@ -179,7 +185,7 @@ int ucov_whichcoord2primecoords(int whichcoord, int ii, int jj, int kk, int loc,
 
 
 
-// converts whichvel/whichcoord velocity to WHICHVEL/MCOORD
+/// converts whichvel/whichcoord velocity to WHICHVEL/MCOORD
 int bl2met2metp2v_gen(int whichvel, int whichcoord, int newwhichvel, int newwhichcoord, FTYPE *pr, int ii, int jj, int kk)
 {
   int k = 0;
@@ -248,7 +254,7 @@ int bl2met2metp2v_gen(int whichvel, int whichcoord, int newwhichvel, int newwhic
 }
 
 
-// transform MCOORD prime primitive velocity to whichcoord whichvel velocity (also converts field)
+/// transform MCOORD prime primitive velocity to whichcoord whichvel velocity (also converts field)
 int metp2met2bl(int whichvel, int whichcoord, FTYPE *pr, int ii, int jj, int kk)
 {
   int loc;
@@ -259,7 +265,7 @@ int metp2met2bl(int whichvel, int whichcoord, FTYPE *pr, int ii, int jj, int kk)
 
 }
 
-// transform MCOORD prime primitive velocity to whichcoord whichvel velocity (also converts field)
+/// transform MCOORD prime primitive velocity to whichcoord whichvel velocity (also converts field)
 int metp2met2bl_genloc(int whichvel, int whichcoord, FTYPE *pr, int ii, int jj, int kk, int pos)
 {
   int k;
@@ -336,7 +342,7 @@ int metp2met2bl_genloc(int whichvel, int whichcoord, FTYPE *pr, int ii, int jj, 
 
 
 
-// whichcoordin -> whichcoordout
+/// whichcoordin -> whichcoordout
 int coordtrans(int whichcoordin, int whichcoordout, int ii, int jj, int kk, int loc, FTYPE *ucon)
 {
   // GODMARK: need transformation from BL to KS_JP1 for EP3!=0 or THETAROT!=0
@@ -494,10 +500,10 @@ void kstobl(int ii, int jj, int kk, int loc, FTYPE*ucon)
 
 
 
-// transformation of metric written in V[X]-type coordinates with dV differentials to one written in Vmetric old/original coordinates with dVmetric original/old differentials
-//
-// This is *not* used in metric.c to rotate metric
-// This would only be used to transform V[X] metric to old/original Vmetric=rold,hold,phold
+/// transformation of metric written in V[X]-type coordinates with dV differentials to one written in Vmetric old/original coordinates with dVmetric original/old differentials
+///
+/// This is *not* used in metric.c to rotate metric
+/// This would only be used to transform V[X] metric to old/original Vmetric=rold,hold,phold
 void transV2Vmetric(int whichcoord, int ii, int jj, int kk, int loc, FTYPE *X, FTYPE *V, FTYPE *Xmetric, FTYPE *Vmetric, FTYPE*gcov, FTYPE *gcovpert)
 {
 
@@ -557,9 +563,9 @@ void transV2Vmetric(int whichcoord, int ii, int jj, int kk, int loc, FTYPE *X, F
 
 
 
-// transformation of metric written in Vmetric-type coordinates with dVmetric differentials to one written in V[X] coordinates with dVdifferentials
-//
-// This is what's used to take original metric from set_gcov and get the one with new differentials based upon V[X]
+/// transformation of metric written in Vmetric-type coordinates with dVmetric differentials to one written in V[X] coordinates with dVdifferentials
+///
+/// This is what's used to take original metric from set_gcov and get the one with new differentials based upon V[X]
 void transVmetric2V(int whichcoord, int ii, int jj, int kk, int loc, FTYPE *X, FTYPE *V, FTYPE *Xmetric, FTYPE *Vmetric, FTYPE*gcov, FTYPE *gcovpert)
 {
 
@@ -626,8 +632,10 @@ void transVmetric2V(int whichcoord, int ii, int jj, int kk, int loc, FTYPE *X, F
 
 // all below stuff independent of metrics
 
-// convert primitive velocity to coordinate 4-velocity
-// KORALNOTEMARK: Use pr2ucon with shifted &pr[URAD1-U1] for radiation primitives
+
+
+/// convert primitive velocity to coordinate 4-velocity
+/// KORALNOTEMARK: Use pr2ucon with shifted &pr[URAD1-U1] for radiation primitives
 int pr2ucon(int whichvel, FTYPE *pr, struct of_geom *geom, FTYPE*ucon)
 {
   FTYPE others[NUMOTHERSTATERESULTS];
@@ -668,7 +676,7 @@ void mettometp(int ii, int jj, int kk, FTYPE*ucon)
 
 }
 
-// MCOORD -> prime MCOORD
+/// MCOORD -> prime MCOORD
 void mettometp_genloc(int ii, int jj, int kk, int loc, FTYPE*ucon)
 {
   int j,k;
@@ -702,7 +710,7 @@ void mettometp_genloc(int ii, int jj, int kk, int loc, FTYPE*ucon)
   /* done! */
 }
 
-// MCOORD -> prime MCOORD for u^\mu
+/// MCOORD -> prime MCOORD for u^\mu
 void mettometp_simple(FTYPE (*idxdxp)[NDIM], FTYPE*ucon)
 {
   int j,k;
@@ -716,7 +724,7 @@ void mettometp_simple(FTYPE (*idxdxp)[NDIM], FTYPE*ucon)
   DLOOPA(j) ucon[j] = tmp[j];
 }
 
-// prime MCOORD -> MCOORD for u_\mu
+/// prime MCOORD -> MCOORD for u_\mu
 void metptomet_ucov_simple(FTYPE (*idxdxp)[NDIM], FTYPE*ucov)
 {
   int j,k;
@@ -739,7 +747,7 @@ void metptomet(int ii, int jj, int kk, FTYPE*ucon)
 
 }
 
-// prime MCOORD -> MCOORD for u^\mu
+/// prime MCOORD -> MCOORD for u^\mu
 void metptomet_genloc(int ii, int jj, int kk, int loc, FTYPE*ucon)
 {
   int j,k;
@@ -757,7 +765,7 @@ void metptomet_genloc(int ii, int jj, int kk, int loc, FTYPE*ucon)
   /* done! */
 }
 
-// prime MCOORD -> MCOORD for u^\mu
+/// prime MCOORD -> MCOORD for u^\mu
 void metptomet_simple(FTYPE (*dxdxp)[NDIM], FTYPE*ucon)
 {
   int j,k;
@@ -772,7 +780,7 @@ void metptomet_simple(FTYPE (*dxdxp)[NDIM], FTYPE*ucon)
   /* done! */
 }
 
-// MCOORD -> prime MCOORD for u_\mu
+/// MCOORD -> prime MCOORD for u_\mu
 void mettometp_ucov_simple(FTYPE (*dxdxp)[NDIM], FTYPE*ucov)
 {
   int j,k;
@@ -786,7 +794,7 @@ void mettometp_ucov_simple(FTYPE (*dxdxp)[NDIM], FTYPE*ucov)
   /* done! */
 }
 
-// prime MCOORD -> MCOORD for T^\mu_\nu
+/// prime MCOORD -> MCOORD for T^\mu_\nu
 void metptomet_Tud(int ii, int jj, int kk, FTYPE (*Tud)[NDIM])
 {
   int j,k;
@@ -808,9 +816,9 @@ void metptomet_Tud(int ii, int jj, int kk, FTYPE (*Tud)[NDIM])
   /* done! */
 }
 
-// prime MCOORD -> MCOORD
-// feed in coordinate dependent quantities instead of computing them
-// useful when wanting to speep up calculation when calling function needs dxdxp and/or idxdxp
+/// prime MCOORD -> MCOORD
+/// feed in coordinate dependent quantities instead of computing them
+/// useful when wanting to speep up calculation when calling function needs dxdxp and/or idxdxp
 void metptomet_simple_Tud(FTYPE (*dxdxp)[NDIM], FTYPE (*idxdxp)[NDIM], FTYPE (*Tud)[NDIM])
 {
   int j,k;
@@ -825,7 +833,7 @@ void metptomet_simple_Tud(FTYPE (*dxdxp)[NDIM], FTYPE (*idxdxp)[NDIM], FTYPE (*T
   /* done! */
 }
 
-// convert 4-velocity to whichvel velocity
+/// convert 4-velocity to whichvel velocity
 void ucon2pr(int whichvel, FTYPE *ucon, struct of_geom *geom, FTYPE *pr)
 {
   FTYPE alphasq,gammaoalpha,beta[NDIM] ;
@@ -846,7 +854,7 @@ void ucon2pr(int whichvel, FTYPE *ucon, struct of_geom *geom, FTYPE *pr)
   }
 }
 
-// convert 3-velocity to whichvel velocity
+/// convert 3-velocity to whichvel velocity
 int vcon2pr(int whichvel, FTYPE *vcon, struct of_geom *geom, FTYPE *pr)
 {
   FTYPE alphasq,gammaoalpha,beta[NDIM] ;
@@ -901,7 +909,7 @@ int vcon2pr(int whichvel, FTYPE *vcon, struct of_geom *geom, FTYPE *pr)
 #define DENSITYTYPE LOGDENSITY
 
 
-// make sure both of these are setup so density could be same memory location as pr
+/// make sure both of these are setup so density could be same memory location as pr
 void density2pr(FTYPE *density, FTYPE *pr)
 {
 
@@ -915,7 +923,7 @@ void density2pr(FTYPE *density, FTYPE *pr)
 
 }
 
-// note that we have to have inverses for this to work in general, numerical inverses probably bad idea?
+/// note that we have to have inverses for this to work in general, numerical inverses probably bad idea?
 void pr2density(FTYPE *pr, FTYPE *density)
 {
 

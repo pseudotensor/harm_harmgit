@@ -1,3 +1,8 @@
+
+/*! \file transforms.funcdeclare.h
+    \brief function declrations for global use of functions in transforms.c
+*/
+
 // transform stuff
 extern int bl2met2metp2v(int whichvel, int whichcoord, FTYPE *pr, int ii, int jj, int kk);
 extern int bl2met2metp2v_genloc(int whichvel, int whichcoord, FTYPE *pr, int ii, int jj, int kk, int loc);

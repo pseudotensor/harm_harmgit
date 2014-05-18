@@ -1,4 +1,8 @@
 
+/*! \file utoprimgen.funcdeclare.h
+    \brief function declrations for global use of functions in utoprimgen.c
+*/
+
 extern int Utoprimgen(int showmessages, int checkoninversiongas, int checkoninversionrad, int allowlocalfailurefixandnoreport, int finalstep, int *eomtype, int whichcap, int whichmethod, int modprim, int evolvetype, int inputtype, FTYPE *U, struct of_state *qptr, struct of_geom *ptrgeom, FTYPE dissmeasure, FTYPE *pi, FTYPE *pr, struct of_newtonstats *newtonstats);
 extern int Utoprimloop(FTYPE (*unew)[NSTORE2][NSTORE3][NPR],FTYPE (*pf)[NSTORE2][NSTORE3][NPR], struct of_newtonstats *newtonstats);
 extern int primtoUloop(FTYPE (*pi)[NSTORE2][NSTORE3][NPR],FTYPE (*unew)[NSTORE2][NSTORE3][NPR]);

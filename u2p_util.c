@@ -1,4 +1,10 @@
 
+/*! \file u2p_util.c
+    \brief U->P inversion functions used by all utoprim files
+    
+*/
+
+
 //#include "u2p_defs.h"
 
 
@@ -20,10 +26,10 @@
  * 
  */
 
-/* primitive variables */
-/* covariant (index dn) form of metric */
-/* contravariant (index up) form of metric */
-/* matrix of derivatives */
+///  primitive variables 
+///  covariant (index dn) form of metric 
+///  contravariant (index up) form of metric 
+///  matrix of derivatives 
 
 
 #include "global.grmhd.h"
@@ -38,13 +44,10 @@ static void ncov_calc(FTYPE *gcon,FTYPE ncov[]) ;
 static void bcon_calc_g(FTYPE prim[],FTYPE ucon[],FTYPE ucov[],FTYPE ncov[],FTYPE bcon[]); 
 
 
-/***********************************************************
- Converts primitive variables to conservative variables 
- as they are defined with respect to the new primitive 
- variable solver and not how they are used in the rest of HARM.
-************************************************************/
-
-// shouldn't use this function since not optimized to avoid catastrophic cancellations
+/// Converts primitive variables to conservative variables 
+/// as they are defined with respect to the new primitive 
+/// variable solver and not how they are used in the rest of HARM.
+/// shouldn't use this function since not optimized to avoid catastrophic cancellations
 static void primtoU_g(struct of_geom *ptrgeom, FTYPE *prim,FTYPE gcov[SYMMATRIXNDIM],FTYPE gcon[SYMMATRIXNDIM],FTYPE *U)
 {
   int i,j ;
@@ -52,7 +55,7 @@ static void primtoU_g(struct of_geom *ptrgeom, FTYPE *prim,FTYPE gcov[SYMMATRIXN
   FTYPE ucon[NDIM],ucov[NDIM],bcon[NDIM],bcov[NDIM],ncov[NDIM] ;
   FTYPE gamma,n_dot_b,bsq,u,p,w ;
 
-  /* preliminaries */
+  // preliminaries
   ucon_calc_g(prim,gcov,gcon,ucon) ;
   lower_g(ucon,gcov,ucov) ;
   ncov_calc(gcon,ncov) ;
@@ -86,8 +89,7 @@ static void primtoU_g(struct of_geom *ptrgeom, FTYPE *prim,FTYPE gcov[SYMMATRIXN
   return ;
 }
 
-/* find the contravariant fluid four-velocity from primitive 
-   variables plus the metric */
+//// find the contravariant fluid four-velocity from primitive variables plus the metric
 static void ucon_calc_g(FTYPE prim[8],FTYPE gcov[SYMMATRIXNDIM],FTYPE gcon[SYMMATRIXNDIM],FTYPE ucon[NDIM])
 {
   FTYPE u_tilde_con[NDIM] ;
@@ -115,7 +117,7 @@ static void ucon_calc_g(FTYPE prim[8],FTYPE gcov[SYMMATRIXNDIM],FTYPE gcon[SYMMA
   return ;
 }
 
-/* raise covariant vector vcov using gcon, place result in vcon */
+///  raise covariant vector vcov using gcon, place result in vcon 
 static void raise_g(FTYPE vcov[NDIM], FTYPE gcon[SYMMATRIXNDIM], FTYPE vcon[NDIM])
 {
   int i,j;
@@ -130,7 +132,7 @@ static void raise_g(FTYPE vcov[NDIM], FTYPE gcon[SYMMATRIXNDIM], FTYPE vcon[NDIM
 
   return ;
 }
-/* lower contravariant vector vcon using gcov, place result in vcov */
+///  lower contravariant vector vcon using gcov, place result in vcov 
 static void lower_g(FTYPE vcon[NDIM], FTYPE gcov[SYMMATRIXNDIM], FTYPE vcov[NDIM])
 {
   int i,j;
@@ -144,7 +146,7 @@ static void lower_g(FTYPE vcon[NDIM], FTYPE gcov[SYMMATRIXNDIM], FTYPE vcov[NDIM
   return ;
 }
 
-/* set covariant normal observer four-velocity */
+///  set covariant normal observer four-velocity 
 static void ncov_calc(FTYPE gcon[SYMMATRIXNDIM],FTYPE ncov[NDIM])
 {
   FTYPE lapse ;
@@ -161,7 +163,7 @@ static void ncov_calc(FTYPE gcon[SYMMATRIXNDIM],FTYPE ncov[NDIM])
 
 
 
-/* set covariant normal observer four-velocity */
+///  set covariant normal observer four-velocity 
 static void ncov_calc_fromlapse(FTYPE lapse,FTYPE ncov[NDIM]) 
 {
 
@@ -173,7 +175,7 @@ static void ncov_calc_fromlapse(FTYPE lapse,FTYPE ncov[NDIM])
   return ;
 }
 
-/* calculate contravariant magnetic field four-vector b */
+///  calculate contravariant magnetic field four-vector b 
 static void bcon_calc_g(FTYPE prim[8],FTYPE ucon[NDIM],FTYPE ucov[NDIM],FTYPE ncov[NDIM],FTYPE bcon[NDIM]) 
 {
   FTYPE Bcon[NDIM] ;

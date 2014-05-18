@@ -1,35 +1,35 @@
 
+/*! \file vchar.c
+     \brief Compute characteristics
+     calculate components of magnetosonic velocity 
+     corresponding to primitive variables p 
+     Based upon cfg 7-10-01
+*/
+
 #include "decs.h"
 
-/* 
- * calculate components of magnetosonic velocity 
- * corresponding to primitive variables p 
- *
- * cfg 7-10-01
- * 
- */
 
 
 #define BOUNDARYSMOOTHER 0
-// whether to use larger vmin/vmax near boundaries to help with large changes in primitive quantities that Riemann solver cannot handle
-// this also can control courant condition to be consistent, unless set IGNORECOURANT 1
+/// whether to use larger vmin/vmax near boundaries to help with large changes in primitive quantities that Riemann solver cannot handle
+/// this also can control courant condition to be consistent, unless set IGNORECOURANT 1
 #define SMOOTHFACTOR 2.0
-// factor by which to make vmin/vmax larger.
+/// factor by which to make vmin/vmax larger.
 #define IGNORECOURANT 0
-// whether to ignore vchar result in courant condition.  Otherwise dt may be controlled by boundary smoother.  Ignoring may lead to numerical instabilities.
-// this leads to numerical instabilities!
+/// whether to ignore vchar result in courant condition.  Otherwise dt may be controlled by boundary smoother.  Ignoring may lead to numerical instabilities.
+/// this leads to numerical instabilities!
 
-// whether to check if phase velocity is >c and limit it to c.
-// not quite right.  really phase or group velocity can have independent other components.  Other than k direction, can move with different velocity, so not a good comparison
+/// whether to check if phase velocity is >c and limit it to c.
+/// not quite right.  really phase or group velocity can have independent other components.  Other than k direction, can move with different velocity, so not a good comparison
 #define CHECKSOL 0
 
-// whether to use group velocity rather than phase velocity
-// mutually exclusive with CHECKSOL
-// actually doesn't work when va2=1.  ctsq->\infty, should avoid somehow
+/// whether to use group velocity rather than phase velocity
+/// mutually exclusive with CHECKSOL
+/// actually doesn't work when va2=1.  ctsq->\infty, should avoid somehow
 #define USEGROUPVEL 0
 
 //#define GTOL 1.e-8
-// Charles believed that near polar axis one should set vmax=vmin=0, but not right since makes flux completely non-diffusive (leads to numerical instabilities)
+/// Charles believed that near polar axis one should set vmax=vmin=0, but not right since makes flux completely non-diffusive (leads to numerical instabilities)
 
 int vchar(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *vmax, FTYPE *vmin,int *ignorecourant)
 {
@@ -219,7 +219,7 @@ int vchar(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *v
 }
 
 
-// method didn't work
+/// method didn't work
 int boundary_smoother(struct of_geom *geom, FTYPE *vmax, FTYPE *vmin, int *ignorecourant)
 {
 
@@ -458,8 +458,8 @@ int simplefast(int whichcall, int dir,struct of_geom *geom, struct of_state *q, 
 }
 
 
-// See grmhd-sonicpoint.nb and grmhd-quartic?.nb
-// related: see grmhdwaves2.nb
+/// See grmhd-sonicpoint.nb and grmhd-quartic?.nb
+/// related: see grmhdwaves2.nb
 int realfast(int dir, struct of_geom *geom,struct of_state *q, FTYPE EF,FTYPE cs2,FTYPE cms2,FTYPE va2,FTYPE *ucon,FTYPE *bcon,FTYPE *gcon,FTYPE *vmin,FTYPE *vmax)
 {
   FTYPE va02,vax2,va0x2,uux;
@@ -515,7 +515,7 @@ int realfast(int dir, struct of_geom *geom,struct of_state *q, FTYPE EF,FTYPE cs
 
 }
 
-// one should reorder phase speeds for sign1!=sign2 since results in ambiguous order.  Fast terms are unambiguously ordered always
+/// one should reorder phase speeds for sign1!=sign2 since results in ambiguous order.  Fast terms are unambiguously ordered always
 FTYPE quarticsol(FTYPE sign1, FTYPE sign2,FTYPE AAA,FTYPE BBB,FTYPE CCC,FTYPE DDD,FTYPE EEE)
 {
   FTYPE unit1,unit2,unit3,newradius,newphi,unit4;
@@ -594,16 +594,16 @@ FTYPE quarticsol(FTYPE sign1, FTYPE sign2,FTYPE AAA,FTYPE BBB,FTYPE CCC,FTYPE DD
   return(part1 +sign1* 0.5*part2 +sign2* 0.5*part3);
 }
 
-// group velocities along a particular direction
-
-// assumes vmax and vmin are filled with left and right going phase velocities
-// w^2 = ct^2 k^2 (little k)
-
-// e.g. for simplified dispersion relation:
-// ct^2 = (va^2 + cs^2(1-va^2) ) / ( 1 - (va^2+cs^2(1-va^2)))
-
-// the velocity of the wave packet can have completely different velocity components than fluid velocity -- even for k along one direction.
-
+/// group velocities along a particular direction
+///
+/// assumes vmax and vmin are filled with left and right going phase velocities
+/// w^2 = ct^2 k^2 (little k)
+///
+/// e.g. for simplified dispersion relation:
+/// ct^2 = (va^2 + cs^2(1-va^2) ) / ( 1 - (va^2+cs^2(1-va^2)))
+///
+/// the velocity of the wave packet can have completely different velocity components than fluid velocity -- even for k along one direction.
+///
 void groupvel(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *vmax, FTYPE *vmin, FTYPE ctsq, FTYPE *vgmax, FTYPE *vgmin)
 {
   FTYPE uu[NDIM],vg[NDIM];

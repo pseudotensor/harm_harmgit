@@ -1,9 +1,15 @@
+
+/*! \file tetlapack_func_doubleonly.c
+    \brief External related Tetrad calculations (double only)
+*/
+
+
 #include "decs.h"
 
-// Charles had wrong function call!
-//extern int dsyev_(char *jobz, char *uplo, int *n, double *a, int *lda,
-//    double *w, double *work, int *lwork, int *iwork,
-//    int *liwork, int *info);
+/// Charles had wrong function call!
+///extern int dsyev_(char *jobz, char *uplo, int *n, double *a, int *lda,
+///    double *w, double *work, int *lwork, int *iwork,
+///    int *liwork, int *info);
 extern int dsyev_(char *jobz, char *uplo, int *n, double *a, int *lda,
                   double *w, double *work, int *lwork, int *info);
 extern int dsyevr_(char *jobz, char *range, char *uplo, int *n, double *a, int *lda,
@@ -17,8 +23,8 @@ extern int dsyevr_(char *jobz, char *range, char *uplo, int *n, double *a, int *
 
 #define LWORKSIZE MAX(NDIM*NDIM*NDIM,26*NDIM)
 #define LIWORKSIZE MAX(NDIM*NDIM*NDIM,10*NDIM)
-// native doubles for inside variables
-// find tetrad
+/// native doubles for inside variables
+/// find tetrad
 int tetlapack_func(double (*metr)[NDIM], double (*tetr)[NDIM], double eigenvalues[])
 {
   char jobz,uplo ;

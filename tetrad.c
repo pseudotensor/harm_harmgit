@@ -1,4 +1,8 @@
 
+/*! \file tetrad.c
+    \brief Tetrad related calculations
+*/
+
 #include "decs.h"
 
 int globalii,globaljj,globalkk;
@@ -9,9 +13,8 @@ static int compute_tetrcon_frommetric(FTYPE (*generalmatrix)[NDIM], FTYPE (*tetr
 
 static int tetlapack_func_prec(FTYPE (*metr)[NDIM], FTYPE (*tetr)[NDIM], FTYPE eigenvalues[]);
 
-/* find suitable orthonormal tetrad */
-
-// wrapper for tetr_func().  This converts metric using dxdxp so likely simpler form easier to match mathematica version with
+/// find suitable orthonormal tetrad
+/// wrapper for tetr_func().  This converts metric using dxdxp so likely simpler form easier to match mathematica version with
 int tetr_func_frommetric(int primcoord, FTYPE (*dxdxp)[NDIM], FTYPE *gcov, FTYPE (*tetrcov)[NDIM],FTYPE (*tetrcon)[NDIM], FTYPE eigenvalues[])
 {
   int jj,kk;
@@ -49,6 +52,7 @@ int tetr_func_frommetric(int primcoord, FTYPE (*dxdxp)[NDIM], FTYPE *gcov, FTYPE
 
 }
 
+/// pre-setup tetrad use of lapack function
 static int tetlapack_func_prec(FTYPE (*metr)[NDIM], FTYPE (*tetr)[NDIM], FTYPE eigenvalues[])
 {
   int info;
@@ -71,8 +75,8 @@ static int tetlapack_func_prec(FTYPE (*metr)[NDIM], FTYPE (*tetr)[NDIM], FTYPE e
 }
 
 
-// input gcov and get out orthonormal tetrad in covariant and contravariant forms
-// if metrictype, assume gcov is inputted as simplest as user could (e.g. using dxdxp's)
+/// input gcov and get out orthonormal tetrad in covariant and contravariant forms
+/// if metrictype, assume gcov is inputted as simplest as user could (e.g. using dxdxp's)
 int tetr_func(int inputtype, FTYPE *gcov, FTYPE (*tetr_cov)[NDIM],FTYPE (*tetr_con)[NDIM], FTYPE eigenvalues[]) 
 {
   FTYPE generalmatrixlower[NDIM][NDIM];
@@ -134,12 +138,12 @@ int tetr_func(int inputtype, FTYPE *gcov, FTYPE (*tetr_cov)[NDIM],FTYPE (*tetr_c
 
 
 
-// GODMARK: only applies for metric as input
-// whether to debug lapack by comparing with simpler Mathematica version that doesn't work in all generality but seems to be correct
-// GODMARK: for now, always in debug mode because use bootstrap technique to figure out how to reorder lapack result
-// 0 : don't use yet since raw lapack isn't ordered correctly
-// 1 : fake debug, bootstrap method
-// 2 : true debug method
+/// GODMARK: only applies for metric as input
+/// whether to debug lapack by comparing with simpler Mathematica version that doesn't work in all generality but seems to be correct
+/// GODMARK: for now, always in debug mode because use bootstrap technique to figure out how to reorder lapack result
+/// 0 : don't use yet since raw lapack isn't ordered correctly
+/// 1 : fake debug, bootstrap method
+/// 2 : true debug method
 #define DEBUGLAPACK 1
 
 static int compute_tetrcon_frommetric(FTYPE (*generalmatrix)[NDIM], FTYPE (*tetrcon)[NDIM], FTYPE eigenvalues[])
@@ -299,13 +303,13 @@ static int compute_tetrcon_frommetric(FTYPE (*generalmatrix)[NDIM], FTYPE (*tetr
 
 }
 
-// compute orthonormal tetrad \Lambda_\mu[ortho]^\nu[lab] for converting u_\nu[lab] or u^\nu[ortho]
-// Notes:
-// For full rotating BH with g_{r\theta}=0 (i.e. use dxdxp first), result can be found analytically:
-// See: simple_eigensystem_nonrotbh.nb
-// http://en.wikipedia.org/wiki/Cubic_equation
-// However, Orthogonalization is quite involved, so probably simpler to do full numerical solution
-// Issue always: order of system being out-of-order compared to input order
+/// compute orthonormal tetrad \Lambda_\mu[ortho]^\nu[lab] for converting u_\nu[lab] or u^\nu[ortho]
+/// Notes:
+/// For full rotating BH with g_{r\theta}=0 (i.e. use dxdxp first), result can be found analytically:
+/// See: simple_eigensystem_nonrotbh.nb
+/// http://en.wikipedia.org/wiki/Cubic_equation
+/// However, Orthogonalization is quite involved, so probably simpler to do full numerical solution
+/// Issue always: order of system being out-of-order compared to input order
 static int compute_tetrcon_frommetric_mathematica(FTYPE (*generalmatrix)[NDIM], FTYPE (*tetrcon)[NDIM], FTYPE eigenvalues[])
 {
   FTYPE gtt,grr,grt,ghh,gpp;
@@ -370,23 +374,17 @@ static int compute_tetrcon_frommetric_mathematica(FTYPE (*generalmatrix)[NDIM], 
 
 
 
-////////////
-//
-// Notes:
-//
-// dxdxp = dV^i/dX^k = \Lambda^i_k
-// idxdxp = inverse and tranpose of dxdxp = dX^k/dV^i = (iLambda)^k_i
-// Tetrcon_k^j [first index ortho, second index lab]
-// Tetrcov^k_j [first index ortho, second index lab (i.e. not transposed!)]
-
-
-//**********************************************************************
-//**********************************************************************
-//**********************************************************************
-//calculates base vectors and 1-forms of ORTHO to transform lab <--> ORTHO
-// primcoord: 0 = false   1 = true, then probably want to remove known dxdxp that twisted-up the coordinates
-// tmuup : LAB2ORTHO
-// tmudn : ORTHO2LAB
+/// Notes:
+///
+/// dxdxp = dV^i/dX^k = \Lambda^i_k
+/// idxdxp = inverse and tranpose of dxdxp = dX^k/dV^i = (iLambda)^k_i
+/// Tetrcon_k^j [first index ortho, second index lab]
+/// Tetrcov^k_j [first index ortho, second index lab (i.e. not transposed!)]
+///
+///calculates base vectors and 1-forms of ORTHO to transform lab <--> ORTHO
+/// primcoord: 0 = false   1 = true, then probably want to remove known dxdxp that twisted-up the coordinates
+/// tmuup : LAB2ORTHO
+/// tmudn : ORTHO2LAB
 int calc_ORTHOes(int primcoord, struct of_geom *ptrgeom, FTYPE tmuup[][NDIM], FTYPE tmudn[][NDIM])
 {
   FTYPE dxdxp[NDIM][NDIM];
@@ -457,8 +455,8 @@ int calc_ORTHOes(int primcoord, struct of_geom *ptrgeom, FTYPE tmuup[][NDIM], FT
 }
 
 
-// get stored or compute tetrcov and tetrcon
-// primcoord: whether PRIMCOORDS type, so will use dxdxp to simplify matching to get tetrad
+/// get stored or compute tetrcov and tetrcon
+/// primcoord: whether PRIMCOORDS type, so will use dxdxp to simplify matching to get tetrad
 int get_tetrcovcon(int primcoord, struct of_geom *ptrgeom, FTYPE (**tetrcov)[NDIM],FTYPE (**tetrcon)[NDIM])
 {
 
@@ -497,14 +495,14 @@ int get_tetrcovcon(int primcoord, struct of_geom *ptrgeom, FTYPE (**tetrcov)[NDI
 
 
 
-//**********************************************************************
-// Bardeen tensor transforming between ZAMO and LAB frames
-//**********************************************************************
-//**********************************************************************
-//calculates base vectors and 1-forms of ZAMO to transform lab <--> ZAMO
-// Here, ZAMO is ZAMO frame, and this function only works for BL coords
-// Only applies for Boyer-Lindquist coordinates
-// KORALTODO: Not used.  Remove? 
+///**********************************************************************
+/// Bardeen tensor transforming between ZAMO and LAB frames
+///**********************************************************************
+///**********************************************************************
+///calculates base vectors and 1-forms of ZAMO to transform lab <--> ZAMO
+/// Here, ZAMO is ZAMO frame, and this function only works for BL coords
+/// Only applies for Boyer-Lindquist coordinates
+/// KORALTODO: Not used.  Remove? 
 int calc_ZAMOes_old(struct of_geom *ptrgeom, FTYPE emuup[][NDIM], FTYPE emudn[][NDIM])
 {
   FTYPE e2nu,e2psi,e2mu1,e2mu2,omega;
@@ -553,15 +551,15 @@ int calc_ZAMOes_old(struct of_geom *ptrgeom, FTYPE emuup[][NDIM], FTYPE emudn[][
 }
 
 
-// Compute general Lorentz boost for an arbitrary metric and arbitrary 4-velocities
-// see docs/lorentz.ps.gz by Avery Broderick
-//    Lambda^\mu[w]_\nu[u] u^\nu = w^\mu  [Corresponding to boost *into* fluid frame]
-//    Lambda^\mu[w]_\nu[u] w_\mu = u_\nu  [Corresponding to boost *from* fluid frame]
-// (iLambda)^\mu[u]_\nu[w] u_\mu = w_\nu  [Corresponding to boost *into* fluid frame]
-// (iLambda)^\mu[u]_\nu[w] w^\nu = u^\mu  [Corresponding to boost *from* fluid frame]
-// So if going from w->u (i.e. FF2LAB) frame for  vecff^\mu  , then apply (iLambda)^\mu_\nu vecff^nu  = veclab^\mu
-// So if going from u->w (i.e. LAB2FF) frame for veclab^\mu  , then apply   Lambda ^\mu_\nu veclab^nu = vecff^\mu
-// All this assumes iLambda was formed from matrix_inverse() that gives inverse transpose
+/// Compute general Lorentz boost for an arbitrary metric and arbitrary 4-velocities
+/// see docs/lorentz.ps.gz by Avery Broderick
+///    Lambda^\mu[w]_\nu[u] u^\nu = w^\mu  [Corresponding to boost *into* fluid frame]
+///    Lambda^\mu[w]_\nu[u] w_\mu = u_\nu  [Corresponding to boost *from* fluid frame]
+/// (iLambda)^\mu[u]_\nu[w] u_\mu = w_\nu  [Corresponding to boost *into* fluid frame]
+/// (iLambda)^\mu[u]_\nu[w] w^\nu = u^\mu  [Corresponding to boost *from* fluid frame]
+/// So if going from w->u (i.e. FF2LAB) frame for  vecff^\mu  , then apply (iLambda)^\mu_\nu vecff^nu  = veclab^\mu
+/// So if going from u->w (i.e. LAB2FF) frame for veclab^\mu  , then apply   Lambda ^\mu_\nu veclab^nu = vecff^\mu
+/// All this assumes iLambda was formed from matrix_inverse() that gives inverse transpose
 int calc_generalized_boost_uu(struct of_geom *ptrgeom, FTYPE *wcon, FTYPE *ucon, FTYPE (*lambda)[NDIM])
 {
   int mu,nu;
@@ -589,8 +587,8 @@ int calc_generalized_boost_uu(struct of_geom *ptrgeom, FTYPE *wcon, FTYPE *ucon,
 }
 
 
-// calculate boost assuming in orthonormal basis where g_{\mu\nu}=\eta_{\mu\nu} = diag(-1,0,0,0)
-// NOTEMARK: Orthonormal does *not* mean in Cartesian coordinates!  If metric was originally in SPC Mink or SPC KS, then final metric is diag(-1,0,0,0) but is still SPC.  Have to do SPC->Cart conversion (see, e.g., jon_interp stuff) to get to Cartesian.
+/// calculate boost assuming in orthonormal basis where g_{\mu\nu}=\eta_{\mu\nu} = diag(-1,0,0,0)
+/// NOTEMARK: Orthonormal does *not* mean in Cartesian coordinates!  If metric was originally in SPC Mink or SPC KS, then final metric is diag(-1,0,0,0) but is still SPC.  Have to do SPC->Cart conversion (see, e.g., jon_interp stuff) to get to Cartesian.
 int calc_ortho_boost_uu(FTYPE *wcon, FTYPE *ucon, FTYPE (*lambda)[NDIM])
 {
   int mu,nu;
@@ -621,8 +619,8 @@ int calc_ortho_boost_uu(FTYPE *wcon, FTYPE *ucon, FTYPE (*lambda)[NDIM])
 
 
 
-// use lab frame contravariant 4-velocity (uconlab) and get transformation matrix for going to orthonormal basis (same base coordinate system: e.g. SPC, does not convert to Cartesian) or back
-// NOTEMARK: If set uconlab=uconZAMO, then no boost and just does Xlab2Vortho
+/// use lab frame contravariant 4-velocity (uconlab) and get transformation matrix for going to orthonormal basis (same base coordinate system: e.g. SPC, does not convert to Cartesian) or back
+/// NOTEMARK: If set uconlab=uconZAMO, then no boost and just does Xlab2Vortho
 int transboost_lab2fluid(int lab2orthofluid, int primcoord, struct of_geom *ptrgeom, FTYPE *uconlab, FTYPE (*transboostup)[NDIM], FTYPE (*transboostlo)[NDIM])
 {
   int mu,nu;
@@ -747,20 +745,20 @@ int transboost_lab2fluid(int lab2orthofluid, int primcoord, struct of_geom *ptrg
 
 
 
-// Wrapper for vector_lab2orthofluidorback()
-//
-// Correct for HARM tensor quantities that have implicit component set to (e.g.) t, which makes it ambiguous what frame that was measured in.
-//
-// whichvector:
-//
-// TYPEUCOV :
-//  T^t_\nu type,  so that T^t_\nu  = -[E_\nu]/(-\alpha) = -[-\eta_\mu T^\mu_\nu] /(-\alpha) . So that E_t is negative definite in Minkowski.
-//  T^{t\nu} type, so that T^{t\nu} = -[E^\nu]/(-\alpha) = -[-\eta_\mu T^{\mu\nu}]/(-\alpha) . So that E^t is positive definite in Minkowski.
-
-// TYPEUCON:
-//  B^i = *F^{it} type, so that B^i = *F^{it}[HARMLAB]  = -[B^\nu]/(-\alpha) = -[\eta_\mu *F^{\mu\nu}]/(-\alpha)
-//  B_i = *F_i^t type , so that B_i = *F_i^t[HARMLAB]   = -[B_\nu]/(-\alpha) = -[\eta_\mu *F^\mu_\nu] /(-\alpha)
-// primcoord=1 assumed because if "harm" then assuming PRIMCOORD coordinates that used dxdxp
+/// Wrapper for vector_lab2orthofluidorback()
+///
+/// Correct for HARM tensor quantities that have implicit component set to (e.g.) t, which makes it ambiguous what frame that was measured in.
+///
+/// whichvector:
+///
+/// TYPEUCOV :
+///  T^t_\nu type,  so that T^t_\nu  = -[E_\nu]/(-\alpha) = -[-\eta_\mu T^\mu_\nu] /(-\alpha) . So that E_t is negative definite in Minkowski.
+///  T^{t\nu} type, so that T^{t\nu} = -[E^\nu]/(-\alpha) = -[-\eta_\mu T^{\mu\nu}]/(-\alpha) . So that E^t is positive definite in Minkowski.
+///
+/// TYPEUCON:
+///  B^i = *F^{it} type, so that B^i = *F^{it}[HARMLAB]  = -[B^\nu]/(-\alpha) = -[\eta_\mu *F^{\mu\nu}]/(-\alpha)
+///  B_i = *F_i^t type , so that B_i = *F_i^t[HARMLAB]   = -[B_\nu]/(-\alpha) = -[\eta_\mu *F^\mu_\nu] /(-\alpha)
+/// primcoord=1 assumed because if "harm" then assuming PRIMCOORD coordinates that used dxdxp
 int vector_harm2orthofluidorback(int whichvector, int harm2orthofluid, struct of_geom *ptrgeom, int uconcovtype, FTYPE *uconcov, FTYPE v4concovtype, FTYPE *vector4in, FTYPE *vector4out)
 {
   int vector_lab2orthofluidorback(int primcoord, int lab2orthofluid, struct of_geom *ptrgeom, int uconcovtype, FTYPE *uconcov, FTYPE v4concovtype, FTYPE *vector4in, FTYPE *vector4out);
@@ -819,24 +817,24 @@ int vector_harm2orthofluidorback(int whichvector, int harm2orthofluid, struct of
 
 
 
-// convert 4-vector to/from lab-frame coordinate basis to fluid frame orthonormal basis
-//
-// lab2orthofluid : LAB2FF = then vector4 is lab and vector4out is fluid ortho.  FF2LAB = orthofluid 2 lab
-// uconcovtype: TYPEUCON=uconcov is ucon or TYPEUCOV=uconcov is ucov for fluid 4-velocity
-// uconcov is in lab-frame as 4-vector of fluid
-// v4concovtype: TYPEUCON=vector4 is ucon or TYPEUCOV=vector4 is ucov for 4-vector to transform
-// vector4in : inserted 4-vector to transform
-// vector4out : returned orthonormal fluid frame 4-vector (returned as same concov as input vector4in)
-// NOTEMARK: If insert uconcov as ZAMO, then no boost, so can then use this for just lab2ortho and back
-// NOTES:
-// 1) "Lab" corresponds to value of uconcov in \eta_\mu = (-\alpha,0,0,0) frame.
-// 2) "HARMLAB" corresponds to "frame" used by harm.
-// E.g.
-//       \rho_harmlab = -\eta_\mu \rho_0 u^\mu /\alpha
-//       E_\nu[harm] = -\eta_\mu T^\mu_\nu/\alpha [MA or EM or RAD]
-//       B^\nu[harm] = +\eta_\mu *F^{\mu\nu}/\alpha  [i.e. B^i [lab] = *F^{it} is our choice of sign for the magnetic field]
-//       [[Note these are without \sqrt{-g}]]
-//
+/// convert 4-vector to/from lab-frame coordinate basis to fluid frame orthonormal basis
+///
+/// lab2orthofluid : LAB2FF = then vector4 is lab and vector4out is fluid ortho.  FF2LAB = orthofluid 2 lab
+/// uconcovtype: TYPEUCON=uconcov is ucon or TYPEUCOV=uconcov is ucov for fluid 4-velocity
+/// uconcov is in lab-frame as 4-vector of fluid
+/// v4concovtype: TYPEUCON=vector4 is ucon or TYPEUCOV=vector4 is ucov for 4-vector to transform
+/// vector4in : inserted 4-vector to transform
+/// vector4out : returned orthonormal fluid frame 4-vector (returned as same concov as input vector4in)
+/// NOTEMARK: If insert uconcov as ZAMO, then no boost, so can then use this for just lab2ortho and back
+/// NOTES:
+/// 1) "Lab" corresponds to value of uconcov in \eta_\mu = (-\alpha,0,0,0) frame.
+/// 2) "HARMLAB" corresponds to "frame" used by harm.
+/// E.g.
+///       \rho_harmlab = -\eta_\mu \rho_0 u^\mu /\alpha
+///       E_\nu[harm] = -\eta_\mu T^\mu_\nu/\alpha [MA or EM or RAD]
+///       B^\nu[harm] = +\eta_\mu *F^{\mu\nu}/\alpha  [i.e. B^i [lab] = *F^{it} is our choice of sign for the magnetic field]
+///       [[Note these are without \sqrt{-g}]]
+///
 int vector_lab2orthofluidorback(int primcoord, int lab2orthofluid, struct of_geom *ptrgeom, int uconcovtype, FTYPE *uconcov, FTYPE v4concovtype, FTYPE *vector4in, FTYPE *vector4out)
 {
   int mu,nu;
@@ -894,16 +892,16 @@ int vector_lab2orthofluidorback(int primcoord, int lab2orthofluid, struct of_geo
 
 
 
-// convert lab frame 4-tensor to fluid frame orthonormal 4-tensor
-//
-// lab2orthofluid: LAB2FF : lab2orthofluid   FF2LAB: orthofluid 2 lab
-// uconcovtype: TYPEUCON=uconcov is ucon or TYPEUCOV=uconcov is ucov for fluid 4-velocity
-// uconcov is in lab-frame as 4-vector of fluid
-// tconcovtypeA: for 1st index of tensor: TYPEUCON=tconcov is con or TYPEUCOV=tconcov is cov
-// tconcovtypeB: for 2nd index of tensor: TYPEUCON=tconcov is con or TYPEUCOV=tconcov is cov
-// tensor4in : input lab-frame as 4-tensor
-// tensor4out is returned orthonormal fluid frame 4-tensor (same tconcovtypeA and tconcovtypeB as tensor4in)
-// NOTEMARK: If insert uconcov as ZAMO, then no boost, so can then use this for just lab2ortho and back
+/// convert lab frame 4-tensor to fluid frame orthonormal 4-tensor
+///
+/// lab2orthofluid: LAB2FF : lab2orthofluid   FF2LAB: orthofluid 2 lab
+/// uconcovtype: TYPEUCON=uconcov is ucon or TYPEUCOV=uconcov is ucov for fluid 4-velocity
+/// uconcov is in lab-frame as 4-vector of fluid
+/// tconcovtypeA: for 1st index of tensor: TYPEUCON=tconcov is con or TYPEUCOV=tconcov is cov
+/// tconcovtypeB: for 2nd index of tensor: TYPEUCON=tconcov is con or TYPEUCOV=tconcov is cov
+/// tensor4in : input lab-frame as 4-tensor
+/// tensor4out is returned orthonormal fluid frame 4-tensor (same tconcovtypeA and tconcovtypeB as tensor4in)
+/// NOTEMARK: If insert uconcov as ZAMO, then no boost, so can then use this for just lab2ortho and back
 int tensor_lab2orthofluidorback(int primcoord, int lab2orthofluid, struct of_geom *ptrgeom, int uconcovtype, FTYPE *uconcov, int tconcovtypeA, int tconcovtypeB, FTYPE (*tensor4in)[NDIM], FTYPE (*tensor4out)[NDIM])
 {
   int mu,nu,aa,bb;
@@ -993,13 +991,13 @@ int tensor_lab2orthofluidorback(int primcoord, int lab2orthofluid, struct of_geo
 
 
 
-// Use as, e.g.:
-//    FTYPE vecvortho[NDIM];
-//    concovtype=1; // contravariant input in vec[0-3]
-//    vecX2vecVortho(concovtype, vecv, vecvortho);
-
-// converts contravariant (concovtype=1 using tetrcov) or covariant (concovtype=2 using tetrcon) X-based vector into orthonormal V-based vector
-// no boost here!
+/// Use as, e.g.:
+///    FTYPE vecvortho[NDIM];
+///    concovtype=1; // contravariant input in vec[0-3]
+///    vecX2vecVortho(concovtype, vecv, vecvortho);
+///
+/// converts contravariant (concovtype=1 using tetrcov) or covariant (concovtype=2 using tetrcon) X-based vector into orthonormal V-based vector
+/// no boost here!
 void vecX2vecVortho(int concovtype, struct of_geom *ptrgeom, FTYPE *veclab, FTYPE *vecortho)
 {
   int primcoord=1; // input is X and going to V means used dxdxp when making metric, so can use dxdxp to simplify metric before getting tetrad
@@ -1053,9 +1051,9 @@ void vecX2vecVortho(int concovtype, struct of_geom *ptrgeom, FTYPE *veclab, FTYP
 
 }
 
-// http://stackoverflow.com/questions/12449079/roots-of-cubic-using-c-and-gsl
-// http://en.wikipedia.org/wiki/Cubic_function (but not good if need to use all real numbers)
-// a x^3 + b c^2 + c x + d = 0
+/// http://stackoverflow.com/questions/12449079/roots-of-cubic-using-c-and-gsl
+/// http://en.wikipedia.org/wiki/Cubic_function (but not good if need to use all real numbers)
+/// a x^3 + b c^2 + c x + d = 0
 FTYPE Root(FTYPE a, FTYPE b, FTYPE c, FTYPE d, FTYPE *roots, int *numroots)
 {
   FTYPE x0=BIG,x1=BIG,x2=BIG;
@@ -1079,8 +1077,8 @@ FTYPE Root(FTYPE a, FTYPE b, FTYPE c, FTYPE d, FTYPE *roots, int *numroots)
 }
 
 
-// http://en.wikipedia.org/wiki/Cubic_function (but not good if need to use all real numbers)
-// a x^3 + b c^2 + c x + d = 0
+/// http://en.wikipedia.org/wiki/Cubic_function (but not good if need to use all real numbers)
+/// a x^3 + b c^2 + c x + d = 0
 int cubicroots(FTYPE a, FTYPE b, FTYPE c, FTYPE d, FTYPE *roots)
 {
   FTYPE Delta = 18.0*a*b*c*d - 4.0*b*b*b*d + b*b*c*c - 4.0*a*c*c*c - 27.0*a*a*d*d;
@@ -1108,7 +1106,7 @@ int cubicroots(FTYPE a, FTYPE b, FTYPE c, FTYPE d, FTYPE *roots)
   return(0);
 }
 
-// compute the semi-general eigensystem for a pretty general metric.
+/// compute the semi-general eigensystem for a pretty general metric.
 int genes(FTYPE *gcov[4], FTYPE *evec[4], FTYPE *eval)
 {
   FTYPE Root(FTYPE a, FTYPE b, FTYPE c, FTYPE d, FTYPE *roots, int *numroots);
@@ -1118,7 +1116,7 @@ int genes(FTYPE *gcov[4], FTYPE *evec[4], FTYPE *eval)
   return(0);
 }
 
-// compute the general orthonormal version of 4 vectors (that should be from eigensystem)
+/// compute the general orthonormal version of 4 vectors (that should be from eigensystem)
 int genortho(FTYPE *vec1, FTYPE *vec2, FTYPE *vec3, FTYPE *vec4, FTYPE *ovec1, FTYPE *ovec2, FTYPE *ovec3, FTYPE *ovec4)
 {
   FTYPE vec1a=vec1[0];

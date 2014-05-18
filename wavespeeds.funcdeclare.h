@@ -1,4 +1,8 @@
 
+/*! \file wavespeeds.funcdeclare.h
+    \brief function declrations for global use of functions in wavespeeds.c
+*/
+
 extern int get_global_wavespeeds(int dir, struct of_geom *ptrgeom, FTYPE *pr,FTYPE *wspeedtemp,FTYPE *wspeedradtemp,FTYPE *wspeedrad2temp);
 extern int get_global_wavespeeds_full(int dir, int is, int ie, int js, int je, int ks, int ke, int idel, int jdel, int kdel, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],FTYPE (*wspeed)[COMPDIM][NUMCS][NSTORE1][NSTORE2][NSTORE3]);
 extern int global_vchar(FTYPE (*pointspeed)[NSTORE1][NSTORE2][NSTORE3][NUMCS], int dir, int is, int ie, int js, int je, int ks, int ke, int idel, int jdel, int kdel, FTYPE (*wspeed)[COMPDIM][NUMCS][NSTORE1][NSTORE2][NSTORE3]);

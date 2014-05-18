@@ -1,13 +1,18 @@
+
+/*! \file wavespeeds.c
+     \brief Wrapper for using vchar and storing wavespeed results
+*/
+
+
 #include "decs.h"
 
 
 
+///////////////////////////////////
+///
+/// get wave speeds for flux calculation and for dt calculation
+///
 //////////////////////////////////
-//
-// get wave speeds for flux calculation and for dt calculation
-//
-/////////////////////////////////
-
 int vchar_all(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *vmaxall, FTYPE *vminall,int *ignorecourant)
 {
   FTYPE vminmhd,vmaxmhd;
@@ -41,7 +46,7 @@ int vchar_each(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTY
 }
 
 
-// get wave speeds for flux calculation
+/// get wave speeds for flux calculation
 int get_wavespeeds(int dir, struct of_geom *ptrgeom, FTYPE *p_l, FTYPE *p_r, FTYPE *U_l, FTYPE *U_r, FTYPE *F_l, FTYPE *F_r, struct of_state *state_l, struct of_state * state_r, FTYPE *cminmax_l, FTYPE *cminmax_r, FTYPE *cminmax, FTYPE *ctopptr, FTYPE *cminmaxrad_l, FTYPE *cminmaxrad_r, FTYPE *cminmaxrad, FTYPE *ctopradptr, FTYPE *cminmaxrad2_l, FTYPE *cminmaxrad2_r, FTYPE *cminmaxrad2, FTYPE *ctoprad2ptr)
 {
   int cminmax_calc(FTYPE cmin_l,FTYPE cmin_r,FTYPE cmax_l,FTYPE cmax_r,FTYPE *cmin,FTYPE *cmax,FTYPE *ctop);
@@ -238,8 +243,8 @@ int get_wavespeeds(int dir, struct of_geom *ptrgeom, FTYPE *p_l, FTYPE *p_r, FTY
 
 
 
-// get Roe-averaged primitive state
-// based upon Athena2's flux_hlle.c
+/// get Roe-averaged primitive state
+/// based upon Athena2's flux_hlle.c
 void get_roe_averaged_state(int dir, FTYPE *p_l, struct of_state *state_l, FTYPE *Ul, FTYPE * p_r, struct of_state *state_r, FTYPE *Ur, struct of_geom *geom, FTYPE * p_roe, FTYPE *Hroe, FTYPE *cminnonrel_roe, FTYPE*cmaxnonrel_roe)
 {
   FTYPE sqrtrhol,sqrtrhor,isqrtrholr;
@@ -312,8 +317,8 @@ void get_roe_averaged_state(int dir, FTYPE *p_l, struct of_state *state_l, FTYPE
 
 
 
-// complete storage of wave speeds per dimension
-// only called for STOREWAVESPEEDS==1
+/// complete storage of wave speeds per dimension
+/// only called for STOREWAVESPEEDS==1
 int get_global_wavespeeds_full(int dir, int is, int ie, int js, int je, int ks, int ke, int idel, int jdel, int kdel, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],FTYPE (*finalwspeed)[COMPDIM][NUMCS][NSTORE1][NSTORE2][NSTORE3])
 {
 
@@ -360,7 +365,7 @@ int get_global_wavespeeds_full(int dir, int is, int ie, int js, int je, int ks, 
 
 
 
-// store wavespeeds somewhere
+/// store wavespeeds somewhere
 int get_global_wavespeeds(int dir, struct of_geom *ptrgeom, FTYPE *pr,FTYPE *output,FTYPE *outputrad,FTYPE *outputrad2)
 {
   struct of_state qdontuse;
@@ -380,12 +385,12 @@ int get_global_wavespeeds(int dir, struct of_geom *ptrgeom, FTYPE *pr,FTYPE *out
 
 
 
-// GODMARK: something wrong with comparing multiple velocities since grid/metric changes in space (i.e. v=dx/dt means something different at each grid point)
-// GODMARK: assumes boundary zones exist (flux method of bounding won't work) -- have to apply extra limits on values (i,j,k) used here
-
-// defines an effective maximum wave speed centered on the cell interface (FACE)
-
-// might choose wavespeeds that correspond to interpolation stencil, which to first approximation is a symmetric stencil of size interporder[reallim]
+/// GODMARK: something wrong with comparing multiple velocities since grid/metric changes in space (i.e. v=dx/dt means something different at each grid point)
+/// GODMARK: assumes boundary zones exist (flux method of bounding won't work) -- have to apply extra limits on values (i,j,k) used here
+///
+/// defines an effective maximum wave speed centered on the cell interface (FACE)
+///
+/// might choose wavespeeds that correspond to interpolation stencil, which to first approximation is a symmetric stencil of size interporder[reallim]
 int global_vchar(FTYPE (*pointspeed)[NSTORE1][NSTORE2][NSTORE3][NUMCS], int dir, int is, int ie, int js, int je, int ks, int ke, int idel, int jdel, int kdel, FTYPE (*wspeed)[COMPDIM][NUMCS][NSTORE1][NSTORE2][NSTORE3])
 {
 
@@ -493,12 +498,10 @@ int global_vchar(FTYPE (*pointspeed)[NSTORE1][NSTORE2][NSTORE3][NUMCS], int dir,
 
 
 
-// GODMARK:
 
-// really HARM is currently using VERY local lax Friedrich.
-// maybe try local lax Friedrich, using max wave speed from zones used to reconstruct the zone (most common?)
-// also can try more global wave speed, or even speed of light.
-
+/// really HARM is currently using VERY local lax Friedrich.
+/// maybe try local lax Friedrich, using max wave speed from zones used to reconstruct the zone (most common?)
+/// also can try more global wave speed, or even speed of light.
 int cminmax_calc(FTYPE cmin_l,FTYPE cmin_r,FTYPE cmax_l,FTYPE cmax_r,FTYPE *cmin,FTYPE *cmax,FTYPE *ctop)
 {
   int cminmax_calc_1(FTYPE cmin_l,FTYPE cmin_r,FTYPE cmax_l,FTYPE cmax_r,FTYPE *cmin,FTYPE *cmax);
@@ -512,7 +515,7 @@ int cminmax_calc(FTYPE cmin_l,FTYPE cmin_r,FTYPE cmax_l,FTYPE cmax_r,FTYPE *cmin
 
 }
 
-// determine cmin,cmax,ctop
+/// determine cmin,cmax,ctop
 int cminmax_calc_1(FTYPE cmin_l,FTYPE cmin_r,FTYPE cmax_l,FTYPE cmax_r,FTYPE *cmin,FTYPE *cmax)
 {
   FTYPE lmin,lmax,ltop;
@@ -559,7 +562,7 @@ int cminmax_calc_1(FTYPE cmin_l,FTYPE cmin_r,FTYPE cmax_l,FTYPE cmax_r,FTYPE *cm
 
 
 
-// determine cmin,cmax,ctop
+/// determine cmin,cmax,ctop
 int cminmax_calc_2(FTYPE *cmin,FTYPE *cmax,FTYPE *ctop)
 {
   FTYPE lmin=*cmin;

@@ -1,4 +1,7 @@
 
+/*! \file utoprimgen.c
+     \brief General extended feature wrapper for inversion U->P     
+*/
 
 
 #include "decs.h"
@@ -7,7 +10,7 @@
 
 
 
-// fractional error above which inversion is reported on as having made a signficant error
+/// fractional error above which inversion is reported on as having made a signficant error
 #if(PRODUCTION>=2)
 #define CHECKONINVFRAC (1E-1)
 #elif(PRODUCTION==1)
@@ -16,15 +19,15 @@
 #define CHECKONINVFRAC (MAX(1E-7,newtonstats->tryconv*1E3)) // can't check if didn't ask for large error.
 #endif
 
-// whether to fail if check on inversion fails
+/// whether to fail if check on inversion fails
 #define FAILIFBADCHECK 1
 
-// fraction upon if greater will treat as failure if FAILIFBADCHECK is triggered
+/// fraction upon if greater will treat as failure if FAILIFBADCHECK is triggered
 #define CHECKONINVFRACFAIL (1E-1)
 
 #define REPORTCYCLE (10)
 
-// whether to fix u_g using entropy conserved quantity, if available.
+/// whether to fix u_g using entropy conserved quantity, if available.
 #define ENTROPYFIXGUESSEXTERNAL (ENTROPYFIXGUESS)
 
 
@@ -764,15 +767,15 @@ int Utoprimgen(int showmessages, int checkoninversiongas, int checkoninversionra
 
 
 
-// use hot grmhd if hot grmhd gives u<zerouuperbaryon*rho since then hot is valid
+/// use hot grmhd if hot grmhd gives u<zerouuperbaryon*rho since then hot is valid
 #define USEHOTIFHOTUNEG 1
-// use hot grmhd if hot grmhd gives rho<0 since rho<0 is nearly no solution
+/// use hot grmhd if hot grmhd gives rho<0 since rho<0 is nearly no solution
 #define USEHOTIFHOTRHONEG 1
-// use hot grmhd if hot grmhd leads to convergence or other "no solution" type failure
+/// use hot grmhd if hot grmhd leads to convergence or other "no solution" type failure
 #define USEHOTIFHOTFAILCONV 1
 
 
-// try hot inversion of entropy one fails
+/// try hot inversion of entropy one fails
 int tryhotinversion(int showmessages, int allowlocalfailurefixandnoreport, int finalstep, PFTYPE oldpflag, int forcetry, int whichcap, int modprim, FTYPE *pi, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, FTYPE *Ugeomfree, FTYPE *Ugeomfree0, struct of_state *qptr, struct of_geom *ptrgeom, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad)
 {
   int triedhot=0;
@@ -891,14 +894,14 @@ int tryhotinversion(int showmessages, int allowlocalfailurefixandnoreport, int f
 
 
 
-// use entropy grmhd if hot grmhd gives u<zerouuperbaryon*rho since then entropy is valid
+/// use entropy grmhd if hot grmhd gives u<zerouuperbaryon*rho since then entropy is valid
 #define USEENTROPYIFHOTUNEG 1
-// use entropy grmhd if hot grmhd gives rho<0 since rho<0 is nearly no solution
+/// use entropy grmhd if hot grmhd gives rho<0 since rho<0 is nearly no solution
 #define USEENTROPYIFHOTRHONEG 1
-// use entropy grmhd if hot grmhd leads to convergence or other "no solution" type failure
+/// use entropy grmhd if hot grmhd leads to convergence or other "no solution" type failure
 #define USEENTROPYIFHOTFAILCONV 1
 
-// try entropy inversion of hot one fails
+/// try entropy inversion of hot one fails
 int tryentropyinversion(int showmessages, int allowlocalfailurefixandnoreport, int finalstep, PFTYPE hotpflag, int forcetry, int whichcap, int modprim, FTYPE *pi, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, FTYPE *Ugeomfree, FTYPE *Ugeomfree0, struct of_state *qptr, struct of_geom *ptrgeom, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad)
 {
   int triedentropy=0;
@@ -1048,14 +1051,14 @@ int tryentropyinversion(int showmessages, int allowlocalfailurefixandnoreport, i
 
 
 
-// use cold grmhd if hot grmhd gives u<zerouuperbaryon*rho since then cold is valid
+/// use cold grmhd if hot grmhd gives u<zerouuperbaryon*rho since then cold is valid
 #define USECOLDIFHOTUNEG 1
-// use cold grmhd if hot grmhd gives rho<0 since rho<0 is nearly no solution
+/// use cold grmhd if hot grmhd gives rho<0 since rho<0 is nearly no solution
 #define USECOLDIFHOTRHONEG 1
-// use cold grmhd if hot grmhd leads to convergence or other "no solution" type failure
+/// use cold grmhd if hot grmhd leads to convergence or other "no solution" type failure
 #define USECOLDIFHOTFAILCONV 1
 
-// try cold inversion of hot one fails
+/// try cold inversion of hot one fails
 int trycoldinversion(int showmessages, int allowlocalfailurefixandnoreport, int finalstep, PFTYPE oldpflag, int forcetry, int whichcap, int modprim, FTYPE *pi, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, FTYPE *Ugeomfree, FTYPE *Ugeomfree0, struct of_state *qptr, struct of_geom *ptrgeom, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad)
 {
   int triedcold;
@@ -1190,12 +1193,12 @@ int trycoldinversion(int showmessages, int allowlocalfailurefixandnoreport, int 
 
 
 
-// Function to check on success of inversion by comparing original conserved quantities (Uold) with new conserved quantities (Unew(p(Uold))) as computed from primitives (p(Uold)) obtained from the inversion.
-// Changes failure flag if bad inversion is bad enough
-// Note that inversion might imply small error, but still very wrong.  This occurs when no solution but approach solution from one side.
-
-// Like force-free that doesn't limit |vrad|<c, radiation primitives might not correspond to conserved because of such limiters in u2p_rad(), so should generally have this turned off and only use for debugging
-
+/// Function to check on success of inversion by comparing original conserved quantities (Uold) with new conserved quantities (Unew(p(Uold))) as computed from primitives (p(Uold)) obtained from the inversion.
+/// Changes failure flag if bad inversion is bad enough
+/// Note that inversion might imply small error, but still very wrong.  This occurs when no solution but approach solution from one side.
+///
+/// Like force-free that doesn't limit |vrad|<c, radiation primitives might not correspond to conserved because of such limiters in u2p_rad(), so should generally have this turned off and only use for debugging
+///
 static int check_on_inversion(int checkoninversiongas, int checkoninversionrad, int usedhotinversion,int usedentropyinversion,int usedcoldinversion,int usedffdeinversion, PFTYPE *lpflag, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, struct of_geom *ptrgeom, FTYPE *Uold, FTYPE *Unew, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad)
 {
   int badinversion,badinversionfail;
@@ -1511,7 +1514,7 @@ static int check_on_inversion(int checkoninversiongas, int checkoninversionrad, 
 
 
 
-// compare ffde inversions
+/// compare ffde inversions
 static int compare_ffde_inversions(int showmessages, int allowlocalfailurefixandnoreport, PFTYPE *lpflag, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, struct of_geom *ptrgeom, FTYPE *Ugeomfree0, FTYPE*Ugeomfree, FTYPE *Uold, FTYPE *Unew, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad)
 {
   int j,k;
@@ -1567,7 +1570,7 @@ static int compare_ffde_inversions(int showmessages, int allowlocalfailurefixand
 
 
 
-// arbitrary debugging code created at any time
+/// arbitrary debugging code created at any time
 static int debug_utoprimgen(PFTYPE *lpflag, FTYPE *pr0, FTYPE *pr, struct of_geom *ptrgeom, FTYPE *Uold, FTYPE *Unew)
 {
   int j,k;
@@ -1668,7 +1671,7 @@ static int debug_utoprimgen(PFTYPE *lpflag, FTYPE *pr0, FTYPE *pr, struct of_geo
 
 
 
-// deal with negative density in special way to tell fixup routine to perform special "average" of density
+/// deal with negative density in special way to tell fixup routine to perform special "average" of density
 static int negdensitycheck(int finalstep, FTYPE *prim, PFTYPE *pflag)
 {
 
@@ -1688,7 +1691,7 @@ static int negdensitycheck(int finalstep, FTYPE *prim, PFTYPE *pflag)
 
 
 
-// perform U->p inversion on advected scalars
+/// perform U->p inversion on advected scalars
 int invert_scalars(struct of_geom *ptrgeom, FTYPE *Ugeomfree, FTYPE *pr)
 {
   FTYPE myrhouu0,oneOmyrhouu0;
@@ -1802,7 +1805,7 @@ int invert_scalars(struct of_geom *ptrgeom, FTYPE *Ugeomfree, FTYPE *pr)
 
 
 
-// convert U (conserved quantities) to form acceptable to utoprimversion for a given removerestmassfromuu
+/// convert U (conserved quantities) to form acceptable to utoprimversion for a given removerestmassfromuu
 void convert_U_removerestmassfromuu(int utoprimversion, int removerestmassfromuu, FTYPE *U)
 {
 
@@ -1844,7 +1847,7 @@ void convert_U_removerestmassfromuu(int utoprimversion, int removerestmassfromuu
 
 
 
-// Used for dissipation calculation only
+/// Used for dissipation calculation only
 int Utoprimdiss(int showmessages, int allowlocalfailurefixandnoreport, int evolvetype, int inputtype,FTYPE *U,  struct of_geom *ptrgeom, FTYPE *pr, PFTYPE *otherpflag, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad)
 {
   // debug
@@ -1939,9 +1942,9 @@ int Utoprimdiss(int showmessages, int allowlocalfailurefixandnoreport, int evolv
 
 
 
-//////////////////////////////
-//
-// COMPARISON of 2 (currently only 2) methods
+///////////////////////////////
+///
+/// COMPARISON of 2 (currently only 2) methods
 int Utoprimgen_compare(int showmessages, int allowlocalfailurefixandnoreport, int eomtype, int whichcap, int parameter, FTYPE *Ugeomfree, struct of_geom *ptrgeom, PFTYPE *lpflag, FTYPE *pr, FTYPE *pressure, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad)
 {
   int Utoprimgen_pick(int showmessages, int allowlocalfailurefixandnoreport, int which, int eomtype, int whichcap, int parameter, FTYPE *Ugeomfree, struct of_geom *ptrgeom, PFTYPE *lpflag, FTYPE *pr, FTYPE *pressure, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad);
@@ -2008,7 +2011,7 @@ int Utoprimgen_compare(int showmessages, int allowlocalfailurefixandnoreport, in
 
 
 
-// just picks the algorithm to invert
+/// just picks the algorithm to invert
 int Utoprimgen_pick(int showmessages, int allowlocalfailurefixandnoreport, int which, int eomtype, int whichcap, int parameter, FTYPE *Ugeomfree, struct of_geom *ptrgeom, PFTYPE *lpflag, FTYPE *pr, FTYPE *pressure, struct of_newtonstats *newtonstats,PFTYPE *lpflagrad)
 {
   extern int Utoprim_ffde(FTYPE *U, struct of_geom *geom, FTYPE *pr);
@@ -2084,7 +2087,7 @@ int Utoprimgen_pick(int showmessages, int allowlocalfailurefixandnoreport, int w
 
 
 
-// Utoprimgen try again.  Can be whatever sequence or number of inversions
+/// Utoprimgen try again.  Can be whatever sequence or number of inversions
 int Utoprimgen_tryagain(int showmessages, int allowlocalfailurefixandnoreport, int eomtype, int whichcap, int parameter, FTYPE *Ugeomfree0, FTYPE *Ugeomfree,struct of_geom *ptrgeom, PFTYPE *lpflag, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad)
 {
   int Utoprimgen_tryagain_substep(int showmessages, int allowlocalfailurefixandnoreport, int which, int eomtype, int whichcap, int parameter, FTYPE *Ugeomfree0, FTYPE*Ugeomfree, struct of_geom *ptrgeom, PFTYPE *lpflag, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad);
@@ -2108,8 +2111,8 @@ int Utoprimgen_tryagain(int showmessages, int allowlocalfailurefixandnoreport, i
 }
 
 
-// Utoprimgen try again.  Can be whatever sequence or number of inversions
-// only those algorithms designed directly for REMOVERESTMASSFROMUU==2
+/// Utoprimgen try again.  Can be whatever sequence or number of inversions
+/// only those algorithms designed directly for REMOVERESTMASSFROMUU==2
 int Utoprimgen_tryagain2(int showmessages, int allowlocalfailurefixandnoreport, int eomtype, int whichcap, int parameter, FTYPE *Ugeomfree0, FTYPE *Ugeomfree,struct of_geom *ptrgeom, PFTYPE *lpflag, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad)
 {
   int Utoprimgen_tryagain_substep(int showmessages, int allowlocalfailurefixandnoreport, int which, int eomtype, int whichcap, int parameter, FTYPE *Ugeomfree0, FTYPE*Ugeomfree, struct of_geom *ptrgeom, PFTYPE *lpflag, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad);
@@ -2144,7 +2147,7 @@ int Utoprimgen_tryagain2(int showmessages, int allowlocalfailurefixandnoreport, 
 
 
 
-// need to keep this function of to date if going to add other "non-critical" failures.  Point is that some inversions can't handle non-rel case and might get positive results when shouldn't have.
+/// need to keep this function of to date if going to add other "non-critical" failures.  Point is that some inversions can't handle non-rel case and might get positive results when shouldn't have.
 int Utoprimgen_tryagain_substep(int showmessages, int allowlocalfailurefixandnoreport, int which, int eomtype, int whichcap, int parameter, FTYPE *Ugeomfree0, FTYPE*Ugeomfree, struct of_geom *ptrgeom, PFTYPE *lpflag, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad)
 {
   int pl;
@@ -2172,8 +2175,8 @@ int Utoprimgen_tryagain_substep(int showmessages, int allowlocalfailurefixandnor
 
 
 
-// there may be something wrong with this function -- didn't work in TIMEORDER==4, had to do standard method
-// could have just been that I wasn't bounding after using this
+/// there may be something wrong with this function -- didn't work in TIMEORDER==4, had to do standard method
+/// could have just been that I wasn't bounding after using this
 int Utoprimloop(FTYPE (*U)[NSTORE2][NSTORE3][NPR],FTYPE (*prim)[NSTORE2][NSTORE3][NPR], struct of_newtonstats *newtonstats)
 {
   struct of_geom geomdontuse;
@@ -2199,7 +2202,7 @@ int Utoprimloop(FTYPE (*U)[NSTORE2][NSTORE3][NPR],FTYPE (*prim)[NSTORE2][NSTORE3
 
 
 
-// loop for P->U
+/// loop for P->U
 int primtoUloop(FTYPE (*prim)[NSTORE2][NSTORE3][NPR],FTYPE (*U)[NSTORE2][NSTORE3][NPR])
 {
   struct of_geom geomdontuse;
@@ -2218,7 +2221,7 @@ int primtoUloop(FTYPE (*prim)[NSTORE2][NSTORE3][NPR],FTYPE (*U)[NSTORE2][NSTORE3
 
 
 
-// filter out velocity along field line
+/// filter out velocity along field line
 void filterffde(int i, int j, int k, FTYPE *pr)
 {
   int pl,pliter;
@@ -2257,8 +2260,8 @@ void filterffde(int i, int j, int k, FTYPE *pr)
 }
 
 
-// return 0 if energy solution good.  return 1 if energy solution bad and should use entropy solution.
-// check based upon u_g or based upon specific entropy
+/// return 0 if energy solution good.  return 1 if energy solution bad and should use entropy solution.
+/// check based upon u_g or based upon specific entropy
 int badenergy(struct of_geom *ptrgeom, FTYPE *energypr, FTYPE *entropypr)
 {
   
@@ -2282,7 +2285,7 @@ int badenergy(struct of_geom *ptrgeom, FTYPE *energypr, FTYPE *entropypr)
 }
 
 
-// decide whether can/should do entropy
+/// decide whether can/should do entropy
 int whetherdoentropy(struct of_geom *ptrgeom, FTYPE fracenergy, int entropynotfail, int energynotfail, int radinvmodentropy, int radinvmodenergy, FTYPE tryerror, FTYPE okerror, FTYPE baderror, FTYPE entropyerror, FTYPE energyerror, FTYPE *entropypr, FTYPE *energypr)
 {
   int doentropy=0;
@@ -2317,7 +2320,7 @@ int whetherdoentropy(struct of_geom *ptrgeom, FTYPE fracenergy, int entropynotfa
 }
 
 
-// set fracenergy, where 0.0 means no energy at all (i.e. only entropy)
+/// set fracenergy, where 0.0 means no energy at all (i.e. only entropy)
 int set_fracenergy(int i, int j, int k, FTYPE dissmeasure, FTYPE *fracenergy)
 {
   // get divcond.  Go over dimensions in case not full 3D.  Just duplicates value as per in flux.c.
@@ -2383,7 +2386,7 @@ int set_fracenergy(int i, int j, int k, FTYPE dissmeasure, FTYPE *fracenergy)
 }
 
 
-// better guess using entropy information
+/// better guess using entropy information
 int entropyfixguess(struct of_state *q, struct of_geom *ptrgeom, FTYPE *uu, FTYPE *pp)
 {
   if(ENTROPY>=0 && isfinite(pp[ENTROPY]) && isfinite(uu[ENTROPY]) ){
@@ -2432,7 +2435,7 @@ int entropyfixguess(struct of_state *q, struct of_geom *ptrgeom, FTYPE *uu, FTYP
 
 
 
-// set defaults for of_newtonstats structure for "inputs" that can be used by utoprim_jon.c's general_newton_raphson()
+/// set defaults for of_newtonstats structure for "inputs" that can be used by utoprim_jon.c's general_newton_raphson()
 int setnewtonstatsdefault(struct of_newtonstats *newtonstats)
 {
 

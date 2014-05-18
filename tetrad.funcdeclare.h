@@ -1,4 +1,8 @@
 
+/*! \file tetrad.funcdeclare.h
+    \brief function declarations for global use of tetrad.c functions
+*/
+
 
 
 extern void make_tetr(FTYPE *ucon, FTYPE (*econ)[NDIM]);

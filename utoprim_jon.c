@@ -1,15 +1,19 @@
 
+/*! \file utoprim_jon.c
+     \brief Jon's U->P inversion
+     
+     // OPENMPNOTE: This function should only have local variables in order to be parallelized, otherwise global shared variables can change while computing.
+     // OPENMPNOTE: Should avoid use of static variables inside functions, for example when first time called to initialize things.  Only done right now in bin_newt_data() that is not used.
+     */
 
-// OPENMPNOTE: This function should only have local variables in order to be parallelized, otherwise global shared variables can change while computing.
-// OPENMPNOTE: Should avoid use of static variables inside functions, for example when first time called to initialize things.  Only done right now in bin_newt_data() that is not used.
 
 #include "u2p_defs.h" // only includes #define's
 #include "utoprim_jon.h" // only includes #define's
 
 
-// 0 = no debug indexes set
-// 1 = set global (file scope) index for debugging
-//     OPENMPMARK: This is not thread safe!, so only set to 1 if not using more than one OpenMP thread.
+/// 0 = no debug indexes set
+/// 1 = set global (file scope) index for debugging
+///     OPENMPMARK: This is not thread safe!, so only set to 1 if not using more than one OpenMP thread.
 #define DEBUGINDEX 0
 
 #if(DEBUGINDEX)
@@ -18,10 +22,10 @@ static int ifileglobal,jfileglobal,kfileglobal,pfileglobal;
 #endif
 
 
-// Main function called:
+/// Main function called:
 static int Utoprim_new_body(int showmessages, int eomtype, PFTYPE *lpflag, int whicheos, FTYPE *EOSextra, FTYPE U[NPR], struct of_geom *ptrgeom,  FTYPE *prim, FTYPE *pressure, struct of_newtonstats *newtonstats);
 
-// Metric-related things:
+/// Metric-related things:
 static void raise_g(FTYPE vcov[], FTYPE *gcon, FTYPE vcon[]);
 static void lower_g(FTYPE vcon[], FTYPE *gcov, FTYPE vcov[]);
 static void ncov_calc_fromlapse(FTYPE lapse,FTYPE ncov[]) ;
@@ -29,7 +33,7 @@ static void ncov_calc(FTYPE gcon[SYMMATRIXNDIM],FTYPE ncov[]) ;
 static int coldgrhd(PFTYPE *lpflag, FTYPE Qtsq, FTYPE D, FTYPE *Wp);
 static int vsqgtr1(FTYPE W,FTYPE Bsq,FTYPE QdotBsq, FTYPE Qtsq);
 
-// Kinetic-related things:
+/// Kinetic-related things:
 static FTYPE vsq_calc(FTYPE W, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra);
 static FTYPE dvsq_dW(FTYPE W, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra);
 static FTYPE Eprime_Wp(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra);
@@ -39,12 +43,12 @@ static FTYPE utsq_calc(FTYPE W, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotB
 static FTYPE gammasq_calc_W(FTYPE W, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra);
 static FTYPE utsq_calc(FTYPE W, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra);
 
-// validate solution:
+/// validate solution:
 static void validate_Wp(FTYPE Wpold, FTYPE *Wpnew, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra);
 static int validate_vsq(FTYPE vsqold,FTYPE *vsqnew, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra);
 static void check_utsq_fail(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra);
 
-// EOS-related things for hot GRMHD evolution
+/// EOS-related things for hot GRMHD evolution
 static FTYPE pressure_W_vsq(int whicheos, FTYPE *EOSextra, FTYPE W, FTYPE D, FTYPE vsq) ;
 static FTYPE pressure_Wp_utsq(int whicheos, FTYPE *EOSextra, FTYPE Wp, FTYPE D, FTYPE utsq);
 static FTYPE dpdW_calc_vsq(int whicheos, FTYPE *EOSextra, FTYPE W, FTYPE D, FTYPE vsq);
@@ -53,7 +57,7 @@ static FTYPE dpdvsq_calc2_Wp(int whicheos, FTYPE *EOSextra, FTYPE Wp, FTYPE D, F
 static FTYPE dpdvsq_calc(int whicheos, FTYPE *EOSextra, FTYPE W, FTYPE D, FTYPE vsq);
 static FTYPE dpdWp_calc_utsq(int whicheos, FTYPE *EOSextra, FTYPE Wp, FTYPE D, FTYPE utsq);
 
-// EOS-related things for entropy evolution
+/// EOS-related things for entropy evolution
 static FTYPE Ss_W_vsq(int whicheos, FTYPE *EOSextra, FTYPE W, FTYPE D, FTYPE vsq) ;
 static FTYPE Ss_Wp_utsq(int whicheos, FTYPE *EOSextra, FTYPE Wp, FTYPE D, FTYPE utsq);
 static FTYPE dSsdW_calc_vsq(int whicheos, FTYPE *EOSextra, FTYPE W, FTYPE D, FTYPE vsq);
@@ -62,7 +66,7 @@ static FTYPE dSsdvsq_calc2_Wp(int whicheos, FTYPE *EOSextra, FTYPE Wp, FTYPE D, 
 static FTYPE dSsdvsq_calc(int whicheos, FTYPE *EOSextra, FTYPE W, FTYPE D, FTYPE vsq);
 static FTYPE dSsdWp_calc_utsq(int whicheos, FTYPE *EOSextra, FTYPE Wp, FTYPE D, FTYPE utsq);
 
-// Find Root wrappers:
+/// Find Root wrappers:
 static int find_root_1D_gen(int showmessages, PFTYPE *lpflag, int eomtype, FTYPE x0, FTYPE *xnew, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra, struct of_newtonstats *newtonstats);
 static int find_root_1D_gen_scn(int showmessages, PFTYPE *lpflag, int eomtype, FTYPE x0, FTYPE *xnew, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra, struct of_newtonstats *newtonstats);
 static int find_root_1D_gen_Eprime(int showmessages, PFTYPE *lpflag, int eomtype, FTYPE x0, FTYPE *xnew, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra, struct of_newtonstats *newtonstats);
@@ -71,7 +75,7 @@ static int find_root_3D_gen_Palpha(int showmessages, PFTYPE *lpflag, int eomtype
 static int find_root_2D_gen(int showmessages, PFTYPE *lpflag, int eomtype, FTYPE x0, FTYPE *xnew, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra, struct of_newtonstats *newtonstats);
 static int find_root_1D_gen_Sc(int showmessages, PFTYPE *lpflag, int eomtype, FTYPE x0, FTYPE *xnew, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra, struct of_newtonstats *newtonstats);
 
-// Newton methods:
+/// Newton methods:
 static int general_newton_raphson(int showmessages, PFTYPE *lpflag, int eomtype, FTYPE x[], int n, int do_line_search,
                                   void (*funcd) (FTYPE [], FTYPE [], FTYPE [], FTYPE [], FTYPE [][NEWT_DIM], FTYPE *, FTYPE *, int, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra), 
                                   FTYPE (*res_func) (FTYPE [], FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra), FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra, struct of_newtonstats *newtonstats);
@@ -95,7 +99,7 @@ static void my_lnsrch(int eomtype, int n, FTYPE xold[], FTYPE fold, FTYPE g[], F
                       FTYPE *f, FTYPE TOLX, FTYPE stpmax, int *check, FTYPE (*func) (FTYPE [], FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra), FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra);
 
 
-// Newton checks:
+/// Newton checks:
 static int newt_repeatcheck(int n, FTYPE errx, FTYPE errx_old, FTYPE errx_oldest, FTYPE *dx, FTYPE *dx_old, FTYPE *x, FTYPE *x_old, FTYPE *x_older, FTYPE *x_olderer);
 static int newt_cyclecheck(int n, FTYPE errx, FTYPE errx_old, FTYPE errx_oldest, FTYPE *dx, FTYPE *dx_old, FTYPE *x, FTYPE *x_old, FTYPE *x_older, FTYPE *x_olderer);
 static int newt_errorcheck(int n, FTYPE NEWT_TOL_VAR, FTYPE NEWT_TOL_ULTRAREL_VAR, FTYPE errx, FTYPE x0, FTYPE dx0, FTYPE *x, FTYPE *dx, FTYPE *wglobal);
@@ -107,7 +111,7 @@ static void check_on_inversion(int showmessages, FTYPE *prim, FTYPE *U, struct o
 
 
 
-// Setup inversion:
+/// Setup inversion:
 static int compute_setup_quantities(FTYPE *prim, FTYPE *U, struct of_geom *ptrgeom, FTYPE *Qtcon, FTYPE *Bcon, FTYPE *Bcov, FTYPE *Bsq,FTYPE *QdotB,FTYPE *QdotBsq,FTYPE *Qtsq,FTYPE *Qdotn,FTYPE *Qdotnp,FTYPE *D, FTYPE *Sc, int whicheos, FTYPE *EOSextra);
 static int set_guess_Wp(int showmessages, PFTYPE *lpflag, int eomtype, FTYPE *prim, struct of_geom *ptrgeom, FTYPE *W_last, FTYPE *Wp_last, FTYPE *wglobal, FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra);
 static int check_Wp(PFTYPE *lpflag, int eomtype, FTYPE *prim, FTYPE *U, struct of_geom *ptrgeom, FTYPE Wp_last, FTYPE Wp, int retval, FTYPE *wglobal, FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra);
@@ -115,7 +119,7 @@ static int Wp2prim(int showmessages, PFTYPE *lpflag, int eomtype, FTYPE *prim, F
 static int verify_Wlast(FTYPE u, FTYPE p, struct of_geom *ptrgeom, FTYPE *W_last, FTYPE *Wp_last, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra);
 
 
-// other inversions:
+/// other inversions:
 static int forcefree_inversion(struct of_geom *ptrgeom, FTYPE *Qtcon, FTYPE Bsq, FTYPE *Bcon, FTYPE *Bcov, FTYPE Qtsq, FTYPE *U, FTYPE *prim);
 
 
@@ -133,7 +137,7 @@ static int forcefree_inversion(struct of_geom *ptrgeom, FTYPE *Qtcon, FTYPE Bsq,
 
 ******************************************************************/
 
-// The ONLY global function:
+/// The ONLY global function:
 int Utoprim_jon_nonrelcompat_inputnorestmass(int showmessages, int eomtype, FTYPE *EOSextra, FTYPE *U, struct of_geom *ptrgeom,  PFTYPE *lpflag,  FTYPE *prim, FTYPE *pressure, struct of_newtonstats *newtonstats)
 {
 
@@ -738,8 +742,8 @@ static int Utoprim_new_body(int showmessages, int eomtype, PFTYPE *lpflag, int w
 
 
 
-//returns global quanities Bsq,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc
-// returns other local quantities
+///returns global quanities Bsq,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc
+/// returns other local quantities
 static int compute_setup_quantities(FTYPE *prim, FTYPE *U, struct of_geom *ptrgeom, FTYPE *Qtcon, FTYPE *Bcon, FTYPE *Bcov, FTYPE *Bsq,FTYPE *QdotB,FTYPE *QdotBsq,FTYPE *Qtsq,FTYPE *Qdotn,FTYPE *Qdotnp,FTYPE *D, FTYPE *Sc, int whicheos, FTYPE *EOSextra)
 {
   int i,j;
@@ -908,12 +912,12 @@ static int compute_setup_quantities(FTYPE *prim, FTYPE *U, struct of_geom *ptrge
 
 
 
-////////////////////////////////
-//
-// SETUP ITERATIVE METHODS (good for GRMHD or entropy evolution or cold GRMHD)
-// Doesn't use Sc since initial guess for W can be found from last primitives alone
-//
-////////////////////////////////
+/////////////////////////////////
+///
+/// SETUP ITERATIVE METHODS (good for GRMHD or entropy evolution or cold GRMHD)
+/// Doesn't use Sc since initial guess for W can be found from last primitives alone
+///
+/////////////////////////////////
 static int set_guess_Wp(int showmessages, PFTYPE *lpflag, int eomtype, FTYPE *prim, struct of_geom *ptrgeom, FTYPE *W_last, FTYPE *Wp_last, FTYPE *wglobal, FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
 {
   FTYPE u,p;
@@ -1153,15 +1157,15 @@ static int set_guess_Wp(int showmessages, PFTYPE *lpflag, int eomtype, FTYPE *pr
 }
 
 
-///////////////////////////////////////
-//
-// Good for GRMHD or entropy GRMHD or cold GRMHD
-//
-// Make sure that W is large enough so that v^2 < 1 : 
-//
-// GODMARK: apparently this is necessary for 1D method, otherwise it can't find solution (2D method seems to be ok)
-//
-////////////////////////////////////// 
+////////////////////////////////////////
+///
+/// Good for GRMHD or entropy GRMHD or cold GRMHD
+///
+/// Make sure that W is large enough so that v^2 < 1 : 
+///
+/// GODMARK: apparently this is necessary for 1D method, otherwise it can't find solution (2D method seems to be ok)
+///
+/////////////////////////////////////// 
 static int verify_Wlast(FTYPE u, FTYPE p, struct of_geom *ptrgeom, FTYPE *W_last, FTYPE *Wp_last, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
 {
   int i_increase;
@@ -1227,11 +1231,11 @@ static int verify_Wlast(FTYPE u, FTYPE p, struct of_geom *ptrgeom, FTYPE *W_last
 
 
 
-///////////////////////////////////////
-//
-//  Check if solution was found
-//
-////////////////////////////////////// 
+////////////////////////////////////////
+///
+///  Check if solution was found
+///
+/////////////////////////////////////// 
 static int check_Wp(PFTYPE *lpflag, int eomtype, FTYPE *prim, FTYPE *U, struct of_geom *ptrgeom, FTYPE Wp_last, FTYPE Wp, int retval, FTYPE *wglobal, FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
 {
 
@@ -1336,7 +1340,7 @@ static int check_Wp(PFTYPE *lpflag, int eomtype, FTYPE *prim, FTYPE *U, struct o
 }
 
 
-// check on v^2>1 failure
+/// check on v^2>1 failure
 static void check_utsq_fail(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
 {
 
@@ -1655,7 +1659,7 @@ static int Wp2prim(int showmessages, PFTYPE *lpflag, int eomtype, FTYPE *prim, F
 
 
 
-// appears to give qualitatively similar, but still qualitatively different results than original phys.ffde.c code.  Gives more oscillatory results for torus DISKFIELD force-free field (i.e. set rho=u=0 but otherwise start with init.fishmon.c type setup)
+/// appears to give qualitatively similar, but still qualitatively different results than original phys.ffde.c code.  Gives more oscillatory results for torus DISKFIELD force-free field (i.e. set rho=u=0 but otherwise start with init.fishmon.c type setup)
 static int forcefree_inversion(struct of_geom *ptrgeom, FTYPE *Qtcon, FTYPE Bsq, FTYPE *Bcon, FTYPE *Bcov, FTYPE Qtsq, FTYPE *U, FTYPE *prim)
 {
   // force-free variables
@@ -1754,11 +1758,10 @@ static int forcefree_inversion(struct of_geom *ptrgeom, FTYPE *Qtcon, FTYPE Bsq,
 }
 
 
-// returns v^2>=1
-// does NOT depend on EOS
-// W^3 (W+2B^2) - S^2 (2W+B^2) \le W^2 (P^2-B^4)
-
-// GODMARK: vsqgtr1 based upon energy equation information?  What about P^2 equation inversion?
+/// returns v^2>=1
+/// does NOT depend on EOS
+/// W^3 (W+2B^2) - S^2 (2W+B^2) \le W^2 (P^2-B^4)
+/// GODMARK: vsqgtr1 based upon energy equation information?  What about P^2 equation inversion?
 static int vsqgtr1(FTYPE W,FTYPE Bsq,FTYPE QdotBsq, FTYPE Qtsq)
 {
 
@@ -1778,8 +1781,8 @@ static int vsqgtr1(FTYPE W,FTYPE Bsq,FTYPE QdotBsq, FTYPE Qtsq)
 //////////////////////////////////////////////
 
 
-// returns \tilde{u}^2 = \gamma^2 v^2
-// Note that this does NOT use Qdotn or Qdotnp (from energy equation) so works for entropy evolution too
+/// returns \tilde{u}^2 = \gamma^2 v^2
+/// Note that this does NOT use Qdotn or Qdotnp (from energy equation) so works for entropy evolution too
 static FTYPE utsq_calc(FTYPE W, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
 {
   FTYPE utsqtop,utsqbottom,utsq;
@@ -1805,8 +1808,8 @@ static FTYPE utsq_calc(FTYPE W, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotB
 
 }
 
-// returns \gamma^2
-// Note that this does NOT use Qdotn or Qdotnp (from energy equation) so works for entropy evolution too
+/// returns \gamma^2
+/// Note that this does NOT use Qdotn or Qdotnp (from energy equation) so works for entropy evolution too
 static FTYPE gammasq_calc_W(FTYPE W, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
 {
   FTYPE gammatop,gammabottom,gammasq;
@@ -1826,8 +1829,8 @@ static FTYPE gammasq_calc_W(FTYPE W, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE 
 
 }
 
-// returns \gamma
-// Note that this does NOT use Qdotn or Qdotnp (from energy equation) so works for entropy evolution too
+/// returns \gamma
+/// Note that this does NOT use Qdotn or Qdotnp (from energy equation) so works for entropy evolution too
 static FTYPE gamma_calc_W(FTYPE W, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
 {
   FTYPE gammasq,gamma;
@@ -1845,9 +1848,9 @@ static FTYPE gamma_calc_W(FTYPE W, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE Qd
 
 
 
-/* evaluate v^2 (spatial, normalized velocity) from W = \gamma^2 w */
-// does NOT depend on EOS
-// Note that this does NOT use Qdotn or Qdotnp (from energy equation) so works for entropy evolution too
+/// evaluate v^2 (spatial, normalized velocity) from W = \gamma^2 w
+/// does NOT depend on EOS
+/// Note that this does NOT use Qdotn or Qdotnp (from energy equation) so works for entropy evolution too
 static FTYPE vsq_calc(FTYPE W, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
 {
   FTYPE Wsq,Xsq,Ssq;
@@ -1866,9 +1869,9 @@ static FTYPE vsq_calc(FTYPE W, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBs
 
 }
 
-/* evaluate dv^2/dW */
-// does NOT depend on EOS
-// Note that this does NOT use Qdotn or Qdotnp (from energy equation) so works for entropy evolution too
+///  evaluate dv^2/dW 
+/// does NOT depend on EOS
+/// Note that this does NOT use Qdotn or Qdotnp (from energy equation) so works for entropy evolution too
 static FTYPE dvsq_dW(FTYPE W, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
 {
   FTYPE W3,X3,Ssq,Wsq,X;
@@ -1892,8 +1895,8 @@ static FTYPE dvsq_dW(FTYPE W, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq
 }
 
 
-// re-look at this GODMARK
-// Solution to the cold GRHD equation P^2 = ...[Wp]
+/// re-look at this GODMARK
+/// Solution to the cold GRHD equation P^2 = ...[Wp]
 static int coldgrhd(PFTYPE *lpflag, FTYPE Qtsq, FTYPE D, FTYPE *Wp)
 {
   FTYPE det;
@@ -1919,10 +1922,9 @@ static int coldgrhd(PFTYPE *lpflag, FTYPE Qtsq, FTYPE D, FTYPE *Wp)
 }
 
 
-// resultP = 0 = -P^2 + P^2 [ Wp ] for cold GRMHD
-
-// old version with poles
-// Note that this does NOT use Qdotn or Qdotnp (from energy equation) so works for entropy evolution too
+/// resultP = 0 = -P^2 + P^2 [ Wp ] for cold GRMHD
+/// old version with poles
+/// Note that this does NOT use Qdotn or Qdotnp (from energy equation) so works for entropy evolution too
 static FTYPE Psq_Wp_old(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
 {
   FTYPE result;
@@ -1951,9 +1953,9 @@ static FTYPE Psq_Wp_old(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE Qdo
 }
 
 
-// old version with poles
-// result = d(resultP)/dWp = + dP^2[Wp]/dWp
-// Note that this does NOT use Qdotn or Qdotnp (from energy equation) so works for entropy evolution too
+/// old version with poles
+/// result = d(resultP)/dWp = + dP^2[Wp]/dWp
+/// Note that this does NOT use Qdotn or Qdotnp (from energy equation) so works for entropy evolution too
 static FTYPE dPsqdWp_Wp_old(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
 {
   FTYPE result;
@@ -1970,9 +1972,9 @@ static FTYPE dPsqdWp_Wp_old(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE
 
 }
 
-// new version without poles
-// returns actually W^2 P^2
-// Note that this does NOT use Qdotn or Qdotnp (from energy equation) so works for entropy evolution too
+/// new version without poles
+/// returns actually W^2 P^2
+/// Note that this does NOT use Qdotn or Qdotnp (from energy equation) so works for entropy evolution too
 static int Psq_Wp(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra, FTYPE *resid, FTYPE *norm)
 {
   FTYPE S,W,W2,DoW,SoW;
@@ -1991,9 +1993,9 @@ static int Psq_Wp(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,F
 }
 
 
-// new version without poles
-// result = d(W^2 P^2)/dWp = 
-// Note that this does NOT use Qdotn or Qdotnp (from energy equation) so works for entropy evolution too
+/// new version without poles
+/// result = d(W^2 P^2)/dWp = 
+/// Note that this does NOT use Qdotn or Qdotnp (from energy equation) so works for entropy evolution too
 static FTYPE dPsqdWp_Wp(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
 {
   FTYPE result;
@@ -2016,11 +2018,11 @@ static FTYPE dPsqdWp_Wp(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE Qdo
 
 
 
-// residual for Eprime (old normal residual) when \tilde{u}^2=0, which is minimum value before problems
+/// residual for Eprime (old normal residual) when \tilde{u}^2=0, which is minimum value before problems
 #define MINRESIDEPRIME(Wp) ( Bsq*0.5+Qdotnp+3.0/5.0*Wp+(Bsq*Qtsq-QdotBsq)/(2.0*(Bsq+D+Wp)*(Bsq+D+Wp)) )
 
-// 0 = -E' + E'[Wp] for hot GRMHD (can be used for cold GRMHD too)
-// while this has poles near bad roots, the E\propto Wp for ultra relativistic case, so easy to find root
+/// 0 = -E' + E'[Wp] for hot GRMHD (can be used for cold GRMHD too)
+/// while this has poles near bad roots, the E\propto Wp for ultra relativistic case, so easy to find root
 static int Eprime_Wp_unopt(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra, FTYPE *resid, FTYPE *norm)
 {
   FTYPE X,X2,W;
@@ -2059,10 +2061,10 @@ static int Eprime_Wp_unopt(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE 
 
 
 
-// dE'/dWp [ Wp ]
-// It is ok that there exists a term (1-dpdW) since even with ideal gas EOS in non-rel limit (1-dpdWp) still order unity
-// as above, while poles near bad roots, linear dependence makes easier to find roots.
-// OPTMARK: Note that I already tried removing if-else and has no effect (05/20/09)
+/// dE'/dWp [ Wp ]
+/// It is ok that there exists a term (1-dpdW) since even with ideal gas EOS in non-rel limit (1-dpdWp) still order unity
+/// as above, while poles near bad roots, linear dependence makes easier to find roots.
+/// OPTMARK: Note that I already tried removing if-else and has no effect (05/20/09)
 static FTYPE dEprimedWp_unopt(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
 {
   FTYPE result;
@@ -2097,9 +2099,9 @@ static FTYPE dEprimedWp_unopt(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTY
 }
 
 
-// this version has no poles
-// assumes X2!=0, in which case previous old version gives inf anyways
-// 0 = (B^2+W)^2 (-E' + E'[Wp]) for hot GRMHD (can be used for cold GRMHD too)
+/// this version has no poles
+/// assumes X2!=0, in which case previous old version gives inf anyways
+/// 0 = (B^2+W)^2 (-E' + E'[Wp]) for hot GRMHD (can be used for cold GRMHD too)
 static FTYPE Eprime_Wp_new1(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
 {
   FTYPE result;
@@ -2136,9 +2138,9 @@ static FTYPE Eprime_Wp_new1(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE
 }
 
 
-// this version has no poles
-// d((B^2+W)^2 E')/dWp [ Wp ]
-// It is ok that there exists a term (1-dpdW) since even with ideal gas EOS in non-rel limit (1-dpdWp) still order unity
+/// this version has no poles
+/// d((B^2+W)^2 E')/dWp [ Wp ]
+/// It is ok that there exists a term (1-dpdW) since even with ideal gas EOS in non-rel limit (1-dpdWp) still order unity
 static FTYPE dEprimedWp_new1(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
 {
   FTYPE result;
@@ -2192,7 +2194,7 @@ static FTYPE dEprimedWp_new1(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYP
 
 
 
-// 0 = -Sc + Sc[Wp] for entropy GRMHD
+/// 0 = -Sc + Sc[Wp] for entropy GRMHD
 static FTYPE Sc_Wp_old(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
 {
   FTYPE result;
@@ -2223,8 +2225,8 @@ static FTYPE Sc_Wp_old(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE Qdot
 
 }
 
-// 0 = Wp(-Sc + Sc[Wp]) for entropy GRMHD
-// Noticed that original residual behaves like log(Wp) near the root, so that the derivative shoots too far.  Multiplying by Wp solves that problem.
+/// 0 = Wp(-Sc + Sc[Wp]) for entropy GRMHD
+/// Noticed that original residual behaves like log(Wp) near the root, so that the derivative shoots too far.  Multiplying by Wp solves that problem.
 static int Sc_Wp_unopt(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra, FTYPE *resid, FTYPE *norm)
 {
   FTYPE W;
@@ -2259,7 +2261,7 @@ static int Sc_Wp_unopt(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE Qdot
 
 
 
-// dSc/dWp [ Wp ] for entropy GRMHD
+/// dSc/dWp [ Wp ] for entropy GRMHD
 static FTYPE dScdWp_unopt(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
 {
   FTYPE result;
@@ -2369,8 +2371,8 @@ static int x1_of_x0(FTYPE x0, FTYPE *x1, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FT
     *********************************************************************/
 
 
-// Wpold is previous Newton iteration's value
-// *Wpnew is updated Newton iterations value
+/// Wpold is previous Newton iteration's value
+/// *Wpnew is updated Newton iterations value
 static void validate_Wp(FTYPE Wpold, FTYPE *Wpnew, FTYPE *wglobal, FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
 {
   FTYPE Wp;
@@ -2406,10 +2408,10 @@ static void validate_Wp(FTYPE Wpold, FTYPE *Wpnew, FTYPE *wglobal, FTYPE Bsq,FTY
 }
 
 
-// retvsq=0 : no problem
-// retvsq=1 : >=1.0
-// retvsq=2 : < too negative
-// retvsq=3 : >VSQ_TOO_BIG (forced failure even if converged)
+/// retvsq=0 : no problem
+/// retvsq=1 : >=1.0
+/// retvsq=2 : < too negative
+/// retvsq=3 : >VSQ_TOO_BIG (forced failure even if converged)
 static int validate_vsq(FTYPE vsqold,FTYPE *vsqnew, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
 {
   int retval;
@@ -2458,7 +2460,7 @@ static int validate_vsq(FTYPE vsqold,FTYPE *vsqnew, FTYPE *wglobal,FTYPE Bsq,FTY
 }
 
 
-// validate functions here change where Newton is, so ok to change arbitrarily since next Newton step will be in well-defined place (although may get stuck)
+/// validate functions here change where Newton is, so ok to change arbitrarily since next Newton step will be in well-defined place (although may get stuck)
 static void validate_x_2d(FTYPE x[NEWT_DIM], FTYPE x0[NEWT_DIM], FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
 {
 
@@ -2469,7 +2471,7 @@ static void validate_x_2d(FTYPE x[NEWT_DIM], FTYPE x0[NEWT_DIM], FTYPE *wglobal,
 }
 
 
-// 1D methods using W'
+/// 1D methods using W'
 static void validate_x_1d_old(FTYPE x[1], FTYPE x0[1], FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
 {
   FTYPE dv = NUMEPSILON;
@@ -2486,7 +2488,7 @@ static void validate_x_1d_old(FTYPE x[1], FTYPE x0[1], FTYPE *wglobal,FTYPE Bsq,
 
 
 
-// 1D methods using W'
+/// 1D methods using W'
 static void validate_x_1d(FTYPE x[1], FTYPE x0[1], FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
 {
 
@@ -2495,7 +2497,7 @@ static void validate_x_1d(FTYPE x[1], FTYPE x0[1], FTYPE *wglobal,FTYPE Bsq,FTYP
 }
 
 
-// set pointer to the correct validate_x function
+/// set pointer to the correct validate_x function
 static void pick_validate_x(int eomtype,void (**ptr_validate_x)(FTYPE x[NEWT_DIM], FTYPE x0[NEWT_DIM], FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra))
 {
 
@@ -2948,7 +2950,7 @@ static FTYPE res_sq_1d_orig_scn(FTYPE x[], FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,
 
 
 
-// unoptimized vresion of func_Eprime
+/// unoptimized vresion of func_Eprime
 static void func_Eprime_unopt(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE norm[], FTYPE (*jac)[NEWT_DIM], FTYPE *f, FTYPE *df, int n, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
 {
   FTYPE drdW;
@@ -2974,7 +2976,7 @@ static void func_Eprime_unopt(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE norm[]
 }
 
 
-// res_sq_Eprime() (or any pure residual function) is only called by line searching method
+/// res_sq_Eprime() (or any pure residual function) is only called by line searching method
 static FTYPE res_sq_Eprime_unopt(FTYPE x[], FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
 {
   FTYPE Wp;
@@ -2991,8 +2993,8 @@ static FTYPE res_sq_Eprime_unopt(FTYPE x[], FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB
 
 
 
-// get first part of kinetic stuff for func() or resid_sq()
-// for optimized version of func()
+/// get first part of kinetic stuff for func() or resid_sq()
+/// for optimized version of func()
 static void get_kinetics_part1(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra,  FTYPE *W, FTYPE *X, FTYPE *X2, FTYPE *X3, FTYPE *utsq, FTYPE *gamma, FTYPE *gammasq, FTYPE *rho0, FTYPE *wmrho0)
 {
 
@@ -3020,8 +3022,8 @@ static void get_kinetics_part1(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FT
 
 }
 
-// get kinetic stuff for func() or resid_sq()
-// for optimized version of func()
+/// get kinetic stuff for func() or resid_sq()
+/// for optimized version of func()
 static void get_kinetics_part2(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra,  FTYPE W, FTYPE X, FTYPE X2, FTYPE X3, FTYPE utsq, FTYPE gamma, FTYPE gammasq, FTYPE rho0, FTYPE wmrho0,FTYPE *dvsq,FTYPE *dwmrho0dW,FTYPE *drho0dW,FTYPE *dwmrho0dvsq,FTYPE *drho0dvsq)
 {
 
@@ -3041,8 +3043,8 @@ static void get_kinetics_part2(FTYPE Wp, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FT
 
 
 
-// optimized version of func_Eprime()
-// optimized in sense that minimizes extra kinetic calculations AND EOS lookups
+/// optimized version of func_Eprime()
+/// optimized in sense that minimizes extra kinetic calculations AND EOS lookups
 static void func_Eprime_opt(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE norm[], FTYPE (*jac)[NEWT_DIM], FTYPE *f, FTYPE *df, int n, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
 {
   //  FTYPE dv = 1.0e-10;
@@ -3176,7 +3178,7 @@ static void func_Eprime_opt(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE norm[], 
 }
 
 
-// res_sq_Eprime() (or any pure residual function) is only called by line searching method
+/// res_sq_Eprime() (or any pure residual function) is only called by line searching method
 static FTYPE res_sq_Eprime_opt(FTYPE x[], FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
 {
   FTYPE jac[NEWT_DIM][NEWT_DIM]; // dummy variable, return value not used
@@ -3196,7 +3198,7 @@ static FTYPE res_sq_Eprime_opt(FTYPE x[], FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,F
 
 
 
-// not that this is well-optimized.  Psq_Wp() and dPsqdWp_Wp() don't use subfunctions like "_unopt" versions for hot and entropy inversions.  Also no EOS functions to call.
+/// not that this is well-optimized.  Psq_Wp() and dPsqdWp_Wp() don't use subfunctions like "_unopt" versions for hot and entropy inversions.  Also no EOS functions to call.
 static void func_Psq(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE norm[], FTYPE (*jac)[NEWT_DIM], FTYPE *f, FTYPE *df, int n, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
 {
   FTYPE drdW,Wp;
@@ -3273,8 +3275,8 @@ static FTYPE res_sq_Sc_unopt(FTYPE x[], FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTY
 }
 
 
-// optimized version of func_Sc()
-// very similar to optimized version of func_Eprime() but different "getall_forinversion()" call and different residual and derivative
+/// optimized version of func_Sc()
+/// very similar to optimized version of func_Eprime() but different "getall_forinversion()" call and different residual and derivative
 static void func_Sc_opt(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE norm[], FTYPE (*jac)[NEWT_DIM], FTYPE *f, FTYPE *df, int n, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
 {
 
@@ -3392,8 +3394,8 @@ static void func_Sc_opt(FTYPE x[], FTYPE dx[], FTYPE resid[], FTYPE norm[], FTYP
 }
 
 
-// optimized version of res_sq_Sc()
-// just calls func_Sc_opt() for now since more optimized than original res_sq_Sc() still.  Could optimize further, but don't require only residual unless doing line searching that don't currently do.
+/// optimized version of res_sq_Sc()
+/// just calls func_Sc_opt() for now since more optimized than original res_sq_Sc() still.  Could optimize further, but don't require only residual unless doing line searching that don't currently do.
 static FTYPE res_sq_Sc_opt(FTYPE x[], FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
 {
   FTYPE jac[NEWT_DIM][NEWT_DIM]; // dummy variable, return value not used
@@ -3820,7 +3822,7 @@ static int find_root_1D_gen_Psq(int showmessages, PFTYPE *lpflag, int eomtype, F
 
 
 
-// below not done yet!
+/// below not done yet!
 static int find_root_3D_gen_Palpha(int showmessages, PFTYPE *lpflag, int eomtype, FTYPE x0, FTYPE *xnew, FTYPE *wglobal,FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra, struct of_newtonstats *newtonstats)
 {
   FTYPE x_3d[3];
@@ -4737,7 +4739,7 @@ static int general_newton_raphson(int showmessages, PFTYPE *lpflag, int eomtype,
 
 
 
-// see if meet tolerance
+/// see if meet tolerance
 static int newt_errorcheck(int n, FTYPE NEWT_TOL_VAR, FTYPE NEWT_TOL_ULTRAREL_VAR, FTYPE errx, FTYPE x0, FTYPE dx0, FTYPE *x, FTYPE *dx, FTYPE *wglobal)
 {
 
@@ -4760,7 +4762,7 @@ static int newt_errorcheck(int n, FTYPE NEWT_TOL_VAR, FTYPE NEWT_TOL_ULTRAREL_VA
 
 
 
-// see if repeating Newton cycle with no change in errx, so indicates can't do anything (even damping) to reduce error
+/// see if repeating Newton cycle with no change in errx, so indicates can't do anything (even damping) to reduce error
 static int newt_repeatcheck(int n, FTYPE errx, FTYPE errx_old, FTYPE errx_oldest, FTYPE *dx, FTYPE *dx_old, FTYPE *x, FTYPE *x_old, FTYPE *x_older, FTYPE *x_olderer)
 {
   int repeat;
@@ -4781,7 +4783,7 @@ static int newt_repeatcheck(int n, FTYPE errx, FTYPE errx_old, FTYPE errx_oldest
 }
 
 
-// see if repeating Newton cycle with no change in errx, so indicates can't do anything (even damping) to reduce error
+/// see if repeating Newton cycle with no change in errx, so indicates can't do anything (even damping) to reduce error
 static int newt_cyclecheck(int n, FTYPE errx, FTYPE errx_old, FTYPE errx_oldest, FTYPE *dx, FTYPE *dx_old, FTYPE *x, FTYPE *x_old, FTYPE *x_older, FTYPE *x_olderer)
 {
   int cycle;

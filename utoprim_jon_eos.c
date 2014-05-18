@@ -1,12 +1,13 @@
-// this file is actually just included in other files
+
+/*! \file utoprim_jon_eos.c
+  \brief EOS stuff for utoprim_jon.c
+  // FUNCTIONS ARE GENERAL for ANY EOS
+  // input variables may need to be expanded for more advanced EOS
+  // this file is actually just included in other files
+*/
 
 
-////////////////////////////////////////////////////////////////
-//
-// FUNCTIONS ARE GENERAL for ANY EOS
-// input variables may need to be expanded for more advanced EOS
-//
-////////////////////////////////////////////////////////////////
+
 
 
 /* 
@@ -252,8 +253,8 @@ static FTYPE dpdW_calc_vsq(int whicheos, FTYPE *EOSextra, FTYPE W, FTYPE D, FTYP
 }
 
 
-// holding v^2 fixed -- used by 1D and 2D methods, where for 1D method one uses a full derivative to obtain answer
-// obtains: dp/dW' holding v^2 fixed
+/// holding v^2 fixed -- used by 1D and 2D methods, where for 1D method one uses a full derivative to obtain answer
+/// obtains: dp/dW' holding v^2 fixed
 static FTYPE dpdWp_calc_vsq(int whicheos, FTYPE *EOSextra, FTYPE Wp, FTYPE D, FTYPE vsq)
 {
   FTYPE compute_idwmrho0dp(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
@@ -283,8 +284,8 @@ static FTYPE dpdWp_calc_vsq(int whicheos, FTYPE *EOSextra, FTYPE Wp, FTYPE D, FT
 
 }
 
-// holding utsq fixed
-// obtains dp/dW' holding utsq fixed
+/// holding utsq fixed
+/// obtains dp/dW' holding utsq fixed
 static FTYPE dpdWp_calc_utsq(int whicheos, FTYPE *EOSextra, FTYPE Wp, FTYPE D, FTYPE utsq)
 {
   FTYPE compute_idwmrho0dp(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
@@ -318,8 +319,8 @@ static FTYPE dpdWp_calc_utsq(int whicheos, FTYPE *EOSextra, FTYPE Wp, FTYPE D, F
 
 
 
-// holding v^2 fixed -- used by 1D and 2D methods, where for 1D method one uses a full derivative to obtain answer
-// obtains: dSs/dW' holding v^2 fixed
+/// holding v^2 fixed -- used by 1D and 2D methods, where for 1D method one uses a full derivative to obtain answer
+/// obtains: dSs/dW' holding v^2 fixed
 static FTYPE dSsdWp_calc_vsq(int whicheos, FTYPE *EOSextra, FTYPE Wp, FTYPE D, FTYPE vsq)
 {
   FTYPE compute_dspecificSdrho_wmrho0(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
@@ -349,8 +350,8 @@ static FTYPE dSsdWp_calc_vsq(int whicheos, FTYPE *EOSextra, FTYPE Wp, FTYPE D, F
 
 }
 
-// holding utsq fixed
-// obtains dSs/dW' holding utsq fixed
+/// holding utsq fixed
+/// obtains dSs/dW' holding utsq fixed
 static FTYPE dSsdWp_calc_utsq(int whicheos, FTYPE *EOSextra, FTYPE Wp, FTYPE D, FTYPE utsq)
 {
   FTYPE compute_dspecificSdrho_wmrho0(int whicheos, FTYPE *EOSextra, FTYPE rho0, FTYPE wmrho0);
@@ -440,7 +441,7 @@ static FTYPE dpdvsq_calc_Wp(int whicheos, FTYPE *EOSextra, FTYPE Wp, FTYPE D, FT
 #else
 
 
-//dp/dv^2 holding W' fixed
+///dp/dv^2 holding W' fixed
 static FTYPE dpdvsq_calc_Wp(int whicheos, FTYPE *EOSextra, FTYPE Wp, FTYPE D, FTYPE vsq)
 {
   FTYPE outval;
@@ -484,7 +485,7 @@ static FTYPE dpdvsq_calc_Wp(int whicheos, FTYPE *EOSextra, FTYPE Wp, FTYPE D, FT
 }
 
 
-// dp/dv^2 holding W' fixed with utsq as input instead of vsq
+/// dp/dv^2 holding W' fixed with utsq as input instead of vsq
 static FTYPE dpdvsq_calc2_Wp(int whicheos, FTYPE *EOSextra, FTYPE Wp, FTYPE D, FTYPE utsq)
 {
   FTYPE outval;
@@ -522,7 +523,7 @@ static FTYPE dpdvsq_calc2_Wp(int whicheos, FTYPE *EOSextra, FTYPE Wp, FTYPE D, F
 }
 
 
-//dSs/dv^2 holding W' fixed
+///dSs/dv^2 holding W' fixed
 static FTYPE dSsdvsq_calc_Wp(int whicheos, FTYPE *EOSextra, FTYPE Wp, FTYPE D, FTYPE vsq)
 {
   FTYPE outval;
@@ -566,7 +567,7 @@ static FTYPE dSsdvsq_calc_Wp(int whicheos, FTYPE *EOSextra, FTYPE Wp, FTYPE D, F
 }
 
 
-// dSs/dv^2 holding W' fixed with utsq as input instead of vsq
+/// dSs/dv^2 holding W' fixed with utsq as input instead of vsq
 static FTYPE dSsdvsq_calc2_Wp(int whicheos, FTYPE *EOSextra, FTYPE Wp, FTYPE D, FTYPE utsq)
 {
   FTYPE outval;
@@ -638,8 +639,8 @@ static FTYPE dpdvsq_calc_scn(int whicheos, FTYPE *EOSextra, FTYPE W, FTYPE D, FT
   return(outval);
 }
 
-// does NOT depend on EOS
-// w-\rho_0 = (u+p) = W'/\gamma^2 - D v^2/(1+\gamma)
+/// does NOT depend on EOS
+/// w-\rho_0 = (u+p) = W'/\gamma^2 - D v^2/(1+\gamma)
 static FTYPE wmrho0_compute_vsq(FTYPE Wp, FTYPE D, FTYPE vsq, FTYPE gamma,FTYPE gammasq)
 {
   return(Wp/gammasq - D*vsq/(1.0+gamma));
@@ -647,8 +648,8 @@ static FTYPE wmrho0_compute_vsq(FTYPE Wp, FTYPE D, FTYPE vsq, FTYPE gamma,FTYPE 
 }
 
 
-// does NOT depend on EOS
-// w-\rho_0 = (u+p) = W'/\gamma^2 - D utsq/(1+\gamma)/gamma^2
+/// does NOT depend on EOS
+/// w-\rho_0 = (u+p) = W'/\gamma^2 - D utsq/(1+\gamma)/gamma^2
 static FTYPE wmrho0_compute_utsq(FTYPE Wp, FTYPE D, FTYPE utsq, FTYPE gamma,FTYPE gammasq)
 {
   return( (Wp - D*utsq/(1.0+gamma) )/gammasq );
