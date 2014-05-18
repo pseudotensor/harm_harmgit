@@ -1,7 +1,0 @@
-SuperComputer Tips3 Pages
-HomePage IndexRecent Activity
-View PageEdit PageDelete
-Web pages for various super computers
-Version 1 Created by Jonathan M. on 22 Jun 2009.
-TACC Ranger: http://services.tacc.utexas.edu/index.php/ranger-user-guide
-TACC Lonestar: http://services.tacc.utexas.edu/index.php/lonestar-user-guide

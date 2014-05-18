@@ -1,5 +1,7 @@
+/*! \file ./docs//eos/0.txt
 0) Some useful scripts that do parts of 1+ below
 Version 1 Created by Jonathan M. on 07 Aug 2009.
 See helmeoscode/scripts/chunkbunch.sh
 
 That not only does all setup stuff of instructions #1-4 (minus any SM commands to plot results) and also chunks EOS table creation on orange using bsub.
+*/

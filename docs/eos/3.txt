@@ -1,3 +1,4 @@
+/*! \file ./docs//eos/3.txt
 3) Running HARM with EOS/nu
 Version 1 Created by Jonathan M. on 13 Jul 2009.
 1) Get HARM, Make the EOS files (eosnew.dat, eosnew.head, eosdegennew.dat), Make the stellar model (stellar1.txt)
@@ -91,3 +92,4 @@ pl 0 t eosfailt0
 ** However, some things are probably wrong:
 1) need to fix creation of BH
 2) Evolution of ye and ynu needs checking
+*/

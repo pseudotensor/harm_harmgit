@@ -1,3 +1,4 @@
+/*! \file ./docs//pnmhd/4.txt
 Initial and Boundary Conditions
 Version 1 Created by Jonathan M. on 30 May 2009.
 I suggest making a completely separate file that will contain all your code. Call it: steprad.c and a similar name can be used for the primary function. Eventually this primary function will be stuck amongst all the other operations. We’ll have to think about at what stage we want the radiation step to be done. Perhaps that paper you mention says how they do it.
@@ -8,3 +9,4 @@ For the initial condition file you should know now that you should duplicate the
 
 For the actual boundary conditions: It all depends on the details of your problem. If you really have a disk attached to a star, then I suppose there is a radiation flux into the disk and out of the disk and one has to choose that total flux. For the other boundary conditions you should just use “outflow” for the outer radial edge and the normal polar axis boundary condition for the poles. I would presume that outflow would mean that some simple primitive variable used to define the radiation field will just be copied either directly or linearly into the ghost zones.
 
+*/

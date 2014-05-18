@@ -1,3 +1,4 @@
+/*! \file ./docs//quick_start_guide/6.txt
 6) How to setup new problem
 Version 3 Created by Jonathan M. on 05 Feb 2013. Previous Version
 1) For example, copy existing problem to new problem code.  Start in HARM directory tree and do:
@@ -34,3 +35,4 @@ ln -s initboundcode/bounds.subkep.c bounds.c
 
 4) Now follow directions in Quick Start Guide: Notebook #1 to compile and run code.
 
+*/

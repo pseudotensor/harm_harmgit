@@ -1,3 +1,4 @@
+/*! \file ./docs//pnmhd/6.txt
 Modifying Viscosity
 Version 1 Created by Jonathan M. on 30 May 2009.
 BTW,
@@ -39,3 +40,4 @@ These turn on/off each component of the viscous stress tensor, where in spherica
 Cheers!
 
 Jon
+*/

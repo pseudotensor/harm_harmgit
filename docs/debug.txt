@@ -1,3 +1,4 @@
+/*! \file ./docs//debug.txt
 
 ////////////////////////////////////
 //
@@ -40,3 +41,4 @@
 /* click on source statement of interest */
 
 /* There is also a non-gui mode: coreprocessor.pl –help */
+*/

@@ -1,3 +1,4 @@
+/*! \file ./docs//quick_start_guide/other3.txt
 How to use SVN
 Version 2 Created by Jonathan M. on 31 May 2009. Previous Version
 1) http://svnbook.red-bean.com/
@@ -51,3 +52,4 @@ So if still have changes, then do:
 
 svn commit -m “your comment”
 svn update
+*/

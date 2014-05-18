@@ -1,3 +1,4 @@
+/*! \file ./docs//sm/1.txt
 Plotting Vectors
 Version 1 Created by Jonathan M. on 30 May 2009.
 Zhaohuan,
@@ -48,3 +49,4 @@ I wonder do you have sm programs to plot vector velocity (small arrows) in a plo
 Thanks,
 
 Zhaohuan
+*/

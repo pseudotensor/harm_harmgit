@@ -1,3 +1,4 @@
+/*! \file ./docs//quick_start_guide/3.txt
 3) Description of diagnostics files and files inside dump and image directories
 Version 2 Created by Jonathan M. on 05 Feb 2013. Previous Version
 *Diagnostics files: All viewable in SM*:
@@ -76,3 +77,4 @@ im0f?s : ?=0: log scale   ?=1: linear scale
 im0f0s?l : ?=0: not limited ?=1 limited
 
 
+*/

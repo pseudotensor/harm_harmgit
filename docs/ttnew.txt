@@ -1,3 +1,4 @@
+/*! \file ./docs//ttnew.txt
 (*   non-daginal terms:*)
 
      nondiag=-Bd[[nu]]*(gdet*Bu[[dir]])/(uu[[TT]]*uu[[TT]])     -(gdet*Bu[[dir]])*Bu[[odir1[[dir]]]]*(ud[[nu]]/uu[[TT]])*(ud[[odir1[[dir]]]]/uu[[TT]])     -(gdet*Bu[[dir]])*Bu[[odir2[[dir]]]]*(ud[[nu]]/uu[[TT]])*(ud[[odir2[[dir]]]]/uu[[TT]])     +Bd[[dir]]*(gdet*Bu[[dir]])*(ud[[nu]]/uu[[TT]])*(uu[[dir]]/uu[[TT]])     +Bd[[odir1[[dir]]]]*Bu[[odir1[[dir]]]]*(ud[[nu]]/uu[[TT]])*(uu[[dir]]/uu[[TT]])*(gdet)     +Bd[[odir2[[dir]]]]*Bu[[odir2[[dir]]]]*(ud[[nu]]/uu[[TT]])*(uu[[dir]]/uu[[TT]])*(gdet)     -Bd[[nu]]*(gdet*Bu[[dir]])*(ud[[dir]]/uu[[TT]])*(uu[[dir]]/uu[[TT]])     -Bd[[nu]]*Bu[[odir1[[dir]]]]*(ud[[odir1[[dir]]]]/uu[[TT]])*(uu[[dir]]/uu[[TT]])*(gdet)     -Bd[[nu]]*Bu[[odir2[[dir]]]]*(ud[[odir2[[dir]]]]/uu[[TT]])*(uu[[dir]]/uu[[TT]])*(gdet)     -(ud[[nu]]/uu[[TT]])*(ud[[dir]]/uu[[TT]])*(Bu[[dir]])*(gdet*Bu[[dir]])
@@ -30,3 +31,4 @@
     (* diagonal spatial terms*)
 +(-(1/2)*gdet*Bu[[dir]])*(Bd[[dir]])*(1/uu[[TT]])*(1/uu[[TT]])+((1/2)*gdet)*(Bu[[odir1[[dir]]]])*(Bd[[odir1[[dir]]]])*(1/uu[[TT]])*(1/uu[[TT]])+((1/2)*gdet)*(Bu[[odir2[[dir]]]])*(Bd[[odir2[[dir]]]])*(1/uu[[TT]])*(1/uu[[TT]])+(gdet)*(Bu[[odir1[[dir]]]])*(Bu[[odir2[[dir]]]])*(ud[[odir1[[dir]]]]/uu[[TT]])*(ud[[odir2[[dir]]]]/uu[[TT]])+(-gdet)*(Bu[[odir1[[dir]]]])*(Bd[[dir]])*(uu[[dir]]/uu[[TT]])*(ud[[odir1[[dir]]]]/uu[[TT]])+(-gdet)*(Bu[[odir2[[dir]]]])*(Bd[[dir]])*(uu[[dir]]/uu[[TT]])*(ud[[odir2[[dir]]]]/uu[[TT]])+(gdet)*(Bu[[odir1[[dir]]]])*(Bd[[odir1[[dir]]]])*(uu[[dir]]/uu[[TT]])*(ud[[dir]]/uu[[TT]])+(gdet)*(Bu[[odir2[[dir]]]])*(Bd[[odir2[[dir]]]])*(uu[[dir]]/uu[[TT]])*(ud[[dir]]/uu[[TT]])+(-(1/2)*gdet*Bu[[dir]])*(Bu[[dir]])*(ud[[dir]]/uu[[TT]])*(ud[[dir]]/uu[[TT]])+((1/2)*gdet)*(Bu[[odir1[[dir]]]])*(Bu[[odir1[[dir]]]])*(ud[[odir1[[dir]]]]/uu[[TT]])*(ud[[odir1[[dir]]]]/uu[[TT]])+((1/2)*gdet)*(Bu[[odir2[[dir]]]])*(Bu[[odir2[[dir]]]])*(ud[[odir2[[dir]]]]/uu[[TT]])*(ud[[odir2[[dir]]]]/uu[[TT]])
 
+*/

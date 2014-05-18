@@ -1,3 +1,4 @@
+/*! \file ./docs//possibleissues.txt
 
 2) bounds.c new features may cause super long loops or something
 
@@ -45,3 +46,4 @@ But only done each full step
 11) MPI_Barrier around MPI_Reduce() -- probably not
 
 
+*/

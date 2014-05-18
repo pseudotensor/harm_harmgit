@@ -1,3 +1,142 @@
+/*! \mainpage HARM Documentation Page
+ *
+ *
+
+
+ * \section intro_sec Introduction
+ *
+ * This is the introduction.
+
+ * \section code_sec Code
+ * Code is present at: <a href="https://harm.unfuddle.com">HARM Unfuddle</a>
+
+  <a href="svngit_8txt.html">SVN GIT Notes</a>
+
+
+
+ *
+ * \section install_sec Installation and Quick Start Guides
+
+ * Note, if already running on Ubuntu with pre-installed packages by Jon or others like on many supercomputers, then can skip all apt-get or similar package install commands.
+
+<a href="quick__start__guide_21_8txt.html">note: git code and compile and run</a>
+
+
+<a href="quick__start__guide_25_8txt.html">note: Fieldline files to Viz5D file</a>
+
+<a href="quick__start__guide_22_8txt.html">note: install r8 stuff to view images from harm</a>
+
+<a href="quick__start__guide_26_8txt.html">note: How to setup new problem</a>
+
+<a href="quick__start__guide_23_8txt.html">note: About diagnostics outputted by HARM</a>
+
+<a href="quick__start__guide_27_8txt.html">note: How to use SM</a>
+
+<a href="quick__start__guide_24_8txt.html">note: Compile and run Viz5D</a>
+
+
+ * \section data_sec HARM data description
+
+  <a href="datanewdesc_8txt.html">new data description</a>
+
+  <a href="tousedata_8txt.html">To use data, follow this</a>
+
+  <a href="datadesc_8txt.html">data description</a>
+
+  <a href="datadesc__mb09_8txt.html">MB09 data description</a>
+
+
+ * \section viz_sec Analysis and Viz Stuff
+
+<a href="general__plotting__guide_8txt.html">note: Jon's general plotting guide using Python with full detailed Tutorial</a>
+
+
+<a href="guide_8txt.html">note: Sasha Python help</a>
+
+<a href="viz_21_8txt.html">note: Viz routines/scripts for vis5d</a>
+
+
+ * \section debug_sec Debugging
+
+ <a href="debug_8txt.html">Debug</a>
+
+
+ * \section emacs_sec Efficient use of emacs
+
+ <a href="emacsefficient_8txt.html">Emacs</a>
+
+
+
+ * \section filetransfer_sec File transfer
+
+ Use globusconnect as part of globusonline:  <a href="http://globusonline.org/">GlobusOnline</a>
+
+ Some example globusonline commands: <a href="globusonline_8txt.html">Example GlobusOnline commands</a>
+
+ I used to use bbcp: <a href="bbcp_8txt.html">bbcp</a> and  <a href="tocopy_8txt.html">bbcp more notes</a>
+
+ Nothing is reliable and nothing is as reliable as globusconnect.
+
+ * \section callgraph_sec Optimizations and Call Graphs
+
+<a href="optimizations_8txt.html">Optimization Notes</a>
+
+<a href="callgraphs_8txt.html">Callgraphs</a>
+
+<a href="installperfstuff_8txt.html">Performance profile software</a>
+
+ * \section parallel_sec MPI and OpenMP Notes and SuperComputers
+
+<a href="parallel_8txt.html">Parallel Notes</a>
+
+<a href="supercomputertips.html">SuperCompute Tips</a>
+
+<a href="_xvfb_8txt.html">Using X remotely</a>
+
+ * \section eos_sec Equation of State Notes
+
+<a href="eos_21_8txt.html">note: Install and Compile EOS stuff and generate stellar model</a>
+
+<a href="eos_22_8txt.html">note: General EOS table from EOS Fortran code</a>
+
+<a href="eos_23_8txt.html">note: Running harm with EOS</a>
+
+<a href="eos_24_8txt.html">note: About Ynu variable</a>
+
+<a href="eos_8c.html">note: About </a>
+
+
+
+
+
+ * \section pnmhd_sec Docs on related PNMHD code
+
+<a href="pnmhd_21_8txt.html">note: Avery wind</a>
+
+<a href="pnmhd_24_8txt.html">note: Initial and boundary conditions</a>
+
+<a href="pnmhd_27_8txt.html">note: Details on Code</a>
+
+<a href="pnmhd_22_8txt.html">note: 2D simulations</a>
+
+<a href="pnmhd_25_8txt.html">note: Mathematica files</a>
+
+<a href="pnmhd_23_8txt.html">note: Gravity Potential</a>
+
+<a href="pnmhd_26_8txt.html">note: Modifying Viscosity</a>
+
+* \section scripts_sec Scripts locations
+
+See harmgit/scripts for many scripts that do many things
+
+* \section scripts_sec Scripts locations
+
+See harmgit/scripts for many scripts that do many things
+
+ */
+
+
+
 
 /*! \file main.c
     \brief Main file

@@ -1,3 +1,4 @@
+/*! \file ./docs//sashapythonviz/guide.txt
 Sasha's Python viz1 Pages
 HomePage IndexRecent Activity
 View PageEdit PageDelete
@@ -66,3 +67,4 @@ Python syntax is quite simple and intuitive. It uses indentation instead of curl
 
 Cheers!
 Sasha
+*/

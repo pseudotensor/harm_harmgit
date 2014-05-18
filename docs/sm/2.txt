@@ -1,3 +1,4 @@
+/*! \file ./docs//sm/2.txt
 1) Get the harm_sm repository:
 
 mkdir mysm ; cd mysm
@@ -86,3 +87,4 @@ C) jsm
 D) gogrmhd
 E) jrdpcf3duentropy dump0000
 F) plc 0 lrho # This will plot the log of density as contours
+*/

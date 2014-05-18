@@ -1,3 +1,4 @@
+/*! \file ./docs//optimizations.txt
 ////////////////////////////////////
 //
 // Performance Notes
@@ -421,3 +422,4 @@
 //
 
  
+*/

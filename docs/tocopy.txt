@@ -1,3 +1,4 @@
+/*! \file ./docs//tocopy.txt
 cd /lustre/scratch/atchekho/runcopy
 
 which=4 ; for fil in `cat ~/dirs$which.txt` ; do echo $fil ; export dirorig=`pwd` ; cd $fil/dumps/ ; find . \( -name "fieldline*.bin" -o -name "dump0000.bin" -o -name "gdump.bin" \) -print > ~/fieldlinepluslistdirs$which.txt ; ssh jmckinne@ki-jmck.slac.stanford.edu "mkdir -p /data2/jmckinne/$fil/dumps/" ;  scp ../npr* ../coord* jmckinne@ki-jmck.slac.stanford.edu:/data2/jmckinne/$fil/ ; ~/bin/bbcp -a -k -f -p -r -z -b +500 -I ~/fieldlinepluslistdirs$which.txt  -P 5 -V -T 'ssh -x -a -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' -S 'ssh -x -a -oConnectTimeout=0 -oFallBackToRsh=no %I -l %U %H ~/bin/bbcp' jmckinne@ki-jmck.slac.stanford.edu:/data2/jmckinne/$fil/dumps/  ; cd $dirorig ; done
@@ -456,3 +457,4 @@ Dest:   gsiftp://gridftp.ranch.tacc.xsede.org/home/01014/tg802609/
   thickdiskr3nexti
 
 globus-url-copy -vb -p 4 -stripe -tcp-bs 11M -r file:///lustre/
+*/

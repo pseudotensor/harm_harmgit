@@ -1,3 +1,4 @@
+/*! \file ./docs//quick_start_guide/other2.txt
 How to use "svn diff" and "svn log" and "svn info"
 Version 1 Created by Jonathan M. on 24 Jun 2009.
 It appears svn diff does many nice things (see “svn help diff”):
@@ -45,3 +46,4 @@ Here are some neat front-ends to SVN:
 RapidSVN + Meld diff tool (which you specify in RapidSVN settings).
 
 Does a great job at comparing revisions since it highlightes exactly which words on a line were changed rather than the whole line that was different.
+*/

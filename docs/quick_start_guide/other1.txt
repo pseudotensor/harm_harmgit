@@ -1,3 +1,4 @@
+/*! \file ./docs//quick_start_guide/other1.txt
 How to use "svn checkout" and "svn export"
 Version 1 Created by Jonathan M. on 24 Jun 2009.
 Apart from checking out the latest repository, you can checkout any revision. See “svn help checkout”.
@@ -27,3 +28,4 @@ The “svn export” is useful when you don’t want to ever edit the code or ke
 svn export https://harm.unfuddle.com/svn/harm_harm/@HEAD .
 
 Then there will be no “.svn” files, etc.
+*/

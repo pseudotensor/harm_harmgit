@@ -1,3 +1,4 @@
+/*! \file ./docs//svngit.txt
 
 
 // SVN comments:
@@ -42,3 +43,4 @@
 // Got git with:
 // git@harm.unfuddle.com:harm/harmgit.git
 
+*/

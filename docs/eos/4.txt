@@ -1,3 +1,4 @@
+/*! \file ./docs//eos/4.txt
 4) Notes about meaning of Ynu variable
 Version 1 Created by Jonathan M. on 30 Jul 2009.
 Ynu0 is obtained using Newton's method, where the Newton derivative is obtained after two iterations.
@@ -27,3 +28,4 @@ So #1 and #4 agree very closely!  So that confirms the value of Ynu is the same 
 
 The value of #3 is the post-iterative processed value of Ynu.  Note that currently the pr[YNU] read-in is forced every metric/neutrino iteration step during initialization.  If I really wanted neutrinos to be iterated, I should only assign Ynu on the first read-in of the stellar model file, with later iterations evolving Ynu.  Anyways, #3 is very rough, as expected after only really doing 1 iteration with an unresolved Ynu table.
 
+*/

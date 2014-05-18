@@ -1,3 +1,4 @@
+/*! \file ./docs//quick_start_guide/other5.txt
 Notes on Intel compiler
 Version 1 Created by Jonathan M. on 01 Feb 2013.
 
@@ -22,3 +23,4 @@ and then "source" the environment variables as mentioned in makehead.inc:
 Or wherever you installed Intel's MKL package.  Here you can see I installed it in my home directory as /home/intel/mkl, where normally it might be in /opt/intel/mkl .
 
 NOTE: One doesn't need to use lapack.  Try without lapack first.
+*/

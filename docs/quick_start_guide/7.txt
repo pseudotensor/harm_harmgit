@@ -1,3 +1,4 @@
+/*! \file ./docs//quick_start_guide/7.txt
 7) In SM look at basic output
 Version 3 Created by Jonathan M. on 05 Feb 2013. Previous Version
 1) Enter run directory
@@ -53,3 +54,4 @@ set absv3 = sqrt(1-1/(uu0*dxdxp00)**2)
 plc 0 absv3
 # So just be careful that things are computed exactly correctly.  Sometimes the exactly correct expression may be easily obtained from existing diagnostics.  In some cases exactly correct expressions may be more complicated.
 
+*/

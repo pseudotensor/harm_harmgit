@@ -1,3 +1,4 @@
+/*! \file ./docs//quick_start_guide/1.txt
 1) Compile and Run HARM (using latest git version)
 Version 26 Created by Jonathan M. at 7:52pm. Previous Version
 1) *Be in Linux*
@@ -122,3 +123,4 @@ b) chmod -R og-rwx harmcode
 11) Finally, this is not a shared code.  Only you are allowed access to this code.  Do not share it or share your access to this site.  Thank you for understanding!
 
 -Jonathan McKinney
+*/

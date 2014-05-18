@@ -1,3 +1,4 @@
+/*! \file ./docs//bbcp.txt
 ####################
 #
 # File transfer notes:
@@ -365,3 +366,4 @@ cd $dirorig
 
 
 
+*/

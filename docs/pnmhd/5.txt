@@ -1,4 +1,6 @@
+/*! \file ./docs//pnmhd/5.txt
 Mathematica Files
 Version 1 Created by Jonathan M. on 20 Jun 2009.
 http://www.slac.stanford.edu/~jmckinne/mathematica_pnmhd.zip
 
+*/
