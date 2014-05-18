@@ -1,3 +1,5 @@
+/*! \file harm_authorship_policy.txt
+
 Here are a few policy issues regarding coauthorship:
 
 1) HARM's State:
@@ -72,3 +74,6 @@ Of course, given Ramesh's scientific seniority, he can trump any of my judgments
 
 Thanks!
 Jon
+
+*/
+

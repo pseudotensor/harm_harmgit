@@ -155,6 +155,16 @@ See harmgit/utils for many utilities that do many things.
 
 See also harmgit/homescripts for other scripts.
 
+
+* \section license_sec License info
+
+<a href="license_8txt.html">License</a>
+
+<a href="harm__authorship__policy_8txt.html">Harm Authorship Policy</a>
+
+
+
+
  */
 
 
