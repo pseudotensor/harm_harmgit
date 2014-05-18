@@ -16,6 +16,14 @@
     \brief Header for makefile.  Sets primary code compile conditionals.
 */
 
+/*! \file maketail.harm.inc
+    \brief Tail for makefile for harm related files
+*/
+
+/*! \file maketail.inc
+    \brief Tail for makefile with various final links
+*/
+
 /*! \file maketail.ldouble.deps.inc
     \brief Tail including dependencies for long double makefile.
     See scripts/longdouble2double.sh

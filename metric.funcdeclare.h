@@ -1,4 +1,7 @@
 
+/*! \file metric.c
+     \brief Function delcarations for global use of functions in metric.c
+*/
 
 
 // metric stuff
