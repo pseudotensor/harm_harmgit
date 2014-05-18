@@ -1,6 +1,7 @@
 
 /*! \file fluxcompute.c
     \brief Per-point calculations for getting flux.
+
     // ideas:
     // GODMARK: Consider ZIP-average for non-diffusive part of LAXF or HLL flux
     // Chacon (2004) Computer Physics Communications
