@@ -1,4 +1,12 @@
 
+/*! \file initbase.c
+     \brief General initialization of code
+*/
+
+/*! \file init.c
+     \brief USER initial conditions (usually links to code in initbasecode directory)
+*/
+
 #include "decs.h"
 
 

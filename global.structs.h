@@ -1,15 +1,12 @@
 
+/*! \file global.structs.h
+    \brief macros and definitions related to HARM structures
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
 // structure definitions
-//
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+*/
 
 
-// none of below blink integers should be nearly as large as 32-bit signed integer can handle
+/// none of below blink integers should be nearly as large as 32-bit signed integer can handle
 struct blink {
   int num; // must stay int since used as argument to MPI functions that assume int -- so this limits number of elements one can pass.
   struct blink * np;
@@ -21,11 +18,10 @@ struct blink {
 };
 
 
-// structure declarations
 
-// if add something, then should set it in (at least) set_grid.c
-// gcon put below gcov,gcovpert,alphalapse since gcon not as often needed
-// store betasqoalphasq to avoid need of gcon in most calculations
+/// if add something, then should set it in (at least) set_grid.c
+/// gcon put below gcov,gcovpert,alphalapse since gcon not as often needed
+/// store betasqoalphasq to avoid need of gcon in most calculations
 #define interiorofgeompart1a                    \
   int i,j,k,p;
 
@@ -49,7 +45,7 @@ struct blink {
   FTYPE beta[NDIM];
 
 #if(WHICHEOM==WITHGDET)
-// must always create eomfunc[NPR],ieomfuncnosing[NPR] even if(WHICHEOM!=WITHGDET) since code refers to these arrays[pl] in general
+/// must always create eomfunc[NPR],ieomfuncnosing[NPR] even if(WHICHEOM!=WITHGDET) since code refers to these arrays[pl] in general
 #define interiorofgeompart2                     \
   FTYPE igdetnosing;
 #else
@@ -86,7 +82,7 @@ struct blink {
 
 
 
-// stored global geometry used most of the time when previously would call get_geometry()
+/// stored global geometry used most of the time when previously would call get_geometry()
 struct of_compgeom {
 
   interiorofgeom
@@ -99,9 +95,8 @@ struct of_compgeom {
 
 #if(GETGEOMUSEPOINTER==0)
 
-//typedef struct of_geom struct of_compgeom;
-
-// force to be the same
+///typedef struct of_geom struct of_compgeom;
+/// force to be the same
 #define of_geom of_compgeom
 
 struct of_allgeom {
@@ -187,7 +182,7 @@ struct of_allgeom {
 
 
 #if(NEWMETRICSTORAGE)
-// stored global geometry used most of the time when previously would call get_geometry()
+/// stored global geometry used most of the time when previously would call get_geometry()
 struct of_gdetgeom {
 
   interiorofgdetgeom
@@ -200,12 +195,11 @@ struct of_gdetgeom {
 
 
 
-//////////////////////
-//
-// state structure
-//
-//////////////////////
-
+///////////////////////
+///
+/// state structure
+///
+///////////////////////
 struct of_state {
   FTYPE ucon[NDIM];
   FTYPE ucov[NDIM];

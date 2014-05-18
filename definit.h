@@ -4,6 +4,11 @@
     
 */
 
+/*! \file init.h
+    \brief USER choices/switches (usually linked to code in initboundcode directory)
+    
+*/
+
 /// Set array storage order as defined in global.storage.h
 /// 0 corresponds to original HARM
 /// 5 optimal for extended radial grid, less so in \theta, and even less so in \phi

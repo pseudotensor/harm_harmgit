@@ -1,5 +1,12 @@
 
 
+/*! \file init.readdata.c
+    \brief GRB/KAZFULLEOS related reading of data from Fortran code's generated data
+    
+*/
+
+
+/// initialize stellar structure
 int init_star(int *whichvel, int*whichcoord, int i, int j, int k, FTYPE *pr, FTYPE *pstag)
 {
   int set_zamo_velocity(int whichvel, struct of_geom *ptrgeom, FTYPE *pr);

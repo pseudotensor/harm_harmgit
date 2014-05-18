@@ -1,5 +1,9 @@
-/* 
-   produces an "r8" file. */
+
+/*! \file image.c
+     \brief image dumping
+
+   produces an "r8" file.
+*/
 
 #include "decs.h"
 
@@ -32,7 +36,7 @@ static int imagescale,imagewhichpl,imagevartype,imagelimits;
 
 
 
-
+/// setup image dump
 int image_dump(long dump_cnt)
 {
   int startpl,endpl,starts,ends,startl,endl,startv,endv;
@@ -125,7 +129,7 @@ int image_dump(long dump_cnt)
   return(0);
 }
 
-
+/// define image parameters and data range
 int imagedefs(int whichpl, int scale, int limits, int vartype)
 {
   int i = 0, j = 0, k = 0, l = 0, col = 0, floor;
@@ -332,7 +336,7 @@ int imagedefs(int whichpl, int scale, int limits, int vartype)
 
 
 
-
+/// create image dump
 int image(long dump_cnt, int whichpl, int scale, int limits, int vartype)
 {
   MPI_Datatype datatype;
@@ -388,7 +392,7 @@ int image(long dump_cnt, int whichpl, int scale, int limits, int vartype)
 
 }
 
-
+/// image header
 int image_header(int whichdump, int whichdumpversion, int numcolumns, int bintxt, FILE *headerptr)
 { 
   int realtotalsize[NDIM];
@@ -454,7 +458,7 @@ int image_header(int whichdump, int whichdumpversion, int numcolumns, int bintxt
 
 
 
-
+/// image contents number
 extern void set_image_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
 {
 
@@ -466,7 +470,8 @@ extern void set_image_content_dnumcolumns_dnumversion(int *numcolumns, int *numv
 }
 
 
-// uses global vars to get aa and lmin
+/// image content
+/// uses global vars to get aa and lmin
 int image_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 {
   unsigned char liqb;

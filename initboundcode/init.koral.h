@@ -1,3 +1,9 @@
+
+/*! \file init.koral.h
+    \brief USER KORAL/RAD choices/switches
+    
+*/
+
 //undefs
 #undef MAXWELL
 #undef TRACKVPOT

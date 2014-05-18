@@ -1,3 +1,9 @@
+
+
+/*! \file init.koral.c
+     \brief USER initial conditions for Koral/RAD simulations
+*/
+
 // issues:
 
 // runnew8: RADTUBE: oscillations and slow.  averageiter=6.7
