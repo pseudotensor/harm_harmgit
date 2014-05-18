@@ -5,13 +5,14 @@
 
  * \section intro_sec Introduction
  *
- * This is the introduction.
+ * HARM (and HARMARD) solve the GRMHD (radiative) equations of motion.  This page itself gives some documentation/tutorials about how to use harm.
+
+ * The "Files" Link and "search" functions and "Data Structures" Link allow one to see the code layout, direct code documentation, and all other doxygen related context like the list of all global variables.
 
  * \section code_sec Code
  * Code is present at: <a href="https://harm.unfuddle.com">HARM Unfuddle</a>
 
   <a href="svngit_8txt.html">SVN GIT Notes</a>
-
 
 
  *
@@ -21,10 +22,13 @@
 
 <a href="quick__start__guide_21_8txt.html">note: git code and compile and run</a>
 
+See also harmgit/makefiles.other
 
 <a href="quick__start__guide_25_8txt.html">note: Fieldline files to Viz5D file</a>
 
 <a href="quick__start__guide_22_8txt.html">note: install r8 stuff to view images from harm</a>
+
+See harmgit/r8toras directory.
 
 <a href="quick__start__guide_26_8txt.html">note: How to setup new problem</a>
 
@@ -33,6 +37,8 @@
 <a href="quick__start__guide_27_8txt.html">note: How to use SM</a>
 
 <a href="quick__start__guide_24_8txt.html">note: Compile and run Viz5D</a>
+
+  See harmgit/docs/ for other docs that aren't in txt format (pdfs, latex, png, etc.)
 
 
  * \section data_sec HARM data description
@@ -85,11 +91,18 @@
 
 <a href="installperfstuff_8txt.html">Performance profile software</a>
 
+See harmgit/performancedata directory.
+
  * \section parallel_sec MPI and OpenMP Notes and SuperComputers
 
 <a href="parallel_8txt.html">Parallel Notes</a>
 
 <a href="supercomputertips.html">SuperCompute Tips</a>
+
+  See harmgit/environmentfiles/ for environment files for other computers, including supercomputers.  Note that there are "hidden" . files in these subdirectories.
+
+  See harmgit/batches for batch system files for various supercomputers running harm.
+
 
 <a href="_xvfb_8txt.html">Using X remotely</a>
 
@@ -105,8 +118,14 @@
 
 <a href="eos_8c.html">note: About </a>
 
+See also harmgit/eosstuff
 
 
+ * \section othercode_sec Other code for harm
+
+See harmgit/initboundcode and harmgit/initbounddata for code/data for other initial conditions/boundary conditions.
+
+See harmgit/subcodesfromothers for codes by other people.
 
 
  * \section pnmhd_sec Docs on related PNMHD code
@@ -129,9 +148,12 @@
 
 See harmgit/scripts for many scripts that do many things
 
-* \section scripts_sec Scripts locations
 
-See harmgit/scripts for many scripts that do many things
+* \section utils_sec Utilities locations
+
+See harmgit/utils for many utilities that do many things.
+
+See also harmgit/homescripts for other scripts.
 
  */
 
