@@ -1,4 +1,5 @@
 /*! \file ./docs//datadesc.txt
+~~~~
 The data file for the dipole field model in MB09 is at:
 
 http://www.cfa.harvard.edu/~jmckinney/research/dump0050
@@ -222,4 +223,5 @@ Other Notes:
 3) I have the dipole field and quadrupolar field models.  We can try the quadrupolar field as well.
 4) In some points in the jet the solution may be poor due to being somewhat unresolved.  Let me know if you have issues.
 5) Realize that the solution starts with an initial torus.  This may not be optimal for a long-term solution.  Instead injecting mass may be optimal.  We can discuss this.
+~~~~
 */

@@ -1,4 +1,5 @@
 /*! \file ./docs//temptempfinalallc.txt
+~~~~
  extern  void check_spc_singularities_user(void);
  extern  int set_fieldfrompotential(int *fieldfrompotential);
  extern  int prepre_init(void);
@@ -148,4 +149,5 @@
  extern  void UtoU(int inputtype, int returntype,struct of_geom *ptrgeom,FTYPE *Uin, FTYPE *Uout);
  extern  int entropy_calc(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *entropy);
  extern  int mnewt(FTYPE *U_target,FTYPE *pr0,int numnormterms,int whichcons, int primtoUcons, struct of_geom *ptrgeom, int whethertoreport,int ntrial, int mintrial, FTYPE x[], int n, int startp, FTYPE tolx, FTYPE tolf, FTYPE tolxallowed, FTYPE tolfallowed, FTYPE tolxreport, FTYPE tolfreport, struct of_newtonstats *newtonstats);
+~~~~
 */

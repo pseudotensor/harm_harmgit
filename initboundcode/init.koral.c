@@ -31,6 +31,8 @@ static SFTYPE beta,randfact,rin,rinfield; // OPENMPMARK: Ok file global since se
 static FTYPE rhodisk;
 static FTYPE nz_func(FTYPE R) ;
 static FTYPE taper_func2(FTYPE R,FTYPE rin, FTYPE rpow) ;
+static int fieldprim(int *whichvel, int*whichcoord, int ii, int jj, int kk, FTYPE *pr);
+FTYPE B0wald=1.0;
 
 //FTYPE thindiskrhopow=-3.0/2.0; // can make steeper like -0.7
 FTYPE thindiskrhopow=-0.2; // closer to NT73
@@ -57,6 +59,10 @@ int inittypeglobal; // for bounds to communicate detail of what doing
 #define MONOPOLAR 8
 #define OLEKFIELD 9
 #define FIELDJONMAD 10
+#define FIELDWALD 11
+#define MONOPOLE 12
+#define SPLITMONOPOLE 13
+
 
 
 
@@ -239,6 +245,11 @@ int prepre_init_specific_init(void)
   }
   // spherical polar problems:
   else if(WHICHPROBLEM==RADDONUT || WHICHPROBLEM==ATMSTATIC || WHICHPROBLEM==RADATM || WHICHPROBLEM==RADBONDI || WHICHPROBLEM==RADNT || WHICHPROBLEM==RADFLATDISK){
+    periodicx1=periodicx2=0;
+    periodicx3=1;
+  }
+  // assume spherical polar problems:
+  else{
     periodicx1=periodicx2=0;
     periodicx3=1;
   }
@@ -1486,6 +1497,9 @@ int init_global(void)
     }
 
     cooling=KORAL;
+
+    //    cooling=NOCOOLING; // WALD
+
     // ARAD_CODE=ARAD_CODE_DEF*1E5; // tuned so radiation energy flux puts in something much higher than ambient, while initial ambient radiation energy density lower than ambient gas internal energy.
     //    GAMMAMAXRAD=1000.0; // Koral limits for this problem.
     GAMMAMAXRAD=50.0L; // Koral limits for this problem.
@@ -1563,6 +1577,11 @@ int init_global(void)
   /*************************************************/
   /*************************************************/
   /*************************************************/
+
+
+
+
+
 
 
 
@@ -2177,6 +2196,12 @@ int init_defcoord(void)
 
 
 
+
+  /*************************************************/
+  /*************************************************/
+  /*************************************************/
+
+
   return(0);
 }
 
@@ -2646,6 +2671,16 @@ int init_dsandvels(int inittype, int pos, int *whichvel, int*whichcoord, SFTYPE 
   // assume inittype not used, pos==CENT, and time doesn't matter (e.g. only used at t=0)
 
   init_dsandvels_koral(whichvel, whichcoord,  i,  j,  k, pr, pstag);
+
+
+  int set_fieldtype(void);
+  int FIELDTYPE=set_fieldtype();
+
+  if(FIELDTYPE==SPLITMONOPOLE || FIELDTYPE==MONOPOLE || FIELDTYPE==FIELDWALD){
+    // generate field with same whichcoord as init_dsandvels_koral() set
+    fieldprim(whichvel, whichcoord, i, j, k, pr); // assume pstag set as average of pr
+  }
+
 
   return(0);
 }
@@ -4797,6 +4832,9 @@ int set_fieldtype(void)
       //FIELDTYPE=OLEKFIELD;
       //FIELDTYPE=FIELDJONMAD;
 
+      //FIELDTYPE=FIELDWALD; // WALD
+
+
     }
     else if(RADNT_DONUTTYPE==DONUTOHSUGA){
       FIELDTYPE=OHSUGAFIELD;
@@ -5101,6 +5139,44 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
 
   }
 
+  if(FIELDTYPE==SPLITMONOPOLE || FIELDTYPE==MONOPOLE || FIELDTYPE==FIELDWALD){
+
+    if(FIELDTYPE==SPLITMONOPOLE || FIELDTYPE==MONOPOLE) return(0); // otherwise setup poloidal components using vector potential
+    else if(FIELDTYPE==FIELDWALD){
+
+      FTYPE mcov[NDIM],mcon[NDIM],kcov[NDIM],kcon[NDIM];
+      
+
+      mcon[TT]=0;
+      mcon[RR]=0;
+      mcon[TH]=0;
+      mcon[PH]=1.0;
+      
+      kcon[TT]=1.0;
+      kcon[RR]=0;
+      kcon[TH]=0;
+      kcon[PH]=0;
+
+      // get metric grid geometry for these ICs
+      int getprim=0;
+      struct of_geom geomrealdontuse;
+      struct of_geom *ptrgeomreal=&geomrealdontuse;
+      *whichcoord = MCOORD;
+      gset(getprim,*whichcoord,i,j,k,ptrgeomreal);
+
+      lower_vec(mcon,ptrgeomreal,mcov);
+      lower_vec(kcon,ptrgeomreal,kcov);
+      
+      
+      if(l==3){ // WALD: allow PH->l?
+        // A_\phi
+        B0wald=1.0;
+        vpot += -B0wald*(mcov[PH]+2.0*a*kcov[PH]);
+      }
+    }
+  }
+
+
   //////////////////////////////////
   //
   // finally assign what's returned
@@ -5114,6 +5190,423 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
   return(0);
 
 }
+
+
+
+// setup primitive field (must use whichcoord inputted)
+static int fieldprim(int *whichvel, int*whichcoord, int ii, int jj, int kk, FTYPE *pr)
+{
+
+
+
+  /////
+  //
+  // Get FIELDTYPE
+  //
+  /////
+  int set_fieldtype(void);
+  int FIELDTYPE=set_fieldtype();
+
+
+  /////
+  //
+  // Get ptrgeom
+  //
+  /////
+  struct of_geom geomdontuse;
+  struct of_geom *ptrgeom=&geomdontuse;
+  if(*whichcoord==PRIMECOORDS){
+    get_geometry(ii,jj,kk,CENT,ptrgeom);
+  }
+  else{
+    // get metric grid geometry for these ICs
+    int getprim=0;
+    gset(getprim,*whichcoord,ii,jj,kk,ptrgeom);
+  }
+
+  /////
+  //
+  // get X and V
+  //
+  ////
+  FTYPE X[NDIM],V[NDIM];
+  coord(ii, jj, kk, CENT, X);
+  bl_coord(X, V);
+  FTYPE r=V[1];
+  FTYPE th=V[2];
+  FTYPE ph=V[3];
+
+
+  /////
+  //
+  // OVERWRITE velocity
+  //
+  /////
+  pr[U1]=pr[U2]=pr[U3]=0.0;
+
+  /////
+  //
+  // set field
+  //
+  ////
+  if(FIELDTYPE==SPLITMONOPOLE){
+    if(th<M_PI*0.5)  pr[B1]=B0wald/ptrgeom->gdet;
+    else pr[B1]=-B0wald/ptrgeom->gdet;
+    pr[B2]=pr[B3]=0;
+  }
+  else if(FIELDTYPE==MONOPOLE){
+    // Ruben's talk says they set $\dF^{tr} = C\sin{\theta}/\detg$.
+    pr[B1]=B0wald*ptrgeom->gdet;
+    pr[B2]=pr[B3]=0;
+  }
+  else if(FIELDTYPE==FIELDWALD){
+
+    FTYPE Fcov[NDIM][NDIM];
+    FTYPE Mcon[NDIM][NDIM];
+    FTYPE Mcov[NDIM][NDIM];
+    FTYPE etacov[NDIM],etacon[NDIM];
+    FTYPE Ecov[NDIM],Econ[NDIM],Bcov[NDIM],Bcon[NDIM];
+    FTYPE alpha;
+    FTYPE Jcon[NDIM];
+    int j,k;
+
+    void Fcov_numerical(FTYPE *X, FTYPE (*Fcov)[NDIM]);
+    void Jcon_numerical(FTYPE *X, FTYPE *Jcon);
+    extern void MtoF(int which, FTYPE Max[NDIM][NDIM],struct of_geom *geom, FTYPE faraday[NDIM][NDIM]);
+    extern void lower_A(FTYPE Acon[NDIM][NDIM], struct of_geom *geom, FTYPE Acov[NDIM][NDIM]);
+    extern void EBtopr(FTYPE *E,FTYPE *B,struct of_geom *geom, FTYPE *pr);
+    extern void EBtopr_2(FTYPE *E,FTYPE *B,struct of_geom *geom, FTYPE *pr);
+
+    //    first get F_{\mu\nu}
+    Fcov_numerical(X, Fcov);
+
+    // check that J^\mu=0
+    Jcon_numerical(X, Jcon);
+
+
+    //    dualfprintf(fail_file,"Fcov\n");
+    //DLOOP dualfprintf(fail_file,"Fcov[%d][%d]=%21.15g\n",j,k,Fcov[j][k]);
+    //    dualfprintf(fail_file,"%21.15g %21.15g\n",j,k,Fcov[0][3],Fcov[3][0]);
+    
+    // lapse
+    // define \eta_\alpha
+    // assume always has 0 value for space components
+    alpha = 1./sqrt(-ptrgeom->gcon[GIND(0,0)]);
+
+    etacov[TT]=-alpha; // any constant will work.
+    SLOOPA(j) etacov[j]=0.0; // must be 0
+    
+    // shift
+    // define \eta^\beta
+    raise_vec(etacov,ptrgeom,etacon);
+    //    dualfprintf(fail_file,"raise\n");
+
+    //    DLOOPA dualfprintf(fail_file,"etacon[%d]=%21.15g etacov[%d]=%21.15g\n",j,etacon[j],j,etacov[j]);
+    
+
+    // then get E^\alpha and B^\alpha
+    DLOOPA(j) Ecov[j]=0.0;
+    DLOOP(j,k) Ecov[j]+=etacon[k]*Fcov[j][k];
+    raise_vec(Ecov,ptrgeom,Econ);
+    //    dualfprintf(fail_file,"Ecov[3]=%2.15g\n",Ecov[3]);
+    //DLOOPA dualfprintf(fail_file,"Econ[%d]=%2.15g\n",j,Econ[j]);
+
+
+    MtoF(3,Fcov,ptrgeom,Mcon);
+    //    dualfprintf(fail_file,"MtoF\n");
+    //    DLOOP dualfprintf(fail_file,"Mcon[%d][%d]=%21.15g\n",j,k,Mcon[j][k]);
+
+    DLOOPA(j) Bcon[j]=0.0;
+    DLOOP(j,k) Bcon[j]+=etacov[k]*Mcon[k][j];
+
+    lower_vec(Bcon,ptrgeom,Bcov);
+
+    //    DLOOPA dualfprintf(fail_file,"Econ[%d]=%21.15g Bcon[%d]=%21.15g\n",j,Econ[j],j,Bcon[j]);
+
+    // ASSUMES FORCE-FREE!
+    EBtopr(Econ,Bcon,ptrgeom,pr);
+    //    dualfprintf(fail_file,"EBtopr\n");
+
+
+    // stick J^\mu into dump file
+#if(0)
+    for(k=U1;k<=U1+3;k++){
+      pr[k] = Jcon[k-U1];
+    }
+#endif
+    dualfprintf(fail_file,"ii=%d jj=%d\n",ii,jj);
+
+#if(0)
+    // E.B
+    k=U1;
+    pr[k]=0;
+    DLOOPA(j) pr[k]+=Ecov[j]*Bcon[j];
+
+    // B^2-E^2
+    k=UU;
+    pr[k]=0;
+    DLOOPA(j) pr[k]+=Bcov[j]*Bcon[j];
+    //    DLOOPA pr[k]+=Bcon[j];
+    DLOOPA(j) pr[k]-=Ecov[j]*Econ[j];
+
+    pr[B1]=Econ[1]*geom.g/etacov[TT];
+#endif
+
+
+#if(0)
+    struct of_state q;
+    FTYPE faradaytest[NDIM][NDIM];
+
+    // check where faraday changed
+    get_state(pr,ptrgeom,&q);
+
+    faraday_calc(0,q.bcon,q.ucon,&geom,faradaytest);
+    //    DLOOP dualfprintf(fail_file,"%21.15g  %21.15g\n",faradaytest[j][k],Fcov[j][k]);
+    DLOOP{
+      if(fabs(faradaytest[j][k]-Fcov[j][k])>1E-10){
+        dualfprintf(fail_file,"1 %d %d : %21.15g  %21.15g\n",ii,jj,faradaytest[j][k],Fcov[j][k]);
+      }
+    }
+    if(fabs(faradaytest[0][3])>1E-10) dualfprintf(fail_file,"1 Fcov=%21.15g faraday=%21.15g\n",Fcov[0][3],faradaytest[0][3]);
+#endif
+ 
+  }// end if FIELDWALD
+
+
+  return(0);
+}
+
+
+
+//#define FCOVDERTYPE DIFFNUMREC
+#define FCOVDERTYPE DIFFGAMMIE
+
+// see conn_func() for notes
+#if((REALTYPE==DOUBLETYPE)||(REALTYPE==FLOATTYPE))
+#define FCOVDXDELTA 1E-5
+#elif(REALTYPE==LONGDOUBLETYPE)
+#define FCOVDXDELTA 1E-6
+#endif
+
+void Fcov_numerical(FTYPE *X, FTYPE (*Fcov)[NDIM])
+{
+  int j,k,l;
+  FTYPE Xhk[NDIM], Xlk[NDIM];
+  FTYPE Xhj[NDIM], Xlj[NDIM];
+  FTYPE mcovhj,mcovlj,kcovhj,kcovlj;
+  FTYPE mcovhk,mcovlk,kcovhk,kcovlk;
+  FTYPE mcov_func_mcoord(struct of_geom *ptrgeom, FTYPE* X, int i, int j); // i not used
+  FTYPE kcov_func_mcoord(struct of_geom *ptrgeom, FTYPE* X, int i, int j); // i not used
+  extern int dfridr(FTYPE (*func)(struct of_geom *,FTYPE*,int,int), struct of_geom *ptrgeom, FTYPE *X,int ii, int jj, int kk, FTYPE *ans);
+
+
+  // setup dummy grid location since dxdxp doesn't need to know if on grid since don't store dxdxp (needed for dfridr())
+  struct of_geom geom;
+  struct of_geom *ptrgeom;
+  ptrgeom=&geom;
+  ptrgeom->i=0;
+  ptrgeom->j=0;
+  ptrgeom->k=0;
+  ptrgeom->p=NOWHERE;
+
+
+
+  // GET Fcov
+  if(FCOVDERTYPE==DIFFGAMMIE){
+
+    for(k=0;k<NDIM;k++){
+      for(j=0;j<NDIM;j++){
+
+	  for(l=0;l<NDIM;l++) Xlk[l]=Xhk[l]=Xlj[l]=Xhj[l]=X[l]; // location of derivative
+	  Xhk[k]+=FCOVDXDELTA; // shift up
+	  Xlk[k]-=FCOVDXDELTA; // shift down
+
+	  Xhj[j]+=FCOVDXDELTA; // shift up
+	  Xlj[j]-=FCOVDXDELTA; // shift down
+
+	  //	  dualfprintf(fail_file,"got here1: k=%d j=%d\n",k,j);
+
+	  
+	  mcovhj=mcov_func_mcoord(ptrgeom,Xhk,0,j); // 0 not used
+	  //	  dualfprintf(fail_file,"got here1.1: k=%d j=%d\n",k,j);
+	  mcovlj=mcov_func_mcoord(ptrgeom,Xlk,0,j); // 0 not used
+	  //	  dualfprintf(fail_file,"got here1.2: k=%d j=%d\n",k,j);
+	  mcovhk=mcov_func_mcoord(ptrgeom,Xhj,0,k); // 0 not used
+	  //	  dualfprintf(fail_file,"got here1.3: k=%d j=%d\n",k,j);
+	  mcovlk=mcov_func_mcoord(ptrgeom,Xlj,0,k); // 0 not used
+	  //	  dualfprintf(fail_file,"got here1.4: k=%d j=%d\n",k,j);
+
+	  kcovhj=kcov_func_mcoord(ptrgeom,Xhk,0,j); // 0 not used
+	  //	  dualfprintf(fail_file,"got here1.5: k=%d j=%d\n",k,j);
+	  kcovlj=kcov_func_mcoord(ptrgeom,Xlk,0,j); // 0 not used
+	  //	  dualfprintf(fail_file,"got here1.6: k=%d j=%d\n",k,j);
+	  kcovhk=kcov_func_mcoord(ptrgeom,Xhj,0,k); // 0 not used
+	  //	  dualfprintf(fail_file,"got here1.7: k=%d j=%d\n",k,j);
+	  kcovlk=kcov_func_mcoord(ptrgeom,Xlj,0,k); // 0 not used
+	  //	  dualfprintf(fail_file,"got here1.8: k=%d j=%d\n",k,j);
+
+	  //	  dualfprintf(fail_file,"got here2\n");
+
+	  Fcov[j][k] = B0wald*(
+	    +(mcovhj - mcovlj) / (Xhk[k] - Xlk[k])
+	    -(mcovhk - mcovlk) / (Xhj[j] - Xlj[j])
+	    +2.0*a*(
+		   +(kcovhj - kcovlj) / (Xhk[k] - Xlk[k])
+		   -(kcovhk - kcovlk) / (Xhj[j] - Xlj[j])
+		   )
+	    );
+      }// j
+    }// k
+  }
+  else if(FCOVDERTYPE==DIFFNUMREC){
+
+    for(k=0;k<NDIM;k++) for(j=0;j<NDIM;j++){
+        // 0 in dfridr not used
+        FTYPE ans1;+dfridr(mcov_func_mcoord,ptrgeom,X,0,j,k,&ans1);
+        FTYPE ans2;-dfridr(mcov_func_mcoord,ptrgeom,X,0,k,j,&ans2);
+        FTYPE ans3;+dfridr(kcov_func_mcoord,ptrgeom,X,0,j,k,&ans3);
+        FTYPE ans4;-dfridr(kcov_func_mcoord,ptrgeom,X,0,k,j,&ans4);
+        Fcov[j][k]=B0wald*(+ans1 + ans2 +2.0*a*(ans3 + ans4));
+      }
+    
+  }// end DIFFNUMREC
+
+}// end Fcov_numerical()
+
+
+
+
+
+// returns MCOORD m_\mu form of m^\mu={0,0,0,1} value for jth element
+FTYPE mcov_func_mcoord(struct of_geom *ptrgeom, FTYPE* X, int ii, int jj) // i not used
+{
+  FTYPE mcon[NDIM];
+  FTYPE mcov[NDIM];
+
+  int getprim=0;
+  int whichcoord=MCOORD;
+  gset_X(getprim, whichcoord, ptrgeom->i, ptrgeom->j, ptrgeom->k, ptrgeom->p, X, ptrgeom);
+
+  //  dualfprintf(fail_file,"got here3.3\n");
+  mcon[TT]=0.0;
+  mcon[RR]=0.0;
+  mcon[TH]=0.0;
+  mcon[PH]=1.0;
+  //  dualfprintf(fail_file,"got here3.4\n");
+
+  // lower only needs geom->gcov
+  lower_vec(mcon,ptrgeom,mcov);
+  //  dualfprintf(fail_file,"got here3.5\n");
+
+  return(mcov[jj]);
+}
+
+// returns MCOORD k_\mu form of k^\mu={1,0,0,0} value for jth element
+FTYPE kcov_func_mcoord(struct of_geom *ptrgeom, FTYPE* X, int ii, int jj) // i not used
+{
+  FTYPE kcon[NDIM];
+  FTYPE kcov[NDIM];
+
+  int getprim=0;
+  int whichcoord=MCOORD;
+  gset_X(getprim, whichcoord, ptrgeom->i, ptrgeom->j, ptrgeom->k, ptrgeom->p, X, ptrgeom);
+
+  kcon[TT]=1.0;
+  kcon[RR]=0.0;
+  kcon[TH]=0.0;
+  kcon[PH]=0.0;
+
+  // lower only needs geom->gcov
+  lower_vec(kcon,ptrgeom,kcov);
+
+  return(kcov[jj]);
+}
+
+void Jcon_numerical(FTYPE *X, FTYPE *Jcon)
+{
+  int j,k,l;
+  FTYPE Xh[NDIM], Xl[NDIM];
+  FTYPE Fconh,Fconl;
+  FTYPE Fcon_func_mcoord(struct of_geom *ptrgeom, FTYPE* X, int i, int j);
+  extern int dfridr(FTYPE (*func)(struct of_geom *,FTYPE*,int,int), struct of_geom *ptrgeom, FTYPE *X,int ii, int jj, int kk, FTYPE *ans);
+
+
+  // setup dummy grid location since dxdxp doesn't need to know if on grid since don't store dxdxp (needed for dfridr())
+  struct of_geom geom;
+  struct of_geom *ptrgeom;
+  ptrgeom=&geom;
+  ptrgeom->i=0;
+  ptrgeom->j=0;
+  ptrgeom->k=0;
+  ptrgeom->p=NOWHERE;
+
+
+  if(FCOVDERTYPE==DIFFGAMMIE){
+
+    for(k=0;k<NDIM;k++){
+      
+      Jcon[k] = 0;
+      for(j=0;j<NDIM;j++){
+
+        for(l=0;l<NDIM;l++) Xl[l]=Xh[l]=X[l]; // location of derivative
+        Xh[j]+=FCOVDXDELTA; // shift up
+        Xl[j]-=FCOVDXDELTA; // shift down
+        
+        // F^{kj}
+        Fconh=Fcon_func_mcoord(ptrgeom,Xh,k,j);
+        Fconl=Fcon_func_mcoord(ptrgeom,Xl,k,j);
+	
+        // J^\mu = {F^{\mu\nu}}_{;\nu}
+        // \detg J^k = F^{kj}_{;j} = (\detg F^{kj})_{,j} <--- thing actually computed and returned
+        Jcon[k] += (Fconh - Fconl) / (Xh[j] - Xl[j]);
+      } // j
+    }// k
+  }
+  else if(FCOVDERTYPE==DIFFNUMREC){
+
+    for(k=0;k<NDIM;k++){
+      Jcon[k] = 0;
+      for(j=0;j<NDIM;j++){
+        FTYPE ans1; dfridr(Fcon_func_mcoord,ptrgeom,X,0,j,k,&ans1);
+        Jcon[k]+=ans1;
+      }
+    }
+
+  }
+}
+
+#undef FCOVDERTYPE
+#undef FCOVDXDELTA
+
+
+
+
+// returns MCOORD F^{ii jj}
+FTYPE Fcon_func_mcoord(struct of_geom *ptrgeom, FTYPE* X, int ii, int jj)
+{
+  int getprim=0;
+  int whichcoord=MCOORD;
+  gset_X(getprim, whichcoord, ptrgeom->i, ptrgeom->j, ptrgeom->k, ptrgeom->p, X, ptrgeom);
+
+  FTYPE Fcov[NDIM][NDIM];
+  void Fcov_numerical(FTYPE *X, FTYPE (*Fcov)[NDIM]);
+  Fcov_numerical(X, Fcov);
+
+  // get covariant Maxwell from contravariant
+  FTYPE Fcon[NDIM][NDIM];
+  extern void raise_A(FTYPE Acov[NDIM][NDIM], struct of_geom *geom, FTYPE Acon[NDIM][NDIM]);
+  raise_A(Fcov, ptrgeom, Fcon) ;
+
+  // return gdet*F^{ii jj}
+  return(ptrgeom->gdet*Fcon[ii][jj]);
+}
+
+
+
+
+
+
+
 
 
 

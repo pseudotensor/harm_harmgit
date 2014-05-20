@@ -1,4 +1,5 @@
 /*! \file ./docs//quick_start_guide/5.txt
+~~~~
 5) Convert fieldline files and gdump files from HARM into V5D files
 Version 6 Created by Jonathan M. on 13 Feb 2013. Previous Version
 1) Assuming harmgit tree is at ~/harmgit/ and the run directory is in ~/harmgit/run/ , then:
@@ -62,4 +63,5 @@ posr : r
 posh : \theta
 posph : \phi
 
+~~~~
 */

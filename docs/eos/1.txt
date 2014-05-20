@@ -1,4 +1,5 @@
 /*! \file ./docs//eos/1.txt
+~~~~
 1) Installing EOS and compiling EOS ; Generating stellar model with EOS
 Version 1 Created by Jonathan M. on 22 Jun 2009.
 BASEDIR=`pwd`
@@ -131,4 +132,5 @@ For whichynumethod==0, must set ntydynorynu=1 and probably set value range from 
       restmassfix
 
 
+~~~~
 */

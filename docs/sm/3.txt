@@ -1,4 +1,5 @@
 /*! \file ./docs//sm/3.txt
+~~~~
 # This file describes some basic SM stuff using existing macros from this repo assuming already gone through quick start guide.
 
 Primary files are marked with * .  Still, those functions have been replaced by python scripts, but using SM is sometimes simpler or nice for simple plots with Latex labels.  But SM is buggy compared to python.
@@ -187,4 +188,5 @@ agpl 'dump' r rho
 
 
 
+~~~~
 */

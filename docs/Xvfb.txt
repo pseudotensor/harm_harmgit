@@ -1,4 +1,5 @@
 /*! \file ./docs//Xvfb.txt
+~~~~
 XVFB
 You can get Xvfb for Linux from ftp.xfree86.org. Distributions for other Unix systems can also be found at ftp.xfree86.org. You can also get Xvfb source at ftp.x.org and compile it.
 
@@ -39,4 +40,5 @@ Xvnc :2
 
 
 vis5d ./v5d/ifieldline0550.v5d -offscreen -script 3dmovie.test.tcl              
+~~~~
 */

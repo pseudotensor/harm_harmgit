@@ -1,4 +1,5 @@
 /*! \file ./docs//pnmhd/3.txt
+~~~~
 Gravity Potential
 Version 1 Created by Jonathan M. on 30 May 2009.
 In short, yes, you should set these in your analsol-type file. These are redundant objects because with different problems we would use different variables. I suggest just setting GM=GRAVC*MASSBH in your own analsol file for now. Later you can define your own code that uses those things. See below for what code I’m referring to:
@@ -43,4 +44,5 @@ One quick question: I think in the code you already set GM=1. But in init.c you 
 Thanks,
 
 Zhaohuan
+~~~~
 */

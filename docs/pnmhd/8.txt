@@ -1,4 +1,5 @@
 /*! \file ./docs//pnmhd/8.txt
+~~~~
 More on BCs
 Version 1 Created by Jonathan M. on 30 May 2009.
 1) PUREBC:
@@ -42,4 +43,5 @@ Note in this case there is no need to know anything about the CPU layout.
 Also, when making these MPI calls, make sure to make the code so that if #define USEMPI 0, then the code still compiles and works. This means putting #if(USEMPI) #endif around the MPI calls and then making sure the code STILL works correctly.
 
 You can see diag.c in diag_ener() for this type of thing being done, although again the code is complicated in there. I highly recommend making things as modular as possible — which I did not do.
+~~~~
 */

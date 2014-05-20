@@ -1,4 +1,5 @@
 /*! \file ./docs//pnmhd/7.txt
+~~~~
 More Details on Code
 Version 1 Created by Jonathan M. on 30 May 2009.
 Yes, I didn’t explain the code at all so we could reach this point of you plotting at least.
@@ -42,4 +43,5 @@ I’m sure there are tons of things I’m not telling you, so let me know….
 Cheers!
 
 Jon
+~~~~
 */

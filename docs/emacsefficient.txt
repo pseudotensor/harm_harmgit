@@ -1,4 +1,5 @@
 /*! \file ./docs//emacsefficient.txt
+~~~~
 How to use emacs more efficiently for many changes across multiple files
 Version 1 Created by Jonathan M. at 6:07am.
 While emacs and its regexp are great, I never knew one could be even more powerful with TAGS in emacs that allows you to process multiple files. Without this, I'd have to use VC++ with its broken regexp and horrible key sequences and/or mouse clicks required.
@@ -32,4 +33,5 @@ that do regexp research replace, search, and regexp search, respectively.
 There is apparently no "dumb" version of tags-query-replace, so that means even your input has to be regexp (e.g. to search for array[123] one must search for array\[123\]). Output is always non-regexp except for regexp variables.
 
 -Jon
+~~~~
 */

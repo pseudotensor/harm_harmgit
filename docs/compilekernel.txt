@@ -1,4 +1,5 @@
 /*! \file ./docs//compilekernel.txt
+~~~~
 
 How to: Compile Linux kernel 2.6
 
@@ -84,4 +85,5 @@ For more information see:
     * Our Exploring Linux kernel article and Compiling Linux Kernel module only.
     * Official README file has more information on kernel and software requirement to compile it. This file is kernel source directory tree.
     * Documentation/ directory has interesting kernel documentation for you in kernel source tree.
+~~~~
 */

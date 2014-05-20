@@ -1,5 +1,5 @@
-/*! \file docs/general_plotting_guide.txt
-
+/*! \file ./docs/general_plotting_guide.txt
+~~~~
 There are a couple plotting tools that go beyond vis5d+'s capability
 to deal with more publishable plots.
 
@@ -454,6 +454,5 @@ mytut1()
 
 
 
-
+~~~~
 */
-

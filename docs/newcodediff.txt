@@ -1,4 +1,5 @@
 /*! \file ./docs//newcodediff.txt
+~~~~
 advance.c
   DLOOPA(jj) dphidt += GLOBALMETMACP0A3(conn,i,j,k,jj,TT,TT)*(ptrgeom->gcov[GIND(jj,TT)]);																										   |	  DLOOPA(jj) dphidt += GLOBALMETMACP0A3(conn,i,j,k,jj,TT,TT)*(ptrgeom->gcov[jj][TT]);
   phi = -(1.0+ptrgeom->gcov[GIND(TT,TT)])*0.5;																																   |	  phi = -(1.0+ptrgeom->gcov[TT][TT])*0.5;
@@ -1349,4 +1350,5 @@ int realfast(int dir,FTYPE EF,FTYPE cs2,FTYPE cms2,FTYPE va2,FTYPE *ucon,FTYPE *
   gii=geom->gcon[GIND(dir,dir)];																																	   |	  gii=geom->gcon[dir][dir];
 wavespeeds.c
   SLOOP(j,k) vsqroe += p_roe[UU+j]*p_roe[UU+k] * geom->gcov[GIND(j,k)];																													   |	  SLOOP(j,k) vsqroe += p_roe[UU+j]*p_roe[UU+k] * geom->gcov[j][k];
+~~~~
 */

@@ -172,7 +172,7 @@
 
 
 
-#define ALLOWMETRICROT 0
+#define ALLOWMETRICROT 0 // WALD->1
 #if(ALLOWMETRICROT==1)
 #undef CONNAXISYMM
 #define CONNAXISYMM 0 //required to be 0 if really rotating metric
@@ -323,7 +323,7 @@
 #define DOENOFLUXMEMORY 0
 #define BOUNDARYINTERPADJUST 0  //should be set to zero always
 #define COMPUTEFRDOT 0
-#define CALCFARADAYANDCURRENTS 0
+#define CALCFARADAYANDCURRENTS 0 // WALD->1
 #define WHICHCURRENTCALC CURRENTCALC1
 #define FARADAYT0 1
 #define CURRENTST0 1
@@ -468,7 +468,6 @@ struct Ccoordparams {
 #define RVDONUTIN (43) //  radiative and viscous dougnut inflowing
 #define RADNTCYL (44) // emission from midplane in cylindrical
 
-
 // non-implemented NON-radiative problems in KORAL that are semi-duplicated by some other radiative tests
 #define RADINFALL (2) // RADBEAM2D with FLATBACKGROUND=0 is like this
 #define DONUT (3) // initboundcode/*fishmon* similar
@@ -543,6 +542,15 @@ struct Ccoordparams {
 
 
 
+
+
+////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////
+///// CHOOSE PROBLEM
+////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////
+
+#define WHICHPROBLEM RADDONUT
 
 
 
@@ -1013,6 +1021,7 @@ struct Ccoordparams {
 #elif(WHICHPROBLEM==RADDONUT)
 
 #undef WHICHRADSOURCEMETHOD
+//#define WHICHRADSOURCEMETHOD SOURCEMETHODNONE // WALD
 //#define WHICHRADSOURCEMETHOD SOURCEMETHODNONE
 //#define WHICHRADSOURCEMETHOD SOURCEMETHODEXPLICIT
 #define WHICHRADSOURCEMETHOD SOURCEMETHODIMPLICIT
@@ -1100,6 +1109,9 @@ struct Ccoordparams {
 
 
 #endif
+
+
+
 
 
 

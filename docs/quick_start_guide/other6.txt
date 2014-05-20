@@ -1,4 +1,5 @@
 /*! \file ./docs//quick_start_guide/other6.txt
+~~~~
 Useful bash alias's and core dump capability
 Version 1 Created by Jonathan M. on 01 Jun 2009.
 One can add to your bash shell startup script: .bashrc , the following:
@@ -55,4 +56,5 @@ ulimit -S -c 100000000 > /dev/null 2>&1
 
 umask 077
 
+~~~~
 */

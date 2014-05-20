@@ -1,4 +1,5 @@
 /*! \file ./docs//pnmhd/12.txt
+~~~~
 dr8, ppm2fli, xanim, vis5d+, and mpeg2encode
 Version 1 Created by Jonathan M. on 30 May 2009.
 Avery and Manuel,
@@ -105,4 +106,5 @@ and that’s about all I know how to do!
 —————————
 
 -Jon
+~~~~
 */

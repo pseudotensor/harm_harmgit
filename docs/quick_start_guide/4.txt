@@ -1,4 +1,5 @@
 /*! \file ./docs//quick_start_guide/4.txt
+~~~~
 4) Compile and Run Vis5dPlus
 Version 17 Created by Jonathan M. on 21 Feb 2013. Previous Version
 1) 
@@ -99,4 +100,5 @@ NOTES: had to reorder line 172 in util/igmk3d.f so DATA was last (i.e. after lin
 One thing is missing from the include directory, so it needs to be copied over.  Copy src/vis5d.h to ~/include .  E.g.:
 
 jon@physics-179:/data/jon/Vis5dPlus$ cp src/vis5d.h ~/include/
+~~~~
 */

@@ -1,4 +1,5 @@
 /*! \file ./docs//listofpossibleissues.txt
+~~~~
 1) coord.c : GENDXDELTA(k)
 2) coord.c : dxdxp[3][3] and V[3] issue?
 3) eomfunc
@@ -62,4 +63,5 @@ Rebecca code:
 MORE PROBLEMS:
 
 1) phys.c, source.c, phys.ffde.c, utoprimgen.c, utoprim_jon.c
+~~~~
 */

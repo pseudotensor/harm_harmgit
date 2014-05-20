@@ -1,4 +1,5 @@
 /*! \file ./docs//pnmhd/9.txt
+~~~~
 Quick Start Guide
 Version 1 Created by Jonathan M. on 30 May 2009.
 ——-
@@ -241,4 +242,5 @@ Untar this so that it creates a directory: ~/sm/lib (i.e. /home//sm/lib)
 Then make sure your .sm is changed so anything that looks like “/usr/local/lib” is then “/home//sm/lib”
 
 -Jon
+~~~~
 */

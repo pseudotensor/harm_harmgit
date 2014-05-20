@@ -1,4 +1,5 @@
 /*! \file ./docs//tousedata.txt
+~~~~
 The data is on:
 
 /data2/jmckinne/<modelname>
@@ -116,4 +117,5 @@ The fieldline files have temporal gaps sometimes, so check the time (and fill-in
 
 Feel free to ask questions.
 
+~~~~
 */

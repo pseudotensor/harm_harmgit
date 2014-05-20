@@ -1,4 +1,5 @@
 /*! \file ./docs//installperfstuff.txt
+~~~~
 JCM 05/12/2009:
 
 1) Get specific kernel that perfmon has patch to:
@@ -65,4 +66,5 @@ make: *** [all] Error 2
 # not required if have perfmon2
 #2) Install perfctr (where?)
 #   http://sourceforge.net/projects/perfctr/
+~~~~
 */
