@@ -1498,7 +1498,7 @@ int init_global(void)
 
     cooling=KORAL;
 
-    //    cooling=NOCOOLING; // WALD
+    //cooling=NOCOOLING; // WALD
 
     // ARAD_CODE=ARAD_CODE_DEF*1E5; // tuned so radiation energy flux puts in something much higher than ambient, while initial ambient radiation energy density lower than ambient gas internal energy.
     //    GAMMAMAXRAD=1000.0; // Koral limits for this problem.
@@ -3834,7 +3834,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
           pradffortho[PRAD2]=pr[PRAD2];
           pradffortho[PRAD3]=pr[PRAD3];
           
-          dualfprintf(fail_file,"CHECK: ijk=%d %d %d : %g %g %g %g\n",i,j,k,pradffortho[PRAD0],pradffortho[PRAD1],pradffortho[PRAD2],pradffortho[PRAD3]);
+          //          dualfprintf(fail_file,"CHECK: ijk=%d %d %d : %g %g %g %g\n",i,j,k,pradffortho[PRAD0],pradffortho[PRAD1],pradffortho[PRAD2],pradffortho[PRAD3]);
         }
 
      
@@ -4832,7 +4832,7 @@ int set_fieldtype(void)
       //FIELDTYPE=OLEKFIELD;
       //FIELDTYPE=FIELDJONMAD;
 
-      //FIELDTYPE=FIELDWALD; // WALD
+      //      FIELDTYPE=FIELDWALD; // WALD
 
 
     }
@@ -5239,13 +5239,6 @@ static int fieldprim(int *whichvel, int*whichcoord, int ii, int jj, int kk, FTYP
 
   /////
   //
-  // OVERWRITE velocity
-  //
-  /////
-  pr[U1]=pr[U2]=pr[U3]=0.0;
-
-  /////
-  //
   // set field
   //
   ////
@@ -5323,9 +5316,19 @@ static int fieldprim(int *whichvel, int*whichcoord, int ii, int jj, int kk, FTYP
 
     //    DLOOPA dualfprintf(fail_file,"Econ[%d]=%21.15g Bcon[%d]=%21.15g\n",j,Econ[j],j,Bcon[j]);
 
-    // ASSUMES FORCE-FREE!
+    FTYPE prold[NPR];
+    int pliter,pl;
+    PLOOP(pliter,pl) prold[pl]=pr[pl];
+
     EBtopr(Econ,Bcon,ptrgeom,pr);
-    //    dualfprintf(fail_file,"EBtopr\n");
+    // ASSUMES FORCE-FREE!
+    if(EOMTYPE==EOMFFDE){
+      //      pr[U1]=pr[U2]=pr[U3]=0.0;
+      //    dualfprintf(fail_file,"EBtopr\n");
+    }
+    else{
+      for(pl=U1;pl<=U3;pl++) pr[pl]=prold[pl];
+    }
 
 
     // stick J^\mu into dump file
@@ -5334,7 +5337,7 @@ static int fieldprim(int *whichvel, int*whichcoord, int ii, int jj, int kk, FTYP
       pr[k] = Jcon[k-U1];
     }
 #endif
-    dualfprintf(fail_file,"ii=%d jj=%d\n",ii,jj);
+    //    dualfprintf(fail_file,"ii=%d jj=%d\n",ii,jj);
 
 #if(0)
     // E.B
@@ -5665,20 +5668,20 @@ int getmax_densities_full(FTYPE (*prim)[NSTORE2][NSTORE3][NPR],SFTYPE *rhomax, S
 int get_maxes(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *bsq_max, FTYPE *ptot_max, FTYPE *beta_min)
 {
   int funreturn;
-  int eqslice;
+  int eqslice=0;
   FTYPE parms[MAXPASSPARMS];
 
   int set_fieldtype(void);
   int FIELDTYPE=set_fieldtype();
   
-  if(FIELDTYPE==VERTFIELD || FIELDTYPE==BLANDFORDQUAD || FIELDTYPE==DISK2FIELD || FIELDTYPE==FIELDJONMAD){
+  if(FIELDTYPE==VERTFIELD || FIELDTYPE==BLANDFORDQUAD || FIELDTYPE==DISK2FIELD || FIELDTYPE==FIELDJONMAD || FIELDTYPE==FIELDWALD){
     eqslice=1;
   }
   else{
     eqslice=0;
   }
 
-  if(FIELDTYPE==FIELDJONMAD){
+  if(FIELDTYPE==FIELDJONMAD || FIELDTYPE==FIELDWALD){
     parms[0]=rinfield;
     parms[1]=20.0;
   }
