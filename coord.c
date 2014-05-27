@@ -1060,13 +1060,13 @@ void bl_coord(FTYPE *X, FTYPE *V)
   FTYPE BB,CC;
   FTYPE myhslope1,myhslope2,myhslope;
   FTYPE flip1,flip2;
-  FTYPE th0,th0toprint,th2,switch0,switch2,switchinner0,switchinner2,thetasign,x2temp;
+  FTYPE th0,th0toprint,th2,switch0,switch2,switchinner0,switchinner2,switchrad0,switchrad2,thetasign,x2temp;
   FTYPE r,dtheta2dx1,dtheta2dx2,dtheta0dx2,dtheta0dx1,dswitch0dr,dswitch2dr;
   FTYPE X0;
   // for defcoord=JET5COORDS
   FTYPE ii,logform,radialarctan,thetaarctan; // temp vars
   //for SJETCOORDS
-  FTYPE theexp;
+  FTYPE theexp,theexp1,theexp2;
 
 
   // AKMARK: coordinates defined, in particular, phi wedge (e.g., V[3]=2.0*M_PI*X[3])
@@ -1320,12 +1320,20 @@ void bl_coord(FTYPE *X, FTYPE *V)
     V[1] = R0+exp(pow(X[1],bp_npow)) ;
 #else
 
+#if(0)
     theexp = bp_npow*X[1];
     if( X[1] > bp_x1br ) {
       theexp += bp_cpow2 * pow(X[1]-bp_x1br,bp_npow2);
     }
     V[1] = R0+exp(theexp);
+#else
+    switchrad0 = 0.5+1.0/M_PI*atan((X[1]-bp_x1br)/(8.*dx[1])); // switch in .nb file
+    switchrad2 = 0.5-1.0/M_PI*atan((X[1]-bp_x1br)/(8.*dx[1])); // switchi in .nb file
 
+    theexp1 = bp_npow*X[1];
+    theexp2 = theexp1+bp_cpow2 * pow(X[1]-bp_x1br,bp_npow2);
+    V[1] = (R0+exp(theexp1))*switchrad2 + (R0+exp(theexp2))*switchrad0; 
+#endif
 
     //    FTYPE npowtrue,npowlarger=10.0;
     //    FTYPE npowrs=1E3;
