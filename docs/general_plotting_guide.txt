@@ -291,6 +291,16 @@ cd ${moviename} # or whatever to get to directory, like cd run/test1/$moviename
 # this will produce links so ffmpeg or avconv or other programs can see a sequential list of files that they need to act upon.
 
 
+### NOTE: At this point, one is "done" with python scripts called from bash scripts to make automatted stuff.  Remaining "steps" are alternative ways to run python or issues related to super computers.
+
+
+# NOTE: If you want to run with more cores on a multi-core node, you can change numcorespernode=1 to (e.g.) numcorespernode=8 in ~/py/scripts/makemovie.sh .  Then for the make1d/makemerge qty2.npy generation phase and the makemovie phase, it will run 8X faster.  The makeplot phase where various plots are created won't take any longer or shorter with more fieldline files or more cores -- the "plotting" stage only takes longer if the simulation is higher resolution.
+# If you want to do that, then you should probably kill the previously running python in case it's still going.  Do "killall -s 9 python" to kill all your python calls.  Then you can try with more cores.
+
+# You can check "top" to see if it's running python.  Or look at the latest *err* or *.out files in the movie directory to see what's going on.
+
+
+
 8) One can run the makemovie script directly once one has already at
 least run makeallmovie with the first 1 1 1 options so that the
 test1-like directory, files, etc. are all there.  As in those scripts,
