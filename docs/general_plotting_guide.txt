@@ -144,7 +144,7 @@ calculations in the MCAF paper.
 
 Along with those bash scripts (the *links* to make a single place of
 links for the multiple supercomputer runs, makemovie.sh and
-makemovieall.sh for doing batch jobs of analysis over all files for
+makemallovie.sh for doing batch jobs of analysis over all files for
 each supercomputer run, etc.), this is how one can do large-scale
 analysis on supercomputers.  Indeed, those scripts show exactly
 how that __init__.py file is really used under many cases.
@@ -284,6 +284,11 @@ bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 1 1 1 1 1 1 1 1 1 1 0 0 1 0
 # NOTE: Most of the plots won't work for 2D harm data.  Indeed, some plots may hang (e.g. makethradfinalplot making of velocity mkstreamplot1).
 
 # Sometimes if you kill a job, you'll have stray python processes still going.  Assuming it's all you are doing with python as a user, you should do: killall -s 9 python  to get rid of them.
+
+## To get movie files to always be created even if you have numkeep less than number of files in makeallmovie.sh (so it skips some files), you should run:
+cd ${moviename} # or whatever to get to directory, like cd run/test1/$moviename
+~/py/scripts/makelinkimages.sh
+# this will produce links so ffmpeg or avconv or other programs can see a sequential list of files that they need to act upon.
 
 
 8) One can run the makemovie script directly once one has already at

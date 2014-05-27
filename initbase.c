@@ -95,6 +95,7 @@ int init(int *argc, char **argv[])
 
     set_coord_parms_deps(defcoord); // requires correct defcoord at least
 
+    // MPI setup for core placement and boundary conditions
     // requires special3dspc, periodicx?, and dofull2pi and other things defining grid type already be set
     // after the below call, can then call boundary functions and MPI decomposition will be ready
     init_placeongrid_griddecomposition();
@@ -134,6 +135,7 @@ int init(int *argc, char **argv[])
   ///////////////////
   //
   // Always write new coordparms file.  Fresh start needs it, but also do in case user updated restart file but not coord file
+  // Default file name: coordparms.dat
   //
   ////////////////////
   if(RESTARTMODE==0 || RESTARTMODE==1){
@@ -355,6 +357,7 @@ int init(int *argc, char **argv[])
       // user post_init function
       post_init_specific_init();
 
+      // get all conserved quantities (volume averaged or otherwise)
       init_all_conservatives(GLOBALPOINT(pglobal),GLOBALPOINT(pstagglobal),GLOBALPOINT(ulastglobal),GLOBALPOINT(unewglobal));
 
 
@@ -608,7 +611,7 @@ int init(int *argc, char **argv[])
 
 
 #if(PRODUCTION==0)
-
+  // SUPERGODMARK: Should only be done for RESTARTMODE==1?
   // final checks
   restart_init_simple_checks(6);
 
