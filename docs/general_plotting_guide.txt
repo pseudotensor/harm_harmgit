@@ -619,12 +619,22 @@ avg_newtensor=avgmem[i:i+n,:,:,None].reshape((4,4,nx,ny,1));i+=n
 5) add 1 to the getnqtyavg() value before the "return(value)"
 
 
+11) Some notes about functions in tutorial?() or harmradplot?() functions:
+
+grid3d(): loads grid positions, metric, connection coefficients, etc.
+getrhouclean(): Get clean (floor removed) versions of densities in case wanted.
+cvel(): compute some velocity variables
+Tcalcud(): Compute various stress-energy tensor terms/components/etc.
 
 
 ========
 
+
+
+
 Remember python is space-based (instead of curly bracket based like
 C), and code that matches in indention is at same level/scope.
+
 
 
 
