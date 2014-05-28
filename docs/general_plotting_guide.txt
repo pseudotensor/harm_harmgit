@@ -465,6 +465,170 @@ mytut1()
 
 
 
+10) To modify the python script:
+
+There are three modes you can operate in.
+
+Mode 1) insert code during run of normal scripts
+
+Mode 2) command-line use of ipython
+
+Mode 3) New t-r integrated diagnostic
+
+The advantage of #1 is you can eventually compute lots of things and
+output whatever you want.  The advantage of #2 is you can more easily
+play around and you don't have to have all the other script things
+going on.  I recommend Mode 2 for now until you know exactly what you
+are doing and what kind of diagnostic you want.
+
+Mode 3 is an advanced version of Mode 1 when you know exactly what you want to have as a diagnostic.
+
+===
+
+For Mode 1: The best place to insert such calculations is in function
+getqtyvstime() near the top (it's a long function) and just after:
+
+======
+ts[qindex]=t
+        #################################
+        #
+        # Begin quantities
+        #
+        ##################################
+        #
+
+#<INSERT FUNCTION CALL HERE>
+#e.g.
+sgralla1()
+
+
+======
+Then you create a function (say at bottom of the __init__.py file) that has:
+
+def sgralla1():
+    #1) verify that B_z=const asymptotically (my definition of Wald problem)
+
+    #2) compute the energy and angular momentum flux
+
+    #3) understand where the current sheet forms and what supports it numerically
+
+    #4) compute B_phi/E_r asymptotically, which I believe will be 1
+
+    #5) fit for psi where E_r = partial_r psi
+
+
+======
+e.g.
+            sigmaks=r**2+(a*np.cos(h))**2
+            deltaks=r**2-2*r+a**2
+            Aks=(r**2+a**2)**2-a**2*deltaks*(np.sin(h))**2
+            #
+            gvks00=-(1.0-2.0*r/sigmaks)
+            gvks11=(1.0+2.0*r/sigmaks)
+            gvks22=sigmaks
+            gvks33=(np.sin(h))**2*(sigmaks + a**2*(1.0 + 2.0*r/sigmaks)*(np.sin(h))**2)
+            #
+            myuu0=uu[0]*dxdxp[0,0]
+            myuu1=(uu[1]*dxdxp[1,1] + uu[2]*dxdxp[1,2])*np.sqrt(gvks11)/myuu0
+            myuu2=(uu[1]*dxdxp[2,1] + uu[2]*dxdxp[2,2])*np.sqrt(gvks22)/myuu0
+            myuu3=(uu[3]*dxdxp[3,3])*np.sqrt(gvks33)/myuu0
+            myuurot=np.sqrt(myuu2**2+myuu3**2)
+            myB1=(B[1]*dxdxp[1,1] + B[2]*dxdxp[1,2])*np.sqrt(gvks11)
+            myB2=(B[1]*dxdxp[2,1] + B[2]*dxdxp[2,2])*np.sqrt(gvks22)
+            myB3=(B[3]*dxdxp[3,3])*np.sqrt(gvks33)
+            mybu1=(bu[1]*dxdxp[1,1] + bu[2]*dxdxp[1,2])*np.sqrt(gvks11)
+            mybu2=(bu[1]*dxdxp[2,1] + bu[2]*dxdxp[2,2])*np.sqrt(gvks22)
+            mybu3=(bu[3]*dxdxp[3,3])*np.sqrt(gvks33)
+            #
+            sgrallaB1=myB1[:,ny/2,0]
+            print("sgrallaB1");
+            print(sgrallaB1);
+            #
+
+======
+
+For Mode2:
+
+Just look at some functions like harmradplot?() at the bottom of the
+script, like harmradplot1().  You can also look at the tutorial?() and
+tutorial1alt() calls.
+
+Create your own function sg1() that looks similar and sits within the
+same file at the bottom.  Then follow the template and compute
+whatever you want, and you can plot something or save a figure or
+anything like that.  To run on command line, you do:
+
+ipython
+run ~/py/mread/__init__.py
+sg1()
+
+
+To change something in Mode2, you can stay in ipython.  Just edit the
+script and your function in a different terminal, then rerun by doing:
+
+run ~/py/mread/__init__.py
+sg1()
+
+
+The "run" line just loads the script again.
+
+========
+
+For Mode3:
+
+Follow Mode1, but hijack existing quantities stored in hoverr[qindex]
+or other <quantity>[qindex] that you think you don't need.
+
+========
+
+For Mode 4:
+
+To add a new t-r integrated quantity, do:
+
+1) add entry to getqtymem() like the below, at the end of the function before the "return(i) call.
+
+    global     newvar
+    newvar=qtymem[i];i+=1
+
+2) Inside getqtyvstime(), add your calculation before the "if dobob==1:" line with lots of qtymem's inside the conditional.
+
+3) add 1 to the getnonbobnqty() setting of "value" before "return(value)"
+
+To add a new time-averaged quantity, do:
+
+1) add item to assignavg2dvars() after the last avgmem assignment and put like (for scalar)
+
+avg_newvar=avgmem[i,:,:,None];i+=1 # i=1
+
+(for tensor):
+
+n=16
+avg_newtensor=avgmem[i:i+n,:,:,None].reshape((4,4,nx,ny,1));i+=n
+
+2) add avg_newvar or avg_newtensor to global declaration at top of assignavg2dvars()
+
+3) add avg_newvar or avg_newtensor to global declaration at top of get2davgone()
+
+4) In get2davgone() function inside loop after last avg_<var> += assignment, do like (scalar) before the "itert=itert+1"
+
+        n=1
+        newvar = newvarface()
+        avg_newvar += ((_dx3*newvar.sum(-1))**2)[:,:,None]*localdt[itert]
+        
+
+5) add 1 to the getnqtyavg() value before the "return(value)"
+
+
+
+
+========
+
+Remember python is space-based (instead of curly bracket based like
+C), and code that matches in indention is at same level/scope.
+
+
+
+
 
 
 
