@@ -32,7 +32,9 @@ static FTYPE rhodisk;
 static FTYPE nz_func(FTYPE R) ;
 static FTYPE taper_func2(FTYPE R,FTYPE rin, FTYPE rpow) ;
 static int fieldprim(int *whichvel, int*whichcoord, int ii, int jj, int kk, FTYPE *pr);
-FTYPE B0wald=1.0;
+FTYPE B0WALD; // set later
+int DOWALDDEN=0; // WALD: 0->1 to set densities as floor-like with below b^2/rho at horizon.  Should also choose FIELDTYPE==FIELDWALD.
+FTYPE BSQORHOWALD=50.0;
 
 //FTYPE thindiskrhopow=-3.0/2.0; // can make steeper like -0.7
 FTYPE thindiskrhopow=-0.2; // closer to NT73
@@ -1496,9 +1498,8 @@ int init_global(void)
       myexit(2493434635);
     }
 
-    cooling=KORAL;
-
-    //cooling=NOCOOLING; // WALD
+    if(DOWALDDEN) cooling==NOCOOLING;
+    else cooling=KORAL;
 
     // ARAD_CODE=ARAD_CODE_DEF*1E5; // tuned so radiation energy flux puts in something much higher than ambient, while initial ambient radiation energy density lower than ambient gas internal energy.
     //    GAMMAMAXRAD=1000.0; // Koral limits for this problem.
@@ -2286,6 +2287,12 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
       rin=9.0;
       rinfield=12;
       beta = 10.0;
+    }
+    else if(FIELDTYPE==FIELDWALD){
+      rin=9.0;
+      rinfield=12;
+      // so field at horizon is BSQORHOWALD
+      beta = ((gam-1.0)*RADNT_UINTATMMIN)/(RADNT_RHOATMMIN*BSQORHOWALD*0.5);
     }
 
     if(RADNT_DONUTTYPE==DONUTTHINDISK || RADNT_DONUTTYPE==DONUTTHINDISK2){
@@ -3825,7 +3832,9 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
         
 
         // ADD DONUT
-        returndonut=get_full_donut(whichvel,whichcoord,RADDONUT_OPTICALLYTHICKTORUS, pr,X,V,ptrgeomreal);  
+        returndonut=get_full_donut(whichvel,whichcoord,RADDONUT_OPTICALLYTHICKTORUS, pr,X,V,ptrgeomreal);
+
+
      
         if(PRAD0>=0){
           // donut returns fluid frame orthonormal values for radiation in pp
@@ -3968,6 +3977,13 @@ int get_full_donut(int *whichvel, int *whichcoord, int opticallythick, FTYPE *pp
     whichcoordreal=*whichcoord;
     gset(0,whichcoordreal,i,j,k,ptrgeombl);
   }
+
+
+
+  if(DOWALDDEN){
+    anret=1; // never inside donut
+  }
+
 
 
   if(anret==0){ // then inside donut
@@ -4189,6 +4205,8 @@ int donut_analytical_solution(int *whichvel, int *whichcoord, int opticallythick
   FTYPE pt;
 
 
+
+
   // get density and velocity for torus
   if(RADNT_DONUTTYPE==DONUTTHINDISK2){
 
@@ -4248,6 +4266,10 @@ int donut_analytical_solution(int *whichvel, int *whichcoord, int opticallythick
 
     // see if should still use backup non-torus values
     if(rho<ppback[RHO]){
+      usingback=1;
+    }
+
+    if(DOWALDDEN){
       usingback=1;
     }
 
@@ -4416,7 +4438,8 @@ int donut_analytical_solution(int *whichvel, int *whichcoord, int opticallythick
 
 
 
-    dualfprintf(fail_file,"rhodonut1=%g uint=%g\n",rho,uint);
+    //    dualfprintf(fail_file,"rhodonut1=%g uint=%g\n",rho,uint);
+
     //    if(fabs(r-Risco)<0.1*Risco && fabs(th-0.5*M_PI)<0.2*h_over_r){
     //      dualfprintf(fail_file,"rhodonut5=%g uint=%g : r,th=%g %g usingback=%d RADNT_RHODONUT=%g rhoisco=%g\n",rho,uint,r,th,usingback,RADNT_RHODONUT,rhoisco);
     //    }
@@ -4424,7 +4447,7 @@ int donut_analytical_solution(int *whichvel, int *whichcoord, int opticallythick
 
   }
   // get density and velocity for torus
-  if(RADNT_DONUTTYPE==DONUTTHINDISK){
+  else if(RADNT_DONUTTYPE==DONUTTHINDISK){
 
     SFTYPE sth, cth;
     //    struct of_geom geomdontuse;
@@ -4509,6 +4532,13 @@ int donut_analytical_solution(int *whichvel, int *whichcoord, int opticallythick
     // see if should still use backup non-torus values
     if(rho<ppback[RHO]){
       usingback=1;
+    }
+
+    if(DOWALDDEN){
+      usingback=1;
+    }
+
+    if(usingback){
       rho=ppback[RHO];
       uint=ppback[UU];
       E=pp[URAD0]=ppback[URAD0];
@@ -4546,13 +4576,13 @@ int donut_analytical_solution(int *whichvel, int *whichcoord, int opticallythick
 
 
 
-    dualfprintf(fail_file,"nz=%g z=%g S=%g cs=%g H=%g h_over_r=%g\n",nz,z,S,cs,H,h_over_r);
+    //    dualfprintf(fail_file,"nz=%g z=%g S=%g cs=%g H=%g h_over_r=%g\n",nz,z,S,cs,H,h_over_r);
 
-    dualfprintf(fail_file,"rhodonut1=%g uint=%g\n",rho,uint);
+    //    dualfprintf(fail_file,"rhodonut1=%g uint=%g\n",rho,uint);
 
 
   }
-  if(RADNT_DONUTTYPE==DONUTOLEK){
+  else if(RADNT_DONUTTYPE==DONUTOLEK){
     FTYPE podpierd=-((ptrgeomreal->gcon[GIND(0,0)])-2.*RADNT_ELL*(ptrgeomreal->gcon[GIND(0,3)])+RADNT_ELL*RADNT_ELL*(ptrgeomreal->gcon[GIND(3,3)]));
     FTYPE ut=-1./sqrt(podpierd);
     if(!isfinite(ut)) ut=-1.0; // so skips donut, but doesn't give false in condition below (i.e. condition controlled by only podpierd)
@@ -4562,24 +4592,36 @@ int donut_analytical_solution(int *whichvel, int *whichcoord, int opticallythick
     if(ut<-1 || podpierd<0. || r<3. || RADNT_DONUTTYPE==NODONUT || RADNT_INFLOWING){
       // allow torus to be unbound with radiation -- not a problem
       //  if(podpierd<0. || r<3. || RADNT_DONUTTYPE==NODONUT || RADNT_INFLOWING)
-      return -1; //outside donut
+      //return -1; //outside donut
+      usingback=1;
     }
 
     FTYPE h=-1./ut;
     FTYPE eps=(h-1.)/gamtorus;
-    // from P=K rho^gamma
-    rho=pow(eps*(gamtorus-1.)/RADNT_KKK,1./(gamtorus-1.));
-    uint=rho*eps;
-    pt = uint * (gamtorus-1.0); // torus pressure
-    uphi=-RADNT_ELL*ut; // i.e. constant angular momentum torus
-    uT=(ptrgeomreal->gcon[GIND(0,0)])*ut+(ptrgeomreal->gcon[GIND(0,3)])*uphi;
-    uPhi=(ptrgeomreal->gcon[GIND(3,3)])*uphi+(ptrgeomreal->gcon[GIND(0,3)])*ut;
-    Vphi=uPhi/uT;
-    Vr=0.;
+    if(usingback==0){
+      // from P=K rho^gamma
+      rho=pow(eps*(gamtorus-1.)/RADNT_KKK,1./(gamtorus-1.));
+      uint=rho*eps;
+      pt = uint * (gamtorus-1.0); // torus pressure
+      uphi=-RADNT_ELL*ut; // i.e. constant angular momentum torus
+      uT=(ptrgeomreal->gcon[GIND(0,0)])*ut+(ptrgeomreal->gcon[GIND(0,3)])*uphi;
+      uPhi=(ptrgeomreal->gcon[GIND(3,3)])*uphi+(ptrgeomreal->gcon[GIND(0,3)])*ut;
+      Vphi=uPhi/uT;
+      Vr=0.;
+    }
+
+
 
     // see if should still use backup non-torus values
     if(rho<ppback[RHO]){
       usingback=1;
+    }
+    if(DOWALDDEN){
+      usingback=1;
+    }
+
+
+    if(usingback){
       rho=ppback[RHO];
       uint=ppback[UU];
       E=pp[URAD0]=ppback[URAD0];
@@ -4593,7 +4635,8 @@ int donut_analytical_solution(int *whichvel, int *whichcoord, int opticallythick
     }
 
 
-    dualfprintf(fail_file,"rhodonut1=%g eps=%g uint=%g\n",rho,eps,uint);
+    //    dualfprintf(fail_file,"rhodonut1=%g eps=%g uint=%g usingback=%d\n",rho,eps,uint,usingback);
+
   }
   else if(RADNT_DONUTTYPE==DONUTOHSUGA){
     FTYPE rs=2.0; // Schwarzschild radius
@@ -4643,7 +4686,9 @@ int donut_analytical_solution(int *whichvel, int *whichcoord, int opticallythick
       FTYPE Eth0=vs0*vs0/(gamtorus*fabs(phir0));
     }
 
-    if(r<3.0 || rhotarg<0.0 || phieff<phieffr0 || rhot<0.0 || rhot>rhoc || phieffeq>0.0 || rhoteq>rhoc || rhoteq<0.0 ) return(-1);
+    if(r<3.0 || rhotarg<0.0 || phieff<phieffr0 || rhot<0.0 || rhot>rhoc || phieffeq>0.0 || rhoteq>rhoc || rhoteq<0.0 ){
+      usingback=1;
+    }
 
     rho=rhot; // torus density
     uint=pt/(gamtorus-1.0); // torus internal energy density assuming ideal gas with gamtorus
@@ -4651,6 +4696,13 @@ int donut_analytical_solution(int *whichvel, int *whichcoord, int opticallythick
     // see if should still use backup non-torus values
     if(rho<ppback[RHO]){
       usingback=1;
+    }
+
+    if(DOWALDDEN){
+      usingback=1;
+    }
+
+    if(usingback){
       rho=ppback[RHO];
       uint=ppback[UU];
       E=pp[URAD0]=ppback[URAD0];
@@ -4671,7 +4723,12 @@ int donut_analytical_solution(int *whichvel, int *whichcoord, int opticallythick
 
   }
 
+
+  ////
+  //
   // assign torus density-velocity values for return
+  //
+  /////
   pp[RHO]=rho;
   pp[UU]=uint;
   vel[0]=uT;
@@ -4681,7 +4738,10 @@ int donut_analytical_solution(int *whichvel, int *whichcoord, int opticallythick
 
 
   /////////////////////////////////////
+  //
   // get actual temperature and separate internal energies for gas and radiation
+  //
+  /////////////////////////////////////
   FTYPE P,aaa,bbb;
   P=pt; // torus total pressure
   FTYPE Teq=calc_PEQ_Tfromurho(pp[UU],pp[RHO]);
@@ -4762,7 +4822,8 @@ int donut_analytical_solution(int *whichvel, int *whichcoord, int opticallythick
       // stick with uint
     }
 
-    dualfprintf(fail_file,"rhodonut4=%g uint=%g Tgas=%g gtau=%g tautot=%g tauabs=%g dl=%g E=%g\n",rho,uint,Tgas,gtau,tautot,tauabs,dl,E);
+    //    FTYPE rhoatm=RADNT_RHOATMMIN*pow(r/RADNT_ROUT,-1.5);
+    //    dualfprintf(fail_file,"rhodonut4=%g uint=%g Tgas=%g gtau=%g tautot=%g tauabs=%g dl=%g E=%g usingback=%d ratiorho=%g\n",rho,uint,Tgas,gtau,tautot,tauabs,dl,E,usingback,rho/rhoatm);
   }
 
 
@@ -4773,6 +4834,7 @@ int donut_analytical_solution(int *whichvel, int *whichcoord, int opticallythick
     pp[PRAD2]=Fy;
     pp[PRAD3]=Fz;
   }
+
 
   if(usingback){
     return(-1); // tells to not form radiative flux for atmosphere
@@ -4832,7 +4894,9 @@ int set_fieldtype(void)
       //FIELDTYPE=OLEKFIELD;
       //FIELDTYPE=FIELDJONMAD;
 
-      //      FIELDTYPE=FIELDWALD; // WALD
+      if(DOWALDDEN){ // nothing to do with densities, just for simplicity
+        FIELDTYPE=FIELDWALD; // WALD field
+      }
 
 
     }
@@ -5162,16 +5226,18 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
       struct of_geom geomrealdontuse;
       struct of_geom *ptrgeomreal=&geomrealdontuse;
       *whichcoord = MCOORD;
-      gset(getprim,*whichcoord,i,j,k,ptrgeomreal);
+      gset_genloc(getprim,*whichcoord,i,j,k,loc,ptrgeomreal);
 
       lower_vec(mcon,ptrgeomreal,mcov);
       lower_vec(kcon,ptrgeomreal,kcov);
       
       
-      if(l==3){ // WALD: allow PH->l?
-        // A_\phi
-        B0wald=1.0;
-        vpot += -B0wald*(mcov[PH]+2.0*a*kcov[PH]);
+      if(1){
+        // A_i
+        // below so field is b^2/rho=BSQORHOWALD at horizon
+        FTYPE Rhorlocal=rhor_calc(0);
+        B0WALD=sqrt(BSQORHOWALD*RADNT_RHOATMMIN*pow(Rhorlocal/RADNT_ROUT,-1.5));
+        vpot += -0.5*B0WALD*(mcov[l]+2.0*a*kcov[l]);
       }
     }
   }
@@ -5194,6 +5260,7 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
 
 
 // setup primitive field (must use whichcoord inputted)
+// sets CENT value of field primitive
 static int fieldprim(int *whichvel, int*whichcoord, int ii, int jj, int kk, FTYPE *pr)
 {
 
@@ -5210,22 +5277,6 @@ static int fieldprim(int *whichvel, int*whichcoord, int ii, int jj, int kk, FTYP
 
   /////
   //
-  // Get ptrgeom
-  //
-  /////
-  struct of_geom geomdontuse;
-  struct of_geom *ptrgeom=&geomdontuse;
-  if(*whichcoord==PRIMECOORDS){
-    get_geometry(ii,jj,kk,CENT,ptrgeom);
-  }
-  else{
-    // get metric grid geometry for these ICs
-    int getprim=0;
-    gset(getprim,*whichcoord,ii,jj,kk,ptrgeom);
-  }
-
-  /////
-  //
   // get X and V
   //
   ////
@@ -5239,17 +5290,41 @@ static int fieldprim(int *whichvel, int*whichcoord, int ii, int jj, int kk, FTYP
 
   /////
   //
+  // Get ptrgeom
+  //
+  /////
+  struct of_geom geomdontuse;
+  struct of_geom *ptrgeom=&geomdontuse;
+  FTYPE realX[NDIM];
+  if(*whichcoord==PRIMECOORDS){
+    get_geometry(ii,jj,kk,CENT,ptrgeom);
+    DLOOPA(jj) realX[jj]=X[jj];
+  }
+  else{
+    // get metric grid geometry for these ICs
+    int getprim=0;
+    gset(getprim,*whichcoord,ii,jj,kk,ptrgeom);
+    DLOOPA(jj) realX[jj]=V[jj];
+  }
+
+
+
+  /////
+  //
   // set field
   //
   ////
+  FTYPE Rhorlocal=rhor_calc(0);
+  B0WALD=sqrt(BSQORHOWALD*RADNT_RHOATMMIN*pow(Rhorlocal/RADNT_ROUT,-1.5));
+  //
   if(FIELDTYPE==SPLITMONOPOLE){
-    if(th<M_PI*0.5)  pr[B1]=B0wald/ptrgeom->gdet;
-    else pr[B1]=-B0wald/ptrgeom->gdet;
+    if(th<M_PI*0.5)  pr[B1]=B0WALD/ptrgeom->gdet;
+    else pr[B1]=-B0WALD/ptrgeom->gdet;
     pr[B2]=pr[B3]=0;
   }
   else if(FIELDTYPE==MONOPOLE){
     // Ruben's talk says they set $\dF^{tr} = C\sin{\theta}/\detg$.
-    pr[B1]=B0wald*ptrgeom->gdet;
+    pr[B1]=B0WALD/ptrgeom->gdet;
     pr[B2]=pr[B3]=0;
   }
   else if(FIELDTYPE==FIELDWALD){
@@ -5263,18 +5338,18 @@ static int fieldprim(int *whichvel, int*whichcoord, int ii, int jj, int kk, FTYP
     FTYPE Jcon[NDIM];
     int j,k;
 
-    void Fcov_numerical(FTYPE *X, FTYPE (*Fcov)[NDIM]);
-    void Jcon_numerical(FTYPE *X, FTYPE *Jcon);
+    void Fcov_numerical(int whichcoord, FTYPE *X, FTYPE (*Fcov)[NDIM]);
+    void Jcon_numerical(int whichcoord, FTYPE *X, FTYPE *Jcon);
     extern void MtoF(int which, FTYPE Max[NDIM][NDIM],struct of_geom *geom, FTYPE faraday[NDIM][NDIM]);
     extern void lower_A(FTYPE Acon[NDIM][NDIM], struct of_geom *geom, FTYPE Acov[NDIM][NDIM]);
     extern void EBtopr(FTYPE *E,FTYPE *B,struct of_geom *geom, FTYPE *pr);
     extern void EBtopr_2(FTYPE *E,FTYPE *B,struct of_geom *geom, FTYPE *pr);
 
     //    first get F_{\mu\nu}
-    Fcov_numerical(X, Fcov);
+    Fcov_numerical(*whichcoord, X, Fcov);
 
     // check that J^\mu=0
-    Jcon_numerical(X, Jcon);
+    Jcon_numerical(*whichcoord, X, Jcon);
 
 
     //    dualfprintf(fail_file,"Fcov\n");
@@ -5327,7 +5402,7 @@ static int fieldprim(int *whichvel, int*whichcoord, int ii, int jj, int kk, FTYP
       //    dualfprintf(fail_file,"EBtopr\n");
     }
     else{
-      for(pl=U1;pl<=U3;pl++) pr[pl]=prold[pl];
+      for(pl=RHO;pl<=U3;pl++) pr[pl]=prold[pl];
     }
 
 
@@ -5391,11 +5466,13 @@ static int fieldprim(int *whichvel, int*whichcoord, int ii, int jj, int kk, FTYP
 #define FCOVDXDELTA 1E-6
 #endif
 
-void Fcov_numerical(FTYPE *X, FTYPE (*Fcov)[NDIM])
+void Fcov_numerical(int whichcoord, FTYPE *X, FTYPE (*Fcov)[NDIM])
 {
   int j,k,l;
   FTYPE Xhk[NDIM], Xlk[NDIM];
   FTYPE Xhj[NDIM], Xlj[NDIM];
+  FTYPE Vhk[NDIM], Vlk[NDIM];
+  FTYPE Vhj[NDIM], Vlj[NDIM];
   FTYPE mcovhj,mcovlj,kcovhj,kcovlj;
   FTYPE mcovhk,mcovlk,kcovhk,kcovlk;
   FTYPE mcov_func_mcoord(struct of_geom *ptrgeom, FTYPE* X, int i, int j); // i not used
@@ -5412,6 +5489,21 @@ void Fcov_numerical(FTYPE *X, FTYPE (*Fcov)[NDIM])
   ptrgeom->k=0;
   ptrgeom->p=NOWHERE;
 
+  // get V in case whichcoord!=PRIMECOORDS
+  //  FTYPE V[NDIM];
+  //  FTYPE dxdxp[NDIM][NDIM];
+  //  FTYPE idxdxp[NDIM][NDIM];
+  //  if(whichcoord!=PRIMECOORDS){
+  //    bl_coord(X, V);
+  //    dxdxprim(X, V, dxdxp);
+  //    idxdxprim(dxdxp, idxdxp);
+  //  }
+  //  else{
+  //    DLOOPA(j) V[j]=X[j];
+  //    // PRIMECOORDS, then no transformation
+  //    DLOOP(j,k) idxdxp[j][k]=0.0;
+  //    DLOOPA(j) idxdxp[j][j]=1.0;
+  //  }
 
 
   // GET Fcov
@@ -5426,6 +5518,23 @@ void Fcov_numerical(FTYPE *X, FTYPE (*Fcov)[NDIM])
 
 	  Xhj[j]+=FCOVDXDELTA; // shift up
 	  Xlj[j]-=FCOVDXDELTA; // shift down
+
+      if(whichcoord!=PRIMECOORDS){
+        bl_coord(Xhk, Vhk);
+        bl_coord(Xlk, Vlk);
+        bl_coord(Xhj, Vhj);
+        bl_coord(Xlj, Vlj);
+      }
+      else{
+        int jj;
+        DLOOPA(jj){
+          Vhk[jj]=Xhk[jj];
+          Vlk[jj]=Xlk[jj];
+          Vhj[jj]=Xhj[jj];
+          Vlj[jj]=Xlj[jj];
+        }
+      }
+
 
 	  //	  dualfprintf(fail_file,"got here1: k=%d j=%d\n",k,j);
 
@@ -5447,15 +5556,15 @@ void Fcov_numerical(FTYPE *X, FTYPE (*Fcov)[NDIM])
 	  //	  dualfprintf(fail_file,"got here1.7: k=%d j=%d\n",k,j);
 	  kcovlk=kcov_func_mcoord(ptrgeom,Xlj,0,k); // 0 not used
 	  //	  dualfprintf(fail_file,"got here1.8: k=%d j=%d\n",k,j);
+      
+      //      dualfprintf(fail_file,"got here2: j=%d k=%d idxdxp=%g %g\n",j,k,idxdxp[j][k],idxdxp[k][j]);
 
-	  //	  dualfprintf(fail_file,"got here2\n");
-
-	  Fcov[j][k] = B0wald*(
-	    +(mcovhj - mcovlj) / (Xhk[k] - Xlk[k])
-	    -(mcovhk - mcovlk) / (Xhj[j] - Xlj[j])
+	  Fcov[j][k] = 0.5*B0WALD*(
+	    +(mcovhj - mcovlj) / (Vhk[k] - Vlk[k])
+	    -(mcovhk - mcovlk) / (Vhj[j] - Vlj[j])
 	    +2.0*a*(
-		   +(kcovhj - kcovlj) / (Xhk[k] - Xlk[k])
-		   -(kcovhk - kcovlk) / (Xhj[j] - Xlj[j])
+		   +(kcovhj - kcovlj) / (Vhk[k] - Vlk[k])
+		   -(kcovhk - kcovlk) / (Vhj[j] - Vlj[j])
 		   )
 	    );
       }// j
@@ -5469,8 +5578,11 @@ void Fcov_numerical(FTYPE *X, FTYPE (*Fcov)[NDIM])
         FTYPE ans2;-dfridr(mcov_func_mcoord,ptrgeom,X,0,k,j,&ans2);
         FTYPE ans3;+dfridr(kcov_func_mcoord,ptrgeom,X,0,j,k,&ans3);
         FTYPE ans4;-dfridr(kcov_func_mcoord,ptrgeom,X,0,k,j,&ans4);
-        Fcov[j][k]=B0wald*(+ans1 + ans2 +2.0*a*(ans3 + ans4));
+        Fcov[j][k]=B0WALD*(+ans1 + ans2 +2.0*a*(ans3 + ans4));
       }
+
+    dualfprintf(fail_file,"NOT SETUP FOR NUMREC\n");
+    myexit(23483466);
     
   }// end DIFFNUMREC
 
@@ -5525,10 +5637,11 @@ FTYPE kcov_func_mcoord(struct of_geom *ptrgeom, FTYPE* X, int ii, int jj) // i n
   return(kcov[jj]);
 }
 
-void Jcon_numerical(FTYPE *X, FTYPE *Jcon)
+void Jcon_numerical(int whichcoord, FTYPE *X, FTYPE *Jcon)
 {
   int j,k,l;
   FTYPE Xh[NDIM], Xl[NDIM];
+  FTYPE Vh[NDIM], Vl[NDIM];
   FTYPE Fconh,Fconl;
   FTYPE Fcon_func_mcoord(struct of_geom *ptrgeom, FTYPE* X, int i, int j);
   extern int dfridr(FTYPE (*func)(struct of_geom *,FTYPE*,int,int), struct of_geom *ptrgeom, FTYPE *X,int ii, int jj, int kk, FTYPE *ans);
@@ -5544,6 +5657,8 @@ void Jcon_numerical(FTYPE *X, FTYPE *Jcon)
   ptrgeom->p=NOWHERE;
 
 
+
+
   if(FCOVDERTYPE==DIFFGAMMIE){
 
     for(k=0;k<NDIM;k++){
@@ -5554,6 +5669,18 @@ void Jcon_numerical(FTYPE *X, FTYPE *Jcon)
         for(l=0;l<NDIM;l++) Xl[l]=Xh[l]=X[l]; // location of derivative
         Xh[j]+=FCOVDXDELTA; // shift up
         Xl[j]-=FCOVDXDELTA; // shift down
+
+        if(whichcoord!=PRIMECOORDS){
+          bl_coord(Xh, Vh);
+          bl_coord(Xl, Vl);
+        }
+        else{
+          int jj;
+          DLOOPA(jj){
+            Vh[jj]=Xh[jj];
+            Vl[jj]=Xl[jj];
+          }
+        }
         
         // F^{kj}
         Fconh=Fcon_func_mcoord(ptrgeom,Xh,k,j);
@@ -5561,9 +5688,10 @@ void Jcon_numerical(FTYPE *X, FTYPE *Jcon)
 	
         // J^\mu = {F^{\mu\nu}}_{;\nu}
         // \detg J^k = F^{kj}_{;j} = (\detg F^{kj})_{,j} <--- thing actually computed and returned
-        Jcon[k] += (Fconh - Fconl) / (Xh[j] - Xl[j]);
+        Jcon[k] += (Fconh - Fconl) / (Vh[j] - Vl[j]) ;
       } // j
     }// k
+
   }
   else if(FCOVDERTYPE==DIFFNUMREC){
 
@@ -5575,7 +5703,36 @@ void Jcon_numerical(FTYPE *X, FTYPE *Jcon)
       }
     }
 
+    // get V in case whichcoord!=PRIMECOORDS
+    FTYPE V[NDIM];
+    FTYPE dxdxp[NDIM][NDIM];
+    FTYPE idxdxp[NDIM][NDIM];
+    if(whichcoord!=PRIMECOORDS){
+      bl_coord(X, V);
+      dxdxprim(X, V, dxdxp);
+      idxdxprim(dxdxp, idxdxp);
+    }
+    else{
+      DLOOPA(j) V[j]=X[j];
+      // PRIMECOORDS, then no transformation
+      DLOOP(j,k) idxdxp[j][k]=0.0;
+      DLOOPA(j) idxdxp[j][j]=1.0;
+    }
+
+    // get whichcoord version -- assumes Fcon is in whichcoord
+    FTYPE Jconorig[NDIM];
+    DLOOPA(j) Jconorig[j]=Jcon[j];
+    DLOOPA(j) Jcon[j]=0.0;
+    DLOOP(j,k){
+      Jcon[k] += Jconorig[j] * idxdxp[k][j];
+    }
+
   }
+
+
+
+
+
 }
 
 #undef FCOVDERTYPE
@@ -5592,8 +5749,8 @@ FTYPE Fcon_func_mcoord(struct of_geom *ptrgeom, FTYPE* X, int ii, int jj)
   gset_X(getprim, whichcoord, ptrgeom->i, ptrgeom->j, ptrgeom->k, ptrgeom->p, X, ptrgeom);
 
   FTYPE Fcov[NDIM][NDIM];
-  void Fcov_numerical(FTYPE *X, FTYPE (*Fcov)[NDIM]);
-  Fcov_numerical(X, Fcov);
+  void Fcov_numerical(int whichcoord, FTYPE *X, FTYPE (*Fcov)[NDIM]);
+  Fcov_numerical(MCOORD, X, Fcov);
 
   // get covariant Maxwell from contravariant
   FTYPE Fcon[NDIM][NDIM];

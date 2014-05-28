@@ -638,6 +638,7 @@ god=deathadflkjasdflkjasdlfkja242424
 #define HEADER14IN "%Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf"
 #define HEADER17IN "%Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf"
 #define HEADER18IN "%Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf"
+#define HEADER19IN "%Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf"
 #define HEADER21IN "%Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf %Lf"
 #define RESTARTHEADER "%d %d %d "                                       \
     "%Lf %Lf %ld %Lf %Lf %Lf %Lf %Lf "                                  \
@@ -659,6 +660,7 @@ god=deathadflkjasdflkjasdlfkja242424
 #define HEADER14IN "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf"
 #define HEADER17IN "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf"
 #define HEADER18IN "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf"
+#define HEADER19IN "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf"
 #define HEADER21IN "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf"
 #define RESTARTHEADER "%d %d %d "                                       \
     "%Lf %Lf %ld %Lf %Lf %Lf %lf %lf "                                  \
@@ -680,6 +682,7 @@ god=deathadflkjasdflkjasdlfkja242424
 #define HEADER14IN "%f %f %f %f %f %f %f %f %f %f %f %f %f %f"
 #define HEADER17IN "%f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f"
 #define HEADER18IN "%f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f"
+#define HEADER19IN "%f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f"
 #define HEADER21IN "%f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f"
 #define RESTARTHEADER "%d %d %d "                                       \
     "%Lf %Lf %ld %Lf %Lf %Lf %f %f "                                    \
@@ -706,6 +709,7 @@ god=deathadflkjasdflkjasdlfkja242424
 #define HEADER14IN "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf"
 #define HEADER17IN "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf"
 #define HEADER18IN "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf"
+#define HEADER19IN "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf"
 #define HEADER21IN "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf"
 #define RESTARTHEADER "%d %d %d "                                       \
     "%lf %lf %ld %lf %lf %lf %lf %lf "                                  \
@@ -727,6 +731,7 @@ god=deathadflkjasdflkjasdlfkja242424
 #define HEADER14IN "%f %f %f %f %f %f %f %f %f %f %f %f %f %f"
 #define HEADER17IN "%f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f"
 #define HEADER18IN "%f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f"
+#define HEADER19IN "%f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f"
 #define HEADER21IN "%f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f"
 #define RESTARTHEADER "%d %d %d "                                       \
     "%lf %lf %ld %lf %lf %lf %f %f "                                    \
@@ -755,6 +760,7 @@ god=deathadflkjasdflkjasdlfkja242424
 #define HEADER14IN "%f %f %f %f %f %f %f %f %f %f %f %f %f %f"
 #define HEADER17IN "%f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f"
 #define HEADER18IN "%f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f"
+#define HEADER19IN "%f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f"
 #define HEADER21IN "%f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f"
 #define RESTARTHEADER "%d %d %d "                                       \
     "%f %f %ld %f %f %f %f %f "                                         \

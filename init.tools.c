@@ -473,16 +473,43 @@ int user1_init_primitives(int inittype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FT
   //
   /////////////////////////////// 
 
+  if(0){
+    //dump pre-fixup'ed version
+    GLOBALPOINT(pdump)=GLOBALPOINT(pglobal);
+    if (dump(9999) >= 1){
+      dualfprintf(fail_file,"unable to print dump file\n");
+      return (1);
+    }
+  }
+
   trifprintf("Fixup #1\n");
 #if(FIXUPAFTERINIT)
   if(fixup(STAGEM1,prim,ucons,0)>=1) FAILSTATEMENT("init.c:init()", "fixup()", 1);
 #endif
+
+  if(0){
+    //dump post-fixup'ed version
+    GLOBALPOINT(pdump)=GLOBALPOINT(pglobal);
+    if (dump(99988) >= 1){
+      dualfprintf(fail_file,"unable to print dump file\n");
+    return (1);
+    }
+  }
 
 
   {
     trifprintf("Bound #1\n");
     int finalstep=1; //  modifies initial ucum-like-primitives
     if (bound_prim(STAGEM1,finalstep,t,prim, pstag, Bhat, USEMPI) >= 1) FAILSTATEMENT("init.c:init()", "bound_prim()", 1); // t is ok here
+  }
+
+  if(0){
+  //dump post-bound version
+    GLOBALPOINT(pdump)=GLOBALPOINT(pglobal);
+    if (dump(9998) >= 1){
+      dualfprintf(fail_file,"unable to print dump file\n");
+      return (1);
+    }
   }
 
 
@@ -535,6 +562,15 @@ int user1_init_primitives(int inittype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FT
   //
   /////////////////////////////// 
 
+  if(0){
+    //dump pre-fixup version2
+    GLOBALPOINT(pdump)=GLOBALPOINT(pglobal);
+    if (dump(9997) >= 1){
+      dualfprintf(fail_file,"unable to print dump file\n");
+      return (1);
+    }
+  }
+
   trifprintf("Fixup #2\n");
 #if(FIXUPAFTERINIT)
   if(fixup(STAGEM1,prim,ucons,0)>=1) FAILSTATEMENT("init.c:init()", "fixup()", 1);
@@ -547,6 +583,14 @@ int user1_init_primitives(int inittype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FT
   }
 
 
+  if(0){
+    //dump post-fixup'ed version2
+    GLOBALPOINT(pdump)=GLOBALPOINT(pglobal);
+    if (dump(9996) >= 1){
+      dualfprintf(fail_file,"unable to print dump file\n");
+      return (1);
+    }
+  }
 
 
   /////////////////////////////

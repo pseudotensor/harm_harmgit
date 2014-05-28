@@ -74,6 +74,7 @@ static FTYPE torusrmax_loc;
 
 // for defcoord=JET6COORDS
 static FTYPE ntheta,htheta,rsjet2,r0jet2,rsjet3,r0jet3; // and rs,r0
+static FTYPE cpow3;
 
 // for defcoord=PULSARCOORDS
 static FTYPE hinner,houter;
@@ -211,6 +212,8 @@ void set_coord_parms_nodeps(int defcoordlocal)
     //    npow2=4.0; //power exponent
     npow2=10.0; //power exponent
     cpow2=1.0; //exponent prefactor (the larger it is, the more hyperexponentiation is)
+    //    cpow3=0.01;
+    cpow3=1.0;
     //    rbr = 1E3;  //radius at which hyperexponentiation kicks in
     rbr = 5E2;  //radius at which hyperexponentiation kicks in
 
@@ -730,7 +733,7 @@ void write_coord_parms(int defcoordlocal)
         fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",npow,r1jet,njet,r0grid,r0jet,rjetend,rsjet,Qjet,fracphi,npow2,cpow2,rbr,x1br,fracdisk,fracjet,r0disk,rdiskend,torusrmax_loc,jetnu,x10,x20);
       }
       else if (defcoordlocal == JET6COORDS) {
-        fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",npow,r1jet,njet,r0jet,rsjet,Qjet,ntheta,htheta,rsjet2,r0jet2,rsjet3,r0jet3,rs,r0,npow2,cpow2,rbr,x1br);
+        fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",npow,r1jet,njet,r0jet,rsjet,Qjet,ntheta,htheta,rsjet2,r0jet2,rsjet3,r0jet3,rs,r0,npow2,cpow2,rbr,x1br,cpow3);
       }
       else if (defcoordlocal == JET6COORDSTHIN) {
         fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",th_npow,th_r1jet,th_njet,th_r0jet,th_rsjet,th_Qjet,th_ntheta,th_htheta,th_rsjet2,th_r0jet2,th_rsjet3,th_r0jet3,th_rs,th_r0,th_npow2,th_cpow2,th_rbr,th_x1br,th_rbr,th_h0,th_njet1);
@@ -834,7 +837,7 @@ void read_coord_parms(int defcoordlocal)
         fscanf(in,HEADER3IN,&jetnu,&x10,&x20);
       }
       else if (defcoordlocal == JET6COORDS) {
-        fscanf(in,HEADER18IN,&npow,&r1jet,&njet,&r0jet,&rsjet,&Qjet,&ntheta,&htheta,&rsjet2,&r0jet2,&rsjet3,&r0jet3,&rs,&r0,&npow2,&cpow2,&rbr,&x1br);
+        fscanf(in,HEADER19IN,&npow,&r1jet,&njet,&r0jet,&rsjet,&Qjet,&ntheta,&htheta,&rsjet2,&r0jet2,&rsjet3,&r0jet3,&rs,&r0,&npow2,&cpow2,&rbr,&x1br,&cpow3);
       }
       else if (defcoordlocal == JET6COORDSTHIN) {
         fscanf(in,HEADER21IN,&th_npow,&th_r1jet,&th_njet,&th_r0jet,&th_rsjet,&th_Qjet,&th_ntheta,&th_htheta,&th_rsjet2,&th_r0jet2,&th_rsjet3,&th_r0jet3,&th_rs,&th_r0,&th_npow2,&th_cpow2,&th_rbr,&th_x1br,&th_rbr,&th_h0,&th_njet1);
@@ -977,6 +980,7 @@ void read_coord_parms(int defcoordlocal)
     MPI_Bcast(&cpow2, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
     MPI_Bcast(&rbr, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
     MPI_Bcast(&x1br, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&cpow3, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
   }
   else if (defcoordlocal == JET6COORDSTHIN) {
     MPI_Bcast(&th_npow, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
@@ -1253,7 +1257,7 @@ void bl_coord(FTYPE *X, FTYPE *V)
 #if(0) // no change in exponentiation
     // JET3COORDS-like radial grid
     V[1] = R0+exp(pow(X[1],npow)) ;
-#else
+#elif(1)
 
     theexp = npow*X[1];
     if( X[1] > x1br ) {
@@ -1267,6 +1271,17 @@ void bl_coord(FTYPE *X, FTYPE *V)
     //    FTYPE npowr0=2E2;
     //    npowtrue = npow + (npowlarger-npow)*(0.5+1.0/M_PI*atan((V[1]-npowrs)/npowr0));
     //    V[1] = R0+exp(pow(X[1],npowtrue)) ;
+#elif(0)
+    // avoid jump in grid at rbr
+    // determine switches
+    FTYPE r0rbr=rbr/5.0;
+    switch0 = 0.5+1.0/M_PI*atan((V[1]-rbr)/r0rbr); // 1 for outer r
+
+    FTYPE V1 = R0+exp(npow*X[1]);
+    FTYPE V2 = R0+exp(npow*X[1] + cpow2 * pow(cpow3*(X[1]-x1br*1.0),npow2));
+
+    V[1] = V1*(1.0-switch0) + V2*switch0;
+
 #endif
 
 
@@ -1287,7 +1302,7 @@ void bl_coord(FTYPE *X, FTYPE *V)
     //    else njetvsr=njet/(V[1])*rbr;
     //else njetvsr=
     //njetvsr=njet;
-    
+
     if(V[1]<rbr){
       myhslope=h0 + pow( (V[1]-rsjet3)/r0jet3 , njet);
     }
@@ -2455,8 +2470,8 @@ void set_points()
   //for SJETCOORDS
   FTYPE x1max0, x1max,dxmax;
   int iter;
-  const FTYPE RELACC = 1e-14;
-  const int ITERMAX = 50;
+  const FTYPE RELACC = NUMEPSILON*100.0;
+  const int ITERMAX = 100;
 
   // below 2 things not used since we set X[0] directly using t
   startx[0]=0;
@@ -2608,14 +2623,14 @@ void set_points()
 #if(1)
     startx[1] = log(Rin-R0)/npow;
 
-    trifprintf( "ITERATIVE dx1: Rout=%21.15g R0=%21.15g npow=%21.15g cpow2=%21.15g npow2=%21.15g x1br=%21.15g rbr=%21.15g\n",Rout,R0,npow,cpow2,npow2,x1br,rbr);
+    trifprintf( "ITERATIVE dx1: Rout=%21.15g R0=%21.15g npow=%21.15g cpow2=%21.15g cpow3=%21.15g npow2=%21.15g x1br=%21.15g rbr=%21.15g\n",Rout,R0,npow,cpow2,cpow3,npow2,x1br,rbr);
 
     if( Rout < rbr ) {
       x1max = log(Rout-R0)/npow;
     }
     else {
-      x1max0 = 1;
-      x1max = 2;
+      x1max0 = 1.1*x1br;
+      x1max = 1.2*x1br;
 
       //find the root via iterations
       for( iter = 0; iter < ITERMAX; iter++ ) {
@@ -2626,11 +2641,25 @@ void set_points()
           break;
         }
         x1max0 = x1max;
-        dxmax= (pow( (log(Rout-R0) - npow*x1max0)/cpow2, 1./npow2 ) + x1br) - x1max0;
+
+        if(1){
+          dxmax= (pow( (log(Rout-R0) - npow*x1max0)/cpow2, 1./npow2 ) + x1br*1.0) - x1max0;
+        }
+        else{
+          // f-f0 = (x-x0)*dfdx -> if f=Rout -> x = (Rout-f0)/dfdx+x0
+          
+          FTYPE dVdx1=(npow + cpow2*npow2*cpow3*pow(cpow3*(x1max0-x1br*1.0),npow2-1.0)) * exp(npow*x1max0 + cpow2 * pow(cpow3*(x1max0-x1br*1.0),npow2));
+          FTYPE V0 = R0 + exp(npow*x1max0 + cpow2 * pow(cpow3*(x1max0-x1br*1.0),npow2));
+          
+          dxmax=(Rout-V0)/dVdx1; // x-x0
+
+          dualfprintf(fail_file,"dVdx1=%g V0=%g dxmax=%g x1max=%g x1max0=%g\n",dVdx1,V0,dxmax,x1max,x1max0);
+        }
 
         // need a slight damping factor
         FTYPE dampingfactor=0.5;
         x1max = x1max0 + dampingfactor*dxmax;
+
 
       }
 
