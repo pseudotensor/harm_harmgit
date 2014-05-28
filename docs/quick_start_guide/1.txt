@@ -2,6 +2,7 @@
 ~~~~
 1) Compile and Run HARM (using latest git version)
 Version 26 Created by Jonathan M. at 7:52pm. Previous Version
+
 1) *Be in Linux*
 
 1a) Install emacs and other packages necessary along the way or now.
@@ -32,7 +33,7 @@ ln -s initboundcode/init.fishmon.h init.h
 ln -s initboundcode/bounds.fishmon.c bounds.c
 
 
-5) Pre-compile stuff:
+5) Pre-compile stuff: (do this if icc not already installed and not calling source command given below in .bashrc or .profile)
 
 5a) *Source any libraries:* E.g. Command: "source /opt/intel/mkl/10.0.3.020/tools/environment/mklvarsem64t.sh"
 
@@ -49,7 +50,7 @@ If no MPI, set USEMPI=0 (for first setting which is a choice) in makehead.inc
 If no OpenMP (or problems compiling on MAC), set USEOPENMP=0 in makehead.inc
 
 
-5b) Install packages like hdf4 (several things for ubuntu packages, including dev stuff).
+5b) Install packages like hdf4 (several things for ubuntu packages, including dev stuff) (if root, install, else ask)
 
 e.g. in ubuntu: sudo aptitude install libhdf4g-dev libhdf4g-doc libhdf4-0 libhdf4-dev libhdf4-doc hdf4-tools
 
@@ -66,25 +67,25 @@ In bin2txt.c, choose same case for how hdf.h and mfhdf.h are included, but somet
 
 6) *Compile Codes:*
 
-# CAREFUL!
+6a) # CAREFUL! (do this if have root access)
 sudo bash
 cd /bin
 rm -f sh
 ln -s bash sh
 exit  # to get back to your user
 
-6a) Command: "make superclean ; make prepsmcalc ; make smcalc ; cp smcalc ~/bin/"
+6b) Command: "make superclean ; make prepsmcalc ; make smcalc ; cp smcalc ~/bin/"
 
-6b) Command: "make superclean ; make prepiinterp ; make iinterp ; cp iinterp ~/bin/"
+6c) Command: "make superclean ; make prepiinterp ; make iinterp ; cp iinterp ~/bin/"
 
 Edit makefile and do 2 things:
 
 i) search -lv5d .  Before that, add "-L /home/<username>/lib"  without quotes and with <username> replaced by your user name.
 ii) Also, add "-I /home/<username>/include"  (-I is a capital i and not a capital l) to the end of that same line.
 
-6c) Command: "make superclean ; make prepbin2txt ; make bin2txt ; cp bin2txt ~/bin/"
+6d) Command: "make superclean ; make prepbin2txt ; make bin2txt ; cp bin2txt ~/bin/"
 
-6d) Command: "make superclean ; make prep ; make"
+6e) Command: "make superclean ; make prep ; make"
 
 **NOTE**: If have N cores, can vastly speed-up compile by doing:
 
@@ -94,10 +95,12 @@ ii) Also, add "-I /home/<username>/include"  (-I is a capital i and not a capita
 **NOTE**: Default compiler is typical ICC using USEICC=1 in the file "makefile".  See bottom of this document for notes on changing this for other machines.
 
 
+
+
 7) *Make directory for run code:* Command: "mkdir run ; cp grmhd run ; cd run"
 
 
-8) *If OpenMP and MPI, then Run Code with 4 OpemMP threads per node in 1x1x1 MPI matrix:* "./grmhd 4 1 1 1"
+8) *If OpenMP and MPI, then Run Code with 4 OpemMP threads per node in 1x1x1 MPI matrix:* "nohup ./grmhd 4 1 1 1 &"
 
 *If turned off MPI and OPENMP, do: "nohup ./grmhd &"*
 
