@@ -220,7 +220,7 @@ int init_grid(void)
   Rout = 1E5;
 #elif(WHICHPROBLEM==THINBP)
   // make changes to primary coordinate parameters R0, Rin, Rout, hslope
-  R0 = -0.35;
+  R0 = -0.45;
   Rout = 40.0;
   if(totalsize[1]<32) Rout=50.0;
   else if(totalsize[1]<=64) Rout=1.E3;
@@ -319,7 +319,7 @@ int init_global(void)
 
   // default dumping period
   int idt;
-  for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=150.0;
+  for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=250.0;
 
   // ener period
   DTdumpgen[ENERDUMPTYPE] = 500.0;
@@ -330,7 +330,7 @@ int init_global(void)
 
   // DTr = .1 ; /* restart file frequ., in units of M */
   /* restart file period in steps */
-  DTr = 2500; // was 1000
+  DTr = 4000; // was 1000
   DTfake=MAX(1,DTr/10);
 
 
@@ -400,8 +400,8 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
   //rin = (1. + h_over_r)*Risco;
   rin = Risco;
   rinfield = 10.0;
-  beta = 1.60e8;
-  randfact = 2.e-15; //4.e-2;
+  beta = 1.60e2;
+  randfact = 20.e-2; //4.e-2;
   //  fieldnormalizemin = 3. * Risco;
 #elif(WHICHPROBLEM==THICKDISK)
   //  beta = 1.e2 ;
@@ -809,7 +809,7 @@ int init_dsandvels_bpthin(int *whichvel, int*whichcoord, int i, int j, int k, FT
     S = 1./(H*H*nz) ;
     cs = H*nz*sqrt(gam) ; // To understand this factor of gam, and how this equation is approximate, consult Eqn. 7.43 of Melia and definition of T~cs^2/gam
 
-    rho = (S/sqrt(2.*M_PI*H*H)) * (pow(R/rin,3./2+UGPOW)) * exp(-z*z/(2.*H*H))  * taper_func(r,rin, 5.0) ; //3 is best i think //* ( 1.0 - R*R/((pow(R,1.5) + a)*(pow(R,1.5) + a)) )  ;// taper_func(R,rin,-1.0) ;
+    rho = (S/sqrt(2.*M_PI*H*H)) * (pow(R/rin,3./2+UGPOW)) * exp(-z*z/(2.*H*H))  * taper_func(r,rin, 3.0) ; //3 is best i think //* ( 1.0 - R*R/((pow(R,1.5) + a)*(pow(R,1.5) + a)) )  ;// taper_func(R,rin,-1.0) ;
     u = rho*cs*cs/(gam - 1.)/gam;
     ur = 0. ;
     uh = 0. ;
@@ -1677,7 +1677,7 @@ void adjust_fluxctstag_emfs(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR
 // User's cooling function:
 
 #define USERTHETACOOL       (0.1)	/* should be same as h_over_r */
-#define USERTAUCOOL         (2.0*M_PI)	        /* cooling time in number of rotational times : really USERTAUCOOL=2*M_PI would be 1 rotational time */
+#define USERTAUCOOL         (1.0) //(2.0*M_PI)	        /* cooling time in number of rotational times : really USERTAUCOOL=2*M_PI would be 1 rotational time */
 #define USERNOCOOLTHETAFACT     (1.0)           /* this times h_over_r and no more cooling there*/
 
 // This implementation of cooling is as in Noble et. al. 2009, to simulate a radiative cooling source term which keeps the disk thin to a target H/r

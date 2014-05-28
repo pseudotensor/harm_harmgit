@@ -276,7 +276,7 @@ void set_coord_parms_nodeps(int defcoordlocal)
 
     //radial hyperexponential grid
     //    npow2=4.0; //power exponent
-    bp_npow2=4.0; //10.0; //5.0; // 10.0;    // MARKNOTE set to 10.0 before using BP values //power exponent
+    bp_npow2=5.0; //MAVARANOTE must be odd now unless I add a sign explicitly to power component this contributes to sum in exponent //10.0; //5.0; // 10.0;    // MARKNOTE set to 10.0 before using BP values //power exponent
     bp_cpow2=1.0; //exponent prefactor (the larger it is, the more hyperexponentiation is)
     //    rbr = 1E3;  //radius at which hyperexponentiation kicks in
     bp_rbr = 150.0;  //radius at which hyperexponentiation kicks in
@@ -312,8 +312,8 @@ void set_coord_parms_nodeps(int defcoordlocal)
     bp_r0=40.0; // divisor
  
     // for switches from innermost region of disk (inside horizon) to regular disk to increase timestep set by smallest vertical cell size
-    bp_rsinner=3.0;
-    bp_r0inner=1.0; //maybe 1.0 is too quick? not really same problem as outer radii I suppose since it just flattens off;
+    bp_rsinner=4.0;
+    bp_r0inner=1.33; //maybe 1.0 is too quick? not really same problem as outer radii I suppose since it just flattens off;
 
     // for theta1
     //    hslope=0.3 ; // resolve inner-radial region near equator
@@ -1327,8 +1327,8 @@ void bl_coord(FTYPE *X, FTYPE *V)
     }
     V[1] = R0+exp(theexp);
 #else
-    switchrad0 = 0.5+1.0/M_PI*atan((X[1]-bp_x1br)/(8.*dx[1])); // switch in .nb file
-    switchrad2 = 0.5-1.0/M_PI*atan((X[1]-bp_x1br)/(8.*dx[1])); // switchi in .nb file
+    switchrad0 = 0.5+1.0/M_PI*atan((X[1]-bp_x1br)*5.*10./dx[1]/N1); // switch in .nb file
+    switchrad2 = 0.5-1.0/M_PI*atan((X[1]-bp_x1br)*5.*10./dx[1]/N1); // switchi in .nb file
 
     theexp1 = bp_npow*X[1];
     theexp2 = theexp1+bp_cpow2 * pow(X[1]-bp_x1br,bp_npow2);
