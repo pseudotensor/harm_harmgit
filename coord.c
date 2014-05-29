@@ -215,7 +215,7 @@ void set_coord_parms_nodeps(int defcoordlocal)
     //    cpow3=0.01;
     cpow3=1.0;
     //    rbr = 1E3;  //radius at which hyperexponentiation kicks in
-    rbr = 5E2;  //radius at which hyperexponentiation kicks in
+    rbr = 7E2;  //radius at which hyperexponentiation kicks in
 
 
 
@@ -1303,10 +1303,16 @@ void bl_coord(FTYPE *X, FTYPE *V)
     //else njetvsr=
     //njetvsr=njet;
 
-    if(V[1]<rbr){
-      myhslope=h0 + pow( (V[1]-rsjet3)/r0jet3 , njet);
-    }
-    else myhslope=h0 + pow( (rbr-rsjet3)/r0jet3 , njet);
+    FTYPE localrbr=500.0; // rbr;
+    FTYPE localrbrr0=localrbr/5.0;
+
+    switch0 = 0.5+1.0/M_PI*atan((V[1]-localrbr)/localrbrr0); // large r
+    switch2 = 1.0-switch0; // small r
+
+
+    FTYPE myhslope1=h0 + pow( (V[1]-rsjet3)/r0jet3 , njet);
+    FTYPE myhslope2=h0 + pow( (localrbr-rsjet3)/r0jet3 , njet);
+    myhslope = myhslope1*switch2 + myhslope2*switch0;
 
     // determine theta2
     if(X[2]>1.0) myx2=2.0-X[2];
@@ -1320,16 +1326,16 @@ void bl_coord(FTYPE *X, FTYPE *V)
 
     // determine theta0
     // JET3COORDS-based:
-    if(V[1]<rbr){
-      myhslope=2.0-Qjet*pow(V[1]/r1jet,-njet*(0.5+1.0/M_PI*atan(V[1]/r0jet-rsjet/r0jet)));
-    }
-    else myhslope=2.0-Qjet*pow(rbr/r1jet,-njet*(0.5+1.0/M_PI*atan(rbr/r0jet-rsjet/r0jet)));
+    myhslope1=2.0-Qjet*pow(V[1]/r1jet,-njet*(0.5+1.0/M_PI*atan(V[1]/r0jet-rsjet/r0jet)));
+    myhslope2=2.0-Qjet*pow(localrbr/r1jet,-njet*(0.5+1.0/M_PI*atan(localrbr/r0jet-rsjet/r0jet)));
+    myhslope = myhslope1*switch2 + myhslope2*switch0;
     // myhslope here is h0 in MCAF paper
     th0 = M_PI * X[2] + ((1. - myhslope) * 0.5) * mysin(2. * M_PI * X[2]);
 
+
     // determine switches (only function of radius and not x2 or theta)
-    switch0 = 0.5+1.0/M_PI*atan((V[1]-rs)/r0); // switch in .nb file
-    switch2 = 0.5-1.0/M_PI*atan((V[1]-rs)/r0); // switchi in .nb file
+    switch0 = 0.5+1.0/M_PI*atan((V[1]-rs)/r0); // switch in .nb file // switch0->1 as r->infinity
+    switch2 = 1.0-switch0; // for inner radial region
 
     // this works because all functions are monotonic, so final result is monotonic.  Also, th(x2=1)=Pi and th(x2=0)=0 as required
     theta1 = th0*switch2 + th2*switch0; // th0 is activated for small V[1] and th2 is activated at large radii.  Notice that sum of switch2+switch0=1 so normalization correct.
