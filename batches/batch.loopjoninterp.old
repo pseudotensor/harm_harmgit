@@ -1,0 +1,38 @@
+#PBS -N job1
+#PBS -S /bin/bash
+#PBS -j oe
+#PBS -q analysis
+#PBS -A TG-PHY120005 
+#PBS -l ncpus=256,mem=1024GB,walltime=24:00:00
+
+
+####################
+cd /lustre/medusa/jmckinne/data3/jmckinne/jmckinne/sashaa99t1.5708/
+
+
+#######################
+firstdump=0
+lastdump=5737
+skipdump=1
+#########################
+
+stepdump=256
+startdump=$firstdump
+enddump=$(($firstdump+$stepdump-1))
+#########################
+
+rm -rf loopjon.out.txt
+
+while  [ $enddump -le $lastdump ]
+do
+	echo "Doing $startdump $enddump $skipdump" >> loopjon.out.txt
+	sh loopjoninterp.sh $startdump $enddump $skipdump
+	echo "Done $startdump $enddump $skipdump" >> loopjon.out.txt
+	wait
+	#
+	startdump=$(($startdump + $stepdump))
+	enddump=$(($enddump + $stepdump))
+done
+
+
+echo "Done All" >> loopjon.out.txt
