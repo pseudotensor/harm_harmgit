@@ -9,7 +9,7 @@ fi
 
 # Add your commands here to extend your PATH, etc.
 
-PATH=$PATH:$HOME/bin			# Add private commands to PATH
+PATH=$HOME/bin/$PATH			# Add private commands to PATH
 
 source ~/.bashrc.jon
 
@@ -28,9 +28,15 @@ export MPICXX_CXX=icpc
 module load petsc/3.1-p7/intel/mpt
 module load gnuplot/4.4.0
 module load math/intel_mkl_64_10.0.011
+module load math/intel_cmkl_64_9.1.023
 module load mathematica/7.0.1
 module load matlab/2010b
-
+module load ffmpeg/1.2
+module load gnuplot/4.6.3
+#module load python/2.7.3
+module load tcl-tk/8.5.11
+module load hdf5/1.8.3/intel/mpt
+module load imagemagick/6.4.0-3
 
 export MPI_TYPE_DEPTH=20
 export MPICH_MAX_SHORT_MSG_SIZE=16000
@@ -38,3 +44,20 @@ export MPICH_PTL_UNEX_EVENTS=80000
 export MPICH_UNEX_BUFFER_SIZE=768M
 
 
+
+module load git/1.7.7.4
+
+
+# if using user python, then do below:
+
+SRCDIR=/nobackup/jmckinn2/tarballs/
+BASE=/nobackup/jmckinn2/
+export PYTHONPATH=$BASE/lib/python/:$BASE/py/:$HOME/py/
+export PATH=$BASE/bin:$PATH
+export PYTHON_LIB=$BASE/lib/
+export PYTHON_INC=$BASE/include/python2.7/
+export LD_LIBRARY_PATH=$BASE/lib/:$LD_LIBRARY_PATH
+export LIBRARY_PATH=$BASE/lib/:$LIBRARY_PATH
+
+
+module load texlive/2008
