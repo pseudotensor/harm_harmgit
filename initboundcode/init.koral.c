@@ -6093,3 +6093,10 @@ FTYPE calc_kappaes_user(FTYPE rho, FTYPE T,FTYPE x,FTYPE y,FTYPE z)
 
 }
 
+
+int coolfunc_user(FTYPE h_over_r, FTYPE *pr, struct of_geom *geom, struct of_state *q,FTYPE (*dUcomp)[NPR])
+{
+  return(0); // nothing yet
+}
+
+

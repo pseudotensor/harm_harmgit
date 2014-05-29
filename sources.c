@@ -37,13 +37,23 @@ int sourcephysics(FTYPE *pi, FTYPE *pr, FTYPE *pf, int *didreturnpf, int *eomtyp
   else if(cooling==COOLREBECCATHINDISK){
     return(coolfunc_rebecca_thindisk(h_over_r, pr, ptrgeom, q,dUcomp));
   }
+  else if(cooling==COOLUSER){
+    // cooling function defined by user
+    return(coolfunc_user(h_over_r, pr, ptrgeom, q,dUcomp));
+  }
+  else if(cooling==NOCOOLING){
+    // cooling turned off.
+  }
   else if(cooling==KORAL){
     return(koral_source_rad(WHICHRADSOURCEMETHOD, pi, pr, pf, didreturnpf, eomtype, Ugeomfreei, Ugeomfreef, CUf, CUimp, ptrgeom, q, dissmeasure, dUother, dUcomp));
   }
   else{
-    // random physics
-    //misc_source(ph, geom, &q, dU, Dt) ;
+    dualfprintf(fail_file,"cooling=%d does not exist in sourcephysics()\n",cooling);
+    myexit(763252772);
   }
+
+  // random physics
+  //misc_source(ph, geom, &q, dU, Dt) ;
 
   return(0);
 }
