@@ -57,11 +57,11 @@ static void *SwapEndian(void* Addr, const int Nb);
 // so a loop like for(k) for(j) for(i) would be used on array[k][j][i]
 // so i is actually dim2, j is dim1, and k is dim0
 
-// ki-rh42:
+// SOMETIMES SYSTEM USER OR INSTALLATION TYPE (e.g. ki-rh42,physics-179.umd.edu)
 #include "hdf/hdf.h"
 #include "hdf/mfhdf.h"
 
-// ki-rh39:
+// SOMETIMES USER INSTALLATION TYPE (e.g. ki-rh39)
 //#include "hdf.h"
 //#include "mfhdf.h"
 
@@ -759,7 +759,7 @@ int main(
           // v5d data size
           int nrncnl;
           nrncnl = v.Nr * v.Nc * v.Nl[var];
-   
+          
           if(nrncnl!=N1*N2*N3){
             fprintf(stderr,"Memory created was per-time per-variable of size %d while v5d file had %d\n",N1*N2*N3,nrncnl);
             fflush(stderr);
@@ -767,10 +767,10 @@ int main(
           }
           else{
             // debug:
-            //     fprintf(stderr,"time=%d var=%d size=%d\n",time,var,nrncnl); fflush(stderr);
+            //      fprintf(stderr,"time=%d var=%d size=%d\n",time,var,nrncnl); fflush(stderr);
 
             // read data into array
-            //     data = (float *) malloc( nrncnl * sizeof(float) );
+            //      data = (float *) malloc( nrncnl * sizeof(float) );
             data=arrayvisoutput;
 
             if (!v5dReadGrid( &v, time, var, data )) {
@@ -778,34 +778,34 @@ int main(
               exit(0);
             }
 
-            //     min = MISSING;
-            //     max = -MISSING;
-            //     missing = 0;
-            //     good = 0;
-            //     sum = 0.0;
-            //     sumsum = 0.0;
+            //      min = MISSING;
+            //      max = -MISSING;
+            //      missing = 0;
+            //      good = 0;
+            //      sum = 0.0;
+            //      sumsum = 0.0;
             //
-            //     for (i=0;i<nrncnl;i++) {
-            //       /*
-            //  if (data[i]!=data[i]) {
-            //  printf("bad: %g\n", data[i]);
-            //  }
-            //       */
-            //       if ( IS_MISSING(data[i]) ) {
-            //  missing++;
-            //       }
-            //       else {
-            //  good++;
-            //  if (data[i]<min) {
+            //      for (i=0;i<nrncnl;i++) {
+            //        /*
+            //          if (data[i]!=data[i]) {
+            //          printf("bad: %g\n", data[i]);
+            //          }
+            //        */
+            //        if ( IS_MISSING(data[i]) ) {
+            //          missing++;
+            //        }
+            //        else {
+            //          good++;
+            //          if (data[i]<min) {
             //                  min = data[i];
-            //  }
-            //  if (data[i]>max) {
+            //          }
+            //          if (data[i]>max) {
             //                  max = data[i];
-            //  }
-            //  sum += data[i];
-            //  sumsum += data[i]*data[i];
-            //       }
-            //     }
+            //          }
+            //          sum += data[i];
+            //          sumsum += data[i]*data[i];
+            //        }
+            //      }
 
 
             if(dest==0){ // then use min/max conversion for decent legend (at least for fixed scaled data)
@@ -822,33 +822,33 @@ int main(
             for(k=0;k<N3;k++) for(j=0;j<N2;j++) for(i=0;i<N1;i++){
                   ijkjon=(i+(j+k*N2)*N1)*(v.NumVars) + var;  // so var (columns) is fastest
                   ijkvis5d=(N3-1-k) + ((j) + (i) * N2) * N3;
-    
+                  
                   arrayvisf[ijkjon] = (arrayvisoutput[ijkvis5d]-a)*255.0/(b-a);
-                  //    fprintf(stderr,"k=%d j=%d i=%d : var=%d : ijkjon=%d\n",k,j,i,var,ijkjon);
+                  //              fprintf(stderr,"k=%d j=%d i=%d : var=%d : ijkjon=%d\n",k,j,i,var,ijkjon);
 
                 }
 
-            //     free( data );
+            //      free( data );
 
-            //     if (good==0) {
-            //       /* all missing */
-            //       printf("%4d  %-8s %-5s  all missing values\n",
-            //       time+1, v.VarName[var], v.Units[var] );
-            //     }
-            //     else {
-            //       float mean = sum / good;
-            //       float tmp = (sumsum - sum*sum/good) / (good-1);
-            //       float sd;
-            //       if (tmp<0.0) {
-            //  sd = 0.0;
-            //       }
-            //       else {
-            //  sd = sqrt( tmp );
-            //       }
-            //       printf("%4d  %-8s %-5s %13g%13g%13g%13g  %4d\n",
-            //       time+1, v.VarName[var], v.Units[var],
-            //       min,  max,  mean, sd,  missing );
-            //     }
+            //      if (good==0) {
+            //        /* all missing */
+            //        printf("%4d  %-8s %-5s  all missing values\n",
+            //               time+1, v.VarName[var], v.Units[var] );
+            //      }
+            //      else {
+            //        float mean = sum / good;
+            //        float tmp = (sumsum - sum*sum/good) / (good-1);
+            //        float sd;
+            //        if (tmp<0.0) {
+            //          sd = 0.0;
+            //        }
+            //        else {
+            //          sd = sqrt( tmp );
+            //        }
+            //        printf("%4d  %-8s %-5s %13g%13g%13g%13g  %4d\n",
+            //               time+1, v.VarName[var], v.Units[var],
+            //               min,  max,  mean, sd,  missing );
+            //      }
 
 
 
@@ -1051,13 +1051,13 @@ int main(
           //////////////
           // SOURCE
           //////////////
-          switch(source){  
+          switch(source){        
           case 0:
             fread(&dumb,bytesize,1,input); precision[j]='b'; //forced
             break;
           case 1:
-            if(precision[j]=='b')             fread(&dumb,bytesize,1,input);
-            if(precision[j]=='i')             fread(&dumi,intsize,1,input);
+            if(precision[j]=='b')                   fread(&dumb,bytesize,1,input);
+            if(precision[j]=='i')                   fread(&dumi,intsize,1,input);
             if(precision[j]=='f')             fread(&dumf,floatsize,1,input);
             if(precision[j]=='d')             fread(&dumlf,doublesize,1,input);
             break;
@@ -1066,8 +1066,8 @@ int main(
               fscanf(input,"%hu",&shortfordumb);
               dumb=shortfordumb; // convert short to byte
             }
-   
-            if(precision[j]=='i')             fscanf(input,"%d",&dumi);
+          
+            if(precision[j]=='i')                   fscanf(input,"%d",&dumi);
             if(precision[j]=='f')             fscanf(input,"%f",&dumf);
             if(precision[j]=='d')             fscanf(input,"%lf",&dumlf);
             break;
@@ -1084,7 +1084,7 @@ int main(
           case 5:
             // source is always float
             // nextbuf++ just iterates over fastest index, which is columns then i then j then k as normal for HARM
-            //     fprintf(stderr,"nextbuf=%d\n",nextbuf); fflush(stderr);
+            //      fprintf(stderr,"nextbuf=%d\n",nextbuf); fflush(stderr);
             dumf=arrayvisf[nextbuf++]; precision[j]='f'; // forced
             break;
 #endif
@@ -1104,7 +1104,7 @@ int main(
             if(precision[j]=='d'){dumb=dumlf; fwrite(&dumb,bytesize,1,output);}
             break;
           case 1:
-            if(precision[j]=='b')    fwrite(&dumb,bytesize,1,output);
+            if(precision[j]=='b')                 fwrite(&dumb,bytesize,1,output);
             if(precision[j]=='i'){if(ble){ SWAP_LONG(dumi);}     fwrite(&dumi,intsize,1,output);}
             if(precision[j]=='f'){if(ble){ SWAP_FLOAT(dumf);}   fwrite(&dumf,floatsize,1,output);}
             if(precision[j]=='d'){if(ble){ SWAP_DOUBLE(dumlf);} fwrite(&dumlf,doublesize,1,output);}
@@ -1193,7 +1193,7 @@ int main(
               arrayvisoutput[ijkvis5d]=(arrayvisf[ijkjon]/255.0)*(b-a)+a;
 
               // DEBUG:
-              // fprintf(stderr,"i=%d j=%d k=%d iv=%d ijkvis5d=%d a=%g b=%g value=%g\n",i,j,k,iv,ijkvis5d,a,b,arrayvisoutput[ijkvis5d]);
+              //        fprintf(stderr,"i=%d j=%d k=%d iv=%d ijkvis5d=%d a=%g b=%g value=%g\n",i,j,k,iv,ijkvis5d,a,b,arrayvisoutput[ijkvis5d]);
             }
       
         /* Write data to v5d file. */
@@ -1383,20 +1383,20 @@ int IsLittleEndian(void) {
 void *SwapEndian(void* Addr, const int Nb) {
   static char Swapped[16];
   switch (Nb) {
-  case 2: Swapped[0]=*((char*)Addr+1);
+  case 2:       Swapped[0]=*((char*)Addr+1);
     Swapped[1]=*((char*)Addr  );
     break;
-  case 3: // As far as I know, 3 is used only with RGB images
+  case 3:       // As far as I know, 3 is used only with RGB images
     Swapped[0]=*((char*)Addr+2);
     Swapped[1]=*((char*)Addr+1);
     Swapped[2]=*((char*)Addr  );
     break;
-  case 4: Swapped[0]=*((char*)Addr+3);
+  case 4:       Swapped[0]=*((char*)Addr+3);
     Swapped[1]=*((char*)Addr+2);
     Swapped[2]=*((char*)Addr+1);
     Swapped[3]=*((char*)Addr  );
     break;
-  case 8: Swapped[0]=*((char*)Addr+7);
+  case 8:       Swapped[0]=*((char*)Addr+7);
     Swapped[1]=*((char*)Addr+6);
     Swapped[2]=*((char*)Addr+5);
     Swapped[3]=*((char*)Addr+4);
