@@ -1,0 +1,16 @@
+# run using "source" not "bash" or "sh"
+# i.e. source ~/setuppython27
+
+module unload PrgEnv-gnu
+module load PrgEnv-intel
+module unload python/2.6
+module unload python/2.7.1
+module load python/2.7.1-cnl # have to use this specific lustre-installed version
+export MKL_DYNAMIC=FALSE
+export MKL_NUM_THREADS=8
+export PYTHONPATH=$HOME/py:$PYTHONPATH
+
+# now ready to use current version of python that is compiled with gnu
+
+
+
