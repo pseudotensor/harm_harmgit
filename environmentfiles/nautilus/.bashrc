@@ -17,6 +17,8 @@ module load cue-login-env
 if [ $CUE_HOST_PROMPT = nautilus ]; then
     module load PE-intel
 
+    module load texlive/2010
+
     module unload python/2.6
     module load python/2.7.1
     export MKL_DYNAMIC=FALSE
@@ -27,6 +29,8 @@ if [ $CUE_HOST_PROMPT = nautilus ]; then
     # Sasha determined required for many cores to run
     export MPI_TYPE_DEPTH=20 #for using ROMIO
     export MPI_TYPE_MAX=65536
+
+    
 
 fi
 
