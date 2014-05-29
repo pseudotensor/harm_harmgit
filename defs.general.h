@@ -265,7 +265,7 @@ int didstorepositiondata,didstoremetricdata;
 
 /* physical consts */
 FTYPE msun,lsun,rsun,G,H,C,qe,Na,malpha,mn,me,kb,arad,sigmasb,sigmamat,mevocsq,ergPmev,mp,Q,R,Re,hpl,hbar,K,K2;
-SFTYPE a,MBH,QBH,EP3,THETAROT;
+SFTYPE a,MBH,QBH,EP3,THETAROT,THETAROTMETRIC,THETAROTPRIMITIVES;
 FTYPE Mfactor,Jfactor,rhofactor;
 SFTYPE dabh,dE,dJ,dEold,dJold;
 FTYPE mb,mbcsq,mbwithrhounit,amu,a0,MBH0,QBH0,EP30,THETAROT0,Mdot,Mdotc,Mcgs,Ccode;

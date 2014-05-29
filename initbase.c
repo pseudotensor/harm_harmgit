@@ -26,16 +26,15 @@ int init(int *argc, char **argv[])
   extern int init_defglobal(void);
   extern int init_defconsts(void);
   extern int init_arrays_before_set_pu(void);
-  extern int post_par_set(void);
   extern void filterffde(int i, int j, int k, FTYPE *pr);
   extern void filter_coldgrmhd(int i, int j, int k, FTYPE *pr);
+  void set_grid_all(FTYPE thetarot, int restartmode);
   //
   void  init_all_conservatives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR],FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*utemp)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR]);
   int i,j,k;
   int jj;
   int pl,pliter;
   int selfgraviter;
-  int set_box_grid_parameters(void);
   int gotnan;
   int faketimeorder,fakenumtimeorders;
 
@@ -150,41 +149,7 @@ int init(int *argc, char **argv[])
   //
   //////////////////
   if(RESTARTMODE==0 || RESTARTMODE==1){
-
-    //THETAROT = 0.5*0.7; // No, if restarting, then no need since not actually calling init_primitives // set so init rho,u,v,B are as if no rotation
-
-    // once all interpolation parameters are set, now can set dependent items that may be used to set primitives or conservatives
-    // doesn't use metric parameters, so doesn't need to be in SELFGRAV loop
-    post_par_set();
-
-    if(RESTARTMODE==1) trifprintf("proc: %d post_par_set completed: failed=%d\n", myid,failed);
-
-
-
-    // get grid
-    // 0 tells set_grid that it's first call to set_grid() and so have to assume stationarity of the metric since have no time information yet
-    set_grid(0,0,0);
-
-
-
-    if(RESTARTMODE==1) trifprintf("proc: %d grid restart completed: failed=%d\n", myid,failed);
-
-    // set grid boundary parameters that uses metric parameters to determine loop ranges using enerregions and enerpos
-    set_box_grid_parameters();
-
-    if(RESTARTMODE==1) trifprintf("proc: %d set_box_grid_parameters completed: failed=%d\n", myid,failed);
-
-    // user post_set_grid function
-    init_grid_post_set_grid(GLOBALPOINT(pglobal),GLOBALPOINT(pstagglobal),GLOBALPOINT(unewglobal),GLOBALPOINT(vpotarrayglobal),GLOBALPOINT(Bhatglobal),GLOBALPOINT(panalytic),GLOBALPOINT(pstaganalytic),GLOBALPOINT(vpotanalytic),GLOBALPOINT(Bhatanalytic),GLOBALPOINT(F1),GLOBALPOINT(F2),GLOBALPOINT(F3),GLOBALPOINT(emf));
-
-    if(RESTARTMODE==1) trifprintf("proc: %d init_grid_post_set_grid completed: failed=%d\n", myid,failed);
-  
-
-    trifprintf("MCOORD=%d\n",MCOORD);
-    trifprintf("COMPDIM=%d\n",COMPDIM);
-    trifprintf("MAXBND=%d\n",MAXBND);
-    trifprintf("FLUXB=%d\n",FLUXB);
-
+    set_grid_all(THETAROTPRIMITIVES,RESTARTMODE); // use THETAROT=THETAROTPRIMITIVES
   }
 
 
@@ -523,56 +488,26 @@ int init(int *argc, char **argv[])
 
 
 
-#if(0) // SUPERGODMARK: Deal with initial tilt
-  // SUPERGODMARK: After changing metric, should really also do after below:
-  // 1) A_i or U -> Bstag for stag method *or* A_i -> B for Toth
-  // 2) Bstag -> B for stag method
-  // 3) Bstag,U -> Bhat for stag higher order method
-  // etc.
-  //
-  // Otherwise, gdet changes and t=0 Bstag and B won't be consistent with A_i and U for the new metric.
-
-
-  ///////////////////
-  //
-  // Both normal and restart mode need to setup grid
-  //
-  //////////////////
-  if(RESTARTMODE==0 || RESTARTMODE==1){
-
-    //    THETAROT = 0.5*0.7; // reset grid with rotation
-
-    // once all interpolation parameters are set, now can set dependent items that may be used to set primitives or conservatives
-    // doesn't use metric parameters, so doesn't need to be in SELFGRAV loop
-    post_par_set();
-
-    if(RESTARTMODE==1) trifprintf("proc: %d post_par_set completed: failed=%d\n", myid,failed);
-
-    // get grid
-    // 0 tells set_grid that it's first call to set_grid() and so have to assume stationarity of the metric since have no time information yet
-    set_grid(0,0,0);
-
-    if(RESTARTMODE==1) trifprintf("proc: %d grid restart completed: failed=%d\n", myid,failed);
-
-    // set grid boundary parameters that uses metric parameters to determine loop ranges using enerregions and enerpos
-    set_box_grid_parameters();
-
-    if(RESTARTMODE==1) trifprintf("proc: %d set_box_grid_parameters completed: failed=%d\n", myid,failed);
-
-    // user post_set_grid function
-    init_grid_post_set_grid(GLOBALPOINT(pglobal),GLOBALPOINT(pstagglobal),GLOBALPOINT(unewglobal),GLOBALPOINT(vpotarrayglobal),GLOBALPOINT(Bhatglobal),GLOBALPOINT(panalytic),GLOBALPOINT(pstaganalytic),GLOBALPOINT(vpotanalytic),GLOBALPOINT(Bhatanalytic),GLOBALPOINT(F1),GLOBALPOINT(F2),GLOBALPOINT(F3),GLOBALPOINT(emf));
-
-    if(RESTARTMODE==1) trifprintf("proc: %d init_grid_post_set_grid completed: failed=%d\n", myid,failed);
-  
-
-    trifprintf("MCOORD=%d\n",MCOORD);
-    trifprintf("COMPDIM=%d\n",COMPDIM);
-    trifprintf("MAXBND=%d\n",MAXBND);
-    trifprintf("FLUXB=%d\n",FLUXB);
+  if(THETAROTMETRIC!=THETAROTPRIMITIVES){ // Deal with initial tilt
+    // SUPERGODMARK: After changing metric, should really also do after below:
+    // 1) A_i or U -> Bstag for stag method *or* A_i -> B for Toth
+    // 2) Bstag -> B for stag method
+    // 3) Bstag,U -> Bhat for stag higher order method
+    // etc.
+    //
+    // Otherwise, gdet changes and t=0 Bstag and B won't be consistent with A_i and U for the new metric.
+    
+    
+    ///////////////////
+    //
+    // Both normal and restart mode need to setup grid
+    //
+    //////////////////
+    if(RESTARTMODE==0 || RESTARTMODE==1){
+      set_grid_all(THETAROTMETRIC,RESTARTMODE); // now use THETAROT=THETAROTMETRIC
+    }
 
   }
-#endif
-
 
 
   ///////////////////
@@ -624,6 +559,49 @@ int init(int *argc, char **argv[])
   return (0);
 
 }
+
+
+
+// wrapper to do repeated set_grid when involving tilt
+void set_grid_all(FTYPE thetarot, int restartmode)
+{
+  int set_box_grid_parameters(void);
+  extern int post_par_set(void);
+
+
+  // sets global THETAROT
+  THETAROT = thetarot; // No, if restarting, then no need since not actually calling init_primitives // set so init rho,u,v,B are as if no rotation
+
+  // once all interpolation parameters are set, now can set dependent items that may be used to set primitives or conservatives
+  // doesn't use metric parameters, so doesn't need to be in SELFGRAV loop
+  post_par_set();
+
+  if(restartmode==1) trifprintf("proc: %d post_par_set completed: failed=%d\n", myid,failed);
+
+  // get grid
+  // 0 tells set_grid that it's first call to set_grid() and so have to assume stationarity of the metric since have no time information yet
+  set_grid(0,0,0);
+
+  if(restartmode==1) trifprintf("proc: %d grid restart completed: failed=%d\n", myid,failed);
+
+  // set grid boundary parameters that uses metric parameters to determine loop ranges using enerregions and enerpos
+  set_box_grid_parameters();
+
+  if(restartmode==1) trifprintf("proc: %d set_box_grid_parameters completed: failed=%d\n", myid,failed);
+
+  // user post_set_grid function
+  init_grid_post_set_grid(GLOBALPOINT(pglobal),GLOBALPOINT(pstagglobal),GLOBALPOINT(unewglobal),GLOBALPOINT(vpotarrayglobal),GLOBALPOINT(Bhatglobal),GLOBALPOINT(panalytic),GLOBALPOINT(pstaganalytic),GLOBALPOINT(vpotanalytic),GLOBALPOINT(Bhatanalytic),GLOBALPOINT(F1),GLOBALPOINT(F2),GLOBALPOINT(F3),GLOBALPOINT(emf));
+
+  if(restartmode==1) trifprintf("proc: %d init_grid_post_set_grid completed: failed=%d\n", myid,failed);
+  
+
+  trifprintf("MCOORD=%d\n",MCOORD);
+  trifprintf("COMPDIM=%d\n",COMPDIM);
+  trifprintf("MAXBND=%d\n",MAXBND);
+  trifprintf("FLUXB=%d\n",FLUXB);
+
+}
+
 
 
 /// copy over initial solution as analytic solution
@@ -1165,8 +1143,8 @@ int init_defgrid(void)
   MBH=MBH0;
   QBH=QBH0;
   EP3=EP30;
-  THETAROT=THETAROT0;
-
+  THETAROTMETRIC=THETAROT0;
+  THETAROTPRIMITIVES=0.0; // assume by default is zero
 
   return(0);
 }

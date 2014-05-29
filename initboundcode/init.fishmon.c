@@ -21,9 +21,8 @@
 #define SLOWFAC 1.0  /* reduce u_phi by this amount */
 #define MAXPASSPARMS 10
 
-//#define THETAROTMETRIC (0.5*0.7)
-#define THETAROTMETRIC (0.0)
-
+#define USER_THETAROTMETRIC (0.0)
+#define USER_THETAROTPRIMITIVES (0.0) // probably want to choose 0, so initial conditions are as if no tilt
 
 #define NORMALTORUS 0 // note I use randfact=5.e-1 for 3D model with perturbations
 #define GRBJET 1
@@ -116,6 +115,21 @@ int inittypeglobal; // for bounds to communicate detail of what doing
 int prepre_init_specific_init(void)
 {
   int funreturn;
+
+  // set global THETAROTPRIMITIVES
+  if(ALLOWMETRICROT){
+    THETAROTPRIMITIVES=USER_THETAROTPRIMITIVES; // 0 to M_PI : what thetarot to use when primitives are set
+  }
+  else{
+    THETAROTPRIMITIVES=0.0; // DO NOT CHANGE
+  }
+
+  if(ALLOWMETRICROT){
+    THETAROTMETRIC = USER_THETAROTMETRIC; // defines metric generally
+  }
+  else{
+    THETAROTMETRIC = 0.0;
+  }
   
   funreturn=user1_prepre_init_specific_init();
   if(funreturn!=0) return(funreturn);
@@ -233,12 +247,7 @@ int init_grid(void)
   // metric stuff first
   a = 0.9375 ;
 
-  if(ALLOWMETRICROT){
-    THETAROT = THETAROTMETRIC; // defines metric generally
-  }
-  else{
-    THETAROT = 0.0;
-  }
+
   
 
 #if(WHICHPROBLEM==NORMALTORUS || WHICHPROBLEM==KEPDISK)
@@ -490,9 +499,11 @@ int init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2
 {
   int funreturn;
   int inittype;
+  FTYPE thetarotorig;
 
 
-  THETAROT = 0.0; // define rho,u,v,B as if no rotation
+  thetarotorig=THETAROT;
+  THETAROT = THETAROTPRIMITIVES; // define rho,u,v,B as if no rotation (but metric might still be used, so still use set_grid_all() in initbase.c)
 
 
   inittype=1;
@@ -500,8 +511,7 @@ int init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2
   funreturn=user1_init_primitives(inittype, prim, pstag, ucons, vpot, Bhat, panalytic, pstaganalytic, vpotanalytic, Bhatanalytic, F1, F2, F3,Atemp);
   if(funreturn!=0) return(funreturn);
 
-  THETAROT = THETAROTMETRIC; // back to metric version
-
+  THETAROT = thetarotorig; // back to previous version
 
   return(0);
 
@@ -1267,3 +1277,125 @@ FTYPE calc_kappaes_user(FTYPE rho, FTYPE T,FTYPE x,FTYPE y,FTYPE z)
 {  
   return(0.0);
 }
+
+
+// User's cooling function:
+
+#define USERTHETACOOL       (h_over_r)  /* should be same as h_over_r */
+#define USERTAUCOOL         (2.0*M_PI)          /* cooling time in number of rotational times : really USERTAUCOOL=2*M_PI would be 1 rotational time */
+#define USERNOCOOLTHETAFACT     (1.0)           /* this times h_over_r and no more cooling there*/
+
+
+int coolfunc_user(FTYPE h_over_r, FTYPE *pr, struct of_geom *geom, struct of_state *q,FTYPE (*dUcomp)[NPR])
+{
+  FTYPE X[NDIM],V[NDIM],r,th,R,Wcirc,cs_circ,rho,u,P,w,wcirc,dUcool;
+  FTYPE taper0;
+  int ii,jj, kk, pp;
+  FTYPE pressure;
+  FTYPE enk, enk0;
+        
+  FTYPE rpho;      
+  FTYPE photoncapture;
+  FTYPE rincool;
+  FTYPE nocoolthetafactor,thetacool,taucool;
+
+
+
+  // setup for macros
+  nocoolthetafactor=USERNOCOOLTHETAFACT;
+  thetacool=USERTHETACOOL;
+  taucool=USERTAUCOOL;
+
+  ii=geom->i;
+  jj=geom->j;
+  kk=geom->k;
+  pp=geom->p;
+
+  /* cooling function for maintaining fixed H/R */
+  rho = pr[RHO] ;
+  u = pr[UU] ;
+  P=pressure_rho0_u_simple(ii,jj,kk,pp,rho,u);
+  w = rho + u + P ;
+
+  bl_coord_ijk_2(ii,jj,kk,CENT,X, V) ;
+  r=V[1];
+  th=V[2];
+ 
+  rpho=2.0*(1.0+cos(2.0/3.0*(acos(-a))));
+
+  //    trifprintf("rphoton=%lf\n", rpho);
+  if(1 || r>rpho){ //SASMARK: cool always, including inside photon orbit
+    photoncapture=1.0 ;
+    //  trifprintf("r=%lf, photoncapture=%lf, rph=%lf \ n", r, photoncapture, rpho); 
+  }
+  else{
+    photoncapture=0.0 ;
+  }
+
+
+  R = r*sin(th) ;
+  enk=u*(gam-1.)/(pow(rho, gam));
+  //enk0 = 1.e-3; //same as kappa in init.fishmon.c -- somehow wrong, is it because of wrong gam?!
+  enk0 = 0.0043; //as read from ic's for thick torus
+  //enk0=0.00016; //User's version
+  //    enk0=0.00161;
+  //    rin = (1. + h_over_r)*Risco;
+  rincool=10.;
+  /* crude approximation */
+  Wcirc = 1./(a + pow(R,1.5)) ;
+  cs_circ = thetacool/sqrt(R) ;
+  //        wcirc = rho*(1. + cs_circ*cs_circ/(gam - 1.)) ;
+
+  wcirc =   rho*(1. + cs_circ*cs_circ/(gam - 1.)) ;
+
+
+
+  //    trifprintf("photoncapture=%lf, r=%lf, rpho=%lf \n", photoncapture, r, rpho);
+
+  //  if(t > 0.){
+  // dUcool = -(Wcirc/taucool)*( (w - wcirc)*(q->ucon[TT])) ;
+  //     if(t > 0.){
+
+
+  if(t > 0. && dt < taucool/Wcirc  && log(enk/enk0) > 0.) {
+
+    //            dUcool = -(Wcirc/taucool)*( (w - wcirc)*(q->ucon[TT])*(q->ucov[TT])) ;
+
+
+         
+
+    // dUcool=-u*(Wcirc/taucool)*log(enk/enk0)*(q->ucon[TT])*photoncapture;
+
+
+
+    dUcool=-u*(Wcirc/taucool)*log(enk/enk0)*photoncapture;
+
+    //    dUcool*=COOLTAPER1(th);
+    //  dUcool*=taper_func(R,Rhor);
+
+    // shape function to avoid problems near pole
+    //taper0=COOLTAPER(0);
+    //dUcool*=1./(1.-1./taper0)+1./(1.-taper0)*COOLTAPER(th);
+    //dUcool*=COOLTAPER2(th);
+    // dUcool*=COOLTAPER3(th);
+    // dUcool*=taper_func(R,Rhor); // don't cool inside horizon
+  }
+  else{
+    dUcool = 0. ;
+    // dUcool = (-u*log(enk/enk0)/dt)*(q->ucon[TT]) ;
+
+  }
+
+  //    dUcomp[RADSOURCE][UU]=dUcool;
+
+
+  dUcomp[RADSOURCE][UU]=dUcool*(q->ucov[TT]);
+  dUcomp[RADSOURCE][U1]=dUcool*(q->ucov[RR]);
+  dUcomp[RADSOURCE][U2]=dUcool*(q->ucov[TH]);
+  dUcomp[RADSOURCE][U3]=dUcool*(q->ucov[PH]);
+
+  //                    trifprintf("ducomps are %g %g %g %g \n", dUcomp[RADSOURCE][UU], dUcomp[RADSOURCE][U1], dUcomp[RADSOURCE][U2],   dUcomp[RADSOURCE][U3]); 
+  return(0) ;
+}
+
+
