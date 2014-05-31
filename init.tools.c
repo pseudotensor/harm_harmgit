@@ -518,7 +518,7 @@ int user1_init_primitives(int inittype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FT
   pre_interpolate_and_advance(prim);
 
 
-
+  // SUPERGODMARK TODO
   trifprintf("pre_fixup #1\n");
   if(pre_fixup(STAGEM1,prim)>=1) FAILSTATEMENT("init.c:init()", "pre_fixup()", 1);
 

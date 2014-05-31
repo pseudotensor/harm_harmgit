@@ -1515,7 +1515,7 @@ int init_global(void)
       myexit(2493434635);
     }
 
-    if(DOWALDDEN) cooling==NOCOOLING;
+    if(DOWALDDEN) cooling=NOCOOLING;
     else cooling=KORAL;
 
     // ARAD_CODE=ARAD_CODE_DEF*1E5; // tuned so radiation energy flux puts in something much higher than ambient, while initial ambient radiation energy density lower than ambient gas internal energy.
@@ -2089,13 +2089,6 @@ int init_defcoord(void)
     // metric stuff first
     a = 0.8 ;
     
-    if(ALLOWMETRICROT){
-      THETAROT = THETAROTMETRIC; // defines metric generally
-    }
-    else{
-      THETAROT = 0.0;
-    }
-
 
     if(1){
       RADNT_MINX=1.7; // allows in KSCOORDS
@@ -2114,14 +2107,19 @@ int init_defcoord(void)
     //    defcoord = LOGRUNITH; // Uses R0, Rin, Rout and Rin_array,Rout_array for 2,3 directions
     Rin=RADNT_MINX;
     Rout=RADNT_MAXX;
-
-    Rin_array[2]=0.0*Pi/4.; // but koral currently uses 0.5*Pi/4
-    Rout_array[2]=Pi; // KORALNOTE: Different from KORAL code test
-    Rin_array[3]=-1.;
-    Rout_array[3]=1.;
-
     defcoord=JET6COORDS;
-    //defcoord=LOGRUNITH;
+    
+    if(0){
+      Rin_array[1]=Rin;
+      Rout_array[1]=Rout;
+      Rin_array[2]=0.0*Pi/4.; // but koral currently uses 0.5*Pi/4
+      Rout_array[2]=Pi; // KORALNOTE: Different from KORAL code test
+      Rin_array[3]=-1.;
+      Rout_array[3]=1.;
+      defcoord=LOGRUNITH;
+    }
+
+
     Rhor=rhor_calc(0);
 
 

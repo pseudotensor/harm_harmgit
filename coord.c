@@ -209,13 +209,16 @@ void set_coord_parms_nodeps(int defcoordlocal)
     npow=1.0;  //don't change it, essentially equivalent to changing cpow2
 
     //radial hyperexponential grid
-    //    npow2=4.0; //power exponent
-    npow2=10.0; //power exponent
+
+    //power exponent
+    npow2=6.0; // WALD: 6.0->4.0
+
     cpow2=1.0; //exponent prefactor (the larger it is, the more hyperexponentiation is)
     //    cpow3=0.01;
     cpow3=1.0;
-    //    rbr = 1E3;  //radius at which hyperexponentiation kicks in
-    rbr = 7E2;  //radius at which hyperexponentiation kicks in
+    //radius at which hyperexponentiation kicks in
+    //    rbr = 1E3;
+    rbr = 5E2; // WALD 5E2->5E7
 
 
 
@@ -256,7 +259,8 @@ void set_coord_parms_nodeps(int defcoordlocal)
     h0=0.3; // inner-radial "hslope" for theta2
     //h0=0.1; // inner-radial "hslope" for theta2 // for thinner disks, change this.
     // GODMARK: Note that this overwrites above njet!
-    njet=1.0; // power \theta_j \propto r^{-njet}
+    // power \theta_j \propto r^{-njet}
+    njet=1.0; // WALD: 1.0->0.0
 
 
     // see fix_3dpoledtissue.nb
@@ -1303,7 +1307,7 @@ void bl_coord(FTYPE *X, FTYPE *V)
     //else njetvsr=
     //njetvsr=njet;
 
-    FTYPE localrbr=500.0; // rbr;
+    FTYPE localrbr=rbr; //500.0; // rbr;
     FTYPE localrbrr0=localrbr/5.0;
 
     switch0 = 0.5+1.0/M_PI*atan((V[1]-localrbr)/localrbrr0); // large r

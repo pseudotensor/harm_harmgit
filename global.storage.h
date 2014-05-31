@@ -417,7 +417,7 @@
 #define GENMACP0A4(prefix,name,i,j,k,arga1,arga2,arga3,arga4) prefix##name[STO1(i,j,k)][STO2(i,j,k)][STO3(i,j,k)][arga1][arga2][arga3][arga4]
 
 /////////////////
-/// BASE (a_) wrappers
+/// BASE (a_) wrappers // actual declarations for 3D memory arrays set in superdefs.h
 /// 
 #define BASEPOINT(name) GENPOINT(a_,name)
 #define BASEMAC(name,i,j,k) GENMAC(a_,name,i,j,k)

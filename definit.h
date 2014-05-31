@@ -273,7 +273,7 @@
 #define PRODUCTION 0
 /// 0: full images, dumps, etc., few more key failure stderr/fail_file messages
 /// 1: only log density image since too many images (takes alot of time), no utoprim failure messages -- assume debug.out and debug???? will have info if needed
-/// 2: #1 but also avoid error_check() and avoid per-MPI-proc log and fail files
+/// 2: #1 but also avoid error_check() and avoid per-MPI-proc log and fail files (good for running on >1000 cores)
 
 
 /// 0: normal computational zones outputted on diagnostics
