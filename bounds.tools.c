@@ -5612,7 +5612,7 @@ void debugfixupaltdeath_bc(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
        
       //prfix[RHO] = 1E-10*pow(V[1]/500.0,-1.5);
   
-      prfix[UU]= MIN(10.0*prfix[RHO],prfix[UU]); // no more than u/rho=10
+      prfix[UU]= MIN(50.0*prfix[RHO],prfix[UU]); // no more than u/rho=10
       ufix[UU]=MAX(-prfix[UU],ufix[UU]);
   
       ufix[ENTROPY] = ufix[UU];
@@ -5627,19 +5627,29 @@ void debugfixupaltdeath_bc(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
       //      limit_gamma(0,1.5,GAMMAMAXRAD,prfix,NULL,ptrgeom,-1);
       limit_gamma(0,OUTERDEATHGAMMAMAX,OUTERDEATHGAMMAMAXRAD,prfix,NULL,ptrgeom,-1);
 
+      FTYPE rbr=500.0;
+      FTYPE localrbr=rbr; //500.0; // rbr;
+      FTYPE localrbrr0=MAX(100.0,localrbr/2.0);
+      
+      FTYPE switch0 = 0.5+1.0/M_PI*atan((V[1]-localrbr)/localrbrr0); // large r
+      FTYPE switch2 = 1.0-switch0; // small r
+      //      FTYPE myhslope1=h0 + pow( (V[1]-rsjet3)/r0jet3 , njet);
+      //      FTYPE myhslope2=h0 + pow( (localrbr-rsjet3)/r0jet3 , njet);
+      //      myhslope = myhslope1*switch2 + myhslope2*switch0;
 
+      if(V[1]<100.0) switch2=1.0;
  
       if(prfix[U1]<0.0){
-        prfix[U1]=0.0;
-        ufix[U1]=0.0;
+        prfix[U1]*=switch2;
+        ufix[U1]*=switch2;
       }
       //      ufix[U2]=ufix[U3]=0.0;
       //      SLOOPA(jjj) ufix[U1+jjj-1]=prfix[U1+jjj-1] = 0.0;
   
       if(URAD0>=0){
         if(prfix[URAD1]<0.0){
-          prfix[URAD1]=0.0;
-          ufix[URAD1]=0.0;
+          prfix[URAD1]*=switch2;
+          ufix[URAD1]*=switch2;
         }
       }
 

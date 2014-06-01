@@ -1278,7 +1278,7 @@ void bl_coord(FTYPE *X, FTYPE *V)
 #elif(0)
     // avoid jump in grid at rbr
     // determine switches
-    FTYPE r0rbr=rbr/5.0;
+    FTYPE r0rbr=rbr/2.0;
     switch0 = 0.5+1.0/M_PI*atan((V[1]-rbr)/r0rbr); // 1 for outer r
 
     FTYPE V1 = R0+exp(npow*X[1]);
@@ -1308,7 +1308,7 @@ void bl_coord(FTYPE *X, FTYPE *V)
     //njetvsr=njet;
 
     FTYPE localrbr=rbr; //500.0; // rbr;
-    FTYPE localrbrr0=localrbr/5.0;
+    FTYPE localrbrr0=MAX(100.0,localrbr/2.0);
 
     switch0 = 0.5+1.0/M_PI*atan((V[1]-localrbr)/localrbrr0); // large r
     switch2 = 1.0-switch0; // small r
