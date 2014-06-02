@@ -1554,7 +1554,7 @@ int init_global(void)
         //      BCtype[X1DN]=OUTFLOW;
         //      BCtype[X1UP]=OUTFLOW;
 
-        if(DOWALDDEN) BCtype[X1DN]=OUTFLOW;
+        //        if(DOWALDDEN) BCtype[X1DN]=OUTFLOW; // WALD: OUTFLOW leads to highish u^t at large radius, while HORIZONOUTFLOW is ok for u^t but leads top largish drop in density.
       }
       
       if(WHICHPROBLEM==RADFLATDISK)  BCtype[X2DN]=ASYMM; // if non-zero Rin_array[2]
