@@ -3173,7 +3173,7 @@ int set_density_floors_default(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *prfloo
     MYFUN(primtoU(UDIAG,pr, &q, ptrgeom, U, NULL),"fixup.c:set_density_floors()", "primtoU()", 1);
   }
 
-  if(rescaletype==4){
+  if(rescaletype==4||rescaletype==5){
     if(bsq_calc(pr,ptrgeom,&bsq)>=1){
       dualfprintf(fail_file,"bsq_calc:bsq_calc: failure\n");
       return(1);
@@ -3253,7 +3253,7 @@ int set_density_floors_default_alt(struct of_geom *ptrgeom, struct of_state *q, 
       prfloor[RHO] = prfloorcoef[RHO]*pow(r/Rin, -5);
       prfloor[UU] = prfloorcoef[UU]*pow(r/Rin,-6) ;
     }
-    else if(rescaletype==4){
+    else if(rescaletype==4||rescaletype==5){
       // for jet injection with maximum b^2/rho and b^2/u and maximum u/rho
       
       // below uses max of present u and floor u since present u may be too small (or negative!) and then density comparison isn't consistent with final floor between u and rho
@@ -3269,7 +3269,7 @@ int set_density_floors_default_alt(struct of_geom *ptrgeom, struct of_state *q, 
         int POLESIZE=3;
         if(t<TRESTARTE && ISSPCMCOORD(MCOORD) && (startpos[2]+j<POLESIZEE || startpos[2]+j>totalsize[2]-1-POLESIZEE)){
           // temporarily allow much higher field due to very early adjustments in field near pole.  This avoids dumping mass into the pole at learly times.
-	  // But don't let u_g respond to field at all
+          // But don't let u_g respond to field at all
           prfloor[RHO]=MAX(bsq/BSQORHOLIMITTEMP,SMALL);
           prfloor[UU]=MAX(MIN(pr[UU],UORHOLIMITTEMP*prfloor[RHO]),SMALL);
         }
@@ -3291,20 +3291,43 @@ int set_density_floors_default_alt(struct of_geom *ptrgeom, struct of_state *q, 
           prfloor[UU]=MAX(MIN(pr[UU],UORHOLIMITTEMP*prfloor[RHO]),SMALL);
         }
         else{
-	  prfloor[RHO]=MAX(bsq/BSQORHOLIMIT,SMALL);
-	  prfloor[UU]=MAX(bsq/BSQOULIMIT,zerouuperbaryon*MAX(prfloor[RHO],SMALL));
-	  prfloor[UU]=MAX(MIN(MAX(pr[UU],prfloor[UU]),UORHOLIMIT*prfloor[RHO]),SMALL);
-        }
+          prfloor[RHO]=MAX(bsq/BSQORHOLIMIT,SMALL);
+          prfloor[UU]=MAX(bsq/BSQOULIMIT,zerouuperbaryon*MAX(prfloor[RHO],SMALL));
+          prfloor[UU]=MAX(MIN(MAX(pr[UU],prfloor[UU]),UORHOLIMIT*prfloor[RHO]),SMALL);
+
+          if(rescaletype==5){//WALD
+            if(r>500.0){
+              prfloor[RHO]*=pow(500,-1.5);
+              prfloor[UU]*=pow(500,-2.5);
+            }
+            else{
+              prfloor[RHO]*=pow(r,-1.5);
+              prfloor[UU]*=pow(r,-2.5);
+            }
+          }
+
+        }// end NORMAL else conditional
       }
       else{
-	prfloor[RHO]=MAX(bsq/BSQORHOLIMIT,SMALL);
-	prfloor[UU]=MAX(bsq/BSQOULIMIT,zerouuperbaryon*MAX(prfloor[RHO],SMALL));
-	prfloor[UU]=MAX(MIN(MAX(pr[UU],prfloor[UU]),UORHOLIMIT*prfloor[RHO]),SMALL);
-      }
+        prfloor[RHO]=MAX(bsq/BSQORHOLIMIT,SMALL);
+        prfloor[UU]=MAX(bsq/BSQOULIMIT,zerouuperbaryon*MAX(prfloor[RHO],SMALL));
+        prfloor[UU]=MAX(MIN(MAX(pr[UU],prfloor[UU]),UORHOLIMIT*prfloor[RHO]),SMALL);
+
+        if(rescaletype==5){//WALD
+          if(r>500.0){
+            prfloor[RHO]*=pow(500,-1.5);
+            prfloor[UU]*=pow(500,-2.5);
+          }
+          else{
+            prfloor[RHO]*=pow(r,-1.5);
+            prfloor[UU]*=pow(r,-2.5);
+          }
+        }
+      }// else NORMAL case
 
 
 
-    }// end rescaletype==4
+    }// end rescaletype==4 || rescaletype==5
   }
   else{
     prfloor[RHO] = RHOMIN*pow(r, -2.0);

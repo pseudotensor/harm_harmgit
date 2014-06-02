@@ -813,6 +813,7 @@ int bound_x1up_outflow(
           rj=j;
           rk=k;
 
+
 #if(OUTEREXTRAP==0)
           PALLLOOP(pl) get_geometry(ri, rj, rk, dirprim[pl], ptrrgeom[pl]);
 
@@ -2642,6 +2643,7 @@ int extrapfunc(int boundary, int j,int k,
   FTYPE dqucon[NDIM];
   FTYPE dqBd3,myBd3;
   FTYPE dqgdetpl[NPR];
+  FTYPE dqorthopl[NPR];
   FTYPE dqlogdensity[NPR];
   FTYPE uconreftouse[NDIM],uradconreftouse[NDIM];
   FTYPE xfrac,yfrac;
@@ -2660,6 +2662,7 @@ int extrapfunc(int boundary, int j,int k,
   struct of_geom *ptrri2geom[NPR];
   struct of_geom ri3geomdontuse[NPR];
   struct of_geom *ptrri3geom[NPR];
+
 
   // assign memory
   PALLLOOP(pl){
@@ -2812,6 +2815,25 @@ int extrapfunc(int boundary, int j,int k,
     Dqc=(ptrri3geom[pl]->gdet)*MACP0A1(prim,ri3,rj,rk,pl)-(ptrrgeom[pl]->gdet)*MACP0A1(prim,ri,rj,rk,pl);
     Dqc*=0.5;
     dqgdetpl[pl] = signdq*MINMOD(MINMOD(Dqp,Dqm),Dqc);
+  }
+
+  ////////////
+  //
+  // sqrt(gv3ii) * prim[pl] slope
+  //
+  ////////////
+  int ddir;
+  PBOUNDLOOP(pliter,pl){
+    // determine MINM slope for extrapolation
+    ddir=0; // default
+    if(pl>=U1 || pl<=U3) ddir=pl-U1+1;
+    if(pl>=URAD1 || pl<=URAD3) ddir=pl-URAD1+1;
+    if(pl>=B1 || pl<=B3) ddir=pl-B1+1;
+    Dqp=sqrt(fabs(ptrri3geom[pl]->gcov[GIND(ddir,ddir)]))*MACP0A1(prim,ri3,rj,rk,pl)-sqrt(fabs(ptrri2geom[pl]->gcov[GIND(ddir,ddir)]))*MACP0A1(prim,ri2,rj,rk,pl);
+    Dqm=sqrt(fabs(ptrri2geom[pl]->gcov[GIND(ddir,ddir)]))*MACP0A1(prim,ri2,rj,rk,pl)-sqrt(fabs(ptrrgeom[pl]->gcov[GIND(ddir,ddir)]))*MACP0A1(prim,ri,rj,rk,pl);
+    Dqc=sqrt(fabs(ptrri3geom[pl]->gcov[GIND(ddir,ddir)]))*MACP0A1(prim,ri3,rj,rk,pl)-sqrt(fabs(ptrrgeom[pl]->gcov[GIND(ddir,ddir)]))*MACP0A1(prim,ri,rj,rk,pl);
+    Dqc*=0.5;
+    dqorthopl[pl] = signdq*MINMOD(MINMOD(Dqp,Dqm),Dqc);
   }
 
 
@@ -3126,21 +3148,21 @@ int extrapfunc(int boundary, int j,int k,
 
 #if(0)
       ucon_calc(&MACP0A1(prim,ri,rj,rk,0),ptrgeom[U1],ucon,others);
-      if(whichdir==X1DN && (uconref[1]>0.0 || ucon[1]>0.0)) MACP0A1(prim,i,j,k,U1)=0.0;
-      if(whichdir==X1UP && (uconref[1]<0.0 || ucon[1]<0.0)) MACP0A1(prim,i,j,k,U1)=0.0;
-      if(whichdir==X2DN && (uconref[2]>0.0 || ucon[2]>0.0)) MACP0A1(prim,i,j,k,U2)=0.0;
-      if(whichdir==X2UP && (uconref[2]<0.0 || ucon[2]<0.0)) MACP0A1(prim,i,j,k,U2)=0.0;
-      if(whichdir==X3DN && (uconref[3]>0.0 || ucon[3]>0.0)) MACP0A1(prim,i,j,k,U3)=0.0;
-      if(whichdir==X3UP && (uconref[3]<0.0 || ucon[3]<0.0)) MACP0A1(prim,i,j,k,U3)=0.0;
+      if(boundary==X1DN && (uconref[1]>0.0 || ucon[1]>0.0)) MACP0A1(prim,i,j,k,U1)=0.0;
+      if(boundary==X1UP && (uconref[1]<0.0 || ucon[1]<0.0)) MACP0A1(prim,i,j,k,U1)=0.0;
+      if(boundary==X2DN && (uconref[2]>0.0 || ucon[2]>0.0)) MACP0A1(prim,i,j,k,U2)=0.0;
+      if(boundary==X2UP && (uconref[2]<0.0 || ucon[2]<0.0)) MACP0A1(prim,i,j,k,U2)=0.0;
+      if(boundary==X3DN && (uconref[3]>0.0 || ucon[3]>0.0)) MACP0A1(prim,i,j,k,U3)=0.0;
+      if(boundary==X3UP && (uconref[3]<0.0 || ucon[3]<0.0)) MACP0A1(prim,i,j,k,U3)=0.0;
 
       if(EOMRADTYPE!=EOMRADNONE){
         ucon_calc(&MACP0A1(prim,ri,rj,rk,URAD1-U1),ptrgeom[URAD1],uradcon,othersrad);
-        if(whichdir==X1DN && (uradconref[1]>0.0 || uradcon[1]>0.0)) MACP0A1(prim,i,j,k,URAD1)=0.0;
-        if(whichdir==X1UP && (uradconref[1]<0.0 || uradcon[1]<0.0)) MACP0A1(prim,i,j,k,URAD1)=0.0;
-        if(whichdir==X2DN && (uradconref[2]>0.0 || uradcon[2]>0.0)) MACP0A1(prim,i,j,k,URAD2)=0.0;
-        if(whichdir==X2UP && (uradconref[2]<0.0 || uradcon[2]<0.0)) MACP0A1(prim,i,j,k,URAD2)=0.0;
-        if(whichdir==X3DN && (uradconref[3]>0.0 || uradcon[3]>0.0)) MACP0A1(prim,i,j,k,URAD3)=0.0;
-        if(whichdir==X3UP && (uradconref[3]<0.0 || uradcon[3]<0.0)) MACP0A1(prim,i,j,k,URAD3)=0.0;
+        if(boundary==X1DN && (uradconref[1]>0.0 || uradcon[1]>0.0)) MACP0A1(prim,i,j,k,URAD1)=0.0;
+        if(boundary==X1UP && (uradconref[1]<0.0 || uradcon[1]<0.0)) MACP0A1(prim,i,j,k,URAD1)=0.0;
+        if(boundary==X2DN && (uradconref[2]>0.0 || uradcon[2]>0.0)) MACP0A1(prim,i,j,k,URAD2)=0.0;
+        if(boundary==X2UP && (uradconref[2]<0.0 || uradcon[2]<0.0)) MACP0A1(prim,i,j,k,URAD2)=0.0;
+        if(boundary==X3DN && (uradconref[3]>0.0 || uradcon[3]>0.0)) MACP0A1(prim,i,j,k,URAD3)=0.0;
+        if(boundary==X3UP && (uradconref[3]<0.0 || uradcon[3]<0.0)) MACP0A1(prim,i,j,k,URAD3)=0.0;
       }
 #endif
       
@@ -3166,10 +3188,25 @@ int extrapfunc(int boundary, int j,int k,
     // Should probably preserve signature of B^\phi/B^r = -\Omega_F/c -- suggests interpolating B^\phi/B^r instead of B_\phi -- well, can't divide by B^r
     //
     ////////
-    for(pl=B1;pl<=B2;pl++){
-      igdetnosing=sign(ptrgeom[pl]->gdet)/(fabs(ptrgeom[pl]->gdet)+SMALL); // avoids 0.0 for any sign of ptrgeom->gdet
-      MACP0A1(prim,i,j,k,pl) =  (MACP0A1(prim,ri,rj,rk,pl)*(ptrrgeom[pl]->gdet) + dqgdetpl[pl]*(i-ri))*igdetnosing;
+    if(VARTOINTERP==PRIMTOINTERP_GDETFULLVERSION_WALD && boundary==X1UP){ // WALD:
+      int ddirl;
+      for(pl=B1;pl<=B2;pl++){
+        if(pl==B1) ddirl=1;
+        if(pl==B2) ddirl=2;
+        MACP0A1(prim,i,j,k,pl) =  (MACP0A1(prim,ri,rj,rk,pl)*sqrt(fabs(ptrrgeom[pl]->gcov[GIND(ddirl,ddirl)])) + 0.0*dqorthopl[pl]*(i-ri))/sqrt(fabs(ptrgeom[pl]->gcov[GIND(ddirl,ddirl)]));
+                //        MACP0A1(prim,i,j,k,pl) =  (MACP0A1(prim,ri,rj,rk,pl)*sqrt(fabs(ptrrgeom[pl]->gcov[GIND(ddirl,ddirl)])) + dqorthopl[pl]*(i-ri))/sqrt(fabs(ptrgeom[pl]->gcov[GIND(ddirl,ddirl)]));
+        //        MACP0A1(prim,i,j,k,pl) =  (MACP0A1(prim,ri,rj,rk,pl));
+
+      }
+
     }
+    else{
+      for(pl=B1;pl<=B2;pl++){
+        igdetnosing=sign(ptrgeom[pl]->gdet)/(fabs(ptrgeom[pl]->gdet)+SMALL); // avoids 0.0 for any sign of ptrgeom->gdet
+        MACP0A1(prim,i,j,k,pl) =  (MACP0A1(prim,ri,rj,rk,pl)*(ptrrgeom[pl]->gdet) + dqgdetpl[pl]*(i-ri))*igdetnosing;
+      }
+    }
+
 
 
 #define EXTRAPBD3 0
@@ -5592,6 +5629,7 @@ void debugfixupaltdeath_bc(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
   FTYPE *prfix,*ufix;
   int jjj;
 
+  return;
 
   FULLLOOP{
     prfix=&MACP0A1(prim,i,j,k,0);//&GLOBALMACP0A1(pglobal,i,j,k,0);

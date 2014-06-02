@@ -49,6 +49,8 @@ int inittypeglobal; // for bounds to communicate detail of what doing
 //#define THETAROTMETRIC (0.5*0.7)
 #define USER_THETAROTMETRIC (0.0)
 #define USER_THETAROTPRIMITIVES (0.0) // probably want to choose 0, so initial conditions are as if no tilt
+  
+
 
 #define NOFIELD -1
 #define DISK1FIELD 0
@@ -220,7 +222,7 @@ int prepre_init_specific_init(void)
   else{
     THETAROTPRIMITIVES=0.0; // DO NOT CHANGE
   }
-
+  
   if(ALLOWMETRICROT){
     THETAROTMETRIC = USER_THETAROTMETRIC; // defines metric generally
   }
@@ -457,6 +459,10 @@ int init_global(void)
 
   //  rescaletype=1;
   rescaletype=4;
+
+  //    if(DOWALDDEN) rescaletype=4;
+  if(DOWALDDEN) rescaletype=5; // like 4, but b^2/rho scales as 1/r away from horizon
+
   BSQORHOLIMIT=2E2; // was 1E2 but latest BC test had 1E3 // CHANGINGMARK
   BSQOULIMIT=1E5; // was 1E3 but latest BC test had 1E4
   UORHOLIMIT=1E10; // has to be quite high, else hit floor in high optical depth cases and run-away injection of u and then rho.
@@ -1354,6 +1360,8 @@ int init_global(void)
     BSQORHOLIMIT=1E2;
 
 
+
+
     // Torus setups:
     // 3) gam=gamideal=5.0/3.0; RADNT_ELL=4.5; RADNT_UTPOT=0.9999999; RADNT_ROUT=2.0;  RADNT_RHODONUT=3.0; RADDONUT_OPTICALLYTHICKTORUS=1;     RADNT_KKK=1.e-1 * (1.0/powl(RADNT_RHODONUT,gam-1.0)); // where KKK doesn't matter.
     // ATM setups:
@@ -1553,8 +1561,8 @@ int init_global(void)
         BCtype[X1UP]=HORIZONOUTFLOW;
         //      BCtype[X1DN]=OUTFLOW;
         //      BCtype[X1UP]=OUTFLOW;
-
-        //        if(DOWALDDEN) BCtype[X1DN]=OUTFLOW; // WALD: OUTFLOW leads to highish u^t at large radius, while HORIZONOUTFLOW is ok for u^t but leads top largish drop in density.
+        
+        //        if(DOWALDDEN) BCtype[X1UP]=OUTFLOW;
       }
       
       if(WHICHPROBLEM==RADFLATDISK)  BCtype[X2DN]=ASYMM; // if non-zero Rin_array[2]
@@ -2110,7 +2118,7 @@ int init_defcoord(void)
     Rin=RADNT_MINX;
     Rout=RADNT_MAXX;
     defcoord=JET6COORDS;
-    
+
     if(0){
       Rin_array[1]=Rin;
       Rout_array[1]=Rout;
@@ -2658,8 +2666,8 @@ int init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2
   int funreturn;
   int inittype;
   FTYPE thetarotorig;
-
-
+  
+  
   thetarotorig=THETAROT;
   THETAROT = THETAROTPRIMITIVES; // define rho,u,v,B as if no rotation (but metric might still be used, so still use set_grid_all() in initbase.c)
 
@@ -2670,7 +2678,7 @@ int init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2
   if(funreturn!=0) return(funreturn);
 
   THETAROT = thetarotorig; // back to previous version
-
+ 
   return(0);
 
 
@@ -6098,5 +6106,3 @@ int coolfunc_user(FTYPE h_over_r, FTYPE *pr, struct of_geom *geom, struct of_sta
 {
   return(0); // nothing yet
 }
-
-
