@@ -683,6 +683,82 @@ int rescale(int which, int dir, FTYPE *pr, struct of_geom *ptrgeom,FTYPE *p2inte
   }
 
 
+#elif(VARTOINTERP==PRIMTOINTERP_GDETFULLVERSION_WALD)
+
+
+  if(which==1){ // rescale before interpolation
+
+    PINTERPLOOP(pliter,pl) p2interp[pl]=pr[pl];
+
+    //    p2interp[U1]=pr[U1]*(ptrgeom->gdet);
+    //    p2interp[U2]=pr[U2]*(ptrgeom->gdet);
+    //    p2interp[U3]=pr[U3]*(ptrgeom->gdet);
+
+    if(dir==1||dir==3){
+      p2interp[U1]=pr[U1]*(ptrgeom->gdet);
+      p2interp[U2]=pr[U2]*(ptrgeom->gdet);
+      p2interp[U3]=pr[U3]*(ptrgeom->gdet);
+
+      if(URAD1>=0){
+        p2interp[URAD1]=pr[URAD1]*(ptrgeom->gdet);
+        p2interp[URAD2]=pr[URAD2]*(ptrgeom->gdet);
+        p2interp[URAD3]=pr[URAD3]*(ptrgeom->gdet);
+      }
+
+      p2interp[B1]=pr[B1]*sqrt(fabs(ptrgeom->gcov[GIND(1,1)]));
+      p2interp[B2]=pr[B2]*sqrt(fabs(ptrgeom->gcov[GIND(2,2)]));
+      p2interp[B3]=pr[B3]*(sqrt(fabs(ptrgeom->gcov[GIND(3,3)]))*(V[1]));
+    }
+    if(0&&dir==2){
+      //p2interp[U1]=pr[U1]*(ptrgeom->gdet);
+      //p2interp[U2]=pr[U2]*(ptrgeom->gdet);
+      //p2interp[U3]=pr[U3]*(ptrgeom->gdet);
+
+      p2interp[B1]=pr[B1]*(ptrgeom->gdet); //sqrt(fabs(ptrgeom->gcov[GIND(1,1)]))*pow(V[1],3);
+      p2interp[B2]=pr[B2]*(ptrgeom->gdet);//*sqrt(fabs(ptrgeom->gcov[GIND(2,2)]))*pow(V[1],3);
+      p2interp[B3]=pr[B3]*(ptrgeom->gdet);//*pow(V[1],3);
+    }
+  }
+  else if(which==-1){ // unrescale after interpolation
+
+    PINTERPLOOP(pliter,pl) pr[pl]=p2interp[pl];
+
+    //    pr[U1]=p2interp[U1]/(ptrgeom->gdet);
+    //    pr[U2]=p2interp[U2]/(ptrgeom->gdet);
+    //    pr[U3]=p2interp[U3]/(ptrgeom->gdet);
+
+    if(dir==1||dir==3){
+      pr[U1]=p2interp[U1]/(ptrgeom->gdet);
+      pr[U2]=p2interp[U2]/(ptrgeom->gdet);
+      pr[U3]=p2interp[U3]/(ptrgeom->gdet);
+
+      if(URAD1>=0){
+        pr[URAD1]=p2interp[URAD1]/(ptrgeom->gdet);
+        pr[URAD2]=p2interp[URAD2]/(ptrgeom->gdet);
+        pr[URAD3]=p2interp[URAD3]/(ptrgeom->gdet);
+      }
+
+      pr[B1]=p2interp[B1]/sqrt(fabs(ptrgeom->gcov[GIND(1,1)]));//(ptrgeom->gdet);///(sqrt(fabs(ptrgeom->gcov[GIND(1,1)]))*pow(V[1],3));
+      pr[B2]=p2interp[B2]/sqrt(fabs(ptrgeom->gcov[GIND(2,2)]));//(ptrgeom->gdet);///(sqrt(fabs(ptrgeom->gcov[GIND(1,1)]))*pow(V[1],3));
+      pr[B3]=p2interp[B3]/(sqrt(fabs(ptrgeom->gcov[GIND(3,3)]))*(V[1]));//(ptrgeom->gdet);///(pow(V[1],3));
+    }
+    if(0&&dir==2){
+      //pr[U1]=p2interp[U1]/(ptrgeom->gdet);
+      //pr[U2]=p2interp[U2]/(ptrgeom->gdet);
+      //pr[U3]=p2interp[U3]/(ptrgeom->gdet);
+
+      pr[B1]=p2interp[B1]/(ptrgeom->gdet);///(sqrt(fabs(ptrgeom->gcov[GIND(1,1)]))*pow(V[1],3));
+      pr[B2]=p2interp[B2]/(ptrgeom->gdet);///(sqrt(fabs(ptrgeom->gcov[GIND(1,1)]))*pow(V[1],3));
+      pr[B3]=p2interp[B3]/(ptrgeom->gdet);///(pow(V[1],3));
+    }
+      
+  }
+  else{
+    dualfprintf(fail_file,"rescale(): no such rescale type! which=%d\n",which);
+    myexit(100);
+  }
+
+
 #endif // end over choices for VARTOINTERP
 
 

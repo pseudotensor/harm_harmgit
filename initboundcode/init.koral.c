@@ -1553,6 +1553,8 @@ int init_global(void)
         BCtype[X1UP]=HORIZONOUTFLOW;
         //      BCtype[X1DN]=OUTFLOW;
         //      BCtype[X1UP]=OUTFLOW;
+
+        if(DOWALDDEN) BCtype[X1DN]=OUTFLOW;
       }
       
       if(WHICHPROBLEM==RADFLATDISK)  BCtype[X2DN]=ASYMM; // if non-zero Rin_array[2]
