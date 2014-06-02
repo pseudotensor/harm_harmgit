@@ -5629,7 +5629,7 @@ void debugfixupaltdeath_bc(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
   FTYPE *prfix,*ufix;
   int jjj;
 
-  return;
+  //  return;
 
   FULLLOOP{
     prfix=&MACP0A1(prim,i,j,k,0);//&GLOBALMACP0A1(pglobal,i,j,k,0);
