@@ -191,7 +191,11 @@ preA1)  Ensure right files exist in run/dumps and run/
 bin2txt 2 1 0 -1 2 128 64 1 1 dump0000 dump0000.bin d 81
 bin2txt 2 1 0 -1 2 128 64 1 1 gdump gdump.bin d 126
 
+NOTE: If you tried compiling bin2txt in other instructions, but it wouldn't work, you can try editing bin2txt.c and setting HDF and V5D to 0 at the top #define's.  Then edit makefile and search for v5d and comment out hdf and v5d stuff by putting a # in front of that stuff, like: #-lmfhdf -ldf -ljpeg -lz -lv5dbin2txt  .  Then do: make superclean ; make prepbin2txt ; make bin2txt ; cp bin2txt ~/bin  .  Then ensure gdump is converted to gdump.bin as above command for bin2txt does.
+
+
 preA2) Add your run name (e.g. "run" below, where "run" could be any modelname like "thickdisk7" and other things.) to ~/py/mread/__init__.py as another modelname entry in case defaults aren't good enough (e.g. for defaultfti and defaultftf that need to at least cover the range where any data exists, else avg merge will fail as NOTUSING will be applied to all files.)
+
 
 
 A) Run the default torus problem or your problem with harm, so now you
@@ -211,9 +215,12 @@ dircollect="run"     # models (here just 1) to collect latex tables over
 dirruns="run"        # models (here just 1) to run over
 numkeep=2            # number of files to really use out of all of them (2 for now to iterate quickly on confusions)
 
+# NOTE: change numkeep to very large number like 500000 to use all fieldline files.
+
 # then edit ~/py/scripts/makemovie.sh :
 1) change for "$system -eq 3" part:
-numcorespernode=??   # choose ?? as number of cores on your system.  Try ??=1 at first to avoid confusion of multiple stderr and stdout output files in case something goes wrong.
+numcorespernode=??   # choose ?? as number of cores on your system.  Try ??=1 at first to avoid confusion of multiple stderr and stdout output files in case something goes wrong.  Make 8 or 12 or 16 for nodes with that many cores available.
+
 2) change itemspergroup=$(( 20 ))  and replace 20 with 1 unless one has more than 20 files.
 
 # Note that in general, one should setup makeallmovie.sh and makemovie.sh to have your own "system" sections *and* "modelname" sections.  That is so you can control by default which files are actually kept (default is higher half of fieldline files).
