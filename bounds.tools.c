@@ -5629,7 +5629,12 @@ void debugfixupaltdeath_bc(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
   FTYPE *prfix,*ufix;
   int jjj;
 
-  //  return;
+  if(VARTOINTERP==PRIMTOINTERP_GDETFULLVERSION_WALD){
+    // do nothing, since when including low density and high b^2/rho, has issues.
+  }
+  else{
+    return;
+  }
 
   FULLLOOP{
     prfix=&MACP0A1(prim,i,j,k,0);//&GLOBALMACP0A1(pglobal,i,j,k,0);

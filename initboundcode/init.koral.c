@@ -2138,8 +2138,16 @@ int init_defcoord(void)
     // NOTEMARK: Should change h0 in coord.c from h0=0.3 to h0=0.1 or something for thin disks
 
 
-    //    R0=0.0;
-    R0=0.2;
+    if(DOWALDDEN){ // to give more resolution near BH
+      R0=0.7;
+    }
+    else{
+      //    R0=0.0;
+      R0=0.2;
+    }
+
+
+
     if(Rout<1E3){
       Rin=1.05;
     }
