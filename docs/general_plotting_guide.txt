@@ -632,7 +632,7 @@ functions (see script for arguments to each function):
 rfd(): loads field line file
 grid3d(): loads grid positions, metric, connection coefficients, etc.
 getrhouclean(): Get clean (floor removed) versions of densities in case wanted.
-cvel(): compute some velocity variables
+cvel(): compute some velocity-field related things
 Tcalcud(): Compute various stress-energy tensor terms/components/etc.
 faraday(): compute fdd and fuu, the F^{\mu\nu} and F_{\mu\nu} faradays as well as omegaf's, like the generalized omegaf1b that works for any poloidal field orientation.
 fieldcalc(): computes A_\phi
@@ -652,6 +652,14 @@ ud[0-4]: fluid frame: u_\mu
 B[1-3]: *F^{it}
 bu[0-4]: comoving field: b^\mu
 bd[0-4]: comoving field: b_\mu
+
+t: time
+nx,ny,nz: number of cells in the radius,\theta,\phi directions
+a: spin
+rhor: horizon radius
+Rin: Inner grid radius
+Rout: Outer grid radius
+THETAROT: BH tilt
 
 
 
