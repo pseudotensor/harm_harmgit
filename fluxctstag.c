@@ -1027,7 +1027,19 @@ void ustag2pstag(int dir, int i, int j, int k, FTYPE (*ustag)[NSTORE2][NSTORE3][
 /// wrapper for rescale() used for staggered field
 static void rescale_calc_stagfield_full(int *Nvec, FTYPE (*pstag)[NSTORE2][NSTORE3][NPR2INTERP],FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP])
 {
+  int nprlocalstart,nprlocalend;
+  int nprlocallist[MAXNPR];
 
+
+  ////////////////////////////////////////////
+  //
+  // save choice for interpolations so can restore global variables after done
+  {
+    int pl,pliter;
+    nprlocalstart=npr2interpstart;
+    nprlocalend=npr2interpend;
+    PMAXNPRLOOP(pl) nprlocallist[pl]=npr2interplist[pl];
+  }
 
 
 #pragma omp parallel OPENMPGLOBALPRIVATEFORSTATEANDGEOMINTERPFULLNPR2INTERP // requires full copyin() changes npr2interp stuff
@@ -1085,6 +1097,19 @@ static void rescale_calc_stagfield_full(int *Nvec, FTYPE (*pstag)[NSTORE2][NSTOR
       }// end COMPFULLLOOP
     }// end over dirs
   }// end parallel region (with implicit barrier)
+
+
+
+  ////////////////////////////////////////////
+  //
+  // restore choice for interpolations from global variables
+#pragma omp parallel
+  { // must set npr2interp stuff inside parallel region since threadprivate
+    int pl;
+    npr2interpstart=nprlocalstart;
+    npr2interpend=nprlocalend;
+    PMAXNPRLOOP(pl) npr2interplist[pl]=nprlocallist[pl];
+  }
 
 
 }

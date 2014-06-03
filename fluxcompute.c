@@ -433,40 +433,6 @@ int flux_compute(int i, int j, int k, int dir, struct of_geom *geom, FTYPE *cmin
 
 
 
-#if(0)
-  // for koral testing
-#define RHO_AMB (MPERSUN*MSUN/(LBAR*LBAR*LBAR)) // in grams per cm^3 to match koral's units with rho=1
-  //1.34583e+18
-  FTYPE Ufactor,Ffactor;
-
-  PLOOP(pliter,pl){
-
-    Ufactor=Ffactor=1.0;
-#if(1)
-    if(pl==RHO){
-      Ufactor=(1.0/RHO_AMB)/geom->gdet;
-      Ffactor=(1.0/RHO_AMB)*sqrt(fabs(geom->gcov[GIND(dir,dir)]))/geom->gdet;
-    }
-    else if(pl>=UU && pl<=U3){
-      Ufactor=(1.0/RHO_AMB)*sqrt(fabs(geom->gcon[GIND(pl-UU,pl-UU)]))/geom->gdet;
-      Ffactor=(1.0/RHO_AMB)*sqrt(fabs(geom->gcov[GIND(dir,dir)]))*sqrt(fabs(geom->gcon[GIND(pl-UU,pl-UU)]))/geom->gdet;
-    }
-    else if(pl>=URAD0 && pl<=URAD3){
-      Ufactor=(1.0/RHO_AMB)*sqrt(fabs(geom->gcon[GIND(pl-URAD0,pl-URAD0)]))/geom->gdet;
-      Ffactor=(1.0/RHO_AMB)*sqrt(fabs(geom->gcov[GIND(dir,dir)]))*sqrt(fabs(geom->gcon[GIND(pl-URAD0,pl-URAD0)]))/geom->gdet;
-    }
-#endif
-    dualfprintf(fail_file,"i=%d pl=%d ctoppl=%g U_l=%g U_r=%g F_l=%g F_r=%g F=%g\n",
-                i,pl,ctop[pl]*sqrt(geom->gcov[GIND(dir,dir)]),
-                U_l[pl]*Ufactor,
-                U_r[pl]*Ufactor,
-                F_l[pl]*Ffactor,
-                F_r[pl]*Ffactor,
-                F[pl]*Ffactor
-                );
-  }
-#endif
-
 
   return(0);
 }
