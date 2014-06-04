@@ -5429,13 +5429,19 @@ static int fieldprim(int *whichvel, int*whichcoord, int ii, int jj, int kk, FTYP
     int pliter,pl;
     PLOOP(pliter,pl) prold[pl]=pr[pl];
 
-    EBtopr(Econ,Bcon,ptrgeom,pr);
+    // Use E,B to get primitives (v will be in WHICHVEL)
     // ASSUMES FORCE-FREE!
+    EBtopr(Econ,Bcon,ptrgeom,pr);
+    // transform WHICHVEL back to *whichvel
+    FTYPE ucontemp[NDIM];
+    pr2ucon(WHICHVEL,pr,ptrgeom,ucontemp);
+    ucon2pr(*whichvel,ucontemp,ptrgeom,pr);
+
     if(EOMTYPE==EOMFFDE){
       //      pr[U1]=pr[U2]=pr[U3]=0.0;
       //    dualfprintf(fail_file,"EBtopr\n");
     }
-    else{
+    else{ // just use atmosphere (normally a ZAMO) frame for fluid frame
       for(pl=RHO;pl<=U3;pl++) pr[pl]=prold[pl];
     }
 

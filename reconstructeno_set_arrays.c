@@ -2,6 +2,7 @@
 
 void reconstructeno_set_arrays(void)
 {
+  int i,j,k,pliter,pl;
 
   ///////////////////////////
   //
