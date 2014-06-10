@@ -279,7 +279,7 @@ void set_coord_parms_nodeps(int defcoordlocal)
     bp_npow2=5.0; //MAVARANOTE must be odd now unless I add a sign explicitly to power component this contributes to sum in exponent //10.0; //5.0; // 10.0;    // MARKNOTE set to 10.0 before using BP values //power exponent
     bp_cpow2=1.0; //exponent prefactor (the larger it is, the more hyperexponentiation is)
     //    rbr = 1E3;  //radius at which hyperexponentiation kicks in
-    bp_rbr = 150.0;  //radius at which hyperexponentiation kicks in
+    bp_rbr = 200.0;  //radius at which hyperexponentiation kicks in
 
 
 
@@ -308,8 +308,8 @@ void set_coord_parms_nodeps(int defcoordlocal)
     }
 
     // for switches from normal theta to ramesh theta
-    bp_rs=100.0; // shift
-    bp_r0=40.0; // divisor
+    bp_rs=200.0; // shift
+    bp_r0=80.0; // divisor
  
     // for switches from innermost region of disk (inside horizon) to regular disk to increase timestep set by smallest vertical cell size
     bp_rsinner=4.0;
@@ -615,6 +615,16 @@ void set_coord_parms_deps(int defcoordlocal)
     x1br = log( rbr - R0 ) / npow;  //the corresponding X[1] value
   }
   else if (defcoordlocal == BPTHIN1) {
+
+    /////////////////////
+    //PHI GRID SETUP
+    /////////////////////
+    if( dofull2pi ) {
+      fracphi = 1;
+    }
+    else {
+      fracphi = global_fracphi;  //phi-extent measured in units of 2*PI, i.e. 0.25 means PI/2
+    }   
     bp_x1br = log( bp_rbr - R0 ) / bp_npow;  //the corresponding X[1] value
   }
   else if (defcoordlocal == JET5COORDS) {
@@ -727,7 +737,7 @@ void write_coord_parms(int defcoordlocal)
 	fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",npow,r1jet,njet,r0jet,rsjet,Qjet,ntheta,htheta,rsjet2,r0jet2,rsjet3,r0jet3,rs,r0,npow2,cpow2,rbr,x1br);
       }
       else if (defcoordlocal == BPTHIN1) {
-	fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",bp_npow,bp_r1jet,bp_njet,bp_r0jet,bp_rsjet,bp_Qjet,bp_ntheta,bp_htheta,bp_rsjet2,bp_r0jet2,bp_rsjet3,bp_r0jet3,bp_rs,bp_r0,bp_rsinner,bp_r0inner,bp_npow2,bp_cpow2,bp_rbr,bp_x1br);   // MARKTODO   add bp_h0? and add bp_njet1
+	fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",bp_npow,bp_r1jet,bp_njet,bp_r0jet,bp_rsjet,bp_Qjet,bp_ntheta,bp_htheta,bp_rsjet2,bp_r0jet2,bp_rsjet3,bp_r0jet3,bp_rs,bp_r0,bp_rsinner,bp_r0inner,bp_npow2,bp_cpow2,bp_rbr,bp_x1br,fracphi);   // MARKTODO   add bp_h0? and add bp_njet1
       }
       else if (defcoordlocal == JET5COORDS) {
 	fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",AAAA,AAA,BBB,DDD,ii0,CCCC,Rj);
@@ -829,7 +839,7 @@ void read_coord_parms(int defcoordlocal)
 	fscanf(in,HEADER18IN,&npow,&r1jet,&njet,&r0jet,&rsjet,&Qjet,&ntheta,&htheta,&rsjet2,&r0jet2,&rsjet3,&r0jet3,&rs,&r0,&npow2,&cpow2,&rbr,&x1br);
       }
       else if (defcoordlocal == BPTHIN1) {
-	fscanf(in,HEADER18IN,&bp_npow,&bp_r1jet,&bp_njet,&bp_r0jet,&bp_rsjet,&bp_Qjet,&bp_ntheta,&bp_htheta,&bp_rsjet2,&bp_r0jet2,&bp_rsjet3,&bp_r0jet3,&bp_rs,&bp_r0,&bp_rsinner,&bp_r0inner,&bp_npow2,&bp_cpow2,&bp_rbr,&bp_x1br);
+	fscanf(in,HEADER18IN,&bp_npow,&bp_r1jet,&bp_njet,&bp_r0jet,&bp_rsjet,&bp_Qjet,&bp_ntheta,&bp_htheta,&bp_rsjet2,&bp_r0jet2,&bp_rsjet3,&bp_r0jet3,&bp_rs,&bp_r0,&bp_rsinner,&bp_r0inner,&bp_npow2,&bp_cpow2,&bp_rbr,&bp_x1br,&fracphi);
       }
       else if (defcoordlocal == JET5COORDS) {
 	fscanf(in,HEADER7IN,&AAAA,&AAA,&BBB,&DDD,&ii0,&CCCC,&Rj);
@@ -989,6 +999,7 @@ void read_coord_parms(int defcoordlocal)
     MPI_Bcast(&bp_cpow2, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
     MPI_Bcast(&bp_rbr, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
     MPI_Bcast(&bp_x1br, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&fracphi, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
   }
   else if (defcoordlocal == JET5COORDS) {
     MPI_Bcast(&AAAA, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
@@ -1393,7 +1404,7 @@ void bl_coord(FTYPE *X, FTYPE *V)
       thetasign=-1.0;
       x2temp=1.0-X[2];
     }
-    th0 = M_PI * .5 * (.2*(1.+bp_rsinner/V[1])*(2.0*X[2]-1.0) +thetasign*(1.0-.2*(1.+bp_rsinner/V[1]))*pow(2.0*x2temp-1.0,9.0*(1.+bp_rsinner/V[1]))+1.) ; 
+    th0 = M_PI * .5 * (.19*(1.+bp_rsinner/V[1])*(2.0*X[2]-1.0) +thetasign*(1.0-.19*(1.+bp_rsinner/V[1]))*pow(2.0*x2temp-1.0,9.0)+1.) ; // .17 is .2/(1.+4/15.)
     //    if(X[2]>=0.5 && (mycpupos[2]==ncpux2/2 && ncpux2>1 || ncpux2==1)) printf("at radius %21.15g and X[2] = %21.15g the diff is %21.15e\n",V[1],X[2],th0toprint);
 
     // th0 = M_PI * .5 * (.2*(2.0*X[2]-1.0) + (1.0-.2)*pow(2.0*X[2]-1.0,9.0)+1.) ;
@@ -2600,7 +2611,7 @@ void set_points()
     startx[3] = 0.;
     dx[1] = (pow(log(Rout-R0),1.0/bp_npow)-pow(log(Rin-R0),1.0/bp_npow)) / totalsize[1];
     dx[2] = 1. / totalsize[2];
-    dx[3] = 1.0/totalsize[3];
+    dx[3] = fracphi/totalsize[3];
 
 #if(1)
     startx[1] = log(Rin-R0)/bp_npow;

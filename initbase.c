@@ -1145,7 +1145,7 @@ int init_defglobal(void)
     //lim = PARA;
     //  lim = PARAFLAT;
     //lim = MC;
-    TIMEORDER=4;
+    //TIMEORDER=4; //MAVARA commented out so value in init.c not overwritten since DOEVOLVERHO is set to 1 in global.depmnemonics.h when EOMTYPE=EOMGRMHD as we have set in init.h, though, order of execution probably means this actually gets overwritten by mine in init.c
     // whether/which ENO used to interpolate fluxes
     DOENOFLUX = ENOFINITEVOLUME;
     //DOENOFLUX= NOENOFLUX;

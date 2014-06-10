@@ -64,6 +64,15 @@ int prepre_init_specific_init(void)
 {
   int funreturn;
   
+
+  /////////////////////
+  //PHI GRID SETUP
+  /////////////////////
+
+  dofull2pi = 0;   // MAVARANOTE: do less than full phi    ; This line and the next taken from init.sashatorus.c
+  
+  global_fracphi = 0.125;   //phi-extent measured in units of 2*PI, i.e. 0.25 means PI/2; only used if dofull2pi == 0
+
   if(ALLOWMETRICROT){
     THETAROTPRIMITIVES=USER_THETAROTPRIMITIVES; // 0 to M_PI : what thetarot to use when primitives are set
   }
@@ -97,7 +106,7 @@ int pre_init_specific_init(void)
   }
   else if(WHICHPROBLEM==THINBP){
     // globally used parameters set by specific initial condition routines, reran for restart as well *before* all other calculations
-    h_over_r=0.1;
+    h_over_r=0.125;
     // below is theta distance from equator where jet will start, usually about 2-3X disk thickness
     h_over_r_jet=M_PI*0.4;
   }
@@ -262,8 +271,8 @@ int init_global(void)
 
 
   TIMEORDER=2; // no need for 4 unless higher-order or cold collapse problem.
-  //  FLUXB=FLUXCTTOTH;
-  FLUXB=FLUXCTSTAG;
+  FLUXB=FLUXCTTOTH;
+  //FLUXB=FLUXCTSTAG;
 
 #if(WHICHPROBLEM==NORMALTORUS || WHICHPROBLEM==KEPDISK)
   BCtype[X1UP]=OUTFLOW;
@@ -330,7 +339,7 @@ int init_global(void)
 
   // DTr = .1 ; /* restart file frequ., in units of M */
   /* restart file period in steps */
-  DTr = 4000; // was 1000
+  DTr = 2000; // was 1000
   DTfake=MAX(1,DTr/10);
 
 
@@ -400,7 +409,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
   //rin = (1. + h_over_r)*Risco;
   rin = Risco;
   rinfield = 10.0;
-  beta = 1.60e2;
+  beta = 1.8e2;
   randfact = 20.e-2; //4.e-2;
   //  fieldnormalizemin = 3. * Risco;
 #elif(WHICHPROBLEM==THICKDISK)
@@ -1035,7 +1044,7 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
       else if(1){
 	idxdxprim_ijk(i, j, k, CORN2, idxdxp); // CORN2 for l==2     
 
-	if(r<RTRANSITION) vpot += - (1./1.) * pow(r/tempstore_tot[0],(UGPOW/2.+1.5)/4.0) * da3vsr_integrated[startpos[1]+i] * pow(sin(th),hpow)*sin(FIELDROT)*sin(ph); //4 works pretty well//MAVARATEMP
+	if(r<RTRANSITION) vpot += - (1./1.) * pow(r/tempstore_tot[0],(UGPOW/2.+1.5)/6.0) * da3vsr_integrated[startpos[1]+i] * pow(sin(th),hpow)*sin(FIELDROT)*sin(ph); //4 works pretty well//MAVARATEMP
 	else if(r>=RTRANSITION && r<RBREAK) vpot += -  da3vsr_integrated[startpos[1]+i]  * pow(sin(th),hpow)*sin(FIELDROT)*sin(ph);
 	else if(r>=RBREAK) vpot += -  da3vsr_integrated[startpos[1]+i] * pow(sin(th),hpow)*sin(FIELDROT)*sin(ph); 
 	else vpot += 0.0 ; //-  pow(1.5/tempstore_tot[0],rpow2) * da3vsr_integrated[startpos[1]+i] * pow(sin(th),hpow)*sin(FIELDROT)*sin(ph); //MAVARATEMP was 0.0 normally
@@ -1089,7 +1098,7 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
 	//else    
 	//vpot = vpot 
 
-	if(r<RTRANSITION) vpot += (1./1.) * pow(r/tempstore_tot[0],(UGPOW/2.+1.5)/4.0) * da3vsr_integrated[startpos[1]+i] * pow(sin(th),hpow)*(cos(FIELDROT) - cos(ph)*cot(th)*sin(FIELDROT)); //MAVARATEMP
+	if(r<RTRANSITION) vpot += (1./1.) * pow(r/tempstore_tot[0],(UGPOW/2.+1.5)/6.0) * da3vsr_integrated[startpos[1]+i] * pow(sin(th),hpow)*(cos(FIELDROT) - cos(ph)*cot(th)*sin(FIELDROT)); //MAVARATEMP
 	else if(r>=RTRANSITION && r<RBREAK) vpot += da3vsr_integrated[startpos[1]+i] * pow(sin(th),hpow)*(cos(FIELDROT) - cos(ph)*cot(th)*sin(FIELDROT));
 	else if(r>=RBREAK) vpot += da3vsr_integrated[startpos[1]+i]  * pow(sin(th),hpow)*(cos(FIELDROT) - cos(ph)*cot(th)*sin(FIELDROT));
 	else vpot += 0.0; //pow(1.5/tempstore_tot[0],rpow2) * da3vsr_integrated[startpos[1]+i] * pow(sin(th),hpow)*(cos(FIELDROT) - cos(ph)*cot(th)*sin(FIELDROT));
@@ -1676,7 +1685,7 @@ void adjust_fluxctstag_emfs(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR
 
 // User's cooling function:
 
-#define USERTHETACOOL       (0.1)	/* should be same as h_over_r */
+#define USERTHETACOOL       (0.125)	/* should be same as h_over_r */
 #define USERTAUCOOL         (1.0) //(2.0*M_PI)	        /* cooling time in number of rotational times : really USERTAUCOOL=2*M_PI would be 1 rotational time */
 #define USERNOCOOLTHETAFACT     (1.0)           /* this times h_over_r and no more cooling there*/
 
@@ -1748,7 +1757,7 @@ int coolfunc_user(FTYPE h_over_r, FTYPE *pr, struct of_geom *geom, struct of_sta
 
 	if(t > 0. && dt < taucool/Wcirc  && Yscaling > 1.0 && r > Rhor && ((w/rho)*q->ucov[TT] > -1.0) ) {
 
-	  dUcool = - (Wcirc/taucool) * u * sqrt( Yscaling - 1.) * photoncapture * q->ucon[TT]  ; // MAVARA temporarily added 0.1 factor to slow cooling to see if it makes a difference on 11/10/2013
+	  dUcool = - 0.5*(Wcirc/taucool) * u * sqrt( Yscaling - 1.) * photoncapture * q->ucon[TT]  ; // MAVARA temporarily added 0.1 factor to slow cooling to see if it makes a difference on 11/10/2013
 	  //	  dUcool=-u*(Wcirc/taucool)*log(enk/enk0)*photoncapture;
 	}
         else{
@@ -2040,7 +2049,7 @@ int calc_da3vsr(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 
 
   //for(ii=0; ii<N1*ncpux1; ii++) da3vsr_tot[ii] = 0.1 ;
-  da3vsr_integrated[0] = 4.0 * tempstore_tot[2] / (pow(tempstore_tot[1]/tempstore_tot[0],UGPOW/2+1.5)-1.0) ;
+  da3vsr_integrated[0] = 6.0 * tempstore_tot[2] / (pow(tempstore_tot[1]/tempstore_tot[0],UGPOW/2+1.5)-1.0) ;
     /*ii=0;
   do{ 
     da3vsr_integrated[0] = (tempstore_tot[2] - da3vsr_tot[ii]/2.); //this is better but the do-while loop can hang if the switch happens on the bound of a cpu-domain
