@@ -900,9 +900,13 @@ int user1_get_maxes(int eqslice, FTYPE *parms, FTYPE (*prim)[NSTORE2][NSTORE3][N
     r=V[1];
     th=V[2];
 
+    //    if(0&&eqslice){
     if(eqslice){
-      
-      if((r>rin&&r<rout)&&(fabs(th-M_PI*0.5)<4.0*M_PI*dx[2]*hslope)){
+     
+
+      FTYPE THETAEQ=0.3;
+ 
+      if((r>rin&&r<rout)&&(fabs(th-M_PI*0.5)<THETAEQ)){
         gotnormal=1;
         if (bsq_calc(MAC(prim,i,j,k), ptrgeom, &bsq_ij) >= 1) FAILSTATEMENT("init.c:init()", "bsq_calc()", 1);
         if (bsq_ij > bsq_max[0])      bsq_max[0] = bsq_ij;

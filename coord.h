@@ -4,6 +4,7 @@
     
 */
 
+#define USERCOORD (-1)
 #define LOGRSINTH 0
 #define COMPLEX0TH 1
 #define UNIRSINTH 2
@@ -26,7 +27,8 @@
 #define UNIRSINTH2 1600
 #define SJETCOORDS 3000
 
-/// equal and lower have analytic dxdxp
+
+/// lower have analytic dxdxp
 //#define ANALYTICSWITCH 500
 #define ANALYTICSWITCH -1 /// force all to be computed numerically (often analytic dxdxp's are coded wrongly)
 

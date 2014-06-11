@@ -3295,7 +3295,15 @@ int set_density_floors_default_alt(struct of_geom *ptrgeom, struct of_state *q, 
           prfloor[UU]=MAX(bsq/BSQOULIMIT,zerouuperbaryon*MAX(prfloor[RHO],SMALL));
           prfloor[UU]=MAX(MIN(MAX(pr[UU],prfloor[UU]),UORHOLIMIT*prfloor[RHO]),SMALL);
 
-          if(rescaletype==5){//WALD
+        }// end NORMAL else conditional
+      }
+      else{
+        prfloor[RHO]=MAX(bsq/BSQORHOLIMIT,SMALL);
+        prfloor[UU]=MAX(bsq/BSQOULIMIT,zerouuperbaryon*MAX(prfloor[RHO],SMALL));
+        prfloor[UU]=MAX(MIN(MAX(pr[UU],prfloor[UU]),UORHOLIMIT*prfloor[RHO]),SMALL);
+
+        if(rescaletype==5){//WALD
+          if(1){
             if(r>500.0){
               prfloor[RHO]*=pow(500,-1.5);
               prfloor[UU]*=pow(500,-2.5);
@@ -3305,24 +3313,19 @@ int set_density_floors_default_alt(struct of_geom *ptrgeom, struct of_state *q, 
               prfloor[UU]*=pow(r,-2.5);
             }
           }
-
-        }// end NORMAL else conditional
-      }
-      else{
-        prfloor[RHO]=MAX(bsq/BSQORHOLIMIT,SMALL);
-        prfloor[UU]=MAX(bsq/BSQOULIMIT,zerouuperbaryon*MAX(prfloor[RHO],SMALL));
-        prfloor[UU]=MAX(MIN(MAX(pr[UU],prfloor[UU]),UORHOLIMIT*prfloor[RHO]),SMALL);
-
-        if(rescaletype==5){//WALD
-          if(r>500.0){
-            prfloor[RHO]*=pow(500,-1.5);
-            prfloor[UU]*=pow(500,-2.5);
+          if(0){
+            FTYPE R=r*sin(th);
+            FTYPE Z=fabs(r*cos(th));
+            if(Z>500.0){
+              prfloor[RHO]*=pow(500,-1.5);
+              prfloor[UU]*=pow(500,-2.5);
+            }
+            else{
+              prfloor[RHO]*=pow(Z,-1.5);
+              prfloor[UU]*=pow(Z,-2.5);
+            }
           }
-          else{
-            prfloor[RHO]*=pow(r,-1.5);
-            prfloor[UU]*=pow(r,-2.5);
-          }
-        }
+        }// end rescapetype==5
       }// else NORMAL case
 
 

@@ -417,12 +417,42 @@ int dump_header_general(int whichdump, int whichdumpversion, int numcolumnsvar, 
     fwrite(&whichdump,sizeof(int),1,headerptr);
     fwrite(&whichdumpversion,sizeof(int),1,headerptr);
     fwrite(&numcolumnsvar,sizeof(int),1,headerptr);
+
+    // init.h type stuff related to physical settings or what data is outputted
+    int var;
+    var=TRACKVPOT; fwrite(&var,sizeof(int),1,headerptr);
+    var=MCOORD; fwrite(&var,sizeof(int),1,headerptr);
+    var=DODISS; fwrite(&var,sizeof(int),1,headerptr);
+    var=DOEVOLVEMETRIC; fwrite(&var,sizeof(int),1,headerptr);
+    var=WHICHVEL; fwrite(&var,sizeof(int),1,headerptr);
+    var=WHICHEOM; fwrite(&var,sizeof(int),1,headerptr);
+    var=REMOVERESTMASSFROMUU; fwrite(&var,sizeof(int),1,headerptr);
+    var=RELTYPE; fwrite(&var,sizeof(int),1,headerptr);
+    var=EOMTYPE; fwrite(&var,sizeof(int),1,headerptr);
+    var=WHICHEOS; fwrite(&var,sizeof(int),1,headerptr);
+    var=DOENTROPY; fwrite(&var,sizeof(int),1,headerptr);
+    var=WHICHENTROPYEVOLVE; fwrite(&var,sizeof(int),1,headerptr);
+    var=CALCFARADAYANDCURRENTS; fwrite(&var,sizeof(int),1,headerptr);
+    var=DOPOLEDEATH; fwrite(&var,sizeof(int),1,headerptr);
+    var=DOPOLESMOOTH; fwrite(&var,sizeof(int),1,headerptr);
+    var=DOPOLEGAMMADEATH; fwrite(&var,sizeof(int),1,headerptr);
+    var=IF3DSPCTHENMPITRANSFERATPOLE; fwrite(&var,sizeof(int),1,headerptr);
+    var=EOMRADTYPE; fwrite(&var,sizeof(int),1,headerptr);
+    var=WHICHRADSOURCEMETHOD; fwrite(&var,sizeof(int),1,headerptr);
+    var=OUTERDEATH; fwrite(&var,sizeof(int),1,headerptr);
+    var=OUTERDEATHRADIUS; fwrite(&var,sizeof(int),1,headerptr);
+    
+
+       
   }
   else{
+
+#define DUMPHEADERLIST tsteppartf, realtotalsize[1], realtotalsize[2], realtotalsize[3], realstartx[1], realstartx[2], realstartx[3], dx[1], dx[2], dx[3], localrealnstep,gam,a,R0,Rin,Rout,hslope,localdt,defcoord,MBH,QBH,EP3,THETAROT,is,ie,js,je,ks,ke,whichdump,whichdumpversion,numcolumnsvar,  TRACKVPOT    ,MCOORD    ,DODISS    ,DOEVOLVEMETRIC    ,WHICHVEL    ,WHICHEOM    ,REMOVERESTMASSFROMUU    ,RELTYPE    ,EOMTYPE    ,WHICHEOS    ,DOENTROPY    ,WHICHENTROPYEVOLVE    ,CALCFARADAYANDCURRENTS    ,DOPOLEDEATH    ,DOPOLESMOOTH    ,DOPOLEGAMMADEATH    ,IF3DSPCTHENMPITRANSFERATPOLE    ,EOMRADTYPE    ,WHICHRADSOURCEMETHOD    ,OUTERDEATH    ,OUTERDEATHRADIUS
+
 #if(REALTYPE==DOUBLETYPE)
-    fprintf(headerptr, "%21.15g %d %d %d %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %ld %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %d %21.15g %21.15g %21.15g %21.15g %d %d %d %d %d %d %d %d %d\n", tsteppartf, realtotalsize[1], realtotalsize[2], realtotalsize[3], realstartx[1], realstartx[2], realstartx[3], dx[1], dx[2], dx[3], localrealnstep,gam,a,R0,Rin,Rout,hslope,localdt,defcoord,MBH,QBH,EP3,THETAROT,is,ie,js,je,ks,ke,whichdump,whichdumpversion,numcolumnsvar);
+    fprintf(headerptr, "%21.15g %d %d %d %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %ld %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %d %21.15g %21.15g %21.15g %21.15g %d %d %d %d %d %d %d %d %d  %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %21.15g\n", DUMPHEADERLIST);
 #elif(REALTYPE==LONGDOUBLETYPE)
-    fprintf(headerptr, "%31.25Lg %d %d %d %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %ld %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %d %31.25Lg %31.25Lg %31.25Lg %31.25Lg %d %d %d %d %d %d %d %d %d\n", tsteppartf, realtotalsize[1], realtotalsize[2], realtotalsize[3], realstartx[1], realstartx[2], realstartx[3], dx[1], dx[2],dx[3],localrealnstep,gam,a,R0,Rin,Rout,hslope,localdt,defcoord,MBH,QBH,EP3,THETAROT,is,ie,js,je,ks,ke,whichdump,whichdumpversion,numcolumnsvar);
+    fprintf(headerptr, "%31.25Lg %d %d %d %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %ld %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %31.25Lg %d %31.25Lg %31.25Lg %31.25Lg %31.25Lg %d %d %d %d %d %d %d %d %d  %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %31.25Lg\n", DUMPHEADERLIST);
 #endif
   }
   fflush(headerptr);

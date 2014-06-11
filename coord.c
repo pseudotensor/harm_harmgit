@@ -23,6 +23,10 @@
 
 */
 
+
+static void blcoord_singfixes(FTYPE *X, FTYPE *V);
+
+
 ///////////////////////
 //
 // These static variables can only be set in set_coord_parms() type functions, not bl_coord() or dxdxp().  if need to set inside bl_coord() or dxdxp(), then move variable there!
@@ -128,7 +132,11 @@ void set_coord_parms_nodeps(int defcoordlocal)
 
 
   // assumes R0, Rin, Rout, and hslope are so general that are set in init.c
-  if (defcoordlocal == LOGRSINTH) {
+  if (defcoordlocal == USERCOORD) {
+    extern void set_coord_parms_nodeps_user(int defcoordlocal);
+    set_coord_parms_nodeps_user(defcoordlocal);
+  }
+  else if (defcoordlocal == LOGRSINTH) {
   }
   else if (defcoordlocal == REBECCAGRID) {
   }
@@ -514,7 +522,11 @@ void set_coord_parms_deps(int defcoordlocal)
 #endif
 
   // assumes R0, Rin, Rout, and hslope are so general that are set in init.c
-  if (defcoordlocal == LOGRSINTH) {
+  if (defcoordlocal == USERCOORD) {
+    extern void set_coord_parms_deps_user(int defcoordlocal);
+    set_coord_parms_deps_user(defcoordlocal);
+  }
+  else if (defcoordlocal == LOGRSINTH) {
   }
   else if (defcoordlocal == REBECCAGRID) {
   }
@@ -704,7 +716,11 @@ void write_coord_parms(int defcoordlocal)
       // same for all coords (notice no carraige return)
       fprintf(out,"%21.15g %21.15g %21.15g %21.15g %d ",R0,Rin,Rout,hslope,dofull2pi);
 
-      if (defcoordlocal == LOGRSINTH) {
+      if (defcoordlocal == USERCOORD) {
+        extern void write_coord_parms_user(int defcoordlocal, FILE *out);
+        write_coord_parms_user(defcoordlocal,out);
+      }
+      else if (defcoordlocal == LOGRSINTH) {
       }
       else if (defcoordlocal == REBECCAGRID) {
       }
@@ -807,7 +823,13 @@ void read_coord_parms(int defcoordlocal)
       fscanf(in,HEADER4IN,&R0,&Rin,&Rout,&hslope);
       fscanf(in,"%d",&dofull2pi);
 
-      if (defcoordlocal == LOGRSINTH) {
+
+
+      if (defcoordlocal == USERCOORD) {
+        extern void read_coord_parms_user(int defcoordlocal, FILE *in);
+        read_coord_parms_user(defcoordlocal, in);
+      }
+      else if (defcoordlocal == LOGRSINTH) {
       }
       else if (defcoordlocal == REBECCAGRID) {
       }
@@ -890,7 +912,12 @@ void read_coord_parms(int defcoordlocal)
   MPI_Bcast(&hslope, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
   MPI_Bcast(&dofull2pi, 1, MPI_INT, MPIid[0], MPI_COMM_GRMHD);
 
-  if (defcoordlocal == LOGRSINTH) {
+  
+  if (defcoordlocal == USERCOORD) {
+    extern void read_coord_parms_mpi_user(int defcoordlocal);
+    read_coord_parms_mpi_user(defcoordlocal);
+  }
+  else if (defcoordlocal == LOGRSINTH) {
   }
   else if (defcoordlocal == REBECCAGRID) {
   }
@@ -1094,7 +1121,12 @@ void bl_coord(FTYPE *X, FTYPE *V)
 
   // in spherical polar coords: t=V[0] r=V[1] th=V[2] phi=V[3]
 
-  if (defcoord == LOGRSINTH) {
+
+  if(defcoord == USERCOORD) {
+    extern void blcoord_user(FTYPE *X, FTYPE *V);
+    blcoord_user(X,V);
+  }
+  else if (defcoord == LOGRSINTH) {
 #if(1)
     if(BCtype[X1DN]==R0SING){
       if(R0>=0.0){
@@ -1730,8 +1762,27 @@ void bl_coord(FTYPE *X, FTYPE *V)
     myexit(1);
   }
 
+
+
+
+
+
+
+
+  blcoord_singfixes(X,V);
+
+
+}
+
+static void blcoord_singfixes(FTYPE *X, FTYPE *V)
+{
+
+  //////
+  //
   // don't allow to be smaller to avoid singularity
   // noted this caused problems with jon_interp in calculating jacobian
+  //
+  /////
   if(POSDEFMETRIC){
     if(V[2]<0) V[2] = -V[2];
     if(V[2]>M_PI) V[2]=2.0*M_PI-V[2];
@@ -1775,9 +1826,8 @@ void bl_coord(FTYPE *X, FTYPE *V)
 
   }
 
-
-
 }
+
 
 /// special v(x) for sjet coordinates
 void vofx_sjetcoords( FTYPE *X, FTYPE *V )
@@ -1899,7 +1949,7 @@ void dxdxprim(FTYPE *X, FTYPE *V, FTYPE (*dxdxp)[NDIM])
   void dxdxp_numerical(FTYPE *X, FTYPE (*dxdxp)[NDIM]);
   void dxdxp_analytic(FTYPE *X, FTYPE *V, FTYPE (*dxdxp)[NDIM]);
 
-  if(defcoord<=ANALYTICSWITCH){ // then have analytic dxdxp
+  if(defcoord<ANALYTICSWITCH){ // then have analytic dxdxp
     dxdxp_analytic(X,V,dxdxp);
   }
   else{
@@ -1955,7 +2005,11 @@ void dxdxp_analytic(FTYPE *X, FTYPE *V, FTYPE (*dxdxp)[NDIM])
   DLOOP(j,k) dxdxp[j][k]=0.0;
   DLOOPA(j) dxdxp[j][j]=1.0;
 
-  if (defcoord == LOGRSINTH) {
+  if (defcoord == USERCOORD) {
+    extern void dxdxp_analytic_user(FTYPE *X, FTYPE *V, FTYPE (*dxdxp)[NDIM]);
+    dxdxp_analytic_user(X,V,dxdxp);
+  }
+  else if (defcoord == LOGRSINTH) {
     dxdxp[1][1] = V[1]-R0;
     if(X[2]<0.5){
       dxdxp[2][2] = M_PI + (1. - hslope) * M_PI * mycos(2. * M_PI * X[2]);
@@ -2487,7 +2541,11 @@ void set_points()
   startx[0]=0;
   dx[0]=dt;
 
-  if (defcoord == LOGRSINTH) {
+  if (defcoord == USERCOORD) {
+    extern void set_points_user(void);
+    set_points_user();
+  }
+  else if (defcoord == LOGRSINTH) {
     startx[1] = log(Rin-R0);
     startx[2] = 0.;
     startx[3] = 0.;
@@ -2873,7 +2931,11 @@ FTYPE setRin(int ihor)
 
   //  fprintf(stderr,"ihoradjust = %21.15g\n",ihoradjust);
 
-  if(defcoord == LOGRSINTH){
+  if(defcoord == USERCOORD){
+    extern FTYPE setRin_user(int ihor, FTYPE ihoradjust);
+    return(setRin_user(ihor,ihoradjust));
+  }
+  else if(defcoord == LOGRSINTH){
     ftemp=ihoradjust/(FTYPE)totalsize[1];
     return(R0+pow((Rhor-R0)/pow(Rout-R0,ftemp),1.0/(1.0-ftemp)));
   }
