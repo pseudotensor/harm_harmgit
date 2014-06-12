@@ -6471,6 +6471,26 @@ void blcoord_user(FTYPE *X, FTYPE *V)
 
     }
 
+    if(0){ // Sam Gralla 3
+
+      h0=0.0;
+
+#define plateau(x,L,R,W) (trans(x,(L)-0.5*(W),(L)+0.5*(W))*(1.0-trans(x,(R)-0.5*(W),(R)+0.5*(W))))
+#define lineeq(x,w) ((x)*(w)+(0.5*M_PI)-(0.5*w))
+#define linepole(x,w) (line1(x,w))
+#define thetaL(x,wp,weq,xp1,xp2) ( linepole(x,wp)*(1.0-trans(x,xp1,xp2)) + lineeq(x,weq)*trans(x,xp1,xp2) )
+#define thetasam2(x,wp,weq,xp1,xp2) ( x<0.5 ? thetaL(x,wp,weq,xp1,xp2) : -thetaL(1.0-x,wp,weq,xp1,xp2)+M_PI )
+
+      FTYPE poleslope=wparsam(X[2],V[1]);
+      FTYPE xpole=0.25;
+      //      FTYPE eqslope=0.1;
+      FTYPE eqslope=0.5;
+      FTYPE xeq=0.5;
+      V[2] = thetasam2(X[2], poleslope, eqslope, xpole, xeq);
+      
+
+    }
+
 
 
 
