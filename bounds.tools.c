@@ -5634,7 +5634,7 @@ void debugfixupaltdeath_bc(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 
   if(VARTOINTERP==PRIMTOINTERP_GDETFULLVERSION_WALD){
     // do nothing, since when including low density and high b^2/rho, has issues.
-    return;
+    //return;
   }
   else{
     // allow outerdeath
@@ -5649,60 +5649,84 @@ void debugfixupaltdeath_bc(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
     get_geometry(i, j, k, CENT, ptrgeom);
     bl_coord_ijk_2(i,j,k,CENT,X, V) ;
   
-    //    FTYPE bsq=0.0;
-    //    bsq_calc(prfix,ptrgeom,&bsq);
+    FTYPE bsq=0.0;
+    bsq_calc(prfix,ptrgeom,&bsq);
 
 
     FTYPE Rbadout=OUTERDEATHRADIUS; //MIN(500.0,0.5*Rout);
     
+    Rbadout=100.0 + t;
  
-    if(V[1]>Rbadout ){
-       
-      //prfix[RHO] = 1E-10*pow(V[1]/500.0,-1.5);
-  
-      prfix[UU]= MIN(50.0*prfix[RHO],prfix[UU]); // no more than u/rho=10
-      ufix[UU]=MAX(-prfix[UU],ufix[UU]);
-  
-      ufix[ENTROPY] = ufix[UU];
-      ufix[ENTROPY] = MAX(0.0001,MIN(ufix[ENTROPY],1.0)); // like u/rho=1
+    if(V[1]>Rbadout || V[1]>t && (mycpupos[2]==0 && (j<=2) || mycpupos[2]==ncpux2-1 && (j>=N2-1-2)) ){
 
-      if(URAD0>=0){
-        //prfix[URAD0] = 2E-10*pow(V[1]/500.0,-1.5);
-        prfix[URAD0] = MIN(MIN(prfix[RHO],prfix[URAD0]),prfix[UU]); // no more than Erf/rho=1 and Erf/u=1
-        ufix[URAD0]=MAX(-prfix[URAD0],ufix[URAD0]);
+      if(VARTOINTERP==PRIMTOINTERP_GDETFULLVERSION_WALD){
+
+        FTYPE prfloor[NPR];
+        set_density_floors(ptrgeom,prfix,prfloor);
+
+        prfix[RHO]=prfloor[RHO];
+        prfix[UU]=prfloor[UU];
+
+        limit_gamma(0,OUTERDEATHGAMMAMAX,OUTERDEATHGAMMAMAXRAD,prfix,NULL,ptrgeom,-1);
+
       }
+      else{
 
-      //      limit_gamma(0,1.5,GAMMAMAXRAD,prfix,NULL,ptrgeom,-1);
-      limit_gamma(0,OUTERDEATHGAMMAMAX,OUTERDEATHGAMMAMAXRAD,prfix,NULL,ptrgeom,-1);
+       
+        //prfix[RHO] = 1E-10*pow(V[1]/500.0,-1.5);
+  
+        prfix[UU]= MIN(50.0*prfix[RHO],prfix[UU]); // no more than u/rho=10
+        //      prfix[UU] = MIN(prfix[UU],
+        ufix[UU]=MAX(-prfix[UU],ufix[UU]);
+  
+        ufix[ENTROPY] = ufix[UU];
+        ufix[ENTROPY] = MAX(0.0001,MIN(ufix[ENTROPY],1.0)); // like u/rho=1
+
+        if(URAD0>=0){
+          //prfix[URAD0] = 2E-10*pow(V[1]/500.0,-1.5);
+          prfix[URAD0] = MIN(MIN(prfix[RHO],prfix[URAD0]),prfix[UU]); // no more than Erf/rho=1 and Erf/u=1
+          ufix[URAD0]=MAX(-prfix[URAD0],ufix[URAD0]);
+        }
+
+        //      limit_gamma(0,1.5,GAMMAMAXRAD,prfix,NULL,ptrgeom,-1);
+        limit_gamma(0,OUTERDEATHGAMMAMAX,OUTERDEATHGAMMAMAXRAD,prfix,NULL,ptrgeom,-1);
+
+      }
     }
 
 
-    FTYPE rbr=500.0;
-    FTYPE localrbr=rbr; //500.0; // rbr;
-    FTYPE localrbrr0=MAX(100.0,localrbr/2.0);
-    
-    FTYPE switch0 = 0.5+1.0/M_PI*atan((V[1]-localrbr)/localrbrr0); // large r
-    FTYPE switch2 = 1.0-switch0; // small r
-    //      FTYPE myhslope1=h0 + pow( (V[1]-rsjet3)/r0jet3 , njet);
-    //      FTYPE myhslope2=h0 + pow( (localrbr-rsjet3)/r0jet3 , njet);
-    //      myhslope = myhslope1*switch2 + myhslope2*switch0;
-    
-    if(V[1]<100.0) switch2=1.0;
-    //if(V[1]>500.0) switch2=0.0;
-    
-    if(prfix[U1]<0.0){
-      //    switch2=0.0;
-      prfix[U1]*=switch2;
-      ufix[U1]*=switch2;
+    if(VARTOINTERP==PRIMTOINTERP_GDETFULLVERSION_WALD){
+
     }
-    //      ufix[U2]=ufix[U3]=0.0;
-    //      SLOOPA(jjj) ufix[U1+jjj-1]=prfix[U1+jjj-1] = 0.0;
+    else{
+
+      FTYPE rbr=500.0;
+      FTYPE localrbr=rbr; //500.0; // rbr;
+      FTYPE localrbrr0=MAX(100.0,localrbr/2.0);
     
-    if(URAD0>=0){
-      if(prfix[URAD1]<0.0){
-        //switch2=0.0;
-        prfix[URAD1]*=switch2;
-        ufix[URAD1]*=switch2;
+      FTYPE switch0 = 0.5+1.0/M_PI*atan((V[1]-localrbr)/localrbrr0); // large r
+      FTYPE switch2 = 1.0-switch0; // small r
+      //      FTYPE myhslope1=h0 + pow( (V[1]-rsjet3)/r0jet3 , njet);
+      //      FTYPE myhslope2=h0 + pow( (localrbr-rsjet3)/r0jet3 , njet);
+      //      myhslope = myhslope1*switch2 + myhslope2*switch0;
+    
+      if(V[1]<100.0) switch2=1.0;
+      //if(V[1]>500.0) switch2=0.0;
+    
+      if(prfix[U1]<0.0){
+        //    switch2=0.0;
+        prfix[U1]*=switch2;
+        ufix[U1]*=switch2;
+      }
+      //      ufix[U2]=ufix[U3]=0.0;
+      //      SLOOPA(jjj) ufix[U1+jjj-1]=prfix[U1+jjj-1] = 0.0;
+    
+      if(URAD0>=0){
+        if(prfix[URAD1]<0.0){
+          //switch2=0.0;
+          prfix[URAD1]*=switch2;
+          ufix[URAD1]*=switch2;
+        }
       }
     }
 

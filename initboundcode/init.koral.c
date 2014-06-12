@@ -5426,6 +5426,9 @@ static int fieldprim(int *whichvel, int*whichcoord, int ii, int jj, int kk, FTYP
 
     DLOOPA(j) Bcon[j]=0.0;
     DLOOP(j,k) Bcon[j]+=etacov[k]*Mcon[k][j];
+    
+    // force B3=0 so only using poloidal part of Wald solution.
+    pl=B3; fieldfrompotential[pl-B1+1]=0;
 
     lower_vec(Bcon,ptrgeom,Bcov);
 
@@ -6463,7 +6466,7 @@ void blcoord_user(FTYPE *X, FTYPE *V)
 #define wparsam(x,r) (h0 + pow( ((r)-0.0)/4.2 , -njet))
 #define thetasam(x,r,w,xp1,xp2) (line1(x,w)*(1.0-trans(x,xp1,xp2)) + line2(x,w)*trans(x,xp1,xp2))
 
-      V[2] = thetasam(X[2],V[1],wparsam(X[2],V[1]),0.2,0.8);
+      V[2] = thetasam(X[2],V[1],wparsam(X[2],V[1]),0.3,0.8);
       //      V[2] = thetasam(X[2],V[1],1.0/V[1],0.2,0.8);
 
       //      dualfprintf(fail_file,"tr=%g %g %g %g\n",tr(0.5),line1(0.5,wparsam(0.5,V[1])),trans(X[2],0.2,0.8),line2(0.5,wparsam(0.5,V[1])));

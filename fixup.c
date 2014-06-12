@@ -3309,8 +3309,8 @@ int set_density_floors_default_alt(struct of_geom *ptrgeom, struct of_state *q, 
               prfloor[UU]*=pow(500,-2.5);
             }
             else{
-              prfloor[RHO]*=pow(r,-1.5);
-              prfloor[UU]*=pow(r,-2.5);
+              prfloor[RHO]*=(pow(r,-1.5)+pow(500,-1.5));
+              prfloor[UU]*=(pow(r,-2.5)+pow(500,-2.5));
             }
           }
           if(0){
