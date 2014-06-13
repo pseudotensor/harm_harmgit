@@ -213,7 +213,7 @@ $(PREP): $(PREPDEP)
  	############################################
 	#below is for code working per point
  	############################################
-	( echo $(OBJSONEPOINT) > objsonepoint )
+	( echo $(OBJSONEPOINT) > objsonepoint )   #MAVARANOTE OBJSONEPOINT and other similar lists of .o linked files are in included file maketail.harm.inc
 	# remove and touch (so exists) files to create
 	( rm -rf objsonepoint.cmd.list ; rm -rf onepoint ; touch objsonepoint.cmd.list ; touch onepoint )
 	# create list of prefixes
