@@ -13,9 +13,9 @@
 
 
 
-#define N1 8 //12 //32  // MARKTODO resolution
-#define N2 6 //6 //24
-#define N3 1 //8 //6 //8   //16
+#define N1 16 //12 //32  // MARKTODO resolution
+#define N2 8 //6 //24
+#define N3 6 //8 //6 //8   //16
 
 
 // atch adjusts
@@ -183,13 +183,13 @@
 #undef DOPOLESMOOTH 
 #undef DOPOLEGAMMADEATH
 #define DOPOLEDEATH 1
-#define DOPOLESMOOTH 1  // MARKNOTE smoothes the polar axis
+#define DOPOLESMOOTH 0  // MARKNOTE smoothes the polar axis
 #define DOPOLEGAMMADEATH 0
 // Note that if DOPOLESMOOTH>=DOPOLEGAMMADEATH or DOPOLESMOOTH>=DOPOLEDEATH, then DOPOLEGAMMADEATH or DOPOLEDEATH do nothing -- they are overwritten by DOPOLESMOOTH.
 
 
 #undef IF3DSPCTHENMPITRANSFERATPOLE
-#define IF3DSPCTHENMPITRANSFERATPOLE 1   // MARKNOTE deals with transmissive vs. reflective bd. conditions at pole
+#define IF3DSPCTHENMPITRANSFERATPOLE 0   // MARKNOTE deals with transmissive vs. reflective bd. conditions at pole
 
 
 
@@ -357,7 +357,7 @@
 #define HORIZONSUPERFAST 0
 
 //#define VARTOINTERP PRIMTOINTERP
-#define VARTOINTERP PRIMTOINTERP_GDETFULLVERSION
+#define VARTOINTERP PRIMTOINTERP_BP
 //#define VARTOINTERP PRIMTOINTERP_RHOU
 //#define VARTOINTERP PRIMTOINTERP_VSQ
 // #define VARTOINTERP PRIMTOINTERP_3VELREL_GAMMAREL (used in Sasha tests)
