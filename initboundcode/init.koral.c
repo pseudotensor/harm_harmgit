@@ -36,6 +36,7 @@ FTYPE B0WALD; // set later
 int DOWALDDEN=0; // WALD: 0->1 to set densities as floor-like with below b^2/rho at horizon.  Should also choose FIELDTYPE==FIELDWALD.
 //FTYPE BSQORHOWALD=50.0; // leads to too large b^2/rho and uu0 cylindrical shock forms at r\sim 2r_g and remains forever (at least at 128x64)
 FTYPE BSQORHOWALD=10.0;
+FTYPE aforwald;
 
 //FTYPE thindiskrhopow=-3.0/2.0; // can make steeper like -0.7
 FTYPE thindiskrhopow=-0.2; // closer to NT73
@@ -318,6 +319,9 @@ int set_fieldfrompotential(int *fieldfrompotential)
 
   // default (assume all fields are from potential)
   PLOOPBONLY(pl) fieldfrompotential[pl-B1+1]=1;
+
+  // force B3=0 so only using poloidal part of Wald solution.
+  //int pl=B3; fieldfrompotential[pl-B1+1]=0;
 
 
   return(0);
@@ -5277,7 +5281,8 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
         // below so field is b^2/rho=BSQORHOWALD at horizon
         FTYPE Rhorlocal=rhor_calc(0);
         B0WALD=sqrt(BSQORHOWALD*RADNT_RHOATMMIN*pow(Rhorlocal/RADNT_ROUT,-1.5));
-        vpot += -0.5*B0WALD*(mcov[l]+2.0*a*kcov[l]);
+        aforwald=a;
+        vpot += -0.5*B0WALD*(mcov[l]+2.0*aforwald*kcov[l]);
       }
     }
   }
@@ -5427,8 +5432,6 @@ static int fieldprim(int *whichvel, int*whichcoord, int ii, int jj, int kk, FTYP
     DLOOPA(j) Bcon[j]=0.0;
     DLOOP(j,k) Bcon[j]+=etacov[k]*Mcon[k][j];
     
-    // force B3=0 so only using poloidal part of Wald solution.
-    pl=B3; fieldfrompotential[pl-B1+1]=0;
 
     lower_vec(Bcon,ptrgeom,Bcov);
 
@@ -5503,6 +5506,86 @@ static int fieldprim(int *whichvel, int*whichcoord, int ii, int jj, int kk, FTYP
   return(0);
 }
 
+
+// Also tried:
+
+// For final conservation and noise
+// 1) uniform grid near hole for half of grid (/home/jon/coordradial.nb)
+// 2) Turned off POLEDEATH and GAMMAPOLEDEATH
+// 3) advance_standard_orig() instead.
+
+// For hot MHD part in cylindrical part of jet that gets in way
+// 1) Cleaning/cooling off as floor held in wave front.  Still happens.
+
+// For initial energy-momentum flux:
+// 1) u^i at r>3
+// 2) B_\phi (this function) called after the second set_grid_all() and before copy_prim2panalytic() in initbase.c
+// 3) F_{it}=0 before used but after set
+// 4) a=0 before first set_grid_all, a=0.8 before second
+// 5) Wald A_\mu has zero a term.
+// 6) Only use A_\phi
+// 7) fieldfrompotential[B3]=0 so only use poloidal Wald.
+// 8) Ecov=0
+// 9) Econ=0
+void shortout_Bd3(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
+{
+  int i,j,k,pliter,pl;
+  struct of_geom geomdontuse;
+  struct of_geom *ptrgeom=&geomdontuse;
+  FULLLOOP{
+    get_geometry(i,j,k,CENT,ptrgeom);
+    FTYPE Bcov[NDIM];
+    FTYPE *pr = &MACP0A1(prim,i,j,k,0);
+
+    FTYPE Bu1,Bu2,gcon03,gcon13,gcon23,gcon33;
+    FTYPE gcov01,gcov02,gcov11,gcov12,gcov21,gcov22,gcov03,gcov13,gcov23;
+
+    Bu1=pr[B1];
+    Bu2=pr[B2];
+
+    gcon03=ptrgeom->gcon[GIND(0,3)];
+    gcon13=ptrgeom->gcon[GIND(1,3)];
+    gcon23=ptrgeom->gcon[GIND(2,3)];
+    gcon33=ptrgeom->gcon[GIND(3,3)];
+    
+    gcov01=ptrgeom->gcov[GIND(0,1)];
+    gcov02=ptrgeom->gcov[GIND(0,2)];
+    gcov11=ptrgeom->gcov[GIND(1,1)];
+    gcov12=gcov21=ptrgeom->gcov[GIND(1,2)];
+    gcov22=ptrgeom->gcov[GIND(2,2)];
+    gcov03=ptrgeom->gcov[GIND(0,3)];
+    gcov13=ptrgeom->gcov[GIND(1,3)];
+    gcov23=ptrgeom->gcov[GIND(2,3)];
+    
+    FTYPE myBd3=0.0;
+
+    FTYPE ftemp=(1.0 - gcon03*gcov03 - gcon13*gcov13 - gcon23*gcov23);
+    FTYPE igdetnosing=sign(ftemp)/(fabs(ftemp)+SMALL);
+    pl=B3; pr[pl] = (myBd3*gcon33 + Bu1*gcon03*gcov01 + Bu2*gcon03*gcov02 + Bu1*gcon13*gcov11 + Bu2*gcon13*gcov12 + Bu1*gcon23*gcov21 + Bu2*gcon23*gcov22)*igdetnosing;
+
+    FTYPE ucon[NDIM];
+    pr2ucon(WHICHVEL,pr,ptrgeom,ucon);
+
+    FTYPE X[NDIM],V[NDIM];
+    coord(i, j, k, CENT, X);
+    bl_coord(X, V);
+    FTYPE r,th,ph;
+    r=V[1];
+    th=V[2];
+    ph=V[3];
+
+    if(r>3.0) ucon[1]=ucon[2]=ucon[3]=0.0;
+
+    ucon2pr(WHICHVEL,ucon,ptrgeom,pr);
+  }
+
+  extern void filterffde(int i, int j, int k, FTYPE *pr);
+
+  COMPFULLLOOP{
+    filterffde(i,j,k,GLOBALMAC(pglobal,i,j,k));
+  }
+
+}
 
 
 //#define FCOVDERTYPE DIFFNUMREC
@@ -5608,10 +5691,12 @@ void Fcov_numerical(int whichcoord, FTYPE *X, FTYPE (*Fcov)[NDIM])
       
       //      dualfprintf(fail_file,"got here2: j=%d k=%d idxdxp=%g %g\n",j,k,idxdxp[j][k],idxdxp[k][j]);
 
+      aforwald=a;
+
 	  Fcov[j][k] = 0.5*B0WALD*(
 	    +(mcovhj - mcovlj) / (Vhk[k] - Vlk[k])
 	    -(mcovhk - mcovlk) / (Vhj[j] - Vlj[j])
-	    +2.0*a*(
+	    +2.0*aforwald*(
 		   +(kcovhj - kcovlj) / (Vhk[k] - Vlk[k])
 		   -(kcovhk - kcovlk) / (Vhj[j] - Vlj[j])
 		   )
@@ -5621,13 +5706,15 @@ void Fcov_numerical(int whichcoord, FTYPE *X, FTYPE (*Fcov)[NDIM])
   }
   else if(FCOVDERTYPE==DIFFNUMREC){
 
+    aforwald=a;
+
     for(k=0;k<NDIM;k++) for(j=0;j<NDIM;j++){
         // 0 in dfridr not used
         FTYPE ans1;+dfridr(mcov_func_mcoord,ptrgeom,X,0,j,k,&ans1);
         FTYPE ans2;-dfridr(mcov_func_mcoord,ptrgeom,X,0,k,j,&ans2);
         FTYPE ans3;+dfridr(kcov_func_mcoord,ptrgeom,X,0,j,k,&ans3);
         FTYPE ans4;-dfridr(kcov_func_mcoord,ptrgeom,X,0,k,j,&ans4);
-        Fcov[j][k]=B0WALD*(+ans1 + ans2 +2.0*a*(ans3 + ans4));
+        Fcov[j][k]=B0WALD*(+ans1 + ans2 +2.0*aforwald*(ans3 + ans4));
       }
 
     dualfprintf(fail_file,"NOT SETUP FOR NUMREC\n");
@@ -6145,6 +6232,12 @@ int coolfunc_user(FTYPE h_over_r, FTYPE *pr, struct of_geom *geom, struct of_sta
 }
 
 
+#define JET6LIKEUSERCOORD 0
+#define UNIHALFUSERCOORD 1
+
+#define WHICHUSERCOORD JET6LIKEUSERCOORD
+
+
 // for defcoord=JET6COORDS like USERCOORDS
 static FTYPE npow,r1jet,njet1,njet,r0jet,rsjet,Qjet, ntheta,htheta,rsjet2,r0jet2,rsjet3,r0jet3, rs, r0,npow2,cpow2,rbr,x1br, h0,cpow3; 
 
@@ -6295,7 +6388,17 @@ void blcoord_user(FTYPE *X, FTYPE *V)
 #if(0) // no change in exponentiation
     // JET3COORDS-like radial grid
     V[1] = R0+exp(pow(X[1],npow)) ;
-#elif(1)
+#elif(WHICHUSERCOORD==UNIHALFUSERCOORD)
+
+    Rout=2000.0;
+    theexp = npow*X[1];
+    npow=1.0;
+    FTYPE gconst1=1.0;
+    FTYPE gconst2=gconst1*.000001;
+    V[1] = R0 + gconst1*X[1] + gconst2*exp(theexp);
+
+
+#elif(WHICHUSERCOORD==JET6LIKEUSERCOORD)
 
     FTYPE theexp = npow*X[1];
     if( X[1] > x1br ) {
@@ -6466,7 +6569,7 @@ void blcoord_user(FTYPE *X, FTYPE *V)
 #define wparsam(x,r) (h0 + pow( ((r)-0.0)/4.2 , -njet))
 #define thetasam(x,r,w,xp1,xp2) (line1(x,w)*(1.0-trans(x,xp1,xp2)) + line2(x,w)*trans(x,xp1,xp2))
 
-      V[2] = thetasam(X[2],V[1],wparsam(X[2],V[1]),0.3,0.8);
+      V[2] = thetasam(X[2],V[1],wparsam(X[2],V[1]),0.25,0.75);
       //      V[2] = thetasam(X[2],V[1],1.0/V[1],0.2,0.8);
 
       //      dualfprintf(fail_file,"tr=%g %g %g %g\n",tr(0.5),line1(0.5,wparsam(0.5,V[1])),trans(X[2],0.2,0.8),line2(0.5,wparsam(0.5,V[1])));
@@ -6513,7 +6616,20 @@ void dxdxp_analytic_user(FTYPE *X, FTYPE *V, FTYPE (*dxdxp)[NDIM])
 }
 void set_points_user(void)
 {
-  if(1){
+
+
+  if(WHICHUSERCOORD==UNIHALFUSERCOORD){
+    startx[1] = 0.3999985081775278946780799743777598329673;
+    startx[2] = 0.;
+    startx[3] = 0.;
+    
+    FTYPE endx1=21.40529883372801383045167738115556702610;
+    dx[1] = (endx1-startx[1]) / totalsize[1];
+    dx[2] = 1. / totalsize[2];
+    dx[3] = 1.0/totalsize[3];
+  }
+
+  if(WHICHUSERCOORD==JET6LIKEUSERCOORD){
     startx[1] = pow(log(Rin-R0),1.0/npow);
     startx[2] = 0.;
     startx[3] = 0.;
