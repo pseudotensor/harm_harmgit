@@ -5633,8 +5633,35 @@ void debugfixupaltdeath_bc(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
   int jjj;
 
   if(VARTOINTERP==PRIMTOINTERP_GDETFULLVERSION_WALD){
+
+#define AVOIDCS 1
+
+    if(AVOIDCS){
+      FULLLOOP{
+        prfix=&MACP0A1(prim,i,j,k,0);//&GLOBALMACP0A1(pglobal,i,j,k,0);
+        ufix=&GLOBALMACP0A1(unewglobal,i,j,k,0);
+      
+        // get geometry for center pre-interpolated values
+        //get_geometry(i, j, k, CENT, ptrgeom);
+        //bl_coord_ijk_2(i,j,k,CENT,X, V) ;
+      
+        //      FTYPE bsq=0.0;
+        //      bsq_calc(prfix,ptrgeom,&bsq);
+      
+      
+        // symmetric around equator for centered zones
+        int ti=startpos[1]+i;
+        int tj=startpos[2]+j;
+        int tk=startpos[3]+k;
+        if((tj>totalsize[2]/2-3)&&(tj<totalsize[2]/2+2)){
+          prfix[U2]=0.0;
+        }
+      
+      }
+    }
+
     // do nothing, since when including low density and high b^2/rho, has issues.
-    //return;
+    return; // flipping back to return because shifting floor in rho,u didn't help MHD heating.
   }
   else{
     // allow outerdeath
