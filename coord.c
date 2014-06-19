@@ -1404,7 +1404,7 @@ void bl_coord(FTYPE *X, FTYPE *V)
       thetasign=-1.0;
       x2temp=1.0-X[2];
     }
-    th0 = M_PI * .5 * (.19*(1.+bp_rsinner/V[1])*(2.0*X[2]-1.0) +thetasign*(1.0-.19*(1.+bp_rsinner/V[1]))*pow(2.0*x2temp-1.0,9.0)+1.) ; // .17 is .2/(1.+4/15.)
+    th0 = M_PI * .5 * (.11875*(1.+bp_rsinner/V[1])*(2.0*X[2]-1.0) +thetasign*(1.0-.11875*(1.+bp_rsinner/V[1]))*pow(2.0*x2temp-1.0,9.0)+1.) ; // .17 is .2/(1.+4/15.)
     //    if(X[2]>=0.5 && (mycpupos[2]==ncpux2/2 && ncpux2>1 || ncpux2==1)) printf("at radius %21.15g and X[2] = %21.15g the diff is %21.15e\n",V[1],X[2],th0toprint);
 
     // th0 = M_PI * .5 * (.2*(2.0*X[2]-1.0) + (1.0-.2)*pow(2.0*X[2]-1.0,9.0)+1.) ;
