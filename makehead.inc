@@ -30,6 +30,7 @@ USETACCLONESTAR=0
 USETACCRANGER=0
 USEPFE=0
 USENAU=0
+USEDPTH2=0
 
 ########################
 #
@@ -145,7 +146,7 @@ endif
 # OpenMP CHOICE
 #
 ########################
-USEOPENMP=0
+USEOPENMP=1
 
 
 
@@ -186,7 +187,7 @@ ENFORCEPRECISION=0
 #
 ifneq ($(filter $(LAPACKTARGETS), $(MYMAKECMDGOALS)),)
 # choice for below
-USELAPACK=0
+USELAPACK=1
 # below is for new form of library -l line
 USELAPACKNEW=0
 else

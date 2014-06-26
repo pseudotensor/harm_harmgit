@@ -299,7 +299,8 @@ endif
 
 ifeq ($(USELAPACK),1)
 #	below gives blas and lapack support
-	LAPACKLDFLAGS=-lmkl_lapack -lmkl -lguide -lpthread
+	#LAPACKLDFLAGS=-lmkl_lapack -lmkl -lguide -lpthread
+	LAPACKLDFLAGS=-L$(MKLROOT)/lib/intel64 -lmkl_intel_lp64 -lmkl_core -lmkl_intel_thread -liomp5 -lm -I$(MKLROOT)/include #included by MAVARA from intel link line advisor plus some googling I realized i might need liomp5 wheb some intel_thread things were missing
 
 ifeq ($(USELAPACKNEW),1)
 # below for ki-jmck or lonestar4
