@@ -309,7 +309,7 @@ void set_coord_parms_nodeps(int defcoordlocal)
 
     // for switches from normal theta to ramesh theta
     bp_rs=200.0; // shift
-    bp_r0=80.0; // divisor
+    bp_r0=60.0; // divisor
  
     // for switches from innermost region of disk (inside horizon) to regular disk to increase timestep set by smallest vertical cell size
     bp_rsinner=4.0;
@@ -1377,7 +1377,7 @@ void bl_coord(FTYPE *X, FTYPE *V)
     else if(X[2]<0.0) myx2=-X[2];
     else myx2=X[2];
 
-    th2 = M_PI*.5*(.23*(2.0*myx2-1.0) + (1.0-.23)*pow(2.0*myx2-1,3.0)+1.0);
+    th2 = M_PI*.5*(.2*(2.0*myx2-1.0) + (1.0-.2)*pow(2.0*myx2-1,3.0)+1.0);
 
     if(X[2]>1.0) th2=2.0*M_PI-th2;
     else if(X[2]<0.0) th2=-th2;

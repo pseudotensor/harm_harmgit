@@ -68,9 +68,9 @@ int prepre_init_specific_init(void)
   //PHI GRID SETUP
   /////////////////////
 
-  dofull2pi = 0;   // MAVARANOTE: do less than full phi    ; This line and the next taken from init.sashatorus.c
+  dofull2pi = 1;   // MAVARANOTE: do less than full phi    ; This line and the next taken from init.sashatorus.c
   
-  global_fracphi = 0.25;   //phi-extent measured in units of 2*PI, i.e. 0.25 means PI/2; only used if dofull2pi == 0
+  global_fracphi = 1.0;   //phi-extent measured in units of 2*PI, i.e. 0.25 means PI/2; only used if dofull2pi == 0
 
   if(ALLOWMETRICROT){
     THETAROTPRIMITIVES=USER_THETAROTPRIMITIVES; // 0 to M_PI : what thetarot to use when primitives are set
@@ -105,7 +105,7 @@ int pre_init_specific_init(void)
   }
   else if(WHICHPROBLEM==THINBP){
     // globally used parameters set by specific initial condition routines, reran for restart as well *before* all other calculations
-    h_over_r=0.125;
+    h_over_r=0.1;
     // below is theta distance from equator where jet will start, usually about 2-3X disk thickness
     h_over_r_jet=M_PI*0.4;
   }
@@ -233,7 +233,7 @@ int init_grid(void)
   if(totalsize[1]<32) Rout=50.0;
   else if(totalsize[1]<=64) Rout=1.E3;
   else Rout=1.E5;
-  Rout=1.E3; // MAVARA tilttest used this
+  //Rout=1.E3; // MAVARA tilttest used this
 #endif
 
  
@@ -332,7 +332,7 @@ int init_global(void)
   // ener period
   DTdumpgen[ENERDUMPTYPE] = 500.0;
   /* image file frequ., in units of M */
-  DTdumpgen[IMAGEDUMPTYPE] = 5.0; // was 5 after 2.0
+  DTdumpgen[IMAGEDUMPTYPE] = 4.0; // was 5 after 2.0
   // fieldline locked to images so can overlay
   DTdumpgen[FIELDLINEDUMPTYPE] = DTdumpgen[IMAGEDUMPTYPE];
 
@@ -408,8 +408,8 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
   //rin = (1. + h_over_r)*Risco;
   rin = Risco;
   rinfield = 10.0;
-  beta = 30.;
-  randfact = 20.e-2; //4.e-2;
+  beta = 200.;
+  randfact = 10.e-2; //4.e-2;
   //  fieldnormalizemin = 3. * Risco;
 #elif(WHICHPROBLEM==THICKDISK)
   //  beta = 1.e2 ;
@@ -817,7 +817,7 @@ int init_dsandvels_bpthin(int *whichvel, int*whichcoord, int i, int j, int k, FT
     S = 1./(H*H*nz) ;
     cs = H*nz*sqrt(gam) ; // To understand this factor of gam, and how this equation is approximate, consult Eqn. 7.43 of Melia and definition of T~cs^2/gam
 
-    rho = (S/sqrt(2.*M_PI*H*H)) * (pow(R/rin,3./2+UGPOW)) * exp(-z*z/(2.*H*H))  * taper_func(r,2.*rin, 3.0) ; //3 is best i think //* ( 1.0 - R*R/((pow(R,1.5) + a)*(pow(R,1.5) + a)) )  ;// taper_func(R,rin,-1.0) ;
+    rho = (S/sqrt(2.*M_PI*H*H)) * (pow(R/rin,3./2+UGPOW)) * exp(-z*z/(2.*H*H))  * taper_func(r,2.0*rin, 3.0) ; //3 is best i think //* ( 1.0 - R*R/((pow(R,1.5) + a)*(pow(R,1.5) + a)) )  ;// taper_func(R,rin,-1.0) ;
     u = rho*cs*cs/(gam - 1.)/gam;
     ur = 0. ;
     uh = 0. ;
@@ -1007,7 +1007,7 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
   FTYPE hpow=2.0; // MAVARANOTE originally 2.0
 #define RBREAK_MACRO (100000.0)
   FTYPE RBREAK=RBREAK_MACRO;
-#define RTRANSITION_MACRO (12.0) 
+#define RTRANSITION_MACRO (14.0) 
   FTYPE RTRANSITION=RTRANSITION_MACRO; 
   FTYPE UGPOW=UGPOW_MACRO ;
   FTYPE normalize;
@@ -1043,7 +1043,7 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
       else if(1){
 	idxdxprim_ijk(i, j, k, CORN2, idxdxp); // CORN2 for l==2     
 
-	if(r<RTRANSITION) vpot += - (1.+0.*sin(ph*8.))*(1./1.) * pow(r/tempstore_tot[0],(UGPOW/2.+1.5)/1.0) * da3vsr_integrated[startpos[1]+i] * pow(sin(th),hpow)*sin(FIELDROT)*sin(ph); //6 is what bptf5 was, etc. //4 works pretty well//MAVARATEMP
+	if(r<RTRANSITION) vpot += - (1.+0.*sin(ph*8.))*(1./1.) * pow(r/tempstore_tot[0],(UGPOW/2.+1.5)/6.0) * da3vsr_integrated[startpos[1]+i] * pow(sin(th),hpow)*sin(FIELDROT)*sin(ph); //6 is what bptf5 was, etc. //4 works pretty well//MAVARATEMP
 	else if(r>=RTRANSITION && r<RBREAK) vpot += -  (1.+0.*sin(ph*8.))*da3vsr_integrated[startpos[1]+i]  * pow(sin(th),hpow)*sin(FIELDROT)*sin(ph);
 	else if(r>=RBREAK) vpot += -  (1.+0.*sin(ph*8.))*da3vsr_integrated[startpos[1]+i] * pow(sin(th),hpow)*sin(FIELDROT)*sin(ph); 
 	else vpot += 0.0 ; //-  pow(1.5/tempstore_tot[0],rpow2) * da3vsr_integrated[startpos[1]+i] * pow(sin(th),hpow)*sin(FIELDROT)*sin(ph); //MAVARATEMP was 0.0 normally
@@ -1097,7 +1097,7 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
 	//else    
 	//vpot = vpot 
 
-	if(r<RTRANSITION) vpot += (1.+0.*sin(ph*8.))*(1./1.) * pow(r/tempstore_tot[0],(UGPOW/2.+1.5)/1.0) * da3vsr_integrated[startpos[1]+i] * pow(sin(th),hpow)*(cos(FIELDROT) - cos(ph)*cot(th)*sin(FIELDROT)); //MAVARATEMP
+	if(r<RTRANSITION) vpot += (1.+0.*sin(ph*8.))*(1./1.) * pow(r/tempstore_tot[0],(UGPOW/2.+1.5)/6.0) * da3vsr_integrated[startpos[1]+i] * pow(sin(th),hpow)*(cos(FIELDROT) - cos(ph)*cot(th)*sin(FIELDROT)); //MAVARATEMP
 	else if(r>=RTRANSITION && r<RBREAK) vpot += (1.+0.*sin(ph*8.))*da3vsr_integrated[startpos[1]+i] * pow(sin(th),hpow)*(cos(FIELDROT) - cos(ph)*cot(th)*sin(FIELDROT));
 	else if(r>=RBREAK) vpot += (1.+0.*sin(ph*8.))*da3vsr_integrated[startpos[1]+i]  * pow(sin(th),hpow)*(cos(FIELDROT) - cos(ph)*cot(th)*sin(FIELDROT)); // was using a .2 multiplyer for sin(ph*8.) term
 	else vpot += 0.0; //pow(1.5/tempstore_tot[0],rpow2) * da3vsr_integrated[startpos[1]+i] * pow(sin(th),hpow)*(cos(FIELDROT) - cos(ph)*cot(th)*sin(FIELDROT));
@@ -1684,7 +1684,7 @@ void adjust_fluxctstag_emfs(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR
 
 // User's cooling function:
 
-#define USERTHETACOOL       (0.125)	/* should be same as h_over_r */
+#define USERTHETACOOL       (0.1)	/* should be same as h_over_r */
 #define USERTAUCOOL         (1.0) //(2.0*M_PI)	        /* cooling time in number of rotational times : really USERTAUCOOL=2*M_PI would be 1 rotational time */
 #define USERNOCOOLTHETAFACT     (1.0)           /* this times h_over_r and no more cooling there*/
 
@@ -2048,7 +2048,7 @@ int calc_da3vsr(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 
 
   //for(ii=0; ii<N1*ncpux1; ii++) da3vsr_tot[ii] = 0.1 ;
-  da3vsr_integrated[0] = 1.0 * tempstore_tot[2] / (pow(tempstore_tot[1]/tempstore_tot[0],UGPOW/2+1.5)-1.0) ;
+  da3vsr_integrated[0] = 6.0 * tempstore_tot[2] / (pow(tempstore_tot[1]/tempstore_tot[0],UGPOW/2+1.5)-1.0) ;
     /*ii=0;
   do{ 
     da3vsr_integrated[0] = (tempstore_tot[2] - da3vsr_tot[ii]/2.); //this is better but the do-while loop can hang if the switch happens on the bound of a cpu-domain
