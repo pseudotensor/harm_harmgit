@@ -68,9 +68,9 @@ int prepre_init_specific_init(void)
   //PHI GRID SETUP
   /////////////////////
 
-  dofull2pi = 1;   // MAVARANOTE: do less than full phi    ; This line and the next taken from init.sashatorus.c
+  dofull2pi = 0;   // MAVARANOTE: do less than full phi    ; This line and the next taken from init.sashatorus.c
   
-  global_fracphi = 1.0;   //phi-extent measured in units of 2*PI, i.e. 0.25 means PI/2; only used if dofull2pi == 0
+  global_fracphi = 0.25;   //phi-extent measured in units of 2*PI, i.e. 0.25 means PI/2; only used if dofull2pi == 0
 
   if(ALLOWMETRICROT){
     THETAROTPRIMITIVES=USER_THETAROTPRIMITIVES; // 0 to M_PI : what thetarot to use when primitives are set
@@ -409,7 +409,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
   rin = Risco;
   rinfield = 10.0;
   beta = 200.;
-  randfact = 10.e-2; //4.e-2;
+  randfact = 15.e-2; //4.e-2;
   //  fieldnormalizemin = 3. * Risco;
 #elif(WHICHPROBLEM==THICKDISK)
   //  beta = 1.e2 ;
@@ -832,7 +832,7 @@ int init_dsandvels_bpthin(int *whichvel, int*whichcoord, int i, int j, int k, FT
 
     pr[U1] = ur ;
     pr[U2] = uh ;    
-    pr[U3] = SLOWFAC * up * (1. +0.05 * (ranc(0,0) - 0.5));
+    pr[U3] = SLOWFAC * up * (1. +0.10 * (ranc(0,0) - 0.5));
 
     if(FLUXB==FLUXCTSTAG){
       PLOOPBONLY(pl) pstag[pl]=pr[pl]=0.0;
@@ -1007,10 +1007,12 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
   FTYPE hpow=2.0; // MAVARANOTE originally 2.0
 #define RBREAK_MACRO (100000.0)
   FTYPE RBREAK=RBREAK_MACRO;
-#define RTRANSITION_MACRO (14.0) 
+#define RTRANSITION_MACRO (11.0) 
   FTYPE RTRANSITION=RTRANSITION_MACRO; 
   FTYPE UGPOW=UGPOW_MACRO ;
   FTYPE normalize;
+  FTYPE switchmad1;
+  FTYPE switchmad2;
 
   if(l==2){// A_\theta
 
@@ -1042,10 +1044,11 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
       }
       else if(1){
 	idxdxprim_ijk(i, j, k, CORN2, idxdxp); // CORN2 for l==2     
-
-	if(r<RTRANSITION) vpot += - (1.+0.*sin(ph*8.))*(1./1.) * pow(r/tempstore_tot[0],(UGPOW/2.+1.5)/6.0) * da3vsr_integrated[startpos[1]+i] * pow(sin(th),hpow)*sin(FIELDROT)*sin(ph); //6 is what bptf5 was, etc. //4 works pretty well//MAVARATEMP
-	else if(r>=RTRANSITION && r<RBREAK) vpot += -  (1.+0.*sin(ph*8.))*da3vsr_integrated[startpos[1]+i]  * pow(sin(th),hpow)*sin(FIELDROT)*sin(ph);
-	else if(r>=RBREAK) vpot += -  (1.+0.*sin(ph*8.))*da3vsr_integrated[startpos[1]+i] * pow(sin(th),hpow)*sin(FIELDROT)*sin(ph); 
+	switchmad2 = 0.5+1.0/M_PI*atan((r-40.)/10.); 
+	switchmad1 = 0.5-1.0/M_PI*atan((r-40.)/10.);
+	if(r<RTRANSITION) vpot += - (switchmad1*sqrt(6.)+switchmad2*1.)*(1.+0.*sin(ph*8.))*(1./1.) * pow(r/tempstore_tot[0],(UGPOW/2.+1.5)/6.0) * da3vsr_integrated[startpos[1]+i] * pow(sin(th),hpow)*sin(FIELDROT)*sin(ph); //6 is what bptf5 was, etc. //4 works pretty well//MAVARATEMP
+	else if(r>=RTRANSITION && r<RBREAK) vpot += -  (switchmad1*sqrt(6.)+switchmad2*1.)*(1.+0.*sin(ph*8.))*da3vsr_integrated[startpos[1]+i]  * pow(sin(th),hpow)*sin(FIELDROT)*sin(ph);
+	else if(r>=RBREAK) vpot += - (switchmad1*sqrt(6.)+switchmad2*1.)* (1.+0.*sin(ph*8.))*da3vsr_integrated[startpos[1]+i] * pow(sin(th),hpow)*sin(FIELDROT)*sin(ph); 
 	else vpot += 0.0 ; //-  pow(1.5/tempstore_tot[0],rpow2) * da3vsr_integrated[startpos[1]+i] * pow(sin(th),hpow)*sin(FIELDROT)*sin(ph); //MAVARATEMP was 0.0 normally
       }
       else if(0){
@@ -1096,10 +1099,11 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
 	//if(r<=0)	vpot = 0.0;
 	//else    
 	//vpot = vpot 
-
-	if(r<RTRANSITION) vpot += (1.+0.*sin(ph*8.))*(1./1.) * pow(r/tempstore_tot[0],(UGPOW/2.+1.5)/6.0) * da3vsr_integrated[startpos[1]+i] * pow(sin(th),hpow)*(cos(FIELDROT) - cos(ph)*cot(th)*sin(FIELDROT)); //MAVARATEMP
-	else if(r>=RTRANSITION && r<RBREAK) vpot += (1.+0.*sin(ph*8.))*da3vsr_integrated[startpos[1]+i] * pow(sin(th),hpow)*(cos(FIELDROT) - cos(ph)*cot(th)*sin(FIELDROT));
-	else if(r>=RBREAK) vpot += (1.+0.*sin(ph*8.))*da3vsr_integrated[startpos[1]+i]  * pow(sin(th),hpow)*(cos(FIELDROT) - cos(ph)*cot(th)*sin(FIELDROT)); // was using a .2 multiplyer for sin(ph*8.) term
+	switchmad2 = 0.5+1.0/M_PI*atan((r-40.)/10.); 
+	switchmad1 = 0.5-1.0/M_PI*atan((r-40.)/10.);
+	if(r<RTRANSITION) vpot += (switchmad1*sqrt(6.)+switchmad2*1.)*(1.+0.*sin(ph*8.))*(1./1.) * pow(r/tempstore_tot[0],(UGPOW/2.+1.5)/6.0) * da3vsr_integrated[startpos[1]+i] * pow(sin(th),hpow)*(cos(FIELDROT) - cos(ph)*cot(th)*sin(FIELDROT)); //MAVARATEMP
+	else if(r>=RTRANSITION && r<RBREAK) vpot += (switchmad1*sqrt(6.)+switchmad2*1.)*(1.+0.*sin(ph*8.))*da3vsr_integrated[startpos[1]+i] * pow(sin(th),hpow)*(cos(FIELDROT) - cos(ph)*cot(th)*sin(FIELDROT));
+	else if(r>=RBREAK) vpot += (switchmad1*sqrt(6.)+switchmad2*1.)*(1.+0.*sin(ph*8.))*da3vsr_integrated[startpos[1]+i]  * pow(sin(th),hpow)*(cos(FIELDROT) - cos(ph)*cot(th)*sin(FIELDROT)); // was using a .2 multiplyer for sin(ph*8.) term
 	else vpot += 0.0; //pow(1.5/tempstore_tot[0],rpow2) * da3vsr_integrated[startpos[1]+i] * pow(sin(th),hpow)*(cos(FIELDROT) - cos(ph)*cot(th)*sin(FIELDROT));
       }
       else if(0){
