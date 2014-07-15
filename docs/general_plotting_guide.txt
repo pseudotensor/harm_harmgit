@@ -374,6 +374,10 @@ iii) make
 
 f) Edit ~/py/scripts/makemovie.sh for kraken section to be how long run should be, how many cores, etc.  Can add "$modelname" entry for jobsuffix, needed if have multiple jobs
 
+g) default is currently set to have numtasks equal to total number of field line files, so total number of cores requested is equal to total number of field line files, so fastest possible run.  However, can set numtasks directly as number of mpi processes to run, numcorespernode directly as needed for memory issues (i.e. ensure total memory on node is sufficient for whatever number of cores you run on), and the rest should be handled by the makemovie.sh script as far as setting up the chunk list passed onto the makemoviec program.
+
+h) 
+
 i) At least edit default for kraken sections.  Set timetot, numcorespernode (which will be total cores), memtot (estimating how much memory per core needed as well as overhead), then in kraken's parllel 2 section, only have to set plot part.
 
 j) Edit ~/py/mread/__init__.py :
