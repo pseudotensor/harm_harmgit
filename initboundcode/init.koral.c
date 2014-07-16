@@ -35,7 +35,7 @@ static int fieldprim(int *whichvel, int*whichcoord, int ii, int jj, int kk, FTYP
 FTYPE B0WALD; // set later
 int DOWALDDEN=0; // WALD: 0->1 to set densities as floor-like with below b^2/rho at horizon.  Should also choose FIELDTYPE==FIELDWALD.
 //FTYPE BSQORHOWALD=50.0; // leads to too large b^2/rho and uu0 cylindrical shock forms at r\sim 2r_g and remains forever (at least at 128x64)
-FTYPE BSQORHOWALD=10.0;
+FTYPE BSQORHOWALD=100.0;
 FTYPE aforwald;
 
 //FTYPE thindiskrhopow=-3.0/2.0; // can make steeper like -0.7
@@ -217,20 +217,6 @@ int prepre_init_specific_init(void)
   int funreturn;
 
 
-  // set global THETAROTPRIMITIVES
-  if(ALLOWMETRICROT){
-    THETAROTPRIMITIVES=USER_THETAROTPRIMITIVES; // 0 to M_PI : what thetarot to use when primitives are set
-  }
-  else{
-    THETAROTPRIMITIVES=0.0; // DO NOT CHANGE
-  }
-  
-  if(ALLOWMETRICROT){
-    THETAROTMETRIC = USER_THETAROTMETRIC; // defines metric generally
-  }
-  else{
-    THETAROTMETRIC = 0.0;
-  }
 
 
   funreturn=user1_prepre_init_specific_init();
@@ -1364,6 +1350,10 @@ int init_global(void)
     // 5) #define N1 32
 
     BSQORHOLIMIT=1E2;
+    
+    if(DOWALDDEN){// override if doing wald
+      BSQORHOLIMIT=BSQORHOWALD;
+    }
 
 
 
@@ -1626,6 +1616,22 @@ int init_global(void)
 
 int init_defcoord(void)
 {
+
+  // set global THETAROTPRIMITIVES
+  if(ALLOWMETRICROT){
+    THETAROTPRIMITIVES=USER_THETAROTPRIMITIVES; // 0 to M_PI : what thetarot to use when primitives are set
+  }
+  else{
+    THETAROTPRIMITIVES=0.0; // DO NOT CHANGE
+  }
+  
+  if(ALLOWMETRICROT){
+    THETAROTMETRIC = USER_THETAROTMETRIC; // defines metric generally
+  }
+  else{
+    THETAROTMETRIC = 0.0;
+  }
+
 
 
   /*************************************************/

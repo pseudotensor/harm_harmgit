@@ -3304,6 +3304,9 @@ int set_density_floors_default_alt(struct of_geom *ptrgeom, struct of_state *q, 
 
         if(rescaletype==5){//WALD
           if(1){
+            // do nothing, so constant bsq/rho
+          }
+          if(0){
             if(r>500.0){
               prfloor[RHO]*=pow(500,-1.5);
               prfloor[UU]*=pow(500,-2.5);
@@ -3325,6 +3328,13 @@ int set_density_floors_default_alt(struct of_geom *ptrgeom, struct of_state *q, 
               prfloor[UU]*=pow(Z,-2.5);
             }
           }
+          if(0){ // WALD TEST
+            FTYPE R=r*sin(th);
+            FTYPE Z=fabs(r*cos(th));
+            prfloor[RHO]*=MIN(1.0/(pow(Z,1.5)*pow(R,-1.5)),1.0);
+            prfloor[UU]*=MIN(1.0/(pow(Z,2.5)*pow(R,-2.5)),1.0);
+          }
+
         }// end rescapetype==5
       }// else NORMAL case
 
