@@ -21,7 +21,7 @@
 #define MAXPASSPARMS 10
 
 //#define THETAROTMETRIC (0.5*0.7)
-#define USER_THETAROTMETRIC (0.0) // arctan(0.2) = 0.19739556
+#define USER_THETAROTMETRIC (0.05) // arctan(0.2) = 0.19739556
 #define USER_THETAROTPRIMITIVES (0.0) // probably want to choose 0, so initial conditions are as if no tilt
 
 #define NORMALTORUS 0 // note I use randfact=5.e-1 for 3D model with perturbations
@@ -68,9 +68,9 @@ int prepre_init_specific_init(void)
   //PHI GRID SETUP
   /////////////////////
 
-  dofull2pi = 0;   // MAVARANOTE: do less than full phi    ; This line and the next taken from init.sashatorus.c
+  dofull2pi = 1;   // MAVARANOTE: do less than full phi    ; This line and the next taken from init.sashatorus.c
   
-  global_fracphi = 0.25;   //phi-extent measured in units of 2*PI, i.e. 0.25 means PI/2; only used if dofull2pi == 0
+  global_fracphi = 1.0; //0.25;   //phi-extent measured in units of 2*PI, i.e. 0.25 means PI/2; only used if dofull2pi == 0
 
   if(ALLOWMETRICROT){
     THETAROTPRIMITIVES=USER_THETAROTPRIMITIVES; // 0 to M_PI : what thetarot to use when primitives are set
@@ -230,6 +230,7 @@ int init_grid(void)
   // make changes to primary coordinate parameters R0, Rin, Rout, hslope
   R0 = -0.45;
   Rout = 40.0;
+  Rin=1.45;
   if(totalsize[1]<32) Rout=50.0;
   else if(totalsize[1]<=64) Rout=1.E3;
   else Rout=1.E5;
@@ -244,7 +245,7 @@ int init_grid(void)
   hslope = h_over_r;
 
 
-  setRin_withchecks(&Rin);
+  //setRin_withchecks(&Rin);
 
 
 
@@ -338,7 +339,7 @@ int init_global(void)
 
   // DTr = .1 ; /* restart file frequ., in units of M */
   /* restart file period in steps */
-  DTr = 2000; // was 1000
+  DTr = 8000; // was 1000
   DTfake=MAX(1,DTr/10);
 
 
@@ -409,7 +410,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
   rin = Risco;
   rinfield = 10.0;
   beta = 200.;
-  randfact = 15.e-2; //4.e-2;
+  randfact = 10.e-2; //4.e-2;
   //  fieldnormalizemin = 3. * Risco;
 #elif(WHICHPROBLEM==THICKDISK)
   //  beta = 1.e2 ;
