@@ -116,20 +116,6 @@ int prepre_init_specific_init(void)
 {
   int funreturn;
 
-  // set global THETAROTPRIMITIVES
-  if(ALLOWMETRICROT){
-    THETAROTPRIMITIVES=USER_THETAROTPRIMITIVES; // 0 to M_PI : what thetarot to use when primitives are set
-  }
-  else{
-    THETAROTPRIMITIVES=0.0; // DO NOT CHANGE
-  }
-
-  if(ALLOWMETRICROT){
-    THETAROTMETRIC = USER_THETAROTMETRIC; // defines metric generally
-  }
-  else{
-    THETAROTMETRIC = 0.0;
-  }
   
   funreturn=user1_prepre_init_specific_init();
   if(funreturn!=0) return(funreturn);
@@ -275,6 +261,20 @@ int init_grid(void)
 
 
 
+  // set global THETAROTPRIMITIVES
+  if(ALLOWMETRICROT){
+    THETAROTPRIMITIVES=USER_THETAROTPRIMITIVES; // 0 to M_PI : what thetarot to use when primitives are set
+  }
+  else{
+    THETAROTPRIMITIVES=0.0; // DO NOT CHANGE
+  }
+
+  if(ALLOWMETRICROT){
+    THETAROTMETRIC = USER_THETAROTMETRIC; // defines metric generally
+  }
+  else{
+    THETAROTMETRIC = 0.0;
+  }
 
 
   return(0);
