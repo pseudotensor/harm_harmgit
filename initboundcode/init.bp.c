@@ -21,7 +21,7 @@
 #define MAXPASSPARMS 10
 
 //#define THETAROTMETRIC (0.5*0.7)
-#define USER_THETAROTMETRIC (0.05) // arctan(0.2) = 0.19739556
+#define USER_THETAROTMETRIC (0.2) // arctan(0.2) = 0.19739556
 #define USER_THETAROTPRIMITIVES (0.0) // probably want to choose 0, so initial conditions are as if no tilt
 
 #define NORMALTORUS 0 // note I use randfact=5.e-1 for 3D model with perturbations
@@ -210,7 +210,7 @@ int init_grid(void)
   
   // metric stuff first
 
-  a = 0.5; //9375 ;
+  a = 0.95; //9375 ;
 
   
 
@@ -234,7 +234,7 @@ int init_grid(void)
   if(totalsize[1]<32) Rout=50.0;
   else if(totalsize[1]<=64) Rout=1.E3;
   else Rout=1.E5;
-  Rout=1.E3; // MAVARA tilttest used this
+  Rout=1.E5; // MAVARA tilttest used this
 #endif
 
  
@@ -248,6 +248,20 @@ int init_grid(void)
   //setRin_withchecks(&Rin);
 
 
+
+  if(ALLOWMETRICROT){
+    THETAROTPRIMITIVES=USER_THETAROTPRIMITIVES; // 0 to M_PI : what thetarot to use when primitives are set
+  }
+  else{
+    THETAROTPRIMITIVES=0.0; // DO NOT CHANGE
+  }
+
+  if(ALLOWMETRICROT){
+    THETAROTMETRIC = USER_THETAROTMETRIC; // defines metric generally
+  }
+  else{
+    THETAROTMETRIC = 0.0;
+  }
 
 
 
@@ -833,7 +847,7 @@ int init_dsandvels_bpthin(int *whichvel, int*whichcoord, int i, int j, int k, FT
 
     pr[U1] = ur ;
     pr[U2] = uh ;    
-    pr[U3] = SLOWFAC * up * (1. +0.10 * (ranc(0,0) - 0.5));
+    pr[U3] = SLOWFAC * up ; //* (1. +0.10 * (ranc(0,0) - 0.5));
 
     if(FLUXB==FLUXCTSTAG){
       PLOOPBONLY(pl) pstag[pl]=pr[pl]=0.0;
@@ -1008,7 +1022,7 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
   FTYPE hpow=2.0; // MAVARANOTE originally 2.0
 #define RBREAK_MACRO (100000.0)
   FTYPE RBREAK=RBREAK_MACRO;
-#define RTRANSITION_MACRO (11.0) 
+#define RTRANSITION_MACRO (14.0) 
   FTYPE RTRANSITION=RTRANSITION_MACRO; 
   FTYPE UGPOW=UGPOW_MACRO ;
   FTYPE normalize;
