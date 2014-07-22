@@ -230,7 +230,7 @@ int init_grid(void)
   // make changes to primary coordinate parameters R0, Rin, Rout, hslope
   R0 = -0.45;
   Rout = 40.0;
-  Rin=1.45;
+  Rin=0.96;
   if(totalsize[1]<32) Rout=50.0;
   else if(totalsize[1]<=64) Rout=1.E3;
   else Rout=1.E5;
@@ -248,7 +248,7 @@ int init_grid(void)
   //setRin_withchecks(&Rin);
 
 
-
+  
   if(ALLOWMETRICROT){
     THETAROTPRIMITIVES=USER_THETAROTPRIMITIVES; // 0 to M_PI : what thetarot to use when primitives are set
   }
@@ -262,7 +262,7 @@ int init_grid(void)
   else{
     THETAROTMETRIC = 0.0;
   }
-
+  
 
 
   return(0);
