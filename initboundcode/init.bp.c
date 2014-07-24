@@ -21,7 +21,7 @@
 #define MAXPASSPARMS 10
 
 //#define THETAROTMETRIC (0.5*0.7)
-#define USER_THETAROTMETRIC (0.05) // arctan(0.2) = 0.19739556
+#define USER_THETAROTMETRIC (0.025) // arctan(0.2) = 0.19739556
 #define USER_THETAROTPRIMITIVES (0.0) // probably want to choose 0, so initial conditions are as if no tilt
 
 #define NORMALTORUS 0 // note I use randfact=5.e-1 for 3D model with perturbations
@@ -247,6 +247,20 @@ int init_grid(void)
   setRin_withchecks(&Rin);
 
 
+  if(ALLOWMETRICROT){
+    THETAROTPRIMITIVES=USER_THETAROTPRIMITIVES; // 0 to M_PI : what thetarot to use when primitives are set
+  }
+  else{
+    THETAROTPRIMITIVES=0.0; // DO NOT CHANGE
+  }
+
+  if(ALLOWMETRICROT){
+    THETAROTMETRIC = USER_THETAROTMETRIC; // defines metric generally
+  }
+  else{
+    THETAROTMETRIC = 0.0;
+  }
+
 
 
 
@@ -338,7 +352,7 @@ int init_global(void)
 
   // DTr = .1 ; /* restart file frequ., in units of M */
   /* restart file period in steps */
-  DTr = 2000; // was 1000
+  DTr = 8000; // was 1000
   DTfake=MAX(1,DTr/10);
 
 
@@ -408,7 +422,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
   //rin = (1. + h_over_r)*Risco;
   rin = Risco;
   rinfield = 10.0;
-  beta = 300.;
+  beta = 200.;
   randfact = 10.e-2; //4.e-2;
   //  fieldnormalizemin = 3. * Risco;
 #elif(WHICHPROBLEM==THICKDISK)
