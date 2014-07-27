@@ -5393,8 +5393,8 @@ static int fieldprim(int *whichvel, int*whichcoord, int ii, int jj, int kk, FTYP
     void Jcon_numerical(int whichcoord, FTYPE *X, FTYPE *Jcon);
     extern void MtoF(int which, FTYPE Max[NDIM][NDIM],struct of_geom *geom, FTYPE faraday[NDIM][NDIM]);
     extern void lower_A(FTYPE Acon[NDIM][NDIM], struct of_geom *geom, FTYPE Acov[NDIM][NDIM]);
-    extern void EBtopr(FTYPE *E,FTYPE *B,struct of_geom *geom, FTYPE *pr);
-    extern void EBtopr_2(FTYPE *E,FTYPE *B,struct of_geom *geom, FTYPE *pr);
+    extern int EBtopr(FTYPE *E,FTYPE *B,struct of_geom *geom, FTYPE *pr);
+    extern int EBtopr_2(FTYPE *E,FTYPE *B,struct of_geom *geom, FTYPE *pr);
 
     //    first get F_{\mu\nu}
     Fcov_numerical(*whichcoord, X, Fcov);

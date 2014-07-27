@@ -72,6 +72,7 @@ return( (*x)>=0 ?
 	floor(*x + .5) : -floor(.5 - *x) );
 }
 
+#define MYEXTERN extern
 
 #ifdef KR_headers
 extern void f_exit();
@@ -82,10 +83,10 @@ int s_stop(s, n) char *s; ftnlen n;
 #undef max
 #include "stdlib.h"
 #ifdef __cplusplus
-extern "C" {
+MYEXTERN "C" {
 #endif
 #ifdef __cplusplus
-extern "C" {
+MYEXTERN "C" {
 #endif
 void f_exit(void);
 
@@ -127,7 +128,7 @@ double pow_dd(ap, bp) doublereal *ap, *bp;
 #undef abs
 #include "math.h"
 #ifdef __cplusplus
-extern "C" {
+MYEXTERN "C" {
 #endif
 double pow_dd(doublereal *ap, doublereal *bp)
 #endif
