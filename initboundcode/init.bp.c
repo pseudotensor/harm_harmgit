@@ -21,7 +21,7 @@
 #define MAXPASSPARMS 10
 
 //#define THETAROTMETRIC (0.5*0.7)
-#define USER_THETAROTMETRIC (0.025) // arctan(0.2) = 0.19739556
+#define USER_THETAROTMETRIC (0.0) // arctan(0.2) = 0.19739556
 #define USER_THETAROTPRIMITIVES (0.0) // probably want to choose 0, so initial conditions are as if no tilt
 
 #define NORMALTORUS 0 // note I use randfact=5.e-1 for 3D model with perturbations
@@ -1698,7 +1698,7 @@ void adjust_fluxctstag_emfs(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR
 
 // User's cooling function:
 
-#define USERTHETACOOL       (0.1)	/* should be same as h_over_r */
+#define USERTHETACOOL       (0.1*sqrt(2./M_PI))	/* should be same as h_over_r */
 #define USERTAUCOOL         (1.0) //(2.0*M_PI)	        /* cooling time in number of rotational times : really USERTAUCOOL=2*M_PI would be 1 rotational time */
 #define USERNOCOOLTHETAFACT     (1.0)           /* this times h_over_r and no more cooling there*/
 
@@ -1768,7 +1768,7 @@ int coolfunc_user(FTYPE h_over_r, FTYPE *pr, struct of_geom *geom, struct of_sta
 	Yscaling = (gam-1.)*e/(Tfix);
 
 
-	if(t > 0. && dt < taucool/Wcirc  && Yscaling > 1.0 && r > Rhor && ((w/rho)*q->ucov[TT] > -1.0) ) {
+	if(t > 0. && dt < taucool/Wcirc  && Yscaling > 1.0 && r > Rhor ) { //&& ((w/rho)*q->ucov[TT] > -1.0) ) {
 
 	  dUcool = - 0.5*(Wcirc/taucool) * u * sqrt( Yscaling - 1.) * photoncapture * q->ucon[TT]  ; // MAVARA temporarily added 0.1 factor to slow cooling to see if it makes a difference on 11/10/2013
 	  //	  dUcool=-u*(Wcirc/taucool)*log(enk/enk0)*photoncapture;
