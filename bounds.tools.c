@@ -5634,7 +5634,7 @@ void debugfixupaltdeath_bc(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 
   if(VARTOINTERP==PRIMTOINTERP_GDETFULLVERSION_WALD){
 
-#define AVOIDCS 1
+#define AVOIDCS (0&&EOMTYPE==EOMFFDE)
 
     if(AVOIDCS){
       FULLLOOP{
@@ -5665,6 +5665,8 @@ void debugfixupaltdeath_bc(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
   }
   else{
     // allow outerdeath
+
+    // don't allow in general
     //    return;
   }
 

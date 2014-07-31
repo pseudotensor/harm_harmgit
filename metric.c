@@ -146,6 +146,9 @@ void gcov_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, F
         else if(whichcoord==KSCOORDS){
           set_gcov_ksmetric(Vmetric, gcovinfunc, gcovpertinfunc);
         }
+        else if(whichcoord==KSCARTCOORDS){
+          //          set_gcov_kscartmetric(Vmetric, gcovinfunc, gcovpertinfunc); // can just call wrapper around set_gcov_ksmetric()
+        }
         else if(whichcoord==KS_JP1_COORDS){
           set_gcov_ks_jp1_metric(Vmetric, gcovinfunc, gcovpertinfunc);
         }
@@ -711,7 +714,7 @@ void gcon_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, F
       // since don't have gcon and want to keep things simple by only having to specify gcov 
       else matrix_inverse_metric(whichcoord,gcov,gcon);
     }
-    else if(whichcoord==KS_JP1_COORDS || whichcoord==HTMETRIC || whichcoord==HTMETRICACCURATE || whichcoord==CARTMINKMETRIC || whichcoord==CARTMINKMETRIC2 || whichcoord==UNIGRAVITY || whichcoord==CYLMINKMETRIC || whichcoord==SPCMINKMETRIC || whichcoord==KS_BH_TOV_COORDS || whichcoord==KS_TOV_COORDS || whichcoord==BL_TOV_COORDS){
+    else if(whichcoord==KS_JP1_COORDS || whichcoord==HTMETRIC || whichcoord==HTMETRICACCURATE || whichcoord==CARTMINKMETRIC || whichcoord==CARTMINKMETRIC2 || whichcoord==UNIGRAVITY || whichcoord==CYLMINKMETRIC || whichcoord==SPCMINKMETRIC || whichcoord==KS_BH_TOV_COORDS || whichcoord==KS_TOV_COORDS || whichcoord==BL_TOV_COORDS || whichcoord==KSCARTCOORDS){
       // do not have analytic gcon, so invert numerically
       matrix_inverse_metric(whichcoord,gcov,gcon);
     }
@@ -751,7 +754,7 @@ void conn_func(int whichcoord, FTYPE *X, struct of_geom *geom,
                                FTYPE (*conn)[NDIM][NDIM],FTYPE *conn2);
   
 
-  if(whichcoord==KS_JP1_COORDS || whichcoord==BLCOORDS || whichcoord==KS_BH_TOV_COORDS || whichcoord==KS_TOV_COORDS || whichcoord==BL_TOV_COORDS || whichcoord==HTMETRIC || whichcoord==HTMETRICACCURATE || whichcoord==UNIGRAVITY || whichcoord==SPCMINKMETRIC){
+  if(whichcoord==KS_JP1_COORDS || whichcoord==BLCOORDS || whichcoord==KS_BH_TOV_COORDS || whichcoord==KS_TOV_COORDS || whichcoord==BL_TOV_COORDS || whichcoord==HTMETRIC || whichcoord==HTMETRICACCURATE || whichcoord==UNIGRAVITY || whichcoord==SPCMINKMETRIC || whichcoord==KSCARTCOORDS){
     set_conn_general(X,geom,conn,conn2);
   }
   else if(whichcoord==KSCOORDS){

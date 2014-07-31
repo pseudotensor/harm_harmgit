@@ -710,7 +710,7 @@ int rescale(int which, int dir, FTYPE *pr, struct of_geom *ptrgeom,FTYPE *p2inte
         }
 
         if(pl==B1) p2interp[B1]=pr[B1]*sqrt(fabs(ptrgeom->gcov[GIND(1,1)]));
-        if(pl==U2) p2interp[B2]=pr[B2]*sqrt(fabs(ptrgeom->gcov[GIND(2,2)]));
+        if(pl==B2) p2interp[B2]=pr[B2]*sqrt(fabs(ptrgeom->gcov[GIND(2,2)]));
         if(pl==B3) p2interp[B3]=pr[B3]*(sqrt(fabs(ptrgeom->gcov[GIND(3,3)]))*(V[1]));
       }
       if(0&&dir==2){

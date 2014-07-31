@@ -5464,6 +5464,81 @@ static int fieldprim(int *whichvel, int*whichcoord, int ii, int jj, int kk, FTYP
     }
 
 
+    int BOOSTFIELD=0; // for moving BH problem
+
+
+    if(BOOSTFIELD){
+      // BOOST of field
+      FTYPE xx=r*sin(th)*cos(ph);
+      FTYPE yy=r*sin(th)*sin(ph);
+      FTYPE zz=r*cos(th);
+      FTYPE lambdatrans[NDIM][NDIM];
+      FTYPE ilambdatrans[NDIM][NDIM];
+      // assume time doesn't change or mix with space
+      lambdatrans[TT][TT]=1.0;
+      SLOOPA(jj) lambdatrans[TT][jj] = lambdatrans[jj][TT] = 0.0;
+
+      ilambdatrans[TT][TT]=1.0;
+      SLOOPA(jj) ilambdatrans[TT][jj] = ilambdatrans[jj][TT] = 0.0;
+
+      // rest come from definitions of {x,y,z}(r,\theta,\phi)
+      // assumes orthonormal to orhonormal!
+      lambdatrans[1][RR] = sin(th)*cos(ph);
+      lambdatrans[1][TH] = cos(th)*cos(ph);
+      lambdatrans[1][PH] = -sin(ph);
+
+      lambdatrans[2][RR] = sin(th)*sin(ph);
+      lambdatrans[2][TH] = cos(th)*sin(ph);
+      lambdatrans[2][PH] = cos(ph);
+
+      lambdatrans[3][RR] = cos(th);
+      lambdatrans[3][TH] = -sin(th);
+      lambdatrans[3][PH] = 0.0;
+
+      // Cart 2 SPC
+      ilambdatrans[1][RR] = sin(th)*cos(ph);
+      ilambdatrans[1][TH] = cos(th)*cos(ph);
+      ilambdatrans[1][PH] = -sin(ph);
+
+      ilambdatrans[2][RR] = sin(th)*sin(ph);
+      ilambdatrans[2][TH] = cos(th)*sin(ph);
+      ilambdatrans[2][PH] = cos(ph);
+
+      ilambdatrans[3][RR] = cos(th);
+      ilambdatrans[3][TH] = -sin(th);
+      ilambdatrans[3][PH] = 0.0;
+
+      // quasi-orthonormal
+      FTYPE finalvec[NDIM];
+      finalvec[TT]=0.0;
+      finalvec[RR]=0.3; // x
+      finalvec[TH]=0; // y
+      finalvec[PH]=0; // z
+
+
+      // transform from ortho Cart to ortho SPC
+      FTYPE tempcomp[NDIM];
+      DLOOPA(jj) tempcomp[jj]=0.0;
+      DLOOP(jj,kk){
+        tempcomp[kk] += ilambdatrans[jj][kk]*finalvec[jj];
+      }
+      DLOOPA(jj) finalvec[jj]=tempcomp[jj]; // spc
+
+
+      // add non-ortho coordinate basis velocity to ortho
+      finalvec[TT]=0.0;
+      finalvec[RR]=pr[U1] + finalvec[1]/sqrt(ptrgeom->gcov[GIND(1,1)]);
+      finalvec[TH]=pr[U2] + finalvec[2]/sqrt(ptrgeom->gcov[GIND(2,2)]);
+      finalvec[PH]=pr[U3] + finalvec[3]/sqrt(ptrgeom->gcov[GIND(3,3)]);
+
+      pr[U1] = finalvec[RR];
+      pr[U2] = finalvec[TH];
+      pr[U3] = finalvec[PH];
+    }    
+
+
+
+
     // stick J^\mu into dump file
 #if(0)
     for(k=U1;k<=U1+3;k++){

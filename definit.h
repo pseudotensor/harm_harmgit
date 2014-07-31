@@ -1047,3 +1047,9 @@
 ////////////////////////////////////////////
 /// number of zones to smooth pole
 #define POLESMOOTH (MIN(DOPOLESMOOTH,N2BND))
+
+// defaults for bounds.tools.c
+#define OUTERDEATH 0
+#define OUTERDEATHRADIUS (500.0)
+#define OUTERDEATHGAMMAMAX (6.0)
+#define OUTERDEATHGAMMAMAXRAD (GAMMAMAXRAD)

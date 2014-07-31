@@ -17,6 +17,7 @@
 #define KS_TOV_COORDS 9 // KS TOV metric
 #define BL_TOV_COORDS 10 // BL TOV metric
 #define KS_JP1_COORDS 11 // KS Johannsen & Psaltis metric 2011
+#define KSCARTCOORDS 20 // Cartesian KS coords
 #define CARTMINKMETRIC2 100
 
 
@@ -34,6 +35,6 @@
 
 
 // black hole metrics
-#define ISBLACKHOLEMCOORD(whichcoord) (whichcoord==BLCOORDS ||whichcoord==KSCOORDS ||whichcoord==KS_BH_TOV_COORDS ||whichcoord==KS_TOV_COORDS ||whichcoord==BL_TOV_COORDS  || whichcoord==KS_JP1_COORDS)
+#define ISBLACKHOLEMCOORD(whichcoord) (whichcoord==BLCOORDS ||whichcoord==KSCOORDS || whichcoord==KSCARTCOORDS ||whichcoord==KS_BH_TOV_COORDS ||whichcoord==KS_TOV_COORDS ||whichcoord==BL_TOV_COORDS  || whichcoord==KS_JP1_COORDS)
 
 
