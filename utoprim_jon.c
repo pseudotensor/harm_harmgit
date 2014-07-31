@@ -101,8 +101,8 @@ static void my_lnsrch(int eomtype, int n, FTYPE xold[], FTYPE fold, FTYPE g[], F
 
 /// Newton checks:
 static int newt_repeatcheck(int n, FTYPE errx, FTYPE errx_old, FTYPE errx_oldest, FTYPE *dx, FTYPE *dx_old, FTYPE *x, FTYPE *x_old, FTYPE *x_older, FTYPE *x_olderer);
-static int newt_cyclecheck(int n, FTYPE errx, FTYPE errx_old, FTYPE errx_oldest, FTYPE *dx, FTYPE *dx_old, FTYPE *x, FTYPE *x_old, FTYPE *x_older, FTYPE *x_olderer);
-static int newt_errorcheck(int n, FTYPE NEWT_TOL_VAR, FTYPE NEWT_TOL_ULTRAREL_VAR, FTYPE errx, FTYPE x0, FTYPE dx0, FTYPE *x, FTYPE *dx, FTYPE *wglobal);
+static int newt_cyclecheck(int n, FTYPE trueerror, FTYPE errx, FTYPE errx_old, FTYPE errx_oldest, FTYPE *dx, FTYPE *dx_old, FTYPE *x, FTYPE *x_old, FTYPE *x_older, FTYPE *x_olderer, int n_iter, FTYPE (*xlist)[MAX_NEWT_ITER+EXTRA_NEWT_ITER_ULTRAREL+EXTRA_NEWT_ITER], FTYPE (*dxlist)[MAX_NEWT_ITER+EXTRA_NEWT_ITER_ULTRAREL+EXTRA_NEWT_ITER], FTYPE *errxlist, FTYPE *trueerrorlist);
+static int newt_errorcheck(int n, FTYPE NEWT_TOL_VAR, FTYPE NEWT_TOL_ULTRAREL_VAR, FTYPE errx, FTYPE trueerrortotal, FTYPE x0, FTYPE dx0, FTYPE *x, FTYPE *dx, FTYPE *wglobal);
 static int newt_extracheck(int n, int EXTRA_NEWT_ITER_VAR, int EXTRA_NEWT_ITER_ULTRAREL_VAR, FTYPE errx, FTYPE x0, FTYPE dx0, FTYPE *x, FTYPE *dx, FTYPE *wglobal);
 static void bin_newt_data(FTYPE MAX_NEWT_ITER_VAR, FTYPE errx, int niters, int conv_type, int print_now  ) ;
 
@@ -3980,6 +3980,8 @@ static int general_newton_raphson(int showmessages, PFTYPE *lpflag, int eomtype,
 
   FTYPE res_func_val, res_func_old, res_func_new;
   FTYPE dn[NEWT_DIM], del_f[NEWT_DIM];
+  
+  FTYPE trueerror[NEWT_DIM],trueerrortotal;
 
   // Jon's modification
   FTYPE DAMPFACTOR[NEWT_DIM];
@@ -4027,10 +4029,14 @@ static int general_newton_raphson(int showmessages, PFTYPE *lpflag, int eomtype,
 
 
   // setup error list
-  FTYPE dxlist[MAX_NEWT_ITER+EXTRA_NEWT_ITER_ULTRAREL+EXTRA_NEWT_ITER],errorlist[MAX_NEWT_ITER+EXTRA_NEWT_ITER_ULTRAREL+EXTRA_NEWT_ITER];
+  FTYPE xlist[NEWT_DIM][MAX_NEWT_ITER+EXTRA_NEWT_ITER_ULTRAREL+EXTRA_NEWT_ITER],errxlist[MAX_NEWT_ITER+EXTRA_NEWT_ITER_ULTRAREL+EXTRA_NEWT_ITER];
+  FTYPE dxlist[NEWT_DIM][MAX_NEWT_ITER+EXTRA_NEWT_ITER_ULTRAREL+EXTRA_NEWT_ITER],trueerrorlist[MAX_NEWT_ITER+EXTRA_NEWT_ITER_ULTRAREL+EXTRA_NEWT_ITER];
   int listi;
-  for(listi=0;listi<MAX_NEWT_ITER+EXTRA_NEWT_ITER_ULTRAREL+EXTRA_NEWT_ITER;listi++){
-    dxlist[listi]=errorlist[listi]=BIG;
+  for(it=0;it<n;it++){
+    for(listi=0;listi<MAX_NEWT_ITER+EXTRA_NEWT_ITER_ULTRAREL+EXTRA_NEWT_ITER;listi++){
+      xlist[it][listi]=errxlist[listi]=BIG;
+      dxlist[it][listi]=trueerrorlist[listi]=BIG;
+    }
   }
 
 
@@ -4051,7 +4057,6 @@ static int general_newton_raphson(int showmessages, PFTYPE *lpflag, int eomtype,
 
   for( id = 0; id < n ; id++) DAMPFACTOR[id]=1.0; // Jon's mod: start out fast
   for( id = 0; id < n ; id++) dx_old[id]=VERYBIG;// Assume bad error at first (notice not normalized to x[id] since x[id] might be 0
-  n_iter = 0;
 
 
 
@@ -4061,6 +4066,7 @@ static int general_newton_raphson(int showmessages, PFTYPE *lpflag, int eomtype,
   /* Start the Newton-Raphson iterations : */
   //
   /////////////////////////////////////////////////////////
+  n_iter = 0;
   keep_iterating = 1;
   newtoniter=0;
   while( keep_iterating ) { 
@@ -4084,14 +4090,26 @@ static int general_newton_raphson(int showmessages, PFTYPE *lpflag, int eomtype,
     /* returns with new dx, f, df */
     (*funcd) (x, dx, resid, norm, jac, &f, &df, n, wglobal,Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra);
 
+    // get true error
+    for(it=0;it<n;it++) trueerror[it]=fabs(resid[it]/(SMALL+fabs(norm[it])));
+    trueerrortotal=0.0;
+    for(it=0;it<n;it++) trueerrortotal = MAX(trueerrortotal,(1.0/(FTYPE)(n))*(fabs(resid[it])/(SMALL+fabs(norm[it]))));
+
+    // store in list
+    errxlist[n_iter] = errx;
+    trueerrorlist[n_iter] = trueerrortotal;
+    for(it=0;it<n;it++){
+      dxlist[it][n_iter] = fabs(dx[it]);
+      xlist[it][n_iter] = x[it];
+    }
+
     
+    // below now used currently
     id=0; if(resid[id] <=-VERYBIG || jac[0][id]==0.0){
       // get error and dx
-      dxlist[newtoniter]=0.0;
-      for(it=0;it<n;it++) dxlist[newtoniter] = MAX(dxlist[newtoniter],fabs(dx[it]));
-      for(it=0;it<n;it++) errorlist[newtoniter] += (1.0/n)*(fabs(resid[it])/fabs(norm[it]));
       newtoniter++;
     }
+
 
 
     // DEBUG:
@@ -4334,12 +4352,13 @@ static int general_newton_raphson(int showmessages, PFTYPE *lpflag, int eomtype,
             }
 #endif
 
-            if( newt_cyclecheck(n,errx,errx_old,errx_oldest,dx,dx_old,x,x_old,x_older,x_olderer) ){
+            if(newt_cyclecheck(n, trueerrortotal, errx, errx_old, errx_oldest, dx, dx_old, x, x_old, x_older, x_olderer, n_iter, xlist,dxlist, errxlist, trueerrorlist)){
+              //            if( newt_cyclecheck(n,errx,errx_old,errx_oldest,dx,dx_old,x,x_old,x_older,x_olderer) ){
               if(debugfail>=2) dualfprintf(fail_file,"Caught in cycle, trying to damp: n_iter=%d.\n",n_iter);
               // if hits another cycle, damp more
               for(id=0;id<n;id++) DAMPFACTOR[id]=0.1*DAMPFACTOR[id]; // severe damp to try to get good step.
               diddamp=1; // tells start of loop to not reset DAMPFACTOR
-              didcycle=1; // tells not to reset damp because having trouble and should stay damped
+              didcycle++; // tells not to reset damp because having trouble and should stay damped
             }
           }// end if avoiding cycle
         }
@@ -4510,7 +4529,7 @@ static int general_newton_raphson(int showmessages, PFTYPE *lpflag, int eomtype,
 
     
     // see if reached tolerance
-    if(newt_errorcheck(n, NEWT_TOL_VAR, NEWT_TOL_ULTRAREL_VAR, errx, x[0],  dx[0], x, dx, wglobal) && (doing_extra == 0) && (newt_extracheck(n, EXTRA_NEWT_ITER_VAR, EXTRA_NEWT_ITER_ULTRAREL_VAR, errx,x[0],dx[0],x, dx, wglobal) > 0) ) {
+    if(newt_errorcheck(n, NEWT_TOL_VAR, NEWT_TOL_ULTRAREL_VAR, errx, trueerrortotal, x[0],  dx[0], x, dx, wglobal) && (doing_extra == 0) && (newt_extracheck(n, EXTRA_NEWT_ITER_VAR, EXTRA_NEWT_ITER_ULTRAREL_VAR, errx,x[0],dx[0],x, dx, wglobal) > 0) ) {
       doing_extra = 1;
     }
 
@@ -4523,11 +4542,18 @@ static int general_newton_raphson(int showmessages, PFTYPE *lpflag, int eomtype,
 
     if( doing_extra == 1 ) i_extra++ ;
 
-    if( (newt_errorcheck(n, NEWT_TOL_VAR, NEWT_TOL_ULTRAREL_VAR, errx, x[0],  dx[0],x,dx, wglobal)&&(doing_extra == 0)) || (i_extra > newt_extracheck(n, EXTRA_NEWT_ITER_VAR, EXTRA_NEWT_ITER_ULTRAREL_VAR, errx,x[0],dx[0],x,dx,wglobal)) || (n_iter >= (MAX_NEWT_ITER_VAR-1)) ) {
+    if( (newt_errorcheck(n, NEWT_TOL_VAR, NEWT_TOL_ULTRAREL_VAR, errx, trueerrortotal, x[0],  dx[0],x,dx, wglobal)&&(doing_extra == 0)) || (i_extra > newt_extracheck(n, EXTRA_NEWT_ITER_VAR, EXTRA_NEWT_ITER_ULTRAREL_VAR, errx,x[0],dx[0],x,dx,wglobal)) || (n_iter >= (MAX_NEWT_ITER_VAR-1)) ) {
+      keep_iterating = 0;
+    }
+
+    // if cycling twice, then jump out and assume repeating cycle with no hope of improvement.  Do so after CYCLESTOP steps
+    if(n_iter>CYCLESTOP && didcycle>1){
       keep_iterating = 0;
     }
 
 
+
+#if(0)
     // check if error is not dropping sufficiently
 #define CHECKDECREASE0 5
 #define CHECKDECREASEAVGNUM 3 // should be less than CHECKDECREASE0
@@ -4548,8 +4574,7 @@ static int general_newton_raphson(int showmessages, PFTYPE *lpflag, int eomtype,
         if(debugfail>=2) dualfprintf(fail_file,"Error not decreasing properly: currenterror=%g avgerror=%g\n",currenterror,avgerror);
       }// end if current error too large compared to older average error
     }// end if large enough iterations so can check how error is trending, to avoid many iterations when error is not dropping enough to matter.
-
-
+#endif
 
 
 
@@ -4572,6 +4597,13 @@ static int general_newton_raphson(int showmessages, PFTYPE *lpflag, int eomtype,
 #endif
 
   }   // END of while(keep_iterating)
+
+
+
+
+
+
+
 
 
 
@@ -4630,7 +4662,10 @@ static int general_newton_raphson(int showmessages, PFTYPE *lpflag, int eomtype,
 #endif
 
 
-  if(newt_errorcheck(n, NEWT_TOL_VAR, NEWT_TOL_ULTRAREL_VAR, errx, x[0],  dx[0], x,dx,wglobal) ){
+
+
+
+  if(newt_errorcheck(n, NEWT_TOL_VAR, NEWT_TOL_ULTRAREL_VAR, errx, trueerrortotal, x[0],  dx[0], x,dx,wglobal) ){
 #if(DOHISTOGRAM)
     bin_newt_data(MAX_NEWT_ITER_VAR, errx, n_iter, 2, 0 );
 #endif
@@ -4648,7 +4683,7 @@ static int general_newton_raphson(int showmessages, PFTYPE *lpflag, int eomtype,
 
 
 
-  if( (fabs(errx) <= MIN_NEWT_TOL_VAR) && newt_errorcheck(n, NEWT_TOL_VAR, NEWT_TOL_ULTRAREL_VAR, errx, x[0],  dx[0], x,dx,wglobal) ){
+  if( (fabs(errx) <= MIN_NEWT_TOL_VAR) && newt_errorcheck(n, NEWT_TOL_VAR, NEWT_TOL_ULTRAREL_VAR, errx, trueerrortotal, x[0],  dx[0], x,dx,wglobal) ){
 #if(DOHISTOGRAM)
     bin_newt_data(MAX_NEWT_ITER_VAR, errx, n_iter, 1, 0 );
 #endif
@@ -4739,8 +4774,16 @@ static int general_newton_raphson(int showmessages, PFTYPE *lpflag, int eomtype,
 
 
 
+
+
+
+
+
+
+
+
 /// see if meet tolerance
-static int newt_errorcheck(int n, FTYPE NEWT_TOL_VAR, FTYPE NEWT_TOL_ULTRAREL_VAR, FTYPE errx, FTYPE x0, FTYPE dx0, FTYPE *x, FTYPE *dx, FTYPE *wglobal)
+static int newt_errorcheck(int n, FTYPE NEWT_TOL_VAR, FTYPE NEWT_TOL_ULTRAREL_VAR, FTYPE errx, FTYPE trueerrortotal, FTYPE x0, FTYPE dx0, FTYPE *x, FTYPE *dx, FTYPE *wglobal)
 {
 
   int ultrarel=0;
@@ -4753,10 +4796,10 @@ static int newt_errorcheck(int n, FTYPE NEWT_TOL_VAR, FTYPE NEWT_TOL_ULTRAREL_VA
   for(iter=0;iter<n;iter++) dxsmallcount += (fabs(dx[iter])<NUMEPSILON*x[iter]);
 
   if(!ultrarel){
-    return(fabs(errx) <= NEWT_TOL_VAR || dxsmallcount==n);
+    return(fabs(errx) <= NEWT_TOL_VAR || fabs(trueerrortotal) <= NEWT_TOL_VAR || dxsmallcount==n);
   }
   else{
-    return(fabs(errx) <= NEWT_TOL_ULTRAREL_VAR || dxsmallcount==n);
+    return(fabs(errx) <= NEWT_TOL_ULTRAREL_VAR || fabs(trueerrortotal) <= NEWT_TOL_ULTRAREL_VAR || dxsmallcount==n);
   }
 }
 
@@ -4782,23 +4825,39 @@ static int newt_repeatcheck(int n, FTYPE errx, FTYPE errx_old, FTYPE errx_oldest
 
 }
 
+//  FTYPE xlist[NEWT_DIM][MAX_NEWT_ITER+EXTRA_NEWT_ITER_ULTRAREL+EXTRA_NEWT_ITER],errxlist[MAX_NEWT_ITER+EXTRA_NEWT_ITER_ULTRAREL+EXTRA_NEWT_ITER];
+//  FTYPE dxlist[NEWT_DIM][MAX_NEWT_ITER+EXTRA_NEWT_ITER_ULTRAREL+EXTRA_NEWT_ITER],trueerrorlist[MAX_NEWT_ITER+EXTRA_NEWT_ITER_ULTRAREL+EXTRA_NEWT_ITER];
+
 
 /// see if repeating Newton cycle with no change in errx, so indicates can't do anything (even damping) to reduce error
-static int newt_cyclecheck(int n, FTYPE errx, FTYPE errx_old, FTYPE errx_oldest, FTYPE *dx, FTYPE *dx_old, FTYPE *x, FTYPE *x_old, FTYPE *x_older, FTYPE *x_olderer)
+static int newt_cyclecheck(int n, FTYPE trueerror, FTYPE errx, FTYPE errx_old, FTYPE errx_oldest, FTYPE *dx, FTYPE *dx_old, FTYPE *x, FTYPE *x_old, FTYPE *x_older, FTYPE *x_olderer, int n_iter, FTYPE (*xlist)[MAX_NEWT_ITER+EXTRA_NEWT_ITER_ULTRAREL+EXTRA_NEWT_ITER], FTYPE (*dxlist)[MAX_NEWT_ITER+EXTRA_NEWT_ITER_ULTRAREL+EXTRA_NEWT_ITER], FTYPE *errxlist, FTYPE *trueerrorlist)
 {
-  int cycle;
   int i;
 
-  cycle=0;
+  int cycle=0;
   for(i=0;i<n;i++){
   
     //    dualfprintf(fail_file,"%d %d %g %g %g %g\n",x[i]==x_olderer[i],errx_oldest==errx_old,x[i],x_olderer[i],errx_oldest,errx_old);
-    if( (x[i]==x_olderer[i]) && (errx_oldest==errx_old) ){
+    if( (x[i]==x_olderer[i]) && (errx_oldest==errx_old && errx_old!=0.0) ){
       cycle++;
     }
   }
 
-  if(cycle==n) return(1);
+
+  int cycle2=0;
+  int ii;
+  for(ii=CYCLESTOP;ii<n_iter;ii++){
+    if(errx_old!=0.0 && errx_old==errxlist[ii]) cycle2++;
+    if(trueerror!=0.0 && trueerror==trueerrorlist[ii]) cycle2++;
+    for(i=0;i<n;i++){
+      if(x[i]==xlist[i][ii]) cycle2++;
+    }
+  }
+
+
+
+
+  if(cycle>=n || cycle2>=NUMCYCLES*n) return(1);
   else return(0);
 
 

@@ -37,6 +37,9 @@
 #define GAMMASQCHECKRESID (1e2)
 
 
+// trying to control repeated cycles
+#define CYCLESTOP 10
+#define NUMCYCLES 3
 
 /// Note that if using -pc64 -mp that error in inversion seems to be limited for doubles to 1E-11 instead of 1E-15
 #if(PRECISEINVERSION)
