@@ -68,9 +68,9 @@ int prepre_init_specific_init(void)
   //PHI GRID SETUP
   /////////////////////
 
-  dofull2pi = 1;   // MAVARANOTE: do less than full phi    ; This line and the next taken from init.sashatorus.c
+  dofull2pi = 0;   // MAVARANOTE: do less than full phi    ; This line and the next taken from init.sashatorus.c
   
-  global_fracphi = 1.0;   //phi-extent measured in units of 2*PI, i.e. 0.25 means PI/2; only used if dofull2pi == 0
+  global_fracphi = 0.25;   //phi-extent measured in units of 2*PI, i.e. 0.25 means PI/2; only used if dofull2pi == 0
 
   if(ALLOWMETRICROT){
     THETAROTPRIMITIVES=USER_THETAROTPRIMITIVES; // 0 to M_PI : what thetarot to use when primitives are set
@@ -233,7 +233,7 @@ int init_grid(void)
   if(totalsize[1]<32) Rout=50.0;
   else if(totalsize[1]<=64) Rout=1.E3;
   else Rout=1.E5;
-  //Rout=1.E3; // MAVARA tilttest used this
+  Rout=1.E3; // MAVARA tilttest used this
 #endif
 
  
@@ -353,7 +353,7 @@ int init_global(void)
   // DTr = .1 ; /* restart file frequ., in units of M */
   /* restart file period in steps */
   DTr = 8000; // was 1000
-  DTfake=MAX(1,DTr/10);
+  DTfake=MAX(5,DTr/10);
 
 
 #if(WHICHPROBLEM==NORMALTORUS || WHICHPROBLEM==KEPDISK)
@@ -846,7 +846,7 @@ int init_dsandvels_bpthin(int *whichvel, int*whichcoord, int i, int j, int k, FT
 
     pr[U1] = ur ;
     pr[U2] = uh ;    
-    pr[U3] = SLOWFAC * up * (1. +0.05 * (ranc(0,0) - 0.5));
+    pr[U3] = SLOWFAC * up ; //* (1. +0.05 * (ranc(0,0) - 0.5));
 
     if(FLUXB==FLUXCTSTAG){
       PLOOPBONLY(pl) pstag[pl]=pr[pl]=0.0;
@@ -1021,7 +1021,7 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
   FTYPE hpow=2.0; // MAVARANOTE originally 2.0
 #define RBREAK_MACRO (100000.0)
   FTYPE RBREAK=RBREAK_MACRO;
-#define RTRANSITION_MACRO (14.0) 
+#define RTRANSITION_MACRO (12.0) 
   FTYPE RTRANSITION=RTRANSITION_MACRO; 
   FTYPE UGPOW=UGPOW_MACRO ;
   FTYPE normalize;
@@ -1699,7 +1699,7 @@ void adjust_fluxctstag_emfs(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR
 // User's cooling function:
 
 #define USERTHETACOOL       (0.1*sqrt(2./M_PI))	/* should be same as h_over_r */
-#define USERTAUCOOL         (0.01) //(2.0*M_PI)	        /* cooling time in number of rotational times : really USERTAUCOOL=2*M_PI would be 1 rotational time */
+#define USERTAUCOOL         (2.0*M_PI)	        /* cooling time in number of rotational times : really USERTAUCOOL=2*M_PI would be 1 rotational time */
 #define USERNOCOOLTHETAFACT     (1.0)           /* this times h_over_r and no more cooling there*/
 
 // This implementation of cooling is as in Noble et. al. 2009, to simulate a radiative cooling source term which keeps the disk thin to a target H/r
@@ -1770,7 +1770,7 @@ int coolfunc_user(FTYPE h_over_r, FTYPE *pr, struct of_geom *geom, struct of_sta
 
 	if(t > 0. && dt < taucool/Wcirc  && Yscaling > 1.0 && r > Rhor ) { //&& ((w/rho)*q->ucov[TT] > -1.0) ) {
 
-	  dUcool = - 0.5*(Wcirc/taucool) * u * sqrt( Yscaling - 1.) * photoncapture * q->ucon[TT]  ; // MAVARA temporarily added 0.1 factor to slow cooling to see if it makes a difference on 11/10/2013
+	  dUcool = - (Wcirc/taucool) * u * sqrt( Yscaling - 1.) * photoncapture * q->ucon[TT]  ; // MAVARA temporarily added 0.1 factor to slow cooling to see if it makes a difference on 11/10/2013
 	  //	  dUcool=-u*(Wcirc/taucool)*log(enk/enk0)*photoncapture;
 	}
         else{
