@@ -464,9 +464,9 @@ int user1_init_primitives(int inittype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FT
   /////////////////////////////// 
 #if(1)
   extern int calc_da3vsr(FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
-  calc_da3vsr(prim);
+  //calc_da3vsr(prim);
   init_vpot(prim,pstag,ucons,vpot,Bhat,F1,F2,F3,Atemp);
-  //normalize_field(prim,pstag,ucons,vpot,Bhat); // normalizes p and pstag and unew and vpot if tracked //MAVARACHANGE
+  normalize_field(prim,pstag,ucons,vpot,Bhat); // normalizes p and pstag and unew and vpot if tracked //MAVARACHANGE
 
 #else
   // no field
@@ -777,7 +777,7 @@ int user1_get_maxes(int eqslice, FTYPE *parms, FTYPE (*prim)[NSTORE2][NSTORE3][N
 
 // 0: maxes method
 // 1: betamin
-#define FIELDBETANORMMETHOD 1
+#define FIELDBETANORMMETHOD 0
 
 // assumes normal field definition
 int user1_normalize_field(FTYPE beta, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR])

@@ -422,7 +422,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
   //rin = (1. + h_over_r)*Risco;
   rin = Risco;
   rinfield = 10.0;
-  beta = 200.;
+  beta = 10.;
   randfact = 10.e-2; //4.e-2;
   //  fieldnormalizemin = 3. * Risco;
 #elif(WHICHPROBLEM==THICKDISK)
@@ -879,7 +879,8 @@ int init_dsandvels_bpthin(int *whichvel, int*whichcoord, int i, int j, int k, FT
 //#define FIELDTYPE TOROIDALFIELD
 #define FIELDTYPE DISK2FIELD
 #elif(WHICHPROBLEM==THINBP)
-#define FIELDTYPE DISKVERTBP
+//#define FIELDTYPE DISKVERTBP
+#define FIELDTYPE TOROIDALFIELD
 #else
 #define FIELDTYPE DISK1FIELD
 #endif
@@ -1241,6 +1242,9 @@ int get_maxes(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *bsq_max, FTYPE *pg_ma
   }
   else if(FIELDTYPE==DISKVERTBP){
     eqslice=1;
+  }
+  else if(FIELDTYPE==TOROIDALFIELD){
+    eqslice=0; //2;
   }
   else{
     eqslice=0;
@@ -1820,7 +1824,7 @@ int user2_get_maxes(int eqslice, FTYPE *parms, FTYPE (*prim)[NSTORE2][NSTORE3][N
   ZLOOP {
     get_geometry(i, j, k, loc, ptrgeom);
 
-    if(eqslice){
+    if(eqslice==1){
       bl_coord_ijk_2(i, j, k, loc, X, V);
       r=V[1];
       th=V[2];
@@ -1841,7 +1845,28 @@ int user2_get_maxes(int eqslice, FTYPE *parms, FTYPE (*prim)[NSTORE2][NSTORE3][N
 
 	}
     }
-    else{
+    else if(eqslice==2){
+      bl_coord_ijk_2(i, j, k, loc, X, V);
+      r=V[1];
+      th=V[2];
+      //      if (bsq_calc(MAC(prim,i,j,k), ptrgeom, &bsq_ij) >= 1) FAILSTATEMENT("init.c:init()", "bsq_calc()", 1);
+      //trifprintf("betaforcheck = %e \n",bsq_ij);
+
+      if(k == 0 && j==ncpux2*N2/2){
+        gotnormal=1;
+        if (bsq_calc(MAC(prim,i,j,k), ptrgeom, &bsq_ij) >= 1) FAILSTATEMENT("init.c:init()", "bsq_calc()", 1);
+        if (bsq_ij > bsq_max[0])      bsq_max[0] = bsq_ij;
+
+        pg_ij=pressure_rho0_u_simple(i,j,k,loc,MACP0A1(prim,i,j,k,RHO),MACP0A1(prim,i,j,k,UU));
+        if (pg_ij > pg_max[0])      pg_max[0] = pg_ij;
+
+        beta_ij=pg_ij/(bsq_ij*0.5);
+	printf("betaforcheck = %f \n",beta_ij);
+        if (beta_ij < beta_min[0])      beta_min[0] = beta_ij;
+
+      }
+    }
+    else {
       gotnormal=1;
       if (bsq_calc(MAC(prim,i,j,k), ptrgeom, &bsq_ij) >= 1) FAILSTATEMENT("init.c:init()", "bsq_calc()", 1);
       if (bsq_ij > bsq_max[0])      bsq_max[0] = bsq_ij;
