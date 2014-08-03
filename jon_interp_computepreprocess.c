@@ -5,9 +5,22 @@
 // local declarations of local functions
 static void vec2vecortho(int concovtype, FTYPE V[],  FTYPE *gcov,  FTYPE (*dxdxp)[NDIM], int oldgridtype, int newgridtype, FTYPE *vec, FTYPE *vecortho);
 
+static void T2Tortho(int concovtype, FTYPE V[],  FTYPE *gcov,  FTYPE (*dxdxp)[NDIM], int oldgridtype, int newgridtype, FTYPE (*T)[NDIM], FTYPE (*Tortho)[NDIM]);
+
 
 static void vB2poyntingdensity(int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*conn)[NDIM][NDIM],  FTYPE *gcon,  FTYPE *gcov,  FTYPE gdet,  FTYPE ck[],  FTYPE (*dxdxp)[NDIM], int oldgridtype, int newgridtype, int vectorcomponent, FTYPE *vecv, FTYPE *vecB, FTYPE *compout);
-static void vecup2vecdowncomponent(int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*conn)[NDIM][NDIM],  FTYPE *gcon,  FTYPE *gcov,  FTYPE gdet,  FTYPE ck[],  FTYPE (*dxdxp)[NDIM], int oldgridtype, int newgridtype, int vectorcomponent, FTYPE *vec, FTYPE *compout);
+static void vboost(int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*conn)[NDIM][NDIM],  FTYPE *gcon,  FTYPE *gcov,  FTYPE gdet,  FTYPE ck[],  FTYPE (*dxdxp)[NDIM], int oldgridtype, int newgridtype, int vectorcomponent, FTYPE *vecv, FTYPE *vecB, FTYPE *vecvboost);
+static void vB2poyntingdensityboost(int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*conn)[NDIM][NDIM],  FTYPE *gcon,  FTYPE *gcov,  FTYPE gdet,  FTYPE ck[],  FTYPE (*dxdxp)[NDIM], int oldgridtype, int newgridtype, int vectorcomponent, FTYPE *vecv, FTYPE *vecB, FTYPE *compout);
+
+static void getvboost(int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*conn)[NDIM][NDIM],  FTYPE *gcon,  FTYPE *gcov,  FTYPE gdet,  FTYPE ck[],  FTYPE (*dxdxp)[NDIM], int oldgridtype, int newgridtype, int vectorcomponent, FTYPE *vecv, FTYPE *vecB, FTYPE *vecvboost);
+
+static int Mcon_calc_uB(FTYPE *ucon, FTYPE *Bcon, FTYPE (*Mcon)[NDIM]);
+static int Mcon_calc_ub(FTYPE *ucon, FTYPE *bcon, FTYPE (*Mcon)[NDIM]);
+static FTYPE lc4(int updown, FTYPE detg, int mu,int nu,int kappa,int lambda);
+static void MtoF_simple(int which, FTYPE (*invar)[NDIM], FTYPE gdet, FTYPE (*outvar)[NDIM]);
+
+
+static void vecup2vecdown(int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*conn)[NDIM][NDIM],  FTYPE *gcon,  FTYPE *gcov,  FTYPE gdet,  FTYPE ck[],  FTYPE (*dxdxp)[NDIM], int oldgridtype, int newgridtype, FTYPE *vec, FTYPE *vecout);
 static void generate_lambdacoord(int oldgridtype, int newgridtype, FTYPE *V, FTYPE (*lambdacoord)[NDIM]);
 static void bcon_calc(FTYPE *pr, FTYPE *ucon, FTYPE *ucov, FTYPE *bcon);
 
@@ -189,7 +202,9 @@ void compute_preprocess(int outputvartypelocal, FILE *gdumpfile, int h, int i, i
     else dualfprintf(fail_file,"BAD4 DATATYPE=%d\n",DATATYPE);
     
     // compute
-    vecup2vecdowncomponent(ti,X,V,conn,gcon,gcov,gdet,ck,dxdxp,oldgridtype, newgridtype, vectorcomponent, vec, &fvar[0]);
+    FTYPE vecdowntemp[NDIM];
+    vecup2vecdown(ti,X,V,conn,gcon,gcov,gdet,ck,dxdxp,oldgridtype, newgridtype, vec, vecdowntemp);
+    fvar[0]=vecdowntemp[vectorcomponent];
     
     if(immediateoutput==1){ // then immediately write to output
       DLOOPA(jj) writeelement(binaryoutput,outFTYPE,outfile,fvar[0]);
@@ -616,8 +631,9 @@ static int compute_datatype14(int which, FTYPE *val, FTYPE *fvar, int ti[],  FTY
 
     // compute B_{\phi}
     vectorcomponentlocal=3; // \phi component
-    FTYPE Bphi;
-    vecup2vecdowncomponent(ti,X,V,conn,gcon,gcov,gdet,ck,dxdxp,oldgridtype, newgridtype, vectorcomponentlocal, vecB, &Bphi);
+    FTYPE vecBdown[NDIM],Bphi;
+    vecup2vecdown(ti,X,V,conn,gcon,gcov,gdet,ck,dxdxp,oldgridtype, newgridtype, vecB, vecBdown);
+    Bphi=vecBdown[vectorcomponentlocal];
 
 
     fvar[OUTRHO]=val[FLRHO]; // rho0
@@ -701,10 +717,90 @@ static int compute_datatype15(int outputvartypelocal, FTYPE *val, FTYPE *fvar, i
   vectorcomponentlocal=1; // radial component
   vB2poyntingdensity(ti,X,V,conn,gcon,gcov,gdet,ck,dxdxp,oldgridtype, newgridtype, vectorcomponentlocal, vecv, vecB, &FEMrad);
 
+  // compute FEMrad2
+  FTYPE FEMrad2;
+  vectorcomponentlocal=1; // radial component
+  FTYPE vecvboost[NDIM];
+  vboost(ti,X,V,conn,gcon,gcov,gdet,ck,dxdxp,oldgridtype, newgridtype, vectorcomponentlocal, vecv, vecB, vecvboost);
+  vB2poyntingdensity(ti,X,V,conn,gcon,gcov,gdet,ck,dxdxp,oldgridtype, newgridtype, vectorcomponentlocal, vecvboost, vecB, &FEMrad2);
+
+
+  // get dF^{\mu\nu}
+  FTYPE Mcon[NDIM][NDIM],Mconortho[NDIM][NDIM];
+  Mcon_calc_uB(vecv, vecB, Mcon);
+  concovtype=1; // M^{\mu\nu} form
+  T2Tortho(concovtype,V,gcov,dxdxp,oldgridtype, newgridtype, Mcon, Mconortho);
+  //  FTYPE vtemp[NDIM],vtemportho[NDIM];
+  int kk;
+//  for(kk=0;kk<NDIM;kk++){  // bit of overkill, since gets tetrad 4X as many times as required
+    //    DLOOPA(jj) vtemp[jj]=Mcon[jj][kk];
+  //    vec2vecortho(concovtype,V,gcov,dxdxp,oldgridtype, newgridtype, vtemp, vtemportho);
+  //    DLOOPA(jj) Mconortho[jj][kk]=vtemportho[jj];
+  //  }
+
+  FTYPE r=V[1];
+  FTYPE h=V[2];
+  FTYPE ph=V[3];
+
+  FTYPE Bx=Mconortho[1][0];
+  FTYPE By=Mconortho[2][0];
+  FTYPE Bz=Mconortho[3][0];
+
+  FTYPE Bdx=-Mconortho[1][0];
+  FTYPE Bdy=-Mconortho[2][0];
+  FTYPE Bdz=-Mconortho[3][0];
+
+  FTYPE Br=sin(h)*cos(ph)*Bdx + sin(h)*sin(ph)*Bdy + cos(h)*Bdz;
+  FTYPE Bh=cos(h)*cos(ph)*Bdx + cos(h)*sin(ph)*Bdy - sin(h)*Bdz;
+  FTYPE Bphi=-sin(ph)*Bdx + cos(ph)*Bdy;
+
+  FTYPE vx=vecvortho[1];
+  FTYPE vy=vecvortho[2];
+  FTYPE vz=vecvortho[3];
+
+  FTYPE vr=sin(h)*cos(ph)*vx + sin(h)*sin(ph)*vy + cos(h)*vz;
+  FTYPE vh=cos(h)*cos(ph)*vx + cos(h)*sin(ph)*vy - sin(h)*vz;
+  FTYPE vphi=-sin(ph)*vx + cos(ph)*vy;
+
+
+  // Get F_{munu}
+  FTYPE Fcovortho[NDIM][NDIM];
+  MtoF_simple(0,Mconortho,1.0,Fcovortho); // gdet=1
+
+  // Get \Omega_F (directly, could use Fcovortho but would have to again go back to x,y,x->r,h,ph)
+  FTYPE R=abs(r*sin(h));
+  FTYPE omegaf1b = (vphi/R) - (Bphi/R)*(vr*Br + vh*Bh)/(Br*Br + Bh*Bh);
+
+
   // compute B_{\phi}
-  vectorcomponentlocal=3; // \phi component
-  FTYPE Bphi;
-  vecup2vecdowncomponent(ti,X,V,conn,gcon,gcov,gdet,ck,dxdxp,oldgridtype, newgridtype, vectorcomponentlocal, vecB, &Bphi);
+  FTYPE vecBdown[NDIM];
+  if(0){
+    // not true B_\phi since time component still up
+    vectorcomponentlocal=3; // \phi component
+    vecup2vecdown(ti,X,V,conn,gcon,gcov,gdet,ck,dxdxp,oldgridtype, newgridtype, vecB, vecBdown);
+    Bphi=vecBdown[vectorcomponentlocal];
+  }
+  else{
+    // \dF^{it} = B^i
+    // dF_{it}= B_i  B_\phi = Bphi
+    // orthonormal so flat space-time and only time comonent going down gives -1
+    //    Bphi=-sin(ph)*Bdx + cos(ph)*Bdy;
+  }
+  FTYPE truevecBortho[NDIM];
+  DLOOPA(jj) truevecBortho[jj] = Mconortho[jj][0];
+
+  // compute FEMrad3
+  FTYPE FEMrad3;
+  vectorcomponentlocal=1; // radial component
+  FTYPE gcovflat[SYMMATRIXNDIM]={-1,0,0,0,1,0,0,1,0,1},gconflat[SYMMATRIXNDIM]={-1,0,0,0,1,0,0,1,0,1};
+  FTYPE gdetflat=1.0;
+  FTYPE dxdxpflat[NDIM][NDIM]={{1,0,0,0},{0,1,0,0},{0,0,1,0},{0,0,0,1}};
+  // feed in cart-ortho vecv and true cart-ortho vecB
+  vB2poyntingdensityboost(ti,X,V,conn,gconflat,gcovflat,gdetflat,ck,dxdxpflat,oldgridtype, newgridtype, vectorcomponentlocal, vecvortho, truevecBortho, &FEMrad3);
+  if(r<2.5) FEMrad3=FEMrad; // avoid boosting near BH
+  
+
+
 
   // 3-velocity magnitude: v^2=vx^2+vy^2+vz^2 (i.e. just spatials are squared)
   // Lorentz factor: ut = 1/sqrt(1-v^2)
@@ -818,9 +914,9 @@ static int compute_datatype15(int outputvartypelocal, FTYPE *val, FTYPE *fvar, i
     fvar[8]=vecvortho[1]/vecvortho[TT]; // vx
     fvar[9]=vecvortho[2]/vecvortho[TT]; // vy
     fvar[10]=vecvortho[3]/vecvortho[TT]; // vz
-    fvar[11]=vecBortho[1]; // Bx
-    fvar[12]=vecBortho[2]; // By
-    fvar[13]=vecBortho[3]; // Bz
+    fvar[11]=truevecBortho[1];//vecBortho[1]; // Bx
+    fvar[12]=truevecBortho[2];//vecBortho[2]; // By
+    fvar[13]=truevecBortho[3];//vecBortho[3]; // Bz
     fvar[14]=V[1]; // spherical polar radius r
     fvar[15]=V[2]; // spherical polar angle \theta = 0..\pi
     fvar[16]=V[3]; // spherical polar angle \phi = 0..2\pi
@@ -828,6 +924,11 @@ static int compute_datatype15(int outputvartypelocal, FTYPE *val, FTYPE *fvar, i
     fvar[18]=vecvradortho[1]/vecvradortho[TT]; // vradx
     fvar[19]=vecvradortho[2]/vecvradortho[TT]; // vrady
     fvar[20]=vecvradortho[3]/vecvradortho[TT]; // vradz
+    fvar[21]=FEMrad; // FEMrad = lab-frame radial energy flux
+    fvar[22]=FEMrad2; // FEMrad using boosted velocity
+    fvar[23]=FEMrad3; // boosted FEMrad
+    fvar[24]=Bphi; // *F_{\phi t} = B_{\phi} == poloidal current
+    fvar[25]=omegaf1b; // \Omega_F
   }
   else{
     dualfprintf(fail_file,"No such outputvartypelocal=%d\n",outputvartypelocal);
@@ -1569,6 +1670,137 @@ static void vec2vecortho(int concovtype, FTYPE V[],  FTYPE *gcov,  FTYPE (*dxdxp
 
 }
 
+// coordinate transform of vector and get single component of result
+// concovtype: 1 = inputting T^{\mu\nu}   2 = inputting T_{\mu\nu} 3 = inputting T^\mu_\nu 4 = inputting T_\mu^\nu
+static void T2Tortho(int concovtype, FTYPE V[],  FTYPE *gcov,  FTYPE (*dxdxp)[NDIM], int oldgridtype, int newgridtype, FTYPE (*T)[NDIM], FTYPE (*Tortho)[NDIM])
+{
+  int jj,kk,ll,mm;
+  FTYPE tetrcov[NDIM][NDIM],tetrcon[NDIM][NDIM],eigenvalues[NDIM];
+
+
+  // get tetrad (uses dxdxp so that tetrcov and tetrcon and eigenvalues are using V metric not X metric)
+  int primcoord=1; // tells to use dxdxp to make simpler
+  tetr_func_frommetric(primcoord, dxdxp, gcov, tetrcov, tetrcon, eigenvalues);
+
+  // DEBUG
+  //  if(tiglobal[1]==200 && tiglobal[2]==10 && tiglobal[3]==0){
+  //    //    DLOOP(jj,kk) dualfprintf(fail_file,"jj=%d kk=%d gcov=%21.15g\n",jj,kk,gcov[GIND(jj,kk)]);
+  //    DLOOP(jj,kk) dualfprintf(fail_file,"jj=%d kk=%d tetrcon=%21.15g\n",jj,kk,tetrcon[jj][kk]);
+  //    DLOOPA(jj) dualfprintf(fail_file,"jj=%d eigenvalues=%21.15g\n",jj,eigenvalues[jj]);
+  //  }
+
+  FTYPE idxdxp[NDIM][NDIM];
+  // get inverse coordinate transformation
+  idxdxprim(dxdxp, idxdxp); // from coord.c
+
+
+  // transform from X to V
+  FTYPE TinV[NDIM][NDIM];
+  DLOOP(jj,kk) TinV[jj][kk]=0.0;
+  if(concovtype==1){
+    // transform from X to V for contravariant tensor
+    int ll,mm;
+    DLOOP(jj,kk){
+      DLOOP(ll,mm){
+        TinV[jj][kk] += dxdxp[jj][ll]*dxdxp[kk][mm]*T[ll][mm];
+      }
+    }
+  }
+  else if(concovtype==2){
+    // transform from X to V for covariant tensor
+    int ll,mm;
+    DLOOP(jj,kk){
+      DLOOP(ll,mm){
+        TinV[jj][kk] += idxdxp[ll][jj]*idxdxp[mm][kk]*T[ll][mm];
+      }
+    }
+  }
+  else if(concovtype==3){
+    // transform from X to V for T^\mu_\nu
+    int ll,mm;
+    DLOOP(jj,kk){
+      DLOOP(ll,mm){
+        TinV[jj][kk] += dxdxp[jj][ll]*idxdxp[mm][kk]*T[ll][mm];
+      }
+    }
+  }
+  else if(concovtype==4){
+    // transform from X to V for T_\mu^\nu
+    int ll,mm;
+    DLOOP(jj,kk){
+      DLOOP(ll,mm){
+        TinV[jj][kk] += idxdxp[ll][jj]*dxdxp[kk][mm]*T[ll][mm];
+      }
+    }
+  }
+  else{
+    dualfprintf(fail_file,"not yet: concovtype=%d\n",concovtype);
+    myexit(9834353);
+  }
+
+
+  // transform to orthonormal basis in SPC
+  FTYPE Torthospc[NDIM][NDIM];
+  DLOOP(jj,kk) Torthospc[jj][kk]=0.0;
+  if(concovtype==1){
+    // transform to orthonormal basis for contravariant tensor in V coordinates
+    DLOOP(jj,kk){
+      DLOOP(ll,mm){
+        // u^kk[ortho] = tetrcov^kk[ortho]_jj[lab] u^jj[lab]
+        Torthospc[jj][kk] += tetrcov[jj][ll]*tetrcov[kk][mm]*TinV[ll][mm];
+      }
+    }
+  }
+  else if(concovtype==2){
+    // transform to orthonormal basis for covariant tensor in V coordinates
+    DLOOP(jj,kk){
+      DLOOP(ll,mm){
+        // u_kk[ortho] = tetrcon_kk[ortho]^jj[lab] u_jj[lab]
+        Torthospc[jj][kk] += tetrcon[jj][ll]*tetrcon[kk][mm]*TinV[ll][mm];
+      }
+    }
+  }
+  else if(concovtype==3){
+    // transform to orthonormal basis for T^\mu_\nu in V coordinates
+    DLOOP(jj,kk){
+      DLOOP(ll,mm){
+        Torthospc[jj][kk] += tetrcov[jj][ll]*tetrcon[kk][mm]*TinV[ll][mm];
+      }
+    }
+  }
+  else if(concovtype==4){
+    // transform to orthonormal basis for T_\mu^\nu in V coordinates
+    DLOOP(jj,kk){
+      DLOOP(ll,mm){
+        Torthospc[jj][kk] += tetrcon[jj][ll]*tetrcov[kk][mm]*TinV[ll][mm];
+      }
+    }
+  }
+  else{
+    dualfprintf(fail_file,"No such concovtype=%d\n",concovtype);
+    myexit(1);
+  }
+
+
+
+  // get SPC -> Cart transformation
+  FTYPE lambdacoord[NDIM][NDIM];
+  generate_lambdacoord(oldgridtype, newgridtype, V, lambdacoord);
+
+
+  // transform from spherical polar to Cartesian coordinates (assumes tensor is in orthonormal basis)
+  DLOOP(jj,kk) Tortho[jj][kk]=0.0;
+  DLOOP(jj,kk){
+    DLOOP(ll,mm){
+      Tortho[jj][kk] += lambdacoord[jj][ll]*lambdacoord[kk][mm]*Torthospc[ll][mm];
+    }
+  }
+
+
+}
+
+
+
 
 
 
@@ -1608,7 +1840,8 @@ static void vB2poyntingdensity(int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*conn)[
   // T^p_t[EM] = b^2 u^p u_t  - b^p b_t
   // EM poloidal flux only
   DLOOPA(jj){
-    if(jj==1 || jj==2){
+    //    if(jj==1 || jj==2){
+    if(jj==1){
       Tit[jj]=bsq*ucon[jj]*ucov[0] - bcon[jj]*bcov[0] + delta(jj,0)*(bsq*0.5);
     }
     else Tit[jj]=0.0;
@@ -1619,7 +1852,167 @@ static void vB2poyntingdensity(int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*conn)[
   DLOOP(jj,kk) Titsq+=Tit[jj]*Tit[kk]*gcov[GIND(jj,kk)];
 
   // dP/d\omega = \detg T^p_t[EM]/sin(\theta)
-  dPdw=sqrt(fabs(Titsq))*fabs(gdet/sin(V[2]));
+  //dPdw=sqrt(fabs(Titsq))*fabs(gdet/sin(V[2]));
+  //dPdw=sqrt(fabs(Titsq))*fabs(gdet);
+  dPdw=sqrt(fabs(Titsq));
+
+  // final output
+  *compout = dPdw;
+
+
+}
+
+
+// assume input Cartesian orthonormal quantities
+static void vB2poyntingdensityboost(int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*conn)[NDIM][NDIM],  FTYPE *gcon,  FTYPE *gcov,  FTYPE gdet,  FTYPE ck[],  FTYPE (*dxdxp)[NDIM], int oldgridtype, int newgridtype, int vectorcomponent, FTYPE *vecv, FTYPE *vecB, FTYPE *compout)
+{
+  FTYPE newgcov[SYMMATRIXNDIM];
+  int jj,kk,ll,mm,pp;
+  FTYPE tempcomp[NDIM];
+  FTYPE finalvec[NDIM];
+  FTYPE pr[NPR];
+  FTYPE ucov[NDIM],ucon[NDIM];
+  FTYPE bcon[NDIM],bcov[NDIM],bsq;
+  FTYPE Tmunu[NDIM][NDIM];
+  FTYPE Titsq,dPdw;
+
+  // get SPC orthonormal version of velocity of frame we are boosting into
+  //  FTYPE vecvorthoboosted[NDIM];
+  //  vboost(ti,X,V,conn,gcon,gcov,gdet,ck,dxdxp,oldgridtype, newgridtype, vectorcomponentlocal, vecvortho, vecB, vecvorthoboosted);
+
+
+  pr[B1]=vecB[1];
+  pr[B2]=vecB[2];
+  pr[B3]=vecB[3];
+  
+  // compute lower components
+  DLOOPA(jj) ucon[jj]=vecv[jj];
+  DLOOPA(jj) ucov[jj]=0.0;
+  DLOOP(jj,kk) ucov[jj] += ucon[kk]*gcov[GIND(jj,kk)];
+
+  // compute b^\mu[pr,ucon,ucov]
+  bcon_calc(pr, ucon, ucov, bcon);
+
+  // compute b_\mu
+  DLOOPA(jj) bcov[jj]=0.0;
+  DLOOP(jj,kk) bcov[jj] += bcon[kk]*gcov[GIND(jj,kk)];
+
+  // compute b^2
+  bsq = dot(bcon,bcov);
+
+  // T^\mu_\nu[EM] = b^2 u^\mu u_\nu  - b^\mu b_\nu
+  DLOOP(jj,kk){
+    Tmunu[jj][kk]=bsq*ucon[jj]*ucov[kk] - bcon[jj]*bcov[kk] + delta(jj,kk)*(bsq*0.5);
+  }
+
+
+
+  FTYPE lambdatrans[NDIM][NDIM];
+  if(0){
+    lambdatrans[TT][TT]=1.0;
+    SLOOPA(jj) lambdatrans[TT][jj] = lambdatrans[jj][TT] = 0.0;
+
+    FTYPE r=V[1];
+    FTYPE th=V[2];
+    FTYPE ph=V[3];
+
+    // rest come from definitions of {x,y,z}(r,\theta,\phi)
+    // assumes orthonormal to orhonormal!
+    lambdatrans[0][TT] = 1.0;
+    lambdatrans[0][RR] = 0.0;
+    lambdatrans[0][TH] = 0.0;
+    lambdatrans[0][PH] = 0.0;
+
+    lambdatrans[1][TT] = 0.0;
+    lambdatrans[1][RR] = sin(th)*cos(ph);
+    lambdatrans[1][TH] = cos(th)*cos(ph);
+    lambdatrans[1][PH] = -sin(ph);
+
+    lambdatrans[2][TT] = 0.0;
+    lambdatrans[2][RR] = sin(th)*sin(ph);
+    lambdatrans[2][TH] = cos(th)*sin(ph);
+    lambdatrans[2][PH] = cos(ph);
+
+    lambdatrans[3][TT] = 0.0;
+    lambdatrans[3][RR] = cos(th);
+    lambdatrans[3][TH] = -sin(th);
+    lambdatrans[3][PH] = 0.0;
+  }
+  else{
+    // if inputed ortho, then already Cart as well
+  }
+
+  FTYPE beta=+0.3; // what's in init.c
+  FTYPE gamma = 1.0/sqrt(1.0-beta*beta);
+
+  FTYPE vlambdatrans[NDIM][NDIM];
+  // assume time doesn't change or mix with space
+
+  // Cartesian Lorentz boost
+  vlambdatrans[0][0] = gamma;
+  vlambdatrans[0][1] = -beta*gamma;
+  vlambdatrans[0][2] = 0.0;
+  vlambdatrans[0][3] = 0.0;
+
+  vlambdatrans[1][0] = -beta*gamma;
+  vlambdatrans[1][1] = gamma;
+  vlambdatrans[1][2] = 0.0;
+  vlambdatrans[1][3] = 0.0;
+
+  vlambdatrans[2][0] = 0.0;
+  vlambdatrans[2][1] = 0.0;
+  vlambdatrans[2][2] = 1.0;
+  vlambdatrans[2][3] = 0.0;
+
+  vlambdatrans[3][0] = 0.0;
+  vlambdatrans[3][1] = 0.0;
+  vlambdatrans[3][2] = 0.0;
+  vlambdatrans[3][3] = 1.0;
+
+
+  FTYPE boostA[NDIM][NDIM];
+  if(0){
+    FTYPE ilambdatrans[NDIM][NDIM];
+    matrix_inverse_4d(lambdatrans,ilambdatrans); // inverse and transpose.
+    
+    // transform Cart boost to SPC boost
+    DLOOP(jj,kk) boostA[jj][kk]=0.0;
+    DLOOP(kk,mm){
+      DLOOP(jj,ll){
+        // B^kk_mm = L^kk_jj (iL)^ll_mm V^jj_ll
+        boostA[kk][mm] += lambdatrans[kk][jj]*ilambdatrans[ll][mm]*vlambdatrans[jj][ll];
+      }
+    }
+  }
+  else{
+    DLOOP(jj,kk) boostA[jj][kk]=vlambdatrans[jj][kk];
+  }
+
+
+  FTYPE iboostA[NDIM][NDIM];
+  matrix_inverse_4d(boostA,iboostA); // inverse and transpose.
+
+  // transform Tmunu in orthonormal 
+  FTYPE Tmunuboost[NDIM][NDIM];
+  DLOOP(jj,kk) Tmunuboost[jj][kk]=0.0;
+  DLOOP(kk,mm){
+    DLOOP(jj,ll){
+      // T^kk_mm = B^kk_jj (iB)^ll_mm   T^jj_ll
+      Tmunuboost[kk][mm] += boostA[kk][jj]*iboostA[ll][mm]*Tmunu[jj][ll];
+    }
+  }
+
+
+  // now extract specific direction.
+
+  // |Tb^r_t|
+  int whichdir=1;
+  Titsq = Tmunuboost[whichdir][0]*Tmunuboost[whichdir][0]*gcov[GIND(whichdir,whichdir)];
+
+  // dP/d\omega = \detg T^p_t[EM]/sin(\theta)
+  //dPdw=sqrt(fabs(Titsq))*fabs(gdet/sin(V[2]));
+  //dPdw=sqrt(fabs(Titsq))*fabs(gdet);
+  dPdw=sqrt(fabs(Titsq));
 
   // final output
   *compout = dPdw;
@@ -1630,15 +2023,17 @@ static void vB2poyntingdensity(int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*conn)[
 
 
 
+
+
+
 // input PRIMECOORD coordinate basis v^i and output MCOORD coordinate basis v_{vectorcomponent}
 // so no transformation to orthonormal basis or even to Cartesian coordaintes
-static void vecup2vecdowncomponent(int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*conn)[NDIM][NDIM],  FTYPE *gcon,  FTYPE *gcov,  FTYPE gdet,  FTYPE ck[],  FTYPE (*dxdxp)[NDIM], int oldgridtype, int newgridtype, int vectorcomponent, FTYPE *vec, FTYPE *compout)
+static void vecup2vecdown(int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*conn)[NDIM][NDIM],  FTYPE *gcon,  FTYPE *gcov,  FTYPE gdet,  FTYPE ck[],  FTYPE (*dxdxp)[NDIM], int oldgridtype, int newgridtype, FTYPE *vec, FTYPE *vecdown)
 {
   FTYPE idxdxp[NDIM][NDIM];
   FTYPE newgcov[SYMMATRIXNDIM];
   int jj,kk,ll,pp;
   FTYPE tempcomp[NDIM];
-  FTYPE finalvec[NDIM];
 
 
   // get inverse coordinate transformation
@@ -1653,16 +2048,9 @@ static void vecup2vecdowncomponent(int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*co
   }
 
 
-  DLOOPA(jj) finalvec[jj]=vec[jj];
-
   // compute lower components
-  DLOOPA(jj) tempcomp[jj]=0.0;
-  DLOOP(jj,kk) tempcomp[jj] += finalvec[kk]*newgcov[GIND(jj,kk)];
-  DLOOPA(jj) finalvec[jj]=tempcomp[jj];
-
-  // finally get desired component
-  *compout = finalvec[vectorcomponent];
-
+  DLOOPA(jj) vecdown[jj]=0.0;
+  DLOOP(jj,kk) vecdown[jj] += vec[kk]*newgcov[GIND(jj,kk)];
 
 }
 
@@ -1960,3 +2348,214 @@ void lower_vec(FTYPE *ucon, struct of_geom *geom, FTYPE *ucov)
 
   return ;
 }
+
+static void vboost(int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*conn)[NDIM][NDIM],  FTYPE *gcon,  FTYPE *gcov,  FTYPE gdet,  FTYPE ck[],  FTYPE (*dxdxp)[NDIM], int oldgridtype, int newgridtype, int vectorcomponent, FTYPE *vecv, FTYPE *vecB, FTYPE *vecvboost)
+{
+  int jj,kk;
+
+  FTYPE r=V[1];
+  FTYPE th=V[2];
+  FTYPE ph=V[3];
+
+  int BOOSTFIELD=1; // for moving BH problem
+
+
+  if(BOOSTFIELD){
+ 
+    
+    FTYPE vecvboosted[NDIM]={0.0};
+    getvboost(ti,  X,  V,  conn,  gcon,  gcov,  gdet,  ck,  dxdxp, oldgridtype, newgridtype, vectorcomponent, vecv, vecB, vecvboosted);
+
+
+    // add non-ortho coordinate basis velocity to ortho
+    FTYPE finalvec[NDIM];
+    finalvec[TT]=0.0;
+    if(r<2.5){
+      //if(0){
+      finalvec[RR]=vecv[1];
+      finalvec[TH]=vecv[2];
+      finalvec[PH]=vecv[3];
+    }
+    else{
+      finalvec[RR]=vecv[1] + vecvboosted[1]/sqrt(gcov[GIND(1,1)]);
+      finalvec[TH]=vecv[2] + vecvboosted[2]/sqrt(gcov[GIND(2,2)]);
+      finalvec[PH]=vecv[3] + vecvboosted[3]/sqrt(gcov[GIND(3,3)]);
+    }
+
+    vecvboost[0] = vecv[0]; // not relativistic boost.
+    vecvboost[1] = finalvec[RR];
+    vecvboost[2] = finalvec[TH];
+    vecvboost[3] = finalvec[PH];
+  }    
+}
+
+
+
+static void getvboost(int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*conn)[NDIM][NDIM],  FTYPE *gcon,  FTYPE *gcov,  FTYPE gdet,  FTYPE ck[],  FTYPE (*dxdxp)[NDIM], int oldgridtype, int newgridtype, int vectorcomponent, FTYPE *vecv, FTYPE *vecB, FTYPE *vecvboosted)
+{
+  int jj,kk;
+
+  FTYPE r=V[1];
+  FTYPE th=V[2];
+  FTYPE ph=V[3];
+
+  int BOOSTFIELD=1; // for moving BH problem
+
+
+  if(BOOSTFIELD){
+    // BOOST of field
+    FTYPE xx=r*sin(th)*cos(ph);
+    FTYPE yy=r*sin(th)*sin(ph);
+    FTYPE zz=r*cos(th);
+    FTYPE lambdatrans[NDIM][NDIM];
+    FTYPE ilambdatrans[NDIM][NDIM];
+    // assume time doesn't change or mix with space
+    lambdatrans[TT][TT]=1.0;
+    SLOOPA(jj) lambdatrans[TT][jj] = lambdatrans[jj][TT] = 0.0;
+
+    ilambdatrans[TT][TT]=1.0;
+    SLOOPA(jj) ilambdatrans[TT][jj] = ilambdatrans[jj][TT] = 0.0;
+
+    // rest come from definitions of {x,y,z}(r,\theta,\phi)
+    // assumes orthonormal to orhonormal!
+    lambdatrans[1][RR] = sin(th)*cos(ph);
+    lambdatrans[1][TH] = cos(th)*cos(ph);
+    lambdatrans[1][PH] = -sin(ph);
+
+    lambdatrans[2][RR] = sin(th)*sin(ph);
+    lambdatrans[2][TH] = cos(th)*sin(ph);
+    lambdatrans[2][PH] = cos(ph);
+
+    lambdatrans[3][RR] = cos(th);
+    lambdatrans[3][TH] = -sin(th);
+    lambdatrans[3][PH] = 0.0;
+
+    // Cart 2 SPC
+    ilambdatrans[1][RR] = sin(th)*cos(ph);
+    ilambdatrans[1][TH] = cos(th)*cos(ph);
+    ilambdatrans[1][PH] = -sin(ph);
+
+    ilambdatrans[2][RR] = sin(th)*sin(ph);
+    ilambdatrans[2][TH] = cos(th)*sin(ph);
+    ilambdatrans[2][PH] = cos(ph);
+
+    ilambdatrans[3][RR] = cos(th);
+    ilambdatrans[3][TH] = -sin(th);
+    ilambdatrans[3][PH] = 0.0;
+
+    // quasi-orthonormal
+    FTYPE finalvec[NDIM];
+    finalvec[TT]=0.0;
+    finalvec[RR]=-0.3; // x // OPPOSITE of what's in init.c
+    finalvec[TH]=0; // y
+    finalvec[PH]=0; // z
+
+
+    // transform from ortho Cart to ortho SPC
+    FTYPE tempcomp[NDIM];
+    DLOOPA(jj) tempcomp[jj]=0.0;
+    DLOOP(jj,kk){
+      tempcomp[kk] += ilambdatrans[jj][kk]*finalvec[jj];
+    }
+    DLOOPA(jj) finalvec[jj]=tempcomp[jj]; // spc
+
+
+    vecvboosted[0] = 0.0;
+    vecvboosted[1] = finalvec[RR];
+    vecvboosted[2] = finalvec[TH];
+    vecvboosted[3] = finalvec[PH];
+  }    
+}
+
+
+
+
+/// dual of Maxwell tensor
+/// returns \dF^{\mu \nu}
+static int Mcon_calc_uB(FTYPE *ucon, FTYPE *Bcon, FTYPE (*Mcon)[NDIM])
+{
+  int j,k;
+  FTYPE vcon[NDIM];
+
+
+  // diagonal is 0
+  DLOOPA(j) Mcon[j][j]=0.0;
+
+  // space-time terms
+  SLOOPA(k) {
+    // \dF^{it} = B^i = Bcon[i]
+    Mcon[k][0] = Bcon[k] ; 
+    Mcon[0][k] = - Mcon[k][0] ;
+  }
+
+  // get v^i
+  SLOOPA(k) vcon[k]= ucon[k]/ucon[TT];
+
+  // space-space terms
+  //  SLOOP(j,k) Mcon[j][k] = (Bcon[1+j-1] * vcon[k] - Bcon[1+k-1] * vcon[j]);
+  // optimize
+  Mcon[1][2] = (Bcon[1] * vcon[2] - Bcon[2] * vcon[1]);
+  Mcon[1][3] = (Bcon[1] * vcon[3] - Bcon[3] * vcon[1]);
+  Mcon[2][3] = (Bcon[2] * vcon[3] - Bcon[3] * vcon[2]);
+  Mcon[2][1] = -Mcon[1][2];
+  Mcon[3][1] = -Mcon[1][3];
+  Mcon[3][2] = -Mcon[2][3];
+  Mcon[1][1] = Mcon[2][2] = Mcon[3][3] = 0.0;
+
+
+  return(0);
+
+}
+
+
+
+/// dual of Maxwell tensor
+/// returns \dF^{\mu \nu}
+static int Mcon_calc_ub(FTYPE *ucon, FTYPE *bcon, FTYPE (*Mcon)[NDIM])
+{
+  int j,k;
+  FTYPE vcon[NDIM];
+
+  DLOOP(j,k) Mcon[j][k] = bcon[j] * ucon[k] - bcon[k] * ucon[j];
+
+
+  return(0);
+
+}
+
+
+
+
+/// Maxwell to Faraday
+/// which=0 : Mcon -> Fcov (for clean Mcon, Fcov has \detg)
+/// which=1 : Mcov -> Fcon (for clean Mcov)
+/// which=2 : Fcon -> Mcov
+/// which=3 : Fcov -> Mcon
+/// copies faraday_calc() in phys.c
+static void MtoF_simple(int which, FTYPE (*invar)[NDIM], FTYPE gdet, FTYPE (*outvar)[NDIM])
+{
+  int nu,mu,kappa,lambda;
+  FTYPE prefactor;
+  int whichlc;
+
+  if((which==0)||(which==1)){
+    prefactor=-0.5;
+    if(which==0) whichlc=0;
+    if(which==1) whichlc=1;
+  }
+  if((which==2)||(which==3)){
+    prefactor=0.5;
+    if(which==2) whichlc=0;
+    if(which==3) whichlc=1;
+  }
+
+  for(nu=0;nu<NDIM;nu++) for(mu=0;mu<NDIM;mu++){
+      outvar[mu][nu]=0.0;
+      for(kappa=0;kappa<NDIM;kappa++) for(lambda=0;lambda<NDIM;lambda++){
+          outvar[mu][nu]+=prefactor*lc4(whichlc,gdet,mu,nu,kappa,lambda)*invar[kappa][lambda];
+        }
+    }
+
+
+}
+

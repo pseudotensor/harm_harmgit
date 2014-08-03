@@ -1100,6 +1100,78 @@ void matrix_inverse(int whichcoord, FTYPE (*genmatrixlower)[NDIM], FTYPE (*genma
 }
 
 
+/* invert genmatrixlower to get genmatrixupper */
+// can be used to invert any 2nd rank tensor (symmetric or not)
+// actually returns the inverse transpose, so if
+// genmatrixlower=T^j_k then out pops (iT)^k_j such that T^j_k (iT)^k_l = \delta^j_l
+void matrix_inverse_4d(FTYPE (*genmatrixlower)[NDIM], FTYPE (*genmatrixupper)[NDIM])
+{
+  int pl,pliter;
+  int j, k;
+  void matrix_inverse_2d(FTYPE (*genmatrixlower)[NDIM], FTYPE (*genmatrixupper)[NDIM]);
+  void matrix_inverse_3d(FTYPE (*genmatrixlower)[NDIM], FTYPE (*genmatrixupper)[NDIM]);  
+
+
+#if(USEOPENMP)
+  // maintain thread safety
+  FTYPE **tmp;
+  tmp = dmatrix(1, NDIM, 1, NDIM);
+#else
+  static int firstc = 1;
+  static FTYPE **tmp;
+  if (firstc) {
+    tmp = dmatrix(1, NDIM, 1, NDIM);
+    firstc = 0;
+  }
+#endif
+
+
+
+
+  DLOOP(j,k) tmp[j + 1][k + 1] = genmatrixlower[j][k];
+  
+  int truedim=NDIM;
+
+  // 0-out all genmatrixupper
+  DLOOP(j,k) genmatrixupper[j][k]=0.0;
+
+
+  //  DLOOP(j,k) dualfprintf(fail_file,"tmp[%d][%d]=%21.15g\n",j+1,k+1,tmp[j+1][k+1]);
+
+  // GODMARK: Feeding in nan's results in gaussj segfaulting with erroneous access.  Seems bad behavior!
+  if(gaussj(tmp, truedim, NULL, 0)){
+    // then singular
+    dualfprintf(fail_file,"Singular\n");
+    DLOOP(j,k) dualfprintf(fail_file,"inputmatrix[%d][%d]=%21.15g\n",j,k,genmatrixlower[j][k]);
+    myexit(2714);
+  }
+  else{
+    // assign but also transpose (shouldn't do in general, confusing)
+    //DLOOP(j,k) genmatrixupper[j][k] = tmp[k + 1][j + 1];
+    DLOOP(j,k) genmatrixupper[j][k] = tmp[j + 1][k + 1];
+  }
+
+
+#if(1) // check for nan's
+  DLOOP(j,k) if(!finite(genmatrixupper[j][k])){
+    dualfprintf(fail_file,"Came out of matrix_inverse_4d with inf/nan for genmatrixupper at j=%d k=%d\n",j,k);
+    myexit(5);
+  }
+#endif
+
+
+
+
+#if(USEOPENMP)
+  // maintain thread safety
+  free_dmatrix(tmp, 1, NDIM, 1, NDIM);
+#endif
+
+
+
+}
+
+
 
 
 

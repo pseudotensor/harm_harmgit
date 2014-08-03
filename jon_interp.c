@@ -718,6 +718,11 @@ static void readdata_preprocessdata(void)
         defaultvalue[18]=0.0; // PRAD1
         defaultvalue[19]=0.0; // PRAD2
         defaultvalue[20]=0.0; // PRAD3
+        defaultvalue[21]=0.0; // FEMrad
+        defaultvalue[22]=0.0; // FEMrad2
+        defaultvalue[23]=0.0; // FEMrad3
+        defaultvalue[24]=0.0; // Bphi
+        defaultvalue[25]=0.0; // OmegaF
       }
       else{
         for(coli=0;coli<numoutputcols;coli++){ // over all independent columsn of data
@@ -2632,7 +2637,7 @@ void interpret_commandlineresults_subpart1(void)
       outputvartype=19;
       immediateoutput=0;
       vectorcomponent=-1;
-      numoutputcols=17+4;
+      numoutputcols=17+4+5;
     }
     else if(DATATYPE>=101 && DATATYPE<1000){
       num4vectors=DATATYPE-100;
@@ -2956,3 +2961,8 @@ void defaultoptions(void)
 
 
 }
+
+// should contain whatever user version of coordinates exist in the relevant init.c file.
+#include "jon_interp_coorduser.c"
+
+

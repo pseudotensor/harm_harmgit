@@ -24,6 +24,7 @@ extern void eomfunc_func(struct of_geom *ptrgeom, int getprim, int whichcoord, F
 
 extern void matrix_inverse_metric(int whichcoord, FTYPE *gcov, FTYPE *gcon);
 extern void matrix_inverse(int whichcoord, FTYPE (*genmatrixlower)[NDIM], FTYPE (*genmatrixupper)[NDIM]);
+extern void matrix_inverse_4d(FTYPE (*genmatrixlower)[NDIM], FTYPE (*genmatrixupper)[NDIM]);
 extern void alphalapse_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, FTYPE *gcov, FTYPE *gcon, FTYPE *alphalapse);
 extern void betasqoalphasq_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, FTYPE *gcov, FTYPE *gcon, FTYPE *betasqoalphasq);
 extern void beta_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, FTYPE *gcov, FTYPE *gcon, FTYPE alphalapse, FTYPE *beta);
