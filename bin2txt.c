@@ -114,7 +114,7 @@ int main(
   int machineEndianness(void);
   int argstep=0;
   int NDIM;
-  int i,j,k;
+  long long int i,j,k; // just so products will stay long long int without cast
   int numrows,numcolumns,numterms,numheader,pipeheader,realnumheader;
   int bytesize,intsize,floatsize,doublesize;
   unsigned char dumb;
@@ -125,10 +125,10 @@ int main(
   char precision[MAXTERMS];
   int group[MAXTERMS];
 
-  int N1,N2,N3,TS;
+  long long int N1,N2,N3,TS; // just so products will stay long long int without cast
   int inputlist,outputlist,input4dblock;
 
-  int nextbuf;
+  long long int nextbuf;
   FILE * input;
   FILE * output;
   FILE * inputfilenamelist;
@@ -176,7 +176,7 @@ int main(
   float pos[3+1][2+1];
   float minmax[2][MAXVARS];
   float a,b;
-  int ijkvis5d,ijkjon;
+  long long int ijkvis5d,ijkjon;
 #endif
   
 
@@ -376,7 +376,9 @@ int main(
   numcolumns=0;
   while(argstep<argc){  
     sscanf(argv[argstep++],"%c",&precision[j]);
+    fprintf(stderr,"precision[%d]=%c\n",j,precision[j]);
     sscanf(argv[argstep++],"%d",&group[j]);
+    fprintf(stderr,"group[%d]=%d\n",j,group[j]);
     numcolumns+=group[j];
     j++;
     if(j>MAXTERMS){
@@ -741,10 +743,12 @@ int main(
 
       // code pulled from v5dstats.c
 
+      fprintf(stderr,"BEGIN: v5dOpenFile\n"); fflush(stderr);
       if (!v5dOpenFile( INPUT_NAME, &v )) {
         printf("Error: couldn't open %s for reading\n", INPUT_NAME );
         exit(0);
       }
+      fprintf(stderr,"END: v5dOpenFile\n"); fflush(stderr);
 
       if(v.NumTimes>1){
         fprintf(stderr,"Not quite setup for multi-timed inputs since need to increase size of array to have time dimension\n");
@@ -773,10 +777,12 @@ int main(
             //      data = (float *) malloc( nrncnl * sizeof(float) );
             data=arrayvisoutput;
 
+            fprintf(stderr,"BEGIN: v5dReadGrid\n"); fflush(stderr);
             if (!v5dReadGrid( &v, time, var, data )) {
               printf("Error while reading grid (time=%d,var=%s)\n", time+1, v.VarName[var] );
               exit(0);
             }
+            fprintf(stderr,"END: v5dReadGrid\n"); fflush(stderr);
 
             //      min = MISSING;
             //      max = -MISSING;
@@ -820,7 +826,7 @@ int main(
 
             // loop over spatial dimensions //      for (i=0;i<nrncnl;i++)
             for(k=0;k<N3;k++) for(j=0;j<N2;j++) for(i=0;i<N1;i++){
-                  ijkjon=(i+(j+k*N2)*N1)*(v.NumVars) + var;  // so var (columns) is fastest
+                  ijkjon=(i+(j+k*N2)*N1)*((long long int)v.NumVars) + (long long int)var;  // so var (columns) is fastest
                   ijkvis5d=(N3-1-k) + ((j) + (i) * N2) * N3;
                   
                   arrayvisf[ijkjon] = (arrayvisoutput[ijkvis5d]-a)*255.0/(b-a);
@@ -866,9 +872,10 @@ int main(
       }
 
 
+      fprintf(stderr,"BEGIN: v5dCloseFile\n"); fflush(stderr);
       v5dCloseFile( &v );
-      fprintf(stderr,"Closing vis5d+ file. Done reading vis5d+ file into array\n");
-      fflush(stderr);
+      fprintf(stderr,"END: v5dCloseFile\n"); fflush(stderr);
+      fprintf(stderr,"Closing vis5d+ file. Done reading vis5d+ file into array\n");  fflush(stderr);
 
     }
 #endif
@@ -1006,6 +1013,7 @@ int main(
       }
 
       /* use the v5dCreate call to create the v5d file and write the header */
+      fprintf(stderr,"BEGIN: v5dCreate\n"); fflush(stderr);
       if (!v5dCreate( OUTPUT_NAME, NumTimes, NumVars, Nr, Nc, Nl,
                       (const char (*)[MAXVARNAME]) VarName,
                       TimeStamp, DateStamp, CompressMode,
@@ -1013,6 +1021,7 @@ int main(
         printf("Error: couldn't create %s\n", OUTPUT_NAME );
         exit(1);
       }
+      fprintf(stderr,"END: v5dCreate\n"); fflush(stderr);
     }
 #endif
 
@@ -1147,7 +1156,7 @@ int main(
       if(dest==2) fprintf(output,"\n");
 
     }// end over rows
-
+  
 
 
 #if(HDF)
@@ -1188,7 +1197,7 @@ int main(
         }
         // convert my format to vis5d format
         for(k=0;k<N3;k++) for(j=0;j<N2;j++) for(i=0;i<N1;i++){
-              ijkjon=(i+(j+k*N2)*N1)*NumVars+iv;
+              ijkjon=(i+(j+k*N2)*N1)*(long long int)NumVars + (long long int)iv;
               ijkvis5d=(N3-1-k) + ((j) + (i) * N2) * N3;
               arrayvisoutput[ijkvis5d]=(arrayvisf[ijkjon]/255.0)*(b-a)+a;
 
@@ -1197,10 +1206,12 @@ int main(
             }
       
         /* Write data to v5d file. */
+        fprintf(stderr,"BEGIN: v5dWrite: it=%d iv=%d\n",it,iv); fflush(stderr);
         if (!v5dWrite( it+1, iv+1, arrayvisoutput )) {
           printf("Error while writing grid.  Disk full?\n");
           exit(1);
         }
+        fprintf(stderr,"END: v5dWrite: it=%d iv=%d\n",it,iv); fflush(stderr);
       }
     }
 #endif
@@ -1266,7 +1277,9 @@ int main(
 #if(V5D)
   // close v5d file which has entire time series in it
   if(dest==5){
+    fprintf(stderr,"BEGIN: v5Close\n"); fflush(stderr);
     v5dClose();
+    fprintf(stderr,"END: v5Close\n"); fflush(stderr);
     free(arrayvisf);
     free(arrayvisoutput);
   }

@@ -797,7 +797,7 @@ static int compute_datatype15(int outputvartypelocal, FTYPE *val, FTYPE *fvar, i
   FTYPE dxdxpflat[NDIM][NDIM]={{1,0,0,0},{0,1,0,0},{0,0,1,0},{0,0,0,1}};
   // feed in cart-ortho vecv and true cart-ortho vecB
   vB2poyntingdensityboost(ti,X,V,conn,gconflat,gcovflat,gdetflat,ck,dxdxpflat,oldgridtype, newgridtype, vectorcomponentlocal, vecvortho, truevecBortho, &FEMrad3);
-  if(r<2.5) FEMrad3=FEMrad; // avoid boosting near BH
+  if(r<4.0) FEMrad3=FEMrad; // avoid boosting near BH
   
 
 
@@ -1905,6 +1905,9 @@ static void vB2poyntingdensityboost(int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*c
     Tmunu[jj][kk]=bsq*ucon[jj]*ucov[kk] - bcon[jj]*bcov[kk] + delta(jj,kk)*(bsq*0.5);
   }
 
+  FTYPE r=V[1];
+  FTYPE th=V[2];
+  FTYPE ph=V[3];
 
 
   FTYPE lambdatrans[NDIM][NDIM];
@@ -1912,9 +1915,6 @@ static void vB2poyntingdensityboost(int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*c
     lambdatrans[TT][TT]=1.0;
     SLOOPA(jj) lambdatrans[TT][jj] = lambdatrans[jj][TT] = 0.0;
 
-    FTYPE r=V[1];
-    FTYPE th=V[2];
-    FTYPE ph=V[3];
 
     // rest come from definitions of {x,y,z}(r,\theta,\phi)
     // assumes orthonormal to orhonormal!
@@ -2002,12 +2002,18 @@ static void vB2poyntingdensityboost(int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*c
     }
   }
 
+  // get ortho SPC version: T^i_t
+  FTYPE Tx=Tmunuboost[1][0];
+  FTYPE Ty=Tmunuboost[2][0];
+  FTYPE Tz=Tmunuboost[3][0];
+  // get SPC
+  FTYPE Tr=sin(th)*cos(ph)*Tx + sin(th)*sin(ph)*Ty + cos(th)*Tz;
+  FTYPE Th=cos(th)*cos(ph)*Tx + cos(th)*sin(ph)*Ty - sin(th)*Tz;
+  FTYPE Tphi=-sin(ph)*Tx + cos(ph)*Ty;
+
 
   // now extract specific direction.
-
-  // |Tb^r_t|
-  int whichdir=1;
-  Titsq = Tmunuboost[whichdir][0]*Tmunuboost[whichdir][0]*gcov[GIND(whichdir,whichdir)];
+  Titsq = Tr*Tr;
 
   // dP/d\omega = \detg T^p_t[EM]/sin(\theta)
   //dPdw=sqrt(fabs(Titsq))*fabs(gdet/sin(V[2]));
@@ -2370,7 +2376,7 @@ static void vboost(int ti[],  FTYPE X[],  FTYPE V[],  FTYPE (*conn)[NDIM][NDIM],
     // add non-ortho coordinate basis velocity to ortho
     FTYPE finalvec[NDIM];
     finalvec[TT]=0.0;
-    if(r<2.5){
+    if(r<4.0){
       //if(0){
       finalvec[RR]=vecv[1];
       finalvec[TH]=vecv[2];
