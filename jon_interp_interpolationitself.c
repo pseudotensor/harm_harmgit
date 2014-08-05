@@ -806,9 +806,13 @@ static void new_coord(int h, int i,int j,int k, FTYPE *t, FTYPE *r,FTYPE *th,FTY
     // Needs to be consistent with generate_lambdacoord() such that formula between rotated and nonrotated coordinates is same
     // such that BACK-rotation with tnrdegrees=90deg takes : -xrot -> +znonrot  & +zrot -> +xnonrot  so BACK-rotation is from x-axis towards z-axis.  Or with y-axis pointed at you, the rotation is clockwise.
 
-    xc = +xc*cos(-tnrdegrees*M_PI/180.0) + +yc*sin(-tnrdegrees*M_PI/180.0); // x // then xcCartnonrot = -zcCartrot for tnrdegrees=90deg.
-    yc = -xc*sin(-tnrdegrees*M_PI/180.0) + +yc*cos(-tnrdegrees*M_PI/180.0); // z // then zcCartnonrot = xcCartrot for tnrdegrees=90deg.
-    zc  = zc; // y
+    FTYPE xcnew = +xc*cos(-tnrdegrees*M_PI/180.0) + +yc*sin(-tnrdegrees*M_PI/180.0); // x // then xcCartnonrot = -zcCartrot for tnrdegrees=90deg.
+    FTYPE zcnew = -xc*sin(-tnrdegrees*M_PI/180.0) + +yc*cos(-tnrdegrees*M_PI/180.0); // z // then zcCartnonrot = xcCartrot for tnrdegrees=90deg.
+    FTYPE ycnew  = zc; // y
+
+    xc=xcnew;
+    yc=ycnew;
+    zc=zcnew;
 
     // now we have the back-rotation around the y-axis (i.e. zc)
       
@@ -972,8 +976,8 @@ static void old_xyzcoord(FTYPE t, FTYPE r, FTYPE th, FTYPE ph, FTYPE *tc, FTYPE 
     // ph : yold rotated
     // should be same transformation as done in new_coord()
     *xc = +r*cos(-tnrdegrees*M_PI/180.0) + +th*sin(-tnrdegrees*M_PI/180.0);
-    *yc = -r*sin(-tnrdegrees*M_PI/180.0) + +th*cos(-tnrdegrees*M_PI/180.0);
-    *zc  = ph;
+    *zc = -r*sin(-tnrdegrees*M_PI/180.0) + +th*cos(-tnrdegrees*M_PI/180.0);
+    *yc  = ph;
     //    }
 
     // get rspc
@@ -1001,21 +1005,21 @@ static void old_xyzcoord(FTYPE t, FTYPE r, FTYPE th, FTYPE ph, FTYPE *tc, FTYPE 
         // then fake Cartesian generated
         *tc = t;
         *xc = log(r+1.0)*sin(th)*cos(ph); // my x
-        *yc = log(r+1.0)*cos(th); // my z
-        *zc = log(r+1.0)*sin(th)*sin(ph); // my y
+        *zc = log(r+1.0)*cos(th); // my z
+        *yc = log(r+1.0)*sin(th)*sin(ph); // my y
       }
       // below seems unnecessary and was even wrong before
       //      else if(newgridtype==GRIDTYPECART && oN3==1){
       // *tc = t;
       // *xc = 0; // not really equivalent to code before because before *xc was just unset, but unsure why that was or why doing this new version GODMARK
-      // *yc = r*cos(th); // my z
-      // *zc = r*sin(th)*sin(ph); // my y
+      // *zc = r*cos(th); // my z
+      // *yc = r*sin(th)*sin(ph); // my y
       //      }
       else{// normal SPC 2 Cart
         *tc = t;
         *xc = fabs(r*sin(th)*cos(ph)); // my x
-        *yc = r*cos(th); // my z
-        *zc = r*sin(th)*sin(ph); // my y
+        *zc = r*cos(th); // my z
+        *yc = r*sin(th)*sin(ph); // my y
       }
       
 
@@ -1046,8 +1050,8 @@ static void old_xyzcoord(FTYPE t, FTYPE r, FTYPE th, FTYPE ph, FTYPE *tc, FTYPE 
 
     // again, should be same transformation as in new_coord()
     *xc = +r*cos(-tnrdegrees*M_PI/180.0) + +th*sin(-tnrdegrees*M_PI/180.0);
-    *yc = -r*sin(-tnrdegrees*M_PI/180.0) + +th*cos(-tnrdegrees*M_PI/180.0);
-    *zc  = ph;
+    *zc = -r*sin(-tnrdegrees*M_PI/180.0) + +th*cos(-tnrdegrees*M_PI/180.0);
+    *yc  = ph;
 
     //    }
 
