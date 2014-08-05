@@ -721,8 +721,13 @@ static void readdata_preprocessdata(void)
         defaultvalue[21]=0.0; // FEMrad
         defaultvalue[22]=0.0; // FEMrad2
         defaultvalue[23]=0.0; // FEMrad3
-        defaultvalue[24]=0.0; // Bphi
-        defaultvalue[25]=0.0; // OmegaF
+        defaultvalue[24]=0.0; // FEMrad4
+        defaultvalue[25]=0.0; // FEMrad5
+        defaultvalue[26]=0.0; // Fmomx
+        defaultvalue[27]=0.0; // Bphi
+        defaultvalue[28]=0.0; // Bphi boosted
+        defaultvalue[29]=0.0; // OmegaF
+        defaultvalue[30]=0.0; // OmegaF boosted
       }
       else{
         for(coli=0;coli<numoutputcols;coli++){ // over all independent columsn of data
@@ -2637,7 +2642,7 @@ void interpret_commandlineresults_subpart1(void)
       outputvartype=19;
       immediateoutput=0;
       vectorcomponent=-1;
-      numoutputcols=17+4+5;
+      numoutputcols=31;
     }
     else if(DATATYPE>=101 && DATATYPE<1000){
       num4vectors=DATATYPE-100;
