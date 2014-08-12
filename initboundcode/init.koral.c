@@ -2184,7 +2184,7 @@ int init_defcoord(void)
       //      setRin_withchecks(&Rin);
     }
     
-    if(totalsize[1]<32*4 || DOWALDDEN){
+    if(totalsize[1]<32*4 && DOWALDDEN==0){
       dualfprintf(fail_file,"RADDONUT setup for 128x64 with that grid\n");
       myexit(28634693);
     }
@@ -6509,7 +6509,18 @@ void blcoord_user(FTYPE *X, FTYPE *V)
 
 #elif(WHICHUSERCOORD==JET6LIKEUSERCOORD)
 
-    if(0){
+
+#define cr(x) (exp(-1.0/(x)))
+#define tr(x) (cr(x)/(cr(x) + cr(1.0-(x))))
+#define trans(x,L,R) ((x)<=(L) ? 0.0 : ((x)>=(R) ? 1.0 : tr(((x)-(L))/((R)-(L)))) )
+#define transR(x,center,width) ( 0.5*(1.0-tanh(+((x)-(center))/(width))))
+#define transL(x,center,width) ( 0.5*(1.0-tanh(-((x)-(center))/(width))))
+#define transM(x,center,width) ( exp(-pow(((x)-(center))/((width)*0.5),2.0) ) )
+
+#define plateau(x,L,R,W) (trans(x,(L)-0.5*(W),(L)+0.5*(W))*(1.0-trans(x,(R)-0.5*(W),(R)+0.5*(W))))
+
+
+    if(1){
       FTYPE theexp = npow*X[1];
       if( X[1] > x1br ) {
         theexp += cpow2 * pow(X[1]-x1br,npow2);
@@ -6517,12 +6528,85 @@ void blcoord_user(FTYPE *X, FTYPE *V)
       V[1] = R0+exp(theexp);
     }
     else{
-      V[1] = R0+exp(npow*X[1]);
-      // go startx[1] to totalsize[1]*dx[1]+startx[1] at pole and equator and everywhere.
-      //      But go to reduced value of V[1] near equator related to Rout as will be used at pole via setting of X[1]'s first and last values.
+
+#define line1r(x,w) (Rout)
+#define line2r(x,w) (Routeq)
+#define line3r(x,w) (Rout))
+      //#define wparsam(x,r) (h0 + pow( ((r)-rsjet3)/r0jet3 , -njet))
+      //#define wparsam(x,r) (h0 + pow( ((r)-0.0)/4.2 , -njet))
+  //#define wparsam(x,r) (h0 + pow(0.15 + ((r)-0.0)/10.0 , -njet))
+#define thetajon(x,w,xp1,xp2) (line1r(x,w)*(1.0-trans(x,xp1,xp2)) + line2r(x,w)*trans(x,xp1,xp2))
+
+      //startx[1] = pow(log(Rin-R0),1.0/npow);
+      //dx[1] = (pow(log(Rout-R0),1.0/npow)-pow(log(Rin-R0),1.0/npow)) / totalsize[1];
+      //startx[1] = log(Rin-R0)/npow;
+
+      // 
+      FTYPE mysx1=log(Rin-R0)/npow;
+
+#define lineeqr(x,w) (R0 + exp(npow*(X[1]-mysx1)*0.70 + npow*mysx1  ) )
+#define linepoler(x,w) (R0 + exp(npow*X[1]))
+#define thetaLr(x,wp,weq,xp1,xp2) ( linepoler(x,wp)*(1.0-trans(x,xp1,xp2)) + lineeqr(x,weq)*trans(x,xp1,xp2) )
+#define thetajon2(x,wp,weq,xp1,xp2) ( x<0.5 ? thetaLr(x,wp,weq,xp1,xp2) : thetaLr(1.0-x,wp,weq,xp1,xp2) )
+
+      FTYPE Routvsx2,R0vsx2;
       FTYPE Routeq = 100.0;
-      FTYPE AA = 1.0 - Routeq/Rout;
-      V[1] = Rin + (V[1]-Rin)*(1.0 - AA*sin(X[2]*M_PI));
+
+      if(1){
+
+        FTYPE xpole=0.25;
+        FTYPE eqslope=0.5;
+        FTYPE xeq=0.5;
+
+        V[1] = thetajon2(X[2],0,0,xpole,xeq);
+
+      }
+
+      if(0){
+        //      FTYPE poleslope=wparsam(X[2],V[1]);
+        FTYPE xpole=0.25;
+        //      FTYPE eqslope=0.1;
+        FTYPE eqslope=0.5;
+        FTYPE xeq=0.5;
+        Routvsx2 = thetajon2(X[2], 0.0, 0.0, xpole, xeq);
+
+        FTYPE R0eq=0.0;
+
+        R0vsx2 = R0eq + R0*((Routvsx2-Routeq)/(Rout-Routeq));
+      }
+
+
+      if(0){
+        //V[1] = R0+exp(npow*X[1]);
+        // go startx[1] to totalsize[1]*dx[1]+startx[1] at pole and equator and everywhere.
+        //      But go to reduced value of V[1] near equator related to Rout as will be used at pole via setting of X[1]'s first and last values.
+        //FTYPE AA = 1.0 - Routeq/Rout;
+        //      V[1] = Rin + (V[1]-Rin)*(1.0 - AA*sin(X[2]*M_PI));
+        //      V[1] *= (1.0 - AA*sin(X[2]*M_PI));
+        
+        Routvsx2 = thetajon(X[2],0.0,0.25,0.75);
+
+        R0vsx2=R0;
+        
+      }
+
+      //      V[1] = R0 + exp(npow*( (X[1]-startx[1])*Routvsx2/Rout+startx[1])   );
+
+      //      V[1] = R0 + exp(npow*X[1]);
+
+      //      V[1] = R0 + (V[1]-R0)*Routvsx2/Rout + (1.0-Routvsx2/Rout)*(0.38+0.018);
+
+      
+
+      
+      if(0){
+        V[1] = R0+exp(npow*X[1]);
+        // go startx[1] to totalsize[1]*dx[1]+startx[1] at pole and equator and everywhere.
+        //      But go to reduced value of V[1] near equator related to Rout as will be used at pole via setting of X[1]'s first and last values.
+        //        FTYPE Routeq = 100.0;
+        FTYPE AA = 1.0 - Routeq/Rout;
+        V[1] = Rin + (V[1]-Rin)*(1.0 - AA*sin(X[2]*M_PI));
+      }
     }
 
 
@@ -6680,12 +6764,6 @@ void blcoord_user(FTYPE *X, FTYPE *V)
 
       h0=0.0;
 
-#define cr(x) (exp(-1.0/(x)))
-#define tr(x) (cr(x)/(cr(x) + cr(1.0-(x))))
-#define trans(x,L,R) ((x)<=(L) ? 0.0 : ((x)>=(R) ? 1.0 : tr(((x)-(L))/((R)-(L)))) )
-#define transR(x,center,width) ( 0.5*(1.0-tanh(+((x)-(center))/(width))))
-#define transL(x,center,width) ( 0.5*(1.0-tanh(-((x)-(center))/(width))))
-#define transM(x,center,width) ( exp(-pow(((x)-(center))/((width)*0.5),2.0) ) )
 #define line1(x,w) ((x)*(w))
 #define line2(x,w) ((x)*(w)+M_PI-(w))
 #define line3(x,w) ((x)*(w))
@@ -6706,7 +6784,6 @@ void blcoord_user(FTYPE *X, FTYPE *V)
 
       h0=0.0;
 
-#define plateau(x,L,R,W) (trans(x,(L)-0.5*(W),(L)+0.5*(W))*(1.0-trans(x,(R)-0.5*(W),(R)+0.5*(W))))
 #define lineeq(x,w) ((x)*(w)+(0.5*M_PI)-(0.5*w))
 #define linepole(x,w) (line1(x,w))
 #define thetaL(x,wp,weq,xp1,xp2) ( linepole(x,wp)*(1.0-trans(x,xp1,xp2)) + lineeq(x,weq)*trans(x,xp1,xp2) )

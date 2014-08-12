@@ -2651,6 +2651,22 @@ void check_rmin(void)
     }
   }
 
+  // show cells that are inside horizon
+  if(mycpupos[2]==ncpux2/2 && mycpupos[3]==0){
+    j=0;
+    k=0;
+    LOOPF1{
+      coord(i,j,k, FACE1, X);
+      bl_coord(X, V);
+      r=V[1];
+      if(r<Rhor){
+        logfprintf("INSIDE Horizon (r=%g): i=%d r=%21.15g\n",Rhor, i, r);
+      }
+      
+    }
+  }
+
+
 
 
 }
