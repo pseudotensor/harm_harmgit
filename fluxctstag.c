@@ -701,6 +701,16 @@ void slope_lim_continuous_e2z(int realisinterp, int dir, int idel, int jdel, int
   // TODOMARK: Can take discrete derivative so edge quantity at center, then c2e fully correct, and correctly interpolates as continuous.
   // TODOMARK: Then after interpolation, just sum-up from left-most-edge-value using derivative at edge to get centered quantities
 
+  // Like:
+
+  //   B1     B1     B1     B1     B1 
+  //->   dB1    dB1    dB1    dB1
+  //-> interpolate as center to face giving:
+  //->dl dr  dl dr  dl dr  dl dr  dl dr
+  //
+
+
+
   if( LINEINTERPTYPE(lim[dir]) ){ // this overrides lim, but lim must still be set properly
     get_loop(INTERPLINETYPE, ENOINTERPTYPE, dir, face2centloop);
 

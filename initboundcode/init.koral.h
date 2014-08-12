@@ -185,8 +185,10 @@
 #undef DOPOLEGAMMADEATH
 // needed to avoid random death at pole at large distances when grid focuses on axis and so makes-up information a bit.
 #define DOPOLEDEATH 2
+//#define DOPOLEDEATH 0 // WALD
 #define DOPOLESMOOTH 0 // GODMARK: Need to reject outliers
 #define DOPOLEGAMMADEATH 2
+//#define DOPOLEGAMMADEATH 0 // WALD
 // Note that if DOPOLESMOOTH>=DOPOLEGAMMADEATH or DOPOLESMOOTH>=DOPOLEDEATH, then DOPOLEGAMMADEATH or DOPOLEDEATH do nothing -- they are overwritten by DOPOLESMOOTH.
 
 #undef IF3DSPCTHENMPITRANSFERATPOLE
@@ -982,6 +984,7 @@ struct Ccoordparams {
 
 #undef OUTERDEATH
 #define OUTERDEATH 1 // do it
+//#define OUTERDEATH 0 // don't do it // WALD
 #undef OUTERDEATHRADIUS
 #define OUTERDEATHRADIUS (500.0)
 #undef OUTERDEATHGAMMAMAX

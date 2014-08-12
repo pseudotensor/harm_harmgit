@@ -430,12 +430,23 @@ int init_global(void)
   //  TIMEORDER=2; // no need for 4 unless higher-order or cold collapse problem.
   //  TIMEORDER=4;
   TIMEORDER=3; // more smooth accurate solution than TIMEORDER=4 or 2 (midpoint or TVD)
-  //    lim[1]=lim[2]=lim[3]=DONOR;
-  //    lim[1]=lim[2]=lim[3]=MINM;
-  //lim[1]=lim[2]=lim[3]=MC;
-  //  lim[1]=lim[2]=lim[3]=WENO5BND;
-  //lim[1]=lim[2]=lim[3]=PARAFLAT;
-  lim[1]=lim[2]=lim[3]=PARALINE;
+
+  if(EOMTYPE==EOMFFDE){
+    //    lim[1]=lim[2]=lim[3]=DONOR;
+    //    lim[1]=lim[2]=lim[3]=MINM;
+    lim[1]=lim[2]=lim[3]=MC;
+    //  lim[1]=lim[2]=lim[3]=WENO5BND;
+    //lim[1]=lim[2]=lim[3]=PARAFLAT;
+    //lim[1]=lim[2]=lim[3]=PARALINE;
+  }
+  else{
+    //    lim[1]=lim[2]=lim[3]=DONOR;
+    //    lim[1]=lim[2]=lim[3]=MINM;
+    //lim[1]=lim[2]=lim[3]=MC;
+    //  lim[1]=lim[2]=lim[3]=WENO5BND;
+    //lim[1]=lim[2]=lim[3]=PARAFLAT;
+    lim[1]=lim[2]=lim[3]=PARALINE;
+  }
 
   //    cour=0.1;
   //    cour=0.5;
@@ -2130,7 +2141,10 @@ int init_defcoord(void)
     Rin=RADNT_MINX;
     Rout=RADNT_MAXX;
 
-    if(DOWALDDEN) defcoord=USERCOORD;
+    if(DOWALDDEN){
+      Rout=2000.0; // new normal
+      defcoord=USERCOORD;
+    }
     else defcoord=JET6COORDS;
 
     if(0){
@@ -2170,7 +2184,7 @@ int init_defcoord(void)
       //      setRin_withchecks(&Rin);
     }
     
-    if(totalsize[1]<32*4){
+    if(totalsize[1]<32*4 || DOWALDDEN){
       dualfprintf(fail_file,"RADDONUT setup for 128x64 with that grid\n");
       myexit(28634693);
     }
@@ -5282,7 +5296,7 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
       lower_vec(kcon,ptrgeomreal,kcov);
       
       
-      if(1){
+      if(1 || l==3){
         // A_i
         // below so field is b^2/rho=BSQORHOWALD at horizon
         FTYPE Rhorlocal=rhor_calc(0);
@@ -5450,17 +5464,30 @@ static int fieldprim(int *whichvel, int*whichcoord, int ii, int jj, int kk, FTYP
     // Use E,B to get primitives (v will be in WHICHVEL)
     // ASSUMES FORCE-FREE!
     EBtopr(Econ,Bcon,ptrgeom,pr);
+
     // transform WHICHVEL back to *whichvel
     FTYPE ucontemp[NDIM];
-    pr2ucon(WHICHVEL,pr,ptrgeom,ucontemp);
-    ucon2pr(*whichvel,ucontemp,ptrgeom,pr);
+    int return1=pr2ucon(WHICHVEL,pr,ptrgeom,ucontemp);
+    if(failed || return1){
+      for(pl=RHO;pl<=U3;pl++) pr[pl]=prold[pl];
+      failed=0;
+    }
+    else{
+      ucon2pr(*whichvel,ucontemp,ptrgeom,pr);
+      if(0&&r<Rhor){
+        for(pl=RHO;pl<=U3;pl++) pr[pl]=prold[pl] + (pr[pl]-prold[pl])/(Rhor-0.0)*(r-0.0);
+      }
+      else{
+        // keep
+      }
+    }
 
     if(EOMTYPE==EOMFFDE){
       //      pr[U1]=pr[U2]=pr[U3]=0.0;
       //    dualfprintf(fail_file,"EBtopr\n");
     }
     else{ // just use atmosphere (normally a ZAMO) frame for fluid frame
-      for(pl=RHO;pl<=U3;pl++) pr[pl]=prold[pl];
+      //for(pl=RHO;pl<=U3;pl++) pr[pl]=prold[pl];
     }
 
 
@@ -6315,6 +6342,7 @@ int coolfunc_user(FTYPE h_over_r, FTYPE *pr, struct of_geom *geom, struct of_sta
 
 #define JET6LIKEUSERCOORD 0
 #define UNIHALFUSERCOORD 1
+#define ORIGWALD 2
 
 #define WHICHUSERCOORD JET6LIKEUSERCOORD
 
@@ -6481,11 +6509,21 @@ void blcoord_user(FTYPE *X, FTYPE *V)
 
 #elif(WHICHUSERCOORD==JET6LIKEUSERCOORD)
 
-    FTYPE theexp = npow*X[1];
-    if( X[1] > x1br ) {
-      theexp += cpow2 * pow(X[1]-x1br,npow2);
+    if(0){
+      FTYPE theexp = npow*X[1];
+      if( X[1] > x1br ) {
+        theexp += cpow2 * pow(X[1]-x1br,npow2);
+      }
+      V[1] = R0+exp(theexp);
     }
-    V[1] = R0+exp(theexp);
+    else{
+      V[1] = R0+exp(npow*X[1]);
+      // go startx[1] to totalsize[1]*dx[1]+startx[1] at pole and equator and everywhere.
+      //      But go to reduced value of V[1] near equator related to Rout as will be used at pole via setting of X[1]'s first and last values.
+      FTYPE Routeq = 100.0;
+      FTYPE AA = 1.0 - Routeq/Rout;
+      V[1] = Rin + (V[1]-Rin)*(1.0 - AA*sin(X[2]*M_PI));
+    }
 
 
     //    FTYPE npowtrue,npowlarger=10.0;
@@ -6505,6 +6543,11 @@ void blcoord_user(FTYPE *X, FTYPE *V)
     V[1] = V1*(1.0-switch0) + V2*switch0;
 
 #endif
+
+
+
+
+
 
 
 
@@ -6686,6 +6729,15 @@ void blcoord_user(FTYPE *X, FTYPE *V)
     // default is uniform \phi grid
     V[3]=2.0*M_PI*X[3];
   }
+
+
+  if(WHICHUSERCOORD==ORIGWALD){
+     V[1] = R0+exp(X[1]) ;
+     V[2] = M_PI * X[2] + ((1. - hslope) / 2.) * sin(2. * M_PI * X[2]);
+     V[3]=2.0*M_PI*X[3];
+  }
+
+
 }
 
 
@@ -6698,7 +6750,13 @@ void dxdxp_analytic_user(FTYPE *X, FTYPE *V, FTYPE (*dxdxp)[NDIM])
 }
 void set_points_user(void)
 {
-
+  if(WHICHUSERCOORD==ORIGWALD){
+    startx[1] = log(Rin-R0);
+    startx[2] = 0.;
+    dx[1] = log((Rout-R0)/(Rin-R0)) / totalsize[1];
+    dx[2] = 1. / totalsize[2];
+    dx[3] = 2.0*M_PI;
+  }
 
   if(WHICHUSERCOORD==UNIHALFUSERCOORD){
     startx[1] = 0.3999985081775278946780799743777598329673;
@@ -6803,5 +6861,25 @@ FTYPE setRin_user(int ihor, FTYPE ihoradjust)
       return(R0+exp( pow((totalsize[1]*pow(log(Rhor-R0),1.0/npow) - ihoradjust*pow(log(Rout-R0),1.0/npow))/(totalsize[1]-ihoradjust),npow)));
     }
   }
+
+  if(WHICHUSERCOORD==ORIGWALD){
+    FTYPE ftemp=ihoradjust/(FTYPE)totalsize[1];
+    return(R0+pow((Rhor-R0)/pow(Rout-R0,ftemp),1.0/(1.0-ftemp)));
+
+  }
 }
  
+
+#define MAXIHOR 10
+#define FRACN1 (0.1)
+#define ADJUSTFRACT (0.25)
+
+int setihor_user(void)
+{
+  // set to smaller of either totalsize[1]*0.1 or MAXIHOR
+  if(totalsize[1]*FRACN1>MAXIHOR) return((int)MAXIHOR);
+  else return((int)((FTYPE)totalsize[1]*(FTYPE)FRACN1));
+}
+#undef MAXIHOR
+#undef FRACN1
+#undef ADJUSTFRACT
