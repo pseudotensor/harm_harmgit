@@ -21,7 +21,7 @@
 #define MAXPASSPARMS 10
 
 //#define THETAROTMETRIC (0.5*0.7)
-#define USER_THETAROTMETRIC (0.2) // arctan(0.2) = 0.19739556
+#define USER_THETAROTMETRIC (0.0) // arctan(0.2) = 0.19739556
 #define USER_THETAROTPRIMITIVES (0.0) // probably want to choose 0, so initial conditions are as if no tilt
 
 #define NORMALTORUS 0 // note I use randfact=5.e-1 for 3D model with perturbations
@@ -210,7 +210,7 @@ int init_grid(void)
   
   // metric stuff first
 
-  a = 0.95; //9375 ;
+  a = 0.5; //9375 ;
 
   
 
@@ -230,11 +230,11 @@ int init_grid(void)
   // make changes to primary coordinate parameters R0, Rin, Rout, hslope
   R0 = -0.45;
   Rout = 40.0;
-  Rin=0.96;
+  //Rin=1.0;
   if(totalsize[1]<32) Rout=50.0;
   else if(totalsize[1]<=64) Rout=1.E3;
   else Rout=1.E5;
-  Rout=1.E5; // MAVARA tilttest used this
+  Rout=1.E3; // MAVARA tilttest used this
 #endif
 
  
@@ -245,7 +245,7 @@ int init_grid(void)
   hslope = h_over_r;
 
 
-  //setRin_withchecks(&Rin);
+  setRin_withchecks(&Rin);
 
 
   
@@ -304,7 +304,7 @@ int init_global(void)
   //  rescaletype=1;
   rescaletype=4;
   BSQORHOLIMIT=1E2; // may have to make smaller if problems
-  BSQOULIMIT=1E5;
+  BSQOULIMIT=1E4;
   UORHOLIMIT=1E2;
   // JCM: Have to choose below so that Mdot from atmosphere is not important compared to true Mdot for thin disk.
   RHOMIN = 1E-4;
@@ -832,7 +832,7 @@ int init_dsandvels_bpthin(int *whichvel, int*whichcoord, int i, int j, int k, FT
     S = 1./(H*H*nz) ;
     cs = H*nz*sqrt(gam) ; // To understand this factor of gam, and how this equation is approximate, consult Eqn. 7.43 of Melia and definition of T~cs^2/gam
 
-    rho = (S/sqrt(2.*M_PI*H*H)) * (pow(R/rin,3./2+UGPOW)) * exp(-z*z/(2.*H*H))  * taper_func(r,2.0*rin, 3.0) ; //3 is best i think //* ( 1.0 - R*R/((pow(R,1.5) + a)*(pow(R,1.5) + a)) )  ;// taper_func(R,rin,-1.0) ;
+    rho = (S/sqrt(2.*M_PI*H*H)) * (pow(R/rin,3./2+UGPOW)) * exp(-z*z/(2.*H*H))  * taper_func(r,rin, 3.0) ; //3 is best i think //* ( 1.0 - R*R/((pow(R,1.5) + a)*(pow(R,1.5) + a)) )  ;// taper_func(R,rin,-1.0) ;
     u = rho*cs*cs/(gam - 1.)/gam;
     ur = 0. ;
     uh = 0. ;
@@ -1698,7 +1698,7 @@ void adjust_fluxctstag_emfs(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR
 // User's cooling function:
 
 #define USERTHETACOOL       (0.1)	/* should be same as h_over_r */
-#define USERTAUCOOL         (1.0) //(2.0*M_PI)	        /* cooling time in number of rotational times : really USERTAUCOOL=2*M_PI would be 1 rotational time */
+#define USERTAUCOOL         (2.0*M_PI*0.01)	        /* cooling time in number of rotational times : really USERTAUCOOL=2*M_PI would be 1 rotational time */
 #define USERNOCOOLTHETAFACT     (1.0)           /* this times h_over_r and no more cooling there*/
 
 // This implementation of cooling is as in Noble et. al. 2009, to simulate a radiative cooling source term which keeps the disk thin to a target H/r
@@ -1763,13 +1763,13 @@ int coolfunc_user(FTYPE h_over_r, FTYPE *pr, struct of_geom *geom, struct of_sta
 
         wcirc =   rho*(1. + cs_circ*cs_circ/(gam - 1.)) ;
 
-	Tfix = (M_PI / 2.) * (thetacool * R * Wcirc) * (thetacool * R * Wcirc);
+	Tfix = (thetacool * R * Wcirc) * (thetacool * R * Wcirc);
 	Yscaling = (gam-1.)*e/(Tfix);
 
 
-	if(t > 0. && dt < taucool/Wcirc  && Yscaling > 1.0 && r > Rhor && ((w/rho)*q->ucov[TT] > -1.0) ) {
+	if(t > 0. && Yscaling > 1.0 ) {
 
-	  dUcool = - 0.5*(Wcirc/taucool) * u * sqrt( Yscaling - 1.) * photoncapture * q->ucon[TT]  ; // MAVARA temporarily added 0.1 factor to slow cooling to see if it makes a difference on 11/10/2013
+	  dUcool = - (Wcirc/taucool) * u * sqrt( Yscaling - 1.) * photoncapture * q->ucon[TT]  ; // MAVARA temporarily added 0.1 factor to slow cooling to see if it makes a difference on 11/10/2013
 	  //	  dUcool=-u*(Wcirc/taucool)*log(enk/enk0)*photoncapture;
 	}
         else{
@@ -1996,8 +1996,8 @@ int calc_da3vsr(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
                                  
       if(rr>=RTRANSITION_MACRO && rr < RBREAK_MACRO) {
 
-	switchmad2 = 0.5+1.0/M_PI*atan((rr-40.)/10.); 
-	switchmad1 = 0.5-1.0/M_PI*atan((rr-40.)/10.);
+	switchmad2 = 0.5+1.0/M_PI*atan((rr-25.)/6.); 
+	switchmad1 = 0.5-1.0/M_PI*atan((rr-25.)/6.);
 
 	if(tempstore[0] > 0.1 && tempstore[1] < 0.1) {
 	  tempstore[1] = rr; 

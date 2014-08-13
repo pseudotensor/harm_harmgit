@@ -2762,7 +2762,7 @@ void set_points()
 
 
 
-#define MAXIHOR MAXBND
+#define MAXIHOR (5) //MAXBND MAVARACHANGE now halving resolution doesn't make less than 5 cells inside horizon
 #define FRACN1 (0.1)
 #define ADJUSTFRACT (0.25)
 
