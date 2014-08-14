@@ -31,9 +31,10 @@ static SFTYPE beta,randfact,rin,rinfield,routfield; // OPENMPMARK: Ok file globa
 static FTYPE rhodisk;
 static FTYPE nz_func(FTYPE R) ;
 static FTYPE taper_func2(FTYPE R,FTYPE rin, FTYPE rpow) ;
-static int fieldprim(int *whichvel, int*whichcoord, int ii, int jj, int kk, FTYPE *pr);
+static int fieldprim(int whichmethod, int *whichvel, int*whichcoord, int ii, int jj, int kk, FTYPE *pr);
 FTYPE B0WALD; // set later
 int DOWALDDEN=0; // WALD: 0->1 to set densities as floor-like with below b^2/rho at horizon.  Should also choose FIELDTYPE==FIELDWALD.
+int WALDWHICHACOV=3; // which component : -1 is all of them
 //FTYPE BSQORHOWALD=50.0; // leads to too large b^2/rho and uu0 cylindrical shock forms at r\sim 2r_g and remains forever (at least at 128x64)
 FTYPE BSQORHOWALD=100.0;
 FTYPE aforwald;
@@ -49,6 +50,7 @@ int inittypeglobal; // for bounds to communicate detail of what doing
 #define MAXPASSPARMS 10
 
 //#define THETAROTMETRIC (0.5*0.7)
+//#define USER_THETAROTMETRIC (M_PI*0.25)
 #define USER_THETAROTMETRIC (0.0)
 #define USER_THETAROTPRIMITIVES (0.0) // probably want to choose 0, so initial conditions are as if no tilt
   
@@ -217,8 +219,6 @@ int prepre_init_specific_init(void)
   int funreturn;
 
 
-
-
   funreturn=user1_prepre_init_specific_init();
   if(funreturn!=0) return(funreturn);
 
@@ -264,7 +264,7 @@ int prepre_init_specific_init(void)
   }
 
   // Also: SET USEROMIO to 0 or 1 in mympi.definit.h (needs to be 0 for TEXTOUTPUT)
-  if(PRODUCTION==0){
+  if(PRODUCTION==0||DOWALDDEN==1){ // for now DOWALDDEN==1
     binaryoutput=TEXTOUTPUT;
     // KRAKEN: comment out above.  And change mympi.definit.h's USEROMIO 0 to 1 for the "choice" version.
   }
@@ -1361,11 +1361,11 @@ int init_global(void)
     // 5) #define N1 32
 
     BSQORHOLIMIT=1E2;
-    
+
     if(DOWALDDEN){// override if doing wald
       BSQORHOLIMIT=BSQORHOWALD;
     }
-
+ 
 
 
 
@@ -1594,7 +1594,7 @@ int init_global(void)
     else{
       //      for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=1.0;
       for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=4.0;
-      //    for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=0.1;
+      //for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=0.1;
     }
 
     DTr = 100; //number of time steps for restart dumps
@@ -1642,7 +1642,6 @@ int init_defcoord(void)
   else{
     THETAROTMETRIC = 0.0;
   }
-
 
 
   /*************************************************/
@@ -2749,7 +2748,8 @@ int init_dsandvels(int inittype, int pos, int *whichvel, int*whichcoord, SFTYPE 
 
   if(FIELDTYPE==SPLITMONOPOLE || FIELDTYPE==MONOPOLE || FIELDTYPE==FIELDWALD){
     // generate field with same whichcoord as init_dsandvels_koral() set
-    fieldprim(whichvel, whichcoord, i, j, k, pr); // assume pstag set as average of pr
+    int whichmethod=0;
+    fieldprim(whichmethod, whichvel, whichcoord, i, j, k, pr); // assume pstag set as average of pr
   }
 
 
@@ -5296,7 +5296,7 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
       lower_vec(kcon,ptrgeomreal,kcov);
       
       
-      if(1 || l==3){
+      if(l==WALDWHICHACOV || WALDWHICHACOV==-1){
         // A_i
         // below so field is b^2/rho=BSQORHOWALD at horizon
         FTYPE Rhorlocal=rhor_calc(0);
@@ -5324,9 +5324,12 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
 
 
 
+
+
+
 // setup primitive field (must use whichcoord inputted)
 // sets CENT value of field primitive
-static int fieldprim(int *whichvel, int*whichcoord, int ii, int jj, int kk, FTYPE *pr)
+static int fieldprim(int whichmethod, int *whichvel, int*whichcoord, int ii, int jj, int kk, FTYPE *pr)
 {
 
 
@@ -5363,13 +5366,17 @@ static int fieldprim(int *whichvel, int*whichcoord, int ii, int jj, int kk, FTYP
   FTYPE realX[NDIM];
   if(*whichcoord==PRIMECOORDS){
     get_geometry(ii,jj,kk,CENT,ptrgeom);
-    DLOOPA(jj) realX[jj]=X[jj];
+    int j;
+    DLOOPA(j) realX[j]=X[j];
+    //    dualfprintf(fail_file,"using PRIMECOORDS\n");
   }
   else{
     // get metric grid geometry for these ICs
     int getprim=0;
     gset(getprim,*whichcoord,ii,jj,kk,ptrgeom);
-    DLOOPA(jj) realX[jj]=V[jj];
+    int j;
+    DLOOPA(j) realX[j]=V[j];
+    //    dualfprintf(fail_file,"using WHICHCOORD=%d\n",*whichcoord);
   }
 
 
@@ -5396,7 +5403,6 @@ static int fieldprim(int *whichvel, int*whichcoord, int ii, int jj, int kk, FTYP
 
     FTYPE Fcov[NDIM][NDIM];
     FTYPE Mcon[NDIM][NDIM];
-    FTYPE Mcov[NDIM][NDIM];
     FTYPE etacov[NDIM],etacon[NDIM];
     FTYPE Ecov[NDIM],Econ[NDIM],Bcov[NDIM],Bcon[NDIM];
     FTYPE alpha;
@@ -5406,74 +5412,170 @@ static int fieldprim(int *whichvel, int*whichcoord, int ii, int jj, int kk, FTYP
     void Fcov_numerical(int whichcoord, FTYPE *X, FTYPE (*Fcov)[NDIM]);
     void Jcon_numerical(int whichcoord, FTYPE *X, FTYPE *Jcon);
     extern void MtoF(int which, FTYPE Max[NDIM][NDIM],struct of_geom *geom, FTYPE faraday[NDIM][NDIM]);
-    extern void lower_A(FTYPE Acon[NDIM][NDIM], struct of_geom *geom, FTYPE Acov[NDIM][NDIM]);
+    extern void lower_A(FTYPE (*Acon)[NDIM], struct of_geom *geom, FTYPE (*Acov)[NDIM]);
+    extern void raise_A(FTYPE (*Acov)[NDIM], struct of_geom *geom, FTYPE (*Acon)[NDIM]);//extern void raise_A(FTYPE Acov[NDIM][NDIM], struct of_geom *geom, FTYPE Acon[NDIM][NDIM]);
     extern int EBtopr(FTYPE *E,FTYPE *B,struct of_geom *geom, FTYPE *pr);
     extern int EBtopr_2(FTYPE *E,FTYPE *B,struct of_geom *geom, FTYPE *pr);
 
-    //    first get F_{\mu\nu}
-    Fcov_numerical(*whichcoord, X, Fcov);
-
-    // check that J^\mu=0
-    Jcon_numerical(*whichcoord, X, Jcon);
-
-
-    //    dualfprintf(fail_file,"Fcov\n");
-    //DLOOP dualfprintf(fail_file,"Fcov[%d][%d]=%21.15g\n",j,k,Fcov[j][k]);
-    //    dualfprintf(fail_file,"%21.15g %21.15g\n",j,k,Fcov[0][3],Fcov[3][0]);
     
-    // lapse
-    // define \eta_\alpha
-    // assume always has 0 value for space components
-    alpha = 1./sqrt(-ptrgeom->gcon[GIND(0,0)]);
-
-    etacov[TT]=-alpha; // any constant will work.
-    SLOOPA(j) etacov[j]=0.0; // must be 0
-    
-    // shift
-    // define \eta^\beta
-    raise_vec(etacov,ptrgeom,etacon);
-    //    dualfprintf(fail_file,"raise\n");
-
-    //    DLOOPA dualfprintf(fail_file,"etacon[%d]=%21.15g etacov[%d]=%21.15g\n",j,etacon[j],j,etacov[j]);
-    
-
-    // then get E^\alpha and B^\alpha
-    DLOOPA(j) Ecov[j]=0.0;
-    DLOOP(j,k) Ecov[j]+=etacon[k]*Fcov[j][k];
-    raise_vec(Ecov,ptrgeom,Econ);
-    //    dualfprintf(fail_file,"Ecov[3]=%2.15g\n",Ecov[3]);
-    //DLOOPA dualfprintf(fail_file,"Econ[%d]=%2.15g\n",j,Econ[j]);
-
-
-    MtoF(3,Fcov,ptrgeom,Mcon);
-    //    dualfprintf(fail_file,"MtoF\n");
-    //    DLOOP dualfprintf(fail_file,"Mcon[%d][%d]=%21.15g\n",j,k,Mcon[j][k]);
-
-    DLOOPA(j) Bcon[j]=0.0;
-    DLOOP(j,k) Bcon[j]+=etacov[k]*Mcon[k][j];
-    
-
-    lower_vec(Bcon,ptrgeom,Bcov);
-
-    //    DLOOPA dualfprintf(fail_file,"Econ[%d]=%21.15g Bcon[%d]=%21.15g\n",j,Econ[j],j,Bcon[j]);
-
     FTYPE prold[NPR];
     int pliter,pl;
     PLOOP(pliter,pl) prold[pl]=pr[pl];
+    
+    // check that J^\mu=0
+    Jcon_numerical(*whichcoord, X, Jcon);
 
-    // Use E,B to get primitives (v will be in WHICHVEL)
-    // ASSUMES FORCE-FREE!
-    EBtopr(Econ,Bcon,ptrgeom,pr);
+    FTYPE Fcon[NDIM][NDIM];
+    FTYPE Fud[NDIM][NDIM];
+    FTYPE Fdu[NDIM][NDIM];
+    FTYPE Mud[NDIM][NDIM];
+    FTYPE Mdu[NDIM][NDIM];
+    FTYPE Mcov[NDIM][NDIM];
+    if(whichmethod==0){
+      //    first get F_{\mu\nu}
+      Fcov_numerical(*whichcoord, X, Fcov);
+      
+      // get *F^{\mu\nu}
+      MtoF(3,Fcov,ptrgeom,Mcon);
+    }
+    else{
+      //      int j,k;
+      DLOOP(j,k) Mcon[j][k]=0.0;
+      SLOOPA(j) Mcon[j][0] = Bcon[j] = prold[B1+j-1]; // use original field from staggered field to centered from A_i
+      SLOOPA(j) Mcon[0][j] = -Mcon[j][0];
 
-    // transform WHICHVEL back to *whichvel
+      MtoF(0,Mcon,ptrgeom,Fcov);
+    }
+
+    raise_A(Fcov,ptrgeom,Fcon);
+    indices_2221(Fcon,Fud,ptrgeom);
+    indices_2212(Fcon,Fdu,ptrgeom);
+
+    indices_2221(Mcon,Mud,ptrgeom);
+    indices_2212(Mcon,Mdu,ptrgeom);
+    lower_A(Mcon,ptrgeom,Mcov);
+
+
+    //    dualfprintf(fail_file,"MtoF\n");
+    //    DLOOP dualfprintf(fail_file,"Mcon[%d][%d]=%21.15g\n",j,k,Mcon[j][k]);
+
+    int doit=ii==N1-1 && jj==N2/4-1 && kk==0;
+    doit=0;
+
+
+
+    if(1){
+      FTYPE Tud[NDIM][NDIM];
+      int ll,mm;
+      FTYPE Fsq=0.0;
+      DLOOP(j,k) Fsq += Fcon[j][k]*Fcov[j][k];
+      DLOOP(j,k) Tud[j][k] = 0.0;
+      DLOOP(j,k){
+        DLOOPA(ll) Tud[j][k] += Fud[j][ll]*Fdu[k][ll];
+        Tud[j][k] += - 0.25*delta(j,k)*Fsq;
+      }
+
+      if(doit) dualfprintf(fail_file,"Tudi0=%g %g %g\n",Tud[1][0],Tud[2][0],Tud[3][0]);
+
+      FTYPE U[NPR];
+      DLOOPA(j) U[UU+j] = Tud[0][j];
+      DLOOPA(j) Mcon[j][j]=0.0; // force
+      SLOOPA(j) U[B1+j-1] = Bcon[j] = Mcon[j][0]; // B^i = \dF^{it}
+      Bcon[TT]=0.0; // force
+
+
+      if(doit) dualfprintf(fail_file,"CONS: %g %g %g %g : %g %g %g: F=%g %g\n",U[UU],U[U1],U[U2],U[U3],Bcon[1],Bcon[2],Bcon[3],Fcov[0][3],Fcov[3][0]);
+      
+      struct of_newtonstats newtonstats; setnewtonstatsdefault(&newtonstats);
+      int eomtypelocal=EOMFFDE;
+      struct of_state qdontuse;
+      struct of_state *qptr=&qdontuse;
+      // assume if needed rest of pr already set
+      SLOOPA(j) pr[B1+j-1]=Bcon[j];
+      //SLOOPA(j) pr[U1+j-1]=0.0; // only valid if WHICHVEL==VELREL4 // just assume use "old" versions
+      if(doit) dualfprintf(fail_file,"BEFORE Utoprimgen()\n");
+      if(doit) PLOOP(pliter,pl) dualfprintf(fail_file,"oldpr[%d]=%g\n",pl,pr[pl]);
+      Utoprimgen(0,0,0,0,1,&eomtypelocal,CAPTYPEBASIC,0,1,EVOLVEUTOPRIM,UNOTHING,U,qptr,ptrgeom,0,pr,pr,&newtonstats);
+      if(doit) dualfprintf(fail_file,"AFTER Utoprimgen()\n");
+      if(doit) PLOOP(pliter,pl) dualfprintf(fail_file,"newpr[%d]=%g\n",pl,pr[pl]);
+      PLOOP(pliter,pl) if(pl>=URAD1 && pl<=URAD3) pr[pl]=prold[pl]; // revert radiation primitives to unmodified values (in whichvel, whichcoord)
+
+      struct of_state qdontuse2;
+      struct of_state *qptr2=&qdontuse2;
+      get_state(pr,ptrgeom,qptr2);
+      bcon_calc(pr,qptr2->ucon,qptr2->ucov,qptr2->bcon);
+      FTYPE fdd03;
+      fdd03 = ptrgeom->gdet * (qptr2->ucon[1]*qptr2->bcon[2] - qptr2->ucon[2]*qptr2->bcon[1]) ;
+      if(doit) dualfprintf(fail_file,"fdd03=%g\n",fdd03);
+
+      FTYPE mhdflux[NDIM][NDIM];
+      DLOOPA(j)  mhd_calc(pr, j, ptrgeom, qptr2, mhdflux[j], NULL);
+      if(doit) dualfprintf(fail_file,"mhdflux=%g %g %g\n",mhdflux[1][0],mhdflux[2][0],mhdflux[3][0]);
+
+    }
+    else{
+      
+      // lapse
+      // define \eta_\alpha
+      // assume always has 0 value for space components
+      alpha = 1./sqrt(-ptrgeom->gcon[GIND(0,0)]);
+      
+      etacov[TT]=-alpha; // any constant will work.
+      SLOOPA(j) etacov[j]=0.0; // must be 0
+      
+      DLOOPA(j) Bcon[j]=0.0;
+      DLOOP(j,k) Bcon[j]+=etacov[k]*Mcon[k][j];
+      lower_vec(Bcon,ptrgeom,Bcov);
+
+
+      //    dualfprintf(fail_file,"Fcov\n");
+      //DLOOP dualfprintf(fail_file,"Fcov[%d][%d]=%21.15g\n",j,k,Fcov[j][k]);
+      //    dualfprintf(fail_file,"%21.15g %21.15g\n",j,k,Fcov[0][3],Fcov[3][0]);
+    
+    
+      // shift
+      // define \eta^\beta
+      raise_vec(etacov,ptrgeom,etacon);
+      //    dualfprintf(fail_file,"raise\n");
+
+      //    DLOOPA dualfprintf(fail_file,"etacon[%d]=%21.15g etacov[%d]=%21.15g\n",j,etacon[j],j,etacov[j]);
+    
+
+      // then get E^\alpha and B^\alpha
+      DLOOPA(j) Ecov[j]=0.0;
+      DLOOP(j,k) Ecov[j]+=etacon[k]*Fcov[j][k];
+      raise_vec(Ecov,ptrgeom,Econ);
+      dualfprintf(fail_file,"etacon=%g %g %g %g Ecov[3]=%21.15g\n",etacon[0],etacon[1],etacon[2],etacon[3],Ecov[3]);
+      //DLOOPA dualfprintf(fail_file,"Econ[%d]=%2.15g\n",j,Econ[j]);
+
+
+
+      //    DLOOPA dualfprintf(fail_file,"Econ[%d]=%21.15g Bcon[%d]=%21.15g\n",j,Econ[j],j,Bcon[j]);
+
+
+      // Use E,B to get primitives (v will be in WHICHVEL)
+      // ASSUMES FORCE-FREE!
+      EBtopr(Econ,Bcon,ptrgeom,pr);
+    }
+
+
+
+
+    // transform WHICHVEL back to *whichvel (only for plasma, not radiation)
     FTYPE ucontemp[NDIM];
+    //    dualfprintf(fail_file,"BEFORE pr2ucon\n");
     int return1=pr2ucon(WHICHVEL,pr,ptrgeom,ucontemp);
+    //    dualfprintf(fail_file,"AFTER pr2ucon\n");
     if(failed || return1){
       for(pl=RHO;pl<=U3;pl++) pr[pl]=prold[pl];
       failed=0;
     }
     else{
+      //      dualfprintf(fail_file,"BEFORE ucon2pr: %d\n",*whichvel);
       ucon2pr(*whichvel,ucontemp,ptrgeom,pr);
+      //      dualfprintf(fail_file,"AFTER ucon2pr\n");
+      //      PLOOP(pliter,pl) dualfprintf(fail_file,"from ucon2pr[%d]=%g\n",pl,pr[pl]);
+
       if(0&&r<Rhor){
         for(pl=RHO;pl<=U3;pl++) pr[pl]=prold[pl] + (pr[pl]-prold[pl])/(Rhor-0.0)*(r-0.0);
       }
@@ -5482,17 +5584,17 @@ static int fieldprim(int *whichvel, int*whichcoord, int ii, int jj, int kk, FTYP
       }
     }
 
+
     if(EOMTYPE==EOMFFDE){
       //      pr[U1]=pr[U2]=pr[U3]=0.0;
       //    dualfprintf(fail_file,"EBtopr\n");
     }
     else{ // just use atmosphere (normally a ZAMO) frame for fluid frame
-      //for(pl=RHO;pl<=U3;pl++) pr[pl]=prold[pl];
+      //      for(pl=RHO;pl<=U3;pl++) pr[pl]=prold[pl];
     }
 
 
     int BOOSTFIELD=0; // for moving BH problem
-
 
     if(BOOSTFIELD){
       // BOOST of field
@@ -5503,10 +5605,10 @@ static int fieldprim(int *whichvel, int*whichcoord, int ii, int jj, int kk, FTYP
       FTYPE ilambdatrans[NDIM][NDIM];
       // assume time doesn't change or mix with space
       lambdatrans[TT][TT]=1.0;
-      SLOOPA(jj) lambdatrans[TT][jj] = lambdatrans[jj][TT] = 0.0;
+      SLOOPA(j) lambdatrans[TT][j] = lambdatrans[j][TT] = 0.0;
 
       ilambdatrans[TT][TT]=1.0;
-      SLOOPA(jj) ilambdatrans[TT][jj] = ilambdatrans[jj][TT] = 0.0;
+      SLOOPA(j) ilambdatrans[TT][j] = ilambdatrans[j][TT] = 0.0;
 
       // rest come from definitions of {x,y,z}(r,\theta,\phi)
       // assumes orthonormal to orhonormal!
@@ -5545,11 +5647,11 @@ static int fieldprim(int *whichvel, int*whichcoord, int ii, int jj, int kk, FTYP
 
       // transform from ortho Cart to ortho SPC
       FTYPE tempcomp[NDIM];
-      DLOOPA(jj) tempcomp[jj]=0.0;
-      DLOOP(jj,kk){
-        tempcomp[kk] += ilambdatrans[jj][kk]*finalvec[jj];
+      DLOOPA(j) tempcomp[j]=0.0;
+      DLOOP(j,k){
+        tempcomp[k] += ilambdatrans[j][k]*finalvec[j];
       }
-      DLOOPA(jj) finalvec[jj]=tempcomp[jj]; // spc
+      DLOOPA(j) finalvec[j]=tempcomp[j]; // spc
 
 
       // add non-ortho coordinate basis velocity to ortho
@@ -5562,8 +5664,6 @@ static int fieldprim(int *whichvel, int*whichcoord, int ii, int jj, int kk, FTYP
       pr[U2] = finalvec[TH];
       pr[U3] = finalvec[PH];
     }    
-
-
 
 
     // stick J^\mu into dump file
@@ -5610,6 +5710,24 @@ static int fieldprim(int *whichvel, int*whichcoord, int ii, int jj, int kk, FTYP
  
   }// end if FIELDWALD
 
+
+  return(0);
+}
+
+// compute after A_\mu -> Bstag^i -> Bcent^i to use proper centered field in inversion to get centered velocity for, e.g., Wald problem
+int init_postvpot(int i, int j, int k, FTYPE *pr, FTYPE *pstag, FTYPE *ucons){
+
+  int set_fieldtype(void);
+  int FIELDTYPE=set_fieldtype();
+
+  if(FIELDTYPE==SPLITMONOPOLE || FIELDTYPE==MONOPOLE || FIELDTYPE==FIELDWALD){
+
+    int whichvel=WHICHVEL;
+    int whichcoord=PRIMECOORDS;
+    int whichmethod=1;
+    fieldprim(whichmethod, &whichvel, &whichcoord, i, j, k, pr);
+
+  }
 
   return(0);
 }
@@ -5801,14 +5919,26 @@ void Fcov_numerical(int whichcoord, FTYPE *X, FTYPE (*Fcov)[NDIM])
 
       aforwald=a;
 
-	  Fcov[j][k] = 0.5*B0WALD*(
-	    +(mcovhj - mcovlj) / (Vhk[k] - Vlk[k])
-	    -(mcovhk - mcovlk) / (Vhj[j] - Vlj[j])
-	    +2.0*aforwald*(
-		   +(kcovhj - kcovlj) / (Vhk[k] - Vlk[k])
-		   -(kcovhk - kcovlk) / (Vhj[j] - Vlj[j])
-		   )
-	    );
+      // F_{\mu\nu} = A_\nu,\mu - A_\mu,\nu
+      // A_\phi only
+      Fcov[j][k]=0.0;
+
+      if(j==WALDWHICHACOV || WALDWHICHACOV==-1){
+        Fcov[j][k] += 0.5*B0WALD*(
+                                 +(mcovhj - mcovlj) / (Vhk[k] - Vlk[k])
+                                 +2.0*aforwald*(
+                                                +(kcovhj - kcovlj) / (Vhk[k] - Vlk[k])
+                                                )
+                                 );
+      }
+      if(k==WALDWHICHACOV || WALDWHICHACOV==-1){
+        Fcov[j][k] += 0.5*B0WALD*(
+                                 -(mcovhk - mcovlk) / (Vhj[j] - Vlj[j])
+                                 +2.0*aforwald*(
+                                                -(kcovhk - kcovlk) / (Vhj[j] - Vlj[j])
+                                                )
+                                 );
+      }
       }// j
     }// k
   }
@@ -5817,12 +5947,19 @@ void Fcov_numerical(int whichcoord, FTYPE *X, FTYPE (*Fcov)[NDIM])
     aforwald=a;
 
     for(k=0;k<NDIM;k++) for(j=0;j<NDIM;j++){
+        Fcov[j][k]=0.0;
+
         // 0 in dfridr not used
         FTYPE ans1;+dfridr(mcov_func_mcoord,ptrgeom,X,0,j,k,&ans1);
         FTYPE ans2;-dfridr(mcov_func_mcoord,ptrgeom,X,0,k,j,&ans2);
         FTYPE ans3;+dfridr(kcov_func_mcoord,ptrgeom,X,0,j,k,&ans3);
         FTYPE ans4;-dfridr(kcov_func_mcoord,ptrgeom,X,0,k,j,&ans4);
-        Fcov[j][k]=B0WALD*(+ans1 + ans2 +2.0*aforwald*(ans3 + ans4));
+        if(j==WALDWHICHACOV || WALDWHICHACOV==-1){
+          Fcov[j][k] += B0WALD*(ans1 +2.0*aforwald*(ans3));
+        }
+        if(k==WALDWHICHACOV || WALDWHICHACOV==-1){
+          Fcov[j][k] += B0WALD*(ans2 +2.0*aforwald*(ans4));
+        }
       }
 
     dualfprintf(fail_file,"NOT SETUP FOR NUMREC\n");
@@ -5998,7 +6135,7 @@ FTYPE Fcon_func_mcoord(struct of_geom *ptrgeom, FTYPE* X, int ii, int jj)
 
   // get covariant Maxwell from contravariant
   FTYPE Fcon[NDIM][NDIM];
-  extern void raise_A(FTYPE Acov[NDIM][NDIM], struct of_geom *geom, FTYPE Acon[NDIM][NDIM]);
+  extern void raise_A(FTYPE (*Acov)[NDIM], struct of_geom *geom, FTYPE (*Acon)[NDIM]);//extern void raise_A(FTYPE Acov[NDIM][NDIM], struct of_geom *geom, FTYPE Acon[NDIM][NDIM]);
   raise_A(Fcov, ptrgeom, Fcon) ;
 
   // return gdet*F^{ii jj}
@@ -6338,6 +6475,7 @@ int coolfunc_user(FTYPE h_over_r, FTYPE *pr, struct of_geom *geom, struct of_sta
 {
   return(0); // nothing yet
 }
+
 
 
 #define JET6LIKEUSERCOORD 0

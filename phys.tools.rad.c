@@ -10038,6 +10038,38 @@ int indices_2221(FTYPE T1[][NDIM],FTYPE T2[][NDIM], struct of_geom *ptrgeom)
   return 0;
 }
 
+/*****************************************************************/
+/*****************************************************************/
+/*****************************************************************/
+/// T^ij -> T_i^j
+int indices_2212(FTYPE T1[][NDIM],FTYPE T2[][NDIM], struct of_geom *ptrgeom)
+{
+  int i,j,k;
+  FTYPE Tt[NDIM][NDIM];
+
+  for(i=0;i<NDIM;i++)
+    {
+      for(j=0;j<NDIM;j++)
+        {
+          Tt[i][j]=0.;
+          for(k=0;k<NDIM;k++)
+            {
+              Tt[k][i]+=T1[j][i]*ptrgeom->gcov[GIND(j,k)];
+            }   
+        }
+    }
+
+  for(i=0;i<NDIM;i++)
+    {
+      for(j=0;j<NDIM;j++)
+        {
+          T2[i][j]=Tt[i][j];
+        }
+    }
+
+  return 0;
+}
+
 /// T^i_j -> T^{ij}
 int indices_2122(FTYPE T1[][NDIM],FTYPE T2[][NDIM], struct of_geom *ptrgeom)
 {

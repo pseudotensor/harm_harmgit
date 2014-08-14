@@ -540,7 +540,27 @@ int user1_init_primitives(int inittype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FT
   // no field
   trifprintf("init_zero_field #1\n");
   init_zero_field(prim,pstag,ucons,vpot,Bhat);
+
 #endif
+
+
+
+  if(1){
+#pragma omp parallel private(i,j,k) OPENMPGLOBALPRIVATEFULL
+    {
+      OPENMP3DLOOPVARSDEFINE;
+      ////////  COMPFULLLOOP{
+      OPENMP3DLOOPSETUPFULL;
+#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+      OPENMP3DLOOPBLOCK{
+        OPENMP3DLOOPBLOCK2IJK(i,j,k);
+
+        init_postvpot(i, j, k, MAC(prim,i,j,k), MAC(pstag,i,j,k), MAC(ucons,i,j,k));
+      }
+    }// end parallel region
+  }
+
+
 
 
 

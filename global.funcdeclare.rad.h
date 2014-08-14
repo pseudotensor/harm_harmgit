@@ -24,6 +24,7 @@ extern int calc_Rij(FTYPE *pp, FTYPE Rij[][4]);
 
 extern int indices_2221(FTYPE T1[][NDIM],FTYPE T2[][NDIM], struct of_geom *ptrgeom);
 extern int indices_2122(FTYPE T1[][NDIM],FTYPE T2[][NDIM], struct of_geom *ptrgeom);
+extern int indices_2212(FTYPE T1[][NDIM],FTYPE T2[][NDIM], struct of_geom *ptrgeom);
 extern int indices_21(FTYPE A1[NDIM],FTYPE A2[NDIM],struct of_geom *ptrgeom);
 extern int indices_12(FTYPE A1[NDIM],FTYPE A2[NDIM],struct of_geom *ptrgeom);
 
