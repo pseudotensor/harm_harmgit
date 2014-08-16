@@ -52,7 +52,7 @@ int inittypeglobal; // for bounds to communicate detail of what doing
 //#define THETAROTMETRIC (0.5*0.7)
 //#define USER_THETAROTMETRIC (M_PI*0.25)
 #define USER_THETAROTMETRIC (0.0)
-#define USER_THETAROTPRIMITIVES (0.0) // probably want to choose 0, so initial conditions are as if no tilt
+#define USER_THETAROTPRIMITIVES (0.0) // probably want to choose 0, so initial conditions are as if no tilt // WALD -> make same as USER_THETAROTMETRIC
   
 
 
