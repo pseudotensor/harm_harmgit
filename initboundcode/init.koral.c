@@ -5529,7 +5529,8 @@ static int fieldprim(int whichmethod, int whichinversion, int *whichvel, int*whi
       if(doit) dualfprintf(fail_file,"CONS: %g %g %g %g : %g %g %g: F=%g %g\n",U[UU],U[U1],U[U2],U[U3],Bcon[1],Bcon[2],Bcon[3],Fcov[0][3],Fcov[3][0]);
       
       struct of_newtonstats newtonstats; setnewtonstatsdefault(&newtonstats);
-      int eomtypelocal=EOMFFDE;
+      //      int eomtypelocal=EOMFFDE;
+      int eomtypelocal=EOMTYPE;
       struct of_state qdontuse;
       struct of_state *qptr=&qdontuse;
       // assume if needed rest of pr already set
