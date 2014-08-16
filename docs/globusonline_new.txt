@@ -1,0 +1,444 @@
+/*! \file ./docs//globusonline.txt
+~~~~
+https://www.globusonline.org/
+
+
+###################################
+# from ki-jmck to Nautilus:
+# this unfortunately puts jmckinne into jmckinne.
+ssh pseudotensor@cli.globusonline.org scp -r -s 1 pseudotensor#ki-jmck:/data2/jmckinne/ xsede#nautilus:/lustre/medusa/jmckinne/data2/jmckinne/ &> data2.globusonline.tryagain.errors_rev3.txt
+
+and:
+ssh pseudotensor@cli.globusonline.org scp -r -s 1 pseudotensor#ki-jmck:/data1/jmckinne/ xsede#nautilus:/lustre/medusa/jmckinne/data1/jmckinne/ &> data1.globusonline.tryagain.errors_rev2.txt
+
+
+# but should have done instead:
+ssh pseudotensor@cli.globusonline.org scp -r -s 1 pseudotensor#ki-jmck:/data2/jmckinne xsede#nautilus:/lustre/medusa/jmckinne/data2/ &> data2.globusonline.tryagain.errors_rev3.txt
+
+
+
+###################################
+# from Nautilus to ki-jmck:
+# with proper directory structure so sasha2b put into directory rather than recreating jmckinne again
+ssh pseudotensor@cli.globusonline.org scp -r -s 1 xsede#nautilus:/lustre/medusa/jmckinne/data1/jmckinne/jmckinne/sasha2b pseudotensor#ki-jmck:/data1/jmckinne/
+
+
+
+
+###################################
+# from Kraken to Ranch
+#
+#
+# below done once, so can easily copy using globusonline.
+# ssh tg802609@ranch.tacc.utexas.edu "ln -s ./ jcmkinne"
+ssh pseudotensor@cli.globusonline.org scp -D -r -s 1 xsede#kraken:/lustre/scratch/jmckinne xsede#ranch:/home/01014/tg802609/
+#   &> jonkraken2ranch.globusonline.tryagain.errors.txt
+
+# rblandfo
+# ssh tg802609@ranch.tacc.utexas.edu "ln -s ./ rblandfo"
+# but need to ensure jmckinne on kraken can access rblandfo's stuff. (at least chmod a+x /lustre/scratch/rblandfo and then chmod -R a+rx * inside that directory)
+ssh pseudotensor@cli.globusonline.org scp -D -r -s 1 xsede#kraken:/lustre/scratch/rblandfo xsede#ranch:/home/01014/tg802609/
+
+
+####################################
+# from pfe1 to Ranch
+# jmckinn2
+# ssh tg802609@ranch.tacc.utexas.edu "ln -s ./ jcmkinn2"
+# then create ssh keys locally for system: ssh-keygen -t rsa
+# then add id_rsa.pub to authorized_keys on other systems.  Also add to public keys on globusonline.
+ssh pseudotensor@cli.globusonline.org scp -D -r -s 1 pseudotensor#pfe1:/nobackup/jmckinn2 xsede#ranch:/home/01014/tg802609/ 
+
+
+
+
+
+######################################
+# from ki-jmck data1 to ranch (to backup Sasha models in particular)
+
+cd /data1/jmckinne/
+rm -rf globuslist.txt
+for realfile in `cat list.txt`
+do
+    echo "pseudotensor#ki-jmck/data1/jmckinne/$realfile/ xsede#ranch/home/01014/tg802609/$realfile/ -r" >> globuslist.txt
+done
+
+ssh pseudotensor@cli.globusonline.org transfer -s 1 < globuslist.txt
+
+######################################
+# from ki-jmck data2 to ranch (to backup things not properly sent to ranch)
+
+cd /data2/jmckinne/
+rm -rf globuslist.txt
+lssdir2 > list.txt
+###emacs list.txt &
+for realfile in `cat list.txt`
+do
+    echo "pseudotensor#ki-jmck/data2/jmckinne/$realfile/ xsede#ranch/home/01014/tg802609/$realfile/ -r" >> globuslist.txt
+done
+
+ssh pseudotensor@cli.globusonline.org transfer -s 1 < globuslist.txt
+
+
+
+
+######################################
+# from Nautilus to Kraken for thickdisk7
+ssh pseudotensor@cli.globusonline.org scp -D -r -s 2 xsede#nautilus:/lustre/medusa/jmckinne/data1/jmckinne/jmckinne/thickdisk7 xsede#kraken:/lustre/scratch/jmckinne/ &> naut2kraken.globusonline.tryagain.errors.txt
+
+
+######################################
+# from ki-jmck to Kraken for thickdisk7
+ssh pseudotensor@cli.globusonline.org scp -D -r -s 2 pseudotensor#ki-jmck:/data1/jmckinne/thickdisk7 xsede#kraken:/lustre/scratch/jmckinne/ &> jmck2kraken.globusonline.tryagain.errors.txt
+
+
+# when scp itself doesn't work, use globus to synch
+
+# ki-jmck to Kraken:
+ssh pseudotensor@cli.globusonline.org scp -D -r -s 3 pseudotensor#ki-jmck:/home/jmckinne/py xsede#kraken:/nics/b/home/jmckinne/
+
+# ki-jmck to Kraken (only __init__.py)
+ssh pseudotensor@cli.globusonline.org scp -s 3 pseudotensor#ki-jmck:/home/jmckinne/py/mread/__init__.py xsede#kraken:/nics/b/home/jmckinne/py/mread/
+
+# ki-jmck to Kraken (only makemovie.sh)
+ssh pseudotensor@cli.globusonline.org scp -s 3 pseudotensor#ki-jmck:/home/jmckinne/py/scripts/makemovie.sh xsede#kraken:/nics/b/home/jmckinne/py/scripts/
+
+# Kraken to ki-jmck (Makefile and makemoviec stuff only)
+ssh pseudotensor@cli.globusonline.org scp -D -s 3 xsede#kraken:/nics/b/home/jmckinne/py/scripts/jon_makemovie_programstartc.c pseudotensor#ki-jmck:py/scripts ; ssh pseudotensor@cli.globusonline.org scp -D -s 3 xsede#kraken:/nics/b/home/jmckinne/py/scripts/Makefile pseudotensor#ki-jmck:py/scripts
+
+
+
+################
+# from ki-rh12 to Nautilus
+
+### PART1
+
+# keep trailing slash!
+mydir=/nfs/slac/g/ki/ki14/jmckinne/sasha99/movie7/
+cd $mydir
+rm -rf globuslist.txt
+# keep trailing slash!
+otherdir=/lustre/medusa/jmckinne/data1/jmckinne/jmckinne/sasha99/movie7/
+ls *.npy > list.txt
+for realfile in `cat list.txt`
+do
+    echo "pseudotensor#ki-rh12$mydir$realfile xsede#nautilus$otherdir$realfile" >> globuslist.txt
+done
+
+ssh pseudotensor@cli.globusonline.org transfer -s 1 < globuslist.txt
+
+### PART2
+
+# keep trailing slash!
+mydir=/nfs/slac/g/ki/ki14/jmckinne/sasha99/movie7b/
+cd $mydir
+rm -rf globuslist.txt
+# keep trailing slash!
+otherdir=/lustre/medusa/jmckinne/data1/jmckinne/jmckinne/sasha99/movie7/
+ls *.npy > list.txt
+for realfile in `cat list.txt`
+do
+    echo "pseudotensor#ki-rh12$mydir$realfile xsede#nautilus$otherdir$realfile" >> globuslist.txt
+done
+
+ssh pseudotensor@cli.globusonline.org transfer -s 1 < globuslist.txt
+
+##################
+
+
+#ssh pseudotensor@cli.globusonline.org scp -r -s 3 pseudotensor#ki-rh12:/nfs/slac/g/ki/ki14/jmckinne/sasha99/movie7 xsede#nautilus:/lustre/medusa/jmckinne/data1/jmckinne/jmckinne/sasha99/movie7/          
+
+
+#############
+
+
+
+
+
+
+################
+# from Kraken (rblandfo) to Nautilus (jmckinne) of thickdiskr7 of only fieldline+gdump files for analysis.
+
+# keep trailing slash!
+mydir=/lustre/scratch/rblandfo/
+cd $mydir
+rm -rf $mydir/globuslist.txt
+# keep trailing slash!
+alias ls='ls'
+otherdir=/lustre/medusa/jmckinne/data1/jmckinne/jmckinne/
+dirlist=`ls | grep thickdiskr7`
+for fil in $dirlist
+do
+    cd $mydir/$fil/dumps/
+    filelist=`ls | egrep 'fieldline|gdump'`
+    for realfile in $filelist
+    do
+        echo "xsede#kraken$mydir/$fil/dumps/$realfile xsede#nautilus$otherdir/$fil/dumps/$realfile" >> $mydir/globuslist.txt
+    done
+    cd $mydir
+done
+
+ssh pseudotensor@cli.globusonline.org transfer -s 1 < $mydir/globuslist.txt
+
+
+
+
+################
+# from Kraken (rblandfo) to Nautilus (jmckinne) for sashaa* of only fieldline+gdump files for analysis.
+
+cd /lustre/scratch/rblandfo/
+list="sashaa99t1.5708i sashaa9b100t1.5708i sashaam9full2pit1.5708i"
+for dirname in $list
+do
+	chgrp -R tug1111 $dirname
+	find $dirname -type d -exec chmod 750 {} \;
+	find $dirname -type f -exec chmod 640 {} \;
+done
+
+
+# keep trailing slash!
+mydir=/lustre/scratch/rblandfo/
+cd $mydir
+rm -rf $mydir/globuslist335.txt
+# keep trailing slash!
+alias ls='ls'
+alias lssdir2='ls -ap| grep / | tail -n +3 | sed "s/\///"'
+otherdir=/lustre/medusa/jmckinne/data3/jmckinne/jmckinne/
+dirlist=`lssdir2 | grep sashaa`
+
+for fil in $dirlist
+do
+    echo "xsede#kraken$mydir/$fil/coordparms.dat xsede#nautilus$otherdir/$fil/coordparms.dat" >> $mydir/globuslist335.txt
+    cd $mydir/$fil/dumps/
+    filelist=`ls | egrep 'fieldline|gdump|rdump-0.bin'`
+    for realfile in $filelist
+    do
+        echo "xsede#kraken$mydir/$fil/dumps/$realfile xsede#nautilus$otherdir/$fil/dumps/$realfile" >> $mydir/globuslist335.txt
+    done
+    cd $mydir
+done
+
+ssh pseudotensor@cli.globusonline.org transfer -s 1 < $mydir/globuslist335.txt
+
+
+
+################
+# from Kraken (jmckinne) to Nautilus (jmckinne) for *3d7* and *hr3tilt* of only fieldline+gdump files for analysis.
+
+# keep trailing slash!
+mydir=/lustre/scratch/jmckinne/
+cd $mydir
+rm -rf $mydir/globuslist336.txt
+# keep trailing slash!
+alias ls='ls'
+alias lssdir2='ls -ap| grep / | tail -n +3 | sed "s/\///"'
+otherdir=/lustre/medusa/jmckinne/data3/jmckinne/jmckinne/
+dirlist1=`lssdir2 | grep 3d7`
+dirlist2=`lssdir2 | grep hr3tilt`
+dirlist3=`lssdir2 | grep sashalow`
+dirlist="$dirlist1 $dirlist2 $dirlist3"
+for fil in $dirlist
+do
+    echo "xsede#kraken$mydir/$fil/coordparms.dat xsede#nautilus$otherdir/$fil/coordparms.dat" >> $mydir/globuslist336.txt
+    cd $mydir/$fil/dumps/
+    filelist=`ls | egrep 'fieldline|gdump|rdump-0.bin'`
+    for realfile in $filelist
+    do
+        echo "xsede#kraken$mydir/$fil/dumps/$realfile xsede#nautilus$otherdir/$fil/dumps/$realfile" >> $mydir/globuslist336.txt
+    done
+    cd $mydir
+done
+
+ssh pseudotensor@cli.globusonline.org transfer -s 1 < $mydir/globuslist336.txt
+
+
+
+ssh pseudotensor@cli.globusonline.org scp -D -r -s 1 xsede#nautilus:/lustre/medusa/jmckinne xsede#ranch:/home/01014/tg802609/
+
+################
+# from Nautilus (jmckinne) to Nautilus (jmckinne) for *sashalow* of only fieldline+gdump files for analysis.
+
+# keep trailing slash!
+mydir=/lustre/medusa/jmckinne/
+cd $mydir
+rm -rf $mydir/globuslist339.txt
+# keep trailing slash!
+alias ls='ls'
+alias lssdir2='ls -ap| grep / | tail -n +3 | sed "s/\///"'
+otherdir=/lustre/medusa/jmckinne/data3/jmckinne/jmckinne/
+dirlist1=`lssdir2 | grep sashalow`
+dirlist2=`lssdir2 | grep sashalowlow`
+dirlist="$dirlist1 $dirlist2"
+for fil in $dirlist
+do
+    echo "xsede#nautilus$mydir/$fil/coordparms.dat xsede#nautilus$otherdir/$fil/coordparms.dat" >> $mydir/globuslist339.txt
+    cd $mydir/$fil/dumps/
+    filelist=`ls | egrep 'fieldline|gdump|rdump-0.bin'`
+    for realfile in $filelist
+    do
+        echo "xsede#nautilus$mydir/$fil/dumps/$realfile xsede#nautilus$otherdir/$fil/dumps/$realfile" >> $mydir/globuslist339.txt
+    done
+    cd $mydir
+done
+
+ssh pseudotensor@cli.globusonline.org transfer -s 1 < $mydir/globuslist339.txt
+
+
+################
+# from pfe1 (jmckinn2) to Nautilus (jmckinne) for *3d7* of only fieldline+gdump files for analysis.
+
+# keep trailing slash!
+mydir=/nobackup/jmckinn2/
+cd $mydir
+rm -rf $mydir/globuslist337.txt
+# keep trailing slash!
+alias ls='ls'
+alias lssdir2='ls -ap| grep / | tail -n +3 | sed "s/\///"'
+otherdir=/lustre/medusa/jmckinne/data3/jmckinne/jmckinne/
+dirlist1=`lssdir2 | grep 3d7`
+dirlist2=`lssdir2 | grep hr3tilt`
+dirlist="$dirlist1 $dirlist2"
+for fil in $dirlist
+do
+    echo "pseudotensor#pfe1$mydir/$fil/coordparms.dat xsede#nautilus$otherdir/$fil/coordparms.dat" >> $mydir/globuslist337.txt
+    cd $mydir/$fil/dumps/
+    filelist=`ls | egrep 'fieldline|gdump|rdump-0.bin'`
+    for realfile in $filelist
+    do
+        echo "pseudotensor#pfe1$mydir/$fil/dumps/$realfile xsede#nautilus$otherdir/$fil/dumps/$realfile" >> $mydir/globuslist337.txt
+    done
+    cd $mydir
+done
+
+ssh pseudotensor@cli.globusonline.org transfer -s 1 < $mydir/globuslist337.txt
+
+
+
+
+
+
+
+
+### from TACC
+export MYPROXY_SERVER=myproxy.teragrid.org
+myproxy-logon –s myproxy.xsede.org
+
+globus-url-copy –vb -tcp-bs 33554432 –stripe –p 4 file:///sourcefile
+gsiftp://gridftp1.ranch.tacc.utexas.edu/home/01014/tg802609/targetfile
+
+This only transfers a single file -- you would want to create a
+tarball of your directory tree and transfer the tarball in one
+command.
+### from TACC
+
+
+
+# recover thickdiskfull3d7tilt0.35 thickdiskfull3d7tilt0.7
+
+# /lustre/medusa/jmckinne/data3/jmckinne/jmckinne/thickdiskfull3d7tilt0.35/
+# /lustre/medusa/jmckinne/data3/jmckinne/jmckinne/thickdiskfull3d7tilt0.7/
+
+dirs="thickdiskfull3d7a thickdiskfull3d7b thickdiskfull3d7c thickdiskfull3d7d thickdiskfull3d7e thickdiskfull3d7f thickdiskfull3d7g thickdiskfull3d7h thickdiskfull3d7i thickdiskfull3d7j thickdiskfull3d7k thickdiskfull3d7l thickdiskfull3d7m thickdiskfull3d7n thickdiskfull3d7o thickdiskfull3d7p thickdiskfull3d7q thickdiskfull3d7r thickdiskfull3d7s thickdiskfull3d7t thickdiskfull3d7u thickdiskfull3d7v thickdiskfull3d7w thickdiskfull3d7x thickdiskfull3d7y thickdiskfull3d7z thickdiskfull3d7nexta thickdiskfull3d7nextb thickdiskfull3d7nextc thickdiskfull3d7nextd thickdiskfull3d7nexte thickdiskfull3d7nextf thickdiskfull3d7nextg thickdiskfull3d7nexth thickdiskfull3d7nexti thickdiskfull3d7nextj thickdiskfull3d7nextk thickdiskfull3d7nextl thickdiskfull3d7nextm thickdiskfull3d7nextn thickdiskfull3d7nexto thickdiskfull3d7nextp thickdiskfull3d7tilt0.7a thickdiskfull3d7tilt0.7b thickdiskfull3d7tilt0.7c thickdiskfull3d7tilt0.7d thickdiskfull3d7tilt0.7e thickdiskfull3d7tilt0.7f thickdiskfull3d7tilt0.7g thickdiskfull3d7tilt0.7h thickdiskfull3d7tilt0.7i thickdiskfull3d7tilt0.7j thickdiskfull3d7tilt0.7k thickdiskfull3d7tilt0.7l thickdiskfull3d7tilt0.7m thickdiskfull3d7tilt0.7n thickdiskfull3d7tilt0.7o thickdiskfull3d7tilt0.7p thickdiskfull3d7tilt0.7q thickdiskfull3d7tilt0.7r thickdiskfull3d7tilt0.7s thickdiskfull3d7tilt0.7t thickdiskfull3d7tilt0.7u thickdiskfull3d7tilt0.7v thickdiskfull3d7tilt0.7w thickdiskfull3d7tilt0.7x thickdiskfull3d7tilt0.7y thickdiskfull3d7tilt0.7z thickdiskfull3d7tilt0.7nexta thickdiskfull3d7tilt0.7nextb thickdiskfull3d7tilt0.7nextc thickdiskfull3d7tilt0.7nextd thickdiskfull3d7tilt0.7nexte thickdiskfull3d7tilt0.7nextf thickdiskfull3d7tilt0.7nextg thickdiskfull3d7tilt0.7nexth thickdiskfull3d7tilt0.7nexti thickdiskfull3d7tilt0.7nextj thickdiskfull3d7tilt0.7nextk"
+
+for fil in `echo $dirs`
+do
+        mkdir -p /lustre/medusa/jmckinne/data3/jmckinne/jmckinne/$fil/dumps/
+        ssh pseudotensor@cli.globusonline.org scp -D -r -s 1 xsede#ranch:/home/01014/tg802609/$fil xsede#nautilus:/lustre/medusa/jmckinne/data3/jmckinne/jmckinne/
+done
+
+
+
+
+
+
+################
+# from ranch to Nautilus (jmckinne) of thickdisk7 of only fieldline+gdump files for analysis.
+
+#ssh pseudotensor@cli.globusonline.org scp -D -r -s 1 xsede#ranch:/home/01014/tg802609/thickdisk7nextnextnextk/dumps/fieldline*.bin xsede#nautilus:/lustre/medusa/jmckinne/jmckinne/thickdisk7nextnextnextk/dumps/ 
+
+
+rm -rf ~/globus1.txt
+for fil in `cat ~/list.txt`
+do
+    echo "xsede#ranch/home/01014/tg802609/thickdisk7nextnextnextk/dumps/$fil xsede#nautilus/lustre/medusa/jmckinne/data1/jmckinne/jmckinne/thickdisk7/thickdisk7nextnextnextk/dumps/$fil" >> ~/globus1.txt
+done
+
+ssh pseudotensor@cli.globusonline.org transfer -s 1 < ~/globus1.txt
+
+
+############## new ranch to nautilus/Stampede
+# BEGIN
+
+1) On ranch:
+
+extradir=""
+tp="rads"
+cd /home/01014/tg802609/
+list=`ls | grep rad | grep -v listrads`
+
+#extradir="thickdisk7"
+#tp="td7"
+#cd /home/01014/tg802609/${extradir}/ # location where happen to have all files..blah
+#list=`ls | grep thickdisk7 | grep -v tar | grep -v '\.txt' | grep -v '\.avi' | grep -v 'dirslists'`
+
+#extradir=""
+#tp="sa0.99t0.6"
+#cd /home/01014/tg802609/${extradir}/ # location where happen to have all files..blah
+#list=`ls | grep sashaa99t0.6 | grep -v tar | grep -v '\.txt' | grep -v '\.avi' | grep -v 'dirslists'`
+
+#extradir=""
+#tp="sasha99"
+#cd /home/01014/tg802609/${extradir}/ # location where happen to have all files..blah
+#list=`ls | egrep 'sasha99\.' | grep -v tar | grep -v '\.txt' | grep -v '\.avi' | grep -v '\.sh' | grep -v 'dirslists'`
+
+
+for fil in $list ; do result=`ls -aR $fil/dumps/ | grep fieldline`; for sfil in $result; do echo "/home/01014/tg802609//${extradir}/$fil/dumps/$sfil" ; done ; done > ~/list${tp}_fieldline.txt
+for fil in $list ; do result=`ls -aR $fil/dumps/ | grep gdump`; for sfil in $result; do echo "/home/01014/tg802609//${extradir}/$fil/dumps/$sfil" ; done ; done > ~/list${tp}_gdump.txt
+for fil in $list ; do result=`ls -a $fil/coordparms.dat`; for sfil in $result; do echo "/home/01014/tg802609//${extradir}/$fil/$sfil" ; done ; done > ~/list${tp}_coordparms.txt
+for fil in $list ; do result=`ls -a $fil/dimensions.txt`; for sfil in $result; do echo "/home/01014/tg802609//${extradir}/$fil/$sfil" ; done ; done > ~/list${tp}_dimensions.txt
+cat ~/list${tp}_fieldline.txt ~/list${tp}_gdump.txt ~/list${tp}_coordparms.txt ~/list${tp}_dimensions.txt > ~/list${tp}_all.txt
+
+for fil in `cat ~/list${tp}_all.txt` ; do stage $fil ; done
+
+2) On Nautilus or Stampede
+
+tp="rads"
+#tp="sa0.99t0.6"
+#tp="sasha99"
+
+scp tg802609@ranch.tacc.utexas.edu:list${tp}_all.txt ~/
+
+rm -rf ~/globus1${tp}.txt
+for fil in `cat ~/list${tp}_all.txt`
+do
+    newname=`echo $fil | sed 's/\/home\/01014\/tg802609\//\/scratch\/01014\/tg802609\//'`
+    echo "xsede#ranch$fil xsede#stampede$newname" >> ~/globus1${tp}.txt
+done
+
+ssh pseudotensor@cli.globusonline.org transfer -s 1 < ~/globus1${tp}.txt
+
+3) When done copying, then need to make links
+
+cd $SCRATCH # on stampede
+~/py/make
+
+
+
+# END
+####################
+
+
+#####################
+# JUST ONE:
+
+rm -rf ~/globus1.txt
+for fil in `cat ~/list.txt`
+do
+    echo "xsede#ranch/home/01014/tg802609/thickdisk7nextnextnextk/dumps/$fil pseudotensor#ki-jmck/data1/jmckinne/thickdisk7/thickdisk7nextnextnextk/dumps/$fil" >> ~/globus1.txt
+done
+
+ssh pseudotensor@cli.globusonline.org transfer -s 1 < ~/globus1.txt
+
+
+  
+~~~~
+*/

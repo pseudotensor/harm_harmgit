@@ -5545,7 +5545,7 @@ static int fieldprim(int whichmethod, int *whichvel, int*whichcoord, int ii, int
       DLOOPA(j) Ecov[j]=0.0;
       DLOOP(j,k) Ecov[j]+=etacon[k]*Fcov[j][k];
       raise_vec(Ecov,ptrgeom,Econ);
-      dualfprintf(fail_file,"etacon=%g %g %g %g Ecov[3]=%21.15g\n",etacon[0],etacon[1],etacon[2],etacon[3],Ecov[3]);
+      if(doit) dualfprintf(fail_file,"etacon=%g %g %g %g Ecov[3]=%21.15g Fcov03=%g\n",etacon[0],etacon[1],etacon[2],etacon[3],Ecov[3],Fcov[0][3]);
       //DLOOPA dualfprintf(fail_file,"Econ[%d]=%2.15g\n",j,Econ[j]);
 
 

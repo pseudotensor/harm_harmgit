@@ -10054,7 +10054,7 @@ int indices_2212(FTYPE T1[][NDIM],FTYPE T2[][NDIM], struct of_geom *ptrgeom)
           Tt[i][j]=0.;
           for(k=0;k<NDIM;k++)
             {
-              Tt[k][i]+=T1[j][i]*ptrgeom->gcov[GIND(j,k)];
+              Tt[i][j]+=T1[k][j]*ptrgeom->gcov[GIND(k,i)];
             }   
         }
     }

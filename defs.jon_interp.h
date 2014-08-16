@@ -28,7 +28,7 @@ FTYPE *rcent,*rcent_tot;
 int horizoni,horizoncpupos1;
 int numprocs;
 int mycpupos[NDIM];
-int ncpux1;
+int ncpux1,ncpux2,ncpux3;
 
 // SOME GEOMETRIC VARIABLES (see also global.jon_interp.h for PERIODICINPHI)
 int dofull2pi;
