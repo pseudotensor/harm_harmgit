@@ -5748,7 +5748,7 @@ void debugfixupaltdeath_bc(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
     }
 
     // do nothing, since when including low density and high b^2/rho, has issues.
-    return; // flipping back to return because shifting floor in rho,u didn't help MHD heating.
+    //    return; // flipping back to return because shifting floor in rho,u didn't help MHD heating.
   }
   else{
     // allow outerdeath
@@ -5756,11 +5756,11 @@ void debugfixupaltdeath_bc(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
     // don't allow in general
     //return;
   }
-
+#define DAMPECOV 0
 #define DAMPGAMMA 0
 #define OUTERDEATHDAMP 0
 
-  if(DAMPGAMMA || OUTERDEATHDAMP){
+  if(DAMPGAMMA || OUTERDEATHDAMP || DAMPECOV){
 
     FULLLOOP{
       prfix=&MACP0A1(prim,i,j,k,0);//&GLOBALMACP0A1(pglobal,i,j,k,0);
@@ -5785,6 +5785,12 @@ void debugfixupaltdeath_bc(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
         }
       }
 
+      if(DAMPECOV){
+        if(V[1]>2.5 && steppart==0 && nstep%2==0){
+          extern int init_postvpot(int i, int j, int k, FTYPE *pr, FTYPE *pstag, FTYPE *ucons);
+          init_postvpot(i, j, k, prfix, NULL, NULL);
+        }
+      }
 
       if(OUTERDEATHDAMP){
 
