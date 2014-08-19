@@ -761,7 +761,12 @@ int diag_fixup_U(int docorrectucons, FTYPE *Ui, FTYPE *Uf, FTYPE *uconsinput, st
 
 
 
+
+#if(VARTOINTERP==PRIMTOINTERP_GDETFULLVERSION_WALD)
+#define FIXUPTYPE 0 // or else would create spurious Poynting flux
+#else
 #define FIXUPTYPE 1
+#endif
 /// 0 = primitive (adds rho,u in comoving frame)
 /// 1 = conserved but rho,u added in ZAMO frame
 /// 2 = conserved but ignore strict rho,u change for ZAMO frame and instead conserved momentum (doesn't keep desired u/rho, b^2/rho, or b^2/u and so that itself can cause problems

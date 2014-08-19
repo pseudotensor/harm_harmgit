@@ -5445,6 +5445,37 @@ static int fieldprim(int whichmethod, int whichinversion, int *whichvel, int*whi
       SLOOPA(j) Mcon[j][0] = Bcon[j] = prold[B1+j-1]; // use original field from staggered field to centered from A_i
       SLOOPA(j) Mcon[0][j] = -Mcon[j][0];
 
+      if(1){ // set *F_{\phi t}=0 so no angular momentum flux
+        FTYPE myBd3=0.0;
+        FTYPE Bu1=Bcon[1];
+        FTYPE Bu2=Bcon[2];
+        FTYPE Ed1=Mcon[2][3]; // *F^{23} = E_1 = F_{10}/detg
+        FTYPE Ed2=Mcon[3][1]; // *F^{31} = E_2 = F_{20}/detg
+        FTYPE Ed3=Mcon[1][2]; // *F^{12} = E_3 = F_{30}/detg
+        FTYPE gv00=ptrgeom->gcov[GIND(0,0)];
+        FTYPE gv01=ptrgeom->gcov[GIND(0,1)];
+        FTYPE gv02=ptrgeom->gcov[GIND(0,2)];
+        FTYPE gv03=ptrgeom->gcov[GIND(0,3)];
+        FTYPE gv13=ptrgeom->gcov[GIND(1,3)];
+        FTYPE gv23=ptrgeom->gcov[GIND(2,3)];
+        FTYPE gv33=ptrgeom->gcov[GIND(3,3)];
+        
+        FTYPE denom=(-Power(gv03,2) + gv00*gv33);
+        //        if(fabs(denom)<0.2 || fabs(r-Rhor)/Rhor<0.3){
+        if(fabs(r-Rhor)/Rhor<0.3){
+          Bcon[3] = Mcon[3][0] = 0.0;
+        }
+        else{
+          Bcon[3] = Mcon[3][0] = (B1*gv01*gv03 + B2*gv02*gv03 - B1*gv00*gv13 - Ed3*gv02*gv13 + Ed2*gv03*gv13 - B2*gv00*gv23 + Ed3*gv01*gv23 - Ed1*gv03*gv23 - Ed2*gv01*gv33 + Ed1*gv02*gv33 + myBd3)/denom;
+        }
+
+        //        Bcon[3] = Mcon[3][0] = (-(Bu1*gv01*gv03) - Bu2*gv02*gv03 + Bu1*gv00*gv13 + Bu2*gv00*gv23 + myBd3)/(pow(gv03,2) - gv00*gv33);
+
+        Mcon[0][3] = -Mcon[3][0];
+      }
+
+
+
       MtoF(0,Mcon,ptrgeom,Fcov);
     }
 
@@ -5573,6 +5604,12 @@ static int fieldprim(int whichmethod, int whichinversion, int *whichvel, int*whi
     FTYPE mhdflux[NDIM][NDIM];
     DLOOPA(j)  mhd_calc(pr, j, ptrgeom, qptr2, mhdflux[j], NULL);
     if(doit) dualfprintf(fail_file,"mhdflux=%g %g %g\n",mhdflux[1][0],mhdflux[2][0],mhdflux[3][0]);
+    FTYPE mhdfluxma[NDIM][NDIM];
+    DLOOPA(j)  mhd_calc_ma(pr, j, ptrgeom, qptr2, mhdfluxma[j], NULL, NULL, NULL);
+    if(doit) dualfprintf(fail_file,"mhdfluxma=%g %g %g\n",mhdfluxma[1][0],mhdfluxma[2][0],mhdfluxma[3][0]);
+    FTYPE mhdfluxem[NDIM][NDIM];
+    DLOOPA(j)  mhd_calc_em(pr, j, ptrgeom, qptr2, mhdfluxem[j], NULL);
+    if(doit) dualfprintf(fail_file,"mhdfluxem=%g %g %g\n",mhdfluxem[1][0],mhdfluxem[2][0],mhdfluxem[3][0]);
     
     
 

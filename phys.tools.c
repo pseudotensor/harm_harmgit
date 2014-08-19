@@ -1211,13 +1211,13 @@ void mhd_calc_0_ma(FTYPE *pr, int dir, struct of_state *q, FTYPE *mhd, FTYPE *mh
   DLOOPA(j) mhd[j] = eta * q->ucon[dir] * q->ucov[j];
   if(mhdabs!=NULL) DLOOPA(j) mhdabs[j] = fabs(mhd[j]);
 
-  DLOOPA(j) mhddiagpress[j] = 0.0;
+  if(mhddiagpress!=NULL) DLOOPA(j) mhddiagpress[j] = 0.0;
 #if(SPLITPRESSURETERMINFLUXMA==0)
   mhd[dir] += ptot;
   if(mhdabs!=NULL) mhdabs[dir] += fabs(ptot);
 #else
   // below equivalent to ptot * delta(dir,j)
-  mhddiagpress[dir] = ptot;
+  if(mhddiagpress!=NULL) mhddiagpress[dir] = ptot; // NOTEMARK: assumes if here, then mdhdiagpress better not be NULL
   if(mhddiagpressabs!=NULL) mhddiagpressabs[dir] = fabs(ptot);
 #endif
 
@@ -1269,6 +1269,7 @@ void mhd_calc_norestmass(FTYPE *pr, int dir, struct of_geom *geom, struct of_sta
 
   // add up MA and RAD and EM parts
   DLOOPA(j) mhd[j] = (mhdma[j] + mhddiagpress[j]) + mhdem[j];
+
   if(mhdabs!=NULL) DLOOPA(j) mhdabs[j] = (mhdmaabs[j] + mhddiagpressabs[j]) + mhdemabs[j];
 
 }
@@ -1319,7 +1320,7 @@ void mhd_calc_norestmass_ma(FTYPE *pr, int dir, struct of_geom *geom, struct of_
   // eta u^dir u_j + rho u^dir = (p+u+b^2) u^dir u_j + rho u^dir u_j + rho u^dir
   // = (p+u+b^2) u^dir u_j + rho u^dir (u_j + 1)
 
-  DLOOPA(j) mhddiagpress[j] = 0.0;
+  if(mhddiagpress!=NULL) DLOOPA(j) mhddiagpress[j] = 0.0;
 
   // T^dir_0
   j=0;
@@ -1339,7 +1340,7 @@ void mhd_calc_norestmass_ma(FTYPE *pr, int dir, struct of_geom *geom, struct of_
   if(mhdabs!=NULL) mhdabs[dir] += fabs(ptot);
 #else
   // below equivalent to ptot * delta(dir,j)
-  mhddiagpress[dir] = ptot;
+  if(mhddiagpress!=NULL) mhddiagpress[dir] = ptot; // NOTEMARK: assume mhddiagpress!=NULL if here
   if(mhddiagpressabs!=NULL) mhddiagpressabs[dir] = fabs(ptot);
 #endif
 
