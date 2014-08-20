@@ -454,7 +454,10 @@ int init_global(void)
   //  cour=0.8;
   cour=0.49999; // 0.8 is too unstable for RADBEAM2D with curved flow relative to grid.
 
-  //  fluxmethod=HLLFLUX; // fails to work with radiation for RADDONUT.
+  if(DOWALDDEN){
+    fluxmethod=HLLFLUX; // lower errors in unresolved regions
+    lim[1]=lim[2]=lim[3]=MC; // to preserve symmetry better
+  }
 
   //FLUXB=FLUXCTTOTH;
   FLUXB=FLUXCTSTAG;
@@ -5402,6 +5405,10 @@ static int fieldprim(int whichmethod, int whichinversion, int *whichvel, int*whi
   }
   else if(FIELDTYPE==FIELDWALD){
 
+    int doit=ii==N1-1 && jj==N2/4-1 && kk==0;
+    doit=0; // no debug normally
+
+
     FTYPE Fcov[NDIM][NDIM];
     FTYPE Mcon[NDIM][NDIM];
     FTYPE etacov[NDIM],etacon[NDIM];
@@ -5491,8 +5498,6 @@ static int fieldprim(int whichmethod, int whichinversion, int *whichvel, int*whi
     //    dualfprintf(fail_file,"MtoF\n");
     //    DLOOP dualfprintf(fail_file,"Mcon[%d][%d]=%21.15g\n",j,k,Mcon[j][k]);
 
-    int doit=ii==N1-1 && jj==N2/4-1 && kk==0;
-    doit=0; // no debug normally
 
 
     // T^\mu_\nu
@@ -5560,18 +5565,39 @@ static int fieldprim(int whichmethod, int whichinversion, int *whichvel, int*whi
       if(doit) dualfprintf(fail_file,"CONS: %g %g %g %g : %g %g %g: F=%g %g\n",U[UU],U[U1],U[U2],U[U3],Bcon[1],Bcon[2],Bcon[3],Fcov[0][3],Fcov[3][0]);
       
       struct of_newtonstats newtonstats; setnewtonstatsdefault(&newtonstats);
-      //      int eomtypelocal=EOMFFDE;
-      int eomtypelocal=EOMTYPE;
+      int eomtypelocal=EOMFFDE;
+      //      int eomtypelocal=EOMTYPE;
       struct of_state qdontuse;
       struct of_state *qptr=&qdontuse;
       // assume if needed rest of pr already set
       SLOOPA(j) pr[B1+j-1]=Bcon[j];
+      pr[RHO]=pr[UU]=0.0;
       //SLOOPA(j) pr[U1+j-1]=0.0; // only valid if WHICHVEL==VELREL4 // just assume use "old" versions
       if(doit) dualfprintf(fail_file,"BEFORE Utoprimgen()\n");
       if(doit) PLOOP(pliter,pl) dualfprintf(fail_file,"oldpr[%d]=%g\n",pl,pr[pl]);
       Utoprimgen(0,0,0,0,1,&eomtypelocal,CAPTYPEBASIC,0,1,EVOLVEUTOPRIM,UNOTHING,U,qptr,ptrgeom,0,pr,pr,&newtonstats);
+      PLOOP(pliter,pl) if(pl>=URAD1 && pl<=URAD3) pr[pl]=prold[pl];
       if(doit) dualfprintf(fail_file,"AFTER Utoprim()\n");
       if(doit) PLOOP(pliter,pl) dualfprintf(fail_file,"newpr[%d]=%g\n",pl,pr[pl]);
+
+      if(EOMTYPE!=EOMFFDE){
+        PLOOP(pliter,pl){
+          if(pl==RHO || pl==UU || pl>B3 || pl>=URAD1 && pl<=URAD3) pr[pl]=prold[pl];
+        }
+        
+        struct of_state qdontuse4;
+        struct of_state *qptr4=&qdontuse4;
+        get_state(pr,ptrgeom,qptr4);
+        FTYPE Ueomtype[NPR],Ueomtypeabs[NPR];
+        primtoflux(UNOTHING,pr,qptr4,TT,ptrgeom,Ueomtype,Ueomtypeabs);
+        eomtypelocal=EOMTYPE; // now do EOMTYPE
+        Utoprimgen(0,0,0,0,1,&eomtypelocal,CAPTYPEBASIC,0,1,EVOLVEUTOPRIM,UNOTHING,Ueomtype,qptr4,ptrgeom,0,pr,pr,&newtonstats);
+        //        PLOOP(pliter,pl) if(pl>=URAD1 && pl<=URAD3) pr[pl]=prold[pl];
+        if(doit) PLOOP(pliter,pl) dualfprintf(fail_file,"newprMHD[%d]=%g\n",pl,pr[pl]);
+        
+      }
+ 
+ 
 
     }
     else if(whichinversion==1){
@@ -5589,9 +5615,16 @@ static int fieldprim(int whichmethod, int whichinversion, int *whichvel, int*whi
       if(doit) PLOOP(pliter,pl) dualfprintf(fail_file,"newpr[%d]=%g\n",pl,pr[pl]);
     }
 
-    // revert radiation primitives to unmodified values (in whichvel, whichcoord)
-    PLOOP(pliter,pl) if(pl>=URAD1 && pl<=URAD3) pr[pl]=prold[pl];
+    if(EOMTYPE==EOMFFDE){
+      // revert radiation primitives to unmodified values (in whichvel, whichcoord)
+      PLOOP(pliter,pl) if(pl>=URAD1 && pl<=URAD3) pr[pl]=prold[pl];
+    }
+    //    if(EOMTYPE!=EOMFFDE){
+    //      // revert rho and ug and anything beyond field
+    //      PLOOP(pliter,pl) if((pl>=RHO && pl<=UU) || (pl>B3 && pl>URAD3)) pr[pl]=prold[pl];      
+    //    }
 
+  
     // some checks
     struct of_state qdontuse2;
     struct of_state *qptr2=&qdontuse2;
@@ -6296,7 +6329,7 @@ int normalize_field(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2
   int set_fieldtype(void);
   int FIELDTYPE=set_fieldtype();
 
-  if(FIELDTYPE!=NOFIELD){
+  if(FIELDTYPE!=NOFIELD && FIELDTYPE!=FIELDWALD){
     dualfprintf(fail_file,"DID NORM FIELD\n");
     
     funreturn=user1_normalize_field(beta, prim, pstag, ucons, vpot, Bhat);
