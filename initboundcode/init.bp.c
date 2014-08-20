@@ -831,7 +831,7 @@ int init_dsandvels_bpthin(int *whichvel, int*whichcoord, int i, int j, int k, FT
     S = 1./(H*H*nz) ;
     cs = H*nz*sqrt(gam) ; // To understand this factor of gam, and how this equation is approximate, consult Eqn. 7.43 of Melia and definition of T~cs^2/gam
 
-    rho = (S/sqrt(2.*M_PI*H*H)) * (pow(R/rin,3./2+UGPOW)) * exp(-z*z/(2.*H*H))  * taper_func(r,2.0*rin, 3.0) ; //3 is best i think //* ( 1.0 - R*R/((pow(R,1.5) + a)*(pow(R,1.5) + a)) )  ;// taper_func(R,rin,-1.0) ;
+    rho = (S/sqrt(2.*M_PI*H*H)) * (pow(R/rin,3./2+UGPOW)) * exp(-z*z/(2.*H*H))  * taper_func(r,rin, 3.0) ; //3 is best i think //* ( 1.0 - R*R/((pow(R,1.5) + a)*(pow(R,1.5) + a)) )  ;// taper_func(R,rin,-1.0) ;
     u = rho*cs*cs/(gam - 1.)/gam;
     ur = 0. ;
     uh = 0. ;
@@ -958,7 +958,7 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
   FTYPE setblandfordfield(FTYPE r, FTYPE th);
   FTYPE idxdxp[NDIM][NDIM];
 
-#define FRACAPHICUT 0.2
+#define FRACAPHICUT 0.05
       //#define FRACAPHICUT 0.1
 
 
@@ -992,21 +992,60 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
 
   if(FIELDTYPE==TOROIDALFIELD){
     
+    FTYPE ttrans = 1.81712*rin;
+
     if(l==2){// A_\theta (MCOORD)
       
       r=V[1];
       th=V[2];
 
-      //      q = r*r*r*fabs(sin(th)) * 1.0 ; // constant B^\phi
-      q = r*r*r;
-
-      q=q/(r); // makes more uniform in radius
-
-      q = q*(u_av / umax - FRACAPHICUT); // weight by internal energy density
-      //      q = (rho_av / rhomax - FRACAPHICUT);
-
-      if(q<0.0) q=0.0;
-
+      FTYPE H,nz,S,cs,rho,u,z,switchttrans0,switchttrans2;
+      H = h_over_r*r ;
+      nz = nz_func(r) ;
+      z = r*cos(th) ;
+      S = 1./(H*H*nz) ;
+      cs = H*nz*sqrt(gam) ; // To understand this factor of gam, and how this equation is approximate, consult Eqn. 7.43 of Melia and definition of T~cs^2/gam
+      rho = (S/sqrt(2.*M_PI*H*H)) * (pow(r/rin,3./2-.6))  * taper_func(r,rin, 3.0) ; //3 is best i think //* ( 1.0 - R*R/((pow(R,1.5) + a)*(pow(R,1.5) + a)) )  ;// taper_func(R,rin,-1.0) ;
+      u = rho*cs*cs/(gam - 1.)/gam;
+      /*
+      switchttrans0 = 0.5+1.0/M_PI*atan((r-ttrans)*6./(ttrans-rin)); // switch in .nb file
+      switchttrans2 = 0.5-1.0/M_PI*atan((r-ttrans)*6./(ttrans-rin)); // switchi in .nb file
+      if(r>=rin){
+	if(u_av *29.54/ u - FRACAPHICUT >= 0.0 ) 
+	  q = switchttrans2*( pow(r,1.2)*sqrt(u_av *29.54/ u - FRACAPHICUT)    - (1.2*pow(ttrans,.2)*(rin-ttrans) + pow(ttrans,1.2)-1.2*pow(ttrans,.2))*sqrt( u_av *29.54/ u - FRACAPHICUT)) + switchttrans0*((1.2*pow(ttrans,.2)*(r-ttrans) + pow(ttrans,1.2)-1.2*pow(ttrans,.2))*sqrt(u_av *29.54/ u - FRACAPHICUT)        - (1.2*pow(ttrans,.2)*(rin-ttrans) + pow(ttrans,1.2)-1.2*pow(ttrans,.2))*sqrt( u_av *29.54/ u  - FRACAPHICUT)); // weight by internal energy density
+	else
+	  q=0.0;
+      }
+      else{
+	q = 0.0;
+	  //q = pow(r,1.2);
+	  //q = q*(u_av / umax - FRACAPHICUT); // weight by internal energy density
+	
+	if(q<0.0) q=0.0;
+      }
+      */
+      
+      if(r>ttrans){
+	q = pow(r,1.2);
+	if(u_av *29.54/ u - FRACAPHICUT >= 0.0 ) //&& exp(-z*z/(2.*H*H)) > FRACAPHICUT)
+	  q = q*sqrt(u_av *29.54/ u - FRACAPHICUT)       - (1.2*pow(ttrans,.2)*(rin-ttrans) + pow(ttrans,1.2)-1.2*pow(ttrans,.2))*sqrt( u_av *29.54/ u - FRACAPHICUT); // weight by internal energy density
+	else
+	  q=0.0;
+      }
+      else if(r>=rin){
+	if(u_av *29.54/ u - FRACAPHICUT >= 0.0 )
+	  q = (1.2*pow(ttrans,.2)*(r-ttrans) + pow(ttrans,1.2)-1.2*pow(ttrans,.2))*sqrt(u_av *29.54/ u - FRACAPHICUT)        - (1.2*pow(ttrans,.2)*(rin-ttrans) + pow(ttrans,1.2)-1.2*pow(ttrans,.2))*sqrt( u_av *29.54/ u  - FRACAPHICUT);
+	else
+	  q=0.0;
+      }
+      else{
+	q = 0.0;
+	  //q = pow(r,1.2);
+	  //q = q*(u_av / umax - FRACAPHICUT); // weight by internal energy density
+	
+	if(q<0.0) q=0.0;
+      }
+      
       vpot += q;
       
     }
