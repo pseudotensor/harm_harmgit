@@ -381,6 +381,7 @@ int user1_init_primitives(int inittype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FT
   }// end parallel region
 
 
+
   //////////////////////
   //
   // assign rough pstag value in case not using vector potential
@@ -481,6 +482,7 @@ int user1_init_primitives(int inittype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FT
       return (1);
     }
   }
+
 
   trifprintf("Fixup #1\n");
 #if(FIXUPAFTERINIT)
@@ -627,6 +629,7 @@ int user1_init_primitives(int inittype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FT
       GLOBALMACP0A1(EOSextraglobal,i,j,k,PGASGLOBAL)=pressure_rho0_u(WHICHEOS,GLOBALMAC(EOSextraglobal,i,j,k),MACP0A1(prim,i,j,k,RHO),MACP0A1(prim,i,j,k,UU));
     }
   }
+
 
 
   // now fully bounded, initialize interpolations in case interpolate using prim/pstag data
