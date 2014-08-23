@@ -1698,7 +1698,7 @@ void adjust_fluxctstag_emfs(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR
 // User's cooling function:
 
 #define USERTHETACOOL       (0.1)	/* should be same as h_over_r */
-#define USERTAUCOOL         (2.0*M_PI*0.01)	        /* cooling time in number of rotational times : really USERTAUCOOL=2*M_PI would be 1 rotational time */
+#define USERTAUCOOL         (2.0*M_PI*0.1)	        /* cooling time in number of rotational times : really USERTAUCOOL=2*M_PI would be 1 rotational time */
 #define USERNOCOOLTHETAFACT     (1.0)           /* this times h_over_r and no more cooling there*/
 
 // This implementation of cooling is as in Noble et. al. 2009, to simulate a radiative cooling source term which keeps the disk thin to a target H/r
@@ -1717,7 +1717,7 @@ int coolfunc_user(FTYPE h_over_r, FTYPE *pr, struct of_geom *geom, struct of_sta
 	FTYPE photoncapture;
 	FTYPE rincool;
 	FTYPE nocoolthetafactor,thetacool,taucool;
-
+	FTYPE bsq_ijcool;
 
 
 	// setup for macros
@@ -1737,6 +1737,7 @@ int coolfunc_user(FTYPE h_over_r, FTYPE *pr, struct of_geom *geom, struct of_sta
 	P=pressure_rho0_u_simple(ii,jj,kk,pp,rho,u);
         w = rho + u + P ; // enthalpy?
 
+	if (bsq_calc(pr, geom, &bsq_ijcool) >= 1) FAILSTATEMENT("init.c:init()", "bsq_calc()", 1);
         bl_coord_ijk_2(ii,jj,kk,CENT,X, V) ;
 	r=V[1];
 	th=V[2];
@@ -1767,6 +1768,25 @@ int coolfunc_user(FTYPE h_over_r, FTYPE *pr, struct of_geom *geom, struct of_sta
 	Yscaling = (gam-1.)*e/(Tfix);
 
 
+
+
+	if(t > 0. && Yscaling > 1.0 ) { 
+	  if(R*R*h_over_r*h_over_r/25./(bsq_ijcool/rho) > taucool*taucool/Wcirc/Wcirc ) {    
+	    dUcool = - (Wcirc/taucool) * rho*Tfix/(gam-1.) * pow( Yscaling - 1.,1.) * photoncapture * q->ucon[TT]  ; 
+	  }
+	  else if( (h_over_r*R/5.)/sqrt(bsq_ijcool/rho) > 15.*dt){
+	    dUcool = - (sqrt(bsq_ijcool/rho)/(h_over_r*R/5.)) * rho*Tfix/(gam-1.) * pow( Yscaling - 1.,1.) * photoncapture * q->ucon[TT]  ;
+	  }
+	  else{
+	    dUcool = - (1./(15.*dt)) * rho*Tfix/(gam-1.) * pow( Yscaling - 1.,1.) * photoncapture * q->ucon[TT]  ;
+	  }
+	}
+	else{
+	  dUcool = 0. ;
+	}
+
+
+	/*
 	if(t > 0. && Yscaling > 1.0 ) {
 
 	  dUcool = - (Wcirc/taucool) * u * sqrt( Yscaling - 1.) * photoncapture * q->ucon[TT]  ; // MAVARA temporarily added 0.1 factor to slow cooling to see if it makes a difference on 11/10/2013
@@ -1775,7 +1795,7 @@ int coolfunc_user(FTYPE h_over_r, FTYPE *pr, struct of_geom *geom, struct of_sta
         else{
 	    dUcool = 0. ;
 	}
-
+	*/
 
 	dUcomp[RADSOURCE][UU]=dUcool*(q->ucov[TT]);
 	dUcomp[RADSOURCE][U1]=dUcool*(q->ucov[RR]);
