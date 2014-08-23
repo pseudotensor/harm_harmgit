@@ -206,9 +206,10 @@ FTYPE RADNT_LPOW;
 
 int RADDONUT_OPTICALLYTHICKTORUS;
 
-int get_full_rtsolution(int *whichvel, int *whichcoord, int opticallythick, FTYPE *pp,FTYPE *X, FTYPE *V,struct of_geom **ptrptrgeom);
+static int get_full_rtsolution(int *whichvel, int *whichcoord, int opticallythick, FTYPE *pp,FTYPE *X, FTYPE *V,struct of_geom **ptrptrgeom);
 static int make_nonrt2rt_solution(int *whichvel, int *whichcoord, int opticallythick, FTYPE *pp,FTYPE *X, FTYPE *V,struct of_geom **ptrptrgeom);
 static int donut_analytical_solution(int *whichvel, int *whichcoord, int opticallythick, FTYPE *pp,FTYPE *X, FTYPE *V,struct of_geom **ptrptrgeom, FTYPE *ptptr);
+static int process_solution(int *whichvel, int *whichcoord, int opticallythick, FTYPE *pp,FTYPE *X, FTYPE *V,struct of_geom **ptrptrgeom, FTYPE *ptptr);
 
 
 
@@ -4015,7 +4016,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
 // input pp has backup (e.g. atmosphere) values in *whichvel, *whichcoord with geometry ptrgeom
 // input pp[PRAD0-PRAD3] are fluid frame orthonormal values
 // RETURNS: pp and can change whichvel and whichcoord and ptrptrgeom (these must all 3 be consistent with the returned pp)
-int get_full_rtsolution(int *whichvel, int *whichcoord, int opticallythick, FTYPE *pp,FTYPE *X, FTYPE *V,struct of_geom **ptrptrgeom)
+static int get_full_rtsolution(int *whichvel, int *whichcoord, int opticallythick, FTYPE *pp,FTYPE *X, FTYPE *V,struct of_geom **ptrptrgeom)
 {
   int jj,kk;
   int pliter,pl;
@@ -4228,7 +4229,7 @@ int get_full_rtsolution(int *whichvel, int *whichcoord, int opticallythick, FTYP
 // convert non-radiative solution to radiative one by splitting total pressure up into gas + radiation pressure with optical depth corrections
 // expects pp[PRAD0-PRAD3] to be fluid frame orthonormal, while pp[U1-U3] is ptrgeom whichvel whichcoord lab frame value (doesn't change U1-U3)
 // returns: pp and can change whichvel and whichcoord
-int make_nonrt2rt_solution(int *whichvel, int *whichcoord, int opticallythick, FTYPE *pp,FTYPE *X, FTYPE *V, struct of_geom **ptrptrgeom)
+static int make_nonrt2rt_solution(int *whichvel, int *whichcoord, int opticallythick, FTYPE *pp,FTYPE *X, FTYPE *V, struct of_geom **ptrptrgeom)
 {
   // get location
   int i=(*ptrptrgeom)->i;
@@ -4246,6 +4247,7 @@ int make_nonrt2rt_solution(int *whichvel, int *whichcoord, int opticallythick, F
   // total torus pressure
   FTYPE pt;
   int usingback=donut_analytical_solution(whichvel, whichcoord, opticallythick, pp, X, V, ptrptrgeom, &pt);
+  //int usingback=process_solution(whichvel, whichcoord, opticallythick, pp, X, V, ptrptrgeom, &pt);
   
   // assign to names
   FTYPE rho=pp[RHO];
@@ -4378,7 +4380,7 @@ int make_nonrt2rt_solution(int *whichvel, int *whichcoord, int opticallythick, F
 // analytical solution for RADDONUT donut
 // expects pp[PRAD0-PRAD3] to be fluid frame orthonormal, while pp[U1-U3] is ptrgeom whichvel whichcoord lab frame value (doesn't change U1-U3)
 // RETURNS: pp, uTptr, ptptr and can return whichvel and whichcoord and ptrptrgeom
-int donut_analytical_solution(int *whichvel, int *whichcoord, int opticallythick, FTYPE *pp,FTYPE *X, FTYPE *V,struct of_geom **ptrptrgeom, FTYPE *ptptr)
+static int donut_analytical_solution(int *whichvel, int *whichcoord, int opticallythick, FTYPE *pp,FTYPE *X, FTYPE *V,struct of_geom **ptrptrgeom, FTYPE *ptptr)
 {
   int usingback=0;
   FTYPE Vphi=0.0,Vr=0.0,Vh=0.0;
@@ -4969,6 +4971,55 @@ int donut_analytical_solution(int *whichvel, int *whichcoord, int opticallythick
 
 
 
+
+// return pp (if not already set) for gas primitives as well as assumed total pressure consistent with original simulation's pressure and ideal gas constant gamtorus.
+// use instead of donut_analytical_solution() everywhere function called (currently just 1 location)
+static int process_solution(int *whichvel, int *whichcoord, int opticallythick, FTYPE *pp,FTYPE *X, FTYPE *V,struct of_geom **ptrptrgeom, FTYPE *ptptr)
+{
+
+  FTYPE gamtorus=4.0/3.0; // whatever you had in original restart file.
+  // total torus pressure that will be distributed among gas and radiation pressure
+  *ptptr=(gamtorus-1.0)*pp[UU];
+
+  int usingback=0; // never use backup, always a solution
+
+  return(usingback);
+}
+
+
+
+
+// take global primitive data (say read in by restart_read()) and create radiation component.
+// to be called externally after restart_init()
+int process_restart_toget_radiation(void)
+{
+  int i,j,k;
+
+  DUMPGENLOOP{ // could make this OpenMP'ed, but just done once.  Needs to be no more or less than what restart_init() and so restart_read() and so dumpgen() and so DUMPGENLOOP uses.
+    int whichvel=WHICHVEL, whichcoord=PRIMECOORDS; // for the below to make sense and work (without further transformation calls), this should be WHICHVEL and PRIMECOORDS always.
+    int loc=CENT;
+    FTYPE X[NDIM],V[NDIM];
+    bl_coord_ijk_2(i,j,k,loc,X,V);
+    struct of_geom geomrealdontuse;
+    struct of_geom *ptrgeomrad=&geomrealdontuse;
+    get_geometry(i,j,k,loc,ptrgeomrad);
+    int thick=1; // see how used
+    FTYPE *pr=&GLOBALMACP0A1(pglobal,i,j,k,0);
+    int returndonut=get_full_rtsolution(&whichvel,&whichcoord,thick, pr,X,V,&ptrgeomrad);
+    FTYPE pradffortho[NPR];
+    if(PRAD0>=0){
+      // donut returns fluid frame orthonormal values for radiation in pr
+      pradffortho[PRAD0]=pr[PRAD0];
+      pradffortho[PRAD1]=pr[PRAD1];
+      pradffortho[PRAD2]=pr[PRAD2];
+      pradffortho[PRAD3]=pr[PRAD3];
+    }
+    prad_fforlab(&whichvel, &whichcoord, FF2LAB, i,j,k,loc,ptrgeomrad, pradffortho, pr, pr);
+    // now all pr is PRIMECOORDS, WHICHVEL in lab-frame.
+  }
+
+  return(0);
+}
 
 
 

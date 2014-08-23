@@ -126,6 +126,10 @@ int init(int *argc, char **argv[])
 
     // don't bound read-in data yet since need grid and other things
 
+    // if read-in dummy data that had meaningless radiation terms, then call below:
+    // extern int process_restart_toget_radiation(void);
+    // process_restart_toget_radiation();
+
   }
 
 
