@@ -206,7 +206,7 @@ FTYPE RADNT_LPOW;
 
 int RADDONUT_OPTICALLYTHICKTORUS;
 
-static int get_full_rtsolution(int *whichvel, int *whichcoord, int opticallythick, FTYPE *pp,FTYPE *X, FTYPE *V,struct of_geom **ptrptrgeom);
+int get_full_rtsolution(int *whichvel, int *whichcoord, int opticallythick, FTYPE *pp,FTYPE *X, FTYPE *V,struct of_geom **ptrptrgeom);
 static int make_nonrt2rt_solution(int *whichvel, int *whichcoord, int opticallythick, FTYPE *pp,FTYPE *X, FTYPE *V,struct of_geom **ptrptrgeom);
 static int donut_analytical_solution(int *whichvel, int *whichcoord, int opticallythick, FTYPE *pp,FTYPE *X, FTYPE *V,struct of_geom **ptrptrgeom, FTYPE *ptptr);
 
