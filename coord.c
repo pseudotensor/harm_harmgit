@@ -264,7 +264,8 @@ void set_coord_parms_nodeps(int defcoordlocal)
     rsjet3=0.0; // subtractor
 
     // for theta2
-    h0=0.3; // inner-radial "hslope" for theta2
+    //h0=0.3; // inner-radial "hslope" for theta2
+    h0=0.2; // inner-radial "hslope" for theta2
     //h0=0.1; // inner-radial "hslope" for theta2 // for thinner disks, change this.
     // GODMARK: Note that this overwrites above njet!
     // power \theta_j \propto r^{-njet}
