@@ -208,7 +208,7 @@ int RADDONUT_OPTICALLYTHICKTORUS;
 
 static int get_full_rtsolution(int *whichvel, int *whichcoord, int opticallythick, FTYPE *pp,FTYPE *X, FTYPE *V,struct of_geom **ptrptrgeom);
 static int make_nonrt2rt_solution(int *whichvel, int *whichcoord, int opticallythick, FTYPE *pp,FTYPE *X, FTYPE *V,struct of_geom **ptrptrgeom);
-static int donut_analytical_solution(int *whichvel, int *whichcoord, int opticallythick, FTYPE *ppback, FTYPE *pp,FTYPE *X, FTYPE *V,struct of_geom **ptrptrgeom, FTYPE *ptptr);
+static int donut_analytical_solution(int *whichvel, int *whichcoord, int opticallythick, FTYPE *pp,FTYPE *X, FTYPE *V,struct of_geom **ptrptrgeom, FTYPE *ptptr);
 
 
 
@@ -4237,10 +4237,6 @@ int make_nonrt2rt_solution(int *whichvel, int *whichcoord, int opticallythick, F
   int p=(*ptrptrgeom)->p;
 
 
-  // set backup atmosphere value for primitives
-  int pliter,pl;
-  FTYPE ppback[NPR];
-  PLOOP(pliter,pl) ppback[pl]=pp[pl];
 
   /////
   //
@@ -4249,7 +4245,7 @@ int make_nonrt2rt_solution(int *whichvel, int *whichcoord, int opticallythick, F
   /////
   // total torus pressure
   FTYPE pt;
-  int usingback=donut_analytical_solution(whichvel, whichcoord, opticallythick, ppback, pp, X, V, ptrptrgeom, &pt);
+  int usingback=donut_analytical_solution(whichvel, whichcoord, opticallythick, pp, X, V, ptrptrgeom, &pt);
   
   // assign to names
   FTYPE rho=pp[RHO];
@@ -4382,12 +4378,17 @@ int make_nonrt2rt_solution(int *whichvel, int *whichcoord, int opticallythick, F
 // analytical solution for RADDONUT donut
 // expects pp[PRAD0-PRAD3] to be fluid frame orthonormal, while pp[U1-U3] is ptrgeom whichvel whichcoord lab frame value (doesn't change U1-U3)
 // RETURNS: pp, uTptr, ptptr and can return whichvel and whichcoord and ptrptrgeom
-int donut_analytical_solution(int *whichvel, int *whichcoord, int opticallythick, FTYPE *ppback, FTYPE *pp,FTYPE *X, FTYPE *V,struct of_geom **ptrptrgeom, FTYPE *ptptr)
+int donut_analytical_solution(int *whichvel, int *whichcoord, int opticallythick, FTYPE *pp,FTYPE *X, FTYPE *V,struct of_geom **ptrptrgeom, FTYPE *ptptr)
 {
   int usingback=0;
   FTYPE Vphi=0.0,Vr=0.0,Vh=0.0;
   FTYPE D,W,uT=1.0,uphi,uPhi,rho,ucon[NDIM],uint,E,Fx,Fy,Fz;
   //  FTYPE rho,uint,uT=1.0,E,Fx,Fy,Fz;
+
+  // set backup atmosphere value for primitives
+  int pliter,pl;
+  FTYPE ppback[NPR];
+  PLOOP(pliter,pl) ppback[pl]=pp[pl];
 
   // get location
   FTYPE r=V[1];
