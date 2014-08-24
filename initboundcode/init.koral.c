@@ -1502,7 +1502,7 @@ int init_global(void)
 
     ///////////////////////////////////
     // DONUT atmosphere:
-    RADNT_ROUT=1.0; // what radius ATMMIN things are defining
+    RADNT_ROUT=2.0; // what radius ATMMIN things are defining
     //RADNT_RHOATMMIN=KORAL2HARMRHO(1.e-4);
     //    RADNT_RHOATMMIN= KORAL2HARMRHO(1.e-2); // current koral choice
     RADNT_RHOATMMIN=RADNT_RHODONUT*1E-6;
