@@ -303,13 +303,13 @@ int init_global(void)
   BCtype[X1DN]=FREEOUTFLOW;
   //  rescaletype=1;
   rescaletype=4;
-  BSQORHOLIMIT=5E2; // may have to make smaller if problems
-  BSQOULIMIT=5E6;
+  BSQORHOLIMIT=1E2; // may have to make smaller if problems
+  BSQOULIMIT=1E4;
   UORHOLIMIT=1E2;
   // JCM: Have to choose below so that Mdot from atmosphere is not important compared to true Mdot for thin disk.
-  RHOMIN = 1E-4;
+  RHOMIN = 2.5E-6;
   UUMIN = 1E-6;
-  RHOMINEVOLVE = 1E-4;
+  RHOMINEVOLVE = 2.5E-6;
   UUMINEVOLVE = 1E-6;
 
   cooling=COOLUSER; // MARKTODO should override these values set in initbase, right?
