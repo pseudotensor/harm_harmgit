@@ -252,6 +252,7 @@ void set_coord_parms_nodeps(int defcoordlocal)
       r0jet=15.0;
       rsjet=40.0;
       Qjet=1.3; // chosen to help keep jet resolved even within disk region
+      //      Qjet=1.7; // chosen to help keep jet resolved even within disk region
     }
 
     // for switches from normal theta to ramesh theta
@@ -1341,7 +1342,8 @@ void bl_coord(FTYPE *X, FTYPE *V)
     //njetvsr=njet;
 
     FTYPE localrbr=rbr; //500.0; // rbr;
-    FTYPE localrbrr0=MAX(100.0,localrbr/2.0);
+//    FTYPE localrbrr0=MAX(100.0,localrbr/2.0);
+    FTYPE localrbrr0=100.0;
 
     switch0 = 0.5+1.0/M_PI*atan((V[1]-localrbr)/localrbrr0); // large r
     switch2 = 1.0-switch0; // small r

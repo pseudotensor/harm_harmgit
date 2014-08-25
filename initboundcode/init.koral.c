@@ -2345,7 +2345,8 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 
     if(FIELDTYPE==DISK2FIELD){
       //rin=6.0; // old setting
-      rinfield=rin=12.0;
+      rinfield=rin=9.0;
+      routfield=13.0;
       //  beta=100.0; // was used for rada0.94 etc.
       beta = 10.0;
     }
