@@ -3910,7 +3910,9 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
           pradffortho[PRAD2]=pr[PRAD2];
           pradffortho[PRAD3]=pr[PRAD3];
           
-          //          dualfprintf(fail_file,"CHECK: ijk=%d %d %d : %g %g %g %g\n",i,j,k,pradffortho[PRAD0],pradffortho[PRAD1],pradffortho[PRAD2],pradffortho[PRAD3]);
+          //          if(i==21 && j==3 && k==0){
+          //            dualfprintf(fail_file,"ZOOM: CHECK: ijk=%d %d %d : %g %g %g %g\n",i,j,k,pradffortho[PRAD0],pradffortho[PRAD1],pradffortho[PRAD2],pradffortho[PRAD3]);
+          //          }
         }
 
     
@@ -3918,8 +3920,17 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
 
 
       if(PRAD0>=0){
+
+        //        if(i==21 && j==3 && k==0){
+        //          PLOOP(pliter,pl) dualfprintf(fail_file,"ZOOM: CHECKPREpradfforlab: pl=%d pr=%21.15g\n",pl,pr[pl]);
+        //        }
+
         // Transform these fluid frame E,F^i to lab frame coordinate basis primitives
         prad_fforlab(whichvel, whichcoord, FF2LAB, i,j,k,CENT,ptrgeomrad, pradffortho, pr, pr);
+
+        //        if(i==21 && j==3 && k==0){
+        //          PLOOP(pliter,pl) dualfprintf(fail_file,"ZOOM: CHECKPOSTpradfforlab: pl=%d pr=%21.15g\n",pl,pr[pl]);
+        //        }
         
         if(debugfail>=2 && returndonut==0 && pradfforthoatm[PRAD0]>pradffortho[PRAD0]){
           dualfprintf(fail_file,"WARNING: Torus radiation pressure below atmosphere.\n");
@@ -4026,6 +4037,11 @@ static int get_full_rtsolution(int *whichvel, int *whichcoord, int opticallythic
   int loc=(*ptrptrgeom)->p;
   FTYPE r=V[1];
   FTYPE E,Fx,Fy,Fz;
+  FTYPE ppback[NPR];
+  PLOOP(pliter,pl) ppback[pl]=pp[pl]; // for initial backup, used to see if torus below atmosphere in donut
+  // whichvelback and whichcoordback hold values before any make_nonrt2rt_solution call
+  int whichvelback=*whichvel;
+  int whichcoordback=*whichcoord;
 
   // get actual BL-coords in case ptrgeom not, because we need BL-coords to get sizes of cells in finite differences below
   int whichcoordreal=MCOORD;
@@ -4055,8 +4071,6 @@ static int get_full_rtsolution(int *whichvel, int *whichcoord, int opticallythic
       Fz=pp[PRAD3];
     }
 
-    int whichvelt=*whichvel;
-    int whichcoordt=*whichcoord;
 
 
     ////////////////// STAGE2
@@ -4074,8 +4088,7 @@ static int get_full_rtsolution(int *whichvel, int *whichcoord, int opticallythic
     FTYPE Vtemp1[NDIM],Vtemp2[NDIM];
     FTYPE Xtemp1[NDIM],Xtemp2[NDIM];
     FTYPE pptemp[NPR],E1=0,E2=0;
-    PLOOP(pliter,pl) pptemp[pl]=pp[pl];
-    getprim=(whichcoordt==PRIMECOORDS); // as consistent with pptemp being fed-in as backup
+    getprim=(whichcoordback==PRIMECOORDS); // as consistent with pptemp being fed-in as backup
     int anretmin=0;
     struct of_geom geomtdontuse;
     struct of_geom *ptrgeomt=&geomtdontuse;
@@ -4088,9 +4101,10 @@ static int get_full_rtsolution(int *whichvel, int *whichcoord, int opticallythic
     Xtemp1[2]=1.0*X[2];
     Xtemp1[3]=1.0*X[3];
     bl_coord(Xtemp1,Vtemp1); // only needed for Vtemp1[1] for radius in make_nonrt2rt_solution()
-    gset_X(getprim,whichcoordt,i,j,k,NOWHERE,Xtemp1,ptrgeomt);
+    gset_X(getprim,whichcoordback,i,j,k,NOWHERE,Xtemp1,ptrgeomt);
+    PLOOP(pliter,pl) pptemp[pl]=ppback[pl]; // ppback that holds unchanged pp, not modified by previous make_nonrt2rt_solution() call.
 
-    anretlocal=make_nonrt2rt_solution(&whichvelt, &whichcoordt, opticallythick, pptemp,Xtemp1,Vtemp1,&ptrgeomt);
+    anretlocal=make_nonrt2rt_solution(&whichvelback, &whichcoordback, opticallythick, pptemp,Xtemp1,Vtemp1,&ptrgeomt);
     if(anretlocal<0) anretmin=-1;
     if(PRAD0>=0){
       E1=pptemp[PRAD0]; // fluid frame E
@@ -4101,9 +4115,10 @@ static int get_full_rtsolution(int *whichvel, int *whichcoord, int opticallythic
     Xtemp2[2]=1.0*X[2];
     Xtemp2[3]=1.0*X[3];
     bl_coord(Xtemp2,Vtemp2); // only needed for Vtemp2[1] for radius in make_nonrt2rt_solution()
-    gset_X(getprim,whichcoordt,i,j,k,NOWHERE,Xtemp2,ptrgeomt);
+    gset_X(getprim,whichcoordback,i,j,k,NOWHERE,Xtemp2,ptrgeomt);
+    PLOOP(pliter,pl) pptemp[pl]=ppback[pl]; // ppback that holds unchanged pp, not modified by previous make_nonrt2rt_solution() call.
 
-    anretlocal=make_nonrt2rt_solution(&whichvelt, &whichcoordt, opticallythick, pptemp,Xtemp2,Vtemp2,&ptrgeomt);
+    anretlocal=make_nonrt2rt_solution(&whichvelback, &whichcoordback, opticallythick, pptemp,Xtemp2,Vtemp2,&ptrgeomt);
     if(anretlocal<0) anretmin=-1;
     if(PRAD0>=0){ 
       E2=pptemp[PRAD0]; // fluid frame E
@@ -4122,9 +4137,10 @@ static int get_full_rtsolution(int *whichvel, int *whichcoord, int opticallythic
     Xtemp1[2]=1.01*X[2];
     Xtemp1[3]=1.0*X[3];
     bl_coord(Xtemp1,Vtemp1); // only needed for Vtemp1[2] for theta in make_nonrt2rt_solution()
-    gset_X(getprim,whichcoordt,i,j,k,NOWHERE,Xtemp1,ptrgeomt);
+    gset_X(getprim,whichcoordback,i,j,k,NOWHERE,Xtemp1,ptrgeomt);
+    PLOOP(pliter,pl) pptemp[pl]=ppback[pl]; // ppback that holds unchanged pp, not modified by previous make_nonrt2rt_solution() call.
 
-    anretlocal=make_nonrt2rt_solution(&whichvelt, &whichcoordt, opticallythick, pptemp,Xtemp1,Vtemp1,&ptrgeomt);
+    anretlocal=make_nonrt2rt_solution(&whichvelback, &whichcoordback, opticallythick, pptemp,Xtemp1,Vtemp1,&ptrgeomt);
     if(anretlocal<0) anretmin=-1;
     if(PRAD0>=0){ 
       E1=pptemp[PRAD0]; // fluid frame E1
@@ -4135,9 +4151,10 @@ static int get_full_rtsolution(int *whichvel, int *whichcoord, int opticallythic
     Xtemp2[2]=0.99*X[2];
     Xtemp2[3]=1.0*X[3];
     bl_coord(Xtemp2,Vtemp2); // only needed for Vtemp2[2] for theta in make_nonrt2rt_solution()
-    gset_X(getprim,whichcoordt,i,j,k,NOWHERE,Xtemp2,ptrgeomt);
+    gset_X(getprim,whichcoordback,i,j,k,NOWHERE,Xtemp2,ptrgeomt);
+    PLOOP(pliter,pl) pptemp[pl]=ppback[pl]; // ppback that holds unchanged pp, not modified by previous make_nonrt2rt_solution() call.
 
-    anretlocal=make_nonrt2rt_solution(&whichvelt, &whichcoordt, opticallythick, pptemp,Xtemp2,Vtemp2,&ptrgeomt);
+    anretlocal=make_nonrt2rt_solution(&whichvelback, &whichcoordback, opticallythick, pptemp,Xtemp2,Vtemp2,&ptrgeomt);
     if(anretlocal<0) anretmin=-1;
     if(PRAD0>=0){ 
       E2=pptemp[PRAD0]; // fluid frame E2
@@ -4157,9 +4174,10 @@ static int get_full_rtsolution(int *whichvel, int *whichcoord, int opticallythic
     Xtemp1[2]=1.0*X[2];
     Xtemp1[3]=1.01*X[3];
     bl_coord(Xtemp1,Vtemp1); // only needed for Vtemp1[3] for phi in make_nonrt2rt_solution()
-    gset_X(getprim,whichcoordt,i,j,k,NOWHERE,Xtemp1,ptrgeomt);
+    gset_X(getprim,whichcoordback,i,j,k,NOWHERE,Xtemp1,ptrgeomt);
+    PLOOP(pliter,pl) pptemp[pl]=ppback[pl]; // ppback that holds unchanged pp, not modified by previous make_nonrt2rt_solution() call.
 
-    anretlocal=make_nonrt2rt_solution(&whichvelt, &whichcoordt, opticallythick, pptemp,Xtemp1,Vtemp1,&ptrgeomt);
+    anretlocal=make_nonrt2rt_solution(&whichvelback, &whichcoordback, opticallythick, pptemp,Xtemp1,Vtemp1,&ptrgeomt);
     if(anretlocal<0) anretmin=-1;
     if(PRAD0>=0){ 
       E1=pptemp[PRAD0]; // fluid frame E1
@@ -4170,9 +4188,10 @@ static int get_full_rtsolution(int *whichvel, int *whichcoord, int opticallythic
     Xtemp2[2]=1.0*X[2];
     Xtemp2[3]=0.99*X[3];
     bl_coord(Xtemp2,Vtemp2); // only needed for Vtemp2[3] for phi in make_nonrt2rt_solution()
-    gset_X(getprim,whichcoordt,i,j,k,NOWHERE,Xtemp2,ptrgeomt);
+    gset_X(getprim,whichcoordback,i,j,k,NOWHERE,Xtemp2,ptrgeomt);
+    PLOOP(pliter,pl) pptemp[pl]=ppback[pl]; // ppback that holds unchanged pp, not modified by previous make_nonrt2rt_solution() call.
 
-    anretlocal=make_nonrt2rt_solution(&whichvelt, &whichcoordt, opticallythick, pptemp,Xtemp2,Vtemp2,&ptrgeomt);
+    anretlocal=make_nonrt2rt_solution(&whichvelback, &whichcoordback, opticallythick, pptemp,Xtemp2,Vtemp2,&ptrgeomt);
     if(anretlocal<0) anretmin=-1;
     if(PRAD0>=0){ 
       E2=pptemp[PRAD0]; // fluid frame E2
@@ -4188,8 +4207,10 @@ static int get_full_rtsolution(int *whichvel, int *whichcoord, int opticallythic
 
     if(anretmin<0){ // then ended up with one point outside solution
       Fx=Fy=Fz=0.;
+      //      dualfprintf(fail_file,"OUTSIDE: ijk=%d %d %d\n",i,j,k);
     }
     else{ // then inside solution
+      //      dualfprintf(fail_file,"INSIDE: ijk=%d %d %d\n",i,j,k);
       FTYPE MAXFOE;
       
       MAXFOE=0.70; // KORALTODO: SUPERGODMARK: Kraken failed with this set to 0.99 where hit 3vel calculation with disc=+1E-16.  So just marginal beyond v=c, but with 0.99 why did that happen?
@@ -4392,7 +4413,7 @@ static int donut_analytical_solution(int *whichvel, int *whichcoord, int optical
   FTYPE ppback[NPR];
   PLOOP(pliter,pl) ppback[pl]=pp[pl];
 
-  // get location
+  // get location (NOTE: not affected by whichcoord)
   FTYPE r=V[1];
   FTYPE th=V[2];
   FTYPE Rcyl=fabs(r*sin(th));
@@ -4419,7 +4440,7 @@ static int donut_analytical_solution(int *whichvel, int *whichcoord, int optical
     if(*whichcoord!=mycoords){
       // get metric grid geometry for these ICs
       int getprim=0;
-      gset(getprim,mycoords,i,j,k,*ptrptrgeom);
+      gset_X(getprim,mycoords,i,j,k,NOWHERE,X,*ptrptrgeom);
     }
     *whichcoord=mycoords;
     *whichvel=VEL3;
@@ -4637,7 +4658,7 @@ static int donut_analytical_solution(int *whichvel, int *whichcoord, int optical
     if(*whichcoord!=mycoords){
       // get metric grid geometry for these ICs
       int getprim=0;
-      gset(getprim,mycoords,i,j,k,*ptrptrgeom);
+      gset_X(getprim,mycoords,i,j,k,NOWHERE,X,*ptrptrgeom);
     }
     *whichcoord=mycoords;
     *whichvel=VEL3;
@@ -4766,10 +4787,11 @@ static int donut_analytical_solution(int *whichvel, int *whichcoord, int optical
   else if(RADNT_DONUTTYPE==DONUTOLEK){
 
     int mycoords=BLCOORDS;
+    //    int mycoords=KSCOORDS;
     if(*whichcoord!=mycoords){
       // get metric grid geometry for these ICs
       int getprim=0;
-      gset(getprim,mycoords,i,j,k,*ptrptrgeom);
+      gset_X(getprim,mycoords,i,j,k,NOWHERE,X,*ptrptrgeom);
     }
     *whichcoord=mycoords;
     *whichvel=VEL3;
@@ -4823,7 +4845,7 @@ static int donut_analytical_solution(int *whichvel, int *whichcoord, int optical
     if(*whichcoord!=mycoords){
       // get metric grid geometry for these ICs
       int getprim=0;
-      gset(getprim,mycoords,i,j,k,*ptrptrgeom);
+      gset_X(getprim,mycoords,i,j,k,NOWHERE,X,*ptrptrgeom);
     }
     *whichcoord=mycoords;
     *whichvel=VEL3;
