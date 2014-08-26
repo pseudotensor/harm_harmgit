@@ -2658,6 +2658,10 @@ int set_density_floors_default(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *prfloo
   FTYPE r,th,X[NDIM],V[NDIM];
   FTYPE bsq;
   int pl,pliter;
+  int i=ptrgeom->i;
+  int j=ptrgeom->j;
+  int k=ptrgeom->k;
+  int loc=ptrgeom->p;
 
   coord_ijk(ptrgeom->i, ptrgeom->j, ptrgeom->k, ptrgeom->p, X);
   bl_coord_ijk(ptrgeom->i, ptrgeom->j, ptrgeom->k, ptrgeom->p, V);
@@ -2730,9 +2734,27 @@ int set_density_floors_default(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *prfloo
         dualfprintf(fail_file,"bsq_calc:bsq_calc: failure\n");
         return(1);
       }
+      // ceiling on bsq/u
       prfloor[UU]=MAX(bsq/BSQOULIMIT,zerouuperbaryon*MAX(pr[RHO],SMALL));
+
+      // MARKAVARA: ceiling on T/Ttarget
+      FTYPE ugestimate=max(pr[UU],prfloor[UU]);
+      FTYPE temp=compute_temp_simple(i,j,k,loc,pr[RHO],ugestimate);
+      FTYPE temptarget=BIG;
+      // MARK, compute temptarget here
+      FTYPE BSQOUULARGE=100.0; // ensure this works! 100 may be too high to reach enough hot parts.
+      if(bsq/ugestimate>BSQOUULARGE && temp>temptarget){ // then enforce ceiling
+        // assume ideal gas with T = P/rho = (gam-1)*u/rho
+        prfloor[UU] = pr[RHO]*temptarget/(gam-1.0);
+      }
+
+      // ceiling on bsq/rho and u/rho .  As applied after the above, this will only ever make the temperature smaller, so ok to come after T ceiling.
       // below uses max of present u and floor u since present u may be too small (or negative!) and then density comparison isn't consistent with final floor between u and rho
       prfloor[RHO]=MAX(MAX(bsq/BSQORHOLIMIT,max(pr[UU],prfloor[UU])/UORHOLIMIT),SMALL);
+
+
+
+
     }
   }
   else{
