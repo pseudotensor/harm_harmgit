@@ -1698,7 +1698,7 @@ void adjust_fluxctstag_emfs(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR
 // User's cooling function:
 
 #define USERTHETACOOL       (0.1)	/* should be same as h_over_r */
-#define USERTAUCOOL         (2.0*M_PI*0.01)	        /* cooling time in number of rotational times : really USERTAUCOOL=2*M_PI would be 1 rotational time */
+#define USERTAUCOOL         (2.0*M_PI*0.1)	        /* cooling time in number of rotational times : really USERTAUCOOL=2*M_PI would be 1 rotational time */
 #define USERNOCOOLTHETAFACT     (1.0)           /* this times h_over_r and no more cooling there*/
 
 // This implementation of cooling is as in Noble et. al. 2009, to simulate a radiative cooling source term which keeps the disk thin to a target H/r
@@ -1770,7 +1770,7 @@ int coolfunc_user(FTYPE h_over_r, FTYPE *pr, struct of_geom *geom, struct of_sta
 
 
 
-	if(t > 0. && Yscaling > 1.0 ) { 
+	if(t > 0. && Yscaling > 1.0 && Yscaling < 4) { 
 	  if(R*R*h_over_r*h_over_r/25./(bsq_ijcool/rho) > taucool*taucool/Wcirc/Wcirc ) {    
 	    dUcool = - (Wcirc/taucool) * rho*Tfix/(gam-1.) * pow( Yscaling - 1.,1.) * photoncapture * q->ucon[TT]  ; 
 	  }
@@ -1781,6 +1781,9 @@ int coolfunc_user(FTYPE h_over_r, FTYPE *pr, struct of_geom *geom, struct of_sta
 	    dUcool = - (1./(15.*dt)) * rho*Tfix/(gam-1.) * pow( Yscaling - 1.,1.) * photoncapture * q->ucon[TT]  ;
 	  }
 	}
+	else if(t > 0. && Yscaling >= 4.0 ) { 
+	  dUcool = - rho*(e - 4.*Tfix/(gam-1)) / dt * photoncapture * q->ucon[TT]  ;
+	} 
 	else{
 	  dUcool = 0. ;
 	}
