@@ -30,7 +30,6 @@
 #define THICKDISK 3 // very similar to NORMALTORUS
 #define THINBP 4
 
-
 #define WHICHPROBLEM THINBP
 
 static FTYPE RHOMINEVOLVE,UUMINEVOLVE;
