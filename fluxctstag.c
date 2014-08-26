@@ -698,17 +698,22 @@ void slope_lim_continuous_e2z(int realisinterp, int dir, int idel, int jdel, int
   int pl,pliter;
 
 
+
+
   // TODOMARK: Can take discrete derivative so edge quantity at center, then c2e fully correct, and correctly interpolates as continuous.
-  // TODOMARK: Then after interpolation, just sum-up from left-most-edge-value using derivative at edge to get centered quantities
-
   // Like:
-
+  //       0      1      2      3
   //   B1     B1     B1     B1     B1 
   //->   dB1    dB1    dB1    dB1
   //-> interpolate as center to face giving:
-  //->dl dr  dl dr  dl dr  dl dr  dl dr
+  //->  dl dr  dl dr  dl dr  dl dr  dl dr
+  //-> Now have left-right face values as well as center value of dB
   //
 
+  
+  PINTERPLOOP(pliter,pl){ // probably only pl=B1+dir-1;
+    // difference oriented on difference in dir, otherwise full
+  }
 
 
   if( LINEINTERPTYPE(lim[dir]) ){ // this overrides lim, but lim must still be set properly
@@ -730,6 +735,28 @@ void slope_lim_continuous_e2z(int realisinterp, int dir, int idel, int jdel, int
       slope_lim_pointtype(ENOINTERPTYPE, realisinterp, pl, dir, idel, jdel, kdel, primreal, p2interp, dq, pleft, pright); // GODMARK: overwritting dq from other type of interpolation
     }
   }
+
+
+
+  // TODOMARK: Then after interpolation, just sum-up from left-most-edge-value using derivative at edge to get centered quantities
+  // Get final values by doing:
+  //
+  // for linear interpolations, is continuous linear function within cell
+  //
+  // Bc = Bfl + (3.0/8.0)*dl + (1.0/8.0)*dr
+  //
+  // for parabolic interpolations, is continous parabolic function within cell
+  //
+  // Bc = Bfl + (1.0/3.0)*dB + (5.0/24.0)*dl - (1.0/24.0)*dr
+  //
+  // assumes original interpolation of dB properly reduces in shocks, so in shock one reduces down to possibly DONOR so dl=dr=0
+
+
+
+
+
+
+
 
 #if(0)
   bound_prim(STAGEM1,t,pleft, 0);
