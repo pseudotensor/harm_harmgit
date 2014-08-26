@@ -307,9 +307,9 @@ int init_global(void)
   BSQOULIMIT=1E4;
   UORHOLIMIT=1E2;
   // JCM: Have to choose below so that Mdot from atmosphere is not important compared to true Mdot for thin disk.
-  RHOMIN = 2.5E-6;
+  RHOMIN = 1.E-4;
   UUMIN = 1E-6;
-  RHOMINEVOLVE = 2.5E-6;
+  RHOMINEVOLVE = 1.E-4;
   UUMINEVOLVE = 1E-6;
 
   cooling=COOLUSER; // MARKTODO should override these values set in initbase, right?
@@ -1770,19 +1770,19 @@ int coolfunc_user(FTYPE h_over_r, FTYPE *pr, struct of_geom *geom, struct of_sta
 
 
 
-	if(t > 0. && Yscaling > 1.0 && Yscaling < 4) { 
+	if(t > 0. && Yscaling > 1.0 && bsq_ijcool*bsq_ijcool*.5/(gam-1)/u >= 0.1) { 
 	  if(R*R*h_over_r*h_over_r/25./(bsq_ijcool/rho) > taucool*taucool/Wcirc/Wcirc ) {    
 	    dUcool = - (Wcirc/taucool) * rho*Tfix/(gam-1.) * pow( Yscaling - 1.,1.) * photoncapture * q->ucon[TT]  ; 
 	  }
-	  else if( (h_over_r*R/5.)/sqrt(bsq_ijcool/rho) > 15.*dt){
+	  else if( (h_over_r*R/5.)/sqrt(bsq_ijcool/rho) > 8.*dt){
 	    dUcool = - (sqrt(bsq_ijcool/rho)/(h_over_r*R/5.)) * rho*Tfix/(gam-1.) * pow( Yscaling - 1.,1.) * photoncapture * q->ucon[TT]  ;
 	  }
 	  else{
-	    dUcool = - (1./(15.*dt)) * rho*Tfix/(gam-1.) * pow( Yscaling - 1.,1.) * photoncapture * q->ucon[TT]  ;
+	    dUcool = - (1./(8.*dt)) * rho*Tfix/(gam-1.) * pow( Yscaling - 1.,1.) * photoncapture * q->ucon[TT]  ;
 	  }
 	}
-	else if(t > 0. && Yscaling >= 4.0 ) { 
-	  dUcool = - rho*(e - 4.*Tfix/(gam-1)) / dt * photoncapture * q->ucon[TT]  ;
+	else if(t > 0. && Yscaling > 1.0 && bsq_ijcool*bsq_ijcool*.5/(gam-1)/u < 0.1) { 
+	  dUcool = - rho*(e - 2.*Tfix/(gam-1)) / dt * photoncapture * q->ucon[TT]  ;
 	} 
 	else{
 	  dUcool = 0. ;
