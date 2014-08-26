@@ -1770,7 +1770,7 @@ int coolfunc_user(FTYPE h_over_r, FTYPE *pr, struct of_geom *geom, struct of_sta
 
 
 
-	if(t > 0. && Yscaling > 1.0 && bsq_ijcool*bsq_ijcool*.5/(gam-1)/u >= 0.1) { 
+	if(t > 0. && Yscaling > 1.0 && bsq_ijcool*bsq_ijcool*.5/(gam-1)/u >= 0.005) { 
 	  if(R*R*h_over_r*h_over_r/25./(bsq_ijcool/rho) > taucool*taucool/Wcirc/Wcirc ) {    
 	    dUcool = - (Wcirc/taucool) * rho*Tfix/(gam-1.) * pow( Yscaling - 1.,1.) * photoncapture * q->ucon[TT]  ; 
 	  }
@@ -1781,8 +1781,8 @@ int coolfunc_user(FTYPE h_over_r, FTYPE *pr, struct of_geom *geom, struct of_sta
 	    dUcool = - (1./(8.*dt)) * rho*Tfix/(gam-1.) * pow( Yscaling - 1.,1.) * photoncapture * q->ucon[TT]  ;
 	  }
 	}
-	else if(t > 0. && Yscaling > 1.0 && bsq_ijcool*bsq_ijcool*.5/(gam-1)/u < 0.1) { 
-	  dUcool = - rho*(e - 2.*Tfix/(gam-1)) / dt * photoncapture * q->ucon[TT]  ;
+	else if(t > 0. && Yscaling > 1.0 && bsq_ijcool*bsq_ijcool*.5/(gam-1)/u < 0.005) { 
+	  dUcool = - rho*(e - 1.*Tfix/(gam-1)) / dt * photoncapture * q->ucon[TT]  ;
 	} 
 	else{
 	  dUcool = 0. ;
