@@ -2731,6 +2731,27 @@ int set_density_floors_default(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *prfloo
         return(1);
       }
       prfloor[UU]=MAX(bsq/BSQOULIMIT,zerouuperbaryon*MAX(pr[RHO],SMALL));
+
+      // MARKAVARA: ceiling on T/Ttarget
+      FTYPE ugestimate=max(pr[UU],prfloor[UU]);
+      FTYPE temp=compute_temp_simple(ptrgeom->i, ptrgeom->j, ptrgeom->k, ptrgeom->p,pr[RHO],ugestimate);
+      FTYPE temptarget=BIG;
+      // MARK, compute temptarget here
+      R = r*sin(th) ;     // r in Noble paper
+      /* crude approximation */
+      FTYPE Wcirc;
+      Wcirc = 1./(a + pow(R,1.5)) ;   // Omega in Noble paper
+      temptarget = (.1 * R * Wcirc) * (.1 * R * Wcirc);
+
+      FTYPE INVERSEBETALARGE=50.0; // ensure this works! 100 may be too high to reach enough hot parts.
+      if(bsq/ugestimate/(gam-1.0)/(gam-1.0)>INVERSEBETALARGE && temp>temptarget){ // then enforce ceiling
+        // assume ideal gas with T = P/rho = (gam-1)*u/rho
+        prfloor[UU] = pr[RHO]*temptarget/(gam-1.0);
+      }
+  
+      // ceiling on bsq/rho and u/rho .  As applied after the above, this will only ever make the temperature smaller, so ok to come after T ceiling.
+
+
       // below uses max of present u and floor u since present u may be too small (or negative!) and then density comparison isn't consistent with final floor between u and rho
       prfloor[RHO]=MAX(MAX(bsq/BSQORHOLIMIT,max(pr[UU],prfloor[UU])/UORHOLIMIT),SMALL);
     }
