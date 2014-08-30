@@ -712,7 +712,7 @@ int diag_fixup_U(int docorrectucons, FTYPE *Ui, FTYPE *Uf, FTYPE *ucons, struct 
 // 0 = primitive (adds rho,u in comoving frame)
 // 1 = conserved but rho,u added in ZAMO frame
 // 2 = conserved but ignore strict rho,u change for ZAMO frame and instead conserved momentum (doesn't keep desired u/rho, b^2/rho, or b^2/u and so that itself can cause problems
-#define FIXUPTYPE 1
+#define FIXUPTYPE 0
 
 // finalstep==0 is non-accounting, finalstep==1 is accounting
 int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
@@ -2740,11 +2740,11 @@ int set_density_floors_default(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *prfloo
       R = r*sin(th) ;     // r in Noble paper
       /* crude approximation */
       FTYPE Wcirc;
-      Wcirc = 1./(a + pow(R,1.5)) ;   // Omega in Noble paper
-      temptarget = (.1 * R * Wcirc) * (.1 * R * Wcirc);
+      Wcirc = 1./(a + pow(r,1.5)) ;   // Omega in Noble paper
+      temptarget = (.1 * r * Wcirc) * (.1 * r * Wcirc);
 
-      FTYPE INVERSEBETALARGE=50.0; // ensure this works! 100 may be too high to reach enough hot parts.
-      if(bsq/ugestimate/(gam-1.0)/(gam-1.0)>INVERSEBETALARGE && temp>temptarget){ // then enforce ceiling
+      FTYPE INVERSEBETALARGE=5.0; // ensure this works! 100 may be too high to reach enough hot parts.
+      if(bsq/ugestimate/(gam-1.0)/(gam-1.0)>-INVERSEBETALARGE && temp>temptarget){ // then enforce ceiling
         // assume ideal gas with T = P/rho = (gam-1)*u/rho
         prfloor[UU] = pr[RHO]*temptarget/(gam-1.0);
       }
