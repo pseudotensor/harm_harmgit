@@ -88,6 +88,10 @@ int prepre_init_specific_init(void)
   funreturn=user1_prepre_init_specific_init();
   if(funreturn!=0) return(funreturn);
 
+  if(PRODUCTION==0){
+    binaryoutput=TEXTOUTPUT;
+  }
+
   return(0);
 
 }
@@ -341,7 +345,7 @@ int init_global(void)
 
   // default dumping period
   int idt;
-  for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=250.0;
+  for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=50.0;
 
   // ener period
   DTdumpgen[ENERDUMPTYPE] = 500.0;
