@@ -807,7 +807,7 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
 
     /////////////////////////////
     //
-    // Get new primitive if went beyond floow
+    // Get new primitive if went beyond floor
     //
     /////////////////////////////
 
@@ -1301,6 +1301,8 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
     struct of_geom geomdontuse;
     struct of_geom *ptrgeom=&geomdontuse;
 
+    FTYPE X[NDIM],V[NDIM],r,th,R,Wcirc,temptarget; //MAVARAADD for final ceiling on temp for bad inversion	      
+
 
     OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUPZLOOP;
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
@@ -1461,8 +1463,17 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
 
             }// end over density
 
+	    
+	    if((startpl>=RHO && endpl<=UU) && fixed==1){ //MAVARACHANGE
 
-
+	      bl_coord_ijk_2(i,j,k,CENT,X, V) ;
+	      r=V[1];
+	      th=V[2];
+	      R = r*sin(th) ;     // r in Noble paper
+              Wcirc = 1./(a + pow(r,1.5)) ;   // Omega in Noble paper
+	      temptarget = (.1 * r * Wcirc) * (.1 * r * Wcirc);
+	      MACP0A1(pv,i,j,k,UU) = MACP0A1(pv,i,j,k,RHO)*temptarget/(gam-1.0);
+	    }
 
 
             /////////////////////
@@ -2736,24 +2747,33 @@ int set_density_floors_default(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *prfloo
       FTYPE ugestimate=max(pr[UU],prfloor[UU]);
       FTYPE temp=compute_temp_simple(ptrgeom->i, ptrgeom->j, ptrgeom->k, ptrgeom->p,pr[RHO],ugestimate);
       FTYPE temptarget=BIG;
+      FTYPE rhofloor1=SMALL;
       // MARK, compute temptarget here
       R = r*sin(th) ;     // r in Noble paper
       /* crude approximation */
       FTYPE Wcirc;
-      Wcirc = 1./(a + pow(r,1.5)) ;   // Omega in Noble paper
+      Wcirc = 1./(.5 + pow(r,1.5)) ;   // Omega in Noble paper
       temptarget = (.1 * r * Wcirc) * (.1 * r * Wcirc);
 
-      FTYPE INVERSEBETALARGE=5.0; // ensure this works! 100 may be too high to reach enough hot parts.
-      if(bsq/ugestimate/(gam-1.0)/(gam-1.0)>-INVERSEBETALARGE && temp>temptarget){ // then enforce ceiling
+      FTYPE INVERSEBETALARGE=10.0; // ensure this works! 100 may be too high to reach enough hot parts.
+      if(bsq/ugestimate/(gam-1.0)>INVERSEBETALARGE && temp>temptarget && 1){ // then enforce ceiling
         // assume ideal gas with T = P/rho = (gam-1)*u/rho
-        prfloor[UU] = pr[RHO]*temptarget/(gam-1.0);
+        pr[UU] = pr[RHO]*temptarget/(gam-1.0);
+	if(pr[UU]<prfloor[UU]){ // If the new internal energy is below the floor and is going to be reset, then make sure density is AT LEAST high enough for temperature to be at target when UU is reset. 
+	  rhofloor1=prfloor[UU]*(gam-1.0)/temptarget;
+	}
+	//if(th<M_PI*(.5+.05) && th>M_PI*(.5-0.05)) 
+	//  printf("at r %21.15g cooling at rho=%21.15g to %21.15g",r,pr[RHO],temptarget);
       }
   
       // ceiling on bsq/rho and u/rho .  As applied after the above, this will only ever make the temperature smaller, so ok to come after T ceiling.
 
 
       // below uses max of present u and floor u since present u may be too small (or negative!) and then density comparison isn't consistent with final floor between u and rho
+      //prfloor[RHO]=MAX(prfloor[RHO],MAX(MAX(bsq/BSQORHOLIMIT,max(pr[UU],prfloor[UU])/UORHOLIMIT),SMALL));
       prfloor[RHO]=MAX(MAX(bsq/BSQORHOLIMIT,max(pr[UU],prfloor[UU])/UORHOLIMIT),SMALL);
+      FTYPE rhofloor2=prfloor[RHO];
+      prfloor[RHO]=max(rhofloor1,rhofloor2);
     }
   }
   else{
