@@ -1780,7 +1780,7 @@ int coolfunc_user(FTYPE h_over_r, FTYPE *pr, struct of_geom *geom, struct of_sta
 	    dUcool = - (1./(2.*dt)) * rho*Tfix/(gam-1.) * pow( Yscaling - 1.,1.) * photoncapture * q->ucon[TT]  ;
 	  }
 	}
-	else if(0 && t > 0. && Yscaling > 1.0 && bsq_ijcool*bsq_ijcool*.5/(gam-1)/u < 0.005) { 
+	else if(0 && t > 0. && Yscaling > 1.0 && bsq_ijcool*bsq_ijcool*.5/(gam-1)/u < 0.005) { // MAVARANOTE This ceiling has been moved to fixup.c so more immediate 
 	  dUcool = - rho*(e - 1.*Tfix/(gam-1)) / dt * photoncapture * q->ucon[TT]  ;
 	} 
 	else{

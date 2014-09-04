@@ -1464,14 +1464,24 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
             }// end over density
 
 	    
-	    if((startpl>=RHO && endpl<=UU) && fixed==1){ //MAVARACHANGE
+
+            ///////////////////////MAVARAADD
+            //
+            // A temperature ceiling set for failed inversion locations where inversion fix may reset prim[UU]
+            //
+            ////////////////////////MAVARAADD
+	    
+	    if((startpl>=RHO && endpl<=UU) && fixed==1){ 
 
 	      bl_coord_ijk_2(i,j,k,CENT,X, V) ;
 	      r=V[1];
 	      th=V[2];
-	      R = r*sin(th) ;     // r in Noble paper
-              Wcirc = 1./(a + pow(r,1.5)) ;   // Omega in Noble paper
-	      temptarget = (.1 * r * Wcirc) * (.1 * r * Wcirc);
+	      if(r>=Rhor)
+		R = r*sin(th) ;     // r in Noble paper
+	      else
+		R = Rhor; // Don't want target temperature to be overly high in column above and below BH where R<<Rhor
+              Wcirc = 1./(a + pow(R,1.5)) ;   // Omega in Noble paper
+	      temptarget = (h_over_r * R * Wcirc) * (h_over_r * R * Wcirc); // MAVARANOTE h_over_r here may not be the H/R you want to cool to in all circumstances.
 	      MACP0A1(pv,i,j,k,UU) = MACP0A1(pv,i,j,k,RHO)*temptarget/(gam-1.0);
 	    }
 
@@ -2743,31 +2753,34 @@ int set_density_floors_default(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *prfloo
       }
       prfloor[UU]=MAX(bsq/BSQOULIMIT,zerouuperbaryon*MAX(pr[RHO],SMALL));
 
-      // MARKAVARA: ceiling on T/Ttarget
+      // MAVARAADD: ceiling on T/Ttarget
       FTYPE ugestimate=max(pr[UU],prfloor[UU]);
       FTYPE temp=compute_temp_simple(ptrgeom->i, ptrgeom->j, ptrgeom->k, ptrgeom->p,pr[RHO],ugestimate);
       FTYPE temptarget=BIG;
       FTYPE rhofloor1=SMALL;
       // MARK, compute temptarget here
-      R = r*sin(th) ;     // r in Noble paper
+      if(r>=Rhor)
+	R = r*sin(th) ;     // r in Noble paper
+      else
+	R = Rhor; // Don't want target temperature to be overly high in column above and below BH where R<<Rhor
       /* crude approximation */
       FTYPE Wcirc;
-      Wcirc = 1./(.5 + pow(r,1.5)) ;   // Omega in Noble paper
-      temptarget = (.1 * r * Wcirc) * (.1 * r * Wcirc);
+      Wcirc = 1./(a + pow(R,1.5)) ;   // Omega in Noble paper
+      temptarget = (h_over_r * R * Wcirc) * (h_over_r * R * Wcirc);
 
       FTYPE INVERSEBETALARGE=10.0; // ensure this works! 100 may be too high to reach enough hot parts.
-      if(bsq/ugestimate/(gam-1.0)>INVERSEBETALARGE && temp>temptarget && 1){ // then enforce ceiling
+      if(bsq/ugestimate/(gam-1.0)>INVERSEBETALARGE && temp>temptarget && 1){ // then enforce ceiling; 1 is to ensure not used when 0 && 0 for cooler regions
         // assume ideal gas with T = P/rho = (gam-1)*u/rho
         pr[UU] = pr[RHO]*temptarget/(gam-1.0);
 	if(pr[UU]<prfloor[UU]){ // If the new internal energy is below the floor and is going to be reset, then make sure density is AT LEAST high enough for temperature to be at target when UU is reset. 
 	  rhofloor1=prfloor[UU]*(gam-1.0)/temptarget;
 	}
+	// MAVARACHECK output for debugging
 	//if(th<M_PI*(.5+.05) && th>M_PI*(.5-0.05)) 
 	//  printf("at r %21.15g cooling at rho=%21.15g to %21.15g",r,pr[RHO],temptarget);
       }
   
       // ceiling on bsq/rho and u/rho .  As applied after the above, this will only ever make the temperature smaller, so ok to come after T ceiling.
-
 
       // below uses max of present u and floor u since present u may be too small (or negative!) and then density comparison isn't consistent with final floor between u and rho
       //prfloor[RHO]=MAX(prfloor[RHO],MAX(MAX(bsq/BSQORHOLIMIT,max(pr[UU],prfloor[UU])/UORHOLIMIT),SMALL));
