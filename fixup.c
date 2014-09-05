@@ -98,6 +98,9 @@ int post_fixup(int stageit,int finalstep, SFTYPE boundtime, FTYPE (*pv)[NSTORE2]
     // fixup before new solution (has to be here since need previous stage's failure flag)
     fixup_utoprim(stage,pv,pbackup,ucons,finalstep);
 
+    // averaging, if occurred, will not necessarily maintain floors, so redo point-wise floors.
+    fixup(stage,pv,ucons, finalstep);
+
     
 #if(0)
     // GODMARK: I don't see why need to bound pflag since already done with using pflag
@@ -165,7 +168,7 @@ int fixup(int stage,FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ucons)[NSTORE2][N
   int ip, jp, kp, im, jm, km;
   FTYPE bsq, del;
   FTYPE ftempA,ftempB;
-  FTYPE prfloor[NPR];
+  FTYPE prfloor[NPR],prceiling[NPR];
   struct of_geom geomdontuse;
   struct of_geom *ptrgeom=&geomdontuse;
 
@@ -175,7 +178,7 @@ int fixup(int stage,FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ucons)[NSTORE2][N
   COMPZLOOP {
     get_geometry(i,j,k, CENT,ptrgeom) ;
     // densities
-    if(DOEVOLVERHO||DOEVOLVEUU) set_density_floors(ptrgeom,MAC(pv,i,j,k),prfloor);
+    if(DOEVOLVERHO||DOEVOLVEUU) set_density_floors(ptrgeom,MAC(pv,i,j,k),prfloor,prceiling);
   
 
     if(DOEVOLVERHO ){
@@ -724,7 +727,7 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
   FTYPE ftempA,ftempB;
   struct of_state q;
   struct of_state dq;
-  FTYPE prfloor[NPR];
+  FTYPE prfloor[NPR],prceiling[NPR];
   FTYPE prdiag[NPR];
   FTYPE pr0[NPR];
   FTYPE prnew[NPR];
@@ -772,6 +775,27 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
   }
 
 
+  ////////////////////
+  //
+  // limit gamma wrt normal observer -- this can change b^2, so do this first.
+  //
+  ////////////////////
+#if(WHICHVEL==VELREL4)
+  int docorrectucons=1;
+  didchangeprim=0;
+
+
+  failreturn=limit_gamma(GAMMAMAX,pr,ucons,ptrgeom,-1);
+  if(failreturn>=1) FAILSTATEMENT("fixup.c:fixup()", "limit_gamma()", 1);
+  if(failreturn==-1) didchangeprim=1;
+
+  if(didchangeprim&&FLOORDIAGS){// FLOORDIAGS includes fail diags
+    diag_fixup(docorrectucons,prdiag, pr, ucons, ptrgeom, finalstep,COUNTLIMITGAMMAACT);
+    PALLLOOP(pl) prdiag[pl]=pr[pl];
+  }
+
+#endif// end if WHICHVEL==VEL4REL
+
     
   ////////////
   //
@@ -781,12 +805,15 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
   if(DOEVOLVERHO||DOEVOLVEUU){
 
 
+
+
+
     //////////////
     //
     // get floor value
     //
     //////////////
-    set_density_floors(ptrgeom,pr,prfloor);
+    set_density_floors(ptrgeom,pr,prfloor,prceiling);
     scalemin[RHO]=RHOMINLIMIT;
     scalemin[UU]=UUMINLIMIT;
     
@@ -811,14 +838,27 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
     //
     /////////////////////////////
 
+    /// default
     PALLLOOP(pl){
-      if ( checkfl[pl]&&(prfloor[pl] > pr[pl]) ){
+      prnew[pl]=pr[pl];
+    }
+
+    PALLLOOP(pl){
+      if ( checkfl[pl]&&(pr[pl] < prfloor[pl] && pr[pl]<prceiling[pl]) ){
         didchangeprim=1;
         //dualfprintf(fail_file,"%d : %d %d %d : %d : %d : %21.15g - %21.15g\n",pl,ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p,checkfl[pl],prfloor[pl],pr[pl]); 
         // only add on full step since middle step is not really updating primitive variables
         prnew[pl]=prfloor[pl];
       }
-      else prnew[pl]=pr[pl];
+    }
+
+    PALLLOOP(pl){
+      if ( checkfl[pl]&&(pr[pl] > prfloor[pl] && pr[pl]>prceiling[pl]) ){
+        didchangeprim=1;
+        //dualfprintf(fail_file,"%d : %d %d %d : %d : %d : %21.15g - %21.15g\n",pl,ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p,checkfl[pl],prfloor[pl],pr[pl]); 
+        // only add on full step since middle step is not really updating primitive variables
+        prnew[pl]=prceiling[pl];
+      }
     }
 
 
@@ -836,8 +876,10 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
       // For example, occurs on poles where u^r\sim 0 (stagnation surface) which launches artificially high u^t stuff only because goes below floor for a range of radii and so adds momentum to low density material
       // 
       PALLLOOP(pl){
+        //        if(checkfl[pl]) dualfprintf(fail_file,"pl=%d prfloor=%g prceiling=%g pr=%g prnew=%g\n",pl,prfloor[pl],prceiling[pl],pr[pl],prnew[pl]);
         pr[pl]=prnew[pl];
       }
+
 
 
 #elif(FIXUPTYPE==1 || FIXUPTYPE==2)
@@ -929,26 +971,6 @@ int fixup1zone(FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep)
   }
 
 
-
-  ////////////////////
-  //
-  // limit gamma wrt normal observer
-  //
-  ////////////////////
-#if(WHICHVEL==VELREL4)
-  int docorrectucons=1;
-  didchangeprim=0;
-
-  failreturn=limit_gamma(GAMMAMAX,pr,ucons,ptrgeom,-1);
-  if(failreturn>=1) FAILSTATEMENT("fixup.c:fixup()", "limit_gamma()", 1);
-  if(failreturn==-1) didchangeprim=1;
-
-  if(didchangeprim&&FLOORDIAGS){// FLOORDIAGS includes fail diags
-    diag_fixup(docorrectucons,prdiag, pr, ucons, ptrgeom, finalstep,COUNTLIMITGAMMAACT);
-    PALLLOOP(pl) prdiag[pl]=pr[pl];
-  }
-
-#endif// end if WHICHVEL==VEL4REL
 
 
 
@@ -1470,21 +1492,22 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
             // A temperature ceiling set for failed inversion locations where inversion fix may reset prim[UU]
             //
             ////////////////////////MAVARAADD
-	    /*
-	    if((startpl>=RHO && endpl<=UU) && fixed==1){ 
+	    
+            if((startpl<=UU && endpl>=UU) && fixed==1){ 
 
-	      bl_coord_ijk_2(i,j,k,CENT,X, V) ;
-	      r=V[1];
-	      th=V[2];
-	      if(r>=Rhor)
-		R = r*sin(th) ;     // r in Noble paper
-	      else
-		R = Rhor; // Don't want target temperature to be overly high in column above and below BH where R<<Rhor
+              bl_coord_ijk_2(i,j,k,CENT,X, V) ;
+              r=V[1];
+              th=V[2];
+              if(r>=Rhor)
+                R = r*sin(th) ;     // r in Noble paper
+              else
+                R = Rhor; // Don't want target temperature to be overly high in column above and below BH where R<<Rhor
               Wcirc = 1./(a + pow(R,1.5)) ;   // Omega in Noble paper
-	      temptarget = (h_over_r * R * Wcirc) * (h_over_r * R * Wcirc); // MAVARANOTE h_over_r here may not be the H/R you want to cool to in all circumstances.
-	      MACP0A1(pv,i,j,k,UU) = MACP0A1(pv,i,j,k,RHO)*temptarget/(gam-1.0);
-	    }
-	    */
+              temptarget = (h_over_r * R * Wcirc) * (h_over_r * R * Wcirc); // MAVARANOTE h_over_r here may not be the H/R you want to cool to in all circumstances.
+              MACP0A1(pv,i,j,k,UU) = MACP0A1(pv,i,j,k,RHO)*temptarget/(gam-1.0);
+            }
+
+
 
             /////////////////////
             //
@@ -1648,7 +1671,7 @@ int fixup_utoprim_nofixup(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (
 // fixup negative densities
 static int fixup_negdensities(int *fixed, int startpl, int endpl, int i, int j, int k, PFTYPE mypflag, FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ptoavg)[NSTORE2][NSTORE3][NPR], struct of_geom *ptrgeom, FTYPE *pr0, FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], int finalstep)
 {
-  FTYPE prguess[NPR];
+  FTYPE prguess[NPR],prceiling[NPR];
 
   ////////////////////////////
   //
@@ -1663,7 +1686,7 @@ static int fixup_negdensities(int *fixed, int startpl, int endpl, int i, int j, 
 
         if(HANDLEUNEG==1){
           // set back to floor level
-          set_density_floors(ptrgeom,MAC(pv,i,j,k),prguess);
+          set_density_floors(ptrgeom,MAC(pv,i,j,k),prguess,prceiling);
           // GODMARK -- maybe too agressive, maybe allow more negative?
                 
           if(UTOPRIMFAILRETURNTYPE==UTOPRIMRETURNADJUSTED){
@@ -1697,7 +1720,7 @@ static int fixup_negdensities(int *fixed, int startpl, int endpl, int i, int j, 
 
         if(HANDLERHONEG==1){
           // set back to floor level
-          set_density_floors(ptrgeom,MAC(pv,i,j,k),prguess);
+          set_density_floors(ptrgeom,MAC(pv,i,j,k),prguess,prceiling);
           // GODMARK -- maybe too agressive, maybe allow more negative?
                 
           if(UTOPRIMFAILRETURNTYPE==UTOPRIMRETURNADJUSTED){
@@ -1733,7 +1756,7 @@ static int fixup_negdensities(int *fixed, int startpl, int endpl, int i, int j, 
 
         if(HANDLERHOUNEG==1){
           // set back to floor level
-          set_density_floors(ptrgeom,MAC(pv,i,j,k),prguess);
+          set_density_floors(ptrgeom,MAC(pv,i,j,k),prguess,prceiling);
           // GODMARK -- maybe too agressive, maybe allow more negative?
                 
           if(UTOPRIMFAILRETURNTYPE==UTOPRIMRETURNADJUSTED){
@@ -2671,7 +2694,7 @@ static int superdebug_utoprim(FTYPE *pr0, FTYPE *pr, struct of_geom *ptrgeom, in
 
 
 
-int set_density_floors_default(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *prfloor)
+int set_density_floors_default(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *prfloor, FTYPE *prceiling)
 {
   struct of_state q;
   FTYPE U[NPR];
@@ -2751,48 +2774,51 @@ int set_density_floors_default(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *prfloo
         dualfprintf(fail_file,"bsq_calc:bsq_calc: failure\n");
         return(1);
       }
+      prfloor[RHO]=MAX(bsq/BSQORHOLIMIT,SMALL);
       prfloor[UU]=MAX(bsq/BSQOULIMIT,zerouuperbaryon*MAX(pr[RHO],SMALL));
-
-      // MAVARAADD: ceiling on T/Ttarget
-      FTYPE ugestimate=max(pr[UU],prfloor[UU]);
-      FTYPE temp=compute_temp_simple(ptrgeom->i, ptrgeom->j, ptrgeom->k, ptrgeom->p,pr[RHO],ugestimate);
-      FTYPE temptarget=BIG;
-      FTYPE rhofloor1=SMALL;
-      // MARK, compute temptarget here
-      if(r>=Rhor)
-	R = r*sin(th) ;     // r in Noble paper
-      else
-	R = Rhor; // Don't want target temperature to be overly high in column above and below BH where R<<Rhor
-      /* crude approximation */
-      FTYPE Wcirc;
-      Wcirc = 1./(a + pow(R,1.5)) ;   // Omega in Noble paper
-      temptarget = (h_over_r * R * Wcirc) * (h_over_r * R * Wcirc);
-
-      FTYPE INVERSEBETALARGE=10.0; // ensure this works! 100 may be too high to reach enough hot parts.
-      if(bsq/ugestimate/(gam-1.0)>INVERSEBETALARGE && temp>temptarget && 1){ // then enforce ceiling; 1 is to ensure not used when 0 && 0 for cooler regions
-        // assume ideal gas with T = P/rho = (gam-1)*u/rho
-        pr[UU] = pr[RHO]*temptarget/(gam-1.0);
-	if(pr[UU]<prfloor[UU]){ // If the new internal energy is below the floor and is going to be reset, then make sure density is AT LEAST high enough for temperature to be at target when UU is reset. 
-	  rhofloor1=prfloor[UU]*(gam-1.0)/temptarget;
-	}
-	// MAVARACHECK output for debugging
-	//if(th<M_PI*(.5+.05) && th>M_PI*(.5-0.05)) 
-	//  printf("at r %21.15g cooling at rho=%21.15g to %21.15g",r,pr[RHO],temptarget);
-      }
-  
-      // ceiling on bsq/rho and u/rho .  As applied after the above, this will only ever make the temperature smaller, so ok to come after T ceiling.
-
-      // below uses max of present u and floor u since present u may be too small (or negative!) and then density comparison isn't consistent with final floor between u and rho
-      //prfloor[RHO]=MAX(prfloor[RHO],MAX(MAX(bsq/BSQORHOLIMIT,max(pr[UU],prfloor[UU])/UORHOLIMIT),SMALL));
-      prfloor[RHO]=MAX(MAX(bsq/BSQORHOLIMIT,max(pr[UU],prfloor[UU])/UORHOLIMIT),SMALL);
-      FTYPE rhofloor2=prfloor[RHO];
-      prfloor[RHO]=max(rhofloor1,rhofloor2);
     }
   }
   else{
     prfloor[RHO] = RHOMIN*pow(r, -2.0);
     prfloor[UU] = UUMIN*prfloor[RHO] ;
   }
+
+
+
+  // MAVARAADD: ceiling on T/Ttarget
+  FTYPE ugest=max(pr[UU],prfloor[UU]);
+  FTYPE rhoest=max(pr[RHO],prfloor[RHO]);
+  FTYPE pest;
+  pest = (gam-1.0)*ugest;
+  FTYPE temp=compute_temp_simple(ptrgeom->i, ptrgeom->j, ptrgeom->k, ptrgeom->p,rhoest,ugest);
+  FTYPE temptarget=BIG;
+  // MARK, compute temptarget here
+  if(r>=Rhor)
+    R = r*sin(th) ;     // r in Noble paper
+  else
+    R = Rhor; // Don't want target temperature to be overly high in column above and below BH where R<<Rhor
+  /* crude approximation */
+  FTYPE Wcirc;
+  Wcirc = 1./(a + pow(R,1.5)) ;   // Omega in Noble paper
+  temptarget = (h_over_r * R * Wcirc) * (h_over_r * R * Wcirc);
+
+  FTYPE INVERSEBETALARGE=10.0; // ensure this works! 100 may be too high to reach enough hot parts.
+  FTYPE ibeta=0.5*bsq/pest;
+  if(ibeta>INVERSEBETALARGE && temp>temptarget && 1){ // then enforce ceiling; 1 is to ensure not used when 0 && 0 for cooler regions
+    // assume ideal gas with T = P/rho = (gam-1)*u/rho
+    prceiling[UU]=rhoest/(gam-1.0)*temptarget;
+    // MAVARACHECK output for debugging
+    //if(th<M_PI*(.5+.05) && th>M_PI*(.5-0.05)) 
+    //  printf("at r %21.15g cooling at rho=%21.15g to %21.15g",r,pr[RHO],temptarget);
+
+  }
+  else{
+    prceiling[UU]=BIG;
+  }
+  prceiling[UU]=MAX(prfloor[UU],MIN(prceiling[UU],UORHOLIMIT*rhoest)); // smallest ceiling but bigger than the floor
+  prceiling[RHO]=MAX(prfloor[RHO],BIG);
+  
+  // ceiling on bsq/rho and u/rho .  As applied after the above, this will only ever make the temperature smaller, so ok to come after T ceiling.
 
 
 
@@ -2841,7 +2867,7 @@ int get_bsqflags(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR])
   struct of_state q;
   FTYPE gamma,X[NDIM],V[NDIM];
   FTYPE qsq;
-  FTYPE prfloor[NPR];
+  FTYPE prfloor[NPR],prceiling[NPR];
   int flags[NUMBSQFLAGS]={0};
   int limgen;
   struct of_geom geomdontuse;
@@ -2912,7 +2938,7 @@ int get_bsqflags(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR])
 
 #if(0)
     // density floors
-    set_density_floors(ptrgeom,MAC(pv,i,j,k),prfloor);
+    set_density_floors(ptrgeom,MAC(pv,i,j,k),prfloor,prceiling);
     // rho/rho_{fl}    
     // GODMARK, 0.1 here    
     if(prfloor[RHO]/MACP0A1(pv,i,j,k,RHO)>FLOORDAMPFRAC) flags[2]=2;
@@ -2997,17 +3023,20 @@ int limit_gamma(FTYPE gammamax, FTYPE*pr, FTYPE *ucons, struct of_geom *ptrgeom,
   bl_coord_ijk(i,j,k,loc,V);
   r=V[1];
 
+
+
+
 #if(GAMMAERGOLIMIT)
   // force flow to not move too fast inside ergosphere
   if(r<GAMMAERGOLIMITRADIUS) realgammamax=GAMMAERGOLIMITVALUE;
-  else realgammamax=GAMMAMAX;
+  else realgammamax=gammamax;
 #else
   realgammamax=gammamax;
 #endif
 
 #if(GAMMAOUTERLIMIT)
   if(r>GAMMAOUTERLIMITRADIUS) realgammamax=GAMMAOUTERLIMITVALUE;
-  else realgammamax=GAMMAMAX;
+  else realgammamax=gammamax;
 #endif
 
   if(realgammamax<=1.0) return(0); // nothing to do
