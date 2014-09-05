@@ -98,6 +98,9 @@ int post_fixup(int stageit,int finalstep, SFTYPE boundtime, FTYPE (*pv)[NSTORE2]
     // fixup before new solution (has to be here since need previous stage's failure flag)
     fixup_utoprim(stage,pv,pbackup,ucons,finalstep);
 
+    // averaging, if occurred, will not necessarily maintain floors, so redo point-wise floors.
+    fixup(stage,pv,ucons, finalstep);
+
     
 #if(0)
     // GODMARK: I don't see why need to bound pflag since already done with using pflag
