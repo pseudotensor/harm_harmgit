@@ -6,8 +6,8 @@ extern int ucon_fix(FTYPE disc, FTYPE AA, FTYPE BB, FTYPE CC,
 
 
 extern int set_atmosphere(int whichcond, int whichvel, struct of_geom *geom, FTYPE *pr);
-extern int set_density_floors_default(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *scaler);
-extern int set_density_floors(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *scaler);
+extern int set_density_floors_default(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *scaler, FTYPE *scalar2);
+extern int set_density_floors(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *scaler, FTYPE *scalar2);
 extern int fixup(int stage, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR],int finalstep);
 extern int fixup1zone(FTYPE *pr,FTYPE *ucons, struct of_geom *ptrlgeom, int finalstep);
 

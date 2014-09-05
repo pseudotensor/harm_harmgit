@@ -307,8 +307,9 @@ int init_global(void)
   //  rescaletype=1;
   rescaletype=4;
   BSQORHOLIMIT=1E2; // may have to make smaller if problems
-  BSQOULIMIT=1E4;
+  BSQOULIMIT=1E6;
   UORHOLIMIT=1E2;
+  //  UORHOLIMIT=10.0;
   // JCM: Have to choose below so that Mdot from atmosphere is not important compared to true Mdot for thin disk.
   RHOMIN = 1.E-4;
   UUMIN = 1E-6;
@@ -1535,11 +1536,11 @@ int user2_set_atmosphere(int atmospheretype, int whichcond, int whichvel, struct
 
 
 
-int set_density_floors(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *prfloor)
+int set_density_floors(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *prfloor, FTYPE *prceiling)
 {
   int funreturn;
   
-  funreturn=set_density_floors_default(ptrgeom, pr, prfloor);
+  funreturn=set_density_floors_default(ptrgeom, pr, prfloor, prceiling);
 
   FTYPE X[NDIM],V[NDIM];
   FTYPE r,th;
