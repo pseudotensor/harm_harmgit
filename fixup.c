@@ -898,19 +898,34 @@ int fixup1zone(FTYPE *pr, FTYPE *uconsinput, struct of_geom *ptrgeom, int finals
 
     /////////////////////////////
     //
-    // Get new primitive if went beyond floow
+    // Get new primitive if went beyond floor
     //
     /////////////////////////////
 
+    /// default
     PALLLOOP(pl){
-      if ( checkfl[pl]&&(prfloor[pl] > prmhd[pl]) ){
+      prmhdnew[pl]=prmhd[pl];
+    }
+
+    PALLLOOP(pl){
+      if ( checkfl[pl]&&(prmhd[pl] < prfloor[pl] && prmhd[pl]<prceiling[pl]) ){
         didchangeprim=1;
-        //dualfprintf(fail_file,"%d : %d %d %d : %d : %d : %21.15g - %21.15g\n",pl,ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p,checkfl[pl],prfloor[pl],pr[pl]); 
+        //dualfprintf(fail_file,"%d : %d %d %d : %d : %d : %21.15g - %21.15g\n",pl,ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p,checkfl[pl],prfloor[pl],prmhd[pl]); 
         // only add on full step since middle step is not really updating primitive variables
         prmhdnew[pl]=prfloor[pl];
       }
-      else prmhdnew[pl]=prmhd[pl];
     }
+
+    PALLLOOP(pl){
+      if ( checkfl[pl]&&(prmhd[pl] > prfloor[pl] && prmhd[pl]>prceiling[pl]) ){
+        didchangeprim=1;
+        //dualfprintf(fail_file,"%d : %d %d %d : %d : %d : %21.15g - %21.15g\n",pl,ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p,checkfl[pl],prfloor[pl],prmhd[pl]); 
+        // only add on full step since middle step is not really updating primitive variables
+        prmhdnew[pl]=prceiling[pl];
+      }
+    }
+
+
 
 
     //////////////////////////
@@ -966,7 +981,7 @@ int fixup1zone(FTYPE *pr, FTYPE *uconsinput, struct of_geom *ptrgeom, int finals
         if(URAD0>=0) dU[URAD0]=dU[URAD1]=dU[URAD2]=dU[URAD3]=0.0;
 
         pl=UU;
-        if ( checkfl[pl]&&(prfloor[pl] > prmhd[pl]) ){
+        if ( checkfl[pl]&&(prfloor[pl] > prmhd[pl] || prceiling[pl] < prmhd[pl]) ){
           // then must change dU[UU]
         }
         else dU[UU]=0.0; // if only mass added, then no change needed to energy-momentum
@@ -3193,7 +3208,7 @@ int set_density_floors_default(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *prfloo
 }
 
 /// alternative default way to set density floors
-int set_density_floors_default_alt(struct of_geom *ptrgeom, struct of_state *q, FTYPE *pr, FTYPE *U, FTYPE bsq, FTYPE *prfloor, FTYPE *prceilings)
+int set_density_floors_default_alt(struct of_geom *ptrgeom, struct of_state *q, FTYPE *pr, FTYPE *U, FTYPE bsq, FTYPE *prfloor, FTYPE *prceiling)
 {
   FTYPE Upbinf[NPR];
   FTYPE r,th,X[NDIM],V[NDIM];
@@ -3204,6 +3219,10 @@ int set_density_floors_default_alt(struct of_geom *ptrgeom, struct of_state *q, 
   bl_coord_ijk(ptrgeom->i, ptrgeom->j, ptrgeom->k, ptrgeom->p, V);
   r=V[1];
   th=V[2];
+
+  // default
+  prceiling[RHO]=BIG;
+  prceiling[UU]=BIG;
 
 
   if(PRAD0>=0.0) prfloor[PRAD0]=ERADLIMIT;
@@ -3297,17 +3316,19 @@ int set_density_floors_default_alt(struct of_geom *ptrgeom, struct of_state *q, 
           // still limit u near pole
           prfloor[UU]=MAX(MIN(pr[UU],UORHOLIMITTEMP*prfloor[RHO]),SMALL);
         }
-        else{
+        else{ // NORMAL CASE
           prfloor[RHO]=MAX(bsq/BSQORHOLIMIT,SMALL);
           prfloor[UU]=MAX(bsq/BSQOULIMIT,zerouuperbaryon*MAX(prfloor[RHO],SMALL));
-          prfloor[UU]=MAX(MIN(MAX(pr[UU],prfloor[UU]),UORHOLIMIT*prfloor[RHO]),SMALL);
+          //          prfloor[UU]=MAX(MIN(MAX(pr[UU],prfloor[UU]),UORHOLIMIT*prfloor[RHO]),SMALL);
+          prceiling[UU]=MAX(prfloor[UU],MIN(prceiling[UU],UORHOLIMIT*MAX(pr[RHO],prfloor[RHO])));
 
         }// end NORMAL else conditional
       }
       else{
         prfloor[RHO]=MAX(bsq/BSQORHOLIMIT,SMALL);
         prfloor[UU]=MAX(bsq/BSQOULIMIT,zerouuperbaryon*MAX(prfloor[RHO],SMALL));
-        prfloor[UU]=MAX(MIN(MAX(pr[UU],prfloor[UU]),UORHOLIMIT*prfloor[RHO]),SMALL);
+        //        prfloor[UU]=MAX(MIN(MAX(pr[UU],prfloor[UU]),UORHOLIMIT*prfloor[RHO]),SMALL);
+        prceiling[UU]=MAX(prfloor[UU],MIN(prceiling[UU],UORHOLIMIT*MAX(pr[RHO],prfloor[RHO])));
 
         if(rescaletype==5){//WALD
           if(1){
