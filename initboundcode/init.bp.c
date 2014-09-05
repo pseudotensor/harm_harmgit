@@ -345,7 +345,7 @@ int init_global(void)
 
   // default dumping period
   int idt;
-  for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=50.0;
+  for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=1.0;
 
   // ener period
   DTdumpgen[ENERDUMPTYPE] = 500.0;
