@@ -1743,6 +1743,11 @@ int coolfunc_user(FTYPE h_over_r, FTYPE *pr, struct of_geom *geom, struct of_sta
  
       	rpho=2.0*(1.0+cos(2.0/3.0*(acos(-a))));
 
+	if(bsq_ijcool/rho > 100000*BSQORHOLIMIT || bsq_ijcool/u > 100000*BSQOULIMIT){
+	  printf("in cooling: bsq/rho=%21.15g, at ijk= %d,%d,%d",bsq_ijcool/rho,ii,jj,kk);
+	  printf("in cooling: bsq/u=%21.15g \n",bsq_ijcool/u);
+	}
+
 	//	trifprintf("rphoton=%lf\n", rpho);
 	if(1 || r>rpho){ //SASMARK: cool always, including inside photon orbit
 	  photoncapture=1.0 ;
@@ -1787,6 +1792,7 @@ int coolfunc_user(FTYPE h_over_r, FTYPE *pr, struct of_geom *geom, struct of_sta
 	  dUcool = 0. ;
 	}
 
+	
 
 	/*
 	if(t > 0. && Yscaling > 1.0 ) {

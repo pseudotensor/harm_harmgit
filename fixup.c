@@ -1470,7 +1470,7 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
             // A temperature ceiling set for failed inversion locations where inversion fix may reset prim[UU]
             //
             ////////////////////////MAVARAADD
-	    
+	    /*
 	    if((startpl>=RHO && endpl<=UU) && fixed==1){ 
 
 	      bl_coord_ijk_2(i,j,k,CENT,X, V) ;
@@ -1484,7 +1484,7 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
 	      temptarget = (h_over_r * R * Wcirc) * (h_over_r * R * Wcirc); // MAVARANOTE h_over_r here may not be the H/R you want to cool to in all circumstances.
 	      MACP0A1(pv,i,j,k,UU) = MACP0A1(pv,i,j,k,RHO)*temptarget/(gam-1.0);
 	    }
-
+	    */
 
             /////////////////////
             //

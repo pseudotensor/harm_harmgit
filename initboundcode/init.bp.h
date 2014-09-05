@@ -13,9 +13,9 @@
 
 
 
-#define N1 12 //12 //32  // MARKTODO resolution
-#define N2 8 //6 //24
-#define N3 10 // 6 for big runs //8 //6 //8   //16
+#define N1 32 /// 12 //12 //32  // MARKTODO resolution
+#define N2 32 ///8  //6 //24
+#define N3 1 //10 // 6 for big runs //8 //6 //8   //16
 
 
 // atch adjusts
