@@ -38,8 +38,10 @@
 
 
 // trying to control repeated cycles
-#define CYCLESTOP 10
-#define NUMCYCLES 3
+//#define CYCLESTOP 10 // 10 is too dangerous
+//#define NUMCYCLES 3 // 3 is too dangerous
+#define CYCLESTOP 200 // don't limit for now to avoid issues with bad solutions in highly magnetized cases.
+#define NUMCYCLES 200 // ""
 
 /// Note that if using -pc64 -mp that error in inversion seems to be limited for doubles to 1E-11 instead of 1E-15
 #if(PRECISEINVERSION)

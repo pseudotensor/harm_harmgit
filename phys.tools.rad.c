@@ -1454,7 +1454,7 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
       // 3) Apply any fixups, like floors or limit_gamma's.  Won't help reduce error, but even if solution with high fluid gamma, later apply limit_gamma, but then balance between fluid and radiation lost.  So better to see as high error event than accurate high gamma event.
       int finalstepfixup=0; // treat as if not needing to diagnose, just act.  KORALTODO: Although, Utoprimgen(finalstep) used to get change in fluid primitives.
       // Note, uu is old, but only used for diagnostics, and don't care about diagnostics in this stepping.
-      FTYPE ppfixup[NPR],ppfloor[NPR],uufixup[NPR];
+      FTYPE ppfixup[NPR],ppfloor[NPR],uufixup[NPR],prceiling[NPR];
       PLOOP(pliter,pl){
         ppfixup[pl]=ppfloor[pl]=pp[pl];
         uufixup[pl]=uu[pl];
@@ -1462,7 +1462,7 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
       // bsq is accurate using below
       FTYPE bsq; bsq_calc_fromq(ppfixup, ptrgeom, q, &bsq);
       // uu isn't exactly like pfixup here, but close enough
-      set_density_floors_alt(ptrgeom, q, ppfixup, uu, bsq, ppfloor);
+      set_density_floors_alt(ptrgeom, q, ppfixup, uu, bsq, ppfloor, prceiling);
       //      fixup1zone(ppfloor,uufixup, ptrgeom,finalstepfixup); // too complicated for implicit stepping given how rare shoul be used.
       if(pp[RHO]<0.0) pp[RHO]=ppfloor[RHO]; // only fix RHO if really went negative.  Not smooth, but avoids problems in difficult regimes.
 

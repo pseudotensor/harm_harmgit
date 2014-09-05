@@ -38,6 +38,7 @@ int WALDWHICHACOV=3; // which component : -1 is all of them
 //FTYPE BSQORHOWALD=50.0; // leads to too large b^2/rho and uu0 cylindrical shock forms at r\sim 2r_g and remains forever (at least at 128x64)
 FTYPE BSQORHOWALD=100.0;
 FTYPE aforwald;
+FTYPE TILTWALD;
 
 //FTYPE thindiskrhopow=-3.0/2.0; // can make steeper like -0.7
 FTYPE thindiskrhopow=-0.2; // closer to NT73
@@ -5425,6 +5426,11 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
 
   if(FIELDTYPE==SPLITMONOPOLE || FIELDTYPE==MONOPOLE || FIELDTYPE==FIELDWALD){
 
+    r=V[1];
+    th=V[2];
+    ph=V[3];
+
+
     if(FIELDTYPE==SPLITMONOPOLE || FIELDTYPE==MONOPOLE) return(0); // otherwise setup poloidal components using vector potential
     else if(FIELDTYPE==FIELDWALD){
 
@@ -5451,14 +5457,47 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
       lower_vec(mcon,ptrgeomreal,mcov);
       lower_vec(kcon,ptrgeomreal,kcov);
       
+
+      // below so field is b^2/rho=BSQORHOWALD at horizon
+      FTYPE Rhorlocal=rhor_calc(0);
+      B0WALD=sqrt(BSQORHOWALD*RADNT_RHOATMMIN*pow(Rhorlocal/RADNT_ROUT,-1.5));
+      TILTWALD=THETAROT;
+      aforwald=a;
       
-      if(l==WALDWHICHACOV || WALDWHICHACOV==-1){
-        // A_i
-        // below so field is b^2/rho=BSQORHOWALD at horizon
-        FTYPE Rhorlocal=rhor_calc(0);
-        B0WALD=sqrt(BSQORHOWALD*RADNT_RHOATMMIN*pow(Rhorlocal/RADNT_ROUT,-1.5));
-        aforwald=a;
-        vpot += -0.5*B0WALD*(mcov[l]+2.0*aforwald*kcov[l]);
+      if(fabs(TILTWALD-0.0)>1E-10){
+        if(l==WALDWHICHACOV || WALDWHICHACOV==-1){
+          vpot += -0.5*B0WALD*(mcov[l]+2.0*aforwald*kcov[l]);
+        }
+
+
+      }
+      else{ // need all A_i's for tilted field
+        FTYPE BC0=1.0;
+        FTYPE BC1=1.0;
+        FTYPE Acovblnonrot[NDIM];
+        FTYPE Acov[NDIM];
+
+        FTYPE delta,sigma,rp,rm,psi;
+
+        delta= r*r - 2*MBH*r + a*a;
+        sigma = r*r + a*a*cos(th)*cos(th);
+        rp = MBH + sqrt(MBH*MBH - a*a);
+        rm = MBH - sqrt(MBH*MBH - a*a);
+        
+        psi = ph + a/(rp-rm)*log((r-rp)/(r-rm));
+
+        Acovblnonrot[0] = -(a*BC0) + (a*BC0*MBH*r*(1 + Power(Cos(th),2)))/sigma + (a*BC1*MBH*Cos(th)*(r*Cos(psi) - a*Sin(psi))*Sin(th))/sigma;
+
+        Acovblnonrot[1] = -(BC1*(-MBH + r)*Cos(th)*Sin(psi)*Sin(th));
+
+        Acovblnonrot[2] = -(BC1*(Power(r,2)*Power(Cos(th),2) + Power(a,2)*Cos(2*th) - MBH*r*Cos(2*th))*Sin(psi)) - 
+          a*BC1*Cos(psi)*(MBH*Power(Cos(th),2) + r*Power(Sin(th),2));
+
+        Acovblnonrot[3] = -(BC1*Cos(th)*(delta*Cos(psi) + (MBH*(Power(a,2) + Power(r,2))*(r*Cos(psi) - a*Sin(psi)))/sigma)*Sin(th)) + 
+          BC0*((Power(a,2) + Power(r,2))/2. - (Power(a,2)*MBH*r*(1 + Power(Cos(th),2)))/sigma)*Power(Sin(th),2);
+
+        // TODOWALD: now take Acovblnonrot -> Acovksnonrot -> Acovksrot
+ 
       }
     }
   }
@@ -6521,7 +6560,7 @@ int set_atmosphere(int whichcond, int whichvel, struct of_geom *ptrgeom, FTYPE *
 
 
 
-int set_density_floors(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *prfloor)
+int set_density_floors(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *prfloor, FTYPE *prceiling)
 {
   int funreturn;
 
@@ -6538,7 +6577,7 @@ int set_density_floors(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *prfloor)
   // default is for spherical flow near BH
   if(WHICHPROBLEM==RADDONUT){
     // KORALTODO: floor currently causes injection of hot matter and run-away problems with radiation.
-    funreturn=set_density_floors_default(ptrgeom, pr, prfloor);
+    funreturn=set_density_floors_default(ptrgeom, pr, prfloor, prceiling);
 
     if(funreturn!=0) return(funreturn);
   }
@@ -6546,7 +6585,7 @@ int set_density_floors(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *prfloor)
   return(0);
 }
 
-int set_density_floors_alt(struct of_geom *ptrgeom, struct of_state *q, FTYPE *pr, FTYPE *U, FTYPE bsq, FTYPE *prfloor)
+int set_density_floors_alt(struct of_geom *ptrgeom, struct of_state *q, FTYPE *pr, FTYPE *U, FTYPE bsq, FTYPE *prfloor, FTYPE *prceiling)
 {
   int funreturn;
 
@@ -6563,7 +6602,7 @@ int set_density_floors_alt(struct of_geom *ptrgeom, struct of_state *q, FTYPE *p
   // default is for spherical flow near BH
   if(WHICHPROBLEM==RADDONUT){
     // KORALTODO: floor currently causes injection of hot matter and run-away problems with radiation.
-    funreturn=set_density_floors_default_alt(ptrgeom, q, pr, U, bsq, prfloor);
+    funreturn=set_density_floors_default_alt(ptrgeom, q, pr, U, bsq, prfloor, prceiling);
 
     if(funreturn!=0) return(funreturn);
   }

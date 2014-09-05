@@ -5802,8 +5802,8 @@ void debugfixupaltdeath_bc(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 
           if(VARTOINTERP==PRIMTOINTERP_GDETFULLVERSION_WALD){
 
-            FTYPE prfloor[NPR];
-            set_density_floors(ptrgeom,prfix,prfloor);
+            FTYPE prfloor[NPR],prceiling[NPR];
+            set_density_floors(ptrgeom,prfix,prfloor,prceiling);
 
             prfix[RHO]=prfloor[RHO];
             prfix[UU]=prfloor[UU];

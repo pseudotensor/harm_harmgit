@@ -173,7 +173,7 @@ int fixup(int stage,FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ucons)[NSTORE2][N
   int ip, jp, kp, im, jm, km;
   FTYPE bsq, del;
   FTYPE ftempA,ftempB;
-  FTYPE prfloor[NPR];
+  FTYPE prfloor[NPR],prceiling[NPR];
   struct of_geom geomdontuse;
   struct of_geom *ptrgeom=&geomdontuse;
 
@@ -183,7 +183,7 @@ int fixup(int stage,FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ucons)[NSTORE2][N
   COMPZLOOP {
     get_geometry(i,j,k, CENT,ptrgeom) ;
     // densities
-    if(DOEVOLVERHO||DOEVOLVEUU) set_density_floors(ptrgeom,MAC(pv,i,j,k),prfloor);
+    if(DOEVOLVERHO||DOEVOLVEUU) set_density_floors(ptrgeom,MAC(pv,i,j,k),prfloor,prceiling);
   
 
     if(DOEVOLVERHO ){
@@ -781,7 +781,7 @@ int fixup1zone(FTYPE *pr, FTYPE *uconsinput, struct of_geom *ptrgeom, int finals
   FTYPE ftempA,ftempB;
   struct of_state q;
   struct of_state dq;
-  FTYPE prfloor[NPR];
+  FTYPE prfloor[NPR],prceiling[NPR];
   FTYPE prdiag[NPR];
   FTYPE pr0[NPR];
   FTYPE prmhdnew[NPR];
@@ -841,6 +841,28 @@ int fixup1zone(FTYPE *pr, FTYPE *uconsinput, struct of_geom *ptrgeom, int finals
   if(DOEVOLVEURAD0) checkfl[PRAD0]=1;
 
 
+  ////////////////////
+  //
+  // limit gamma wrt normal observer -- this can change b^2, so do this first.
+  //
+  ////////////////////
+#if(WHICHVEL==VELREL4)
+  int docorrectucons=0;
+  //  didchangeprim=0;
+
+  failreturn=limit_gamma(docorrectucons,GAMMAMAX,GAMMAMAXRAD,prmhd,ucons,ptrgeom,-1);
+  if(failreturn>=1) FAILSTATEMENT("fixup.c:fixup()", "limit_gamma()", 1);
+  if(failreturn==-1) didchangeprim=1;
+
+  if(didchangeprim&&FLOORDIAGS){// FLOORDIAGS includes fail diags
+    int doingmhdfixup=1;
+    diag_fixup(docorrectucons,prdiag, prmhd, ucons, ptrgeom, finalstep,doingmhdfixup,COUNTLIMITGAMMAACT);
+    PALLLOOP(pl) prdiag[pl]=prmhd[pl];
+  }
+
+#endif// end if WHICHVEL==VEL4REL
+
+
     
   ////////////
   //
@@ -855,7 +877,7 @@ int fixup1zone(FTYPE *pr, FTYPE *uconsinput, struct of_geom *ptrgeom, int finals
     // get floor value
     //
     //////////////
-    set_density_floors(ptrgeom,prmhd,prfloor);
+    set_density_floors(ptrgeom,prmhd,prfloor,prceiling);
     scalemin[RHO]=RHOMINLIMIT;
     scalemin[UU]=UUMINLIMIT;
     if(URAD0>=0) scalemin[URAD0]=ERADLIMIT;
@@ -1067,26 +1089,6 @@ int fixup1zone(FTYPE *pr, FTYPE *uconsinput, struct of_geom *ptrgeom, int finals
 
 
 
-  ////////////////////
-  //
-  // limit gamma wrt normal observer
-  //
-  ////////////////////
-#if(WHICHVEL==VELREL4)
-  int docorrectucons=0;
-  //  didchangeprim=0;
-
-  failreturn=limit_gamma(docorrectucons,GAMMAMAX,GAMMAMAXRAD,prmhd,ucons,ptrgeom,-1);
-  if(failreturn>=1) FAILSTATEMENT("fixup.c:fixup()", "limit_gamma()", 1);
-  if(failreturn==-1) didchangeprim=1;
-
-  if(didchangeprim&&FLOORDIAGS){// FLOORDIAGS includes fail diags
-    int doingmhdfixup=1;
-    diag_fixup(docorrectucons,prdiag, prmhd, ucons, ptrgeom, finalstep,doingmhdfixup,COUNTLIMITGAMMAACT);
-    PALLLOOP(pl) prdiag[pl]=prmhd[pl];
-  }
-
-#endif// end if WHICHVEL==VEL4REL
 
 
 
@@ -2004,7 +2006,7 @@ int fixup_utoprim_nofixup(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (
 /// fixup negative densities
 static int fixup_negdensities(int whicheomset, int *fixed, int startpl, int endpl, int i, int j, int k, PFTYPE lpflag, FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ptoavg)[NSTORE2][NSTORE3][NPR], struct of_geom *ptrgeom, FTYPE *pr0, FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], int finalstep)
 {
-  FTYPE prguess[NPR];
+  FTYPE prguess[NPR],prceiling[NPR];
 
 
   if(whicheomset==EOMSETMHD){
@@ -2021,7 +2023,7 @@ static int fixup_negdensities(int whicheomset, int *fixed, int startpl, int endp
 
           if(HANDLEUNEG==1){
             // set back to floor level
-            set_density_floors(ptrgeom,MAC(pv,i,j,k),prguess);
+            set_density_floors(ptrgeom,MAC(pv,i,j,k),prguess,prceiling);
             // GODMARK -- maybe too agressive, maybe allow more negative?
   
             if(UTOPRIMFAILRETURNTYPE==UTOPRIMRETURNADJUSTED){
@@ -2055,7 +2057,7 @@ static int fixup_negdensities(int whicheomset, int *fixed, int startpl, int endp
 
           if(HANDLERHONEG==1){
             // set back to floor level
-            set_density_floors(ptrgeom,MAC(pv,i,j,k),prguess);
+            set_density_floors(ptrgeom,MAC(pv,i,j,k),prguess,prceiling);
             // GODMARK -- maybe too agressive, maybe allow more negative?
   
             if(UTOPRIMFAILRETURNTYPE==UTOPRIMRETURNADJUSTED){
@@ -2091,7 +2093,7 @@ static int fixup_negdensities(int whicheomset, int *fixed, int startpl, int endp
 
           if(HANDLERHOUNEG==1){
             // set back to floor level
-            set_density_floors(ptrgeom,MAC(pv,i,j,k),prguess);
+            set_density_floors(ptrgeom,MAC(pv,i,j,k),prguess,prceiling);
             // GODMARK -- maybe too agressive, maybe allow more negative?
   
             if(UTOPRIMFAILRETURNTYPE==UTOPRIMRETURNADJUSTED){
@@ -3164,7 +3166,7 @@ static int superdebug_utoprim(FTYPE *pr0, FTYPE *pr, struct of_geom *ptrgeom, in
 }
 
 /// default way to set density floors
-int set_density_floors_default(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *prfloor)
+int set_density_floors_default(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *prfloor, FTYPE *prceiling)
 {
   struct of_state q;
   FTYPE U[NPR];
@@ -3185,13 +3187,13 @@ int set_density_floors_default(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *prfloo
     }
   }
 
-  set_density_floors_default_alt(ptrgeom, &q, pr, U, bsq, prfloor);
+  set_density_floors_default_alt(ptrgeom, &q, pr, U, bsq, prfloor, prceiling);
 
   return(0);
 }
 
 /// alternative default way to set density floors
-int set_density_floors_default_alt(struct of_geom *ptrgeom, struct of_state *q, FTYPE *pr, FTYPE *U, FTYPE bsq, FTYPE *prfloor)
+int set_density_floors_default_alt(struct of_geom *ptrgeom, struct of_state *q, FTYPE *pr, FTYPE *U, FTYPE bsq, FTYPE *prfloor, FTYPE *prceilings)
 {
   FTYPE Upbinf[NPR];
   FTYPE r,th,X[NDIM],V[NDIM];
@@ -3476,7 +3478,7 @@ int get_bsqflags(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR])
 
 #if(0)
     // density floors
-    set_density_floors(ptrgeom,MAC(pv,i,j,k),prfloor);
+    set_density_floors(ptrgeom,MAC(pv,i,j,k),prfloor,prceiling);
     // rho/rho_{fl}    
     // GODMARK, 0.1 here    
     if(prfloor[RHO]/MACP0A1(pv,i,j,k,RHO)>FLOORDAMPFRAC) flags[2]=2;
