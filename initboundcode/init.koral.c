@@ -5472,31 +5472,65 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
 
       }
       else{ // need all A_i's for tilted field
-        FTYPE BC0=1.0;
-        FTYPE BC1=1.0;
-        FTYPE Acovblnonrot[NDIM];
-        FTYPE Acov[NDIM];
+
+        // STEP1:
+        // r,\theta,\phi are such that BH spin stays in z-hat and field is tilted.  So we need to provide r,\theta,\phi in coordinates wher z-hat is along spin axis.
+
+        // Original V at this point is with tilted BH spin, but solution below is for spin along z-axis, so find Vmetric[corresponding to when BH spin is along z-axis]
+        FTYPE Vmetric[NDIM];
+        rotate_VtoVmetric(MCOORD,V,Vmetric);
+
+        FTYPE rV=Vmetric[1];
+        FTYPE thV=Vmetric[2];
+        FTYPE phV=Vmetric[3];
+
+        // STEP2: Now get solution in setup where BH spin along z-axis always and it is the field that is rotated
+        // B0y=0
+        FTYPE B0z=1.0; // B0z
+        FTYPE B0x=1.0; // B0x
 
         FTYPE delta,sigma,rp,rm,psi;
 
-        delta= r*r - 2*MBH*r + a*a;
-        sigma = r*r + a*a*cos(th)*cos(th);
+        delta= rV*rV - 2.0*MBH*rV + a*a;
+        sigma = rV*rV + a*a*cos(thV)*cos(thV);
         rp = MBH + sqrt(MBH*MBH - a*a);
         rm = MBH - sqrt(MBH*MBH - a*a);
         
-        psi = ph + a/(rp-rm)*log((r-rp)/(r-rm));
+        psi = phV + a/(rp-rm)*log((rV-rp)/(rV-rm));
 
-        Acovblnonrot[0] = -(a*BC0) + (a*BC0*MBH*r*(1 + Power(Cos(th),2)))/sigma + (a*BC1*MBH*Cos(th)*(r*Cos(psi) - a*Sin(psi))*Sin(th))/sigma;
+        FTYPE Acovblnonrot[NDIM];
 
-        Acovblnonrot[1] = -(BC1*(-MBH + r)*Cos(th)*Sin(psi)*Sin(th));
+        Acovblnonrot[0] = -1.*a*B0z + (a*B0z*MBH*rV*(1. + Power(Cos(thV),2)))/sigma + 
+          (a*B0x*MBH*Cos(thV)*(rV*Cos(psi) - 1.*a*Sin(psi))*Sin(thV))/sigma;
 
-        Acovblnonrot[2] = -(BC1*(Power(r,2)*Power(Cos(th),2) + Power(a,2)*Cos(2*th) - MBH*r*Cos(2*th))*Sin(psi)) - 
-          a*BC1*Cos(psi)*(MBH*Power(Cos(th),2) + r*Power(Sin(th),2));
+        Acovblnonrot[1] = -1.*B0x*(-1.*MBH + rV)*Cos(thV)*Sin(psi)*Sin(thV);
 
-        Acovblnonrot[3] = -(BC1*Cos(th)*(delta*Cos(psi) + (MBH*(Power(a,2) + Power(r,2))*(r*Cos(psi) - a*Sin(psi)))/sigma)*Sin(th)) + 
-          BC0*((Power(a,2) + Power(r,2))/2. - (Power(a,2)*MBH*r*(1 + Power(Cos(th),2)))/sigma)*Power(Sin(th),2);
+        Acovblnonrot[2] = -1.*B0x*(Power(rV,2)*Power(Cos(thV),2) + Power(a,2)*Cos(2.*thV) - 
+                                   1.*MBH*rV*Cos(2.*thV))*Sin(psi) - 
+          1.*a*B0x*Cos(psi)*(MBH*Power(Cos(thV),2) + rV*Power(Sin(thV),2));
+        
+        
+        Acovblnonrot[3] = -1.*B0x*Cos(thV)*(delta*Cos(psi) + 
+                                            (MBH*(Power(a,2) + Power(rV,2))*(rV*Cos(psi) - 1.*a*Sin(psi)))/
+                                            sigma)*Sin(thV) + B0z*(0.5*(Power(a,2) + Power(rV,2)) - 
+                                                                   (1.*Power(a,2)*MBH*rV*(1. + Power(Cos(thV),2)))/sigma)*
+          Power(Sin(thV),2);
 
-        // TODOWALD: now take Acovblnonrot -> Acovksnonrot -> Acovksrot
+        // STEP3: now take Acovblnonrot -> Acovksnonrot
+        // NOTE: bl2ks transformation assumes BH spin is pointing z-hat, just like Acovblnonrot[] assumes, so have to apply this here before rotation vector.
+        FTYPE Acovksnonrot[NDIM];
+        int jj;
+        DLOOPA(jj) Acovksnonrot[jj]=Acovblnonrot[jj];
+        bltoks_ucov(i,j,k,loc,Acovksnonrot);
+
+        // STEP4: now take Acovksnonrot -> Acovks.
+        // That is, while coordinate position was correctly mapped in STEP1, coordinate vector still needs to be rotated
+        FTYPE Acovks[NDIM];
+        DLOOPA(jj) Acovks[jj]=Acovksnonrot[jj];
+        transVmetric2V_ucov(Vmetric,Acovks);
+
+        // now pluck out only the A_l one wanted
+        vpot += Acovks[l];
  
       }
     }

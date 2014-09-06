@@ -1640,7 +1640,7 @@ void transgcov_old(FTYPE *gcov, FTYPE (*dxdxp)[NDIM], FTYPE *gcovprim)
       }
   }
   DLOOP(j,k){
-    // use tmpgcov since gcon might be same address as gcovprim
+    // use tmpgcov since gcov might be same address as gcovprim
     gcovprim[GIND(j,k)] = tmpgcov[GIND(j,k)];
   }
 

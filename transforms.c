@@ -364,12 +364,9 @@ int coordtrans(int whichcoordin, int whichcoordout, int ii, int jj, int kk, int 
 
 }
 
-  
-/* transforms u^i to our ks from boyer-lindquist */
-void bltoks(int ii, int jj, int kk, int loc, FTYPE*ucon)
+// transformation matrix
+void bltoks_trans(int ii, int jj, int kk, int loc, FTYPE (*bl2ks)[NDIM])
 {
-  FTYPE tmp[NDIM];
-  FTYPE trans[NDIM][NDIM];
   FTYPE V[NDIM], r, th;
   int j,k;
 
@@ -403,39 +400,75 @@ void bltoks(int ii, int jj, int kk, int loc, FTYPE*ucon)
 
   /* make transform matrix */
   // order for trans is [ourmetric][bl]
-  // DLOOP(j,k) trans[j][k] = 0. ;
-  // DLOOPA(j) trans[j][j] = 1. ;
-  trans[0][0] = bl2ks_trans00;
-  trans[0][1] = bl2ks_trans01;
-  trans[0][2] = bl2ks_trans02;
-  trans[0][3] = bl2ks_trans03;
-  trans[1][0] = bl2ks_trans10;
-  trans[1][1] = bl2ks_trans11;
-  trans[1][2] = bl2ks_trans12;
-  trans[1][3] = bl2ks_trans13;
-  trans[2][0] = bl2ks_trans20;
-  trans[2][1] = bl2ks_trans21;
-  trans[2][2] = bl2ks_trans22;
-  trans[2][3] = bl2ks_trans23;
-  trans[3][0] = bl2ks_trans30;
-  trans[3][1] = bl2ks_trans31;
-  trans[3][2] = bl2ks_trans32;
-  trans[3][3] = bl2ks_trans33;
+  // DLOOP(j,k) bl2ks[j][k] = 0. ;
+  // DLOOPA(j) bl2ks[j][j] = 1. ;
+  bl2ks[0][0] = bl2ks_trans00;
+  bl2ks[0][1] = bl2ks_trans01;
+  bl2ks[0][2] = bl2ks_trans02;
+  bl2ks[0][3] = bl2ks_trans03;
+  bl2ks[1][0] = bl2ks_trans10;
+  bl2ks[1][1] = bl2ks_trans11;
+  bl2ks[1][2] = bl2ks_trans12;
+  bl2ks[1][3] = bl2ks_trans13;
+  bl2ks[2][0] = bl2ks_trans20;
+  bl2ks[2][1] = bl2ks_trans21;
+  bl2ks[2][2] = bl2ks_trans22;
+  bl2ks[2][3] = bl2ks_trans23;
+  bl2ks[3][0] = bl2ks_trans30;
+  bl2ks[3][1] = bl2ks_trans31;
+  bl2ks[3][2] = bl2ks_trans32;
+  bl2ks[3][3] = bl2ks_trans33;
+
+  /* done! */
+}
+
+  
+/* transforms u^i to our ks from boyer-lindquist */
+void bltoks(int ii, int jj, int kk, int loc, FTYPE*ucon)
+{
+  FTYPE tmp[NDIM];
+  FTYPE bl2ks[NDIM][NDIM];
+  FTYPE V[NDIM], r, th;
+  int j,k;
+
+
+  bltoks_trans(ii, jj, kk, loc, bl2ks);
+
+
   /* transform ucon; solve for v */
-  // this is u^j = T^j_k u^k
+  // this is u^j[ks] = T^j[ks]_k[bl] u^k[bl]
   DLOOPA(j) tmp[j] = 0.;
-  DLOOP(j,k) tmp[j] += trans[j][k] * ucon[k];
+  DLOOP(j,k) tmp[j] += bl2ks[j][k] * ucon[k];
   DLOOPA(j) ucon[j] = tmp[j];
 
   /* done! */
 }
 
-
 /* transforms u^i to our ks from boyer-lindquist */
-void kstobl(int ii, int jj, int kk, int loc, FTYPE*ucon)
+void bltoks_ucov(int ii, int jj, int kk, int loc, FTYPE *ucov)
 {
   FTYPE tmp[NDIM];
-  FTYPE trans[NDIM][NDIM];
+  FTYPE ks2bl[NDIM][NDIM];
+  FTYPE V[NDIM], r, th;
+  int j,k;
+
+
+  kstobl_trans(ii, jj, kk, loc, ks2bl);
+
+
+  /* transform ucon; solve for v */
+  // this is u_j[ks] = T_j[ks]^k[bl] u_k[bl] = T^k[bl]_j[ks] u_k[bl] = ks2bl^k[bl]_j[ks] u_k[bl]
+  DLOOPA(j) tmp[j] = 0.;
+  DLOOP(j,k) tmp[j] += ks2bl[k][j] * ucov[k];
+  DLOOPA(j) ucov[j] = tmp[j];
+
+  /* done! */
+}
+
+
+// transformation matrix from ks to bl (inverse *and* transpose of bl2ks -- i.e. just Inverse[] in mathematica)
+void kstobl_trans(int ii, int jj, int kk, int loc, FTYPE (*ks2bl)[NDIM])
+{
   FTYPE V[NDIM], r, th;
   int j,k;
 
@@ -469,30 +502,44 @@ void kstobl(int ii, int jj, int kk, int loc, FTYPE*ucon)
 
 
   /* make transform matrix */
-  // order for trans is [ourmetric][bl]
-  // DLOOP(j,k) trans[j][k] = 0. ;
-  // DLOOPA(j) trans[j][j] = 1. ;
-  trans[0][0] = ks2bl_trans00;
-  trans[0][1] = ks2bl_trans01;
-  trans[0][2] = ks2bl_trans02;
-  trans[0][3] = ks2bl_trans03;
-  trans[1][0] = ks2bl_trans10;
-  trans[1][1] = ks2bl_trans11;
-  trans[1][2] = ks2bl_trans12;
-  trans[1][3] = ks2bl_trans13;
-  trans[2][0] = ks2bl_trans20;
-  trans[2][1] = ks2bl_trans21;
-  trans[2][2] = ks2bl_trans22;
-  trans[2][3] = ks2bl_trans23;
-  trans[3][0] = ks2bl_trans30;
-  trans[3][1] = ks2bl_trans31;
-  trans[3][2] = ks2bl_trans32;
-  trans[3][3] = ks2bl_trans33;
+  // order for trans is [bl][ourmetric] (i.e. inverse transpose of bl2ks)
+  // DLOOP(j,k) ks2bl[j][k] = 0. ;
+  // DLOOPA(j) ks2bl[j][j] = 1. ;
+  ks2bl[0][0] = ks2bl_trans00;
+  ks2bl[0][1] = ks2bl_trans01;
+  ks2bl[0][2] = ks2bl_trans02;
+  ks2bl[0][3] = ks2bl_trans03;
+  ks2bl[1][0] = ks2bl_trans10;
+  ks2bl[1][1] = ks2bl_trans11;
+  ks2bl[1][2] = ks2bl_trans12;
+  ks2bl[1][3] = ks2bl_trans13;
+  ks2bl[2][0] = ks2bl_trans20;
+  ks2bl[2][1] = ks2bl_trans21;
+  ks2bl[2][2] = ks2bl_trans22;
+  ks2bl[2][3] = ks2bl_trans23;
+  ks2bl[3][0] = ks2bl_trans30;
+  ks2bl[3][1] = ks2bl_trans31;
+  ks2bl[3][2] = ks2bl_trans32;
+  ks2bl[3][3] = ks2bl_trans33;
+
+  /* done! */
+}
+
+/* transforms u^i to our ks from boyer-lindquist */
+void kstobl(int ii, int jj, int kk, int loc, FTYPE*ucon)
+{
+  FTYPE tmp[NDIM];
+  FTYPE ks2bl[NDIM][NDIM];
+  FTYPE V[NDIM], r, th;
+  int j,k;
+
+
+  kstobl_trans(ii, jj, kk, loc, ks2bl);
 
   /* transform ucon; solve for v */
-  // this is u^j = T^j_k u^k
+  // this is u^j[bl] = T^j[bl]_k[ks] u^k[ks]
   DLOOPA(j) tmp[j] = 0.;
-  DLOOP(j,k) tmp[j] += trans[j][k] * ucon[k];
+  DLOOP(j,k) tmp[j] += ks2bl[j][k] * ucon[k];
   DLOOPA(j) ucon[j] = tmp[j];
 
   /* done! */
@@ -582,38 +629,10 @@ void transVmetric2V(int whichcoord, int ii, int jj, int kk, int loc, FTYPE *X, F
     rotate_VtoVmetric(MCOORD,V,Vmetric);
     // now have Vmetric and can put into trans below
 #endif
-    FTYPE told, r, h, ph;
-    told=Vmetric[0]; r=Vmetric[1]; h=Vmetric[2]; ph=Vmetric[3];
 
-    /* make transform matrix */
-    // order for trans is [ourmetric][bl]
-    // DLOOP(j,k) trans[j][k] = 0. ;
-    // DLOOPA(j) trans[j][j] = 1. ;
-
-    FTYPE b0=THETAROT;
-
+    // get transformation from Vmetric to V (i.e. rotation from BH spin along z-axis to rotated in -x direction by THETAROT)
     FTYPE trans[NDIM][NDIM];
-    extern FTYPE csc(FTYPE arg);
-    extern FTYPE cot(FTYPE arg);
-
-    trans[0][0]=1.;
-    trans[0][1]=0.;
-    trans[0][2]=0.;
-    trans[0][3]=0.;
-    trans[1][0]=0.;
-    trans[1][1]=1.;
-    trans[1][2]=0.;
-    trans[1][3]=0.;
-    trans[2][0]=0.;
-    trans[2][1]=0.;
-    trans[2][2]=pow(pow(cos(h)*cos(ph)*sin(b0) - 1.*cos(b0)*sin(h),2.) + pow(sin(b0),2.)*pow(sin(ph),2.),-1.)*pow(pow(cos(h)*sin(b0) - 1.*cos(b0)*cos(ph)*sin(h),2.) + pow(sin(h),2.)*pow(sin(ph),2.),0.5)*(-1.*cos(h)*cos(ph)*sin(b0) + cos(b0)*sin(h));
-    trans[2][3]=-1.*sin(b0)*sin(ph);
-    trans[3][0]=0.;
-    trans[3][1]=0.;
-    trans[3][2]=csc(h)*pow(pow(cos(h)*cos(ph)*sin(b0) - 1.*cos(b0)*sin(h),2.) + pow(sin(b0),2.)*pow(sin(ph),2.),-1.)*pow(pow(cos(h)*sin(b0) - 1.*cos(b0)*cos(ph)*sin(h),2.) + pow(sin(h),2.)*pow(sin(ph),2.),0.5)*sin(b0)*sin(ph);
-    trans[3][3]=cos(b0) - 1.*cos(ph)*cot(h)*sin(b0);
-
-
+    transVmetric2V_trans(Vmetric, trans);
   
     // now perform transformation
     transgcovgcovpertself(gcov,gcovpert,trans);
@@ -621,6 +640,79 @@ void transVmetric2V(int whichcoord, int ii, int jj, int kk, int loc, FTYPE *X, F
   else{
     // then no change, and given function format gcov is just not changed.
   }
+
+
+  /* done! */
+}
+
+/// Transform u_\mu from Vmetric form (where z-axis is BH spin axis) to V form [tilted BH spin axis]
+void transVmetric2V_ucov(FTYPE *Vmetric, FTYPE*ucov)
+{
+
+  // get transformation from Vmetric to V (i.e. rotation from BH spin along z-axis to rotated in -x direction by THETAROT
+  FTYPE trans[NDIM][NDIM];
+  transVmetric2V_trans(Vmetric, trans);
+  
+  // now perform transformation
+  FTYPE tmpucov[NDIM];
+  int j,l;
+  DLOOPA(j){
+    tmpucov[j] = 0.;
+    DLOOPA(l){
+      // u_{mup} = u_{mu} T^mu_mup
+      // where T^mu_mup == dx^mu[BL]/dx^mup[KSP uni grid]
+      // where T^\mu[Vmetric]_mup[V] =dx^\mu[z-axis is BH axis]_mup[tilted axis is BH axis]
+      tmpucov[j] += ucov[l] * trans[l][j];
+    }
+  }
+  DLOOPA(j){
+    ucov[j] = tmpucov[j];
+  }
+
+  /* done! */
+}
+
+
+
+/// transformation of metric written in Vmetric-type coordinates with dVmetric differentials to one written in V[X] coordinates with dVdifferentials
+///
+/// This is what's used to take original metric from set_gcov and get the one with new differentials based upon V[X]
+/// Generate trans[mu][nu] = T^mu[Vmetric]_nu[V]
+/// Such that g_{mup nup} = g_{mu nu} T^mu_mup T^nu_nup
+// see metricrot.nb
+void transVmetric2V_trans(FTYPE *Vmetric, FTYPE (*trans)[NDIM])
+{
+
+  FTYPE told, r, h, ph;
+  told=Vmetric[0]; r=Vmetric[1]; h=Vmetric[2]; ph=Vmetric[3];
+
+  /* make transform matrix */
+  // order for trans is [ourmetric][bl]
+  // DLOOP(j,k) trans[j][k] = 0. ;
+  // DLOOPA(j) trans[j][j] = 1. ;
+
+  FTYPE b0=THETAROT;
+
+  extern FTYPE csc(FTYPE arg);
+  extern FTYPE cot(FTYPE arg);
+
+  // transformation is from SPC[Vmetric] to SPC[V] using Vmetric values of coordinates to identify coordinate location.
+  trans[0][0]=1.;
+  trans[0][1]=0.;
+  trans[0][2]=0.;
+  trans[0][3]=0.;
+  trans[1][0]=0.;
+  trans[1][1]=1.;
+  trans[1][2]=0.;
+  trans[1][3]=0.;
+  trans[2][0]=0.;
+  trans[2][1]=0.;
+  trans[2][2]=pow(pow(cos(h)*cos(ph)*sin(b0) - 1.*cos(b0)*sin(h),2.) + pow(sin(b0),2.)*pow(sin(ph),2.),-1.)*pow(pow(cos(h)*sin(b0) - 1.*cos(b0)*cos(ph)*sin(h),2.) + pow(sin(h),2.)*pow(sin(ph),2.),0.5)*(-1.*cos(h)*cos(ph)*sin(b0) + cos(b0)*sin(h));
+  trans[2][3]=-1.*sin(b0)*sin(ph);
+  trans[3][0]=0.;
+  trans[3][1]=0.;
+  trans[3][2]=csc(h)*pow(pow(cos(h)*cos(ph)*sin(b0) - 1.*cos(b0)*sin(h),2.) + pow(sin(b0),2.)*pow(sin(ph),2.),-1.)*pow(pow(cos(h)*sin(b0) - 1.*cos(b0)*cos(ph)*sin(h),2.) + pow(sin(h),2.)*pow(sin(ph),2.),0.5)*sin(b0)*sin(ph);
+  trans[3][3]=cos(b0) - 1.*cos(ph)*cot(h)*sin(b0);
 
 
   /* done! */

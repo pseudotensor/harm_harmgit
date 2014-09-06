@@ -3315,8 +3315,9 @@ int set_density_floors_default_alt(struct of_geom *ptrgeom, struct of_state *q, 
           prfloor[RHO]=MAX(bsq/BSQORHOLIMIT,SMALL);
           // still limit u near pole
           prfloor[UU]=MAX(MIN(pr[UU],UORHOLIMITTEMP*prfloor[RHO]),SMALL);
+          //prceiling[UU]=MAX(prfloor[UU],MIN(prceiling[UU],UORHOLIMIT*MAX(pr[RHO],prfloor[RHO])));
         }
-        else{ // NORMAL CASE
+        else{ // NORMAL CASE when restarting,etc.
           prfloor[RHO]=MAX(bsq/BSQORHOLIMIT,SMALL);
           prfloor[UU]=MAX(bsq/BSQOULIMIT,zerouuperbaryon*MAX(prfloor[RHO],SMALL));
           //          prfloor[UU]=MAX(MIN(MAX(pr[UU],prfloor[UU]),UORHOLIMIT*prfloor[RHO]),SMALL);
@@ -3324,7 +3325,7 @@ int set_density_floors_default_alt(struct of_geom *ptrgeom, struct of_state *q, 
 
         }// end NORMAL else conditional
       }
-      else{
+      else{ // FULLY NORMAL CASE
         prfloor[RHO]=MAX(bsq/BSQORHOLIMIT,SMALL);
         prfloor[UU]=MAX(bsq/BSQOULIMIT,zerouuperbaryon*MAX(prfloor[RHO],SMALL));
         //        prfloor[UU]=MAX(MIN(MAX(pr[UU],prfloor[UU]),UORHOLIMIT*prfloor[RHO]),SMALL);

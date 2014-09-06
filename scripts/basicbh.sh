@@ -19,6 +19,8 @@ chgrp -R user user
 # run as 1 line
 sudo apt-get -y install mpich2 python python2.7-scipy python-dateutil yasm ipython python-setuptools python-nose python2.7-scipy python2.7-numpy python-matplotlib python-matplotlib-data dvipng emacs make f2c
 
+sudo aptitude install libhdf4-0 libhdf4-dev libhdf4-doc hdf4-tools
+
 # run separately
 cd /mnt/data0/
 mkdir opt
