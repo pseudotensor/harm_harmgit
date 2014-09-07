@@ -715,6 +715,8 @@ void slope_lim_continuous_e2z(int realisinterp, int dir, int idel, int jdel, int
     // difference oriented on difference in dir, otherwise full
   }
 
+  // SUPERGODMARK: preal is located at CENT always, but p2interp will be at FACE, so have to average preal inside to get correct location
+
 
   if( LINEINTERPTYPE(lim[dir]) ){ // this overrides lim, but lim must still be set properly
     get_loop(INTERPLINETYPE, ENOINTERPTYPE, dir, face2centloop);
@@ -1529,6 +1531,8 @@ void slope_lim_face2corn(int realisinterp, int dir, int idel, int jdel, int kdel
     interporflux=ENOINTERPTYPE;
   }
 
+  // SUPERGODMARK: primreal is located at CENT always, but p2interp can be at FACE in orthogonal direction, so have to average preal inside to get correct location
+
 
   if( LINEINTERPTYPE(lim[dir]) ){ // this overrides lim, but lim must still be set properly
     // ENOPRIMITIVE below means primitives instead of conserved quantities
@@ -1536,7 +1540,7 @@ void slope_lim_face2corn(int realisinterp, int dir, int idel, int jdel, int kdel
     slope_lim_linetype_c2e(realisinterp, ENOPRIMITIVE, interporflux, dir, idel, jdel, kdel, primreal, NULL, p2interp, pleft, pright);
   }
   else{
-    int loc=CENT; // center relative to direction of interpolation
+    int loc=FACE1+dir-1; // CENT relative to direction of interpolation, but FACE1+dir-1 relative to primreal
     int continuous=0;
     get_loop(INTERPPOINTTYPE, interporflux, dir, face2cornloop);
     PINTERPLOOP(pliter,pl){

@@ -213,6 +213,7 @@ void slope_lim_pointtype(int interporflux, int realisinterp, int pl, int dir, in
           }
         }
         else{
+          // if loc!=CENT, then because primreal always at CENT, assume use of yreal will be treated as being CENT
           for(l=startorderi;l<=endorderi;l++){
             yreal[l]=MACP0A1(primreal,i + l*idel,j + l*jdel,k + l*kdel,pl);
           }
