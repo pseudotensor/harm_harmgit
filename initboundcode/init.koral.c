@@ -4838,7 +4838,7 @@ static int donut_analytical_solution(int *whichvel, int *whichcoord, int optical
     
 
 
-    dualfprintf(fail_file,"rhodonut1=%g eps=%g uint=%g usingback=%d\n",rho,eps,uint,usingback);
+    //    dualfprintf(fail_file,"rhodonut1=%g eps=%g uint=%g usingback=%d\n",rho,eps,uint,usingback);
 
   }
   else if(RADNT_DONUTTYPE==DONUTOHSUGA){
@@ -5464,7 +5464,7 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
       TILTWALD=THETAROT;
       aforwald=a;
       
-      if(fabs(TILTWALD-0.0)>1E-10){
+      if(fabs(TILTWALD-0.0)<1E-10){
         if(l==WALDWHICHACOV || WALDWHICHACOV==-1){
           vpot += -0.5*B0WALD*(mcov[l]+2.0*aforwald*kcov[l]);
         }
@@ -5478,7 +5478,7 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
 
         // Original V at this point is with tilted BH spin, but solution below is for spin along z-axis, so find Vmetric[corresponding to when BH spin is along z-axis]
         FTYPE Vmetric[NDIM];
-        rotate_VtoVmetric(MCOORD,V,Vmetric);
+        rotate_VtoVmetric(MCOORD,TILTWALD,V,Vmetric);
 
         FTYPE rV=Vmetric[1];
         FTYPE thV=Vmetric[2];
@@ -5527,7 +5527,7 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
         // That is, while coordinate position was correctly mapped in STEP1, coordinate vector still needs to be rotated
         FTYPE Acovks[NDIM];
         DLOOPA(jj) Acovks[jj]=Acovksnonrot[jj];
-        transVmetric2V_ucov(Vmetric,Acovks);
+        transVmetrictoV_ucov(TILTWALD,Vmetric,Acovks);
 
         // now pluck out only the A_l one wanted
         vpot += Acovks[l];
@@ -5698,10 +5698,12 @@ static int fieldprim(int whichmethod, int whichinversion, int *whichvel, int*whi
           Bcon[3] = Mcon[3][0] = 0.0;
         }
         else{
-          Bcon[3] = Mcon[3][0] = (B1*gv01*gv03 + B2*gv02*gv03 - B1*gv00*gv13 - Ed3*gv02*gv13 + Ed2*gv03*gv13 - B2*gv00*gv23 + Ed3*gv01*gv23 - Ed1*gv03*gv23 - Ed2*gv01*gv33 + Ed1*gv02*gv33 + myBd3)/denom;
+          Bcon[3] = Mcon[3][0] =(Bu1*gv01*gv03 + Bu2*gv02*gv03 - Bu1*gv00*gv13 - Ed3*gv02*gv13 + 
+                                 Ed2*gv03*gv13 - Bu2*gv00*gv23 + Ed3*gv01*gv23 - Ed1*gv03*gv23 - 
+                                 Ed2*gv01*gv33 + Ed1*gv02*gv33 + myBd3)/denom;
+          //        Bcon[3] = Mcon[3][0] = (-(Bu1*gv01*gv03) - Bu2*gv02*gv03 + Bu1*gv00*gv13 + Bu2*gv00*gv23 + myBd3)/(pow(gv03,2) - gv00*gv33);
         }
 
-        //        Bcon[3] = Mcon[3][0] = (-(Bu1*gv01*gv03) - Bu2*gv02*gv03 + Bu1*gv00*gv13 + Bu2*gv00*gv23 + myBd3)/(pow(gv03,2) - gv00*gv33);
 
         Mcon[0][3] = -Mcon[3][0];
       }

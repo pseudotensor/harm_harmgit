@@ -129,7 +129,7 @@ void gcov_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, F
       // Use V[X] and get Vmetric[V[X]] since all set_gcov's are in terms of Vmetric=r,h,ph (i.e. axisymmetric-type old/original versions)
       //
       ////////////////////////////
-      rotate_VtoVmetric(whichcoord,V,Vmetric);
+      rotate_VtoVmetric(whichcoord,THETAROT,V,Vmetric);
       int jj; DLOOPA(jj) Xmetric[jj]=X[jj]; // no change?  Depends upon how Xmetric used in set_gcov. GODMARK
       
 
@@ -286,7 +286,7 @@ void gcov_func(struct of_geom *ptrgeom, int getprim, int whichcoord, FTYPE *X, F
       // X[] inputted is really X, not Xmetric or anything else.
       // i.e., X[] is associated with V, not Vmetric.
       ///////////
-      transVmetric2V(whichcoord,ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p, X, V, Xmetric, Vmetric, gcovinfunc,gcovpertinfunc);
+      transVmetrictoV(whichcoord,ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p, THETAROT, X, V, Xmetric, Vmetric, gcovinfunc,gcovpertinfunc);
 
 
       ///////////
@@ -369,16 +369,16 @@ FTYPE arctanmath(FTYPE x, FTYPE y)
 /// 1) gcov_func(X,V)
 /// 2) rotate_VtoVmetric(V,Vmetric)
 /// 3) set_gcov...(Vmetric)
-/// 4) transVmetric2V(gcov) (which internally uses rotate_VtoVmetric() to keep expressions simple (i.e. kept in terms of Vmetric)
+/// 4) transVmetrictoV(gcov) (which internally uses rotate_VtoVmetric() to keep expressions simple (i.e. kept in terms of Vmetric)
 ///
 /// #2 just accounts for Vmetric[V[X]] as far as assignment of metric values so that X[] grid has used correct values of old/metric r,h,ph
 /// #4 accounts for differentials in metric so that ds^2 is the same.  This is written in terms of V=rnew,hnew,phnew, so can just feed-in V[X].
 ///
 ////////////////
-int rotate_VtoVmetric(int whichcoord, FTYPE *V, FTYPE *Vmetric)
+int rotate_VtoVmetric(int whichcoord, FTYPE ROTANGLE, FTYPE *V, FTYPE *Vmetric)
 {
 
-  if(THETAROT!=0.0 && ALLOWMETRICROT && ISSPCMCOORD(whichcoord)){
+  if(ROTANGLE!=0.0 && ALLOWMETRICROT && ISSPCMCOORD(whichcoord)){
     // see metricrot.nb.  
     FTYPE tnew,rnew,hnew,phnew; // true V used in bl_coord() to map to X
  
@@ -392,7 +392,7 @@ int rotate_VtoVmetric(int whichcoord, FTYPE *V, FTYPE *Vmetric)
     told=tnew;
     rold=rnew;
 
-    FTYPE b0=THETAROT;
+    FTYPE b0=ROTANGLE;
 
     hold=arctanmath (cos(b0)*cos(hnew) - 1.*cos(phnew)*sin(b0)*sin(hnew),pow(pow(cos(hnew)*sin(b0) + cos(b0)*cos(phnew)*sin(hnew),2) + pow(sin(hnew),2)*pow(sin(phnew),2),0.5));
 
@@ -477,15 +477,15 @@ int fix_hp(FTYPE *h, FTYPE *p)
 ///
 /// This can be used in (e.g.) __init__.py to have python script take data (in Vnew=V) and obtain Vmetric version
 ///
-/// 1) transV2Vmetric(gcovnew) gives gcov[original metric]
-/// 2) transV2Vmetric(ucon,bcon,ucov,bcov) or transVmetric2V(ucon,bcon,ucov,bcov)
+/// 1) transVtoVmetric(gcovnew) gives gcov[original metric]
+/// 2) transVtoVmetric(ucon,bcon,ucov,bcov) or transVmetrictoV(ucon,bcon,ucov,bcov)
 /// 3) Rotate actual spatial positions of data, including metrics, so that again axisymmetric so only have to store 1 phi slice!
 ///
 /////////////////////////////
-int rotate_Vmetric2V(int whichcoord, FTYPE *Vmetric, FTYPE *V)
+int rotate_VmetrictoV(int whichcoord, FTYPE ROTANGLE, FTYPE *Vmetric, FTYPE *V)
 {
 
-  if(THETAROT!=0.0 && ALLOWMETRICROT && ISSPCMCOORD(whichcoord)){
+  if(ROTANGLE!=0.0 && ALLOWMETRICROT && ISSPCMCOORD(whichcoord)){
     // see metricrot.nb.  Note that mathematica's Arctan[x,y] = C's atan2(y,x) (i.e. args are flipped in order)
     FTYPE t,r,h,ph;
  
@@ -502,9 +502,9 @@ int rotate_Vmetric2V(int whichcoord, FTYPE *Vmetric, FTYPE *V)
 
     // rotation around y-axis using right-hand rule
     FTYPE xcnew,ycnew,zcnew,Rnew;
-    xcnew=xc*mycos(THETAROT)-zc*mysin(THETAROT);
+    xcnew=xc*mycos(ROTANGLE)-zc*mysin(ROTANGLE);
     ycnew=yc;
-    zcnew=zc*mycos(THETAROT)+xc*mysin(THETAROT);
+    zcnew=zc*mycos(ROTANGLE)+xc*mysin(ROTANGLE);
     Rnew=sqrt(xcnew*xcnew + ycnew*ycnew);
 
     // Below uses atan2 so gets back correct quadrant

@@ -52,7 +52,7 @@
 
 
 /// interpolation with loop over POINTS
-void slope_lim_pointtype(int interporflux, int realisinterp, int pl, int dir, int idel, int jdel, int kdel, FTYPE (*primreal)[NSTORE2][NSTORE3][NPR], FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*dq)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP])
+void slope_lim_pointtype(int interporflux, int realisinterp, int pl, int dir, int loc, int continuous, int idel, int jdel, int kdel, FTYPE (*primreal)[NSTORE2][NSTORE3][NPR], FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*dq)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP])
 {
   void slope_lim_point(int i, int j, int k, int loc, int realisinterp, int dir, int reallim, int pl, int startorderi, int endorderi, FTYPE *yreal, FTYPE*y, FTYPE *dq,FTYPE *left,FTYPE *right);
   void slope_lim_point_allpl(int i, int j, int k, int loc, int realisinterp, int dir, int reallim, int startorderi, int endorderi, FTYPE **yreal, FTYPE **y, FTYPE *dq,FTYPE *left,FTYPE *right);
@@ -66,10 +66,8 @@ void slope_lim_pointtype(int interporflux, int realisinterp, int pl, int dir, in
   int startorderi,endorderi;
   int reallim;
   int is,ie,js,je,ks,ke,di,dj,dk;
-  int loc;
 
 
-  loc=CENT; // SUPERGODMARK: Need to pass loc in
 
 
   // make sure dq's exist if going to use them

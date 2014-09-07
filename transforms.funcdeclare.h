@@ -17,11 +17,11 @@ extern int pr2ucon(int whichvel, FTYPE *pr, struct of_geom *geom, FTYPE*ucon);
 
 extern int coordtrans(int whichcoordin, int whichcoordout, int ii, int jj, int kk, int loc, FTYPE*ucon);
 
-extern void transV2Vmetric(int whichcoord, int ii, int jj, int kk, int loc, FTYPE *X, FTYPE *V, FTYPE *Xmetric, FTYPE *Vmetric, FTYPE*gcov, FTYPE *gcovpert);
-extern void transVmetric2V(int whichcoord, int ii, int jj, int kk, int loc, FTYPE *X, FTYPE *V, FTYPE *Xmetric, FTYPE *Vmetric, FTYPE*gcov, FTYPE *gcovpert);
+extern void transVtoVmetric(int whichcoord, int ii, int jj, int kk, int loc, FTYPE ROTANGLE, FTYPE *X, FTYPE *V, FTYPE *Xmetric, FTYPE *Vmetric, FTYPE*gcov, FTYPE *gcovpert);
+extern void transVmetrictoV(int whichcoord, int ii, int jj, int kk, int loc, FTYPE ROTANGLE, FTYPE *X, FTYPE *V, FTYPE *Xmetric, FTYPE *Vmetric, FTYPE*gcov, FTYPE *gcovpert);
 
-extern void transVmetric2V_trans(FTYPE *Vmetric, FTYPE (*trans)[NDIM]);
-extern void transVmetric2V_ucov(FTYPE *Vmetric, FTYPE*ucov);
+extern void transVmetrictoV_trans(FTYPE ROTANGLE, FTYPE *Vmetric, FTYPE (*trans)[NDIM]);
+extern void transVmetrictoV_ucov(FTYPE ROTANGLE, FTYPE *Vmetric, FTYPE*ucov);
 
 extern void bltoks_trans(int ii, int jj, int kk, int loc, FTYPE (*bl2ks)[NDIM]);
 extern void kstobl_trans(int ii, int jj, int kk, int loc, FTYPE (*ks2bl)[NDIM]);

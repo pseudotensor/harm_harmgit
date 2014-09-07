@@ -694,7 +694,7 @@ int fluxcalc_fluxctstag_emf_1d(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], in
 void slope_lim_continuous_e2z(int realisinterp, int dir, int idel, int jdel, int kdel, FTYPE (*primreal)[NSTORE2][NSTORE3][NPR], FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*dq)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP], struct of_loop *face2centloop)
 {
   extern void slope_lim_linetype_c2e(int realisinterp, int whichprimtype, int interporflux, int dir, int idel, int jdel, int kdel, FTYPE (*primreal)[NSTORE2][NSTORE3][NPR], FTYPE (*stencilvar)[NSTORE2][NSTORE3][NPR], FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP]);
-  extern void slope_lim_pointtype(int interporflux, int realisinterp, int pl, int dir, int idel, int jdel, int kdel, FTYPE (*primreal)[NSTORE2][NSTORE3][NPR], FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*dq)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP]);
+  extern void slope_lim_pointtype(int interporflux, int realisinterp, int pl, int dir, int loc, int continuous, int idel, int jdel, int kdel, FTYPE (*primreal)[NSTORE2][NSTORE3][NPR], FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*dq)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP]);
   int pl,pliter;
 
 
@@ -730,9 +730,11 @@ void slope_lim_continuous_e2z(int realisinterp, int dir, int idel, int jdel, int
   else{
     // Should really interpolate such that continuous GODMARK
     // GODMARK: set_interppoint() inside this function sets starting and ending position for loops, and as set c2e always needs more than e2c for obtaining flux, so leaving as for c2e is fine for now
+    int loc=FACE1+dir-1;
+    int continuous=1;
     get_loop(INTERPPOINTTYPE, ENOINTERPTYPE, dir, face2centloop);
     PINTERPLOOP(pliter,pl){
-      slope_lim_pointtype(ENOINTERPTYPE, realisinterp, pl, dir, idel, jdel, kdel, primreal, p2interp, dq, pleft, pright); // GODMARK: overwritting dq from other type of interpolation
+      slope_lim_pointtype(ENOINTERPTYPE, realisinterp, pl, dir, loc, continuous, idel, jdel, kdel, primreal, p2interp, dq, pleft, pright); // GODMARK: overwritting dq from other type of interpolation
     }
   }
 
@@ -1514,7 +1516,7 @@ int interpolate_pfield_face2cent(FTYPE (*preal)[NSTORE2][NSTORE3][NPR], FTYPE (*
 void slope_lim_face2corn(int realisinterp, int dir, int idel, int jdel, int kdel, FTYPE (*primreal)[NSTORE2][NSTORE3][NPR], FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*dq)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP], struct of_loop *face2cornloop)
 {
   extern void slope_lim_linetype_c2e(int realisinterp, int whichprimtype, int interporflux, int dir, int idel, int jdel, int kdel, FTYPE (*primreal)[NSTORE2][NSTORE3][NPR], FTYPE (*stencilvar)[NSTORE2][NSTORE3][NPR], FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP]);
-  extern void slope_lim_pointtype(int interporflux, int realisinterp, int pl, int dir, int idel, int jdel, int kdel, FTYPE (*primreal)[NSTORE2][NSTORE3][NPR], FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*dq)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP]);
+  extern void slope_lim_pointtype(int interporflux, int realisinterp, int pl, int dir, int loc, int continuous, int idel, int jdel, int kdel, FTYPE (*primreal)[NSTORE2][NSTORE3][NPR], FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*dq)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP]);
   int pl,pliter;
   int interporflux;
 
@@ -1534,9 +1536,11 @@ void slope_lim_face2corn(int realisinterp, int dir, int idel, int jdel, int kdel
     slope_lim_linetype_c2e(realisinterp, ENOPRIMITIVE, interporflux, dir, idel, jdel, kdel, primreal, NULL, p2interp, pleft, pright);
   }
   else{
+    int loc=CENT; // center relative to direction of interpolation
+    int continuous=0;
     get_loop(INTERPPOINTTYPE, interporflux, dir, face2cornloop);
     PINTERPLOOP(pliter,pl){
-      slope_lim_pointtype(interporflux,realisinterp, pl, dir, idel, jdel, kdel, primreal, p2interp, dq, pleft, pright);
+      slope_lim_pointtype(interporflux,realisinterp, pl, dir, loc, continuous, idel, jdel, kdel, primreal, p2interp, dq, pleft, pright);
     }
   }
 

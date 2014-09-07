@@ -551,10 +551,10 @@ void kstobl(int ii, int jj, int kk, int loc, FTYPE*ucon)
 ///
 /// This is *not* used in metric.c to rotate metric
 /// This would only be used to transform V[X] metric to old/original Vmetric=rold,hold,phold
-void transV2Vmetric(int whichcoord, int ii, int jj, int kk, int loc, FTYPE *X, FTYPE *V, FTYPE *Xmetric, FTYPE *Vmetric, FTYPE*gcov, FTYPE *gcovpert)
+void transV2Vmetric(int whichcoord, int ii, int jj, int kk, int loc, FTYPE ROTANGLE, FTYPE *X, FTYPE *V, FTYPE *Xmetric, FTYPE *Vmetric, FTYPE*gcov, FTYPE *gcovpert)
 {
 
-  if(THETAROT!=0.0 && ALLOWMETRICROT==1 && ISSPCMCOORD(whichcoord)){
+  if(ROTANGLE!=0.0 && ALLOWMETRICROT==1 && ISSPCMCOORD(whichcoord)){
 
 #if(0)// if input X,V,Xmetric,Vmetric, no longer need to duplicate doing below.
     FTYPE V[NDIM];
@@ -562,7 +562,7 @@ void transV2Vmetric(int whichcoord, int ii, int jj, int kk, int loc, FTYPE *X, F
 
     // V[X] is not same as Vmetric (used in set_gcov), so get it.
     FTYPE Vmetric[NDIM];
-    rotate_VtoVmetric(MCOORD,V,Vmetric);
+    rotate_VtoVmetric(MCOORD,ROTANGLE,V,Vmetric);
 #endif
 
     FTYPE told, r, h, ph;
@@ -574,7 +574,7 @@ void transV2Vmetric(int whichcoord, int ii, int jj, int kk, int loc, FTYPE *X, F
     // DLOOP(j,k) trans[j][k] = 0. ;
     // DLOOPA(j) trans[j][j] = 1. ;
 
-    FTYPE b0=THETAROT;
+    FTYPE b0=ROTANGLE;
 
 
     FTYPE trans[NDIM][NDIM];
@@ -613,10 +613,10 @@ void transV2Vmetric(int whichcoord, int ii, int jj, int kk, int loc, FTYPE *X, F
 /// transformation of metric written in Vmetric-type coordinates with dVmetric differentials to one written in V[X] coordinates with dVdifferentials
 ///
 /// This is what's used to take original metric from set_gcov and get the one with new differentials based upon V[X]
-void transVmetric2V(int whichcoord, int ii, int jj, int kk, int loc, FTYPE *X, FTYPE *V, FTYPE *Xmetric, FTYPE *Vmetric, FTYPE*gcov, FTYPE *gcovpert)
+void transVmetrictoV(int whichcoord, int ii, int jj, int kk, int loc, FTYPE ROTANGLE, FTYPE *X, FTYPE *V, FTYPE *Xmetric, FTYPE *Vmetric, FTYPE*gcov, FTYPE *gcovpert)
 {
 
-  if(THETAROT!=0.0 && ALLOWMETRICROT==1 && ISSPCMCOORD(whichcoord)){
+  if(ROTANGLE!=0.0 && ALLOWMETRICROT==1 && ISSPCMCOORD(whichcoord)){
 
 #if(0)
     // gets V[X]
@@ -626,13 +626,13 @@ void transVmetric2V(int whichcoord, int ii, int jj, int kk, int loc, FTYPE *X, F
     // V[X] is not same as Vmetric (used in set_gcov)
     // trans needs Vmetric to keep expression simple, so get it.
     FTYPE Vmetric[NDIM];
-    rotate_VtoVmetric(MCOORD,V,Vmetric);
+    rotate_VtoVmetric(MCOORD,ROTANGLE,V,Vmetric);
     // now have Vmetric and can put into trans below
 #endif
 
-    // get transformation from Vmetric to V (i.e. rotation from BH spin along z-axis to rotated in -x direction by THETAROT)
+    // get transformation from Vmetric to V (i.e. rotation from BH spin along z-axis to rotated in -x direction by ROTANGLE)
     FTYPE trans[NDIM][NDIM];
-    transVmetric2V_trans(Vmetric, trans);
+    transVmetrictoV_trans(ROTANGLE, Vmetric, trans);
   
     // now perform transformation
     transgcovgcovpertself(gcov,gcovpert,trans);
@@ -646,12 +646,12 @@ void transVmetric2V(int whichcoord, int ii, int jj, int kk, int loc, FTYPE *X, F
 }
 
 /// Transform u_\mu from Vmetric form (where z-axis is BH spin axis) to V form [tilted BH spin axis]
-void transVmetric2V_ucov(FTYPE *Vmetric, FTYPE*ucov)
+void transVmetrictoV_ucov(FTYPE ROTANGLE, FTYPE *Vmetric, FTYPE*ucov)
 {
 
-  // get transformation from Vmetric to V (i.e. rotation from BH spin along z-axis to rotated in -x direction by THETAROT
+  // get transformation from Vmetric to V (i.e. rotation from BH spin along z-axis to rotated in -x direction by ROTANGLE
   FTYPE trans[NDIM][NDIM];
-  transVmetric2V_trans(Vmetric, trans);
+  transVmetrictoV_trans(ROTANGLE, Vmetric, trans);
   
   // now perform transformation
   FTYPE tmpucov[NDIM];
@@ -680,7 +680,7 @@ void transVmetric2V_ucov(FTYPE *Vmetric, FTYPE*ucov)
 /// Generate trans[mu][nu] = T^mu[Vmetric]_nu[V]
 /// Such that g_{mup nup} = g_{mu nu} T^mu_mup T^nu_nup
 // see metricrot.nb
-void transVmetric2V_trans(FTYPE *Vmetric, FTYPE (*trans)[NDIM])
+void transVmetrictoV_trans(FTYPE ROTANGLE, FTYPE *Vmetric, FTYPE (*trans)[NDIM])
 {
 
   FTYPE told, r, h, ph;
@@ -691,7 +691,7 @@ void transVmetric2V_trans(FTYPE *Vmetric, FTYPE (*trans)[NDIM])
   // DLOOP(j,k) trans[j][k] = 0. ;
   // DLOOPA(j) trans[j][j] = 1. ;
 
-  FTYPE b0=THETAROT;
+  FTYPE b0=ROTANGLE;
 
   extern FTYPE csc(FTYPE arg);
   extern FTYPE cot(FTYPE arg);

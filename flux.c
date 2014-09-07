@@ -2477,10 +2477,12 @@ void slope_lim(int dointerpolation, int realisinterp, int dir, int idel, int jde
     if(dointerpolation) slope_lim_linetype_c2e(realisinterp, ENOPRIMITIVE, ENOINTERPTYPE, dir, idel, jdel, kdel, primreal, NULL, p2interp, pleft, pright);
   }
   else{
+    int loc=CENT;
+    int continuous=0;
     get_loop(INTERPPOINTTYPE, ENOINTERPTYPE, dir, cent2faceloop);
     if(dointerpolation){
       PINTERPLOOP(pliter,pl){
-        slope_lim_pointtype(ENOINTERPTYPE, realisinterp, pl, dir, idel, jdel, kdel, primreal, p2interp, dq, pleft, pright);
+        slope_lim_pointtype(ENOINTERPTYPE, realisinterp, pl, dir, loc, continuous, idel, jdel, kdel, primreal, p2interp, dq, pleft, pright);
       }
     }
   }
@@ -2526,10 +2528,12 @@ void slope_lim_cent2face(int dointerpolation, int realisinterp, int dir, int ide
     if(dointerpolation) slope_lim_linetype_c2e(realisinterp, ENOPRIMITIVE, interporflux, dir, idel, jdel, kdel, primreal, NULL, p2interp, pleft, pright);
   }
   else{
+    int loc=CENT;
+    int continuous=0;
     get_loop(INTERPPOINTTYPE, interporflux, dir, cent2faceloop);
     if(dointerpolation){
       PINTERPLOOP(pliter,pl){
-        slope_lim_pointtype(interporflux, realisinterp, pl, dir, idel, jdel, kdel, primreal, p2interp, dq, pleft, pright);
+        slope_lim_pointtype(interporflux, realisinterp, pl, dir, loc, continuous, idel, jdel, kdel, primreal, p2interp, dq, pleft, pright);
       }
     }
   }
