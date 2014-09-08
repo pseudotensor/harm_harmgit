@@ -1393,8 +1393,10 @@ int interpolate_pfield_face2cent(FTYPE (*preal)[NSTORE2][NSTORE3][NPR], FTYPE (*
         OPENMP3DLOOPBLOCK{
           OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
+#define OLDNONCONT 0
 
 
+#if(OLDNONCONT)
           // note that interpolation from FACE_to_CENT is different than from FACE_to_EDGE or CENT_to_FACE
           // if not rescaling or auto-gdet rescaling, then p2interp_? is already really p_?, otherwise p2interp_? is separate memory from p_?
           if(usedq){
@@ -1405,7 +1407,16 @@ int interpolate_pfield_face2cent(FTYPE (*preal)[NSTORE2][NSTORE3][NPR], FTYPE (*
             p2interp_l[pl] = MACP0A1(pright,i,j,k,pl);
             p2interp_r[pl] = MACP0A1(pleft,i+idel,j+jdel,k+kdel,pl);
           }
-
+#else
+          // note that interpolation from FACE_to_CENT is different than from FACE_to_EDGE or CENT_to_FACE
+          // if not rescaling or auto-gdet rescaling, then p2interp_? is already really p_?, otherwise p2interp_? is separate memory from p_?
+          if(usedq){
+            p2interp_r[pl] = p2interp_l[pl] = MACP0A1(p2interp,i,j,k,pl) + 0.5 * MACP1A1(dqvec,dir,i,j,k,pl);
+          }
+          else{
+            p2interp_r[pl] = p2interp_l[pl] = MACP0A1(pright,i,j,k,pl); // left at same i,j,k just set equal to right, so can ignore left.
+          }
+#endif
 
  
 
