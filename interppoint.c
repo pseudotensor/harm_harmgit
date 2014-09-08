@@ -76,10 +76,13 @@ void slope_lim_pointtype(int interporflux, int realisinterp, int pl, int dir, in
     myexit(17);
   }
 
-
   // set range of positions interpolated to
-  set_interppoint_loop_ranges(interporflux, dir, &is, &ie, &js, &je, &ks, &ke, &di, &dj, &dk);
-
+  if(loc!=CENT){
+    set_interppoint_loop_ranges(interporflux, dir, &is, &ie, &js, &je, &ks, &ke, &di, &dj, &dk);
+  }
+  else{
+    set_interppoint_loop_ranges(interporflux, dir, &is, &ie, &js, &je, &ks, &ke, &di, &dj, &dk);
+  }
 
 
   {
@@ -110,7 +113,7 @@ void slope_lim_pointtype(int interporflux, int realisinterp, int pl, int dir, in
 #pragma omp parallel OPENMPGLOBALPRIVATEFORSTATEANDGEOMINTERP
 #else
     // don't need full copyin() unless pressure needs to be computed as computed if prior conditional holds
-#pragma omp parallel 
+#pragma omp parallel
 #endif
     {
       int i,j,k,l;
@@ -136,7 +139,7 @@ void slope_lim_pointtype(int interporflux, int realisinterp, int pl, int dir, in
         yrealpl[plpl] = realinterplistpl[plpl] - startorderi;
       }
 
-      
+
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
       OPENMP3DLOOPBLOCK{
         OPENMP3DLOOPBLOCK2IJK(i,j,k);
@@ -146,7 +149,7 @@ void slope_lim_pointtype(int interporflux, int realisinterp, int pl, int dir, in
           // get interpolation points, where y[0] is point of interest for which interpolation is found.
           ypl[plpl][l]=MACP0A1(p2interp,i + l*idel,j + l*jdel,k + l*kdel,plpl);
         }
-      
+
         if(realisinterp){
           // need all quantities for real var
           // PLOOPINTERP is used because PALLREALLOOP can be different (extra things at end not part of "real" set
@@ -174,14 +177,14 @@ void slope_lim_pointtype(int interporflux, int realisinterp, int pl, int dir, in
     // Loop over points only
     //
     //////////////////////////////
-    
+
     // For limiters that are general, use slope_lim_point()
     // get interpolation points, where y[0] is point of interest for which interpolation is found.
 #if( DOUSEPARAFLAT || DOUSEPPMCONTACTSTEEP)
 #pragma omp parallel OPENMPGLOBALPRIVATEFORSTATEANDGEOMINTERP
 #else
     // don't need full copyin() unless pressure needs to be computed as computed if prior conditional holds
-#pragma omp parallel 
+#pragma omp parallel
 #endif
     {
       int i,j,k,l;
@@ -218,7 +221,7 @@ void slope_lim_pointtype(int interporflux, int realisinterp, int pl, int dir, in
             yreal[l]=MACP0A1(primreal,i + l*idel,j + l*jdel,k + l*kdel,pl);
           }
         }
-      
+
         slope_lim_point(i, j, k, loc, realisinterp, dir, reallim,pl,startorderi,endorderi,yreal,y,
                         &MACP0A1(dq,i,j,k,pl),&MACP0A1(pleft,i,j,k,pl),&MACP0A1(pright,i,j,k,pl)
                         );
@@ -249,7 +252,7 @@ void slope_lim_pointtype(int interporflux, int realisinterp, int pl, int dir, in
 /// Note that if direction doesn't exist should still return reasonable result that is not out of range (e.g. dir==3 if N3==1 should still give ks=ke=0)
 int set_interppoint_loop_ranges(int interporflux, int dir, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk)
 {
-  
+
   //  if(useghostplusactive){
   set_interppoint_loop_expanded(interporflux, dir, is, ie, js, je, ks, ke, di, dj, dk);
   //  }
@@ -315,7 +318,7 @@ void set_interppoint_loop_ranges_2D_EMF_formerged(int interporflux, int corner, 
   else{
     myUconsloop=Uconsloop;
   }
-  
+
 
   if(corner==1){
 
@@ -325,7 +328,7 @@ void set_interppoint_loop_ranges_2D_EMF_formerged(int interporflux, int corner, 
 
     *js=myUconsloop[FJS]-SHIFT2;
     *je=myUconsloop[FJE]+SHIFT2;
-    
+
     *ks=myUconsloop[FKS]-SHIFT3;
     *ke=myUconsloop[FKE]+SHIFT3;
 
@@ -341,7 +344,7 @@ void set_interppoint_loop_ranges_2D_EMF_formerged(int interporflux, int corner, 
     *js=0;
     //    *je=N2-1;
     *je=N2;
-       
+
     *ks=myUconsloop[FKS]-SHIFT3;
     *ke=myUconsloop[FKE]+SHIFT3;
 
@@ -353,10 +356,10 @@ void set_interppoint_loop_ranges_2D_EMF_formerged(int interporflux, int corner, 
 
     *is=myUconsloop[FIS]-SHIFT1;
     *ie=myUconsloop[FIE]+SHIFT1;
-    
+
     *js=myUconsloop[FJS]-SHIFT2;
     *je=myUconsloop[FJE]+SHIFT2;
-    
+
     *ks=0;
     //    *ke=N3-1;
     *ke=N3;
@@ -388,7 +391,7 @@ void set_interppoint_loop_ranges_geomcorn_formerged(int interporflux, int corner
   else{
     myUconsloop=Uconsloop;
   }
-  
+
 
   if(corner==1){
 
@@ -398,7 +401,7 @@ void set_interppoint_loop_ranges_geomcorn_formerged(int interporflux, int corner
 
     *js=myUconsloop[FJS]-SHIFT2;
     *je=myUconsloop[FJE]+SHIFT2*2;
-    
+
     *ks=myUconsloop[FKS]-SHIFT3;
     *ke=myUconsloop[FKE]+SHIFT3*2;
 
@@ -414,7 +417,7 @@ void set_interppoint_loop_ranges_geomcorn_formerged(int interporflux, int corner
     *js=0;
     //    *je=N2-1;
     *je=N2;
-       
+
     *ks=myUconsloop[FKS]-SHIFT3;
     *ke=myUconsloop[FKE]+SHIFT3*2;
 
@@ -426,10 +429,10 @@ void set_interppoint_loop_ranges_geomcorn_formerged(int interporflux, int corner
 
     *is=myUconsloop[FIS]-SHIFT1;
     *ie=myUconsloop[FIE]+SHIFT1*2;
-    
+
     *js=myUconsloop[FJS]-SHIFT2;
     *je=myUconsloop[FJE]+SHIFT2*2;
-    
+
     *ks=0;
     //    *ke=N3-1;
     *ke=N3;
@@ -532,7 +535,7 @@ void set_interppoint_loop_expanded(int interporflux, int dir, int *is, int *ie, 
   else{
     myUconsloop=Uconsloop;
   }
-  
+
 
   if(dir==1){
 
@@ -542,7 +545,7 @@ void set_interppoint_loop_expanded(int interporflux, int dir, int *is, int *ie, 
 
     *js=fluxloop[dir][FJS];
     *je=fluxloop[dir][FJE];
-    
+
     *ks=fluxloop[dir][FKS];
     *ke=fluxloop[dir][FKE];
 
@@ -554,10 +557,10 @@ void set_interppoint_loop_expanded(int interporflux, int dir, int *is, int *ie, 
 
     *is=fluxloop[dir][FIS];
     *ie=fluxloop[dir][FIE];
-    
+
     *js=myUconsloop[FJS]-SHIFT2;
     *je=myUconsloop[FJE]+SHIFT2;
-    
+
     *ks=fluxloop[dir][FKS];
     *ke=fluxloop[dir][FKE];
 
@@ -569,10 +572,10 @@ void set_interppoint_loop_expanded(int interporflux, int dir, int *is, int *ie, 
 
     *is=fluxloop[dir][FIS];
     *ie=fluxloop[dir][FIE];
-    
+
     *js=fluxloop[dir][FJS];
     *je=fluxloop[dir][FJE];
-    
+
     *ks=myUconsloop[FKS]-SHIFT3;
     *ke=myUconsloop[FKE]+SHIFT3;
 
@@ -588,6 +591,75 @@ void set_interppoint_loop_expanded(int interporflux, int dir, int *is, int *ie, 
 
 }
 
+
+
+
+/// Setup loop over region of points for finite volume method (or any method that uses extended ghost+active grid)
+/// Note that +-SHIFT? gives interpolation at maximal face (i.e. for dir=1 and ncpux1=1, i=0 and i=N1), so consistent with requirements for FLUXBSTAG and IF3DSPCTHENMPITRANSFERATPOLE
+void set_interppoint_loop_expanded_face2cent(int interporflux, int dir, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk)
+{
+  int *myUconsloop;
+
+
+  if(interporflux==ENOINTERPTYPE4EMF){
+    myUconsloop=emfUconsloop;
+  }
+  else{
+    myUconsloop=Uconsloop;
+  }
+
+  // 0 to N-1 for actual values because others are center boundary cells
+  if(dir==1){
+    *is=myUconsloop[FIS];
+    *ie=myUconsloop[FIE];
+
+    *js=fluxloop[dir][FJS];
+    *je=fluxloop[dir][FJE];
+
+    *ks=fluxloop[dir][FKS];
+    *ke=fluxloop[dir][FKE];
+
+    *di=1;
+    *dj=1;
+    *dk=1;
+  }
+  else if(dir==2){
+
+    *is=fluxloop[dir][FIS];
+    *ie=fluxloop[dir][FIE];
+
+    *js=myUconsloop[FJS];
+    *je=myUconsloop[FJE];
+
+    *ks=fluxloop[dir][FKS];
+    *ke=fluxloop[dir][FKE];
+
+    *di=1;
+    *dj=1;
+    *dk=1;
+  }
+  else if(dir==3){
+
+    *is=fluxloop[dir][FIS];
+    *ie=fluxloop[dir][FIE];
+
+    *js=fluxloop[dir][FJS];
+    *je=fluxloop[dir][FJE];
+
+    *ks=myUconsloop[FKS];
+    *ke=myUconsloop[FKE];
+
+    *di=1;
+    *dj=1;
+    *dk=1;
+
+  }
+  else{
+    dualfprintf(fail_file,"No such dir=%d in set_interppoint_loop_expanded()\n",dir);
+    myexit(9894387);
+  }
+
+}
 
 
 
@@ -1082,7 +1154,7 @@ void mcsteeppl(int i, int j, int k, int loc, int realisinterp, int dir, FTYPE **
     checkparamonotonicity(smooth, dqrange, pl, ypl[pl], ddq, dqpl[pl], &loutpl[pl], &routpl[pl], &loutpl[pl], &routpl[pl]);
 #endif
 
-    
+
   }
 
 

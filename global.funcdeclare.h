@@ -168,7 +168,7 @@ extern void set_interppoint_loop_ranges_geomcorn_formerged(int interporflux, int
 
 extern void set_interppoint_loop(int interporflux, int dir, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk);
 extern void set_interppoint_loop_expanded(int interporflux, int dir, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk);
-
+extern void set_interppoint_loop_expanded_face2cent(int interporflux, int dir, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk);
 
 #include "fluxvpot.funcdeclare.h"
 
@@ -294,7 +294,7 @@ long double lgammal(long double);
 extern int isfinitel ( long double );
 #define finite(arg) isfinitel(arg)
 //#define isfinite(arg) isfinitel(arg)
-#define copysign( a, b ) ( fabsl(a) * sign(b) ) 
+#define copysign( a, b ) ( fabsl(a) * sign(b) )
 extern int merror;
 #else
 
@@ -319,7 +319,7 @@ extern int merror;
 
 
 #ifdef WIN32
-#define copysign( a, b ) ( fabs(a) * sign(b) ) 
+#define copysign( a, b ) ( fabs(a) * sign(b) )
 #endif
 
 
@@ -339,4 +339,3 @@ extern int assert_func_empty( int is_bad_val, char *s, ... );
 #include "global.funcdeclare.rad.h"
 
 #include "global.funcdeclare.user.h"
-
