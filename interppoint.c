@@ -77,13 +77,8 @@ void slope_lim_pointtype(int interporflux, int realisinterp, int pl, int dir, in
   }
 
   // set range of positions interpolated to
-  if(loc!=CENT){
-    set_interppoint_loop_ranges(interporflux, dir, &is, &ie, &js, &je, &ks, &ke, &di, &dj, &dk);
-  }
-  else{
-    set_interppoint_loop_ranges(interporflux, dir, &is, &ie, &js, &je, &ks, &ke, &di, &dj, &dk);
-  }
-
+  set_interppoint_loop_ranges(interporflux, dir, loc, &is, &ie, &js, &je, &ks, &ke, &di, &dj, &dk);
+  
 
   {
     int i,j,k;
@@ -250,15 +245,20 @@ void slope_lim_pointtype(int interporflux, int realisinterp, int pl, int dir, in
 /// given dir=fluxdir, return ranges for loop over which obtain those interpolated quantities
 /// these is,ie,js,je,ks,ke are used inside a loop that has grid section SHIFTS already, so don't add shift here
 /// Note that if direction doesn't exist should still return reasonable result that is not out of range (e.g. dir==3 if N3==1 should still give ks=ke=0)
-int set_interppoint_loop_ranges(int interporflux, int dir, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk)
+int set_interppoint_loop_ranges(int interporflux, int dir, int loc, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk)
 {
 
-  //  if(useghostplusactive){
-  set_interppoint_loop_expanded(interporflux, dir, is, ie, js, je, ks, ke, di, dj, dk);
-  //  }
-  //  else{
-  //    set_interppoint_loop(interporflux, dir, is, ie, js, je, ks, ke, di, dj, dk);
-  //  }
+  if(loc==CENT){
+    //  if(useghostplusactive){
+    set_interppoint_loop_expanded(interporflux, dir, loc, is, ie, js, je, ks, ke, di, dj, dk);
+    //  }
+    //  else{
+    //    set_interppoint_loop(interporflux, dir, loc, is, ie, js, je, ks, ke, di, dj, dk);
+    //  }
+  }
+  else{
+    set_interppoint_loop_expanded_face2cent(interporflux, dir, loc, is, ie, js, je, ks, ke, di, dj, dk);
+  }
 
 
   return(0);
@@ -266,7 +266,7 @@ int set_interppoint_loop_ranges(int interporflux, int dir, int *is, int *ie, int
 
 
 
-int set_interppoint_loop_ranges_3Dextended(int interporflux, int *maxis, int *maxie, int *maxjs, int *maxje, int *maxks, int *maxke, int *di, int *dj, int *dk)
+int set_interppoint_loop_ranges_3Dextended(int interporflux, int loc, int *maxis, int *maxie, int *maxjs, int *maxje, int *maxks, int *maxke, int *di, int *dj, int *dk)
 {
   int firsttime;
   int dimen;
@@ -285,11 +285,11 @@ int set_interppoint_loop_ranges_3Dextended(int interporflux, int *maxis, int *ma
     if(firsttime){
       firsttime=0;
       // set range of positions interpolated to
-      set_interppoint_loop_ranges(interporflux, dimen, maxis, maxie, maxjs, maxje, maxks, maxke, di, dj, dk);
+      set_interppoint_loop_ranges(interporflux, dimen, loc, maxis, maxie, maxjs, maxje, maxks, maxke, di, dj, dk);
     }
     else{
       // max here means largest extent in the direction of that boundary as from interior of domain
-      set_interppoint_loop_ranges(interporflux, dimen, &is, &ie, &js, &je, &ks, &ke, di, dj, dk);
+      set_interppoint_loop_ranges(interporflux, dimen, loc, &is, &ie, &js, &je, &ks, &ke, di, dj, dk);
       if(is<*maxis) *maxis=is;
       if(ie>*maxie) *maxie=ie;
       if(js<*maxjs) *maxjs=js;
@@ -459,7 +459,7 @@ void set_interppoint_loop_ranges_geomcorn_formerged(int interporflux, int corner
 /// Setup loop over region of points
 /// very similar to set_interp_loop() in interpline.c
 /// off-dir directions have been expanded to account for EMF type calculations
-void set_interppoint_loop(int interporflux, int dir, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk)
+void set_interppoint_loop(int interporflux, int dir, int loc, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk)
 {
 
   // interporflux never matters if ghost+active not used
@@ -524,7 +524,7 @@ void set_interppoint_loop(int interporflux, int dir, int *is, int *ie, int *js, 
 
 /// Setup loop over region of points for finite volume method (or any method that uses extended ghost+active grid)
 /// Note that +-SHIFT? gives interpolation at maximal face (i.e. for dir=1 and ncpux1=1, i=0 and i=N1), so consistent with requirements for FLUXBSTAG and IF3DSPCTHENMPITRANSFERATPOLE
-void set_interppoint_loop_expanded(int interporflux, int dir, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk)
+void set_interppoint_loop_expanded(int interporflux, int dir, int loc, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk)
 {
   int *myUconsloop;
 
@@ -596,7 +596,7 @@ void set_interppoint_loop_expanded(int interporflux, int dir, int *is, int *ie, 
 
 /// Setup loop over region of points for finite volume method (or any method that uses extended ghost+active grid)
 /// Note that +-SHIFT? gives interpolation at maximal face (i.e. for dir=1 and ncpux1=1, i=0 and i=N1), so consistent with requirements for FLUXBSTAG and IF3DSPCTHENMPITRANSFERATPOLE
-void set_interppoint_loop_expanded_face2cent(int interporflux, int dir, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk)
+void set_interppoint_loop_expanded_face2cent(int interporflux, int dir, int loc, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk)
 {
   int *myUconsloop;
 
@@ -655,7 +655,7 @@ void set_interppoint_loop_expanded_face2cent(int interporflux, int dir, int *is,
 
   }
   else{
-    dualfprintf(fail_file,"No such dir=%d in set_interppoint_loop_expanded()\n",dir);
+    dualfprintf(fail_file,"No such dir=%d in set_interppoint_loop_expanded_face2cent()\n",dir);
     myexit(9894387);
   }
 

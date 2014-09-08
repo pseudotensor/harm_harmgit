@@ -1770,7 +1770,8 @@ void compute_and_store_fluxstatecent(FTYPE (*pr)[NSTORE2][NSTORE3][NPR])
   shocktemparray = GLOBALPOINT(emf);
 
   // define +-1 in every direction loop range
-  set_interppoint_loop_ranges_3Dextended(ENOINTERPTYPE, &is, &ie, &js, &je, &ks, &ke, &di, &dj, &dk);
+  int loc=CENT;
+  set_interppoint_loop_ranges_3Dextended(ENOINTERPTYPE, loc, &is, &ie, &js, &je, &ks, &ke, &di, &dj, &dk);
 
 
 #if(STOREFLUXSTATE||STORESHOCKINDICATOR)

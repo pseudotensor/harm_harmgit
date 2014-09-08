@@ -1,4 +1,5 @@
 
+
 /*! \file initbase.c
      \brief General initialization of code
 */
@@ -2701,7 +2702,7 @@ int interp_loop_set(void)
 int get_loop(int pointorlinetype, int interporflux, int dir, struct of_loop *loop)
 {
 
-  set_interpalltypes_loop_ranges(pointorlinetype, interporflux, dir, &(loop->intdir), &(loop->is), &(loop->ie), &(loop->js), &(loop->je), &(loop->ks), &(loop->ke), &(loop->di), &(loop->dj), &(loop->dk), &(loop->bs), &(loop->ps), &(loop->pe), &(loop->be));
+  set_interpalltypes_loop_ranges(pointorlinetype, interporflux, dir, CENT, &(loop->intdir), &(loop->is), &(loop->ie), &(loop->js), &(loop->je), &(loop->ks), &(loop->ke), &(loop->di), &(loop->dj), &(loop->dk), &(loop->bs), &(loop->ps), &(loop->pe), &(loop->be));
     
   return(0);
 
@@ -2711,12 +2712,12 @@ int get_loop(int pointorlinetype, int interporflux, int dir, struct of_loop *loo
 
 /// master interp range function for both point and line methods
 /// This particular loop gives back 3D grid range, not line-by-line as in original line type method (so don't use directly in interpline.c!)
-int set_interpalltypes_loop_ranges(int pointorlinetype, int interporflux, int dir, int *intdir, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk, int *bs, int *ps, int *pe, int *be)
+int set_interpalltypes_loop_ranges(int pointorlinetype, int interporflux, int dir, int loc, int *intdir, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk, int *bs, int *ps, int *pe, int *be)
 {
   int withshifts;
 
   if(pointorlinetype==INTERPPOINTTYPE){
-    set_interppoint_loop_ranges(interporflux, dir, is, ie, js, je, ks, ke, di, dj, dk);
+    set_interppoint_loop_ranges(interporflux, dir, loc, is, ie, js, je, ks, ke, di, dj, dk);
     // interpolation is always along dir-direction for point methods
     *intdir=dir;
     *ps=*is;
@@ -2727,7 +2728,7 @@ int set_interpalltypes_loop_ranges(int pointorlinetype, int interporflux, int di
   }
   else if(pointorlinetype==INTERPLINETYPE){
     withshifts=0; // force to be without shifts so results can be put into loop that has shifts embedded
-    set_interp_loop_gen(withshifts, interporflux, dir, intdir, is, ie, js, je, ks, ke, di, dj, dk, bs, ps, pe, be);
+    set_interp_loop_gen(withshifts, interporflux, dir, loc, intdir, is, ie, js, je, ks, ke, di, dj, dk, bs, ps, pe, be);
     // transcribe from loop over starting positions to full 3D loop
     if(*intdir==1){
       *is=*ps;
