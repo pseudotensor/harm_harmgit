@@ -103,6 +103,9 @@ int post_fixup(int stageit,int finalstep, SFTYPE boundtime, FTYPE (*pv)[NSTORE2]
     // fixup before new solution (has to be here since need previous stage's failure flag)
     fixup_utoprim(stage,pv,pbackup,ucons,finalstep);
 
+    // after fixup_utoprim(), the floors/ceilings won't be satisfied anymore, especially near sharp jumps in densities, so repeat.
+    fixup(stage, pv, ucons, finalstep);
+
     
 #if(0)
     // GODMARK: I don't see why need to bound pflag since already done with using pflag

@@ -3824,9 +3824,20 @@ int poledeath(int whichx2,
             PBOUNDLOOP(pliter,pl) {
               if(!(pl==U1 || pl==U3 || pl==URAD1 || pl==URAD3)) continue;
   
-              if(doavginradius[pl]) MACP0A1(prim,i,j,k,pl) = THIRD*(MACP0A1(prim,rim1,rj,rk,pl)+MACP0A1(prim,ri,rj,rk,pl)+MACP0A1(prim,rip1,rj,rk,pl));
-              else MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
-              madechange++;
+              FTYPE myvalue;
+              myvalue=MACP0A1(prim,i,j,k,pl);
+              FTYPE avgresult;
+              if(doavginradius[pl]){
+                avgresult=THIRD*(MACP0A1(prim,rim1,rj,rk,pl)+MACP0A1(prim,ri,rj,rk,pl)+MACP0A1(prim,rip1,rj,rk,pl));
+              }
+              else{
+                avgresult=MACP0A1(prim,ri,rj,rk,pl);
+              }
+
+              if(1||fabs(avgresult)<myvalue){// only use reference if smaller value of velocity // well, for now, just copy over velocity under no additional conditions
+                MACP0A1(prim,i,j,k,pl) = avgresult;
+                madechange++;
+              }
             }
 
 
@@ -3837,10 +3848,25 @@ int poledeath(int whichx2,
               // this helps remove drop-outs in density at high b^2/\rho_0 and high b^2/u
               PBOUNDLOOP(pliter,pl) {
                 if(!(pl==RHO || pl==UU || pl==ENTROPY || pl==URAD0)) continue;
+
+                FTYPE myvalue;
+                myvalue=MACP0A1(prim,i,j,k,pl);
+                FTYPE avgresult;
+                if(doavginradius[pl]){
+                  avgresult=THIRD*(MACP0A1(prim,rim1,rj,rk,pl)+MACP0A1(prim,ri,rj,rk,pl)+MACP0A1(prim,rip1,rj,rk,pl));
+                }
+                else{
+                  avgresult=MACP0A1(prim,ri,rj,rk,pl);
+                }
+                
+                if(fabs(avgresult)>myvalue){// only use reference if it is larger than polar value.  That is, trying to avoid evacuation, and using smaller value of density only makes things worse, not better.
+                  MACP0A1(prim,i,j,k,pl) = avgresult;
+                  madechange++;
+                }
   
-                if(doavginradius[pl]) MACP0A1(prim,i,j,k,pl) = THIRD*(MACP0A1(prim,rim1,rj,rk,pl)+MACP0A1(prim,ri,rj,rk,pl)+MACP0A1(prim,rip1,rj,rk,pl));
-                else MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
-                madechange++;
+              //                if(doavginradius[pl]) MACP0A1(prim,i,j,k,pl) = THIRD*(MACP0A1(prim,rim1,rj,rk,pl)+MACP0A1(prim,ri,rj,rk,pl)+MACP0A1(prim,rip1,rj,rk,pl));
+              //                else MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
+              //                madechange++;
               }
 
 

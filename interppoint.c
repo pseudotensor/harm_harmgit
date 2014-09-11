@@ -90,6 +90,10 @@ void slope_lim_pointtype(int interporflux, int realisinterp, int pl, int dir, in
     // get starting point for stencil, assumed quasi-symmetric (including even/odd size of stencil)
     startorderi = - interporder[reallim]/2;
     endorderi   = - startorderi;
+
+    if(loc!=CENT && continuous==1){
+      // then doing face->cent as continuous function, so need 1 more point at upper end (although loop range more limited)
+    }
   }
 
 
