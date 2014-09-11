@@ -153,7 +153,7 @@ extern void interpfun(int interptype, int numpoints, int i, FTYPE pos, FTYPE *xf
 
 /// interpolation stuff
 extern int get_loop(int pointorlinetype, int interporflux, int dir, struct of_loop *loop);
-extern int set_interpalltypes_loop_ranges(int pointorlinetype, int interporflux, int dir, int *intdir, int loc, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk, int *bs, int *ps, int *pe, int *be);
+extern int set_interpalltypes_loop_ranges(int pointorlinetype, int interporflux, int dir, int loc, int *intdir, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk, int *bs, int *ps, int *pe, int *be);
 
 
 /// line types:
