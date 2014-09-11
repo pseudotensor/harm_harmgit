@@ -54,7 +54,8 @@
 /// interpolation with loop over POINTS
 void slope_lim_pointtype(int interporflux, int realisinterp, int pl, int dir, int loc, int continuous, int idel, int jdel, int kdel, FTYPE (*primreal)[NSTORE2][NSTORE3][NPR], FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*dq)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP])
 {
-  void slope_lim_point(int i, int j, int k, int loc, int realisinterp, int dir, int reallim, int pl, int startorderi, int endorderi, FTYPE *yreal, FTYPE*y, FTYPE *dq,FTYPE *left,FTYPE *right);
+  void slope_lim_point_c2e(int i, int j, int k, int loc, int realisinterp, int dir, int reallim, int pl, int startorderi, int endorderi, FTYPE *yreal, FTYPE*y, FTYPE *dq,FTYPE *left,FTYPE *right);
+  void slope_lim_point_e2c_continuous(int i, int j, int k, int loc, int realisinterp, int dir, int reallim, int pl, int startorderi, int endorderi, FTYPE *yreal, FTYPE*y, FTYPE *dq,FTYPE *left,FTYPE *right);
   void slope_lim_point_allpl(int i, int j, int k, int loc, int realisinterp, int dir, int reallim, int startorderi, int endorderi, FTYPE **yreal, FTYPE **y, FTYPE *dq,FTYPE *left,FTYPE *right);
   extern int choose_limiter(int dir, int i, int j, int k, int pl);
   FTYPE interplist[MAXSPACEORDER];
@@ -76,23 +77,27 @@ void slope_lim_pointtype(int interporflux, int realisinterp, int pl, int dir, in
     myexit(17);
   }
 
-
   // set range of positions interpolated to
-  set_interppoint_loop_ranges(interporflux, dir, &is, &ie, &js, &je, &ks, &ke, &di, &dj, &dk);
-
-
+  set_interppoint_loop_ranges(interporflux, dir, loc, &is, &ie, &js, &je, &ks, &ke, &di, &dj, &dk);
+  
 
   {
     int i,j,k;
     // GODMARK: for now assume not doing per-point choice of limiter (note originally pl didn't actually have correct choice of limiter since pl is fake and pl set to final pl at end of loop
     i=j=k=0;
     reallim=choose_limiter(dir, i,j,k,pl);
-    // get starting point for stencil, assumed quasi-symmetric (including even/odd size of stencil)
-    startorderi = - interporder[reallim]/2;
-    endorderi   = - startorderi;
-
-    if(loc!=CENT && continuous==1){
-      // then doing face->cent as continuous function, so need 1 more point at upper end (although loop range more limited)
+    if(loc==CENT){
+      // get starting point for stencil, assumed quasi-symmetric (including even/odd size of stencil)
+      // for 2nd order: i-1, i, i+1
+      startorderi = - interporder[reallim]/2;
+      endorderi   = - startorderi;
+    }
+    else{
+      // get starting and ending point for stencil centered around face
+      // for 2nd order: i-1, i, i+1, i+2
+      // NOTE: Overall loop range is more limited, so extra i+2 not an issue
+      startorderi = - interporder[reallim]/2;
+      endorderi   = - startorderi + 1;
     }
   }
 
@@ -114,7 +119,7 @@ void slope_lim_pointtype(int interporflux, int realisinterp, int pl, int dir, in
 #pragma omp parallel OPENMPGLOBALPRIVATEFORSTATEANDGEOMINTERP
 #else
     // don't need full copyin() unless pressure needs to be computed as computed if prior conditional holds
-#pragma omp parallel 
+#pragma omp parallel
 #endif
     {
       int i,j,k,l;
@@ -140,7 +145,7 @@ void slope_lim_pointtype(int interporflux, int realisinterp, int pl, int dir, in
         yrealpl[plpl] = realinterplistpl[plpl] - startorderi;
       }
 
-      
+
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
       OPENMP3DLOOPBLOCK{
         OPENMP3DLOOPBLOCK2IJK(i,j,k);
@@ -150,7 +155,7 @@ void slope_lim_pointtype(int interporflux, int realisinterp, int pl, int dir, in
           // get interpolation points, where y[0] is point of interest for which interpolation is found.
           ypl[plpl][l]=MACP0A1(p2interp,i + l*idel,j + l*jdel,k + l*kdel,plpl);
         }
-      
+
         if(realisinterp){
           // need all quantities for real var
           // PLOOPINTERP is used because PALLREALLOOP can be different (extra things at end not part of "real" set
@@ -178,14 +183,14 @@ void slope_lim_pointtype(int interporflux, int realisinterp, int pl, int dir, in
     // Loop over points only
     //
     //////////////////////////////
-    
+
     // For limiters that are general, use slope_lim_point()
     // get interpolation points, where y[0] is point of interest for which interpolation is found.
 #if( DOUSEPARAFLAT || DOUSEPPMCONTACTSTEEP)
 #pragma omp parallel OPENMPGLOBALPRIVATEFORSTATEANDGEOMINTERP
 #else
     // don't need full copyin() unless pressure needs to be computed as computed if prior conditional holds
-#pragma omp parallel 
+#pragma omp parallel
 #endif
     {
       int i,j,k,l;
@@ -217,15 +222,23 @@ void slope_lim_pointtype(int interporflux, int realisinterp, int pl, int dir, in
           }
         }
         else{
-          // if loc!=CENT, then because primreal always at CENT, assume use of yreal will be treated as being CENT
+          // if loc!=CENT, then because primreal always at CENT, assume use of yreal will be treated as being CENT even if inputted quantity to interpolate does not start (or even end at) CENT
           for(l=startorderi;l<=endorderi;l++){
             yreal[l]=MACP0A1(primreal,i + l*idel,j + l*jdel,k + l*kdel,pl);
           }
         }
-      
-        slope_lim_point(i, j, k, loc, realisinterp, dir, reallim,pl,startorderi,endorderi,yreal,y,
-                        &MACP0A1(dq,i,j,k,pl),&MACP0A1(pleft,i,j,k,pl),&MACP0A1(pright,i,j,k,pl)
-                        );
+
+        if(loc==CENT){
+          slope_lim_point_c2e(i, j, k, loc, realisinterp, dir, reallim,pl,startorderi,endorderi,yreal,y,
+                              &MACP0A1(dq,i,j,k,pl),&MACP0A1(pleft,i,j,k,pl),&MACP0A1(pright,i,j,k,pl)
+                              );
+        }
+        else{
+          slope_lim_point_e2c_continuous(i, j, k, loc, realisinterp, dir, reallim,pl,startorderi,endorderi,yreal,y,
+                              &MACP0A1(dq,i,j,k,pl),&MACP0A1(pleft,i,j,k,pl),&MACP0A1(pright,i,j,k,pl)
+                              );
+        }
+
       }// end over loop
     }// end parallel region
   }// end if doing per pl
@@ -251,15 +264,20 @@ void slope_lim_pointtype(int interporflux, int realisinterp, int pl, int dir, in
 /// given dir=fluxdir, return ranges for loop over which obtain those interpolated quantities
 /// these is,ie,js,je,ks,ke are used inside a loop that has grid section SHIFTS already, so don't add shift here
 /// Note that if direction doesn't exist should still return reasonable result that is not out of range (e.g. dir==3 if N3==1 should still give ks=ke=0)
-int set_interppoint_loop_ranges(int interporflux, int dir, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk)
+int set_interppoint_loop_ranges(int interporflux, int dir, int loc, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk)
 {
-  
-  //  if(useghostplusactive){
-  set_interppoint_loop_expanded(interporflux, dir, is, ie, js, je, ks, ke, di, dj, dk);
-  //  }
-  //  else{
-  //    set_interppoint_loop(interporflux, dir, is, ie, js, je, ks, ke, di, dj, dk);
-  //  }
+
+  if(loc==CENT){
+    //  if(useghostplusactive){
+    set_interppoint_loop_expanded(interporflux, dir, loc, is, ie, js, je, ks, ke, di, dj, dk);
+    //  }
+    //  else{
+    //    set_interppoint_loop(interporflux, dir, loc, is, ie, js, je, ks, ke, di, dj, dk);
+    //  }
+  }
+  else{
+    set_interppoint_loop_expanded_face2cent(interporflux, dir, loc, is, ie, js, je, ks, ke, di, dj, dk);
+  }
 
 
   return(0);
@@ -267,7 +285,7 @@ int set_interppoint_loop_ranges(int interporflux, int dir, int *is, int *ie, int
 
 
 
-int set_interppoint_loop_ranges_3Dextended(int interporflux, int *maxis, int *maxie, int *maxjs, int *maxje, int *maxks, int *maxke, int *di, int *dj, int *dk)
+int set_interppoint_loop_ranges_3Dextended(int interporflux, int loc, int *maxis, int *maxie, int *maxjs, int *maxje, int *maxks, int *maxke, int *di, int *dj, int *dk)
 {
   int firsttime;
   int dimen;
@@ -286,11 +304,11 @@ int set_interppoint_loop_ranges_3Dextended(int interporflux, int *maxis, int *ma
     if(firsttime){
       firsttime=0;
       // set range of positions interpolated to
-      set_interppoint_loop_ranges(interporflux, dimen, maxis, maxie, maxjs, maxje, maxks, maxke, di, dj, dk);
+      set_interppoint_loop_ranges(interporflux, dimen, loc, maxis, maxie, maxjs, maxje, maxks, maxke, di, dj, dk);
     }
     else{
       // max here means largest extent in the direction of that boundary as from interior of domain
-      set_interppoint_loop_ranges(interporflux, dimen, &is, &ie, &js, &je, &ks, &ke, di, dj, dk);
+      set_interppoint_loop_ranges(interporflux, dimen, loc, &is, &ie, &js, &je, &ks, &ke, di, dj, dk);
       if(is<*maxis) *maxis=is;
       if(ie>*maxie) *maxie=ie;
       if(js<*maxjs) *maxjs=js;
@@ -319,7 +337,7 @@ void set_interppoint_loop_ranges_2D_EMF_formerged(int interporflux, int corner, 
   else{
     myUconsloop=Uconsloop;
   }
-  
+
 
   if(corner==1){
 
@@ -329,7 +347,7 @@ void set_interppoint_loop_ranges_2D_EMF_formerged(int interporflux, int corner, 
 
     *js=myUconsloop[FJS]-SHIFT2;
     *je=myUconsloop[FJE]+SHIFT2;
-    
+
     *ks=myUconsloop[FKS]-SHIFT3;
     *ke=myUconsloop[FKE]+SHIFT3;
 
@@ -345,7 +363,7 @@ void set_interppoint_loop_ranges_2D_EMF_formerged(int interporflux, int corner, 
     *js=0;
     //    *je=N2-1;
     *je=N2;
-       
+
     *ks=myUconsloop[FKS]-SHIFT3;
     *ke=myUconsloop[FKE]+SHIFT3;
 
@@ -357,10 +375,10 @@ void set_interppoint_loop_ranges_2D_EMF_formerged(int interporflux, int corner, 
 
     *is=myUconsloop[FIS]-SHIFT1;
     *ie=myUconsloop[FIE]+SHIFT1;
-    
+
     *js=myUconsloop[FJS]-SHIFT2;
     *je=myUconsloop[FJE]+SHIFT2;
-    
+
     *ks=0;
     //    *ke=N3-1;
     *ke=N3;
@@ -392,7 +410,7 @@ void set_interppoint_loop_ranges_geomcorn_formerged(int interporflux, int corner
   else{
     myUconsloop=Uconsloop;
   }
-  
+
 
   if(corner==1){
 
@@ -402,7 +420,7 @@ void set_interppoint_loop_ranges_geomcorn_formerged(int interporflux, int corner
 
     *js=myUconsloop[FJS]-SHIFT2;
     *je=myUconsloop[FJE]+SHIFT2*2;
-    
+
     *ks=myUconsloop[FKS]-SHIFT3;
     *ke=myUconsloop[FKE]+SHIFT3*2;
 
@@ -418,7 +436,7 @@ void set_interppoint_loop_ranges_geomcorn_formerged(int interporflux, int corner
     *js=0;
     //    *je=N2-1;
     *je=N2;
-       
+
     *ks=myUconsloop[FKS]-SHIFT3;
     *ke=myUconsloop[FKE]+SHIFT3*2;
 
@@ -430,10 +448,10 @@ void set_interppoint_loop_ranges_geomcorn_formerged(int interporflux, int corner
 
     *is=myUconsloop[FIS]-SHIFT1;
     *ie=myUconsloop[FIE]+SHIFT1*2;
-    
+
     *js=myUconsloop[FJS]-SHIFT2;
     *je=myUconsloop[FJE]+SHIFT2*2;
-    
+
     *ks=0;
     //    *ke=N3-1;
     *ke=N3;
@@ -460,7 +478,7 @@ void set_interppoint_loop_ranges_geomcorn_formerged(int interporflux, int corner
 /// Setup loop over region of points
 /// very similar to set_interp_loop() in interpline.c
 /// off-dir directions have been expanded to account for EMF type calculations
-void set_interppoint_loop(int interporflux, int dir, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk)
+void set_interppoint_loop(int interporflux, int dir, int loc, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk)
 {
 
   // interporflux never matters if ghost+active not used
@@ -525,7 +543,7 @@ void set_interppoint_loop(int interporflux, int dir, int *is, int *ie, int *js, 
 
 /// Setup loop over region of points for finite volume method (or any method that uses extended ghost+active grid)
 /// Note that +-SHIFT? gives interpolation at maximal face (i.e. for dir=1 and ncpux1=1, i=0 and i=N1), so consistent with requirements for FLUXBSTAG and IF3DSPCTHENMPITRANSFERATPOLE
-void set_interppoint_loop_expanded(int interporflux, int dir, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk)
+void set_interppoint_loop_expanded(int interporflux, int dir, int loc, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk)
 {
   int *myUconsloop;
 
@@ -536,7 +554,7 @@ void set_interppoint_loop_expanded(int interporflux, int dir, int *is, int *ie, 
   else{
     myUconsloop=Uconsloop;
   }
-  
+
 
   if(dir==1){
 
@@ -546,7 +564,7 @@ void set_interppoint_loop_expanded(int interporflux, int dir, int *is, int *ie, 
 
     *js=fluxloop[dir][FJS];
     *je=fluxloop[dir][FJE];
-    
+
     *ks=fluxloop[dir][FKS];
     *ke=fluxloop[dir][FKE];
 
@@ -558,10 +576,10 @@ void set_interppoint_loop_expanded(int interporflux, int dir, int *is, int *ie, 
 
     *is=fluxloop[dir][FIS];
     *ie=fluxloop[dir][FIE];
-    
+
     *js=myUconsloop[FJS]-SHIFT2;
     *je=myUconsloop[FJE]+SHIFT2;
-    
+
     *ks=fluxloop[dir][FKS];
     *ke=fluxloop[dir][FKE];
 
@@ -573,10 +591,10 @@ void set_interppoint_loop_expanded(int interporflux, int dir, int *is, int *ie, 
 
     *is=fluxloop[dir][FIS];
     *ie=fluxloop[dir][FIE];
-    
+
     *js=fluxloop[dir][FJS];
     *je=fluxloop[dir][FJE];
-    
+
     *ks=myUconsloop[FKS]-SHIFT3;
     *ke=myUconsloop[FKE]+SHIFT3;
 
@@ -595,6 +613,75 @@ void set_interppoint_loop_expanded(int interporflux, int dir, int *is, int *ie, 
 
 
 
+/// Setup loop over region of points for finite volume method (or any method that uses extended ghost+active grid)
+/// Note that +-SHIFT? gives interpolation at maximal face (i.e. for dir=1 and ncpux1=1, i=0 and i=N1), so consistent with requirements for FLUXBSTAG and IF3DSPCTHENMPITRANSFERATPOLE
+void set_interppoint_loop_expanded_face2cent(int interporflux, int dir, int loc, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk)
+{
+  int *myUconsloop;
+
+
+  if(interporflux==ENOINTERPTYPE4EMF){
+    myUconsloop=emfUconsloop;
+  }
+  else{
+    myUconsloop=Uconsloop;
+  }
+
+  // 0 to N-1 for actual values because others are center boundary cells
+  if(dir==1){
+    *is=myUconsloop[FIS];
+    *ie=myUconsloop[FIE];
+
+    *js=fluxloop[dir][FJS];
+    *je=fluxloop[dir][FJE];
+
+    *ks=fluxloop[dir][FKS];
+    *ke=fluxloop[dir][FKE];
+
+    *di=1;
+    *dj=1;
+    *dk=1;
+  }
+  else if(dir==2){
+
+    *is=fluxloop[dir][FIS];
+    *ie=fluxloop[dir][FIE];
+
+    *js=myUconsloop[FJS];
+    *je=myUconsloop[FJE];
+
+    *ks=fluxloop[dir][FKS];
+    *ke=fluxloop[dir][FKE];
+
+    *di=1;
+    *dj=1;
+    *dk=1;
+  }
+  else if(dir==3){
+
+    *is=fluxloop[dir][FIS];
+    *ie=fluxloop[dir][FIE];
+
+    *js=fluxloop[dir][FJS];
+    *je=fluxloop[dir][FJE];
+
+    *ks=myUconsloop[FKS];
+    *ke=myUconsloop[FKE];
+
+    *di=1;
+    *dj=1;
+    *dk=1;
+
+  }
+  else{
+    dualfprintf(fail_file,"No such dir=%d in set_interppoint_loop_expanded_face2cent()\n",dir);
+    myexit(9894387);
+  }
+
+}
+
+
+
 
 
 
@@ -602,7 +689,7 @@ void set_interppoint_loop_expanded(int interporflux, int dir, int *is, int *ie, 
 
 
 /// interpolate from a center point to a left/right interface
-void slope_lim_point(int i, int j, int k, int loc, int realisinterp, int dir, int reallim, int pl, int startorderi, int endorderi, FTYPE *yreal, FTYPE*y, FTYPE *dq,FTYPE *left,FTYPE *right)
+void slope_lim_point_c2e(int i, int j, int k, int loc, int realisinterp, int dir, int reallim, int pl, int startorderi, int endorderi, FTYPE *yreal, FTYPE*y, FTYPE *dq,FTYPE *left,FTYPE *right)
 {
   extern void para(FTYPE *y, FTYPE *lout, FTYPE *rout);
   extern void para2(FTYPE *y, FTYPE *lout, FTYPE *rout);
@@ -660,6 +747,45 @@ void slope_lim_point(int i, int j, int k, int loc, int realisinterp, int dir, in
 
 }
 
+/// DEVELOPING RIGHT NOW
+/// interpolate from a center point to a left/right interface
+void slope_lim_point_e2c_continuous(int i, int j, int k, int loc, int realisinterp, int dir, int reallim, int pl, int startorderi, int endorderi, FTYPE *yreal, FTYPE*y, FTYPE *dq,FTYPE *left,FTYPE *right)
+{
+  void slope_lim_4points_e2c_continuous(int reallim, FTYPE yl, FTYPE yc, FTYPE yr, FTYPE yrr, FTYPE *dq);
+  FTYPE ddq = 0.0; //to avoid copying of nan's
+  FTYPE mydq = 0.0; //to avoid copying of nan's
+
+  FTYPE yl,yc,yr,yrr;
+  yl=y[-1];
+  yc=y[0];
+  yr=y[1];
+  yrr=y[2];
+  slope_lim_4points_e2c_continuous(reallim, yl, yc, yr, yrr, &ddq);
+
+  if(reallim<=MC){
+
+    // Obtain lower mydq by just setting true Bcenter(x=1/2)=left or =right immediately below and solving for mydq.  So fake slope just to get the final value correct for *right
+    // *left can be set, but not actual left value at next cell center.  So really only should use *right
+    mydq=2.*(0.25*ddq - 1.*yc + 1.*yl - 0.5*(-1.*yc + yr)); // only for fake left that will just return same Bcenter(x=1/2) as *right
+    *left =yc - 0.5* mydq; // fake, just gives back B(x=1/2) as well
+
+    // now overwrite mydq with correct value assuming will only use *right as result for centered final value
+    mydq=-2.*(0.25*ddq - 1.*yc + 1.*yl - 0.5*(-1.*yc + yr));// only for right
+    *right=yc + 0.5* mydq; // B(x=1/2)
+  }
+  else{
+    dualfprintf(fail_file,"NOT SETUP YET FOR slope_lim_point_e2c_continuous\n");
+    myexit(972372252);
+  }
+
+#if(DODQMEMORY)
+  // for now force both ways always so have information
+  *dq=mydq; // only set to dq if necessary since DODQMEMORY may be 0
+#endif
+  
+
+}
+
 /// interpolate from a center point to a left/right interface
 void slope_lim_point_allpl(int i, int j, int k, int loc, int realisinterp, int dir,int reallim, int startorderi, int endorderi, FTYPE **yreal, FTYPE **y, FTYPE *dq,FTYPE *left,FTYPE *right)
 {
@@ -685,64 +811,8 @@ void slope_lim_point_allpl(int i, int j, int k, int loc, int realisinterp, int d
 
 
 
-
-void slope_lim_3points_old(int reallim, FTYPE yl, FTYPE yc, FTYPE yr,FTYPE *dq)
-{
-  FTYPE Dqm, Dqp, Dqc, s;
-
-  if (reallim == MC) {
-    Dqm = 2.0 * (yc - yl);
-    Dqp = 2.0 * (yr - yc);
-    Dqc = 0.5 * (yr - yl);
-    s = Dqm * Dqp;
-    if (s <= 0.)  *dq= 0.;
-    else{
-      if (fabs(Dqm) < fabs(Dqp) && fabs(Dqm) < fabs(Dqc))
-        *dq= (Dqm);
-      else if (fabs(Dqp) < fabs(Dqc))
-        *dq= (Dqp);
-      else
-        *dq= (Dqc);
-    }
-  }
-  /* van leer slope limiter */
-  else if (reallim == VANL) {
-    Dqm = (yc - yl);
-    Dqp = (yr - yc);
-    s = Dqm * Dqp;
-    if (s <= 0.)
-      *dq= 0.;
-    else
-      *dq= (2.0 * s / (Dqm + Dqp));
-  }
-  /* minmod slope limiter (crude but robust) */
-  else if (reallim == MINM) {
-    Dqm = (yc - yl);
-    Dqp = (yr - yc);
-    s = Dqm * Dqp;
-    if (s <= 0.) *dq= 0.;
-    else{
-      if (fabs(Dqm) < fabs(Dqp)) *dq= Dqm;
-      else *dq= Dqp;
-    }
-  }
-  else if (reallim == NLIM) {
-    Dqc = 0.5 * (yr - yl);
-    *dq= (Dqc);
-  }
-  else if (reallim == DONOR) {
-    *dq=(0.0);
-  }
-  else {
-    dualfprintf(fail_file, "unknown slope limiter: %d\n",reallim);
-    myexit(10);
-  }
-
-
-
-}
-
-
+/// limited slopes using 3 points
+/// Gives slope that will be assumed to be located at same location as yc -- center of cell
 void slope_lim_3points(int reallim, FTYPE yl, FTYPE yc, FTYPE yr,FTYPE *dq)
 {
   FTYPE dq1l,dq1r,dq2;
@@ -754,6 +824,27 @@ void slope_lim_3points(int reallim, FTYPE yl, FTYPE yc, FTYPE yr,FTYPE *dq)
   dq2  = 0.5*(yr - yl);
 
   get_limit_slopes(reallim, 0, &dq1l, &dq1r, &dq2, dq);
+
+}
+
+
+/// limited 2nd derivatives using 4 points
+/// see e2c_continuous.nb
+void slope_lim_4points_e2c_continuous(int reallim, FTYPE yl, FTYPE yc, FTYPE yr, FTYPE yrr, FTYPE *ddq)
+{
+  FTYPE ddq1l,ddq1r,ddq2;
+  extern void get_limit_slopes(int reallim, int extremum, FTYPE *dq1l, FTYPE *dq1r, FTYPE *dq2, FTYPE *dqout);
+
+
+  ddq1l=0.5*(-2.0*yc+yl+yr);
+  ddq1r=0.5*(yc-2.0*yr+yrr);
+  ddq2=SIXTH*(-3.*yc + yl + 3.*yr - 1.*yrr) + 
+    SIXTH*(3.*yc - 1.*yl - 3.*yr + yrr) + 
+    0.5*(-1.*yc + yl - 1.*yr + yrr);
+  
+
+  // use same procedure as slope limiter
+  get_limit_slopes(reallim, 0, &ddq1l, &ddq1r, &ddq2, ddq);
 
 }
 
@@ -821,6 +912,61 @@ void get_limit_slopes(int reallim, int extremum, FTYPE *dq1l, FTYPE *dq1r, FTYPE
 }
 
 
+void slope_lim_3points_old(int reallim, FTYPE yl, FTYPE yc, FTYPE yr,FTYPE *dq)
+{
+  FTYPE Dqm, Dqp, Dqc, s;
+
+  if (reallim == MC) {
+    Dqm = 2.0 * (yc - yl);
+    Dqp = 2.0 * (yr - yc);
+    Dqc = 0.5 * (yr - yl);
+    s = Dqm * Dqp;
+    if (s <= 0.)  *dq= 0.;
+    else{
+      if (fabs(Dqm) < fabs(Dqp) && fabs(Dqm) < fabs(Dqc))
+        *dq= (Dqm);
+      else if (fabs(Dqp) < fabs(Dqc))
+        *dq= (Dqp);
+      else
+        *dq= (Dqc);
+    }
+  }
+  /* van leer slope limiter */
+  else if (reallim == VANL) {
+    Dqm = (yc - yl);
+    Dqp = (yr - yc);
+    s = Dqm * Dqp;
+    if (s <= 0.)
+      *dq= 0.;
+    else
+      *dq= (2.0 * s / (Dqm + Dqp));
+  }
+  /* minmod slope limiter (crude but robust) */
+  else if (reallim == MINM) {
+    Dqm = (yc - yl);
+    Dqp = (yr - yc);
+    s = Dqm * Dqp;
+    if (s <= 0.) *dq= 0.;
+    else{
+      if (fabs(Dqm) < fabs(Dqp)) *dq= Dqm;
+      else *dq= Dqp;
+    }
+  }
+  else if (reallim == NLIM) {
+    Dqc = 0.5 * (yr - yl);
+    *dq= (Dqc);
+  }
+  else if (reallim == DONOR) {
+    *dq=(0.0);
+  }
+  else {
+    dualfprintf(fail_file, "unknown slope limiter: %d\n",reallim);
+    myexit(10);
+  }
+
+
+
+}
 
 
 
@@ -1086,7 +1232,7 @@ void mcsteeppl(int i, int j, int k, int loc, int realisinterp, int dir, FTYPE **
     checkparamonotonicity(smooth, dqrange, pl, ypl[pl], ddq, dqpl[pl], &loutpl[pl], &routpl[pl], &loutpl[pl], &routpl[pl]);
 #endif
 
-    
+
   }
 
 

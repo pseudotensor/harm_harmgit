@@ -552,7 +552,9 @@ void mergedc2ea2cmethod_compute(int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTOR
       // loop range should be same as where computed fluxes, or where formed primitive interpolation, as in interppoint.c:
 
       // set range of positions interpolated to (di,dj,dk useless)
-      set_interppoint_loop_ranges(ENOINTERPTYPE, dimen, &is, &ie, &js, &je, &ks, &ke, &di, &dj, &dk);
+
+      int loc=CENT;
+      set_interppoint_loop_ranges(ENOINTERPTYPE, dimen, loc, &is, &ie, &js, &je, &ks, &ke, &di, &dj, &dk);
 
       // loop over all i,j,k
       COMPZSLOOP(is,ie,js,je,ks,ke){

@@ -1,4 +1,6 @@
 
+
+
 /*! \file interpline.c
      \brief Spatial Interpolation for fluxes based upon providing full 1D line information
      // Instead of acting per point, this acts per line to improve memory efficiency.
@@ -288,8 +290,8 @@ static void (*pass_1d_line)(int whichquantity, int dir, int do_weight_or_recon, 
 static void (*pass_1d_line_multipl)(int MULTIPLTYPE, int whichquantity, int dir, int do_weight_or_recon, int recontype, int whichreduce, int preforder, int bs, int ps, int pe, int be, int *minorder, int *maxorder, int *shift,   FTYPE (*shockindicator)[NBIGM], FTYPE *stiffindicator, FTYPE (*Vline)[NBIGM],  FTYPE (*Pline)[NBIGM], FTYPE (*df)[NUMDFS][NBIGM], FTYPE (*dP)[NBIGM], FTYPE (*etai)[NUMTRUEEOMSETS][NBIGM], FTYPE (*monoindicator)[NUMMONOINDICATORS][NBIGM], FTYPE (*yprim)[2][NBIGM], FTYPE (*ystecilvar)[2][NBIGM], FTYPE (*yin)[2][NBIGM], FTYPE (*yout)[2][NBIGM], FTYPE (*youtpolycoef)[MAXSPACEORDER][NBIGM], struct of_trueijkp *trueijkp);
 
 
-static void set_interp_loop(int withshifts, int interporflux, int dir, int *intdir, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk, int *bs, int *ps, int *pe, int *be);
-static void set_interp_loop_expanded(int withshifts, int interporflux, int dir, int *intdir, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk, int *bs, int *ps, int *pe, int *be);
+static void set_interp_loop(int withshifts, int interporflux, int dir, int loc, int *intdir, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk, int *bs, int *ps, int *pe, int *be);
+static void set_interp_loop_expanded(int withshifts, int interporflux, int dir, int loc, int *intdir, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk, int *bs, int *ps, int *pe, int *be);
 
 
 
@@ -330,7 +332,9 @@ void slope_lim_linetype_c2e(int realisinterp, int whichprimtype, int interporflu
 
 
   withshifts=1; // need with shifts since SUPERGENLOOP below has no shifts and shouldn't have shifts since (e.g.) for dir=1 ie=is and shifts would split the loop into 3D type loop instead of over starting positions
-  set_interp_loop_gen(withshifts, interporflux, dir, &intdir, &is, &ie, &js, &je, &ks, &ke, &di, &dj, &dk, &bs, &ps, &pe, &be);
+
+  int loc =CENT;
+  set_interp_loop_gen(withshifts, interporflux, dir, loc, &intdir, &is, &ie, &js, &je, &ks, &ke, &di, &dj, &dk, &bs, &ps, &pe, &be);
 
   ///////////////////
   //
@@ -910,7 +914,9 @@ void slope_lim_linetype(int whichquantity, int interporflux, int dir, int idel, 
   /////////////////
 
   withshifts=1; // need with shifts since SUPERGENLOOP below has no shifts and shouldn't have shifts since (e.g.) for dir=1 ie=is and shifts would split the loop into 3D type loop instead of over starting positions
-  set_interp_loop_gen(withshifts,interporflux, dir, &intdir, &is, &ie, &js, &je, &ks, &ke, &di, &dj, &dk, &bs, &ps, &pe, &be);
+
+  int loc=CENT;
+  set_interp_loop_gen(withshifts,interporflux, dir, loc, &intdir, &is, &ie, &js, &je, &ks, &ke, &di, &dj, &dk, &bs, &ps, &pe, &be);
 
   ///////////////////
   //
@@ -1564,17 +1570,17 @@ static void get_df_line_paraline(int realisinterp, int doingweno, int whichprimt
 
 
 /// just a wrapper
-void set_interp_loop_gen(int withshifts, int interporflux, int dir, int *intdir, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk, int *bs, int *ps, int *pe, int *be)
+void set_interp_loop_gen(int withshifts, int interporflux, int dir, int loc, int *intdir, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk, int *bs, int *ps, int *pe, int *be)
 {
 
   if(useghostplusactive){
     // now assume active + active/ghost + ghost layers so only bound primitives during calculation
-    set_interp_loop_expanded(withshifts, interporflux, dir, intdir, is, ie, js, je, ks, ke, di, dj, dk, bs, ps, pe, be);
+    set_interp_loop_expanded(withshifts, interporflux, dir, loc, intdir, is, ie, js, je, ks, ke, di, dj, dk, bs, ps, pe, be);
   }
   else{
     // straight-forward average or de-average along dir and just one ghost layer (original method)
     // GODMARK: later should convert ENOFLUXRECON method to have expanded ghost layer and ghost+active layer
-    set_interp_loop(withshifts, interporflux, dir, intdir, is, ie, js, je, ks, ke, di, dj, dk, bs, ps, pe, be);
+    set_interp_loop(withshifts, interporflux, dir, loc, intdir, is, ie, js, je, ks, ke, di, dj, dk, bs, ps, pe, be);
   }
 
 }
@@ -1585,7 +1591,7 @@ void set_interp_loop_gen(int withshifts, int interporflux, int dir, int *intdir,
 /// i.e. Define loop over starting positions and range of loop for each starting position
 /// Note, function should still return result that is within bounds even for unused directions (e.g. dir==3 should not go out of bounds even if N3==1)
 /// Note that interp loop gives output from i=0..N so consistent with requirements for FLUXBSTAG and IF3DSPCTHENMPITRANSFERATPOLE
-static void set_interp_loop(int withshifts, int interporflux, int dir, int *intdir, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk, int *bs, int *ps, int *pe, int *be)
+static void set_interp_loop(int withshifts, int interporflux, int dir, int loc, int *intdir, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk, int *bs, int *ps, int *pe, int *be)
 {
 
   /////////////////////
@@ -1778,7 +1784,7 @@ static void set_interp_loop(int withshifts, int interporflux, int dir, int *intd
 /// i.e. Define loop over starting positions and range of loop for each starting position
 /// This function is for any method using the expanded ghost+ghost/active+active layers
 /// Note, function should still return result that is within bounds even for unused directions (e.g. dir==3 should not go out of bounds even if N3==1)
-static void set_interp_loop_expanded(int withshifts, int interporflux, int dir, int *intdir, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk, int *bs, int *ps, int *pe, int *be)
+static void set_interp_loop_expanded(int withshifts, int interporflux, int dir, int loc, int *intdir, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk, int *bs, int *ps, int *pe, int *be)
 {
   int dir_exception[NDIM];
   int *myUconsloop;
