@@ -732,8 +732,16 @@ void slope_lim_continuous_e2z(int realisinterp, int dir, int idel, int jdel, int
   else{
     // Should really interpolate such that continuous GODMARK
     // GODMARK: set_interppoint() inside this function sets starting and ending position for loops, and as set c2e always needs more than e2c for obtaining flux, so leaving as for c2e is fine for now
-    int loc=FACE1+dir-1;
-    int continuous=1;
+    int loc;
+    int continuous;
+    if(OLDNONCONT){
+      loc=CENT;
+      continuous=0;
+    }
+    else{
+      loc=FACE1+dir-1;
+      continuous=1;
+    }
     get_loop(INTERPPOINTTYPE, ENOINTERPTYPE, dir, face2centloop);
     PINTERPLOOP(pliter,pl){
       slope_lim_pointtype(ENOINTERPTYPE, realisinterp, pl, dir, loc, continuous, idel, jdel, kdel, primreal, p2interp, dq, pleft, pright); // GODMARK: overwritting dq from other type of interpolation
@@ -1393,7 +1401,6 @@ int interpolate_pfield_face2cent(FTYPE (*preal)[NSTORE2][NSTORE3][NPR], FTYPE (*
         OPENMP3DLOOPBLOCK{
           OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
-#define OLDNONCONT 0
 
 
 #if(OLDNONCONT)

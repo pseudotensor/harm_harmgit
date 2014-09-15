@@ -554,7 +554,8 @@ void mergedc2ea2cmethod_compute(int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTOR
       // set range of positions interpolated to (di,dj,dk useless)
 
       int loc=CENT;
-      set_interppoint_loop_ranges(ENOINTERPTYPE, dimen, loc, &is, &ie, &js, &je, &ks, &ke, &di, &dj, &dk);
+      int continuous=0;
+      set_interppoint_loop_ranges(ENOINTERPTYPE, dimen, loc, continuous, &is, &ie, &js, &je, &ks, &ke, &di, &dj, &dk);
 
       // loop over all i,j,k
       COMPZSLOOP(is,ie,js,je,ks,ke){

@@ -1771,7 +1771,8 @@ void compute_and_store_fluxstatecent(FTYPE (*pr)[NSTORE2][NSTORE3][NPR])
 
   // define +-1 in every direction loop range
   int loc=CENT;
-  set_interppoint_loop_ranges_3Dextended(ENOINTERPTYPE, loc, &is, &ie, &js, &je, &ks, &ke, &di, &dj, &dk);
+  int continuous=0;
+  set_interppoint_loop_ranges_3Dextended(ENOINTERPTYPE, loc, continuous, &is, &ie, &js, &je, &ks, &ke, &di, &dj, &dk);
 
 
 #if(STOREFLUXSTATE||STORESHOCKINDICATOR)

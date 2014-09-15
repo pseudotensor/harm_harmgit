@@ -153,21 +153,21 @@ extern void interpfun(int interptype, int numpoints, int i, FTYPE pos, FTYPE *xf
 
 /// interpolation stuff
 extern int get_loop(int pointorlinetype, int interporflux, int dir, struct of_loop *loop);
-extern int set_interpalltypes_loop_ranges(int pointorlinetype, int interporflux, int dir, int loc, int *intdir, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk, int *bs, int *ps, int *pe, int *be);
+extern int set_interpalltypes_loop_ranges(int pointorlinetype, int interporflux, int dir, int loc, int continuous, int *intdir, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk, int *bs, int *ps, int *pe, int *be);
 
 
 /// line types:
-extern void set_interp_loop_gen(int withshifts, int interporflux, int dir, int loc, int *intdir, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk, int *bs, int *ps, int *pe, int *be);
-//extern void set_interp_loop(int withshifts, int interporflux, int dir, int loc, int *intdir, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk, int *bs, int *ps, int *pe, int *be);
-//extern void set_interp_loop_expanded(int withshifts, int interporflux, int dir, int loc, int *intdir, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk, int *bs, int *ps, int *pe, int *be);
+extern void set_interp_loop_gen(int withshifts, int interporflux, int dir, int loc, int continuous, int *intdir, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk, int *bs, int *ps, int *pe, int *be);
+//extern void set_interp_loop(int withshifts, int interporflux, int dir, int loc, int continuous, int *intdir, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk, int *bs, int *ps, int *pe, int *be);
+//extern void set_interp_loop_expanded(int withshifts, int interporflux, int dir, int loc, int continuous, int *intdir, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk, int *bs, int *ps, int *pe, int *be);
 
 /// point types:
-extern int set_interppoint_loop_ranges(int interporflux, int dir, int loc, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk);
-extern int set_interppoint_loop_ranges_3Dextended(int interporflux, int loc, int *maxis, int *maxie, int *maxjs, int *maxje, int *maxks, int *maxke, int *di, int *dj, int *dk);
+extern int set_interppoint_loop_ranges(int interporflux, int dir, int loc, int continuous, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk);
+extern int set_interppoint_loop_ranges_3Dextended(int interporflux, int loc, int continuous, int *maxis, int *maxie, int *maxjs, int *maxje, int *maxks, int *maxke, int *di, int *dj, int *dk);
 extern void set_interppoint_loop_ranges_2D_EMF_formerged(int interporflux, int corner, int odir1, int odir2, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk);
 extern void set_interppoint_loop_ranges_geomcorn_formerged(int interporflux, int corner, int odir1, int odir2, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk);
 
-extern void set_interppoint_loop(int interporflux, int dir, int loc, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk);
+extern void set_interppoint_loop(int interporflux, int dir, int loc, int continuous, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk);
 extern void set_interppoint_loop_expanded(int interporflux, int dir, int loc, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk);
 extern void set_interppoint_loop_expanded_face2cent(int interporflux, int dir, int loc, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk);
 

@@ -78,15 +78,17 @@ void slope_lim_pointtype(int interporflux, int realisinterp, int pl, int dir, in
   }
 
   // set range of positions interpolated to
-  set_interppoint_loop_ranges(interporflux, dir, loc, &is, &ie, &js, &je, &ks, &ke, &di, &dj, &dk);
+  set_interppoint_loop_ranges(interporflux, dir, loc, continuous, &is, &ie, &js, &je, &ks, &ke, &di, &dj, &dk);
   
+  //  loc=CENT;
+  //  continuous=0;
 
   {
     int i,j,k;
     // GODMARK: for now assume not doing per-point choice of limiter (note originally pl didn't actually have correct choice of limiter since pl is fake and pl set to final pl at end of loop
     i=j=k=0;
     reallim=choose_limiter(dir, i,j,k,pl);
-    if(loc==CENT){
+    if(continuous==0){
       // get starting point for stencil, assumed quasi-symmetric (including even/odd size of stencil)
       // for 2nd order: i-1, i, i+1
       startorderi = - interporder[reallim]/2;
@@ -228,7 +230,7 @@ void slope_lim_pointtype(int interporflux, int realisinterp, int pl, int dir, in
           }
         }
 
-        if(loc==CENT){
+        if(continuous==0){
           slope_lim_point_c2e(i, j, k, loc, realisinterp, dir, reallim,pl,startorderi,endorderi,yreal,y,
                               &MACP0A1(dq,i,j,k,pl),&MACP0A1(pleft,i,j,k,pl),&MACP0A1(pright,i,j,k,pl)
                               );
@@ -264,10 +266,10 @@ void slope_lim_pointtype(int interporflux, int realisinterp, int pl, int dir, in
 /// given dir=fluxdir, return ranges for loop over which obtain those interpolated quantities
 /// these is,ie,js,je,ks,ke are used inside a loop that has grid section SHIFTS already, so don't add shift here
 /// Note that if direction doesn't exist should still return reasonable result that is not out of range (e.g. dir==3 if N3==1 should still give ks=ke=0)
-int set_interppoint_loop_ranges(int interporflux, int dir, int loc, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk)
+int set_interppoint_loop_ranges(int interporflux, int dir, int loc, int continuous, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk)
 {
 
-  if(loc==CENT){
+  if(continuous==0){
     //  if(useghostplusactive){
     set_interppoint_loop_expanded(interporflux, dir, loc, is, ie, js, je, ks, ke, di, dj, dk);
     //  }
@@ -285,7 +287,7 @@ int set_interppoint_loop_ranges(int interporflux, int dir, int loc, int *is, int
 
 
 
-int set_interppoint_loop_ranges_3Dextended(int interporflux, int loc, int *maxis, int *maxie, int *maxjs, int *maxje, int *maxks, int *maxke, int *di, int *dj, int *dk)
+int set_interppoint_loop_ranges_3Dextended(int interporflux, int loc, int continuous, int *maxis, int *maxie, int *maxjs, int *maxje, int *maxks, int *maxke, int *di, int *dj, int *dk)
 {
   int firsttime;
   int dimen;
@@ -304,11 +306,11 @@ int set_interppoint_loop_ranges_3Dextended(int interporflux, int loc, int *maxis
     if(firsttime){
       firsttime=0;
       // set range of positions interpolated to
-      set_interppoint_loop_ranges(interporflux, dimen, loc, maxis, maxie, maxjs, maxje, maxks, maxke, di, dj, dk);
+      set_interppoint_loop_ranges(interporflux, dimen, loc, continuous, maxis, maxie, maxjs, maxje, maxks, maxke, di, dj, dk);
     }
     else{
       // max here means largest extent in the direction of that boundary as from interior of domain
-      set_interppoint_loop_ranges(interporflux, dimen, loc, &is, &ie, &js, &je, &ks, &ke, di, dj, dk);
+      set_interppoint_loop_ranges(interporflux, dimen, loc, continuous, &is, &ie, &js, &je, &ks, &ke, di, dj, dk);
       if(is<*maxis) *maxis=is;
       if(ie>*maxie) *maxie=ie;
       if(js<*maxjs) *maxjs=js;
@@ -478,7 +480,7 @@ void set_interppoint_loop_ranges_geomcorn_formerged(int interporflux, int corner
 /// Setup loop over region of points
 /// very similar to set_interp_loop() in interpline.c
 /// off-dir directions have been expanded to account for EMF type calculations
-void set_interppoint_loop(int interporflux, int dir, int loc, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk)
+void set_interppoint_loop(int interporflux, int dir, int loc, int continuous, int *is, int *ie, int *js, int *je, int *ks, int *ke, int *di, int *dj, int *dk)
 {
 
   // interporflux never matters if ghost+active not used
@@ -772,6 +774,8 @@ void slope_lim_point_e2c_continuous(int i, int j, int k, int loc, int realisinte
     // now overwrite mydq with correct value assuming will only use *right as result for centered final value
     mydq=-2.*(0.25*ddq - 1.*yc + 1.*yl - 0.5*(-1.*yc + yr));// only for right
     *right=yc + 0.5* mydq; // B(x=1/2)
+
+    //    dualfprintf(fail_file,"POINT4: ijk=%d %d %d : %g %g %g %g : %g %g\n",i,j,k,yl,yc,yr,yrr,mydq,*right);
   }
   else{
     dualfprintf(fail_file,"NOT SETUP YET FOR slope_lim_point_e2c_continuous\n");

@@ -1053,3 +1053,6 @@
 #define OUTERDEATHRADIUS (500.0)
 #define OUTERDEATHGAMMAMAX (6.0)
 #define OUTERDEATHGAMMAMAXRAD (GAMMAMAXRAD)
+
+// whether to use old non-continuous method for Bi along i interpolation in staggered field method
+#define OLDNONCONT 1
