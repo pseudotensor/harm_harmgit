@@ -772,7 +772,7 @@ void slope_lim_point_e2c_continuous(int i, int j, int k, int loc, int realisinte
     *left =yc - 0.5* mydq; // fake, just gives back B(x=1/2) as well
 
     // now overwrite mydq with correct value assuming will only use *right as result for centered final value
-    mydq=-2.*(0.25*ddq - 1.*yc + 1.*yl - 0.5*(-1.*yc + yr));// only for right
+    mydq=-2.*(0.25*ddq - 0.5*(-1.*yc + yr));// only for right
     *right=yc + 0.5* mydq; // B(x=1/2)
 
     //    dualfprintf(fail_file,"POINT4: ijk=%d %d %d : %g %g %g %g : %g %g\n",i,j,k,yl,yc,yr,yrr,mydq,*right);

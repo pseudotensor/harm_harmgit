@@ -5496,7 +5496,7 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
         rp = MBH + sqrt(MBH*MBH - a*a);
         rm = MBH - sqrt(MBH*MBH - a*a);
         
-        psi = phV + a/(rp-rm)*log((rV-rp)/(rV-rm));
+        psi = phV ; // + a/(rp-rm)*log((rV-rp)/(rV-rm)); // ph originally is phi[BL] and psi is phi[KS].
 
         FTYPE Acovblnonrot[NDIM];
 
