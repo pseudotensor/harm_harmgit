@@ -1425,6 +1425,9 @@ int interpolate_pfield_face2cent(FTYPE (*preal)[NSTORE2][NSTORE3][NPR], FTYPE (*
           }
 #endif
 
+          // TEST ddq=0 equiv or behavior like Athena that just averages the faces so Bi along i is assumed to be piece-wise continuous linear
+          //   p2interp_r[pl] = p2interp_l[pl] = 0.5*(MACP0A1(p2interp,i,j,k,pl) + MACP0A1(p2interp,i+idel,j+jdel,k+kdel,pl));
+
  
 
 
