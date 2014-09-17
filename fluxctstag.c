@@ -593,11 +593,11 @@ int fluxcalc_fluxctstag_emf_1d(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], in
              +c2d[CMIN][0]*c2d[CMIN][1]*emf2d[1][1]  // emf has +odir1 +odir2, so wavespeed has -odir1 -odir2
              )*bottomwave[0]*bottomwave[1]
           // dissipative terms
-          - (
+          - EMFDISSIPATION*(
              // dB has d(B[odir2]) so wavespeed has +-odir1  (note d(B[odir1]) for +-odir1 is 0 due to divb=0) (i.e. otherwise would be 4 dissipation terms for 2D Riemann problem)
              c2d[CMIN][0]*c2d[CMAX][0]*bottomwave[0]*dB[1]
              )
-          + (
+          + EMFDISSIPATION*(
              // dB has d(B[odir1]) so wavespeed has +-odir2  (note d(B[odir2]) for +-odir2 is 0 due to divb=0) (i.e. otherwise would be 4 dissipation terms for 2D Riemann problem)
              c2d[CMIN][1]*c2d[CMAX][1]*bottomwave[1]*dB[0]
              )
@@ -608,7 +608,7 @@ int fluxcalc_fluxctstag_emf_1d(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], in
         // dB and ctop flip odir's due to divb=0(i.e. otherwise would be 4 dissipation terms for 2D Riemann problem)
         emffinal =
           + 0.25*(emf2d[0][0]+emf2d[0][1]+emf2d[1][0]+emf2d[1][1])
-          - 0.50*(ctop[0]*dB[1] - ctop[1]*dB[0]);
+          - EMFDISSIPATION*0.50*(ctop[0]*dB[1] - ctop[1]*dB[0]);
       }
 
 

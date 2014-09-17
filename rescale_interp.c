@@ -691,6 +691,7 @@ int rescale(int which, int dir, FTYPE *pr, struct of_geom *ptrgeom,FTYPE *p2inte
 
   if(which==1){ // rescale before interpolation
 
+
     PINTERPLOOP(pliter,pl){
       p2interp[pl]=pr[pl];
 
@@ -699,9 +700,9 @@ int rescale(int which, int dir, FTYPE *pr, struct of_geom *ptrgeom,FTYPE *p2inte
       // if(pl==U3) p2interp[U3]=pr[U3]*(ptrgeom->gdet);
 
       if(dir==1||dir==3){
-        if(pl==U1) p2interp[U1]=pr[U1]*(ptrgeom->gdet);
-        if(pl==U2) p2interp[U2]=pr[U2]*(ptrgeom->gdet);
-        if(pl==U3) p2interp[U3]=pr[U3]*(ptrgeom->gdet);
+        if(pl==U1) p2interp[U1]=pr[U1]*(sqrt(fabs(ptrgeom->gcov[GIND(1,1)]))*(V[1]));
+        if(pl==U2) p2interp[U2]=pr[U2]*(sqrt(fabs(ptrgeom->gcov[GIND(2,2)]))*(V[1]));
+        if(pl==U3) p2interp[U3]=pr[U3]*(sqrt(fabs(ptrgeom->gcov[GIND(3,3)]))*(V[1]));
 
         if(URAD1>=0){
           if(pl==URAD1) p2interp[URAD1]=pr[URAD1]*(ptrgeom->gdet);
@@ -713,14 +714,14 @@ int rescale(int which, int dir, FTYPE *pr, struct of_geom *ptrgeom,FTYPE *p2inte
         if(pl==B2) p2interp[B2]=pr[B2]*sqrt(fabs(ptrgeom->gcov[GIND(2,2)]));
         if(pl==B3) p2interp[B3]=pr[B3]*(sqrt(fabs(ptrgeom->gcov[GIND(3,3)]))*(V[1]));
       }
-      if(0&&dir==2){
-        //if(pl==U1) p2interp[U1]=pr[U1]*(ptrgeom->gdet);
-        //if(pl==U2) p2interp[U2]=pr[U2]*(ptrgeom->gdet);
-        //if(pl==U3) p2interp[U3]=pr[U3]*(ptrgeom->gdet);
+      if(dir==2){
+        if(pl==U1) p2interp[U1]=pr[U1]*(sqrt(fabs(ptrgeom->gcov[GIND(1,1)]))*(V[1]));
+        if(pl==U2) p2interp[U2]=pr[U2]*(sqrt(fabs(ptrgeom->gcov[GIND(2,2)]))*(V[1]));
+        if(pl==U3) p2interp[U3]=pr[U3]*(sqrt(fabs(ptrgeom->gcov[GIND(3,3)]))*(V[1]));
 
-        if(pl==B1) p2interp[B1]=pr[B1]*(ptrgeom->gdet); //sqrt(fabs(ptrgeom->gcov[GIND(1,1)]))*pow(V[1],3);
-        if(pl==B2) p2interp[B2]=pr[B2]*(ptrgeom->gdet);//*sqrt(fabs(ptrgeom->gcov[GIND(2,2)]))*pow(V[1],3);
-        if(pl==B3) p2interp[B3]=pr[B3]*(ptrgeom->gdet);//*pow(V[1],3);
+        if(pl==B1) p2interp[B1]=pr[B1]*sqrt(fabs(ptrgeom->gcov[GIND(1,1)]));
+        if(pl==B2) p2interp[B2]=pr[B2]*sqrt(fabs(ptrgeom->gcov[GIND(2,2)]));
+        if(pl==B3) p2interp[B3]=pr[B3]*(sqrt(fabs(ptrgeom->gcov[GIND(3,3)]))*(V[1]));
       }
     }
   }
@@ -734,9 +735,9 @@ int rescale(int which, int dir, FTYPE *pr, struct of_geom *ptrgeom,FTYPE *p2inte
       //if(pl==U3) pr[U3]=p2interp[U3]/(ptrgeom->gdet);
 
       if(dir==1||dir==3){
-        if(pl==U1) pr[U1]=p2interp[U1]/(ptrgeom->gdet);
-        if(pl==U2) pr[U2]=p2interp[U2]/(ptrgeom->gdet);
-        if(pl==U3) pr[U3]=p2interp[U3]/(ptrgeom->gdet);
+        if(pl==U1) pr[U1]=p2interp[U1]/(sqrt(fabs(ptrgeom->gcov[GIND(1,1)]))*(V[1]));
+        if(pl==U2) pr[U2]=p2interp[U2]/(sqrt(fabs(ptrgeom->gcov[GIND(2,2)]))*(V[1]));
+        if(pl==U3) pr[U3]=p2interp[U3]/(sqrt(fabs(ptrgeom->gcov[GIND(3,3)]))*(V[1]));
 
         if(URAD1>=0){
           if(pl==URAD1) pr[URAD1]=p2interp[URAD1]/(ptrgeom->gdet);
@@ -748,15 +749,16 @@ int rescale(int which, int dir, FTYPE *pr, struct of_geom *ptrgeom,FTYPE *p2inte
         if(pl==B2) pr[B2]=p2interp[B2]/sqrt(fabs(ptrgeom->gcov[GIND(2,2)]));//(ptrgeom->gdet);///(sqrt(fabs(ptrgeom->gcov[GIND(1,1)]))*pow(V[1],3));
         if(pl==B3) pr[B3]=p2interp[B3]/(sqrt(fabs(ptrgeom->gcov[GIND(3,3)]))*(V[1]));//(ptrgeom->gdet);///(pow(V[1],3));
       }
-      if(0&&dir==2){
-        //if(pl==U1) pr[U1]=p2interp[U1]/(ptrgeom->gdet);
-        //if(pl==U2) pr[U2]=p2interp[U2]/(ptrgeom->gdet);
-        //if(pl==U3) pr[U3]=p2interp[U3]/(ptrgeom->gdet);
+      if(dir==2){
+        if(pl==U1) pr[U1]=p2interp[U1]/(sqrt(fabs(ptrgeom->gcov[GIND(1,1)]))*(V[1]));
+        if(pl==U2) pr[U2]=p2interp[U2]/(sqrt(fabs(ptrgeom->gcov[GIND(2,2)]))*(V[1]));
+        if(pl==U3) pr[U3]=p2interp[U3]/(sqrt(fabs(ptrgeom->gcov[GIND(3,3)]))*(V[1]));
 
-        if(pl==B1) pr[B1]=p2interp[B1]/(ptrgeom->gdet);///(sqrt(fabs(ptrgeom->gcov[GIND(1,1)]))*pow(V[1],3));
-        if(pl==B2) pr[B2]=p2interp[B2]/(ptrgeom->gdet);///(sqrt(fabs(ptrgeom->gcov[GIND(1,1)]))*pow(V[1],3));
-        if(pl==B3) pr[B3]=p2interp[B3]/(ptrgeom->gdet);///(pow(V[1],3));
+        if(pl==B1) pr[B1]=p2interp[B1]/sqrt(fabs(ptrgeom->gcov[GIND(1,1)]));
+        if(pl==B2) pr[B2]=p2interp[B2]/sqrt(fabs(ptrgeom->gcov[GIND(2,2)]));
+        if(pl==B3) pr[B3]=p2interp[B3]/(sqrt(fabs(ptrgeom->gcov[GIND(3,3)]))*(V[1]));
       }
+
     }      
   }
   else{

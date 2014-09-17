@@ -1177,6 +1177,7 @@ int init_defglobal(void)
   /* maximum increase in timestep */
   SAFE=1.3;
   FLUXDISSIPATION=(1.0); // normally full flux dissipation.
+  EMFDISSIPATION=(1.0); // normally full emf dissipation.
   nstep = realnstep = 0;
   whichrestart = 0;
   restartsteps[0] = 0;

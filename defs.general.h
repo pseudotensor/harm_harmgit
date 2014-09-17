@@ -57,7 +57,7 @@ FTYPE rcurr, hcurr;
 FTYPE drsing;
 
 /// float value prefactor for dissipation term in flux calculations (see fluxcompute.c)
-FTYPE FLUXDISSIPATION;
+FTYPE FLUXDISSIPATION,EMFDISSIPATION;
 
 
 ///int istart, istop, jstart, jstop;
