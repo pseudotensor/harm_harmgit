@@ -319,6 +319,8 @@ int emfUconsloop[NUMFLUXLOOPNUMBERS];
 int Uconsevolveloop[NUMFLUXLOOPNUMBERS];
 int a_interporder[NUMINTERPS];
 int *interporder;
+int a_usedqarray[NUMINTERPS];
+int *usedqarray;
 
 
 /// ENO DEBUG GLOBAL VARS

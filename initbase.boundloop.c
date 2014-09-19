@@ -516,6 +516,18 @@ int orders_set(void)
   // WENO4 useful for avg->point at an interface, but not for point->point at different location, which requires odd WENO.
   // for WENO5, then if i=2, then si=0 and list is 0,1,2,3,4 .  Here, point is assumed to be centered of middle (2) cell.
 
+  // default is 0 to indicate no limiter set
+  for(l=-NUMNEGINTERPS;l<NUMPOSINTERPS;l++){
+    interporder[l]=0;
+  }
+
+
+  // non-limiters
+  interporder[NLIM]=3;
+  interporder[NLIMCENT]=3;
+  interporder[NLIMUP]=3;
+  interporder[NLIMDOWN]=3;
+
   interporder[DONOR]=1;
   interporder[VANL]=3;
   interporder[MINM]=3;
@@ -524,6 +536,7 @@ int orders_set(void)
   interporder[PARAFLAT]=7;
   interporder[MCSTEEP]=7;
   interporder[CSSLOPE]=5;
+  interporder[MP5]=5;
   interporder[WENO3]=3;
   interporder[WENO4]=4;
   interporder[WENO5]=5;
@@ -539,11 +552,6 @@ int orders_set(void)
 
   interporder[PARALINE]=7;
 
-  // non-limiters
-  interporder[NLIM]=3;
-  interporder[NLIMCENT]=3;
-  interporder[NLIMUP]=3;
-  interporder[NLIMDOWN]=3;
 
   for(l=-NUMNEGINTERPS;l<NUMPOSINTERPS;l++){
     if(interporder[l]>MAXSPACEORDER){
@@ -560,6 +568,34 @@ int orders_set(void)
   //      myexit(77);
   //    }
   //  }
+
+
+  /////
+  //
+  // set whether use dq
+  //
+  /////
+
+  // default is not to use dq
+  for(l=-NUMNEGINTERPS;l<NUMPOSINTERPS;l++){
+    usedqarray[l]=0;
+  }
+
+  if(LIMADJUST){// if adjusting limiter, cannot use dq since higher order choices cannot use dq
+    // nothing to do
+  }
+  else{ // just change those that use dq
+
+    // 2nd order or lower can/do use dq
+    usedqarray[NLIM]=1;
+    usedqarray[NLIMCENT]=1;
+    usedqarray[NLIMUP]=1;
+    usedqarray[NLIMDOWN]=1;
+    usedqarray[DONOR]=1;
+    usedqarray[VANL]=1;
+    usedqarray[MINM]=1;
+    usedqarray[MC]=1;
+  }
 
 
   return(0);

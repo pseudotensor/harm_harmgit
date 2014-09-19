@@ -2370,11 +2370,12 @@ void getp2interplr(int dir, int idel, int jdel, int kdel, int i, int j, int k, F
     thleft=Vleft[2];
     rcenter=Vcent[1];
     thcent=Vcent[2];
-
+    
     PINTERPLOOP(pliter,pl){
       locallim=choose_limiter(dir, i,j,k,pl);
+      int usedq = usedqarray[locallim];
       // get interpolated quantity
-      if((locallim<PARA)&&(LIMADJUST==0)){
+      if(usedq){
         if(rleft>Rhor) p2interp_l[pl] = MACP0A1(p2interp,i - idel,j - jdel,k - kdel,pl) + 0.5 * MACP0A1(dq,i - idel,j - jdel,k - kdel,pl);
         else p2interp_l[pl] = MACP0A1(p2interp,i,j,k,pl) - 0.5 * MACP0A1(dq,i,j,k,pl);
         if(rcenter>Rhor) p2interp_r[pl] = MACP0A1(p2interp,i,j,k,pl) - 0.5 * MACP0A1(dq,i,j,k,pl);
@@ -2394,8 +2395,9 @@ void getp2interplr(int dir, int idel, int jdel, int kdel, int i, int j, int k, F
     /////////////////////////////
     PINTERPLOOP(pliter,pl){
       locallim=choose_limiter(dir, i,j,k,pl);
+      int usedq = usedqarray[locallim];
       // get interpolated quantity
-      if((locallim<PARA)&&(LIMADJUST==0)){
+      if(usedq){
         p2interp_l[pl] = MACP0A1(p2interp,i - idel,j - jdel,k - kdel,pl) + 0.5 * MACP0A1(dq,i - idel,j - jdel,k - kdel,pl);
         p2interp_r[pl] = MACP0A1(p2interp,i,j,k,pl) - 0.5 * MACP0A1(dq,i,j,k,pl);
       }

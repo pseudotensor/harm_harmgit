@@ -18,6 +18,7 @@ void set_arrays_perpoint_perline()
 
 
   interporder = (int (*)) (&(a_interporder[NUMNEGINTERPS]));
+  usedqarray = (int (*)) (&(a_usedqarray[NUMNEGINTERPS]));
   
   
   

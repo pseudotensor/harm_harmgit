@@ -569,6 +569,14 @@
 
 
 // mnemonics for slope limiter
+
+/// negative versions for testing only
+#define NLIM    -1 // no limiter
+#define NLIMCENT    -2 // no limiter
+#define NLIMUP    -3 // no limiter
+#define NLIMDOWN    -4 // no limiter
+#define NUMNEGINTERPS 4
+
 /// ordered from most diffusive to least diffusive, so can start high and go down if needed
 /// 0 should be reasonble most diffusive, highest should be least diffusive
 
@@ -582,22 +590,23 @@
 #define PARAFLAT 5
 #define MCSTEEP 6 // uses 3-point limiter, but other features of PARAFLAT
 #define CSSLOPE      7 // not tested/compared against others
+#define MP5 8
 
 /// assume here and beyond all higher numbers are using WENO or ENO
-#define WENO3 8
-#define WENO4 9
-#define WENO5  10
-#define WENO6  11
-#define WENO7  12
-#define WENO8  13
-#define WENO9  14
-#define ENO3 15
-#define ENO5 16
-#define WENO5FLAT 17
-#define WENO5BND 18
-#define WENO5BNDPLUSMIN 19
+#define WENO3 20
+#define WENO4 21
+#define WENO5  22
+#define WENO6  23
+#define WENO7  24
+#define WENO8  25
+#define WENO9  26
+#define ENO3 27
+#define ENO5 28
+#define WENO5FLAT 29
+#define WENO5BND 30
+#define WENO5BNDPLUSMIN 31
 
-#define PARALINE 20
+#define PARALINE 40
 
 #define FIRSTWENO WENO3
 #define LASTWENO WENO5BNDPLUSMIN
@@ -605,8 +614,7 @@
 #define FIRSTINTERPLINE WENO3
 #define LASTINTERPLINE PARALINE
 
-#define NUMPOSINTERPS LASTINTERPLINE
-#define NUMNEGINTERPS 4
+#define NUMPOSINTERPS LASTINTERPLINE // not number, just last, ok if some entries are not any limiter
 /// 1+ for DONOR
 #define NUMINTERPS (1 + NUMPOSINTERPS + NUMNEGINTERPS)
 
@@ -620,11 +628,6 @@
 /// defines which limiters are for interpline.c (rest are for interppoint.c)
 #define LINEINTERPTYPE(lim) (lim>=FIRSTINTERPLINE && lim<=LASTINTERPLINE)
 
-/// negative versions for testing only
-#define NLIM    -1 // no limiter
-#define NLIMCENT    -2 // no limiter
-#define NLIMUP    -3 // no limiter
-#define NLIMDOWN    -4 // no limiter
 
 
 /// see orders_set() in initbase.c

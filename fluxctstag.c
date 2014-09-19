@@ -1389,7 +1389,7 @@ int interpolate_pfield_face2cent(FTYPE (*preal)[NSTORE2][NSTORE3][NPR], FTYPE (*
         // Assume for now that limiter is not per i,j,k but only per dir (unlike normal interpolation)
         // no HORIZONSUPERFAST here
         locallim=choose_limiter(dir, 0,0,0,pl);
-        usedq = (locallim<PARA)&&(LIMADJUST==0);
+        usedq = usedqarray[locallim];
     
         // using COMPZSLOOP since final CENT quantity is used wherever centered primitive is needed for flux (which is sometimes transverse direction)
         // do maximal loop but avoid going out of bounds when accessing dqvec,pleft,pright
@@ -2184,7 +2184,7 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
         // Assume for now that limiter is not per i,j,k but only per dir (unlike normal interpolation) (also no pl dependence)
         // no HORIZONSUPERFAST here
         locallim=choose_limiter(interpdir, 0,0,0,B1);
-        usedq=(locallim<PARA)&&(LIMADJUST==0);
+        usedq = usedqarray[locallim];
 
 
         // face2corn is at effective-CENT relative to edgedir

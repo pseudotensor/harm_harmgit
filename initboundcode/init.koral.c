@@ -6806,7 +6806,6 @@ void set_coord_parms_nodeps_user(int defcoordlocal)
 {
   if(1){
     // see jet3coords_checknew.nb
-    npow=1.0;
 
     /////////////////////
     // RADIAL GRID SETUP
@@ -6815,15 +6814,22 @@ void set_coord_parms_nodeps_user(int defcoordlocal)
 
     //radial hyperexponential grid
 
-    //power exponent
-    npow2=6.0; // WALD: 6.0->4.0
 
     cpow2=1.0; //exponent prefactor (the larger it is, the more hyperexponentiation is)
     //    cpow3=0.01;
     cpow3=1.0;
     //radius at which hyperexponentiation kicks in
     //    rbr = 1E3;
-    rbr = 5E2; // WALD 5E2->5E7
+    if(DOWALDDEN){
+      rbr = 5E7; // WALD 5E2->5E7
+      //power exponent
+      npow2=4.0; // WALD: 6.0->4.0
+    }
+    else{
+      rbr = 5E2; // WALD 5E2->5E7
+      //power exponent
+      npow2=6.0; // WALD: 6.0->4.0
+    }
 
 
 

@@ -731,6 +731,11 @@ void slope_lim_point_c2e(int i, int j, int k, int loc, int realisinterp, int dir
 #endif
     break;
 
+  case MP5:
+    
+
+    break;
+
   default:
 
     //    if(pl==RHO || pl==U1+dir-1 || pl==UU) slope_lim_3points(MINM, y[-1], y[0], y[1], &mydq);
