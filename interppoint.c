@@ -700,6 +700,7 @@ void slope_lim_point_c2e(int i, int j, int k, int loc, int realisinterp, int dir
   extern void parajon(int i, int j, int k, int loc, int realisinterp, int dir, int pl, FTYPE *y, FTYPE *lout, FTYPE *rout);
   void slope_lim_3points(int reallim, FTYPE yl, FTYPE yc, FTYPE yr,FTYPE *dq);
   void csslope(int pl, FTYPE *y, FTYPE *dq);
+  void mp5(FTYPE *y, FTYPE *lout, FTYPE *rout);
   FTYPE mydq = 0.0; //to avoid copying of nan's
 
 
@@ -732,8 +733,7 @@ void slope_lim_point_c2e(int i, int j, int k, int loc, int realisinterp, int dir
     break;
 
   case MP5:
-    
-
+    mp5(y,left,right);
     break;
 
   default:
@@ -1336,5 +1336,78 @@ void get_mcsteep_dqs(int dqrange, FTYPE *y, FTYPE *dq)
 #endif
   }
 
+
+}
+
+
+#define MIN3(x,y,z) (min(min(x,y),z))
+#define MAX3(x,y,z) (max(max(x,y),z))
+
+#define MIN4(w,x,y,z) (min(w,MIN3(x,y,z)))
+#define MAX4(w,x,y,z) (max(w,MAX3(x,y,z)))
+
+#define MINMODMP5(x,y) (0.5*(sign(x)+sign(y))*min(fabs(x),fabs(y)))
+
+#define MINMOD4(w,x,y,z) (0.125*(sign(w)+sign(x))*fabs( (sign(w)+sign(y))*(sign(w)+sign(z)) ) * MIN4(fabs(w),fabs(x),fabs(y),fabs(z)) )
+
+
+/// http://mesa.sourceforge.net/pdfs/suresh+huynh_97.pdf
+/// http://iopscience.iop.org/0264-9381/31/1/015005/pdf/0264-9381_31_1_015005.pdf
+/// http://adsabs.harvard.edu/cgi-bin/bib_query?arXiv:1304.5544
+/// see Suresh & Huynh (1997) and Mosta et al. (2014)
+void mp5(FTYPE *y, FTYPE *lout, FTYPE *rout)
+{
+  void mp5face(FTYPE yll, FTYPE yl, FTYPE yc, FTYPE yr, FTYPE yrr, FTYPE *out);
+
+  FTYPE yll=y[-2];
+  FTYPE yl=y[-1];
+  FTYPE yc=y[0];
+  FTYPE yr=y[1];
+  FTYPE yrr=y[2];
+  
+  mp5face(yll,yl,yc,yr,yrr,lout); // left face
+  mp5face(yrr,yr,yc,yl,yll,rout); // right face
+
+}
+
+/// if yll,yl,yc,yr,yrr are really in that order, then get lout.
+/// reverse order gives rout
+/// Takes 5 *point* positions and gives back *point* interface values, while original takes averages and gets points.
+void mp5face(FTYPE yll, FTYPE yl, FTYPE yc, FTYPE yr, FTYPE yrr, FTYPE *out)
+{
+  FTYPE UL = 0.0078125*(90.*yc + 60.*yl - 5.*(yll + 4.*yr) + 3.*yrr); // see poly.nb fpl
+
+  FTYPE talpha=4.0;
+  FTYPE UMP = yc + MINMODMP5(yr-yc,talpha*(yc-yl));
+
+  FTYPE epsilonmp5=1E-10;
+  FTYPE fabsU=(1.0/5.0)*sqrt(yll*yll + yl*yl + yc*yc + yr*yr + yrr*yrr);
+  int nolimit=(UL-yc)*(UL-UMP)<=epsilonmp5*fabsU;
+
+  if(nolimit==0){// 
+    FTYPE Dm = yll - 2.0*yl + yc;
+    FTYPE D0 = yl - 2.0*yc + yr;
+    FTYPE Dp = yc - 2.0*yr + yrr;
+
+    FTYPE DM4p=MINMOD4(4.0*D0-Dp,4.0*Dp-D0,D0,Dp);
+    FTYPE DM4m=MINMOD4(4.0*D0-Dm,4.0*Dm-D0,D0,Dm);
+
+    FTYPE alpha=4.0; // missing from Mosta et al. (2014)
+    FTYPE UUL = yc + alpha*(yc-yr);
+    FTYPE UAV = 0.5*(yc+yr);
+    FTYPE UMD = UAV - 0.5*DM4p;
+    FTYPE dd = 4.0*DM4m;
+    FTYPE ULC = 0.75*yc + 0.375*yl + 0.125*(-1.dd - 2.*yc + yl); // see poly3-2.nb fnewleft
+
+    FTYPE UMIN = max(MIN3(yc,yr,UMD),MIN3(yc,UUL,ULC));
+    FTYPE UMAX = min(MAX3(yc,yr,UMD),MAX3(yc,UUL,ULC));
+
+    // new limited value
+    *out = UL + MINMOD(UMIN-UL,UMAX-UL);
+  }
+  else{
+    *out = UL;
+    // done
+  }
 
 }
