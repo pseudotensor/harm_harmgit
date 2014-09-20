@@ -230,6 +230,8 @@ void slope_lim_pointtype(int interporflux, int realisinterp, int pl, int dir, in
           }
         }
 
+        //        dualfprintf(fail_file,"godpl=%d\n",pl);
+
         if(continuous==0){
           slope_lim_point_c2e(i, j, k, loc, realisinterp, dir, reallim,pl,startorderi,endorderi,yreal,y,
                               &MACP0A1(dq,i,j,k,pl),&MACP0A1(pleft,i,j,k,pl),&MACP0A1(pright,i,j,k,pl)
@@ -767,9 +769,10 @@ void slope_lim_point_e2c_continuous(int i, int j, int k, int loc, int realisinte
   yc=y[0];
   yr=y[1];
   yrr=y[2];
+  if(reallim>MC) reallim=MC; // SUPERGODMARK TODOMARK (just changes local value)
   slope_lim_4points_e2c_continuous(reallim, yl, yc, yr, yrr, &ddq);
 
-  if(reallim<=MC){
+  if(reallim<=MC || 1){ // || 1 for now SUPERGODMARK
 
     // Obtain lower mydq by just setting true Bcenter(x=1/2)=left or =right immediately below and solving for mydq.  So fake slope just to get the final value correct for *right
     // *left can be set, but not actual left value at next cell center.  So really only should use *right
@@ -1350,11 +1353,14 @@ void get_mcsteep_dqs(int dqrange, FTYPE *y, FTYPE *dq)
 
 #define MINMOD4(w,x,y,z) (0.125*(sign(w)+sign(x))*fabs( (sign(w)+sign(y))*(sign(w)+sign(z)) ) * MIN4(fabs(w),fabs(x),fabs(y),fabs(z)) )
 
+#define MEDIAN(x,y,z) ((x) + MINMODMP5((y)-(x),(z)-(x)));
+
 
 /// http://mesa.sourceforge.net/pdfs/suresh+huynh_97.pdf
 /// http://iopscience.iop.org/0264-9381/31/1/015005/pdf/0264-9381_31_1_015005.pdf
 /// http://adsabs.harvard.edu/cgi-bin/bib_query?arXiv:1304.5544
 /// see Suresh & Huynh (1997) and Mosta et al. (2014)
+/// Use of alpha=4 below may require cour=0.2 but cour=0.4 said to be ok in practice
 void mp5(FTYPE *y, FTYPE *lout, FTYPE *rout)
 {
   void mp5face(FTYPE yll, FTYPE yl, FTYPE yc, FTYPE yr, FTYPE yrr, FTYPE *out);
@@ -1365,8 +1371,8 @@ void mp5(FTYPE *y, FTYPE *lout, FTYPE *rout)
   FTYPE yr=y[1];
   FTYPE yrr=y[2];
   
-  mp5face(yll,yl,yc,yr,yrr,lout); // left face
-  mp5face(yrr,yr,yc,yl,yll,rout); // right face
+  mp5face(yll,yl,yc,yr,yrr,rout); // right face relative to center (U^L_{i+1/2})
+  mp5face(yrr,yr,yc,yl,yll,lout); // left face relative to center (U^R_{i-1/2})
 
 }
 
@@ -1375,39 +1381,55 @@ void mp5(FTYPE *y, FTYPE *lout, FTYPE *rout)
 /// Takes 5 *point* positions and gives back *point* interface values, while original takes averages and gets points.
 void mp5face(FTYPE yll, FTYPE yl, FTYPE yc, FTYPE yr, FTYPE yrr, FTYPE *out)
 {
-  FTYPE UL = 0.0078125*(90.*yc + 60.*yl - 5.*(yll + 4.*yr) + 3.*yrr); // see poly.nb fpl
 
-  FTYPE talpha=4.0;
-  FTYPE UMP = yc + MINMODMP5(yr-yc,talpha*(yc-yl));
+  //  dualfprintf(fail_file,"yll=%g yl=%g yc=%g yr=%g yrr=%g\n",yll,yl,yc,yr,yrr);
 
-  FTYPE epsilonmp5=1E-10;
-  FTYPE fabsU=(1.0/5.0)*sqrt(yll*yll + yl*yl + yc*yc + yr*yr + yrr*yrr);
-  int nolimit=(UL-yc)*(UL-UMP)<=epsilonmp5*fabsU;
+  // original UL eq2.1
+  FTYPE UL = 0.0078125*(90.*yc - 20.*yl + 3.*yll + 60.*yr - 5.*yrr); // see poly.nb fpr
+  //  FTYPE UL = (1.0/60.0)*(2.0*yll-13.0*yl+47.0*yc+27.0*yr-3.0*yrr);
 
-  if(nolimit==0){// 
-    FTYPE Dm = yll - 2.0*yl + yc;
-    FTYPE D0 = yl - 2.0*yc + yr;
-    FTYPE Dp = yc - 2.0*yr + yrr;
+  // Mosta et al. (2014) uses alpha and \tilde{alpha} for same thing and doesn't define \alpha.
+  FTYPE alpha=4.0; // see entire paper.
+  FTYPE UMP = yc + MINMODMP5(yr-yc,alpha*(yc-yl)); // eq 2.12
 
-    FTYPE DM4p=MINMOD4(4.0*D0-Dp,4.0*Dp-D0,D0,Dp);
-    FTYPE DM4m=MINMOD4(4.0*D0-Dm,4.0*Dm-D0,D0,Dm);
+  FTYPE epsilonmp5=1E-10; // used by Mosta et al. (2014)
+  FTYPE fabsU=(1.0/5.0)*sqrt(yll*yll + yl*yl + yc*yc + yr*yr + yrr*yrr); // L2 norm
+  int nolimit=(UL-yc)*(UL-UMP)<=epsilonmp5*fabsU; // eq 2.30
 
-    FTYPE alpha=4.0; // missing from Mosta et al. (2014)
-    FTYPE UUL = yc + alpha*(yc-yr);
-    FTYPE UAV = 0.5*(yc+yr);
-    FTYPE UMD = UAV - 0.5*DM4p;
+
+  // unlimited
+  *out = UL;
+
+  if(nolimit==0){ // then get limited contribution
+    // 2nd derivatives based on points or averages gives same 2nd derivative for point or average reconstruction
+    FTYPE Dm = yll - 2.0*yl + yc; // eq 2.19
+    FTYPE D0 = yl - 2.0*yc + yr; // eq 2.19
+    FTYPE Dp = yc - 2.0*yr + yrr; // eq 2.19
+
+    FTYPE DM4p=MINMOD4(4.0*D0-Dp,4.0*Dp-D0,D0,Dp); // eq 2.27
+    FTYPE DM4m=MINMOD4(4.0*D0-Dm,4.0*Dm-D0,D0,Dm); // eq 2.27 also
+
+    FTYPE UUL = yc + alpha*(yc-yr); // eq 2.8
+    FTYPE UAV = 0.5*(yc+yr); // eq 2.16
+    //    FTYPE UFL = yc + 0.5*(yc-yl);
+    //    FTYPE UFR = yr + 0.5*(yr-yrr);
+    //FTYPE UMD = median(UAV,UFL,UFR); // replaced by Eq2.27's DM4
+    FTYPE UMD = UAV - 0.5*DM4p; // eq 2.28 (correct for points or averages)
     FTYPE dd = 4.0*DM4m;
-    FTYPE ULC = 0.75*yc + 0.375*yl + 0.125*(-1.dd - 2.*yc + yl); // see poly3-2.nb fnewleft
+    FTYPE ULC = 0.75*yc + 0.375*(dd + 2.*yc - 1.*yl) - 0.125*yl; // see poly3-2.nb fnewright (original eq2.29 for averages->points)
+    //FTYPE ULC = yc + 0.5*(yc-yl) + (4.0/3.0)*DM4m;
 
-    FTYPE UMIN = max(MIN3(yc,yr,UMD),MIN3(yc,UUL,ULC));
-    FTYPE UMAX = min(MAX3(yc,yr,UMD),MAX3(yc,UUL,ULC));
+    FTYPE UMIN = max(MIN3(yc,yr,UMD),MIN3(yc,UUL,ULC)); // eq 2.24a
+    FTYPE UMAX = min(MAX3(yc,yr,UMD),MAX3(yc,UUL,ULC)); // eq 2.24b
 
     // new limited value
-    *out = UL + MINMOD(UMIN-UL,UMAX-UL);
+    *out += MINMOD(UMIN-UL,UMAX-UL); // eq 2.26 using eq 2.5
+
+    //    dualfprintf(fail_file,"UL=%g UMP=%g fabsU=%g nolimit=%d UUL=%g UAV=%g UMD=%g ULC=%g UMIN=%g UMAX=%g\n",UL,UMP,fabsU,nolimit,UUL,UAV,UMD,ULC,UMIN,UMAX);
   }
   else{
-    *out = UL;
-    // done
+    //    dualfprintf(fail_file,"UL=%g UMP=%g fabsU=%g nolimit=%d\n",UL,UMP,fabsU,nolimit);
   }
+
 
 }

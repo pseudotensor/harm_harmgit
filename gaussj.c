@@ -24,7 +24,7 @@ int gaussj(FTYPE **a, int n, FTYPE **b, int m)
               icol = k;
             }// assume no other conditions GODMARK (compiler warning)
           } else if (ipiv[k] > 1) {
-            dualfprintf(fail_file, "choke in gaussj\n");
+            dualfprintf(fail_file, "choke in gaussj: k=%d ipivk=%d cond=%d\n",k,ipiv[k],(ipiv[k] > 1));
             myexit(2);
           }
         }
