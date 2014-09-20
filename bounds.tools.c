@@ -2586,8 +2586,10 @@ int poledeath(int whichx2,
               for(pl=RHO;pl<=UU;pl++){
                 
                 if(doavginradius[pl]) MACP0A1(prim,i,j,k,pl) = THIRD*(MACP0A1(prim,rim1,rj,rk,pl)+MACP0A1(prim,ri,rj,rk,pl)+MACP0A1(prim,rip1,rj,rk,pl));
-                else MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
-                madechange++;
+                else if(MACP0A1(prim,i,j,k,pl) < MACP0A1(prim,ri,rj,rk,pl)){
+		  MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
+		  madechange++;
+		}
               }
 
 

@@ -346,7 +346,7 @@ int init_global(void)
 
   // default dumping period
   int idt;
-  for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=1.0;
+  for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=250.0;
 
   // ener period
   DTdumpgen[ENERDUMPTYPE] = 500.0;
@@ -1747,11 +1747,14 @@ int coolfunc_user(FTYPE h_over_r, FTYPE *pr, struct of_geom *geom, struct of_sta
 	th=V[2];
  
       	rpho=2.0*(1.0+cos(2.0/3.0*(acos(-a))));
-
-	if(bsq_ijcool/rho > 100000*BSQORHOLIMIT || bsq_ijcool/u > 100000*BSQOULIMIT){
-	  printf("in cooling: bsq/rho=%21.15g, at ijk= %d,%d,%d",bsq_ijcool/rho,ii,jj,kk);
+	/*
+	if(ii==0 && jj==0 && kk==0 && 1) printf("in cooling function: ");
+	if(bsq_ijcool/rho > BSQORHOLIMIT || bsq_ijcool/u > BSQOULIMIT || u/rho > UORHOLIMIT){
+	  printf("in cooling: bsq/rho=%21.15g, at ijk= %d,%d,%d \n",bsq_ijcool/rho,ii,jj,kk);
 	  printf("in cooling: bsq/u=%21.15g \n",bsq_ijcool/u);
+	  printf("in cooling: u/rho=%21.15g \n",u/rho);
 	}
+	*/
 
 	//	trifprintf("rphoton=%lf\n", rpho);
 	if(1 || r>rpho){ //SASMARK: cool always, including inside photon orbit
