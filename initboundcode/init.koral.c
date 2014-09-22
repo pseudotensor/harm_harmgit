@@ -1869,6 +1869,7 @@ int init_global(void)
     cour=0.8;
     cooling=NOCOOLING;
     gam=gamideal=4./3.;
+    GAMMAMAX=50.0;
 
     BCtype[X1UP]=FREEOUTFLOW;
     BCtype[X1DN]=FREEOUTFLOW;
