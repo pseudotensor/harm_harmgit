@@ -132,20 +132,28 @@ FTYPE RADDBLSHADOW_BEAMY;
 
 int RADWAVE_NWAVE;
 int RADWAVE_NUMERO;
+int RADWAVE_WAVETYPE;
 FTYPE RADWAVE_PP;
 FTYPE RADWAVE_CC;
 FTYPE RADWAVE_KAPPA;
 FTYPE RADWAVE_RHOFAC;
+FTYPE RADWAVE_B0;
 FTYPE RADWAVE_DRRE;
 FTYPE RADWAVE_DRIM;
 FTYPE RADWAVE_DVRE;
 FTYPE RADWAVE_DVIM;
+FTYPE RADWAVE_DV2RE;
+FTYPE RADWAVE_DV2IM;
+FTYPE RADWAVE_DB2RE;
+FTYPE RADWAVE_DB2IM;
 FTYPE RADWAVE_DURE;
 FTYPE RADWAVE_DUIM;
 FTYPE RADWAVE_DERE;
 FTYPE RADWAVE_DEIM;
 FTYPE RADWAVE_DFRE;
 FTYPE RADWAVE_DFIM;
+FTYPE RADWAVE_DF2RE;
+FTYPE RADWAVE_DF2IM;
 FTYPE RADWAVE_OMRE;
 FTYPE RADWAVE_OMIM;
 FTYPE RADWAVE_DTOUT1;
@@ -260,6 +268,10 @@ int prepre_init_specific_init(void)
     periodicx1=periodicx2=0;
     periodicx3=1;
   }
+  else if(WHICHPROBLEM==KOMIPROBLEM){
+    periodicx1=0;
+    periodicx2=periodicx3=1;
+  }
   // assume spherical polar problems:
   else{
     periodicx1=periodicx2=0;
@@ -311,6 +323,13 @@ int set_fieldfrompotential(int *fieldfrompotential)
 
   // force B3=0 so only using poloidal part of Wald solution.
   //int pl=B3; fieldfrompotential[pl-B1+1]=0;
+  
+  //In the case of Komissarov's tests, set up the field directly in all cases
+  if( WHICHPROBLEM==KOMIPROBLEM || WHICHPROBLEM == RADWAVE){
+    PLOOPBONLY(pl) fieldfrompotential[pl-B1+1]=0;
+  }
+ 
+
 
 
   return(0);
@@ -1063,7 +1082,8 @@ int init_global(void)
     //    RADWAVE_NWAVE=2; // GOOD
     //    RADWAVE_NWAVE=3; // GOOD
     //    RADWAVE_NWAVE=4; // gets noisy in prad1 by t~30 with MINM or MC  -- check koral when Olek makes it work.  KORALTODO
-    RADWAVE_NUMERO=11; // GOOD
+    //    RADWAVE_NUMERO=11; // GOOD
+    RADWAVE_NUMERO=104;
     //RADWAVE_NUMERO=41; // OK if don't use check if can do explicit.  So use this to show how should more generally improve the tau based suppression check!  But, DAMPS significantly! Smaller IMPCONV doesn't help.  Check with koral KORALTODO.  MC doesn't help/change much.
     //RADWAVE_NUMERO=1; // wierd jello oscillations in prad0, and no wave motion -- like in koral though.  KORALTODO.  With only implicit, jello is different (smaller IMPCONV doesn't help and larger IMPEPS doesn't help).
 
@@ -1078,6 +1098,7 @@ int init_global(void)
     RADWAVE_KAPPA=RADWAVE_KAPPAES=0.0;
 
 
+    /* Pre-SASHA
     if(RADWAVE_NWAVE==5){ //sound wave with radiation set up according to Jiang+12
 
       if(RADWAVE_NUMERO==41){
@@ -1215,6 +1236,602 @@ int init_global(void)
       RADWAVE_ERADFACTOR=.5;
       RADWAVE_GASFACTOR=.5;
     }
+      */ // end pre-SASHA
+
+    // start post-SASHA
+
+    if(RADWAVE_NWAVE==5){ //sound wave with radiation set up according to Jiang+12
+
+      if(RADWAVE_NUMERO==1) { // sound wave
+        RADWAVE_WAVETYPE=0;  //sound wave
+        RADWAVE_RHOFAC=0.001;
+        RADWAVE_B0=0.;
+        RADWAVE_PP=0.01;
+        RADWAVE_CC=10;
+        RADWAVE_KAPPA=0;
+        RADWAVE_DRRE=0.001*RADWAVE_RHOFAC;
+        RADWAVE_DRIM=0*RADWAVE_RHOFAC;
+        RADWAVE_DVRE=0.00010000000000000002*RADWAVE_RHOFAC;
+        RADWAVE_DVIM=0.*RADWAVE_RHOFAC;
+        RADWAVE_DV2RE=0*RADWAVE_RHOFAC;
+        RADWAVE_DV2IM=0*RADWAVE_RHOFAC;
+        RADWAVE_DURE=0.000015228426395939093*RADWAVE_RHOFAC;
+        RADWAVE_DUIM=0.*RADWAVE_RHOFAC;
+        RADWAVE_DB2RE=0*RADWAVE_RHOFAC;
+        RADWAVE_DB2IM=0*RADWAVE_RHOFAC;
+        RADWAVE_DERE=0*RADWAVE_RHOFAC;
+        RADWAVE_DEIM=0*RADWAVE_RHOFAC;
+        RADWAVE_DFRE=-2.4365482233502554e-8*RADWAVE_RHOFAC;
+        RADWAVE_DFIM=0.*RADWAVE_RHOFAC;
+        RADWAVE_DF2RE=0*RADWAVE_RHOFAC;
+        RADWAVE_DF2IM=0*RADWAVE_RHOFAC;
+        RADWAVE_OMRE=0.6283185307179587;
+        RADWAVE_OMIM=0;
+        RADWAVE_DTOUT1=2*M_PI/RADWAVE_OMRE/10.;
+      }
+      
+      if(RADWAVE_NUMERO==10) { // fast magnetosonic wave
+        RADWAVE_WAVETYPE=2;  //fast
+        RADWAVE_RHOFAC=0.001;
+        RADWAVE_B0=0.10075854437197568;
+        RADWAVE_PP=0.01;
+        RADWAVE_CC=10;
+        RADWAVE_KAPPA=0;
+        RADWAVE_DRRE=0.001*RADWAVE_RHOFAC;
+        RADWAVE_DRIM=0*RADWAVE_RHOFAC;
+        RADWAVE_DVRE=0.0001602940583015828*RADWAVE_RHOFAC;
+        RADWAVE_DVIM=0.*RADWAVE_RHOFAC;
+        RADWAVE_DV2RE=-0.00009790871410382318*RADWAVE_RHOFAC;
+        RADWAVE_DV2IM=0.*RADWAVE_RHOFAC;
+        RADWAVE_DURE=0.00001522842639593907*RADWAVE_RHOFAC;
+        RADWAVE_DUIM=0.*RADWAVE_RHOFAC;
+        RADWAVE_DB2RE=0.00016230255678865884*RADWAVE_RHOFAC;
+        RADWAVE_DB2IM=0.*RADWAVE_RHOFAC;
+        RADWAVE_DERE=0*RADWAVE_RHOFAC;
+        RADWAVE_DEIM=0*RADWAVE_RHOFAC;
+        RADWAVE_DFRE=-3.905642029683238e-8*RADWAVE_RHOFAC;
+        RADWAVE_DFIM=0.*RADWAVE_RHOFAC;
+        RADWAVE_DF2RE=2.3855930340017838e-8*RADWAVE_RHOFAC;
+        RADWAVE_DF2IM=0.*RADWAVE_RHOFAC;
+        RADWAVE_OMRE=1.007157271948693;
+        RADWAVE_OMIM=0;
+        RADWAVE_DTOUT1=2*M_PI/RADWAVE_OMRE/10.;
+      }
+      
+      if(RADWAVE_NUMERO==11) { // slow magnetosonic wave
+        RADWAVE_WAVETYPE=1;  //slow
+        RADWAVE_RHOFAC=0.001;
+        RADWAVE_B0=0.10075854437197568;
+        RADWAVE_PP=0.01;
+        RADWAVE_CC=10;
+        RADWAVE_KAPPA=0;
+        RADWAVE_DRRE=0.001*RADWAVE_RHOFAC;
+        RADWAVE_DRIM=0*RADWAVE_RHOFAC;
+        RADWAVE_DVRE=0.00006177069527516586*RADWAVE_RHOFAC;
+        RADWAVE_DVIM=0.*RADWAVE_RHOFAC;
+        RADWAVE_DV2RE=0.00010011836806552759*RADWAVE_RHOFAC;
+        RADWAVE_DV2IM=0.*RADWAVE_RHOFAC;
+        RADWAVE_DURE=0.00001522842639593909*RADWAVE_RHOFAC;
+        RADWAVE_DUIM=0.*RADWAVE_RHOFAC;
+        RADWAVE_DB2RE=-0.0000625515978604029*RADWAVE_RHOFAC;
+        RADWAVE_DB2IM=0.*RADWAVE_RHOFAC;
+        RADWAVE_DERE=-4.0433761094240253e-25*RADWAVE_RHOFAC;
+        RADWAVE_DEIM=0.*RADWAVE_RHOFAC;
+        RADWAVE_DFRE=-1.5050727782781537e-8*RADWAVE_RHOFAC;
+        RADWAVE_DFIM=0.*RADWAVE_RHOFAC;
+        RADWAVE_DF2RE=-2.4394323183478818e-8*RADWAVE_RHOFAC;
+        RADWAVE_DF2IM=0.*RADWAVE_RHOFAC;
+        RADWAVE_OMRE=0.3881167249671897;
+        RADWAVE_OMIM=0;
+        RADWAVE_DTOUT1=2*M_PI/RADWAVE_OMRE/10.;
+      }
+      
+      if(RADWAVE_NUMERO==101) { // radiation-modified sound wave
+        RADWAVE_WAVETYPE=0;  //sound
+        RADWAVE_RHOFAC=0.001;
+        RADWAVE_B0=0.;
+        RADWAVE_PP=0.1;
+        RADWAVE_CC=10;
+        RADWAVE_KAPPA=0.1;
+        RADWAVE_DRRE=0.001*RADWAVE_RHOFAC;
+        RADWAVE_DRIM=0*RADWAVE_RHOFAC;
+        RADWAVE_DVRE=0.0000997992249118626*RADWAVE_RHOFAC;
+        RADWAVE_DVIM=2.552072175928721e-6*RADWAVE_RHOFAC;
+        RADWAVE_DV2RE=0*RADWAVE_RHOFAC;
+        RADWAVE_DV2IM=0*RADWAVE_RHOFAC;
+        RADWAVE_DURE=0.000015155652908079845*RADWAVE_RHOFAC;
+        RADWAVE_DUIM=7.696929719530536e-7*RADWAVE_RHOFAC;
+        RADWAVE_DB2RE=0*RADWAVE_RHOFAC;
+        RADWAVE_DB2IM=0*RADWAVE_RHOFAC;
+        RADWAVE_DERE=1.3314776991134588e-10*RADWAVE_RHOFAC;
+        RADWAVE_DEIM=3.6001746512388956e-8*RADWAVE_RHOFAC;
+        RADWAVE_DFRE=-2.5247126486226934e-7*RADWAVE_RHOFAC;
+        RADWAVE_DFIM=7.400407810152034e-8*RADWAVE_RHOFAC;
+        RADWAVE_DF2RE=0*RADWAVE_RHOFAC;
+        RADWAVE_DF2IM=0*RADWAVE_RHOFAC;
+        RADWAVE_OMRE=0.627057023634126;
+        RADWAVE_OMIM=0.016035142398657175;
+        RADWAVE_DTOUT1=2*M_PI/RADWAVE_OMRE/10.;
+      }
+
+      if(RADWAVE_NUMERO==102) { // radiation-modified sound wave
+        RADWAVE_WAVETYPE=0;  //sound
+        RADWAVE_RHOFAC=0.001;
+        RADWAVE_B0=0.;
+        RADWAVE_PP=10;
+        RADWAVE_CC=10;
+        RADWAVE_KAPPA=10;
+        RADWAVE_DRRE=0.001*RADWAVE_RHOFAC;
+        RADWAVE_DRIM=0*RADWAVE_RHOFAC;
+        RADWAVE_DVRE=0.0002662507979198814*RADWAVE_RHOFAC;
+        RADWAVE_DVIM=0.0000633514446524509*RADWAVE_RHOFAC;
+        RADWAVE_DV2RE=0*RADWAVE_RHOFAC;
+        RADWAVE_DV2IM=0*RADWAVE_RHOFAC;
+        RADWAVE_DURE=0.000011706978034894262*RADWAVE_RHOFAC;
+        RADWAVE_DUIM=1.881532710186292e-6*RADWAVE_RHOFAC;
+        RADWAVE_DB2RE=0*RADWAVE_RHOFAC;
+        RADWAVE_DB2IM=0*RADWAVE_RHOFAC;
+        RADWAVE_DERE=0.00020541918444857084*RADWAVE_RHOFAC;
+        RADWAVE_DEIM=0.00014985861843019722*RADWAVE_RHOFAC;
+        RADWAVE_DFRE=-0.000020730815318727886*RADWAVE_RHOFAC;
+        RADWAVE_DFIM=0.000037755564579364684*RADWAVE_RHOFAC;
+        RADWAVE_DF2RE=0*RADWAVE_RHOFAC;
+        RADWAVE_DF2IM=0*RADWAVE_RHOFAC;
+        RADWAVE_OMRE=1.67290310151504;
+        RADWAVE_OMIM=0.39804886622888025;
+        RADWAVE_DTOUT1=2*M_PI/RADWAVE_OMRE/10.;
+      }
+      
+      if(RADWAVE_NUMERO==103) { // radiation-modified sound wave
+        RADWAVE_WAVETYPE=0;
+        RADWAVE_RHOFAC=0.001;
+        RADWAVE_B0=0.;
+        RADWAVE_PP=0.1;
+        RADWAVE_CC=10;
+        RADWAVE_KAPPA=10;
+        RADWAVE_DRRE=0.001*RADWAVE_RHOFAC;
+        RADWAVE_DRIM=0*RADWAVE_RHOFAC;
+        RADWAVE_DVRE=0.00009290985655754982*RADWAVE_RHOFAC;
+        RADWAVE_DVIM=0.000014438241113392203*RADWAVE_RHOFAC;
+        RADWAVE_DV2RE=0*RADWAVE_RHOFAC;
+        RADWAVE_DV2IM=0*RADWAVE_RHOFAC;
+        RADWAVE_DURE=0.00001179766900341804*RADWAVE_RHOFAC;
+        RADWAVE_DUIM=3.0429210480592464e-6*RADWAVE_RHOFAC;
+        RADWAVE_DB2RE=0*RADWAVE_RHOFAC;
+        RADWAVE_DB2IM=0*RADWAVE_RHOFAC;
+        RADWAVE_DERE=1.9819771721015766e-6*RADWAVE_RHOFAC;
+        RADWAVE_DEIM=2.206454751998895e-6*RADWAVE_RHOFAC;
+        RADWAVE_DFRE=-4.3677706188561827e-7*RADWAVE_RHOFAC;
+        RADWAVE_DFIM=4.316214437243016e-7*RADWAVE_RHOFAC;
+        RADWAVE_DF2RE=0*RADWAVE_RHOFAC;
+        RADWAVE_DF2IM=0*RADWAVE_RHOFAC;
+        RADWAVE_OMRE=0.5837698456145599;
+        RADWAVE_OMIM=0.09071814442518213;
+        RADWAVE_DTOUT1=2*M_PI/RADWAVE_OMRE/10.;
+      }
+      
+      if(RADWAVE_NUMERO==104) { // radiation-modified sound wave
+        RADWAVE_WAVETYPE=0;
+        RADWAVE_RHOFAC=0.001;
+        RADWAVE_B0=0.;
+        RADWAVE_PP=10;
+        RADWAVE_CC=10;
+        RADWAVE_KAPPA=0.1;
+        RADWAVE_DRRE=0.001*RADWAVE_RHOFAC;
+        RADWAVE_DRIM=0*RADWAVE_RHOFAC;
+        RADWAVE_DVRE=0.00007748046325109175*RADWAVE_RHOFAC;
+        RADWAVE_DVIM=3.583193353788357e-6*RADWAVE_RHOFAC;
+        RADWAVE_DV2RE=0*RADWAVE_RHOFAC;
+        RADWAVE_DV2IM=0*RADWAVE_RHOFAC;
+        RADWAVE_DURE=9.141343124149056e-6*RADWAVE_RHOFAC;
+        RADWAVE_DUIM=3.83221342644378e-7*RADWAVE_RHOFAC;
+        RADWAVE_DB2RE=0*RADWAVE_RHOFAC;
+        RADWAVE_DB2IM=0*RADWAVE_RHOFAC;
+        RADWAVE_DERE=-1.5219307455357163e-7*RADWAVE_RHOFAC;
+        RADWAVE_DEIM=9.380406060306363e-7*RADWAVE_RHOFAC;
+        RADWAVE_DFRE=-0.000019366644866579624*RADWAVE_RHOFAC;
+        RADWAVE_DFIM=-7.930468856866346e-7*RADWAVE_RHOFAC;
+        RADWAVE_DF2RE=0*RADWAVE_RHOFAC;
+        RADWAVE_DF2IM=0*RADWAVE_RHOFAC;
+        RADWAVE_OMRE=0.4868241082927276;
+        RADWAVE_OMIM=0.02251386783330655;
+        RADWAVE_DTOUT1=2*M_PI/RADWAVE_OMRE/10.;
+      }
+      
+      if(RADWAVE_NUMERO==1001){ //radiation-modified fast magnetosonic
+        RADWAVE_WAVETYPE=2;  //fast
+        RADWAVE_RHOFAC=0.001;
+        RADWAVE_B0=0.10075854437197568;
+        RADWAVE_PP=0.1;
+        RADWAVE_CC=10;
+        RADWAVE_KAPPA=0.1;
+        RADWAVE_DRRE=0.001*RADWAVE_RHOFAC;
+        RADWAVE_DRIM=0*RADWAVE_RHOFAC;
+        RADWAVE_DVRE=0.00016025131429328265*RADWAVE_RHOFAC;
+        RADWAVE_DVIM=7.238312005077197e-7*RADWAVE_RHOFAC;
+        RADWAVE_DV2RE=-0.00009795442630848571*RADWAVE_RHOFAC;
+        RADWAVE_DV2IM=9.836789501779977e-7*RADWAVE_RHOFAC;
+        RADWAVE_DURE=0.000015198360895974991*RADWAVE_RHOFAC;
+        RADWAVE_DUIM=4.815752909936621e-7*RADWAVE_RHOFAC;
+        RADWAVE_DB2RE=0.00016234366410161697*RADWAVE_RHOFAC;
+        RADWAVE_DB2IM=-8.96662164240542e-7*RADWAVE_RHOFAC;
+        RADWAVE_DERE=1.4842118188293356e-9*RADWAVE_RHOFAC;
+        RADWAVE_DEIM=6.063223162955078e-8*RADWAVE_RHOFAC;
+        RADWAVE_DFRE=-3.9543271084234507e-7*RADWAVE_RHOFAC;
+        RADWAVE_DFIM=8.51051304663626e-8*RADWAVE_RHOFAC;
+        RADWAVE_DF2RE=2.3667952154599258e-7*RADWAVE_RHOFAC;
+        RADWAVE_DF2IM=2.1118238693659835e-8*RADWAVE_RHOFAC;
+        RADWAVE_OMRE=1.0068887034237715;
+        RADWAVE_OMIM=0.004547965563908265;
+        RADWAVE_DTOUT1=2*M_PI/RADWAVE_OMRE/10.;
+      }
+      
+      if(RADWAVE_NUMERO==1101){ //radiation-modified slow magnetosonic
+        RADWAVE_WAVETYPE=1;  //slow
+        RADWAVE_RHOFAC=0.001;
+        RADWAVE_B0=0.10075854437197568;
+        RADWAVE_PP=0.1;
+        RADWAVE_CC=10;
+        RADWAVE_KAPPA=0.1;
+        RADWAVE_DRRE=0.001*RADWAVE_RHOFAC;
+        RADWAVE_DRIM=0*RADWAVE_RHOFAC;
+        RADWAVE_DVRE=0.0000615332754996702*RADWAVE_RHOFAC;
+        RADWAVE_DVIM=1.8313980164851912e-6*RADWAVE_RHOFAC;
+        RADWAVE_DV2RE=0.00009897721183016215*RADWAVE_RHOFAC;
+        RADWAVE_DV2IM=6.541857910619384e-6*RADWAVE_RHOFAC;
+        RADWAVE_DURE=0.000015017423510649482*RADWAVE_RHOFAC;
+        RADWAVE_DUIM=1.2229894345580098e-6*RADWAVE_RHOFAC;
+        RADWAVE_DB2RE=-0.00006148820918323782*RADWAVE_RHOFAC;
+        RADWAVE_DB2IM=-5.883153382953974e-6*RADWAVE_RHOFAC;
+        RADWAVE_DERE=1.9170283012363001e-10*RADWAVE_RHOFAC;
+        RADWAVE_DEIM=2.187214582100525e-8*RADWAVE_RHOFAC;
+        RADWAVE_DFRE=-1.6518053269343755e-7*RADWAVE_RHOFAC;
+        RADWAVE_DFIM=7.175204181969396e-8*RADWAVE_RHOFAC;
+        RADWAVE_DF2RE=-2.2367888827266106e-7*RADWAVE_RHOFAC;
+        RADWAVE_DF2IM=-7.43141463935117e-8*RADWAVE_RHOFAC;
+        RADWAVE_OMRE=0.38662497252216144;
+        RADWAVE_OMIM=0.011507013108777591;
+        RADWAVE_DTOUT1=2*M_PI/RADWAVE_OMRE/10.;
+      }
+      
+      if(RADWAVE_NUMERO==1002){ //radiation-modified fast magnetosonic, opt THICK
+        RADWAVE_WAVETYPE=2;  //fast
+        RADWAVE_RHOFAC=0.001;
+        RADWAVE_B0=0.10075854437197568;
+        RADWAVE_PP=10;
+        RADWAVE_CC=10;
+        RADWAVE_KAPPA=10;
+        RADWAVE_DRRE=0.001*RADWAVE_RHOFAC;
+        RADWAVE_DRIM=0*RADWAVE_RHOFAC;
+        RADWAVE_DVRE=0.0002784991109850316*RADWAVE_RHOFAC;
+        RADWAVE_DVIM=0.000052380393168228656*RADWAVE_RHOFAC;
+        RADWAVE_DV2RE=-0.000028109315354609682*RADWAVE_RHOFAC;
+        RADWAVE_DV2IM=6.2558750019767086e-6*RADWAVE_RHOFAC;
+        RADWAVE_DURE=0.000011730539980454472*RADWAVE_RHOFAC;
+        RADWAVE_DUIM=1.7129010401392157e-6*RADWAVE_RHOFAC;
+        RADWAVE_DB2RE=0.00011016964855189374*RADWAVE_RHOFAC;
+        RADWAVE_DB2IM=-4.033370850235303e-6*RADWAVE_RHOFAC;
+        RADWAVE_DERE=0.0002072941184085973*RADWAVE_RHOFAC;
+        RADWAVE_DEIM=0.00013636362726103654*RADWAVE_RHOFAC;
+        RADWAVE_DFRE=-0.00001833308481505651*RADWAVE_RHOFAC;
+        RADWAVE_DFIM=0.00003636638174654657*RADWAVE_RHOFAC;
+        RADWAVE_DF2RE=2.6758144678721757e-7*RADWAVE_RHOFAC;
+        RADWAVE_DF2IM=1.2427179588260004e-6*RADWAVE_RHOFAC;
+        RADWAVE_OMRE=1.7498615222037273;
+        RADWAVE_OMIM=0.3291157167389043;
+        RADWAVE_DTOUT1=2*M_PI/RADWAVE_OMRE/10.;
+      }
+
+      if(RADWAVE_NUMERO==1003){ //radiation-modified fast magnetosonic, opt THICK
+        RADWAVE_WAVETYPE=2;
+        RADWAVE_RHOFAC=0.001;
+        RADWAVE_B0=0.10075854437197568;
+        RADWAVE_PP=0.1;
+        RADWAVE_CC=10;
+        RADWAVE_KAPPA=10;
+        RADWAVE_DRRE=0.001*RADWAVE_RHOFAC;
+        RADWAVE_DRIM=0*RADWAVE_RHOFAC;
+        RADWAVE_DVRE=0.00015921491906000263*RADWAVE_RHOFAC;
+        RADWAVE_DVIM=4.267309467171878e-6*RADWAVE_RHOFAC;
+        RADWAVE_DV2RE=-0.00009865659642379489*RADWAVE_RHOFAC;
+        RADWAVE_DV2IM=6.116424112313706e-6*RADWAVE_RHOFAC;
+        RADWAVE_DURE=0.000013105512199532442*RADWAVE_RHOFAC;
+        RADWAVE_DUIM=2.2690789485828284e-6*RADWAVE_RHOFAC;
+        RADWAVE_DB2RE=0.00016304450066324336*RADWAVE_RHOFAC;
+        RADWAVE_DB2IM=-5.540155699476499e-6*RADWAVE_RHOFAC;
+        RADWAVE_DERE=2.9534637071306857e-6*RADWAVE_RHOFAC;
+        RADWAVE_DEIM=1.5968078176265759e-6*RADWAVE_RHOFAC;
+        RADWAVE_DFRE=-2.7219589023767955e-7*RADWAVE_RHOFAC;
+        RADWAVE_DFIM=6.086535550665933e-7*RADWAVE_RHOFAC;
+        RADWAVE_DF2RE=3.2386284213141576e-9*RADWAVE_RHOFAC;
+        RADWAVE_DF2IM=2.3827073246896776e-8*RADWAVE_RHOFAC;
+        RADWAVE_OMRE=1.0003768401215956;
+        RADWAVE_OMIM=0.02681229614532269;
+        RADWAVE_DTOUT1=2*M_PI/RADWAVE_OMRE/10.;
+      }
+      
+      if(RADWAVE_NUMERO==1004){ //radiation-modified fast magnetosonic, opt thin
+        RADWAVE_WAVETYPE=2;
+        RADWAVE_RHOFAC=0.001;
+        RADWAVE_B0=0.10075854437197568;
+        RADWAVE_PP=10;
+        RADWAVE_CC=10;
+        RADWAVE_KAPPA=0.1;
+        RADWAVE_DRRE=0.001*RADWAVE_RHOFAC;
+        RADWAVE_DRIM=0*RADWAVE_RHOFAC;
+        RADWAVE_DVRE=0.00015164754212433659*RADWAVE_RHOFAC;
+        RADWAVE_DVIM=2.9243074320866887e-6*RADWAVE_RHOFAC;
+        RADWAVE_DV2RE=-0.00011147156590526742*RADWAVE_RHOFAC;
+        RADWAVE_DV2IM=6.596175366942675e-7*RADWAVE_RHOFAC;
+        RADWAVE_DURE=9.205934027867234e-6*RADWAVE_RHOFAC;
+        RADWAVE_DUIM=7.437886816058989e-7*RADWAVE_RHOFAC;
+        RADWAVE_DB2RE=0.00017478715294162717*RADWAVE_RHOFAC;
+        RADWAVE_DB2IM=-1.8658034881621974e-6*RADWAVE_RHOFAC;
+        RADWAVE_DERE=-4.7021288964385735e-7*RADWAVE_RHOFAC;
+        RADWAVE_DEIM=1.9823405974044627e-6*RADWAVE_RHOFAC;
+        RADWAVE_DFRE=-0.00003794222976803031*RADWAVE_RHOFAC;
+        RADWAVE_DFIM=-3.18097469382448e-7*RADWAVE_RHOFAC;
+        RADWAVE_DF2RE=0.00002693491298739615*RADWAVE_RHOFAC;
+        RADWAVE_DF2IM=2.670466935767298e-6*RADWAVE_RHOFAC;
+        RADWAVE_OMRE=0.952829608545529;
+        RADWAVE_OMIM=0.018373965490963148;
+        RADWAVE_DTOUT1=2*M_PI/RADWAVE_OMRE/10.;
+      }
+      
+      if(RADWAVE_NUMERO==1102){ //radiation-modified slow magnetosonic, opt THICK
+        RADWAVE_WAVETYPE=1;  //slow
+        RADWAVE_RHOFAC=0.001;
+        RADWAVE_B0=0.10075854437197568;
+        RADWAVE_PP=10;
+        RADWAVE_CC=10;
+        RADWAVE_KAPPA=10;
+        RADWAVE_DRRE=0.001*RADWAVE_RHOFAC;
+        RADWAVE_DRIM=0*RADWAVE_RHOFAC;
+        RADWAVE_DVRE=0.00008342687348874559*RADWAVE_RHOFAC;
+        RADWAVE_DVIM=0.000012082877629545738*RADWAVE_RHOFAC;
+        RADWAVE_DV2RE=0.00011363325579507992*RADWAVE_RHOFAC;
+        RADWAVE_DV2IM=0.00027269723955801375*RADWAVE_RHOFAC;
+        RADWAVE_DURE=9.461886706340277e-6*RADWAVE_RHOFAC;
+        RADWAVE_DUIM=1.2137574760252086e-6*RADWAVE_RHOFAC;
+        RADWAVE_DB2RE=-0.0000803822945939874*RADWAVE_RHOFAC;
+        RADWAVE_DB2IM=-0.00030311425160368743*RADWAVE_RHOFAC;
+        RADWAVE_DERE=0.000025966624942266354*RADWAVE_RHOFAC;
+        RADWAVE_DEIM=0.00009678910913258438*RADWAVE_RHOFAC;
+        RADWAVE_DFRE=-0.000019826286725607242*RADWAVE_RHOFAC;
+        RADWAVE_DFIM=5.476096510182763e-6*RADWAVE_RHOFAC;
+        RADWAVE_DF2RE=3.6607454416002e-6*RADWAVE_RHOFAC;
+        RADWAVE_DF2IM=-1.1474975240229893e-6*RADWAVE_RHOFAC;
+        RADWAVE_OMRE=0.5241865057284164;
+        RADWAVE_OMIM=0.0759189591904107;
+        RADWAVE_DTOUT1=2*M_PI/RADWAVE_OMRE/10.;
+      }
+
+      if(RADWAVE_NUMERO==1103){ //radiation-modified slow magnetosonic, opt THICK
+        RADWAVE_WAVETYPE=1;
+        RADWAVE_RHOFAC=0.001;
+        RADWAVE_B0=0.10075854437197568;
+        RADWAVE_PP=0.1;
+        RADWAVE_CC=10;
+        RADWAVE_KAPPA=10;
+        RADWAVE_DRRE=0.001*RADWAVE_RHOFAC;
+        RADWAVE_DRIM=0*RADWAVE_RHOFAC;
+        RADWAVE_DVRE=0.000055107074739986735*RADWAVE_RHOFAC;
+        RADWAVE_DVIM=6.81771795916397e-6*RADWAVE_RHOFAC;
+        RADWAVE_DV2RE=0.00007683477442788993*RADWAVE_RHOFAC;
+        RADWAVE_DV2IM=0.000018069585727045885*RADWAVE_RHOFAC;
+        RADWAVE_DURE=0.000010353641210907202*RADWAVE_RHOFAC;
+        RADWAVE_DUIM=2.5489931913014527e-6*RADWAVE_RHOFAC;
+        RADWAVE_DB2RE=-0.00004163521053362644*RADWAVE_RHOFAC;
+        RADWAVE_DB2IM=-0.00001542206148990843*RADWAVE_RHOFAC;
+        RADWAVE_DERE=9.058920389631598e-7*RADWAVE_RHOFAC;
+        RADWAVE_DEIM=1.8594869909418343e-6*RADWAVE_RHOFAC;
+        RADWAVE_DFRE=-3.830409107982378e-7*RADWAVE_RHOFAC;
+        RADWAVE_DFIM=1.992679542320905e-7*RADWAVE_RHOFAC;
+        RADWAVE_DF2RE=2.114058251324126e-9*RADWAVE_RHOFAC;
+        RADWAVE_DF2IM=-6.394153931776251e-9*RADWAVE_RHOFAC;
+        RADWAVE_OMRE=0.346247962327932;
+        RADWAVE_OMIM=0.04283698530951345;
+        RADWAVE_DTOUT1=2*M_PI/RADWAVE_OMRE/10.;
+      }
+        
+      if(RADWAVE_NUMERO==1104){ //radiation-modified slow magnetosonic, opt thin
+        RADWAVE_WAVETYPE=1;
+        RADWAVE_RHOFAC=0.001;
+        RADWAVE_B0=0.10075854437197568;
+        RADWAVE_PP=10;
+        RADWAVE_CC=10;
+        RADWAVE_KAPPA=0.1;
+        RADWAVE_DRRE=0.001*RADWAVE_RHOFAC;
+        RADWAVE_DRIM=0*RADWAVE_RHOFAC;
+        RADWAVE_DVRE=0.00005019053133722909*RADWAVE_RHOFAC;
+        RADWAVE_DVIM=2.3866183515916313e-6*RADWAVE_RHOFAC;
+        RADWAVE_DV2RE=0.00006765290591654829*RADWAVE_RHOFAC;
+        RADWAVE_DV2IM=3.826394449423638e-6*RADWAVE_RHOFAC;
+        RADWAVE_DURE=9.134497469805529e-6*RADWAVE_RHOFAC;
+        RADWAVE_DUIM=2.481944791269412e-7*RADWAVE_RHOFAC;
+        RADWAVE_DB2RE=-0.00003511412717901583*RADWAVE_RHOFAC;
+        RADWAVE_DB2IM=-1.2206629792761417e-6*RADWAVE_RHOFAC;
+        RADWAVE_DERE=-7.354752234301807e-8*RADWAVE_RHOFAC;
+        RADWAVE_DEIM=6.007447328384492e-7*RADWAVE_RHOFAC;
+        RADWAVE_DFRE=-0.000012540740009734634*RADWAVE_RHOFAC;
+        RADWAVE_DFIM=-5.536217727919607e-7*RADWAVE_RHOFAC;
+        RADWAVE_DF2RE=-0.000014894816213683286*RADWAVE_RHOFAC;
+        RADWAVE_DF2IM=-5.731053967780647e-6*RADWAVE_RHOFAC;
+        RADWAVE_OMRE=0.3153564090576144;
+        RADWAVE_OMIM=0.0149955653605657;
+        RADWAVE_DTOUT1=2*M_PI/RADWAVE_OMRE/10.;
+      }
+      RADWAVE_RHOZERO=1.;
+      RADWAVE_KK=2.*Pi;
+      RADWAVE_UINT=((1./RADWAVE_CC/RADWAVE_CC)*RADWAVE_RHOZERO/gam/(gam-1.-1./RADWAVE_CC/RADWAVE_CC)) ; // to get proper sound speed
+      RADWAVE_TEMP=(calc_PEQ_Tfromurho(RADWAVE_UINT,RADWAVE_RHOZERO)) ; // temperature from rho and uint
+      ARAD_CODE=((3.*RADWAVE_PP*(gam-1.)*RADWAVE_UINT/RADWAVE_TEMP/RADWAVE_TEMP/RADWAVE_TEMP/RADWAVE_TEMP)); //to get the proper radiation to gas pressure ratio, PP=4 sig T^4 / P
+      RADWAVE_ERAD=(calc_LTE_EfromT(RADWAVE_TEMP)) ; // to get thermal equilibrium, E=4 sig T^4
+      
+      dualfprintf(fail_file,"RADWAVE_RHOZERO=%g, RADWAVE_KK=%g, RADWAVE_UINT=%g, RADWAVE_TEMP=%g, ARAD_CODE=%g, RADWAVE_ERAD=%21.15g\n",
+                  RADWAVE_RHOZERO, RADWAVE_KK, RADWAVE_UINT, RADWAVE_TEMP, ARAD_CODE, RADWAVE_ERAD);
+      if(RADWAVE_NWAVE==5){
+        FILE *out;
+        if((out=fopen("radtestparams.dat","wt"))==NULL){
+          dualfprintf(fail_file,"Couldn't write radtestparams.dat file\n");
+          myexit(1);
+        }
+        else{
+          fprintf(out,"#%20s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s %21s\n",
+                  "RADWAVE_RHOZERO",
+                  "RADWAVE_KK",
+                  "RADWAVE_UINT",
+                  "RADWAVE_ERAD",
+                  "RADWAVE_DRRE",
+                  "RADWAVE_RHOFAC",
+                  "RADWAVE_B0",
+                  "RADWAVE_PP",
+                  "RADWAVE_CC",
+                  "RADWAVE_KAPPA",
+                  "RADWAVE_DRRE",
+                  "RADWAVE_DRIM",
+                  "RADWAVE_DVRE",
+                  "RADWAVE_DVIM",
+                  "RADWAVE_DV2RE",
+                  "RADWAVE_DV2IM",
+                  "RADWAVE_DURE",
+                  "RADWAVE_DUIM",
+                  "RADWAVE_DB2RE",
+                  "RADWAVE_DB2IM",
+                  "RADWAVE_DERE",
+                  "RADWAVE_DEIM",
+                  "RADWAVE_DFRE",
+                  "RADWAVE_DFIM",
+                  "RADWAVE_DF2RE",
+                  "RADWAVE_DF2IM",
+                  "RADWAVE_OMRE",
+                  "RADWAVE_OMIM",
+                  "RADWAVE_DTOUT1",
+                  "RADWAVE_WAVETYPE");
+          fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",
+                  RADWAVE_RHOZERO,
+                  RADWAVE_KK,
+                  RADWAVE_UINT,
+                  RADWAVE_ERAD,
+                  RADWAVE_DRRE,
+                  RADWAVE_RHOFAC,
+                  RADWAVE_B0,
+                  RADWAVE_PP,
+                  RADWAVE_CC,
+                  RADWAVE_KAPPA,
+                  RADWAVE_DRRE,
+                  RADWAVE_DRIM,
+                  RADWAVE_DVRE,
+                  RADWAVE_DVIM,
+                  RADWAVE_DV2RE,
+                  RADWAVE_DV2IM,
+                  RADWAVE_DURE,
+                  RADWAVE_DUIM,
+                  RADWAVE_DB2RE,
+                  RADWAVE_DB2IM,
+                  RADWAVE_DERE,
+                  RADWAVE_DEIM,
+                  RADWAVE_DFRE,
+                  RADWAVE_DFIM,
+                  RADWAVE_DF2RE,
+                  RADWAVE_DF2IM,
+                  RADWAVE_OMRE,
+                  RADWAVE_OMIM,
+                  RADWAVE_DTOUT1,
+                  (double)RADWAVE_WAVETYPE
+                  );
+          fclose(out);
+        }
+      }
+
+    }
+
+
+    if(RADWAVE_NWAVE==1){ //density wave advected with the gas
+      // NO RADIATION
+      RADWAVE_PP=0.1;
+      RADWAVE_CC=1.e6;
+      RADWAVE_VX=1.e-3;
+      RADWAVE_DTOUT1=(.05/RADWAVE_VX);
+      RADWAVE_RHOZERO=1.;
+      RADWAVE_AAA=1.e-5;
+      RADWAVE_ERAD=1.;
+      RADWAVE_KK=2.*Pi;
+      RADWAVE_UINT=(1./RADWAVE_CC/RADWAVE_CC)*RADWAVE_RHOZERO/gam/(gam-1.-1./RADWAVE_CC/RADWAVE_CC);
+      RADWAVE_TEMP=calc_PEQ_Tfromurho(RADWAVE_UINT,RADWAVE_RHOZERO);
+      ARAD_CODE=(3.0*RADWAVE_PP*(gam-1.)*RADWAVE_UINT/RADWAVE_TEMP/RADWAVE_TEMP/RADWAVE_TEMP/RADWAVE_TEMP);
+    }
+
+    if(RADWAVE_NWAVE==2){ //hydro sound wave
+      // NO RADIATION
+      RADWAVE_PP=0.01;
+      RADWAVE_CC=1.e6;
+      RADWAVE_DTOUT1=(.05*RADWAVE_CC);
+      RADWAVE_VX=0.;
+      RADWAVE_RHOZERO=1.;
+      RADWAVE_AAA=1.e-5;
+      RADWAVE_ERAD=1.;
+      RADWAVE_KK=2.*Pi;
+      RADWAVE_UINT=(1./RADWAVE_CC/RADWAVE_CC)*RADWAVE_RHOZERO/gam/(gam-1.-1./RADWAVE_CC/RADWAVE_CC);
+      RADWAVE_TEMP=calc_PEQ_Tfromurho(RADWAVE_UINT,RADWAVE_RHOZERO);
+      ARAD_CODE=(3.0*RADWAVE_PP*(gam-1.)*RADWAVE_UINT/RADWAVE_TEMP/RADWAVE_TEMP/RADWAVE_TEMP/RADWAVE_TEMP);
+    }
+
+    if(RADWAVE_NWAVE==3){ //radiative density wave advected with the gas
+      //      FLUXDISSIPATION=(0.0);
+      RADWAVE_PP=10.;
+      RADWAVE_CC=1.e6;
+      RADWAVE_VX=1.e-2;
+      RADWAVE_DTOUT1=(.0005/RADWAVE_VX);
+      RADWAVE_RHOZERO=1.;
+      RADWAVE_AAA=1.e-5;
+      RADWAVE_KK=2.*Pi;
+      RADWAVE_UINT=(1./RADWAVE_CC/RADWAVE_CC)*RADWAVE_RHOZERO/gam/(gam-1.-1./RADWAVE_CC/RADWAVE_CC);
+      RADWAVE_TEMP=calc_PEQ_Tfromurho(RADWAVE_UINT,RADWAVE_RHOZERO);
+      ARAD_CODE=(3.*RADWAVE_PP*(gam-1.)*RADWAVE_UINT/RADWAVE_TEMP/RADWAVE_TEMP/RADWAVE_TEMP/RADWAVE_TEMP);
+      RADWAVE_ERAD=calc_LTE_EfromT(RADWAVE_TEMP);
+      RADWAVE_KAPPAES=10.;
+    }
+
+
+    if(RADWAVE_NWAVE==4){ //sound wave with radiation, set up without the phase shifts etc.
+      //      FLUXDISSIPATION=(0.0);
+      RADWAVE_PP=1.;
+      RADWAVE_CC=1.e2;
+      RADWAVE_DTOUT1=(.005*RADWAVE_CC);
+      RADWAVE_VX=0.;
+      RADWAVE_RHOZERO=1.;
+      RADWAVE_AAA=1.e-1;
+      RADWAVE_KK=2.*Pi;
+      RADWAVE_UINT=(1./RADWAVE_CC/RADWAVE_CC)*RADWAVE_RHOZERO/gam/(gam-1.-1./RADWAVE_CC/RADWAVE_CC);
+      RADWAVE_TEMP=calc_PEQ_Tfromurho(RADWAVE_UINT,RADWAVE_RHOZERO);
+      ARAD_CODE=(3.0*RADWAVE_PP*(gam-1.)*RADWAVE_UINT/RADWAVE_TEMP/RADWAVE_TEMP/RADWAVE_TEMP/RADWAVE_TEMP);
+      RADWAVE_ERAD=calc_LTE_EfromT(RADWAVE_TEMP);
+      RADWAVE_KAPPA=100.;
+      RADWAVE_ERADFACTOR=.5;
+      RADWAVE_GASFACTOR=.5;
+    }
+
+//    if(RADWAVE_NWAVE==5){ //fast radiation-modified magnetosonic waves #1001 //Sasha
+//      FLUXDISSIPATION=(0.0);
+//      RADWAVE_PP=0.1;
+//      RADWAVE_CC=10.;
+//      RADWAVE_DTOUT1=(.005*RADWAVE_CC);
+//      RADWAVE_VX=0.;
+//      RADWAVE_RHOZERO=1.;
+//      RADWAVE_AAA=1.e-1;
+//      RADWAVE_KK=2.*Pi;
+//      RADWAVE_UINT=(1./RADWAVE_CC/RADWAVE_CC)*RADWAVE_RHOZERO/gam/(gam-1.-1./RADWAVE_CC/RADWAVE_CC);
+//      RADWAVE_TEMP=calc_PEQ_Tfromurho(RADWAVE_UINT,RADWAVE_RHOZERO);
+//      ARAD_CODE=(3.0*RADWAVE_PP*(gam-1.)*RADWAVE_UINT/RADWAVE_TEMP/RADWAVE_TEMP/RADWAVE_TEMP/RADWAVE_TEMP);
+//      RADWAVE_ERAD=calc_LTE_EfromT(RADWAVE_TEMP);
+//      RADWAVE_KAPPA=0.1;
+//      RADWAVE_ERADFACTOR=.5;
+//      RADWAVE_GASFACTOR=.5;
+//    }
+
+
+    // end post-SASHA
 
 
     BCtype[X1UP]=PERIODIC;
@@ -1231,10 +1848,81 @@ int init_global(void)
     if(RADWAVE_VX==0.0) tf = MAX(100.0*RADWAVE_DTOUT1,5.0/RADWAVE_CC);
     else tf = MAX(100.0*RADWAVE_DTOUT1,5.0/MIN(RADWAVE_VX,RADWAVE_CC));
 
+    if(RADWAVE_NWAVE==5){
+      tf = 1.1*2*M_PI/RADWAVE_OMRE;
+    }
+
+
 
     //    DODIAGEVERYSUBSTEP = 1;
 
   }
+
+  /*************************************************/
+  /*************************************************/
+  /*************************************************/
+
+#if(WHICHPROBLEM==KOMIPROBLEM)
+    
+    //lim[1]=lim[2]=lim[3]=MINM;
+    lim[1]=lim[2]=lim[3]=MC;
+    cour=0.8;
+    cooling=NOCOOLING;
+    gam=gamideal=4./3.;
+
+    BCtype[X1UP]=FREEOUTFLOW;
+    BCtype[X1DN]=FREEOUTFLOW;
+    BCtype[X2UP]=OUTFLOW;
+    BCtype[X2DN]=OUTFLOW;
+    BCtype[X3UP]=PERIODIC;
+    BCtype[X3DN]=PERIODIC;
+    
+    DTr = 100; //number of time steps for restart dumps
+    
+    //set final time
+    
+    //fast shock
+    if(WHICHKOMI==1){
+      tf = 2.5;
+    }
+    //slow shock
+    else if(WHICHKOMI==2){
+      tf = 2.0;
+    }
+    //fast switch-off rarefaction
+    else if(WHICHKOMI==3){
+      tf = 1.0;
+    }
+    //slow switch-on rarefaction
+    else if(WHICHKOMI==4){
+      tf = 2.0;
+    }
+    //alfven wave
+    else if(WHICHKOMI==5){ //not done
+      tf = 2.0;
+    }
+    //compound wave
+    else if(WHICHKOMI==6){ //not done
+      tf = 1.5;  //also 0.1 and 0.75 are other times
+    }
+    //Shock tube 1
+    else if(WHICHKOMI==7){
+      tf = 1.0;
+    }
+    //Shock tube 2
+    else if(WHICHKOMI==8){
+      tf = 1.0;
+    }
+    //Collision
+    else if(WHICHKOMI==9){
+      tf = 1.22;
+    }
+
+    int idt;
+    for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=0.1*tf;
+
+#endif
+
 
 
   /*************************************************/
@@ -1944,6 +2632,77 @@ int init_defcoord(void)
   /*************************************************/
   /*************************************************/
   /*************************************************/
+#if(WHICHPROBLEM==KOMIPROBLEM)
+    FTYPE xl, xc, xr;
+    a=0.0; // no spin in case use MCOORD=KSCOORDS
+    
+    defcoord = UNIFORMCOORDS;
+    
+    //fast shock
+    if(WHICHKOMI==1){
+      xl = -1.0;
+      xc =  0.0;
+      xr =  1.0;
+    }
+    //slow shock
+    else if(WHICHKOMI==2){
+      xl = -0.5;
+      xc =  0.0;
+      xr =  1.5;
+    }
+    //fast switch-off rarefaction
+    else if(WHICHKOMI==3){
+      xl = -1.0;
+      xc =  0.0;
+      xr =  1.0;
+    }
+    //slow switch-on rarefaction
+    else if(WHICHKOMI==4){
+      xl = -1.0;
+      xc =  0.0;
+      xr =  1.0;
+    }
+    //alfven wave
+    else if(WHICHKOMI==5){
+      //not done as requires solution
+    }
+    //compound wave
+    else if(WHICHKOMI==6){
+      //not done as requires solution
+    }
+    //Shock tube 1
+    else if(WHICHKOMI==7){
+      xl = -1.0;
+      xc =  0.0;
+      xr =  1.5;
+    }
+    //Shock tube 2
+    else if(WHICHKOMI==8){
+      xl = -1.2;
+      xc =  0.0;
+      xr =  1.2;
+    }
+    //Collision
+    else if(WHICHKOMI==9){
+      xl = -1.0;
+      xc =  0.0;
+      xr =  1.0;
+    }
+
+    Rin = Rin_array[1]=xl;
+    Rin_array[2]=0;
+    Rin_array[3]=0;
+    
+    Rout = Rout_array[1]=xr;
+    Rout_array[2]=1.0;
+    Rout_array[3]=1.0;
+
+#endif
+
+
+  /*************************************************/
+  /*************************************************/
+  /*************************************************/
   if(WHICHPROBLEM==RADBONDI){
     a=0.0; // no spin in case use MCOORD=KSCOORDS
 
@@ -2638,6 +3397,15 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 
 #define KAPPAUSER(rho,T) (rho*RADWAVE_KAPPA)
 #define KAPPAESUSER(rho,T) (rho*RADWAVE_KAPPAES)
+
+#endif
+
+
+
+#if(WHICHPROBLEM==KOMIPROBLEM)
+
+#define KAPPAUSER(rho,T) (0.)
+#define KAPPAESUSER(rho,T) (0.)
 
 #endif
 
@@ -3649,6 +4417,232 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
 
 
 
+
+
+
+  /*************************************************/
+  /*************************************************/
+  if(WHICHPROBLEM==KOMIPROBLEM){
+    FTYPE pleft[NPR], pright[NPR], P;
+    FTYPE dxdxp[NDIM][NDIM];
+    FTYPE x;
+    
+    coord(i, j, k, CENT, X);
+    bl_coord(X, V);
+    dxdxprim_ijk(0, 0, 0, CENT, dxdxp);
+    x = V[1];
+  
+    //zero out initial conditions
+    PALLLOOP(pl) pleft[pl] = 0.;
+    PALLLOOP(pl) pright[pl] = 0.;
+    
+    
+    //fast shock
+    if(WHICHKOMI==1){
+      //left state
+      pleft[U1] = 25.0;
+      pleft[U2] =  0.0;
+      pleft[U3] =  0.0;
+      pleft[B1] = 20.0;
+      pleft[B2] = 25.02;
+      pleft[B3] =  0.0;
+      P = 1.0;
+      pleft[RHO] = 1.;
+      pleft[UU] = P/(gam-1);
+
+      //right state
+      pright[U1] = 1.091;
+      pright[U2] =  0.3923;
+      pright[U3] =  0.0;
+      pright[B1] = 20.0;
+      pright[B2] = 49.0;
+      pright[B3] =  0.0;
+      P = 367.5;
+      pright[RHO] = 25.48;
+      pright[UU] = P/(gam-1);
+    }
+    //slow shock
+    else if(WHICHKOMI==2){
+      //left state
+      pleft[U1] = 1.53;
+      pleft[U2] =  0.0;
+      pleft[U3] =  0.0;
+      pleft[B1] = 10.0;
+      pleft[B2] = 18.28;
+      pleft[B3] = 0.0;
+      P = 10.0;
+      pleft[RHO] = 1.;
+      pleft[UU] = P/(gam-1);
+      
+      //right state
+      pright[U1] =  .9571;
+      pright[U2] = -0.6822;
+      pright[U3] =  0.0;
+      pright[B1] = 10.0;
+      pright[B2] = 14.49;
+      pright[B3] =  0.0;
+      P = 55.36;
+      pright[RHO] = 3.323;
+      pright[UU] = P/(gam-1);
+    }
+    //fast switch-off rarefaction
+    else if(WHICHKOMI==3){
+      //left state
+      pleft[U1] = -2.0;
+      pleft[U2] =  0.0;
+      pleft[U3] =  0.0;
+      pleft[B1] = 2.0;
+      pleft[B2] = 0.0;
+      pleft[B3] = 0.0;
+      P = 1.0;
+      pleft[RHO] = 0.1;
+      pleft[UU] = P/(gam-1);
+      
+      //right state
+      pright[U1] = -0.212;
+      pright[U2] = -0.590;
+      pright[U3] =  0.0;
+      pright[B1] =  2.0;
+      pright[B2] =  4.710;
+      pright[B3] =  0.0;
+      P = 10.0;
+      pright[RHO] = 0.562;
+      pright[UU] = P/(gam-1);
+    }
+    //slow switch-on rarefaction
+    else if(WHICHKOMI==4){
+      //left state
+      pleft[U1] = -0.765;
+      pleft[U2] = -1.386;
+      pleft[U3] =  0.0;
+      pleft[B1] = 1.0;
+      pleft[B2] = 1.022;
+      pleft[B3] = 0.0;
+      P = 0.1;
+      pleft[RHO] = 1.78e-3;
+      pleft[UU] = P/(gam-1);
+      
+      //right state
+      pright[U1] =  0.0;
+      pright[U2] =  0.0;
+      pright[U3] =  0.0;
+      pright[B1] =  1.0;
+      pright[B2] =  0.0;
+      pright[B3] =  0.0;
+      P = 1.0;
+      pright[RHO] = 1.0;
+      pright[UU] = P/(gam-1);
+    }
+    //alfven wave
+    else if(WHICHKOMI==5){
+      //not done as requires solution
+    }
+    //compound wave
+    else if(WHICHKOMI==6){
+      //not done as requires solution
+    }
+    //Shock tube 1
+    else if(WHICHKOMI==7){
+      //left state
+      pleft[U1] =  0.0;
+      pleft[U2] =  0.0;
+      pleft[U3] =  0.0;
+      pleft[B1] = 1.0;
+      pleft[B2] = 0.0;
+      pleft[B3] = 0.0;
+      P = 1000.0;
+      pleft[RHO] = 1.0;
+      pleft[UU] = P/(gam-1);
+      
+      //right state
+      pright[U1] =  0.0;
+      pright[U2] =  0.0;
+      pright[U3] =  0.0;
+      pright[B1] =  1.0;
+      pright[B2] =  0.0;
+      pright[B3] =  0.0;
+      P = 1.0;
+      pright[RHO] = 0.1;
+      pright[UU] = P/(gam-1);
+    }
+    //Shock tube 2
+    else if(WHICHKOMI==8){
+      //left state
+      pleft[U1] =  0.0;
+      pleft[U2] =  0.0;
+      pleft[U3] =  0.0;
+      pleft[B1] = 0.0;
+      pleft[B2] = 20.0;
+      pleft[B3] = 0.0;
+      P = 30.;
+      pleft[RHO] = 1.0;
+      pleft[UU] = P/(gam-1);
+      
+      //right state
+      pright[U1] =  0.0;
+      pright[U2] =  0.0;
+      pright[U3] =  0.0;
+      pright[B1] =  0.0;
+      pright[B2] =  0.0;
+      pright[B3] =  0.0;
+      P = 1.0;
+      pright[RHO] = 0.1;
+      pright[UU] = P/(gam-1);
+    }
+    //Collision
+    else if(WHICHKOMI==9){
+      //left state
+      pleft[U1] =  5.0;
+      pleft[U2] =  0.0;
+      pleft[U3] =  0.0;
+      pleft[B1] = 10.0;
+      pleft[B2] = 10.0;
+      pleft[B3] = 0.0;
+      P = 1.0;
+      pleft[RHO] = 1.0;
+      pleft[UU] = P/(gam-1);
+      
+      //right state
+      pright[U1] = -5.0;
+      pright[U2] =  0.0;
+      pright[U3] =  0.0;
+      pright[B1] =  10.0;
+      pright[B2] = -10.0;
+      pright[B3] =  0.0;
+      P = 1.0;
+      pright[RHO] = 1.0;
+      pright[UU] = P/(gam-1);
+    }
+
+    if (x<=0) {
+      PALLLOOP(pl) pr[pl] = pleft[pl];
+    }
+    else if (x>0) {
+      PALLLOOP(pl) pr[pl] = pright[pl];
+    }
+    
+    //convert magnetic field components into code coordinates
+    //    for(pl=1; pl <= 3; pl++) {
+    //      pr[pl-1+B1] /= dxdxp[pl][pl];
+    //    }
+  
+    if(FLUXB==FLUXCTSTAG){
+      //can ignore half a cell shift for B1: it does not change across the interface so does not matter
+      PLOOPBONLY(pl) pstag[pl]=pr[pl];
+    }
+    
+    
+    pr[PRAD0] = 0 ;
+    pr[PRAD1] = 0 ;
+    pr[PRAD2] = 0 ;
+    pr[PRAD3] = 0 ;
+    
+    
+    *whichvel=VEL4;
+    *whichcoord=CARTMINKMETRIC2;
+    
+    return(0);
+  }
 
 
 

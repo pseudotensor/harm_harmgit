@@ -703,6 +703,7 @@ void slope_lim_point_c2e(int i, int j, int k, int loc, int realisinterp, int dir
   void slope_lim_3points(int reallim, FTYPE yl, FTYPE yc, FTYPE yr,FTYPE *dq);
   void csslope(int pl, FTYPE *y, FTYPE *dq);
   void mp5(FTYPE *y, FTYPE *lout, FTYPE *rout);
+  void eppm(FTYPE *y, FTYPE *lout, FTYPE *rout);
   FTYPE mydq = 0.0; //to avoid copying of nan's
 
 
@@ -736,6 +737,10 @@ void slope_lim_point_c2e(int i, int j, int k, int loc, int realisinterp, int dir
 
   case MP5:
     mp5(y,left,right);
+    break;
+
+  case EPPM:
+    eppm(y,left,right);
     break;
 
   default:
@@ -1431,5 +1436,15 @@ void mp5face(FTYPE yll, FTYPE yl, FTYPE yc, FTYPE yr, FTYPE yrr, FTYPE *out)
     //    dualfprintf(fail_file,"UL=%g UMP=%g fabsU=%g nolimit=%d\n",UL,UMP,fabsU,nolimit);
   }
 
+
+}
+
+
+/// Enhanced PPM
+///The Einstein Toolkit source code says that the relevant references are:
+///Colella & Sekora 2008 (http://crd.lbl.gov/assets/pubs_presos/AMCS/ANAG/ColellaSekora.pdf)
+///                       McCorquodale & Colella 2011 (http://msp.org/camcos/2011/6-1/camcos-v6-n1-p01-s.pdf)
+void eppm(FTYPE *y, FTYPE *lout, FTYPE *rout)
+{
 
 }

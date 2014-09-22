@@ -173,6 +173,8 @@ endif
 ifeq ($(USEOSX),1)
 GSLCFLAGS=`gsl-config --cflags`
 GSLLIB=`gsl-config --libs`
+#GSLCFLAGS=`/opt/local/bin/gsl-config --cflags`
+#GSLLIB=`/opt/local/bin/gsl-config --libs
 MCC=mpicc ${GSLCFLAGS}
 USEGCC=1
 ECHOSWITCH=

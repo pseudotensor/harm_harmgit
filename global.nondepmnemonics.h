@@ -591,6 +591,7 @@
 #define MCSTEEP 6 // uses 3-point limiter, but other features of PARAFLAT
 #define CSSLOPE      7 // not tested/compared against others
 #define MP5 8
+#define EPPM 9
 
 /// assume here and beyond all higher numbers are using WENO or ENO
 #define WENO3 20

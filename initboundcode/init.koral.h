@@ -490,6 +490,9 @@ struct Ccoordparams {
 #define RADWAVEBC (14) // 1d linear rad wave imposed on boundary (not setup in koral yet -- looks like time-dep BC for density on left boundary)
 #define EDDINFALL (5) // infall with flux from inside
 
+#define KOMIPROBLEM 50
+
+
 // RADDONUT types
 #define NODONUT 0
 #define DONUTOLEK 1
@@ -518,9 +521,12 @@ struct Ccoordparams {
 #define OUTFLOWSTATIC 215
 
 
-///////////////////////////////
-//problem choice
-///////////////////////////////
+
+////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////
+///// CHOOSE PROBLEM
+////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////
 
 //#define WHICHPROBLEM FLATNESS
 //#define WHICHPROBLEM RADBEAMFLAT
@@ -546,16 +552,6 @@ struct Ccoordparams {
 
 
 
-
-
-
-////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////
-///// CHOOSE PROBLEM
-////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////
-
-#define WHICHPROBLEM RADDONUT
 
 
 
@@ -1115,6 +1111,60 @@ struct Ccoordparams {
 
 
 
+//choose which Komissarov's test number to use (1 through 9)
+#define WHICHKOMI 1
+
+
+#if(WHICHPROBLEM==KOMIPROBLEM)
+
+#define MCOORD CARTMINKMETRIC2
+//#undef EOMTYPE
+//#define EOMTYPE EOMGRMHD
+////#define EOMTYPE EOMCOLDGRMHD
+//#undef EOMRADTYPE
+//#define EOMRADTYPE EOMRADNONE // EOMRADM1CLOSURE
+//#undef WHICHRADSOURCEMETHOD
+//#define WHICHRADSOURCEMETHOD SOURCEMETHODNONE
+
+#undef WHICHRADSOURCEMETHOD
+//#define WHICHRADSOURCEMETHOD SOURCEMETHODNONE
+//#define WHICHRADSOURCEMETHOD SOURCEMETHODEXPLICIT
+#define WHICHRADSOURCEMETHOD SOURCEMETHODIMPLICIT
+//#define WHICHRADSOURCEMETHOD SOURCEMETHODIMPLICITEXPLICITCHECK
+
+
+#define N2 1
+#define N3 1
+
+#if(WHICHKOMI==1)
+#define N1 40
+
+#elif(WHICHKOMI==2)
+#define N1 200
+
+#elif(WHICHKOMI==3)
+#define N1 150
+
+#elif(WHICHKOMI==4)
+#define N1 150
+
+#elif(WHICHKOMI==5) //not done
+#define N1 200
+
+#elif(WHICHKOMI==6) //not done
+#define N1 200
+
+#elif(WHICHKOMI==7)
+#define N1 400
+
+#elif(WHICHKOMI==8)
+#define N1 500
+
+#elif(WHICHKOMI==9)
+#define N1 200
+
+#endif
+#endif
 
 
 

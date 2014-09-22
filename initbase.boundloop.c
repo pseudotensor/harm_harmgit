@@ -537,6 +537,8 @@ int orders_set(void)
   interporder[MCSTEEP]=7;
   interporder[CSSLOPE]=5;
   interporder[MP5]=5;
+  interporder[EPPM]=5;
+
   interporder[WENO3]=3;
   interporder[WENO4]=4;
   interporder[WENO5]=5;
