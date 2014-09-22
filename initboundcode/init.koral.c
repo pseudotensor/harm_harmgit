@@ -1862,7 +1862,7 @@ int init_global(void)
   /*************************************************/
   /*************************************************/
 
-#if(WHICHPROBLEM==KOMIPROBLEM)
+  if(WHICHPROBLEM==KOMIPROBLEM){
     
     //lim[1]=lim[2]=lim[3]=MINM;
     lim[1]=lim[2]=lim[3]=MC;
@@ -1920,8 +1920,7 @@ int init_global(void)
 
     int idt;
     for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=0.1*tf;
-
-#endif
+  }
 
 
 
@@ -7599,8 +7598,12 @@ int set_density_floors(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *prfloor, FTYPE
     prfloor[RHO]=RHOMINLIMIT;
     prfloor[UU]=UUMINLIMIT;
 
+    prceiling[RHO]=BIG;
+    prceiling[UU]=BIG;
+
     if(PRAD0>=0){ 
       prfloor[PRAD0]=ERADLIMIT;
+      prceiling[PRAD0]=BIG;
     }
   }
 
@@ -7624,8 +7627,12 @@ int set_density_floors_alt(struct of_geom *ptrgeom, struct of_state *q, FTYPE *p
     prfloor[RHO]=RHOMINLIMIT;
     prfloor[UU]=UUMINLIMIT;
 
+    prceiling[RHO]=BIG;
+    prceiling[UU]=BIG;
+
     if(PRAD0>=0){ 
       prfloor[PRAD0]=ERADLIMIT;
+      prceiling[PRAD0]=BIG;
     }
   }
 
