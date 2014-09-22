@@ -4632,7 +4632,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
     }
     
     
-    pr[PRAD0] = 0 ;
+    pr[PRAD0] = ERADLIMIT ;
     pr[PRAD1] = 0 ;
     pr[PRAD2] = 0 ;
     pr[PRAD3] = 0 ;
