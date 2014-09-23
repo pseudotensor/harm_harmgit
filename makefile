@@ -156,7 +156,8 @@ endif
 
 ifeq ($(USEGCC),1)
 #MCC=mpicc
-gcc
+MCC=gcc
+COMP=gcc
 endif
 
 ifeq ($(USEPGCC),1)
