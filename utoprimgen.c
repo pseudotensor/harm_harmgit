@@ -386,9 +386,12 @@ int Utoprimgen(int showmessages, int checkoninversiongas, int checkoninversionra
     // If hot GRMHD failed or gets suspicious solution, revert to entropy GRMHD if solution
     // If radiation, then this redoes radiation inversion since entropy would give new velocity and local corrections in u2p_rad() might use velocity.
     ///////////////////
-    if(HOT2ENTROPY && (hotpflag>0 && whichmethod==MODEPICKREVERT || whichmethod==MODEPICKBEST)){
+    //    int forcetryentropy=(whichmethod==MODEPICKBEST && fracenergy!=1.0 || hotpflag>0 && whichmethod==MODEPICKBEST && fracenergy!=1.0);
+    int forcetryentropy=0; // force
+    //   if(HOT2ENTROPY && (hotpflag>0 && whichmethod==MODEPICKREVERT || forcetryentropy)){
+    if(HOT2ENTROPY && hotpflag>0){
 
-      entropytried=tryentropyinversion(showmessages, allowlocalfailurefixandnoreport,finalstep, hotpflag, whichmethod==MODEPICKBEST, whichcap, modprim, pi, pr0, pr, pressure, Ugeomfree, Ugeomfree0, qptr, ptrgeom,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
+      entropytried=tryentropyinversion(showmessages, allowlocalfailurefixandnoreport,finalstep, hotpflag, forcetryentropy, whichcap, modprim, pi, pr0, pr, pressure, Ugeomfree, Ugeomfree0, qptr, ptrgeom,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
       if(entropytried){
         PLOOP(pliter,pl) entropypr[pl]=pr[pl];
 
@@ -504,9 +507,13 @@ int Utoprimgen(int showmessages, int checkoninversiongas, int checkoninversionra
     ///////////////////
     //    if(ENTROPY2HOT && (entropypflag>0 && whichmethod==MODEPICKREVERT || (whichmethod==MODEPICKBEST))){
     // below is consistent with hot entropy forced when fracenergy=0.0 as long as entropy didn't fail to invert.
-    if(ENTROPY2HOT && (entropypflag>0 && whichmethod==MODEPICKREVERT || (whichmethod==MODEPICKBEST)&&(entropypflag>0&&fracenergy==0.0 || fracenergy!=0.0))){
+    // int forcetryhot = (whichmethod==MODEPICKBEST)&&(entropypflag>0&&fracenergy==0.0 || fracenergy!=0.0);
+    // override since not using fracenergy approach and above seems wrong
+    int forcetryhot=0;
+    //    if(ENTROPY2HOT && (entropypflag>0 && whichmethod==MODEPICKREVERT || forcetryhot)){
+    if(ENTROPY2HOT && entropypflag>0){
 
-      hottried=tryhotinversion(showmessages, allowlocalfailurefixandnoreport,finalstep, entropypflag, (whichmethod==MODEPICKBEST), whichcap, modprim, pi, pr0, pr, pressure, Ugeomfree, Ugeomfree0, qptr, ptrgeom,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
+      hottried=tryhotinversion(showmessages, allowlocalfailurefixandnoreport,finalstep, entropypflag, forcetryhot, whichcap, modprim, pi, pr0, pr, pressure, Ugeomfree, Ugeomfree0, qptr, ptrgeom,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
       if(hottried){
         PLOOP(pliter,pl) hotpr[pl]=pr[pl];
         

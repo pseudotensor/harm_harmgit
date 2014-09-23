@@ -1865,11 +1865,15 @@ int init_global(void)
   if(WHICHPROBLEM==KOMIPROBLEM){
     
     //lim[1]=lim[2]=lim[3]=MINM;
-    lim[1]=lim[2]=lim[3]=MC;
-    cour=0.8;
+    lim[1]=lim[2]=lim[3]=MC; 
+    cour=0.499;
     cooling=NOCOOLING;
     gam=gamideal=4./3.;
-    GAMMAMAX=50.0;
+    GAMMAMAX=100.0;
+    BSQORHOLIMIT=1E10;
+    BSQOULIMIT=1E10;
+    UORHOLIMIT=1E10;
+
 
     BCtype[X1UP]=FREEOUTFLOW;
     BCtype[X1DN]=FREEOUTFLOW;
@@ -1885,6 +1889,8 @@ int init_global(void)
     //fast shock
     if(WHICHKOMI==1){
       tf = 2.5;
+      cour=0.3; // must reduce
+      lim[1]=lim[2]=lim[3]=DONOR;
     }
     //slow shock
     else if(WHICHKOMI==2){
@@ -4632,7 +4638,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
     }
     
     
-    pr[PRAD0] = ERADLIMIT ;
+    pr[PRAD0] = 10.0*ERADLIMIT ; // so doesn't hit floor and confuse debug info
     pr[PRAD1] = 0 ;
     pr[PRAD2] = 0 ;
     pr[PRAD3] = 0 ;
