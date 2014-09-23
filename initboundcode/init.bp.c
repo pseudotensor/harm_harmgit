@@ -1770,7 +1770,7 @@ int coolfunc_user(FTYPE h_over_r, FTYPE *pr, struct of_geom *geom, struct of_sta
 
 	rincool=10.;
         /* crude approximation */
-        Wcirc = 1./(a + pow(R,1.5)) ;   // Omega in Noble paper
+        Wcirc = 1./(a + pow(r,1.5)) ;   // Omega in Noble paper
         cs_circ = thetacool/sqrt(R) ;
 	//        wcirc = rho*(1. + cs_circ*cs_circ/(gam - 1.)) ;
 
@@ -1783,11 +1783,11 @@ int coolfunc_user(FTYPE h_over_r, FTYPE *pr, struct of_geom *geom, struct of_sta
 
 
 	if(t > 0. && Yscaling > 1.0 ) { //&& bsq_ijcool*bsq_ijcool*.5/(gam-1)/u >= 0.005) { 
-	  if(R*R*h_over_r*h_over_r/25./(bsq_ijcool/rho) > taucool*taucool/Wcirc/Wcirc ) {    
+	  if(R*R*h_over_r*h_over_r/1./(bsq_ijcool/rho) > taucool*taucool/Wcirc/Wcirc ) {    
 	    dUcool = - (Wcirc/taucool) * rho*Tfix/(gam-1.) * pow( Yscaling - 1.,1.) * photoncapture * q->ucon[TT]  ; 
 	  }
-	  else if( (h_over_r*R/5.)/sqrt(bsq_ijcool/rho) > 2.*dt){
-	    dUcool = - (sqrt(bsq_ijcool/rho)/(h_over_r*R/5.)) * rho*Tfix/(gam-1.) * pow( Yscaling - 1.,1.) * photoncapture * q->ucon[TT]  ;
+	  else if( (h_over_r*R/1.)/sqrt(bsq_ijcool/rho) > 2.*dt){
+	    dUcool = - (sqrt(bsq_ijcool/rho)/(h_over_r*R/1.)) * rho*Tfix/(gam-1.) * pow( Yscaling - 1.,1.) * photoncapture * q->ucon[TT]  ;
 	  }
 	  else{
 	    dUcool = - (1./(2.*dt)) * rho*Tfix/(gam-1.) * pow( Yscaling - 1.,1.) * photoncapture * q->ucon[TT]  ;

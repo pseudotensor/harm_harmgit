@@ -1498,11 +1498,11 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
               bl_coord_ijk_2(i,j,k,CENT,X, V) ;
               r=V[1];
               th=V[2];
-              if(r>=Rhor)
+              if(1)//r>=Rhor)
                 R = r*sin(th) ;     // r in Noble paper
               else
                 R = Rhor; // Don't want target temperature to be overly high in column above and below BH where R<<Rhor
-              Wcirc = 1./(a + pow(R,1.5)) ;   // Omega in Noble paper
+              Wcirc = 1./(a + pow(r,1.5)) ;   // Omega in Noble paper
               temptarget = (h_over_r * R * Wcirc) * (h_over_r * R * Wcirc); // MAVARANOTE h_over_r here may not be the H/R you want to cool to in all circumstances.
               MACP0A1(pv,i,j,k,UU) = MACP0A1(pv,i,j,k,RHO)*temptarget/(gam-1.0);
             }
@@ -2793,13 +2793,13 @@ int set_density_floors_default(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *prfloo
   FTYPE temp=compute_temp_simple(ptrgeom->i, ptrgeom->j, ptrgeom->k, ptrgeom->p,rhoest,ugest);
   FTYPE temptarget=BIG;
   // MARK, compute temptarget here
-  if(r>=Rhor)
+  if(1)//r>=Rhor)
     R = r*sin(th) ;     // r in Noble paper
   else
     R = Rhor; // Don't want target temperature to be overly high in column above and below BH where R<<Rhor
   /* crude approximation */
   FTYPE Wcirc;
-  Wcirc = 1./(a + pow(R,1.5)) ;   // Omega in Noble paper
+  Wcirc = 1./(a + pow(r,1.5)) ;   // Omega in Noble paper
   temptarget = (h_over_r * R * Wcirc) * (h_over_r * R * Wcirc);
 
   FTYPE INVERSEBETALARGE=10.0; // ensure this works! 100 may be too high to reach enough hot parts.
