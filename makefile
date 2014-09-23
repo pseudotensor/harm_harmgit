@@ -155,8 +155,8 @@ MCC=mpicc -I/afs/slac/package/OpenMPI/include/ -L/afs/slac/package/OpenMPI/lib/
 endif
 
 ifeq ($(USEGCC),1)
-MCC=mpicc
-#.gcc
+#MCC=mpicc
+gcc
 endif
 
 ifeq ($(USEPGCC),1)
