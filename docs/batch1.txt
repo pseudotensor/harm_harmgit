@@ -1,0 +1,8 @@
+/*! \file ./docs//batch1.txt
+~~~~
+batch file itself: batches/batch.qsub.kraken.rada0.94a
+thing that sets up the restart files, done *inside* each batch file: batches/krakenrestartsustain_rad1.sh
+makes all the batch files: batches/makebatches.sh
+submits all the jobs in the dep list: batches/submitdeplist.sh
+~~~~
+*/

@@ -101,7 +101,10 @@ See harmgit/performancedata directory.
 
   See harmgit/environmentfiles/ for environment files for other computers, including supercomputers.  Note that there are "hidden" . files in these subdirectories.
 
+
   See harmgit/batches for batch system files for various supercomputers running harm.
+
+<a href="batch1_8txt.html">note: Batch queue dependency lists</a>
 
 
 <a href="_xvfb_8txt.html">Using X remotely</a>
@@ -147,6 +150,7 @@ See harmgit/subcodesfromothers for codes by other people.
 * \section scripts_sec Scripts locations
 
 See harmgit/scripts for many scripts that do many things
+
 
 
 * \section utils_sec Utilities locations
