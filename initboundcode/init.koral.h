@@ -1111,7 +1111,7 @@ struct Ccoordparams {
 
 
 
-//choose which Komissarov's test number to use (1 through 9)
+//choose which Komissarov's test number to use (1-9 and 101-106)
 #define WHICHKOMI 1
 
 
@@ -1162,6 +1162,13 @@ struct Ccoordparams {
 
 #elif(WHICHKOMI==9)
 #define N1 200
+
+#elif(WHICHKOMI>=101 && WHICHKOMI<=109)
+#define N1 200 // all use 200, see McKinney (2006) FFDE code paper
+
+#undef EOMTYPE
+//#define EOMTYPE EOMGRMHD // can use this as long as bsq/rho large and rho,P constant
+#define EOMTYPE EOMFFDE // what these problems really are for
 
 #endif
 #endif

@@ -1864,8 +1864,10 @@ int init_global(void)
 
   if(WHICHPROBLEM==KOMIPROBLEM){
     
-    //lim[1]=lim[2]=lim[3]=MINM;
-    lim[1]=lim[2]=lim[3]=MC; 
+    lim[1]=lim[2]=lim[3]=MINM; // ok with fast shock
+    //lim[1]=lim[2]=lim[3]=PARALINE; // good with fast shock
+    //    lim[1]=lim[2]=lim[3]=MC;  // not too good with fast shock
+    //    lim[1]=lim[2]=lim[3]=MP5;  // kinda ok with fast shock
     cour=0.499;
     cooling=NOCOOLING;
     gam=gamideal=4./3.;
@@ -1922,6 +1924,11 @@ int init_global(void)
     else if(WHICHKOMI==9){
       tf = 1.22;
     }
+
+    if(WHICHKOMI>=101 && WHICHKOMI<=109){
+      GAMMAMAX=2000.0;
+    }
+
 
     int idt;
     for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=0.1*tf;
@@ -2695,6 +2702,53 @@ int init_defcoord(void)
       xl = -1.0;
       xc =  0.0;
       xr =  1.0;
+    }
+
+
+    if(WHICHKOMI==101){
+      xl = -0.5;
+      xc =  0.0;
+      xr =  1.5;
+    }
+    if(WHICHKOMI==102){
+      xl = -0.5;
+      xc =  0.0;
+      xr =  1.5;
+    }
+    if(WHICHKOMI==103){
+      xl = -1.5;
+      xc =  0.0;
+      xr =  0.5;
+    }
+    if(WHICHKOMI==104){
+      xl = -0.5;
+      xc =  0.0;
+      xr =  1.5;
+    }
+    if(WHICHKOMI==105){
+      xl = -0.5;
+      xc =  0.0;
+      xr =  1.5;
+    }
+    if(WHICHKOMI==106){
+      xl = -0.5;
+      xc =  0.0;
+      xr =  1.5;
+    }
+    if(WHICHKOMI==107){
+      xl = -0.5;
+      xc =  0.0;
+      xr =  1.5;
+    }
+    if(WHICHKOMI==108){
+      xl = -1.0;
+      xc =  0.0;
+      xr =  2.0;
+    }
+    if(WHICHKOMI==109){
+      xl = -1.0;
+      xc =  0.0;
+      xr =  2.0;
     }
 
     Rin = Rin_array[1]=xl;
@@ -4431,236 +4485,624 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
   /*************************************************/
   /*************************************************/
   if(WHICHPROBLEM==KOMIPROBLEM){
-    FTYPE pleft[NPR], pright[NPR], P;
-    FTYPE dxdxp[NDIM][NDIM];
-    FTYPE x;
-    
+
     coord(i, j, k, CENT, X);
     bl_coord(X, V);
-    dxdxprim_ijk(0, 0, 0, CENT, dxdxp);
-    x = V[1];
-  
-    //zero out initial conditions
-    PALLLOOP(pl) pleft[pl] = 0.;
-    PALLLOOP(pl) pright[pl] = 0.;
+    FTYPE x = V[1];
+
+    if(WHICHKOMI>=1 && WHICHKOMI<=9){
+      FTYPE pleft[NPR], pright[NPR], P;
+      //zero out initial conditions
+      PALLLOOP(pl) pleft[pl] = 0.;
+      PALLLOOP(pl) pright[pl] = 0.;
     
     
-    //fast shock
-    if(WHICHKOMI==1){
-      //left state
-      pleft[U1] = 25.0;
-      pleft[U2] =  0.0;
-      pleft[U3] =  0.0;
-      pleft[B1] = 20.0;
-      pleft[B2] = 25.02;
-      pleft[B3] =  0.0;
-      P = 1.0;
-      pleft[RHO] = 1.;
-      pleft[UU] = P/(gam-1);
+      //fast shock
+      if(WHICHKOMI==1){
+        //left state
+        pleft[U1] = 25.0;
+        pleft[U2] =  0.0;
+        pleft[U3] =  0.0;
+        pleft[B1] = 20.0;
+        pleft[B2] = 25.02;
+        pleft[B3] =  0.0;
+        P = 1.0;
+        pleft[RHO] = 1.;
+        pleft[UU] = P/(gam-1);
 
-      //right state
-      pright[U1] = 1.091;
-      pright[U2] =  0.3923;
-      pright[U3] =  0.0;
-      pright[B1] = 20.0;
-      pright[B2] = 49.0;
-      pright[B3] =  0.0;
-      P = 367.5;
-      pright[RHO] = 25.48;
-      pright[UU] = P/(gam-1);
-    }
-    //slow shock
-    else if(WHICHKOMI==2){
-      //left state
-      pleft[U1] = 1.53;
-      pleft[U2] =  0.0;
-      pleft[U3] =  0.0;
-      pleft[B1] = 10.0;
-      pleft[B2] = 18.28;
-      pleft[B3] = 0.0;
-      P = 10.0;
-      pleft[RHO] = 1.;
-      pleft[UU] = P/(gam-1);
+        //right state
+        pright[U1] = 1.091;
+        pright[U2] =  0.3923;
+        pright[U3] =  0.0;
+        pright[B1] = 20.0;
+        pright[B2] = 49.0;
+        pright[B3] =  0.0;
+        P = 367.5;
+        pright[RHO] = 25.48;
+        pright[UU] = P/(gam-1);
+      }
+      //slow shock
+      else if(WHICHKOMI==2){
+        //left state
+        pleft[U1] = 1.53;
+        pleft[U2] =  0.0;
+        pleft[U3] =  0.0;
+        pleft[B1] = 10.0;
+        pleft[B2] = 18.28;
+        pleft[B3] = 0.0;
+        P = 10.0;
+        pleft[RHO] = 1.;
+        pleft[UU] = P/(gam-1);
       
-      //right state
-      pright[U1] =  .9571;
-      pright[U2] = -0.6822;
-      pright[U3] =  0.0;
-      pright[B1] = 10.0;
-      pright[B2] = 14.49;
-      pright[B3] =  0.0;
-      P = 55.36;
-      pright[RHO] = 3.323;
-      pright[UU] = P/(gam-1);
-    }
-    //fast switch-off rarefaction
-    else if(WHICHKOMI==3){
-      //left state
-      pleft[U1] = -2.0;
-      pleft[U2] =  0.0;
-      pleft[U3] =  0.0;
-      pleft[B1] = 2.0;
-      pleft[B2] = 0.0;
-      pleft[B3] = 0.0;
-      P = 1.0;
-      pleft[RHO] = 0.1;
-      pleft[UU] = P/(gam-1);
+        //right state
+        pright[U1] =  .9571;
+        pright[U2] = -0.6822;
+        pright[U3] =  0.0;
+        pright[B1] = 10.0;
+        pright[B2] = 14.49;
+        pright[B3] =  0.0;
+        P = 55.36;
+        pright[RHO] = 3.323;
+        pright[UU] = P/(gam-1);
+      }
+      //fast switch-off rarefaction
+      else if(WHICHKOMI==3){
+        //left state
+        pleft[U1] = -2.0;
+        pleft[U2] =  0.0;
+        pleft[U3] =  0.0;
+        pleft[B1] = 2.0;
+        pleft[B2] = 0.0;
+        pleft[B3] = 0.0;
+        P = 1.0;
+        pleft[RHO] = 0.1;
+        pleft[UU] = P/(gam-1);
       
-      //right state
-      pright[U1] = -0.212;
-      pright[U2] = -0.590;
-      pright[U3] =  0.0;
-      pright[B1] =  2.0;
-      pright[B2] =  4.710;
-      pright[B3] =  0.0;
-      P = 10.0;
-      pright[RHO] = 0.562;
-      pright[UU] = P/(gam-1);
-    }
-    //slow switch-on rarefaction
-    else if(WHICHKOMI==4){
-      //left state
-      pleft[U1] = -0.765;
-      pleft[U2] = -1.386;
-      pleft[U3] =  0.0;
-      pleft[B1] = 1.0;
-      pleft[B2] = 1.022;
-      pleft[B3] = 0.0;
-      P = 0.1;
-      pleft[RHO] = 1.78e-3;
-      pleft[UU] = P/(gam-1);
+        //right state
+        pright[U1] = -0.212;
+        pright[U2] = -0.590;
+        pright[U3] =  0.0;
+        pright[B1] =  2.0;
+        pright[B2] =  4.710;
+        pright[B3] =  0.0;
+        P = 10.0;
+        pright[RHO] = 0.562;
+        pright[UU] = P/(gam-1);
+      }
+      //slow switch-on rarefaction
+      else if(WHICHKOMI==4){
+        //left state
+        pleft[U1] = -0.765;
+        pleft[U2] = -1.386;
+        pleft[U3] =  0.0;
+        pleft[B1] = 1.0;
+        pleft[B2] = 1.022;
+        pleft[B3] = 0.0;
+        P = 0.1;
+        pleft[RHO] = 1.78e-3;
+        pleft[UU] = P/(gam-1);
       
-      //right state
-      pright[U1] =  0.0;
-      pright[U2] =  0.0;
-      pright[U3] =  0.0;
-      pright[B1] =  1.0;
-      pright[B2] =  0.0;
-      pright[B3] =  0.0;
-      P = 1.0;
-      pright[RHO] = 1.0;
-      pright[UU] = P/(gam-1);
-    }
-    //alfven wave
-    else if(WHICHKOMI==5){
-      //left state
-      pleft[U1] = 0;
-      pleft[U2] = 0;
-      pleft[U3] = 0.0;
-      pleft[B1] = 3.0;
-      pleft[B2] = 3.0;
-      pleft[B3] = 0.0;
-      P = 1.0;
-      pleft[RHO] = 1.0;
-      pleft[UU] = P/(gam-1);
+        //right state
+        pright[U1] =  0.0;
+        pright[U2] =  0.0;
+        pright[U3] =  0.0;
+        pright[B1] =  1.0;
+        pright[B2] =  0.0;
+        pright[B3] =  0.0;
+        P = 1.0;
+        pright[RHO] = 1.0;
+        pright[UU] = P/(gam-1);
+      }
+      //alfven wave
+      else if(WHICHKOMI==5){
+        //left state
+        pleft[U1] = 0;
+        pleft[U2] = 0;
+        pleft[U3] = 0.0;
+        pleft[B1] = 3.0;
+        pleft[B2] = 3.0;
+        pleft[B3] = 0.0;
+        P = 1.0;
+        pleft[RHO] = 1.0;
+        pleft[UU] = P/(gam-1);
       
-      //right state
-      pright[U1] =  3.70;
-      pright[U2] =  5.76;
-      pright[U3] =  0.0;
-      pright[B1] =  3.0;
-      pright[B2] =  -6.857;
-      pright[B3] =  0.0;
-      P = 1.0;
-      pright[RHO] = 1.0;
-      pright[UU] = P/(gam-1);
-    }
-    //compound wave
-    else if(WHICHKOMI==6){
-    }
-    //Shock tube 1
-    else if(WHICHKOMI==7){
-      //left state
-      pleft[U1] =  0.0;
-      pleft[U2] =  0.0;
-      pleft[U3] =  0.0;
-      pleft[B1] = 1.0;
-      pleft[B2] = 0.0;
-      pleft[B3] = 0.0;
-      P = 1000.0;
-      pleft[RHO] = 1.0;
-      pleft[UU] = P/(gam-1);
+        //right state
+        pright[U1] =  3.70;
+        pright[U2] =  5.76;
+        pright[U3] =  0.0;
+        pright[B1] =  3.0;
+        pright[B2] =  -6.857;
+        pright[B3] =  0.0;
+        P = 1.0;
+        pright[RHO] = 1.0;
+        pright[UU] = P/(gam-1);
+      }
+      //compound wave
+      else if(WHICHKOMI==6){
+      }
+      //Shock tube 1
+      else if(WHICHKOMI==7){
+        //left state
+        pleft[U1] =  0.0;
+        pleft[U2] =  0.0;
+        pleft[U3] =  0.0;
+        pleft[B1] = 1.0;
+        pleft[B2] = 0.0;
+        pleft[B3] = 0.0;
+        P = 1000.0;
+        pleft[RHO] = 1.0;
+        pleft[UU] = P/(gam-1);
       
-      //right state
-      pright[U1] =  0.0;
-      pright[U2] =  0.0;
-      pright[U3] =  0.0;
-      pright[B1] =  1.0;
-      pright[B2] =  0.0;
-      pright[B3] =  0.0;
-      P = 1.0;
-      pright[RHO] = 0.1;
-      pright[UU] = P/(gam-1);
-    }
-    //Shock tube 2
-    else if(WHICHKOMI==8){
-      //left state
-      pleft[U1] =  0.0;
-      pleft[U2] =  0.0;
-      pleft[U3] =  0.0;
-      pleft[B1] = 0.0;
-      pleft[B2] = 20.0;
-      pleft[B3] = 0.0;
-      P = 30.;
-      pleft[RHO] = 1.0;
-      pleft[UU] = P/(gam-1);
+        //right state
+        pright[U1] =  0.0;
+        pright[U2] =  0.0;
+        pright[U3] =  0.0;
+        pright[B1] =  1.0;
+        pright[B2] =  0.0;
+        pright[B3] =  0.0;
+        P = 1.0;
+        pright[RHO] = 0.1;
+        pright[UU] = P/(gam-1);
+      }
+      //Shock tube 2
+      else if(WHICHKOMI==8){
+        //left state
+        pleft[U1] =  0.0;
+        pleft[U2] =  0.0;
+        pleft[U3] =  0.0;
+        pleft[B1] = 0.0;
+        pleft[B2] = 20.0;
+        pleft[B3] = 0.0;
+        P = 30.;
+        pleft[RHO] = 1.0;
+        pleft[UU] = P/(gam-1);
       
-      //right state
-      pright[U1] =  0.0;
-      pright[U2] =  0.0;
-      pright[U3] =  0.0;
-      pright[B1] =  0.0;
-      pright[B2] =  0.0;
-      pright[B3] =  0.0;
-      P = 1.0;
-      pright[RHO] = 0.1;
-      pright[UU] = P/(gam-1);
-    }
-    //Collision
-    else if(WHICHKOMI==9){
-      //left state
-      pleft[U1] =  5.0;
-      pleft[U2] =  0.0;
-      pleft[U3] =  0.0;
-      pleft[B1] = 10.0;
-      pleft[B2] = 10.0;
-      pleft[B3] = 0.0;
-      P = 1.0;
-      pleft[RHO] = 1.0;
-      pleft[UU] = P/(gam-1);
+        //right state
+        pright[U1] =  0.0;
+        pright[U2] =  0.0;
+        pright[U3] =  0.0;
+        pright[B1] =  0.0;
+        pright[B2] =  0.0;
+        pright[B3] =  0.0;
+        P = 1.0;
+        pright[RHO] = 0.1;
+        pright[UU] = P/(gam-1);
+      }
+      //Collision
+      else if(WHICHKOMI==9){
+        //left state
+        pleft[U1] =  5.0;
+        pleft[U2] =  0.0;
+        pleft[U3] =  0.0;
+        pleft[B1] = 10.0;
+        pleft[B2] = 10.0;
+        pleft[B3] = 0.0;
+        P = 1.0;
+        pleft[RHO] = 1.0;
+        pleft[UU] = P/(gam-1);
       
-      //right state
-      pright[U1] = -5.0;
-      pright[U2] =  0.0;
-      pright[U3] =  0.0;
-      pright[B1] =  10.0;
-      pright[B2] = -10.0;
-      pright[B3] =  0.0;
-      P = 1.0;
-      pright[RHO] = 1.0;
-      pright[UU] = P/(gam-1);
-    }
+        //right state
+        pright[U1] = -5.0;
+        pright[U2] =  0.0;
+        pright[U3] =  0.0;
+        pright[B1] =  10.0;
+        pright[B2] = -10.0;
+        pright[B3] =  0.0;
+        P = 1.0;
+        pright[RHO] = 1.0;
+        pright[UU] = P/(gam-1);
+      }
 
-    if(WHICHKOMI==5){
-      if(x<=-0.5) PALLLOOP(pl) pr[pl] = pleft[pl];
-      else if(x>=0.0) PALLLOOP(pl) pr[pl] = pright[pl];
+      if(WHICHKOMI==5){
+        if(x<=-0.5) PALLLOOP(pl) pr[pl] = pleft[pl];
+        else if(x>=0.0) PALLLOOP(pl) pr[pl] = pright[pl];
+        else{
+          PALLLOOP(pl) pr[pl] = pleft[pl] + (pright[pl]-pleft[pl])*(x- (-0.5))/(0.0 - (-0.5));
+        }
+      }
       else{
-        PALLLOOP(pl) pr[pl] = pleft[pl] + (pright[pl]-pleft[pl])*(x- (-0.5))/(0.0 - (-0.5));
+        if (x<=0) {
+          PALLLOOP(pl) pr[pl] = pleft[pl];
+        }
+        else if (x>0) {
+          PALLLOOP(pl) pr[pl] = pright[pl];
+        }
       }
     }
-    else{
-      if (x<=0) {
-        PALLLOOP(pl) pr[pl] = pleft[pl];
+
+    if(WHICHKOMI>=101 && WHICHKOMI<=109){
+      FTYPE E[NDIM],B[NDIM];
+      FTYPE x0,dx0;
+      FTYPE bcon[NDIM],vcon[NDIM],econ[NDIM];
+      FTYPE phi0;
+      FTYPE KK;
+      FTYPE B0;
+      FTYPE muf;
+
+      // defaults
+      if(EOMTYPE==EOMFFDE){
+        pr[RHO]=pr[UU]=0;
       }
-      else if (x>0) {
-        PALLLOOP(pl) pr[pl] = pright[pl];
+      else{
+        pr[RHO]=0.1; // all fields below are order unity overall, but can pass through zero.
+        pr[UU]=pr[RHO]; // so relativistically hot
       }
-    }
+
+      pr[U1]=pr[U2]=pr[U3]=0.0;
+      pr[B2]=pr[B3]=0;
+      pr[B1]=0;
+
+      
+      extern void vbtopr(FTYPE *vcon,FTYPE *bcon,struct of_geom *geom, FTYPE *pr);
+      extern void computeKK(FTYPE *pr, struct of_geom *geom, FTYPE *KK);
+      extern void EBvetatopr(FTYPE *Econ, FTYPE *Bcon, FTYPE *veta, struct of_geom *geom, FTYPE *pr);
+      extern int EBtopr(FTYPE *E,FTYPE *B,struct of_geom *geom, FTYPE *pr);
+      extern int EBtopr_2(FTYPE *E,FTYPE *B,struct of_geom *geom, FTYPE *pr);
+
+
+      int TESTNUMBER=WHICHKOMI-101; // to translate to init.komtests.c numbering
+
+      *whichvel=WHICHVEL;
+      //*whichvel=VEL4;
+      *whichcoord=MCOORD;
+      // get metric grid geometry for these ICs
+      int getprim=0;
+      struct of_geom geomdontuse;
+      struct of_geom *ptrgeom=&geomdontuse;
+      gset(getprim,*whichcoord,i,j,k,ptrgeom);
+
+      //      *whichvel=WHICHVEL;
+      //      *whichcoord=PRIMECOORDS;
+      //      struct of_geom geomdontuse;
+      //      struct of_geom *ptrgeom=&geomdontuse;
+      //      int loc=CENT;
+      //      get_geometry(i,j,k,loc,ptrgeom);
+
+
+      if(TESTNUMBER==0){ // Fast wave
+        tf = 1;
+        int idt;
+        for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=tf/10.0;
+
+        //  tf = 1;
+        //  DTd=1E-5;
+  
+
+        E[1]=0;
+        E[2]=0;
+        B[3]=0.0;
+        B[1]=0.0;
+        x0=0.0;
+        dx0=0.1;
+        if(x-x0<=-dx0) B[2]=1.0;
+        else if((x-x0>-dx0)&&(x-x0<dx0)) B[2]=1.0-(0.3/(2.0*dx0))*((x-x0)+dx0);
+        else if(x-x0>=dx0) B[2]=0.7;
+
+        muf=1.0;
+
+        E[3]=1.0-muf*B[2];
+
+        //  for(k=1;k<=3;k++) E[k]=-E[k]; // switch for GRFFE formulation sign convention
+
+        //        int jj;
+        //        SLOOPA(jj) E[jj]*=sqrt(ptrgeom->gcon[GIND(jj,jj)]);
+        //        SLOOPA(jj) B[jj]*=sqrt(ptrgeom->gcon[GIND(jj,jj)]);
+        EBtopr(E,B,ptrgeom,pr);
+        //EBtopr_2(E,B,ptrgeom,pr);
+        
+        //  pr[U1]=0.9;
+        
+        //dualfprintf(fail_file,"pr[U1]=%21.15g pr[U2]=%21.15g\n",pr[U1],pr[U2]);
+        
+        computeKK(pr,ptrgeom,&KK);
+        
+        dualfprintf(fail_file,"i=%d KK=%21.15g\n",i,KK);
+        
+      }
+      if(TESTNUMBER==1){ // comoving Fast wave (NOT a Komissarov test)
+        //tf = 1;
+        //  DTd=tf/10.0;
+
+        tf = 1;
+        int idt;
+        for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=1E-5;
+        
+        
+        bcon[3]=0.0;
+        bcon[1]=0.0;
+        x0=0.0;
+        dx0=0.1;
+        if(x-x0<=-dx0) bcon[2]=1.0;
+        else if((x-x0>-dx0)&&(x-x0<dx0)) bcon[2]=1.0-(0.3/(2.0*dx0))*((x-x0)+dx0);
+        else if(x-x0>=dx0) bcon[2]=0.7;
+        
+        //  for(k=1;k<=3;k++) E[k]=-E[k]; // switch for GRFFE formulation sign convention
+        
+        
+        vcon[1]=0.9999;
+        vcon[2]=vcon[3]=0;
+        
+        //        int jj;
+        //        SLOOPA(jj) vcon[jj]*=sqrt(ptrgeom->gcon[GIND(jj,jj)]);
+        //        SLOOPA(jj) bcon[jj]*=sqrt(ptrgeom->gcon[GIND(jj,jj)]);
+        vbtopr(vcon,bcon,ptrgeom,pr);
+
+        computeKK(pr,ptrgeom,&KK);
+
+        dualfprintf(fail_file,"i=%d KK=%21.15g\n",i,KK);
+
+      }
+      if(TESTNUMBER==2){ // (nondegenerate) Alfven wave (not going to work with HARM)
+        tf = 2;
+        int idt;
+        for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=tf/10.0;
+
+        bcon[1]=bcon[2]=1.0;
+  
+        x0=0.0;
+        if(x-x0<=-0.1) bcon[3]=1.0;
+        else if((x-x0>-0.1)&&(x-x0<0.1)) bcon[3]=1.0+3.0/2.0*((x-x0)+0.1);
+        else if(x-x0>=0.1) bcon[3]=1.3;
+
+        econ[2]=econ[3]=0.0;
+
+        // can be + or -
+        //FTYPE CONSTECON1=1.3;
+        //  econ[1]=-sqrt(-CONSTECON1+bcon[1]*bcon[1]+bcon[2]*bcon[3]+bcon[3]*bcon[3]);
+        //  econ[1]=1-0.5*bcon[3];
+        FTYPE CONSTECON1=1.0;
+        econ[1]=sqrt(-CONSTECON1 + bcon[3]*bcon[3]);
+        //  econ[1]=0.0;
+        //  econ[1]=-bcon[3];
+
+        vcon[1]=-0.5;
+        vcon[2]=vcon[3]=0;
+
+        //        int jj;
+        //        SLOOPA(jj) econ[jj]*=sqrt(ptrgeom->gcon[GIND(jj,jj)]);
+        //        SLOOPA(jj) bcon[jj]*=sqrt(ptrgeom->gcon[GIND(jj,jj)]);
+        //        SLOOPA(jj) vcon[jj]*=sqrt(ptrgeom->gcon[GIND(jj,jj)]);
+        EBvetatopr(econ, bcon, vcon, ptrgeom, pr);
+        //  vbtopr(vcon,bcon,ptrgeom,pr);
+
+        computeKK(pr,ptrgeom,&KK);
+
+        dualfprintf(fail_file,"i=%d KK=%21.15g\n",i,KK);
+
+      }
+
+      if(TESTNUMBER==3){ // Degenerate Alfven wave
+        tf = 2;
+        int idt;
+        for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=tf/10.0;
+        bcon[1]=0.0;
+
+  
+        x0=0.0;
+        if(x-x0<=-0.1) phi0=0.0;
+        else if((x-x0>-0.1)&&(x-x0<0.1)) phi0=5.0/2.0*M_PI*((x-x0)+0.1);
+        else if(x-x0>=0.1) phi0=M_PI*0.5;
+
+        bcon[2]=2.0*cos(phi0);
+        bcon[3]=2.0*sin(phi0);
+
+
+        vcon[1]=0.5;
+        vcon[2]=vcon[3]=0;
+
+        //        int jj;
+        //        SLOOPA(jj) vcon[jj]*=sqrt(ptrgeom->gcon[GIND(jj,jj)]);
+        //        SLOOPA(jj) bcon[jj]*=sqrt(ptrgeom->gcon[GIND(jj,jj)]);
+        vbtopr(vcon,bcon,ptrgeom,pr);
+
+        computeKK(pr,ptrgeom,&KK);
+
+        dualfprintf(fail_file,"i=%d KK=%21.15g\n",i,KK);
+
+
+      }
+      if(TESTNUMBER==4){ // Three-wave problem
+        tf = .75;
+        int idt;
+        for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=tf/10.0;
+
+        x0=0.5;
+        if(x<x0){
+          B[1]=1.0;
+          B[2]=1.5;
+          B[3]=3.5;
+          E[1]=-1.0;
+          E[2]=-0.5;
+          E[3]=0.5;
+        }
+        else{
+          B[1]=1.0;
+          B[2]=2.0;
+          B[3]=2.3;
+          E[1]=-1.5;
+          E[2]=1.3;
+          E[3]=-0.5;
+        }
+
+        //  for(k=1;k<=3;k++) E[k]=-E[k]; // switch for GRFFE formulation sign convention
+
+        //        int jj;
+        //        SLOOPA(jj) E[jj]*=sqrt(ptrgeom->gcon[GIND(jj,jj)]);
+        //        SLOOPA(jj) B[jj]*=sqrt(ptrgeom->gcon[GIND(jj,jj)]);
+        EBtopr(E,B,ptrgeom,pr);
+        //EBtopr_2(E,B,ptrgeom,pr);
+
+        computeKK(pr,ptrgeom,&KK);
+
+        dualfprintf(fail_file,"i=%d KK=%21.15g\n",i,KK);
+
+
+      }
+
+      if(TESTNUMBER==5){ // B^2-E^2<0 problem
+        tf = .02;
+        int idt;
+        for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=tf/10.0;
+
+        x0=0.5;
+        if(x<x0){
+          B[0]=0.0;
+          B[1]=1.0;
+          B[2]=1.0;
+          B[3]=1.0;
+          E[0]=0.0;
+          E[1]=0.0;
+          E[2]=0.5;
+          E[3]=-0.5;
+        }
+        else{
+          B[0]=0.0;
+          B[1]=1.0;
+          B[2]=-1.0;
+          B[3]=-1.0;
+          E[0]=0.0;
+          E[1]=0.0;
+          E[2]=0.5;
+          E[3]=-0.5;
+        }
+
+        //  for(k=1;k<=3;k++) E[k]=-E[k]; // switch for GRFFE formulation sign convention
+
+        //        int jj;
+        //        SLOOPA(jj) E[jj]*=sqrt(ptrgeom->gcon[GIND(jj,jj)]);
+        //        SLOOPA(jj) B[jj]*=sqrt(ptrgeom->gcon[GIND(jj,jj)]);
+        EBtopr(E,B,ptrgeom,pr);
+        //EBtopr_2(E,B,ptrgeom,pr);
+
+        computeKK(pr,ptrgeom,&KK);
+
+        dualfprintf(fail_file,"i=%d KK=%21.15g\n",i,KK);
+
+
+      }
+      if(TESTNUMBER==6){ // smoothed B^2-E^2<0 problem
+        tf = .02;
+        int idt;
+        for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=tf/10.0;
+
+        x0=0.5;
+        if(x-x0<-0.1){
+          B[1]=1.0;
+          B[2]=1.0;
+          B[3]=1.0;
+          E[1]=0.0;
+          E[2]=0.5;
+          E[3]=-0.5;
+        }
+        else if(x-x0>0.1){
+          B[1]=1.0;
+          B[2]=-1.0;
+          B[3]=-1.0;
+          E[1]=0.0;
+          E[2]=0.5;
+          E[3]=-0.5;
+        }
+        else if((x-x0>=-0.1)&&(x-x0<=0.1)){
+          B[1]=1.0;
+          B[2]=1.0+(x-x0+0.1)*(-2.0/0.2);
+          B[3]=1.0+(x-x0+0.1)*(-2.0/0.2);
+          E[1]=0.0;
+          E[2]=0.5;
+          E[3]=-0.5;
+        }
+
+        //  for(k=1;k<=3;k++) E[k]=-E[k]; // switch for GRFFE formulation sign convention
+
+
+        //        int jj;
+        //        SLOOPA(jj) E[jj]*=sqrt(ptrgeom->gcon[GIND(jj,jj)]);
+        //        SLOOPA(jj) B[jj]*=sqrt(ptrgeom->gcon[GIND(jj,jj)]);
+        EBtopr(E,B,ptrgeom,pr);
+        //EBtopr_2(E,B,ptrgeom,pr);
+
+        computeKK(pr,ptrgeom,&KK);
+
+        dualfprintf(fail_file,"i=%d KK=%21.15g\n",i,KK);
+
+
+      }
+
+      if(TESTNUMBER==7){ // Komissarov 2004 C3.1 Alfven wave
+        // PARA generates crap on left side, but wave doesn't move
+        // MC does very well
+        // no obvious difference between HLL and LAXF
+        // Athena1/2 ok
+        tf = 2.0;
+        int idt;
+        for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=tf/10.0;
+
+        //  B[1]=B[2]=E[3]=E[2]=0;
+        B[1]=B[2]=E[3]=1.0;
+        E[2]=0;
+
+
+        if(x<=0.5){
+          B[3]=1.0;
+        }
+        else if(x>=0.2+0.5){
+          B[3]=1.3;
+        }
+        else{
+          B[3]=1.0+0.15*(1.0+sin(5.0*M_PI*(x-0.1-0.5)));
+        }
+        E[1]=-B[3];
+
+        //  for(k=1;k<=3;k++) E[k]=-E[k]; // switch for GRFFE formulation sign convention
+
+        //        int jj;
+        //        SLOOPA(jj) E[jj]*=sqrt(ptrgeom->gcon[GIND(jj,jj)]);
+        //        SLOOPA(jj) B[jj]*=sqrt(ptrgeom->gcon[GIND(jj,jj)]);
+        EBtopr(E,B,ptrgeom,pr);
+        //EBtopr_2(E,B,ptrgeom,pr);
+
+        computeKK(pr,ptrgeom,&KK);
+
+        dualfprintf(fail_file,"i=%d KK=%21.15g\n",i,KK);
+
+
+      }
+      if(TESTNUMBER==8){ // Komissarov 2004 C3.2 Current Sheet
+        tf = 1.0;
+        int idt;
+        for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=tf/10.0;
+
+        E[1]=E[2]=E[3]=0.0;
+        B[3]=0.0;
+        B[1]=1.0;
+
+        //B0=0.5; // fine
+        B0 = 2.0;
+
+        if(x<=0.5){
+          B[2]=B0;
+        }
+        else{
+          B[2]=-B0;
+        }
+
+
+        //        int jj;
+        //        SLOOPA(jj) E[jj]*=sqrt(ptrgeom->gcon[GIND(jj,jj)]);
+        //        SLOOPA(jj) B[jj]*=sqrt(ptrgeom->gcon[GIND(jj,jj)]);
+        EBtopr(E,B,ptrgeom,pr);
+        //EBtopr_2(E,B,ptrgeom,pr);
+
+        computeKK(pr,ptrgeom,&KK);
+
+        dualfprintf(fail_file,"i=%d KK=%21.15g\n",i,KK);
+
+
+      }
+
+    }// end over init.komtests.c from FFDE code tests
+
+
     
-    //convert magnetic field components into code coordinates
-    //    for(pl=1; pl <= 3; pl++) {
-    //      pr[pl-1+B1] /= dxdxp[pl][pl];
-    //    }
   
     if(FLUXB==FLUXCTSTAG){
       //can ignore half a cell shift for B1: it does not change across the interface so does not matter
