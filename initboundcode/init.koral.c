@@ -4491,6 +4491,9 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
     FTYPE x = V[1];
 
     if(WHICHKOMI>=1 && WHICHKOMI<=9){
+      *whichvel=VEL4;
+      *whichcoord=CARTMINKMETRIC2;
+
       FTYPE pleft[NPR], pright[NPR], P;
       //zero out initial conditions
       PALLLOOP(pl) pleft[pl] = 0.;
@@ -5116,8 +5119,6 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
     pr[PRAD3] = 0 ;
     
     
-    *whichvel=VEL4;
-    *whichcoord=CARTMINKMETRIC2;
     
     return(0);
   }
