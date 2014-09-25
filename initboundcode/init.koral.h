@@ -1148,10 +1148,10 @@ struct Ccoordparams {
 #elif(WHICHKOMI==4)
 #define N1 150
 
-#elif(WHICHKOMI==5) //not done
+#elif(WHICHKOMI==5)
 #define N1 200
 
-#elif(WHICHKOMI==6) //not done
+#elif(WHICHKOMI==6)
 #define N1 200
 
 #elif(WHICHKOMI==7)

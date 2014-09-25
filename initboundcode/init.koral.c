@@ -1903,11 +1903,11 @@ int init_global(void)
       tf = 2.0;
     }
     //alfven wave
-    else if(WHICHKOMI==5){ //not done
+    else if(WHICHKOMI==5){
       tf = 2.0;
     }
     //compound wave
-    else if(WHICHKOMI==6){ //not done
+    else if(WHICHKOMI==6){
       tf = 1.5;  //also 0.1 and 0.75 are other times
     }
     //Shock tube 1
@@ -2662,17 +2662,21 @@ int init_defcoord(void)
     }
     //slow switch-on rarefaction
     else if(WHICHKOMI==4){
-      xl = -1.0;
+      xl = -0.75;
       xc =  0.0;
-      xr =  1.0;
+      xr =  1.2;
     }
     //alfven wave
     else if(WHICHKOMI==5){
-      //not done as requires solution
+      xl = -1.0;
+      xc =  0.0;
+      xr =  1.5;
     }
     //compound wave
     else if(WHICHKOMI==6){
-      //not done as requires solution
+      xl = -0.5;
+      xc =  0.0;
+      xr =  1.5;
     }
     //Shock tube 1
     else if(WHICHKOMI==7){
@@ -4539,11 +4543,30 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
     }
     //alfven wave
     else if(WHICHKOMI==5){
-      //not done as requires solution
+      //left state
+      pleft[U1] = 0;
+      pleft[U2] = 0;
+      pleft[U3] = 0.0;
+      pleft[B1] = 3.0;
+      pleft[B2] = 3.0;
+      pleft[B3] = 0.0;
+      P = 1.0;
+      pleft[RHO] = 1.0;
+      pleft[UU] = P/(gam-1);
+      
+      //right state
+      pright[U1] =  3.70;
+      pright[U2] =  5.76;
+      pright[U3] =  0.0;
+      pright[B1] =  3.0;
+      pright[B2] =  -6.857;
+      pright[B3] =  0.0;
+      P = 1.0;
+      pright[RHO] = 1.0;
+      pright[UU] = P/(gam-1);
     }
     //compound wave
     else if(WHICHKOMI==6){
-      //not done as requires solution
     }
     //Shock tube 1
     else if(WHICHKOMI==7){
@@ -4618,11 +4641,20 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
       pright[UU] = P/(gam-1);
     }
 
-    if (x<=0) {
-      PALLLOOP(pl) pr[pl] = pleft[pl];
+    if(WHICHKOMI==5){
+      if(x<=-0.5) PALLLOOP(pl) pr[pl] = pleft[pl];
+      else if(x>=0.0) PALLLOOP(pl) pr[pl] = pright[pl];
+      else{
+        PALLLOOP(pl) pr[pl] = pleft[pl] + (pright[pl]-pleft[pl])*(x- (-0.5))/(0.0 - (-0.5));
+      }
     }
-    else if (x>0) {
-      PALLLOOP(pl) pr[pl] = pright[pl];
+    else{
+      if (x<=0) {
+        PALLLOOP(pl) pr[pl] = pleft[pl];
+      }
+      else if (x>0) {
+        PALLLOOP(pl) pr[pl] = pright[pl];
+      }
     }
     
     //convert magnetic field components into code coordinates
