@@ -1889,8 +1889,6 @@ int init_global(void)
     //fast shock
     if(WHICHKOMI==1){
       tf = 2.5;
-      cour=0.3; // must reduce
-      lim[1]=lim[2]=lim[3]=DONOR;
     }
     //slow shock
     else if(WHICHKOMI==2){
