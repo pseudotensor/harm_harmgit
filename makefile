@@ -155,8 +155,8 @@ MCC=mpicc -I/afs/slac/package/OpenMPI/include/ -L/afs/slac/package/OpenMPI/lib/
 endif
 
 ifeq ($(USEGCC),1)
-#MCC=mpicc
-MCC=gcc
+MCC=mpicc # mpicc here assumes system had mpi compiled with gcc or allows use of -cc=gcc
+#MCC=gcc # use this if gcc has built-in MPI on some supercomputer as implicit from linking options built into modules
 COMP=gcc
 endif
 
