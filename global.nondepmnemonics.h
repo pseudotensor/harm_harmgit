@@ -1208,6 +1208,9 @@
 #define LMAX 2
 
 
+// for rescale() in rescale_interp.c
+#define DORESCALE 1
+#define UNRESCALE -1
 
 
 

@@ -1132,7 +1132,7 @@ static void rescale_calc_stagfield_full(int *Nvec, FTYPE (*pstag)[NSTORE2][NSTOR
 #if(RESCALEINTERPFLUXCTSTAG && RESCALEINTERP)
         // get geometry for face pre-interpolated values
         get_geometry(i, j, k, FACE1-1+dir, ptrgeomf[dir]); // FACE1,FACE2,FACE3 each
-        rescale(1,dir,MAC(pstag,i,j,k),ptrgeomf[dir],MAC(p2interp,i,j,k));
+        rescale(DORESCALE,dir,MAC(pstag,i,j,k),ptrgeomf[dir],MAC(p2interp,i,j,k));
 #else
         MACP0A1(p2interp,i,j,k,pl) = MACP0A1(pstag,i,j,k,pl);
 
@@ -1438,8 +1438,8 @@ int interpolate_pfield_face2cent(FTYPE (*preal)[NSTORE2][NSTORE3][NPR], FTYPE (*
           /////////////////////////////////////
 #if(RESCALEINTERPFLUXCTSTAG && RESCALEINTERP)
           get_geometry(i, j, k, CENT, ptrgeomc); // final quantity is at CENT
-          rescale(-1,dir,p_l,ptrgeomc,p2interp_l);
-          rescale(-1,dir,p_r,ptrgeomc,p2interp_r);
+          rescale(UNRESCALE,dir,p_l,ptrgeomc,p2interp_l);
+          rescale(UNRESCALE,dir,p_r,ptrgeomc,p2interp_r);
 
           if(ucent!=NULL) MACP0A1(ucent,i,j,k,pl)  = 0.5*(p_l[pl]+p_r[pl])*(ptrgeomc->gdet); // exactly correct (even for ENO/FV)
 

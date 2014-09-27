@@ -677,12 +677,12 @@ int bound_x1dn_outflow(
           }
 #elif(HORIZONEXTRAP==2)
           get_geometry(ri, rj, rk, dirprim[0], ptrrgeom[0]);
-          rescale(1,1,MAC(prim,ri,rj,rk),ptrrgeom[0],prescale);
+          rescale(DORESCALE,1,MAC(prim,ri,rj,rk),ptrrgeom[0],prescale);
           LOOPBOUND1INSPECIAL{
             // set guess
             PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl)=MACP0A1(prim,ri,rj,k,pl);
             get_geometry(i, j, k, dirprim[0], ptrgeom[0]);     
-            rescale(-1,1,MAC(prim,i,j,k),ptrgeom[0],prescale);
+            rescale(UNRESCALE,1,MAC(prim,i,j,k),ptrgeom[0],prescale);
           }
 #elif(HORIZONEXTRAP==3)
           extrapfunc(X1DN,j,k,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
@@ -853,12 +853,12 @@ int bound_x1up_outflow(
           }
 #elif(OUTEREXTRAP==2)
           get_geometry(ri, rj, rk, dirprim[0], ptrrgeom[0]);
-          rescale(1,1,MAC(prim,ri,rj,rk),ptrrgeom[0],prescale);
+          rescale(DORESCALE,1,MAC(prim,ri,rj,rk),ptrrgeom[0],prescale);
           LOOPBOUND1OUT{
             // set guess
             PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl)=MACP0A1(prim,ri,rj,rk,pl);
             get_geometry(i, j, k, dirprim[0], ptrgeom[0]);
-            rescale(-1,1,MAC(prim,i,j,k),ptrgeom[0],prescale);
+            rescale(UNRESCALE,1,MAC(prim,i,j,k),ptrgeom[0],prescale);
           }
 #elif(OUTEREXTRAP==3)
           extrapfunc(X1UP,j,k,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);

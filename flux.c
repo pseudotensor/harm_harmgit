@@ -907,7 +907,7 @@ void rescale_calc_full(int dir,FTYPE (*pr)[NSTORE2][NSTORE3][NPR],FTYPE (*p2inte
       // get geometry for center pre-interpolated values
       get_geometry(i, j, k, CENT, ptrgeom); 
       // assume no need for a guess to p2interp to get pr (consistent with no unrescale being done after interpolation)
-      if(npr2interpstart<=npr2interpend) rescale(1,dir,MAC(pr,i,j,k),ptrgeom,MAC(p2interp,i,j,k));
+      if(npr2interpstart<=npr2interpend) rescale(DORESCALE,dir,MAC(pr,i,j,k),ptrgeom,MAC(p2interp,i,j,k));
     }// end COMPFULLLOOP
   }// end parallel region
 
@@ -2209,8 +2209,8 @@ int getplpr(int dir, SFTYPE time, int idel, int jdel, int kdel, int i, int j, in
       p_l[pl]=MACP0A1(pr,i,j,k,pl);
       p_r[pl]=MACP0A1(pr,i,j,k,pl);
     }
-    rescale(-1,dir,p_l,ptrgeom,p2interp_l);
-    rescale(-1,dir,p_r,ptrgeom,p2interp_r);
+    rescale(UNRESCALE,dir,p_l,ptrgeom,p2interp_l);
+    rescale(UNRESCALE,dir,p_r,ptrgeom,p2interp_r);
   }
 
 
