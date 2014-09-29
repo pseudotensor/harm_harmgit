@@ -2679,7 +2679,7 @@ int init_defcoord(void)
       xc =  0.0;
       xr =  1.5;
     }
-    //compound wave
+    //compound wave (plot is -0.5 to 1.5, but need 4 cells between -0.025 and 0.0 according to Figure 5)
     else if(WHICHKOMI==6){
       xl = -0.5;
       xc =  0.0;
@@ -4596,8 +4596,8 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
         pright[RHO] = 1.0;
         pright[UU] = P/(gam-1);
       }
-      //alfven wave
-      else if(WHICHKOMI==5){
+      //alfven wave and compound wave
+      else if(WHICHKOMI==5 || WHICHKOMI==6){
         //left state
         pleft[U1] = 0;
         pleft[U2] = 0;
@@ -4619,9 +4619,6 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
         P = 1.0;
         pright[RHO] = 1.0;
         pright[UU] = P/(gam-1);
-      }
-      //compound wave
-      else if(WHICHKOMI==6){
       }
       //Shock tube 1
       else if(WHICHKOMI==7){
@@ -4696,11 +4693,82 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
         pright[UU] = P/(gam-1);
       }
 
-      if(WHICHKOMI==5){
-        if(x<=-0.5) PALLLOOP(pl) pr[pl] = pleft[pl];
-        else if(x>=0.0) PALLLOOP(pl) pr[pl] = pright[pl];
+      if(WHICHKOMI==5 || WHICHKOMI==6){ // Alfven wave or compound wave
+        FTYPE xcl,xcr,xint;
+        //        xcl=xcr=0.0;
+        if(WHICHKOMI==5){ xcl=-0.5; xcr=0.0; }
+        if(WHICHKOMI==6){ xcl=-0.025; xcr=0.0; } // 4 cells according to figure 5 in Komi 1999, but seems to really be 2 cells unless expanded range of box relative to WHICHKOMI==5 for odd reason
+        if(x<=xcl) PALLLOOP(pl) pr[pl] = pleft[pl];
+        else if(x>xcr) PALLLOOP(pl) pr[pl] = pright[pl];
         else{
-          PALLLOOP(pl) pr[pl] = pleft[pl] + (pright[pl]-pleft[pl])*(x- (-0.5))/(0.0 - (-0.5));
+          //          FTYPE xint=(x- xcl)/(xcr - xcl);
+          // default left-right state values
+          //          PALLLOOP(pl) pr[pl] = pleft[pl] + (pright[pl]-pleft[pl])*xint;
+
+          // but rotate field by \pi
+          if(WHICHKOMI==5){ xcl=-0.5; xcr=0.0; }
+          if(WHICHKOMI==6){ xcl=-0.025; xcr=0.0; } // 4 cells according to figure 5 in Komi 1999, but seems to really be 2 cells unless expanded range of box relative to WHICHKOMI==5 for odd reason
+          FTYPE phi0;
+          if(x<=xcl) phi0=0.0;
+          else if((x>xcl)&&(x<xcr)) phi0=0.5*M_PI*(x-xcl)/(xcr-xcl);
+          else if(x>=xcr) phi0=0.5*M_PI;
+
+          FTYPE phi1;
+          if(x<=xcl) phi1=0.0;
+          else if((x>xcl)&&(x<xcr)) phi1=M_PI*(x-xcl)/(xcr-xcl);
+          else if(x>=xcr) phi1=M_PI;
+
+          //          xint=sin(phi0);
+          // rotate all by pi
+          PALLLOOP(pl) pr[pl] = pleft[pl]  + (pright[pl]-pleft[pl])*sin(phi0);
+          //          PALLLOOP(pl) if(pl==B2) pr[pl] = pleft[B2]*sin(phi1) + pright[B2]*cos(phi1);
+          // set B3 so bsq is constant
+          
+          FTYPE usq = pr[U1]*pr[U1]+pr[U2]*pr[U2]+pr[U3]*pr[U3];
+          FTYPE gamma = sqrt(1.0 + fabs(usq));
+
+          FTYPE usqleft = pleft[U1]*pleft[U1]+pleft[U2]*pleft[U2]+pleft[U3]*pleft[U3];
+          FTYPE gammaleft = sqrt(1.0 + fabs(usqleft));
+
+          FTYPE mybsqconst=Power(pleft[B3],2)/Power(gammaleft,2) + 
+            (-1.*pleft[B1]*pleft[U1] - 1.*pleft[B2]*pleft[U2])*
+            (pleft[B1]*pleft[U1] + pleft[B2]*pleft[U2]) + 
+            Power(pleft[B1]/gammaleft + (pleft[U1]*
+                                          (pleft[B1]*pleft[U1] + pleft[B2]*pleft[U2]))/gammaleft,2) + 
+            Power(pleft[B2]/gammaleft + (pleft[U2]*
+                                          (pleft[B1]*pleft[U1] + pleft[B2]*pleft[U2]))/gammaleft,2);
+
+          dualfprintf(fail_file,"x=%g mybsqconst=%g\n",x,mybsqconst);
+
+          FTYPE disc1=Power(gamma,2)*mybsqconst - 1.*Power(pr[B1],2) - 1.*Power(pr[B2],2) - 
+            2.*Power(pr[B1],2)*Power(pr[U1],2) + 
+            Power(gamma,2)*Power(pr[B1],2)*Power(pr[U1],2) - 
+            1.*Power(pr[B1],2)*Power(pr[U1],4) - 4.*pr[B1]*pr[B2]*pr[U1]*pr[U2] + 
+            2.*Power(gamma,2)*pr[B1]*pr[B2]*pr[U1]*pr[U2] - 
+            2.*pr[B1]*pr[B2]*Power(pr[U1],3)*pr[U2] - 2.*Power(pr[B2],2)*Power(pr[U2],2) + 
+            Power(gamma,2)*Power(pr[B2],2)*Power(pr[U2],2) - 
+            1.*Power(pr[B1],2)*Power(pr[U1],2)*Power(pr[U2],2) - 
+            1.*Power(pr[B2],2)*Power(pr[U1],2)*Power(pr[U2],2) - 
+            2.*pr[B1]*pr[B2]*pr[U1]*Power(pr[U2],3) - 1.*Power(pr[B2],2)*Power(pr[U2],4);
+          
+          FTYPE disc2=Power(gamma,2)*mybsqconst - 1.*Power(pr[B1],2) - 1.*Power(pr[B2],2) - 
+            2.*Power(pr[B1],2)*Power(pr[U1],2) + 
+            Power(gamma,2)*Power(pr[B1],2)*Power(pr[U1],2) - 
+            1.*Power(pr[B1],2)*Power(pr[U1],4) - 4.*pr[B1]*pr[B2]*pr[U1]*pr[U2] + 
+            2.*Power(gamma,2)*pr[B1]*pr[B2]*pr[U1]*pr[U2] - 
+            2.*pr[B1]*pr[B2]*Power(pr[U1],3)*pr[U2] - 2.*Power(pr[B2],2)*Power(pr[U2],2) + 
+            Power(gamma,2)*Power(pr[B2],2)*Power(pr[U2],2) - 
+            1.*Power(pr[B1],2)*Power(pr[U1],2)*Power(pr[U2],2) - 
+            1.*Power(pr[B2],2)*Power(pr[U1],2)*Power(pr[U2],2) - 
+            2.*pr[B1]*pr[B2]*pr[U1]*Power(pr[U2],3) - 1.*Power(pr[B2],2)*Power(pr[U2],4);
+          
+          if(disc1>=0.0){ PALLLOOP(pl) if(pl==B3) pr[pl] = +sqrt(disc1); }
+          else if(disc2>=0){ PALLLOOP(pl) if(pl==B3) pr[pl] = -sqrt(disc2); }
+          else PALLLOOP(pl){ if(pl==B3) pr[pl] = 0.0; }
+
+          //          PALLLOOP(pl) if(pl==B2){ xint=cos(phi0); pr[pl] = pleft[pl] + (pright[pl]-pleft[pl])*xint; }
+          //          PALLLOOP(pl) if(pl==B3){ xint=sin(phi0); pr[pl] = pleft[B2] + (pright[B2]-pleft[B2])*xint; }
+
         }
       }
       else{
