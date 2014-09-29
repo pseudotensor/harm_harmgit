@@ -307,7 +307,7 @@ int init_global(void)
   //  rescaletype=1;
   rescaletype=4;
   BSQORHOLIMIT=1E2; // may have to make smaller if problems
-  BSQOULIMIT=1E6;
+  BSQOULIMIT=1E30;
   UORHOLIMIT=1E2;
   //  UORHOLIMIT=10.0;
   // JCM: Have to choose below so that Mdot from atmosphere is not important compared to true Mdot for thin disk.
@@ -346,7 +346,7 @@ int init_global(void)
 
   // default dumping period
   int idt;
-  for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=1.; //250.0;
+  for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=250.0;
 
   // ener period
   DTdumpgen[ENERDUMPTYPE] = 500.0;
@@ -1766,6 +1766,10 @@ int coolfunc_user(FTYPE h_over_r, FTYPE *pr, struct of_geom *geom, struct of_sta
 	}
 
 
+	//if(r>=Rhor)
+	//  R = r*sin(th) ;     // r in Noble paper
+	//else
+	//  R = Rhor; // Don't want target temperature to be overly high in column above and below BH where R<<Rhor    
         R = r*sin(th) ;     // r in Noble paper
 
 	rincool=10.;
@@ -1780,7 +1784,7 @@ int coolfunc_user(FTYPE h_over_r, FTYPE *pr, struct of_geom *geom, struct of_sta
 	Yscaling = (gam-1.)*e/(Tfix);
 
 
-
+	//R=r*sin(th); //revert to regular form for everything other than where Tfix/Wcirc has previous adjusted version internally
 
 	if(t > 0. && Yscaling > 1.0 ) { //&& bsq_ijcool*bsq_ijcool*.5/(gam-1)/u >= 0.005) { 
 	  if(R*R*h_over_r*h_over_r/1./(bsq_ijcool/rho) > taucool*taucool/Wcirc/Wcirc ) {    
@@ -2032,8 +2036,8 @@ int calc_da3vsr(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
                                  
       if(rr>=RTRANSITION_MACRO && rr < RBREAK_MACRO) {
 
-	switchmad2 = 0.5+1.0/M_PI*atan((rr-25.)/6.); 
-	switchmad1 = 0.5-1.0/M_PI*atan((rr-25.)/6.);
+	switchmad2 = 0.5+1.0/M_PI*atan((rr-50.)/12.); 
+	switchmad1 = 0.5-1.0/M_PI*atan((rr-50.)/12.);
 
 	if(tempstore[0] > 0.1 && tempstore[1] < 0.1) {
 	  tempstore[1] = rr; 
