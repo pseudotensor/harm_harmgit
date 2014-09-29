@@ -4730,6 +4730,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
           FTYPE usqleft = pleft[U1]*pleft[U1]+pleft[U2]*pleft[U2]+pleft[U3]*pleft[U3];
           FTYPE gammaleft = sqrt(1.0 + fabs(usqleft));
 
+          // see komi_fake_alfven.nb
           FTYPE mybsqconst=Power(pleft[B3],2)/Power(gammaleft,2) + 
             (-1.*pleft[B1]*pleft[U1] - 1.*pleft[B2]*pleft[U2])*
             (pleft[B1]*pleft[U1] + pleft[B2]*pleft[U2]) + 
