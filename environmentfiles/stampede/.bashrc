@@ -14,13 +14,18 @@ module load globus
 #module load intel
 module load python
 export MKL_DYNAMIC=FALSE
-export MKL_NUM_THREADS=8
+export MKL_NUM_THREADS=16
 export MPLCONFIGDIR=/lustre/medusa/$USER/matplotlibdir/
 unset MPLCONFIGDIR
 export MPI_TYPE_DEPTH=20 #for using ROMIO
 export MPI_TYPE_MAX=65536
 
-
+export MKL_MIC_ENABLE=1
+# -1 means auto-load balancing
+export MKL_MIC_WORKDIVISION0=-1 # HOST
+export MKL_MIC_WORKDIVISION1=-1 # PHI COPROC1
+export MKL_MIC_WORKDIVISION2=-1 # PHI COPROC2
+export MKL_MIC_WORKDIVISION=1 # auto-load
     #module load imagemagick/6.6.9-1
 # GSL
 module load gsl

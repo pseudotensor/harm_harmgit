@@ -215,7 +215,7 @@ $(PREP): $(PREPDEP)
 	
 	for fil in `cat objsonepoint` ; do prefa=`basename $$fil .o` ; pref=`echo $$prefa | awk '{print $$1}'` ; echo ${ECHOSWITCH} $$pref >> onepoint ; done
 	# create list of commands
-	for fil in `cat onepoint` ; do echo ${ECHOSWITCH} $$fil.o :\\n\\t$(CC) $(CFLAGSNONPRECISE) -c $$fil.c $(LDFLAGS) >> objsonepoint.cmd.list ; done
+	for fil in `cat onepoint` ; do echo ${ECHOSWITCH} "$$fil.o :" >> objsonepoint.cmd.list ; echo ${ECHOSWITCH} "	$(CC) $(CFLAGSNONPRECISE) -c $$fil.c $(LDFLAGS)" >> objsonepoint.cmd.list ; done
 	# remove old depenedencies file and create
 	rm -rf deps.onepoint.list ; touch deps.onepoint.list
 	# create new dependencies file
@@ -233,7 +233,7 @@ $(PREP): $(PREPDEP)
 	# create list of prefixes
 	for fil in `cat objsmanypoints` ; do prefa=`basename $$fil .o` ; pref=`echo $$prefa | awk '{print $$1}'` ; echo ${ECHOSWITCH} $$pref >> manypoints ; done
 	# create list of commands
-	for fil in `cat manypoints` ; do echo ${ECHOSWITCH} $$fil.o :\\n\\t$(CC) $(CFLAGS) -c $$fil.c $(LDFLAGS) >> objsmanypoints.cmd.list ; done
+	for fil in `cat manypoints` ; do echo ${ECHOSWITCH} "$$fil.o :" >> objsmanypoints.cmd.list ; echo ${ECHOSWITCH} "	$(CC) $(CFLAGS) -c $$fil.c $(LDFLAGS)" >> objsmanypoints.cmd.list ; done
 	# remove old depenedencies file and create
 	rm -rf deps.manypoints.list ; touch deps.manypoints.list
 	# create new dependencies file
@@ -254,7 +254,7 @@ $(PREP): $(PREPDEP)
 	
 	for fil in `cat objspuredouble` ; do prefa=`basename $$fil .o` ; pref=`echo $$prefa | awk '{print $$1}'` ; echo ${ECHOSWITCH} $$pref >> puredouble ; done
 	# create list of commands
-	for fil in `cat puredouble` ; do echo ${ECHOSWITCH} $$fil.o :\\n\\t$(CC) $(CFLAGSNONPRECISENOLONG) -c $$fil.c $(LDFLAGS) >> objspuredouble.cmd.list ; done
+	for fil in `cat puredouble` ; do echo ${ECHOSWITCH} "$$fil.o :">> objspuredouble.cmd.list ; echo ${ECHOSWITCH} "	$(CC) $(CFLAGSNONPRECISENOLONG) -c $$fil.c $(LDFLAGS)" >> objspuredouble.cmd.list ; done
 	# remove old depenedencies file and create
 	rm -rf deps.puredouble.list ; touch deps.puredouble.list
 	# create new dependencies file
@@ -311,7 +311,7 @@ $(PREPLD):  $(PREPDEP) maketail.ldouble.deps.inc maketail.ldouble.inc maketailsu
 	# create list of prefixes
 	( for fil in `cat objslong` ; do prefa=`basename $$fil .o` ; pref=`echo $$prefa | awk '{print $$1}'` ; echo ${ECHOSWITCH} $$pref >> long ; done )
 	# create list of commands
-	( for fil in `cat long` ; do echo ${ECHOSWITCH} $$fil.o :\\n\\t$(CC2) $(GCCCFLAGS) -c $$fil.c $(LDFLAGS) >> objslong.cmd.list ; done )
+	( for fil in `cat long` ; do echo ${ECHOSWITCH} "$$fil.o :" >> objslong.cmd.list ; echo ${ECHOSWITCH} "	$(CC2) $(GCCCFLAGS) -c $$fil.c $(LDFLAGS)" >> objslong.cmd.list ; done )
 	# remove old depenedencies file and create
 	( rm -rf deps.long.list ; touch deps.long.list )
 	# create new dependencies file
@@ -356,7 +356,7 @@ $(PREPLIAISON): $(PREPDEP) maketail.liaison.inc defs.liaison.h defs.liaison.h li
 	# create list of prefixes
 	( for fil in `cat objsdepsliaison` ; do prefa=`basename $$fil .o` ; pref=`echo $$prefa | awk '{print $$1}'` ; echo ${ECHOSWITCH} $$pref >> depsliaison ; done )
 	# create list of commands
-	( for fil in `cat depsliaison` ; do echo ${ECHOSWITCH} $$fil.o :\\n\\t$(CC) $(CFLAGSNONPRECISE) -c $$fil.c $(LDFLAGS) >> objsdepsliaison.cmd.list ; done )
+	( for fil in `cat depsliaison` ; do echo ${ECHOSWITCH} "$$fil.o :" >> objsdepsliaison.cmd.list ; echo ${ECHOSWITCH} "	$(CC) $(CFLAGSNONPRECISE) -c $$fil.c $(LDFLAGS)" >> objsdepsliaison.cmd.list ; done )
 	# remove old depenedencies file and create
 	( rm -rf deps.depsliaison.list ; touch deps.depsliaison.list )
 	# create new dependencies file
@@ -392,7 +392,7 @@ $(PREPJONINTERP): $(PREPDEP) defs.jon_interp.h global.jon_interp.h
 	# create list of prefixes
 	( for fil in `cat objsdepsjoninterp` ; do prefa=`basename $$fil .o` ; pref=`echo $$prefa | awk '{print $$1}'` ; echo ${ECHOSWITCH} $$pref >> depsjoninterp ; done )
 	# create list of commands
-	( for fil in `cat depsjoninterp` ; do echo ${ECHOSWITCH} $$fil.o :\\n\\t$(CC) $(CFLAGSNONPRECISE) -c $$fil.c $(LDFLAGS) >> objsdepsjoninterp.cmd.list ; done )
+	( for fil in `cat depsjoninterp` ; do echo ${ECHOSWITCH} "$$fil.o :">> objsdepsjoninterp.cmd.list ; echo ${ECHOSWITCH} "	$(CC) $(CFLAGSNONPRECISE) -c $$fil.c $(LDFLAGS)" >> objsdepsjoninterp.cmd.list ; done )
 	# remove old depenedencies file and create
 	( rm -rf deps.depsjoninterp.list ; touch deps.depsjoninterp.list )
 	# create new dependencies file
@@ -419,7 +419,7 @@ $(PREPBIN2TXT): makefile makehead.inc maketail.inc maketail.ldouble.deps.inc mak
 	# create list of prefixes
 	( for fil in `cat objsdepsbin2txt` ; do prefa=`basename $$fil .o` ; pref=`echo $$prefa | awk '{print $$1}'` ; echo ${ECHOSWITCH} $$pref >> depsbin2txt ; done )
 	# create list of commands
-	( for fil in `cat depsbin2txt` ; do echo ${ECHOSWITCH} $$fil.o :\\n\\t$(CC) $(CFLAGSNONPRECISE) -c $$fil.c $(BIN2TXTLIBS1) $(LDFLAGS) $(BIN2TXTLIBS2) >> objsdepsbin2txt.cmd.list ; done )
+	( for fil in `cat depsbin2txt` ; do echo ${ECHOSWITCH} "$$fil.o :" >> objsdepsbin2txt.cmd.list ; echo ${ECHOSWITCH} "	$(CC) $(CFLAGSNONPRECISE) -c $$fil.c $(BIN2TXTLIBS1) $(LDFLAGS) $(BIN2TXTLIBS2)" >> objsdepsbin2txt.cmd.list ; done )
 	# remove old depenedencies file and create
 	( rm -rf deps.depsbin2txt.list ; touch deps.depsbin2txt.list )
 	# create new dependencies file
@@ -446,7 +446,7 @@ $(PREPSMCALC): makefile makehead.inc maketail.inc maketail.ldouble.deps.inc make
 	# create list of prefixes
 	( for fil in `cat objsdepssmcalc` ; do prefa=`basename $$fil .o` ; pref=`echo $$prefa | awk '{print $$1}'` ; echo ${ECHOSWITCH} $$pref >> depssmcalc ; done )
 	# create list of commands
-	( for fil in `cat depssmcalc` ; do echo ${ECHOSWITCH} $$fil.o :\\n\\t$(CC) $(CFLAGSNONPRECISE) -c $$fil.c $(LDFLAGS) >> objsdepssmcalc.cmd.list ; done )
+	( for fil in `cat depssmcalc` ; do echo ${ECHOSWITCH} "$$fil.o :" >> objsdepssmcalc.cmd.list ; echo ${ECHOSWITCH} "	$(CC) $(CFLAGSNONPRECISE) -c $$fil.c $(LDFLAGS)" >> objsdepssmcalc.cmd.list ; done )
 	# remove old depenedencies file and create
 	( rm -rf deps.depssmcalc.list ; touch deps.depssmcalc.list )
 	# create new dependencies file

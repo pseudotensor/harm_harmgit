@@ -99,6 +99,21 @@ $(warning USEICCINTEL is $(USEICCINTEL))
 else ifeq ($(HOSTNAME),ki-jmck)
 USEICCINTEL=1
 $(warning USEICCINTEL is $(USEICCINTEL))
+else ifeq ($(HOSTNAME),login1.stampede.tacc.utexas.edu)
+USESTAMPEDE=1
+$(warning USESTAMPEDE is $(USESTAMPEDE))
+else ifeq ($(HOSTNAME),login2.stampede.tacc.utexas.edu)
+USESTAMPEDE=1
+$(warning USESTAMPEDE is $(USESTAMPEDE))
+else ifeq ($(HOSTNAME),login3.stampede.tacc.utexas.edu)
+USESTAMPEDE=1
+$(warning USESTAMPEDE is $(USESTAMPEDE))
+else ifeq ($(HOSTNAME),login4.stampede.tacc.utexas.edu)
+USESTAMPEDE=1
+$(warning USESTAMPEDE is $(USESTAMPEDE))
+else ifeq ($(HOSTNAME),login5.stampede.tacc.utexas.edu)
+USESTAMPEDE=1
+$(warning USESTAMPEDE is $(USESTAMPEDE))
 else ifeq ($(HOSTNAME),ubuntu)
 USEICCINTEL=1
 $(warning USEICCINTEL is $(USEICCINTEL))
