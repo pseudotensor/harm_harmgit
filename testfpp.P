@@ -1,0 +1,52 @@
+extern int rameshsolver_(doublereal *args, doublereal *resultseng, doublereal *resultsent);
+extern int getfinal_(integer *which, integer *showboth, doublereal *results, integer *isc, doublereal *gn, doublereal *gv, doublereal *hp, doublereal *hf, doublereal *vgasp, doublereal *vgasf, doublereal *b1, doublereal *b2, doublereal *bbp, doublereal *bbf, doublereal *bbc, doublereal *vradp, doublereal *vradf, doublereal *s, doublereal *ugasconf, doublereal *ugascovf, doublereal *ugasconp, doublereal *ugascovp, doublereal *uradconf, doublereal *uradcovf, doublereal *uradconp, doublereal *uradcovp, doublereal *ugasconi, doublereal *ugascovi, doublereal *uradconi, doublereal *uradcovi, doublereal *bconp, doublereal *bcovp, doublereal *bconf, doublereal *bcovf, doublereal *bconi, doublereal *bcovi, doublereal *tmunup, doublereal *tmunuf, doublereal *rmunup, doublereal *rmunuf, doublereal *tmunui, doublereal *rmunui, doublereal *ttcovi, doublereal *rtcovi, doublereal *ttcovc, doublereal *rtcovc, doublereal *ttotc, doublereal *prim, doublereal *error, doublereal *primeng, doublereal *priment, doublereal *ugasconfinal, doublereal *ugascovfinal, doublereal *uradconfinal, doublereal *uradcovfinal, doublereal *bconfinal, doublereal *bcovfinal, doublereal *ttcovfinal, doublereal *rtcovfinal, doublereal *tmunufinal, doublereal *rmunufinal, doublereal *rhou0c, doublereal *gam);
+extern int readtype1_(doublereal *gn, doublereal *gv, doublereal *rhof, doublereal *rhop, doublereal *rhou0i, doublereal *rhou0f, doublereal *rhou0p, doublereal *uf, doublereal *up, doublereal *t00i, doublereal *t00f, doublereal *t00p, doublereal *vgasf, doublereal *vgasp, doublereal *t01i, doublereal *t01f, doublereal *t01p, doublereal *t02i, doublereal *t02f, doublereal *t02p, doublereal *t03i, doublereal *t03f, doublereal *t03p, doublereal *bbf, doublereal *bbp, doublereal *ef, doublereal *ep, doublereal *r00i, doublereal *r00f, doublereal *r00p, doublereal *vradf, doublereal *vradp, doublereal *r01i, doublereal *r01f, doublereal *r01p, doublereal *r02i, doublereal *r02f, doublereal *r02p, doublereal *r03i, doublereal *r03f, doublereal *r03p, doublereal *s, doublereal *si, doublereal *sf, doublereal *sp, doublereal *uradconf, doublereal *uradcovf, doublereal *ugasconf, doublereal *ugascovf, doublereal *uradconp, doublereal *uradcovp, doublereal *ugasconp, doublereal *ugascovp, integer *ifinish, doublereal *errorabs);
+extern int readtype2_(doublereal *gn, doublereal *gv, doublereal *rhof, doublereal *rhop, doublereal *rhou0i, doublereal *rhou0f, doublereal *rhou0p, doublereal *uf, doublereal *up, doublereal *t00i, doublereal *t00f, doublereal *t00p, doublereal *vgasf, doublereal *vgasp, doublereal *t01i, doublereal *t01f, doublereal *t01p, doublereal *t02i, doublereal *t02f, doublereal *t02p, doublereal *t03i, doublereal *t03f, doublereal *t03p, doublereal *bbf, doublereal *bbp, doublereal *ef, doublereal *ep, doublereal *r00i, doublereal *r00f, doublereal *r00p, doublereal *vradf, doublereal *vradp, doublereal *r01i, doublereal *r01f, doublereal *r01p, doublereal *r02i, doublereal *r02f, doublereal *r02p, doublereal *r03i, doublereal *r03f, doublereal *r03p, doublereal *s, doublereal *si, doublereal *sf, doublereal *sp, doublereal *uradconf, doublereal *uradcovf, doublereal *ugasconf, doublereal *ugascovf, doublereal *uradconp, doublereal *uradcovp, doublereal *ugasconp, doublereal *ugascovp, integer *ifinish, doublereal *errorabs);
+extern int readtype3_(doublereal *origintype, doublereal *args, doublereal *gn, doublereal *gv, doublereal *rhof, doublereal *rhop, doublereal *rhou0i, doublereal *rhou0f, doublereal *rhou0p, doublereal *uf, doublereal *up, doublereal *t00i, doublereal *t00f, doublereal *t00p, doublereal *vgasf, doublereal *vgasp, doublereal *t01i, doublereal *t01f, doublereal *t01p, doublereal *t02i, doublereal *t02f, doublereal *t02p, doublereal *t03i, doublereal *t03f, doublereal *t03p, doublereal *bbf, doublereal *bbp, doublereal *ef, doublereal *ep, doublereal *r00i, doublereal *r00f, doublereal *r00p, doublereal *vradf, doublereal *vradp, doublereal *r01i, doublereal *r01f, doublereal *r01p, doublereal *r02i, doublereal *r02f, doublereal *r02p, doublereal *r03i, doublereal *r03f, doublereal *r03p, doublereal *s, doublereal *si, doublereal *sf, doublereal *sp, doublereal *uradconf, doublereal *uradcovf, doublereal *ugasconf, doublereal *ugascovf, doublereal *uradconp, doublereal *uradcovp, doublereal *ugasconp, doublereal *ugascovp, integer *ifinish, doublereal *errorabs);
+extern doublereal mymax_(doublereal *x, doublereal *y);
+extern doublereal myabs_(doublereal *x);
+extern integer myisnan_(doublereal *x);
+extern doublereal mydiv_(doublereal *x, doublereal *y);
+extern int solveucon_(doublereal *prim, doublereal *con);
+extern int uconrel_(doublereal *con, doublereal *tcon);
+extern int solveu0old_(doublereal *con);
+extern int solveu0new_(doublereal *tcon, doublereal *con);
+extern int contocov_(doublereal *vecin, doublereal *vecout);
+extern int covtocon_(doublereal *vecin, doublereal *vecout);
+extern doublereal condotcov_(doublereal *con, doublereal *cov);
+extern int calcbconbcov_(doublereal *bb, doublereal *ucon, doublereal *ucov, doublereal *bcon, doublereal *bcov, doublereal *bsq);
+extern int calctmunu_(doublereal *rho, doublereal *u, doublereal *bsq, doublereal *gam, doublereal *ucon, doublereal *ucov, doublereal *bcon, doublereal *bcov, doublereal *tmunu);
+extern int calcrmunu_(doublereal *e, doublereal *ucon, doublereal *ucov, doublereal *rmunu);
+extern int makedelta_(doublereal *delta);
+extern int rmunuinvert_(doublereal *rtcov, doublereal *e, doublereal *ucon, doublereal *ucov, doublereal *ugascon, doublereal *rmunu, integer *radinvmod);
+extern int rmunuinvert0_(doublereal *rtcov, doublereal *e, doublereal *ucon, doublereal *ucov, doublereal *ugascon, doublereal *rmunu, integer *radinvmod);
+extern int rmunuinvert1_(doublereal *rtcov, doublereal *e, doublereal *ucon, doublereal *ucov, doublereal *ugascon, doublereal *rmunu, integer *radinvmod);
+extern int mhdinvert_(doublereal *prim, integer *iflag, integer *jflag, integer *ientropy, doublereal *itertot, doublereal *guesstype);
+extern int radsource_(doublereal *prim, integer *iter, integer *iflag, integer *jflag, integer *ientropy, doublereal *itertot, doublereal *guesstype, doublereal *primeng, doublereal *priment, doublereal *resultseng, doublereal *resultsent);
+extern int newton4_(doublereal *prim0, integer *iter, integer *iflag, integer *jflag, S_fp func, doublereal *err4);
+extern int newton3_(doublereal *prim0, integer *iter, integer *iflag, integer *jflag, U_fp func);
+extern int usolvemhd_(doublereal *prim, integer *iter, integer *iflag, integer *jflag, S_fp funcmhd, S_fp umhd);
+extern int umhd1_(doublereal *u, doublereal *u0, doublereal *rho, doublereal *ehat, doublereal *ffkap, doublereal *arad, doublereal *dtau, doublereal *err);
+extern int umhd2_(doublereal *u, doublereal *u0, doublereal *rho, doublereal *ehat, doublereal *ffkap, doublereal *arad, doublereal *dtau, doublereal *err);
+extern int usolverad_(doublereal *prim, integer *iter, integer *iflag, integer *jflag, S_fp funcrad, U_fp uerr);
+extern int uerr1_(doublereal *u, doublereal *u0, doublereal *rho, doublereal *ehat0, doublereal *ffkap, doublereal *arad, doublereal *dtau, doublereal *err);
+extern int uerr2_(doublereal *u, doublereal *u0, doublereal *rho, doublereal *ehat0, doublereal *ffkap, doublereal *arad, doublereal *dtau, doublereal *err);
+extern int uuerr_(doublereal *u, doublereal *err, doublereal *derr);
+extern int funcmhd1_(doublereal *prim, doublereal *error, doublereal *errornorm, doublereal *err4, doublereal *err3, integer *iflag, integer *jflag);
+extern int funcmhd2_(doublereal *prim, doublereal *error, doublereal *errornorm, doublereal *err4, doublereal *err3, integer *iflag, integer *jflag);
+extern int func3_(doublereal *primsave, doublereal *prim3, doublereal *error3, doublereal *errornorm3, doublereal *err4, doublereal *err3, integer *iflag, integer *jflag, S_fp func);
+extern int funcrad1_(doublereal *prim, doublereal *error, doublereal *errornorm, doublereal *err4, doublereal *err3, integer *iflag, integer *jflag);
+extern int funcrad2_(doublereal *prim, doublereal *error, doublereal *errornorm, doublereal *err4, doublereal *err3, integer *iflag, integer *jflag);
+extern int lubksb_(doublereal *a, integer *n, integer *np, integer *indx, doublereal *b);
+extern int ludcmp_(doublereal *a, integer *n, integer *np, integer *indx, doublereal *d__, doublereal *retval);
+extern doublereal rtsafe_(S_fp funcd, doublereal *x1, doublereal *x2, doublereal *fl, doublereal *fr, doublereal *xacc);
+/* comlen metric_ 256 */
+/* comlen accuracy_ 60 */
+/* comlen conserved_ 240 */
+/* comlen funcmhdd_ 608 */
+/* comlen funcradd_ 620 */
+/*:ref: usolvemhd_ 14 6 7 4 4 4 214 214 */
+/*:ref: newton4_ 14 6 7 4 4 4 214 7 */
+/*:ref: usolverad_ 14 6 7 4 4 4 214 200 */
+/*:ref: func3_ 14 9 7 7 7 7 7 7 4 4 214 */
+/* Rerunning f2c -P may change prototypes or declarations. */

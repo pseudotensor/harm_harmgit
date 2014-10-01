@@ -163,6 +163,9 @@ superclean: cleanall
 	rm -rf prepbin2txt prepsmcalc
 	rm -rf initbase.defaultnprlists.c
 	rm -rf *.deps.puredouble.list *.deps.manypoints.list *.deps.onepoint.list
+
+superfclean: cleanall superclean
+	rm -rf $(PREPF)
 	
 # removes in addition the links to user code
 # useful when wanting to compare with SVN that has no such files
@@ -258,6 +261,10 @@ $(PREP): $(PREPDEP)
 	for fil in `cat puredouble` ; do  echo $$fil.c ; $(MMCOMP) -c -MM $$fil.c > $$fil.deps.puredouble.list & done; wait; 
 	for fil in `cat puredouble` ; do  (cat $$fil.deps.puredouble.list >> deps.puredouble.list) ; done
 	#
+$(PREPF): $(PREPDEP)
+ 	############################################
+	#below is for GRMHD code
+ 	############################################
  	############################################
 	#below is for fortran bits
  	############################################
@@ -266,6 +273,7 @@ ifeq ($(USEKRAKEN),$(ZERO))
 	fpp -P test.f > testfpp.temp1.f ; sed 's/^f.*$$//g' testfpp.temp1.f | sed 's/^\&.*$$//g' > testfpp.temp.f; f2c -Wall -f -P testfpp.temp.f ; sed 's/static//g' testfpp.temp.c > testfpp.c ;sed 's/static//g' testfpp.temp.P > testfpp.P
 endif
     # otherwise assume created testfpp.P and testfpp.c on another computer and copied to Kraken
+	echo "DONE" > $(PREPF)
     #
     
 
