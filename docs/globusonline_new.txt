@@ -48,14 +48,19 @@ ssh pseudotensor@cli.globusonline.org scp -D -r -s 1 xsede#kraken:/lustre/scratc
 # then add id_rsa.pub to authorized_keys on other systems.  Also add to public keys on globusonline.
 ssh pseudotensor@cli.globusonline.org scp -D -r -s 1 pseudotensor#pfe1:/nobackup/jmckinn2 xsede#ranch:/home/01014/tg802609/ 
 
+list="wa0 wa0.8"
+list="wa0.8t45 wa0.8t90 wa0.0m0.3 lwa0.8t45 lwa0 lwa0.8 lwa0.0m0.3 lwa0.8t90"
+list="radm2a0.82da"
 
-#####
-# from stampede to ranch
-ssh pseudotensor@cli.globusonline.org scp -D -r -s 1 xsede#stampede:/scratch/01014/tg802609/wa0 xsede#ranch:/home/01014/tg802609/
+for fil in $list
+do
+echo $fil
 
-###
-# from stampede to bh01
-ssh pseudotensor@cli.globusonline.org scp -D -r -s 1 xsede#stampede:/scratch/01014/tg802609/wa0 pseudotensor#bh01:/mnt/data0/user/
+ssh pseudotensor@cli.globusonline.org scp -D -r -s 1 xsede#stampede:/scratch/01014/tg802609/$fil xsede#ranch:/home/01014/tg802609/
+
+ssh pseudotensor@cli.globusonline.org scp -D -r -s 1 xsede#stampede:/scratch/01014/tg802609/$fil pseudotensor#bh01:/mnt/data0/user/
+
+done
 
 
 ######################################

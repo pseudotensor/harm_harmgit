@@ -15,7 +15,7 @@ module load globus
 module load python
 export MKL_DYNAMIC=FALSE
 export MKL_NUM_THREADS=16
-export MPLCONFIGDIR=/lustre/medusa/$USER/matplotlibdir/
+export MPLCONFIGDIR=$SCRATCH/matplotlibdir/
 unset MPLCONFIGDIR
 export MPI_TYPE_DEPTH=20 #for using ROMIO
 export MPI_TYPE_MAX=65536

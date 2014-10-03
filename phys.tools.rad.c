@@ -415,6 +415,10 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE *errorabs, stru
 /// stop iterating energy if pbenergy[UU]<0.5*pbentropy[UU] consistently starting aafter below number of iterations and lasting for 2nd below number of iterations
 #define RAMESHSTOPENERGYIFTOOOFTENBELOWENTROPY 3
 
+/// whether to allow changes in eomtype during implicit iterations
+/// generally not a good idea currently because overall scheme handles switching between eomtype's in separate full calls
+// Also, have found switching during iterations can lead to solution going astray
+// But still currently allow Utoprimgen() to do MHD inversion of any backup, just that once out of Utoprimgen() we treat as original starting eomtype and eomtype is not changed.
 //#define SWITCHTOENTROPYIFCHANGESTOENTROPY (*implicitferr==QTYUMHD ? 0 : 1)
 #define SWITCHTOENTROPYIFCHANGESTOENTROPY (0)
 
@@ -622,10 +626,11 @@ static void calc_kappa_kappaes(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappa,
 static int Utoprimgen_failwrapper(int doradonly, int *radinvmod, int showmessages, int checkoninversiongas, int checkoninversionrad, int allowlocalfailurefixandnoreport, int finalstep, int *eomtype, int whichcap, int evolvetype, int inputtype,FTYPE *U,  struct of_state *qptr,  struct of_geom *ptrgeom, FTYPE dissmeasure, FTYPE *pr, struct of_newtonstats *newtonstats)
 {
   int failreturn;
-
   // defaults
   failreturn=0;
 
+
+  int eomtypelocal=*eomtype;
 
 
   // KORALTODO: 
@@ -650,7 +655,9 @@ static int Utoprimgen_failwrapper(int doradonly, int *radinvmod, int showmessage
     int modprim=0;
     //    int checkoninversiongas=CHECKONINVERSION;
     //    int checkoninversionrad=CHECKONINVERSIONRAD;
-    MYFUN(Utoprimgen(showmessages,checkoninversiongas,checkoninversionrad, allowlocalfailurefixandnoreport, finalstep, eomtype, whichcap, whichmethod, modprim, evolvetype, inputtype, U, qptr, ptrgeom, dissmeasure, pr, pr, newtonstats),"phys.tools.rad.c:Utoprimgen_failwrapper()", "Utoprimgen", 1);
+    MYFUN(Utoprimgen(showmessages,checkoninversiongas,checkoninversionrad, allowlocalfailurefixandnoreport, finalstep, &eomtypelocal, whichcap, whichmethod, modprim, evolvetype, inputtype, U, qptr, ptrgeom, dissmeasure, pr, pr, newtonstats),"phys.tools.rad.c:Utoprimgen_failwrapper()", "Utoprimgen", 1);
+    if(SWITCHTOENTROPYIFCHANGESTOENTROPY==1) *eomtype=eomtypelocal;
+    // else don't change
     *radinvmod=(int)(*lpflagrad);
     //    *radinvmod=0;  //KORALTODO: Not using method that needs this call, so for now don't pass radinvmod through to Utoprimgen().
     nstroke+=(newtonstats->nstroke);
@@ -6300,9 +6307,9 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
             // f1-based
             // using old uu,uup, but probably ok since just helps normalize error
             errorabsf1[0]=0.0;   JACLOOPFULLERROR(itermode,jj,startjac,endjac) errorabsf1[0]   += fabs(f1report[erefU[jj]]);
-            errorabsf1[1]=0.0;   JACLOOPSUPERFULL(pliter,pl,*eomtype,*baseitermethod,*radinvmod)  errorabsf1[1]   += fabs(f1report[pl]);
+            errorabsf1[1]=0.0;   JACLOOPSUPERFULL(pliter,pl,eomtypelocal,*baseitermethod,*radinvmod)  errorabsf1[1]   += fabs(f1report[pl]);
             errorabsbest[0]=0.0; JACLOOPFULLERROR(itermode,jj,startjac,endjac) errorabsbest[0] += fabs(lowestf1report[erefU[jj]]);
-            errorabsbest[1]=0.0; JACLOOPSUPERFULL(pliter,pl,*eomtype,*baseitermethod,*radinvmod)  errorabsbest[1] += fabs(lowestf1report[pl]);
+            errorabsbest[1]=0.0; JACLOOPSUPERFULL(pliter,pl,eomtypelocal,*baseitermethod,*radinvmod)  errorabsbest[1] += fabs(lowestf1report[pl]);
 
             // see if should revert to prior best
             if(errorabsbest[WHICHERROR]<errorabsf1[WHICHERROR] || !isfinite(errorabsf1[WHICHERROR]) ){
@@ -6330,6 +6337,7 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
               errorabsbest[0]=errorabsf1[0];
               errorabsbest[1]=errorabsf1[1];
               radinvmodbest = *radinvmod;
+              failreturnbest = failreturn;
             }
           }
         }// end GETBEST
@@ -6367,7 +6375,7 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
             failreturn=FAILRETURNNOTTOLERROR; mathfailtype=202;
 
             if(iter>trueimpmaxiter){// then reached maximum iterations
-              if(debugfail>=2) dualfprintf(fail_file,"trueimpmaxiter=%d eomtype=%d MAXcheckconv=%d havebackup=%d failreturnallowable=%d: f1report=%g %g %g %g : f1=%g %g %g %g\n",trueimpmaxiter,*eomtype,checkconv,havebackup,failreturnallowable,f1report[erefU[0]],f1report[erefU[1]],f1report[erefU[2]],f1report[erefU[3]],f1[erefU[0]],f1[erefU[1]],f1[erefU[2]],f1[erefU[3]]);
+              if(debugfail>=2) dualfprintf(fail_file,"trueimpmaxiter=%d eomtype=%d MAXcheckconv=%d havebackup=%d failreturnallowable=%d: f1report=%g %g %g %g : f1=%g %g %g %g\n",trueimpmaxiter,eomtypelocal,checkconv,havebackup,failreturnallowable,f1report[erefU[0]],f1report[erefU[1]],f1report[erefU[2]],f1report[erefU[3]],f1[erefU[0]],f1[erefU[1]],f1[erefU[2]],f1[erefU[3]]);
 
               if(showmessages && debugfail>=2) dualfprintf(fail_file,"iter>trueimpmaxiter=%d : iter exceeded in solve_implicit_lab().  But f1 was allowed error. checkconv=%d (if checkconv=0, could be issue!) : %g %g %g %g : %g %g %g %g : errorabs=%g %g : %g %g %g\n",trueimpmaxiter,checkconv,f1report[erefU[0]],f1report[erefU[1]],f1report[erefU[2]],f1report[erefU[3]],f1[erefU[0]],f1[erefU[1]],f1[erefU[2]],f1[erefU[3]],errorabsf1[0],errorabsf1[1],fracdtuu0,fracuup,fracdtG);
               if(REPORTMAXITERALLOWED){
@@ -6440,7 +6448,7 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
 
   }// end loop over damping
   if(dampattempt==truenumdampattempts && truenumdampattempts>1){
-    if(debugfail>=2) dualfprintf(fail_file,"Damping failed to avoid max iterations (but error might have dropped: %21.15g %21.15g): failreturn=%d dampattempt=%d eomtypelocal=%d *eomtype=%d ijk=%d %d %d\n",errorabsf1[0],errorabsf1[1],failreturn,dampattempt,eomtypelocal,*eomtype,ptrgeom->i,ptrgeom->j,ptrgeom->k);
+    if(debugfail>=2) dualfprintf(fail_file,"Damping failed to avoid max iterations (but error might have dropped: %21.15g %21.15g): failreturn=%d dampattempt=%d eomtypelocal=%d eomtypelocal=%d ijk=%d %d %d\n",errorabsf1[0],errorabsf1[1],failreturn,dampattempt,eomtypelocal,eomtypelocal,ptrgeom->i,ptrgeom->j,ptrgeom->k);
   }
 
   ///////////
