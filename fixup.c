@@ -439,35 +439,34 @@ int diag_fixup_dUandaccount(FTYPE *Ui, FTYPE *Uf, FTYPE *ucons, struct of_geom *
 /// ucons is in UEVOLVE form (originates from unewglobal in step_ch_full() called in main.c)
 /// only makes sense if do this with truestep==1 and finalstep==1
 /// uses diag_fixup(modcons=-1,...) argument to ensure all other diag calls do not get counted in failfloordu accounting.
-int diag_fixup_allzones(int truestep, int finalstep, FTYPE (*pf)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR])
+int diag_fixup_allzones(FTYPE (*pf)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR])
 {
 
-  if(truestep && finalstep){
-    int i, j, k, pliter,pl;
-    struct of_geom *ptrgeom;
-    struct of_geom geomdontuse;
+  int i, j, k, pliter,pl;
+  struct of_geom *ptrgeom;
+  struct of_geom geomdontuse;
 
-    if(DOENOFLUX!=NOENOFLUX){
-      dualfprintf(fail_file,"Cannot use diag_fixup_allzones() with DOENOFLUX!=NOENOFLUX\n");
-      myexit(3487622211);
-    }
+  if(DOENOFLUX!=NOENOFLUX){
+    dualfprintf(fail_file,"Cannot use diag_fixup_allzones() with DOENOFLUX!=NOENOFLUX\n");
+    myexit(3487622211);
+  }
     
-    ptrgeom=&(geomdontuse);
+  ptrgeom=&(geomdontuse);
     
-    COMPZLOOP{
-      get_geometry(i, j, k, CENT, ptrgeom);
-      // account for change of conserved quantities
-      // Primitives have been modified by fixup1zone() in advance.c (floors).
-      // During this call, called from post_advance(), pf also modified by bounds (poledeath,gammadeath) and also post_fixup() (failures, checks, limits).
-      //
-      // ucons=unewglobal that stores last steps final substep version of ucum that is full U[]
-      // ucons has yet to be modified at all, so is true conserved quantity without corrections (as long as avoided corrections to ucons during other diag_fixup calls).
-      // GODMARK: So this method only works if NOENOFLUX==1, since otherwise *need* to modify U[] during modification of p[] since know how much to modify.
+  COMPZLOOP{
+    get_geometry(i, j, k, CENT, ptrgeom);
+    // account for change of conserved quantities
+    // Primitives have been modified by fixup1zone() in advance.c (floors).
+    // During this call, called from post_advance(), pf also modified by bounds (poledeath,gammadeath) and also post_fixup() (failures, checks, limits).
+    //
+    // ucons=unewglobal that stores last steps final substep version of ucum that is full U[]
+    // ucons has yet to be modified at all, so is true conserved quantity without corrections (as long as avoided corrections to ucons during other diag_fixup calls).
+    // GODMARK: So this method only works if NOENOFLUX==1, since otherwise *need* to modify U[] during modification of p[] since know how much to modify.
 
-      int docorrectucons=1; // make any needed corrections if doing corrections
-      diag_fixup_Ui_pf(docorrectucons,MAC(ucons,i,j,k),MAC(pf,i,j,k),ptrgeom,finalstep,COUNTONESTEP);
-    }
-  }    
+    int docorrectucons=1; // make any needed corrections if doing corrections
+    int finalstep=1; // if here, always on finalstep=1
+    diag_fixup_Ui_pf(docorrectucons,MAC(ucons,i,j,k),MAC(pf,i,j,k),ptrgeom,finalstep,COUNTONESTEP);
+  }
 
 
   return(0);
@@ -1096,9 +1095,9 @@ int fixup1zone(FTYPE *pr, FTYPE *uconsinput, struct of_geom *ptrgeom, int finals
   //
   ///////////////////////////////
   if(didchangeprim&&FLOORDIAGS){// FLOORDIAGS includes fail diags
-    int docorrectucons=0;
+    int docorrectucons2=0;
     int doingmhdfixup=1;
-    diag_fixup(docorrectucons,prdiag, prmhd, ucons, ptrgeom, finalstep,doingmhdfixup,COUNTFLOORACT);
+    diag_fixup(docorrectucons2,prdiag, prmhd, ucons, ptrgeom, finalstep,doingmhdfixup,COUNTFLOORACT);
     // now prdiag=prmhd as far as diag_fixup() is concerned, so next changes are new changes (i.e. don't cumulative w.r.t. pr0 multiple times, since that (relative to prmhd each time) would add each prior change to each next change)
     PALLLOOP(pl) prdiag[pl]=prmhd[pl];
   }
