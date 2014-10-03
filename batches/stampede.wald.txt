@@ -1,0 +1,44 @@
+#model="wa0"
+#model="wa0.8"
+#model="wa0.8t23"
+#model="wa0.8t45"
+#model="wa0.8t90"
+#model="wa0.8t68"
+#model="wa0.0m0.3"
+#model="wa0.0m0.6"
+#model="lwa0"
+#model="lwa0.8"
+#model="lwa0.8t23"
+#model="lwa0.8t45"
+#model="lwa0.8t68"
+#model="lwa0.8t90"
+#model="lwa0.0m0.3"
+#model="lwa0.0m0.6"
+# PRODUCTION 2
+# binaryoutput MIXEDOUTPUT
+# WALD
+# a =
+# THETAROT
+# EOMTYPE EOMFFDE
+# BOOSTFIELD velocity
+#
+emacs -nw init.c
+#
+alias cp='cp'
+cp init.c init.c.${model}
+cp init.h init.h.${model}
+alias mv='mv'
+make superclean ; make prep ; make -j 16 ; mv grmhd grmhd.${model}
+cp batch.slurm.stampede.wa0 batch.slurm.stampede.${model}
+alias mv='mv -i'
+alias cp='cp -i'
+#
+emacs -nw  batch.slurm.stampede.${model}
+# replace old wa0 with new ${model}
+#
+rm -rf ${model}.err ${model}.out
+sbatch batch.slurm.stampede.${model}
+showq | grep tg802609
+#scancel 4204197
+
+
