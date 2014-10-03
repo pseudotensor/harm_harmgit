@@ -111,6 +111,13 @@ MCC=mpicc
 CCGENERATE=mpicc
 USESPECIAL4GENERATE=1
 USELAPACK=0
+#USEOPENMP=0
+endif
+
+ifeq ($(USEDPTH2),1)
+# override again
+USELAPACK=1
+USEOPENMP=0
 endif
 
 ifeq ($(USEICCGENERIC),1)
@@ -219,6 +226,12 @@ ifeq ($(USEICCINTELNEW),1)
 endif
 
 ifeq ($(USETACCRANGER),1)
+endif
+
+ifeq ($(USEDPTH2),1)
+# override again
+USELAPACK=1
+USEOPENMP=0
 endif
 
 ifeq ($(USEORANGE),1)
