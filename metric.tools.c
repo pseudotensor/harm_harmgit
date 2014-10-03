@@ -56,7 +56,6 @@ int dfridr(FTYPE (*func)(struct of_geom *, FTYPE*,int,int), struct of_geom *ptrg
   FTYPE h,err;
   FTYPE firsthstart,hstart;
   FTYPE newdx,temp;
-  int shit;
   int iter;
   FTYPE errlist[MAXITER];
   FTYPE hhlist[MAXITER];

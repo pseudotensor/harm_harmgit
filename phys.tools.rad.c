@@ -1,4 +1,6 @@
 
+// __WORKINGONIT__ indicates what still in development
+
 /*! \file phys.tools.rad.c
      \brief All locally-related Koral/RAD physics calculations
      
@@ -406,7 +408,7 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE *errorabs, stru
 /// whether to apply Jon's hold on u_g or rho from going negative
 #define JONHOLDPOS 1
 
-#define NEWJONHOLDPOS 0 // FUCK: WORKING ON IT
+#define NEWJONHOLDPOS 0 // __WORKINGONIT__: WORKING ON IT
 
 /// number of times allowed to hold u_g as positive
 #define NUMHOLDTIMES 6
@@ -1327,7 +1329,7 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
       if(0){
         Tgaslocal=compute_temp_simple(ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p,pp[RHO],pp[UU]);
         get_state(pp, ptrgeom, q);
-        DLOOPA(iv) GS += (-q->ucon[iv]*signgd2*(signgd7*Gddt[iv]))/(Tgaslocal+TEMPMIN); // maybe more accurate than just using entropy from pp and ucon[TT] from state from pp. FUCK: Can't be right that this is the same (signgd2=signgd7=1) for both URAD and UMHD methods.
+        DLOOPA(iv) GS += (-q->ucon[iv]*signgd2*(signgd7*Gddt[iv]))/(Tgaslocal+TEMPMIN); // maybe more accurate than just using entropy from pp and ucon[TT] from state from pp. __WORKINGONIT__: Can't be right that this is the same (signgd2=signgd7=1) for both URAD and UMHD methods.
       }
       else{
         // Get GS completely consisent with primitives, in case using entropy error function, because then shouldn't use Gddt[TT] related to energy equation.
@@ -2847,7 +2849,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
 
 
-        // FUCK
+        // __WORKINGONIT__
         //        if(baseitermethodlist[tryphase1]==QTYURAD || baseitermethodlist[tryphase1]==QTYPRAD) continue; // skip this method for now.
 
 
@@ -3342,7 +3344,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
         }
 
 
-        // FUCK
+        // __WORKINGONIT__
         //if(baseitermethodlist[tryphase1]==QTYENTROPYUMHD || baseitermethodlist[tryphase1]==QTYURAD || baseitermethodlist[tryphase1]==QTYPRAD) continue; // skip this method for now.
         if(baseitermethodlist[tryphase1]==QTYENTROPYUMHD) continue; // skip this method for now.
 
@@ -3960,7 +3962,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
         if(debugfail>=3) dualfprintf(fail_file,"Went explicit: eenergy=%g eentropy=%g ienergy=%d ientropy=%d\n",errorabsenergy[WHICHERROR],errorabsentropy[WHICHERROR],itersenergy,itersentropy);
         if(goexplicitenergy==1 || goexplicitentropy==1){ usedexplicitgood=1; failfinalreturn=-1;}
-        else{ usedexplicitkindabad=1; failfinalreturn=1;} // FUCK: might want to treat as actual failure if QTYPMHD mode since lpflag never set.
+        else{ usedexplicitkindabad=1; failfinalreturn=1;} // __WORKINGONIT__: might want to treat as actual failure if QTYPMHD mode since lpflag never set.
       }
       else{ // actual failure
         // if no source, then will do normal inversion (no change to *eomtype) as if G=0.
@@ -5502,7 +5504,7 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
         }
         // see if error on iterated quantities has already gone near/below machine precision.  If so, can't do any better with total error, so stop.
         if(STOPIFITERLOWERROR && WHICHERROR==1 && errorabsf1[0]<=LOCALPREIMPCONVABS){
-          lowitererror=1; // FUCK: makes use urad alot and why?
+          lowitererror=1; // __WORKINGONIT__: makes use urad alot and why?
         }
 
         //////////////
@@ -6036,7 +6038,7 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
           //
           ////////////
 
-          if(IMPRADTYPEBASE(*baseitermethod)){//FUCK, might be too aggressive for PMHD method.
+          if(IMPRADTYPEBASE(*baseitermethod)){//__WORKINGONIT__, might be too aggressive for PMHD method.
             // abort if too often hit negative u_g or Erf and know have entropy backup method.
 #define NUMUGNEGENERGY (3)
 
@@ -7397,9 +7399,9 @@ static int f_error_check(int showmessages, int showmessagesheavy, int iter, FTYP
   //  dualfprintf(fail_file,"fnormspacetime: %g %g %g %g: uu0=%g fakevel=%g\n",fnormspace,fnormspace2,fnormtime,fnormtime2,fabs(uu0[erefU[0]]*dimfactU[erefU[0]]),fakevel);
 #else
   // These suggest that velocity can be no better than NUMEPSILON*c=NUMEPSILON, but non-rel velocities can be much smaller.  But with rad inversion, v^i comes from mixed-up R^t_\mu -- catastrophic cancellation issue.  What about MHD?
-  FTYPE fnormspace2 = fnormtime; // maybe ok SUPERGODMARK -- problem for very small non-rel velocities. FUCK
+  FTYPE fnormspace2 = fnormtime; // maybe ok SUPERGODMARK -- problem for very small non-rel velocities. __WORKINGONIT__
   FTYPE fnormtime2 = fnormtime; // no problem with this since now include absolute sum version
-  FTYPE fnormspaceother2 = fnormtimeother; // maybe ok SUPERGODMARK -- problem for very small non-rel velocities. FUCK
+  FTYPE fnormspaceother2 = fnormtimeother; // maybe ok SUPERGODMARK -- problem for very small non-rel velocities. __WORKINGONIT__
   FTYPE fnormtimeother2 = fnormtimeother; // no problem with this since now include absolute sum version
 #endif
 
@@ -7583,7 +7585,7 @@ static int get_implicit_iJ(int allowbaseitermethodswitch, int failreturnallowabl
     PLOOP(pliter,pl) upitoup0[pl] = upitoup0U[pl];
     // velmomscale is set such that when (e.g.) T^t_i is near zero, we use T^t_t as reference since we consider T^t_i/T^t_t to be velocity scale that is up to order unity.
     //    velmomscale=pow(fabs(x[irefU[TT]]*upitoup0[irefU[TT]]),1.5);
-    velmomscale=pow(fabs(x[irefU[TT]]*upitoup0[irefU[TT]]),1.0); // FUCK
+    velmomscale=pow(fabs(x[irefU[TT]]*upitoup0[irefU[TT]]),1.0); // __WORKINGONIT__
   }
   // P
   else if(IMPPTYPE(implicititer)){
@@ -7594,12 +7596,12 @@ static int get_implicit_iJ(int allowbaseitermethodswitch, int failreturnallowabl
     // for velocity, assume ortho-scale is order unity (i.e. v=1.0*c)
     //    velmomscale=1.0; // reference scale considered to be order unity  KORALTODO: Not sure if should use something like T^t_i/T^t_t with denominator something more non-zero-ish.
     if(IMPMHDTYPE(implicititer)) velmomscale=MAX(SMALL,sqrt(fabs(x[UU])/MAX(ppp[RHO],ppcopy[RHO]))); // u_g/\rho_0\propto (v/c)^2, so this gives \propto (v/c) .  Leads to more problems for RADTUBE
-    else velmomscale=1.0; // FUCK
+    else velmomscale=1.0; // __WORKINGONIT__
 
     // limit
     velmomscale=MIN(1.0,velmomscale);
 
-    //    velmomscale=1.0; // FUCK
+    //    velmomscale=1.0; // __WORKINGONIT__
   }
 
   //////////////////////////
@@ -7645,10 +7647,10 @@ static int get_implicit_iJ(int allowbaseitermethodswitch, int failreturnallowabl
   // Also add (u_g)^{1/2} \propto \rho_0(v/c)
   delspace=0.0; SLOOPA(jj) delspace = MAX(delspace,MAX(fabs(predel[jj]) , velmomscale )); // dimensionless-ortho
 
-  //FUCK: Needs to improve and be more general
+  //__WORKINGONIT__: Needs to improve and be more general
   if(IMPPMHDTYPE(implicititer)){
     // u_g goes like \rho_0 v^2
-    jj=TT; deltime = MAX(fabs(predel[jj]),MAX(ppp[RHO],ppcopy[RHO])*vsqnorm); // FUCK : Leads to more problems for RADTUBE
+    jj=TT; deltime = MAX(fabs(predel[jj]),MAX(ppp[RHO],ppcopy[RHO])*vsqnorm); // __WORKINGONIT__ : Leads to more problems for RADTUBE
     //jj=TT; deltime = fabs(predel[jj]);
   }
   else if(IMPPTYPE(implicititer)){
@@ -7814,7 +7816,7 @@ static int get_implicit_iJ(int allowbaseitermethodswitch, int failreturnallowabl
           int whichcapnew=CAPTYPEFIX2; // so Erf stays well-defined even if innaccurate a bit.  So J stays well-defined so iJ doesn't nan-out
           //          PLOOP(pliter,pl) dualfprintf(fail_file,"pl=%d ppjac=%21.15g uu0=%21.15g uujac=%21.15g\n",pl,ppjac[pl],uu0[pl],uujac[pl]);
           failreturn=f_implicit(allowbaseitermethodswitch, fakeiter,fakef1iter,failreturnallowableuse, whichcall,localIMPEPS,showmessages,showmessagesheavy, allowlocalfailurefixandnoreport, &eomtypelocallocal, whichcapnew,itermode, baseitermethod, fracenergy, dissmeasure, &radinvmod, trueimptryconv, trueimptryconvabs, trueimpallowconvabs, trueimpmaxiter, realdt, dimtypef, dimfactU, ppjacalt, ppjac,piin,uujacalt, Uiin,uu0,uujac,fracdtG*realdt,ptrgeom,&qjac,f2[sided],f2norm[sided],f2report[sided], &goexplicitfake, &errorabsf2[0], &errorabsf2[1], whicherror, &convreturnf2, nummhdinvsreturn);
-          if(failreturn){ // FUCK: Noticed if ==1 (radinv failure), then hits this and tries again.  Maybe costly, and maybe not required with CAPTYPEFIX2 used at least for PMHD,PRAD methods.
+          if(failreturn){ // __WORKINGONIT__: Noticed if ==1 (radinv failure), then hits this and tries again.  Maybe costly, and maybe not required with CAPTYPEFIX2 used at least for PMHD,PRAD methods.
             if(showmessages&& debugfail>=2) dualfprintf(fail_file,"f_implicit for f2 failed: jj=%d.  Trying smaller localIMPEPS=%g (giving del=%g) to %g\n",jj,localIMPEPS,del,localIMPEPS*FRACIMPEPSCHANGE);
             localIMPEPS*=FRACIMPEPSCHANGE;
             // try making smaller until no error, unless doesn't work out
@@ -9124,7 +9126,7 @@ static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYP
 
   // get R^t_t u^t + (R^t_t u^t u_t)u^t and avoid catastrophic cancellation
   FTYPE Ruuss=0.; DLOOP(i,j) if(i!=TT && j!=TT) Ruuss+=Rij[i][j]*ucov[i]*ucon[j];
-  // FUCK: Check again.
+  // __WORKINGONIT__: Check again.
   FTYPE fact=(-ptrgeom->gcov[GIND(TT,TT)])*(-ptrgeom->gcon[GIND(TT,TT)]);
   FTYPE fact2=1.0-fact;
   FTYPE utildecon[NDIM]={0.0,pp[URAD1],pp[URAD2],pp[URAD3]};
@@ -10269,7 +10271,7 @@ int u2p_rad(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gammama
 
   int caughtnan=0;
   if(!finite(pin[URAD0]) || !finite(pin[URAD1]) || !finite(pin[URAD2]) || !finite(pin[URAD3])){
-    // FUCK: Shouldn't happen, but does on Kraken
+    // __WORKINGONIT__: Shouldn't happen, but does on Kraken
     caughtnan=1;
   }
 
@@ -10281,7 +10283,7 @@ int u2p_rad(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gammama
     }
 
 
-    if(0){ // FUCK: if doing iterations, need to let fail with nan so aborts and stops trying right away.  Otherwise huge waste.
+    if(0){ // __WORKINGONIT__: if doing iterations, need to let fail with nan so aborts and stops trying right away.  Otherwise huge waste.
       // force to be reasonable
       // currently always return WHICHVEL=VELREL4, so just set to floor values
       pin[URAD0]=ERADLIMIT;

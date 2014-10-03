@@ -443,7 +443,7 @@ void set_arrays_multidimen()
   GLOBALPOINT(dissmeasurearray) = (FTYPE PTRMACP0A1(dissmeasurearray,N1M,N2M,N3M,NSPECIAL+1+3*2)) (&(BASEMACP0A1(dissmeasurearray,N1BND,N2BND,N3BND,0)));
   FULLLOOP{
     //    for(pl=0;pl<NSPECIAL+1+3*2;pl++) GLOBALMACP0A1(dissmeasurearray,i,j,k,pl)=valueinit;
-    for(pl=0;pl<NSPECIAL+1+3*2;pl++) GLOBALMACP0A1(dissmeasurearray,i,j,k,pl)=0.0; // FUCK: For now so can use past measure to help set Fi and Firad
+    for(pl=0;pl<NSPECIAL+1+3*2;pl++) GLOBALMACP0A1(dissmeasurearray,i,j,k,pl)=0.0; //  __WORKINGONIT__ For now so can use past measure to help set Fi and Firad
     // for dump to be clean for unused things
     if(N1==1){
       dir=1; pl=NSPECIAL+1+dir-1; GLOBALMACP0A1(dissmeasurearray,i,j,k,pl)=0.0;

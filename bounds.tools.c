@@ -5807,7 +5807,7 @@ void debugfixupaltdeath_bc(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
           FTYPE gammanew=((gamma-1.0)*0.1)+1.0;
           limit_gamma(0,gammanew,OUTERDEATHGAMMAMAXRAD,prfix,NULL,ptrgeom,-1);
           //prfix[U1]=0.0;
-          //dualfprintf(fail_file,"fuck: gamma=%g gammanew=%g\n",gamma,gammanew);
+          //dualfprintf(fail_file,"problem: gamma=%g gammanew=%g\n",gamma,gammanew);
         }
       }
 
