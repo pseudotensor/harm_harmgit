@@ -42,6 +42,8 @@ int image_dump(long dump_cnt)
   int startpl,endpl,starts,ends,startl,endl,startv,endv;
   int whichpl,limits,scale,vartype;
 
+  if(DOIMAGEDUMP==0) return(0);
+
   ////////////////////////////
   //
   // Image Loop

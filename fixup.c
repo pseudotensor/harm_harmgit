@@ -231,32 +231,27 @@ int diag_fixup_correctablecheck(int docorrectucons, struct of_geom *ptrgeom)
   int is_within_correctable_region;
   int docorrectuconslocal;
 
-  if(DOONESTEPDUACCOUNTING){
-    docorrectuconslocal=docorrectucons;
+  ///////////
+  //
+  // determine if within correctable region
+  //
+  ///////////
+  if( DOENOFLUX != NOENOFLUX ) {
+    is_within_correctable_region=((ptrgeom->i)>=Uconsevolveloop[FIS])&&((ptrgeom->i)<=Uconsevolveloop[FIE])&&((ptrgeom->j)>=Uconsevolveloop[FJS])&&((ptrgeom->j)<=Uconsevolveloop[FJE])&&((ptrgeom->k)>=Uconsevolveloop[FKS])&&((ptrgeom->k)<=Uconsevolveloop[FKE]);
   }
   else{
-    ///////////
-    //
-    // determine if within correctable region
-    //
-    ///////////
-    if( DOENOFLUX != NOENOFLUX ) {
-      is_within_correctable_region=((ptrgeom->i)>=Uconsevolveloop[FIS])&&((ptrgeom->i)<=Uconsevolveloop[FIE])&&((ptrgeom->j)>=Uconsevolveloop[FJS])&&((ptrgeom->j)<=Uconsevolveloop[FJE])&&((ptrgeom->k)>=Uconsevolveloop[FKS])&&((ptrgeom->k)<=Uconsevolveloop[FKE]);
-    }
-    else{
-      is_within_correctable_region=1; // assume diag_fixup() only called where ok to do change to ucons!
-    }
-
-
-    ///////////
-    //
-    // determine if should do correction to ucons
-    // only correct once -- should really put correction somewhere else.
-    //
-    ///////////
-    docorrectuconslocal=docorrectucons  && is_within_correctable_region;
-
+    is_within_correctable_region=1; // assume diag_fixup() only called where ok to do change to ucons!
   }
+
+
+  ///////////
+  //
+  // determine if should do correction to ucons
+  // only correct once -- should really put correction somewhere else.
+  //
+  ///////////
+  docorrectuconslocal=docorrectucons  && is_within_correctable_region;
+
 
   return(docorrectuconslocal);
 
@@ -266,7 +261,7 @@ int diag_fixup_correctablecheck(int docorrectucons, struct of_geom *ptrgeom)
 
 
 /// record who called the diag_fixup routine
-int count_whocalled(struct of_geom *ptrgeom, int finalstep, int whocalled)
+int count_whocalled(int i, int j, int k, int finalstep, int whocalled)
 {
   int tscale;
 
@@ -278,19 +273,19 @@ int count_whocalled(struct of_geom *ptrgeom, int finalstep, int whocalled)
   /////////////////////
   if(DODEBUG){
 
-    if(whocalled>=NUMFAILFLOORFLAGS || whocalled<COUNTNOTHING || ptrgeom->i<-N1BND || ptrgeom->i>N1-1+N1BND ||ptrgeom->j<-N2BND || ptrgeom->j>N2-1+N2BND ||ptrgeom->k<-N3BND || ptrgeom->k>N3-1+N3BND ){
-      dualfprintf(fail_file,"In diag_fixup() whocalled=%d for i=%d j=%d k=%d\n",whocalled,ptrgeom->i,ptrgeom->j,ptrgeom->k);
+    if(whocalled>=NUMFAILFLOORFLAGS || whocalled<COUNTNOTHING || i<-N1BND || i>N1-1+N1BND ||j<-N2BND || j>N2-1+N2BND ||k<-N3BND || k>N3-1+N3BND ){
+      dualfprintf(fail_file,"In diag_fixup() whocalled=%d for i=%d j=%d k=%d\n",whocalled,i,j,k);
       myexit(24683463);
     }
 
-    if(whocalled!=COUNTNOTHING){
+    if(whocalled>=COUNTREALSTART){
       int indexfinalstep;
       indexfinalstep=0;
-      TSCALELOOP(tscale) GLOBALMACP0A3(failfloorcount,ptrgeom->i,ptrgeom->j,ptrgeom->k,indexfinalstep,tscale,whocalled)++;
+      TSCALELOOP(tscale) GLOBALMACP0A3(failfloorcount,i,j,k,indexfinalstep,tscale,whocalled)++;
       if(finalstep){
         indexfinalstep=1;
         // iterate finalstep version
-        TSCALELOOP(tscale) GLOBALMACP0A3(failfloorcount,ptrgeom->i,ptrgeom->j,ptrgeom->k,indexfinalstep,tscale,whocalled)++;
+        TSCALELOOP(tscale) GLOBALMACP0A3(failfloorcount,i,j,k,indexfinalstep,tscale,whocalled)++;
       }
     }// end if counting something
 
@@ -356,7 +351,7 @@ int diag_fixup_dUandaccount(FTYPE *Ui, FTYPE *Uf, FTYPE *ucons, struct of_geom *
   }
   else{
     // original HARM method
-    // don't modify ucons
+    // don't modify ucons.  That is, we ignore docorrectuconslocal.
 
     PALLLOOP(pl) deltaUavg[pl] = Uf[pl]-Ui[pl];
   }
@@ -364,7 +359,7 @@ int diag_fixup_dUandaccount(FTYPE *Ui, FTYPE *Uf, FTYPE *ucons, struct of_geom *
 
 
   //only do aggregate accounting, after the fact (just before taking the new time step)
-  if(DOONESTEPDUACCOUNTING && docorrectuconslocal < 0 ||  DOONESTEPDUACCOUNTING==0){
+  if(DOONESTEPDUACCOUNTING && whocalled==COUNTONESTEP ||  DOONESTEPDUACCOUNTING==0){
 
     ///////////////////
     //
@@ -441,6 +436,9 @@ int diag_fixup_dUandaccount(FTYPE *Ui, FTYPE *Uf, FTYPE *ucons, struct of_geom *
 
 /// single call in step_ch.c:post_advance() to do all diag_fixup() diagnostic dU stores.  Still allows counts by other diag_fixup calls.
 /// for DOONESTEPDUACCOUNTING==1
+/// ucons is in UEVOLVE form (originates from unewglobal in step_ch_full() called in main.c)
+/// only makes sense if do this with truestep==1 and finalstep==1
+/// uses diag_fixup(modcons=-1,...) argument to ensure all other diag calls do not get counted in failfloordu accounting.
 int diag_fixup_allzones(int truestep, int finalstep, FTYPE (*pf)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR])
 {
 
@@ -450,7 +448,7 @@ int diag_fixup_allzones(int truestep, int finalstep, FTYPE (*pf)[NSTORE2][NSTORE
     struct of_geom geomdontuse;
 
     if(DOENOFLUX!=NOENOFLUX){
-      dualfprintf(fail_file,"Cannot use diag_fixup_allzones() with DOENOFLUX==NOENOFLUX\n");
+      dualfprintf(fail_file,"Cannot use diag_fixup_allzones() with DOENOFLUX!=NOENOFLUX\n");
       myexit(3487622211);
     }
     
@@ -466,7 +464,7 @@ int diag_fixup_allzones(int truestep, int finalstep, FTYPE (*pf)[NSTORE2][NSTORE
       // ucons has yet to be modified at all, so is true conserved quantity without corrections (as long as avoided corrections to ucons during other diag_fixup calls).
       // GODMARK: So this method only works if NOENOFLUX==1, since otherwise *need* to modify U[] during modification of p[] since know how much to modify.
 
-      int docorrectucons=-1; // -1 is like 1, but is used to tell if coming from this function (if -1) or not (if 1)
+      int docorrectucons=1; // make any needed corrections if doing corrections
       diag_fixup_Ui_pf(docorrectucons,MAC(ucons,i,j,k),MAC(pf,i,j,k),ptrgeom,finalstep,COUNTONESTEP);
     }
   }    
@@ -508,7 +506,7 @@ int diag_fixup(int docorrectucons, FTYPE *pr0, FTYPE *pr, FTYPE *uconsinput, str
 
 
   // count whocalled diag_fixup()
-  if(doingmhdfixup) count_whocalled(ptrgeom, finalstep, whocalled);
+  if(doingmhdfixup) count_whocalled(ptrgeom->i,ptrgeom->j,ptrgeom->k, finalstep, whocalled);
 
 
 
@@ -601,7 +599,7 @@ int diag_fixup_Ui_pf(int docorrectucons, FTYPE *Uievolve, FTYPE *pf, struct of_g
 
 
   // count whocalled diag_fixup()
-  count_whocalled(ptrgeom, finalstep, whocalled);
+  count_whocalled(ptrgeom->i,ptrgeom->j,ptrgeom->k, finalstep, whocalled);
 
 
   if(finalstep > 0){
@@ -698,7 +696,7 @@ int diag_fixup_U(int docorrectucons, FTYPE *Ui, FTYPE *Uf, FTYPE *uconsinput, st
   }
 
   // count whocalled diag_fixup()
-  count_whocalled(ptrgeom, finalstep, whocalled);
+  count_whocalled(ptrgeom->i,ptrgeom->j,ptrgeom->k, finalstep, whocalled);
   
 
 
@@ -2367,10 +2365,6 @@ static int fixuputoprim_accounting(int i, int j, int k, PFTYPE mhdlpflag, PFTYPE
   }
   else if(mhdlpflag==UTOPRIMFAILFIXEDBOUND2){
     mhdutoprimfailtype=COUNTBOUND2;
-    docorrectucons=0; // account, but don't change conserved quantities
-  }
-  else if(mhdlpflag==UTOPRIMFAILFIXEDONESTEP){
-    mhdutoprimfailtype=COUNTONESTEP;
     docorrectucons=0; // account, but don't change conserved quantities
   }
   else if(mhdlpflag==UTOPRIMFAILFIXEDUTOPRIM){

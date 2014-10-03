@@ -49,7 +49,13 @@ ssh pseudotensor@cli.globusonline.org scp -D -r -s 1 xsede#kraken:/lustre/scratc
 ssh pseudotensor@cli.globusonline.org scp -D -r -s 1 pseudotensor#pfe1:/nobackup/jmckinn2 xsede#ranch:/home/01014/tg802609/ 
 
 
+#####
+# from stampede to ranch
+ssh pseudotensor@cli.globusonline.org scp -D -r -s 1 xsede#stampede:/scratch/01014/tg802609/wa0 xsede#ranch:/home/01014/tg802609/
 
+###
+# from stampede to bh01
+ssh pseudotensor@cli.globusonline.org scp -D -r -s 1 xsede#stampede:/scratch/01014/tg802609/wa0 pseudotensor#bh01:/mnt/data0/user/
 
 
 ######################################

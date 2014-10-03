@@ -883,8 +883,10 @@
 
 
 /// see failfloorcount counter
-#define COUNTNOTHING -1
-#define NUMFAILFLOORFLAGS 16
+#define COUNTNOTHING -2
+#define COUNTONESTEP -1 // used as control label, not counted
+#define COUNTREALSTART 0 // marks when real counters begin
+#define NUMFAILFLOORFLAGS 31
 ///  mnemonics
 #define COUNTUTOPRIMFAILCONV 0 // if failed to converge
 #define COUNTFLOORACT 1 // if floor activated
@@ -901,7 +903,25 @@
 #define COUNTEOSLOOKUPFAIL 12
 #define COUNTBOUND1 13 // see bounds.tools.c (used when boundary code actually affects active zone values)
 #define COUNTBOUND2 14
-#define COUNTONESTEP 15
+
+// IMPLICITs count normal and issues separately from utoprim failure because not a normal 1-step inversion
+#define COUNTIMPLICITNORMAL 15
+#define COUNTEXPLICITNORMAL 16
+#define COUNTIMPLICITBAD 17
+#define COUNTEXPLICITBAD 18
+#define COUNTIMPLICITENERGY 19
+#define COUNTIMPLICITENTROPY 20
+#define COUNTIMPLICITCOLDMHD 21
+#define COUNTIMPLICITFAILED 22
+#define COUNTIMPLICITPMHD 23
+#define COUNTIMPLICITUMHD 24
+#define COUNTIMPLICITPRAD 25
+#define COUNTIMPLICITURAD 26
+#define COUNTIMPLICITENTROPYUMHD 27
+#define COUNTIMPLICITENTROPYPMHD 28
+#define COUNTIMPLICITMODENORMAL 29
+#define COUNTIMPLICITMODESTAGES 30
+#define COUNTIMPLICITMODECOLD 31
 
 
 /// below 3 used to indicate when eos lookup failure shouldn't report failure since (e.g.) was not at a particular grid location
@@ -912,7 +932,6 @@
 /// failure codes for utoprim failures
 /// NOTE: PFLAGTYPE is probably "char" so can't use value of pflag beyond -127..127
 #define NANPFLAG -100 // bad pflag
-#define UTOPRIMFAILFIXEDONESTEP -6
 #define UTOPRIMFAILFIXEDBOUND2 -5
 #define UTOPRIMFAILFIXEDBOUND1 -4
 #define UTOPRIMFAILFIXEDCOLD -3
@@ -1212,7 +1231,10 @@
 #define DORESCALE 1
 #define UNRESCALE -1
 
-
+// for diag_fixup() in fixup.c
+#define DOMODCONS 1
+#define NOMODCONS 0
+#define DOONESTEPCONS -1
 
 #include "global.nondepmnemonics.rad.h" // KORAL
 

@@ -410,12 +410,26 @@ struct Ccoordparams {
 //#undef DOJETDIAG
 #undef DODEBUG
 #undef DOFLOORDIAG
+#undef DODISSMEASUREDUMP
 //#define DOJETDIAG 0
 #define DODEBUG 0
 #define DOFLOORDIAG 0
+#define DODISSMEASUREDUMP 0
 #endif
 
+#if(PRODUCTION>=3)
 
+// only needed files for python, not SM
+#undef DOEOSDIAG
+#undef DORADDIAG
+#undef DOVPOTDUMP
+#undef DOIMAGEDUMP
+#undef
+#define DOEOSDIAG 0
+#define DORADDIAG 0
+#define DOVPOTDUMP 0
+#define DOIMAGEDUMP 0
+#endif
 
 
 

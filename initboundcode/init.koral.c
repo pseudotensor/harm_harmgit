@@ -7006,7 +7006,7 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
       TILTWALD=THETAROT;
       aforwald=a;
       
-      if(fabs(TILTWALD-0.0)<1E-10){
+      if(1||fabs(TILTWALD-0.0)<1E-10){ // 1|| for now since issue with uu0 at maximum near outer radius when tilt=90deg-1E-5
         if(l==WALDWHICHACOV || WALDWHICHACOV==-1){
           vpot += -0.5*B0WALD*(mcov[l]+2.0*aforwald*kcov[l]);
         }

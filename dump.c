@@ -1582,14 +1582,15 @@ int eosdump(long dump_cnt)
 void set_eosdump_content_dnumcolumns_dnumversion(int *numcolumnsvar, int *numversion)
 {
 
-  //#if(WHICHEOS==KAZFULL)
-  // all EOSs output same size data so uniform format
-  // otherwise have to also put this condition in dump.c when outputting so don't overwrite memory!
-  *numcolumnsvar=MAXPARLIST+1+MAXNUMEXTRAS+MAXPROCESSEDEXTRAS; // 1 is temperature
-  //#else
-  //  *numcolumnsvar=0;
-  //#endif
-
+  if(DOEOSDIAG==1){
+    // all EOSs output same size data so uniform format
+    // otherwise have to also put this condition in dump.c when outputting so don't overwrite memory!
+    *numcolumnsvar=MAXPARLIST+1+MAXNUMEXTRAS+MAXPROCESSEDEXTRAS; // 1 is temperature
+  }
+  else{
+    *numcolumnsvar=0;
+  }
+    
   // Version number:
   *numversion=0;
 
@@ -1694,8 +1695,12 @@ int raddump(long dump_cnt)
 void set_raddump_content_dnumcolumns_dnumversion(int *numcolumnsvar, int *numversion)
 {
 
-  if(EOMRADTYPE==EOMRADNONE) *numcolumnsvar=0;
-  else *numcolumnsvar=NDIM*2 + 1+1 + NDIM+1 + NDIM + NDIM*2 + 1 + 1 + 1 + 1 + 1 + 4*3;
+  if(EOMRADTYPE!=EOMRADNONE && DORADDIAG){
+    *numcolumnsvar=NDIM*2 + 1+1 + NDIM+1 + NDIM + NDIM*2 + 1 + 1 + 1 + 1 + 1 + 4*3;
+  }
+  else{
+    *numcolumnsvar=0;
+  }
 
   // Version number:
   *numversion=0;
@@ -1973,7 +1978,7 @@ int dissmeasuredump(long dump_cnt)
 void set_dissmeasuredump_content_dnumcolumns_dnumversion(int *numcolumnsvar, int *numversion)
 {
 
-  if(DODISSMEASURE){
+  if(DODISSMEASURE && DODISSMEASUREDIAG){
     *numcolumnsvar=NSPECIAL+1; // dissmeasurepl and dissmeasure
     *numcolumnsvar+=3*2; // Fi for each direction and gas/rad
   }

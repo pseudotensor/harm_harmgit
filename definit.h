@@ -274,6 +274,7 @@
 /// 0: full images, dumps, etc., few more key failure stderr/fail_file messages
 /// 1: only log density image since too many images (takes alot of time), no utoprim failure messages -- assume debug.out and debug???? will have info if needed
 /// 2: #1 but also avoid error_check() and avoid per-MPI-proc log and fail files (good for running on >1000 cores)
+/// 3: #2 but also avoid dumps not needed except by python (remove all SM-related dumps)
 
 
 /// 0: normal computational zones outputted on diagnostics
@@ -323,9 +324,24 @@
 /// 0: don't output file with diag_fixup() activated changes in conserved quantities
 /// 1: do
 
+#define DODISSMEASUREDIAG 0
+/// 0: don't do dissmeasure dump files
+/// 1: do
+
+#define DOEOSDIAG 1
+/// 0: don't do eosdump files
+/// 1: do
+
+#define DORADDIAG 1
+/// 0: don't do raddump files
+/// 1: do
+
 
 /// whether to dump vector potential
 #define DOVPOTDUMP (1 && TRACKVPOT)
+
+#define DOIMAGEDUMP (1)
+
 
 #define DOENODEBUG 0
 /// whether to do ENO debug
@@ -410,7 +426,9 @@
 
 #define DODISS 0
 
-#define DODISSMEASURE 1
+#define DODISSMEASURE 0
+/// 0: don't do calculation
+/// 1: do
 
 /// see diag_source()
 #define DOLUMVSR 0
@@ -934,7 +952,8 @@
 #define BCSIGMACONSTATPOLE 0
 
 /// whether to do one-step diag_fixup accounting
-#define DOONESTEPDUACCOUNTING 0
+/// for dU (failfloordudump) best to have as 1.  Counting in each function still done.
+#define DOONESTEPDUACCOUNTING 1
 
 #define FIELDLINEGDETB 0
 

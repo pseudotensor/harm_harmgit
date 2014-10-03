@@ -1971,7 +1971,7 @@ void compute_and_store_fluxstatecent(FTYPE (*pr)[NSTORE2][NSTORE3][NPR])
             //      GLOBALMACP0A1(shockindicatorarray,i,j,k,SHOCKPLDIR1+dir-1)=Ficalc(dir,&velptr[0],&ptotptr[0],&primptr[0]);
             Fi=Ficalc(dir,&velptr[0],&ptotptr[0]);
             //            Fi=1.0;
-            if(NSPECIAL>=1&&0){
+            if(NSPECIAL>=1&&0 && DODISSMEASURE){
               FTYPE dissit=fabs(GLOBALMACP0A1(dissmeasurearray,i,j,k,1));
               dissit = MAX(0.0,MIN(1,2*(dissit-0.3)));
               Fi=MIN(1.0,MAX(Fi,dissit));
@@ -2020,7 +2020,7 @@ void compute_and_store_fluxstatecent(FTYPE (*pr)[NSTORE2][NSTORE3][NPR])
               Firad=Ficalc(dir,&velptr[0],&ptotptr[0]);
               //              Firad*=2.0;
               //              Firad=MIN(1.0,Firad);
-              if(NSPECIAL>=6&&0){
+              if(NSPECIAL>=6&&0 && DODISSMEASURE){
                 FTYPE dissit=fabs(GLOBALMACP0A1(dissmeasurearray,i,j,k,5));
                 dissit = MAX(0.0,MIN(1,2*(dissit-0.3)));
                 Firad=MIN(1.0,MAX(Firad,dissit));

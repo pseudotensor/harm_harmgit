@@ -439,7 +439,7 @@ void set_arrays_multidimen()
     PALLLOOP(pl) GLOBALMACP0A1(failfloordu,i,j,k,pl)=valueinit;
   }
 #endif
-
+#if(DODISSMEASURE)
   GLOBALPOINT(dissmeasurearray) = (FTYPE PTRMACP0A1(dissmeasurearray,N1M,N2M,N3M,NSPECIAL+1+3*2)) (&(BASEMACP0A1(dissmeasurearray,N1BND,N2BND,N3BND,0)));
   FULLLOOP{
     //    for(pl=0;pl<NSPECIAL+1+3*2;pl++) GLOBALMACP0A1(dissmeasurearray,i,j,k,pl)=valueinit;
@@ -458,7 +458,7 @@ void set_arrays_multidimen()
       dir=3; pl=NSPECIAL+1+3+dir-1; GLOBALMACP0A1(dissmeasurearray,i,j,k,pl)=0.0;
     }
   }
-
+#endif
 
   ////////////////////////////////////////////////
   //

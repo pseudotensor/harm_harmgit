@@ -1016,7 +1016,7 @@ static FTYPE compute_dissmeasure(int timeorder, int i, int j, int k, int loc, FT
   FTYPE dissmeasure;
   int pliter,pl;
 
-  //  return(-1.0);
+  if(DODISSMEASURE==0) return(-1.0);
 
   if(NSPECIAL>0){
     FTYPE dUgeomtemp[NPR+NSPECIAL];
