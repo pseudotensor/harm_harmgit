@@ -1024,7 +1024,7 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
   FTYPE rpow2=RPOW2_MACRO; //.1 abandoned on april 20, 2014 due to too much flux on BH when taper function in rho removed; //3.0/4.0; // has two meanings. was originally used for, as below, some power outside the break radius. now hijacked for field radial dependence inside rtransition.
   FTYPE FIELDROT=0.0;
   FTYPE hpow=2.0; // MAVARANOTE originally 2.0
-#define RBREAK_MACRO (100000.0)
+#define RBREAK_MACRO (10000000.0)
   FTYPE RBREAK=RBREAK_MACRO;
 #define RTRANSITION_MACRO (14.0) 
   FTYPE RTRANSITION=RTRANSITION_MACRO; 
@@ -1061,7 +1061,7 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
       }
       else if(1){
 	idxdxprim_ijk(i, j, k, CORN2, idxdxp); // CORN2 for l==2     
-	if(r<RTRANSITION) vpot += - (1.+0.*sin(ph*8.))*(1./1.) * pow(r/tempstore_tot[0],(UGPOW/2.+1.5)/4.0) * da3vsr_integrated[startpos[1]+i] * pow(sin(th),hpow)*sin(FIELDROT)*sin(ph); //6 is what bptf5 was, etc. //4 works pretty well//MAVARATEMP
+	if(r<RTRANSITION) vpot += - (1.+0.*sin(ph*8.))*(1./1.) * pow(r/tempstore_tot[0],(UGPOW/2.+1.5)/5.0) * da3vsr_integrated[startpos[1]+i] * pow(sin(th),hpow)*sin(FIELDROT)*sin(ph); //6 is what bptf5 was, etc. //4 works pretty well//MAVARATEMP
 	else if(r>=RTRANSITION && r<RBREAK) vpot += -  (1.+0.*sin(ph*8.))*da3vsr_integrated[startpos[1]+i]  * pow(sin(th),hpow)*sin(FIELDROT)*sin(ph);
 	else if(r>=RBREAK) vpot += - (1.+0.*sin(ph*8.))*da3vsr_integrated[startpos[1]+i] * pow(sin(th),hpow)*sin(FIELDROT)*sin(ph); 
 	else vpot += 0.0 ; //-  pow(1.5/tempstore_tot[0],rpow2) * da3vsr_integrated[startpos[1]+i] * pow(sin(th),hpow)*sin(FIELDROT)*sin(ph); //MAVARATEMP was 0.0 normally
@@ -1114,7 +1114,7 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
 	//if(r<=0)	vpot = 0.0;
 	//else    
 	//vpot = vpot 
-	if(r<RTRANSITION) vpot += (1.+0.*sin(ph*8.))*(1./1.) * pow(r/tempstore_tot[0],(UGPOW/2.+1.5)/4.0) * da3vsr_integrated[startpos[1]+i] * pow(sin(th),hpow)*(cos(FIELDROT) - cos(ph)*cot(th)*sin(FIELDROT)); //MAVARATEMP
+	if(r<RTRANSITION) vpot += (1.+0.*sin(ph*8.))*(1./1.) * pow(r/tempstore_tot[0],(UGPOW/2.+1.5)/5.0) * da3vsr_integrated[startpos[1]+i] * pow(sin(th),hpow)*(cos(FIELDROT) - cos(ph)*cot(th)*sin(FIELDROT)); //MAVARATEMP
 	else if(r>=RTRANSITION && r<RBREAK) vpot += (1.+0.*sin(ph*8.))*da3vsr_integrated[startpos[1]+i] * pow(sin(th),hpow)*(cos(FIELDROT) - cos(ph)*cot(th)*sin(FIELDROT));
 	else if(r>=RBREAK) vpot += (1.+0.*sin(ph*8.))*da3vsr_integrated[startpos[1]+i]  * pow(sin(th),hpow)*(cos(FIELDROT) - cos(ph)*cot(th)*sin(FIELDROT)); // was using a .2 multiplyer for sin(ph*8.) term
 	else vpot += 0.0; //pow(1.5/tempstore_tot[0],rpow2) * da3vsr_integrated[startpos[1]+i] * pow(sin(th),hpow)*(cos(FIELDROT) - cos(ph)*cot(th)*sin(FIELDROT));
@@ -2047,12 +2047,12 @@ int calc_da3vsr(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 	if(tempstore[0] <0.1 && startval<=RTRANSITION_MACRO) { //this if is true if r of ii=o for this core was <= RTRANSITION and rr and reached > RTRANSITION as well...only happens on the right single core. //trackingticker == 0 && rr< RBREAK_MACRO/2. && rr<(RTRANSITION_MACRO*1.2) ) {
 	  Rtransition=rr;
 	  tempstore[0]=rr; //MAVARACHANGE from rr on April 28th so the power law multiple in the A_phi setting section works for r<rtransition
-	  tempstore[2] = - (switchmad1*sqrt(4.)+switchmad2*1.)* ptrgeom->gdet * idxdxp[3][3] * dx[1] * ucon[TT] / sqrt(ptrgeom->gcov[GIND(2,2)]) * sqrt( (2./beta) * (gam - 1.0) * MACP0A1(prim,ii,jj,kk,UU) ) ;   // r/(UGPOW + 4.5)^2 was the multiplier
+	  tempstore[2] = - (switchmad1*sqrt(5.)+switchmad2*1.)* ptrgeom->gdet * idxdxp[3][3] * dx[1] * ucon[TT] / sqrt(ptrgeom->gcov[GIND(2,2)]) * sqrt( (2./beta) * (gam - 1.0) * MACP0A1(prim,ii,jj,kk,UU) ) ;   // r/(UGPOW + 4.5)^2 was the multiplier
 	  printf("rr tempstore[0]: %21.15g , at tracking= %d \n",rr,trackingticker);
 	  trackingticker++;
 	}
 
-	da3vsr[startpos[1]+ii] = - (switchmad1*sqrt(4.)+switchmad2*1.)* ptrgeom->gdet * idxdxp[3][3] * dx[1] * ucon[TT] / sqrt(ptrgeom->gcov[GIND(2,2)]) * sqrt( (2./beta) * (gam - 1.0) * MACP0A1(prim,ii,jj,kk,UU) ) ; //- ptrgeom->gdet * idxdxp[3][3] * dx[1] / sqrt(ptrgeom->gcov[GIND(2,2)]) * ucon[TT] * sqrt( (2./beta) * (gam - 1.0) * MACP0A1(prim,ii,jj,kk,UU) ) ; //- ptrgeom->gdet * dxdxp[1][1] * dx[1] / sqrt(ptrgeom->gcov[GIND(2,2)]) /r * sqrt( (2./beta) * (gam - 1.0) * MACP0A1(prim,ii,jj,kk,UU) ) ; //- ptrgeom->gdet * dx[1] / sqrt(ptrgeom->gcov[GIND(2,2)]) * pow(.1,.5) * ucon[TT] * sqrt( (gam - 1.0) * MACP0A1(prim,ii,jj,kk,UU) )  ; 
+	da3vsr[startpos[1]+ii] = - (switchmad1*sqrt(5.)+switchmad2*1.)* ptrgeom->gdet * idxdxp[3][3] * dx[1] * ucon[TT] / sqrt(ptrgeom->gcov[GIND(2,2)]) * sqrt( (2./beta) * (gam - 1.0) * MACP0A1(prim,ii,jj,kk,UU) ) ; //- ptrgeom->gdet * idxdxp[3][3] * dx[1] / sqrt(ptrgeom->gcov[GIND(2,2)]) * ucon[TT] * sqrt( (2./beta) * (gam - 1.0) * MACP0A1(prim,ii,jj,kk,UU) ) ; //- ptrgeom->gdet * dxdxp[1][1] * dx[1] / sqrt(ptrgeom->gcov[GIND(2,2)]) /r * sqrt( (2./beta) * (gam - 1.0) * MACP0A1(prim,ii,jj,kk,UU) ) ; //- ptrgeom->gdet * dx[1] / sqrt(ptrgeom->gcov[GIND(2,2)]) * pow(.1,.5) * ucon[TT] * sqrt( (gam - 1.0) * MACP0A1(prim,ii,jj,kk,UU) )  ; 
 
 	printf("idxdxp[3][3] checkval: %21.15g , at r= %21.15g \n",idxdxp[3][3],rr);
 	printf("idxdxp[2][2] checkval: %21.15g , at r= %21.15g \n",idxdxp[2][2],rr);
@@ -2083,14 +2083,6 @@ int calc_da3vsr(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
   sleep(10);
   
 
-  /*
-  for(ii=0; ii<N1; ii++) {
-    if(mycpupos[2]==ncpux2/2 && ncpux2>1  || ncpux2==1 ) 
-      da3vsr[startpos[1]+ii] = startval ; //(totalsize[2]/2)
-    else
-      da3vsr[startpos[1]+ii] = 0.0;
-  }
-  */  
   //for(ii=0; ii<ncpux1*N1; ii++) da3vsr_tot[ii] = 0.0;
   printf("Check 1\n core id: %d",myid);
   printf("Check 2\n");
@@ -2107,22 +2099,10 @@ int calc_da3vsr(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
   trifprintf("Ending values of tempstore0 and tempstore1 , and tempstore[2] = %21.15g   %21.15g  %21.15g \n", tempstore_tot[0], tempstore_tot[1],tempstore_tot[2]);
 
 
-  //for(ii=0; ii<N1*ncpux1; ii++) da3vsr_tot[ii] = 0.1 ;
-  da3vsr_integrated[0] = 4.0 * tempstore_tot[2] / (pow(tempstore_tot[1]/tempstore_tot[0],UGPOW/2+1.5)-1.0) ;
-    /*ii=0;
-  do{ 
-    da3vsr_integrated[0] = (tempstore_tot[2] - da3vsr_tot[ii]/2.); //this is better but the do-while loop can hang if the switch happens on the bound of a cpu-domain
-    ii++;
-  }while(da3vsr_tot[ii]<0.00001 && da3vsr_tot[ii]>-0.00001); //MAVARACHANGE testing only - not efficient //tempstore_tot[2] ; //tempstore_tot[2]*(1./(pow(tempstore_tot[1]/tempstore_tot[0],.3)-1.0)) ; // had to wait to set this once tempstores to be sent to all processors
-    */
+  da3vsr_integrated[0] = 5.0 * tempstore_tot[2] / (pow(tempstore_tot[1]/tempstore_tot[0],UGPOW/2+1.5)-1.0) ;
 
   for(ii=1; ii<N1*ncpux1; ii++) da3vsr_integrated[ii] = da3vsr_integrated[ii-1] + da3vsr_tot[ii-1] ;
-  /*for(ii=1; ii<N1*ncpux1; ii++){
-    if(da3vsr_tot[ii-1] > -0.00000001){ 
-      da3vsr_integrated[ii] = da3vsr_integrated[0] ;} //MAVARAFIX this is a BAD way to check to see if the value has changed - FIX!!
-    else {
-      da3vsr_integrated[ii] = da3vsr_integrated[ii-1] + da3vsr_tot[ii-1] ; }//need to go to ii=N1*ncpux1 to get outer boundary? MAVARACHANGED da3vsr_tot[ii-1] to ii on 19/2/2014...skipping cell before?
-      }*/
+
   for(ii=0; ii<ncpux1*N1; ii++) trifprintf("value %d : %21.15g \n", ii, da3vsr_integrated[ii]);
 
   
@@ -2154,77 +2134,4 @@ int calc_da3vsr(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
   
 
 
-  // OLD ******************************
-  /*
-  trifprintf("Starting calc_da3vsr\n");
-  da3vsr=(FTYPE*)malloc(ncpux1*N1*sizeof(FTYPE)); // add test to see if these work                                                                        
-  da3vsr_tot=(FTYPE*)malloc(ncpux1*N1*sizeof(FTYPE));
-
-  if(da3vsr_tot==NULL){
-    dualfprintf(fail_file,"Couldn't open lumvsr_tot memory\n");
-    myexit(1);
-  }
-
-  trifprintf("startpos[2]==totalsizep[2]/2: %g ",startpos[2]==totalsize[2]/2 );
-                                                                                                                                                        
-  for(ii=0; ii<N1; ii++) {                                                                                                                                
-                                                                                                                                                          
-    if(startpos[2]==totalsize[2]/2 ) {  //&& !(startpos[1]==0 && ii==0)                                                                                       
-      bl_coord_ijk_2(ii, jj, kk, FACE2, X, V);                                                                                                            
-      get_geometry(ii, jj, kk, FACE2, ptrgeom);                                                                                                           
-      r=V[1];                                                                                                                                             
-      th=V[2];                                                                                                                                            
-      ucon_calc(MAC(prim,ii,jj,kk),ptrgeom,ucon, others);                                                                                                 
-      idxdxprim_ijk(ii, jj, kk, FACE2, idxdxp);                                                                                                           
-      if(r>rin && r < RBREAK_MACRO) da3vsr[startpos[1]+ii] = - ptrgeom->gdet * dx[1] * idxdxp[2][2] / ptrgeom->gcov[GIND(2,2)] * pow(.1,.5) * ucon[TT] * sqrt( (gam - 1.0)*prim[ii][jj][kk][UU] ) ; 
-      else da3vsr[startpos[1]+ii] = 0.0; // the if(r < RBREAK_MACRO) above means that when I integrate through to get all the A_3 values at the end of this$
-    }                                                                                                                                                     
-    
-                                                                                                                                                          
-    //   da3vsr_tot[startpos[1]+ii] = 0.0;                                                                                                                
-    // if(integrate(ncpux1*N1,&lumvsr[0],&lumvsr_tot[0],CUMULATIVETYPE,enerregion)>=1) return(1);                                                         
-  }                                                                                                                                                       
-                                                                                                                                                          
-  
-  
-  
-  //for(ii=0; ii<N1; ii++) da3vsr[startpos[1]+ii] = 0.1 ;
-
-  if(integrate(ncpux1*N1,&da3vsr[0],&da3vsr_tot[0], CUMULATIVETYPE, 0) > 0) trifprintf("HELLLLLLOOOOOOOOOOOOOOOO") ; // 0 is just a filler for an integer$
-  da3vsr_tot[0] = 0.0 ;  
-  //for(ii=0; ii<N1*ncpux1; ii++) da3vsr_tot[ii] = 0.1 ;
-  for(ii=1; ii<N1*ncpux1; ii++) da3vsr_tot[ii] += da3vsr_tot[ii-1] ;
-  trifprintf("Ending calc_da3vsr\n");
-  for(ii=0; ii<ncpux1*N1; ii++) trifprintf("value %g : %g \n", ii, da3vsr_tot[ii]);
-
-  
-  da3vsr=(FTYPE*)malloc(ncpux1*N1*sizeof(FTYPE)); // add test to see if these work
-  da3vsr_tot=(FTYPE*)malloc(ncpux1*N1*sizeof(FTYPE));
-  					       
-  for(ii=0; ii<N1; ii++) {
-    
-    if(startpos[2]==totalsize[2]/2 && !(startpos[1]==0 && ii==0)) {    
-      bl_coord_ijk_2(ii, jj, kk, FACE2, X, V);
-      get_geometry(ii, jj, kk, FACE2, ptrgeom);
-      r=V[1];
-      th=V[2];
-      ucon_calc(MAC(prim,ii,jj,kk),ptrgeom,ucon, others);
-      idxdxprim_ijk(ii, jj, kk, FACE2, idxdxp);
-      if(r>rin && r < RBREAK_MACRO) da3vsr[startpos[1]+ii] = - ptrgeom->gdet * dx[1] * idxdxp[2][2] / ptrgeom->gcov[GIND(2,2)] * pow(.1,.5) * ucon[TT] * sqrt( (gam - 1.0)*prim[ii][jj][kk][UU] ) ;   // use ptrgeom->i instead?  ; will need to change prim access to average of centers of two vertical cells to get machine accuracy on beta=const
-    }
-    else da3vsr[startpos[1]+ii] = 0.0; // the if(r < RBREAK_MACRO) above means that when I integrate through to get all the A_3 values at the end of this function, these zeros will mean everything beyond RBREAK has the same value as the last cell before RBREAK
-    
-    //   da3vsr_tot[startpos[1]+ii] = 0.0;
-    // if(integrate(ncpux1*N1,&lumvsr[0],&lumvsr_tot[0],CUMULATIVETYPE,enerregion)>=1) return(1);
-  }
-  
-  if(integrate(ncpux1*N1,&da3vsr[0],&da3vsr_tot[0], CUMULATIVETYPE, 0) > 0) trifprintf("HELLLLLLOOOOOOOOOOOOOOOO") ; // 0 is just a filler for an integer that is not used when CUMULATIVE is the case type used
-  //
-  da3vsr_tot[0] = 0.0 ;
-  for(ii=0; ii<N1*ncpux1; ii++) da3vsr[ii] = 0.0 ;
-   for(ii=0; ii<N1*ncpux1; ii++) da3vsr_tot[ii] = 0.0 ;
-  for(ii=1; ii<N1*ncpux1; ii++) da3vsr_tot[ii] += da3vsr_tot[ii-1] ; 
-  
-  return(0);
-  */
 }
