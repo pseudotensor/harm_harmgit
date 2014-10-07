@@ -1026,7 +1026,7 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
   FTYPE hpow=2.0; // MAVARANOTE originally 2.0
 #define RBREAK_MACRO (100000.0)
   FTYPE RBREAK=RBREAK_MACRO;
-#define RTRANSITION_MACRO (14.0) 
+#define RTRANSITION_MACRO (11.0) 
   FTYPE RTRANSITION=RTRANSITION_MACRO; 
   FTYPE UGPOW=UGPOW_MACRO ;
   FTYPE normalize;
