@@ -2036,8 +2036,8 @@ int calc_da3vsr(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
                                  
       if(rr>=RTRANSITION_MACRO && rr < RBREAK_MACRO) {
 
-	switchmad2 = 0.5+1.0/M_PI*atan((rr-50.)/12.); 
-	switchmad1 = 0.5-1.0/M_PI*atan((rr-50.)/12.);
+	switchmad2 = 0.5+1.0/M_PI*atan((rr-35.)/8.4); 
+	switchmad1 = 0.5-1.0/M_PI*atan((rr-35.)/8.4);
 
 	if(tempstore[0] > 0.1 && tempstore[1] < 0.1) {
 	  tempstore[1] = rr; 
