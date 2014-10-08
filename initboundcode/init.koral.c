@@ -33,7 +33,7 @@ static FTYPE nz_func(FTYPE R) ;
 static FTYPE taper_func2(FTYPE R,FTYPE rin, FTYPE rpow) ;
 static int fieldprim(int whichmethod, int whichinversion, int *whichvel, int*whichcoord, int ii, int jj, int kk, FTYPE *pr);
 FTYPE B0WALD; // set later
-int DOWALDDEN=0; // WALD: 0->1 to set densities as floor-like with below b^2/rho at horizon.  Should also choose FIELDTYPE==FIELDWALD.
+int DOWALDDEN=1; // WALD: 0->1 to set densities as floor-like with below b^2/rho at horizon.  Should also choose FIELDTYPE==FIELDWALD.
 int WALDWHICHACOV=3; // which component : -1 is all of them
 //FTYPE BSQORHOWALD=50.0; // leads to too large b^2/rho and uu0 cylindrical shock forms at r\sim 2r_g and remains forever (at least at 128x64)
 FTYPE BSQORHOWALD=100.0;
@@ -52,8 +52,8 @@ int inittypeglobal; // for bounds to communicate detail of what doing
 
 //#define THETAROTMETRIC (0.5*0.7)
 //#define USER_THETAROTMETRIC (M_PI*0.25)
-#define USER_THETAROTMETRIC (0.0)
-#define USER_THETAROTPRIMITIVES (0.0) // probably want to choose 0, so initial conditions are as if no tilt // WALD -> make same as USER_THETAROTMETRIC
+#define USER_THETAROTMETRIC (0.5*M_PI-1E-5)
+#define USER_THETAROTPRIMITIVES (USER_THETAROTMETRIC) // probably want to choose 0, so initial conditions are as if no tilt // WALD -> make same as USER_THETAROTMETRIC
   
 
 
@@ -280,7 +280,7 @@ int prepre_init_specific_init(void)
 
   // Also: SET USEROMIO to 0 or 1 in mympi.definit.h (needs to be 0 for TEXTOUTPUT)
   if(PRODUCTION==0||DOWALDDEN==1){ // for now DOWALDDEN==1
-    binaryoutput=TEXTOUTPUT;
+    ///    binaryoutput=TEXTOUTPUT;
     // KRAKEN: comment out above.  And change mympi.definit.h's USEROMIO 0 to 1 for the "choice" version.
   }
 
@@ -359,6 +359,8 @@ int post_init_specific_init(void)
   funreturn=user1_post_init_specific_init();
   if(funreturn!=0) return(funreturn);
 
+
+  DTr = 1000;
 
 
   trifprintf("WHICHPROBLEM: %d\n",WHICHPROBLEM);
@@ -478,7 +480,8 @@ int init_global(void)
 
   if(DOWALDDEN){
     fluxmethod=HLLFLUX; // lower errors in unresolved regions
-    lim[1]=lim[2]=lim[3]=MC; // to preserve symmetry better
+    //    lim[1]=lim[2]=lim[3]=MC; // to preserve symmetry better
+    lim[1]=lim[2]=lim[3]=MP5;
   }
 
   //FLUXB=FLUXCTTOTH;
@@ -2305,7 +2308,7 @@ int init_global(void)
     DTr = 100; //number of time steps for restart dumps
     // tf = 100*DTdumpgen[0]; // 100 dumps(?)
     //    tf = 2000*DTdumpgen[0]; // koral in default setup does 1000 dumps
-    tf = 1E5;
+    tf = 400.0;
 
     //    DODIAGEVERYSUBSTEP = 1;
 
@@ -2968,7 +2971,7 @@ int init_defcoord(void)
     Rout=RADNT_MAXX;
 
     if(DOWALDDEN){
-      Rout=2000.0; // new normal
+      Rout=400.0; // new normal
       defcoord=USERCOORD;
     }
     else defcoord=JET6COORDS;
@@ -7006,7 +7009,7 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
       TILTWALD=THETAROT;
       aforwald=a;
       
-      if(fabs(TILTWALD-0.0)<1E-10){
+      if(1||fabs(TILTWALD-0.0)<1E-10){
         if(l==WALDWHICHACOV || WALDWHICHACOV==-1){
           vpot += -0.5*B0WALD*(mcov[l]+2.0*aforwald*kcov[l]);
         }
@@ -8376,9 +8379,9 @@ void set_coord_parms_nodeps_user(int defcoordlocal)
       npow2=4.0; // WALD: 6.0->4.0
     }
     else{
-      rbr = 5E2; // WALD 5E2->5E7
+      rbr = 5E2;
       //power exponent
-      npow2=6.0; // WALD: 6.0->4.0
+      npow2=6.0;
     }
 
 

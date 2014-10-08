@@ -172,7 +172,7 @@
 
 
 
-#define ALLOWMETRICROT 0 // WALD->1
+#define ALLOWMETRICROT 1 // WALD->1
 #if(ALLOWMETRICROT==1)
 #undef CONNAXISYMM
 #define CONNAXISYMM 0 //required to be 0 if really rotating metric
@@ -184,11 +184,11 @@
 #undef DOPOLESMOOTH
 #undef DOPOLEGAMMADEATH
 // needed to avoid random death at pole at large distances when grid focuses on axis and so makes-up information a bit.
-#define DOPOLEDEATH 2
-//#define DOPOLEDEATH 0 // WALD
+//#define DOPOLEDEATH 2
+#define DOPOLEDEATH 0 // WALD
 #define DOPOLESMOOTH 0 // GODMARK: Need to reject outliers
-#define DOPOLEGAMMADEATH 2
-//#define DOPOLEGAMMADEATH 0 // WALD
+//#define DOPOLEGAMMADEATH 2
+#define DOPOLEGAMMADEATH 0 // WALD
 // Note that if DOPOLESMOOTH>=DOPOLEGAMMADEATH or DOPOLESMOOTH>=DOPOLEDEATH, then DOPOLEGAMMADEATH or DOPOLEDEATH do nothing -- they are overwritten by DOPOLESMOOTH.
 
 #undef IF3DSPCTHENMPITRANSFERATPOLE
@@ -200,7 +200,7 @@
 #define FIELDSTAGMEM 1 // testing
 #define HIGHERORDERMEM 0
 #define MAXBND 4 // 4 for PARAFLAT, 6 for WENO5BND wo/a2c stuff : 11 for full point-field FLUXRECON method
-#define PRODUCTION 0
+#define PRODUCTION 2
 //#define FULLOUTPUT MAXBND // TESTING BCs
 #define FULLOUTPUT 0
 
@@ -245,10 +245,10 @@
 //#define WHICHEOM (ISSPCMCOORD(MCOORD) ? WITHNOGDET : WITHGDET) // now default is WITHNOGDET for normal problems -- assumes half or full \theta hemispheres since main benefit is near poles. // still seems wrong -- need to test.
 #define REMOVERESTMASSFROMUU 2
 #define RELTYPE RELEOM
-#define EOMTYPE EOMGRMHD
+//#define EOMTYPE EOMGRMHD
 #undef EOMRADTYPE
 #define EOMRADTYPE EOMRADM1CLOSURE
-//#define EOMTYPE EOMFFDE
+#define EOMTYPE EOMFFDE
 //#define EOMTYPE EOMCOLDGRMHD
 #define UTOPRIMTRYAGAIN 0
 #define WHICHEOS IDEALGAS
@@ -325,7 +325,7 @@
 #define DOENOFLUXMEMORY 0
 #define BOUNDARYINTERPADJUST 0  //should be set to zero always
 #define COMPUTEFRDOT 0
-#define CALCFARADAYANDCURRENTS 0 // WALD->1
+#define CALCFARADAYANDCURRENTS 1 // WALD->1
 #define WHICHCURRENTCALC CURRENTCALC1
 #define FARADAYT0 1
 #define CURRENTST0 1
@@ -342,8 +342,8 @@
 #define HORIZONSUPERFAST 0
 
 //#define VARTOINTERP PRIMTOINTERP
-#define VARTOINTERP PRIMTOINTERP_GDETFULLVERSION
-//#define VARTOINTERP PRIMTOINTERP_GDETFULLVERSION_WALD // WALD
+//#define VARTOINTERP PRIMTOINTERP_GDETFULLVERSION
+#define VARTOINTERP PRIMTOINTERP_GDETFULLVERSION_WALD // WALD
 //#define VARTOINTERP PRIMTOINTERP_RHOU
 //#define VARTOINTERP PRIMTOINTERP_VSQ
 // #define VARTOINTERP PRIMTOINTERP_3VELREL_GAMMAREL (used in Sasha tests)
@@ -352,7 +352,7 @@
 #define VARTOINTERPFIELD NOFIELDRESCALE
 #define RESCALEINTERP 1
 #undef RESCALEINTERPFLUXCTSTAG
-#define RESCALEINTERPFLUXCTSTAG 0 // WALD: 0->1
+#define RESCALEINTERPFLUXCTSTAG 1 // WALD: 0->1
 #define DOEXTRAINTERP 0
 
 #define USEAVGPRIMITIVEFORWENOFLAT 1
@@ -979,8 +979,8 @@ struct Ccoordparams {
 #if(WHICHPROBLEM==RADNT || WHICHPROBLEM==RADFLATDISK || WHICHPROBLEM==RADDONUT || WHICHPROBLEM==RADCYLBEAM || WHICHPROBLEM==RADCYLBEAMCART)
 
 #undef OUTERDEATH
-#define OUTERDEATH 1 // do it
-//#define OUTERDEATH 0 // don't do it // WALD
+//#define OUTERDEATH 1 // do it
+#define OUTERDEATH 0 // don't do it // WALD
 #undef OUTERDEATHRADIUS
 #define OUTERDEATHRADIUS (500.0)
 #undef OUTERDEATHGAMMAMAX
@@ -1018,19 +1018,19 @@ struct Ccoordparams {
 #elif(WHICHPROBLEM==RADDONUT)
 
 #undef WHICHRADSOURCEMETHOD
-//#define WHICHRADSOURCEMETHOD SOURCEMETHODNONE // WALD
+#define WHICHRADSOURCEMETHOD SOURCEMETHODNONE // WALD
 //#define WHICHRADSOURCEMETHOD SOURCEMETHODNONE
 //#define WHICHRADSOURCEMETHOD SOURCEMETHODEXPLICIT
-#define WHICHRADSOURCEMETHOD SOURCEMETHODIMPLICIT
+//#define WHICHRADSOURCEMETHOD SOURCEMETHODIMPLICIT
 //#define WHICHRADSOURCEMETHOD SOURCEMETHODEXPLICITSUBCYCLECHECKSFROMIMPLICIT // least stable result since doesn't use time-advanced prnew to get force since assumes will be doing accurate substeps.
 //#define WHICHRADSOURCEMETHOD SOURCEMETHODIMPLICITEXPLICITCHECK // SUPERKORALTODO: Actually doesn't work -- donut heats-up improperly and grows and unsteady.  Even with using time-advanced prnew, leads to problems eventually and noisy overall.
 
 // N1=30 if using log coords from r=1.7 to r=50
 // N1=60 if using 1.5*hor - 40 (or 27.8)
 // N1=70 if using 1.5*hor - 30 (or 27.8)
-#define N1 32
+#define N1 16
 #define N2 16
-#define N3 1
+#define N3 18
 
    //#define N1 128
 //#define N2 64
