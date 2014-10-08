@@ -54,6 +54,7 @@ USESTAMPEDE=0
 #
 #####################
 
+hoststriped=`echo $HOSTNAME | sed 's/[0-9]*//g'`
 
 ifeq ($(HOSTNAME),)
 #############
@@ -72,22 +73,7 @@ ifeq ($(HOSTNAME),physics-179)
 USEICCINTEL=1
 #USEGCC=1
 $(warning USEICCINTEL is $(USEICCINTEL))
-else ifeq ($(HOSTNAME),krakenpf1)
-USEKRAKENICC=1
-$(warning USEKRAKENICC is $(USEKRAKENICC))
-else ifeq ($(HOSTNAME),krakenpf2)
-USEKRAKENICC=1
-$(warning USEKRAKENICC is $(USEKRAKENICC))
-else ifeq ($(HOSTNAME),krakenpf3)
-USEKRAKENICC=1
-$(warning USEKRAKENICC is $(USEKRAKENICC))
-else ifeq ($(HOSTNAME),krakenpf4)
-USEKRAKENICC=1
-$(warning USEKRAKENICC is $(USEKRAKENICC))
-else ifeq ($(HOSTNAME),krakenpf5)
-USEKRAKENICC=1
-$(warning USEKRAKENICC is $(USEKRAKENICC))
-else ifeq ($(HOSTNAME),krakenpf6)
+else ifeq ($(hoststriped),krakenpf)
 USEKRAKENICC=1
 $(warning USEKRAKENICC is $(USEKRAKENICC))
 else ifeq ($(HOSTNAME),ki-rh42)
@@ -99,21 +85,12 @@ $(warning USEICCINTEL is $(USEICCINTEL))
 else ifeq ($(HOSTNAME),ki-jmck)
 USEICCINTEL=1
 $(warning USEICCINTEL is $(USEICCINTEL))
-else ifeq ($(HOSTNAME),login1.stampede.tacc.utexas.edu)
+else ifeq ($(hoststriped),login.stampede.tacc.utexas.edu)
 USESTAMPEDE=1
 $(warning USESTAMPEDE is $(USESTAMPEDE))
-else ifeq ($(HOSTNAME),login2.stampede.tacc.utexas.edu)
-USESTAMPEDE=1
-$(warning USESTAMPEDE is $(USESTAMPEDE))
-else ifeq ($(HOSTNAME),login3.stampede.tacc.utexas.edu)
-USESTAMPEDE=1
-$(warning USESTAMPEDE is $(USESTAMPEDE))
-else ifeq ($(HOSTNAME),login4.stampede.tacc.utexas.edu)
-USESTAMPEDE=1
-$(warning USESTAMPEDE is $(USESTAMPEDE))
-else ifeq ($(HOSTNAME),login5.stampede.tacc.utexas.edu)
-USESTAMPEDE=1
-$(warning USESTAMPEDE is $(USESTAMPEDE))
+else ifeq ($(hoststriped),pfe)
+USEPFE=1
+$(warning USEPFE is $(USEPFE))
 else ifeq ($(HOSTNAME),ubuntu)
 USEICCINTEL=1
 $(warning USEICCINTEL is $(USEICCINTEL))
