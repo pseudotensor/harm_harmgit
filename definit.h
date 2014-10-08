@@ -316,6 +316,11 @@
 /// 0: don't split AVG file
 /// 1: do
 
+
+#define DOMAINDUMPDIAG 1
+/// 0: don't output main dump files
+/// 1: do
+
 #define DODEBUG 1
 /// 0: don't output debug dump file or ener file(ener is based on dump counts)
 /// 1: do

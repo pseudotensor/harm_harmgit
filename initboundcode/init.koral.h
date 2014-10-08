@@ -420,15 +420,18 @@ struct Ccoordparams {
 #if(PRODUCTION>=3)
 
 // only needed files for python, not SM
+#undef DOMAINDUMPDIAG
 #undef DOEOSDIAG
 #undef DORADDIAG
 #undef DOVPOTDUMP
 #undef DOIMAGEDUMP
-#undef
+
+#define DOMAINDUMPDIAG 0
 #define DOEOSDIAG 0
 #define DORADDIAG 0
 #define DOVPOTDUMP 0
 #define DOIMAGEDUMP 0
+
 #endif
 
 
