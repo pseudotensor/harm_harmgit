@@ -51,6 +51,11 @@ ssh pseudotensor@cli.globusonline.org scp -D -r -s 1 pseudotensor#pfe1:/nobackup
 list="wa0 wa0.8"
 list="wa0.8t45 wa0.8t90 wa0.0m0.3 lwa0.8t45 lwa0 lwa0.8 lwa0.0m0.3 lwa0.8t90"
 list="radm2a0.82da"
+list="wa0.0m0.6 lwa0.0m0.6 wa0.8t23 lwa0.8t23 wa0.8t68 lwa0.8t68"
+list="rad1m2a0.82da"
+list="hwa0.8t90a hlwa0.8t90 h5wa0.8t90a hl5wa0.8t90"
+list="hwa0.8t90b h5wa0.8t90b"
+
 
 for fil in $list
 do
@@ -61,6 +66,19 @@ ssh pseudotensor@cli.globusonline.org scp -D -r -s 1 xsede#stampede:/scratch/010
 ssh pseudotensor@cli.globusonline.org scp -D -r -s 1 xsede#stampede:/scratch/01014/tg802609/$fil pseudotensor#bh01:/mnt/data0/user/
 
 done
+
+
+
+
+ssh pseudotensor@cli.globusonline.org scp -D -s 1 pseudotensor#ki-rh12:/u/ki/jmckinne/superdrive/nobackup/reconprogs.tgz xsede#ranch:/home/01014/tg802609/
+
+ssh pseudotensor@cli.globusonline.org scp -D -r -s 1 pseudotensor#ki-rh12:/nfs/slac/g/ki/ki06/jmckinne/ xsede#ranch:/home/01014/tg802609/nfsslac3/
+
+ssh pseudotensor@cli.globusonline.org scp -D -r -s 1 pseudotensor#ki-rh12:/nfs/slac/g/ki/ki14/jmckinne/ xsede#ranch:/home/01014/tg802609/nfsslac2/
+
+ssh pseudotensor@cli.globusonline.org scp -D -r -s 1 pseudotensor#ki-rh12:/nfs/slac/g/ki/ki02/jmckinne/ xsede#ranch:/home/01014/tg802609/nfsslac/
+
+
 
 
 ######################################

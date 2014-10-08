@@ -2302,7 +2302,12 @@ int init_global(void)
       //for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=0.1;
     }
 
-    DTr = 100; //number of time steps for restart dumps
+    if(totalsize[1]<=64){
+      DTr = 100; //number of time steps for restart dumps
+    }
+    else{
+      DTr = 1000;
+    }
     // tf = 100*DTdumpgen[0]; // 100 dumps(?)
     //    tf = 2000*DTdumpgen[0]; // koral in default setup does 1000 dumps
     tf = 1E5;
@@ -7029,7 +7034,7 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
         // STEP2: Now get solution in setup where BH spin along z-axis always and it is the field that is rotated
         // B0y=0
         FTYPE B0z=1.0; // B0z
-        FTYPE B0x=1.0; // B0x
+        FTYPE B0x=0.0; // B0x
 
         FTYPE delta,sigma,rp,rm,psi;
 
