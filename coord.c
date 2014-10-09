@@ -276,7 +276,7 @@ void set_coord_parms_nodeps(int defcoordlocal)
 
     //radial hyperexponential grid
     //    npow2=4.0; //power exponent
-    bp_npow2=5.0; //MAVARANOTE must be odd now unless I add a sign explicitly to power component this contributes to sum in exponent //10.0; //5.0; // 10.0;    // MARKNOTE set to 10.0 before using BP values //power exponent
+    bp_npow2=3.0; //MAVARANOTE must be odd now unless I add a sign explicitly to power component this contributes to sum in exponent //10.0; //5.0; // 10.0;    // MARKNOTE set to 10.0 before using BP values //power exponent
     bp_cpow2=1.0; //exponent prefactor (the larger it is, the more hyperexponentiation is)
     //    rbr = 1E3;  //radius at which hyperexponentiation kicks in
     bp_rbr = 200.0;  //radius at which hyperexponentiation kicks in
