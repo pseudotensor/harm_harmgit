@@ -13,6 +13,12 @@
 #model="h5wa0.8t90"
 #model="hl5wa0.8t90"
 
+#model="h5mwa0.8t90"
+#model="hl5mwa0.8t90"
+
+#model="h5mwa0.8"
+#model="hl5mwa0.8"
+
 #model="h5rwa0.8t90"
 
 #model="lwa0"

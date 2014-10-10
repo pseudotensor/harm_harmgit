@@ -2265,6 +2265,10 @@ void check_bnd_num(void)
   }
     
 
+  if(USEROMIO==1 && binaryoutput==TEXTOUTPUT){
+    dualfprintf(fail_file,"Cannot use text output with ROMIO\n");
+    myexit(98725235);
+  }
 
 
 

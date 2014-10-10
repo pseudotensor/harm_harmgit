@@ -55,7 +55,7 @@ list="wa0.0m0.6 lwa0.0m0.6 wa0.8t23 lwa0.8t23 wa0.8t68 lwa0.8t68"
 list="rad1m2a0.82da"
 list="hwa0.8t90a hlwa0.8t90 h5wa0.8t90a hl5wa0.8t90"
 list="hwa0.8t90b h5wa0.8t90b"
-
+list="h5wa0.8t90c"
 
 for fil in $list
 do
