@@ -36,15 +36,20 @@
 
 /// whether to try entropy inversion if hot fails
 #define HOT2ENTROPY 1
-
-/// whether to try cold inversion if hot fails
+/// whether to try cold inversion if hot fails (only used if cold makes sense)
 #define HOT2COLD 1
+/// whether to try FFDE inversion if hot fails (only used if FFDE makes sense)
+#define HOT2FFDE 1
 
 /// whether to try cold inversion if entropy fails
 #define ENTROPY2COLD 1
-
 /// whether to try HOT inversion if entropy fails
 #define ENTROPY2HOT 1
+/// whether to try FFDE inversion if entropy fails (only used if FFDE makes sense)
+#define ENTROPY2FFDE 1
+
+
+
 
 #define BADENERGYMAC(ugenergy,ugentropy) ((ugenergy) < 0.5*(ugentropy))
 #define BADENERGY2MAC(ugenergy,ugentropy) ((ugenergy) < (ugentropy))

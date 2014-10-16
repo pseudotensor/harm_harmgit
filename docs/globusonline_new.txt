@@ -57,6 +57,8 @@ list="hwa0.8t90a hlwa0.8t90 h5wa0.8t90a hl5wa0.8t90"
 list="hwa0.8t90b h5wa0.8t90b"
 list="h5wa0.8t90c"
 
+list="hl5mwa0.8a h5mwa0.8a h5mwa0.8b h5mwa0.8c hl5mwa0.8t90a h5mwa0.8t90a h5mwa0.8t90b h5mwa0.8t90c"
+
 for fil in $list
 do
 echo $fil

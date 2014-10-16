@@ -3729,24 +3729,11 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       // measure whether flow really cold enough to even use cold inversion
       //
       /////
-      int iscoldflow;
+      int includerad=1;
+      int iscoldflow=isflowcold(includerad,pb,ptrgeom,q,uu0);
+      //      iscoldflow=1; // test
 
-      int jj;
-      FTYPE usq=0.0;  SLOOPA(jj) usq+=q->ucon[jj]*q->ucov[jj];
-      FTYPE ucovgas[NDIM],ucovrad[NDIM];
-      DLOOPA(jj) ucovgas[jj]=uu0[UU+jj];
-      DLOOPA(jj) ucovrad[jj]=uu0[URAD0+jj];
-      FTYPE ucongas[NDIM],uconrad[NDIM];
-      raise_vec(ucovgas,ptrgeom,ucongas);
-      raise_vec(ucovrad,ptrgeom,uconrad);
-      FTYPE ugas=0.0;  SLOOPA(jj) ugas+=ucovgas[jj]*ucongas[jj];
-      FTYPE urad=0.0;  SLOOPA(jj) urad+=ucovrad[jj]*uconrad[jj];
-#define COLDFACTOR (0.1)
-      iscoldflow = (pb[UU]<COLDFACTOR*pb[RHO]*fabs(usq) && fabs(ucongas[TT]*ucovgas[TT])<COLDFACTOR*fabs(ugas) && fabs(uconrad[TT]*ucovrad[TT])<COLDFACTOR*fabs(urad));
-
-      //      iscoldflow=1;
-
-      //      dualfprintf(fail_file,"iscoldflow: %d : ug=%21.15g Erf=%21.15g rhovsq=%21.15g : Esqgas=%21.15g usqgas=%21.15g Esqrad=%21.15g usqrad=%21.15g\n",iscoldflow,pb[UU],pb[URAD0],pb[RHO]*fabs(usq),fabs(ucongas[TT]*ucovgas[TT]),fabs(ugas),fabs(uconrad[TT]*ucovrad[TT]),fabs(urad));
+      //      dualfprintf(fail_file,"iscoldflow: %d : ug=%21.15g Erf=%21.15g rhovsq=%21.15g : Esqgas=%21.15g usqgas=%21.15g Esqrad=%21.15g usqrad=%21.15g\n",iscoldflow,pb[UU],pb[URAD0],pb[RHO]*fabs(usq),fabs(ucongas[TT]*ucovgas[TT]),fabs(ugas),fabs(uconrad[TT]*ucovrad[TT]),fabs(urad)); // DEBUG
 
 
       // if flow is cold, do inversion

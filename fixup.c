@@ -1585,6 +1585,11 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
               startpl=RHO;
               endpl=RHO;
             }
+            else if(mhdlpflag==UTOPRIMFAILURHO2AVG1FROMFFDE){
+              startpl=RHO;
+              endpl=UU;
+              // SUPERGODMARK: should also average v along v.B
+            }
             else{
               // then presume inversion failure with no solution or assuming rho<=0 or u<=zerouuperbaryon*prim[RHO] is bad inversion if HANDLE?NEG==0
               startpl=RHO;
@@ -2281,6 +2286,10 @@ static int fixuputoprim_accounting(int i, int j, int k, PFTYPE mhdlpflag, PFTYPE
 
     // default counting:
     if(mhdlpflag==UTOPRIMFAILU2AVG1FROMCOLD|| mhdlpflag==UTOPRIMFAILU2AVG2FROMCOLD) mhdutoprimfailtype=COUNTCOLD;
+    else mhdutoprimfailtype=COUNTUTOPRIMFAILUNEG;
+
+    // default counting:
+    if(mhdlpflag==UTOPRIMFAILURHO2AVG1FROMFFDE) mhdutoprimfailtype=COUNTFFDE;
     else mhdutoprimfailtype=COUNTUTOPRIMFAILUNEG;
 
     // now set whether to ucons correction or override counting

@@ -39,6 +39,7 @@ static int compare_ffde_inversions(int showmessages, int allowlocalfailurefixand
 static int tryhotinversion(int showmessages, int allowlocalfailurefixandnoreport, int finalstep, PFTYPE oldpflag, int forcetry, int whichcap, int modprim, FTYPE *pi, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, FTYPE *Ugeomfree, FTYPE *Ugeomfree0, struct of_state *qptr, struct of_geom *ptrgeom, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad);
 static int tryentropyinversion(int showmessages, int allowlocalfailurefixandnoreport, int finalstep, PFTYPE oldpflag, int forcetry, int whichcap, int modprim, FTYPE *pi, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, FTYPE *Ugeomfree, FTYPE *Ugeomfree0, struct of_state *qptr, struct of_geom *ptrgeom, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad);
 static int trycoldinversion(int showmessages, int allowlocalfailurefixandnoreport, int finalstep, PFTYPE oldpflag, int forcetry, int whichcap, int modprim, FTYPE *pi, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, FTYPE *Ugeomfree, FTYPE *Ugeomfree0, struct of_state *qptr, struct of_geom *ptrgeom, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad);
+static int tryffdeinversion(int showmessages, int allowlocalfailurefixandnoreport, int finalstep, PFTYPE oldpflag, int forcetry, int whichcap, int modprim, FTYPE *pi, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, FTYPE *Ugeomfree, FTYPE *Ugeomfree0, struct of_state *qptr, struct of_geom *ptrgeom, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad);
 
 
 int Utoprimgen(int showmessages, int checkoninversiongas, int checkoninversionrad, int allowlocalfailurefixandnoreport, int finalstep, int *eomtype, int whichcap, int whichmethod, int modprim, int evolvetype, int inputtype,FTYPE *U, struct of_state *qptr,  struct of_geom *ptrgeom, FTYPE dissmeasure, FTYPE *pi, FTYPE *pr, struct of_newtonstats *newtonstats)
@@ -304,11 +305,11 @@ int Utoprimgen(int showmessages, int checkoninversiongas, int checkoninversionra
 
 
 
-  int entropytried=0,hottried=0,coldtried=0;
-  PFTYPE entropypflag=-1,hotpflag=-1,coldpflag=-1;
-  PFTYPE entropyradinvmod=-1,hotradinvmod=-1,coldradinvmod=-1;
-  int entropyhardfailure=-1,hothardfailure=-1,coldhardfailure=-1;
-  FTYPE entropypr[NPR],hotpr[NPR],coldpr[NPR];
+  int entropytried=0,hottried=0,coldtried=0,ffdetried=0;
+  PFTYPE entropypflag=-1,hotpflag=-1,coldpflag=-1,ffdepflag=-1;
+  PFTYPE entropyradinvmod=-1,hotradinvmod=-1,coldradinvmod=-1,ffderadinvmod=-1;
+  int entropyhardfailure=-1,hothardfailure=-1,coldhardfailure=-1,ffdehardfailure=-1;
+  FTYPE entropypr[NPR],hotpr[NPR],coldpr[NPR],ffdepr[NPR];
 
 
   if(eomtypelocal==EOMGRMHD){
@@ -415,7 +416,7 @@ int Utoprimgen(int showmessages, int checkoninversiongas, int checkoninversionra
       }
       
     }
-
+    else entropypflag=1;
 
 
 
@@ -448,6 +449,39 @@ int Utoprimgen(int showmessages, int checkoninversiongas, int checkoninversionra
       }
 
     }
+    else coldpflag=1;
+
+
+    ////////////////////
+    //  If hot GRMHD failed or gets suspicious solution, revert to FFDE GRMHD if solution is FFDE
+    ///////////////////
+    if(HOT2FFDE && (coldpflag>0 && entropypflag>0 && hotpflag>0) ){
+
+      ffdetried=tryffdeinversion(showmessages, allowlocalfailurefixandnoreport,finalstep, hotpflag, 0, whichcap, modprim, pi, pr0, pr, pressure, Ugeomfree, Ugeomfree0, qptr, ptrgeom,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
+      if(ffdetried){
+        PLOOP(pliter,pl) ffdepr[pl]=pr[pl];
+
+        // get failure flag
+        ffdepflag=GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL);
+        ffderadinvmod=GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL);
+        ffdehardfailure=(IFUTOPRIMFAIL(ffdepflag) && IFUTOPRIMFAILSOFT(ffdepflag)==0);
+
+        if(!ffdehardfailure){
+          usedhotinversion=0;
+          usedentropyinversion=0;
+          usedcoldinversion=0;
+          usedffdeinversion=0;
+        
+          // report back that used this
+          *eomtype=EOMFFDE;
+        
+          // check ffde inversion if inversion thinks it was successful
+          check_on_inversion(checkoninversiongas, checkoninversionrad, usedhotinversion,usedentropyinversion,usedcoldinversion,usedffdeinversion,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr0, pr, pressure, ptrgeom, Uold, Unew,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
+        }
+      }
+
+    }
+    else ffdepflag=1;
 
 
 
@@ -537,7 +571,7 @@ int Utoprimgen(int showmessages, int checkoninversiongas, int checkoninversionra
       }
 
     }
-
+    else hotpflag=1;
 
 
     ////////////////////
@@ -567,6 +601,39 @@ int Utoprimgen(int showmessages, int checkoninversiongas, int checkoninversionra
         }
       }
     }
+    else coldpflag=1;
+
+
+    ////////////////////
+    //  If entropy GRMHD failed or gets suspicious solution, revert to FFDE GRMHD if solution is FFDE
+    ///////////////////
+    if(ENTROPY2FFDE && (coldpflag>0 && entropypflag>0 && hotpflag>0) ){
+
+      ffdetried=tryffdeinversion(showmessages, allowlocalfailurefixandnoreport,finalstep, entropypflag, 0, whichcap, modprim, pi, pr0, pr, pressure, Ugeomfree, Ugeomfree0, qptr, ptrgeom,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
+      if(ffdetried){
+        PLOOP(pliter,pl) ffdepr[pl]=pr[pl];
+
+        // get failure flag
+        ffdepflag=GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL);
+        ffderadinvmod=GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL);
+        ffdehardfailure=(IFUTOPRIMFAIL(ffdepflag) && IFUTOPRIMFAILSOFT(ffdepflag)==0);
+
+        if(!ffdehardfailure){
+          usedhotinversion=0;
+          usedentropyinversion=0;
+          usedcoldinversion=0;
+          usedffdeinversion=1;
+        
+          // report back that used this
+          *eomtype=EOMFFDE;
+        
+          // check ffde inversion if inversion thinks it was successful
+          check_on_inversion(checkoninversiongas, checkoninversionrad, usedhotinversion,usedentropyinversion,usedcoldinversion,usedffdeinversion,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr0, pr, pressure, ptrgeom, Uold, Unew,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
+        }
+      }
+    }
+    else ffdepflag=1;
+
 
     
   }
@@ -604,6 +671,40 @@ int Utoprimgen(int showmessages, int checkoninversiongas, int checkoninversionra
       // check cold inversion
       check_on_inversion(checkoninversiongas, checkoninversionrad, usedhotinversion,usedentropyinversion,usedcoldinversion,usedffdeinversion,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr0, pr, pressure, ptrgeom, Uold, Unew,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
     }
+
+
+
+    ////////////////////
+    //  If cold GRMHD failed or gets suspicious solution, revert to FFDE GRMHD if solution is FFDE
+    ///////////////////
+    if(ENTROPY2FFDE && (coldpflag>0) ){
+
+      ffdetried=tryffdeinversion(showmessages, allowlocalfailurefixandnoreport,finalstep, coldpflag, 0, whichcap, modprim, pi, pr0, pr, pressure, Ugeomfree, Ugeomfree0, qptr, ptrgeom,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
+      if(ffdetried){
+        PLOOP(pliter,pl) ffdepr[pl]=pr[pl];
+
+        // get failure flag
+        ffdepflag=GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL);
+        ffderadinvmod=GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL);
+        ffdehardfailure=(IFUTOPRIMFAIL(ffdepflag) && IFUTOPRIMFAILSOFT(ffdepflag)==0);
+
+        if(!ffdehardfailure){
+          usedhotinversion=0;
+          usedentropyinversion=0;
+          usedcoldinversion=0;
+          usedffdeinversion=1;
+        
+          // report back that used this
+          *eomtype=EOMFFDE;
+        
+          // check ffde inversion if inversion thinks it was successful
+          check_on_inversion(checkoninversiongas, checkoninversionrad, usedhotinversion,usedentropyinversion,usedcoldinversion,usedffdeinversion,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL), pr0, pr, pressure, ptrgeom, Uold, Unew,newtonstats,&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL));
+        }
+      }
+    }
+    else ffdepflag=1;
+
+
 
 
   }
@@ -1092,7 +1193,14 @@ int trycoldinversion(int showmessages, int allowlocalfailurefixandnoreport, int 
   }
 
 
-  if(badfailure || forcetry){
+
+  // see if cold inversion makes sense to do
+  int includerad=0; // just MHD inversion here
+  int iscoldflow=isflowcold(includerad, pr0, ptrgeom, qptr, NULL);
+
+
+
+  if((badfailure || forcetry)&&iscoldflow){
 
     // then bad failure, so try to use cold grmhd
     // restore backup in case previous inversion changed things
@@ -1118,6 +1226,8 @@ int trycoldinversion(int showmessages, int allowlocalfailurefixandnoreport, int 
 
       // then keep cold solution
       PALLLOOP(pl) pr[pl]=prcold[pl];
+      //  if internal energy is not negligible or unknown, then should average or evolve!
+      pl=UU; pr[pl] = pr0[pl]; // but keep u_g from prior hot.
 
 
       // but set internal energy to previous value (should really evolve with entropy equation, but if negligible and no strong shocks, then ok )
@@ -1138,8 +1248,6 @@ int trycoldinversion(int showmessages, int allowlocalfailurefixandnoreport, int 
       }
       else{
         //////////////
-        //  if internal energy is not negligible or unknown, then should average or evolve!
-        pr[UU]=pr0[UU];
         // then very bad failure, so try cold inversion and average internal energy for now
         GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)=UTOPRIMFAILU2AVG1FROMCOLD; // assume only internal energy needs correcting by averaging
  
@@ -1189,6 +1297,141 @@ int trycoldinversion(int showmessages, int allowlocalfailurefixandnoreport, int 
   }// if bad failure of some kind
 
   return(triedcold);
+}
+
+
+
+
+
+
+/// use ffde grmhd if hot grmhd gives u<zerouuperbaryon*rho since then ffde is valid
+#define USEFFDEIFHOTUNEG 1
+/// use ffde grmhd if hot grmhd gives rho<0 since rho<0 is nearly no solution
+#define USEFFDEIFHOTRHONEG 1
+/// use ffde grmhd if hot grmhd leads to convergence or other "no solution" type failure
+#define USEFFDEIFHOTFAILCONV 1
+
+/// try ffde inversion of hot one fails
+int tryffdeinversion(int showmessages, int allowlocalfailurefixandnoreport, int finalstep, PFTYPE oldpflag, int forcetry, int whichcap, int modprim, FTYPE *pi, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, FTYPE *Ugeomfree, FTYPE *Ugeomfree0, struct of_state *qptr, struct of_geom *ptrgeom, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad)
+{
+  int triedffde;
+  int pl;
+  FTYPE prhot[NPR],prffde[NPR];
+  PFTYPE ffdepflag;
+  int Utoprimgen_pick(int showmessages, int allowlocalfailurefixandnoreport, int which, int eomtype, int whichcap, int parameter, FTYPE *Ugeomfree, struct of_geom *ptrgeom, PFTYPE *lpflag, FTYPE *pr, FTYPE *pressure, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad);
+
+
+  //  dualfprintf(fail_file,"Got here in tryffdeinversion\n");
+
+  int badfailure=0;
+  if( (USEFFDEIFHOTRHONEG==0 && IFUTOPRIMFAILSOFTRHORELATED(oldpflag)) || (USEFFDEIFHOTUNEG==0 && IFUTOPRIMFAILSOFTNOTRHORELATED(oldpflag)) ){
+    // then maybe not so bad failure
+    // e.g. if get here, do nothing when either rho<=0 or u<=0
+    badfailure=0;
+  }
+  else if( (USEFFDEIFHOTRHONEG==1 && IFUTOPRIMFAILSOFTRHORELATED(oldpflag)) || (USEFFDEIFHOTUNEG==1 && IFUTOPRIMFAILSOFTNOTRHORELATED(oldpflag)) || (USEFFDEIFHOTFAILCONV==1 && IFUTOPRIMFAIL(oldpflag)) ){
+    // get here if want to fix up rho<=0, u<=0, or convergence failure
+    // First if() is needed since last conditional or else if() would trigger on any failure type
+    badfailure=1;
+
+
+  }
+
+
+
+  // see if ffde inversion makes sense to do
+  int includerad=0; // just MHD inversion here
+  int isffdeflow=isflowffde(pr0, qptr);
+
+
+
+  if((badfailure || forcetry)&&isffdeflow){
+
+    // then bad failure, so try to use ffde grmhd
+    // restore backup in case previous inversion changed things
+    PALLLOOP(pl){
+      prhot[pl]=pr[pl];
+      Ugeomfree[pl]=Ugeomfree0[pl];
+
+      // set guess and sets any pre-inverted quantities
+      prffde[pl]=pr0[pl];
+    }
+    
+    
+    // get ffde inversion
+    Utoprimgen_pick(showmessages, allowlocalfailurefixandnoreport, UTOPRIMJONNONRELCOMPAT, EOMFFDE, whichcap, EVOLVENOENTROPY, Ugeomfree, ptrgeom, &ffdepflag, prffde,pressure,newtonstats, lpflagrad);
+
+    
+    ///////////////////////////////////
+    //
+    // check if ffde solution is good
+    if(IFUTOPRIMNOFAILORFIXED(ffdepflag)){
+
+      GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)=UTOPRIMFAILFIXEDFFDE; // default then is that no failure (or fixed failure)
+
+      // then keep ffde solution
+      PALLLOOP(pl) pr[pl]=prffde[pl];
+      //  if rho or u_g are not negligible or unknown, then should average or evolve!
+      pl=RHO; pr[pl] = pr0[pl]; // but keep rho from prior hot.
+      pl=UU; pr[pl] = pr0[pl]; // but keep u_g from prior hot.
+
+
+      // but set internal energy to previous value (should really evolve with entropy equation, but if negligible and no strong shocks, then ok )
+      // GODMARK: another ok way is to set special failure that only averages internal energy!  Then can evolve at least -- in some diffusive way
+      
+#if(PRODUCTION==0)      
+      if(forcetry==0 && debugfail>=2) dualfprintf(fail_file,"Tried ffde and good on finalstep=%d! i=%d j=%d k=%d :: oldpflag=%d ffdepflag=%d\n",finalstep,ptrgeom->i,ptrgeom->j,ptrgeom->k,oldpflag,ffdepflag);
+#endif
+
+      //////////////
+      // then very bad failure, so try ffde inversion and average internal energy for now
+      GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)=UTOPRIMFAILURHO2AVG1FROMFFDE; // assume only internal energy needs correcting by averaging
+      
+
+
+
+
+
+      // accounting (since fixup.c accounting doesn't know what original pr0 is and actual prhot is undefined since Uhot->prhot wasn't possible)
+      // GODMARK: For DOENOFLUX>0, should modify conserved quantity in some way.  For DOENOFLUX==0, primitives form basis of conserved quantities, so once primitives are modified all is done.  So should probably pass in U[] from  Utoprimgen() or whatever is the full conserved quantity later used.
+      int modcons=0;
+      FTYPE Ui[NPR];
+      // ucons not modified (i.e. modcons=0), but ucons may be used by diag_fixup()
+      UtoU(UNOTHING,UDIAG,ptrgeom,Ugeomfree0,Ui);
+      // account for change to hot MHD conserved quantities
+      int counttype;
+      if(GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)==UTOPRIMFAILFIXEDFFDE) counttype=COUNTFFDE;
+      else counttype=COUNTNOTHING; // do correction, but don't do counting until later
+      diag_fixup_Ui_pf(modcons,Ui,pr,ptrgeom,finalstep,counttype);
+
+      // KORALTODO: allowlocalfailurefixandnoreport could be used below to avoid reset, but for now let implicit solver be ok with ffde inversion
+      // reset pflag since above does full accounting, unless need to average-out internal energy still
+      if(GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)==UTOPRIMFAILFIXEDFFDE){
+        GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)=UTOPRIMNOFAIL;
+      }
+
+
+      triedffde=1;
+
+    }// else if ffdepflag is bad
+    else{
+      // then both hot and ffde are bad, so keep hot
+      // GODMARK: Could try going to force-free and "failing" the parallel velocity so it gets averaged like internal energy in ffde case!
+      // only can go to force-free if b^2/rho>>1 as well
+      // keep hotpflag and keep hot solution
+      PALLLOOP(pl) pr[pl]=prhot[pl];
+
+#if(PRODUCTION==0)      
+      if(forcetry==0 && debugfail>=2) dualfprintf(fail_file,"Tried ffde and bad on finalstep=%d! t=%g steppart=%d nstep=%ld i=%d j=%d k=%d :: oldpflag=%d ffdepflag=%d\n",finalstep,t,steppart,nstep,ptrgeom->i,ptrgeom->j,ptrgeom->k,oldpflag,ffdepflag);
+#endif
+
+      triedffde=0;
+
+    }
+        
+  }// if bad failure of some kind
+
+  return(triedffde);
 }
 
 
@@ -2456,3 +2699,63 @@ int setnewtonstatsdefault(struct of_newtonstats *newtonstats)
   return(0);
 }
 
+
+
+
+/// includerad=1: account for fact that not only assume MHD flow is cold itself, but energy-force balance between gas and radiation is not important, only momentum being important.
+int isflowcold(int includerad, FTYPE *pb, struct of_geom *ptrgeom, struct of_state *q, FTYPE *uu0)
+{
+  int iscoldflow=0;
+
+#define COLDFACTOR (0.1)
+
+  if(includerad==0 || EOMRADTYPE==EOMRADNONE || uu0==NULL){
+    int jj;
+    FTYPE usq=0.0;  SLOOPA(jj) usq+=q->ucon[jj]*q->ucov[jj];
+    //    FTYPE ucovgas[NDIM];
+    //    DLOOPA(jj) ucovgas[jj]=q->ucov[jj];
+    //    FTYPE ucongas[NDIM];
+    //    DLOOPA(jj) ucongas[jj]=q->ucon[jj];
+    //    FTYPE ugas=0.0;  SLOOPA(jj) ugas+=ucovgas[jj]*ucongas[jj];
+    // u_g << rho u^2
+    //  && fabs(ucongas[TT]*ucovgas[TT])<COLDFACTOR*fabs(ugas)
+    iscoldflow = (pb[UU]<COLDFACTOR*pb[RHO]*fabs(usq) &&  pb[UU]<COLDFACTOR*pb[RHO]);
+  }
+  else{// RAD
+    int jj;
+    FTYPE usq=0.0;  SLOOPA(jj) usq+=q->ucon[jj]*q->ucov[jj];
+    FTYPE ucovgas[NDIM],ucovrad[NDIM];
+    DLOOPA(jj) ucovgas[jj]=uu0[UU+jj];
+    DLOOPA(jj) ucovrad[jj]=uu0[URAD0+jj];
+    FTYPE ucongas[NDIM],uconrad[NDIM];
+    raise_vec(ucovgas,ptrgeom,ucongas);
+    raise_vec(ucovrad,ptrgeom,uconrad);
+    FTYPE ugas=0.0;  SLOOPA(jj) ugas+=ucovgas[jj]*ucongas[jj];
+    FTYPE urad=0.0;  SLOOPA(jj) urad+=ucovrad[jj]*uconrad[jj];
+    // t^t_\mu = T^t_\mu + \rho_0 u^t = uu0[UU+mu] : t^t_t = \rho_0 (1+u_t) u^t + (u_g+p_g) u^t u_t + p_g  = uu0[UU]
+    // R^t_\mu = uu[URAD0+mu]
+    // u_g < rho u^2 and -u^t u_t < |u| and \gamma_rad^2 < |urad|
+    // these ensure gas internal energy is small
+    // u_g < rho u^2 and 
+    iscoldflow = (pb[UU]<COLDFACTOR*pb[RHO]*fabs(usq) && fabs(ucongas[TT]*ucovgas[TT])<COLDFACTOR*fabs(ugas) && fabs(uconrad[TT]*ucovrad[TT])<COLDFACTOR*fabs(urad));
+  }
+
+
+  return(iscoldflow);
+}
+
+int isflowffde(FTYPE *pb, struct of_state *q)
+{
+  int isffdeflow=0;
+
+#define FFDEFACTOR (1.0) // assume if here then desparate to avoid failure.  1.0 should be when only order unity errors.
+
+  int jj;
+  FTYPE usq=0.0;  SLOOPA(jj) usq+=q->ucon[jj]*q->ucov[jj];
+  FTYPE bsq=0.0;  DLOOPA(jj) bsq+=q->bcon[jj]*q->bcov[jj];
+  // u_g << rho u^2
+  //  && fabs(ucongas[TT]*ucovgas[TT])<COLDFACTOR*fabs(ugas)
+  isffdeflow = (pb[RHO]<FFDEFACTOR*fabs(bsq) &&  pb[UU]<FFDEFACTOR*fabs(bsq));
+
+  return(isffdeflow);
+}
