@@ -1461,6 +1461,11 @@ int tryffdeinversion(int showmessages, int allowlocalfailurefixandnoreport, int 
   // see if ffde inversion makes sense to do
   int includerad=0; // just MHD inversion here
   FTYPE FFDEFACTOR=0.5; // try to make use ffde to order unity errors
+  if(ISBLACKHOLEMCOORD(MCOORD)){
+    FTYPE V[NDIM];
+    bl_coord_ijk(ptrgeom->i,ptrgeom->j,ptrgeom->k,CENT,V);
+    if(V[1]<Rhor) FFDEFACTOR=5.0; // more aggressive inside horizon to keep field evolving
+  }
   int isffdeflow=isflowffde(FFDEFACTOR, pr0, qptr);
   if(isffdeflow==0) if(debugfail>=2) dualfprintf(fail_file,"in tryffdeinversion but isffdeflow=0\n");
 
