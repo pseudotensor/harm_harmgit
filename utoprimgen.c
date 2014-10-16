@@ -1384,7 +1384,7 @@ int trycoldinversion(int showmessages, int allowlocalfailurefixandnoreport, int 
       UtoU(UNOTHING,UDIAG,ptrgeom,Ugeomfree0,Ui);
       // account for change to hot MHD conserved quantities
       int counttype;
-      if(GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)==UTOPRIMFAILFIXEDCOLD) counttype=COUNTCOLD;
+      if(GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)!=UTOPRIMFAILFIXEDCOLD) counttype=COUNTCOLD; // count if not going to be counted later
       else counttype=COUNTNOTHING; // do correction, but don't do counting until later
       diag_fixup_Ui_pf(modcons,Ui,pr,ptrgeom,finalstep,counttype);
 
@@ -1529,7 +1529,7 @@ int tryffdeinversion(int showmessages, int allowlocalfailurefixandnoreport, int 
       UtoU(UNOTHING,UDIAG,ptrgeom,Ugeomfree0,Ui);
       // account for change to hot MHD conserved quantities
       int counttype;
-      if(GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)==UTOPRIMFAILFIXEDFFDE) counttype=COUNTFFDE;
+      if(GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)!=UTOPRIMFAILFIXEDFFDE) counttype=COUNTFFDE;
       else counttype=COUNTNOTHING; // do correction, but don't do counting until later
       diag_fixup_Ui_pf(modcons,Ui,pr,ptrgeom,finalstep,counttype);
 
