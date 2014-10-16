@@ -886,7 +886,7 @@
 #define COUNTNOTHING -2
 #define COUNTONESTEP -1 // used as control label, not counted
 #define COUNTREALSTART 0 // marks when real counters begin
-#define NUMFAILFLOORFLAGS 32
+#define NUMFAILFLOORFLAGS 33
 ///  mnemonics
 #define COUNTUTOPRIMFAILCONV 0 // if failed to converge
 #define COUNTFLOORACT 1 // if floor activated

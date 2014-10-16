@@ -392,7 +392,7 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
   // GRIDDUMPTYPE special case
   // Only done at t=0 or for 1D on synch with MAINDUMPTYPE
   // output grid (probaly want both fullgrid (to make sure ok) and compute grid to compare with data dumps
-  if((DOGDUMPDIAG)&&(!GAMMIEDUMP)&&(firsttime&&(RESTARTMODE==0))){
+  if((DOGDUMP)&&(!GAMMIEDUMP)&&(firsttime&&(RESTARTMODE==0))){
     // -1 means no file number on filename
     gdump(-1);
     // NOTEMARK: if want to, e.g., stop right after gdump, then have to add MPI barrier.  If forcing gdump output, then put 1|| in conditional above .

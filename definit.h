@@ -308,6 +308,7 @@
 /// 1: do
 
 #define DOAVG 0
+#define DOAVGDUMP (DOAVG)
 /// 0: don't do time average dumps, so don't allocate memory
 /// 1: do
 
@@ -322,27 +323,44 @@
 /// 1: do
 
 
-#define DOMAINDUMPDIAG 1
+#define DOGDUMP 1
+/// 0: don't output grid dump
+/// 1: do
+
+#define DORDUMP 1
+/// 0: don't output restart dumps
+/// 1: do
+
+#define DOMAINDUMP 1
+#define DOMAINDUMPDIAG (DOMAINDUMP)
 /// 0: don't output main dump files
+/// 1: do
+
+#define DODEBUGDUMP 1
+/// 0: don't output debug dump file or ener file(ener is based on dump counts)
 /// 1: do
 
 #define DODEBUG 1
 /// 0: don't output debug dump file or ener file(ener is based on dump counts)
 /// 1: do
 
-#define DOFLOORDIAG 1
+#define DOFLOORDUMP 1
+#define DOFLOORDIAG (DOFLOORDUMP)
 /// 0: don't output file with diag_fixup() activated changes in conserved quantities
 /// 1: do
 
-#define DODISSMEASUREDIAG 0
+#define DODISSMEASUREDUMP 0
+#define DODISSMEASUREDIAG (DODISSMEASUREDUMP)
 /// 0: don't do dissmeasure dump files
 /// 1: do
 
-#define DOEOSDIAG 1
+#define DOEOSDUMP 1
+#define DOEOSDIAG (DOEOSDUMP)
 /// 0: don't do eosdump files
 /// 1: do
 
-#define DORADDIAG 1
+#define DORADDUMP 1
+#define DORADDIAG (DORADDUMP)
 /// 0: don't do raddump files
 /// 1: do
 
@@ -351,6 +369,8 @@
 #define DOVPOTDUMP (1 && TRACKVPOT)
 
 #define DOIMAGEDUMP (1)
+
+#define DOAREAMAPDUMP (1)
 
 
 #define DOENODEBUG 0

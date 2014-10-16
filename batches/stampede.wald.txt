@@ -36,6 +36,9 @@
 # THETAROT
 # EOMTYPE EOMFFDE
 # BOOSTFIELD velocity
+# lim MP5 vs. MC
+# Rin=1.05 vs. 1.4
+# USEROMIO
 #
 emacs -nw init.c
 #

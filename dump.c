@@ -728,7 +728,7 @@ int debugdump(long dump_cnt)
 extern void set_debug_content_dnumcolumns_dnumversion(int *numcolumnsvar, int *numversion)
 {
 
-  if(DODEBUG){
+  if(DODEBUG && DODEBUGDUMP){ //different than doing just DODEBUG
     *numcolumnsvar=2*NUMFAILFLOORFLAGS*NUMTSCALES;
   }
   else *numcolumnsvar=0;
@@ -858,26 +858,30 @@ int avgdump(long dump_cnt)
 void set_avg_content_dnumcolumns_dnumversion(int *numcolumnsvar, int *numversion)
 {
 
-  // 36+29+8*2+4*2+2+12*2+96*2=339
-  *numcolumnsvar=3*3 + 1 + NUMNORMDUMP  // (6+1+29=36)
-    + NUMNORMDUMP // |normal terms| (29)
+  if(DOAVG){
+    // 36+29+8*2+4*2+2+12*2+96*2=339
+    *numcolumnsvar=3*3 + 1 + NUMNORMDUMP  // (6+1+29=36)
+      + NUMNORMDUMP // |normal terms| (29)
 #if(CALCFARADAYANDCURRENTS)
-    + NDIM*2 // jcon/jcov (8)
-    + NDIM*2 // |jcon|/|jcov| (8)
+      + NDIM*2 // jcon/jcov (8)
+      + NDIM*2 // |jcon|/|jcov| (8)
 #endif
-    + NDIM*2 // massflux/|massflux|
-    + NUMOTHER*2 // other stuff and fabs of each
+      + NDIM*2 // massflux/|massflux|
+      + NUMOTHER*2 // other stuff and fabs of each
 #if(CALCFARADAYANDCURRENTS)
-    +6*2 // fcon/fcov (12)
-    +6*2 // |fcon|,|fcov| (12)
+      +6*2 // fcon/fcov (12)
+      +6*2 // |fcon|,|fcov| (12)
 #endif
-    +7*16 // Tud all 7 parts, all 4x4 terms (112)
-    +7*16 // |Tud| all 7 parts, all 4x4 terms (112)
-    ;
+      +7*16 // Tud all 7 parts, all 4x4 terms (112)
+      +7*16 // |Tud| all 7 parts, all 4x4 terms (112)
+      ;
 
-
-  if(DOAVG2){
-    *numcolumnsvar-=224;
+    if(DOAVG2){
+      *numcolumnsvar-=224;
+    }
+  }
+  else{
+    *numcolumnsvar=0;
   }
 
   // Version number:
@@ -1063,13 +1067,16 @@ int gdump(long dump_cnt)
 extern void set_gdump_content_dnumcolumns_dnumversion(int *numcolumnsvar, int *numversion)
 {
 
-
-  // 205+4+4*4 currently
-  //*numcolumnsvar=3*3+NDIM*NDIM*NDIM+NPG*NDIM*NDIM*2+NPG+4+4*4;
-  //NPG was replaced with unity in order to avoid excessive dumping of info (only center info now available)
-  *numcolumnsvar=3*3  +   NDIM*NDIM*NDIM  +   1*NDIM*NDIM*2   +   1  +  NDIM   +   NDIM*NDIM;
-  //t^i x^i V^i,     \Gamma^\mu_{\nu\tau},     g^{\mu\nu} g_{\mu\nu}, \sqrt{-g}, \gamma_\mu, dx^\mu/dx^\nu
-
+  if(DOGDUMP){
+    // 205+4+4*4 currently
+    //*numcolumnsvar=3*3+NDIM*NDIM*NDIM+NPG*NDIM*NDIM*2+NPG+4+4*4;
+    //NPG was replaced with unity in order to avoid excessive dumping of info (only center info now available)
+    *numcolumnsvar=3*3  +   NDIM*NDIM*NDIM  +   1*NDIM*NDIM*2   +   1  +  NDIM   +   NDIM*NDIM;
+    //t^i x^i V^i,     \Gamma^\mu_{\nu\tau},     g^{\mu\nu} g_{\mu\nu}, \sqrt{-g}, \gamma_\mu, dx^\mu/dx^\nu
+  }
+  else{
+    *numcolumnsvar=0;
+  }
   // Version number:
   *numversion=0;
 

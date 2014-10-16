@@ -4261,7 +4261,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     
     numhisterr[MAX(MIN((int)(-log10l(SMALL+errorabs[WHICHERROR])),NUMNUMHIST-1),0)]++;
     numhistiter[MAX(MIN(iters,IMPMAXITERLONG),0)]++;
-#define HISTREPORTSTEP (20)
+#define HISTREPORTSTEP (DTr) //something infrequent but not too much so
     if(debugfail>=2 && nstep%HISTREPORTSTEP==0 && ptrgeom->i==0 && ptrgeom->j==0 && ptrgeom->k==0){
       int histi;
       for(histi=0;histi<NUMNUMHIST;histi++){
