@@ -39,6 +39,8 @@
 # lim MP5 vs. MC
 # Rin=1.05 vs. 1.4
 # USEROMIO
+# Rout=400 instead of 2000
+# tf=400 instead of 1e5
 #
 emacs -nw init.c
 #

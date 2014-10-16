@@ -2280,7 +2280,7 @@ static int fixuputoprim_accounting(int i, int j, int k, PFTYPE mhdlpflag, PFTYPE
       docorrectucons=1;
     }
   }
-  else if(mhdlpflag==UTOPRIMFAILUNEG || mhdlpflag==UTOPRIMFAILU2AVG1|| mhdlpflag==UTOPRIMFAILU2AVG2 || mhdlpflag==UTOPRIMFAILU2AVG1FROMCOLD|| mhdlpflag==UTOPRIMFAILU2AVG2FROMCOLD){ // GODMARK: maybe want separate accounting
+  else if(mhdlpflag==UTOPRIMFAILUNEG || mhdlpflag==UTOPRIMFAILU2AVG1|| mhdlpflag==UTOPRIMFAILU2AVG2 || mhdlpflag==UTOPRIMFAILU2AVG1FROMCOLD|| mhdlpflag==UTOPRIMFAILU2AVG2FROMCOLD || mhdlpflag==UTOPRIMFAILURHO2AVG1FROMFFDE){ // GODMARK: maybe want separate accounting
     // whether to count uneg as failure in diagnostic reporting or not
     // should really have a new diagnostic for substep u<zerouuperbaryon*prim[RHO] 's.
 

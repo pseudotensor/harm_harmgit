@@ -52,7 +52,7 @@ int inittypeglobal; // for bounds to communicate detail of what doing
 
 //#define THETAROTMETRIC (0.5*0.7)
 //#define USER_THETAROTMETRIC (M_PI*0.25)
-#define USER_THETAROTMETRIC (0.0)
+#define USER_THETAROTMETRIC (0.0) // WALD
 #define USER_THETAROTPRIMITIVES (0.0) // probably want to choose 0, so initial conditions are as if no tilt // WALD -> make same as USER_THETAROTMETRIC
   
 
@@ -280,7 +280,7 @@ int prepre_init_specific_init(void)
 
   // Also: SET USEROMIO to 0 or 1 in mympi.definit.h (needs to be 0 for TEXTOUTPUT)
   if(PRODUCTION==0||DOWALDDEN==1){ // for now DOWALDDEN==1
-    binaryoutput=TEXTOUTPUT;
+    binaryoutput=TEXTOUTPUT; // WALDPRODUCTION
     // KRAKEN: comment out above.  And change mympi.definit.h's USEROMIO 0 to 1 for the "choice" version.
   }
 
@@ -2312,6 +2312,8 @@ int init_global(void)
     //    tf = 2000*DTdumpgen[0]; // koral in default setup does 1000 dumps
     tf = 1E5;
 
+    if(DOWALDDEN) tf=400.0;
+
     //    DODIAGEVERYSUBSTEP = 1;
 
     //    if(WHICHPROBLEM==RADDONUT) DODIAGEVERYSUBSTEP = 1;
@@ -2951,7 +2953,7 @@ int init_defcoord(void)
     //    a=0.0; // no spin in case use MCOORD=KSCOORDS
 
     // metric stuff first
-    a = 0.8 ;
+    a = 0.8 ;  // WALD
     
 
     if(1){
@@ -2973,7 +2975,8 @@ int init_defcoord(void)
     Rout=RADNT_MAXX;
 
     if(DOWALDDEN){
-      Rout=2000.0; // new normal
+      //      Rout=2000.0; // new normal
+      Rout=400.0; // newer normal
       defcoord=USERCOORD;
     }
     else defcoord=JET6COORDS;
@@ -3014,6 +3017,8 @@ int init_defcoord(void)
       Rin=1.1;
       //      setRin_withchecks(&Rin);
     }
+
+    if(DOWALDDEN && a<0.9 && totalsize[1]>64) Rin=1.4;
     
     if(totalsize[1]<32*4&&DOWALDDEN==0){
       dualfprintf(fail_file,"RADDONUT setup for 128x64 with that grid\n");
@@ -7453,7 +7458,7 @@ static int fieldprim(int whichmethod, int whichinversion, int *whichvel, int*whi
     }
 
 
-    int BOOSTFIELD=0; // for moving BH problem
+    int BOOSTFIELD=0; // for moving BH problem // WALD
 
     if(BOOSTFIELD){
       // BOOST of field

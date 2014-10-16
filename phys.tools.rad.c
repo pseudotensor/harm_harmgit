@@ -3730,7 +3730,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       //
       /////
       int includerad=1;
-      int iscoldflow=isflowcold(includerad,pb,ptrgeom,q,uu0);
+      FTYPE COLDFACTOR=0.1; // really ensure cold to use cold solution
+      int iscoldflow=isflowcold(COLDFACTOR, includerad,pb,ptrgeom,q,uu0);
       //      iscoldflow=1; // test
 
       //      dualfprintf(fail_file,"iscoldflow: %d : ug=%21.15g Erf=%21.15g rhovsq=%21.15g : Esqgas=%21.15g usqgas=%21.15g Esqrad=%21.15g usqrad=%21.15g\n",iscoldflow,pb[UU],pb[URAD0],pb[RHO]*fabs(usq),fabs(ucongas[TT]*ucovgas[TT]),fabs(ugas),fabs(uconrad[TT]*ucovrad[TT]),fabs(urad)); // DEBUG

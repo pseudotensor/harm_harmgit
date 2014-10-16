@@ -53,6 +53,6 @@ extern int sp_stress_calc(FTYPE *pr, FTYPE (*tens_matt)[NDIM],
 
 extern int setnewtonstatsdefault(struct of_newtonstats *newtonstats);
 
-extern int isflowcold(int includerad, FTYPE *pb, struct of_geom *ptrgeom, struct of_state *q, FTYPE *uu0);
+extern int isflowcold(FTYPE COLDFACTOR, int includerad, FTYPE *pb, struct of_geom *ptrgeom, struct of_state *q, FTYPE *uu0);
 
-extern int isflowffde(FTYPE *pb, struct of_state *q);
+extern int isflowffde(FTYPE FFDEFACTOR, FTYPE *pb, struct of_state *q);
