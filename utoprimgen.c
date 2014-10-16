@@ -1325,6 +1325,12 @@ int trycoldinversion(int showmessages, int allowlocalfailurefixandnoreport, int 
     // get cold inversion
     Utoprimgen_pick(showmessages, allowlocalfailurefixandnoreport, UTOPRIMJONNONRELCOMPAT, EOMCOLDGRMHD, whichcap, EVOLVENOENTROPY, Ugeomfree, ptrgeom, &coldpflag, prcold,pressure,newtonstats, lpflagrad);
 
+
+    // check also if gamma hit beyond maximum
+    FTYPE gamma,qsq;
+    gamma_calc(pr,ptrgeom,&gamma,&qsq);
+    if(gamma>GAMMAMAX) coldpflag=UTOPRIMFAILGENERIC;
+
     
     ///////////////////////////////////
     //
@@ -1344,6 +1350,10 @@ int trycoldinversion(int showmessages, int allowlocalfailurefixandnoreport, int 
       
 #if(PRODUCTION==0)      
       if(forcetry==0 && debugfail>=2) dualfprintf(fail_file,"Tried cold and good on finalstep=%d! i=%d j=%d k=%d :: oldpflag=%d coldpflag=%d\n",finalstep,ptrgeom->i,ptrgeom->j,ptrgeom->k,oldpflag,coldpflag);
+      //      if(debugfail>=2){
+      //        if(pr[RHO]<0.0 || pr[UU]<0.0) PALLLOOP(pl) dualfprintf(fail_file,"pl=%d pr=%g\n",pl,pr[pl]);
+      //        if(gamma>2.0) dualfprintf(fail_file,"gamma=%g\n",gamma);
+      //      }
 #endif
 
       ///////////////////////////////
