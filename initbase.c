@@ -1298,11 +1298,12 @@ int init_defglobal(void)
   DODIAGS=1; // whether to do diagnostics
   // specify individual diagnostics to be done
 
-  if(PRODUCTION>=2){ // then disable things not really using
+  if(PRODUCTION>=3){ // then disable things not really using
     DOENERDIAG=0;
     // still kinda use images to check if looks reasonable, and already limit images to 1 image file if PRODUCTION==1
   }
   else{
+    // ener diag also does debug.out counts that could want even if not dumping debug dump itself that would give spatial information
     DOENERDIAG=1;
   }
   DOGDUMPDIAG=DOGDUMP;
