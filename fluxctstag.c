@@ -718,7 +718,8 @@ void slope_lim_continuous_e2z(int realisinterp, int dir, int idel, int jdel, int
   // SUPERGODMARK: preal is located at CENT always, but p2interp will be at FACE, so have to average preal inside to get correct location
 
 
-  if( LINEINTERPTYPE(lim[dir]) ){ // this overrides lim, but lim must still be set properly
+  // SUPERGODMARK: Use continuous version, overrides use of (e.g.) PARALINE in favor of MC continuous.
+  if(OLDNONCONT==1 && LINEINTERPTYPE(lim[dir]) ){ // this overrides lim, but lim must still be set properly
     get_loop(INTERPLINETYPE, ENOINTERPTYPE, dir, face2centloop);
 
     // 1 below means primitives instead of conserved quantities (used for loops)
