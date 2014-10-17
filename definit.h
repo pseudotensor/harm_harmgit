@@ -1106,3 +1106,5 @@
 // whether to use old non-continuous method for Bi along i interpolation in staggered field method
 #define OLDNONCONT 0
 
+/// whether for BH problems to have inner and outer radial boundary as HLL superfast
+#define OUTERRADIALSUPERFAST 0

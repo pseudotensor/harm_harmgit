@@ -399,6 +399,7 @@ int fluxcalc_fluxctstag_emf_1d(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], in
   int idel1,jdel1,kdel1;
   int idel2,jdel2,kdel2;
   int Nvec[NDIM];
+  int fluxmethodlocal=fluxmethod;
 
 
 
@@ -453,7 +454,21 @@ int fluxcalc_fluxctstag_emf_1d(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], in
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
-    
+
+  FTYPE cmaxfactorodir1=1.0;
+  FTYPE cmaxfactorodir2=1.0;
+  FTYPE cminfactorodir1=1.0;
+  FTYPE cminfactorodir2=1.0;
+#if(OUTERRADIALSUPERFAST)
+  // force effective superfast condition on outer radial boundaries
+  if(ISBLACKHOLEMCOORD(MCOORD)){
+    if(dir==3 && odir1==1 && startpos[1]+i==totalsize[1]){ fluxmethodlocal=HLLFLUX; cminfactorodir1=0.0; }
+    if(dir==3 && odir2==1 && startpos[1]+i==totalsize[1]){ fluxmethodlocal=HLLFLUX; cminfactorodir2=0.0; }
+    if(dir==3 && odir1==1 && startpos[1]+i==0){ fluxmethodlocal=HLLFLUX; cmaxfactorodir1=0.0; }
+    if(dir==3 && odir2==1 && startpos[1]+i==0){ fluxmethodlocal=HLLFLUX; cmaxfactorodir2=0.0; }
+  }
+#endif
+
       // pvcorninterp and pbcorninterp are defined to be used like below initializaiton in set_arrays.c
       //    for(pl2=1;pl2<=COMPDIM;pl2++) for(pl=1;pl<=COMPDIM;pl++) for(m=0;m<NUMCS+1;m++) for(l=0;l<NUMCS;l++)  GLOBALMACP1A3(pvbcorninterp,pl2,i,j,k,pl,m,l)=valueinit;
 
@@ -509,8 +524,8 @@ int fluxcalc_fluxctstag_emf_1d(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], in
       // -?del? since going from FACE to CORN
       // del2 for c2d[][0] since wspeed[odir1] is wave going in odir1-direction, whereas other wavespeed to MAX with is in other (odir2) direction
       if(Nvec[odir1]>1){
-        c2d[CMIN][0] = fabs(MAX(0.,MAX(+MACP3A0(wspeed,EOMSETMHD,odir1,CMIN,i,j,k),+MACP3A0(wspeed,EOMSETMHD,odir1,CMIN,i-idel2,j-jdel2,k-kdel2))));
-        c2d[CMAX][0] = fabs(MAX(0.,MAX(+MACP3A0(wspeed,EOMSETMHD,odir1,CMAX,i,j,k),+MACP3A0(wspeed,EOMSETMHD,odir1,CMAX,i-idel2,j-jdel2,k-kdel2))));
+        c2d[CMIN][0] = fabs(MAX(0.,MAX(+MACP3A0(wspeed,EOMSETMHD,odir1,CMIN,i,j,k),+MACP3A0(wspeed,EOMSETMHD,odir1,CMIN,i-idel2,j-jdel2,k-kdel2))))*cminfactorodir1;
+        c2d[CMAX][0] = fabs(MAX(0.,MAX(+MACP3A0(wspeed,EOMSETMHD,odir1,CMAX,i,j,k),+MACP3A0(wspeed,EOMSETMHD,odir1,CMAX,i-idel2,j-jdel2,k-kdel2))))*cmaxfactorodir1;
       }
       else{
         // GODMARK: shoud just set the offending wavespeed (associated with non-existing dimensional direction) to 1.0 so don't have this conditional
@@ -520,8 +535,8 @@ int fluxcalc_fluxctstag_emf_1d(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], in
       }
       
       if(Nvec[odir2]>1){
-        c2d[CMIN][1] = fabs(MAX(0.,MAX(+MACP3A0(wspeed,EOMSETMHD,odir2,CMIN,i,j,k),+MACP3A0(wspeed,EOMSETMHD,odir2,CMIN,i-idel1,j-jdel1,k-kdel1))));
-        c2d[CMAX][1] = fabs(MAX(0.,MAX(+MACP3A0(wspeed,EOMSETMHD,odir2,CMAX,i,j,k),+MACP3A0(wspeed,EOMSETMHD,odir2,CMAX,i-idel1,j-jdel1,k-kdel1))));
+        c2d[CMIN][1] = fabs(MAX(0.,MAX(+MACP3A0(wspeed,EOMSETMHD,odir2,CMIN,i,j,k),+MACP3A0(wspeed,EOMSETMHD,odir2,CMIN,i-idel1,j-jdel1,k-kdel1))))*cminfactorodir2;
+        c2d[CMAX][1] = fabs(MAX(0.,MAX(+MACP3A0(wspeed,EOMSETMHD,odir2,CMAX,i,j,k),+MACP3A0(wspeed,EOMSETMHD,odir2,CMAX,i-idel1,j-jdel1,k-kdel1))))*cmaxfactorodir2;
       }
       else{
         // then speed doesn't matter, not set, so scale-out
@@ -578,7 +593,7 @@ int fluxcalc_fluxctstag_emf_1d(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], in
       topwave[1]=c2d[CMIN][1] + c2d[CMAX][1];
 
 
-      if( (fluxmethod==HLLFLUX) && (topwave[0]>SMALL) && (topwave[1]>SMALL) ){
+      if( (fluxmethodlocal==HLLFLUX) && (topwave[0]>SMALL) && (topwave[1]>SMALL) ){
 
         bottomwave[0]=1.0/topwave[0];
         bottomwave[1]=1.0/topwave[1];

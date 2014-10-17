@@ -261,7 +261,7 @@ void diag_fluxdump_1(int dir, int i, int j, int k, FTYPE *p_l, FTYPE *p_r, FTYPE
 int flux_compute(int i, int j, int k, int dir, struct of_geom *geom, FTYPE *cminmax_l, FTYPE *cminmax_r, FTYPE *cminmax, FTYPE ctopmhd, FTYPE *cminmaxrad_l, FTYPE *cminmaxrad_r, FTYPE *cminmaxrad, FTYPE ctoprad, FTYPE CUf, FTYPE *p_l, FTYPE *p_r, FTYPE *U_l, FTYPE *U_r, FTYPE *F_l, FTYPE *F_r, FTYPE *F)
 {
   int pl,pliter;
-  void choose_flux(int i, int j, int k, int pl, FTYPE *laxffrac,FTYPE *hllfrac);
+  void choose_flux(int fluxmethodlocal, int i, int j, int k, int pl, FTYPE *laxffrac,FTYPE *hllfrac);
   FTYPE laxffrac[NPR],hllfrac[NPR];
   int cminmax_calc(FTYPE cmin_l,FTYPE cmin_r,FTYPE cmax_l,FTYPE cmax_r,FTYPE *cmin,FTYPE *cmax,FTYPE *ctop);
   int forceflux_compute(int dir,struct of_geom *geom, FTYPE *cmin, FTYPE *cmax, FTYPE *ctop, FTYPE *cforce, FTYPE *p_l, FTYPE *p_r, FTYPE *U_l, FTYPE *U_r,FTYPE *F_l,FTYPE *F_r, FTYPE *F);
@@ -272,7 +272,17 @@ int flux_compute(int i, int j, int k, int dir, struct of_geom *geom, FTYPE *cmin
   FTYPE cmin_l[NPR], cmax_l[NPR], cmin_r[NPR], cmax_r[NPR], cmax[NPR], cmin[NPR];
   FTYPE ctop[NPR];
   FTYPE dPoP,f_s;
+  int fluxmethodlocal=fluxmethod;
 
+  FTYPE cmaxfactor=1.0;
+  FTYPE cminfactor=1.0;
+#if(OUTERRADIALSUPERFAST)
+  // force effective superfast condition on outer radial boundaries
+  if(ISBLACKHOLEMCOORD(MCOORD)){
+    if(dir==1 && startpos[1]+i==totalsize[1]){ fluxmethodlocal=HLLFLUX; cminfactor=0.0; }
+    if(dir==1 && startpos[1]+i==0){ fluxmethodlocal=HLLFLUX; cmaxfactor=0.0; }
+  }
+#endif
 
   // assign cmin/cmax/ctop for each conserved quantity
   PLOOP(pliter,pl){
@@ -282,9 +292,10 @@ int flux_compute(int i, int j, int k, int dir, struct of_geom *geom, FTYPE *cmin
       cmax_l[pl] = cminmax_l[CMAX];
       cmin_r[pl] = cminmax_r[CMIN];
       cmax_r[pl] = cminmax_r[CMAX];
-      cmin[pl] = cminmax[CMIN];
-      cmax[pl] = cminmax[CMAX];
+      cmin[pl] = cminmax[CMIN]*cminfactor;
+      cmax[pl] = cminmax[CMAX]*cmaxfactor;
       ctop[pl] = ctopmhd;
+
     }
     else{
       // radiation terms
@@ -292,8 +303,8 @@ int flux_compute(int i, int j, int k, int dir, struct of_geom *geom, FTYPE *cmin
       cmax_l[pl] = cminmaxrad_l[CMAX];
       cmin_r[pl] = cminmaxrad_r[CMIN];
       cmax_r[pl] = cminmaxrad_r[CMAX];
-      cmin[pl] = cminmaxrad[CMIN];
-      cmax[pl] = cminmaxrad[CMAX];
+      cmin[pl] = cminmaxrad[CMIN]*cminfactor;
+      cmax[pl] = cminmaxrad[CMAX]*cmaxfactor;
       ctop[pl] = ctoprad;
     }
     // if(steppart==0) crus[pl]=dx[dir]/(dt*0.5);
@@ -342,16 +353,16 @@ int flux_compute(int i, int j, int k, int dir, struct of_geom *geom, FTYPE *cmin
   // store full non-dissipative + dissipative contributions
   //
   ////////////////////
-  if(fluxmethod==LAXFFLUX){
+  if(fluxmethodlocal==LAXFFLUX){
     PLOOP(pliter,pl) F[pl] = LAXFCOMPUTE(ctop[pl],U_l[pl],U_r[pl],F_l[pl],F_r[pl]);
   }
-  else if(fluxmethod==HLLFLUX){
+  else if(fluxmethodlocal==HLLFLUX){
     //////////////////////////////////
     //
     // decide which flux formula to use
     //
     /////////////////////////////////
-    //    PLOOP(pliter,pl) choose_flux(i,j,k,pl,laxffrac,hllfrac);
+    //    PLOOP(pliter,pl) choose_flux(fluxmethodlocal, i,j,k,pl,laxffrac,hllfrac);
 
 
     //////////////////////////////////
@@ -376,7 +387,7 @@ int flux_compute(int i, int j, int k, int dir, struct of_geom *geom, FTYPE *cmin
     hllflux_compute(dir,geom,cmin,cmax,ctop,p_l,p_r,U_l,U_r,F_l,F_r,F);
     
   }
-  else if(fluxmethod==FORCEFLUX){
+  else if(fluxmethodlocal==FORCEFLUX){
 
     // normal Rusanov speed
     //cforce=crus;
@@ -387,7 +398,7 @@ int flux_compute(int i, int j, int k, int dir, struct of_geom *geom, FTYPE *cmin
     forceflux_compute(dir,geom,cmin,cmax,ctop,cforce,p_l,p_r,U_l,U_r,F_l,F_r,F);
 
   }
-  else if(fluxmethod==MUSTAFLUX){
+  else if(fluxmethodlocal==MUSTAFLUX){
 
     PLOOP(pliter,pl) {
       //cforce[pl]=crus[pl];
@@ -396,7 +407,7 @@ int flux_compute(int i, int j, int k, int dir, struct of_geom *geom, FTYPE *cmin
     mustaflux_compute(dir,geom,cmin_l,cmin_r,cmax_l,cmax_r,cmin,cmax,ctop,cforce,p_l,p_r,U_l,U_r,F_l,F_r,F);
 
   }
-  else if(fluxmethod==HLLLAXF1FLUX){
+  else if(fluxmethodlocal==HLLLAXF1FLUX){
 
 #define MINDPOP (0.0)
 #define MAXDPOP (0.3)
@@ -1336,7 +1347,7 @@ int musta2flux_compute(int dir,struct of_geom *geom, FTYPE *cmin_l, FTYPE *cmin_
 
 
 /// choose flux form
-void choose_flux(int i, int j, int k, int pl, FTYPE *laxffrac,FTYPE *hllfrac)
+void choose_flux(int fluxmethodlocal, int i, int j, int k, int pl, FTYPE *laxffrac,FTYPE *hllfrac)
 {
 #if(FLUXADJUST)
 
@@ -1346,11 +1357,11 @@ void choose_flux(int i, int j, int k, int pl, FTYPE *laxffrac,FTYPE *hllfrac)
     else { hllfrac[pl]=0.0; laxffrac[pl]=1.0; }
   }
   else{
-    if(fluxmethod==HLLFLUX){
+    if(fluxmethodlocal==HLLFLUX){
       hllfrac[pl]=1.0;
       laxffrac[pl]=0.0;
     }
-    else if(fluxmethod==LAXFFLUX){
+    else if(fluxmethodlocal==LAXFFLUX){
       hllfrac[pl]=0.0;
       laxffrac[pl]=1.0;
     }
@@ -1361,11 +1372,11 @@ void choose_flux(int i, int j, int k, int pl, FTYPE *laxffrac,FTYPE *hllfrac)
 #endif
 
 #else
-  if(fluxmethod==HLLFLUX){
+  if(fluxmethodlocal==HLLFLUX){
     hllfrac[pl]=1.0;
     laxffrac[pl]=0.0;
   }
-  else if(fluxmethod==LAXFFLUX){
+  else if(fluxmethodlocal==LAXFFLUX){
     hllfrac[pl]=0.0;
     laxffrac[pl]=1.0;
   }

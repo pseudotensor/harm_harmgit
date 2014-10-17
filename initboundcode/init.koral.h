@@ -392,6 +392,10 @@
 #undef FLUXDUMP
 #define FLUXDUMP 0
 
+#undef OUTERRADIALSUPERFAST
+#define OUTERRADIALSUPERFAST 1
+
+
 struct Ccoordparams {
   double timescalefactor;
 }  coordparams;
