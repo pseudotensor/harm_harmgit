@@ -233,7 +233,7 @@ int init_grid(void)
   // make changes to primary coordinate parameters R0, Rin, Rout, hslope
   R0 = -0.45;
   Rout = 40.0;
-  Rin=1.60;
+  //Rin=1.60;
   if(totalsize[1]<32) Rout=50.0;
   else if(totalsize[1]<=64) Rout=1.E3;
   else Rout=1.E5;
@@ -248,7 +248,7 @@ int init_grid(void)
   hslope = h_over_r;
 
 
-  //setRin_withchecks(&Rin);
+  setRin_withchecks(&Rin);
 
 
   
@@ -288,8 +288,8 @@ int init_global(void)
 
 
   TIMEORDER=2; // no need for 4 unless higher-order or cold collapse problem.
-  FLUXB=FLUXCTTOTH;
-  //FLUXB=FLUXCTSTAG;
+  //FLUXB=FLUXCTTOTH;
+  FLUXB=FLUXCTSTAG;
 
 #if(WHICHPROBLEM==NORMALTORUS || WHICHPROBLEM==KEPDISK)
   BCtype[X1UP]=OUTFLOW;
@@ -1061,7 +1061,7 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
       }
       else if(1){
 	idxdxprim_ijk(i, j, k, CORN2, idxdxp); // CORN2 for l==2     
-	if(r<RTRANSITION) vpot += - (1.+0.*sin(ph*8.))*(1./1.) * pow(r/tempstore_tot[0],(UGPOW/2.+1.5)/6.0) * da3vsr_integrated[startpos[1]+i] * pow(sin(th),hpow)*sin(FIELDROT)*sin(ph); //6 is what bptf5 was, etc. //4 works pretty well//MAVARATEMP
+	if(r<RTRANSITION) vpot += - (1.+0.*sin(ph*8.))*(1./1.) * pow(r/tempstore_tot[0],(UGPOW/2.+1.5)/4.0) * da3vsr_integrated[startpos[1]+i] * pow(sin(th),hpow)*sin(FIELDROT)*sin(ph); //6 is what bptf5 was, etc. //4 works pretty well//MAVARATEMP
 	else if(r>=RTRANSITION && r<RBREAK) vpot += -  (1.+0.*sin(ph*8.))*da3vsr_integrated[startpos[1]+i]  * pow(sin(th),hpow)*sin(FIELDROT)*sin(ph);
 	else if(r>=RBREAK) vpot += - (1.+0.*sin(ph*8.))*da3vsr_integrated[startpos[1]+i] * pow(sin(th),hpow)*sin(FIELDROT)*sin(ph); 
 	else vpot += 0.0 ; //-  pow(1.5/tempstore_tot[0],rpow2) * da3vsr_integrated[startpos[1]+i] * pow(sin(th),hpow)*sin(FIELDROT)*sin(ph); //MAVARATEMP was 0.0 normally
@@ -1114,7 +1114,7 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
 	//if(r<=0)	vpot = 0.0;
 	//else    
 	//vpot = vpot 
-	if(r<RTRANSITION) vpot += (1.+0.*sin(ph*8.))*(1./1.) * pow(r/tempstore_tot[0],(UGPOW/2.+1.5)/6.0) * da3vsr_integrated[startpos[1]+i] * pow(sin(th),hpow)*(cos(FIELDROT) - cos(ph)*cot(th)*sin(FIELDROT)); //MAVARATEMP
+	if(r<RTRANSITION) vpot += (1.+0.*sin(ph*8.))*(1./1.) * pow(r/tempstore_tot[0],(UGPOW/2.+1.5)/4.0) * da3vsr_integrated[startpos[1]+i] * pow(sin(th),hpow)*(cos(FIELDROT) - cos(ph)*cot(th)*sin(FIELDROT)); //MAVARATEMP
 	else if(r>=RTRANSITION && r<RBREAK) vpot += (1.+0.*sin(ph*8.))*da3vsr_integrated[startpos[1]+i] * pow(sin(th),hpow)*(cos(FIELDROT) - cos(ph)*cot(th)*sin(FIELDROT));
 	else if(r>=RBREAK) vpot += (1.+0.*sin(ph*8.))*da3vsr_integrated[startpos[1]+i]  * pow(sin(th),hpow)*(cos(FIELDROT) - cos(ph)*cot(th)*sin(FIELDROT)); // was using a .2 multiplyer for sin(ph*8.) term
 	else vpot += 0.0; //pow(1.5/tempstore_tot[0],rpow2) * da3vsr_integrated[startpos[1]+i] * pow(sin(th),hpow)*(cos(FIELDROT) - cos(ph)*cot(th)*sin(FIELDROT));
@@ -2036,8 +2036,8 @@ int calc_da3vsr(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
                                  
       if(rr>=RTRANSITION_MACRO && rr < RBREAK_MACRO) {
 
-	switchmad2 = 0.5+1.0/M_PI*atan((rr-30.)/8.); 
-	switchmad1 = 0.5-1.0/M_PI*atan((rr-30.)/8.);
+	switchmad2 = 0.5+1.0/M_PI*atan((rr-30.)/4.); 
+	switchmad1 = 0.5-1.0/M_PI*atan((rr-30.)/4.);
 
 	if(tempstore[0] > 0.1 && tempstore[1] < 0.1) {
 	  tempstore[1] = rr; 
@@ -2047,12 +2047,12 @@ int calc_da3vsr(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 	if(tempstore[0] <0.1 && startval<=RTRANSITION_MACRO) { //this if is true if r of ii=o for this core was <= RTRANSITION and rr and reached > RTRANSITION as well...only happens on the right single core. //trackingticker == 0 && rr< RBREAK_MACRO/2. && rr<(RTRANSITION_MACRO*1.2) ) {
 	  Rtransition=rr;
 	  tempstore[0]=rr; //MAVARACHANGE from rr on April 28th so the power law multiple in the A_phi setting section works for r<rtransition
-	  tempstore[2] = - (switchmad1*sqrt(6.)+switchmad2*1.)* ptrgeom->gdet * idxdxp[3][3] * dx[1] * ucon[TT] / sqrt(ptrgeom->gcov[GIND(2,2)]) * sqrt( (2./beta) * (gam - 1.0) * MACP0A1(prim,ii,jj,kk,UU) ) ;   // r/(UGPOW + 4.5)^2 was the multiplier
+	  tempstore[2] = - (switchmad1*sqrt(4.)+switchmad2*1.)* ptrgeom->gdet * idxdxp[3][3] * dx[1] * ucon[TT] / sqrt(ptrgeom->gcov[GIND(2,2)]) * sqrt( (2./beta) * (gam - 1.0) * MACP0A1(prim,ii,jj,kk,UU) ) ;   // r/(UGPOW + 4.5)^2 was the multiplier
 	  printf("rr tempstore[0]: %21.15g , at tracking= %d \n",rr,trackingticker);
 	  trackingticker++;
 	}
 
-	da3vsr[startpos[1]+ii] = - (switchmad1*sqrt(6.)+switchmad2*1.)* ptrgeom->gdet * idxdxp[3][3] * dx[1] * ucon[TT] / sqrt(ptrgeom->gcov[GIND(2,2)]) * sqrt( (2./beta) * (gam - 1.0) * MACP0A1(prim,ii,jj,kk,UU) ) ; //- ptrgeom->gdet * idxdxp[3][3] * dx[1] / sqrt(ptrgeom->gcov[GIND(2,2)]) * ucon[TT] * sqrt( (2./beta) * (gam - 1.0) * MACP0A1(prim,ii,jj,kk,UU) ) ; //- ptrgeom->gdet * dxdxp[1][1] * dx[1] / sqrt(ptrgeom->gcov[GIND(2,2)]) /r * sqrt( (2./beta) * (gam - 1.0) * MACP0A1(prim,ii,jj,kk,UU) ) ; //- ptrgeom->gdet * dx[1] / sqrt(ptrgeom->gcov[GIND(2,2)]) * pow(.1,.5) * ucon[TT] * sqrt( (gam - 1.0) * MACP0A1(prim,ii,jj,kk,UU) )  ; 
+	da3vsr[startpos[1]+ii] = - (switchmad1*sqrt(4.)+switchmad2*1.)* ptrgeom->gdet * idxdxp[3][3] * dx[1] * ucon[TT] / sqrt(ptrgeom->gcov[GIND(2,2)]) * sqrt( (2./beta) * (gam - 1.0) * MACP0A1(prim,ii,jj,kk,UU) ) ; //- ptrgeom->gdet * idxdxp[3][3] * dx[1] / sqrt(ptrgeom->gcov[GIND(2,2)]) * ucon[TT] * sqrt( (2./beta) * (gam - 1.0) * MACP0A1(prim,ii,jj,kk,UU) ) ; //- ptrgeom->gdet * dxdxp[1][1] * dx[1] / sqrt(ptrgeom->gcov[GIND(2,2)]) /r * sqrt( (2./beta) * (gam - 1.0) * MACP0A1(prim,ii,jj,kk,UU) ) ; //- ptrgeom->gdet * dx[1] / sqrt(ptrgeom->gcov[GIND(2,2)]) * pow(.1,.5) * ucon[TT] * sqrt( (gam - 1.0) * MACP0A1(prim,ii,jj,kk,UU) )  ; 
 
 	printf("idxdxp[3][3] checkval: %21.15g , at r= %21.15g \n",idxdxp[3][3],rr);
 	printf("idxdxp[2][2] checkval: %21.15g , at r= %21.15g \n",idxdxp[2][2],rr);
@@ -2099,7 +2099,7 @@ int calc_da3vsr(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
   trifprintf("Ending values of tempstore0 and tempstore1 , and tempstore[2] = %21.15g   %21.15g  %21.15g \n", tempstore_tot[0], tempstore_tot[1],tempstore_tot[2]);
 
 
-  da3vsr_integrated[0] = 6.0 * tempstore_tot[2] / (pow(tempstore_tot[1]/tempstore_tot[0],UGPOW/2+1.5)-1.0) ;
+  da3vsr_integrated[0] = 4.0 * tempstore_tot[2] / (pow(tempstore_tot[1]/tempstore_tot[0],UGPOW/2+1.5)-1.0) ;
 
   for(ii=1; ii<N1*ncpux1; ii++) da3vsr_integrated[ii] = da3vsr_integrated[ii-1] + da3vsr_tot[ii-1] ;
 

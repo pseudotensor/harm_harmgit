@@ -327,7 +327,7 @@ void set_coord_parms_nodeps(int defcoordlocal)
 
 
     // see fix_3dpoledtissue.nb
-#if(0)
+#if(1) // MAVARACHANGE I choose this because bp_ntheta 5 is less than the 0 used for the thin regime for the bp study. so, 5 note extreme enough.
     bp_ntheta=21.0;
     bp_htheta=0.15;
     bp_rsjet2=5.0;
@@ -1418,7 +1418,7 @@ void bl_coord(FTYPE *X, FTYPE *V)
 
 #endif
 
-#if(0)    
+#if(1)    
     // fix_3dpoledtissue.nb based:
     theta2 = M_PI*0.5*(bp_htheta*(2.0*X[2]-1.0)+(1.0-bp_htheta)*pow(2.0*X[2]-1.0,bp_ntheta)+1.0);
 
@@ -2762,7 +2762,7 @@ void set_points()
 
 
 
-#define MAXIHOR (5) //MAXBND MAVARACHANGE now halving resolution doesn't make less than 5 cells inside horizon
+#define MAXIHOR (7) //was set to 5 until Oct 12. 2014 MAXBND MAVARACHANGE now halving resolution doesn't make less than 5 cells inside horizon
 #define FRACN1 (0.1)
 #define ADJUSTFRACT (0.25)
 
