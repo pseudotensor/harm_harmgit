@@ -328,8 +328,8 @@ void set_coord_parms_nodeps(int defcoordlocal)
 
     // see fix_3dpoledtissue.nb
 #if(1) // MAVARACHANGE I choose this because bp_ntheta 5 is less than the 0 used for the thin regime for the bp study. so, 5 note extreme enough.
-    bp_ntheta=21.0;
-    bp_htheta=0.15;
+    bp_ntheta=13.0; //21.0; // MAVARANOTE only use 21 for high res, use 15 for mid-res, non for low-res
+    bp_htheta=0.2; // changed from .15 to be in line with my own additions for theta-flaring
     bp_rsjet2=5.0;
     bp_r0jet2=2.0;
 #else
@@ -1418,7 +1418,7 @@ void bl_coord(FTYPE *X, FTYPE *V)
 
 #endif
 
-#if(0)    
+#if(1)    
     // fix_3dpoledtissue.nb based:
     theta2 = M_PI*0.5*(bp_htheta*(2.0*X[2]-1.0)+(1.0-bp_htheta)*pow(2.0*X[2]-1.0,bp_ntheta)+1.0);
 
