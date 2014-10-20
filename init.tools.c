@@ -218,8 +218,9 @@ int user1_init_global(void)
     //DOENOFLUX=ENOFLUXRECON;
   }
 
-
-
+  //int randrank;//MAVARAADD these two lines and the randrank*... in the ranc call.
+  //MPI_Comm_rank(MPI_COMM_WORLD, &randrank);
+  //ranc(1,randrank*473879); // no MPI method yet, so just pure randomization
   ranc(1,0); // no MPI method yet, so just pure randomization
   /* some physics parameters */
   gam = 4. / 3.;

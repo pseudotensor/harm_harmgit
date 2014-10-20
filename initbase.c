@@ -647,8 +647,11 @@ int prepre_init(void)
 
   // things initialized whether restarting or init fresh
 
+  //int randrank; //MAVARAADD these two lines and the randrank*... in the ranc call.
+  //MPI_Comm_rank(MPI_COMM_WORLD, &randrank);
+  
+  //ranc(1,randrank*473879);  // power up random number generator in case used without init
   ranc(1,0);  // power up random number generator in case used without init
-
 
   // set default performance parameters
   set_defaults_performance_checks_prepreinit();

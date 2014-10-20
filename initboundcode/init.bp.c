@@ -231,9 +231,9 @@ int init_grid(void)
   Rout = 1E5;
 #elif(WHICHPROBLEM==THINBP)
   // make changes to primary coordinate parameters R0, Rin, Rout, hslope
-  R0 = -0.45;
+  R0 = -0.35;
   Rout = 40.0;
-  //Rin=1.60;
+  Rin=0.75;
   if(totalsize[1]<32) Rout=50.0;
   else if(totalsize[1]<=64) Rout=1.E3;
   else Rout=1.E5;
@@ -248,7 +248,7 @@ int init_grid(void)
   hslope = h_over_r;
 
 
-  setRin_withchecks(&Rin);
+  //setRin_withchecks(&Rin);
 
 
   
@@ -843,8 +843,6 @@ int init_dsandvels_bpthin(int *whichvel, int*whichcoord, int i, int j, int k, FT
     up = 1./(pow(r,1.5) + a) ;     // MARKNOTE  angular, not linear
     // solution for 3-vel
 
-
-    
     
     pr[RHO] = rho ;
     pr[UU] = u * (1. +randfact * (ranc(0,0) - 0.5));
