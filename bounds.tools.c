@@ -3842,7 +3842,7 @@ int poledeath(int whichx2,
 
 
 
-            if(EOMTYPE!=EOMFFDE){
+            if(EOMTYPE!=EOMFFDE && EOMTYPE!=EOMFFDE2){
               //////////
               // for densities
               // this helps remove drop-outs in density at high b^2/\rho_0 and high b^2/u
@@ -3889,7 +3889,7 @@ int poledeath(int whichx2,
                 }
                 // do nothing different than simple copy in any other cases.  NOTE: If not high sigma, else if near-pole is low sigma, then this feeds in mass crazily
               }// end if BCSIGMACONSTATPOLE==1
-            }// end if EOMTYPE!=EOMFFDE
+            }// end if EOMTYPE!=EOMFFDE && EOMTYPE!=EOMFFDE2
 
 
           }// end if correct j

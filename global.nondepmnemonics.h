@@ -181,17 +181,19 @@
 /// global.h : FIXUPAFTERINIT, FIXUPAFTERRESTART,CHECKSOLUTION,LIMADJUST,FLUXADJUST
 /// global.h FIXUPZONES->FIXUPNOZONES
  // do nothing in Utoprimgen() assuming already effectively or actually did the inversion.
-#define EOMDIDFFDE -5
+#define EOMDIDFFDE -6
+#define EOMDIDFFDE2 -5
 #define EOMDIDCOLDGRMHD -4
 #define EOMDIDENTROPYGRMHD -3
 #define EOMDIDGRMHD -2
 #define EOMDONOTHING(eomtype) (eomtype<=EOMDIDGRMHD)
 #define EOMDEFAULT -1 // choose to do default behavior without any forced EOM
-#define NUMEOMTYPES 4
+#define NUMEOMTYPES 5
 #define EOMFFDE 0
-#define EOMCOLDGRMHD 1
-#define EOMENTROPYGRMHD 2
-#define EOMGRMHD 3
+#define EOMFFDE2 1
+#define EOMCOLDGRMHD 2
+#define EOMENTROPYGRMHD 3
+#define EOMGRMHD 4
 
 /// mode for inversion
 #define MODEDEFAULT -1
@@ -897,7 +899,7 @@
 #define COUNTUTOPRIMFAILRHOUNEG 6
 #define COUNTGAMMAPERC 7 // see fixup_checksolution()
 #define COUNTUPERC 8 // see fixup_checksolution()
-#define COUNTFFDE 9
+#define COUNTFFDE 9 // if originally MHD or ENTROPY, this is always referring to EOMFFDE2 or whatever set in utoprimgen.c
 #define COUNTCOLD 10
 #define COUNTENTROPY 11
 #define COUNTHOT 12

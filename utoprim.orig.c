@@ -62,7 +62,7 @@ int Utoprim(int whichcons, FTYPE *U, struct of_geom *ptrgeom, PFTYPE *lpflag, FT
 #define INVERTNPR (4) // always same
 #define STARTPINVERT (RHO) // where to start in primitive space
   // need to skip UU if using this (SUPERGODMARK -- not done yet)
-#elif(EOMTYPE==EOMFFDE)
+#elif(EOMTYPE==EOMFFDE||EOMTYPE==EOMFFDE2)
 #define INVERTNPR (3) // always same
 #define STARTPINVERT (U1) // where to start in primitive space
 #endif
@@ -202,7 +202,7 @@ int Utoprim(int whichcons, FTYPE *U, struct of_geom *ptrgeom, PFTYPE *lpflag, FT
   // zero internal energy density so can use standard dU/dp
   priter[UU]=0;
 
-#elif(EOMTYPE==EOMFFDE)
+#elif(EOMTYPE==EOMFFDE||EOMTYPE==EOMFFDE2)
 
 #define NORMMETHOD (1)  // no choice
 #define WHICHFFDEINVERSION 0 // choice (see below)
@@ -419,7 +419,7 @@ int Utoprim(int whichcons, FTYPE *U, struct of_geom *ptrgeom, PFTYPE *lpflag, FT
   if(flagifnonrel)  PLOOP(pliter,pl) pr[pl]=prnonrel[pl];
   else PLOOP(pliter,pl) pr[pl]=prrel[pl];
 
-#elif(EOMTYPE==EOMFFDE)
+#elif(EOMTYPE==EOMFFDE||EOMTYPE==EOMFFDE2)
   // v^i
   // don't overwrite rest
   pr[U1]=prrel[U1];
@@ -768,7 +768,7 @@ int usrfun(FTYPE *U_target,FTYPE *pr0,int numnormterms,int whichcons, int primto
 
 #if(EOMTYPE==EOMGRMHD||EOMTYPE==EOMENTROPYGRMHD)
     PLOOP(pliter,pl) U_curr[pl]=U[pl];
-#elif(EOMTYPE==EOMFFDE)
+#elif(EOMTYPE==EOMFFDE||EOMTYPE==EOMFFDE2)
     // convert from normal U to iterative U
     fixUtarget(WHICHFFDEINVERSION,U,U_curr);
 #endif
@@ -786,7 +786,7 @@ int usrfun(FTYPE *U_target,FTYPE *pr0,int numnormterms,int whichcons, int primto
         alpha[j+1][k+1]=alpha5[j+1][k+1];
       }
     }    
-#elif(EOMTYPE==EOMFFDE)
+#elif(EOMTYPE==EOMFFDE||EOMTYPE==EOMFFDE2)
 
 #if(WHICHFFDEINVERSION==0)
     removerow(U2,alpha5,alpha);

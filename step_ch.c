@@ -302,7 +302,7 @@ int pre_advance(int timeorder, int numtimeorders, int finalstep, FTYPE (*pi)[NST
   // prefixup
   //
   //////////////////
-#if(EOMTYPE!=EOMFFDE)
+#if(EOMTYPE!=EOMFFDE && EOMTYPE!=EOMFFDE2)
   // force-free and cold GRMHD don't use pre_fixup, currently, even if could
   MYFUN(pre_fixup(STAGEM1, pi),"step_ch.c:step_ch_simple()", "pre_fixup()", 1);
 #endif

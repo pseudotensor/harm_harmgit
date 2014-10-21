@@ -202,7 +202,7 @@ int user1_init_global(void)
   }
 
 
-  if(EOMTYPE==EOMFFDE){
+  if(EOMTYPE==EOMFFDE||EOMTYPE==EOMFFDE2){
     // PARA and TO=4 and HLL not trustable in FFDE so far
     lim[1] =lim[2]=lim[3]= MC;
     TIMEORDER=2;
@@ -1007,7 +1007,7 @@ int user1_normalize_field(FTYPE beta, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYP
   int get_maxes(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *bsq_max, FTYPE *myptotmax, FTYPE *beta_min);
 
 
-  if(EOMTYPE==EOMFFDE) return(0); // do nothing
+  if(EOMTYPE==EOMFFDE||EOMTYPE==EOMFFDE2) return(0); // do nothing
 
 
   // get initial maximum

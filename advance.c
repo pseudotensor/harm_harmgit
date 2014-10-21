@@ -743,6 +743,7 @@ static int advance_standard(
             else if(eomtypelocal==EOMDIDENTROPYGRMHD) eomtypelocal=EOMENTROPYGRMHD;
             else if(eomtypelocal==EOMDIDCOLDGRMHD) eomtypelocal=EOMCOLDGRMHD;
             else if(eomtypelocal==EOMDIDFFDE) eomtypelocal=EOMFFDE;
+            else if(eomtypelocal==EOMDIDFFDE2) eomtypelocal=EOMFFDE2;
           }
         }
 

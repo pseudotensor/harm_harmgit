@@ -445,7 +445,7 @@ void getall_forinversion_mignone(int eomtype, int whichd, FTYPE *EOSextra, FTYPE
       *dfunofu=compute_dSdu_mignone(EOSextra, quant1, quant2);
     }
   }
-  else if(eomtype==EOMCOLDGRMHD || eomtype==EOMFFDE){
+  else if(eomtype==EOMCOLDGRMHD || eomtype==EOMFFDE || eomtype==EOMFFDE2){
     *fun=*dfunofrho=*dfunofu=0.0;
   }
 

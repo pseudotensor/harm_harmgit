@@ -453,7 +453,7 @@ int init_global(void)
   //  TIMEORDER=4;
   TIMEORDER=3; // more smooth accurate solution than TIMEORDER=4 or 2 (midpoint or TVD)
 
-  if(EOMTYPE==EOMFFDE){
+  if(EOMTYPE==EOMFFDE||EOMTYPE==EOMFFDE2){
     //    lim[1]=lim[2]=lim[3]=DONOR;
     //    lim[1]=lim[2]=lim[3]=MINM;
     lim[1]=lim[2]=lim[3]=MC;
@@ -4802,7 +4802,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
       FTYPE muf;
 
       // defaults
-      if(EOMTYPE==EOMFFDE){
+      if(EOMTYPE==EOMFFDE||EOMTYPE==EOMFFDE2){
         pr[RHO]=pr[UU]=0;
       }
       else{
@@ -7359,7 +7359,7 @@ static int fieldprim(int whichmethod, int whichinversion, int *whichvel, int*whi
       if(doit) dualfprintf(fail_file,"AFTER Utoprim()\n");
       if(doit) PLOOP(pliter,pl) dualfprintf(fail_file,"newpr[%d]=%g\n",pl,pr[pl]);
 
-      if(EOMTYPE!=EOMFFDE){
+      if(EOMTYPE!=EOMFFDE && EOMTYPE!=EOMFFDE2){
         PLOOP(pliter,pl){
           if(pl==RHO || pl==UU || pl>B3 || pl>=URAD1 && pl<=URAD3) pr[pl]=prold[pl];
         }
@@ -7394,11 +7394,11 @@ static int fieldprim(int whichmethod, int whichinversion, int *whichvel, int*whi
       if(doit) PLOOP(pliter,pl) dualfprintf(fail_file,"newpr[%d]=%g\n",pl,pr[pl]);
     }
 
-    if(EOMTYPE==EOMFFDE){
+    if(EOMTYPE==EOMFFDE||EOMTYPE==EOMFFDE2){
       // revert radiation primitives to unmodified values (in whichvel, whichcoord)
       PLOOP(pliter,pl) if(pl>=URAD1 && pl<=URAD3) pr[pl]=prold[pl];
     }
-    //    if(EOMTYPE!=EOMFFDE){
+    //    if(EOMTYPE!=EOMFFDE&& EOMTYPE!=EOMFFDE2){
     //      // revert rho and ug and anything beyond field
     //      PLOOP(pliter,pl) if((pl>=RHO && pl<=UU) || (pl>B3 && pl>URAD3)) pr[pl]=prold[pl];      
     //    }
@@ -7449,7 +7449,7 @@ static int fieldprim(int whichmethod, int whichinversion, int *whichvel, int*whi
     }
 
 
-    if(EOMTYPE==EOMFFDE){
+    if(EOMTYPE==EOMFFDE || EOMTYPE==EOMFFDE2){
       //      pr[U1]=pr[U2]=pr[U3]=0.0;
       //    dualfprintf(fail_file,"EBtopr\n");
     }

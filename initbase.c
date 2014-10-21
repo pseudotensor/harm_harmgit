@@ -235,7 +235,7 @@ int init(int *argc, char **argv[])
       //
       /////////////////////////////// 
       
-      if(EOMTYPE==EOMFFDE){
+      if(EOMTYPE==EOMFFDE||EOMTYPE==EOMFFDE2){
         trifprintf("System filtered to FFDE\n");
         // filter to get force-free
         COMPFULLLOOP{
@@ -1244,7 +1244,7 @@ int init_defglobal(void)
   }
 
 
-  if(EOMTYPE==EOMFFDE){
+  if(EOMTYPE==EOMFFDE||EOMTYPE==EOMFFDE2){
     // PARA and TO=4 and HLL not trustable in FFDE so far
     lim[1] = lim[2] = lim[3] = MC;
     TIMEORDER=2;

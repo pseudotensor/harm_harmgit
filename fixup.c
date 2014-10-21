@@ -1426,7 +1426,7 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
 
   // this average only works if using 4 velocity since only then guaranteed solution is good after interpolation
   if(WHICHVEL==VEL3) return(0); // just stick with static, best can do
-  if(EOMTYPE==EOMFFDE) return(0); // nothing to do
+  if(EOMTYPE==EOMFFDE || EOMTYPE==EOMFFDE2) return(0); // nothing to do
 
 
 
@@ -1963,7 +1963,7 @@ int fixup_utoprim_nofixup(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (
 
   // this average only works if using 4 velocity since only then guaranteed solution is good after interpolation
   if(WHICHVEL==VEL3) return(0); // just stick with static, best can do
-  if(EOMTYPE==EOMFFDE) return(0); // nothing to do
+  if(EOMTYPE==EOMFFDE || EOMTYPE==EOMFFDE2) return(0); // nothing to do
 
 
   ///////////////////////////////////

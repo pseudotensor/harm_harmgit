@@ -2571,8 +2571,8 @@ int limit_3vel_ffde(FTYPE *Bcon, struct of_geom *geom, FTYPE *vcon, FTYPE *pr)
   int Utoprim_ffde(FTYPE *U, struct of_geom *geom, FTYPE *pr);
   FTYPE U[NPR];
 
-#if(EOMTYPE!=EOMFFDE)
-  dualfprintf(fail_file,"Only call limit_3vel_ffde() if doing EOMTYPE==EOMFFDE\n");
+#if(EOMTYPE!=EOMFFDE && EOMTYPE!=EOMFFDE2)
+  dualfprintf(fail_file,"Only call limit_3vel_ffde() if doing EOMTYPE==EOMFFDE || EOMTYPE==EOMFFDE2\n");
   myexit(346983463);
 #endif
 

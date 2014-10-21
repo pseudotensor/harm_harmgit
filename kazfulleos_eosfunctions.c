@@ -707,7 +707,7 @@ void getall_forinversion_kazfull(int eomtype, int whichd, FTYPE *EOSextra, FTYPE
   // Quickly return if doing cold or force-free
   //
   ///////////////
-  if(eomtype==EOMCOLDGRMHD || eomtype==EOMFFDE){
+  if(eomtype==EOMCOLDGRMHD || eomtype==EOMFFDE || eomtype==EOMFFDE2){
     *fun=*dfunofrho=*dfunofu=0.0;
     return; // done!
   }

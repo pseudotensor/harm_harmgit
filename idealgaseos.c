@@ -435,7 +435,7 @@ void getall_forinversion_idealgas(int eomtype, int whichd, FTYPE *EOSextra, FTYP
       *dfunofu=compute_dSdu_idealgas(EOSextra, quant1, quant2);
     }
   }
-  else if(eomtype==EOMCOLDGRMHD || eomtype==EOMFFDE){
+  else if(eomtype==EOMCOLDGRMHD || eomtype==EOMFFDE || eomtype==EOMFFDE2){
     *fun=*dfunofrho=*dfunofu=0.0;
   }
 

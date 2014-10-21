@@ -1,10 +1,10 @@
 
 /*! \file utoprim_jon.c
-     \brief Jon's U->P inversion
+  \brief Jon's U->P inversion
      
-     // OPENMPNOTE: This function should only have local variables in order to be parallelized, otherwise global shared variables can change while computing.
-     // OPENMPNOTE: Should avoid use of static variables inside functions, for example when first time called to initialize things.  Only done right now in bin_newt_data() that is not used.
-     */
+  // OPENMPNOTE: This function should only have local variables in order to be parallelized, otherwise global shared variables can change while computing.
+  // OPENMPNOTE: Should avoid use of static variables inside functions, for example when first time called to initialize things.  Only done right now in bin_newt_data() that is not used.
+  */
 
 
 #include "u2p_defs.h" // only includes #define's
@@ -113,6 +113,7 @@ static void check_on_inversion(int showmessages, FTYPE *prim, FTYPE *U, struct o
 
 /// Setup inversion:
 static int compute_setup_quantities(FTYPE *prim, FTYPE *U, struct of_geom *ptrgeom, FTYPE *Qtcon, FTYPE *Bcon, FTYPE *Bcov, FTYPE *Bsq,FTYPE *QdotB,FTYPE *QdotBsq,FTYPE *Qtsq,FTYPE *Qdotn,FTYPE *Qdotnp,FTYPE *D, FTYPE *Sc, int whicheos, FTYPE *EOSextra);
+static int compute_Wp(int showmessages, PFTYPE *lpflag, int eomtype, FTYPE *prim, struct of_geom *ptrgeom, FTYPE *W_last, FTYPE *Wp_last, FTYPE *Wpabs, FTYPE *etaabs, FTYPE *gamma, FTYPE *gammasq, FTYPE *rho0, FTYPE *u, FTYPE *p, FTYPE *wmrho0, FTYPE *wglobal, FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra);
 static int set_guess_Wp(int showmessages, PFTYPE *lpflag, int eomtype, FTYPE *prim, struct of_geom *ptrgeom, FTYPE *W_last, FTYPE *Wp_last, FTYPE *wglobal, FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra);
 static int check_Wp(PFTYPE *lpflag, int eomtype, FTYPE *prim, FTYPE *U, struct of_geom *ptrgeom, FTYPE Wp_last, FTYPE Wp, int retval, FTYPE *wglobal, FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra);
 static int Wp2prim(int showmessages, PFTYPE *lpflag, int eomtype, FTYPE *prim, FTYPE *pressure, FTYPE *U, struct of_geom *ptrgeom, FTYPE Wp, FTYPE *Qtcon, FTYPE *Bcon, FTYPE *Bcov, int retval, FTYPE *wglobal, FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra);
@@ -120,7 +121,7 @@ static int verify_Wlast(FTYPE u, FTYPE p, struct of_geom *ptrgeom, FTYPE *W_last
 
 
 /// other inversions:
-static int forcefree_inversion(struct of_geom *ptrgeom, FTYPE *Qtcon, FTYPE Bsq, FTYPE *Bcon, FTYPE *Bcov, FTYPE Qtsq, FTYPE *U, FTYPE *prim);
+static int forcefree_inversion(int cleaned, struct of_geom *ptrgeom, FTYPE W, FTYPE *Qtcon, FTYPE Bsq, FTYPE *Bcon, FTYPE *Bcov, FTYPE Qtsq, FTYPE *U, FTYPE *prim, FTYPE *gammaret);
 
 
 
@@ -505,11 +506,52 @@ static int Utoprim_new_body(int showmessages, int eomtype, PFTYPE *lpflag, int w
   //
   ////////////////////////////////
 
-  if(eomtype==EOMFFDE){
+  if(eomtype==EOMFFDE || eomtype==EOMFFDE2){
     Wdependentsolution=0;
+    if(eomtype==EOMFFDE){
+      FTYPE gammaret0;
+      W_last=0.0;
+      int cleaned=1;
+      if(forcefree_inversion(cleaned, ptrgeom, W_last, Qtcon, Bsq, Bcon, Bcov, Qtsq, U, prim, &gammaret0)) retval++;
+    }
+    else if(0&&eomtype==EOMFFDE2){ // does not so good.
+      int cleaned=0;
+      FTYPE gammaret0;
 
-    // then perform the analytic inversion with Lorentz factor limit
-    if(forcefree_inversion(ptrgeom, Qtcon, Bsq, Bcon, Bcov, Qtsq, U, prim)) retval++;
+      // get Wp, wglobal, etaabs, gamma, gammaabs
+      FTYPE gammasq,gamma,rho0,u,p,wmrho0;
+      FTYPE Wpabs, etaabs;
+      compute_Wp(showmessages, lpflag, eomtype, prim, ptrgeom, &W_last, &Wp_last, &Wpabs, &etaabs, &gamma, &gammasq, &rho0, &u, &p, &wmrho0, wglobal, Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra);
+
+      if(forcefree_inversion(cleaned, ptrgeom, W_last, Qtcon, Bsq, Bcon, Bcov, Qtsq, U, prim, &gammaret0)) retval++;
+    }
+    else{ // doesn't do as well as EOMFFDE, so smallest instant value of gamma not only important thing, since eventually leads to larger gamma.
+
+      // get Wp, wglobal, etaabs, gamma, gammaabs
+      FTYPE gammasq,gamma,rho0,u,p,wmrho0;
+      FTYPE Wpabs, etaabs;
+      compute_Wp(showmessages, lpflag, eomtype, prim, ptrgeom, &W_last, &Wp_last, &Wpabs, &etaabs, &gamma, &gammasq, &rho0, &u, &p, &wmrho0, wglobal, Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra);
+
+      // then perform the analytic inversion with Lorentz factor limit
+      FTYPE gammaret1;
+      FTYPE prim1[NPR];
+      int pliter,pl;
+      PLOOP(pliter,pl) prim1[pl] = prim[pl];
+      int ret1=forcefree_inversion(0, ptrgeom, W_last, Qtcon, Bsq, Bcon, Bcov, Qtsq, U, prim1, &gammaret1);
+
+      FTYPE gammaret2;
+      FTYPE prim2[NPR];
+      PLOOP(pliter,pl) prim2[pl] = prim[pl];
+      int ret2=forcefree_inversion(1, ptrgeom, W_last, Qtcon, Bsq, Bcon, Bcov, Qtsq, U, prim2, &gammaret2);
+      if(gammaret1>gammaret2){
+        PLOOP(pliter,pl) prim[pl] = prim2[pl];
+        if(ret2) retval++;
+      }
+      else{
+        PLOOP(pliter,pl) prim[pl] = prim1[pl];
+        if(ret1) retval++;
+      }
+    }
   }
   else{
     Wdependentsolution=1;
@@ -911,28 +953,17 @@ static int compute_setup_quantities(FTYPE *prim, FTYPE *U, struct of_geom *ptrge
 }
 
 
-
-/////////////////////////////////
-///
-/// SETUP ITERATIVE METHODS (good for GRMHD or entropy evolution or cold GRMHD)
-/// Doesn't use Sc since initial guess for W can be found from last primitives alone
-///
-/////////////////////////////////
-static int set_guess_Wp(int showmessages, PFTYPE *lpflag, int eomtype, FTYPE *prim, struct of_geom *ptrgeom, FTYPE *W_last, FTYPE *Wp_last, FTYPE *wglobal, FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
+/// compute Wp from primitives
+/// also get normalizations wglobal
+static int compute_Wp(int showmessages, PFTYPE *lpflag, int eomtype, FTYPE *prim, struct of_geom *ptrgeom, FTYPE *W_last, FTYPE *Wp_last, FTYPE *Wpabs, FTYPE *etaabs, FTYPE *gamma, FTYPE *gammasq, FTYPE *rho0, FTYPE *u, FTYPE *p, FTYPE *wmrho0, FTYPE *wglobal, FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
 {
-  FTYPE u,p;
   FTYPE utsq;
   FTYPE Ss;
-  FTYPE gammasq,gamma,rho0,wmrho0,w;
-  FTYPE bsq;
-  FTYPE etaabs;
+  FTYPE w;
   int i,j;
-  FTYPE Wpcoldhd;
-  FTYPE nuabs,Wpabs;
-  int numattemptstofixguess;
-  FTYPE Bcon[NDIM],Bcov[NDIM];
   int jj;
-
+  FTYPE Bcon[NDIM],Bcov[NDIM],bsq;
+  FTYPE nuabs;
 
   /* calculate W from last timestep and use 
      for guess */
@@ -964,19 +995,27 @@ static int set_guess_Wp(int showmessages, PFTYPE *lpflag, int eomtype, FTYPE *pr
     //return(1) ;
   }
 
-  gammasq = 1. + utsq ;
-  gamma  = sqrt(gammasq);
+  *gammasq = 1. + utsq ;
+  *gamma  = sqrt(*gammasq);
  
   // Always calculate rho from D and gamma so that using D in EOS remains consistent
   //   i.e. you don't get positive values for dP/d(vsq) . 
-  rho0 = (D) / gamma ;
-  u = prim[UU] ;
+  *rho0 = (D) / (*gamma) ;
+  *u = prim[UU] ;
   if(whicheos==KAZFULL){
-    u = MAX(0.0,u); // near degeneracy, allow somewhat "hot" solution so guess doesn't give immediately bad Wp and utsq(Wp)
+    *u = MAX(0.0,*u); // near degeneracy, allow somewhat "hot" solution so guess doesn't give immediately bad Wp and utsq(Wp)
   }
-  p = pressure_rho0_u(whicheos,EOSextra,rho0,u) ; // p(rho0,u) just used for guess, while p(rho0,\chi) used to get solution since assume don't know \chi yet.  Even if had initial \chi, wouldn't be final \chi anyways.
-  wmrho0=u+p;
-  w = rho0 + wmrho0 ;
+  *p = pressure_rho0_u(whicheos,EOSextra,*rho0,*u) ; // p(rho0,u) just used for guess, while p(rho0,\chi) used to get solution since assume don't know \chi yet.  Even if had initial \chi, wouldn't be final \chi anyways.
+  *wmrho0=(*u)+(*p);
+  w = (*rho0) + (*wmrho0) ;
+
+
+
+
+  // W'=W-D (D removed from W)
+  *Wp_last = (D)*utsq/(1.0+(*gamma)) + ((*u) + (*p))*(*gammasq);
+  *W_last = *Wp_last + (D);
+
 
   // need b^2 to normalize W since error in W limited by b^2
   // GODMARK: Computing b^2 this way is too expensive, just use B^2 since just used to make an error estimate
@@ -985,18 +1024,39 @@ static int set_guess_Wp(int showmessages, PFTYPE *lpflag, int eomtype, FTYPE *pr
   Bcon[TT]=0.0; SLOOPA(jj) Bcon[jj]=prim[B1-1+jj];
   lower_vec(Bcon,ptrgeom,Bcov);
   bsq = 0.0; SLOOPA(jj) bsq += Bcon[jj]*Bcov[jj];
-  bsq *= ((ptrgeom->alphalapse * ptrgeom->alphalapse))/gammasq;
+  bsq *= ((ptrgeom->alphalapse * ptrgeom->alphalapse))/(*gammasq);
+
+  // Get normalizations
+  *Wpabs = fabs((D)*utsq)/(1.0+fabs(*gamma)) + (fabs(*u)+fabs(*p))*fabs(*gammasq) + SQRTMINNUMREPRESENT;
+  nuabs = fabs(*u) + fabs(*p) + fabs(bsq);
+  *etaabs = fabs(*rho0) + nuabs; 
+  wglobal[2]=GAMMASQCHECKRESID * fabs(*rho0);
 
 
+  return(0);
+}
 
-  // W'=W-D (D removed from W)
-  *Wp_last = (D)*utsq/(1.0+gamma) + (u+p)*gammasq;
-  *W_last = *Wp_last + (D);
 
-  Wpabs = fabs((D)*utsq)/(1.0+fabs(gamma)) + (fabs(u)+fabs(p))*fabs(gammasq) + SQRTMINNUMREPRESENT;
-  nuabs = fabs(u) + fabs(p) + fabs(bsq);
-  etaabs = fabs(rho0) + nuabs; 
-  wglobal[2]=GAMMASQCHECKRESID * fabs(rho0);
+/////////////////////////////////
+///
+/// SETUP ITERATIVE METHODS (good for GRMHD or entropy evolution or cold GRMHD)
+/// Doesn't use Sc since initial guess for W can be found from last primitives alone
+///
+/////////////////////////////////
+static int set_guess_Wp(int showmessages, PFTYPE *lpflag, int eomtype, FTYPE *prim, struct of_geom *ptrgeom, FTYPE *W_last, FTYPE *Wp_last, FTYPE *wglobal, FTYPE Bsq,FTYPE QdotB,FTYPE QdotBsq,FTYPE Qtsq,FTYPE Qdotn,FTYPE Qdotnp,FTYPE D,FTYPE Sc, int whicheos, FTYPE *EOSextra)
+{
+  FTYPE Ss;
+  FTYPE gammasq,gamma,rho0,u,p,wmrho0;
+  FTYPE Wpabs, etaabs;
+  int i,j;
+  FTYPE Wpcoldhd;
+  int numattemptstofixguess;
+  int jj;
+
+
+  // get Wp, wglobal, etaabs, gamma, gammaabs
+  compute_Wp(showmessages, lpflag, eomtype, prim, ptrgeom, W_last, Wp_last, &Wpabs, &etaabs, &gamma, &gammasq, &rho0, &u, &p, &wmrho0, wglobal, Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc,whicheos,EOSextra);
+
 
 
 
@@ -1075,7 +1135,7 @@ static int set_guess_Wp(int showmessages, PFTYPE *lpflag, int eomtype, FTYPE *pr
 
   // sometimes above gives invalid guess (Wp=0 or utsq<0) so fix
   numattemptstofixguess=0;
-  FTYPE Ss0;
+  FTYPE utsq,Ss0;
   while(1){
     // under all eomtype's, ensure utsq reasonable for guess so Newton's method starts at reasonable value around which to work from
     // check  utsq from this guess for W
@@ -1657,10 +1717,8 @@ static int Wp2prim(int showmessages, PFTYPE *lpflag, int eomtype, FTYPE *prim, F
 
 
 
-
-
 /// appears to give qualitatively similar, but still qualitatively different results than original phys.ffde.c code.  Gives more oscillatory results for torus DISKFIELD force-free field (i.e. set rho=u=0 but otherwise start with init.fishmon.c type setup)
-static int forcefree_inversion(struct of_geom *ptrgeom, FTYPE *Qtcon, FTYPE Bsq, FTYPE *Bcon, FTYPE *Bcov, FTYPE Qtsq, FTYPE *U, FTYPE *prim)
+static int forcefree_inversion(int cleaned, struct of_geom *ptrgeom, FTYPE W, FTYPE *Qtcon, FTYPE Bsq, FTYPE *Bcon, FTYPE *Bcov, FTYPE Qtsq, FTYPE *U, FTYPE *prim, FTYPE *gammaret)
 {
   // force-free variables
   FTYPE Qtconclean[NDIM],Qtcovclean[NDIM],Qtsqclean;
@@ -1689,11 +1747,22 @@ static int forcefree_inversion(struct of_geom *ptrgeom, FTYPE *Qtcon, FTYPE Bsq,
   for(i=1;i<4;i++) QtdotB += Qtcon[i]*Bcov[i];
 
   Qtconclean[TT]=0.0;
-  for(i=1;i<4;i++) Qtconclean[i] = Qtcon[i] - QtdotB*Bcon[i]/Bsq;
+  if(cleaned==1){
+    for(i=1;i<4;i++) Qtconclean[i] = Qtcon[i] - QtdotB*Bcon[i]/Bsq;
 
-  // define new cleaned 3-velocity
-  vconff[TT]=0.0;
-  for(i=1;i<4;i++) vconff[i] = Qtconclean[i]/Bsq;
+    // define new cleaned 3-velocity
+    vconff[TT]=0.0;
+    for(i=1;i<4;i++) vconff[i] = Qtconclean[i]/Bsq;
+  }
+  else{
+    for(i=1;i<4;i++) Qtconclean[i] = Qtcon[i];
+
+    // define new non-cleaned 3-velocity
+    vconff[TT]=0.0;
+    for(i=1;i<4;i++) vconff[i] = (Qtconclean[i] + QtdotB*Bcon[i]/fabs(W) )/(fabs(W) + fabs(Bsq));
+    
+  }
+
 
   // v_\alpha cleaned
   lower_vec(vconff,ptrgeom,vcovff) ;
@@ -1721,7 +1790,13 @@ static int forcefree_inversion(struct of_geom *ptrgeom, FTYPE *Qtcon, FTYPE Bsq,
     //realBsq=sqrt(Bsq+sqrt(alphasq*Qtsqclean));
     // Note that E^2 = P^2/B^2, and then use same limiting procedure as in phys.ffde.c
     realBsq=sqrt(Qtsqclean*alphasq);
-    for(i=1;i<4;i++) vconff[i] = Qtconclean[i]/realBsq ;
+
+    if(cleaned==1){
+      for(i=1;i<4;i++) vconff[i] = Qtconclean[i]/realBsq ;
+    }
+    else{
+      for(i=1;i<4;i++) vconff[i] = (Qtconclean[i] + QtdotB*Bcon[i]/fabs(W) )/(fabs(W) + fabs(realBsq));
+    }
 
     // v_\alpha cleaned and w/ dissipation
     lower_vec(vconff,ptrgeom,vcovff) ;
@@ -1752,6 +1827,8 @@ static int forcefree_inversion(struct of_geom *ptrgeom, FTYPE *Qtcon, FTYPE Bsq,
 
   // DEBUG:
   //  PLOOPALLINVERT(i) dualfprintf(fail_file,"vsq=%21.15g prim[%d]=%21.15g\n",vsq,i,prim[i]);
+
+  *gammaret=gamma;
 
   return(0);
 
@@ -4117,8 +4194,8 @@ static int general_newton_raphson(int showmessages, PFTYPE *lpflag, int eomtype,
     //    if(nstep>=26070){
     //      if(1||myid==5 && nstep==1 && steppart==0 && ifileglobal==19 && jfileglobal==15){
     for(it=0;it<n;it++) dualfprintf(fail_file,"lntries=%d after funcd: x[%d]=%26.20g dx[%d]=%26.20g f=%26.20g df=%26.20g errx=%26.20g trueerror=%26.20g (%26.20g %26.20g) diddamp=%d dampfactor=%26.20g didcycle=%d : %g %g %g %g %g %g %g %g %g\n",(int)(newtonstats->lntries),it,x[it],it,dx[it],f,df,errx,resid[it]/norm[it],NEWT_TOL_VAR,NEWT_TOL_ULTRAREL_VAR,diddamp,DAMPFACTOR[it],didcycle,wglobal[2],Bsq,QdotB,QdotBsq,Qtsq,Qdotn,Qdotnp,D,Sc);
-        //      }
-        //    }
+    //      }
+    //    }
 #endif
 
 #if(CRAZYDEBUG&&DEBUGINDEX)

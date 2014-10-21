@@ -220,6 +220,7 @@ int Utoprimgen(int showmessages, int checkoninversiongas, int checkoninversionra
     else if(*eomtype==EOMDIDENTROPYGRMHD) eomtypelocal=EOMENTROPYGRMHD;
     else if(*eomtype==EOMDIDCOLDGRMHD) eomtypelocal=EOMCOLDGRMHD;
     else if(*eomtype==EOMDIDFFDE) eomtypelocal=EOMFFDE;
+    else if(*eomtype==EOMDIDFFDE2) eomtypelocal=EOMFFDE2;
     else eomtypelocal=*eomtype; // force eomtype
    
     if(whichmethod==MODEPICKBEST){
@@ -1488,6 +1489,8 @@ int tryffdeinversion(int showmessages, int allowlocalfailurefixandnoreport, int 
     
     
     // get ffde inversion
+    // NOTEMARK: Note use of EOMFFDE2 instead of EOMFFDE because FFDE used always from originally having density, so using non-cleaned version that uses initial W.
+    // REVERT to just EOMFFDE since current EOMFFDE2 (or 2nd version in utoprim_jon.c) is worse behavior for \gamma and bsq.
     Utoprimgen_pick(showmessages, allowlocalfailurefixandnoreport, UTOPRIMJONNONRELCOMPAT, EOMFFDE, whichcap, EVOLVENOENTROPY, Ugeomfree, ptrgeom, &ffdepflag, prffde,pressure,newtonstats, lpflagrad);
 
     
@@ -1503,6 +1506,8 @@ int tryffdeinversion(int showmessages, int allowlocalfailurefixandnoreport, int 
       //  if rho or u_g are not negligible or unknown, then should average or evolve!
       pl=RHO; pr[pl] = pr0[pl]; // but keep rho from prior hot.
       pl=UU; pr[pl] = pr0[pl]; // but keep u_g from prior hot.
+      // EOMFFDE2 above tries to keep evolve v.B value.
+      
 
 
       // but set internal energy to previous value (should really evolve with entropy equation, but if negligible and no strong shocks, then ok )
