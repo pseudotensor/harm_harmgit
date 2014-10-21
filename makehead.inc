@@ -54,7 +54,9 @@ USESTAMPEDE=0
 #
 #####################
 
-hoststriped=`echo $HOSTNAME | sed 's/[0-9]*//g'`
+hoststriped=$(shell echo $$HOSTNAME | sed 's/[0-9]*//g')
+$(warning hoststriped is $(hoststriped))
+
 
 ifeq ($(HOSTNAME),)
 #############
