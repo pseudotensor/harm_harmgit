@@ -514,7 +514,7 @@ static int Utoprim_new_body(int showmessages, int eomtype, PFTYPE *lpflag, int w
       int cleaned=1;
       if(forcefree_inversion(cleaned, ptrgeom, W_last, Qtcon, Bsq, Bcon, Bcov, Qtsq, U, prim, &gammaret0)) retval++;
     }
-    else if(0&&eomtype==EOMFFDE2){ // does not so good.
+    else if(eomtype==EOMFFDE2){ // does not so good.
       int cleaned=0;
       FTYPE gammaret0;
 
@@ -1759,7 +1759,7 @@ static int forcefree_inversion(int cleaned, struct of_geom *ptrgeom, FTYPE W, FT
 
     // define new non-cleaned 3-velocity
     vconff[TT]=0.0;
-    for(i=1;i<4;i++) vconff[i] = (Qtconclean[i] + QtdotB*Bcon[i]/fabs(W) )/(fabs(W) + fabs(Bsq));
+    for(i=1;i<4;i++) vconff[i] = (Qtconclean[i] + 0.0*QtdotB*Bcon[i]/fabs(W) )/(fabs(W) + fabs(Bsq));
     
   }
 
@@ -1795,7 +1795,7 @@ static int forcefree_inversion(int cleaned, struct of_geom *ptrgeom, FTYPE W, FT
       for(i=1;i<4;i++) vconff[i] = Qtconclean[i]/realBsq ;
     }
     else{
-      for(i=1;i<4;i++) vconff[i] = (Qtconclean[i] + QtdotB*Bcon[i]/fabs(W) )/(fabs(W) + fabs(realBsq));
+      for(i=1;i<4;i++) vconff[i] = (Qtconclean[i] + 0.0*QtdotB*Bcon[i]/fabs(W) )/(fabs(W) + fabs(realBsq));
     }
 
     // v_\alpha cleaned and w/ dissipation

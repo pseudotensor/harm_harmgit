@@ -1491,6 +1491,7 @@ int tryffdeinversion(int showmessages, int allowlocalfailurefixandnoreport, int 
     // get ffde inversion
     // NOTEMARK: Note use of EOMFFDE2 instead of EOMFFDE because FFDE used always from originally having density, so using non-cleaned version that uses initial W.
     // REVERT to just EOMFFDE since current EOMFFDE2 (or 2nd version in utoprim_jon.c) is worse behavior for \gamma and bsq.
+    // Well, as long as only include W and not Q.B, does better than including Q.B, but still worse than just EOMFFDE
     Utoprimgen_pick(showmessages, allowlocalfailurefixandnoreport, UTOPRIMJONNONRELCOMPAT, EOMFFDE, whichcap, EVOLVENOENTROPY, Ugeomfree, ptrgeom, &ffdepflag, prffde,pressure,newtonstats, lpflagrad);
 
     
