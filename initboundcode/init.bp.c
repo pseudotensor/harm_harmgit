@@ -957,6 +957,9 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
   FTYPE vpot;
   FTYPE setblandfordfield(FTYPE r, FTYPE th);
   FTYPE idxdxp[NDIM][NDIM];
+  int ii,jj,kk;
+  FTYPE XX1[NDIM],VV1[NDIM],XX2[NDIM],VV2[NDIM];
+  FTYPE rhoincell,uincell;
 
 #define FRACAPHICUT 0.05
       //#define FRACAPHICUT 0.1
@@ -988,18 +991,43 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
 
 
 
-
+  rhoincell = MACP0A1(prim,i,j,k,RHO); // to use instead of average in testing
+  uincell = MACP0A1(prim,i,j,k,UU); // to use instead of average in testing
 
   if(FIELDTYPE==TOROIDALFIELD){
-    
-    FTYPE ttrans = 1.81712*rin;
+    FTYPE trin,ttrans;
+
+    jj=0;
+    kk=0;
+    for(ii=0; ii<N1*ncpux1; ii++){
+      //Viter=ii*dx[1]+startx[1];
+      coord(ii,jj,kk,CORN3,XX1);
+      bl_coord(XX1, VV1);
+      printf("in loop for ttrans = %f \n",VV1[1]);
+      if(VV1[1]>1.81712*rin){
+	ttrans=VV1[1];
+	break; //ii=N1*ncpux1+1; // end loop
+      }
+    }
+
+    for(ii=0; ii<N1*ncpux1; ii++){
+      //Viter=ii*dx[1]+startx[1];
+      coord(ii,jj,kk,CORN3,XX2);
+      bl_coord(XX2, VV2);
+      printf("in loop for rin = %f \n",VV2[1]);
+      if(VV2[1]>=rin){
+	trin=VV2[1];
+	break; //ii=N1*ncpux1+1; // end loop
+      }
+    }
+
 
     if(l==2){// A_\theta (MCOORD)
       
       r=V[1];
       th=V[2];
 
-      FTYPE H,nz,S,cs,rho,u,z,switchttrans0,switchttrans2;
+      FTYPE H,nz,S,cs,rho,u,z,switchttrans0,switchttrans2,qtran,qrest,transconst;
       H = h_over_r*r ;
       nz = nz_func(r) ;
       z = r*cos(th) ;
@@ -1007,12 +1035,40 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
       cs = H*nz*sqrt(gam) ; // To understand this factor of gam, and how this equation is approximate, consult Eqn. 7.43 of Melia and definition of T~cs^2/gam
       rho = (S/sqrt(2.*M_PI*H*H)) * (pow(r/rin,3./2-.6))  * taper_func(r,rin, 3.0) ; //3 is best i think //* ( 1.0 - R*R/((pow(R,1.5) + a)*(pow(R,1.5) + a)) )  ;// taper_func(R,rin,-1.0) ;
       u = rho*cs*cs/(gam - 1.)/gam;
+      
+      switchttrans0 = 0.5+1.0/M_PI*atan((r-ttrans)*4./(ttrans-trin)); // switch in .nb file
+      switchttrans2 = 0.5-1.0/M_PI*atan((r-ttrans)*4./(ttrans-trin)); // switchi in .nb file
+      
+      if(r>trin){
+	if(u_av *29.54/ u - FRACAPHICUT >= 0.0 ) {
+	  transconst=pow(ttrans,1.2)-(1.2*pow(ttrans,0.2)/(ttrans*ttrans-trin*ttrans))*(ttrans*ttrans*ttrans/3.-ttrans*ttrans*trin/2.);
+	  qtran=((1.2*pow(ttrans,0.2)/(ttrans*ttrans-trin*ttrans))*(r*r*r/3.-r*r*trin/2.)) * sqrt(u_av *29.54/ u - FRACAPHICUT);
+	  qrest=(pow(r,1.2)-transconst) * sqrt( u_av *29.54/ u - FRACAPHICUT);
+	  q = switchttrans2*(qrest) + switchttrans0*(qtran); // weight by internal energy density
+	}
+	else
+	  q=0.0;
+      }
+      else{
+	q = 0.0;
+	  //q = pow(r,1.2);
+	  //q = q*(u_av / umax - FRACAPHICUT); // weight by internal energy density
+	
+	if(q<0.0) q=0.0;
+      }
+      
+      
       /*
-      switchttrans0 = 0.5+1.0/M_PI*atan((r-ttrans)*6./(ttrans-rin)); // switch in .nb file
-      switchttrans2 = 0.5-1.0/M_PI*atan((r-ttrans)*6./(ttrans-rin)); // switchi in .nb file
-      if(r>=rin){
-	if(u_av *29.54/ u - FRACAPHICUT >= 0.0 ) 
-	  q = switchttrans2*( pow(r,1.2)*sqrt(u_av *29.54/ u - FRACAPHICUT)    - (1.2*pow(ttrans,.2)*(rin-ttrans) + pow(ttrans,1.2)-1.2*pow(ttrans,.2))*sqrt( u_av *29.54/ u - FRACAPHICUT)) + switchttrans0*((1.2*pow(ttrans,.2)*(r-ttrans) + pow(ttrans,1.2)-1.2*pow(ttrans,.2))*sqrt(u_av *29.54/ u - FRACAPHICUT)        - (1.2*pow(ttrans,.2)*(rin-ttrans) + pow(ttrans,1.2)-1.2*pow(ttrans,.2))*sqrt( u_av *29.54/ u  - FRACAPHICUT)); // weight by internal energy density
+      if(r>ttrans){
+	q = pow(r,1.2);
+	if(uincell *29.54/ u - FRACAPHICUT >= 0.0 ) //&& exp(-z*z/(2.*H*H)) > FRACAPHICUT)
+	  q = q*sqrt(uincell *29.54/ u - FRACAPHICUT)       - (1.2*pow(ttrans,.2)*(rin-ttrans) + pow(ttrans,1.2)-1.2*pow(ttrans,.2))*sqrt( uincell *29.54/ u - FRACAPHICUT); // weight by internal energy density
+	else
+	  q=0.0;
+      }
+      else if(r>rin){
+	if(uincell *29.54/ u - FRACAPHICUT >= 0.0 )
+	  q = (1.2*pow(ttrans,.2)*(r-ttrans) + pow(ttrans,1.2)-1.2*pow(ttrans,.2))*sqrt(uincell *29.54/ u - FRACAPHICUT)        - (1.2*pow(ttrans,.2)*(rin-ttrans) + pow(ttrans,1.2)-1.2*pow(ttrans,.2))*sqrt( uincell *29.54/ u  - FRACAPHICUT);
 	else
 	  q=0.0;
       }
@@ -1024,28 +1080,6 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
 	if(q<0.0) q=0.0;
       }
       */
-      
-      if(r>ttrans){
-	q = pow(r,1.2);
-	if(u_av *29.54/ u - FRACAPHICUT >= 0.0 ) //&& exp(-z*z/(2.*H*H)) > FRACAPHICUT)
-	  q = q*sqrt(u_av *29.54/ u - FRACAPHICUT)       - (1.2*pow(ttrans,.2)*(rin-ttrans) + pow(ttrans,1.2)-1.2*pow(ttrans,.2))*sqrt( u_av *29.54/ u - FRACAPHICUT); // weight by internal energy density
-	else
-	  q=0.0;
-      }
-      else if(r>=rin){
-	if(u_av *29.54/ u - FRACAPHICUT >= 0.0 )
-	  q = (1.2*pow(ttrans,.2)*(r-ttrans) + pow(ttrans,1.2)-1.2*pow(ttrans,.2))*sqrt(u_av *29.54/ u - FRACAPHICUT)        - (1.2*pow(ttrans,.2)*(rin-ttrans) + pow(ttrans,1.2)-1.2*pow(ttrans,.2))*sqrt( u_av *29.54/ u  - FRACAPHICUT);
-	else
-	  q=0.0;
-      }
-      else{
-	q = 0.0;
-	  //q = pow(r,1.2);
-	  //q = q*(u_av / umax - FRACAPHICUT); // weight by internal energy density
-	
-	if(q<0.0) q=0.0;
-      }
-      
       vpot += q;
       
     }
