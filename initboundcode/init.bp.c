@@ -21,7 +21,7 @@
 #define MAXPASSPARMS 10
 
 //#define THETAROTMETRIC (0.5*0.7)
-#define USER_THETAROTMETRIC (0.05) // arctan(0.2) = 0.19739556
+#define USER_THETAROTMETRIC (0.0) // arctan(0.2) = 0.19739556
 #define USER_THETAROTPRIMITIVES (0.0) // probably want to choose 0, so initial conditions are as if no tilt
 
 #define NORMALTORUS 0 // note I use randfact=5.e-1 for 3D model with perturbations
@@ -233,7 +233,7 @@ int init_grid(void)
   // make changes to primary coordinate parameters R0, Rin, Rout, hslope
   R0 = -0.45;
   Rout = 40.0;
-  Rin=1.03;
+  Rin=1.4;
   if(totalsize[1]<32) Rout=50.0;
   else if(totalsize[1]<=64) Rout=1.E3;
   else Rout=1.E5;
