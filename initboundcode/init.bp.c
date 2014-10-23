@@ -997,26 +997,27 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
   if(FIELDTYPE==TOROIDALFIELD){
     FTYPE trin,ttrans;
 
-    jj=0;
-    kk=0;
+    jj=j;
+    kk=k;
     for(ii=0; ii<N1*ncpux1; ii++){
       //Viter=ii*dx[1]+startx[1];
-      coord(ii,jj,kk,CORN3,XX1);
+      coord(ii-startpos[1],jj,kk,CORN2,XX1);
       bl_coord(XX1, VV1);
-      printf("in loop for ttrans = %f \n",VV1[1]);
       if(VV1[1]>1.81712*rin){
 	ttrans=VV1[1];
+	printf("in loop for ttrans = %f  %f\n",VV1[1],ttrans);
 	break; //ii=N1*ncpux1+1; // end loop
       }
     }
 
     for(ii=0; ii<N1*ncpux1; ii++){
       //Viter=ii*dx[1]+startx[1];
-      coord(ii,jj,kk,CORN3,XX2);
+      coord(ii-startpos[1],jj,kk,CORN2,XX2);
       bl_coord(XX2, VV2);
-      printf("in loop for rin = %f \n",VV2[1]);
+      //printf("in loop for rin = %f %f\n",VV2[1]);
       if(VV2[1]>=rin){
 	trin=VV2[1];
+	printf("in loop for rin = %f  %f\n",VV2[1],trin);
 	break; //ii=N1*ncpux1+1; // end loop
       }
     }
@@ -1027,7 +1028,10 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
       r=V[1];
       th=V[2];
 
-      FTYPE H,nz,S,cs,rho,u,z,switchttrans0,switchttrans2,qtran,qrest,transconst;
+      //ttrans=1.817*rin;
+      //trin=rin;
+
+      FTYPE H,nz,S,cs,rho,u,z,switchttrans0,switchttrans2,qtran,qrest,transconst,zeroout;
       H = h_over_r*r ;
       nz = nz_func(r) ;
       z = r*cos(th) ;
@@ -1036,15 +1040,16 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
       rho = (S/sqrt(2.*M_PI*H*H)) * (pow(r/rin,3./2-.6))  * taper_func(r,rin, 3.0) ; //3 is best i think //* ( 1.0 - R*R/((pow(R,1.5) + a)*(pow(R,1.5) + a)) )  ;// taper_func(R,rin,-1.0) ;
       u = rho*cs*cs/(gam - 1.)/gam;
       
-      switchttrans0 = 0.5+1.0/M_PI*atan((r-ttrans)*4./(ttrans-trin)); // switch in .nb file
-      switchttrans2 = 0.5-1.0/M_PI*atan((r-ttrans)*4./(ttrans-trin)); // switchi in .nb file
+      switchttrans0 = (1.-pow(trin/r,2.5)) ; //0.5+1.0/M_PI*atan((r-ttrans)*4./(ttrans-trin)); // switch in .nb file
+      switchttrans2 = pow(trin/r,2.5) ; //0.5-1.0/M_PI*atan((r-ttrans)*4./(ttrans-trin)); // switchi in .nb file
       
       if(r>trin){
 	if(u_av *29.54/ u - FRACAPHICUT >= 0.0 ) {
+	  zeroout= (1.2*pow(ttrans,0.2)/(ttrans*ttrans-trin*ttrans))*pow(trin,3.0)/6.0; // make sure qtran itself goes to zero at trin.
 	  transconst=pow(ttrans,1.2)-(1.2*pow(ttrans,0.2)/(ttrans*ttrans-trin*ttrans))*(ttrans*ttrans*ttrans/3.-ttrans*ttrans*trin/2.);
-	  qtran=((1.2*pow(ttrans,0.2)/(ttrans*ttrans-trin*ttrans))*(r*r*r/3.-r*r*trin/2.)) * sqrt(u_av *29.54/ u - FRACAPHICUT);
-	  qrest=(pow(r,1.2)-transconst) * sqrt( u_av *29.54/ u - FRACAPHICUT);
-	  q = switchttrans2*(qrest) + switchttrans0*(qtran); // weight by internal energy density
+	  qtran=((1.2*pow(ttrans,0.2)/(ttrans*ttrans-trin*ttrans))*(r*r*r/3.-r*r*trin/2.)+zeroout) * sqrt(u_av *29.54/ u - FRACAPHICUT);
+	  qrest=(pow(r,1.2)-transconst+zeroout) * sqrt( u_av *29.54/ u - FRACAPHICUT);
+	  q = switchttrans0*(qrest) + switchttrans2*(qtran); // weight by internal energy density
 	}
 	else
 	  q=0.0;
