@@ -87,6 +87,8 @@
 #define K_BOLTZ (1.3806488e-16) // cgs in erg/K
 #define M_PROTON (1.67262158e-24) // proton mass in cgs in grams
 #define MB (1.66054E-24) // = 1/N_A = 1/(Avogadro's number) = baryon mass in cgs in grams (as often used in general EOSs)
+#define MPOME (1836.15)
+#define MELE (MP/MPOME) // electron mass in cgs in grams
 //#define SIGMA_RAD (5.67e-5) // cgs in erg/(cm^2 s K^4)
 
 

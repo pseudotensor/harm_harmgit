@@ -9133,9 +9133,10 @@ static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYP
   //2) Relativistic corrections:  http://adsabs.harvard.edu/cgi-bin/bib_query?arXiv:1201.5606 and http://adsabs.harvard.edu/abs/2002nmgm.meet.2329S .  It looks like nothing more difficult as far as actually using the expressions in place of non-relativistic version.
   //One semi-relevant application: http://www.aanda.org/articles/aa/full_html/2009/45/aa12061-09/aa12061-09.html
   FTYPE Tradff = pow(fabs(Ruu)/ARAD_CODE,0.25); // ASSUMPTION: PLANCK
-  FTYPE Tele=*Tgas; // ASSUMPTION: Tion=Tele
-  FTYPE relcorr=(1.0 + 3.683*Tele+4.0*Tele*Tele)/(1.0 + Tele); // Sadowski et al. (2014) Eq 26 and 27.
-  FTYPE preterm3 = -4.0*kappaes*(Tele - Tradff)*Ruu*relcorr;
+  FTYPE Telepermecsq=*Tgas*MPOME; // ASSUMPTION: Tion=Tele
+  FTYPE relcorr=(1.0 + 3.683*Telepermecsq+4.0*Telepermecsq*Telepermecsq)/(1.0 + Telepermecsq); // Sadowski et al. (2014) Eq 26 and 27.
+  FTYPE neleobar=1.0/MUMEAN; // to have neleobar*kappaes=kappaesperele*mb*rho/(MUMEAN*mb)
+  FTYPE preterm3 = -4.0*(neleobar*kappaes)*(Telepermecsq - Tradff*MPOME)*Ruu*relcorr;
   //  f[pl] = ((uu[pl] - uu0[pl]) + (sign[pl] * localdt * Gdpl[pl]))*extrafactor[pl]; -> T^t_t[new] = T^t_t[old] - Gdpl[UU] -> dT^t_t = -Gdpl[UU] = +Gd[TT]
   // Ruu>0, so if Tgas>Trad, then preterm3<0.  Then egas should drop.
   // We have dT^t_t = G_t = Gd_t = -Gdpl_t = preterm3 u_t > 0, so G_t>0 so T^t_t rises so -T^t_t drops so egas drops.
