@@ -35,10 +35,12 @@ FTYPE u_rho0_p_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE p)
   return(p/GAMMAM1) ;
 }
 
+// anywhere T or entropy are involved, really want number density, not mass density, so involves rho0/MUMEAN
+
 /// u(rho0, T) (used for initial conditions)
 FTYPE u_rho0_T_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE T)
 {
-  return((rho0*T)/GAMMAM1) ;
+  return(((rho0/MUMEAN)*T)/GAMMAM1) ;
 }
 
 /// dp(rho0, u)/du
@@ -102,7 +104,7 @@ FTYPE compute_entropy_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
   }
 
   // normal:
-  entropy=rho0*log(pow(pressure,indexn)/pow(rho0,indexn+1.0));
+  entropy=(rho0/MUMEAN)*log(pow(pressure,indexn)/pow(rho0/MUMEAN,indexn+1.0));
 
   // if p>>1 and rho0~0, then argument to log() could be out of range (i.e. inf).
   //  if(!isfinite(entropy)) entropy=0.0;
@@ -128,7 +130,7 @@ FTYPE compute_u_from_entropy_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE entropy
   if(rho0<SMALL) rho0=SMALL;
   
   // entropy version of ie
-  u=pow(pow(rho0,indexn+1.0)*exp(entropy/rho0),1.0/indexn)/GAMMAM1;
+  u=pow(pow(rho0/MUMEAN,indexn+1.0)*exp(entropy/(rho0/MUMEAN)),1.0/indexn)/GAMMAM1;
 
 
   return(u);
@@ -151,7 +153,7 @@ static FTYPE compute_inside_entropy_wmrho0_idealgas(FTYPE *EOSextra, FTYPE rho0,
   //  if(rho0<SMALL) rho0=SMALL;
   //  if(pressure<SMALL) pressure=SMALL;
   
-  insideentropy=pow(pressure,indexn)/pow(rho0,indexn+1.0);
+  insideentropy=pow(pressure,indexn)/pow(rho0/MUMEAN,indexn+1.0);
 
   return(insideentropy);
 }
@@ -172,7 +174,7 @@ FTYPE compute_dSdrho_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
   // ideal gas
   indexn=1.0/GAMMAM1;
 
-  dSdrho=entropy/rho0-(indexn+1.0);
+  dSdrho=(entropy/(rho0/MUMEAN)-(indexn+1.0))/MUMEAN;
 
   return(dSdrho);
 
@@ -189,7 +191,7 @@ FTYPE compute_dSdu_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
   // ideal gas
   indexn=1.0/GAMMAM1;
 
-  dSdu=indexn*rho0/u;
+  dSdu=indexn*(rho0/MUMEAN)/u;
 
   return(dSdu);
 
@@ -204,7 +206,7 @@ FTYPE compute_entropy_wmrho0_idealgas_unused(FTYPE *EOSextra, FTYPE rho0, FTYPE 
 
   insideentropy=compute_inside_entropy_wmrho0_idealgas(EOSextra, rho0, wmrho0);
   
-  entropy=rho0*log(insideentropy);
+  entropy=(rho0/MUMEAN)*log(insideentropy);
 
   //  if(!isfinite(entropy)) entropy=0.0;
 
@@ -242,7 +244,7 @@ FTYPE compute_dSdrho_wmrho0_idealgas_unused(FTYPE *EOSextra, FTYPE rho0, FTYPE w
 
   insideentropy=compute_inside_entropy_wmrho0_idealgas(EOSextra, rho0, wmrho0);
   
-  dSdrho=GAMMA/(1.0-GAMMA) + log(insideentropy);
+  dSdrho=(GAMMA/(1.0-GAMMA) + log(insideentropy))/MUMEAN;
 
   //  if(!isfinite(dSdrho)) dSdrho=0.0;
 
@@ -260,7 +262,7 @@ FTYPE compute_dspecificSdrho_wmrho0_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE 
   // Don't limit rho0 and pressure since this is used for iterative scheme that requires to know if beyond valid domain or not.  Nan will be terminated during inversion.
   //  if(rho0<SMALL) rho0=SMALL;
   
-  dSdrho=GAMMA/((1.0-GAMMA)*rho0);
+  dSdrho=GAMMA/((1.0-GAMMA)*(rho0*MUMEAN)); // yes, really *MUMEAN because we define specific as S/rho and not S/(mu*rho)
 
   // Note that it makes no sense to speak of entropy changes with isothermal (GAMMA=1.0) gas since in the limit GAMMA->1, dSdrho->-\infty
 
@@ -275,7 +277,7 @@ FTYPE compute_dSdwmrho0_wmrho0_idealgas_unused(FTYPE *EOSextra, FTYPE rho0, FTYP
 {
   FTYPE dSdchi;
 
-  dSdchi = rho0/(GAMMAM1*wmrho0);
+  dSdchi = (rho0/MUMEAN)/(GAMMAM1*wmrho0);
 
   // Again, GAMMA->1 means dSdchi->\infty unless \chi->0 or rho0->0
 
@@ -370,7 +372,7 @@ FTYPE compute_temp_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE u)
 {
   FTYPE temp;
 
-  temp = GAMMAM1*u/(SMALL+fabs(rho0));
+  temp = GAMMAM1*u/(SMALL+fabs(rho0/MUMEAN));
   // can't let temp go negative because have T^2 or T^4 terms in lambda or other functions
   if(temp<SMALL) temp=SMALL;
 

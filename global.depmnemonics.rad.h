@@ -63,12 +63,26 @@
 //
 //////////////
 
-#define XFACT (1.0) // hydrogen mass fraction
-#define ZATOM (1.0) // Atomic number
-#define AATOM (1.0) // Atomic weight
-#define MUE (1.0) // n_b = rho/m_b = n_e/Y_e = n_e \mu_e
-#define MUI (1.0) // n_I = rho/m_b = n_i/Y_i = n_i \mu_i
-// MUE,MUI=1,1 for pure hydrogen
+// Sun-like stars: X=0.75, Y=0.23, Z=0.02, so may be applicable to X-ray binaries
+// Solar: X=0.70 Y=0.28 Z=0.02 by mass, neutral MUMEAN=1.3, ionized MUMEAN=0.62
+// Big-Bang: X=0.77 Y=0.23 Z=0.00
+// post-Big-Bang: X=0.6 Y=0.4 Z=0, so applicable to GRBs from Pop3 stars.
+
+#define XFACT (0.7) // Hydrogen mass fraction
+#define YFACT (0.28) // Helium mass fraction
+#define AVG10AJ (1.0/15.5) // for solar composition.  Not used unless MUMEAN is chosen to be for neutrals.
+
+
+#define ZFACT (1.0-(XFACT+YFACT)) // Rest.  Called "metals".
+// http://www.astro.wisc.edu/~townsend/resource/teaching/astro-310-F08/21-eos.pdf
+#define MUMEANNEUTRAL (1.0/(XFACT + 0.25*YFACT + AVG1OAJ*ZFACT))
+#define MUMEANIONIZED (1.0/(2.0*XFACT + 0.75*YFACT + 0.5*ZFACT))
+#define MUMEAN (MUMEANIONIZED) // assume fully ionized
+
+/// while avoids singular behavior, can make inversion unable to reach solution and get locked in cycles due to bad Jacobian, etc.
+//#define TEMPMINKELVIN (1.0E+2) // Kelvin // Problem with consistency in error function and entropy estimate for URAD method.
+#define TEMPMINKELVIN (1.0E-10) // Kelvin
+#define TEMPMIN (TEMPMINKELVIN/TEMPBAR) // Code units
 
 
 ////////////////////
@@ -77,23 +91,22 @@
 //
 /////////////////////
 
-/// while avoids singular behavior, can make inversion unable to reach solution and get locked in cycles due to bad Jacobian, etc.
-//#define TEMPMINKELVIN (1.0E+2) // Kelvin // Problem with consistency in error function and entropy estimate for URAD method.
-#define TEMPMINKELVIN (1.0E-10) // Kelvin
-#define TEMPMIN (TEMPMINKELVIN/TEMPBAR) // Code units
-
 /// whether to do comptonization (upscatter or downscatter)
 #define DOCOMPTON 1
 
+
 #define OPACITYBAR (LBAR*LBAR/MBAR) // cgs in cm^2/g
-/// non-relativistic ES:
+
+/// SCATTERING
 #define KAPPA_ES_FERMICORR(rhocode,Tcode) (1.0/((1.0+2.7E11*(rhocode*RHOBAR)/pow(Tcode*TEMPBAR,2.0))*(1.0+pow(Tcode*TEMPBAR/4.5E8,0.86)))) // Buchler and Yueh 1976
 #define KAPPA_ES_CODE(rhocode,Tcode) (0.2*(1.0+XFACT)*KAPPA_ES_FERMICORR(rhocode,Tcode)/OPACITYBAR)
-#define KAPPA_FF_CODE(rhocode,Tcode) (1.0E23*ZATOM*ZATOM/(MUE*MUI)*((rhocode)*RHOBAR)*pow((Tcode)*TEMPBAR,-7.0/2.0)*(1.0+4.4E-10*(Tcode*TEMPBAR))/OPACITYBAR)  // ASSUMPTION: Thermal ele and no pairs.  See Rybicki & Lightman Eq~5.25 and McKinney & Uzdensky (2012)
-#define KAPPA_BF_CODE(rhocode,Tcode) (1.0E25*(ZATOM+0.001)*(1.0+XFACT)*((rhocode)*RHOBAR)*pow((Tcode)*TEMPBAR,-7.0/2.0)/OPACITYBAR) // ASSUMPTION: heavy elements by mass of 1E-3 or more as in Pop1,2 stars.
-#define KAPPA_HN_CODE(rhocode,Tcode) (1.1E-25*pow(ZATOM,0.5)*pow(rhocode*RHOBAR,0.5)*pow(Tcode*TEMPBAR,7.7)/OPACITYBAR)
-#define KAPPA_MOL_CODE(rhocode,Tcode) (0.1*ZATOM/OPACITYBAR)
-#define KAPPA_GENFF_CODE(rhocode,Tcode) (1.0/(1.0/(KAPPA_MOL_CODE(rhocode,Tcode)+KAPPA_HN_CODE(rhocode,Tcode)) + 1.0/KAPPA_FF_CODE(rhocode,Tcode))) // for 1.3E3K \le T \le 1E9K or higher.  Numerically better to have kappa bottom out at low T so no diverent opacity as T->0
+
+/// EMISSION/ABSORBPTION
+#define KAPPA_FF_CODE(rhocode,Tcode) (4.0E22*(1.0+XFACT)*(1.0-ZFACT)*((rhocode)*RHOBAR)*pow((Tcode)*TEMPBAR,-7.0/2.0)*(1.0+4.4E-10*(Tcode*TEMPBAR))/OPACITYBAR)  // ASSUMPTION: Thermal ele and no pairs.  See Rybicki & Lightman Eq~5.25 and McKinney & Uzdensky (2012)
+#define KAPPA_BF_CODE(rhocode,Tcode) (3.0E25*(ZFACT)*(1.0+XFACT+0.75*YFACT)*((rhocode)*RHOBAR)*pow((Tcode)*TEMPBAR,-7.0/2.0)/OPACITYBAR) // ASSUMPTION: Number of electrons similar to for solar abundances for 1+X+(3/4)Y term.
+#define KAPPA_HN_CODE(rhocode,Tcode) (1.1E-25*pow(ZFACT,0.5)*pow(rhocode*RHOBAR,0.5)*pow(Tcode*TEMPBAR,7.7)/OPACITYBAR)
+#define KAPPA_MOL_CODE(rhocode,Tcode) (0.1*ZFACT/OPACITYBAR)
+#define KAPPA_GENFF_CODE(rhocode,Tcode) (1.0/(1.0/(KAPPA_MOL_CODE(rhocode,Tcode)+KAPPA_HN_CODE(rhocode,Tcode)) + 1.0/(KAPPA_BF_CODE(rhocode,Tcode)+KAPPA_FF_CODE(rhocode,Tcode)))) // for 1.3E3K \le T \le 1E9K or higher.  Numerically better to have kappa bottom out at low T so no diverent opacity as T->0
 
 
 //////////////////////////////////
