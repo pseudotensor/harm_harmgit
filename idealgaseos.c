@@ -224,7 +224,7 @@ FTYPE compute_specificentropy_wmrho0_idealgas(FTYPE *EOSextra, FTYPE rho0, FTYPE
 
   insideentropy=compute_inside_entropy_wmrho0_idealgas(EOSextra, rho0, wmrho0);
   
-  specificentropy=log(insideentropy);
+  specificentropy=log(insideentropy)/MUMEAN; // because Sspecific = S/rho alone by choice/definition.
 
   //  if(!isfinite(specificentropy)) specificentropy=0.0;
 
