@@ -9131,13 +9131,14 @@ static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYP
   //1) Conservative form of Kompaneet's equation and dealing with the diffusion term implicitly: http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.13.798 and related: http://www.osti.gov/scitech/biblio/891567 .  We should ensure the 4-force is consistent (numerically and analytically) with what's used in this equation for n.
   //2) Relativistic corrections:  http://adsabs.harvard.edu/cgi-bin/bib_query?arXiv:1201.5606 and http://adsabs.harvard.edu/abs/2002nmgm.meet.2329S .  It looks like nothing more difficult as far as actually using the expressions in place of non-relativistic version.
   //One semi-relevant application: http://www.aanda.org/articles/aa/full_html/2009/45/aa12061-09/aa12061-09.html
-  FTYPE Tradff = pow(fabs(Ruu)/ARAD_CODE,0.25);
-  FTYPE preterm3 = -4.0*kappaes*((*Tgas) - Tradff)*Ruu;
+  FTYPE Tradff = pow(fabs(Ruu)/ARAD_CODE,0.25); // ASSUMPTION: PLANCK
+  FTYPE Tele=*Tgas; // ASSUMPTION: Tion=Tele
+  FTYPE relcorr=(1.0 + 3.683*Tele+4.0*Tele*Tele)/(1.0 + Tele); // Sadowski et al. (2014) Eq 26 and 27.
+  FTYPE preterm3 = -4.0*kappaes*(Tele - Tradff)*Ruu*relcorr;
   //  f[pl] = ((uu[pl] - uu0[pl]) + (sign[pl] * localdt * Gdpl[pl]))*extrafactor[pl]; -> T^t_t[new] = T^t_t[old] - Gdpl[UU] -> dT^t_t = -Gdpl[UU] = +Gd[TT]
   // Ruu>0, so if Tgas>Trad, then preterm3<0.  Then egas should drop.
   // We have dT^t_t = G_t = Gd_t = -Gdpl_t = preterm3 u_t > 0, so G_t>0 so T^t_t rises so -T^t_t drops so egas drops.
 
-  // 
 #endif
 
 
@@ -9160,7 +9161,7 @@ static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYP
     term1 = -(kappa*Ru + lambda*ucon[i]);
     term2 = -kappaes*Ruuu;
 #if(DOCOMPTON)
-    term3 = preterm3*ucon[i];
+    term3 = preterm3*ucon[i]; // ASSUMPTION: in fluid frame only energy exchange, no momentum exchange.
 #else
     term3 = 0.0;
 #endif

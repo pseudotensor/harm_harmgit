@@ -87,11 +87,13 @@
 
 #define OPACITYBAR (LBAR*LBAR/MBAR) // cgs in cm^2/g
 /// non-relativistic ES:
-#define KAPPA_ES_CODE(rhocode,Tcode) (0.2*(1.0+XFACT)/OPACITYBAR)
-#define KAPPA_FF_CODE(rhocode,Tcode) (1.0E23*ZATOM*ZATOM/(MUE*MUI)*((rhocode)*RHOBAR)*pow((Tcode)*TEMPBAR,-7.0/2.0)/OPACITYBAR)
-#define KAPPA_BF_CODE(rhocode,Tcode) (1.0E25*ZATOM*(1.0+XFACT)*((rhocode)*RHOBAR)*pow((Tcode)*TEMPBAR,-7.0/2.0)/OPACITYBAR)
-
-
+#define KAPPA_ES_FERMICORR(rhocode,Tcode) (1.0/((1.0+2.7E11*(rhocode*RHOBAR)/pow(Tcode*TEMPBAR,2.0))*(1.0+pow(Tcode*TEMPBAR/4.5E8,0.86)))) // Buchler and Yueh 1976
+#define KAPPA_ES_CODE(rhocode,Tcode) (0.2*(1.0+XFACT)*KAPPA_ES_FERMICORR(rhocode,Tcode)/OPACITYBAR)
+#define KAPPA_FF_CODE(rhocode,Tcode) (1.0E23*ZATOM*ZATOM/(MUE*MUI)*((rhocode)*RHOBAR)*pow((Tcode)*TEMPBAR,-7.0/2.0)*(1.0+4.4E-10*(Tcode*TEMPBAR))/OPACITYBAR)  // ASSUMPTION: Thermal ele and no pairs.  See Rybicki & Lightman Eq~5.25 and McKinney & Uzdensky (2012)
+#define KAPPA_BF_CODE(rhocode,Tcode) (1.0E25*(ZATOM+0.001)*(1.0+XFACT)*((rhocode)*RHOBAR)*pow((Tcode)*TEMPBAR,-7.0/2.0)/OPACITYBAR) // ASSUMPTION: heavy elements by mass of 1E-3 or more as in Pop1,2 stars.
+#define KAPPA_HN_CODE(rhocode,Tcode) (1.1E-25*pow(ZATOM,0.5)*pow(rhocode*RHOBAR,0.5)*pow(Tcode*TEMPBAR,7.7)/OPACITYBAR)
+#define KAPPA_MOL_CODE(rhocode,Tcode) (0.1*ZATOM/OPACITYBAR)
+#define KAPPA_GENFF_CODE(rhocode,Tcode) (1.0/(1.0/(KAPPA_MOL_CODE(rhocode,Tcode)+KAPPA_HN_CODE(rhocode,Tcode)) + 1.0/KAPPA_FF_CODE(rhocode,Tcode))) // for 1.3E3K \le T \le 1E9K or higher.  Numerically better to have kappa bottom out at low T so no diverent opacity as T->0
 
 
 //////////////////////////////////
