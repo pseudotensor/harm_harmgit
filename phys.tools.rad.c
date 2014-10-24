@@ -2069,6 +2069,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
   // whether doing energy at all
   int eomtypecond[NUMEOMTYPES];
   eomtypecond[EOMFFDE]=(*eomtype==EOMFFDE || *eomtype==EOMDEFAULT && EOMTYPE==EOMFFDE);
+  eomtypecond[EOMFFDE2]=(*eomtype==EOMFFDE2 || *eomtype==EOMDEFAULT && EOMTYPE==EOMFFDE2);
   eomtypecond[EOMCOLDGRMHD]=(*eomtype==EOMCOLDGRMHD || *eomtype==EOMDEFAULT && EOMTYPE==EOMCOLDGRMHD);
   eomtypecond[EOMENTROPYGRMHD]=(*eomtype==EOMENTROPYGRMHD || *eomtype==EOMDEFAULT && EOMTYPE==EOMENTROPYGRMHD);
   eomtypecond[EOMGRMHD]=(*eomtype==EOMGRMHD || *eomtype==EOMDEFAULT && EOMTYPE==EOMGRMHD);
