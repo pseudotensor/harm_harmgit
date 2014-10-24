@@ -291,7 +291,7 @@ FTYPE compute_dspecificSdwmrho0_wmrho0_idealgas(FTYPE *EOSextra, FTYPE rho0, FTY
 {
   FTYPE dSdchi;
 
-  dSdchi = 1.0/(GAMMAM1*wmrho0);
+  dSdchi = 1.0/(GAMMAM1*wmrho0)/MUMEAN;
 
   // Again, GAMMA->1 means dSdchi->\infty unless \chi->0 or rho0->0
 
