@@ -399,7 +399,6 @@ int fluxcalc_fluxctstag_emf_1d(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], in
   int idel1,jdel1,kdel1;
   int idel2,jdel2,kdel2;
   int Nvec[NDIM];
-  int fluxmethodlocal=fluxmethod;
 
 
 
@@ -454,19 +453,19 @@ int fluxcalc_fluxctstag_emf_1d(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], in
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
-
-  FTYPE cmaxfactorodir1=1.0;
-  FTYPE cmaxfactorodir2=1.0;
-  FTYPE cminfactorodir1=1.0;
-  FTYPE cminfactorodir2=1.0;
+      int fluxmethodlocal=fluxmethod;
+      FTYPE cmaxfactorodir1=1.0;
+      FTYPE cmaxfactorodir2=1.0;
+      FTYPE cminfactorodir1=1.0;
+      FTYPE cminfactorodir2=1.0;
 #if(OUTERRADIALSUPERFAST)
-  // force effective superfast condition on outer radial boundaries
-  if(ISBLACKHOLEMCOORD(MCOORD)){
-    if(dir==3 && odir1==1 && startpos[1]+i==totalsize[1]){ fluxmethodlocal=HLLFLUX; cminfactorodir1=0.0; }
-    if(dir==3 && odir2==1 && startpos[1]+i==totalsize[1]){ fluxmethodlocal=HLLFLUX; cminfactorodir2=0.0; }
-    if(dir==3 && odir1==1 && startpos[1]+i==0){ fluxmethodlocal=HLLFLUX; cmaxfactorodir1=0.0; }
-    if(dir==3 && odir2==1 && startpos[1]+i==0){ fluxmethodlocal=HLLFLUX; cmaxfactorodir2=0.0; }
-  }
+      // force effective superfast condition on outer radial boundaries
+      if(ISBLACKHOLEMCOORD(MCOORD)){
+        if(dir==3 && odir1==1 && startpos[1]+i==totalsize[1]){ fluxmethodlocal=HLLFLUX; cminfactorodir1=0.0; }
+        if(dir==3 && odir2==1 && startpos[1]+i==totalsize[1]){ fluxmethodlocal=HLLFLUX; cminfactorodir2=0.0; }
+        if(dir==3 && odir1==1 && startpos[1]+i==0){ fluxmethodlocal=HLLFLUX; cmaxfactorodir1=0.0; }
+        if(dir==3 && odir2==1 && startpos[1]+i==0){ fluxmethodlocal=HLLFLUX; cmaxfactorodir2=0.0; }
+      }
 #endif
 
       // pvcorninterp and pbcorninterp are defined to be used like below initializaiton in set_arrays.c

@@ -393,7 +393,7 @@
 #define FLUXDUMP 0
 
 #undef OUTERRADIALSUPERFAST
-#define OUTERRADIALSUPERFAST 1
+#define OUTERRADIALSUPERFAST 0 // can be better, but can also be much worse.
 
 
 struct Ccoordparams {
