@@ -448,16 +448,22 @@ int fluxcalc_fluxctstag_emf_1d(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], in
     FTYPE topwave[COMPDIM-1],bottomwave[COMPDIM-1];
     OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
     
+    int fluxmethodlocal;
+    FTYPE cmaxfactorodir1;
+    FTYPE cmaxfactorodir2;
+    FTYPE cminfactorodir1;
+    FTYPE cminfactorodir2;
 
 #pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
-      int fluxmethodlocal=fluxmethod;
-      FTYPE cmaxfactorodir1=1.0;
-      FTYPE cmaxfactorodir2=1.0;
-      FTYPE cminfactorodir1=1.0;
-      FTYPE cminfactorodir2=1.0;
+      // defaults
+      fluxmethodlocal=fluxmethod;
+      cmaxfactorodir1=1.0;
+      cmaxfactorodir2=1.0;
+      cminfactorodir1=1.0;
+      cminfactorodir2=1.0;
 #if(OUTERRADIALSUPERFAST)
       // force effective superfast condition on outer radial boundaries
       if(ISBLACKHOLEMCOORD(MCOORD)){

@@ -272,8 +272,9 @@ int flux_compute(int i, int j, int k, int dir, struct of_geom *geom, FTYPE *cmin
   FTYPE cmin_l[NPR], cmax_l[NPR], cmin_r[NPR], cmax_r[NPR], cmax[NPR], cmin[NPR];
   FTYPE ctop[NPR];
   FTYPE dPoP,f_s;
-  int fluxmethodlocal=fluxmethod;
 
+  // defaults
+  int fluxmethodlocal=fluxmethod;
   FTYPE cmaxfactor=1.0;
   FTYPE cminfactor=1.0;
 #if(OUTERRADIALSUPERFAST)
