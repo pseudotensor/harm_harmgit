@@ -538,6 +538,8 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
 
 static int calc_tautot_chieff(FTYPE *pp, FTYPE chieff, struct of_geom *ptrgeom, FTYPE *tautot, FTYPE *tautotmax);
 
+static FTYPE calc_approx_ratchangeRtt(struct of_state *q, FTYPE chieff, FTYPE realdt);
+
 
 static int get_implicit_iJ(int allowbaseitermethodswitch, int failreturnallowableuse, int showmessages, int showmessagesheavy, int allowlocalfailurefixandnoreport, int *eomtypelocal, int whichcap, int itermode, int *baseitermethod, FTYPE fracenergy, FTYPE dissmeasure, FTYPE impepsjac, FTYPE trueimptryconv, FTYPE trueimptryconvabs, FTYPE trueimpallowconvabs, int trueimpmaxiter, int iter, FTYPE errorabs, FTYPE errorallabs, int whicherror, int dimtypef, FTYPE *dimfactU, FTYPE *Uiin, FTYPE *uu, FTYPE *uup, FTYPE *uu0, FTYPE *piin, FTYPE *pp, FTYPE *ppp, FTYPE fracdtG, FTYPE realdt, struct of_geom *ptrgeom, struct of_state *q, FTYPE *f1, FTYPE *f1norm, FTYPE (*iJ)[NPR], int *nummhdinvsreturn);
 
@@ -1858,8 +1860,7 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
   if(1){
     if(whichcall==FIMPLICITCALLTYPEF1){//FIMPLICITCALLTYPEJAC)
 
-      FTYPE ucon0=q->ucon[TT]; // what enters G for dR^t_t/R^t_t from time part
-      FTYPE ratchangeRtt=SMALL+fabs(chieff * ucon0 * ucon0 * realdt * 1.0); // 1.0 = c (2nd term with chi instead of kappaes to be sever and account for B-based term)
+      FTYPE ratchangeRtt=calc_approx_ratchangeRtt(q, chieff, realdt);
 
       //      if( (iter>ITERCHECKEXPLICITSAFE || iter==1 && tautotmax<NUMEPSILON ) && failreturn<=UTOPRIMGENWRAPPERRETURNFAILRAD){
       if( (iter>ITERCHECKEXPLICITSAFE || iter==1 && tautotmax<NUMEPSILON ) ){
@@ -8079,12 +8080,9 @@ static void get_dtsub(int method, FTYPE *pr, struct of_state *q, FTYPE *Ui, FTYP
       idtsub0=taumax/realdt;
     }
     else{
-      // New Jon method (problem is this only makes sense in perfectly LTE.  If T gets high quickly, then G gets high before the density reacts.)
-      FTYPE ucon0=q->ucon[TT]; // what enters G for dR^t_t/R^t_t from time part
-      //      FTYPE ratchangeRtt=chi * ucon0 * realdt * 1.0; // 1.0 = c (1st term)
-      FTYPE ratchangeRtt=SMALL+fabs(chi * ucon0 * ucon0 * realdt * 1.0); // 1.0 = c (2nd term with chi instead of kappaes to be sever and account for B-based term)
+      FTYPE ratchangeRtt=calc_approx_ratchangeRtt(q, chi, realdt);
+
       idtsub0 = ratchangeRtt/realdt; // if ratchange=1, then in principle right at edge of big change.
-      // this is like having a "source speed" of v_s\sim \tau \gamma^2 c and limiting the timestep so the source wave only reaches across a cell dxortho in time dt.
 
       //      dualfprintf(fail_file,"ucon0=%g chi=%g ratchangeRtt=%g idtsub=%g\n",ucon0,chi,ratchangeRtt,idtsub0);
 
@@ -9146,22 +9144,28 @@ static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYP
 
   //////////////
   // LOOP over i
-  FTYPE Ru,Ruuu,term1,term2,term3;
+  FTYPE Ru,Ruuu,Ruuuabs,term1a,term1b,term2,term2abs,term3;
   DLOOPA(i){
     Ru=0.; DLOOPA(j) Ru+=Rij[i][j]*ucon[j];
 #if(1)
     Ruuu=(Ru + Ruu*ucon[i]);
+    Ruuuabs=fabs(Ru) + fabs(Ruu*ucon[i]);
 #else
     if(i!=TT) Ruuu=(Ru + Ruu*ucon[i]);
     else{
       Rus=0.; DLOOPA(j) if(j!=TT) Rus+=Rij[i][j]*ucon[j];
       Ruuu=Ruuss + Rus + Rut;
     }
+    Ruuuabs=fabs(Ru) + fabs(Ruu*ucon[i]));
 #endif
 
     // group by independent terms
-    term1 = -(kappa*Ru + lambda*ucon[i]);
+    term1a = -(kappa*Ru);
+    term1b = -(lambda*ucon[i]);
+  
     term2 = -kappaes*Ruuu;
+    term2abs = fabs(kappaes*Ruuuabs);
+
 #if(DOCOMPTON)
     term3 = preterm3*ucon[i]; // ASSUMPTION: in fluid frame only energy exchange, no momentum exchange.
 #else
@@ -9170,15 +9174,15 @@ static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYP
 
     // actual source term
     //    Gu[i]=-chi*Ru - (kappaes*Ruu + lambda)*ucon[i] + term3;
-    Gu[i] = term1 + term2 + term3;
+    Gu[i] = term1a + term1b + term2 + term3;
     
     // absolute magnitude of source term that can be used for estimating importance of 4-force relative to existing conserved quantities to get dtsub.  But don't split kappa terms because if those cancel then physically no contribution.
-    Gabs[i] = fabs(term1) + fabs(term2) + fabs(term3);
+    Gabs[i] = fabs(term1a) + fabs(term1b) + fabs(term2abs) + fabs(term3);
 
 #if(0)
     // DEBUG:
     if(ptrgeom->i==3 && ptrgeom->j==26){
-      dualfprintf(fail_file,"i=%d term1=%g term2=%g kappa=%g lambda=%g kappaes=%g ucon=%g Gu=%g Gabs=%g\n",i,term1,term2,kappa,lambda,kappaes,ucon[i],Gu[i],Gabs[i]);
+      dualfprintf(fail_file,"i=%d term1a=%g term1b=%g term2=%g kappa=%g lambda=%g kappaes=%g ucon=%g Gu=%g Gabs=%g\n",i,term1a,term1b,term2,kappa,lambda,kappaes,ucon[i],Gu[i],Gabs[i]);
     }
 #endif
 
@@ -9214,6 +9218,29 @@ int calc_rad_lambda(FTYPE *pp, struct of_geom *ptrgeom, FTYPE kappa, FTYPE kappa
 
   return(0);
 }
+
+
+// compute approximate dRtt/Rtt based upon all source terms to be used to compare ratchangeRtt*uu vs. NUMEPSILON*uuallabs or idtsub=ratchangeRtt/realdt gives dtsub<realdt
+static FTYPE calc_approx_ratchangeRtt(struct of_state *q, FTYPE chieff, FTYPE realdt)
+{
+
+  // New Jon method (problem is this only makes sense in perfectly LTE.  If T gets high quickly, then G gets high before the density reacts.)
+  // this is like having a "source speed" of v_s\sim \tau \gamma^2 c and limiting the timestep so the source wave only reaches across a cell dxortho in time dt.
+
+
+  // as due to non-Compton 4-force
+  FTYPE ucon0=q->ucon[TT]; // what enters G for dR^t_t/R^t_t from time part
+  FTYPE ratchangeRtt=SMALL+fabs(chieff * ucon0 * ucon0 * realdt * 1.0); // 1.0 = c (2nd term with chi instead of kappaes to be severe and account for B-based term)
+
+  // assume Compton term good enough with Gabs
+
+
+  return(ratchangeRtt);
+  
+}
+
+
+
 
 
 /// compute radiative characteristics as limited by opacity
