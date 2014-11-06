@@ -1862,6 +1862,9 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
 
       FTYPE ratchangeRtt=calc_approx_ratchangeRtt(q, chieff, realdt);
 
+      //      get_dtsub(int method, pp, q, uu0, uu, FTYPE *dUother,  FTYPE *CUf, FTYPE *CUimp, FTYPE *Gdpl, FTYPE chi, FTYPE *Gdplabs, struct of_geom *ptrgeom, FTYPE *dtsub)
+
+
       //      if( (iter>ITERCHECKEXPLICITSAFE || iter==1 && tautotmax<NUMEPSILON ) && failreturn<=UTOPRIMGENWRAPPERRETURNFAILRAD){
       if( (iter>ITERCHECKEXPLICITSAFE || iter==1 && tautotmax<NUMEPSILON ) ){
         // iter>1 so at least have estimate of G even if not great.

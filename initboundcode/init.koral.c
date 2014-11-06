@@ -480,10 +480,11 @@ int init_global(void)
     PALLLOOP(pl) fluxmethod[pl]=HLLFLUX; // lower errors in unresolved regions
     lim[1]=lim[2]=lim[3]=MC; // to preserve symmetry better
   }
-
-  PALLLOOP(pl) fluxmethod[pl]=HLLFLUX;
-  // HLL leads to problems with radiation and realistic opacities.
-  PALLLOOP(pl) if(RADPL(pl)) fluxmethod[pl]=LAXFFLUX;
+  else{
+    PALLLOOP(pl) fluxmethod[pl]=HLLFLUX;
+    // HLL leads to problems with radiation and realistic opacities.
+    PALLLOOP(pl) if(RADPL(pl)) fluxmethod[pl]=LAXFFLUX;
+  }
 
   //FLUXB=FLUXCTTOTH;
   FLUXB=FLUXCTSTAG;
