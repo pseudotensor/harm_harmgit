@@ -531,7 +531,7 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE *errorabs, stru
 //////// implicit stuff
 static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, FTYPE *CUimp, struct of_geom *ptrgeom, struct of_state *q, FTYPE dissmeasure, FTYPE *dUother ,FTYPE (*dUcomp)[NPR]);
 
-static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int modprim, int havebackup, int didentropyalready, int *eomtype, int whichcap, int itermode, int *baseitermethod, FTYPE trueimptryconv, FTYPE trueimpokconv, FTYPE trueimpallowconv, int trueimpmaxiter, int truenumdampattempts, FTYPE fracenergy, FTYPE dissmeasure, int *radinvmod, FTYPE *pb, FTYPE *uub, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, FTYPE *CUimp, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother ,FTYPE (*dUcomp)[NPR], FTYPE *errorabs, FTYPE *errorabsbestexternal, int *iters, int *f1iters, int *nummhdinvs, int *nummhdsteps);
+static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseitermethodswitch, int modprim, int havebackup, int didentropyalready, int *eomtype, int whichcap, int itermode, int *baseitermethod, FTYPE trueimptryconv, FTYPE trueimpokconv, FTYPE trueimpallowconv, int trueimpmaxiter, int truenumdampattempts, FTYPE fracenergy, FTYPE dissmeasure, int *radinvmod, FTYPE *pb, FTYPE *uub, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, FTYPE *CUimp, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother ,FTYPE (*dUcomp)[NPR], FTYPE *errorabs, FTYPE *errorabsbestexternal, int *iters, int *f1iters, int *nummhdinvs, int *nummhdsteps);
 
 static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int failreturnallowable, int whichcall, FTYPE impeps, int showmessages, int showmessagesheavy, int allowlocalfailurefixandnoreport, int *eomtype, int whichcap, int itermode, int *baseitermethod, FTYPE fracenergy, FTYPE dissmeasure, int *radinvmod, FTYPE conv, FTYPE convabs, FTYPE allowconvabs, int maxiter, FTYPE realdt, int dimtypef, FTYPE *dimfactU, FTYPE *ppprev, FTYPE *pp, FTYPE *piin, FTYPE *uuprev, FTYPE *Uiin, FTYPE *uu0,FTYPE *uu,FTYPE localdt, struct of_geom *ptrgeom, struct of_state *q,  FTYPE *f, FTYPE *fnorm, FTYPE *freport, int *goexplicit, FTYPE *errorabs, FTYPE *errorallabs, int whicherror, int *convreturn, int *nummhdinvsreturn);
 
@@ -1978,6 +1978,17 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
   int k=ptrgeom->k;
   int p=ptrgeom->p;
 
+
+
+  int modemethodlocal=MODEMETHOD;
+  // tj=-2,-1,0,1 work
+  // tj=ts2+1,ts2,ts2-1,ts2-2 work
+  FTYPE tj=(FTYPE)(startpos[2]+j);
+  if(fabs(tj+0.5 - (FTYPE)(0))<(FTYPE)POLEDEATH || fabs(tj+0.5-(FTYPE)totalsize[2])<(FTYPE)POLEDEATH){
+    modemethodlocal=MODEPICKBESTSIMPLE;
+  }
+
+
   int pliter,pl;
   int sc;
 
@@ -2120,7 +2131,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
   //
   //////////////////////////////
 
-  if(MODEMETHOD==MODEENERGY && eomtypecond[EOMGRMHD]==1 || MODEMETHOD==MODEDEFAULT && *eomtype==EOMGRMHD){
+  if(modemethodlocal==MODEENERGY && eomtypecond[EOMGRMHD]==1 || modemethodlocal==MODEDEFAULT && *eomtype==EOMGRMHD){
     havebackup=0;
     didentropyalready=0;
     eomtypelocal=*eomtype;
@@ -2138,7 +2149,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     // but, ITERMODESTAGES with QTYPRAD does kinda ok, 6 early bads and ~20 damps, but then settles.
 
     whichcap=CAPTYPEBASIC;
-    failreturn=koral_source_rad_implicit_mode(1,0,havebackup, didentropyalready, &eomtypelocal, whichcap, itermode, &baseitermethod, trueimptryconv, trueimpokconv, trueimpallowconv, trueimpmaxiter,  truenumdampattempts, fracenergy, dissmeasure, &radinvmod, pb, uub, piin, Uiin, Ufin, CUf, CUimp, ptrgeom, q, dUother ,dUcomp, errorabs, errorabs, &iters, &f1iters, &nummhdinvs, &nummhdsteps);
+    failreturn=koral_source_rad_implicit_mode(modemethodlocal,1,0,havebackup, didentropyalready, &eomtypelocal, whichcap, itermode, &baseitermethod, trueimptryconv, trueimpokconv, trueimpallowconv, trueimpmaxiter,  truenumdampattempts, fracenergy, dissmeasure, &radinvmod, pb, uub, piin, Uiin, Ufin, CUf, CUimp, ptrgeom, q, dUother ,dUcomp, errorabs, errorabs, &iters, &f1iters, &nummhdinvs, &nummhdsteps);
     if(ACTUALHARDFAILURE(failreturn)){
       failfinalreturn=1;
       *lpflag=UTOPRIMFAILCONV;
@@ -2176,7 +2187,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
   //
   //////////////////////////////
 
-  if(MODEMETHOD==MODEENTROPY || MODEMETHOD==MODEDEFAULT && *eomtype==EOMENTROPYGRMHD){
+  if(modemethodlocal==MODEENTROPY || modemethodlocal==MODEDEFAULT && *eomtype==EOMENTROPYGRMHD){
     havebackup=0;
     didentropyalready=0;
     eomtypelocal=EOMENTROPYGRMHD;
@@ -2185,7 +2196,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     itermode=ITERMODESTAGES;
     whichcap=CAPTYPEBASIC;
     baseitermethod=QTYPMHD;
-    failreturn=koral_source_rad_implicit_mode(1,0,havebackup, didentropyalready, &eomtypelocal, whichcap, itermode, &baseitermethod, trueimptryconv, trueimpokconv, trueimpallowconv, trueimpmaxiter,  truenumdampattempts, fracenergy, dissmeasure, &radinvmod, pb, uub, piin, Uiin, Ufin, CUf, CUimp, ptrgeom, q, dUother ,dUcomp, errorabs, errorabs, &iters, &f1iters, &nummhdinvs, &nummhdsteps);
+    failreturn=koral_source_rad_implicit_mode(modemethodlocal,1,0,havebackup, didentropyalready, &eomtypelocal, whichcap, itermode, &baseitermethod, trueimptryconv, trueimpokconv, trueimpallowconv, trueimpmaxiter,  truenumdampattempts, fracenergy, dissmeasure, &radinvmod, pb, uub, piin, Uiin, Ufin, CUf, CUimp, ptrgeom, q, dUother ,dUcomp, errorabs, errorabs, &iters, &f1iters, &nummhdinvs, &nummhdsteps);
     if(ACTUALHARDFAILURE(failreturn)){
       failfinalreturn=1;
       *lpflag=UTOPRIMFAILCONV;
@@ -2221,7 +2232,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
 
 
-  if(MODEMETHOD==MODEENERGYRAMESH&&USERAMESH){
+  if(modemethodlocal==MODEENERGYRAMESH&&USERAMESH){
     // these ramesh solutions are here so both entropy and energy can have chance to fill them.
     int gotrameshsolution=0;
     FTYPE ppeng[NPR]={0},ppent[NPR]={0},errorabseng[NUMERRORTYPES],errorabsent[NUMERRORTYPES];
@@ -2309,7 +2320,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
   //
   //////////////////////////////
 
-  if(MODEMETHOD==MODESWITCH && eomtypecond[EOMGRMHD]==1){
+  if(modemethodlocal==MODESWITCH && eomtypecond[EOMGRMHD]==1){
     FTYPE errorabsenergy[NUMERRORTYPES],errorabsentropy[NUMERRORTYPES];
     set_array(errorabsenergy,NUMERRORTYPES,MPI_FTYPE,1.0);
     set_array(errorabsentropy,NUMERRORTYPES,MPI_FTYPE,1.0);
@@ -2342,7 +2353,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     trueimpmaxiterenergy=IMPMAXITERLONG;
     truenumdampattemptsenergy=NUMDAMPATTEMPTS;
     baseitermethodenergy=QTYPMHD;
-    failreturnenergy=koral_source_rad_implicit_mode(1,0,havebackup, didentropyalready, &eomtypelocal, whichcapenergy, itermodeenergy, &baseitermethodenergy, trueimptryconvenergy, trueimpokconvenergy, trueimpallowconvenergy, trueimpmaxiterenergy,  truenumdampattemptsenergy, fracenergy, dissmeasure, &radinvmod, pb, uub, piin, Uiin, Ufin, CUf, CUimp, ptrgeom, q, dUother ,dUcomp, errorabsenergy, errorabsenergy, &itersenergy, &f1itersenergy, &nummhdinvsenergy, &nummhdstepsenergy);
+    failreturnenergy=koral_source_rad_implicit_mode(modemethodlocal,1,0,havebackup, didentropyalready, &eomtypelocal, whichcapenergy, itermodeenergy, &baseitermethodenergy, trueimptryconvenergy, trueimpokconvenergy, trueimpallowconvenergy, trueimpmaxiterenergy,  truenumdampattemptsenergy, fracenergy, dissmeasure, &radinvmod, pb, uub, piin, Uiin, Ufin, CUf, CUimp, ptrgeom, q, dUother ,dUcomp, errorabsenergy, errorabsenergy, &itersenergy, &f1itersenergy, &nummhdinvsenergy, &nummhdstepsenergy);
 
     if(SWITCHGOODIDEAFAILURE(failreturn) && eomtypecond[EOMGRMHD]){
       // if failed with GRMHD or return reported switching to entropy is preferred, then do entropy method
@@ -2367,7 +2378,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       trueimpmaxiterentropy=IMPMAXITERLONG;
       truenumdampattemptsentropy=NUMDAMPATTEMPTS;
       baseitermethodentropy=QTYPMHD;
-      failreturnentropy=koral_source_rad_implicit_mode(1,0,havebackup, didentropyalready, &eomtypelocal, whichcapentropy, itermodeentropy, &baseitermethodentropy, trueimptryconventropy, trueimpokconventropy, trueimpallowconventropy, trueimpmaxiterentropy,  truenumdampattemptsentropy, fracenergy, dissmeasure, &radinvmod, pb, uub, piin, Uiin, Ufin, CUf, CUimp, ptrgeom, q, dUother ,dUcomp, errorabsentropy, errorabsentropy, &itersentropy, &f1itersentropy, &nummhdinvsentropy, &nummhdstepsentropy);
+      failreturnentropy=koral_source_rad_implicit_mode(modemethodlocal,1,0,havebackup, didentropyalready, &eomtypelocal, whichcapentropy, itermodeentropy, &baseitermethodentropy, trueimptryconventropy, trueimpokconventropy, trueimpallowconventropy, trueimpmaxiterentropy,  truenumdampattemptsentropy, fracenergy, dissmeasure, &radinvmod, pb, uub, piin, Uiin, Ufin, CUf, CUimp, ptrgeom, q, dUother ,dUcomp, errorabsentropy, errorabsentropy, &itersentropy, &f1itersentropy, &nummhdinvsentropy, &nummhdstepsentropy);
       if(ACTUALHARDFAILURE(failreturnentropy)){
         failfinalreturn=1;
         *lpflag=UTOPRIMFAILCONV;
@@ -2468,7 +2479,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
 
   int gotrameshsolution=0,usedrameshenergy=0,usedrameshentropy=0;
-  if(MODEMETHOD==MODEPICKBEST || MODEMETHOD==MODEPICKBESTSIMPLE  || MODEMETHOD==MODEPICKBESTSIMPLE2){
+  if(modemethodlocal==MODEPICKBEST || modemethodlocal==MODEPICKBESTSIMPLE  || modemethodlocal==MODEPICKBESTSIMPLE2){
 
 
 
@@ -2694,7 +2705,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       gasprimaryevolves=0;
     }
 
-    if(MODEMETHOD==MODEPICKBESTSIMPLE){
+    if(modemethodlocal==MODEPICKBESTSIMPLE){
       // forcing PMHD method, so must use gas
       radprimaryevolves=radextremeprimaryevolves=0;
       gasprimaryevolves=gasextremeprimaryevolves=1;
@@ -2799,10 +2810,10 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
         //        dualfprintf(fail_file,"TRYING: tryphase1=%d : %d %d %d\n",tryphase1,gasextremeprimaryevolves,radextremeprimaryevolves,baseitermethodlist[tryphase1]);
 
         // pick best simple method avoids all solvers except PMHD
-        if(MODEMETHOD==MODEPICKBESTSIMPLE && baseitermethodlist[tryphase1]!=QTYPMHD) continue;
+        if(modemethodlocal==MODEPICKBESTSIMPLE && baseitermethodlist[tryphase1]!=QTYPMHD) continue;
 
         // pick best simple 2 method avoids all itermodestages methods
-        if(MODEMETHOD==MODEPICKBESTSIMPLE2 && itermodelist[tryphase1]==ITERMODESTAGES) continue;
+        if(modemethodlocal==MODEPICKBESTSIMPLE2 && itermodelist[tryphase1]==ITERMODESTAGES) continue;
 
         // avoid method in case very non-dominant since then would give errorneous (critically bad even) results.  If methods that can use fail, have to revert to entropy or fixups.
         if(radextremeprimaryevolves && baseitermethodlist[tryphase1]==QTYPMHD) continue;
@@ -2821,7 +2832,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
         }
 
 
-        if(MODEMETHOD==MODEPICKBESTSIMPLE){
+        if(modemethodlocal==MODEPICKBESTSIMPLE){
           // do nothing, don't skip stages.  Even when iteration-error is small, often stages can get both iteration and total errors to be small.
         }
         else{
@@ -2941,7 +2952,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
             radinvmodenergy=radinvmodentropy;
           }
           //
-          failreturnenergy=koral_source_rad_implicit_mode(0,modprim,havebackup, didentropyalready, &eomtypeenergy, whichcapenergy, itermodeenergy, &baseitermethodenergy, trueimptryconvenergy, trueimpokconvenergy, trueimpallowconvenergy, trueimpmaxiterenergy,  truenumdampattemptsenergy, fracenergy, dissmeasure, &radinvmodenergy, pbenergy, uubenergy, piin, Uiin, Ufin, CUf, CUimp, ptrgeom, &qenergy, dUother ,dUcompenergy, errorabsenergy, errorabsenergybest, &itersenergy, &f1itersenergy, &nummhdinvsenergy, &nummhdstepsenergy);
+          failreturnenergy=koral_source_rad_implicit_mode(modemethodlocal,0,modprim,havebackup, didentropyalready, &eomtypeenergy, whichcapenergy, itermodeenergy, &baseitermethodenergy, trueimptryconvenergy, trueimpokconvenergy, trueimpallowconvenergy, trueimpmaxiterenergy,  truenumdampattemptsenergy, fracenergy, dissmeasure, &radinvmodenergy, pbenergy, uubenergy, piin, Uiin, Ufin, CUf, CUimp, ptrgeom, &qenergy, dUother ,dUcompenergy, errorabsenergy, errorabsenergybest, &itersenergy, &f1itersenergy, &nummhdinvsenergy, &nummhdstepsenergy);
           
           // store error, no matter if using solution or not or even if explicit
           errorabslist[tryphase1][0]=errorabsenergy[0];
@@ -3032,7 +3043,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
       // see if want to try harder
       if(
-         !(MODEMETHOD==MODEPICKBESTSIMPLE2) // Ramesh method is like stages, so avoid if simple2 method
+         !(modemethodlocal==MODEPICKBESTSIMPLE2) // Ramesh method is like stages, so avoid if simple2 method
          && (ACTUALHARDORSOFTFAILURE(failreturnenergy) && failreturn!=FAILRETURNMODESWITCH && USERAMESH && radextremeprimaryevolves==0)
          && !(errorabslist[whichfirstpmhd][0]<IMPTRYCONV && errorabslist[whichfirstpmhd][1]>IMPTRYCONV) // avoid ramesh (pmhd-type) method if already did it and got iterate-small error.
          ){
@@ -3300,10 +3311,10 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       for(tryphase1=0;tryphase1<NUMPHASESENT;tryphase1++){
 
         // pick best simple method avoids all solvers except PMHD
-        if(MODEMETHOD==MODEPICKBESTSIMPLE && baseitermethodlist[tryphase1]!=QTYPMHD) continue;
+        if(modemethodlocal==MODEPICKBESTSIMPLE && baseitermethodlist[tryphase1]!=QTYPMHD) continue;
 
         // pick best simple 2 method avoids all itermodestages methods
-        if(MODEMETHOD==MODEPICKBESTSIMPLE2 && itermodelist[tryphase1]==ITERMODESTAGES) continue;
+        if(modemethodlocal==MODEPICKBESTSIMPLE2 && itermodelist[tryphase1]==ITERMODESTAGES) continue;
 
         // avoid method in case very non-dominant since then would give errorneous (critically bad even) results.  If methods that can use fail, have to revert to entropy or fixups.
         if(radextremeprimaryevolves && (baseitermethodlist[tryphase1]==QTYPMHD || baseitermethodlist[tryphase1]==QTYENTROPYUMHD) ) continue;
@@ -3322,7 +3333,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
         }
 
 
-        if(MODEMETHOD==MODEPICKBESTSIMPLE){
+        if(modemethodlocal==MODEPICKBESTSIMPLE){
           // do nothing, don't skip stages.
         }
         else{
@@ -3423,7 +3434,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
           //
           //
           FTYPE fracenergyentropy=0;
-          failreturnentropy=koral_source_rad_implicit_mode(0,modprim,havebackup, didentropyalready, &eomtypeentropy, whichcapentropy, itermodeentropy, &baseitermethodentropy, trueimptryconventropy, trueimpokconventropy, trueimpallowconventropy, trueimpmaxiterentropy,  truenumdampattemptsentropy, fracenergyentropy, dissmeasure, &radinvmodentropy, pbentropy, uubentropy, piin, Uiin, Ufin, CUf, CUimp, ptrgeom, &qentropy, dUother ,dUcompentropy, errorabsentropy, errorabsentropybest, &itersentropy, &f1itersentropy, &nummhdinvsentropy, &nummhdstepsentropy);
+          failreturnentropy=koral_source_rad_implicit_mode(modemethodlocal,0,modprim,havebackup, didentropyalready, &eomtypeentropy, whichcapentropy, itermodeentropy, &baseitermethodentropy, trueimptryconventropy, trueimpokconventropy, trueimpallowconventropy, trueimpmaxiterentropy,  truenumdampattemptsentropy, fracenergyentropy, dissmeasure, &radinvmodentropy, pbentropy, uubentropy, piin, Uiin, Ufin, CUf, CUimp, ptrgeom, &qentropy, dUother ,dUcompentropy, errorabsentropy, errorabsentropybest, &itersentropy, &f1itersentropy, &nummhdinvsentropy, &nummhdstepsentropy);
 
           // store error, no matter if using solution or not or even if explicit
           errorabslist[tryphase1][0]=errorabsentropy[0];
@@ -3507,7 +3518,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
 
       if(
-         !(MODEMETHOD==MODEPICKBESTSIMPLE2) // Ramesh method is like stages, so avoid if simple2 method
+         !(modemethodlocal==MODEPICKBESTSIMPLE2) // Ramesh method is like stages, so avoid if simple2 method
          && ACTUALHARDORSOFTFAILURE(failreturnentropy) && USERAMESH && radextremeprimaryevolves==0
          && !(errorabslist[whichfirstpmhd][0]<IMPTRYCONV && errorabslist[whichfirstpmhd][1]>IMPTRYCONV)
          ){ // try ramesh
@@ -3791,7 +3802,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
         errorabscold[0]=errorabscold[1]=1.0;
 
 
-        failreturncold=koral_source_rad_implicit_mode(0,0,havebackup, didentropyalready, &eomtypecold, whichcapcold, itermodecold, &baseitermethodcold, trueimptryconvcold, trueimpokconvcold, trueimpallowconvcold, trueimpmaxitercold, truenumdampattemptscold, fracenergycold, dissmeasure, &radinvmodcold, pbcold, uubcold, piin, Uiin, Ufin, CUf, CUimp, ptrgeom, &qcold, dUother ,dUcompcold, errorabscold, errorabscoldbest, &iterscold, &f1iterscold, &nummhdinvscold, &nummhdstepscold);
+        failreturncold=koral_source_rad_implicit_mode(modemethodlocal,0,0,havebackup, didentropyalready, &eomtypecold, whichcapcold, itermodecold, &baseitermethodcold, trueimptryconvcold, trueimpokconvcold, trueimpallowconvcold, trueimpmaxitercold, truenumdampattemptscold, fracenergycold, dissmeasure, &radinvmodcold, pbcold, uubcold, piin, Uiin, Ufin, CUf, CUimp, ptrgeom, &qcold, dUother ,dUcompcold, errorabscold, errorabscoldbest, &iterscold, &f1iterscold, &nummhdinvscold, &nummhdstepscold);
 
         if(failreturncold==FAILRETURNGOEXPLICIT) goexplicitcold=1;
         // store these in case cold ultimately used
@@ -4359,7 +4370,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
 /// compute changes to U (both T and R) using implicit method
 /// KORALTODO: If doing implicit, should also add geometry source term that can sometimes be stiff.  Would require inverting sparse 8x8 matrix (or maybe 6x6 since only r-\theta for SPC).  Could be important for very dynamic radiative flows.
-static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int modprim, int havebackup, int didentropyalready, int *eomtype, int whichcap, int itermode, int *baseitermethod, FTYPE trueimptryconv, FTYPE trueimpokconv, FTYPE trueimpallowconv, int trueimpmaxiter, int truenumdampattempts, FTYPE fracenergy, FTYPE dissmeasure, int *radinvmod, FTYPE *pb, FTYPE *uub, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, FTYPE *CUimp, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother ,FTYPE (*dUcomp)[NPR], FTYPE *errorabsreturn, FTYPE *errorabsbestexternal, int *itersreturn, int *f1itersreturn, int *nummhdinvsreturn, int *nummhdstepsreturn)
+static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseitermethodswitch, int modprim, int havebackup, int didentropyalready, int *eomtype, int whichcap, int itermode, int *baseitermethod, FTYPE trueimptryconv, FTYPE trueimpokconv, FTYPE trueimpallowconv, int trueimpmaxiter, int truenumdampattempts, FTYPE fracenergy, FTYPE dissmeasure, int *radinvmod, FTYPE *pb, FTYPE *uub, FTYPE *piin, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, FTYPE *CUimp, struct of_geom *ptrgeom, struct of_state *q, FTYPE *dUother ,FTYPE (*dUcomp)[NPR], FTYPE *errorabsreturn, FTYPE *errorabsbestexternal, int *itersreturn, int *f1itersreturn, int *nummhdinvsreturn, int *nummhdstepsreturn)
 {
   int nstrokeorig=nstroke;
   *nummhdinvsreturn=0;
@@ -5581,7 +5592,7 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
           if(iter>NUMNOERRORREDUCE0 && suberrorabsf1>errorneed){ // no need to do this if actually error is below desired tolerance,  hence second argument
             if(suberrorabsf1>=errorabspf1[0]) counterrorrose++;
             int allowedtoabort=(havebackup || havebackup==0 && ABORTBACKUPIFNOERRORREDUCE==1 && suberrorabsf1<errorneedalt);
-            //+int allowedtoabort=(havebackup || havebackup==0 && ABORTBACKUPIFNOERRORREDUCE==1 && suberrorabsf1<errorneedalt || MODEMETHOD==MODEPICKBEST || MODEMETHOD==MODEPICKBESTSIMPLE  || MODEMETHOD==MODEPICKBESTSIMPLE2);
+            //+int allowedtoabort=(havebackup || havebackup==0 && ABORTBACKUPIFNOERRORREDUCE==1 && suberrorabsf1<errorneedalt || modemethodlocal==MODEPICKBEST || modemethodlocal==MODEPICKBESTSIMPLE  || modemethodlocal==MODEPICKBESTSIMPLE2);
             if(counterrorrose>=NUMNOERRORREDUCE && allowedtoabort){ // would be risky to do abort if don't have backup, even if enter into limit cycle.
 
               if(itermode==ITERMODESTAGES && iter>=BEGINMOMSTEPS && iter<=ENDMOMSTEPS){
@@ -6042,7 +6053,7 @@ static int koral_source_rad_implicit_mode(int allowbaseitermethodswitch, int mod
               //            dualfprintf(fail_file,"NOTNEG: countugnegative=%d\n",countugnegative);
             }
 
-            if(countugnegative>=NUMUGNEGENERGY && eomcond && (MODEMETHOD==MODEPICKBEST || MODEMETHOD==MODEPICKBESTSIMPLE  || MODEMETHOD==MODEPICKBESTSIMPLE2) && iter>=BEGINNORMALSTEPS){
+            if(countugnegative>=NUMUGNEGENERGY && eomcond && (modemethodlocal==MODEPICKBEST || modemethodlocal==MODEPICKBESTSIMPLE  || modemethodlocal==MODEPICKBESTSIMPLE2) && iter>=BEGINNORMALSTEPS){
               if(DOFINALCHECK){
                 if(debugfail>=DEBUGLEVELIMPSOLVER) dualfprintf(fail_file,"2Unable to hold off u_g<0, setting canbreak=1 and letting finalchecks confirm error is good or bad.  iter=%d\n",iter);
                 canbreak=5; // just break since might be good (or at least allowable) error still.  Let final error check handle this.
