@@ -3535,9 +3535,9 @@ int get_bsqflags(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR])
 
 #if(FLUXADJUST>0)
     // now check our flag state
-    if((flags[0]==2)||(flags[1]==2)||(flags[2]==2)||(flags[3]==2)||(flags[4]==2)){ GLOBALMACP0A1(pflag,i,j,k,FLAGREALFLUX)=fluxmethod-1;}
-    else if((flags[0]==1)||(flags[1]==1)||(flags[2]==1)||(flags[3]==1)||(flags[4]==1)){ GLOBALMACP0A1(pflag,i,j,k,FLAGREALFLUX)=fluxmethod; }
-    else{GLOBALMACP0A1(pflag,i,j,k,FLAGREALFLUX)=fluxmethod;}
+    if((flags[0]==2)||(flags[1]==2)||(flags[2]==2)||(flags[3]==2)||(flags[4]==2)){ GLOBALMACP0A1(pflag,i,j,k,FLAGREALFLUX)=fluxmethod[RHO]-1;}
+    else if((flags[0]==1)||(flags[1]==1)||(flags[2]==1)||(flags[3]==1)||(flags[4]==1)){ GLOBALMACP0A1(pflag,i,j,k,FLAGREALFLUX)=fluxmethod[RHO]; }
+    else{GLOBALMACP0A1(pflag,i,j,k,FLAGREALFLUX)=fluxmethod[RHO];}
     if(GLOBALMACP0A1(pflag,i,j,k,FLAGREALFLUX)<0) GLOBALMACP0A1(pflag,i,j,k,FLAGREALFLUX)=0;
 #endif
 

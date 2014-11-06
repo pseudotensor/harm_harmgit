@@ -477,9 +477,13 @@ int init_global(void)
   cour=0.49999; // 0.8 is too unstable for RADBEAM2D with curved flow relative to grid.
 
   if(DOWALDDEN){
-    fluxmethod=HLLFLUX; // lower errors in unresolved regions
+    PALLLOOP(pl) fluxmethod[pl]=HLLFLUX; // lower errors in unresolved regions
     lim[1]=lim[2]=lim[3]=MC; // to preserve symmetry better
   }
+
+  PALLLOOP(pl) fluxmethod[pl]=HLLFLUX;
+  // HLL leads to problems with radiation and realistic opacities.
+  PALLLOOP(pl) if(RADPL(pl)) fluxmethod[pl]=LAXFFLUX;
 
   //FLUXB=FLUXCTTOTH;
   FLUXB=FLUXCTSTAG;
@@ -759,7 +763,7 @@ int init_global(void)
     //    RADDBLSHADOW_NLEFT=0.99999; // Works well with MINM (only 49 total failures at relatively early time for otherwise default setup).  very hard on code -- only MINM with jon choice for CASES works.
     //    RADDBLSHADOW_NLEFT=0.99; // koral paper
     //    RADDBLSHADOW_NLEFT=0.999; // latest koral (ok to use, weak oscillations with LAXF)
-    //  fluxmethod=HLLFLUX; // smaller oscillations even at 0.99999
+    //PALLLOOP(pl) fluxmethod[pl]=HLLFLUX; // smaller oscillations even at 0.99999
 
 
     //  RADDBLSHADOW_NLEFT=0.7;

@@ -1232,11 +1232,11 @@ int init_defglobal(void)
     DOENOFLUX = ENOFINITEVOLUME;
     //DOENOFLUX= NOENOFLUX;
     //DOENOFLUX=ENOFLUXRECON;
-    //  fluxmethod=MUSTAFLUX;
-    //fluxmethod=FORCEFLUX;
-    fluxmethod=HLLFLUX;
-    //fluxmethod=HLLLAXF1FLUX;
-    //fluxmethod=LAXFFLUX;
+    // PALLLOOP(pl) fluxmethod[pl]=MUSTAFLUX;
+    //PALLLOOP(pl) fluxmethod[pl]=FORCEFLUX;
+    PALLLOOP(pl) fluxmethod[pl]=HLLFLUX;
+    //PALLLOOP(pl) fluxmethod[pl]=HLLLAXF1FLUX;
+    //PALLLOOP(pl) fluxmethod[pl]=LAXFFLUX;
     FLUXB = FLUXCTTOTH;
     UTOPRIMVERSION=UTOPRIM5D1;  //UTOPRIM2DFINAL;
     //UTOPRIMVERSION=UTOPRIM5D2;
@@ -1249,7 +1249,7 @@ int init_defglobal(void)
     lim[1] = lim[2] = lim[3] = MC;
     TIMEORDER=2;
     TIMETYPE=TIMEEXPLICIT;
-    fluxmethod=LAXFFLUX;
+    PALLLOOP(pl) fluxmethod[pl]=LAXFFLUX;
     FLUXB = FLUXCTTOTH;
     UTOPRIMVERSION=UTOPRIM2DFINAL;
     // whether/which ENO used to interpolate fluxes

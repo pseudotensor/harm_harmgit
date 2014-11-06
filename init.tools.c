@@ -192,8 +192,8 @@ int user1_init_global(void)
     TIMEORDER=4;
     //  TIMEORDER=3;
     TIMETYPE=TIMEEXPLICIT;
-    //  fluxmethod= HLLFLUX;
-    fluxmethod= LAXFFLUX; // generally more robust than HLLFLUX for various reasons
+    // PALLLOOP(pl) fluxmethod[pl]= HLLFLUX;
+    PALLLOOP(pl) fluxmethod[pl]= LAXFFLUX; // generally more robust than HLLFLUX for various reasons
   
 
     //  UTOPRIMVERSION=UTOPRIM5D1;
@@ -218,7 +218,7 @@ int user1_init_global(void)
 
 
 
-    fluxmethod=LAXFFLUX; // generally more robust than HLLFLUX
+    PALLLOOP(pl) fluxmethod[pl]=LAXFFLUX; // generally more robust than HLLFLUX
     //    FLUXB = FLUXCTTOTH;
     FLUXB = FLUXCTSTAG;
     //    UTOPRIMVERSION=UTOPRIM2DFINAL;

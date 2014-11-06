@@ -459,7 +459,7 @@ int fluxcalc_fluxctstag_emf_1d(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], in
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
       // defaults
-      fluxmethodlocal=fluxmethod;
+      fluxmethodlocal=fluxmethod[B1]; // assume all B's are same.
       cmaxfactorodir1=1.0;
       cmaxfactorodir2=1.0;
       cminfactorodir1=1.0;
