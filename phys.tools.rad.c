@@ -4123,9 +4123,9 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     if(methodindex[BASEITERMETHODINDEX] == QTYURAD) count_whocalled(ptrgeom->i,ptrgeom->j,ptrgeom->k, fakefinalstep, COUNTIMPLICITURAD);
     if(methodindex[BASEITERMETHODINDEX] == QTYENTROPYUMHD) count_whocalled(ptrgeom->i,ptrgeom->j,ptrgeom->k, fakefinalstep, COUNTIMPLICITENTROPYUMHD);
     if(methodindex[BASEITERMETHODINDEX] == QTYENTROPYPMHD) count_whocalled(ptrgeom->i,ptrgeom->j,ptrgeom->k, fakefinalstep, COUNTIMPLICITENTROPYPMHD);
-    if(methodindex[BASEITERMETHODINDEX] == ITERMODENORMAL) count_whocalled(ptrgeom->i,ptrgeom->j,ptrgeom->k, fakefinalstep, COUNTIMPLICITMODENORMAL);
-    if(methodindex[BASEITERMETHODINDEX] == ITERMODESTAGES) count_whocalled(ptrgeom->i,ptrgeom->j,ptrgeom->k, fakefinalstep, COUNTIMPLICITMODESTAGES);
-    if(methodindex[BASEITERMETHODINDEX] == ITERMODECOLD) count_whocalled(ptrgeom->i,ptrgeom->j,ptrgeom->k, fakefinalstep, COUNTIMPLICITMODECOLD);
+    if(methodindex[ITERMODEINDEX] == ITERMODENORMAL) count_whocalled(ptrgeom->i,ptrgeom->j,ptrgeom->k, fakefinalstep, COUNTIMPLICITMODENORMAL);
+    if(methodindex[ITERMODEINDEX] == ITERMODESTAGES) count_whocalled(ptrgeom->i,ptrgeom->j,ptrgeom->k, fakefinalstep, COUNTIMPLICITMODESTAGES);
+    if(methodindex[ITERMODEINDEX] == ITERMODECOLD) count_whocalled(ptrgeom->i,ptrgeom->j,ptrgeom->k, fakefinalstep, COUNTIMPLICITMODECOLD);
   }
 
 
