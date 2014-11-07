@@ -481,7 +481,7 @@ int init_global(void)
     lim[1]=lim[2]=lim[3]=MC; // to preserve symmetry better
   }
   else{
-    PALLLOOP(pl) fluxmethod[pl]=HLLFLUX;
+    PALLLOOP(pl) fluxmethod[pl]=LAXFFLUX; //HLLFLUX;
     // HLL leads to problems with radiation and realistic opacities.
     PALLLOOP(pl) if(RADPL(pl)) fluxmethod[pl]=LAXFFLUX;
   }

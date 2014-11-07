@@ -97,10 +97,28 @@
 
 #define OPACITYBAR (LBAR*LBAR/MBAR) // cgs in cm^2/g
 
-/// SCATTERING
-#define KAPPA_ES_FERMICORR(rhocode,Tcode) (1.0/((1.0+2.7E11*((rhocode)*RHOBAR)/pow((Tcode)*TEMPBAR,2.0))*(1.0+pow((Tcode)*TEMPBAR/4.5E8,0.86)))) // Buchler and Yueh 1976
+
+/// PURE ELASTIC SCATTERING
+//#define KAPPA_ES_KNCORRF(f) (0.75*((-1.*(1. + 3.*(f)))/Power(1. + 2.*(f),2) +  (0.5*Log(1. + 2.*(f)))/(f) + ((1. + (f))*((2. + 2.*(f))/(1. + 2.*(f)) - (1.*Log(1. + 2.*(f)))/(f)))/Power((f),2)))
+//#define KAPPA_ES_KNCORR(rhocode,Tcode) (KAPPA_ES_KNCORREP(K_BOLTZ*(Tcode)*TEMPBAR/(MELE*CCCTRUE*CCCTRUE)))
+#define KAPPA_ES_FERMICORR(rhocode,Tcode) (1.0/(1.0+2.7E11*((rhocode)*RHOBAR)/pow((Tcode)*TEMPBAR,2.0))) // Buchler and Yueh 1976 (just Fermi part)
+#define KAPPA_ES_KNCORR(rhocode,Tcode) (1.0/(1.0+pow((Tcode)*TEMPBAR/4.5E8,0.86)))  // Buchler and Yueh 1976 .  Fewer electrons when near Fermi fluid limit.  Also integrates over Klein-Nishina for thermal electrons
 /// kappaes = sigma_T n_e = sigma_T n_b (n_e/n_b) = sigma_T rho/mb (ne/nb)
-#define KAPPA_ES_CODE(rhocode,Tcode) (0.2*(1.0+XFACT)*KAPPA_ES_FERMICORR(rhocode,Tcode)/OPACITYBAR)
+#define KAPPA_ES_CODE(rhocode,Tcode) (0.2*(1.0+XFACT)*KAPPA_ES_FERMICORR(rhocode,Tcode)*KAPPA_ES_KNCORR(rhocode,Tcode)/OPACITYBAR)
+
+// INELASTIC COMPTON TERM
+// see DOCOMPTON in physics.tools.rad.c:
+// in term2, doesn't change photon energy, so that in scattering-dominated atmospheres, photons move through unchanged by temperature of gas.
+// Eq A7 in http://adsabs.harvard.edu/abs/2012ApJ...752...18K used first in http://adsabs.harvard.edu/cgi-bin/bib_query?arXiv:0904.4123 as based upon a calculation in http://adsabs.harvard.edu/abs/2000thas.book.....P .
+// Also interesting for next steps:
+//1) Conservative form of Kompaneet's equation and dealing with the diffusion term implicitly: http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.13.798 and related: http://www.osti.gov/scitech/biblio/891567 .  We should ensure the 4-force is consistent (numerically and analytically) with what's used in this equation for n.
+//2) Relativistic corrections:  http://adsabs.harvard.edu/cgi-bin/bib_query?arXiv:1201.5606 and http://adsabs.harvard.edu/abs/2002nmgm.meet.2329S .  It looks like nothing more difficult as far as actually using the expressions in place of non-relativistic version.
+//One semi-relevant application: http://www.aanda.org/articles/aa/full_html/2009/45/aa12061-09/aa12061-09.html
+#define KAPPA_FORCOMPT_RELCORREP(ep) ((1.0 + 3.683*(ep)+4.0*(ep)*(ep))/(1.0 + (ep))) // Sadowski et al. (2014) Eq 26 and 27.
+#define KAPPA_FORCOMPT_RELCORR(rhocode,Tcode) (KAPPA_FORCOMPT_RELCORREP(K_BOLTZ*(Tcode)*TEMPBAR/(MELE*CCCTRUE*CCCTRUE)))
+#define KAPPA_FORCOMPT_CODE(rhocode,Tcode) (0.2*(1.0+XFACT)*KAPPA_ES_FERMICORR(rhocode,Tcode)*KAPPA_FORCOMPT_RELCORR(rhocode,Tcode)/OPACITYBAR)
+
+#define TEMPELE (MELE*CCCTRUE*CCCTRUE/K_BOLTZ)
 
 /// EMISSION/ABSORBPTION
 #define KAPPA_FF_CODE(rhocode,Tcode) (4.0E22*(1.0+XFACT)*(1.0-ZFACT)*((rhocode)*RHOBAR)*pow((Tcode)*TEMPBAR,-7.0/2.0)*(1.0+4.4E-10*(Tcode*TEMPBAR))/OPACITYBAR)  // ASSUMPTION: Thermal ele and no pairs.  See Rybicki & Lightman Eq~5.25 and McKinney & Uzdensky (2012)
