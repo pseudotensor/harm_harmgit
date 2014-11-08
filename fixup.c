@@ -261,7 +261,7 @@ int diag_fixup_correctablecheck(int docorrectucons, struct of_geom *ptrgeom)
 
 
 /// record who called the diag_fixup routine
-int count_whocalled(int i, int j, int k, int finalstep, int whocalled)
+int count_whocalled(int i, int j, int k, int finalstep, int whocalled, CTYPE toadd)
 {
   int tscale;
 
@@ -281,11 +281,11 @@ int count_whocalled(int i, int j, int k, int finalstep, int whocalled)
     if(whocalled>=COUNTREALSTART){
       int indexfinalstep;
       indexfinalstep=0;
-      TSCALELOOP(tscale) GLOBALMACP0A3(failfloorcount,i,j,k,indexfinalstep,tscale,whocalled)++;
+      TSCALELOOP(tscale) GLOBALMACP0A3(failfloorcount,i,j,k,indexfinalstep,tscale,whocalled)+=toadd;
       if(finalstep){
         indexfinalstep=1;
         // iterate finalstep version
-        TSCALELOOP(tscale) GLOBALMACP0A3(failfloorcount,i,j,k,indexfinalstep,tscale,whocalled)++;
+        TSCALELOOP(tscale) GLOBALMACP0A3(failfloorcount,i,j,k,indexfinalstep,tscale,whocalled)+=toadd;
       }
     }// end if counting something
 
@@ -505,7 +505,7 @@ int diag_fixup(int docorrectucons, FTYPE *pr0, FTYPE *pr, FTYPE *uconsinput, str
 
 
   // count whocalled diag_fixup()
-  if(doingmhdfixup) count_whocalled(ptrgeom->i,ptrgeom->j,ptrgeom->k, finalstep, whocalled);
+  if(doingmhdfixup) count_whocalled(ptrgeom->i,ptrgeom->j,ptrgeom->k, finalstep, whocalled,1);
 
 
 
@@ -598,7 +598,7 @@ int diag_fixup_Ui_pf(int docorrectucons, FTYPE *Uievolve, FTYPE *pf, struct of_g
 
 
   // count whocalled diag_fixup()
-  count_whocalled(ptrgeom->i,ptrgeom->j,ptrgeom->k, finalstep, whocalled);
+  count_whocalled(ptrgeom->i,ptrgeom->j,ptrgeom->k, finalstep, whocalled,1);
 
 
   if(finalstep > 0){
@@ -695,7 +695,7 @@ int diag_fixup_U(int docorrectucons, FTYPE *Ui, FTYPE *Uf, FTYPE *uconsinput, st
   }
 
   // count whocalled diag_fixup()
-  count_whocalled(ptrgeom->i,ptrgeom->j,ptrgeom->k, finalstep, whocalled);
+  count_whocalled(ptrgeom->i,ptrgeom->j,ptrgeom->k, finalstep, whocalled,1);
   
 
 

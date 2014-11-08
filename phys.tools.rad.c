@@ -172,18 +172,22 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE *errorabs, stru
 
 /// Funny, even 1E-5 does ok with torus, no worse at Erf~ERADLIMIT instances.  Also, does ~3 iterations, but not any faster than using 1E-12 with ~6 iterations.
 #define IMPTRYCONV (1.e-12) // works generally to avoid high iterations
-#define IMPTRYCONVQUICK (1.e-9) // less greedy so doesn't slow things down so much.
+//#define IMPTRYCONVQUICK (1.e-9) // less greedy so doesn't slow things down so much.
+#define IMPTRYCONVQUICK (1.e-6) // even less greedy so doesn't slow things down so much.
 /// error for comparing to sum over all absolute errors
 #define IMPTRYCONVABS ((FTYPE)(NDIM+2)*trueimptryconv)
 
 /// what tolerance to use for saying can switch to entropy when u_g is suggested to be bad for energy
-#define IMPOKCONVCONST (1E-9)
+//#define IMPOKCONVCONST (1E-9)
+#define IMPOKCONVCONST (1E-6) // even more likely to use energy solution
 #define IMPOKCONVCONSTABS ((FTYPE)(NDIM+2)*IMPOKCONVCONST)
 #define IMPOKCONV (MAX(trueimptryconv,IMPOKCONVCONST))
 #define IMPOKCONVABS ((FTYPE)(NDIM+2)*IMPOKCONV)
 
+// what error to allow at all
 /// too allowing to allow 1E-4 error since often solution is nuts at even errors>1E-8
-#define IMPALLOWCONVCONST (1.e-7)
+//#define IMPALLOWCONVCONST (1.e-7)
+#define IMPALLOWCONVCONST (1.e-6)
 #define IMPALLOWCONVCONSTABS ((FTYPE)(NDIM+2)*IMPALLOWCONVCONST)
 //#define IMPALLOWCONV (MAX(trueimptryconv,IMPALLOWCONVCONST))
 #define IMPALLOWCONV (trueimpallowconv)
@@ -191,7 +195,8 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE *errorabs, stru
 #define IMPALLOWCONVABS ((FTYPE)(NDIM+2)*IMPALLOWCONV)
 
 /// tolerance above which say energy solution is probably bad even if not very large error.  These have tended (or nearly 100%) to be cases where actual solution has u_g<0 but harm gets error u_g>0 and error not too large.
-#define IMPBADENERGY (MIN(IMPALLOWCONV,1E-7))
+//#define IMPBADENERGY (MIN(IMPALLOWCONV,1E-7))
+#define IMPBADENERGY (MIN(IMPALLOWCONV,1E-6))
 
 /// how many iterations before we try harder to get better 1D MHD inversion solution
 #define ITERMHDINVTRYHARDER 5
@@ -1983,6 +1988,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
   int modemethodlocal=MODEMETHOD;
   // tj=-2,-1,0,1 work
   // tj=ts2+1,ts2,ts2-1,ts2-2 work
+  // revert to simple mode if POLEDEATH is active because then anyways solution near pole is inaccurate and whatever generated here would be overwritten.
+  // doing this because with or without poledeath active, the poles often find no solution at all or at least not with the fast PMHD method, so the pole alone causes things to slow down alot for the whole code.
   FTYPE tj=(FTYPE)(startpos[2]+j);
   if(fabs(tj+0.5 - (FTYPE)(0))<(FTYPE)POLEDEATH || fabs(tj+0.5-(FTYPE)totalsize[2])<(FTYPE)POLEDEATH){
     modemethodlocal=MODEPICKBESTSIMPLE;
@@ -2118,6 +2125,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
   int trueimpmaxiter=IMPMAXITERLONG;
   int truenumdampattempts=NUMDAMPATTEMPTS;
   int goexplicit;
+
+
 
 
 
@@ -4113,33 +4122,45 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
 
 
-  if(DOFLOORDIAG){
+  if(DODEBUG){
     // counters for implicit method and how it fails.
     // Separate from normal utoprim inversion failure since once outside lose what actually did exactly
     // That is, once outside this function, only know if failed, not which scheme used, because locally treat as not failing if (e.g.) entropy or coldMHD can be used and they did not fail.  This way, only no solution gives failure that then needs to be processed by fixup_utoprim().
 
     // just count, assume if want more details about how U is changed as a result, would use ONESTEPDUACCOUNTING=1
-    extern int count_whocalled(int i, int j, int k, int finalstep, int whocalled);
+    extern int count_whocalled(int i, int j, int k, int finalstep, int whocalled, CTYPE toadd);
     int fakefinalstep=1; // always count, since final step actually doesn't do implicit stepping sometimes and need to know how intermediate steps did.
-    if(usedimplicit) count_whocalled(ptrgeom->i,ptrgeom->j,ptrgeom->k, fakefinalstep, COUNTIMPLICITNORMAL);
-    if(usedexplicitgood) count_whocalled(ptrgeom->i,ptrgeom->j,ptrgeom->k, fakefinalstep, COUNTEXPLICITNORMAL);
-    if(usedexplicitkindabad || usedexplicitbad) count_whocalled(ptrgeom->i,ptrgeom->j,ptrgeom->k, fakefinalstep, COUNTEXPLICITBAD);
-    if(usedenergy==0 && usedentropy==0 && usedboth==0 && usedcold==0 && usedimplicit==1) count_whocalled(ptrgeom->i,ptrgeom->j,ptrgeom->k, fakefinalstep, COUNTIMPLICITBAD);
-    if(usedenergy||usedboth) count_whocalled(ptrgeom->i,ptrgeom->j,ptrgeom->k, fakefinalstep, COUNTIMPLICITENERGY);
-    if(usedentropy||usedboth) count_whocalled(ptrgeom->i,ptrgeom->j,ptrgeom->k, fakefinalstep, COUNTIMPLICITENTROPY);
-    if(usedcold) count_whocalled(ptrgeom->i,ptrgeom->j,ptrgeom->k, fakefinalstep, COUNTIMPLICITCOLDMHD);
+
+    count_whocalled(ptrgeom->i,ptrgeom->j,ptrgeom->k, fakefinalstep, COUNTIMPLICITITERS,iters);
+    count_whocalled(ptrgeom->i,ptrgeom->j,ptrgeom->k, fakefinalstep, COUNTIMPLICITERRORS,errorabs[WHICHERROR]);
+
+    if(usedimplicit) count_whocalled(ptrgeom->i,ptrgeom->j,ptrgeom->k, fakefinalstep, COUNTIMPLICITNORMAL,1);
+    if(usedexplicitgood) count_whocalled(ptrgeom->i,ptrgeom->j,ptrgeom->k, fakefinalstep, COUNTEXPLICITNORMAL,1);
+    if(usedexplicitkindabad || usedexplicitbad) count_whocalled(ptrgeom->i,ptrgeom->j,ptrgeom->k, fakefinalstep, COUNTEXPLICITBAD,1);
+    if(usedenergy==0 && usedentropy==0 && usedboth==0 && usedcold==0 && usedimplicit==1) count_whocalled(ptrgeom->i,ptrgeom->j,ptrgeom->k, fakefinalstep, COUNTIMPLICITBAD,1);
+    if(usedenergy||usedboth) count_whocalled(ptrgeom->i,ptrgeom->j,ptrgeom->k, fakefinalstep, COUNTIMPLICITENERGY,1);
+    if(usedentropy||usedboth) count_whocalled(ptrgeom->i,ptrgeom->j,ptrgeom->k, fakefinalstep, COUNTIMPLICITENTROPY,1);
+    if(usedcold) count_whocalled(ptrgeom->i,ptrgeom->j,ptrgeom->k, fakefinalstep, COUNTIMPLICITCOLDMHD,1);
 
     
 
-    if(methodindex[BASEITERMETHODINDEX] == QTYPMHD) count_whocalled(ptrgeom->i,ptrgeom->j,ptrgeom->k, fakefinalstep, COUNTIMPLICITPMHD);
-    if(methodindex[BASEITERMETHODINDEX] == QTYUMHD) count_whocalled(ptrgeom->i,ptrgeom->j,ptrgeom->k, fakefinalstep, COUNTIMPLICITUMHD);
-    if(methodindex[BASEITERMETHODINDEX] == QTYPRAD) count_whocalled(ptrgeom->i,ptrgeom->j,ptrgeom->k, fakefinalstep, COUNTIMPLICITPRAD);
-    if(methodindex[BASEITERMETHODINDEX] == QTYURAD) count_whocalled(ptrgeom->i,ptrgeom->j,ptrgeom->k, fakefinalstep, COUNTIMPLICITURAD);
-    if(methodindex[BASEITERMETHODINDEX] == QTYENTROPYUMHD) count_whocalled(ptrgeom->i,ptrgeom->j,ptrgeom->k, fakefinalstep, COUNTIMPLICITENTROPYUMHD);
-    if(methodindex[BASEITERMETHODINDEX] == QTYENTROPYPMHD) count_whocalled(ptrgeom->i,ptrgeom->j,ptrgeom->k, fakefinalstep, COUNTIMPLICITENTROPYPMHD);
-    if(methodindex[ITERMODEINDEX] == ITERMODENORMAL) count_whocalled(ptrgeom->i,ptrgeom->j,ptrgeom->k, fakefinalstep, COUNTIMPLICITMODENORMAL);
-    if(methodindex[ITERMODEINDEX] == ITERMODESTAGES) count_whocalled(ptrgeom->i,ptrgeom->j,ptrgeom->k, fakefinalstep, COUNTIMPLICITMODESTAGES);
-    if(methodindex[ITERMODEINDEX] == ITERMODECOLD) count_whocalled(ptrgeom->i,ptrgeom->j,ptrgeom->k, fakefinalstep, COUNTIMPLICITMODECOLD);
+    if(methodindex[BASEITERMETHODINDEX] == QTYPMHD) count_whocalled(ptrgeom->i,ptrgeom->j,ptrgeom->k, fakefinalstep, COUNTIMPLICITPMHD,1);
+    if(methodindex[BASEITERMETHODINDEX] == QTYUMHD) count_whocalled(ptrgeom->i,ptrgeom->j,ptrgeom->k, fakefinalstep, COUNTIMPLICITUMHD,1);
+    if(methodindex[BASEITERMETHODINDEX] == QTYPRAD) count_whocalled(ptrgeom->i,ptrgeom->j,ptrgeom->k, fakefinalstep, COUNTIMPLICITPRAD,1);
+    if(methodindex[BASEITERMETHODINDEX] == QTYURAD) count_whocalled(ptrgeom->i,ptrgeom->j,ptrgeom->k, fakefinalstep, COUNTIMPLICITURAD,1);
+    if(methodindex[BASEITERMETHODINDEX] == QTYENTROPYUMHD) count_whocalled(ptrgeom->i,ptrgeom->j,ptrgeom->k, fakefinalstep, COUNTIMPLICITENTROPYUMHD,1);
+    if(methodindex[BASEITERMETHODINDEX] == QTYENTROPYPMHD) count_whocalled(ptrgeom->i,ptrgeom->j,ptrgeom->k, fakefinalstep, COUNTIMPLICITENTROPYPMHD,1);
+    if(methodindex[ITERMODEINDEX] == ITERMODENORMAL) count_whocalled(ptrgeom->i,ptrgeom->j,ptrgeom->k, fakefinalstep, COUNTIMPLICITMODENORMAL,1);
+    if(methodindex[ITERMODEINDEX] == ITERMODESTAGES) count_whocalled(ptrgeom->i,ptrgeom->j,ptrgeom->k, fakefinalstep, COUNTIMPLICITMODESTAGES,1);
+    if(methodindex[ITERMODEINDEX] == ITERMODECOLD) count_whocalled(ptrgeom->i,ptrgeom->j,ptrgeom->k, fakefinalstep, COUNTIMPLICITMODECOLD,1);
+
+
+// maybe fill du instead of these counts?
+//    count_whocalled(ptrgeom->i,ptrgeom->j,ptrgeom->k, fakefinalstep, COUNTIMPLICITERRORS,errorabs[WHICHERROR]);
+//  numhisterr[MAX(MIN((int)(-log10l(SMALL+errorabs[WHICHERROR])),NUMNUMHIST-1),0)]++;
+
+// unused: COUNTIMPLICITFAILED
+
   }
 
 
