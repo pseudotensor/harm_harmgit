@@ -1991,6 +1991,15 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
   // revert to simple mode if POLEDEATH is active because then anyways solution near pole is inaccurate and whatever generated here would be overwritten.
   // doing this because with or without poledeath active, the poles often find no solution at all or at least not with the fast PMHD method, so the pole alone causes things to slow down alot for the whole code.
   FTYPE tj=(FTYPE)(startpos[2]+j);
+  int EXTRAPOLEDEATH=1;
+  int localpoledeath=POLEDEATH + EXTRAPOLEDEATH;
+  if(fabs(tj+0.5 - (FTYPE)(0))<(FTYPE)localpoledeath || fabs(tj+0.5-(FTYPE)totalsize[2])<(FTYPE)localpoledeath){
+    modemethodlocal=MODEPICKBESTSIMPLE;
+    //    dualfprintf(fail_file,"j=%d modechange\n",j); // debug
+  }
+
+ 
+
   if(fabs(tj+0.5 - (FTYPE)(0))<(FTYPE)POLEDEATH || fabs(tj+0.5-(FTYPE)totalsize[2])<(FTYPE)POLEDEATH){
     modemethodlocal=MODEPICKBESTSIMPLE;
   }
