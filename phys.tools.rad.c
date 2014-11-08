@@ -2372,6 +2372,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     truenumdampattemptsenergy=NUMDAMPATTEMPTS;
     baseitermethodenergy=QTYPMHD;
     failreturnenergy=koral_source_rad_implicit_mode(modemethodlocal,1,0,havebackup, didentropyalready, &eomtypelocal, whichcapenergy, itermodeenergy, &baseitermethodenergy, trueimptryconvenergy, trueimpokconvenergy, trueimpallowconvenergy, trueimpmaxiterenergy,  truenumdampattemptsenergy, fracenergy, dissmeasure, &radinvmod, pb, uub, piin, Uiin, Ufin, CUf, CUimp, ptrgeom, q, dUother ,dUcomp, errorabsenergy, errorabsenergy, &itersenergy, &f1itersenergy, &nummhdinvsenergy, &nummhdstepsenergy);
+    nummhdsteps+=nummhdstepsenergy;
 
     if(SWITCHGOODIDEAFAILURE(failreturn) && eomtypecond[EOMGRMHD]){
       // if failed with GRMHD or return reported switching to entropy is preferred, then do entropy method
@@ -2397,6 +2398,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       truenumdampattemptsentropy=NUMDAMPATTEMPTS;
       baseitermethodentropy=QTYPMHD;
       failreturnentropy=koral_source_rad_implicit_mode(modemethodlocal,1,0,havebackup, didentropyalready, &eomtypelocal, whichcapentropy, itermodeentropy, &baseitermethodentropy, trueimptryconventropy, trueimpokconventropy, trueimpallowconventropy, trueimpmaxiterentropy,  truenumdampattemptsentropy, fracenergy, dissmeasure, &radinvmod, pb, uub, piin, Uiin, Ufin, CUf, CUimp, ptrgeom, q, dUother ,dUcomp, errorabsentropy, errorabsentropy, &itersentropy, &f1itersentropy, &nummhdinvsentropy, &nummhdstepsentropy);
+      nummhdsteps+=nummhdstepsentropy;
+      
       if(ACTUALHARDFAILURE(failreturnentropy)){
         failfinalreturn=1;
         *lpflag=UTOPRIMFAILCONV;
@@ -2971,6 +2974,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
           }
           //
           failreturnenergy=koral_source_rad_implicit_mode(modemethodlocal,0,modprim,havebackup, didentropyalready, &eomtypeenergy, whichcapenergy, itermodeenergy, &baseitermethodenergy, trueimptryconvenergy, trueimpokconvenergy, trueimpallowconvenergy, trueimpmaxiterenergy,  truenumdampattemptsenergy, fracenergy, dissmeasure, &radinvmodenergy, pbenergy, uubenergy, piin, Uiin, Ufin, CUf, CUimp, ptrgeom, &qenergy, dUother ,dUcompenergy, errorabsenergy, errorabsenergybest, &itersenergy, &f1itersenergy, &nummhdinvsenergy, &nummhdstepsenergy);
+          nummhdsteps+=nummhdstepsenergy;
           
           // store error, no matter if using solution or not or even if explicit
           errorabslist[tryphase1][0]=errorabsenergy[0];
@@ -3453,6 +3457,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
           //
           FTYPE fracenergyentropy=0;
           failreturnentropy=koral_source_rad_implicit_mode(modemethodlocal,0,modprim,havebackup, didentropyalready, &eomtypeentropy, whichcapentropy, itermodeentropy, &baseitermethodentropy, trueimptryconventropy, trueimpokconventropy, trueimpallowconventropy, trueimpmaxiterentropy,  truenumdampattemptsentropy, fracenergyentropy, dissmeasure, &radinvmodentropy, pbentropy, uubentropy, piin, Uiin, Ufin, CUf, CUimp, ptrgeom, &qentropy, dUother ,dUcompentropy, errorabsentropy, errorabsentropybest, &itersentropy, &f1itersentropy, &nummhdinvsentropy, &nummhdstepsentropy);
+          nummhdsteps+=nummhdstepsentropy;
+
 
           // store error, no matter if using solution or not or even if explicit
           errorabslist[tryphase1][0]=errorabsentropy[0];
@@ -3821,6 +3827,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
 
         failreturncold=koral_source_rad_implicit_mode(modemethodlocal,0,0,havebackup, didentropyalready, &eomtypecold, whichcapcold, itermodecold, &baseitermethodcold, trueimptryconvcold, trueimpokconvcold, trueimpallowconvcold, trueimpmaxitercold, truenumdampattemptscold, fracenergycold, dissmeasure, &radinvmodcold, pbcold, uubcold, piin, Uiin, Ufin, CUf, CUimp, ptrgeom, &qcold, dUother ,dUcompcold, errorabscold, errorabscoldbest, &iterscold, &f1iterscold, &nummhdinvscold, &nummhdstepscold);
+        nummhdsteps+=nummhdstepscold;
 
         if(failreturncold==FAILRETURNGOEXPLICIT) goexplicitcold=1;
         // store these in case cold ultimately used
@@ -4140,8 +4147,9 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     extern int count_whocalled(int i, int j, int k, int finalstep, int whocalled, CTYPE toadd);
     int fakefinalstep=1; // always count, since final step actually doesn't do implicit stepping sometimes and need to know how intermediate steps did.
 
-    count_whocalled(ptrgeom->i,ptrgeom->j,ptrgeom->k, fakefinalstep, COUNTIMPLICITITERS,iters);
-    count_whocalled(ptrgeom->i,ptrgeom->j,ptrgeom->k, fakefinalstep, COUNTIMPLICITERRORS,errorabs[WHICHERROR]);
+    count_whocalled(ptrgeom->i,ptrgeom->j,ptrgeom->k, fakefinalstep, COUNTIMPLICITITERS,(CTYPE)iters);
+    count_whocalled(ptrgeom->i,ptrgeom->j,ptrgeom->k, fakefinalstep, COUNTIMPLICITMHDSTEPS,(CTYPE)nummhdsteps);
+    count_whocalled(ptrgeom->i,ptrgeom->j,ptrgeom->k, fakefinalstep, COUNTIMPLICITERRORS,(CTYPE)errorabs[WHICHERROR]);
 
     if(usedimplicit) count_whocalled(ptrgeom->i,ptrgeom->j,ptrgeom->k, fakefinalstep, COUNTIMPLICITNORMAL,1);
     if(usedexplicitgood) count_whocalled(ptrgeom->i,ptrgeom->j,ptrgeom->k, fakefinalstep, COUNTEXPLICITNORMAL,1);
