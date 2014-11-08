@@ -246,7 +246,7 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE *errorabs, stru
 //#define IMPMAXITER (15) // for used implicit solver // For others
 #define IMPMAXITERLONG (100) // for used implicit solver
 #define IMPMAXITERMEDIUM (40)
-#define IMPMAXITERQUICK (20)
+#define IMPMAXITERQUICK (13)
 
 #define IMPMINABSERROR (1E-100) // minimum absolute error (or value) below which don't treat as bad error and just avoid 4-force.  Otherwise will "fail" implicit solver even if impossible to reach smaller relative error due to absolute machine precision issues.
 
