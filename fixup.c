@@ -765,7 +765,7 @@ int diag_fixup_U(int docorrectucons, FTYPE *Ui, FTYPE *Uf, FTYPE *uconsinput, st
 #if(VARTOINTERP==PRIMTOINTERP_GDETFULLVERSION_WALD)
 #define FIXUPTYPE 0 // or else would create spurious Poynting flux
 #else
-#define FIXUPTYPE 1
+#define FIXUPTYPE 0 // too expensive if inversion fails alot as can happen near floors, near poles, or with radiation.
 #endif
 /// 0 = primitive (adds rho,u in comoving frame)
 /// 1 = conserved but rho,u added in ZAMO frame
