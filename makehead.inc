@@ -187,7 +187,7 @@ ENFORCEPRECISION=0
 #
 ifneq ($(filter $(LAPACKTARGETS), $(MYMAKECMDGOALS)),)
 # choice for below
-USELAPACK=0
+USELAPACK=1
 # below is for new form of library -l line
 USELAPACKNEW=0
 else
