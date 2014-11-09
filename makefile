@@ -706,14 +706,15 @@ LDFLAGS= -lm  $(LAPACKLDFLAGS)
 endif
 
 ifeq ($(USEPFE),1)
+# MAVARACHANGE nov 8 2014 added -axCORE-AVX2 -xSSE4.2 to -O3 compile options based on pleiades documentation for haswell nodes
 LONGDOUBLECOMMAND=-m128bit-long-double
 DFLAGS=-DUSINGICC=1  -DUSINGORANGE=0  -Wno-unknown-pragmas -no-ipo $(EXTRA)
-COMP=icc $(DFLAGS)
+COMP=icc $(DFLAGS) $(OPMPFLAGS)
 # -fast forces static linkage with Intel compiler and Intel MPI library, which doesn't work on Pleaides
 #CFLAGSPRE=-fast -funroll-loops $(DFLAGS)
-CFLAGSPRE=-O3 -funroll-loops $(DFLAGS)
+CFLAGSPRE=-O3 -axCORE-AVX2 -xSSE4.2 -funroll-loops $(DFLAGS)
 CFLAGSPRENONPRECISE= $(CFLAGSPRE)
-GCCCFLAGSPRE= -O3 $(DFLAGS)
+GCCCFLAGSPRE= -O3 -axCORE-AVX2 -xSSE4.2 $(DFLAGS)
 # uses MVAPICH
 LDFLAGS= -lm  $(LAPACKLDFLAGS)
 # uses SGI MPT, but with mpicc don't need to include -lmpi manually
