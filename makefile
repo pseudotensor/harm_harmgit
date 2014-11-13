@@ -108,7 +108,7 @@ ifeq ($(USEPFE),1)
 USEMCCSWITCH=1
 AVOIDFORK=1
 MCC=mpicc
-CCGENERATE=mpicc
+CCGENERATE=mpicc #MAVARANOTE with usespecial4generate=1 as opposed to 0 when useiccintel is used, mpicc is used for compile rather than icc
 USESPECIAL4GENERATE=1
 #USELAPACK=0
 #USEOPENMP=0
@@ -707,7 +707,7 @@ endif
 
 ifeq ($(USEPFE),1)
 # MAVARACHANGE nov 8 2014 added -axCORE-AVX2 -xSSE4.2 to -O3 compile options based on pleiades documentation for haswell nodes
-LONGDOUBLECOMMAND=-m128bit-long-double
+LONGDOUBLECOMMAND=-m128bit-long-double #MAVARANOTE used when grmhddouble used at command line
 DFLAGS=-DUSINGICC=1  -DUSINGORANGE=0  -Wno-unknown-pragmas -no-ipo $(EXTRA)
 COMP=icc $(DFLAGS) $(OPMPFLAGS)
 # -fast forces static linkage with Intel compiler and Intel MPI library, which doesn't work on Pleaides
