@@ -1099,7 +1099,7 @@ int init_defglobal(void)
   // included in rdump
   defcon = 1.0;
   /* maximum increase in timestep */
-  SAFE=1.3;
+  SAFE=1000.3;//MAVARACHANGE 3;
   nstep = realnstep = 0;
   whichrestart = 0;
   restartsteps[0] = 0;
@@ -1108,7 +1108,7 @@ int init_defglobal(void)
   fakesteps[0] = restartsteps[0];
   fakesteps[1] = restartsteps[1];
   failed = 0;
-  cour = 0.5;  //atch: modified the courant factor from 0.9
+  cour = 0.5;//mavarachange5;  //atch: modified the courant factor from 0.9
   doevolvemetricsubsteps=0; // default is to evolve on long steps (only applicable if DOEVOLVEMETRIC==1 && EVOLVEMETRICSUBSTEP==2)
   gravityskipstep=0; // default is no skipping
   gravitydtglobal = BIG;
@@ -1158,7 +1158,7 @@ int init_defglobal(void)
     fluxmethod=HLLFLUX;
     //fluxmethod=HLLLAXF1FLUX;
     //fluxmethod=LAXFFLUX;
-    FLUXB = FLUXCTTOTH;
+    FLUXB = FLUXCTTOTH; //MAVARANOTE is this used???
     UTOPRIMVERSION=UTOPRIM5D1;  //UTOPRIM2DFINAL;
     //UTOPRIMVERSION=UTOPRIM5D2;
     //  UTOPRIMVERSION=UTOPRIM2DFINAL;

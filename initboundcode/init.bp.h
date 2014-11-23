@@ -15,8 +15,8 @@
 
 
 #define N1 48 //12 //12 //32  // MARKTODO resolution
-#define N2 8 //8  //6 //24
-#define N3 8 //10 // 6 for big runs //8 //6 //8   //16
+#define N2 16 //8  //6 //24
+#define N3 26 //10 // 6 for big runs //8 //6 //8   //16
 
 
 // atch adjusts
@@ -183,7 +183,7 @@
 #undef DOPOLEDEATH
 #undef DOPOLESMOOTH 
 #undef DOPOLEGAMMADEATH
-#define DOPOLEDEATH 1
+#define DOPOLEDEATH 0
 #define DOPOLESMOOTH 0  // MARKNOTE smoothes the polar axis
 #define DOPOLEGAMMADEATH 0
 // Note that if DOPOLESMOOTH>=DOPOLEGAMMADEATH or DOPOLESMOOTH>=DOPOLEDEATH, then DOPOLEGAMMADEATH or DOPOLEDEATH do nothing -- they are overwritten by DOPOLESMOOTH.
@@ -194,7 +194,7 @@
 
 
 
-#define PERCELLDT 0
+#define PERCELLDT 1
 
 
 #define COMPDIM 3

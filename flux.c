@@ -744,7 +744,8 @@ int fluxcalc_flux(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[
           if (wavedt < *(ndtvec[dimen]) ){
             *ndtvec[dimen] = wavedt;
             // below are global so can report when other dt's are reported in advance.c
-            waveglobaldti[dimen]=i;
+            printf("wavedt at i,j,k %d, %d, %d   and wavedt %21.15g \n",i,j,k,wavedt);
+	    waveglobaldti[dimen]=i;
             waveglobaldtj[dimen]=j;
             waveglobaldtk[dimen]=k;
           }
