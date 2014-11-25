@@ -1589,7 +1589,7 @@ static int prepare_globaldt(
                             FTYPE gravitydt,int gravitydti,int gravitydtj,int gravitydtk,
                             FTYPE *ndt)
 {
-  FTYPE wavedt;
+  FTYPE wavedt,wavedt_copy;
   int jj;
 
 
@@ -1599,7 +1599,7 @@ static int prepare_globaldt(
   // unsplit multidimensional Courant condition
   //
   ////////////////
-  if(PERCELLDT==0){
+  if(PERCELLDT==0){// || nstep==0){
     wavedt = 1. / (1. / ndt1 + 1. / ndt2 + 1. / ndt3);
   }
   else{
@@ -1607,6 +1607,8 @@ static int prepare_globaldt(
   }
 
 
+  wavedt_copy=wavedt; // these two lines for debug
+  mpifmin(&wavedt_copy);
 
   ///////////////
   //
@@ -1637,9 +1639,11 @@ static int prepare_globaldt(
 
     // GODMARK: 1 : do always
     if(1|| nstep%DTr==0){
+      if(wavedt_copy==wavedt){
       logdtfprintf("nstep=%ld steppart=%d :: dt=%g ndt=%g ndt1=%g ndt2=%g ndt3=%g\n",nstep,steppart,dt,*ndt,ndt1,ndt2,ndt3);
-      SLOOPA(jj) logdtfprintf("dir=%d wavedti=%d wavedtj=%d wavedtk=%d\n",jj,waveglobaldti[jj],waveglobaldtj[jj],waveglobaldtk[jj]);
+      SLOOPA(jj) logdtfprintf("dir=%d wavedti=%d wavedtj=%d wavedtk=%d\n",jj,waveglobaldti[jj]+startpos[1],waveglobaldtj[jj]+startpos[2],waveglobaldtk[jj]+startpos[3]);
       logdtfprintf("accdt=%g (accdti=%d accdtj=%d accdtk=%d) :: gravitydt=%g (gravitydti=%d gravitydtj=%d gravitydtk=%d) :: gravityskipstep=%d\n",accdt,accdti,accdtj,accdtk,gravitydt,gravitydti,gravitydtj,gravitydtk,gravityskipstep);
+      }
     }
   }
 #endif
@@ -2231,7 +2235,7 @@ int set_dt(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], SFTYPE *dt)
   FTYPE tempwavedt,tempaccdt,tempgravitydt;
   FTYPE dtij[NDIM], wavedt, accdt, gravitydt;
   FTYPE wavendt[NDIM];
-  FTYPE wavedt_1,wavedt_2,wavedttemp;
+  FTYPE wavedt_1,wavedt_2,wavedt_2copy,wavendt1copy,wavendt2copy,wavendt3copy,wavedttemp;
   FTYPE ndtfinal;
   FTYPE dUgeom[NPR],dUcomp[NUMSOURCES][NPR];
   int enerregion;
@@ -2243,7 +2247,7 @@ int set_dt(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], SFTYPE *dt)
 
 
 
-  wavedt_1=wavedt_2=wavedt=accdt=gravitydt=ndtfinal=BIG;
+  wavedt_1=wavendt1copy=wavendt2copy=wavendt3copy=wavedt_2=wavedt_2copy=wavedt=accdt=gravitydt=ndtfinal=BIG;
   wavendt[1]=wavendt[2]=wavendt[3]=BIG;
   wavendti[1]=wavendtj[1]=wavendtk[1]=-100;
   wavendti[2]=wavendtj[2]=wavendtk[2]=-100;
@@ -2303,7 +2307,7 @@ int set_dt(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], SFTYPE *dt)
 
 
     // also get PERCELLDT==1 version
-    wavedttemp = 1.0/(1.0/wavendt[1]+1.0/wavendt[2]+1.0/wavendt[3]);
+    wavedttemp = 1.0/(1.0/wavendt[1]+1.0/wavendt[2]+1.0/wavendt[3]); //MAVARANOTE this seems wrong...shouldn't it be dtij[1,2,3] rather than wavendt[1,2,3]?
     if(wavedttemp<wavedt_2) wavedt_2=wavedttemp;
 
 
@@ -2379,16 +2383,19 @@ int set_dt(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], SFTYPE *dt)
 
     // GODMARK: note that in normal advance, wavendt[i] is over each CPU region and wavedt computed for each CPU and then minimized over all CPUs -- so not perfectly consistent with MPI
     // here we preserve perfect MPI domain decomposition
+  wavendt1copy=wavendt[1]; //for debuging:
+  wavendt2copy=wavendt[2]; //for debuging:
+  wavendt3copy=wavendt[3]; //for debuging:
   mpifmin(&wavendt[1]);
   mpifmin(&wavendt[2]);
   mpifmin(&wavendt[3]);
   // single all-CPU wavedt for PERCELLDT==0 version
   wavedt_1 = 1.0/(1.0/wavendt[1]+1.0/wavendt[2]+1.0/wavendt[3]); // wavendt[i] is over entire region for each i
-
+  
   // minimize per-cell dt over all CPUs for PERCELLDT==1 version
+  wavedt_2copy=wavedt_2;
   mpifmin(&wavedt_2);
-
-
+  
   // get actual version to use
   if(PERCELLDT==0) wavedt=wavedt_1;
   else wavedt=wavedt_2;
@@ -2407,10 +2414,12 @@ int set_dt(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], SFTYPE *dt)
 
 #if(1)
   // below single line only right if 1-CPU
-  SLOOPA(jj) dualfprintf(log_file,"dtij[%d]=%21.15g wavendti=%d wavendtj=%d wavendtk=%d\n",jj,wavendt[jj],wavendti[jj],wavendtj[jj],wavendtk[jj]);
+  if((wavedt_2copy == wavedt_2 && PERCELLDT && 1) || (PERCELLDT==0 && (wavendt1copy==wavendt[1] || wavendt1copy==wavendt[2] || wavendt1copy==wavendt[3])) ){
+  SLOOPA(jj) dualfprintf(log_file,"dtij[%d]=%21.15g wavendti=%d wavendtj=%d wavendtk=%d\n",jj,wavendt[jj],wavendti[jj]+startpos[1],wavendtj[jj]+startpos[2],wavendtk[jj]+startpos[3]);
   dualfprintf(log_file,"wavedt_1=%21.15g wavedt_2=%21.15g\n",wavedt_1,wavedt_2); // report this so can compare PERCELLDT==0 vs. 1 at least when starting or restarting runs
   dualfprintf(log_file,"ndtfinal=%21.15g wavedt=%21.15g accdt=%21.15g gravitydt=%21.15g\n",ndtfinal,wavedt,accdt,gravitydt); 
   dualfprintf(log_file,"accdti=%d accdtj=%d accdtk=%d :: gravitydti=%d  gravitydtj=%d  gravitydtk=%d\n",accdti,accdtj,accdtk,gravitydti,gravitydtj,gravitydtk);
+  }
 #endif
 
   *dt = ndtfinal;

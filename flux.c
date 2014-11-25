@@ -697,7 +697,7 @@ int fluxcalc_flux(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[
   // set per-cell minimum for dt
   //
   ///////////////////
-  if(PERCELLDT){
+  if(PERCELLDT){// && 1 && nstep>0){
     FTYPE ndtveclocal[NDIM];
 
     {  
@@ -741,10 +741,10 @@ int fluxcalc_flux(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[
         dimen=dimenorig;
 #pragma omp critical
         {
-          if (wavedt < *(ndtvec[dimen]) ){
+          if (wavedt < *(ndtvec[dimen]) ){ //&& 1 && i>=0 && j>=0 && k>=0){ //MAVARANOTE maybe put check here that i,j,k not <0?
             *ndtvec[dimen] = wavedt;
             // below are global so can report when other dt's are reported in advance.c
-            printf("wavedt at i,j,k %d, %d, %d   and wavedt %21.15g \n",i,j,k,wavedt);
+	    //            printf("wavedt at i,j,k %d, %d, %d   and wavedt %21.15g \n",i,j,k,wavedt);
 	    waveglobaldti[dimen]=i;
             waveglobaldtj[dimen]=j;
             waveglobaldtk[dimen]=k;
@@ -1445,14 +1445,14 @@ int fluxcalc_standard_4fluxctstag(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR],
         // save minimum dt
         //
         /////////////////////////////////
-        if(PERCELLDT==0){
+        if(PERCELLDT==0){// || nstep==0){
 
           // only set timestep if in computational domain or just +-1 cell beyond.  Don't go further since end up not really using that flux or rely on the stability of fluxes beyond that point.
           // Need +-1 in case flow is driven by injection boundary conditions rather than what's on grid
           if(WITHINACTIVESECTIONEXPAND1(i,j,k)){
 #pragma omp critical
             {// *ndt and waveglobaldt's have to have blocked write access for OpenMP
-              if (dtij < *ndt){
+              if (dtij < *ndt){ //MAVARANOTE could put check that i,j,k!=-1 here to avoid those regions
                 *ndt = dtij;
                 // below are global so can report when other dt's are reported in advance.c
                 waveglobaldti[dir]=i;
