@@ -3551,7 +3551,7 @@ int set_dt(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], SFTYPE *dt)
 
 
     // also get PERCELLDT==1 version
-    wavedttemp = MINDTSET(wavendt[1],wavendt[2],wavendt[3]);
+    wavedttemp = MINDTSET(dtij[1],dtij[2],dtij[3]);
     if(wavedttemp<wavedt_2) wavedt_2=wavedttemp;
 
 
