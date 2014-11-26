@@ -1575,7 +1575,7 @@ int bound_uavg(int boundstage, int finalstep, SFTYPE boundtime, int boundvartype
     // CHANGINGMARK: DEBUG:
     // can modify for diag call if choose to avoid if outflow condition
     // or do something simple for outflow just for diagnostics
-#if(FULLOUTPUT!=0 && PRODUCTION==0)
+#if(FULLOUTPUT!=0 && PRODUCTION==0) //MAVARABUG add  && 1 to make consistent?
     bound_anyprim(boundstage, finalstep, boundtime, boundvartype, uavg,pstag, uavg,doboundmpi);
 #endif
 

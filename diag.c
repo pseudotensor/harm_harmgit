@@ -1251,7 +1251,7 @@ int diag_flux_pureflux(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2
           // Otherwise flux would have to be completely recomputed for gdet case JUST for diagnostic to be consistent at higher order
           UtoU_evolve2diag(UEVOLVE,UDIAG,ptrgeom,Ftemp,Ftempdiag); // convert to diag form
           PDIAGLOOP(pl){
-#if(PRODUCTION>0)
+#if(PRODUCTION>0) //MAVARABUG add  && 0 to make consistent?
             // assume if nan that just box is beyond where flux defined
             if(!isfinite(Ftempdiag[pl])){
               Ftempdiag[pl]=0.0;

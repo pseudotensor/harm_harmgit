@@ -312,7 +312,7 @@ void set_coord_parms_nodeps(int defcoordlocal)
     bp_r0=60.0; // divisor
  
     // for switches from innermost region of disk (inside horizon) to regular disk to increase timestep set by smallest vertical cell size
-    bp_rsinner=5.6;//4.0*Rin; //MAVARACHANGE changed from 4. and added the Rin so that the ratio bp_rsinner/r doesn't grow too large or too fast. maybe make that ratio **.5 to be even safer?
+    bp_rsinner=4.0;//5.6;//4.0*Rin; //MAVARACHANGE changed from 4. and added the Rin so that the ratio bp_rsinner/r doesn't grow too large or too fast. maybe make that ratio **.5 to be even safer?
     bp_r0inner=1.33; //maybe 1.0 is too quick? not really same problem as outer radii I suppose since it just flattens off;
 
     // for theta1
@@ -1347,8 +1347,8 @@ void bl_coord(FTYPE *X, FTYPE *V)
 	switchrad0=1.0;
 	switchrad2=0.0;
 	}*/
-    switchrad0 = 0.5+1.0/M_PI*atan((X[1]-bp_x1br)*5.*10./.1/8.); //dx[1]/N1);//totalsize[1]); // switch in .nb file
-    switchrad2 = 0.5-1.0/M_PI*atan((X[1]-bp_x1br)*5.*10./.1/8.); //dx[1]/N1);//totalsize[1]); // switchi in .nb file
+    switchrad0 = 0.5+1.0/M_PI*atan((X[1]-bp_x1br)*5.*10./dx[1]/48.); //dx[1]/N1);//totalsize[1]); // switch in .nb file
+    switchrad2 = 0.5-1.0/M_PI*atan((X[1]-bp_x1br)*5.*10./dx[1]/48.); //dx[1]~.03151/N1);//totalsize[1]); // switchi in .nb file
 
     theexp1 = bp_npow*X[1];
     theexp2 = theexp1+bp_cpow2 * pow(X[1]-bp_x1br,bp_npow2);
