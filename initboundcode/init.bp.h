@@ -194,7 +194,7 @@
 
 
 
-#define PERCELLDT 0
+#define PERCELLDT 1
 
 
 #define COMPDIM 3
