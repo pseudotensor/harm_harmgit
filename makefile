@@ -108,7 +108,7 @@ ifeq ($(USEPFE),1)
 USEMCCSWITCH=1
 AVOIDFORK=1
 MCC=mpicc
-CCGENERATE=mpicc
+CCGENERATE=mpicc #MAVARANOTE with usespecial4generate=1 as opposed to 0 when useiccintel is used, mpicc is used for compile rather than icc
 USESPECIAL4GENERATE=1
 #USELAPACK=0
 #USEOPENMP=0
@@ -313,7 +313,7 @@ endif
 ifeq ($(USELAPACK),1)
 #	below gives blas and lapack support
 	#LAPACKLDFLAGS=-lmkl_lapack -lmkl -lguide -lpthread
-	LAPACKLDFLAGS=-L$(MKLROOT)/lib/intel64 -lmkl_intel_ilp64 -lmkl_core -lmkl_intel_thread -liomp5 -lpthread -lm -I$(MKLROOT)/include #included by MAVARA from intel link line advisor plus some googling I realized i might need liomp5 wheb some intel_thread things were missing
+	LAPACKLDFLAGS=-L$(MKLROOT)/lib/intel64 -lmkl_intel_ilp64 -lmkl_core -lmkl_intel_thread -lpthread -lm -I$(MKLROOT)/include #included by MAVARA from intel link line advisor plus some googling I realized i might need liomp5 when some intel_thread things were missing
 
 ifeq ($(USELAPACKNEW),1)
 # below for ki-jmck or lonestar4
@@ -707,16 +707,20 @@ endif
 
 ifeq ($(USEPFE),1)
 # MAVARACHANGE nov 8 2014 added -axCORE-AVX2 -xSSE4.2 to -O3 compile options based on pleiades documentation for haswell nodes
-LONGDOUBLECOMMAND=-m128bit-long-double
-DFLAGS=-DUSINGICC=1  -DUSINGORANGE=0  -Wno-unknown-pragmas -no-ipo $(EXTRA)
+LONGDOUBLECOMMAND=-m128bit-long-double #MAVARANOTE used when grmhddouble used at command line
+DFLAGS=-DUSINGICC=1  -DUSINGORANGE=0  -Wno-unknown-pragmas -no-ipo -liomp5 $(EXTRA)
 COMP=icc $(DFLAGS) $(OPMPFLAGS)
 # -fast forces static linkage with Intel compiler and Intel MPI library, which doesn't work on Pleaides
 #CFLAGSPRE=-fast -funroll-loops $(DFLAGS)
-CFLAGSPRE=-O3 -axCORE-AVX2 -xSSE4.2 -funroll-loops $(DFLAGS) #http://www.nas.nasa.gov/hecc/support/kb/Preparing-to-Run-on-Pleiades-Ivy-Bridge-Nodes_446.html says to use -axAVX ... this is probably outdated compared to what it says on HASWELL documentation part
+CFLAGSPRE=-O3 -axCORE-AVX2 -xSSE4.2 -funroll-loops $(DFLAGS) #http://www.nas.nasa.gov/hecc/support/kb/Preparing-to-Run-on-Pleiades-Ivy-Bridge-Nodes_446.html says to use -axAVX ... this is probably outdated compared to what it says on HASWELL documentation part  MAVARANOTE took out -ip on 12/5/14 because it might cause similar problems to -ipo mentioned above? not sig speedup anyway, I think.
 CFLAGSPRENONPRECISE= $(CFLAGSPRE)
 GCCCFLAGSPRE= -O3 -axCORE-AVX2 -xSSE4.2 $(DFLAGS)
 # uses MVAPICH
-LDFLAGS= -lm  $(LAPACKLDFLAGS)
+ifeq ($(USELAPACK),1)
+	LDFLAGS= -lm  $(LAPACKLDFLAGS)
+else
+	LDFLAGS=
+endif
 # uses SGI MPT, but with mpicc don't need to include -lmpi manually
 #LDFLAGS=-lmpi -l$(LAPACKLDFLAGS)
 endif
