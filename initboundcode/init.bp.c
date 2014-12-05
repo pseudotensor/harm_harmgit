@@ -21,7 +21,7 @@
 #define MAXPASSPARMS 10
 
 //#define THETAROTMETRIC (0.5*0.7)
-#define USER_THETAROTMETRIC (0.0) // arctan(0.2) = 0.19739556
+#define USER_THETAROTMETRIC (0.05) // arctan(0.2) = 0.19739556
 #define USER_THETAROTPRIMITIVES (0.0) // probably want to choose 0, so initial conditions are as if no tilt
 
 #define NORMALTORUS 0 // note I use randfact=5.e-1 for 3D model with perturbations
@@ -346,10 +346,10 @@ int init_global(void)
 
   // default dumping period
   int idt;
-  for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=250.0;
+  for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=2000.0;
 
   // ener period
-  DTdumpgen[ENERDUMPTYPE] = 500.0;
+  DTdumpgen[ENERDUMPTYPE] = 2000.0;
   /* image file frequ., in units of M */
   DTdumpgen[IMAGEDUMPTYPE] = 4.0; // was 5 after 2.0
   // fieldline locked to images so can overlay
@@ -357,7 +357,7 @@ int init_global(void)
 
   // DTr = .1 ; /* restart file frequ., in units of M */
   /* restart file period in steps */
-  DTr = 8000; // was 1000
+  DTr = 16000; // was 1000
   DTfake=MAX(1,DTr/10);
 
 
