@@ -104,7 +104,7 @@ int user1_init_global(void)
   DODIAGEVERYSUBSTEP = 0;
 
 
-  SAFE=1000.3;//MAVARACHANGE 1.3;
+  SAFE=1.3;//MAVARACHANGE 1.3;
   //  cour = 0.9;
   //  cour=0.8;
   cour = 0.4999;

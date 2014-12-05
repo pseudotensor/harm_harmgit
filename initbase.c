@@ -1099,7 +1099,7 @@ int init_defglobal(void)
   // included in rdump
   defcon = 1.0;
   /* maximum increase in timestep */
-  SAFE=1000.3;//MAVARACHANGE 3;
+  SAFE=1.3;//MAVARACHANGE 3;
   nstep = realnstep = 0;
   whichrestart = 0;
   restartsteps[0] = 0;
