@@ -712,7 +712,7 @@ DFLAGS=-DUSINGICC=1  -DUSINGORANGE=0  -Wno-unknown-pragmas -no-ipo -liomp5 $(EXT
 COMP=icc $(DFLAGS) $(OPMPFLAGS)
 # -fast forces static linkage with Intel compiler and Intel MPI library, which doesn't work on Pleaides
 #CFLAGSPRE=-fast -funroll-loops $(DFLAGS)
-CFLAGSPRE=-O3 -ip -axCORE-AVX2 -xSSE4.2 -funroll-loops $(DFLAGS) #http://www.nas.nasa.gov/hecc/support/kb/Preparing-to-Run-on-Pleiades-Ivy-Bridge-Nodes_446.html says to use -axAVX ... this is probably outdated compared to what it says on HASWELL documentation part
+CFLAGSPRE=-O3 -axCORE-AVX2 -xSSE4.2 -funroll-loops $(DFLAGS) #http://www.nas.nasa.gov/hecc/support/kb/Preparing-to-Run-on-Pleiades-Ivy-Bridge-Nodes_446.html says to use -axAVX ... this is probably outdated compared to what it says on HASWELL documentation part  MAVARANOTE took out -ip on 12/5/14 because it might cause similar problems to -ipo mentioned above? not sig speedup anyway, I think.
 CFLAGSPRENONPRECISE= $(CFLAGSPRE)
 GCCCFLAGSPRE= -O3 -axCORE-AVX2 -xSSE4.2 $(DFLAGS)
 # uses MVAPICH
