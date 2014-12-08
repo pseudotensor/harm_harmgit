@@ -21,7 +21,7 @@
 #define MAXPASSPARMS 10
 
 //#define THETAROTMETRIC (0.5*0.7)
-#define USER_THETAROTMETRIC (0.0) // arctan(0.2) = 0.19739556
+#define USER_THETAROTMETRIC (0.05) // arctan(0.2) = 0.19739556
 #define USER_THETAROTPRIMITIVES (0.0) // probably want to choose 0, so initial conditions are as if no tilt
 
 #define NORMALTORUS 0 // note I use randfact=5.e-1 for 3D model with perturbations
@@ -233,7 +233,7 @@ int init_grid(void)
   // make changes to primary coordinate parameters R0, Rin, Rout, hslope
   R0 = -0.45;
   Rout = 40.0;
-  Rin=1.4;
+  Rin=.75;
   if(totalsize[1]<32) Rout=50.0;
   else if(totalsize[1]<=64) Rout=1.E3;
   else Rout=1.E5;
@@ -346,10 +346,10 @@ int init_global(void)
 
   // default dumping period
   int idt;
-  for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=250.0;
+  for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=2000.0;
 
   // ener period
-  DTdumpgen[ENERDUMPTYPE] = 500.0;
+  DTdumpgen[ENERDUMPTYPE] = 2000.0;
   /* image file frequ., in units of M */
   DTdumpgen[IMAGEDUMPTYPE] = 4.0; // was 5 after 2.0
   // fieldline locked to images so can overlay
@@ -357,7 +357,7 @@ int init_global(void)
 
   // DTr = .1 ; /* restart file frequ., in units of M */
   /* restart file period in steps */
-  DTr = 8000; // was 1000
+  DTr = 16000; // was 1000
   DTfake=MAX(1,DTr/10);
 
 
@@ -845,7 +845,7 @@ int init_dsandvels_bpthin(int *whichvel, int*whichcoord, int i, int j, int k, FT
 
     
     pr[RHO] = rho ;
-    pr[UU] = u ;//* (1. +randfact * (ranc(0,0) - 0.5));
+    pr[UU] = u * (1. +randfact * (ranc(0,0) - 0.5));
 
     pr[U1] = ur ;
     pr[U2] = uh ;    
@@ -1972,9 +1972,7 @@ FTYPE integrate_vpot_r(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int i, int j, int k
 
 int calc_da3vsr(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 {
-  int ii;
-  int jj=0;
-  int kk=0;
+  int ii,jj=0,kk=0;
   FTYPE X[NDIM],V[NDIM],XX[NDIM],VV[NDIM],rr,r,th;
   FTYPE idxdxp[NDIM][NDIM],dxdxp[NDIM][NDIM];
   FTYPE ucon[NDIM];
@@ -1986,9 +1984,9 @@ int calc_da3vsr(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
   int trackingticker = 0;
 
   trifprintf("Starting calc_da3vsr \n");
-  da3vsr=(SFTYPE*)malloc((ncpux1*N1+1)*sizeof(SFTYPE)); // add test to see if these work                                                                        
-  da3vsr_tot=(SFTYPE*)malloc((ncpux1*N1+1)*sizeof(SFTYPE));
-  da3vsr_integrated=(SFTYPE*)malloc((ncpux1*N1+1)*sizeof(SFTYPE));
+  da3vsr=(SFTYPE*)malloc(ncpux1*N1*sizeof(SFTYPE)); // add test to see if these work                                                                        
+  da3vsr_tot=(SFTYPE*)malloc(ncpux1*N1*sizeof(SFTYPE));
+  da3vsr_integrated=(SFTYPE*)malloc((ncpux1*N1)*sizeof(SFTYPE));
   tempstore=(SFTYPE*)malloc(3*sizeof(SFTYPE)); // add test to see if these work                                                                        
   tempstore_tot=(SFTYPE*)malloc(3*sizeof(SFTYPE));
   tempstore[0]=0.0;
@@ -2007,22 +2005,14 @@ int calc_da3vsr(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
   printf("Check 1\n");
   //trifprintf("startpos[2]==totalsize[2]/2: %g ",startpos[2]==totalsize[2]/2 );
 
-  for(ii=0; ii<N1*ncpux1+1; ii++) da3vsr[ii]=0.;
+  for(ii=0; ii<N1*ncpux1; ii++) da3vsr[ii]=0.;
 
-  FTYPE NEND;
-  if(mycpupos[1]==ncpux1-1)
-    NEND=N1+1;
-  else
-    NEND=N1;
-  for(ii=0; ii<NEND; ii++) {                                                                                                                                
+  for(ii=0; ii<N1; ii++) {                                                                                                                                
                                                                                                                                                           
-    if(1 && mycpupos[3] == 0 && (mycpupos[2]==(ncpux2/2) && ncpux2>1 || ncpux2==1)){//|| startpos[2]==totalsize[2]/2 ) {  //&& !(startpos[1]==0 && ii==0)                                                                                       
+    if(mycpupos[3] == 0 && (mycpupos[2]==ncpux2/2 && ncpux2>1 || ncpux2==1)){//|| startpos[2]==totalsize[2]/2 ) {  //&& !(startpos[1]==0 && ii==0)                                                                                       
       printf("Getting called 1");
 
-      if(ncpux2==1){ 
-	jj = N2/2; //N2/2; // MAVARACHANGE?
-	printf("Check 1.5 %d \n",jj);
-      }
+      if(ncpux2==1) jj = N2/2; // MAVARACHANGE?
       //bl_coord_ijk_2(ii, jj, kk, FACE2, X, V);                                
       coord(ii, jj, kk, CORN3, XX); // USING THIS TO MAKE SURE i have the same if statement below as I do when I set the pot.
       coord(ii, jj, kk, FACE2, X);
@@ -2094,13 +2084,13 @@ int calc_da3vsr(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
   //for(ii=0; ii<ncpux1*N1; ii++) da3vsr_tot[ii] = 0.0;
   printf("Check 1\n core id: %d",myid);
   printf("Check 2\n");
-  for(ii=0; ii<ncpux1*N1+1; ii++) printf("valuein %d : %21.15g \n", ii, da3vsr[ii]);
+  for(ii=0; ii<ncpux1*N1; ii++) printf("valuein %d : %21.15g \n", ii, da3vsr[ii]);
   
-  if(integrate(ncpux1*N1+1,&da3vsr[0],&da3vsr_tot[0], CUMULATIVETYPE3, 0) > 0) trifprintf("Failed to perform integrate() across cpus. \n") ; // 0 is just a filler for an integer$
+  if(integrate(ncpux1*N1,&da3vsr[0],&da3vsr_tot[0], CUMULATIVETYPE3, 0) > 0) trifprintf("Failed to perform integrate() across cpus. \n") ; // 0 is just a filler for an integer$
   sleep(10);
   printf("Check 3\n core id: %d",myid);
-  for(ii=0; ii<ncpux1*N1+1; ii++) printf("valueout %d : %21.15g \n", ii, da3vsr_tot[ii]);
-  for(ii=0; ii<ncpux1*N1+1; ii++) trifprintf("da3vsr_tot %d : %21.15g \n", ii, da3vsr_tot[ii]);
+  for(ii=0; ii<ncpux1*N1; ii++) printf("valueout %d : %21.15g \n", ii, da3vsr_tot[ii]);
+  for(ii=0; ii<ncpux1*N1; ii++) trifprintf("da3vsr_tot %d : %21.15g \n", ii, da3vsr_tot[ii]);
 
   sleep(10);
   if(integrate(3,&tempstore[0],&tempstore_tot[0], CUMULATIVETYPE3, 0) > 0) trifprintf("Failed to perform integrate() across cpus. \n") ;
@@ -2109,9 +2099,9 @@ int calc_da3vsr(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 
   da3vsr_integrated[0] = 1.0 * tempstore_tot[2] / (pow(tempstore_tot[1]/tempstore_tot[0],UGPOW/2+1.5)-1.0) ;
 
-  for(ii=1; ii<N1*ncpux1+1; ii++) da3vsr_integrated[ii] = da3vsr_integrated[ii-1] + da3vsr_tot[ii-1] ;
+  for(ii=1; ii<N1*ncpux1; ii++) da3vsr_integrated[ii] = da3vsr_integrated[ii-1] + da3vsr_tot[ii-1] ;
 
-  for(ii=0; ii<ncpux1*N1+1; ii++) trifprintf("value %d : %21.15g \n", ii, da3vsr_integrated[ii]);
+  for(ii=0; ii<ncpux1*N1; ii++) trifprintf("value %d : %21.15g \n", ii, da3vsr_integrated[ii]);
 
   
 
@@ -2133,7 +2123,7 @@ int calc_da3vsr(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
   /////*/
   //for(ii=ioffirstpast_rtransition; ii<N1*ncpux1; ii++) da3vsr_integrated[ii] = da3vsr_integrated[ii] + (temp1/.2+temp2);  // MAVARANOTE here I multiple by rpow2 = .1 so that when I divide by it later when using the functional form of vpot_<rtransition the edges at the transition of vpot forms line up
   
-  for(ii=0; ii<ncpux1*N1+1; ii++) if(mycpupos[1]==0 && mycpupos[2]==0) trifprintf("value %d : %21.15g \n", ii, da3vsr_integrated[ii]);
+  for(ii=0; ii<ncpux1*N1; ii++) if(mycpupos[1]==0 && mycpupos[2]==0) trifprintf("value %d : %21.15g \n", ii, da3vsr_integrated[ii]);
   ///////////
 
   trifprintf("Ending calc_da3vsr Totalsize[2]=%d \n", totalsize[2]);
