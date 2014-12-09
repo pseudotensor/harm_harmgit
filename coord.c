@@ -312,7 +312,7 @@ void set_coord_parms_nodeps(int defcoordlocal)
     bp_r0=60.0; // divisor
  
     // for switches from innermost region of disk (inside horizon) to regular disk to increase timestep set by smallest vertical cell size
-    bp_rsinner=4.0;//5.6;//4.0*Rin; //MAVARACHANGE changed from 4. and added the Rin so that the ratio bp_rsinner/r doesn't grow too large or too fast. maybe make that ratio **.5 to be even safer?
+    bp_rsinner=2.0;//5.6;//4.0*Rin; //MAVARACHANGE changed from 4. and added the Rin so that the ratio bp_rsinner/r doesn't grow too large or too fast. maybe make that ratio **.5 to be even safer?
     bp_r0inner=1.33; //maybe 1.0 is too quick? not really same problem as outer radii I suppose since it just flattens off;
 
     // for theta1
@@ -327,7 +327,7 @@ void set_coord_parms_nodeps(int defcoordlocal)
 
 
     // see fix_3dpoledtissue.nb
-#if(0)//HIGHRES // MAVARACHANGE I choose this because bp_ntheta 5 is less than the 0 used for the thin regime for the bp study. so, 5 note extreme enough.
+#if(1)//HIGHRES // MAVARACHANGE I choose this because bp_ntheta 5 is less than the 0 used for the thin regime for the bp study. so, 5 note extreme enough.
     bp_ntheta=21.0; //13.0; // MAVARANOTE only use 21 for high res, use 15 for mid-res, non for low-res
     bp_htheta=0.45; // changed from .15 to be in line with my own additions for theta-flaring
     bp_rsjet2=5.0;
@@ -1417,7 +1417,7 @@ void bl_coord(FTYPE *X, FTYPE *V)
       x2temp=1.0-X[2];
     }
     */
-    th0 = M_PI * .5 * (.11875*(1.+pow(bp_rsinner/V[1],.5))*(2.0*X[2]-1.0) +(1.0-.11875*(1.+pow(bp_rsinner/V[1],.5)))*pow(2.0*X[2]-1.0,9.0)+1.) ; // .1096=.1425/(1+6/20) -- .11875 is .1425/(1+4/20) --- .17 is .2/(1.+4/15.)
+    th0 = M_PI * .5 * (.11875*(1.+(bp_rsinner/V[1]))*(2.0*X[2]-1.0) +(1.0-.11875*(1.+(bp_rsinner/V[1])))*pow(2.0*X[2]-1.0,9.0)+1.) ; // .1096=.1425/(1+6/20) -- .11875 is .1425/(1+4/20) --- .17 is .2/(1.+4/15.)
     //    if(X[2]>=0.5 && (mycpupos[2]==ncpux2/2 && ncpux2>1 || ncpux2==1)) printf("at radius %21.15g and X[2] = %21.15g the diff is %21.15e\n",V[1],X[2],th0toprint);
 
     // th0 = M_PI * .5 * (.2*(2.0*X[2]-1.0) + (1.0-.2)*pow(2.0*X[2]-1.0,9.0)+1.) ;
@@ -1431,9 +1431,9 @@ void bl_coord(FTYPE *X, FTYPE *V)
 
 #endif
 
-#if(0)    
+#if(1)    
     // fix_3dpoledtissue.nb based:
-    theta2 = M_PI*0.5*(bp_htheta*(2.0*X[2]-1.0)+(1.0-bp_htheta)*pow(2.0*X[2]-1.0,bp_ntheta)+1.0);
+    theta2 = M_PI*0.5*(.11875*(1.+(bp_rsinner/V[1]))*(2.0*X[2]-1.0)+(1.0-.11875*(1.+(bp_rsinner/V[1])))*pow(2.0*X[2]-1.0,bp_ntheta)+1.0);
 
     // generate interpolation factor
     arctan2 = 0.5 + 1.0/M_PI*(atan( (V[1]-bp_rsjet2)/bp_r0jet2) ); // MAVARA: outside a certain radius this switches the v2 dependence from theta2 to theta1....known as interpolation. this interpolation fixes pole issue. previous involving switch0/2 involves more fundamental difference in vertical distribution.
