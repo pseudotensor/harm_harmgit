@@ -839,7 +839,7 @@ void read_coord_parms(int defcoordlocal)
 	fscanf(in,HEADER18IN,&npow,&r1jet,&njet,&r0jet,&rsjet,&Qjet,&ntheta,&htheta,&rsjet2,&r0jet2,&rsjet3,&r0jet3,&rs,&r0,&npow2,&cpow2,&rbr,&x1br);
       }
       else if (defcoordlocal == BPTHIN1) {
-	fscanf(in,HEADER18IN,&bp_npow,&bp_r1jet,&bp_njet,&bp_r0jet,&bp_rsjet,&bp_Qjet,&bp_ntheta,&bp_htheta,&bp_rsjet2,&bp_r0jet2,&bp_rsjet3,&bp_r0jet3,&bp_rs,&bp_r0,&bp_rsinner,&bp_r0inner,&bp_npow2,&bp_cpow2,&bp_rbr,&bp_x1br,&fracphi);
+	fscanf(in,HEADER21IN,&bp_npow,&bp_r1jet,&bp_njet,&bp_r0jet,&bp_rsjet,&bp_Qjet,&bp_ntheta,&bp_htheta,&bp_rsjet2,&bp_r0jet2,&bp_rsjet3,&bp_r0jet3,&bp_rs,&bp_r0,&bp_rsinner,&bp_r0inner,&bp_npow2,&bp_cpow2,&bp_rbr,&bp_x1br,&fracphi);
       }
       else if (defcoordlocal == JET5COORDS) {
 	fscanf(in,HEADER7IN,&AAAA,&AAA,&BBB,&DDD,&ii0,&CCCC,&Rj);
@@ -1427,7 +1427,7 @@ void bl_coord(FTYPE *X, FTYPE *V)
 
 #endif
 
-#if(1)    
+#if(0)    
     // fix_3dpoledtissue.nb based:
     theta2 = M_PI*0.5*(bp_htheta*(2.0*X[2]-1.0)+(1.0-bp_htheta)*pow(2.0*X[2]-1.0,bp_ntheta)+1.0);
 
