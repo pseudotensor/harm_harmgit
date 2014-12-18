@@ -82,7 +82,7 @@
 #define YELE (1.0/MUELE)
 #define MUMEANNEUTRAL (1.0/(XFACT + 0.25*YFACT + AVG1OAJ*ZFACT))
 #define MUMEANIONIZED (1.0/(2.0*XFACT + 0.75*YFACT + 0.5*ZFACT))
-#define MUMEAN (MUMEANIONIZED) // assume fully ionized
+#define MUMEAN (MUMEANIONIZED) // ASSUMPTION: fully ionized // CHOICE
 
 /// while avoids singular behavior, can make inversion unable to reach solution and get locked in cycles due to bad Jacobian, etc.
 //#define TEMPMINKELVIN (1.0E+2) // Kelvin // Problem with consistency in error function and entropy estimate for URAD method.
@@ -106,8 +106,8 @@
 /// PURE ELASTIC SCATTERING
 //#define KAPPA_ES_KNCORRF(f) (0.75*((-1.*(1. + 3.*(f)))/Power(1. + 2.*(f),2) +  (0.5*Log(1. + 2.*(f)))/(f) + ((1. + (f))*((2. + 2.*(f))/(1. + 2.*(f)) - (1.*Log(1. + 2.*(f)))/(f)))/Power((f),2)))
 //#define KAPPA_ES_KNCORR(rhocode,Tcode) (KAPPA_ES_KNCORREP(K_BOLTZ*(Tcode)*TEMPBAR/(MELE*CCCTRUE*CCCTRUE)))
-#define KAPPA_ES_FERMICORR(rhocode,Tcode) (1.0/(1.0+2.7E11*((rhocode)*RHOBAR)/pow((Tcode)*TEMPBAR,2.0))) // Buchler and Yueh 1976 (just Fermi part)
-#define KAPPA_ES_KNCORR(rhocode,Tcode) (1.0/(1.0+pow((Tcode)*TEMPBAR/4.5E8,0.86)))  // Buchler and Yueh 1976 .  Fewer electrons when near Fermi fluid limit.  Also integrates over Klein-Nishina for thermal electrons
+#define KAPPA_ES_FERMICORR(rhocode,Tcode) (1.0/(1.0+2.7E11*((rhocode)*RHOBAR)/pow((Tcode)*TEMPBAR,2.0))) // Buchler and Yueh 1976 (just Fermi part). Fewer electrons when near Fermi fluid limit.
+#define KAPPA_ES_KNCORR(rhocode,Tcode) (1.0/(1.0+pow((Tcode)*TEMPBAR/4.5E8,0.86)))  // Buchler and Yueh 1976 .  Klein-Nishina for thermal electrons.
 /// kappaes = sigma_T n_e = sigma_T n_b (n_e/n_b) = sigma_T rho/mb (ne/nb)
 #define KAPPA_ES_CODE(rhocode,Tcode) (0.2*(1.0+XFACT)*KAPPA_ES_FERMICORR(rhocode,Tcode)*KAPPA_ES_KNCORR(rhocode,Tcode)/OPACITYBAR)
 
