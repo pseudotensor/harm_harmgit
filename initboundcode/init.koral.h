@@ -541,6 +541,7 @@ struct Ccoordparams {
 #define HORIZONOUTFLOWSTATIC 214
 #define OUTFLOWSTATIC 215
 
+#define WALDMONOBC 300
 
 
 ////////////////////////////////////////////////////////

@@ -1853,7 +1853,8 @@ void compute_and_store_fluxstatecent(FTYPE (*pr)[NSTORE2][NSTORE3][NPR])
 
       // add radiation pressure to total pressure if optically thick
       FTYPE tautot[NDIM],tautotmax;
-      calc_tautot(&MACP0A1(pr,i,j,k,0), ptrgeom, tautot, &tautotmax);
+      // &GLOBALMAC(fluxstatecent,i,j,k)
+      calc_tautot(&MACP0A1(pr,i,j,k,0), ptrgeom, NULL, tautot, &tautotmax); // high accuracy not required
 
       MACP1A0(shocktemparray,SHOCKPLSTOREPTOT,i,j,k) += MIN(tautotmax/TAUTOTMAXSWITCH,1.0)*prad;
       MACP1A0(shocktemparray,SHOCKRADPLSTOREPTOT,i,j,k) += MIN(tautotmax/TAUTOTMAXSWITCH,1.0)*pmhd;
@@ -2060,7 +2061,8 @@ void compute_and_store_fluxstatecent(FTYPE (*pr)[NSTORE2][NSTORE3][NPR])
         // KORALTODO: using tau here, but tau is only over a cell.  If resolution changes, different tau, yet physics is the same.  How to manage?
         // KORALNOTE: Need this because radiation can be escaping from shock, so radiation itself is not converging, while still sufficient for MHD shock conditions.
         FTYPE tautot[NDIM],tautotmax;
-        calc_tautot(&MACP0A1(pr,i,j,k,0), ptrgeom, tautot, &tautotmax);
+        // &GLOBALMAC(fluxstatecent,i,j,k)
+        calc_tautot(&MACP0A1(pr,i,j,k,0), ptrgeom, NULL, tautot, &tautotmax); // high accuracy not required
 
         DIMENLOOP(dir){
           if(NxNOT1[dir]){

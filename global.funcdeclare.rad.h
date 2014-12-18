@@ -29,8 +29,8 @@ extern int indices_21(FTYPE A1[NDIM],FTYPE A2[NDIM],struct of_geom *ptrgeom);
 extern int indices_12(FTYPE A1[NDIM],FTYPE A2[NDIM],struct of_geom *ptrgeom);
 
 
-extern void koral_source_rad_calc(int computestate, int computeentropy, FTYPE *pr, struct of_geom *ptrgeom, FTYPE *Gdpl, FTYPE *Gdabspl, FTYPE *chi, FTYPE *Tgas, struct of_state *q);
-extern int calc_rad_lambda(FTYPE *pp, struct of_geom *ptrgeom, FTYPE kappa, FTYPE kappaes, FTYPE Tgas, FTYPE *lambda);
+extern void koral_source_rad_calc(int computestate, int computeentropy, FTYPE *pr, struct of_geom *ptrgeom, FTYPE *Gdpl, FTYPE *Gdabspl, FTYPE *chi, FTYPE *Tgas, FTYPE *Trad, struct of_state *q);
+extern int calc_rad_lambda(FTYPE *pp, struct of_geom *ptrgeom, FTYPE Tgas, FTYPE *lambda);
 
 
 
@@ -57,12 +57,14 @@ extern int vchar_rad(FTYPE *pr, struct of_state *q, int dir,
                      struct of_geom *geom, FTYPE *cmax, FTYPE *cmin, FTYPE *cmax2, FTYPE *cmin2,int *ignorecourant);
 
 
-extern void calc_kappa(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappa);
+extern void calc_kappa(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE *kappa);
+extern void calc_kappaemit(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappaemit);
 extern void calc_kappaes(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappaes);
-extern FTYPE calc_kappa_user(FTYPE rho, FTYPE T,FTYPE x,FTYPE y,FTYPE z);
+extern FTYPE calc_kappa_user(FTYPE rho, FTYPE Tg, FTYPE Tr,FTYPE x,FTYPE y,FTYPE z);
 extern FTYPE calc_kappaes_user(FTYPE rho, FTYPE T,FTYPE x,FTYPE y,FTYPE z);
-extern int calc_tautot(FTYPE *pp, struct of_geom *ptrgeom, FTYPE *tautot, FTYPE *tautotmax);
-extern int calc_tauabs(FTYPE *pp, struct of_geom *ptrgeom, FTYPE *tauabs, FTYPE *tauabsmax);
+extern int calcfull_tautot(FTYPE *pp, struct of_geom *ptrgeom, FTYPE *tautot, FTYPE *tautotmax);
+extern int calc_tautot(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q, FTYPE *tautot, FTYPE *tautotmax);
+extern int calc_tauabs(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q, FTYPE *tauabs, FTYPE *tauabsmax);
 
 extern FTYPE calc_LTE_EfromT(FTYPE);
 extern FTYPE calc_LTE_TfromE(FTYPE);

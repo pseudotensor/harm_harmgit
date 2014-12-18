@@ -434,6 +434,10 @@ int bound_prim_user_general(int boundstage, int finalstep, SFTYPE boundtime, int
         bound_radcylbeamcart(dir,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos); 
         donebc[dir]=1;
       }
+      else if(BCtype[dir]==WALDMONOBC){
+        bound_waldmono(dir,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos); 
+        donebc[dir]=1;
+      }
       else{
         dualfprintf(fail_file,"No x1up boundary condition specified: %d\n",BCtype[dir]);
         myexit(7598731);
@@ -525,6 +529,15 @@ int bound_prim_user_general(int boundstage, int finalstep, SFTYPE boundtime, int
       }
       else if(BCtype[dir]==RADCYLBEAMCARTBC){
         bound_radcylbeamcart(dir,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos); 
+        donebc[dir]=1;
+      }
+      else if(BCtype[dir]==WALDMONOBC){
+        // do ASYMM first
+        BCtype[dir]=ASYMM;
+        bound_x2up_polaraxis(boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos);
+        // now do anything else that needs to be done
+        BCtype[dir]=WALDMONOBC;
+        bound_waldmono(dir,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos); 
         donebc[dir]=1;
       }
       else{
@@ -3780,4 +3793,115 @@ int bound_staticset(int dir,
 } 
 
 
+
+
+
+/// WALDMONO
+int bound_waldmono(int dir,
+                int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+                int *inboundloop,
+                int *outboundloop,
+                int *innormalloop,
+                int *outnormalloop,
+                int (*inoutlohi)[NUMUPDOWN][NDIM],
+                int riin, int riout, int rjin, int rjout, int rkin, int rkout,
+                int *dosetbc,
+                int enerregion,
+                int *localenerpos
+                )
+
+{
+
+
+#pragma omp parallel  // assume don't require EOS
+  {
+
+
+    int i,j,k,pl,pliter;
+    FTYPE vcon[NDIM],X[NDIM],V[NDIM]; 
+#if(WHICHVEL==VEL3)
+    int failreturn;
+#endif
+    int ri, rj, rk; // reference i,j,k
+    FTYPE prescale[NPR];
+    int jj,kk;
+    struct of_geom geomdontuse[NPR];
+    struct of_geom *ptrgeom[NPR];
+    struct of_geom rgeomdontuse[NPR];
+    struct of_geom *ptrrgeom[NPR];
+
+    // assign memory
+    PALLLOOP(pl){
+      ptrgeom[pl]=&(geomdontuse[pl]);
+      ptrrgeom[pl]=&(rgeomdontuse[pl]);
+    }
+
+
+  
+
+
+    if(dir==X2UP && BCtype[X2UP]==WALDMONOBC && (totalsize[2]>1) && (mycpupos[2] == ncpux2-1) ){
+
+      OPENMPBCLOOPVARSDEFINELOOPX2DIR; OPENMPBCLOOPSETUPLOOPX2DIR;
+      //////// LOOPX2dir{
+#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+      OPENMPBCLOOPBLOCK{
+        OPENMPBCLOOPBLOCK2IJKLOOPX2DIR(i,k);
+
+        ri=i;
+        rj=rjout;
+        rk=k;
+
+        // ptrrgeom : i.e. ref geom
+        PALLLOOP(pl) get_geometry(ri, rj, rk, dirprim[pl], ptrrgeom[pl]);
+
+        FTYPE *pr;
+        LOOPBOUND2OUT{
+          pr = &MACP0A1(prim,i,j,k,0);
+
+          // ASYMM already done before got here, so only change what's necessary to change
+
+          if(ispstag==0){ // only do something special with non-field primitives
+
+            // local geom
+            PALLLOOP(pl) get_geometry(i, j, k, dirprim[pl], ptrgeom[pl]);
+
+            //coordinates of the ghost cell
+            bl_coord_ijk_2(i,j,k,CENT,X, V);
+            FTYPE r;
+            r=V[1];
+
+            FTYPE rin,rout;
+            int conddisk;
+            rin=15.;
+            rout=25.;
+            conddisk=1;//(r<rout); // as in new koral
+
+            //hot boundary
+            if(conddisk){
+
+              //pr[RHO] and pr[UU] remain same as from ASYMM condition as well as any field
+              //Keplerian gas with no inflow or outflow
+              pr[U1]=pr[U2]=0.0; // have to be careful with this for VEL3 (must have rin>>rergo).
+              pr[U3]=0.0; // current koral value
+ 
+            } // end if actually doing something to boundary cells in "hot" boundary
+
+          }// end if not staggered field
+
+
+        }// end loop over outer j's
+      }
+    }
+
+
+
+
+
+
+
+  }// end parallel region
+
+  return(0);
+} 
 

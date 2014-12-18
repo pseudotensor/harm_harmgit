@@ -592,12 +592,17 @@ static int opacity_interpolated_urfconrel(FTYPE tautotmax, FTYPE *pp,struct of_g
 // general stuff
 static FTYPE compute_dt(int isexplicit, FTYPE *CUf, FTYPE *CUimp, FTYPE dtin);
 
-static void calc_Gd(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *G, FTYPE *Tgas, FTYPE *chieffreturn, FTYPE *Gabs);
-static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *Gu, FTYPE *Tgas, FTYPE *chieffreturn, FTYPE *Gabs);
+static void calc_Gd(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *G, FTYPE *Tgasreturn, FTYPE *Tradreturn, FTYPE *chieffreturn, FTYPE *Gabs);
+static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *Gu, FTYPE *Tgasreturn, FTYPE *Tradreturn, FTYPE *chieffreturn, FTYPE *Gabs);
 void mhdfull_calc_rad(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE (*radstressdir)[NDIM]);
 static int simplefast_rad(int dir, struct of_geom *geom,struct of_state *q, FTYPE vrad2,FTYPE *vmin, FTYPE *vmax);
 
-static void calc_kappa_kappaes(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappa, FTYPE *kappaes, FTYPE *Tgas);
+
+static void calcfull_Trad(FTYPE *pp, struct of_geom *ptrgeom, FTYPE *Trad);
+static void calc_Trad(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q , FTYPE *Trad) ;
+static void calcfull_kappa_kappaes(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappa, FTYPE *kappaes, FTYPE *Tgasreturn, FTYPE *Tradreturn);
+static void calc_kappa_kappaes(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE *kappa, FTYPE *kappaes, FTYPE *Tgasreturn, FTYPE *Tradreturn);
+static void calc_kappa_kappaes_inputTgasTrad(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappa, FTYPE *kappaes, FTYPE Tgas, FTYPE Trad);
 
 
 /// f_implicit() call types
@@ -1230,7 +1235,7 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
 
 
   int finalstep = 1;  //can choose either 1 or 0 depending on whether want floor-like fixups (1) or not (0).  unclear which one would work best since for Newton method to converge might want to allow negative density on the way to the correct solution, on the other hand want to prevent runaway into rho < 0 region and so want floors.
-  FTYPE Gdpl[NPR]={0.0},Gdplabs[NPR]={0.0}, Tgas={0.0};
+  FTYPE Gdpl[NPR]={0.0},Gdplabs[NPR]={0.0}, Tgas={0.0},Trad={0.0};
   int failreturn;
   FTYPE uuabs[NPR]={0.0};
 
@@ -1331,7 +1336,7 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
     // 2) Get estimated U[entropy]
     // mathematica has Sc = Sc0 + dt *GS with GS = -u.G/T
     FTYPE GS=0.0;
-    FTYPE Tgaslocal=0.0;
+    FTYPE Tgaslocal=0.0,Tradlocal=0.0;
     if(badchange==0){
       if(0){
         Tgaslocal=compute_temp_simple(ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p,pp[RHO],pp[UU]);
@@ -1344,7 +1349,7 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
         int doradonly=1; failreturn=Utoprimgen_failwrapper(doradonly,radinvmod,showmessages,checkoninversiongas,checkoninversionrad,allowlocalfailurefixandnoreport, finalstep, eomtype, whichcap, EVOLVEUTOPRIM, UNOTHING, uu, q, ptrgeom, dissmeasure, pp, &newtonstats);
         int computestate=1;
         int computeentropy=1;
-        koral_source_rad_calc(computestate,computeentropy,pp, ptrgeom, Gdpl, Gdplabs, NULL, &Tgaslocal, q);
+        koral_source_rad_calc(computestate,computeentropy,pp, ptrgeom, Gdpl, Gdplabs, NULL, &Tgaslocal, &Tradlocal, q);
         GS = -signgd4 * localdt * Gdpl[ENTROPY]/(signgd6); // Consistent with uu = uu0 + signgd6*GS and how used when getting error function later
       }
     }
@@ -1594,7 +1599,7 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
     // UNSURE what to do, since blows up either way:
     //    FTYPE GS=0.0; DLOOPA(iv) GS += (-q->ucon[iv]*signgd2*(signgd7*Gddt[iv]))/(Tgaslocal+TEMPMIN); // more accurate than just using entropy from pp and ucon[TT] from state from pp.
     FTYPE GS=0.0;
-    FTYPE Tgaslocal;
+    FTYPE Tgaslocal=0.0,Tradlocal=0.0;
     if(0){
       Tgaslocal=compute_temp_simple(ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p,pp[RHO],pp[UU]);
       DLOOPA(iv) GS += (-q->ucon[iv]*signgd2*(signgd7*Gddt[iv]))/(Tgaslocal+TEMPMIN); // more accurate than just using entropy from pp and ucon[TT] from state from pp.
@@ -1604,7 +1609,7 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
       // Below rad inv may not be completely necessary, but not too expensive, so ok.
       int computestate=0; // already computed above
       int computeentropy=1;
-      koral_source_rad_calc(computestate,computeentropy,pp, ptrgeom, Gdpl, Gdplabs, NULL, &Tgaslocal, q);
+      koral_source_rad_calc(computestate,computeentropy,pp, ptrgeom, Gdpl, Gdplabs, NULL, &Tgaslocal, &Tradlocal, q);
       GS = -signgd4 * localdt * Gdpl[ENTROPY]/(signgd6); // so uu = uu0 + signgd6*GS is consistent with how Gdpl included in error function later.
     }
     uu[ENTROPY] = uu0[ENTROPY] + signgd6*GS;
@@ -1712,7 +1717,7 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
   int computestate=0;// already computed above
   int computeentropy=needentropy;
   FTYPE chieff;
-  koral_source_rad_calc(computestate,computeentropy,pp, ptrgeom, Gdpl, Gdplabs, &chieff, &Tgas, q);
+  koral_source_rad_calc(computestate,computeentropy,pp, ptrgeom, Gdpl, Gdplabs, &chieff, &Tgas, &Trad, q);
   FTYPE tautot,tautotmax;
   calc_tautot_chieff(pp, chieff, ptrgeom, &tautot, &tautotmax);
 
@@ -4792,7 +4797,7 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
 
     // use tau as guess for which guess is best
     FTYPE tautot[NDIM]={0.0},tautotmax=0.0;
-    calc_tautot(pb, ptrgeom, tautot, &tautotmax);
+    calc_tautot(pb, ptrgeom, q, tautot, &tautotmax);
 
     // iterated, so keep as initial (i.e. previous full solution, not just initial+flux)
     PLOOP(pliter,pl){
@@ -6701,7 +6706,7 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
 
   // for checking cases where tau>=1 but still Erf<0
   //  FTYPE tautot[NDIM],tautotmax;
-  //  calc_tautot(pp, ptrgeom, tautot, &tautotmax);
+  //  calc_tautot(pp, ptrgeom, q, tautot, &tautotmax);
   //  //  if(tautotmax>1 && pp[PRAD0]<10.0*ERADLIMIT){
   //  if(tautotmax>2 && pp[PRAD0]<10.0*ERADLIMIT){
 
@@ -6955,7 +6960,7 @@ int get_rameshsolution(int whichcallramesh, int radinvmod, int failtype, long lo
     na++; args[na]=ARAD_CODE;
     // so as really code uses:
     na++; args[na]=calc_kappaes_user(1.0,1.0,0,0,0);
-    na++; args[na]=calc_kappa_user(1.0,1.0,0,0,0);
+    na++; args[na]=calc_kappa_user(1.0,1.0,1.0,0,0,0);
     na++; args[na]=0.0;
     DLOOP(jj,kk){ na++; args[na]=ptrgeom->gcon[GIND(jj,kk)];}
     DLOOP(jj,kk){ na++; args[na]=ptrgeom->gcov[GIND(jj,kk)];}
@@ -7291,8 +7296,8 @@ int mathematica_report_check(int radinvmod, int failtype, long long int failnum,
     dualfprintf(fail_file,"%d %d %lld %d %d %d %21.15g %21.15g %d %d %21.15g %lld %d %21.15g ",failtype,myid,failnum,gotfirstnofail,eomtypelocal,itermode,errorabs[WHICHERROR],errorabsbestexternal[WHICHERROR],iters,totaliters,realdt,nstep,steppart,gam); // 14
     FTYPE trueimptryconv=IMPTRYCONV;
     dualfprintf(fail_file,"%21.15g %21.15g %21.15g %21.15g ",GAMMAMAXRAD,ERADLIMIT,IMPTRYCONVABS,IMPALLOWCONVCONSTABS); // 4
-    //    dualfprintf(fail_file,"%21.15g %21.15g %21.15g %21.15g ",ARAD_CODE,KAPPA_ES_CODE(1.0,1.0),KAPPA_FF_CODE(1.0,1.0),KAPPA_BF_CODE(1.0,1.0)); // 4
-    dualfprintf(fail_file,"%21.15g %21.15g %21.15g %21.15g ",ARAD_CODE,calc_kappaes_user(1.0,1.0,0,0,0),calc_kappa_user(1.0,1.0,0,0,0),0.0); // 4
+    //    dualfprintf(fail_file,"%21.15g %21.15g %21.15g %21.15g ",ARAD_CODE,KAPPA_ES_CODE(1.0,1.0),KAPPA_FF_CODE(1.0,1.0,1.0),KAPPA_BF_CODE(1.0,1.0,1.0)); // 4
+    dualfprintf(fail_file,"%21.15g %21.15g %21.15g %21.15g ",ARAD_CODE,calc_kappaes_user(1.0,1.0,0,0,0),calc_kappa_user(1.0,1.0,1.0,0,0,0),0.0); // 4
     DLOOP(jj,kk) dualfprintf(fail_file,"%21.15g ",ptrgeom->gcon[GIND(jj,kk)]); // 16
     DLOOP(jj,kk) dualfprintf(fail_file,"%21.15g ",ptrgeom->gcov[GIND(jj,kk)]); // 16
     PLOOP(pliter,pl) dualfprintf(fail_file,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g ",pp[pl],ppfirst[pl],pb[pl],piin[pl],prtestUiin[pl],prtestUU0[pl],uu0[pl],uu[pl],Uiin[pl]);  // 9*13
@@ -8942,10 +8947,9 @@ int koral_source_rad(int whichradsourcemethod, FTYPE *piin, FTYPE *pb, FTYPE *pf
 ///******* opacities ****************************************************
 ///**********************************************************************
 ///absorption in 1/cm form
-void calc_kappa(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappa)
+void calc_kappa(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE *kappa)
 {
-
-  extern FTYPE calc_kappa_user(FTYPE rho, FTYPE T,FTYPE x,FTYPE y,FTYPE z);
+  extern FTYPE calc_kappa_user(FTYPE rho, FTYPE Tg,FTYPE Tr,FTYPE x,FTYPE y,FTYPE z);
   //user_calc_kappa()
   FTYPE rho=pr[RHO];
   FTYPE u=pr[UU];
@@ -8953,13 +8957,46 @@ void calc_kappa(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappa)
   int jj=ptrgeom->j;
   int kk=ptrgeom->k;
   int loc=ptrgeom->p;
-  FTYPE T=compute_temp_simple(ii,jj,kk,loc,rho,u);
-  FTYPE V[NDIM],xx,yy,zz;
+  FTYPE Tgas=compute_temp_simple(ii,jj,kk,loc,rho,u);
+
+  FTYPE Trad;
+  if(q==NULL) Trad=Tgas;
+  else{
+    calc_Trad(pr,ptrgeom,q,&Trad); // kinda expensive, avoid if not really necessary.
+  }
+
+  FTYPE V[NDIM]={0.0},xx=0.0,yy=0.0,zz=0.0;
+#if(ALLOWKAPPAEXPLICITPOSDEPENDENCE)
   bl_coord_ijk(ii,jj,kk,loc,V);
   xx=V[1];
   yy=V[2];
   zz=V[3];
-  *kappa = calc_kappa_user(rho,T,xx,yy,zz);
+#endif
+  *kappa = calc_kappa_user(rho,Tgas,Trad,xx,yy,zz);
+  //  dualfprintf(fail_file,"kappaabs=%g\n",*kappa);
+}
+
+///Absorption from emission in 1/cm form
+void calc_kappaemit(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappaemit)
+{
+  extern FTYPE calc_kappa_user(FTYPE rho, FTYPE Tg,FTYPE Tr,FTYPE x,FTYPE y,FTYPE z);
+  //user_calc_kappa()
+  FTYPE rho=pr[RHO];
+  FTYPE u=pr[UU];
+  int ii=ptrgeom->i;
+  int jj=ptrgeom->j;
+  int kk=ptrgeom->k;
+  int loc=ptrgeom->p;
+  FTYPE Tgas=compute_temp_simple(ii,jj,kk,loc,rho,u);
+
+  FTYPE V[NDIM]={0.0},xx=0.0,yy=0.0,zz=0.0;
+#if(ALLOWKAPPAEXPLICITPOSDEPENDENCE)
+  bl_coord_ijk(ii,jj,kk,loc,V);
+  xx=V[1];
+  yy=V[2];
+  zz=V[3];
+#endif
+  *kappaemit = calc_kappa_user(rho,Tgas,Tgas,xx,yy,zz); // Here Trad was set to Tgas for emission of radiation
   //  dualfprintf(fail_file,"kappaabs=%g\n",*kappa);
 }
 
@@ -8975,29 +9012,50 @@ void calc_kappaes(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappaes)
   int kk=ptrgeom->k;
   int loc=ptrgeom->p;
   FTYPE T=compute_temp_simple(ii,jj,kk,loc,rho,u);
-  FTYPE V[NDIM],xx,yy,zz;
+  FTYPE V[NDIM]={0.0},xx=0.0,yy=0.0,zz=0.0;
+#if(ALLOWKAPPAEXPLICITPOSDEPENDENCE)
   bl_coord_ijk(ii,jj,kk,loc,V);
   xx=V[1];
   yy=V[2];
   zz=V[3];
+#endif
   *kappaes = calc_kappaes_user(rho,T,xx,yy,zz);
   //  dualfprintf(fail_file,"kappaes=%g\n",*kappa);
 }
+ 
 
-/// get \chi = \kappa_{abs} + \kappa_{es} in 1/cm form.
-void calc_chi(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *chi)
+void calc_chi(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE *chi)
 {
   FTYPE kappa,kappaes;
-  calc_kappa(pr,ptrgeom,&kappa);
+  calc_kappa(pr,ptrgeom,q,&kappa);
   calc_kappaes(pr,ptrgeom,&kappaes);
   
   *chi=kappa+kappaes;
 }
 
-/// get \kappa_{abs} and \kappa_{es} in \sigma/mass * rho = 1/cm form.
-static void calc_kappa_kappaes(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappa, FTYPE *kappaes, FTYPE *Tgas)
+/// get \chi = \kappa_{abs} + \kappa_{es} in 1/cm form.
+void calcfull_chi(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *chi)
 {
-  extern FTYPE calc_kappa_user(FTYPE rho, FTYPE T,FTYPE x,FTYPE y,FTYPE z);
+  struct of_state q;
+  get_state(pr, ptrgeom, &q);
+  calc_chi(pr,ptrgeom,&q,chi);
+
+}
+
+/// get \kappa_{abs} and \kappa_{es} in \sigma/mass * rho = 1/cm form.
+static void calcfull_kappa_kappaes(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappa, FTYPE *kappaes, FTYPE *Tgasreturn, FTYPE *Tradreturn)
+{
+
+  struct of_state q;
+  get_state(pr, ptrgeom, &q);
+  calc_kappa_kappaes(pr, ptrgeom, &q, kappa, kappaes, Tgasreturn, Tradreturn);
+
+}
+
+
+static void calc_kappa_kappaes(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE *kappa, FTYPE *kappaes, FTYPE *Tgasreturn, FTYPE *Tradreturn)
+{
+  extern FTYPE calc_kappa_user(FTYPE rho, FTYPE Tg,FTYPE Tr,FTYPE x,FTYPE y,FTYPE z);
   //user_calc_kappa()
   FTYPE rho=pr[RHO];
   FTYPE u=pr[UU];
@@ -9005,39 +9063,77 @@ static void calc_kappa_kappaes(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappa,
   int jj=ptrgeom->j;
   int kk=ptrgeom->k;
   int loc=ptrgeom->p;
-  FTYPE T=compute_temp_simple(ii,jj,kk,loc,rho,u); // KORALNOTE: Currently, primary location where Tgas is computed for speed purposes.
-  FTYPE V[NDIM],xx,yy,zz;
+
+  FTYPE Tgas=compute_temp_simple(ii,jj,kk,loc,rho,u); // KORALNOTE: Currently, primary location where Tgas is computed for speed purposes.
+
+  FTYPE Trad;
+  calc_Trad(pr,ptrgeom,q,&Trad);
+
+
+  FTYPE V[NDIM]={0.0},xx=0.0,yy=0.0,zz=0.0;
+#if(ALLOWKAPPAEXPLICITPOSDEPENDENCE)
   bl_coord_ijk(ii,jj,kk,loc,V);
   xx=V[1];
   yy=V[2];
   zz=V[3];
-  *kappa = calc_kappa_user(rho,T,xx,yy,zz);
-  *kappaes = calc_kappaes_user(rho,T,xx,yy,zz);
-  *Tgas = fabs(T) + TEMPMIN;
+#endif
+
+  *kappa = calc_kappa_user(rho,Tgas,Trad,xx,yy,zz);
+  *kappaes = calc_kappaes_user(rho,Tgas,xx,yy,zz);
+
+  *Tgasreturn = fabs(Tgas) + TEMPMIN;
+  *Tradreturn = fabs(Trad) + TEMPMIN;
+
+  //  dualfprintf(fail_file,"kappaabs=%g kappaes=%g\n",*kappa,*kappaes);
+}
+
+static void calc_kappa_kappaes_inputTgasTrad(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappa, FTYPE *kappaes, FTYPE Tgas, FTYPE Trad)
+{
+  extern FTYPE calc_kappa_user(FTYPE rho, FTYPE Tg,FTYPE Tr,FTYPE x,FTYPE y,FTYPE z);
+  //user_calc_kappa()
+  FTYPE rho=pr[RHO];
+  FTYPE u=pr[UU];
+  int ii=ptrgeom->i;
+  int jj=ptrgeom->j;
+  int kk=ptrgeom->k;
+  int loc=ptrgeom->p;
+
+  FTYPE V[NDIM]={0.0},xx=0.0,yy=0.0,zz=0.0;
+#if(ALLOWKAPPAEXPLICITPOSDEPENDENCE)
+  bl_coord_ijk(ii,jj,kk,loc,V);
+  xx=V[1];
+  yy=V[2];
+  zz=V[3];
+#endif
+
+  *kappa = calc_kappa_user(rho,Tgas,Trad,xx,yy,zz);
+  *kappaes = calc_kappaes_user(rho,Tgas,xx,yy,zz);
+
   //  dualfprintf(fail_file,"kappaabs=%g kappaes=%g\n",*kappa,*kappaes);
 }
 
 /// get G_\mu
-static void calc_Gd(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *GG, FTYPE *Tgas, FTYPE* chieffreturn, FTYPE *Gabs)
+static void calc_Gd(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *GG, FTYPE *Tgas, FTYPE *Trad, FTYPE* chieffreturn, FTYPE *Gabs)
 {
-  calc_Gu(pp, ptrgeom, q, GG, Tgas, chieffreturn,Gabs);
+  calc_Gu(pp, ptrgeom, q, GG, Tgas, Trad, chieffreturn,Gabs);
   indices_21(GG, GG, ptrgeom);
 }
 
 
 
 /// get 4-force for all pl's
-void koral_source_rad_calc(int computestate, int computeentropy, FTYPE *pr, struct of_geom *ptrgeom, FTYPE *Gdpl, FTYPE *Gdplabs, FTYPE *chi, FTYPE *Tgas, struct of_state *q)
+void koral_source_rad_calc(int computestate, int computeentropy, FTYPE *pr, struct of_geom *ptrgeom, FTYPE *Gdpl, FTYPE *Gdplabs, FTYPE *chi, FTYPE *Tgas, FTYPE *Trad, struct of_state *q)
 {
   int jj;
   int pliter,pl;
   FTYPE Gd[NDIM],Gdabs[NDIM];
   struct of_state qlocal;
-  FTYPE chilocal,Tgaslocal;
+  FTYPE chilocal,Tgaslocal,Tradlocal;
 
   if(q==NULL){ q=&qlocal; computestate=1; }
   if(chi==NULL) chi=&chilocal;
   if(Tgas==NULL) Tgas=&Tgaslocal;
+  if(Trad==NULL) Trad=&Tradlocal;
 
 
   // no, thermodynamics stuff can change since MHD fluid U changes, so must do get_state() as above
@@ -9045,7 +9141,7 @@ void koral_source_rad_calc(int computestate, int computeentropy, FTYPE *pr, stru
   //  get_state_uradconuradcovonly(pr, ptrgeom, q);
   if(computestate) get_state(pr,ptrgeom,q);
 
-  calc_Gd(pr, ptrgeom, q, Gd, Tgas, chi, Gdabs);
+  calc_Gd(pr, ptrgeom, q, Gd, Tgas, Trad, chi, Gdabs);
 
   PLOOP(pliter,pl) Gdpl[pl] = 0.0;
   // equal and opposite forces on fluid and radiation due to radiation 4-force
@@ -9093,12 +9189,12 @@ void koral_source_rad_calc(int computestate, int computeentropy, FTYPE *pr, stru
 static void koral_source_dtsub_rad_calc(int method, FTYPE *pr, FTYPE *Ui, FTYPE *Uf, FTYPE *dUother, FTYPE *CUf, FTYPE *CUimp, FTYPE *Gdpl, struct of_geom *ptrgeom, FTYPE *dtsub)
 {
   FTYPE Gdplabs[NPR];
-  FTYPE chi,Tgas;
+  FTYPE chi,Tgas,Trad;
   struct of_state q;
 
   int computestate=1;
   int computeentropy=1;
-  koral_source_rad_calc(computestate,computeentropy,pr,ptrgeom,Gdpl,Gdplabs,&chi,&Tgas,&q);
+  koral_source_rad_calc(computestate,computeentropy,pr,ptrgeom,Gdpl,Gdplabs,&chi,&Tgas,&Trad,&q);
 
   if(dtsub!=NULL){
     // then assume expect calculation of dtsub
@@ -9110,11 +9206,9 @@ static void koral_source_dtsub_rad_calc(int method, FTYPE *pr, FTYPE *Ui, FTYPE 
 }
 
 /// compute G^\mu 4-force
-static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *Gu, FTYPE *Tgas, FTYPE* chieffreturn, FTYPE *Gabs) 
+static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *Gu, FTYPE *Tgasreturn, FTYPE *Tradreturn, FTYPE* chieffreturn, FTYPE *Gabs) 
 {
   int i,j,k;
-
-  FTYPE rho=pp[RHO];
   
   //radiative stress tensor in the lab frame
   FTYPE Rij[NDIM][NDIM];
@@ -9127,22 +9221,37 @@ static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYP
   ucon = q->ucon;
   ucov = q->ucov;
   
- 
-  // get opacities
-  FTYPE kappa,kappaes;
-  calc_kappa_kappaes(pp,ptrgeom,&kappa,&kappaes,Tgas);
-
-  // get cooling rate
-  FTYPE lambda;
-  calc_rad_lambda(pp, ptrgeom, kappa, kappaes,*Tgas, &lambda);
-
-  // get chi
-  FTYPE chi=kappa+kappaes;
-  
-  // compute contravariant four-force in the lab frame
-  
   //Eradff = R^a_b u_a u^b
   FTYPE Ruu=0.; DLOOP(i,j) Ruu+=Rij[i][j]*ucov[i]*ucon[j];
+ 
+  FTYPE Tradff = pow(fabs(Ruu)/ARAD_CODE,0.25); // ASSUMPTION: PLANCK
+  *Tradreturn=Tradff;
+
+  // Tgas
+  FTYPE rho=pp[RHO];
+  FTYPE u=pp[UU];
+  int ii=ptrgeom->i;
+  int jj=ptrgeom->j;
+  int kk=ptrgeom->k;
+  int loc=ptrgeom->p;
+  FTYPE Tgas=compute_temp_simple(ii,jj,kk,loc,rho,u);
+  *Tgasreturn=Tgas;
+
+  // get absorption opacities
+  FTYPE kappa,kappaes;
+  calc_kappa_kappaes_inputTgasTrad(pp,ptrgeom,&kappa,&kappaes,Tgas,Tradff);
+
+  // get chi (absorption opacity total)
+  FTYPE chi=kappa+kappaes;
+
+  // get cooling rate of gas
+  FTYPE lambda;
+  calc_rad_lambda(pp, ptrgeom, Tgas, &lambda);
+
+
+  /////////  
+  // compute contravariant four-force in the lab frame
+  
 
 
 #if(0)
@@ -9175,17 +9284,20 @@ static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYP
   FTYPE Rus;
 #endif
 
+
+
 #if(DOCOMPTON)
-  FTYPE Tradff = pow(fabs(Ruu)/ARAD_CODE,0.25); // ASSUMPTION: PLANCK
   //  FTYPE neleobar=1.0/MUMEAN; // to have neleobar*kappaes=kappaesperele*mb*rho/(MUMEAN*mb)
   // ASSUMPTION: Tion=Tele
-  FTYPE preterm3 = -4.0*(rho*KAPPA_FORCOMPT_CODE(rho,*Tgas))*(*Tgas - Tradff)*(TEMPBAR/TEMPELE)*Ruu; // kappaes with its internal *rho already accounts for being number density of electrons involved, so no need to use MUMEAN again here.
+  FTYPE preterm3 = -4.0*(rho*KAPPA_FORCOMPT_CODE(rho,Tgas))*(Tgas - Tradff)*(TEMPBAR/TEMPELE)*Ruu; // kappaes with its internal *rho already accounts for being number density of electrons involved, so no need to use MUMEAN again here.
 
   //  f[pl] = ((uu[pl] - uu0[pl]) + (sign[pl] * localdt * Gdpl[pl]))*extrafactor[pl]; -> T^t_t[new] = T^t_t[old] - Gdpl[UU] -> dT^t_t = -Gdpl[UU] = +Gd[TT]
   // Ruu>0, so if Tgas>Trad, then preterm3<0.  Then egas should drop.
   // We have dT^t_t = G_t = Gd_t = -Gdpl_t = preterm3 u_t > 0, so G_t>0 so T^t_t rises so -T^t_t drops so egas drops.
 
 #endif
+
+
 
 
   //////////////
@@ -9241,8 +9353,48 @@ static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYP
 }
 
 
+// compute Trad with only primitive sand geometry
+static void calcfull_Trad(FTYPE *pp, struct of_geom *ptrgeom, FTYPE *Trad)
+{
+
+  struct of_state q;
+  get_state(pp, ptrgeom, &q);
+  calc_Trad(pp,ptrgeom,&q,Trad);
+  
+}
+
+
+/// compute Trad (also computed directly in calc_Gu() above
+static void calc_Trad(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q , FTYPE *Trad) 
+{
+  int i,j,k;
+
+  FTYPE rho=pp[RHO];
+  
+  //radiative stress tensor in the lab frame
+  FTYPE Rij[NDIM][NDIM];
+
+  //this call returns R^i_j, i.e., the first index is contra-variant and the last index is co-variant
+  mhdfull_calc_rad(pp, ptrgeom, q, Rij);
+
+  //the four-velocity of fluid in lab frame
+  FTYPE *ucon,*ucov;
+  ucon = q->ucon;
+  ucov = q->ucov;
+  
+  //Eradff = R^a_b u_a u^b
+  FTYPE Ruu=0.; DLOOP(i,j) Ruu+=Rij[i][j]*ucov[i]*ucon[j];
+
+  FTYPE Tradff = pow(fabs(Ruu)/ARAD_CODE,0.25); // ASSUMPTION: PLANCK
+
+  *Trad=Tradff; // radiation temperature in fluid frame
+}
+
+
+
+
 /// energy density loss rate integrated over frequency and solid angle
-int calc_rad_lambda(FTYPE *pp, struct of_geom *ptrgeom, FTYPE kappa, FTYPE kappaes, FTYPE Tgas, FTYPE *lambda)
+int calc_rad_lambda(FTYPE *pp, struct of_geom *ptrgeom, FTYPE Tgas, FTYPE *lambda)
 {
 
   // get gas properties
@@ -9258,9 +9410,12 @@ int calc_rad_lambda(FTYPE *pp, struct of_geom *ptrgeom, FTYPE kappa, FTYPE kappa
   // Note if T is near maximum for FTYPE, then aradT^4 likely too large.
   FTYPE B=0.25*ARAD_CODE*pow(Tgas,4.)/Pi;
 
+  FTYPE kappaemit;
+  calc_kappaemit(pp,ptrgeom,&kappaemit);
+
 
   // energy density loss rate integrated over frequency and solid angle
-  *lambda = kappa*4.*Pi*B;
+  *lambda = kappaemit*(4.*Pi*B);
 
   return(0);
 }
@@ -9298,9 +9453,9 @@ int vchar_rad(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYP
   // Assume computed as d\tau/dorthonormallength as defined by user.
   // Assume \chi defined in fluid frame (i.e. not radiation frame).
   FTYPE kappa,chi;
-  calc_chi(pr,geom,&chi);
+  calc_chi(pr,geom,q,&chi);
   // KORALTODO: in paper, suggests only kappaes should matter?
-  //  calc_kappa(pr,geom,&kappa);
+  //  calc_kappa(pr,geom,q,&kappa);
   //  chi=kappa;
 
 
@@ -11490,7 +11645,7 @@ static int get_m1closure_urfconrel_old(int showmessages, int allowlocalfailurefi
   if(M1REDUCE==TOOPACITYDEPENDENTFRAME){
     // then will possibly need tautotmax
     // get tautot based upon previous pp in order to determine what to do in case of failure
-    calc_tautot(pp, ptrgeom, tautot, &tautotmax);
+    calcfull_tautot(pp, ptrgeom, tautot, &tautotmax);
   }
 
   
@@ -11706,7 +11861,7 @@ static int get_m1closure_urfconrel(int showmessages, int allowlocalfailurefixand
   if(M1REDUCE==TOOPACITYDEPENDENTFRAME){
     // then will possibly need tautotmax
     // get tautot based upon previous pp in order to determine what to do in case of failure
-    calc_tautot(pp, ptrgeom, tautot, &tautotmax);
+    calcfull_tautot(pp, ptrgeom, tautot, &tautotmax);
   }
 
   
@@ -12250,12 +12405,23 @@ int calc_tautot_chieff(FTYPE *pp, FTYPE chieff, struct of_geom *ptrgeom, FTYPE *
 
   return 0;
 }
+
+int calcfull_tautot(FTYPE *pp, struct of_geom *ptrgeom, FTYPE *tautot, FTYPE *tautotmax)
+{
+
+  struct of_state q;
+  get_state(pp, ptrgeom, &q);
+  calc_tautot(pp, ptrgeom, &q, tautot, tautotmax);
+
+  return 0;
+
+}
 /// calculates total opacity over dx[]
-int calc_tautot(FTYPE *pp, struct of_geom *ptrgeom, FTYPE *tautot, FTYPE *tautotmax)
+int calc_tautot(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q, FTYPE *tautot, FTYPE *tautotmax)
 {
   //xx[0] holds time
   FTYPE kappa,kappaes,chi;
-  calc_kappa(pp,ptrgeom,&kappa);
+  calc_kappa(pp,ptrgeom,q,&kappa);
   calc_kappaes(pp,ptrgeom,&kappaes);
   chi=kappa+kappaes;
   int NxNOT1[NDIM]={0,N1NOT1,N2NOT1,N3NOT1}; // want to ignore non-used dimensions
@@ -12271,10 +12437,11 @@ int calc_tautot(FTYPE *pp, struct of_geom *ptrgeom, FTYPE *tautot, FTYPE *tautot
 }
 
 /// calculates abs opacity over dx[]
-int calc_tauabs(FTYPE *pp, struct of_geom *ptrgeom, FTYPE *tauabs, FTYPE *tauabsmax)
+/// not used currently
+int calc_tauabs(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q, FTYPE *tauabs, FTYPE *tauabsmax)
 {
   FTYPE kappa;
-  calc_kappa(pp,ptrgeom,&kappa);
+  calc_kappa(pp,ptrgeom,q,&kappa);
 
   int NxNOT1[NDIM]={0,N1NOT1,N2NOT1,N3NOT1}; // want to ignore non-used dimensions
 

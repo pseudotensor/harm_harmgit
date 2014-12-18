@@ -33,7 +33,7 @@ static int asym_compute_2(FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
 
 static FTYPE fractional_diff( FTYPE a, FTYPE b );
 
-static FTYPE compute_dissmeasure(int timeorder, int i, int j, int k, int loc, FTYPE *pr, struct of_geom *ptrgeom, FTYPE *CUf, FTYPE *CUnew, FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE *Ui,  FTYPE *Uf, FTYPE *tempucum);
+static FTYPE compute_dissmeasure(int timeorder, int i, int j, int k, int loc, FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE *CUf, FTYPE *CUnew, FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE *Ui,  FTYPE *Uf, FTYPE *tempucum);
 
 
 // AVG_2_POINT functions:
@@ -622,7 +622,7 @@ static int advance_standard(
         // note that uf and ucum are initialized inside setup_rktimestep() before first substep
 
         // get dissmeasure
-        FTYPE dissmeasure=compute_dissmeasure(timeorder,i,j,k,ptrgeom->p,MAC(pf,i,j,k),ptrgeom,CUf, CUnew, F1, F2, F3, MAC(ui,i,j,k),MAC(olduf,i,j,k), MAC(tempucum,i,j,k)); // GODMARK:  If doflux==0, then this actually uses old F's.
+        FTYPE dissmeasure=compute_dissmeasure(timeorder,i,j,k,ptrgeom->p,MAC(pf,i,j,k),ptrgeom,qptr2,CUf, CUnew, F1, F2, F3, MAC(ui,i,j,k),MAC(olduf,i,j,k), MAC(tempucum,i,j,k)); // GODMARK:  If doflux==0, then this actually uses old F's.
 
         // find dU(pb)
         // so pf contains updated field at cell center for use in (e.g.) implicit solver that uses inversion P(U)
@@ -1012,7 +1012,7 @@ static int advance_standard(
 
 
 /// compute dissipation measure for determining if can use entropy equations of motion or must use energy equations of motion
-static FTYPE compute_dissmeasure(int timeorder, int i, int j, int k, int loc, FTYPE *pr, struct of_geom *ptrgeom, FTYPE *CUf, FTYPE *CUnew, FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE *ui,  FTYPE *uf, FTYPE *tempucum)
+static FTYPE compute_dissmeasure(int timeorder, int i, int j, int k, int loc, FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE *CUf, FTYPE *CUnew, FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE *ui,  FTYPE *uf, FTYPE *tempucum)
 {
   FTYPE dissmeasure;
   int pliter,pl;
@@ -1188,7 +1188,7 @@ static FTYPE compute_dissmeasure(int timeorder, int i, int j, int k, int loc, FT
       if(truenspecial>=6 && SPECIALPL6>=0){
         // add radiation pressure to total pressure if optically thick
         FTYPE tautot[NDIM],tautotmax;
-        calc_tautot(pr, ptrgeom, tautot, &tautotmax);
+        calc_tautot(pr, ptrgeom, NULL, tautot, &tautotmax); // high accuracy not required
 
         FTYPE dissswitch=MIN(tautotmax/TAUTOTMAXSWITCH,1.0);
 

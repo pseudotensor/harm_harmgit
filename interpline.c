@@ -3114,7 +3114,8 @@ static int get_V_and_P(int whichprimtype, int interporflux, int dir, int bs, int
 #if(RADSHOCKFLAT&&EOMRADTYPE!=EOMRADNONE) // KORAL
     // add radiation pressure to total pressure if optically thick
     FTYPE tautot[NDIM],tautotmax;
-    calc_tautot(myprim, ptrgeom, tautot, &tautotmax);
+    //calcfull_tautot(myprim, ptrgeom, tautot, &tautotmax);
+    calc_tautot(myprim, ptrgeom, NULL, tautot, &tautotmax); // very accurate tautot not necessary, so use Tgas=Trad assumption in opacity
     Pline[EOMSETRAD][yiniter]=(4.0/3.0-1.0)*yrealin[PRAD0][0][num]; // radiative pressure
     // add radiation pressure to total pressure if optically thick
     // KORALNOTE: recall pressure just along diagonal and no velocity in R^\mu_\nu
@@ -3710,7 +3711,8 @@ int compute_df_line_new(int doingweno, int whichprimtype, int interporflux, int 
 #if(RADSHOCKFLAT&&EOMRADTYPE!=EOMRADNONE) // KORAL
     // add radiation pressure to total pressure if optically thick
     FTYPE tautot[NDIM],tautotmax;
-    calc_tautot(myprim, ptrgeom, tautot, &tautotmax);
+    //    calcfull_tautot(myprim, ptrgeom, tautot, &tautotmax);
+    calc_tautot(myprim, ptrgeom, NULL, tautot, &tautotmax); // very accurate tautot not necessary, so use Tgas=Trad assumption in opacity
     Pline[EOMSETRAD][num]=(4.0/3.0-1.0)*yprim[PRAD0][0][num]; // radiative pressure
     // add radiation pressure to total pressure if optically thick
     // KORALNOTE: recall pressure just along diagonal and no velocity in R^\mu_\nu

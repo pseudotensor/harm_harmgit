@@ -1754,14 +1754,14 @@ int raddump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
  
   // get kappa
   FTYPE kappa,kappaes;
-  calc_kappa(pr,ptrgeom,&kappa);
+  calc_kappa(pr,ptrgeom,&q,&kappa);
   myset(datatype,&kappa,0,1,writebuf); // 1
   calc_kappaes(pr,ptrgeom,&kappaes);
   myset(datatype,&kappaes,0,1,writebuf); // 1
 
   // get tau
   FTYPE tautot[NDIM]={0},tautotmax;
-  calc_tautot(pr, ptrgeom, tautot, &tautotmax);
+  calc_tautot(pr, ptrgeom, &q, tautot, &tautotmax);
   myset(datatype,tautot,0,NDIM,writebuf); // NDIM
   myset(datatype,&tautotmax,0,1,writebuf); // 1
 
@@ -1774,17 +1774,17 @@ int raddump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
   myset(datatype,pradffortho,PRAD0,NDIM,writebuf); // NDIM
 
   // get 4-force in lab and fluid frame
-  FTYPE Gdpl[NPR],Gdabspl[NPR],chi,Tgas;
+  FTYPE Gdpl[NPR],Gdabspl[NPR],chi,Tgas,Trad;
   int computestate=0;// already computed above
   int computeentropy=1;
-  koral_source_rad_calc(computestate,computeentropy,pr, ptrgeom, Gdpl, Gdabspl, &chi, &Tgas, &q);
+  koral_source_rad_calc(computestate,computeentropy,pr, ptrgeom, Gdpl, Gdabspl, &chi, &Tgas, &Trad, &q);
   myset(datatype,Gdpl,PRAD0,NDIM,writebuf); // NDIM
   myset(datatype,Gdabspl,PRAD0,NDIM,writebuf); // NDIM
 
   // get lambda
   FTYPE lambda;
   //  FTYPE Tgas=calc_PEQ_Tfromurho(pr[UU],pr[RHO]);
-  calc_rad_lambda(pr, ptrgeom, kappa, kappaes, Tgas, &lambda);
+  calc_rad_lambda(pr, ptrgeom, Tgas, &lambda);
   myset(datatype,&lambda,0,1,writebuf); // 1
 
   // get Erf [assuming LTE]
@@ -1796,8 +1796,8 @@ int raddump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
   myset(datatype,&Tgas,0,1,writebuf); // 1
 
   // get radiation T from actual Erf
-  FTYPE Trad=calc_LTE_TfromE(pr[PRAD0]);
-  myset(datatype,&Trad,0,1,writebuf); // 1
+  FTYPE Tradlte=calc_LTE_TfromE(pr[PRAD0]);
+  myset(datatype,&Tradlte,0,1,writebuf); // 1
 
   // get radiation's fluid frame T from actual Erf in fluid frame
   FTYPE Tradff=calc_LTE_TfromE(pradffortho[PRAD0]);

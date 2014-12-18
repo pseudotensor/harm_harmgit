@@ -65,6 +65,9 @@
 
 // Sun-like stars: X=0.75, Y=0.23, Z=0.02, so may be applicable to X-ray binaries
 // Solar: X=0.70 Y=0.28 Z=0.02 by mass, neutral MUMEAN=1.3, ionized MUMEAN=0.62
+#define XSOLAR (0.7)
+#define YSOLAR (0.28)
+#define ZSOLAR (1.0-(XSOLAR+YSOLAR))
 // Big-Bang: X=0.77 Y=0.23 Z=0.00
 // post-Big-Bang: X=0.6 Y=0.4 Z=0, so applicable to GRBs from Pop3 stars.
 
@@ -75,6 +78,8 @@
 
 #define ZFACT (1.0-(XFACT+YFACT)) // Rest.  Called "metals".
 // http://www.astro.wisc.edu/~townsend/resource/teaching/astro-310-F08/21-eos.pdf
+#define MUELE (2.0/(1.0+XFACT)) //(1.0/(XFACT + 0.5*(YFACT+ZFACT))) // inverse of Ye = electron fraction by baryon mass
+#define YELE (1.0/MUELE)
 #define MUMEANNEUTRAL (1.0/(XFACT + 0.25*YFACT + AVG1OAJ*ZFACT))
 #define MUMEANIONIZED (1.0/(2.0*XFACT + 0.75*YFACT + 0.5*ZFACT))
 #define MUMEAN (MUMEANIONIZED) // assume fully ionized
@@ -120,13 +125,18 @@
 
 #define TEMPELE (MELE*CCCTRUE*CCCTRUE/K_BOLTZ)
 
-/// EMISSION/ABSORBPTION
-#define KAPPA_FF_CODE(rhocode,Tcode) (4.0E22*(1.0+XFACT)*(1.0-ZFACT)*((rhocode)*RHOBAR)*pow((Tcode)*TEMPBAR,-7.0/2.0)*(1.0+4.4E-10*(Tcode*TEMPBAR))/OPACITYBAR)  // ASSUMPTION: Thermal ele and no pairs.  See Rybicki & Lightman Eq~5.25 and McKinney & Uzdensky (2012)
-#define KAPPA_BF_CODE(rhocode,Tcode) (3.0E25*(ZFACT)*(1.0+XFACT+0.75*YFACT)*((rhocode)*RHOBAR)*pow((Tcode)*TEMPBAR,-7.0/2.0)/OPACITYBAR) // ASSUMPTION: Number of electrons similar to for solar abundances for 1+X+(3/4)Y term.
-#define KAPPA_HN_CODE(rhocode,Tcode) (1.1E-25*pow(ZFACT,0.5)*pow((rhocode)*RHOBAR,0.5)*pow((Tcode)*TEMPBAR,7.7)/OPACITYBAR)
-#define KAPPA_MOL_CODE(rhocode,Tcode) (0.1*ZFACT/OPACITYBAR)
-#define KAPPA_GENFF_CODE(rhocode,Tcode) (1.0/(1.0/(KAPPA_MOL_CODE(rhocode,Tcode)+KAPPA_HN_CODE(rhocode,Tcode)) + 1.0/(KAPPA_BF_CODE(rhocode,Tcode)+KAPPA_FF_CODE(rhocode,Tcode)))) // for 1.3E3K \le T \le 1E9K or higher.  Numerically better to have kappa bottom out at low T so no diverent opacity as T->0
+/// EMISSION (Tr=Tg) or ABSORBPTION (Tr different from Tg)
+#define KAPPA_ZETA(Tgcode,Trcode) ((TEMPMIN+Trcode)/(TEMPMIN+Tgcode))
+#define KAPPA_FF_CODE(rhocode,Tgcode,Trcode) (4.0E22*(1.0+XFACT)*(1.0-ZFACT)*((rhocode)*RHOBAR)*pow((Tgcode)*TEMPBAR,-0.5)*pow((Trcode)*TEMPBAR,-3.0)*log(1.0+1.6*KAPPA_ZETA(Tgcode,Trcode))*(1.0+4.4E-10*(Tgcode*TEMPBAR))/OPACITYBAR)  // ASSUMPTION: Thermal ele and no pairs.  See Rybicki & Lightman Eq~5.25 and McKinney & Uzdensky (2012) .  For Tr,Tg split, see Ramesh notes.
+#define KAPPA_BF_CODE(rhocode,Tgcode,Trcode) (3.0E25*(ZFACT)*(1.0+XFACT+0.75*YFACT)*((rhocode)*RHOBAR)*pow((Tgcode)*TEMPBAR,-0.5)*pow((Trcode)*TEMPBAR,-3.0)*log(1.0+1.6*KAPPA_ZETA(Tgcode,Trcode))/OPACITYBAR) // ASSUMPTION: Number of electrons similar to for solar abundances for 1+X+(3/4)Y term.  For Tr,Tg split, see Ramesh notes.
+#define KAPPA_CHIANTIBF_CODE(rhocode,Tgcode,Trcode) (4.0E34*((rhocode*RHOBAR))*(ZFACT/ZSOLAR)*YELE*pow((Tgcode)*TEMPBAR,-1.7)*pow((Trcode)*TEMPBAR,-3.0)/OPACITYBAR)
+#define KAPPA_HN_CODE(rhocode,Tgcode,Trcode) (1.1E-25*pow(ZFACT,0.5)*pow((rhocode)*RHOBAR,0.5)*pow((Tgcode)*TEMPBAR,7.7+3.0)*pow((Trcode)*TEMPBAR,-3.0)/OPACITYBAR)
+#define KAPPA_MOL_CODE(rhocode,Tgcode,Trcode) (0.1*ZFACT/OPACITYBAR)
+// see opacities.nb
+#define KAPPA_GENFF_CODE(rhocode,Tgcode,Trcode) (1.0/(1.0/(KAPPA_MOL_CODE(rhocode,Tgcode,Trcode)+KAPPA_HN_CODE(rhocode,Tgcode,Trcode)) + 1.0/(KAPPA_CHIANTIBF_CODE(rhocode,Tgcode,Trcode)+KAPPA_BF_CODE(rhocode,Tgcode,Trcode)+KAPPA_FF_CODE(rhocode,Tgcode,Trcode)))) // for 1.3E3K \le T \le 1E9K or higher.  Numerically better to have kappa bottom out at low T so no diverent opacity as T->0
 
+// whether to allow kappa to depend explicitly upon position, which would require getting position and can be expensive.
+#define ALLOWKAPPAEXPLICITPOSDEPENDENCE 0
 
 //////////////////////////////////
 //

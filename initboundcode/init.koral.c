@@ -32,13 +32,21 @@ static FTYPE rhodisk;
 static FTYPE nz_func(FTYPE R) ;
 static FTYPE taper_func2(FTYPE R,FTYPE rin, FTYPE rpow) ;
 static int fieldprim(int whichmethod, int whichinversion, int *whichvel, int*whichcoord, int ii, int jj, int kk, FTYPE *pr);
+
+///////
+// WALD STUFF
 FTYPE B0WALD; // set later
-int DOWALDDEN=0; // WALD: 0->1 to set densities as floor-like with below b^2/rho at horizon.  Should also choose FIELDTYPE==FIELDWALD.
+// DOWALDDEN=0 : Turn off doing WALD
+// DOWALDDEN=1 : among other things, set densities as floor-like with below b^2/rho at horizon.  Should also choose FIELDTYPE==FIELDWALD.
+// DOWALDDEN=2 : monopole case against disk equator
+int DOWALDDEN=0;
 int WALDWHICHACOV=3; // which component : -1 is all of them
 //FTYPE BSQORHOWALD=50.0; // leads to too large b^2/rho and uu0 cylindrical shock forms at r\sim 2r_g and remains forever (at least at 128x64)
 FTYPE BSQORHOWALD=100.0;
 FTYPE aforwald;
 FTYPE TILTWALD;
+
+
 
 //FTYPE thindiskrhopow=-3.0/2.0; // can make steeper like -0.7
 FTYPE thindiskrhopow=-0.2; // closer to NT73
@@ -279,7 +287,7 @@ int prepre_init_specific_init(void)
   }
 
   // Also: SET USEROMIO to 0 or 1 in mympi.definit.h (needs to be 0 for TEXTOUTPUT)
-  if(PRODUCTION==0||DOWALDDEN==1){ // for now DOWALDDEN==1
+  if(PRODUCTION==0||DOWALDDEN!=0){ // for now DOWALDDEN!=0
     binaryoutput=TEXTOUTPUT; // WALDPRODUCTION
     // KRAKEN: comment out above.  And change mympi.definit.h's USEROMIO 0 to 1 for the "choice" version.
   }
@@ -365,7 +373,7 @@ int post_init_specific_init(void)
   // print out units and some constants
   trifprintf("Constants\n");
   trifprintf("LBAR=%g TBAR=%g VBAR=%g RHOBAR=%g MBAR=%g UBAR=%g TEMPBAR=%g\n",LBAR,TBAR,VBAR,RHOBAR,MBAR,UBAR,TEMPBAR); 
-  trifprintf("ARAD_CODE=%26.20g OPACITYBAR=%g KAPPA_ES_CODE(1,1)=%g KAPPA_FF_CODE(1,1)=%g KAPPA_BF_CODE(1,1)=%g KAPPA_GENFF_CODE(1,1)=%g\n",ARAD_CODE,OPACITYBAR,KAPPA_ES_CODE(1,1),KAPPA_FF_CODE(1,1),KAPPA_BF_CODE(1,1),KAPPA_GENFF_CODE(1,1));
+  trifprintf("ARAD_CODE=%26.20g OPACITYBAR=%g KAPPA_ES_CODE(1,1)=%g KAPPA_FF_CODE(1,1,1)=%g KAPPA_BF_CODE(1,1,1)=%g KAPPA_GENFF_CODE(1,1)=%g\n",ARAD_CODE,OPACITYBAR,KAPPA_ES_CODE(1,1),KAPPA_FF_CODE(1,1,1),KAPPA_BF_CODE(1,1,1),KAPPA_GENFF_CODE(1,1,1));
   trifprintf("ARAD_CODE_DEF=%g\n",ARAD_CODE_DEF);
   trifprintf("GAMMAMAXRAD=%g\n",GAMMAMAXRAD);
 
@@ -2249,6 +2257,11 @@ int init_global(void)
     GAMMAMAXRADFAIL=50.0L;
     GAMMAMAX=15.0L; // MHD
 
+
+    ////////////
+    //
+    // BOUNDARY CONDITIONS
+
     if(WHICHPROBLEM==RADCYLBEAM){
       //      BCtype[X1DN]=ASYMM;
       //      BCtype[X1DN]=SYMM;
@@ -2286,6 +2299,8 @@ int init_global(void)
       else if(WHICHPROBLEM==RADNT || WHICHPROBLEM==RADDONUT){
         BCtype[X2DN]=POLARAXIS; // assumes Rin_array[2]=0
       }
+
+
       
       if(WHICHPROBLEM==RADNT || WHICHPROBLEM==RADFLATDISK) BCtype[X2UP]=RADNTBC; // disk condition (with ASYMM done first)
       else  if(WHICHPROBLEM==RADDONUT){
@@ -2293,9 +2308,17 @@ int init_global(void)
         BCtype[X2UP]=POLARAXIS; // assumes Rin_array[2]=pi (full sphere)
       }
 
+      if(DOWALDDEN==2) BCtype[X2UP]=WALDMONOBC;
+
       BCtype[X3UP]=PERIODIC;
       BCtype[X3DN]=PERIODIC;
     }
+
+
+
+
+    ////////////
+    // DUMP PERIODS
 
     int idt;
     if(WHICHPROBLEM==RADCYLBEAMCART){
@@ -2979,12 +3002,14 @@ int init_defcoord(void)
     Rin=RADNT_MINX;
     Rout=RADNT_MAXX;
 
-    if(DOWALDDEN){
+    if(DOWALDDEN==0) defcoord=JET6COORDS;
+    else if(DOWALDDEN){
       //      Rout=2000.0; // new normal
       Rout=400.0; // newer normal
       defcoord=USERCOORD;
     }
-    else defcoord=JET6COORDS;
+    //    else if(DOWALDDEN==2) defcoord=JET6COORDS;
+
 
     if(0){
       Rin_array[1]=Rin;
@@ -3192,7 +3217,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
       rinfield=12;
       beta = 10.0;
     }
-    else if(FIELDTYPE==FIELDWALD){
+    else if(FIELDTYPE==FIELDWALD || FIELDTYPE==MONOPOLE){
       rin=9.0;
       rinfield=1.0;
       routfield=2.0;
@@ -3277,7 +3302,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 #define KAPPAES 0.
 
 // assume KAPPA defines fraction of FF opacity
-#define KAPPAUSER(rho,T) (rho*KAPPA*KAPPA_FF_CODE(rho,T))
+#define KAPPAUSER(rho,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
 // assume KAPPAES defines fraction of ES opacity
 #define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_CODE(rho,T))
 
@@ -3308,7 +3333,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 //#define KAPPAES (1E-4*1.09713E-18*1E-3*1E-10)
 
 // assume KAPPA defines fraction of FF opacity
-//#define KAPPAUSER(rho,T) (rho*KAPPA*KAPPA_FF_CODE(rho,T))
+//#define KAPPAUSER(rho,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
 // assume KAPPAES defines fraction of ES opacity
 //#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_CODE(rho,T))
 
@@ -3319,7 +3344,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 //#define KAPPAES (1.0)
 //#define KAPPAES (1E-10)
 
-#define KAPPAUSER(rho,T) (rho*KAPPA)
+#define KAPPAUSER(rho,Tg,Tr) (rho*KAPPA)
 #define KAPPAESUSER(rho,T) (rho*KAPPAES)
 
 
@@ -3330,7 +3355,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 #define KAPPAES (SMALL)
 
 // assume KAPPA defines fraction of FF opacity
-#define KAPPAUSER(rho,T) (rho*KAPPA*KAPPA_FF_CODE(rho,T))
+#define KAPPAUSER(rho,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
 // assume KAPPAES defines fraction of ES opacity
 #define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_CODE(rho,T))
 
@@ -3352,7 +3377,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 #define KAPPAES 0.
 
 // assume KAPPA defines fraction of FF opacity
-#define KAPPAUSER(rho,T) (rho*KAPPA*KAPPA_FF_CODE(rho,T))
+#define KAPPAUSER(rho,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
 // assume KAPPAES defines fraction of ES opacity
 #define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_CODE(rho,T))
 
@@ -3368,19 +3393,19 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 #define KAPPAESUSER(rho,T) (0.0)
 
 #if(NTUBE==1)
-#define KAPPAUSER(rho,T) (0.4*rho)
+#define KAPPAUSER(rho,Tg,Tr) (0.4*rho)
 #elif(NTUBE==2)
-#define KAPPAUSER(rho,T) (0.2*rho)
+#define KAPPAUSER(rho,Tg,Tr) (0.2*rho)
 #elif(NTUBE==3)
-#define KAPPAUSER(rho,T) (0.3*rho)
+#define KAPPAUSER(rho,Tg,Tr) (0.3*rho)
 #elif(NTUBE==31)
-#define KAPPAUSER(rho,T) (25*rho)
+#define KAPPAUSER(rho,Tg,Tr) (25*rho)
 #elif(NTUBE==4)
-#define KAPPAUSER(rho,T) (0.08*rho)
+#define KAPPAUSER(rho,Tg,Tr) (0.08*rho)
 #elif(NTUBE==41)
-#define KAPPAUSER(rho,T) (0.7*rho)
+#define KAPPAUSER(rho,Tg,Tr) (0.7*rho)
 #elif(NTUBE==5)
-#define KAPPAUSER(rho,T) (1000*rho)
+#define KAPPAUSER(rho,Tg,Tr) (1000*rho)
 #endif
 
 
@@ -3392,8 +3417,8 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 
 #if(WHICHPROBLEM==RADSHADOW || WHICHPROBLEM==RADDBLSHADOW)
 
-//#define KAPPAUSER(rho,T) (rho*1E2)
-#define KAPPAUSER(rho,T) (rho*1.0) // paper
+//#define KAPPAUSER(rho,Tg,Tr) (rho*1E2)
+#define KAPPAUSER(rho,Tg,Tr) (rho*1.0) // paper
 #define KAPPAESUSER(rho,T) (rho*0.0)
 
 
@@ -3415,7 +3440,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 #define KAPPAES 0.
 
 // assume KAPPA defines fraction of FF opacity
-#define KAPPAUSER(rho,T) (rho*KAPPA*KAPPA_FF_CODE(rho,T))
+#define KAPPAUSER(rho,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
 // assume KAPPAES defines fraction of ES opacity
 #define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_CODE(rho,T))
 
@@ -3430,7 +3455,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 #define KAPPAES 0.
 
 // assume KAPPA defines fraction of FF opacity
-#define KAPPAUSER(rho,T) (rho*KAPPA*KAPPA_FF_CODE(rho,T))
+#define KAPPAUSER(rho,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
 // assume KAPPAES defines fraction of ES opacity
 #define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_CODE(rho,T))
 
@@ -3445,7 +3470,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 #define KAPPAES 1. // only scattering
 
 // assume KAPPA defines fraction of FF opacity
-#define KAPPAUSER(rho,T) (rho*KAPPA*KAPPA_FF_CODE(rho,T))
+#define KAPPAUSER(rho,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
 // assume KAPPAES defines fraction of ES opacity
 #define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_CODE(rho,T))
 
@@ -3460,7 +3485,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 #define KAPPAES 0.
 
 // assume KAPPA defines fraction of FF opacity
-#define KAPPAUSER(rho,T) (rho*KAPPA*KAPPA_FF_CODE(rho,T))
+#define KAPPAUSER(rho,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
 // assume KAPPAES defines fraction of ES opacity
 #define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_CODE(rho,T))
 
@@ -3472,7 +3497,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 
 #if(WHICHPROBLEM==RADWAVE)
 
-#define KAPPAUSER(rho,T) (rho*RADWAVE_KAPPA)
+#define KAPPAUSER(rho,Tg,Tr) (rho*RADWAVE_KAPPA)
 #define KAPPAESUSER(rho,T) (rho*RADWAVE_KAPPAES)
 
 #endif
@@ -3481,7 +3506,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 
 #if(WHICHPROBLEM==KOMIPROBLEM)
 
-#define KAPPAUSER(rho,T) (0.)
+#define KAPPAUSER(rho,Tg,Tr) (0.)
 #define KAPPAESUSER(rho,T) (0.)
 
 #endif
@@ -3494,7 +3519,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 #define KAPPAES 1.0
 
 // assume KAPPA defines fraction of FF opacity
-#define KAPPAUSER(rho,T) (rho*KAPPA*KAPPA_FF_CODE(rho,T))
+#define KAPPAUSER(rho,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
 // assume KAPPAES defines fraction of ES opacity
 #define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_CODE(rho,T))
 
@@ -3509,7 +3534,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 #define KAPPAES 0.
 
 // assume KAPPA defines fraction of FF opacity
-#define KAPPAUSER(rho,T) (rho*KAPPA*KAPPA_FF_CODE(rho,T))
+#define KAPPAUSER(rho,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
 // assume KAPPAES defines fraction of ES opacity
 #define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_CODE(rho,T))
 
@@ -3518,15 +3543,15 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 
 #if(WHICHPROBLEM==RADNT || WHICHPROBLEM==RADFLATDISK)
 
-#define KAPPAUSER(rho,T) (rho*KAPPA_ES_CODE(rho,T)/1E14*0.1) // wierd use of kappa_{es} in koral
-//#define KAPPAUSER(rho,T) (rho*KAPPA_ES_CODE(rho,T)/1E14*0.0)
+#define KAPPAUSER(rho,Tg,Tr) (rho*KAPPA_ES_CODE(rho,Tg)/1E14*0.1) // wierd use of kappa_{es} in koral
+//#define KAPPAUSER(rho,Tg,Tr) (rho*KAPPA_ES_CODE(rho,T)/1E14*0.0)
 #define KAPPAESUSER(rho,T) (0.0)
 
 #endif
 
 #if(WHICHPROBLEM==RADDONUT)
 // kappa can't be zero or else flux will be nan
-//#define KAPPAUSER(rho,T) (rho*KAPPA_ES_CODE(rho,T)/1E14*1.0) // wierd use of kappa_{es} in koral
+//#define KAPPAUSER(rho,Tg,Tr) (rho*KAPPA_ES_CODE(rho,T)/1E14*1.0) // wierd use of kappa_{es} in koral
 //#define KAPPAESUSER(rho,T) (0.0)
 
 // KORALNOTE: Different than koral code test, but as if full problem.
@@ -3535,8 +3560,8 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 
 // KORALTODO: Put a lower limit on T~1E4K so not overly wrongly opaque in spots where u_g->0 anomologously?
 // assume KAPPA defines fraction of FF opacity
-//#define KAPPAUSER(rho,T) (rho*KAPPA*KAPPA_FF_CODE(rho,T+TEMPMIN))
-#define KAPPAUSER(rho,T) (rho*KAPPA*KAPPA_GENFF_CODE(rho,T+TEMPMIN)) // accounts for low temperatures so non-divergent and more physical
+//#define KAPPAUSER(rho,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg+TEMPMIN))
+#define KAPPAUSER(rho,Tg,Tr) (rho*KAPPA*KAPPA_GENFF_CODE(rho,Tg+TEMPMIN,Tr+TEMPMIN)) // accounts for low temperatures so non-divergent and more physical
 // assume KAPPAES defines fraction of ES opacity
 #define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_CODE(rho,T))
 
@@ -3545,7 +3570,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 
 #if(WHICHPROBLEM==RADCYLBEAM || WHICHPROBLEM==RADCYLBEAMCART)
 
-#define KAPPAUSER(rho,T) (rho*KAPPA_ES_CODE(rho,T)/1E14*0.0) // note 0.0
+#define KAPPAUSER(rho,Tg,Tr) (rho*KAPPA_ES_CODE(rho,Tg)/1E14*0.0) // note 0.0
 #define KAPPAESUSER(rho,T) (0.0)
 
 #endif
@@ -5640,8 +5665,9 @@ static int get_full_rtsolution(int *whichvel, int *whichcoord, int opticallythic
     // -(1/chi)dPrad/dx = Frad/c
     FTYPE kappa,kappaes,chi;
     // use of V assumes user knows which coordinates they are in (e.g. r,th,ph vs. x,y,z)
+    FTYPE Tg=calc_PEQ_Tfromurho(pp[UU],pp[RHO]);
     chi=
-      calc_kappa_user(pp[RHO],calc_PEQ_Tfromurho(pp[UU],pp[RHO]),V[1],V[2],V[3])
+      calc_kappa_user(pp[RHO],Tg,Tg,V[1],V[2],V[3])
       +
       calc_kappaes_user(pp[RHO],calc_PEQ_Tfromurho(pp[UU],pp[RHO]),V[1],V[2],V[3]);
 
@@ -5861,7 +5887,7 @@ static int make_nonrt2rt_solution(int *whichvel, int *whichcoord, int opticallyt
     // 2-stream approximation for pressure
     FTYPE kappaabs,kappaes,kappatot;
     // use of V assumes user knows which coordinates they are in (e.g. r,th,ph vs. x,y,z)
-    kappaabs=calc_kappa_user(rho,Tgas,V[1],V[2],V[3]);
+    kappaabs=calc_kappa_user(rho,Tgas,Tgas,V[1],V[2],V[3]);
     kappaes=calc_kappaes_user(rho,Tgas,V[1],V[2],V[3]);
     kappatot=kappaabs+kappaes;
 
@@ -6657,9 +6683,10 @@ int set_fieldtype(void)
       //FIELDTYPE=OLEKFIELD;
       //FIELDTYPE=FIELDJONMAD;
 
-      if(DOWALDDEN){ // nothing to do with densities, just for simplicity
+      if(DOWALDDEN==1){ // nothing to do with densities, just for simplicity
         FIELDTYPE=FIELDWALD; // WALD field
       }
+      else if(DOWALDDEN==2) FIELDTYPE=MONOPOLE;
 
 
     }
@@ -8114,7 +8141,7 @@ int normalize_field(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2
   int set_fieldtype(void);
   int FIELDTYPE=set_fieldtype();
 
-  if(FIELDTYPE!=NOFIELD && FIELDTYPE!=FIELDWALD){
+  if(FIELDTYPE!=NOFIELD && FIELDTYPE!=FIELDWALD && DOWALDDEN==0){
     dualfprintf(fail_file,"DID NORM FIELD\n");
     
     funreturn=user1_normalize_field(beta, prim, pstag, ucons, vpot, Bhat);
@@ -8333,13 +8360,13 @@ void adjust_fluxctstag_emfs(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR
 // \kappa is optical depth per unit length per unit rest-mass energy density
 
 //absorption
-FTYPE calc_kappa_user(FTYPE rho, FTYPE T,FTYPE x,FTYPE y,FTYPE z)
+FTYPE calc_kappa_user(FTYPE rho, FTYPE Tg,FTYPE Tr,FTYPE x,FTYPE y,FTYPE z)
 {
   //  if(WHICHPROBLEM==RADDONUT && nstep>100){
   //    return(0.0);
   //  }
-  //  else return(KAPPAUSER(rho,T));
-  return(KAPPAUSER(rho,T));
+  //  else return(KAPPAUSER(rho,Tg,Tr));
+  return(KAPPAUSER(rho,Tg,Tr));
 }
 
 //scattering
@@ -8437,7 +8464,10 @@ void set_coord_parms_nodeps_user(int defcoordlocal)
     //h0=0.1; // inner-radial "hslope" for theta2 // for thinner disks, change this.
     // GODMARK: Note that this overwrites above njet!
     // power \theta_j \propto r^{-njet}
-    njet=1.0;
+    if(DOWALDDEN==1){
+      njet=1.0;
+    }
+    else if(DOWALDDEN==2) njet=0.0;
 
 
     // see fix_3dpoledtissue.nb
@@ -8875,7 +8905,8 @@ void set_points_user(void)
     startx[2] = 0.;
     startx[3] = 0.;
     dx[1] = (pow(log(Rout-R0),1.0/npow)-pow(log(Rin-R0),1.0/npow)) / totalsize[1];
-    dx[2] = 1. / totalsize[2];
+    if(DOWALDDEN==1) dx[2] = 1. / totalsize[2];
+    else if(DOWALDDEN==2) dx[2] = 0.5 / totalsize[2];
     dx[3] = 1.0/totalsize[3];
 
 #if(1)

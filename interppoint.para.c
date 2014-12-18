@@ -1454,7 +1454,8 @@ void getPressure(int whicheom, int i, int j, int k, int loc, FTYPE **yrealpl, FT
     if(whicheom==EOMSETRAD || whicheom==EOMSETMHD){
       // add radiation pressure to total pressure if optically thick
       PALLREALLOOP(pl) prreal[pl]=yrealpl[pl][mm]; // reorder
-      calc_tautot(prreal, ptrgeom, tautot, &tautotmax);
+      //      calcfull_tautot(prreal, ptrgeom, tautot, &tautotmax);
+      calc_tautot(prreal, ptrgeom, NULL, tautot, &tautotmax); // very accurate tautot not necessary, so use Tgas=Trad assumption in opacity
 
       P[mm] += MIN(tautotmax,1.0)*(4.0/3.0-1.0)*yrealpl[PRAD0][mm]; // KORALNOTE: recall pressure just along diagonal and no velocity in R^\mu_\nu
     }
