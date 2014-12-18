@@ -334,7 +334,7 @@ void set_coord_parms_nodeps(int defcoordlocal)
     bp_r0jet2=2.0;
 #endif
 #if(0) //MIDRES    note that lowres doesn't use polefix code
-    bp_ntheta=5.0;
+    bp_ntheta=15.0;
     bp_htheta=0.15;
     bp_rsjet2=5.0;
     bp_r0jet2=2.0;
