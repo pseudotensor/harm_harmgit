@@ -9224,7 +9224,7 @@ static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYP
   //Eradff = R^a_b u_a u^b
   FTYPE Ruu=0.; DLOOP(i,j) Ruu+=Rij[i][j]*ucov[i]*ucon[j];
  
-  FTYPE Tradff = pow(fabs(Ruu)/ARAD_CODE,0.25); // ASSUMPTION: PLANCK
+  FTYPE Tradff = pow(fabs(Ruu)/ARAD_CODE,0.25); // ASSUMPTION: PLANCK-like in comoving frame even though radiation flowing through cell
   *Tradreturn=Tradff;
 
   // Tgas
