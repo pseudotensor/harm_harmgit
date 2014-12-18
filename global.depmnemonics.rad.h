@@ -129,7 +129,7 @@
 #define KAPPA_ZETA(Tgcode,Trcode) ((TEMPMIN+Trcode)/(TEMPMIN+Tgcode))
 #define KAPPA_FF_CODE(rhocode,Tgcode,Trcode) (4.0E22*(1.0+XFACT)*(1.0-ZFACT)*((rhocode)*RHOBAR)*pow((Tgcode)*TEMPBAR,-0.5)*pow((Trcode)*TEMPBAR,-3.0)*log(1.0+1.6*KAPPA_ZETA(Tgcode,Trcode))*(1.0+4.4E-10*(Tgcode*TEMPBAR))/OPACITYBAR)  // ASSUMPTION: Thermal ele and no pairs.  See Rybicki & Lightman Eq~5.25 and McKinney & Uzdensky (2012) .  For Tr,Tg split, see Ramesh notes.
 #define KAPPA_BF_CODE(rhocode,Tgcode,Trcode) (3.0E25*(ZFACT)*(1.0+XFACT+0.75*YFACT)*((rhocode)*RHOBAR)*pow((Tgcode)*TEMPBAR,-0.5)*pow((Trcode)*TEMPBAR,-3.0)*log(1.0+1.6*KAPPA_ZETA(Tgcode,Trcode))/OPACITYBAR) // ASSUMPTION: Number of electrons similar to for solar abundances for 1+X+(3/4)Y term.  For Tr,Tg split, see Ramesh notes.
-#define KAPPA_CHIANTIBF_CODE(rhocode,Tgcode,Trcode) (4.0E34*((rhocode*RHOBAR))*(ZFACT/ZSOLAR)*YELE*pow((Tgcode)*TEMPBAR,-1.7)*pow((Trcode)*TEMPBAR,-3.0)/OPACITYBAR)
+#define KAPPA_CHIANTIBF_CODE(rhocode,Tgcode,Trcode) (4.0E34*((rhocode*RHOBAR))*(ZFACT/ZSOLAR)*YELE*pow((Tgcode)*TEMPBAR,-1.7)*pow((Trcode)*TEMPBAR,-3.0)/OPACITYBAR) // *XFACT literally from Fig 34.1 in Draine book, but for solar n_H\sim n_b\sim 1/cm^3 only
 #define KAPPA_HN_CODE(rhocode,Tgcode,Trcode) (1.1E-25*pow(ZFACT,0.5)*pow((rhocode)*RHOBAR,0.5)*pow((Tgcode)*TEMPBAR,7.7+3.0)*pow((Trcode)*TEMPBAR,-3.0)/OPACITYBAR)
 #define KAPPA_MOL_CODE(rhocode,Tgcode,Trcode) (0.1*ZFACT/OPACITYBAR)
 // see opacities.nb
