@@ -592,14 +592,14 @@ static int opacity_interpolated_urfconrel(FTYPE tautotmax, FTYPE *pp,struct of_g
 // general stuff
 static FTYPE compute_dt(int isexplicit, FTYPE *CUf, FTYPE *CUimp, FTYPE dtin);
 
-static void calc_Gd(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *G, FTYPE *Tgasreturn, FTYPE *Tradreturn, FTYPE *chieffreturn, FTYPE *Gabs);
-static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *Gu, FTYPE *Tgasreturn, FTYPE *Tradreturn, FTYPE *chieffreturn, FTYPE *Gabs);
+static void calc_Gd(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *G, FTYPE *Tgasreturn, FTYPE *Tradreturn, FTYPE *chieffreturn, FTYPE *ndotffreturn, FTYPE *ndotffabsreturn, FTYPE *Gabs);
+static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *Gu, FTYPE *Tgasreturn, FTYPE *Tradreturn, FTYPE* chieffreturn, FTYPE *ndotffreturn, FTYPE *ndotffabsreturn, FTYPE *Gabs);
 void mhdfull_calc_rad(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE (*radstressdir)[NDIM]);
 static int simplefast_rad(int dir, struct of_geom *geom,struct of_state *q, FTYPE vrad2,FTYPE *vmin, FTYPE *vmax);
 
 
-static void calcfull_Trad(FTYPE *pp, struct of_geom *ptrgeom, FTYPE *Trad);
-static void calc_Trad(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q , FTYPE *Trad) ;
+static void calcfull_Trad(FTYPE *pp, struct of_geom *ptrgeom, FTYPE *Trad, FTYPE *nrad);
+static void calc_Trad(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q , FTYPE *Trad, FTYPE *nrad);
 static void calcfull_kappa_kappaes(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappa, FTYPE *kappaes, FTYPE *Tgasreturn, FTYPE *Tradreturn);
 static void calc_kappa_kappaes(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE *kappa, FTYPE *kappaes, FTYPE *Tgasreturn, FTYPE *Tradreturn);
 static void calc_kappa_kappaes_inputTgasTrad(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappa, FTYPE *kappaes, FTYPE Tgas, FTYPE Trad);
@@ -8960,9 +8960,13 @@ void calc_kappa(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE *k
   FTYPE Tgas=compute_temp_simple(ii,jj,kk,loc,rho,u);
 
   FTYPE Trad;
-  if(q==NULL) Trad=Tgas;
+  if(q==NULL){
+    Trad=Tgas; // estimate for opacity
+    //nradff not used here, so don't have to set
+  }
   else{
-    calc_Trad(pr,ptrgeom,q,&Trad); // kinda expensive, avoid if not really necessary.
+    FTYPE nradff;
+    calc_Trad(pr,ptrgeom,q,&Trad,&nradff); // kinda expensive, avoid if not really necessary (could set Trad=Tgas, just for opacity purposes)
   }
 
   FTYPE V[NDIM]={0.0},xx=0.0,yy=0.0,zz=0.0;
@@ -9067,7 +9071,14 @@ static void calc_kappa_kappaes(FTYPE *pr, struct of_geom *ptrgeom, struct of_sta
   FTYPE Tgas=compute_temp_simple(ii,jj,kk,loc,rho,u); // KORALNOTE: Currently, primary location where Tgas is computed for speed purposes.
 
   FTYPE Trad;
-  calc_Trad(pr,ptrgeom,q,&Trad);
+  if(q==NULL){
+    Trad=Tgas; // estimate for opacity purposes
+    // nradff not needed
+  }
+  else{
+    FTYPE nradff;
+    calc_Trad(pr,ptrgeom,q,&Trad,&nradff);
+  }
 
 
   FTYPE V[NDIM]={0.0},xx=0.0,yy=0.0,zz=0.0;
@@ -9113,9 +9124,9 @@ static void calc_kappa_kappaes_inputTgasTrad(FTYPE *pr, struct of_geom *ptrgeom,
 }
 
 /// get G_\mu
-static void calc_Gd(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *GG, FTYPE *Tgas, FTYPE *Trad, FTYPE* chieffreturn, FTYPE *Gabs)
+static void calc_Gd(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *GG, FTYPE *Tgas, FTYPE *Trad, FTYPE* chieffreturn, FTYPE *ndotffreturn, FTYPE *ndotffabsreturn, FTYPE *Gabs)
 {
-  calc_Gu(pp, ptrgeom, q, GG, Tgas, Trad, chieffreturn,Gabs);
+  calc_Gu(pp, ptrgeom, q, GG, Tgas, Trad, chieffreturn,ndotffreturn,ndotffabsreturn,Gabs);
   indices_21(GG, GG, ptrgeom);
 }
 
@@ -9127,6 +9138,7 @@ void koral_source_rad_calc(int computestate, int computeentropy, FTYPE *pr, stru
   int jj;
   int pliter,pl;
   FTYPE Gd[NDIM],Gdabs[NDIM];
+  FTYPE ndotff,ndotffabs;
   struct of_state qlocal;
   FTYPE chilocal,Tgaslocal,Tradlocal;
 
@@ -9136,12 +9148,17 @@ void koral_source_rad_calc(int computestate, int computeentropy, FTYPE *pr, stru
   if(Trad==NULL) Trad=&Tradlocal;
 
 
+  //////
+  //
+  // energy-momentum density rate in lab-frame
+  //
+  /////
   // no, thermodynamics stuff can change since MHD fluid U changes, so must do get_state() as above
   //  get_state_uconucovonly(pr, ptrgeom, q);
   //  get_state_uradconuradcovonly(pr, ptrgeom, q);
   if(computestate) get_state(pr,ptrgeom,q);
 
-  calc_Gd(pr, ptrgeom, q, Gd, Tgas, Trad, chi, Gdabs);
+  calc_Gd(pr, ptrgeom, q, Gd, Tgas, Trad, chi, &ndotff, &ndotffabs, Gdabs);
 
   PLOOP(pliter,pl) Gdpl[pl] = 0.0;
   // equal and opposite forces on fluid and radiation due to radiation 4-force
@@ -9161,6 +9178,11 @@ void koral_source_rad_calc(int computestate, int computeentropy, FTYPE *pr, stru
     DLOOPA(jj) Gdplabs[URAD0+jj]  = Gdabs[jj];
   }
 
+  //////
+  //
+  // entropy density rate -- invariant
+  //
+  /////
 #if(DOENTROPY!=DONOENTROPY && ENTROPY!=-100)
   if(computeentropy){
     pl=ENTROPY;
@@ -9179,6 +9201,17 @@ void koral_source_rad_calc(int computestate, int computeentropy, FTYPE *pr, stru
     }
   }
 #endif
+
+  //////
+  //
+  // number density of photon rate -- invariant
+  //
+  /////
+  if(NRAD>=0){
+    pl=NRAD;
+    Gdpl[pl] = ndotff;
+    Gdplabs[pl] = ndotffabs;
+  }
 
 
 
@@ -9205,8 +9238,9 @@ static void koral_source_dtsub_rad_calc(int method, FTYPE *pr, FTYPE *Ui, FTYPE 
 
 }
 
+
 /// compute G^\mu 4-force
-static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *Gu, FTYPE *Tgasreturn, FTYPE *Tradreturn, FTYPE* chieffreturn, FTYPE *Gabs) 
+static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *Gu, FTYPE *Tgasreturn, FTYPE *Tradreturn, FTYPE* chieffreturn, FTYPE *ndotffreturn, FTYPE *ndotffabsreturn, FTYPE *Gabs) 
 {
   int i,j,k;
   
@@ -9223,11 +9257,19 @@ static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYP
   
   //Eradff = R^a_b u_a u^b
   FTYPE Ruu=0.; DLOOP(i,j) Ruu+=Rij[i][j]*ucov[i]*ucon[j];
- 
-  FTYPE Tradff = pow(fabs(Ruu)/ARAD_CODE,0.25); // ASSUMPTION: PLANCK-like in comoving frame even though radiation flowing through cell
+
+  // Tradff
+  FTYPE Tradff,nradff;
+  if(NRAD<0){
+    // accurate fluid-frame but assumes Planck in fluid frame
+    Tradff = pow(fabs(Ruu)/ARAD_CODE,0.25); // ASSUMPTION: PLANCK-like in comoving frame even though radiation flowing through cell
+  }
+  else{
+    calc_Trad(pp,ptrgeom,q,&Tradff,&nradff);
+  }
   *Tradreturn=Tradff;
 
-  // Tgas
+  // Tgas (in ff by definition)
   FTYPE rho=pp[RHO];
   FTYPE u=pp[UU];
   int ii=ptrgeom->i;
@@ -9314,9 +9356,9 @@ static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYP
       Rus=0.; DLOOPA(j) if(j!=TT) Rus+=Rij[i][j]*ucon[j];
       Ruuu=Ruuss + Rus + Rut;
     }
-    Ruuuabs=fabs(Ru) + fabs(Ruu*ucon[i]));
+    Ruuuabs=fabs(Ru) + fabs(Ruu*ucon[i]);
 #endif
-
+  
     // group by independent terms
     term1a = -(kappa*Ru);
     term1b = -(lambda*ucon[i]);
@@ -9344,7 +9386,24 @@ static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYP
     }
 #endif
 
+  }// END LOOP over ENERGY-MOMENTUM terms
+
+
+  // get photon number source term, dnrad/dtau in comoving frame, which acts as source term.
+  FTYPE ndotff,ndotffabs;
+  if(NRAD>=0){
+    FTYPE nlambda;
+    calcfull_rad_nlambda(pp, ptrgeom, Tgas, &nlambda);
+    ndotff = -(kappa*nradff - nlambda);
+    ndotffabs = fabs(kappa*nradff) + fabs(nlambda);
   }
+  else{
+    // not used then, but set to zero
+    ndotffabs = ndotff = 0.0;
+  }
+  // return \dot{nrad} : photon density in fluid frame per unit fluid frame time
+  *ndotffreturn=ndotff;
+  *ndotffabsreturn=ndotffabs;
 
   // really a chi-effective that also includes lambda term in case cooling unrelated to absorption
   *chieffreturn=chi + lambda/(ERADLIMIT+fabs(pp[PRAD0])); // if needed
@@ -9354,44 +9413,96 @@ static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYP
 
 
 // compute Trad with only primitive sand geometry
-static void calcfull_Trad(FTYPE *pp, struct of_geom *ptrgeom, FTYPE *Trad)
+static void calcfull_Trad(FTYPE *pp, struct of_geom *ptrgeom, FTYPE *Trad, FTYPE *nrad)
 {
 
   struct of_state q;
   get_state(pp, ptrgeom, &q);
-  calc_Trad(pp,ptrgeom,&q,Trad);
+  calc_Trad(pp,ptrgeom,&q,Trad,nrad);
   
 }
 
 
-/// compute Trad (also computed directly in calc_Gu() above
-static void calc_Trad(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q , FTYPE *Trad) 
+/// compute Trad (also computed directly in calc_Gu() above) using only primitives (not using conserved quantities)
+static void calc_Trad(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q , FTYPE *Trad, FTYPE *nrad)
 {
   int i,j,k;
+  FTYPE Tradff,nradff;
 
-  FTYPE rho=pp[RHO];
+  if(q==NULL){// if q==NULL, assume don't want to do something expensive an accurate, just basics
+    // so get radiation frame things even if should have gotten fluid frame things
+    //get_state(pp, ptrgeom, &q);
+    Tradff = calc_LTE_TfromE(pp[PRAD0]);
+    nradff = calc_LTE_NfromE(pp[PRAD0]);
+  }
+  else{
+
+    FTYPE rho=pp[RHO];
   
-  //radiative stress tensor in the lab frame
-  FTYPE Rij[NDIM][NDIM];
+    //radiative stress tensor in the lab frame
+    FTYPE Rij[NDIM][NDIM];
 
-  //this call returns R^i_j, i.e., the first index is contra-variant and the last index is co-variant
-  mhdfull_calc_rad(pp, ptrgeom, q, Rij);
+    //this call returns R^i_j, i.e., the first index is contra-variant and the last index is co-variant
+    mhdfull_calc_rad(pp, ptrgeom, q, Rij);
 
-  //the four-velocity of fluid in lab frame
-  FTYPE *ucon,*ucov;
-  ucon = q->ucon;
-  ucov = q->ucov;
+    //the four-velocity of fluid in lab frame
+    FTYPE *ucon,*ucov;
+    ucon = q->ucon;
+    ucov = q->ucov;
   
-  //Eradff = R^a_b u_a u^b
-  FTYPE Ruu=0.; DLOOP(i,j) Ruu+=Rij[i][j]*ucov[i]*ucon[j];
+    // Get fluid-frame radiation energy density = Eradff = R^a_b u_a u^b
+    FTYPE Ruu=0.; DLOOP(i,j) Ruu+=Rij[i][j]*ucov[i]*ucon[j];
 
-  FTYPE Tradff = pow(fabs(Ruu)/ARAD_CODE,0.25); // ASSUMPTION: PLANCK
+    // Get fluid-frame radiation temperature
+    if(NRAD<0){
+      // ASSUMPTION: PLANCK
+      Tradff = pow(fabs(Ruu)/ARAD_CODE,0.25);
+      nradff = Ruu/(EBAR0*Tradff);
+    }
+    else{
+      // Color-corrected/shifted Planck
+      FTYPE gammaradgas = 0.0;
+      int jj;
+      DLOOPA(jj) gammaradgas += - (q->ucov[jj] * q->uradcon[jj]);
+      nradff = pp[NRAD]*gammaradgas;
+
+      FTYPE CRAD = CRAD0*ARAD_CODE;
+      //    Tradff = Ruu/nradff / (EBAR0); // EBAR0 kb T = Ruu/nradff = average energy per photon
+      FTYPE BB = CRAD0 * EBAR0*EBAR0*EBAR0*EBAR0 * (3.0-EBAR0); // FTYPE BB=2.449724;
+      // below avoids assuming that EBAR0 kb T is average energy per photon
+      Tradff = Ruu/(nradff*(3.0-BB*nradff*nradff*nradff*nradff/(CRAD*Ruu*Ruu*Ruu)));
+
+    }
+  }
 
   *Trad=Tradff; // radiation temperature in fluid frame
+  *nrad=nradff; // radiation number density in fluid frame
 }
 
+int calc_rad_nlambda(FTYPE *pp, struct of_geom *ptrgeom, FTYPE Tgas, FTYPE lambda, FTYPE *nlambda)
+{
 
+  // ASSUMPTION: Emitting radiation has average photon energy for gas at temperatures Tgas (isn't true for synchrotron, for example)
 
+  FTYPE ebar = EBAR0 * (TEMPMIN+Tgas);
+
+  *nlambda = lambda/ebar;
+
+  return(0);
+
+}
+
+/// energy density loss rate integrated over frequency and solid angle
+int calcfull_rad_nlambda(FTYPE *pp, struct of_geom *ptrgeom, FTYPE Tgas, FTYPE *nlambda)
+{
+
+  FTYPE lambda;
+  calc_rad_lambda(pp, ptrgeom, Tgas, &lambda);
+  calc_rad_nlambda(pp, ptrgeom, Tgas, lambda, nlambda);
+
+  return(0);
+
+}
 
 /// energy density loss rate integrated over frequency and solid angle
 int calc_rad_lambda(FTYPE *pp, struct of_geom *ptrgeom, FTYPE Tgas, FTYPE *lambda)
@@ -10513,6 +10624,10 @@ int u2p_rad(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gammama
   }
 
 
+
+
+
+
   return(toreturn);
 }
 
@@ -10526,6 +10641,7 @@ int u2p_rad(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gammama
 int u2p_rad_new_pre(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gammamaxrad, FTYPE *uu, FTYPE *pin, struct of_geom *ptrgeom,PFTYPE *lpflag, PFTYPE *lpflagrad)
 {
   static long long int numyvarneg,numyvarbig,numErneg,nummod;
+  int recomputegamma=0;
 
   if(WHICHVEL!=VELREL4){
     dualfprintf(fail_file,"u2p_rad() only setup for relative 4-velocity, currently.\n");
@@ -10611,12 +10727,14 @@ int u2p_rad_new_pre(int showmessages, int allowlocalfailurefixandnoreport, FTYPE
     
     // radiation frame relativity 4-velocity
     SLOOPA(jj) urfconrel[jj] = (Utildecon[jj]/(4.0*pr*gamma));
+    recomputegamma=1;
   }
   else{
     Erf = ERADLIMIT;
     gamma=1.0;
     // radiation frame relativity 4-velocity
     SLOOPA(jj) urfconrel[jj] = 0.0;
+    recomputegamma=1;
     didmod=1; *lpflagrad=UTOPRIMRADFAILERFNEG; // used to detect if modified primitives to not be consistent with inputted uu
   }
 
@@ -10651,6 +10769,8 @@ int u2p_rad_new_pre(int showmessages, int allowlocalfailurefixandnoreport, FTYPE
     else{
       SLOOPA(jj) urfconrel[jj] *= 0.0;
     }
+    recomputegamma=1;
+
     //    dualfprintf(fail_file,"urfconrel=%g %g %g\n",urfconrel[1],urfconrel[2],urfconrel[3]);
 
     
@@ -10690,6 +10810,25 @@ int u2p_rad_new_pre(int showmessages, int allowlocalfailurefixandnoreport, FTYPE
   pin[PRAD3]=urfconrel[3];
 
 
+  ////////////
+  //
+  // INVERT to get Number density of photons in radiation frame
+  //
+  ////////////
+  if(NRAD>0 && *lpflagrad==UTOPRIMRADNOFAIL){
+    FTYPE gammafinal,qsqfinal;
+    if(recomputegamma) gamma_calc_fromuconrel(&pin[URAD1-1],ptrgeom,&gammafinal,&qsqfinal);
+    else gammafinal=gamma;
+    FTYPE uradt=gammafinal/(ptrgeom->alphalapse); // u^t = gamma/alphalapse
+    pin[NRAD] = uu[NRAD]/uradt; // nradinradframe * urad[TT] / uradt
+  }
+  else{
+    // if failed to get solution, can't trust \gamma, so revert to thermal photons
+    pin[NRAD] = calc_LTE_NfromE(Erf);
+  }
+
+
+
   if(debugfail>=2){
     static long int nstepold=-1;
     if(nstep!=nstepold && nstep%100==0 && ptrgeom->i==0 && ptrgeom->j==0 && ptrgeom->k==0 && steppart==0){
@@ -10723,6 +10862,7 @@ int u2p_rad_new_pre(int showmessages, int allowlocalfailurefixandnoreport, FTYPE
 int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gammamaxrad, int whichcap, FTYPE *uu, FTYPE *pin, struct of_geom *ptrgeom,PFTYPE *lpflag, PFTYPE *lpflagrad)
 {
   static long long int numyvarneg,numyvarbig,numErneg,nummod;
+  int recomputegamma=0;
 
   if(WHICHVEL!=VELREL4){
     dualfprintf(fail_file,"u2p_rad() only setup for relative 4-velocity, currently.\n");
@@ -10967,6 +11107,27 @@ int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gam
   pin[PRAD2]=urfconrel[2];
   pin[PRAD3]=urfconrel[3];
 
+
+
+  ////////////
+  //
+  // INVERT to get Number density of photons in radiation frame
+  //
+  ////////////
+  if(NRAD>0 && *lpflagrad==UTOPRIMRADNOFAIL){
+    FTYPE gammafinal,qsqfinal;
+    if(recomputegamma) gamma_calc_fromuconrel(&pin[URAD1-1],ptrgeom,&gammafinal,&qsqfinal);
+    else gammafinal=gamma;
+    FTYPE uradt=gammafinal/(ptrgeom->alphalapse); // u^t = gamma/alphalapse
+    pin[NRAD] = uu[NRAD]/uradt; // nradinradframe * urad[TT] / uradt
+  }
+  else{
+    // if failed to get solution, can't trust \gamma, so revert to thermal photons
+    pin[NRAD] = calc_LTE_NfromE(Erf);
+  }
+
+
+
   //  dualfprintf(fail_file,"didmod=%d\n",didmod);
 
   // make sure E_r no larger than starting value
@@ -11190,6 +11351,23 @@ int u2p_rad_orig(int showmessages, int allowlocalfailurefixandnoreport, FTYPE ga
   pin[PRAD1]=urfconrel[1];
   pin[PRAD2]=urfconrel[2];
   pin[PRAD3]=urfconrel[3];
+
+  ////////////
+  //
+  // INVERT to get Number density of photons in radiation frame
+  //
+  ////////////
+  if(NRAD>0 && *lpflagrad==UTOPRIMRADNOFAIL){
+    FTYPE gammafinal,qsqfinal;
+    gamma_calc_fromuconrel(&pin[URAD1-1],ptrgeom,&gammafinal,&qsqfinal);
+    FTYPE uradt=gammafinal/(ptrgeom->alphalapse); // u^t = gamma/alphalapse
+    pin[NRAD] = uu[NRAD]/uradt; // nradinradframe * urad[TT] / uradt
+  }
+  else{
+    // if failed to get solution, can't trust \gamma, so revert to thermal photons
+    pin[NRAD] = calc_LTE_NfromE(Erf);
+  }
+
 
   //  DLOOPA(jj){
   //    if(!isfinite(pin[PRAD0+jj])){
@@ -12480,6 +12658,19 @@ FTYPE calc_LTE_EfromT(FTYPE T)
 {
   //  return 4.*SIGMA_RAD*T*T*T*T;
   return (ARAD_CODE*T*T*T*T);
+}
+
+/// nrad(T) = nrad=arad T^3/2.70118 (this is LTE only if put in T was gas T)
+FTYPE calc_LTE_NfromT(FTYPE T)
+{
+  return (ARAD_CODE*T*T*T/EBAR0); // i.e. average energy per photon is 2.7k_b T
+}
+
+/// nrad(E)
+FTYPE calc_LTE_NfromE(FTYPE E)
+{
+  FTYPE T=calc_LTE_TfromE(E);
+  return(calc_LTE_NfromT(T));
 }
 
 /// E=urad=arad T^4 and just solve for T  (this is LTE only if assume resulting T is gas T).  If put in fluid-frame E, then correct T for radiation in fluid frame.

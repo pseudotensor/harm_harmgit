@@ -31,6 +31,10 @@ extern int indices_12(FTYPE A1[NDIM],FTYPE A2[NDIM],struct of_geom *ptrgeom);
 
 extern void koral_source_rad_calc(int computestate, int computeentropy, FTYPE *pr, struct of_geom *ptrgeom, FTYPE *Gdpl, FTYPE *Gdabspl, FTYPE *chi, FTYPE *Tgas, FTYPE *Trad, struct of_state *q);
 extern int calc_rad_lambda(FTYPE *pp, struct of_geom *ptrgeom, FTYPE Tgas, FTYPE *lambda);
+extern int calcfull_rad_nlambda(FTYPE *pp, struct of_geom *ptrgeom, FTYPE Tgas, FTYPE *nlambda);
+extern int calc_rad_nlambda(FTYPE *pp, struct of_geom *ptrgeom, FTYPE Tgas, FTYPE lambda, FTYPE *nlambda);
+
+
 
 
 
@@ -65,6 +69,11 @@ extern FTYPE calc_kappaes_user(FTYPE rho, FTYPE T,FTYPE x,FTYPE y,FTYPE z);
 extern int calcfull_tautot(FTYPE *pp, struct of_geom *ptrgeom, FTYPE *tautot, FTYPE *tautotmax);
 extern int calc_tautot(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q, FTYPE *tautot, FTYPE *tautotmax);
 extern int calc_tauabs(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q, FTYPE *tauabs, FTYPE *tauabsmax);
+
+
+extern FTYPE calc_LTE_NfromT(FTYPE T);
+extern FTYPE calc_LTE_NfromE(FTYPE E);
+
 
 extern FTYPE calc_LTE_EfromT(FTYPE);
 extern FTYPE calc_LTE_TfromE(FTYPE);
