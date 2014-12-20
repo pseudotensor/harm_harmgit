@@ -9472,6 +9472,8 @@ static void calc_Trad(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q , F
       // below avoids assuming that EBAR0 kb T is average energy per photon
       Tradff = Ruu/(nradff*(3.0-BB*nradff*nradff*nradff*nradff/(CRAD*Ruu*Ruu*Ruu)));
 
+      // Tradff/TradLTE = fco = color correction factor
+
     }
   }
 
