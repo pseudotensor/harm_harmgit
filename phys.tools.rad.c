@@ -9467,10 +9467,10 @@ static void calc_Trad(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q , F
       nradff = pp[NRAD]*gammaradgas;
 
       FTYPE CRAD = CRAD0*ARAD_CODE;
-      //    Tradff = Ruu/nradff / (EBAR0); // EBAR0 kb T = Ruu/nradff = average energy per photon
-      FTYPE BB = CRAD0 * EBAR0*EBAR0*EBAR0*EBAR0 * (3.0-EBAR0); // FTYPE BB=2.449724;
+      Tradff = Ruu/nradff / (EBAR0); // EBAR0 kb T = Ruu/nradff = average energy per photon
+      //FTYPE BB = CRAD0 * EBAR0*EBAR0*EBAR0*EBAR0 * (3.0-EBAR0); // FTYPE BB=2.449724;
       // below avoids assuming that EBAR0 kb T is average energy per photon
-      Tradff = Ruu/(nradff*(3.0-BB*nradff*nradff*nradff*nradff/(CRAD*Ruu*Ruu*Ruu)));
+      //Tradff = Ruu/(nradff*(3.0-BB*nradff*nradff*nradff*nradff/(CRAD*Ruu*Ruu*Ruu))); // Ramesh says accounts for non-zero chemical potential, but diverges and goes negative for positive real nradff, so avoid.
 
       // Tradff/TradLTE = fco = color correction factor
 
