@@ -24,7 +24,7 @@ int main(void)
   int npr,npr2interp,npr2notinterp,nprbound,nfluxbound,nprdump,nprinvert;
   int maxnpr;
   int yl,ynu,entropy,vsq;
-  int rad0,rad1,rad2,rad3;
+  int rad0,rad1,rad2,rad3,nrad;
   int orignprstart,orignprend,orignprlist[SUPERMAXNPR];
   int orignpr2interpstart,orignpr2interpend,orignpr2interplist[SUPERMAXNPR];
   int orignpr2notinterpstart,orignpr2notinterpend,orignpr2notinterplist[SUPERMAXNPR];
@@ -141,6 +141,18 @@ int main(void)
     rad3 = VARNOTDEFINED; // indicates not defined
   }
 
+  // number density of radiation
+  if(EVOLVENRAD){
+    npr++; nrad = npr-1;
+    orignprend++; orignprlist[orignprend]=nrad;
+    orignpr2interpend++; orignpr2interplist[orignpr2interpend]=nrad;
+    orignprboundend++; orignprboundlist[orignprboundend]=nrad;
+    orignprfluxboundend++; orignprfluxboundlist[orignprfluxboundend]=nrad;
+    orignprdumpend++; orignprdumplist[orignprdumpend]=nrad;
+  }
+  else{
+    nrad = VARNOTDEFINED; // indicates not defined
+  }
 
   ///////////////////
   //
@@ -270,6 +282,8 @@ int main(void)
   fprintf(defout,"#define URAD1 %d\n",rad1);
   fprintf(defout,"#define URAD2 %d\n",rad2);
   fprintf(defout,"#define URAD3 %d\n",rad3);
+
+  fprintf(defout,"#define NRAD %d\n",nrad);
 
   // define name of extra variables
   fprintf(defout,"#define YL %d\n",yl);

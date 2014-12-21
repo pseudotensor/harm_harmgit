@@ -60,7 +60,6 @@
 // CRAD = 60 sigma/pi^4/kb^4 and arad=4*sigma -> CRAD = 15 arad/kb^4/pi^4 = 15 aradcode/pi^4
 #define EBAR0 (2.7011780329190638961) // 2.70118 kb T = Ruu/nradff = average energy per photon
 #define CRAD0 (15.0/(M_PI*M_PI*M_PI*M_PI))
-#define NRAD 14 // temp
 
 
 //////////////

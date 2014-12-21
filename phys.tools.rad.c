@@ -9262,7 +9262,9 @@ static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYP
   FTYPE Tradff,nradff;
   if(NRAD<0){
     // accurate fluid-frame but assumes Planck in fluid frame
-    Tradff = pow(fabs(Ruu)/ARAD_CODE,0.25); // ASSUMPTION: PLANCK-like in comoving frame even though radiation flowing through cell
+    //    Tradff = pow(fabs(Ruu)/ARAD_CODE,0.25); // ASSUMPTION: PLANCK-like in comoving frame even though radiation flowing through cell
+    Tradff = calc_LTE_TfromE(fabs(Ruu));
+    nradff = calc_LTE_NfromE(fabs(Ruu));
   }
   else{
     calc_Trad(pp,ptrgeom,q,&Tradff,&nradff);
@@ -9287,8 +9289,8 @@ static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYP
   FTYPE chi=kappa+kappaes;
 
   // get cooling rate of gas
-  FTYPE lambda;
-  calc_rad_lambda(pp, ptrgeom, Tgas, &lambda);
+  FTYPE lambda,kappaemit;
+  calc_rad_lambda(pp, ptrgeom, Tgas, &lambda, &kappaemit);
 
 
   /////////  
@@ -9392,8 +9394,12 @@ static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYP
   // get photon number source term, dnrad/dtau in comoving frame, which acts as source term.
   FTYPE ndotff,ndotffabs;
   if(NRAD>=0){
+    // in limit that Tgas=Trad and ndotff=0, must have balance, so implies kappa->kappaemit=kappa(Tg=Tr) and n_\gamma = 4\pi B/(ERAD0*Tgas) = Erad/<average photon energy> where <average photon energy> = 2.7kb T
+    // or at least nlambda=ndot_{emit} -> kappa_{emit} n_\gamma
     FTYPE nlambda;
-    calcfull_rad_nlambda(pp, ptrgeom, Tgas, &nlambda);
+    //    calcfull_rad_nlambda(pp, ptrgeom, Tgas, &nlambda);
+    calc_rad_nlambda(pp, ptrgeom, Tgas, lambda, &nlambda);
+
     ndotff = -(kappa*nradff - nlambda);
     ndotffabs = fabs(kappa*nradff) + fabs(nlambda);
   }
@@ -9456,8 +9462,10 @@ static void calc_Trad(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q , F
     // Get fluid-frame radiation temperature
     if(NRAD<0){
       // ASSUMPTION: PLANCK
-      Tradff = pow(fabs(Ruu)/ARAD_CODE,0.25);
-      nradff = Ruu/(EBAR0*Tradff);
+      //      Tradff = pow(fabs(Ruu)/ARAD_CODE,0.25);
+      //      nradff = Ruu/(EBAR0*Tradff);
+      Tradff = calc_LTE_TfromE(fabs(Ruu));
+      nradff = calc_LTE_NfromE(fabs(Ruu));
     }
     else{
       // Color-corrected/shifted Planck
@@ -9466,8 +9474,8 @@ static void calc_Trad(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q , F
       DLOOPA(jj) gammaradgas += - (q->ucov[jj] * q->uradcon[jj]);
       nradff = pp[NRAD]*gammaradgas;
 
-      FTYPE CRAD = CRAD0*ARAD_CODE;
       Tradff = Ruu/nradff / (EBAR0); // EBAR0 kb T = Ruu/nradff = average energy per photon
+      //FTYPE CRAD = CRAD0*ARAD_CODE;
       //FTYPE BB = CRAD0 * EBAR0*EBAR0*EBAR0*EBAR0 * (3.0-EBAR0); // FTYPE BB=2.449724;
       // below avoids assuming that EBAR0 kb T is average energy per photon
       //Tradff = Ruu/(nradff*(3.0-BB*nradff*nradff*nradff*nradff/(CRAD*Ruu*Ruu*Ruu))); // Ramesh says accounts for non-zero chemical potential, but diverges and goes negative for positive real nradff, so avoid.
@@ -9481,6 +9489,7 @@ static void calc_Trad(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q , F
   *nrad=nradff; // radiation number density in fluid frame
 }
 
+
 int calc_rad_nlambda(FTYPE *pp, struct of_geom *ptrgeom, FTYPE Tgas, FTYPE lambda, FTYPE *nlambda)
 {
 
@@ -9490,6 +9499,8 @@ int calc_rad_nlambda(FTYPE *pp, struct of_geom *ptrgeom, FTYPE Tgas, FTYPE lambd
 
   *nlambda = lambda/ebar;
 
+  //NOTEMARK: As Trad->Tgas, one should have nlambda -> kappaabs(Tgas=Trad)*nradff -> kappaemit*nradff , so maybe use nradff directly instead of lambda or ebar.  No, only holds in that limit.
+
   return(0);
 
 }
@@ -9498,8 +9509,8 @@ int calc_rad_nlambda(FTYPE *pp, struct of_geom *ptrgeom, FTYPE Tgas, FTYPE lambd
 int calcfull_rad_nlambda(FTYPE *pp, struct of_geom *ptrgeom, FTYPE Tgas, FTYPE *nlambda)
 {
 
-  FTYPE lambda;
-  calc_rad_lambda(pp, ptrgeom, Tgas, &lambda);
+  FTYPE lambda,kappaemit;
+  calc_rad_lambda(pp, ptrgeom, Tgas, &lambda, &kappaemit);
   calc_rad_nlambda(pp, ptrgeom, Tgas, lambda, nlambda);
 
   return(0);
@@ -9507,7 +9518,7 @@ int calcfull_rad_nlambda(FTYPE *pp, struct of_geom *ptrgeom, FTYPE Tgas, FTYPE *
 }
 
 /// energy density loss rate integrated over frequency and solid angle
-int calc_rad_lambda(FTYPE *pp, struct of_geom *ptrgeom, FTYPE Tgas, FTYPE *lambda)
+int calc_rad_lambda(FTYPE *pp, struct of_geom *ptrgeom, FTYPE Tgas, FTYPE *lambda, FTYPE *kappaemit)
 {
 
   // get gas properties
@@ -9521,14 +9532,15 @@ int calc_rad_lambda(FTYPE *pp, struct of_geom *ptrgeom, FTYPE Tgas, FTYPE *lambd
   // But, have to be careful that "kappa rho" is constructed from \Lambda/(u*c) or else balance won't occur.
   // This is issue because "kappa" is often frequency integrated directly, giving different answer than frequency integrating j_v -> \Lambda/(4\pi) and B_\nu -> (aT^4)/(4\pi) each and then taking the ratio.
   // Note if T is near maximum for FTYPE, then aradT^4 likely too large.
-  FTYPE B=0.25*ARAD_CODE*pow(Tgas,4.)/Pi;
+  //  FTYPE B=0.25*ARAD_CODE*pow(Tgas,4.)/Pi;
 
-  FTYPE kappaemit;
-  calc_kappaemit(pp,ptrgeom,&kappaemit);
+  //  FTYPE kappaemit;
+  calc_kappaemit(pp,ptrgeom,kappaemit);
 
 
   // energy density loss rate integrated over frequency and solid angle
-  *lambda = kappaemit*(4.*Pi*B);
+  *lambda = (*kappaemit)*calc_LTE_EfromT(Tgas);
+    //(4.*Pi*B);
 
   return(0);
 }

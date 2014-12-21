@@ -1782,9 +1782,9 @@ int raddump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
   myset(datatype,Gdabspl,PRAD0,NDIM,writebuf); // NDIM
 
   // get lambda
-  FTYPE lambda;
+  FTYPE lambda,kappaemit;
   //  FTYPE Tgas=calc_PEQ_Tfromurho(pr[UU],pr[RHO]);
-  calc_rad_lambda(pr, ptrgeom, Tgas, &lambda);
+  calc_rad_lambda(pr, ptrgeom, Tgas, &lambda, &kappaemit);
   myset(datatype,&lambda,0,1,writebuf); // 1
 
   // get Erf [assuming LTE]

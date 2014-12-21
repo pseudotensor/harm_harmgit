@@ -30,9 +30,10 @@ extern int indices_12(FTYPE A1[NDIM],FTYPE A2[NDIM],struct of_geom *ptrgeom);
 
 
 extern void koral_source_rad_calc(int computestate, int computeentropy, FTYPE *pr, struct of_geom *ptrgeom, FTYPE *Gdpl, FTYPE *Gdabspl, FTYPE *chi, FTYPE *Tgas, FTYPE *Trad, struct of_state *q);
-extern int calc_rad_lambda(FTYPE *pp, struct of_geom *ptrgeom, FTYPE Tgas, FTYPE *lambda);
+extern int calc_rad_lambda(FTYPE *pp, struct of_geom *ptrgeom, FTYPE Tgas, FTYPE *lambda, FTYPE *kappaemit);
 extern int calcfull_rad_nlambda(FTYPE *pp, struct of_geom *ptrgeom, FTYPE Tgas, FTYPE *nlambda);
 extern int calc_rad_nlambda(FTYPE *pp, struct of_geom *ptrgeom, FTYPE Tgas, FTYPE lambda, FTYPE *nlambda);
+
 
 
 
