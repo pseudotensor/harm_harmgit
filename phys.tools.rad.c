@@ -562,9 +562,10 @@ static int Utoprimgen_failwrapper(int doradonly, int *radinvmod, int showmessage
 static void define_method(int iter, int *eomtype, int itermode, int baseitermethod, FTYPE fracenergy, FTYPE dissmeasure, int *implicititer, int *implicitferr, int *BEGINMOMSTEPS, int *ENDMOMSTEPS, int *BEGINENERGYSTEPS, int *ENDENERGYSTEPS, int *BEGINFULLSTEPS, int *ENDFULLSTEPS, int *BEGINNORMALSTEPS);
 static void get_refUs(int *numdims, int *startjac, int *endjac, int *implicititer, int *implicitferr, int *irefU, int *iotherU, int *erefU, int *eotherU, int *signgd2, int *signgd4, int *signgd6, int *signgd7);
 
+#define MAXJACDIM (5)
 
 // debug stuff
-static void showdebuglist(int debugiter, FTYPE (*pppreholdlist)[NPR],FTYPE (*ppposholdlist)[NPR],FTYPE (*f1reportlist)[NPR],FTYPE (*f1list)[NPR],FTYPE *errorabsf1list,FTYPE *errorallabsf1list, int *realiterlist, FTYPE (*jaclist)[NDIM][NDIM], FTYPE *fracdamplist, int *implicititerlist, int *implicitferrlist);
+static void showdebuglist(int debugiter, FTYPE (*pppreholdlist)[NPR],FTYPE (*ppposholdlist)[NPR],FTYPE (*f1reportlist)[NPR],FTYPE (*f1list)[NPR],FTYPE *errorabsf1list,FTYPE *errorallabsf1list, int *realiterlist, FTYPE (*jaclist)[MAXJACDIM][MAXJACDIM], FTYPE *fracdamplist, int *implicititerlist, int *implicitferrlist);
 int mathematica_report_check(int radinvmod, int failtype, long long int failnum, int gotfirstnofail, int eomtypelocal, int itermode, int baseitermethod, FTYPE *errorabs, FTYPE *errorabsbestexternal, int iters, int iterstotal, FTYPE realdt,struct of_geom *ptrgeom, FTYPE *ppfirst, FTYPE *pp, FTYPE *pb, FTYPE *piin, FTYPE *prtestUiin, FTYPE *prtestUU0, FTYPE *uu0, FTYPE *uu, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, FTYPE *CUimp, struct of_state *q, FTYPE *dUother);
 
 // explicit stuff (uses CUf instead of CUf since even with sub-cycling not implicit)
@@ -1052,6 +1053,20 @@ static void define_method(int iter, int *eomtype, int itermode, int baseitermeth
 }
 
 
+#define JACNPR (NDIM+1) // maximum number of terms in Jacobian
+#define JACNUMTYPES 5
+#define JNORMALTYPE 0
+#define JALTTYPE 1
+#define JSUPERFULLTYPE 2
+#define JFULLERRORTYPE 3
+#define JSUBERRORTYPE 4
+int jacstart[JACNUMTYPES],jaclist[JACNUMTYPES][JACNPR],jacend[JACNUMTYPES];
+#define JACTYPELOOP(type) for(type=0;type<JACNUMTYPES;type++)
+#define JACALLLOOP(pl) for(pl=0;pl<JACNPR;pl++)
+#define JACLOOP(type,pliter,pl) for(pliter=jacstart[type],pl=jaclist[type][pliter];pliter<=jacend[type];pliter++,pl=jaclist[type][pliter])
+
+
+
 
 #define JACLOOP(jj,startjj,endjj) for(jj=startjj;jj<=endjj;jj++)
 #define JACLOOPALT(jj,startjj,endjj) DLOOPA(jj) //for(jj=startjj;jj<=endjj;jj++) // for those things might or might not want to do all terms
@@ -1063,22 +1078,29 @@ static void define_method(int iter, int *eomtype, int itermode, int baseitermeth
 static void get_refUs(int *numdims, int *startjac, int *endjac, int *implicititer, int *implicitferr, int *irefU, int *iotherU, int *erefU, int *eotherU, int *signgd2, int *signgd4, int *signgd6, int *signgd7)
 {
   int jj;
+  int type;
+
 
   // default
-  *numdims=NDIM;
+
+  // default
+  *numdims=jacend[JNORMALTYPE];
   *signgd7= (+1.0); // not used for PMHD
   DLOOPA(jj) irefU[jj]=UU+jj;
   DLOOPA(jj) iotherU[jj]=URAD0+jj;
-  *startjac=0; *endjac=NDIM-1;
+  //  *startjac=0; *endjac=NDIM-1;
 
   // same list and numbers in array for both primitives and conserved
   if(*implicititer==QTYUMHD || *implicititer==QTYPMHD){
+    JACTYPELOOP(type){ jacstart[type]=0; jacend[type]=NDIM-1; DLOOPA(jj) jaclist[type][jj]=UU+jj; }
   }
   else if(*implicititer==QTYUMHDENERGYONLY || *implicititer==QTYPMHDENERGYONLY){
-    *startjac=0; *endjac=0;
+    //    *startjac=0; *endjac=0;
+    JACTYPELOOP(type){ jacstart[type]=0; jacend[type]=0; jaclist[type][0]=UU; }
   }
   else if(*implicititer==QTYUMHDMOMONLY || *implicititer==QTYPMHDMOMONLY){
-    *startjac=1; *endjac=3;
+    //    *startjac=1; *endjac=3;
+    JACTYPELOOP(type){ jacstart[type]=0; jacend[type]=2; SLOOPA(jj) jaclist[type][jj]=U1+jj-1; }
   }
   else if(*implicititer==QTYENTROPYUMHD || *implicititer==QTYENTROPYPMHD){
     irefU[TT]=ENTROPY;
@@ -1163,6 +1185,20 @@ static void get_refUs(int *numdims, int *startjac, int *endjac, int *implicitite
   *signgd2=(+1.0);
   *signgd4=(+1.0); // for entropy alone for Gdpl in error function // Appears for QTYUMHD,QTYENTROPYUMHD this sign is the right one.  But both cases have lots of cold MHD inversions.
   *signgd6=(-1.0); // for entropy as goes into GS from dUrad or dUmhd  //  // KORALTODO SUPERGODMARK:  -- unsure about sign!
+
+
+  ///////////////
+  //
+  // Fix jacobian lists for including NRAD, which must always be included when doing full steps.
+  //
+  ///////////////
+  if(NRAD>=0){
+    JACTYPELOOP(type){
+      jacend[type]++;
+      jaclist[type][jacend[type]-1]=NRAD;
+    }
+  }
+
 
 }
 
@@ -4447,7 +4483,7 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
   FTYPE errorallabsf1list[IMPMAXITERLONG+2]={0}; // for debug
   int realiterlist[IMPMAXITERLONG+2]; // for debug
   set_array(realiterlist,IMPMAXITERLONG+2,MPI_INT,-1);
-  FTYPE jaclist[IMPMAXITERLONG+2][NDIM][NDIM]; // for debug
+  FTYPE jaclist[IMPMAXITERLONG+2][JACNPR][NDIM]; // for debug
   set_array(jaclist,(IMPMAXITERLONG+2)*NDIM*NDIM,MPI_FTYPE,BIG);
   int implicititerlist[IMPMAXITERLONG+2]={0}; // for debug
   int implicitferrlist[IMPMAXITERLONG+2]={0}; // for debug
@@ -9474,12 +9510,19 @@ static void calc_Trad(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q , F
       DLOOPA(jj) gammaradgas += - (q->ucov[jj] * q->uradcon[jj]);
       nradff = pp[NRAD]*gammaradgas;
 
-      Tradff = Ruu/nradff / (EBAR0); // EBAR0 kb T = Ruu/nradff = average energy per photon
-      //FTYPE CRAD = CRAD0*ARAD_CODE;
-      //FTYPE BB = CRAD0 * EBAR0*EBAR0*EBAR0*EBAR0 * (3.0-EBAR0); // FTYPE BB=2.449724;
-      // below avoids assuming that EBAR0 kb T is average energy per photon
-      //Tradff = Ruu/(nradff*(3.0-BB*nradff*nradff*nradff*nradff/(CRAD*Ruu*Ruu*Ruu))); // Ramesh says accounts for non-zero chemical potential, but diverges and goes negative for positive real nradff, so avoid.
+#define TRADTYPE 0
 
+#if(TRADTYPE==0)
+      Tradff = Ruu/(nradff*EBAR0); // EBAR0 kb T = Ruu/nradff = average energy per photon
+#elif(TRADTYPE==1)
+      FTYPE CRAD = CRAD0*ARAD_CODE;
+      FTYPE BB = CRAD0 * EBAR0*EBAR0*EBAR0*EBAR0 * (3.0-EBAR0); // FTYPE BB=2.449724;
+      //       below avoids assuming that EBAR0 kb T is average energy per photon
+      FTYPE EBAR1=3.0-BB*nradff*nradff*nradff*nradff/(CRAD*Ruu*Ruu*Ruu+SMALL); // physically reasonable to be limited to *larger* than EBAR0
+      if(EBAR1<EBAR0) EBAR1=EBAR0; // hard cut
+      //if(EBAR1<0.5*EBAR0) EBAR1=0.5*EBAR0; // hard cut but at lower value, allowing a bit lower than BB value that is rare but avoids Jacobian problems
+      Tradff = Ruu/(nradff*EBAR1); // Accounts for non-zero chemical potential of photons giving them higher average energy per photon than thermal case for a given temperature
+#endif
       // Tradff/TradLTE = fco = color correction factor
 
     }
