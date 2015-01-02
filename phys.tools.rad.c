@@ -9326,7 +9326,7 @@ static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYP
 
   // get cooling rate of gas
   FTYPE lambda,kappaemit;
-  calc_rad_lambda(pp, ptrgeom, Tgas, &lambda, &kappaemit);
+  calc_rad_lambda(pp, ptrgeom, q, Tgas, &lambda, &kappaemit);
 
 
   /////////  
@@ -9434,7 +9434,8 @@ static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYP
     // or at least nlambda=ndot_{emit} -> kappa_{emit} n_\gamma
     FTYPE nlambda;
     //    calcfull_rad_nlambda(pp, ptrgeom, Tgas, &nlambda);
-    calc_rad_nlambda(pp, ptrgeom, Tgas, lambda, &nlambda);
+    //    calc_rad_nlambda(pp, ptrgeom, Tgas, lambda, &nlambda);
+    calc_rad_nlambda(pp, ptrgeom, q, Tgas, lambda, &nlambda);
 
     ndotff = -(kappa*nradff - nlambda);
     ndotffabs = fabs(kappa*nradff) + fabs(nlambda);
@@ -9533,14 +9534,25 @@ static void calc_Trad(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q , F
 }
 
 
-int calc_rad_nlambda(FTYPE *pp, struct of_geom *ptrgeom, FTYPE Tgas, FTYPE lambda, FTYPE *nlambda)
+int calc_rad_nlambda(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q, FTYPE Tgas, FTYPE lambda, FTYPE *nlambda)
 {
 
   // ASSUMPTION: Emitting radiation has average photon energy for gas at temperatures Tgas (isn't true for synchrotron, for example)
 
   FTYPE ebar = EBAR0 * (TEMPMIN+Tgas);
 
+  // result based upon opacity-based calculation of lambda, so includes free-free, bound-free, bound-bound, etc.
   *nlambda = lambda/ebar;
+
+  /////////////////////
+  // synchrotron  
+  // non-opacity determined rates related to when energy of photons is not related just to gas temperature
+  FTYPE nb = (pp[RHO]/MB);
+  FTYPE ne = nb*YELE;
+  int jj; FTYPE bsq=0.0; DLOOPA(jj) bsq+=(q->bcon[jj])*(q->bcov[jj]);
+  FTYPE absb = sqrt(bsq);
+  FTYPE absbgauss = absb*sqrt(4.0*M_PI); // Bgauss^2/(4\pi) = Bhl^2
+  *nlambda += (1.44E5/NDENRATEBAR) * (absbgauss) * (ne) 
 
   //NOTEMARK: As Trad->Tgas, one should have nlambda -> kappaabs(Tgas=Trad)*nradff -> kappaemit*nradff , so maybe use nradff directly instead of lambda or ebar.  No, only holds in that limit.
 
@@ -9553,15 +9565,16 @@ int calcfull_rad_nlambda(FTYPE *pp, struct of_geom *ptrgeom, FTYPE Tgas, FTYPE *
 {
 
   FTYPE lambda,kappaemit;
-  calc_rad_lambda(pp, ptrgeom, Tgas, &lambda, &kappaemit);
-  calc_rad_nlambda(pp, ptrgeom, Tgas, lambda, nlambda);
+  struct of_state q; get_state(pp, ptrgeom, &q);
+  calc_rad_lambda(pp, ptrgeom, q, Tgas, &lambda, &kappaemit);
+  calc_rad_nlambda(pp, ptrgeom, q, Tgas, lambda, nlambda);
 
   return(0);
 
 }
 
 /// energy density loss rate integrated over frequency and solid angle
-int calc_rad_lambda(FTYPE *pp, struct of_geom *ptrgeom, FTYPE Tgas, FTYPE *lambda, FTYPE *kappaemit)
+int calc_rad_lambda(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q, FTYPE Tgas, FTYPE *lambda, FTYPE *kappaemit)
 {
 
   // get gas properties
@@ -9581,9 +9594,19 @@ int calc_rad_lambda(FTYPE *pp, struct of_geom *ptrgeom, FTYPE Tgas, FTYPE *lambd
   calc_kappaemit(pp,ptrgeom,kappaemit);
 
 
-  // energy density loss rate integrated over frequency and solid angle
+  // energy density loss rate integrated over frequency and solid angle, based upon those processes written as an opacity
   *lambda = (*kappaemit)*calc_LTE_EfromT(Tgas);
     //(4.*Pi*B);
+    
+    
+  /////////////////////
+  // synchrotron  
+  FTYPE nb = (pp[RHO]/MB);
+  FTYPE ne = nb*YELE;
+  int jj; FTYPE bsq=0.0; DLOOPA(jj) bsq+=(q->bcon[jj])*(q->bcov[jj]);
+  FTYPE bsqgauss = bsq*(4.0*M_PI); // Bgauss^2/(4\pi) = Bhl^2
+  FTYPE Te=Tgas;
+  *lambda += (3.61E-14/EDENRATEBAR)*(bsqgauss)*(ne)*pow(Te/(1E10/TEMPBAR),2.0);
 
   return(0);
 }

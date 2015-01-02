@@ -36,6 +36,9 @@
 #define MBAR (RHOBAR*LBAR*LBAR*LBAR) // cgs in grams
 #define ENBAR (MBAR*VBAR*VBAR) // cgs energy in ergs
 #define UBAR (RHOBAR*VBAR*VBAR) // cgs energy density in ergs/cm^3
+#define NDENRATEBAR (1.0/(LBAR*LBAR*LBAR*TBAR))
+#define EDENRATEBAR (ENBAR/(LBAR*LBAR*LBAR*TBAR))
+#define BFIELDBAR (VBAR*sqrt(RHOBAR))  // speed ~ b/sqrt(rho)
 #define TEMPBAR (M_PROTON*CCCTRUE*CCCTRUE/K_BOLTZ) // cgs unit of temperature in Kelvin (used to make Kelvin dimensionless)
 // so for (e.g.) ideal gas, ucode = rhocode * Tcode using u=\rho_0 k_b T / (m_b c^2)  gives both ucode and rhocode in g/cm^3
 
@@ -139,6 +142,14 @@
 #define KAPPA_MOL_CODE(rhocode,Tgcode,Trcode) (0.1*ZFACT/OPACITYBAR)
 // see opacities.nb
 #define KAPPA_GENFF_CODE(rhocode,Tgcode,Trcode) (1.0/(1.0/(KAPPA_MOL_CODE(rhocode,Tgcode,Trcode)+KAPPA_HN_CODE(rhocode,Tgcode,Trcode)) + 1.0/(KAPPA_CHIANTIBF_CODE(rhocode,Tgcode,Trcode)+KAPPA_BF_CODE(rhocode,Tgcode,Trcode)+KAPPA_FF_CODE(rhocode,Tgcode,Trcode)))) // for 1.3E3K \le T \le 1E9K or higher.  Numerically better to have kappa bottom out at low T so no diverent opacity as T->0
+
+
+/// Synchrotron
+#define nuM(Bcode,Tcode) (1.5*QCHARGE*(Bcode*BFIELDBAR)/(2.0*M_PI*MELE*CCCTRUE0)*(K_BOLTZ*Tcode*TEMPBAR/(MELE*CCCTRUE0*CCCTRUE0)))
+#define KAPPA_XI(Tcode,Bcode) (K_BOLTZ*Tcode*TEMPBAR/(HPLANCK*nuM(Bcode,Tcode)))
+#define NESYN(rhocode) (rhocode*RHOBAR/(MB)*YELE)
+#define IaSYN(xi) (1.0/(1.79*pow(xi,5.0/3.0) + 1.35*pow(xi,7.0/3.0) + 0.248*pow(xi,3.0)))
+#define KAPPASYN(rhocode,Tgcode,Trcode,Bcode) (2.13E-11*NESYN(rhocode)/(Bcode+SMALL)*pow(Tcode/1E10,-5.0)*IaSYN(KAPPA_XI(Tcode,Bcode)))
 
 // whether to allow kappa to depend explicitly upon position, which would require getting position and can be expensive.
 #define ALLOWKAPPAEXPLICITPOSDEPENDENCE 0

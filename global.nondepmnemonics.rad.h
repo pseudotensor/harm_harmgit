@@ -90,6 +90,9 @@
 #define MPOME (1836.15)
 #define MELE (M_PROTON/MPOME) // electron mass in cgs in grams
 //#define SIGMA_RAD (5.67e-5) // cgs in erg/(cm^2 s K^4)
+#define HPLANCK (6.62607E-27) // cgs
+#define QCHARGE (4.8029E-10) // cgs
+
 
 
 
