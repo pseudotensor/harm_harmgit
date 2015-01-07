@@ -87,9 +87,11 @@
 #define ZFACT (1.0-(XFACT+YFACT)) // Rest.  Called "metals".
 // http://www.astro.wisc.edu/~townsend/resource/teaching/astro-310-F08/21-eos.pdf
 #define MUELE (2.0/(1.0+XFACT)) //(1.0/(XFACT + 0.5*(YFACT+ZFACT))) // inverse of Ye = electron fraction by baryon mass
+// n_e = Y_e n_b
 #define YELE (1.0/MUELE)
 #define MUMEANNEUTRAL (1.0/(XFACT + 0.25*YFACT + AVG1OAJ*ZFACT))
 #define MUMEANIONIZED (1.0/(2.0*XFACT + 0.75*YFACT + 0.5*ZFACT))
+// n_b = \rho_0/(\mu_{mean} m_a)
 #define MUMEAN (MUMEANIONIZED) // ASSUMPTION: fully ionized // CHOICE
 
 /// while avoids singular behavior, can make inversion unable to reach solution and get locked in cycles due to bad Jacobian, etc.
@@ -144,12 +146,20 @@
 #define KAPPA_GENFF_CODE(rhocode,Tgcode,Trcode) (1.0/(1.0/(KAPPA_MOL_CODE(rhocode,Tgcode,Trcode)+KAPPA_HN_CODE(rhocode,Tgcode,Trcode)) + 1.0/(KAPPA_CHIANTIBF_CODE(rhocode,Tgcode,Trcode)+KAPPA_BF_CODE(rhocode,Tgcode,Trcode)+KAPPA_FF_CODE(rhocode,Tgcode,Trcode)))) // for 1.3E3K \le T \le 1E9K or higher.  Numerically better to have kappa bottom out at low T so no diverent opacity as T->0
 
 
-/// Synchrotron
-#define nuM(Bcode,Tcode) (1.5*QCHARGE*(Bcode*BFIELDBAR)/(2.0*M_PI*MELE*CCCTRUE0)*(K_BOLTZ*Tcode*TEMPBAR/(MELE*CCCTRUE0*CCCTRUE0)))
-#define KAPPA_XI(Tcode,Bcode) (K_BOLTZ*Tcode*TEMPBAR/(HPLANCK*nuM(Bcode,Tcode)))
-#define NESYN(rhocode) (rhocode*RHOBAR/(MB)*YELE)
-#define IaSYN(xi) (1.0/(1.79*pow(xi,5.0/3.0) + 1.35*pow(xi,7.0/3.0) + 0.248*pow(xi,3.0)))
-#define KAPPASYN(rhocode,Tgcode,Trcode,Bcode) (2.13E-11*NESYN(rhocode)/(Bcode+SMALL)*pow(Tcode/1E10,-5.0)*IaSYN(KAPPA_XI(Tcode,Bcode)))
+/// Synchrotron energy-opacity
+#define KAPPA_SYN_CODE(Bcode,Tecode,Trcode) ((Power(Bcode,2)*Power(BFIELDBAR,2)*(Tecode)*(YELE))/(Power(TEMPBAR,2)*(Trcode)*(3.27095820457139e-25*Power(Tecode,2.6666666666666665)*Power((Bcode)*(BFIELDBAR)*(TEMPBAR),1.3333333333333333)*Power(Trcode,0.6666666666666666) + 81761.98763621644*Power(Trcode,2) + 3.3135584083567277e-10*Power((Bcode)*(BFIELDBAR)*(TEMPBAR),0.6666666666666666)*Power((Tecode)*(Trcode),1.3333333333333333)))/(OPACITYBAR))
+
+#define KAPPA_SYN_T5E8K_CODE(Bcode,Trcode) ((Power((Bcode),2)*Power((BFIELDBAR),2)*(YELE))/(1.6250710782015368e8*Power((Bcode)*(BFIELDBAR),1.3333333333333333)*Power((Trcode),1.6666666666666667) + 6.217523497187853e16*Power((Bcode)*(BFIELDBAR),0.8888888888888888)*Power((Trcode),2.111111111111111) + 9.314982856010713e23*Power((Bcode)*(BFIELDBAR),0.4444444444444444)*Power((Trcode),2.5555555555555554) + 2.449794466046448e32*Power((Trcode),3)))
+
+#define KAPPA_SYN_T2E9K_CODE(Bcode,Trcode) ((Power((Bcode),2)*Power((BFIELDBAR),2)*(YELE))/(8.644647866425093e11*Power((Bcode)*(BFIELDBAR),1.3333333333333333)*Power((Trcode),1.6666666666666667) + 6.861128702990499e20*Power((Bcode)*(BFIELDBAR),0.8888888888888888)*Power((Trcode),2.111111111111111) - 2.0802123666142304e27*Power((Bcode)*(BFIELDBAR),0.4444444444444444)*Power((Trcode),2.5555555555555554) + 4.051023716808301e34*Power((Trcode),3)))
+
+/// Synchrotron number-opacity
+#define KAPPAN_SYN_CODE(Bcode,Tecode,Trcode) ((((Bcode)*(BFIELDBAR)*(YELE))/(Power(TEMPBAR,3)*(-1.7623181336231107e-22*Power(Tecode,1.3333333333333335)*Power((Bcode)*(BFIELDBAR)*(TEMPBAR),0.16666666666666674)*Power(Trcode,1.8333333333333333) + 1.9763458947198796e-18*(Tecode)*Power(Trcode,2) + 6.354607984200488e-26*Power((Bcode)*(BFIELDBAR)*Power(Tecode,5)*(TEMPBAR)*Power(Trcode,5),0.3333333333333333))))/OPACITYBAR)
+
+#define KAPPAN_SYN_T5E8K_CODE(Bcode,Trcode) (((Bcode)*(BFIELDBAR)*(YELE))/((-1.5654634083885176e10*Power((Bcode)*(BFIELDBAR),0.16666666666666674)*Power((Trcode),1.8333333333333333) + 6.206328253752638e13*Power((Trcode),2) + 3.1530454850414436e7*Power((Bcode)*(BFIELDBAR)*Power((Trcode),5),0.3333333333333333))*OPACITYBAR))
+
+#define KAPPAN_SYN_T2E9K_CODE(Bcode,Trcode) (((Bcode)*(BFIELDBAR)*(YELE))/((-4.2789076015181265e12*Power((Bcode)*(BFIELDBAR),0.16666666666666674)*Power((Trcode),1.8333333333333333) + 3.35341737163873e17*Power((Trcode),2) + 1.6715078598268213e11*Power((Bcode)*(BFIELDBAR)*Power((Trcode),5),0.3333333333333333))*OPACITYBAR))
+
 
 // whether to allow kappa to depend explicitly upon position, which would require getting position and can be expensive.
 #define ALLOWKAPPAEXPLICITPOSDEPENDENCE 0

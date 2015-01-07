@@ -30,9 +30,7 @@ extern int indices_12(FTYPE A1[NDIM],FTYPE A2[NDIM],struct of_geom *ptrgeom);
 
 
 extern void koral_source_rad_calc(int computestate, int computeentropy, FTYPE *pr, struct of_geom *ptrgeom, FTYPE *Gdpl, FTYPE *Gdabspl, FTYPE *chi, FTYPE *Tgas, FTYPE *Trad, struct of_state *q);
-extern int calc_rad_lambda(FTYPE *pp, struct of_geom *ptrgeom, FTYPE Tgas, FTYPE *lambda, FTYPE *kappaemit);
-extern int calcfull_rad_nlambda(FTYPE *pp, struct of_geom *ptrgeom, FTYPE Tgas, FTYPE *nlambda);
-extern int calc_rad_nlambda(FTYPE *pp, struct of_geom *ptrgeom, FTYPE Tgas, FTYPE lambda, FTYPE *nlambda);
+extern int calc_rad_lambda(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q, FTYPE Tgas, FTYPE *lambda, FTYPE *nlambda, FTYPE *kappaemit, FTYPE *kappanemit);
 
 
 
@@ -65,7 +63,8 @@ extern int vchar_rad(FTYPE *pr, struct of_state *q, int dir,
 extern void calc_kappa(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE *kappa);
 extern void calc_kappaemit(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappaemit);
 extern void calc_kappaes(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappaes);
-extern FTYPE calc_kappa_user(FTYPE rho, FTYPE Tg, FTYPE Tr,FTYPE x,FTYPE y,FTYPE z);
+extern FTYPE calc_kappa_user(FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr,FTYPE x,FTYPE y,FTYPE z);
+extern FTYPE calc_kappan_user(FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr,FTYPE x,FTYPE y,FTYPE z);
 extern FTYPE calc_kappaes_user(FTYPE rho, FTYPE T,FTYPE x,FTYPE y,FTYPE z);
 extern int calcfull_tautot(FTYPE *pp, struct of_geom *ptrgeom, FTYPE *tautot, FTYPE *tautotmax);
 extern int calc_tautot(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q, FTYPE *tautot, FTYPE *tautotmax);

@@ -3302,7 +3302,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 #define KAPPAES 0.
 
 // assume KAPPA defines fraction of FF opacity
-#define KAPPAUSER(rho,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
+#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
 // assume KAPPAES defines fraction of ES opacity
 #define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_CODE(rho,T))
 
@@ -3333,7 +3333,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 //#define KAPPAES (1E-4*1.09713E-18*1E-3*1E-10)
 
 // assume KAPPA defines fraction of FF opacity
-//#define KAPPAUSER(rho,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
+//#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
 // assume KAPPAES defines fraction of ES opacity
 //#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_CODE(rho,T))
 
@@ -3344,7 +3344,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 //#define KAPPAES (1.0)
 //#define KAPPAES (1E-10)
 
-#define KAPPAUSER(rho,Tg,Tr) (rho*KAPPA)
+#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA)
 #define KAPPAESUSER(rho,T) (rho*KAPPAES)
 
 
@@ -3355,7 +3355,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 #define KAPPAES (SMALL)
 
 // assume KAPPA defines fraction of FF opacity
-#define KAPPAUSER(rho,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
+#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
 // assume KAPPAES defines fraction of ES opacity
 #define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_CODE(rho,T))
 
@@ -3377,7 +3377,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 #define KAPPAES 0.
 
 // assume KAPPA defines fraction of FF opacity
-#define KAPPAUSER(rho,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
+#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
 // assume KAPPAES defines fraction of ES opacity
 #define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_CODE(rho,T))
 
@@ -3393,19 +3393,19 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 #define KAPPAESUSER(rho,T) (0.0)
 
 #if(NTUBE==1)
-#define KAPPAUSER(rho,Tg,Tr) (0.4*rho)
+#define KAPPAUSER(rho,B,Tg,Tr) (0.4*rho)
 #elif(NTUBE==2)
-#define KAPPAUSER(rho,Tg,Tr) (0.2*rho)
+#define KAPPAUSER(rho,B,Tg,Tr) (0.2*rho)
 #elif(NTUBE==3)
-#define KAPPAUSER(rho,Tg,Tr) (0.3*rho)
+#define KAPPAUSER(rho,B,Tg,Tr) (0.3*rho)
 #elif(NTUBE==31)
-#define KAPPAUSER(rho,Tg,Tr) (25*rho)
+#define KAPPAUSER(rho,B,Tg,Tr) (25*rho)
 #elif(NTUBE==4)
-#define KAPPAUSER(rho,Tg,Tr) (0.08*rho)
+#define KAPPAUSER(rho,B,Tg,Tr) (0.08*rho)
 #elif(NTUBE==41)
-#define KAPPAUSER(rho,Tg,Tr) (0.7*rho)
+#define KAPPAUSER(rho,B,Tg,Tr) (0.7*rho)
 #elif(NTUBE==5)
-#define KAPPAUSER(rho,Tg,Tr) (1000*rho)
+#define KAPPAUSER(rho,B,Tg,Tr) (1000*rho)
 #endif
 
 
@@ -3417,8 +3417,8 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 
 #if(WHICHPROBLEM==RADSHADOW || WHICHPROBLEM==RADDBLSHADOW)
 
-//#define KAPPAUSER(rho,Tg,Tr) (rho*1E2)
-#define KAPPAUSER(rho,Tg,Tr) (rho*1.0) // paper
+//#define KAPPAUSER(rho,B,Tg,Tr) (rho*1E2)
+#define KAPPAUSER(rho,B,Tg,Tr) (rho*1.0) // paper
 #define KAPPAESUSER(rho,T) (rho*0.0)
 
 
@@ -3440,7 +3440,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 #define KAPPAES 0.
 
 // assume KAPPA defines fraction of FF opacity
-#define KAPPAUSER(rho,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
+#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
 // assume KAPPAES defines fraction of ES opacity
 #define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_CODE(rho,T))
 
@@ -3455,7 +3455,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 #define KAPPAES 0.
 
 // assume KAPPA defines fraction of FF opacity
-#define KAPPAUSER(rho,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
+#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
 // assume KAPPAES defines fraction of ES opacity
 #define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_CODE(rho,T))
 
@@ -3470,7 +3470,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 #define KAPPAES 1. // only scattering
 
 // assume KAPPA defines fraction of FF opacity
-#define KAPPAUSER(rho,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
+#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
 // assume KAPPAES defines fraction of ES opacity
 #define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_CODE(rho,T))
 
@@ -3485,7 +3485,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 #define KAPPAES 0.
 
 // assume KAPPA defines fraction of FF opacity
-#define KAPPAUSER(rho,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
+#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
 // assume KAPPAES defines fraction of ES opacity
 #define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_CODE(rho,T))
 
@@ -3497,7 +3497,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 
 #if(WHICHPROBLEM==RADWAVE)
 
-#define KAPPAUSER(rho,Tg,Tr) (rho*RADWAVE_KAPPA)
+#define KAPPAUSER(rho,B,Tg,Tr) (rho*RADWAVE_KAPPA)
 #define KAPPAESUSER(rho,T) (rho*RADWAVE_KAPPAES)
 
 #endif
@@ -3506,7 +3506,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 
 #if(WHICHPROBLEM==KOMIPROBLEM)
 
-#define KAPPAUSER(rho,Tg,Tr) (0.)
+#define KAPPAUSER(rho,B,Tg,Tr) (0.)
 #define KAPPAESUSER(rho,T) (0.)
 
 #endif
@@ -3519,7 +3519,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 #define KAPPAES 1.0
 
 // assume KAPPA defines fraction of FF opacity
-#define KAPPAUSER(rho,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
+#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
 // assume KAPPAES defines fraction of ES opacity
 #define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_CODE(rho,T))
 
@@ -3534,7 +3534,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 #define KAPPAES 0.
 
 // assume KAPPA defines fraction of FF opacity
-#define KAPPAUSER(rho,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
+#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
 // assume KAPPAES defines fraction of ES opacity
 #define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_CODE(rho,T))
 
@@ -3543,15 +3543,15 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 
 #if(WHICHPROBLEM==RADNT || WHICHPROBLEM==RADFLATDISK)
 
-#define KAPPAUSER(rho,Tg,Tr) (rho*KAPPA_ES_CODE(rho,Tg)/1E14*0.1) // wierd use of kappa_{es} in koral
-//#define KAPPAUSER(rho,Tg,Tr) (rho*KAPPA_ES_CODE(rho,T)/1E14*0.0)
+#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA_ES_CODE(rho,Tg)/1E14*0.1) // wierd use of kappa_{es} in koral
+//#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA_ES_CODE(rho,T)/1E14*0.0)
 #define KAPPAESUSER(rho,T) (0.0)
 
 #endif
 
 #if(WHICHPROBLEM==RADDONUT)
 // kappa can't be zero or else flux will be nan
-//#define KAPPAUSER(rho,Tg,Tr) (rho*KAPPA_ES_CODE(rho,T)/1E14*1.0) // wierd use of kappa_{es} in koral
+//#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA_ES_CODE(rho,T)/1E14*1.0) // wierd use of kappa_{es} in koral
 //#define KAPPAESUSER(rho,T) (0.0)
 
 // KORALNOTE: Different than koral code test, but as if full problem.
@@ -3560,8 +3560,14 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 
 // KORALTODO: Put a lower limit on T~1E4K so not overly wrongly opaque in spots where u_g->0 anomologously?
 // assume KAPPA defines fraction of FF opacity
-//#define KAPPAUSER(rho,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg+TEMPMIN))
-#define KAPPAUSER(rho,Tg,Tr) (rho*KAPPA*KAPPA_GENFF_CODE(rho,Tg+TEMPMIN,Tr+TEMPMIN)) // accounts for low temperatures so non-divergent and more physical
+//#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg+TEMPMIN))
+// accounts for low temperatures so non-divergent and more physical
+
+#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*(KAPPA_GENFF_CODE(SMALL+rho,Tg+TEMPMIN,Tr+TEMPMIN)+KAPPA_SYN_CODE(SMALL+B,Tg+TEMPMIN,Tr+TEMPMIN)))
+
+// TODOMARK: Compute FF number opacity
+#define KAPPANUSER(rho,B,Tg,Tr) (rho*KAPPA*(KAPPA_GENFF_CODE(SMALL+rho,Tg+TEMPMIN,Tr+TEMPMIN)+KAPPAN_SYN_CODE(SMALL+B,Tg+TEMPMIN,Tr+TEMPMIN)))
+
 // assume KAPPAES defines fraction of ES opacity
 #define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_CODE(rho,T))
 
@@ -3570,11 +3576,15 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 
 #if(WHICHPROBLEM==RADCYLBEAM || WHICHPROBLEM==RADCYLBEAMCART)
 
-#define KAPPAUSER(rho,Tg,Tr) (rho*KAPPA_ES_CODE(rho,Tg)/1E14*0.0) // note 0.0
+#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA_ES_CODE(rho,Tg)/1E14*0.0) // note 0.0
 #define KAPPAESUSER(rho,T) (0.0)
 
 #endif
 
+#ifndef KAPPANUSER
+// in case haven't defined KAPPANUSER, just use energy opacity
+#define KAPPANUSER(rho,B,Tg,Tr) KAPPAUSER(rho,B,Tg,Tr)
+#endif
 
 int init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR], FTYPE (*panalytic)[NSTORE2][NSTORE3][NPR], FTYPE (*pstaganalytic)[NSTORE2][NSTORE3][NPR], FTYPE (*vpotanalytic)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhatanalytic)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*Atemp)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
 {
@@ -5666,8 +5676,11 @@ static int get_full_rtsolution(int *whichvel, int *whichcoord, int opticallythic
     FTYPE kappa,kappaes,chi;
     // use of V assumes user knows which coordinates they are in (e.g. r,th,ph vs. x,y,z)
     FTYPE Tg=calc_PEQ_Tfromurho(pp[UU],pp[RHO]);
+    FTYPE bsq,B;
+    bsq_calc(pp,*ptrptrgeom,&bsq);
+    B=sqrt(bsq);
     chi=
-      calc_kappa_user(pp[RHO],Tg,Tg,V[1],V[2],V[3])
+      calc_kappa_user(pp[RHO],B,Tg,Tg,V[1],V[2],V[3])
       +
       calc_kappaes_user(pp[RHO],calc_PEQ_Tfromurho(pp[UU],pp[RHO]),V[1],V[2],V[3]);
 
@@ -5887,7 +5900,10 @@ static int make_nonrt2rt_solution(int *whichvel, int *whichcoord, int opticallyt
     // 2-stream approximation for pressure
     FTYPE kappaabs,kappaes,kappatot;
     // use of V assumes user knows which coordinates they are in (e.g. r,th,ph vs. x,y,z)
-    kappaabs=calc_kappa_user(rho,Tgas,Tgas,V[1],V[2],V[3]);
+    FTYPE bsq,B;
+    bsq_calc(pp,*ptrptrgeom,&bsq);
+    B=sqrt(bsq);
+    kappaabs=calc_kappa_user(rho,B,Tgas,Tgas,V[1],V[2],V[3]);
     kappaes=calc_kappaes_user(rho,Tgas,V[1],V[2],V[3]);
     kappatot=kappaabs+kappaes;
 
@@ -8357,16 +8373,27 @@ void adjust_fluxctstag_emfs(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR
 //******* user opacities ****************************************************
 //**********************************************************************
 
-// \kappa is optical depth per unit length per unit rest-mass energy density
+// KAPPAUSER is optical depth per unit length per unit rest-mass energy density
+// calc_kappa_user and calc_kappan_user and calc_kappaes_user return optical depth per unit length.
 
-//absorption
-FTYPE calc_kappa_user(FTYPE rho, FTYPE Tg,FTYPE Tr,FTYPE x,FTYPE y,FTYPE z)
+// energy absorption
+FTYPE calc_kappa_user(FTYPE rho, FTYPE B, FTYPE Tg,FTYPE Tr,FTYPE x,FTYPE y,FTYPE z)
 {
   //  if(WHICHPROBLEM==RADDONUT && nstep>100){
   //    return(0.0);
   //  }
-  //  else return(KAPPAUSER(rho,Tg,Tr));
-  return(KAPPAUSER(rho,Tg,Tr));
+  //  else return(KAPPAUSER(rho,B,Tg,Tr));
+  return(KAPPAUSER(rho,B,Tg,Tr));
+}
+
+// number absorption
+FTYPE calc_kappan_user(FTYPE rho, FTYPE B, FTYPE Tg,FTYPE Tr,FTYPE x,FTYPE y,FTYPE z)
+{
+  //  if(WHICHPROBLEM==RADDONUT && nstep>100){
+  //    return(0.0);
+  //  }
+  //  else return(KAPPANUSER(rho,B,Tg,Tr));
+  return(KAPPANUSER(rho,B,Tg,Tr));
 }
 
 //scattering
