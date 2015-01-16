@@ -9472,7 +9472,7 @@ static void calc_Trad(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q , F
 /// compute Trad (also computed directly in calc_Gu() above) using only primitives (not using conserved quantities)
 static void calc_Trad_fromRuuandgamma(FTYPE *pp, struct of_geom *ptrgeom, FTYPE Ruu, FTYPE gammaradgas, FTYPE *Trad, FTYPE *nrad)
 {
-  FTYPE Tradff,nradff;
+  FTYPE Tradff,nradff,expfactorradff;
 
   // Get fluid-frame radiation temperature
   if(NRAD<0){
@@ -9494,6 +9494,7 @@ static void calc_Trad_fromRuuandgamma(FTYPE *pp, struct of_geom *ptrgeom, FTYPE 
     
 #if(TRADTYPE==0)
     Tradff = Ruu/(nradff*EBAR0); // EBAR0 kb T = Ruu/nradff = average energy per photon
+    expfactorradff = 1.0; // but really inconsistent since should be able to get Tradff directly from Ruu if \mu=0
 #elif(TRADTYPE==1)
     FTYPE CRAD = CRAD0*ARAD_CODE;
     FTYPE BB = CRAD0 * EBAR0*EBAR0*EBAR0*EBAR0 * (3.0-EBAR0); // FTYPE BB=2.449724;
@@ -9504,6 +9505,9 @@ static void calc_Trad_fromRuuandgamma(FTYPE *pp, struct of_geom *ptrgeom, FTYPE 
     Tradff = Ruu/(SMALL+nradff*EBAR1); // Accounts for non-zero chemical potential of photons giving them higher average energy per photon than thermal case for a given temperature
 #elif(TRADTYPE==2)
     Tradff = (Ruu*(0.333333333327962 + 0.060724957534625555/(0.6467556546674441 + (0.12198190033984817*CRAD*Power(Ruu,3))/Power(SMALL+nradff,4))))/(SMALL+nradff);
+    expfactorradff = 1.6467556546674442/(0.6467556546674441 + (0.12198190033984817*CRAD*Power(Ruu,3))/Power(SMALL+nradff,4));
+    if(expfactorradff>1.0) expfactorradff=1.0; // account for BE condensation.
+    // expfactorradff = exp(-\xi) = exp(-\mu/(k_B Tradff))
 #ndif
     // Tradff/TradLTE = fco = color correction factor
     
