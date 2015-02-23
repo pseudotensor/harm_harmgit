@@ -738,7 +738,9 @@ int fluxcalc_flux(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[
  
         // get dt for each dimension at each grid point -- but only if dimension is relevant (otherwise stays as BIG and doesn't affect wavedt)
         DIMENLOOP(dimen) if(doingdimen[dimen]) ndtveclocal[dimen]=GLOBALMACP0A1(dtijk,i,j,k,dimen);
- 
+
+        if(i<-1 || j<-1 || k<-1 || i>N1 || j>N2 || k>N3 || i<0 && j<0 || i<0 && k<0 || j<0 && k<0 || i>N1-1 && j>N2-1 || i>N1-1 && k>N3-1 || j>N2-1 && k>N3-1 || ndtveclocal[1] <0.0 || ndtveclocal[2] <0.0 || ndtveclocal[3] <0.0) continue; // avoid too deep into boundary or if never set. // SUPERGODMARK:  KINDA HACK, can improve.
+
         // set local per-cell dt
         // sum of inverses is proper for unsplit scheme based upon split interpolations/fluxes.
         wavedt = MINDTSET(ndtveclocal[1],ndtveclocal[2],ndtveclocal[3]);

@@ -3226,11 +3226,13 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
     }
 
     if(RADNT_DONUTTYPE==DONUTTHINDISK || RADNT_DONUTTYPE==DONUTTHINDISK2){
-      rin=0.0;
       //      rinfield=1.1*Risco;
       rinfield=Risco;
       //      beta=1E30;
       beta=10.0;
+
+      if(FIELDTYPE==FIELDJONMAD) rin=0.0;
+      else rin=rinfield;
     }
   }
 
@@ -6214,7 +6216,7 @@ static int donut_analytical_solution(int *whichvel, int *whichcoord, int optical
     }
 
     // OVERRIDE
-    if(r>1.0*Rhor){
+    if(r>1.2*Rhor){
       *whichvel=VEL3;
       *whichcoord=BLCOORDS;
     }

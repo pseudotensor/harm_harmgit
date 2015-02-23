@@ -182,7 +182,7 @@ void set_arrays_multidimen()
 #if(PERCELLDT)
   GLOBALPOINT(dtijk) = (FTYPE PTRMACP0A1(dtijk,N1M,N2M,N3M,COMPDIM)) (&(BASEMACP0A1(dtijk,N1BND,N2BND,N3BND,-1))); // so access like dtijk[1,2,3]
   FULLLOOP for(l=1;l<=COMPDIM;l++){
-    GLOBALMACP0A1(dtijk,i,j,k,l) = valueinit;
+    GLOBALMACP0A1(dtijk,i,j,k,l) = -1; //valueinit; // SUPERGODMARK: Can improve
   }
 #endif
 

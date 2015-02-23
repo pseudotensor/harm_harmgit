@@ -166,6 +166,8 @@ static int compute_tetrcon_frommetric(FTYPE (*generalmatrix)[NDIM], FTYPE (*tetr
 
 #if(DEBUGLAPACK && (USINGLAPACK))
 
+  // in case feed in BL coord metric inside horizon, just fix so no minimum error reached
+ if(generalmatrix[1][1]<=0.0) generalmatrix[1][1]=NUMEPSILON+fabs(generalmatrix[1][1]);
 
   // get general tetrad and eigenvalues
   info=tetlapack_func_prec(generalmatrix,tetrcon,eigenvalues);
