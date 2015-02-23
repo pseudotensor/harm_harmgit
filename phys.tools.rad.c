@@ -2775,9 +2775,15 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       gasprimaryevolves=gasextremeprimaryevolves=1;
     }
 
+    
+    // SUPERGODMARK: HACK to force more use of PMHD method to avoid slowdown.
+    if(q->bsq/pb[RHO]>0.2*BSQORHOLIMIT || q->bsq/pb[UU]>0.2*BSQOULIMIT || pb[UU]/pb[RHO]>0.1*UORHOLIMIT){
+      radprimaryevolves=radextremeprimaryevolves=0;
+      gasprimaryevolves=gasextremeprimaryevolves=1;      
+    }
 
 
-
+  
 
 
     // DEBUG:
@@ -2865,7 +2871,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       
 
 
-
+    
 
       // ENERGY PHASE LOOP
       int firsttryphase1used=-1;
