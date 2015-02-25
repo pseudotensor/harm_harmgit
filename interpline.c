@@ -2337,6 +2337,7 @@ static void get_1d_line_c2e_multipl(int whichquantity, int dir, int interporflux
     myexit(9586);
     // JCM: expensive and not sure why doing it
     // reset to 0 so eno schemes don't care about values there (assume weights set to also 0 there)
+    pl=0; // fake
     for(yiniter=-NBIGBND;yiniter<NBIG+NBIGBND;yiniter++){
       yin[pl][0][yiniter] = 0;
     }

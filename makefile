@@ -400,7 +400,7 @@ LONGDOUBLECOMMAND=-m128bit-long-double
 DFLAGS=-DUSINGICC=0 -DUSINGORANGE=0 $(EXTRA)
 
 
-COMP=gcc $(DFLAGS) $(OPMPFLAGS) -Wno-unused-but-set-variable -Wno-unused-variable -Wno-unused-function
+COMP=gcc $(DFLAGS) $(OPMPFLAGS) -Wno-unused-but-set-variable -Wno-unused-variable -Wno-unused-function -Wno-unknown-pragmas -Wno-comment -Wno-parentheses
 # COMP=gcc3
 
 # gcc type flags

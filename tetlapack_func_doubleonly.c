@@ -28,8 +28,8 @@ extern int dsyevr_(char *jobz, char *range, char *uplo, int *n, double *a, int *
 int tetlapack_func(double (*metr)[NDIM], double (*tetr)[NDIM], double eigenvalues[])
 {
   char jobz,uplo ;
-  int n,lda,lwork,info ;
-  double a[NDIM][NDIM],w[NDIM],work[LWORKSIZE] ;
+  int n,lda,lwork,info=0 ;
+  double a[NDIM][NDIM],w[NDIM]={0},work[LWORKSIZE]={0};
   int chk;
   int j,k ;
 

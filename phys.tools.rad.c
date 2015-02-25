@@ -171,8 +171,8 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE *errorabs, stru
 #define IMPTRYCONVHIGHTAU (NUMEPSILON*5.0)  // for used implicit solver
 
 /// Funny, even 1E-5 does ok with torus, no worse at Erf~ERADLIMIT instances.  Also, does ~3 iterations, but not any faster than using 1E-12 with ~6 iterations.
-#define IMPTRYCONV (1.e-12) // works generally to avoid high iterations
-//#define IMPTRYCONVQUICK (1.e-9) // less greedy so doesn't slow things down so much.
+//#define IMPTRYCONV (1.e-12) // works generally to avoid high iterations
+#define IMPTRYCONV (1.e-9) // less greedy so doesn't slow things down so much.
 #define IMPTRYCONVQUICK (1.e-6) // even less greedy so doesn't slow things down so much.
 /// error for comparing to sum over all absolute errors
 #define IMPTRYCONVABS ((FTYPE)(NDIM+2)*trueimptryconv)
@@ -187,7 +187,9 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE *errorabs, stru
 // what error to allow at all
 /// too allowing to allow 1E-4 error since often solution is nuts at even errors>1E-8
 //#define IMPALLOWCONVCONST (1.e-7)
-#define IMPALLOWCONVCONST (1.e-6)
+//#define IMPALLOWCONVCONST (1.e-6)
+//#define IMPALLOWCONVCONST (1.e-5) // ensure energy conservation equation used as much as possible
+#define IMPALLOWCONVCONST (1.e-3) // with new total error, accurately accounting for error in force balance.
 #define IMPALLOWCONVCONSTABS ((FTYPE)(NDIM+2)*IMPALLOWCONVCONST)
 //#define IMPALLOWCONV (MAX(trueimptryconv,IMPALLOWCONVCONST))
 #define IMPALLOWCONV (trueimpallowconv)
@@ -1557,6 +1559,8 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
     // 7) Get actual Urad(G) via energy conservation (correct even if using entropy as error function, because just computed correct U[ENTROPY] consistent with U[UU].
     // KORALNOTE: uu set by p->uu, which has an error of order machice precision.  So even if primitives didn't change, uu-uu0 can be order machine precision.  So when fluid uu>>rad uu, this can lead to the below giving huge radiation changes even if actually fluid background is not changing.
     DLOOPA(iv) uu[iotherU[iv]] = uu0[iotherU[iv]] - (uu[irefU[iv]]-uu0[irefU[iv]]);
+    DLOOPA(iv) uuabs[iotherU[iv]] = fabs(uu0[iotherU[iv]]) + fabs(uu[irefU[iv]]) + fabs(uu0[irefU[iv]]);
+
     //
     // 8) Do RAD-ONLY Inversion (eomtype not used)
     int whichcapnew;
@@ -2028,24 +2032,40 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
 
 
-  int modemethodlocal=MODEMETHOD;
+ int modemethodlocal=MODEMETHOD;
+  int reducetoquick=0;
   // tj=-2,-1,0,1 work
   // tj=ts2+1,ts2,ts2-1,ts2-2 work
   // revert to simple mode if POLEDEATH is active because then anyways solution near pole is inaccurate and whatever generated here would be overwritten.
   // doing this because with or without poledeath active, the poles often find no solution at all or at least not with the fast PMHD method, so the pole alone causes things to slow down alot for the whole code.
+  int EXTRAPOLEDEATH,localpoledeath;
   FTYPE tj=(FTYPE)(startpos[2]+j);
-  int EXTRAPOLEDEATH=1;
-  int localpoledeath=POLEDEATH + EXTRAPOLEDEATH;
+
+  EXTRAPOLEDEATH=POLEDEATH;
+  localpoledeath=POLEDEATH + EXTRAPOLEDEATH;
   if(fabs(tj+0.5 - (FTYPE)(0))<(FTYPE)localpoledeath || fabs(tj+0.5-(FTYPE)totalsize[2])<(FTYPE)localpoledeath){
     modemethodlocal=MODEPICKBESTSIMPLE;
+    reducetoquick=2;
     //    dualfprintf(fail_file,"j=%d modechange\n",j); // debug
   }
 
- 
+
+
+
+  EXTRAPOLEDEATH=1;
+  localpoledeath=POLEDEATH + EXTRAPOLEDEATH;
+  if(fabs(tj+0.5 - (FTYPE)(0))<(FTYPE)localpoledeath || fabs(tj+0.5-(FTYPE)totalsize[2])<(FTYPE)localpoledeath){
+    modemethodlocal=MODEPICKBESTSIMPLE;
+    reducetoquick=1;
+    //    dualfprintf(fail_file,"j=%d modechange\n",j); // debug
+  }
 
   if(fabs(tj+0.5 - (FTYPE)(0))<(FTYPE)POLEDEATH || fabs(tj+0.5-(FTYPE)totalsize[2])<(FTYPE)POLEDEATH){
     modemethodlocal=MODEPICKBESTSIMPLE;
+    reducetoquick=1;
   }
+ 
+
 
 
   int pliter,pl;
@@ -2161,7 +2181,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
   // diags
   //
   ////////
-  FTYPE errorabs[NUMERRORTYPES]; // 0: over iterated pl and 1: over full relavant pl
+  FTYPE errorabs[NUMERRORTYPES]={1}; // 0: over iterated pl and 1: over full relavant pl
   int iters=0;
   int f1iters=0;
   int nummhdinvs=0;
@@ -2568,7 +2588,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     set_array(errorabsentropyold,NUMERRORTYPES,MPI_FTYPE,1.0);
 
     int radinvmodentropyold=UTOPRIMRADFAILBAD1;
-    int itersentropyold;
+    int itersentropyold=0;
     // hold iterations for total entropy attempts
     int itersentropy=0;
     int f1itersentropy=0;
@@ -2939,11 +2959,26 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
         //        if(baseitermethodlist[tryphase1]==QTYURAD || baseitermethodlist[tryphase1]==QTYPRAD) continue; // skip this method for now.
 
 
+        if(reducetoquick){
+          if(reducetoquick==1){
+            trueimptryconvlist[tryphase1]=IMPTRYCONVSUPERQUICK;
+            trueimpmaxiterlist[tryphase1]=IMPMAXITERSUPERQUICK;
+          }
+          else{
+            trueimptryconvlist[tryphase1]=IMPTRYCONVQUICK;
+            trueimpmaxiterlist[tryphase1]=IMPMAXITERQUICK;
+          }
+          if(firsttryphase1used!=-1) continue;
+        }
+
 
         // consider radinvmod only if error bad for original approach.  Avoids excessive attempts when should hit radiative ceiling and error is small.
         // KORALTODO: KORALNOTE: If explicit was triggered (failreturnenergy) then could move on, but go ahead and test using other methods in case radinvmod!=0 can be avoided.
         //radinvmodenergybest!=0
-        if(RADINVBAD(radinvmodenergybest) && checkradinvlist[tryphase1] || ACTUALHARDORSOFTFAILURE(failreturnenergybest) && failreturnenergybest!=FAILRETURNMODESWITCH){
+
+        int needtotry=(RADINVBAD(radinvmodenergybest) && checkradinvlist[tryphase1] || ACTUALHARDORSOFTFAILURE(failreturnenergybest) && failreturnenergybest!=FAILRETURNMODESWITCH);
+
+        if(needtotry){
           if(firsttryphase1used==-1) firsttryphase1used=tryphase1;
           tryphaselistenergy[tryphase1]++;
 
@@ -3378,7 +3413,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       }
 
 
-      int firsttryphase1used;
+      int firsttryphase1used=-1;
       for(tryphase1=0;tryphase1<NUMPHASESENT;tryphase1++){
 
         // pick best simple method avoids all solvers except PMHD
@@ -3435,10 +3470,24 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
         //if(baseitermethodlist[tryphase1]==QTYENTROPYUMHD || baseitermethodlist[tryphase1]==QTYURAD || baseitermethodlist[tryphase1]==QTYPRAD) continue; // skip this method for now.
         if(baseitermethodlist[tryphase1]==QTYENTROPYUMHD) continue; // skip this method for now.
 
+        if(reducetoquick){
+          if(reducetoquick==1){
+            trueimptryconvlist[tryphase1]=IMPTRYCONVSUPERQUICK;
+            trueimpmaxiterlist[tryphase1]=IMPMAXITERSUPERQUICK;
+          }
+          else{
+            trueimptryconvlist[tryphase1]=IMPTRYCONVQUICK;
+            trueimpmaxiterlist[tryphase1]=IMPMAXITERQUICK;
+          }
+          if(firsttryphase1used!=-1) continue;
+        }
 
 
         // consider radinvmod only if error bad for original approach.  Avoids excessive attempts when should hit radiative ceiling and error is small.
-        if(RADINVBAD(radinvmodentropybest) && checkradinvlist[tryphase1] || ACTUALHARDORSOFTFAILURE(failreturnentropybest) && failreturnentropybest!=FAILRETURNMODESWITCH){
+
+        int needtotry=RADINVBAD(radinvmodentropybest) && checkradinvlist[tryphase1] || ACTUALHARDORSOFTFAILURE(failreturnentropybest) && failreturnentropybest!=FAILRETURNMODESWITCH;
+
+        if(needtotry){
           if(firsttryphase1used==-1) firsttryphase1used=tryphase1;
           tryphaselistentropy[tryphase1]++;
 
@@ -3842,6 +3891,16 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
         int trueimpmaxitercold=IMPMAXITERQUICK;
         int truenumdampattemptscold=NUMDAMPATTEMPTSQUICK;
       
+        if(reducetoquick){
+          if(reducetoquick==1){
+            trueimptryconvcold=IMPTRYCONVSUPERQUICK;
+            trueimpmaxitercold=IMPMAXITERSUPERQUICK;
+          }
+          else{
+            trueimptryconvcold=IMPTRYCONVQUICK;
+            trueimpmaxitercold=IMPMAXITERQUICK;
+          }
+        }
 
         // start fresh or use entropy as starting point
         *lpflag=UTOPRIMNOFAIL;
@@ -6578,6 +6637,8 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
       FTYPE fakefracdtG=1.0;
       FTYPE f1fake[NPR],f1normfake[NPR],f1reportfake[NPR];
       FTYPE errorabsf1fake[NUMERRORTYPES];
+      errorabsf1fake[0]=errorabsf1[0];
+      errorabsf1fake[1]=errorabsf1[1];
       int convreturnfake=1;
       FTYPE fakeimpepsjac=1E-6;
       int fakefailreturnf=f_implicit(allowbaseitermethodswitch, iter,fakef1iter,failreturnallowableuse, whichcall,fakeimpepsjac,showmessages, showmessagesheavy, allowlocalfailurefixandnoreport, &eomtypelocal, whichcap, itermode, baseitermethod, fracenergy, dissmeasure, radinvmod, trueimptryconv, trueimptryconvabs, trueimpallowconvabs, trueimpmaxiter, realdt, dimtypef, dimfactU, pp, pp, piin, uu, Uiin, uu0, uu, fakefracdtG*realdt, ptrgeom, q, f1fake, f1normfake, f1reportfake, &goexplicitfake, &errorabsf1fake[0], &errorabsf1fake[1], WHICHERROR, &convreturnfake, nummhdinvsreturn);
@@ -6616,6 +6677,77 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
     }
 
   }
+
+#define BORROWENTROPY 1 // whether to try borrowing energy/entropy from radiation to get total energy conservation with entropy method
+  /////////////////////
+  //
+  // try to obtain total energy conservation *with* entropy solution for gas by borrowing from radiation.
+  // Do this by trying to keep entropy version of gas variables that have good enough total solution
+  //
+  /////////////////////
+  if(BORROWENTROPY && ACCEPTASNOFAILURE(failreturn)==1 && eomtypelocal==EOMENTROPYGRMHD){
+
+    // set borrow version of uu
+    FTYPE uuborrow[NPR];
+    FTYPE ppborrow[NPR];
+    struct of_state qborrowdontuse;
+    struct of_state *qborrow=&qborrowdontuse;
+    PLOOP(pliter,pl) uuborrow[pl] = uu[pl];
+    PLOOP(pliter,pl) ppborrow[pl] = pp[pl];
+    *qborrow=*q;
+
+    // energy added to gas
+    FTYPE dugas=uuborrow[UU]-uu0[UU];
+
+    // try enforcing energy conservation
+    uuborrow[URAD0] = uu0[URAD0] - dugas;
+
+
+    // invert full solution with errors
+    int whichcall=FIMPLICITCALLTYPEFINALCHECK2; // KEY CHOICE IS THIS, which will use whichcap
+    int goexplicitborrow;
+    int dimtypef=DIMTYPEFCONS; // 0 = conserved R^t_\nu type, 1 = primitive (u,v^i) type, i.e. v^i has no energy density term
+    int borrowf1iter=-1;
+    FTYPE borrowfracdtG=1.0;
+    FTYPE f1borrow[NPR],f1normborrow[NPR],f1reportborrow[NPR];
+    FTYPE errorabsf1borrow[NUMERRORTYPES];
+    errorabsf1borrow[0]=errorabsf1[0];
+    errorabsf1borrow[1]=errorabsf1[1];
+    int convreturnborrow=1;
+    FTYPE borrowimpepsjac=1E-6;
+    int borrowfailreturnf=f_implicit(allowbaseitermethodswitch, iter,borrowf1iter,failreturnallowableuse, whichcall,borrowimpepsjac,showmessages, showmessagesheavy, allowlocalfailurefixandnoreport, &eomtypelocal, whichcap, itermode, baseitermethod, fracenergy, dissmeasure, radinvmod, trueimptryconv, trueimptryconvabs, trueimpallowconvabs, trueimpmaxiter, realdt, dimtypef, dimfactU, ppborrow, ppborrow, piin, uuborrow, Uiin, uu0, uuborrow, borrowfracdtG*realdt, ptrgeom, qborrow, f1borrow, f1normborrow, f1reportborrow, &goexplicitborrow, &errorabsf1borrow[0], &errorabsf1borrow[1], WHICHERROR, &convreturnborrow, nummhdinvsreturn);
+
+    if(ALLOWUSEUUALT){
+      get_state(pp, ptrgeom, q);
+      primtoU(UNOTHING,pp,q,ptrgeom, uu, NULL);
+    }
+
+#define BORROWTOL (1E-1)
+
+    // only borrow if error is not order unity and if was and is plenty of energy in radiation to give
+    // e.g., borrowing from radiation can leave radiation hitting floor, do not improving total energy conservation in such cases.
+    // or allow shift in radiation energy if only adding energy to radiation
+    //    if(errorabsf1borrow[WHICHERROR]<BORROWTOL && ((-uuborrow[URAD0])>(-uuborrow[UU]))   ){}
+    if(errorabsf1borrow[WHICHERROR]<BORROWTOL && ((-uuborrow[URAD0])>(-dugas) || (-dugas<0.0))   ){
+      // then use new solution
+      PLOOP(pliter,pl){
+        uu[pl] = uuborrow[pl];
+        pp[pl] = ppborrow[pl];
+      }
+      errorabsf1[0]=errorabsf1borrow[0];
+      errorabsf1[1]=errorabsf1borrow[1];
+#if(PRODUCTION==0||1)
+      dualfprintf(fail_file,"YESSwitched: %g : uu=%g %g : dugas=%g\n",errorabsf1borrow[WHICHERROR],-uuborrow[URAD0],-uuborrow[UU],-dugas);
+#endif
+    }
+    else{
+#if(PRODUCTION==0||1)
+      dualfprintf(fail_file,"NOSwitched: %g : uu=%g %g dugas=%g\n",errorabsf1borrow[WHICHERROR],-uuborrow[URAD0],-uuborrow[UU],dugas);
+#endif
+    }
+
+
+  }// end if borrowing entropy/energy from radiation to give to gas
 
   /////////////////////
   //

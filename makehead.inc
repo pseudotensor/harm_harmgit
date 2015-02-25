@@ -71,7 +71,7 @@ else
 # HOSTNAME->COMPILER: system name (HOSTNAME) chooses compiler to use.  So don't have to have git repo keep changing for each user.
 ####################
 
-ifeq ($(HOSTNAME),physics-179)
+ifeq ($(HOSTNAME),physics-179.umd.edu)
 USEICCINTEL=1
 #USEGCC=1
 $(warning USEICCINTEL is $(USEICCINTEL))

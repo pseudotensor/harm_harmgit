@@ -109,8 +109,8 @@ int primtoflux_nonradonly(int needentropy, FTYPE *pr, struct of_state *q, int di
   int primtoflux_em(int *returntype, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux, FTYPE *fluxabs);
   VARSTATIC FTYPE fluxma[NPR],fluxem[NPR];
   VARSTATIC FTYPE fluxmaabs[NPR],fluxemabs[NPR];
-  VARSTATIC FTYPE fluxdiag;
-  VARSTATIC FTYPE fluxdiagabs;
+  //  VARSTATIC FTYPE fluxdiag;
+  //  VARSTATIC FTYPE fluxdiagabs;
   VARSTATIC int pl,pliter;
   int returntype=UNOTHING;
 
@@ -119,19 +119,20 @@ int primtoflux_nonradonly(int needentropy, FTYPE *pr, struct of_state *q, int di
   PLOOP(pliter,pl) flux[pl]=fluxma[pl]=fluxem[pl]=0.0;
   PLOOP(pliter,pl) fluxmaabs[pl]=fluxemabs[pl]=0.0;
   if(fluxabs!=NULL) PLOOP(pliter,pl) fluxabs[pl]=0.0;
-  fluxdiag=0.0;
-  fluxdiagabs=0.0;
+  //  fluxdiag=0.0;
+  //  fluxdiagabs=0.0;
 
 
   // define MA terms
-  primtoflux_ma(needentropy,&returntype, pr, q, dir, geom, fluxma, fluxmaabs, &fluxdiag, &fluxdiagabs);
-  fluxma[UU+dir]+=fluxdiag; // add back to normal term
-  fluxmaabs[UU+dir]+=fluxdiagabs; // add back to normal term
+  primtoflux_ma(needentropy,&returntype, pr, q, dir, geom, fluxma, fluxmaabs, NULL, NULL);
+  //  fluxma[UU+dir]+=fluxdiag; // add back to normal term
+  //  fluxmaabs[UU+dir]+=fluxdiagabs; // add back to normal term
   // add up MA
   PLOOP(pliter,pl){
     flux[pl] += fluxma[pl];
     if(fluxabs!=NULL) fluxabs[pl] += fluxmaabs[pl];
   }
+
 
   // define EM terms
   primtoflux_em(&returntype, pr, q, dir, geom, fluxem, fluxemabs);
@@ -140,6 +141,7 @@ int primtoflux_nonradonly(int needentropy, FTYPE *pr, struct of_state *q, int di
     flux[pl] += fluxem[pl];
     if(fluxabs!=NULL) fluxabs[pl] += fluxemabs[pl];
   }
+
 
   // returns UNOTHING form
 
@@ -152,7 +154,7 @@ int primtoflux_radonly(FTYPE *pr, struct of_state *q, int dir,
   int primtoflux_rad(int *returntype, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux, FTYPE *fluxabs);
   VARSTATIC FTYPE fluxrad[NPR];
   VARSTATIC FTYPE fluxradabs[NPR];
-  VARSTATIC FTYPE fluxdiag;
+  //  VARSTATIC FTYPE fluxdiag;
   VARSTATIC int pl,pliter;
   int returntype=UNOTHING;
 
@@ -290,9 +292,11 @@ int primtoflux_ma(int needentropy,int *returntype, FTYPE *pr, struct of_state *q
 #endif
     {
       mhd_calc_ma(pr, dir, geom, q, &flux[UU], &fluxabs[UU], &fluxdiagpress[UU], &fluxdiagpressabs[UU]); // fills flux[UU->U3] and fluxdiagonal[UU->U3]
-      *fluxdiag = fluxdiagpress[UU+dir];
+      if(fluxdiag!=NULL) *fluxdiag = fluxdiagpress[UU+dir];
       if(fluxdiagabs!=NULL) *fluxdiagabs = fluxdiagpressabs[UU+dir];
     }
+
+  //  dualfprintf(fail_file,"fluxdiagabs=%g\n",*fluxdiagabs);
 
 
 #if(DOYL!=DONOYL)
@@ -320,7 +324,8 @@ int primtoflux_ma(int needentropy,int *returntype, FTYPE *pr, struct of_state *q
     if(*returntype==UENTROPY){
       flux[UU]=flux[ENTROPY]; // overwrite for utoprim()
       fluxabs[UU]=fluxabs[ENTROPY]; // overwrite for utoprim()
-      *fluxdiag = 0.0; // overwrite for utoprim()
+      if(fluxdiag!=NULL) *fluxdiag = 0.0; // overwrite for utoprim()
+      if(fluxdiagabs!=NULL) *fluxdiagabs = 0.0; // overwrite for utoprim()
       *returntype=UNOTHING; // reset returntype for UtoU
     }
   }
@@ -1321,6 +1326,7 @@ void mhd_calc_norestmass_ma(FTYPE *pr, int dir, struct of_geom *geom, struct of_
   // = (p+u+b^2) u^dir u_j + rho u^dir (u_j + 1)
 
   if(mhddiagpress!=NULL) DLOOPA(j) mhddiagpress[j] = 0.0;
+  if(mhddiagpressabs!=NULL) DLOOPA(j) mhddiagpressabs[j] = 0.0;
 
   // T^dir_0
   j=0;

@@ -3450,7 +3450,7 @@ int poledeath(int whichx2,
       if(whichx2==X2DN){
 
         //#define RADIUSOUTERDEATHMORE 300.0
-#define RADIUSOUTERDEATHMORE (OUTERDEATHRADIUS) // i.e. inactive
+#define RADIUSOUTERDEATHMORE BIG //(OUTERDEATHRADIUS) // i.e. inactive
 
         bl_coord_ijk(i,0,k,CENT,Vtemp);
         if(Vtemp[1]>RADIUSOUTERDEATHMORE){

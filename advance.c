@@ -531,7 +531,7 @@ static int advance_standard(
       // for source()
       FTYPE Uitemp[NPR];
       // set all to zero in case doother=DONONBPL in which case need rest of calculations to know no change to field
-      FTYPE dUgeom[NPR]={0},dUriemann[NPR]={0},dUriemann1[NPR+NSPECIAL]={0},dUriemann2[NPR+NSPECIAL]={0},dUriemann3[NPR+NSPECIAL]={0},dUcomp[NUMSOURCES][NPR]={0};
+      FTYPE dUgeom[NPR]={0},dUriemann[NPR]={0},dUriemann1[NPR+NSPECIAL]={0},dUriemann2[NPR+NSPECIAL]={0},dUriemann3[NPR+NSPECIAL]={0},dUcomp[NUMSOURCES][NPR]={{0}};
       struct of_state qdontuse;
       struct of_state *qptr=&qdontuse;
       struct of_state qdontuse2;
@@ -3466,7 +3466,7 @@ int set_dt(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], SFTYPE *dt)
   int accdti,accdtj,accdtk;
   int gravitydti,gravitydtj,gravitydtk;
   FTYPE tempwavedt,tempaccdt,tempgravitydt;
-  FTYPE dtij[NDIM], wavedt, accdt, gravitydt;
+  FTYPE dtij[NDIM]={BIG}, wavedt, accdt, gravitydt;
   FTYPE wavendt[NDIM];
   FTYPE wavedt_1,wavedt_2,wavedttemp;
   FTYPE ndtfinal;

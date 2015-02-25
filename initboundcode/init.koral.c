@@ -6190,7 +6190,7 @@ static int donut_analytical_solution(int *whichvel, int *whichcoord, int optical
         Vr = 0. ; // zero zamo vel
         Vh = 0. ; // zero zamo vel
         *whichvel=VELREL4;
-        if(*whichcoord==BLCOORDS) *whichcoord==KSCOORDS;
+        if(*whichcoord==BLCOORDS) *whichcoord=KSCOORDS;
       }
       else if(r<1.1*Rhor){
         //      uT=10.0;
@@ -6200,7 +6200,7 @@ static int donut_analytical_solution(int *whichvel, int *whichcoord, int optical
         Vr = 0. ; // zero zamo vel
         Vh = 0. ; // zero zamo vel
         *whichvel=VELREL4;
-        if(*whichcoord==BLCOORDS) *whichcoord==KSCOORDS;
+        if(*whichcoord==BLCOORDS) *whichcoord=KSCOORDS;
       }
       else{
         // i.e. keep whichvel, whichcoord the same
@@ -7866,10 +7866,10 @@ void Fcov_numerical(int whichcoord, FTYPE *X, FTYPE (*Fcov)[NDIM])
         Fcov[j][k]=0.0;
 
         // 0 in dfridr not used
-        FTYPE ans1;+dfridr(mcov_func_mcoord,ptrgeom,X,0,j,k,&ans1);
-        FTYPE ans2;-dfridr(mcov_func_mcoord,ptrgeom,X,0,k,j,&ans2);
-        FTYPE ans3;+dfridr(kcov_func_mcoord,ptrgeom,X,0,j,k,&ans3);
-        FTYPE ans4;-dfridr(kcov_func_mcoord,ptrgeom,X,0,k,j,&ans4);
+        FTYPE ans1; dfridr(mcov_func_mcoord,ptrgeom,X,0,j,k,&ans1);
+        FTYPE ans2; dfridr(mcov_func_mcoord,ptrgeom,X,0,k,j,&ans2);
+        FTYPE ans3; dfridr(kcov_func_mcoord,ptrgeom,X,0,j,k,&ans3);
+        FTYPE ans4; dfridr(kcov_func_mcoord,ptrgeom,X,0,k,j,&ans4);
         if(j==WALDWHICHACOV || WALDWHICHACOV==-1){
           Fcov[j][k] += B0WALD*(ans1 +2.0*aforwald*(ans3));
         }
