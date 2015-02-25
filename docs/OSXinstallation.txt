@@ -1,0 +1,109 @@
+/*! \file ./docs//OSXinstallation.txt
+~~~~
+
+
+Compiling and running HARM on MAc OS X (using latest git version)
+Version 1 created by Peter Polko 18 Feb 2015
+
+1) Installing HDF4 (necessary only once per computer)
+1a) If you don't have gcc and gfortran installed with the same version:
+1a1) Download MacPorts (https://www.macports.org/install.php) and open a terminal
+1a2) Run the selfupdate: sudo port -v selfupdate
+1a3) Type "port list 'gcc*'" for a list of gcc versions
+1a4) Type "sudo port install gcc48" to install for example version 4.8.4
+1a5) Type "sudo port upgrade --enforce-variants gcc48 +gfortran" to install gfortran
+1a6) Type "sudo port select --set gcc mp-gcc48" to activate for example version 4.8.4 (mp for MacPorts)
+1a7) Make sure "/opt/local/bin" is first in your PATH shell variable
+1a8) Type "which gcc" or "gcc -v", and "which gfortran" or "gfortran -v" to check the right version is used
+1b) If ZLIB isn't installed:
+1b1) Type "sudo port install zlib"
+1c) If SZIP isn't installed:
+1c1) Type "sudo port install szip"
+1d) If JPEGlib isn't installed:
+1d1) Download jpegsrc.v9a.tar.gz from http://www.ijg.org/files/
+1d2) Type "tar xvzf jpegsrc.v9a.tar.gz", "cd jpeg-9a", "./configure", "make", "make test", and if that doesn't give any errors "sudo make install"
+1e) Installing HDF4:
+1e1) Download HDF4 from http://www.hdfgroup.org/release4/obtain.html
+1e2) Make sure there are no shell variables set such as GCC, CC, CXX, etc. that can interfere with compilation
+1e3) Type "tar xvzf hdf-4.2.11.tar.bz2", "cd hdf-4.2.11", "./configure --prefix=/usr/local", "make", "make check", "sudo make install", "make installcheck"
+1e4) Check if this includes libhdf4g-dev libhdf4g-doc libhdf4-0 libhdf4-dev libhdf4-doc hdf4-tools
+
+2) Installing vis5d+ is not absolutely necessary (but see new notebook for vis5dPlus installation instructions if required).
+
+3) Preparing to obtain the code (necessary only once per user/computer)
+3a) Create an ssh public/private key pair for use with unfuddle:
+3a1) Type "ssh-keygen" [hit enter if any questions]
+3a2) Copy the contents of the public key (e.g. ~/.ssh/id_rsa.pub) to unfuddle in your personal settings.
+3b) Create a directory for git code tree by typing "mkdir harm ; cd harm"
+
+4) Getting the HARM code
+4a) Type "git clone git@harm.unfuddle.com:harm/harmgit.git"
+4b) Standard permissions on many computers is that anyone can read your files. Wherever you place the code or move it to (e.g. some supercomputer or other server), PLEASE change the permissions of that directory so no one else can access (i.e. copy) the code.  I don't want just anybody being able to copy HARM.  Please do this for each and every machine you place the code onto.
+4b1) Type "chmod -R og-rwx harmgit" Again, do this no matter where you copy the code to.
+4c) Type "cd harmgit"
+
+5) Setting up the environment (necessary only once per computer)
+5a) The Intel compiler icc (do this if icc is not already installed and you're not calling the source command given below in .bashrc or .profile):
+5a1) When you don't want to use icc, set USEICCINTEL=0 and USEGCC=1 in makehead.inc
+5a2) To install icc, download it from http://software.intel.com/en-us/non-commercial-software-development and choose the one with both Intel and Fortran compilers (e.g., Intel® Parallel Studio XE 2013 for Linux)
+5a3) To use icc, source any libraries, e.g., "source /opt/intel/mkl/10.0.3.020/tools/environment/mklvarsem64t.sh"
+5b) The Message Passing Interface (MPI) for parallel computing:
+5b1) When you don't want to use MPI, set USEMPI=0 (for first setting which is a choice) in makehead.inc
+5b2) To install MPI, go to: http://www.mpich.org/downloads/ and get the "mpich-3.0.2 (stable release)" version to install from source.  Look at the README, follow "bash" versions of "configure" "make" "make install" with your username instead of <USERNAME>
+5c) The Multi Processing package OpenMP for multiprocessing:
+5c1) When you don't want to use OpenMP (or if you have problems compiling on OS X), set USEOPENMP=0 in makehead.inc.
+5d) The Linear Algebra PACKage LAPACK:
+5d1) When you don't want to use LAPACK, set USELAPACK=0 and USELAPACKNEW=0 in makehead.inc.
+5e) The Vis5D plotting program:
+## Start of new part ##
+5e1) When you don't want to use Vis5D, set USEV5D=0 in makehead.inc.
+## End of new part ##
+## Start of obsoleted part ##
+5e1) When you don't want to use Vis5D, change '#define V5D (1)' to '#define V5D (0)' in bin2txt.c.
+5f) The Hierarchical Data Format header files:
+5f1) In bin2txt.c, make sure '#include "hdf.h"' and '#include "mfhdf.h"' are used, instead of 'hdf/hdf.h' and 'hdf/mfhdf.h'.
+## End of obsoleted part ##
+5g) Choosing between "system" (every library installed on system level) or "user" (everything installed in a user's home folder) type installation:
+5g1) In makefile, search for "bin2txt" and either choose block of code for "system" type installation or "user" type installation and adapt the commands to your own setup.
+5h) Link sh to bash (CAREFUL! do this if you have root access):
+5h1) Type "sudo bash"
+5h2) Type "cd /bin"
+5h3) Type "mv sh sh_old" to backup the old version
+5h4) Type "ln -s bash sh"
+5h5) Type "exit" to get back to your user
+
+## Start of obsoleted part ##
+5i) Edit makefile and do 2 things:
+5i1) search -lv5d .  Before that, add "-L /home/<username>/lib"  without quotes and with <username> replaced by your user name.
+5i2) Also, add "-I /home/<username>/include"  (-I is a capital i and not a capital l) to the end of that same line.
+## End of obsoleted part ##
+
+6) Setting up the links to the desired simulation model initializations and boundary condition files
+6a) Type "ln -s initboundcode/init.fishmon.c init.c"
+6b) Type "ln -s initboundcode/init.fishmon.h init.h"
+6c) Type "ln -s initboundcode/bounds.fishmon.c bounds.c"
+
+7) Compiling the codes
+7b) Type "make superclean ; make prepsmcalc ; make smcalc ; cp smcalc ~/bin/"
+7b1) If you get an error \\n\\tgcc, switch to bash and try again. The tcsh echo command does not support interpretation of tabs and newlines.
+7c) Type "make superclean ; make prepiinterp ; make iinterp ; cp iinterp ~/bin/"
+7d) Type "make superclean ; make prepbin2txt ; make bin2txt ; cp bin2txt ~/bin/"
+7e) Type "make superclean ; make prep ; make" (If you have N cores, you can vastly speed-up compile by typing "make superclean ; make prep ; make -j N")
+
+8) Making directory for run code
+8a) Type "mkdir run ; cp grmhd run ; cd run"
+
+9) Running the code
+9a) When using MPI and OpenMP, to run code with 4 OpenMP threads per node in 1x1x1 MPI matrix, type "nohup ./grmhd 4 1 1 1 &"
+9b) When not using MPI and OpenMP, type "nohup ./grmhd &"
+
+10) Visualizing the results
+10a) You can look at results with SM (Supermongo) using the SM project.
+10b) You can also use vis5d+.
+
+11) Finally, this is not a shared code.  Only you are allowed access to this code.  Do not share it or share your access to this site.  Thank you for your understanding!
+-Jonathan McKinney
+
+
+~~~~
+*/

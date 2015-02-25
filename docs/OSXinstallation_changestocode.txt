@@ -1,0 +1,121 @@
+/*! \file ./docs//OSXinstallation_changestocode.txt
+~~~~
+
+
+Proposed changes:
+
+To compile on a mac:
+
+	In makefile:
+Line 261: replace "ECHOSWITCH=" with "ECHOSWITCH=-e"
+Line 327: replace "-DOSX=$(USEOSX)" with "-DUSINGOSX=$(USEOSX)" for conformity
+Line 735: replace
+
+#BIN2TXTLIBS=-I /usr/include/hdf/ -L /usr/lib64/hdf/ -lmfhdf -ldf -ljpeg -lz -L /home/mavara/lib -lv5d -I /home/mavara/include
+
+with
+
+ifeq ($(USEOSX),1)
+BIN2TXTLIBS=-lmfhdf -ldf ljpeg -lz
+else
+BIN2TXTLIBS=-I /usr/include/hdf/ -L /usr/lib64/hdf/ -lmfhdf -ldf -ljpeg -lz
+endif
+
+	In maketail:
+Line 85: could add "$(warning USEOSX is $(USEOSX))"
+
+	In bin2txt.c:
+Line 59: replace
+
+// SOMETIMES SYSTEM USER OR INSTALLATION TYPE (e.g. ki-rh42,physics-179.umd.edu)
+#include "hdf/hdf.h"
+#include "hdf/mfhdf.h"
+
+// SOMETIMES USER INSTALLATION TYPE (e.g. ki-rh39)
+//#include "hdf.h"
+//#include "mfhdf.h"
+
+with
+
+// SOMETIMES USER INSTALLATION TYPE (e.g. ki-rh39)
+#if( USINGOSX == 1 ) //Add conditions as needed
+#include "hdf.h"
+#include "mfhdf.h"
+#else
+// SOMETIMES SYSTEM USER OR INSTALLATION TYPE (e.g. ki-rh42,physics-179.umd.edu)
+#include "hdf/hdf.h"
+#include "hdf/mfhdf.h"
+#endif
+
+	In freespace.c:
+Line 5: replace
+
+#if( 0 == OSX )
+// below for free HD space check in dump.c
+#include <sys/vfs.h>
+//#include <sys/statfs.h>
+#else
+#include <sys/param.h>
+#include <sys/mount.h>
+#endif
+
+with
+
+#if( USINGOSX == 1 )
+#include <sys/param.h>
+#include <sys/mount.h>
+#else
+// below for free HD space check in dump.c
+#include <sys/vfs.h>
+//#include <sys/statfs.h>
+#endif
+
+	In global.jon_interp.h:
+Line 129: replace "#include <malloc.h>" with
+
+#if( USINGOSX == 1 )
+#include <malloc/malloc.h>
+#else
+#include <malloc.h>
+#endif
+
+
+To make V5D a one-parameter choice:
+
+	In makehead.inc:
+Line 201 (or maybe better in the list of "PICK SYSTEM TO COMPILE ON"): add
+
+####################
+#
+# Vis5D choice
+#
+####################
+USEV5D=1
+
+	In makefile:
+Line 327: add " -DUSINGV5D=$(USEV5D)" to the end of the line
+Line 736: add
+
+ifeq ($(USEV5D),1)
+BIN2TXTLIBS=$(BIN2TXTLIBS) -L $(HOME)/lib -lv5d -I $(HOME)/lib
+endif
+
+	In maketail:
+Line 85: could add "$(warning USEV5D is $(USEV5D))"
+
+	In bin2txt.c:
+Lines 75, 161, 410, 627, 731, 996, 1083, 1130, 1161 (commented out), 1162, and 1266: replace V5D with USINGV5D for conformity. A single search and replace of "#if(V5D" with "#if(USINGV5D" should do it, without changing the other "V5D" instances.
+Line 11: remove "#define V5D (0)"
+
+To make system/user installation a one-parameter choice:
+
+	In makehead.inc:
+Line 33: add "USESYSTEMINSTALLATION=1"
+
+	In makefile:
+Line 732: add "ifeq ($(USESYSTEMINSTALLATION),1)"
+Line 741: add "else"
+Line 751: add "endif"
+
+~~~~
+*/

@@ -22,6 +22,11 @@
 
 <a href="quick__start__guide_21_8txt.html">note: git code and compile and run</a>
 
+
+<a href="_o_s_xinstallation_8txt.html">note: OSX installation issues#1</a>
+
+<a href="_o_s_xinstallation__changestocode_8txt.html">note: OSX installation issues#2</a>
+
 See also harmgit/makefiles.other
 
 <a href="quick__start__guide_25_8txt.html">note: Fieldline files to Viz5D file</a>
