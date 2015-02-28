@@ -200,7 +200,7 @@
 #define FIELDSTAGMEM 1 // testing
 #define HIGHERORDERMEM 0
 #define MAXBND 4 // 4 for PARAFLAT, 6 for WENO5BND wo/a2c stuff : 11 for full point-field FLUXRECON method
-#define PRODUCTION 0 // WALDPROD
+#define PRODUCTION 1 // WALDPROD
 //#define FULLOUTPUT MAXBND // TESTING BCs
 #define FULLOUTPUT 0
 
@@ -410,30 +410,34 @@ struct Ccoordparams {
 // disable things that are not really needed because they are debugging type things
 //
 ///////////////////////////////////////
+
 #if(PRODUCTION>=2)
-//#undef DOJETDIAG
-#undef DODEBUGDUMP
-#undef DOFLOORDUMP
+#undef DOEOSDUMP
+#define DOEOSDUMP 0
 #undef DODISSMEASUREDUMP
-//#define DOJETDIAG 0
-#define DODEBUGDUMP 0
-#define DOFLOORDUMP 0
 #define DODISSMEASUREDUMP 0
+#undef DOVPOTDUMP
+#define DOVPOTDUMP 0
+#undef DODEBUGDUMP // very large, only for speed debug
+#define DODEBUGDUMP 0
+//#undef DOJETDIAG
+#undef DOFLOORDUMP // for accounting for energy from floor
+//#define DOJETDIAG 0
+#define DOFLOORDUMP 0
 #endif
 
 #if(PRODUCTION>=3)
+#endif
+
+#if(PRODUCTION>=4)
 
 // only needed files for python, not SM
 #undef DOMAINDUMPDUMP
-#undef DOEOSDUMP
 #undef DORADDUMP
-#undef DOVPOTDUMP
 #undef DOIMAGEDUMP
 
 #define DOMAINDUMPDUMP 0
-#define DOEOSDUMP 0
 #define DORADDUMP 0
-#define DOVPOTDUMP 0
 #define DOIMAGEDUMP 0
 
 #endif
@@ -1038,9 +1042,6 @@ struct Ccoordparams {
 #define MCOORD KSCOORDS
 
 #elif(WHICHPROBLEM==RADDONUT)
-
-#undef EVOLVENRAD
-#define EVOLVENRAD 1
 
 #undef WHICHRADSOURCEMETHOD
 //#define WHICHRADSOURCEMETHOD SOURCEMETHODNONE // WALD
