@@ -1135,21 +1135,21 @@ int set_atmosphere(int whichcond, int whichvel, struct of_geom *ptrgeom, FTYPE *
 
 
 
-int set_density_floors(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *prfloor)
+int set_density_floors(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *prfloor, FTYPE *prceiling)
 {
   int funreturn;
   
-  funreturn=set_density_floors_default(ptrgeom, pr, prfloor);
+  funreturn=set_density_floors_default(ptrgeom, pr, prfloor, prceiling);
   if(funreturn!=0) return(funreturn);
 
   return(0);
 }
 
-int set_density_floors_alt(struct of_geom *ptrgeom, struct of_state *q, FTYPE *pr, FTYPE *U, FTYPE bsq, FTYPE *prfloor)
+int set_density_floors_alt(struct of_geom *ptrgeom, struct of_state *q, FTYPE *pr, FTYPE *U, FTYPE bsq, FTYPE *prfloor, FTYPE *prceiling)
 {
   int funreturn;
   
-  funreturn=set_density_floors_default_alt(ptrgeom, q, pr, U, bsq, prfloor);
+  funreturn=set_density_floors_default_alt(ptrgeom, q, pr, U, bsq, prfloor, prceiling);
   if(funreturn!=0) return(funreturn);
 
   return(0);
@@ -1268,7 +1268,7 @@ void adjust_fluxctstag_emfs(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR
 
 
 // not used
-FTYPE calc_kappa_user(FTYPE rho, FTYPE T,FTYPE x,FTYPE y,FTYPE z)
+FTYPE calc_kappa_user(FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr,FTYPE x,FTYPE y,FTYPE z)
 {
   return(0.0);
 }
@@ -1399,3 +1399,56 @@ int coolfunc_user(FTYPE h_over_r, FTYPE *pr, struct of_geom *geom, struct of_sta
 }
 
 
+int init_postvpot(int i, int j, int k, FTYPE *pr, FTYPE *pstag, FTYPE *ucons){
+
+  return(0);
+}
+
+
+
+void set_coord_parms_nodeps_user(int defcoordlocal)
+{
+
+}
+
+
+void set_coord_parms_deps_user(int defcoordlocal)
+{
+}
+
+void write_coord_parms_user(int defcoordlocal, FILE *out)
+{
+}
+void read_coord_parms_user(int defcoordlocal, FILE *in)
+{
+}
+
+void read_coord_parms_mpi_user(int defcoordlocal)
+{
+}
+
+
+void blcoord_user(FTYPE *X, FTYPE *V)
+{
+}
+
+
+void dxdxp_analytic_user(FTYPE *X, FTYPE *V, FTYPE (*dxdxp)[NDIM])
+{
+
+}
+void set_points_user(void)
+{
+
+}
+FTYPE setRin_user(int ihor, FTYPE ihoradjust)
+{
+  return(0.0);
+}
+ 
+
+
+int setihor_user(void)
+{
+  return(0);
+}

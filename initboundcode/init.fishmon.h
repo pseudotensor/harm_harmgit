@@ -12,8 +12,8 @@
 #endif
 
 #define N1 64
-#define N2 64
-#define N3 1
+#define N2 32
+#define N3 4
 
 // atch adjusts
 #undef MAXWELL
@@ -387,16 +387,19 @@ struct Ccoordparams {
 }  coordparams;
 
 
-#undef OUTERDEATH
 //#define OUTERDEATH 1
 // defaults
+#undef OUTERDEATH
 #define OUTERDEATH 1
+#undef OUTERDEATHRADIUS
 #define OUTERDEATHRADIUS (500.0)
+#undef OUTERDEATHGAMMAMAX
 #define OUTERDEATHGAMMAMAX (6.0)
+#undef OUTERDEATHGAMMAMAXRAD
 #define OUTERDEATHGAMMAMAXRAD (50.0)
 
 
-
+#define MPERSUN 1.0
 
 // problem-dependent code activation
 #undef USERRESETREGION

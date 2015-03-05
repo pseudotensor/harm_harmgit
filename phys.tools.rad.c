@@ -571,7 +571,8 @@ static int Utoprimgen_failwrapper(int doradonly, int *radinvmod, int showmessage
 static void define_method(int iter, int *eomtype, int itermode, int baseitermethod, FTYPE fracenergy, FTYPE dissmeasure, int *implicititer, int *implicitferr, int *BEGINMOMSTEPS, int *ENDMOMSTEPS, int *BEGINENERGYSTEPS, int *ENDENERGYSTEPS, int *BEGINFULLSTEPS, int *ENDFULLSTEPS, int *BEGINNORMALSTEPS);
 static void get_refUs(int *numdims, int *startjac, int *endjac, int *implicititer, int *implicitferr, int *irefU, int *iotherU, int *erefU, int *eotherU, int *signgd2, int *signgd4, int *signgd6, int *signgd7);
 
-#define MAXJACDIM (5)
+#define MAXJACDIM (NDIM)
+//#define MAXJACDIM (NDIM+1)
 
 // debug stuff
 static void showdebuglist(int debugiter, FTYPE (*pppreholdlist)[NPR],FTYPE (*ppposholdlist)[NPR],FTYPE (*f1reportlist)[NPR],FTYPE (*f1list)[NPR],FTYPE *errorabsf1list,FTYPE *errorallabsf1list, int *realiterlist, FTYPE (*jaclist)[MAXJACDIM][MAXJACDIM], FTYPE *fracdamplist, int *implicititerlist, int *implicitferrlist);
@@ -1065,6 +1066,7 @@ static void define_method(int iter, int *eomtype, int itermode, int baseitermeth
 
 
 
+#if(0)
 #define JACNPR (NDIM+1) // maximum number of terms in Jacobian
 #define JACNUMTYPES 5
 #define JNORMALTYPE 0
@@ -1076,9 +1078,10 @@ int jacstart[JACNUMTYPES],jaclist[JACNUMTYPES][JACNPR],jacend[JACNUMTYPES];
 #define JACTYPELOOP(type) for(type=0;type<JACNUMTYPES;type++)
 #define JACALLLOOP(pl) for(pl=0;pl<JACNPR;pl++)
 #define JACLOOP(type,pliter,pl) for(pliter=jacstart[type],pl=jaclist[type][pliter];pliter<=jacend[type];pliter++,pl=jaclist[type][pliter])
+#endif
 
 
-
+#define JACNPR (NDIM)
 #define JACLOOP(jj,startjj,endjj) for(jj=startjj;jj<=endjj;jj++)
 #define JACLOOPALT(jj,startjj,endjj) DLOOPA(jj) //for(jj=startjj;jj<=endjj;jj++) // for those things might or might not want to do all terms
 #define JACLOOPSUPERFULL(pliter,pl,eomtype,baseitermethod,radinvmod) PLOOP(pliter,pl) if(pl!=ENTROPY && pl!=UU && pl!=URAD0 || (eomtype==EOMDEFAULT && EOMTYPE==EOMENTROPYGRMHD || eomtype==EOMENTROPYGRMHD || eomtype==EOMDIDENTROPYGRMHD) && (pl==ENTROPY || pl==URAD0 && IMPMHDTYPEBASE(baseitermethod)==0 || IMPMHDTYPEBASE(baseitermethod)==1 && (pl==URAD0 && AVOIDURAD0IFRADINVMODANDPMHDMETHOD==0 || pl==URAD0 && AVOIDURAD0IFRADINVMODANDPMHDMETHOD==1 && radinvmod==0)) || (eomtype==EOMDEFAULT && EOMTYPE==EOMGRMHD || eomtype==EOMGRMHD || eomtype==EOMDIDGRMHD) && (pl==UU || pl==URAD0 && IMPMHDTYPEBASE(baseitermethod)==0 || IMPMHDTYPEBASE(baseitermethod)==1 && (pl==URAD0 && AVOIDURAD0IFRADINVMODANDPMHDMETHOD==0 || pl==URAD0 && AVOIDURAD0IFRADINVMODANDPMHDMETHOD==1 && radinvmod==0) )) // over f's, not primitives.
@@ -1086,6 +1089,7 @@ int jacstart[JACNUMTYPES],jaclist[JACNUMTYPES][JACNPR],jacend[JACNUMTYPES];
 #define JACLOOPSUBERROR(jj,startjj,endjj) JACLOOP(jj,startjj,endjj)
 #define JACLOOP2D(ii,jj,startjj,endjj) JACLOOP(ii,startjj,endjj) JACLOOP(jj,startjj,endjj)
 
+#if(0)
 static void get_refUs(int *numdims, int *startjac, int *endjac, int *implicititer, int *implicitferr, int *irefU, int *iotherU, int *erefU, int *eotherU, int *signgd2, int *signgd4, int *signgd6, int *signgd7)
 {
   int jj;
@@ -1212,6 +1216,114 @@ static void get_refUs(int *numdims, int *startjac, int *endjac, int *implicitite
 
 
 }
+#endif
+
+static void get_refUs(int *numdims, int *startjac, int *endjac, int *implicititer, int *implicitferr, int *irefU, int *iotherU, int *erefU, int *eotherU, int *signgd2, int *signgd4, int *signgd6, int *signgd7)
+{
+  int jj;
+
+  // default
+  *numdims=NDIM;
+  *signgd7= (+1.0); // not used for PMHD
+  DLOOPA(jj) irefU[jj]=UU+jj;
+  DLOOPA(jj) iotherU[jj]=URAD0+jj;
+  *startjac=0; *endjac=NDIM-1;
+
+  // same list and numbers in array for both primitives and conserved
+  if(*implicititer==QTYUMHD || *implicititer==QTYPMHD){
+  }
+  else if(*implicititer==QTYUMHDENERGYONLY || *implicititer==QTYPMHDENERGYONLY){
+    *startjac=0; *endjac=0;
+  }
+  else if(*implicititer==QTYUMHDMOMONLY || *implicititer==QTYPMHDMOMONLY){
+    *startjac=1; *endjac=3;
+  }
+  else if(*implicititer==QTYENTROPYUMHD || *implicititer==QTYENTROPYPMHD){
+    irefU[TT]=ENTROPY;
+  }
+  else if(*implicititer==QTYENTROPYUMHDENERGYONLY){
+    irefU[TT]=ENTROPY;
+    *startjac=0; *endjac=0;
+  }
+  else if(*implicititer==QTYENTROPYUMHDMOMONLY){
+    irefU[TT]=ENTROPY;
+    *startjac=1; *endjac=3;
+  }
+  else if(*implicititer==QTYURAD || *implicititer==QTYPRAD){
+    *numdims=NDIM;
+    *signgd7= (+1.0); // required to make URAD method work for (e.g.) RADSHADOW if using Gddt-based GS
+    DLOOPA(jj) irefU[jj]=URAD0+jj;
+    DLOOPA(jj) iotherU[jj]=UU+jj;
+    *startjac=0; *endjac=NDIM-1;
+  }
+  else if(*implicititer==QTYURADENERGYONLY || *implicititer==QTYPRADENERGYONLY){
+    *numdims=NDIM;
+    *signgd7= (+1.0);
+    DLOOPA(jj) irefU[jj]=URAD0+jj;
+    DLOOPA(jj) iotherU[jj]=UU+jj;
+    *startjac=0; *endjac=0;
+  }
+  else if(*implicititer==QTYURADMOMONLY || *implicititer==QTYPRADMOMONLY){
+    *numdims=NDIM;
+    *signgd7= (+1.0);
+    DLOOPA(jj) irefU[jj]=URAD0+jj;
+    DLOOPA(jj) iotherU[jj]=UU+jj;
+    *startjac=1; *endjac=3;
+  }
+  else if(PRODUCTION==0){
+    dualfprintf(fail_file,"No such implicititer=%d\n",*implicititer);
+    myexit(468346321);
+  }
+
+  // same list and numbers in array for both primitives and conserved
+  
+  //default
+  *numdims=NDIM;
+  DLOOPA(jj) erefU[jj]=UU+jj;
+  DLOOPA(jj) eotherU[jj]=URAD0+jj;
+
+  if(*implicitferr==QTYUMHD){
+  }
+  else if(*implicitferr==QTYUMHDENERGYONLY){
+  }
+  else if(*implicitferr==QTYUMHDMOMONLY){
+  }
+  else if(*implicitferr==QTYENTROPYUMHD){
+    erefU[TT]=ENTROPY;
+  }
+  else if(*implicitferr==QTYENTROPYUMHDENERGYONLY){
+    erefU[TT]=ENTROPY;
+  }
+  else if(*implicitferr==QTYENTROPYUMHDMOMONLY){
+    erefU[TT]=ENTROPY;
+  }
+  else if(*implicitferr==QTYURAD){
+    *numdims=NDIM;
+    DLOOPA(jj) erefU[jj]=URAD0+jj;
+    DLOOPA(jj) eotherU[jj]=UU+jj;
+  }
+  else if(*implicitferr==QTYURADENERGYONLY){
+    *numdims=NDIM;
+    DLOOPA(jj) erefU[jj]=URAD0+jj;
+    DLOOPA(jj) eotherU[jj]=UU+jj;
+  }
+  else if(*implicitferr==QTYURADMOMONLY){
+    *numdims=NDIM;
+    DLOOPA(jj) erefU[jj]=URAD0+jj;
+    DLOOPA(jj) eotherU[jj]=UU+jj;
+  }
+  else if(PRODUCTION==0){
+    dualfprintf(fail_file,"No such implicitferr=%d\n",*implicitferr);
+    myexit(468346322);
+  }
+
+  // sign that goes into implicit differencer that's consistent with sign for *signgd of -1 when using the radiative uu to measure f.
+  *signgd2=(+1.0);
+  *signgd4=(+1.0); // for entropy alone for Gdpl in error function // Appears for QTYUMHD,QTYENTROPYUMHD this sign is the right one.  But both cases have lots of cold MHD inversions.
+  *signgd6=(-1.0); // for entropy as goes into GS from dUrad or dUmhd  //  // KORALTODO SUPERGODMARK:  -- unsure about sign!
+
+}
+
 
 
 
@@ -4555,7 +4667,7 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
   FTYPE trueimpokconvabs=IMPOKCONVABS;
   FTYPE trueimpallowconvabs=IMPALLOWCONVABS;
 
-  int trueimptryconv_orig=trueimptryconv;
+  FTYPE trueimptryconv_orig=trueimptryconv;
 
 #if(DEBUGMAXITER)
   FTYPE pppreholdlist[IMPMAXITERLONG+2][NPR]={{0}}; // for debug
@@ -6977,7 +7089,7 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
 #define DEBUGMAXMODE 1
 
 /// DEBUGMAXITER stuff
-static void showdebuglist(int debugiter, FTYPE (*pppreholdlist)[NPR],FTYPE (*ppposholdlist)[NPR],FTYPE (*f1reportlist)[NPR],FTYPE (*f1list)[NPR],FTYPE *errorabsf1list,FTYPE *errorallabsf1list, int *realiterlist, FTYPE (*jaclist)[NDIM][NDIM], FTYPE *fracdamplist, int *implicititerlist, int *implicitferrlist)
+static void showdebuglist(int debugiter, FTYPE (*pppreholdlist)[NPR],FTYPE (*ppposholdlist)[NPR],FTYPE (*f1reportlist)[NPR],FTYPE (*f1list)[NPR],FTYPE *errorabsf1list,FTYPE *errorallabsf1list, int *realiterlist, FTYPE (*jaclist)[JACNPR][JACNPR], FTYPE *fracdamplist, int *implicititerlist, int *implicitferrlist)
 {
 
   if(DEBUGMAXITER==0) return;
@@ -9687,7 +9799,7 @@ static void calc_Trad_fromRuuandgamma(FTYPE *pp, struct of_geom *ptrgeom, FTYPE 
     expfactorradff = 1.6467556546674442/(0.6467556546674441 + (0.12198190033984817*CRAD*Power(Ruu,3))/Power(SMALL+nradff,4));
     if(expfactorradff>1.0) expfactorradff=1.0; // account for BE condensation.
     // expfactorradff = exp(-\xi) = exp(-\mu/(k_B Tradff))
-#ndif
+#endif
     // Tradff/TradLTE = fco = color correction factor
     
   }

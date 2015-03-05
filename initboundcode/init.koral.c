@@ -6828,10 +6828,10 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
   FTYPE *pr = &MACP0A1(prim,i,j,k,0);
 
 #if(1)
-  int ib=0,jb=0,kb=0;
-  if(i==-N1BND || i==N1-1+N1BND) ib=1;
-  if(j==-N2BND || j==N2-1+N2BND) jb=1;
-  if(k==-N3BND || k==N3-1+N3BND) kb=1;
+  int ibound=0,jbound=0,kbound=0;
+  if(i==-N1BND || i==N1-1+N1BND) ibound=1;
+  if(j==-N2BND || j==N2-1+N2BND) jbound=1;
+  if(k==-N3BND || k==N3-1+N3BND) kbound=1;
 
   int iout=0,jout=0,kout=0;
   if(i<-N1BND || i>N1-1+N1BND) iout=1;
@@ -6844,8 +6844,8 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
   if(iout||jout||kout){
     rho_av=p_av=0.0;
   }
-  else if(ib||jb||kb){
-    //    if(ib||jb||kb){
+  else if(ibound||jbound||kbound){
+    //    if(ibound||jbound||kbound){
     //  if(i==-N1BND && j==-N2BND){
     rho_av = pr[RHO];
     p_av = pressure_rho0_u_simple(i,j,k,CENT,pr[RHO],pr[UU]);
