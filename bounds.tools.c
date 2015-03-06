@@ -5782,15 +5782,145 @@ void debugfixupaltdeath_bc(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
     // don't allow in general
     //return;
   }
+
+
+  if(0){
+
+
 #define DAMPECOV 0
 #define DAMPGAMMA 0
 #define OUTERDEATHDAMP 0
 
-  if(DAMPGAMMA || OUTERDEATHDAMP || DAMPECOV){
+    if(DAMPGAMMA || OUTERDEATHDAMP || DAMPECOV){
+
+      FULLLOOP{
+        prfix=&MACP0A1(prim,i,j,k,0);//&GLOBALMACP0A1(pglobal,i,j,k,0);
+        ufix=&GLOBALMACP0A1(unewglobal,i,j,k,0);
+  
+        // get geometry for center pre-interpolated values
+        get_geometry(i, j, k, CENT, ptrgeom);
+        bl_coord_ijk_2(i,j,k,CENT,X, V) ;
+  
+        FTYPE bsq=0.0;
+        bsq_calc(prfix,ptrgeom,&bsq);
+
+
+        if(DAMPGAMMA){
+          if(V[1]>t-100.0 && steppart==0 && nstep%2==0){
+            FTYPE gamma,qsq;
+            gamma_calc(prfix,ptrgeom,&gamma,&qsq);
+            FTYPE gammanew=((gamma-1.0)*0.1)+1.0;
+            limit_gamma(0,gammanew,OUTERDEATHGAMMAMAXRAD,prfix,NULL,ptrgeom,-1);
+            //prfix[U1]=0.0;
+            //dualfprintf(fail_file,"problem: gamma=%g gammanew=%g\n",gamma,gammanew);
+          }
+        }
+
+        if(DAMPECOV){
+          if(V[1]>2.5 && steppart==0 && nstep%2==0){
+            extern int init_postvpot(int i, int j, int k, FTYPE *pr, FTYPE *pstag, FTYPE *ucons);
+            init_postvpot(i, j, k, prfix, NULL, NULL);
+          }
+        }
+
+        if(OUTERDEATHDAMP){
+
+          FTYPE Rbadout=OUTERDEATHRADIUS; //MIN(500.0,0.5*Rout);
+    
+          Rbadout=100.0 + t;
+ 
+          if(V[1]>Rbadout || V[1]>t && (mycpupos[2]==0 && (j<=2) || mycpupos[2]==ncpux2-1 && (j>=N2-1-2)) ){
+
+            if(VARTOINTERP==PRIMTOINTERP_GDETFULLVERSION_WALD){
+
+              FTYPE prfloor[NPR],prceiling[NPR];
+              set_density_floors(ptrgeom,prfix,prfloor,prceiling);
+
+              prfix[RHO]=prfloor[RHO];
+              prfix[UU]=prfloor[UU];
+
+              limit_gamma(0,OUTERDEATHGAMMAMAX,OUTERDEATHGAMMAMAXRAD,prfix,NULL,ptrgeom,-1);
+
+            }
+            else{
+
+       
+              //prfix[RHO] = 1E-10*pow(V[1]/500.0,-1.5);
+  
+              prfix[UU]= MIN(50.0*prfix[RHO],prfix[UU]); // no more than u/rho=10
+              //      prfix[UU] = MIN(prfix[UU],
+              ufix[UU]=MAX(-prfix[UU],ufix[UU]);
+  
+              ufix[ENTROPY] = ufix[UU];
+              ufix[ENTROPY] = MAX(0.0001,MIN(ufix[ENTROPY],1.0)); // like u/rho=1
+
+              if(URAD0>=0){
+                //prfix[URAD0] = 2E-10*pow(V[1]/500.0,-1.5);
+                prfix[URAD0] = MIN(MIN(prfix[RHO],prfix[URAD0]),prfix[UU]); // no more than Erf/rho=1 and Erf/u=1
+                ufix[URAD0]=MAX(-prfix[URAD0],ufix[URAD0]);
+              }
+
+              //      limit_gamma(0,1.5,GAMMAMAXRAD,prfix,NULL,ptrgeom,-1);
+              limit_gamma(0,OUTERDEATHGAMMAMAX,OUTERDEATHGAMMAMAXRAD,prfix,NULL,ptrgeom,-1);
+
+            }
+          }
+
+
+          if(VARTOINTERP==PRIMTOINTERP_GDETFULLVERSION_WALD){
+
+          }
+          else{
+
+            FTYPE rbr=500.0;
+            FTYPE localrbr=rbr; //500.0; // rbr;
+            FTYPE localrbrr0=MAX(100.0,localrbr/2.0);
+    
+            FTYPE switch0 = 0.5+1.0/M_PI*atan((V[1]-localrbr)/localrbrr0); // large r
+            FTYPE switch2 = 1.0-switch0; // small r
+            //      FTYPE myhslope1=h0 + pow( (V[1]-rsjet3)/r0jet3 , njet);
+            //      FTYPE myhslope2=h0 + pow( (localrbr-rsjet3)/r0jet3 , njet);
+            //      myhslope = myhslope1*switch2 + myhslope2*switch0;
+    
+            if(V[1]<100.0) switch2=1.0;
+            //if(V[1]>500.0) switch2=0.0;
+    
+            if(prfix[U1]<0.0){
+              //    switch2=0.0;
+              prfix[U1]*=switch2;
+              ufix[U1]*=switch2;
+            }
+            //      ufix[U2]=ufix[U3]=0.0;
+            //      SLOOPA(jjj) ufix[U1+jjj-1]=prfix[U1+jjj-1] = 0.0;
+    
+            if(URAD0>=0){
+              if(prfix[URAD1]<0.0){
+                //switch2=0.0;
+                prfix[URAD1]*=switch2;
+                ufix[URAD1]*=switch2;
+              }
+            }
+          }
+        }// end OUTERDEATHDAMP
+      }// end FULLLOOP
+    }
+  }// end if(0)
+  else{
+
+    FTYPE prfixtry[NPR],ufixtry[NPR];
+    FTYPE prfixtryb[NPR],ufixtryb[NPR];
+    int pliter,pl;
+
 
     FULLLOOP{
       prfix=&MACP0A1(prim,i,j,k,0);//&GLOBALMACP0A1(pglobal,i,j,k,0);
       ufix=&GLOBALMACP0A1(unewglobal,i,j,k,0);
+
+      PLOOP(pliter,pl) prfixtry[pl]=prfix[pl];
+      PLOOP(pliter,pl) ufixtry[pl]=ufix[pl];
+
+      PLOOP(pliter,pl) prfixtryb[pl]=prfix[pl];
+      PLOOP(pliter,pl) ufixtryb[pl]=ufix[pl];
   
       // get geometry for center pre-interpolated values
       get_geometry(i, j, k, CENT, ptrgeom);
@@ -5799,107 +5929,125 @@ void debugfixupaltdeath_bc(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
       FTYPE bsq=0.0;
       bsq_calc(prfix,ptrgeom,&bsq);
 
+#define BEGINDEATHTRANSITION (300.0)
 
-      if(DAMPGAMMA){
-        if(V[1]>t-100.0 && steppart==0 && nstep%2==0){
-          FTYPE gamma,qsq;
-          gamma_calc(prfix,ptrgeom,&gamma,&qsq);
-          FTYPE gammanew=((gamma-1.0)*0.1)+1.0;
-          limit_gamma(0,gammanew,OUTERDEATHGAMMAMAXRAD,prfix,NULL,ptrgeom,-1);
-          //prfix[U1]=0.0;
-          //dualfprintf(fail_file,"problem: gamma=%g gammanew=%g\n",gamma,gammanew);
-        }
-      }
-
-      if(DAMPECOV){
-        if(V[1]>2.5 && steppart==0 && nstep%2==0){
-          extern int init_postvpot(int i, int j, int k, FTYPE *pr, FTYPE *pstag, FTYPE *ucons);
-          init_postvpot(i, j, k, prfix, NULL, NULL);
-        }
-      }
-
-      if(OUTERDEATHDAMP){
-
-        FTYPE Rbadout=OUTERDEATHRADIUS; //MIN(500.0,0.5*Rout);
+      if(V[1]>OUTERDEATHRADIUS|| V[1]>BEGINDEATHTRANSITION){
     
-        Rbadout=100.0 + t;
- 
-        if(V[1]>Rbadout || V[1]>t && (mycpupos[2]==0 && (j<=2) || mycpupos[2]==ncpux2-1 && (j>=N2-1-2)) ){
+        FTYPE rbr=500.0;
+        FTYPE localrbr=rbr; //500.0; // rbr;
+        FTYPE localrbrr0=BEGINDEATHTRANSITION;
+        FTYPE localrbrdr=localrbr/3.0;
 
-          if(VARTOINTERP==PRIMTOINTERP_GDETFULLVERSION_WALD){
+#define cr(x) (exp(-1.0/(x)))
+#define tr(x) (cr(x)/(cr(x) + cr(1.0-(x))))
+#define trans(x,L,R) ((x)<=(L) ? 0.0 : ((x)>=(R) ? 1.0 : tr(((x)-(L))/((R)-(L)))) )
+      
+        FTYPE switch0,switch2;
+        FTYPE switch0b,switch2b;
+        FTYPE rinner;
 
-            FTYPE prfloor[NPR],prceiling[NPR];
-            set_density_floors(ptrgeom,prfix,prfloor,prceiling);
+        if(0){
+          switch0 = 0.5+1.0/M_PI*atan((V[1]-localrbr)/localrbrdr); // large r
+          switch2 = 1.0-switch0; // small r
 
-            prfix[RHO]=prfloor[RHO];
-            prfix[UU]=prfloor[UU];
-
-            limit_gamma(0,OUTERDEATHGAMMAMAX,OUTERDEATHGAMMAMAXRAD,prfix,NULL,ptrgeom,-1);
-
-          }
-          else{
-
-       
-            //prfix[RHO] = 1E-10*pow(V[1]/500.0,-1.5);
-  
-            prfix[UU]= MIN(50.0*prfix[RHO],prfix[UU]); // no more than u/rho=10
-            //      prfix[UU] = MIN(prfix[UU],
-            ufix[UU]=MAX(-prfix[UU],ufix[UU]);
-  
-            ufix[ENTROPY] = ufix[UU];
-            ufix[ENTROPY] = MAX(0.0001,MIN(ufix[ENTROPY],1.0)); // like u/rho=1
-
-            if(URAD0>=0){
-              //prfix[URAD0] = 2E-10*pow(V[1]/500.0,-1.5);
-              prfix[URAD0] = MIN(MIN(prfix[RHO],prfix[URAD0]),prfix[UU]); // no more than Erf/rho=1 and Erf/u=1
-              ufix[URAD0]=MAX(-prfix[URAD0],ufix[URAD0]);
-            }
-
-            //      limit_gamma(0,1.5,GAMMAMAXRAD,prfix,NULL,ptrgeom,-1);
-            limit_gamma(0,OUTERDEATHGAMMAMAX,OUTERDEATHGAMMAMAXRAD,prfix,NULL,ptrgeom,-1);
-
-          }
-        }
-
-
-        if(VARTOINTERP==PRIMTOINTERP_GDETFULLVERSION_WALD){
-
+          switch0b = 0.5+1.0/M_PI*atan((V[1]-localrbr)/localrbrdr); // large r
+          switch2b = 1.0-switch0; // small r
         }
         else{
+          rinner=MAX(rbr-localrbrdr,BEGINDEATHTRANSITION);
+          switch0 = trans(V[1],rinner,rbr+localrbrdr);
+          switch2 = 1.0-switch0;
 
-          FTYPE rbr=500.0;
-          FTYPE localrbr=rbr; //500.0; // rbr;
-          FTYPE localrbrr0=MAX(100.0,localrbr/2.0);
-    
-          FTYPE switch0 = 0.5+1.0/M_PI*atan((V[1]-localrbr)/localrbrr0); // large r
-          FTYPE switch2 = 1.0-switch0; // small r
-          //      FTYPE myhslope1=h0 + pow( (V[1]-rsjet3)/r0jet3 , njet);
-          //      FTYPE myhslope2=h0 + pow( (localrbr-rsjet3)/r0jet3 , njet);
-          //      myhslope = myhslope1*switch2 + myhslope2*switch0;
-    
-          if(V[1]<100.0) switch2=1.0;
-          //if(V[1]>500.0) switch2=0.0;
-    
-          if(prfix[U1]<0.0){
-            //    switch2=0.0;
-            prfix[U1]*=switch2;
-            ufix[U1]*=switch2;
-          }
-          //      ufix[U2]=ufix[U3]=0.0;
-          //      SLOOPA(jjj) ufix[U1+jjj-1]=prfix[U1+jjj-1] = 0.0;
-    
-          if(URAD0>=0){
-            if(prfix[URAD1]<0.0){
-              //switch2=0.0;
-              prfix[URAD1]*=switch2;
-              ufix[URAD1]*=switch2;
-            }
+#define FACTORNEXTSWTICH (2.0)
+          rinner=MAX(FACTORNEXTSWTICH*rbr-localrbrdr,BEGINDEATHTRANSITION);
+          switch0b = trans(V[1],rinner,FACTORNEXTSWTICH*rbr+localrbrdr);
+          switch2b = 1.0-switch0b;
+        }
+      
+        if(V[1]<BEGINDEATHTRANSITION){
+          switch0=0.0;
+          switch2=1.0;
+
+          switch0b=0.0;
+          switch2b=1.0;
+        }
+        //if(V[1]>500.0) switch2=0.0;
+
+
+
+
+        /// things to change
+
+        FTYPE gamma,qsq;
+        gamma_calc(prfixtry,ptrgeom,&gamma,&qsq);
+        FTYPE gammanew=OUTERDEATHGAMMAMAX;
+        limit_gamma(0,gammanew,OUTERDEATHGAMMAMAXRAD,prfixtry,NULL,ptrgeom,-1);
+        //prfixtry[U1]=0.0;
+        //dualfprintf(fail_file,"problem: gamma=%g gammanew=%g\n",gamma,gammanew);
+
+
+        //prfixtry[RHO] = 1E-10*pow(V[1]/500.0,-1.5);
+      
+        prfixtry[UU]= MIN(1.0*prfixtry[RHO],prfixtry[UU]); // no more than u/rho=1
+        //      prfixtry[UU] = MIN(prfixtry[UU],
+        ufixtry[UU]=MAX(-prfixtry[UU],ufixtry[UU]);
+
+        ufixtry[ENTROPY] = ufixtry[UU];
+        ufixtry[ENTROPY] = MAX(0.0001,MIN(ufixtry[ENTROPY],1.0)); // like u/rho=1
+      
+        if(URAD0>=0){
+          //prfixtry[URAD0] = 2E-10*pow(V[1]/500.0,-1.5);
+          //prfixtry[URAD0] = MIN(MIN(prfixtry[RHO],prfixtry[URAD0]),prfixtry[UU]); // no more than Erf/rho=1 and Erf/u=1
+          prfixtry[URAD0] = MIN(10.0*prfixtry[RHO],prfixtry[URAD0]); // no more than Erf/rho=10.  No limit on u/prad0 that can be very large in optically thin or thick parts
+          ufixtry[URAD0]=MAX(-prfixtry[URAD0],ufixtry[URAD0]);
+        }
+      
+        //      limit_gamma(0,1.5,GAMMAMAXRAD,prfixtry,NULL,ptrgeom,-1);
+        limit_gamma(0,OUTERDEATHGAMMAMAX,OUTERDEATHGAMMAMAXRAD,prfixtry,NULL,ptrgeom,-1);
+      
+      
+
+      
+        if(prfixtry[U1]<0.0){
+          prfixtry[U1]=0.0;
+          ufixtry[U1]=0.0;
+        }
+        //      ufixtry[U2]=ufixtry[U3]=0.0;
+        //      SLOOPA(jjj) ufixtry[U1+jjj-1]=prfixtry[U1+jjj-1] = 0.0;
+      
+        if(URAD0>=0){
+          if(prfixtry[URAD1]<0.0){
+            prfixtry[URAD1]=0.0;
+            ufixtry[URAD1]=0.0;
           }
         }
-      }// end OUTERDEATHDAMP
-    }// end FULLLOOP
-  }
 
+
+        // set b
+        PLOOP(pliter,pl){
+          prfixtryb[pl] = prfixtry[pl];
+          ufixtryb[pl]  = ufixtry[pl];
+        }
+
+        // stronger restrictions for b on prad0
+        if(URAD0>=0){
+          prfixtry[URAD0] = MIN(MIN(prfixtry[RHO],prfixtry[URAD0]),prfixtry[UU]); // no more than Erf/rho=1 and Erf/u=1
+          ufixtry[URAD0]=MAX(-prfixtry[URAD0],ufixtry[URAD0]);
+        }
+
+
+        // final setting of fixed up quantities
+        PLOOP(pliter,pl){
+          prfix[pl] = prfixtryb[pl]*switch0b + prfixtry[pl]*switch0*switch2b + prfix[pl]*switch2*switch2b;
+          ufix[pl] = ufixtryb[pl]*switch0b + ufixtry[pl]*switch0*switch2b + ufix[pl]*switch2*switch2b;
+        }
+
+        //      dualfprintf(fail_file,"V[1]=%g ijk=%d %d %d switch0=%g switch2=%g\n",V[1],i,j,k,switch0,switch2);
+
+      } // end if beyond some radius
+    }
+
+  }
 }
 
 

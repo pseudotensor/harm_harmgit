@@ -54,3 +54,11 @@
 /// blank-out the function call since error_check() slows things down in MPI
 #define error_check(wherefrom) (0)
 #endif
+
+
+//https://gcc.gnu.org/onlinedocs/cpp/Variadic-Macros.html
+#if(PRODUCTION>0)
+#define prod0dualfprintf(cond,...) if(cond){ dualfprintf(__VA_ARGS__); }
+#else
+#define prod0dualfprintf(cond,...)
+#endif

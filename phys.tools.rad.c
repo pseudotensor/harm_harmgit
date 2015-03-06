@@ -695,28 +695,29 @@ static int Utoprimgen_failwrapper(int doradonly, int *radinvmod, int showmessage
   if(IFUTOPRIMFAILSOFT(*lpflag)){
     // assume soft failure ok, but reset
     GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)=UTOPRIMNOFAIL;
-    if(PRODUCTION==0 && showmessages && debugfail>=2) dualfprintf(fail_file,"Got soft MHD failure inversion failure during Utoprimgen_failwrapper: ijk=%d %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
+    prod0dualfprintf(showmessages && debugfail>=2,fail_file,"Got soft MHD failure inversion failure during Utoprimgen_failwrapper: ijk=%d %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
   }
   else if(IFUTOPRIMRADFAIL(*lpflagrad)){
     // can reduce Newton step if getting failure.
     // reset pflag for radiation to no failure, but treat here locally
     GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL)=UTOPRIMRADNOFAIL;
-    if(PRODUCTION==0&&showmessages && debugfail>=2) dualfprintf(fail_file,"Got some radiation inversion failure during Utoprimgen_failwrapper: ijk=%d %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
+    prod0dualfprintf(showmessages && debugfail>=2,fail_file,"Got some radiation inversion failure during Utoprimgen_failwrapper: ijk=%d %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
     failreturn=UTOPRIMGENWRAPPERRETURNFAILRAD;
   }
   else if( IFUTOPRIMFAIL(*lpflag) || IFUTOPRIMRADFAIL(*lpflagrad) ){
     // these need to get fixed-up, but can't, so return failure
-    if(PRODUCTION==0&&showmessages && debugfail>=2) dualfprintf(fail_file,"Got hard failure of inversion (MHD part only considered as hard) in f_implicit(): ijk=%d %d %d : %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,*lpflag,*lpflagrad);
+    prod0dualfprintf(showmessages && debugfail>=2,fail_file,"Got hard failure of inversion (MHD part only considered as hard) in f_implicit(): ijk=%d %d %d : %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,*lpflag,*lpflagrad);
     failreturn=UTOPRIMGENWRAPPERRETURNFAILMHD;
   }
   else if(PRODUCTION==0){
     // no failure
-    // dualfprintf(fail_file,"No failure in Utoprimgen_failwrapper: ijk=%d %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
+    // prod0dualfprintf(1,fail_file,"No failure in Utoprimgen_failwrapper: ijk=%d %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
   }
 
 
   //DEBUG:
-  if(PRODUCTION==0&&debugfail>=2 && showmessages){
+#if(PRODUCTION==0)
+  if(debugfail>=2 && showmessages){
     struct of_state q;
     MYFUN(get_stateforcheckinversion(pr, ptrgeom, &q),"flux.c:fluxcalc()", "get_state()", 1);
     int outputtype=inputtype;
@@ -729,7 +730,7 @@ static int Utoprimgen_failwrapper(int doradonly, int *radinvmod, int showmessage
     DLOOPA(jj) dualfprintf(fail_file,"COMPARE: jj=%d ucon=%g ucov=%g\n",jj,q.ucon[jj],q.ucov[jj]);
   }
   //DEBUG:
-  if(PRODUCTION==0 && (showmessages || debugfail>=2)){
+  if((showmessages || debugfail>=2)){
     static int maxlntries=0,maxnstroke=0;
     int diff;
     diff=0;
@@ -739,6 +740,7 @@ static int Utoprimgen_failwrapper(int doradonly, int *radinvmod, int showmessage
     // only report if grew beyond prior maximum
     if(diff) dualfprintf(fail_file,"newtonsteps: lntries=%d (max=%d) nstroke=%d (max=%d) logerror=%g\n",newtonstats->lntries,maxlntries,newtonstats->nstroke,maxnstroke,newtonstats->lerrx);
   }
+#endif
 
   // return failure mode of inversion U->P
   return(failreturn);
