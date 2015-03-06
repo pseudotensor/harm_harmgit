@@ -3,7 +3,7 @@
   \brief Function declarations (used globally) from RADIATION parts of code
  */
 
-
+extern void mhdfull_calc_rad(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE (*radstressdir)[NDIM]);
 extern void mhd_calc_rad(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, FTYPE *radstressdir, FTYPE *radstressdirabs);
 extern FTYPE my_min(FTYPE a, FTYPE b);
 extern FTYPE my_sign(FTYPE x);
@@ -33,7 +33,7 @@ extern void koral_source_rad_calc(int computestate, int computeentropy, FTYPE *p
 extern int calc_rad_lambda(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q, FTYPE Tgas, FTYPE *lambda, FTYPE *nlambda, FTYPE *kappaemit, FTYPE *kappanemit);
 
 
-
+extern void calc_Tandopacityandemission(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE Ruu, FTYPE gammaradgas, FTYPE B, FTYPE *Tgas, FTYPE *Tradff, FTYPE *nradff, FTYPE *kappa, FTYPE *kappan, FTYPE *kappaemit, FTYPE *kappanemit, FTYPE *kappaes, FTYPE *lambda, FTYPE *nlambda);
 
 
 

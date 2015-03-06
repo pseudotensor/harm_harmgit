@@ -6829,14 +6829,14 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
 
 #if(1)
   int ibound=0,jbound=0,kbound=0;
-  if(i==-N1BND || i==N1-1+N1BND) ibound=1;
-  if(j==-N2BND || j==N2-1+N2BND) jbound=1;
-  if(k==-N3BND || k==N3-1+N3BND) kbound=1;
+  if(i==-N1BND || i==N1-1+N1BND) ibound=1 && N1NOT1;
+  if(j==-N2BND || j==N2-1+N2BND) jbound=1 && N2NOT1;
+  if(k==-N3BND || k==N3-1+N3BND) kbound=1 && N3NOT1;
 
   int iout=0,jout=0,kout=0;
-  if(i<-N1BND || i>N1-1+N1BND) iout=1;
-  if(j<-N2BND || j>N2-1+N2BND) jout=1;
-  if(k<-N3BND || k>N3-1+N3BND) kout=1;
+  if(i<-N1BND || i>N1-1+N1BND) iout=1 && N1NOT1;
+  if(j<-N2BND || j>N2-1+N2BND) jout=1 && N2NOT1;
+  if(k<-N3BND || k>N3-1+N3BND) kout=1 && N3NOT1;
 #endif
 
   // since init_vpot() is called for all i,j,k, can't use

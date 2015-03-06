@@ -1708,7 +1708,7 @@ void set_raddump_content_dnumcolumns_dnumversion(int *numcolumnsvar, int *numver
 {
 
   if(EOMRADTYPE!=EOMRADNONE && DORADDIAG){
-    *numcolumnsvar=NDIM*2 + 1+1 + NDIM+1 + NDIM + NDIM*2 + 1 + 1 + 1 + 1 + 1 + 4*3;
+    *numcolumnsvar=NDIM*2 + NDIM+1 + NDIM + NDIM*2 + 1*14 + 4*3;
   }
   else{
     *numcolumnsvar=0;
@@ -1752,19 +1752,6 @@ int raddump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
   myset(datatype,q.uradcon,0,NDIM,writebuf); // NDIM
   myset(datatype,q.uradcov,0,NDIM,writebuf); // NDIM
  
-  // get kappa
-  FTYPE kappa,kappaes;
-  calc_kappa(pr,ptrgeom,&q,&kappa);
-  myset(datatype,&kappa,0,1,writebuf); // 1
-  calc_kappaes(pr,ptrgeom,&kappaes);
-  myset(datatype,&kappaes,0,1,writebuf); // 1
-
-  // get tau
-  FTYPE tautot[NDIM]={0},tautotmax;
-  calc_tautot(pr, ptrgeom, &q, tautot, &tautotmax);
-  myset(datatype,tautot,0,NDIM,writebuf); // NDIM
-  myset(datatype,&tautotmax,0,1,writebuf); // 1
-
   // Transform these lab frame coordinate basis primitives to fluid frame E,F^i
   int whichvel=VEL4; // desired final ff version
   int whichcoord=MCOORD; // desired final ff version
@@ -1774,23 +1761,12 @@ int raddump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
   myset(datatype,pradffortho,PRAD0,NDIM,writebuf); // NDIM
 
   // get 4-force in lab and fluid frame
-  FTYPE Gdpl[NPR],Gdabspl[NPR],chi,Tgas,Trad;
+  FTYPE Gdpl[NPR]={0},Gdabspl[NPR]={0},chi,Tgas,Trad;
   int computestate=0;// already computed above
   int computeentropy=1;
   koral_source_rad_calc(computestate,computeentropy,pr, ptrgeom, Gdpl, Gdabspl, &chi, &Tgas, &Trad, &q);
   myset(datatype,Gdpl,PRAD0,NDIM,writebuf); // NDIM
   myset(datatype,Gdabspl,PRAD0,NDIM,writebuf); // NDIM
-
-  // get lambda
-  FTYPE lambda,nlambda,kappaemit,kappanemit;
-  //  FTYPE Tgas=calc_PEQ_Tfromurho(pr[UU],pr[RHO]);
-  //  calc_rad_lambda(pr, ptrgeom, Tgas, &lambda, &nlambda, &kappaemit, &kappanemit);
-  myset(datatype,&lambda,0,1,writebuf); // 1
-
-  // get Erf [assuming LTE]
-  FTYPE Erf;
-  Erf=calc_LTE_Efromurho(pr[UU],pr[RHO]);
-  myset(datatype,&Erf,0,1,writebuf); // 1
 
   // get gas T
   myset(datatype,&Tgas,0,1,writebuf); // 1
@@ -1803,22 +1779,84 @@ int raddump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
   FTYPE Tradff=calc_LTE_TfromE(pradffortho[PRAD0]);
   myset(datatype,&Tradff,0,1,writebuf); // 1
 
+  // get Trad -- full fluid frame T
+  myset(datatype,&Trad,0,1,writebuf); // 1
+
+
+  //radiative stress tensor in the lab frame
+  FTYPE Rij[NDIM][NDIM];
+
+  //this call returns R^i_j, i.e., the first index is contra-variant and the last index is co-variant
+  mhdfull_calc_rad(pr, ptrgeom, &q, Rij);
+
+  //the four-velocity of fluid in lab frame
+  FTYPE *ucon,*ucov;
+  ucon = q.ucon;
+  ucov = q.ucov;
+
+  //Eradff = R^a_b u_a u^b
+  FTYPE Ruu=0.; DLOOP(i,j) Ruu+=Rij[i][j]*ucov[i]*ucon[j];
+  // get relative Lorentz factor between gas and radiation
+  FTYPE gammaradgas = 0.0;
+  int jj;
+  DLOOPA(jj) gammaradgas += - (q.ucov[jj] * q.uradcon[jj]);
+
+  // get Erf in fluid frame
+  myset(datatype,&Ruu,0,1,writebuf); // 1
+
+  // get Erf [assuming LTE]
+  FTYPE Erf;
+  Erf=calc_LTE_Efromurho(pr[UU],pr[RHO]);
+  myset(datatype,&Erf,0,1,writebuf); // 1
+
+  // get B
+  FTYPE bsq = dot(q.bcon, q.bcov);
+  FTYPE B=sqrt(bsq);
+
+  // get lambda
+  //  FTYPE Tgas=calc_PEQ_Tfromurho(pr[UU],pr[RHO]);
+  //  calc_rad_lambda(pr, ptrgeom, Tgas, &lambda, &nlambda, &kappaemit, &kappanemit);
+  // get absorption opacities
+  //  FTYPE Tgas;
+  FTYPE nradff=0;
+  FTYPE kappa,kappan=0;
+  FTYPE kappaemit,kappanemit=0;
+  FTYPE kappaes;
+  FTYPE lambda,nlambda=0;
+  calc_Tandopacityandemission(pr,ptrgeom,&q,Ruu,gammaradgas,B,&Tgas,&Tradff,&nradff,&kappa,&kappan,&kappaemit,&kappanemit,&kappaes, &lambda, &nlambda);
+
+  myset(datatype,&nradff,0,1,writebuf); // 1
+  myset(datatype,&kappa,0,1,writebuf); // 1
+  myset(datatype,&kappan,0,1,writebuf); // 1
+  myset(datatype,&kappaemit,0,1,writebuf); // 1
+  myset(datatype,&kappanemit,0,1,writebuf); // 1
+  myset(datatype,&kappaes,0,1,writebuf); // 1
+  myset(datatype,&lambda,0,1,writebuf); // 1
+  myset(datatype,&nlambda,0,1,writebuf); // 1
+
+  // get tau
+  FTYPE tautot[NDIM]={0},tautotmax;
+  calc_tautot(pr, ptrgeom, &q, tautot, &tautotmax);
+  myset(datatype,tautot,0,NDIM,writebuf); // NDIM
+  myset(datatype,&tautotmax,0,1,writebuf); // 1
+
+
 
   // get radiative vchar
   int ignorecourant;
-  FTYPE vmin1,vmax1,vmax21,vmin21;
+  FTYPE vmin1=0,vmax1=0,vmax21=0,vmin21=0;
   vchar_rad(pr, &q, 1, ptrgeom, &vmax1, &vmin1, &vmax21, &vmin21, &ignorecourant);
   myset(datatype,&vmin1,0,1,writebuf); // 1
   myset(datatype,&vmax1,0,1,writebuf); // 1
   myset(datatype,&vmin21,0,1,writebuf); // 1
   myset(datatype,&vmax21,0,1,writebuf); // 1
-  FTYPE vmin2,vmax2,vmax22,vmin22;
+  FTYPE vmin2=0,vmax2=0,vmax22=0,vmin22=0;
   vchar_rad(pr, &q, 2, ptrgeom, &vmax2, &vmin2, &vmax22, &vmin22, &ignorecourant);
   myset(datatype,&vmin2,0,1,writebuf); // 1
   myset(datatype,&vmax2,0,1,writebuf); // 1
   myset(datatype,&vmin22,0,1,writebuf); // 1
   myset(datatype,&vmax22,0,1,writebuf); // 1
-  FTYPE vmin3,vmax3,vmax23,vmin23;
+  FTYPE vmin3=0,vmax3=0,vmax23=0,vmin23=0;
   vchar_rad(pr, &q, 3, ptrgeom, &vmax3, &vmin3, &vmax23, &vmin23, &ignorecourant);
   myset(datatype,&vmin3,0,1,writebuf); // 1
   myset(datatype,&vmax3,0,1,writebuf); // 1

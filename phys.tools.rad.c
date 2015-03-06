@@ -605,7 +605,6 @@ static FTYPE compute_dt(int isexplicit, FTYPE *CUf, FTYPE *CUimp, FTYPE dtin);
 
 static void calc_Gd(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *G, FTYPE *Tgasreturn, FTYPE *Tradreturn, FTYPE *chieffreturn, FTYPE *ndotffreturn, FTYPE *ndotffabsreturn, FTYPE *Gabs);
 static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYPE *Gu, FTYPE *Tgasreturn, FTYPE *Tradreturn, FTYPE* chieffreturn, FTYPE *ndotffreturn, FTYPE *ndotffabsreturn, FTYPE *Gabs);
-void mhdfull_calc_rad(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE (*radstressdir)[NDIM]);
 static int simplefast_rad(int dir, struct of_geom *geom,struct of_state *q, FTYPE vrad2,FTYPE *vmin, FTYPE *vmax);
 
 
@@ -613,8 +612,6 @@ static void calcfull_Trad(FTYPE *pp, struct of_geom *ptrgeom, FTYPE *Trad, FTYPE
 static void calc_Trad(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q , FTYPE *Trad, FTYPE *nrad);
 static void calc_Trad_fromRuuandgamma(FTYPE *pp, struct of_geom *ptrgeom, FTYPE Ruu, FTYPE gammaradgas, FTYPE *Trad, FTYPE *nrad);
 
-
-static void calc_Tandopacityandemission(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE Ruu, FTYPE gammaradgas, FTYPE B, FTYPE *Tgas, FTYPE *Tradff, FTYPE *nradff, FTYPE *kappa, FTYPE *kappan, FTYPE *kappaemit, FTYPE *kappanemit, FTYPE *kappaes, FTYPE *lambda, FTYPE *nlambda);
 
 
 
@@ -3099,7 +3096,6 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
         //radinvmodenergybest!=0
 
         int needtotry;
-
         needtotry=(RADINVBAD(radinvmodenergybest) && checkradinvlist[tryphase1] || ACTUALHARDORSOFTFAILURE(failreturnenergybest) && failreturnenergybest!=FAILRETURNMODESWITCH);
 
         if(needtotry){
@@ -9367,7 +9363,7 @@ void calc_chi(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE *chi
 
 /// get \kappa_{abs} and \kappa_{es} in \sigma/mass * rho = 1/cm form.
 /// energy density loss rate integrated over frequency and solid angle
-static void calc_Tandopacityandemission(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE Ruu, FTYPE gammaradgas, FTYPE B, FTYPE *Tgas, FTYPE *Tradff, FTYPE *nradff, FTYPE *kappa, FTYPE *kappan, FTYPE *kappaemit, FTYPE *kappanemit, FTYPE *kappaes, FTYPE *lambda, FTYPE *nlambda)
+void calc_Tandopacityandemission(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE Ruu, FTYPE gammaradgas, FTYPE B, FTYPE *Tgas, FTYPE *Tradff, FTYPE *nradff, FTYPE *kappa, FTYPE *kappan, FTYPE *kappaemit, FTYPE *kappanemit, FTYPE *kappaes, FTYPE *lambda, FTYPE *nlambda)
 {
   extern FTYPE calc_kappa_user(FTYPE rho, FTYPE B, FTYPE Tg,FTYPE Tr,FTYPE x,FTYPE y,FTYPE z);
   //user_calc_kappa()
