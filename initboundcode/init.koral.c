@@ -6864,10 +6864,28 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
   /*   if(EOMRADTYPE!=EOMRADNONE) p_av += AVGN_1(prim,i,j,k,URAD0)*(4.0/3.0-1.0); */
   /* } */
   else{ // normal cells
-    rho_av = AVGN_for3(prim,i,j,k,RHO);
-    u_av = AVGN_for3(prim,i,j,k,UU);
-    p_av = pressure_rho0_u_simple(i,j,k,loc,rho_av,u_av);
-    if(EOMRADTYPE!=EOMRADNONE) p_av += AVGN_for3(prim,i,j,k,URAD0)*(4.0/3.0-1.0);
+    if(loc==CORN3){
+      rho_av = AVGN_for3(prim,i,j,k,RHO);
+      u_av = AVGN_for3(prim,i,j,k,UU);
+      p_av = pressure_rho0_u_simple(i,j,k,loc,rho_av,u_av);
+      if(EOMRADTYPE!=EOMRADNONE) p_av += AVGN_for3(prim,i,j,k,URAD0)*(4.0/3.0-1.0);
+    }
+    else if(loc==CORN2){
+      rho_av = AVGN_for2(prim,i,j,k,RHO);
+      u_av = AVGN_for2(prim,i,j,k,UU);
+      p_av = pressure_rho0_u_simple(i,j,k,loc,rho_av,u_av);
+      if(EOMRADTYPE!=EOMRADNONE) p_av += AVGN_for2(prim,i,j,k,URAD0)*(4.0/3.0-1.0);
+    }
+    else if(loc==CORN1){
+      rho_av = AVGN_for1(prim,i,j,k,RHO);
+      u_av = AVGN_for1(prim,i,j,k,UU);
+      p_av = pressure_rho0_u_simple(i,j,k,loc,rho_av,u_av);
+      if(EOMRADTYPE!=EOMRADNONE) p_av += AVGN_for1(prim,i,j,k,URAD0)*(4.0/3.0-1.0);
+    }
+    else{
+      dualfprintf(fail_file,"No such setup for loc=%d\n",loc);
+      myexit(34782985);
+    }
   }
 
 

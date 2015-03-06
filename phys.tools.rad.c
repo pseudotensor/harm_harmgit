@@ -3098,7 +3098,9 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
         // KORALTODO: KORALNOTE: If explicit was triggered (failreturnenergy) then could move on, but go ahead and test using other methods in case radinvmod!=0 can be avoided.
         //radinvmodenergybest!=0
 
-        int needtotry=(RADINVBAD(radinvmodenergybest) && checkradinvlist[tryphase1] || ACTUALHARDORSOFTFAILURE(failreturnenergybest) && failreturnenergybest!=FAILRETURNMODESWITCH);
+        int needtotry;
+
+        needtotry=(RADINVBAD(radinvmodenergybest) && checkradinvlist[tryphase1] || ACTUALHARDORSOFTFAILURE(failreturnenergybest) && failreturnenergybest!=FAILRETURNMODESWITCH);
 
         if(needtotry){
           if(firsttryphase1used==-1) firsttryphase1used=tryphase1;
@@ -3607,7 +3609,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
         // consider radinvmod only if error bad for original approach.  Avoids excessive attempts when should hit radiative ceiling and error is small.
 
-        int needtotry=RADINVBAD(radinvmodentropybest) && checkradinvlist[tryphase1] || ACTUALHARDORSOFTFAILURE(failreturnentropybest) && failreturnentropybest!=FAILRETURNMODESWITCH;
+        int needtotry;
+        needtotry=RADINVBAD(radinvmodentropybest) && checkradinvlist[tryphase1] || ACTUALHARDORSOFTFAILURE(failreturnentropybest) && failreturnentropybest!=FAILRETURNMODESWITCH;
 
         if(needtotry){
           if(firsttryphase1used==-1) firsttryphase1used=tryphase1;
@@ -9301,7 +9304,10 @@ void calc_kappa(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE *k
   FTYPE Trad;
   FTYPE bsq,B;
   if(q==NULL){
-    Trad=Tgas; // estimate for opacity
+    //    Trad=Tgas; // estimate for opacity (worse than below)
+    FTYPE Ruufake=pr[PRAD0]; // estimate for opacity
+    Trad = pow(fabs(Ruufake)/ARAD_CODE,0.25); // ASSUMPTION: PLANCK
+
     //nradff not used here, so don't have to set
     bsq_calc(pr,ptrgeom,&bsq);
   }
@@ -9348,6 +9354,7 @@ void calc_kappaes(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappaes)
 }
  
 
+// compute \chi TODOMARK: Should compute this and wavespeed (how this used) just after implicit stepping to avoid repeating opacity calculation.
 void calc_chi(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE *chi)
 {
   FTYPE kappa,kappaes;
@@ -9379,9 +9386,7 @@ static void calc_Tandopacityandemission(FTYPE *pr, struct of_geom *ptrgeom, stru
 
   // get Tradff and nradff
   calc_Trad_fromRuuandgamma(pr, ptrgeom, Ruu, gammaradgas, Tradff, nradff);
-  // avoid division by zero in later calculations
-  *Tradff = fabs(*Tradff) + TEMPMIN;
-  *nradff = fabs(*nradff) + SMALL;
+  *Tradff = fabs(*Tradff) + TEMPMIN;  // avoid division by zero in later calculations
 
   // get position for opacity if needed
   FTYPE V[NDIM]={0.0},xx=0.0,yy=0.0,zz=0.0;
@@ -9392,18 +9397,17 @@ static void calc_Tandopacityandemission(FTYPE *pr, struct of_geom *ptrgeom, stru
   zz=V[3];
 #endif
 
+  // get scattering opacity (elastic with no energy or number weighting)
+  *kappaes = calc_kappaes_user(rho,*Tgas,xx,yy,zz);
+
+
+
+
   // get energy-based absorption opacity
   *kappa = calc_kappa_user(rho,B,*Tgas,*Tradff,xx,yy,zz);
-  // get number-based absorption opacity
-  *kappan = calc_kappan_user(rho,B,*Tgas,*Tradff,xx,yy,zz);
 
   // get energy-based emission opacity
   *kappaemit = calc_kappa_user(rho,B,*Tgas,*Tgas,xx,yy,zz); // Here Trad was set to Tgas for emission of radiation
-  // get number-based emission opacity
-  *kappanemit = calc_kappan_user(rho,B,*Tgas,*Tgas,xx,yy,zz); // Here Trad was set to Tgas for emission of radiation
-
-  // get scattering opacity (elastic with no energy or number weighting)
-  *kappaes = calc_kappaes_user(rho,*Tgas,xx,yy,zz);
 
   // This is aT^4/(4\pi) that is the specific black body emission rate in B_\nu d\nu d\Omega corresponding to energy density rate per unit frequency per unit solid angle, which has been integrated over frequency.
   // More generally, kappa*4*Pi*B can be replaced by some \Lambda that is some energy density rate
@@ -9415,12 +9419,23 @@ static void calc_Tandopacityandemission(FTYPE *pr, struct of_geom *ptrgeom, stru
   // energy density loss rate integrated over frequency and solid angle, based upon those processes written as an opacity
   *lambda = (*kappaemit)*calc_LTE_EfromT(*Tgas);  //(4.*Pi*B); / i.e. 4\pi B = arad T^4
 
-
+#if(EVOLVENRAD)
+  *nradff = fabs(*nradff) + SMALL;
+  // get number-based absorption opacity
+  *kappan = calc_kappan_user(rho,B,*Tgas,*Tradff,xx,yy,zz);
+  // get number-based emission opacity
+  *kappanemit = calc_kappan_user(rho,B,*Tgas,*Tgas,xx,yy,zz); // Here Trad was set to Tgas for emission of radiation
   // ASSUMPTION: Emitting radiation has average photon energy for gas at temperatures Tgas (isn't true for synchrotron, for example)
   //  FTYPE ebar = EBAR0 * (TEMPMIN+*Tgas);
   //  // result based upon opacity-based calculation of lambda, so includes free-free, bound-free, bound-bound, etc.
   //  *nlambda = (*lambda)/ebar;
   *nlambda = (*kappanemit)*calc_LTE_NfromT(*Tgas);
+#endif
+
+
+
+
+
 
 
   //  dualfprintf(fail_file,"kappaabs=%g kappaes=%g\n",*kappa,*kappaes);
@@ -9511,12 +9526,11 @@ void koral_source_rad_calc(int computestate, int computeentropy, FTYPE *pr, stru
   // number density of photon rate -- invariant
   //
   /////
-  if(NRAD>=0){
+#if(EVOLVENRAD)
     pl=NRAD;
     Gdpl[pl] = ndotff;
     Gdplabs[pl] = ndotffabs;
-  }
-
+#endif
 
 
 }
@@ -9684,18 +9698,6 @@ static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYP
   }// END LOOP over ENERGY-MOMENTUM terms
 
 
-  // get photon number source term, dnrad/dtau in comoving frame, which acts as source term.
-  FTYPE ndotff,ndotffabs;
-  if(NRAD>=0){
-    // in limit that Tgas=Trad, must have balance such that ndotff->0, so nlambda must come from kappan and nradff->LTE_N
-    ndotff = -(kappan*nradff - nlambda);
-    ndotffabs = fabs(kappan*nradff) + fabs(nlambda);
-  }
-  else{
-    // not used then, but set to zero
-    ndotffabs = ndotff = 0.0;
-  }
-
 
 
   // return some other things that may be useful beyond Gu and Gabs
@@ -9704,9 +9706,24 @@ static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYP
   // really a chi-effective that also includes lambda term in case cooling unrelated to absorption
   *chieffreturn=chi + lambda/(ERADLIMIT+fabs(pp[PRAD0])); // if needed
 
+
+
+
+
+  // get photon number source term, dnrad/dtau in comoving frame, which acts as source term.
+#if(EVOLVENRAD)
+  FTYPE ndotff,ndotffabs;
+  if(NRAD>=0){
+    // in limit that Tgas=Trad, must have balance such that ndotff->0, so nlambda must come from kappan and nradff->LTE_N
+    ndotff = -(kappan*nradff - nlambda);
+    ndotffabs = fabs(kappan*nradff) + fabs(nlambda);
   // return \dot{nrad} : photon density in fluid frame per unit fluid frame time
   *ndotffreturn=ndotff;
   *ndotffabsreturn=ndotffabs;
+#endif
+
+
+
 
 }
 
@@ -9769,15 +9786,15 @@ static void calc_Trad_fromRuuandgamma(FTYPE *pp, struct of_geom *ptrgeom, FTYPE 
 {
   FTYPE Tradff,nradff,expfactorradff;
 
-  // Get fluid-frame radiation temperature
-  if(NRAD<0){
-    // ASSUMPTION: PLANCK
-    //      Tradff = pow(fabs(Ruu)/ARAD_CODE,0.25);
-    //      nradff = Ruu/(EBAR0*Tradff);
-    Tradff = calc_LTE_TfromE(fabs(Ruu));
-    nradff = calc_LTE_NfromE(fabs(Ruu));
-  }
-  else{
+  // Get fluid-frame radiation temperature and number density
+
+
+
+#if(EVOLVENRAD==0)
+  // ASSUMPTION: PLANCK
+  Tradff = calc_LTE_TfromE(fabs(Ruu));
+  nradff = calc_LTE_NfromE(fabs(Ruu));
+#else
     // Color-corrected/shifted Planck
     nradff = pp[NRAD]*gammaradgas;
 
@@ -9805,10 +9822,9 @@ static void calc_Trad_fromRuuandgamma(FTYPE *pp, struct of_geom *ptrgeom, FTYPE 
     // expfactorradff = exp(-\xi) = exp(-\mu/(k_B Tradff))
 #endif
     // Tradff/TradLTE = fco = color correction factor
-    
-  }
 
-  // return quantities
+#endif    
+
   *Trad=Tradff; // radiation temperature in fluid frame
   *nrad=nradff; // radiation number density in fluid frame
 }
