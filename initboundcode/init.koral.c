@@ -5728,7 +5728,7 @@ static int get_full_rtsolution(int *whichvel, int *whichcoord, int opticallythic
     // fluid frame Fx
     //    Fx=(E2-E1)/(.02*V[1]*(ptrgeombl->gcov[GIND(1,1)]))/chi/3.;
     Fx=-THIRD*(E2-E1)/((Vtemp2[1]-Vtemp1[1])*sqrt(fabs(ptrgeombl->gcov[GIND(1,1)])))/chi;
-    dualfprintf(fail_file,"E2=%g E1=%g Fx=%g\n",E2,E1,Fx);
+    //    dualfprintf(fail_file,"E2=%g E1=%g Fx=%g\n",E2,E1,Fx);
 
     ////////////////// STAGE2B
 
@@ -5764,7 +5764,7 @@ static int get_full_rtsolution(int *whichvel, int *whichcoord, int opticallythic
     // fluid frame Fy
     //    Fy=(E2-E1)/(.02*V[2]*(ptrgeombl->gcov[GIND(2,2)]))/chi/3.;
     Fy=-THIRD*(E2-E1)/((Vtemp2[2]-Vtemp1[2])*sqrt(fabs(ptrgeombl->gcov[GIND(2,2)])))/chi;
-    dualfprintf(fail_file,"E2=%g E1=%g Fy=%g\n",E2,E1,Fy);
+    //dualfprintf(fail_file,"E2=%g E1=%g Fy=%g\n",E2,E1,Fy);
 
     ////////////////// STAGE2C
 
@@ -5800,7 +5800,7 @@ static int get_full_rtsolution(int *whichvel, int *whichcoord, int opticallythic
 
     // fluid frame Fz
     Fz=-THIRD*(E2-E1)/((Vtemp2[3]-Vtemp1[3])*sqrt(fabs(ptrgeombl->gcov[GIND(3,3)])))/chi;
-    dualfprintf(fail_file,"E2=%g E1=%g Fz=%g\n",E2,E1,Fz);
+    //dualfprintf(fail_file,"E2=%g E1=%g Fz=%g\n",E2,E1,Fz);
 
 
 
@@ -5825,7 +5825,7 @@ static int get_full_rtsolution(int *whichvel, int *whichcoord, int opticallythic
         Fy=Fy/Fl*MAXFOE*E;
         Fz=Fz/Fl*MAXFOE*E;
         FTYPE Flnew=sqrt(Fx*Fx+Fy*Fy+Fz*Fz);
-        dualfprintf(fail_file,"limited: Fl=%g E=%g Fx=%g Fy=%g Fz=%g : Flnew=%g\n",Fl,E,Fx,Fy,Fz,Flnew);
+        if(PRODUCTION==0) dualfprintf(fail_file,"limited: Fl=%g E=%g Fx=%g Fy=%g Fz=%g : Flnew=%g\n",Fl,E,Fx,Fy,Fz,Flnew);
       }
     }
 
@@ -5936,7 +5936,7 @@ static int make_nonrt2rt_solution(int *whichvel, int *whichcoord, int opticallyt
       aaa=(4.0/3.0-1.0)*ARAD_CODE*gtau; // Prad=(gamma-1)*urad*g[tau] and gamma=4/3 and urad=arad*T^4*g[tau]
       bbb=rho;
 
-      dualfprintf(fail_file,"aaa=%g bbb=%g P=%g gtau=%g\n",aaa,bbb,P,gtau);
+      //      dualfprintf(fail_file,"aaa=%g bbb=%g P=%g gtau=%g\n",aaa,bbb,P,gtau);
 
 
       FTYPE naw1=cbrt(9.*aaa*Power(bbb,2.) - Sqrt(3.)*Sqrt(27.*Power(aaa,2.)*Power(bbb,4.) + 256.*Power(aaa,3.)*Power(P,3.)));
@@ -7020,7 +7020,7 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
 
       if (q > 0.)      vpot += fact1*fact2;
       //      if (q > 0.)      vpot += q*q;
-      dualfprintf(fail_file,"ijk=%d %d %d : ptotmax=%g p_av=%g q=%g %g %g rin=%g vpot=%g : rho_av=%g rhomax=%g\n",i,j,k,ptotmax,p_av,q,fact1,fact2,rin,vpot,rho_av,rhomax);
+      if(PRODUCTION==0) dualfprintf(fail_file,"ijk=%d %d %d : ptotmax=%g p_av=%g q=%g %g %g rin=%g vpot=%g : rho_av=%g rhomax=%g\n",i,j,k,ptotmax,p_av,q,fact1,fact2,rin,vpot,rho_av,rhomax);
     }
 
 

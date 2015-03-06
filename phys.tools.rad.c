@@ -2131,7 +2131,7 @@ static FTYPE compute_dt(int isexplicit, FTYPE *CUf, FTYPE *CUimp, FTYPE dtin)
 
 /// choose to switch to entropy only if energy fails or gives u_g<0.  Or choose to always do both and use best solution.
 #define MODEMETHOD MODEPICKBEST // general switching method
-//#define MODEMETHOD MODEPICKBESTSIMPLE // switches with only PMHD method
+//#define MODEMETHOD MODEPICKBESTSIMPLE // switches with only PMHD method // NOTEFORFAST
 //#define MODEMETHOD MODEPICKBESTSIMPLE2 // switches with all methods but no ITERMODESTAGES attempted
 //#define MODEMETHOD MODESWITCH
 //#define MODEMETHOD MODEENERGY
@@ -2916,7 +2916,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     }
 
     
-    // SUPERGODMARK: HACK to force more use of PMHD method to avoid slowdown.
+    // SUPERGODMARK: HACK to force more use of PMHD method to avoid slowdown.    // NOTEFORFAST
     if(q->bsq/pb[RHO]>0.2*BSQORHOLIMIT || q->bsq/pb[UU]>0.2*BSQOULIMIT || pb[UU]/pb[RHO]>0.1*UORHOLIMIT){
       radprimaryevolves=radextremeprimaryevolves=0;
       gasprimaryevolves=gasextremeprimaryevolves=1;      
@@ -5170,7 +5170,7 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
     }
     else{
       // control factor by which step Newton's method.
-      DAMPFACTOR0=1.0/pow(2.0,(FTYPE)(dampattempt));
+      DAMPFACTOR0=1.0/powf(2.0,(FTYPE)(dampattempt));
       if(dampattempt>0) if(debugfail>=2) dualfprintf(fail_file,"Trying dampattempt=%d DAMPFACTOR0=%g failreturn=%d errorabsf1=%g errorallabsf1=%g iter=%d ijk=%d %d %d\n",dampattempt,DAMPFACTOR0,failreturn,errorabsf1[0],errorabsf1[1],iter,ptrgeom->i,ptrgeom->j,ptrgeom->k);
 
       // start fresh
@@ -6887,12 +6887,12 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
       }
       errorabsf1[0]=errorabsf1borrow[0];
       errorabsf1[1]=errorabsf1borrow[1];
-#if(PRODUCTION==0||1)
+#if(PRODUCTION==0&&0)
       dualfprintf(fail_file,"YESSwitched: %g : uu=%g %g : dugas=%g\n",errorabsf1borrow[WHICHERROR],-uuborrow[URAD0],-uuborrow[UU],-dugas);
 #endif
     }
     else{
-#if(PRODUCTION==0||1)
+#if(PRODUCTION==0&&0)
       dualfprintf(fail_file,"NOSwitched: %g : uu=%g %g dugas=%g\n",errorabsf1borrow[WHICHERROR],-uuborrow[URAD0],-uuborrow[UU],dugas);
 #endif
     }
@@ -7763,8 +7763,8 @@ static int f_error_check(int showmessages, int showmessagesheavy, int iter, FTYP
 #if(0)
   // only kinda applicable for QTYPMHD
   FTYPE rhoref=MAX(pp[RHO],piin[RHO]);
-  FTYPE fnormspace2 = rhoref*pow(fabs(fnormtime)/rhoref,0.5); // energy term in correct scale with \rho_0(v/c)^1 to get reference in case v\sim 0 NOTE: This assumes rho v term dominates
-  FTYPE fnormtime2=rhoref*pow(fabs(fnormspace/rhoref),2.0); // momentum term in correct scale with \rho_0(v/c)^2 in case E\sim 0.  NOTE: assumes rho v term dominates.
+  FTYPE fnormspace2 = rhoref*powf(fabs(fnormtime)/rhoref,0.5); // energy term in correct scale with \rho_0(v/c)^1 to get reference in case v\sim 0 NOTE: This assumes rho v term dominates
+  FTYPE fnormtime2=rhoref*powf(fabs(fnormspace/rhoref),2.0); // momentum term in correct scale with \rho_0(v/c)^2 in case E\sim 0.  NOTE: assumes rho v term dominates.
 #else
   FTYPE fakevel = MIN(1.0,fnormspace/(SMALL+fnormtime));
   FTYPE fnormspace2 = fabs(fnormtime)*fakevel;
@@ -7959,8 +7959,8 @@ static int get_implicit_iJ(int allowbaseitermethodswitch, int failreturnallowabl
     PLOOP(pliter,pl) xjac[0][pl]=xjac[1][pl]=xjacalt[pl]=uucopy[pl];
     PLOOP(pliter,pl) upitoup0[pl] = upitoup0U[pl];
     // velmomscale is set such that when (e.g.) T^t_i is near zero, we use T^t_t as reference since we consider T^t_i/T^t_t to be velocity scale that is up to order unity.
-    //    velmomscale=pow(fabs(x[irefU[TT]]*upitoup0[irefU[TT]]),1.5);
-    velmomscale=pow(fabs(x[irefU[TT]]*upitoup0[irefU[TT]]),1.0); // __WORKINGONIT__
+    //    velmomscale=powf(fabs(x[irefU[TT]]*upitoup0[irefU[TT]]),1.5);
+    velmomscale=powf(fabs(x[irefU[TT]]*upitoup0[irefU[TT]]),1.0); // __WORKINGONIT__
   }
   // P
   else if(IMPPTYPE(implicititer)){
@@ -9297,15 +9297,19 @@ void calc_kappa(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE *k
   FTYPE Tgas=compute_temp_simple(ii,jj,kk,loc,rho,u);
 
   FTYPE Trad;
+  FTYPE bsq,B;
   if(q==NULL){
     Trad=Tgas; // estimate for opacity
     //nradff not used here, so don't have to set
+    bsq_calc(pr,ptrgeom,&bsq);
   }
   else{
     FTYPE nradff;
     calc_Trad(pr,ptrgeom,q,&Trad,&nradff); // kinda expensive, avoid if not really necessary (could set Trad=Tgas, just for opacity purposes)
+    bsq = dot(q->bcon, q->bcov);
   }
-
+  B=sqrt(bsq);
+ 
   FTYPE V[NDIM]={0.0},xx=0.0,yy=0.0,zz=0.0;
 #if(ALLOWKAPPAEXPLICITPOSDEPENDENCE)
   bl_coord_ijk(ii,jj,kk,loc,V);
@@ -9313,8 +9317,6 @@ void calc_kappa(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE *k
   yy=V[2];
   zz=V[3];
 #endif
-  FTYPE bsq = dot(q->bcon, q->bcov);
-  FTYPE B=sqrt(bsq);
   *kappa = calc_kappa_user(rho,B,Tgas,Trad,xx,yy,zz);
   //  dualfprintf(fail_file,"kappaabs=%g\n",*kappa);
 }
