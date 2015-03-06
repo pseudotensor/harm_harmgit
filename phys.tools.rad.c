@@ -9707,12 +9707,11 @@ static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYP
 
 
   // get photon number source term, dnrad/dtau in comoving frame, which acts as source term.
-#if(EVOLVENRAD)
+#if(EVOLVENRAD&&NRAD>0)
   FTYPE ndotff,ndotffabs;
-  if(NRAD>=0){
-    // in limit that Tgas=Trad, must have balance such that ndotff->0, so nlambda must come from kappan and nradff->LTE_N
-    ndotff = -(kappan*nradff - nlambda);
-    ndotffabs = fabs(kappan*nradff) + fabs(nlambda);
+  // in limit that Tgas=Trad, must have balance such that ndotff->0, so nlambda must come from kappan and nradff->LTE_N
+  ndotff = -(kappan*nradff - nlambda);
+  ndotffabs = fabs(kappan*nradff) + fabs(nlambda);
   // return \dot{nrad} : photon density in fluid frame per unit fluid frame time
   *ndotffreturn=ndotff;
   *ndotffabsreturn=ndotffabs;
@@ -11116,7 +11115,8 @@ int u2p_rad_new_pre(int showmessages, int allowlocalfailurefixandnoreport, FTYPE
   // INVERT to get Number density of photons in radiation frame
   //
   ////////////
-  if(NRAD>0 && *lpflagrad==UTOPRIMRADNOFAIL){
+#if(EVOLVENRAD&&NRAD>0)
+  if(*lpflagrad==UTOPRIMRADNOFAIL){
     FTYPE gammafinal,qsqfinal;
     if(recomputegamma) gamma_calc_fromuconrel(&pin[URAD1-1],ptrgeom,&gammafinal,&qsqfinal);
     else gammafinal=gamma;
@@ -11127,6 +11127,8 @@ int u2p_rad_new_pre(int showmessages, int allowlocalfailurefixandnoreport, FTYPE
     // if failed to get solution, can't trust \gamma, so revert to thermal photons
     pin[NRAD] = calc_LTE_NfromE(Erf);
   }
+#endif
+
 
 
 
@@ -11415,7 +11417,8 @@ int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gam
   // INVERT to get Number density of photons in radiation frame
   //
   ////////////
-  if(NRAD>0 && *lpflagrad==UTOPRIMRADNOFAIL){
+#if(EVOLVENRAD&&NRAD>0)
+  if(*lpflagrad==UTOPRIMRADNOFAIL){
     FTYPE gammafinal,qsqfinal;
     if(recomputegamma) gamma_calc_fromuconrel(&pin[URAD1-1],ptrgeom,&gammafinal,&qsqfinal);
     else gammafinal=gamma;
@@ -11426,7 +11429,7 @@ int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gam
     // if failed to get solution, can't trust \gamma, so revert to thermal photons
     pin[NRAD] = calc_LTE_NfromE(Erf);
   }
-
+#endif
 
 
   //  dualfprintf(fail_file,"didmod=%d\n",didmod);
@@ -11658,7 +11661,8 @@ int u2p_rad_orig(int showmessages, int allowlocalfailurefixandnoreport, FTYPE ga
   // INVERT to get Number density of photons in radiation frame
   //
   ////////////
-  if(NRAD>0 && *lpflagrad==UTOPRIMRADNOFAIL){
+#if(EVOLVENRAD&&NRAD>0)
+  if(*lpflagrad==UTOPRIMRADNOFAIL){
     FTYPE gammafinal,qsqfinal;
     gamma_calc_fromuconrel(&pin[URAD1-1],ptrgeom,&gammafinal,&qsqfinal);
     FTYPE uradt=gammafinal/(ptrgeom->alphalapse); // u^t = gamma/alphalapse
@@ -11668,6 +11672,7 @@ int u2p_rad_orig(int showmessages, int allowlocalfailurefixandnoreport, FTYPE ga
     // if failed to get solution, can't trust \gamma, so revert to thermal photons
     pin[NRAD] = calc_LTE_NfromE(Erf);
   }
+#endif
 
 
   //  DLOOPA(jj){
