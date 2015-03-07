@@ -531,6 +531,44 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE *errorabs, stru
 /// stop if iter error is low error
 #define STOPIFITERLOWERROR (0)
 
+
+
+
+
+
+
+
+
+#define FAILRETURNGOEXPLICIT -1
+#define FAILRETURNNOFAIL 0
+#define FAILRETURNGENERAL 1
+#define FAILRETURNJACISSUE 2
+#define FAILRETURNMODESWITCH 3
+#define FAILRETURNNOTTOLERROR 4
+
+#define ACCEPTASNOFAILURE(failreturn) (failreturn==FAILRETURNNOFAIL || failreturn==FAILRETURNNOTTOLERROR || failreturn==FAILRETURNGOEXPLICIT)
+//#define GOODNOFAILURE(failreturn) (failreturn==FAILRETURNNOFAIL || failreturn==FAILRETURNGOEXPLICIT)
+#define NOTACTUALFAILURE(failreturn) (failreturn==FAILRETURNNOFAIL || failreturn==FAILRETURNMODESWITCH || failreturn==FAILRETURNGOEXPLICIT)
+#define NOTBADFAILURE(failreturn) (failreturn==FAILRETURNNOFAIL || failreturn==FAILRETURNMODESWITCH  || failreturn==FAILRETURNNOTTOLERROR || failreturn==FAILRETURNGOEXPLICIT)
+
+#define ACTUALHARDFAILURE(failreturn) (failreturn==FAILRETURNGENERAL || failreturn==FAILRETURNJACISSUE)
+#define ACTUALHARDORSOFTFAILURE(failreturn) (failreturn==FAILRETURNGENERAL || failreturn==FAILRETURNJACISSUE || failreturn==FAILRETURNNOTTOLERROR)
+#define SWITCHGOODIDEAFAILURE(failreturn) (failreturn==FAILRETURNGENERAL || failreturn==FAILRETURNJACISSUE || failreturn==FAILRETURNNOTTOLERROR || failreturn==FAILRETURNMODESWITCH)
+
+#define RADINVBAD(radinvmod) (radinvmod==UTOPRIMRADFAILERFNEG || radinvmod==UTOPRIMRADFAILBAD1)
+#define RADINVOK(radinvmod) (RADINVBAD(radinvmod)==0)
+
+
+/// choose to switch to entropy only if energy fails or gives u_g<0.  Or choose to always do both and use best solution.
+#define MODEMETHOD MODEPICKBEST // general switching method
+//#define MODEMETHOD MODEPICKBESTSIMPLE // switches with only PMHD method // NOTEFORFAST
+//#define MODEMETHOD MODEPICKBESTSIMPLE2 // switches with all methods but no ITERMODESTAGES attempted
+//#define MODEMETHOD MODESWITCH
+//#define MODEMETHOD MODEENERGY
+//#define MODEMETHOD MODEENTROPY
+//#define MODEMETHOD MODEENERGYRAMESH
+
+
 ///////////////////////////////
 //
 // END SOME LOCAL OPTIONS
@@ -1542,9 +1580,9 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
 
 
     // When failreturn==UTOPRIMGENWRAPPERRETURNFAILMHD, Utoprimgen() passes back pp as initial guess, and when u(pp) is computed below, effectively didn't move uu[gas] away from uu0[gas]
-    if(badchange) failreturn==UTOPRIMGENWRAPPERRETURNFAILMHD; // indicate that messed-up MHD inversion, without having to do the inversion.
+    if(badchange) failreturn=UTOPRIMGENWRAPPERRETURNFAILMHD; // indicate that messed-up MHD inversion, without having to do the inversion.
     //    PLOOP(pliter,pl) dualfprintf(fail_file,"AFTER: pl=%d pr=%g\n",pl,pp[pl]);
-    if(debugfail>=3) dualfprintf(fail_file,"NEWTON: %d : ijk=%d %d %d : %d %g\n",iter,ptrgeom->i,ptrgeom->j,ptrgeom->k,newtonstats.lntries,newtonstats.lerrx);
+    prod0dualfprintf(debugfail>=3,fail_file,"NEWTON: %d : ijk=%d %d %d : %d %g\n",iter,ptrgeom->i,ptrgeom->j,ptrgeom->k,newtonstats.lntries,newtonstats.lerrx);
     radinvmodalt=*radinvmod; // default
     failreturnalt=failreturn; // default
 
@@ -1692,7 +1730,7 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
     //    if(*radinvmod>0) dualfprintf(fail_file,"radinvmodinside=%d  whichcall=%d : u=%g Erf=%g\n",*radinvmod,whichcall,pp[UU],pp[PRAD0]);
 
 
-    if(0){
+#if(0)
       // deal with Erf<0 and possibly gammarad caps or E_r<0 issues
       if(iter<BEGINNORMALSTEPS+4 && pp[PRAD0]<10.0*ERADLIMIT && ppbackup[PRAD0]>10.0*ERADLIMIT){
         // then can play with Erf in case negative E_r to avoid bad NR due to floor on Erf.
@@ -1703,6 +1741,7 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
         dualfprintf(fail_file,"bob: iter=%d (%d) %g %g (%g)\n",iter,BEGINNORMALSTEPS+4,pp[PRAD0],ppbackup[PRAD0],10.0*ERADLIMIT);
       }
     }
+#endif
 
     //
     // 9) Get consistent RAD state
@@ -1801,7 +1840,7 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
 
 
 
-
+#if(MODEMETHOD==MODEENERGY ||MODEMETHOD==MODEENTROPY ||MODEMETHOD==MODESWITCH)
   ///////////
   //
   // check which baseitermethod we should really be using based upon any inversions done above
@@ -1823,14 +1862,14 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
     // For iter=1, using initial guess's uu.  But by second iteration, have used Jacobian to move iterates.  If dU[UU]/U[UU] near machine precision but dU[URAD0]/U[URAD0] far from it, then should use radiation iterate.
     if(iter>1){
       if(rdU[UU]<rdU[URAD0] && IMPMHDTYPEBASE(*baseitermethod)==1){
-        if(debugfail>=3) dualfprintf(fail_file,"Should switch base to QTYURAD or QTYPRAD\n");
+        prod0dualfprintf(debugfail>=3,fail_file,"Should switch base to QTYURAD or QTYPRAD\n");
       }
       if(rdU[UU]>rdU[URAD0] && (*baseitermethod==QTYURAD||*baseitermethod==QTYPRAD)){
-        if(debugfail>=3) dualfprintf(fail_file,"Should switch base to QTYPMHD\n");
+        prod0dualfprintf(debugfail>=3,fail_file,"Should switch base to QTYPMHD\n");
       }
     }
     if(pp[URAD0]<10.0*ERADLIMIT && IMPMHDTYPEBASE(*baseitermethod)==1){
-      if(debugfail>=3) dualfprintf(fail_file,"Should switch base to QTYURAD or QTYPRAD: Erf=%21.15g<10*%21.15g baseitermethod=%d\n",pp[URAD0],ERADLIMIT,*baseitermethod);
+      prod0dualfprintf(debugfail>=3,fail_file,"Should switch base to QTYURAD or QTYPRAD: Erf=%21.15g<10*%21.15g baseitermethod=%d\n",pp[URAD0],ERADLIMIT,*baseitermethod);
       if(1){
         // then Erf dropped-out.  Probably because using QTYPMHD and too big change
         *baseitermethod=QTYPRAD; // prad safest and fastest
@@ -1852,7 +1891,7 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
     }
     if(pp[UU]<10.0*UUMINLIMIT &&  (*baseitermethod==QTYURAD||*baseitermethod==QTYPRAD)){
       // Then u_g dropped-out.  Probably because iteration radiation quantity
-      if(debugfail>=3) dualfprintf(fail_file,"Should switch base to QTYMHD: ug=%21.15g\n",pp[UU]);
+      prod0dualfprintf(debugfail>=3,fail_file,"Should switch base to QTYMHD: ug=%21.15g\n",pp[UU]);
     }
 
     if(doswitchbaseitermethod){
@@ -1861,6 +1900,11 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
       get_refUs(&numdims, &startjac, &endjac, &implicititer, &implicitferr, irefU, iotherU, erefU, eotherU, &signgd2, &signgd4, &signgd6, &signgd7);
     }
   }
+#endif
+
+
+
+
 
 
   /////////
@@ -1868,6 +1912,9 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
   // At this point, must have pp, uu, uuabs, and q all consistent and defined
   //
   /////////
+
+
+
 
 
 
@@ -1927,7 +1974,7 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
 
 
 
-
+#if(0)
   // compute difference vector between original and new 4-force's effect on conserved radiative quantities
   // NR1992 Eq. 16.6.16: y_{n+1} = y_n + h f(y_{n+1}) , so error function is f = (y_{n+1} - y_n) - h f(y_{n+1})
   // i.e. f->0 as change in conserved quantity approaches the updated value of 4-force
@@ -1947,6 +1994,9 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
       }
     }
   }
+#endif
+
+
 
 
   ///////
@@ -1964,54 +2014,54 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
   // Used in case optically thin and no interaction between RAD and GAS and radiation hits ceiling/floor and then must treat as ok since no force balance will help since no G and dUgas from dUrad will be wrong (and if u_g<<Erf, then would wrongly affect gas despite actually G<<U -- and if u_g>>Erf would no effect on gas be caused by that happening).
   //
   ////////
-  if(ALLOWUSEUUALT){ // purpose of this is equivalent to whether one can go explicit, but overly complicated and if reduces to using alternative when not desired, then not energy-momentum conserving
-    if(whichcall==FIMPLICITCALLTYPEF1 && (iter==1 && tautotmax<NUMEPSILON) && failreturn<=UTOPRIMGENWRAPPERRETURNFAILRAD){//FIMPLICITCALLTYPEJAC
-      // Have to check if really small error for alternative error, since otherwise f1iter loop won't work.
-      // Only check on iter==1 since if moved beyond iter=1, then must be relevant 4-force.  Only check if f1iter>1 because for f1iter=1 4-force is not set yet.
+#if(ALLOWUSEUUALT) // purpose of this is equivalent to whether one can go explicit, but overly complicated and if reduces to using alternative when not desired, then not energy-momentum conserving
+  if(whichcall==FIMPLICITCALLTYPEF1 && (iter==1 && tautotmax<NUMEPSILON) && failreturn<=UTOPRIMGENWRAPPERRETURNFAILRAD){//FIMPLICITCALLTYPEJAC
+    // Have to check if really small error for alternative error, since otherwise f1iter loop won't work.
+    // Only check on iter==1 since if moved beyond iter=1, then must be relevant 4-force.  Only check if f1iter>1 because for f1iter=1 4-force is not set yet.
 
-      // have to check if unmodified iterated quantities actually have smaller error, in which case probably U->P->Unew led to Unew different from U for iterated quantities due to no normal solution without fixups.  When gas~rad in energy density, the other compnent can abosorb that error, but in limit that (say) RAD<<GAS, then dRAD won't register to GAS values and RAD will never converge if iterated on.
-      FTYPE errorabsalt,errorallabsalt;
-      FTYPE faltreport[NPR];
-      int convreturnalt=f_error_check(showmessages, showmessagesheavy, iter, conv, convabs, realdt, dimtypef,*eomtype , *radinvmod, itermode,*baseitermethod,fracenergy,dissmeasure,dimfactU,pp,piin,falt,fnorm,faltreport,Uiin,uu0,uualt,ptrgeom,&errorabsalt,&errorallabsalt,whicherror);
+    // have to check if unmodified iterated quantities actually have smaller error, in which case probably U->P->Unew led to Unew different from U for iterated quantities due to no normal solution without fixups.  When gas~rad in energy density, the other compnent can abosorb that error, but in limit that (say) RAD<<GAS, then dRAD won't register to GAS values and RAD will never converge if iterated on.
+    FTYPE errorabsalt,errorallabsalt;
+    FTYPE faltreport[NPR];
+    int convreturnalt=f_error_check(showmessages, showmessagesheavy, iter, conv, convabs, realdt, dimtypef,*eomtype , *radinvmod, itermode,*baseitermethod,fracenergy,dissmeasure,dimfactU,pp,piin,falt,fnorm,faltreport,Uiin,uu0,uualt,ptrgeom,&errorabsalt,&errorallabsalt,whicherror);
 
-      //  if(nstep>=32 && nstep<=46){
-      //    PLOOP(pliter,pl) dualfprintf(fail_file,"DEBUGIT: wc=%d iter=%d pl=%d uu0=%21.15g uu=%21.15g uualt=%21.15g Gdpl=%21.15g f=%21.15g falt=%21.15g errorabs=%21.15g errorabsalt=%21.15g radinvmod=%d radinvmodalt=%d failreturn=%d\n",whichcall,iter,pl,uu0[pl],uu[pl],uualt[pl],sign[pl]*localdt*Gdpl[pl],f[pl],falt[pl],*errorabs,errorabsalt,*radinvmod,radinvmodalt,failreturn);
-      //  }
+    //  if(nstep>=32 && nstep<=46){
+    //    PLOOP(pliter,pl) dualfprintf(fail_file,"DEBUGIT: wc=%d iter=%d pl=%d uu0=%21.15g uu=%21.15g uualt=%21.15g Gdpl=%21.15g f=%21.15g falt=%21.15g errorabs=%21.15g errorabsalt=%21.15g radinvmod=%d radinvmodalt=%d failreturn=%d\n",whichcall,iter,pl,uu0[pl],uu[pl],uualt[pl],sign[pl]*localdt*Gdpl[pl],f[pl],falt[pl],*errorabs,errorabsalt,*radinvmod,radinvmodalt,failreturn);
+    //  }
 
 
 
-      // see if alternative error is smaller *and* in converged limit.  Catches cases when optically thin and ok that hits radiation ceiling.
-      if(errorabsalt<*errorabs && convreturnalt==1){
-        //dualfprintf(fail_file,"UsingALT\n");
+    // see if alternative error is smaller *and* in converged limit.  Catches cases when optically thin and ok that hits radiation ceiling.
+    if(errorabsalt<*errorabs && convreturnalt==1){
+      //dualfprintf(fail_file,"UsingALT\n");
 
-        // then switch to use falt.
-        // This typically controls what uu is used for the error
-        // Eventually want uu to be consistent with pp
-        // But allow for possible iteration upon uualt, so want to keep uu=uualt even though not consistent with pp
-        // So have to fix uu(pp) once iterations are done.
-        PLOOP(pliter,pl){
-          uu[pl]=uualt[pl];
-          pp[pl]=ppalt[pl];
-          f[pl]=falt[pl];
-          freport[pl]=faltreport[pl];
-        }
-        if(IMPUTYPE(implicititer)){
-          // q based upon primitives, so if uu-method, then stuck with that q
-        }
-        else{
-          // get new q(ppalt) now q(pp)
-          get_state(pp, ptrgeom, q);
-          // get new uu(ppalt) now uu(pp)
-          primtoU(UNOTHING,pp,q,ptrgeom, uu, uuabs);
-        }
-        *convreturn=convreturnalt;
-        *errorabs=errorabsalt;
-        *errorallabs=errorallabsalt;
-        *radinvmod=radinvmodalt;
-        failreturn=failreturnalt;
+      // then switch to use falt.
+      // This typically controls what uu is used for the error
+      // Eventually want uu to be consistent with pp
+      // But allow for possible iteration upon uualt, so want to keep uu=uualt even though not consistent with pp
+      // So have to fix uu(pp) once iterations are done.
+      PLOOP(pliter,pl){
+        uu[pl]=uualt[pl];
+        pp[pl]=ppalt[pl];
+        f[pl]=falt[pl];
+        freport[pl]=faltreport[pl];
       }
+      if(IMPUTYPE(implicititer)){
+        // q based upon primitives, so if uu-method, then stuck with that q
+      }
+      else{
+        // get new q(ppalt) now q(pp)
+        get_state(pp, ptrgeom, q);
+        // get new uu(ppalt) now uu(pp)
+        primtoU(UNOTHING,pp,q,ptrgeom, uu, uuabs);
+      }
+      *convreturn=convreturnalt;
+      *errorabs=errorabsalt;
+      *errorallabs=errorallabsalt;
+      *radinvmod=radinvmodalt;
+      failreturn=failreturnalt;
     }
   }
+#endif
 
 
 
@@ -2028,35 +2078,35 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
   ////////
   *goexplicit=0; // default
 #define ITERCHECKEXPLICITSAFE 1 // iteration by which assume G has settled and can test if can go explicit.
-  if(1){
-    if(whichcall==FIMPLICITCALLTYPEF1){//FIMPLICITCALLTYPEJAC)
+#if(1)
+  if(whichcall==FIMPLICITCALLTYPEF1){//FIMPLICITCALLTYPEJAC)
 
-      FTYPE ratchangeRtt=calc_approx_ratchangeRtt(q, chieff, realdt);
+    FTYPE ratchangeRtt=calc_approx_ratchangeRtt(q, chieff, realdt);
 
-      //      get_dtsub(int method, pp, q, uu0, uu, FTYPE *dUother,  FTYPE *CUf, FTYPE *CUimp, FTYPE *Gdpl, FTYPE chi, FTYPE *Gdplabs, struct of_geom *ptrgeom, FTYPE *dtsub)
+    //      get_dtsub(int method, pp, q, uu0, uu, FTYPE *dUother,  FTYPE *CUf, FTYPE *CUimp, FTYPE *Gdpl, FTYPE chi, FTYPE *Gdplabs, struct of_geom *ptrgeom, FTYPE *dtsub)
 
 
-      //      if( (iter>ITERCHECKEXPLICITSAFE || iter==1 && tautotmax<NUMEPSILON ) && failreturn<=UTOPRIMGENWRAPPERRETURNFAILRAD){
-      if( (iter>ITERCHECKEXPLICITSAFE || iter==1 && tautotmax<NUMEPSILON ) ){
-        // iter>1 so at least have estimate of G even if not great.
-        // At iter=1, U->p->G can give G=0, while dUrad=-dUgas can still lead to changes that upon next iteration lead to G!=0.
-        *goexplicit=1;
-        PLOOP(pliter,pl) if(fabs(Gallabs[pl])>NUMEPSILON*fabs(uuallabs[pl])) *goexplicit=0;
-        pl=URAD0;
-        if(fabs(ratchangeRtt*uu[pl])>NUMEPSILON*fabs(uuallabs[pl])) *goexplicit=0;
-        if(fabs(ratchangeRtt*uu0[pl])>NUMEPSILON*fabs(uuallabs[pl])) *goexplicit=0;
-        //  if(*goexplicit) dualfprintf(fail_file,"Went explicit\n");
-        //  else dualfprintf(fail_file,"Stayed implicit\n");
-      }
+    //      if( (iter>ITERCHECKEXPLICITSAFE || iter==1 && tautotmax<NUMEPSILON ) && failreturn<=UTOPRIMGENWRAPPERRETURNFAILRAD){
+    if( (iter>ITERCHECKEXPLICITSAFE || iter==1 && tautotmax<NUMEPSILON ) ){
+      // iter>1 so at least have estimate of G even if not great.
+      // At iter=1, U->p->G can give G=0, while dUrad=-dUgas can still lead to changes that upon next iteration lead to G!=0.
+      *goexplicit=1;
+      PLOOP(pliter,pl) if(fabs(Gallabs[pl])>NUMEPSILON*fabs(uuallabs[pl])) *goexplicit=0;
+      pl=URAD0;
+      if(fabs(ratchangeRtt*uu[pl])>NUMEPSILON*fabs(uuallabs[pl])) *goexplicit=0;
+      if(fabs(ratchangeRtt*uu0[pl])>NUMEPSILON*fabs(uuallabs[pl])) *goexplicit=0;
+      //  if(*goexplicit) dualfprintf(fail_file,"Went explicit\n");
+      //  else dualfprintf(fail_file,"Stayed implicit\n");
     }
   }
+#endif
 
 
 
 
 
 
-
+#if(PRODUCTION==0)
   if(debugfail>=3){
     ///////////
     //
@@ -2069,24 +2119,24 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
     newtoncounthere++;
     dualfprintf(fail_file,"Newtonstat: local=%d total=%d average=%21.15g\n",newtonstats.lntries,newtoncounttotal,(FTYPE)newtoncounttotal/(FTYPE)newtoncounthere);
   }  
-  
+#endif  
 
 
-  if(failreturn && failreturn>failreturnallowable){
-    if(PRODUCTION==0&&showmessages && debugfail>=2) dualfprintf(fail_file,"Utoprimgen_wrapper() failed, must return out of f_implicit(): %d vs. %d\n",failreturn,failreturnallowable);
-    return(failreturn);
-  }
+
+
+
+
+  failreturn*=(failreturn>failreturnallowable);
+  prod0dualfprintf(showmessages && debugfail>=2,fail_file,"Utoprimgen_wrapper() failed, must return out of f_implicit(): %d vs. %d\n",failreturn,failreturnallowable);
+  return(failreturn);
   //  else{
   //    // save better guess for later inversion (including this inversion above) from this inversion
   //    PLOOP(pliter,pl) pp0[pl]=pp[pl];
   //  }
-
-
-
-
-
-  return(0);
 } 
+
+
+
 
 /// compute dt for this sub-step
 static FTYPE compute_dt(int isexplicit, FTYPE *CUf, FTYPE *CUimp, FTYPE dtin)
@@ -2108,34 +2158,6 @@ static FTYPE compute_dt(int isexplicit, FTYPE *CUf, FTYPE *CUimp, FTYPE dtin)
 
 
 
-#define FAILRETURNGOEXPLICIT -1
-#define FAILRETURNNOFAIL 0
-#define FAILRETURNGENERAL 1
-#define FAILRETURNJACISSUE 2
-#define FAILRETURNMODESWITCH 3
-#define FAILRETURNNOTTOLERROR 4
-
-#define ACCEPTASNOFAILURE(failreturn) (failreturn==FAILRETURNNOFAIL || failreturn==FAILRETURNNOTTOLERROR || failreturn==FAILRETURNGOEXPLICIT)
-//#define GOODNOFAILURE(failreturn) (failreturn==FAILRETURNNOFAIL || failreturn==FAILRETURNGOEXPLICIT)
-#define NOTACTUALFAILURE(failreturn) (failreturn==FAILRETURNNOFAIL || failreturn==FAILRETURNMODESWITCH || failreturn==FAILRETURNGOEXPLICIT)
-#define NOTBADFAILURE(failreturn) (failreturn==FAILRETURNNOFAIL || failreturn==FAILRETURNMODESWITCH  || failreturn==FAILRETURNNOTTOLERROR || failreturn==FAILRETURNGOEXPLICIT)
-
-#define ACTUALHARDFAILURE(failreturn) (failreturn==FAILRETURNGENERAL || failreturn==FAILRETURNJACISSUE)
-#define ACTUALHARDORSOFTFAILURE(failreturn) (failreturn==FAILRETURNGENERAL || failreturn==FAILRETURNJACISSUE || failreturn==FAILRETURNNOTTOLERROR)
-#define SWITCHGOODIDEAFAILURE(failreturn) (failreturn==FAILRETURNGENERAL || failreturn==FAILRETURNJACISSUE || failreturn==FAILRETURNNOTTOLERROR || failreturn==FAILRETURNMODESWITCH)
-
-#define RADINVBAD(radinvmod) (radinvmod==UTOPRIMRADFAILERFNEG || radinvmod==UTOPRIMRADFAILBAD1)
-#define RADINVOK(radinvmod) (RADINVBAD(radinvmod)==0)
-
-
-/// choose to switch to entropy only if energy fails or gives u_g<0.  Or choose to always do both and use best solution.
-#define MODEMETHOD MODEPICKBEST // general switching method
-//#define MODEMETHOD MODEPICKBESTSIMPLE // switches with only PMHD method // NOTEFORFAST
-//#define MODEMETHOD MODEPICKBESTSIMPLE2 // switches with all methods but no ITERMODESTAGES attempted
-//#define MODEMETHOD MODESWITCH
-//#define MODEMETHOD MODEENERGY
-//#define MODEMETHOD MODEENTROPY
-//#define MODEMETHOD MODEENERGYRAMESH
 
 
 // KORALTODOMAYBE: average good neighbor if can.  only use alternative backup if no good neighbor.
