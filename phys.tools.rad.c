@@ -288,6 +288,11 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE *errorabs, stru
 #define ERRORFORIMPEPSSMALL (1E-9)
 #endif
 
+
+// whether to skip computing Jacobian every step after certain condition of having done a few steps and then compute every few steps only.
+#define SKIPJACCOMPUTE 1
+
+
 /// maximum EPS for getting Jacobian
 #define MAXIMPEPS (0.3)
 
@@ -6080,7 +6085,7 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
       if(!notfinite){
     
 
-        if(iter<=4 || iter>4 && iter%3==0){ // only get new Jacobian before 5th iteration and then only if every 3rd iteration since assume Jacobian itself doesn't change so rapidly.
+        if(SKIPJACCOMPUTE==0 || SKIPJACCOMPUTE==1 && (iter<=4 || iter>4 && iter%4==0)){ // only get new Jacobian before 5th iteration and then only if every 3rd iteration since assume Jacobian itself doesn't change so rapidly.
 
           /////////
           //

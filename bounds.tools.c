@@ -6023,6 +6023,7 @@ void debugfixupaltdeath_bc(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
         }
 
 
+        /////////////////////////////////////////////
         // set b
         PLOOP(pliter,pl){
           prfixtryb[pl] = prfixtry[pl];
@@ -6031,8 +6032,8 @@ void debugfixupaltdeath_bc(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 
         // stronger restrictions for b on prad0
         if(URAD0>=0){
-          prfixtry[URAD0] = MIN(MIN(prfixtry[RHO],prfixtry[URAD0]),prfixtry[UU]); // no more than Erf/rho=1 and Erf/u=1
-          ufixtry[URAD0]=MAX(-prfixtry[URAD0],ufixtry[URAD0]);
+          prfixtryb[URAD0] = MIN(MIN(prfixtryb[RHO],prfixtryb[URAD0]),10.0*prfixtryb[UU]); // no more than Erf/rho=1 and Erf/u=10
+          ufixtryb[URAD0]=MAX(-prfixtryb[URAD0],ufixtryb[URAD0]);
         }
 
 
