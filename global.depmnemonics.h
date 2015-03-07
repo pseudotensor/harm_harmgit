@@ -48,19 +48,6 @@
 #define CHECKRHONEGZERORESTART 0
 #endif
 
-/// dump.c's fieldlinedump()
-/// CHANGES alot, make sure # is correct!
-/// Add 4 radiation terms if doing radiation
-#if( FIELDLINEGDETB == 1)
-#define NUMFIELDLINEQUANTITIES (14 + (1+NDIM)*(EOMRADTYPE!=EOMRADNONE))
-/// rho, u, -hu_t, -T^t_t/U0, u^t, v1,v2,v3,B1,B2,B3,gdetB1,gdetB2,gdetB3
-/// radiation adds: vrad1,vrad2,vrad3
-#else
-#define NUMFIELDLINEQUANTITIES (11 + (1+NDIM)*(EOMRADTYPE!=EOMRADNONE))
-/// rho, u, -hu_t, -T^t_t/U0, u^t, v1,v2,v3,B1,B2,B3
-/// radiation adds: vrad1,vrad2,vrad3
-#endif
-
 
 /// how many sets of EOMs (MHD or MHD+RAD)
 #if(EOMRADTYPE!=EOMRADNONE)

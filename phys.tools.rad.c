@@ -10976,7 +10976,7 @@ int u2p_rad(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gammama
   // CHECK if should abort inversion attempt if already dropped-out value in uu
   //
   //////////////
-  if(0){
+#if(0)
     // put in a catch for when inputted uu[URAD0] has dropped-out already and don't try to invert.
     if(fabs(uu[URAD0]<=2.0*10.0*ERADLIMIT)){ // often 10*ERADLIMIT is used to set as above ERADLIMIT, so here a higher catch is 2*10*ERADLIMIT
       // force to be reasonable
@@ -10986,7 +10986,7 @@ int u2p_rad(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gammama
       SLOOPA(jj) pin[URAD1+jj-1] = 0.0;
       return(0);
     }
-  }
+#endif
 
 
   ///////////////
@@ -11006,6 +11006,9 @@ int u2p_rad(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gammama
   toreturn=u2p_rad_new(showmessages, allowlocalfailurefixandnoreport, gammamaxrad, whichcap, uu, pin, ptrgeom,lpflag, lpflagrad);
 #endif
 
+
+
+#if(PRODUCTION==0)
   int caughtnan=0;
   if(!finite(pin[URAD0]) || !finite(pin[URAD1]) || !finite(pin[URAD2]) || !finite(pin[URAD3])){
     // __WORKINGONIT__: Shouldn't happen, but does on Kraken
@@ -11029,7 +11032,7 @@ int u2p_rad(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gammama
     }
 
   }
-
+#endif
 
 
 
@@ -11050,10 +11053,10 @@ int u2p_rad_new_pre(int showmessages, int allowlocalfailurefixandnoreport, FTYPE
   static long long int numyvarneg,numyvarbig,numErneg,nummod;
   int recomputegamma=0;
 
-  if(WHICHVEL!=VELREL4){
-    dualfprintf(fail_file,"u2p_rad() only setup for relative 4-velocity, currently.\n");
-    myexit(137432636);
-  }
+#if(WHICHVEL!=VELREL4)
+  dualfprintf(fail_file,"u2p_rad() only setup for relative 4-velocity, currently.\n");
+  myexit(137432636);
+#endif
 
 
   // copy over pin so pin isn't modified until end
@@ -11274,10 +11277,10 @@ int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gam
   static long long int numyvarneg,numyvarbig,numErneg,nummod;
   int recomputegamma=0;
 
-  if(WHICHVEL!=VELREL4){
-    dualfprintf(fail_file,"u2p_rad() only setup for relative 4-velocity, currently.\n");
-    myexit(137432636);
-  }
+#if(WHICHVEL!=VELREL4)
+  dualfprintf(fail_file,"u2p_rad() only setup for relative 4-velocity, currently.\n");
+  myexit(137432636);
+#endif
 
 
   // copy over pin so pin isn't modified until end
@@ -11496,8 +11499,10 @@ int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gam
       }
     }
     else{
+#if(PRODUCTION==0)
       dualfprintf(fail_file,"No such whichcap=%d\n",whichcap);
       myexit(234534634);
+#endif
     }
   }
 
@@ -11553,6 +11558,8 @@ int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gam
   }
 
 
+
+#if(PRODUCTION==0)
   if(debugfail>=2){
     static long int nstepold=-1;
     if(nstep!=nstepold && nstep%100==0 && ptrgeom->i==0 && ptrgeom->j==0 && ptrgeom->k==0 && steppart==0){
@@ -11560,6 +11567,8 @@ int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gam
       dualfprintf(fail_file,"numyvarneg=%lld numyvarbig=%lld numErneg=%lld nummod=%lld : nstep=%ld\n",numyvarneg,numyvarbig,numErneg,nummod,nstep);
     }
   }
+#endif
+
 
 
   if(DORADFIXUPS==1 || allowlocalfailurefixandnoreport==0){

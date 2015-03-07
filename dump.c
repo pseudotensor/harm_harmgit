@@ -1197,6 +1197,23 @@ int fieldlinedump(long dump_cnt)
 /// fieldline data dump content number
 extern void set_fieldline_content_dnumcolumns_dnumversion(int *numcolumnsvar, int *numversion)
 {
+
+
+/// dump.c's fieldlinedump()
+/// CHANGES alot, make sure # is correct!
+/// Add 4 radiation terms if doing radiation
+#if( FIELDLINEGDETB == 1)
+#define NUMFIELDLINEQUANTITIES (14 + (1+NDIM+10)*(EOMRADTYPE!=EOMRADNONE))
+/// rho, u, -hu_t, -T^t_t/U0, u^t, v1,v2,v3,B1,B2,B3,gdetB1,gdetB2,gdetB3
+/// radiation adds: vrad1,vrad2,vrad3
+#else
+#define NUMFIELDLINEQUANTITIES (11 + (1+NDIM+10)*(EOMRADTYPE!=EOMRADNONE))
+/// rho, u, -hu_t, -T^t_t/U0, u^t, v1,v2,v3,B1,B2,B3
+/// radiation adds: vrad1,vrad2,vrad3
+#endif
+
+
+
   if(DOFIELDLINE){
     *numcolumnsvar=NUMFIELDLINEQUANTITIES;
   }
@@ -1221,6 +1238,8 @@ int fieldline_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
   struct of_geom *ptrgeom=&geomdontuse;
   int loc=CENT;
 
+
+  FTYPE *pr=GLOBALMAC(pdump,i,j,k);
 
   //////////////
   //
@@ -1250,7 +1269,7 @@ int fieldline_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
     
   }
 
-  MYFUN(primtoflux(UDIAG,GLOBALMAC(pdump,i,j,k), &q, RR, ptrgeom, FL, NULL),"step_ch.c:fluxcalc()", "primtoflux_calc() dir=1/2 l", RR);
+  MYFUN(primtoflux(UDIAG,pr, &q, RR, ptrgeom, FL, NULL),"step_ch.c:fluxcalc()", "primtoflux_calc() dir=1/2 l", RR);
 
 
   //////////////////////////
@@ -1267,11 +1286,11 @@ int fieldline_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 
   // rho (for various things)
   ftemp=(float)GLOBALMACP0A1(pdump,i,j,k,RHO);
-  myset(datatype,&ftemp,0,1,writebuf);
+  myset(datatype,&ftemp,0,1,writebuf); // 1
 
   // u (for various things)
   ftemp=(float)GLOBALMACP0A1(pdump,i,j,k,UU);
-  myset(datatype,&ftemp,0,1,writebuf);
+  myset(datatype,&ftemp,0,1,writebuf); // 1
 
 
   //////////////////////
@@ -1280,7 +1299,7 @@ int fieldline_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 
   // -u_t (-hu_t can be found from this and rho/u/p above)
   ftemp=(float)(-q.ucov[0]);
-  myset(datatype,&ftemp,0,1,writebuf);
+  myset(datatype,&ftemp,0,1,writebuf); // 1
 
   // -T^t_t/(rho u^t)
   //  ftemp=(float)(-U[UU]/(ptrgeom->gdet * GLOBALMACP0A1(pdump,i,j,k,RHO)*q.ucon[TT]));
@@ -1291,14 +1310,14 @@ int fieldline_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
     ftemp=(float)(-FL[UU]/(ptrgeom->gdet * GLOBALMACP0A1(pdump,i,j,k,RHO)*q.ucon[RR]));
   }
   else ftemp=0.0;
-  myset(datatype,&ftemp,0,1,writebuf);
+  myset(datatype,&ftemp,0,1,writebuf); // 1
 
 
   // 1 extra thing
 
   // u^t
   ftemp=(float)(q.ucon[0]);
-  myset(datatype,&ftemp,0,1,writebuf);
+  myset(datatype,&ftemp,0,1,writebuf); // 1
 
 
   ///////////////////////////
@@ -1307,72 +1326,121 @@ int fieldline_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 
   // v^r [ in grid frame]
   ftemp=(float)(q.ucon[1]/q.ucon[0]);
-  myset(datatype,&ftemp,0,1,writebuf);
+  myset(datatype,&ftemp,0,1,writebuf); // 1
 
   // v^\theta
   ftemp=(float)(q.ucon[2]/q.ucon[0]);
-  myset(datatype,&ftemp,0,1,writebuf);
+  myset(datatype,&ftemp,0,1,writebuf); // 1
 
   // v^\phi
   ftemp=(float)(q.ucon[3]/q.ucon[0]);
-  myset(datatype,&ftemp,0,1,writebuf);
+  myset(datatype,&ftemp,0,1,writebuf); // 1
 
   // B^r
   ftemp=(float)(GLOBALMACP0A1(pdump,i,j,k,B1));
-  myset(datatype,&ftemp,0,1,writebuf);
+  myset(datatype,&ftemp,0,1,writebuf); // 1
 
   // B^\theta
   ftemp=(float)(GLOBALMACP0A1(pdump,i,j,k,B2));
-  myset(datatype,&ftemp,0,1,writebuf);
+  myset(datatype,&ftemp,0,1,writebuf); // 1
 
   // B^\phi
   ftemp=(float)(GLOBALMACP0A1(pdump,i,j,k,B3));
-  myset(datatype,&ftemp,0,1,writebuf);
+  myset(datatype,&ftemp,0,1,writebuf); // 1
 
 #if( FIELDLINEGDETB == 1)
   //it is useful to have access to gdet*B^i at cell faces directly for plotting field lines
   ftemp=(float)(GLOBALMACP0A1(udump,i,j,k,B1));
-  myset(datatype,&ftemp,0,1,writebuf);
+  myset(datatype,&ftemp,0,1,writebuf); // 1
 
   ftemp=(float)(GLOBALMACP0A1(udump,i,j,k,B2));
-  myset(datatype,&ftemp,0,1,writebuf);
+  myset(datatype,&ftemp,0,1,writebuf); // 1
 
   ftemp=(float)(GLOBALMACP0A1(udump,i,j,k,B3));
-  myset(datatype,&ftemp,0,1,writebuf);
+  myset(datatype,&ftemp,0,1,writebuf); // 1
 #endif
   
   // see grmhd-dualfcon2omegaf.nb
   // below can be obtained from above set of v and B
   // \Omega_F_1
   //  ftemp=(float)(v3-B3*v2/(B2+SMALL));
-  //myset(datatype,&ftemp,0,1,writebuf);
+  //myset(datatype,&ftemp,0,1,writebuf); // 1
 
   // \Omega_F_2
   //ftemp=(float)(v3-B3*v1/(B1+SMALL));
-  // myset(datatype,&ftemp,0,1,writebuf);
+  // myset(datatype,&ftemp,0,1,writebuf); // 1
 
 
   if(EOMRADTYPE!=EOMRADNONE){
 
     // Erf (for various things)
     ftemp=(float)GLOBALMACP0A1(pdump,i,j,k,PRAD0);
-    myset(datatype,&ftemp,0,1,writebuf);
+    myset(datatype,&ftemp,0,1,writebuf); // 1
 
     // urad^t [ in grid frame]
     ftemp=(float)(q.uradcon[0]);
-    myset(datatype,&ftemp,0,1,writebuf);
+    myset(datatype,&ftemp,0,1,writebuf); // 1
 
     // vrad^r [ in grid frame]
     ftemp=(float)(q.uradcon[1]/q.uradcon[0]);
-    myset(datatype,&ftemp,0,1,writebuf);
+    myset(datatype,&ftemp,0,1,writebuf); // 1
     
     // vrad^\theta
     ftemp=(float)(q.uradcon[2]/q.uradcon[0]);
-    myset(datatype,&ftemp,0,1,writebuf);
+    myset(datatype,&ftemp,0,1,writebuf); // 1
     
     // vrad^\phi
     ftemp=(float)(q.uradcon[3]/q.uradcon[0]);
-    myset(datatype,&ftemp,0,1,writebuf);
+    myset(datatype,&ftemp,0,1,writebuf); // 1
+
+
+
+
+
+
+    // add kappaes, kappa, kappan, kappaemit, kappanemit so don't have to keep python scripts up to date with form or how opacity is dealth with.
+
+    //radiative stress tensor in the lab frame
+    FTYPE Rij[NDIM][NDIM];
+
+    //this call returns R^i_j, i.e., the first index is contra-variant and the last index is co-variant
+    mhdfull_calc_rad(pr, ptrgeom, &q, Rij);
+
+    //the four-velocity of fluid in lab frame
+    FTYPE *ucon,*ucov;
+    ucon = q.ucon;
+    ucov = q.ucov;
+
+    //Eradff = R^a_b u_a u^b
+    FTYPE Ruu=0.; DLOOP(i,j) Ruu+=Rij[i][j]*ucov[i]*ucon[j];
+    // get relative Lorentz factor between gas and radiation
+    FTYPE gammaradgas = 0.0;
+    int jj;
+    DLOOPA(jj) gammaradgas += - (q.ucov[jj] * q.uradcon[jj]);
+
+    // get B
+    FTYPE bsq = dot(q.bcon, q.bcov);
+    FTYPE B=sqrt(bsq);
+
+    FTYPE nradff=0;
+    FTYPE kappa,kappan=0;
+    FTYPE kappaemit,kappanemit=0;
+    FTYPE kappaes;
+    FTYPE lambda,nlambda=0;
+    FTYPE Tgas=0,Tradff=0;
+    calc_Tandopacityandemission(pr,ptrgeom,&q,Ruu,gammaradgas,B,&Tgas,&Tradff,&nradff,&kappa,&kappan,&kappaemit,&kappanemit,&kappaes, &lambda, &nlambda);
+
+    myset(datatype,&Tgas,0,1,writebuf); // 1
+    myset(datatype,&Tradff,0,1,writebuf); // 1
+    myset(datatype,&nradff,0,1,writebuf); // 1
+    myset(datatype,&kappa,0,1,writebuf); // 1
+    myset(datatype,&kappan,0,1,writebuf); // 1
+    myset(datatype,&kappaemit,0,1,writebuf); // 1
+    myset(datatype,&kappanemit,0,1,writebuf); // 1
+    myset(datatype,&kappaes,0,1,writebuf); // 1
+    myset(datatype,&lambda,0,1,writebuf); // 1
+    myset(datatype,&nlambda,0,1,writebuf); // 1
+
   }
 
 
