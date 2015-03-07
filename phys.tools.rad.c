@@ -6007,37 +6007,46 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
       /////////////////
       if(!notfinite){
     
-        /////////
-        //
-        // get Jacobian and inversion Jacobian 
-        //
-        /////////
-        //      eomtypelocal=*eomtype; // re-chose default each time.  No, stick with what f1 reduced to for consistency.
-        //        dualfprintf(fail_file,"iJ call: iter=%d\n",iter);
 
-        // assume as error gets small, function becomes linear and can use smaller delta for Jacobian
-        if(errorabsf1[WHICHERROR]<ERRORFORIMPEPSSMALL) impepsjac=IMPEPSSMALL;
-        else impepsjac=IMPEPSLARGE;
-        int dimtypef=DIMTYPEFCONS;
-        int failreturniJ=get_implicit_iJ(allowbaseitermethodswitch, failreturnallowableuse, showmessages, showmessagesheavy, allowlocalfailurefixandnoreport, &eomtypelocal, whichcap, itermode, baseitermethod, fracenergy, dissmeasure, impepsjac, trueimptryconv, trueimptryconvabs, trueimpallowconvabs, trueimpmaxiter, iter, errorabsf1[0], errorabsf1[1], WHICHERROR, dimtypef, dimfactU, Uiin, uu, uup, uu0, piin, pp, ppp, fracdtG, realdt, ptrgeom, q, f1, f1norm, iJ, nummhdinvsreturn);
+        if(iter<=4 || iter>4 && iter%3==0){ // only get new Jacobian before 5th iteration and then only if every 3rd iteration since assume Jacobian itself doesn't change so rapidly.
 
-        if(failreturniJ!=0){
-          if(havebackup){
-            failreturn=FAILRETURNMODESWITCH; mathfailtype=30;
-            if(debugfail>=DEBUGLEVELIMPSOLVER) dualfprintf(fail_file,"SWITCHING MODE: Detected bad Jacobian\n");
-            break;
+          /////////
+          //
+          // get Jacobian and inversion Jacobian 
+          //
+          /////////
+          //      eomtypelocal=*eomtype; // re-chose default each time.  No, stick with what f1 reduced to for consistency.
+          //        dualfprintf(fail_file,"iJ call: iter=%d\n",iter);
+
+          // assume as error gets small, function becomes linear and can use smaller delta for Jacobian
+          if(errorabsf1[WHICHERROR]<ERRORFORIMPEPSSMALL) impepsjac=IMPEPSSMALL;
+          else impepsjac=IMPEPSLARGE;
+          int dimtypef=DIMTYPEFCONS;
+          int failreturniJ=get_implicit_iJ(allowbaseitermethodswitch, failreturnallowableuse, showmessages, showmessagesheavy, allowlocalfailurefixandnoreport, &eomtypelocal, whichcap, itermode, baseitermethod, fracenergy, dissmeasure, impepsjac, trueimptryconv, trueimptryconvabs, trueimpallowconvabs, trueimpmaxiter, iter, errorabsf1[0], errorabsf1[1], WHICHERROR, dimtypef, dimfactU, Uiin, uu, uup, uu0, piin, pp, ppp, fracdtG, realdt, ptrgeom, q, f1, f1norm, iJ, nummhdinvsreturn);
+
+          if(failreturniJ!=0){
+            if(havebackup){
+              failreturn=FAILRETURNMODESWITCH; mathfailtype=30;
+              prod0dualfprintf(debugfail>=DEBUGLEVELIMPSOLVER,fail_file,"SWITCHING MODE: Detected bad Jacobian\n");
+              break;
+            }
+            else{
+              failreturn=FAILRETURNJACISSUE; mathfailtype=12;
+              break;
+            }
           }
-          else{
-            failreturn=FAILRETURNJACISSUE; mathfailtype=12;
-            break;
+
+
+
+#if(PRODUCTION==0)
+          if(showmessagesheavy){
+            int iii,jjj;
+            JACLOOP2D(iii,jjj,startjac,endjac)  dualfprintf(fail_file,"iJ[i %d][e %d]=%g\n",iii,jjj,iJ[irefU[iii]][erefU[jjj]]);
           }
-        }
+#endif
 
-        if(showmessagesheavy){
-          int iii,jjj;
-          JACLOOP2D(iii,jjj,startjac,endjac)  dualfprintf(fail_file,"iJ[i %d][e %d]=%g\n",iii,jjj,iJ[irefU[iii]][erefU[jjj]]);
-        }
 
+        }
 
 
 
@@ -6074,7 +6083,12 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
             }
           }
 
+
+#if(PRODUCTION==0)
           if(showmessagesheavy) dualfprintf(fail_file,"POSTDX: uu: %g %g %g %g : uup=%g %g %g %g\n",uu[irefU[0]],uu[irefU[1]],uu[irefU[2]],uu[irefU[3]],uup[irefU[0]],uup[irefU[1]],uup[irefU[2]],uup[irefU[3]]);
+#endif
+
+
         }// end iterating U
 
 
