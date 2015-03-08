@@ -135,6 +135,14 @@
 
 #define TEMPELE (MELE*CCCTRUE*CCCTRUE/K_BOLTZ)
 
+// COMPTON ALTERNATIVES
+//1) 1201.5606v2.pdf eq. 4.8 with Teff=Te different.
+//2) 891567.pdf  eq. 10.
+//3) art%3A10.1007%2FBF03035735.pdf (what we are approximating when not using full Kompaneets).  How could solve.
+//4) compton.pdf
+
+
+
 /// EMISSION (Tr=Tg) or ABSORBPTION (Tr different from Tg)
 #define KAPPA_ZETA(Tgcode,Trcode) ((TEMPMIN+Trcode)/(TEMPMIN+Tgcode))
 //#define KAPPA_FF_CODE(rhocode,Tgcode,Trcode) (4.0E22*(1.0+XFACT)*(1.0-ZFACT)*((rhocode)*RHOBAR)*prpow((Tgcode)*TEMPBAR,-0.5)*prpow((Trcode)*TEMPBAR,-3.0)*prlog(1.0+1.6*KAPPA_ZETA(Tgcode,Trcode))*(1.0+4.4E-10*(Tgcode*TEMPBAR))/OPACITYBAR)  // ASSUMPTION: Thermal ele and no pairs.  See Rybicki & Lightman Eq~5.25 and McKinney & Uzdensky (2012) .  For Tr,Tg split, see Ramesh notes.

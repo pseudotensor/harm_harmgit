@@ -756,7 +756,7 @@ static int Utoprimgen_failwrapper(int doradonly, int *radinvmod, int showmessage
   lpflagrad=&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL);
 
 
-  if(doradonly==1){
+  if(doradonly==1){ // if doradonly==1, no need to call Utoprimgen() and no use for checkoninversiongas or checkoninversionrad
     u2p_rad(showmessages, allowlocalfailurefixandnoreport,GAMMAMAXRADIMPLICITSOLVER,whichcap,U,pr,ptrgeom,lpflag,lpflagrad);
     *radinvmod=(int)(*lpflagrad);
   }
@@ -1421,6 +1421,49 @@ static void get_refUs(struct of_method *mtd, struct of_refU *ru)
 
 
 
+static void setgasinversionstuff(int iter, int whichcall, FTYPE impeps, FTYPE errorabs, FTYPE convabs, int maxiter, struct of_newtonstats *newtonstats, int *checkoninversiongas, int *checkoninversionrad)
+{
+ setnewtonstatsdefault(newtonstats);
+  // initialize counters
+  newtonstats->nstroke=newtonstats->lntries=0;
+  // set inputs for errors, maxiters, etc.
+  if(iter>=ITERMHDINVTRYHARDER || whichcall==FIMPLICITCALLTYPEFINALCHECK || whichcall==FIMPLICITCALLTYPEFINALCHECK2){
+    // try lowest error allowed, may be raised a bit in MHD inversion code.
+    // min between normal desired error and iterated-quantity error.  This seeks low error if iterated got low error, while avoids excessive attempt if not.
+    newtonstats->tryconv=1E-2*MIN(convabs,errorabs); // NUMEPSILON
+    newtonstats->tryconvultrarel=1E-2*MIN(convabs,errorabs); // NUMEPSILON
+    newtonstats->extra_newt_iter=1; // KORALNOTE: apparently should keep this as >=1 to ensure error really drops
+    newtonstats->extra_newt_iter_ultrarel=2; // KORALNOTE: apparently should keep this as >=1 to ensure error really drops
+  }
+  else{
+    // KORALNOTE: If make newtonstats->tryconv~convabs, then if convabs~1E-12, then MHD inversion may return error~1E-10 in terms of how measured with f_error_check(), so must try harder than expected.
+    newtonstats->tryconv=convabs*1E-2;
+    newtonstats->tryconvultrarel=convabs*1E-2; // just bit smaller, not as extreme as default
+    newtonstats->extra_newt_iter=1; // KORALNOTE: apparently should keep this as >=1 to ensure error really drops
+    newtonstats->extra_newt_iter_ultrarel=1; // KORALNOTE: apparently should keep this as >=1 to ensure error really drops
+  }
+  //  newtonstats->mintryconv=allowconvabs;
+  newtonstats->mintryconv=MINTRYCONVFORMHDINVERSION;
+  newtonstats->maxiter=maxiter;
+  // override with less strict error for Jacobian calculation
+  if(whichcall==FIMPLICITCALLTYPEJAC){
+    newtonstats->tryconv=MAX(impeps*1E-2,newtonstats->tryconv);
+    newtonstats->tryconvultrarel=MAX(impeps*1E-3,newtonstats->tryconvultrarel);
+  }
+
+
+  // set whether should check inversion result inside Utoprimgen()
+  if(whichcall==FIMPLICITCALLTYPEFINALCHECK || whichcall==FIMPLICITCALLTYPEFINALCHECK2){
+    *checkoninversiongas=*checkoninversionrad=1;
+  }
+  else{
+    // don't check since slows down code and could be good enough solution if original error says ok.
+    *checkoninversiongas=*checkoninversionrad=0;
+  }
+
+}
+
+
 
 ///uu0 - original cons. qty
 ///uu -- current iteration
@@ -1443,58 +1486,22 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
 {
   int pliter, pl;
   int iv;
-  struct of_newtonstats newtonstats; setnewtonstatsdefault(&newtonstats);
-  // initialize counters
-  newtonstats.nstroke=newtonstats.lntries=0;
-  // set inputs for errors, maxiters, etc.
-  if(iter>=ITERMHDINVTRYHARDER || whichcall==FIMPLICITCALLTYPEFINALCHECK || whichcall==FIMPLICITCALLTYPEFINALCHECK2){
-    // try lowest error allowed, may be raised a bit in MHD inversion code.
-    // min between normal desired error and iterated-quantity error.  This seeks low error if iterated got low error, while avoids excessive attempt if not.
-    newtonstats.tryconv=1E-2*MIN(convabs,*errorabs); // NUMEPSILON
-    newtonstats.tryconvultrarel=1E-2*MIN(convabs,*errorabs); // NUMEPSILON
-    newtonstats.extra_newt_iter=1; // KORALNOTE: apparently should keep this as >=1 to ensure error really drops
-    newtonstats.extra_newt_iter_ultrarel=2; // KORALNOTE: apparently should keep this as >=1 to ensure error really drops
-  }
-  else{
-    // KORALNOTE: If make newtonstats.tryconv~convabs, then if convabs~1E-12, then MHD inversion may return error~1E-10 in terms of how measured with f_error_check(), so must try harder than expected.
-    newtonstats.tryconv=convabs*1E-2;
-    newtonstats.tryconvultrarel=convabs*1E-2; // just bit smaller, not as extreme as default
-    newtonstats.extra_newt_iter=1; // KORALNOTE: apparently should keep this as >=1 to ensure error really drops
-    newtonstats.extra_newt_iter_ultrarel=1; // KORALNOTE: apparently should keep this as >=1 to ensure error really drops
-  }
-  //  newtonstats.mintryconv=allowconvabs;
-  newtonstats.mintryconv=MINTRYCONVFORMHDINVERSION;
-  newtonstats.maxiter=maxiter;
-  // override with less strict error for Jacobian calculation
-  if(whichcall==FIMPLICITCALLTYPEJAC){
-    newtonstats.tryconv=MAX(impeps*1E-2,newtonstats.tryconv);
-    newtonstats.tryconvultrarel=MAX(impeps*1E-3,newtonstats.tryconvultrarel);
-  }
-
-  // set whether should check inversion result inside Utoprimgen()
-  int checkoninversiongas;
-  int checkoninversionrad;
-  if(whichcall==FIMPLICITCALLTYPEFINALCHECK || whichcall==FIMPLICITCALLTYPEFINALCHECK2){
-    checkoninversiongas=checkoninversionrad=1;
-  }
-  else{
-    // don't check since slows down code and could be good enough solution if original error says ok.
-    checkoninversiongas=checkoninversionrad=0;
-  }
-
-
-
- 
-
-
-
+  struct of_newtonstats newtonstats;
+  int checkoninversiongas=0;
+  int checkoninversionrad=0;
   int finalstep = 1;  //can choose either 1 or 0 depending on whether want floor-like fixups (1) or not (0).  unclear which one would work best since for Newton method to converge might want to allow negative density on the way to the correct solution, on the other hand want to prevent runaway into rho < 0 region and so want floors.
   FTYPE Gdpl[NPR]={0.0},Gdplabs[NPR]={0.0}, Tgas={0.0},Trad={0.0};
   int failreturn;
   FTYPE uuabs[NPR]={0.0};
 
+
+
+
+
   // default is no failure
   failreturn=0;
+
+
 
   ////////
   //
@@ -1532,13 +1539,15 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
 
   // optimize whether need to really compute entropy with log/pow so slow
   int needentropy=1; // default get uu[entropy] and q->entropy
-  if(ENTROPYOPT){
-    // whichcall==FIMPLICITCALLTYPEFINALCHECK means final check where if wasn't computing entropy during iterations, need at end so next RK substeps have it ready
-    if(whichcall==FIMPLICITCALLTYPEFINALCHECK || whichcall==FIMPLICITCALLTYPEFINALCHECK2 || *eomtype==EOMENTROPYGRMHD || (mtd->implicititer==QTYENTROPYUMHDMOMONLY)||(mtd->implicititer==QTYENTROPYUMHDENERGYONLY)||(mtd->implicititer==QTYENTROPYUMHD || mtd->implicititer==QTYENTROPYPMHD) || (mtd->implicitferr==QTYENTROPYUMHD || mtd->implicitferr==QTYENTROPYUMHDENERGYONLY || mtd->implicitferr==QTYENTROPYUMHDMOMONLY) || (fracenergy>0.0 && fracenergy<1.0)){
-      needentropy=1;
-    }
-    else needentropy=0;
+#if(ENTROPYOPT)
+  // whichcall==FIMPLICITCALLTYPEFINALCHECK means final check where if wasn't computing entropy during iterations, need at end so next RK substeps have it ready
+  if(whichcall==FIMPLICITCALLTYPEFINALCHECK || whichcall==FIMPLICITCALLTYPEFINALCHECK2 || *eomtype==EOMENTROPYGRMHD || (mtd->implicititer==QTYENTROPYUMHDMOMONLY)||(mtd->implicititer==QTYENTROPYUMHDENERGYONLY)||(mtd->implicititer==QTYENTROPYUMHD || mtd->implicititer==QTYENTROPYPMHD) || (mtd->implicitferr==QTYENTROPYUMHD || mtd->implicitferr==QTYENTROPYUMHDENERGYONLY || mtd->implicitferr==QTYENTROPYUMHDMOMONLY) || (fracenergy>0.0 && fracenergy<1.0)){
+    needentropy=1;
   }
+#else
+  needentropy=0;
+#endif
+
 
 
 
@@ -1617,6 +1626,7 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
     uu[ENTROPY] = uu0[ENTROPY] + (ru->signgd6)*GS; // KORALTODO SUPERGODMARK: Problem with UMHD,UMHD no matter signgd7.  Ok with URAD,URAD.   Ok with UMHD,ENTROPYUMHD if signgd7 +1 and signgd4 +1.
     // 3) Do MHD+RAD Inversion
     //    PLOOP(pliter,pl) dualfprintf(fail_file,"BEFORE: pl=%d pr=%g\n",pl,pp[pl]);
+    setgasinversionstuff(iter,whichcall,impeps,*errorabs,convabs,maxiter,&newtonstats,&checkoninversiongas,&checkoninversionrad);
     int doradonly=0; failreturn=Utoprimgen_failwrapper(doradonly,radinvmod,showmessages,checkoninversiongas,checkoninversionrad,allowlocalfailurefixandnoreport, finalstep, eomtype, whichcap, EVOLVEUTOPRIM, UNOTHING, uu, q, ptrgeom, dissmeasure, pp, &newtonstats);
     *nummhdinvsreturn++;
 
@@ -1676,6 +1686,7 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
     // so iterating U[ENTROPY,U1,U2,U3]
     //    FTYPE uuorig[NPR]; PLOOP(pliter,pl) uuorig[pl]=uu[pl];
     // 1) Do pure ENTROPYMHD inversion to get pmhd
+    setgasinversionstuff(iter,whichcall,impeps,*errorabs,convabs,maxiter,&newtonstats,&checkoninversiongas,&checkoninversionrad);
     int doradonly=0; int eomtypetemp=EOMENTROPYGRMHD; failreturn=Utoprimgen_failwrapper(doradonly,radinvmod,showmessages,checkoninversiongas,checkoninversionrad,allowlocalfailurefixandnoreport, finalstep, &eomtypetemp, whichcap, EVOLVEUTOPRIM, UNOTHING, uu, q, ptrgeom, dissmeasure, pp, &newtonstats);
     *nummhdinvsreturn++;
     radinvmodalt=*radinvmod; // default
@@ -1877,6 +1888,7 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
     }
     uu[ENTROPY] = uu0[ENTROPY] + (ru->signgd6)*GS;
     // 5) Invert to get pmhd (also does rad inversion, but not expensive so ok)
+    setgasinversionstuff(iter,whichcall,impeps,*errorabs,convabs,maxiter,&newtonstats,&checkoninversiongas,&checkoninversionrad);
     int doradonly=0; failreturn=Utoprimgen_failwrapper(doradonly,radinvmod,showmessages,checkoninversiongas,checkoninversionrad,allowlocalfailurefixandnoreport, finalstep, eomtype, whichcap, EVOLVEUTOPRIM, UNOTHING, uu, q, ptrgeom, dissmeasure, pp, &newtonstats);
     *nummhdinvsreturn++;
     radinvmodalt=*radinvmod; // default
@@ -2171,28 +2183,6 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
     }
   }
 #endif
-
-
-
-
-
-
-#if(PRODUCTION==0)
-  if(debugfail>=3){
-    ///////////
-    //
-    // get stats on any Utoprimgen() newton calls
-    //
-    /////////
-    static long long int newtoncounttotal=0;
-    newtoncounttotal+=newtonstats.lntries;
-    static long long int newtoncounthere=0;
-    newtoncounthere++;
-    dualfprintf(fail_file,"Newtonstat: local=%d total=%d average=%21.15g\n",newtonstats.lntries,newtoncounttotal,(FTYPE)newtoncounttotal/(FTYPE)newtoncounthere);
-  }  
-#endif  
-
-
 
 
 
@@ -6792,12 +6782,12 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
             failreturn=FAILRETURNNOTTOLERROR; mathfailtype=202;
 
             if(iter>trueimpmaxiter){// then reached maximum iterations
-              if(debugfail>=2) dualfprintf(fail_file,"trueimpmaxiter=%d eomtype=%d MAXcheckconv=%d havebackup=%d failreturnallowable=%d: f1report=%g %g %g %g : f1=%g %g %g %g\n",trueimpmaxiter,eomtypelocal,checkconv,havebackup,failreturnallowable,f1report[ru.erefU[0]],f1report[ru.erefU[1]],f1report[ru.erefU[2]],f1report[ru.erefU[3]],f1[ru.erefU[0]],f1[ru.erefU[1]],f1[ru.erefU[2]],f1[ru.erefU[3]]);
+              prod0dualfprintf(debugfail>=2,fail_file,"trueimpmaxiter=%d eomtype=%d MAXcheckconv=%d havebackup=%d failreturnallowable=%d: f1report=%g %g %g %g : f1=%g %g %g %g\n",trueimpmaxiter,eomtypelocal,checkconv,havebackup,failreturnallowable,f1report[ru.erefU[0]],f1report[ru.erefU[1]],f1report[ru.erefU[2]],f1report[ru.erefU[3]],f1[ru.erefU[0]],f1[ru.erefU[1]],f1[ru.erefU[2]],f1[ru.erefU[3]]);
 
-              if(showmessages && debugfail>=2) dualfprintf(fail_file,"iter>trueimpmaxiter=%d : iter exceeded in solve_implicit_lab().  But f1 was allowed error. checkconv=%d (if checkconv=0, could be issue!) : %g %g %g %g : %g %g %g %g : errorabs=%g %g : %g %g %g\n",trueimpmaxiter,checkconv,f1report[ru.erefU[0]],f1report[ru.erefU[1]],f1report[ru.erefU[2]],f1report[ru.erefU[3]],f1[ru.erefU[0]],f1[ru.erefU[1]],f1[ru.erefU[2]],f1[ru.erefU[3]],errorabsf1[0],errorabsf1[1],fracdtuu0,fracuup,fracdtG);
+              prod0dualfprintf(showmessages && debugfail>=2,fail_file,"iter>trueimpmaxiter=%d : iter exceeded in solve_implicit_lab().  But f1 was allowed error. checkconv=%d (if checkconv=0, could be issue!) : %g %g %g %g : %g %g %g %g : errorabs=%g %g : %g %g %g\n",trueimpmaxiter,checkconv,f1report[ru.erefU[0]],f1report[ru.erefU[1]],f1report[ru.erefU[2]],f1report[ru.erefU[3]],f1[ru.erefU[0]],f1[ru.erefU[1]],f1[ru.erefU[2]],f1[ru.erefU[3]],errorabsf1[0],errorabsf1[1],fracdtuu0,fracuup,fracdtG);
               if(REPORTMAXITERALLOWED){
                 if(havebackup){
-                  if(debugfail>=DEBUGLEVELIMPSOLVERMORE) dualfprintf(fail_file,"SWITCHING MODE: Detected MAXITER\n");
+                  prod0dualfprintf(debugfail>=DEBUGLEVELIMPSOLVERMORE,fail_file,"SWITCHING MODE: Detected MAXITER\n");
                   // don't break, just reporting or not
                   mathfailtype=50;
                 }
@@ -6814,6 +6804,8 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
             // not allowable failure
             failreturn=FAILRETURNGENERAL; mathfailtype=203;
 
+
+#if(PRODUCTION==0)
             // KORALTODO: Need backup that won't fail.
             if(debugfail>=2){
               if(canbreak==1 && havebackup==0) dualfprintf(fail_file,"Held u_g, couldn't hold anymore and broke, but error still larger than allowed : iter=%d ijknstepsteppart=%d %d %d %ld %d\n",iter,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart);
@@ -6836,6 +6828,7 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
               }
 
             }// debug
+#endif
 
             // nothing else to do except leave
             break;
@@ -6865,7 +6858,7 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
 
   }// end loop over damping
   if(dampattempt==truenumdampattempts && truenumdampattempts>1){
-    if(debugfail>=2) dualfprintf(fail_file,"Damping failed to avoid max iterations (but error might have dropped: %21.15g %21.15g): failreturn=%d dampattempt=%d eomtypelocal=%d eomtypelocal=%d ijk=%d %d %d\n",errorabsf1[0],errorabsf1[1],failreturn,dampattempt,eomtypelocal,eomtypelocal,ptrgeom->i,ptrgeom->j,ptrgeom->k);
+    prod0dualfprintf(debugfail>=2,fail_file,"Damping failed to avoid max iterations (but error might have dropped: %21.15g %21.15g): failreturn=%d dampattempt=%d eomtypelocal=%d eomtypelocal=%d ijk=%d %d %d\n",errorabsf1[0],errorabsf1[1],failreturn,dampattempt,eomtypelocal,eomtypelocal,ptrgeom->i,ptrgeom->j,ptrgeom->k);
   }
 
   ///////////
@@ -6887,7 +6880,7 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
 
 
 
-  if(ACTUALHARDFAILURE(failreturn)==0){ // deal with radinv issue but only didn't fail
+  if(ACTUALHARDFAILURE(failreturn)==0){ // deal with radinv issue but only if didn't fail
 
     ///////
     //
@@ -7002,12 +6995,12 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
       errorabsf1[0]=errorabsf1borrow[0];
       errorabsf1[1]=errorabsf1borrow[1];
 #if(PRODUCTION==0&&0)
-      dualfprintf(fail_file,"YESSwitched: %g : uu=%g %g : dugas=%g\n",errorabsf1borrow[WHICHERROR],-uuborrow[URAD0],-uuborrow[UU],-dugas);
+      prod0dualfprintf(1,fail_file,"YESSwitched: %g : uu=%g %g : dugas=%g\n",errorabsf1borrow[WHICHERROR],-uuborrow[URAD0],-uuborrow[UU],-dugas);
 #endif
     }
     else{
 #if(PRODUCTION==0&&0)
-      dualfprintf(fail_file,"NOSwitched: %g : uu=%g %g dugas=%g\n",errorabsf1borrow[WHICHERROR],-uuborrow[URAD0],-uuborrow[UU],dugas);
+      prod0dualfprintf(1,fail_file,"NOSwitched: %g : uu=%g %g dugas=%g\n",errorabsf1borrow[WHICHERROR],-uuborrow[URAD0],-uuborrow[UU],dugas);
 #endif
     }
 
