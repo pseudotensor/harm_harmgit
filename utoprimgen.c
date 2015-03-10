@@ -2706,10 +2706,10 @@ int whetherdoentropy(struct of_geom *ptrgeom, FTYPE fracenergy, int entropynotfa
   // so might use energy even in expanding flows.
   if(entropynotfail==1 && energynotfail==1 && radinvmodenergy<=0 && radinvmodentropy>0 && energyerror<okerror){
     doentropy=0;
-    if(debugfail>=3) dualfprintf(fail_file,"Went to energy with errorabs=%g because radinvmodentropy=%d with with entropyerror=%g\n",energyerror,radinvmodentropy,entropyerror);
+    prod0dualfprintf(debugfail>=3,fail_file,"Went to energy with errorabs=%g because radinvmodentropy=%d with with entropyerror=%g\n",energyerror,radinvmodentropy,entropyerror);
   }
   if(entropynotfail==1 && energynotfail==1 && radinvmodenergy>0 && radinvmodentropy<=0 && entropyerror<okerror){
-    if(debugfail>=3) dualfprintf(fail_file,"Went to entropy with errorabs=%g because radinvmodenergy=%d with with energyerror=%g\n",entropyerror,radinvmodenergy,energyerror);
+    prod0dualfprintf(debugfail>=3,fail_file,"Went to entropy with errorabs=%g because radinvmodenergy=%d with with energyerror=%g\n",entropyerror,radinvmodenergy,energyerror);
   }
 
   //  UTOPRIMRADFAILCASE2A;

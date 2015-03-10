@@ -1568,6 +1568,9 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
   //
   // BUT, if hit radinvmod with change in energy, then change in U would be dumped into GAS even if gas<<rad or tau\sim 0.
 
+
+  // f_implicit_umhdurad(iter,uu,uu0,pp,q
+
   if(
      mtd->implicititer==QTYUMHD || mtd->implicititer==QTYUMHDENERGYONLY || mtd->implicititer==QTYUMHDMOMONLY
      || mtd->implicititer==QTYURAD || mtd->implicititer==QTYURADENERGYONLY || mtd->implicititer==QTYURADMOMONLY
@@ -2002,11 +2005,81 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
   int computestate=0;// already computed above
   int computeentropy=needentropy;
   FTYPE chieff;
-  koral_source_rad_calc(computestate,computeentropy,pp, ptrgeom, Gdpl, Gdplabs, &chieff, &Tgas, &Trad, q);
   FTYPE tautot,tautotmax;
+  koral_source_rad_calc(computestate,computeentropy,pp, ptrgeom, Gdpl, Gdplabs, &chieff, &Tgas, &Trad, q);
   calc_tautot_chieff(pp, chieff, ptrgeom, &tautot, &tautotmax);
   *tautotmaxreturn=tautotmax;
 
+
+  // prepare for error or explicit step
+  FTYPE sign[NPR];
+  PLOOP(pliter,pl){
+    sign[pl]=ru->signgd2;
+  }
+  if(ENTROPY>=0){
+    pl=ENTROPY;
+    sign[pl]=ru->signgd4;
+  }
+
+
+  // get fractional change in |R^t_t| as estimate from \tau
+  FTYPE ratchangeRtt;
+  if(1){
+    if(whichcall==FIMPLICITCALLTYPEF1){//FIMPLICITCALLTYPEJAC)
+      ratchangeRtt=calc_approx_ratchangeRtt(q, chieff, realdt);
+      //      get_dtsub(int method, pp, q, uu0, uu, FTYPE *dUother,  FTYPE *CUf, FTYPE *CUimp, FTYPE *Gdpl, FTYPE chi, FTYPE *Gdplabs, struct of_geom *ptrgeom, FTYPE *dtsub)
+    }
+  }
+
+
+
+  // try doing 1 explicit step when doing first implicit iteration.
+  // Needed if rho,u<<urad and want to resolve regions that are optically thin like the jet.  Else would have to have overall small error and that woudl be slower.
+  if(1){
+    if(whichcall==FIMPLICITCALLTYPEF1){//FIMPLICITCALLTYPEJAC)
+
+      if(iter==1){// &&  (implicititer==QTYPMHD || implicititer==QTYPMHDENERGYONLY || implicititer==QTYPMHDMOMONLY)){
+        // then do explicit step
+
+        // explicit step using explicit-like dt
+        FTYPE idtsub0=SMALL+fabs(ratchangeRtt)/realdt;
+        FTYPE explicitdt=MIN(localdt,1.0/idtsub0);
+        FTYPE uue[NPR],ppe[NPR];
+        PLOOP(pliter,pl){
+          ppe[pl] = pp[pl];
+          uue[pl] = -((0- uu0[pl]) + (sign[pl] * explicitdt * Gdpl[pl]));
+        }
+        struct of_state qe;
+        qe=*q;
+            
+
+        // need error to be small so rho,u,v are accurate even if choose overall error allowed that is high.  Important when radiation energy density is higher than rho,u -- especially in nearly optically thin regions like the jet.
+        newtonstats.tryconv=1E-12;
+        newtonstats.tryconvultrarel=1E-12;
+        int doradonly=0; failreturn=Utoprimgen_failwrapper(doradonly,radinvmod,showmessages,checkoninversiongas,checkoninversionrad,allowlocalfailurefixandnoreport, finalstep, eomtype, whichcap, EVOLVEUTOPRIM, UNOTHING, uue, &qe, ptrgeom, dissmeasure, ppe, &newtonstats);
+        *nummhdinvsreturn++;
+        // completed explicit step
+
+        if(failreturn!=UTOPRIMGENWRAPPERRETURNFAILMHD){
+          PLOOP(pliter,pl){
+            pp[pl]=ppe[pl];
+            uu[pl]=uue[pl];
+          }         
+          // get other things usually needed at end of f_implicit()
+          get_state(pp, ptrgeom, q);
+
+          // get updated 4-force using new pp so can compute proper error
+          koral_source_rad_calc(computestate,computeentropy,pp, ptrgeom, Gdpl, Gdplabs, &chieff, &Tgas, &Trad, q);
+          calc_tautot_chieff(pp, chieff, ptrgeom, &tautot, &tautotmax);
+          *tautotmaxreturn=tautotmax;
+
+        }
+
+        // assume uuabs and ppalt/uualt don't need to be accurate.
+      }
+
+    }
+  }
 
 
 
@@ -2021,14 +2094,12 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
   // get abs versions for all pl
   FTYPE uuallabs[NPR]={0.0},Gallabs[NPR]={0.0};
 
-  FTYPE sign[NPR],extrafactor[NPR];
+  FTYPE extrafactor[NPR];
   PLOOP(pliter,pl){
-    sign[pl]= (ru->signgd2);
     extrafactor[pl]=1.0;
   }
   if(ENTROPY>=0){
     pl=ENTROPY;
-    sign[pl]= (ru->signgd4);
     // replace original equation with dS*T equation
     // error function is T*dS so no actual division by T.  Found in mathematica that this works best in difficult precision cases.
     extrafactor[pl]=fabs(Tgas)+TEMPMIN;
@@ -2049,6 +2120,44 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
     Gallabs[pl] = fabs(sign[pl] * localdt * Gdplabs[pl])*extrafactor[pl];
     fnorm[pl] = uuallabs[pl] + Gallabs[pl];
   }
+
+
+
+
+
+
+  /////////
+  //
+  // At this point, even if first iteration, know whether source term is what contributes to changes in uu.
+  // If no absolute force to machine precision for each absolute uu, then implicit stepping can be avoided.
+  // Even if inversions led to no consistent inversion (e.g. raditive inversion uses ceilings and so uu!=uu0 even for G=0), the below is correct.
+  // This even accounts for case where entropy or energy suggest need implicit
+  // This even accounts for when RAD quantities or MHD quantities differ on whether need explicit, since go over all pl always.
+  //
+  // NO: Apparently guess can lead to small G, but next iteration may not.  But generally iterations can slowly grow G, so can't use any iter condition either.
+  // Ok, if iter=1, then check both tau and G (not either, but both) and also ensure only rad inversion changes, no gas inversion changes/issues/failures.
+  ////////
+  *goexplicit=0; // default
+#define ITERCHECKEXPLICITSAFE 1 // iteration by which assume G has settled and can test if can go explicit.
+#if(1)
+  if(whichcall==FIMPLICITCALLTYPEF1){//FIMPLICITCALLTYPEJAC)
+    //      if( (iter>ITERCHECKEXPLICITSAFE || iter==1 && tautotmax<NUMEPSILON ) && failreturn<=UTOPRIMGENWRAPPERRETURNFAILRAD){
+    if( (iter>ITERCHECKEXPLICITSAFE || iter==1 && tautotmax<NUMEPSILON ) ){
+      // iter>1 so at least have estimate of G even if not great.
+      // At iter=1, U->p->G can give G=0, while dUrad=-dUgas can still lead to changes that upon next iteration lead to G!=0.
+      *goexplicit=1;
+      PLOOP(pliter,pl) if(fabs(Gallabs[pl])>NUMEPSILON*fabs(uuallabs[pl])) *goexplicit=0;
+      pl=URAD0;
+      if(fabs(ratchangeRtt*uu[pl])>NUMEPSILON*fabs(uuallabs[pl])) *goexplicit=0;
+      if(fabs(ratchangeRtt*uu0[pl])>NUMEPSILON*fabs(uuallabs[pl])) *goexplicit=0;
+      //  if(*goexplicit) dualfprintf(fail_file,"Went explicit\n");
+      //  else dualfprintf(fail_file,"Stayed implicit\n");
+    }
+  }
+#endif
+
+
+
 
 
 
@@ -2148,41 +2257,6 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
 
 
 
-  /////////
-  //
-  // At this point, even if first iteration, know whether source term is what contributes to changes in uu.
-  // If no absolute force to machine precision for each absolute uu, then implicit stepping can be avoided.
-  // Even if inversions led to no consistent inversion (e.g. raditive inversion uses ceilings and so uu!=uu0 even for G=0), the below is correct.
-  // This even accounts for case where entropy or energy suggest need implicit
-  // This even accounts for when RAD quantities or MHD quantities differ on whether need explicit, since go over all pl always.
-  //
-  // NO: Apparently guess can lead to small G, but next iteration may not.  But generally iterations can slowly grow G, so can't use any iter condition either.
-  // Ok, if iter=1, then check both tau and G (not either, but both) and also ensure only rad inversion changes, no gas inversion changes/issues/failures.
-  ////////
-  *goexplicit=0; // default
-#define ITERCHECKEXPLICITSAFE 1 // iteration by which assume G has settled and can test if can go explicit.
-#if(1)
-  if(whichcall==FIMPLICITCALLTYPEF1){//FIMPLICITCALLTYPEJAC)
-
-    FTYPE ratchangeRtt=calc_approx_ratchangeRtt(q, chieff, realdt);
-
-    //      get_dtsub(int method, pp, q, uu0, uu, FTYPE *dUother,  FTYPE *CUf, FTYPE *CUimp, FTYPE *Gdpl, FTYPE chi, FTYPE *Gdplabs, struct of_geom *ptrgeom, FTYPE *dtsub)
-
-
-    //      if( (iter>ITERCHECKEXPLICITSAFE || iter==1 && tautotmax<NUMEPSILON ) && failreturn<=UTOPRIMGENWRAPPERRETURNFAILRAD){
-    if( (iter>ITERCHECKEXPLICITSAFE || iter==1 && tautotmax<NUMEPSILON ) ){
-      // iter>1 so at least have estimate of G even if not great.
-      // At iter=1, U->p->G can give G=0, while dUrad=-dUgas can still lead to changes that upon next iteration lead to G!=0.
-      *goexplicit=1;
-      PLOOP(pliter,pl) if(fabs(Gallabs[pl])>NUMEPSILON*fabs(uuallabs[pl])) *goexplicit=0;
-      pl=URAD0;
-      if(fabs(ratchangeRtt*uu[pl])>NUMEPSILON*fabs(uuallabs[pl])) *goexplicit=0;
-      if(fabs(ratchangeRtt*uu0[pl])>NUMEPSILON*fabs(uuallabs[pl])) *goexplicit=0;
-      //  if(*goexplicit) dualfprintf(fail_file,"Went explicit\n");
-      //  else dualfprintf(fail_file,"Stayed implicit\n");
-    }
-  }
-#endif
 
 
 
@@ -7953,6 +8027,7 @@ static int get_implicit_iJ(int allowbaseitermethodswitch, int failreturnallowabl
   int eomtypelocallocal=*eomtypelocal; // default
 
   int JDIFFTYPE;
+#if(0)
   if(IMPPTYPE(mtd->implicititer)){
     // with mtd->implicititer==QTYPMHD, no longer expensive so can do JDIFFCENTERED
     // choose:
@@ -7966,7 +8041,9 @@ static int get_implicit_iJ(int allowbaseitermethodswitch, int failreturnallowabl
   else{
     JDIFFTYPE=JDIFFONESIDED;
   }
-
+#else
+  JDIFFTYPE=JDIFFONESIDED; // avoid expense
+#endif
 
   // ensure uu and pp don't get modified by del-shifts to get Jacobian, which can change primitives to order unity at high radiation gamma
   FTYPE uujac[NPR],ppjac[NPR];
