@@ -1,3 +1,4 @@
+#define DOPERF 0
 
 // __WORKINGONIT__ indicates what still in development
 
@@ -216,8 +217,11 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE *errorabs, stru
 #define IMPTRYCONVHIGHTAU (NUMEPSILON*5.0)  // for used implicit solver
 
 /// Funny, even 1E-5 does ok with torus, no worse at Erf~ERADLIMIT instances.  Also, does ~3 iterations, but not any faster than using 1E-12 with ~6 iterations.
-//#define IMPTRYCONV (1.e-12) // works generally to avoid high iterations
+#if(DOPERF)
 #define IMPTRYCONV (1.e-9) // less greedy so doesn't slow things down so much.
+#else
+#define IMPTRYCONV (1.e-12) // works generally to avoid high iterations
+#endif
 #define IMPTRYCONVQUICK (1.e-6) // even less greedy so doesn't slow things down so much.
 #define IMPTRYCONVSUPERQUICK (1.e-3) // even less greedy so doesn't slow things down so much.
 /// error for comparing to sum over all absolute errors
@@ -235,7 +239,14 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE *errorabs, stru
 //#define IMPALLOWCONVCONST (1.e-7)
 //#define IMPALLOWCONVCONST (1.e-6)
 //#define IMPALLOWCONVCONST (1.e-5) // ensure energy conservation equation used as much as possible
-#define IMPALLOWCONVCONST (1.e-3) // with new total error, accurately accounting for error in force balance.
+//#define IMPALLOWCONVCONST (1.e-3) // with new total error, accurately accounting for error in force balance.
+#if(DOPERF)
+#define IMPALLOWCONVCONST (1.e-2)
+#else
+#define IMPALLOWCONVCONST (1.e-5)
+#endif
+
+
 #define IMPALLOWCONVCONSTABS ((FTYPE)(NDIM+2)*IMPALLOWCONVCONST)
 //#define IMPALLOWCONV (MAX(trueimptryconv,IMPALLOWCONVCONST))
 #define IMPALLOWCONV (trueimpallowconv)
@@ -610,7 +621,13 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE *errorabs, stru
 
 
 /// choose to switch to entropy only if energy fails or gives u_g<0.  Or choose to always do both and use best solution.
+#if(DOPERF)
+#define MODEMETHOD MODEPICKBESTSIMPLE // switches with only PMHD method
+#else
 #define MODEMETHOD MODEPICKBEST // general switching method
+#endif
+
+//#define MODEMETHOD MODEPICKBEST // general switching method
 //#define MODEMETHOD MODEPICKBESTSIMPLE // switches with only PMHD method // NOTEFORFAST
 //#define MODEMETHOD MODEPICKBESTSIMPLE2 // switches with all methods but no ITERMODESTAGES attempted
 //#define MODEMETHOD MODESWITCH
@@ -2035,11 +2052,14 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
 
   // try doing 1 explicit step when doing first implicit iteration.
   // Needed if rho,u<<urad and want to resolve regions that are optically thin like the jet.  Else would have to have overall small error and that woudl be slower.
+  int didexplicit=0;
   if(1){
     if(whichcall==FIMPLICITCALLTYPEF1){//FIMPLICITCALLTYPEJAC)
 
-      if(iter==1){// &&  (implicititer==QTYPMHD || implicititer==QTYPMHDENERGYONLY || implicititer==QTYPMHDMOMONLY)){
+      if(iter==1 && f1iter==0){// &&  (implicititer==QTYPMHD || implicititer==QTYPMHDENERGYONLY || implicititer==QTYPMHDMOMONLY)){
         // then do explicit step
+
+
 
         // explicit step using explicit-like dt
         FTYPE idtsub0=SMALL+fabs(ratchangeRtt)/realdt;
@@ -2053,14 +2073,15 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
         qe=*q;
             
 
-        // need error to be small so rho,u,v are accurate even if choose overall error allowed that is high.  Important when radiation energy density is higher than rho,u -- especially in nearly optically thin regions like the jet.
         newtonstats.tryconv=1E-12;
         newtonstats.tryconvultrarel=1E-12;
-        int doradonly=0; failreturn=Utoprimgen_failwrapper(doradonly,radinvmod,showmessages,checkoninversiongas,checkoninversionrad,allowlocalfailurefixandnoreport, finalstep, eomtype, whichcap, EVOLVEUTOPRIM, UNOTHING, uue, &qe, ptrgeom, dissmeasure, ppe, &newtonstats);
+        int eomtypeother=*eomtype;
+        int doradonly=0; int failreturnother=Utoprimgen_failwrapper(doradonly,radinvmod,showmessages,checkoninversiongas,checkoninversionrad,allowlocalfailurefixandnoreport, finalstep, &eomtypeother, whichcap, EVOLVEUTOPRIM, UNOTHING, uue, &qe, ptrgeom, dissmeasure, ppe, &newtonstats);
         *nummhdinvsreturn++;
         // completed explicit step
 
-        if(failreturn!=UTOPRIMGENWRAPPERRETURNFAILMHD){
+        if(failreturnother!=UTOPRIMGENWRAPPERRETURNFAILMHD){
+          didexplicit=1;
           PLOOP(pliter,pl){
             pp[pl]=ppe[pl];
             uu[pl]=uue[pl];
@@ -2068,11 +2089,9 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
           // get other things usually needed at end of f_implicit()
           get_state(pp, ptrgeom, q);
 
-          // get updated 4-force using new pp so can compute proper error
           koral_source_rad_calc(computestate,computeentropy,pp, ptrgeom, Gdpl, Gdplabs, &chieff, &Tgas, &Trad, q);
           calc_tautot_chieff(pp, chieff, ptrgeom, &tautot, &tautotmax);
           *tautotmaxreturn=tautotmax;
-
         }
 
         // assume uuabs and ppalt/uualt don't need to be accurate.
@@ -2139,22 +2158,22 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
   ////////
   *goexplicit=0; // default
 #define ITERCHECKEXPLICITSAFE 1 // iteration by which assume G has settled and can test if can go explicit.
-#if(1)
-  if(whichcall==FIMPLICITCALLTYPEF1){//FIMPLICITCALLTYPEJAC)
-    //      if( (iter>ITERCHECKEXPLICITSAFE || iter==1 && tautotmax<NUMEPSILON ) && failreturn<=UTOPRIMGENWRAPPERRETURNFAILRAD){
-    if( (iter>ITERCHECKEXPLICITSAFE || iter==1 && tautotmax<NUMEPSILON ) ){
-      // iter>1 so at least have estimate of G even if not great.
-      // At iter=1, U->p->G can give G=0, while dUrad=-dUgas can still lead to changes that upon next iteration lead to G!=0.
-      *goexplicit=1;
-      PLOOP(pliter,pl) if(fabs(Gallabs[pl])>NUMEPSILON*fabs(uuallabs[pl])) *goexplicit=0;
-      pl=URAD0;
-      if(fabs(ratchangeRtt*uu[pl])>NUMEPSILON*fabs(uuallabs[pl])) *goexplicit=0;
-      if(fabs(ratchangeRtt*uu0[pl])>NUMEPSILON*fabs(uuallabs[pl])) *goexplicit=0;
-      //  if(*goexplicit) dualfprintf(fail_file,"Went explicit\n");
-      //  else dualfprintf(fail_file,"Stayed implicit\n");
+  if(didexplicit==0){
+    if(whichcall==FIMPLICITCALLTYPEF1){//FIMPLICITCALLTYPEJAC)
+      //      if( (iter>ITERCHECKEXPLICITSAFE || iter==1 && tautotmax<NUMEPSILON ) && failreturn<=UTOPRIMGENWRAPPERRETURNFAILRAD){
+      if( (iter>ITERCHECKEXPLICITSAFE || iter==1 && tautotmax<NUMEPSILON ) ){
+        // iter>1 so at least have estimate of G even if not great.
+        // At iter=1, U->p->G can give G=0, while dUrad=-dUgas can still lead to changes that upon next iteration lead to G!=0.
+        *goexplicit=1;
+        PLOOP(pliter,pl) if(fabs(Gallabs[pl])>NUMEPSILON*fabs(uuallabs[pl])) *goexplicit=0;
+        pl=URAD0;
+        if(fabs(ratchangeRtt*uu[pl])>NUMEPSILON*fabs(uuallabs[pl])) *goexplicit=0;
+        if(fabs(ratchangeRtt*uu0[pl])>NUMEPSILON*fabs(uuallabs[pl])) *goexplicit=0;
+        //  if(*goexplicit) dualfprintf(fail_file,"Went explicit\n");
+        //  else dualfprintf(fail_file,"Stayed implicit\n");
+      }
     }
   }
-#endif
 
 
 
@@ -3072,12 +3091,13 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     }
 
     
+#if(DOPERF)
     // SUPERGODMARK: HACK to force more use of PMHD method to avoid slowdown.    // NOTEFORFAST
     if(q->bsq/pb[RHO]>0.2*BSQORHOLIMIT || q->bsq/pb[UU]>0.2*BSQOULIMIT || pb[UU]/pb[RHO]>0.1*UORHOLIMIT){
       radprimaryevolves=radextremeprimaryevolves=0;
       gasprimaryevolves=gasextremeprimaryevolves=1;      
     }
-
+#endif
 
   
 
@@ -3178,8 +3198,12 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
         // pick best simple method avoids all solvers except PMHD
         if(modemethodlocal==MODEPICKBESTSIMPLE && baseitermethodlist[tryphase1]!=QTYPMHD) continue;
 
+#if(DOPERF)
         // pick best simple 2 method avoids all itermodestages methods
+        if(modemethodlocal==MODEPICKBESTSIMPLE && itermodelist[tryphase1]==ITERMODESTAGES) continue;
+#else
         if(modemethodlocal==MODEPICKBESTSIMPLE2 && itermodelist[tryphase1]==ITERMODESTAGES) continue;
+#endif
 
         // avoid method in case very non-dominant since then would give errorneous (critically bad even) results.  If methods that can use fail, have to revert to entropy or fixups.
         if(radextremeprimaryevolves && baseitermethodlist[tryphase1]==QTYPMHD) continue;
@@ -3642,10 +3666,17 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
       int baseitermethodlist[NUMPHASESENT]={QTYPMHD,QTYENTROPYUMHD,QTYURAD,QTYPRAD,QTYPMHD,QTYENTROPYUMHD,QTYURAD,QTYPRAD}; int whichfirstpmhd=0,whichfirstentropyumhd=1,whichfirsturad=2,whichfirstprad=3;
       int itermodelist[NUMPHASESENT]={ITERMODENORMAL,ITERMODENORMAL,ITERMODENORMAL,ITERMODENORMAL,ITERMODESTAGES,ITERMODESTAGES,ITERMODESTAGES,ITERMODESTAGES};
-      FTYPE trueimptryconvlist[NUMPHASESENT]={IMPTRYCONV,IMPTRYCONVQUICK,IMPTRYCONVQUICK,IMPTRYCONVQUICK,IMPTRYCONVQUICK,IMPTRYCONVQUICK,IMPTRYCONVQUICK,IMPTRYCONVQUICK};
+#if(DOPERF)
+      FTYPE trueimptryconvlist[NUMPHASESENT]={IMPTRYCONVSUPERQUICK,IMPTRYCONVSUPERQUICK,IMPTRYCONVSUPERQUICK,IMPTRYCONVSUPERQUICK,IMPTRYCONVSUPERQUICK,IMPTRYCONVSUPERQUICK,IMPTRYCONVSUPERQUICK,IMPTRYCONVSUPERQUICK};
+      FTYPE trueimpokconvlist[NUMPHASESENT]={IMPTRYCONVSUPERQUICK,IMPTRYCONVSUPERQUICK,IMPTRYCONVSUPERQUICK,IMPTRYCONVSUPERQUICK,IMPTRYCONVSUPERQUICK,IMPTRYCONVSUPERQUICK,IMPTRYCONVSUPERQUICK,IMPTRYCONVSUPERQUICK};
+      FTYPE trueimpallowconvconstlist[NUMPHASESENT]={IMPALLOWCONVCONST,IMPALLOWCONVCONST,IMPALLOWCONVCONST,IMPALLOWCONVCONST,IMPALLOWCONVCONST,IMPALLOWCONVCONST,IMPALLOWCONVCONST,IMPALLOWCONVCONST};
+      int trueimpmaxiterlist[NUMPHASESENT]={IMPMAXITERSUPERQUICK+1,IMPMAXITERSUPERQUICK+1,IMPMAXITERSUPERQUICK+1,IMPMAXITERSUPERQUICK+1,IMPMAXITERSUPERQUICK+1,IMPMAXITERSUPERQUICK+1,IMPMAXITERSUPERQUICK+1,IMPMAXITERSUPERQUICK+1};
+#else
+      FTYPE trueimptryconvlist[NUMPHASESENT]={IMPTRYCONVQUICK,IMPTRYCONVQUICK,IMPTRYCONVQUICK,IMPTRYCONVQUICK,IMPTRYCONVQUICK,IMPTRYCONVQUICK,IMPTRYCONVQUICK,IMPTRYCONVQUICK};
       FTYPE trueimpokconvlist[NUMPHASESENT]={IMPTRYCONVQUICK,IMPTRYCONVQUICK,IMPTRYCONVQUICK,IMPTRYCONVQUICK,IMPTRYCONVQUICK,IMPTRYCONVQUICK,IMPTRYCONVQUICK,IMPTRYCONVQUICK};
       FTYPE trueimpallowconvconstlist[NUMPHASESENT]={IMPALLOWCONVCONST,IMPALLOWCONVCONST,IMPALLOWCONVCONST,IMPALLOWCONVCONST,IMPALLOWCONVCONST,IMPALLOWCONVCONST,IMPALLOWCONVCONST,IMPALLOWCONVCONST};
-      int trueimpmaxiterlist[NUMPHASESENT]={IMPMAXITERQUICK,IMPMAXITERQUICK,IMPMAXITERQUICK,IMPMAXITERQUICK,IMPMAXITERMEDIUM,IMPMAXITERMEDIUM,IMPMAXITERMEDIUM,IMPMAXITERMEDIUM};
+      int trueimpmaxiterlist[NUMPHASESENT]={IMPMAXITERQUICK,IMPMAXITERQUICK,IMPMAXITERQUICK,IMPMAXITERQUICK,IMPMAXITERQUICK,IMPMAXITERQUICK,IMPMAXITERQUICK,IMPMAXITERQUICK};
+#endif
       int truenumdampattemptslist[NUMPHASESENT]={NUMDAMPATTEMPTSQUICK,NUMDAMPATTEMPTSQUICK,NUMDAMPATTEMPTSQUICK,NUMDAMPATTEMPTSQUICK,NUMDAMPATTEMPTSQUICK,NUMDAMPATTEMPTSQUICK,NUMDAMPATTEMPTSQUICK,NUMDAMPATTEMPTSQUICK};
       int modprimlist[NUMPHASESENT]={0,0,0,0,1,0,0,0};
       int checkradinvlist[NUMPHASESENT]={0,1,1,1,0,1,1,1};
@@ -3696,8 +3727,13 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
         // pick best simple method avoids all solvers except PMHD
         if(modemethodlocal==MODEPICKBESTSIMPLE && baseitermethodlist[tryphase1]!=QTYPMHD) continue;
 
+#if(DOPERF)
+        // pick best simple 2 method avoids all itermodestages methods
+        if(modemethodlocal==MODEPICKBESTSIMPLE && itermodelist[tryphase1]==ITERMODESTAGES) continue;
+#else
         // pick best simple 2 method avoids all itermodestages methods
         if(modemethodlocal==MODEPICKBESTSIMPLE2 && itermodelist[tryphase1]==ITERMODESTAGES) continue;
+#endif
 
         // avoid method in case very non-dominant since then would give errorneous (critically bad even) results.  If methods that can use fail, have to revert to entropy or fixups.
         if(radextremeprimaryevolves && (baseitermethodlist[tryphase1]==QTYPMHD || baseitermethodlist[tryphase1]==QTYENTROPYUMHD) ) continue;
@@ -4163,11 +4199,19 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
         int whichcapcold=CAPTYPEBASIC;
         int itermodecold=ITERMODECOLD;
         int baseitermethodcold=QTYPMHD;
+#if(DOPERF)
+        FTYPE trueimptryconvcold=IMPTRYCONVSUPERQUICK;
+        FTYPE trueimpokconvcold=IMPALLOWCONVCONST;
+        FTYPE trueimpallowconvcold=IMPALLOWCONVCONST;
+        int trueimpmaxitercold=IMPMAXITERSUPERQUICK+1;
+        int truenumdampattemptscold=NUMDAMPATTEMPTSQUICK;
+#else
         FTYPE trueimptryconvcold=IMPTRYCONVQUICK;
-        FTYPE trueimpokconvcold=IMPTRYCONVQUICK;
-        FTYPE trueimpallowconvcold=IMPTRYCONVQUICK;
+        FTYPE trueimpokconvcold=IMPALLOWCONVCONST;
+        FTYPE trueimpallowconvcold=IMPALLOWCONVCONST;
         int trueimpmaxitercold=IMPMAXITERQUICK;
         int truenumdampattemptscold=NUMDAMPATTEMPTSQUICK;
+#endif
       
         if(reducetoquick){
           if(reducetoquick==1){
@@ -6149,6 +6193,7 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
       if(!notfinite){
     
 
+#define SKIPJACCOMPUTE (DOPERF)
         if(SKIPJACCOMPUTE==0 || SKIPJACCOMPUTE==1 && (iter<=4 || iter>4 && iter%4==0)){ // only get new Jacobian before 5th iteration and then only if every 3rd iteration since assume Jacobian itself doesn't change so rapidly.
 
           /////////
@@ -6615,6 +6660,11 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
         } // end if checkconv==1
 
   
+#if(DOPERF)
+        // performance maintainer needed for large parallel runs where various cores might get very different iterations on average (e.g. pole-BH corner vs. rest).
+        if(iter>4) break;
+#endif
+
       }// end if finite
 
 
