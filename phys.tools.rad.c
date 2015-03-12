@@ -603,17 +603,17 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE *errorabs, stru
 
 
 
-#define FAILRETURNGOEXPLICIT -1
+#define FAILRETURNGOTRIVIALEXPLICIT -1
 #define FAILRETURNNOFAIL 0
 #define FAILRETURNGENERAL 1
 #define FAILRETURNJACISSUE 2
 #define FAILRETURNMODESWITCH 3
 #define FAILRETURNNOTTOLERROR 4
 
-#define ACCEPTASNOFAILURE(failreturn) (failreturn==FAILRETURNNOFAIL || failreturn==FAILRETURNNOTTOLERROR || failreturn==FAILRETURNGOEXPLICIT)
-//#define GOODNOFAILURE(failreturn) (failreturn==FAILRETURNNOFAIL || failreturn==FAILRETURNGOEXPLICIT)
-#define NOTACTUALFAILURE(failreturn) (failreturn==FAILRETURNNOFAIL || failreturn==FAILRETURNMODESWITCH || failreturn==FAILRETURNGOEXPLICIT)
-#define NOTBADFAILURE(failreturn) (failreturn==FAILRETURNNOFAIL || failreturn==FAILRETURNMODESWITCH  || failreturn==FAILRETURNNOTTOLERROR || failreturn==FAILRETURNGOEXPLICIT)
+#define ACCEPTASNOFAILURE(failreturn) (failreturn==FAILRETURNNOFAIL || failreturn==FAILRETURNNOTTOLERROR || failreturn==FAILRETURNGOTRIVIALEXPLICIT)
+//#define GOODNOFAILURE(failreturn) (failreturn==FAILRETURNNOFAIL || failreturn==FAILRETURNGOTRIVIALEXPLICIT)
+#define NOTACTUALFAILURE(failreturn) (failreturn==FAILRETURNNOFAIL || failreturn==FAILRETURNMODESWITCH || failreturn==FAILRETURNGOTRIVIALEXPLICIT)
+#define NOTBADFAILURE(failreturn) (failreturn==FAILRETURNNOFAIL || failreturn==FAILRETURNMODESWITCH  || failreturn==FAILRETURNNOTTOLERROR || failreturn==FAILRETURNGOTRIVIALEXPLICIT)
 
 #define ACTUALHARDFAILURE(failreturn) (failreturn==FAILRETURNGENERAL || failreturn==FAILRETURNJACISSUE)
 #define ACTUALHARDORSOFTFAILURE(failreturn) (failreturn==FAILRETURNGENERAL || failreturn==FAILRETURNJACISSUE || failreturn==FAILRETURNNOTTOLERROR)
@@ -2150,6 +2150,8 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
 
   /////////
   //
+  // See if can do "trivial" explicit corresponding to machine level version of G=0 (i.e. when changes to u would be not noticible even if G is non-zero)
+  //
   // At this point, even if first iteration, know whether source term is what contributes to changes in uu.
   // If no absolute force to machine precision for each absolute uu, then implicit stepping can be avoided.
   // Even if inversions led to no consistent inversion (e.g. raditive inversion uses ceilings and so uu!=uu0 even for G=0), the below is correct.
@@ -2161,7 +2163,7 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
   ////////
   *goexplicit=0; // default
 #define ITERCHECKEXPLICITSAFE 1 // iteration by which assume G has settled and can test if can go explicit.
-  if(didexplicit==0){
+  if(1){
     if(whichcall==FIMPLICITCALLTYPEF1){//FIMPLICITCALLTYPEJAC)
       //      if( (iter>ITERCHECKEXPLICITSAFE || iter==1 && tautotmax<NUMEPSILON ) && failreturn<=UTOPRIMGENWRAPPERRETURNFAILRAD){
       if( (iter>ITERCHECKEXPLICITSAFE || iter==1 && tautotmax<NUMEPSILON ) ){
@@ -2552,7 +2554,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       usedimplicit=1;
     }
     else{
-      failfinalreturn=-1; // indicates to koral_source_rad() that implicit says just do trivial explicit
+      failfinalreturn=FAILRETURNGOTRIVIALEXPLICIT; // indicates to koral_source_rad() that implicit says just do trivial explicit
       noprims=1;
       *eomtype=EOMGRMHD;
       goexplicit=1;
@@ -2599,7 +2601,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       usedimplicit=1;
     }
     else{
-      failfinalreturn=-1; // indicates to koral_source_rad() that implicit says just do trivial explicit
+      failfinalreturn=FAILRETURNGOTRIVIALEXPLICIT; // indicates to koral_source_rad() that implicit says just do trivial explicit
       noprims=1;
       *eomtype=EOMENTROPYGRMHD;
       goexplicit=1;
@@ -2785,7 +2787,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
         usedimplicit=1;
       }
       else{
-        failfinalreturn=-1; // indicates to koral_source_rad() that implicit says just do trivial explicit
+        failfinalreturn=FAILRETURNGOTRIVIALEXPLICIT; // indicates to koral_source_rad() that implicit says just do trivial explicit
         noprims=1;
         *eomtype=EOMDEFAULT;
         iters=itersentropy;
@@ -2810,7 +2812,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       if(ACTUALHARDFAILURE(failreturnenergy) && debugfail>=2) dualfprintf(fail_file,"Decided didn't meet go-entropy condition but failed: failreturn=%d eomtypelocal=%d\n",failreturn,eomtypelocal);
     }
     else{
-      failfinalreturn=-1; // indicates to koral_source_rad() that implicit says just do trivial explicit
+      failfinalreturn=FAILRETURNGOTRIVIALEXPLICIT; // indicates to koral_source_rad() that implicit says just do trivial explicit
       noprims=1;
       *eomtype=EOMDEFAULT;
       iters=itersentropy;
@@ -3368,7 +3370,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
           errorabslist[tryphase1][0]=errorabsenergy[0];
           errorabslist[tryphase1][1]=errorabsenergy[1];
 
-          if(failreturnenergy==FAILRETURNGOEXPLICIT){
+          if(failreturnenergy==FAILRETURNGOTRIVIALEXPLICIT){
             lpflagenergybest=*lpflag;
             lpflagradenergybest=*lpflagrad;
             radinvmodenergybest=radinvmodenergy;
@@ -3879,7 +3881,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
           errorabslist[tryphase1][0]=errorabsentropy[0];
           errorabslist[tryphase1][1]=errorabsentropy[1];
 
-          if(failreturnentropy==FAILRETURNGOEXPLICIT){
+          if(failreturnentropy==FAILRETURNGOTRIVIALEXPLICIT){
             lpflagentropybest=*lpflag;
             lpflagradentropybest=*lpflagrad;
             radinvmodentropybest=radinvmodentropy;
@@ -4262,7 +4264,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
         failreturncold=koral_source_rad_implicit_mode(modemethodlocal,0,0,havebackup, didentropyalready, &eomtypecold, whichcapcold, itermodecold, &baseitermethodcold, trueimptryconvcold, trueimpokconvcold, trueimpallowconvcold, trueimpmaxitercold, truenumdampattemptscold, fracenergycold, dissmeasure, &radinvmodcold, pbcold, uubcold, piin, Uiin, Ufin, CUf, CUimp, ptrgeom, &qcold, dUother ,dUcompcold, errorabscold, errorabscoldbest, &iterscold, &f1iterscold, &nummhdinvscold, &nummhdstepscold);
         nummhdsteps+=nummhdstepscold;
 
-        if(failreturncold==FAILRETURNGOEXPLICIT) goexplicitcold=1;
+        if(failreturncold==FAILRETURNGOTRIVIALEXPLICIT) goexplicitcold=1;
         // store these in case cold ultimately used
         lpflagcold=*lpflag;
         lpflagradcold=*lpflagrad;
@@ -4309,7 +4311,17 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     if(goexplicitentropy==1) doentropy=0; // override
 
 
-    // check if doing implicit (don't care about cold check)
+
+
+    // check if doing implicit
+    // 1) check if used entropy
+    // 2) check if used energy
+    // 3) check if used cold
+    // 4) else if none, then no implicit solution
+
+    // 4a) If goexplicit{energy,entropy}=1, then explicit will be done as indicated by failfinalreturn=-1
+    // 4b) Else, real failure, so will just avoid G and do outer MHD/RAD inversion that assumes G=0.
+
     if(goexplicitentropy==0 && goexplicitenergy==0){
       usedimplicit=1;
 
@@ -4418,17 +4430,18 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
         *lpflag=UTOPRIMNOFAIL;
         *lpflagrad=UTOPRIMRADNOFAIL;
         noprims=1;
-        failfinalreturn=1;
         *eomtype=EOMDEFAULT;
         methodindex[EOMTYPEINDEX] == *eomtype;
 
-        if(debugfail>=3) dualfprintf(fail_file,"Went explicit: eenergy=%g eentropy=%g ienergy=%d ientropy=%d\n",errorabsenergy[WHICHERROR],errorabsentropy[WHICHERROR],itersenergy,itersentropy);
-        if(goexplicitenergy==1 || goexplicitentropy==1){ usedexplicitgood=1; failfinalreturn=-1;}
+        failfinalreturn=1;
+        if(goexplicitenergy==1 || goexplicitentropy==1){ usedexplicitgood=1; failfinalreturn=FAILRETURNGOTRIVIALEXPLICIT;}
         else{ usedexplicitkindabad=1; failfinalreturn=1;} // __WORKINGONIT__: might want to treat as actual failure if QTYPMHD mode since lpflag never set.
+
+        prod0dualfprintf(debugfail>=3,fail_file,"Went explicit: eenergy=%g eentropy=%g ienergy=%d ientropy=%d\n",errorabsenergy[WHICHERROR],errorabsentropy[WHICHERROR],itersenergy,itersentropy);
       }
       else{ // actual failure
         // if no source, then will do normal inversion (no change to *eomtype) as if G=0.
-        methodindex[EOMTYPEINDEX] == *eomtype;
+        methodindex[EOMTYPEINDEX] = *eomtype;
         *lpflag=UTOPRIMFAILCONV;
         *lpflagrad=UTOPRIMRADFAILCASE1A;
         if(errorabsenergy[WHICHERROR]<errorabsentropy[WHICHERROR]){
@@ -4440,10 +4453,12 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
           errorabs[0]=errorabsentropy[0];
           errorabs[1]=errorabsentropy[1];
         }
-        if(debugfail>=2) dualfprintf(fail_file,"No source: eenergy=%g eentropy=%g ienergy=%d ientropy=%d\n",errorabsenergy[WHICHERROR],errorabsentropy[WHICHERROR],itersenergy,itersentropy);
         failfinalreturn=1;
         usedexplicitbad=1;
+
+        prod0dualfprintf(debugfail>=2,fail_file,"No source: eenergy=%g eentropy=%g ienergy=%d ientropy=%d\n",errorabsenergy[WHICHERROR],errorabsentropy[WHICHERROR],itersenergy,itersentropy);
       }
+
       // set prims and dU, but shouldn't be used
       PLOOP(pliter,pl){
         pb[pl]=pbbackup[pl];
@@ -4460,7 +4475,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     } // end if using implicit solution
 
 
-    if(*eomtype>=0 && failreturnenergy>=0 && failreturnentropy>=0 && failreturncold>=0) dualfprintf(fail_file,"WTF: %d %d %d : %d : %d : %d\n",failreturnentropy,failreturnenergy,failreturncold,failfinalreturn,noprims,*eomtype);
+    prod0dualfprintf(*eomtype>=0 && failreturnenergy>=0 && failreturnentropy>=0 && failreturncold>=0,fail_file,"WTF: %d %d %d : %d : %d : %d\n",failreturnentropy,failreturnenergy,failreturncold,failfinalreturn,noprims,*eomtype);
 
   }// end MODEPICKBEST || MODEPICKBESTSIMPLE || MODEPICKBESTSIMPLE2
 
@@ -4499,7 +4514,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
 
 
-
+#if(PRODUCTION==0)
   // check if uncaught nan/inf
   int caughtnan=0;
   PLOOP(pliter,pl){
@@ -4537,7 +4552,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     noprims=1;
     //      failreturn=0;
   }
-  
+#endif  
 
 
 
@@ -4562,11 +4577,12 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
 
 
-  
-  if(PRODUCTION==0&&errorabs[WHICHERROR]>IMPALLOWCONVCONSTABS && (usedenergy||usedentropy||usedcold)){
+#if(PRODUCTION==0)
+  if(errorabs[WHICHERROR]>IMPALLOWCONVCONSTABS && (usedenergy||usedentropy||usedcold)){
     dualfprintf(fail_file,"WTF2: %g : %d %d %d : %d %d\n",errorabs[WHICHERROR],usedenergy,usedentropy,usedcold,usedrameshenergy,usedrameshentropy);
     myexit(666);
   }
+#endif
 
 
 
@@ -9425,13 +9441,13 @@ int koral_source_rad(int whichradsourcemethod, FTYPE *piin, FTYPE *pb, FTYPE *pf
     }// end if failed to do implicit
     else if(failimplicit==0){
       // no failure in implicit, then just return
-      // and if did implicit, then better pf guess
+      // and if did implicit, then better pf guess for any future inversions
       PLOOP(pliter,pl) pf[pl]=pborig[pl];
       *didreturnpf=1;
     }
     else{
       *didreturnpf=0;
-      // e.g. if failimplicit==FAILRETURNGOEXPLICIT, then aborted implicit and letting trivial explicit operate.
+      // e.g. if failimplicit==FAILRETURNGOTRIVIALEXPLICIT, then aborted implicit and letting trivial explicit operate.
     }
     //    if(debugfail>=2) dualfprintf(fail_file,"Good: Imlicit good.: ijk=%d %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
     return(0);
