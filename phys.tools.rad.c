@@ -344,6 +344,9 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE *errorabs, stru
 #define RADDAMPDELTA (0.5) // choose, but best to choose 1/Integer so no machine precision issues.
 #define RADDAMPUNDELTA (1.0/RADDAMPDELTA)
 
+// whether to try explicit first before implicit steps
+#define TRYFIRSTEXPLICIT 1
+
 
 #define TAUFAILLIMIT (2.0/3.0) // at what \tau below which to assume "failure1" in u2p_rad() means should be moving at gammamax rather than not moving.
 
@@ -2053,7 +2056,7 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
   // try doing 1 explicit step when doing first implicit iteration.
   // Needed if rho,u<<urad and want to resolve regions that are optically thin like the jet.  Else would have to have overall small error and that woudl be slower.
   int didexplicit=0;
-  if(1){
+#if(TRYFIRSTEXPLICIT)
     if(whichcall==FIMPLICITCALLTYPEF1){//FIMPLICITCALLTYPEJAC)
 
       if(iter==1 && f1iter==0){// &&  (implicititer==QTYPMHD || implicititer==QTYPMHDENERGYONLY || implicititer==QTYPMHDMOMONLY)){
@@ -2098,7 +2101,7 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
       }
 
     }
-  }
+#endif
 
 
 
