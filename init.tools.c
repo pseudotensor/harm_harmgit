@@ -898,7 +898,7 @@ int user1_get_maxes(int eqslice, FTYPE *parms, FTYPE (*prim)[NSTORE2][NSTORE3][N
   FTYPE dxdxp[NDIM][NDIM];
   FTYPE r,th;
   int gotnormal;
-  FTYPE rin,rout;
+  FTYPE rin,rout,THETAEQ;
   int loc;
 
   
@@ -906,8 +906,9 @@ int user1_get_maxes(int eqslice, FTYPE *parms, FTYPE (*prim)[NSTORE2][NSTORE3][N
 
   rin=parms[0];
   rout=parms[1];
+  THETAEQ=parms[2];
   if(rout<=rin) rout=2.0*rin; // default (a bit model dependent -- user should really have set rout)
-  dualfprintf(fail_file,"rin=%g rout=%g\n",rin,rout);
+  dualfprintf(fail_file,"rin=%g rout=%g THETAEQ=%g\n",rin,rout,THETAEQ);
 
   bsq_max[0] = SMALL;
   ptot_max[0]= 0.;
@@ -927,7 +928,7 @@ int user1_get_maxes(int eqslice, FTYPE *parms, FTYPE (*prim)[NSTORE2][NSTORE3][N
     if(eqslice){
      
 
-      FTYPE THETAEQ=0.3;
+      //      FTYPE THETAEQ=0.3;
  
       if((r>rin&&r<rout)&&(fabs(th-M_PI*0.5)<THETAEQ)){
         gotnormal=1;

@@ -505,7 +505,7 @@ int init_global(void)
   if(DOWALDDEN) rescaletype=5; // like 4, but b^2/rho scales as 1/r away from horizon
 
   BSQORHOLIMIT=2E2; // was 1E2 but latest BC test had 1E3 // CHANGINGMARK
-  BSQOULIMIT=1E5; // was 1E3 but latest BC test had 1E4
+  BSQOULIMIT=1E8; // was 1E3 but latest BC test had 1E4.  was 1E5 but needed like 1E7 to 1E8 to avoid gastemperature in funnel being repeatedly forced up even when Compton and other processes keep low.  Also makes next solution guess for implicit solver very different, and takes longer to converge.
   UORHOLIMIT=1E10; // has to be quite high, else hit floor in high optical depth cases and run-away injection of u and then rho.
   RHOMIN = 1E-4;
   UUMIN = 1E-6;
@@ -2329,13 +2329,24 @@ int init_global(void)
       for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=4.0;
       //for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=0.1;
     }
-
+    
     if(totalsize[1]<=64){
       DTr = 100; //number of time steps for restart dumps
     }
     else{
       DTr = 1000;
     }
+
+    if(WHICHPROBLEM==RADDONUT && totalsize[1]>64){
+      // then, not testing, so full production mode for dumps
+      for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=50.0;
+      DTdumpgen[FIELDLINEDUMPTYPE]=4.0;
+      DTdumpgen[IMAGEDUMPTYPE]=4.0;
+      DTr=5000;
+    }
+
+
+
     // tf = 100*DTdumpgen[0]; // 100 dumps(?)
     //    tf = 2000*DTdumpgen[0]; // koral in default setup does 1000 dumps
     tf = 1E5;
@@ -8161,6 +8172,8 @@ int get_maxes(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE *bsq_max, FTYPE *ptot_
     parms[0]=rinfield;
     parms[1]=routfield;
   }
+
+  parms[2]=0.05; // for THETAEQ for near equator only so easy to understand how beta enters.  Still should check vertical distribution.
 
   funreturn=user1_get_maxes(eqslice, parms,prim, bsq_max, ptot_max, beta_min);
   if(funreturn!=0) return(funreturn);

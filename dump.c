@@ -711,7 +711,7 @@ int debugdump(long dump_cnt)
 
   whichdump=DEBUGDUMPTYPE;
   datatype=MPI_CTYPE;
-  strcpy(fileprefix,"dumps/debug");
+  strcpy(fileprefix,"dumps/debugdump");
   strcpy(fileformat,"%04ld");
   strcpy(filesuffix,"");
   
@@ -769,7 +769,7 @@ int enodebugdump(long dump_cnt)
   whichdump=ENODEBUGDUMPTYPE;
   //  datatype=MPI_FTYPE;
   datatype=MPI_CTYPE;
-  strcpy(fileprefix,"dumps/enodebug");
+  strcpy(fileprefix,"dumps/enodebugdump");
   strcpy(fileformat,"%04ld");
   strcpy(filesuffix,"");
   

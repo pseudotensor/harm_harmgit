@@ -3859,7 +3859,7 @@ int poledeath(int whichx2,
                   avgresult=MACP0A1(prim,ri,rj,rk,pl);
                 }
                 
-                if(fabs(avgresult)>myvalue){// only use reference if it is larger than polar value.  That is, trying to avoid evacuation, and using smaller value of density only makes things worse, not better.
+                if(1||fabs(avgresult)>myvalue){// only use reference if it is larger than polar value.  That is, trying to avoid evacuation, and using smaller value of density only makes things worse, not better.
                   MACP0A1(prim,i,j,k,pl) = avgresult;
                   madechange++;
                 }
@@ -4001,7 +4001,7 @@ int poledeath(int whichx2,
           ///////////////////////////////////
           if(ispstag==0){
             PBOUNDLOOP(pliter,pl){
-              if(!(pl==RHO || pl==UU || pl==U1 || pl==U2 || pl==U3 || pl==ENTROPY || pl==B1 || pl==B2 || pl==B3 || pl==URAD0 || pl==URAD1 || pl==URAD2 || pl==URAD3)) continue;
+              if((pl==RHO || pl==UU || pl==U1 || pl==U2 || pl==U3 || pl==ENTROPY || pl==B1 || pl==B2 || pl==B3 || pl==URAD0 || pl==URAD1 || pl==URAD2 || pl==URAD3)) continue;
 
               if(doavginradius[pl]) ftemp=THIRD*(MACP0A1(prim,rim1,rj,rk,pl) + MACP0A1(prim,ri,rj,rk,pl) + MACP0A1(prim,rip1,rj,rk,pl));
               else ftemp=MACP0A1(prim,ri,rj,rk,pl);
@@ -6032,7 +6032,12 @@ void debugfixupaltdeath_bc(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 
         // stronger restrictions for b on prad0
         if(URAD0>=0){
+          //FTYPE Tgaslocal=compute_temp_simple(i,j,k,CENT,prfixtryb[RHO],prfixtryb[UU]);
           prfixtryb[URAD0] = MIN(MIN(prfixtryb[RHO],prfixtryb[URAD0]),10.0*prfixtryb[UU]); // no more than Erf/rho=1 and Erf/u=10
+          prfixtryb[URAD0] = MAX(prfixtryb[URAD0],prfixtryb[UU]); // avoid drop-outs in Erf
+          // try thermal equilibrium (arad Tgas^4 = urad )
+          //          prfixtryb[URAD0] = calc_LTE_EfromT(Tgaslocal);
+
           ufixtryb[URAD0]=MAX(-prfixtryb[URAD0],ufixtryb[URAD0]);
         }
 
