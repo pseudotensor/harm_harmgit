@@ -1554,7 +1554,7 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
   
 
 
-#if(MODEMETHOD==MODEENERGY ||MODEMETHOD==MODEENTROPY ||MODEMETHOD==MODESWITCH)
+#if(MODEMETHOD==MODEENERGY ||MODEMETHOD==MODEENTROPY ||MODEMETHOD==MODESWITCH) // currently only ones that allow change
   /////////
   //
   // setup method and signs (only needed per f_implicit if baseitermethod can change, because already do per iter in main implicit loop
@@ -1576,6 +1576,7 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
   if(whichcall==FIMPLICITCALLTYPEFINALCHECK || whichcall==FIMPLICITCALLTYPEFINALCHECK2 || *eomtype==EOMENTROPYGRMHD || (mtd->implicititer==QTYENTROPYUMHDMOMONLY)||(mtd->implicititer==QTYENTROPYUMHDENERGYONLY)||(mtd->implicititer==QTYENTROPYUMHD || mtd->implicititer==QTYENTROPYPMHD) || (mtd->implicitferr==QTYENTROPYUMHD || mtd->implicitferr==QTYENTROPYUMHDENERGYONLY || mtd->implicitferr==QTYENTROPYUMHDMOMONLY) || (fracenergy>0.0 && fracenergy<1.0)){
     needentropy=1;
   }
+  else needentropy=0;
 #else
   // then assume might need entropy generally
   needentropy=1;
@@ -2009,7 +2010,7 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
 
 
 
-#if(MODEMETHOD==MODEENERGY ||MODEMETHOD==MODEENTROPY ||MODEMETHOD==MODESWITCH)
+#if(MODEMETHOD==MODEENERGY ||MODEMETHOD==MODEENTROPY ||MODEMETHOD==MODESWITCH) // currently only ones that allow change
   ///////////
   //
   // check which baseitermethod we should really be using based upon any inversions done above
@@ -2599,9 +2600,12 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
 
 
 
-  failreturn*=(failreturn>failreturnallowable);
-  prod0dualfprintf(showmessages && debugfail>=2,fail_file,"Utoprimgen_wrapper() failed, must return out of f_implicit(): %d vs. %d\n",failreturn,failreturnallowable);
-  return(failreturn);
+  if(failreturn && failreturn>failreturnallowable){
+    prod0dualfprintf(showmessages && debugfail>=2,fail_file,"Utoprimgen_wrapper() failed, must return out of f_implicit(): %d vs. %d\n",failreturn,failreturnallowable);
+    return(failreturn);
+  }
+
+  return(0);
   //  else{
   //    // save better guess for later inversion (including this inversion above) from this inversion
   //    PLOOP(pliter,pl) pp0[pl]=pp[pl];
@@ -8482,7 +8486,7 @@ static int get_implicit_iJ(int allowbaseitermethodswitch, int failreturnallowabl
   int eomtypelocallocal=*eomtypelocal; // default
 
   int JDIFFTYPE;
-#if(0)
+#if(DOPERF==0)
   if(IMPPTYPE(mtd->implicititer)){
     // with mtd->implicititer==QTYPMHD, no longer expensive so can do JDIFFCENTERED
     // choose:

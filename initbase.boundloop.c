@@ -81,16 +81,16 @@ void set_numbnd(int boundvartype, int *numbnd, int *numnpr)
   }
   else if(boundvartype==BOUNDPRIMSIMPLETYPE || boundvartype==BOUNDPSTAGSIMPLETYPE){ // simple means only 1 cell
     // used to bound after fixups that only modify +-1 cell currently
-    numbnd[1]=SHIFT1;
-    numbnd[2]=SHIFT2;
-    numbnd[3]=SHIFT3;      
+    numbnd[1]=NUMPFLAGBND1;
+    numbnd[2]=NUMPFLAGBND2;
+    numbnd[3]=NUMPFLAGBND3;      
     *numnpr = NPRBOUND;
   }
   else if(boundvartype==BOUNDINTTYPE){ // always "simple"
     // right now only need 1 boundary cell for averaging or checking by check_solution() and fixup_utoprim()
-    numbnd[1]=SHIFT1;
-    numbnd[2]=SHIFT2;
-    numbnd[3]=SHIFT3;      
+    numbnd[1]=NUMPFLAGBND1;
+    numbnd[2]=NUMPFLAGBND2;
+    numbnd[3]=NUMPFLAGBND3;      
     *numnpr = NUMPFLAGSBOUND;
   }
   else if(boundvartype==BOUNDFLUXTYPE){
@@ -100,6 +100,7 @@ void set_numbnd(int boundvartype, int *numbnd, int *numnpr)
     *numnpr = NFLUXBOUND;
   }
   else if(boundvartype==BOUNDFLUXSIMPLETYPE){
+    // flux only defined with 1 shift
     numbnd[1]=SHIFT1;
     numbnd[2]=SHIFT2;
     numbnd[3]=SHIFT3;
@@ -112,6 +113,7 @@ void set_numbnd(int boundvartype, int *numbnd, int *numnpr)
     *numnpr = NDIM;
   }
   else if(boundvartype==BOUNDVPOTSIMPLETYPE){
+    // vpot only defined with one shift
     numbnd[1]=SHIFT1;
     numbnd[2]=SHIFT2;
     numbnd[3]=SHIFT3;

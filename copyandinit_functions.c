@@ -850,13 +850,13 @@ void copy_3dpftype_special_fullloop(PFTYPE (*source)[NSTORE2][NSTORE3][NUMPFLAGS
   // override
   get_inversion_startendindices(Uconsevolveloop,&is,&ie,&js,&je,&ks,&ke);
   
-  // +-1 extra so can do check
-  is += -SHIFT1;
-  ie += +SHIFT1;
-  js += -SHIFT2;
-  je += +SHIFT2;
-  ks += -SHIFT3;
-  ke += +SHIFT3;
+  // +-NUMPFLAGBNDx extra so can do check
+  is += -NUMPFLAGBND1;
+  ie += +NUMPFLAGBND1;
+  js += -NUMPFLAGBND2;
+  je += +NUMPFLAGBND2;
+  ks += -NUMPFLAGBND3;
+  ke += +NUMPFLAGBND3;
 
 
   copy_3dpftype_special(is, ie, js, je, ks, ke,source, destspecial);

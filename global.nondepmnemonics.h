@@ -1064,7 +1064,6 @@
 
 /// flag failures/problems for correction/check in fixup
 #define NUMPFLAGS (6)
-
 #define NUMFAILPFLAGS (2)
 
 /// FAILURE FLAGS (always should be listed first starting from 0 and NUMFAILPFLAGS should be number of them.

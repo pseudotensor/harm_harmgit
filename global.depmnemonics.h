@@ -428,6 +428,14 @@
 #define NUMPFLAGSBOUND (1+FLAGUTOPRIMFAIL) // only 0
 #endif
 
+
+// number of boundary cells to choose for setting and MPI-copying and using of pflag boundary cells
+#define NUMPFLAGBND1 N1BND
+#define NUMPFLAGBND2 N2BND
+#define NUMPFLAGBND3 N3BND
+#define MAXNUMPFLAGBND (MAX(MAX(NUMPFLAGBND1,NUMPFLAGBND2),NUMPFLAGBND3))
+
+
 /// GODMARK: Could make a volume that is not NBIGBND*NBIGSM but may be smaller?
 /// used in init_mpi.c for workbc and workbc_int
 

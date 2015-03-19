@@ -11,8 +11,8 @@
 
 
 static int simple_average(int startpl, int endpl, int i, int j, int k, int doingmhd, PFTYPE (*lpflagfailorig)[NSTORE2][NSTORE3][NUMFAILPFLAGS],FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ptoavg)[NSTORE2][NSTORE3][NPR]);
-static int general_average(int startpl, int endpl, int i, int j, int k, int doingmhd, PFTYPE mhdlpflag, PFTYPE radlpflag, PFTYPE (*lpflagfailorig)[NSTORE2][NSTORE3][NUMFAILPFLAGS],FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ptoavg)[NSTORE2][NSTORE3][NPR], struct of_geom *geom);
-static int fixup_nogood(int startpl, int endpl, int i, int j, int k, FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ptoavg)[NSTORE2][NSTORE3][NPR],FTYPE (*pbackup)[NSTORE2][NSTORE3][NPR], struct of_geom *ptrgeom);
+static int general_average(int useonlynonfailed, int numbndtotry, int maxnumbndtotry, int startpl, int endpl, int i, int j, int k, int doingmhd, PFTYPE mhdlpflag, PFTYPE radlpflag, PFTYPE (*lpflagfailorig)[NSTORE2][NSTORE3][NUMFAILPFLAGS],FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ptoavg)[NSTORE2][NSTORE3][NPR], struct of_geom *ptrgeom);
+static int fixup_nogood(int startpl, int endpl, int i, int j, int k, int doingmhd, PFTYPE mhdlpflag, PFTYPE radlpflag, FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ptoavg)[NSTORE2][NSTORE3][NPR],FTYPE (*pbackup)[NSTORE2][NSTORE3][NPR], struct of_geom *ptrgeom);
 static int fixuputoprim_accounting(int i, int j, int k, PFTYPE mhdlpflag, PFTYPE radlpflag, PFTYPE (*lpflag)[NSTORE2][NSTORE3][NUMPFLAGS],FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ptoavg)[NSTORE2][NSTORE3][NPR], struct of_geom *geom, FTYPE *pr0, FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], int finalstep);
 static int fixup_negdensities(int whichtofix, int *fixed, int startpl, int endpl, int i, int j, int k, PFTYPE mhdlpflag, FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ptoavg)[NSTORE2][NSTORE3][NPR], struct of_geom *geom, FTYPE *pr0, FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], int finalstep);
 
@@ -1414,7 +1414,7 @@ int fixup_checksolution(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR],int finals
 
 
 /// fix the bad solution as determined by utoprim() and fixup_checksolution()
-/// needs fail flag over -1..N, but uses p at 0..N-1
+/// needs fail flag over -NUMPFLAGBNDx .. ..N-1+NUMPFLAGBNDx , and uses p at 0..N-1
 int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], int finalstep)
 {
   FTYPE (*ptoavg)[NSTORE2][NSTORE3][NPR];
@@ -1443,13 +1443,13 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
 
     get_inversion_startendindices(Uconsevolveloop,&is,&ie,&js,&je,&ks,&ke);
     
-    // +-1 extra so can do check
-    is += -SHIFT1;
-    ie += +SHIFT1;
-    js += -SHIFT2;
-    je += +SHIFT2;
-    ks += -SHIFT3;
-    ke += +SHIFT3;
+    // +-NUMPFLAGBNDx extra so can do check
+    is += -NUMPFLAGBND1;
+    ie += +NUMPFLAGBND1;
+    js += -NUMPFLAGBND2;
+    je += +NUMPFLAGBND2;
+    ks += -NUMPFLAGBND3;
+    ke += +NUMPFLAGBND3;
 
     //////    COMPZSLOOP(is,ie,js,je,ks,ke) PALLLOOP(pl) MACP0A1(ptoavg,i,j,k,pl)=MACP0A1(pv,i,j,k,pl);
     copy_3dnpr(is,ie,js,je,ks,ke,pv,ptoavg); // GODMARK: Won't PLOOP be PALLLOOP here, so ok?
@@ -1464,6 +1464,7 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
 
   // shouldn't modify pflagfailorig once inside parallel region below
   // Should only modify final (true) pflag value
+  // only copies fail flags
   copy_3dpftype_special_fullloop(GLOBALPOINT(pflag),GLOBALPOINT(pflagfailorig));
 
 
@@ -1618,7 +1619,14 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
               nogood=0;
               int doingmhd=1;
 #if(GENERALAVERAGE==1)
-              nogood=general_average(startpl, endpl, i, j, k, doingmhd, mhdlpflag, radlpflag, GLOBALPOINT(pflagfailorig) ,pv,ptoavg,ptrgeom);
+              int useonlynonfailed=1;
+              int maxnumbndtotry=MAXNUMPFLAGBND; // choice smaller or equal to MAXNUMPFLAGBND
+              int numbndtotry;
+              // TODOMARK: could also do multi-pass fixup_utoprim() with BCs done as squeeze in on failure region from outside, in case region is not caught by this.
+              for(numbndtotry=1;numbndtotry<=maxnumbndtotry;numbndtotry++){
+                nogood=general_average(useonlynonfailed,numbndtotry,maxnumbndtotry,startpl, endpl, i, j, k, doingmhd, mhdlpflag, radlpflag, GLOBALPOINT(pflagfailorig) ,pv,ptoavg,ptrgeom);
+                if(nogood==0) break; // then success before using any more points
+              }
 #else
               nogood=simple_average(startpl,endpl,i,j,k, doingmhd, GLOBALPOINT(pflagfailorig) ,pv,ptoavg);
 #endif
@@ -1650,7 +1658,8 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
               //
               //////////////////////
               if(nogood){
-                fixup_nogood(startpl, endpl, i, j, k, pv,ptoavg, pbackup, ptrgeom);
+                //                dualfprintf(fail_file,"fixupnogood: mhd %d %d %d : %d %d\n",i,j,k,startpl,endpl);
+                fixup_nogood(startpl, endpl, i, j, k, doingmhd, mhdlpflag, radlpflag, pv,ptoavg, pbackup, ptrgeom);
               }
 
 
@@ -1823,7 +1832,13 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
               nogood=0;
               int doingmhd=0;
 #if(GENERALAVERAGE==1)
-              nogood=general_average(startpl, endpl, i, j, k, doingmhd, mhdlpflag, radlpflag, GLOBALPOINT(pflagfailorig) ,pv,ptoavg,ptrgeom);
+              int useonlynonfailed=1;
+              int maxnumbndtotry=MAXNUMPFLAGBND; // choice smaller or equal to MAXNUMPFLAGBND
+              int numbndtotry;
+              for(numbndtotry=1;numbndtotry<=maxnumbndtotry;numbndtotry++){
+                nogood=general_average(useonlynonfailed,numbndtotry,maxnumbndtotry,startpl, endpl, i, j, k, doingmhd, mhdlpflag, radlpflag, GLOBALPOINT(pflagfailorig) ,pv,ptoavg,ptrgeom);
+                if(nogood==0) break; // then success before using any more points
+              }
 #else
               nogood=simple_average(startpl,endpl,i,j,k, doingmhd, GLOBALPOINT(pflagfailorig) ,pv,ptoavg);
 #endif
@@ -1856,7 +1871,8 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
               //////////////////////
               if(1){ // should stay 1, see below.
                 if(nogood){
-                  fixup_nogood(startpl, endpl, i, j, k, pv,ptoavg, pbackup, ptrgeom);
+                  //                  dualfprintf(fail_file,"fixupnogood: rad %d %d %d : %d %d\n",i,j,k,startpl,endpl);
+                  fixup_nogood(startpl, endpl, i, j, k, doingmhd, mhdlpflag, radlpflag, pv,ptoavg, pbackup, ptrgeom);
                 }
               }
               else{
@@ -1954,9 +1970,7 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
 
 
 
-
-/// fix the bad solution as determined by utoprim() and fixup_checksolution()
-/// needs fail flag over -1..N, but uses p at 0..N-1
+/// report problems, but doesn't fix them
 int fixup_utoprim_nofixup(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], int finalstep)
 {
   FTYPE (*ptoavg)[NSTORE2][NSTORE3][NPR];
@@ -2512,7 +2526,7 @@ static int fixuputoprim_accounting(int i, int j, int k, PFTYPE mhdlpflag, PFTYPE
 //#define HOWTOAVG_WHEN_U2AVG CAUSAL_THENMIN_WHEN_U2AVG
 
 /// more general averaging procedure that tries to pick best from surrounding good values
-static int general_average(int startpl, int endpl, int i, int j, int k, int doingmhd, PFTYPE mhdlpflag, PFTYPE radlpflag, PFTYPE (*lpflagfailorig)[NSTORE2][NSTORE3][NUMFAILPFLAGS],FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ptoavg)[NSTORE2][NSTORE3][NPR], struct of_geom *ptrgeom)
+static int general_average(int useonlynonfailed, int numbndtotry, int maxnumbndtotry, int startpl, int endpl, int i, int j, int k, int doingmhd, PFTYPE mhdlpflag, PFTYPE radlpflag, PFTYPE (*lpflagfailorig)[NSTORE2][NSTORE3][NUMFAILPFLAGS],FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ptoavg)[NSTORE2][NSTORE3][NPR], struct of_geom *ptrgeom)
 {
   int doavgcausal,failavglooptype;
   int pl,pliter;
@@ -2533,8 +2547,8 @@ static int general_average(int startpl, int endpl, int i, int j, int k, int doin
   PFTYPE lpflag;
   int whichpflag;
 
-
-  if(debugfail>=2) dualfprintf(fail_file,"uc2generalA: doingmhd=%d mhdlpflag=%d radlpflag=%d startpl=%d endpl=%d :: i=%d j=%d k=%d\n",doingmhd,mhdlpflag,radlpflag,startpl,endpl,i,j,k); // not too much
+  
+  prod0dualfprintf(debugfail>=2,fail_file,"uc2generalA: doingmhd=%d mhdlpflag=%d radlpflag=%d startpl=%d endpl=%d :: i=%d j=%d k=%d\n",doingmhd,mhdlpflag,radlpflag,startpl,endpl,i,j,k); // not too much
   //  if(debugfail>=2) for(pl=startpl; pl<=endpl; pl++) dualfprintf(fail_file,"uc2generalSTART: pl=%d pv=%g\n",pl,MACP0A1(pv,i,j,k,pl));
 
 
@@ -2624,30 +2638,41 @@ static int general_average(int startpl, int endpl, int i, int j, int k, int doin
     mysum[1][pl]=0.0;
     lastmin[pl]=VERYBIG;
   }
-  // size of little averaging box
-  rnx=(SHIFT1==1) ? 3*SHIFT1 : 1;
-  rny=(SHIFT2==1) ? 3*SHIFT2 : 1;
-  rnz=(SHIFT3==1) ? 3*SHIFT3 : 1;
+  // size of little averaging box, from -NUMPFLAGBNDx to +NUMPFLAGBNDx
+  int rbndx=MIN(numbndtotry,NUMPFLAGBND1);
+  int rbndy=MIN(numbndtotry,NUMPFLAGBND2);
+  int rbndz=MIN(numbndtotry,NUMPFLAGBND3);
+  rnx=(SHIFT1==1) ? (rbndx*2+1) : 1;
+  rny=(SHIFT2==1) ? (rbndy*2+1) : 1;
+  rnz=(SHIFT3==1) ? (rbndz*2+1) : 1;
      
-  // number of unique pairs
-  factor=SHIFT1+SHIFT2+SHIFT3;
-  numupairs=(int)(pow(3,factor)-1)/2;
+  // number of unique pairs ( NUMPFLAGBND1*NUMPFLAGBND2*NUMPFLAGBND3 + NUMPFLAGBND1
+  numupairs=(int)(rnx*rny*rnz-1)/2;
      
   for(qq=0;qq<numupairs;qq++){
        
     // 1-d to 3D index
-    ii=(int)(qq%rnx)-SHIFT1;
-    jj=(int)((qq%(rnx*rny))/rnx)-SHIFT2;
-    kk=(int)(qq/(rnx*rny))-SHIFT3;
+    ii=(int)(qq%rnx)-rbndx;
+    jj=(int)((qq%(rnx*rny))/rnx)-rbndy;
+    kk=(int)(qq/(rnx*rny))-rbndz;
 
-    if(doingmhd){
-      thisnotfail=IFUTOPRIMNOFAILORFIXED(MACP0A1(lpflagfailorig,i+ii,j+jj,k+kk,whichpflag));
-      thatnotfail=IFUTOPRIMNOFAILORFIXED(MACP0A1(lpflagfailorig,i-ii,j-jj,k-kk,whichpflag));
+    if(useonlynonfailed==1){
+      if(doingmhd){
+        thisnotfail=IFUTOPRIMNOFAILORFIXED(MACP0A1(lpflagfailorig,i+ii,j+jj,k+kk,whichpflag));
+        thatnotfail=IFUTOPRIMNOFAILORFIXED(MACP0A1(lpflagfailorig,i-ii,j-jj,k-kk,whichpflag));
+      }
+      else{
+        thisnotfail=IFUTOPRIMRADNOFAILORFIXED(MACP0A1(lpflagfailorig,i+ii,j+jj,k+kk,whichpflag));
+        thatnotfail=IFUTOPRIMRADNOFAILORFIXED(MACP0A1(lpflagfailorig,i-ii,j-jj,k-kk,whichpflag));
+      }
     }
     else{
-      thisnotfail=IFUTOPRIMRADNOFAILORFIXED(MACP0A1(lpflagfailorig,i+ii,j+jj,k+kk,whichpflag));
-      thatnotfail=IFUTOPRIMRADNOFAILORFIXED(MACP0A1(lpflagfailorig,i-ii,j-jj,k-kk,whichpflag));
+      // here lpflagfailorig can be just NULL since not used
+      thisnotfail=thatnotfail=1; // just ignores whether failed
     }
+
+
+
 
     if(doavgcausal){
 #if(1)
@@ -2680,21 +2705,35 @@ static int general_average(int startpl, int endpl, int i, int j, int k, int doin
     // number of quantities one summed
     numavg0+=thisnotfail+thatnotfail;
      
+    /////////
+    // AVERAGE types
+    /////////
     if(failavglooptype==0 || failavglooptype==2){
       //////////
       // NORMAL:
       //////////
-      if(debugfail>=3) dualfprintf(fail_file,"uc2: i=%d i+ii=%d j=%d j+jj=%d k=%d k+kk=%d (e.g.) pl=%d pv=%21.15g\n",i,i+ii,j,j+jj,k,k+kk,RHO,MACP0A1(pv,i,j,k,RHO)); // still bit much
+      prod0dualfprintf(debugfail>=3,fail_file,"uc2: i=%d i+ii=%d j=%d j+jj=%d k=%d k+kk=%d (e.g.) pl=%d pv=%21.15g\n",i,i+ii,j,j+jj,k,k+kk,RHO,MACP0A1(pv,i,j,k,RHO)); // still bit much
+
+
+      // do sum of these 2 pairs
       for(pl=startpl;pl<=endpl;pl++){
         mysum[qq%2][pl]+=MACP0A1(ptoavg,i+ii,j+jj,k+kk,pl)*thisnotfail + MACP0A1(ptoavg,i-ii,j-jj,k-kk,pl)*thatnotfail;
-        if(debugfail>=4) dualfprintf(fail_file,"uc2: i=%d i+ii=%d j=%d j+jj=%d k=%d k+kk=%d pl=%d pv=%21.15g\n",pl,i,i+ii,j,j+jj,k,k+kk,MACP0A1(pv,i,j,k,pl)); // bit much, just do for all pl above
+
+
+
+        prod0dualfprintf(debugfail>=4,fail_file,"uc2: i=%d i+ii=%d j=%d j+jj=%d k=%d k+kk=%d pl=%d pv=%21.15g\n",pl,i,i+ii,j,j+jj,k,k+kk,MACP0A1(pv,i,j,k,pl)); // bit much, just do for all pl above
 
 #if(0) // DEBUG
         // DEBUG problem of launch with pressureless stellar model collapse
-        dualfprintf(fail_file,"nstep=%ld steppart=%d :: i=%d j=%d k=%d pl=%d pv=%21.15g thisnotfail=%d ptoavg1=%21.15g thatnotfail=%d ptoavg2=%21.15g :: ii=%d jj=%d kk=%d numavg0=%d\n",nstep,steppart,i,j,k,pl,MACP0A1(pv,i,j,k,pl),thisnotfail,MACP0A1(ptoavg,i+ii,j+jj,k+kk,pl),thatnotfail,MACP0A1(ptoavg,i-ii,j-jj,k-kk,pl),ii,jj,kk,numavg0);
+        prod0dualfprintf(fail_file,"nstep=%ld steppart=%d :: i=%d j=%d k=%d pl=%d pv=%21.15g thisnotfail=%d ptoavg1=%21.15g thatnotfail=%d ptoavg2=%21.15g :: ii=%d jj=%d kk=%d numavg0=%d\n",nstep,steppart,i,j,k,pl,MACP0A1(pv,i,j,k,pl),thisnotfail,MACP0A1(ptoavg,i+ii,j+jj,k+kk,pl),thatnotfail,MACP0A1(ptoavg,i-ii,j-jj,k-kk,pl),ii,jj,kk,numavg0);
 #endif
       }
     }
+
+
+    /////////
+    // MIN types
+    /////////
     if(failavglooptype==1 || failavglooptype==2){ // only for U2AVG
       for(pl=startpl;pl<=endpl;pl++){
 #if(0)
@@ -2713,12 +2752,12 @@ static int general_average(int startpl, int endpl, int i, int j, int k, int doin
         ftemp1=MACP0A1(ptoavg,i+ii,j+jj,k+kk,pl);
         ftemp2=MACP0A1(ptoavg,i-ii,j-jj,k-kk,pl);
         if(ftemp1>=ref && ftemp2>=ref){
-          lastmin[pl]=MIN(MIN(lastmin[pl],ftemp1),ftemp2); // smallest positive number if both of pair are larger than my value
+          lastmin[pl]=MIN(MIN(lastmin[pl],ftemp1),ftemp2); // smallest positive number if both of pair are larger than my value (else keep my small value)
           numavg1++;
         }
 #endif
-      }
-    }
+      }// pl loop
+    }// failavglooptype=1,2
   } //end loop over pairs
 
  
@@ -2781,13 +2820,13 @@ static int general_average(int startpl, int endpl, int i, int j, int k, int doin
   }
 
 
-  if(debugfail>=2) dualfprintf(fail_file,"uc2generalB: mhdlpflag=%d radlpflag=%d numavg=%d startpl=%d endpl=%d :: i=%d j=%d k=%d\n",mhdlpflag,radlpflag,numavg,startpl,endpl,i,j,k);
-  if(numavg==0) if(debugfail>=2) dualfprintf(fail_file,"Failed to average over good neighbors.\n");
+  prod0dualfprintf(debugfail>=2,fail_file,"uc2generalB: mhdlpflag=%d radlpflag=%d numavg=%d startpl=%d endpl=%d :: i=%d j=%d k=%d\n",mhdlpflag,radlpflag,numavg,startpl,endpl,i,j,k);
+  prod0dualfprintf(numavg==0 && debugfail>=2,fail_file,"Failed to average over good neighbors.\n");
   //  if(debugfail>=2) for(pl=startpl; pl<=endpl; pl++) dualfprintf(fail_file,"uc2generalFINISH: pl=%d pv=%g\n",pl,MACP0A1(pv,i,j,k,pl));
 
          
   if( lpflag==UTOPRIMFAILU2AVG2){ // lpflag here is either for MHD or RAD depending upon doingmhd=1 or 0
-    numavg++; // assume at least always one good one so don't treat as real failure if no good values surrounding
+    if(numbndtotry==maxnumbndtotry) numavg++; // assume at least always one good one so don't treat as real failure if no good values surrounding.  But only do so if last chance for no good average.
   }
   // else use real numavg
    
@@ -2809,7 +2848,7 @@ static int simple_average(int startpl, int endpl, int i, int j, int k,int doingm
   int pl,pliter;
   int whichpflag;
 
-  if(debugfail>=2) dualfprintf(fail_file,"uc2simple: i=%d j=%d k=%d\n",i,j,k); // not too much
+  prod0dualfprintf(debugfail>=2,fail_file,"uc2simple: i=%d j=%d k=%d\n",i,j,k); // not too much
 
 
 
@@ -3017,7 +3056,8 @@ static int simple_average(int startpl, int endpl, int i, int j, int k,int doingm
 
 
 /// how to fixup when no good surrounding values to use
-static int fixup_nogood(int startpl, int endpl, int i, int j, int k, FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ptoavg)[NSTORE2][NSTORE3][NPR],FTYPE (*pbackup)[NSTORE2][NSTORE3][NPR], struct of_geom *ptrgeom)
+//static int fixup_nogood(int startpl, int endpl, int i, int j, int k, FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ptoavg)[NSTORE2][NSTORE3][NPR],FTYPE (*pbackup)[NSTORE2][NSTORE3][NPR], struct of_geom *ptrgeom)
+static int fixup_nogood(int startpl, int endpl, int i, int j, int k, int doingmhd, PFTYPE mhdlpflag, PFTYPE radlpflag, FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ptoavg)[NSTORE2][NSTORE3][NPR],FTYPE (*pbackup)[NSTORE2][NSTORE3][NPR], struct of_geom *ptrgeom)
 {
   int pl,pliter;
   FTYPE prguess[NPR];
@@ -3025,8 +3065,8 @@ static int fixup_nogood(int startpl, int endpl, int i, int j, int k, FTYPE (*pv)
   int ti,tj,tk,resetregion;
 
 
-
-  if(debugfail>=2) dualfprintf(fail_file,"uc2nogood: i=%d j=%d k=%d\n",i,j,k); // not too much
+  
+  prod0dualfprintf(debugfail>=2,fail_file,"uc2nogood: i=%d j=%d k=%d\n",i,j,k); // not too much
 
 
   // Determine which primitive to use to average when no good solution
@@ -3099,7 +3139,17 @@ static int fixup_nogood(int startpl, int endpl, int i, int j, int k, FTYPE (*pv)
   /////////////////////////////////////////////////
   else if(TODONOGOOD==NOGOODAVERAGE){// if no solution, revert to normal observer and averaged densities
     // average out densities+velocity
-    for(pl=startpl;pl<=endpl;pl++) MACP0A1(pv,i,j,k,pl)=0.5*(AVG4_1(ptoavgwhennogood,i,j,k,pl)+AVG4_2(ptoavgwhennogood,i,j,k,pl));
+#if(GENERALAVERAGE==1)
+    // use general average without regard to failure
+    int useonlynonfailed=0; // any type of cell, failed or not, will be used in the average
+    int numbndtotry=1;
+    int maxnumbndtotry=1; //MAXNUMPFLAGBND; // choice smaller or equal to MAXNUMPFLAGBND
+    int nogood=general_average(useonlynonfailed,numbndtotry,maxnumbndtotry,startpl, endpl, i, j, k, doingmhd, mhdlpflag, radlpflag, NULL ,pv,ptoavg,ptrgeom);
+    // nogood will be 1
+#else
+    for(pl=startpl;pl<=endpl;pl++) MACP0A1(pv,i,j,k,pl)=0.5*(AVG4_1(ptoavgwhennogood,i,j,k,pl)+AVG4_2(ptoavgwhennogood,i,j,k,pl)); // like simple average
+#endif
+    
   }
   else if(TODONOGOOD==NOGOODSTATIC){// if no solution, revert to normal observer and averaged densities
     // don't change -- stay at previous timestep value (or whatever utoprim() left it as).

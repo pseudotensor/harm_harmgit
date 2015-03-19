@@ -908,7 +908,7 @@ void init_placeongrid_griddecomposition(void)
         //
         //////////////////////
         if(bti==BOUNDPRIMTYPE || bti==BOUNDPRIMSIMPLETYPE || bti==BOUNDPSTAGTYPE || bti==BOUNDPSTAGSIMPLETYPE || bti==BOUNDINTTYPE ){
-          dirgenset[bti][dir][DIRNUMPR]=NPRBOUND; // not used if SPLITNPR==1 or doing general range for quantities
+          dirgenset[bti][dir][DIRNUMPR]=NPRBOUND; // not used if SPLITNPR==1 or doing general range for quantities // not used for BOUNDINTTYPE
         }
         else if(bti==BOUNDFLUXTYPE || bti==BOUNDFLUXSIMPLETYPE){
           dirgenset[bti][dir][DIRNUMPR]=NFLUXBOUND;// not used if SPLITNPR==1 or doing general range for quantities
