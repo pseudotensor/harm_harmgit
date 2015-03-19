@@ -271,7 +271,11 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE *errorabs, stru
 // what optical depth in a cell to say below which can use allowed tolerance, to speed things up.
 #define TAUTOTMAXHIGHERTOL (-1.0) // i.e. avoid this
 #define IMPTRYCONV_TAUTOTMAXHIGHERTOL (1E-4)
-#define IMPTRYCONV_TAUTOTMAXHIGHERTOL2 (1E-3)
+
+// tolerances tried and allowed based upon position (sometimes commented out in _mode() function)
+#define IMPTRYCONV_RHORHIGHERTOL (1E-3) // (leads to transition)
+#define IMPTRYCONV_ROUTERHIGHERTOL (1E-3) // good to have since don't care about outer region with OUTERDEATH
+#define IMPALLOWCONV_RHORHIGHERTOL (1E-2) // allow lower tol inside horizon to avoid failures (but leads to transition)  NOTEMARK: Probably don't want this >1/BSQORHOLIMIT else rho will be in error by more than order unity just from G, which may be limit of acceptability.  u will be in error much more likely, but u driven by Comptonization often so by thermal equilibrium.
 
 
 /// how many iterations before we try harder to get better 1D MHD inversion solution
@@ -314,6 +318,9 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE *errorabs, stru
 
 // whether to skip computing Jacobian every step after certain condition of having done a few steps and then compute every few steps only.
 #define SKIPJACCOMPUTE (DOPERF)
+#define SKIPJACITER (4)
+#define SKIPJACFACTOR (4)
+
 
 
 /// maximum EPS for getting Jacobian
@@ -2687,6 +2694,28 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     modemethodlocal=MODEPICKBESTSIMPLE;
     reducetoquick=1;
   }
+
+
+
+
+
+
+  ////////////////////
+  //
+  // get coordinate position of cell
+  //
+  ////////////////////
+  int iiii=ptrgeom->i;
+  int jjjj=ptrgeom->j;
+  int kkkk=ptrgeom->k;
+  int llloc=ptrgeom->p;
+  FTYPE V[NDIM]={0.0};
+  bl_coord_ijk(iiii,jjjj,kkkk,llloc,V);
+
+
+
+
+
  
 
 
@@ -2820,9 +2849,6 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
   int trueimpmaxiter=IMPMAXITERLONG;
   int truenumdampattempts=NUMDAMPATTEMPTS;
   int goexplicit;
-
-
-
 
 
 
@@ -3539,6 +3565,14 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
         if(funnelcond){ // then don't expect to treat density accurate anyways, just need ok accuracy and stability
           trueimptryconvlist[tryphase1]=MAX(trueimptryconvlist[tryphase1],IMPTRYCONVMARGINAL);
         }
+        // allow tolerance to be higher if...
+        if(V[1]<Rhor){
+          //trueimptryconvlist[tryphase1]=MAX(trueimptryconvlist[tryphase1],IMPTRYCONV_RHORHIGHERTOL);
+          trueimpallowconvconstlist[tryphase1]=MAX(trueimpallowconvconstlist[tryphase1],IMPALLOWCONV_RHORHIGHERTOL);
+        }
+        else if(V[1]>OUTERDEATHRADIUS && OUTERDEATH==1){
+          trueimptryconvlist[tryphase1]=MAX(trueimptryconvlist[tryphase1],IMPTRYCONV_ROUTERHIGHERTOL);
+        } 
 #else
         if(modemethodlocal==MODEPICKBESTSIMPLE2 && itermodelist[tryphase1]==ITERMODESTAGES) continue;
 #endif
@@ -4073,6 +4107,13 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
         if(funnelcond){ // then don't expect to treat density accurate anyways, just need ok accuracy and stability
           trueimptryconvlist[tryphase1]=MAX(trueimptryconvlist[tryphase1],IMPTRYCONVMARGINAL);
         }
+        if(V[1]<Rhor){
+          //          trueimptryconvlist[tryphase1]=MAX(trueimptryconvlist[tryphase1],IMPTRYCONV_RHORHIGHERTOL);
+          trueimpallowconvconstlist[tryphase1]=MAX(trueimpallowconvconstlist[tryphase1],IMPALLOWCONV_RHORHIGHERTOL);
+        }
+        else if(V[1]>OUTERDEATHRADIUS && OUTERDEATH==1){
+          trueimptryconvlist[tryphase1]=MAX(trueimptryconvlist[tryphase1],IMPTRYCONV_ROUTERHIGHERTOL);
+        } 
 #else
         // pick best simple 2 method avoids all itermodestages methods
         if(modemethodlocal==MODEPICKBESTSIMPLE2 && itermodelist[tryphase1]==ITERMODESTAGES) continue;
@@ -4559,6 +4600,14 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
         if(funnelcond){ // then don't expect to treat density accurate anyways, just need ok accuracy and stability
           trueimptryconvcold=MAX(trueimptryconvcold,IMPTRYCONVMARGINAL);
+          if(V[1]<Rhor){
+            //          trueimptryconvlist[tryphase1]=MAX(trueimptryconvlist[tryphase1],IMPTRYCONV_RHORHIGHERTOL);
+            trueimpallowconvcold=MAX(trueimpallowconvcold,IMPALLOWCONV_RHORHIGHERTOL);
+          }
+          else if(V[1]>OUTERDEATHRADIUS && OUTERDEATH==1){
+            trueimptryconvcold=MAX(trueimptryconvcold,IMPTRYCONV_ROUTERHIGHERTOL);
+          } 
+
         }
       
         if(reducetoquick){
@@ -5302,18 +5351,6 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
 
 
 
-  ////////////////////
-  //
-  // get coordinate position of cell
-  //
-  ////////////////////
-  int iiii=ptrgeom->i;
-  int jjjj=ptrgeom->j;
-  int kkkk=ptrgeom->k;
-  int llloc=ptrgeom->p;
-  FTYPE V[NDIM]={0.0};
-  bl_coord_ijk(iiii,jjjj,kkkk,llloc,V);
-
 
 
   ////////////////////
@@ -5605,14 +5642,8 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
     calc_tautot(pb, ptrgeom, q, tautot, &tautotmax);
 
     // allow tolerance to be higher if optically thin enough
-    if(tautotmax<TAUTOTMAXHIGHERTOL || 0&&V[1]<Rhor){
+    if(tautotmax<TAUTOTMAXHIGHERTOL){
       trueimptryconv=IMPTRYCONV_TAUTOTMAXHIGHERTOL;
-      //  FTYPE trueimptryconv=IMPTRYCONV;
-      trueimptryconvabs=IMPTRYCONVABS;
-      trueimptryconvalt=IMPTRYCONVALT;
-    }
-    else if(V[1]>OUTERDEATHRADIUS && OUTERDEATH==1){
-      trueimptryconv=IMPTRYCONV_TAUTOTMAXHIGHERTOL2;
       //  FTYPE trueimptryconv=IMPTRYCONV;
       trueimptryconvabs=IMPTRYCONVABS;
       trueimptryconvalt=IMPTRYCONVALT;
@@ -6011,14 +6042,8 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
 
 
         // allow tolerance to be higher if optically thin enough, track for each iteration in case changes!
-        if(tautotmaxreturn<TAUTOTMAXHIGHERTOL || 0&&V[1]<Rhor){
+        if(tautotmaxreturn<TAUTOTMAXHIGHERTOL){
           trueimptryconv=IMPTRYCONV_TAUTOTMAXHIGHERTOL;
-          //  FTYPE trueimptryconv=IMPTRYCONV;
-          trueimptryconvabs=IMPTRYCONVABS;
-          trueimptryconvalt=IMPTRYCONVALT;
-        }
-        else if(V[1]>OUTERDEATHRADIUS && OUTERDEATH==1){
-          trueimptryconv=IMPTRYCONV_TAUTOTMAXHIGHERTOL2;
           //  FTYPE trueimptryconv=IMPTRYCONV;
           trueimptryconvabs=IMPTRYCONVABS;
           trueimptryconvalt=IMPTRYCONVALT;
@@ -6171,8 +6196,8 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
       //////////////
       // break again out of total loop if broke in f1iter loop
       if(failreturn){
-        if(debugfail>=DEBUGLEVELIMPSOLVERMORE) dualfprintf(fail_file,"Breaking out of loop as think f1iter wanted us to.\n");
-        break;
+        prod0dualfprintf(debugfail>=DEBUGLEVELIMPSOLVERMORE,fail_file,"Breaking out of loop as think f1iter wanted us to.\n");
+        break; // ok to break here and avoid saying this was best solution since unlikely will be best as f1 can't even be obtained.  And so step shouldn't be taken as well.
       }
       else{// else if good f1
 
@@ -6189,13 +6214,13 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
           if(havebackup){
             failreturn=FAILRETURNMODESWITCH; mathfailtype=20;
             if(debugfail>=DEBUGLEVELIMPSOLVERMORE) dualfprintf(fail_file,"SWITCHING MODE: Detected MAXF1TRIES\n");
-            break;
+            break; // ok to break, no better solution to store as best
           }
           else{
             failreturn=FAILRETURNGENERAL; mathfailtype=2;
             if(doingit==1) myexit(10000000); // DEBUG
             // Note that if inversion reduces to entropy or cold, don't fail, so passes until reached this point.  But convergence can be hard if flipping around which EOMs for the inversion are actually used.
-            break;
+            break; // ok to break, no better solution to store as best
           }
         }
         else{
@@ -6249,8 +6274,6 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
       if(iter<mtd.BEGINNORMALSTEPS) checkconv=0; // don't check actual convergence till doing full steps
       ////////////////////////////////////////////////////////////////////////////
 
-
-      //if(convreturnf1 && checkconv) break; // then converged already // DOES NOT WORK FOR SOME REASON SUPERGODMARK
 
 
       //////////////
@@ -6345,7 +6368,8 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
 #define BUFFERITER 0 // how many iterations to wait until start to check how error is doing.  When switching iteration methods, error will often rise initially in f1[0], but that's ok.  But can temper jump by bridging used pp,uu, so ok to keep as 0 perhaps.
       // check if doing energy stepping and error jumped up too much
 #define NUMJUMPCHECKSMAX 5 // must limit, else if really drops-out and can't help, need to just accept.
-      if(ERRORJUMPCHECK && numjumpchecks<NUMJUMPCHECKSMAX){
+#if(ERRORJUMPCHECK)
+      if(numjumpchecks<NUMJUMPCHECKSMAX){
         if(iter>=mtd.BEGINENERGYSTEPS+BUFFERITER && iter<=mtd.ENDENERGYSTEPS || iter>=mtd.BEGINFULLSTEPS+BUFFERITER && iter<=mtd.ENDFULLSTEPS){// now all steps beyond energy
           if(
              (fabs(f1[ru.erefU[0]]/f1p[ru.erefU[0]])>FACTORBADJUMPERROR && fabs(f1report[ru.erefU[0]])>trueimptryconv)
@@ -6387,7 +6411,7 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
               fracdamplist[2]=DAMPFACTOR;
             }
 #endif
-
+          
 
             // need to get new error function so can take step based upon this as reference!
             if(iter>trueimpmaxiter){
@@ -6401,6 +6425,9 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
           }
         }
       }
+#endif // end if ERRORJUMPCHECK
+
+
 
 
 
@@ -6423,6 +6450,8 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
         if(STOPIFITERLOWERROR && WHICHERROR==1 && errorabsf1[0]<=LOCALPREIMPCONVABS){
           lowitererror=1; // __WORKINGONIT__: makes use urad alot and why?
         }
+
+
 
         //////////////
         //
@@ -6459,6 +6488,23 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
         }
 
 
+        if(convreturnf1){
+          break; // then converged already and no need to take a step (saves time)
+        }
+
+
+
+
+
+
+
+        ///////
+        //
+        // See if error is dropping as expected
+        // Trying to avoid excessive unhelpful iterations
+        //
+        ///////
+
 #define CHECKDECREASE0 5
 #define CHECKDECREASEAVGNUM 3 // should be less than CHECKDECREASE0
 #define CHECKDECFACTOR (0.5) // i.e. should drop by this factor compared to older average
@@ -6466,8 +6512,8 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
           int ci;
           FTYPE avgerror[NUMERRORTYPES];
           avgerror[0]=avgerror[1]=0.0;
-          for(ci=0;ci<CHECKDECREASEAVGNUM;ci++) avgerror[0] += errorabsf1list[debugiter-CHECKDECREASE0+ci]; // GODMARK: uses debug info
-          for(ci=0;ci<CHECKDECREASEAVGNUM;ci++) avgerror[1] += errorallabsf1list[debugiter-CHECKDECREASE0+ci]; // GODMARK: uses debug info
+          for(ci=0;ci<CHECKDECREASEAVGNUM;ci++) avgerror[0] += errorabsf1list[debugiter-CHECKDECREASE0+ci];
+          for(ci=0;ci<CHECKDECREASEAVGNUM;ci++) avgerror[1] += errorallabsf1list[debugiter-CHECKDECREASE0+ci];
           avgerror[0]/=(CHECKDECREASEAVGNUM);
           avgerror[1]/=(CHECKDECREASEAVGNUM);
           FTYPE currenterror[NUMERRORTYPES];
@@ -6497,8 +6543,16 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
         }// end if large enough iterations so can check how error is trending, to avoid many iterations when error is not dropping enough to matter.
 
 
+
+
+
+        ////////
+        //
         // check if error repeatedly rises
         // do this even if damping, since damping should only help get continuous reduction in error.
+        //
+        ////////
+
         if(NUMNOERRORREDUCE && iter>=mtd.BEGINNORMALSTEPS){
           FTYPE errorneed=((FTYPE)(numsub+2)*trueimptryconv);
           FTYPE errorneedalt=(MAX(1E-8,errorneed));
@@ -6535,9 +6589,14 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
         }      
 
 
+
+        ////////
+        //
         // check if error isn't decreasing enough for be interesting
         // but don't check on error if holding on u_g>0 since error can be bad until settle to near root.
         // and don't do this check if damping, since if damping really want to try harder.
+        //
+        ////////
         if(NUMPRIORERRORS>0 && holdingaspositive==0 && dampattempt==0){
           if(priorerrorscount>=NUMPRIORERRORSITER0){
             FTYPE erroraverage=0.0; int numerroraverage=0;
@@ -6601,7 +6660,7 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
       if(!notfinite){
     
 
-        if(SKIPJACCOMPUTE==0 || SKIPJACCOMPUTE==1 && (iter<=4 || iter>4 && iter%4==0)){ // only get new Jacobian before 5th iteration and then only if every 3rd iteration since assume Jacobian itself doesn't change so rapidly.
+        if(SKIPJACCOMPUTE==0 || SKIPJACCOMPUTE==1 && (iter<=SKIPJACITER || iter>SKIPJACITER && iter%SKIPJACFACTOR==0)){ // only get new Jacobian before 5th iteration and then only if every 3rd iteration since assume Jacobian itself doesn't change so rapidly.
 
           /////////
           //
@@ -6876,6 +6935,8 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
           }
 
 
+
+
           // DEBUG: store steps in case hit max iter and want to debug
 #if(DEBUGMAXITER)
           if(dampattempt==0){
@@ -6920,7 +6981,7 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
                     else{// else doing normal steps
                       // "switch" to entropy by just stopping trying to get energy solution
                       failreturn=FAILRETURNMODESWITCH; mathfailtype=100;
-                      if(debugfail>=DEBUGLEVELIMPSOLVER) dualfprintf(fail_file,"SWITCHING MODE: Detected entropy u_g preferred consistently: iter=%d: %g %g\n",iter,pp[ru.irefU[0]],pborig[ru.irefU[0]]);
+                      prod0dualfprintf(debugfail>=DEBUGLEVELIMPSOLVER,fail_file,"SWITCHING MODE: Detected entropy u_g preferred consistently: iter=%d: %g %g\n",iter,pp[ru.irefU[0]],pborig[ru.irefU[0]]);
                       break;
                     }
                   }// end if normal step
@@ -6946,7 +7007,7 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
 
 
 
-          if(showmessagesheavy) dualfprintf(fail_file,"POSTDX: pp: %g %g %g %g : ppp=%g %g %g %g\n",pp[ru.irefU[0]],pp[ru.irefU[1]],pp[ru.irefU[2]],pp[ru.irefU[3]],ppp[ru.irefU[0]],ppp[ru.irefU[1]],ppp[ru.irefU[2]],ppp[ru.irefU[3]]);
+          prod0dualfprintf(showmessagesheavy,fail_file,"POSTDX: pp: %g %g %g %g : ppp=%g %g %g %g\n",pp[ru.irefU[0]],pp[ru.irefU[1]],pp[ru.irefU[2]],pp[ru.irefU[3]],ppp[ru.irefU[0]],ppp[ru.irefU[1]],ppp[ru.irefU[2]],ppp[ru.irefU[3]]);
 
 
 
@@ -6967,6 +7028,8 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
 
         // only do post-newton checks if checking convergence allowed
         if(checkconv==1){
+
+
 
           ////////////
           //
@@ -7005,6 +7068,11 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
               }
             }
           }
+
+
+
+
+
 
           FTYPE f3[NPR]={0},f3norm[NPR]={0};
           if(POSTNEWTONCONVCHECK==1 && notholding==1){
@@ -7046,6 +7114,7 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
           }
 
 
+
           /////////////////
           //
           // check convergence
@@ -7053,6 +7122,7 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
           //
           /////////////////
           if(convreturnf1 || convreturnf3limit || canbreak){
+#if(PRODUCTION==0)
             if(debugfail>=DEBUGLEVELIMPSOLVERMORE){
               if(convreturnf3limit && debugfail>=3){
                 dualfprintf(fail_file,"f3limit good\n");
@@ -7062,6 +7132,7 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
               if(convreturnf3limit) dualfprintf(fail_file,"f3 good: ijknstepsteppart=%d %d %d %ld %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart);
               if(canbreak) dualfprintf(fail_file,"canbreak=%d good: ijknstepsteppart=%d %d %d %ld %d\n",canbreak,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart);
             }
+#endif
             // so done.
             break;
           }
@@ -7073,12 +7144,15 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
 
 #if(DOPERF)
         // only try low error if not too many iterations, otherwise drop trying quite as hard.
-        if(iter>ITERATIONMARGINAL2 && (errorabsf1[WHICHERROR]<IMPTRYCONVMARGINAL2) ){
+        if(iter>ITERATIONMARGINAL2 && (errorabsf1[WHICHERROR]<MIN(trueimpallowconvabs,IMPTRYCONVMARGINAL2) ) ){
           break;
         }
 #endif
 
       }// end if finite
+
+
+
 
 
 
