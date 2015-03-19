@@ -2343,6 +2343,13 @@ int init_global(void)
       DTdumpgen[FIELDLINEDUMPTYPE]=4.0;
       DTdumpgen[IMAGEDUMPTYPE]=4.0;
       DTr=5000;
+      if(PRODUCTION>=2){
+        for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=1-0.0;
+        DTdumpgen[DEBUGDUMPTYPE]=400.0;
+        DTdumpgen[FIELDLINEDUMPTYPE]=4.0;
+        DTdumpgen[IMAGEDUMPTYPE]=4.0;
+        DTr=5000;
+      }
     }
 
 

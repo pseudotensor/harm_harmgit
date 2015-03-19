@@ -2105,6 +2105,11 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
 
   ///////////////////////////////
   // GET ERROR FUNCTION
+  //
+  // NOTEMARK: Error is normalized by sum of any terms that can be formed separately as an absolute magnitude.  For gas, error *includes* MA+EM but not rest-mass (at least when REMOVERESTMASSFROMUU=2 is set, which is default).  While one might think error should only include MA due to MA<->RAD force G, the force G affects the full T and changes the (e.g.) EM energy flux by changing the velocity.  So even if RAD only directly affects particles=MA, that MA involves changes in velocity that affects EM as well, so indirectly RAD affects EM.  E.g., it's possible that MA energy flux doesn't change at all, but RAD<->EM conversion occurs.  E.g., just as scattering provides force from gas to radiation, velocity changes provide force between MA and EM.  So keep uu[Ux] full MA+EM in normalization of error.
+  // NOTEMARK: Of course, possible field is background uniform and strong and has no force role at all, in which case should have just MA in error norm.
+  // NOTEMARK: But of course, if (say) b^2/rho>>1, then can't expect to get rho very accurate anyways, so focus on total error so that as b^2/rho gets bigger, error in rho gets worse.  However, error in velocity will still be preserved since those appear as separate error terms (i.e. uu[U1-U3]).
+  //
   ///////////////////////////////
 
   // prepare for error or explicit step
