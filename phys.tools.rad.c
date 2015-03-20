@@ -368,7 +368,8 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE *errorabs, stru
 
 // whether to try normal guess if explicit fails as guess
 // helps avoid some failures due to guess issue
-#define DONONEXPLICITIFFAILS (1*TRYFIRSTEXPLICIT) 
+// slows the code down some, and if consistent failure in a cell (say equator near inner radial boundary), then will slow down entire run by about a factor of two.  So only use with DOPERF==0 for now, and assume fixups will be efficient enough.
+#define DONONEXPLICITIFFAILS ((DOPERF==0)*TRYFIRSTEXPLICIT) 
 
 
 
