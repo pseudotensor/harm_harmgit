@@ -366,6 +366,11 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE *errorabs, stru
 // whether to try explicit first before implicit steps
 #define TRYFIRSTEXPLICIT 1
 
+// whether to try normal guess if explicit fails as guess
+// helps avoid some failures due to guess issue
+#define DONONEXPLICITIFFAILS (1*TRYFIRSTEXPLICIT) 
+
+
 
 #define TAUFAILLIMIT (2.0/3.0) // at what \tau below which to assume "failure1" in u2p_rad() means should be moving at gammamax rather than not moving.
 
@@ -5764,592 +5769,621 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
 
   FTYPE tautotmaxreturn;
 
-  ////////////////
-  //
-  // THE DAMP LOOP ITSELF
-  //
-  ////////////////
-  int dampattempt;
-  for(dampattempt=0;dampattempt<truenumdampattempts;dampattempt++){
-    FTYPE DAMPFACTOR0;
-    // dampattempt>0 refers to any attempt beyond the very first.  Uses iter from end of region inside this loop.
-    if(dampattempt>0 && (lowitererror || earlylowerror || errorabsf1[WHICHERROR]<IMPTRYDAMPCONV && ACCEPTASNOFAILURE(failreturn) || failreturn==FAILRETURNMODESWITCH) ){ // try damping if any bad failure or not desired tolerance when damping
-      if(dampattempt>=2 && failreturn!=FAILRETURNMODESWITCH){ // dampattempt>=2 refers to attempts with at least 1 damp attempt
-        if(debugfail>=2) dualfprintf(fail_file,"Damping worked to reach desired tolerance: errorabsf1=%g errorallabsf1=%g (IMPTRYDAMPCONV=%g), so should have lower error: dampattempt=%d iter=%d ijk=%d %d %d\n",errorabsf1[0],errorabsf1[1],IMPTRYDAMPCONV,dampattempt,iter,ptrgeom->i,ptrgeom->j,ptrgeom->k);
-      }
-      break; // if didn't hit problem, so no need to damp since got tolerance requested or returned because will just switch to another scheme.
+
+  int f1iterstart=0;
+  int explicitattempt;
+  for(explicitattempt=0;explicitattempt<=DONONEXPLICITIFFAILS;explicitattempt++){
+
+    gotbackup=0;
+    iter=0;
+    debugiter=0;
+    set_array(errorabsf1,NUMERRORTYPES,MPI_FTYPE,BIG);
+    suberrorabsf1=BIG;
+    errorabsf3=BIG;
+    suberrorabsf3=BIG;
+
+    if(explicitattempt>0 && (lowitererror || earlylowerror || errorabsf1[WHICHERROR]<IMPTRYDAMPCONV && ACCEPTASNOFAILURE(failreturn) || failreturn==FAILRETURNMODESWITCH) ){ // try damping if any bad failure or not desired tolerance when damping
+      break;
     }
-    else{
-      // control factor by which step Newton's method.
-      if(dampattempt==0) DAMPFACTOR0=1.0;
-      else DAMPFACTOR0=1.0/pow(2.0,(FTYPE)(dampattempt));
+    if(explicitattempt==1){
+      f1iterstart=1;
+    }
+    else f1iterstart=0;
+    PLOOP(pliter,pl){
+      pp[pl]=ppdampbackup[pl];
+      uu[pl]=uudampbackup[pl];
+      uu0[pl]=uu0dampbackup[pl];
+    }
 
-      if(dampattempt>0) if(debugfail>=2) dualfprintf(fail_file,"Trying dampattempt=%d DAMPFACTOR0=%g failreturn=%d errorabsf1=%g errorallabsf1=%g iter=%d ijk=%d %d %d\n",dampattempt,DAMPFACTOR0,failreturn,errorabsf1[0],errorabsf1[1],iter,ptrgeom->i,ptrgeom->j,ptrgeom->k);
 
-      // start fresh
-      iter=debugiter=0;
-      failreturn=FAILRETURNNOFAIL; // default is no failure
-      mathfailtype=-1; // indicates not set
-      {
-        //        PLOOP(pliter,pl) uu0[pl]=uu0dampbackup[pl];
-      }
-      if(errorabsf1[WHICHERROR]<TRYHARDERFEEDGUESSTOL){
-        // then keep pp and uu as better starting point
+
+
+    ////////////////
+    //
+    // THE DAMP LOOP ITSELF
+    //
+    ////////////////
+    int dampattempt;
+    for(dampattempt=0;dampattempt<truenumdampattempts;dampattempt++){
+      FTYPE DAMPFACTOR0;
+      // dampattempt>0 refers to any attempt beyond the very first.  Uses iter from end of region inside this loop.
+      if(dampattempt>0 && (lowitererror || earlylowerror || errorabsf1[WHICHERROR]<IMPTRYDAMPCONV && ACCEPTASNOFAILURE(failreturn) || failreturn==FAILRETURNMODESWITCH) ){ // try damping if any bad failure or not desired tolerance when damping
+        if(dampattempt>=2 && failreturn!=FAILRETURNMODESWITCH){ // dampattempt>=2 refers to attempts with at least 1 damp attempt
+          if(debugfail>=2) dualfprintf(fail_file,"Damping worked to reach desired tolerance: errorabsf1=%g errorallabsf1=%g (IMPTRYDAMPCONV=%g), so should have lower error: dampattempt=%d iter=%d ijk=%d %d %d\n",errorabsf1[0],errorabsf1[1],IMPTRYDAMPCONV,dampattempt,iter,ptrgeom->i,ptrgeom->j,ptrgeom->k);
+        }
+        break; // if didn't hit problem, so no need to damp since got tolerance requested or returned because will just switch to another scheme.
       }
       else{
-        PLOOP(pliter,pl){
-          pp[pl]=ppdampbackup[pl];
-          uu[pl]=uudampbackup[pl];
-          uu0[pl]=uu0dampbackup[pl];
+        // control factor by which step Newton's method.
+        if(dampattempt==0) DAMPFACTOR0=1.0;
+        else DAMPFACTOR0=1.0/pow(2.0,(FTYPE)(dampattempt));
+
+        if(dampattempt>0) if(debugfail>=2) dualfprintf(fail_file,"Trying dampattempt=%d DAMPFACTOR0=%g failreturn=%d errorabsf1=%g errorallabsf1=%g iter=%d ijk=%d %d %d\n",dampattempt,DAMPFACTOR0,failreturn,errorabsf1[0],errorabsf1[1],iter,ptrgeom->i,ptrgeom->j,ptrgeom->k);
+
+        // start fresh
+        iter=debugiter=0;
+        failreturn=FAILRETURNNOFAIL; // default is no failure
+        mathfailtype=-1; // indicates not set
+        {
+          //        PLOOP(pliter,pl) uu0[pl]=uu0dampbackup[pl];
         }
+        if(errorabsf1[WHICHERROR]<TRYHARDERFEEDGUESSTOL){
+          // then keep pp and uu as better starting point
+        }
+        else{
+          PLOOP(pliter,pl){
+            pp[pl]=ppdampbackup[pl];
+            uu[pl]=uudampbackup[pl];
+            uu0[pl]=uu0dampbackup[pl];
+          }
+        }
+
       }
 
-    }
 
 
 
 
+      ////////////////////////////////
+      //
+      // SETUP IMPLICIT ITERATIONS
+      //
+      ////////////////////////////////
+      int f1iter;
+      int checkconv,changeotherdt=1;
+      FTYPE impepsjac=IMPEPSLARGE; // default
+      FTYPE errorabspf1[NUMPRIORERRORS];
+      set_array(errorabspf1,NUMPRIORERRORS,MPI_FTYPE,BIG);
+      FTYPE errorabspf3=BIG;
 
-    ////////////////////////////////
-    //
-    // SETUP IMPLICIT ITERATIONS
-    //
-    ////////////////////////////////
-    int f1iter;
-    int checkconv,changeotherdt=1;
-    FTYPE impepsjac=IMPEPSLARGE; // default
-    FTYPE errorabspf1[NUMPRIORERRORS];
-    set_array(errorabspf1,NUMPRIORERRORS,MPI_FTYPE,BIG);
-    FTYPE errorabspf3=BIG;
-
-    // initialize previous 'good inversion' based uu's
-    PLOOP(pliter,pl){
-      uupriorsteptype[pl]=uuppp[pl]=uupp[pl]=uuporig[pl]=uup[pl]=uu0orig[pl]=uu[pl];
-      pppriorsteptype[pl]=ppppp[pl]=pppp[pl]=ppporig[pl]=ppp[pl]=pp0orig[pl]=pp[pl];
-    }
+      // initialize previous 'good inversion' based uu's
+      PLOOP(pliter,pl){
+        uupriorsteptype[pl]=uuppp[pl]=uupp[pl]=uuporig[pl]=uup[pl]=uu0orig[pl]=uu[pl];
+        pppriorsteptype[pl]=ppppp[pl]=pppp[pl]=ppporig[pl]=ppp[pl]=pp0orig[pl]=pp[pl];
+      }
 
 
-    // setup debug so can see starting guess
+      // setup debug so can see starting guess
 #if(DEBUGMAXITER)
-    int iterlist=0;
-    if(dampattempt==0){
-      PLOOP(pliter,pl) pppreholdlist[iterlist][pl]=pp[pl];
-      PLOOP(pliter,pl) ppposholdlist[iterlist][pl]=pp[pl];
-      if(DEBUGMAXITERVELOCITY==1){
-        SLOOPA(jj){
-          pppreholdlist[iterlist][U1+jj-1]=q->ucon[jj];
-          pppreholdlist[iterlist][URAD1+jj-1]=q->uradcon[jj];
-          ppposholdlist[iterlist][U1+jj-1]=q->ucon[jj];
-          ppposholdlist[iterlist][URAD1+jj-1]=q->uradcon[jj];
-        }
-      }
-      PLOOP(pliter,pl) f1reportlist[iterlist][pl]=BIG;
-      PLOOP(pliter,pl) f1list[iterlist][pl]=BIG;
-      realiterlist[iterlist]=-1;
-      DLOOP(jj,kk) jaclist[iterlist][jj][kk]=BIG;
-      implicititerlist[iterlist]=-1;
-      implicitferrlist[iterlist]=-1;
-      fracdamplist[0]=fracdtuu0;
-      fracdamplist[1]=fracdtG;
-      fracdamplist[2]=0;
-    }
-    errorabsf1list[iterlist]=BIG;
-    errorallabsf1list[iterlist]=BIG;
-#else
-    {
       int iterlist=0;
+      if(dampattempt==0){
+        PLOOP(pliter,pl) pppreholdlist[iterlist][pl]=pp[pl];
+        PLOOP(pliter,pl) ppposholdlist[iterlist][pl]=pp[pl];
+        if(DEBUGMAXITERVELOCITY==1){
+          SLOOPA(jj){
+            pppreholdlist[iterlist][U1+jj-1]=q->ucon[jj];
+            pppreholdlist[iterlist][URAD1+jj-1]=q->uradcon[jj];
+            ppposholdlist[iterlist][U1+jj-1]=q->ucon[jj];
+            ppposholdlist[iterlist][URAD1+jj-1]=q->uradcon[jj];
+          }
+        }
+        PLOOP(pliter,pl) f1reportlist[iterlist][pl]=BIG;
+        PLOOP(pliter,pl) f1list[iterlist][pl]=BIG;
+        realiterlist[iterlist]=-1;
+        DLOOP(jj,kk) jaclist[iterlist][jj][kk]=BIG;
+        implicititerlist[iterlist]=-1;
+        implicitferrlist[iterlist]=-1;
+        fracdamplist[0]=fracdtuu0;
+        fracdamplist[1]=fracdtG;
+        fracdamplist[2]=0;
+      }
       errorabsf1list[iterlist]=BIG;
       errorallabsf1list[iterlist]=BIG;
-    }
+#else
+      {
+        int iterlist=0;
+        errorabsf1list[iterlist]=BIG;
+        errorallabsf1list[iterlist]=BIG;
+      }
 #endif
 
-    // DEBUG:
-    errorabsreturn[0]=errorabsreturn[1]=BIG;
+      // DEBUG:
+      errorabsreturn[0]=errorabsreturn[1]=BIG;
 
-    // whether holding as positive and outher counts
-    // or things that happen that mean need to break out of this attempt, but not break out of damping loop.
-    int holdingaspositive=0,iterhold=0;
-    int countholdpositive=0;
-    int countugnegative=0;
-    int countbadenergy=0;
-    int counterrorrose=0;
-    int priorerrorscount=0;
-    int canbreak=0;
-    int notfinite=0;
-    int convreturnf3limit=0;
-    int notholding=1;
-    FTYPE DAMPFACTOR;
-    int numjumpchecks=0;
+      // whether holding as positive and outher counts
+      // or things that happen that mean need to break out of this attempt, but not break out of damping loop.
+      int holdingaspositive=0,iterhold=0;
+      int countholdpositive=0;
+      int countugnegative=0;
+      int countbadenergy=0;
+      int counterrorrose=0;
+      int priorerrorscount=0;
+      int canbreak=0;
+      int notfinite=0;
+      int convreturnf3limit=0;
+      int notholding=1;
+      FTYPE DAMPFACTOR;
+      int numjumpchecks=0;
 
-    ////////////////////////////////
-    //
-    // IMPLICIT LOOP ITSELF
-    //
-    ////////////////////////////////
-
-    do{
-      debugiter++; // never skips, goes every step
-      //      dualfprintf(fail_file,"iter=%d debugiter=%d\n",iter,debugiter);
-      debugiteratteempts[dampattempt]=debugiter;
-      iter++; // below might skip some iter, used to control which equations used
-
-
-
-      // setup method and signs
-      define_method(iter, &eomtypelocal, itermode, *baseitermethod, fracenergy, dissmeasure, &mtd);
-      get_refUs(&mtd, &ru);
-
-
-      if(iter>=mtd.BEGINMOMSTEPS && iter<=mtd.ENDMOMSTEPS){
-        momiters++;
-      }
-      if(iter>=mtd.BEGINENERGYSTEPS && iter<=mtd.ENDENERGYSTEPS){
-        energyiters++;
-      }
-      if(iter>=mtd.BEGINFULLSTEPS && iter<=mtd.ENDFULLSTEPS){
-        fulliters++;
-      }
-
-
-
-
-      ////////////////////
+      ////////////////////////////////
       //
-      // things to reset each iteration start for any steps
+      // IMPLICIT LOOP ITSELF
       //
-      ///////////////////
-      canbreak=0; // reset each start of iteration
-      convreturnf3limit=0;
-      notholding=1; // default is no hold
-      earlylowerror=0; // reset each iteration
-      lowitererror=0;
-    
-      if(iter>10){ // KORALTODO: improve upon this later.  Only matters if not doing PMHD method
-        // assume trying hard and failing to work, then allow CASE radiation errors
-        failreturnallowable=failreturnallowableuse=UTOPRIMGENWRAPPERRETURNFAILRAD;
-      }
+      ////////////////////////////////
 
-      if(CHANGEDAMPFACTOR==1){
-        if(trueimpmaxiter==IMPMAXITERQUICK && iter>IMPMAXITERQUICK/2){
-          DAMPFACTOR=0.5*DAMPFACTOR0;
+      do{
+        debugiter++; // never skips, goes every step
+        //      dualfprintf(fail_file,"iter=%d debugiter=%d\n",iter,debugiter);
+        debugiteratteempts[dampattempt]=debugiter;
+        iter++; // below might skip some iter, used to control which equations used
+
+
+
+        // setup method and signs
+        define_method(iter, &eomtypelocal, itermode, *baseitermethod, fracenergy, dissmeasure, &mtd);
+        get_refUs(&mtd, &ru);
+
+
+        if(iter>=mtd.BEGINMOMSTEPS && iter<=mtd.ENDMOMSTEPS){
+          momiters++;
         }
-        else if(trueimpmaxiter==IMPMAXITERLONG && iter>MIN(IMPMAXITERLONG/2,20)){
-          DAMPFACTOR=0.5*DAMPFACTOR0;
+        if(iter>=mtd.BEGINENERGYSTEPS && iter<=mtd.ENDENERGYSTEPS){
+          energyiters++;
+        }
+        if(iter>=mtd.BEGINFULLSTEPS && iter<=mtd.ENDFULLSTEPS){
+          fulliters++;
+        }
+
+
+
+
+        ////////////////////
+        //
+        // things to reset each iteration start for any steps
+        //
+        ///////////////////
+        canbreak=0; // reset each start of iteration
+        convreturnf3limit=0;
+        notholding=1; // default is no hold
+        earlylowerror=0; // reset each iteration
+        lowitererror=0;
+    
+        if(iter>10){ // KORALTODO: improve upon this later.  Only matters if not doing PMHD method
+          // assume trying hard and failing to work, then allow CASE radiation errors
+          failreturnallowable=failreturnallowableuse=UTOPRIMGENWRAPPERRETURNFAILRAD;
+        }
+
+        if(CHANGEDAMPFACTOR==1){
+          if(trueimpmaxiter==IMPMAXITERQUICK && iter>IMPMAXITERQUICK/2){
+            DAMPFACTOR=0.5*DAMPFACTOR0;
+          }
+          else if(trueimpmaxiter==IMPMAXITERLONG && iter>MIN(IMPMAXITERLONG/2,20)){
+            DAMPFACTOR=0.5*DAMPFACTOR0;
+          }
+          else DAMPFACTOR=DAMPFACTOR0;
+        }
+        else if(CHANGEDAMPFACTOR==2){
+          if(itermode==ITERMODESTAGES && iter==mtd.BEGINMOMSTEPS) DAMPFACTOR=0.5*DAMPFACTOR0; else DAMPFACTOR=DAMPFACTOR0;
+          if(itermode==ITERMODESTAGES && iter==mtd.BEGINENERGYSTEPS) DAMPFACTOR=0.5*DAMPFACTOR0; else DAMPFACTOR=DAMPFACTOR0;
+          if(itermode==ITERMODESTAGES && iter==mtd.BEGINFULLSTEPS) DAMPFACTOR=0.25*DAMPFACTOR0; else DAMPFACTOR=DAMPFACTOR0; // 0.25 to be very careful since can change energy too much when suddenly turning back on momentum
         }
         else DAMPFACTOR=DAMPFACTOR0;
-      }
-      else if(CHANGEDAMPFACTOR==2){
-        if(itermode==ITERMODESTAGES && iter==mtd.BEGINMOMSTEPS) DAMPFACTOR=0.5*DAMPFACTOR0; else DAMPFACTOR=DAMPFACTOR0;
-        if(itermode==ITERMODESTAGES && iter==mtd.BEGINENERGYSTEPS) DAMPFACTOR=0.5*DAMPFACTOR0; else DAMPFACTOR=DAMPFACTOR0;
-        if(itermode==ITERMODESTAGES && iter==mtd.BEGINFULLSTEPS) DAMPFACTOR=0.25*DAMPFACTOR0; else DAMPFACTOR=DAMPFACTOR0; // 0.25 to be very careful since can change energy too much when suddenly turning back on momentum
-      }
-      else DAMPFACTOR=DAMPFACTOR0;
       
 
 
-      ///////////
-      //
-      // vector of conserved, primitives, and fractions of steps used at the previous few iterations
-      //
-      //////////
-      PLOOP(pliter,pl){
-        uuppp[pl]=uupp[pl]; // uuppp...
-        uupp[pl]=uup[pl]; // uupp will have solution for inversion: P(uupp)
-        uup[pl]=uu[pl]; // uup will not necessarily have P(uup) because uu used Newton step.
-        uuporig[pl]=uu[pl];
-        
-        ppppp[pl]=pppp[pl]; // ppppp will have knowledge of 2 prior errorabsf1's
-        pppp[pl]=ppp[pl]; // pppp will have solution for inversion
-        ppp[pl]=pp[pl]; // ppp will not necessarily have solution because pp used Newton step.
-        ppporig[pl]=pp[pl];
-      }
-
-      fracdtuu0pp=fracdtuu0p; // fracdtuu0 used when computing previous f1 and f2's
-      fracdtuu0p=fracdtuu0; // fracdtuu0 used when computing previous f1 and f2's
-
-      fracdtGpp=fracdtGp; // fracdtG used when computing previous f1 and f2's
-      fracdtGp=fracdtG; // fracdtG used when computing previous f1 and f2's
-
-      errorabspf3=errorabsf3;
-
-
-      /////////////
-      //
-      // reset at start of new use of equations
-      //
-      ////////////
-      int itererror;
-      if(iter==mtd.BEGINMOMSTEPS || iter==mtd.BEGINENERGYSTEPS || iter==mtd.BEGINFULLSTEPS){
-        iterhold=0;
-        countbadenergy=0;
-        counterrorrose=0;
-        priorerrorscount=0;
-        holdingaspositive=0;
-        countholdpositive=0;
-        countugnegative=0;
-        for(itererror=0;itererror<NUMPRIORERRORS;itererror++) errorabspf1[itererror]=BIG;
-        // store uu,pp before modified using new step
+        ///////////
+        //
+        // vector of conserved, primitives, and fractions of steps used at the previous few iterations
+        //
+        //////////
         PLOOP(pliter,pl){
-          uupriorsteptype[pl]=uu[pl];
-          pppriorsteptype[pl]=pp[pl];
-        }
-      }
-      else if(iter>1){
-        for(itererror=MIN(priorerrorscount,NUMPRIORERRORS)-1;itererror>=1;itererror--) errorabspf1[itererror]=errorabspf1[itererror-1]; // shift to higher
-        errorabspf1[0]=suberrorabsf1; // only for equations that are currently iterating.
-      }
-      // store previous f1 values
-      PLOOP(pliter,pl) f1p[pl]=f1[pl];
-
-
-
-
-      // KORALTODO: Once use certain uu0 value and succeed in getting f1, not enough.  But if take a step and *then* good f1, then know that original U was good choice and can restart from that point instead of backing up uu0 again.
-      // KORALTODO: Look at whether bounding error by sign as in bisection (only true in 1D!!), and if approaching 0 slowly enough and still hit CASE, then must be real CASE not a stepping issue.
-      // KORALTODO: Getting f1 is just about f1(U) as far as radiation is concerned.  So as far as CASE issues, getting f1(U) means we are good with that U and we can certainly stick with the used uu0.
-
-
-
-
-      /////////////////
-      //
-      // get error function (f1) and inversion (uu->pp) using uu
-      //
-      /////////////////
-      int failreturnferr;
-      int convreturnf1;
-      for(f1iter=0;f1iter<MAXF1TRIES;f1iter++){
+          uuppp[pl]=uupp[pl]; // uuppp...
+          uupp[pl]=uup[pl]; // uupp will have solution for inversion: P(uupp)
+          uup[pl]=uu[pl]; // uup will not necessarily have P(uup) because uu used Newton step.
+          uuporig[pl]=uu[pl];
         
-        //        dualfprintf(fail_file,"iter=%d debugiter=%d f1iter=%d\n",iter,debugiter,f1iter);
-
-
-        int whichcall=FIMPLICITCALLTYPEF1;
-        eomtypelocal=*eomtype; // re-chose default each time.  If this reduces to a new eomtype, then Jacobian will stick with that for consistency!
-        int goexplicit;
-        int dimtypef=DIMTYPEFCONS;
-
-        // get original baseitermethod
-        int baseitermethodorig=*baseitermethod;
-        // use ppppp and uuppp as backup since one previous step is often off alot even if not already hitting point at which one should change baseitermethod
-        failreturnferr=f_implicit(allowbaseitermethodswitch, iter, f1iter, failreturnallowableuse, whichcall, impepsjac, showmessages, showmessagesheavy, allowlocalfailurefixandnoreport, &eomtypelocal, whichcap, itermode, baseitermethod, fracenergy, dissmeasure, radinvmod, trueimptryconv, trueimptryconvabs, trueimpallowconvabs, trueimpmaxiter, realdt, dimtypef, dimfactU, ppppp, pp, piin, uuppp, Uiin, uu0, uu, fracdtG*realdt, ptrgeom, q, f1, f1norm, f1report, &goexplicit, &errorabsf1[0], &errorabsf1[1], WHICHERROR, &convreturnf1, nummhdinvsreturn, &tautotmaxreturn, &mtd, &ru); // modifies uu and pp, f1poret, goexplicit, errorabsf1[0,1], convreturnf1
-
-
-        // see if 4-force negligible
-        if(goexplicit){
-          // immediate return.
-          return(-1);
+          ppppp[pl]=pppp[pl]; // ppppp will have knowledge of 2 prior errorabsf1's
+          pppp[pl]=ppp[pl]; // pppp will have solution for inversion
+          ppp[pl]=pp[pl]; // ppp will not necessarily have solution because pp used Newton step.
+          ppporig[pl]=pp[pl];
         }
 
+        fracdtuu0pp=fracdtuu0p; // fracdtuu0 used when computing previous f1 and f2's
+        fracdtuu0p=fracdtuu0; // fracdtuu0 used when computing previous f1 and f2's
 
-        // allow tolerance to be higher if optically thin enough, track for each iteration in case changes!
-        if(tautotmaxreturn<TAUTOTMAXHIGHERTOL){
-          trueimptryconv=IMPTRYCONV_TAUTOTMAXHIGHERTOL;
-          //  FTYPE trueimptryconv=IMPTRYCONV;
-          trueimptryconvabs=IMPTRYCONVABS;
-          trueimptryconvalt=IMPTRYCONVALT;
+        fracdtGpp=fracdtGp; // fracdtG used when computing previous f1 and f2's
+        fracdtGp=fracdtG; // fracdtG used when computing previous f1 and f2's
+
+        errorabspf3=errorabsf3;
+
+
+        /////////////
+        //
+        // reset at start of new use of equations
+        //
+        ////////////
+        int itererror;
+        if(iter==mtd.BEGINMOMSTEPS || iter==mtd.BEGINENERGYSTEPS || iter==mtd.BEGINFULLSTEPS){
+          iterhold=0;
+          countbadenergy=0;
+          counterrorrose=0;
+          priorerrorscount=0;
+          holdingaspositive=0;
+          countholdpositive=0;
+          countugnegative=0;
+          for(itererror=0;itererror<NUMPRIORERRORS;itererror++) errorabspf1[itererror]=BIG;
+          // store uu,pp before modified using new step
+          PLOOP(pliter,pl){
+            uupriorsteptype[pl]=uu[pl];
+            pppriorsteptype[pl]=pp[pl];
+          }
         }
-        else{
-          trueimptryconv=trueimptryconv_orig;
-          //  FTYPE trueimptryconv=IMPTRYCONV;
-          trueimptryconvabs=IMPTRYCONVABS;
-          trueimptryconvalt=IMPTRYCONVALT;
+        else if(iter>1){
+          for(itererror=MIN(priorerrorscount,NUMPRIORERRORS)-1;itererror>=1;itererror--) errorabspf1[itererror]=errorabspf1[itererror-1]; // shift to higher
+          errorabspf1[0]=suberrorabsf1; // only for equations that are currently iterating.
         }
+        // store previous f1 values
+        PLOOP(pliter,pl) f1p[pl]=f1[pl];
 
 
-        // if baseitermethod changed, then need to deal with fracdtuu0 that may have different properties.  So while we don't necessarily go back too far on pp,uu, we need to pretend starting over with how we deal with uu0.
-        if(*baseitermethod!=baseitermethodorig) iter=1;
+
+
+        // KORALTODO: Once use certain uu0 value and succeed in getting f1, not enough.  But if take a step and *then* good f1, then know that original U was good choice and can restart from that point instead of backing up uu0 again.
+        // KORALTODO: Look at whether bounding error by sign as in bisection (only true in 1D!!), and if approaching 0 slowly enough and still hit CASE, then must be real CASE not a stepping issue.
+        // KORALTODO: Getting f1 is just about f1(U) as far as radiation is concerned.  So as far as CASE issues, getting f1(U) means we are good with that U and we can certainly stick with the used uu0.
+
+
+
+
+        /////////////////
+        //
+        // get error function (f1) and inversion (uu->pp) using uu
+        //
+        /////////////////
+        int failreturnferr;
+        int convreturnf1;
+        for(f1iter=f1iterstart;f1iter<MAXF1TRIES;f1iter++){
+        
+          //        dualfprintf(fail_file,"iter=%d debugiter=%d f1iter=%d\n",iter,debugiter,f1iter);
+
+
+          int whichcall=FIMPLICITCALLTYPEF1;
+          eomtypelocal=*eomtype; // re-chose default each time.  If this reduces to a new eomtype, then Jacobian will stick with that for consistency!
+          int goexplicit;
+          int dimtypef=DIMTYPEFCONS;
+
+          // get original baseitermethod
+          int baseitermethodorig=*baseitermethod;
+          // use ppppp and uuppp as backup since one previous step is often off alot even if not already hitting point at which one should change baseitermethod
+          failreturnferr=f_implicit(allowbaseitermethodswitch, iter, f1iter, failreturnallowableuse, whichcall, impepsjac, showmessages, showmessagesheavy, allowlocalfailurefixandnoreport, &eomtypelocal, whichcap, itermode, baseitermethod, fracenergy, dissmeasure, radinvmod, trueimptryconv, trueimptryconvabs, trueimpallowconvabs, trueimpmaxiter, realdt, dimtypef, dimfactU, ppppp, pp, piin, uuppp, Uiin, uu0, uu, fracdtG*realdt, ptrgeom, q, f1, f1norm, f1report, &goexplicit, &errorabsf1[0], &errorabsf1[1], WHICHERROR, &convreturnf1, nummhdinvsreturn, &tautotmaxreturn, &mtd, &ru); // modifies uu and pp, f1poret, goexplicit, errorabsf1[0,1], convreturnf1
+
+
+          // see if 4-force negligible
+          if(goexplicit){
+            // immediate return.
+            return(-1);
+          }
+
+
+          // allow tolerance to be higher if optically thin enough, track for each iteration in case changes!
+          if(tautotmaxreturn<TAUTOTMAXHIGHERTOL){
+            trueimptryconv=IMPTRYCONV_TAUTOTMAXHIGHERTOL;
+            //  FTYPE trueimptryconv=IMPTRYCONV;
+            trueimptryconvabs=IMPTRYCONVABS;
+            trueimptryconvalt=IMPTRYCONVALT;
+          }
+          else{
+            trueimptryconv=trueimptryconv_orig;
+            //  FTYPE trueimptryconv=IMPTRYCONV;
+            trueimptryconvabs=IMPTRYCONVABS;
+            trueimptryconvalt=IMPTRYCONVALT;
+          }
+
+
+          // if baseitermethod changed, then need to deal with fracdtuu0 that may have different properties.  So while we don't necessarily go back too far on pp,uu, we need to pretend starting over with how we deal with uu0.
+          if(*baseitermethod!=baseitermethodorig) iter=1;
 
 
 #if(MODEMETHOD==MODEENERGY ||MODEMETHOD==MODEENTROPY ||MODEMETHOD==MODESWITCH)
-        // setup method and signs in case changed baseitermethod
-        define_method(iter, &eomtypelocal, itermode, *baseitermethod, fracenergy, dissmeasure, &mtd);
-        get_refUs(&mtd, &ru);
+          // setup method and signs in case changed baseitermethod
+          define_method(iter, &eomtypelocal, itermode, *baseitermethod, fracenergy, dissmeasure, &mtd);
+          get_refUs(&mtd, &ru);
 #endif
 
 
 
-        // f1 error calculation updated non-iterated pp or uu, so store.  Ok to re-store iterated uu and pp as well
-        // KORALTODO: This might mess up when f1 backs-up uu and pp
-        PLOOP(pliter,pl){
-          uup[pl]=uu[pl];
-          ppp[pl]=pp[pl];
-        }
+          // f1 error calculation updated non-iterated pp or uu, so store.  Ok to re-store iterated uu and pp as well
+          // KORALTODO: This might mess up when f1 backs-up uu and pp
+          PLOOP(pliter,pl){
+            uup[pl]=uu[pl];
+            ppp[pl]=pp[pl];
+          }
 
 
 #if(0)
-        if(pp[PRAD0]<10.0*ERADLIMIT){
-          // try smaller tolerance
-          trueimptryconv=10.0*NUMEPSILON;
-          trueimptryconvabs=((FTYPE)(NDIM+2)*trueimptryconv);
-          trueimptryconvalt=(MAX(1E-8,trueimptryconvabs));
-        }
+          if(pp[PRAD0]<10.0*ERADLIMIT){
+            // try smaller tolerance
+            trueimptryconv=10.0*NUMEPSILON;
+            trueimptryconvabs=((FTYPE)(NDIM+2)*trueimptryconv);
+            trueimptryconvalt=(MAX(1E-8,trueimptryconvabs));
+          }
 #endif
 
 
-        if(failreturnferr){
+          if(failreturnferr){
 
-          //          if(debugfail>=2) dualfprintf(fail_file,"Failed f1: %d\n",failreturnferr);
+            //          if(debugfail>=2) dualfprintf(fail_file,"Failed f1: %d\n",failreturnferr);
 
 #define BACKUPRELEASEFAIL0 (1E-4)
 #define BACKUPRELEASEFAIL1 (1E-6)
 #define BACKUPRELEASEFAIL2 (1E-7)
 #define MAXF1ITERRADTRY (10) // number of iterations after which to release and allow radiation to "fail"
 
-          // if backing up alot, then allow same failure as original Uiin in hopes that can recover that way (otherwise would have hoped would recover via flux update to Uiin)
-          if(fracdtuu0<BACKUPRELEASEFAIL0){
-            failreturnallowableuse=failreturnallowable;
+            // if backing up alot, then allow same failure as original Uiin in hopes that can recover that way (otherwise would have hoped would recover via flux update to Uiin)
+            if(fracdtuu0<BACKUPRELEASEFAIL0){
+              failreturnallowableuse=failreturnallowable;
+            }
+            if(fracdtuu0<BACKUPRELEASEFAIL1 || f1iter>=MAXF1ITERRADTRY){
+              failreturnallowableuse=UTOPRIMGENWRAPPERRETURNFAILRAD;
+            }
+
+
+            if(iter==1){
+              // if initial uu failed, then should take smaller jump from Uiin->uu until settled between fluid and radiation.
+              // If here, know original Uiin is good, so take baby steps in case uu needs heavy raditive changes.
+              // if f1 fails, try going back to Uiin a bit
+              fracdtuu0*=RADDAMPDELTA; // DAMP Uiin->uu0 step that may be too large and generated too large G
+              fracdtuu0=MIN(1.0,fracdtuu0);
+
+              //          if(fracdtuu0<BACKUPRELEASEFAIL2) fracdtuu0=0.0; // just stop trying to start with some uu0 and revert to Uiin
+
+              // modifies uup (ppp) and uu (pp) as if starting over, and then another call to f_implicit(f1) will change uu by generally smaller amount.
+              PLOOP(pliter,pl){
+                uup[pl]=uu[pl]=uu0[pl];
+                ppp[pl]=pp[pl]=pp0[pl];
+              }
+            }
+            else{
+              // if here, then assume prior uup was good in sense that no failures like P(uup) is good inversion.  And uu=uup before f_implicit(f1) is called.
+              // No, not necessarily true, because uu updated with some-sized Newton step without checking if inversion is good for that uu.
+              // So need to damp between original uup and uupp .  This essentially damps Newton step now that have knowledge the Newton step was too large as based upon P(U) failure.
+
+              // Avoid G-damping because not needed so far.  If added, competes in non-trivial way with fracuup damping that's required separately for large forces in some problems beyond iter=1 (e.g. NTUBE=31).
+              //          fracdtG*=RADDAMPDELTA; // DAMP give only fraction of 4-force to let uu to catch-up
+              //           fracdtG=0.5; // DAMP give only fraction of 4-force to let uu to catch-up
+
+              fracuup*=RADDAMPDELTA; // DAMP in case Newton step is too large after iter>1 and stuck with certain uu from Newton step that gets stored in uup above.
+
+              PLOOP(pliter,pl) uu[pl]=(1.0-fracuup)*uupp[pl] + fracuup*uuporig[pl];
+              //          PLOOP(pliter,pl) uu[pl]=(1.0-fracuup)*uupp[pl] + fracuup*uup[pl];
+              PLOOP(pliter,pl) uup[pl]=uu[pl]; // store new version of prior Newton step
+
+              PLOOP(pliter,pl) pp[pl]=(1.0-fracuup)*pppp[pl] + fracuup*ppporig[pl];
+              //          PLOOP(pliter,pl) pp[pl]=(1.0-fracuup)*pppp[pl] + fracuup*ppp[pl];
+              PLOOP(pliter,pl) ppp[pl]=pp[pl]; // store new version of prior Newton step
+          
+              // get interpolated fracdtuu0 so using fracdtuu0 that was used with the corresponding uu
+              fracdtuu0=(1.0-fracuup)*fracdtuu0pp + fracuup*fracdtuu0p;
+              // same for fracdtG
+              fracdtG=(1.0-fracuup)*fracdtGpp + fracuup*fracdtGp;
+
+            }
+
+
+            // get uu0 (which may be changing)
+            //          FTYPE dUnongeomall[MAXTIMEORDER]={0.0};
+            PLOOP(pliter,pl) uu0[pl]=UFSET(CUf,fracdtuu0*dt,Uiin[pl],Ufin[pl],dUother[pl],0.0,dUnongeomall);
+            {
+              FTYPE uuiterback[NPR];
+              PLOOP(pliter,pl) uuiterback[pl] = uu[pl]; // hold actual iterated quantities
+              PLOOP(pliter,pl) uu[pl] = uu0[pl]; // "iterate" non-iterated quantities
+              JACLOOP(ii,ru.startjac,ru.endjac) uu[ru.irefU[ii]] = uuiterback[ru.irefU[ii]]; // overwrite with actual previous step for iterated quantities
+            }
+            // KORALNOTE: pp0 not used, setting uu0 above fixes error function where only uu0 is needed.
+
+
+
+            // keep below so can count inversion failures against retry successes in the failure file.
+            if(showmessages && debugfail>=2) dualfprintf(fail_file,"f_implicit for f1 failed: iter=%d  Backing-up both uu0 and G.: f1iter=%d fracdtuu0=%g fracdtG=%g fracuup=%g\n",iter,f1iter,fracdtuu0,fracdtG,fracuup);
+            if(showmessagesheavy) PLOOP(pliter,pl) dualfprintf(fail_file,"pl=%d Ui=%26.20g uu0=%26.20g uu0orig=%26.20g uu=%26.20g uup=%26.20g dUother=%26.20g\n",pl,Uiin[pl],uu0[pl],uu0orig[pl],uu[pl],uup[pl],dUother[pl]);
+          }// end if failed inversion in f_implicit()
+          else{
+            // then success, so was able to do inversion P(U) with change in radiation on fluid: P(uu[fluid] = uu0[fluid] - (uu[rad]-uu0[rad]))
+            // This doesn't necessarily mean could do P(uu0) except for iter=1.
+            // Corresponds to success for a certain P(uu0,uu) pair.
+            if(showmessagesheavy) PLOOP(pliter,pl) dualfprintf(fail_file,"SUCCESS: pl=%d Ui=%26.20g uu0=%26.20g uu0orig=%26.20g uu=%26.20g uup=%26.20g dUother=%26.20g: pp(pnew)=%g : fracdtuu0=%g fracdtG=%g fracuup=%g\n",pl,Uiin[pl],uu0[pl],uu0orig[pl],uu[pl],uup[pl],dUother[pl],pp[pl],fracdtuu0,fracdtG,fracuup);
+            break;
           }
-          if(fracdtuu0<BACKUPRELEASEFAIL1 || f1iter>=MAXF1ITERRADTRY){
-            failreturnallowableuse=UTOPRIMGENWRAPPERRETURNFAILRAD;
+
+          // if during f1iter-ations u_g or rho is negative, switch to entropy
+#define F1ITERSWITCHONNEG 20
+          if(havebackup){
+            if(f1iter>F1ITERSWITCHONNEG && (pp[RHO]<0 || pp[UU]<0)){
+              failreturn=FAILRETURNMODESWITCH; mathfailtype=70;
+              if(debugfail>=DEBUGLEVELIMPSOLVERMORE) dualfprintf(fail_file,"Switched modes during f1iter=%d : rho=%21.15g ug=%21.15g\n",f1iter,pp[RHO],pp[UU]);
+              break;
+            }
           }
 
 
-          if(iter==1){
-            // if initial uu failed, then should take smaller jump from Uiin->uu until settled between fluid and radiation.
-            // If here, know original Uiin is good, so take baby steps in case uu needs heavy raditive changes.
-            // if f1 fails, try going back to Uiin a bit
-            fracdtuu0*=RADDAMPDELTA; // DAMP Uiin->uu0 step that may be too large and generated too large G
-            fracdtuu0=MIN(1.0,fracdtuu0);
+          *nummhdstepsreturn = (int)(nstroke-nstrokeorig); // get number of mhd inversion steps
+          if(*nummhdstepsreturn>MAXMHDSTEPS){
+            failreturn=0;
+            break;
+          }
+      
 
-            //          if(fracdtuu0<BACKUPRELEASEFAIL2) fracdtuu0=0.0; // just stop trying to start with some uu0 and revert to Uiin
+        }// end loop over f1iter
+        *f1itersreturn += f1iter;
 
-            // modifies uup (ppp) and uu (pp) as if starting over, and then another call to f_implicit(f1) will change uu by generally smaller amount.
-            PLOOP(pliter,pl){
-              uup[pl]=uu[pl]=uu0[pl];
-              ppp[pl]=pp[pl]=pp0[pl];
+
+        //////////////
+        // break again out of total loop if broke in f1iter loop
+        if(failreturn){
+          prod0dualfprintf(debugfail>=DEBUGLEVELIMPSOLVERMORE,fail_file,"Breaking out of loop as think f1iter wanted us to.\n");
+          break; // ok to break here and avoid saying this was best solution since unlikely will be best as f1 can't even be obtained.  And so step shouldn't be taken as well.
+        }
+        else{// else if good f1
+
+          /////////////////////////////////
+          //
+          // Check if reached max f1 iterations
+          //
+          ////////////////////////////////
+          *nummhdstepsreturn = (int)(nstroke-nstrokeorig); // get number of mhd inversion steps
+          if(f1iter==MAXF1TRIES || *nummhdstepsreturn>MAXMHDSTEPS){
+
+            if(f1iter==MAXF1TRIES) if(debugfail>=2) dualfprintf(fail_file,"Reached MAXF1TRIES=%d (nummhdstepsreturn=%d: %d %d trueimpmaxiter=%d): fracdtuu0=%g nstep=%ld steppart=%d ijk=%d %d %d : iter=%d eomtype=%d baseitermethod=%d failreturn=%d\n",MAXF1TRIES,*nummhdstepsreturn,nstrokeorig,nstroke,trueimpmaxiter,fracdtuu0,nstep,steppart,ptrgeom->i,ptrgeom->j,ptrgeom->k,iter,eomtypelocal,*baseitermethod,failreturn);
+            if(*nummhdstepsreturn>MAXMHDSTEPS) if(debugfail>=2) dualfprintf(fail_file,"Reached MAXMHDSTEPS=%d: fracdtuu0=%g nstep=%ld steppart=%d ijk=%d %d %d : iter=%d eomtype=%d baseitermethod=%d failreturn=%d\n",*nummhdstepsreturn,fracdtuu0,nstep,steppart,ptrgeom->i,ptrgeom->j,ptrgeom->k,iter,eomtypelocal,*baseitermethod,failreturn);
+            if(havebackup){
+              failreturn=FAILRETURNMODESWITCH; mathfailtype=20;
+              if(debugfail>=DEBUGLEVELIMPSOLVERMORE) dualfprintf(fail_file,"SWITCHING MODE: Detected MAXF1TRIES\n");
+              break; // ok to break, no better solution to store as best
+            }
+            else{
+              failreturn=FAILRETURNGENERAL; mathfailtype=2;
+              if(doingit==1) myexit(10000000); // DEBUG
+              // Note that if inversion reduces to entropy or cold, don't fail, so passes until reached this point.  But convergence can be hard if flipping around which EOMs for the inversion are actually used.
+              break; // ok to break, no better solution to store as best
             }
           }
           else{
-            // if here, then assume prior uup was good in sense that no failures like P(uup) is good inversion.  And uu=uup before f_implicit(f1) is called.
-            // No, not necessarily true, because uu updated with some-sized Newton step without checking if inversion is good for that uu.
-            // So need to damp between original uup and uupp .  This essentially damps Newton step now that have knowledge the Newton step was too large as based upon P(U) failure.
-
-            // Avoid G-damping because not needed so far.  If added, competes in non-trivial way with fracuup damping that's required separately for large forces in some problems beyond iter=1 (e.g. NTUBE=31).
-            //          fracdtG*=RADDAMPDELTA; // DAMP give only fraction of 4-force to let uu to catch-up
-            //           fracdtG=0.5; // DAMP give only fraction of 4-force to let uu to catch-up
-
-            fracuup*=RADDAMPDELTA; // DAMP in case Newton step is too large after iter>1 and stuck with certain uu from Newton step that gets stored in uup above.
-
-            PLOOP(pliter,pl) uu[pl]=(1.0-fracuup)*uupp[pl] + fracuup*uuporig[pl];
-            //          PLOOP(pliter,pl) uu[pl]=(1.0-fracuup)*uupp[pl] + fracuup*uup[pl];
-            PLOOP(pliter,pl) uup[pl]=uu[pl]; // store new version of prior Newton step
-
-            PLOOP(pliter,pl) pp[pl]=(1.0-fracuup)*pppp[pl] + fracuup*ppporig[pl];
-            //          PLOOP(pliter,pl) pp[pl]=(1.0-fracuup)*pppp[pl] + fracuup*ppp[pl];
-            PLOOP(pliter,pl) ppp[pl]=pp[pl]; // store new version of prior Newton step
-          
-            // get interpolated fracdtuu0 so using fracdtuu0 that was used with the corresponding uu
-            fracdtuu0=(1.0-fracuup)*fracdtuu0pp + fracuup*fracdtuu0p;
-            // same for fracdtG
-            fracdtG=(1.0-fracuup)*fracdtGpp + fracuup*fracdtGp;
-
+            // restore fracuup back to 1 since this is only meant to adjust how much go back to previous uu to be able to get f1 computed.
+            // fracuup doesn't stay <1.0 because each attempt to get f1 is independent.
+            // KORALNOTE: Perhaps reasonable and safer to keep fracuup as not reverted back to 1, since apparently unable to take full steps.  This effectively damps stepping.
+            fracuup=1.0;
           }
-
-
-          // get uu0 (which may be changing)
-          //          FTYPE dUnongeomall[MAXTIMEORDER]={0.0};
-          PLOOP(pliter,pl) uu0[pl]=UFSET(CUf,fracdtuu0*dt,Uiin[pl],Ufin[pl],dUother[pl],0.0,dUnongeomall);
-          {
-            FTYPE uuiterback[NPR];
-            PLOOP(pliter,pl) uuiterback[pl] = uu[pl]; // hold actual iterated quantities
-            PLOOP(pliter,pl) uu[pl] = uu0[pl]; // "iterate" non-iterated quantities
-            JACLOOP(ii,ru.startjac,ru.endjac) uu[ru.irefU[ii]] = uuiterback[ru.irefU[ii]]; // overwrite with actual previous step for iterated quantities
-          }
-          // KORALNOTE: pp0 not used, setting uu0 above fixes error function where only uu0 is needed.
-
-
-
-          // keep below so can count inversion failures against retry successes in the failure file.
-          if(showmessages && debugfail>=2) dualfprintf(fail_file,"f_implicit for f1 failed: iter=%d  Backing-up both uu0 and G.: f1iter=%d fracdtuu0=%g fracdtG=%g fracuup=%g\n",iter,f1iter,fracdtuu0,fracdtG,fracuup);
-          if(showmessagesheavy) PLOOP(pliter,pl) dualfprintf(fail_file,"pl=%d Ui=%26.20g uu0=%26.20g uu0orig=%26.20g uu=%26.20g uup=%26.20g dUother=%26.20g\n",pl,Uiin[pl],uu0[pl],uu0orig[pl],uu[pl],uup[pl],dUother[pl]);
-        }// end if failed inversion in f_implicit()
-        else{
-          // then success, so was able to do inversion P(U) with change in radiation on fluid: P(uu[fluid] = uu0[fluid] - (uu[rad]-uu0[rad]))
-          // This doesn't necessarily mean could do P(uu0) except for iter=1.
-          // Corresponds to success for a certain P(uu0,uu) pair.
-          if(showmessagesheavy) PLOOP(pliter,pl) dualfprintf(fail_file,"SUCCESS: pl=%d Ui=%26.20g uu0=%26.20g uu0orig=%26.20g uu=%26.20g uup=%26.20g dUother=%26.20g: pp(pnew)=%g : fracdtuu0=%g fracdtG=%g fracuup=%g\n",pl,Uiin[pl],uu0[pl],uu0orig[pl],uu[pl],uup[pl],dUother[pl],pp[pl],fracdtuu0,fracdtG,fracuup);
-          break;
-        }
-
-        // if during f1iter-ations u_g or rho is negative, switch to entropy
-#define F1ITERSWITCHONNEG 20
-        if(havebackup){
-          if(f1iter>F1ITERSWITCHONNEG && (pp[RHO]<0 || pp[UU]<0)){
-            failreturn=FAILRETURNMODESWITCH; mathfailtype=70;
-            if(debugfail>=DEBUGLEVELIMPSOLVERMORE) dualfprintf(fail_file,"Switched modes during f1iter=%d : rho=%21.15g ug=%21.15g\n",f1iter,pp[RHO],pp[UU]);
-            break;
-          }
-        }
-
-
-        *nummhdstepsreturn = (int)(nstroke-nstrokeorig); // get number of mhd inversion steps
-        if(*nummhdstepsreturn>MAXMHDSTEPS){
-          failreturn=0;
-          break;
-        }
-      
-
-      }// end loop over f1iter
-      *f1itersreturn += f1iter;
-
-
-      //////////////
-      // break again out of total loop if broke in f1iter loop
-      if(failreturn){
-        prod0dualfprintf(debugfail>=DEBUGLEVELIMPSOLVERMORE,fail_file,"Breaking out of loop as think f1iter wanted us to.\n");
-        break; // ok to break here and avoid saying this was best solution since unlikely will be best as f1 can't even be obtained.  And so step shouldn't be taken as well.
-      }
-      else{// else if good f1
-
-        /////////////////////////////////
-        //
-        // Check if reached max f1 iterations
-        //
-        ////////////////////////////////
-        *nummhdstepsreturn = (int)(nstroke-nstrokeorig); // get number of mhd inversion steps
-        if(f1iter==MAXF1TRIES || *nummhdstepsreturn>MAXMHDSTEPS){
-
-          if(f1iter==MAXF1TRIES) if(debugfail>=2) dualfprintf(fail_file,"Reached MAXF1TRIES=%d (nummhdstepsreturn=%d: %d %d trueimpmaxiter=%d): fracdtuu0=%g nstep=%ld steppart=%d ijk=%d %d %d : iter=%d eomtype=%d baseitermethod=%d failreturn=%d\n",MAXF1TRIES,*nummhdstepsreturn,nstrokeorig,nstroke,trueimpmaxiter,fracdtuu0,nstep,steppart,ptrgeom->i,ptrgeom->j,ptrgeom->k,iter,eomtypelocal,*baseitermethod,failreturn);
-          if(*nummhdstepsreturn>MAXMHDSTEPS) if(debugfail>=2) dualfprintf(fail_file,"Reached MAXMHDSTEPS=%d: fracdtuu0=%g nstep=%ld steppart=%d ijk=%d %d %d : iter=%d eomtype=%d baseitermethod=%d failreturn=%d\n",*nummhdstepsreturn,fracdtuu0,nstep,steppart,ptrgeom->i,ptrgeom->j,ptrgeom->k,iter,eomtypelocal,*baseitermethod,failreturn);
-          if(havebackup){
-            failreturn=FAILRETURNMODESWITCH; mathfailtype=20;
-            if(debugfail>=DEBUGLEVELIMPSOLVERMORE) dualfprintf(fail_file,"SWITCHING MODE: Detected MAXF1TRIES\n");
-            break; // ok to break, no better solution to store as best
-          }
-          else{
-            failreturn=FAILRETURNGENERAL; mathfailtype=2;
-            if(doingit==1) myexit(10000000); // DEBUG
-            // Note that if inversion reduces to entropy or cold, don't fail, so passes until reached this point.  But convergence can be hard if flipping around which EOMs for the inversion are actually used.
-            break; // ok to break, no better solution to store as best
-          }
-        }
-        else{
-          // restore fracuup back to 1 since this is only meant to adjust how much go back to previous uu to be able to get f1 computed.
-          // fracuup doesn't stay <1.0 because each attempt to get f1 is independent.
-          // KORALNOTE: Perhaps reasonable and safer to keep fracuup as not reverted back to 1, since apparently unable to take full steps.  This effectively damps stepping.
-          fracuup=1.0;
-        }
   
-        // diagnose
-        if(showmessagesheavy) PLOOP(pliter,pl) dualfprintf(fail_file,"i=%d ii=%d pl=%d f1=%g\n",ptrgeom->i,ii,pl,f1[pl]);
-      }// else if f1 calculation didn't fail.
+          // diagnose
+          if(showmessagesheavy) PLOOP(pliter,pl) dualfprintf(fail_file,"i=%d ii=%d pl=%d f1=%g\n",ptrgeom->i,ii,pl,f1[pl]);
+        }// else if f1 calculation didn't fail.
 
 
     
     
-      ////////
-      //
-      // get type of EOMTYPE
-      //
-      ////////
-      int eomcond=(eomtypelocal==EOMGRMHD || eomtypelocal==EOMDEFAULT && EOMDEFAULT==EOMGRMHD);
+        ////////
+        //
+        // get type of EOMTYPE
+        //
+        ////////
+        int eomcond=(eomtypelocal==EOMGRMHD || eomtypelocal==EOMDEFAULT && EOMDEFAULT==EOMGRMHD);
 
 
-      /////////
-      //
-      // see if should check convergence or check how solution is behaving.
-      //
-      /////////
-      checkconv=1;
-      ////////////////////////////////////////////////////////////////////////////
-      //    if(fracuup!=1.0){
-      //      if(fabs(fracuup-1.0)>10.0*NUMEPSILON){
-      if(fracuup<1.0){
-        // try increasing amount of uu or pp used
-        checkconv=0;
-      }
-      ////////////////////////////////////////////////////////////////////////////
-      //    if(fracdtuu0!=1.0){
-      //      if(fabs(fracdtuu0-1.0)>10.0*NUMEPSILON && changeotherdt){
-      if(fracdtuu0<1.0){
-        checkconv=0;
-      }
-      ////////////////////////////////////////////////////////////////////////////
-      //    if(fracdtG!=1.0){
-      //      if(fabs(fracdtG-1.0)>10.0*NUMEPSILON && changeotherdt){
-      if(fracdtG<1.0 && changeotherdt){
-        checkconv=0;
-      }      
-      ////////////////////////////////////////////////////////////////////////////
-      if(iter<mtd.BEGINNORMALSTEPS) checkconv=0; // don't check actual convergence till doing full steps
-      ////////////////////////////////////////////////////////////////////////////
-
-
-
-      //////////////
-      //
-      // get error using f1 and f1norm
-      //
-      //////////////
-      //      int convreturnf1=f_error_check(showmessages, showmessagesheavy, iter, trueimptryconv, trueimptryconvabs, realdt, DIMTYPEFCONS,eomtypelocal , *radinvmod, itermode,*baseitermethod,fracenergy,dissmeasure,dimfactU,pp,piin,f1,f1norm,f1report,Uiin,uu0,uu,ptrgeom,&errorabsf1[0],&errorabsf1[1],WHICHERROR,&mtd,&ru);
-      // but don't break, since need to iterate a bit first and check |dU/U| and need to see if checkconv==1
-      FTYPE numsub=0;
-      suberrorabsf1=0.0;  JACLOOPSUBERROR(jj,ru.startjac,ru.endjac){
-        suberrorabsf1     += fabs(f1report[ru.erefU[jj]]); // e.g. may only be energy error or only momentum error.
-        numsub += 1.0;
-      }
-
-
-
-      // DEBUG STUFF
-#if(DEBUGMAXITER)
-      if(dampattempt==0){
-        PLOOP(pliter,pl) pppreholdlist[debugiter][pl]=pp[pl]; // just default dummy value in case break
-        PLOOP(pliter,pl) ppposholdlist[debugiter][pl]=pp[pl]; // just default dummy value in case break
-        if(DEBUGMAXITERVELOCITY==1){
-          SLOOPA(jj){
-            pppreholdlist[debugiter][U1+jj-1]=q->ucon[jj];
-            pppreholdlist[debugiter][URAD1+jj-1]=q->uradcon[jj];
-            ppposholdlist[debugiter][U1+jj-1]=q->ucon[jj];
-            ppposholdlist[debugiter][URAD1+jj-1]=q->uradcon[jj];
-          }
+        /////////
+        //
+        // see if should check convergence or check how solution is behaving.
+        //
+        /////////
+        checkconv=1;
+        ////////////////////////////////////////////////////////////////////////////
+        //    if(fracuup!=1.0){
+        //      if(fabs(fracuup-1.0)>10.0*NUMEPSILON){
+        if(fracuup<1.0){
+          // try increasing amount of uu or pp used
+          checkconv=0;
         }
-        PLOOP(pliter,pl) f1reportlist[debugiter][pl]=f1report[pl];
-        PLOOP(pliter,pl) f1list[debugiter][pl]=f1[pl];
-        realiterlist[debugiter]=iter;
-        DLOOP(jj,kk) jaclist[debugiter][jj][kk]=BIG; // just default dummy value in case break
-        implicititerlist[debugiter]=mtd.implicititer;
-        implicitferrlist[debugiter]=mtd.implicitferr;
-        fracdamplist[0]=fracdtuu0;
-        fracdamplist[1]=fracdtG;
-        fracdamplist[2]=DAMPFACTOR;
-      }
-      errorabsf1list[debugiter]=errorabsf1[0];
-      errorallabsf1list[debugiter]=errorabsf1[1];
+        ////////////////////////////////////////////////////////////////////////////
+        //    if(fracdtuu0!=1.0){
+        //      if(fabs(fracdtuu0-1.0)>10.0*NUMEPSILON && changeotherdt){
+        if(fracdtuu0<1.0){
+          checkconv=0;
+        }
+        ////////////////////////////////////////////////////////////////////////////
+        //    if(fracdtG!=1.0){
+        //      if(fabs(fracdtG-1.0)>10.0*NUMEPSILON && changeotherdt){
+        if(fracdtG<1.0 && changeotherdt){
+          checkconv=0;
+        }      
+        ////////////////////////////////////////////////////////////////////////////
+        if(iter<mtd.BEGINNORMALSTEPS) checkconv=0; // don't check actual convergence till doing full steps
+        ////////////////////////////////////////////////////////////////////////////
+
+
+
+        //////////////
+        //
+        // get error using f1 and f1norm
+        //
+        //////////////
+        //      int convreturnf1=f_error_check(showmessages, showmessagesheavy, iter, trueimptryconv, trueimptryconvabs, realdt, DIMTYPEFCONS,eomtypelocal , *radinvmod, itermode,*baseitermethod,fracenergy,dissmeasure,dimfactU,pp,piin,f1,f1norm,f1report,Uiin,uu0,uu,ptrgeom,&errorabsf1[0],&errorabsf1[1],WHICHERROR,&mtd,&ru);
+        // but don't break, since need to iterate a bit first and check |dU/U| and need to see if checkconv==1
+        FTYPE numsub=0;
+        suberrorabsf1=0.0;  JACLOOPSUBERROR(jj,ru.startjac,ru.endjac){
+          suberrorabsf1     += fabs(f1report[ru.erefU[jj]]); // e.g. may only be energy error or only momentum error.
+          numsub += 1.0;
+        }
+
+
+
+        // DEBUG STUFF
+#if(DEBUGMAXITER)
+        if(dampattempt==0){
+          PLOOP(pliter,pl) pppreholdlist[debugiter][pl]=pp[pl]; // just default dummy value in case break
+          PLOOP(pliter,pl) ppposholdlist[debugiter][pl]=pp[pl]; // just default dummy value in case break
+          if(DEBUGMAXITERVELOCITY==1){
+            SLOOPA(jj){
+              pppreholdlist[debugiter][U1+jj-1]=q->ucon[jj];
+              pppreholdlist[debugiter][URAD1+jj-1]=q->uradcon[jj];
+              ppposholdlist[debugiter][U1+jj-1]=q->ucon[jj];
+              ppposholdlist[debugiter][URAD1+jj-1]=q->uradcon[jj];
+            }
+          }
+          PLOOP(pliter,pl) f1reportlist[debugiter][pl]=f1report[pl];
+          PLOOP(pliter,pl) f1list[debugiter][pl]=f1[pl];
+          realiterlist[debugiter]=iter;
+          DLOOP(jj,kk) jaclist[debugiter][jj][kk]=BIG; // just default dummy value in case break
+          implicititerlist[debugiter]=mtd.implicititer;
+          implicitferrlist[debugiter]=mtd.implicitferr;
+          fracdamplist[0]=fracdtuu0;
+          fracdamplist[1]=fracdtG;
+          fracdamplist[2]=DAMPFACTOR;
+        }
+        errorabsf1list[debugiter]=errorabsf1[0];
+        errorallabsf1list[debugiter]=errorabsf1[1];
 #else
-      errorabsf1list[debugiter]=errorabsf1[0];
-      errorallabsf1list[debugiter]=errorabsf1[1];
+        errorabsf1list[debugiter]=errorabsf1[0];
+        errorallabsf1list[debugiter]=errorabsf1[1];
 #endif
 
 
 
-      ////////////////
-      //
-      // If error dropped below tolerance for this sub-matrix iteration mode, then continue to next level.
-      //
-      /////////////////
-      // check if energy only iteration has error that has dropped below tolerance, then can move on to 
-      if(itermode==ITERMODESTAGES && iter>=mtd.BEGINMOMSTEPS && iter<=mtd.ENDMOMSTEPS){
-        FTYPE errorabs3=0.0; int testi;
-        for(testi=1;testi<=3;testi++) errorabs3 += fabs(f1report[ru.irefU[testi]]);
-        FTYPE errorneed=((FTYPE)(3+2)*trueimptryconv);
-        if(errorabs3<errorneed){
-          if(iter<=mtd.ENDMOMSTEPS){ iter=mtd.BEGINENERGYSTEPS-1; continue;} // force as if already doing energy steps.  If already next iteration is to be this energy step, then no skipping needed.
-          // continue assumes not triggered when iter>trueimpmaxiter
+        ////////////////
+        //
+        // If error dropped below tolerance for this sub-matrix iteration mode, then continue to next level.
+        //
+        /////////////////
+        // check if energy only iteration has error that has dropped below tolerance, then can move on to 
+        if(itermode==ITERMODESTAGES && iter>=mtd.BEGINMOMSTEPS && iter<=mtd.ENDMOMSTEPS){
+          FTYPE errorabs3=0.0; int testi;
+          for(testi=1;testi<=3;testi++) errorabs3 += fabs(f1report[ru.irefU[testi]]);
+          FTYPE errorneed=((FTYPE)(3+2)*trueimptryconv);
+          if(errorabs3<errorneed){
+            if(iter<=mtd.ENDMOMSTEPS){ iter=mtd.BEGINENERGYSTEPS-1; continue;} // force as if already doing energy steps.  If already next iteration is to be this energy step, then no skipping needed.
+            // continue assumes not triggered when iter>trueimpmaxiter
+          }
         }
-      }
-      // check if energy only iteration has error that has dropped below tolerance, then can move on to 
-      if(itermode==ITERMODESTAGES && iter>=mtd.BEGINENERGYSTEPS && iter<=mtd.ENDENERGYSTEPS){
-        //        if(f1report[ru.irefU[0]]==BIG){ dualfprintf(fail_file,"FUDGE\n"); }
-        // SUPERGODMARK: valgrind says belw is undefined, but don't see it.
-        FTYPE errorabs1=0.0; int testi;
-        for(testi=1;testi<=1;testi++) errorabs1 += fabs(f1report[ru.irefU[testi]]);
-        FTYPE errorneed=((FTYPE)(1+2)*trueimptryconv);
-        if(errorabs1<errorneed){
-          if(iter<=mtd.ENDENERGYSTEPS){ iter=mtd.BEGINFULLSTEPS-1; continue;} // force as if already doing normal steps.  If already next iteration is to be normal step, no need to skip.
-          // continue assumes not triggered when iter>trueimpmaxiter
+        // check if energy only iteration has error that has dropped below tolerance, then can move on to 
+        if(itermode==ITERMODESTAGES && iter>=mtd.BEGINENERGYSTEPS && iter<=mtd.ENDENERGYSTEPS){
+          //        if(f1report[ru.irefU[0]]==BIG){ dualfprintf(fail_file,"FUDGE\n"); }
+          // SUPERGODMARK: valgrind says belw is undefined, but don't see it.
+          FTYPE errorabs1=0.0; int testi;
+          for(testi=1;testi<=1;testi++) errorabs1 += fabs(f1report[ru.irefU[testi]]);
+          FTYPE errorneed=((FTYPE)(1+2)*trueimptryconv);
+          if(errorabs1<errorneed){
+            if(iter<=mtd.ENDENERGYSTEPS){ iter=mtd.BEGINFULLSTEPS-1; continue;} // force as if already doing normal steps.  If already next iteration is to be normal step, no need to skip.
+            // continue assumes not triggered when iter>trueimpmaxiter
+          }
         }
-      }
 
 
 
@@ -6357,50 +6391,451 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
 
 
 
-      ///////////////////////////
-      //
-      //  PRE NEWTON ADJUSTMENTS
-      //
-      ///////////////////////////
+        ///////////////////////////
+        //
+        //  PRE NEWTON ADJUSTMENTS
+        //
+        ///////////////////////////
 
 #define ERRORJUMPCHECK 0 // no longer needed with error trend check, and expensive if u_g or Erf try to be <0 since hits continue.
-// whether to check if error jumps up, between last and current step, in irefU[0] -- u_g for QTYPMHD method.  If so, backs-up step a bit for all quantities iterated and try to get error again
+        // whether to check if error jumps up, between last and current step, in irefU[0] -- u_g for QTYPMHD method.  If so, backs-up step a bit for all quantities iterated and try to get error again
 #define BUFFERITER 0 // how many iterations to wait until start to check how error is doing.  When switching iteration methods, error will often rise initially in f1[0], but that's ok.  But can temper jump by bridging used pp,uu, so ok to keep as 0 perhaps.
-      // check if doing energy stepping and error jumped up too much
+        // check if doing energy stepping and error jumped up too much
 #define NUMJUMPCHECKSMAX 5 // must limit, else if really drops-out and can't help, need to just accept.
 #if(ERRORJUMPCHECK)
-      if(numjumpchecks<NUMJUMPCHECKSMAX){
-        if(iter>=mtd.BEGINENERGYSTEPS+BUFFERITER && iter<=mtd.ENDENERGYSTEPS || iter>=mtd.BEGINFULLSTEPS+BUFFERITER && iter<=mtd.ENDFULLSTEPS){// now all steps beyond energy
-          if(
-             (fabs(f1[ru.erefU[0]]/f1p[ru.erefU[0]])>FACTORBADJUMPERROR && fabs(f1report[ru.erefU[0]])>trueimptryconv)
-             || (pp[URAD0]<10.0*ERADLIMIT) // expensive
-             || (pp[UU]<10.0*UUMINLIMIT) // expensive
-             ){
-            // then pseudo-bisect (between zero and previous ok error case)
-            if(debugfail>=DEBUGLEVELIMPSOLVER) dualfprintf(fail_file,"pseudo-bisect: iter=%d f1=%g f1p=%g pp=%g ppp=%g  pppp=%g  ppppp=%g\n",iter,f1[ru.erefU[0]],f1p[ru.erefU[0]],pp[ru.irefU[0]],ppp[ru.irefU[0]],pppp[ru.irefU[0]],ppppp[ru.irefU[0]]);
-            if(0){
-              // doens't make sense in general
-              //          pp[ru.irefU[0]] = ppp[ru.irefU[0]] = pppp[ru.irefU[0]] = 0.5*(fabs(ppppp[ru.irefU[0]]));
-              pp[ru.irefU[0]] = ppp[ru.irefU[0]] = 0.5*fabs(pppp[ru.irefU[0]]);
-              uu[ru.irefU[0]] = uup[ru.irefU[0]] = 0.5*fabs(uupp[ru.irefU[0]]);
+        if(numjumpchecks<NUMJUMPCHECKSMAX){
+          if(iter>=mtd.BEGINENERGYSTEPS+BUFFERITER && iter<=mtd.ENDENERGYSTEPS || iter>=mtd.BEGINFULLSTEPS+BUFFERITER && iter<=mtd.ENDFULLSTEPS){// now all steps beyond energy
+            if(
+               (fabs(f1[ru.erefU[0]]/f1p[ru.erefU[0]])>FACTORBADJUMPERROR && fabs(f1report[ru.erefU[0]])>trueimptryconv)
+               || (pp[URAD0]<10.0*ERADLIMIT) // expensive
+               || (pp[UU]<10.0*UUMINLIMIT) // expensive
+               ){
+              // then pseudo-bisect (between zero and previous ok error case)
+              if(debugfail>=DEBUGLEVELIMPSOLVER) dualfprintf(fail_file,"pseudo-bisect: iter=%d f1=%g f1p=%g pp=%g ppp=%g  pppp=%g  ppppp=%g\n",iter,f1[ru.erefU[0]],f1p[ru.erefU[0]],pp[ru.irefU[0]],ppp[ru.irefU[0]],pppp[ru.irefU[0]],ppppp[ru.irefU[0]]);
+              if(0){
+                // doens't make sense in general
+                //          pp[ru.irefU[0]] = ppp[ru.irefU[0]] = pppp[ru.irefU[0]] = 0.5*(fabs(ppppp[ru.irefU[0]]));
+                pp[ru.irefU[0]] = ppp[ru.irefU[0]] = 0.5*fabs(pppp[ru.irefU[0]]);
+                uu[ru.irefU[0]] = uup[ru.irefU[0]] = 0.5*fabs(uupp[ru.irefU[0]]);
+              }
+              else{
+                // half-way between current (pp and ppp are same current primitve) and last primitive
+                // uu and pp won't be consistent, but when get to f_implicit(), as continue forces, this will be done.
+                PLOOP(pliter,pl) pp[pl] = 0.75*pppp[pl] + 0.25*ppp[pl];
+                PLOOP(pliter,pl) uu[pl] = 0.75*uupp[pl] + 0.25*uup[pl];
+              }
+              // update debug with modifications
+#if(DEBUGMAXITER)
+              if(dampattempt==0){
+                PLOOP(pliter,pl) pppreholdlist[debugiter][pl]=pp[pl];
+                PLOOP(pliter,pl) ppposholdlist[debugiter][pl]=pp[pl];
+                if(DEBUGMAXITERVELOCITY==1){
+                  SLOOPA(jj){
+                    pppreholdlist[debugiter][U1+jj-1]=q->ucon[jj];
+                    pppreholdlist[debugiter][URAD1+jj-1]=q->uradcon[jj];
+                    ppposholdlist[debugiter][U1+jj-1]=q->ucon[jj];
+                    ppposholdlist[debugiter][URAD1+jj-1]=q->uradcon[jj];
+                  }
+                }
+                DLOOP(jj,kk) jaclist[debugiter][jj][kk]=iJ[ru.irefU[jj]][ru.erefU[kk]];
+                implicititerlist[debugiter]=mtd.implicititer;
+                implicitferrlist[debugiter]=mtd.implicitferr;
+                fracdamplist[0]=fracdtuu0;
+                fracdamplist[1]=fracdtG;
+                fracdamplist[2]=DAMPFACTOR;
+              }
+#endif
+          
+
+              // need to get new error function so can take step based upon this as reference!
+              if(iter>trueimpmaxiter){
+                prod0dualfprintf(debugfail>=DEBUGLEVELIMPSOLVERMORE,fail_file,"iter=%d>%d\n",iter,trueimpmaxiter);
+              }
+              else{
+                // continue assumes not triggered when iter>trueimpmaxiter
+                numjumpchecks++;
+                if(numjumpchecks<NUMJUMPCHECKSMAX) continue; // head to start of loop to iter++ and get new error function.
+              }
+            }
+          }
+        }
+#endif // end if ERRORJUMPCHECK
+
+
+
+
+
+
+        // only check convergence or check the properties of the solution if checkconv==1
+        if(checkconv){
+          /////////////////
+          //
+          // see if pre-convergence (happens if force is small or no force at all.  Can't necessarily continue since Jacobian can require arbitrarily large dU on fluid and fail to invert even if no fluid-radiation interaction!
+          //test pre-convergence using initial |dU/U|
+          // KORALTODO: This isn't a completely general error check since force might be large for fluid that needs itself to have more accuracy, but if using ~NUMEPSILON, won't resolve 4-force of radiation on fluid to better than that.
+          //
+          /////////////////
+          FTYPE LOCALPREIMPCONV=MIN(10.0*NUMEPSILON,trueimptryconv); // more strict than later tolerance
+          FTYPE LOCALPREIMPCONVABS=(FTYPE)(NDIM+2)*LOCALPREIMPCONV; // more strict than later tolerance
+          if(STOPIFVERYLOWERROR && errorabsf1[WHICHERROR]<=LOCALPREIMPCONVABS){
+            earlylowerror=1;
+          }
+          // see if error on iterated quantities has already gone near/below machine precision.  If so, can't do any better with total error, so stop.
+          if(STOPIFITERLOWERROR && WHICHERROR==1 && errorabsf1[0]<=LOCALPREIMPCONVABS){
+            lowitererror=1; // __WORKINGONIT__: makes use urad alot and why?
+          }
+
+
+
+          //////////////
+          //
+          // try to get best solution (should be based upon immediate f_error_check(uu,pp,errorabsf1)
+          //
+          // store error and solution in case eventually lead to max iterations and actually get worse error
+          // f1 based
+          //
+          //////////////
+          errorabsbest[0]=0.0; JACLOOPFULLERROR(itermode,jj,ru.startjac,ru.endjac) errorabsbest[0] += fabs(lowestf1report[ru.erefU[jj]]);
+          errorabsbest[1]=0.0; JACLOOPSUPERFULL(pliter,pl,*eomtype,*baseitermethod,*radinvmod) errorabsbest[1] += fabs(lowestf1report[pl]);
+          if(errorabsbest[WHICHERROR]>errorabsf1[WHICHERROR] && isfinite(errorabsf1[WHICHERROR]) && (itermode==ITERMODECOLD || pp[RHO]>0.0 && pp[UU]>0.0 && pp[PRAD0]>0.0)){
+            PLOOP(pliter,pl) bestuu[pl]=uu[pl];
+            PLOOP(pliter,pl) bestpp[pl]=pp[pl];
+            PLOOP(pliter,pl) lowestf1[pl]=f1[pl];
+            PLOOP(pliter,pl) lowestf1norm[pl]=f1norm[pl];
+            PLOOP(pliter,pl) lowestf1report[pl]=f1report[pl];
+            errorabsbest[0]=errorabsf1[0];
+            errorabsbest[1]=errorabsf1[1];
+            radinvmodbest=*radinvmod;
+            gotbest=1;
+          }
+
+
+          if(earlylowerror){
+            if(debugfail>=DEBUGLEVELIMPSOLVERMORE) dualfprintf(fail_file,"Early low error=%g %g : iter=%d\n",errorabsf1[0],errorabsf1[1],iter);
+            //  not failure.
+            break;
+          }
+          if(lowitererror){
+            if(debugfail>=DEBUGLEVELIMPSOLVERMORE) dualfprintf(fail_file,"Low iter error=%g %g : iter=%d\n",errorabsf1[0],errorabsf1[1],iter);
+            //  not failure.
+            break;
+          }
+
+
+          if(convreturnf1){
+            break; // then converged already and no need to take a step (saves time)
+          }
+
+
+
+
+
+
+
+          ///////
+          //
+          // See if error is dropping as expected
+          // Trying to avoid excessive unhelpful iterations
+          //
+          ///////
+
+#define CHECKDECREASE0 5
+#define CHECKDECREASEAVGNUM 3 // should be less than CHECKDECREASE0
+#define CHECKDECFACTOR (0.5) // i.e. should drop by this factor compared to older average
+          if(debugiter>=mtd.BEGINNORMALSTEPS+CHECKDECREASE0){
+            int ci;
+            FTYPE avgerror[NUMERRORTYPES];
+            avgerror[0]=avgerror[1]=0.0;
+            for(ci=0;ci<CHECKDECREASEAVGNUM;ci++) avgerror[0] += errorabsf1list[debugiter-CHECKDECREASE0+ci];
+            for(ci=0;ci<CHECKDECREASEAVGNUM;ci++) avgerror[1] += errorallabsf1list[debugiter-CHECKDECREASE0+ci];
+            avgerror[0]/=(CHECKDECREASEAVGNUM);
+            avgerror[1]/=(CHECKDECREASEAVGNUM);
+            FTYPE currenterror[NUMERRORTYPES];
+            currenterror[0]=errorabsf1list[debugiter];
+            currenterror[1]=errorallabsf1list[debugiter];
+            //
+            // check both errors to ensure they are decreasing
+            int cond1=(currenterror[0]>CHECKDECFACTOR*avgerror[0] || currenterror[1]>CHECKDECFACTOR*avgerror[1])&&(WHICHERROR==1);
+            int cond2=(currenterror[0]>CHECKDECFACTOR*avgerror[0])&&(WHICHERROR==0);
+            if(cond1 || cond2){
+
+              if(havebackup){
+                failreturn=FAILRETURNMODESWITCH; mathfailtype=80;
+                if(debugfail>=DEBUGLEVELIMPSOLVER) dualfprintf(fail_file,"SWITCHING MODE: Detected did not decrease error\n");
+                // if want to ensure should have gotten solution, should still report
+              }
+              else{
+                // then aborting due to error alone even without backup
+                canbreak=4; // use same canbreak as below
+                mathfailtype=81;
+                if(debugfail>=DEBUGLEVELIMPSOLVER) dualfprintf(fail_file,"Aborting even without backup because error not decreasing\n");
+                // no failure or switch.
+              }
+              break;
+
+            }// end if current error too large compared to older average error
+          }// end if large enough iterations so can check how error is trending, to avoid many iterations when error is not dropping enough to matter.
+
+
+
+
+
+          ////////
+          //
+          // check if error repeatedly rises
+          // do this even if damping, since damping should only help get continuous reduction in error.
+          //
+          ////////
+
+          if(NUMNOERRORREDUCE && iter>=mtd.BEGINNORMALSTEPS){
+            FTYPE errorneed=((FTYPE)(numsub+2)*trueimptryconv);
+            FTYPE errorneedalt=(MAX(1E-8,errorneed));
+            if(iter>NUMNOERRORREDUCE0 && suberrorabsf1>errorneed){ // no need to do this if actually error is below desired tolerance,  hence second argument
+              if(suberrorabsf1>=errorabspf1[0]) counterrorrose++;
+              int allowedtoabort=(havebackup || havebackup==0 && ABORTBACKUPIFNOERRORREDUCE==1 && suberrorabsf1<errorneedalt);
+              //+int allowedtoabort=(havebackup || havebackup==0 && ABORTBACKUPIFNOERRORREDUCE==1 && suberrorabsf1<errorneedalt || modemethodlocal==MODEPICKBEST || modemethodlocal==MODEPICKBESTSIMPLE  || modemethodlocal==MODEPICKBESTSIMPLE2);
+              if(counterrorrose>=NUMNOERRORREDUCE && allowedtoabort){ // would be risky to do abort if don't have backup, even if enter into limit cycle.
+
+                if(itermode==ITERMODESTAGES && iter>=mtd.BEGINMOMSTEPS && iter<=mtd.ENDMOMSTEPS){
+                  if(iter<=mtd.ENDMOMSTEPS){ iter=mtd.BEGINENERGYSTEPS-1; continue;} // force as if already doing energy steps.  If already next iteration is to be this energy step, then no skipping needed.
+                }// end if doing momentum steps and error not decreasing fast enough, then skip to energy steps
+                else if(itermode==ITERMODESTAGES && iter>=mtd.BEGINENERGYSTEPS && iter<=mtd.ENDENERGYSTEPS){
+                  if(iter<=mtd.ENDENERGYSTEPS){ iter=mtd.BEGINFULLSTEPS-1; continue;} // force as if already doing normal steps.  If already next iteration is to be normal step, no need to skip.
+                }// end if doing energy steps and error not decreasing fast enough, then skip to normal steps
+                else{// else if normal step
+
+                  if(havebackup){
+                    failreturn=FAILRETURNMODESWITCH; mathfailtype=80;
+                    if(debugfail>=DEBUGLEVELIMPSOLVER) dualfprintf(fail_file,"SWITCHING MODE: Detected did not decrease error %d times at iter=%d : suberrorabsf1=%g errorabspf1=%g\n",counterrorrose,iter,suberrorabsf1,errorabspf1[0]);
+                    // if want to ensure should have gotten solution, should still report
+                  }
+                  else{
+                    // then aborting due to error alone even without backup
+                    canbreak=2;
+                    mathfailtype=81;
+                    if(debugfail>=DEBUGLEVELIMPSOLVER) dualfprintf(fail_file,"Aborting even without backup because error oscillated (iter=%d) and suberrorabsf1=%g errorabsf1[0,1]=%g %g\n",iter,suberrorabsf1,errorabsf1[0],errorabsf1[1]);
+                    // no failure or switch.
+                  }
+                  break;
+                }
+              }// end if normal step
+            }
+          }      
+
+
+
+          ////////
+          //
+          // check if error isn't decreasing enough for be interesting
+          // but don't check on error if holding on u_g>0 since error can be bad until settle to near root.
+          // and don't do this check if damping, since if damping really want to try harder.
+          //
+          ////////
+          if(NUMPRIORERRORS>0 && holdingaspositive==0 && dampattempt==0){
+            if(priorerrorscount>=NUMPRIORERRORSITER0){
+              FTYPE erroraverage=0.0; int numerroraverage=0;
+              for(itererror=1;itererror<MIN(priorerrorscount,NUMPRIORERRORS);itererror++){ erroraverage += errorabspf1[itererror]; numerroraverage++;} erroraverage/=((FTYPE)numerroraverage);
+              FTYPE changerequired;
+              if(dampattempt==0) changerequired=PRIORERRORCHANGEREQUIRED;
+              else if(dampattempt==1) changerequired=0.7;
+              else if(dampattempt==2) changerequired=0.8;
+              else if(dampattempt==3) changerequired=0.9;
+              else changerequired=0.95;
+              FTYPE errorneed=((FTYPE)(numsub+2)*trueimptryconv);
+              if(suberrorabsf1/erroraverage>changerequired && suberrorabsf1>errorneed){
+
+                if(itermode==ITERMODESTAGES && iter>=mtd.BEGINMOMSTEPS && iter<=mtd.ENDMOMSTEPS){
+                  if(iter<=mtd.ENDMOMSTEPS){ iter=mtd.BEGINENERGYSTEPS-1; continue;} // force as if already doing energy steps.  If already next iteration is to be this energy step, then no skipping needed.
+                }// end if doing momentum steps and error not decreasing fast enough, then skip to energy steps
+                else if(itermode==ITERMODESTAGES && iter>=mtd.BEGINENERGYSTEPS && iter<=mtd.ENDENERGYSTEPS){
+                  if(iter<=mtd.ENDENERGYSTEPS){ iter=mtd.BEGINFULLSTEPS-1; continue;} // force as if already doing normal steps.  If already next iteration is to be normal step, no need to skip.
+                }// end if doing energy steps and error not decreasing fast enough, then skip to normal steps
+                else{
+                  canbreak=3;
+                  if(debugfail>=DEBUGLEVELIMPSOLVER){
+                    dualfprintf(fail_file,"Error is not decreasing sufficiently fast: iter=%d priorerrorscount=%d suberrorabsf1=%g\n",iter,priorerrorscount,suberrorabsf1);
+                    for(itererror=1;itererror<MIN(priorerrorscount,NUMPRIORERRORS);itererror++) dualfprintf(fail_file,"errorabspf1[%d]=%g\n",itererror,errorabspf1[itererror]);
+                  }
+                  break;
+                }// end if doing normal steps and error not decreasing fast enough
+              }// end if error not decreasing enough and also higher than desired tolerance in error
+            }// end if enough prior errors to make average measurement of past error
+            priorerrorscount++;
+          }
+
+
+
+
+
+        }// end if checkconv==1
+
+
+
+
+        /////////////////////////
+        //
+        // See if solution has nan'ed or inf'ed out.
+        //
+        ////////////////////////
+        if(IMPUTYPE(mtd.implicititer)){
+          notfinite = !isfinite(uu[ru.irefU[0]])|| !isfinite(uu[ru.irefU[1]])|| !isfinite(uu[ru.irefU[2]])|| !isfinite(uu[ru.irefU[3]]) || !isfinite(uup[ru.irefU[0]])|| !isfinite(uup[ru.irefU[1]])|| !isfinite(uup[ru.irefU[2]])|| !isfinite(uup[ru.irefU[3]]);
+        }
+        else if(IMPPTYPE(mtd.implicititer)){
+          notfinite = !isfinite(pp[ru.irefU[0]])|| !isfinite(pp[ru.irefU[1]])|| !isfinite(pp[ru.irefU[2]])|| !isfinite(pp[ru.irefU[3]]) || !isfinite(ppp[ru.irefU[0]])|| !isfinite(ppp[ru.irefU[1]])|| !isfinite(ppp[ru.irefU[2]])|| !isfinite(ppp[ru.irefU[3]]);
+        }
+
+
+
+        /////////////////
+        //
+        // continue with computing Jacobian and Newton step if origin point for error function didn't nan'out or inf'out.
+        //
+        /////////////////
+        if(!notfinite){
+    
+
+          if(SKIPJACCOMPUTE==0 || SKIPJACCOMPUTE==1 && (iter<=SKIPJACITER || iter>SKIPJACITER && iter%SKIPJACFACTOR==0)){ // only get new Jacobian before 5th iteration and then only if every 3rd iteration since assume Jacobian itself doesn't change so rapidly.
+
+            /////////
+            //
+            // get Jacobian and inversion Jacobian 
+            //
+            /////////
+            //      eomtypelocal=*eomtype; // re-chose default each time.  No, stick with what f1 reduced to for consistency.
+            //        dualfprintf(fail_file,"iJ call: iter=%d\n",iter);
+
+            // assume as error gets small, function becomes linear and can use smaller delta for Jacobian
+            if(errorabsf1[WHICHERROR]<ERRORFORIMPEPSSMALL) impepsjac=IMPEPSSMALL;
+            else impepsjac=IMPEPSLARGE;
+            int dimtypef=DIMTYPEFCONS;
+            int failreturniJ=get_implicit_iJ(allowbaseitermethodswitch, failreturnallowableuse, showmessages, showmessagesheavy, allowlocalfailurefixandnoreport, &eomtypelocal, whichcap, itermode, baseitermethod, fracenergy, dissmeasure, impepsjac, trueimptryconv, trueimptryconvabs, trueimpallowconvabs, trueimpmaxiter, iter, errorabsf1[0], errorabsf1[1], WHICHERROR, dimtypef, dimfactU, Uiin, uu, uup, uu0, piin, pp, ppp, fracdtG, realdt, ptrgeom, q, f1, f1norm, iJ, nummhdinvsreturn,&mtd,&ru);
+
+            if(failreturniJ!=0){
+              if(havebackup){
+                failreturn=FAILRETURNMODESWITCH; mathfailtype=30;
+                prod0dualfprintf(debugfail>=DEBUGLEVELIMPSOLVER,fail_file,"SWITCHING MODE: Detected bad Jacobian\n");
+                break;
+              }
+              else{
+                failreturn=FAILRETURNJACISSUE; mathfailtype=12;
+                break;
+              }
+            }
+
+
+
+#if(PRODUCTION==0)
+            if(showmessagesheavy){
+              int iii,jjj;
+              JACLOOP2D(iii,jjj,ru.startjac,ru.endjac)  dualfprintf(fail_file,"iJ[i %d][e %d]=%g\n",iii,jjj,iJ[ru.irefU[iii]][ru.erefU[jjj]]);
+            }
+#endif
+
+
+          }
+
+
+
+          /////////
+          //
+          // Newton step (uup or ppp)
+          //
+          // DAMPFACTOR unused so far because don't know a priori whether to damp.  fracuup does post-inversion effective damping of this Newton step.
+          // Newton step: x = x0 - (df/dx)^{-1}|_{x=x0} f(x0)
+          //
+          // Only updates 4D part of NPR data
+          //
+          /////////
+
+
+          //////////////
+          //
+          // ITERATING U
+          //
+          ///////////////
+          if(IMPUTYPE(mtd.implicititer)){
+            PLOOP(pliter,pl) uu[pl] = uup[pl];
+            JACLOOP2D(ii,jj,ru.startjac,ru.endjac) uu[ru.irefU[ii]] -= DAMPFACTOR*iJ[ru.irefU[ii]][ru.erefU[jj]]*f1[ru.erefU[jj]];
+
+            if(POSTNEWTONCONVCHECK==2){
+              // check if any actual changes in primitives.  If none, then have to stop.
+              FTYPE diffuu=0.0,sumuu=0.0;
+              PLOOP(pliter,pl){
+                diffuu += fabs(uu[pl]-uup[pl]);
+                sumuu += fabs(uu[pl])+fabs(uup[pl]);
+              }
+              if(diffuu<DIFFXLIMIT*sumuu){
+                convreturnf3limit=1;
+              }
+            }
+
+
+#if(PRODUCTION==0)
+            if(showmessagesheavy) dualfprintf(fail_file,"POSTDX: uu: %g %g %g %g : uup=%g %g %g %g\n",uu[ru.irefU[0]],uu[ru.irefU[1]],uu[ru.irefU[2]],uu[ru.irefU[3]],uup[ru.irefU[0]],uup[ru.irefU[1]],uup[ru.irefU[2]],uup[ru.irefU[3]]);
+#endif
+
+
+          }// end iterating U
+
+
+          //////////////
+          //
+          // ITERATING P
+          //
+          ///////////////
+          else if(IMPPTYPE(mtd.implicititer)){
+
+            if(NEWJONHOLDPOS==0){
+              PLOOP(pliter,pl) pp[pl]=ppp[pl];
+              JACLOOP2D(ii,jj,ru.startjac,ru.endjac){
+                pp[ru.irefU[ii]] -= DAMPFACTOR*iJ[ru.irefU[ii]][ru.erefU[jj]]*f1[ru.erefU[jj]];
+                if(debugfail>=DEBUGLEVELIMPSOLVERMORE) dualfprintf(fail_file,"added to ppp=%21.15g ii=%d jj=%d irefU=%d an amount of negative %21.15g\n",ppp[ru.irefU[ii]],ii,jj,ru.irefU[ii],DAMPFACTOR*iJ[ru.irefU[ii]][ru.erefU[jj]]*f1[ru.erefU[jj]]);
+              }
             }
             else{
-              // half-way between current (pp and ppp are same current primitve) and last primitive
-              // uu and pp won't be consistent, but when get to f_implicit(), as continue forces, this will be done.
-              PLOOP(pliter,pl) pp[pl] = 0.75*pppp[pl] + 0.25*ppp[pl];
-              PLOOP(pliter,pl) uu[pl] = 0.75*uupp[pl] + 0.25*uup[pl];
+              // if u_g (or Erf)<0, then shift entire jacobian to make smaller changes
+
+              FTYPE dpp[NPR]={0.0};
+              PLOOP(pliter,pl) pp[pl]=ppp[pl];
+              JACLOOP2D(ii,jj,ru.startjac,ru.endjac){
+                dpp[ru.irefU[ii]] += -DAMPFACTOR*iJ[ru.irefU[ii]][ru.erefU[jj]]*f1[ru.erefU[jj]];
+                if(debugfail>=DEBUGLEVELIMPSOLVERMORE) dualfprintf(fail_file,"added to ppp=%21.15g ii=%d jj=%d irefU=%d an amount of negative %21.15g\n",ppp[ru.irefU[ii]],ii,jj,ru.irefU[ii],DAMPFACTOR*iJ[ru.irefU[ii]][ru.erefU[jj]]*f1[ru.erefU[jj]]);
+              }
+              JACLOOP(ii,ru.startjac,ru.endjac){
+                pp[ru.irefU[ii]] += dpp[ru.irefU[ii]];
+              }
+
+              if(ru.startjac==0){
+                ii=0;
+                if(pp[ru.irefU[ii]]<=0.0){
+#if(0)
+                  FTYPE ppbad[NPR];
+                  PLOOP(pliter,pl) ppbad[pl]=pp[pl];
+                  // rescale iJ so u_g -> u_g0/2 instead (or for Erf)
+                  PLOOP(pliter,pl) pp[pl]=ppp[pl];
+                  FTYPE REDAMP=fabs(+0.5*ppp[UU]/dpp[UU])*DAMPFACTOR; // KORALTOD: inverted damp.  Sometimes works, sometimes bad.
+                  JACLOOP2D(ii,jj,ru.startjac,ru.endjac){
+                    pp[ru.irefU[ii]] += REDAMP*iJ[ru.irefU[ii]][ru.erefU[jj]]*f1[ru.erefU[jj]];
+                  }
+#else
+                  pp[ru.irefU[ii]]=ppp[ru.irefU[ii]]; // super hold, works just as well as inverted damp.
+#endif
+                }
+              }
+
             }
-            // update debug with modifications
+
+
+
+          
+            // DEBUG: store steps in case hit max iter and want to debug
 #if(DEBUGMAXITER)
             if(dampattempt==0){
               PLOOP(pliter,pl) pppreholdlist[debugiter][pl]=pp[pl];
-              PLOOP(pliter,pl) ppposholdlist[debugiter][pl]=pp[pl];
               if(DEBUGMAXITERVELOCITY==1){
                 SLOOPA(jj){
                   pppreholdlist[debugiter][U1+jj-1]=q->ucon[jj];
                   pppreholdlist[debugiter][URAD1+jj-1]=q->uradcon[jj];
-                  ppposholdlist[debugiter][U1+jj-1]=q->ucon[jj];
-                  ppposholdlist[debugiter][URAD1+jj-1]=q->uradcon[jj];
                 }
               }
               DLOOP(jj,kk) jaclist[debugiter][jj][kk]=iJ[ru.irefU[jj]][ru.erefU[kk]];
@@ -6411,1070 +6846,678 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
               fracdamplist[2]=DAMPFACTOR;
             }
 #endif
-          
-
-            // need to get new error function so can take step based upon this as reference!
-            if(iter>trueimpmaxiter){
-              prod0dualfprintf(debugfail>=DEBUGLEVELIMPSOLVERMORE,fail_file,"iter=%d>%d\n",iter,trueimpmaxiter);
-            }
-            else{
-              // continue assumes not triggered when iter>trueimpmaxiter
-              numjumpchecks++;
-              if(numjumpchecks<NUMJUMPCHECKSMAX) continue; // head to start of loop to iter++ and get new error function.
-            }
-          }
-        }
-      }
-#endif // end if ERRORJUMPCHECK
 
 
 
 
-
-
-      // only check convergence or check the properties of the solution if checkconv==1
-      if(checkconv){
-        /////////////////
-        //
-        // see if pre-convergence (happens if force is small or no force at all.  Can't necessarily continue since Jacobian can require arbitrarily large dU on fluid and fail to invert even if no fluid-radiation interaction!
-        //test pre-convergence using initial |dU/U|
-        // KORALTODO: This isn't a completely general error check since force might be large for fluid that needs itself to have more accuracy, but if using ~NUMEPSILON, won't resolve 4-force of radiation on fluid to better than that.
-        //
-        /////////////////
-        FTYPE LOCALPREIMPCONV=MIN(10.0*NUMEPSILON,trueimptryconv); // more strict than later tolerance
-        FTYPE LOCALPREIMPCONVABS=(FTYPE)(NDIM+2)*LOCALPREIMPCONV; // more strict than later tolerance
-        if(STOPIFVERYLOWERROR && errorabsf1[WHICHERROR]<=LOCALPREIMPCONVABS){
-          earlylowerror=1;
-        }
-        // see if error on iterated quantities has already gone near/below machine precision.  If so, can't do any better with total error, so stop.
-        if(STOPIFITERLOWERROR && WHICHERROR==1 && errorabsf1[0]<=LOCALPREIMPCONVABS){
-          lowitererror=1; // __WORKINGONIT__: makes use urad alot and why?
-        }
+            ///////////////////////////
+            //
+            //  POST NEWTON ADJUSTMENTS
+            //
+            ///////////////////////////
 
 
 
-        //////////////
-        //
-        // try to get best solution (should be based upon immediate f_error_check(uu,pp,errorabsf1)
-        //
-        // store error and solution in case eventually lead to max iterations and actually get worse error
-        // f1 based
-        //
-        //////////////
-        errorabsbest[0]=0.0; JACLOOPFULLERROR(itermode,jj,ru.startjac,ru.endjac) errorabsbest[0] += fabs(lowestf1report[ru.erefU[jj]]);
-        errorabsbest[1]=0.0; JACLOOPSUPERFULL(pliter,pl,*eomtype,*baseitermethod,*radinvmod) errorabsbest[1] += fabs(lowestf1report[pl]);
-        if(errorabsbest[WHICHERROR]>errorabsf1[WHICHERROR] && isfinite(errorabsf1[WHICHERROR]) && (itermode==ITERMODECOLD || pp[RHO]>0.0 && pp[UU]>0.0 && pp[PRAD0]>0.0)){
-          PLOOP(pliter,pl) bestuu[pl]=uu[pl];
-          PLOOP(pliter,pl) bestpp[pl]=pp[pl];
-          PLOOP(pliter,pl) lowestf1[pl]=f1[pl];
-          PLOOP(pliter,pl) lowestf1norm[pl]=f1norm[pl];
-          PLOOP(pliter,pl) lowestf1report[pl]=f1report[pl];
-          errorabsbest[0]=errorabsf1[0];
-          errorabsbest[1]=errorabsf1[1];
-          radinvmodbest=*radinvmod;
-          gotbest=1;
-        }
+            // HOLD TT-iterated quantity or momentum-iterated quantity in initial steps
+            if(RAMESHFIXEARLYSTEPS){
+              // RAMESH  HOLD
+              if(iter<RAMESHFIXEARLYSTEPS) pp[ru.irefU[0]]=ppp[ru.irefU[0]]; // don't trust first Newton step in u_g, Erf, or S
+              else if(iter==RAMESHFIXEARLYSTEPS) SLOOPA(jj) pp[ru.irefU[jj]]=ppp[ru.irefU[jj]]; // don't trust second Newton step in velocity-momentum.
 
-
-        if(earlylowerror){
-          if(debugfail>=DEBUGLEVELIMPSOLVERMORE) dualfprintf(fail_file,"Early low error=%g %g : iter=%d\n",errorabsf1[0],errorabsf1[1],iter);
-          //  not failure.
-          break;
-        }
-        if(lowitererror){
-          if(debugfail>=DEBUGLEVELIMPSOLVERMORE) dualfprintf(fail_file,"Low iter error=%g %g : iter=%d\n",errorabsf1[0],errorabsf1[1],iter);
-          //  not failure.
-          break;
-        }
-
-
-        if(convreturnf1){
-          break; // then converged already and no need to take a step (saves time)
-        }
-
-
-
-
-
-
-
-        ///////
-        //
-        // See if error is dropping as expected
-        // Trying to avoid excessive unhelpful iterations
-        //
-        ///////
-
-#define CHECKDECREASE0 5
-#define CHECKDECREASEAVGNUM 3 // should be less than CHECKDECREASE0
-#define CHECKDECFACTOR (0.5) // i.e. should drop by this factor compared to older average
-        if(debugiter>=mtd.BEGINNORMALSTEPS+CHECKDECREASE0){
-          int ci;
-          FTYPE avgerror[NUMERRORTYPES];
-          avgerror[0]=avgerror[1]=0.0;
-          for(ci=0;ci<CHECKDECREASEAVGNUM;ci++) avgerror[0] += errorabsf1list[debugiter-CHECKDECREASE0+ci];
-          for(ci=0;ci<CHECKDECREASEAVGNUM;ci++) avgerror[1] += errorallabsf1list[debugiter-CHECKDECREASE0+ci];
-          avgerror[0]/=(CHECKDECREASEAVGNUM);
-          avgerror[1]/=(CHECKDECREASEAVGNUM);
-          FTYPE currenterror[NUMERRORTYPES];
-          currenterror[0]=errorabsf1list[debugiter];
-          currenterror[1]=errorallabsf1list[debugiter];
-          //
-          // check both errors to ensure they are decreasing
-          int cond1=(currenterror[0]>CHECKDECFACTOR*avgerror[0] || currenterror[1]>CHECKDECFACTOR*avgerror[1])&&(WHICHERROR==1);
-          int cond2=(currenterror[0]>CHECKDECFACTOR*avgerror[0])&&(WHICHERROR==0);
-          if(cond1 || cond2){
-
-            if(havebackup){
-              failreturn=FAILRETURNMODESWITCH; mathfailtype=80;
-              if(debugfail>=DEBUGLEVELIMPSOLVER) dualfprintf(fail_file,"SWITCHING MODE: Detected did not decrease error\n");
-              // if want to ensure should have gotten solution, should still report
-                }
-            else{
-              // then aborting due to error alone even without backup
-              canbreak=4; // use same canbreak as below
-              mathfailtype=81;
-              if(debugfail>=DEBUGLEVELIMPSOLVER) dualfprintf(fail_file,"Aborting even without backup because error not decreasing\n");
-              // no failure or switch.
-            }
-            break;
-
-          }// end if current error too large compared to older average error
-        }// end if large enough iterations so can check how error is trending, to avoid many iterations when error is not dropping enough to matter.
-
-
-
-
-
-        ////////
-        //
-        // check if error repeatedly rises
-        // do this even if damping, since damping should only help get continuous reduction in error.
-        //
-        ////////
-
-        if(NUMNOERRORREDUCE && iter>=mtd.BEGINNORMALSTEPS){
-          FTYPE errorneed=((FTYPE)(numsub+2)*trueimptryconv);
-          FTYPE errorneedalt=(MAX(1E-8,errorneed));
-          if(iter>NUMNOERRORREDUCE0 && suberrorabsf1>errorneed){ // no need to do this if actually error is below desired tolerance,  hence second argument
-            if(suberrorabsf1>=errorabspf1[0]) counterrorrose++;
-            int allowedtoabort=(havebackup || havebackup==0 && ABORTBACKUPIFNOERRORREDUCE==1 && suberrorabsf1<errorneedalt);
-            //+int allowedtoabort=(havebackup || havebackup==0 && ABORTBACKUPIFNOERRORREDUCE==1 && suberrorabsf1<errorneedalt || modemethodlocal==MODEPICKBEST || modemethodlocal==MODEPICKBESTSIMPLE  || modemethodlocal==MODEPICKBESTSIMPLE2);
-            if(counterrorrose>=NUMNOERRORREDUCE && allowedtoabort){ // would be risky to do abort if don't have backup, even if enter into limit cycle.
-
-              if(itermode==ITERMODESTAGES && iter>=mtd.BEGINMOMSTEPS && iter<=mtd.ENDMOMSTEPS){
-                if(iter<=mtd.ENDMOMSTEPS){ iter=mtd.BEGINENERGYSTEPS-1; continue;} // force as if already doing energy steps.  If already next iteration is to be this energy step, then no skipping needed.
-              }// end if doing momentum steps and error not decreasing fast enough, then skip to energy steps
-              else if(itermode==ITERMODESTAGES && iter>=mtd.BEGINENERGYSTEPS && iter<=mtd.ENDENERGYSTEPS){
-                if(iter<=mtd.ENDENERGYSTEPS){ iter=mtd.BEGINFULLSTEPS-1; continue;} // force as if already doing normal steps.  If already next iteration is to be normal step, no need to skip.
-              }// end if doing energy steps and error not decreasing fast enough, then skip to normal steps
-              else{// else if normal step
-
-                if(havebackup){
-                  failreturn=FAILRETURNMODESWITCH; mathfailtype=80;
-                  if(debugfail>=DEBUGLEVELIMPSOLVER) dualfprintf(fail_file,"SWITCHING MODE: Detected did not decrease error %d times at iter=%d : suberrorabsf1=%g errorabspf1=%g\n",counterrorrose,iter,suberrorabsf1,errorabspf1[0]);
-                  // if want to ensure should have gotten solution, should still report
-                }
-                else{
-                  // then aborting due to error alone even without backup
-                  canbreak=2;
-                  mathfailtype=81;
-                  if(debugfail>=DEBUGLEVELIMPSOLVER) dualfprintf(fail_file,"Aborting even without backup because error oscillated (iter=%d) and suberrorabsf1=%g errorabsf1[0,1]=%g %g\n",iter,suberrorabsf1,errorabsf1[0],errorabsf1[1]);
-                  // no failure or switch.
-                }
-                break;
+              if(pp[RHO]<=0.0||pp[UU]<=0.0){
+                if(debugfail>=DEBUGLEVELIMPSOLVERMORE) dualfprintf(fail_file,"Detected negative rho=%21.15g ug=%21.15g\n",iter,pp[RHO],pp[UU]);
               }
-            }// end if normal step
-          }
-        }      
-
-
-
-        ////////
-        //
-        // check if error isn't decreasing enough for be interesting
-        // but don't check on error if holding on u_g>0 since error can be bad until settle to near root.
-        // and don't do this check if damping, since if damping really want to try harder.
-        //
-        ////////
-        if(NUMPRIORERRORS>0 && holdingaspositive==0 && dampattempt==0){
-          if(priorerrorscount>=NUMPRIORERRORSITER0){
-            FTYPE erroraverage=0.0; int numerroraverage=0;
-            for(itererror=1;itererror<MIN(priorerrorscount,NUMPRIORERRORS);itererror++){ erroraverage += errorabspf1[itererror]; numerroraverage++;} erroraverage/=((FTYPE)numerroraverage);
-            FTYPE changerequired;
-            if(dampattempt==0) changerequired=PRIORERRORCHANGEREQUIRED;
-            else if(dampattempt==1) changerequired=0.7;
-            else if(dampattempt==2) changerequired=0.8;
-            else if(dampattempt==3) changerequired=0.9;
-            else changerequired=0.95;
-            FTYPE errorneed=((FTYPE)(numsub+2)*trueimptryconv);
-            if(suberrorabsf1/erroraverage>changerequired && suberrorabsf1>errorneed){
-
-              if(itermode==ITERMODESTAGES && iter>=mtd.BEGINMOMSTEPS && iter<=mtd.ENDMOMSTEPS){
-                if(iter<=mtd.ENDMOMSTEPS){ iter=mtd.BEGINENERGYSTEPS-1; continue;} // force as if already doing energy steps.  If already next iteration is to be this energy step, then no skipping needed.
-              }// end if doing momentum steps and error not decreasing fast enough, then skip to energy steps
-              else if(itermode==ITERMODESTAGES && iter>=mtd.BEGINENERGYSTEPS && iter<=mtd.ENDENERGYSTEPS){
-                if(iter<=mtd.ENDENERGYSTEPS){ iter=mtd.BEGINFULLSTEPS-1; continue;} // force as if already doing normal steps.  If already next iteration is to be normal step, no need to skip.
-              }// end if doing energy steps and error not decreasing fast enough, then skip to normal steps
-              else{
-                canbreak=3;
-                if(debugfail>=DEBUGLEVELIMPSOLVER){
-                  dualfprintf(fail_file,"Error is not decreasing sufficiently fast: iter=%d priorerrorscount=%d suberrorabsf1=%g\n",iter,priorerrorscount,suberrorabsf1);
-                  for(itererror=1;itererror<MIN(priorerrorscount,NUMPRIORERRORS);itererror++) dualfprintf(fail_file,"errorabspf1[%d]=%g\n",itererror,errorabspf1[itererror]);
-                }
-                break;
-              }// end if doing normal steps and error not decreasing fast enough
-            }// end if error not decreasing enough and also higher than desired tolerance in error
-          }// end if enough prior errors to make average measurement of past error
-          priorerrorscount++;
-        }
-
-
-
-
-
-      }// end if checkconv==1
-
-
-
-
-      /////////////////////////
-      //
-      // See if solution has nan'ed or inf'ed out.
-      //
-      ////////////////////////
-      if(IMPUTYPE(mtd.implicititer)){
-        notfinite = !isfinite(uu[ru.irefU[0]])|| !isfinite(uu[ru.irefU[1]])|| !isfinite(uu[ru.irefU[2]])|| !isfinite(uu[ru.irefU[3]]) || !isfinite(uup[ru.irefU[0]])|| !isfinite(uup[ru.irefU[1]])|| !isfinite(uup[ru.irefU[2]])|| !isfinite(uup[ru.irefU[3]]);
-      }
-      else if(IMPPTYPE(mtd.implicititer)){
-        notfinite = !isfinite(pp[ru.irefU[0]])|| !isfinite(pp[ru.irefU[1]])|| !isfinite(pp[ru.irefU[2]])|| !isfinite(pp[ru.irefU[3]]) || !isfinite(ppp[ru.irefU[0]])|| !isfinite(ppp[ru.irefU[1]])|| !isfinite(ppp[ru.irefU[2]])|| !isfinite(ppp[ru.irefU[3]]);
-      }
-
-
-
-      /////////////////
-      //
-      // continue with computing Jacobian and Newton step if origin point for error function didn't nan'out or inf'out.
-      //
-      /////////////////
-      if(!notfinite){
-    
-
-        if(SKIPJACCOMPUTE==0 || SKIPJACCOMPUTE==1 && (iter<=SKIPJACITER || iter>SKIPJACITER && iter%SKIPJACFACTOR==0)){ // only get new Jacobian before 5th iteration and then only if every 3rd iteration since assume Jacobian itself doesn't change so rapidly.
-
-          /////////
-          //
-          // get Jacobian and inversion Jacobian 
-          //
-          /////////
-          //      eomtypelocal=*eomtype; // re-chose default each time.  No, stick with what f1 reduced to for consistency.
-          //        dualfprintf(fail_file,"iJ call: iter=%d\n",iter);
-
-          // assume as error gets small, function becomes linear and can use smaller delta for Jacobian
-          if(errorabsf1[WHICHERROR]<ERRORFORIMPEPSSMALL) impepsjac=IMPEPSSMALL;
-          else impepsjac=IMPEPSLARGE;
-          int dimtypef=DIMTYPEFCONS;
-          int failreturniJ=get_implicit_iJ(allowbaseitermethodswitch, failreturnallowableuse, showmessages, showmessagesheavy, allowlocalfailurefixandnoreport, &eomtypelocal, whichcap, itermode, baseitermethod, fracenergy, dissmeasure, impepsjac, trueimptryconv, trueimptryconvabs, trueimpallowconvabs, trueimpmaxiter, iter, errorabsf1[0], errorabsf1[1], WHICHERROR, dimtypef, dimfactU, Uiin, uu, uup, uu0, piin, pp, ppp, fracdtG, realdt, ptrgeom, q, f1, f1norm, iJ, nummhdinvsreturn,&mtd,&ru);
-
-          if(failreturniJ!=0){
-            if(havebackup){
-              failreturn=FAILRETURNMODESWITCH; mathfailtype=30;
-              prod0dualfprintf(debugfail>=DEBUGLEVELIMPSOLVER,fail_file,"SWITCHING MODE: Detected bad Jacobian\n");
-              break;
-            }
-            else{
-              failreturn=FAILRETURNJACISSUE; mathfailtype=12;
-              break;
-            }
-          }
-
-
-
-#if(PRODUCTION==0)
-          if(showmessagesheavy){
-            int iii,jjj;
-            JACLOOP2D(iii,jjj,ru.startjac,ru.endjac)  dualfprintf(fail_file,"iJ[i %d][e %d]=%g\n",iii,jjj,iJ[ru.irefU[iii]][ru.erefU[jjj]]);
-          }
-#endif
-
-
-        }
-
-
-
-        /////////
-        //
-        // Newton step (uup or ppp)
-        //
-        // DAMPFACTOR unused so far because don't know a priori whether to damp.  fracuup does post-inversion effective damping of this Newton step.
-        // Newton step: x = x0 - (df/dx)^{-1}|_{x=x0} f(x0)
-        //
-        // Only updates 4D part of NPR data
-        //
-        /////////
-
-
-        //////////////
-        //
-        // ITERATING U
-        //
-        ///////////////
-        if(IMPUTYPE(mtd.implicititer)){
-          PLOOP(pliter,pl) uu[pl] = uup[pl];
-          JACLOOP2D(ii,jj,ru.startjac,ru.endjac) uu[ru.irefU[ii]] -= DAMPFACTOR*iJ[ru.irefU[ii]][ru.erefU[jj]]*f1[ru.erefU[jj]];
-
-          if(POSTNEWTONCONVCHECK==2){
-            // check if any actual changes in primitives.  If none, then have to stop.
-            FTYPE diffuu=0.0,sumuu=0.0;
-            PLOOP(pliter,pl){
-              diffuu += fabs(uu[pl]-uup[pl]);
-              sumuu += fabs(uu[pl])+fabs(uup[pl]);
-            }
-            if(diffuu<DIFFXLIMIT*sumuu){
-              convreturnf3limit=1;
-            }
-          }
-
-
-#if(PRODUCTION==0)
-          if(showmessagesheavy) dualfprintf(fail_file,"POSTDX: uu: %g %g %g %g : uup=%g %g %g %g\n",uu[ru.irefU[0]],uu[ru.irefU[1]],uu[ru.irefU[2]],uu[ru.irefU[3]],uup[ru.irefU[0]],uup[ru.irefU[1]],uup[ru.irefU[2]],uup[ru.irefU[3]]);
-#endif
-
-
-        }// end iterating U
-
-
-        //////////////
-        //
-        // ITERATING P
-        //
-        ///////////////
-        else if(IMPPTYPE(mtd.implicititer)){
-
-          if(NEWJONHOLDPOS==0){
-            PLOOP(pliter,pl) pp[pl]=ppp[pl];
-            JACLOOP2D(ii,jj,ru.startjac,ru.endjac){
-              pp[ru.irefU[ii]] -= DAMPFACTOR*iJ[ru.irefU[ii]][ru.erefU[jj]]*f1[ru.erefU[jj]];
-              if(debugfail>=DEBUGLEVELIMPSOLVERMORE) dualfprintf(fail_file,"added to ppp=%21.15g ii=%d jj=%d irefU=%d an amount of negative %21.15g\n",ppp[ru.irefU[ii]],ii,jj,ru.irefU[ii],DAMPFACTOR*iJ[ru.irefU[ii]][ru.erefU[jj]]*f1[ru.erefU[jj]]);
-            }
-          }
-          else{
-            // if u_g (or Erf)<0, then shift entire jacobian to make smaller changes
-
-            FTYPE dpp[NPR]={0.0};
-            PLOOP(pliter,pl) pp[pl]=ppp[pl];
-            JACLOOP2D(ii,jj,ru.startjac,ru.endjac){
-              dpp[ru.irefU[ii]] += -DAMPFACTOR*iJ[ru.irefU[ii]][ru.erefU[jj]]*f1[ru.erefU[jj]];
-              if(debugfail>=DEBUGLEVELIMPSOLVERMORE) dualfprintf(fail_file,"added to ppp=%21.15g ii=%d jj=%d irefU=%d an amount of negative %21.15g\n",ppp[ru.irefU[ii]],ii,jj,ru.irefU[ii],DAMPFACTOR*iJ[ru.irefU[ii]][ru.erefU[jj]]*f1[ru.erefU[jj]]);
-            }
-            JACLOOP(ii,ru.startjac,ru.endjac){
-              pp[ru.irefU[ii]] += dpp[ru.irefU[ii]];
-            }
-
-            if(ru.startjac==0){
-              ii=0;
-              if(pp[ru.irefU[ii]]<=0.0){
-#if(0)
-                FTYPE ppbad[NPR];
-                PLOOP(pliter,pl) ppbad[pl]=pp[pl];
-                // rescale iJ so u_g -> u_g0/2 instead (or for Erf)
-                PLOOP(pliter,pl) pp[pl]=ppp[pl];
-                FTYPE REDAMP=fabs(+0.5*ppp[UU]/dpp[UU])*DAMPFACTOR; // KORALTOD: inverted damp.  Sometimes works, sometimes bad.
-                JACLOOP2D(ii,jj,ru.startjac,ru.endjac){
-                  pp[ru.irefU[ii]] += REDAMP*iJ[ru.irefU[ii]][ru.erefU[jj]]*f1[ru.erefU[jj]];
-                }
-#else
-                pp[ru.irefU[ii]]=ppp[ru.irefU[ii]]; // super hold, works just as well as inverted damp.
-#endif
-              }
-            }
-
-          }
-
-
-
-          
-          // DEBUG: store steps in case hit max iter and want to debug
-#if(DEBUGMAXITER)
-          if(dampattempt==0){
-            PLOOP(pliter,pl) pppreholdlist[debugiter][pl]=pp[pl];
-            if(DEBUGMAXITERVELOCITY==1){
-              SLOOPA(jj){
-                pppreholdlist[debugiter][U1+jj-1]=q->ucon[jj];
-                pppreholdlist[debugiter][URAD1+jj-1]=q->uradcon[jj];
-              }
-            }
-            DLOOP(jj,kk) jaclist[debugiter][jj][kk]=iJ[ru.irefU[jj]][ru.erefU[kk]];
-            implicititerlist[debugiter]=mtd.implicititer;
-            implicitferrlist[debugiter]=mtd.implicitferr;
-            fracdamplist[0]=fracdtuu0;
-            fracdamplist[1]=fracdtG;
-            fracdamplist[2]=DAMPFACTOR;
-          }
-#endif
-
-
-
-
-          ///////////////////////////
-          //
-          //  POST NEWTON ADJUSTMENTS
-          //
-          ///////////////////////////
-
-
-
-          // HOLD TT-iterated quantity or momentum-iterated quantity in initial steps
-          if(RAMESHFIXEARLYSTEPS){
-            // RAMESH  HOLD
-            if(iter<RAMESHFIXEARLYSTEPS) pp[ru.irefU[0]]=ppp[ru.irefU[0]]; // don't trust first Newton step in u_g, Erf, or S
-            else if(iter==RAMESHFIXEARLYSTEPS) SLOOPA(jj) pp[ru.irefU[jj]]=ppp[ru.irefU[jj]]; // don't trust second Newton step in velocity-momentum.
-
-            if(pp[RHO]<=0.0||pp[UU]<=0.0){
-              if(debugfail>=DEBUGLEVELIMPSOLVERMORE) dualfprintf(fail_file,"Detected negative rho=%21.15g ug=%21.15g\n",iter,pp[RHO],pp[UU]);
-            }
-          }// end Ramesh hold
+            }// end Ramesh hold
 
 
 
 
 
 
-          ////////////
-          //
-          // check if u_g,Erf<0.  Do even if RAMESHFIXEARLYSTEPS going or even if checkconv==0
-          //
-          ////////////
-          //          FTYPE umin=10.0*calc_PEQ_ufromTrho(TEMPMIN,fabs(pp[RHO]));
-          if(pp[ru.irefU[0]]<=0.0 && (IMPPTYPE(mtd.implicititer)&& *baseitermethod!=QTYENTROPYPMHD)){ // don't consider mtd.implicititer==QTYENTROPYPMHD since S can be positive or negative.  Would only be unphysical or absolute-limited if the related u_g<0 or rho<0.
-            if(JONHOLDPOS){
+            ////////////
+            //
+            // check if u_g,Erf<0.  Do even if RAMESHFIXEARLYSTEPS going or even if checkconv==0
+            //
+            ////////////
+            //          FTYPE umin=10.0*calc_PEQ_ufromTrho(TEMPMIN,fabs(pp[RHO]));
+            if(pp[ru.irefU[0]]<=0.0 && (IMPPTYPE(mtd.implicititer)&& *baseitermethod!=QTYENTROPYPMHD)){ // don't consider mtd.implicititer==QTYENTROPYPMHD since S can be positive or negative.  Would only be unphysical or absolute-limited if the related u_g<0 or rho<0.
+              if(JONHOLDPOS){
 
 #if(1)
-              holdingaspositive=0; // default
-              if(countholdpositive<NUMHOLDTIMES){
-                if(debugfail>=DEBUGLEVELIMPSOLVER) dualfprintf(fail_file,"HOLDING: Detected unphysical iter=%d countholdpositive=%d : pp[ru.irefU[0]]=%g : ijknstepsteppart=%d %d %d %ld %d\n",iter,countholdpositive,pp[ru.irefU[0]],ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart);
-                //pp[ru.irefU[0]]=MAX(100.0*NUMEPSILON*fabs(pp[RHO]),fabs(ppp[ru.irefU[0]])); // hold as positive -- ppp might be too large so hold might be too aggressive to be useful.
-                //                if(gotbest) umin=MAX(umin,0.5*fabs(pp[UU])); // override with last best version of u_g, because using very minimum leads to jump in behavior. // causes problems, leads to many high error events.
-                //pp[ru.irefU[0]]=umin; // hold as positive.
-                pp[ru.irefU[0]]=0.5*fabs(ppp[ru.irefU[0]]); // just drop by half of positive value of *previous* value, not of negative value.
-                countholdpositive++;
-                holdingaspositive=1;
-              }
+                holdingaspositive=0; // default
+                if(countholdpositive<NUMHOLDTIMES){
+                  if(debugfail>=DEBUGLEVELIMPSOLVER) dualfprintf(fail_file,"HOLDING: Detected unphysical iter=%d countholdpositive=%d : pp[ru.irefU[0]]=%g : ijknstepsteppart=%d %d %d %ld %d\n",iter,countholdpositive,pp[ru.irefU[0]],ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart);
+                  //pp[ru.irefU[0]]=MAX(100.0*NUMEPSILON*fabs(pp[RHO]),fabs(ppp[ru.irefU[0]])); // hold as positive -- ppp might be too large so hold might be too aggressive to be useful.
+                  //                if(gotbest) umin=MAX(umin,0.5*fabs(pp[UU])); // override with last best version of u_g, because using very minimum leads to jump in behavior. // causes problems, leads to many high error events.
+                  //pp[ru.irefU[0]]=umin; // hold as positive.
+                  pp[ru.irefU[0]]=0.5*fabs(ppp[ru.irefU[0]]); // just drop by half of positive value of *previous* value, not of negative value.
+                  countholdpositive++;
+                  holdingaspositive=1;
+                }
 #else
 #define NUMITERHOLD (eomcond ? 2 : 4)
-              if(holdingaspositive==0 || holdingaspositive==1 && iter<iterhold+NUMITERHOLD){
-                if(debugfail>=DEBUGLEVELIMPSOLVER) dualfprintf(fail_file,"HOLDING: Detected unphysical iter=%d iterhold+NUMITERHOLD=%d holdingaspositive=%d : pp[ru.irefU[0]]=%g : ijknstepsteppart=%d %d %d %ld %d\n",iter,iterhold+NUMITERHOLD,holdingaspositive,pp[ru.irefU[0]],ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart);
-                if(holdingaspositive==0) iterhold=iter;
-                //              else holdingaspositive=1;
-                holdingaspositive=1;
-                //                pp[ru.irefU[0]]=100.0*NUMEPSILON*fabs(pp[RHO]); // hold as positive just one iteration
-                //                if(gotbest) umin=MAX(umin,0.5*fabs(pp[UU])); // override with last best version of u_g, because using very minimum leads to jump in behavior. // causes problems, leads to many high error events.
-                //pp[ru.irefU[0]]=umin; // hold as positive
-                pp[ru.irefU[0]]=0.5*fabs(ppp[ru.irefU[0]]); // just drop by half of positive value of *previous* value, not of negative value.
-              }
-#endif
-              else{// then exceeding hold attempts
-
-                // if pre-normal step, skip to next type of step because non-normal step seems to want wrong/bad u_g anyways.
-                if(itermode==ITERMODESTAGES && iter>=mtd.BEGINMOMSTEPS && iter<=mtd.ENDMOMSTEPS){
-                  // revert to previous stepping's u_g, since using modified u_g (after u_g<0) should be bad.
-                  PLOOP(pliter,pl){
-                    pp[pl] = pppriorsteptype[pl];
-                    uu[pl] = uupriorsteptype[pl];
-                  }                    
-                  iter=mtd.BEGINENERGYSTEPS-1;
-                  continue;
-                }
-                else if(itermode==ITERMODESTAGES && iter>=mtd.BEGINENERGYSTEPS && iter<=mtd.ENDENERGYSTEPS){
-                  // revert previous stepping's u_g, since using modified u_g (after u_g<0) should be bad.
-                  PLOOP(pliter,pl){
-                    pp[pl] = pppriorsteptype[pl];
-                    uu[pl] = uupriorsteptype[pl];
-                  }                    
-                  iter=mtd.BEGINFULLSTEPS-1;
-                  continue;
-                }
-                else{// else doing normal steps
+                if(holdingaspositive==0 || holdingaspositive==1 && iter<iterhold+NUMITERHOLD){
+                  if(debugfail>=DEBUGLEVELIMPSOLVER) dualfprintf(fail_file,"HOLDING: Detected unphysical iter=%d iterhold+NUMITERHOLD=%d holdingaspositive=%d : pp[ru.irefU[0]]=%g : ijknstepsteppart=%d %d %d %ld %d\n",iter,iterhold+NUMITERHOLD,holdingaspositive,pp[ru.irefU[0]],ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart);
+                  if(holdingaspositive==0) iterhold=iter;
+                  //              else holdingaspositive=1;
+                  holdingaspositive=1;
+                  //                pp[ru.irefU[0]]=100.0*NUMEPSILON*fabs(pp[RHO]); // hold as positive just one iteration
+                  //                if(gotbest) umin=MAX(umin,0.5*fabs(pp[UU])); // override with last best version of u_g, because using very minimum leads to jump in behavior. // causes problems, leads to many high error events.
+                  //pp[ru.irefU[0]]=umin; // hold as positive
                   pp[ru.irefU[0]]=0.5*fabs(ppp[ru.irefU[0]]); // just drop by half of positive value of *previous* value, not of negative value.
-                  if(DOFINALCHECK){
-                    if(debugfail>=DEBUGLEVELIMPSOLVER) dualfprintf(fail_file,"Unable to hold off u_g<0, setting canbreak=1 and letting finalchecks confirm error is good or bad.  iter=%d\n",iter);
-                    canbreak=1; // just break since might be good (or at least allowable) error still.  Let final error check handle this.
-                    // not fail.
-                    mathfailtype=89;
-                    break;
-                  }
-                  else if(havebackup){
-                    failreturn=FAILRETURNMODESWITCH; mathfailtype=90;
-                    if(debugfail>=DEBUGLEVELIMPSOLVERMORE) dualfprintf(fail_file,"SWITCHING MODE: Detected bad u_g\n");
-                    break;
-                  }
-                  else{
-                    // then full failure
-                    failreturn=FAILRETURNGENERAL; mathfailtype=10;
-                    break;
-                  }
-                }// end else normal step
-              } // if beyond hold counts allowed
-            } // end if JONHOLDPOS
-            else{//  not using JONHOLDPOS
-              // if pre-normal step, skip to next type of step because non-normal step may have wrong u_g anyways.
-              if(itermode==ITERMODESTAGES && iter>=mtd.BEGINMOMSTEPS && iter<=mtd.ENDMOMSTEPS){ iter=mtd.BEGINENERGYSTEPS-1;    continue;    }
-              else if(itermode==ITERMODESTAGES && iter>=mtd.BEGINENERGYSTEPS && iter<=mtd.ENDENERGYSTEPS){ iter=mtd.BEGINFULLSTEPS-1;   continue; }
-              else{// else doing normal steps
-                if(havebackup){
-                  failreturn=FAILRETURNMODESWITCH; mathfailtype=90;
-                  if(debugfail>=DEBUGLEVELIMPSOLVERMORE) dualfprintf(fail_file,"SWITCHING MODE: Detected unphysical pp[ru.irefU[0]]: iter=%d\n",iter);
-                  break;
                 }
-              }
-            }// else if not using JONHOLDPOS
-          }// end if u_g<0 and iterating primitives
-          else{
-            // if u_g>0, not holding.
-            holdingaspositive=0;
-          }
-
-
-
-
-          // DEBUG: store steps in case hit max iter and want to debug
-#if(DEBUGMAXITER)
-          if(dampattempt==0){
-            PLOOP(pliter,pl) ppposholdlist[debugiter][pl]=pp[pl];
-            if(DEBUGMAXITERVELOCITY==1){
-              SLOOPA(jj){
-                ppposholdlist[debugiter][U1+jj-1]=q->ucon[jj];
-                ppposholdlist[debugiter][URAD1+jj-1]=q->uradcon[jj];
-              }
-            }
-          }
 #endif
+                else{// then exceeding hold attempts
 
-
-
-          // determine if holding so post-newton checks know.
-          notholding=(RAMESHFIXEARLYSTEPS && iter>=RAMESHFIXEARLYSTEPS || RAMESHFIXEARLYSTEPS==0) && (JONHOLDPOS && holdingaspositive==0 || JONHOLDPOS==0);
-
-
-
-          ///////////////////////////
-          //
-          //  POST NEWTON CHECKS
-          //
-          ///////////////////////////
-
-
-          // only do post-newton checks if checking convergence allowed
-          if(checkconv==1){
-
-            // check if energy u_g too often bad compared to entropy u_g
-            // assume this is only done after 
-            if(RAMESHSTOPENERGYIFTOOOFTENBELOWENTROPY){
-              if((mtd.implicititer==QTYPMHD || mtd.implicititer==QTYPMHDENERGYONLY)  && didentropyalready){
-                if(notholding==1 || mtd.implicititer==QTYPMHD){ // if holding on energy equation, don't  use this u_g check.  But, if normal steps, then ignore holding and assume holding means u_g bad if on normal steps.
-                  if(badenergy(ptrgeom,pp,pborig)) countbadenergy++;
-                  if(countbadenergy>=RAMESHSTOPENERGYIFTOOOFTENBELOWENTROPY){
-
-                    // if pre-normal step, skip to next type of step because non-normal step may have wrong u_g anyways.
-                    if(itermode==ITERMODESTAGES && iter>=mtd.BEGINMOMSTEPS && iter<=mtd.ENDMOMSTEPS){ iter=mtd.BEGINENERGYSTEPS-1;    continue;    }
-                    else if(itermode==ITERMODESTAGES && iter>=mtd.BEGINENERGYSTEPS && iter<=mtd.ENDENERGYSTEPS){ iter=mtd.BEGINFULLSTEPS-1;   continue; }
-                    else{// else doing normal steps
-                      // "switch" to entropy by just stopping trying to get energy solution
-                      failreturn=FAILRETURNMODESWITCH; mathfailtype=100;
-                      prod0dualfprintf(debugfail>=DEBUGLEVELIMPSOLVER,fail_file,"SWITCHING MODE: Detected entropy u_g preferred consistently: iter=%d: %g %g\n",iter,pp[ru.irefU[0]],pborig[ru.irefU[0]]);
+                  // if pre-normal step, skip to next type of step because non-normal step seems to want wrong/bad u_g anyways.
+                  if(itermode==ITERMODESTAGES && iter>=mtd.BEGINMOMSTEPS && iter<=mtd.ENDMOMSTEPS){
+                    // revert to previous stepping's u_g, since using modified u_g (after u_g<0) should be bad.
+                    PLOOP(pliter,pl){
+                      pp[pl] = pppriorsteptype[pl];
+                      uu[pl] = uupriorsteptype[pl];
+                    }                    
+                    iter=mtd.BEGINENERGYSTEPS-1;
+                    continue;
+                  }
+                  else if(itermode==ITERMODESTAGES && iter>=mtd.BEGINENERGYSTEPS && iter<=mtd.ENDENERGYSTEPS){
+                    // revert previous stepping's u_g, since using modified u_g (after u_g<0) should be bad.
+                    PLOOP(pliter,pl){
+                      pp[pl] = pppriorsteptype[pl];
+                      uu[pl] = uupriorsteptype[pl];
+                    }                    
+                    iter=mtd.BEGINFULLSTEPS-1;
+                    continue;
+                  }
+                  else{// else doing normal steps
+                    pp[ru.irefU[0]]=0.5*fabs(ppp[ru.irefU[0]]); // just drop by half of positive value of *previous* value, not of negative value.
+                    if(DOFINALCHECK){
+                      if(debugfail>=DEBUGLEVELIMPSOLVER) dualfprintf(fail_file,"Unable to hold off u_g<0, setting canbreak=1 and letting finalchecks confirm error is good or bad.  iter=%d\n",iter);
+                      canbreak=1; // just break since might be good (or at least allowable) error still.  Let final error check handle this.
+                      // not fail.
+                      mathfailtype=89;
                       break;
                     }
-                  }// end if normal step
-                }//end if at point where iterations can be considered
-              }// whether have information necessary to check
-            }// whether to check u_g energy vs. entropy
+                    else if(havebackup){
+                      failreturn=FAILRETURNMODESWITCH; mathfailtype=90;
+                      if(debugfail>=DEBUGLEVELIMPSOLVERMORE) dualfprintf(fail_file,"SWITCHING MODE: Detected bad u_g\n");
+                      break;
+                    }
+                    else{
+                      // then full failure
+                      failreturn=FAILRETURNGENERAL; mathfailtype=10;
+                      break;
+                    }
+                  }// end else normal step
+                } // if beyond hold counts allowed
+              } // end if JONHOLDPOS
+              else{//  not using JONHOLDPOS
+                // if pre-normal step, skip to next type of step because non-normal step may have wrong u_g anyways.
+                if(itermode==ITERMODESTAGES && iter>=mtd.BEGINMOMSTEPS && iter<=mtd.ENDMOMSTEPS){ iter=mtd.BEGINENERGYSTEPS-1;    continue;    }
+                else if(itermode==ITERMODESTAGES && iter>=mtd.BEGINENERGYSTEPS && iter<=mtd.ENDENERGYSTEPS){ iter=mtd.BEGINFULLSTEPS-1;   continue; }
+                else{// else doing normal steps
+                  if(havebackup){
+                    failreturn=FAILRETURNMODESWITCH; mathfailtype=90;
+                    if(debugfail>=DEBUGLEVELIMPSOLVERMORE) dualfprintf(fail_file,"SWITCHING MODE: Detected unphysical pp[ru.irefU[0]]: iter=%d\n",iter);
+                    break;
+                  }
+                }
+              }// else if not using JONHOLDPOS
+            }// end if u_g<0 and iterating primitives
+            else{
+              // if u_g>0, not holding.
+              holdingaspositive=0;
+            }
 
 
 
-            if(POSTNEWTONCONVCHECK==2 && notholding==1){
-              // check if any actual changes in primitives.  If none, then have to stop.
-              FTYPE diffpp=0.0,sumpp=0.0;
-              PLOOP(pliter,pl){
-                diffpp += fabs(pp[pl]-ppp[pl]);
-                sumpp += fabs(pp[pl])+fabs(ppp[pl]);
-              }
-              if(diffpp<DIFFXLIMIT*sumpp){
-                convreturnf3limit=1;
+
+            // DEBUG: store steps in case hit max iter and want to debug
+#if(DEBUGMAXITER)
+            if(dampattempt==0){
+              PLOOP(pliter,pl) ppposholdlist[debugiter][pl]=pp[pl];
+              if(DEBUGMAXITERVELOCITY==1){
+                SLOOPA(jj){
+                  ppposholdlist[debugiter][U1+jj-1]=q->ucon[jj];
+                  ppposholdlist[debugiter][URAD1+jj-1]=q->uradcon[jj];
+                }
               }
             }
-          }// end if checkconv==1
+#endif
+
+
+
+            // determine if holding so post-newton checks know.
+            notholding=(RAMESHFIXEARLYSTEPS && iter>=RAMESHFIXEARLYSTEPS || RAMESHFIXEARLYSTEPS==0) && (JONHOLDPOS && holdingaspositive==0 || JONHOLDPOS==0);
+
+
+
+            ///////////////////////////
+            //
+            //  POST NEWTON CHECKS
+            //
+            ///////////////////////////
+
+
+            // only do post-newton checks if checking convergence allowed
+            if(checkconv==1){
+
+              // check if energy u_g too often bad compared to entropy u_g
+              // assume this is only done after 
+              if(RAMESHSTOPENERGYIFTOOOFTENBELOWENTROPY){
+                if((mtd.implicititer==QTYPMHD || mtd.implicititer==QTYPMHDENERGYONLY)  && didentropyalready){
+                  if(notholding==1 || mtd.implicititer==QTYPMHD){ // if holding on energy equation, don't  use this u_g check.  But, if normal steps, then ignore holding and assume holding means u_g bad if on normal steps.
+                    if(badenergy(ptrgeom,pp,pborig)) countbadenergy++;
+                    if(countbadenergy>=RAMESHSTOPENERGYIFTOOOFTENBELOWENTROPY){
+
+                      // if pre-normal step, skip to next type of step because non-normal step may have wrong u_g anyways.
+                      if(itermode==ITERMODESTAGES && iter>=mtd.BEGINMOMSTEPS && iter<=mtd.ENDMOMSTEPS){ iter=mtd.BEGINENERGYSTEPS-1;    continue;    }
+                      else if(itermode==ITERMODESTAGES && iter>=mtd.BEGINENERGYSTEPS && iter<=mtd.ENDENERGYSTEPS){ iter=mtd.BEGINFULLSTEPS-1;   continue; }
+                      else{// else doing normal steps
+                        // "switch" to entropy by just stopping trying to get energy solution
+                        failreturn=FAILRETURNMODESWITCH; mathfailtype=100;
+                        prod0dualfprintf(debugfail>=DEBUGLEVELIMPSOLVER,fail_file,"SWITCHING MODE: Detected entropy u_g preferred consistently: iter=%d: %g %g\n",iter,pp[ru.irefU[0]],pborig[ru.irefU[0]]);
+                        break;
+                      }
+                    }// end if normal step
+                  }//end if at point where iterations can be considered
+                }// whether have information necessary to check
+              }// whether to check u_g energy vs. entropy
+
+
+
+              if(POSTNEWTONCONVCHECK==2 && notholding==1){
+                // check if any actual changes in primitives.  If none, then have to stop.
+                FTYPE diffpp=0.0,sumpp=0.0;
+                PLOOP(pliter,pl){
+                  diffpp += fabs(pp[pl]-ppp[pl]);
+                  sumpp += fabs(pp[pl])+fabs(ppp[pl]);
+                }
+                if(diffpp<DIFFXLIMIT*sumpp){
+                  convreturnf3limit=1;
+                }
+              }
+            }// end if checkconv==1
 
 
 
 
-          prod0dualfprintf(showmessagesheavy,fail_file,"POSTDX: pp: %g %g %g %g : ppp=%g %g %g %g\n",pp[ru.irefU[0]],pp[ru.irefU[1]],pp[ru.irefU[2]],pp[ru.irefU[3]],ppp[ru.irefU[0]],ppp[ru.irefU[1]],ppp[ru.irefU[2]],ppp[ru.irefU[3]]);
+            prod0dualfprintf(showmessagesheavy,fail_file,"POSTDX: pp: %g %g %g %g : ppp=%g %g %g %g\n",pp[ru.irefU[0]],pp[ru.irefU[1]],pp[ru.irefU[2]],pp[ru.irefU[3]],ppp[ru.irefU[0]],ppp[ru.irefU[1]],ppp[ru.irefU[2]],ppp[ru.irefU[3]]);
 
 
 
-        }// end if iterating primitves
+          }// end if iterating primitves
 
 
    
 
       
 
-        ///////////////////////////
-        //
-        //  POST NEWTON ADJUSTMENTS part 2
-        //
-        ///////////////////////////
-
-
-
-        // only do post-newton checks if checking convergence allowed
-        if(checkconv==1){
-
-
-
-          ////////////
+          ///////////////////////////
           //
-          // check if u_g<0 too often and know have entropy backup
+          //  POST NEWTON ADJUSTMENTS part 2
           //
-          ////////////
+          ///////////////////////////
 
-          if(IMPRADTYPEBASE(*baseitermethod)){//__WORKINGONIT__, might be too aggressive for PMHD method.
-            // abort if too often hit negative u_g or Erf and know have entropy backup method.
+
+
+          // only do post-newton checks if checking convergence allowed
+          if(checkconv==1){
+
+
+
+            ////////////
+            //
+            // check if u_g<0 too often and know have entropy backup
+            //
+            ////////////
+
+            if(IMPRADTYPEBASE(*baseitermethod)){//__WORKINGONIT__, might be too aggressive for PMHD method.
+              // abort if too often hit negative u_g or Erf and know have entropy backup method.
 #define NUMUGNEGENERGY (3)
 
-            if(pp[UU]<=10.0*UUMINLIMIT && *baseitermethod!=QTYENTROPYPMHD && iter>=mtd.BEGINNORMALSTEPS){
-              countugnegative++;
-            }
-            else{
-              //            dualfprintf(fail_file,"NOTNEG: countugnegative=%d\n",countugnegative);
-            }
-
-            if(countugnegative>=NUMUGNEGENERGY && eomcond && (modemethodlocal==MODEPICKBEST || modemethodlocal==MODEPICKBESTSIMPLE  || modemethodlocal==MODEPICKBESTSIMPLE2) && iter>=mtd.BEGINNORMALSTEPS){
-              if(DOFINALCHECK){
-                if(debugfail>=DEBUGLEVELIMPSOLVER) dualfprintf(fail_file,"2Unable to hold off u_g<0, setting canbreak=1 and letting finalchecks confirm error is good or bad.  iter=%d\n",iter);
-                canbreak=5; // just break since might be good (or at least allowable) error still.  Let final error check handle this.
-                // not fail.
-                mathfailtype=89;
-                break;
-              }
-              else if(havebackup){
-                failreturn=FAILRETURNMODESWITCH; mathfailtype=90;
-                if(debugfail>=DEBUGLEVELIMPSOLVERMORE) dualfprintf(fail_file,"2SWITCHING MODE: Detected bad u_g\n");
-                break;
+              if(pp[UU]<=10.0*UUMINLIMIT && *baseitermethod!=QTYENTROPYPMHD && iter>=mtd.BEGINNORMALSTEPS){
+                countugnegative++;
               }
               else{
-                // then full failure
-                failreturn=FAILRETURNGENERAL; mathfailtype=10;
-                break;
+                //            dualfprintf(fail_file,"NOTNEG: countugnegative=%d\n",countugnegative);
+              }
+
+              if(countugnegative>=NUMUGNEGENERGY && eomcond && (modemethodlocal==MODEPICKBEST || modemethodlocal==MODEPICKBESTSIMPLE  || modemethodlocal==MODEPICKBESTSIMPLE2) && iter>=mtd.BEGINNORMALSTEPS){
+                if(DOFINALCHECK){
+                  if(debugfail>=DEBUGLEVELIMPSOLVER) dualfprintf(fail_file,"2Unable to hold off u_g<0, setting canbreak=1 and letting finalchecks confirm error is good or bad.  iter=%d\n",iter);
+                  canbreak=5; // just break since might be good (or at least allowable) error still.  Let final error check handle this.
+                  // not fail.
+                  mathfailtype=89;
+                  break;
+                }
+                else if(havebackup){
+                  failreturn=FAILRETURNMODESWITCH; mathfailtype=90;
+                  if(debugfail>=DEBUGLEVELIMPSOLVERMORE) dualfprintf(fail_file,"2SWITCHING MODE: Detected bad u_g\n");
+                  break;
+                }
+                else{
+                  // then full failure
+                  failreturn=FAILRETURNGENERAL; mathfailtype=10;
+                  break;
+                }
               }
             }
-          }
 
 
 
 
 
 
-          FTYPE f3[NPR]={0},f3norm[NPR]={0};
-          if(POSTNEWTONCONVCHECK==1 && notholding==1){
-            int dimtypef3;
-            /////////
+            FTYPE f3[NPR]={0},f3norm[NPR]={0};
+            if(POSTNEWTONCONVCHECK==1 && notholding==1){
+              int dimtypef3;
+              /////////
+              //
+              // test convergence after Newton step
+              // test convergence using |dU/U|
+              // KORALTODO: This isn't a completely general error check since force might be large for fluid.  So using (e.g.) 1E-6 might still imply a ~1 or larger error for the fluid.  Only down to ~NUMEPSILON will radiation 4-force be unresolved as fluid source term.
+              // NOTE: Have to be careful with decreasing DAMPFACTOR or fracdtuu0 because can become small enough that apparently fake convergence with below condition, so only check for convergence if all DAMPs are 1.0.
+              /////////
+              // 0 = conserved R^t_\nu type, 1 = primitive R^{ti} type
+              if(IMPUTYPE(mtd.implicititer)){ // still considering iterate error
+                dimtypef3=DIMTYPEFCONS;
+                JACLOOPALT(ii,ru.startjac,ru.endjac){
+                  f3[ru.erefU[ii]]=(uu[ru.irefU[ii]]-uup[ru.irefU[ii]]);
+                  f3norm[ru.erefU[ii]]=fabs(uu[ru.irefU[ii]])+fabs(uup[ru.irefU[ii]]);
+                }
+              }
+              else if(IMPPTYPE(mtd.implicititer)){ // still considering iterate error
+                dimtypef3=DIMTYPEFPRIM;
+                JACLOOPALT(ii,ru.startjac,ru.endjac){
+                  f3[ru.erefU[ii]]=(pp[ru.irefU[ii]]-ppp[ru.irefU[ii]]);
+                  f3norm[ru.erefU[ii]]=fabs(pp[ru.irefU[ii]])+fabs(ppp[ru.irefU[ii]]);
+                }
+              }
+  
+              // store error and solution in case eventually lead to max iterations and actually get worse error
+              // f_error_check(uu0,uu) is ok to use since it just normalizes error
+              int convreturnf3;
+              FTYPE errorallabsf3; // not used
+              convreturnf3=f_error_check(showmessages, showmessagesheavy, iter, trueimptryconv, trueimptryconvabs, realdt, dimtypef3,eomtypelocal ,*radinvmod, itermode,*baseitermethod,fracenergy,dissmeasure,dimfactU,pp,piin,f3,f3norm,f3report,Uiin,uu0,uu,ptrgeom,&errorabsf3,&errorallabsf3,WHICHERROR,&mtd,&ru);
+              // while using f1 for true error, can't do better if f3 error is below near machine precision.
+              convreturnf3limit=(errorabsf3<LOCALPREIMPCONVXABS);
+            }
+
+            if(POSTNEWTONCONVCHECK==0 || notholding==0){
+              convreturnf3limit=0;
+            }
+
+
+
+            /////////////////
             //
-            // test convergence after Newton step
-            // test convergence using |dU/U|
-            // KORALTODO: This isn't a completely general error check since force might be large for fluid.  So using (e.g.) 1E-6 might still imply a ~1 or larger error for the fluid.  Only down to ~NUMEPSILON will radiation 4-force be unresolved as fluid source term.
-            // NOTE: Have to be careful with decreasing DAMPFACTOR or fracdtuu0 because can become small enough that apparently fake convergence with below condition, so only check for convergence if all DAMPs are 1.0.
-            /////////
-            // 0 = conserved R^t_\nu type, 1 = primitive R^{ti} type
-            if(IMPUTYPE(mtd.implicititer)){ // still considering iterate error
-              dimtypef3=DIMTYPEFCONS;
-              JACLOOPALT(ii,ru.startjac,ru.endjac){
-                f3[ru.erefU[ii]]=(uu[ru.irefU[ii]]-uup[ru.irefU[ii]]);
-                f3norm[ru.erefU[ii]]=fabs(uu[ru.irefU[ii]])+fabs(uup[ru.irefU[ii]]);
-              }
-            }
-            else if(IMPPTYPE(mtd.implicititer)){ // still considering iterate error
-              dimtypef3=DIMTYPEFPRIM;
-              JACLOOPALT(ii,ru.startjac,ru.endjac){
-                f3[ru.erefU[ii]]=(pp[ru.irefU[ii]]-ppp[ru.irefU[ii]]);
-                f3norm[ru.erefU[ii]]=fabs(pp[ru.irefU[ii]])+fabs(ppp[ru.irefU[ii]]);
-              }
-            }
-  
-            // store error and solution in case eventually lead to max iterations and actually get worse error
-            // f_error_check(uu0,uu) is ok to use since it just normalizes error
-            int convreturnf3;
-            FTYPE errorallabsf3; // not used
-            convreturnf3=f_error_check(showmessages, showmessagesheavy, iter, trueimptryconv, trueimptryconvabs, realdt, dimtypef3,eomtypelocal ,*radinvmod, itermode,*baseitermethod,fracenergy,dissmeasure,dimfactU,pp,piin,f3,f3norm,f3report,Uiin,uu0,uu,ptrgeom,&errorabsf3,&errorallabsf3,WHICHERROR,&mtd,&ru);
-            // while using f1 for true error, can't do better if f3 error is below near machine precision.
-            convreturnf3limit=(errorabsf3<LOCALPREIMPCONVXABS);
-          }
-
-          if(POSTNEWTONCONVCHECK==0 || notholding==0){
-            convreturnf3limit=0;
-          }
-
-
-
-          /////////////////
-          //
-          // check convergence
-          // then can check convergence: using f1 and f3limit
-          //
-          /////////////////
-          if(convreturnf1 || convreturnf3limit || canbreak){
+            // check convergence
+            // then can check convergence: using f1 and f3limit
+            //
+            /////////////////
+            if(convreturnf1 || convreturnf3limit || canbreak){
 #if(PRODUCTION==0)
-            if(debugfail>=DEBUGLEVELIMPSOLVERMORE){
-              if(convreturnf3limit && debugfail>=3){
-                dualfprintf(fail_file,"f3limit good\n");
-                if(POSTNEWTONCONVCHECK==1) JACLOOPALT(ii,ru.startjac,ru.endjac) dualfprintf(fail_file,"ii=%d erefU[ii]=%d f3=%21.15g f3norm=%21.15g f3report=%21.15g\n",ii,ru.erefU[ii],f3[ru.erefU[ii]],f3norm[ru.erefU[ii]],f3report[ru.erefU[ii]]);          
+              if(debugfail>=DEBUGLEVELIMPSOLVERMORE){
+                if(convreturnf3limit && debugfail>=3){
+                  dualfprintf(fail_file,"f3limit good\n");
+                  if(POSTNEWTONCONVCHECK==1) JACLOOPALT(ii,ru.startjac,ru.endjac) dualfprintf(fail_file,"ii=%d erefU[ii]=%d f3=%21.15g f3norm=%21.15g f3report=%21.15g\n",ii,ru.erefU[ii],f3[ru.erefU[ii]],f3norm[ru.erefU[ii]],f3report[ru.erefU[ii]]);          
+                }
+                if(convreturnf1) dualfprintf(fail_file,"f1 good: ijknstepsteppart=%d %d %d %ld %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart);
+                if(convreturnf3limit) dualfprintf(fail_file,"f3 good: ijknstepsteppart=%d %d %d %ld %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart);
+                if(canbreak) dualfprintf(fail_file,"canbreak=%d good: ijknstepsteppart=%d %d %d %ld %d\n",canbreak,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart);
               }
-              if(convreturnf1) dualfprintf(fail_file,"f1 good: ijknstepsteppart=%d %d %d %ld %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart);
-              if(convreturnf3limit) dualfprintf(fail_file,"f3 good: ijknstepsteppart=%d %d %d %ld %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart);
-              if(canbreak) dualfprintf(fail_file,"canbreak=%d good: ijknstepsteppart=%d %d %d %ld %d\n",canbreak,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart);
-            }
 #endif
-            // so done.
-            break;
-          }
-          else{
-            // then not done
-          }
-
-        } // end if checkconv==1
-
-#if(DOPERF)
-        // only try low error if not too many iterations, otherwise drop trying quite as hard.
-        if(iter>ITERATIONMARGINAL2 && (errorabsf1[WHICHERROR]<MIN(trueimpallowconvabs,IMPTRYCONVMARGINAL2) ) ){
-          break;
-        }
-#endif
-
-      }// end if finite
-
-
-
-
-
-
-      /////////
-      //
-      // revert any back-ups if ok to do so
-      //
-      // NOTEMARK: Can only modify uu0 or frac's after they are used consistently to get f1, iJ, take step, and check convergence with error function
-      //
-      /////////
-      changeotherdt=1;
-      ////////////////////////////////////////////////////////////////////////////
-      //    if(fracuup!=1.0){
-      //      if(fabs(fracuup-1.0)>10.0*NUMEPSILON){
-      if(fracuup<1.0){
-        // try increasing amount of uu or pp used
-        fracuup*=RADDAMPUNDELTA;
-        fracuup=MIN(1.0,fracuup);
-        changeotherdt=0; // ensure fracuup back to 1.0 first before reverting others.
-      }
-      ////////////////////////////////////////////////////////////////////////////
-      //    if(fracdtuu0!=1.0){
-      //      if(fabs(fracdtuu0-1.0)>10.0*NUMEPSILON && changeotherdt){
-      if(fracdtuu0<1.0 && changeotherdt){
-        // try increasing uu0 away from Uiin to account for full dUother
-        fracdtuu0*=RADDAMPUNDELTA;
-        fracdtuu0=MIN(1.0,fracdtuu0);
-        //        FTYPE dUnongeomall[MAXTIMEORDER]={0.0};
-        PLOOP(pliter,pl) uu0[pl]=UFSET(CUf,fracdtuu0*dt,Uiin[pl],Ufin[pl],dUother[pl],0.0,dUnongeomall); // modifies uu0
-        {
-          FTYPE uuiterback[NPR];
-          PLOOP(pliter,pl) uuiterback[pl] = uu[pl]; // hold actual iterated quantities
-          PLOOP(pliter,pl) uu[pl] = uu0[pl]; // "iterate" non-iterated quantities
-          JACLOOP(ii,ru.startjac,ru.endjac) uu[ru.irefU[ii]] = uuiterback[ru.irefU[ii]]; // overwrite with actual previous step for iterated quantities
-        }
-        // KORALNOTE: No need to get pp0, since never used.  uu0 only used in error function.
-      }
-      ////////////////////////////////////////////////////////////////////////////
-      //    if(fracdtG!=1.0){
-      //      if(fabs(fracdtG-1.0)>10.0*NUMEPSILON && changeotherdt){
-      if(fracdtG<1.0 && changeotherdt){
-        // try increasing amount of G applied
-        fracdtG*=RADDAMPUNDELTA;
-        fracdtG=MIN(1.0,fracdtG);
-      }      
-
-
-      /////////
-      // see if took too many Newton steps or not finite results
-      /////////
-      *nummhdstepsreturn = (int)(nstroke-nstrokeorig); // get number of mhd inversion steps
-      if(iter>trueimpmaxiter || *nummhdstepsreturn>MAXMHDSTEPS || notfinite ){
-        if(debugfail>=DEBUGLEVELIMPSOLVERMORE) dualfprintf(fail_file,"iter=%d>%d mhdsteps=%d>%d or notfinite=%d\n",iter,trueimpmaxiter,*nummhdstepsreturn,MAXMHDSTEPS,notfinite);
-        //      failreturn=FAILRETURNGENERAL; // no don't fail, might be allowable error.
-        break;
-      }
-
-    }// end do
-    while(1);
-
-
-
-
-
-
-
-
-    ////////////
-    //
-    // once done iterating, regardless of result or failure, need to ensure non-iterated quantities are normal
-    //
-    /////////////
-    fracdtuu0=1.0;
-    //
-    //    FTYPE dUnongeomall[MAXTIMEORDER]={0.0};
-    PLOOP(pliter,pl) uu0[pl]=UFSET(CUf,fracdtuu0*dt,Uiin[pl],Ufin[pl],dUother[pl],0.0,dUnongeomall); // modifies uu0
-    PLOOP(pliter,pl){
-      if(!(pl>=UU && pl<=U3 || RADPL(pl) || pl==ENTROPY)){
-        uu[pl] = uu0[pl];
-      }
-    }
-    // regardless, invert non-iterated quantities
-    // 1) trivially invert field
-    PLOOPBONLY(pl) bestpp[pl]=bestuu[pl]=pp[pl] = uu0[pl];
-    // 2) trivially invert to get rho assuming q up-to-date
-    //    pp[RHO]= uu0[RHO]/q->ucon[TT]; // q might not be up-to-date
-    // 3) Invert other scalars (only uses uu[RHO], not pp[RHO])
-    extern int invert_scalars(struct of_geom *ptrgeom, FTYPE *Ugeomfree, FTYPE *pr);
-    invert_scalars(ptrgeom, uu,pp);
-    PLOOP(pliter,pl){
-      if(pl!=RHO && pl<UU && pl>U3 && pl<B1 && pl>B3 & RADPL(pl)==0 && pl!=ENTROPY){
-        bestpp[pl]=pp[pl];
-        bestuu[pl]=uu[pl];
-      }
-    }
-    //
-    // end trivial inversion
-    //
-    //////////////
-
-  
-
-
-    //////////////
-    //
-    // if no failure, then see if really still failed or not with some final checks.
-    //
-    ///////////////
-    int failreturnf=0;
-    //    if(failreturn==0 && (earlylowerror==0 && lowitererror==0) ){
-    if(failreturn==0 && earlylowerror==0){ // still check if lowitererror==1 because might have best total error at another iter.
-
-
-      // if didn't fail, shouldn't need to set fracdtuu0=1, but do so just in caes.
-      fracdtuu0=1.0;
-
-
-      int fakeiter;
-      for(fakeiter=0;fakeiter<=0;fakeiter++){
-
-        int convreturn=1,convreturnok=1,convreturnallow=1; // default is solution is acceptable.
-
-
-        if(DOFINALCHECK){
-          //////////////////////////
-          //
-          // check and get error for last iteration or any mods from above that are post-iteration
-          //
-          // uses final uu0 with fracdtuu0=1 to ensure really updated non-iterated quantities correctly
-          //
-          // The call to f_implicit() also ensures uu is consistent with new pp
-          //
-          ////////////////////////
-          int whichcall=FIMPLICITCALLTYPEFINALCHECK;
-          //  eomtypelocal=*eomtype; // re-chose default each time. No, stick with what f1 (last call to f1) chose
-          int goexplicitfake; // not used here
-          int dimtypef=DIMTYPEFCONS; // 0 = conserved R^t_\nu type, 1 = primitive (u,v^i) type, i.e. v^i has no energy density term
-          int fakef1iter=-1;
-          failreturnf=f_implicit(allowbaseitermethodswitch, iter,fakef1iter,failreturnallowableuse, whichcall,impepsjac,showmessages, showmessagesheavy, allowlocalfailurefixandnoreport, &eomtypelocal, whichcap, itermode, baseitermethod, fracenergy, dissmeasure, radinvmod, trueimptryconv, trueimptryconvabs, trueimpallowconvabs, trueimpmaxiter, realdt, dimtypef, dimfactU, pp, pp, piin, uu, Uiin, uu0, uu, fracdtG*realdt, ptrgeom, q, f1, f1norm, f1report, &goexplicitfake, &errorabsf1[0], &errorabsf1[1], WHICHERROR, &convreturn, nummhdinvsreturn, &tautotmaxreturn, &mtd, &ru); // modifies uu and pp and q and f1report and goexplicitfake and errorabsf1
-          // radinvmod contains whether radiative inversion modified process.
-
-          //          convreturn=f_error_check(showmessages, showmessagesheavy, iter, trueimptryconv,trueimptryconvabs,realdt,dimtypef,eomtypelocal,*radinvmod, itermode,*baseitermethod,fracenergy,dissmeasure,dimfactU,pp,piin,f1,f1norm,f1report,Uiin,uu0,uu,ptrgeom,&errorabsf1,WHICHERROR,&mtd,&ru);
-          convreturnallow=(errorabsf1[WHICHERROR]<trueimpallowconvabs);
-          convreturnok=(errorabsf1[WHICHERROR]<trueimpokconvabs);
-          if(debugfail>=DEBUGLEVELIMPSOLVERMORE) dualfprintf(fail_file,"DOFINALCHECK: convreturn=%d convreturnok=%d convreturnallow=%d (IMPOKCONV=%g IMPALLOWCONV=%g) f1report: %g %g %g %g : %g %g\n",convreturn,convreturnok,convreturnallow,IMPOKCONV,IMPALLOWCONV,f1report[ru.erefU[0]],f1report[ru.erefU[1]],f1report[ru.erefU[2]],f1report[ru.erefU[3]],errorabsf1[0],errorabsf1[1]);
-        }// end if doing final check
-        else{
-          // kinda risky to rely upon last step but not checking its error
-
-          if(IMPPTYPE(mtd.implicititer)){
-            // since iterated pp or uu but didn't call f_implicit(), uu or pp (respectively) is no longer consistent.
-            // So get uu(pp)
-            struct of_state qcons;
-            get_state(pp, ptrgeom, &qcons);
-            primtoU(UNOTHING,pp,&qcons,ptrgeom, uu, NULL);
-          }
-
-          // now get error
-          int dimtypef=DIMTYPEFCONS; // 0 = conserved R^t_\nu type, 1 = primitive (u,v^i) type, i.e. v^i has no energy density term
-          convreturn=f_error_check(showmessages, showmessagesheavy, iter, trueimptryconv, trueimptryconvabs,realdt,dimtypef,eomtypelocal,*radinvmod,itermode,*baseitermethod,fracenergy,dissmeasure,dimfactU,pp,piin,f1,f1norm,f1report,Uiin,uu0,uu,ptrgeom,&errorabsf1[0],&errorabsf1[1],WHICHERROR,&mtd,&ru);
-          convreturnallow=(errorabsf1[WHICHERROR]<trueimpallowconvabs);
-          convreturnok=(errorabsf1[WHICHERROR]<trueimpokconvabs);
-        }
-
-
-
-        if(GETBEST){
-      
-          if(gotbest){
-            // f1-based
-            // using old uu,uup, but probably ok since just helps normalize error
-            errorabsf1[0]=0.0;   JACLOOPFULLERROR(itermode,jj,ru.startjac,ru.endjac) errorabsf1[0]   += fabs(f1report[ru.erefU[jj]]);
-            errorabsf1[1]=0.0;   JACLOOPSUPERFULL(pliter,pl,eomtypelocal,*baseitermethod,*radinvmod)  errorabsf1[1]   += fabs(f1report[pl]);
-            errorabsbest[0]=0.0; JACLOOPFULLERROR(itermode,jj,ru.startjac,ru.endjac) errorabsbest[0] += fabs(lowestf1report[ru.erefU[jj]]);
-            errorabsbest[1]=0.0; JACLOOPSUPERFULL(pliter,pl,eomtypelocal,*baseitermethod,*radinvmod)  errorabsbest[1] += fabs(lowestf1report[pl]);
-
-            // see if should revert to prior best
-            if(errorabsbest[WHICHERROR]<errorabsf1[WHICHERROR] || !isfinite(errorabsf1[WHICHERROR]) ){
-              if(showmessages && debugfail>=DEBUGLEVELIMPSOLVERMORE) dualfprintf(fail_file,"Using best: %g %g : %g %g\n",errorabsf1[0],errorabsf1[1],errorabsbest[0],errorabsbest[1]);
-
-              PLOOP(pliter,pl) uu[pl]=bestuu[pl];
-              PLOOP(pliter,pl) pp[pl]=bestpp[pl];
-              errorabsf1[0]=errorabsbest[0];
-              errorabsf1[1]=errorabsbest[1];
-              PLOOP(pliter,pl) f1[pl] = lowestf1[pl];
-              PLOOP(pliter,pl) f1norm[pl] = lowestf1norm[pl];
-              PLOOP(pliter,pl) f1report[pl] = lowestf1report[pl];
-              *radinvmod = radinvmodbest;
-
-              // get whether converged
-              convreturn=(errorabsf1[WHICHERROR]<trueimptryconvabs);
-              convreturnallow=(errorabsf1[WHICHERROR]<trueimpallowconvabs);
-              convreturnok=(errorabsf1[WHICHERROR]<trueimpokconvabs);
-              if(debugfail>=DEBUGLEVELIMPSOLVERMORE) dualfprintf(fail_file,"GETBEST: convreturn=%d convreturnok=%d convreturnallow=%d (IMPOKCONV=%g IMPALLOWCONV=%g) f1report: %g %g %g %g : %g %g\n",convreturn,convreturnok,convreturnallow,IMPOKCONV,IMPALLOWCONV,f1report[ru.erefU[0]],f1report[ru.erefU[1]],f1report[ru.erefU[2]],f1report[ru.erefU[3]],errorabsf1[0],errorabsf1[1]);
+              // so done.
+              break;
             }
             else{
-              if(debugfail>=DEBUGLEVELIMPSOLVERMORE) dualfprintf(fail_file,"gotbest=%d but errorabsbest=%g %g while errorabsf1=%g %g\n",gotbest,errorabsbest[0],errorabsbest[1],errorabsf1[0],errorabsf1[1]);
-              PLOOP(pliter,pl) bestuu[pl]=uu[pl];
-              PLOOP(pliter,pl) bestpp[pl]=pp[pl];
-              errorabsbest[0]=errorabsf1[0];
-              errorabsbest[1]=errorabsf1[1];
-              radinvmodbest = *radinvmod;
-              failreturnbest = failreturn;
-            }
-          }
-        }// end GETBEST
-
-
-
-
-
-
-
-
-
-
-
-
-        // KORALTODO: If convreturnallow doesn't work, but still (say) 10% error, might want to hold onto result in case explicit backup fails as well (which is likely), in which case *much* better to use 10% error because otherwise 4-force not accounted for, which can lead to very big changes in fluid behavior due to large flux from previous step.
-        // KORALTODO: Or, perhaps should really take it as a failure and use fixups.  Probably should allow for result to be written if error<10%, but only use as super-backup in fixups.  So should set pflag still.
-
-        ///////////////
-        //
-        // See if reached desired tolerance
-        //
-        ///////////////
-        if(convreturn || convreturnok){
-          // then really done
-          failreturn=FAILRETURNNOFAIL; mathfailtype=0;
-          break;
-        }
-        else{ // convreturn==0 && convreturnok==0
-          
-          // see if at least allowed error
-          if(convreturnallow){
-
-            // set as soft allowable failure
-            failreturn=FAILRETURNNOTTOLERROR; mathfailtype=202;
-
-            if(iter>trueimpmaxiter){// then reached maximum iterations
-              prod0dualfprintf(debugfail>=2,fail_file,"trueimpmaxiter=%d eomtype=%d MAXcheckconv=%d havebackup=%d failreturnallowable=%d: f1report=%g %g %g %g : f1=%g %g %g %g\n",trueimpmaxiter,eomtypelocal,checkconv,havebackup,failreturnallowable,f1report[ru.erefU[0]],f1report[ru.erefU[1]],f1report[ru.erefU[2]],f1report[ru.erefU[3]],f1[ru.erefU[0]],f1[ru.erefU[1]],f1[ru.erefU[2]],f1[ru.erefU[3]]);
-
-              prod0dualfprintf(showmessages && debugfail>=2,fail_file,"iter>trueimpmaxiter=%d : iter exceeded in solve_implicit_lab().  But f1 was allowed error. checkconv=%d (if checkconv=0, could be issue!) : %g %g %g %g : %g %g %g %g : errorabs=%g %g : %g %g %g\n",trueimpmaxiter,checkconv,f1report[ru.erefU[0]],f1report[ru.erefU[1]],f1report[ru.erefU[2]],f1report[ru.erefU[3]],f1[ru.erefU[0]],f1[ru.erefU[1]],f1[ru.erefU[2]],f1[ru.erefU[3]],errorabsf1[0],errorabsf1[1],fracdtuu0,fracuup,fracdtG);
-              if(REPORTMAXITERALLOWED){
-                if(havebackup){
-                  prod0dualfprintf(debugfail>=DEBUGLEVELIMPSOLVERMORE,fail_file,"SWITCHING MODE: Detected MAXITER\n");
-                  // don't break, just reporting or not
-                  mathfailtype=50;
-                }
-                else{
-                  mathfailtype=(eomtypelocal==EOMGRMHD ? 6 : 600);
-                }
-              }
+              // then not done
             }
 
-            // then nothing else to do
+          } // end if checkconv==1
+
+#if(DOPERF)
+          // only try low error if not too many iterations, otherwise drop trying quite as hard.
+          if(iter>ITERATIONMARGINAL2 && (errorabsf1[WHICHERROR]<MIN(trueimpallowconvabs,IMPTRYCONVMARGINAL2) ) ){
             break;
           }
-          else{ // didn't reach allowable error
-            // not allowable failure
-            failreturn=FAILRETURNGENERAL; mathfailtype=203;
+#endif
+
+        }// end if finite
+
+
+
+
+
+
+        /////////
+        //
+        // revert any back-ups if ok to do so
+        //
+        // NOTEMARK: Can only modify uu0 or frac's after they are used consistently to get f1, iJ, take step, and check convergence with error function
+        //
+        /////////
+        changeotherdt=1;
+        ////////////////////////////////////////////////////////////////////////////
+        //    if(fracuup!=1.0){
+        //      if(fabs(fracuup-1.0)>10.0*NUMEPSILON){
+        if(fracuup<1.0){
+          // try increasing amount of uu or pp used
+          fracuup*=RADDAMPUNDELTA;
+          fracuup=MIN(1.0,fracuup);
+          changeotherdt=0; // ensure fracuup back to 1.0 first before reverting others.
+        }
+        ////////////////////////////////////////////////////////////////////////////
+        //    if(fracdtuu0!=1.0){
+        //      if(fabs(fracdtuu0-1.0)>10.0*NUMEPSILON && changeotherdt){
+        if(fracdtuu0<1.0 && changeotherdt){
+          // try increasing uu0 away from Uiin to account for full dUother
+          fracdtuu0*=RADDAMPUNDELTA;
+          fracdtuu0=MIN(1.0,fracdtuu0);
+          //        FTYPE dUnongeomall[MAXTIMEORDER]={0.0};
+          PLOOP(pliter,pl) uu0[pl]=UFSET(CUf,fracdtuu0*dt,Uiin[pl],Ufin[pl],dUother[pl],0.0,dUnongeomall); // modifies uu0
+          {
+            FTYPE uuiterback[NPR];
+            PLOOP(pliter,pl) uuiterback[pl] = uu[pl]; // hold actual iterated quantities
+            PLOOP(pliter,pl) uu[pl] = uu0[pl]; // "iterate" non-iterated quantities
+            JACLOOP(ii,ru.startjac,ru.endjac) uu[ru.irefU[ii]] = uuiterback[ru.irefU[ii]]; // overwrite with actual previous step for iterated quantities
+          }
+          // KORALNOTE: No need to get pp0, since never used.  uu0 only used in error function.
+        }
+        ////////////////////////////////////////////////////////////////////////////
+        //    if(fracdtG!=1.0){
+        //      if(fabs(fracdtG-1.0)>10.0*NUMEPSILON && changeotherdt){
+        if(fracdtG<1.0 && changeotherdt){
+          // try increasing amount of G applied
+          fracdtG*=RADDAMPUNDELTA;
+          fracdtG=MIN(1.0,fracdtG);
+        }      
+
+
+        /////////
+        // see if took too many Newton steps or not finite results
+        /////////
+        *nummhdstepsreturn = (int)(nstroke-nstrokeorig); // get number of mhd inversion steps
+        if(iter>trueimpmaxiter || *nummhdstepsreturn>MAXMHDSTEPS || notfinite ){
+          if(debugfail>=DEBUGLEVELIMPSOLVERMORE) dualfprintf(fail_file,"iter=%d>%d mhdsteps=%d>%d or notfinite=%d\n",iter,trueimpmaxiter,*nummhdstepsreturn,MAXMHDSTEPS,notfinite);
+          //      failreturn=FAILRETURNGENERAL; // no don't fail, might be allowable error.
+          break;
+        }
+
+      }// end do
+      while(1);
+
+
+
+
+
+
+
+
+      ////////////
+      //
+      // once done iterating, regardless of result or failure, need to ensure non-iterated quantities are normal
+      //
+      /////////////
+      fracdtuu0=1.0;
+      //
+      //    FTYPE dUnongeomall[MAXTIMEORDER]={0.0};
+      PLOOP(pliter,pl) uu0[pl]=UFSET(CUf,fracdtuu0*dt,Uiin[pl],Ufin[pl],dUother[pl],0.0,dUnongeomall); // modifies uu0
+      PLOOP(pliter,pl){
+        if(!(pl>=UU && pl<=U3 || RADPL(pl) || pl==ENTROPY)){
+          uu[pl] = uu0[pl];
+        }
+      }
+      // regardless, invert non-iterated quantities
+      // 1) trivially invert field
+      PLOOPBONLY(pl) bestpp[pl]=bestuu[pl]=pp[pl] = uu0[pl];
+      // 2) trivially invert to get rho assuming q up-to-date
+      //    pp[RHO]= uu0[RHO]/q->ucon[TT]; // q might not be up-to-date
+      // 3) Invert other scalars (only uses uu[RHO], not pp[RHO])
+      extern int invert_scalars(struct of_geom *ptrgeom, FTYPE *Ugeomfree, FTYPE *pr);
+      invert_scalars(ptrgeom, uu,pp);
+      PLOOP(pliter,pl){
+        if(pl!=RHO && pl<UU && pl>U3 && pl<B1 && pl>B3 & RADPL(pl)==0 && pl!=ENTROPY){
+          bestpp[pl]=pp[pl];
+          bestuu[pl]=uu[pl];
+        }
+      }
+      //
+      // end trivial inversion
+      //
+      //////////////
+
+  
+
+
+      //////////////
+      //
+      // if no failure, then see if really still failed or not with some final checks.
+      //
+      ///////////////
+      int failreturnf=0;
+      //    if(failreturn==0 && (earlylowerror==0 && lowitererror==0) ){
+      if(failreturn==0 && earlylowerror==0){ // still check if lowitererror==1 because might have best total error at another iter.
+
+
+        // if didn't fail, shouldn't need to set fracdtuu0=1, but do so just in caes.
+        fracdtuu0=1.0;
+
+
+        int fakeiter;
+        for(fakeiter=0;fakeiter<=0;fakeiter++){
+
+          int convreturn=1,convreturnok=1,convreturnallow=1; // default is solution is acceptable.
+
+
+          if(DOFINALCHECK){
+            //////////////////////////
+            //
+            // check and get error for last iteration or any mods from above that are post-iteration
+            //
+            // uses final uu0 with fracdtuu0=1 to ensure really updated non-iterated quantities correctly
+            //
+            // The call to f_implicit() also ensures uu is consistent with new pp
+            //
+            ////////////////////////
+            int whichcall=FIMPLICITCALLTYPEFINALCHECK;
+            //  eomtypelocal=*eomtype; // re-chose default each time. No, stick with what f1 (last call to f1) chose
+            int goexplicitfake; // not used here
+            int dimtypef=DIMTYPEFCONS; // 0 = conserved R^t_\nu type, 1 = primitive (u,v^i) type, i.e. v^i has no energy density term
+            int fakef1iter=-1;
+            failreturnf=f_implicit(allowbaseitermethodswitch, iter,fakef1iter,failreturnallowableuse, whichcall,impepsjac,showmessages, showmessagesheavy, allowlocalfailurefixandnoreport, &eomtypelocal, whichcap, itermode, baseitermethod, fracenergy, dissmeasure, radinvmod, trueimptryconv, trueimptryconvabs, trueimpallowconvabs, trueimpmaxiter, realdt, dimtypef, dimfactU, pp, pp, piin, uu, Uiin, uu0, uu, fracdtG*realdt, ptrgeom, q, f1, f1norm, f1report, &goexplicitfake, &errorabsf1[0], &errorabsf1[1], WHICHERROR, &convreturn, nummhdinvsreturn, &tautotmaxreturn, &mtd, &ru); // modifies uu and pp and q and f1report and goexplicitfake and errorabsf1
+            // radinvmod contains whether radiative inversion modified process.
+
+            //          convreturn=f_error_check(showmessages, showmessagesheavy, iter, trueimptryconv,trueimptryconvabs,realdt,dimtypef,eomtypelocal,*radinvmod, itermode,*baseitermethod,fracenergy,dissmeasure,dimfactU,pp,piin,f1,f1norm,f1report,Uiin,uu0,uu,ptrgeom,&errorabsf1,WHICHERROR,&mtd,&ru);
+            convreturnallow=(errorabsf1[WHICHERROR]<trueimpallowconvabs);
+            convreturnok=(errorabsf1[WHICHERROR]<trueimpokconvabs);
+            if(debugfail>=DEBUGLEVELIMPSOLVERMORE) dualfprintf(fail_file,"DOFINALCHECK: convreturn=%d convreturnok=%d convreturnallow=%d (IMPOKCONV=%g IMPALLOWCONV=%g) f1report: %g %g %g %g : %g %g\n",convreturn,convreturnok,convreturnallow,IMPOKCONV,IMPALLOWCONV,f1report[ru.erefU[0]],f1report[ru.erefU[1]],f1report[ru.erefU[2]],f1report[ru.erefU[3]],errorabsf1[0],errorabsf1[1]);
+          }// end if doing final check
+          else{
+            // kinda risky to rely upon last step but not checking its error
+
+            if(IMPPTYPE(mtd.implicititer)){
+              // since iterated pp or uu but didn't call f_implicit(), uu or pp (respectively) is no longer consistent.
+              // So get uu(pp)
+              struct of_state qcons;
+              get_state(pp, ptrgeom, &qcons);
+              primtoU(UNOTHING,pp,&qcons,ptrgeom, uu, NULL);
+            }
+
+            // now get error
+            int dimtypef=DIMTYPEFCONS; // 0 = conserved R^t_\nu type, 1 = primitive (u,v^i) type, i.e. v^i has no energy density term
+            convreturn=f_error_check(showmessages, showmessagesheavy, iter, trueimptryconv, trueimptryconvabs,realdt,dimtypef,eomtypelocal,*radinvmod,itermode,*baseitermethod,fracenergy,dissmeasure,dimfactU,pp,piin,f1,f1norm,f1report,Uiin,uu0,uu,ptrgeom,&errorabsf1[0],&errorabsf1[1],WHICHERROR,&mtd,&ru);
+            convreturnallow=(errorabsf1[WHICHERROR]<trueimpallowconvabs);
+            convreturnok=(errorabsf1[WHICHERROR]<trueimpokconvabs);
+          }
+
+
+
+          if(GETBEST){
+      
+            if(gotbest){
+              // f1-based
+              // using old uu,uup, but probably ok since just helps normalize error
+              errorabsf1[0]=0.0;   JACLOOPFULLERROR(itermode,jj,ru.startjac,ru.endjac) errorabsf1[0]   += fabs(f1report[ru.erefU[jj]]);
+              errorabsf1[1]=0.0;   JACLOOPSUPERFULL(pliter,pl,eomtypelocal,*baseitermethod,*radinvmod)  errorabsf1[1]   += fabs(f1report[pl]);
+              errorabsbest[0]=0.0; JACLOOPFULLERROR(itermode,jj,ru.startjac,ru.endjac) errorabsbest[0] += fabs(lowestf1report[ru.erefU[jj]]);
+              errorabsbest[1]=0.0; JACLOOPSUPERFULL(pliter,pl,eomtypelocal,*baseitermethod,*radinvmod)  errorabsbest[1] += fabs(lowestf1report[pl]);
+
+              // see if should revert to prior best
+              if(errorabsbest[WHICHERROR]<errorabsf1[WHICHERROR] || !isfinite(errorabsf1[WHICHERROR]) ){
+                if(showmessages && debugfail>=DEBUGLEVELIMPSOLVERMORE) dualfprintf(fail_file,"Using best: %g %g : %g %g\n",errorabsf1[0],errorabsf1[1],errorabsbest[0],errorabsbest[1]);
+
+                PLOOP(pliter,pl) uu[pl]=bestuu[pl];
+                PLOOP(pliter,pl) pp[pl]=bestpp[pl];
+                errorabsf1[0]=errorabsbest[0];
+                errorabsf1[1]=errorabsbest[1];
+                PLOOP(pliter,pl) f1[pl] = lowestf1[pl];
+                PLOOP(pliter,pl) f1norm[pl] = lowestf1norm[pl];
+                PLOOP(pliter,pl) f1report[pl] = lowestf1report[pl];
+                *radinvmod = radinvmodbest;
+
+                // get whether converged
+                convreturn=(errorabsf1[WHICHERROR]<trueimptryconvabs);
+                convreturnallow=(errorabsf1[WHICHERROR]<trueimpallowconvabs);
+                convreturnok=(errorabsf1[WHICHERROR]<trueimpokconvabs);
+                if(debugfail>=DEBUGLEVELIMPSOLVERMORE) dualfprintf(fail_file,"GETBEST: convreturn=%d convreturnok=%d convreturnallow=%d (IMPOKCONV=%g IMPALLOWCONV=%g) f1report: %g %g %g %g : %g %g\n",convreturn,convreturnok,convreturnallow,IMPOKCONV,IMPALLOWCONV,f1report[ru.erefU[0]],f1report[ru.erefU[1]],f1report[ru.erefU[2]],f1report[ru.erefU[3]],errorabsf1[0],errorabsf1[1]);
+              }
+              else{
+                if(debugfail>=DEBUGLEVELIMPSOLVERMORE) dualfprintf(fail_file,"gotbest=%d but errorabsbest=%g %g while errorabsf1=%g %g\n",gotbest,errorabsbest[0],errorabsbest[1],errorabsf1[0],errorabsf1[1]);
+                PLOOP(pliter,pl) bestuu[pl]=uu[pl];
+                PLOOP(pliter,pl) bestpp[pl]=pp[pl];
+                errorabsbest[0]=errorabsf1[0];
+                errorabsbest[1]=errorabsf1[1];
+                radinvmodbest = *radinvmod;
+                failreturnbest = failreturn;
+              }
+            }
+          }// end GETBEST
+
+
+
+
+
+
+
+
+
+
+
+
+          // KORALTODO: If convreturnallow doesn't work, but still (say) 10% error, might want to hold onto result in case explicit backup fails as well (which is likely), in which case *much* better to use 10% error because otherwise 4-force not accounted for, which can lead to very big changes in fluid behavior due to large flux from previous step.
+          // KORALTODO: Or, perhaps should really take it as a failure and use fixups.  Probably should allow for result to be written if error<10%, but only use as super-backup in fixups.  So should set pflag still.
+
+          ///////////////
+          //
+          // See if reached desired tolerance
+          //
+          ///////////////
+          if(convreturn || convreturnok){
+            // then really done
+            failreturn=FAILRETURNNOFAIL; mathfailtype=0;
+            break;
+          }
+          else{ // convreturn==0 && convreturnok==0
+          
+            // see if at least allowed error
+            if(convreturnallow){
+
+              // set as soft allowable failure
+              failreturn=FAILRETURNNOTTOLERROR; mathfailtype=202;
+
+              if(iter>trueimpmaxiter){// then reached maximum iterations
+                prod0dualfprintf(debugfail>=2,fail_file,"trueimpmaxiter=%d eomtype=%d MAXcheckconv=%d havebackup=%d failreturnallowable=%d: f1report=%g %g %g %g : f1=%g %g %g %g\n",trueimpmaxiter,eomtypelocal,checkconv,havebackup,failreturnallowable,f1report[ru.erefU[0]],f1report[ru.erefU[1]],f1report[ru.erefU[2]],f1report[ru.erefU[3]],f1[ru.erefU[0]],f1[ru.erefU[1]],f1[ru.erefU[2]],f1[ru.erefU[3]]);
+
+                prod0dualfprintf(showmessages && debugfail>=2,fail_file,"iter>trueimpmaxiter=%d : iter exceeded in solve_implicit_lab().  But f1 was allowed error. checkconv=%d (if checkconv=0, could be issue!) : %g %g %g %g : %g %g %g %g : errorabs=%g %g : %g %g %g\n",trueimpmaxiter,checkconv,f1report[ru.erefU[0]],f1report[ru.erefU[1]],f1report[ru.erefU[2]],f1report[ru.erefU[3]],f1[ru.erefU[0]],f1[ru.erefU[1]],f1[ru.erefU[2]],f1[ru.erefU[3]],errorabsf1[0],errorabsf1[1],fracdtuu0,fracuup,fracdtG);
+                if(REPORTMAXITERALLOWED){
+                  if(havebackup){
+                    prod0dualfprintf(debugfail>=DEBUGLEVELIMPSOLVERMORE,fail_file,"SWITCHING MODE: Detected MAXITER\n");
+                    // don't break, just reporting or not
+                    mathfailtype=50;
+                  }
+                  else{
+                    mathfailtype=(eomtypelocal==EOMGRMHD ? 6 : 600);
+                  }
+                }
+              }
+
+              // then nothing else to do
+              break;
+            }
+            else{ // didn't reach allowable error
+              // not allowable failure
+              failreturn=FAILRETURNGENERAL; mathfailtype=203;
 
 
 #if(PRODUCTION==0)
-            // KORALTODO: Need backup that won't fail.
-            if(debugfail>=2){
-              if(canbreak==1 && havebackup==0) dualfprintf(fail_file,"Held u_g, couldn't hold anymore and broke, but error still larger than allowed : iter=%d ijknstepsteppart=%d %d %d %ld %d\n",iter,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart);
-              if(canbreak==2 && havebackup==0) dualfprintf(fail_file,"Aborted due to oscillatory error despite not having backup: iter=%d\n",iter);
-              if(canbreak==3 && havebackup==0) dualfprintf(fail_file,"Aborted due to error not decreasing fast enough: iter=%d errorabsf1=%g %g\n",iter,errorabsf1[0],errorabsf1[1]);
-              if(canbreak==4 && havebackup==0) dualfprintf(fail_file,"Aborted due to error not decreasing fast enough: iter=%d errorabsf1=%g %g\n",iter,errorabsf1[0],errorabsf1[1]);
-              if(canbreak==5 && havebackup==0) dualfprintf(fail_file,"Aborted due to error not decreasing fast enough: iter=%d errorabsf1=%g %g\n",iter,errorabsf1[0],errorabsf1[1]);
-              if(iter>trueimpmaxiter && havebackup==0) dualfprintf(fail_file,"iter>trueimpmaxiter=%d : iter exceeded in solve_implicit_lab(). nstep=%ld steppart=%d ijk=%d %d %d :  Bad error.\n",trueimpmaxiter,nstep,steppart,ptrgeom->i,ptrgeom->j,ptrgeom->k);
-              if(notfinite && havebackup==0) dualfprintf(fail_file,"IMPGOTNAN at iter=%d : in solve_implicit_lab(). ijk=%d %d %d :  Bad error.\n",iter,ptrgeom->i,ptrgeom->j,ptrgeom->k);
-              if(havebackup==0) dualfprintf(fail_file,"checkconv=%d havebackup=%d failreturnallowable=%d: f1report=%g %g %g %g : f1=%g %g %g %g\n",checkconv,havebackup,failreturnallowable,f1report[ru.erefU[0]],f1report[ru.erefU[1]],f1report[ru.erefU[2]],f1report[ru.erefU[3]],f1[ru.erefU[0]],f1[ru.erefU[1]],f1[ru.erefU[2]],f1[ru.erefU[3]]);
-              if(1||showmessages){
-                if(havebackup){
-                  // don't break, just don't report.
+              // KORALTODO: Need backup that won't fail.
+              if(debugfail>=2){
+                if(canbreak==1 && havebackup==0) dualfprintf(fail_file,"Held u_g, couldn't hold anymore and broke, but error still larger than allowed : iter=%d ijknstepsteppart=%d %d %d %ld %d\n",iter,ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart);
+                if(canbreak==2 && havebackup==0) dualfprintf(fail_file,"Aborted due to oscillatory error despite not having backup: iter=%d\n",iter);
+                if(canbreak==3 && havebackup==0) dualfprintf(fail_file,"Aborted due to error not decreasing fast enough: iter=%d errorabsf1=%g %g\n",iter,errorabsf1[0],errorabsf1[1]);
+                if(canbreak==4 && havebackup==0) dualfprintf(fail_file,"Aborted due to error not decreasing fast enough: iter=%d errorabsf1=%g %g\n",iter,errorabsf1[0],errorabsf1[1]);
+                if(canbreak==5 && havebackup==0) dualfprintf(fail_file,"Aborted due to error not decreasing fast enough: iter=%d errorabsf1=%g %g\n",iter,errorabsf1[0],errorabsf1[1]);
+                if(iter>trueimpmaxiter && havebackup==0) dualfprintf(fail_file,"iter>trueimpmaxiter=%d : iter exceeded in solve_implicit_lab(). nstep=%ld steppart=%d ijk=%d %d %d :  Bad error.\n",trueimpmaxiter,nstep,steppart,ptrgeom->i,ptrgeom->j,ptrgeom->k);
+                if(notfinite && havebackup==0) dualfprintf(fail_file,"IMPGOTNAN at iter=%d : in solve_implicit_lab(). ijk=%d %d %d :  Bad error.\n",iter,ptrgeom->i,ptrgeom->j,ptrgeom->k);
+                if(havebackup==0) dualfprintf(fail_file,"checkconv=%d havebackup=%d failreturnallowable=%d: f1report=%g %g %g %g : f1=%g %g %g %g\n",checkconv,havebackup,failreturnallowable,f1report[ru.erefU[0]],f1report[ru.erefU[1]],f1report[ru.erefU[2]],f1report[ru.erefU[3]],f1[ru.erefU[0]],f1[ru.erefU[1]],f1[ru.erefU[2]],f1[ru.erefU[3]]);
+                if(1||showmessages){
+                  if(havebackup){
+                    // don't break, just don't report.
 
-                  mathfailtype=60;
+                    mathfailtype=60;
+                  }
+                  else{
+                    mathfailtype=1;
+                  }
                 }
-                else{
-                  mathfailtype=1;
-                }
-              }
 
-            }// debug
+              }// debug
 #endif
 
-            // nothing else to do except leave
-            break;
-          }// end if convreturnallow=0 (didn't reach allowed error)
-        }// end if didn't reach desired error
+              // nothing else to do except leave
+              break;
+            }// end if convreturnallow=0 (didn't reach allowed error)
+          }// end if didn't reach desired error
 
 
 
       
 
-      }// end fake loop that can break out of
-    }// end if failreturn==0 originally
+        }// end fake loop that can break out of
+      }// end if failreturn==0 originally
 
 
-    // get best failreturn
-    if(GETBEST){
-      if(gotbest){
-        failreturnbest=failreturn;
-        radinvmodbest = *radinvmod;
+      // get best failreturn
+      if(GETBEST){
+        if(gotbest){
+          failreturnbest=failreturn;
+          radinvmodbest = *radinvmod;
+        }
       }
+
+
+      // estimate effective work based on iterations done for each equation type
+      FTYPE fndim=(FTYPE)NDIM;
+      totaliters += (int)( (3.0/fndim)*(FTYPE)momiters + (1.0/fndim)*(FTYPE)energyiters + (fndim/fndim)*(FTYPE)fulliters);
+
+    }// end loop over damping
+    if(dampattempt==truenumdampattempts && truenumdampattempts>1){
+      prod0dualfprintf(debugfail>=2,fail_file,"Damping failed to avoid max iterations (but error might have dropped: %21.15g %21.15g): failreturn=%d dampattempt=%d eomtypelocal=%d eomtypelocal=%d ijk=%d %d %d\n",errorabsf1[0],errorabsf1[1],failreturn,dampattempt,eomtypelocal,eomtypelocal,ptrgeom->i,ptrgeom->j,ptrgeom->k);
     }
 
 
-    // estimate effective work based on iterations done for each equation type
-    FTYPE fndim=(FTYPE)NDIM;
-    totaliters += (int)( (3.0/fndim)*(FTYPE)momiters + (1.0/fndim)*(FTYPE)energyiters + (fndim/fndim)*(FTYPE)fulliters);
+  }// end explicitattempt
 
-  }// end loop over damping
-  if(dampattempt==truenumdampattempts && truenumdampattempts>1){
-    prod0dualfprintf(debugfail>=2,fail_file,"Damping failed to avoid max iterations (but error might have dropped: %21.15g %21.15g): failreturn=%d dampattempt=%d eomtypelocal=%d eomtypelocal=%d ijk=%d %d %d\n",errorabsf1[0],errorabsf1[1],failreturn,dampattempt,eomtypelocal,eomtypelocal,ptrgeom->i,ptrgeom->j,ptrgeom->k);
-  }
+
+
+
+
+
 
   ///////////
   //
-  // Once damping done, ensure choose best over all damp tries
+  // Once damping or explicitattemps are done, ensure choose best over all tries
   //
   ///////////
   if(GETBEST){
