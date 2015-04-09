@@ -2692,13 +2692,25 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
   localpoledeath=POLEDEATH + EXTRAPOLEDEATH;
   if(fabs(tj+0.5 - (FTYPE)(0))<(FTYPE)localpoledeath || fabs(tj+0.5-(FTYPE)totalsize[2])<(FTYPE)localpoledeath){
     modemethodlocal=MODEPICKBESTSIMPLE;
-    reducetoquick=1;
+    reducetoquick=2;
     //    dualfprintf(fail_file,"j=%d modechange\n",j); // debug
   }
 
   if(fabs(tj+0.5 - (FTYPE)(0))<(FTYPE)POLEDEATH || fabs(tj+0.5-(FTYPE)totalsize[2])<(FTYPE)POLEDEATH){
     modemethodlocal=MODEPICKBESTSIMPLE;
-    reducetoquick=1;
+    if(LIMITEDPOLEDEATHINRADIUS){
+      FTYPE Rhorref=rhor_calc(0);
+      int iiii=ptrgeom->i;
+      int jjjj=ptrgeom->j;
+      int kkkk=ptrgeom->k;
+      int llloc=ptrgeom->p;
+      FTYPE V[NDIM]={0.0};
+      bl_coord_ijk(iiii,jjjj,kkkk,llloc,V);
+      
+      if(V[1]>0.9*Rhorref && (V[1]<OUTERDEATHRADIUS && OUTERDEATH==1 || OUTERDEATH==0)) reducetoquick=2;
+      else reducetoquick=1;
+    }
+    else reducetoquick=1;
   }
 
 

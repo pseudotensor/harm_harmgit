@@ -3564,6 +3564,15 @@ int poledeath(int whichx2,
       }
 
 
+      if(LIMITEDPOLEDEATHINRADIUS){
+        FTYPE Rhorref=rhor_calc(0);
+        if(ispstag==0){
+          if(Vtemp[1]>0.9*Rhorref && (Vtemp[1]<OUTERDEATHRADIUS && OUTERDEATH==1 || OUTERDEATH==0)) continue;
+        }
+      }
+        
+
+
 
       //////////////
       //

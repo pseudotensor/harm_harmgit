@@ -1086,6 +1086,10 @@
 /// 3 : limit if inflow OR out to r=RADIUSLIMITPOLEDEATHIN (in case inflow only starts near horizon, still poledeath out to that radius
 #define IFLIMITPOLEDEATH 0
 
+// whether to limit poledeath to inside horizon and inside death region
+#define LIMITEDPOLEDEATHINRADIUS 1
+
+
 /// radius within which to use poledeath if have IFLIMITPOLEDEATH==3
 #define RADIUSLIMITPOLEDEATHIN (3.0) // choose r=3M since always close to BH but always slightly outside horizon to help control stability.
 
