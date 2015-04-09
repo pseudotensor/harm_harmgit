@@ -276,7 +276,7 @@ void set_coord_parms_nodeps(int defcoordlocal)
 
     //radial hyperexponential grid
     //    npow2=4.0; //power exponent
-    bp_npow2=3.0; //MAVARANOTE must be odd now unless I add a sign explicitly to power component this contributes to sum in exponent //10.0; //5.0; // 10.0;    // MARKNOTE set to 10.0 before using BP values //power exponent
+    bp_npow2=5.0; //MAVARANOTE must be odd now unless I add a sign explicitly to power component this contributes to sum in exponent //10.0; //5.0; // 10.0;    // MARKNOTE set to 10.0 before using BP values //power exponent
     bp_cpow2=1.0; //exponent prefactor (the larger it is, the more hyperexponentiation is)
     //    rbr = 1E3;  //radius at which hyperexponentiation kicks in
     bp_rbr = 200.0;  //radius at which hyperexponentiation kicks in
@@ -304,7 +304,7 @@ void set_coord_parms_nodeps(int defcoordlocal)
       bp_njet1=0.1; // MARKNOTE set to 0.3 before using BP values
       bp_r0jet=35.0;
       bp_rsjet=30.0;
-      bp_Qjet=1.9; // chosen to help keep jet resolved even within disk region
+      bp_Qjet=1.9;//-hslope; // chosen to help keep jet resolved even within disk region
     }
 
     // for switches from normal theta to ramesh theta
@@ -312,7 +312,7 @@ void set_coord_parms_nodeps(int defcoordlocal)
     bp_r0=60.0; // divisor
  
     // for switches from innermost region of disk (inside horizon) to regular disk to increase timestep set by smallest vertical cell size
-    bp_rsinner=4.0; //MAVARACHANGE changed from 4. and added the Rin so that the ratio bp_rsinner/r doesn't grow too large or too fast. maybe make that ratio **.5 to be even safer?
+    bp_rsinner=2.0;//5.6;//4.0*Rin; //MAVARACHANGE changed from 4. and added the Rin so that the ratio bp_rsinner/r doesn't grow too large or too fast. maybe make that ratio **.5 to be even safer?
     bp_r0inner=1.33; //maybe 1.0 is too quick? not really same problem as outer radii I suppose since it just flattens off;
 
     // for theta1
@@ -327,17 +327,19 @@ void set_coord_parms_nodeps(int defcoordlocal)
 
 
     // see fix_3dpoledtissue.nb
-#if(1) // MAVARACHANGE I choose this because bp_ntheta 5 is less than the 0 used for the thin regime for the bp study. so, 5 note extreme enough.
+#if(1)//HIGHRES // MAVARACHANGE I choose this because bp_ntheta 5 is less than the 0 used for the thin regime for the bp study. so, 5 note extreme enough.
     bp_ntheta=21.0; //13.0; // MAVARANOTE only use 21 for high res, use 15 for mid-res, non for low-res
-    bp_htheta=0.2; // changed from .15 to be in line with my own additions for theta-flaring
+    bp_htheta=0.45; // changed from .15 to be in line with my own additions for theta-flaring
     bp_rsjet2=5.0;
     bp_r0jet2=2.0;
-#else
+#endif
+#if(0) //MIDRES    note that lowres doesn't use polefix code
     bp_ntheta=5.0;
     bp_htheta=0.15;
     bp_rsjet2=5.0;
     bp_r0jet2=2.0;
 #endif
+
 
   }
   else if (defcoordlocal == JET5COORDS) {
@@ -839,7 +841,7 @@ void read_coord_parms(int defcoordlocal)
 	fscanf(in,HEADER18IN,&npow,&r1jet,&njet,&r0jet,&rsjet,&Qjet,&ntheta,&htheta,&rsjet2,&r0jet2,&rsjet3,&r0jet3,&rs,&r0,&npow2,&cpow2,&rbr,&x1br);
       }
       else if (defcoordlocal == BPTHIN1) {
-	fscanf(in,HEADER18IN,&bp_npow,&bp_r1jet,&bp_njet,&bp_r0jet,&bp_rsjet,&bp_Qjet,&bp_ntheta,&bp_htheta,&bp_rsjet2,&bp_r0jet2,&bp_rsjet3,&bp_r0jet3,&bp_rs,&bp_r0,&bp_rsinner,&bp_r0inner,&bp_npow2,&bp_cpow2,&bp_rbr,&bp_x1br,&fracphi);
+	fscanf(in,HEADER21IN,&bp_npow,&bp_r1jet,&bp_njet,&bp_r0jet,&bp_rsjet,&bp_Qjet,&bp_ntheta,&bp_htheta,&bp_rsjet2,&bp_r0jet2,&bp_rsjet3,&bp_r0jet3,&bp_rs,&bp_r0,&bp_rsinner,&bp_r0inner,&bp_npow2,&bp_cpow2,&bp_rbr,&bp_x1br,&fracphi);
       }
       else if (defcoordlocal == JET5COORDS) {
 	fscanf(in,HEADER7IN,&AAAA,&AAA,&BBB,&DDD,&ii0,&CCCC,&Rj);
@@ -1338,8 +1340,17 @@ void bl_coord(FTYPE *X, FTYPE *V)
     }
     V[1] = R0+exp(theexp);
 #else
-    switchrad0 = 0.5+1.0/M_PI*atan((X[1]-bp_x1br)*5.*10./dx[1]/48); // switch in .nb file
-    switchrad2 = 0.5-1.0/M_PI*atan((X[1]-bp_x1br)*5.*10./dx[1]/48); // switchi in .nb file
+    /*if(X[1]<bp_x1br){
+      switchrad0=0.0;
+      switchrad2=1.0;
+    }
+    else
+    {
+	switchrad0=1.0;
+	switchrad2=0.0;
+	}*/
+    switchrad0 = 0.5+1.0/M_PI*atan((X[1]-bp_x1br)*5.*10./dx[1]/totalsize[1]); //dx[1]/N1);//totalsize[1]); // switch in .nb file
+    switchrad2 = 0.5-1.0/M_PI*atan((X[1]-bp_x1br)*5.*10./dx[1]/totalsize[1]); //dx[1]~.03151/N1);//totalsize[1]); // switchi in .nb file
 
     theexp1 = bp_npow*X[1];
     theexp2 = theexp1+bp_cpow2 * pow(X[1]-bp_x1br,bp_npow2);
@@ -1396,6 +1407,7 @@ void bl_coord(FTYPE *X, FTYPE *V)
     //switchinner2 = 0.5-1.0/M_PI*atan((V[1]-bp_rsinner)/bp_r0inner); // switchi in .nb file
     
     //th0 = M_PI * .5 * (.2*(2.0*X[2]-1.0) + (1.0-.2)*pow(2.0*X[2]-1.0,9.0)+1.) ;
+    /*
     if(X[2]>=.5){
       thetasign=+1.0;
       x2temp=X[2];
@@ -1404,7 +1416,8 @@ void bl_coord(FTYPE *X, FTYPE *V)
       thetasign=-1.0;
       x2temp=1.0-X[2];
     }
-    th0 = M_PI * .5 * (.11875*(1.+pow(bp_rsinner/V[1],1.))*(2.0*X[2]-1.0) +thetasign*(1.0-.11875*(1.+pow(bp_rsinner/V[1],1.)))*pow(2.0*x2temp-1.0,9.0)+1.) ; // .1096=.1425/(1+6/20) -- .11875 is .1425/(1+4/20) --- .17 is .2/(1.+4/15.)
+    */
+    th0 = M_PI * .5 * (.11875*(1.+(bp_rsinner/V[1]))*(2.0*X[2]-1.0) +(1.0-.11875*(1.+(bp_rsinner/V[1])))*pow(2.0*X[2]-1.0,9.0)+1.) ; // .1096=.1425/(1+6/20) -- .11875 is .1425/(1+4/20) --- .17 is .2/(1.+4/15.)
     //    if(X[2]>=0.5 && (mycpupos[2]==ncpux2/2 && ncpux2>1 || ncpux2==1)) printf("at radius %21.15g and X[2] = %21.15g the diff is %21.15e\n",V[1],X[2],th0toprint);
 
     // th0 = M_PI * .5 * (.2*(2.0*X[2]-1.0) + (1.0-.2)*pow(2.0*X[2]-1.0,9.0)+1.) ;
@@ -1420,7 +1433,7 @@ void bl_coord(FTYPE *X, FTYPE *V)
 
 #if(1)    
     // fix_3dpoledtissue.nb based:
-    theta2 = M_PI*0.5*(bp_htheta*(2.0*X[2]-1.0)+(1.0-bp_htheta)*pow(2.0*X[2]-1.0,bp_ntheta)+1.0);
+    theta2 = M_PI*0.5*(.11875*(1.+(bp_rsinner/V[1]))*(2.0*X[2]-1.0)+(1.0-.11875*(1.+(bp_rsinner/V[1])))*pow(2.0*X[2]-1.0,bp_ntheta)+1.0);
 
     // generate interpolation factor
     arctan2 = 0.5 + 1.0/M_PI*(atan( (V[1]-bp_rsjet2)/bp_r0jet2) ); // MAVARA: outside a certain radius this switches the v2 dependence from theta2 to theta1....known as interpolation. this interpolation fixes pole issue. previous involving switch0/2 involves more fundamental difference in vertical distribution.
