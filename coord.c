@@ -327,13 +327,13 @@ void set_coord_parms_nodeps(int defcoordlocal)
 
 
     // see fix_3dpoledtissue.nb
-#if(1)//HIGHRES // MAVARACHANGE I choose this because bp_ntheta 5 is less than the 0 used for the thin regime for the bp study. so, 5 note extreme enough.
+#if(0)//HIGHRES // MAVARACHANGE I choose this because bp_ntheta 5 is less than the 0 used for the thin regime for the bp study. so, 5 note extreme enough.
     bp_ntheta=21.0; //13.0; // MAVARANOTE only use 21 for high res, use 15 for mid-res, non for low-res
     bp_htheta=0.45; // changed from .15 to be in line with my own additions for theta-flaring
     bp_rsjet2=5.0;
     bp_r0jet2=2.0;
 #endif
-#if(0) //MIDRES    note that lowres doesn't use polefix code
+#if(1) //MIDRES    note that lowres doesn't use polefix code
     bp_ntheta=15.0;
     bp_htheta=0.15;
     bp_rsjet2=5.0;
