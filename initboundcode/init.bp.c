@@ -231,7 +231,7 @@ int init_grid(void)
   Rout = 1E5;
 #elif(WHICHPROBLEM==THINBP)
   // make changes to primary coordinate parameters R0, Rin, Rout, hslope
-  R0 = -0.45;
+  R0 = 0.;
   Rout = 40.0;
   Rin=1.4;
   if(totalsize[1]<32) Rout=50.0;
