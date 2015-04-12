@@ -5461,6 +5461,14 @@ void check_spc_singularities_user(void)
         if(singfound){
           if(doprintout) dualfprintf(fail_file,"Detected singularity at i=%d j=%d k=%d loc=%d with gdet=%21.15g so resetting it to 0.0\n",i,j,k,loc,localgdet[0]);
           localgdet[0]=0.0;
+          if(NEWMETRICSTORAGE){
+            GLOBALMETMACP1A0(compgeom,loc,i,j,k).gdet=0.0;
+            GLOBALMETMACP1A0(compgeom,loc,i,j,k).igdetnosing=0.0;
+            GLOBALMETMACP1A0(gdetgeomnormal,loc,i,j,k).gdet=0.0;
+            GLOBALMETMACP1A0(gdetgeomnormal,loc,i,j,k).igdetnosing=0.0;
+            GLOBALMETMACP0A1(gdetgeom,i,j,k,loc).gdet=0.0;
+            GLOBALMETMACP0A1(gdetgeom,i,j,k,loc).igdetnosing=0.0;
+          }
 #if(WHICHEOM!=WITHGDET)
           PLOOP(pliter,pl) LOCALEOMFUNCMAC(pl)=0.0;
 #endif
@@ -5534,6 +5542,14 @@ void check_spc_singularities_user(void)
         if(needzero && singfound){
           if(doprintout) dualfprintf(fail_file,"Detected singularity at i=%d j=%d k=%d loc=%d with gdet=%21.15g so resetting it to 0.0\n",i,j,k,loc,localgdet[0]);
           localgdet[0]=0.0;
+          if(NEWMETRICSTORAGE){
+            GLOBALMETMACP1A0(compgeom,loc,i,j,k).gdet=0.0;
+            GLOBALMETMACP1A0(compgeom,loc,i,j,k).igdetnosing=0.0;
+            GLOBALMETMACP1A0(gdetgeomnormal,loc,i,j,k).gdet=0.0;
+            GLOBALMETMACP1A0(gdetgeomnormal,loc,i,j,k).igdetnosing=0.0;
+            GLOBALMETMACP0A1(gdetgeom,i,j,k,loc).gdet=0.0;
+            GLOBALMETMACP0A1(gdetgeom,i,j,k,loc).igdetnosing=0.0;
+          }
 #if(WHICHEOM!=WITHGDET)
           PLOOP(pliter,pl) LOCALEOMFUNCMAC(pl)=0.0;
 #endif

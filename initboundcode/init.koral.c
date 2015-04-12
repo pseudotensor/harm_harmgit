@@ -3293,7 +3293,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
     trifprintf("END check_rmin\n");
   }
 
-  if(0){
+  if(1){
     // check that singularities are properly represented by code
     trifprintf("BEGIN check_spc_singularities_user\n");
     // SUPERGODMARK: Goes very slowly sometimes randomly for unknown reasons.
@@ -8260,6 +8260,15 @@ int set_density_floors(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *prfloor, FTYPE
     // KORALTODO: floor currently causes injection of hot matter and run-away problems with radiation.
     funreturn=set_density_floors_default(ptrgeom, pr, prfloor, prceiling);
 
+    
+    // absolute floor, because when magnetic field is zero in some region, then density can go to zero rather than being limited, and then radiation can radically push it around or density gradient can be too extreme for code.
+    FTYPE V[NDIM];
+    bl_coord_ijk(ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p,V);
+    FTYPE lowcoef=MIN(1E-7,RADNT_RHOATMMIN/RADNT_RHODONUT);
+    FTYPE lowpow=-2.0;
+    FTYPE rholimit=RADNT_RHODONUT*(lowcoef*pow(V[1],lowpow));
+    if(pr[RHO]<rholimit) pr[RHO]=rholimit;
+
     if(funreturn!=0) return(funreturn);
   }
 
@@ -8288,6 +8297,15 @@ int set_density_floors_alt(struct of_geom *ptrgeom, struct of_state *q, FTYPE *p
   if(WHICHPROBLEM==RADDONUT){
     // KORALTODO: floor currently causes injection of hot matter and run-away problems with radiation.
     funreturn=set_density_floors_default_alt(ptrgeom, q, pr, U, bsq, prfloor, prceiling);
+
+    FTYPE V[NDIM];
+    bl_coord_ijk(ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p,V);
+    FTYPE lowcoef=MIN(1E-7,RADNT_RHOATMMIN/RADNT_RHODONUT);
+    FTYPE lowpow=-2.0;
+    FTYPE rholimit=RADNT_RHODONUT*(lowcoef*pow(V[1],lowpow));
+    if(pr[RHO]<rholimit) pr[RHO]=rholimit;
+
+
 
     if(funreturn!=0) return(funreturn);
   }

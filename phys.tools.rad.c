@@ -1847,7 +1847,7 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
       FTYPE bsq; bsq_calc_fromq(ppfixup, ptrgeom, q, &bsq);
       // uu isn't exactly like pfixup here, but close enough
       set_density_floors_alt(ptrgeom, q, ppfixup, uu, bsq, ppfloor, prceiling);
-      //      fixup1zone(ppfloor,uufixup, ptrgeom,finalstepfixup); // too complicated for implicit stepping given how rare shoul be used.
+      //      fixup1zone(ppfloor,uufixup, ptrgeom,finalstepfixup); // too complicated for implicit stepping given how rare should be used.
       if(pp[RHO]<0.0) pp[RHO]=ppfloor[RHO]; // only fix RHO if really went negative.  Not smooth, but avoids problems in difficult regimes.
 
       //      limit_gamma(0,GAMMAMAX,GAMMAMAXRADIMPLICITSOLVER,pp,NULL,ptrgeom,0);
@@ -2348,12 +2348,35 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
         int eomtypee=*eomtype;
         int radinvmode;
         int doradonly=0; int failreturne=Utoprimgen_failwrapper(doradonly,&radinvmode,showmessages,checkoninversiongas,checkoninversionrad,allowlocalfailurefixandnoreport, finalstep, &eomtypee, whichcap, EVOLVEUTOPRIM, UNOTHING, uue, &qe, ptrgeom, dissmeasure, ppe, &newtonstats);
+        // if switches to entropy (*eomtype=EOMGRMHD -> eomtypee=EOMENTROPYGRMHD), then uue won't be changed, but ppe will be entropy inversion solution.  So below error test using uue and Gple uses uue from energy and Gple from entropy primitives, which is fine because Gpl still computed as perfectly conservative and uue still conservative.  So good error check.
+        // However, final primitives (ppe) not consistent with conserved (uue), like normally would be.
+        // However, if really error ended up small, then would drop out of f1 loop and still do FINALCHECK that would recompute f1 and ensure primitives and conserves are consistent *and* based upon original emptype because Utoprimgen not used.  At that point, entropy gas solution would be used to compute UUgas and then radiation would be computed as UUrad=uu0rad-dUgas  with dUgas=uu0-UUgas, so that radiation bears brunt of error of using entropy in gas -- but total energy conserved.  In optically thick or high radiation regions, this is fine.  In optically thin regions or gas-dominated regions, this is an issue -- acts like effective opacity even though no opacity -- like numerical opacity.  So this acts like automatic borrow operation.
+
         //*nummhdinvsreturn++;
         // completed explicit step
 
         didexplicit=0;
         if(failreturne!=UTOPRIMGENWRAPPERRETURNFAILMHD){
           didexplicit=1;
+
+          
+#if(1)
+          // might think not needed because pgas(entropy) and uue(energy) will be used below in error and error used will be for eomtype so any error that exists will be seen in use of Gpl(pgas(entropy) as compared to uue and uu0 and that Gpl. So good error estimate.  No use of rad errors for whicherror=0, but *is* used for whicherror=1
+
+          if(mtd->implicititer==QTYPMHD || mtd->implicititer==QTYPMHDENERGYONLY || mtd->implicititer==QTYPMHDMOMONLY){
+            // then ensure total energy conservation version of primitives obtained here, and total consistent p/uu used in error estimate
+            // matters to get whicherror=1 error estimate valid/constent.
+            DLOOPA(iv) uue[ru->iotherU[iv]] = uu0[ru->iotherU[iv]] - (uue[ru->irefU[iv]]-uu0[ru->irefU[iv]]);
+            //            DLOOPA(iv) uuabs[ru->iotherU[iv]] = fabs(uu0[ru->iotherU[iv]]) + fabs(uu[ru->irefU[iv]]) + fabs(uu0[ru->irefU[iv]]); // assume uuabs ok as same
+
+            int eomtypee2=*eomtype; // back to original, but doing radiation below so doesn't matter.
+            int radinvmode2;
+            int doradonly=1; int failreturne2=Utoprimgen_failwrapper(doradonly,&radinvmode2,showmessages,checkoninversiongas,checkoninversionrad,allowlocalfailurefixandnoreport, finalstep, &eomtypee2, whichcap, EVOLVEUTOPRIM, UNOTHING, uue, &qe, ptrgeom, dissmeasure, ppe, &newtonstats);
+            // if radinvmode==0 and radinvmode2!=0, should we abort explicit?
+            // as long as radinvmode2==0, then all uu and pp's are now consistent
+
+          }
+#endif
 
           // get other things usually needed at end of f_implicit()
           get_state(ppe, ptrgeom, &qe);
@@ -7739,9 +7762,9 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
 
     if(SWITCHTODONOTHING){
       // always do nothing, so entropy won't try to revert to cold.
-      if(EOMENTROPYGRMHD) *eomtype=EOMDIDENTROPYGRMHD;
-      if(EOMCOLDGRMHD) *eomtype=EOMDIDCOLDGRMHD;
-      if(EOMGRMHD) *eomtype=EOMDIDGRMHD;
+      if(*eomtype==EOMENTROPYGRMHD) *eomtype=EOMDIDENTROPYGRMHD;
+      if(*eomtype==EOMCOLDGRMHD) *eomtype=EOMDIDCOLDGRMHD;
+      if(*eomtype==EOMGRMHD) *eomtype=EOMDIDGRMHD;
     }
 
   }// end if didn't fail, so can set final solution.
