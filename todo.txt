@@ -1,0 +1,32 @@
+pp[NF0]
+pp[NF]
+nsource=calc_nsource(pp,ggg);
+f[4]=uu[NF0] - uu0[NF0] - dt * gdetu * nsource;
+if(fabs(f[4])>SMALL) err[4]=fabs(f[4])/(fabs(uu[NF0])+fabs(uu0[NF0])+fabs(dt*gdetu*nsource)); else err[4]=0.;
+
+
+inverse_matrix(&J[0][0],&iJ[0][0],5);
+
+DAMPCOMPTONIZATIONATBH
+
+====================================================
+
+1) JACLOOPs
+
+2) get_refUs()
+
+3) DLOOPA's, irefU, iotherU, erefU through-out when dealing with uu or Gddt, etc. in f_implicit()
+
+4) f_error_check()
+
+5) DLOOP and SLOOP in _mode()
+
+6) NDIM in _mode() and elsewhere.
+
+7) use of irefU erefU for numbered items or labels.
+
+8) get_implicit_iJ()
+
+9) maybe have other QTY types.
+
+
