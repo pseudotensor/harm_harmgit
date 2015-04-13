@@ -927,6 +927,26 @@ int constotal(int enerregion, SFTYPE *vars)
           if(get_state(GLOBALMAC(pdump,i,j,k),ptrgeom,&q)>=1) return(1);
           if(primtoU(UDIAG,GLOBALMAC(pdump,i,j,k),&q,ptrgeom,U, NULL)>=1) return(1);
         }
+
+        // must use centered primitive for non-field stuff if staggered (or all if non-staggered) so *true* primitive-based conservative that we are really tracking
+        PLOOP(pliter,pl){
+          if(BPL(pl)==0 && FLUXB==FLUXCTSTAG || FLUXB!=FLUXCTSTAG){
+            ftemp[pl]=U[pl]*dVF;
+            vars[pl] += ftemp[pl];
+          }
+        }
+        
+        // must use staggered field because using true emf fluxes
+        if(FLUXB==FLUXCTSTAG){
+          PLOOP(pliter,pl){
+            if(BPL(pl)==1){
+              ftemp[pl]=GLOBALMACP0A1(unewglobal,i,j,k,pl)*dVF;
+              vars[pl] += ftemp[pl];
+            }
+          }
+        }
+
+
         PLOOP(pliter,pl){
           ftemp[pl]=U[pl]*dVF;
           vars[pl] += ftemp[pl];

@@ -30,9 +30,7 @@
 
 /* Need to have Utoprimgen() call without doing radiation inversion to save time .. doradonly=-1 ? */
 
-/* 2) i THINK RADINVMOD IS NOT BEING SET.  COMPARE FAIL WITH RADINVMOD.  *RADINVMOD VS. RADINVMOD? */
 
-//1) pull from energy density
 
 
 ////////////////////////////////////////////////////////
@@ -648,6 +646,19 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE *errorabs, stru
 #define RADINVOK(radinvmod) (RADINVBAD(radinvmod)==0)
 
 
+////////////////////////////////////////////////
+// NOTEMARK: for MODEENERGY type method, note that ener.out and jrdpradener (SM) can be used to track all conserved quantities for: 1) how well we have tracked all changes 2) how much each term contributes (fl tracks any changes that deviate unew from pf as well as standard floors)
+//
+// Sources of non-conservation *included* in "fl" term: 1) any floors 2) when no implicit solution and reverts to averaging surrounding cells in fixup_utoprim(), because applied to primitives before diag checks ucons vs. pf 3) when OUTERDEATH or POLEDEATH are applied, because comparison between ucons and pf occurs after boundary conditions are applied 4) when implicit solver reverts to having to use entropy, but ends up not able to borrow to conserve total energy, because dUrad forced to always be -dUgas regardles of primitive solution used. 5) when energy (or entropy with borrow) is used, but despite gas having good solution, still radinvmod=1 is triggered so that caps are put in place and total energy conservation not possible -- Because dUrad forced to be -dUgas.
+
+// Do the above regarding entropy because will be tracked and for adding to ucum, if sub-step, then might recover.
+
+// Sources of non-conservation (e.g. of energy) that are *not* tracked include 1) machine error in doubles adding up over entire grid. 2) fluxes adding up over time 3) u obtained from pf uses get_state and primtoU that has non-trivial errors sometimes, so u cumulated over time won't be perfectly matching fluxes.  Still good to know because this is true error because initial U in advance does this exact get_state and primtoU.
+//
+////////////////////////////////////////////////////////
+
+
+////////////////////////////////////////////////
 /// choose to switch to entropy only if energy fails or gives u_g<0.  Or choose to always do both and use best solution.
 #if(DOPERF)
 #define MODEMETHOD MODEPICKBESTSIMPLE // switches with only PMHD method
@@ -7689,6 +7700,11 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
 #endif
     }
     else{
+      // if not good idea to borrow, still update uu as if did.  Might be able to recover if this is just sub-step being added to bigger step.  Plus, only use uu from here on as diagnostic if implicit solver obtained full solution to primitive inversion (as normal for most RK methods).
+      PLOOP(pliter,pl){
+        uu[pl] = uuborrow[pl]; // ensures full energy conservation even when entropy method used.  Or at least, diagnostic will have non-conservation part in "fl"
+      }
+      
 #if(PRODUCTION==0&&0)
       prod0dualfprintf(1,fail_file,"NOSwitched: %g : uu=%g %g dugas=%g\n",errorabsf1borrow[WHICHERROR],-uuborrow[URAD0],-uuborrow[UU],dugas);
 #endif
@@ -7696,6 +7712,26 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
 
 
   }// end if borrowing entropy/energy from radiation to give to gas
+
+
+
+  /////////////////////
+  //
+  // in case radinvmod==1 or no solution, force conservation so at least "fl" diagnostic works.
+  //
+  /////////////////////
+  if(IMPMHDTYPEBASE(*baseitermethod)==1){
+    FTYPE dugas[4];
+    DLOOPA(jj) dugas[jj] = uu[UU+jj]-uu0[UU+jj];
+    DLOOPA(jj) uu[URAD0+jj] = uu0[URAD0+jj] - dugas[jj];
+  }
+  else{//    IMPRADTYPEBASE(*baseitermethod)
+    FTYPE durad[4];
+    DLOOPA(jj) durad[jj] = uu[URAD0+jj]-uu0[URAD0+jj];
+    DLOOPA(jj) uu[UU+jj] = uu0[UU+jj] - durad[jj];    
+  }
+
+
 
   /////////////////////
   //
