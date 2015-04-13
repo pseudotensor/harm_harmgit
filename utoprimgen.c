@@ -1057,7 +1057,7 @@ int tryhotinversion(int showmessages, int allowlocalfailurefixandnoreport, int f
 
       // accounting (since fixup.c accounting doesn't know what original pr0 is and actual prhot is undefined since Uhot->prhot wasn't possible)
       // GODMARK: For DOENOFLUX>0, should modify conserved quantity in some way.  For DOENOFLUX==0, primitives form basis of conserved quantities, so once primitives are modified all is done.  So should probably pass in U[] from  Utoprimgen() or whatever is the full conserved quantity later used.
-      int modcons=0;
+      int modcons=(DOENOFLUX != NOENOFLUX);
       FTYPE Uievolve[NPR];
       // ucons not modified (i.e. modcons=0), but ucons may be used by diag_fixup()
       UtoU(UNOTHING,UEVOLVE,ptrgeom,Ugeomfree0,Uievolve);
@@ -1188,7 +1188,7 @@ int tryentropyinversion(int showmessages, int allowlocalfailurefixandnoreport, i
 
       // accounting (since fixup.c accounting doesn't know what original pr0 is and actual prold is undefined since U->pr wasn't possible)
       // GODMARK: For DOENOFLUX>0, should modify conserved quantity in some way.  For DOENOFLUX==0, primitives form basis of conserved quantities, so once primitives are modified all is done.  So should probably pass in U[] from  Utoprimgen() or whatever is the full conserved quantity later used.
-      int modcons=0;
+      int modcons=(DOENOFLUX != NOENOFLUX);
       FTYPE Uievolve[NPR];
       // ucons not modified (i.e. modcons=0), but ucons may be used by diag_fixup()
       UtoU(UNOTHING,UEVOLVE,ptrgeom,Ugeomfree0,Uievolve);
@@ -1379,7 +1379,7 @@ int trycoldinversion(int showmessages, int allowlocalfailurefixandnoreport, int 
 
       // accounting (since fixup.c accounting doesn't know what original pr0 is and actual prold is undefined since U->pr wasn't possible)
       // GODMARK: For DOENOFLUX>0, should modify conserved quantity in some way.  For DOENOFLUX==0, primitives form basis of conserved quantities, so once primitives are modified all is done.  So should probably pass in U[] from  Utoprimgen() or whatever is the full conserved quantity later used.
-      int modcons=0;
+      int modcons=(DOENOFLUX != NOENOFLUX);
       FTYPE Ui[NPR];
       // ucons not modified (i.e. modcons=0), but ucons may be used by diag_fixup()
       UtoU(UNOTHING,UDIAG,ptrgeom,Ugeomfree0,Ui);
@@ -1529,7 +1529,7 @@ int tryffdeinversion(int showmessages, int allowlocalfailurefixandnoreport, int 
 
       // accounting (since fixup.c accounting doesn't know what original pr0 is and actual prold is undefined since U->pr wasn't possible)
       // GODMARK: For DOENOFLUX>0, should modify conserved quantity in some way.  For DOENOFLUX==0, primitives form basis of conserved quantities, so once primitives are modified all is done.  So should probably pass in U[] from  Utoprimgen() or whatever is the full conserved quantity later used.
-      int modcons=0;
+      int modcons=(DOENOFLUX != NOENOFLUX);
       FTYPE Ui[NPR];
       // ucons not modified (i.e. modcons=0), but ucons may be used by diag_fixup()
       UtoU(UNOTHING,UDIAG,ptrgeom,Ugeomfree0,Ui);

@@ -398,7 +398,7 @@ int bound_x1dn_outflow_simple(
                 // projection may not preserve u^t to be real and rho>rhoscal u>uuscal
 #if(JONCHECKS)
                 if(jonchecks){
-                  //fixup1zone(MAC(prim,i,j,k),ptrgeom[U1],0);
+                  //fixup1zone(0,MAC(prim,i,j,k),ptrgeom[U1],0);
                   failreturn=check_pr(MAC(prim,i,j,k),MAC(prim,i,j,k),ptrgeom[U1],-3);
                   if(failreturn){
                     dualfprintf(fail_file,"Bad boundary zone, couldn't fix: i=%d j=%d k=%d\n",startpos[1]+i,startpos[2]+j,startpos[3]+k);
@@ -523,7 +523,7 @@ int bound_x1up_outflow_simple(
                 // projection may not preserve u^t to be real and rho>rhoscal u>uuscal
 #if(JONCHECKS)
                 if(jonchecks){
-                  //fixup1zone(MAC(prim,i,j,k),ptrgeom[U1],0);
+                  //fixup1zone(0,MAC(prim,i,j,k),ptrgeom[U1],0);
                   failreturn=check_pr(MAC(prim,i,j,k),MAC(prim,i,j,k),ptrgeom[U1],-3);
                   if(failreturn){
                     dualfprintf(fail_file,"Bad boundary zone, couldn't fix: i=%d j=%d k=%d\n",startpos[1]+i,startpos[2]+j,startpos[3]+k);
@@ -705,7 +705,7 @@ int bound_x1dn_outflow(
                 // projection may not preserve u^t to be real and rho>rhoscal u>uuscal
 #if(JONCHECKS)
                 if(jonchecks){
-                  //fixup1zone(MAC(prim,i,j,k),ptrgeom[U1],0);
+                  //fixup1zone(0,MAC(prim,i,j,k),ptrgeom[U1],0);
                   failreturn=check_pr(MAC(prim,i,j,k),MAC(prim,i,j,k),ptrgeom[U1],-3);
                   if(failreturn){
                     dualfprintf(fail_file,"Bad boundary zone, couldn't fix: i=%d j=%d k=%d\n",startpos[1]+i,startpos[2]+j,startpos[3]+k);
@@ -882,7 +882,7 @@ int bound_x1up_outflow(
                 // projection may not preserve u^t to be real and rho>rhoscal u>uuscal
 #if(JONCHECKS)
                 if(jonchecks){
-                  //fixup1zone(MAC(prim,i,j,k),ptrgeom[U1],0);
+                  //fixup1zone(0,MAC(prim,i,j,k),ptrgeom[U1],0);
                   failreturn=check_pr(MAC(prim,i,j,k),MAC(prim,i,j,k),ptrgeom[U1],-3);
                   if(failreturn){
                     dualfprintf(fail_file,"Bad boundary zone, couldn't fix: i=%d j=%d k=%d\n",startpos[1]+i,startpos[2]+j,startpos[3]+k);
@@ -1124,7 +1124,7 @@ int bound_x2dn_outflow_simple(
                 // projection may not preserve u^t to be real and rho>rhoscal u>uuscal
 #if(JONCHECKS)
                 if(jonchecks){
-                  //fixup1zone(MAC(prim,i,j,k),ptrgeom[U2],0);
+                  //fixup1zone(0,MAC(prim,i,j,k),ptrgeom[U2],0);
                   failreturn=check_pr(MAC(prim,i,j,k),MAC(prim,i,j,k),ptrgeom[U2],-3);
                   if(failreturn){
                     dualfprintf(fail_file,"Bad boundary zone, couldn't fix: i=%d j=%d k=%d\n",startpos[1]+i,startpos[2]+j,startpos[3]+k);
@@ -1246,7 +1246,7 @@ int bound_x2up_outflow_simple(
                 // projection may not preserve u^t to be real and rho>rhoscal u>uuscal
 #if(JONCHECKS)
                 if(jonchecks){
-                  //fixup1zone(MAC(prim,i,j,k),ptrgeom[U2],0);
+                  //fixup1zone(0,MAC(prim,i,j,k),ptrgeom[U2],0);
                   failreturn=check_pr(MAC(prim,i,j,k),MAC(prim,i,j,k),ptrgeom[U2],-3);
                   if(failreturn){
                     dualfprintf(fail_file,"Bad boundary zone, couldn't fix: i=%d j=%d k=%d\n",startpos[1]+i,startpos[2]+j,startpos[3]+k);
@@ -2124,7 +2124,7 @@ int bound_x3dn_outflow_simple(
                 // projection may not preserve u^t to be real and rho>rhoscal u>uuscal
 #if(JONCHECKS)
                 if(jonchecks){
-                  //fixup1zone(MAC(prim,i,j,k),ptrgeom[U3],0);
+                  //fixup1zone(0,MAC(prim,i,j,k),ptrgeom[U3],0);
                   failreturn=check_pr(MAC(prim,i,j,k),MAC(prim,i,j,k),ptrgeom[U3],-3);
                   if(failreturn){
                     dualfprintf(fail_file,"Bad boundary zone, couldn't fix: i=%d j=%d k=%d\n",startpos[1]+i,startpos[2]+j,startpos[3]+k);
@@ -2246,7 +2246,7 @@ int bound_x3up_outflow_simple(
                 // projection may not preserve u^t to be real and rho>rhoscal u>uuscal
 #if(JONCHECKS)
                 if(jonchecks){
-                  //fixup1zone(MAC(prim,i,j,k),ptrgeom[U3],0);
+                  //fixup1zone(0,MAC(prim,i,j,k),ptrgeom[U3],0);
                   failreturn=check_pr(MAC(prim,i,j,k),MAC(prim,i,j,k),ptrgeom[U3],-3);
                   if(failreturn){
                     dualfprintf(fail_file,"Bad boundary zone, couldn't fix: i=%d j=%d k=%d\n",startpos[1]+i,startpos[2]+j,startpos[3]+k);
@@ -3563,16 +3563,12 @@ int poledeath(int whichx2,
 
       }
 
-
       if(LIMITEDPOLEDEATHINRADIUS){
         FTYPE Rhorref=rhor_calc(0);
         if(ispstag==0){
           if(Vtemp[1]>0.9*Rhorref && (Vtemp[1]<OUTERDEATHRADIUS && OUTERDEATH==1 || OUTERDEATH==0)) continue;
         }
       }
-        
-
-
 
       //////////////
       //
@@ -4029,7 +4025,7 @@ int poledeath(int whichx2,
           // accounting for on-grid changes
           //
           ////////////
-          int modcons=1;
+          int modcons=(DOENOFLUX != NOENOFLUX);
           FTYPE *ucons;
           ucons=GLOBALMAC(unewglobal,i,j,k); // GODMARK -- need to pass ucons to bounds if really want !=NOENOFLUX method to work
           // GODMARK: assume all quantities at the same location since only ispstag==0 modifies relevant primitves, so ptrgeom[pl]->ptrgoem
@@ -4281,7 +4277,7 @@ int poledeath(int whichx2,
           // accounting for on-grid changes
           //
           ////////////
-          int modcons=1;
+          int modcons=(DOENOFLUX != NOENOFLUX);
           FTYPE *ucons;
           ucons=GLOBALMAC(unewglobal,i,j,k); // GODMARK -- need to pass ucons to bounds if really want !=NOENOFLUX method to work
           // GODMARK: assume all quantities at the same location since only ispstag==0 modifies relevant primitves, so ptrgeom[pl]->ptrgoem
@@ -4615,7 +4611,7 @@ int poledeath(int whichx2,
             // accounting for on-grid changes
             //
             ////////////
-            int modcons=1;
+            int modcons=(DOENOFLUX != NOENOFLUX);
             FTYPE *ucons;
             ucons=GLOBALMAC(unewglobal,i,j,k); // GODMARK -- need to pass ucons to bounds if really want !=NOENOFLUX method to work
             // GODMARK: assume all quantities at the same location since ispstag==0 is assumed in this section, so ptrgeom[pl]->ptrgoem
@@ -5472,6 +5468,8 @@ void check_spc_singularities_user(void)
 #if(WHICHEOM!=WITHGDET)
           PLOOP(pliter,pl) LOCALEOMFUNCMAC(pl)=0.0;
 #endif
+
+
         }
       }// end over indloc
     }// end loop 23
@@ -5553,6 +5551,7 @@ void check_spc_singularities_user(void)
 #if(WHICHEOM!=WITHGDET)
           PLOOP(pliter,pl) LOCALEOMFUNCMAC(pl)=0.0;
 #endif
+
         }
         else if(needzero==0 && nonsingfound){
           dualfprintf(fail_file,"Detected |\\detg|<=NUMEPSILON at i=%d j=%d k=%d loc=%d with gdet=%21.15g: Must be non-zero\n",i,j,k,loc,localgdet[0]);
@@ -5637,15 +5636,18 @@ void debugfixupaltdeath_bc_old(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
       //prfix[RHO] = 1E-10*pow(V[1]/500.0,-1.5);
   
       prfix[UU]= MIN(prfix[RHO],prfix[UU]); // no more than u/rho=1
-      ufix[UU]=MAX(-prfix[UU],ufix[UU]);
-  
-      ufix[ENTROPY] = ufix[UU];
-      ufix[ENTROPY] = MAX(0.0001,MIN(ufix[ENTROPY],1.0)); // like u/rho=1
+      if(DOENOFLUX != NOENOFLUX){
+        ufix[UU]=MAX(-prfix[UU],ufix[UU]);
+        ufix[ENTROPY] = ufix[UU];
+        ufix[ENTROPY] = MAX(0.0001,MIN(ufix[ENTROPY],1.0)); // like u/rho=1
+      }
 
       if(URAD0>=0){
         //prfix[URAD0] = 2E-10*pow(V[1]/500.0,-1.5);
         prfix[URAD0] = MIN(MIN(prfix[RHO],prfix[URAD0]),prfix[UU]); // no more than Erf/rho=1 and Erf/u=1
-        ufix[URAD0]=MAX(-prfix[URAD0],ufix[URAD0]);
+        if(DOENOFLUX != NOENOFLUX){
+          ufix[URAD0]=MAX(-prfix[URAD0],ufix[URAD0]);
+        }
       }
 
       //      limit_gamma(0,1.5,GAMMAMAXRAD,prfix,NULL,ptrgeom,-1);
@@ -5655,7 +5657,9 @@ void debugfixupaltdeath_bc_old(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
  
       if(prfix[U1]<0.0){
         prfix[U1]=0.0;
-        ufix[U1]=0.0;
+        if(DOENOFLUX != NOENOFLUX){
+          ufix[U1]=0.0;
+        }
       }
       //      ufix[U2]=ufix[U3]=0.0;
       //      SLOOPA(jjj) ufix[U1+jjj-1]=prfix[U1+jjj-1] = 0.0;
@@ -5663,7 +5667,9 @@ void debugfixupaltdeath_bc_old(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
       if(URAD0>=0){
         if(prfix[URAD1]<0.0){
           prfix[URAD1]=0.0;
-          ufix[URAD1]=0.0;
+          if(DOENOFLUX != NOENOFLUX){
+            ufix[URAD1]=0.0;
+          }
         }
       }
 
@@ -5726,7 +5732,9 @@ void debugfixupaltdeath_bc(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
         if(V[1]<Rhorlocal){
 
           prfix=&MACP0A1(prim,i,j,k,0);//&GLOBALMACP0A1(pglobal,fii,fjj,fkk,0);
-          ufix=&GLOBALMACP0A1(unewglobal,i,j,k,0);
+          if(DOENOFLUX != NOENOFLUX){
+            ufix=&GLOBALMACP0A1(unewglobal,i,j,k,0);
+          }
           prfix[U2]=0.0;
         }
       
@@ -5753,6 +5761,7 @@ void debugfixupaltdeath_bc(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
               
               prfix=&MACP0A1(prim,fii,fjj,fkk,0);//&GLOBALMACP0A1(pglobal,fii,fjj,fkk,0);
               ufix=&GLOBALMACP0A1(unewglobal,fii,fjj,fkk,0);
+              
               
               // get geometry for center pre-interpolated values
               get_geometry(fii,fjj,fkk, CENT, ptrgeom);
@@ -5874,15 +5883,18 @@ void debugfixupaltdeath_bc(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
   
               prfix[UU]= MIN(50.0*prfix[RHO],prfix[UU]); // no more than u/rho=10
               //      prfix[UU] = MIN(prfix[UU],
+              if(DOENOFLUX != NOENOFLUX){
               ufix[UU]=MAX(-prfix[UU],ufix[UU]);
-  
               ufix[ENTROPY] = ufix[UU];
               ufix[ENTROPY] = MAX(0.0001,MIN(ufix[ENTROPY],1.0)); // like u/rho=1
+              }
 
               if(URAD0>=0){
                 //prfix[URAD0] = 2E-10*pow(V[1]/500.0,-1.5);
                 prfix[URAD0] = MIN(MIN(prfix[RHO],prfix[URAD0]),prfix[UU]); // no more than Erf/rho=1 and Erf/u=1
-                ufix[URAD0]=MAX(-prfix[URAD0],ufix[URAD0]);
+                if(DOENOFLUX != NOENOFLUX){
+                  ufix[URAD0]=MAX(-prfix[URAD0],ufix[URAD0]);
+                }
               }
 
               //      limit_gamma(0,1.5,GAMMAMAXRAD,prfix,NULL,ptrgeom,-1);
@@ -5913,16 +5925,22 @@ void debugfixupaltdeath_bc(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
             if(prfix[U1]<0.0){
               //    switch2=0.0;
               prfix[U1]*=switch2;
-              ufix[U1]*=switch2;
+              if(DOENOFLUX != NOENOFLUX){
+                ufix[U1]*=switch2;
+              }
             }
-            //      ufix[U2]=ufix[U3]=0.0;
-            //      SLOOPA(jjj) ufix[U1+jjj-1]=prfix[U1+jjj-1] = 0.0;
+            if(DOENOFLUX != NOENOFLUX){
+              //      ufix[U2]=ufix[U3]=0.0;
+              //      SLOOPA(jjj) ufix[U1+jjj-1]=prfix[U1+jjj-1] = 0.0;
+            }
     
             if(URAD0>=0){
               if(prfix[URAD1]<0.0){
                 //switch2=0.0;
                 prfix[URAD1]*=switch2;
-                ufix[URAD1]*=switch2;
+                if(DOENOFLUX != NOENOFLUX){
+                  ufix[URAD1]*=switch2;
+                }
               }
             }
           }
@@ -5942,10 +5960,14 @@ void debugfixupaltdeath_bc(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
       ufix=&GLOBALMACP0A1(unewglobal,i,j,k,0);
 
       PLOOP(pliter,pl) prfixtry[pl]=prfix[pl];
-      PLOOP(pliter,pl) ufixtry[pl]=ufix[pl];
+      if(DOENOFLUX != NOENOFLUX){
+        PLOOP(pliter,pl) ufixtry[pl]=ufix[pl];
+      }
 
       PLOOP(pliter,pl) prfixtryb[pl]=prfix[pl];
-      PLOOP(pliter,pl) ufixtryb[pl]=ufix[pl];
+      if(DOENOFLUX != NOENOFLUX){
+        PLOOP(pliter,pl) ufixtryb[pl]=ufix[pl];
+      }
   
       // get geometry for center pre-interpolated values
       get_geometry(i, j, k, CENT, ptrgeom);
@@ -6015,16 +6037,19 @@ void debugfixupaltdeath_bc(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
       
         prfixtry[UU]= MIN(1.0*prfixtry[RHO],prfixtry[UU]); // no more than u/rho=1
         //      prfixtry[UU] = MIN(prfixtry[UU],
-        ufixtry[UU]=MAX(-prfixtry[UU],ufixtry[UU]);
-
-        ufixtry[ENTROPY] = ufixtry[UU];
-        ufixtry[ENTROPY] = MAX(0.0001,MIN(ufixtry[ENTROPY],1.0)); // like u/rho=1
+        if(DOENOFLUX != NOENOFLUX){
+          ufixtry[UU]=MAX(-prfixtry[UU],ufixtry[UU]);
+          ufixtry[ENTROPY] = ufixtry[UU];
+          ufixtry[ENTROPY] = MAX(0.0001,MIN(ufixtry[ENTROPY],1.0)); // like u/rho=1
+        }
       
         if(URAD0>=0){
           //prfixtry[URAD0] = 2E-10*pow(V[1]/500.0,-1.5);
           //prfixtry[URAD0] = MIN(MIN(prfixtry[RHO],prfixtry[URAD0]),prfixtry[UU]); // no more than Erf/rho=1 and Erf/u=1
           prfixtry[URAD0] = MIN(10.0*prfixtry[RHO],prfixtry[URAD0]); // no more than Erf/rho=10.  No limit on u/prad0 that can be very large in optically thin or thick parts
-          ufixtry[URAD0]=MAX(-prfixtry[URAD0],ufixtry[URAD0]);
+          if(DOENOFLUX != NOENOFLUX){
+            ufixtry[URAD0]=MAX(-prfixtry[URAD0],ufixtry[URAD0]);
+          }
         }
       
         //      limit_gamma(0,1.5,GAMMAMAXRAD,prfixtry,NULL,ptrgeom,-1);
@@ -6035,15 +6060,21 @@ void debugfixupaltdeath_bc(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
       
         if(prfixtry[U1]<0.0){
           prfixtry[U1]=0.0;
-          ufixtry[U1]=0.0;
+          if(DOENOFLUX != NOENOFLUX){
+            ufixtry[U1]=0.0;
+          }
         }
-        //      ufixtry[U2]=ufixtry[U3]=0.0;
-        //      SLOOPA(jjj) ufixtry[U1+jjj-1]=prfixtry[U1+jjj-1] = 0.0;
+        if(DOENOFLUX != NOENOFLUX){
+          //      ufixtry[U2]=ufixtry[U3]=0.0;
+          //      SLOOPA(jjj) ufixtry[U1+jjj-1]=prfixtry[U1+jjj-1] = 0.0;
+        }
       
         if(URAD0>=0){
           if(prfixtry[URAD1]<0.0){
             prfixtry[URAD1]=0.0;
-            ufixtry[URAD1]=0.0;
+            if(DOENOFLUX != NOENOFLUX){
+              ufixtry[URAD1]=0.0;
+            }
           }
         }
 
@@ -6052,7 +6083,9 @@ void debugfixupaltdeath_bc(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
         // set b
         PLOOP(pliter,pl){
           prfixtryb[pl] = prfixtry[pl];
-          ufixtryb[pl]  = ufixtry[pl];
+          if(DOENOFLUX != NOENOFLUX){
+            ufixtryb[pl]  = ufixtry[pl];
+          }
         }
 
         // stronger restrictions for b on prad0
@@ -6063,14 +6096,18 @@ void debugfixupaltdeath_bc(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
           // try thermal equilibrium (arad Tgas^4 = urad )
           //          prfixtryb[URAD0] = calc_LTE_EfromT(Tgaslocal);
 
-          ufixtryb[URAD0]=MAX(-prfixtryb[URAD0],ufixtryb[URAD0]);
+          if(DOENOFLUX != NOENOFLUX){
+            ufixtryb[URAD0]=MAX(-prfixtryb[URAD0],ufixtryb[URAD0]);
+          }
         }
 
 
         // final setting of fixed up quantities
         PLOOP(pliter,pl){
           prfix[pl] = prfixtryb[pl]*switch0b + prfixtry[pl]*switch0*switch2b + prfix[pl]*switch2*switch2b;
-          ufix[pl] = ufixtryb[pl]*switch0b + ufixtry[pl]*switch0*switch2b + ufix[pl]*switch2*switch2b;
+          if(DOENOFLUX != NOENOFLUX){
+            ufix[pl] = ufixtryb[pl]*switch0b + ufixtry[pl]*switch0*switch2b + ufix[pl]*switch2*switch2b;
+          }
         }
 
         //      dualfprintf(fail_file,"V[1]=%g ijk=%d %d %d switch0=%g switch2=%g\n",V[1],i,j,k,switch0,switch2);
@@ -6105,16 +6142,22 @@ void debugfixup(void)
       prfix[RHO] = RHOMIN*pow(V[1],-2.0);
 
       prfix[UU]= MIN(prfix[RHO],prfix[UU]); // no more than u/rho=1
-      ufix[UU]=MAX(-prfix[UU],ufix[UU]);
-
-      ufix[ENTROPY] = ufix[UU];
-      ufix[ENTROPY] = MAX(0.0001,MIN(ufix[ENTROPY],1.0)); // like u/rho=1
-
       prfix[URAD0] = MIN(MIN(prfix[RHO],prfix[URAD0]),prfix[UU]); // no more than Erf/rho=1 and Erf/u=1
-      ufix[URAD0]=MAX(-prfix[URAD0],ufix[URAD0]);
 
-      SLOOPA(jjj) ufix[U1+jjj-1]=prfix[U1+jjj-1] = 0.0;
-      SLOOPA(jjj) ufix[URAD1+jjj-1]=prfix[URAD1+jjj-1] = 0.0;
+      if(DOENOFLUX != NOENOFLUX){
+        ufix[UU]=MAX(-prfix[UU],ufix[UU]);
+        ufix[ENTROPY] = ufix[UU];
+        ufix[ENTROPY] = MAX(0.0001,MIN(ufix[ENTROPY],1.0)); // like u/rho=1
+        ufix[URAD0]=MAX(-prfix[URAD0],ufix[URAD0]);
+      }
+
+      SLOOPA(jjj) prfix[U1+jjj-1] = 0.0;
+      SLOOPA(jjj) prfix[URAD1+jjj-1] = 0.0;
+
+      if(DOENOFLUX != NOENOFLUX){
+        SLOOPA(jjj) ufix[U1+jjj-1]= 0.0;
+        SLOOPA(jjj) ufix[URAD1+jjj-1]=0.0;
+      }
     }
   }
 
@@ -6149,16 +6192,24 @@ void debugfixupnonmad(void)
       prfix[RHO] = RHOMIN*pow(V[1],-2.0);
 
       prfix[UU]= MIN(prfix[RHO],prfix[UU]); // no more than u/rho=1
-      ufix[UU]=MAX(-prfix[UU],ufix[UU]);
-
-      ufix[ENTROPY] = ufix[UU];
-      ufix[ENTROPY] = MAX(0.0001,MIN(ufix[ENTROPY],1.0)); // like u/rho=1
+      if(DOENOFLUX != NOENOFLUX){
+        ufix[UU]=MAX(-prfix[UU],ufix[UU]);
+        ufix[ENTROPY] = ufix[UU];
+        ufix[ENTROPY] = MAX(0.0001,MIN(ufix[ENTROPY],1.0)); // like u/rho=1
+      }
 
       prfix[URAD0] = MIN(MIN(prfix[RHO],prfix[URAD0]),prfix[UU]); // no more than Erf/rho=1 and Erf/u=1
-      ufix[URAD0]=MAX(-prfix[URAD0],ufix[URAD0]);
+      if(DOENOFLUX != NOENOFLUX){
+        ufix[URAD0]=MAX(-prfix[URAD0],ufix[URAD0]);
+      }
 
-      SLOOPA(jjj) ufix[U1+jjj-1]=prfix[U1+jjj-1] = 0.0;
-      SLOOPA(jjj) ufix[URAD1+jjj-1]=prfix[URAD1+jjj-1] = 0.0;
+      SLOOPA(jjj) prfix[U1+jjj-1] = 0.0;
+      SLOOPA(jjj) prfix[URAD1+jjj-1] = 0.0;
+
+      if(DOENOFLUX != NOENOFLUX){
+        SLOOPA(jjj) ufix[U1+jjj-1]= 0.0;
+        SLOOPA(jjj) ufix[URAD1+jjj-1]=0.0;
+      }
     }
   }
 
@@ -6193,13 +6244,17 @@ void debugfixupmad(void)
 
     if(V[1]>60.0 && bsq/prfix[RHO]>1.0){
       prfix[UU]= MIN(prfix[RHO],prfix[UU]); // no more than u/rho=1
-      ufix[UU]=MAX(-prfix[UU],ufix[UU]);
 
-      ufix[ENTROPY] = ufix[UU];
-      ufix[ENTROPY] = MAX(0.0001,MIN(ufix[ENTROPY],1.0)); // like u/rho=1
+      if(DOENOFLUX != NOENOFLUX){
+        ufix[UU]=MAX(-prfix[UU],ufix[UU]);
+        ufix[ENTROPY] = ufix[UU];
+        ufix[ENTROPY] = MAX(0.0001,MIN(ufix[ENTROPY],1.0)); // like u/rho=1
+      }
 
       prfix[URAD0] = MIN(MIN(prfix[RHO],prfix[URAD0]),prfix[UU]); // no more than Erf/rho=1 and Erf/u=1
-      ufix[URAD0]=MAX(-prfix[URAD0],ufix[URAD0]);
+      if(DOENOFLUX != NOENOFLUX){
+        ufix[URAD0]=MAX(-prfix[URAD0],ufix[URAD0]);
+      }
 
       limit_gamma(0,1.5,GAMMAMAXRAD,prfix,NULL,ptrgeom,-1);
 
@@ -6210,19 +6265,21 @@ void debugfixupmad(void)
       prfix[RHO] = 1.5E-9*pow(V[1]/500.0,-1.5);
 
       prfix[UU]= MIN(prfix[RHO],prfix[UU]); // no more than u/rho=1
-      ufix[UU]=MAX(-prfix[UU],ufix[UU]);
+      if(DOENOFLUX != NOENOFLUX){
+        ufix[UU]=MAX(-prfix[UU],ufix[UU]);
+        ufix[ENTROPY] = ufix[UU];
+        ufix[ENTROPY] = MAX(0.0001,MIN(ufix[ENTROPY],1.0)); // like u/rho=1
+      }
 
-      ufix[ENTROPY] = ufix[UU];
-      ufix[ENTROPY] = MAX(0.0001,MIN(ufix[ENTROPY],1.0)); // like u/rho=1
 
       prfix[URAD0] = 1E-9*pow(V[1]/900.0,-1.0);
       prfix[URAD0] = MIN(MIN(prfix[RHO],prfix[URAD0]),prfix[UU]); // no more than Erf/rho=1 and Erf/u=1
-      ufix[URAD0]=MAX(-prfix[URAD0],ufix[URAD0]);
+      if(DOENOFLUX != NOENOFLUX){
+        ufix[URAD0]=MAX(-prfix[URAD0],ufix[URAD0]);
+      }
 
       limit_gamma(0,1.5,GAMMAMAXRAD,prfix,NULL,ptrgeom,-1);
 
-      //      SLOOPA(jjj) ufix[U1+jjj-1]=prfix[U1+jjj-1] = 0.0;
-      //SLOOPA(jjj) ufix[URAD1+jjj-1]=prfix[URAD1+jjj-1] = 0.0;
     }
   }
 
@@ -6255,20 +6312,26 @@ void debugfixupalt1(void)
       limit_gamma(0,1.5,GAMMAMAXRAD,prfix,NULL,ptrgeom,-1);
 
       prfix[UU]= MIN(prfix[RHO],prfix[UU]); // no more than u/rho=1
-      ufix[UU]=MAX(-prfix[UU],ufix[UU]);
+      if(DOENOFLUX != NOENOFLUX){
+        ufix[UU]=MAX(-prfix[UU],ufix[UU]);
+      }
     }
     }
 
     if(0){
     if(V[1]>60.0 && bsq/prfix[RHO]>1.0){
       prfix[UU]= MIN(prfix[RHO],prfix[UU]); // no more than u/rho=1
-      ufix[UU]=MAX(-prfix[UU],ufix[UU]);
 
-      ufix[ENTROPY] = ufix[UU];
-      ufix[ENTROPY] = MAX(0.0001,MIN(ufix[ENTROPY],1.0)); // like u/rho=1
+      if(DOENOFLUX != NOENOFLUX){
+        ufix[UU]=MAX(-prfix[UU],ufix[UU]);
+        ufix[ENTROPY] = ufix[UU];
+        ufix[ENTROPY] = MAX(0.0001,MIN(ufix[ENTROPY],1.0)); // like u/rho=1
+      }
 
       prfix[URAD0] = MIN(MIN(prfix[RHO],prfix[URAD0]),prfix[UU]); // no more than Erf/rho=1 and Erf/u=1
-      ufix[URAD0]=MAX(-prfix[URAD0],ufix[URAD0]);
+      if(DOENOFLUX != NOENOFLUX){
+        ufix[URAD0]=MAX(-prfix[URAD0],ufix[URAD0]);
+      }
 
       limit_gamma(0,1.5,GAMMAMAXRAD,prfix,NULL,ptrgeom,-1);
 
@@ -6281,25 +6344,27 @@ void debugfixupalt1(void)
       //prfix[RHO] = 1E-10*pow(V[1]/500.0,-1.5);
 
       prfix[UU]= MIN(prfix[RHO],prfix[UU]); // no more than u/rho=1
-      ufix[UU]=MAX(-prfix[UU],ufix[UU]);
-
-      ufix[ENTROPY] = ufix[UU];
-      ufix[ENTROPY] = MAX(0.0001,MIN(ufix[ENTROPY],1.0)); // like u/rho=1
+      if(DOENOFLUX != NOENOFLUX){
+        ufix[UU]=MAX(-prfix[UU],ufix[UU]);
+        ufix[ENTROPY] = ufix[UU];
+        ufix[ENTROPY] = MAX(0.0001,MIN(ufix[ENTROPY],1.0)); // like u/rho=1
+      }
 
       //prfix[URAD0] = 2E-10*pow(V[1]/500.0,-1.5);
       prfix[URAD0] = MIN(MIN(prfix[RHO],prfix[URAD0]),prfix[UU]); // no more than Erf/rho=1 and Erf/u=1
-      ufix[URAD0]=MAX(-prfix[URAD0],ufix[URAD0]);
+      if(DOENOFLUX != NOENOFLUX){
+        ufix[URAD0]=MAX(-prfix[URAD0],ufix[URAD0]);
+      }
 
       limit_gamma(0,1.5,GAMMAMAXRAD,prfix,NULL,ptrgeom,-1);
 
-      if(ufix[U1]<0.0) ufix[U1]=0.0;
-      ufix[U2]=ufix[U3]=0.0;
+      if(DOENOFLUX != NOENOFLUX){
+        if(ufix[U1]<0.0) ufix[U1]=0.0;
+        ufix[U2]=ufix[U3]=0.0;
+        if(ufix[URAD1]<0.0) ufix[URAD1]=0.0;
+        ufix[URAD2]=ufix[URAD3]=0.0;
+      }
 
-      if(ufix[URAD1]<0.0) ufix[URAD1]=0.0;
-      ufix[URAD2]=ufix[URAD3]=0.0;
-
-      //      SLOOPA(jjj) ufix[U1+jjj-1]=prfix[U1+jjj-1] = 0.0;
-      //SLOOPA(jjj) ufix[URAD1+jjj-1]=prfix[URAD1+jjj-1] = 0.0;
     }
     }
   }
@@ -6334,20 +6399,26 @@ void debugfixupaltdeath(void)
       limit_gamma(0,1.5,GAMMAMAXRAD,prfix,NULL,ptrgeom,-1);
 
       prfix[UU]= MIN(prfix[RHO],prfix[UU]); // no more than u/rho=1
-      ufix[UU]=MAX(-prfix[UU],ufix[UU]);
+      if(DOENOFLUX != NOENOFLUX){
+        ufix[UU]=MAX(-prfix[UU],ufix[UU]);
+      }
     }
     }
 
     if(0){
     if(V[1]>60.0 && bsq/prfix[RHO]>1.0){
       prfix[UU]= MIN(prfix[RHO],prfix[UU]); // no more than u/rho=1
-      ufix[UU]=MAX(-prfix[UU],ufix[UU]);
 
-      ufix[ENTROPY] = ufix[UU];
-      ufix[ENTROPY] = MAX(0.0001,MIN(ufix[ENTROPY],1.0)); // like u/rho=1
+      if(DOENOFLUX != NOENOFLUX){
+        ufix[UU]=MAX(-prfix[UU],ufix[UU]);
+        ufix[ENTROPY] = ufix[UU];
+        ufix[ENTROPY] = MAX(0.0001,MIN(ufix[ENTROPY],1.0)); // like u/rho=1
+      }
 
       prfix[URAD0] = MIN(MIN(prfix[RHO],prfix[URAD0]),prfix[UU]); // no more than Erf/rho=1 and Erf/u=1
-      ufix[URAD0]=MAX(-prfix[URAD0],ufix[URAD0]);
+      if(DOENOFLUX != NOENOFLUX){
+        ufix[URAD0]=MAX(-prfix[URAD0],ufix[URAD0]);
+      }
 
       limit_gamma(0,1.5,GAMMAMAXRAD,prfix,NULL,ptrgeom,-1);
 
@@ -6360,26 +6431,30 @@ void debugfixupaltdeath(void)
       //prfix[RHO] = 1E-10*pow(V[1]/500.0,-1.5);
 
       prfix[UU]= MIN(prfix[RHO],prfix[UU]); // no more than u/rho=1
-      ufix[UU]=MAX(-prfix[UU],ufix[UU]);
 
-      ufix[ENTROPY] = ufix[UU];
-      ufix[ENTROPY] = MAX(0.0001,MIN(ufix[ENTROPY],1.0)); // like u/rho=1
+      if(DOENOFLUX != NOENOFLUX){
+        ufix[UU]=MAX(-prfix[UU],ufix[UU]);
+        ufix[ENTROPY] = ufix[UU];
+        ufix[ENTROPY] = MAX(0.0001,MIN(ufix[ENTROPY],1.0)); // like u/rho=1
+      }
 
       //prfix[URAD0] = 2E-10*pow(V[1]/500.0,-1.5);
       prfix[URAD0] = MIN(MIN(prfix[RHO],prfix[URAD0]),prfix[UU]); // no more than Erf/rho=1 and Erf/u=1
-      ufix[URAD0]=MAX(-prfix[URAD0],ufix[URAD0]);
+      if(DOENOFLUX != NOENOFLUX){
+        ufix[URAD0]=MAX(-prfix[URAD0],ufix[URAD0]);
+      }
 
       //      limit_gamma(0,1.5,GAMMAMAXRAD,prfix,NULL,ptrgeom,-1);
       limit_gamma(0,6.0,GAMMAMAXRAD,prfix,NULL,ptrgeom,-1);
 
-      if(ufix[U1]<0.0) ufix[U1]=0.0;
-      //      ufix[U2]=ufix[U3]=0.0;
+      if(DOENOFLUX != NOENOFLUX){
+        if(ufix[U1]<0.0) ufix[U1]=0.0;
+        //      ufix[U2]=ufix[U3]=0.0;
+        
+        if(ufix[URAD1]<0.0) ufix[URAD1]=0.0;
+        //      ufix[URAD2]=ufix[URAD3]=0.0;
+      }
 
-      if(ufix[URAD1]<0.0) ufix[URAD1]=0.0;
-      //      ufix[URAD2]=ufix[URAD3]=0.0;
-
-      //      SLOOPA(jjj) ufix[U1+jjj-1]=prfix[U1+jjj-1] = 0.0;
-      //SLOOPA(jjj) ufix[URAD1+jjj-1]=prfix[URAD1+jjj-1] = 0.0;
     }
     }
   }

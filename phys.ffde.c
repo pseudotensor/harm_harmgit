@@ -614,8 +614,8 @@ int diss_account(int modified, FTYPE *Fit,FTYPE *U, struct of_geom *geom,FTYPE*p
   
   // account for change
   // diag_fixup_U is forced to account on every time substep since can't step through problems like with negative internal energy.
-  if(modified) diag_fixup_U(1,Ui,Uf,U,geom,0,COUNTUTOPRIMFAILCONV); // real dissipation, absolute limit of Lorentz factor
-  else diag_fixup_U(1,Ui,Uf,U,geom,0,COUNTFLOORACT); // truncation dissipation
+  if(modified) diag_fixup_U((DOENOFLUX != NOENOFLUX),Ui,Uf,U,geom,0,COUNTUTOPRIMFAILCONV); // real dissipation, absolute limit of Lorentz factor
+  else diag_fixup_U((DOENOFLUX != NOENOFLUX),Ui,Uf,U,geom,0,COUNTFLOORACT); // truncation dissipation
    
 
   return(0);

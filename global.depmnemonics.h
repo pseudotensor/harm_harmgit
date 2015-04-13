@@ -180,7 +180,7 @@
 #define EOMFUNCASSIGN(pl) (*gdet) // requires special care within code -- only used when doing eomfunc_func()
 #define EOMFUNCPTR &gdet
 #define EOMFUNCMAC(pl) gdet
-#define LOCALEOMFUNCMAC(pl) gdet // used when did GETLOCALMETRIC
+#define LOCALEOMFUNCMAC(pl) localgdet[0] // used when did GETLOCALMETRIC
 #define IEOMFUNCNOSINGMAC(pl) igdetnosing
 #endif
 

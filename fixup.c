@@ -162,7 +162,7 @@ int fixup(int stage,FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ucons)[NSTORE2][N
   COMPZLOOP{
     //    dualfprintf(fail_file,"i=%d j=%d k=%d\n",i,j,k); fflush(fail_file);
     get_geometry(i,j,k,CENT,ptrgeom);
-    if(fixup1zone(MAC(pv,i,j,k),MAC(ucons,i,j,k), ptrgeom,finalstep)>=1)
+    if(fixup1zone(0,MAC(pv,i,j,k),MAC(ucons,i,j,k), ptrgeom,finalstep)>=1)
       FAILSTATEMENT("fixup.c:fixup()", "fixup1zone()", 1);
   }
   return(0);
@@ -463,7 +463,7 @@ int diag_fixup_allzones(FTYPE (*pf)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTOR
     // ucons has yet to be modified at all, so is true conserved quantity without corrections (as long as avoided corrections to ucons during other diag_fixup calls).
     // GODMARK: So this method only works if NOENOFLUX==1, since otherwise *need* to modify U[] during modification of p[] since know how much to modify.
 
-    int docorrectucons=1; // make any needed corrections if doing corrections
+    int docorrectucons=(DOENOFLUX != NOENOFLUX); // make any needed corrections if doing corrections
     int finalstep=1; // if here, always on finalstep=1
     diag_fixup_Ui_pf(docorrectucons,MAC(ucons,i,j,k),MAC(pf,i,j,k),ptrgeom,finalstep,COUNTONESTEP);
   }
@@ -558,7 +558,7 @@ int diag_fixup(int docorrectucons, FTYPE *pr0, FTYPE *pr, FTYPE *uconsinput, str
     diag_fixup_dUandaccount(Uicent, Ufcent, ucons, ptrgeom, finalstep, whocalled, docorrectuconslocal);
 
 
-    if(uconsinput!=NULL){
+    if(uconsinput!=NULL && docorrectuconslocal){
       
       // copy over ucons result in case changed.
       PLOOP(pliter,pl){
@@ -654,11 +654,13 @@ int diag_fixup_Ui_pf(int docorrectucons, FTYPE *Uievolve, FTYPE *pf, struct of_g
     diag_fixup_dUandaccount(Uicent, Ufcent, ucons, ptrgeom, finalstep, whocalled, docorrectuconslocal);
 
 
-    // copy over ucons result in case changed.
-    PLOOP(pliter,pl){
-      // if staggered field, avoid modifying field since at FACEs, not CENT where pr lives.
-      if(BPL(pl)==0 && FLUXB==FLUXCTSTAG || FLUXB==FLUXCTTOTH){
-        uconsinput[pl] = ucons[pl];
+    if(docorrectuconslocal){
+      // copy over ucons result in case changed.
+      PLOOP(pliter,pl){
+        // if staggered field, avoid modifying field since at FACEs, not CENT where pr lives.
+        if(BPL(pl)==0 && FLUXB==FLUXCTSTAG || FLUXB==FLUXCTTOTH){
+          uconsinput[pl] = ucons[pl];
+        }
       }
     }
 
@@ -740,7 +742,7 @@ int diag_fixup_U(int docorrectucons, FTYPE *Ui, FTYPE *Uf, FTYPE *uconsinput, st
     // Get deltaUavg[] and also modify ucons if required and should
     diag_fixup_dUandaccount(Uicent, Ufcent, ucons, ptrgeom, finalstep, whocalled, docorrectuconslocal);
 
-    if(uconsinput!=NULL){
+    if(uconsinput!=NULL && docorrectuconslocal){
       // copy over ucons result in case changed.
       PLOOP(pliter,pl){
         // if staggered field, avoid modifying field since at FACEs, not CENT where pr lives.
@@ -772,7 +774,7 @@ int diag_fixup_U(int docorrectucons, FTYPE *Ui, FTYPE *Uf, FTYPE *uconsinput, st
 /// 2 = conserved but ignore strict rho,u change for ZAMO frame and instead conserved momentum (doesn't keep desired u/rho, b^2/rho, or b^2/u and so that itself can cause problems
 ///
 /// finalstep==0 is non-accounting, finalstep==1 is accounting
-int fixup1zone(FTYPE *pr, FTYPE *uconsinput, struct of_geom *ptrgeom, int finalstep)
+int fixup1zone(int docorrectucons, FTYPE *pr, FTYPE *uconsinput, struct of_geom *ptrgeom, int finalstep)
 {
   int pliter,pl;
   int ip, jp, im, jm;
@@ -847,7 +849,7 @@ int fixup1zone(FTYPE *pr, FTYPE *uconsinput, struct of_geom *ptrgeom, int finals
   //
   ////////////////////
 #if(WHICHVEL==VELREL4)
-  int docorrectucons=0;
+  //  int docorrectucons=(DOENOFLUX != NOENOFLUX);
   //  didchangeprim=0;
 
   failreturn=limit_gamma(docorrectucons,GAMMAMAX,GAMMAMAXRAD,prmhd,ucons,ptrgeom,-1);
@@ -1095,7 +1097,7 @@ int fixup1zone(FTYPE *pr, FTYPE *uconsinput, struct of_geom *ptrgeom, int finals
   //
   ///////////////////////////////
   if(didchangeprim&&FLOORDIAGS){// FLOORDIAGS includes fail diags
-    int docorrectucons2=0;
+    int docorrectucons2=(DOENOFLUX != NOENOFLUX);
     int doingmhdfixup=1;
     diag_fixup(docorrectucons2,prdiag, prmhd, ucons, ptrgeom, finalstep,doingmhdfixup,COUNTFLOORACT);
     // now prdiag=prmhd as far as diag_fixup() is concerned, so next changes are new changes (i.e. don't cumulative w.r.t. pr0 multiple times, since that (relative to prmhd each time) would add each prior change to each next change)
@@ -1146,7 +1148,7 @@ int fixup1zone(FTYPE *pr, FTYPE *uconsinput, struct of_geom *ptrgeom, int finals
   }
 
 
-  if(uconsinput!=NULL){
+  if(uconsinput!=NULL && docorrectucons){
     // copy over ucons result in case changed.
     PLOOP(pliter,pl){
       // if staggered field, avoid modifying field since at FACEs, not CENT where pr lives.
@@ -2433,6 +2435,9 @@ static int fixuputoprim_accounting(int i, int j, int k, PFTYPE mhdlpflag, PFTYPE
   //////////////////////
 
   if(mhdutoprimfailtype!=-1 || radutoprimfailtype!=-1){ 
+    if(docorrectucons==1){
+      docorrectucons=(DOENOFLUX != NOENOFLUX);
+    }
     // diagnostics
     FTYPE prdiag[NPR],pr[NPR];
     PLOOP(pliter,pl) prdiag[pl]=pr0[pl];
@@ -2470,7 +2475,7 @@ static int fixuputoprim_accounting(int i, int j, int k, PFTYPE mhdlpflag, PFTYPE
     }
 
     // copy over ucons result in case changed.
-    if(uconsinput!=NULL){
+    if(uconsinput!=NULL && docorrectucons){
       PLOOP(pliter,pl){
         // if staggered field, avoid modifying field since at FACEs, not CENT where pr lives.
         if(BPL(pl)==0 && FLUXB==FLUXCTSTAG || FLUXB==FLUXCTTOTH){
@@ -4083,7 +4088,8 @@ int check_pr(FTYPE *pr,FTYPE *prmodel, FTYPE *ucons, struct of_geom *ptrgeom,int
   FTYPE prdiag[NPR];
   PLOOP(pliter,pl) prdiag[pl]=pr0[pl];
   int doingmhdfixup=1;
-  diag_fixup(1,prdiag, pr, ucons, ptrgeom, finalstep,doingmhdfixup,COUNTLIMITGAMMAACT);
+  int docorrectucons=(DOENOFLUX != NOENOFLUX);
+  diag_fixup(docorrectucons,prdiag, pr, ucons, ptrgeom, finalstep,doingmhdfixup,COUNTLIMITGAMMAACT);
   PLOOP(pliter,pl) prdiag[pl]=pr[pl];
 
 #endif
@@ -4128,7 +4134,7 @@ int inflow_check_4vel(int dir, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom,
       // account for changes
       PLOOP(pliter,pl) prdiag[pl]=pr0[pl];
       int doingmhdfixup=1;
-      diag_fixup(1,prdiag, pr, ucons, ptrgeom, finalstep,doingmhdfixup,COUNTINFLOWACT);
+      diag_fixup((DOENOFLUX != NOENOFLUX),prdiag, pr, ucons, ptrgeom, finalstep,doingmhdfixup,COUNTINFLOWACT);
       PLOOP(pliter,pl) prdiag[pl]=pr[pl];
     }
     if(EOMRADTYPE!=EOMRADNONE&&(
@@ -4143,7 +4149,7 @@ int inflow_check_4vel(int dir, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom,
       // account for changes
       PLOOP(pliter,pl) prdiag[pl]=pr0[pl];
       int doingmhdfixup=1;
-      diag_fixup(1,prdiag, pr, ucons, ptrgeom, finalstep,doingmhdfixup,COUNTINFLOWACT);
+      diag_fixup((DOENOFLUX != NOENOFLUX),prdiag, pr, ucons, ptrgeom, finalstep,doingmhdfixup,COUNTINFLOWACT);
       PLOOP(pliter,pl) prdiag[pl]=pr[pl];
     }
     if( 
@@ -4158,7 +4164,7 @@ int inflow_check_4vel(int dir, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom,
       // below never really accounted for since on boundary zones
       PLOOP(pliter,pl) prdiag[pl]=pr0[pl];
       int doingmhdfixup=1;
-      diag_fixup(1,prdiag, pr, ucons, ptrgeom, finalstep,doingmhdfixup,COUNTINFLOWACT);
+      diag_fixup((DOENOFLUX != NOENOFLUX),prdiag, pr, ucons, ptrgeom, finalstep,doingmhdfixup,COUNTINFLOWACT);
       PLOOP(pliter,pl) prdiag[pl]=pr[pl];
     }
   }
@@ -4181,7 +4187,7 @@ int inflow_check_4vel(int dir, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom,
       // account for changes
       PLOOP(pliter,pl) prdiag[pl]=pr0[pl];
       int doingmhdfixup=1;
-      diag_fixup(1,prdiag, pr, ucons, ptrgeom, finalstep,doingmhdfixup,COUNTINFLOWACT);
+      diag_fixup((DOENOFLUX != NOENOFLUX),prdiag, pr, ucons, ptrgeom, finalstep,doingmhdfixup,COUNTINFLOWACT);
       PLOOP(pliter,pl) prdiag[pl]=pr[pl];
     }
     if(EOMRADTYPE!=EOMRADNONE&&(
@@ -4196,7 +4202,7 @@ int inflow_check_4vel(int dir, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom,
       // account for changes
       PLOOP(pliter,pl) prdiag[pl]=pr0[pl];
       int doingmhdfixup=1;
-      diag_fixup(1,prdiag, pr, ucons, ptrgeom, finalstep,doingmhdfixup,COUNTINFLOWACT);
+      diag_fixup((DOENOFLUX != NOENOFLUX),prdiag, pr, ucons, ptrgeom, finalstep,doingmhdfixup,COUNTINFLOWACT);
       PLOOP(pliter,pl) prdiag[pl]=pr[pl];
     }
   }
@@ -4219,7 +4225,7 @@ int inflow_check_4vel(int dir, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom,
       // account for changes
       PLOOP(pliter,pl) prdiag[pl]=pr0[pl];
       int doingmhdfixup=1;
-      diag_fixup(1,prdiag, pr, ucons, ptrgeom, finalstep,doingmhdfixup,COUNTINFLOWACT);
+      diag_fixup((DOENOFLUX != NOENOFLUX),prdiag, pr, ucons, ptrgeom, finalstep,doingmhdfixup,COUNTINFLOWACT);
       PLOOP(pliter,pl) prdiag[pl]=pr[pl];
     }
     if(EOMRADTYPE!=EOMRADNONE&&(
@@ -4234,7 +4240,7 @@ int inflow_check_4vel(int dir, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom,
       // account for changes
       PLOOP(pliter,pl) prdiag[pl]=pr0[pl];
       int doingmhdfixup=1;
-      diag_fixup(1,prdiag, pr, ucons, ptrgeom, finalstep,doingmhdfixup,COUNTINFLOWACT);
+      diag_fixup((DOENOFLUX != NOENOFLUX),prdiag, pr, ucons, ptrgeom, finalstep,doingmhdfixup,COUNTINFLOWACT);
       PLOOP(pliter,pl) prdiag[pl]=pr[pl];
     }
   }
@@ -4433,7 +4439,7 @@ int inflow_check_rel4vel(int dir, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrge
 
     // only for boundary conditions, not active zones, hence -1.0 instead of finalstep
     int doingmhdfixup=1;
-    diag_fixup(1,prdiag, pr, ucons, ptrgeom, finalstep,doingmhdfixup,COUNTINFLOWACT);
+    diag_fixup((DOENOFLUX != NOENOFLUX),prdiag, pr, ucons, ptrgeom, finalstep,doingmhdfixup,COUNTINFLOWACT);
     PLOOP(pliter,pl) prdiag[pl]=pr[pl];
 
   }
@@ -4501,7 +4507,7 @@ int inflow_check_rel4vel(int dir, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrge
 
     // only for boundary conditions, not active zones, hence -1.0 instead of finalstep
     int doingmhdfixup=1;
-    diag_fixup(1,prdiag, pr, ucons, ptrgeom, finalstep,doingmhdfixup,COUNTINFLOWACT);
+    diag_fixup((DOENOFLUX != NOENOFLUX),prdiag, pr, ucons, ptrgeom, finalstep,doingmhdfixup,COUNTINFLOWACT);
     PLOOP(pliter,pl) prdiag[pl]=pr[pl];
 
   }

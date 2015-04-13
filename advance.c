@@ -327,6 +327,7 @@ static int advance_standard(
   }
 
 
+
   /////////////////////////////////////////////
   //
   // Compute flux
@@ -676,6 +677,7 @@ static int advance_standard(
 
           utoinvert1 = tempucumconsider;
           useducum1 = tempucumconsider;
+
         }
         else{
           // invert uf on substeps
@@ -748,7 +750,6 @@ static int advance_standard(
         }
 
 
-
         // actual inversion
         int whichcap=CAPTYPEBASIC;
         int whichmethod=MODEPICKBEST; // try to choose best option for this "external" inversion
@@ -784,16 +785,25 @@ static int advance_standard(
             if((STEPOVERNEGU==NEGDENSITY_ALWAYSFIXUP)||(STEPOVERNEGRHO==NEGDENSITY_ALWAYSFIXUP)||(STEPOVERNEGRHOU==NEGDENSITY_ALWAYSFIXUP)||(finalstep)){
               FTYPE utoinvertlocal[NPR];
               PLOOP(pliter,pl) utoinvertlocal[pl] = utoinvert1[pl];
-              int didfixup=fixup1zone(MAC(pf,i,j,k),utoinvertlocal, ptrgeom,finalstep);
-              if(didfixup==-1){
+              int docorrectucons=0;
+              int docorrectuconslocal=1;
+              int didfixup=fixup1zone(docorrectuconslocal,MAC(pf,i,j,k),utoinvertlocal, ptrgeom,finalstep);
+              if(didfixup==-1&&finalstep!=1){ // on final step, shouldn't modify ucum
                 // now deal with differences, which are all due to changes in dUriemann
                 PLOOP(pliter,pl) dUriemann[pl] += (utoinvertlocal[pl]-utoinvert1[pl])/(CUf[2]*dt);
                 // now get new uf (which should be consistent with utoinvertlocal) and ucum (which needs adjusting using this new dUriemann)
+                FTYPE tempucumconsiderbackup[NPR];
                 PLOOP(pliter,pl){
                   ufconsider[pl]=MACP0A1(olduf,i,j,k,pl);
-                  tempucumconsider[pl]=MACP0A1(tempucum,i,j,k,pl);
+                  tempucumconsiderbackup[pl]=tempucumconsider[pl];
+                  tempucumconsider[pl]=MACP0A1(tempucum,i,j,k,pl); // for redo
                 }
                 dUtoU(timeorder,doother,i,j,k,ptrgeom->p,dUgeom, dUcomp, dUriemann, CUf, CUnew, MAC(ui,i,j,k), ufconsider, tempucumconsider);
+                if(docorrectucons==0){ // restore since didn't want to change
+                  PLOOP(pliter,pl){
+                    tempucumconsider[pl]=tempucumconsiderbackup[pl];
+                  }
+                }
               } // if did fixup
             }// if might do fixups
 #endif
@@ -819,16 +829,16 @@ static int advance_standard(
             // KORALTODO SUPERGODMARK: Should have function call to check U
             if(pl==URAD0){
               if(-MACP0A1(uf,i,j,k,URAD0)<=0.0) MACP0A1(uf,i,j,k,URAD0)=-ERADLIMIT;
-              if(-MACP0A1(tempucum,i,j,k,URAD0)<=0.0) MACP0A1(tempucum,i,j,k,URAD0)=-ERADLIMIT;
+              if(DOENOFLUX != NOENOFLUX) if(-MACP0A1(tempucum,i,j,k,URAD0)<=0.0) MACP0A1(tempucum,i,j,k,URAD0)=-ERADLIMIT;
             }
             if(pl==UU){
               if(REMOVERESTMASSFROMUU==2){
                 if(MACP0A1(uf,i,j,k,RHO)-MACP0A1(uf,i,j,k,pl)<=0.0) MACP0A1(uf,i,j,k,pl)=-MACP0A1(uf,i,j,k,RHO)-UUMINLIMIT;
-                if(MACP0A1(tempucum,i,j,k,RHO)-MACP0A1(tempucum,i,j,k,pl)<=0.0) MACP0A1(tempucum,i,j,k,pl)=-MACP0A1(tempucum,i,j,k,RHO)-UUMINLIMIT;
+                if(DOENOFLUX != NOENOFLUX) if(MACP0A1(tempucum,i,j,k,RHO)-MACP0A1(tempucum,i,j,k,pl)<=0.0) MACP0A1(tempucum,i,j,k,pl)=-MACP0A1(tempucum,i,j,k,RHO)-UUMINLIMIT;
               }
               else{
                 if(-MACP0A1(uf,i,j,k,pl)<=0.0) MACP0A1(uf,i,j,k,pl)=-UUMINLIMIT;
-                if(-MACP0A1(tempucum,i,j,k,pl)<=0.0) MACP0A1(tempucum,i,j,k,pl)=-UUMINLIMIT;
+                if(DOENOFLUX != NOENOFLUX) if(-MACP0A1(tempucum,i,j,k,pl)<=0.0) MACP0A1(tempucum,i,j,k,pl)=-UUMINLIMIT;
               }
             }
 #endif
@@ -998,6 +1008,7 @@ static int advance_standard(
 #if(PRODUCTION==0)
   trifprintf( "2f");
 #endif
+
 
   return (0);
 }
@@ -1946,7 +1957,8 @@ static int advance_standard_orig(
 #if(FIXUPZONES==FIXUP1ZONE)
           // SUPERGODMARK: Below should differentiate beteween whether want negative densities fixed or not, but right now fixup1zone() does all
           if((STEPOVERNEGU==0)||(STEPOVERNEGRHO==0)||(STEPOVERNEGRHOU==0)||(finalstep)){
-            MYFUN(fixup1zone(MAC(pf,i,j,k),MAC(useducum,i,j,k), ptrgeom,finalstep),"fixup.c:fixup()", "fixup1zone()", 1);
+            int docorrectucons=0;
+            MYFUN(fixup1zone(docorrectucons,MAC(pf,i,j,k),MAC(useducum,i,j,k), ptrgeom,finalstep),"fixup.c:fixup()", "fixup1zone()", 1);
           }
 #endif
         }
@@ -2728,7 +2740,8 @@ static int advance_finitevolume(
 #if(FIXUPZONES==FIXUP1ZONE)
           // SUPERGODMARK: Below should differentiate beteween whether want negative densities fixed or not, but right now fixup1zone() does all
           if((STEPOVERNEGU==0)||(STEPOVERNEGRHO==0)||(STEPOVERNEGRHOU==0)||(finalstep)){
-            MYFUN(fixup1zone(MAC(pf,i,j,k), MAC(useducum,i,j,k), ptrgeom, finalstep),"advance.c:advance_finitevolume()", "fixup1zone()", 1);
+            int docorrectucons=0;
+            MYFUN(fixup1zone(docorrectucons,MAC(pf,i,j,k), MAC(useducum,i,j,k), ptrgeom, finalstep),"advance.c:advance_finitevolume()", "fixup1zone()", 1);
           }
 #endif
         }
@@ -3556,7 +3569,6 @@ int set_dt(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], SFTYPE *dt)
 
 
 
-
     ////////////////////
     //
     // deal with source terms
@@ -3641,7 +3653,6 @@ int set_dt(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], SFTYPE *dt)
 
   // minimize per-cell dt over all CPUs for PERCELLDT==1 version
   mpifmin(&wavedt_2);
-
 
   // get actual version to use
   if(PERCELLDT==0) wavedt=wavedt_1;

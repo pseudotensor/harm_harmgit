@@ -19,7 +19,7 @@ extern int set_density_floors_default(struct of_geom *ptrgeom, FTYPE *pr, FTYPE 
 extern int set_density_floors(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *scaler,FTYPE *prceiling);
 
 extern int fixup(int stage, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR],int finalstep);
-extern int fixup1zone(FTYPE *pr,FTYPE *ucons, struct of_geom *ptrlgeom, int finalstep);
+extern int fixup1zone(int docorrectucons, FTYPE *pr,FTYPE *ucons, struct of_geom *ptrlgeom, int finalstep);
 
 extern int diag_fixup(int docorrectucons, FTYPE *pr0, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep, int doingmhdfixup, int whocalled);
 int diag_fixup_allzones(FTYPE (*pf)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR]);

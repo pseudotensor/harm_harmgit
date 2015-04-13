@@ -1847,7 +1847,7 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
       FTYPE bsq; bsq_calc_fromq(ppfixup, ptrgeom, q, &bsq);
       // uu isn't exactly like pfixup here, but close enough
       set_density_floors_alt(ptrgeom, q, ppfixup, uu, bsq, ppfloor, prceiling);
-      //      fixup1zone(ppfloor,uufixup, ptrgeom,finalstepfixup); // too complicated for implicit stepping given how rare should be used.
+      //      fixup1zone(1,ppfloor,uufixup, ptrgeom,finalstepfixup); // too complicated for implicit stepping given how rare should be used.
       if(pp[RHO]<0.0) pp[RHO]=ppfloor[RHO]; // only fix RHO if really went negative.  Not smooth, but avoids problems in difficult regimes.
 
       //      limit_gamma(0,GAMMAMAX,GAMMAMAXRADIMPLICITSOLVER,pp,NULL,ptrgeom,0);

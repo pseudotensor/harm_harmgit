@@ -486,7 +486,7 @@ int Utoprim(int whichcons, FTYPE *U, struct of_geom *ptrgeom, PFTYPE *lpflag, FT
   // this is just a check, fixup() will soon do both in step_ch.c
 
   // currently need to check this since last iteration may lead to bad pr
-  if(jonchecks) fixup1zone(pr,ptrgeom,0); // actually this is done in a general fixup call soon after this point in step_ch.c
+  if(jonchecks) fixup1zone(0,pr,ptrgeom,0); // actually this is done in a general fixup call soon after this point in step_ch.c
   // check and see if u^t is actually a good solution now we think we have the solution? or fix it if u^t is bad
   if(jonchecks) if(check_pr(pr,pr0,ptrgeom,0)>=1)
                   FAILSTATEMENT("utoprim.c:Utoprim()", "mnewt check:check_pr()", 1);
@@ -725,7 +725,7 @@ int usrfun(FTYPE *U_target,FTYPE *pr0,int numnormterms,int whichcons, int primto
   // these checks seem to cause problems with convergence of any kind // GODMARK
   // we need to make sure densities are ok while iterating.
 #if(WHICHVEL==VEL3)
-  if(0&&jonchecks) fixup1zone(pr,ptrgeom,0);
+  if(0&&jonchecks) fixup1zone(0,pr,ptrgeom,0);
 
   // once pr lead to imaginary u^t, state is invalid and U cannot be found.
   // Thus, need to adjust pr while iterating to keep pr in line
