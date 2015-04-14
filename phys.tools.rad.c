@@ -655,6 +655,8 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE *errorabs, stru
 
 // Sources of non-conservation (e.g. of energy) that are *not* tracked include 1) machine error in doubles adding up over entire grid. 2) fluxes adding up over time 3) u obtained from pf uses get_state and primtoU that has non-trivial errors sometimes, so u cumulated over time won't be perfectly matching fluxes.  Still good to know because this is true error because initial U in advance does this exact get_state and primtoU.
 //
+// NOTEMARK: u7 associated with conserved B3 that in SPC B^\phi would be conserved if ideal MHD, but dissipation of the B3-supporting currents can mean a non-zero net B3 can change without ever passing through boundaries.
+//
 ////////////////////////////////////////////////////////
 
 

@@ -327,6 +327,30 @@ int setgeneral_enerregion(int (*enerregiondef)[NDIM], int doprintout, int whichr
 
 
 
+
+  if(whichregion!=NULLENERREGIONS){
+    // check if really on grid
+    if(localenerpos[X1UP]<localenerpos[X1DN] && Nvec[1]>1 || localenerpos[X2UP]<localenerpos[X2DN] && Nvec[2]>1 || localenerpos[X3UP]<localenerpos[X3DN] && Nvec[3]>1){
+      DIMENLOOP(dimen){
+        dirsign=-1;
+        localdoflux[DIRFROMDIMEN(dimen,dirsign)]=FLUXNOTONGRID;
+        dirsign=1;
+        localdoflux[DIRFROMDIMEN(dimen,dirsign)]=FLUXNOTONGRID;
+      }
+    }
+  }
+  if(whichbndregion!=NULLENERREGIONS){
+    // check if really on grid
+    if(localenerposglobal[X1UP]<localenerposglobal[X1DN] && Nvec[1]>1 || localenerposglobal[X2UP]<localenerposglobal[X2DN] && Nvec[2]>1 || localenerposglobal[X3UP]<localenerposglobal[X3DN] && Nvec[3]>1){
+      DIMENLOOP(dimen){
+        dirsign=-1;
+        localdofluxglobal[DIRFROMDIMEN(dimen,dirsign)]=FLUXNOTONGRID;
+        dirsign=1;
+        localdofluxglobal[DIRFROMDIMEN(dimen,dirsign)]=FLUXNOTONGRID;
+      }
+    }
+  }
+
   /////////////////////////////////////
   //
   // Print out some diagnostic information about this enerregion

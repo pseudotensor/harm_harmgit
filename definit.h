@@ -26,7 +26,10 @@
 /// whether to accurately update diagnostics related to source() terms.
 /// Not really necessary since those source terms don't lead to perfect conservation anyways
 /// Calling diag_source_comp() can be somewhat expensive, so just do on final steps for now (i.e. below set to 0)
-#define ACCURATESOURCEDIAG 0
+// 0 : not accurate
+// 1 : cumulative source accurate
+// 2 : each component accurate
+#define ACCURATESOURCEDIAG 1
 #define DIAGSOURCECOMPSTEP 4 // how many fullsteps to wait to compute diag_source_comp() that is somewhat expensive but just diagnostics and not incredibly needed compared to diag_source_all()
 
 

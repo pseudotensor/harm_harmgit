@@ -13,6 +13,8 @@
 #undef MERGEDC2EA2CMETHODMA
 #undef MERGEDC2EA2CMETHOD
 #undef ACCURATESINCOS
+#undef ACCURATESOURCEDIAG
+#undef ACCURATEDIAG
 #undef REMOTEHOST
 #undef WENO_REDUCE_A2C_LOOK_OTHER_DIRECTIONS
 #undef WENO_USE_PRIM_REDUCTION
@@ -155,6 +157,8 @@
 //****************************************//
 //****************************************//
 
+#define ACCURATESOURCEDIAG 2 // 2 means full component decomposition is accurate as well as sum.
+#define ACCURATEDIAG 1 // 1 means fluxes are accurate
 
 
 #define MAXWELL PRIMMAXWELL

@@ -638,17 +638,18 @@ static int advance_standard(
         if(advancepassnumber==-1 || advancepassnumber==1)
 #endif
           {
-#if(ACCURATESOURCEDIAG)
             if(DODIAGS){
-              diag_source_comp(ptrgeom,dUcomp,fluxdt);
+#if(ACCURATESOURCEDIAG>=1)
               diag_source_all(ptrgeom,dUgeom,fluxdt);
-            }
 #else
-            if(DODIAGS){
-              diag_source_comp(ptrgeom,dUcomp,dt4diag);
               diag_source_all(ptrgeom,dUgeom,dt4diag);
-            }
 #endif
+#if(ACCURATESOURCEDIAG>=2)
+              diag_source_comp(ptrgeom,dUcomp,fluxdt);
+#else
+              diag_source_comp(ptrgeom,dUcomp,dt4diag);
+#endif
+            }
           }
 
       
@@ -1639,17 +1640,18 @@ static int advance_standard_orig(
         if(advancepassnumber==-1 || advancepassnumber==1)
 #endif
           {
-#if(ACCURATESOURCEDIAG)
             if(DODIAGS){
-              diag_source_comp(ptrgeom,dUcomp,fluxdt);
+#if(ACCURATESOURCEDIAG>=1)
               diag_source_all(ptrgeom,dUgeom,fluxdt);
-            }
 #else
-            if(DODIAGS){
-              diag_source_comp(ptrgeom,dUcomp,dt4diag);
               diag_source_all(ptrgeom,dUgeom,dt4diag);
-            }
 #endif
+#if(ACCURATESOURCEDIAG>=2)
+              diag_source_comp(ptrgeom,dUcomp,fluxdt);
+#else
+              diag_source_comp(ptrgeom,dUcomp,dt4diag);
+#endif
+            }
           }
 
       
@@ -2345,16 +2347,19 @@ static int advance_finitevolume(
         {
 #pragma omp critical // since diagnostics store in same global cumulative variables
           {
-#if(ACCURATESOURCEDIAG)
             if(DODIAGS){
-              diag_source_comp(ptrgeom,dUcomp,fluxdt);
-            }
+#if(ACCURATESOURCEDIAG>=1)
+              diag_source_all(ptrgeom,dUgeom,fluxdt);
 #else
-            if(DODIAGS){
-              diag_source_comp(ptrgeom,dUcomp,dt4diag);
-            }
+              diag_source_all(ptrgeom,dUgeom,dt4diag);
 #endif
-          }   
+#if(ACCURATESOURCEDIAG>=2)
+              diag_source_comp(ptrgeom,dUcomp,fluxdt);
+#else
+              diag_source_comp(ptrgeom,dUcomp,dt4diag);
+#endif
+            }
+          }
         }
       
 
@@ -2448,18 +2453,20 @@ static int advance_finitevolume(
           {
 #pragma omp critical // since diagnostics store in same global cumulative variables
             {
-#if(ACCURATESOURCEDIAG)
-              if(DODIAGS){
-                diag_source_all(ptrgeom,dUgeom,fluxdt);
-              }
+            if(DODIAGS){
+#if(ACCURATESOURCEDIAG>=1)
+              diag_source_all(ptrgeom,dUgeom,fluxdt);
 #else
-              if(DODIAGS){
-                diag_source_all(ptrgeom,dUgeom,dt4diag);
-              }
+              diag_source_all(ptrgeom,dUgeom,dt4diag);
 #endif
-            }   
+#if(ACCURATESOURCEDIAG>=2)
+              diag_source_comp(ptrgeom,dUcomp,fluxdt);
+#else
+              diag_source_comp(ptrgeom,dUcomp,dt4diag);
+#endif
+            }
           }
-    
+        }
 
         // dUriemann is volume averaged quantity
         if(doflux){
