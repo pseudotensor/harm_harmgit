@@ -1792,7 +1792,7 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
     // 4) Get actual Urad [note uses UU not irefU that is ENTROPY for irefU[0]]
     DLOOPA(iv) uu[URAD0+iv] = uu0[URAD0+iv] - (uu[UU+iv]-uu0[UU+iv]);
     // 5) Do RAD-ONLY inversion
-    int failreturn2;  doradonly=1; failreturn2=Utoprimgen_failwrapper(doradonly,radinvmod,showmessages,checkoninversiongas,checkoninversionrad,allowlocalfailurefixandnoreport, finalstep, eomtype, whichcap, EVOLVEUTOPRIM, UNOTHING, uu, q, ptrgeom, dissmeasure, pp, &newtonstats);
+    int failreturn2;  int doradonly2=1; failreturn2=Utoprimgen_failwrapper(doradonly2,radinvmod,showmessages,checkoninversiongas,checkoninversionrad,allowlocalfailurefixandnoreport, finalstep, eomtype, whichcap, EVOLVEUTOPRIM, UNOTHING, uu, q, ptrgeom, dissmeasure, pp, &newtonstats);
     //  no need to concern with eomtype in RAD only case.  i.e. eomtype won't change.
     if(failreturn2>failreturn) failreturn=failreturn2; // use worst case.
     // 6) now get consistent uu[] based upon actual final primitives.
@@ -2384,7 +2384,7 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
 
             int eomtypee2=*eomtype; // back to original, but doing radiation below so doesn't matter.
             int radinvmode2;
-            int doradonly=1; int failreturne2=Utoprimgen_failwrapper(doradonly,&radinvmode2,showmessages,checkoninversiongas,checkoninversionrad,allowlocalfailurefixandnoreport, finalstep, &eomtypee2, whichcap, EVOLVEUTOPRIM, UNOTHING, uue, &qe, ptrgeom, dissmeasure, ppe, &newtonstats);
+            int doradonly2=1; int failreturne2=Utoprimgen_failwrapper(doradonly2,&radinvmode2,showmessages,checkoninversiongas,checkoninversionrad,allowlocalfailurefixandnoreport, finalstep, &eomtypee2, whichcap, EVOLVEUTOPRIM, UNOTHING, uue, &qe, ptrgeom, dissmeasure, ppe, &newtonstats);
             // if radinvmode==0 and radinvmode2!=0, should we abort explicit?
             // as long as radinvmode2==0, then all uu and pp's are now consistent
 

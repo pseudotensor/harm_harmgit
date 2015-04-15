@@ -439,11 +439,11 @@ struct Ccoordparams {
 #if(PRODUCTION>=4)
 
 // only needed files for python, not SM
-#undef DOMAINDUMPDUMP
+#undef DOMAINDUMP
 #undef DORADDUMP
 #undef DOIMAGEDUMP
 
-#define DOMAINDUMPDUMP 0
+#define DOMAINDUMP 0
 #define DORADDUMP 0
 #define DOIMAGEDUMP 0
 

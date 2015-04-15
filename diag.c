@@ -330,6 +330,30 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
 
 
 
+  ///////////////////
+  // additional types of dumps linked to normal sequence of dump types
+  ///////////////////
+
+  int dumptypeiter2=MAINDUMPTYPE;
+  if(dodumpgen[dumptypeiter2]){
+
+    // get main dump count
+    long int dumpcntmain;
+    dumpcntmain=dumpcntgen[dumptypeiter2];
+
+    // don't want restart write here to change "state" of restart header as post_dump() does.
+    // MAINDUMPTYPE period for restart files is here instead of part of main loop since the "dodumpgen[]" condition is setup for the frequent restart dumps and want the below restart dumps to be in synch with main dump files
+    // so can restart at a dump without reconstructing the rdump from a dump.
+    // Also, if run out of disk space then normal rdump's can be corrupted
+          
+    // avoid upperpole restart file since this is called inside restart_write() itself, since always want these to be in synch
+    // if(FLUXB==FLUXCTSTAG && special3dspc==1) restartupperpole_write(-(long)dumpcntgen[dumptypeiter]-1);
+    // NOTEMARK: This maindump-type-restart file is done after all other dump types are done so the dump type file numbers are fully updated for this dumping time.
+    restart_write(-(long)dumpcntmain-1);
+    if(DOEVOLVEMETRIC) restartmetric_write(-(long)dumpcntmain-1);
+  }
+
+
 
   ///////////////////////
   //
@@ -354,8 +378,6 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
         return (1);
       }
 
-      // get main dump count for additional types below
-      if(dodumpgen[dumptypeiter] && dumptypeiter==MAINDUMPTYPE) dumpcntmain=dumpcntgen[dumptypeiter];
       
       // post_dump:
       post_dump(dumptypeiter,localt,DTdumpgen,dumpcntgen,dumpcgen,tdumpgen,dumpcnt_filegen,tlastgen
@@ -366,22 +388,6 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
   }
 
 
-  ///////////////////
-  // additional types of dumps linked to normal sequence of dump types
-  ///////////////////
-
-  dumptypeiter=MAINDUMPTYPE;
-  if(dodumpgen[dumptypeiter]){
-    // MAINDUMPTYPE period for restart files is here instead of part of main loop since the "dodumpgen[]" condition is setup for the frequent restart dumps and want the below restart dumps to be in synch with main dump files
-    // so can restart at a dump without reconstructing the rdump from a dump.
-    // Also, if run out of disk space then normal rdump's can be corrupted
-    
-    // avoid upperpole restart file since this is called inside restart_write() itself, since always want these to be in synch
-    // if(FLUXB==FLUXCTSTAG && special3dspc==1) restartupperpole_write(-(long)dumpcntgen[dumptypeiter]-1);
-    // NOTEMARK: This maindump-type-restart file is done after all other dump types are done so the dump type file numbers are fully updated for this dumping time.
-    restart_write(-(long)dumpcntmain-1);
-    if(DOEVOLVEMETRIC) restartmetric_write(-(long)dumpcntmain-1);
-  }
 
 
 
