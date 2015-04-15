@@ -377,6 +377,13 @@ int user1_init_primitives(int inittype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FT
       }
       else MYFUN(transform_primitive_vB(whichvel, whichcoord, i,j,k, prim, pstag),"init.c:init_primitives","transform_primitive_vB()",0);
 
+
+      // force dummy entropy variable to be same as ug so restart file consistent -- even if not used by the code.
+      if(ENTROPY>=0){
+        MACP0A1(prim,i,j,k,ENTROPY)=MACP0A1(prim,i,j,k,UU);
+      }
+
+
     }
   }// end parallel region
 
