@@ -683,7 +683,7 @@ void set_coord_parms_deps(int defcoordlocal)
       }
     }
     
-    trifprintf("Rstar = %21.15g Nstar=%d Afactor=%21.15g\n",Rstar,Nstar,Afactor);
+    trifprintf("Rstar = %26.20g Nstar=%d Afactor=%26.20g\n",Rstar,Nstar,Afactor);
   }
   else{
     dualfprintf(fail_file,"Shouldn't reach end of set_coord_parms: You set defcoordlocal=%d\n",defcoordlocal);
@@ -716,7 +716,7 @@ void write_coord_parms(int defcoordlocal)
     else{
 
       // same for all coords (notice no carraige return)
-      fprintf(out,"%21.15g %21.15g %21.15g %21.15g %d ",R0,Rin,Rout,hslope,dofull2pi);
+      fprintf(out,"%26.20g %26.20g %26.20g %26.20g %d ",R0,Rin,Rout,hslope,dofull2pi);
 
       if (defcoordlocal == USERCOORD) {
         extern void write_coord_parms_user(int defcoordlocal, FILE *out);
@@ -735,56 +735,56 @@ void write_coord_parms(int defcoordlocal)
       else if(defcoordlocal == COMPLEX1TH) {
       }
       else if(defcoordlocal == COMPLEX2TH) {
-        fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",x2trans,thetatores,m2,d2,c2,m3,b3,h_over_r);
+        fprintf(out,"%26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g\n",x2trans,thetatores,m2,d2,c2,m3,b3,h_over_r);
       }
       else if (defcoordlocal == LOGRUNITH) { // uniform theta and log in radius
-        DIMENLOOP(dimen) fprintf(out,"%21.15g ",Rin_array[dimen]);
-        DIMENLOOP(dimen) fprintf(out,"%21.15g ",Rout_array[dimen]);
+        DIMENLOOP(dimen) fprintf(out,"%26.20g ",Rin_array[dimen]);
+        DIMENLOOP(dimen) fprintf(out,"%26.20g ",Rout_array[dimen]);
         fprintf(out,"\n");
       }
       else if (defcoordlocal == JET1COORDS) {
-        fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",npow,h0,hf,rh0,myrout,dmyhslope1dr,dmyhslope2dx1,x1in,x1out);
+        fprintf(out,"%26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g\n",npow,h0,hf,rh0,myrout,dmyhslope1dr,dmyhslope2dx1,x1in,x1out);
       }
       else if (defcoordlocal == JET2COORDS) {
-        fprintf(out,"%21.15g %21.15g %21.15g %21.15g\n",npow,r1jet,njet,rpjet);
+        fprintf(out,"%26.20g %26.20g %26.20g %26.20g\n",npow,r1jet,njet,rpjet);
       }
       else if (defcoordlocal == JET3COORDS) {
-        fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",npow,r1jet,njet,r0jet,rsjet,Qjet);
+        fprintf(out,"%26.20g %26.20g %26.20g %26.20g %26.20g %26.20g\n",npow,r1jet,njet,r0jet,rsjet,Qjet);
       }
       else if (defcoordlocal == SJETCOORDS) {
-        fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",npow,r1jet,njet,r0grid,r0jet,rjetend,rsjet,Qjet,fracphi,npow2,cpow2,rbr,x1br,fracdisk,fracjet,r0disk,rdiskend,torusrmax_loc,jetnu,x10,x20);
+        fprintf(out,"%26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g\n",npow,r1jet,njet,r0grid,r0jet,rjetend,rsjet,Qjet,fracphi,npow2,cpow2,rbr,x1br,fracdisk,fracjet,r0disk,rdiskend,torusrmax_loc,jetnu,x10,x20);
       }
       else if (defcoordlocal == JET6COORDS) {
-        fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",npow,r1jet,njet,r0jet,rsjet,Qjet,ntheta,htheta,rsjet2,r0jet2,rsjet3,r0jet3,rs,r0,npow2,cpow2,rbr,x1br,cpow3);
+        fprintf(out,"%26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g\n",npow,r1jet,njet,r0jet,rsjet,Qjet,ntheta,htheta,rsjet2,r0jet2,rsjet3,r0jet3,rs,r0,npow2,cpow2,rbr,x1br,cpow3);
       }
       else if (defcoordlocal == JET6COORDSTHIN) {
-        fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",th_npow,th_r1jet,th_njet,th_r0jet,th_rsjet,th_Qjet,th_ntheta,th_htheta,th_rsjet2,th_r0jet2,th_rsjet3,th_r0jet3,th_rs,th_r0,th_npow2,th_cpow2,th_rbr,th_x1br,th_rbr,th_h0,th_njet1);
+        fprintf(out,"%26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g\n",th_npow,th_r1jet,th_njet,th_r0jet,th_rsjet,th_Qjet,th_ntheta,th_htheta,th_rsjet2,th_r0jet2,th_rsjet3,th_r0jet3,th_rs,th_r0,th_npow2,th_cpow2,th_rbr,th_x1br,th_rbr,th_h0,th_njet1);
       }
       else if (defcoordlocal == JET5COORDS) {
-        fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",AAAA,AAA,BBB,DDD,ii0,CCCC,Rj);
-        fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g\n",r1jet,njet,r0jet,rsjet,Qjet);
+        fprintf(out,"%26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g\n",AAAA,AAA,BBB,DDD,ii0,CCCC,Rj);
+        fprintf(out,"%26.20g %26.20g %26.20g %26.20g %26.20g\n",r1jet,njet,r0jet,rsjet,Qjet);
       }
       else if (defcoordlocal == PULSARCOORDS) {
-        fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g\n",npow,hinner,houter,r0jet,rsjet);
+        fprintf(out,"%26.20g %26.20g %26.20g %26.20g %26.20g\n",npow,hinner,houter,r0jet,rsjet);
       }
       else if (defcoordlocal == UNIFORMCOORDS) {
         //uniform grid for Cartesian coordinates
-        DIMENLOOP(dimen) fprintf(out,"%21.15g ",Rin_array[dimen]);
-        DIMENLOOP(dimen) fprintf(out,"%21.15g ",Rout_array[dimen]);
+        DIMENLOOP(dimen) fprintf(out,"%26.20g ",Rin_array[dimen]);
+        DIMENLOOP(dimen) fprintf(out,"%26.20g ",Rout_array[dimen]);
         fprintf(out,"\n");
       }
       else if (defcoordlocal == BILOGCYLCOORDS) {
-        fprintf(out,"%21.15g\n",npow);
+        fprintf(out,"%26.20g\n",npow);
       }
       else if (defcoordlocal == RAMESHCOORDS || defcoordlocal == RAMESHCOORDS_HALFDISK) {
-        fprintf(out,"%21.15g %21.15g %21.15g %21.15g\n",npow,r0jet,njet,rsjet);
+        fprintf(out,"%26.20g %26.20g %26.20g %26.20g\n",npow,r0jet,njet,rsjet);
       }
       else if (defcoordlocal == JET4COORDS) {
         // npow, rs, r0, h0, r0jet, njet, rsjet
-        fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",npow,rs,r0,h0,r0jet,njet,rsjet);
+        fprintf(out,"%26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g\n",npow,rs,r0,h0,r0jet,njet,rsjet);
       }
       else if (defcoordlocal == UNI2LOG) {
-        fprintf(out,"%d %21.15g %21.15g\n",Nstar,Rstar,Afactor);
+        fprintf(out,"%d %26.20g %26.20g\n",Nstar,Rstar,Afactor);
       }
       else{
         dualfprintf(fail_file,"Shouldn't reach end of write_coord_parms: You set defcoordlocal=%d\n",defcoordlocal);
@@ -1132,13 +1132,13 @@ void bl_coord(FTYPE *X, FTYPE *V)
 #if(1)
     if(BCtype[X1DN]==R0SING){
       if(R0>=0.0){
-        dualfprintf(fail_file,"With log grid and R0SING must have R0<0 instead of %21.15g\n",R0);
+        dualfprintf(fail_file,"With log grid and R0SING must have R0<0 instead of %26.20g\n",R0);
         myexit(8274);
       }
       X0 = log(-R0);
       if(X[1]>X0) V[1] = R0+exp(X[1]) ;
       else V[1] = -(R0+R0*R0*exp(-X[1])) ;
-      //      dualfprintf(fail_file,"X0=%21.15g V[1]=%21.15g\n",X0,V[1]);
+      //      dualfprintf(fail_file,"X0=%26.20g V[1]=%26.20g\n",X0,V[1]);
     }
     else{
       V[1] = R0+exp(X[1]) ;
@@ -1634,13 +1634,13 @@ void bl_coord(FTYPE *X, FTYPE *V)
 
     if(BCtype[X1DN]==R0SING){
       if(R0>=0.0){
-        dualfprintf(fail_file,"With log grid and R0SING must have R0<0 instead of %21.15g\n",R0);
+        dualfprintf(fail_file,"With log grid and R0SING must have R0<0 instead of %26.20g\n",R0);
         myexit(8274);
       }
       X0 = log(-R0);
       if(X[1]>X0) V[1] = R0+exp(X[1]) ;
       else V[1] = -(R0+R0*R0*exp(-X[1])) ;
-      //      dualfprintf(fail_file,"X0=%21.15g V[1]=%21.15g\n",X0,V[1]);
+      //      dualfprintf(fail_file,"X0=%26.20g V[1]=%26.20g\n",X0,V[1]);
     }
     else{
       V[1] = R0+exp(X[1]) ;
@@ -2186,7 +2186,7 @@ void dxdxp_analytic(FTYPE *X, FTYPE *V, FTYPE (*dxdxp)[NDIM])
     dxdxp[1][1] = Rout_array[1] - Rin_array[1];
     dxdxp[2][2] = Rout_array[2] - Rin_array[2];
     dxdxp[3][3] = Rout_array[3] - Rin_array[3];
-    //    dualfprintf(fail_file,"COORD.c: dxdxp[1][1]=%21.15g\n",dxdxp[1][1]);
+    //    dualfprintf(fail_file,"COORD.c: dxdxp[1][1]=%26.20g\n",dxdxp[1][1]);
   }
   else if (defcoord == BILOGCYLCOORDS) {
     myexit(6666);
@@ -2482,8 +2482,8 @@ void dxdxp_numerical(FTYPE *X, FTYPE (*dxdxp)[NDIM])
       // GODMARK: Also, not only Xh-Xl, but each Xl and Xh must be machine representable
 
       // So even for a uniform grid dxdxp can vary near machine level
-      //      dualfprintf(fail_file,"Vh=%21.15g Vl=%21.15g Xh=%2.15g Xl=%21.15g DX=%21.15g\n",Vh[j],Vl[j],Xh[k],Xl[k],GENDXDELTA(k));
-      //      dualfprintf(fail_file,"(Vh[%d] - Vl[%d])=%21.15g (Xh[%d] - Xl[%d])=%21.15g\n",j,j,(Vh[j] - Vl[j]),k,k,(Xh[k] - Xl[k]));
+      //      dualfprintf(fail_file,"Vh=%26.20g Vl=%26.20g Xh=%2.15g Xl=%26.20g DX=%26.20g\n",Vh[j],Vl[j],Xh[k],Xl[k],GENDXDELTA(k));
+      //      dualfprintf(fail_file,"(Vh[%d] - Vl[%d])=%26.20g (Xh[%d] - Xl[%d])=%26.20g\n",j,j,(Vh[j] - Vl[j]),k,k,(Xh[k] - Xl[k]));
       // }
 
       if(j==k && fabs(dxdxp[j][k])<NUMEPSILON){
@@ -2694,7 +2694,7 @@ void set_points()
 #if(1)
     startx[1] = log(Rin-R0)/npow;
 
-    trifprintf( "ITERATIVE dx1: Rout=%21.15g R0=%21.15g npow=%21.15g cpow2=%21.15g cpow3=%21.15g npow2=%21.15g x1br=%21.15g rbr=%21.15g\n",Rout,R0,npow,cpow2,cpow3,npow2,x1br,rbr);
+    trifprintf( "ITERATIVE dx1: Rout=%26.20g R0=%26.20g npow=%26.20g cpow2=%26.20g cpow3=%26.20g npow2=%26.20g x1br=%26.20g rbr=%26.20g\n",Rout,R0,npow,cpow2,cpow3,npow2,x1br,rbr);
 
     if( Rout < rbr ) {
       x1max = log(Rout-R0)/npow;
@@ -2706,7 +2706,7 @@ void set_points()
       //find the root via iterations
       for( iter = 0; iter < ITERMAX; iter++ ) {
 
-        // trifprintf( "iter=%d x1max=%21.15g x2max0=%21.15g\n",iter,x1max0,x1max);
+        // trifprintf( "iter=%d x1max=%26.20g x2max0=%26.20g\n",iter,x1max0,x1max);
 
         if( fabs((x1max - x1max0)/x1max) < RELACC ) {
           break;
@@ -2760,7 +2760,7 @@ void set_points()
 #if(1)
     startx[1] = log(Rin-R0)/th_npow;
 
-    trifprintf( "ITERATIVE dx1: Rout=%21.15g R0=%21.15g npow=%21.15g cpow2=%21.15g npow2=%21.15g x1br=%21.15g rbr=%21.15g\n",Rout,R0,th_npow,th_cpow2,th_npow2,th_x1br,th_rbr);
+    trifprintf( "ITERATIVE dx1: Rout=%26.20g R0=%26.20g npow=%26.20g cpow2=%26.20g npow2=%26.20g x1br=%26.20g rbr=%26.20g\n",Rout,R0,th_npow,th_cpow2,th_npow2,th_x1br,th_rbr);
 
     if( Rout < th_rbr ) {
       x1max = log(Rout-R0)/th_npow;
@@ -2772,7 +2772,7 @@ void set_points()
       //find the root via iterations
       for( iter = 0; iter < ITERMAX; iter++ ) {
 
-        // trifprintf( "iter=%d x1max=%21.15g x2max0=%21.15g\n",iter,x1max0,x1max);
+        // trifprintf( "iter=%d x1max=%26.20g x2max0=%26.20g\n",iter,x1max0,x1max);
 
         if( fabs((x1max - x1max0)/x1max) < RELACC ) {
           break;
@@ -2894,7 +2894,7 @@ void set_points()
   // fabs() used since only ever used as absolute value
   DLOOPA(jj) Diffx[jj] = fabs(endx[jj] - startx[jj]);
 
-  //  DLOOPA(jj) fprintf(stderr,"jj=%d Diffx=%21.15g endx=%21.15g startx=%21.15g\n",jj,Diffx[jj],endx[jj],startx[jj]);
+  //  DLOOPA(jj) fprintf(stderr,"jj=%d Diffx=%26.20g endx=%26.20g startx=%26.20g\n",jj,Diffx[jj],endx[jj],startx[jj]);
 
 
 }
@@ -2932,7 +2932,7 @@ FTYPE setRin(int ihor)
 
   ihoradjust=((FTYPE)ihor)+ADJUSTFRACT; // can't have grid edge exactly on horizon due to ucon_calc()
 
-  //  fprintf(stderr,"ihoradjust = %21.15g\n",ihoradjust);
+  //  fprintf(stderr,"ihoradjust = %26.20g\n",ihoradjust);
 
   if(defcoord == USERCOORD){
     extern FTYPE setRin_user(int ihor, FTYPE ihoradjust);
@@ -2997,7 +2997,7 @@ FTYPE setRin(int ihor)
       return(R0+pow((Rhor-R0)/pow(Rout-R0,ftemp),1.0/(1.0-ftemp)));
     }
     else{
-      dualfprintf(fail_file,"ihoradjust=%21.15g totalsize[1]=%d Rhor=%21.15g R0=%21.15g npow=%21.15g Rout=%21.15g\n",ihoradjust,totalsize[1],Rhor,R0,npow,Rout);
+      dualfprintf(fail_file,"ihoradjust=%26.20g totalsize[1]=%d Rhor=%26.20g R0=%26.20g npow=%26.20g Rout=%26.20g\n",ihoradjust,totalsize[1],Rhor,R0,npow,Rout);
       return(R0+exp( pow((totalsize[1]*pow(log(Rhor-R0),1.0/npow) - ihoradjust*pow(log(Rout-R0),1.0/npow))/(totalsize[1]-ihoradjust),npow)));
     }
   }
@@ -3015,7 +3015,7 @@ FTYPE setRin(int ihor)
       return(1.2);
     }
     else{
-      dualfprintf(fail_file,"ihoradjust=%21.15g totalsize[1]=%d Rhor=%21.15g R0=%21.15g npow=%21.15g Rout=%21.15g\n",ihoradjust,totalsize[1],Rhor,R0,npow,Rout);
+      dualfprintf(fail_file,"ihoradjust=%26.20g totalsize[1]=%d Rhor=%26.20g R0=%26.20g npow=%26.20g Rout=%26.20g\n",ihoradjust,totalsize[1],Rhor,R0,npow,Rout);
       return(R0+exp( pow((totalsize[1]*pow(log(Rhor-R0),1.0/npow) - ihoradjust*pow(log(Rout-R0),1.0/npow))/(totalsize[1]-ihoradjust),npow)));
     }
   }
@@ -3029,7 +3029,7 @@ FTYPE setRin(int ihor)
       return(1.2);
     }
     else{
-      dualfprintf(fail_file,"ihoradjust=%21.15g totalsize[1]=%d Rhor=%21.15g R0=%21.15g npow=%21.15g Rout=%21.15g\n",ihoradjust,totalsize[1],Rhor,R0,th_npow,Rout);
+      dualfprintf(fail_file,"ihoradjust=%26.20g totalsize[1]=%d Rhor=%26.20g R0=%26.20g npow=%26.20g Rout=%26.20g\n",ihoradjust,totalsize[1],Rhor,R0,th_npow,Rout);
       return(R0+exp( pow((totalsize[1]*pow(log(Rhor-R0),1.0/th_npow) - ihoradjust*pow(log(Rout-R0),1.0/th_npow))/(totalsize[1]-ihoradjust),th_npow)));
     }
   }

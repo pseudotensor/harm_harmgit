@@ -5976,11 +5976,11 @@ void debugfixupaltdeath_bc(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
       FTYPE bsq=0.0;
       bsq_calc(prfix,ptrgeom,&bsq);
 
-#define BEGINDEATHTRANSITION (300.0)
+#define BEGINDEATHTRANSITION (OUTERDEATHRADIUS*0.8)
 
       if(V[1]>OUTERDEATHRADIUS|| V[1]>BEGINDEATHTRANSITION){
     
-        FTYPE rbr=500.0;
+        FTYPE rbr=OUTERDEATHRADIUS;
         FTYPE localrbr=rbr; //500.0; // rbr;
         FTYPE localrbrr0=BEGINDEATHTRANSITION;
         FTYPE localrbrdr=localrbr/3.0;
@@ -6006,8 +6006,9 @@ void debugfixupaltdeath_bc(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
           switch2 = 1.0-switch0;
 
 #define FACTORNEXTSWTICH (2.0)
-          rinner=MAX(FACTORNEXTSWTICH*rbr-localrbrdr,BEGINDEATHTRANSITION);
-          switch0b = trans(V[1],rinner,FACTORNEXTSWTICH*rbr+localrbrdr);
+          //rinner=MAX(FACTORNEXTSWTICH*rbr-localrbrdr,BEGINDEATHTRANSITION);
+          //switch0b = trans(V[1],rinner,FACTORNEXTSWTICH*rbr+localrbrdr);
+          switch0b = trans(V[1],rbr+localrbrdr,FACTORNEXTSWTICH*rbr+localrbrdr);
           switch2b = 1.0-switch0b;
         }
       
@@ -6025,10 +6026,10 @@ void debugfixupaltdeath_bc(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 
         /// things to change
 
-        FTYPE gamma,qsq;
-        gamma_calc(prfixtry,ptrgeom,&gamma,&qsq);
-        FTYPE gammanew=OUTERDEATHGAMMAMAX;
-        limit_gamma(0,gammanew,OUTERDEATHGAMMAMAXRAD,prfixtry,NULL,ptrgeom,-1);
+        //        FTYPE gamma,qsq;
+        //        gamma_calc(prfixtry,ptrgeom,&gamma,&qsq);
+        //        FTYPE gammanew=OUTERDEATHGAMMAMAX;
+        //        limit_gamma(0,gammanew,OUTERDEATHGAMMAMAXRAD,prfixtry,NULL,ptrgeom,-1);
         //prfixtry[U1]=0.0;
         //dualfprintf(fail_file,"problem: gamma=%g gammanew=%g\n",gamma,gammanew);
 
@@ -6057,7 +6058,7 @@ void debugfixupaltdeath_bc(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
       
       
 
-      
+#if(1)      
         if(prfixtry[U1]<0.0){
           prfixtry[U1]=0.0;
           if(DOENOFLUX != NOENOFLUX){
@@ -6077,7 +6078,7 @@ void debugfixupaltdeath_bc(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
             }
           }
         }
-
+#endif
 
         /////////////////////////////////////////////
         // set b
@@ -6088,11 +6089,13 @@ void debugfixupaltdeath_bc(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
           }
         }
 
+#if(1)
         // stronger restrictions for b on prad0
         if(URAD0>=0){
           //FTYPE Tgaslocal=compute_temp_simple(i,j,k,CENT,prfixtryb[RHO],prfixtryb[UU]);
-          prfixtryb[URAD0] = MIN(MIN(prfixtryb[RHO],prfixtryb[URAD0]),10.0*prfixtryb[UU]); // no more than Erf/rho=1 and Erf/u=10
-          prfixtryb[URAD0] = MAX(prfixtryb[URAD0],prfixtryb[UU]); // avoid drop-outs in Erf
+          //          prfixtryb[URAD0] = MIN(MIN(prfixtryb[RHO],prfixtryb[URAD0]),10.0*prfixtryb[UU]); // no more than Erf/rho=1 and Erf/u=10
+          prfixtryb[URAD0] = MIN(prfixtryb[RHO],prfixtryb[URAD0]);
+          //          prfixtryb[URAD0] = MAX(prfixtryb[URAD0],prfixtryb[UU]); // avoid drop-outs in Erf
           // try thermal equilibrium (arad Tgas^4 = urad )
           //          prfixtryb[URAD0] = calc_LTE_EfromT(Tgaslocal);
 
@@ -6100,7 +6103,7 @@ void debugfixupaltdeath_bc(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
             ufixtryb[URAD0]=MAX(-prfixtryb[URAD0],ufixtryb[URAD0]);
           }
         }
-
+#endif
 
         // final setting of fixed up quantities
         PLOOP(pliter,pl){
@@ -6116,6 +6119,7 @@ void debugfixupaltdeath_bc(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
     }
 
   }
+
 }
 
 

@@ -568,7 +568,7 @@ god=deathadflkjasdflkjasdlfkja242424
 
 #if(COUNTTYPE==DOUBLETYPE)
 #define CTYPE double
-#define CTYPEHEADERONEOUT "%21.15g"
+#define CTYPEHEADERONEOUT "%26.20g"
 #define CTYPEHEADERONEIN "%lf"
 #elif(COUNTTYPE==LONGLONGINTTYPE)
 #define CTYPE long long int
