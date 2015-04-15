@@ -223,6 +223,7 @@ static int advance_standard(
     tempucum=ucum;
     useducum=ucum;
   }
+  olduf=GLOBALPOINT(oldufstore);
 
 
   ucumformetric=GLOBALPOINT(ucumformetric);// temporary space for ucum for metric that is same time as "pb", so not updated yet or is ui
@@ -375,8 +376,8 @@ static int advance_standard(
 
 
     // initialize uf and ucum if very first time here since ucum is cumulative (+=) [now tempucum is cumulative]
-    // copy 0 -> {uf,tempucum}
-    if(timeorder==0) init_3dnpr_2ptrs(is, ie, js, je, ks, ke,0.0, uf,tempucum);
+    // copy 0 -> {uf,tempucum,olduf}
+    if(timeorder==0) init_3dnpr_3ptrs(is, ie, js, je, ks, ke,0.0, uf,tempucum,olduf);
 
 
 
@@ -389,11 +390,7 @@ static int advance_standard(
 #endif
 
   
-    // KORALNOTE: field dUtoU loses previous time uf needed for RK3 and RK4, so need to store it for safe keeping
-    // this oldud is used for B1,B2,B3 and required in cases when CUf[1]!=0.0, as even TVD RK2 method needs because previous Uf used even for updating new Uf.
-    olduf=GLOBALPOINT(oldufstore);
-    copy_3dnpr_fullloop(uf,olduf);
-    
+   
 
     ////////////////////////
     //
@@ -442,6 +439,10 @@ static int advance_standard(
           // ui is itself at FACE as already set
           // this overwrites uf[B1,B2,B3], while need original uf[B1,B2,B3] for some RK methods, so store as olduf outside this loop, already.
           dUtoU(timeorder,DOBPL,i,j,k,CENT,dUgeom, dUcomp, dUriemann, CUf, CUnew, MAC(ui,i,j,k), MAC(uf,i,j,k), MAC(tempucum,i,j,k));
+          if(finalstep==0){
+            PLOOP(pliter,pl) if(BPL(pl)) MACP0A1(olduf,i,j,k,pl) = MACP0A1(uf,i,j,k,pl);
+          }
+
         }//end loop
       }// end parallel
 
@@ -667,6 +668,27 @@ static int advance_standard(
         }
         dUtoU(timeorder,doother,i,j,k,ptrgeom->p,dUgeom, dUcomp, dUriemann, CUf, CUnew, MAC(ui,i,j,k), ufconsider, tempucumconsider);
 
+        // KORALNOTE: field dUtoU loses previous time uf needed for RK3 and RK4, so need to store it for safe keeping
+        // this oldud is used for B1,B2,B3 and required in cases when CUf[1]!=0.0, as even TVD RK2 method needs because previous Uf used even for updating new Uf.
+        ///////
+        // Save uf here because below modify uf to account for floors.
+        // The later modification of uf is required since 
+        FTYPE origolduf[NPR];
+        if(doother==DONONBPL){
+          PLOOP(pliter,pl){
+            if(BPL(pl)==0){
+              origolduf[pl] = MACP0A1(olduf,i,j,k,pl);
+              MACP0A1(olduf,i,j,k,pl) = ufconsider[pl];
+            }
+          }
+        }
+        else if(doother==DOALLPL){
+          PLOOP(pliter,pl){
+            origolduf[pl] = MACP0A1(olduf,i,j,k,pl);
+            MACP0A1(olduf,i,j,k,pl) = ufconsider[pl];
+          }
+        }
+
 
         ////////////////////////////
         // Choose what to invert
@@ -693,7 +715,8 @@ static int advance_standard(
           // copy over evolved field.  If finalstep=1, then myupoint contains ucum field as required.  Else has uf field as required.
           PLOOPBONLY(pl) utoinvert1[pl] = MACP0A1(myupoint,i,j,k,pl);
         } // else already there as point centered quantity
-
+        
+        
 
 #if(0)
         ////////////////////////////
@@ -751,6 +774,7 @@ static int advance_standard(
         }
 
 
+
         // actual inversion
         int whichcap=CAPTYPEBASIC;
         int whichmethod=MODEPICKBEST; // try to choose best option for this "external" inversion
@@ -795,7 +819,7 @@ static int advance_standard(
                 // now get new uf (which should be consistent with utoinvertlocal) and ucum (which needs adjusting using this new dUriemann)
                 FTYPE tempucumconsiderbackup[NPR];
                 PLOOP(pliter,pl){
-                  ufconsider[pl]=MACP0A1(olduf,i,j,k,pl);
+                  ufconsider[pl]=origolduf[pl];
                   tempucumconsiderbackup[pl]=tempucumconsider[pl];
                   tempucumconsider[pl]=MACP0A1(tempucum,i,j,k,pl); // for redo
                 }
@@ -2348,11 +2372,6 @@ static int advance_finitevolume(
 #pragma omp critical // since diagnostics store in same global cumulative variables
           {
             if(DODIAGS){
-#if(ACCURATESOURCEDIAG>=1)
-              diag_source_all(ptrgeom,dUgeom,fluxdt);
-#else
-              diag_source_all(ptrgeom,dUgeom,dt4diag);
-#endif
 #if(ACCURATESOURCEDIAG>=2)
               diag_source_comp(ptrgeom,dUcomp,fluxdt);
 #else
@@ -2459,14 +2478,10 @@ static int advance_finitevolume(
 #else
               diag_source_all(ptrgeom,dUgeom,dt4diag);
 #endif
-#if(ACCURATESOURCEDIAG>=2)
-              diag_source_comp(ptrgeom,dUcomp,fluxdt);
-#else
-              diag_source_comp(ptrgeom,dUcomp,dt4diag);
-#endif
             }
-          }
+          }   
         }
+    
 
         // dUriemann is volume averaged quantity
         if(doflux){

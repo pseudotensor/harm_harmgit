@@ -7734,6 +7734,23 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
   }
 
 
+  /////////////////////
+  // ensure if failed that no changes in quantities
+  /////////////////////
+  if(ACCEPTASNOFAILURE(failreturn)==0){
+    DLOOPA(jj) uu[UU+jj] = uu0[UU+jj];
+    DLOOPA(jj) uu[URAD0+jj] = uu0[URAD0+jj];
+    if(ENTROPY>=0) uu[ENTROPY] = uu0[ENTROPY];
+  }
+  /////////////////////
+  // if cold method, then entropy change infinite.  Modify so no change in entropy.  Ok, because not using entropy conservation here.  Just need evolution of entropy to be reasonable in case revert to it, and also want ener diagnostics to be reasonable and show conservation properties of entropy.
+  // constant uu[ENTROPY] consistent with eventually averaging internal energy to get close to original internal energy (i.e. rather than formally zero).
+  /////////////////////
+  if(*eomtype==EOMCOLDGRMHD){
+    if(ENTROPY>=0) uu[ENTROPY]=uu0[ENTROPY];
+  }
+
+
 
   /////////////////////
   //

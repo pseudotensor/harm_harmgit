@@ -36,6 +36,7 @@ extern void copy_3d_onepl_fullloop(int pl, FTYPE (*source)[NSTORE2][NSTORE3][NPR
 extern void copy_3dnpr2interp_2ptrs_fullloop(FTYPE (*source)[NSTORE2][NSTORE3][NPR2INTERP],FTYPE (*dest1)[NSTORE2][NSTORE3][NPR2INTERP],FTYPE (*dest2)[NSTORE2][NSTORE3][NPR2INTERP]);
 extern void copy_3dnpr2interp_2ptrs(int is, int ie, int js, int je, int ks, int ke,FTYPE (*source)[NSTORE2][NSTORE3][NPR2INTERP],FTYPE (*dest1)[NSTORE2][NSTORE3][NPR2INTERP],FTYPE (*dest2)[NSTORE2][NSTORE3][NPR2INTERP]);
 
+extern void init_3dnpr_3ptrs(int is, int ie, int js, int je, int ks, int ke,FTYPE initvalue, FTYPE (*dest1)[NSTORE2][NSTORE3][NPR],FTYPE (*dest2)[NSTORE2][NSTORE3][NPR],FTYPE (*dest3)[NSTORE2][NSTORE3][NPR]);
 
 extern void copy_3dnpr(int is, int ie, int js, int je, int ks, int ke,FTYPE (*source)[NSTORE2][NSTORE3][NPR],FTYPE (*dest)[NSTORE2][NSTORE3][NPR]);
 extern void init_3dnpr_2ptrs(int is, int ie, int js, int je, int ks, int ke,FTYPE initvalue, FTYPE (*dest1)[NSTORE2][NSTORE3][NPR],FTYPE (*dest2)[NSTORE2][NSTORE3][NPR]);

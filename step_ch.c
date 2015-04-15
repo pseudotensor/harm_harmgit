@@ -934,27 +934,64 @@ void get_truetime_fluxdt(int numtimeorders, SFTYPE localdt, FTYPE (*CUf)[NUMDTCU
 
 
 
+
+  // initialize
+  for(timeorder=0;timeorder<numtimeorders;timeorder++){
+    fluxdt[timeorder] = 0.0;
+    boundtime[timeorder] = 0.0;
+    fluxtime[timeorder] = 0.0;
+  }
   //////////////////////
   //
-  // Get fluxdt
+  // Get fluxdt (for up to explicit RK5)
+  // See setup_rktimestep() for how Uf^i and unew^i are defined, such that fluxdt[] below just adds all dUe terms appropriately.
   //
   //////////////////////
-  fluxdt[0] = 0.0; // initialize
-  boundtime[0] = 0.0; // initialize
-  fluxtime[0] = 0.0; // initialize
-  Ui=dUgeom=0.0; // don't care about update from non-flux terms
-  FTYPE dUnongeomall[MAXTIMEORDER]={0.0};
-  dUriemann=1.0; // indicates want dt applied on flux update
+  for(timeorder=4;timeorder<numtimeorders;timeorder++){ // for >=RK5
+    fluxdt[timeorder-4] += CUnew[timeorder][2]*CUf[timeorder][1]*CUf[timeorder-1][1]*CUf[timeorder-2][1]*CUf[timeorder-3][1]*CUf[timeorder-4][2]*localdt;
+  }
+
+  for(timeorder=3;timeorder<numtimeorders;timeorder++){ // for >=RK4
+    fluxdt[timeorder-3] += CUnew[timeorder][2]*CUf[timeorder][1]*CUf[timeorder-1][1]*CUf[timeorder-2][1]*CUf[timeorder-3][2]*localdt;
+  }
+
+  for(timeorder=2;timeorder<numtimeorders;timeorder++){ // for >=RK3
+    fluxdt[timeorder-2] += CUnew[timeorder][2]*CUf[timeorder][1]*CUf[timeorder-1][1]*CUf[timeorder-2][2]*localdt;
+  }
+
+  for(timeorder=1;timeorder<numtimeorders;timeorder++){ // for >=RK2
+    fluxdt[timeorder-1] += CUnew[timeorder][2]*CUf[timeorder][1]*CUf[timeorder-1][2]*localdt;
+  }
+
+  for(timeorder=0;timeorder<numtimeorders;timeorder++){ // for >=RK1
+    fluxdt[timeorder] += (CUnew[timeorder][1] + CUnew[timeorder][2]*CUf[timeorder][2])*localdt;
+  }
+
+  if(nstep==0){
+    for(timeorder=0;timeorder<numtimeorders;timeorder++){
+      dualfprintf(fail_file,"timeorder=%d fluxdt/dt=%g\n",timeorder,fluxdt[timeorder]/localdt);
+    }
+  }
+
+
+  // assuming fluxdt used before any calls in advance.c
+  // then represents *amount* of flux'ed stuff in time dt
+  // This is NOT the time of the flux evaluation
+  // This is to be used with diag_flux and other things multiplied by dt for diagnostics only
+  // Other things (e.g. sources()) use same dt as dUriemann automatically, so fluxdt is not for anything but diagnostics
+  // Only exception is updating vpot that is out of place and uses ucum-type updates
+
 
   // loop up to current substep to get current fluxdt
+  Ui=dUgeom=0.0; // don't care about update from non-flux terms
+  FTYPE uf;
+  FTYPE dUnongeomall[MAXTIMEORDER]={0.0};
   for(timeorder=0;timeorder<numtimeorders;timeorder++){
     if(timeorder==0){
       oldufdt=0.0;
-      olducumdt=0.0;
     }
     else{
       oldufdt=ufdt[timeorder-1];
-      olducumdt=ucumdt[timeorder-1];
     }
 
     // follows dUtoU() in advance.c
@@ -962,14 +999,6 @@ void get_truetime_fluxdt(int numtimeorders, SFTYPE localdt, FTYPE (*CUf)[NUMDTCU
     // below is NOT += since just want current change, not all prior changes
     // if did +=, then get 1 for timeorder==numtimeorders-1 as required!
     ucumdt[timeorder] = UCUMUPDATE(CUnew[timeorder],localdt,Ui,ufdt[timeorder],dUriemann,dUgeom,dUnongeomall);
-
-    // assuming fluxdt used before any calls in advance.c
-    // then represents *amount* of flux'ed stuff in time dt
-    // This is NOT the time of the flux evaluation
-    // This is to be used with diag_flux and other things multiplied by dt for diagnostics only
-    // Other things (e.g. sources()) use same dt as dUriemann automatically, so fluxdt is not for anything but diagnostics
-    // Only exception is updating vpot that is out of place and uses ucum-type updates
-    fluxdt[timeorder] = ucumdt[timeorder];
 
     //  time of pf at end of substep
     boundtime[timeorder] = t + ufdt[timeorder];
@@ -983,6 +1012,8 @@ void get_truetime_fluxdt(int numtimeorders, SFTYPE localdt, FTYPE (*CUf)[NUMDTCU
 
   }
 
+
+  
 
 #if(0)
   //////////////////////

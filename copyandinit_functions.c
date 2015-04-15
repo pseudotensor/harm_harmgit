@@ -778,6 +778,31 @@ void init_3dnpr_2ptrs(int is, int ie, int js, int je, int ks, int ke,FTYPE initv
 
 }
 
+/// general purpose copy machine for 3D arrays with only size NPR appended onto the end of array
+/// put as function because then wrap-up OpenMP stuff
+void init_3dnpr_3ptrs(int is, int ie, int js, int je, int ks, int ke,FTYPE initvalue, FTYPE (*dest1)[NSTORE2][NSTORE3][NPR],FTYPE (*dest2)[NSTORE2][NSTORE3][NPR],FTYPE (*dest3)[NSTORE2][NSTORE3][NPR])
+{
+
+#pragma omp parallel 
+  {
+    int i,j,k,pl,pliter;
+    OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
+
+#pragma omp for schedule(OPENMPFULLNOVARYSCHEDULE())
+    OPENMP3DLOOPBLOCK{
+      OPENMP3DLOOPBLOCK2IJK(i,j,k);
+
+      //      COMPZSLOOP(is,ie,js,je,ks,ke){
+      PLOOP(pliter,pl){
+        MACP0A1(dest1,i,j,k,pl)=MACP0A1(dest2,i,j,k,pl)=MACP0A1(dest3,i,j,k,pl)=initvalue;
+      }
+    }// end 3D loop
+
+
+  }// end parallel region
+
+}
+
 
 
 
