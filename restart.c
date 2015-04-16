@@ -238,6 +238,11 @@ void set_rdump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
 int rdump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 {
 
+  // ensure what is written (even at t=0) for fake entropy primitive is just internal energy, as assumed through-out evolution.
+  if(ENTROPY>=0){
+    GLOBALMACP0A1(pglobal,i,j,k,ENTROPY)=GLOBALMACP0A1(pglobal,i,j,k,UU);
+  }
+
   // always NPR
   myset(datatype,GLOBALMAC(pglobal,i,j,k),0,NPR,writebuf);
   myset(datatype,GLOBALMAC(unewglobal,i,j,k),0,NPR,writebuf);

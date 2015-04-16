@@ -946,11 +946,6 @@ int constotal(int enerregion, SFTYPE *vars)
           }
         }
 
-
-        PLOOP(pliter,pl){
-          ftemp[pl]=U[pl]*dVF;
-          vars[pl] += ftemp[pl];
-        }
       }
     }
   }
