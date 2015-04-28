@@ -100,6 +100,7 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
   dumpfuncgen[ENERDUMPTYPE]=NULL;
   dumpfuncgen[RADDUMPTYPE]=&raddump;
   dumpfuncgen[DISSMEASUREDUMPTYPE]=&dissmeasuredump;
+  dumpfuncgen[FLUXSIMPLEDUMPTYPE]=&fluxsimpledump;
   if(USEMPI && USEROMIO==1 && MPIVERSION==2){
     // then do restart-like dumping of fakedump so ROMIO non-blocking writes are eventually put to disk on reasonable timestep scale.
     dumpfuncgen[FAKEDUMPTYPE]=&fakedump;
@@ -767,6 +768,13 @@ static int get_dodumps(int call_code, int firsttime, SFTYPE localt, long localns
   }
   else dodumpgen[FAILFLOORDUDUMPTYPE]=0;
   
+
+  // FLUXSIMPLEDUMPTYPE
+  if((dnumcolumns[FLUXSIMPLEDUMPTYPE]>0)&&( ((DODUMPDIAG)&&(DODIAGEVERYSUBSTEP||((localt!=tlastgen[FLUXSIMPLEDUMPTYPE])&&(localt >= tdumpgen[FLUXSIMPLEDUMPTYPE] || (RESTARTMODE&&dofaildump&&(localnstep>=steptofaildump)) || call_code==FINAL_OUT ))) )  )){
+    dodumpgen[FLUXSIMPLEDUMPTYPE]=1;
+  }
+  else dodumpgen[FLUXSIMPLEDUMPTYPE]=0;
+
   
   // ENERDUMPTYPE (dnumcolumns[ENERDUMPTYPE]==0 is normal)
   // t!=tlast avoids duplicate entries

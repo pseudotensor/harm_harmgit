@@ -407,7 +407,8 @@ ssh pseudotensor@cli.globusonline.org transfer -s 1 < ~/globus1.txt
 
 extradir=""
 tp="rads"
-cd /home/01014/tg802609/
+dir="/home/01014/tg802609/"
+cd $dir
 list=`ls | grep rad | grep -v listrads`
 
 #extradir="thickdisk7"
@@ -425,23 +426,44 @@ list=`ls | grep rad | grep -v listrads`
 #cd /home/01014/tg802609/${extradir}/ # location where happen to have all files..blah
 #list=`ls | egrep 'sasha99\.' | grep -v tar | grep -v '\.txt' | grep -v '\.avi' | grep -v '\.sh' | grep -v 'dirslists'`
 
+# on stampede
+extradir=""
+tp="radt"
+dir=$SCRATCH
+cd $dir
+#list=`ls | grep rad | grep -v listrads`
+list=`ls | grep radt | grep -v listrads| grep -v radtransfer`
 
-for fil in $list ; do result=`ls -aR $fil/dumps/ | grep fieldline`; for sfil in $result; do echo "/home/01014/tg802609//${extradir}/$fil/dumps/$sfil" ; done ; done > ~/list${tp}_fieldline.txt
-for fil in $list ; do result=`ls -aR $fil/dumps/ | grep gdump`; for sfil in $result; do echo "/home/01014/tg802609//${extradir}/$fil/dumps/$sfil" ; done ; done > ~/list${tp}_gdump.txt
-for fil in $list ; do result=`ls -a $fil/coordparms.dat`; for sfil in $result; do echo "/home/01014/tg802609//${extradir}/$fil/$sfil" ; done ; done > ~/list${tp}_coordparms.txt
-for fil in $list ; do result=`ls -a $fil/dimensions.txt`; for sfil in $result; do echo "/home/01014/tg802609//${extradir}/$fil/$sfil" ; done ; done > ~/list${tp}_dimensions.txt
-cat ~/list${tp}_fieldline.txt ~/list${tp}_gdump.txt ~/list${tp}_coordparms.txt ~/list${tp}_dimensions.txt > ~/list${tp}_all.txt
+# on pfe
+extradir=""
+tp="radt"
+dir=/nobackup/jmckinn2
+cd $dir
+list=`ls | grep radt | grep -v listrads| grep -v \.err | grep -v \.out | grep -v radtransfer`
 
+
+for fil in $list ; do result=`ls -aR $fil/dumps/ | grep fieldline`; for sfil in $result; do echo "$dir/${extradir}/$fil/dumps/$sfil" ; done ; done > ~/list${tp}_fieldline.txt
+for fil in $list ; do result=`ls -aR $fil/dumps/ | grep gdump`; for sfil in $result; do echo "$dir/${extradir}/$fil/dumps/$sfil" ; done ; done > ~/list${tp}_gdump.txt
+for fil in $list ; do result=`ls -aR $fil/dumpsa/ | grep fieldline`; for sfil in $result; do echo "$dir/${extradir}/$fil/dumpsa/$sfil" ; done ; done > ~/list${tp}_fieldline2.txt
+for fil in $list ; do result=`ls -aR $fil/dumpsa/ | grep gdump`; for sfil in $result; do echo "$dir/${extradir}/$fil/dumpsa/$sfil" ; done ; done > ~/list${tp}_gdump2.txt
+for fil in $list ; do result=`ls -a $fil/coordparms.dat`; for sfil in $result; do echo "$dir/${extradir}/$sfil" ; done ; done > ~/list${tp}_coordparms.txt
+for fil in $list ; do result=`ls -a $fil/dimensions.txt`; for sfil in $result; do echo "$dir/${extradir}/$sfil" ; done ; done > ~/list${tp}_dimensions.txt
+cat ~/list${tp}_fieldline.txt ~/list${tp}_gdump.txt ~/list${tp}_fieldline2.txt ~/list${tp}_gdump2.txt ~/list${tp}_coordparms.txt ~/list${tp}_dimensions.txt > ~/list${tp}_all.txt
+
+# on ranch only
 for fil in `cat ~/list${tp}_all.txt` ; do stage $fil ; done
 
 2) On Nautilus or Stampede
 
 tp="rads"
+#tp="radt"
 #tp="sa0.99t0.6"
 #tp="sasha99"
 
 scp tg802609@ranch.tacc.utexas.edu:list${tp}_all.txt ~/
 
+#####
+# on stampede for ranch->stampede
 rm -rf ~/globus1${tp}.txt
 for fil in `cat ~/list${tp}_all.txt`
 do
@@ -449,7 +471,39 @@ do
     echo "xsede#ranch$fil xsede#stampede$newname" >> ~/globus1${tp}.txt
 done
 
+#####
+# on stampede for stampede->bh06
+rm -rf ~/globus1${tp}.txt
+for fil in `cat ~/list${tp}_all.txt`
+do
+    newname=`echo $fil | sed 's/\/scratch\/01014\/tg802609\//\/mnt\/data0\/user\//'`
+    echo "xsede#stampede$fil pseudotensor#bh06$newname " >> ~/globus1${tp}.txt
+done
+
+#####
+# on bh06 for ranch->bh06
+rm -rf ~/globus1${tp}.bh06.txt
+for fil in `cat ~/list${tp}_all.txt`
+do
+    newname=`echo $fil | sed 's/\/home\/01014\/tg802609\//\/mnt\/data0\/user\//'`
+    echo "xsede#ranch$fil pseudotensor#bh06$newname " >> ~/globus1${tp}.bh06.txt
+done
+
+#####
+# on pfe for pfe->bh06
+rm -rf ~/globus1${tp}.txt
+for fil in `cat ~/list${tp}_all.txt`
+do
+    newname=`echo $fil | sed 's/\/nobackup\/jmckinn2\//\/mnt\/data0\/user\//'`
+    echo "pseudotensor#pfe1$fil pseudotensor#bh06$newname " >> ~/globus1${tp}.txt
+done
+
+
+
 ssh pseudotensor@cli.globusonline.org transfer -s 1 < ~/globus1${tp}.txt
+
+ssh pseudotensor@cli.globusonline.org transfer -s 1 < ~/globus1${tp}.bh06.txt
+
 
 3) When done copying, then need to make links
 

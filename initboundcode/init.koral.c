@@ -504,7 +504,7 @@ int init_global(void)
   //    if(DOWALDDEN) rescaletype=4;
   if(DOWALDDEN) rescaletype=5; // like 4, but b^2/rho scales as 1/r away from horizon
 
-  BSQORHOLIMIT=2E2; // was 1E2 but latest BC test had 1E3 // CHANGINGMARK
+  BSQORHOLIMIT=1E3; // was 1E2 but latest BC test had 1E3 // CHANGINGMARK // was 2E2 but 
   BSQOULIMIT=1E8; // was 1E3 but latest BC test had 1E4.  was 1E5 but needed like 1E7 to 1E8 to avoid gastemperature in funnel being repeatedly forced up even when Compton and other processes keep low.  Also makes next solution guess for implicit solver very different, and takes longer to converge.
   UORHOLIMIT=1E10; // has to be quite high, else hit floor in high optical depth cases and run-away injection of u and then rho.
   RHOMIN = 1E-4;
@@ -2078,7 +2078,19 @@ int init_global(void)
     // 4) #define CONNDERTYPE DIFFGAMMIE
     // 5) #define N1 32
 
-    BSQORHOLIMIT=1E2;
+
+    int set_fieldtype(void);
+    int FIELDTYPE=set_fieldtype();
+
+    if(FIELDTYPE==FIELDJONMAD){
+      // then funnel becomes too optically thick and traps radiation and accelerates radiation down into BH, leading to bad physical energy conservation even if total energy-momentum conservation equations used very well.
+      BSQORHOLIMIT=1E3;
+    }
+    else{
+      BSQORHOLIMIT=1E2;
+    }
+
+
 
     if(DOWALDDEN){// override if doing wald
       BSQORHOLIMIT=BSQORHOWALD;

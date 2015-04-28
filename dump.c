@@ -2065,6 +2065,63 @@ int failfloordudump_content(int i, int j, int k, MPI_Datatype datatype,void *wri
 
 
 
+/// failure and floor dU dump
+int fluxsimpledump(long dump_cnt)
+{
+  MPI_Datatype datatype;
+  int whichdump;
+  char fileprefix[MAXFILENAME]={'\0'};
+  char filesuffix[MAXFILENAME]={'\0'};
+  char fileformat[MAXFILENAME]={'\0'};
+
+
+  trifprintf("begin dumping fluxsimpledump# %ld ... ",dump_cnt);
+
+  whichdump=FLUXSIMPLEDUMPTYPE;
+  datatype=MPI_FTYPE;
+  strcpy(fileprefix,"dumps/fluxsimpledump");
+  strcpy(fileformat,"%04ld");  //atch adjust dump every substep
+  strcpy(filesuffix,"");
+  
+  if(dump_gen(WRITEFILE,dump_cnt,binaryoutput,whichdump,datatype,fileprefix,fileformat,filesuffix,dump_header,fluxsimpledump_content)>=1) return(1);
+
+  trifprintf("end dumping fluxsimpledump# %ld ... ",dump_cnt);
+
+
+  return(0);
+  
+}
+
+
+/// failfloor dump content number
+void set_fluxsimpledump_content_dnumcolumns_dnumversion(int *numcolumnsvar, int *numversion)
+{
+
+  if(DOFLOORDIAG && N1NOT1==1){
+    *numcolumnsvar=NPR; // radial fluxes only
+  }
+  else *numcolumnsvar=0;
+
+  // Version number:
+  *numversion=0;
+
+
+
+}
+
+/// fluxsimple dump contents
+int fluxsimpledump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
+{
+  int pl;
+
+  myset(datatype,&GLOBALMACP0A1(F1,i,j,k,0),0,NPR,writebuf); // NPR
+  
+  return (0);
+}
+
+
+
+
 /// dissipation measure dump
 int dissmeasuredump(long dump_cnt)
 {

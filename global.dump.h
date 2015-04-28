@@ -56,6 +56,10 @@ extern int vpotdump_content(int i, int j, int k, MPI_Datatype datatype,void *wri
 extern int failfloordudump(long dump_cnt);
 extern int failfloordudump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf);
 
+extern int fluxsimpledump(long dump_cnt);
+extern int fluxsimpledump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf);
+
+
 extern int dissmeasuredump(long dump_cnt);
 extern int dissmeasuredump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf);
 

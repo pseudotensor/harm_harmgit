@@ -428,12 +428,12 @@ struct Ccoordparams {
 #undef DODEBUGDUMP // very large, only for speed debug
 #define DODEBUGDUMP 0
 //#undef DOJETDIAG
-#undef DOFLOORDUMP // for accounting for energy from floor
 //#define DOJETDIAG 0
-#define DOFLOORDUMP 0
 #endif
 
 #if(PRODUCTION>=3)
+#undef DOFLOORDUMP // for accounting for energy from floor and controls if radial fluxes are dumped
+#define DOFLOORDUMP 0
 #endif
 
 #if(PRODUCTION>=4)
