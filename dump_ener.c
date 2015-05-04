@@ -1,5 +1,7 @@
 #include "decs.h"
 
+#define PROBEFILE (0 &&DOENERDIAG) // whether to do probe file
+
 /*! \file dump_ener.c
   \brief Time-dependence spatially-integrated diagnostics
 
@@ -78,7 +80,7 @@ int dump_ener(int doener, int dordump, int call_code)
 
   if ((call_code == INIT_OUT) || (firsttime == 1)) {
 
-    if(DOENERDIAG){ // NOTEMARK: Locking probe output to DOENERDIAG=0/1
+    if(PROBEFILE&&DOENERDIAG){ // NOTEMARK: Locking probe output to DOENERDIAG=0/1
       // PER CPU FILE
       sprintf(dfnam,"probe.dat%s",myidtxt);
       if((probe_file=fopen(dfnam,"at"))==NULL){
@@ -494,7 +496,7 @@ int dump_ener(int doener, int dordump, int call_code)
 
         /////////////////////////
         // PROBE FILE
-        if(DOENERDIAG){
+        if(PROBEFILE&&DOENERDIAG){
           // !!per CPU!! probe file NPRDUMP*3 terms
           //
           ////////////////////////
@@ -576,7 +578,7 @@ int dump_ener(int doener, int dordump, int call_code)
         if(DOLUMVSR) myfclose(&lumener_file,"Couldn't close lumener_file\n");
         if(DODISSVSR)    for(dissloop=0;dissloop<NUMDISSVERSIONS;dissloop++) myfclose(&dissener_file[dissloop],"Couldn't close dissener_file\n");
         if(DODEBUG) myfclose(&debug_file,"Couldn't close debug_file\n");
-        if(DOENERDIAG) fclose(probe_file);
+        if(PROBEFILE&&DOENERDIAG) fclose(probe_file);
       }
     }
   }// end enerregion loop

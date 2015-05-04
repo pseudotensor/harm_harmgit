@@ -188,6 +188,7 @@
 #undef DOPOLESMOOTH
 #undef DOPOLEGAMMADEATH
 // needed to avoid random death at pole at large distances when grid focuses on axis and so makes-up information a bit.
+// no, causes injection of lots of radiation and violates energy-momentum conservation alot, even changes solution alot.
 #define DOPOLEDEATH 1
 //#define DOPOLEDEATH 0 // WALD
 #define DOPOLESMOOTH 0 // GODMARK: Need to reject outliers
