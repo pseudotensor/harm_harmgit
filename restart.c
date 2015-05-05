@@ -1203,7 +1203,9 @@ int readwrite_restart_header(int readwrite, int bintxt, int bcasthead, FILE*head
   // always NPR
   headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&pcumreg_tot[0][0][0],sizeof(SFTYPE), sheaderone, NUMENERREGIONS*(COMPDIM*2)*NPR, MPI_SFTYPE,headerptr);
   headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&fladdreg_tot[0][0],sizeof(SFTYPE), sheaderone, NUMENERREGIONS*NPR, MPI_SFTYPE,headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&fladdtermsreg_tot[0][0][0],sizeof(SFTYPE), sheaderone, NUMENERREGIONS*NUMFAILFLOORFLAGS*NPR, MPI_SFTYPE,headerptr);
   headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&sourceaddreg_tot[0][0],sizeof(SFTYPE), sheaderone, NUMENERREGIONS*NPR, MPI_SFTYPE,headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&sourceaddtermsreg_tot[0][0][0],sizeof(SFTYPE), sheaderone, NUMENERREGIONS*NUMSOURCES*NPR, MPI_SFTYPE,headerptr);
 
   headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&Ureg_init_tot[0][0],sizeof(SFTYPE), sheaderone, NUMENERREGIONS*NPR, MPI_SFTYPE,headerptr);
   //FAILFLOORLOOP(indexfinalstep,tscale,floor)
@@ -1325,7 +1327,7 @@ int readwrite_restart_header(int readwrite, int bintxt, int bcasthead, FILE*head
 int restart_read_defs_new(void)
 {
   int enerregion;
-  int indexfinalstep,floor,tscale;
+  int indexfinalstep,floor,tscale,sc;
   int dissloop;
   int dir,pl,pliter;
   int ii;
@@ -1339,9 +1341,12 @@ int restart_read_defs_new(void)
     // Define for cpu=0 only, which will continue to keep track of the total after restart
     //
     // Recall that PDUMPLOOP is only for primitives, while PLOOP should always be used for conserved quantities or fluxes
+    // pdot and pdotterms computed each time and not cumulative, so no need to store.
     ENERREGIONLOOP(enerregion) DIRLOOP(dir) PLOOP(pliter,pl) pcumreg[enerregion][dir][pl]=pcumreg_tot[enerregion][dir][pl];
     ENERREGIONLOOP(enerregion) PLOOP(pliter,pl) fladdreg[enerregion][pl]=fladdreg_tot[enerregion][pl];
+    ENERREGIONLOOP(enerregion) PLOOP(pliter,pl) FLOORLOOP(floor) fladdtermsreg[enerregion][floor][pl]=fladdtermsreg_tot[enerregion][floor][pl];
     ENERREGIONLOOP(enerregion) PLOOP(pliter,pl) sourceaddreg[enerregion][pl]=sourceaddreg_tot[enerregion][pl];
+    ENERREGIONLOOP(enerregion) PLOOP(pliter,pl) SCLOOP(sc) sourceaddtermsreg[enerregion][sc][pl]=sourceaddtermsreg_tot[enerregion][sc][pl];
     ENERREGIONLOOP(enerregion) PLOOP(pliter,pl) Ureg_init[enerregion][pl]=Ureg_init_tot[enerregion][pl];
 
     if(DODEBUG){

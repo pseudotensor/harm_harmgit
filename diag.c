@@ -1390,6 +1390,7 @@ int diag_flux_general(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], SFTYPE Dt)
 
   if(DODIAGS==0) return(0);
 
+  if(FLUXDIAGPARTS==0) return(0);
 
   // initialize
   ENERREGIONLOOP(enerregion){

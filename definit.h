@@ -22,6 +22,7 @@
 
 /// whether to use accurate (bit more expensive) diagnostics.  Only necessary for timeorder>2
 #define ACCURATEDIAG 1
+#define FLUXDIAGPARTS 0 // whether to compute parts of fluxes
 
 /// whether to accurately update diagnostics related to source() terms.
 /// Not really necessary since those source terms don't lead to perfect conservation anyways
