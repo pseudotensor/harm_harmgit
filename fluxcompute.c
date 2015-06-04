@@ -50,17 +50,18 @@ int flux_compute_general(int i, int j, int k, int dir, struct of_geom *ptrgeom, 
   // setup flux calculation based upon interpolated primitives
   //
   //////////////////////
-#if(FLUXDUMP!=2)
   MYFUN(p2SFUevolve(dir, ISLEFT, p_l, ptrgeom, &ptrstate_l, F_l, U_l),"step_ch.c:fluxcalc()", "p2SFUevolve()", 1);
   MYFUN(p2SFUevolve(dir, ISRIGHT, p_r, ptrgeom, &ptrstate_r, F_r, U_r),"step_ch.c:fluxcalc()", "p2SFUevolve()", 2);
-#else
+
+
+#if(FLUXDUMP==2)
   FTYPE FPAKE[NPR], FPAKE_l[NPR], FPAKE_r[NPR], UPAKE_l[NPR], UPAKE_r[NPR];
   FTYPE FEN[NPR], FEN_l[NPR], FEN_r[NPR], UEN_l[NPR], UEN_r[NPR];
   FTYPE FEM[NPR], FEM_l[NPR], FEM_r[NPR], UEM_l[NPR], UEM_r[NPR];
   FTYPE FRAD[NPR], FRAD_l[NPR], FRAD_r[NPR], URAD_l[NPR], URAD_r[NPR];
-  int p2SFUevolveall(int dir, int isleftright, FTYPE *p, struct of_geom *ptrgeom, struct of_state **ptrstate, FTYPE *F, FTYPE *FPAKE, FTYPE *FEN, FTYPE *FEM, FTYPE *FRAD, FTYPE *U, FTYPE *UPAKE, FTYPE *UEN, FTYPE *UEM, FTYPE *URAD);
-  MYFUN(p2SFUevolveall(dir, ISLEFT, p_l, ptrgeom, &ptrstate_l, F_l, FPAKE_l, FEN_l, FEM_l, FRAD_l, U_l, UPAKE_l, UEN_l, UEM_l, URAD_l),"step_ch.c:fluxcalc()", "p2SFUevolve()", 1);
-  MYFUN(p2SFUevolveall(dir, ISRIGHT, p_r, ptrgeom, &ptrstate_r, F_r, FPAKE_r, FEN_r, FEM_r, FRAD_r, U_r, UPAKE_r, UEN_r, UEM_r, URAD_r),"step_ch.c:fluxcalc()", "p2SFUevolve()", 2);
+  int p2SFUevolveall(int dir, int isleftright, FTYPE *p, struct of_geom *ptrgeom, struct of_state **ptrstate, FTYPE *FPAKE, FTYPE *FEN, FTYPE *FEM, FTYPE *FRAD, FTYPE *UPAKE, FTYPE *UEN, FTYPE *UEM, FTYPE *URAD);
+  MYFUN(p2SFUevolveall(dir, ISLEFT, p_l, ptrgeom, &ptrstate_l, FPAKE_l, FEN_l, FEM_l, FRAD_l, UPAKE_l, UEN_l, UEM_l, URAD_l),"step_ch.c:fluxcalc()", "p2SFUevolve()", 1);
+  MYFUN(p2SFUevolveall(dir, ISRIGHT, p_r, ptrgeom, &ptrstate_r, FPAKE_r, FEN_r, FEM_r, FRAD_r, UPAKE_r, UEN_r, UEM_r, URAD_r),"step_ch.c:fluxcalc()", "p2SFUevolve()", 2);
 #endif
 
 
@@ -214,7 +215,7 @@ int p2SFUevolve(int dir, int isleftright, FTYPE *p, struct of_geom *ptrgeom, str
 
 
 // p2SFUevolve() for each physical term
-int p2SFUevolveall(int dir, int isleftright, FTYPE *p, struct of_geom *ptrgeom, struct of_state **ptrstate, FTYPE *F, FTYPE *FPAKE, FTYPE *FEN, FTYPE *FEM, FTYPE *FRAD, FTYPE *U, FTYPE *UPAKE, FTYPE *UEN, FTYPE *UEM, FTYPE *URAD)
+int p2SFUevolveall(int dir, int isleftright, FTYPE *p, struct of_geom *ptrgeom, struct of_state **ptrstate, FTYPE *FPAKE, FTYPE *FEN, FTYPE *FEM, FTYPE *FRAD, FTYPE *UPAKE, FTYPE *UEN, FTYPE *UEM, FTYPE *URAD)
 {
 
 
@@ -224,9 +225,6 @@ int p2SFUevolveall(int dir, int isleftright, FTYPE *p, struct of_geom *ptrgeom, 
   //  }
 
   MYFUN(get_stateforfluxcalc(dir,isleftright, p, ptrgeom, ptrstate),"flux.c:p2SFUevolve", "get_state()", 1);
-
-  MYFUN(primtoflux(UEVOLVE,p, *ptrstate, dir, ptrgeom, F,NULL),"flux.c:p2SFUevolve()","primtoflux_calc() dir=1/2 l", 1);
-  MYFUN(primtoflux(UEVOLVE,p, *ptrstate, TT, ptrgeom, U,NULL),"flux.c:p2SFUevolve()", "primtoflux_calc() dir=l0", 1);
 
   int pliter,pl,jj;
   struct of_state qtemp;
