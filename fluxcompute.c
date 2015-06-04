@@ -133,7 +133,7 @@ int flux_compute_splitmaem(int i, int j, int k, int dir, struct of_geom *ptrgeom
 
 
 
-int p2SFUevolve(int whichterms, int dir, int isleftright, FTYPE *p, struct of_geom *ptrgeom, struct of_state **ptrstate, FTYPE *F, FTYPE *FPAKE, FTYPE *FEN, FTYPE *FEM, FTYPE *U, FTYPE *UPAKE, FTYPE *UEN, FTYPE *UEM)
+int p2SFUevolve(int dir, int isleftright, FTYPE *p, struct of_geom *ptrgeom, struct of_state **ptrstate, FTYPE *F, FTYPE *FPAKE, FTYPE *FEN, FTYPE *FEM, FTYPE *U, FTYPE *UPAKE, FTYPE *UEN, FTYPE *UEM)
 {
   MYFUN(get_stateforfluxcalc(dir,isleftright, p, ptrgeom, ptrstate),"flux.c:p2SFUevolve", "get_state()", 1);
 
@@ -149,13 +149,17 @@ int p2SFUevolve(int whichterms, int dir, int isleftright, FTYPE *p, struct of_ge
   int pliter,pl;
   FTYPE ptemp[NPR];
 
-  PLOOP(pliter,pl) ptemp[pl] = p[pl]; p[UU]=0.0;
+  PLOOP(pliter,pl) ptemp[pl] = p[pl]; p[UU]=p[B1]=p[B2]=p[B3]=0.0;
   MYFUN(primtoflux(UEVOLVE,ptemp, *ptrstate, dir, ptrgeom, FPAKE),"flux.c:p2SFUevolve()","primtoflux_calc() dir=1/2 l", 1);
   MYFUN(primtoflux(UEVOLVE,ptemp, *ptrstate, TT, ptrgeom, UPAKE),"flux.c:p2SFUevolve()", "primtoflux_calc() dir=l0", 1);
 
-  PLOOP(pliter,pl) ptemp[pl] = p[pl]; p[RHO]=0.0;
+  PLOOP(pliter,pl) ptemp[pl] = p[pl]; p[RHO]=p[B1]=p[B2]=p[B3]=0.0;
   MYFUN(primtoflux(UEVOLVE,ptemp, *ptrstate, dir, ptrgeom, FEN),"flux.c:p2SFUevolve()","primtoflux_calc() dir=1/2 l", 1);
   MYFUN(primtoflux(UEVOLVE,ptemp, *ptrstate, TT, ptrgeom, UEN),"flux.c:p2SFUevolve()", "primtoflux_calc() dir=l0", 1);
+
+  PLOOP(pliter,pl) ptemp[pl] = p[pl]; p[RHO]=p[UU]=0.0;
+  MYFUN(primtoflux(UEVOLVE,ptemp, *ptrstate, dir, ptrgeom, FEM),"flux.c:p2SFUevolve()","primtoflux_calc() dir=1/2 l", 1);
+  MYFUN(primtoflux(UEVOLVE,ptemp, *ptrstate, TT, ptrgeom, UEM),"flux.c:p2SFUevolve()", "primtoflux_calc() dir=l0", 1);
 
 
   return(0);
