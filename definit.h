@@ -947,6 +947,10 @@
 #define DODUMPOTHER 0 // whether to dump other stuff
 
 /// whether to do flux dumps and have memory for it
+/// 0: no flux dump files
+/// 1 : flux dump files with decomposition by part of LAXF flux
+/// 2 : flux dump files with decomposition by physical terms for full LAXF flux
+/// decomposition of only needed total fluxes dumped along with fieldline file
 #define FLUXDUMP 0
 
 /// default number of extra things needed

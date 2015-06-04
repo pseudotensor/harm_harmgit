@@ -398,7 +398,7 @@
 #define DODUMPOTHER 0
 
 #undef FLUXDUMP
-#define FLUXDUMP 0
+#define FLUXDUMP 2
 
 #undef OUTERRADIALSUPERFAST
 #define OUTERRADIALSUPERFAST 0 // can be better, but can also be much worse.

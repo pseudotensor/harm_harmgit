@@ -475,12 +475,23 @@
 
 
 
+#define NUMPHYSICALFLUXTERMS (1  +  1+1+1 + (EOMRADTYPE!=EOMRADNONE))
+#define NUMFLUXESTOSAVE (1 + 2 + (EOMRADTYPE!=EOMRADNONE)*2)
+#define FLUXESTOSAVEPL(pl) (pl==RHO || pl==UU || pl==U3 || pl==URAD0 || pl==URAD3)
 
+#if(FLUXDUMP==0)
+#define NUMFLUXDUMP (1)
 
+#elif(FLUXDUMP==1)
 /// cent,face1,face2,face3,corn
 /// NPR*4 = 1 dUgeom and 3 dUriemanns ; 3 directions for F1,F2,F3 and pl pr and F(pl) and F(pr)
 #define NUMFLUXDUMP (NPR*4 + NPR*3*(1+2+2))
 
+#else
+/// total,pake,en,em
+#define NUMFLUXDUMP (NPR*(NUMPHYSICALFLUXTERMS))
+
+#endif
 
 #if(MODIFYEMFORVPOT==MODIFYVPOT || TRACKVPOT>0 || EVOLVEWITHVPOT>0)
 /// 4 space-time directions with only spatial parts used for now

@@ -319,7 +319,7 @@ int fluxcalc(int stage,
   // DEBUG:
   //
   /////////////////////////////
-#if(FLUXDUMP)
+#if(FLUXDUMP==1)
   // this accounts for final flux
   FULLLOOP{
     DIMENLOOP(dir){

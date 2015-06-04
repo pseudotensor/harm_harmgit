@@ -1381,7 +1381,7 @@ int vectorpot_fluxreconorfvavg(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FT
 
 
 
-#if(FLUXDUMP)
+#if(FLUXDUMP==1)
     // this accounts for final flux
     FULLLOOP{
       DIMENLOOP(dir){

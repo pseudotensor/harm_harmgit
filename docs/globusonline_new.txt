@@ -453,7 +453,7 @@ cat ~/list${tp}_fieldline.txt ~/list${tp}_gdump.txt ~/list${tp}_fieldline2.txt ~
 # on ranch only
 for fil in `cat ~/list${tp}_all.txt` ; do stage $fil ; done
 
-2) On Nautilus or Stampede
+2) On Nautilus or Stampede or bh06
 
 tp="rads"
 #tp="radt"

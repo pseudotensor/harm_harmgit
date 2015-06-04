@@ -1216,8 +1216,11 @@ extern void set_fieldline_content_dnumcolumns_dnumversion(int *numcolumnsvar, in
 
   if(DOFIELDLINE){
     *numcolumnsvar=NUMFIELDLINEQUANTITIES;
+    if(FLUXDUMP==2) *numcolumnsvar+= (NUMFLUXESTOSAVE*NUMPHYSICALFLUXTERMS);
   }
   else *numcolumnsvar=0;
+
+
 
 
   // Version number:
@@ -1443,6 +1446,19 @@ int fieldline_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 
   }
 
+  if(FLUXDUMP==2){
+    int fluxterm;
+    int pliter;
+    for(fluxterm=0;fluxterm<NUMPHYSICALFLUXTERMS;fluxterm++){
+      PLOOP(pliter,pl){
+        if(FLUXESTOSAVEPL(pl)){
+          ftemp=(float)(GLOBALMACP0A1(fluxdump,i,j,k,fluxterm*NPR + pl));
+          myset(datatype,&ftemp,0,1,writebuf);
+        }
+      }
+    }
+  }
+
 
   return(0);
 
@@ -1602,7 +1618,7 @@ int fluxdumpdump(long dump_cnt)
 void set_fluxdump_content_dnumcolumns_dnumversion(int *numcolumnsvar, int *numversion)
 {
 
-  if(FLUXDUMP){ // dU, flux, and ppprimitives for flux
+  if(FLUXDUMP==1){ // dU, flux, and ppprimitives for flux
     *numcolumnsvar=NUMFLUXDUMP;
   }
   else *numcolumnsvar=0;

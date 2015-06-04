@@ -1719,7 +1719,7 @@ static int advance_standard_orig(
 
 
 
-#if(FLUXDUMP)
+#if(FLUXDUMP==1)
         fluxdumpdt=dt; // store current dt so when dump fluxdump use that dt instead of updated dt
         fluxdumprealnstep=realnstep;
         // DEBUG - DIAG:
@@ -2537,7 +2537,7 @@ static int advance_finitevolume(
 
 
 
-#if(FLUXDUMP)
+#if(FLUXDUMP==1)
       PLOOP(pliter,pl) GLOBALMACP0A1(fluxdump,i,j,k,0*NPR + pl)=dUgeom[pl];
 
       if(N1>1) PLOOP(pliter,pl) GLOBALMACP0A1(fluxdump,i,j,k,1*NPR + pl)=dUriemann1[pl];

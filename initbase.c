@@ -1939,7 +1939,7 @@ void check_bnd_num(void)
     dualfprintf(fail_file,"Contact not recommended\n");
   }
 
-  if(FLUXDUMP!=0){
+  if(FLUXDUMP==1){
     dualfprintf(fail_file,"FLUXDUMP ACTIVE -- lots of extra output\n");
   }
 
