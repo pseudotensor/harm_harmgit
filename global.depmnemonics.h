@@ -397,9 +397,18 @@
 
 // cent,face1,face2,face3,corn
 
+#if(FLUXDUMP==0)
+#define NUMFLUXDUMP (1)
 
+#elif(FLUXDUMP==1)
 // NPR*4 = 1 dUgeom and 3 dUriemanns ; 3 directions for F1,F2,F3 and pl pr and F(pl) and F(pr)
 #define NUMFLUXDUMP (NPR*4 + NPR*3*(1+2+2))
+
+#else
+
+#define NUMFLUXDUMP (NPR*(1+3))
+
+#endif
 
 
 #if(MODIFYEMFORVPOT==MODIFYVPOT || TRACKVPOT>0 || EVOLVEWITHVPOT>0)

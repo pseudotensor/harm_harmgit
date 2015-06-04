@@ -403,7 +403,7 @@
 #define DODUMPOTHER 0
 
 #undef FLUXDUMP
-#define FLUXDUMP 0
+#define FLUXDUMP 2
 
 struct Ccoordparams {
     double timescalefactor;

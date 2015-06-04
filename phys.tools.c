@@ -207,6 +207,7 @@ int primtoflux_ma(int *returntype, FTYPE *pr, struct of_state *q, int dir, struc
 }
 
 
+
 // electromagnetic terms (as if rho=u=p=0)
 int primtoflux_em(int *returntype, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux)
 {
@@ -1083,6 +1084,7 @@ void mhd_calc_norestmass(FTYPE *pr, int dir, struct of_geom *geom, struct of_sta
 // also avoids catastrophic cancellation in field due to using 4-field.  Instead derive stress tensor from 3-velocity and 3-field usinc Mcon_calc()
 // seems to work to avoid catastrophic cancellation with field, but maybe should use WHICHVEL=RELVEL4 directly?  GODMARK
 // T^dir_\mu
+
 void mhd_calc_norestmass_ma(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, FTYPE *mhd, FTYPE *mhddiagpress)
 {
   VARSTATIC int j;

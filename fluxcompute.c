@@ -19,12 +19,14 @@ static void diag_fluxdump_1(int dir, int i, int j, int k, FTYPE *p_l, FTYPE *p_r
 int flux_compute_general(int i, int j, int k, int dir, struct of_geom *ptrgeom, FTYPE CUf, FTYPE *p_c, FTYPE *p_l, FTYPE *p_r, FTYPE *F, FTYPE *ctopptr)
 {
   int flux_compute(int i, int j, int k, int dir, struct of_geom *geom, FTYPE *cminmax_l, FTYPE *cminmax_r, FTYPE *cminmax, FTYPE ctop, FTYPE CUf, FTYPE *p_l, FTYPE *p_r, FTYPE *U_l, FTYPE *U_r, FTYPE *F_l, FTYPE *F_r, FTYPE *F);
-  int p2SFUevolve(int dir, int isleftright, FTYPE *p, struct of_geom *geom, struct of_state **ptrstate, FTYPE *F, FTYPE *U);
+  int p2SFUevolve(int dir, int isleftright, FTYPE *p, struct of_geom *geom, struct of_state **ptrstate, FTYPE *F, FTYPE*FPAKE, FTYPE*FEN, FTYPE *FEM, FTYPE *U, FTYPE *UPAKE, FTYPE *UEN, FTYPE *UEM);
   FTYPE cminmax_l[NUMCS], cminmax_r[NUMCS], cminmax[NUMCS];
   struct of_state state_c, state_l, state_r;
   struct of_state *ptrstate_c, *ptrstate_l, *ptrstate_r;
-  FTYPE F_c[NPR], F_l[NPR], F_r[NPR];
-  FTYPE U_c[NPR], U_l[NPR], U_r[NPR];
+  FTYPE F_l[NPR], F_r[NPR], U_l[NPR], U_r[NPR];
+  FTYPE FPAKE[NPR], FPAKE_l[NPR], FPAKE_r[NPR], UPAKE_l[NPR], UPAKE_r[NPR];
+  FTYPE FEN[NPR], FEN_l[NPR], FEN_r[NPR], UEN_l[NPR], UEN_r[NPR];
+  FTYPE FEM[NPR], FEM_l[NPR], FEM_r[NPR], UEM_l[NPR], UEM_r[NPR];
   int pl,pliter;
   int jj,kk;
 
@@ -41,16 +43,29 @@ int flux_compute_general(int i, int j, int k, int dir, struct of_geom *ptrgeom, 
   // setup flux calculation based upon interpolated primitives
   //
   //////////////////////
-  MYFUN(p2SFUevolve(dir, ISLEFT, p_l, ptrgeom, &ptrstate_l, F_l, U_l),"step_ch.c:fluxcalc()", "p2SFUevolve()", 1);
-  MYFUN(p2SFUevolve(dir, ISRIGHT, p_r, ptrgeom, &ptrstate_r, F_r, U_r),"step_ch.c:fluxcalc()", "p2SFUevolve()", 2);
+  MYFUN(p2SFUevolve(dir, ISLEFT, p_l, ptrgeom, &ptrstate_l, F_l, FPAKE_l, FEN_l, FEM_l, U_l, UPAKE_l, UEN_l, UEM_l),"step_ch.c:fluxcalc()", "p2SFUevolve()", 1);
+  MYFUN(p2SFUevolve(dir, ISRIGHT, p_r, ptrgeom, &ptrstate_r, F_r, FPAKE_r, FEN_r, FEM_r, U_r, UPAKE_r, UEN_r, UEM_r),"step_ch.c:fluxcalc()", "p2SFUevolve()", 2);
 
   // usually "always" need cminmax_l cminmax_r and always need ctop
   get_wavespeeds(dir, ptrgeom, p_l, p_r, U_l, U_r, F_l, F_r, ptrstate_l, ptrstate_r, cminmax_l, cminmax_r, cminmax, ctopptr);
 
   MYFUN(flux_compute(i, j, k, dir, ptrgeom, cminmax_l,cminmax_r, cminmax, *ctopptr, CUf, p_l, p_r, U_l, U_r, F_l, F_r, F),"step_ch.c:fluxcalc()", "flux_compute", 1);
 
+  if(FLUXDUMP==2 && dir==1){ // only for radial fluxes
+    MYFUN(flux_compute(i, j, k, dir, ptrgeom, cminmax_l,cminmax_r, cminmax, *ctopptr, CUf, p_l, p_r, UPAKE_l, UPAKE_r, FPAKE_l, FPAKE_r, FPAKE),"step_ch.c:fluxcalc()", "flux_compute", 1);
+    MYFUN(flux_compute(i, j, k, dir, ptrgeom, cminmax_l,cminmax_r, cminmax, *ctopptr, CUf, p_l, p_r, UEN_l, UEN_r, FEN_l, FEN_r, FEN),"step_ch.c:fluxcalc()", "flux_compute", 1);
+    MYFUN(flux_compute(i, j, k, dir, ptrgeom, cminmax_l,cminmax_r, cminmax, *ctopptr, CUf, p_l, p_r, UEM_l, UEM_r, FEM_l, FEM_r, FEM),"step_ch.c:fluxcalc()", "flux_compute", 1);
 
-#if(FLUXDUMP)
+    PLOOP(pliter,pl) GLOBALMACP0A1(fluxdump,i,j,k,0*NPR + pl)=F[pl];
+    PLOOP(pliter,pl) GLOBALMACP0A1(fluxdump,i,j,k,1*NPR + pl)=FPAKE[pl];
+    PLOOP(pliter,pl) GLOBALMACP0A1(fluxdump,i,j,k,2*NPR + pl)=FEN[pl];
+    PLOOP(pliter,pl) GLOBALMACP0A1(fluxdump,i,j,k,3*NPR + pl)=FEM[pl];
+
+  }
+
+
+
+#if(FLUXDUMP==1)
   diag_fluxdump_1(dir,i,j,k,p_l, p_r, F_l, F_r);
 #endif  
 
@@ -107,7 +122,7 @@ int flux_compute_splitmaem(int i, int j, int k, int dir, struct of_geom *ptrgeom
   // Note that if splitmaem==1 then pressure term was moved as separate quasi-flux/conserved term.  flux remains, and conserved quantity not used
 
 
-#if(FLUXDUMP)
+#if(FLUXDUMP==1)
   diag_fluxdump_1(dir,i,j,k,p_l, p_r, F_l, F_r);
 #endif  
 
@@ -118,7 +133,7 @@ int flux_compute_splitmaem(int i, int j, int k, int dir, struct of_geom *ptrgeom
 
 
 
-int p2SFUevolve(int dir, int isleftright, FTYPE *p, struct of_geom *ptrgeom, struct of_state **ptrstate, FTYPE *F, FTYPE *U)
+int p2SFUevolve(int whichterms, int dir, int isleftright, FTYPE *p, struct of_geom *ptrgeom, struct of_state **ptrstate, FTYPE *F, FTYPE *FPAKE, FTYPE *FEN, FTYPE *FEM, FTYPE *U, FTYPE *UPAKE, FTYPE *UEN, FTYPE *UEM)
 {
   MYFUN(get_stateforfluxcalc(dir,isleftright, p, ptrgeom, ptrstate),"flux.c:p2SFUevolve", "get_state()", 1);
 
@@ -128,9 +143,20 @@ int p2SFUevolve(int dir, int isleftright, FTYPE *p, struct of_geom *ptrgeom, str
   //    dualfprintf(fail_file,"NORMAL: INp2SFUevolve: gdet=%21.15g : B1=%21.15g B2=%21.15g B3=%21.15g uu0=%21.15g uu1=%21.15g uu2=%21.15g uu3=%21.15g\n",ptrgeom->gdet,p[B1],p[B2],p[B3],(*ptrstate)->ucon[TT],(*ptrstate)->ucon[1],(*ptrstate)->ucon[2],(*ptrstate)->ucon[3]);
   //  }
 
-
   MYFUN(primtoflux(UEVOLVE,p, *ptrstate, dir, ptrgeom, F),"flux.c:p2SFUevolve()","primtoflux_calc() dir=1/2 l", 1);
   MYFUN(primtoflux(UEVOLVE,p, *ptrstate, TT, ptrgeom, U),"flux.c:p2SFUevolve()", "primtoflux_calc() dir=l0", 1);
+
+  int pliter,pl;
+  FTYPE ptemp[NPR];
+
+  PLOOP(pliter,pl) ptemp[pl] = p[pl]; p[UU]=0.0;
+  MYFUN(primtoflux(UEVOLVE,ptemp, *ptrstate, dir, ptrgeom, FPAKE),"flux.c:p2SFUevolve()","primtoflux_calc() dir=1/2 l", 1);
+  MYFUN(primtoflux(UEVOLVE,ptemp, *ptrstate, TT, ptrgeom, UPAKE),"flux.c:p2SFUevolve()", "primtoflux_calc() dir=l0", 1);
+
+  PLOOP(pliter,pl) ptemp[pl] = p[pl]; p[RHO]=0.0;
+  MYFUN(primtoflux(UEVOLVE,ptemp, *ptrstate, dir, ptrgeom, FEN),"flux.c:p2SFUevolve()","primtoflux_calc() dir=1/2 l", 1);
+  MYFUN(primtoflux(UEVOLVE,ptemp, *ptrstate, TT, ptrgeom, UEN),"flux.c:p2SFUevolve()", "primtoflux_calc() dir=l0", 1);
+
 
   return(0);
 }
@@ -163,7 +189,7 @@ void diag_fluxdump_1(int dir, int i, int j, int k, FTYPE *p_l, FTYPE *p_r, FTYPE
 {
   int pl,pliter;
 
-#if(FLUXDUMP)
+#if(FLUXDUMP==1)
   PLOOP(pliter,pl) GLOBALMACP0A1(fluxdump,i,j,k,4*NPR + (dir-1)*NPR*5 + NPR*1 + pl)=F_l[pl];
   PLOOP(pliter,pl) GLOBALMACP0A1(fluxdump,i,j,k,4*NPR + (dir-1)*NPR*5 + NPR*2 + pl)=F_r[pl];
   PLOOP(pliter,pl) GLOBALMACP0A1(fluxdump,i,j,k,4*NPR + (dir-1)*NPR*5 + NPR*3 + pl)=p_l[pl];
