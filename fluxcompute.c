@@ -151,17 +151,17 @@ int p2SFUevolve(int dir, int isleftright, FTYPE *p, struct of_geom *ptrgeom, str
   struct of_state qtemp;
   FTYPE ptemp[NPR];
 
-  PLOOP(pliter,pl) ptemp[pl] = p[pl]; p[UU]=p[B1]=p[B2]=p[B3]=0.0;
+  PLOOP(pliter,pl) ptemp[pl] = p[pl]; ptemp[UU]=ptemp[B1]=ptemp[B2]=ptemp[B3]=0.0;
   qtemp=**ptrstate; DLOOPA(jj) qtemp.bcon[jj]=qtemp.bcov[jj]=0.0; qtemp.bsq=0.0; qtemp.pressure=0.0;  qtemp.entropy=0.0;
   MYFUN(primtoflux(UEVOLVE,ptemp, &qtemp, dir, ptrgeom, FPAKE),"flux.c:p2SFUevolve()","primtoflux_calc() dir=1/2 l", 1);
   MYFUN(primtoflux(UEVOLVE,ptemp, &qtemp, TT, ptrgeom, UPAKE),"flux.c:p2SFUevolve()", "primtoflux_calc() dir=l0", 1);
 
-  PLOOP(pliter,pl) ptemp[pl] = p[pl]; p[RHO]=p[B1]=p[B2]=p[B3]=0.0;
+  PLOOP(pliter,pl) ptemp[pl] = p[pl]; ptemp[RHO]=ptemp[B1]=ptemp[B2]=ptemp[B3]=0.0;
   qtemp=**ptrstate; DLOOPA(jj) qtemp.bcon[jj]=qtemp.bcov[jj]=0.0; qtemp.bsq=0.0;
   MYFUN(primtoflux(UEVOLVE,ptemp, &qtemp, dir, ptrgeom, FEN),"flux.c:p2SFUevolve()","primtoflux_calc() dir=1/2 l", 1);
   MYFUN(primtoflux(UEVOLVE,ptemp, &qtemp, TT, ptrgeom, UEN),"flux.c:p2SFUevolve()", "primtoflux_calc() dir=l0", 1);
 
-  PLOOP(pliter,pl) ptemp[pl] = p[pl]; p[RHO]=p[UU]=0.0;
+  PLOOP(pliter,pl) ptemp[pl] = p[pl]; ptemp[RHO]=ptemp[UU]=0.0;
   qtemp=**ptrstate;  qtemp.pressure=0.0;  qtemp.entropy=0.0;
   MYFUN(primtoflux(UEVOLVE,ptemp, &qtemp, dir, ptrgeom, FEM),"flux.c:p2SFUevolve()","primtoflux_calc() dir=1/2 l", 1);
   MYFUN(primtoflux(UEVOLVE,ptemp, &qtemp, TT, ptrgeom, UEM),"flux.c:p2SFUevolve()", "primtoflux_calc() dir=l0", 1);
