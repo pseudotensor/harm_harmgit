@@ -1126,7 +1126,8 @@ extern void set_fieldline_content_dnumcolumns_dnumversion(int *numcolumns, int *
   }
   else *numcolumns=0;
 
-
+  *numcolumns+=NPR;
+  
   // Version number:
   *numversion=0;
 
@@ -1274,6 +1275,15 @@ int fieldline_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
   //ftemp=(float)(v3-B3*v1/(B1+SMALL));
   // myset(datatype,&ftemp,0,1,writebuf);
 
+
+  //  myset(datatype,&GLOBALMACP0A1(F1,i,j,k,0),0,NPR,writebuf); // NPR
+
+  int pliter; //pl already defined
+  PLOOP(pliter,pl){
+    ftemp=(float)(GLOBALMACP0A1(F1,i,j,k,pl));
+    myset(datatype,&ftemp,0,1,writebuf);
+  }
+  
   return(0);
 
 }

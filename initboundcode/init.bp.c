@@ -351,7 +351,7 @@ int init_global(void)
   // ener period
   DTdumpgen[ENERDUMPTYPE] = 2000.0;
   /* image file frequ., in units of M */
-  DTdumpgen[IMAGEDUMPTYPE] = 4.0; // was 5 after 2.0
+  DTdumpgen[IMAGEDUMPTYPE] = 0.1; // was 5 after 2.0
   // fieldline locked to images so can overlay
   DTdumpgen[FIELDLINEDUMPTYPE] = DTdumpgen[IMAGEDUMPTYPE];
 
