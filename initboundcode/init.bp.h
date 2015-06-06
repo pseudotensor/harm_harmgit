@@ -18,6 +18,8 @@
 #define N2 24 //8  //6 //24
 #define N3 1 //10 // 6 for big runs //8 //6 //8   //16
 
+#undef DOONESTEPDUACCOUNTING
+#define DOONESTEPDUACCOUNTING 1
 
 // atch adjusts
 #undef MAXWELL
@@ -422,8 +424,9 @@ struct Ccoordparams {
 #if(PRODUCTION>=2)
 //#undef DOJETDIAG
 #undef DODEBUG
-#undef DOFLOORDIAG
 //#define DOJETDIAG 0
 #define DODEBUG 0
-#define DOFLOORDIAG 0
 #endif
+
+//#undef DOFLOORDIAG
+//#define DOFLOORDIAG 0

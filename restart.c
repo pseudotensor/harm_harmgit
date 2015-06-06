@@ -10,6 +10,7 @@ static int restart_process_extra_variables(void);
 
 static int restartupperpole_set(void);
 
+static int firsttimerestart=1;
 
 int extrarestartfunction_new(void)
 {
@@ -217,7 +218,8 @@ void set_rdump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion)
   // spatial debug counters not crucial
   //  *numcolumns=NPR*2 + dnumcolumns[VPOTDUMPTYPE] + dnumcolumns[FAILFLOORDUDUMPTYPE] + dnumcolumns[DEBUGDUMPTYPE] ;
 
-  *numcolumns=NPR*2 + dnumcolumns[DISSDUMPTYPE] + dnumcolumns[FAILFLOORDUDUMPTYPE] ;
+  
+  *numcolumns=NPR*2 + dnumcolumns[DISSDUMPTYPE];
 
   
   if(EVOLVEWITHVPOT||TRACKVPOT){
@@ -254,9 +256,7 @@ int rdump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
   }
 
 
-  if(dnumcolumns[FAILFLOORDUDUMPTYPE]>0){
-    myset(datatype,GLOBALMAC(failfloordu,i,j,k),0,dnumcolumns[FAILFLOORDUDUMPTYPE],writebuf);
-  }
+
 
   // too many of these and not crucial since just counters
   //  if(dnumcolumns[DEBUGDUMPTYPE]>0){
@@ -347,9 +347,6 @@ int rdump_read_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf
   }
 
 
-  if(dnumcolumns[FAILFLOORDUDUMPTYPE]>0){
-    myget(datatype,GLOBALMAC(failfloordu,i,j,k),0,dnumcolumns[FAILFLOORDUDUMPTYPE],writebuf);
-  }
 
   // counters not crucial
   //  if(dnumcolumns[DEBUGDUMPTYPE]>0){

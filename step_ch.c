@@ -19,7 +19,7 @@ static void setup_rktimestep(int truestep, int *numtimeorders,
 
 
 static int pre_stepch(int *dumpingnext, FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
-static int post_stepch(int *dumpingnext, FTYPE fullndt, FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
+static int post_stepch(int *dumpingnext, FTYPE fullndt, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR]);
 static int step_ch(int truestep, int *dumpingnext, FTYPE *fullndt,FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR], FTYPE (*pl_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pr_ct)[NSTORE1][NSTORE2][NSTORE3][NPR2INTERP],FTYPE (*F1)[NSTORE2][NSTORE3][NPR],FTYPE (*F2)[NSTORE2][NSTORE3][NPR],FTYPE (*F3)[NSTORE2][NSTORE3][NPR],FTYPE (*Atemp)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],FTYPE (*uconstemp)[NSTORE2][NSTORE3][NPR]);
 static int post_advance(int truestep, int *dumpingnext, int timeorder, int numtimeorders, int finalstep, SFTYPE boundtime, SFTYPE fluxtime, FTYPE (*pi)[NSTORE2][NSTORE3][NPR],FTYPE (*pb)[NSTORE2][NSTORE3][NPR],FTYPE (*pf)[NSTORE2][NSTORE3][NPR],FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR], FTYPE (*F2)[NSTORE2][NSTORE3][NPR], FTYPE (*F3)[NSTORE2][NSTORE3][NPR], FTYPE (*Atemp)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*uconstemp)[NSTORE2][NSTORE3][NPR]);
 
@@ -48,7 +48,7 @@ int step_ch_full(int truestep, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pst
   step_ch(truestep,dumpingnext, &fullndt,prim,pstag,ucons,vpot,Bhat,pl_ct, pr_ct, F1, F2, F3,Atemp,uconstemp);
 
   // things to do after taking full step
-  if(truestep) post_stepch(dumpingnext, fullndt, prim);
+  if(truestep) post_stepch(dumpingnext, fullndt, prim,ucons);
 
 
   if(truestep){ // don't do if just passing through -- otherwise would end up looping endlessly!
@@ -147,7 +147,7 @@ int pre_stepch(int *dumpingnext, FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 
 // things to do after taking a full timestep
 // assume not called when dt==0.0
-int post_stepch(int *dumpingnext, FTYPE fullndt, FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
+int post_stepch(int *dumpingnext, FTYPE fullndt, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR])
 {
 
 
@@ -183,6 +183,12 @@ int post_stepch(int *dumpingnext, FTYPE fullndt, FTYPE (*prim)[NSTORE2][NSTORE3]
   // general flux only done on full steps since no requirement for accuracy and code can be expensive computationally
   diag_flux_general(prim,dt);// Should be full dt, not substep dt.
 
+
+  if(DOONESTEPDUACCOUNTING){
+    // do one-step accounting for fixup related things (failures, floors, fixups, etc.)
+    // ucons is in UEVOLVE form (originates from unewglobal in step_ch_full() called in main.c)
+    diag_fixup_allzones(1, 1, prim, ucons);
+  }
 
 
 
@@ -539,12 +545,6 @@ int post_advance(int truestep, int *dumpingnext, int timeorder, int numtimeorder
   }// end if truestep
 
 
-
-  if(DOONESTEPDUACCOUNTING){
-    // do one-step accounting for fixup related things (failures, floors, fixups, etc.)
-    // ucons is in UEVOLVE form (originates from unewglobal in step_ch_full() called in main.c)
-    diag_fixup_allzones(truestep, finalstep, pf, ucons);
-  }
 
 
 

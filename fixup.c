@@ -224,7 +224,7 @@ int diag_fixup_correctablecheck(int docorrectucons, struct of_geom *ptrgeom)
   int docorrectuconslocal;
 
   if(DOONESTEPDUACCOUNTING){
-    docorrectuconslocal=docorrectucons;
+    docorrectuconslocal=0;
   }
   else{
     ///////////
@@ -250,7 +250,7 @@ int diag_fixup_correctablecheck(int docorrectucons, struct of_geom *ptrgeom)
 
   }
 
-  return(docorrectuconslocal);
+  return(0);
 
 
 }
@@ -306,7 +306,6 @@ int diag_fixup_dUandaccount(FTYPE *Ui, FTYPE *Uf, FTYPE *ucons, struct of_geom *
   FTYPE Uprefixup[NPR],Upostfixup[NPR];
   int pliter,pl;
   int enerregion;
-
 
 
   /////////////
@@ -485,7 +484,7 @@ int diag_fixup(int docorrectucons, FTYPE *pr0, FTYPE *pr, FTYPE *ucons, struct o
   FTYPE Uprefixup[NPR],Upostfixup[NPR];
   int docorrectuconslocal;
 
-
+  docorrectucons=0; // override
 
 #if(DOSUPERDEBUG)
   superdebug_utoprim(pr0,pr,ptrgeom,whocalled);
@@ -571,6 +570,7 @@ int diag_fixup_Ui_pf(int docorrectucons, FTYPE *Uievolve, FTYPE *pf, struct of_g
   void UtoU(int inputtype, int returntype,struct of_geom *ptrgeom,FTYPE *Uin, FTYPE *Uout);
   int docorrectuconslocal;
 
+  docorrectucons=0; // override
 
 
   // count whocalled diag_fixup()
@@ -655,6 +655,7 @@ int diag_fixup_U(int docorrectucons, FTYPE *Ui, FTYPE *Uf, FTYPE *ucons, struct 
   void UtoU(int inputtype, int returntype,struct of_geom *ptrgeom,FTYPE *Uin, FTYPE *Uout);
   int docorrectuconslocal;
 
+  docorrectucons=0; // override
 
   // count whocalled diag_fixup()
   count_whocalled(ptrgeom, finalstep, whocalled);
