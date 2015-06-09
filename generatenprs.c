@@ -18,12 +18,12 @@ int main(void)
   int pl,pliter;
 
   // temp vars
-  int mydoyl,mydoynu,mydoentropy,mydoextrainterp;
+  int mydoyfl,mydoyl,mydoynu,mydoentropy,mydoextrainterp;
 
   // things to define:
   int npr,npr2interp,npr2notinterp,nprbound,nfluxbound,nprdump,nprinvert;
   int maxnpr;
-  int yl,ynu,entropy,vsq;
+  int yfl,yl,ynu,entropy,vsq;
   int rad0,rad1,rad2,rad3,nrad;
   int orignprstart,orignprend,orignprlist[SUPERMAXNPR];
   int orignpr2interpstart,orignpr2interpend,orignpr2interplist[SUPERMAXNPR];
@@ -158,9 +158,22 @@ int main(void)
   //
   // Rest of variables are most often on/off
   //
-  // These variables: yl, ynu, entropy, all have variable number assignments unlike more stable names
+  // These variables: yfl, yl, ynu, entropy, all have variable number assignments unlike more stable names
   //
   ////////////////////
+
+  if(DOYFL!=DONOYFL){
+    npr++; yfl = npr-1;
+
+    orignprend++; orignprlist[orignprend]=yfl;
+    orignpr2interpend++; orignpr2interplist[orignpr2interpend]=yfl;
+    orignprboundend++; orignprboundlist[orignprboundend]=yfl;
+    orignprfluxboundend++; orignprfluxboundlist[orignprfluxboundend]=yfl;
+    orignprdumpend++; orignprdumplist[orignprdumpend]=yfl;
+  }
+  else{
+    yfl = VARNOTDEFINED; // indicates not defined
+  }
 
 
   if(DOYL!=DONOYL){
@@ -286,6 +299,7 @@ int main(void)
   fprintf(defout,"#define NRAD %d\n",nrad);
 
   // define name of extra variables
+  fprintf(defout,"#define YFL %d\n",yfl);
   fprintf(defout,"#define YL %d\n",yl);
   fprintf(defout,"#define YE %d\n",yl); // treating YE as primitive for YL conservation
   fprintf(defout,"#define YNU %d\n",ynu);

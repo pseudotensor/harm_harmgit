@@ -266,6 +266,7 @@ int primtoflux_ma(int needentropy,int *returntype, FTYPE *pr, struct of_state *q
   // sizes: NPR,struct of_state, int, struct of_geom, NPR
   int ynuflux_calc(struct of_geom *ptrgeom, FTYPE *pr, int dir, struct of_state *q, FTYPE *advectedscalarflux, FTYPE *advectedscalarfluxabs, int pnum);
   int ylflux_calc(struct of_geom *ptrgeom, FTYPE *pr, int dir, struct of_state *q, FTYPE *advectedscalarflux, FTYPE *advectedscalarfluxabs, int pnum);
+  int yflflux_calc(struct of_geom *ptrgeom, FTYPE *pr, int dir, struct of_state *q, FTYPE *advectedscalarflux, FTYPE *advectedscalarfluxabs, int pnum);
   int massflux_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *massflux, FTYPE *massfluxabs);
   int entropyflux_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *entropyflux, FTYPE *entropyfluxabs);
   VARSTATIC FTYPE fluxdiagpress[NPR]; // temp var
@@ -299,6 +300,12 @@ int primtoflux_ma(int needentropy,int *returntype, FTYPE *pr, struct of_state *q
   //  dualfprintf(fail_file,"fluxdiagabs=%g\n",*fluxdiagabs);
 
 
+#if(DOYFL!=DONOYFL)
+#if(SPLITNPR)
+  if(nprlist[nprstart]<=YFL && nprlist[nprend]>=YFL)
+#endif
+    yflflux_calc(geom,pr, dir, q, &flux[YFL], &fluxabs[YFL],YFL); // fills YFL only
+#endif
 #if(DOYL!=DONOYL)
 #if(SPLITNPR)
   if(nprlist[nprstart]<=YL && nprlist[nprend]>=YL)
@@ -418,6 +425,27 @@ int massflux_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *massflux, FTYPE
 
 
 /// flux associated with Y_L variable
+int yflflux_calc(struct of_geom *ptrgeom, FTYPE *pr, int dir, struct of_state *q, FTYPE *advectedscalarflux, FTYPE *advectedscalarfluxabs, int pnum)
+{
+  int massflux_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *massflux, FTYPE *massfluxabs);
+  VARSTATIC FTYPE massflux;
+  VARSTATIC FTYPE massfluxabs;
+  FTYPE prforadvect;
+
+  // get mass flux
+  massflux_calc(pr, dir, q, &massflux, &massfluxabs);
+
+  prforadvect = pr[pnum];
+
+  // get flux associated with Y_L
+  *advectedscalarflux = prforadvect * massflux;
+
+  *advectedscalarfluxabs = fabs(*advectedscalarflux);
+
+  return(0);
+}
+
+/// flux associated with Y_L variable
 int ylflux_calc(struct of_geom *ptrgeom, FTYPE *pr, int dir, struct of_state *q, FTYPE *advectedscalarflux, FTYPE *advectedscalarfluxabs, int pnum)
 {
   int massflux_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *massflux, FTYPE *massfluxabs);
@@ -477,7 +505,7 @@ int advectedscalarflux_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *advec
   VARSTATIC FTYPE massflux;
   VARSTATIC FTYPE massfluxabs;
 
-  //  yl/ynu/etc. per unit rest-mass flux 
+  //  yfl/yl/ynu/etc. per unit rest-mass flux 
 
   // entropy=entropy per unit volume, where conserved quantity is specific entropy:
   // d/d\tau(entropy/rho)=0

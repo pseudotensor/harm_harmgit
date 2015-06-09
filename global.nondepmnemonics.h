@@ -155,6 +155,7 @@
 #define NOGDETURAD2 1
 #define NOGDETURAD3 0
 #define NOGDETENTROPY 0
+#define NOGDETYFL 0
 #define NOGDETYL 0
 #define NOGDETYNU 0
 
@@ -254,6 +255,9 @@
 /// for DOENTROPY
 #define DONOENTROPY  0
 #define DOEVOLVEENTROPY 1 // generic activation of entropy variable in conservation laws, etc.
+
+#define DONOYFL 0
+#define DOEVOLVEYFL 1
 
 #define DONOYL 0
 #define DOEVOLVEYL 1

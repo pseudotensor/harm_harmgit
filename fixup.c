@@ -22,22 +22,6 @@ static int superdebug_utoprim(FTYPE *pr0, FTYPE *pr, struct of_geom *ptrgeom, in
 
 
 
-#define JONFIXUP 1 // 0=gammie 1=jon's
-
-#if 0
-/// apply floors to density, internal energy
-/// currently called before bound, which assumes bound sets boundary
-/// values exactly as wanted without any fixing.
-void fixup(int stage,FTYPE (*pv)[NSTORE2][NSTORE3][NPR],int finalstep)
-{
-  int i, j, k;
-
-
-
-  COMPZLOOP{ pfixup(MAC(pv,i,j,k), i, j, k);}
-
-}
-#endif
 
 /// operations that require synch of boundary zones in MPI, or that require use of boundary zones at all
 /// operations that only need to be done inside computational loop
@@ -146,7 +130,6 @@ int post_fixup_nofixup(int stageit, int finalstep, SFTYPE boundtime, FTYPE (*pv)
 
 
 
-#if(JONFIXUP==1)
 
 /// apply floors to density, internal energy
 /// currently called before bound, which assumes bound sets boundary
@@ -167,61 +150,6 @@ int fixup(int stage,FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ucons)[NSTORE2][N
   }
   return(0);
 }
-#else
-
-/// GAMMIE OLD FIXUP (not kept up to date)
-int fixup(int stage,FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ucons)[NSTORE2][NSTORE3][NPR],int finalstep)
-{
-  int i,j,k,pl,pliter;
-  int ip, jp, kp, im, jm, km;
-  FTYPE bsq, del;
-  FTYPE ftempA,ftempB;
-  FTYPE prfloor[NPR],prceiling[NPR];
-  struct of_geom geomdontuse;
-  struct of_geom *ptrgeom=&geomdontuse;
-
-
-
-
-  COMPZLOOP {
-    get_geometry(i,j,k, CENT,ptrgeom) ;
-    // densities
-    if(DOEVOLVERHO||DOEVOLVEUU) set_density_floors(ptrgeom,MAC(pv,i,j,k),prfloor,prceiling);
-  
-
-    if(DOEVOLVERHO ){
-      /* floor on density (momentum *not* conserved) */
-      if (MACP0A1(pv,i,j,k,RHO) < prfloor[RHO]) {
-#if(FLOORDIAGS)
-        fladd[RHO] +=
-          dVF * ptrgeom->gdet * (prfloor[RHO] - MACP0A1(pv,i,j,k,RHO));
-#endif
-        MACP0A1(pv,i,j,k,RHO) = prfloor[RHO];
-      }
-    }
-    
-    if(DOEVOLVEUU){
-      /* floor on internal energy */
-      if (MACP0A1(pv,i,j,k,UU) < prfloor[UU]) {
-#if(FLOORDIAGS)
-        fladd[UU] +=
-          dVF * ptrgeom->gdet * (prfloor[UU] - MACP0A1(pv,i,j,k,UU));
-#endif
-        MACP0A1(pv,i,j,k,UU) = prfloor[UU]; // REBECCAMARK
-      }
-    }
-
-    /* limit gamma wrt normal observer */
-#if(WHICHVEL==VELREL4)
-    if(limit_gamma(0,GAMMAMAX,GAMMAMAXRAD,MAC(pv,i,j,k),MAC(ucons,i,j,k), ptrgeom,finalstep)>=1)  // need general accounting for entire routine.
-      FAILSTATEMENT("fixup.c:fixup()", "limit_gamma()", 1);
-#endif
-  }
-
-  return(0);}
-
-
-#endif
 
 
 
@@ -360,8 +288,6 @@ int diag_fixup_dUandaccount(FTYPE *Ui, FTYPE *Uf, FTYPE *ucons, struct of_geom *
 
   //only do aggregate accounting, after the fact (just before taking the new time step)
   if(DOONESTEPDUACCOUNTING && whocalled==COUNTONESTEP ||  DOONESTEPDUACCOUNTING==0){
-
-
 
     ///////////////////
     //
@@ -652,6 +578,8 @@ int consfixup_1zone(int finaluu, int i, int j, int k, struct of_geom *ptrgeom, F
   diag_fixup_dUandaccount(uudiag, ufdiag, ucons, ptrgeom, finalstep, whocalled, docorrectuconslocal);
 
 
+
+
   // so exact energy conservation at cost of unknown effect on radiation
   // so one-step accounting below will include a floor for both gas and radiation, but sum of floors will always be zero net gain of energy-momentum as long as radiation has radinvmod==0
 
@@ -692,6 +620,14 @@ int diag_fixup_allzones(FTYPE (*pf)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTOR
     int docorrectucons=(DOENOFLUX != NOENOFLUX); // make any needed corrections if doing corrections
     int finalstep=1; // if here, always on finalstep=1
     diag_fixup_Ui_pf(docorrectucons,MAC(ucons,i,j,k),MAC(pf,i,j,k),ptrgeom,finalstep,COUNTONESTEP);
+
+    if(DOYFL){ // set actual total change in effective floor
+      
+      FTYPE ucon[NDIM],others[NUMOTHERSTATERESULTS];
+      ucon_calc(MAC(pf,i,j,k),ptrgeom,ucon,others);
+      MACP0A1(pf,i,j,k,YFL) += MACP0A1(pf,i,j,k,RHO) - MACP0A1(ucons,i,j,k,RHO)/ucon[TT]; // effective source term for floor scalar
+    }
+
   }
 
 
@@ -778,10 +714,6 @@ int diag_fixup(int docorrectucons, FTYPE *pr0, FTYPE *pr, FTYPE *uconsinput, str
     if(failreturn>=1) dualfprintf(fail_file,"primtoU(2) failed in fixup.c, why???\n");
 
     // if Uicent and Ufcent are both from pi and pf at CENT, then B1,B2,B3 entries are agreeably located even for FLUXB==FLUXCTSTAG
-
-    //    if((startpos[1]+ptrgeom->i==17) && (startpos[2]+ptrgeom->j)==0){
-    //      dualfprintf(fail_file,"dUrho=%21.15g Urhof=%21.15g Urhoi=%21.15g whocalled=%d\n",(Ufcent[RHO]-Uicent[RHO])*dx[1]*dx[2]*dx[3],Ufcent[RHO]*dx[1]*dx[2]*dx[3],Uicent[RHO]*dx[1]*dx[2]*dx[3],whocalled);
-    //    }
 
     // Get deltaUavg[] and also modify ucons if required and should
     diag_fixup_dUandaccount(Uicent, Ufcent, ucons, ptrgeom, finalstep, whocalled, docorrectuconslocal);
@@ -892,10 +824,6 @@ int diag_fixup_Ui_pf(int docorrectucons, FTYPE *Uievolve, FTYPE *pf, struct of_g
     }
 
 
-
-    //    if((startpos[1]+ptrgeom->i==17) && (startpos[2]+ptrgeom->j)==0){
-    //      dualfprintf(fail_file,"Uipf: dUrho=%21.15g Urhof=%21.15g Urhoi=%21.15g whocalled=%d\n",(Ufcent[RHO]-Uicent[RHO])*dx[1]*dx[2]*dx[3],Ufcent[RHO]*dx[1]*dx[2]*dx[3],Uicent[RHO]*dx[1]*dx[2]*dx[3],whocalled);
-    //    }
 
     ////////////////
     //
@@ -1411,6 +1339,7 @@ int fixup1zone(int docorrectucons, FTYPE *pr, FTYPE *uconsinput, struct of_geom 
     ////////////////
 
     PALLLOOP(pl) pr[pl]=prmhd[pl];
+    //    if(DOYFL) pr[YFL] += (pr[RHO]-pr0[RHO]); // add to floor mass scalar // NO, only main floor, not total
 
 #if(0)
     ///////////////

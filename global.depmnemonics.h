@@ -125,7 +125,7 @@
 
 #define BPL(pl) (pl==B1 || pl==B2 || pl==B3)
 
-#define POSPL(pl) (pl==RHO || pl==UU || pl==URAD0 || pl==YL || pl==YNU)
+#define POSPL(pl) (pl==RHO || pl==UU || pl==URAD0 || pl==YFL || pl==YL || pl==YNU)
 
 #if((WHICHCURRENTCALC==CURRENTCALC0)||(WHICHCURRENTCALC==CURRENTCALC2))
 #define NUMCURRENTSLOTS 5

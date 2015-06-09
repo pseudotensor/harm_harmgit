@@ -210,7 +210,7 @@
 /// below is always true unless hit certain terms that are true
 /// 
 #define ALLOTHERSMINIMIZE(pl) (! (VELTERMSMINIMIZE(pl) || ORTHOVEL1TERMSMINIMIZE(pl) || ORTHOVEL2TERMSMINIMIZE(pl) || PRESSUREMINIMIZE(pl) || ((emffixedstencil==1)&&EMFTERMS(pl))  ) )
-///#define OTHERADVECTMINIMIZE(pl) (pl==YL && DOYL!=DONOYL || pl==YNU && DOYNU!=DONOYNU || pl==ENTROPY && DOENTROPY!=DONOENTROPY)
+///#define OTHERADVECTMINIMIZE(pl) (pl==YFL && DOYFL!=DONOYFL || pl==YL && DOYL!=DONOYL || pl==YNU && DOYNU!=DONOYNU || pl==ENTROPY && DOENTROPY!=DONOENTROPY)
 
 
 
@@ -585,7 +585,8 @@
 #define DOEXTRAINTERP 0
 /// must also set RESCALEINTERP=1
 
-
+/// whether to evolve Y_fl (see fixup.c)
+#define DOYFL 0
 /// whether to evolve Y_l (see kazeosfull.c)
 #define DOYL 0
 /// whether to evolve Y_\nu (see kazeosfull.c)

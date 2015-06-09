@@ -2206,7 +2206,7 @@ int invert_scalars(struct of_geom *ptrgeom, FTYPE *Ugeomfree, FTYPE *pr)
   FTYPE myrhouu0,oneOmyrhouu0;
   int i,j,k,loc;
   FTYPE prforadvect;
-  FTYPE ylforadvect,ynuforadvect;
+  FTYPE yflforadvect,ylforadvect,ynuforadvect;
 
 
 
@@ -2234,6 +2234,12 @@ int invert_scalars(struct of_geom *ptrgeom, FTYPE *Ugeomfree, FTYPE *pr)
   //
   ///////////////
 
+#if(DOYFL!=DONOYFL)
+  yflforadvect = Ugeomfree[YFL]*oneOmyrhouu0;
+#else
+  yflforadvect=0.0;
+#endif
+
 #if(DOYL!=DONOYL)
   ylforadvect = Ugeomfree[YL]*oneOmyrhouu0;
 #else
@@ -2252,6 +2258,9 @@ int invert_scalars(struct of_geom *ptrgeom, FTYPE *Ugeomfree, FTYPE *pr)
   //
   ///////////////
 
+#if(DOYFL!=DONOYFL)
+  pr[YFL] = yflforadvect;
+#endif
 
 #if(DOYL!=DONOYL)
 #if(WHICHEOS==KAZFULL)
@@ -2285,6 +2294,11 @@ int invert_scalars(struct of_geom *ptrgeom, FTYPE *Ugeomfree, FTYPE *pr)
   // Adjust conserved quantities based upon fixed-up primitives
   //
   //////////////////
+
+#if(DOYFL!=DONOYFL)
+  prforadvect = pr[YFL];
+  Ugeomfree[YFL] = prforadvect*myrhouu0;
+#endif
 
 #if(DOYL!=DONOYL)
 #if(WHICHEOS==KAZFULL)
