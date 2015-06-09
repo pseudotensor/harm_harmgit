@@ -625,7 +625,19 @@ int diag_fixup_allzones(FTYPE (*pf)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTOR
       
       FTYPE ucon[NDIM],others[NUMOTHERSTATERESULTS];
       ucon_calc(MAC(pf,i,j,k),ptrgeom,ucon,others);
-      MACP0A1(pf,i,j,k,YFL) += MACP0A1(pf,i,j,k,RHO) - MACP0A1(ucons,i,j,k,RHO)/ucon[TT]; // effective source term for floor scalar
+      FTYPE rho=MACP0A1(pf,i,j,k,RHO); // new final total
+
+      FTYPE uconsnothing[NPR];
+      FTYPE rhofromucons;
+      UtoU(UEVOLVE,UNOTHING,ptrgeom,MAC(ucons,i,j,k),uconsnothing);
+      FTYPE drho=rho - uconsnothing[RHO]/ucon[TT]; // effective source term for floor scalar accounting for all changes to rho not accounted for by conserved quantity additions (that includes no floors or failures or anything else except fluxes)
+
+
+      FTYPE rhofl = MACP0A1(pf,i,j,k,YFL)*MACP0A1(pf,i,j,k,RHO); // final rhofl without source term
+      FTYPE rhoflfinal = rhofl + drho;
+      MACP0A1(pf,i,j,k,YFL) = rhoflfinal/(SMALL+fabs(rho)); // newYfl = newrhofl / newrhototal
+
+      //      dualfprintf(fail_file,"rho=%g drho=%g rhofl=%g rhoflfinal=%g yfl=%g\n",rho,drho,rhofl,rhoflfinal,MACP0A1(pf,i,j,k,YFL));
     }
 
   }
@@ -1339,7 +1351,12 @@ int fixup1zone(int docorrectucons, FTYPE *pr, FTYPE *uconsinput, struct of_geom 
     ////////////////
 
     PALLLOOP(pl) pr[pl]=prmhd[pl];
-    //    if(DOYFL) pr[YFL] += (pr[RHO]-pr0[RHO]); // add to floor mass scalar // NO, only main floor, not total
+
+    if(DOYFL){
+      FTYPE drho=(pr[RHO]-pr0[RHO]);
+      pr[YFL] = (pr0[YFL]*pr0[RHO] + drho)/pr[RHO]; // add to floor mass scalar // NO, only main floor, not total
+    }
+
 
 #if(0)
     ///////////////
