@@ -49,3 +49,6 @@ extern int inflow_check_rel4vel(int dir, FTYPE *pr, FTYPE *ucons, struct of_geom
 extern void diag_eosfaillookup(int i, int j, int k);
 
 
+extern int consfixup_allzones(int finaluu, FTYPE (*pf)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR]);
+extern int consfixup_1zone(int finaluu, int i, int j, int k, struct of_geom *ptrgeom, FTYPE *pf, FTYPE *ucons);
+

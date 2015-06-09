@@ -13,7 +13,7 @@
 static int simple_average(int startpl, int endpl, int i, int j, int k, int doingmhd, PFTYPE (*lpflagfailorig)[NSTORE2][NSTORE3][NUMFAILPFLAGS],FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ptoavg)[NSTORE2][NSTORE3][NPR]);
 static int general_average(int useonlynonfailed, int numbndtotry, int maxnumbndtotry, int startpl, int endpl, int i, int j, int k, int doingmhd, PFTYPE mhdlpflag, PFTYPE radlpflag, PFTYPE (*lpflagfailorig)[NSTORE2][NSTORE3][NUMFAILPFLAGS],FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ptoavg)[NSTORE2][NSTORE3][NPR], struct of_geom *ptrgeom);
 static int fixup_nogood(int startpl, int endpl, int i, int j, int k, int doingmhd, PFTYPE mhdlpflag, PFTYPE radlpflag, FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ptoavg)[NSTORE2][NSTORE3][NPR],FTYPE (*pbackup)[NSTORE2][NSTORE3][NPR], struct of_geom *ptrgeom);
-static int fixuputoprim_accounting(int i, int j, int k, PFTYPE mhdlpflag, PFTYPE radlpflag, PFTYPE (*lpflag)[NSTORE2][NSTORE3][NUMPFLAGS],FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ptoavg)[NSTORE2][NSTORE3][NPR], struct of_geom *geom, FTYPE *pr0, FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], int finalstep);
+static int fixuputoprim_accounting(int i, int j, int k, PFTYPE mhdlpflag, PFTYPE radlpflag, int limitgammamhd, int limitgammarad, PFTYPE (*lpflag)[NSTORE2][NSTORE3][NUMPFLAGS],FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ptoavg)[NSTORE2][NSTORE3][NPR], struct of_geom *geom, FTYPE *pr0, FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], int finalstep);
 static int fixup_negdensities(int whichtofix, int *fixed, int startpl, int endpl, int i, int j, int k, PFTYPE mhdlpflag, FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ptoavg)[NSTORE2][NSTORE3][NPR], struct of_geom *geom, FTYPE *pr0, FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], int finalstep);
 
 static int superdebug_utoprim(FTYPE *pr0, FTYPE *pr, struct of_geom *ptrgeom, int whocalled);
@@ -213,7 +213,7 @@ int fixup(int stage,FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ucons)[NSTORE2][N
 
     /* limit gamma wrt normal observer */
 #if(WHICHVEL==VELREL4)
-    if(limit_gamma(0,GAMMAMAX,GAMMAMAXRAD,MAC(pv,i,j,k),MAC(ucons,i,j,k), ptrgeom,-1)>=1)  // need general accounting for entire routine.
+    if(limit_gamma(0,GAMMAMAX,GAMMAMAXRAD,MAC(pv,i,j,k),MAC(ucons,i,j,k), ptrgeom,finalstep)>=1)  // need general accounting for entire routine.
       FAILSTATEMENT("fixup.c:fixup()", "limit_gamma()", 1);
 #endif
   }
@@ -361,6 +361,8 @@ int diag_fixup_dUandaccount(FTYPE *Ui, FTYPE *Uf, FTYPE *ucons, struct of_geom *
   //only do aggregate accounting, after the fact (just before taking the new time step)
   if(DOONESTEPDUACCOUNTING && whocalled==COUNTONESTEP ||  DOONESTEPDUACCOUNTING==0){
 
+
+
     ///////////////////
     //
     // get correction
@@ -418,8 +420,51 @@ int diag_fixup_dUandaccount(FTYPE *Ui, FTYPE *Uf, FTYPE *ucons, struct of_geom *
           // So compare this to (e.g.) (U0)*(\detg')*(dV') = U0*gdet*dV in SM
           dUincell[pl]=dVF * deltaUavg[pl];
 
-          fladdterms[whocalled][pl] += (SFTYPE)dUincell[pl];
           fladd[pl] += dUincell[pl];
+
+        }// end over pl's
+      }// end if within diagnostic region
+
+    }// end over enerregions
+
+  }// end if doing accounting
+
+  if(1){
+
+    //////////////
+    //
+    // Loop over ENERREGIONs
+    //
+    //////////////
+    ENERREGIONLOOP(enerregion){
+
+      // setup pointers to enerregion diagnostics
+      enerpos=enerposreg[enerregion];
+      fladdterms=fladdtermsreg[enerregion];
+
+
+      ///////////
+      //
+      // determine if within diagnostic region
+      //
+      ///////////
+      is_within_diagnostic_region=WITHINENERREGION(enerpos,ptrgeom->i,ptrgeom->j,ptrgeom->k);
+
+
+      /////////////////////////
+      //
+      // diagnostics (both for enerregion and single-region types)
+      //
+      /////////////////////////
+      if(is_within_diagnostic_region){
+
+        PALLLOOP(pl){
+     
+          // dUincell means already (e.g.) (dU0)*(\detg')*(dV') = integral of energy in cell = dUint0 in SM
+          // So compare this to (e.g.) (U0)*(\detg')*(dV') = U0*gdet*dV in SM
+          dUincell[pl]=dVF * deltaUavg[pl];
+
+          fladdterms[whocalled][pl] += (SFTYPE)dUincell[pl];
      
 
         }// end over pl's
@@ -432,6 +477,187 @@ int diag_fixup_dUandaccount(FTYPE *Ui, FTYPE *Uf, FTYPE *ucons, struct of_geom *
 
   return(0);
 }
+
+
+
+int consfixup_allzones(int finaluu, FTYPE (*pf)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR])
+{
+
+
+  int i, j, k, pliter,pl;
+  struct of_geom *ptrgeom;
+  struct of_geom geomdontuse;
+
+   
+  ptrgeom=&(geomdontuse);
+    
+  COMPZLOOP{
+    get_geometry(i, j, k, CENT, ptrgeom);
+    // account for change of conserved quantities
+    // Primitives have been modified by fixup1zone() in advance.c (floors).
+    // During this call, called from post_advance(), pf also modified by bounds (poledeath,gammadeath) and also post_fixup() (failures, checks, limits).
+    //
+    // ucons=unewglobal that stores last steps final substep version of ucum that is full U[]
+    // ucons has yet to be modified at all, so is true conserved quantity without corrections (as long as avoided corrections to ucons during other diag_fixup calls).
+    // GODMARK: So this method only works if NOENOFLUX==1, since otherwise *need* to modify U[] during modification of p[] since know how much to modify.
+
+    consfixup_1zone(finaluu, i,j,k, ptrgeom, &MACP0A1(pf,i,j,k,0), &MACP0A1(ucons,i,j,k,0));
+
+
+  }
+
+
+  return(0);
+
+}
+
+#define ENSURECONS 1
+
+int consfixup_1zone(int finaluu, int i, int j, int k, struct of_geom *ptrgeom, FTYPE *pf, FTYPE *ucons)
+{
+  if(ENSURECONS==0) return(0);
+
+  int pliter,pl;
+  // now that have averaged values, try to enforce energy conservation by borrowing from radiation
+  FTYPE *pp=pf;
+  struct of_state qp;
+  get_state(pp,ptrgeom,&qp);
+  int uutype=UNOTHING;
+  FTYPE uu[NPR],uuabs[NPR];
+  primtoU(uutype,pp,&qp,ptrgeom,uu,uuabs);
+  FTYPE uu0[NPR];
+  if(finaluu==1){
+#if(WHICHEOM==WITHGDET)
+    PLOOP(pliter,pl) uu0[pl]=ucons[pl]*ptrgeom->igdetnosing; // put in UNOTHING form
+#else
+    PLOOP(pliter,pl) uu0[pl]=ucons[pl]*ptrgeom->ieomfuncnosing[pl]; // put in UNOTHING form
+#endif
+  }
+  else{
+    //    PLOOP(pliter,pl) uu0[pl] = GLOBALMACP0A1(uu0old,i,j,k,pl); // USE OF GLOBALS from phys.tools.rad.c // already in UNOTHING form
+  }
+  //
+  FTYPE uunew1[NPR];
+  PLOOP(pliter,pl) uunew1[pl]=uu[pl];
+  //
+  FTYPE dugas[4];
+  int jj;
+  DLOOPA(jj) uunew1[UU+jj] = uu[UU+jj];
+  DLOOPA(jj) dugas[jj] = uu[UU+jj]-uu0[UU+jj];
+  DLOOPA(jj) uunew1[URAD0+jj] = uu0[URAD0+jj] - dugas[jj];
+  //
+  FTYPE uunew2[NPR];
+  PLOOP(pliter,pl) uunew2[pl]=uu[pl];
+  //
+  FTYPE durad[4];
+  DLOOPA(jj) uunew2[URAD0+jj] = uu[URAD0+jj];
+  DLOOPA(jj) durad[jj] = uu[URAD0+jj]-uu0[URAD0+jj];
+  DLOOPA(jj) uunew2[UU+jj] = uu0[UU+jj] - durad[jj];
+  //
+  // choose which or how much of each uunew and uunew2
+  FTYPE uunewfinal[NPR];
+  PLOOP(pliter,pl) uunewfinal[pl] = uu[pl];
+  //
+  DLOOPA(jj){
+    uunewfinal[UU+jj]   = 0.5*(uunew1[UU+jj] + uunew2[UU+jj]);
+    uunewfinal[URAD0+jj] = 0.5*(uunew1[URAD0+jj] + uunew2[URAD0+jj]);
+  }
+
+  // now invert just radiation
+  int showmessages=0;
+  int allowlocalfailurefixandnoreport=1;
+  int whichcap=CAPTYPEBASIC; // finalcheck type
+
+  int didrad=0;
+  if(-uunew1[URAD0]<-uu[URAD0]){ // only modify radiation if forcing less radiation, not more as that can run-away
+    FTYPE GAMMAMAXRADIMPLICITSOLVER=GAMMAMAXRAD;
+    PFTYPE lpflag=0;
+    PFTYPE lpflagrad=0;
+    FTYPE pprad[NPR];
+    PLOOP(pliter,pl) pprad[pl]=pp[pl];
+    // u2p_rad takes UNOTHING form
+    u2p_rad(showmessages, allowlocalfailurefixandnoreport,GAMMAMAXRADIMPLICITSOLVER,whichcap,uunew1,pprad,ptrgeom,&lpflag,&lpflagrad);
+    int radinvmod=(int)(lpflagrad);
+    if(radinvmod==UTOPRIMRADNOFAIL && isfinite(pprad[URAD0])==1 && isfinite(pprad[URAD1])==1 && isfinite(pprad[URAD2])==1 && isfinite(pprad[URAD3])==1){
+      PLOOP(pliter,pl) if(RADPL(pl)) pp[pl] = pprad[pl];
+      didrad=1;
+    }
+    else{
+      didrad=0;
+      //    dualfprintf(fail_file,"issue ijk=%d %d %d radinvmod=%d\n",i,j,k,radinvmod);
+      //    PLOOP(pliter,pl) if(RADPL(pl)) dualfprintf(fail_file,"pprad[%d]=%g\n",pl,pprad[pl]);
+    }
+  }
+
+
+  if(0&&didrad==0){
+    int finalstep=finaluu;
+    int eomtypelocal=EOMTYPE;
+    int whichmethod=MODEPICKBEST; // try to choose best option for this "external" inversion
+    int modprim=0;
+    int checkoninversiongas=CHECKONINVERSION;
+    int checkoninversionrad=CHECKONINVERSIONRAD;
+    FTYPE dissmeasure=0.0;
+  
+
+    struct of_newtonstats newtonstats; setnewtonstatsdefault(&newtonstats);
+    // initialize counters
+    newtonstats.nstroke=newtonstats.lntries=0;
+    // KORALNOTE: If make newtonstats.tryconv~convabs, then if convabs~1E-12, then MHD inversion may return error~1E-10 in terms of how measured with f_error_check(), so must try harder than expected.
+    newtonstats.tryconv=1E-3;
+    newtonstats.tryconvultrarel=1E-5;
+    newtonstats.extra_newt_iter=1;
+    newtonstats.extra_newt_iter_ultrarel=1;
+#define MINTRYCONVFORMHDINVERSION (1E-4) // assume not failure if got down to this much. -- don't have to be related to implicit allowance.
+
+    newtonstats.mintryconv=MINTRYCONVFORMHDINVERSION;
+    newtonstats.maxiter=100;
+
+    FTYPE pptry[NPR];
+    PLOOP(pliter,pl) pptry[pl] = pf[pl];
+    MYFUN(Utoprimgen(showmessages,checkoninversiongas,checkoninversionrad,allowlocalfailurefixandnoreport, finalstep,&eomtypelocal,whichcap,whichmethod,modprim,EVOLVEUTOPRIM,UNOTHING,uunewfinal, &qp, ptrgeom, dissmeasure, pptry, pptry, &newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
+
+    PFTYPE *lpflag,*lpflagrad;
+    lpflag=&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL);
+    lpflagrad=&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL);
+  
+
+    if(IFUTOPRIMFAILSOFT(*lpflag)){
+      // PLOOP(pliter,pl) pf[pl] = pptry[pl]; 
+    }
+    else if(IFUTOPRIMRADFAIL(*lpflagrad)){
+    }
+    else if( IFUTOPRIMFAIL(*lpflag) || IFUTOPRIMRADFAIL(*lpflagrad) ){
+    }
+    else{
+      PLOOP(pliter,pl) pf[pl] = pptry[pl]; 
+    }
+  }  
+
+
+  struct of_state qf;
+  get_state(pf,ptrgeom,&qf);
+  FTYPE uf[NPR],ufabs[NPR];
+  primtoU(uutype,pf,&qf,ptrgeom,uf,ufabs); // should be closer to having uf[UU]+uf[URAD0] = ucons[UU]+ucons[URAD0]
+
+  FTYPE uudiag[NPR],ufdiag[NPR];
+  UtoU(UNOTHING,UDIAG,ptrgeom,uu,uudiag);  // convert from UNOTHING -> UDIAG
+  UtoU(UNOTHING,UDIAG,ptrgeom,uf,ufdiag); // convert from UNOTHING -> UDIAG
+
+
+  // Get deltaUavg[] and also modify ucons if required and should
+  int whocalled=COUNTUCONSFIXUP;
+  int docorrectuconslocal=0;
+  int finalstep=finaluu;
+  diag_fixup_dUandaccount(uudiag, ufdiag, ucons, ptrgeom, finalstep, whocalled, docorrectuconslocal);
+
+
+  // so exact energy conservation at cost of unknown effect on radiation
+  // so one-step accounting below will include a floor for both gas and radiation, but sum of floors will always be zero net gain of energy-momentum as long as radiation has radinvmod==0
+
+  return(0);
+}
+
 
 
 /// single call in step_ch.c:post_advance() to do all diag_fixup() diagnostic dU stores.  Still allows counts by other diag_fixup calls.
@@ -553,6 +779,9 @@ int diag_fixup(int docorrectucons, FTYPE *pr0, FTYPE *pr, FTYPE *uconsinput, str
 
     // if Uicent and Ufcent are both from pi and pf at CENT, then B1,B2,B3 entries are agreeably located even for FLUXB==FLUXCTSTAG
 
+    //    if((startpos[1]+ptrgeom->i==17) && (startpos[2]+ptrgeom->j)==0){
+    //      dualfprintf(fail_file,"dUrho=%21.15g Urhof=%21.15g Urhoi=%21.15g whocalled=%d\n",(Ufcent[RHO]-Uicent[RHO])*dx[1]*dx[2]*dx[3],Ufcent[RHO]*dx[1]*dx[2]*dx[3],Uicent[RHO]*dx[1]*dx[2]*dx[3],whocalled);
+    //    }
 
     // Get deltaUavg[] and also modify ucons if required and should
     diag_fixup_dUandaccount(Uicent, Ufcent, ucons, ptrgeom, finalstep, whocalled, docorrectuconslocal);
@@ -645,6 +874,28 @@ int diag_fixup_Ui_pf(int docorrectucons, FTYPE *Uievolve, FTYPE *pf, struct of_g
     // Assumes, as very generally true, that U[B1..B3] never change and can never be adjusted.
     PLOOPBONLY(pl) Uicent[pl]=Ufcent[pl];
 
+    PFTYPE *lpflag,*lpflagrad;
+    lpflag=&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL);
+    lpflagrad=&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL);
+
+    //    if((startpos[1]+ptrgeom->i==17) && (startpos[2]+ptrgeom->j)==0){
+    //      dualfprintf(fail_file,"lpflag=%d lpflagrad=%d\n",*lpflag,*lpflagrad);
+    //    }
+
+    if(*lpflag>UTOPRIMNOFAIL){
+      // then assume fixup_utoprim() needs to operate and will also handle accounting
+      PLOOP(pliter,pl) if(RADPL(pl)==0) Ufcent[pl] = Uicent[pl];
+    }
+    if(*lpflagrad>UTOPRIMRADNOFAIL){
+      // then assume fixup_utoprim() needs to operate and will also handle accounting
+      PLOOP(pliter,pl) if(RADPL(pl)==1) Ufcent[pl] = Uicent[pl];
+    }
+
+
+
+    //    if((startpos[1]+ptrgeom->i==17) && (startpos[2]+ptrgeom->j)==0){
+    //      dualfprintf(fail_file,"Uipf: dUrho=%21.15g Urhof=%21.15g Urhoi=%21.15g whocalled=%d\n",(Ufcent[RHO]-Uicent[RHO])*dx[1]*dx[2]*dx[3],Ufcent[RHO]*dx[1]*dx[2]*dx[3],Uicent[RHO]*dx[1]*dx[2]*dx[3],whocalled);
+    //    }
 
     ////////////////
     //
@@ -852,15 +1103,22 @@ int fixup1zone(int docorrectucons, FTYPE *pr, FTYPE *uconsinput, struct of_geom 
   //  int docorrectucons=(DOENOFLUX != NOENOFLUX);
   //  didchangeprim=0;
 
+  //  if((startpos[1]+ptrgeom->i==17) && (startpos[2]+ptrgeom->j)==0){
+  //    dualfprintf(fail_file,"BEFORE IN FIXUP1ZONE LIMITGAMMA: finalstep=%d\n",finalstep);
+  //  }
   failreturn=limit_gamma(docorrectucons,GAMMAMAX,GAMMAMAXRAD,prmhd,ucons,ptrgeom,-1);
   if(failreturn>=1) FAILSTATEMENT("fixup.c:fixup()", "limit_gamma()", 1);
   if(failreturn==-1) didchangeprim=1;
+  //  PALLLOOP(pl) prdiag[pl]=prmhd[pl];
+  //  if((startpos[1]+ptrgeom->i==17) && (startpos[2]+ptrgeom->j)==0){
+  //    dualfprintf(fail_file,"AFTER IN FIXUP1ZONE LIMITGAMMA: didchangeprim=%d\n",didchangeprim);
+  //  }
 
-  if(didchangeprim&&FLOORDIAGS){// FLOORDIAGS includes fail diags
-    int doingmhdfixup=1;
-    diag_fixup(docorrectucons,prdiag, prmhd, ucons, ptrgeom, finalstep,doingmhdfixup,COUNTLIMITGAMMAACT);
-    PALLLOOP(pl) prdiag[pl]=prmhd[pl];
-  }
+  //  if(didchangeprim&&FLOORDIAGS){// FLOORDIAGS includes fail diags
+  //    int doingmhdfixup=1;
+  //    diag_fixup(docorrectucons,prdiag, prmhd, ucons, ptrgeom, finalstep,doingmhdfixup,COUNTLIMITGAMMAACT);
+  //    PALLLOOP(pl) prdiag[pl]=prmhd[pl];
+  //  }
 
 #endif// end if WHICHVEL==VEL4REL
 
@@ -1099,9 +1357,33 @@ int fixup1zone(int docorrectucons, FTYPE *pr, FTYPE *uconsinput, struct of_geom 
   if(didchangeprim&&FLOORDIAGS){// FLOORDIAGS includes fail diags
     int docorrectucons2=(DOENOFLUX != NOENOFLUX);
     int doingmhdfixup=1;
-    diag_fixup(docorrectucons2,prdiag, prmhd, ucons, ptrgeom, finalstep,doingmhdfixup,COUNTFLOORACT);
+    //    if((startpos[1]+ptrgeom->i==17) && (startpos[2]+ptrgeom->j)==0){
+    //      dualfprintf(fail_file,"FLOORACTBEFORE: steppart=%d nstep=%ld\n",steppart,nstep);
+    //    }
+
+    PFTYPE *lpflag,*lpflagrad;
+    lpflag=&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL);
+    lpflagrad=&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL);
+
+    if(*lpflag>UTOPRIMNOFAIL || *lpflagrad>UTOPRIMRADNOFAIL){
+      // by this point, pr0 or prdiag are not necessarily consistent with ucons, which if finalstep=1 is the final conserved quantity.  This occurs when no implicit solution and no explicit inversion.  Happens when (e.g.) U[RHO]<0.
+      FTYPE Uievolve[NPR];
+      PLOOP(pliter,pl) Uievolve[pl] = ucons[pl];
+      diag_fixup_Ui_pf(docorrectucons2, Uievolve, prmhd, ptrgeom, finalstep,COUNTFLOORACT);
+    }
+    else{
+      // if no failure, then fixup_utoprim won't be called or do diagnostics, so floor will be preserved and so do accounting here.
+      diag_fixup(docorrectucons2,prdiag, prmhd, ucons, ptrgeom, finalstep,doingmhdfixup,COUNTFLOORACT);
+    }
+
+    
+
+
     // now prdiag=prmhd as far as diag_fixup() is concerned, so next changes are new changes (i.e. don't cumulative w.r.t. pr0 multiple times, since that (relative to prmhd each time) would add each prior change to each next change)
-    PALLLOOP(pl) prdiag[pl]=prmhd[pl];
+    //    PALLLOOP(pl) prdiag[pl]=prmhd[pl];
+    //    if((startpos[1]+ptrgeom->i==17) && (startpos[2]+ptrgeom->j)==0){
+    //      dualfprintf(fail_file,"FLOORACTAFTER: steppart=%d nstep=%ld\n",steppart,nstep);
+    //    }
   }
 
 
@@ -1130,6 +1412,7 @@ int fixup1zone(int docorrectucons, FTYPE *pr, FTYPE *uconsinput, struct of_geom 
 
     PALLLOOP(pl) pr[pl]=prmhd[pl];
 
+#if(0)
     ///////////////
     //
     // now ensure primitive and conserved consistent for RK3 and other methods that use Uf
@@ -1142,6 +1425,7 @@ int fixup1zone(int docorrectucons, FTYPE *pr, FTYPE *uconsinput, struct of_geom 
     get_state(pr,ptrgeom,&qnew);
 
     primtoU(UEVOLVE,pr,&qnew,ptrgeom,ucons, NULL);
+#endif
 
     return(-1); // -1 means made changes
 
@@ -1159,6 +1443,14 @@ int fixup1zone(int docorrectucons, FTYPE *pr, FTYPE *uconsinput, struct of_geom 
   }
 
 
+  //  if((startpos[1]+ptrgeom->i==17) && (startpos[2]+ptrgeom->j)==0){
+  //    struct of_state qb;
+  //    get_state(pr,ptrgeom,&qb);
+  //    FTYPE ub[NPR],ubabs[NPR];
+  //    int uutype=UDIAG;
+  //    primtoU(uutype,pr,&qb,ptrgeom,ub,ubabs);
+  //    dualfprintf(fail_file,"URHOINFIXUPU1ZONE=%21.15g\n",ub[RHO]*dx[1]*dx[2]*dx[3]);
+  //  }
   
 
 
@@ -1497,6 +1789,7 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
     struct of_geom geomdontuse;
     struct of_geom *ptrgeom=&geomdontuse;
     int fixingmhd,fixingrad;
+    int limitgammamhd,limitgammarad;
 
 
     OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUPZLOOP;
@@ -1533,7 +1826,7 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
         // ACCOUNTING (static or average)
         //
         /////////////////////////////////
-        fixuputoprim_accounting(i, j, k, mhdlpflag, radlpflag, GLOBALPOINT(pflag),pv,ptoavg, ptrgeom, pr0, ucons, finalstep);
+        fixuputoprim_accounting(i, j, k, mhdlpflag, radlpflag, 0, 0, GLOBALPOINT(pflag),pv,ptoavg, ptrgeom, pr0, ucons, finalstep);
 
 
       }
@@ -1737,7 +2030,13 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
                 /////////////
      
 #if(WHICHVEL==VELREL4)
-                if(limit_gamma(0,gamma,GAMMAMAXRAD,MAC(pv,i,j,k),MAC(ucons,i,j,k),ptrgeom,-1)>=1) FAILSTATEMENT("fixup.c:fixup()", "limit_gamma()", 2);
+                //                if((startpos[1]+ptrgeom->i==17) && (startpos[2]+ptrgeom->j)==0){
+                //                  dualfprintf(fail_file,"BEFORE IN FIXUPUTOPRIM LIMITGAMMA: finalstep=%d flag=%d\n",finalstep,mhdlpflag);
+                //                }
+                if(limitgammamhd=limit_gamma(0,gamma,GAMMAMAXRAD,MAC(pv,i,j,k),MAC(ucons,i,j,k),ptrgeom,-1)>=1) FAILSTATEMENT("fixup.c:fixup()", "limit_gamma()", 2);
+                //                if((startpos[1]+ptrgeom->i==17) && (startpos[2]+ptrgeom->j)==0){
+                //                  dualfprintf(fail_file,"AFTER IN FIXUPUTOPRIM LIMITGAMMA: finalstep=%d\n",finalstep);
+                //                }
 
                 if(debugfail>=3){
                   if(limitedgamma){
@@ -1921,7 +2220,13 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
                 /////////////
      
 #if(WHICHVEL==VELREL4)
-                if(limit_gamma(0,gamma,GAMMAMAXRAD,&MACP0A1(pv,i,j,k,URAD1-U1),MAC(ucons,i,j,k),ptrgeom,-1)>=1) FAILSTATEMENT("fixup.c:fixup()", "limit_gamma()", 2);
+                //                if((startpos[1]+ptrgeom->i==17) && (startpos[2]+ptrgeom->j)==0){
+                //                  dualfprintf(fail_file,"BEFORE IN FIXUPUTOPRIM LIMITGAMMA2: finalstep=%d radlpflag=%d\n",finalstep,radlpflag);
+                //                }
+                if(limitgammarad=limit_gamma(0,gamma,GAMMAMAXRAD,&MACP0A1(pv,i,j,k,URAD1-U1),MAC(ucons,i,j,k),ptrgeom,-1)>=1) FAILSTATEMENT("fixup.c:fixup()", "limit_gamma()", 2);
+                //                if((startpos[1]+ptrgeom->i==17) && (startpos[2]+ptrgeom->j)==0){
+                //                  dualfprintf(fail_file,"AFTER IN FIXUPUTOPRIM LIMITGAMMA2: finalstep=%d\n",finalstep);
+                //                }
 
                 if(debugfail>=3){
                   if(limitedgamma){
@@ -1943,6 +2248,9 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
 #endif
 
 
+              //              int finaluu=0;
+              //              consfixup_1zone(finaluu,i,j,k,ptrgeom, &MACP0A1(pv,i,j,k,0),NULL);
+
 
             } // end if fixedrad==0
           }// end if not keeping static
@@ -1954,7 +2262,7 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
         // ACCOUNTING (static or average)
         //
         /////////////////////////////////
-        fixuputoprim_accounting(i, j, k, mhdlpflag, radlpflag, GLOBALPOINT(pflag),pv,ptoavg, ptrgeom, pr0, ucons, finalstep);
+        fixuputoprim_accounting(i, j, k, mhdlpflag, radlpflag, limitgammamhd, limitgammarad, GLOBALPOINT(pflag),pv,ptoavg, ptrgeom, pr0, ucons, finalstep);
 
 
       }// if fixing mhd or fixing radiation  
@@ -2022,7 +2330,7 @@ int fixup_utoprim_nofixup(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (
         // ACCOUNTING (static or average)
         //
         /////////////////////////////////
-        fixuputoprim_accounting(i, j, k, mhdlpflag, radlpflag, GLOBALPOINT(pflag),pv,ptoavg, ptrgeom, pr0, ucons, finalstep);
+        fixuputoprim_accounting(i, j, k, mhdlpflag, radlpflag, 0, 0, GLOBALPOINT(pflag),pv,ptoavg, ptrgeom, pr0, ucons, finalstep);
    
       }// end if failure
     }// end over COMPZLOOP loop
@@ -2219,7 +2527,7 @@ static int fixup_negdensities(int whicheomset, int *fixed, int startpl, int endp
 #define ADJUSTCONSERVEDQUANTITY 0
 
 /// ACCOUNTING (under any circumstance, static or average) when modified quantities due to inversion issue
-static int fixuputoprim_accounting(int i, int j, int k, PFTYPE mhdlpflag, PFTYPE radlpflag, PFTYPE (*lpflag)[NSTORE2][NSTORE3][NUMPFLAGS],FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ptoavg)[NSTORE2][NSTORE3][NPR], struct of_geom *ptrgeom, FTYPE *pr0, FTYPE (*uconsinput)[NSTORE2][NSTORE3][NPR], int finalstep)
+static int fixuputoprim_accounting(int i, int j, int k, PFTYPE mhdlpflag, PFTYPE radlpflag, int limitgammamhd, int limitgammarad, PFTYPE (*lpflag)[NSTORE2][NSTORE3][NUMPFLAGS],FTYPE (*pv)[NSTORE2][NSTORE3][NPR],FTYPE (*ptoavg)[NSTORE2][NSTORE3][NPR], struct of_geom *ptrgeom, FTYPE *pr0, FTYPE (*uconsinput)[NSTORE2][NSTORE3][NPR], int finalstep)
 {
   PFTYPE mhdutoprimfailtype,radutoprimfailtype;
   int doadjustcons;
@@ -2434,24 +2742,57 @@ static int fixuputoprim_accounting(int i, int j, int k, PFTYPE mhdlpflag, PFTYPE
   //
   //////////////////////
 
-  if(mhdutoprimfailtype!=-1 || radutoprimfailtype!=-1){ 
+  if(mhdutoprimfailtype!=-1 || radutoprimfailtype!=-1 || limitgammamhd==-1 || limitgammarad==-1){ 
     if(docorrectucons==1){
       docorrectucons=(DOENOFLUX != NOENOFLUX);
     }
-    // diagnostics
-    FTYPE prdiag[NPR],pr[NPR];
-    PLOOP(pliter,pl) prdiag[pl]=pr0[pl];
-    int doingmhdfixup=(mhdutoprimfailtype!=-1); // diag_fixup() accounting diagnostics part doesn't have radiation yet
-    diag_fixup(docorrectucons,prdiag, MAC(pv,i,j,k), ucons, ptrgeom, finalstep, doingmhdfixup, (int)mhdutoprimfailtype); // do corrections in general, but only include accounting for MHD case so far (KORALTODO, not too crucial, just diags).
-    PLOOP(pliter,pl) prdiag[pl]=MACP0A1(pv,i,j,k,pl);
 
     ////////////////
     //
-    // reset true pflag counter to "no" (fixed) failure
+    // reset true pflag counter to "no" (fixed) failure so diagnostics account for change
     //
     ////////////////
     MACP0A1(lpflag,i,j,k,FLAGUTOPRIMFAIL)=UTOPRIMFAILFIXEDUTOPRIM;
     MACP0A1(lpflag,i,j,k,FLAGUTOPRIMRADFAIL)=UTOPRIMRADFAILFIXEDUTOPRIMRAD;
+
+
+
+    // diagnostics
+    //    FTYPE prdiag[NPR],pr[NPR];
+    //    PLOOP(pliter,pl) prdiag[pl]=pr0[pl];
+    //    int doingmhdfixup=(mhdutoprimfailtype!=-1); // diag_fixup() accounting diagnostics part doesn't have radiation yet
+
+    //    if((startpos[1]+ptrgeom->i==17) && (startpos[2]+ptrgeom->j)==0){
+    //      dualfprintf(fail_file,"BEFORE IN FIXUPUTOPRIM: finalstep=%d\n",finalstep);
+    //    }
+
+
+    //    diag_fixup(docorrectucons,prdiag, MAC(pv,i,j,k), ucons, ptrgeom, finalstep, doingmhdfixup, (int)mhdutoprimfailtype); // do corrections in general, but only include accounting for MHD case so far (KORALTODO, not too crucial, just diags).
+    //    PLOOP(pliter,pl) prdiag[pl]=MACP0A1(pv,i,j,k,pl);
+
+    // pr0=prdiag only correct as reference primitive if was no failure of any kind, but some kind of failure if here, so need to use ucons as reference to what should be.
+    FTYPE Uievolve[NPR];
+    PLOOP(pliter,pl) Uievolve[pl] = MACP0A1(uconsinput,i,j,k,pl);
+    diag_fixup_Ui_pf(docorrectucons, Uievolve, MAC(pv,i,j,k), ptrgeom, finalstep,(int)mhdutoprimfailtype);
+
+    
+
+
+
+    //    if((startpos[1]+ptrgeom->i==17) && (startpos[2]+ptrgeom->j)==0){
+    //      dualfprintf(fail_file,"AFTER IN FIXUPUTOPRIM: UievolveRHO=%21.15g\n",Uievolve[RHO]*dx[1]*dx[2]*dx[3]);
+    //    }
+
+
+    //    if((startpos[1]+ptrgeom->i==17) && (startpos[2]+ptrgeom->j)==0){
+    //      struct of_state qb;
+    //      get_state(MAC(pv,i,j,k),ptrgeom,&qb);
+    //      FTYPE ub[NPR],ubabs[NPR];
+    //      int uutype=UDIAG;
+    //      primtoU(uutype,MAC(pv,i,j,k),&qb,ptrgeom,ub,ubabs);
+    //      dualfprintf(fail_file,"URHOINFIXUPUTOPRIMACCTT=%21.15g\n",ub[RHO]*dx[1]*dx[2]*dx[3]);
+    //    }
+
 
 
     // now adjust uf or ucum so agrees [already done in diag_fixup() but only if final step.  This allows one to do it on any step in case want to control behavior of conserved quantities or primitive quantities used to create fluxes.
@@ -3631,8 +3972,9 @@ int limit_gamma(int docorrectucons, FTYPE gammamax, FTYPE gammamaxrad, FTYPE*pr,
   int k=ptrgeom->k;
   int loc=ptrgeom->p;
 
-
-
+  //  if((startpos[1]+ptrgeom->i==17) && (startpos[2]+ptrgeom->j)==0){
+  //    dualfprintf(fail_file,"inside limit_gamma(): finalstep=%d nstep=%ld steppart=%d\n",finalstep,nstep,steppart);
+  //  }
 
   // assume didn't change primitives
   didchange=0;
@@ -3824,8 +4166,15 @@ int limit_gamma(int docorrectucons, FTYPE gammamax, FTYPE gammamaxrad, FTYPE*pr,
     FTYPE prdiag[NPR];
     PLOOP(pliter,pl) prdiag[pl]=pr0[pl];
     int doingmhdfixup=1;
+    //    if((startpos[1]+ptrgeom->i==17) && (startpos[2]+ptrgeom->j)==0){
+    //      dualfprintf(fail_file,"LIMITGAMMABEFORE: steppart=%d nstep=%ld\n",steppart,nstep);
+    //    }
     diag_fixup(docorrectucons,prdiag, pr, ucons, ptrgeom, finalstep,doingmhdfixup,COUNTLIMITGAMMAACT);
     PLOOP(pliter,pl) prdiag[pl]=pr[pl];
+    //    if((startpos[1]+ptrgeom->i==17) && (startpos[2]+ptrgeom->j)==0){
+    //      dualfprintf(fail_file,"LIMITGAMMAAFTER: steppart=%d nstep=%ld\n",steppart,nstep);
+    //    }
+
     return(-1);// indicates did change primitive
   }
 

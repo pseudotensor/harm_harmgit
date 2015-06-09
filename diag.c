@@ -1165,7 +1165,6 @@ int diag_flux_pureflux(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2
   if(DODIAGS==0) return(0);
 
 
-
   // initialize
   ENERREGIONLOOP(enerregion){
     localdoflux=dofluxreg[enerregion];

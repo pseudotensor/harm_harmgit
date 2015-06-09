@@ -1112,7 +1112,7 @@
 
 // defaults for bounds.tools.c
 #define OUTERDEATH 0
-#define OUTERDEATHRADIUS (500.0)
+#define OUTERDEATHRADIUS (1E3)
 #define OUTERDEATHGAMMAMAX (6.0)
 #define OUTERDEATHGAMMAMAXRAD (GAMMAMAXRAD)
 

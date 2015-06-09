@@ -957,11 +957,121 @@ int Utoprimgen(int showmessages, int checkoninversiongas, int checkoninversionra
   ///////////// override fail flags with preexisting conditions, with assumption that wanted to get inversion just for fixups to have something to revert.  In case of radiation-mhd simulations, this will be without the correct 4-force, which isn't necessarily a good backup and can itself be a bad backup.
   //
   ///////////////////////////////////////////////////
-  if(preexistingfailgas) GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)=preexistingfailgas;
-  if(preexistingfailrad) GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL)=preexistingfailrad;
-  
+  if(0){
+    if(preexistingfailgas) GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)=preexistingfailgas;
+    if(preexistingfailrad) GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL)=preexistingfailrad;
   // KORALTODO: Could further decide to use original pf from some point in source explicit/implicit updates instead of this no-force solution.
+  }
+  else{
 
+    if(preexistingfailgas>0 || preexistingfailrad>0){
+
+      // then accepting explicit as solution, do see how close got solution in diagnostics
+
+      if(1||finalstep==1){// && GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)<=UTOPRIMNOFAIL && GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL)<=UTOPRIMRADNOFAIL){
+        // see how accurately got energy-momentum
+        struct of_state qb;
+        get_state(pr,ptrgeom,&qb);
+        FTYPE ub[NPR],ubabs[NPR];
+        int uutype=UDIAG;
+        primtoU(uutype,pr,&qb,ptrgeom,ub,ubabs);
+        //    if((startpos[1]+ptrgeom->i==17) && (startpos[2]+ptrgeom->j)==0){
+        //      dualfprintf(fail_file,"URHOINIMPLICIT=%21.15g\n",ub[RHO]*dx[1]*dx[2]*dx[3]);
+        //    }
+
+        FTYPE utot[NPR];
+        PLOOP(pliter,pl) utot[pl] = Ugeomfree0[pl]; // UNOTHING
+
+        //    dualfprintf(fail_file,"ub=%g utot=%g dU=%g\n",ub[UU],utot[UU],ub[UU]-utot[UU]);
+
+        FTYPE ubdiag[NPR],utotdiag[NPR];
+        UtoU(UDIAG,UDIAG,ptrgeom,ub,ubdiag);  // convert from UNOTHING -> UDIAG
+        UtoU(UNOTHING,UDIAG,ptrgeom,utot,utotdiag);  // convert from UNOTHING -> UDIAG
+
+
+        PLOOP(pliter,pl) if(BPL(pl)) utotdiag[pl] = ubdiag[pl]; // cell center as if no change as required, but should be true already as setup these.
+
+        // get optical depth
+        FTYPE tautot[NDIM],tautotmax;
+        calc_tautot(pr, ptrgeom, &qb, tautot, &tautotmax);
+       
+
+        if(preexistingfailgas && (IFUTOPRIMFAILSOFT(lpflag) || IFUTOPRIMNOFAILORFIXED(lpflag) )){// then failed before but not with explicit
+
+          // get bsqorho
+          FTYPE bsqorho;
+          FTYPE bsq; bsq_calc_fromq(pr, ptrgeom, &qb, &bsq);
+          bsqorho=bsq/pr[RHO];
+
+
+          FTYPE gammamaxlimit=0.9*GAMMAMAX;
+          FTYPE gamma,qsq;
+          gamma_calc(pr,ptrgeom,&gamma,&qsq);
+
+          // keep velocity if bsq/rho>1
+          //          if(bsqorho>1.0 && gamma<gammamaxlimit){
+          if(bsqorho>BSQORHOLIMIT/5.0 && tautotmax<1E-1 && gamma<gammamaxlimit){
+            // only fail densities, because velocity in high mag regime controls flux of magnetic flux-energy-momentum and don't want to just average that as that would unreasonably lose energy-momentum conservation
+            GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)=UTOPRIMFAILURHO2AVG1FROMFFDE;
+            //            dualfprintf(fail_file,"MHD bsqhorho=%g avoided full failure: %d %d %d preexist=%d\n",bsqorho,ptrgeom->i,ptrgeom->j,ptrgeom->k,preexistingfailgas);
+          }
+          else{
+            // revert fail
+            GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)=preexistingfailgas;
+            //            dualfprintf(fail_file,"MHD1: bsqorho=%g %d %d : %d %d %d\n",bsqorho,preexistingfailgas,lpflag,ptrgeom->i,ptrgeom->j,ptrgeom->k);
+          }
+        }
+        else{
+          //          dualfprintf(fail_file,"MHD2: %d %d\n",preexistingfailgas,lpflag);
+        }
+
+
+        //UTOPRIMRADFAILFIXEDUTOPRIMRAD
+        if(preexistingfailrad && IFUTOPRIMRADNOFAIL(lpflagrad)){// then failed before but not with explicit
+          
+          FTYPE radgammamaxlimit=0.9*GAMMAMAXRAD;
+          FTYPE radgamma,radqsq;
+          gamma_calc(&pr[URAD1-U1],ptrgeom,&radgamma,&radqsq);
+
+
+          if(tautotmax<1E-3 && radgamma<radgammamaxlimit){ // tautotmax<1 too aggressive, makes radiation go nuts.
+            // fail density only
+            GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL)=UTOPRIMFAILU2AVG1;
+            //            dualfprintf(fail_file,"RAD avoided full failure: %d %d %d: preexist=%d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,preexistingfailrad);
+          }
+          else{
+            GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL)=preexistingfailrad;
+            //            dualfprintf(fail_file,"RAD1: tau=%g %d %d : %d %d %d\n",tautotmax,preexistingfailgas,lpflag,ptrgeom->i,ptrgeom->j,ptrgeom->k);
+          }
+        }
+        else{
+          //          dualfprintf(fail_file,"RAD2: %d %d\n",preexistingfailgas,lpflag);
+        }
+        // unlike gas velocity that links to both density and magnetic field, radiation is alone, so no point in making rad density averaged and not average velocity
+        GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL)=preexistingfailrad;
+
+
+        // Get deltaUavg[] and also modify ucons if required and should
+        int whocalled;
+        whocalled=COUNTEXPLICITNORMAL;
+    
+
+        int docorrectuconslocal=0;
+        extern int diag_fixup_dUandaccount(FTYPE *Ui, FTYPE *Uf, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep, int whocalled, int docorrectuconslocal);
+        diag_fixup_dUandaccount(utotdiag, ubdiag, NULL, ptrgeom, finalstep, whocalled, docorrectuconslocal);
+
+
+        //    FTYPE rat = fabs(utotdiag[RHO]-ubdiag[RHO])/(fabs(utotdiag[RHO])+fabs(ubdiag[RHO]));
+        //    if(rat>1E-13){
+        //      dualfprintf(fail_file,"Why not: %d %d %d :  %21.15g %21.15g: diff=%21.15g : prho=%21.15g uu0RHO=%21.15g: error=%21.15g %21.15g\n",usedenergy,usedentropy,usedcold,utotdiag[RHO],ubdiag[RHO],utotdiag[RHO]-ubdiag[RHO],pb[RHO],uu0[RHO]*ptrgeom->gdet,errorabs[0],errorabs[1]);
+        //    }
+
+      }
+      else{
+        // no solution, reverst to explicit and then average bad values, accounting will occur there.
+      }
+    }
+  }
 
 
   ///////////////
@@ -1062,7 +1172,7 @@ int tryhotinversion(int showmessages, int allowlocalfailurefixandnoreport, int f
       // ucons not modified (i.e. modcons=0), but ucons may be used by diag_fixup()
       UtoU(UNOTHING,UEVOLVE,ptrgeom,Ugeomfree0,Uievolve);
       // account for change to hot MHD conserved quantities
-      diag_fixup_Ui_pf(modcons,Uievolve,pr,ptrgeom,finalstep,COUNTHOT);
+      //      diag_fixup_Ui_pf(modcons,Uievolve,pr,ptrgeom,finalstep,COUNTHOT);
       
       // KORALTODO: allowlocalfailurefixandnoreport could be used below to avoid reset, but for now let implicit solver be ok with hot inversion
       // reset pflag, unless still need to do some kind of averaging
@@ -1116,8 +1226,8 @@ int tryentropyinversion(int showmessages, int allowlocalfailurefixandnoreport, i
   PFTYPE entropypflag;
   int Utoprimgen_pick(int showmessages, int allowlocalfailurefixandnoreport, int which, int eomtype, int whichcap, int parameter, FTYPE *Ugeomfree, struct of_geom *ptrgeom, PFTYPE *lpflag, FTYPE *pr, FTYPE *pressure, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad);
   int eomtypelocal=EOMENTROPYGRMHD;
-
-  //  dualfprintf(fail_file,"Got here in tryentropyinversion\n");
+  
+  //  dualfprintf(fail_file,"Got here in tryentropyinversion: oldpflag=%d\n",oldpflag);
 
   /// try new if old gives u<zerouuperbaryon*rho
   int TRYNEWIFOLDUNEG=1;
@@ -1193,7 +1303,7 @@ int tryentropyinversion(int showmessages, int allowlocalfailurefixandnoreport, i
       // ucons not modified (i.e. modcons=0), but ucons may be used by diag_fixup()
       UtoU(UNOTHING,UEVOLVE,ptrgeom,Ugeomfree0,Uievolve);
       // account for change to hot MHD conserved quantities
-      diag_fixup_Ui_pf(modcons,Uievolve,pr,ptrgeom,finalstep,COUNTENTROPY);
+      //      diag_fixup_Ui_pf(modcons,Uievolve,pr,ptrgeom,finalstep,COUNTENTROPY);
       
       // KORALTODO: allowlocalfailurefixandnoreport could be used below to avoid reset, but for now let implicit solver be ok with entropy inversion
       // reset pflag, unless still need to do some kind of averaging
@@ -1387,7 +1497,7 @@ int trycoldinversion(int showmessages, int allowlocalfailurefixandnoreport, int 
       int counttype;
       if(GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)!=UTOPRIMFAILFIXEDCOLD) counttype=COUNTCOLD; // count if not going to be counted later
       else counttype=COUNTNOTHING; // do correction, but don't do counting until later
-      diag_fixup_Ui_pf(modcons,Ui,pr,ptrgeom,finalstep,counttype);
+      //      diag_fixup_Ui_pf(modcons,Ui,pr,ptrgeom,finalstep,counttype);
 
       // KORALTODO: allowlocalfailurefixandnoreport could be used below to avoid reset, but for now let implicit solver be ok with cold inversion
       // reset pflag since above does full accounting, unless need to average-out internal energy still
@@ -1537,7 +1647,7 @@ int tryffdeinversion(int showmessages, int allowlocalfailurefixandnoreport, int 
       int counttype;
       if(GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)!=UTOPRIMFAILFIXEDFFDE) counttype=COUNTFFDE;
       else counttype=COUNTNOTHING; // do correction, but don't do counting until later
-      diag_fixup_Ui_pf(modcons,Ui,pr,ptrgeom,finalstep,counttype);
+      //      diag_fixup_Ui_pf(modcons,Ui,pr,ptrgeom,finalstep,counttype);
 
       // KORALTODO: allowlocalfailurefixandnoreport could be used below to avoid reset, but for now let implicit solver be ok with ffde inversion
       // reset pflag since above does full accounting, unless need to average-out internal energy still
@@ -1649,7 +1759,6 @@ static int check_on_inversion(int checkoninversiongas, int checkoninversionrad, 
     MYFUN(get_stateforcheckinversion(prtest, ptrgeom, &q),"flux.c:fluxcalc()", "get_state()", 1);
     FTYPE Unewabs[NPR];
     MYFUN(primtoU(UNOTHING,prtest, &q, ptrgeom, Unew, Unewabs),"step_ch.c:advance()", "primtoU()", 1); // UtoU inside doesn't do anything...therefore for REMOVERESTMASSFROMUU==1, Unew[UU] will have rest-mass included
-
 
     /////////////
     //
@@ -2469,10 +2578,38 @@ int Utoprimgen_pick(int showmessages, int allowlocalfailurefixandnoreport, int w
   //
   /////////////
 
-  // KORAL
-  // NOTEMARK: u2p_rad() uses pr, which will have updated velocities in case radiation inversion wants to use fluid frame reduction.  But need to know if got good solution, so pass that flag to u2p_rad()
-  if(EOMRADTYPE!=EOMRADNONE) u2p_rad(showmessages, allowlocalfailurefixandnoreport, GAMMAMAXRAD, whichcap, Ugeomfree,pr,ptrgeom,lpflag,lpflagrad);
-  //*lpflagrad=0; // test that check_on_inversion triggered where velocity limiter applies
+  if(EOMRADTYPE!=EOMRADNONE){
+    // KORAL
+    // NOTEMARK: u2p_rad() uses pr, which will have updated velocities in case radiation inversion wants to use fluid frame reduction.  But need to know if got good solution, so pass that flag to u2p_rad()
+
+    // get MHD state
+    struct of_state q;
+    get_state_norad_part1(pr, ptrgeom, &q);
+    get_state_norad_part2(1, pr, ptrgeom, &q); // where entropy would be computed
+
+    // get accurate UMHD[pmhd] to avoid inversion inaccuracies for MHD inversion part
+    extern int primtoflux_nonradonly(int needentropy, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux, FTYPE *fluxabs);
+    FTYPE uumhd[NPR],uumhdabs[NPR];
+    PLOOP(pliter,pl) uumhd[pl] = Ugeomfree[pl];
+    primtoflux_nonradonly(1,pr,&q,TT,ptrgeom, uumhd, uumhdabs); // anything not set is set as zero, which is rad.
+
+    // enforce conservation even if inaccuracy in MHD inversion
+    int iv;
+    DLOOPA(iv) uumhd[URAD0+iv] = Ugeomfree[URAD0+iv] - (uumhd[UU+iv]-Ugeomfree[UU+iv]);
+    PLOOP(pliter,pl) Ugeomfree[pl] = uumhd[pl];
+
+    u2p_rad(showmessages, allowlocalfailurefixandnoreport, GAMMAMAXRAD, whichcap, Ugeomfree,pr,ptrgeom,lpflag,lpflagrad);
+    //*lpflagrad=0; // test that check_on_inversion triggered where velocity limiter applies
+
+
+    get_state_radonly(pr, ptrgeom, &q);
+
+    extern int primtoflux_radonly(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux, FTYPE *fluxabs);
+    FTYPE uurad[NPR],uuradabs[NPR];
+    primtoflux_radonly(pr,&q,TT,ptrgeom, uurad,uuradabs); // all non-rad stuff is set to zero.
+    // write new uurad's to uu
+    PLOOP(pliter,pl) if(RADUPL(pl)) Ugeomfree[pl]=uurad[pl];
+  }
 
 
   //  if(ptrgeom->i==10 && ptrgeom->k==0){
@@ -2706,10 +2843,10 @@ int whetherdoentropy(struct of_geom *ptrgeom, FTYPE fracenergy, int entropynotfa
   // so might use energy even in expanding flows.
   if(entropynotfail==1 && energynotfail==1 && radinvmodenergy<=0 && radinvmodentropy>0 && energyerror<okerror){
     doentropy=0;
-    prod0dualfprintf(debugfail>=3,fail_file,"Went to energy with errorabs=%g because radinvmodentropy=%d with with entropyerror=%g\n",energyerror,radinvmodentropy,entropyerror);
+    if(debugfail>=3) dualfprintf(fail_file,"Went to energy with errorabs=%g because radinvmodentropy=%d with with entropyerror=%g\n",energyerror,radinvmodentropy,entropyerror);
   }
   if(entropynotfail==1 && energynotfail==1 && radinvmodenergy>0 && radinvmodentropy<=0 && entropyerror<okerror){
-    prod0dualfprintf(debugfail>=3,fail_file,"Went to entropy with errorabs=%g because radinvmodenergy=%d with with energyerror=%g\n",entropyerror,radinvmodenergy,energyerror);
+    if(debugfail>=3) dualfprintf(fail_file,"Went to entropy with errorabs=%g because radinvmodenergy=%d with with energyerror=%g\n",entropyerror,radinvmodenergy,energyerror);
   }
 
   //  UTOPRIMRADFAILCASE2A;

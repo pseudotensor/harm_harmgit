@@ -1086,7 +1086,7 @@ int vpot2field_useflux(int *fieldloc,FTYPE (*pfield)[NSTORE2][NSTORE3][NPR],FTYP
 
 
 
-#if(FLUXDUMP)
+#if(FLUXDUMP==1)
   {
     int i,j,k,dir,pl,pliter;
     // this accounts for final flux

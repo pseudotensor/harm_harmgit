@@ -1016,7 +1016,7 @@ struct Ccoordparams {
 #define OUTERDEATH 1 // do it
 //#define OUTERDEATH 0 // don't do it // WALD
 #undef OUTERDEATHRADIUS
-#define OUTERDEATHRADIUS (500.0)
+#define OUTERDEATHRADIUS (1E3)
 #undef OUTERDEATHGAMMAMAX
 #define OUTERDEATHGAMMAMAX (6.0)
 #undef OUTERDEATHGAMMAMAXRAD

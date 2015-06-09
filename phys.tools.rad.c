@@ -208,6 +208,9 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE *errorabs, stru
 //
 ///////////////////////////////
 
+#define AVOIDTAUFORFLOOR (1) // whether to apply optical depth calculation for floor (0) or not (1)
+
+
 #define COURRADEXPLICIT (0.1) // Effective Courant-like factor for stiff explicit radiation source term.  Required to not only avoid failure of explicit scheme, but also that explicit scheme is really accurate compared to implicit.  E.g., near \tau\sim 1, explicit won't fail with RADPULSEPLANAR but will not give same results as implicit.  So only use explicit if really in optically thin regime.
 
 
@@ -1547,7 +1550,7 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
   struct of_newtonstats newtonstats;
   int checkoninversiongas=0;
   int checkoninversionrad=0;
-  int finalstep = 1;  //can choose either 1 or 0 depending on whether want floor-like fixups (1) or not (0).  unclear which one would work best since for Newton method to converge might want to allow negative density on the way to the correct solution, on the other hand want to prevent runaway into rho < 0 region and so want floors.
+  int finalstep = 0;  //can choose either 1 or 0 depending on whether want floor-like fixups (1) or not (0).  unclear which one would work best since for Newton method to converge might want to allow negative density on the way to the correct solution, on the other hand want to prevent runaway into rho < 0 region and so want floors.
   FTYPE Gdpl[NPR]={0.0},Gdplabs[NPR]={0.0}, Tgas={0.0},Trad={0.0};
   int failreturn;
   FTYPE uuabs[NPR]={0.0};
@@ -1866,6 +1869,8 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
       //      limit_gamma(0,GAMMAMAX,GAMMAMAXRADIMPLICITSOLVER,pp,NULL,ptrgeom,0);
       // fix uu[RHO] to be consistent, since uu[RHO] used to get inverted scalars
       uu[RHO] = pp[RHO]*q->ucon[TT];
+      // NOTEMARK:  If uu0[RHO]<=0, then really no formal solution, but can still get solution to some error as long as adjust rho to be some "floor" value that is not unexpected when otherwise rho<0 would be implied and cause the radiation terms to be ill-defined or complex.
+      // NOTEMARK: If happens to be on sub-step, then really not crucial and better to have had approximate solution for sub-step so perhaps final step can be regular with RHO and all terms.  If only issue on sub-step, won't shown up in final diagnostics.
     }
     //
     // 4) Invert other scalars (only uses uu[RHO], not pp[RHO])
@@ -2319,7 +2324,7 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
       // explicit step using explicit-like dt
       //FTYPE idtsub0=SMALL+fabs(ratchangeRtt)/realdt;
       //FTYPE explicitdt=MIN(localdt,1.0/idtsub0);
-      FTYPE uue[NPR],ppe[NPR];
+      FTYPE uue[NPR],uueabs[NPR],ppe[NPR];
       FTYPE errorabse=BIG,errorallabse=BIG;
       FTYPE fe[NPR]={0.0},fnorme[NPR]={0.0};
       FTYPE uuallabse[NPR]={0.0},Gallabse[NPR]={0.0};
@@ -2337,6 +2342,7 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
         PLOOP(pliter,pl){
           ppe[pl] = pp[pl];
           uue[pl] = -((0- uu0[pl]) + (sign[pl] * explicitdt * Gdpl[pl])); // uses Gdpl[pp(uu)]
+          uueabs[pl] = uuabs[pl]; // estimate
         }
             
 
@@ -2360,13 +2366,27 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
         }
         int eomtypee=*eomtype;
         int radinvmode;
-        int doradonly=0; int failreturne=Utoprimgen_failwrapper(doradonly,&radinvmode,showmessages,checkoninversiongas,checkoninversionrad,allowlocalfailurefixandnoreport, finalstep, &eomtypee, whichcap, EVOLVEUTOPRIM, UNOTHING, uue, &qe, ptrgeom, dissmeasure, ppe, &newtonstats);
+        int finalstepe=0;
+        int doradonly=0; int failreturne=Utoprimgen_failwrapper(doradonly,&radinvmode,showmessages,checkoninversiongas,checkoninversionrad,allowlocalfailurefixandnoreport, finalstepe, &eomtypee, whichcap, EVOLVEUTOPRIM, UNOTHING, uue, &qe, ptrgeom, dissmeasure, ppe, &newtonstats);
         // if switches to entropy (*eomtype=EOMGRMHD -> eomtypee=EOMENTROPYGRMHD), then uue won't be changed, but ppe will be entropy inversion solution.  So below error test using uue and Gple uses uue from energy and Gple from entropy primitives, which is fine because Gpl still computed as perfectly conservative and uue still conservative.  So good error check.
         // However, final primitives (ppe) not consistent with conserved (uue), like normally would be.
         // However, if really error ended up small, then would drop out of f1 loop and still do FINALCHECK that would recompute f1 and ensure primitives and conserves are consistent *and* based upon original emptype because Utoprimgen not used.  At that point, entropy gas solution would be used to compute UUgas and then radiation would be computed as UUrad=uu0rad-dUgas  with dUgas=uu0-UUgas, so that radiation bears brunt of error of using entropy in gas -- but total energy conserved.  In optically thick or high radiation regions, this is fine.  In optically thin regions or gas-dominated regions, this is an issue -- acts like effective opacity even though no opacity -- like numerical opacity.  So this acts like automatic borrow operation.
 
         //*nummhdinvsreturn++;
         // completed explicit step
+
+        // get MHD state
+        get_state_norad_part1(ppe, ptrgeom, &qe);
+        get_state_norad_part2(needentropy, ppe, ptrgeom, &qe); // where entropy would be computed
+        
+        // get accurate UMHD[pmhd] to avoid inversion inaccuracies for MHD inversion part
+        extern int primtoflux_nonradonly(int needentropy, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux, FTYPE *fluxabs);
+        FTYPE uumhd[NPR],uumhdabs[NPR];
+        primtoflux_nonradonly(needentropy,ppe,&qe,TT,ptrgeom, uumhd, uumhdabs); // anything not set is set as zero, which is rad.
+        PLOOP(pliter,pl) if(!RADUPL(pl)) uue[pl]=uumhd[pl];
+        PLOOP(pliter,pl) if(!RADUPL(pl)) uueabs[pl]=uumhdabs[pl];
+
+
 
         didexplicit=0;
         if(failreturne!=UTOPRIMGENWRAPPERRETURNFAILMHD){
@@ -2380,11 +2400,11 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
             // then ensure total energy conservation version of primitives obtained here, and total consistent p/uu used in error estimate
             // matters to get whicherror=1 error estimate valid/constent.
             DLOOPA(iv) uue[ru->iotherU[iv]] = uu0[ru->iotherU[iv]] - (uue[ru->irefU[iv]]-uu0[ru->irefU[iv]]);
-            //            DLOOPA(iv) uuabs[ru->iotherU[iv]] = fabs(uu0[ru->iotherU[iv]]) + fabs(uu[ru->irefU[iv]]) + fabs(uu0[ru->irefU[iv]]); // assume uuabs ok as same
+            DLOOPA(iv) uuabs[ru->iotherU[iv]] = fabs(uu0[ru->iotherU[iv]]) + fabs(uue[ru->irefU[iv]]) + fabs(uu0[ru->irefU[iv]]); // assume uuabs ok as same
 
             int eomtypee2=*eomtype; // back to original, but doing radiation below so doesn't matter.
             int radinvmode2;
-            int doradonly2=1; int failreturne2=Utoprimgen_failwrapper(doradonly2,&radinvmode2,showmessages,checkoninversiongas,checkoninversionrad,allowlocalfailurefixandnoreport, finalstep, &eomtypee2, whichcap, EVOLVEUTOPRIM, UNOTHING, uue, &qe, ptrgeom, dissmeasure, ppe, &newtonstats);
+            int doradonly2=1; int failreturne2=Utoprimgen_failwrapper(doradonly2,&radinvmode2,showmessages,checkoninversiongas,checkoninversionrad,allowlocalfailurefixandnoreport, finalstepe, &eomtypee2, whichcap, EVOLVEUTOPRIM, UNOTHING, uue, &qe, ptrgeom, dissmeasure, ppe, &newtonstats);
             // if radinvmode==0 and radinvmode2!=0, should we abort explicit?
             // as long as radinvmode2==0, then all uu and pp's are now consistent
 
@@ -2392,7 +2412,19 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
 #endif
 
           // get other things usually needed at end of f_implicit()
-          get_state(ppe, ptrgeom, &qe);
+          //          get_state(ppe, ptrgeom, &qe);
+
+          // ensure uue is exactly consistent with ppe despite inversion inaccuracies.
+          //            primtoU(UNOTHING,ppe,&qe,ptrgeom, uue, uueabs);
+          
+          extern int primtoflux_radonly(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux, FTYPE *fluxabs);
+          FTYPE uurad[NPR],uuradabs[NPR];
+          primtoflux_radonly(ppe,&qe,TT,ptrgeom, uurad,uuradabs); // all non-rad stuff is set to zero.
+          // write new uurad's to uu
+          PLOOP(pliter,pl) if(RADUPL(pl)) uue[pl]=uurad[pl];
+          PLOOP(pliter,pl) if(RADUPL(pl)) uueabs[pl]=uuradabs[pl];
+
+
           
           koral_source_rad_calc(computestate,computeentropy,ppe, ptrgeom, Gdple, Gdplabse, &chieffe, &Tgase, &Trade, &qe);
           
@@ -2408,7 +2440,7 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
           PLOOP(pliter,pl){
             fe[pl] = ((uue[pl] - uu0[pl]) + (sign[pl] * localdt * Gdple[pl]))*extrafactore[pl];
 
-            uuallabse[pl] = THIRD*(fabs(uuabs[pl]) + fabs(uue[pl]) + fabs(uu0[pl]))*extrafactore[pl];
+            uuallabse[pl] = THIRD*(fabs(uueabs[pl]) + fabs(uue[pl]) + fabs(uu0[pl]))*extrafactore[pl];
             Gallabse[pl] = fabs(sign[pl] * localdt * Gdplabse[pl])*extrafactore[pl];
             fnorme[pl] = uuallabse[pl] + Gallabse[pl];
           }
@@ -3628,6 +3660,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
           trueimptryconvlist[tryphase1]=MAX(trueimptryconvlist[tryphase1],IMPTRYCONV_ROUTERHIGHERTOL);
         } 
 #else
+        // pick best simple 2 method avoids all itermodestages methods 
         if(modemethodlocal==MODEPICKBESTSIMPLE2 && itermodelist[tryphase1]==ITERMODESTAGES) continue;
 #endif
 
@@ -4876,10 +4909,10 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
         *lpflag=UTOPRIMNOFAIL;
         *lpflagrad=UTOPRIMRADNOFAIL;
         noprims=1;
+        failfinalreturn=1;
         *eomtype=EOMDEFAULT;
         methodindex[EOMTYPEINDEX] = *eomtype;
 
-        failfinalreturn=1;
         if(goexplicitenergy==1 || goexplicitentropy==1){ usedexplicitgood=1; failfinalreturn=FAILRETURNGOTRIVIALEXPLICIT;}
         else{ usedexplicitkindabad=1; failfinalreturn=1;} // __WORKINGONIT__: might want to treat as actual failure if QTYPMHD mode since lpflag never set.
 
@@ -5031,6 +5064,67 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 #endif
 
 
+  int finalstep=steppart==TIMEORDER-1; // all sub-steps aren't a concern as just setting flux but not implicit part of final ucum
+
+  //  if(*lpflagrad<0){
+  //    dualfprintf(fail_file,"GOTHERE\n");
+  //  }
+
+  //  if(*lpflag<=UTOPRIMNOFAIL && *lpflagrad<=UTOPRIMRADNOFAIL && (! (*lpflag<UTOPRIMNOFAIL && *lpflagrad<UTOPRIMRADNOFAIL)) && finalstep==1 && failfinalreturn==0 && *eomtype==EOMDIDGRMHD && EOMTYPE==EOMGRMHD){
+  //*lpflag<=UTOPRIMNOFAIL && *lpflagrad<=UTOPRIMRADNOFAIL && (! (*lpflag<UTOPRIMNOFAIL && *lpflagrad<UTOPRIMRADNOFAIL))&&
+
+
+
+  if(finalstep==1&& failfinalreturn==0){
+    // see how accurately got energy-momentum
+    struct of_state qb;
+    get_state(pb,ptrgeom,&qb);
+    FTYPE ub[NPR],ubabs[NPR];
+    int uutype=UDIAG;
+    primtoU(uutype,pb,&qb,ptrgeom,ub,ubabs);
+    //    if((startpos[1]+ptrgeom->i==17) && (startpos[2]+ptrgeom->j)==0){
+    //      dualfprintf(fail_file,"URHOINIMPLICIT=%21.15g\n",ub[RHO]*dx[1]*dx[2]*dx[3]);
+    //    }
+
+    FTYPE utot[NPR];
+    PLOOP(pliter,pl) utot[pl] = uub[pl]; // UNOTHING
+
+    //    dualfprintf(fail_file,"ub=%g utot=%g dU=%g\n",ub[UU],utot[UU],ub[UU]-utot[UU]);
+
+    FTYPE ubdiag[NPR],utotdiag[NPR];
+    UtoU(UDIAG,UDIAG,ptrgeom,ub,ubdiag);  // convert from UNOTHING -> UDIAG
+    UtoU(UNOTHING,UDIAG,ptrgeom,utot,utotdiag);  // convert from UNOTHING -> UDIAG
+
+
+    PLOOP(pliter,pl) if(BPL(pl)) utotdiag[pl] = ubdiag[pl]; // cell center as if no change as required, but should be true already as setup these.
+
+    // Get deltaUavg[] and also modify ucons if required and should
+    int whocalled;
+    if(usedenergy) whocalled=COUNTIMPLICITENERGY;
+    else if(usedentropy) whocalled=COUNTIMPLICITENTROPY;
+    else if(usedcold) whocalled=COUNTIMPLICITCOLDMHD;
+    //else if(usedexplicitgood) whocalled=COUNTEXPLICITNORMAL;
+    else if(usedexplicitkindabad || usedexplicitbad) whocalled=COUNTEXPLICITBAD;
+    else if(usedenergy==0 && usedentropy==0 && usedboth==0 && usedcold==0 && usedimplicit==1) whocalled=COUNTIMPLICITBAD;
+    else{
+      //      dualfprintf(fail_file,"GOD: %d %d\n",usedimplicit,usedexplicitgood);
+      whocalled=COUNTIMPLICITITERS;
+    }
+
+    int docorrectuconslocal=0;
+    extern int diag_fixup_dUandaccount(FTYPE *Ui, FTYPE *Uf, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep, int whocalled, int docorrectuconslocal);
+    diag_fixup_dUandaccount(utotdiag, ubdiag, NULL, ptrgeom, finalstep, whocalled, docorrectuconslocal);
+
+
+    //    FTYPE rat = fabs(utotdiag[RHO]-ubdiag[RHO])/(fabs(utotdiag[RHO])+fabs(ubdiag[RHO]));
+    //    if(rat>1E-13){
+    //      dualfprintf(fail_file,"Why not: %d %d %d :  %21.15g %21.15g: diff=%21.15g : prho=%21.15g uu0RHO=%21.15g: error=%21.15g %21.15g\n",usedenergy,usedentropy,usedcold,utotdiag[RHO],ubdiag[RHO],utotdiag[RHO]-ubdiag[RHO],pb[RHO],uu0[RHO]*ptrgeom->gdet,errorabs[0],errorabs[1]);
+    //    }
+
+  }
+  else{
+    // no solution, reverst to explicit and then average bad values, accounting will occur there.
+  }
 
 
   if(DODEBUG){
@@ -5521,7 +5615,7 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
     newtonstats.mintryconv=MINTRYCONVFORMHDINVERSION;//IMPALLOWCONVCONSTFORDEFAULT;
     newtonstats.maxiter=MIN(trueimpmaxiter,IMPMAXITERFORDEFAULT);
     //
-    int finalstep = 1;
+    int finalstep = 0;
     int doradonly=0;
     eomtypelocal=*eomtype; // stick with default choice so far
     int checkoninversiongas;
@@ -5593,7 +5687,7 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
       //
     }
     //
-    int finalstep = 1;
+    int finalstep = 0;
     int doradonly=0;
     if(*baseitermethod==QTYPRAD){
       doradonly=1;
@@ -5663,7 +5757,7 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
     }
     //
     int failreturninversion;
-    int finalstep = 1;
+    int finalstep = 0;
     int doradonly=0;
     int checkoninversiongas;
     int checkoninversionrad;
@@ -7676,7 +7770,8 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
     errorabsf1borrow[1]=errorabsf1[1];
     int convreturnborrow=1;
     FTYPE borrowimpepsjac=1E-6;
-    int borrowfailreturnf=f_implicit(allowbaseitermethodswitch, iter,borrowf1iter,failreturnallowableuse, whichcall,borrowimpepsjac,showmessages, showmessagesheavy, allowlocalfailurefixandnoreport, &eomtypelocal, whichcap, itermode, baseitermethod, fracenergy, dissmeasure, radinvmod, trueimptryconv, trueimptryconvabs, trueimpallowconvabs, trueimpmaxiter, realdt, dimtypef, dimfactU, ppborrow, ppborrow, piin, uuborrow, Uiin, uu0, uuborrow, borrowfracdtG*realdt, ptrgeom, qborrow, f1borrow, f1normborrow, f1reportborrow, &goexplicitborrow, &errorabsf1borrow[0], &errorabsf1borrow[1], WHICHERROR, &convreturnborrow, nummhdinvsreturn, &tautotmaxreturn, &mtd, &ru);
+    int radinvmodborrow=0;
+    int borrowfailreturnf=f_implicit(allowbaseitermethodswitch, iter,borrowf1iter,failreturnallowableuse, whichcall,borrowimpepsjac,showmessages, showmessagesheavy, allowlocalfailurefixandnoreport, &eomtypelocal, whichcap, itermode, baseitermethod, fracenergy, dissmeasure, &radinvmodborrow, trueimptryconv, trueimptryconvabs, trueimpallowconvabs, trueimpmaxiter, realdt, dimtypef, dimfactU, ppborrow, ppborrow, piin, uuborrow, Uiin, uu0, uuborrow, borrowfracdtG*realdt, ptrgeom, qborrow, f1borrow, f1normborrow, f1reportborrow, &goexplicitborrow, &errorabsf1borrow[0], &errorabsf1borrow[1], WHICHERROR, &convreturnborrow, nummhdinvsreturn, &tautotmaxreturn, &mtd, &ru);
 
     if(ALLOWUSEUUALT){
       get_state(pp, ptrgeom, q);
@@ -7689,8 +7784,10 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
     // e.g., borrowing from radiation can leave radiation hitting floor, do not improving total energy conservation in such cases.
     // or allow shift in radiation energy if only adding energy to radiation
     //    if(errorabsf1borrow[WHICHERROR]<BORROWTOL && ((-uuborrow[URAD0])>(-uuborrow[UU]))   ){}
-    if(errorabsf1borrow[WHICHERROR]<BORROWTOL && ((-uuborrow[URAD0])>(-dugas) || (-dugas<0.0))   ){
-      // then use new solution
+    //    if(errorabsf1borrow[WHICHERROR]<BORROWTOL && ((-uuborrow[URAD0])>(-dugas) || (-dugas<0.0))   ){
+    if(radinvmodborrow==UTOPRIMRADNOFAIL && errorabsf1borrow[WHICHERROR]<BORROWTOL && ((-uuborrow[URAD0])>(-dugas) || (-dugas<0.0))   ){
+      // then use new solution regardless of how it is correct 4-force, just so energy-momentum can be conserved
+      // if randinvmodborrow!=0, then not enough radiation energy to give, and would violate energy-momentum conservation anyways, so wait till very end for consfixup_1zone() to fixup things if it can
       PLOOP(pliter,pl){
         uu[pl] = uuborrow[pl];
         pp[pl] = ppborrow[pl];
@@ -9512,7 +9609,7 @@ static int source_explicit(int whichsc, int whichradsourcemethod, int methoddtsu
   struct of_newtonstats newtonstats; setnewtonstatsdefault(&newtonstats);
   // initialize counters
   newtonstats.nstroke=newtonstats.lntries=0;
-  int finalstep = 1;  //can choose either 1 or 0 depending on whether want floor-like fixups (1) or not (0).  unclear which one would work best since for Newton method to converge might want to allow negative density on the way to the correct solution, on the other hand want to prevent runaway into rho < 0 region and so want floors.
+  int finalstep = 0;  //can choose either 1 or 0 depending on whether want floor-like fixups (1) or not (0).  unclear which one would work best since for Newton method to converge might want to allow negative density on the way to the correct solution, on the other hand want to prevent runaway into rho < 0 region and so want floors.
 
 
   //  if(1||nstep>=800){
@@ -10177,6 +10274,17 @@ void calc_kappa(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE *k
 #endif
   *kappa = calc_kappa_user(rho,B,Tgas,Trad,xx,yy,zz);
   //  dualfprintf(fail_file,"kappaabs=%g\n",*kappa);
+
+  if(AVOIDTAUFORFLOOR==1){
+    FTYPE bsqorholimit=BSQORHOLIMIT/5.0;
+    FTYPE factor;
+    FTYPE thebsqorho=bsq/rho;
+    if(bsq/rho<0 || bsq/rho>BSQORHOLIMIT) thebsqorho=bsqorholimit;
+    factor=exp(-thebsqorho/bsqorholimit);
+    *kappa *= factor;
+  }
+
+
 }
 
 
@@ -10201,6 +10309,18 @@ void calc_kappaes(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappaes)
 #endif
   *kappaes = calc_kappaes_user(rho,T,xx,yy,zz);
   //  dualfprintf(fail_file,"kappaes=%g\n",*kappa);
+
+  if(AVOIDTAUFORFLOOR==1){
+    FTYPE bsq;
+    bsq_calc(pr, ptrgeom, &bsq);
+    FTYPE bsqorholimit=BSQORHOLIMIT/5.0;
+    FTYPE factor;
+    FTYPE thebsqorho=bsq/rho;
+    if(bsq/rho<0 || bsq/rho>BSQORHOLIMIT) thebsqorho=bsqorholimit;
+    factor=exp(-thebsqorho/bsqorholimit);
+    *kappaes *= factor;
+  }
+
 }
  
 
@@ -10283,6 +10403,23 @@ void calc_Tandopacityandemission(FTYPE *pr, struct of_geom *ptrgeom, struct of_s
 #endif
 
 
+  if(AVOIDTAUFORFLOOR==1){
+    FTYPE bsq=B*B;
+    FTYPE bsqorholimit=BSQORHOLIMIT/5.0;
+    FTYPE factor;
+    FTYPE thebsqorho=bsq/rho;
+    if(bsq/rho<0 || bsq/rho>BSQORHOLIMIT) thebsqorho=bsqorholimit;
+    factor=exp(-thebsqorho/bsqorholimit);
+
+    *kappaes *= factor;
+    *kappa *= factor;
+    *kappaemit *= factor;
+    *lambda *= factor;
+
+    *kappan *= factor;
+    *kappanemit *= factor;
+    *nlambda *= factor;
+  }
 
 
 

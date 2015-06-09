@@ -672,7 +672,7 @@ static int advance_standard(
         // this oldud is used for B1,B2,B3 and required in cases when CUf[1]!=0.0, as even TVD RK2 method needs because previous Uf used even for updating new Uf.
         ///////
         // Save uf here because below modify uf to account for floors.
-        // The later modification of uf is required since 
+        // The later modification of uf is required for >=RK3 methods that use olduf
         FTYPE origolduf[NPR];
         if(doother==DONONBPL){
           PLOOP(pliter,pl){
@@ -811,25 +811,7 @@ static int advance_standard(
               FTYPE utoinvertlocal[NPR];
               PLOOP(pliter,pl) utoinvertlocal[pl] = utoinvert1[pl];
               int docorrectucons=0;
-              int docorrectuconslocal=1;
-              int didfixup=fixup1zone(docorrectuconslocal,MAC(pf,i,j,k),utoinvertlocal, ptrgeom,finalstep);
-              if(didfixup==-1&&finalstep!=1){ // on final step, shouldn't modify ucum
-                // now deal with differences, which are all due to changes in dUriemann
-                PLOOP(pliter,pl) dUriemann[pl] += (utoinvertlocal[pl]-utoinvert1[pl])/(CUf[2]*dt);
-                // now get new uf (which should be consistent with utoinvertlocal) and ucum (which needs adjusting using this new dUriemann)
-                FTYPE tempucumconsiderbackup[NPR];
-                PLOOP(pliter,pl){
-                  ufconsider[pl]=origolduf[pl];
-                  tempucumconsiderbackup[pl]=tempucumconsider[pl];
-                  tempucumconsider[pl]=MACP0A1(tempucum,i,j,k,pl); // for redo
-                }
-                dUtoU(timeorder,doother,i,j,k,ptrgeom->p,dUgeom, dUcomp, dUriemann, CUf, CUnew, MAC(ui,i,j,k), ufconsider, tempucumconsider);
-                if(docorrectucons==0){ // restore since didn't want to change
-                  PLOOP(pliter,pl){
-                    tempucumconsider[pl]=tempucumconsiderbackup[pl];
-                  }
-                }
-              } // if did fixup
+              int didfixup=fixup1zone(docorrectucons,MAC(pf,i,j,k),utoinvertlocal, ptrgeom,finalstep);
             }// if might do fixups
 #endif
           }// end doing single-point fixups
@@ -847,27 +829,6 @@ static int advance_standard(
           if(doother==DOALLPL || doother==DONONBPL && BPL(pl)==0 || doother==DOBPL && BPL(pl)==1){
             MACP0A1(uf,i,j,k,pl)=ufconsider[pl];
             MACP0A1(tempucum,i,j,k,pl)=tempucumconsider[pl];
-
-#if(1) // maybe ok
- // something wrong with this, makes RADBEAM2D fail to work even with GAMMAMAXRAD=100 -- by dump=40, prad0 goes nuts at boundary where radiation hits.
-            // Ensure iterated U and fixed-up U from fixup1zone() don't leave URAD0 or UU below physical floor.  Ensures remains physical, as also important for RK3-type methods that use Uf from previous step to get new step's Uf.
-            // KORALTODO SUPERGODMARK: Should have function call to check U
-            if(pl==URAD0){
-              if(-MACP0A1(uf,i,j,k,URAD0)<=0.0) MACP0A1(uf,i,j,k,URAD0)=-ERADLIMIT;
-              if(DOENOFLUX != NOENOFLUX) if(-MACP0A1(tempucum,i,j,k,URAD0)<=0.0) MACP0A1(tempucum,i,j,k,URAD0)=-ERADLIMIT;
-            }
-            if(pl==UU){
-              if(REMOVERESTMASSFROMUU==2){
-                if(MACP0A1(uf,i,j,k,RHO)-MACP0A1(uf,i,j,k,pl)<=0.0) MACP0A1(uf,i,j,k,pl)=-MACP0A1(uf,i,j,k,RHO)-UUMINLIMIT;
-                if(DOENOFLUX != NOENOFLUX) if(MACP0A1(tempucum,i,j,k,RHO)-MACP0A1(tempucum,i,j,k,pl)<=0.0) MACP0A1(tempucum,i,j,k,pl)=-MACP0A1(tempucum,i,j,k,RHO)-UUMINLIMIT;
-              }
-              else{
-                if(-MACP0A1(uf,i,j,k,pl)<=0.0) MACP0A1(uf,i,j,k,pl)=-UUMINLIMIT;
-                if(DOENOFLUX != NOENOFLUX) if(-MACP0A1(tempucum,i,j,k,pl)<=0.0) MACP0A1(tempucum,i,j,k,pl)=-UUMINLIMIT;
-              }
-            }
-#endif
-
           }
         }
 

@@ -470,6 +470,12 @@ int post_advance(int truestep, int *dumpingnext, int timeorder, int numtimeorder
 
 
 
+  if(timeorder==numtimeorders-1){
+    // ensure total e-m conservation for final solution after all sub-steps
+    int finaluu=1;
+    consfixup_allzones(finaluu,pf,ucons);
+  }
+
 
 
 
@@ -1401,7 +1407,7 @@ void setup_rktimestep(int truestep, int *numtimeorders,
 
     }
     else if(TIMEORDER==2  && truestep){
-#if(0)
+#if(1)
       // midpoint method
 
       *numtimeorders=2;
