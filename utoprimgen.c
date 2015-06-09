@@ -67,7 +67,8 @@ int Utoprimgen(int showmessages, int checkoninversiongas, int checkoninversionra
   int Utoprimgen_tryagain(int showmessages, int allowlocalfailurefixandnoreport, int eomtype, int whichcap, int parameter, FTYPE *Ugeomfree0, FTYPE *Ugeomfree,struct of_geom *ptrgeom, PFTYPE *lpflag, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad);
   int Utoprimgen_tryagain2(int showmessages, int allowlocalfailurefixandnoreport, int eomtype, int whichcap, int parameter, FTYPE *Ugeomfree0, FTYPE *Ugeomfree,struct of_geom *ptrgeom, PFTYPE *lpflag, FTYPE *pr0, FTYPE *pr, FTYPE *pressure, struct of_newtonstats *newtonstats, PFTYPE *lpflagrad);
   void convert_U_removerestmassfromuu(int utoprimverison, int removerestmassfromuu, FTYPE *U);
-  int invert_scalars(struct of_geom *ptrgeom, FTYPE *Ugeomfree,FTYPE *pr);
+  int invert_scalars1(struct of_geom *ptrgeom, FTYPE *Ugeomfree,FTYPE *pr);
+  int invert_scalars2(struct of_geom *ptrgeom, FTYPE *Ugeomfree, struct of_state *q, FTYPE *pr);
   int pl,pliter;
   PFTYPE lpflag,lpflagrad;
   int usedhotinversion,usedentropyinversion,usedcoldinversion,usedffdeinversion;
@@ -273,7 +274,7 @@ int Utoprimgen(int showmessages, int checkoninversiongas, int checkoninversionra
   // So don't include passive scalars in check_on_inversion() [Since modify passive scalars]
   //
   ////////////////////////
-  invert_scalars(ptrgeom, Ugeomfree,pr);
+  invert_scalars1(ptrgeom, Ugeomfree,pr);
 
 
 
@@ -1079,6 +1080,16 @@ int Utoprimgen(int showmessages, int checkoninversiongas, int checkoninversionra
   //  if(nstep==4 && steppart==0){
   //    PLOOP(pliter,pl) dualfprintf(fail_file,"PRIMUTOPRIMGEN1 (%d): pl=%d pp=%21.15g uu=%21.15g\n",*eomtype,pl,pr[pl],Ugeomfree[pl]);
   //  }
+
+
+
+
+  ////////////////////////
+  //
+  // INVERT pseudo-passive scalars #2 (where u^t needed)
+  //
+  ////////////////////////
+  invert_scalars2(ptrgeom, Ugeomfree,NULL, pr);
 
      
   return(0);
@@ -2201,7 +2212,7 @@ static int negdensitycheck(int finalstep, FTYPE *prim, PFTYPE *pflag)
 
 
 /// perform U->p inversion on advected scalars
-int invert_scalars(struct of_geom *ptrgeom, FTYPE *Ugeomfree, FTYPE *pr)
+int invert_scalars1(struct of_geom *ptrgeom, FTYPE *Ugeomfree, FTYPE *pr)
 {
   FTYPE myrhouu0,oneOmyrhouu0;
   int i,j,k,loc;
@@ -2234,11 +2245,11 @@ int invert_scalars(struct of_geom *ptrgeom, FTYPE *Ugeomfree, FTYPE *pr)
   //
   ///////////////
 
-#if(DOYFL!=DONOYFL)
-  yflforadvect = Ugeomfree[YFL]*oneOmyrhouu0;
-#else
-  yflforadvect=0.0;
-#endif
+  //#if(DOYFL!=DONOYFL)
+  //  yflforadvect = Ugeomfree[YFL]; *oneOmyrhouu0;
+  //#else
+  //  yflforadvect=0.0;
+  //#endif
 
 #if(DOYL!=DONOYL)
   ylforadvect = Ugeomfree[YL]*oneOmyrhouu0;
@@ -2258,9 +2269,9 @@ int invert_scalars(struct of_geom *ptrgeom, FTYPE *Ugeomfree, FTYPE *pr)
   //
   ///////////////
 
-#if(DOYFL!=DONOYFL)
-  pr[YFL] = yflforadvect;
-#endif
+  //#if(DOYFL!=DONOYFL)
+  //  pr[YFL] = yflforadvect;
+  //#endif
 
 #if(DOYL!=DONOYL)
 #if(WHICHEOS==KAZFULL)
@@ -2295,10 +2306,10 @@ int invert_scalars(struct of_geom *ptrgeom, FTYPE *Ugeomfree, FTYPE *pr)
   //
   //////////////////
 
-#if(DOYFL!=DONOYFL)
-  prforadvect = pr[YFL];
-  Ugeomfree[YFL] = prforadvect*myrhouu0;
-#endif
+  //#if(DOYFL!=DONOYFL)
+  //  prforadvect = pr[YFL];
+  //  Ugeomfree[YFL] = prforadvect*myrhouu0;
+  //#endif
 
 #if(DOYL!=DONOYL)
 #if(WHICHEOS==KAZFULL)
@@ -2320,6 +2331,51 @@ int invert_scalars(struct of_geom *ptrgeom, FTYPE *Ugeomfree, FTYPE *pr)
 
 
   // SUPER TODO: Consider if need to recompute KAZ EOSextra stuff for fluxes.  Maybe now with primitives as lookups, interpolations correct.  But need to ensure assignments to EOSextra for Y_e and Ynu0 is correctly done.  Can leave neutrino stuff as "DONOR" cell
+
+  return(0);
+}
+
+
+
+
+
+/// perform U->p inversion on advected scalars
+int invert_scalars2(struct of_geom *ptrgeom, FTYPE *Ugeomfree, struct of_state *q, FTYPE *pr)
+{
+  int i,j,k,loc;
+  FTYPE prforadvect;
+  FTYPE yflforadvect;
+
+  i=ptrgeom->i;
+  j=ptrgeom->j;
+  k=ptrgeom->k;
+  loc=ptrgeom->p;
+  
+
+  // get u^t
+  FTYPE ucon[NDIM],others[NUMOTHERSTATERESULTS];
+  if(q==NULL){
+    ucon_calc(pr,ptrgeom,ucon,others);
+  }
+  else{
+    ucon[TT] = q->ucon[TT];
+  }
+
+
+
+
+  ///////////////
+  //
+  // Invert U->direct Primitive for scalars (in rhopart form rather than y=rhopart/rhototal form)
+  //
+  ///////////////
+
+#if(DOYFL!=DONOYFL)
+  yflforadvect = Ugeomfree[YFL]/ucon[TT];
+  pr[YFL] = yflforadvect;
+#endif
+
+
 
   return(0);
 }

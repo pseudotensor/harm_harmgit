@@ -1203,11 +1203,11 @@ extern void set_fieldline_content_dnumcolumns_dnumversion(int *numcolumnsvar, in
 /// CHANGES alot, make sure # is correct!
 /// Add 4 radiation terms if doing radiation
 #if( FIELDLINEGDETB == 1)
-#define NUMFIELDLINEQUANTITIES (14-2 + (1+NDIM+10)*(EOMRADTYPE!=EOMRADNONE))
+#define NUMFIELDLINEQUANTITIES (14-2+DOYFL+DOYL+DOYNU + (1+NDIM+10)*(EOMRADTYPE!=EOMRADNONE))
 /// rho, u, -hu_t, -T^t_t/U0, u^t, v1,v2,v3,B1,B2,B3,gdetB1,gdetB2,gdetB3
 /// radiation adds: vrad1,vrad2,vrad3
 #else
-#define NUMFIELDLINEQUANTITIES (11-2 + (1+NDIM+10)*(EOMRADTYPE!=EOMRADNONE))
+#define NUMFIELDLINEQUANTITIES (11-2+DOYFL+DOYL+DOYNU + (1+NDIM+10)*(EOMRADTYPE!=EOMRADNONE))
 /// rho, u, -hu_t, -T^t_t/U0, u^t, v1,v2,v3,B1,B2,B3
 /// radiation adds: vrad1,vrad2,vrad3
 #endif
@@ -1295,6 +1295,23 @@ int fieldline_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
   ftemp=(float)GLOBALMACP0A1(pdump,i,j,k,UU);
   myset(datatype,&ftemp,0,1,writebuf); // 1
 
+  if(DOYFL){
+    // Y_fl
+    ftemp=(float)(GLOBALMACP0A1(pdump,i,j,k,YFL));
+    myset(datatype,&ftemp,0,1,writebuf); // 1
+  }
+
+  if(DOYL){
+    // Y_l
+    ftemp=(float)(GLOBALMACP0A1(pdump,i,j,k,YL));
+    myset(datatype,&ftemp,0,1,writebuf); // 1
+  }
+
+  if(DOYNU){
+    // Y_nu
+    ftemp=(float)(GLOBALMACP0A1(pdump,i,j,k,YNU));
+    myset(datatype,&ftemp,0,1,writebuf); // 1
+  }
 
   //////////////////////
   //

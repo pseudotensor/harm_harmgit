@@ -1874,8 +1874,8 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
     }
     //
     // 4) Invert other scalars (only uses uu[RHO], not pp[RHO])
-    extern int invert_scalars(struct of_geom *ptrgeom, FTYPE *Ugeomfree, FTYPE *pr);
-    invert_scalars(ptrgeom, uu,pp);
+    extern int invert_scalars1(struct of_geom *ptrgeom, FTYPE *Ugeomfree, FTYPE *pr);
+    invert_scalars1(ptrgeom, uu,pp);
     //
     // save final fixed-up pp's
     FTYPE pporig[NPR]; PLOOP(pliter,pl) pporig[pl]=pp[pl];
@@ -1954,6 +1954,12 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
     PLOOPBONLY(pl) uu[pl]=pp[pl];
     //
     // now have full primitives (pp) and full U (uu) including entropy and these (pp and uu) are fully consistent with each other.
+
+
+    extern int invert_scalars2(struct of_geom *ptrgeom, FTYPE *Ugeomfree, struct of_state *q, FTYPE *pr);
+    invert_scalars2(ptrgeom, uu,q,pp);
+
+
     // 13)
     // set alternative that doesn't keep any changes to iterated quantities
     PLOOP(pliter,pl) ppalt[pl] = pp[pl];
@@ -7417,8 +7423,10 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
       // 2) trivially invert to get rho assuming q up-to-date
       //    pp[RHO]= uu0[RHO]/q->ucon[TT]; // q might not be up-to-date
       // 3) Invert other scalars (only uses uu[RHO], not pp[RHO])
-      extern int invert_scalars(struct of_geom *ptrgeom, FTYPE *Ugeomfree, FTYPE *pr);
-      invert_scalars(ptrgeom, uu,pp);
+      extern int invert_scalars1(struct of_geom *ptrgeom, FTYPE *Ugeomfree, FTYPE *pr);
+      invert_scalars1(ptrgeom, uu,pp);
+      extern int invert_scalars2(struct of_geom *ptrgeom, FTYPE *Ugeomfree, struct of_state *q, FTYPE *pr);
+      invert_scalars2(ptrgeom, uu, q, pp);
       PLOOP(pliter,pl){
         if(pl!=RHO && pl<UU && pl>U3 && pl<B1 && pl>B3 & RADPL(pl)==0 && pl!=ENTROPY){
           bestpp[pl]=pp[pl];
@@ -8298,8 +8306,10 @@ int get_rameshsolution(int whichcallramesh, int radinvmod, int failtype, long lo
       // get full state (thermo and other stuff needed)
       get_state(ppeng,ptrgeom,qeng);
       primtoU(UNOTHING,ppeng, qeng, ptrgeom, uueng, NULL);
-      extern int invert_scalars(struct of_geom *ptrgeom, FTYPE *Ugeomfree, FTYPE *pr);
-      invert_scalars(ptrgeom, uueng,ppeng);
+      extern int invert_scalars1(struct of_geom *ptrgeom, FTYPE *Ugeomfree, FTYPE *pr);
+      invert_scalars1(ptrgeom, uueng,ppeng);
+      extern int invert_scalars2(struct of_geom *ptrgeom, FTYPE *Ugeomfree, struct of_state *q, FTYPE *pr);
+      invert_scalars2(ptrgeom, uueng,qeng,ppeng);
     }
     errorabseng[0] = resultseng[12];
     *iterseng = (int)resultseng[13];
@@ -8339,8 +8349,10 @@ int get_rameshsolution(int whichcallramesh, int radinvmod, int failtype, long lo
       // get full state (thermo and other stuff needed)
       get_state(ppent,ptrgeom,qent);
       primtoU(UNOTHING,ppent, qent, ptrgeom, uuent, NULL);
-      extern int invert_scalars(struct of_geom *ptrgeom, FTYPE *Ugeomfree, FTYPE *pr);
-      invert_scalars(ptrgeom, uuent,ppent);
+      extern int invert_scalars1(struct of_geom *ptrgeom, FTYPE *Ugeomfree, FTYPE *pr);
+      invert_scalars1(ptrgeom, uuent,ppent);
+      extern int invert_scalars2(struct of_geom *ptrgeom, FTYPE *Ugeomfree, struct of_state *q, FTYPE *pr);
+      invert_scalars2(ptrgeom, uuent,qent,ppent);
     }
     errorabsent[0] = resultsent[12];
     *itersent = (int)resultsent[13];

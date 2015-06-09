@@ -432,13 +432,15 @@ int yflflux_calc(struct of_geom *ptrgeom, FTYPE *pr, int dir, struct of_state *q
   VARSTATIC FTYPE massfluxabs;
   FTYPE prforadvect;
 
-  // get mass flux
-  massflux_calc(pr, dir, q, &massflux, &massfluxabs);
 
   prforadvect = pr[pnum];
 
   // get flux associated with Y_L
-  *advectedscalarflux = prforadvect * massflux;
+  // get mass flux
+  //  massflux_calc(pr, dir, q, &massflux, &massfluxabs);
+  //*advectedscalarflux = prforadvect * massflux; // y form
+
+  *advectedscalarflux = prforadvect * q->ucon[dir]; // rho form
 
   *advectedscalarfluxabs = fabs(*advectedscalarflux);
 

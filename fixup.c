@@ -621,7 +621,7 @@ int diag_fixup_allzones(FTYPE (*pf)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTOR
     int finalstep=1; // if here, always on finalstep=1
     diag_fixup_Ui_pf(docorrectucons,MAC(ucons,i,j,k),MAC(pf,i,j,k),ptrgeom,finalstep,COUNTONESTEP);
 
-    if(DOYFL){ // set actual total change in effective floor
+    if(DOYFL&&0){ // set actual total change in effective floor
       
       FTYPE ucon[NDIM],others[NUMOTHERSTATERESULTS];
       ucon_calc(MAC(pf,i,j,k),ptrgeom,ucon,others);
@@ -630,12 +630,47 @@ int diag_fixup_allzones(FTYPE (*pf)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTOR
       FTYPE uconsnothing[NPR];
       FTYPE rhofromucons;
       UtoU(UEVOLVE,UNOTHING,ptrgeom,MAC(ucons,i,j,k),uconsnothing);
-      FTYPE drho=rho - uconsnothing[RHO]/ucon[TT]; // effective source term for floor scalar accounting for all changes to rho not accounted for by conserved quantity additions (that includes no floors or failures or anything else except fluxes)
+      // effective source term for floor scalar accounting for all changes to rho not accounted for by conserved quantity additions (that includes no floors or failures or anything else except fluxes)
+      // Assumes floor and mass have same velocity
+      // drho can actually be negative or positive, but only negative when failure
+      FTYPE drho=rho - uconsnothing[RHO]/ucon[TT];
 
 
-      FTYPE rhofl = MACP0A1(pf,i,j,k,YFL)*MACP0A1(pf,i,j,k,RHO); // final rhofl without source term
+      FTYPE rhofl = MACP0A1(pf,i,j,k,YFL)*MACP0A1(pf,i,j,k,RHO); // final rhofl without source term (if failure, then yfl and rho come from averaging, then rhofl and rho will not be related by conserved fluxes and (e.g.) yfl can become >1
+      FTYPE yfl = uconsnothing[YFL]/uconsnothing[RHO]; // yfl expected from ucons that accounts for fluxes but no sources, but uconsnothing[RHO] could be negative or zero and would have led to failure
+      rhofl = uconsnothing[YFL]/ucon[TT]; // rhofl from ucons, not consistent with final yfl,rho if failure, but averaged yfl probably worse than yfl linked to rho
+      //      if(rhofl<SMALL) rhofl=SMALL;
+
       FTYPE rhoflfinal = rhofl + drho;
+      if(rhoflfinal<SMALL) rhoflfinal=SMALL; // allow flux and source to compensate to give final >0 quantity
       MACP0A1(pf,i,j,k,YFL) = rhoflfinal/(SMALL+fabs(rho)); // newYfl = newrhofl / newrhototal
+      if(MACP0A1(pf,i,j,k,YFL)<0.0) MACP0A1(pf,i,j,k,YFL)=0.0;
+      if(MACP0A1(pf,i,j,k,YFL)>1.0) MACP0A1(pf,i,j,k,YFL)=1.0;
+
+      //      dualfprintf(fail_file,"rho=%g drho=%g rhofl=%g rhoflfinal=%g yfl=%g\n",rho,drho,rhofl,rhoflfinal,MACP0A1(pf,i,j,k,YFL));
+    }
+    else if(DOYFL){ // set actual total change in effective floor
+      
+      FTYPE ucon[NDIM],others[NUMOTHERSTATERESULTS];
+      ucon_calc(MAC(pf,i,j,k),ptrgeom,ucon,others);
+      FTYPE rho=MACP0A1(pf,i,j,k,RHO); // new final total
+
+      FTYPE uconsnothing[NPR];
+      FTYPE rhofromucons;
+      UtoU(UEVOLVE,UNOTHING,ptrgeom,MAC(ucons,i,j,k),uconsnothing);
+      // effective source term for floor scalar accounting for all changes to rho not accounted for by conserved quantity additions (that includes no floors or failures or anything else except fluxes)
+      // Assumes floor and mass have same velocity
+      // drho can actually be negative or positive, but only negative when failure
+      FTYPE drho=rho - uconsnothing[RHO]/ucon[TT];
+
+
+      FTYPE rhofl = MACP0A1(pf,i,j,k,YFL);
+      rhofl = uconsnothing[YFL]/ucon[TT]; // rhofl u^t / u^t
+
+      FTYPE rhoflfinal = rhofl + drho;
+      if(rhoflfinal<SMALL) rhoflfinal=SMALL; // allow flux and source to compensate to give final >0 quantity
+      //if(rhoflfinal>rho) rhoflfinal=rho; // limit so effective true Y_fl<=1
+      MACP0A1(pf,i,j,k,YFL) = rhoflfinal;
 
       //      dualfprintf(fail_file,"rho=%g drho=%g rhofl=%g rhoflfinal=%g yfl=%g\n",rho,drho,rhofl,rhoflfinal,MACP0A1(pf,i,j,k,YFL));
     }
@@ -1354,7 +1389,14 @@ int fixup1zone(int docorrectucons, FTYPE *pr, FTYPE *uconsinput, struct of_geom 
 
     if(DOYFL){
       FTYPE drho=(pr[RHO]-pr0[RHO]);
-      pr[YFL] = (pr0[YFL]*pr0[RHO] + drho)/pr[RHO]; // add to floor mass scalar // NO, only main floor, not total
+      if(0){
+        pr[YFL] = (pr0[YFL]*pr0[RHO] + drho)/pr[RHO];// have floor set new floor scalar fraction.  Adds mass at same velocity for FIXUPTYPE==0
+        if(pr[YFL]<0.0) pr[YFL]=0.0;
+        if(pr[YFL]>1.0) pr[YFL]=1.0;
+      }
+      else{
+        pr[YFL] = pr0[YFL] + drho;
+      }
     }
 
 
