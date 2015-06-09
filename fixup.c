@@ -669,7 +669,8 @@ int diag_fixup_allzones(FTYPE (*pf)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTOR
 
       FTYPE rhoflfinal = rhofl + drho;
       if(rhoflfinal<SMALL) rhoflfinal=SMALL; // allow flux and source to compensate to give final >0 quantity
-      //if(rhoflfinal>rho) rhoflfinal=rho; // limit so effective true Y_fl<=1
+      // rhofl could have been negative, as if failure or other process pulled away total rest-mass.  Since force not have floor on value, then that means rhofl can go greater than rhototal sometimes.  So avoid.
+      if(rhoflfinal>rho) rhoflfinal=rho; // limit so effective true Y_fl<=1
       MACP0A1(pf,i,j,k,YFL) = rhoflfinal;
 
       //      dualfprintf(fail_file,"rho=%g drho=%g rhofl=%g rhoflfinal=%g yfl=%g\n",rho,drho,rhofl,rhoflfinal,MACP0A1(pf,i,j,k,YFL));
