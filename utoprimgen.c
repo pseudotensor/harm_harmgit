@@ -2245,11 +2245,9 @@ int invert_scalars1(struct of_geom *ptrgeom, FTYPE *Ugeomfree, FTYPE *pr)
   //
   ///////////////
 
-  //#if(DOYFL!=DONOYFL)
-  //  yflforadvect = Ugeomfree[YFL]; *oneOmyrhouu0;
-  //#else
-  //  yflforadvect=0.0;
-  //#endif
+#if(DOYFL==1)
+  yflforadvect = Ugeomfree[YFL]; *oneOmyrhouu0;
+#endif
 
 #if(DOYL!=DONOYL)
   ylforadvect = Ugeomfree[YL]*oneOmyrhouu0;
@@ -2269,9 +2267,9 @@ int invert_scalars1(struct of_geom *ptrgeom, FTYPE *Ugeomfree, FTYPE *pr)
   //
   ///////////////
 
-  //#if(DOYFL!=DONOYFL)
-  //  pr[YFL] = yflforadvect;
-  //#endif
+#if(DOYFL==1)
+  pr[YFL] = yflforadvect;
+#endif
 
 #if(DOYL!=DONOYL)
 #if(WHICHEOS==KAZFULL)
@@ -2306,10 +2304,10 @@ int invert_scalars1(struct of_geom *ptrgeom, FTYPE *Ugeomfree, FTYPE *pr)
   //
   //////////////////
 
-  //#if(DOYFL!=DONOYFL)
-  //  prforadvect = pr[YFL];
-  //  Ugeomfree[YFL] = prforadvect*myrhouu0;
-  //#endif
+#if(DOYFL==1)
+  prforadvect = pr[YFL];
+  Ugeomfree[YFL] = prforadvect*myrhouu0;
+#endif
 
 #if(DOYL!=DONOYL)
 #if(WHICHEOS==KAZFULL)
@@ -2343,8 +2341,6 @@ int invert_scalars1(struct of_geom *ptrgeom, FTYPE *Ugeomfree, FTYPE *pr)
 int invert_scalars2(struct of_geom *ptrgeom, FTYPE *Ugeomfree, struct of_state *q, FTYPE *pr)
 {
   int i,j,k,loc;
-  FTYPE prforadvect;
-  FTYPE yflforadvect;
 
   i=ptrgeom->i;
   j=ptrgeom->j;
@@ -2370,9 +2366,8 @@ int invert_scalars2(struct of_geom *ptrgeom, FTYPE *Ugeomfree, struct of_state *
   //
   ///////////////
 
-#if(DOYFL!=DONOYFL)
-  yflforadvect = Ugeomfree[YFL]/ucon[TT];
-  pr[YFL] = yflforadvect;
+#if(DOYFL==2)
+  pr[YFL] = Ugeomfree[YFL]/ucon[TT];
 #endif
 
 

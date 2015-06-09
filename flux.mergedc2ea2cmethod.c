@@ -943,7 +943,7 @@ static int deconvolve_flux_ma(int dir, int odir1, int odir2, FTYPE *EOSextra, st
 #endif
 
 #if(MERGEDC2EA2CMETHOD)
-#if(DOYFL!=DONOYFL)
+#if(DOYFL!=0)
 
   FTYPE YFLl,YFLc,YFLr;
 
@@ -963,7 +963,7 @@ static int deconvolve_flux_ma(int dir, int odir1, int odir2, FTYPE *EOSextra, st
   ///////////////////
 
 #if(MERGEDC2EA2CMETHOD)
-#if(DOYFL!=DONOYFL)
+#if(DOYFL==1)
 
   FTYPE yfl2advectl,yfl2advectc,yfl2advectr;
 

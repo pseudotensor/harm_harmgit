@@ -158,7 +158,7 @@
 //****************************************//
 //****************************************//
 
-#define DOYFL 1 // track floor as scalar density fraction
+#define DOYFL 2 // track floor as scalar density fraction
 
 #define ACCURATESOURCEDIAG 2 // 2 means full component decomposition is accurate as well as sum.
 #define ACCURATEDIAG 1 // 1 means fluxes are accurate

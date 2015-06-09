@@ -621,7 +621,7 @@ int diag_fixup_allzones(FTYPE (*pf)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTOR
     int finalstep=1; // if here, always on finalstep=1
     diag_fixup_Ui_pf(docorrectucons,MAC(ucons,i,j,k),MAC(pf,i,j,k),ptrgeom,finalstep,COUNTONESTEP);
 
-    if(DOYFL&&0){ // set actual total change in effective floor
+    if(DOYFL==1){ // set actual total change in effective floor
       
       FTYPE ucon[NDIM],others[NUMOTHERSTATERESULTS];
       ucon_calc(MAC(pf,i,j,k),ptrgeom,ucon,others);
@@ -649,7 +649,7 @@ int diag_fixup_allzones(FTYPE (*pf)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTOR
 
       //      dualfprintf(fail_file,"rho=%g drho=%g rhofl=%g rhoflfinal=%g yfl=%g\n",rho,drho,rhofl,rhoflfinal,MACP0A1(pf,i,j,k,YFL));
     }
-    else if(DOYFL){ // set actual total change in effective floor
+    else if(DOYFL==2){ // set actual total change in effective floor
       
       FTYPE ucon[NDIM],others[NUMOTHERSTATERESULTS];
       ucon_calc(MAC(pf,i,j,k),ptrgeom,ucon,others);
@@ -1390,13 +1390,15 @@ int fixup1zone(int docorrectucons, FTYPE *pr, FTYPE *uconsinput, struct of_geom 
 
     if(DOYFL){
       FTYPE drho=(pr[RHO]-pr0[RHO]);
-      if(0){
+      if(DOYFL==1){
         pr[YFL] = (pr0[YFL]*pr0[RHO] + drho)/pr[RHO];// have floor set new floor scalar fraction.  Adds mass at same velocity for FIXUPTYPE==0
         if(pr[YFL]<0.0) pr[YFL]=0.0;
         if(pr[YFL]>1.0) pr[YFL]=1.0;
       }
-      else{
+      else if(DOYFL==2){
         pr[YFL] = pr0[YFL] + drho;
+        if(pr[YFL]<SMALL) pr[YFL]=SMALL;
+        if(pr[YFL]>pr[RHO]) pr[YFL]=pr[RHO];
       }
     }
 
