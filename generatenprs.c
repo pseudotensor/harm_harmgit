@@ -11,7 +11,7 @@
 
 
 // upper limit of number of MAXNPR
-#define SUPERMAXNPR 15
+#define SUPERMAXNPR 20
 
 int main(void)
 {
