@@ -313,6 +313,10 @@ int main(void)
   maxnpr=MAX(maxnpr,nprinvert);
 
 
+  if(npr>SUPERMAXNPR){
+    fprintf(stderr,"Must increase SUPERMAXNPR=%d to be greater than npr=%d\n",SUPERMAXNPR,npr);
+    exit(1);
+  }
 
   ///////////////////////////////////////////
   //
