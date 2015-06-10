@@ -942,15 +942,15 @@ static int deconvolve_flux_ma(int dir, int odir1, int odir2, FTYPE *EOSextra, st
 #endif
 #endif
 
-#if(MERGEDC2EA2CMETHOD)
+#if(MERGEDC2EA2CMETHOD) // SUPERGODMARK: none done for YFLx
 #if(DOYFL!=0)
 
   FTYPE YFLl,YFLc,YFLr;
 
   // Y_l:
-  YFLl=stateleft->prim[YFL];
-  YFLc=statecent->prim[YFL];
-  YFLr=stateright->prim[YFL];
+  YFLl=stateleft->prim[YFL1];
+  YFLc=statecent->prim[YFL1];
+  YFLr=stateright->prim[YFL1];
 #endif
 #endif
 
@@ -979,14 +979,14 @@ static int deconvolve_flux_ma(int dir, int odir1, int odir2, FTYPE *EOSextra, st
   
 
 #if(MCOORD==CARTMINKMETRIC)
-  threetermdeconvolution(rhol, rhoc, rhor  ,udirl, udirc, udirr,  yfl2advectl, yfl2advectc, yfl2advectr   ,&Fleft[YFL], &Fright[YFL]);
+  threetermdeconvolution(rhol, rhoc, rhor  ,udirl, udirc, udirr,  yfl2advectl, yfl2advectc, yfl2advectr   ,&Fleft[YFL1], &Fright[YFL1]);
 
   // Apply constant \detg factor
-  Fleft[YFL]*=gdetc;
-  Fright[YFL]*=gdetc;
+  Fleft[YFL1]*=gdetc;
+  Fright[YFL1]*=gdetc;
 
 #else
-  fourtermdeconvolution(gdetl, gdetc, gdetr,  rhol, rhoc, rhor  ,udirl, udirc, udirr,  yfl2advectl, yfl2advectc, yfl2advectr   ,&Fleft[YFL], &Fright[YFL]);
+  fourtermdeconvolution(gdetl, gdetc, gdetr,  rhol, rhoc, rhor  ,udirl, udirc, udirr,  yfl2advectl, yfl2advectc, yfl2advectr   ,&Fleft[YFL1], &Fright[YFL1]);
 #endif
 
 #endif // end if doing YFL

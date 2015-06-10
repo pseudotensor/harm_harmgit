@@ -733,9 +733,13 @@ int prepre_init(void)
     nogdetlist[URAD3] =NOGDETURAD3;
   }
   if(DOENTROPY) nogdetlist[ENTROPY] =NOGDETENTROPY;
-  if(DOYFL) nogdetlist[YFL] =NOGDETYFL;
-  if(DOYL) nogdetlist[YL] =NOGDETYL;
-  if(DOYNU) nogdetlist[YNU] =NOGDETYNU;
+  if(YFL1>=0) nogdetlist[YFL1] =NOGDETYFL1;
+  if(YFL2>=0) nogdetlist[YFL2] =NOGDETYFL2;
+  if(YFL3>=0) nogdetlist[YFL3] =NOGDETYFL3;
+  if(YFL4>=0) nogdetlist[YFL4] =NOGDETYFL4;
+  if(YFL5>=0) nogdetlist[YFL5] =NOGDETYFL5;
+  if(YL>=0) nogdetlist[YL] =NOGDETYL;
+  if(YNU>=0) nogdetlist[YNU] =NOGDETYNU;
 
 
 

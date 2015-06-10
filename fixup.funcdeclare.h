@@ -24,7 +24,7 @@ extern int fixup1zone(int docorrectucons, FTYPE *pr,FTYPE *ucons, struct of_geom
 extern int diag_fixup(int docorrectucons, FTYPE *pr0, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep, int doingmhdfixup, int whocalled);
 int diag_fixup_allzones(FTYPE (*pf)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR]);
 
-extern int diag_fixup_Ui_pf(int docorrectucons, FTYPE *Ui, FTYPE *pf, struct of_geom *ptrgeom, int finalstep, int whocalled);
+extern int diag_fixup_Ui_pf(int docorrectucons, FTYPE *Ui, FTYPE *pf, struct of_geom *ptrgeom, int finalstep, int whocalled, FTYPE *Uf);
 extern int diag_fixup_U(int docorrectucons, FTYPE *Ui, FTYPE *Uf, FTYPE *ucons, struct of_geom *ptrgeom, int finalstep,int whocalled);
 
 

@@ -300,12 +300,47 @@ int primtoflux_ma(int needentropy,int *returntype, FTYPE *pr, struct of_state *q
   //  dualfprintf(fail_file,"fluxdiagabs=%g\n",*fluxdiagabs);
 
 
-#if(DOYFL!=DONOYFL)
+
+
+#if(YFL1>=0)
 #if(SPLITNPR)
-  if(nprlist[nprstart]<=YFL && nprlist[nprend]>=YFL)
+  if(nprlist[nprstart]<=YFL1 && nprlist[nprend]>=YFL1)
 #endif
-    yflflux_calc(geom,pr, dir, q, &flux[YFL], &fluxabs[YFL],YFL); // fills YFL only
+    yflflux_calc(geom,pr, dir, q, &flux[YFL1], &fluxabs[YFL1],YFL1); // fills YFL1 only
 #endif
+
+#if(YFL2>=0)
+#if(SPLITNPR)
+  if(nprlist[nprstart]<=YFL2 && nprlist[nprend]>=YFL2)
+#endif
+    yflflux_calc(geom,pr, dir, q, &flux[YFL2], &fluxabs[YFL2],YFL2); // fills YFL2 only
+#endif
+
+#if(YFL3>=0)
+#if(SPLITNPR)
+  if(nprlist[nprstart]<=YFL3 && nprlist[nprend]>=YFL3)
+#endif
+    yflflux_calc(geom,pr, dir, q, &flux[YFL3], &fluxabs[YFL3],YFL3); // fills YFL3 only
+#endif
+
+#if(YFL4>=0)
+#if(SPLITNPR)
+  if(nprlist[nprstart]<=YFL4 && nprlist[nprend]>=YFL4)
+#endif
+    yflflux_calc(geom,pr, dir, q, &flux[YFL4], &fluxabs[YFL4],YFL4); // fills YFL4 only
+#endif
+
+#if(YFL5>=0)
+#if(SPLITNPR)
+  if(nprlist[nprstart]<=YFL5 && nprlist[nprend]>=YFL5)
+#endif
+    yflflux_calc(geom,pr, dir, q, &flux[YFL5], &fluxabs[YFL5],YFL5); // fills YFL5 only
+#endif
+
+
+
+
+
 #if(DOYL!=DONOYL)
 #if(SPLITNPR)
   if(nprlist[nprstart]<=YL && nprlist[nprend]>=YL)
@@ -424,7 +459,7 @@ int massflux_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *massflux, FTYPE
 }
 
 
-/// flux associated with Y_L variable
+/// flux associated with Y_fl variable
 int yflflux_calc(struct of_geom *ptrgeom, FTYPE *pr, int dir, struct of_state *q, FTYPE *advectedscalarflux, FTYPE *advectedscalarfluxabs, int pnum)
 {
   int massflux_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *massflux, FTYPE *massfluxabs);
@@ -509,7 +544,7 @@ int advectedscalarflux_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *advec
   VARSTATIC FTYPE massflux;
   VARSTATIC FTYPE massfluxabs;
 
-  //  yfl/yl/ynu/etc. per unit rest-mass flux 
+  //  yflx/yl/ynu/etc. per unit rest-mass flux 
 
   // entropy=entropy per unit volume, where conserved quantity is specific entropy:
   // d/d\tau(entropy/rho)=0

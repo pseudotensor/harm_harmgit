@@ -210,7 +210,7 @@
 /// below is always true unless hit certain terms that are true
 /// 
 #define ALLOTHERSMINIMIZE(pl) (! (VELTERMSMINIMIZE(pl) || ORTHOVEL1TERMSMINIMIZE(pl) || ORTHOVEL2TERMSMINIMIZE(pl) || PRESSUREMINIMIZE(pl) || ((emffixedstencil==1)&&EMFTERMS(pl))  ) )
-///#define OTHERADVECTMINIMIZE(pl) (pl==YFL && DOYFL!=DONOYFL || pl==YL && DOYL!=DONOYL || pl==YNU && DOYNU!=DONOYNU || pl==ENTROPY && DOENTROPY!=DONOENTROPY)
+///#define OTHERADVECTMINIMIZE(pl) ( YFLPL(pl) && DOYFL!=DONOYFL || pl==YL && DOYL!=DONOYL || pl==YNU && DOYNU!=DONOYNU || pl==ENTROPY && DOENTROPY!=DONOENTROPY)
 
 
 

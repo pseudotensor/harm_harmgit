@@ -125,7 +125,10 @@
 
 #define BPL(pl) (pl==B1 || pl==B2 || pl==B3)
 
-#define POSPL(pl) (pl==RHO || pl==UU || pl==URAD0 || pl==YFL || pl==YL || pl==YNU)
+// YFL for: rho,T10,T13,R10,R13
+#define NUMYFL (1 + 2 + 2*(EOMRADTYPE!=EOMRADNONE))
+#define YFLPL(pl) (pl==YFL1 || pl==YFL2 || pl==YFL3 || pl==YFL4 || pl==YFL5)
+#define POSPL(pl) (pl==RHO || pl==UU || pl==URAD0 || YFLPL(pl) || pl==YL || pl==YNU)
 
 #if((WHICHCURRENTCALC==CURRENTCALC0)||(WHICHCURRENTCALC==CURRENTCALC2))
 #define NUMCURRENTSLOTS 5
@@ -474,10 +477,10 @@
 
 
 
-
+// total + pake + en + em + rad
 #define NUMPHYSICALFLUXTERMS (1  +  1+1+1 + (EOMRADTYPE!=EOMRADNONE))
-#define NUMFLUXESTOSAVE (1 + 2 + (EOMRADTYPE!=EOMRADNONE)*2)
-#define FLUXESTOSAVEPL(pl) (pl==RHO || pl==UU || pl==U3 || pl==URAD0 || pl==URAD3)
+#define NUMFLUXESTOSAVE (1 + 2 + (EOMRADTYPE!=EOMRADNONE)*2 + NUMYFL*(DOYFL!=0) + (DOYL!=0) + (DOYNU!=0) )
+#define FLUXESTOSAVEPL(pl) (pl==RHO || pl==UU || pl==U3 || pl==URAD0 || pl==URAD3 || YFLPL(pl) || pl==YL || pl==YNU)
 
 #if(FLUXDUMP==0)
 #define NUMFLUXDUMP (1)

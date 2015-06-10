@@ -619,64 +619,71 @@ int diag_fixup_allzones(FTYPE (*pf)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTOR
 
     int docorrectucons=(DOENOFLUX != NOENOFLUX); // make any needed corrections if doing corrections
     int finalstep=1; // if here, always on finalstep=1
-    diag_fixup_Ui_pf(docorrectucons,MAC(ucons,i,j,k),MAC(pf,i,j,k),ptrgeom,finalstep,COUNTONESTEP);
+    FTYPE Uf[NPR]; // for returning back pf->Uf result so don't have to repeat if needed later
+    diag_fixup_Ui_pf(docorrectucons,MAC(ucons,i,j,k),MAC(pf,i,j,k),ptrgeom,finalstep,COUNTONESTEP, Uf); // Uf in UDIAG form
 
-    if(DOYFL==1){ // set actual total change in effective floor
-      
-      FTYPE ucon[NDIM],others[NUMOTHERSTATERESULTS];
-      ucon_calc(MAC(pf,i,j,k),ptrgeom,ucon,others);
-      FTYPE rho=MACP0A1(pf,i,j,k,RHO); // new final total
-
-      FTYPE uconsnothing[NPR];
-      FTYPE rhofromucons;
-      UtoU(UEVOLVE,UNOTHING,ptrgeom,MAC(ucons,i,j,k),uconsnothing);
-      // effective source term for floor scalar accounting for all changes to rho not accounted for by conserved quantity additions (that includes no floors or failures or anything else except fluxes)
-      // Assumes floor and mass have same velocity
-      // drho can actually be negative or positive, but only negative when failure
-      FTYPE drho=rho - uconsnothing[RHO]/ucon[TT];
-
-
-      FTYPE rhofl = MACP0A1(pf,i,j,k,YFL)*MACP0A1(pf,i,j,k,RHO); // final rhofl without source term (if failure, then yfl and rho come from averaging, then rhofl and rho will not be related by conserved fluxes and (e.g.) yfl can become >1
-      FTYPE yfl = uconsnothing[YFL]/uconsnothing[RHO]; // yfl expected from ucons that accounts for fluxes but no sources, but uconsnothing[RHO] could be negative or zero and would have led to failure
-      rhofl = uconsnothing[YFL]/ucon[TT]; // rhofl from ucons, not consistent with final yfl,rho if failure, but averaged yfl probably worse than yfl linked to rho
-      //      if(rhofl<SMALL) rhofl=SMALL;
-
-      FTYPE rhoflfinal = rhofl + drho;
-      if(rhoflfinal<SMALL) rhoflfinal=SMALL; // allow flux and source to compensate to give final >0 quantity
-      MACP0A1(pf,i,j,k,YFL) = rhoflfinal/(SMALL+fabs(rho)); // newYfl = newrhofl / newrhototal
-      if(MACP0A1(pf,i,j,k,YFL)<0.0) MACP0A1(pf,i,j,k,YFL)=0.0;
-      if(MACP0A1(pf,i,j,k,YFL)>1.0) MACP0A1(pf,i,j,k,YFL)=1.0;
-
-      //      dualfprintf(fail_file,"rho=%g drho=%g rhofl=%g rhoflfinal=%g yfl=%g\n",rho,drho,rhofl,rhoflfinal,MACP0A1(pf,i,j,k,YFL));
-    }
-    else if(DOYFL==2){ // set actual total change in effective floor
-      
-      FTYPE ucon[NDIM],others[NUMOTHERSTATERESULTS];
-      ucon_calc(MAC(pf,i,j,k),ptrgeom,ucon,others);
-      FTYPE rho=MACP0A1(pf,i,j,k,RHO); // new final total
-
-      FTYPE uconsnothing[NPR];
-      FTYPE rhofromucons;
-      UtoU(UEVOLVE,UNOTHING,ptrgeom,MAC(ucons,i,j,k),uconsnothing);
-      // effective source term for floor scalar accounting for all changes to rho not accounted for by conserved quantity additions (that includes no floors or failures or anything else except fluxes)
-      // Assumes floor and mass have same velocity
-      // drho can actually be negative or positive, but only negative when failure
-      FTYPE drho=rho - uconsnothing[RHO]/ucon[TT];
-
-
-      FTYPE rhofl = MACP0A1(pf,i,j,k,YFL);
-      rhofl = uconsnothing[YFL]/ucon[TT]; // rhofl u^t / u^t
-
-      FTYPE rhoflfinal = rhofl + drho;
-      if(rhoflfinal<SMALL) rhoflfinal=SMALL; // allow flux and source to compensate to give final >0 quantity
-      // rhofl could have been negative, as if failure or other process pulled away total rest-mass.  Since force not have floor on value, then that means rhofl can go greater than rhototal sometimes.  So avoid.
-      if(rhoflfinal>rho) rhoflfinal=rho; // limit so effective true Y_fl<=1
-      MACP0A1(pf,i,j,k,YFL) = rhoflfinal;
-
-      //      dualfprintf(fail_file,"rho=%g drho=%g rhofl=%g rhoflfinal=%g yfl=%g\n",rho,drho,rhofl,rhoflfinal,MACP0A1(pf,i,j,k,YFL));
+    int map[NPR];
+    PLOOP(pliter,pl){
+      if(pl==RHO) map[pl]=YFL1;
+      else if(pl==UU) map[pl]=YFL2;
+      else if(pl==U3) map[pl]=YFL3;
+      else if(pl==URAD0) map[pl]=YFL4;
+      else if(pl==URAD3) map[pl]=YFL5;
+      else map[pl]=VARNOTDEFINED;
     }
 
-  }
+    FTYPE *pr=MAC(pf,i,j,k);
+    FTYPE ucon[NDIM],others[NUMOTHERSTATERESULTS];
+    ucon_calc(pr,ptrgeom,ucon,others);
+    
+    if(YFL4>=0 || YFL5>=0){
+      FTYPE uradcon[NDIM],othersrad[NUMOTHERSTATERESULTS];
+      ucon_calc(&pr[URAD1-U1],ptrgeom,uradcon,othersrad);
+    }
+
+    FTYPE uconsnothing[NPR];
+    UtoU(UEVOLVE,UNOTHING,ptrgeom,MAC(ucons,i,j,k),uconsnothing);
+
+    FTYPE Ufnothing[NPR];
+    UtoU(UDIAG,UNOTHING,ptrgeom,Uf,Ufnothing);
+
+    int mapvar;
+    PLOOP(pliter,pl){
+      mapvar=map[pl];
+      if(mapvar>=0){
+      
+        // effective source term for floor scalar accounting for all changes to pl not accounted for by conserved quantity additions (that includes no floors or failures or anything else except fluxes)
+        // Assumes floor and mass have same velocity
+        // dpl can actually be negative or positive, but only negative when failure
+        //      FTYPE pl=MACP0A1(pf,i,j,k,PL); // new final total
+        FTYPE pltotal=Ufnothing[pl]/ucon[TT];
+        //FTYPE dpl=pl - uconsnothing[pl]/ucon[TT];
+        FTYPE dpl=(Ufnothing[pl] - uconsnothing[pl])/ucon[TT];
+
+        FTYPE plfl;
+        //      FTYPE plfl = MACP0A1(pf,i,j,k,mapvar)*pltotal); // final plfl without source term (if failure, then yflx and pl come from averaging, then plfl and pltotal will not be related by conserved fluxes and (e.g.) yflx can become >1
+        FTYPE yflx = uconsnothing[mapvar]/uconsnothing[pl]; // yflx expected from ucons that accounts for fluxes but no sources, but uconsnothing[pl] could be negative or zero and would have led to failure
+        plfl = uconsnothing[mapvar]/ucon[TT]; // plfl from ucons, not consistent with final yflx,pltotal if failure, but averaged yflx probably worse than yflx linked to pltotal
+        //      if(plfl<SMALL) plfl=SMALL;
+
+        FTYPE plflfinal = plfl + dpl;
+        if(plflfinal<SMALL) plflfinal=SMALL; // allow flux and source to compensate to give final >0 quantity
+        // plfl could have been negative, as if failure or other process pulled away total rest-mass.  Since force not have floor on value, then that means plfl can go greater than pltotal sometimes.  So avoid.
+        if(plflfinal>pltotal) plflfinal=pltotal; // limit so effective true Y_fl<=1
+
+        // set actual total change in effective floor
+        if(DOYFL==1){ // here get true Y_fl=plflfinal/pltotal
+          MACP0A1(pf,i,j,k,mapvar) = plflfinal/(SMALL+fabs(pltotal)); // newYflx = newplfl / newpltotal
+        }
+        else if(DOYFL==2){ // here get plflfinal alone
+          MACP0A1(pf,i,j,k,mapvar) = plflfinal;
+        }
+        //      dualfprintf(fail_file,"pltotal=%g dpl=%g plfl=%g plflfinal=%g yfl=%g\n",pltotal,dpl,plfl,plflfinal,MACP0A1(pf,i,j,k,YFL));
+
+
+      } // end if doing this Yflx
+    }// end loop over Yflx
+  }// end spatial loop
 
 
   return(0);
@@ -793,7 +800,7 @@ int diag_fixup(int docorrectucons, FTYPE *pr0, FTYPE *pr, FTYPE *uconsinput, str
 /// Assumes Ui is like unewglobal, so UEVOLVE type
 /// Assume ultimately hot MHD equations are used, so need to get new Uf that'll differ from Ui
 /// Also don't know Uf quite yet.
-int diag_fixup_Ui_pf(int docorrectucons, FTYPE *Uievolve, FTYPE *pf, struct of_geom *ptrgeom, int finalstep, int whocalled)
+int diag_fixup_Ui_pf(int docorrectucons, FTYPE *Uievolve, FTYPE *pf, struct of_geom *ptrgeom, int finalstep, int whocalled, FTYPE *Uf)
 {
   struct of_state q;
   FTYPE Ufcent[NPR],Uicent[NPR],uconsinput[NPR],ucons[NPR];
@@ -838,6 +845,7 @@ int diag_fixup_Ui_pf(int docorrectucons, FTYPE *Uievolve, FTYPE *pf, struct of_g
     failreturn=primtoU(UDIAG,pf,&q,ptrgeom,Ufcent, NULL);
     if(failreturn>=1) dualfprintf(fail_file,"primtoU(2) failed in fixup.c, why???\n");
 
+    if(Uf!=NULL) PLOOP(pliter,pl) Uf[pl]=Ufcent[pl];// store result for returning before gets modified
 
     //////////////////
     //
@@ -1345,7 +1353,7 @@ int fixup1zone(int docorrectucons, FTYPE *pr, FTYPE *uconsinput, struct of_geom 
       // by this point, pr0 or prdiag are not necessarily consistent with ucons, which if finalstep=1 is the final conserved quantity.  This occurs when no implicit solution and no explicit inversion.  Happens when (e.g.) U[RHO]<0.
       FTYPE Uievolve[NPR];
       PLOOP(pliter,pl) Uievolve[pl] = ucons[pl];
-      diag_fixup_Ui_pf(docorrectucons2, Uievolve, prmhd, ptrgeom, finalstep,COUNTFLOORACT);
+      diag_fixup_Ui_pf(docorrectucons2, Uievolve, prmhd, ptrgeom, finalstep,COUNTFLOORACT,NULL);
     }
     else{
       // if no failure, then fixup_utoprim won't be called or do diagnostics, so floor will be preserved and so do accounting here.
@@ -1388,17 +1396,18 @@ int fixup1zone(int docorrectucons, FTYPE *pr, FTYPE *uconsinput, struct of_geom 
 
     PALLLOOP(pl) pr[pl]=prmhd[pl];
 
+    // SUPERGODMARK: only doing rest-mass density here for now.  Still account for YFL2-5 via finalstep==1 source injection, but sub-steps only then handle fluxes for YFL2-5 currently unless add how conserved quantities changed here.  In any case, this is estimate for finalstep actual ucons vs. Uf(pf) changes.
     if(DOYFL){
       FTYPE drho=(pr[RHO]-pr0[RHO]);
       if(DOYFL==1){
-        pr[YFL] = (pr0[YFL]*pr0[RHO] + drho)/pr[RHO];// have floor set new floor scalar fraction.  Adds mass at same velocity for FIXUPTYPE==0
-        if(pr[YFL]<0.0) pr[YFL]=0.0;
-        if(pr[YFL]>1.0) pr[YFL]=1.0;
+        pr[YFL1] = (pr0[YFL1]*pr0[RHO] + drho)/pr[RHO];// have floor set new floor scalar fraction.  Adds mass at same velocity for FIXUPTYPE==0
+        if(pr[YFL1]<0.0) pr[YFL1]=0.0;
+        if(pr[YFL1]>1.0) pr[YFL1]=1.0;
       }
       else if(DOYFL==2){
-        pr[YFL] = pr0[YFL] + drho;
-        if(pr[YFL]<SMALL) pr[YFL]=SMALL;
-        if(pr[YFL]>pr[RHO]) pr[YFL]=pr[RHO];
+        pr[YFL1] = pr0[YFL1] + drho;
+        if(pr[YFL1]<SMALL) pr[YFL1]=SMALL;
+        if(pr[YFL1]>pr[RHO]) pr[YFL1]=pr[RHO];
       }
     }
 
@@ -2764,7 +2773,7 @@ static int fixuputoprim_accounting(int i, int j, int k, PFTYPE mhdlpflag, PFTYPE
     // pr0=prdiag only correct as reference primitive if was no failure of any kind, but some kind of failure if here, so need to use ucons as reference to what should be.
     FTYPE Uievolve[NPR];
     PLOOP(pliter,pl) Uievolve[pl] = MACP0A1(uconsinput,i,j,k,pl);
-    diag_fixup_Ui_pf(docorrectucons, Uievolve, MAC(pv,i,j,k), ptrgeom, finalstep,(int)mhdutoprimfailtype);
+    diag_fixup_Ui_pf(docorrectucons, Uievolve, MAC(pv,i,j,k), ptrgeom, finalstep,(int)mhdutoprimfailtype, NULL);
 
     
 

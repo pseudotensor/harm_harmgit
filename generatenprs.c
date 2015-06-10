@@ -23,7 +23,7 @@ int main(void)
   // things to define:
   int npr,npr2interp,npr2notinterp,nprbound,nfluxbound,nprdump,nprinvert;
   int maxnpr;
-  int yfl,yl,ynu,entropy,vsq;
+  int yfl1,yfl2,yfl3,yfl4,yfl5,yl,ynu,entropy,vsq;
   int rad0,rad1,rad2,rad3,nrad;
   int orignprstart,orignprend,orignprlist[SUPERMAXNPR];
   int orignpr2interpstart,orignpr2interpend,orignpr2interplist[SUPERMAXNPR];
@@ -158,22 +158,76 @@ int main(void)
   //
   // Rest of variables are most often on/off
   //
-  // These variables: yfl, yl, ynu, entropy, all have variable number assignments unlike more stable names
+  // These variables: yflx, yl, ynu, entropy, all have variable number assignments unlike more stable names
   //
   ////////////////////
 
   if(DOYFL!=DONOYFL){
-    npr++; yfl = npr-1;
+    npr++; yfl1 = npr-1;
 
-    orignprend++; orignprlist[orignprend]=yfl;
-    orignpr2interpend++; orignpr2interplist[orignpr2interpend]=yfl;
-    orignprboundend++; orignprboundlist[orignprboundend]=yfl;
-    orignprfluxboundend++; orignprfluxboundlist[orignprfluxboundend]=yfl;
-    orignprdumpend++; orignprdumplist[orignprdumpend]=yfl;
+    orignprend++; orignprlist[orignprend]=yfl1;
+    orignpr2interpend++; orignpr2interplist[orignpr2interpend]=yfl1;
+    orignprboundend++; orignprboundlist[orignprboundend]=yfl1;
+    orignprfluxboundend++; orignprfluxboundlist[orignprfluxboundend]=yfl1;
+    orignprdumpend++; orignprdumplist[orignprdumpend]=yfl1;
   }
   else{
-    yfl = VARNOTDEFINED; // indicates not defined
+    yfl1 = VARNOTDEFINED; // indicates not defined
   }
+
+  if(DOYFL!=DONOYFL){
+    npr++; yfl2 = npr-1;
+
+    orignprend++; orignprlist[orignprend]=yfl2;
+    orignpr2interpend++; orignpr2interplist[orignpr2interpend]=yfl2;
+    orignprboundend++; orignprboundlist[orignprboundend]=yfl2;
+    orignprfluxboundend++; orignprfluxboundlist[orignprfluxboundend]=yfl2;
+    orignprdumpend++; orignprdumplist[orignprdumpend]=yfl2;
+  }
+  else{
+    yfl2 = VARNOTDEFINED; // indicates not defined
+  }
+
+  if(DOYFL!=DONOYFL){
+    npr++; yfl3 = npr-1;
+
+    orignprend++; orignprlist[orignprend]=yfl3;
+    orignpr2interpend++; orignpr2interplist[orignpr2interpend]=yfl3;
+    orignprboundend++; orignprboundlist[orignprboundend]=yfl3;
+    orignprfluxboundend++; orignprfluxboundlist[orignprfluxboundend]=yfl3;
+    orignprdumpend++; orignprdumplist[orignprdumpend]=yfl3;
+  }
+  else{
+    yfl3 = VARNOTDEFINED; // indicates not defined
+  }
+
+  if(DOYFL!=DONOYFL && (EOMRADTYPE!=EOMRADNONE)){
+    npr++; yfl4 = npr-1;
+
+    orignprend++; orignprlist[orignprend]=yfl4;
+    orignpr2interpend++; orignpr2interplist[orignpr2interpend]=yfl4;
+    orignprboundend++; orignprboundlist[orignprboundend]=yfl4;
+    orignprfluxboundend++; orignprfluxboundlist[orignprfluxboundend]=yfl4;
+    orignprdumpend++; orignprdumplist[orignprdumpend]=yfl4;
+  }
+  else{
+    yfl4 = VARNOTDEFINED; // indicates not defined
+  }
+
+  if(DOYFL!=DONOYFL && (EOMRADTYPE!=EOMRADNONE)){
+    npr++; yfl5 = npr-1;
+
+    orignprend++; orignprlist[orignprend]=yfl5;
+    orignpr2interpend++; orignpr2interplist[orignpr2interpend]=yfl5;
+    orignprboundend++; orignprboundlist[orignprboundend]=yfl5;
+    orignprfluxboundend++; orignprfluxboundlist[orignprfluxboundend]=yfl5;
+    orignprdumpend++; orignprdumplist[orignprdumpend]=yfl5;
+  }
+  else{
+    yfl5 = VARNOTDEFINED; // indicates not defined
+  }
+
+
 
 
   if(DOYL!=DONOYL){
@@ -299,7 +353,11 @@ int main(void)
   fprintf(defout,"#define NRAD %d\n",nrad);
 
   // define name of extra variables
-  fprintf(defout,"#define YFL %d\n",yfl);
+  fprintf(defout,"#define YFL1 %d\n",yfl1);
+  fprintf(defout,"#define YFL2 %d\n",yfl2);
+  fprintf(defout,"#define YFL3 %d\n",yfl3);
+  fprintf(defout,"#define YFL4 %d\n",yfl4);
+  fprintf(defout,"#define YFL5 %d\n",yfl5);
   fprintf(defout,"#define YL %d\n",yl);
   fprintf(defout,"#define YE %d\n",yl); // treating YE as primitive for YL conservation
   fprintf(defout,"#define YNU %d\n",ynu);

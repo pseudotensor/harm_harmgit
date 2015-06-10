@@ -3678,7 +3678,11 @@ int init_dsandvels(int inittype, int pos, int *whichvel, int*whichcoord, SFTYPE 
 
   // assume any floor set at t=0 is part of solution
   if(DOYFL){
-    pr[YFL] = SMALL;
+    if(YFL1>=0) pr[YFL1] = SMALL;
+    if(YFL2>=0) pr[YFL2] = SMALL;
+    if(YFL3>=0) pr[YFL3] = SMALL;
+    if(YFL4>=0) pr[YFL4] = SMALL;
+    if(YFL5>=0) pr[YFL5] = SMALL;
   }
 
   return(0);

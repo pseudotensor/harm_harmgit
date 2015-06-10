@@ -155,7 +155,11 @@
 #define NOGDETURAD2 1
 #define NOGDETURAD3 0
 #define NOGDETENTROPY 0
-#define NOGDETYFL 0
+#define NOGDETYFL1 0
+#define NOGDETYFL2 0
+#define NOGDETYFL3 0
+#define NOGDETYFL4 0
+#define NOGDETYFL5 0
 #define NOGDETYL 0
 #define NOGDETYNU 0
 
