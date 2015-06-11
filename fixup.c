@@ -623,6 +623,7 @@ int diag_fixup_allzones(FTYPE (*pf)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTOR
     diag_fixup_Ui_pf(docorrectucons,MAC(ucons,i,j,k),MAC(pf,i,j,k),ptrgeom,finalstep,COUNTONESTEP, Uf); // Uf in UDIAG form
 
     int map[NPR];
+    FTYPE uconmap[NPR];
     PLOOP(pliter,pl){
       if(pl==RHO) map[pl]=YFL1;
       else if(pl==UU) map[pl]=YFL2;
@@ -635,10 +636,15 @@ int diag_fixup_allzones(FTYPE (*pf)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTOR
     FTYPE *pr=MAC(pf,i,j,k);
     FTYPE ucon[NDIM],others[NUMOTHERSTATERESULTS];
     ucon_calc(pr,ptrgeom,ucon,others);
+    if(YFL1>=0) uconmap[YFL1]=ucon[TT];
+    if(YFL2>=0) uconmap[YFL2]=-ucon[TT];
+    if(YFL3>=0) uconmap[YFL3]=ucon[TT];
     
     if(YFL4>=0 || YFL5>=0){
       FTYPE uradcon[NDIM],othersrad[NUMOTHERSTATERESULTS];
       ucon_calc(&pr[URAD1-U1],ptrgeom,uradcon,othersrad);
+      if(YFL4>=0) uconmap[YFL4]=-uradcon[TT];
+      if(YFL5>=0) uconmap[YFL5]=uradcon[TT];
     }
 
     FTYPE uconsnothing[NPR];
@@ -656,20 +662,22 @@ int diag_fixup_allzones(FTYPE (*pf)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTOR
         // Assumes floor and mass have same velocity
         // dpl can actually be negative or positive, but only negative when failure
         //      FTYPE pl=MACP0A1(pf,i,j,k,PL); // new final total
-        FTYPE pltotal=Ufnothing[pl]/ucon[TT];
-        //FTYPE dpl=pl - uconsnothing[pl]/ucon[TT];
-        FTYPE dpl=(Ufnothing[pl] - uconsnothing[pl])/ucon[TT];
+        FTYPE pltotal=Ufnothing[pl]/uconmap[mapvar];
+        //FTYPE dpl=pl - uconsnothing[pl]/uconmap[mapvar];
+        FTYPE dpl=(Ufnothing[pl] - uconsnothing[pl])/uconmap[mapvar];
 
         FTYPE plfl;
         //      FTYPE plfl = MACP0A1(pf,i,j,k,mapvar)*pltotal); // final plfl without source term (if failure, then yflx and pl come from averaging, then plfl and pltotal will not be related by conserved fluxes and (e.g.) yflx can become >1
-        FTYPE yflx = uconsnothing[mapvar]/uconsnothing[pl]; // yflx expected from ucons that accounts for fluxes but no sources, but uconsnothing[pl] could be negative or zero and would have led to failure
-        plfl = uconsnothing[mapvar]/ucon[TT]; // plfl from ucons, not consistent with final yflx,pltotal if failure, but averaged yflx probably worse than yflx linked to pltotal
+        //        FTYPE yflx = uconsnothing[mapvar]/uconsnothing[pl]; // yflx expected from ucons that accounts for fluxes but no sources, but uconsnothing[pl] could be negative or zero and would have led to failure
+        plfl = uconsnothing[mapvar]/uconmap[mapvar]; // plfl from ucons, not consistent with final yflx,pltotal if failure, but averaged yflx probably worse than yflx linked to pltotal
         //      if(plfl<SMALL) plfl=SMALL;
 
         FTYPE plflfinal = plfl + dpl;
+#if(0)
         if(plflfinal<SMALL) plflfinal=SMALL; // allow flux and source to compensate to give final >0 quantity
         // plfl could have been negative, as if failure or other process pulled away total rest-mass.  Since force not have floor on value, then that means plfl can go greater than pltotal sometimes.  So avoid.
         if(plflfinal>pltotal) plflfinal=pltotal; // limit so effective true Y_fl<=1
+#endif
 
         // set actual total change in effective floor
         if(DOYFL==1){ // here get true Y_fl=plflfinal/pltotal
