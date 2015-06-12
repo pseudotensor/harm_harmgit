@@ -173,7 +173,7 @@ int imagedefs(int whichpl, int scale, int limits, int vartype)
   if(limits==ZOOM){ // zoom in on dynamic range of values to see fine details
     DUMPGENLOOP{ // diagnostic loop // OPENMPOPTMARK: Could optimize this, but not frequently done
       if(vartype==0){
-        if(whichpl==RHO || whichpl==UU || pl==PRAD0 || pl==YL || pl==YNU){
+        if(whichpl==RHO || whichpl==UU || pl==PRAD0 || SCALARPL(pl)){
           bl_coord_ijk_2(i,j,k,CENT,X,V);
           r=V[1];
           th=V[2];
@@ -212,7 +212,7 @@ int imagedefs(int whichpl, int scale, int limits, int vartype)
   else{ // normal image
     DUMPGENLOOP{ // diagnostic loop // OPENMPOPTMARK: Could optimize this, but not frequently done
       if(vartype==0){
-        if(whichpl==RHO || whichpl==UU || pl==PRAD0 || pl==YL || pl==YNU) GLOBALMACP0A1(pimage,i,j,k,whichpl)=GLOBALMACP0A1(pdump,i,j,k,whichpl);
+        if(whichpl==RHO || whichpl==UU || pl==PRAD0 || SCALARPL(pl)) GLOBALMACP0A1(pimage,i,j,k,whichpl)=GLOBALMACP0A1(pdump,i,j,k,whichpl);
         else{
           if(scale==LINEAR) GLOBALMACP0A1(pimage,i,j,k,whichpl)=GLOBALMACP0A1(pdump,i,j,k,whichpl);
           else if(scale==LOG) GLOBALMACP0A1(pimage,i,j,k,whichpl)=fabs(GLOBALMACP0A1(pdump,i,j,k,whichpl))+MINVECTOR;
@@ -290,7 +290,7 @@ int imagedefs(int whichpl, int scale, int limits, int vartype)
 #endif
   }
   else{
-    if(whichpl==RHO || whichpl==UU || pl==PRAD0 || pl==YL || pl==YNU){
+    if(whichpl==RHO || whichpl==UU || pl==PRAD0 || SCALARPL(pl)){
       max=maxptr[whichpl]/ZOOMFACTOR;
       min=minptr[whichpl];
     }

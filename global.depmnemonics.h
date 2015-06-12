@@ -130,6 +130,9 @@
 #define YFLPL(pl) (pl==YFL1 || pl==YFL2 || pl==YFL3 || pl==YFL4 || pl==YFL5)
 #define POSPL(pl) (pl==RHO || pl==UU || pl==URAD0 || YFLPL(pl) || pl==YL || pl==YNU)
 
+#define SCALARPL(pl) (YFLPL(pl) || pl==YL || pl==YNU)
+
+
 #if((WHICHCURRENTCALC==CURRENTCALC0)||(WHICHCURRENTCALC==CURRENTCALC2))
 #define NUMCURRENTSLOTS 5
 #elif(WHICHCURRENTCALC==CURRENTCALC1)

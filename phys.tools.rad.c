@@ -7428,7 +7428,7 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
       extern int invert_scalars2(struct of_geom *ptrgeom, FTYPE *Ugeomfree, struct of_state *q, FTYPE *pr);
       invert_scalars2(ptrgeom, uu, q, pp);
       PLOOP(pliter,pl){
-        if(pl!=RHO && pl<UU && pl>U3 && pl<B1 && pl>B3 & RADPL(pl)==0 && pl!=ENTROPY){
+        if(SCALARPL(pl)){
           bestpp[pl]=pp[pl];
           bestuu[pl]=uu[pl];
         }

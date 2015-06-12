@@ -190,8 +190,9 @@ void init_dnumcolumns_dnumversion(void)
   extern void set_eosdump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
   extern void set_raddump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
   extern void set_vpotdump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
-  extern void set_dissmeasuredump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
   extern void set_failfloordudump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
+  extern void set_dissmeasuredump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
+  extern void set_fluxsimpledump_content_dnumcolumns_dnumversion(int *numcolumnsvar, int *numversion);
 
   extern void set_rupperpoledump_read_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
   extern void set_rupperpoledump_content_dnumcolumns_dnumversion(int *numcolumns, int *numversion);
@@ -248,6 +249,8 @@ void init_dnumcolumns_dnumversion(void)
   set_failfloordudump_content_dnumcolumns_dnumversion(&dnumcolumns[FAILFLOORDUDUMPTYPE],&dnumversion[FAILFLOORDUDUMPTYPE]);
   // dissmeasuredump
   set_dissmeasuredump_content_dnumcolumns_dnumversion(&dnumcolumns[DISSMEASUREDUMPTYPE],&dnumversion[DISSMEASUREDUMPTYPE]);
+  // fluxsimpledump
+  set_fluxsimpledump_content_dnumcolumns_dnumversion(&dnumcolumns[FLUXSIMPLEDUMPTYPE],&dnumversion[FLUXSIMPLEDUMPTYPE]);
 
   // rdump (must come after all normal dumps since dnumcolumns used by restart to store other things needed up restart that are dealt with also above)
   // rupperpoledump
@@ -1216,7 +1219,6 @@ extern void set_fieldline_content_dnumcolumns_dnumversion(int *numcolumnsvar, in
 
   if(DOFIELDLINE){
     *numcolumnsvar=NUMFIELDLINEQUANTITIES;
-    if(FLUXDUMP==2) *numcolumnsvar+= (NUMFLUXESTOSAVE*NUMPHYSICALFLUXTERMS);
   }
   else *numcolumnsvar=0;
 
@@ -1481,18 +1483,6 @@ int fieldline_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 
   }
 
-  if(FLUXDUMP==2){
-    int fluxterm;
-    int pliter;
-    for(fluxterm=0;fluxterm<NUMPHYSICALFLUXTERMS;fluxterm++){
-      PLOOP(pliter,pl){
-        if(FLUXESTOSAVEPL(pl)){
-          ftemp=(float)(GLOBALMACP0A1(fluxdump,i,j,k,fluxterm*NPR + pl));
-          myset(datatype,&ftemp,0,1,writebuf);
-        }
-      }
-    }
-  }
 
 
   return(0);
@@ -1657,6 +1647,8 @@ void set_fluxdump_content_dnumcolumns_dnumversion(int *numcolumnsvar, int *numve
     *numcolumnsvar=NUMFLUXDUMP;
   }
   else *numcolumnsvar=0;
+
+
 
   // Version number:
   *numversion=0;
@@ -2144,7 +2136,7 @@ int fluxsimpledump(long dump_cnt)
 }
 
 
-/// failfloor dump content number
+/// simple fluxes dump content number
 void set_fluxsimpledump_content_dnumcolumns_dnumversion(int *numcolumnsvar, int *numversion)
 {
 
@@ -2152,6 +2144,10 @@ void set_fluxsimpledump_content_dnumcolumns_dnumversion(int *numcolumnsvar, int 
     *numcolumnsvar=NPR; // radial fluxes only
   }
   else *numcolumnsvar=0;
+
+
+  if(FLUXDUMP==2) *numcolumnsvar+= (NUMFLUXESTOSAVE*NUMPHYSICALFLUXTERMS);
+
 
   // Version number:
   *numversion=0;
@@ -2166,6 +2162,21 @@ int fluxsimpledump_content(int i, int j, int k, MPI_Datatype datatype,void *writ
   int pl;
 
   myset(datatype,&GLOBALMACP0A1(F1,i,j,k,0),0,NPR,writebuf); // NPR
+
+
+  FTYPE ftemp;
+  if(FLUXDUMP==2){ // can reduce this alot (rho not in en or yflx's, etc.)
+    int fluxterm;
+    int pliter;
+    for(fluxterm=0;fluxterm<NUMPHYSICALFLUXTERMS;fluxterm++){
+      PLOOP(pliter,pl){
+        if(FLUXESTOSAVEPL(pl)){
+          ftemp=(GLOBALMACP0A1(fluxdump,i,j,k,fluxterm*NPR + pl)); // (float)
+          myset(datatype,&ftemp,0,1,writebuf);
+        }
+      }
+    }
+  }
   
   return (0);
 }

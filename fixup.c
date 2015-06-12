@@ -674,7 +674,11 @@ int diag_fixup_allzones(FTYPE (*pf)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTOR
 
         FTYPE plflfinal = plfl + dpl;
 #if(0)
-        if(plflfinal<SMALL) plflfinal=SMALL; // allow flux and source to compensate to give final >0 quantity
+        FTYPE offset=0.0;
+        if(pl==UU){ // need to compare to zero when rest-mass added
+          offset=uconsnothing[RHO]/ucon[TT];
+        }
+        if(plflfinal<-offset+SMALL) plflfinal=-offset+SMALL; // allow flux and source to compensate to give final >0 quantity
         // plfl could have been negative, as if failure or other process pulled away total rest-mass.  Since force not have floor on value, then that means plfl can go greater than pltotal sometimes.  So avoid.
         if(plflfinal>pltotal) plflfinal=pltotal; // limit so effective true Y_fl<=1
 #endif
@@ -2041,7 +2045,7 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
                 //                if((startpos[1]+ptrgeom->i==17) && (startpos[2]+ptrgeom->j)==0){
                 //                  dualfprintf(fail_file,"BEFORE IN FIXUPUTOPRIM LIMITGAMMA: finalstep=%d flag=%d\n",finalstep,mhdlpflag);
                 //                }
-                if(limitgammamhd=limit_gamma(0,gamma,GAMMAMAXRAD,MAC(pv,i,j,k),MAC(ucons,i,j,k),ptrgeom,-1)>=1) FAILSTATEMENT("fixup.c:fixup()", "limit_gamma()", 2);
+                if(limitgammamhd=limit_gamma(0,gamma,BIG,MAC(pv,i,j,k),MAC(ucons,i,j,k),ptrgeom,-1)>=1) FAILSTATEMENT("fixup.c:fixup()", "limit_gamma()", 2);
                 //                if((startpos[1]+ptrgeom->i==17) && (startpos[2]+ptrgeom->j)==0){
                 //                  dualfprintf(fail_file,"AFTER IN FIXUPUTOPRIM LIMITGAMMA: finalstep=%d\n",finalstep);
                 //                }
@@ -2231,7 +2235,7 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
                 //                if((startpos[1]+ptrgeom->i==17) && (startpos[2]+ptrgeom->j)==0){
                 //                  dualfprintf(fail_file,"BEFORE IN FIXUPUTOPRIM LIMITGAMMA2: finalstep=%d radlpflag=%d\n",finalstep,radlpflag);
                 //                }
-                if(limitgammarad=limit_gamma(0,gamma,GAMMAMAXRAD,&MACP0A1(pv,i,j,k,URAD1-U1),MAC(ucons,i,j,k),ptrgeom,-1)>=1) FAILSTATEMENT("fixup.c:fixup()", "limit_gamma()", 2);
+                if(limitgammarad=limit_gamma(0,BIG,GAMMAMAXRAD,MAC(pv,i,j,k),MAC(ucons,i,j,k),ptrgeom,-1)>=1) FAILSTATEMENT("fixup.c:fixup()", "limit_gamma()", 2);
                 //                if((startpos[1]+ptrgeom->i==17) && (startpos[2]+ptrgeom->j)==0){
                 //                  dualfprintf(fail_file,"AFTER IN FIXUPUTOPRIM LIMITGAMMA2: finalstep=%d\n",finalstep);
                 //                }
