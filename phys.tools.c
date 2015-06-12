@@ -323,20 +323,6 @@ int primtoflux_ma(int needentropy,int *returntype, FTYPE *pr, struct of_state *q
     yflflux_calc(geom,pr, dir, q, &flux[YFL3], &fluxabs[YFL3],YFL3); // fills YFL3 only
 #endif
 
-#if(YFL4>=0)
-#if(SPLITNPR)
-  if(nprlist[nprstart]<=YFL4 && nprlist[nprend]>=YFL4)
-#endif
-    yflflux_calc(geom,pr, dir, q, &flux[YFL4], &fluxabs[YFL4],YFL4); // fills YFL4 only
-#endif
-
-#if(YFL5>=0)
-#if(SPLITNPR)
-  if(nprlist[nprstart]<=YFL5 && nprlist[nprend]>=YFL5)
-#endif
-    yflflux_calc(geom,pr, dir, q, &flux[YFL5], &fluxabs[YFL5],YFL5); // fills YFL5 only
-#endif
-
 
 
 
@@ -387,6 +373,7 @@ int primtoflux_ma(int needentropy,int *returntype, FTYPE *pr, struct of_state *q
 /// radiation terms (as if rho=u=p=0)
 int primtoflux_rad(int *returntype, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux, FTYPE *fluxabs)
 {
+  int yflflux_calc(struct of_geom *ptrgeom, FTYPE *pr, int dir, struct of_state *q, FTYPE *advectedscalarflux, FTYPE *advectedscalarfluxabs, int pnum);
 
   // Radiation stress-energy tensor w/ first index up, second index down.
 #if(SPLITNPR)
@@ -397,6 +384,21 @@ int primtoflux_rad(int *returntype, FTYPE *pr, struct of_state *q, int dir, stru
     mhd_calc_rad(pr, dir, geom, q, &flux[URAD0], &fluxabs[URAD0]); // fills URAD0->URAD3
   }
   // else don't fill flux[RAD0->RAD3] since assume entries don't exist
+
+#if(YFL4>=0)
+#if(SPLITNPR)
+  if(nprlist[nprstart]<=YFL4 && nprlist[nprend]>=YFL4)
+#endif
+    yflflux_calc(geom,pr, dir, q, &flux[YFL4], &fluxabs[YFL4],YFL4); // fills YFL4 only
+#endif
+
+#if(YFL5>=0)
+#if(SPLITNPR)
+  if(nprlist[nprstart]<=YFL5 && nprlist[nprend]>=YFL5)
+#endif
+    yflflux_calc(geom,pr, dir, q, &flux[YFL5], &fluxabs[YFL5],YFL5); // fills YFL5 only
+#endif
+
 
 
   return (0);
@@ -462,12 +464,9 @@ int massflux_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *massflux, FTYPE
 /// flux associated with Y_fl variable
 int yflflux_calc(struct of_geom *ptrgeom, FTYPE *pr, int dir, struct of_state *q, FTYPE *advectedscalarflux, FTYPE *advectedscalarfluxabs, int pnum)
 {
-  int massflux_calc(FTYPE *pr, int dir, struct of_state *q, FTYPE *massflux, FTYPE *massfluxabs);
-  VARSTATIC FTYPE massflux;
-  VARSTATIC FTYPE massfluxabs;
   FTYPE prforadvect;
 
-  FTYPE udir;
+  FTYPE udir=0.0;
   if(pnum==YFL1 || pnum==YFL2 || pnum==YFL3) udir=q->ucon[dir];
   if(pnum==YFL4 || pnum==YFL5) udir=q->uradcon[dir];
 
