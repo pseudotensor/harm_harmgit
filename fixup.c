@@ -505,13 +505,13 @@ int consfixup_1zone(int finaluu, int i, int j, int k, struct of_geom *ptrgeom, F
     u2p_rad(showmessages, allowlocalfailurefixandnoreport,GAMMAMAXRADIMPLICITSOLVER,whichcap,uunew1,pprad,ptrgeom,&lpflag,&lpflagrad);
     int radinvmod=(int)(lpflagrad);
     if(radinvmod==UTOPRIMRADNOFAIL && isfinite(pprad[URAD0])==1 && isfinite(pprad[URAD1])==1 && isfinite(pprad[URAD2])==1 && isfinite(pprad[URAD3])==1){
-      PLOOP(pliter,pl) if(RADPL(pl)) pp[pl] = pprad[pl];
+      PLOOP(pliter,pl) if(RADFULLPL(pl)) pp[pl] = pprad[pl];
       didrad=1;
     }
     else{
       didrad=0;
       //    dualfprintf(fail_file,"issue ijk=%d %d %d radinvmod=%d\n",i,j,k,radinvmod);
-      //    PLOOP(pliter,pl) if(RADPL(pl)) dualfprintf(fail_file,"pprad[%d]=%g\n",pl,pprad[pl]);
+      //    PLOOP(pliter,pl) if(RADFULLPL(pl)) dualfprintf(fail_file,"pprad[%d]=%g\n",pl,pprad[pl]);
     }
   }
 
@@ -1684,9 +1684,6 @@ int fixup_checksolution(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR],int finals
 
 
 
-// GODMARK: fixup_utoprim() is 2D function that works in 3D, but doesn't consider 3rd direction (i.e. it doesn't average in 3rd direction)
-
-
 #if(MPIEQUALNONMPI==1)
 #define ORDERINDEPENDENT 1 // no choice
 // whether fixup_utoprim should be order-independent or not
@@ -1700,8 +1697,9 @@ int fixup_checksolution(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR],int finals
 // whether to conserve D when averaging (uses original D to keep D constant -- less problematic compared to how used in limit_gamma() where original \gamma might be quite large)
 // This is probably not useful
 // More useful to use conserved D from unew as reference D0 so particle mass really conserved -- and this is ok compared to limit_gamma since newly averaged 4-velocity will not imply a large \gamma (unless averaging nearly failed regions!)
+// Also, during failure, can't assume mass can be so easily conserved and D might be bad
 // So disable for now
-#define DO_CONSERVE_D_INFAILFIXUPS 0 
+#define DO_CONSERVE_D_INFAILFIXUPS (finalstep==1)
 
 #define HANDLEUNEG 0
 // seems to keep failing with this, so probably treating u<zerouuperbaryon*prim[RHO] like failure is better idea
@@ -1878,6 +1876,7 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
             /////////////////
             //
             // choose which range of quantities to average
+            // Doesn't include any floor scalars (e.g. YFLx) presumed to be forced as fully conservative post-adjusted ucon[TT] unlike (normally) evolved density
             //
             //////////////////
             // field is evolved fine, so only average non-field
@@ -1901,7 +1900,7 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
             else{
               // then presume inversion failure with no solution or assuming rho<=0 or u<=zerouuperbaryon*prim[RHO] is bad inversion if HANDLE?NEG==0
               startpl=RHO;
-              endpl=U3;
+              endpl=NPR-1;
             }
 
 
@@ -1970,39 +1969,6 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
               }
 
 
-              /////////////////////
-              //
-              // Things to do only if modifying density
-              //
-              //////////////////////
-              if(startpl<=RHO && endpl>=RHO){
-
-
-#if(DO_CONSERVE_D_INFAILFIXUPS)
-
-                if(mhdlpflag==UTOPRIMFAILGAMMAPERC || 1){ // GODMARK: always doing it
-                  // Use D0 to constrain how changing u^t changes rho
-                  // GODMARK: Why not used evolved D=\rho_0 u^t  from conserved quantity?
-                  // GODMARK: See fixup.c's limit_gamma() notes on why using conserved version of D not good to use
-                  // Here we ignore all conserved quantities and just ensure that D0 is conserved (close) to original value after averaging that assumes original value was reasonable
-                  // This is probably not necessary or useful
-                  D0 = MACP0A1(ptoavg,i,j,k,RHO)*ucon[TT];
-
-                  ///////////////////////////////////////////
-                  //
-                  // constrain change in density so conserve particle number
-                  // always do it?
-                  //
-                  //////////////////////////////////////////
-                  if (ucon_calc(MAC(pv,i,j,k), ptrgeom, ucon,others) >= 1) FAILSTATEMENT("fixup.c:utoprimfail_fixup()", "ucon_calc()", 1);
-                  MACP0A1(pv,i,j,k,RHO) = D0/ucon[TT];
-                }
-#endif
-
-              }// end over density
-
-
-
 
               /////////////////////
               //
@@ -2063,6 +2029,49 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
 
 
 
+              /////////////////////
+              //
+              // Things to do only if modifying density (must come after modifying velocity that enters ucon[TT])
+              //
+              //////////////////////
+              int scalarlikeloop;
+              PLOOP(pliter,pl){
+                if(pl==RHO || pl==YFL1 || pl==YFL2 || pl==YFL3){
+                  if(startpl<=pl && endpl>=pl){
+
+
+                    if(DO_CONSERVE_D_INFAILFIXUPS){
+                      
+                      if(mhdlpflag==UTOPRIMFAILGAMMAPERC || 1){ // GODMARK: always doing it
+                        // Use D0 to constrain how changing u^t changes rho
+                        // GODMARK: Why not used evolved D=\rho_0 u^t  from conserved quantity?
+                        // GODMARK: See fixup.c's limit_gamma() notes on why using conserved version of D not good to use
+                        // Here we ignore all conserved quantities and just ensure that D0 is conserved (close) to original value after averaging that assumes original value was reasonable
+                        if(finalstep==1){
+                          // this is not reasonable, because ignores any mass injection required during failure to make sense of solution
+                          D0 = MACP0A1(ucons,i,j,k,pl);
+                        }
+                        else{
+                          // This is probably not necessary or useful
+                          D0 = MACP0A1(ptoavg,i,j,k,pl)*ucon[TT];
+                        }
+                        
+                        ///////////////////////////////////////////
+                        //
+                        // constrain change in density so conserve particle number
+                        //
+                        //////////////////////////////////////////
+                        if(D0>0.0 || pl==YFL1 || pl==YFL2 || pl==YFL3){ // only makes sense if D0 implies positive density at least
+                          if (ucon_calc(MAC(pv,i,j,k), ptrgeom, ucon,others) >= 1) FAILSTATEMENT("fixup.c:utoprimfail_fixup()", "ucon_calc()", 1);
+                          MACP0A1(pv,i,j,k,pl) = D0/ucon[TT];
+                        }
+                      }
+                    }
+                  }
+                }
+              }// end over density or scalars
+
+
 
 #if(0)
               // DEBUG problem of launch with pressureless stellar model collapse
@@ -2121,8 +2130,8 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
             }
             else{
               // then presume inversion failure with no solution
-              startpl=PRAD0;
-              endpl=PRAD3;
+              startpl=RHO;
+              endpl=NPR-1;
             }
 
 
@@ -2250,6 +2259,47 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
 #endif
 
               }// end if dealing with velocity
+
+
+
+              /////////////////////
+              //
+              // Things to do only if modifying density (must come after modifying velocity that enters ucon[TT])
+              //
+              //////////////////////
+              int scalarlikeloop;
+              PLOOP(pliter,pl){
+                if(pl==YFL4 || pl==YFL5 ){
+                  if(startpl<=pl && endpl>=pl){
+
+
+                    if(DO_CONSERVE_D_INFAILFIXUPS){
+                      
+                      if(mhdlpflag==UTOPRIMFAILGAMMAPERC || 1){ // GODMARK: always doing it
+                        if(finalstep==1){
+                          // this is not reasonable, because ignores any mass injection required during failure to make sense of solution
+                          D0 = MACP0A1(ucons,i,j,k,pl);
+                        }
+                        else{
+                          // This is probably not necessary or useful
+                          D0 = MACP0A1(ptoavg,i,j,k,pl)*ucon[TT];
+                        }
+                        
+                        ///////////////////////////////////////////
+                        //
+                        // constrain change in density so conserve particle number
+                        //
+                        //////////////////////////////////////////
+                        if(D0>0.0 || pl==YFL4 || pl==YFL5){ // only makes sense if D0 implies positive density at least
+                          if (ucon_calc(&MACP0A1(pv,i,j,k,URAD1-U1), ptrgeom, ucon,others) >= 1) FAILSTATEMENT("fixup.c:utoprimfail_fixup()", "ucon_calc()", 1);
+                          MACP0A1(pv,i,j,k,pl) = D0/ucon[TT];
+                        }
+                      }
+                    }
+                  }
+                }
+              }// end over density or scalars
+
 
 
 
@@ -2853,6 +2903,9 @@ static int fixuputoprim_accounting(int i, int j, int k, PFTYPE mhdlpflag, PFTYPE
 }
 
 
+// what quantities to average or treat in fixup_utoprim()
+// only touch mhd quantities for mhd case, rad quantities for rad case, and never touch field
+#define PLOOPSTARTEND(pl) for(pl=startpl;pl<=endpl;pl++) if((NONRADFULLPL(pl) && doingmhd || RADFULLPL(pl) && doingmhd==0) && BPL(pl)==0)
 
 
 
@@ -2991,7 +3044,7 @@ static int general_average(int useonlynonfailed, int numbndtotry, int maxnumbndt
   /////////////////////////////////////////////////////////////
   numavg=0;
   numavg0=numavg1=0;
-  for(pl=startpl;pl<=endpl;pl++){
+  PLOOPSTARTEND(pl){
     mysum[0][pl]=0.0;
     mysum[1][pl]=0.0;
     lastmin[pl]=VERYBIG;
@@ -3074,7 +3127,8 @@ static int general_average(int useonlynonfailed, int numbndtotry, int maxnumbndt
 
 
       // do sum of these 2 pairs
-      for(pl=startpl;pl<=endpl;pl++){
+      PLOOPSTARTEND(pl){
+        
         mysum[qq%2][pl]+=MACP0A1(ptoavg,i+ii,j+jj,k+kk,pl)*thisnotfail + MACP0A1(ptoavg,i-ii,j-jj,k-kk,pl)*thatnotfail;
 
 
@@ -3093,7 +3147,7 @@ static int general_average(int useonlynonfailed, int numbndtotry, int maxnumbndt
     // MIN types
     /////////
     if(failavglooptype==1 || failavglooptype==2){ // only for U2AVG
-      for(pl=startpl;pl<=endpl;pl++){
+      PLOOPSTARTEND(pl){
 #if(0)
         ftemp=MACP0A1(ptoavg,i+ii,j+jj,k+kk,pl);
         if(ftemp>=ref){
@@ -3131,12 +3185,14 @@ static int general_average(int useonlynonfailed, int numbndtotry, int maxnumbndt
     //////////
     // NORMAL:
     //////////
-    if(numavg0!=0) for(pl=startpl;pl<=endpl;pl++){
+    if(numavg0!=0){
+      PLOOPSTARTEND(pl){
         avganswer0[pl]=(mysum[0][pl]+mysum[1][pl])/((FTYPE)(numavg0));
       }
+    }
   }
   if(failavglooptype==1 || failavglooptype==2){
-    for(pl=startpl;pl<=endpl;pl++){
+    PLOOPSTARTEND(pl){
       avganswer1[pl]=lastmin[pl];
     }
   }
@@ -3151,29 +3207,40 @@ static int general_average(int useonlynonfailed, int numbndtotry, int maxnumbndt
     //////////
     // NORMAL:
     //////////
-    if(numavg0!=0) for(pl=startpl;pl<=endpl;pl++) MACP0A1(pv,i,j,k,pl)=avganswer0[pl];
+    if(numavg0!=0){
+      PLOOPSTARTEND(pl){
+        MACP0A1(pv,i,j,k,pl)=avganswer0[pl];
+      }
+    }
     numavg=numavg0;
   }
   if(failavglooptype==1 || ((failavglooptype==2)&&(numavg0==0)) ){  
-    //     if(numavg1!=0 && (MACP0A1(pv,i,j,k,pl)<avganswer1[pl]) ) for(pl=startpl;pl<=endpl;pl++) MACP0A1(pv,i,j,k,pl)=avganswer1[pl]; // else keep same as original answer
-    //     if(numavg1!=0 && (MACP0A1(ptoavg,i,j,k,pl)<avganswer1[pl]) ) for(pl=startpl;pl<=endpl;pl++) MACP0A1(pv,i,j,k,pl)=avganswer1[pl]; // else keep same as original answer
-    if(numavg1!=0) for(pl=startpl;pl<=endpl;pl++) MACP0A1(pv,i,j,k,pl)=avganswer1[pl]; // else keep same as original answer
-    //     if(numavg1==2) for(pl=startpl;pl<=endpl;pl++) MACP0A1(pv,i,j,k,pl)=avganswer1[pl]; // else keep same as original answer
+    //     if(numavg1!=0 && (MACP0A1(pv,i,j,k,pl)<avganswer1[pl]) ) PLOOPSTARTEND(pl) MACP0A1(pv,i,j,k,pl)=avganswer1[pl]; // else keep same as original answer
+    //     if(numavg1!=0 && (MACP0A1(ptoavg,i,j,k,pl)<avganswer1[pl]) ) PLOOPSTARTEND(pl) MACP0A1(pv,i,j,k,pl)=avganswer1[pl]; // else keep same as original answer
+    if(numavg1!=0){
+      PLOOPSTARTEND(pl){
+        MACP0A1(pv,i,j,k,pl)=avganswer1[pl]; // else keep same as original answer
+      }
+    }
+    //     if(numavg1==2) PLOOPSTARTEND(pl) MACP0A1(pv,i,j,k,pl)=avganswer1[pl]; // else keep same as original answer
     numavg=numavg1;
   }
   if(failavglooptype==2 && (numavg0!=0) && (numavg1!=0) ){ // here if both numavg0!=0 and numavg1!=0
-    //for(pl=startpl;pl<=endpl;pl++) MACP0A1(pv,i,j,k,pl)=MIN(MIN(avganswer1[pl],avganswer0[pl]),MACP0A1(pv,i,j,k,pl));
     if(MACP0A1(pv,i,j,k,pl)<avganswer1[pl] && MACP0A1(pv,i,j,k,pl)<avganswer0[pl]){
-      for(pl=startpl;pl<=endpl;pl++) MACP0A1(pv,i,j,k,pl)=MIN(avganswer1[pl],avganswer0[pl]);
+      PLOOPSTARTEND(pl){
+        MACP0A1(pv,i,j,k,pl)=MIN(avganswer1[pl],avganswer0[pl]);
+      }
     }
     else if(MACP0A1(pv,i,j,k,pl)<avganswer1[pl] ){ // Sasha scheme
-      for(pl=startpl;pl<=endpl;pl++) MACP0A1(pv,i,j,k,pl)=avganswer1[pl];
+      PLOOPSTARTEND(pl){
+        MACP0A1(pv,i,j,k,pl)=avganswer1[pl];
+      }
     }
     else if(MACP0A1(pv,i,j,k,pl)<avganswer0[pl] ){ // Causal scheme
-      for(pl=startpl;pl<=endpl;pl++) MACP0A1(pv,i,j,k,pl)=avganswer0[pl];
+      PLOOPSTARTEND(pl){
+        MACP0A1(pv,i,j,k,pl)=avganswer0[pl];
+      }
     }
-    //for(pl=startpl;pl<=endpl;pl++) MACP0A1(pv,i,j,k,pl)=avganswer0[pl];
-    //for(pl=startpl;pl<=endpl;pl++) MACP0A1(pv,i,j,k,pl)=avganswer1[pl];
     numavg=MAX(numavg0,numavg1); // only matters now that this is nonzero
   }
 
@@ -3232,7 +3299,7 @@ static int simple_average(int startpl, int endpl, int i, int j, int k,int doingm
     if(debugfail>=2) dualfprintf(fail_file,"t=%21.15g : i=%d j=%d k=%d : utoprim corrected1\n",t,startpos[1]+i,startpos[2]+j,startpos[3]+k);
     // then average
     // don't mess with B field, it's correct already
-    for(pl=startpl;pl<=endpl;pl++){
+    PLOOPSTARTEND(pl){
       MACP0A1(pv,i,j,k,pl)=AVG4_1(ptoavg,i,j,k,pl);  
       if(debugfail>=2) dualfprintf(fail_file,"uc2: pl=%d pv=%21.15g\n",pl,MACP0A1(pv,i,j,k,pl));
     }
@@ -3245,7 +3312,7 @@ static int simple_average(int startpl, int endpl, int i, int j, int k,int doingm
            ){
     if(debugfail>=2) dualfprintf(fail_file,"t=%21.15g : i=%d j=%d k=%d : utoprim corrected2\n",t,startpos[1]+i,startpos[2]+j,startpos[3]+k);
     // then average
-    for(pl=startpl;pl<=endpl;pl++){
+    PLOOPSTARTEND(pl){
       MACP0A1(pv,i,j,k,pl)=AVG4_2(ptoavg,i,j,k,pl);
       if(debugfail>=2) dualfprintf(fail_file,"uc2: pl=%d pv=%21.15g\n",pl,MACP0A1(pv,i,j,k,pl));
     }
@@ -3261,7 +3328,7 @@ static int simple_average(int startpl, int endpl, int i, int j, int k,int doingm
            ){
     if(debugfail>=2) dualfprintf(fail_file,"t=%21.15g : i=%d j=%d k=%d : utoprim corrected3\n",t,startpos[1]+i,startpos[2]+j,startpos[3]+k);
     // then average
-    for(pl=startpl;pl<=endpl;pl++){
+    PLOOPSTARTEND(pl){
       MACP0A1(pv,i,j,k,pl)=AVG2_1(ptoavg,i,j,k,pl);
       if(debugfail>=2) dualfprintf(fail_file,"uc2: pl=%d pv=%21.15g\n",pl,MACP0A1(pv,i,j,k,pl));
     }
@@ -3272,7 +3339,7 @@ static int simple_average(int startpl, int endpl, int i, int j, int k,int doingm
            ){
     if(debugfail>=2) dualfprintf(fail_file,"t=%21.15g : i=%d j=%d k=%d : utoprim corrected4\n",t,startpos[1]+i,startpos[2]+j,startpos[3]+k);
     // then average
-    for(pl=startpl;pl<=endpl;pl++){
+    PLOOPSTARTEND(pl){
       MACP0A1(pv,i,j,k,pl)=AVG2_2(ptoavg,i,j,k,pl);
       if(debugfail>=2) dualfprintf(fail_file,"uc2: pl=%d pv=%21.15g\n",pl,MACP0A1(pv,i,j,k,pl));
     }
@@ -3283,7 +3350,7 @@ static int simple_average(int startpl, int endpl, int i, int j, int k,int doingm
            ){
     if(debugfail>=2) dualfprintf(fail_file,"t=%21.15g : i=%d j=%d k=%d : utoprim corrected5\n",t,startpos[1]+i,startpos[2]+j,startpos[3]+k);
     // then average
-    for(pl=startpl;pl<=endpl;pl++){
+    PLOOPSTARTEND(pl){
       MACP0A1(pv,i,j,k,pl)=AVG2_3(ptoavg,i,j,k,pl);
       if(debugfail>=2) dualfprintf(fail_file,"uc2: pl=%d pv=%21.15g\n",pl,MACP0A1(pv,i,j,k,pl));
     }
@@ -3294,7 +3361,7 @@ static int simple_average(int startpl, int endpl, int i, int j, int k,int doingm
            ){
     if(debugfail>=2) dualfprintf(fail_file,"t=%21.15g : i=%d j=%d k=%d : utoprim corrected6\n",t,startpos[1]+i,startpos[2]+j,startpos[3]+k);
     // then average
-    for(pl=startpl;pl<=endpl;pl++){
+    PLOOPSTARTEND(pl){
       MACP0A1(pv,i,j,k,pl)=AVG2_4(ptoavg,i,j,k,pl);
       if(debugfail>=2) dualfprintf(fail_file,"uc2: pl=%d pv=%21.15g\n",pl,MACP0A1(pv,i,j,k,pl));
     }
@@ -3309,7 +3376,7 @@ static int simple_average(int startpl, int endpl, int i, int j, int k,int doingm
            ){
     if(debugfail>=2) dualfprintf(fail_file,"t=%21.15g : i=%d j=%d k=%d : utoprim corrected7\n",t,startpos[1]+i,startpos[2]+j,startpos[3]+k);
     // then ASSIGN
-    for(pl=startpl;pl<=endpl;pl++){
+    PLOOPSTARTEND(pl){
       MACP0A1(pv,i,j,k,pl)=MACP0A1(ptoavg,ip1mac(i),jp1mac(j),k,pl);
       if(debugfail>=2) dualfprintf(fail_file,"uc2: pl=%d pv=%21.15g\n",pl,MACP0A1(pv,i,j,k,pl));
     }
@@ -3319,7 +3386,7 @@ static int simple_average(int startpl, int endpl, int i, int j, int k,int doingm
            ){
     if(debugfail>=2) dualfprintf(fail_file,"t=%21.15g : i=%d j=%d k=%d : utoprim corrected7\n",t,startpos[1]+i,startpos[2]+j,startpos[3]+k);
     // then ASSIGN
-    for(pl=startpl;pl<=endpl;pl++){
+    PLOOPSTARTEND(pl){
       MACP0A1(pv,i,j,k,pl)=MACP0A1(ptoavg,ip1mac(i),j,k,pl);
       if(debugfail>=2) dualfprintf(fail_file,"uc2: pl=%d pv=%21.15g\n",pl,MACP0A1(pv,i,j,k,pl));
     }
@@ -3329,7 +3396,7 @@ static int simple_average(int startpl, int endpl, int i, int j, int k,int doingm
            ){
     if(debugfail>=2) dualfprintf(fail_file,"t=%21.15g : i=%d j=%d k=%d : utoprim corrected7\n",t,startpos[1]+i,startpos[2]+j,startpos[3]+k);
     // then ASSIGN
-    for(pl=startpl;pl<=endpl;pl++){
+    PLOOPSTARTEND(pl){
       MACP0A1(pv,i,j,k,pl)=MACP0A1(ptoavg,ip1mac(i),jm1mac(j),k,pl);
       if(debugfail>=2) dualfprintf(fail_file,"uc2: pl=%d pv=%21.15g\n",pl,MACP0A1(pv,i,j,k,pl));
     }
@@ -3339,7 +3406,7 @@ static int simple_average(int startpl, int endpl, int i, int j, int k,int doingm
            ){
     if(debugfail>=2) dualfprintf(fail_file,"t=%21.15g : i=%d j=%d k=%d : utoprim corrected7\n",t,startpos[1]+i,startpos[2]+j,startpos[3]+k);
     // then ASSIGN
-    for(pl=startpl;pl<=endpl;pl++){
+    PLOOPSTARTEND(pl){
       MACP0A1(pv,i,j,k,pl)=MACP0A1(ptoavg,i,jm1mac(j),k,pl);
       if(debugfail>=2) dualfprintf(fail_file,"uc2: pl=%d pv=%21.15g\n",pl,MACP0A1(pv,i,j,k,pl));
     }
@@ -3349,7 +3416,7 @@ static int simple_average(int startpl, int endpl, int i, int j, int k,int doingm
            ){
     if(debugfail>=2) dualfprintf(fail_file,"t=%21.15g : i=%d j=%d k=%d : utoprim corrected7\n",t,startpos[1]+i,startpos[2]+j,startpos[3]+k);
     // then ASSIGN
-    for(pl=startpl;pl<=endpl;pl++){
+    PLOOPSTARTEND(pl){
       MACP0A1(pv,i,j,k,pl)=MACP0A1(ptoavg,im1mac(i),jm1mac(j),k,pl);
       if(debugfail>=2) dualfprintf(fail_file,"uc2: pl=%d pv=%21.15g\n",pl,MACP0A1(pv,i,j,k,pl));
     }
@@ -3359,7 +3426,7 @@ static int simple_average(int startpl, int endpl, int i, int j, int k,int doingm
            ){
     if(debugfail>=2) dualfprintf(fail_file,"t=%21.15g : i=%d j=%d k=%d : utoprim corrected7\n",t,startpos[1]+i,startpos[2]+j,startpos[3]+k);
     // then ASSIGN
-    for(pl=startpl;pl<=endpl;pl++){
+    PLOOPSTARTEND(pl){
       MACP0A1(pv,i,j,k,pl)=MACP0A1(ptoavg,im1mac(i),j,k,pl);
       if(debugfail>=2) dualfprintf(fail_file,"uc2: pl=%d pv=%21.15g\n",pl,MACP0A1(pv,i,j,k,pl));
     }
@@ -3369,7 +3436,7 @@ static int simple_average(int startpl, int endpl, int i, int j, int k,int doingm
            ){
     if(debugfail>=2) dualfprintf(fail_file,"t=%21.15g : i=%d j=%d k=%d : utoprim corrected7\n",t,startpos[1]+i,startpos[2]+j,startpos[3]+k);
     // then ASSIGN
-    for(pl=startpl;pl<=endpl;pl++){
+    PLOOPSTARTEND(pl){
       MACP0A1(pv,i,j,k,pl)=MACP0A1(ptoavg,im1mac(i),jp1mac(j),k,pl);
       if(debugfail>=2) dualfprintf(fail_file,"uc2: pl=%d pv=%21.15g\n",pl,MACP0A1(pv,i,j,k,pl));
     }
@@ -3379,7 +3446,7 @@ static int simple_average(int startpl, int endpl, int i, int j, int k,int doingm
            ){
     if(debugfail>=2) dualfprintf(fail_file,"t=%21.15g : i=%d j=%d k=%d : utoprim corrected7\n",t,startpos[1]+i,startpos[2]+j,startpos[3]+k);
     // then ASSIGN
-    for(pl=startpl;pl<=endpl;pl++){
+    PLOOPSTARTEND(pl){
       MACP0A1(pv,i,j,k,pl)=MACP0A1(ptoavg,i,jp1mac(j),k,pl);
       if(debugfail>=2) dualfprintf(fail_file,"uc2: pl=%d pv=%21.15g\n",pl,MACP0A1(pv,i,j,k,pl));
     }
@@ -3505,7 +3572,7 @@ static int fixup_nogood(int startpl, int endpl, int i, int j, int k, int doingmh
     int nogood=general_average(useonlynonfailed,numbndtotry,maxnumbndtotry,startpl, endpl, i, j, k, doingmhd, mhdlpflag, radlpflag, NULL ,pv,ptoavg,ptrgeom);
     // nogood will be 1
 #else
-    for(pl=startpl;pl<=endpl;pl++) MACP0A1(pv,i,j,k,pl)=0.5*(AVG4_1(ptoavgwhennogood,i,j,k,pl)+AVG4_2(ptoavgwhennogood,i,j,k,pl)); // like simple average
+    PLOOPSTARTEND(pl) MACP0A1(pv,i,j,k,pl)=0.5*(AVG4_1(ptoavgwhennogood,i,j,k,pl)+AVG4_2(ptoavgwhennogood,i,j,k,pl)); // like simple average
 #endif
     
   }

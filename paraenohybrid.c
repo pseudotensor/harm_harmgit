@@ -233,7 +233,7 @@ int paraprocess_line_c2e( int whichquantity, int dir, int do_weight_or_recon, we
   dqrange=5;
 
   int whicheom;
-  if(RADPL(pl)) whicheom=EOMSETRAD;
+  if(RADFULLPL(pl)) whicheom=EOMSETRAD;
   else whicheom=EOMSETMHD;
 
 

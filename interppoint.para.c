@@ -1285,14 +1285,14 @@ void parapl(int i, int j, int k, int loc, int realisinterp, int dir, FTYPE **yre
     para4gen(realisinterp,dqrange,pl,y,&loutpl[pl],&routpl[pl],dq[pl],&smooth);
 
 #if(DOPPMCONTACTSTEEP)
-    if(RADPL(pl)&&RADSHOCKFLAT) parasteep(dir,pl,V[EOMSETRAD],P[EOMSETRAD],ypl[pl],dq[pl],&loutpl[pl],&routpl[pl]);
-    if(!RADPL(pl)) parasteep(dir,pl,V[EOMSETMHD],P[EOMSETMHD],ypl[pl],dq[pl],&loutpl[pl],&routpl[pl]);
+    if(RADFULLPL(pl)&&RADSHOCKFLAT) parasteep(dir,pl,V[EOMSETRAD],P[EOMSETRAD],ypl[pl],dq[pl],&loutpl[pl],&routpl[pl]);
+    if(!RADFULLPL(pl)) parasteep(dir,pl,V[EOMSETMHD],P[EOMSETMHD],ypl[pl],dq[pl],&loutpl[pl],&routpl[pl]);
 #endif
 
 
 #if( DOPPMREDUCE )
-    if(RADPL(pl)&&RADSHOCKFLAT) paraflatten(dir,pl,ypl[pl],Fi[EOMSETRAD],&loutpl[pl],&routpl[pl]);
-    if(!RADPL(pl)) paraflatten(dir,pl,ypl[pl],Fi[EOMSETMHD],&loutpl[pl],&routpl[pl]);
+    if(RADFULLPL(pl)&&RADSHOCKFLAT) paraflatten(dir,pl,ypl[pl],Fi[EOMSETRAD],&loutpl[pl],&routpl[pl]);
+    if(!RADFULLPL(pl)) paraflatten(dir,pl,ypl[pl],Fi[EOMSETMHD],&loutpl[pl],&routpl[pl]);
 #endif
 
 
@@ -1305,8 +1305,8 @@ void parapl(int i, int j, int k, int loc, int realisinterp, int dir, FTYPE **yre
 
 #if(NONMONOLIM>0 && DOPPMREDUCE)
     // then flatten again
-    if(RADPL(pl)&&RADSHOCKFLAT) paraflatten(dir,pl,ypl[pl],Fi[EOMSETRAD],&loutpl[pl],&routpl[pl]);
-    if(!RADPL(pl)) paraflatten(dir,pl,ypl[pl],Fi[EOMSETMHD],&loutpl[pl],&routpl[pl]);
+    if(RADFULLPL(pl)&&RADSHOCKFLAT) paraflatten(dir,pl,ypl[pl],Fi[EOMSETRAD],&loutpl[pl],&routpl[pl]);
+    if(!RADFULLPL(pl)) paraflatten(dir,pl,ypl[pl],Fi[EOMSETMHD],&loutpl[pl],&routpl[pl]);
 #endif
 
     

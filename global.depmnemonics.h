@@ -120,9 +120,6 @@
 #define DONONBPL 2
 #define DOSPECIALPL 3
 
-#define RADUPL(pl) (pl==URAD0 || pl==URAD1 || pl==URAD2 || pl==URAD3)
-#define RADPL(pl) (pl==PRAD0 || pl==PRAD1 || pl==PRAD2 || pl==PRAD3)
-
 #define BPL(pl) (pl==B1 || pl==B2 || pl==B3)
 
 // YFL for: rho,T10,T13,R10,R13
@@ -131,6 +128,12 @@
 #define POSPL(pl) (pl==RHO || pl==UU || pl==URAD0 || YFLPL(pl) || pl==YL || pl==YNU)
 
 #define SCALARPL(pl) (YFLPL(pl) || pl==YL || pl==YNU)
+
+#define RADPL(pl) (pl==PRAD0 || pl==PRAD1 || pl==PRAD2 || pl==PRAD3)
+#define RADFULLPL(pl) (pl==PRAD0 || pl==PRAD1 || pl==PRAD2 || pl==PRAD3 || pl==YFL4 || pl==YFL5)
+
+#define NONRADFULLPL(pl) (!RADFULLPL(pl))
+
 
 
 #if((WHICHCURRENTCALC==CURRENTCALC0)||(WHICHCURRENTCALC==CURRENTCALC2))

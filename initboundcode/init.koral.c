@@ -491,7 +491,7 @@ int init_global(void)
   else{
     PALLLOOP(pl) fluxmethod[pl]=LAXFFLUX; //HLLFLUX;
     // HLL leads to problems with radiation and realistic opacities.
-    PALLLOOP(pl) if(RADPL(pl)) fluxmethod[pl]=LAXFFLUX;
+    PALLLOOP(pl) if(RADFULLPL(pl)) fluxmethod[pl]=LAXFFLUX;
   }
 
   //FLUXB=FLUXCTTOTH;

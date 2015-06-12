@@ -91,7 +91,7 @@ void pass_1d_line_multipl_paraline(int MULTIPLTYPE, int whichquantity, int dir, 
     //    yout[pl][1][i]=facecont[pl][i+1];
     right=facecont[pl][i+1];
 
-    if(RADPL(pl)) whicheom=EOMSETRAD;
+    if(RADFULLPL(pl)) whicheom=EOMSETRAD;
     else whicheom=EOMSETMHD;
 
 #if(JONPARASMOOTH)

@@ -1234,7 +1234,7 @@ int jacstart[JACNUMTYPES],jaclist[JACNUMTYPES][JACNPR],jacend[JACNUMTYPES];
 #define JACNPR (NDIM)
 #define JACLOOP(jj,startjj,endjj) for(jj=startjj;jj<=endjj;jj++)
 #define JACLOOPALT(jj,startjj,endjj) DLOOPA(jj) //for(jj=startjj;jj<=endjj;jj++) // for those things might or might not want to do all terms
-#define JACLOOPSUPERFULL(pliter,pl,eomtype,baseitermethod,radinvmod) PLOOP(pliter,pl) if(pl!=ENTROPY && pl!=UU && pl!=URAD0 || (eomtype==EOMDEFAULT && EOMTYPE==EOMENTROPYGRMHD || eomtype==EOMENTROPYGRMHD || eomtype==EOMDIDENTROPYGRMHD) && (pl==ENTROPY || pl==URAD0 && IMPMHDTYPEBASE(baseitermethod)==0 || IMPMHDTYPEBASE(baseitermethod)==1 && (pl==URAD0 && AVOIDURAD0IFRADINVMODANDPMHDMETHOD==0 || pl==URAD0 && AVOIDURAD0IFRADINVMODANDPMHDMETHOD==1 && radinvmod==0)) || (eomtype==EOMDEFAULT && EOMTYPE==EOMGRMHD || eomtype==EOMGRMHD || eomtype==EOMDIDGRMHD) && (pl==UU || pl==URAD0 && IMPMHDTYPEBASE(baseitermethod)==0 || IMPMHDTYPEBASE(baseitermethod)==1 && (pl==URAD0 && AVOIDURAD0IFRADINVMODANDPMHDMETHOD==0 || pl==URAD0 && AVOIDURAD0IFRADINVMODANDPMHDMETHOD==1 && radinvmod==0) )) // over f's, not primitives.
+#define JACLOOPSUPERFULL(pliter,pl,eomtype,baseitermethod,radinvmod) PLOOP(pliter,pl) if(pl!=ENTROPY && pl!=UU && pl!=URAD0 && !SCALARPL(pl) || (eomtype==EOMDEFAULT && EOMTYPE==EOMENTROPYGRMHD || eomtype==EOMENTROPYGRMHD || eomtype==EOMDIDENTROPYGRMHD) && (pl==ENTROPY || pl==URAD0 && IMPMHDTYPEBASE(baseitermethod)==0 || IMPMHDTYPEBASE(baseitermethod)==1 && (pl==URAD0 && AVOIDURAD0IFRADINVMODANDPMHDMETHOD==0 || pl==URAD0 && AVOIDURAD0IFRADINVMODANDPMHDMETHOD==1 && radinvmod==0)) || (eomtype==EOMDEFAULT && EOMTYPE==EOMGRMHD || eomtype==EOMGRMHD || eomtype==EOMDIDGRMHD) && (pl==UU || pl==URAD0 && IMPMHDTYPEBASE(baseitermethod)==0 || IMPMHDTYPEBASE(baseitermethod)==1 && (pl==URAD0 && AVOIDURAD0IFRADINVMODANDPMHDMETHOD==0 || pl==URAD0 && AVOIDURAD0IFRADINVMODANDPMHDMETHOD==1 && radinvmod==0) )) // over f's, not primitives.
 #define JACLOOPFULLERROR(itermode,jj,startjj,endjj) for(jj=(itermode==ITERMODECOLD ? startjj : 0);jj<=(itermode==ITERMODECOLD ? endjj : NDIM-1);jj++)
 #define JACLOOPSUBERROR(jj,startjj,endjj) JACLOOP(jj,startjj,endjj)
 #define JACLOOP2D(ii,jj,startjj,endjj) JACLOOP(ii,startjj,endjj) JACLOOP(jj,startjj,endjj)
@@ -1892,8 +1892,8 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
     extern int primtoflux_nonradonly(int needentropy, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux, FTYPE *fluxabs);
     FTYPE uumhd[NPR],uumhdabs[NPR];
     primtoflux_nonradonly(needentropy,pp,q,TT,ptrgeom, uumhd, uumhdabs); // anything not set is set as zero, which is rad.
-    PLOOP(pliter,pl) if(!RADUPL(pl)) uu[pl]=uumhd[pl];
-    PLOOP(pliter,pl) if(!RADUPL(pl)) uuabs[pl]=uumhdabs[pl];
+    PLOOP(pliter,pl) if(!RADFULLPL(pl)) uu[pl]=uumhd[pl];
+    PLOOP(pliter,pl) if(!RADFULLPL(pl)) uuabs[pl]=uumhdabs[pl];
     //    primtoflux_nonradonly(1,pp,q,TT,ptrgeom, uu, uuabs); // doesn't actually compute entropy again, just multiplies existing things.
     //    if(needentropy==0) uu[ENTROPY]=sqrt(-1.0);
     
@@ -1919,7 +1919,7 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
     // deal with Erf<0 and possibly gammarad caps or E_r<0 issues
     if(iter<mtd->BEGINNORMALSTEPS+4 && pp[PRAD0]<10.0*ERADLIMIT && ppbackup[PRAD0]>10.0*ERADLIMIT){
       // then can play with Erf in case negative E_r to avoid bad NR due to floor on Erf.
-      PLOOP(pliter,pl) if(RADPL(pl)) pp[pl]=ppbackup[pl]; // only concern is error might coincidentally be small
+      PLOOP(pliter,pl) if(RADFULLPL(pl)) pp[pl]=ppbackup[pl]; // only concern is error might coincidentally be small
       dualfprintf(fail_file,"Caught\n");
     }
     if(myid==8){
@@ -1941,14 +1941,14 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
     FTYPE uurad[NPR],uuradabs[NPR];
     primtoflux_radonly(pp,q,TT,ptrgeom, uurad,uuradabs); // all non-rad stuff is set to zero.
     // write new uurad's to uu
-    PLOOP(pliter,pl) if(RADUPL(pl)) uu[pl]=uurad[pl];
-    PLOOP(pliter,pl) if(RADUPL(pl)) uuabs[pl]=uuradabs[pl];
+    PLOOP(pliter,pl) if(RADFULLPL(pl)) uu[pl]=uurad[pl];
+    PLOOP(pliter,pl) if(RADFULLPL(pl)) uuabs[pl]=uuradabs[pl];
     //
     // 11) Recover actual iterated pmhd to avoid machine related differences between original pp and pp(U(pp)) for pmhd quantities
     // This assumes that iterated pmhd is optimal and not modified except by iteration by Newton step, which is currently true.
     // This gives machine error priority to mhd primitives rather than mhd U's.
     // below not necessary since don't overwrite pp[non-rad]
-    //PLOOP(pliter,pl) if(!RADPL(pl)) pp[pl]=pporig[pl];
+    //PLOOP(pliter,pl) if(!RADFULLPL(pl)) pp[pl]=pporig[pl];
     //
     // 12) overwrite any setting of uu[B1,B2,B3], so machine accurate field
     PLOOPBONLY(pl) uu[pl]=pp[pl];
@@ -1987,7 +1987,7 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
     // 2) Compute Urad[prad0,uradcon,uradcov] [also computes old Umhd and old Uentropy, but not used]
     FTYPE uurad[NPR],uuradabs[NPR];
     primtoU(UNOTHING,pp,q,ptrgeom, uurad, uuradabs);
-    PLOOP(pliter,pl) if(RADPL(pl)){
+    PLOOP(pliter,pl) if(RADFULLPL(pl)){
       uu[pl]=uurad[pl];
       uuabs[pl]=uuradabs[pl];
     }
@@ -2026,7 +2026,7 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
     // KORALTODO: now can check if actually did eomtype==EOMGRMHD or EOMENTROPYGRMHD or EOMCOLDGRMHD and apply correct error function
     // 6) Recover actual iterated prad to avoid machine related differences between original pp and pp(U(pp)) for prad quantities
     // This assumes that iterated prad is optimal and not modified except by iteration by Newton step
-    PLOOP(pliter,pl) if(RADPL(pl)) pp[pl]=ppbackup[pl];
+    PLOOP(pliter,pl) if(RADFULLPL(pl)) pp[pl]=ppbackup[pl];
     // 7) Get consistent Urad [also computes Umhd and Uentropy, which is ok]
     get_state(pp, ptrgeom, q);
     primtoU(UNOTHING,pp,q,ptrgeom, uu, uuabs);
@@ -2389,8 +2389,8 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
         extern int primtoflux_nonradonly(int needentropy, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux, FTYPE *fluxabs);
         FTYPE uumhd[NPR],uumhdabs[NPR];
         primtoflux_nonradonly(needentropy,ppe,&qe,TT,ptrgeom, uumhd, uumhdabs); // anything not set is set as zero, which is rad.
-        PLOOP(pliter,pl) if(!RADUPL(pl)) uue[pl]=uumhd[pl];
-        PLOOP(pliter,pl) if(!RADUPL(pl)) uueabs[pl]=uumhdabs[pl];
+        PLOOP(pliter,pl) if(!RADFULLPL(pl)) uue[pl]=uumhd[pl];
+        PLOOP(pliter,pl) if(!RADFULLPL(pl)) uueabs[pl]=uumhdabs[pl];
 
 
 
@@ -2427,8 +2427,8 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
           FTYPE uurad[NPR],uuradabs[NPR];
           primtoflux_radonly(ppe,&qe,TT,ptrgeom, uurad,uuradabs); // all non-rad stuff is set to zero.
           // write new uurad's to uu
-          PLOOP(pliter,pl) if(RADUPL(pl)) uue[pl]=uurad[pl];
-          PLOOP(pliter,pl) if(RADUPL(pl)) uueabs[pl]=uuradabs[pl];
+          PLOOP(pliter,pl) if(RADFULLPL(pl)) uue[pl]=uurad[pl];
+          PLOOP(pliter,pl) if(RADFULLPL(pl)) uueabs[pl]=uuradabs[pl];
 
 
           
@@ -5711,11 +5711,11 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
     failreturnallowable=Utoprimgen_failwrapper(doradonly,radinvmod,showmessages,checkoninversiongas,checkoninversionrad,allowlocalfailurefixandnoreport, finalstep, &eomtypelocal, whichcapnew, EVOLVEUTOPRIM, UNOTHING, uu0, q, ptrgeom, dissmeasure, prtest, &newtonstats);
     if(doradonly==0) *nummhdinvsreturn++;
     if(*baseitermethod==QTYPRAD && (1||failreturnallowable==UTOPRIMGENWRAPPERRETURNNOFAIL)){ // 1|| so assigns if failed or not, because with CAPTYEPFIX2 won't give dropped-out answer.
-      PLOOP(pliter,pl) if(RADPL(pl)) pb[pl]=prtest[pl];
+      PLOOP(pliter,pl) if(RADFULLPL(pl)) pb[pl]=prtest[pl];
     }
     else if(*baseitermethod==QTYPMHD && (failreturnallowable==UTOPRIMGENWRAPPERRETURNNOFAIL)){
       // if not iterating radiation primitives, then these rad primitives will be overwritten by first f_implicit() call, so avoid...
-      PLOOP(pliter,pl) if(RADPL(pl)) pb[pl]=prtest[pl];
+      PLOOP(pliter,pl) if(RADFULLPL(pl)) pb[pl]=prtest[pl];
     }
     else{
       // then just leave pb as pb.
@@ -11903,6 +11903,11 @@ int u2p_rad(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gammama
 #endif
 
 
+  // scalar inversions
+  
+
+
+
 
 #if(PRODUCTION==0)
   int caughtnan=0;
@@ -12430,6 +12435,7 @@ int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gam
     FTYPE gammafinal,qsqfinal;
     if(recomputegamma) gamma_calc_fromuconrel(&pin[URAD1-1],ptrgeom,&gammafinal,&qsqfinal);
     else gammafinal=gamma;
+    recomputegamma=0; // already recomputed, so can avoid another recomputation
     FTYPE uradt=gammafinal/(ptrgeom->alphalapse); // u^t = gamma/alphalapse
     pin[NRAD] = uu[NRAD]/uradt; // nradinradframe * urad[TT] / uradt
   }
@@ -12438,6 +12444,33 @@ int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gam
     pin[NRAD] = calc_LTE_NfromE(Erf);
   }
 #endif
+
+
+
+  ////////////
+  //
+  // INVERT floor advectors
+  //
+  ////////////
+#if(DOYFL==2 && (YFL4>=0 || YFL5>=0))
+  // if failed to get solution, can't trust \gamma, so evolution of floor wil be itself bad, but assume CASE reductions reasonable
+  // But, for scalars, this primitive is ultimately multiplied by uradt itself, so whatever uradt is, the conserved quantity is evolved/fluxed correctly/conservatively
+  if(1){
+    FTYPE gammafinal,qsqfinal;
+    if(recomputegamma) gamma_calc_fromuconrel(&pin[URAD1-1],ptrgeom,&gammafinal,&qsqfinal);
+    else gammafinal=gamma;
+    FTYPE uradt=gammafinal/(ptrgeom->alphalapse); // u^t = gamma/alphalapse
+    if(YFL4>=0) pin[YFL4] = uu[YFL4]/uradt; // uu[YFLx]/u^t
+    if(YFL5>=0) pin[YFL5] = uu[YFL5]/uradt; // uu[YFLx]/u^t
+  }
+#endif
+
+
+
+
+
+
+
 
 
   //  dualfprintf(fail_file,"didmod=%d\n",didmod);
@@ -12686,6 +12719,24 @@ int u2p_rad_orig(int showmessages, int allowlocalfailurefixandnoreport, FTYPE ga
   }
 #endif
 
+
+
+  ////////////
+  //
+  // INVERT floor advectors
+  //
+  ////////////
+#if(DOYFL==2 && (YFL4>=0 || YFL5>=0))
+  // if failed to get solution, can't trust \gamma, so evolution of floor wil be itself bad, but assume CASE reductions reasonable
+  // But, for scalars, this primitive is ultimately multiplied by uradt itself, so whatever uradt is, the conserved quantity is evolved/fluxed correctly/conservatively
+  if(1){
+    FTYPE gammafinal,qsqfinal;
+    gamma_calc_fromuconrel(&pin[URAD1-1],ptrgeom,&gammafinal,&qsqfinal);
+    FTYPE uradt=gammafinal/(ptrgeom->alphalapse); // u^t = gamma/alphalapse
+    if(YFL4>=0) pin[YFL4] = uu[YFL4]/uradt; // uu[YFLx]/u^t
+    if(YFL5>=0) pin[YFL5] = uu[YFL5]/uradt; // uu[YFLx]/u^t
+  }
+#endif
 
   //  DLOOPA(jj){
   //    if(!isfinite(pin[PRAD0+jj])){

@@ -265,16 +265,6 @@ int Utoprimgen(int showmessages, int checkoninversiongas, int checkoninversionra
 
 
 
-  ////////////////////////
-  //
-  // INVERT pseudo-passive scalars
-  //
-  // all pseudo-passive scalars are trivially inverted
-  //
-  // So don't include passive scalars in check_on_inversion() [Since modify passive scalars]
-  //
-  ////////////////////////
-  invert_scalars1(ptrgeom, Ugeomfree,pr);
 
 
 
@@ -1084,6 +1074,16 @@ int Utoprimgen(int showmessages, int checkoninversiongas, int checkoninversionra
 
 
 
+  ////////////////////////
+  //
+  // INVERT pseudo-passive scalars
+  //
+  // all pseudo-passive scalars are trivially inverted
+  //
+  // So don't include passive scalars in check_on_inversion() [Since modify passive scalars]
+  //
+  ////////////////////////
+  invert_scalars1(ptrgeom, Ugeomfree,pr);
   ////////////////////////
   //
   // INVERT pseudo-passive scalars #2 (where u^t needed)
@@ -2308,12 +2308,13 @@ int invert_scalars1(struct of_geom *ptrgeom, FTYPE *Ugeomfree, FTYPE *pr)
 #if(YFL3>=0)
   pr[YFL3] = Ugeomfree[YFL3]*oneOmyrhouu0
 #endif
-#if(YFL4>=0)
-  pr[YFL4] = Ugeomfree[YFL4]*oneOmyrhouu0
-#endif
-#if(YFL5>=0)
-  pr[YFL5] = Ugeomfree[YFL5]*oneOmyrhouu0
-#endif
+    // below make no sense
+    //#if(YFL4>=0)
+    //  pr[YFL4] = Ugeomfree[YFL4]*oneOmyrhouu0
+    //#endif
+    //#if(YFL5>=0)
+    //  pr[YFL5] = Ugeomfree[YFL5]*oneOmyrhouu0
+    //#endif
 
 #endif
 
@@ -2361,14 +2362,21 @@ int invert_scalars2(struct of_geom *ptrgeom, FTYPE *Ugeomfree, struct of_state *
 
   // get u^t
   FTYPE ucon[NDIM],others[NUMOTHERSTATERESULTS];
+  //  FTYPE uradcon[NDIM],othersrad[NUMOTHERSTATERESULTS];
   if(q==NULL){
     ucon_calc(pr,ptrgeom,ucon,others);
+    //    if(EOMRADTYPE!=EOMRADNONE && (YFL4>=0||YFL5>=0) ){
+    //      ucon_calc(&pr[URAD1-U1],ptrgeom,uradcon,othersrad);
+    //    }
   }
   else{
     ucon[TT] = q->ucon[TT];
+    //    uradcon[TT] = q->uradcon[TT];
   }
 
-
+  FTYPE udir[NPR]={0.0};
+  udir[YFL1]=udir[YFL2]=udir[YFL3]=ucon[TT];
+  //  udir[YFL4]=udir[YFL5]=uradcon[TT];
 
 
   ///////////////
@@ -2378,11 +2386,11 @@ int invert_scalars2(struct of_geom *ptrgeom, FTYPE *Ugeomfree, struct of_state *
   ///////////////
 
 #if(DOYFL==2)
-  if(YFL1>=0) pr[YFL1] = Ugeomfree[YFL1]/ucon[TT];
-  if(YFL2>=0) pr[YFL2] = Ugeomfree[YFL2]/ucon[TT];
-  if(YFL3>=0) pr[YFL3] = Ugeomfree[YFL3]/ucon[TT];
-  if(YFL4>=0) pr[YFL4] = Ugeomfree[YFL4]/ucon[TT];
-  if(YFL5>=0) pr[YFL5] = Ugeomfree[YFL5]/ucon[TT];
+  if(YFL1>=0) pr[YFL1] = Ugeomfree[YFL1]/udir[YFL1];
+  if(YFL2>=0) pr[YFL2] = Ugeomfree[YFL2]/udir[YFL2];
+  if(YFL3>=0) pr[YFL3] = Ugeomfree[YFL3]/udir[YFL3];
+  //  if(YFL4>=0) pr[YFL4] = Ugeomfree[YFL4]/udir[YFL4];
+  //  if(YFL5>=0) pr[YFL5] = Ugeomfree[YFL5]/udir[YFL5];
 #endif
 
 
@@ -2688,7 +2696,7 @@ int Utoprimgen_pick(int showmessages, int allowlocalfailurefixandnoreport, int w
     FTYPE uurad[NPR],uuradabs[NPR];
     primtoflux_radonly(pr,&q,TT,ptrgeom, uurad,uuradabs); // all non-rad stuff is set to zero.
     // write new uurad's to uu
-    PLOOP(pliter,pl) if(RADUPL(pl)) Ugeomfree[pl]=uurad[pl];
+    PLOOP(pliter,pl) if(RADFULLPL(pl)) Ugeomfree[pl]=uurad[pl];
   }
 
 
