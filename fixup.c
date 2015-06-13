@@ -2011,7 +2011,7 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
                 //                if((startpos[1]+ptrgeom->i==17) && (startpos[2]+ptrgeom->j)==0){
                 //                  dualfprintf(fail_file,"BEFORE IN FIXUPUTOPRIM LIMITGAMMA: finalstep=%d flag=%d\n",finalstep,mhdlpflag);
                 //                }
-                if(limitgammamhd=limit_gamma(0,gamma,BIG,MAC(pv,i,j,k),MAC(ucons,i,j,k),ptrgeom,-1)>=1) FAILSTATEMENT("fixup.c:fixup()", "limit_gamma()", 2);
+                if(limitgammamhd=limit_gamma(0,gamma,GAMMAMAXRAD,MAC(pv,i,j,k),MAC(ucons,i,j,k),ptrgeom,-1)>=1) FAILSTATEMENT("fixup.c:fixup()", "limit_gamma()", 2);
                 //                if((startpos[1]+ptrgeom->i==17) && (startpos[2]+ptrgeom->j)==0){
                 //                  dualfprintf(fail_file,"AFTER IN FIXUPUTOPRIM LIMITGAMMA: finalstep=%d\n",finalstep);
                 //                }
@@ -2244,7 +2244,7 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
                 //                if((startpos[1]+ptrgeom->i==17) && (startpos[2]+ptrgeom->j)==0){
                 //                  dualfprintf(fail_file,"BEFORE IN FIXUPUTOPRIM LIMITGAMMA2: finalstep=%d radlpflag=%d\n",finalstep,radlpflag);
                 //                }
-                if(limitgammarad=limit_gamma(0,BIG,GAMMAMAXRAD,MAC(pv,i,j,k),MAC(ucons,i,j,k),ptrgeom,-1)>=1) FAILSTATEMENT("fixup.c:fixup()", "limit_gamma()", 2);
+                if(limitgammarad=limit_gamma(0,GAMMAMAX,gamma,MAC(pv,i,j,k),MAC(ucons,i,j,k),ptrgeom,-1)>=1) FAILSTATEMENT("fixup.c:fixup()", "limit_gamma()", 2);
                 //                if((startpos[1]+ptrgeom->i==17) && (startpos[2]+ptrgeom->j)==0){
                 //                  dualfprintf(fail_file,"AFTER IN FIXUPUTOPRIM LIMITGAMMA2: finalstep=%d\n",finalstep);
                 //                }

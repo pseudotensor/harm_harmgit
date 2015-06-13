@@ -10288,10 +10288,10 @@ void calc_kappa(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE *k
   //  dualfprintf(fail_file,"kappaabs=%g\n",*kappa);
 
   if(AVOIDTAUFORFLOOR==1){
-    FTYPE bsqorholimit=BSQORHOLIMIT/5.0;
+    FTYPE bsqorholimit=10.0; //BSQORHOLIMIT/5.0;
     FTYPE factor;
     FTYPE thebsqorho=bsq/rho;
-    if(bsq/rho<0 || bsq/rho>BSQORHOLIMIT) thebsqorho=bsqorholimit;
+    if(bsq/rho<0 || bsq/rho>BSQORHOLIMIT) thebsqorho=BSQORHOLIMIT;
     factor=exp(-thebsqorho/bsqorholimit);
     *kappa *= factor;
   }
@@ -10325,10 +10325,10 @@ void calc_kappaes(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappaes)
   if(AVOIDTAUFORFLOOR==1){
     FTYPE bsq;
     bsq_calc(pr, ptrgeom, &bsq);
-    FTYPE bsqorholimit=BSQORHOLIMIT/5.0;
+    FTYPE bsqorholimit=10.0; //BSQORHOLIMIT/5.0;
     FTYPE factor;
     FTYPE thebsqorho=bsq/rho;
-    if(bsq/rho<0 || bsq/rho>BSQORHOLIMIT) thebsqorho=bsqorholimit;
+    if(bsq/rho<0 || bsq/rho>BSQORHOLIMIT) thebsqorho=BSQORHOLIMIT;
     factor=exp(-thebsqorho/bsqorholimit);
     *kappaes *= factor;
   }
@@ -10417,10 +10417,10 @@ void calc_Tandopacityandemission(FTYPE *pr, struct of_geom *ptrgeom, struct of_s
 
   if(AVOIDTAUFORFLOOR==1){
     FTYPE bsq=B*B;
-    FTYPE bsqorholimit=BSQORHOLIMIT/5.0;
+    FTYPE bsqorholimit=10.0; //BSQORHOLIMIT/5.0;
     FTYPE factor;
     FTYPE thebsqorho=bsq/rho;
-    if(bsq/rho<0 || bsq/rho>BSQORHOLIMIT) thebsqorho=bsqorholimit;
+    if(bsq/rho<0 || bsq/rho>BSQORHOLIMIT) thebsqorho=BSQORHOLIMIT;
     factor=exp(-thebsqorho/bsqorholimit);
 
     *kappaes *= factor;
