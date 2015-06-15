@@ -2049,7 +2049,9 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
                         // Here we ignore all conserved quantities and just ensure that D0 is conserved (close) to original value after averaging that assumes original value was reasonable
                         if(finalstep==1){
                           // this is not reasonable, because ignores any mass injection required during failure to make sense of solution
-                          D0 = MACP0A1(ucons,i,j,k,pl);
+                          FTYPE Unothing[NPR];
+                          UtoU(UEVOLVE,UNOTHING,ptrgeom,MAC(ucons,i,j,k),Unothing);
+                          D0 = Unothing[pl] ;
                         }
                         else{
                           // This is probably not necessary or useful
@@ -2061,7 +2063,7 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
                         // constrain change in density so conserve particle number
                         //
                         //////////////////////////////////////////
-                        if(D0>0.0 || pl==YFL1 || pl==YFL2 || pl==YFL3){ // only makes sense if D0 implies positive density at least
+                        if(D0>0.0 && pl==RHO || pl==YFL1 || pl==YFL2 || pl==YFL3){ // only makes sense if D0 implies positive density at least
                           if (ucon_calc(MAC(pv,i,j,k), ptrgeom, ucon,others) >= 1) FAILSTATEMENT("fixup.c:utoprimfail_fixup()", "ucon_calc()", 1);
                           MACP0A1(pv,i,j,k,pl) = D0/ucon[TT];
                         }
@@ -2278,7 +2280,9 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
                       if(mhdlpflag==UTOPRIMFAILGAMMAPERC || 1){ // GODMARK: always doing it
                         if(finalstep==1){
                           // this is not reasonable, because ignores any mass injection required during failure to make sense of solution
-                          D0 = MACP0A1(ucons,i,j,k,pl);
+                          FTYPE Unothing[NPR];
+                          UtoU(UEVOLVE,UNOTHING,ptrgeom,MAC(ucons,i,j,k),Unothing);
+                          D0 = Unothing[pl] ;
                         }
                         else{
                           // This is probably not necessary or useful
@@ -2290,7 +2294,7 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
                         // constrain change in density so conserve particle number
                         //
                         //////////////////////////////////////////
-                        if(D0>0.0 || pl==YFL4 || pl==YFL5){ // only makes sense if D0 implies positive density at least
+                        if(pl==YFL4 || pl==YFL5){
                           if (ucon_calc(&MACP0A1(pv,i,j,k,URAD1-U1), ptrgeom, ucon,others) >= 1) FAILSTATEMENT("fixup.c:utoprimfail_fixup()", "ucon_calc()", 1);
                           MACP0A1(pv,i,j,k,pl) = D0/ucon[TT];
                         }
