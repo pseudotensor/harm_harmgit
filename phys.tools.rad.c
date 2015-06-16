@@ -2781,7 +2781,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       FTYPE V[NDIM]={0.0};
       bl_coord_ijk(iiii,jjjj,kkkk,llloc,V);
       
-      if(V[1]>0.9*Rhorref && (V[1]<OUTERDEATHRADIUS && OUTERDEATH==1 || OUTERDEATH==0)) reducetoquick=2;
+      if( (1||V[1]>0.9*Rhorref) && (V[1]<OUTERDEATHRADIUS && OUTERDEATH==1 || OUTERDEATH==0)) reducetoquick=2;
       else reducetoquick=1;
     }
     else reducetoquick=1;
