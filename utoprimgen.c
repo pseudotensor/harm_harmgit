@@ -1819,8 +1819,8 @@ static int check_on_inversion(int checkoninversiongas, int checkoninversionrad, 
       // pl here is conserved quantity, so checking if conserved quantity not same as used to get primitive
       // in force-free projection on velocity always occurs that makes momenta terms not the same
       // no point checking if inversion doesn't handle or is inconsistent with conservation of that quantity
-      if(usedffdeinversion && (pl==RHO || pl==UU || pl==U1 || pl==U2 || pl==U3 || pl==ENTROPY || pl==YNU || pl==YL) ) continue; // if ffde, no mass or thermal/hot components
-      if(usedcoldinversion  && (pl==UU || pl==ENTROPY || pl==YNU || pl==YL) ) continue; // if cold, can't evolve any hot or thermal component
+      if(usedffdeinversion && (pl==RHO || pl==UU || pl==U1 || pl==U2 || pl==U3 || pl==ENTROPY || SCALARPL(pl)) ) continue; // if ffde, no mass or thermal/hot components
+      if(usedcoldinversion  && (pl==UU || pl==ENTROPY || SCALARPL(pl)) ) continue; // if cold, can't evolve any hot or thermal component
       // inversion either uses energy or entropy and can't use both at once inside inversion routine
       if(usedentropyinversion  && (pl==UU) ) continue; // entropy doesn't use energy equation, but does use conserved entropy
       if(usedhotinversion && (pl==ENTROPY) ) continue; // hot doesn't use entropy, but does use conserved energy
@@ -1832,7 +1832,7 @@ static int check_on_inversion(int checkoninversiongas, int checkoninversionrad, 
       if(EOMRADTYPE==EOMRADEDD && (pl==URAD1 || pl==URAD2 || pl==URAD3)) continue;
 
 
-      if(pl==YNU || pl==YL){
+      if(SCALARPL(pl)){
         // only check that new U is finite
         if(!isfinite(Unormalnew[pl])){
           fdiff[pl]=BIG; // indicates was not finite

@@ -2084,7 +2084,7 @@ int init_global(void)
 
     if(FIELDTYPE==FIELDJONMAD){
       // then funnel becomes too optically thick and traps radiation and accelerates radiation down into BH, leading to bad physical energy conservation even if total energy-momentum conservation equations used very well.
-      BSQORHOLIMIT=1E3;
+      BSQORHOLIMIT=1E2; // back to 100 if using YFL1 and AVOIDTAUFLOOR==2 in phys.tools.rad.c
       BSQOULIMIT=1E9;
     }
     else{

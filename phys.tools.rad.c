@@ -8739,6 +8739,16 @@ static int f_error_check(int showmessages, int showmessagesheavy, int iter, FTYP
   FTYPE fnormtimeother2 = fnormtimeother; // no problem with this since now include absolute sum version
 #endif
 
+
+  // YFLx (because can be negative (zero) and so can't use itself only)
+  PLOOP(pliter,pl){
+    if(pl==YFL1) finnorm[pl] = fabs(finnorm[pl]) + fabs(finnorm[RHO]);
+    if(pl==YFL2) finnorm[pl] = fabs(finnorm[pl]) + fabs(finnorm[UU]);
+    if(pl==YFL3) finnorm[pl] = fabs(finnorm[pl]) + fabs(finnorm[U3]);
+    if(pl==YFL4) finnorm[pl] = fabs(finnorm[pl]) + fabs(finnorm[URAD0]);
+    if(pl==YFL5) finnorm[pl] = fabs(finnorm[pl]) + fabs(finnorm[URAD3]);
+  }
+
   // now assign
   PLOOP(pliter,pl) finnormnew[pl] = finnorm[pl]; // default
   ii=TT; finnormnew[ru->erefU[ii]] = fnormtime + fnormtime2;

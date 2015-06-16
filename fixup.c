@@ -2034,7 +2034,6 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
               // Things to do only if modifying density (must come after modifying velocity that enters ucon[TT])
               //
               //////////////////////
-              int scalarlikeloop;
               PLOOP(pliter,pl){
                 if(pl==RHO || pl==YFL1 || pl==YFL2 || pl==YFL3){
                   if(startpl<=pl && endpl>=pl){
@@ -2043,6 +2042,9 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
                     if(DO_CONSERVE_D_INFAILFIXUPS){
                       
                       if(mhdlpflag==UTOPRIMFAILGAMMAPERC || 1){ // GODMARK: always doing it
+
+                        if (ucon_calc(MAC(ptoavg,i,j,k), ptrgeom, ucon, others) >= 1) FAILSTATEMENT("fixup.c:utoprimfail_fixup()", "ucon_calc()", 1);
+
                         // Use D0 to constrain how changing u^t changes rho
                         // GODMARK: Why not used evolved D=\rho_0 u^t  from conserved quantity?
                         // GODMARK: See fixup.c's limit_gamma() notes on why using conserved version of D not good to use
@@ -2064,7 +2066,6 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
                         //
                         //////////////////////////////////////////
                         if(D0>0.0 && pl==RHO || pl==YFL1 || pl==YFL2 || pl==YFL3){ // only makes sense if D0 implies positive density at least
-                          if (ucon_calc(MAC(pv,i,j,k), ptrgeom, ucon,others) >= 1) FAILSTATEMENT("fixup.c:utoprimfail_fixup()", "ucon_calc()", 1);
                           MACP0A1(pv,i,j,k,pl) = D0/ucon[TT];
                         }
                       }
@@ -2269,7 +2270,6 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
               // Things to do only if modifying density (must come after modifying velocity that enters ucon[TT])
               //
               //////////////////////
-              int scalarlikeloop;
               PLOOP(pliter,pl){
                 if(pl==YFL4 || pl==YFL5 ){
                   if(startpl<=pl && endpl>=pl){
@@ -2278,6 +2278,9 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
                     if(DO_CONSERVE_D_INFAILFIXUPS){
                       
                       if(mhdlpflag==UTOPRIMFAILGAMMAPERC || 1){ // GODMARK: always doing it
+
+                        if (ucon_calc(&MACP0A1(pv,i,j,k,URAD1-U1), ptrgeom, ucon,others) >= 1) FAILSTATEMENT("fixup.c:utoprimfail_fixup()", "ucon_calc()", 1);
+
                         if(finalstep==1){
                           // this is not reasonable, because ignores any mass injection required during failure to make sense of solution
                           FTYPE Unothing[NPR];
@@ -2295,7 +2298,6 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
                         //
                         //////////////////////////////////////////
                         if(pl==YFL4 || pl==YFL5){
-                          if (ucon_calc(&MACP0A1(pv,i,j,k,URAD1-U1), ptrgeom, ucon,others) >= 1) FAILSTATEMENT("fixup.c:utoprimfail_fixup()", "ucon_calc()", 1);
                           MACP0A1(pv,i,j,k,pl) = D0/ucon[TT];
                         }
                       }
