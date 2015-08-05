@@ -2300,17 +2300,17 @@ int invert_scalars1(struct of_geom *ptrgeom, FTYPE *Ugeomfree, FTYPE *pr)
 #if(DOYFL==1)
 
 #if(YFL1>=0)
-  pr[YFL1] = Ugeomfree[YFL1]*oneOmyrhouu0
+  pr[YFL1] = Ugeomfree[YFL1]*oneOmyrhouu0;
 #endif
 #if(YFL2>=0)
-  pr[YFL2] = Ugeomfree[YFL2]*oneOmyrhouu0
+  pr[YFL2] = -Ugeomfree[YFL2]*oneOmyrhouu0; // NOTEMARK: Same sign as in other places like fixup.c and elsewhere here in this file.
 #endif
 #if(YFL3>=0)
-  pr[YFL3] = Ugeomfree[YFL3]*oneOmyrhouu0
+  pr[YFL3] = Ugeomfree[YFL3]*oneOmyrhouu0;
 #endif
     // below make no sense
     //#if(YFL4>=0)
-    //  pr[YFL4] = Ugeomfree[YFL4]*oneOmyrhouu0
+    //  pr[YFL4] = -Ugeomfree[YFL4]*oneOmyrhouu0
     //#endif
     //#if(YFL5>=0)
     //  pr[YFL5] = Ugeomfree[YFL5]*oneOmyrhouu0
@@ -2387,9 +2387,9 @@ int invert_scalars2(struct of_geom *ptrgeom, FTYPE *Ugeomfree, struct of_state *
 
 #if(DOYFL==2)
   if(YFL1>=0) pr[YFL1] = Ugeomfree[YFL1]/udir[YFL1];
-  if(YFL2>=0) pr[YFL2] = Ugeomfree[YFL2]/udir[YFL2];
+  if(YFL2>=0) pr[YFL2] = -Ugeomfree[YFL2]/udir[YFL2]; // NOTEMARK: Same sign as in other places like fixup.c and elsewhere here in this file.
   if(YFL3>=0) pr[YFL3] = Ugeomfree[YFL3]/udir[YFL3];
-  //  if(YFL4>=0) pr[YFL4] = Ugeomfree[YFL4]/udir[YFL4];
+  //  if(YFL4>=0) pr[YFL4] = -Ugeomfree[YFL4]/udir[YFL4];
   //  if(YFL5>=0) pr[YFL5] = Ugeomfree[YFL5]/udir[YFL5];
 #endif
 

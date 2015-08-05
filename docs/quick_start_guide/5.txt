@@ -1,7 +1,28 @@
 /*! \file ./docs//quick_start_guide/5.txt
 ~~~~
 5) Convert fieldline files and gdump files from HARM into V5D files
-Version 6 Created by Jonathan M. on 13 Feb 2013. Previous Version
+Version 6 Created by Jonathan M. on 13 Feb 2013.
+
+
+0)
+
+git clone git@harm.unfuddle.com:harm/harmgit.git
+cd harmgit
+mkdir run
+mkdir run/dumps
+# copy over coordparms.dat to run and fieldline????.bin (and ????-1 and ????+1 for current calculation) and gdump.bin to run/dumps
+cd run
+cp ../scripts/v5dfield/* .
+cp ../docs/howtouse_joninterp.localsetup.new.sh .
+# emacs howtouse_joninterp.localsetup.new.sh &
+cd ..
+ln -s initboundcode/init.fishmon.c init.c
+ln -s initboundcode/init.fishmon.h init.h
+ln -s initboundcode/bounds.fishmon.c bounds.c
+make superclean ; make prepiinterp ; make iinterp ; cp iinterp run/
+make superclean ; make prepbin2txt ; make bin2txt ; cp bin2txt run/
+
+
 1) Assuming harmgit tree is at ~/harmgit/ and the run directory is in ~/harmgit/run/ , then:
 
 cd ~harmgit/
@@ -9,7 +30,8 @@ git pull   [THIS GETS latest version with ~/harmgit/scripts/v5dfield stuff neede
 cd ~/harmgit/run
 cp ~/harmgit/scripts/v5dfield/* .
 #cp ~/harmgit/docs/howtouse_joninterp.sh .
-cp ~/harmgit/docs/howtouse_joninterp.localsetup.sh .  # this one is setup to be used with local harm ran like in earlier steps.
+#cp ~/harmgit/docs/howtouse_joninterp.localsetup.sh .  # this one is setup to be used with local harm ran like in earlier steps.
+cp ~/harmgit/docs/howtouse_joninterp.localsetup.new.sh .  # this one setup to use any harmgit/run/ stuff.
 
 Can edit this howtouse_joninterp.sh script:
 
@@ -23,13 +45,22 @@ Can edit this howtouse_joninterp.sh script:
 
 5) box?? sets the Cartesian box dimensions
 
-etc.
+5b) set whichoutput (e.g. DATATYPE==18 inside jon_interp.c corresponds to whichoutput=18)
 
-After editing the script, one can run this from the "run" directory after running harm to get some fieldline files.
+5c) define correct headv5d file (e.g. headout18.v5d for DATATYPE==18)
+
+5d) After editing the script, one can run this from the "run" directory after running harm to get some fieldline files.
 
 BUT, I recommend (as normal) running *PER LINE* to ensure you really setup things correctly.  If there's a conditional, follow it correctly.
 
+5e) If did not produce all files correctly, rm -rf currentout*.v5d or delete bad link
+
+
 6) Then run vis5d: 
+
+6a) get and compile code: https://github.com/pseudotensor/
+
+6b) Run code (script is setup to do so):
 
 vis5d <v5dfilenameyoujustcreated>
 
@@ -62,6 +93,13 @@ U2 : B_z
 posr : r
 posh : \theta
 posph : \phi
+
+
+
+8) To create a fieldline:
+
+
+
 
 ~~~~
 */

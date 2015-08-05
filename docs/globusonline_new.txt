@@ -405,11 +405,17 @@ ssh pseudotensor@cli.globusonline.org transfer -s 1 < ~/globus1.txt
 
 1) On ranch:
 
-extradir=""
+extradir="/"
 tp="rads"
 dir="/home/01014/tg802609/"
 cd $dir
 list=`ls | grep rad | grep -v listrads`
+
+extradir="/"
+tp="radtma0.8"
+dir="/home/01014/tg802609/"
+cd $dir
+list=`ls | grep $tp | grep -v list$tp`
 
 #extradir="thickdisk7"
 #tp="td7"
@@ -428,11 +434,12 @@ list=`ls | grep rad | grep -v listrads`
 
 # on stampede
 extradir=""
-tp="radt"
+#tp="radt"
+tp="radtma0.8"
 dir=$SCRATCH
 cd $dir
 #list=`ls | grep rad | grep -v listrads`
-list=`ls | grep radt | grep -v listrads| grep -v radtransfer`
+list=`ls | grep $tp | grep -v listrads| grep -v radtransfer`
 
 # on pfe
 extradir=""
@@ -455,7 +462,8 @@ for fil in `cat ~/list${tp}_all.txt` ; do stage $fil ; done
 
 2) On Nautilus or Stampede or bh06
 
-tp="rads"
+#tp="rads"
+tp="radtma0.8"
 #tp="radt"
 #tp="sa0.99t0.6"
 #tp="sasha99"

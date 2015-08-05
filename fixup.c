@@ -637,13 +637,13 @@ int diag_fixup_allzones(FTYPE (*pf)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTOR
     FTYPE ucon[NDIM],others[NUMOTHERSTATERESULTS];
     ucon_calc(pr,ptrgeom,ucon,others);
     if(YFL1>=0) uconmap[YFL1]=ucon[TT];
-    if(YFL2>=0) uconmap[YFL2]=-ucon[TT];
+    if(YFL2>=0) uconmap[YFL2]=-ucon[TT]; // NOTEMARK: Same sign as in other places like utoprimgen.c
     if(YFL3>=0) uconmap[YFL3]=ucon[TT];
     
     if(YFL4>=0 || YFL5>=0){
       FTYPE uradcon[NDIM],othersrad[NUMOTHERSTATERESULTS];
       ucon_calc(&pr[URAD1-U1],ptrgeom,uradcon,othersrad);
-      if(YFL4>=0) uconmap[YFL4]=-uradcon[TT];
+      if(YFL4>=0) uconmap[YFL4]=-uradcon[TT]; // NOTEMARK: Same sign as in other places like utoprimgen.c
       if(YFL5>=0) uconmap[YFL5]=uradcon[TT];
     }
 

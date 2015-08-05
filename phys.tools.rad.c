@@ -12470,7 +12470,7 @@ int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gam
     if(recomputegamma) gamma_calc_fromuconrel(&pin[URAD1-1],ptrgeom,&gammafinal,&qsqfinal);
     else gammafinal=gamma;
     FTYPE uradt=gammafinal/(ptrgeom->alphalapse); // u^t = gamma/alphalapse
-    if(YFL4>=0) pin[YFL4] = uu[YFL4]/uradt; // uu[YFLx]/u^t
+    if(YFL4>=0) pin[YFL4] = -uu[YFL4]/uradt; // -uu[YFLx]/u^t  // NOTEMARK: Same sign as in other places like utoprimgen.c and fixup.c
     if(YFL5>=0) pin[YFL5] = uu[YFL5]/uradt; // uu[YFLx]/u^t
   }
 #endif
@@ -12743,7 +12743,7 @@ int u2p_rad_orig(int showmessages, int allowlocalfailurefixandnoreport, FTYPE ga
     FTYPE gammafinal,qsqfinal;
     gamma_calc_fromuconrel(&pin[URAD1-1],ptrgeom,&gammafinal,&qsqfinal);
     FTYPE uradt=gammafinal/(ptrgeom->alphalapse); // u^t = gamma/alphalapse
-    if(YFL4>=0) pin[YFL4] = uu[YFL4]/uradt; // uu[YFLx]/u^t
+    if(YFL4>=0) pin[YFL4] = -uu[YFL4]/uradt; // -uu[YFLx]/u^t // NOTEMARK: Same sign as in other places like utoprimgen.c and fixup.c
     if(YFL5>=0) pin[YFL5] = uu[YFL5]/uradt; // uu[YFLx]/u^t
   }
 #endif
