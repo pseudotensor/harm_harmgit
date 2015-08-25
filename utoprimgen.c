@@ -2310,10 +2310,10 @@ int invert_scalars1(struct of_geom *ptrgeom, FTYPE *Ugeomfree, FTYPE *pr)
 #endif
     // below make no sense
     //#if(YFL4>=0)
-    //  pr[YFL4] = -Ugeomfree[YFL4]*oneOmyrhouu0
+    //  pr[YFL4] = -Ugeomfree[YFL4]*oneOmyrhouu0;
     //#endif
     //#if(YFL5>=0)
-    //  pr[YFL5] = Ugeomfree[YFL5]*oneOmyrhouu0
+    //  pr[YFL5] = Ugeomfree[YFL5]*oneOmyrhouu0;
     //#endif
 
 #endif

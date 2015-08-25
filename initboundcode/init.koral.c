@@ -3678,11 +3678,14 @@ int init_dsandvels(int inittype, int pos, int *whichvel, int*whichcoord, SFTYPE 
 
   // assume any floor set at t=0 is part of solution
   if(DOYFL){
-    if(YFL1>=0) pr[YFL1] = SMALL;
-    if(YFL2>=0) pr[YFL2] = SMALL;
-    if(YFL3>=0) pr[YFL3] = SMALL;
-    if(YFL4>=0) pr[YFL4] = SMALL;
-    if(YFL5>=0) pr[YFL5] = SMALL;
+    FTYPE rhofloor=pr[RHO]*NUMEPSILON*10.0;
+    FTYPE vfloor=NUMEPSILON*10.0;
+    FTYPE enfloor=pr[URAD0]*NUMEPSILON*10.0;
+    if(YFL1>=0) pr[YFL1] = SMALL + rhofloor; // rho floor
+    if(YFL2>=0) pr[YFL2] = SMALL + rhofloor*vfloor*vfloor; // -T^t_t-rho u^r floor
+    if(YFL3>=0) pr[YFL3] = SMALL + rhofloor*vfloor; // T^t_phi floor
+    if(YFL4>=0) pr[YFL4] = SMALL + enfloor; // -R^t_t floor
+    if(YFL5>=0) pr[YFL5] = SMALL + enfloor*vfloor; // R^t_\phi floor
   }
 
   return(0);

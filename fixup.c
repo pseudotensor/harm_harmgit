@@ -462,7 +462,9 @@ int consfixup_1zone(int finaluu, int i, int j, int k, struct of_geom *ptrgeom, F
   else{
     //    PLOOP(pliter,pl) uu0[pl] = GLOBALMACP0A1(uu0old,i,j,k,pl); // USE OF GLOBALS from phys.tools.rad.c // already in UNOTHING form
   }
-  //
+  
+
+  
   FTYPE uunew1[NPR];
   PLOOP(pliter,pl) uunew1[pl]=uu[pl];
   //
@@ -471,7 +473,10 @@ int consfixup_1zone(int finaluu, int i, int j, int k, struct of_geom *ptrgeom, F
   DLOOPA(jj) uunew1[UU+jj] = uu[UU+jj];
   DLOOPA(jj) dugas[jj] = uu[UU+jj]-uu0[UU+jj];
   DLOOPA(jj) uunew1[URAD0+jj] = uu0[URAD0+jj] - dugas[jj];
-  //
+
+
+  
+#if(0)
   FTYPE uunew2[NPR];
   PLOOP(pliter,pl) uunew2[pl]=uu[pl];
   //
@@ -488,6 +493,7 @@ int consfixup_1zone(int finaluu, int i, int j, int k, struct of_geom *ptrgeom, F
     uunewfinal[UU+jj]   = 0.5*(uunew1[UU+jj] + uunew2[UU+jj]);
     uunewfinal[URAD0+jj] = 0.5*(uunew1[URAD0+jj] + uunew2[URAD0+jj]);
   }
+#endif
 
   // now invert just radiation
   int showmessages=0;
@@ -516,6 +522,7 @@ int consfixup_1zone(int finaluu, int i, int j, int k, struct of_geom *ptrgeom, F
   }
 
 
+#if(0)
   if(0&&didrad==0){
     int finalstep=finaluu;
     int eomtypelocal=EOMTYPE;
@@ -559,7 +566,7 @@ int consfixup_1zone(int finaluu, int i, int j, int k, struct of_geom *ptrgeom, F
       PLOOP(pliter,pl) pf[pl] = pptry[pl]; 
     }
   }  
-
+#endif
 
   struct of_state qf;
   get_state(pf,ptrgeom,&qf);
@@ -622,9 +629,13 @@ int diag_fixup_allzones(FTYPE (*pf)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTOR
     FTYPE Uf[NPR]; // for returning back pf->Uf result so don't have to repeat if needed later
     diag_fixup_Ui_pf(docorrectucons,MAC(ucons,i,j,k),MAC(pf,i,j,k),ptrgeom,finalstep,COUNTONESTEP, Uf); // Uf in UDIAG form
 
+    FTYPE *pr=MAC(pf,i,j,k);
+
     int map[NPR];
     FTYPE uconmap[NPR];
     PLOOP(pliter,pl){
+      uconmap[pl]=1.0; // default
+
       if(pl==RHO) map[pl]=YFL1;
       else if(pl==UU) map[pl]=YFL2;
       else if(pl==U3) map[pl]=YFL3;
@@ -633,7 +644,7 @@ int diag_fixup_allzones(FTYPE (*pf)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTOR
       else map[pl]=VARNOTDEFINED;
     }
 
-    FTYPE *pr=MAC(pf,i,j,k);
+
     FTYPE ucon[NDIM],others[NUMOTHERSTATERESULTS];
     ucon_calc(pr,ptrgeom,ucon,others);
     if(YFL1>=0) uconmap[YFL1]=ucon[TT];
@@ -646,6 +657,20 @@ int diag_fixup_allzones(FTYPE (*pf)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTOR
       if(YFL4>=0) uconmap[YFL4]=-uradcon[TT]; // NOTEMARK: Same sign as in other places like utoprimgen.c
       if(YFL5>=0) uconmap[YFL5]=uradcon[TT];
     }
+
+    // assume fixed floor for YFLx like at t=0
+    FTYPE offset[NPR];
+
+    FTYPE rhofloor=pr[RHO]*NUMEPSILON*10.0;
+    FTYPE vfloor=NUMEPSILON*10.0;
+    FTYPE enfloor=pr[URAD0]*NUMEPSILON*10.0;
+    PLOOP(pliter,pl) offset[pl]=SMALL;
+    if(YFL1>=0) offset[YFL1] = SMALL + rhofloor; // rho floor
+    if(YFL2>=0) offset[YFL2] = SMALL + rhofloor*vfloor*vfloor; // -T^t_t-rho u^r floor
+    if(YFL3>=0) offset[YFL3] = SMALL + rhofloor*vfloor; // T^t_phi floor
+    if(YFL4>=0) offset[YFL4] = SMALL + enfloor; // -R^t_t floor
+    if(YFL5>=0) offset[YFL5] = SMALL + enfloor*vfloor; // R^t_\phi floor
+  
 
     FTYPE uconsnothing[NPR];
     UtoU(UEVOLVE,UNOTHING,ptrgeom,MAC(ucons,i,j,k),uconsnothing);
@@ -673,12 +698,19 @@ int diag_fixup_allzones(FTYPE (*pf)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTOR
         //      if(plfl<SMALL) plfl=SMALL;
 
         FTYPE plflfinal = plfl + dpl;
-#if(0)
-        FTYPE offset=0.0;
-        if(pl==UU){ // need to compare to zero when rest-mass added
-          offset=uconsnothing[RHO]/ucon[TT];
+        if(mapvar==YFL2 || mapvar==YFL4){ // just energy densities.  Can't apply to angular momenta that can be any sign.  Could apply to density, but doesn't seem to need it.
+          // at least for non-densities, especially energy densities, having near 0 or negative values leads to an instability and crazy run-away in the values due to fluxes.
+          // So won't be able to track losses of energy, only gains, unless split gains and losses.
+          // Or maybe need floor at t=0 at least so that not dealing with crazy small values?
+          FTYPE offsetfull=0.0;
+          if(pl==UU){ // need to compare to zero when rest-mass added
+            offsetfull=offset[mapvar]-uconsnothing[RHO]/ucon[TT];
+          }
+          else offsetfull=offset[mapvar];
+          if(plflfinal<offsetfull) plflfinal=offsetfull; // allow flux and source to compensate to give final >0 quantity
         }
-        if(plflfinal<-offset+SMALL) plflfinal=-offset+SMALL; // allow flux and source to compensate to give final >0 quantity
+
+#if(0)
         // plfl could have been negative, as if failure or other process pulled away total rest-mass.  Since force not have floor on value, then that means plfl can go greater than pltotal sometimes.  So avoid.
         if(plflfinal>pltotal) plflfinal=pltotal; // limit so effective true Y_fl<=1
 #endif
@@ -687,7 +719,7 @@ int diag_fixup_allzones(FTYPE (*pf)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTOR
         if(DOYFL==1){ // here get true Y_fl=plflfinal/pltotal
           MACP0A1(pf,i,j,k,mapvar) = plflfinal/(SMALL+fabs(pltotal)); // newYflx = newplfl / newpltotal
         }
-        else if(DOYFL==2){ // here get plflfinal alone
+        else if(DOYFL==2){ // source term to density scalar, assuming pf was evolved via fluxes already for YFLx itself, so here we just add error term from normal evolved quantities
           MACP0A1(pf,i,j,k,mapvar) = plflfinal;
         }
         //      dualfprintf(fail_file,"pltotal=%g dpl=%g plfl=%g plflfinal=%g yfl=%g\n",pltotal,dpl,plfl,plflfinal,MACP0A1(pf,i,j,k,YFL));

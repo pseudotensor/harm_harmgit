@@ -473,9 +473,14 @@ int yflflux_calc(struct of_geom *ptrgeom, FTYPE *pr, int dir, struct of_state *q
   prforadvect = pr[pnum];
 
 #if(DOYFL==1)
+  // equation is d_t(\rho_0 u^t y) = d_i (\rho_0 u^i y)
   // get flux associated with Y_L
   *advectedscalarflux = prforadvect * pr[RHO]*udir; // y form
 #elif(DOYFL==2)
+  // equation is d_t(rhofl u^t) = d_i (rhofl u^i)
+  // equation is d_t(T^t_t/u^t u^t) = d_i (T^t_t/u^t u^i)
+  // equation is d_t(T^t_\phi/u^t u^t) = d_i (T^t_\phi/u^t u^i)
+  // etc.
   *advectedscalarflux = prforadvect * udir; // rho form
 #endif
 

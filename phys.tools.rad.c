@@ -200,6 +200,7 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE *errorabs, stru
 //////////////////////////////////////////////
 
 
+#define PLOOPDYNAMICAL(pliter,pl) PLOOP(pliter,pl) if(SCALARPL(pl)==0)
 
 
 ////////////////////////////////
@@ -1234,7 +1235,17 @@ int jacstart[JACNUMTYPES],jaclist[JACNUMTYPES][JACNPR],jacend[JACNUMTYPES];
 #define JACNPR (NDIM)
 #define JACLOOP(jj,startjj,endjj) for(jj=startjj;jj<=endjj;jj++)
 #define JACLOOPALT(jj,startjj,endjj) DLOOPA(jj) //for(jj=startjj;jj<=endjj;jj++) // for those things might or might not want to do all terms
-#define JACLOOPSUPERFULL(pliter,pl,eomtype,baseitermethod,radinvmod) PLOOP(pliter,pl) if(pl!=ENTROPY && pl!=UU && pl!=URAD0 && !SCALARPL(pl) || (eomtype==EOMDEFAULT && EOMTYPE==EOMENTROPYGRMHD || eomtype==EOMENTROPYGRMHD || eomtype==EOMDIDENTROPYGRMHD) && (pl==ENTROPY || pl==URAD0 && IMPMHDTYPEBASE(baseitermethod)==0 || IMPMHDTYPEBASE(baseitermethod)==1 && (pl==URAD0 && AVOIDURAD0IFRADINVMODANDPMHDMETHOD==0 || pl==URAD0 && AVOIDURAD0IFRADINVMODANDPMHDMETHOD==1 && radinvmod==0)) || (eomtype==EOMDEFAULT && EOMTYPE==EOMGRMHD || eomtype==EOMGRMHD || eomtype==EOMDIDGRMHD) && (pl==UU || pl==URAD0 && IMPMHDTYPEBASE(baseitermethod)==0 || IMPMHDTYPEBASE(baseitermethod)==1 && (pl==URAD0 && AVOIDURAD0IFRADINVMODANDPMHDMETHOD==0 || pl==URAD0 && AVOIDURAD0IFRADINVMODANDPMHDMETHOD==1 && radinvmod==0) )) // over f's, not primitives.
+
+// over f's, not primitives, to determine error
+#define JACLOOPSUPERFULL(pliter,pl,eomtype,baseitermethod,radinvmod) PLOOPDYNAMICAL(pliter,pl) if(\
+pl!=ENTROPY && pl!=UU && pl!=URAD0 \
+|| (eomtype==EOMDEFAULT && EOMTYPE==EOMENTROPYGRMHD || eomtype==EOMENTROPYGRMHD || eomtype==EOMDIDENTROPYGRMHD) \
+      && (pl==ENTROPY || pl==URAD0 && IMPMHDTYPEBASE(baseitermethod)==0 || IMPMHDTYPEBASE(baseitermethod)==1 && (pl==URAD0 && AVOIDURAD0IFRADINVMODANDPMHDMETHOD==0 || pl==URAD0 && AVOIDURAD0IFRADINVMODANDPMHDMETHOD==1 && radinvmod==0)) \
+|| (eomtype==EOMDEFAULT && EOMTYPE==EOMGRMHD || eomtype==EOMGRMHD || eomtype==EOMDIDGRMHD) \
+      && (pl==UU || pl==URAD0 && IMPMHDTYPEBASE(baseitermethod)==0 || IMPMHDTYPEBASE(baseitermethod)==1 && (pl==URAD0 && AVOIDURAD0IFRADINVMODANDPMHDMETHOD==0 || pl==URAD0 && AVOIDURAD0IFRADINVMODANDPMHDMETHOD==1 && radinvmod==0) ) \
+)
+
+//#define JACLOOPSUPERFULL(pliter,pl,eomtype,baseitermethod,radinvmod) PLOOP(pliter,pl) if(pl!=ENTROPY && pl!=UU && pl!=URAD0 && !SCALARPL(pl) || (eomtype==EOMDEFAULT && EOMTYPE==EOMENTROPYGRMHD || eomtype==EOMENTROPYGRMHD || eomtype==EOMDIDENTROPYGRMHD) && (pl==ENTROPY || pl==URAD0 && IMPMHDTYPEBASE(baseitermethod)==0 || IMPMHDTYPEBASE(baseitermethod)==1 && (pl==URAD0 && AVOIDURAD0IFRADINVMODANDPMHDMETHOD==0 || pl==URAD0 && AVOIDURAD0IFRADINVMODANDPMHDMETHOD==1 && radinvmod==0)) || (eomtype==EOMDEFAULT && EOMTYPE==EOMGRMHD || eomtype==EOMGRMHD || eomtype==EOMDIDGRMHD) && (pl==UU || pl==URAD0 && IMPMHDTYPEBASE(baseitermethod)==0 || IMPMHDTYPEBASE(baseitermethod)==1 && (pl==URAD0 && AVOIDURAD0IFRADINVMODANDPMHDMETHOD==0 || pl==URAD0 && AVOIDURAD0IFRADINVMODANDPMHDMETHOD==1 && radinvmod==0) )) // over f's, not primitives.
 #define JACLOOPFULLERROR(itermode,jj,startjj,endjj) for(jj=(itermode==ITERMODECOLD ? startjj : 0);jj<=(itermode==ITERMODECOLD ? endjj : NDIM-1);jj++)
 #define JACLOOPSUBERROR(jj,startjj,endjj) JACLOOP(jj,startjj,endjj)
 #define JACLOOP2D(ii,jj,startjj,endjj) JACLOOP(ii,startjj,endjj) JACLOOP(jj,startjj,endjj)
@@ -2570,7 +2581,7 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
         // iter>1 so at least have estimate of G even if not great.
         // At iter=1, U->p->G can give G=0, while dUrad=-dUgas can still lead to changes that upon next iteration lead to G!=0.
         *goexplicit=1;
-        PLOOP(pliter,pl) if(fabs(Gallabs[pl])>NUMEPSILON*fabs(uuallabs[pl])) *goexplicit=0;
+        PLOOPDYNAMICAL(pliter,pl) if(fabs(Gallabs[pl])>NUMEPSILON*fabs(uuallabs[pl])) *goexplicit=0;
         pl=URAD0;
         if(fabs(ratchangeRtt*uu[pl])>NUMEPSILON*fabs(uuallabs[pl])) *goexplicit=0;
         if(fabs(ratchangeRtt*uu0[pl])>NUMEPSILON*fabs(uuallabs[pl])) *goexplicit=0;
@@ -5002,7 +5013,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 #if(PRODUCTION==0)
   // check if uncaught nan/inf
   int caughtnan=0;
-  PLOOP(pliter,pl){
+  PLOOPDYNAMICAL(pliter,pl){
     if(!isfinite(pb[pl])) caughtnan++;
     if(!isfinite(pf[pl])) caughtnan++;
     if(!isfinite(uub[pl])) caughtnan++;
@@ -5012,7 +5023,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     // Doesn't seem to happen, even on Kraken
     if(debugfail>=2){
       dualfprintf(fail_file,"implicit solver generated nan result and it wasn't caught\n");
-      PLOOP(pliter,pl) dualfprintf(fail_file,"1implicit solver: pl=%d pb=%21.15g pf=%21.15g dU=%21.15g\n",pl,pb[pl],pf[pl],dUcomp[RADSOURCE][pl]);
+      PLOOPDYNAMICAL(pliter,pl) dualfprintf(fail_file,"1implicit solver: pl=%d pb=%21.15g pf=%21.15g dU=%21.15g\n",pl,pb[pl],pf[pl],dUcomp[RADSOURCE][pl]);
       int jj;
       DLOOPA(jj) dualfprintf(fail_file,"2implicit solver: jj=%d ucon=%21.15g ucov=%21.15g uradcon=%21.15g uradcov=%21.15g\n",jj,q->ucon[jj],q->ucov[jj],q->uradcon[jj],q->uradcov[jj]);
     }
@@ -7761,7 +7772,6 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
 
     // energy added to gas
     FTYPE dugas=uuborrow[UU]-uu0[UU];
-
     // try enforcing energy conservation
     uuborrow[URAD0] = uu0[URAD0] - dugas;
 
@@ -7955,7 +7965,7 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
 
   // check if uncaught nan/inf
   int caughtnan=0;
-  PLOOP(pliter,pl){
+  PLOOPDYNAMICAL(pliter,pl){
     if(!isfinite(pb[pl])) caughtnan++;
     if(!isfinite(uub[pl])) caughtnan++;
     if(!isfinite(dUcomp[RADSOURCE][pl])) caughtnan++;
@@ -7968,8 +7978,8 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
     if(debugfail>=2){
       dualfprintf(fail_file,"per mode implicit solver generated nan result and it wasn't caught\n");
       dualfprintf(fail_file,"per mode implicit solver: %d %d %d %d %d %d %d %d : %g %g %g : %d %d : %g %g : %d\n",allowbaseitermethodswitch, modprim, havebackup, didentropyalready, *eomtype, whichcap, itermode, *baseitermethod, trueimptryconv, trueimpokconv, trueimpallowconv, trueimpmaxiter, truenumdampattempts, fracenergy, dissmeasure, *radinvmod);
-      PLOOP(pliter,pl) dualfprintf(fail_file,"0implicit solver: pl=%d Uiin=%21.15g dUother=%21.15g dU=%21.15g\n",pl,Uiin[pl],dUother[pl],dUcomp[RADSOURCE][pl]);
-      PLOOP(pliter,pl) dualfprintf(fail_file,"1implicit solver: pl=%d pb=%21.15g piin=%21.15g Ufin=%21.15g dU=%21.15g uub=%21.15g\n",pl,pb[pl],piin[pl],Ufin[pl],dUcomp[RADSOURCE][pl],uub[pl]);
+      PLOOPDYNAMICAL(pliter,pl) dualfprintf(fail_file,"0implicit solver: pl=%d Uiin=%21.15g dUother=%21.15g dU=%21.15g\n",pl,Uiin[pl],dUother[pl],dUcomp[RADSOURCE][pl]);
+      PLOOPDYNAMICAL(pliter,pl) dualfprintf(fail_file,"1implicit solver: pl=%d pb=%21.15g piin=%21.15g Ufin=%21.15g dU=%21.15g uub=%21.15g\n",pl,pb[pl],piin[pl],Ufin[pl],dUcomp[RADSOURCE][pl],uub[pl]);
       int jjj;
       DLOOPA(jjj) dualfprintf(fail_file,"2implicit solver: jj=%d ucon=%21.15g ucov=%21.15g uradcon=%21.15g uradcov=%21.15g\n",jj,q->ucon[jj],q->ucov[jj],q->uradcon[jj],q->uradcov[jj]);
     }

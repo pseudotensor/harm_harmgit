@@ -2958,9 +2958,11 @@ int extrapfunc(int boundary, int j,int k,
 #define POWERRATIO (1.0+POWEREXTRAFRAC) // ratio of densities not allow to go bigger than this when using dqlogdensity
 
 
-#if(1)
+#if(1) ///////////// BIG IF
+
       PBOUNDLOOP(pliter,pl){
-        if(pl!=B1 && pl!=B2 && pl!=B3 && pl!=URAD1 && pl!=URAD2 && pl!=URAD3){
+        // MUST BE POSITIVE DEFINITE!!!
+        if(pl!=B1 && pl!=B2 && pl!=B3 && pl!=URAD1 && pl!=URAD2 && pl!=URAD3 && SCALARPL(pl)==0){
 
           // only use linear if exponentiation causes growth of value, not decreasion
           ftemp = exp(-signdq*dqlogdensity[pl]) - POWERRATIO;
@@ -2979,7 +2981,11 @@ int extrapfunc(int boundary, int j,int k,
         }
       }
 
-#else
+
+
+#else ///////////// BIG ELSE
+
+
 
       // override using OLD WAY for densities
 #if(0)
@@ -2994,7 +3000,8 @@ int extrapfunc(int boundary, int j,int k,
       PBOUNDLOOP(pliter,pl) if(pl==URAD0)  MACP0A1(prim,i,j,k,pl) = exp(log(SMALL+fabs(MACP0A1(prim,ri,rj,rk,pl))) + dqlogdensity[pl]*(i-ri));
 #endif
 
-#endif
+
+#endif ///////////// BIG ENDIF
 
 
 
@@ -3005,7 +3012,9 @@ int extrapfunc(int boundary, int j,int k,
       //
       ///////////////////////////////
 
-#if(0)
+#if(0) ///////////// BIG IF
+
+
       // appears too speculative and use of v^3 causes ucon2pr to lead to no solution within boundary conditions -- suggestive of some inconsistency
       //  (primitive can be anything)
 
@@ -3056,7 +3065,7 @@ int extrapfunc(int boundary, int j,int k,
       ucon2pr(WHICHVEL,ucontouse,ptrgeom[U1],MAC(prim,i,j,k)); // fills only U1,U2,U3
 
 
-#elif(0)
+#elif(0) ///////////// BIG ELIF
 
       // GODMARK: Was causing problems for Rebecca
 
@@ -3111,7 +3120,7 @@ int extrapfunc(int boundary, int j,int k,
 
 
 
-#elif(0)
+#elif(0) ///////////// BIG ELIF
       // linear extrap
       PBOUNDLOOP(pliter,pl){
         if(pl==U1 || pl==U2 || pl==U3 || pl==URAD1 || pl==URAD2 || pl==URAD3){
@@ -3124,7 +3133,7 @@ int extrapfunc(int boundary, int j,int k,
       }
 
 
-#elif(1)
+#elif(1) ///////////// BIG ELIF
       // linear extrap for velocities
       PBOUNDLOOP(pliter,pl){
         if(pl==U1 || pl==U2 || pl==U3 || pl==URAD1 || pl==URAD2 || pl==URAD3){
@@ -3167,7 +3176,7 @@ int extrapfunc(int boundary, int j,int k,
 #endif
       
 
-#endif   
+#endif    ///////////// BIG ENDIF
 
 
     } // end if ispstag==0
@@ -3816,7 +3825,7 @@ int poledeath(int whichx2,
 
         /////////////
         //
-        // DENSITY (rho,u) POLEDATH
+        // velocity and DENSITY (rho,u) POLEDATH
         //
         /////////////
         if(ispstag==0){
