@@ -1014,6 +1014,7 @@
 #define UTOPRIMRADFAILERFNEG 7
 /// unfixable inversion problems
 #define UTOPRIMRADFAILBAD1 8 // not used yet
+#define UTOPRIMRADFAILGAMMAHIGH   9
 
 /// for radiation terms
 #define COUNTRADNOTHING -1
@@ -1021,12 +1022,17 @@
 #define COUNTRADLOCAL 0
 #define COUNTRADNONLOCAL 1
 
+#define IFUTOPRIMRADHARDFAIL(pflagrad) (pflagrad>UTOPRIMRADNOFAIL && pflagrad!=UTOPRIMRADFAILGAMMAHIGH)
+#define IFUTOPRIMRADSOFTFAIL(pflagrad) (pflagrad>UTOPRIMRADNOFAIL && (pflagrad==UTOPRIMRADFAILGAMMAHIGH))
 #define IFUTOPRIMRADFAIL(pflagrad) (pflagrad>UTOPRIMRADNOFAIL)
 
 #define IFUTOPRIMRADFAILFIXED(pflagrad) (pflagrad==UTOPRIMRADFAILFIXEDUTOPRIMRAD)
 #define IFUTOPRIMRADNOFAIL(pflagrad) (pflagrad==UTOPRIMRADNOFAIL)
 
 #define IFUTOPRIMRADNOFAILORFIXED(pflagrad) (pflagrad==UTOPRIMRADFAILFIXEDUTOPRIMRAD || pflagrad==UTOPRIMRADNOFAIL)
+
+#define RADINVBAD(radinvmod) (radinvmod==UTOPRIMRADFAILERFNEG || radinvmod==UTOPRIMRADFAILBAD1 || radinvmod==UTOPRIMRADFAILGAMMAHIGH)
+#define RADINVOK(radinvmod) (RADINVBAD(radinvmod)==0)
 
 
 

@@ -510,7 +510,7 @@ int consfixup_1zone(int finaluu, int i, int j, int k, struct of_geom *ptrgeom, F
     // u2p_rad takes UNOTHING form
     u2p_rad(showmessages, allowlocalfailurefixandnoreport,GAMMAMAXRADIMPLICITSOLVER,whichcap,uunew1,pprad,ptrgeom,&lpflag,&lpflagrad);
     int radinvmod=(int)(lpflagrad);
-    if(radinvmod==UTOPRIMRADNOFAIL && isfinite(pprad[URAD0])==1 && isfinite(pprad[URAD1])==1 && isfinite(pprad[URAD2])==1 && isfinite(pprad[URAD3])==1){
+    if(RADINVBAD(radinvmod) && isfinite(pprad[URAD0])==1 && isfinite(pprad[URAD1])==1 && isfinite(pprad[URAD2])==1 && isfinite(pprad[URAD3])==1){
       PLOOP(pliter,pl) if(RADFULLPL(pl)) pp[pl] = pprad[pl];
       didrad=1;
     }
@@ -918,7 +918,7 @@ int diag_fixup_Ui_pf(int docorrectucons, FTYPE *Uievolve, FTYPE *pf, struct of_g
       // then assume fixup_utoprim() needs to operate and will also handle accounting
       PLOOP(pliter,pl) if(RADPL(pl)==0) Ufcent[pl] = Uicent[pl];
     }
-    if(*lpflagrad>UTOPRIMRADNOFAIL){
+    if(IFUTOPRIMRADFAIL(*lpflagrad)){
       // then assume fixup_utoprim() needs to operate and will also handle accounting
       PLOOP(pliter,pl) if(RADPL(pl)==1) Ufcent[pl] = Uicent[pl];
     }
@@ -1162,7 +1162,7 @@ int fixup1zone(int docorrectucons, FTYPE *pr, FTYPE *uconsinput, struct of_geom 
 
     //////////////
     //
-    // get floor value
+    // get floor value (computes, e.g., bsq)
     //
     //////////////
     set_density_floors(ptrgeom,prmhd,prfloor,prceiling);
@@ -1393,7 +1393,7 @@ int fixup1zone(int docorrectucons, FTYPE *pr, FTYPE *uconsinput, struct of_geom 
     lpflag=&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL);
     lpflagrad=&GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL);
 
-    if(*lpflag>UTOPRIMNOFAIL || *lpflagrad>UTOPRIMRADNOFAIL){
+    if(*lpflag>UTOPRIMNOFAIL || IFUTOPRIMRADFAIL(*lpflagrad)){
       // by this point, pr0 or prdiag are not necessarily consistent with ucons, which if finalstep=1 is the final conserved quantity.  This occurs when no implicit solution and no explicit inversion.  Happens when (e.g.) U[RHO]<0.
       FTYPE Uievolve[NPR];
       PLOOP(pliter,pl) Uievolve[pl] = ucons[pl];
@@ -1847,7 +1847,7 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
 
       // assume not fixing anything
       fixingmhd=IFUTOPRIMFAIL(mhdlpflag);
-      fixingrad=IFUTOPRIMRADFAIL(radlpflag);
+      fixingrad=IFUTOPRIMRADFAIL(radlpflag); // not just a hard failure, but some softish ones too
 
       
       
@@ -2162,6 +2162,10 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
             if(radlpflag==UTOPRIMFAILU2AVG1 || radlpflag==UTOPRIMFAILU2AVG2 || radlpflag==UTOPRIMFAILU2AVG1FROMCOLD || radlpflag==UTOPRIMFAILU2AVG2FROMCOLD || radlpflag==UTOPRIMFAILUPERC || radlpflag==UTOPRIMFAILUNEG && (HANDLEUNEG==1) ){
               startpl=PRAD0;
               endpl=PRAD0;
+            }
+            else if(radlpflag==UTOPRIMRADFAILGAMMAHIGH){ // fixing gammarad so no constant high value from hitting ceiling on gammaradmax
+              startpl=PRAD1;
+              endpl=PRAD3;
             }
             else{
               // then presume inversion failure with no solution
@@ -2824,7 +2828,7 @@ static int fixuputoprim_accounting(int i, int j, int k, PFTYPE mhdlpflag, PFTYPE
     radutoprimfailtype=COUNTRADLOCAL;
     docorrectucons=1;
   }
-  else if(radlpflag>=UTOPRIMRADFAILBAD1){
+  else if(radlpflag>=UTOPRIMRADFAILBAD1 || radlpflag==UTOPRIMRADFAILGAMMAHIGH){
     radutoprimfailtype=COUNTRADNONLOCAL;
     docorrectucons=1;
   }

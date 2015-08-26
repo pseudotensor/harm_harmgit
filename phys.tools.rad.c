@@ -646,8 +646,6 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE *errorabs, stru
 #define ACTUALHARDORSOFTFAILURE(failreturn) (failreturn==FAILRETURNGENERAL || failreturn==FAILRETURNJACISSUE || failreturn==FAILRETURNNOTTOLERROR)
 #define SWITCHGOODIDEAFAILURE(failreturn) (failreturn==FAILRETURNGENERAL || failreturn==FAILRETURNJACISSUE || failreturn==FAILRETURNNOTTOLERROR || failreturn==FAILRETURNMODESWITCH)
 
-#define RADINVBAD(radinvmod) (radinvmod==UTOPRIMRADFAILERFNEG || radinvmod==UTOPRIMRADFAILBAD1)
-#define RADINVOK(radinvmod) (RADINVBAD(radinvmod)==0)
 
 
 ////////////////////////////////////////////////
@@ -844,14 +842,14 @@ static int Utoprimgen_failwrapper(int doradonly, int *radinvmod, int showmessage
     GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)=UTOPRIMNOFAIL;
     prod0dualfprintf(showmessages && debugfail>=2,fail_file,"Got soft MHD failure inversion failure during Utoprimgen_failwrapper: ijk=%d %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
   }
-  else if(IFUTOPRIMRADFAIL(*lpflagrad)){
+  else if(IFUTOPRIMRADHARDFAIL(*lpflagrad)){
     // can reduce Newton step if getting failure.
     // reset pflag for radiation to no failure, but treat here locally
     GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL)=UTOPRIMRADNOFAIL;
     prod0dualfprintf(showmessages && debugfail>=2,fail_file,"Got some radiation inversion failure during Utoprimgen_failwrapper: ijk=%d %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k);
     failreturn=UTOPRIMGENWRAPPERRETURNFAILRAD;
   }
-  else if( IFUTOPRIMFAIL(*lpflag) || IFUTOPRIMRADFAIL(*lpflagrad) ){
+  else if( IFUTOPRIMFAIL(*lpflag) || IFUTOPRIMRADHARDFAIL(*lpflagrad) ){
     // these need to get fixed-up, but can't, so return failure
     prod0dualfprintf(showmessages && debugfail>=2,fail_file,"Got hard failure of inversion (MHD part only considered as hard) in f_implicit(): ijk=%d %d %d : %d %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,*lpflag,*lpflagrad);
     failreturn=UTOPRIMGENWRAPPERRETURNFAILMHD;
@@ -4922,7 +4920,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
 
     if(usedimplicit==0){// No source either because goexplicitenergy==1 && goexplicitentropy==1 or failed
-      if(goexplicitenergy==1 || goexplicitentropy==1 || *lpflagrad>UTOPRIMRADNOFAIL && *lpflag==UTOPRIMNOFAIL){ // then assume just radinvmod (i.e. any radiation failure is always fixable), so revert to explicit if couldn't find solution.
+      if(goexplicitenergy==1 || goexplicitentropy==1){
         *lpflag=UTOPRIMNOFAIL;
         *lpflagrad=UTOPRIMRADNOFAIL;
         noprims=1;
@@ -4935,7 +4933,20 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
         prod0dualfprintf(debugfail>=3,fail_file,"Went explicit: eenergy=%g eentropy=%g ienergy=%d ientropy=%d\n",errorabsenergy[WHICHERROR],errorabsentropy[WHICHERROR],itersenergy,itersentropy);
       }
-      else{ // actual failure
+      else if(*lpflagrad>UTOPRIMRADNOFAIL && *lpflag==UTOPRIMNOFAIL){ // then assume just radinvmod (i.e. any radiation failure is always fixable), so revert to explicit if couldn't find solution.
+        *lpflag=UTOPRIMNOFAIL;
+        //        *lpflagrad=UTOPRIMRADNOFAIL;
+        noprims=1; // so will apply fixup_utoprim()
+        failfinalreturn=1;
+        *eomtype=EOMDEFAULT;
+        methodindex[EOMTYPEINDEX] = *eomtype;
+
+        if(goexplicitenergy==1 || goexplicitentropy==1){ usedexplicitgood=1; failfinalreturn=FAILRETURNGOTRIVIALEXPLICIT;}
+        else{ usedexplicitkindabad=1; failfinalreturn=1;} // __WORKINGONIT__: might want to treat as actual failure if QTYPMHD mode since lpflag never set.
+
+        prod0dualfprintf(debugfail>=3,fail_file,"Went explicit: eenergy=%g eentropy=%g ienergy=%d ientropy=%d\n",errorabsenergy[WHICHERROR],errorabsentropy[WHICHERROR],itersenergy,itersentropy);
+      }
+      else{ // actual full failure
         // if no source, then will do normal inversion (no change to *eomtype) as if G=0.
         methodindex[EOMTYPEINDEX] = *eomtype;
         *lpflag=UTOPRIMFAILCONV;
@@ -12228,7 +12239,7 @@ int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gam
 
   FTYPE yvar;
   int didmod=0;
-  int didmodEr=0,didmody=0;
+  int didmodEr=0,didmody=0,gotbigy=0;
 
   ///////////////////
   //
@@ -12273,6 +12284,7 @@ int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gam
     gamma = gammamax;
     didmod=1;
     didmody=1;
+    gotbigy=1;
     numyvarbig++;
 
     pr = Er/(4.0*gammasq-1.0);
@@ -12502,7 +12514,8 @@ int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gam
       *lpflagrad=UTOPRIMRADFAILERFNEG; // used to detec if modified primitives to not be consistent with inputted uu
     }
     else{
-      *lpflagrad=UTOPRIMRADFAILCASE2A; // used to detec if modified primitives to not be consistent with inputted uu
+      if(gotbigy) *lpflagrad=UTOPRIMRADFAILGAMMAHIGH;
+      else *lpflagrad=UTOPRIMRADFAILCASE2A; // used to detec if modified primitives to not be consistent with inputted uu
     }
   }
 
@@ -12526,6 +12539,7 @@ int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gam
   else{
     // CASE reductions (so set as no failure so fixups don't operate -- but might also want to turn off CHECKINVERSIONRAD else that routine won't know when to ignore bad U->P->U cases.)
     if(*lpflagrad==0) *lpflagrad=UTOPRIMRADNOFAIL;
+    else if(gotbigy) *lpflagrad=UTOPRIMRADFAILGAMMAHIGH; // softish failure where we will fixup_utoprim() urad^t but not Erf
     else *lpflagrad=UTOPRIMRADFAILFIXEDUTOPRIMRAD; //UTOPRIMRADNOFAIL;
   }
 

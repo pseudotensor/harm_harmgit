@@ -919,7 +919,7 @@ int Utoprimgen(int showmessages, int checkoninversiongas, int checkoninversionra
     // then don't report info for now SUPERGODMARK
     if(showmessages&&debugfail>=1) dualfprintf(fail_file, "SOFT Failed to find a prim. var. solution on finalstep=%d!! t=%21.15g steppart=%d nstep=%ld i=%d j=%d k=%d : fail=%d : errx=%21.15g lpflagrad=%d\n",finalstep,t,steppart,realnstep,startpos[1]+ptrgeom->i,startpos[2]+ptrgeom->j,startpos[3]+ptrgeom->k,lpflag,newtonstats->lerrx,lpflagrad);
   }
-  else if((IFUTOPRIMFAIL(lpflag) || IFUTOPRIMRADFAIL(lpflagrad)) &&(debugfail>=1)){
+  else if((IFUTOPRIMFAIL(lpflag) || IFUTOPRIMRADHARDFAIL(lpflagrad)) &&(debugfail>=1)){
     if(showmessages) dualfprintf(fail_file, "Failed to find a prim. var. solution on finalstep=%d!! t=%21.15g steppart=%d nstep=%ld i=%d j=%d k=%d : fail=%d : errx=%21.15g lpflagrad=%d\n",finalstep,t,steppart,realnstep,startpos[1]+ptrgeom->i,startpos[2]+ptrgeom->j,startpos[3]+ptrgeom->k,lpflag,newtonstats->lerrx,lpflagrad);
   }
   else{
@@ -1910,7 +1910,7 @@ static int check_on_inversion(int checkoninversiongas, int checkoninversionrad, 
 
 #if(0)
       if((IFUTOPRIMFAIL(*lpflag) || checkoninversiongas==0) && (pl!=PRAD0 && pl!=PRAD1 && pl!=PRAD2 && pl!=PRAD3)) continue; // don't check MHD (non-radiation) inversion if didn't want to
-      if((IFUTOPRIMRADFAIL(*lpflagrad) || checkoninversionrad==0) && (pl==PRAD0 && pl==PRAD1 && pl==PRAD2 && pl==PRAD3)) continue; // don't check radiation (non-MHD) inversion if didn't want to
+      if((IFUTOPRIMRADHARDFAIL(*lpflagrad) || checkoninversionrad==0) && (pl==PRAD0 && pl==PRAD1 && pl==PRAD2 && pl==PRAD3)) continue; // don't check radiation (non-MHD) inversion if didn't want to
 
 
       plcheck=(pl>=RHO)&&(pl<=B3 || pl<=ENTROPY && usedentropyinversion || (*lpflagrad==0)&&(EOMRADTYPE!=EOMRADNONE && (pl==URAD0 || pl==URAD1&&(EOMRADTYPE!=EOMRADEDD) || pl==URAD2&&(EOMRADTYPE!=EOMRADEDD) || pl==URAD3&&(EOMRADTYPE!=EOMRADEDD) )));
