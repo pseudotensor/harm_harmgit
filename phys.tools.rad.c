@@ -2749,57 +2749,12 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
   int k=ptrgeom->k;
   int p=ptrgeom->p;
 
+  
 
-
- int modemethodlocal=MODEMETHOD;
-  int reducetoquick=0;
-  // tj=-2,-1,0,1 work
-  // tj=ts2+1,ts2,ts2-1,ts2-2 work
-  // revert to simple mode if POLEDEATH is active because then anyways solution near pole is inaccurate and whatever generated here would be overwritten.
-  // doing this because with or without poledeath active, the poles often find no solution at all or at least not with the fast PMHD method, so the pole alone causes things to slow down alot for the whole code.
-  int EXTRAPOLEDEATH,localpoledeath;
-  FTYPE tj=(FTYPE)(startpos[2]+j);
-
-  EXTRAPOLEDEATH=POLEDEATH;
-  localpoledeath=POLEDEATH + EXTRAPOLEDEATH;
-  if(fabs(tj+0.5 - (FTYPE)(0))<(FTYPE)localpoledeath || fabs(tj+0.5-(FTYPE)totalsize[2])<(FTYPE)localpoledeath){
-    modemethodlocal=MODEPICKBESTSIMPLE;
-    reducetoquick=2;
-    //    dualfprintf(fail_file,"j=%d modechange\n",j); // debug
-  }
-
-
-
-
-  EXTRAPOLEDEATH=1;
-  localpoledeath=POLEDEATH + EXTRAPOLEDEATH;
-  if(fabs(tj+0.5 - (FTYPE)(0))<(FTYPE)localpoledeath || fabs(tj+0.5-(FTYPE)totalsize[2])<(FTYPE)localpoledeath){
-    modemethodlocal=MODEPICKBESTSIMPLE;
-    reducetoquick=2;
-    //    dualfprintf(fail_file,"j=%d modechange\n",j); // debug
-  }
-
-  if(fabs(tj+0.5 - (FTYPE)(0))<(FTYPE)POLEDEATH || fabs(tj+0.5-(FTYPE)totalsize[2])<(FTYPE)POLEDEATH){
-    modemethodlocal=MODEPICKBESTSIMPLE;
-    if(LIMITEDPOLEDEATHINRADIUS){
-      FTYPE Rhorref=rhor_calc(0);
-      int iiii=ptrgeom->i;
-      int jjjj=ptrgeom->j;
-      int kkkk=ptrgeom->k;
-      int llloc=ptrgeom->p;
-      FTYPE V[NDIM]={0.0};
-      bl_coord_ijk(iiii,jjjj,kkkk,llloc,V);
-      
-      if( (1||V[1]>0.9*Rhorref) && (V[1]<OUTERDEATHRADIUS && OUTERDEATH==1 || OUTERDEATH==0)) reducetoquick=2;
-      else reducetoquick=1;
-    }
-    else reducetoquick=1;
-  }
-
-
-
-
-
+  // whether SPC
+  int isspc=ISSPCMCOORD(MCOORD);
+  // whether SPC with BH
+  int isbhspc=ISSPCMCOORD(MCOORD) && ISBLACKHOLEMCOORD(MCOORD);
 
   ////////////////////
   //
@@ -2812,6 +2767,48 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
   int llloc=ptrgeom->p;
   FTYPE V[NDIM]={0.0};
   bl_coord_ijk(iiii,jjjj,kkkk,llloc,V);
+
+
+  int modemethodlocal=MODEMETHOD;
+  int reducetoquick=0;
+
+  if(isspc){
+    // tj=-2,-1,0,1 work
+    // tj=ts2+1,ts2,ts2-1,ts2-2 work
+    // revert to simple mode if POLEDEATH is active because then anyways solution near pole is inaccurate and whatever generated here would be overwritten.
+    // doing this because with or without poledeath active, the poles often find no solution at all or at least not with the fast PMHD method, so the pole alone causes things to slow down alot for the whole code.
+    int EXTRAPOLEDEATH=0,localpoledeath=0;
+    FTYPE tj=(FTYPE)(startpos[2]+j);
+
+    EXTRAPOLEDEATH=POLEDEATH;
+    localpoledeath=POLEDEATH + EXTRAPOLEDEATH;
+    if(fabs(tj+0.5 - (FTYPE)(0))<(FTYPE)localpoledeath || fabs(tj+0.5-(FTYPE)totalsize[2])<(FTYPE)localpoledeath){
+      modemethodlocal=MODEPICKBESTSIMPLE;
+      reducetoquick=2;
+      //    dualfprintf(fail_file,"j=%d modechange\n",j); // debug
+    }
+
+
+
+    EXTRAPOLEDEATH=1;
+    localpoledeath=POLEDEATH + EXTRAPOLEDEATH;
+    if(fabs(tj+0.5 - (FTYPE)(0))<(FTYPE)localpoledeath || fabs(tj+0.5-(FTYPE)totalsize[2])<(FTYPE)localpoledeath){
+      modemethodlocal=MODEPICKBESTSIMPLE;
+      reducetoquick=2;
+      //    dualfprintf(fail_file,"j=%d modechange\n",j); // debug
+    }
+
+    if(fabs(tj+0.5 - (FTYPE)(0))<(FTYPE)POLEDEATH || fabs(tj+0.5-(FTYPE)totalsize[2])<(FTYPE)POLEDEATH){
+      modemethodlocal=MODEPICKBESTSIMPLE;
+      if(LIMITEDPOLEDEATHINRADIUS && isbhspc){
+        FTYPE Rhorref=rhor_calc(0);
+      
+        if( (1||V[1]>0.9*Rhorref) && (V[1]<OUTERDEATHRADIUS && OUTERDEATH==1 || OUTERDEATH==0)) reducetoquick=2;
+        else reducetoquick=1;
+      }
+      else reducetoquick=1;
+    }
+  }// end if isspc
 
 
 
@@ -3546,18 +3543,20 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     }
 
     
-  int bsqorhocond=0,funnelcond=0;
+    int bsqorhocond=0,funnelcond=0;
 #if(DOPERF)
-    // HACK to force more use of PMHD method to avoid slowdown.
-    if(q->bsq/pb[RHO]>1.0){
-      bsqorhocond=1;
-    }
-    if(q->bsq/pb[RHO]>0.2*BSQORHOLIMIT || q->bsq/pb[UU]>0.2*BSQOULIMIT || pb[UU]/pb[RHO]>0.1*UORHOLIMIT){
-      radprimaryevolves=radextremeprimaryevolves=0;
-      gasprimaryevolves=gasextremeprimaryevolves=1;      
-    }
-    if(q->bsq/pb[RHO]>0.2*BSQORHOLIMIT){
-      funnelcond=1;
+    if(isspc){
+      // HACK to force more use of PMHD method to avoid slowdown.
+      if(q->bsq/pb[RHO]>1.0){
+        bsqorhocond=1;
+      }
+      if(q->bsq/pb[RHO]>0.2*BSQORHOLIMIT || q->bsq/pb[UU]>0.2*BSQOULIMIT || pb[UU]/pb[RHO]>0.1*UORHOLIMIT){
+        radprimaryevolves=radextremeprimaryevolves=0;
+        gasprimaryevolves=gasextremeprimaryevolves=1;      
+      }
+      if(q->bsq/pb[RHO]>0.2*BSQORHOLIMIT){
+        funnelcond=1;
+      }
     }
 #endif
 
@@ -3667,7 +3666,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
           trueimptryconvlist[tryphase1]=MAX(trueimptryconvlist[tryphase1],IMPTRYCONVMARGINAL);
         }
         // allow tolerance to be higher if...
-        if(V[1]<Rhor){
+        if(V[1]<Rhor && isbhspc){
           //trueimptryconvlist[tryphase1]=MAX(trueimptryconvlist[tryphase1],IMPTRYCONV_RHORHIGHERTOL);
           trueimpallowconvconstlist[tryphase1]=MAX(trueimpallowconvconstlist[tryphase1],IMPALLOWCONV_RHORHIGHERTOL);
         }
@@ -4209,7 +4208,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
         if(funnelcond){ // then don't expect to treat density accurate anyways, just need ok accuracy and stability
           trueimptryconvlist[tryphase1]=MAX(trueimptryconvlist[tryphase1],IMPTRYCONVMARGINAL);
         }
-        if(V[1]<Rhor){
+        if(V[1]<Rhor && isbhspc){
           //          trueimptryconvlist[tryphase1]=MAX(trueimptryconvlist[tryphase1],IMPTRYCONV_RHORHIGHERTOL);
           trueimpallowconvconstlist[tryphase1]=MAX(trueimpallowconvconstlist[tryphase1],IMPALLOWCONV_RHORHIGHERTOL);
         }
@@ -4702,7 +4701,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
         if(funnelcond){ // then don't expect to treat density accurate anyways, just need ok accuracy and stability
           trueimptryconvcold=MAX(trueimptryconvcold,IMPTRYCONVMARGINAL);
-          if(V[1]<Rhor){
+          if(V[1]<Rhor && isbhspc){
             //          trueimptryconvlist[tryphase1]=MAX(trueimptryconvlist[tryphase1],IMPTRYCONV_RHORHIGHERTOL);
             trueimpallowconvcold=MAX(trueimpallowconvcold,IMPALLOWCONV_RHORHIGHERTOL);
           }
