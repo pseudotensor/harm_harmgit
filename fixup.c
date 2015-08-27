@@ -1731,7 +1731,8 @@ int fixup_checksolution(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR],int finals
 // More useful to use conserved D from unew as reference D0 so particle mass really conserved -- and this is ok compared to limit_gamma since newly averaged 4-velocity will not imply a large \gamma (unless averaging nearly failed regions!)
 // Also, during failure, can't assume mass can be so easily conserved and D might be bad
 // So disable for now
-#define DO_CONSERVE_D_INFAILFIXUPS (finalstep==1)
+// enable for finalstep for YFL, but for RHO causes high gamma fixed in regions, so disable for that
+#define DO_CONSERVE_D_INFAILFIXUPS (finalstep==1 && (SCALARPL(pl))) // not pl==RHO
 
 #define HANDLEUNEG 0
 // seems to keep failing with this, so probably treating u<zerouuperbaryon*prim[RHO] like failure is better idea
@@ -2307,7 +2308,7 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
               //
               //////////////////////
               PLOOP(pliter,pl){
-                if(pl==YFL4 || pl==YFL5 ){
+                if(pl==YFL4 || pl==YFL5){
                   if(startpl<=pl && endpl>=pl){
 
 
