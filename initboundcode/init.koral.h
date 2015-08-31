@@ -1057,6 +1057,12 @@ struct Ccoordparams {
 #undef DOCOMPTON
 #define DOCOMPTON 1 // enable thermal Comptonization
 
+#undef DOPERF
+#define DOPERF 1 // enable performance enhancements
+
+#undef ENFORCEMHDCONS2RADCONS
+#define ENFORCEMHDCONS2RADCONS 1 // assumes not true that pmhd>>prad beyond machine precision
+
 #undef WHICHRADSOURCEMETHOD
 //#define WHICHRADSOURCEMETHOD SOURCEMETHODNONE // WALD
 //#define WHICHRADSOURCEMETHOD SOURCEMETHODNONE

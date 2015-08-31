@@ -1,5 +1,3 @@
-#define DOPERF 1
-
 // __WORKINGONIT__ indicates what still in development
 
 /*! \file phys.tools.rad.c
@@ -8813,7 +8811,7 @@ static int f_error_check(int showmessages, int showmessagesheavy, int iter, FTYP
     // report if didn't pass
 #if(PRODUCTION==0)
     prod0dualfprintf(showmessagesheavy,fail_file,"POSTFIN (conv=%21.15g): uu: %21.15g %21.15g %21.15g %21.15g : uu0=%21.15g %21.15g %21.15g %21.15g\n",conv,uu[ru->irefU[0]],uu[ru->irefU[1]],uu[ru->irefU[2]],uu[ru->irefU[3]],uu0[ru->irefU[0]],uu0[ru->irefU[1]],uu0[ru->irefU[2]],uu0[ru->irefU[3]]);
-    PLOOP(pliter,pl) dualfprintf(fail_file,"iii=%d fin=%21.15g finnorm=%21.15g\n",ii,fin[pl],finnorm[pl]);
+    PLOOP(pliter,pl) dualfprintf(fail_file,"pl=%d fin=%21.15g finnorm=%21.15g\n",pl,fin[pl],finnorm[pl]);
     prod0dualfprintf(showmessagesheavy,fail_file,"nstep=%ld steppart=%d dt=%g i=%d iter=%d : %g %g %g %g\n",nstep,steppart,dt,ptrgeom->i,iter,finreport[ru->erefU[0]],finreport[ru->erefU[1]],finreport[ru->erefU[2]],finreport[ru->erefU[3]]);
 #endif    
     return(0);

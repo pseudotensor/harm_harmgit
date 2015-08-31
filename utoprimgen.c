@@ -2667,38 +2667,42 @@ int Utoprimgen_pick(int showmessages, int allowlocalfailurefixandnoreport, int w
   /////////////
 
   if(EOMRADTYPE!=EOMRADNONE){
-    // KORAL
-    // NOTEMARK: u2p_rad() uses pr, which will have updated velocities in case radiation inversion wants to use fluid frame reduction.  But need to know if got good solution, so pass that flag to u2p_rad()
+    if(ENFORCEMHDCONS2RADCONS==1){
+      // KORAL
+      // NOTEMARK: u2p_rad() uses pr, which will have updated velocities in case radiation inversion wants to use fluid frame reduction.  But need to know if got good solution, so pass that flag to u2p_rad()
 
-    // get MHD state
-    struct of_state q;
-    get_state_norad_part1(pr, ptrgeom, &q);
-    get_state_norad_part2(1, pr, ptrgeom, &q); // where entropy would be computed
+      // get MHD state
+      struct of_state q;
+      get_state_norad_part1(pr, ptrgeom, &q);
+      get_state_norad_part2(1, pr, ptrgeom, &q); // where entropy would be computed
 
-    // get accurate UMHD[pmhd] to avoid inversion inaccuracies for MHD inversion part
-    extern int primtoflux_nonradonly(int needentropy, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux, FTYPE *fluxabs);
-    FTYPE uumhd[NPR],uumhdabs[NPR];
-    PLOOP(pliter,pl) uumhd[pl] = Ugeomfree[pl];
-    primtoflux_nonradonly(1,pr,&q,TT,ptrgeom, uumhd, uumhdabs); // anything not set is set as zero, which is rad.
+      // get accurate UMHD[pmhd] to avoid inversion inaccuracies for MHD inversion part
+      extern int primtoflux_nonradonly(int needentropy, FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux, FTYPE *fluxabs);
+      FTYPE uumhd[NPR],uumhdabs[NPR];
+      PLOOP(pliter,pl) uumhd[pl] = Ugeomfree[pl];
+      primtoflux_nonradonly(1,pr,&q,TT,ptrgeom, uumhd, uumhdabs); // anything not set is set as zero, which is rad.
 
-    // enforce conservation even if inaccuracy in MHD inversion
-    int iv;
-    DLOOPA(iv) uumhd[URAD0+iv] = Ugeomfree[URAD0+iv] - (uumhd[UU+iv]-Ugeomfree[UU+iv]);
-    PLOOP(pliter,pl) Ugeomfree[pl] = uumhd[pl];
+      // enforce conservation even if inaccuracy in MHD inversion
+      int iv;
+      DLOOPA(iv) uumhd[URAD0+iv] = Ugeomfree[URAD0+iv] - (uumhd[UU+iv]-Ugeomfree[UU+iv]);
+      PLOOP(pliter,pl) Ugeomfree[pl] = uumhd[pl];
 
-    u2p_rad(showmessages, allowlocalfailurefixandnoreport, GAMMAMAXRAD, whichcap, Ugeomfree,pr,ptrgeom,lpflag,lpflagrad);
-    //*lpflagrad=0; // test that check_on_inversion triggered where velocity limiter applies
+      u2p_rad(showmessages, allowlocalfailurefixandnoreport, GAMMAMAXRAD, whichcap, Ugeomfree,pr,ptrgeom,lpflag,lpflagrad);
+      //*lpflagrad=0; // test that check_on_inversion triggered where velocity limiter applies
 
 
-    get_state_radonly(pr, ptrgeom, &q);
+      get_state_radonly(pr, ptrgeom, &q);
 
-    extern int primtoflux_radonly(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux, FTYPE *fluxabs);
-    FTYPE uurad[NPR],uuradabs[NPR];
-    primtoflux_radonly(pr,&q,TT,ptrgeom, uurad,uuradabs); // all non-rad stuff is set to zero.
-    // write new uurad's to uu
-    PLOOP(pliter,pl) if(RADFULLPL(pl)) Ugeomfree[pl]=uurad[pl];
+      extern int primtoflux_radonly(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYPE *flux, FTYPE *fluxabs);
+      FTYPE uurad[NPR],uuradabs[NPR];
+      primtoflux_radonly(pr,&q,TT,ptrgeom, uurad,uuradabs); // all non-rad stuff is set to zero.
+      // write new uurad's to uu
+      PLOOP(pliter,pl) if(RADFULLPL(pl)) Ugeomfree[pl]=uurad[pl];
+    }
+    else{// required method when pmhd>>prad and small errors in pmhd swamp rad
+      u2p_rad(showmessages, allowlocalfailurefixandnoreport, GAMMAMAXRAD, whichcap, Ugeomfree,pr,ptrgeom,lpflag,lpflagrad);
+    }
   }
-
 
   //  if(ptrgeom->i==10 && ptrgeom->k==0){
   //    PLOOP(pliter,pl) dualfprintf(fail_file,"after rad inversion: pl=%d pr=%g\n",pl,pr[pl]);
