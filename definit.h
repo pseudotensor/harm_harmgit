@@ -1127,4 +1127,5 @@
 #define DOCOMPTON 0
 // whether to (during utoprimgen()) to do mhd inversion, recompute umhd, use energy conservation to get urad, and then invert that urad->prad.  Doesn't work if mhd>>rad when non-QTYPMHD methods used.
 #define ENFORCEMHDCONS2RADCONS 0
-#define DOPERF 1 // whether to enable performance opts, including enforcing only QTYPMHD method.
+#define DOPERF 0 // whether to enable performance opts, including enforcing only QTYPMHD method.
+#define ENSURECONS 0 // when done with full step, whether to ensure energy conservation by modifying rad result if possible

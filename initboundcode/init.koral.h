@@ -1057,6 +1057,9 @@ struct Ccoordparams {
 #undef DOCOMPTON
 #define DOCOMPTON 1 // enable thermal Comptonization
 
+#undef ENSURECONS
+#define ENSURECONS 1
+
 #undef DOPERF
 #define DOPERF 1 // enable performance enhancements
 

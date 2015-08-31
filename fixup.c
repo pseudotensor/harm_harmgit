@@ -437,7 +437,6 @@ int consfixup_allzones(int finaluu, FTYPE (*pf)[NSTORE2][NSTORE3][NPR], FTYPE (*
 
 }
 
-#define ENSURECONS 1
 
 int consfixup_1zone(int finaluu, int i, int j, int k, struct of_geom *ptrgeom, FTYPE *pf, FTYPE *ucons)
 {
