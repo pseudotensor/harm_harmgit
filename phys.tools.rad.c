@@ -12510,11 +12510,11 @@ int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gam
   if(didmod==1){
     nummod++;
     if(didmodEr){
-      *lpflagrad=UTOPRIMRADFAILERFNEG; // used to detec if modified primitives to not be consistent with inputted uu
+      *lpflagrad=UTOPRIMRADFAILERFNEG;
     }
     else{
       if(gotbigy) *lpflagrad=UTOPRIMRADFAILGAMMAHIGH;
-      else *lpflagrad=UTOPRIMRADFAILCASE2A; // used to detec if modified primitives to not be consistent with inputted uu
+      else *lpflagrad=UTOPRIMRADFAILCASE2A; // used to detect if modified primitives to not be consistent with inputted uu
     }
   }
 
@@ -12539,6 +12539,7 @@ int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gam
     // CASE reductions (so set as no failure so fixups don't operate -- but might also want to turn off CHECKINVERSIONRAD else that routine won't know when to ignore bad U->P->U cases.)
     if(*lpflagrad==0) *lpflagrad=UTOPRIMRADNOFAIL;
     else if(gotbigy) *lpflagrad=UTOPRIMRADFAILGAMMAHIGH; // softish failure where we will fixup_utoprim() urad^t but not Erf
+    else if(didmodEr) *lpflagrad=UTOPRIMRADFAILERFNEG; // softish failure, passes through until fixup_utoprim() where adjusted
     else *lpflagrad=UTOPRIMRADFAILFIXEDUTOPRIMRAD; //UTOPRIMRADNOFAIL;
   }
 

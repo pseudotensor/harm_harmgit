@@ -129,6 +129,8 @@
 
 #define SCALARPL(pl) (YFLPL(pl) || pl==YL || pl==YNU)
 
+#define DENSITYPL(pl) (pl==RHO || pl==UU || pl==URAD0 || SCALARPL(pl))
+
 #define RADPL(pl) (pl==PRAD0 || pl==PRAD1 || pl==PRAD2 || pl==PRAD3)
 #define RADFULLPL(pl) (pl==PRAD0 || pl==PRAD1 || pl==PRAD2 || pl==PRAD3 || pl==YFL4 || pl==YFL5)
 

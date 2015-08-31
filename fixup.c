@@ -2160,9 +2160,9 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
             //
             //////////////////
             // field is evolved fine, so only average non-field
-            if(radlpflag==UTOPRIMFAILU2AVG1 || radlpflag==UTOPRIMFAILU2AVG2 || radlpflag==UTOPRIMFAILU2AVG1FROMCOLD || radlpflag==UTOPRIMFAILU2AVG2FROMCOLD || radlpflag==UTOPRIMFAILUPERC || radlpflag==UTOPRIMFAILUNEG && (HANDLEUNEG==1) ){
-              startpl=PRAD0;
-              endpl=PRAD0;
+            if(radlpflag==UTOPRIMFAILU2AVG1 || radlpflag==UTOPRIMFAILU2AVG2 || radlpflag==UTOPRIMFAILU2AVG1FROMCOLD || radlpflag==UTOPRIMFAILU2AVG2FROMCOLD || radlpflag==UTOPRIMFAILUPERC || radlpflag==UTOPRIMFAILUNEG && (HANDLEUNEG==1) || radlpflag==UTOPRIMRADFAILERFNEG){
+              startpl=PRAD0; // use as minimum for PRAD0 and average for PRAD1-PRAD3
+              endpl=PRAD3;
             }
             else if(radlpflag==UTOPRIMRADFAILGAMMAHIGH){ // fixing gammarad so no constant high value from hitting ceiling on gammaradmax
               startpl=PRAD1;
@@ -2206,7 +2206,7 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
 #endif
 
 
-              if(nogood){
+              if(nogood && 0){ // avoid fixup_negdensities() because resets to ERADLIMIT
                 //////////////////////////////
                 //
                 // fixup negative densities
@@ -2225,6 +2225,7 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
                 }
               }
 
+              //              dualfprintf(fail_file,"Trying no good? nogood=%d\n",nogood);
 
               /////////////////////
               //
@@ -2241,6 +2242,11 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
                 // normally assume u2p_rad() did ok local fixup if non-local fixup doesn't work out.
                 // NO, reset failure to non-failure if ok local fixup.  If here, want fixup even of radiation quantity, such as when implicit solver fails.
               }
+
+              //              if(MACP0A1(pv,i,j,k,URAD0)<1.5*ERADLIMIT){
+              //                dualfprintf(fail_file,"Why not fixed? %d %d %d: %21.15g err=%d\n",i,j,k,MACP0A1(pv,i,j,k,URAD0),radlpflag);
+              //                myexit(0);
+              //              }
 
 
               /////////////////////
@@ -2829,7 +2835,7 @@ static int fixuputoprim_accounting(int i, int j, int k, PFTYPE mhdlpflag, PFTYPE
     radutoprimfailtype=COUNTRADLOCAL;
     docorrectucons=1;
   }
-  else if(radlpflag>=UTOPRIMRADFAILBAD1 || radlpflag==UTOPRIMRADFAILGAMMAHIGH){
+  else if(radlpflag>=UTOPRIMRADFAILBAD1 || radlpflag==UTOPRIMRADFAILGAMMAHIGH || radlpflag==UTOPRIMRADFAILERFNEG){
     radutoprimfailtype=COUNTRADNONLOCAL;
     docorrectucons=1;
   }
@@ -2989,11 +2995,11 @@ static int general_average(int useonlynonfailed, int numbndtotry, int maxnumbndt
   struct of_state state_pv;
   FTYPE cminmax[NDIM][NUMCS];
   FTYPE superfast[NDIM];
-  int numavg;
+  int numavg[NPR];
   int numavg0,numavg1;
   FTYPE mysum[2][NPR];
   int numupairs,qq,thisnotfail,thatnotfail,rnx,rny,rnz;
-  FTYPE ref;
+  FTYPE ref[NPR];
   FTYPE ftemp,ftemp1,ftemp2;
   FTYPE lastmin[NPR],avganswer0[NPR],avganswer1[NPR];
   int ignorecourant=0;
@@ -3085,9 +3091,9 @@ static int general_average(int useonlynonfailed, int numbndtotry, int maxnumbndt
   // average all surrounding good values (keeps symmetry)
   //
   /////////////////////////////////////////////////////////////
-  numavg=0;
   numavg0=numavg1=0;
   PLOOPSTARTEND(pl){
+    numavg[pl]=0;
     mysum[0][pl]=0.0;
     mysum[1][pl]=0.0;
     lastmin[pl]=VERYBIG;
@@ -3146,12 +3152,16 @@ static int general_average(int useonlynonfailed, int numbndtotry, int maxnumbndt
     }
 
 #if(1)
-    // bigger than myself
-    if(doingmhd) ref=MACP0A1(ptoavg,i,j,k,UU); // MHD
-    else ref=MACP0A1(ptoavg,i,j,k,URAD0); // RAD
+    // bigger than myself and absolute limit
+    PLOOPSTARTEND(pl){
+      ref[pl]=0.0; // default
+      if(pl==RHO) ref[pl]=MAX(1.001*RHOMINLIMIT,MACP0A1(ptoavg,i,j,k,pl)); // MHD
+      else if(pl==UU) ref[pl]=MAX(1.001*UUMINLIMIT,MACP0A1(ptoavg,i,j,k,pl)); // MHD
+      else if(pl==URAD0) ref[pl]=MAX(1.001*ERADLIMIT,MACP0A1(ptoavg,i,j,k,URAD0)); // RAD
+    }
 #elif(0)
     // bigger than 0
-    ref=0.0;
+    PLOOPSTARTEND(pl) ref[pl]=0.0;
 #endif
 
     //     if(failavglooptype==1  || failavglooptype==2){  // only use if positive
@@ -3159,60 +3169,45 @@ static int general_average(int useonlynonfailed, int numbndtotry, int maxnumbndt
     // number of quantities one summed
     numavg0+=thisnotfail+thatnotfail;
      
-    /////////
-    // AVERAGE types
-    /////////
-    if(failavglooptype==0 || failavglooptype==2){
-      //////////
-      // NORMAL:
-      //////////
-      prod0dualfprintf(debugfail>=3,fail_file,"uc2: i=%d i+ii=%d j=%d j+jj=%d k=%d k+kk=%d (e.g.) pl=%d pv=%21.15g\n",i,i+ii,j,j+jj,k,k+kk,RHO,MACP0A1(pv,i,j,k,RHO)); // still bit much
+    // do sum or min of these 2 pairs
+    PLOOPSTARTEND(pl){
+      ftemp1=MACP0A1(ptoavg,i+ii,j+jj,k+kk,pl);
+      ftemp2=MACP0A1(ptoavg,i-ii,j-jj,k-kk,pl);
 
+      /////////
+      // AVG type
+      /////////
+      mysum[qq%2][pl]+=ftemp1*thisnotfail + ftemp2*thatnotfail;
 
-      // do sum of these 2 pairs
-      PLOOPSTARTEND(pl){
-        
-        mysum[qq%2][pl]+=MACP0A1(ptoavg,i+ii,j+jj,k+kk,pl)*thisnotfail + MACP0A1(ptoavg,i-ii,j-jj,k-kk,pl)*thatnotfail;
-
-
-
-        prod0dualfprintf(debugfail>=4,fail_file,"uc2: i=%d i+ii=%d j=%d j+jj=%d k=%d k+kk=%d pl=%d pv=%21.15g\n",pl,i,i+ii,j,j+jj,k,k+kk,MACP0A1(pv,i,j,k,pl)); // bit much, just do for all pl above
-
-#if(0) // DEBUG
-        // DEBUG problem of launch with pressureless stellar model collapse
-        prod0dualfprintf(fail_file,"nstep=%ld steppart=%d :: i=%d j=%d k=%d pl=%d pv=%21.15g thisnotfail=%d ptoavg1=%21.15g thatnotfail=%d ptoavg2=%21.15g :: ii=%d jj=%d kk=%d numavg0=%d\n",nstep,steppart,i,j,k,pl,MACP0A1(pv,i,j,k,pl),thisnotfail,MACP0A1(ptoavg,i+ii,j+jj,k+kk,pl),thatnotfail,MACP0A1(ptoavg,i-ii,j-jj,k-kk,pl),ii,jj,kk,numavg0);
-#endif
-      }
-    }
-
-
-    /////////
-    // MIN types
-    /////////
-    if(failavglooptype==1 || failavglooptype==2){ // only for U2AVG
-      PLOOPSTARTEND(pl){
+      /////////
+      // MIN type
+      /////////
 #if(0)
-        ftemp=MACP0A1(ptoavg,i+ii,j+jj,k+kk,pl);
-        if(ftemp>=ref){
-          lastmin[pl]=MIN(lastmin[pl],ftemp); // smallest positive number
-          numavg1++;
-        }
-  
-        ftemp=MACP0A1(ptoavg,i-ii,j-jj,k-kk,pl);
-        if(ftemp>=ref){
-          lastmin[pl]=MIN(lastmin[pl],ftemp);
-          numavg1++;
-        }
+      if(ftemp1>ref[pl] && thisnotfail){
+        lastmin[pl]=MIN(lastmin[pl],ftemp1); // smallest positive number
+        numavg1++;
+      }
+      
+      if(ftemp2>ref[pl] && thatnotfail){
+        lastmin[pl]=MIN(lastmin[pl],ftemp2);
+        numavg1++;
+      }
 #else
-        ftemp1=MACP0A1(ptoavg,i+ii,j+jj,k+kk,pl);
-        ftemp2=MACP0A1(ptoavg,i-ii,j-jj,k-kk,pl);
-        if(ftemp1>=ref && ftemp2>=ref){
-          lastmin[pl]=MIN(MIN(lastmin[pl],ftemp1),ftemp2); // smallest positive number if both of pair are larger than my value (else keep my small value)
-          numavg1++;
-        }
+      //      dualfprintf(fail_file,"pl=%d testing: %g>%g && %g>%g : %d %d\n",pl,ftemp1,ref[pl],ftemp2,ref[pl],thisnotfail,thatnotfail);
+      if(ftemp1>ref[pl] && thisnotfail && ftemp2>ref[pl] && thatnotfail){
+        lastmin[pl]=MIN(MIN(lastmin[pl],ftemp1),ftemp2); // smallest positive number if both of pair are larger than my value (else keep my small value)
+        numavg1+=2;
+      }
+      else if(ftemp1>ref[pl] && thisnotfail){
+        lastmin[pl]=MIN(lastmin[pl],ftemp1); // smallest positive number if both of pair are larger than my value (else keep my small value)
+        numavg1++;
+      }
+      else if(ftemp2>ref[pl] && thatnotfail){
+        lastmin[pl]=MIN(lastmin[pl],ftemp2); // smallest positive number if both of pair are larger than my value (else keep my small value)
+        numavg1++;
+      }
 #endif
-      }// pl loop
-    }// failavglooptype=1,2
+    }// pl loop
   } //end loop over pairs
 
  
@@ -3224,82 +3219,73 @@ static int general_average(int useonlynonfailed, int numbndtotry, int maxnumbndt
   // all loops over surrounding points is done, now get average answer
   //
   ////////////////////////
-  if(failavglooptype==0 || failavglooptype==2){       
-    //////////
-    // NORMAL:
-    //////////
-    if(numavg0!=0){
-      PLOOPSTARTEND(pl){
-        avganswer0[pl]=(mysum[0][pl]+mysum[1][pl])/((FTYPE)(numavg0));
-      }
-    }
-  }
-  if(failavglooptype==1 || failavglooptype==2){
+  //////////
+  // NORMAL:
+  //////////
+  if(numavg0!=0){
     PLOOPSTARTEND(pl){
-      avganswer1[pl]=lastmin[pl];
+      avganswer0[pl]=(mysum[0][pl]+mysum[1][pl])/((FTYPE)(numavg0));
     }
   }
+  PLOOPSTARTEND(pl){
+    avganswer1[pl]=lastmin[pl];
+  }
+  
    
 
   ///////////////
   //
-  // choose final answer depending upon loop type
+  // choose final answer (avg or min)
   //
   ///////////////
-  if(failavglooptype==0 || ((failavglooptype==2)&&(numavg1==0)) ){  
-    //////////
-    // NORMAL:
-    //////////
-    if(numavg0!=0){
-      PLOOPSTARTEND(pl){
-        MACP0A1(pv,i,j,k,pl)=avganswer0[pl];
-      }
+
+  int doingavgtype[NPR];
+  PLOOPSTARTEND(pl){
+    doingavgtype[pl]=-1; // default avoidance of pl
+
+    // default
+    if(failavglooptype==0 || ((failavglooptype==2)&&(numavg1==0)) ){
+      doingavgtype[pl]=1;
     }
-    numavg=numavg0;
-  }
-  if(failavglooptype==1 || ((failavglooptype==2)&&(numavg0==0)) ){  
-    //     if(numavg1!=0 && (MACP0A1(pv,i,j,k,pl)<avganswer1[pl]) ) PLOOPSTARTEND(pl) MACP0A1(pv,i,j,k,pl)=avganswer1[pl]; // else keep same as original answer
-    //     if(numavg1!=0 && (MACP0A1(ptoavg,i,j,k,pl)<avganswer1[pl]) ) PLOOPSTARTEND(pl) MACP0A1(pv,i,j,k,pl)=avganswer1[pl]; // else keep same as original answer
-    if(numavg1!=0){
-      PLOOPSTARTEND(pl){
-        MACP0A1(pv,i,j,k,pl)=avganswer1[pl]; // else keep same as original answer
-      }
+    if(failavglooptype==1 || ((failavglooptype==2)&&(numavg0==0)) ){  
+      doingavgtype[pl]=0;
     }
-    //     if(numavg1==2) PLOOPSTARTEND(pl) MACP0A1(pv,i,j,k,pl)=avganswer1[pl]; // else keep same as original answer
-    numavg=numavg1;
-  }
-  if(failavglooptype==2 && (numavg0!=0) && (numavg1!=0) ){ // here if both numavg0!=0 and numavg1!=0
-    if(MACP0A1(pv,i,j,k,pl)<avganswer1[pl] && MACP0A1(pv,i,j,k,pl)<avganswer0[pl]){
-      PLOOPSTARTEND(pl){
-        MACP0A1(pv,i,j,k,pl)=MIN(avganswer1[pl],avganswer0[pl]);
-      }
+
+
+    // override
+    if(doingmhd==0 && radlpflag==UTOPRIMRADFAILERFNEG && pl==URAD0 || doingmhd==1 && lpflag==UTOPRIMFAILRHONEG && pl==RHO || doingmhd==1 && lpflag==UTOPRIMFAILUNEG && pl==UU || doingmhd==1 && lpflag==UTOPRIMFAILRHOUNEG && (pl==RHO || pl==UU)){
+      doingavgtype[pl]=0; // min type
     }
-    else if(MACP0A1(pv,i,j,k,pl)<avganswer1[pl] ){ // Sasha scheme
-      PLOOPSTARTEND(pl){
-        MACP0A1(pv,i,j,k,pl)=avganswer1[pl];
-      }
-    }
-    else if(MACP0A1(pv,i,j,k,pl)<avganswer0[pl] ){ // Causal scheme
-      PLOOPSTARTEND(pl){
-        MACP0A1(pv,i,j,k,pl)=avganswer0[pl];
-      }
-    }
-    numavg=MAX(numavg0,numavg1); // only matters now that this is nonzero
+    else doingavgtype[pl]=1; // avg type
   }
 
 
-  prod0dualfprintf(debugfail>=2,fail_file,"uc2generalB: mhdlpflag=%d radlpflag=%d numavg=%d startpl=%d endpl=%d :: i=%d j=%d k=%d\n",mhdlpflag,radlpflag,numavg,startpl,endpl,i,j,k);
-  prod0dualfprintf(numavg==0 && debugfail>=2,fail_file,"Failed to average over good neighbors.\n");
-  //  if(debugfail>=2) for(pl=startpl; pl<=endpl; pl++) dualfprintf(fail_file,"uc2generalFINISH: pl=%d pv=%g\n",pl,MACP0A1(pv,i,j,k,pl));
 
-         
+  int numavgfinal=256; // just large number (at least (2*NxBND)**3
+  PLOOPSTARTEND(pl){// should only be over specific density(s)
+    // choose min
+    if(numavg1!=0 && doingavgtype[pl]==0){
+      MACP0A1(pv,i,j,k,pl)=avganswer1[pl]; // else keep same as original answer
+      //        dualfprintf(fail_file,"HERE: pl=%d %21.15g %d\n",pl,MACP0A1(pv,i,j,k,pl),numavg1);
+      numavg[pl]=numavg1;
+    }
+    // choose avg
+    if(numavg0!=0 && doingavgtype[pl]==1){
+      MACP0A1(pv,i,j,k,pl)=avganswer0[pl];
+      numavg[pl]=numavg0;
+    }
+    numavgfinal=MIN(numavg[pl],numavgfinal); // get minimum number of good points over those wanted "average".  If one was bad, have to do nogood version
+  }// end pl loop
+
+  
+
   if( lpflag==UTOPRIMFAILU2AVG2){ // lpflag here is either for MHD or RAD depending upon doingmhd=1 or 0
-    if(numbndtotry==maxnumbndtotry) numavg++; // assume at least always one good one so don't treat as real failure if no good values surrounding.  But only do so if last chance for no good average.
+    if(numbndtotry==maxnumbndtotry) numavgfinal++; // assume at least always one good one so don't treat as real failure if no good values surrounding.  But only do so if last chance for no good average.
   }
-  // else use real numavg
+  // else use real numavgfinal
    
    
-  if(numavg==0){
+  if(numavgfinal==0){
     return(1);
   }
    
