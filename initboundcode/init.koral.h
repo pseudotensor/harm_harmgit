@@ -680,9 +680,6 @@ struct Ccoordparams {
 
 #if(WHICHPROBLEM==RADBEAMFLAT)
 
-#undef DOCOMPTON
-#define DOCOMPTON 0
-
 #undef FORCESOLVEL
 #define FORCESOLVEL 0 // to compare against koral
 
@@ -1056,6 +1053,9 @@ struct Ccoordparams {
 #define MCOORD KSCOORDS
 
 #elif(WHICHPROBLEM==RADDONUT)
+
+#undef DOCOMPTON
+#define DOCOMPTON 1 // enable thermal Comptonization
 
 #undef WHICHRADSOURCEMETHOD
 //#define WHICHRADSOURCEMETHOD SOURCEMETHODNONE // WALD
