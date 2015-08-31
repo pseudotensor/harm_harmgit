@@ -12530,6 +12530,9 @@ int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gam
   }
 #endif
 
+  // interpret certain failure modes (below, these are treated as soft failures only processed by fixup_utoprim()
+  if(gotbigy) *lpflagrad=UTOPRIMRADFAILGAMMAHIGH; // softish failure where we will fixup_utoprim() urad^t but not Erf
+  else if(didmodEr) *lpflagrad=UTOPRIMRADFAILERFNEG; // softish failure, passes through until fixup_utoprim() where adjusted
 
 
   if(DORADFIXUPS==1 || allowlocalfailurefixandnoreport==0){
