@@ -1122,3 +1122,7 @@
 
 /// whether for BH problems to have inner and outer radial boundary as HLL superfast
 #define OUTERRADIALSUPERFAST 0
+
+/// whether to do comptonization (upscatter or downscatter)
+#define DOCOMPTON 1
+

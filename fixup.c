@@ -510,7 +510,7 @@ int consfixup_1zone(int finaluu, int i, int j, int k, struct of_geom *ptrgeom, F
     // u2p_rad takes UNOTHING form
     u2p_rad(showmessages, allowlocalfailurefixandnoreport,GAMMAMAXRADIMPLICITSOLVER,whichcap,uunew1,pprad,ptrgeom,&lpflag,&lpflagrad);
     int radinvmod=(int)(lpflagrad);
-    if(RADINVOK(radinvmod) && isfinite(pprad[URAD0])==1 && isfinite(pprad[URAD1])==1 && isfinite(pprad[URAD2])==1 && isfinite(pprad[URAD3])==1){
+    if(RADINVOK(radinvmod) && isfinite(pprad[URAD0])==1 && isfinite(pprad[URAD1])==1 && isfinite(pprad[URAD2])==1 && isfinite(pprad[URAD3])==1 && pprad[URAD0] < pp[URAD0]){
       PLOOP(pliter,pl) if(RADFULLPL(pl)) pp[pl] = pprad[pl];
       didrad=1;
     }

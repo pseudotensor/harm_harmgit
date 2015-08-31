@@ -106,9 +106,6 @@
 //
 /////////////////////
 
-/// whether to do comptonization (upscatter or downscatter)
-#define DOCOMPTON 1
-
 
 #define OPACITYBAR (LBAR*LBAR/MBAR) // cgs in cm^2/g
 

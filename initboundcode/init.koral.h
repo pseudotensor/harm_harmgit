@@ -680,6 +680,9 @@ struct Ccoordparams {
 
 #if(WHICHPROBLEM==RADBEAMFLAT)
 
+#undef DOCOMPTON
+#define DOCOMPTON 0
+
 #undef FORCESOLVEL
 #define FORCESOLVEL 0 // to compare against koral
 
