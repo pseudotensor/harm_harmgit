@@ -1129,3 +1129,4 @@
 #define ENFORCEMHDCONS2RADCONS 0
 #define DOPERF 0 // whether to enable performance opts, including enforcing only QTYPMHD method.
 #define ENSURECONS 0 // when done with full step, whether to ensure energy conservation by modifying rad result if possible
+#define BORROWENTROPY 0 // whether to try borrowing energy/entropy from radiation to get total energy conservation with entropy method

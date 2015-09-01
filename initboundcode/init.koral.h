@@ -1063,6 +1063,9 @@ struct Ccoordparams {
 #undef DOPERF
 #define DOPERF 1 // enable performance enhancements
 
+#undef BORROWENTROPY
+#define BORROWENTROPY 1
+
 #undef ENFORCEMHDCONS2RADCONS
 #define ENFORCEMHDCONS2RADCONS 1 // assumes not true that pmhd>>prad beyond machine precision
 

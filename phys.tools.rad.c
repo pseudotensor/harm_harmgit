@@ -7760,7 +7760,6 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
 
   }
 
-#define BORROWENTROPY 1 // whether to try borrowing energy/entropy from radiation to get total energy conservation with entropy method
   /////////////////////
   //
   // try to obtain total energy conservation *with* entropy solution for gas by borrowing from radiation.
