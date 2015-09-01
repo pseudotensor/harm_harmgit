@@ -2249,7 +2249,7 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
 #if(TRYFIRSTEXPLICIT)
   if(whichcall==FIMPLICITCALLTYPEF1){//FIMPLICITCALLTYPEJAC)
 
-    if(iter==1 && f1iter==0){// &&  (implicititer==QTYPMHD || implicititer==QTYPMHDENERGYONLY || implicititer==QTYPMHDMOMONLY)){
+    if(iter==1 && f1iter==0 &&  (mtd->implicititer==QTYPMHD || mtd->implicititer==QTYPMHDENERGYONLY || mtd->implicititer==QTYPMHDMOMONLY)){ // GODMARK: Not currently working for other QTY methods like QTYURAD.
 
 
 
@@ -3599,11 +3599,19 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
       int baseitermethodlist[NUMPHASES]={QTYPMHD,QTYURAD,QTYPRAD,QTYPMHD,QTYURAD,QTYPRAD}; int whichfirstpmhd=0,whichfirsturad=1,whichfirstprad=2;
       int itermodelist[NUMPHASES]={ITERMODENORMAL,ITERMODENORMAL,ITERMODENORMAL,ITERMODESTAGES,ITERMODESTAGES,ITERMODESTAGES};
+#if(DOPERF)
       FTYPE trueimptryconvlist[NUMPHASES]={IMPTRYCONV,IMPTRYCONVQUICK,IMPTRYCONVQUICK,IMPTRYCONVQUICK,IMPTRYCONVQUICK,IMPTRYCONVQUICK};
       FTYPE trueimpokconvlist[NUMPHASES]={IMPTRYCONVQUICK,IMPTRYCONVQUICK,IMPTRYCONVQUICK,IMPTRYCONVQUICK,IMPTRYCONVQUICK,IMPTRYCONVQUICK};
       FTYPE trueimpallowconvconstlist[NUMPHASES]={IMPALLOWCONVCONST,IMPALLOWCONVCONST,IMPALLOWCONVCONST,IMPALLOWCONVCONST,IMPALLOWCONVCONST,IMPALLOWCONVCONST};
       int trueimpmaxiterlist[NUMPHASES]={IMPMAXITERQUICK,IMPMAXITERQUICK,IMPMAXITERQUICK,IMPMAXITERMEDIUM,IMPMAXITERMEDIUM,IMPMAXITERMEDIUM};
       int truenumdampattemptslist[NUMPHASES]={NUMDAMPATTEMPTSQUICK,NUMDAMPATTEMPTSQUICK,NUMDAMPATTEMPTSQUICK,NUMDAMPATTEMPTSQUICK,NUMDAMPATTEMPTSQUICK,NUMDAMPATTEMPTSQUICK};
+#else
+      FTYPE trueimptryconvlist[NUMPHASES]={IMPTRYCONV,IMPTRYCONV,IMPTRYCONV,IMPTRYCONV,IMPTRYCONV,IMPTRYCONV};
+      FTYPE trueimpokconvlist[NUMPHASES]={IMPTRYCONV,IMPTRYCONV,IMPTRYCONV,IMPTRYCONV,IMPTRYCONV,IMPTRYCONV};
+      FTYPE trueimpallowconvconstlist[NUMPHASES]={IMPALLOWCONVCONST,IMPALLOWCONVCONST,IMPALLOWCONVCONST,IMPALLOWCONVCONST,IMPALLOWCONVCONST,IMPALLOWCONVCONST};
+      int trueimpmaxiterlist[NUMPHASES]={IMPMAXITERQUICK,IMPMAXITERQUICK,IMPMAXITERQUICK,IMPMAXITERMEDIUM,IMPMAXITERMEDIUM,IMPMAXITERMEDIUM};
+      int truenumdampattemptslist[NUMPHASES]={NUMDAMPATTEMPTS,NUMDAMPATTEMPTS,NUMDAMPATTEMPTS,NUMDAMPATTEMPTS,NUMDAMPATTEMPTS,NUMDAMPATTEMPTS};
+#endif
       int modprimlist[NUMPHASES]={0,0,0,1,0,0};
       int checkradinvlist[NUMPHASES]={0,1,1,0,1,1};
       int eomtypelist[NUMPHASES]={EOMGRMHD,EOMGRMHD,EOMGRMHD,EOMGRMHD,EOMGRMHD,EOMGRMHD};
@@ -4147,11 +4155,17 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       FTYPE trueimpokconvlist[NUMPHASESENT]={IMPTRYCONVSUPERQUICK,IMPTRYCONVSUPERQUICK,IMPTRYCONVSUPERQUICK,IMPTRYCONVSUPERQUICK,IMPTRYCONVSUPERQUICK,IMPTRYCONVSUPERQUICK,IMPTRYCONVSUPERQUICK,IMPTRYCONVSUPERQUICK};
       FTYPE trueimpallowconvconstlist[NUMPHASESENT]={IMPALLOWCONVCONST,IMPALLOWCONVCONST,IMPALLOWCONVCONST,IMPALLOWCONVCONST,IMPALLOWCONVCONST,IMPALLOWCONVCONST,IMPALLOWCONVCONST,IMPALLOWCONVCONST};
       int trueimpmaxiterlist[NUMPHASESENT]={IMPMAXITERSUPERQUICK+1,IMPMAXITERSUPERQUICK+1,IMPMAXITERSUPERQUICK+1,IMPMAXITERSUPERQUICK+1,IMPMAXITERSUPERQUICK+1,IMPMAXITERSUPERQUICK+1,IMPMAXITERSUPERQUICK+1,IMPMAXITERSUPERQUICK+1};
-#else
+#endif
+#if(DOPERF)
       FTYPE trueimptryconvlist[NUMPHASESENT]={IMPTRYCONVQUICK,IMPTRYCONVQUICK,IMPTRYCONVQUICK,IMPTRYCONVQUICK,IMPTRYCONVQUICK,IMPTRYCONVQUICK,IMPTRYCONVQUICK,IMPTRYCONVQUICK};
       FTYPE trueimpokconvlist[NUMPHASESENT]={IMPTRYCONVQUICK,IMPTRYCONVQUICK,IMPTRYCONVQUICK,IMPTRYCONVQUICK,IMPTRYCONVQUICK,IMPTRYCONVQUICK,IMPTRYCONVQUICK,IMPTRYCONVQUICK};
       FTYPE trueimpallowconvconstlist[NUMPHASESENT]={IMPALLOWCONVCONST,IMPALLOWCONVCONST,IMPALLOWCONVCONST,IMPALLOWCONVCONST,IMPALLOWCONVCONST,IMPALLOWCONVCONST,IMPALLOWCONVCONST,IMPALLOWCONVCONST};
       int trueimpmaxiterlist[NUMPHASESENT]={IMPMAXITERQUICK,IMPMAXITERQUICK,IMPMAXITERQUICK,IMPMAXITERQUICK,IMPMAXITERQUICK,IMPMAXITERQUICK,IMPMAXITERQUICK,IMPMAXITERQUICK};
+#else
+      FTYPE trueimptryconvlist[NUMPHASESENT]={IMPTRYCONV,IMPTRYCONV,IMPTRYCONV,IMPTRYCONV,IMPTRYCONV,IMPTRYCONV,IMPTRYCONV,IMPTRYCONV};
+      FTYPE trueimpokconvlist[NUMPHASESENT]={IMPTRYCONV,IMPTRYCONV,IMPTRYCONV,IMPTRYCONV,IMPTRYCONV,IMPTRYCONV,IMPTRYCONV,IMPTRYCONV};
+      FTYPE trueimpallowconvconstlist[NUMPHASESENT]={IMPALLOWCONVCONST,IMPALLOWCONVCONST,IMPALLOWCONVCONST,IMPALLOWCONVCONST,IMPALLOWCONVCONST,IMPALLOWCONVCONST,IMPALLOWCONVCONST,IMPALLOWCONVCONST};
+      int trueimpmaxiterlist[NUMPHASESENT]={IMPMAXITERMEDIUM,IMPMAXITERMEDIUM,IMPMAXITERMEDIUM,IMPMAXITERMEDIUM,IMPMAXITERMEDIUM,IMPMAXITERMEDIUM,IMPMAXITERMEDIUM,IMPMAXITERMEDIUM};
 #endif
       int truenumdampattemptslist[NUMPHASESENT]={NUMDAMPATTEMPTSQUICK,NUMDAMPATTEMPTSQUICK,NUMDAMPATTEMPTSQUICK,NUMDAMPATTEMPTSQUICK,NUMDAMPATTEMPTSQUICK,NUMDAMPATTEMPTSQUICK,NUMDAMPATTEMPTSQUICK,NUMDAMPATTEMPTSQUICK};
       int modprimlist[NUMPHASESENT]={0,0,0,0,1,0,0,0};
@@ -8636,7 +8650,9 @@ int mathematica_report_check(int radinvmod, int failtype, long long int failnum,
     FTYPE uueng[NPR]={0},uuent[NPR]={0};
     int failtypeeng=1,failtypeent=1,iterseng=IMPMAXITERLONG,itersent=IMPMAXITERLONG, radinvmodeng=UTOPRIMRADFAILBAD1, radinvmodent=UTOPRIMRADFAILBAD1;
     struct of_state qeng=*q,qent=*q;
-    get_rameshsolution(whichcall, radinvmod, failtype, failnum,  gotfirstnofail,  eomtypelocal,  itermode, baseitermethod, errorabs, errorabsbestexternal,  iters,  totaliters,realdt, ptrgeom, pp, pb, piin, uu0, uu, Uiin, Ufin, CUf, CUimp, q, ppeng, ppent, uueng, uuent, &qeng, &qent, &failtypeeng, errorabseng, &iterseng, &radinvmodeng, &failtypeent, errorabsent, &itersent, &radinvmodent);
+
+    // No longer is rameshsolution() up to date with # of args or opacity physics
+    //    get_rameshsolution(whichcall, radinvmod, failtype, failnum,  gotfirstnofail,  eomtypelocal,  itermode, baseitermethod, errorabs, errorabsbestexternal,  iters,  totaliters,realdt, ptrgeom, pp, pb, piin, uu0, uu, Uiin, Ufin, CUf, CUimp, q, ppeng, ppent, uueng, uuent, &qeng, &qent, &failtypeeng, errorabseng, &iterseng, &radinvmodeng, &failtypeent, errorabsent, &itersent, &radinvmodent);
 
 
 
@@ -8813,7 +8829,7 @@ static int f_error_check(int showmessages, int showmessagesheavy, int iter, FTYP
     // report if didn't pass
 #if(PRODUCTION==0)
     prod0dualfprintf(showmessagesheavy,fail_file,"POSTFIN (conv=%21.15g): uu: %21.15g %21.15g %21.15g %21.15g : uu0=%21.15g %21.15g %21.15g %21.15g\n",conv,uu[ru->irefU[0]],uu[ru->irefU[1]],uu[ru->irefU[2]],uu[ru->irefU[3]],uu0[ru->irefU[0]],uu0[ru->irefU[1]],uu0[ru->irefU[2]],uu0[ru->irefU[3]]);
-    PLOOP(pliter,pl) dualfprintf(fail_file,"pl=%d fin=%21.15g finnorm=%21.15g\n",pl,fin[pl],finnorm[pl]);
+    PLOOP(pliter,pl) prod0dualfprintf(showmessagesheavy,fail_file,"pl=%d fin=%21.15g finnorm=%21.15g\n",pl,fin[pl],finnorm[pl]);
     prod0dualfprintf(showmessagesheavy,fail_file,"nstep=%ld steppart=%d dt=%g i=%d iter=%d : %g %g %g %g\n",nstep,steppart,dt,ptrgeom->i,iter,finreport[ru->erefU[0]],finreport[ru->erefU[1]],finreport[ru->erefU[2]],finreport[ru->erefU[3]]);
 #endif    
     return(0);
