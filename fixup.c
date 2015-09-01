@@ -2995,7 +2995,7 @@ static int general_average(int useonlynonfailed, int numbndtotry, int maxnumbndt
   FTYPE cminmax[NDIM][NUMCS];
   FTYPE superfast[NDIM];
   int numavg[NPR];
-  int numavg0,numavg1;
+  int numavg0,numavg1[NPR];
   FTYPE mysum[2][NPR];
   int numupairs,qq,thisnotfail,thatnotfail,rnx,rny,rnz;
   FTYPE ref[NPR];
@@ -3090,8 +3090,9 @@ static int general_average(int useonlynonfailed, int numbndtotry, int maxnumbndt
   // average all surrounding good values (keeps symmetry)
   //
   /////////////////////////////////////////////////////////////
-  numavg0=numavg1=0;
+  numavg0=0;
   PLOOPSTARTEND(pl){
+    numavg1[pl]=0;
     numavg[pl]=0;
     mysum[0][pl]=0.0;
     mysum[1][pl]=0.0;
@@ -3184,26 +3185,26 @@ static int general_average(int useonlynonfailed, int numbndtotry, int maxnumbndt
 #if(0)
       if(ftemp1>ref[pl] && thisnotfail){
         lastmin[pl]=MIN(lastmin[pl],ftemp1); // smallest positive number
-        numavg1++;
+        numavg1[pl]++;
       }
       
       if(ftemp2>ref[pl] && thatnotfail){
         lastmin[pl]=MIN(lastmin[pl],ftemp2);
-        numavg1++;
+        numavg1[pl]++;
       }
 #else
       //      dualfprintf(fail_file,"pl=%d testing: %g>%g && %g>%g : %d %d\n",pl,ftemp1,ref[pl],ftemp2,ref[pl],thisnotfail,thatnotfail);
       if(ftemp1>ref[pl] && thisnotfail && ftemp2>ref[pl] && thatnotfail){
         lastmin[pl]=MIN(MIN(lastmin[pl],ftemp1),ftemp2); // smallest positive number if both of pair are larger than my value (else keep my small value)
-        numavg1+=2;
+        numavg1[pl]+=2;
       }
       else if(ftemp1>ref[pl] && thisnotfail){
         lastmin[pl]=MIN(lastmin[pl],ftemp1); // smallest positive number if both of pair are larger than my value (else keep my small value)
-        numavg1++;
+        numavg1[pl]++;
       }
       else if(ftemp2>ref[pl] && thatnotfail){
         lastmin[pl]=MIN(lastmin[pl],ftemp2); // smallest positive number if both of pair are larger than my value (else keep my small value)
-        numavg1++;
+        numavg1[pl]++;
       }
 #endif
     }// pl loop
@@ -3243,7 +3244,7 @@ static int general_average(int useonlynonfailed, int numbndtotry, int maxnumbndt
     doingavgtype[pl]=-1; // default avoidance of pl
 
     // default
-    if(failavglooptype==0 || ((failavglooptype==2)&&(numavg1==0)) ){
+    if(failavglooptype==0 || ((failavglooptype==2)&&(numavg1[pl]==0)) ){
       doingavgtype[pl]=1;
     }
     if(failavglooptype==1 || ((failavglooptype==2)&&(numavg0==0)) ){  
@@ -3263,10 +3264,10 @@ static int general_average(int useonlynonfailed, int numbndtotry, int maxnumbndt
   int numavgfinal=256; // just large number (at least (2*NxBND)**3
   PLOOPSTARTEND(pl){// should only be over specific density(s)
     // choose min
-    if(numavg1!=0 && doingavgtype[pl]==0){
+    if(numavg1[pl]!=0 && doingavgtype[pl]==0){
       MACP0A1(pv,i,j,k,pl)=avganswer1[pl]; // else keep same as original answer
-      //        dualfprintf(fail_file,"HERE: pl=%d %21.15g %d\n",pl,MACP0A1(pv,i,j,k,pl),numavg1);
-      numavg[pl]=numavg1;
+      //        dualfprintf(fail_file,"HERE: pl=%d %21.15g %d\n",pl,MACP0A1(pv,i,j,k,pl),numavg1[pl]);
+      numavg[pl]=numavg1[pl];
     }
     // choose avg
     if(numavg0!=0 && doingavgtype[pl]==1){
