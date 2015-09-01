@@ -240,10 +240,6 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE *errorabs, stru
 
 /// what tolerance to use for saying can switch to entropy when u_g is suggested to be bad for energy
 //#define IMPOKCONVCONST (1E-9)
-#define IMPOKCONVCONST (1E-4) // even more likely to use energy solution
-#define IMPOKCONVCONSTABS ((FTYPE)(NDIM+2)*IMPOKCONVCONST)
-#define IMPOKCONV (MAX(trueimptryconv,IMPOKCONVCONST))
-#define IMPOKCONVABS ((FTYPE)(NDIM+2)*IMPOKCONV)
 
 /// what error to allow at all
 /// too allowing to allow 1E-4 error since often solution is nuts at even errors>1E-8
@@ -253,9 +249,16 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE *errorabs, stru
 //#define IMPALLOWCONVCONST (1.e-5)
 #if(DOPERF)
 #define IMPALLOWCONVCONST (1.e-3)
+#define IMPOKCONVCONST (1E-4) // even more likely to use energy solution
 #else
 #define IMPALLOWCONVCONST (1.e-5)
+#define IMPOKCONVCONST (1E-6) // even more likely to use energy solution
 #endif
+
+
+#define IMPOKCONVCONSTABS ((FTYPE)(NDIM+2)*IMPOKCONVCONST)
+#define IMPOKCONV (MAX(trueimptryconv,IMPOKCONVCONST))
+#define IMPOKCONVABS ((FTYPE)(NDIM+2)*IMPOKCONV)
 
 
 #define IMPALLOWCONVCONSTABS ((FTYPE)(NDIM+2)*IMPALLOWCONVCONST)
