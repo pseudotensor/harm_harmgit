@@ -280,6 +280,11 @@ int prepre_init_specific_init(void)
     periodicx1=0;
     periodicx2=periodicx3=1;
   }
+  // periodic in x3
+  else if(WHICHPROBLEM==RADCYLJET){
+    periodicx1=periodicx2=0;
+    periodicx3=1;
+  }
   // assume spherical polar problems:
   else{
     periodicx1=periodicx2=0;
@@ -2385,6 +2390,55 @@ int init_global(void)
   /*************************************************/
   /*************************************************/
 
+  if(WHICHPROBLEM==RADCYLJET){
+
+    int set_fieldtype(void);
+    int FIELDTYPE=set_fieldtype();
+
+    BSQORHOLIMIT=1E2;
+    BSQOULIMIT=1E8;
+    gam=gamideal=5.0/3.0; // Ohsuga choice, assumes pairs not important.
+    cooling=KORAL;
+    GAMMAMAXRAD=50.0L; // Koral limits for this problem.
+    GAMMAMAXRADFAIL=50.0L;
+    GAMMAMAX=15.0L; // MHD
+
+
+    ////////////
+    //
+    // BOUNDARY CONDITIONS
+
+    if(WHICHPROBLEM==RADCYLBEAM){
+      //      BCtype[X1DN]=ASYMM;
+      //      BCtype[X1DN]=SYMM;
+      BCtype[X1DN]=CYLAXIS;
+      BCtype[X1UP]=OUTFLOW;
+      BCtype[X2DN]=OUTFLOW;
+      BCtype[X2UP]=OUTFLOW;
+      BCtype[X3UP]=PERIODIC;
+      BCtype[X3DN]=PERIODIC;
+    }
+    ////////////
+    // DUMP PERIODS
+
+    int idt;
+    //      for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=1.0;
+    for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=4.0;
+    //for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=0.1;
+    
+    tf = 200;
+
+    //    DODIAGEVERYSUBSTEP = 1;
+
+    //    if(WHICHPROBLEM==RADDONUT) DODIAGEVERYSUBSTEP = 1;
+
+  }
+
+
+  /*************************************************/
+  /*************************************************/
+  /*************************************************/
+
 
 
 
@@ -3338,7 +3392,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 // assume KAPPA defines fraction of FF opacity
 #define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
 // assume KAPPAES defines fraction of ES opacity
-#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_CODE(rho,T))
+#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_BASIC_CODE(rho,T))
 
 
 #endif
@@ -3369,7 +3423,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 // assume KAPPA defines fraction of FF opacity
 //#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
 // assume KAPPAES defines fraction of ES opacity
-//#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_CODE(rho,T))
+//#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_BASIC_CODE(rho,T))
 
 #define KAPPAES (1E3) // takes VERY long time with sub-cycling, but works.
 //#define KAPPAES (1E2) // goes with sub-cycling at "ok" rate for this test.
@@ -3391,7 +3445,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 // assume KAPPA defines fraction of FF opacity
 #define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
 // assume KAPPAES defines fraction of ES opacity
-#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_CODE(rho,T))
+#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_BASIC_CODE(rho,T))
 
 
 #endif
@@ -3413,7 +3467,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 // assume KAPPA defines fraction of FF opacity
 #define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
 // assume KAPPAES defines fraction of ES opacity
-#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_CODE(rho,T))
+#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_BASIC_CODE(rho,T))
 
 
 #endif
@@ -3476,7 +3530,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 // assume KAPPA defines fraction of FF opacity
 #define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
 // assume KAPPAES defines fraction of ES opacity
-#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_CODE(rho,T))
+#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_BASIC_CODE(rho,T))
 
 
 #endif
@@ -3491,7 +3545,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 // assume KAPPA defines fraction of FF opacity
 #define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
 // assume KAPPAES defines fraction of ES opacity
-#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_CODE(rho,T))
+#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_BASIC_CODE(rho,T))
 
 
 #endif
@@ -3506,7 +3560,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 // assume KAPPA defines fraction of FF opacity
 #define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
 // assume KAPPAES defines fraction of ES opacity
-#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_CODE(rho,T))
+#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_BASIC_CODE(rho,T))
 
 
 #endif
@@ -3521,7 +3575,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 // assume KAPPA defines fraction of FF opacity
 #define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
 // assume KAPPAES defines fraction of ES opacity
-#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_CODE(rho,T))
+#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_BASIC_CODE(rho,T))
 
 
 #endif
@@ -3555,7 +3609,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 // assume KAPPA defines fraction of FF opacity
 #define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
 // assume KAPPAES defines fraction of ES opacity
-#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_CODE(rho,T))
+#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_BASIC_CODE(rho,T))
 
 
 #endif
@@ -3570,7 +3624,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 // assume KAPPA defines fraction of FF opacity
 #define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
 // assume KAPPAES defines fraction of ES opacity
-#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_CODE(rho,T))
+#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_BASIC_CODE(rho,T))
 
 
 #endif
@@ -3610,7 +3664,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 
 #if(WHICHPROBLEM==RADCYLBEAM || WHICHPROBLEM==RADCYLBEAMCART)
 
-#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA_ES_CODE(rho,Tg)/1E14*0.0) // note 0.0
+#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA_ES_BASIC_CODE(rho,Tg)/1E14*0.0) // note 0.0
 #define KAPPAESUSER(rho,T) (0.0)
 
 #endif

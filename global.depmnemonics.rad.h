@@ -117,6 +117,7 @@
 #define KAPPA_ES_KNCORR(rhocode,Tcode) (1.0/(1.0+prpow((Tcode)*TEMPBAR/4.5E8,0.86)))  // Buchler and Yueh 1976 .  Klein-Nishina for thermal electrons.
 /// kappaes = sigma_T n_e = sigma_T n_b (n_e/n_b) = sigma_T rho/mb (ne/nb)
 #define KAPPA_ES_CODE(rhocode,Tcode) (0.2*(1.0+XFACT)*KAPPA_ES_FERMICORR(rhocode,Tcode)*KAPPA_ES_KNCORR(rhocode,Tcode)/OPACITYBAR)
+#define KAPPA_ES_BASIC_CODE(rhocode,Tcode) (0.2*(1.0+XFACT)/OPACITYBAR)
 
 // INELASTIC COMPTON TERM
 // see DOCOMPTON in physics.tools.rad.c:

@@ -498,6 +498,7 @@ struct Ccoordparams {
 
 
 
+
 // TOTRY : optically thin dot in SPC or pulse in SPC.
 
 // TOTRY: Maybe need to avoid bounding if not in PBOUNDLOOP?  Generally true.
@@ -526,7 +527,14 @@ struct Ccoordparams {
 #define RADWAVEBC (14) // 1d linear rad wave imposed on boundary (not setup in koral yet -- looks like time-dep BC for density on left boundary)
 #define EDDINFALL (5) // infall with flux from inside
 
+
+// other additional tests
 #define KOMIPROBLEM 50
+
+   // other applications
+#define RADCYLJET (51)
+
+
 
 
 // RADDONUT types
@@ -586,6 +594,7 @@ struct Ccoordparams {
 //#define WHICHPROBLEM RADCYLBEAM
 //#define WHICHPROBLEM RADBEAM2DKSVERT
 //#define WHICHPROBLEM RADCYLBEAMCART
+//#define WHICHPROBLEM RADCYLJET
 
 
 
@@ -1223,6 +1232,53 @@ struct Ccoordparams {
 #define EOMTYPE EOMFFDE // what these problems really are for
 
 #endif
+#endif
+
+
+
+
+
+#if(WHICHPROBLEM==RADCYLJET)
+
+#undef OUTERDEATH
+#define OUTERDEATH 0 // don't do it
+#undef OUTERDEATHRADIUS
+#define OUTERDEATHRADIUS (1E3)
+#undef OUTERDEATHGAMMAMAX
+#define OUTERDEATHGAMMAMAX (6.0)
+#undef OUTERDEATHGAMMAMAXRAD
+#define OUTERDEATHGAMMAMAXRAD (GAMMAMAXRAD)
+
+#undef MPERSUN
+#define MPERSUN (10.0)
+
+#undef RADSHOCKFLAT
+#define RADSHOCKFLAT 1
+
+#undef WHICHRADSOURCEMETHOD
+//#define WHICHRADSOURCEMETHOD SOURCEMETHODNONE
+//#define WHICHRADSOURCEMETHOD SOURCEMETHODEXPLICIT
+#define WHICHRADSOURCEMETHOD SOURCEMETHODIMPLICIT
+//#define WHICHRADSOURCEMETHOD SOURCEMETHODIMPLICITEXPLICITCHECK
+
+
+//#undef DOCOMPTON
+//#define DOCOMPTON 1 // enable thermal Comptonization
+//#undef ENSURECONS
+//#define ENSURECONS 1
+//#undef DOPERF
+//#define DOPERF 1 // enable performance enhancements
+//#undef BORROWENTROPY
+//#define BORROWENTROPY 1
+//#undef ENFORCEMHDCONS2RADCONS
+//#define ENFORCEMHDCONS2RADCONS 1 // assumes not true that pmhd>>prad beyond machine precision
+
+#define N1 256 // R // 120 for defcoord=UNIFORMCOORDS
+#define N2 1 // z
+#define N3 1 // \phi
+
+#define MCOORD CYLMINKMETRIC
+
 #endif
 
 
