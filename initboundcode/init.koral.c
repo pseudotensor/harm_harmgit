@@ -5769,12 +5769,31 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
     *whichcoord=MCOORD; // not BLCOORD, in case setting for inside horizon too when MCOORD=KSCOORDS or if using SPCMINKMETRIC
     *whichvel=VEL3;
 
-    
-    pr[RHO]=1.0;
-    pr[UU]=0.1;
-    pr[U1]=0.0;
-    pr[U2]=0.0;
-    pr[U3]=0.0;
+#define fsx(x) ((x)>0 ? exp(-1.0/(x)) : 0.0)
+#define gsx(x) (fsx(x)/(fsx(x) + fsx(1.0-(x))))
+#define stepfunction(x) (1.0 - gsx((x)-0.5))
+#define stepfunctionab(x,a,b) (((a)-(b))*stepfunction(x) + (b))   
+ 
+    FTYPE rhojet=100.0;
+    FTYPE E0perRho0=1E-6;
+    FTYPE Rho0; Rho0=1.0*rhojet;
+    FTYPE L0=0;
+    FTYPE E0; E0=E0perRho0*Rho0*rhojet;
+    FTYPE vz0=0.99;
+    FTYPE vr0=0;
+    FTYPE Fr0; Fr0=-L0-vr0*E0;
+    FTYPE Ehat0; Ehat0=E0+vr0*L0;
+
+    FTYPE Ehatjet=Ehat0*1E-5;
+    FTYPE Ehatstar=Ehat0;
+
+    FTYPE r1=10;
+    FTYPE r0=1E-2;
+
+    pr[RHO]=stepfunctionab(r,rhojet,Rho0);
+    pr[U1]=vr0*stepfunctionab(r,1.0,0.001); // R
+    pr[U2]=vz0*stepfunctionab(r,1,0.001); // z
+    pr[U3]=0.0; // phi
 
     
     // just define some field
@@ -5783,11 +5802,16 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
     pr[B3]=0.0;
     
     // radiation primitives directly
-    pr[URAD0]=0.0001;
-    pr[URAD1]=0.0;
+    pr[URAD0]=Ehat0*stepfunctionab(r,Ehatjet/Ehat0,Ehatstar/Ehat0); // not quite right.
+    pr[URAD1]=Fr0*stepfunctionab(r,1.0,0.001);
     pr[URAD2]=0.0;
     pr[URAD3]=0.0;
 
+    // ensure total pressure is constant by varying gas temperature, but assume LTE at t=0
+    // P = arad T^4 + rho*T  = arad T^4 + (gam-1)*u = Ehat0 + (gam-1)*u ->
+    // u = (P - Ehat0)/(gam-1)
+    // assume rad pressure in star balances 
+    pr[UU]=( (4.0/3.0-1.0)*Ehatstar - (4.0/3.0-1.0)*pr[URAD0])/(gam-1.0);
 
     if(FLUXB==FLUXCTSTAG){
       // assume pstag later defined really using vector potential or directly assignment of B3 in axisymmetry
