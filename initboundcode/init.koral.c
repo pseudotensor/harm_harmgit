@@ -2392,8 +2392,8 @@ int init_global(void)
 
   if(WHICHPROBLEM==RADCYLJET){
 
-    int set_fieldtype(void);
-    int FIELDTYPE=set_fieldtype();
+    //    int set_fieldtype(void);
+    //    int FIELDTYPE=set_fieldtype();
 
     BSQORHOLIMIT=1E2;
     BSQOULIMIT=1E8;
@@ -2408,16 +2408,15 @@ int init_global(void)
     //
     // BOUNDARY CONDITIONS
 
-    if(WHICHPROBLEM==RADCYLBEAM){
-      //      BCtype[X1DN]=ASYMM;
-      //      BCtype[X1DN]=SYMM;
-      BCtype[X1DN]=CYLAXIS;
-      BCtype[X1UP]=OUTFLOW;
-      BCtype[X2DN]=OUTFLOW;
-      BCtype[X2UP]=OUTFLOW;
-      BCtype[X3UP]=PERIODIC;
-      BCtype[X3DN]=PERIODIC;
-    }
+    //      BCtype[X1DN]=ASYMM;
+    //      BCtype[X1DN]=SYMM;
+    BCtype[X1DN]=CYLAXIS;
+    BCtype[X1UP]=OUTFLOW;
+    BCtype[X2DN]=OUTFLOW;
+    BCtype[X2UP]=OUTFLOW;
+    BCtype[X3UP]=PERIODIC;
+    BCtype[X3DN]=PERIODIC;
+    
     ////////////
     // DUMP PERIODS
 
@@ -3209,6 +3208,48 @@ int init_defcoord(void)
   }
 
 
+  /*************************************************/
+  /*************************************************/
+  /*************************************************/
+  if(WHICHPROBLEM==RADCYLJET){
+    a=0.0; // no spin in case use MCOORD=KSCOORDS
+
+    MBH=0.0; // because CYLMINKMETRIC really has gravity if choose MBH!=0
+
+    // TOTRY: find azimuthal flux.
+
+    RADNT_FULLPHI=(Pi/2.5);
+    //    RADNT_FULLPHI=(2.0*Pi);
+
+    RADNT_MINX=0.0; // all the way to the R=0 origin
+    RADNT_MAXX=10.0;
+ 
+    if(1){
+      defcoord = LOGRUNITH; // Uses R0, Rin, Rout and Rin_array,Rout_array for 2,3 directions
+      R0=-1.0;
+      Rin=RADNT_MINX;
+      Rout=RADNT_MAXX;
+      
+      Rin_array[2]=-1.0;
+      Rout_array[2]=1.0;
+
+      Rin_array[3]=0.0;
+      Rout_array[3]=RADNT_FULLPHI;
+    }
+    else{
+      defcoord = UNIFORMCOORDS;
+     
+      Rin_array[1]=RADNT_MINX;
+      Rout_array[1]=RADNT_MAXX;
+
+      Rin_array[2]=-1.0;
+      Rout_array[2]=1.0;
+
+      Rin_array[3]=0.0;
+      Rout_array[3]=RADNT_FULLPHI;
+    }
+
+  }
 
 
   /*************************************************/
@@ -3668,6 +3709,14 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 #define KAPPAESUSER(rho,T) (0.0)
 
 #endif
+
+#if(WHICHPROBLEM==RADCYLJET)
+
+#define KAPPAUSER(rho,B,Tg,Tr) (SMALL) //(rho*KAPPA*(KAPPA_GENFF_CODE(SMALL+rho,Tg+TEMPMIN,Tr+TEMPMIN)+KAPPA_SYN_CODE(SMALL+B,Tg+TEMPMIN,Tr+TEMPMIN)))
+#define KAPPAESUSER(rho,Tg) (rho*KAPPA_ES_BASIC_CODE(rho,Tg))
+
+#endif
+
 
 #ifndef KAPPANUSER
 // in case haven't defined KAPPANUSER, just use energy opacity
@@ -5680,6 +5729,47 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
 
     
     // as in koral:
+    pr[RHO]=1.0;
+    pr[UU]=0.1;
+    pr[U1]=0.0;
+    pr[U2]=0.0;
+    pr[U3]=0.0;
+
+    
+    // just define some field
+    pr[B1]=0.0;
+    pr[B2]=0.0;
+    pr[B3]=0.0;
+    
+    // radiation primitives directly
+    pr[URAD0]=0.0001;
+    pr[URAD1]=0.0;
+    pr[URAD2]=0.0;
+    pr[URAD3]=0.0;
+
+
+    if(FLUXB==FLUXCTSTAG){
+      // assume pstag later defined really using vector potential or directly assignment of B3 in axisymmetry
+      PLOOPBONLY(pl) pstag[pl]=pr[pl];
+    }
+
+    return(0);
+  }
+
+  /*************************************************/
+  /*************************************************/
+  if(WHICHPROBLEM==RADCYLJET){
+    FTYPE r,th,ph;
+    coord(i, j, k, CENT, X);
+    bl_coord(X, V);
+    r=V[1];
+    th=V[2];
+    ph=V[3];
+
+    *whichcoord=MCOORD; // not BLCOORD, in case setting for inside horizon too when MCOORD=KSCOORDS or if using SPCMINKMETRIC
+    *whichvel=VEL3;
+
+    
     pr[RHO]=1.0;
     pr[UU]=0.1;
     pr[U1]=0.0;
