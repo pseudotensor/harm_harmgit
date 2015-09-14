@@ -14002,11 +14002,27 @@ int calc_tautot_chieff(FTYPE *pp, FTYPE chi, struct of_geom *ptrgeom, struct of_
 
   // see averyboost.nb
   // dtau^jj = chi dxff^jj = chi dxlab^jj (1+\gamma - \gamma vjj^2)/(1+\gamma+vjj+\gamma vjj)
+  // = chi dxlab^jj (\gamma + \gamma^2 - ux^2)/( (1+\gamma)*(\gamma+ux) )
   int jj;
+  FTYPE dxorthoff[NDIM];
+  FTYPE orthofactor[NDIM];
+  FTYPE ujj,gamma;
   *tautotmax=0.0;
   SLOOPA(jj){
-    tautot[jj]=chi * (dx[jj]*sqrt(fabs(ptrgeom->gcov[GIND(jj,jj)])))*NxNOT1[jj];
-    *tautotmax=MAX(*tautotmax,tautot[jj]);
+   
+    orthofactor[jj] = sqrt(fabs(ptrgeom->gcov[GIND(jj,jj)]));
+ 
+    // NOTEMARK: only approximate near a rotating BH
+    ujj = q->ucon[jj]*orthofactor[jj];
+    // NOTEMARK: only approximate near a rotating BH
+    gamma = q->ucon[TT]*ptrgeom->alphalapse;
+     
+
+    dxorthoff[jj] = (dx[jj]*orthofactor[jj]) * (gamma + gamma*gamma - ujj*ujj)/( (1.0+gamma)*(gamma+ujj) );
+
+    tautot[jj]=chi * dxorthoff[jj];
+
+    *tautotmax=MAX(*tautotmax,tautot[jj]*NxNOT1[jj]);
   }
 
   return 0;
