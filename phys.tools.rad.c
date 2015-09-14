@@ -699,7 +699,7 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
 static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int failreturnallowable, int whichcall, FTYPE impeps, int showmessages, int showmessagesheavy, int allowlocalfailurefixandnoreport, int *eomtype, int whichcap, int itermode, int *baseitermethod, FTYPE fracenergy, FTYPE dissmeasure, int *radinvmod, FTYPE conv, FTYPE convabs, FTYPE allowconvabs, int maxiter, FTYPE realdt, int dimtypef, FTYPE *dimfactU, FTYPE *ppprev, FTYPE *pp, FTYPE *piin, FTYPE *uuprev, FTYPE *Uiin, FTYPE *uu0,FTYPE *uu,FTYPE localdt, struct of_geom *ptrgeom, struct of_state *q,  FTYPE *f, FTYPE *fnorm, FTYPE *freport, int *goexplicit, FTYPE *errorabs, FTYPE *errorallabs, int whicherror, int *convreturn, int *nummhdinvsreturn, FTYPE *tautotmaxreturn, struct of_method *mtd, struct of_refU *ru);
 
 
-static int calc_tautot_chieff(FTYPE *pp, FTYPE chieff, struct of_geom *ptrgeom, FTYPE *tautot, FTYPE *tautotmax);
+static int calc_tautot_chieff(FTYPE *pp, FTYPE chi, struct of_geom *ptrgeom, struct of_state *q, FTYPE *tautot, FTYPE *tautotmax);
 
 static FTYPE calc_approx_ratchangeRtt(struct of_state *q, FTYPE chieff, FTYPE realdt);
 
@@ -2143,7 +2143,7 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
   FTYPE chieff;
   FTYPE tautot,tautotmax;
   koral_source_rad_calc(computestate,computeentropy,pp, ptrgeom, Gdpl, Gdplabs, &chieff, &Tgas, &Trad, q);
-  calc_tautot_chieff(pp, chieff, ptrgeom, &tautot, &tautotmax);
+  calc_tautot_chieff(pp, chieff, ptrgeom, q, &tautot, &tautotmax);
   *tautotmaxreturn=tautotmax;
 
 
@@ -2306,7 +2306,7 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
 
           koral_source_rad_calc(computestate,computeentropy,ppi, ptrgeom, Gdpli, Gdplabsi, &chieffi, &Tgasi, &Tradi, &qi);
           //        FTYPE tautoti,tautotmaxi;
-          //        calc_tautot_chieff(ppi, chieffi, ptrgeom, &tautoti, &tautotmaxi);
+          //        calc_tautot_chieff(ppi, chieffi, ptrgeom, q, &tautoti, &tautotmaxi);
 
           PLOOP(pliter,pl){
             extrafactori[pl]=1.0;
@@ -2499,7 +2499,7 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
         *q=qe;
             
         FTYPE tautote,tautotmaxe;
-        calc_tautot_chieff(ppe, chieffe, ptrgeom, &tautote, &tautotmaxe);
+        calc_tautot_chieff(ppe, chieffe, ptrgeom, q, &tautote, &tautotmaxe);
             
         tautot=tautote;
         tautotmax=tautotmaxe;
@@ -2532,7 +2532,7 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
         *q=qi;
             
         FTYPE tautoti,tautotmaxi;
-        calc_tautot_chieff(ppi, chieffi, ptrgeom, &tautoti, &tautotmaxi);
+        calc_tautot_chieff(ppi, chieffi, ptrgeom, q, &tautoti, &tautotmaxi);
             
         tautot=tautoti;
         tautotmax=tautotmaxi;
@@ -10931,10 +10931,16 @@ int vchar_rad(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYP
 
     // DOING THIS:
     // KORALTODO: Approximation to any true path, but approximation is sufficient for approximate wave speeds.
-    // \tau_{\rm tot}^2 \approx \chi^2 [dx^{dir} \sqrt{g_{dirdir}}]^2 
+    // \tau_{\rm tot}^2 \approx \chi^2 [dxff^{dir} \sqrt{g_{dirdir}}]^2  where dxff is dx in fluid-frame where chi is measured
     FTYPE tautotsq,vrad2tau;
     // Note that tautot is frame independent once multiple \chi by the cell length.  I.e. it's a Lorentz invariant.
-    tautotsq = chi*chi * dx[dir]*dx[dir]*fabs(geom->gcov[GIND(dir,dir)]);
+    FTYPE tautot[NDIM];
+    FTYPE tautotmax;
+    calc_tautot_chieff(pr, chi, geom, q, &tautot, &tautotmax);
+    tautotsq = tautot[dir]*tautot[dir];
+
+    // below previous version was not Lorentz invariant.
+    //    tautotsq = chi*chi * dx[dir]*dx[dir]*fabs(geom->gcov[GIND(dir,dir)]);
 
     //    dualfprintf(fail_file,"chi=%g dx=%g dir=%d tautot=%g\n",chi,dx[dir],dir,sqrt(tautotsq));
   
@@ -13988,14 +13994,14 @@ static int get_m1closure_gammarel2_cold(int showmessages, struct of_geom *ptrgeo
 
 
 
-/// calculates total opacity over dx[] for given chieff
-int calc_tautot_chieff(FTYPE *pp, FTYPE chieff, struct of_geom *ptrgeom, FTYPE *tautot, FTYPE *tautotmax)
+/// calculates total opacity over dx[] for given chi or chieff
+int calc_tautot_chieff(FTYPE *pp, FTYPE chi, struct of_geom *ptrgeom, struct of_state *q, FTYPE *tautot, FTYPE *tautotmax)
 {
   //xx[0] holds time
-  FTYPE chi;
-  chi=chieff;
   int NxNOT1[NDIM]={0,N1NOT1,N2NOT1,N3NOT1}; // want to ignore non-used dimensions
 
+  // see averyboost.nb
+  // dtau^jj = chi dxff^jj = chi dxlab^jj (1+\gamma - \gamma vjj^2)/(1+\gamma+vjj+\gamma vjj)
   int jj;
   *tautotmax=0.0;
   SLOOPA(jj){
@@ -14024,33 +14030,8 @@ int calc_tautot(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q, FTYPE *t
   calc_kappa(pp,ptrgeom,q,&kappa);
   calc_kappaes(pp,ptrgeom,&kappaes);
   chi=kappa+kappaes;
-  int NxNOT1[NDIM]={0,N1NOT1,N2NOT1,N3NOT1}; // want to ignore non-used dimensions
 
-  int jj;
-  *tautotmax=0.0;
-  SLOOPA(jj){
-    tautot[jj]=chi * (dx[jj]*sqrt(fabs(ptrgeom->gcov[GIND(jj,jj)])))*NxNOT1[jj];
-    *tautotmax=MAX(*tautotmax,tautot[jj]);
-  }
-
-  return 0;
-}
-
-/// calculates abs opacity over dx[]
-/// not used currently
-int calc_tauabs(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q, FTYPE *tauabs, FTYPE *tauabsmax)
-{
-  FTYPE kappa;
-  calc_kappa(pp,ptrgeom,q,&kappa);
-
-  int NxNOT1[NDIM]={0,N1NOT1,N2NOT1,N3NOT1}; // want to ignore non-used dimensions
-
-  int jj;
-  *tauabsmax=0.0;
-  SLOOPA(jj){
-    tauabs[jj]=kappa * (dx[jj]*sqrt(fabs(ptrgeom->gcov[GIND(jj,jj)])))*NxNOT1[jj];
-    *tauabsmax=MAX(*tauabsmax,tauabs[jj]);
-  }
+  calc_tautot_chieff(pp,chi,ptrgeom,q,tautot,tautotmax);
 
   return 0;
 }

@@ -1986,8 +1986,7 @@ void set_conn_cylminkmetric(FTYPE *X, struct of_geom *geom,
   FTYPE dxdxp[NDIM][NDIM]; //atch
   FTYPE V[NDIM];           //atch
 
-
-  if(defcoord==UNIFORMCOORDS){ // uniform grid  SUPERSASMARK
+  if(ANALYTICCONNECTION&&defcoord==UNIFORMCOORDS){ // uniform grid  SUPERSASMARK
     // could directly use gdet in global memory
     // only works for X1=R and X2=z
     gcov_func(geom, 1,CYLMINKMETRIC,X, gcovmid,gcovpertmid);
@@ -2032,7 +2031,8 @@ void set_conn_cartminkmetric(FTYPE *X, struct of_geom *geom,
 
   int i,j,k;
 
-  if(defcoord==UNIFORMCOORDS){// uniform grid
+
+  if(ANALYTICCONNECTION&&defcoord==UNIFORMCOORDS){// uniform grid
     for (k = 0; k < NDIM; k++) conn2[k]= 0.0;
     
     for (i = 0; i < NDIM; i++)

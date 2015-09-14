@@ -12,7 +12,7 @@ mkdir run
 mkdir run/dumps
 # copy over coordparms.dat to run and fieldline????.bin (and ????-1 and ????+1 for current calculation) and gdump.bin to run/dumps
 cd run
-cp ../scripts/v5dfield/* .
+cp ../scripts/v5dfield\/<all> .
 cp ../docs/howtouse_joninterp.localsetup.new.sh .
 # emacs howtouse_joninterp.localsetup.new.sh &
 cd ..
@@ -28,7 +28,7 @@ make superclean ; make prepbin2txt ; make bin2txt ; cp bin2txt run/
 cd ~harmgit/
 git pull   [THIS GETS latest version with ~/harmgit/scripts/v5dfield stuff needed below]
 cd ~/harmgit/run
-cp ~/harmgit/scripts/v5dfield/* .
+cp ~/harmgit/scripts/v5dfield\/<all> .
 #cp ~/harmgit/docs/howtouse_joninterp.sh .
 #cp ~/harmgit/docs/howtouse_joninterp.localsetup.sh .  # this one is setup to be used with local harm ran like in earlier steps.
 cp ~/harmgit/docs/howtouse_joninterp.localsetup.new.sh .  # this one setup to use any harmgit/run/ stuff.

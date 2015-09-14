@@ -182,6 +182,22 @@ int fluxcalc(int stage,
   }
 
 
+  //////////////////////////////
+  //
+  // ADJUST FLUXES
+  //
+  /////////////////////////////
+
+  if(ADJUSTFLUX){
+    extern void adjust_flux(SFTYPE fluxtime,FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL]);
+
+    adjust_flux(fluxtime, pr, fluxvec[1], fluxvec[2], fluxvec[3]);
+#if(PRODUCTION==0)
+    trifprintf( "q");
+#endif
+  }
+
+
 
 
   //////////////////////////////

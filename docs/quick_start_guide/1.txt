@@ -55,7 +55,7 @@ If no OpenMP (or problems compiling on MAC), set USEOPENMP=0 in makehead.inc
 e.g. in ubuntu: sudo aptitude install libhdf4g-dev libhdf4g-doc libhdf4-0 libhdf4-dev libhdf4-doc hdf4-tools
 
 Also in makefile, search for "bin2txt" and either choose block of code for "system" type installation or "user" type installation.
-In bin2txt.c, choose same case for how hdf.h and mfhdf.h are included, but sometimes just "hdf/*" is correct.
+In bin2txt.c, choose same case for how hdf.h and mfhdf.h are included, but sometimes just "hdf\<all>" is correct.
 
 5c) Also ensure you have installed vis5d+ as in other guide before bin2txt will compile.
 

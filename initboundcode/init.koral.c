@@ -221,6 +221,13 @@ FTYPE RADNT_DONUTRADPMAX;
 FTYPE RADNT_HOVERR;
 FTYPE RADNT_LPOW;
 
+FTYPE RADCYLJET_TYPE;
+FTYPE RADCYLJET_VRSTAR;
+FTYPE RADCYLJET_EHATJET;
+FTYPE RADCYLJET_RHOJET;
+FTYPE RADCYLJET_TEMPJET;
+FTYPE RADCYLJET_UJET;
+
 int RADDONUT_OPTICALLYTHICKTORUS;
 
 static int get_full_rtsolution(int *whichvel, int *whichcoord, int opticallythick, FTYPE *pp,FTYPE *X, FTYPE *V,struct of_geom **ptrptrgeom);
@@ -296,6 +303,8 @@ int prepre_init_specific_init(void)
     binaryoutput=TEXTOUTPUT; // WALDPRODUCTION
     // KRAKEN: comment out above.  And change mympi.definit.h's USEROMIO 0 to 1 for the "choice" version.
   }
+
+  binaryoutput=TEXTOUTPUT;
 
   return(0);
 
@@ -415,6 +424,7 @@ int post_init_specific_init(void)
   debugfail=0;
 #endif
 
+  tf = 200000;
 
   return(0);
 }
@@ -2391,41 +2401,106 @@ int init_global(void)
   /*************************************************/
 
   if(WHICHPROBLEM==RADCYLJET){
+    
+    TIMEORDER=2;
+    //    lim[1]=lim[2]=lim[3]=MC;
+    //    lim[1]=lim[2]=lim[3]=DONOR;
+    lim[1]=lim[2]=lim[3]=MINM;
+    //lim[1]=lim[2]=lim[3]=MC;
+    //  lim[1]=lim[2]=lim[3]=WENO5BND;
+    //lim[1]=lim[2]=lim[3]=PARAFLAT;
+    //lim[1]=lim[2]=lim[3]=PARALINE;
+    
+    cour=0.1;
 
     //    int set_fieldtype(void);
     //    int FIELDTYPE=set_fieldtype();
 
     BSQORHOLIMIT=1E2;
     BSQOULIMIT=1E8;
-    gam=gamideal=5.0/3.0; // Ohsuga choice, assumes pairs not important.
     cooling=KORAL;
-    GAMMAMAXRAD=50.0L; // Koral limits for this problem.
-    GAMMAMAXRADFAIL=50.0L;
-    GAMMAMAX=15.0L; // MHD
 
+    //gam=gamideal=5.0/3.0; // 4/3 if pairs
+    gam=gamideal=4.0/3.0; // 4/3 if pairs or to compare with radiation-dominated case
+
+    GAMMAMAXRAD=50.0L; // increase for higher jet speeds
+    GAMMAMAXRADFAIL=50.0L; // increase for higher jet speeds
+    GAMMAMAX=15.0L; // increase for higher jet speeds
+
+
+    // 1: original Jane version
+    // 2: pure jet version with reflective edge, uniform within, and radiative flux at boundary
+    // 3: have high density in boundary that is fixed.
+    // 4: hot jet but otherwise like #1
+    // 5: rigid wall with panalytic setting of boundary conditions as flux, but outflow effectively
+    // 6: like #1, but 2D and with absorption opacity so T matters
+    RADCYLJET_TYPE=6;
+
+
+    if(RADCYLJET_TYPE==6){
+      //lim[1]=lim[2]=lim[3]=MINM;
+      lim[1]=lim[2]=lim[3]=PARALINE;
+    }
+    else{
+      lim[1]=lim[2]=lim[3]=MINM;
+    }
 
     ////////////
     //
     // BOUNDARY CONDITIONS
 
-    //      BCtype[X1DN]=ASYMM;
-    //      BCtype[X1DN]=SYMM;
-    BCtype[X1DN]=CYLAXIS;
-    BCtype[X1UP]=OUTFLOW;
-    BCtype[X2DN]=OUTFLOW;
-    BCtype[X2UP]=OUTFLOW;
-    BCtype[X3UP]=PERIODIC;
-    BCtype[X3DN]=PERIODIC;
+    if(RADCYLJET_TYPE==1 || RADCYLJET_TYPE==4){
+      //      BCtype[X1DN]=ASYMM;
+      //      BCtype[X1DN]=SYMM;
+      BCtype[X1DN]=CYLAXIS;
+      BCtype[X1UP]=OUTFLOW;
+      BCtype[X2DN]=OUTFLOW;
+      BCtype[X2UP]=OUTFLOW;
+      BCtype[X3UP]=PERIODIC;
+      BCtype[X3DN]=PERIODIC;
+    }
+    else if(RADCYLJET_TYPE==2||RADCYLJET_TYPE==3){
+      //      BCtype[X1DN]=ASYMM;
+      //      BCtype[X1DN]=SYMM;
+      BCtype[X1DN]=CYLAXIS;
+      BCtype[X1UP]=RADCYLJETBC;
+      BCtype[X2DN]=OUTFLOW;
+      BCtype[X2UP]=OUTFLOW;
+      BCtype[X3UP]=PERIODIC;
+      BCtype[X3DN]=PERIODIC;
+    }
+    else if(RADCYLJET_TYPE==5){
+      BCtype[X1DN]=CYLAXIS;
+      BCtype[X1UP]=FREEOUTFLOW; //FIXEDUSEPANALYTIC;
+      BCtype[X2DN]=OUTFLOW;
+      BCtype[X2UP]=OUTFLOW;
+      BCtype[X3UP]=PERIODIC;
+      BCtype[X3DN]=PERIODIC;
+    }
+    else if(RADCYLJET_TYPE==6){
+      //      BCtype[X1DN]=ASYMM;
+      //      BCtype[X1DN]=SYMM;
+      BCtype[X1DN]=CYLAXIS;
+      BCtype[X1UP]=OUTFLOW;
+      BCtype[X2DN]=RADCYLJETBC;
+      BCtype[X2UP]=OUTFLOW;
+      BCtype[X3UP]=PERIODIC;
+      BCtype[X3DN]=PERIODIC;
+    }
+
+
     
     ////////////
     // DUMP PERIODS
 
     int idt;
     //      for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=1.0;
-    for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=4.0;
+    //    for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=0.01;
     //for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=0.1;
+    for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=1.0;
+    //for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=10.0;
     
-    tf = 200;
+    tf = 200000;
 
     //    DODIAGEVERYSUBSTEP = 1;
 
@@ -3218,17 +3293,33 @@ int init_defcoord(void)
 
     // TOTRY: find azimuthal flux.
 
-    RADNT_FULLPHI=(Pi/2.5);
-    //    RADNT_FULLPHI=(2.0*Pi);
+    //    RADNT_FULLPHI=(Pi/2.5);
+    RADNT_FULLPHI=(2.0*Pi);
 
-    RADNT_MINX=0.0; // all the way to the R=0 origin
-    RADNT_MAXX=10.0;
+    if(RADCYLJET_TYPE==1 || RADCYLJET_TYPE==4){
+      RADNT_MINX=1E-2; // all the way to the R=0 origin
+      RADNT_MAXX=10.0;
+    }
+    else if(RADCYLJET_TYPE==2||RADCYLJET_TYPE==3){
+      RADNT_MINX=1E-2; // all the way to the R=0 origin
+      RADNT_MAXX=1.0;
+    }
+    else if(RADCYLJET_TYPE==5){
+      RADNT_MINX=1E-2; // all the way to the R=0 origin
+      RADNT_MAXX=1.0;
+    }
+    else if(RADCYLJET_TYPE==6){
+      RADNT_MINX=1E-2; // all the way to the R=0 origin
+      RADNT_MAXX=15.0;
+    }
  
-    if(1){
+    if(RADCYLJET_TYPE==1 || RADCYLJET_TYPE==4 ||RADCYLJET_TYPE==2||RADCYLJET_TYPE==3){
       defcoord = LOGRUNITH; // Uses R0, Rin, Rout and Rin_array,Rout_array for 2,3 directions
       R0=-1.0;
       Rin=RADNT_MINX;
       Rout=RADNT_MAXX;
+      Rin_array[1]=RADNT_MINX;
+      Rout_array[1]=RADNT_MAXX;
       
       Rin_array[2]=-1.0;
       Rout_array[2]=1.0;
@@ -3236,7 +3327,7 @@ int init_defcoord(void)
       Rin_array[3]=0.0;
       Rout_array[3]=RADNT_FULLPHI;
     }
-    else{
+    if(RADCYLJET_TYPE==5){
       defcoord = UNIFORMCOORDS;
      
       Rin_array[1]=RADNT_MINX;
@@ -3244,6 +3335,20 @@ int init_defcoord(void)
 
       Rin_array[2]=-1.0;
       Rout_array[2]=1.0;
+
+      Rin_array[3]=0.0;
+      Rout_array[3]=RADNT_FULLPHI;
+    }
+    if(RADCYLJET_TYPE==6){
+      defcoord = LOGRUNITH; // Uses R0, Rin, Rout and Rin_array,Rout_array for 2,3 directions
+      R0=-0.2;
+      Rin=RADNT_MINX;
+      Rout=RADNT_MAXX;
+      Rin_array[1]=RADNT_MINX;
+      Rout_array[1]=RADNT_MAXX;
+      
+      Rin_array[2]=0.0;
+      Rout_array[2]=45.0; //Rout*10.0;
 
       Rin_array[3]=0.0;
       Rout_array[3]=RADNT_FULLPHI;
@@ -3712,8 +3817,8 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 
 #if(WHICHPROBLEM==RADCYLJET)
 
-#define KAPPAUSER(rho,B,Tg,Tr) (SMALL) //(rho*KAPPA*(KAPPA_GENFF_CODE(SMALL+rho,Tg+TEMPMIN,Tr+TEMPMIN)+KAPPA_SYN_CODE(SMALL+B,Tg+TEMPMIN,Tr+TEMPMIN)))
-#define KAPPAESUSER(rho,Tg) (rho*KAPPA_ES_BASIC_CODE(rho,Tg))
+#define KAPPAUSER(rho,B,Tg,Tr) (rho*(KAPPA_FF_CODE(SMALL+rho,Tg+TEMPMIN,Tr+TEMPMIN))) // SMALL
+#define KAPPAESUSER(rho,Tg) (rho*KAPPA_ES_BASIC_CODE(rho,Tg)/10.0)
 
 #endif
 
@@ -5758,7 +5863,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
 
   /*************************************************/
   /*************************************************/
-  if(WHICHPROBLEM==RADCYLJET){
+  if(WHICHPROBLEM==RADCYLJET && (RADCYLJET_TYPE==1 || RADCYLJET_TYPE==4)){
     FTYPE r,th,ph;
     coord(i, j, k, CENT, X);
     bl_coord(X, V);
@@ -5773,22 +5878,46 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
 #define gsx(x) (fsx(x)/(fsx(x) + fsx(1.0-(x))))
 #define stepfunction(x) (1.0 - gsx((x)-0.5))
 #define stepfunctionab(x,a,b) (((a)-(b))*stepfunction(x) + (b))   
+#define stepfunctionab2(x,a,b) (((a)-(b))*stepfunction(x)*stepfunction(x) + (b))   
  
-    FTYPE rhojet=100.0;
-    FTYPE E0perRho0=1E-6;
-    FTYPE Rho0; Rho0=1.0*rhojet;
-    FTYPE L0=0;
-    FTYPE E0; E0=E0perRho0*Rho0*rhojet;
-    FTYPE vz0=0.99;
+    FTYPE rhojet=1E-5;
+    FTYPE E0perRho0;
+    FTYPE Rho0;
+    FTYPE Ehatjet;
+    FTYPE Ehatstar;
+
+    FTYPE vz0=0.5; // 0.99;
     FTYPE vr0=0;
-    FTYPE Fr0; Fr0=-L0-vr0*E0;
-    FTYPE Ehat0; Ehat0=E0+vr0*L0;
 
-    FTYPE Ehatjet=Ehat0*1E-5;
-    FTYPE Ehatstar=Ehat0;
+    FTYPE L0;
+    FTYPE E0;
+    FTYPE Ehat0;
+    FTYPE Fr0;
 
-    FTYPE r1=10;
-    FTYPE r0=1E-2;
+    if(RADCYLJET_TYPE==1){
+      Rho0=1.0*rhojet;
+      E0perRho0=1E-6;
+      L0=0;
+      E0=E0perRho0*Rho0*rhojet;
+      Ehat0=E0+vr0*L0;
+      Fr0=-L0-vr0*E0;
+      Ehatjet=Ehat0*1E-2;
+      Ehatstar=Ehat0;
+    }
+    else if(RADCYLJET_TYPE==4){
+      Rho0=1000.0*rhojet;
+      E0perRho0=1E2;
+      L0=0;
+      E0=E0perRho0*Rho0*rhojet;
+      Ehat0=E0+vr0*L0;
+      Fr0=-L0-vr0*E0;
+      Ehatjet=Ehat0*0.01;
+      Ehatstar=Ehat0;
+    }
+
+
+    FTYPE r0=RADNT_MINX;
+    FTYPE r1=RADNT_MAXX;
 
     pr[RHO]=stepfunctionab(r,rhojet,Rho0);
     pr[U1]=vr0*stepfunctionab(r,1.0,0.001); // R
@@ -5803,15 +5932,71 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
     
     // radiation primitives directly
     pr[URAD0]=Ehat0*stepfunctionab(r,Ehatjet/Ehat0,Ehatstar/Ehat0); // not quite right.
-    pr[URAD1]=Fr0*stepfunctionab(r,1.0,0.001);
-    pr[URAD2]=0.0;
-    pr[URAD3]=0.0;
+    pr[URAD1]=pr[U1];
+    pr[URAD2]=pr[U2];
+    pr[URAD3]=pr[U3];
 
     // ensure total pressure is constant by varying gas temperature, but assume LTE at t=0
     // P = arad T^4 + rho*T  = arad T^4 + (gam-1)*u = Ehat0 + (gam-1)*u ->
     // u = (P - Ehat0)/(gam-1)
     // assume rad pressure in star balances 
-    pr[UU]=( (4.0/3.0-1.0)*Ehatstar - (4.0/3.0-1.0)*pr[URAD0])/(gam-1.0);
+    if(RADCYLJET_TYPE==1){
+      FTYPE ptot=1.1*(4.0/3.0-1.0)*Ehatstar;
+      pr[UU]=( ptot - (4.0/3.0-1.0)*pr[URAD0])/(gam-1.0);
+    }
+    else{
+      pr[UU]=0.1*pr[URAD0];
+    }
+
+    if(FLUXB==FLUXCTSTAG){
+      // assume pstag later defined really using vector potential or directly assignment of B3 in axisymmetry
+      PLOOPBONLY(pl) pstag[pl]=pr[pl];
+    }
+
+    // THINGS TO TRY:
+
+    return(0);
+  }
+  else if(WHICHPROBLEM==RADCYLJET && (RADCYLJET_TYPE==2||RADCYLJET_TYPE==3)){
+    FTYPE r,th,ph;
+    coord(i, j, k, CENT, X);
+    bl_coord(X, V);
+    r=V[1];
+    th=V[2];
+    ph=V[3];
+
+    *whichcoord=MCOORD; // not BLCOORD, in case setting for inside horizon too when MCOORD=KSCOORDS or if using SPCMINKMETRIC
+    *whichvel=VEL3;
+
+    FTYPE rhojet=0.1;
+    FTYPE vz0=0.5; // 0.99;
+    FTYPE vr0=0;
+    FTYPE Ehat0=0.1*rhojet;
+
+    FTYPE Ehatjet=Ehat0*1E-2;
+
+    FTYPE r0=RADNT_MINX;
+    FTYPE r1=RADNT_MAXX;
+
+    pr[RHO]=rhojet;
+    pr[U1]=vr0;
+    pr[U2]=vz0;
+    pr[U3]=0.0; // phi
+
+    
+    // just define some field
+    pr[B1]=0.0;
+    pr[B2]=0.0;
+    pr[B3]=0.0;
+    
+    // radiation primitives directly
+    pr[URAD0]=Ehatjet;
+    pr[URAD1]=pr[U1];
+    pr[URAD2]=pr[U2];
+    pr[URAD3]=pr[U3];
+
+    FTYPE ptot=1.5*(4.0/3.0-1.0)*Ehatjet;
+    pr[UU]=( ptot - (4.0/3.0-1.0)*pr[URAD0])/(gam-1.0);
 
     if(FLUXB==FLUXCTSTAG){
       // assume pstag later defined really using vector potential or directly assignment of B3 in axisymmetry
@@ -5820,11 +6005,133 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
 
     return(0);
   }
+  else if(WHICHPROBLEM==RADCYLJET && (RADCYLJET_TYPE==5)){
+    FTYPE r,th,ph;
+    coord(i, j, k, CENT, X);
+    bl_coord(X, V);
+    r=V[1];
+    th=V[2];
+    ph=V[3];
+
+    *whichcoord=MCOORD; // not BLCOORD, in case setting for inside horizon too when MCOORD=KSCOORDS or if using SPCMINKMETRIC
+    *whichvel=VEL3;
+
+    FTYPE rhojet=0.1*100.0;
+    FTYPE vz0=0.5; // 0.99;
+    FTYPE vr0=0;
+    FTYPE Ehat0=0.1*rhojet;
+
+    FTYPE Ehatjet=Ehat0*1E-2;
+
+    FTYPE r0=RADNT_MINX;
+    FTYPE r1=RADNT_MAXX;
+
+    pr[RHO]=rhojet;
+    pr[U1]=vr0;
+    pr[U2]=vz0;
+    pr[U3]=0.0; // phi
+
+    
+    // just define some field
+    pr[B1]=0.0;
+    pr[B2]=0.0;
+    pr[B3]=0.0;
+    
+    // radiation primitives directly
+    pr[URAD0]=Ehatjet;
+    pr[URAD1]=pr[U1];
+    pr[URAD2]=pr[U2];
+    pr[URAD3]=pr[U3];
+
+    pr[UU]=0.1*pr[RHO];
+
+    RADCYLJET_RHOJET=pr[RHO];
+    RADCYLJET_UJET=pr[UU];
+    RADCYLJET_EHATJET=pr[URAD0];
+    RADCYLJET_VRSTAR=pr[U1];
+
+
+    if(FLUXB==FLUXCTSTAG){
+      // assume pstag later defined really using vector potential or directly assignment of B3 in axisymmetry
+      PLOOPBONLY(pl) pstag[pl]=pr[pl];
+    }
+
+    return(0);
+  }
+  /*************************************************/
+  /*************************************************/
+  else if(WHICHPROBLEM==RADCYLJET && (RADCYLJET_TYPE==6)){
+    FTYPE r,th,ph;
+    coord(i, j, k, CENT, X);
+    bl_coord(X, V);
+    r=V[1];
+    th=V[2];
+    ph=V[3];
+
+    *whichcoord=MCOORD; // not BLCOORD, in case setting for inside horizon too when MCOORD=KSCOORDS or if using SPCMINKMETRIC
+    *whichvel=VEL3;
+
+    FTYPE Rho0=1E-5*100.0*100.0/79.4/10.0;
+    pr[RHO]=Rho0;
+
+    pr[U1]=0.0;
+    pr[U2]=0.0;
+    pr[U3]=0.0;
+
+    
+    // just define some field
+    pr[B1]=0.0;
+    pr[B2]=0.0;
+    pr[B3]=0.0;
+    
+    // radiation primitives directly
+    pr[URAD1]=pr[U1];
+    pr[URAD2]=pr[U2];
+    pr[URAD3]=pr[U3];
+
+    // ensure thermal equilibrium in star
+    FTYPE Tstar;
+    if(WHICHRADSOURCEMETHOD==SOURCEMETHODNONE) Tstar=1510.0*1.0E7/TEMPBAR/0.8;
+    else Tstar=6.0E7/TEMPBAR;
+    // P = (arad/3)T^4 + rho T
+    pr[UU]=u_rho0_T_simple(i,j,k,CENT,pr[RHO],Tstar);
+    pr[URAD0]=calc_LTE_EfromT(Tstar);
+
+    if(1){
+      static int firsttime=1;
+      if(firsttime){
+        // cs2 ~ gam*Ptot/rho and need vz0>cs.
+        // look at sqrt(cs2tot) in SM to check or obtain here.
+        FTYPE ptot=((gam-1.0)*pr[UU] + (4.0/3.0-1.0)*pr[URAD0]);
+        FTYPE ptrue;
+        if(WHICHRADSOURCEMETHOD==SOURCEMETHODNONE) ptrue=(gam-1.0)*pr[UU];
+        else ptrue=ptot;
+        FTYPE gamptot=(gam*(gam-1.0)*pr[UU] + (4.0/3.0)*(4.0/3.0-1.0)*pr[URAD0]);
+        FTYPE cs2 = gamptot/pr[RHO];
+        dualfprintf(fail_file,"STAR: ptrue=%21.15g ptot=%21.15g ptrue/rho=%21.15g cs2=%21.15g cs=%21.15g\n",ptrue,ptot,ptrue/pr[RHO],cs2,sqrt(cs2));
+        firsttime=0;
+      }
+    }
+
+    if(FLUXB==FLUXCTSTAG){
+      // assume pstag later defined really using vector potential or directly assignment of B3 in axisymmetry
+      PLOOPBONLY(pl) pstag[pl]=pr[pl];
+    }
+
+    // really "star" values
+    RADCYLJET_RHOJET=pr[RHO];
+    RADCYLJET_UJET=pr[UU];
+    RADCYLJET_EHATJET=pr[URAD0];
+    RADCYLJET_TEMPJET=Tstar;
+    RADCYLJET_VRSTAR=pr[U1];
+
+    return(0);
+  }
 
 
 
 
-
+  return(0);
 }
 
 
@@ -8583,6 +8890,353 @@ int theproblem_set_myid(void)
 
 }
 
+
+void adjust_flux(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL])
+{
+
+  // X1UP
+  if(WHICHPROBLEM==RADCYLJET && RADCYLJET_TYPE==5){
+    int i,j,k,pl ;
+    FTYPE sth ;
+    FTYPE X[NDIM],V[NDIM],r,th ;
+    int inboundloop[NDIM];
+    int outboundloop[NDIM];
+    int innormalloop[NDIM];
+    int outnormalloop[NDIM];
+    int inoutlohi[NUMUPDOWN][NUMUPDOWN][NDIM];
+    int riin,riout,rjin,rjout,rkin,rkout;
+    int dosetbc[COMPDIM*2];
+    int ri;
+    int boundvartype=BOUNDFLUXTYPE;
+
+    ////////////////////////
+    //
+    // set bound loop
+    //
+    ///////////////////////
+    set_boundloop(boundvartype, inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi, &riin, &riout, &rjin, &rjout, &rkin, &rkout, dosetbc);
+    //enerregion=ACTIVEREGION; // now replaces TRUEGLOBALENERREGION
+    //  localenerpos=enerposreg[enerregion];
+
+
+
+    // enforce true reflective condition on (near) polar axis
+    if(mycpupos[1]==0){  
+      LOOPX1dir{
+        i=0;
+
+        PALLLOOP(pl) if(pl!=U1 && pl!=URAD1) MACP0A1(F1,i,j,k,pl)=0;
+      }
+    }
+
+    struct of_geom geomdontuse;
+    struct of_geom *ptrgeom=&geomdontuse;
+
+    // prescribe outer boundary condition on wall
+    if(mycpupos[1]==ncpux1-1){
+      LOOPX1dir{
+        i=N1;
+
+        PALLLOOP(pl) if(pl!=U1 && pl!=URAD1) MACP0A1(F1,i,j,k,pl)=0;
+
+        if(1){
+          get_geometry(i,j,k,FACE1,ptrgeom) ;
+
+          FTYPE t0=1.0;
+          FTYPE interptime=(fluxtime<1.0 ? (fluxtime/t0) : 1.0);
+          if(interptime>1.0) interptime=1.0;
+          if(interptime<0.0) interptime=0.0;
+
+          //        interptime=0;
+
+
+          // ensure fake pressure equilibrium
+          FTYPE Ehatstar=1.0*RADCYLJET_EHATJET; // 1.0 ensures pressure equlibrium, regardless of actual physics
+          FTYPE ustar=1.0*RADCYLJET_UJET; // 1.0 ensures pressure equlibrium, regardless of actual physics
+          FTYPE rhostar=1.0*RADCYLJET_RHOJET;
+
+          // but drive radiative flux into jet as if vr0*Ehatstar
+          FTYPE vr0; //=-1E-6; //RADCYLJET_VRSTAR;
+          //        vr0=0.0;
+          // should really set flux directly, or based upon flux-limited diffusion set vr
+          // But jump is infinite, but can imagine as if not.
+
+          // set flux of radiation: R^t_x1.  Just set Ehat=Ehat0 since non-rel injection, and compute literal flux
+          FTYPE prflux[NPR];
+          PALLLOOP(pl) prflux[pl]=0;
+          prflux[RHO]=0.0; //rhostar;  // this has no effect
+          //          prflux[UU]=ustar; // this term ensures pressure equilibrium
+          prflux[UU]=0.0; //MACP0A1(prim,i,j,k,UU);
+          prflux[U1]=0.0;
+          prflux[U2]=0.0;
+          prflux[U3]=0.0;
+          prflux[URAD0]=Ehatstar*(1.0-interptime) + interptime*Ehatstar*10.0;
+
+          //          prflux[URAD1]=interptime*vr0/sqrt(fabs(ptrgeom->gcov[GIND(1,1)])); // assume vr0 is orthonormal, so get coordinate out of it.
+          FTYPE kappa=calc_kappaes_user(rhostar,1.0,0,0,0);
+          vr0=sqrt(1.0/(3.0*kappa*t0));
+          static int firsttime=1;
+          if(firsttime) dualfprintf(fail_file,"vr0=%21.15g\n",vr0);
+          firsttime=0;
+          prflux[URAD1]=vr0/sqrt(fabs(ptrgeom->gcov[GIND(1,1)])); // assume vr0 is orthonormal, so get coordinate out of it.
+          prflux[URAD2]=0.0;
+          prflux[URAD3]=0.0;
+
+          struct of_state q;
+          get_state(prflux, ptrgeom, &q);
+          FTYPE fluxrad[NPR];
+          primtoflux(UEVOLVE, prflux, &q, 1, ptrgeom, fluxrad, NULL);
+
+          //int pliter;
+          //PLOOP(pliter,pl) dualfprintf(fail_file,"pl=%d fluxrad=%21.15g F1=%21.15g\n",pl,fluxrad[pl],MACP0A1(F1,i,j,k,pl));
+          //myexit(0);
+
+          // at least pressure term needs to be there
+          //MACP0A1(F1,i,j,k,U1)=fluxrad[U1]; // use original outflowed, so pressure balance maintained regardless of vr
+          //MACP0A1(F1,i,j,k,URAD1)=fluxrad[URAD1]; // use original outflowed, so pressure balance maintained regardless of vrad_r
+          // will this lead, for large energy flux, inconsistently small momentum flux?
+
+          // setup so exactly pressure balanced, so no momentum flux, implying no motion of boundary.
+          //          MACP0A1(F1,i,j,k,U1)=MACP0A1(F1,im1mac(i),j,k,U1);
+          //MACP0A1(F1,i,j,k,URAD1)=MACP0A1(F1,im1mac(i),j,k,URAD1);
+
+          // But, even with pressure balance, *still* inject energy.  So while boundary cannot move, we still leak in energy.
+          //          MACP0A1(F1,i,j,k,U1)=fluxrad[URAD1];
+          MACP0A1(F1,i,j,k,U1)=MACP0A1(F1,im1mac(i),j,k,U1);
+
+          MACP0A1(F1,i,j,k,URAD1)=fluxrad[URAD1];
+          MACP0A1(F1,i,j,k,URAD0)=fluxrad[URAD0];
+
+        }
+        // IDEAS (for failures)
+
+        // *) Turn on flux slowly so not shock.  Slower.
+        // *) Why cylindrical boundary goofy and evolving? (not body forces change, but maybe non-linear conserves)
+        //   e.g. gdet R^r_r = gdet (Ehat \gamma^2 vr^2 + Erad/3) = r Erad .  So linear, so should be ok.  Must be body force not right really?
+
+      }
+    }
+  }
+
+
+  // X2DN
+  if(WHICHPROBLEM==RADCYLJET && RADCYLJET_TYPE==6){
+    int i,j,k,pl ;
+    FTYPE sth ;
+    FTYPE X[NDIM],V[NDIM],r,th ;
+    int inboundloop[NDIM];
+    int outboundloop[NDIM];
+    int innormalloop[NDIM];
+    int outnormalloop[NDIM];
+    int inoutlohi[NUMUPDOWN][NUMUPDOWN][NDIM];
+    int riin,riout,rjin,rjout,rkin,rkout;
+    int dosetbc[COMPDIM*2];
+    int ri;
+    int boundvartype=BOUNDFLUXTYPE;
+
+    ////////////////////////
+    //
+    // set bound loop
+    //
+    ///////////////////////
+    set_boundloop(boundvartype, inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi, &riin, &riout, &rjin, &rjout, &rkin, &rkout, dosetbc);
+    //enerregion=ACTIVEREGION; // now replaces TRUEGLOBALENERREGION
+    //  localenerpos=enerposreg[enerregion];
+
+
+    // X1DN
+    // enforce true reflective condition on (near) polar axis
+    if(mycpupos[1]==0){  
+      LOOPX1dir{
+        i=0;
+
+        PALLLOOP(pl) if(pl!=U1 && pl!=URAD1) MACP0A1(F1,i,j,k,pl)=0;
+      }
+    }
+
+    struct of_geom geomdontuse;
+    struct of_geom *ptrgeom=&geomdontuse;
+
+    // prescribe outer boundary condition on wall
+    if(mycpupos[2]==0){
+      LOOPX2dir{
+        j=0;
+
+        //        PALLLOOP(pl) if(pl!=U2 && pl!=URAD2) MACP0A1(F2,i,j,k,pl)=0;
+
+        if(1){
+          get_geometry(i,j,k,FACE2,ptrgeom) ;
+          bl_coord_ijk(i,j,k,FACE2,V);
+
+          FTYPE t0=1.0;
+          FTYPE interptime=(fluxtime<1.0 ? (fluxtime/t0) : 1.0);
+          if(interptime>1.0) interptime=1.0;
+          if(interptime<0.0) interptime=0.0;
+
+          FTYPE prflux[NPR];
+          extern int jetbound(int i, int j, int k, int loc, FTYPE *prin, FTYPE *prflux, FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
+          int insidejet=jetbound(i,j,k,FACE2,MAC(prim,i,j,k),prflux,prim);
+          
+
+          if(insidejet==0){
+            //PALLLOOP(pl) if(pl!=U2 && pl!=URAD2) MACP0A1(F2,i,j,k,pl)=0;
+            //            pl=U2; MACP0A1(F2,i,j,k,pl)=MACP0A1(F2,i,jp1mac(j),k,pl);
+            //            pl=URAD2; MACP0A1(F2,i,j,k,pl)=MACP0A1(F2,i,jp1mac(j),k,pl);
+          }
+          else{
+            struct of_state q;
+            get_state(prflux, ptrgeom, &q);
+            FTYPE flux[NPR];
+            primtoflux(UEVOLVE, prflux, &q, 2, ptrgeom, flux, NULL);
+
+            // assign flux
+            PALLLOOP(pl) if(pl!=U2 && pl!=URAD2) MACP0A1(F2,i,j,k,pl)=0;
+            PALLLOOP(pl) MACP0A1(F2,i,j,k,pl)=flux[pl];
+          }
+
+        }
+        // IDEAS
+
+      }
+    }
+  }
+
+}
+
+int jetbound(int i, int j, int k, int loc, FTYPE *prin, FTYPE *prflux, FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
+{
+
+  struct of_geom geomdontuse;
+  struct of_geom *ptrgeom=&geomdontuse;
+  get_geometry(i,j,k,loc,ptrgeom) ;
+  FTYPE X[NDIM],V[NDIM],r,th ;
+  bl_coord_ijk(i,j,k,loc,V);
+
+
+
+  int insidejet;
+  FTYPE width=1.0;
+
+
+  if(V[1]<=width){ // ||1 if want fixed conditions outside of jet as well.
+    insidejet=1;
+  }
+  else{
+    insidejet=0;
+  }
+
+  int pliter,pl;
+  if(insidejet==0){
+    PALLLOOP(pl) prflux[pl]=prin[pl];
+
+  }
+  else{
+
+    // these are really star values
+    FTYPE Ehatstar=1.0*RADCYLJET_EHATJET;
+    FTYPE ustar=1.0*RADCYLJET_UJET; // make jet colder than star
+    FTYPE Tstar=RADCYLJET_TEMPJET;
+    FTYPE pradstar; pradstar=(4.0/3.0-1.0)*calc_LTE_EfromT(Tstar);
+    FTYPE ujet;
+    if(WHICHRADSOURCEMETHOD==SOURCEMETHODNONE) ujet=ustar*1E-2*99.99;
+    else ujet=ustar*1E-2;
+
+ 
+    FTYPE rhostar=1.0*RADCYLJET_RHOJET;
+    FTYPE rhojet; rhojet=rhostar*1E-2*30.0;
+    
+    //    FTYPE vz0;
+    
+
+    //            FTYPE interpi=exp(-V[1]*V[1]/(2.0*width*width));
+
+    // gamma^2 = 1+usq -> usq = gamma^2-1 -> |u| = sqrt(gamma^2-1)
+    FTYPE gammacore; gammacore = 7.0;
+    FTYPE uzcore; uzcore=sqrt(gammacore*gammacore-1.0);
+    FTYPE rhocore; rhocore=rhojet;
+    
+    FTYPE efluxcore; efluxcore=rhocore*uzcore*uzcore;
+
+    FTYPE eflux; eflux = efluxcore*stepfunctionab2(V[1],1,0);
+
+    FTYPE uz=uzcore*stepfunctionab2(V[1],1,0); // orthonormal uz
+    // don't use stepfunctionab() on vz because then drops in gamma very fast.
+    // gamma^2 = 1/(1-v^2) -> 1-v^2 = 1/gamma^2 -> v^2 = 1-1/gamma^2 -> |v| = sqrt(1-1/gamma^2) or |v| = uz0/gamma
+    //    FTYPE vz0=sqrt(1.0-1.0/(gamma*gamma));
+    FTYPE rho; rho = eflux/(uz*uz);
+    if(rho>rhostar) rho=rhostar;
+
+    //stepfunctionab2(V[1],rhojet,rhostar); // so that rho drops faster so no density edge next to jet
+    //FTYPE ug=stepfunctionab(V[1],ujet,ustar);
+
+
+    FTYPE Tjet = 0.8*Tstar;
+    FTYPE Temp;
+    Temp = stepfunctionab2(V[1],Tjet,Tstar);
+    FTYPE ug;
+    ug = Temp*rho/(gam-1.0);
+    //    FTYPE ug=stepfunctionab(V[1],ujet,ustar);
+    //FTYPE Tstar=1.0E7/TEMPBAR;
+    //          // P = (arad/3)T^4 + rho T
+    //          pr[UU]=u_rho0_T_simple(i,j,k,CENT,pr[RHO],Tstar);
+    //          pr[URAD0]=calc_LTE_EfromT(Tstar);
+
+    // set flux of radiation: R^t_x1.  Just set Ehat=Ehat0 since non-rel injection, and compute literal flux
+    PALLLOOP(pl) prflux[pl]=0;
+    prflux[RHO]=rho;
+    prflux[UU]=ug;
+    FTYPE Tgas=compute_temp_simple(i,j,k,loc,prflux[RHO],prflux[UU]);
+
+    prflux[U1]=0.0; //MACP0A1(prim,i,jp1mac(j),k,U1);
+    prflux[U2]=uz/sqrt(fabs(ptrgeom->gcov[GIND(2,2)]));
+    prflux[U3]=0.0; //MACP0A1(prim,i,jp1mac(j),k,U3);
+
+    prflux[URAD0]=calc_LTE_EfromT(Tgas); // Thermal equilibrium  // Ehatstar;
+    prflux[URAD1]=0.0; //MACP0A1(prim,i,jp1mac(j),k,URAD1);
+    prflux[URAD2]=prflux[U2]; // optically thick
+    prflux[URAD3]=0.0; //MACP0A1(prim,i,jp1mac(j),k,URAD3);
+
+    FTYPE ucon[NDIM];
+    FTYPE others[NUMOTHERSTATERESULTS];
+    ucon_calc(prflux,ptrgeom,ucon,others);
+
+    static int firsttime=1;
+    if(firsttime==1){
+      // cs2 ~ gam*Ptot/rho and need vz0>cs.
+      // look at sqrt(cs2tot) in SM to check or obtain here.
+      FTYPE ptot=((gam-1.0)*prflux[UU] + (4.0/3.0-1.0)*prflux[URAD0]);
+      FTYPE ptrue;
+      if(WHICHRADSOURCEMETHOD==SOURCEMETHODNONE) ptrue=(gam-1.0)*prflux[UU];
+      else ptrue=ptot;
+      FTYPE gamptot=(gam*(gam-1.0)*prflux[UU] + (4.0/3.0)*(4.0/3.0-1.0)*prflux[URAD0]);
+      FTYPE cs2 = gamptot/prflux[RHO];
+      dualfprintf(fail_file,"JET: ptrue=%21.15g ptot=%21.15g cs2=%21.15g cs=%21.15g\n",ptrue,ptot,cs2,sqrt(cs2));
+
+      dualfprintf(fail_file,"Tgasinj=%21.15g u/rho=%21.15g prad0/rho=%21.15g\n",Tgas,prflux[UU]/prflux[RHO],prflux[URAD0]/prflux[RHO]);
+      dualfprintf(fail_file,"TEST: %21.15g\n",0.99*stepfunctionab(1E-2,1.0,0.0));
+      dualfprintf(fail_file,"TESTUCON0: %21.15g %21.15g %21.15g %21.15g\n",ucon[TT],ucon[1]*sqrt(ptrgeom->gcov[GIND(1,1)]),ucon[2]*sqrt(ptrgeom->gcov[GIND(2,2)]),ucon[3]*sqrt(ptrgeom->gcov[GIND(3,3)]));
+      dualfprintf(fail_file,"Need: pradstar/rhojet=%21.15g > %21.15g and taujet=%21.15g >>1\n",pradstar/prflux[RHO],ucon[TT]*ucon[TT]*calc_kappaes_user(prflux[RHO],Temp,0,0,0)*width*width/(2.0*Rout_array[2]),calc_kappaes_user(prflux[RHO],Temp,0,0,0)*width);
+
+      FTYPE ljet,ljet1,ljet2,ljet3;
+      ljet1 = prflux[RHO]*ucon[TT]*ucon[TT]*M_PI*width*width;
+      ljet2 = (prflux[UU] + (gam-1.0)*prflux[UU])*ucon[TT]*ucon[TT]*M_PI*width*width;
+      ljet3 = (prflux[URAD0] + (4.0/3.0-1.0)*prflux[URAD0])*ucon[TT]*ucon[TT]*M_PI*width*width;
+      ljet=ljet1+ljet2+ljet3;
+      
+
+      FTYPE lrad;
+      lrad =  (pradstar/calc_kappaes_user(prflux[RHO],Temp,0,0,0))*(2.0*M_PI*Rout_array[2]);
+      dualfprintf(fail_file,"Need: ljet=%21.15g < lrad=%21.15g\n",ljet,lrad);
+      dualfprintf(fail_file,"ljet1=%21.15g ljet2=%21.15g ljet3=%21.15g\n",ljet1,ljet2,ljet3);
+
+      //sm: set lrad=(-Rud01)*dx2*dx3*gdet if(ti==51)
+      //sm: set lradtot=SUM(lrad) print {lradtot}
+
+      firsttime=0;
+    }
+  }
+  return(0);
+}
 
 
 void adjust_fluxctstag_vpot(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])

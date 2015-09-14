@@ -563,6 +563,7 @@ struct Ccoordparams {
 #define RADCYLBEAMCARTBC 213
 #define HORIZONOUTFLOWSTATIC 214
 #define OUTFLOWSTATIC 215
+#define RADCYLJETBC 216
 
 #define WALDMONOBC 300
 
@@ -1240,6 +1241,19 @@ struct Ccoordparams {
 
 #if(WHICHPROBLEM==RADCYLJET)
 
+#undef CONNMACHINEBODY
+#define CONNMACHINEBODY 1
+
+//#undef ANALYTICMEMORY
+//#define ANALYTICMEMORY 1
+
+#undef ADJUSTFLUX
+#define ADJUSTFLUX 1
+
+#undef DOYFL
+#define DOYFL 0
+
+
 #undef OUTERDEATH
 #define OUTERDEATH 0 // don't do it
 #undef OUTERDEATHRADIUS
@@ -1273,8 +1287,10 @@ struct Ccoordparams {
 //#undef ENFORCEMHDCONS2RADCONS
 //#define ENFORCEMHDCONS2RADCONS 1 // assumes not true that pmhd>>prad beyond machine precision
 
-#define N1 256 // R // 120 for defcoord=UNIFORMCOORDS
-#define N2 1 // z
+// RADCYLJET_TYPE==6 needs 2D, rest 1D
+
+#define N1 64 // R // 120 for defcoord=UNIFORMCOORDS
+#define N2 32 // z
 #define N3 1 // \phi
 
 #define MCOORD CYLMINKMETRIC

@@ -68,7 +68,6 @@ extern FTYPE calc_kappan_user(FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr,FTYPE x,FTY
 extern FTYPE calc_kappaes_user(FTYPE rho, FTYPE T,FTYPE x,FTYPE y,FTYPE z);
 extern int calcfull_tautot(FTYPE *pp, struct of_geom *ptrgeom, FTYPE *tautot, FTYPE *tautotmax);
 extern int calc_tautot(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q, FTYPE *tautot, FTYPE *tautotmax);
-extern int calc_tauabs(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q, FTYPE *tauabs, FTYPE *tauabsmax);
 
 
 extern FTYPE calc_LTE_NfromT(FTYPE T);

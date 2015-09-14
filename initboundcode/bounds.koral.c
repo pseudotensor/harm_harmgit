@@ -450,6 +450,10 @@ int bound_prim_user_general(int boundstage, int finalstep, SFTYPE boundtime, int
         bound_waldmono(dir,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos); 
         donebc[dir]=1;
       }
+      else if(BCtype[dir]==RADCYLJETBC){
+        bound_x1up_radcyljet(boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos); 
+        donebc[dir]=1;
+      }
       else{
         dualfprintf(fail_file,"No x1up boundary condition specified: %d\n",BCtype[dir]);
         myexit(7598731);
@@ -490,6 +494,10 @@ int bound_prim_user_general(int boundstage, int finalstep, SFTYPE boundtime, int
       }
       else if(BCtype[dir]==RADCYLBEAMCARTBC){
         bound_radcylbeamcart(dir,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos); 
+        donebc[dir]=1;
+      }
+      else if(BCtype[dir]==RADCYLJETBC){
+        bound_x2dn_radcyljet(boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos); 
         donebc[dir]=1;
       }
       else{
@@ -3018,6 +3026,253 @@ int bound_x1up_radcylbeam(
             int whichcoordfluid=MCOORD;
             int whichcoordrad=whichcoordfluid;
             whichfluid_ffrad_to_primeall(&whichvel, &whichcoordfluid, &whichcoordrad, ptrgeom[RHO], pradffortho, pr, pr);
+
+          }// end if not staggered fields
+
+        }// end loop over outer i's
+
+      }// end over loop
+    }// end if correct boundary condition and core
+   
+   
+   
+  }// end parallel region
+  
+
+
+ 
+
+
+
+  return(0);
+} 
+
+/// X1 upper for RADCYLJET
+int bound_x1up_radcyljet(
+                          int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+                          int *inboundloop,
+                          int *outboundloop,
+                          int *innormalloop,
+                          int *outnormalloop,
+                          int (*inoutlohi)[NUMUPDOWN][NDIM],
+                          int riin, int riout, int rjin, int rjout, int rkin, int rkout,
+                          int *dosetbc,
+                          int enerregion,
+                          int *localenerpos
+                          )
+  
+{
+
+
+
+  extern FTYPE RADCYLJET_TYPE;
+
+
+#pragma omp parallel  // assume don't require EOS
+  {
+
+    int i,j,k,pl,pliter;
+    FTYPE vcon[NDIM],X[NDIM],V[NDIM]; 
+#if(WHICHVEL==VEL3)
+    int failreturn;
+#endif
+    int ri, rj, rk; // reference i,j,k
+    FTYPE prescale[NPR];
+    int jj,kk;
+    struct of_geom geomdontuse[NPR];
+    struct of_geom *ptrgeom[NPR];
+    struct of_geom rgeomdontuse[NPR];
+    struct of_geom *ptrrgeom[NPR];
+
+    // assign memory
+    PALLLOOP(pl){
+      ptrgeom[pl]=&(geomdontuse[pl]);
+      ptrrgeom[pl]=&(rgeomdontuse[pl]);
+    }
+
+
+
+    if(BCtype[X1UP]==RADCYLJETBC && (totalsize[1]>1) && (mycpupos[1] == ncpux1-1) ){
+
+
+      OPENMPBCLOOPVARSDEFINELOOPX1DIR; OPENMPBCLOOPSETUPLOOPX1DIR;
+      //////// LOOPX1dir{
+#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+      OPENMPBCLOOPBLOCK{
+        OPENMPBCLOOPBLOCK2IJKLOOPX1DIR(j,k);
+
+
+        ri=riout;
+        rj=j;
+        rk=k;
+
+
+        // ptrrgeom : i.e. ref geom
+        PALLLOOP(pl) get_geometry(ri, rj, rk, dirprim[pl], ptrrgeom[pl]);
+        
+        FTYPE *pr;
+        LOOPBOUND1OUT{
+          
+          pr = &MACP0A1(prim,i,j,k,0);
+
+    
+          //initially copying everything
+          PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
+
+          if(ispstag==0){
+            // local geom
+            PALLLOOP(pl) get_geometry(i, j, k, dirprim[pl], ptrgeom[pl]);
+   
+            //coordinates of the ghost cell
+            bl_coord_ijk_2(i,j,k,CENT,X, V);
+
+
+            FTYPE xx,yy,zz,rsq;
+            coord(i, j, k, CENT, X);
+            bl_coord(X, V);
+            xx=V[1];
+            yy=V[2];
+            zz=V[3];
+
+
+            FTYPE pradffortho[NPR];
+            if(RADCYLJET_TYPE==2){
+              //            pr[RHO] = 1;
+              //            pr[UU] = 0.1;
+
+              pr[U1] = 0.0;
+              pr[U2] = 0.0;
+              pr[U3] = 0.0;
+
+              //E, F^i in orthonormal fluid frame
+              pradffortho[PRAD0] = calc_LTE_EfromT(1.e10/TEMPBAR);
+              pradffortho[PRAD0] = 1.0; // should be compared to Ehatjet in init.koral.c
+              pradffortho[PRAD1] = 0;
+              pradffortho[PRAD2] = 0;
+              pradffortho[PRAD3] = 0;
+            }
+            if(RADCYLJET_TYPE==3){
+              pr[RHO] = 0.1; // made same as rhojet to keep density flatish
+              pr[UU] = 0.1; // ""
+
+              pr[U1] = 0.0;
+              pr[U2] = 0.0;
+              pr[U3] = 0.0;
+
+              //E, F^i in orthonormal fluid frame
+              pradffortho[PRAD0] = calc_LTE_EfromT(1.e10/TEMPBAR);
+              pradffortho[PRAD0] = 1.0; // should be compared to Ehatjet in init.koral.c
+              pradffortho[PRAD1] = -0.1*pradffortho[PRAD0];
+              pradffortho[PRAD2] = 0;
+              pradffortho[PRAD3] = 0;
+            }
+
+
+            int whichvel=VEL3;
+            int whichcoordfluid=MCOORD;
+            int whichcoordrad=whichcoordfluid;
+            whichfluid_ffrad_to_primeall(&whichvel, &whichcoordfluid, &whichcoordrad, ptrgeom[RHO], pradffortho, pr, pr);
+
+          }// end if not staggered fields
+
+        }// end loop over outer i's
+
+      }// end over loop
+    }// end if correct boundary condition and core
+   
+   
+   
+  }// end parallel region
+  
+
+
+ 
+
+
+
+  return(0);
+} 
+
+
+/// X2 lower for RADCYLJET
+int bound_x2dn_radcyljet(
+                          int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+                          int *inboundloop,
+                          int *outboundloop,
+                          int *innormalloop,
+                          int *outnormalloop,
+                          int (*inoutlohi)[NUMUPDOWN][NDIM],
+                          int riin, int riout, int rjin, int rjout, int rkin, int rkout,
+                          int *dosetbc,
+                          int enerregion,
+                          int *localenerpos
+                          )
+  
+{
+
+
+
+  extern FTYPE RADCYLJET_TYPE;
+
+
+#pragma omp parallel  // assume don't require EOS
+  {
+
+    int i,j,k,pl,pliter;
+    FTYPE vcon[NDIM],X[NDIM],V[NDIM]; 
+#if(WHICHVEL==VEL3)
+    int failreturn;
+#endif
+    int ri, rj, rk; // reference i,j,k
+    FTYPE prescale[NPR];
+    int jj,kk;
+    struct of_geom geomdontuse[NPR];
+    struct of_geom *ptrgeom[NPR];
+    struct of_geom rgeomdontuse[NPR];
+    struct of_geom *ptrrgeom[NPR];
+
+    // assign memory
+    PALLLOOP(pl){
+      ptrgeom[pl]=&(geomdontuse[pl]);
+      ptrrgeom[pl]=&(rgeomdontuse[pl]);
+    }
+
+
+
+    if(BCtype[X2DN]==RADCYLJETBC && (totalsize[2]>1) && (mycpupos[2] == 0) ){
+
+
+      OPENMPBCLOOPVARSDEFINELOOPX2DIR; OPENMPBCLOOPSETUPLOOPX2DIR;
+      //////// LOOPX2dir{
+#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+      OPENMPBCLOOPBLOCK{
+        OPENMPBCLOOPBLOCK2IJKLOOPX2DIR(i,k);
+
+
+        ri=i;
+        rj=rjin;
+        rk=k;
+
+
+        // ptrrgeom : i.e. ref geom
+        PALLLOOP(pl) get_geometry(ri, rj, rk, dirprim[pl], ptrrgeom[pl]);
+        
+        FTYPE *pr;
+        LOOPBOUND2IN{
+          
+          pr = &MACP0A1(prim,i,j,k,0);
+
+    
+          //initially copying everything
+          PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
+
+          if(ispstag==0){
+            // local geom
+            PALLLOOP(pl) get_geometry(i, j, k, dirprim[pl], ptrgeom[pl]);
+
+            extern int jetbound(int i, int j, int k, int loc, FTYPE *prin, FTYPE *prflux, FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
+            int insidejet=jetbound(i,j,k,CENT,MAC(prim,i,j,k),MAC(prim,i,j,k),prim);
+
 
           }// end if not staggered fields
 

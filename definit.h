@@ -4,10 +4,6 @@
     
 */
 
-/*! \file init.h
-    \brief USER choices/switches (usually linked to code in initboundcode directory)
-    
-*/
 
 /// Set array storage order as defined in global.storage.h
 /// 0 corresponds to original HARM
@@ -1014,6 +1010,8 @@
 ///
 ///////////////////////////////////////////////
 #define ADJUSTFLUXCT 0 // whether to adjust fluxCT
+
+#define ADJUSTFLUX 0 // whether to adjust normal flux
 
 /// GODMARK: something seriously wrong with OUTEREXTRAP=1 (EOMFFDE)
 
