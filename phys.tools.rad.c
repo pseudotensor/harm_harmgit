@@ -13999,6 +13999,7 @@ int calc_tautot_chieff(FTYPE *pp, FTYPE chi, struct of_geom *ptrgeom, struct of_
 {
   //xx[0] holds time
   int NxNOT1[NDIM]={0,N1NOT1,N2NOT1,N3NOT1}; // want to ignore non-used dimensions
+ 
 
   // see averyboost.nb
   // dtau^jj = chi dxff^jj = chi dxlab^jj (1+\gamma - \gamma vjj^2)/(1+\gamma+vjj+\gamma vjj)
@@ -14022,14 +14023,23 @@ int calc_tautot_chieff(FTYPE *pp, FTYPE chi, struct of_geom *ptrgeom, struct of_
 
    
     ujjsq = fabs(q->ucon[jj]*q->ucov[jj]); // because true -1 = u^t u_t + u^r u_r + u^h u_h + u^p u_p
-    ujj = sign(q->ucon[jj])*sqrt(ujjsq);
+    ujj = sqrt(ujjsq); //sign(q->ucon[jj])*
 
     gammasq = fabs(-q->ucon[TT]*q->ucov[TT]);
+    gammasq = MAX(1.0,gammasq); // for near the rotating BH since not doing true orthonormal fluid frame.
     gamma = sqrt(gammasq);
 
 
+    FTYPE top=gamma + MAX(1.0,gammasq - ujjsq);
+    top=MAX(top,2.0); // numerator can be no smaller than 2
+
+    FTYPE vjj = ujj/gamma;
+    vjj = MIN(1.0,vjj);
+    FTYPE bottom = (1.0+gamma)*gamma*(1.0+vjj); // ranges from 2 through infinity.  vjj cannot be negative, as that would be a different Lorentz boost the wrong way.
+    bottom = MAX(2.0,bottom);
+
     orthofactor[jj] = sqrt(fabs(ptrgeom->gcov[GIND(jj,jj)]));
-    dxorthoff[jj] = (dx[jj]*orthofactor[jj]) * (gamma + gammasq - ujjsq)/( (1.0+gamma)*(gamma+ujj) );
+    dxorthoff[jj] = (dx[jj]*orthofactor[jj]) * (top/bottom);
 
     tautot[jj]=chi * dxorthoff[jj];
 
