@@ -14007,18 +14007,29 @@ int calc_tautot_chieff(FTYPE *pp, FTYPE chi, struct of_geom *ptrgeom, struct of_
   FTYPE dxorthoff[NDIM];
   FTYPE orthofactor[NDIM];
   FTYPE ujj,gamma;
+  FTYPE ujjsq,gammasq;
   *tautotmax=0.0;
   SLOOPA(jj){
    
-    orthofactor[jj] = sqrt(fabs(ptrgeom->gcov[GIND(jj,jj)]));
+    //    orthofactor[jj] = 1.0/sqrt(fabs(ptrgeom->gcon[GIND(jj,jj)]));
  
     // NOTEMARK: only approximate near a rotating BH
-    ujj = q->ucon[jj]*orthofactor[jj];
+    //    ujj = q->ucon[jj]*orthofactor[jj];
     // NOTEMARK: only approximate near a rotating BH
-    gamma = q->ucon[TT]*ptrgeom->alphalapse;
-     
+    //    gamma = q->ucon[TT]*orthofactor[jj]; // as if *ptrgeom->alphalapse
+    // need gamma>|ujj| always, but if mixing ZAMO and lab, won't be true necessarily.
+    // need ujj->0 to imply gamma->1 if other directions have u_{perp jj}=0, so should really use ujj as utilde^jj, but then not really correct ff->lab conversion if using gamma for relative to ZAMO
 
-    dxorthoff[jj] = (dx[jj]*orthofactor[jj]) * (gamma + gamma*gamma - ujj*ujj)/( (1.0+gamma)*(gamma+ujj) );
+   
+    ujjsq = fabs(q->ucon[jj]*q->ucov[jj]); // because true -1 = u^t u_t + u^r u_r + u^h u_h + u^p u_p
+    ujj = sign(q->ucon[jj])*sqrt(ujjsq);
+
+    gammasq = fabs(-q->ucon[TT]*q->ucov[TT]);
+    gamma = sqrt(gammasq);
+
+
+    orthofactor[jj] = sqrt(fabs(ptrgeom->gcov[GIND(jj,jj)]));
+    dxorthoff[jj] = (dx[jj]*orthofactor[jj]) * (gamma + gammasq - ujjsq)/( (1.0+gamma)*(gamma+ujj) );
 
     tautot[jj]=chi * dxorthoff[jj];
 
