@@ -14010,8 +14010,9 @@ int calc_tautot_chieff(FTYPE *pp, FTYPE chi, struct of_geom *ptrgeom, struct of_
   FTYPE ujj,gamma;
   FTYPE ujjsq,gammasq;
   *tautotmax=0.0;
+  FTYPE top,bottom;
   SLOOPA(jj){
-   
+    
     //    orthofactor[jj] = 1.0/sqrt(fabs(ptrgeom->gcon[GIND(jj,jj)]));
  
     // NOTEMARK: only approximate near a rotating BH
@@ -14021,26 +14022,31 @@ int calc_tautot_chieff(FTYPE *pp, FTYPE chi, struct of_geom *ptrgeom, struct of_
     // need gamma>|ujj| always, but if mixing ZAMO and lab, won't be true necessarily.
     // need ujj->0 to imply gamma->1 if other directions have u_{perp jj}=0, so should really use ujj as utilde^jj, but then not really correct ff->lab conversion if using gamma for relative to ZAMO
 
-   
-    ujjsq = fabs(q->ucon[jj]*q->ucov[jj]); // because true -1 = u^t u_t + u^r u_r + u^h u_h + u^p u_p
-    ujj = sqrt(ujjsq); //sign(q->ucon[jj])*
+    if(q!=NULL){
+      ujjsq = fabs(q->ucon[jj]*q->ucov[jj]); // because true -1 = u^t u_t + u^r u_r + u^h u_h + u^p u_p
+      ujj = sqrt(ujjsq); //sign(q->ucon[jj])*
 
-    gammasq = fabs(-q->ucon[TT]*q->ucov[TT]);
-    gammasq = MAX(1.0,gammasq); // for near the rotating BH since not doing true orthonormal fluid frame.
-    gamma = sqrt(gammasq);
+      gammasq = fabs(-q->ucon[TT]*q->ucov[TT]);
+      gammasq = MAX(1.0,gammasq); // for near the rotating BH since not doing true orthonormal fluid frame.
+      gamma = sqrt(gammasq);
 
 
-    FTYPE top=gamma + MAX(1.0,gammasq - ujjsq);
-    top=MAX(top,2.0); // numerator can be no smaller than 2
+      top=gamma + MAX(1.0,gammasq - ujjsq);
+      top=MAX(top,2.0); // numerator can be no smaller than 2
 
-    FTYPE vjj = ujj/gamma;
-    vjj = MIN(1.0,vjj);
-    FTYPE bottom = (1.0+gamma)*gamma*(1.0+vjj); // ranges from 2 through infinity.  vjj cannot be negative, as that would be a different Lorentz boost the wrong way.
-    bottom = MAX(2.0,bottom);
+      FTYPE vjj = ujj/gamma;
+      vjj = MIN(1.0,vjj);
+      bottom = (1.0+gamma)*gamma*(1.0+vjj); // ranges from 2 through infinity.  vjj cannot be negative, as that would be a different Lorentz boost the wrong way.
+      bottom = MAX(2.0,bottom);
 
-    orthofactor[jj] = sqrt(fabs(ptrgeom->gcov[GIND(jj,jj)]));
+    }
+    else{
+      // assume for cases when high accuracy not required, like shock detector
+      top=1.0;
+      bottom=top;
+    }
+
     dxorthoff[jj] = (dx[jj]*orthofactor[jj]) * (top/bottom);
-
     tautot[jj]=chi * dxorthoff[jj];
 
     *tautotmax=MAX(*tautotmax,tautot[jj]*NxNOT1[jj]);
