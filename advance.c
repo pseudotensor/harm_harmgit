@@ -211,6 +211,13 @@ static int advance_standard(
 
 
 
+  if((GLOBALBCMOVEDWITHACTIVESECTION==0 || USEMPI) && truestep && DOGRIDSECTIONING){
+    // then need to fill pf with pi everywhere in global region, so that non-ACTIVE region will be set for boundary conditions within the domain.
+    int i,j,k,pliter,pl;
+    LOOPF{
+      PLOOP(pliter,pl) MACP0A1(pf,i,j,k,pl) = MACP0A1(pi,i,j,k,pl);
+    }
+  }
 
 
   if(FLUXB==FLUXCTSTAG){

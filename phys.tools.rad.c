@@ -5404,6 +5404,52 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
         MPI_Reduce(tryphaselistcold, totaltryphaselistcold, NUMPHASESCOLD, MPI_LONG_LONG_INT, MPI_SUM, MPIid[0], MPI_COMM_GRMHD);
 #endif
       }
+      else{
+        totalnumimplicits=numimplicits;
+        totalnumexplicitsgood=numexplicitsgood;
+        totalnumexplicitskindabad=numexplicitskindabad;
+        totalnumexplicitsbad=numexplicitsbad;
+        totalnumoff1iter=numoff1iter;
+        totalnumofiter=numofiter;
+        totalnumenergy=numenergy;
+        totalnumentropy=numentropy;
+        totalnumboth=numboth;
+        totalnumcold=numcold;
+        totalnumbad=numbad;
+        totalnumramesh=numramesh;
+        totalnumrameshenergy=numrameshenergy;
+        totalnumrameshentropy=numrameshentropy;
+
+        totalnumqtypmhd=numqtypmhd;
+        totalnumqtyumhd=numqtyumhd;
+        totalnumqtyprad=numqtyprad;
+        totalnumqtyurad=numqtyurad;
+        totalnumqtyentropyumhd=numqtyentropyumhd;
+        totalnumqtyentropypmhd=numqtyentropypmhd;
+        totalnumitermodenormal=numitermodenormal;
+        totalnumitermodestages=numitermodestages;
+
+        int histi;
+        for(histi=0;histi<NUMNUMHIST;histi++){
+          totalnumhisterr0[histi]=numhisterr0[histi];
+          totalnumhisterr1[histi]=numhisterr1[histi];
+        }
+        for(histi=0;histi<=IMPMAXITERLONG;histi++){
+          totalnumhistiter[histi]=numhistiter[histi];
+        }
+
+        int oo;
+        for(oo=0;oo<NUMPHASES;oo++){
+          totaltryphaselistenergy[oo]=tryphaselistenergy[oo];
+        }
+        for(oo=0;oo<NUMPHASESENT;oo++){
+          totaltryphaselistentropy[oo]=tryphaselistentropy[oo];
+        }
+        for(oo=0;oo<NUMPHASESCOLD;oo++){
+          totaltryphaselistcold[oo]=tryphaselistcold[oo];
+        }
+      }
+
       if(myid==MPIid[0]){// only show result on one core that got the final result     
         dualfprintf(fail_file,"nstep=%ld totalnumimplicits=%lld totalnumexplicitsgood=%lld totalnumexplicitskindabad=%lld totalnumexplicitsbad=%lld : totalnumenergy=%lld totalnumentropy=%lld totalnumboth=%lld totalnumcold=%lld : totalnumbad=%lld : totalnumramesh=%lld totalnumrameshenergy=%lld totalnumrameshentropy=%lld : totalaveragef1iter=%g totalaverageiter=%g  : totalnumqtypmhd=%lld totalnumqtyumhd=%lld totalnumqtyprad=%lld totalnumqtyurad=%lld totalnumqtyentropyumhd=%lld totalnumqtyentropypmhd=%lld totalnumitermodenormal=%lld totalnumitermodestages=%lld totalnumitermodecold=%lld\n",nstep,totalnumimplicits,totalnumexplicitsgood,totalnumexplicitskindabad,totalnumexplicitsbad,totalnumenergy,totalnumentropy,totalnumboth,totalnumcold,totalnumbad,totalnumramesh,totalnumrameshenergy,totalnumrameshentropy,(FTYPE)totalnumoff1iter/(SMALL+(FTYPE)totalnumimplicits),(FTYPE)totalnumofiter/(SMALL+(FTYPE)totalnumimplicits),totalnumqtypmhd,totalnumqtyumhd,totalnumqtyprad,totalnumqtyurad,totalnumqtyentropyumhd,totalnumqtyentropypmhd,totalnumitermodenormal,totalnumitermodestages,totalnumitermodecold);
         // counters for which method was *attempted* even if not used
@@ -10936,7 +10982,7 @@ int vchar_rad(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYP
     // Note that tautot is frame independent once multiple \chi by the cell length.  I.e. it's a Lorentz invariant.
     FTYPE tautot[NDIM];
     FTYPE tautotmax;
-    calc_tautot_chieff(pr, chi, geom, q, &tautot, &tautotmax);
+    calc_tautot_chieff(pr, chi, geom, q, tautot, &tautotmax);
     tautotsq = tautot[dir]*tautot[dir];
 
     // below previous version was not Lorentz invariant.

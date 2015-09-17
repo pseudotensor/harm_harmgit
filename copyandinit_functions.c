@@ -32,7 +32,7 @@ void get_inversion_startendindices(int *loop, int *is,int *ie,int *js,int *je,in
   // must constrain result since this is final centered value of field and only have enough information to be well-defined on the current computational box over a finite range
   // Only expand if on outer edge of not-evolved region in order to (primarily) preserve divb=0
 
-  // 1|| because realized don't want to adjust "boundary cells".  Want to keep them fixed.  Violates conservation (and divb=0) unless separately evolve that other region.  This is ok sinc just approximating evolution in non-evolved region when moving full boundary.
+  // 1|| because realized don't want to adjust "boundary cells".  Want to keep them fixed.  Violates conservation (and divb=0) unless separately evolve that other region.  This is ok since just approximating evolution in non-evolved region when moving full boundary.
   // if(subgrid inner boundary>global active grid inner boundary)
   if(AVOIDADVANCESHIFTX1DN||enerposreg[ACTIVEREGION][X1DN]>enerposreg[ACTIVEREGION][X1DN]) *is=Uconsevolveloop[FIS];
   else *is=Uconsevolveloop[FIS]-SHIFT1;

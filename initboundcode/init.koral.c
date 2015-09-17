@@ -3818,7 +3818,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 #if(WHICHPROBLEM==RADCYLJET)
 
 #define KAPPAUSER(rho,B,Tg,Tr) (rho*(KAPPA_FF_CODE(SMALL+rho,Tg+TEMPMIN,Tr+TEMPMIN))) // SMALL
-#define KAPPAESUSER(rho,Tg) (rho*KAPPA_ES_BASIC_CODE(rho,Tg)/10.0)
+#define KAPPAESUSER(rho,Tg) (rho*KAPPA_ES_BASIC_CODE(rho,Tg))
 
 #endif
 
@@ -6071,7 +6071,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
     *whichcoord=MCOORD; // not BLCOORD, in case setting for inside horizon too when MCOORD=KSCOORDS or if using SPCMINKMETRIC
     *whichvel=VEL3;
 
-    FTYPE Rho0=1E-5*100.0*100.0/79.4/10.0;
+    FTYPE Rho0=1E-5;
     pr[RHO]=Rho0;
 
     pr[U1]=0.0;
@@ -6092,7 +6092,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
     // ensure thermal equilibrium in star
     FTYPE Tstar;
     if(WHICHRADSOURCEMETHOD==SOURCEMETHODNONE) Tstar=1510.0*1.0E7/TEMPBAR/0.8;
-    else Tstar=6.0E7/TEMPBAR;
+    else Tstar=1.0E7/TEMPBAR;
     // P = (arad/3)T^4 + rho T
     pr[UU]=u_rho0_T_simple(i,j,k,CENT,pr[RHO],Tstar);
     pr[URAD0]=calc_LTE_EfromT(Tstar);
@@ -6108,7 +6108,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
         else ptrue=ptot;
         FTYPE gamptot=(gam*(gam-1.0)*pr[UU] + (4.0/3.0)*(4.0/3.0-1.0)*pr[URAD0]);
         FTYPE cs2 = gamptot/pr[RHO];
-        dualfprintf(fail_file,"STAR: ptrue=%21.15g ptot=%21.15g ptrue/rho=%21.15g cs2=%21.15g cs=%21.15g\n",ptrue,ptot,ptrue/pr[RHO],cs2,sqrt(cs2));
+        dualfprintf(fail_file,"STAR: ptrue=%21.15g ptot=%21.15g cs2=%21.15g cs=%21.15g\n",ptrue,ptot,cs2,sqrt(cs2));
         firsttime=0;
       }
     }
@@ -8827,13 +8827,34 @@ int theproblem_set_enerregiondef(int forceupdate, int timeorder, int numtimeorde
   //  torus_set_enerregiondef(forceupdate, timeorder, numtimeorders, thenstep, thetime, enerregiondef);
   //jet_set_enerregiondef(forceupdate, timeorder, numtimeorders, thenstep, thetime, enerregiondef);
 
-  if(1){
+  if(1){ // default
     enerregiondef[POINTDOWN][1]=0;
     enerregiondef[POINTUP][1]=totalsize[1]-1;
     enerregiondef[POINTDOWN][2]=0;
     enerregiondef[POINTUP][2]=totalsize[2]-1;
     enerregiondef[POINTDOWN][3]=0;
     enerregiondef[POINTUP][3]=totalsize[3]-1;
+  }
+
+  if(WHICHPROBLEM==RADCYLJET && RADCYLJET_TYPE==6 && DOGRIDSECTIONING){
+
+    // see advance.c: Whether to allow shift in evolved quantities to preserve conservation and divb=0.  Set to zero if exposing that surface in time.  Set to 1 if absorbing that surface in time and relying on it to inject a solution.
+    AVOIDADVANCESHIFTX1DN= 1;
+    AVOIDADVANCESHIFTX1UP= 1;
+    AVOIDADVANCESHIFTX2DN= 1;
+    AVOIDADVANCESHIFTX2UP= 1;
+    AVOIDADVANCESHIFTX3DN= 1;
+    AVOIDADVANCESHIFTX3UP= 1;
+    GLOBALBCMOVEDWITHACTIVESECTION= 1;
+
+    enerregiondef[POINTDOWN][2]=0;
+    
+    enerregiondef[POINTUP][2]=N2BND*2 + round(((thetime+0.0)/45.0)*((FTYPE)(totalsize[2]-1))*(45.0/Rout_array[2]));
+    
+    if(enerregiondef[POINTUP][2]>totalsize[2]-1){
+      enerregiondef[POINTUP][2]=totalsize[2]-1;
+    }
+
   }
 
   return(0);
@@ -9136,14 +9157,13 @@ int jetbound(int i, int j, int k, int loc, FTYPE *prin, FTYPE *prflux, FTYPE (*p
     FTYPE Ehatstar=1.0*RADCYLJET_EHATJET;
     FTYPE ustar=1.0*RADCYLJET_UJET; // make jet colder than star
     FTYPE Tstar=RADCYLJET_TEMPJET;
-    FTYPE pradstar; pradstar=(4.0/3.0-1.0)*calc_LTE_EfromT(Tstar);
     FTYPE ujet;
     if(WHICHRADSOURCEMETHOD==SOURCEMETHODNONE) ujet=ustar*1E-2*99.99;
     else ujet=ustar*1E-2;
 
  
     FTYPE rhostar=1.0*RADCYLJET_RHOJET;
-    FTYPE rhojet; rhojet=rhostar*1E-2*30.0;
+    FTYPE rhojet; rhojet=rhostar*1E-2;
     
     //    FTYPE vz0;
     
@@ -9170,7 +9190,7 @@ int jetbound(int i, int j, int k, int loc, FTYPE *prin, FTYPE *prflux, FTYPE (*p
     //FTYPE ug=stepfunctionab(V[1],ujet,ustar);
 
 
-    FTYPE Tjet = 0.8*Tstar;
+    FTYPE Tjet = 1.62*Tstar;
     FTYPE Temp;
     Temp = stepfunctionab2(V[1],Tjet,Tstar);
     FTYPE ug;
@@ -9215,23 +9235,6 @@ int jetbound(int i, int j, int k, int loc, FTYPE *prin, FTYPE *prflux, FTYPE (*p
       dualfprintf(fail_file,"Tgasinj=%21.15g u/rho=%21.15g prad0/rho=%21.15g\n",Tgas,prflux[UU]/prflux[RHO],prflux[URAD0]/prflux[RHO]);
       dualfprintf(fail_file,"TEST: %21.15g\n",0.99*stepfunctionab(1E-2,1.0,0.0));
       dualfprintf(fail_file,"TESTUCON0: %21.15g %21.15g %21.15g %21.15g\n",ucon[TT],ucon[1]*sqrt(ptrgeom->gcov[GIND(1,1)]),ucon[2]*sqrt(ptrgeom->gcov[GIND(2,2)]),ucon[3]*sqrt(ptrgeom->gcov[GIND(3,3)]));
-      dualfprintf(fail_file,"Need: pradstar/rhojet=%21.15g > %21.15g and taujet=%21.15g >>1\n",pradstar/prflux[RHO],ucon[TT]*ucon[TT]*calc_kappaes_user(prflux[RHO],Temp,0,0,0)*width*width/(2.0*Rout_array[2]),calc_kappaes_user(prflux[RHO],Temp,0,0,0)*width);
-
-      FTYPE ljet,ljet1,ljet2,ljet3;
-      ljet1 = prflux[RHO]*ucon[TT]*ucon[TT]*M_PI*width*width;
-      ljet2 = (prflux[UU] + (gam-1.0)*prflux[UU])*ucon[TT]*ucon[TT]*M_PI*width*width;
-      ljet3 = (prflux[URAD0] + (4.0/3.0-1.0)*prflux[URAD0])*ucon[TT]*ucon[TT]*M_PI*width*width;
-      ljet=ljet1+ljet2+ljet3;
-      
-
-      FTYPE lrad;
-      lrad =  (pradstar/calc_kappaes_user(prflux[RHO],Temp,0,0,0))*(2.0*M_PI*Rout_array[2]);
-      dualfprintf(fail_file,"Need: ljet=%21.15g < lrad=%21.15g\n",ljet,lrad);
-      dualfprintf(fail_file,"ljet1=%21.15g ljet2=%21.15g ljet3=%21.15g\n",ljet1,ljet2,ljet3);
-
-      //sm: set lrad=(-Rud01)*dx2*dx3*gdet if(ti==51)
-      //sm: set lradtot=SUM(lrad) print {lradtot}
-
       firsttime=0;
     }
   }

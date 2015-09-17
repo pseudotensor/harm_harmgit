@@ -156,7 +156,9 @@ void set_boundloop(int boundvartype, int *inboundloop, int*outboundloop, int*inn
   int dimen;
   int numbnd[NDIM],numnpr;
   int shiftamount[COMPDIM*2];
-
+  const int NxNOT1[NDIM]={0,N1NOT1,N2NOT1,N3NOT1};
+  const int Nx[NDIM]={0,N1,N2,N3};
+ 
   //////////////////////////////
   //
   // Get number of boundary cells and number of quantities bounding per cell
@@ -391,6 +393,25 @@ void set_boundloop(int boundvartype, int *inboundloop, int*outboundloop, int*inn
       }
     }
   }
+
+
+
+  // check if really setting BC
+  DIRLOOP(dir){
+    dimen=DIMEN(dir);
+    int point=POINTFROMDIR(dir); // inner and outer boundaries
+    if(point==POINTUP){
+      if(inoutlohi[point][POINTDOWN][dimen]<-numbnd[dimen] || inoutlohi[point][POINTUP][2]<0){
+        dosetbc[dir]=0;
+      }
+    }
+    else if(point==POINTDOWN){
+      if(inoutlohi[point][POINTDOWN][dimen]>Nx[dimen]-1 || inoutlohi[point][POINTUP][2]>Nx[dimen]-1+numbnd[dimen]){
+        dosetbc[dir]=0;
+      }
+    }
+  }
+
 
   ////////////////////
   //

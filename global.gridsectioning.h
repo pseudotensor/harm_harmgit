@@ -165,7 +165,7 @@
                                               ( rk >= enerposreg[ACTIVEWITHBNDREGION][X3DN] && rk < enerposreg[ACTIVEREGION][X3DN]) && (ri >= enerposreg[ACTIVEWITHBNDREGION][X1DN] && ri <= enerposreg[ACTIVEWITHBNDREGION][X1UP] && rj >= enerposreg[ACTIVEWITHBNDREGION][X2DN] && rj <= enerposreg[ACTIVEWITHBNDREGION][X2UP]) \
                                                )
 #define WITHINACTIVEBNDSECTIONX3UP(ri,rj,rk) (                          \
-                                              ( rk <= enerposreg[ACTIVEWITHBNDREGION][X3UP] && rk > enerposreg[ACTIVEREGION][X3UP]) && (ri >= enerposreg[ACTIVEWITHBNDREGION][X1DN] && ri <= enerposreg[ACTIVEWITHBNDREGION][X1UP] && rj >= enerposreg[ACTIVEWITHBNDREGION][X2DN] && rj <= enerposreg[ACTIVEWITHBNDREGION][X2UP])) \
+                                              ( rk <= enerposreg[ACTIVEWITHBNDREGION][X3UP] && rk > enerposreg[ACTIVEREGION][X3UP]) && (ri >= enerposreg[ACTIVEWITHBNDREGION][X1DN] && ri <= enerposreg[ACTIVEWITHBNDREGION][X1UP] && rj >= enerposreg[ACTIVEWITHBNDREGION][X2DN] && rj <= enerposreg[ACTIVEWITHBNDREGION][X2UP]) \
   )
 #else
 #define WITHINACTIVEBNDSECTIONX1DN(ri,rj,rk) (                          \
@@ -211,7 +211,7 @@
                                                   ( rk >= enerposreg[ACTIVEWITHBNDREGION][X3DN] && rk <= enerposreg[ACTIVEREGION][X3DN]) && (ri >= enerposreg[ACTIVEWITHBNDREGION][X1DN] && ri <= enerposreg[ACTIVEWITHBNDREGION][X1UP] && rj >= enerposreg[ACTIVEWITHBNDREGION][X2DN] && rj <= enerposreg[ACTIVEWITHBNDREGION][X2UP]) \
                                                    )
 #define WITHINACTIVESTAGBNDSECTIONX3UP(ri,rj,rk) (                      \
-                                                  ( rk <= enerposreg[ACTIVEWITHBNDREGION][X3UP] && rk > enerposreg[ACTIVEREGION][X3UP]) && (ri >= enerposreg[ACTIVEWITHBNDREGION][X1DN] && ri <= enerposreg[ACTIVEWITHBNDREGION][X1UP] && rj >= enerposreg[ACTIVEWITHBNDREGION][X2DN] && rj <= enerposreg[ACTIVEWITHBNDREGION][X2UP])) \
+                                                  ( rk <= enerposreg[ACTIVEWITHBNDREGION][X3UP] && rk > enerposreg[ACTIVEREGION][X3UP]) && (ri >= enerposreg[ACTIVEWITHBNDREGION][X1DN] && ri <= enerposreg[ACTIVEWITHBNDREGION][X1UP] && rj >= enerposreg[ACTIVEWITHBNDREGION][X2DN] && rj <= enerposreg[ACTIVEWITHBNDREGION][X2UP]) \
   )
 #else
 #define WITHINACTIVESTAGBNDSECTIONX1DN(ri,rj,rk) (                      \
