@@ -221,7 +221,7 @@ FTYPE RADNT_DONUTRADPMAX;
 FTYPE RADNT_HOVERR;
 FTYPE RADNT_LPOW;
 
-FTYPE RADCYLJET_TYPE;
+int RADCYLJET_TYPE;
 FTYPE RADCYLJET_VRSTAR;
 FTYPE RADCYLJET_EHATJET;
 FTYPE RADCYLJET_RHOJET;
@@ -244,9 +244,7 @@ int prepre_init_specific_init(void)
 {
   int funreturn;
 
-
   funreturn=user1_prepre_init_specific_init();
-  if(funreturn!=0) return(funreturn);
 
 
   // set periodicity in x1,x2,x3 directions
@@ -306,6 +304,8 @@ int prepre_init_specific_init(void)
 
   binaryoutput=TEXTOUTPUT;
 
+
+
   return(0);
 
 }
@@ -332,6 +332,32 @@ int pre_init_specific_init(void)
 
 
   UTOPRIMVERSION = UTOPRIMJONNONRELCOMPAT;
+
+
+  if(WHICHPROBLEM==RADCYLJET){
+    static int firsttime=1;
+    if(firsttime==1){
+      firsttime=0;
+      int itid;
+      for(itid=0;itid<numprocs;itid++){
+        if(itid==myid){
+          FILE *fstar;
+          if((fstar=fopen("star.txt","rt"))==NULL){
+            dualfprintf(fail_file,"Couldn't open star.txt, assume values not used.\n");
+          }
+          else{
+            logfprintf("opened star.txt and got contents\n");
+            fscanf(fstar,"%d %lf %lf %lf %lf %lf",&RADCYLJET_TYPE,&RADCYLJET_RHOJET,&RADCYLJET_UJET,&RADCYLJET_EHATJET,&RADCYLJET_TEMPJET,&RADCYLJET_VRSTAR);
+            fclose(fstar);
+          }
+        }
+#if(USEMPI)
+        MPI_Barrier(MPI_COMM_WORLD);
+#endif
+      }
+    }
+  }
+
 
   return(0);
 }
@@ -427,25 +453,6 @@ int post_init_specific_init(void)
   tf = 200000;
 
 
-  static int firsttime=1;
-  if(firsttime==1){
-    firsttime=0;
-    int itid;
-    for(itid=0;itid<numprocs;itid++){
-      if(itid==myid){
-        FILE *fstar;
-        if((fstar=fopen("star.txt","rt"))==NULL){
-          dualfprintf(fail_file,"Couldn't open star.txt\n");
-          myexit(1);
-        }
-        else{
-          fscanf(fstar,"%lf %lf %lf %lf %lf",&RADCYLJET_RHOJET,&RADCYLJET_UJET,&RADCYLJET_EHATJET,&RADCYLJET_TEMPJET,&RADCYLJET_VRSTAR);
-          fclose(fstar);
-        }
-      }
-      MPI_Barrier(MPI_COMM_WORLD);
-    }
-  }
 
   return(0);
 }
@@ -6155,7 +6162,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
         myexit(1);
       }
       else{
-        fprintf(fstar,"%21.15g %21.15g %21.15g %21.15g %21.15g\n",RADCYLJET_RHOJET,RADCYLJET_UJET,RADCYLJET_EHATJET,RADCYLJET_TEMPJET,RADCYLJET_VRSTAR);
+        fprintf(fstar,"%d %21.15g %21.15g %21.15g %21.15g %21.15g\n",RADCYLJET_TYPE,RADCYLJET_RHOJET,RADCYLJET_UJET,RADCYLJET_EHATJET,RADCYLJET_TEMPJET,RADCYLJET_VRSTAR);
         fclose(fstar);
       }
     }
