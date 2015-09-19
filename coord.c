@@ -226,7 +226,7 @@ void set_coord_parms_nodeps(int defcoordlocal)
     cpow3=1.0;
     //radius at which hyperexponentiation kicks in
     //    rbr = 1E3;
-    rbr = 5E2; // WALD 5E2->5E7
+    rbr = 5E2; // WALD 5E2->5E7 // SUPER-EDD: 2E3
 
 
 

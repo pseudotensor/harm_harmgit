@@ -4462,6 +4462,16 @@ int poledeath(int whichx2,
         //////////////////////////////////////
 
 
+        if(LIMITEDPOLEDEATHINRADIUS){
+          FTYPE Rhorref=rhor_calc(0);
+          if(ispstag==0){
+            // even problems with poledeath for within horizon, can lead to Erf blowing up, so why 1|| below
+            if(  (1||startpos[1]+i>N1BND || Vtemp[1]>0.9*Rhorref) && (Vtemp[1]<OUTERDEATHRADIUS && OUTERDEATH==1 || OUTERDEATH==0)) continue;
+          }
+        }
+
+
+
         for (j = gammadeathjs; j <= gammadeathje; j++) { // currently not multiple-point dependent, so normal j loop is fine
 
 
