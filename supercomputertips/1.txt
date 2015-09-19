@@ -1,0 +1,316 @@
+/*! \file ./docs//supercomputertips/1.txt
+~~~~
+S.,
+
+I was thinking more about the overloading of node method. I think I have
+one approach that should work on most machines with any number of nodes,
+sockets/node, and cores/socket. Let me explain and tell me if it makes
+sense or not.
+
+Take Ranger for example:
+
+http://www.tacc.utexas.edu/services/userguides/ranger/
+
+When reordering tasks, one should ensure to overload each core in the
+correct way with the correct socket and core affinity for a given MPI task.
+
+——-
+
+Ranger has 16 cores/node. One sets:
+
+-pe way
+
+where is MPI tasks per node and NoN=Number of nodes. Then we run the
+HARM and choose:
+
+./grmhd OMPPERTASK ncpux1 ncpux2 ncpux3
+
+——-
+
+Also note that on Ranger, each socket has its own memory! I didn’t know
+this. The documentation pages also explain how to assign socket/core
+affinity so that memory accesses are more efficient. This is important, for
+example, in order to avoid a thread or task on one socket trying to use or
+allocate memory on another socket since that would use the PCI bus that is
+very slow. Also, when overloading a socket, we want to have MPI tasks
+assigned with the correct affinity to a socket — otherwise we’ll have NO
+gain!
+
+————-
+
+So now, let us set:
+
+-pe 8way 256
+
+and one sets (although code can override this and the affinity file
+mentioned below doesn’t use it):
+
+export OMP_NUM_THREADS=4
+
+and run using:
+
+./grmhd 4 8 2 1
+
+Ranger will allocate 256/16=16 nodes with 8 MPI tasks per node. If we run
+using:
+
+ibrun tacc_affinity ./grmhd 4 8 2 1
+
+then the affinity will be ensured to use round robin to assign MPI tasks to
+sockets. That is, it will assign (for 8way) for the first node 8 MPI tasks
+with:
+
+rank0 -> Socket0
+rank1 -> Socket0
+rank2 -> Socket1
+rank3 -> Socket1
+rank4 -> Socket2
+rank5 -> Socket2
+rank6 -> Socket3
+rank7 -> Socket4
+
+That’s round robin with 8way set. Clearly, then, for each node with 4
+sockets we must KNOW that this is infact the ordering. If this is the
+ordering, then we can take those 8 MPI tasks and ensure that rank1,3,5,7 are
+associated with the outer radial regions beyond the initially active grid
+sectioning. Only then will each socket be able to launch 4 OpenMP threads
+that efficiently stay on a single socket for each MPI task.
+
+BTW, one can write your own ordering of affinity very easily. The script
+is just /share/sge/default/pe_scripts/tacc_affinity and appears to be very
+easy to control. However, let’s assume the default "tacc_affinity" affinity
+method and modify our code as below.
+
+Within the code, we reorder the MPIid[]’s (see new code and
+mpi_init_grmhd.c) so that (e.g. for 1D for demonstration purposes) MPI tasks
+(ranks) 0-15 are instead ordered as 0,2,4,6,8,10,12,14 in physical model
+space. This assumes that the MPI has done a good job of affinity itself,
+which on TACC is true.
+
+Then assuming grid sectioning operates on roughly half the grid at any one
+time, then MPI task 0 and 1 won’t be going at the same time. All MPI tasks
+will use 4 cores per task so they only access their own memory channel and
+don’t go across the PCI bus on Ranger.
+
+So this reordering of MPI task numbers depends critically (at least for
+multi-socket systems where each socket accesses different memory) on knowing
+how the default affinity is defined. And it depended upon that one chose
+"8way" but tricked the system into a setup that really means "4way" since
+ultimately we used 4 OpenMP threads per MPI task.
+
+——————
+
+Note that without OpenMP, I’m not sure what to do. Without OpenMP one can
+NOT set:
+
+-pe 32way 256
+
+because "32way" is not supported. It’s like they restrict one in a stupid
+way only for stupid people.
+
+——
+
+I worry that if I choose 8way, then some nasty setting will tell my OpenMP
+program that only 2 cores are available and won’t let me use 4 cores per MPI
+task. That’s possible, but would be stupid. However, they have other
+stupid restrictions (no 32way above), so…
+
+I’ll let you know how that goes.
+
+——-
+
+How do you do it on Bluegene or other machines? On simple machines (like my
+deskstop), I can directly write the list of ranks.
+
+Best,
+Jon
+
+> ——-Original Message——-
+> From: Alexander Tchekhovskoy [mailto:atchekho@cfa.harvard.edu]
+> Sent: Friday, March 27, 2009 5:35 AM
+> To: jmckinne@stanford.edu
+> Cc: atchekhovskoi@cfa.harvard.edu
+> Subject: Re: grid sectioning questions #2
+> 
+> Hey Jon,
+> 
+> > Another issue is whether one can do something when using MPI so that
+> > one doesn’t progressively use fewer processors as the section goes
+> > out. Clearly one could adapt the grid to a smaller totalsize[1] each
+> > time the section passes. This effectively involves redoing N1 per
+> > processor and restarting with the same ncpux1 using the smaller
+> > portion. However, that’s a bit complicated. One at least doesn’t
+> > need to do any interpolation since the grid is really the same. One
+> > has to ensure the repeated decreases give totalsize[1] that is
+> > divisible by ncpux1 of course.
+> >
+> > In the case where one moves both inner and outer radii, then its
+> > complicated and one should really do the re-spreading I just mentioned
+> > since I see no other way to benefit. I think this is why you avoided
+> > it. Right?
+> Yes, re-spreading would work but coding would effectively involve
+> restarting, and looks complicated, so did not do it. Actually, if using
+> the exp-exp grid, you end up evolving most of the radial grid initially
+> (so no gain in time) and when exp-exp grid kicks in and the evolution
+> becomes faster due to a larger time step, it really does not matter any
+> more whether you are evolving all or part of the radial grid.
+> 
+> > I recall one way you considered is to overload processors (say) with
+> > multiple processes. Say (in 1D) one had ncpux1=8, then I suppose
+> > you’d put myid=0,8 on CPU1, myid=1,7 on CPU2, etc. for 4 CPUs. Then
+> > the CPUs are always used if one has a fixed Rout but moving inner
+> > grid. Of course, then I worry a bit about whether the communication
+> > is hurt by putting myid=0,8 on the same CPU — maybe 0 and 8
+> > communicate very little on the full grid.
+> >
+> > This overloading method is also kinda nice for multi-core systems
+> > since generally using all cores is pretty inefficient — but
+> > eventually you don’t use all cores so one gets a per-node boost that
+> > can be quite large. In the multi-core case one doesn’t even have to
+> > overload each CPU, just put (say) 0,8 on a dual-core node. Then once
+> > 0 drops out, only 8 is going and one has no efficiency problems.
+> >
+> I tried this on a Dell PowerEdge cluster and was very disappointed.
+> This overloading turned out the as "fast" as using half as many cpu’s.
+> I never figured out why, maybe because there was too much communication
+> on the same node. I think this would have worked faster if we used
+> OpenMPI or shared memory for processes on the same node to avoid
+> excessive MPI bounding.
+> 
+> > Do you have a well-defined way of enforcing certain "myid’s" on
+> > certain CPUs? It seems one could rewrite the init_mpi.c a bit so that
+> > the "myid" returned by MPI is different than the "myid" used by the
+> > entire code — it would be a virtual myid. Then one can use (say) the
+> > node names (provided also by MPI) to force whatever virtual pattern
+> > you want on the nodes.
+> >
+> > For example, say if one has 4 processes. Say we get myidMPI=0,1,2,3
+> > on 2 nodes with 2 cores each. Say one node is SAM and the other BOB.
+> > Each process detects which node its on and shares this with the rest
+> > of the processes. Then we have something like:
+> >
+> > myidMPI: 0,1,2,3 -> SAM SAM BOB BOB
+> >
+> > However, we can set "myid" in the code to anything we want as long as
+> > we know the true myidMPI for MPI functions. So we just create an
+> > array that is accessed like: myidMPI[myid]. Then anytime a true MPI
+> > function is called this is used instead of myid. Any other place and
+> > the virtual "myid" is used. So after all processes have the SAM SAM
+> > BOB BOB order, one writes a little piece of code that does whatever
+> > order you want. In this simple case we just do:
+> >
+> > myidMPI[0]=0
+> > myidMPI[1]=3
+> > myidMPI[2]=1
+> > myidMPI[3]=2
+> >
+> > Then one is set! Again, anytime MPI functions are called and an ID is
+> > used, one uses intead myidMPI[myid], but otherwise one uses myid that
+> > itself identifies the order in physical space (i.e. 0,1,2,3 is in
+> > increasing radius).
+> >
+> > So at least with this method one can take a bit of advantage of
+> > multi-core systems even if they are inefficient (like Ranger at TACC).
+> >
+> I do something similar on blue gene, where there is a special file that
+> you can use to specify the physical ordering of CPUs. I think Avery was
+> telling me once that there are standard MPI commands to layout
+> processors in a particular fashion for a 2D grid at least and then you
+> can refer to the [i-1,j,k] neighbors directly, and the indexing would be
+> done by MPI internally. We don’t use this, and the indexing is done by
+> hand but maybe some similar commands exist when computing the mapping
+> array of MPI processes on to CPUs.
+> 
+> > Any other points?
+> See next email ))
+> 
+> Sasha
+> 
+> On 26.03.2009 09:31, Jonathan McKinney wrote:
+> > S.,
+> >
+> > Another issue is whether one can do something when using MPI so that
+> > one doesn’t progressively use fewer processors as the section goes
+> > out. Clearly one could adapt the grid to a smaller totalsize[1] each
+> > time the section passes. This effectively involves redoing N1 per
+> > processor and restarting with the same ncpux1 using the smaller
+> > portion. However, that’s a bit complicated. One at least doesn’t
+> > need to do any interpolation since the grid is really the same. One
+> > has to ensure the repeated decreases give totalsize[1] that is
+> > divisible by ncpux1 of course.
+> >
+> > In the case where one moves both inner and outer radii, then its
+> > complicated and one should really do the re-spreading I just mentioned
+> > since I see no other way to benefit. I think this is why you avoided
+> > it. Right?
+> >
+> > ————-
+> >
+> > I recall one way you considered is to overload processors (say) with
+> > multiple processes. Say (in 1D) one had ncpux1=8, then I suppose
+> > you’d put myid=0,8 on CPU1, myid=1,7 on CPU2, etc. for 4 CPUs. Then
+> > the CPUs are always used if one has a fixed Rout but moving inner
+> > grid. Of course, then I worry a bit about whether the communication
+> > is hurt by putting myid=0,8 on the same CPU — maybe 0 and 8
+> > communicate very little on the full grid.
+> >
+> > This overloading method is also kinda nice for multi-core systems
+> > since generally using all cores is pretty inefficient — but
+> > eventually you don’t use all cores so one gets a per-node boost that
+> > can be quite large. In the multi-core case one doesn’t even have to
+> > overload each CPU, just put (say) 0,8 on a dual-core node. Then once
+> > 0 drops out, only 8 is going and one has no efficiency problems.
+> >
+> > ————-
+> >
+> > Do you have a well-defined way of enforcing certain "myid’s" on
+> > certain CPUs? It seems one could rewrite the init_mpi.c a bit so that
+> > the "myid" returned by MPI is different than the "myid" used by the
+> > entire code — it would be a virtual myid. Then one can use (say) the
+> > node names (provided also by MPI) to force whatever virtual pattern
+> > you want on the nodes.
+> >
+> > For example, say if one has 4 processes. Say we get myidMPI=0,1,2,3
+> > on 2 nodes with 2 cores each. Say one node is SAM and the other BOB.
+> > Each process detects which node its on and shares this with the rest
+> > of the processes. Then we have something like:
+> >
+> > myidMPI: 0,1,2,3 -> SAM SAM BOB BOB
+> >
+> > However, we can set "myid" in the code to anything we want as long as
+> > we know the true myidMPI for MPI functions. So we just create an
+> > array that is accessed like: myidMPI[myid]. Then anytime a true MPI
+> > function is called this is used instead of myid. Any other place and
+> > the virtual "myid" is used. So after all processes have the SAM SAM
+> > BOB BOB order, one writes a little piece of code that does whatever
+> > order you want. In this simple case we just do:
+> >
+> > myidMPI[0]=0
+> > myidMPI[1]=3
+> > myidMPI[2]=1
+> > myidMPI[3]=2
+> >
+> > Then one is set! Again, anytime MPI functions are called and an ID is
+> > used, one uses intead myidMPI[myid], but otherwise one uses myid that
+> > itself identifies the order in physical space (i.e. 0,1,2,3 is in
+> > increasing radius).
+> >
+> > So at least with this method one can take a bit of advantage of
+> > multi-core systems even if they are inefficient (like Ranger at TACC).
+> >
+> > ————-
+> >
+> > Any other points?
+> >
+> >
+> > Thanks!
+> > Jon
+> >
+> >
+> 
+> —
+> Alexander Tchekhovskoy	atchekho@cfa.harvard.edu
+> Astronomy Department
+> Harvard University
+~~~~
+*/

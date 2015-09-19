@@ -1,0 +1,44 @@
+/*! \file ./docs//supercomputertips/2.txt
+~~~~
+Version 1 Updated by Jonathan M. on 01 Jun 2009.
+1) http://kipac-prod.stanford.edu/collab/computing/docs/orange
+
+2) Orange uses "bsub" to submit jobs.  "bjobs" lists the current jobs.  To see all user's jobs on KIPAC cluster, do:
+
+bjobs -u all -q kipac-ibq | less
+
+3) One should have in the ~/.bashrc the default file with additionally something like:
+
+
+
+ulimit -S -c 100000000 > /dev/null 2>&1
+#umask 022
+umask 077
+
+
+sizeorange=`echo $HOSTNAME | grep "orange" | wc | awk '{print $3}'`
+#echo $sizeorange
+
+if [ $sizeorange -eq 7 ]; then
+  #- intel compilers
+  source /afs/slac.stanford.edu/package/intel_tools/compiler9.0/@sys/cc/bin/iccvars.sh
+  source /afs/slac.stanford.edu/package/intel_tools/compiler9.0/@sys/fc/bin/ifortvars.sh
+  #
+  #- package/OpenMPI
+  PATH=/afs/slac/package/OpenMPI/bin:$PATH
+  export PATH
+  if [ -z $LD_LIBRARY_PATH  ]; then
+      LD_LIBRARY_PATH=/afs/slac/package/OpenMPI/lib
+  else
+      LD_LIBRARY_PATH=/afs/slac/package/OpenMPI/lib:${LD_LIBRARY_PATH}
+  fi
+  #- package/mpich
+  #PATH=/afs/slac/package/mpich/bin:$PATH
+  #if [ -z $LD_LIBRARY_PATH  ]; then
+  #    LD_LIBRARY_PATH=/afs/slac/package/OpenMPI/lib
+  #else
+  #    LD_LIBRARY_PATH=/afs/slac/package/OpenMPI/lib:${LD_LIBRARY_PATH}
+  #fi
+fi
+~~~~
+*/
