@@ -2233,6 +2233,8 @@ int init_global(void)
           RADNT_RHODONUT*=(1.4); // Mdot\sim 135Ledd/c^2
           RADNT_RHODONUT*=(0.71); // Mdot\sim 135Ledd/c^2
         }
+        RADNT_TRADATMMIN = 1.e5/TEMPBAR;
+        RADNT_ERADATMMIN= (calc_LTE_EfromT(RADNT_TRADATMMIN));
 
       }
       if(0){
