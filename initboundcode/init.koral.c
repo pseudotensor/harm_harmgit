@@ -49,8 +49,8 @@ FTYPE TILTWALD;
 
 
 //FTYPE thindiskrhopow=-3.0/2.0; // can make steeper like -0.7
-FTYPE thindiskrhopow=-0.2; // closer to NT73
-
+//FTYPE thindiskrhopow=-0.2; // closer to NT73
+FTYPE thindiskrhopow=-0.6; // closer to thick disk // SUPERMADNEW
 
 FTYPE normglobal;
 int inittypeglobal; // for bounds to communicate detail of what doing
@@ -320,7 +320,8 @@ int pre_init_specific_init(void)
 
   if(WHICHPROBLEM==RADDONUT){
     if(RADNT_DONUTTYPE==DONUTTHINDISK||RADNT_DONUTTYPE==DONUTTHINDISK2){
-      h_over_r=0.02;
+      //      h_over_r=0.02;
+      h_over_r=0.2; // SUPERMADNEW
     }
     else{
       h_over_r=0.2;
@@ -2121,13 +2122,15 @@ int init_global(void)
     // 4) #define CONNDERTYPE DIFFGAMMIE
     // 5) #define N1 32
 
+    TIMEORDER=2; // faster and sufficient
+
 
     int set_fieldtype(void);
     int FIELDTYPE=set_fieldtype();
 
     if(FIELDTYPE==FIELDJONMAD){
       // then funnel becomes too optically thick and traps radiation and accelerates radiation down into BH, leading to bad physical energy conservation even if total energy-momentum conservation equations used very well.
-      BSQORHOLIMIT=1E2; // back to 100 if using YFL1 and AVOIDTAUFLOOR==2 in phys.tools.rad.c
+      BSQORHOLIMIT=3E2; // back to 100 if using YFL1 and AVOIDTAUFLOOR==2 in phys.tools.rad.c
       BSQOULIMIT=1E9;
     }
     else{
@@ -2154,8 +2157,8 @@ int init_global(void)
 
     /////////////////////////////////
     // DONUT selections
-    //    RADNT_DONUTTYPE=DONUTTHINDISK2;
-    RADNT_DONUTTYPE=DONUTOLEK;
+    RADNT_DONUTTYPE=DONUTTHINDISK2; // SUPERMADNEW
+    //RADNT_DONUTTYPE=DONUTOLEK;
     //RADNT_DONUTTYPE=DONUTOHSUGA;
     RADDONUT_OPTICALLYTHICKTORUS=1; // otherwise, pressure only from gas.
     RADNT_INFLOWING=0;
@@ -2174,7 +2177,8 @@ int init_global(void)
       // NOTEMARK: htheta=0.1;
       // NOTEMARK: h0=0.1 instead of h0=0.3
       // NOTEMARK: Force only theta1=th0;
-      h_over_r=0.1;
+      //      h_over_r=0.1;
+      h_over_r=0.2;// SUPERMADNEW
       h_over_r_jet=2.0*h_over_r;
     }
     if(RADNT_DONUTTYPE==DONUTOLEK || RADNT_DONUTTYPE==DONUTOHSUGA){
@@ -2197,7 +2201,41 @@ int init_global(void)
       RADDONUT_OPTICALLYTHICKTORUS=1; // otherwise, pressure only from gas.
       if(RADDONUT_OPTICALLYTHICKTORUS==1) gamtorus=4.0/3.0; // then should be as if gam=4/3 so radiation supports torus properly at t=0
       else gamtorus=gam;
-      if(1){
+
+      if(1){// SUPERMADNEW
+        RADNT_RHODONUT=1E-2;
+        RADNT_RHODONUT*=40.0;
+ 
+        int set_fieldtype(void);
+        int FIELDTYPE=set_fieldtype();
+ 
+        if(a==0.8 && FIELDTYPE==FIELDJONMAD){
+          RADNT_RHODONUT/=(2.0*138.0);
+          RADNT_RHODONUT/=(2.8); // Mdot\sim 135Ledd/c^2
+          RADNT_RHODONUT*=(4.4); // Mdot\sim 135Ledd/c^2
+          RADNT_RHODONUT*=(3.75); // Mdot\sim 135Ledd/c^2
+        }
+        if(a==0.8 && FIELDTYPE!=FIELDJONMAD){
+          RADNT_RHODONUT/=(33.0);
+          RADNT_RHODONUT/=(2.7); // Mdot\sim 135Ledd/c^2
+          RADNT_RHODONUT*=(2.6); // Mdot\sim 135Ledd/c^2
+          RADNT_RHODONUT*=(1.4); // Mdot\sim 135Ledd/c^2
+        }
+        if(a==0.0 && FIELDTYPE==FIELDJONMAD){
+          RADNT_RHODONUT/=(2.0*138.0);
+          RADNT_RHODONUT/=(2.8); // Mdot\sim 135Ledd/c^2
+          RADNT_RHODONUT*=(3.9); // Mdot\sim 135Ledd/c^2
+          RADNT_RHODONUT*=(1.8); // Mdot\sim 135Ledd/c^2
+        }
+        if(a==0.0 && FIELDTYPE!=FIELDJONMAD){
+          RADNT_RHODONUT/=(33.0);
+          RADNT_RHODONUT/=(12.5); // Mdot\sim 135Ledd/c^2
+          RADNT_RHODONUT*=(1.4); // Mdot\sim 135Ledd/c^2
+          RADNT_RHODONUT*=(0.71); // Mdot\sim 135Ledd/c^2
+        }
+
+      }
+      if(0){
         RADNT_RHODONUT=1E-2; // NT73 with MBH=10msun, a=0, Mdot=5Ledd/c^2
         RADNT_TRADATMMIN = 1.e5/TEMPBAR;
         RADNT_ERADATMMIN= (calc_LTE_EfromT(RADNT_TRADATMMIN));
@@ -2278,6 +2316,11 @@ int init_global(void)
     RADNT_RHOATMMIN=RADNT_RHODONUT*1E-6;
     //    RADNT_TGASATMMIN = 1.e11/TEMPBAR;
     RADNT_TGASATMMIN = 1.e9/TEMPBAR;
+
+    if(1){ // SUPERMADNEW
+      RADNT_RHOATMMIN=RADNT_RHODONUT*1E-5;
+    }
+
     RADNT_UINTATMMIN= (calc_PEQ_ufromTrho(RADNT_TGASATMMIN,RADNT_RHOATMMIN));
     // need external radiation energy density to be lower than interior of torus, else drives photons into torus from overpressured atmosphere and is more difficult to evolve.
     //    RADNT_TRADATMMIN = 1.e9/TEMPBAR;
@@ -2405,6 +2448,7 @@ int init_global(void)
         DTdumpgen[DEBUGDUMPTYPE]=400.0;
         DTdumpgen[FIELDLINEDUMPTYPE]=4.0;
         DTdumpgen[IMAGEDUMPTYPE]=4.0;
+        DTdumpgen[ENERDUMPTYPE]=4.0;
         DTr=5000;
       }
     }
@@ -3240,7 +3284,7 @@ int init_defcoord(void)
     
     if(totalsize[1]<32*4&&DOWALDDEN==0){
       dualfprintf(fail_file,"RADDONUT setup for 128x64 with that grid\n");
-      myexit(28634693);
+      //myexit(28634693);
     }
 
   }
@@ -3494,6 +3538,28 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
       if(FIELDTYPE==FIELDJONMAD) rin=0.0;
       else rin=rinfield;
     }
+
+    // SUPERMADNEW
+    if(RADNT_DONUTTYPE==DONUTTHINDISK || RADNT_DONUTTYPE==DONUTTHINDISK2){
+      rin=1.1*Risco;
+      rinfield=1.1*Risco;
+ 
+      rin=0.0;
+ 
+      rinfield=20.0; // works for any a for these models
+      routfield=40.0;
+
+      //rinfield=Risco;
+      //      beta=1E30;
+      if(FIELDTYPE==FIELDJONMAD){
+        beta=20.0; // so for MAD will have ~1 mri wavelength per half-height H.
+      }
+      else{
+        beta=5.0; // so perturbations are at 2 but rest less and tends to be beta\sim 20
+      }
+    }
+
+
   }
 
 
@@ -5725,8 +5791,21 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
     // KORAL:
     // atmtype=0 : -1.5 -2.5
     // atmtype=1 : -2.0 -2.5
-    pr[RHO]=RADNT_RHOATMMIN*pow(r/RADNT_ROUT,-1.5);
+
+    if(1){ // SUPERMADNEW
+      int set_fieldtype(void);
+      int FIELDTYPE=set_fieldtype();
+      if(FIELDTYPE==FIELDJONMAD){
+        // so bsq/rho isn't super high at large radii with current choice for magnetic field
+        pr[RHO]=RADNT_RHOATMMIN*pow(r/RADNT_ROUT,-1.1);
+      }
+    }
+    else{
+      pr[RHO]=RADNT_RHOATMMIN*pow(r/RADNT_ROUT,-1.5);
+    }
+
     pr[UU]=RADNT_UINTATMMIN*pow(r/RADNT_ROUT,-2.5);
+
     set_zamo_velocity(*whichvel,ptrgeomrad,pr); // only sets U1-U3 to zamo
 
     
@@ -6615,7 +6694,12 @@ static int donut_analytical_solution(int *whichvel, int *whichcoord, int optical
 
     /* region outside disk */
     Rhor=rhor_calc(0);
-    Risco=rmso_calc(PROGRADERISCO);
+    if(0){
+      Risco=rmso_calc(PROGRADERISCO);
+    }
+    else{ // SUPERMADNEW
+      Risco=10.0;
+    }
     R = MAX(Rhor,r*sin(th)) ;
 
     ////////////////////////////
@@ -6635,7 +6719,8 @@ static int donut_analytical_solution(int *whichvel, int *whichcoord, int optical
       H = h_over_r*R ;
     }
     else{
-      H = h_over_r*R * pow(r/Risco,2.0);
+      //      H = h_over_r*R * pow(r/Risco,2.0);
+      H = h_over_r*R * pow(r/Risco,.5); // SUPERMADNEW
     }
 
     FTYPE z = r*cos(th) ;
@@ -6659,7 +6744,9 @@ static int donut_analytical_solution(int *whichvel, int *whichcoord, int optical
       rho=RADNT_RHODONUT * pow(1.0-z*z/(H*H),NN)*pow(r/Risco,thindiskrhopow); if(rho<0.0||!isfinite(rho)) rho=0.0;
     }
     // density shouldn't peak at ISCO, but further out even for H/R=0.05 (see Penna et al. 2010 figure 11).
-    FTYPE Rtrans=2.0*Risco;
+    FTYPE Rtrans;
+    //    Rtrans=2.0*Risco;
+    Rtrans=1.5*Risco; // SUPERMADNEW
     if(r<Rtrans){
       //      FTYPE rhopowisco=10.0;
       FTYPE rhopowisco=7.0; // this gives similar result to HD case, although not MHD-turbulence case, but want kinda HD equilibrium as much as possible.
@@ -7251,8 +7338,8 @@ int set_fieldtype(void)
   if(WHICHPROBLEM==RADDONUT){
 
     if(RADNT_DONUTTYPE==DONUTTHINDISK || RADNT_DONUTTYPE==DONUTTHINDISK2){
-      FIELDTYPE=DISK2FIELD;
-      //FIELDTYPE=FIELDJONMAD;
+      //      FIELDTYPE=DISK2FIELD;
+      FIELDTYPE=FIELDJONMAD; // SUPERMADNEW
 
     }
     else if(RADNT_DONUTTYPE==DONUTOLEK){
@@ -7480,6 +7567,7 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
   //  FTYPE FIELDROT=M_PI*0.5;
   FTYPE FIELDROT=0.0;
   FTYPE hpow=2.0;
+  // FTYPE rpow=1.0; // previous SUPERMAD, now just use 3/4
 
 
   if(l==2){// A_\theta
@@ -7525,14 +7613,16 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
     }
 
 #define JONMADHPOW (4.0)
+#define JONMADR0 (0.0)
+#define JONMADROUT (300.0)
 
     if(FIELDTYPE==FIELDJONMAD){
-      if(r>=9.3 && r<300.0){
-        vpot += MAX(pow(r-9.3,rpow)*1E40-0.02,0.0)*(pow(sin(th),1+JONMADHPOW));
+      if(r>=JONMADR0 && r<JONMADROUT){
+        vpot += MAX(pow(r-JONMADR0,rpow)*1E40-0.02,0.0)*(pow(sin(th),1+JONMADHPOW));
       }
-      else if(r>=300.0){
+      else if(r>=JONMADROUT){
         // to go monopolar
-        vpot += MAX(pow(300-9.3,rpow)*1E40-0.02,0.0)*(pow(sin(th),1+JONMADHPOW/(r/300)));
+        vpot += MAX(pow(JONMADROUT-JONMADR0,rpow)*1E40-0.02,0.0)*(pow(sin(th),1+JONMADHPOW/(r/JONMADROUT)));
       }
       if(V[2]<1E-5 || V[2]>M_PI-1E-5){
         vpot=0;
@@ -7585,12 +7675,13 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
       //#define QPOWER 0.5
 #define QPOWER (1.0)
 
-#define POWERNU (2.0)
+#define POWERNU (2.0) // 2.5 for toroidal field SUPERMAD paper
       //#define POWERNU (4.0)
 
       //      if (q > 0.)      vpot += q*q*pow(r*fabs(sin(th)),POWERNU);
       FTYPE fact1,fact2,SSS,TTT;
       fact1=pow(fabs(q),QPOWER)*pow(r*fabs(sin(th)),POWERNU);
+      // fact1=pow(fabs(q),QPOWER)*pow(r,POWERNU); // for SUPERMAD paper
       if(r<rin) fact1=0.0;
       SSS=rin*0.5;
       TTT=0.28;
@@ -8807,7 +8898,8 @@ int set_density_floors(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *prfloor, FTYPE
     // absolute floor, because when magnetic field is zero in some region, then density can go to zero rather than being limited, and then radiation can radically push it around or density gradient can be too extreme for code.
     FTYPE V[NDIM];
     bl_coord_ijk(ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p,V);
-    FTYPE lowcoef=MIN(1E-7,RADNT_RHOATMMIN/RADNT_RHODONUT);
+    //    FTYPE lowcoef=MIN(1E-7,RADNT_RHOATMMIN/RADNT_RHODONUT);
+    FTYPE lowcoef=MIN(1E-9,RADNT_RHOATMMIN/RADNT_RHODONUT); // SUPERMADNEW
     FTYPE lowpow=-2.0;
     FTYPE rholimit=RADNT_RHODONUT*(lowcoef*pow(V[1],lowpow));
     if(pr[RHO]<rholimit) pr[RHO]=rholimit;
@@ -8843,7 +8935,8 @@ int set_density_floors_alt(struct of_geom *ptrgeom, struct of_state *q, FTYPE *p
 
     FTYPE V[NDIM];
     bl_coord_ijk(ptrgeom->i,ptrgeom->j,ptrgeom->k,ptrgeom->p,V);
-    FTYPE lowcoef=MIN(1E-7,RADNT_RHOATMMIN/RADNT_RHODONUT);
+    //   FTYPE lowcoef=MIN(1E-7,RADNT_RHOATMMIN/RADNT_RHODONUT);
+    FTYPE lowcoef=MIN(1E-9,RADNT_RHOATMMIN/RADNT_RHODONUT); // SUPERMADNEW
     FTYPE lowpow=-2.0;
     FTYPE rholimit=RADNT_RHODONUT*(lowcoef*pow(V[1],lowpow));
     if(pr[RHO]<rholimit) pr[RHO]=rholimit;

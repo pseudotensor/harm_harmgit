@@ -226,8 +226,8 @@ void set_coord_parms_nodeps(int defcoordlocal)
     cpow3=1.0;
     //radius at which hyperexponentiation kicks in
     //    rbr = 1E3;
-    rbr = 5E2; // WALD 5E2->5E7 // SUPER-EDD: 2E3
-
+    //    rbr = 5E2; // WALD 5E2->5E7 // SUPER-EDD: 2E3
+    rbr = 2E3; // SUPERMADNEW
 
 
     // must be same as in dxdxp()
@@ -246,7 +246,7 @@ void set_coord_parms_nodeps(int defcoordlocal)
       rsjet=80.0;
       Qjet=1.8;
     }
-    else if(1){
+    else if(0){
       r1jet=2.8;
       njet=0.3;
       r0jet=15.0;
@@ -254,15 +254,30 @@ void set_coord_parms_nodeps(int defcoordlocal)
       Qjet=1.3; // chosen to help keep jet resolved even within disk region
       //      Qjet=1.7; // chosen to help keep jet resolved even within disk region
     }
+    else if(1){ // SUPERMADNEW
+      r1jet=30.0;
+      njet=0.7;
+      r0jet=30.0;
+      rsjet=40.0;
+      Qjet=1.6;
+    }
 
     // for switches from normal theta to ramesh theta
-    rs=40.0; // shift
-    r0=20.0; // divisor
- 
+    if(0){
+      rs=40.0; // shift
+      r0=20.0; // divisor
+      r0jet3=20.0; // divisor
+      rsjet3=0.0; // subtractor
+    }
+    else{// SUPERMADNEW
+      rs=40.0; // shift
+      r0=40.0; // divisor
+      r0jet3=40.0; // divisor
+      rsjet3=0.0; // subtractor
+    }
+
     // for theta1
     //    hslope=0.3 ; // resolve inner-radial region near equator
-    r0jet3=20.0; // divisor
-    rsjet3=0.0; // subtractor
 
     // for theta2
     //h0=0.3; // inner-radial "hslope" for theta2
@@ -270,22 +285,41 @@ void set_coord_parms_nodeps(int defcoordlocal)
     //h0=0.1; // inner-radial "hslope" for theta2 // for thinner disks, change this.
     // GODMARK: Note that this overwrites above njet!
     // power \theta_j \propto r^{-njet}
-    njet=1.0; // WALD: 1.0->0.0
+    if(0){
+      njet=1.0; // WALD: 1.0->0.0
+    }
+    else{//SUPERMADNEW
+      // no change
+    }
 
 
     // see fix_3dpoledtissue.nb
+    if(0){
 #if(0)
-    ntheta=21.0;
-    htheta=0.15;
-    rsjet2=5.0;
-    r0jet2=2.0;
+      ntheta=21.0;
+      htheta=0.15;
+      rsjet2=5.0;
+      r0jet2=2.0;
 #else
-    ntheta=5.0;
-    htheta=0.15;
-    rsjet2=5.0;
-    r0jet2=2.0;
+      ntheta=5.0;
+      htheta=0.15;
+      rsjet2=5.0;
+      r0jet2=2.0;
 #endif
-
+    }
+    else{ // SUPERMADNEW
+      ntheta=5.0;
+      if(a<0.4){
+        htheta=0.15;
+        rsjet2=5.0;
+        r0jet2=2.0;
+      }
+      else{
+        htheta=0.15;
+        rsjet2=8.0;
+        r0jet2=3.0;
+      }
+    }
   }
   else if (defcoordlocal == JET6COORDSTHIN) {
 
@@ -1368,9 +1402,17 @@ void bl_coord(FTYPE *X, FTYPE *V)
     myhslope1=2.0-Qjet*pow(V[1]/r1jet,-njet*(0.5+1.0/M_PI*atan(V[1]/r0jet-rsjet/r0jet)));
     myhslope2=2.0-Qjet*pow(localrbr/r1jet,-njet*(0.5+1.0/M_PI*atan(localrbr/r0jet-rsjet/r0jet)));
     myhslope = myhslope1*switch2 + myhslope2*switch0;
-    // myhslope here is h0 in MCAF paper
-    th0 = M_PI * X[2] + ((1. - myhslope) * 0.5) * mysin(2. * M_PI * X[2]);
 
+    if(0){
+      // myhslope here is h0 in MCAF paper
+      th0 = M_PI * X[2] + ((1. - myhslope) * 0.5) * mysin(2. * M_PI * X[2]);
+    }
+    else{  // SUPERMADNEW
+      // poly grid
+      FTYPE xi=((1. - myhslope) * 0.5);
+      th0 = M_PI * .5 * (myhslope*(2.0*X[2]-1.0) + (1.0-myhslope)*pow(2.0*X[2]-1.0,3.0)+1.);
+      //      dualfprintf(fail_file,"myhslope=%g th0=%g\n",myhslope,th0);
+    }
 
     // determine switches (only function of radius and not x2 or theta)
     switch0 = 0.5+1.0/M_PI*atan((V[1]-rs)/r0); // switch in .nb file // switch0->1 as r->infinity
