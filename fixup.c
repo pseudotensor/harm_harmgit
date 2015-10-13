@@ -21,7 +21,7 @@ static int superdebug_utoprim(FTYPE *pr0, FTYPE *pr, struct of_geom *ptrgeom, in
 
 
 // whether to add radiation YFL4,YFL5 to gas YFL2,YFL3
-#define YFLADDRADTOGAS 1
+#define YFLADDRADTOGAS 0
 
 
 
