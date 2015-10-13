@@ -3991,7 +3991,7 @@ int init_dsandvels(int inittype, int pos, int *whichvel, int*whichcoord, SFTYPE 
   if(DOYFL){
     FTYPE rhofloor=pr[RHO]*NUMEPSILON*10.0;
     FTYPE vfloor=NUMEPSILON*10.0;
-    FTYPE enfloor=pr[URAD0]*NUMEPSILON*10.0;
+    FTYPE enfloor=ERADLIMIT+(pr[URAD0]+pr[UU])*NUMEPSILON*10.0;
     if(YFL1>=0) pr[YFL1] = SMALL + rhofloor; // rho floor
     if(YFL2>=0) pr[YFL2] = SMALL + rhofloor*vfloor*vfloor; // -T^t_t-rho u^r floor
     if(YFL3>=0) pr[YFL3] = SMALL + rhofloor*vfloor; // T^t_phi floor

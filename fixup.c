@@ -20,6 +20,8 @@ static int superdebug_utoprim(FTYPE *pr0, FTYPE *pr, struct of_geom *ptrgeom, in
 
 
 
+// whether to add radiation YFL4,YFL5 to gas YFL2,YFL3
+#define YFLADDRADTOGAS 1
 
 
 
@@ -82,7 +84,12 @@ int post_fixup(int stageit,int finalstep, SFTYPE boundtime, FTYPE (*pv)[NSTORE2]
     }
 
 #endif
-
+    
+    //    int long long nstepfake;
+    //    nstepfake=nstep;
+    //    nstep=0;
+    //    image_dump(-4);
+    //    nstep=nstepfake;
 
     // fixup before new solution (has to be here since need previous stage's failure flag)
     fixup_utoprim(stage,pv,pbackup,ucons,finalstep);
@@ -593,9 +600,6 @@ int consfixup_1zone(int finaluu, int i, int j, int k, struct of_geom *ptrgeom, F
 }
 
 
-// whether to add radiation YFL4,YFL5 to gas YFL2,YFL3
-#define YFLADDRADTOGAS 1
-
 
 /// single call in step_ch.c:post_advance() to do all diag_fixup() diagnostic dU stores.  Still allows counts by other diag_fixup calls.
 /// for DOONESTEPDUACCOUNTING==1
@@ -692,7 +696,7 @@ int diag_fixup_allzones(FTYPE (*pf)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTOR
         FTYPE pltotal=Ufnothing[pl]/uconmap[mapvar];
         //FTYPE dpl=pl - uconsnothing[pl]/uconmap[mapvar];
         FTYPE dpl=(Ufnothing[pl] - uconsnothing[pl])/uconmap[mapvar];
-        
+
         if(YFLADDRADTOGAS){
           int plalt;
           if(pl==URAD0){
@@ -704,8 +708,6 @@ int diag_fixup_allzones(FTYPE (*pf)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTOR
             dpl+=(Ufnothing[plalt] - uconsnothing[plalt])/uconmap[map[plalt]];
           }
         }
-
-
 
         FTYPE plfl;
         //      FTYPE plfl = MACP0A1(pf,i,j,k,mapvar)*pltotal); // final plfl without source term (if failure, then yflx and pl come from averaging, then plfl and pltotal will not be related by conserved fluxes and (e.g.) yflx can become >1
@@ -736,9 +738,12 @@ int diag_fixup_allzones(FTYPE (*pf)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTOR
           MACP0A1(pf,i,j,k,mapvar) = plflfinal/(SMALL+fabs(pltotal)); // newYflx = newplfl / newpltotal
         }
         else if(DOYFL==2){ // source term to density scalar, assuming pf was evolved via fluxes already for YFLx itself, so here we just add error term from normal evolved quantities
+          //          if(mapvar==YFL4 && plflfinal<ERADLIMIT) plflfinal=ERADLIMIT;
           MACP0A1(pf,i,j,k,mapvar) = plflfinal;
         }
         //      dualfprintf(fail_file,"pltotal=%g dpl=%g plfl=%g plflfinal=%g yfl=%g\n",pltotal,dpl,plfl,plflfinal,MACP0A1(pf,i,j,k,YFL));
+
+
 
 
       } // end if doing this Yflx
@@ -1468,6 +1473,33 @@ int fixup1zone(int docorrectucons, FTYPE *pr, FTYPE *uconsinput, struct of_geom 
         pr[YFL1] = pr0[YFL1] + drho;
         if(pr[YFL1]<SMALL) pr[YFL1]=SMALL;
         if(pr[YFL1]>pr[RHO]) pr[YFL1]=pr[RHO];
+      }
+
+
+      if(DOYFL==2){
+        // also iterate on other YFLx's
+        struct of_state qnew;
+        get_state(pr,ptrgeom,&qnew);
+        FTYPE Unew[NPR];
+        primtoU(UNOTHING,pr,&qnew,ptrgeom,Unew, NULL);
+
+        struct of_state q0;
+        get_state(pr0,ptrgeom,&q0);
+        FTYPE U0[NPR];
+        primtoU(UNOTHING,pr0,&q0,ptrgeom,U0, NULL);
+
+        if(YFL2>=0) pr[YFL2]+= -(Unew[UU]-U0[UU])/qnew.ucon[TT];
+        if(YFL3>=0) pr[YFL3]+= +(Unew[U3]-U0[U3])/qnew.ucon[TT];
+        if(YFLADDRADTOGAS){
+          if(YFL2>=0) pr[YFL2]+= -(Unew[URAD0]-U0[URAD0])/qnew.uradcon[TT];
+          if(YFL3>=0) pr[YFL3]+= +(Unew[URAD3]-U0[URAD3])/qnew.uradcon[TT];
+        }
+
+        if(YFL4>=0){
+          pr[YFL4]+= -(Unew[URAD0]-U0[URAD0])/qnew.uradcon[TT];
+          if(pr[YFL4]<ERADLIMIT) pr[YFL4]=ERADLIMIT;
+        }
+        if(YFL5>=0) pr[YFL5]+= (Unew[URAD3]-U0[URAD3])/qnew.uradcon[TT];
       }
     }
 
@@ -3210,7 +3242,7 @@ static int general_average(int useonlynonfailed, int numbndtotry, int maxnumbndt
         numavg1[pl]++;
       }
 #else
-      //      dualfprintf(fail_file,"pl=%d testing: %g>%g && %g>%g : %d %d\n",pl,ftemp1,ref[pl],ftemp2,ref[pl],thisnotfail,thatnotfail);
+      //      if(pl==8) dualfprintf(fail_file,"ii=%d jj=%d kk=%d i+ii=%d j+jj=%d k+kk=%d pl=%d testing: %g>%g && %g>%g : %d %d\n",ii,jj,kk,i+ii,j+jj,k+kk,pl,ftemp1,ref[pl],ftemp2,ref[pl],thisnotfail,thatnotfail);
       if(ftemp1>ref[pl] && thisnotfail && ftemp2>ref[pl] && thatnotfail){
         lastmin[pl]=MIN(MIN(lastmin[pl],ftemp1),ftemp2); // smallest positive number if both of pair are larger than my value (else keep my small value)
         numavg1[pl]+=2;
