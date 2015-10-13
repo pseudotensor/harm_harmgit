@@ -492,6 +492,13 @@ int init_global(void)
 
   //  ERADLIMIT=UUMIN; // set same for now
   ERADLIMIT=UUMINLIMIT; // seems fine.
+
+  if(WHICHPROBLEM==RADDONUT){
+    ERADLIMIT=1E-20; // choose so smallest value PRAD0 likely to obtain, but no smaller else problems with YFL4 (well, still issues)
+  }
+
+
+
   // maximum radiation frame lorentz factor
   //GAMMAMAXRAD=10000.0; // problems with PARA or TIMEORDER=3 for NLEFT=0.99999 with RADBEAM2D, so stick to gammamax=100 in general unless for test.
   // NOTE: Even PARA,TO=3 can handle cartesian beams like RADBEAM2D or RADSHADOW without problems, but if injection gamma > GAMMAMAXRAD, then that limiting process causes problems currently.  Looking into it.

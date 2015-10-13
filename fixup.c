@@ -593,6 +593,9 @@ int consfixup_1zone(int finaluu, int i, int j, int k, struct of_geom *ptrgeom, F
 }
 
 
+// whether to add radiation YFL4,YFL5 to gas YFL2,YFL3
+#define YFLADDRADTOGAS 1
+
 
 /// single call in step_ch.c:post_advance() to do all diag_fixup() diagnostic dU stores.  Still allows counts by other diag_fixup calls.
 /// for DOONESTEPDUACCOUNTING==1
@@ -689,6 +692,20 @@ int diag_fixup_allzones(FTYPE (*pf)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTOR
         FTYPE pltotal=Ufnothing[pl]/uconmap[mapvar];
         //FTYPE dpl=pl - uconsnothing[pl]/uconmap[mapvar];
         FTYPE dpl=(Ufnothing[pl] - uconsnothing[pl])/uconmap[mapvar];
+        
+        if(YFLADDRADTOGAS){
+          int plalt;
+          if(pl==URAD0){
+            plalt=UU;
+            dpl+=(Ufnothing[plalt] - uconsnothing[plalt])/uconmap[map[plalt]];
+          }
+          if(pl==URAD3){
+            plalt=U3;
+            dpl+=(Ufnothing[plalt] - uconsnothing[plalt])/uconmap[map[plalt]];
+          }
+        }
+
+
 
         FTYPE plfl;
         //      FTYPE plfl = MACP0A1(pf,i,j,k,mapvar)*pltotal); // final plfl without source term (if failure, then yflx and pl come from averaging, then plfl and pltotal will not be related by conserved fluxes and (e.g.) yflx can become >1
