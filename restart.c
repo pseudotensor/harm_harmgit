@@ -1128,6 +1128,7 @@ int readwrite_restart_header(int readwrite, int bintxt, int bcasthead, FILE*head
   headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&UUMIN,sizeof(FTYPE), headerone, 1, MPI_FTYPE, headerptr);
   headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&RHOMINLIMIT,sizeof(FTYPE), headerone, 1, MPI_FTYPE, headerptr);
   headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&UUMINLIMIT,sizeof(FTYPE), headerone, 1, MPI_FTYPE, headerptr);
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&UULIMIT,sizeof(FTYPE), headerone, 1, MPI_FTYPE, headerptr);
   headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&BSQORHOLIMIT,sizeof(FTYPE), headerone, 1, MPI_FTYPE, headerptr);
   headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&BSQOULIMIT,sizeof(FTYPE), headerone, 1, MPI_FTYPE, headerptr);
   headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&UORHOLIMIT,sizeof(FTYPE), headerone, 1, MPI_FTYPE, headerptr);

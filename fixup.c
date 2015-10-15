@@ -669,10 +669,10 @@ int diag_fixup_allzones(FTYPE (*pf)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTOR
 
     FTYPE rhofloor=pr[RHO]*NUMEPSILON*10.0;
     FTYPE vfloor=NUMEPSILON*10.0;
-    FTYPE enfloor=pr[URAD0]*NUMEPSILON*10.0;
+    FTYPE enfloor=ERADLIMIT + (pr[URAD0])*NUMEPSILON*10.0;
     PLOOP(pliter,pl) offset[pl]=SMALL;
     if(YFL1>=0) offset[YFL1] = SMALL + rhofloor; // rho floor
-    if(YFL2>=0) offset[YFL2] = SMALL + rhofloor*vfloor*vfloor; // -T^t_t-rho u^r floor
+    if(YFL2>=0) offset[YFL2] = SMALL + rhofloor*vfloor*vfloor + UULIMIT; // -T^t_t-rho u^r floor
     if(YFL3>=0) offset[YFL3] = SMALL + rhofloor*vfloor; // T^t_phi floor
     if(YFL4>=0) offset[YFL4] = SMALL + enfloor; // -R^t_t floor
     if(YFL5>=0) offset[YFL5] = SMALL + enfloor*vfloor; // R^t_\phi floor
@@ -716,12 +716,12 @@ int diag_fixup_allzones(FTYPE (*pf)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTOR
         //      if(plfl<SMALL) plfl=SMALL;
 
         FTYPE plflfinal = plfl + dpl;
-        if(mapvar==YFL2 || mapvar==YFL4){ // just energy densities.  Can't apply to angular momenta that can be any sign.  Could apply to density, but doesn't seem to need it.
+        if(1&&(mapvar==YFL2 || mapvar==YFL4)){ // just energy densities.  Can't apply to angular momenta that can be any sign.  Could apply to density, but doesn't seem to need it.
           // at least for non-densities, especially energy densities, having near 0 or negative values leads to an instability and crazy run-away in the values due to fluxes.
           // So won't be able to track losses of energy, only gains, unless split gains and losses.
           // Or maybe need floor at t=0 at least so that not dealing with crazy small values?
           FTYPE offsetfull=0.0;
-          if(pl==UU){ // need to compare to zero when rest-mass added
+          if(pl==UU&&0){ // need to compare to zero when rest-mass added
             offsetfull=offset[mapvar]-uconsnothing[RHO]/ucon[TT];
           }
           else offsetfull=offset[mapvar];
@@ -742,8 +742,6 @@ int diag_fixup_allzones(FTYPE (*pf)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTOR
           MACP0A1(pf,i,j,k,mapvar) = plflfinal;
         }
         //      dualfprintf(fail_file,"pltotal=%g dpl=%g plfl=%g plflfinal=%g yfl=%g\n",pltotal,dpl,plfl,plflfinal,MACP0A1(pf,i,j,k,YFL));
-
-
 
 
       } // end if doing this Yflx
@@ -1476,7 +1474,7 @@ int fixup1zone(int docorrectucons, FTYPE *pr, FTYPE *uconsinput, struct of_geom 
       }
 
 
-      if(DOYFL==2){
+      if(DOYFL==2&&0){
         // also iterate on other YFLx's
         struct of_state qnew;
         get_state(pr,ptrgeom,&qnew);

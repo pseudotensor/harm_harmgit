@@ -2151,7 +2151,7 @@ int init_global(void)
       BSQORHOLIMIT=BSQORHOWALD;
     }
  
-
+    UULIMIT=1E-20; // something small
 
 
     // Torus setups:
