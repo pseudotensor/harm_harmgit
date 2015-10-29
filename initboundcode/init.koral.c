@@ -9450,6 +9450,58 @@ void adjust_fluxctstag_emfs(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR
 //******* user opacities ****************************************************
 //**********************************************************************
 
+//////////////////////////////
+// ff and s (but means something different for ff and s)
+//listlog10xi = Range[-8, 8, 1];
+//listxi = 10^listlog10xi;
+
+//step1mexpf = 0.2
+//listlog101mexpf = Range[-3, 0, step1mexpf];
+//list1mexpf = 10^listlog101mexpf;
+//list1mexpf = Sort[Join[{0}, list1mexpf]];
+//listexpf = 1 - list1mexpf;
+//////////////////////////////
+
+
+//////////////////////////////
+// dc:
+//step1mexpf = 0.2*2
+//listlog101mexpf = Range[-3, 0, step1mexpf];
+//list1mexpf = 10^listlog101mexpf;
+//list1mexpf = Sort[Join[{0}, list1mexpf]];
+//listexpf = 1 - list1mexpf;
+
+//stepthetag = 0.5*2
+//listlogthetag = Range[-4, 1, stepthetag];
+//listthetag = 10^listlogthetag;
+
+//stepthetae = 0.5
+//listlogthetae = Range[-5, 2, stepthetae];
+//listthetae = 10^listlogthetae;
+//////////////////////////////
+
+
+// as long as scaled-out prefactor, then near Te=Tg and \mu=0 should be order unity and shouldn't be beyond float limit of 1E-30
+// and accuracy of double not needed even if iterations in implicit solver required double, because calculations are not that accurate.
+//#define TBLTYPE static const float
+//#include "opacitytables.c"
+
+// Steps:
+//
+// 1) For .nb's in #2, choose MBH, etc. so cut-off chosen and chosen same way for all .nb's.
+// 1.5) Ensure size of tables at bottom is consistent as hardcoded size
+// 2) run jon@physics-179:/data/jon/pseudotensor@gmail.com/harm_math/opacityfits\ doublecompton_opacity_mu_cutoff2.nb and freefree_opacity_mu_cutoff.nb and synch_opacity_mu_cutoff.nb (with picktemp=0,whichtemp=1 and picktemp=1,whichtemp=1 and picktemp=1,whichtemp=3)
+// 3) Run "sed" at bottom of each .nb after everything done.
+// 4) In opacityfits directory run: cat energyopacityffmu.dat4 numberopacityffmu.dat4 energyopacitydcmu.dat4 numberopacitydcmu.dat4 energyopacityedcmu.dat4 numberopacityedcmu.dat4 energyopacitysamu.dat4 numberopacitysamu.dat4  energyopacitysbmu.dat4 numberopacitysbmu.dat4  energyopacityscmu.dat4 numberopacityscmu.dat4  > opacitytables.temp.c ; sed 's/"//g' opacitytables.temp.c > opacitytables.c
+// 5) copy opacitytables.c to local harmgit directory
+
+// Opal table in GN93hz
+//TABLE # 73  $G&N'93 Solar$    X=0.7000 Y=0.2800 Z=0.0200 dXc=0.0000 dXo=0.0000
+//#include "opacityopaltables.c"
+
+
+
+
 // KAPPAUSER is optical depth per unit length per unit rest-mass energy density
 // calc_kappa_user and calc_kappan_user and calc_kappaes_user return optical depth per unit length.
 
