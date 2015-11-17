@@ -11626,8 +11626,13 @@ int prad_fftolab(int *whichvel, int *whichcoord, int i, int j, int k, int loc, s
         DLOOP(jj,kk) dualfprintf(fail_file,"jj=%d kk=%d gcov=%g gcon=%g\n",jj,kk,ptrgeomtouse->gcov[GIND(jj,kk)],ptrgeomtouse->gcon[GIND(jj,kk)]);
         PLOOP(pliter,pl) dualfprintf(fail_file,"pl=%d pout=%g\n",pl,pout[pl]);
       }
-      myexit(189235);
-      // KORALTODO: Check whether really succeeded?  Need to call fixups?  Probably, but need per-cell fixup.  Hard to do if other cells not even set yet as in ICs.  Should probably include fixup process during initbase.c stuff.
+      if(lpflag==UTOPRIMNOFAIL && lpflagrad==UTOPRIMRADFAILERFNEG){
+        // then probably not really failure, just have high ERADLIMIT for other reasons.
+      }
+      else{
+        myexit(189235);
+        // KORALTODO: Check whether really succeeded?  Need to call fixups?  Probably, but need per-cell fixup.  Hard to do if other cells not even set yet as in ICs.  Should probably include fixup process during initbase.c stuff.
+      }
     }
     else{
       if(debugfail>=2){
