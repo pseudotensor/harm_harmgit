@@ -834,6 +834,9 @@ int main(
                   //                  ijkvis5d=k + ((i) + (j) * N1) * N3; // so y,k,N3,Nl fastest, then x,i,N1,Nc then z,j,N2,Nr
                   ijkvis5d=N1-1-i + ((k) + (j) * N3) * N1; // so x,i,N1,Nl fastest, then z,k,N3,Nc then y,j,N2,Nr
 
+                  ijkvis5d=N1-1-i + ((j) + (k) * N2) * N1;
+
+
                   //                  ijkvis5d=(N3-1-k) + ((i) + (j) * N1) * N3; // so k fastest, then i then j
                   //ijkvis5d=(i+(j+k*N2)*N1);
                   
@@ -1208,7 +1211,10 @@ int main(
               ijkjon=(i+(j+k*N2)*N1)*(long long int)NumVars + (long long int)iv;
               //              ijkvis5d=k + ((j) + (i) * N2) * N3;
               //              ijkvis5d=k + ((i) + (j) * N1) * N3; // so y,k,N3,Nl fastest, then x,i,N1,Nc then z,j,N2,Nr
-              ijkvis5d=N1-1-i + ((k) + (j) * N3) * N1; // so x,i,N1,Nl fastest, then z,k,N3,Nc then y,j,N2,Nr
+              //              ijkvis5d=N1-1-i + ((k) + (j) * N3) * N1; // so x,i,N1,Nl fastest, then z,k,N3,Nc then y,j,N2,Nr
+              //              ijkvis5d=N1-1-i + ((N3-1-k) + (j) * N3) * N1; // so x,i,N1,Nl fastest, then z,k,N3,Nc then y,j,N2,Nr // so x cross y is z instead of -z
+              ijkvis5d=N1-1-i + ((j) + (k) * N2) * N1;
+
 
               //              ijkvis5d=(N3-1-k) + ((i) + (j) * N1) * N3; // so k fastest, then i then j
               //ijkvis5d=(i+(j+k*N2)*N1);
