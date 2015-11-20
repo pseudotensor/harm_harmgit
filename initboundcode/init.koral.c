@@ -1,4 +1,4 @@
-
+// GODMARK: With WALD, symmetry and noise and high bsq/rho
 
 /*! \file init.koral.c
      \brief USER initial conditions for Koral/RAD simulations
