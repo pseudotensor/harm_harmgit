@@ -58,6 +58,8 @@ int inittypeglobal; // for bounds to communicate detail of what doing
 #define SLOWFAC 1.0  /* reduce u_phi by this amount */
 #define MAXPASSPARMS 10
 
+// GODMARK: Thetarot. see whats in init that overwrites restart input.  You might need to set THETAROT directly in
+
 //#define THETAROTMETRIC (0.5*0.7)
 //#define USER_THETAROTMETRIC (M_PI*0.25)
 #define USER_THETAROTMETRIC (0.0) // WALD
