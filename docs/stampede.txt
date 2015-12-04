@@ -1,0 +1,49 @@
+To use Stampede do:
+
+1) Get XSEDE user account and give username to Jon.
+
+2) Get access from Jon.
+
+3) Login with user@stampede.tacc.utexas.edu.
+
+4) See if ~/.ssh/ keys exist.  If already exist, copy public key (id_rsa.pub or similar .pub file) to harm.unfuddle.com's part where your user has a list of keys.  If not exist, create using ssh-keygen (or google about it as maybe what that generates needs to be copied to id_rsa and id_rsa.pub).
+
+5) git clone ... for harm and python stuff. Change to koralinsert branch and compile harm stuff as usual.  Copy over pyton directory to ~/py/ as usual -- follow python directions.
+
+6) in harmgit/environmentfiles/stampede/ there are normal *and* hidden files.  cp all those files to ~/ on stampede.
+
+7) Exit and re-login to stampede so .bash files are used that you just copied.
+
+8) On stampede in ~/ create directory for your run's code by doing (e.g.) cp -a harmgit rad0.3 or rad1 or rad5.  Ensure you've compiled as a check that compiling works.
+
+9) Edit the init.h N1,N2,N3 for RADDONUT section as required for per-core values.
+
+10) in harmgit/batches/ there is batch.slurm.kraken.radtma0.8a that you can use as a template batch file for slurm (like qsub).  Copy this to the ~/rad0.3/ (or other like) directory.
+
+Edit this file by changing 4096 to total number of NCPUX1*NCPUX2*NCPUX3 you will use.  Change 48:00:00 to (say) 00:01:00 for 1 hour test run.  Change email to yours.  Change "radtma0.8" everywhere to "rad0.3" everywhere.
+
+Edit NCPUX1,NCPUX2,NCPUX3 to what you want to use.  These are number of cores in each direction.  Total resolution is (NCPUX1*N1)x(NCPUX2*N2)x(NCPUX3*N3) .  You need N to be 1 if that dimension is not present.  Minimum N is otherwise 4 and good choice is minimum of 8.
+
+set NTOT to be the NCPUX1*NCPUX2*NCPUX3.
+
+Edit everywhere tg802609 to your username.
+
+11) Run the batch by doing on the command line:
+
+sbatch batch.slurm.kraken.radtma0.8a
+
+
+
+Notes:
+
+1) Reasonble choices for total resolution are (say) 128x64x16 at first.  Per core minimums as above.
+
+2) Get me to add more notes if you want to run more than 1 48 hour period (i.e. see http://physics-179.umd.edu/doxygenresults_verypruned/html/batch1_8txt.html )
+
+3) Get me to add more if you get to do python.  It's mostly following general tutorial for python stuff already at http://physics-179.umd.edu/doxygenresults_verypruned/html/general__plotting__guide_8txt.html , but I need to tell you more about makeallmovie.sh and makemovie.sh for stampede-specific things.  So I'll do that at that time.
+
+
+
+
+
+
