@@ -3,133 +3,132 @@
 # submitting dependency list
 # http://beige.ucs.indiana.edu/I590/node45.html
 
-filereport="radsubmitreport.rada0.94.dat"
+filereport="radsubmitreport.radtma0.8.8.dat"
+rm -rf $filereport
 
-#FIRST=`qsub first_1.sh`
+#FIRST=`sbatch first_1.sh`
 #echo $FIRST
-#SECOND=`qsub -W depend=afterok:$FIRST second_1.sh`
+#SECOND=`sbatch -W depend=afterok:$FIRST second_1.sh`
 #echo $SECOND
-#THIRD=`qsub -W depend=afterok:$SECOND third_1.sh`
+#THIRD=`sbatch -W depend=afterok:$SECOND third_1.sh`
 #echo $THIRD
-#FOURTH=`qsub -W depend=afterok:$THIRD fourth_1.sh`
+#FOURTH=`sbatch -W depend=afterok:$THIRD fourth_1.sh`
 #echo $FOURTH
 #exit 0
 
 # first job id can come from qstat | grep jmckinne if not doing dep list for very first run (usually want to ensure first run looks good before setting up full dep list)
-JOBID=`qsub batch.qsub.kraken.rada0.94a`
+#JOBID=`sbatch batch.sbatch.kraken.radtma0.8a`
 # if job already completed, then skip up to that point, and remove dependency at that point
-#JOBID=3950778
-echo "$JOBID for batch.qsub.kraken.rada0.94a" >> $filereport
+JOBID=4915427
+echo "$JOBID for batch.slurm.kraken.radtma0.8a" >> $filereport
 
-JOBID=`qsub -W depend=afterany:$JOBID batch.qsub.kraken.rada0.94b`
-# removed dependency because got done with "rada0.94a" while setting up these files.
-#JOBID=`qsub batch.qsub.kraken.rada0.94b`
-echo "$JOBID for batch.qsub.kraken.rada0.94b" >> $filereport
-                         
-JOBID=`qsub -W depend=afterany:$JOBID batch.qsub.kraken.rada0.94c`
-echo "$JOBID for batch.qsub.kraken.rada0.94c" >> $filereport
-JOBID=`qsub -W depend=afterany:$JOBID batch.qsub.kraken.rada0.94d`
-echo "$JOBID for batch.qsub.kraken.rada0.94d" >> $filereport
-JOBID=`qsub -W depend=afterany:$JOBID batch.qsub.kraken.rada0.94e`
-echo "$JOBID for batch.qsub.kraken.rada0.94e" >> $filereport
-JOBID=`qsub -W depend=afterany:$JOBID batch.qsub.kraken.rada0.94f`
-echo "$JOBID for batch.qsub.kraken.rada0.94f" >> $filereport
-JOBID=`qsub -W depend=afterany:$JOBID batch.qsub.kraken.rada0.94g`
-echo "$JOBID for batch.qsub.kraken.rada0.94g" >> $filereport
-JOBID=`qsub -W depend=afterany:$JOBID batch.qsub.kraken.rada0.94h`
-echo "$JOBID for batch.qsub.kraken.rada0.94h" >> $filereport
-JOBID=`qsub -W depend=afterany:$JOBID batch.qsub.kraken.rada0.94i`
-echo "$JOBID for batch.qsub.kraken.rada0.94i" >> $filereport
-JOBID=`qsub -W depend=afterany:$JOBID batch.qsub.kraken.rada0.94j`
-echo "$JOBID for batch.qsub.kraken.rada0.94j" >> $filereport
-JOBID=`qsub -W depend=afterany:$JOBID batch.qsub.kraken.rada0.94k`
-echo "$JOBID for batch.qsub.kraken.rada0.94k" >> $filereport
-JOBID=`qsub -W depend=afterany:$JOBID batch.qsub.kraken.rada0.94l`
-echo "$JOBID for batch.qsub.kraken.rada0.94l" >> $filereport
-JOBID=`qsub -W depend=afterany:$JOBID batch.qsub.kraken.rada0.94m`
-echo "$JOBID for batch.qsub.kraken.rada0.94m" >> $filereport
-JOBID=`qsub -W depend=afterany:$JOBID batch.qsub.kraken.rada0.94n`
-echo "$JOBID for batch.qsub.kraken.rada0.94n" >> $filereport
-JOBID=`qsub -W depend=afterany:$JOBID batch.qsub.kraken.rada0.94o`
-echo "$JOBID for batch.qsub.kraken.rada0.94o" >> $filereport
-JOBID=`qsub -W depend=afterany:$JOBID batch.qsub.kraken.rada0.94p`
-echo "$JOBID for batch.qsub.kraken.rada0.94p" >> $filereport
-JOBID=`qsub -W depend=afterany:$JOBID batch.qsub.kraken.rada0.94q`
-echo "$JOBID for batch.qsub.kraken.rada0.94q" >> $filereport
-JOBID=`qsub -W depend=afterany:$JOBID batch.qsub.kraken.rada0.94r`
-echo "$JOBID for batch.qsub.kraken.rada0.94r" >> $filereport
-JOBID=`qsub -W depend=afterany:$JOBID batch.qsub.kraken.rada0.94s`
-echo "$JOBID for batch.qsub.kraken.rada0.94s" >> $filereport
-JOBID=`qsub -W depend=afterany:$JOBID batch.qsub.kraken.rada0.94t`
-echo "$JOBID for batch.qsub.kraken.rada0.94t" >> $filereport
-JOBID=`qsub -W depend=afterany:$JOBID batch.qsub.kraken.rada0.94u`
-echo "$JOBID for batch.qsub.kraken.rada0.94u" >> $filereport
-JOBID=`qsub -W depend=afterany:$JOBID batch.qsub.kraken.rada0.94v`
-echo "$JOBID for batch.qsub.kraken.rada0.94v" >> $filereport
-JOBID=`qsub -W depend=afterany:$JOBID batch.qsub.kraken.rada0.94w`
-echo "$JOBID for batch.qsub.kraken.rada0.94w" >> $filereport
-JOBID=`qsub -W depend=afterany:$JOBID batch.qsub.kraken.rada0.94x`
-echo "$JOBID for batch.qsub.kraken.rada0.94x" >> $filereport
-JOBID=`qsub -W depend=afterany:$JOBID batch.qsub.kraken.rada0.94y`
-echo "$JOBID for batch.qsub.kraken.rada0.94y" >> $filereport
-JOBID=`qsub -W depend=afterany:$JOBID batch.qsub.kraken.rada0.94z`
-echo "$JOBID for batch.qsub.kraken.rada0.94z" >> $filereport
+JOBID=`sbatch --dependency=afterany:$JOBID batch.slurm.kraken.radtma0.8b | tail -1 | awk '{print $4}'`
+echo "$JOBID for batch.slurm.kraken.radtma0.8b" >> $filereport
+JOBID=`sbatch --dependency=afterany:$JOBID batch.slurm.kraken.radtma0.8c | tail -1 | awk '{print $4}'`
+echo "$JOBID for batch.slurm.kraken.radtma0.8c" >> $filereport
+JOBID=`sbatch --dependency=afterany:$JOBID batch.slurm.kraken.radtma0.8d | tail -1 | awk '{print $4}'`
+echo "$JOBID for batch.slurm.kraken.radtma0.8d" >> $filereport
+JOBID=`sbatch --dependency=afterany:$JOBID batch.slurm.kraken.radtma0.8e | tail -1 | awk '{print $4}'`
+echo "$JOBID for batch.slurm.kraken.radtma0.8e" >> $filereport
+JOBID=`sbatch --dependency=afterany:$JOBID batch.slurm.kraken.radtma0.8f | tail -1 | awk '{print $4}'`
+echo "$JOBID for batch.slurm.kraken.radtma0.8f" >> $filereport
+JOBID=`sbatch --dependency=afterany:$JOBID batch.slurm.kraken.radtma0.8g | tail -1 | awk '{print $4}'`
+echo "$JOBID for batch.slurm.kraken.radtma0.8g" >> $filereport
+JOBID=`sbatch --dependency=afterany:$JOBID batch.slurm.kraken.radtma0.8h | tail -1 | awk '{print $4}'`
+echo "$JOBID for batch.slurm.kraken.radtma0.8h" >> $filereport
+JOBID=`sbatch --dependency=afterany:$JOBID batch.slurm.kraken.radtma0.8i | tail -1 | awk '{print $4}'`
+echo "$JOBID for batch.slurm.kraken.radtma0.8i" >> $filereport
+JOBID=`sbatch --dependency=afterany:$JOBID batch.slurm.kraken.radtma0.8j | tail -1 | awk '{print $4}'`
+echo "$JOBID for batch.slurm.kraken.radtma0.8j" >> $filereport
+
+#JOBID=`sbatch --dependency=afterany:$JOBID batch.slurm.kraken.radtma0.8k | tail -1 | awk '{print $4}'`
+#echo "$JOBID for batch.slurm.kraken.radtma0.8k" >> $filereport
+#JOBID=`sbatch --dependency=afterany:$JOBID batch.slurm.kraken.radtma0.8l | tail -1 | awk '{print $4}'`
+#echo "$JOBID for batch.slurm.kraken.radtma0.8l" >> $filereport
+#JOBID=`sbatch batch.slurm.kraken.radtma0.8m | tail -1 | awk '{print $4}'`
+#echo "$JOBID for batch.slurm.kraken.radtma0.8m" >> $filereport
+#JOBID=`sbatch --dependency=afterany:$JOBID batch.slurm.kraken.radtma0.8n | tail -1 | awk '{print $4}'`
+#echo "$JOBID for batch.slurm.kraken.radtma0.8n" >> $filereport
+#JOBID=`sbatch --dependency=afterany:$JOBID batch.slurm.kraken.radtma0.8o | tail -1 | awk '{print $4}'`
+#echo "$JOBID for batch.slurm.kraken.radtma0.8o" >> $filereport
+#JOBID=`sbatch --dependency=afterany:$JOBID batch.slurm.kraken.radtma0.8p | tail -1 | awk '{print $4}'`
+#echo "$JOBID for batch.slurm.kraken.radtma0.8p" >> $filereport
+#JOBID=`sbatch --dependency=afterany:$JOBID batch.slurm.kraken.radtma0.8q | tail -1 | awk '{print $4}'`
+#echo "$JOBID for batch.slurm.kraken.radtma0.8q" >> $filereport
+#JOBID=`sbatch batch.slurm.kraken.radtma0.8r | tail -1 | awk '{print $4}'`
+#echo "$JOBID for batch.slurm.kraken.radtma0.8r" >> $filereport
+#JOBID=`sbatch --dependency=afterany:$JOBID batch.slurm.kraken.radtma0.8s | tail -1 | awk '{print $4}'`
+#echo "$JOBID for batch.slurm.kraken.radtma0.8s" >> $filereport
+#JOBID=`sbatch --dependency=afterany:$JOBID batch.slurm.kraken.radtma0.8t | tail -1 | awk '{print $4}'`
+#echo "$JOBID for batch.slurm.kraken.radtma0.8t" >> $filereport
+#JOBID=`sbatch --dependency=afterany:$JOBID batch.slurm.kraken.radtma0.8u | tail -1 | awk '{print $4}'`
+#echo "$JOBID for batch.slurm.kraken.radtma0.8u" >> $filereport
+#JOBID=`sbatch batch.slurm.kraken.radtma0.8v | tail -1 | awk '{print $4}'`
+#echo "$JOBID for batch.slurm.kraken.radtma0.8v" >> $filereport
+#JOBID=`sbatch batch.slurm.kraken.radtma0.8w | tail -1 | awk '{print $4}'`
+#echo "$JOBID for batch.slurm.kraken.radtma0.8w" >> $filereport
+#JOBID=`sbatch --dependency=afterany:$JOBID batch.slurm.kraken.radtma0.8x | tail -1 | awk '{print $4}'`
+#echo "$JOBID for batch.slurm.kraken.radtma0.8x" >> $filereport
+#JOBID=`sbatch --dependency=afterany:$JOBID batch.slurm.kraken.radtma0.8y | tail -1 | awk '{print $4}'`
+#echo "$JOBID for batch.slurm.kraken.radtma0.8y" >> $filereport
+#JOBID=`sbatch --dependency=afterany:$JOBID batch.slurm.kraken.radtma0.8z | tail -1 | awk '{print $4}'`
+#echo "$JOBID for batch.slurm.kraken.radtma0.8z" >> $filereport
 	    
-JOBID=`qsub -W depend=afterany:$JOBID batch.qsub.kraken.rada0.94nexta`
-echo "$JOBID for batch.qsub.kraken.rada0.94nexta" >> $filereport
-
-JOBID=`qsub -W depend=afterany:$JOBID batch.qsub.kraken.rada0.94nextb`
-echo "$JOBID for batch.qsub.kraken.rada0.94nextb" >> $filereport
-
-JOBID=`qsub -W depend=afterany:$JOBID batch.qsub.kraken.rada0.94nextc`
-echo "$JOBID for batch.qsub.kraken.rada0.94nextc" >> $filereport
-JOBID=`qsub -W depend=afterany:$JOBID batch.qsub.kraken.rada0.94nextd`
-echo "$JOBID for batch.qsub.kraken.rada0.94nextd" >> $filereport
-JOBID=`qsub -W depend=afterany:$JOBID batch.qsub.kraken.rada0.94nexte`
-echo "$JOBID for batch.qsub.kraken.rada0.94nexte" >> $filereport
-JOBID=`qsub -W depend=afterany:$JOBID batch.qsub.kraken.rada0.94nextf`
-echo "$JOBID for batch.qsub.kraken.rada0.94nextf" >> $filereport
-JOBID=`qsub -W depend=afterany:$JOBID batch.qsub.kraken.rada0.94nextg`
-echo "$JOBID for batch.qsub.kraken.rada0.94nextg" >> $filereport
-JOBID=`qsub -W depend=afterany:$JOBID batch.qsub.kraken.rada0.94nexth`
-echo "$JOBID for batch.qsub.kraken.rada0.94nexth" >> $filereport
-JOBID=`qsub -W depend=afterany:$JOBID batch.qsub.kraken.rada0.94nexti`
-echo "$JOBID for batch.qsub.kraken.rada0.94nexti" >> $filereport
-JOBID=`qsub -W depend=afterany:$JOBID batch.qsub.kraken.rada0.94nextj`
-echo "$JOBID for batch.qsub.kraken.rada0.94nextj" >> $filereport
-JOBID=`qsub -W depend=afterany:$JOBID batch.qsub.kraken.rada0.94nextk`
-echo "$JOBID for batch.qsub.kraken.rada0.94nextk" >> $filereport
-JOBID=`qsub -W depend=afterany:$JOBID batch.qsub.kraken.rada0.94nextl`
-echo "$JOBID for batch.qsub.kraken.rada0.94nextl" >> $filereport
-JOBID=`qsub -W depend=afterany:$JOBID batch.qsub.kraken.rada0.94nextm`
-echo "$JOBID for batch.qsub.kraken.rada0.94nextm" >> $filereport
-JOBID=`qsub -W depend=afterany:$JOBID batch.qsub.kraken.rada0.94nextn`
-echo "$JOBID for batch.qsub.kraken.rada0.94nextn" >> $filereport
-JOBID=`qsub -W depend=afterany:$JOBID batch.qsub.kraken.rada0.94nexto`
-echo "$JOBID for batch.qsub.kraken.rada0.94nexto" >> $filereport
-JOBID=`qsub -W depend=afterany:$JOBID batch.qsub.kraken.rada0.94nextp`
-echo "$JOBID for batch.qsub.kraken.rada0.94nextp" >> $filereport
-JOBID=`qsub -W depend=afterany:$JOBID batch.qsub.kraken.rada0.94nextq`
-echo "$JOBID for batch.qsub.kraken.rada0.94nextq" >> $filereport
-JOBID=`qsub -W depend=afterany:$JOBID batch.qsub.kraken.rada0.94nextr`
-echo "$JOBID for batch.qsub.kraken.rada0.94nextr" >> $filereport
-JOBID=`qsub -W depend=afterany:$JOBID batch.qsub.kraken.rada0.94nexts`
-echo "$JOBID for batch.qsub.kraken.rada0.94nexts" >> $filereport
-JOBID=`qsub -W depend=afterany:$JOBID batch.qsub.kraken.rada0.94nextt`
-echo "$JOBID for batch.qsub.kraken.rada0.94nextt" >> $filereport
-JOBID=`qsub -W depend=afterany:$JOBID batch.qsub.kraken.rada0.94nextu`
-echo "$JOBID for batch.qsub.kraken.rada0.94nextu" >> $filereport
-JOBID=`qsub -W depend=afterany:$JOBID batch.qsub.kraken.rada0.94nextv`
-echo "$JOBID for batch.qsub.kraken.rada0.94nextv" >> $filereport
-JOBID=`qsub -W depend=afterany:$JOBID batch.qsub.kraken.rada0.94nextw`
-echo "$JOBID for batch.qsub.kraken.rada0.94nextw" >> $filereport
-JOBID=`qsub -W depend=afterany:$JOBID batch.qsub.kraken.rada0.94nextx`
-echo "$JOBID for batch.qsub.kraken.rada0.94nextx" >> $filereport
-JOBID=`qsub -W depend=afterany:$JOBID batch.qsub.kraken.rada0.94nexty`
-echo "$JOBID for batch.qsub.kraken.rada0.94nexty" >> $filereport
-JOBID=`qsub -W depend=afterany:$JOBID batch.qsub.kraken.rada0.94nextz`
-echo "$JOBID for batch.qsub.kraken.rada0.94nextz" >> $filereport
-
+#JOBID=`sbatch --dependency=afterany:$JOBID batch.slurm.kraken.radtma0.8nexta | tail -1 | awk '{print $4}'`
+#echo "$JOBID for batch.slurm.kraken.radtma0.8nexta" >> $filereport
+#
+#JOBID=`sbatch batch.slurm.kraken.radtma0.8nextb | tail -1 | awk '{print $4}'`
+#echo "$JOBID for batch.slurm.kraken.radtma0.8nextb" >> $filereport
+#
+#JOBID=`sbatch --dependency=afterany:$JOBID batch.slurm.kraken.radtma0.8nextc | tail -1 | awk '{print $4}'`
+#echo "$JOBID for batch.slurm.kraken.radtma0.8nextc" >> $filereport
+#JOBID=`sbatch --dependency=afterany:$JOBID batch.slurm.kraken.radtma0.8nextd | tail -1 | awk '{print $4}'`
+#echo "$JOBID for batch.slurm.kraken.radtma0.8nextd" >> $filereport
+#JOBID=`sbatch --dependency=afterany:$JOBID batch.slurm.kraken.radtma0.8nexte | tail -1 | awk '{print $4}'`
+#echo "$JOBID for batch.slurm.kraken.radtma0.8nexte" >> $filereport
+#JOBID=`sbatch --dependency=afterany:$JOBID batch.slurm.kraken.radtma0.8nextf | tail -1 | awk '{print $4}'`
+#echo "$JOBID for batch.slurm.kraken.radtma0.8nextf" >> $filereport
+#JOBID=`sbatch --dependency=afterany:$JOBID batch.slurm.kraken.radtma0.8nextg | tail -1 | awk '{print $4}'`
+#echo "$JOBID for batch.slurm.kraken.radtma0.8nextg" >> $filereport
+#JOBID=`sbatch --dependency=afterany:$JOBID batch.slurm.kraken.radtma0.8nexth | tail -1 | awk '{print $4}'`
+#echo "$JOBID for batch.slurm.kraken.radtma0.8nexth" >> $filereport
+#JOBID=`sbatch --dependency=afterany:$JOBID batch.slurm.kraken.radtma0.8nexti | tail -1 | awk '{print $4}'`
+#echo "$JOBID for batch.slurm.kraken.radtma0.8nexti" >> $filereport
+#JOBID=`sbatch --dependency=afterany:$JOBID batch.slurm.kraken.radtma0.8nextj | tail -1 | awk '{print $4}'`
+#echo "$JOBID for batch.slurm.kraken.radtma0.8nextj" >> $filereport
+#JOBID=`sbatch --dependency=afterany:$JOBID batch.slurm.kraken.radtma0.8nextk | tail -1 | awk '{print $4}'`
+#echo "$JOBID for batch.slurm.kraken.radtma0.8nextk" >> $filereport
+#JOBID=`sbatch --dependency=afterany:$JOBID batch.slurm.kraken.radtma0.8nextl | tail -1 | awk '{print $4}'`
+#echo "$JOBID for batch.slurm.kraken.radtma0.8nextl" >> $filereport
+#JOBID=`sbatch --dependency=afterany:$JOBID batch.slurm.kraken.radtma0.8nextm | tail -1 | awk '{print $4}'`
+#echo "$JOBID for batch.slurm.kraken.radtma0.8nextm" >> $filereport
+#JOBID=`sbatch --dependency=afterany:$JOBID batch.slurm.kraken.radtma0.8nextn | tail -1 | awk '{print $4}'`
+#echo "$JOBID for batch.slurm.kraken.radtma0.8nextn" >> $filereport
+#JOBID=`sbatch --dependency=afterany:$JOBID batch.slurm.kraken.radtma0.8nexto | tail -1 | awk '{print $4}'`
+#echo "$JOBID for batch.slurm.kraken.radtma0.8nexto" >> $filereport
+#JOBID=`sbatch --dependency=afterany:$JOBID batch.slurm.kraken.radtma0.8nextp | tail -1 | awk '{print $4}'`
+#echo "$JOBID for batch.slurm.kraken.radtma0.8nextp" >> $filereport
+#JOBID=`sbatch --dependency=afterany:$JOBID batch.slurm.kraken.radtma0.8nextq | tail -1 | awk '{print $4}'`
+#echo "$JOBID for batch.slurm.kraken.radtma0.8nextq" >> $filereport
+#JOBID=`sbatch --dependency=afterany:$JOBID batch.slurm.kraken.radtma0.8nextr | tail -1 | awk '{print $4}'`
+#echo "$JOBID for batch.slurm.kraken.radtma0.8nextr" >> $filereport
+#JOBID=`sbatch --dependency=afterany:$JOBID batch.slurm.kraken.radtma0.8nexts | tail -1 | awk '{print $4}'`
+#echo "$JOBID for batch.slurm.kraken.radtma0.8nexts" >> $filereport
+#JOBID=`sbatch --dependency=afterany:$JOBID batch.slurm.kraken.radtma0.8nextt | tail -1 | awk '{print $4}'`
+#echo "$JOBID for batch.slurm.kraken.radtma0.8nextt" >> $filereport
+#JOBID=`sbatch --dependency=afterany:$JOBID batch.slurm.kraken.radtma0.8nextu | tail -1 | awk '{print $4}'`
+#echo "$JOBID for batch.slurm.kraken.radtma0.8nextu" >> $filereport
+#JOBID=`sbatch --dependency=afterany:$JOBID batch.slurm.kraken.radtma0.8nextv | tail -1 | awk '{print $4}'`
+#echo "$JOBID for batch.slurm.kraken.radtma0.8nextv" >> $filereport
+#JOBID=`sbatch --dependency=afterany:$JOBID batch.slurm.kraken.radtma0.8nextw | tail -1 | awk '{print $4}'`
+#echo "$JOBID for batch.slurm.kraken.radtma0.8nextw" >> $filereport
+#JOBID=`sbatch --dependency=afterany:$JOBID batch.slurm.kraken.radtma0.8nextx | tail -1 | awk '{print $4}'`
+#echo "$JOBID for batch.slurm.kraken.radtma0.8nextx" >> $filereport
+#JOBID=`sbatch --dependency=afterany:$JOBID batch.slurm.kraken.radtma0.8nexty | tail -1 | awk '{print $4}'`
+#echo "$JOBID for batch.slurm.kraken.radtma0.8nexty" >> $filereport
+#JOBID=`sbatch --dependency=afterany:$JOBID batch.slurm.kraken.radtma0.8nextz | tail -1 | awk '{print $4}'`
+#echo "$JOBID for batch.slurm.kraken.radtma0.8nextz" >> $filereport
+#
 
 
 exit 0
