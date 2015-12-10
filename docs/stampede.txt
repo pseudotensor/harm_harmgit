@@ -18,7 +18,7 @@ To use Stampede do:
 
 9) Edit the init.h N1,N2,N3 for RADDONUT section as required for per-core values.  Compile harm as usual.  Ignore "icc: error #10103: can't fork process"
 
-10) in harmgit/batches/ there is batch.slurm.kraken.radtma0.8a that you can use as a template batch file for slurm (like qsub).  Copy this to the ~/rad0.3/ (or other like) directory.
+10) in ~/rad0.3/batches/ there is batch.slurm.kraken.radtma0.8a that you can use as a template batch file for slurm (like qsub).  Copy this to the ~/rad0.3/ (or other like) directory.
 
 Edit this file by changing 4096 to total number of NCPUX1*NCPUX2*NCPUX3 you will use.  Change 48:00:00 to (say) 00:01:00 for 1 hour test run.  Change email to yours.  Change "radtma0.8" everywhere to "rad0.3" everywhere.
 
@@ -28,19 +28,43 @@ set NTOT to be the NCPUX1*NCPUX2*NCPUX3.  At first use 16 total cores in the sam
 
 Edit everywhere tg802609 to your username.  This includes changing the "DIRFILE" to point to your correct home directory and code directory where "grmhd" is located and was compiled.
 
-11) Run the batch by doing on the command line:
+11) In more detail on choosing cores and resolution:
+
+
+You always control the per-core res (N123) and the number of cores in each direction (ncpux123) that you choose to get whatever total res you want.  Although, often the total res is kinda chosen for you based upon if your testing or doing production runs and the need to get runs done quickly for testing.
+
+Let us all use 128x64x16 for the total res for now.
+
+With the minimum per-core resolution of N123=8x8x8 one has up to ncpux123 = 16x8x2 (i.e. 256 cores total).  That will take a while to get going in the queue and I don't recommend that until the density is tuned better.
+
+So instead I recommend using something like 64 cores, so the job gets going quickly and you only wait for the first 250 field line files (hopefully within no restart needed).  So use ncpux123=8x8x1 (i.e. 64 cores as desired) with (based upon total resolution needed) N123=16x8x16 .
+
+Try this with 1 hour first, and if it works, then try 24 hours.  Or estimate the hours needed to get to 250 field line files.  If it ends up you need to restart the run to get to 250 field line files, then I'll provide docs on how to manually restart by editing the script (rather than automated as used when doing production runs and doing many restarts).
+
+12) Run the batch by doing on the command line:
 
 sbatch batch.slurm.kraken.radtma0.8a
 
+13) If need to restart the run manually, then do the following:
+
+a) cd ~/rada0.3/
+
+b) cp batches/stampederestartsustain_rad1.sh .
+
+c) cp batch.slurm.kraken.radtma0.8a batch.slurm.kraken.radtma0.8b
+
+d) edit the batch.slurm.kraken.radtma0.8b file and change "rad0.3a" to "rad0.3b" everywhere.  Change firstrun to 0 .
+
+e) sbatch batch.slurm.kraken.radtma0.8b
+
+This will use stampederestartsustain_rad1.sh to copy over the necessary files from $SCRATCH/rad0.3a/ to $SCRATCH/rad0.3b/ .
 
 
 Notes:
 
-1) Reasonble choices for total resolution are (say) 128x64x16 at first.  Per core minimums as above.
+1) If you want to run in a more automated way, ask for further notes.  It involves using the batches/makebatches.sh and batches/submitdeplist.sh but editing them for your job name and ensuring you choose the right number of jobs so the system isn't overloaded.  It also involves understanding what to do in case your job had problems and you need to kill all dependent queued jobs. (i.e. see http://physics-179.umd.edu/doxygenresults_verypruned/html/batch1_8txt.html )
 
-2) Get me to add more notes if you want to run more than 1 48 hour period (i.e. see http://physics-179.umd.edu/doxygenresults_verypruned/html/batch1_8txt.html )
-
-3) Get me to add more if you get to do python.  It's mostly following general tutorial for python stuff already at http://physics-179.umd.edu/doxygenresults_verypruned/html/general__plotting__guide_8txt.html , but I need to tell you more about makeallmovie.sh and makemovie.sh for stampede-specific things.  So I'll do that at that time.
+2) Get me to add more if you get to do python.  It's mostly following general tutorial for python stuff already at http://physics-179.umd.edu/doxygenresults_verypruned/html/general__plotting__guide_8txt.html , but I need to tell you more about makeallmovie.sh and makemovie.sh for stampede-specific things.  So I'll do that at that time.
 
 
 
