@@ -362,7 +362,7 @@ int diag_fixup_dUandaccount(FTYPE *Ui, FTYPE *Uf, FTYPE *ucons, struct of_geom *
 
   }// end if doing accounting
 
-  if(1){
+  if(whocalled>=0 && whocalled!=COUNTONESTEP){
 
     //////////////
     //
