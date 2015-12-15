@@ -164,7 +164,7 @@ For each case, you need to check that the number of cores you chose is reasonabl
 
 Once you get the hang of things, some things you can do simultaneously.  E.g., once avg2d.npy and qty2.npy are there, you can simultaneously do the "makeplot" "makemovie" and "makeavgplot" steps without waiting.  But wait for now to ensure you really follow things.  Also, you might skip the "create mp4 movie" line and just run the ~/py/scripts/makelinkimagenew2.sh file that is a general updated way of making the final mp4 files.
 
-I checked all these steps with a new 128x64x1 run with 43 files created after 1 hour run.  All these steps work as a suggested with the latest python stuff.  Of course, as you go to larger simulations and more fieldline files, you'll get the hang of how long things take and how to tune things like "timetot".
+I checked all these steps with a new 128x64x1 run with 43 files created after 1 hour run.  All these steps work as a suggested with the latest python stuff.  Of course, as you go to larger simulations and more fieldline files, you'll get the hang of how long things take and how to tune things like "timetot".  At the moment, for my 128x64x1 run with 43 files, each step takes only a few minutes.  So easy to check and understand at only 50 files and only move on once things work.
 
 
 
