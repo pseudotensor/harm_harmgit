@@ -1,4 +1,6 @@
+=====
 To use Stampede do:
+=====
 
 1) Get XSEDE user account and give username to Jon.
 
@@ -8,7 +10,7 @@ To use Stampede do:
 
 4) See if ~/.ssh/ keys exist.  If already exist, copy public key (id_rsa.pub or similar .pub file) to harm.unfuddle.com's part where your user has a list of keys.  If not exist, create using ssh-keygen (or google about it as maybe what that generates needs to be copied to id_rsa and id_rsa.pub).
 
-5) git clone ... for harm and python stuff. Change to koralinsert branch and compile harm stuff as usual.  Copy over pyton directory to ~/py/ as usual -- follow python directions.
+5) git clone ... for harm and python stuff. Change to koralinsert branch and compile harm stuff as usual.  Copy over python directory to ~/py/ as usual -- follow python directions.
 
 6) in harmgit/environmentfiles/stampede/ there are normal *and* hidden files.  cp all those files to ~/ on stampede.
 
@@ -24,7 +26,7 @@ Edit this file by changing 4096 to total number of NCPUX1*NCPUX2*NCPUX3 you will
 
 Edit NCPUX1,NCPUX2,NCPUX3 to what you want to use.  These are number of cores in each direction.  Total resolution is (NCPUX1*N1)x(NCPUX2*N2)x(NCPUX3*N3) .  You need N to be 1 if that dimension is not present.  Minimum N is otherwise 4 and good choice is minimum of 8.
 
-set NTOT to be the NCPUX1*NCPUX2*NCPUX3.  At first use 16 total cores in the same 4x4x1 configiration as on BH.
+set NTOT to be the NCPUX1*NCPUX2*NCPUX3.  At first use 16 total cores in the same 4x4x1 configuration as on BH.
 
 Edit everywhere tg802609 to your username.  This includes changing the "DIRFILE" to point to your correct home directory and code directory where "grmhd" is located and was compiled.
 
@@ -59,14 +61,108 @@ e) sbatch batch.slurm.kraken.radtma0.8b
 
 This will use stampederestartsustain_rad1.sh to copy over the necessary files from $SCRATCH/rad0.3a/ to $SCRATCH/rad0.3b/ .
 
-
-Notes:
-
-1) If you want to run in a more automated way, ask for further notes.  It involves using the batches/makebatches.sh and batches/submitdeplist.sh but editing them for your job name and ensuring you choose the right number of jobs so the system isn't overloaded.  It also involves understanding what to do in case your job had problems and you need to kill all dependent queued jobs. (i.e. see http://physics-179.umd.edu/doxygenresults_verypruned/html/batch1_8txt.html )
-
-2) Get me to add more if you get to do python.  It's mostly following general tutorial for python stuff already at http://physics-179.umd.edu/doxygenresults_verypruned/html/general__plotting__guide_8txt.html , but I need to tell you more about makeallmovie.sh and makemovie.sh for stampede-specific things.  So I'll do that at that time.
+14) Let run until (say) 250 fieldline files are made.  For 128x64x16 this will take about 48 hours, so choose 48 hours in the batch script.
 
 
+=====
+Running python scripts on stampede:
+=====
+
+It's mostly following general tutorial for python stuff already at
+http://physics-179.umd.edu/doxygenresults_verypruned/html/general__plotting__guide_8txt.html
+, but there are some stampede-specific things mentioned here that you need to consider or change in makeallmovie.sh and makemovie.sh .
+
+1) Be on stampede
+
+2) Ensure you have the latest pythontools repo stuff
+
+cd ~/py/
+git pull
+# if it complains about overwriting files, move the mentioned file to a backup name.  Then compare to see any changes you made in case important.
+
+3) Edit ~/py/scripts/makemovie.sh and search for "stampede" that will bring you to the stampede section where some changes are required.  Common things to change are:
+
+a) "timetot" that is how long is needed to run any of makeavg, make1d, or makemovie.  If you run all 250 files at once, this will use 250 cores and needs about 1 hours I think.  If you ever get an email from the batch system that says the job timed-out during the makeavg, make1d, or makemovie stages, then you probably have to increase this time.
+
+b) "numtasks" that is currently set as the total number of fieldline files.  As you later make more fieldline files, you will not want to use this same option because it will keep asking for the number of cores as the number of fieldline files. An upper limit on the number of cores is probably 512 as a reasonable option.  Then set numtasks=512 if you know that the number of fieldline files is above 512.  In that case, "timetot" should be increased proportionally by (#fieldline files)/(512) once you go beyond 512 fieldline files and fix numtasks to 512.
+
+c) "numtaskspernode" that can be 16 and only needs to be 14 for high-res runs at resolution 256x128x64 or higher.
+
+d) "timetotplot" that is 1 hour by default, which may be fine.  Check if it completes the "makeplot" stage or did not.  If you ever get timed-out from the batch system emails, you know you didn't give enough time.
+
+4) Edit ~/py/__init__.py so that your run name used (say rad0.3) is present as a model list in (at least) def isradmodel(modelname): as another or conditional like or modelname=="rad0.3"  .  You can scan through the file and see how this "isradmodel" is used.  For more careful control over what happens with specific models, you can scan through for examples where "isradmodel" is referred to in the python script.  It's good to also add your model to the place where "fieldtype" and "truemodelname" and "gridtype" are set by adding your model as another conditional.  You can look in the script for modelname=="rad1" to see an example of how a specific model chooses those and other things.
+
+5) Edit ~/py/__init__.py for stampede-specific things to optimize performance.  Uncomment the following lines:
+
+#time.sleep(10.0+100.0*n) # on supercomputer's need to wait so file system gets up to date
+
+#time.sleep(10.0*n) # on supercomputer's need to wait so file system gets up to date
+
+6) By default, makeallmovie.sh will detect stampede and go into so-called "parallel=2" mode where it submits a batch job and runs an MPI wrapper that calls python for each core independently.  So it's an embarrassingly parallel job. To ensure the parallel==2 program will compile properly, go ahead and check by doing:
+
+cd ~/py/scripts/
+make
+# you should get no warnings or errors and "makemoviec" should be newly created or overwrite old one.  This make happens during "makemovie.sh" but this is a check to ensure that will not have issues.  Sometimes TACC changes the MPI compiler or compilers get removed and so things have to be updated.
+
+7) By default the batches create model"a" and further restarts should be "b" "c", etc.  I have a script that makes the final directory needed for python.  One does:
+
+sh ~/py/scripts/createlinkssimple.sh rad0.3
+
+This will take all the rad0.3a rad0.3b etc. and make a single directory rad0.3.
+
+8) Now do your normal edit of "dirruns" or "numkeep" or other things in makeallmovie.sh, have that in $SCRATCH, export the moviename as (e.g.) movie1, and run those 2 lines as in the tutorial.  You have to run the first line, wait for completion and creation of the avg2d.py file, and then run the 2nd line after that is done.  Check progress and ensure the runs don't time-out so they complete.
+
+
+
+
+=====
+Running many restarted jobs (only do if Jon approves).
+=====
+
+In general, I recommend restarting manually for a while.  Only do up to step #4 below and then manually sbatch each "b" or more *after* each previous job is done.
+
+1) Go into your code directory on stampede.  This is where the batch file is.  Ensure the name of the batch file looks like: batch.slurm.kraken.<runname>a where <runname> is replaced by (e.g.) rad0.3 .  Ensure it's setup as a firstrun=1 and the "sh stampederestartsustain_rad1.sh 0 0 4 radtma0.8 radtma0.8 a b" type line really has "a b" there.
+
+2) cp batches/makebatches.sh .  ; cp batches/stampederestartsustain_rad1.sh .
+
+3) Edit makebatches.sh and replace "radtam0.8" with your <runname> .
+
+4) sh makebatches.sh  .  This will create a bunch of batch files that can be used for restarting the job.  Look at a random batch file letter (e.g. "p") and ensure it makes sense.
+
+
+For automated restarts, do #5+ below...
+
+
+5) cp batches/submitdeplist.sh .
+
+6) Edit submitdeplist.sh and again change "radtma0.8" to your <runname> .
+
+As written, the assumption is that you ran "radtam0.8a" manually by calling sbatch batch.slurm.kraken.radtma0.8a .  Then, once that completed and you checked the data and want to restart, only then after such checks do you think about calling submitdeplist.sh.
+
+However, there are by default *WAY* too many restarts setup here.  Better is to take things a step at a time.  Try removing all latter lines and only keep up through the "d" submission to sbatch.
+
+Then, there is the question about whether you ran this submitdeplist.sh *while* the batch.slurm.kraken.radtma0.8a was going *or* if you ran after that job was completed.  By default, submitdeplist.sh is setup as if you ran the "a" job with sbatch manually, and then immediately started this submitdeplist.sh .  DO NOT do this until you are more experienced.
+
+Instead, again, check the data by using python on the "a" data.  Then once you want to restart non-manually (if you want to), then further edit submitdeplist.sh so the first JOBID=4915427 is commented out and you replace:
+
+JOBID=`sbatch --dependency=afterany:$JOBID batch.slurm.kraken.radtma0.8b | tail -1 | awk '{print $4}'`
+
+with
+
+JOBID=`sbatch batch.slurm.kraken.radtma0.8b | tail -1 | awk '{print $4}'`
+
+This just removes the dependence on "a" because here we assume "a" was already completed.
+
+7) Now that submitdeplist.sh is designed appropriately, you can run:
+
+sh submitdeplist.sh
+
+This will submit a dependent list of jobs so when one job is done, the next starts automatically.
+
+8) In general, you have be more knowledgeable to handle submitdeplist.sh .  You have to ensure the jobs don't overload the system, and you need to be able to kill jobs in case something goes wrong.  This means killing the entire set of queued jobs and knowing how to edit submitdeplist.sh to continue appropriately by deleting any older undesired lettered jobs and making the letter you want to start with have no dependency, and then having the latter letters have dependency.
+
+
+======
 
 
 
