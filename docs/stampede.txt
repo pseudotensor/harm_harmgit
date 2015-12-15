@@ -117,6 +117,7 @@ This will take all the rad0.3a rad0.3b etc. and make a single directory rad0.3.
 
 8) cp ~/py/scripts/makeallmovie.sh $SCRATCH ; cd $SCRATCH
 
+
 9) Now edit makeallmovie.sh .
 
 a) Do your normal edit of "dirruns=rad0.3" and "dircollect=rad0.3" .  export your moviename (test1 at first as below, and then, say, movie1).
@@ -133,7 +134,7 @@ c) Edit the other things in makeallmovie.sh, such as adding a section to better 
 
 Or something similar.  This allows you to, for just calculations and not commonly done for movies, to focus resources on the range of files you want to time average, for example.
 
-d) Run the first makeallmovie.sh line as in the tutorial.
+10) Run the first makeallmovie.sh line as in the tutorial.
 
 bash ./makeallmovie.sh ${moviename} 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0
 
@@ -146,7 +147,7 @@ bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0
 This way you won't have to wait for small jobs to get done with the local merge step.  This should create after a few minutes the avg2d.npy file.
 
 
-e) Only after the first line (or the split version above for small jobs) batch job is done and avg2d.npy is created do you run the normal 2nd line.  But again, let's split this up so the makeallmovie.sh doesn't wait for jobs to get done by itself -- for larger jobs it's ok to let makeallmovie.sh handle things, but not yet.  One does each of the below, but checks the results before moving onto the next line.
+11) Only after the first line (or the split version above for small jobs) batch job is done and avg2d.npy is created do you run the normal 2nd line.  But again, let's split this up so the makeallmovie.sh doesn't wait for jobs to get done by itself -- for larger jobs it's ok to let makeallmovie.sh handle things, but not yet.  One does each of the below, but checks the results before moving onto the next line.
 
 bash ./makeallmovie.sh ${moviename} 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 # makes qty2_*.npy files, submits job.
 
@@ -162,9 +163,17 @@ bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 # make
 
 For each case, you need to check that the number of cores you chose is reasonable when looking at the job using: "showq -u $USERNAME".  You also need to, for each case, before moving onto the next step, need to ensure it did what it should have done after the job completed according to "showq" or you got the email saying it completed  The meaning of completion is stated in # comment at end of line.
 
-Once you get the hang of things, some things you can do simultaneously.  E.g., once avg2d.npy and qty2.npy are there, you can simultaneously do the "makeplot" "makemovie" and "makeavgplot" steps without waiting.  But wait for now to ensure you really follow things.  Also, you might skip the "create mp4 movie" line and just run the ~/py/scripts/makelinkimagenew2.sh file that is a general updated way of making the final mp4 files.
+Once you get the hang of things, some things you can do simultaneously.  E.g., once avg2d.npy and qty2.npy are there, you can simultaneously do the "makeplot" "makemovie" and "makeavgplot" steps without waiting.  But wait for now to ensure you really follow things.
 
-I checked all these steps with a new 128x64x1 run with 43 files created after 1 hour run.  All these steps work as a suggested with the latest python stuff.  Of course, as you go to larger simulations and more fieldline files, you'll get the hang of how long things take and how to tune things like "timetot".  At the moment, for my 128x64x1 run with 43 files, each step takes only a few minutes.  So easy to check and understand at only 50 files and only move on once things work.
+12) Also, you might skip the "create mp4 movie" line and just do:
+
+cd $SCRATCH/rad0.3/test1/
+cp ~/py/scripts/makelinkimagenew2.sh .
+# edit makelinkimagesnew2.sh and replace "avconv" with ffmpeg
+module load ffmpeg/2.1.4
+sh makelinkimagenew2.sh # general updated way of making the final mp4 files.
+
+13) I checked all these steps with a new 128x64x1 run with 43 files created after 1 hour run.  All these steps work as a suggested with the latest python stuff.  Of course, as you go to larger simulations and more fieldline files, you'll get the hang of how long things take and how to tune things like "timetot".  At the moment, for my 128x64x1 run with 43 files, each step takes only a few minutes.  So easy to check and understand at only 50 files and only move on once things work.
 
 
 
