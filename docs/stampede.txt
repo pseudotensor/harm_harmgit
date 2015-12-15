@@ -172,7 +172,7 @@ cp ~/py/scripts/makelinkimagenew2.sh .
 # edit makelinkimagesnew2.sh and replace "avconv" with ffmpeg
 module load ffmpeg/2.1.4
 sh makelinkimagenew2.sh # general updated way of making the final mp4 files.
-# scp movies to your computer (or upload then directly to youtube using utils online, like https://code.google.com/p/youtube-upload/wiki/Readme .
+# scp movies to your computer and post to youtube for me.
 
 13) In general, the python produces final output that you want to copy to your computer or some computer.  The stuff you want is:  *.png *.eps *.pdf data*.txt *.mp4  .  You can use scp to copy it somewhere.
 
