@@ -172,9 +172,11 @@ cp ~/py/scripts/makelinkimagenew2.sh .
 # edit makelinkimagesnew2.sh and replace "avconv" with ffmpeg
 module load ffmpeg/2.1.4
 sh makelinkimagenew2.sh # general updated way of making the final mp4 files.
-# scp movies to your computer (or upload then directly to youtube using utils online, like https://code.google.com/p/youtube-upload/wiki/Readme .  Or actually you can run "firefox" directly from command line as long as you entered stampede from linux or some kind of X-windows terminal.
+# scp movies to your computer (or upload then directly to youtube using utils online, like https://code.google.com/p/youtube-upload/wiki/Readme .
 
-13) I checked all these steps with a new 128x64x1 run with 43 files created after 1 hour run.  All these steps work as a suggested with the latest python stuff.  Of course, as you go to larger simulations and more fieldline files, you'll get the hang of how long things take and how to tune things like "timetot".  At the moment, for my 128x64x1 run with 43 files, each step takes only a few minutes.  So easy to check and understand at only 50 files and only move on once things work.
+13) In general, the python produces final output that you want to copy to your computer or some computer.  The stuff you want is:  *.png *.eps *.pdf data*.txt *.mp4  .  You can use scp to copy it somewhere.
+
+14) I checked all these steps with a new 128x64x1 run with 43 files created after 1 hour run.  All these steps work as a suggested with the latest python stuff.  Of course, as you go to larger simulations and more fieldline files, you'll get the hang of how long things take and how to tune things like "timetot".  At the moment, for my 128x64x1 run with 43 files, each step takes only a few minutes.  So easy to check and understand at only 50 files and only move on once things work.
 
 
 
