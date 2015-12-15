@@ -64,6 +64,11 @@ This will use stampederestartsustain_rad1.sh to copy over the necessary files fr
 14) Let run until (say) 250 fieldline files are made.  For 128x64x16 this will take about 48 hours, so choose 48 hours in the batch script.
 
 
+
+
+
+
+
 =====
 Running python scripts on stampede:
 =====
@@ -110,13 +115,66 @@ sh ~/py/scripts/createlinkssimple.sh rad0.3
 
 This will take all the rad0.3a rad0.3b etc. and make a single directory rad0.3.
 
-8) Now do your normal edit of "dirruns" or "numkeep" or other things in makeallmovie.sh, have that in $SCRATCH, export the moviename as (e.g.) movie1, and run those 2 lines as in the tutorial.  You have to run the first line, wait for completion and creation of the avg2d.py file, and then run the 2nd line after that is done.  Check progress and ensure the runs don't time-out so they complete.
+8) cp ~/py/scripts/makeallmovie.sh $SCRATCH ; cd $SCRATCH
+
+9) Now edit makeallmovie.sh .
+
+a) Do your normal edit of "dirruns=rad0.3" and "dircollect=rad0.3" .  export your moviename (test1 at first as below, and then, say, movie1).
+
+b) Try setting "numkeep" to 50 for a test.  Maybe call moviename "test1" or something.  After that test worked completely, *then* you can edit "numkeep" to be as large or larger than your number of fieldline files for a production python run.
+
+c) Edit the other things in makeallmovie.sh, such as adding a section to better control which files are kept by including a new section (among the other similar sections) to have:
+
+       if [ "$thedir" == "rad0.3" ]
+        then
+            keepfilesstart=$(( 100 ))
+           keepfilesend=$(( $numfiles ))
+        fi
+
+Or something similar.  This allows you to, for just calculations and not commonly done for movies, to focus resources on the range of files you want to time average, for example.
+
+d) Run the first makeallmovie.sh line as in the tutorial.
+
+bash ./makeallmovie.sh ${moviename} 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0
+
+You have to wait for completion and creation of the avg2d.py file.  You can check $SCRATCH/rad0.3/test1/ for what is going on inside makemovielocal_radtest.out and makemovielocal_radtest.full.out  as well as 0ma.uk.out and 0ma.uk.err .
+
+For a simple harm simulation with only 50 files, it should only take a few minutes on stampede to start and a few minutes to finish creating the avg2d20_*.npy files.  After the job is done, the script makeallmovie.sh will continue and try to merge those _*.npy files into the single avg2d.npy file.  But this depends upon the script checking if the job got done, which is only done every 5 minutes.  This is why I removed the "1 1" in the above.  So now you should do the merge separately:
+
+bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0
+
+This way you won't have to wait for small jobs to get done with the local merge step.  This should create after a few minutes the avg2d.npy file.
+
+
+e) Only after the first line (or the split version above for small jobs) batch job is done and avg2d.npy is created do you run the normal 2nd line.  But again, let's split this up so the makeallmovie.sh doesn't wait for jobs to get done by itself -- for larger jobs it's ok to let makeallmovie.sh handle things, but not yet.  One does each of the below, but checks the results before moving onto the next line.
+
+bash ./makeallmovie.sh ${moviename} 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 # makes qty2_*.npy files, submits job.
+
+bash ./makeallmovie.sh ${moviename} 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 # merges to get qty2.npy file, local job.
+
+bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 1 1 1 1 1 1 1 1 0 0 0 0 0 0 # makeplot step, submits job.
+
+bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 # makemovie step, submits job.
+
+bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 # create mp4 movie, local job.
+
+bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 # makeavgplot, submits job.
+
+For each case, you need to check that the number of cores you chose is reasonable when looking at the job using: "showq -u $USERNAME".  You also need to, for each case, before moving onto the next step, need to ensure it did what it should have done after the job completed according to "showq" or you got the email saying it completed  The meaning of completion is stated in # comment at end of line.
+
+Once you get the hang of things, some things you can do simultaneously.  E.g., once avg2d.npy and qty2.npy are there, you can simultaneously do the "makeplot" "makemovie" and "makeavgplot" steps without waiting.  But wait for now to ensure you really follow things.  Also, you might skip the "create mp4 movie" line and just run the ~/py/scripts/makelinkimagenew2.sh file that is a general updated way of making the final mp4 files.
+
+I checked all these steps with a new 128x64x1 run with 43 files created after 1 hour run.  All these steps work as a suggested with the latest python stuff.  Of course, as you go to larger simulations and more fieldline files, you'll get the hang of how long things take and how to tune things like "timetot".
+
+
+
+
 
 
 
 
 =====
-Running many restarted jobs (only do if Jon approves).
+Running many restarted jobs.
 =====
 
 In general, I recommend restarting manually for a while.  Only do up to step #4 below and then manually sbatch each "b" or more *after* each previous job is done.
@@ -130,7 +188,7 @@ In general, I recommend restarting manually for a while.  Only do up to step #4 
 4) sh makebatches.sh  .  This will create a bunch of batch files that can be used for restarting the job.  Look at a random batch file letter (e.g. "p") and ensure it makes sense.
 
 
-For automated restarts, do #5+ below...
+For automated restarts, do #5+ below  (only do if Jon approves)...
 
 
 5) cp batches/submitdeplist.sh .
