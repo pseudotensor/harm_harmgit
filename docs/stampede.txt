@@ -85,6 +85,8 @@ cd ~/py/
 git pull
 # if it complains about overwriting files, move the mentioned file to a backup name.  Then compare to see any changes you made in case important.
 
+#I should remind you to always change the email address to yours in makemovie.sh after you update pythontools.
+
 3) Edit ~/py/scripts/makemovie.sh and search for "stampede" that will bring you to the stampede section where some changes are required.  Common things to change are:
 
 a) "timetot" that is how long is needed to run any of makeavg, make1d, or makemovie.  If you run all 250 files at once, this will use 250 cores and needs about 1 hours I think.  If you ever get an email from the batch system that says the job timed-out during the makeavg, make1d, or makemovie stages, then you probably have to increase this time.
