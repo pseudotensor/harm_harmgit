@@ -97,7 +97,7 @@ c) "numtaskspernode" that can be 16 and only needs to be 14 for high-res runs at
 
 d) "timetotplot" that is 1 hour by default, which may be fine.  Check if it completes the "makeplot" stage or did not.  If you ever get timed-out from the batch system emails, you know you didn't give enough time.
 
-4) Edit ~/py/__init__.py so that your run name used (say rad0.3) is present as a model list in (at least) def isradmodel(modelname): as another or conditional like or modelname=="rad0.3"  .  You can scan through the file and see how this "isradmodel" is used.  For more careful control over what happens with specific models, you can scan through for examples where "isradmodel" is referred to in the python script.  It's good to also add your model to the place where "fieldtype" and "truemodelname" and "gridtype" are set by adding your model as another conditional.  You can look in the script for modelname=="rad1" to see an example of how a specific model chooses those and other things.
+4) Optionsal for now: Edit ~/py/__init__.py so that your run name used (say rad0.3) is present as a model list in (at least) def isradmodel(modelname): as another or conditional like or modelname=="rad0.3"  .  You can scan through the file and see how this "isradmodel" is used.  For more careful control over what happens with specific models, you can scan through for examples where "isradmodel" is referred to in the python script.  It's good to also add your model to the place where "fieldtype" and "truemodelname" and "gridtype" are set by adding your model as another conditional.  You can look in the script for modelname=="rad1" to see an example of how a specific model chooses those and other things.
 
 5) Edit ~/py/__init__.py for stampede-specific things to optimize performance.  Uncomment the following lines:
 
@@ -122,11 +122,11 @@ This will take all the rad0.3a rad0.3b etc. and make a single directory rad0.3.
 
 9) Now edit makeallmovie.sh .
 
-a) Do your normal edit of "dirruns=rad0.3" and "dircollect=rad0.3" .  export your moviename (test1 at first as below, and then, say, movie1).
+a) Do your normal edit of "dirruns=rad0.3" and "dircollect=rad0.3" .  export your moviename (test1 at first as below, and then, say, movie1) as described in the original python tutorial.
 
 b) Try setting "numkeep" to 50 for a test.  Maybe call moviename "test1" or something.  After that test worked completely, *then* you can edit "numkeep" to be as large or larger than your number of fieldline files for a production python run.
 
-c) Edit the other things in makeallmovie.sh, such as adding a section to better control which files are kept by including a new section (among the other similar sections) to have:
+c) Optional at first when testing: Edit the other things in makeallmovie.sh, such as adding a section to better control which files are kept by including a new section (among the other similar sections) to have:
 
        if [ "$thedir" == "rad0.3" ]
         then
@@ -136,7 +136,7 @@ c) Edit the other things in makeallmovie.sh, such as adding a section to better 
 
 Or something similar.  This allows you to, for just calculations and not commonly done for movies, to focus resources on the range of files you want to time average, for example.
 
-10) Run the first makeallmovie.sh line as in the tutorial.
+10) Run the first makeallmovie.sh line as in the tutorial (optional note: you can set numtasks to 20X less than the default you would use for make1d or makemovie, because the makeavg step is much faster and doesn't need so many cores, but then you need to change numtasks back to your default choice.  This can speed up getting through the queue).
 
 bash ./makeallmovie.sh ${moviename} 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0
 
@@ -144,7 +144,7 @@ You have to wait for completion and creation of the avg2d.py file.  You can chec
 
 For a simple harm simulation with only 50 files, it should only take a few minutes on stampede to start and a few minutes to finish creating the avg2d20_*.npy files.  After the job is done, the script makeallmovie.sh will continue and try to merge those _*.npy files into the single avg2d.npy file.  But this depends upon the script checking if the job got done, which is only done every 5 minutes.  This is why I removed the "1 1" in the above.  So now you should do the merge separately:
 
-bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0
+bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0
 
 This way you won't have to wait for small jobs to get done with the local merge step.  This should create after a few minutes the avg2d.npy file.
 
