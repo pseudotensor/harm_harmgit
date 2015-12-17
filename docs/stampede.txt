@@ -1,5 +1,6 @@
 =====
 To use Stampede do:
+(Note, other sytems are very similar to one kind of system listed in makeallmovie.sh.  E.g., Kraken uses qsub like Pleides).  So you can modify the conditionals in makemovieall.sh to choose an existing system *number* but using a different check (i.e. iskraken modified for Pleides).  Then, in makemovie.sh, one still modifies everything like one should for that fake system (but chosen system number).
 =====
 
 1) Get XSEDE user account and give username to Jon.
