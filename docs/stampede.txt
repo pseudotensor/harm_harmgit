@@ -85,7 +85,7 @@ cd ~/py/
 git pull
 # if it complains about overwriting files, move the mentioned file to a backup name.  Then compare to see any changes you made in case important.
 
-#I should remind you to always change the email address to yours in makemovie.sh after you update pythontools.
+#I should remind you to always change the email address to yours in makemovie.sh and makeallmovie.sh after you update pythontools.  The pseudotensor@gmail.com occurs in one place in each file near the top of the file.
 
 3) Edit ~/py/scripts/makemovie.sh and search for "stampede" that will bring you to the stampede section where some changes are required.  Common things to change are:
 
@@ -155,7 +155,7 @@ bash ./makeallmovie.sh ${moviename} 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 # make
 
 bash ./makeallmovie.sh ${moviename} 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 # merges to get qty2.npy file, local job.
 
-bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 1 1 1 1 1 1 1 1 0 0 0 0 0 0 # makeplot step, submits job.
+bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 1 1 1 1 1 1 1 1 0 0 0 0 0 0 # makeplot step to make data*.txt and latex stuf in python.plot*, submits job.
 
 bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 # makemovie step, submits job.
 
