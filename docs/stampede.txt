@@ -138,13 +138,15 @@ Or something similar.  This allows you to, for just calculations and not commonl
 
 10) Run the first makeallmovie.sh line as in the tutorial (optional note: you can set numtasks to 20X less than the default you would use for make1d or makemovie, because the makeavg step is much faster and doesn't need so many cores, but then you need to change numtasks back to your default choice.  This can speed up getting through the queue).
 
-bash ./makeallmovie.sh ${moviename} 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0
+bash ./makeallmovie.sh ${moviename} 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 # setup links, copy files, and makeavg step that makes avg2d_*.npy by submitting job
 
 You have to wait for completion and creation of the avg2d.py file.  You can check $SCRATCH/rad0.3/test1/ for what is going on inside makemovielocal_radtest.out and makemovielocal_radtest.full.out  as well as 0ma.uk.out and 0ma.uk.err .
 
-For a simple harm simulation with only 50 files, it should only take a few minutes on stampede to start and a few minutes to finish creating the avg2d20_*.npy files.  After the job is done, the script makeallmovie.sh will continue and try to merge those _*.npy files into the single avg2d.npy file.  But this depends upon the script checking if the job got done, which is only done every 5 minutes.  This is why I removed the "1 1" in the above.  So now you should do the merge separately:
+You can check if the job got started by doing "showq -u $USERNAME" and seeing if the job is in queue or running or not there yet (or maybe died already if you got an email of failure).
 
-bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0
+For a simple harm simulation with only 50 files, it should only take a few minutes on stampede to start (nominally) and a few minutes to finish creating the avg2d20_*.npy files.  After the job is done, the script makeallmovie.sh will continue and try to merge those _*.npy files into the single avg2d.npy file.  But this depends upon the script checking if the job got done, which is only done every 5 minutes.  This is why I removed the "1 1" in the above.  So now you should do the merge separately:
+
+bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 # makes merged avg2d.npy
 
 This way you won't have to wait for small jobs to get done with the local merge step.  This should create after a few minutes the avg2d.npy file.
 
