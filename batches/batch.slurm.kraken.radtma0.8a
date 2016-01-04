@@ -29,7 +29,7 @@ export NCPUX3=8
 export NTOT=4096
 export FILENAME="grmhd"
 export DIRFILE="/home1/01014/tg802609/radtma0.8/"
-firstrun=1 # choose, 0 for first time, 1 for rest
+firstrun=1 # choose: 1 for first time.  0 for restarting
 
 
 if [ $firstrun -eq 0 ]
