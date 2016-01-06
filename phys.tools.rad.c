@@ -11,8 +11,6 @@
 
 // KORALTODO:
 
-// average good neighbor if can.  only use alternative backup if no good neighbor?
-
 /* 1) Reorder URAD method so: */
 
 /* a) URAD */

@@ -488,6 +488,9 @@ int init_global(void)
   if(funreturn!=0) return(funreturn);
 
 
+  init_defcoord(); // just avoids splitting function call, here sets a
+
+
   // default
   ARAD_CODE=ARAD_CODE_DEF;
 
