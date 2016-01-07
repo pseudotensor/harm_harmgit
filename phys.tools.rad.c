@@ -755,9 +755,9 @@ static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYP
 static int simplefast_rad(int dir, struct of_geom *geom,struct of_state *q, FTYPE vrad2,FTYPE *vmin, FTYPE *vmax);
 
 
-static void calcfull_Trad(FTYPE *pp, struct of_geom *ptrgeom, FTYPE *Trad, FTYPE *nrad);
-static void calc_Trad(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q , FTYPE *Trad, FTYPE *nrad);
-static void calc_Trad_fromRuuandgamma(FTYPE *pp, struct of_geom *ptrgeom, FTYPE Ruu, FTYPE gammaradgas, FTYPE *Trad, FTYPE *nrad);
+static void calcfull_Trad(FTYPE *pp, struct of_geom *ptrgeom, FTYPE *Trad, FTYPE *nrad, FTYPE *expfactorrad);
+static void calc_Trad(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q , FTYPE *Trad, FTYPE *nrad, FTYPE *expfactorrad);
+static void calc_Trad_fromRuuandgamma(FTYPE *pp, struct of_geom *ptrgeom, FTYPE Ruu, FTYPE gammaradgas, FTYPE *Trad, FTYPE *nrad, FTYPE *expfactorrad);
 
 
 
@@ -8323,7 +8323,7 @@ int get_rameshsolution(int whichcallramesh, int radinvmod, int failtype, long lo
     na++; args[na]=ARAD_CODE;
     // so as really code uses:
     na++; args[na]=calc_kappaes_user(1.0,1.0,0,0,0);
-    na++; args[na]=calc_kappa_user(1.0,1.0,1.0,1.0,0,0,0);
+    na++; args[na]=calc_kappa_user(1.0,1.0,1.0,1.0,1.0,0,0,0);
     na++; args[na]=0.0;
     DLOOP(jj,kk){ na++; args[na]=ptrgeom->gcon[GIND(jj,kk)];}
     DLOOP(jj,kk){ na++; args[na]=ptrgeom->gcov[GIND(jj,kk)];}
@@ -8667,8 +8667,7 @@ int mathematica_report_check(int radinvmod, int failtype, long long int failnum,
     dualfprintf(fail_file,"%d %d %lld %d %d %d %21.15g %21.15g %d %d %21.15g %lld %d %21.15g ",failtype,myid,failnum,gotfirstnofail,eomtypelocal,itermode,errorabs[WHICHERROR],errorabsbestexternal[WHICHERROR],iters,totaliters,realdt,nstep,steppart,gam); // 14
     FTYPE trueimptryconv=IMPTRYCONV;
     dualfprintf(fail_file,"%21.15g %21.15g %21.15g %21.15g ",GAMMAMAXRAD,ERADLIMIT,IMPTRYCONVABS,IMPALLOWCONVCONSTABS); // 4
-    //    dualfprintf(fail_file,"%21.15g %21.15g %21.15g %21.15g ",ARAD_CODE,KAPPA_ES_CODE(1.0,1.0),KAPPA_FF_CODE(1.0,1.0,1.0),KAPPA_BF_CODE(1.0,1.0,1.0)); // 4
-    dualfprintf(fail_file,"%21.15g %21.15g %21.15g %21.15g ",ARAD_CODE,calc_kappaes_user(1.0,1.0,0,0,0),calc_kappa_user(1.0,1.0,1.0,1.0,0,0,0),0.0); // 4
+    dualfprintf(fail_file,"%21.15g %21.15g %21.15g %21.15g ",ARAD_CODE,calc_kappaes_user(1.0,1.0,0,0,0),calc_kappa_user(1.0,1.0,1.0,1.0,1.0,0,0,0),0.0); // 4
     DLOOP(jj,kk) dualfprintf(fail_file,"%21.15g ",ptrgeom->gcon[GIND(jj,kk)]); // 16
     DLOOP(jj,kk) dualfprintf(fail_file,"%21.15g ",ptrgeom->gcov[GIND(jj,kk)]); // 16
     PLOOP(pliter,pl) dualfprintf(fail_file,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g ",pp[pl],ppfirst[pl],pb[pl],piin[pl],prtestUiin[pl],prtestUU0[pl],uu0[pl],uu[pl],Uiin[pl]);  // 9*13
@@ -10338,9 +10337,10 @@ int koral_source_rad(int whichradsourcemethod, FTYPE *piin, FTYPE *pb, FTYPE *pf
 ///******* opacities ****************************************************
 ///**********************************************************************
 ///absorption in 1/cm form
+// just for chi and tautot
 void calc_kappa(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE *kappa)
 {
-  extern FTYPE calc_kappa_user(FTYPE rho, FTYPE B, FTYPE Tg,FTYPE Tr,FTYPE x,FTYPE y,FTYPE z);
+  extern FTYPE calc_kappa_user(FTYPE rho, FTYPE B, FTYPE Tg,FTYPE Tr,FTYPE expfactorrad, FTYPE x,FTYPE y,FTYPE z);
   //user_calc_kappa()
   FTYPE rho=pr[RHO];
   FTYPE u=pr[UU];
@@ -10350,19 +10350,18 @@ void calc_kappa(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE *k
   int loc=ptrgeom->p;
   FTYPE Tgas=compute_temp_simple(ii,jj,kk,loc,rho,u);
 
-  FTYPE Trad;
+  FTYPE Tradff,nradff,expfactorradff;
   FTYPE bsq,B;
   if(q==NULL){
     //    Trad=Tgas; // estimate for opacity (worse than below)
     FTYPE Ruufake=pr[PRAD0]; // estimate for opacity
-    Trad = pow(fabs(Ruufake)/ARAD_CODE,0.25); // ASSUMPTION: PLANCK
-
+    Tradff = pow(fabs(Ruufake)/ARAD_CODE,0.25); // ASSUMPTION: PLANCK
+    expfactorradff=1.0; // Planck
     //nradff not used here, so don't have to set
     bsq_calc(pr,ptrgeom,&bsq);
   }
   else{
-    FTYPE nradff;
-    calc_Trad(pr,ptrgeom,q,&Trad,&nradff); // kinda expensive, avoid if not really necessary (could set Trad=Tgas, just for opacity purposes)
+    calc_Trad(pr,ptrgeom,q,&Tradff,&nradff,&expfactorradff); // kinda expensive, avoid if not really necessary (could set Trad=Tgas, just for opacity purposes)
     bsq = dot(q->bcon, q->bcov);
   }
   B=sqrt(bsq);
@@ -10374,7 +10373,7 @@ void calc_kappa(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE *k
   yy=V[2];
   zz=V[3];
 #endif
-  *kappa = calc_kappa_user(rho,B,Tgas,Trad,xx,yy,zz);
+  *kappa = calc_kappa_user(rho,B,Tgas,Tradff,expfactorradff,xx,yy,zz);
   //  dualfprintf(fail_file,"kappaabs=%g\n",*kappa);
 
   if(AVOIDTAUFORFLOOR==1){
@@ -10391,6 +10390,7 @@ void calc_kappa(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE *k
 
 
 ///scattering in 1/cm form
+// just for chi and tautot
 void calc_kappaes(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappaes)
 {  
   extern FTYPE calc_kappaes_user(FTYPE rho, FTYPE T,FTYPE x,FTYPE y,FTYPE z);
@@ -10439,9 +10439,9 @@ void calc_chi(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE *chi
 
 /// get \kappa_{abs} and \kappa_{es} in \sigma/mass * rho = 1/cm form.
 /// energy density loss rate integrated over frequency and solid angle
-void calc_Tandopacityandemission(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE Ruu, FTYPE gammaradgas, FTYPE B, FTYPE *Tgas, FTYPE *Tradff, FTYPE *nradff, FTYPE *kappa, FTYPE *kappan, FTYPE *kappaemit, FTYPE *kappanemit, FTYPE *kappaes, FTYPE *lambda, FTYPE *nlambda)
+void calc_Tandopacityandemission(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE Ruu, FTYPE gammaradgas, FTYPE B, FTYPE *Tgas, FTYPE *Tradff, FTYPE *nradff, FTYPE *expfactorradff, FTYPE *kappa, FTYPE *kappan, FTYPE *kappaemit, FTYPE *kappanemit, FTYPE *kappaes, FTYPE *lambda, FTYPE *nlambda)
 {
-  extern FTYPE calc_kappa_user(FTYPE rho, FTYPE B, FTYPE Tg,FTYPE Tr,FTYPE x,FTYPE y,FTYPE z);
+  extern FTYPE calc_kappa_user(FTYPE rho, FTYPE B, FTYPE Tg,FTYPE Tr,FTYPE expfactorrad, FTYPE x,FTYPE y,FTYPE z);
   //user_calc_kappa()
 
   // get rho,u
@@ -10457,7 +10457,7 @@ void calc_Tandopacityandemission(FTYPE *pr, struct of_geom *ptrgeom, struct of_s
   *Tgas = fabs(*Tgas) + TEMPMIN;
 
   // get Tradff and nradff
-  calc_Trad_fromRuuandgamma(pr, ptrgeom, Ruu, gammaradgas, Tradff, nradff);
+  calc_Trad_fromRuuandgamma(pr, ptrgeom, Ruu, gammaradgas, Tradff, nradff, expfactorradff);
   *Tradff = fabs(*Tradff) + TEMPMIN;  // avoid division by zero in later calculations
 
   // get position for opacity if needed
@@ -10469,17 +10469,18 @@ void calc_Tandopacityandemission(FTYPE *pr, struct of_geom *ptrgeom, struct of_s
   zz=V[3];
 #endif
 
-  // get scattering opacity (elastic with no energy or number weighting)
+  // get scattering opacity (elastic with no detailed energy or number weighting)
   *kappaes = calc_kappaes_user(rho,*Tgas,xx,yy,zz);
 
 
 
 
   // get energy-based absorption opacity
-  *kappa = calc_kappa_user(rho,B,*Tgas,*Tradff,xx,yy,zz);
+  *kappa = calc_kappa_user(rho,B,*Tgas,*Tradff,*expfactorradff,xx,yy,zz);
 
   // get energy-based emission opacity
-  *kappaemit = calc_kappa_user(rho,B,*Tgas,*Tgas,xx,yy,zz); // Here Trad was set to Tgas for emission of radiation
+  //  *kappaemit = calc_kappa_user(rho,B,*Tgas,*Tgas,xx,yy,zz); // Here Trad was set to Tgas for emission of radiation
+  *kappaemit = calc_kappaemit_user(rho,B,*Tgas,*Tradff,*expfactorradff,xx,yy,zz);
 
   // This is aT^4/(4\pi) that is the specific black body emission rate in B_\nu d\nu d\Omega corresponding to energy density rate per unit frequency per unit solid angle, which has been integrated over frequency.
   // More generally, kappa*4*Pi*B can be replaced by some \Lambda that is some energy density rate
@@ -10489,19 +10490,21 @@ void calc_Tandopacityandemission(FTYPE *pr, struct of_geom *ptrgeom, struct of_s
   //  FTYPE B=0.25*ARAD_CODE*pow(Tgas,4.)/Pi;
 
   // energy density loss rate integrated over frequency and solid angle, based upon those processes written as an opacity
-  *lambda = (*kappaemit)*calc_LTE_EfromT(*Tgas);  //(4.*Pi*B); / i.e. 4\pi B = arad T^4
+  *lambda = (*kappaemit)*calc_LTE_EfromT(*Tradff);  //(4.*Pi*B); / i.e. 4\pi B = arad Trad^4
 
 #if(EVOLVENRAD)
   *nradff = fabs(*nradff) + SMALL;
   // get number-based absorption opacity
-  *kappan = calc_kappan_user(rho,B,*Tgas,*Tradff,xx,yy,zz);
+  *kappan = calc_kappan_user(rho,B,*Tgas,*Tradff,*expfactorradff,xx,yy,zz);
   // get number-based emission opacity
-  *kappanemit = calc_kappan_user(rho,B,*Tgas,*Tgas,xx,yy,zz); // Here Trad was set to Tgas for emission of radiation
+  //  *kappanemit = calc_kappan_user(rho,B,*Tgas,*Tgas,xx,yy,zz); // Here Trad was set to Tgas for emission of radiation
+  *kappanemit = calc_kappanemit_user(rho,B,*Tgas,*Tradff,*expfactorradff,xx,yy,zz);
+
   // ASSUMPTION: Emitting radiation has average photon energy for gas at temperatures Tgas (isn't true for synchrotron, for example)
   //  FTYPE ebar = EBAR0 * (TEMPMIN+*Tgas);
   //  // result based upon opacity-based calculation of lambda, so includes free-free, bound-free, bound-bound, etc.
   //  *nlambda = (*lambda)/ebar;
-  *nlambda = (*kappanemit)*calc_LTE_NfromT(*Tgas);
+  *nlambda = (*kappanemit)*calc_LTE_NfromT(*Tradff);
 #endif
 
 
@@ -10678,12 +10681,12 @@ static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYP
 
   // get absorption opacities
   FTYPE Tgas;
-  FTYPE Tradff,nradff;
+  FTYPE Tradff,nradff,expfactorradff;
   FTYPE kappa,kappan;
   FTYPE kappaemit,kappanemit;
   FTYPE kappaes;
   FTYPE lambda,nlambda;
-  calc_Tandopacityandemission(pp,ptrgeom,q,Ruu,gammaradgas,B,&Tgas,&Tradff,&nradff,&kappa,&kappan,&kappaemit,&kappanemit,&kappaes, &lambda, &nlambda);
+  calc_Tandopacityandemission(pp,ptrgeom,q,Ruu,gammaradgas,B,&Tgas,&Tradff,&nradff,&expfactorradff,&kappa,&kappan,&kappaemit,&kappanemit,&kappaes, &lambda, &nlambda);
   // get chi (absorption energy opacity total)
   FTYPE chi=kappa+kappaes;
 
@@ -10727,14 +10730,8 @@ static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYP
 
 
 #if(DOCOMPTON)
-  //  FTYPE neleobar=1.0/MUMEAN; // to have neleobar*kappaes=kappaesperele*mb*rho/(MUMEAN*mb)
-  // ASSUMPTION: Tion=Tele
-  FTYPE preterm3 = -4.0*(rho*KAPPA_FORCOMPT_CODE(rho,Tgas))*(Tgas - Tradff)*(TEMPBAR/TEMPELE)*Ruu; // kappaes with its internal *rho already accounts for being number density of electrons involved, so no need to use MUMEAN again here.
-
-  //  f[pl] = ((uu[pl] - uu0[pl]) + (sign[pl] * localdt * Gdpl[pl]))*extrafactor[pl]; -> T^t_t[new] = T^t_t[old] - Gdpl[UU] -> dT^t_t = -Gdpl[UU] = +Gd[TT]
-  // Ruu>0, so if Tgas>Trad, then preterm3<0.  Then egas should drop.
-  // We have dT^t_t = G_t = Gd_t = -Gdpl_t = preterm3 u_t > 0, so G_t>0 so T^t_t rises so -T^t_t drops so egas drops.
-
+  extern FTYPE Gcompt(FTYPE rho, FTYPE Tgas, FTYPE Tradff, FTYPE Ruu);
+  FTYPE preterm3 = Gcompt(rho,Tgas,Tradff,Ruu);
 #endif
 
 
@@ -10792,6 +10789,7 @@ static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYP
   // return some other things that may be useful beyond Gu and Gabs
   *Tgasreturn=Tgas;
   *Tradreturn=Tradff;
+  // *expfactorradreturn=expfactorradff; // not used in return (yet)
   // really a chi-effective that also includes lambda term in case cooling unrelated to absorption
   *chieffreturn=chi + lambda/(ERADLIMIT+fabs(pp[PRAD0])); // if needed
 
@@ -10817,27 +10815,28 @@ static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYP
 
 
 // compute Trad with only primitive sand geometry
-static void calcfull_Trad(FTYPE *pp, struct of_geom *ptrgeom, FTYPE *Trad, FTYPE *nrad)
+static void calcfull_Trad(FTYPE *pp, struct of_geom *ptrgeom, FTYPE *Trad, FTYPE *nrad, FTYPE *expfactorrad)
 {
 
   struct of_state q;
   get_state(pp, ptrgeom, &q);
-  calc_Trad(pp,ptrgeom,&q,Trad,nrad);
+  calc_Trad(pp,ptrgeom,&q,Trad,nrad,expfactorrad);
   
 }
 
 
 /// compute Trad (also computed directly in calc_Gu() above) using only primitives (not using conserved quantities)
-static void calc_Trad(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q , FTYPE *Trad, FTYPE *nrad)
+static void calc_Trad(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q , FTYPE *Trad, FTYPE *nrad, FTYPE *expfactorrad)
 {
   int i,j,k;
-  FTYPE Tradff,nradff;
+  FTYPE Tradff,nradff,expfactorradff;
 
   if(q==NULL){// if q==NULL, assume don't want to do something expensive an accurate, just basics
     // so get radiation frame things even if should have gotten fluid frame things
     //get_state(pp, ptrgeom, &q);
     Tradff = calc_LTE_TfromE(pp[PRAD0]);
     nradff = calc_LTE_NfromE(pp[PRAD0]);
+    expfactorradff=1.0;
   }
   else{
 
@@ -10860,17 +10859,18 @@ static void calc_Trad(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q , F
     int jj;
     DLOOPA(jj) gammaradgas += - (q->ucov[jj] * q->uradcon[jj]);
 
-    calc_Trad_fromRuuandgamma(pp, ptrgeom, Ruu, gammaradgas, &Tradff, &nradff);
+    calc_Trad_fromRuuandgamma(pp, ptrgeom, Ruu, gammaradgas, &Tradff, &nradff, &expfactorradff);
   }
 
   // return quantities
   *Trad=Tradff; // radiation temperature in fluid frame
   *nrad=nradff; // radiation number density in fluid frame
+  *expfactorrad=expfactorradff;
 }
 
 
 /// compute Trad (also computed directly in calc_Gu() above) using only primitives (not using conserved quantities)
-static void calc_Trad_fromRuuandgamma(FTYPE *pp, struct of_geom *ptrgeom, FTYPE Ruu, FTYPE gammaradgas, FTYPE *Trad, FTYPE *nrad)
+static void calc_Trad_fromRuuandgamma(FTYPE *pp, struct of_geom *ptrgeom, FTYPE Ruu, FTYPE gammaradgas, FTYPE *Trad, FTYPE *nrad, FTYPE *expfactorrad)
 {
   FTYPE Tradff,nradff,expfactorradff;
 
@@ -10882,39 +10882,41 @@ static void calc_Trad_fromRuuandgamma(FTYPE *pp, struct of_geom *ptrgeom, FTYPE 
   // ASSUMPTION: PLANCK
   Tradff = calc_LTE_TfromE(fabs(Ruu));
   nradff = calc_LTE_NfromE(fabs(Ruu));
+  expfactorradff=1.0; // Planck
 #else
-    // Color-corrected/shifted Planck
-    nradff = pp[NRAD]*gammaradgas;
-
-    // 0 = assume 0 chemical potential.
-    // 1 = account for finite chemical potential using Ramesh fit
-    // 2 = like 1 but Jon fit without divergent issues.
-    // But 1,2 only change T_r by 10% at most for any Ruu,nradff, and would have to include chemical potential in opacity and use (say Jon's) chemical potential vs. Ruu,nradff fit and have \kappa(Tg,Tr,\mu).  So avoid.
+  // Color-corrected/shifted Planck
+  nradff = pp[NRAD]*gammaradgas;
+  
+  // 0 = assume 0 chemical potential.
+  // 1 = account for finite chemical potential using Ramesh fit
+  // 2 = like 1 but Jon fit without divergent issues.
+  // But 1,2 only change T_r by 10% at most for any Ruu,nradff, and would have to include chemical potential in opacity and use (say Jon's) chemical potential vs. Ruu,nradff fit and have \kappa(Tg,Tr,\mu).  So avoid.
 #define TRADTYPE 0
-    
+  
 #if(TRADTYPE==0)
-    Tradff = Ruu/(nradff*EBAR0); // EBAR0 kb T = Ruu/nradff = average energy per photon
-    expfactorradff = 1.0; // but really inconsistent since should be able to get Tradff directly from Ruu if \mu=0
+  Tradff = Ruu/(nradff*EBAR0); // EBAR0 kb T = Ruu/nradff = average energy per photon
+  expfactorradff = 1.0; // but really inconsistent since should be able to get Tradff directly from Ruu if \mu=0
 #elif(TRADTYPE==1)
-    FTYPE CRAD = CRAD0*ARAD_CODE;
-    FTYPE BB = CRAD0 * EBAR0*EBAR0*EBAR0*EBAR0 * (3.0-EBAR0); // FTYPE BB=2.449724;
-    //       below avoids assuming that EBAR0 kb T is average energy per photon
-    FTYPE EBAR1=3.0-BB*nradff*nradff*nradff*nradff/(CRAD*Ruu*Ruu*Ruu+SMALL); // physically reasonable to be limited to *larger* than EBAR0
-    if(EBAR1<EBAR0) EBAR1=EBAR0; // hard cut
-    //if(EBAR1<0.5*EBAR0) EBAR1=0.5*EBAR0; // hard cut but at lower value, allowing a bit lower than BB value that is rare but avoids Jacobian problems
-    Tradff = Ruu/(SMALL+nradff*EBAR1); // Accounts for non-zero chemical potential of photons giving them higher average energy per photon than thermal case for a given temperature
+  FTYPE CRAD = CRAD0*ARAD_CODE;
+  FTYPE BB = CRAD0 * EBAR0*EBAR0*EBAR0*EBAR0 * (3.0-EBAR0); // FTYPE BB=2.449724;
+  //       below avoids assuming that EBAR0 kb T is average energy per photon
+  FTYPE EBAR1=3.0-BB*nradff*nradff*nradff*nradff/(CRAD*Ruu*Ruu*Ruu+SMALL); // physically reasonable to be limited to *larger* than EBAR0
+  if(EBAR1<EBAR0) EBAR1=EBAR0; // hard cut
+  //if(EBAR1<0.5*EBAR0) EBAR1=0.5*EBAR0; // hard cut but at lower value, allowing a bit lower than BB value that is rare but avoids Jacobian problems
+  Tradff = Ruu/(SMALL+nradff*EBAR1); // Accounts for non-zero chemical potential of photons giving them higher average energy per photon than thermal case for a given temperature
 #elif(TRADTYPE==2)
-    Tradff = (Ruu*(0.333333333327962 + 0.060724957534625555/(0.6467556546674441 + (0.12198190033984817*CRAD*Power(Ruu,3))/Power(SMALL+nradff,4))))/(SMALL+nradff);
-    expfactorradff = 1.6467556546674442/(0.6467556546674441 + (0.12198190033984817*CRAD*Power(Ruu,3))/Power(SMALL+nradff,4));
-    if(expfactorradff>1.0) expfactorradff=1.0; // account for BE condensation.
-    // expfactorradff = exp(-\xi) = exp(-\mu/(k_B Tradff))
+  Tradff = (Ruu*(0.333333333327962 + 0.060724957534625555/(0.6467556546674441 + (0.12198190033984817*CRAD*Power(Ruu,3))/Power(SMALL+nradff,4))))/(SMALL+nradff);
+  expfactorradff = 1.6467556546674442/(0.6467556546674441 + (0.12198190033984817*CRAD*Power(Ruu,3))/Power(SMALL+nradff,4));
+  if(expfactorradff>1.0) expfactorradff=1.0; // account for BE condensation.
+  // expfactorradff = exp(-\xi) = exp(-\mu/(k_B Tradff))
 #endif
-    // Tradff/TradLTE = fco = color correction factor
-
+  // Tradff/TradLTE = fco = color correction factor
+  
 #endif    
-
+  
   *Trad=Tradff; // radiation temperature in fluid frame
   *nrad=nradff; // radiation number density in fluid frame
+  *expfactorrad=expfactorradff;// expf = e^{-\mu/(k_b T_r)} for chemical potential mu of radiation
 }
 
 

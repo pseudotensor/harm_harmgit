@@ -416,7 +416,7 @@ int post_init_specific_init(void)
   // print out units and some constants
   trifprintf("Constants\n");
   trifprintf("LBAR=%g TBAR=%g VBAR=%g RHOBAR=%g MBAR=%g UBAR=%g TEMPBAR=%g\n",LBAR,TBAR,VBAR,RHOBAR,MBAR,UBAR,TEMPBAR); 
-  trifprintf("ARAD_CODE=%26.20g OPACITYBAR=%g KAPPA_ES_CODE(1,1)=%g KAPPA_FF_CODE(1,1,1)=%g KAPPA_BF_CODE(1,1,1)=%g KAPPA_GENFF_CODE(1,1)=%g\n",ARAD_CODE,OPACITYBAR,KAPPA_ES_CODE(1,1),KAPPA_FF_CODE(1,1,1),KAPPA_BF_CODE(1,1,1),KAPPA_GENFF_CODE(1,1,1));
+  trifprintf("ARAD_CODE=%26.20g OPACITYBAR=%g\n",ARAD_CODE,OPACITYBAR);
   trifprintf("ARAD_CODE_DEF=%g\n",ARAD_CODE_DEF);
   trifprintf("GAMMAMAXRAD=%g\n",GAMMAMAXRAD);
 
@@ -2218,8 +2218,6 @@ int init_global(void)
         RADNT_RHODONUT=1E-2;
         RADNT_RHODONUT*=40.0;
  
-        int set_fieldtype(void);
-        int FIELDTYPE=set_fieldtype();
  
         if(a==0.8 && FIELDTYPE==FIELDJONMAD){
           RADNT_RHODONUT/=(2.0*138.0);
@@ -3631,310 +3629,6 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 
 
 
-//****************************************//
-//****************************************//
-//****************************************//
-// Problem setup constants that only modifies things in init.c (not init.h)
-//****************************************//
-//****************************************//
-
-#if(WHICHPROBLEM==FLATNESS)
-
-#define KAPPA 0.
-#define KAPPAES 0.
-
-// assume KAPPA defines fraction of FF opacity
-#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
-// assume KAPPAES defines fraction of ES opacity
-#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_BASIC_CODE(rho,T))
-
-
-#endif
-
-//****************************************//
-//****************************************//
-
-
-#if(WHICHPROBLEM==RADPULSE || WHICHPROBLEM==RADPULSEPLANAR || WHICHPROBLEM==RADPULSE3D)
-
-
-
-
-#if(WHICHPROBLEM==RADPULSEPLANAR)
-
-#define KAPPA 0.
-//#define KAPPAES (0.0)
-//#define KAPPAES (1E-7)
-//#define KAPPAES (1E-4*1.09713E-18*1E6)
-//#define KAPPAES (1E-4*1.09713E-18*1E3)
-//#define KAPPAES (1E-4*1.09713E-18*1E-0)
-//#define KAPPAES (1E-4*1.09713E-18*0.2)
-//#define KAPPAES (1E-4*1.09713E-18*1E-1)
-//#define KAPPAES (1E-4*1.09713E-18*1E-2)
-//#define KAPPAES (1E-4*1.09713E-18*1E-3)
-//#define KAPPAES (1E-4*1.09713E-18*1E-3*1E-10)
-
-// assume KAPPA defines fraction of FF opacity
-//#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
-// assume KAPPAES defines fraction of ES opacity
-//#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_BASIC_CODE(rho,T))
-
-#define KAPPAES (1E3) // takes VERY long time with sub-cycling, but works.
-//#define KAPPAES (1E2) // goes with sub-cycling at "ok" rate for this test.
-//#define KAPPAES (10.0)
-//#define KAPPAES (1E-1)
-//#define KAPPAES (1.0)
-//#define KAPPAES (1E-10)
-
-#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA)
-#define KAPPAESUSER(rho,T) (rho*KAPPAES)
-
-
-#else // PULSE and PULSE3D
-
-// KAPPAs are fraction of physical FF and ES opacities
-#define KAPPA 0.
-#define KAPPAES (SMALL)
-
-// assume KAPPA defines fraction of FF opacity
-#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
-// assume KAPPAES defines fraction of ES opacity
-#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_BASIC_CODE(rho,T))
-
-
-#endif
-
-
-#endif
-
-
-//****************************************//
-//****************************************//
-
-
-#if(WHICHPROBLEM==RADBEAMFLAT)
-
-
-#define KAPPA 0.
-#define KAPPAES 0.
-
-// assume KAPPA defines fraction of FF opacity
-#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
-// assume KAPPAES defines fraction of ES opacity
-#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_BASIC_CODE(rho,T))
-
-
-#endif
-
-//****************************************//
-//****************************************//
-
-
-#if(WHICHPROBLEM==RADTUBE)
-
-#define KAPPAESUSER(rho,T) (0.0)
-
-#if(NTUBE==1)
-#define KAPPAUSER(rho,B,Tg,Tr) (0.4*rho)
-#elif(NTUBE==2)
-#define KAPPAUSER(rho,B,Tg,Tr) (0.2*rho)
-#elif(NTUBE==3)
-#define KAPPAUSER(rho,B,Tg,Tr) (0.3*rho)
-#elif(NTUBE==31)
-#define KAPPAUSER(rho,B,Tg,Tr) (25*rho)
-#elif(NTUBE==4)
-#define KAPPAUSER(rho,B,Tg,Tr) (0.08*rho)
-#elif(NTUBE==41)
-#define KAPPAUSER(rho,B,Tg,Tr) (0.7*rho)
-#elif(NTUBE==5)
-#define KAPPAUSER(rho,B,Tg,Tr) (1000*rho)
-#endif
-
-
-#endif
-
-//****************************************//
-//****************************************//
-
-
-#if(WHICHPROBLEM==RADSHADOW || WHICHPROBLEM==RADDBLSHADOW)
-
-//#define KAPPAUSER(rho,B,Tg,Tr) (rho*1E2)
-#define KAPPAUSER(rho,B,Tg,Tr) (rho*1.0) // paper
-#define KAPPAESUSER(rho,T) (rho*0.0)
-
-
-#endif
-
-
-//****************************************//
-//****************************************//
-
-
-//****************************************//
-//****************************************//
-
-
-#if(WHICHPROBLEM==RADBEAM2D || WHICHPROBLEM==RADBEAM2DKS || WHICHPROBLEM==RADBEAM2DKSVERT)
-
-
-#define KAPPA 0.
-#define KAPPAES 0.
-
-// assume KAPPA defines fraction of FF opacity
-#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
-// assume KAPPAES defines fraction of ES opacity
-#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_BASIC_CODE(rho,T))
-
-
-#endif
-
-
-#if(WHICHPROBLEM==ATMSTATIC)
-
-
-#define KAPPA 0.
-#define KAPPAES 0.
-
-// assume KAPPA defines fraction of FF opacity
-#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
-// assume KAPPAES defines fraction of ES opacity
-#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_BASIC_CODE(rho,T))
-
-
-#endif
-
-
-#if(WHICHPROBLEM==RADATM)
-
-
-#define KAPPA 0.
-#define KAPPAES 1. // only scattering
-
-// assume KAPPA defines fraction of FF opacity
-#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
-// assume KAPPAES defines fraction of ES opacity
-#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_BASIC_CODE(rho,T))
-
-
-#endif
-
-
-#if(WHICHPROBLEM==RADWALL)
-
-
-#define KAPPA 0.
-#define KAPPAES 0.
-
-// assume KAPPA defines fraction of FF opacity
-#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
-// assume KAPPAES defines fraction of ES opacity
-#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_BASIC_CODE(rho,T))
-
-
-#endif
-
-
-
-
-#if(WHICHPROBLEM==RADWAVE)
-
-#define KAPPAUSER(rho,B,Tg,Tr) (rho*RADWAVE_KAPPA)
-#define KAPPAESUSER(rho,T) (rho*RADWAVE_KAPPAES)
-
-#endif
-
-
-
-#if(WHICHPROBLEM==KOMIPROBLEM)
-
-#define KAPPAUSER(rho,B,Tg,Tr) (0.)
-#define KAPPAESUSER(rho,T) (0.)
-
-#endif
-
-
-#if(WHICHPROBLEM==RADBONDI)
-
-
-#define KAPPA 1.0
-#define KAPPAES 1.0
-
-// assume KAPPA defines fraction of FF opacity
-#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
-// assume KAPPAES defines fraction of ES opacity
-#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_BASIC_CODE(rho,T))
-
-
-#endif
-
-
-#if(WHICHPROBLEM==RADDOT)
-
-
-#define KAPPA 0.
-#define KAPPAES 0.
-
-// assume KAPPA defines fraction of FF opacity
-#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
-// assume KAPPAES defines fraction of ES opacity
-#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_BASIC_CODE(rho,T))
-
-
-#endif
-
-#if(WHICHPROBLEM==RADNT || WHICHPROBLEM==RADFLATDISK)
-
-#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA_ES_CODE(rho,Tg)/1E14*0.1) // wierd use of kappa_{es} in koral
-//#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA_ES_CODE(rho,T)/1E14*0.0)
-#define KAPPAESUSER(rho,T) (0.0)
-
-#endif
-
-#if(WHICHPROBLEM==RADDONUT)
-// kappa can't be zero or else flux will be nan
-//#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA_ES_CODE(rho,T)/1E14*1.0) // wierd use of kappa_{es} in koral
-//#define KAPPAESUSER(rho,T) (0.0)
-
-// KORALNOTE: Different than koral code test, but as if full problem.
-#define KAPPA 1.0
-#define KAPPAES 1.0
-
-// KORALTODO: Put a lower limit on T~1E4K so not overly wrongly opaque in spots where u_g->0 anomologously?
-// assume KAPPA defines fraction of FF opacity
-//#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg+TEMPMIN))
-// accounts for low temperatures so non-divergent and more physical
-
-#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*(KAPPA_GENFF_CODE(SMALL+rho,Tg+TEMPMIN,Tr+TEMPMIN)+KAPPA_SYN_CODE(SMALL+B,Tg+TEMPMIN,Tr+TEMPMIN)))
-
-// TODOMARK: Compute FF number opacity
-#define KAPPANUSER(rho,B,Tg,Tr) (rho*KAPPA*(KAPPA_GENFF_CODE(SMALL+rho,Tg+TEMPMIN,Tr+TEMPMIN)+KAPPAN_SYN_CODE(SMALL+B,Tg+TEMPMIN,Tr+TEMPMIN)))
-
-// assume KAPPAES defines fraction of ES opacity
-#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_CODE(rho,T))
-
-
-#endif
-
-#if(WHICHPROBLEM==RADCYLBEAM || WHICHPROBLEM==RADCYLBEAMCART)
-
-#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA_ES_BASIC_CODE(rho,Tg)/1E14*0.0) // note 0.0
-#define KAPPAESUSER(rho,T) (0.0)
-
-#endif
-
-#if(WHICHPROBLEM==RADCYLJET)
-
-#define KAPPAUSER(rho,B,Tg,Tr) (rho*(KAPPA_FF_CODE(SMALL+rho,Tg+TEMPMIN,Tr+TEMPMIN))) // SMALL
-#define KAPPAESUSER(rho,Tg) (rho*KAPPA_ES_BASIC_CODE(rho,Tg)/100.0)
-
-#endif
-
-
-#ifndef KAPPANUSER
-// in case haven't defined KAPPANUSER, just use energy opacity
-#define KAPPANUSER(rho,B,Tg,Tr) KAPPAUSER(rho,B,Tg,Tr)
-#endif
 
 int init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR], FTYPE (*panalytic)[NSTORE2][NSTORE3][NPR], FTYPE (*pstaganalytic)[NSTORE2][NSTORE3][NPR], FTYPE (*vpotanalytic)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhatanalytic)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*Atemp)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
 {
@@ -6336,7 +6030,7 @@ static int get_full_rtsolution(int *whichvel, int *whichcoord, int opticallythic
     bsq_calc(pp,*ptrptrgeom,&bsq);
     B=sqrt(bsq);
     chi=
-      calc_kappa_user(pp[RHO],B,Tg,Tg,V[1],V[2],V[3])
+      calc_kappa_user(pp[RHO],B,Tg,Tg,1.0,V[1],V[2],V[3]) // Planck Tr=Tg at t=0
       +
       calc_kappaes_user(pp[RHO],calc_PEQ_Tfromurho(pp[UU],pp[RHO]),V[1],V[2],V[3]);
 
@@ -6559,7 +6253,7 @@ static int make_nonrt2rt_solution(int *whichvel, int *whichcoord, int opticallyt
     FTYPE bsq,B;
     bsq_calc(pp,*ptrptrgeom,&bsq);
     B=sqrt(bsq);
-    kappaabs=calc_kappa_user(rho,B,Tgas,Tgas,V[1],V[2],V[3]);
+    kappaabs=calc_kappa_user(rho,B,Tgas,Tgas,1.0,V[1],V[2],V[3]); // Planck and Tr=Tgas at t=0
     kappaes=calc_kappaes_user(rho,Tgas,V[1],V[2],V[3]);
     kappatot=kappaabs+kappaes;
 
@@ -9506,36 +9200,603 @@ void adjust_fluxctstag_emfs(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR
 
 
 
+/// PURE ELASTIC SCATTERING
+//#define KAPPA_ES_KNCORRF(f) (0.75*((-1.*(1. + 3.*(f)))/Power(1. + 2.*(f),2) +  (0.5*Log(1. + 2.*(f)))/(f) + ((1. + (f))*((2. + 2.*(f))/(1. + 2.*(f)) - (1.*Log(1. + 2.*(f)))/(f)))/Power((f),2)))
+//#define KAPPA_ES_KNCORR(rhocode,Tcode) (KAPPA_ES_KNCORREP(K_BOLTZ*(Tcode)*TEMPBAR/(MELE*CCCTRUE*CCCTRUE)))
+#define KAPPA_ES_FERMICORR(rhocode,Tcode) (1.0/(1.0+2.7E11*((rhocode)*RHOBAR)/prpow((Tcode)*TEMPBAR,2.0))) // Buchler and Yueh 1976 (just Fermi part). Fewer electrons when near Fermi fluid limit.
+#define KAPPA_ES_KNCORR(rhocode,Tcode) (1.0/(1.0+prpow((Tcode)*TEMPBAR/4.5E8,0.86)))  // Buchler and Yueh 1976 .  Klein-Nishina for thermal electrons.
+/// kappaes = sigma_T n_e = sigma_T n_b (n_e/n_b) = sigma_T rho/mb (ne/nb)
+#define KAPPA_ES_CODE(rhocode,Tcode) (0.2*(1.0+XFACT)*KAPPA_ES_FERMICORR(rhocode,Tcode)*KAPPA_ES_KNCORR(rhocode,Tcode)/OPACITYBAR)
+#define KAPPA_ES_BASIC_CODE(rhocode,Tcode) (0.2*(1.0+XFACT)/OPACITYBAR)
+
+// INELASTIC COMPTON TERM
+// see DOCOMPTON in physics.tools.rad.c:
+// in term2, doesn't change photon energy, so that in scattering-dominated atmospheres, photons move through unchanged by temperature of gas.
+// Eq A7 in http://adsabs.harvard.edu/abs/2012ApJ...752...18K used first in http://adsabs.harvard.edu/cgi-bin/bib_query?arXiv:0904.4123 as based upon a calculation in http://adsabs.harvard.edu/abs/2000thas.book.....P .
+// Also interesting for next steps:
+//1) Conservative form of Kompaneet's equation and dealing with the diffusion term implicitly: http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.13.798 and related: http://www.osti.gov/scitech/biblio/891567 .  We should ensure the 4-force is consistent (numerically and analytically) with what's used in this equation for n.
+//2) Relativistic corrections:  http://adsabs.harvard.edu/cgi-bin/bib_query?arXiv:1201.5606 and http://adsabs.harvard.edu/abs/2002nmgm.meet.2329S .  It looks like nothing more difficult as far as actually using the expressions in place of non-relativistic version.
+//One semi-relevant application: http://www.aanda.org/articles/aa/full_html/2009/45/aa12061-09/aa12061-09.html
+#define KAPPA_FORCOMPT_RELCORREP(ep) ((1.0 + 3.683*(ep)+4.0*(ep)*(ep))/(1.0 + (ep))) // Sadowski et al. (2014) Eq 26 and 27.
+#define KAPPA_FORCOMPT_RELCORR(rhocode,Tcode) (KAPPA_FORCOMPT_RELCORREP(K_BOLTZ*(Tcode)*TEMPBAR/(MELE*CCCTRUE*CCCTRUE)))
+#define KAPPA_FORCOMPT_CODE(rhocode,Tcode) (0.2*(1.0+XFACT)*KAPPA_ES_FERMICORR(rhocode,Tcode)*KAPPA_FORCOMPT_RELCORR(rhocode,Tcode)/OPACITYBAR)
+
+
+// COMPTON ALTERNATIVES
+//1) 1201.5606v2.pdf eq. 4.8 with Teff=Te different.
+//2) 891567.pdf  eq. 10.
+//3) art%3A10.1007%2FBF03035735.pdf (what we are approximating when not using full Kompaneets).  How could solve.
+//4) compton.pdf
+
+
+
+/// EMISSION (Tr=Tg) or ABSORBPTION (Tr different from Tg)
+#define KAPPA_ZETA(Tgcode,Trcode) ((TEMPMIN+Trcode)/(TEMPMIN+Tgcode))
+//#define KAPPA_FF_CODE(rhocode,Tgcode,Trcode) (4.0E22*(1.0+XFACT)*(1.0-ZFACT)*((rhocode)*RHOBAR)*prpow((Tgcode)*TEMPBAR,-0.5)*prpow((Trcode)*TEMPBAR,-3.0)*prlog(1.0+1.6*KAPPA_ZETA(Tgcode,Trcode))*(1.0+4.4E-10*(Tgcode*TEMPBAR))/OPACITYBAR)  // ASSUMPTION: Thermal ele and no pairs.  See Rybicki & Lightman Eq~5.25 and McKinney & Uzdensky (2012) .  For Tr,Tg split, see Ramesh notes.
+#define KAPPA_FF_CODE(rhocode,Tgcode,Trcode) (4.0E22*(1.0+XFACT)*(1.0-ZFACT)*((rhocode)*RHOBAR)*prpow((Tgcode)*TEMPBAR,-0.5)*prpow((Trcode)*TEMPBAR,-3.0)*prlog(1.0+1.6*KAPPA_ZETA(Tgcode,Trcode))*(1.0+4.4E-10*(Tgcode*TEMPBAR))/OPACITYBAR)  // ASSUMPTION: Thermal ele and no pairs.  See Rybicki & Lightman Eq~5.25 and McKinney & Uzdensky (2012) .  For Tr,Tg split, see Ramesh notes.
+
+//////////////////////////////////////////
+// FREE-FREE STUFF
+// see freefree_opacity.nb, freefree_opacity_fitenergyopacity.nb, freefree_opacity_fitnumberopacity.nb
+// accounts for self-absorption and energy vs. number opacity behavior
+//#define KAPPA_FF_ZETAFF_LEN(xv,lenv) (1.0/((lenv) + (0.99366835740822140451*Power((xv),3.001486183352440767))/      Prlog(1. + (0.96029003648876359763*(xv))/(0.62006021009771899259 + 1.3708624629986290167*Power((lenv),0.3428937745657171798)))))
+
+//#define KAPPAN_FF_ZETAFF_LEN(xv,lenv) (1.0/((lenv) + ((0.44920722974573544008 + 3.1077547389879800477*Power((lenv),0.23000000000000001))*Power((xv),2.066660783319324679))/      Log(1. + (10. + 58.528227977634806223/Power((lenv),0.25))*(xv))))
+
+//#define KAPPA_FF_PREFACTOR_CODE(rhocode,Tecode) (1.2E24*RHOBAR*rhocode*prpow(Tecode*TEMPBAR,-3.5)/OPACITYBAR)
+//#define KAPPA_FF_ZETA(Tecode,Trcode) ((TEMPMIN+Trcode)/(TEMPMIN+Tecode))
+// pretau = Lengthcgs * (rhocgs * KAPPA_FF_PREFACTORcgs) = CODELENGTH * rhocode * KAPPA_FF_PREFACTOR_CODE
+//#define KAPPA_FF_PRETAU_CODE(length,rhocode,Tecode) (length*rhocode*KAPPA_FF_PREFACTOR_CODE)
+
+//#define KAPPA_FF_CODE(rhocode,Tgcode,Trcode,ffzeta,pretau) (KAPPA_FF_PREFACTOR_CODE(rhocode,Tecode)*(1.0+XFACT)*(1.0-ZFACT)*KAPPA_FF_ZETAFF_LEN(ffzeta,pretau))
+//#define KAPPAN_FF_CODE(rhocode,Tgcode,Trcode,ffzeta,pretau) (KAPPA_FF_PREFACTOR_CODE(rhocode,Tecode)*(1.0+XFACT)*(1.0-ZFACT)*KAPPAN_FF_ZETAFF_LEN(ffzeta,pretau))
+
+#define KAPPAN_FF_CODE(rhocode,Tgcode,Trcode) KAPPA_FF_CODE(rhocode,Tgcode,Trcode)
+
+///////////////////////////////////
+// BOUND-FREE and other low energy stuff
+#define KAPPA_BF_CODE(rhocode,Tgcode,Trcode) (3.0E25*(ZFACT)*(1.0+XFACT+0.75*YFACT)*((rhocode)*RHOBAR)*prpow((Tgcode)*TEMPBAR,-0.5)*prpow((Trcode)*TEMPBAR,-3.0)*prlog(1.0+1.6*KAPPA_ZETA(Tgcode,Trcode))/OPACITYBAR) // ASSUMPTION: Number of electrons similar to for solar abundances for 1+X+(3/4)Y term.  For Tr,Tg split, see Ramesh notes.
+#define KAPPA_CHIANTIBF_CODE(rhocode,Tgcode,Trcode) (4.0E34*((rhocode*RHOBAR))*(ZFACT/ZSOLAR)*YELE*prpow((Tgcode)*TEMPBAR,-1.7)*prpow((Trcode)*TEMPBAR,-3.0)/OPACITYBAR) // *XFACT literally from Fig 34.1 in Draine book, but for solar n_H\sim n_b\sim 1/cm^3 only
+#define KAPPA_HN_CODE(rhocode,Tgcode,Trcode) (1.1E-25*prpow(ZFACT,0.5)*prpow((rhocode)*RHOBAR,0.5)*prpow((Tgcode)*TEMPBAR,7.7)/OPACITYBAR) // other sources cite 2.5E-31 (Z/0.02)(rho)^(1/2)(T)^9
+#define KAPPA_MOL_CODE(rhocode,Tgcode,Trcode) (0.1*ZFACT/OPACITYBAR)
+// see opacities.nb
+#define KAPPA_GENFF_CODE(rhocode,Tgcode,Trcode) (1.0/(1.0/(KAPPA_MOL_CODE(rhocode,Tgcode,Trcode)+KAPPA_HN_CODE(rhocode,Tgcode,Trcode)) + 1.0/(KAPPA_CHIANTIBF_CODE(rhocode,Tgcode,Trcode)+KAPPA_BF_CODE(rhocode,Tgcode,Trcode)+KAPPA_FF_CODE(rhocode,Tgcode,Trcode)))) // for 1.3E3K \le T \le 1E9K or higher.  Numerically better to have kappa bottom out at low T so no diverent opacity as T->0
+
+//////////////////////////////////////////
+/// SYNCH STUFF
+//#define KAPPA_SYN_PREFACTOR_CODE(Bcode,Tecode) ((3.618472945417517e62*(YELE))/((Bcode)*(BFIELDBAR)*(MUMEAN)*Power((Tecode),5)*Power((TEMPBAR),5)*OPACITYBAR))
+
+//#define SYNZETA(Bcode,Tecode,Trcode) ((4.92270742942408e22*(Trcode))/((Bcode)*(BFIELDBAR)*Power((Tecode),2)*(TEMPBAR)))
+
+
+/// Synchrotron energy-opacity
+//#define KAPPA_SYN_ULTRAREL_ZETA_LEN(xv,len) (1.0/((lenv) + 1.7593661568669912098*Power((xv),1.6666666666666667) +      (1.4263215513887232471 + 0.3471650561326893869*Power((lenv),0.4523670248787104997))*Power((xv),2.111111111111111) +      0.23204675605082615204*Power((xv),2.5555555555555554) +      (0.24443559757524314548 + 0.0088705237575917670473*Power((lenv),0.4271869510615121102))*Power((xv),3)))
+//#define KAPPA_SYN_ULTRAREL_CODE(Bcode,Tecode,Trcode,Trcode,synzeta,pretau) (KAPPA_SYN_PREFACTOR_CODE(Bcode,Tecode)*KAPPA_SYN_ULTRAREL_ZETA_LEN(synzeta,pretau))
+
+//#define KAPPA_SYN_T5E8K_ZETA_LEN(xv,len) (1.0/((lenv) + 0.00052202316156059881506*Power((xv),1.6666666666666667) +      Power(0.14001850794282671986 + 0.11613125770482513044*Power((lenv),0.201800070232941442),3.3333333333333334814)*      Power((xv),2.111111111111111) + 0.00019353241505903052391*Power((xv),2.5555555555555554) +      (0.00027994589708735966894 + 0.000020878066604903371264*Power((lenv),0.1833333333333333481) +         0.00025453146537652838978*Power((lenv),0.3142857142857142794) + 0.000054874224183531537607*Power((lenv),0.5500000000000000444))*      Power((xv),3)))
+//#define KAPPA_SYN_T5E8K_CODE(Bcode,Tecode,Trcode,Trcode,synzeta,pretau) (KAPPA_SYN_PREFACTOR_CODE(Bcode,Tecode)*KAPPA_SYN_T5E8K_ZETA_LEN(synzeta,pretau))
+
+//#define KAPPA_SYN_T2E9K_ZETA_LEN(Bcode,Trcode) (1/((lenv) + (0.28275620637731327697 + 1.1378561908017619967e-11*Power((lenv),0.060928927736612376))*Power((xv),1.6666666666666667) +      (5.4268557992144783249 + 0.043977350144590657277*Power((lenv),0.5779288733465596239))*Power((xv),2.111111111111111) -      0.46233132906151664546*Power((xv),2.5555555555555554) +      (0.19718535926423731898 + 0.0031122781491543971728*Power((lenv),0.4612049073380375952))*Power((xv),3)))
+//#define KAPPA_SYN_T2E9K_CODE(Bcode,Tecode,Trcode,Trcode,synzeta,pretau) (KAPPA_SYN_PREFACTOR_CODE(Bcode,Tecode)*KAPPA_SYN_T2E9K_ZETA_LEN(synzeta,pretau))
+
+/// Synchrotron number-opacity
+//#define KAPPAN_SYN_ULTRAREL_ZETA_LEN(xv,len) (1.0/((lenv) + Power(0.86449798151937196078 + 0.24768973803440103021*Power((lenv),0.1626980491028581777),5.)*      Power((xv),1.6666666666666667) - 1.*(0.37887607591106965651 + 0.22518459751734409835*Power((lenv),0.4285631946482474364))*      Power((xv),1.8333333333333332593) + Power(0.73281421484706721348 + 0.21306057253116089667*Power((lenv),0.2099676374949942248),                                                    3.3333333333333334814)*Power((xv),2)))
+//#define KAPPAN_SYN_ULTRAREL_CODE(Bcode,Tecode,Trcode,Trcode,synzeta,pretau) (KAPPA_SYN_PREFACTOR_CODE(Bcode,Tecode)*KAPPAN_SYN_ULTRAREL_ZETA_LEN(synzeta,pretau))
+
+//#define KAPPAN_SYN_T5E8K_ZETA_LEN(xv,len) (1.0/((lenv) + Power(0.163252088813858387 + 0.18257330106897970423*Power((lenv),0.1627658778956655172),5.)*      Power((xv),1.6666666666666667) + Power(0.069760711506617445465 + 0.1433016264153323116*Power((lenv),0.2012366029583787241),       3.3333333333333334814)*Power((xv),2)))
+//#define KAPPAN_SYN_T5E8K_CODE(Bcode,Tecode,Trcode,Trcode,synzeta,pretau) (KAPPA_SYN_PREFACTOR_CODE(Bcode,Tecode)*KAPPAN_SYN_5E8K_ZETA_LEN(synzeta,pretau))
+
+//#define KAPPAN_SYN_T2E9K_ZETA_LEN(xv,len) (1.0/((lenv) + Power(0.59088832521110612461 + 0.4071501348167751444*Power((lenv),0.1132964803598243697),5.)*      Power((xv),1.6666666666666667) + (0.20483642960172801044 + 0.5219984832002366737*Power((lenv),0.1499999999999999944) +         0.02830076259937870306*Power((lenv),0.5999999999999999778))*Power((xv),2)))
+//#define KAPPAN_SYN_T2E9K_CODE(Bcode,Tecode,Trcode,Trcode,synzeta,pretau) (KAPPA_SYN_PREFACTOR_CODE(Bcode,Tecode)*KAPPAN_SYN_2E9K_ZETA_LEN(synzeta,pretau))
+
+
 
 // KAPPAUSER is optical depth per unit length per unit rest-mass energy density
 // calc_kappa_user and calc_kappan_user and calc_kappaes_user return optical depth per unit length.
 
-// energy absorption
-FTYPE calc_kappa_user(FTYPE rho, FTYPE B, FTYPE Tg,FTYPE Tr,FTYPE x,FTYPE y,FTYPE z)
+#define ISFITORIG 1
+#define ISFITNEW 1
+#define WHICHFIT ISFITORIG
+
+
+#define ISKAPPAEABS 0
+#define ISKAPPANABS 1
+#define ISKAPPAEEMIT 2
+#define ISKAPPANEMIT 3
+#define ISKAPPAES 4
+
+#define E 2.718281828459045
+
+// general fits from mean opacity paper
+static FTYPE kappa_func_fits(int which, FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, FTYPE varexpf)
 {
-  //  if(WHICHPROBLEM==RADDONUT && nstep>100){
+  // TODO: pass varexpf
+  //  FTYPE varexpf=1.0;
+
+// KORALTODO: Put a lower limit on T~1E4K so not overly wrongly opaque in spots where u_g->0 anomologously?
+// accounts for low temperatures so non-divergent and more physical
+
+  if(WHICHFIT==ISFITORIG){
+    if(which==ISKAPPAEABS || which==ISKAPPAEEMIT || which==ISKAPPANABS || which==ISKAPPANEMIT){
+      // energy/number and absorb/emit treated using the same opacity
+      return(rho*(KAPPA_GENFF_CODE(SMALL+rho,Tg+TEMPMIN,Tr+TEMPMIN)));
+    }
+    else if(which==ISKAPPAES){
+      return(rho*KAPPA_ES_CODE(rho,Tg+TEMPMIN));
+    }
+  }
+  else if(WHICHFIT==ISFITNEW){
+
+
+    FTYPE Tereal=Tg*TEMPBAR;
+    FTYPE Tgreal=Tg*TEMPBAR;
+    FTYPE Trreal=Tr*TEMPBAR;
+    FTYPE Breal=B*BFIELDBAR;
+    FTYPE xi = Trreal/Tereal;
+
+    //////////////
+    //
+    // free-free
+    //
+    //////////////
+
+    FTYPE kappaffreal=1.2E24*(1.0+XFACT)*(1.0-ZFACT)*pow(Tereal,-7.0/2.0);
+    FTYPE kappanffreal=kappaffreal; // same prefactor
+    FTYPE kappaemitffreal=kappaffreal; // same prefactor
+    FTYPE kappanemitffreal=kappaffreal; // same prefactor
+
+    // absorption
+
+    // XRB Ledd
+    FTYPE aa = 0.9315361341095171 - 0.6768085524145425*Power(1 - varexpf,0.7198306274197313) + 1.9002183262398797*Power(varexpf,37.829441097625605);
+    FTYPE bb = 3.1012402220434816 + 0.4612339875024576*Power(1 - varexpf,0.03596567451632021) - 0.02585416821144859*Power(varexpf,114.93181787377999);
+    FTYPE cc = 10.042113525722476 - 9.063716681172405*Power(1 - varexpf,2.4433708236615708e-9) - 0.6884461811691391*Power(varexpf,4.432030473409409);
+
+    kappaffreal *= aa*pow(xi,-bb)*log(1.0+cc*xi);
+
+    // XRB Ledd
+    FTYPE aan=1.27*Power(E,1.842068074395237*Power(varexpf,2) + 1.151292546497023*Power(varexpf,4) + 2.8206667389177063*Power(varexpf,70.));
+    FTYPE bbn=3.0976213586221544 - 0.03091777713803534*Power(1 - varexpf,4.613930997481447) - 0.3099700393164486*Power(varexpf,162.16873912467364);
+    FTYPE ccn=0.00010386408308833163 + 5.934327626527228*Power(1 - varexpf,0.5880281963526498) + 62558.02370357485*Power(varexpf,1.3444132516555986e6);
+
+    kappanffreal *= aan*pow(xi,-bbn)*log(1.0+ccn*xi);
+
+    // emission (just Planck varexpf=1 but using actual direct fit instead of fit over many varexpf)
+
+    // XRB Ledd
+    FTYPE aae=0.3759100641660466;
+    FTYPE bbe=3.0775444410210264;
+    FTYPE cce=9.354365388578165;
+ 
+    kappaemitffreal *= aae*pow(xi,-bbe)*log(1.0+cce*xi);
+
+    // XRB Ledd
+    FTYPE aane=7.418554613651609;
+    FTYPE bbne=2.0551425132443293;
+    FTYPE ccne=62558.213216069445;
+
+    kappanemitffreal *= aane*pow(xi,-bbne)*log(1.0+ccne*xi);
+
+    
+    //////////////
+    //
+    // Add bound-free
+    //
+    //////////////
+
+    // just add-in factor by which bound-free
+    FTYPE factorbf=(1.0 + 750.0*ZFACT*(1.0+XFACT+0.75*YFACT)/((1.0+XFACT)*(1.0-ZFACT)) );
+    kappaffreal *= factorbf;
+    kappanffreal *= factorbf;
+    kappaemitffreal *= factorbf;
+    kappanemitffreal *= factorbf;
+
+  }
+
+
+  return(0.0);// should never get here
+}
+
+FTYPE Gcompt(FTYPE rho, FTYPE Tgas, FTYPE Tradff, FTYPE Ruu)
+{
+
+  //  FTYPE neleobar=1.0/MUMEAN; // to have neleobar*kappaes=kappaesperele*mb*rho/(MUMEAN*mb)
+  // ASSUMPTION: Tion=Tele
+  FTYPE preterm3 = -4.0*(rho*KAPPA_FORCOMPT_CODE(rho,Tgas))*(Tgas - Tradff)*(TEMPBAR/TEMPELE)*Ruu; // kappaes with its internal *rho already accounts for being number density of electrons involved, so no need to use MUMEAN again here.
+
+  //  f[pl] = ((uu[pl] - uu0[pl]) + (sign[pl] * localdt * Gdpl[pl]))*extrafactor[pl]; -> T^t_t[new] = T^t_t[old] - Gdpl[UU] -> dT^t_t = -Gdpl[UU] = +Gd[TT]
+  // Ruu>0, so if Tgas>Trad, then preterm3<0.  Then egas should drop.
+  // We have dT^t_t = G_t = Gd_t = -Gdpl_t = preterm3 u_t > 0, so G_t>0 so T^t_t rises so -T^t_t drops so egas drops.
+
+  return(preterm3);
+} 
+
+
+
+
+// energy absorption
+FTYPE calc_kappa_user(FTYPE rho, FTYPE B, FTYPE Tg,FTYPE Tr,FTYPE varexpf, FTYPE x,FTYPE y,FTYPE z)
+{
+  //  if(WHICHPROBLEM==RADDONUT && nstep>100){ 
   //    return(0.0);
   //  }
   //  else return(KAPPAUSER(rho,B,Tg,Tr));
+
+
+#if(WHICHPROBLEM==RADDONUT)
+  return(kappa_func_fits(ISKAPPAEABS,rho,B,Tg,Tr,varexpf));
+#else
   return(KAPPAUSER(rho,B,Tg,Tr));
+#endif
+
+}
+
+// energy emission
+ FTYPE calc_kappaemit_user(FTYPE rho, FTYPE B, FTYPE Tg,FTYPE Tr,FTYPE varexpf, FTYPE x,FTYPE y,FTYPE z)
+{
+  //  if(WHICHPROBLEM==RADDONUT && nstep>100){ 
+  //    return(0.0);
+  //  }
+  //  else return(KAPPAUSER(rho,B,Tg,Tr));
+
+
+#if(WHICHPROBLEM==RADDONUT)
+  return(kappa_func_fits(ISKAPPAEEMIT,rho,B,Tg,Tr,varexpf));
+#else
+  return(KAPPAUSER(rho,B,Tg,Tr));
+#endif
+
 }
 
 // number absorption
-FTYPE calc_kappan_user(FTYPE rho, FTYPE B, FTYPE Tg,FTYPE Tr,FTYPE x,FTYPE y,FTYPE z)
+ FTYPE calc_kappan_user(FTYPE rho, FTYPE B, FTYPE Tg,FTYPE Tr,FTYPE varexpf, FTYPE x,FTYPE y,FTYPE z)
 {
   //  if(WHICHPROBLEM==RADDONUT && nstep>100){
   //    return(0.0);
   //  }
   //  else return(KAPPANUSER(rho,B,Tg,Tr));
+#if(WHICHPROBLEM==RADDONUT)
+  return(kappa_func_fits(ISKAPPANABS,rho,B,Tg,Tr,varexpf));
+#else
   return(KAPPANUSER(rho,B,Tg,Tr));
+#endif
+
+}
+
+// number emission
+ FTYPE calc_kappanemit_user(FTYPE rho, FTYPE B, FTYPE Tg,FTYPE Tr,FTYPE varexpf, FTYPE x,FTYPE y,FTYPE z)
+{
+  //  if(WHICHPROBLEM==RADDONUT && nstep>100){
+  //    return(0.0);
+  //  }
+  //  else return(KAPPANUSER(rho,B,Tg,Tr));
+#if(WHICHPROBLEM==RADDONUT)
+  return(kappa_func_fits(ISKAPPANEMIT,rho,B,Tg,Tr,varexpf));
+#else
+  return(KAPPANUSER(rho,B,Tg,Tr));
+#endif
+
 }
 
 //scattering
 FTYPE calc_kappaes_user(FTYPE rho, FTYPE T,FTYPE x,FTYPE y,FTYPE z)
 {  
+
+#if(WHICHPROBLEM==RADDONUT)
+  return(kappa_func_fits(ISKAPPAES,rho,0,T,T,1.0));
+#else
   return(KAPPAESUSER(rho,T));
+#endif
 
 }
+
+
+
+
+//****************************************//
+//****************************************//
+//****************************************//
+// Problem setup constants that only modifies things in init.c (not init.h)
+//****************************************//
+//****************************************//
+
+#if(WHICHPROBLEM==FLATNESS)
+
+#define KAPPA 0.
+#define KAPPAES 0.
+
+// assume KAPPA defines fraction of FF opacity
+#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
+// assume KAPPAES defines fraction of ES opacity
+#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_BASIC_CODE(rho,T))
+
+
+#endif
+
+//****************************************//
+//****************************************//
+
+
+#if(WHICHPROBLEM==RADPULSE || WHICHPROBLEM==RADPULSEPLANAR || WHICHPROBLEM==RADPULSE3D)
+
+
+
+
+#if(WHICHPROBLEM==RADPULSEPLANAR)
+
+#define KAPPA 0.
+//#define KAPPAES (0.0)
+//#define KAPPAES (1E-7)
+//#define KAPPAES (1E-4*1.09713E-18*1E6)
+//#define KAPPAES (1E-4*1.09713E-18*1E3)
+//#define KAPPAES (1E-4*1.09713E-18*1E-0)
+//#define KAPPAES (1E-4*1.09713E-18*0.2)
+//#define KAPPAES (1E-4*1.09713E-18*1E-1)
+//#define KAPPAES (1E-4*1.09713E-18*1E-2)
+//#define KAPPAES (1E-4*1.09713E-18*1E-3)
+//#define KAPPAES (1E-4*1.09713E-18*1E-3*1E-10)
+
+// assume KAPPA defines fraction of FF opacity
+//#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
+// assume KAPPAES defines fraction of ES opacity
+//#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_BASIC_CODE(rho,T))
+
+#define KAPPAES (1E3) // takes VERY long time with sub-cycling, but works.
+//#define KAPPAES (1E2) // goes with sub-cycling at "ok" rate for this test.
+//#define KAPPAES (10.0)
+//#define KAPPAES (1E-1)
+//#define KAPPAES (1.0)
+//#define KAPPAES (1E-10)
+
+#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA)
+#define KAPPAESUSER(rho,T) (rho*KAPPAES)
+
+
+#else // PULSE and PULSE3D
+
+// KAPPAs are fraction of physical FF and ES opacities
+#define KAPPA 0.
+#define KAPPAES (SMALL)
+
+// assume KAPPA defines fraction of FF opacity
+#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
+// assume KAPPAES defines fraction of ES opacity
+#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_BASIC_CODE(rho,T))
+
+
+#endif
+
+
+#endif
+
+
+//****************************************//
+//****************************************//
+
+
+#if(WHICHPROBLEM==RADBEAMFLAT)
+
+
+#define KAPPA 0.
+#define KAPPAES 0.
+
+// assume KAPPA defines fraction of FF opacity
+#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
+// assume KAPPAES defines fraction of ES opacity
+#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_BASIC_CODE(rho,T))
+
+
+#endif
+
+//****************************************//
+//****************************************//
+
+
+#if(WHICHPROBLEM==RADTUBE)
+
+#define KAPPAESUSER(rho,T) (0.0)
+
+#if(NTUBE==1)
+#define KAPPAUSER(rho,B,Tg,Tr) (0.4*rho)
+#elif(NTUBE==2)
+#define KAPPAUSER(rho,B,Tg,Tr) (0.2*rho)
+#elif(NTUBE==3)
+#define KAPPAUSER(rho,B,Tg,Tr) (0.3*rho)
+#elif(NTUBE==31)
+#define KAPPAUSER(rho,B,Tg,Tr) (25*rho)
+#elif(NTUBE==4)
+#define KAPPAUSER(rho,B,Tg,Tr) (0.08*rho)
+#elif(NTUBE==41)
+#define KAPPAUSER(rho,B,Tg,Tr) (0.7*rho)
+#elif(NTUBE==5)
+#define KAPPAUSER(rho,B,Tg,Tr) (1000*rho)
+#endif
+
+
+#endif
+
+//****************************************//
+//****************************************//
+
+
+#if(WHICHPROBLEM==RADSHADOW || WHICHPROBLEM==RADDBLSHADOW)
+
+//#define KAPPAUSER(rho,B,Tg,Tr) (rho*1E2)
+#define KAPPAUSER(rho,B,Tg,Tr) (rho*1.0) // paper
+#define KAPPAESUSER(rho,T) (rho*0.0)
+
+
+#endif
+
+
+//****************************************//
+//****************************************//
+
+
+//****************************************//
+//****************************************//
+
+
+#if(WHICHPROBLEM==RADBEAM2D || WHICHPROBLEM==RADBEAM2DKS || WHICHPROBLEM==RADBEAM2DKSVERT)
+
+
+#define KAPPA 0.
+#define KAPPAES 0.
+
+// assume KAPPA defines fraction of FF opacity
+#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
+// assume KAPPAES defines fraction of ES opacity
+#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_BASIC_CODE(rho,T))
+
+
+#endif
+
+
+#if(WHICHPROBLEM==ATMSTATIC)
+
+
+#define KAPPA 0.
+#define KAPPAES 0.
+
+// assume KAPPA defines fraction of FF opacity
+#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
+// assume KAPPAES defines fraction of ES opacity
+#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_BASIC_CODE(rho,T))
+
+
+#endif
+
+
+#if(WHICHPROBLEM==RADATM)
+
+
+#define KAPPA 0.
+#define KAPPAES 1. // only scattering
+
+// assume KAPPA defines fraction of FF opacity
+#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
+// assume KAPPAES defines fraction of ES opacity
+#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_BASIC_CODE(rho,T))
+
+
+#endif
+
+
+#if(WHICHPROBLEM==RADWALL)
+
+
+#define KAPPA 0.
+#define KAPPAES 0.
+
+// assume KAPPA defines fraction of FF opacity
+#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
+// assume KAPPAES defines fraction of ES opacity
+#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_BASIC_CODE(rho,T))
+
+
+#endif
+
+
+
+
+#if(WHICHPROBLEM==RADWAVE)
+
+#define KAPPAUSER(rho,B,Tg,Tr) (rho*RADWAVE_KAPPA)
+#define KAPPAESUSER(rho,T) (rho*RADWAVE_KAPPAES)
+
+#endif
+
+
+
+#if(WHICHPROBLEM==KOMIPROBLEM)
+
+#define KAPPAUSER(rho,B,Tg,Tr) (0.)
+#define KAPPAESUSER(rho,T) (0.)
+
+#endif
+
+
+#if(WHICHPROBLEM==RADBONDI)
+
+
+#define KAPPA 1.0
+#define KAPPAES 1.0
+
+// assume KAPPA defines fraction of FF opacity
+#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
+// assume KAPPAES defines fraction of ES opacity
+#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_BASIC_CODE(rho,T))
+
+
+#endif
+
+
+#if(WHICHPROBLEM==RADDOT)
+
+
+#define KAPPA 0.
+#define KAPPAES 0.
+
+// assume KAPPA defines fraction of FF opacity
+#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
+// assume KAPPAES defines fraction of ES opacity
+#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_BASIC_CODE(rho,T))
+
+
+#endif
+
+#if(WHICHPROBLEM==RADNT || WHICHPROBLEM==RADFLATDISK)
+
+#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA_ES_CODE(rho,Tg)/1E14*0.1) // wierd use of kappa_{es} in koral
+//#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA_ES_CODE(rho,T)/1E14*0.0)
+#define KAPPAESUSER(rho,T) (0.0)
+
+#endif
+
+#if(WHICHPROBLEM==RADDONUT)
+// kappa can't be zero or else flux will be nan
+//#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA_ES_CODE(rho,T)/1E14*1.0) // wierd use of kappa_{es} in koral
+//#define KAPPAESUSER(rho,T) (0.0)
+
+// KORALNOTE: Different than koral code test, but as if full problem.
+#define KAPPA 1.0
+#define KAPPAES 1.0
+
+// KORALTODO: Put a lower limit on T~1E4K so not overly wrongly opaque in spots where u_g->0 anomologously?
+// assume KAPPA defines fraction of FF opacity
+//#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg+TEMPMIN))
+// accounts for low temperatures so non-divergent and more physical
+
+#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*(KAPPA_GENFF_CODE(SMALL+rho,Tg+TEMPMIN,Tr+TEMPMIN)))
+
+// TODOMARK: Compute FF number opacity
+#define KAPPANUSER(rho,B,Tg,Tr) (rho*KAPPA*(KAPPA_GENFF_CODE(SMALL+rho,Tg+TEMPMIN,Tr+TEMPMIN)))
+
+// assume KAPPAES defines fraction of ES opacity
+#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_CODE(rho,T))
+
+
+#endif
+
+#if(WHICHPROBLEM==RADCYLBEAM || WHICHPROBLEM==RADCYLBEAMCART)
+
+#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA_ES_BASIC_CODE(rho,Tg)/1E14*0.0) // note 0.0
+#define KAPPAESUSER(rho,T) (0.0)
+
+#endif
+
+#if(WHICHPROBLEM==RADCYLJET)
+
+#define KAPPAUSER(rho,B,Tg,Tr) (rho*(KAPPA_FF_CODE(SMALL+rho,Tg+TEMPMIN,Tr+TEMPMIN))) // SMALL
+#define KAPPAESUSER(rho,Tg) (rho*KAPPA_ES_BASIC_CODE(rho,Tg)/100.0)
+
+#endif
+
+
+#ifndef KAPPANUSER
+// in case haven't defined KAPPANUSER, just use energy opacity
+#define KAPPANUSER(rho,B,Tg,Tr) KAPPAUSER(rho,B,Tg,Tr)
+#endif
 
 
 int coolfunc_user(FTYPE h_over_r, FTYPE *pr, struct of_geom *geom, struct of_state *q,FTYPE (*dUcomp)[NPR])
