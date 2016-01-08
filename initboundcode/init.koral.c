@@ -9758,12 +9758,40 @@ static FTYPE kappa_func_fits(int which, FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, 
     //////////////
 
     // FTYPE kappahminusbase = 33.0*1E-25*pow(ZFACT,0.5)*pow(rhoreal,1.5)*pow(Tereal,7.7);
-    // just add-in factor by which chianti adds-in (see nizisq.nb), but remove Rei
+    // just add-in factor by which H^- adds-in (see nizisq.nb), but remove Rei
     FTYPE factorhm=2.75739E-48*pow(Tereal,11.2)*pow(ZFACT,0.5)/(pow(rhoreal,0.5)*(1.0+XFACT)*(1.0-ZFACT)*Rei);
     FTYPE kappahmreal = kappaffreal*factorhm;
     FTYPE kappanhmreal = kappanffreal*factorhm;
     FTYPE kappaemithmreal = kappaemitffreal*factorhm;
     FTYPE kappanemithmreal = kappanemitffreal*factorhm;
+
+    //////////////
+    //
+    // Add Chianti that fits Opal
+    // below in [cm^{-1}]
+    //
+    //////////////
+
+    // just add-in factor by which chianti opal adds-in
+    FTYPE factorchiantiopal=3E-13*pow(Tereal,1.6)*pow(rhoreal,-0.4);
+    FTYPE kappachiantiopalreal = kappaffreal*factorchianti*factorchiantiopal;
+    FTYPE kappanchiantiopalreal = kappanffreal*factorchianti*factorchiantiopal;
+    FTYPE kappaemitchiantiopalreal = kappaemitffreal*factorchianti*factorchiantiopal;
+    FTYPE kappanemitchiantiopalreal = kappanemitffreal*factorchianti*factorchiantiopal;
+
+    //////////////
+    //
+    // Add H^- that fits Opal
+    // below in [cm^{-1}]
+    //
+    //////////////
+
+    // just add-in factor by which H^- opal adds-in
+    FTYPE factorhmopal=1E4*pow(Tereal,-1.2);
+    FTYPE kappahmopalreal = kappaffreal*factorhm*factorhmopal;
+    FTYPE kappanhmopalreal = kappanffreal*factorhm*factorhmopal;
+    FTYPE kappaemithmopalreal = kappaemitffreal*factorhm*factorhmopal;
+    FTYPE kappanemithmopalreal = kappanemitffreal*factorhm*factorhmopal;
 
     //////////////
     //
@@ -9787,6 +9815,17 @@ static FTYPE kappa_func_fits(int which, FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, 
     FTYPE kappanlowdensityreal  = 1.0/ ( 1.0/(kappanmolreal + kappanhmreal) + 1.0/(kappanchiantireal + kappanffreal + kappanffeereal + kappanbfreal) );
     FTYPE kappaemitlowdensityreal  = 1.0/ ( 1.0/(kappaemitmolreal + kappaemithmreal) + 1.0/(kappaemitchiantireal + kappaemitffreal + kappaemitffeereal + kappaemitbfreal) );
     FTYPE kappanemitlowdensityreal  = 1.0/ ( 1.0/(kappanemitmolreal + kappanemithmreal) + 1.0/(kappanemitchiantireal + kappanemitffreal + kappanemitffeereal + kappanemitbfreal) );
+
+    //////////////
+    //
+    // -density interpolation
+    // be in [cm^{-1}]
+    //
+    //////////////
+    FTYPE kappadensityreal  = 1.0/ ( 1.0/(kappamolreal + kappahmopalreal) + 1.0/(kappachiantiopalreal) + 1.0/(kappachiantireal + kappaffreal + kappaffeereal + kappabfreal) );
+    FTYPE kappandensityreal  = 1.0/ ( 1.0/(kappanmolreal + kappanhmopalreal) + 1.0/(kappanchiantiopalreal) + 1.0/(kappanchiantireal + kappanffreal + kappanffeereal + kappanbfreal) );
+    FTYPE kappaemitdensityreal  = 1.0/ ( 1.0/(kappaemitmolreal + kappaemithmopalreal) + 1.0/(kappaemitchiantiopalreal) + 1.0/(kappaemitchiantireal + kappaemitffreal + kappaemitffeereal + kappaemitbfreal) );
+    FTYPE kappanemitdensityreal  = 1.0/ ( 1.0/(kappanemitmolreal + kappanemithmopalreal) + 1.0/(kappanemitchiantiopalreal) + 1.0/(kappanemitchiantireal + kappanemitffreal + kappanemitffeereal + kappanemitbfreal) );
 
 
     //////////////
@@ -9816,16 +9855,16 @@ static FTYPE kappa_func_fits(int which, FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, 
     FTYPE overopacitybaralt=1.0/(OPACITYBAR*RHOBAR); // for those opacities in cm^{-1}
 
     if(which==ISKAPPAEABS){
-      return(kappalowdensityreal*overopacitybaralt);
+      return(kappadensityreal*overopacitybaralt);
     }
     else if(which==ISKAPPAEEMIT){
-      return(kappaemitlowdensityreal*overopacitybaralt);
+      return(kappaemitdensityreal*overopacitybaralt);
     }
     else if(which==ISKAPPANABS){
-      return(kappanlowdensityreal*overopacitybaralt);
+      return(kappandensityreal*overopacitybaralt);
     }
     else if(which==ISKAPPANEMIT){
-      return(kappanemitlowdensityreal*overopacitybaralt);
+      return(kappanemitdensityreal*overopacitybaralt);
     }
     else if(which==ISKAPPAES){
       return(kappaesreal*overopacitybaralt);
