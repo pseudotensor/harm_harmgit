@@ -1206,11 +1206,11 @@ extern void set_fieldline_content_dnumcolumns_dnumversion(int *numcolumnsvar, in
 /// CHANGES alot, make sure # is correct!
 /// Add 4 radiation terms if doing radiation
 #if( FIELDLINEGDETB == 1)
-#define NUMFIELDLINEQUANTITIES (14-2 + NUMYFL*(DOYFL!=0) + (DOYL!=0) + (DOYNU!=0) + (1+NDIM+10)*(EOMRADTYPE!=EOMRADNONE))
+#define NUMFIELDLINEQUANTITIES (14-2 + NUMYFL*(DOYFL!=0) + (DOYL!=0) + (DOYNU!=0) + (1+NDIM+11)*(EOMRADTYPE!=EOMRADNONE))
 /// rho, u, <yfl,yl,ynu>, u^t, v1,v2,v3,B1,B2,B3 <gdetB1,gdetB2,gdetB3>
 /// radiation adds: vrad1,vrad2,vrad3
 #else
-#define NUMFIELDLINEQUANTITIES (11-2 + NUMYFL*(DOYFL!=0) + (DOYL!=0) + (DOYNU!=0) + (1+NDIM+10)*(EOMRADTYPE!=EOMRADNONE))
+#define NUMFIELDLINEQUANTITIES (11-2 + NUMYFL*(DOYFL!=0) + (DOYL!=0) + (DOYNU!=0) + (1+NDIM+11)*(EOMRADTYPE!=EOMRADNONE))
 /// rho, u, <yfl,yl,ynu>, u^t, v1,v2,v3,B1,B2,B3
 /// radiation adds: vrad1,vrad2,vrad3
 #endif
@@ -1821,7 +1821,7 @@ void set_raddump_content_dnumcolumns_dnumversion(int *numcolumnsvar, int *numver
 {
 
   if(EOMRADTYPE!=EOMRADNONE && DORADDIAG){
-    *numcolumnsvar=NDIM*2 + NDIM+1 + NDIM + NDIM*2 + 1*14 + 4*3;
+    *numcolumnsvar=NDIM*5 + 6 + 9 + NDIM+1 + 4*3;
   }
   else{
     *numcolumnsvar=0;

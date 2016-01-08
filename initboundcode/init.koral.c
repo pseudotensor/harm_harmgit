@@ -9290,209 +9290,6 @@ void adjust_fluxctstag_emfs(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR
 //#define KAPPAN_SYN_T2E9K_CODE(Bcode,Tecode,Trcode,Trcode,synzeta,pretau) (KAPPA_SYN_PREFACTOR_CODE(Bcode,Tecode)*KAPPAN_SYN_2E9K_ZETA_LEN(synzeta,pretau))
 
 
-
-// KAPPAUSER is optical depth per unit length per unit rest-mass energy density
-// calc_kappa_user and calc_kappan_user and calc_kappaes_user return optical depth per unit length.
-
-#define ISFITORIG 1
-#define ISFITNEW 1
-#define WHICHFIT ISFITORIG
-
-
-#define ISKAPPAEABS 0
-#define ISKAPPANABS 1
-#define ISKAPPAEEMIT 2
-#define ISKAPPANEMIT 3
-#define ISKAPPAES 4
-
-#define E 2.718281828459045
-
-// general fits from mean opacity paper
-static FTYPE kappa_func_fits(int which, FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, FTYPE varexpf)
-{
-  // TODO: pass varexpf
-  //  FTYPE varexpf=1.0;
-
-// KORALTODO: Put a lower limit on T~1E4K so not overly wrongly opaque in spots where u_g->0 anomologously?
-// accounts for low temperatures so non-divergent and more physical
-
-  if(WHICHFIT==ISFITORIG){
-    if(which==ISKAPPAEABS || which==ISKAPPAEEMIT || which==ISKAPPANABS || which==ISKAPPANEMIT){
-      // energy/number and absorb/emit treated using the same opacity
-      return(rho*(KAPPA_GENFF_CODE(SMALL+rho,Tg+TEMPMIN,Tr+TEMPMIN)));
-    }
-    else if(which==ISKAPPAES){
-      return(rho*KAPPA_ES_CODE(rho,Tg+TEMPMIN));
-    }
-  }
-  else if(WHICHFIT==ISFITNEW){
-
-
-    FTYPE Tereal=Tg*TEMPBAR;
-    FTYPE Tgreal=Tg*TEMPBAR;
-    FTYPE Trreal=Tr*TEMPBAR;
-    FTYPE Breal=B*BFIELDBAR;
-    FTYPE xi = Trreal/Tereal;
-
-    //////////////
-    //
-    // free-free
-    //
-    //////////////
-
-    FTYPE kappaffreal=1.2E24*(1.0+XFACT)*(1.0-ZFACT)*pow(Tereal,-7.0/2.0);
-    FTYPE kappanffreal=kappaffreal; // same prefactor
-    FTYPE kappaemitffreal=kappaffreal; // same prefactor
-    FTYPE kappanemitffreal=kappaffreal; // same prefactor
-
-    // absorption
-
-    // XRB Ledd
-    FTYPE aa = 0.9315361341095171 - 0.6768085524145425*Power(1 - varexpf,0.7198306274197313) + 1.9002183262398797*Power(varexpf,37.829441097625605);
-    FTYPE bb = 3.1012402220434816 + 0.4612339875024576*Power(1 - varexpf,0.03596567451632021) - 0.02585416821144859*Power(varexpf,114.93181787377999);
-    FTYPE cc = 10.042113525722476 - 9.063716681172405*Power(1 - varexpf,2.4433708236615708e-9) - 0.6884461811691391*Power(varexpf,4.432030473409409);
-
-    kappaffreal *= aa*pow(xi,-bb)*log(1.0+cc*xi);
-
-    // XRB Ledd
-    FTYPE aan=1.27*Power(E,1.842068074395237*Power(varexpf,2) + 1.151292546497023*Power(varexpf,4) + 2.8206667389177063*Power(varexpf,70.));
-    FTYPE bbn=3.0976213586221544 - 0.03091777713803534*Power(1 - varexpf,4.613930997481447) - 0.3099700393164486*Power(varexpf,162.16873912467364);
-    FTYPE ccn=0.00010386408308833163 + 5.934327626527228*Power(1 - varexpf,0.5880281963526498) + 62558.02370357485*Power(varexpf,1.3444132516555986e6);
-
-    kappanffreal *= aan*pow(xi,-bbn)*log(1.0+ccn*xi);
-
-    // emission (just Planck varexpf=1 but using actual direct fit instead of fit over many varexpf)
-
-    // XRB Ledd
-    FTYPE aae=0.3759100641660466;
-    FTYPE bbe=3.0775444410210264;
-    FTYPE cce=9.354365388578165;
- 
-    kappaemitffreal *= aae*pow(xi,-bbe)*log(1.0+cce*xi);
-
-    // XRB Ledd
-    FTYPE aane=7.418554613651609;
-    FTYPE bbne=2.0551425132443293;
-    FTYPE ccne=62558.213216069445;
-
-    kappanemitffreal *= aane*pow(xi,-bbne)*log(1.0+ccne*xi);
-
-    
-    //////////////
-    //
-    // Add bound-free
-    //
-    //////////////
-
-    // just add-in factor by which bound-free
-    FTYPE factorbf=(1.0 + 750.0*ZFACT*(1.0+XFACT+0.75*YFACT)/((1.0+XFACT)*(1.0-ZFACT)) );
-    kappaffreal *= factorbf;
-    kappanffreal *= factorbf;
-    kappaemitffreal *= factorbf;
-    kappanemitffreal *= factorbf;
-
-  }
-
-
-  return(0.0);// should never get here
-}
-
-FTYPE Gcompt(FTYPE rho, FTYPE Tgas, FTYPE Tradff, FTYPE Ruu)
-{
-
-  //  FTYPE neleobar=1.0/MUMEAN; // to have neleobar*kappaes=kappaesperele*mb*rho/(MUMEAN*mb)
-  // ASSUMPTION: Tion=Tele
-  FTYPE preterm3 = -4.0*(rho*KAPPA_FORCOMPT_CODE(rho,Tgas))*(Tgas - Tradff)*(TEMPBAR/TEMPELE)*Ruu; // kappaes with its internal *rho already accounts for being number density of electrons involved, so no need to use MUMEAN again here.
-
-  //  f[pl] = ((uu[pl] - uu0[pl]) + (sign[pl] * localdt * Gdpl[pl]))*extrafactor[pl]; -> T^t_t[new] = T^t_t[old] - Gdpl[UU] -> dT^t_t = -Gdpl[UU] = +Gd[TT]
-  // Ruu>0, so if Tgas>Trad, then preterm3<0.  Then egas should drop.
-  // We have dT^t_t = G_t = Gd_t = -Gdpl_t = preterm3 u_t > 0, so G_t>0 so T^t_t rises so -T^t_t drops so egas drops.
-
-  return(preterm3);
-} 
-
-
-
-
-// energy absorption
-FTYPE calc_kappa_user(FTYPE rho, FTYPE B, FTYPE Tg,FTYPE Tr,FTYPE varexpf, FTYPE x,FTYPE y,FTYPE z)
-{
-  //  if(WHICHPROBLEM==RADDONUT && nstep>100){ 
-  //    return(0.0);
-  //  }
-  //  else return(KAPPAUSER(rho,B,Tg,Tr));
-
-
-#if(WHICHPROBLEM==RADDONUT)
-  return(kappa_func_fits(ISKAPPAEABS,rho,B,Tg,Tr,varexpf));
-#else
-  return(KAPPAUSER(rho,B,Tg,Tr));
-#endif
-
-}
-
-// energy emission
- FTYPE calc_kappaemit_user(FTYPE rho, FTYPE B, FTYPE Tg,FTYPE Tr,FTYPE varexpf, FTYPE x,FTYPE y,FTYPE z)
-{
-  //  if(WHICHPROBLEM==RADDONUT && nstep>100){ 
-  //    return(0.0);
-  //  }
-  //  else return(KAPPAUSER(rho,B,Tg,Tr));
-
-
-#if(WHICHPROBLEM==RADDONUT)
-  return(kappa_func_fits(ISKAPPAEEMIT,rho,B,Tg,Tr,varexpf));
-#else
-  return(KAPPAUSER(rho,B,Tg,Tr));
-#endif
-
-}
-
-// number absorption
- FTYPE calc_kappan_user(FTYPE rho, FTYPE B, FTYPE Tg,FTYPE Tr,FTYPE varexpf, FTYPE x,FTYPE y,FTYPE z)
-{
-  //  if(WHICHPROBLEM==RADDONUT && nstep>100){
-  //    return(0.0);
-  //  }
-  //  else return(KAPPANUSER(rho,B,Tg,Tr));
-#if(WHICHPROBLEM==RADDONUT)
-  return(kappa_func_fits(ISKAPPANABS,rho,B,Tg,Tr,varexpf));
-#else
-  return(KAPPANUSER(rho,B,Tg,Tr));
-#endif
-
-}
-
-// number emission
- FTYPE calc_kappanemit_user(FTYPE rho, FTYPE B, FTYPE Tg,FTYPE Tr,FTYPE varexpf, FTYPE x,FTYPE y,FTYPE z)
-{
-  //  if(WHICHPROBLEM==RADDONUT && nstep>100){
-  //    return(0.0);
-  //  }
-  //  else return(KAPPANUSER(rho,B,Tg,Tr));
-#if(WHICHPROBLEM==RADDONUT)
-  return(kappa_func_fits(ISKAPPANEMIT,rho,B,Tg,Tr,varexpf));
-#else
-  return(KAPPANUSER(rho,B,Tg,Tr));
-#endif
-
-}
-
-//scattering
-FTYPE calc_kappaes_user(FTYPE rho, FTYPE T,FTYPE x,FTYPE y,FTYPE z)
-{  
-
-#if(WHICHPROBLEM==RADDONUT)
-  return(kappa_func_fits(ISKAPPAES,rho,0,T,T,1.0));
-#else
-  return(KAPPAESUSER(rho,T));
-#endif
-
-}
-
-
-
-
 //****************************************//
 //****************************************//
 //****************************************//
@@ -9797,6 +9594,363 @@ FTYPE calc_kappaes_user(FTYPE rho, FTYPE T,FTYPE x,FTYPE y,FTYPE z)
 // in case haven't defined KAPPANUSER, just use energy opacity
 #define KAPPANUSER(rho,B,Tg,Tr) KAPPAUSER(rho,B,Tg,Tr)
 #endif
+
+
+
+// KAPPAUSER is optical depth per unit length per unit rest-mass energy density
+// calc_kappa_user and calc_kappan_user and calc_kappaes_user return optical depth per unit length.
+
+#define ISFITORIG 1
+#define ISFITNEW 1
+#define WHICHFIT ISFITORIG // choose
+
+
+#define ISKAPPAEABS 0
+#define ISKAPPANABS 1
+#define ISKAPPAEEMIT 2
+#define ISKAPPANEMIT 3
+#define ISKAPPAES 4
+
+#define E 2.718281828459045
+
+// general fits from mean opacity paper
+static FTYPE kappa_func_fits(int which, FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, FTYPE varexpf)
+{
+  // TODO: pass varexpf
+  //  FTYPE varexpf=1.0;
+
+// KORALTODO: Put a lower limit on T~1E4K so not overly wrongly opaque in spots where u_g->0 anomologously?
+// accounts for low temperatures so non-divergent and more physical
+
+
+
+  if(WHICHFIT==ISFITORIG){
+    if(which==ISKAPPAEABS || which==ISKAPPAEEMIT || which==ISKAPPANABS || which==ISKAPPANEMIT){
+      // energy/number and absorb/emit treated using the same opacity
+      return(rho*(KAPPA_GENFF_CODE(SMALL+rho,Tg+TEMPMIN,Tr+TEMPMIN)));
+    }
+    else if(which==ISKAPPAES){
+      return(rho*KAPPA_ES_CODE(rho,Tg+TEMPMIN));
+    }
+  }
+  else if(WHICHFIT==ISFITNEW){
+
+
+    FTYPE Te=Tg;
+
+    FTYPE rhoreal=rho*RHOBAR;
+    FTYPE Breal=B*BFIELDBAR;
+    FTYPE Tereal=Te*TEMPBAR;
+    FTYPE Tgreal=Tg*TEMPBAR;
+    FTYPE Trreal=Tr*TEMPBAR;
+    FTYPE xi = Trreal/Tereal;
+
+    FTYPE thetae = Te*(TEMPBAR/TEMPELE);
+    FTYPE thetaesq=thetae*thetae;
+    FTYPE thetaecubed=thetaesq*thetae;
+
+    //////////////
+    //
+    // free-free for e-i
+    // below in [cm^{-1}]
+    //
+    //////////////
+
+    FTYPE kappaffreal=1.2E24*pow(Tereal,-7.0/2.0)*pow(rhoreal,2.0)*(1.0+XFACT)*(1.0-ZFACT);
+
+    FTYPE Rei = (1.0+2.0*thetae+2.0*thetae*thetae)/(1.0+3.8*thetae+5.1*thetaesq+(8.0/M_PI)*thetaecubed)*log(1.0+3.42*thetae);
+    kappaffreal*= Rei;
+
+
+    FTYPE kappanffreal=kappaffreal; // same prefactor
+    FTYPE kappaemitffreal=kappaffreal; // same prefactor
+    FTYPE kappanemitffreal=kappaffreal; // same prefactor
+
+    // absorption
+
+    // XRB Ledd
+    FTYPE aa = 0.9315361341095171 - 0.6768085524145425*Power(1 - varexpf,0.7198306274197313) + 1.9002183262398797*Power(varexpf,37.829441097625605);
+    FTYPE bb = 3.1012402220434816 + 0.4612339875024576*Power(1 - varexpf,0.03596567451632021) - 0.02585416821144859*Power(varexpf,114.93181787377999);
+    FTYPE cc = 10.042113525722476 - 9.063716681172405*Power(1 - varexpf,2.4433708236615708e-9) - 0.6884461811691391*Power(varexpf,4.432030473409409);
+
+    kappaffreal *= aa*pow(xi,-bb)*log(1.0+cc*xi);
+
+    // XRB Ledd
+    FTYPE aan=1.27*Power(E,1.842068074395237*Power(varexpf,2) + 1.151292546497023*Power(varexpf,4) + 2.8206667389177063*Power(varexpf,70.));
+    FTYPE bbn=3.0976213586221544 - 0.03091777713803534*Power(1 - varexpf,4.613930997481447) - 0.3099700393164486*Power(varexpf,162.16873912467364);
+    FTYPE ccn=0.00010386408308833163 + 5.934327626527228*Power(1 - varexpf,0.5880281963526498) + 62558.02370357485*Power(varexpf,1.3444132516555986e6);
+
+    kappanffreal *= aan*pow(xi,-bbn)*log(1.0+ccn*xi);
+
+    // emission (just Planck varexpf=1 but using actual direct fit instead of fit over many varexpf)
+
+    // XRB Ledd
+    FTYPE aae=0.3759100641660466;
+    FTYPE bbe=3.0775444410210264;
+    FTYPE cce=9.354365388578165;
+ 
+    kappaemitffreal *= aae*pow(xi,-bbe)*log(1.0+cce*xi);
+
+    // XRB Ledd
+    FTYPE aane=7.418554613651609;
+    FTYPE bbne=2.0551425132443293;
+    FTYPE ccne=62558.213216069445;
+
+    kappanemitffreal *= aane*pow(xi,-bbne)*log(1.0+ccne*xi);
+
+    //////////////
+    //
+    // Add free-free for e-e
+    // below in [cm^{-1}]
+    //
+    //////////////
+    FTYPE Ree = thetae*(0.851+2.0*thetae)/(1.0+3.8*thetae+5.1*thetaesq+(8.0/M_PI)*thetaecubed)*log(1.0+10.4*thetaesq);
+
+    // just add-in factor by which free-free e-e adds-in (see nizisq.nb)
+    FTYPE factorffee=(1.0 + 0.5*(1.0+XFACT)*Ree/((1.0-ZFACT)*Rei));
+    FTYPE kappaffeereal = kappaffreal*factorffee;
+    FTYPE kappanffeereal = kappanffreal*factorffee;
+    FTYPE kappaemitffeereal = kappaemitffreal*factorffee;
+    FTYPE kappanemitffeereal = kappanemitffreal*factorffee;
+    
+    //////////////
+    //
+    // Add bound-free
+    // below in [cm^{-1}]
+    //
+    //////////////
+
+    // just add-in factor by which bound-free adds-in
+    FTYPE factorbf=(1.0 + 750.0*ZFACT*(1.0+XFACT+0.75*YFACT)/((1.0+XFACT)*(1.0-ZFACT)) );
+    FTYPE kappabfreal = kappaffreal*factorbf;
+    FTYPE kappanbfreal = kappanffreal*factorbf;
+    FTYPE kappaemitbfreal = kappaemitffreal*factorbf;
+    FTYPE kappanemitbfreal = kappanemitffreal*factorbf;
+
+    //////////////
+    //
+    // Add Chianti
+    // below in [cm^{-1}]
+    //  [TODO: Could use ff as prefactor to these as well for more uniform treatment as Trreal and Tereal become different.]
+    //  [TODO: Could use each ff prefactor for each kappa type (4 types) so opacities behave uniformly as Trreal and Tereal become different.  But not clear if all scale the same with temperature.  At least for Chianti it's reasonable.]
+    //  [TODO: integrate real low-temp opacities]
+    //
+    //////////////
+
+    // FTYPE kappachiantirealbase = 30.0*1E33*pow(rhoreal,2.0)*(0.1+ZFACT/ZSOLAR)*XFACT*(1.0+XFACT)*pow(Tereal,-1.7)*pow(Trreal,-3.0);
+    // just add-in factor by which chianti adds-in (see nizisq.nb)
+    FTYPE factorchianti=2.50672E10*XFACT*(0.1+ZFACT/ZSOLAR)*pow(Tereal,-1.2)/(1.0-ZFACT);
+    FTYPE kappachiantireal = kappaffreal*factorchianti;
+    FTYPE kappanchiantireal = kappanffreal*factorchianti;
+    FTYPE kappaemitchiantireal = kappaemitffreal*factorchianti;
+    FTYPE kappanemitchiantireal = kappanemitffreal*factorchianti;
+
+    //////////////
+    //
+    // Add H^-
+    // below in [cm^{-1}]
+    //
+    //////////////
+
+    // FTYPE kappahminusbase = 33.0*1E-25*pow(ZFACT,0.5)*pow(rhoreal,1.5)*pow(Tereal,7.7);
+    // just add-in factor by which chianti adds-in (see nizisq.nb), but remove Rei
+    FTYPE factorhm=2.75739E-48*pow(Tereal,11.2)*pow(ZFACT,0.5)/(pow(rhoreal,0.5)*(1.0+XFACT)*(1.0-ZFACT)*Rei);
+    FTYPE kappahmreal = kappaffreal*factorhm;
+    FTYPE kappanhmreal = kappanffreal*factorhm;
+    FTYPE kappaemithmreal = kappaemitffreal*factorhm;
+    FTYPE kappanemithmreal = kappanemitffreal*factorhm;
+
+    //////////////
+    //
+    // Add molecular (without T dependence)
+    // below in [cm^{-1}]
+    //
+    //////////////
+
+    FTYPE kappamolreal = 3.0*ZFACT*rhoreal;
+    FTYPE kappanmolreal = kappamolreal;
+    FTYPE kappaemitmolreal = kappamolreal;
+    FTYPE kappanemitmolreal = kappamolreal;
+
+    //////////////
+    //
+    // Low-density interpolation
+    // below in [cm^{-1}]
+    //
+    //////////////
+    FTYPE kappalowdensityreal  = 1.0/ ( 1.0/(kappamolreal + kappahmreal) + 1.0/(kappachiantireal + kappaffreal + kappaffeereal + kappabfreal) );
+    FTYPE kappanlowdensityreal  = 1.0/ ( 1.0/(kappanmolreal + kappanhmreal) + 1.0/(kappanchiantireal + kappanffreal + kappanffeereal + kappanbfreal) );
+    FTYPE kappaemitlowdensityreal  = 1.0/ ( 1.0/(kappaemitmolreal + kappaemithmreal) + 1.0/(kappaemitchiantireal + kappaemitffreal + kappaemitffeereal + kappaemitbfreal) );
+    FTYPE kappanemitlowdensityreal  = 1.0/ ( 1.0/(kappanemitmolreal + kappanemithmreal) + 1.0/(kappanemitchiantireal + kappanemitffreal + kappanemitffeereal + kappanemitbfreal) );
+
+
+    //////////////
+    //
+    // Electron Scattering
+    //
+    //////////////
+    //#define KAPPA_ES_KNCORRF(f) (0.75*((-1.*(1. + 3.*(f)))/Power(1. + 2.*(f),2) +  (0.5*Log(1. + 2.*(f)))/(f) + ((1. + (f))*((2. + 2.*(f))/(1. + 2.*(f)) - (1.*Log(1. + 2.*(f)))/(f)))/Power((f),2)))
+    //#define KAPPA_ES_KNCORR(rhocode,Tcode) (KAPPA_ES_KNCORREP(K_BOLTZ*(Tcode)*TEMPBAR/(MELE*CCCTRUE*CCCTRUE)))
+
+    // Buchler and Yueh 1976 (just Fermi part). Fewer electrons when near Fermi fluid limit.
+    FTYPE kappa_es_fermicorr = (1.0/(1.0+2.7E11*prpow(rhoreal,2.0)/prpow(Tereal,2.0)));
+    
+    // Buchler and Yueh 1976 .  Klein-Nishina for thermal electrons.
+    FTYPE kappa_es_kncorr = (1.0/(1.0+prpow(Tereal/4.5E8,0.86)));
+
+    /// kappaes = sigma_T n_e = sigma_T n_b (n_e/n_b) = sigma_T rho/mb (ne/nb)
+    // below in [cm^{-1}]
+    FTYPE kappaesreal = 0.2*(1.0+XFACT)*(rhoreal)*kappa_es_fermicorr*kappa_es_kncorr;
+
+    
+    //////////////
+    //
+    // Return code value of opacity
+    //
+    //////////////
+    FTYPE overopacitybaralt=1.0/(OPACITYBAR*RHOBAR); // for those opacities in cm^{-1}
+
+    if(which==ISKAPPAEABS){
+      return(kappalowdensityreal*overopacitybaralt);
+    }
+    else if(which==ISKAPPAEEMIT){
+      return(kappaemitlowdensityreal*overopacitybaralt);
+    }
+    else if(which==ISKAPPANABS){
+      return(kappanlowdensityreal*overopacitybaralt);
+    }
+    else if(which==ISKAPPANEMIT){
+      return(kappanemitlowdensityreal*overopacitybaralt);
+    }
+    else if(which==ISKAPPAES){
+      return(kappaesreal*overopacitybaralt);
+    }
+
+  }// end fits section
+
+  // TODO: check Ree and Rei with Te for small Te
+  // check all expressions.  ensure rhoreal Tereal all right.
+  // check Gcompt
+
+  return(0.0);// should never get here
+}
+
+FTYPE Gcompt(FTYPE rho0, FTYPE Tgas, FTYPE Tradff, FTYPE Ruu)
+{
+
+// INELASTIC COMPTON TERM
+// see DOCOMPTON in physics.tools.rad.c:
+// in term2, doesn't change photon energy, so that in scattering-dominated atmospheres, photons move through unchanged by temperature of gas.
+// Eq A7 in http://adsabs.harvard.edu/abs/2012ApJ...752...18K used first in http://adsabs.harvard.edu/cgi-bin/bib_query?arXiv:0904.4123 as based upon a calculation in http://adsabs.harvard.edu/abs/2000thas.book.....P .
+// Also interesting for next steps:
+//1) Conservative form of Kompaneet's equation and dealing with the diffusion term implicitly: http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.13.798 and related: http://www.osti.gov/scitech/biblio/891567 .  We should ensure the 4-force is consistent (numerically and analytically) with what's used in this equation for n.
+//2) Relativistic corrections:  http://adsabs.harvard.edu/cgi-bin/bib_query?arXiv:1201.5606 and http://adsabs.harvard.edu/abs/2002nmgm.meet.2329S .  It looks like nothing more difficult as far as actually using the expressions in place of non-relativistic version.
+//One semi-relevant application: http://www.aanda.org/articles/aa/full_html/2009/45/aa12061-09/aa12061-09.html
+
+  FTYPE Te=Tgas;
+  FTYPE thetae = Te*(TEMPBAR/TEMPELE);
+
+  // Sadowski et al. (2014) Eq 26 and 27.
+  FTYPE kappa_forcompt_relcorr = (1.0 + 3.683*thetae+4.0*thetae*thetae)/(1.0 + thetae);
+
+  // Buchler and Yueh 1976 (just Fermi part). Fewer electrons when near Fermi fluid limit.
+  FTYPE kappa_es_fermicorr = 1.0/(1.0+2.7E11*(rho0*RHOBAR)/prpow(Te*TEMPBAR,2.0));
+
+  FTYPE kappa_forcompt_code = 0.2*(1.0+XFACT)*kappa_es_fermicorr*kappa_forcompt_relcorr/OPACITYBAR;
+
+  //  FTYPE neleobar=1.0/MUMEAN; // to have neleobar*kappaes=kappaesperele*mb*rho/(MUMEAN*mb)
+  // ASSUMPTION: Tion=Tele
+  FTYPE preterm3 = -4.0*rho0*kappa_forcompt_code*(Tgas - Tradff)*(TEMPBAR/TEMPELE)*Ruu; // kappaes with its internal *rho already accounts for being number density of electrons involved, so no need to use MUMEAN again here.
+
+  //  f[pl] = ((uu[pl] - uu0[pl]) + (sign[pl] * localdt * Gdpl[pl]))*extrafactor[pl]; -> T^t_t[new] = T^t_t[old] - Gdpl[UU] -> dT^t_t = -Gdpl[UU] = +Gd[TT]
+  // Ruu>0, so if Tgas>Trad, then preterm3<0.  Then egas should drop.
+  // We have dT^t_t = G_t = Gd_t = -Gdpl_t = preterm3 u_t > 0, so G_t>0 so T^t_t rises so -T^t_t drops so egas drops.
+
+  return(preterm3);
+} 
+
+
+
+
+// energy absorption
+FTYPE calc_kappa_user(FTYPE rho, FTYPE B, FTYPE Tg,FTYPE Tr,FTYPE varexpf, FTYPE x,FTYPE y,FTYPE z)
+{
+  //  if(WHICHPROBLEM==RADDONUT && nstep>100){ 
+  //    return(0.0);
+  //  }
+  //  else return(KAPPAUSER(rho,B,Tg,Tr));
+
+
+#if(WHICHPROBLEM==RADDONUT)
+  return(kappa_func_fits(ISKAPPAEABS,rho,B,Tg,Tr,varexpf));
+#else
+  return(KAPPAUSER(rho,B,Tg,Tr));
+#endif
+
+}
+
+// energy emission
+ FTYPE calc_kappaemit_user(FTYPE rho, FTYPE B, FTYPE Tg,FTYPE Tr,FTYPE varexpf, FTYPE x,FTYPE y,FTYPE z)
+{
+  //  if(WHICHPROBLEM==RADDONUT && nstep>100){ 
+  //    return(0.0);
+  //  }
+  //  else return(KAPPAUSER(rho,B,Tg,Tr));
+
+
+#if(WHICHPROBLEM==RADDONUT)
+  return(kappa_func_fits(ISKAPPAEEMIT,rho,B,Tg,Tr,varexpf));
+#else
+  return(KAPPAUSER(rho,B,Tg,Tr));
+#endif
+
+}
+
+// number absorption
+ FTYPE calc_kappan_user(FTYPE rho, FTYPE B, FTYPE Tg,FTYPE Tr,FTYPE varexpf, FTYPE x,FTYPE y,FTYPE z)
+{
+  //  if(WHICHPROBLEM==RADDONUT && nstep>100){
+  //    return(0.0);
+  //  }
+  //  else return(KAPPANUSER(rho,B,Tg,Tr));
+#if(WHICHPROBLEM==RADDONUT)
+  return(kappa_func_fits(ISKAPPANABS,rho,B,Tg,Tr,varexpf));
+#else
+  return(KAPPANUSER(rho,B,Tg,Tr));
+#endif
+
+}
+
+// number emission
+ FTYPE calc_kappanemit_user(FTYPE rho, FTYPE B, FTYPE Tg,FTYPE Tr,FTYPE varexpf, FTYPE x,FTYPE y,FTYPE z)
+{
+  //  if(WHICHPROBLEM==RADDONUT && nstep>100){
+  //    return(0.0);
+  //  }
+  //  else return(KAPPANUSER(rho,B,Tg,Tr));
+#if(WHICHPROBLEM==RADDONUT)
+  return(kappa_func_fits(ISKAPPANEMIT,rho,B,Tg,Tr,varexpf));
+#else
+  return(KAPPANUSER(rho,B,Tg,Tr));
+#endif
+
+}
+
+//scattering
+FTYPE calc_kappaes_user(FTYPE rho, FTYPE T,FTYPE x,FTYPE y,FTYPE z)
+{  
+
+#if(WHICHPROBLEM==RADDONUT)
+  return(kappa_func_fits(ISKAPPAES,rho,0,T,T,1.0));
+#else
+  return(KAPPAESUSER(rho,T));
+#endif
+
+}
+
+
+
+
 
 
 int coolfunc_user(FTYPE h_over_r, FTYPE *pr, struct of_geom *geom, struct of_state *q,FTYPE (*dUcomp)[NPR])
