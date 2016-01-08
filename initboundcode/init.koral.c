@@ -9638,6 +9638,7 @@ static FTYPE kappa_func_fits(int which, FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, 
 
     FTYPE Te=Tg;
 
+    // "real" here means cgs and Gaussian for B and Kelvin for temperature
     FTYPE rhoreal=rho*RHOBAR;
     FTYPE Breal=B*BFIELDBAR;
     FTYPE Tereal=Te*TEMPBAR;
@@ -9645,7 +9646,7 @@ static FTYPE kappa_func_fits(int which, FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, 
     FTYPE Trreal=Tr*TEMPBAR;
     FTYPE xi = Trreal/Tereal;
 
-    FTYPE thetae = Te*(TEMPBAR/TEMPELE);
+    FTYPE thetae = Tereal/TEMPELE;
     FTYPE thetaesq=thetae*thetae;
     FTYPE thetaecubed=thetaesq*thetae;
 
@@ -9697,6 +9698,10 @@ static FTYPE kappa_func_fits(int which, FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, 
     FTYPE ccne=62558.213216069445;
 
     kappanemitffreal *= aane*pow(xi,-bbne)*log(1.0+ccne*xi);
+
+    // TODO: Need to interpolate kappaffreal and kappanffreal towards
+    // Planck when varexpf->1.  Like when varexp=0.999 to 1.0, or
+    // whever fits seem to become off.
 
     //////////////
     //
@@ -9831,6 +9836,7 @@ static FTYPE kappa_func_fits(int which, FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, 
   // TODO: check Ree and Rei with Te for small Te
   // check all expressions.  ensure rhoreal Tereal all right.
   // check Gcompt
+  // run code
 
   return(0.0);// should never get here
 }
@@ -9847,14 +9853,17 @@ FTYPE Gcompt(FTYPE rho0, FTYPE Tgas, FTYPE Tradff, FTYPE Ruu)
 //2) Relativistic corrections:  http://adsabs.harvard.edu/cgi-bin/bib_query?arXiv:1201.5606 and http://adsabs.harvard.edu/abs/2002nmgm.meet.2329S .  It looks like nothing more difficult as far as actually using the expressions in place of non-relativistic version.
 //One semi-relevant application: http://www.aanda.org/articles/aa/full_html/2009/45/aa12061-09/aa12061-09.html
 
-  FTYPE Te=Tgas;
-  FTYPE thetae = Te*(TEMPBAR/TEMPELE);
+  FTYPE Te=Tgas; // assumes Te=Tgas
+  FTYPE Tereal = Te*TEMPBAR;
+  FTYPE rhoreal=rho0*RHOBAR;
+
+  FTYPE thetae = Tereal/TEMPELE;
 
   // Sadowski et al. (2014) Eq 26 and 27.
   FTYPE kappa_forcompt_relcorr = (1.0 + 3.683*thetae+4.0*thetae*thetae)/(1.0 + thetae);
 
   // Buchler and Yueh 1976 (just Fermi part). Fewer electrons when near Fermi fluid limit.
-  FTYPE kappa_es_fermicorr = 1.0/(1.0+2.7E11*(rho0*RHOBAR)/prpow(Te*TEMPBAR,2.0));
+  FTYPE kappa_es_fermicorr = 1.0/(1.0+2.7E11*rhoreal/prpow(Tereal,2.0));
 
   FTYPE kappa_forcompt_code = 0.2*(1.0+XFACT)*kappa_es_fermicorr*kappa_forcompt_relcorr/OPACITYBAR;
 
