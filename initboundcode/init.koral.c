@@ -9636,7 +9636,7 @@ static FTYPE kappa_func_fits(int which, FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, 
   else if(WHICHFIT==ISFITNEW){
 
 
-    FTYPE Te=Tg;
+    FTYPE Te=Tg; // assume electrons and gas/ions/protons are same temperature
 
     // "real" here means cgs and Gaussian for B and Kelvin for temperature
     FTYPE rhoreal=rho*RHOBAR;
@@ -9657,10 +9657,15 @@ static FTYPE kappa_func_fits(int which, FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, 
     //
     //////////////
 
+    // ff prefactor
     FTYPE kappaffreal=1.2E24*pow(Tereal,-7.0/2.0)*pow(rhoreal,2.0)*(1.0+XFACT)*(1.0-ZFACT);
+    // see nizisq.nb -- ensured continuous and differentiable at thetae=1
+    //    FTYPE Rei = (1.0+2.0*thetae+2.0*thetae*thetae)/(1.0+3.8*thetae+5.1*thetaesq+(8.0/M_PI)*thetaecubed)*log(1.0+3.42*thetae);
+    FTYPE Reilow = 1.0 + 1.7644624334086192*Power(thetae,1.34);
+    FTYPE Reihigh = 1.4019447514099515*Power(thetae,0.5)*(1.5 + Log(0.48 + 1.123*thetae));
+    FTYPE Rei = (thetae>=1.0 ? Reihigh : Reilow);
 
-    FTYPE Rei = (1.0+2.0*thetae+2.0*thetae*thetae)/(1.0+3.8*thetae+5.1*thetaesq+(8.0/M_PI)*thetaecubed)*log(1.0+3.42*thetae);
-    kappaffreal*= Rei;
+    kappaffreal *= Rei;
 
 
     FTYPE kappanffreal=kappaffreal; // same prefactor
@@ -9709,10 +9714,13 @@ static FTYPE kappa_func_fits(int which, FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, 
     // below in [cm^{-1}]
     //
     //////////////
-    FTYPE Ree = thetae*(0.851+2.0*thetae)/(1.0+3.8*thetae+5.1*thetaesq+(8.0/M_PI)*thetaecubed)*log(1.0+10.4*thetaesq);
+    //FTYPE Ree = thetae*(0.851+2.0*thetae)/(1.0+3.8*thetae+5.1*thetaesq+(8.0/M_PI)*thetaecubed)*log(1.0+10.4*thetaesq);
+    FTYPE Reelow =1.706666666666667*thetae*(1 + 1.1*thetae + Power(thetae,2) - 1.063803438337589*Power(thetae,2.5));
+    FTYPE Reehigh = 2.489326395711546*Power(thetae,0.5)*(1.28 + Log(1.123*thetae));
+    FTYPE Ree = (thetae>=1.0 ? Reehigh : Reelow);
 
     // just add-in factor by which free-free e-e adds-in (see nizisq.nb)
-    FTYPE factorffee=(1.0 + 0.5*(1.0+XFACT)*Ree/((1.0-ZFACT)*Rei));
+    FTYPE factorffee=0.5*(1.0+XFACT)*Ree/((1.0-ZFACT)*Rei);
     FTYPE kappaffeereal = kappaffreal*factorffee;
     FTYPE kappanffeereal = kappanffreal*factorffee;
     FTYPE kappaemitffeereal = kappaemitffreal*factorffee;
@@ -9726,7 +9734,7 @@ static FTYPE kappa_func_fits(int which, FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, 
     //////////////
 
     // just add-in factor by which bound-free adds-in
-    FTYPE factorbf=(1.0 + 750.0*ZFACT*(1.0+XFACT+0.75*YFACT)/((1.0+XFACT)*(1.0-ZFACT)) );
+    FTYPE factorbf=750.0*ZFACT*(1.0+XFACT+0.75*YFACT)/((1.0+XFACT)*(1.0-ZFACT));
     FTYPE kappabfreal = kappaffreal*factorbf;
     FTYPE kappanbfreal = kappanffreal*factorbf;
     FTYPE kappaemitbfreal = kappaemitffreal*factorbf;
@@ -9818,8 +9826,8 @@ static FTYPE kappa_func_fits(int which, FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, 
 
     //////////////
     //
-    // -density interpolation
-    // be in [cm^{-1}]
+    // full range density interpolation
+    // below in [cm^{-1}]
     //
     //////////////
     FTYPE kappadensityreal  = 1.0/ ( 1.0/(kappamolreal + kappahmopalreal) + 1.0/(kappachiantiopalreal) + 1.0/(kappachiantireal + kappaffreal + kappaffeereal + kappabfreal) );
@@ -9852,7 +9860,7 @@ static FTYPE kappa_func_fits(int which, FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, 
     // Return code value of opacity
     //
     //////////////
-    FTYPE overopacitybaralt=1.0/(OPACITYBAR*RHOBAR); // for those opacities in cm^{-1}
+    static FTYPE overopacitybaralt=1.0/(OPACITYBAR*RHOBAR); // for those opacities in cm^{-1}
 
     if(which==ISKAPPAEABS){
       return(kappadensityreal*overopacitybaralt);
