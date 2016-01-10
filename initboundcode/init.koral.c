@@ -9640,6 +9640,7 @@ static FTYPE kappa_func_fits(int which, FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, 
 
     // "real" here means cgs and Gaussian for B and Kelvin for temperature
     FTYPE rhoreal=rho*RHOBAR;
+    FTYPE nereal=3.0110683499999995e23*rhoreal*(1.0 + XFACT);
     FTYPE Breal=B*BFIELDBAR;
     FTYPE Tereal=Te*TEMPBAR;
     FTYPE Tgreal=Tg*TEMPBAR;
@@ -9838,6 +9839,150 @@ static FTYPE kappa_func_fits(int which, FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, 
 
     //////////////
     //
+    // Cylco-Synchrotron
+    // below in [cm^{-1}]
+    //
+    //////////////
+
+    FTYPE nuM = 1.5*QCHARGE*Breal/(2.0*M_PI*MELE*CCCTRUE0)*thetaesq;
+    FTYPE phi = (K_BOLTZ*Trreal)/(HPLANCK*nuM);
+
+    // synch prefactor
+    FTYPE kappasyreal=2.13E-11*nereal/Breal*pow(Tereal/1E10,-5.0);
+
+    // low-temp factor
+    FTYPE q0 = 1.0/ (1.0+pow(3.3*thetae,-5.0));
+    FTYPE q1 = 1.0 + pow(3.3*thetae,-5.0);
+    FTYPE qsyn = exp(log(q0) + ( 0.5 + (1.0/M_PI)*atan(3.0+log(phi)) )*(log(q1) - log(q0)) );
+    kappasyreal *= qsyn;
+    
+    FTYPE kappansyreal=kappasyreal; // same prefactor
+    FTYPE kappaemitsyreal=kappasyreal; // same prefactor
+    FTYPE kappanemitsyreal=kappasyreal; // same prefactor
+
+    // absorption
+
+    // XRB Ledd
+    FTYPE aas=0.001 - 0.00030000000000000003*Power(1. - 1.*varexpf,0.1) + 9.999*Power(varexpf,100);
+    FTYPE bbs=0.34915123451867575 + 0.6639854085243424*Power(1. - 1.*varexpf,0.21551972527431834) + 0.6969780620639547*Power(varexpf,109.95164261078826);
+    FTYPE ccs=3.5 - 0.5*Power(1. - 1.*varexpf,0.1) + 1.7999999999999998*Power(varexpf,10);
+    FTYPE dds=80.*Power(2.718281828459045,1.611809565095832*Power(varexpf,2) + 1.701470224678968*Power(varexpf,19.123258595041275));
+    FTYPE ees=2.9814806065542103 + 1.0252733145171038*Power(1. - 1.*varexpf,0.03215194092829952);
+
+    kappasyreal *= 1.0/( 1.0/(aas*pow(phi,-bbs)*log(1.0+ccs*phi)) + 1.0/(dds*pow(phi,-ees)) );
+
+    // XRB Ledd
+    FTYPE aans=0.0012 + 0.00005000000000000013*Power(1. - 1.*varexpf,0.05) - 0.0009099999999999999*Power(varexpf,7);
+    FTYPE bbns=2.65 + 0.040000000000000036*Power(1. - 1.*varexpf,0.02) - 0.5499999999999998*Power(varexpf,30);
+    FTYPE ccns=1.31 - 0.06000000000000005*Power(1. - 1.*varexpf,0.02) + 1.69*Power(varexpf,8);
+    FTYPE ddns=Power(2.718281828459045,1.5686159179138452 + 1.151292546497023*Power(varexpf,2) + 1.151292546497023*Power(varexpf,4) + 2.9834230661458117*Power(varexpf,195.52338999877892));
+    FTYPE eens=2.974042326402226 + 0.23373841071210855*Power(1. - 1.*varexpf,11.45996831663565) -  0.1009858740118661*Power(varexpf,201.41910724608374);
+
+    kappansyreal *= 1.0/( 1.0/(aans*pow(phi,-bbns)*log(1.0+ccns*phi)) + 1.0/(ddns*pow(phi,-eens)) );
+
+    // emission (just Planck varexpf=1 but using actual direct fit instead of fit over many varexpf)
+
+    // XRB Ledd
+    FTYPE aaes=0.3188964065440192;
+    FTYPE bbes=1.0768900596611533;
+    FTYPE cces=0.0026066604097452917;
+    FTYPE ddes=1.2627623470514082;
+    FTYPE eees=2.987395175467846;
+ 
+    kappaemitsyreal *= 1.0/( 1.0/(aaes*pow(phi,-bbes)*log(1.0+cces*phi)) + 1.0/(ddes*pow(phi,-eees)) );
+
+    // XRB Ledd
+    FTYPE aanes=0.00029169186404094216;
+    FTYPE bbnes=1.3218673308302118;
+    FTYPE ccnes=1.1634612365295334;
+    FTYPE ddnes=120.01337286010565;
+    FTYPE eenes=2.3252442378326856;
+
+    kappanemitsyreal *= 1.0/( 1.0/(aanes*pow(phi,-bbnes)*log(1.0+ccnes*phi)) + 1.0/(ddnes*pow(phi,-eenes)) );
+
+    //////////////
+    //
+    // DC
+    // below in [cm^{-1}]
+    //
+    //////////////
+
+    //    FTYPE thetar = K_BOLTZ*Trreal/(MELE*CCCTRUE0*CCCTRUE0);
+    FTYPE thetar = Trreal/TEMPELE;
+
+    // dc prefactor
+    FTYPE kappadcreal=7.36E-46*nereal*Trreal*Trreal*varexpf;
+
+    // high-thetae factor
+    FTYPE pdc = pow(1.0+thetae,-3.0);
+    kappadcreal *= pdc;
+    
+    FTYPE kappandcreal=kappadcreal; // same prefactor
+    FTYPE kappaemitdcreal=kappadcreal; // same prefactor
+    FTYPE kappanemitdcreal=kappadcreal; // same prefactor
+
+    // absorption
+
+    // XRB Ledd
+    FTYPE aadc=3.10482346702441e-8 + 4.162489998316388*Power(1. - 1.*varexpf,1.6896115787181434) + 6.702210386421933*Power(varexpf,0.941782674568028);
+    FTYPE bbdc=0.04202835820213653 - 0.03337036710130055*Power(1. - 1.*varexpf,0.4693413976733784) - 0.002097439704449637*Power(varexpf,0.021742118711173992);
+    FTYPE ccdc=3.8020287401719655 + 0.2009643395406986*Power(1. - 1.*varexpf,0.25767159028663056) - 0.18040020940821044*Power(varexpf,33.009903857413704);
+    FTYPE dddc=0.11793169411613985 - 0.06262831233321572*Power(1. - 1.*varexpf,0.34961114748511685) + 0.016889330731907487*Power(varexpf,35.3723390749425);
+    
+    kappadcreal *= 1.0/( 1.0/aadc + 1.0/(bbdc*pow(thetar,-ccdc)) + 1.0/(dddc*pow(thetar,-ccdc/3.0)) );
+
+    // XRB Ledd
+    FTYPE aandc=87.4586627372423 - 76.35909344479292*Power(1. - 1.*varexpf,0.13586634790456995) + 29.385274489218205*Power(varexpf,285.27285622653653);
+    FTYPE bbndc=1.1604225625247175 - 1.1192436863350592*Power(1. - 1.*varexpf,0.1339258484550137) + 0.1955857773358507*Power(varexpf,18.1030753003189);
+    FTYPE ccndc=3.9257505990037376 + 0.04266044504755229*Power(1. - 1.*varexpf,181.71820529516145) - 0.8002705331174753*Power(varexpf,21.623589714867247);
+    FTYPE ddndc=2.8625119194776856 - 2.716652341873481*Power(1. - 1.*varexpf,0.1055549863784506) + 1.8741117433895793*Power(varexpf,309.10043138151474);
+
+    kappandcreal *= 1.0/( 1.0/aandc + 1.0/(bbndc*pow(thetar,-ccndc)) + 1.0/(ddndc*pow(thetar,-ccndc/3.0)) );
+
+    // emission
+
+    // XRB Ledd
+    FTYPE aaedc=6.335417556116487 - 0.058933985431348646*Power(1. - 1.*varexpf,10.71634135441363) + 0.48765467682596686*Power(varexpf,1.7536859250821957);
+    FTYPE bbedc=0.008747549563345837 + 0.014220493179111593*Power(1. - 1.*varexpf,0.36109285953630127) + 0.028227296616735897*Power(varexpf,1.556532326060757);
+    FTYPE ccedc=3.7824716575816524 + 0.18426457897750437*Power(1. - 1.*varexpf,0.3661610552743282) - 0.1602799611377681*Power(varexpf,15.388944611235807);
+    FTYPE ddedc=0.11936934944026895 - 0.025640260828114658*Power(1. - 1.*varexpf,0.39821885979760463) + 0.014988119208161788*Power(varexpf,26.289513268487767);
+ 
+    kappaemitdcreal *= 1.0/( 1.0/aaedc + 1.0/(bbedc*pow(thetar,-ccedc)) + 1.0/(ddedc*pow(thetar,-ccedc/3.0)) );
+
+    // XRB Ledd
+    FTYPE aanedc=197.97520843920014 - 94.77219201589888*Power(1. - 1.*varexpf,0.9245008022924389) - 81.66905945089535*Power(varexpf,1.010185534936844);
+    FTYPE bbnedc=4.798508367755025e-11 + 1.0490039263100823*Power(1. - 1.*varexpf,0.24861894212727034) + 1.3060425347854707*Power(varexpf,1.1248777879043648);
+    FTYPE ccnedc=3.4389272678970677 + 0.441710530722887*Power(1. - 1.*varexpf,0.3614676129393117) - 0.4179301735940477*Power(varexpf,14.840910987577235);
+    FTYPE ddnedc=3.375250751641187 - 1.3820659504372945*Power(1. - 1.*varexpf,0.31579132247596853) + 1.3742704814428137*Power(varexpf,31.28257475560334);
+
+    kappanemitdcreal *= 1.0/( 1.0/aanedc + 1.0/(bbnedc*pow(thetar,-ccnedc)) + 1.0/(ddnedc*pow(thetar,-ccnedc/3.0)) );
+
+    // Planck for interpolation to it when expf->1.  dcpl same as edcpl
+    FTYPE aadcpl=6.8308477566235427614037721740062696378080011960029;
+    FTYPE bbdcpl=0.03737660642072567319753249796331010429215268940195;
+    FTYPE ccdcpl=3.6263522982307391011876292625424350179419071859114;
+    FTYPE dddcpl=0.13396823846337876662165099344371722644585939843797;
+
+    //   ndcpl same as nedcpl
+    FTYPE aandcpl=116.24082637910697352499285024420803245395311274652;
+    FTYPE bbndcpl=1.3436648321999717296470441601823998776061527255987;
+    FTYPE ccndcpl=3.0309933617509186060061141161349078396542823722783;
+    FTYPE ddndcpl=4.7183006844597535352187951503958715513547062753028;
+     
+
+    //////////////
+    //
+    // Get final absorption/emission opacities
+    //
+    //////////////
+
+    FTYPE kappareal = kappadensityreal + kappasyreal + kappadcreal;
+    FTYPE kappanreal = kappandensityreal + kappansyreal + kappandcreal;
+    FTYPE kappaemitreal = kappaemitdensityreal + kappaemitsyreal + kappaemitdcreal;
+    FTYPE kappanemitreal = kappanemitdensityreal + kappanemitsyreal + kappanemitdcreal;
+
+    //////////////
+    //
     // Electron Scattering
     //
     //////////////
@@ -9863,16 +10008,16 @@ static FTYPE kappa_func_fits(int which, FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, 
     static FTYPE overopacitybaralt=1.0/(OPACITYBAR*RHOBAR); // for those opacities in cm^{-1}
 
     if(which==ISKAPPAEABS){
-      return(kappadensityreal*overopacitybaralt);
-    }
-    else if(which==ISKAPPAEEMIT){
-      return(kappaemitdensityreal*overopacitybaralt);
+      return(kappareal*overopacitybaralt);
     }
     else if(which==ISKAPPANABS){
-      return(kappandensityreal*overopacitybaralt);
+      return(kappanreal*overopacitybaralt);
+    }
+    else if(which==ISKAPPAEEMIT){
+      return(kappaemitreal*overopacitybaralt);
     }
     else if(which==ISKAPPANEMIT){
-      return(kappanemitdensityreal*overopacitybaralt);
+      return(kappanemitreal*overopacitybaralt);
     }
     else if(which==ISKAPPAES){
       return(kappaesreal*overopacitybaralt);
