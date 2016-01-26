@@ -10459,6 +10459,7 @@ void calc_Tandopacityandemission(FTYPE *pr, struct of_geom *ptrgeom, struct of_s
   // get Tradff and nradff
   calc_Trad_fromRuuandgamma(pr, ptrgeom, Ruu, gammaradgas, Tradff, nradff, expfactorradff);
   *Tradff = fabs(*Tradff) + TEMPMIN;  // avoid division by zero in later calculations
+  *nradff = fabs(*nradff) + SMALL;
 
   // get position for opacity if needed
   FTYPE V[NDIM]={0.0},xx=0.0,yy=0.0,zz=0.0;
@@ -10469,11 +10470,25 @@ void calc_Tandopacityandemission(FTYPE *pr, struct of_geom *ptrgeom, struct of_s
   zz=V[3];
 #endif
 
+
+#if(WHICHFIT==ISFITNEW)
+  // get opacities
+  //  calc_kappaall_user(rho,B,*Tgas,*Tradff,*expfactorradff,xx,yy,zz, kappa, kappaemit, kappan, kappanemit, kappaes);
+
+  kappa_func_fits_all(rho, B, *Tgas, *Tradff, *expfactorradff, kappa, kappaemit, kappan, kappanemit, kappaes);
+
+
+  // energy density loss rate integrated over frequency and solid angle, based upon those processes written as an opacity
+  // below lambda and nlambda now generally true
+  *lambda = (*kappaemit)*calc_LTE_EfromT(*Tradff);
+
+#if(EVOLVENRAD)
+  *nlambda = (*kappanemit)*calc_LTE_NfromT(*Tradff);
+#endif
+
+#else // WHICHFIT==ISFITORIG
   // get scattering opacity (elastic with no detailed energy or number weighting)
   *kappaes = calc_kappaes_user(rho,*Tgas,xx,yy,zz);
-
-
-
 
   // get energy-based absorption opacity
   *kappa = calc_kappa_user(rho,B,*Tgas,*Tradff,*expfactorradff,xx,yy,zz);
@@ -10492,8 +10507,8 @@ void calc_Tandopacityandemission(FTYPE *pr, struct of_geom *ptrgeom, struct of_s
   // energy density loss rate integrated over frequency and solid angle, based upon those processes written as an opacity
   *lambda = (*kappaemit)*calc_LTE_EfromT(*Tradff);  //(4.*Pi*B); / i.e. 4\pi B = arad Trad^4
 
+
 #if(EVOLVENRAD)
-  *nradff = fabs(*nradff) + SMALL;
   // get number-based absorption opacity
   *kappan = calc_kappan_user(rho,B,*Tgas,*Tradff,*expfactorradff,xx,yy,zz);
   // get number-based emission opacity
@@ -10506,6 +10521,10 @@ void calc_Tandopacityandemission(FTYPE *pr, struct of_geom *ptrgeom, struct of_s
   //  *nlambda = (*lambda)/ebar;
   *nlambda = (*kappanemit)*calc_LTE_NfromT(*Tradff);
 #endif
+
+
+#endif
+
 
 
   if(AVOIDTAUFORFLOOR==1){

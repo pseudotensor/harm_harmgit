@@ -111,7 +111,10 @@
 #define TEMPELE (MELE*CCCTRUE*CCCTRUE/K_BOLTZ)
 
 
-
+// choose which type of opacity calculation to use
+#define ISFITORIG 1
+#define ISFITNEW 1
+#define WHICHFIT ISFITORIG // choose
 
 
 // whether to allow kappa to depend explicitly upon position, which would require getting position and can be expensive.

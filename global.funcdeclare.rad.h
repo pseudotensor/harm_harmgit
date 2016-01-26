@@ -73,6 +73,8 @@ extern FTYPE calc_kappan_user(FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, FTYPE vare
 extern FTYPE calc_kappaemit_user(FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, FTYPE varexpf, FTYPE x,FTYPE y,FTYPE z);
 extern FTYPE calc_kappanemit_user(FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, FTYPE varexpf, FTYPE x,FTYPE y,FTYPE z);
 
+extern int kappa_func_fits_all(FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, FTYPE varexpf, FTYPE *kappa, FTYPE *kappaemit, FTYPE *kappan, FTYPE *kappanemit, FTYPE *kappaes);
+
 
 extern int calcfull_tautot(FTYPE *pp, struct of_geom *ptrgeom, FTYPE *tautot, FTYPE *tautotmax);
 extern int calc_tautot(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q, FTYPE *tautot, FTYPE *tautotmax);

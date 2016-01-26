@@ -9600,9 +9600,6 @@ void adjust_fluxctstag_emfs(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR
 // KAPPAUSER is optical depth per unit length per unit rest-mass energy density
 // calc_kappa_user and calc_kappan_user and calc_kappaes_user return optical depth per unit length.
 
-#define ISFITORIG 1
-#define ISFITNEW 1
-#define WHICHFIT ISFITORIG // choose
 
 
 #define ISKAPPAEABS 0
@@ -9616,8 +9613,6 @@ void adjust_fluxctstag_emfs(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR
 // general fits from mean opacity paper
 static FTYPE kappa_func_fits(int which, FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, FTYPE varexpf)
 {
-  // TODO: pass varexpf
-  //  FTYPE varexpf=1.0;
 
 // KORALTODO: Put a lower limit on T~1E4K so not overly wrongly opaque in spots where u_g->0 anomologously?
 // accounts for low temperatures so non-divergent and more physical
@@ -9634,418 +9629,444 @@ static FTYPE kappa_func_fits(int which, FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, 
     }
   }
   else if(WHICHFIT==ISFITNEW){
+    FTYPE kappa,kappaemit,kappan,kappanemit,kappaes;
+    kappa_func_fits_all(SMALL+rho, B, Tg+TEMPMIN, Tr+TEMPMIN, varexpf, &kappa, &kappaemit, &kappan, &kappanemit, &kappaes);
+    if(which==ISKAPPAEABS) return(kappa);
+    else if(which==ISKAPPANABS) return(kappan);
+    else if(which==ISKAPPAEEMIT) return(kappaemit);
+    else if(which==ISKAPPANEMIT) return(kappanemit);
+    else if(which==ISKAPPAES) return(kappaes);
+  }
+
+  return(0.0); // should never reach here
+}
 
 
-    FTYPE Te=Tg; // assume electrons and gas/ions/protons are same temperature
+// general fits from mean opacity paper, giving back all opacities
+int kappa_func_fits_all(FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, FTYPE varexpf, FTYPE *kappa, FTYPE *kappaemit, FTYPE *kappan, FTYPE *kappanemit, FTYPE *kappaes)
+{
 
-    // "real" here means cgs and Gaussian for B and Kelvin for temperature
-    FTYPE rhoreal=rho*RHOBAR;
-    FTYPE nereal=3.0110683499999995e23*rhoreal*(1.0 + XFACT);
-    FTYPE Breal=B*BFIELDBAR;
-    FTYPE Tereal=Te*TEMPBAR;
-    FTYPE Tgreal=Tg*TEMPBAR;
-    FTYPE Trreal=Tr*TEMPBAR;
-    FTYPE xi = Trreal/Tereal;
+// KORALTODO: Put a lower limit on T~1E4K so not overly wrongly opaque in spots where u_g->0 anomologously?
+// accounts for low temperatures so non-divergent and more physical
 
-    FTYPE thetae = Tereal/TEMPELE;
-    FTYPE thetaesq=thetae*thetae;
-    FTYPE thetaecubed=thetaesq*thetae;
-
-    //////////////
-    //
-    // free-free for e-i
-    // below in [cm^{-1}]
-    //
-    //////////////
-
-    // ff prefactor
-    FTYPE kappaffreal=1.2E24*pow(Tereal,-7.0/2.0)*pow(rhoreal,2.0)*(1.0+XFACT)*(1.0-ZFACT);
-    // see nizisq.nb -- ensured continuous and differentiable at thetae=1
-    //    FTYPE Rei = (1.0+2.0*thetae+2.0*thetae*thetae)/(1.0+3.8*thetae+5.1*thetaesq+(8.0/M_PI)*thetaecubed)*log(1.0+3.42*thetae);
-    FTYPE Reilow = 1.0 + 1.7644624334086192*Power(thetae,1.34);
-    FTYPE Reihigh = 1.4019447514099515*Power(thetae,0.5)*(1.5 + Log(0.48 + 1.123*thetae));
-    FTYPE Rei = (thetae>=1.0 ? Reihigh : Reilow);
-
-    kappaffreal *= Rei;
+#if(WHICHFIT==ISFITORIG)
+  dualfprintf(fail_file,"Shouldn't be here\n");
+  myexit(759275529);
+#endif
 
 
-    FTYPE kappanffreal=kappaffreal; // same prefactor
-    FTYPE kappaemitffreal=kappaffreal; // same prefactor
-    FTYPE kappanemitffreal=kappaffreal; // same prefactor
+  FTYPE Te=Tg; // assume electrons and gas/ions/protons are same temperature
 
-    // absorption
+  // "real" here means cgs and Gaussian for B and Kelvin for temperature
+  FTYPE rhoreal=rho*RHOBAR;
+  FTYPE nereal=3.0110683499999995e23*rhoreal*(1.0 + XFACT);
+  FTYPE Breal=B*BFIELDBAR;
+  FTYPE Tereal=Te*TEMPBAR;
+  FTYPE Tgreal=Tg*TEMPBAR;
+  FTYPE Trreal=Tr*TEMPBAR;
+  FTYPE xi = Trreal/Tereal;
 
-    // XRB Ledd
-    FTYPE aa = 0.3564568198863157 - 0.19982886985727735*Power(1. - 1.*varexpf,0.5646962005387126) + 0.18848660385247928*Power(varexpf,13.940235230123522);
-    FTYPE bb = 3.0641759806549147 + 0.25543546368991477*Power(1. - 1.*varexpf,0.3128511829901932) + 0.07219025685305303*Power(varexpf,1.3638629108321003);
-    FTYPE cc = 5.99474041542733 - 1.4436038489430345*Power(1. - 1.*varexpf,0.12828451539717775) - 1.4051865724895833*Power(varexpf,3.0775239339815585);
-      //      FTYPE aa = 0.9315361341095171 - 0.6768085524145425*Power(1 - varexpf,0.7198306274197313) + 1.9002183262398797*Power(varexpf,37.829441097625605);
-      //    FTYPE bb = 3.1012402220434816 + 0.4612339875024576*Power(1 - varexpf,0.03596567451632021) - 0.02585416821144859*Power(varexpf,114.93181787377999);
-      //    FTYPE cc = 10.042113525722476 - 9.063716681172405*Power(1 - varexpf,2.4433708236615708e-9) - 0.6884461811691391*Power(varexpf,4.432030473409409);
+  FTYPE thetae = Tereal/TEMPELE;
+  FTYPE thetaesq=thetae*thetae;
+  FTYPE thetaecubed=thetaesq*thetae;
 
-    kappaffreal *= aa*pow(xi,-bb)*log(1.0+cc*xi);
+  //////////////
+  //
+  // free-free for e-i
+  // below in [cm^{-1}]
+  //
+  //////////////
 
-    // List(4. - 2.06*Power(1. - 1.*varvarvar,1.) + 21.*Power(varvarvar,5.),3.1503757694129613 + 0.0008942404015805927*Power(1. - 1.*varvarvar,10.174621780103456) -     0.41243605382204196*Power(varvarvar,59.06672963853068),4.552732466653472e-7 + 2.3916452081662603*Power(1. - 1.*varvarvar,0.5522198226571239) + 5.27043093753271*Power(varvarvar,69.17066973904404))
+  // ff prefactor
+  FTYPE kappaffreal=1.2E24*pow(Tereal,-7.0/2.0)*pow(rhoreal,2.0)*(1.0+XFACT)*(1.0-ZFACT);
+  // see nizisq.nb -- ensured continuous and differentiable at thetae=1
+  //    FTYPE Rei = (1.0+2.0*thetae+2.0*thetae*thetae)/(1.0+3.8*thetae+5.1*thetaesq+(8.0/M_PI)*thetaecubed)*log(1.0+3.42*thetae);
+  FTYPE Reilow = 1.0 + 1.7644624334086192*Power(thetae,1.34);
+  FTYPE Reihigh = 1.4019447514099515*Power(thetae,0.5)*(1.5 + Log(0.48 + 1.123*thetae));
+  FTYPE Rei = (thetae>=1.0 ? Reihigh : Reilow);
 
-    // XRB Ledd
-    FTYPE aan = 4. - 2.06*Power(1. - 1.*varexpf,1.) + 21.*Power(varexpf,5.);
-    FTYPE bbn = 3.1503757694129613 + 0.0008942404015805927*Power(1. - 1.*varexpf,10.174621780103456) -      0.41243605382204196*Power(varexpf,59.06672963853068);
-    FTYPE ccn = 4.552732466653472e-7 + 2.3916452081662603*Power(1. - 1.*varexpf,0.5522198226571239) + 5.27043093753271*Power(varexpf,69.17066973904404);
-    //    FTYPE aan=1.27*Power(E,1.842068074395237*Power(varexpf,2) + 1.151292546497023*Power(varexpf,4) + 2.8206667389177063*Power(varexpf,70.));
-    //    FTYPE bbn=3.0976213586221544 - 0.03091777713803534*Power(1 - varexpf,4.613930997481447) - 0.3099700393164486*Power(varexpf,162.16873912467364);
-    //    FTYPE ccn=0.00010386408308833163 + 5.934327626527228*Power(1 - varexpf,0.5880281963526498) + 62558.02370357485*Power(varexpf,1.3444132516555986e6);
+  kappaffreal *= Rei;
 
-    kappanffreal *= aan*pow(xi,-bbn)*log(1.0+ccn*xi);
 
-    // emission (just Planck varexpf=1 but using actual direct fit instead of fit over many varexpf)
+  FTYPE kappanffreal=kappaffreal; // same prefactor
+  FTYPE kappaemitffreal=kappaffreal; // same prefactor
+  FTYPE kappanemitffreal=kappaffreal; // same prefactor
 
-    // XRB Ledd
-    FTYPE aae = 0.5316463286647214;
-    FTYPE bbe = 3.140128803410833;
-    FTYPE cce = 4.522392868247536;
-    //    FTYPE aae=0.3759100641660466;
-    //    FTYPE bbe=3.0775444410210264;
-    //    FTYPE cce=9.354365388578165;
+  // absorption
+
+  // XRB Ledd
+  FTYPE aa = 0.3564568198863157 - 0.19982886985727735*Power(1. - 1.*varexpf,0.5646962005387126) + 0.18848660385247928*Power(varexpf,13.940235230123522);
+  FTYPE bb = 3.0641759806549147 + 0.25543546368991477*Power(1. - 1.*varexpf,0.3128511829901932) + 0.07219025685305303*Power(varexpf,1.3638629108321003);
+  FTYPE cc = 5.99474041542733 - 1.4436038489430345*Power(1. - 1.*varexpf,0.12828451539717775) - 1.4051865724895833*Power(varexpf,3.0775239339815585);
+  //      FTYPE aa = 0.9315361341095171 - 0.6768085524145425*Power(1 - varexpf,0.7198306274197313) + 1.9002183262398797*Power(varexpf,37.829441097625605);
+  //    FTYPE bb = 3.1012402220434816 + 0.4612339875024576*Power(1 - varexpf,0.03596567451632021) - 0.02585416821144859*Power(varexpf,114.93181787377999);
+  //    FTYPE cc = 10.042113525722476 - 9.063716681172405*Power(1 - varexpf,2.4433708236615708e-9) - 0.6884461811691391*Power(varexpf,4.432030473409409);
+
+  kappaffreal *= aa*pow(xi,-bb)*log(1.0+cc*xi);
+
+  // List(4. - 2.06*Power(1. - 1.*varvarvar,1.) + 21.*Power(varvarvar,5.),3.1503757694129613 + 0.0008942404015805927*Power(1. - 1.*varvarvar,10.174621780103456) -     0.41243605382204196*Power(varvarvar,59.06672963853068),4.552732466653472e-7 + 2.3916452081662603*Power(1. - 1.*varvarvar,0.5522198226571239) + 5.27043093753271*Power(varvarvar,69.17066973904404))
+
+#if(EVOLVENRAD)
+  // XRB Ledd
+  FTYPE aan = 4. - 2.06*Power(1. - 1.*varexpf,1.) + 21.*Power(varexpf,5.);
+  FTYPE bbn = 3.1503757694129613 + 0.0008942404015805927*Power(1. - 1.*varexpf,10.174621780103456) -      0.41243605382204196*Power(varexpf,59.06672963853068);
+  FTYPE ccn = 4.552732466653472e-7 + 2.3916452081662603*Power(1. - 1.*varexpf,0.5522198226571239) + 5.27043093753271*Power(varexpf,69.17066973904404);
+  //    FTYPE aan=1.27*Power(E,1.842068074395237*Power(varexpf,2) + 1.151292546497023*Power(varexpf,4) + 2.8206667389177063*Power(varexpf,70.));
+  //    FTYPE bbn=3.0976213586221544 - 0.03091777713803534*Power(1 - varexpf,4.613930997481447) - 0.3099700393164486*Power(varexpf,162.16873912467364);
+  //    FTYPE ccn=0.00010386408308833163 + 5.934327626527228*Power(1 - varexpf,0.5880281963526498) + 62558.02370357485*Power(varexpf,1.3444132516555986e6);
+
+  kappanffreal *= aan*pow(xi,-bbn)*log(1.0+ccn*xi);
+#endif
+
+  // emission (just Planck varexpf=1 but using actual direct fit instead of fit over many varexpf)
+
+  // XRB Ledd
+  FTYPE aae = 0.5316463286647214;
+  FTYPE bbe = 3.140128803410833;
+  FTYPE cce = 4.522392868247536;
+  //    FTYPE aae=0.3759100641660466;
+  //    FTYPE bbe=3.0775444410210264;
+  //    FTYPE cce=9.354365388578165;
  
-    kappaemitffreal *= aae*pow(xi,-bbe)*log(1.0+cce*xi);
+  kappaemitffreal *= aae*pow(xi,-bbe)*log(1.0+cce*xi);
 
-    // XRB Ledd
-    FTYPE aane = 20.;
-    FTYPE bbne = 2.6669560547974855;
-    FTYPE ccne = 5.;
-    //    FTYPE aane=7.418554613651609;
-    //    FTYPE bbne=2.0551425132443293;
-    //    FTYPE ccne=62558.213216069445;
+#if(EVOLVENRAD)
+  // XRB Ledd
+  FTYPE aane = 20.;
+  FTYPE bbne = 2.6669560547974855;
+  FTYPE ccne = 5.;
+  //    FTYPE aane=7.418554613651609;
+  //    FTYPE bbne=2.0551425132443293;
+  //    FTYPE ccne=62558.213216069445;
 
-    kappanemitffreal *= aane*pow(xi,-bbne)*log(1.0+ccne*xi);
+  kappanemitffreal *= aane*pow(xi,-bbne)*log(1.0+ccne*xi);
+#endif
 
-    // TODO: Need to interpolate kappaffreal and kappanffreal towards
-    // Planck when varexpf->1.  Like when varexp=0.999 to 1.0, or
-    // whever fits seem to become off.
+  // TODO: Need to interpolate kappaffreal and kappanffreal towards
+  // Planck when varexpf->1.  Like when varexp=0.999 to 1.0, or
+  // whever fits seem to become off.
 
-    //////////////
-    //
-    // Add free-free for e-e
-    // below in [cm^{-1}]
-    //
-    //////////////
-    //FTYPE Ree = thetae*(0.851+2.0*thetae)/(1.0+3.8*thetae+5.1*thetaesq+(8.0/M_PI)*thetaecubed)*log(1.0+10.4*thetaesq);
-    FTYPE Reelow =1.706666666666667*thetae*(1 + 1.1*thetae + Power(thetae,2) - 1.063803438337589*Power(thetae,2.5));
-    FTYPE Reehigh = 2.489326395711546*Power(thetae,0.5)*(1.28 + Log(1.123*thetae));
-    FTYPE Ree = (thetae>=1.0 ? Reehigh : Reelow);
+  //////////////
+  //
+  // Add free-free for e-e
+  // below in [cm^{-1}]
+  //
+  //////////////
+  //FTYPE Ree = thetae*(0.851+2.0*thetae)/(1.0+3.8*thetae+5.1*thetaesq+(8.0/M_PI)*thetaecubed)*log(1.0+10.4*thetaesq);
+  FTYPE Reelow =1.706666666666667*thetae*(1 + 1.1*thetae + Power(thetae,2) - 1.063803438337589*Power(thetae,2.5));
+  FTYPE Reehigh = 2.489326395711546*Power(thetae,0.5)*(1.28 + Log(1.123*thetae));
+  FTYPE Ree = (thetae>=1.0 ? Reehigh : Reelow);
 
-    // just add-in factor by which free-free e-e adds-in (see nizisq.nb)
-    FTYPE factorffee=0.5*(1.0+XFACT)*Ree/((1.0-ZFACT)*Rei);
-    FTYPE kappaffeereal = kappaffreal*factorffee;
-    FTYPE kappanffeereal = kappanffreal*factorffee;
-    FTYPE kappaemitffeereal = kappaemitffreal*factorffee;
-    FTYPE kappanemitffeereal = kappanemitffreal*factorffee;
+  // just add-in factor by which free-free e-e adds-in (see nizisq.nb)
+  FTYPE factorffee=0.5*(1.0+XFACT)*Ree/((1.0-ZFACT)*Rei);
+  FTYPE kappaffeereal = kappaffreal*factorffee;
+  FTYPE kappanffeereal = kappanffreal*factorffee;
+  FTYPE kappaemitffeereal = kappaemitffreal*factorffee;
+  FTYPE kappanemitffeereal = kappanemitffreal*factorffee;
     
-    //////////////
-    //
-    // Add bound-free
-    // below in [cm^{-1}]
-    //
-    //////////////
+  //////////////
+  //
+  // Add bound-free
+  // below in [cm^{-1}]
+  //
+  //////////////
 
-    // just add-in factor by which bound-free adds-in
-    FTYPE factorbf=750.0*ZFACT*(1.0+XFACT+0.75*YFACT)/((1.0+XFACT)*(1.0-ZFACT));
-    FTYPE kappabfreal = kappaffreal*factorbf;
-    FTYPE kappanbfreal = kappanffreal*factorbf;
-    FTYPE kappaemitbfreal = kappaemitffreal*factorbf;
-    FTYPE kappanemitbfreal = kappanemitffreal*factorbf;
+  // just add-in factor by which bound-free adds-in
+  FTYPE factorbf=750.0*ZFACT*(1.0+XFACT+0.75*YFACT)/((1.0+XFACT)*(1.0-ZFACT));
+  FTYPE kappabfreal = kappaffreal*factorbf;
+  FTYPE kappanbfreal = kappanffreal*factorbf;
+  FTYPE kappaemitbfreal = kappaemitffreal*factorbf;
+  FTYPE kappanemitbfreal = kappanemitffreal*factorbf;
 
-    //////////////
-    //
-    // Add Chianti
-    // below in [cm^{-1}]
-    //  [TODO: Could use ff as prefactor to these as well for more uniform treatment as Trreal and Tereal become different.]
-    //  [TODO: Could use each ff prefactor for each kappa type (4 types) so opacities behave uniformly as Trreal and Tereal become different.  But not clear if all scale the same with temperature.  At least for Chianti it's reasonable.]
-    //  [TODO: integrate real low-temp opacities]
-    //
-    //////////////
+  //////////////
+  //
+  // Add Chianti
+  // below in [cm^{-1}]
+  //  [TODO: Could use ff as prefactor to these as well for more uniform treatment as Trreal and Tereal become different.]
+  //  [TODO: Could use each ff prefactor for each kappa type (4 types) so opacities behave uniformly as Trreal and Tereal become different.  But not clear if all scale the same with temperature.  At least for Chianti it's reasonable.]
+  //  [TODO: integrate real low-temp opacities]
+  //
+  //////////////
 
-    // FTYPE kappachiantirealbase = 30.0*1E33*pow(rhoreal,2.0)*(0.1+ZFACT/ZSOLAR)*XFACT*(1.0+XFACT)*pow(Tereal,-1.7)*pow(Trreal,-3.0);
-    // just add-in factor by which chianti adds-in (see nizisq.nb)
-    FTYPE factorchianti=2.50672E10*XFACT*(0.1+ZFACT/ZSOLAR)*pow(Tereal,-1.2)/(1.0-ZFACT);
-    FTYPE kappachiantireal = kappaffreal*factorchianti;
-    FTYPE kappanchiantireal = kappanffreal*factorchianti;
-    FTYPE kappaemitchiantireal = kappaemitffreal*factorchianti;
-    FTYPE kappanemitchiantireal = kappanemitffreal*factorchianti;
+  // FTYPE kappachiantirealbase = 30.0*1E33*pow(rhoreal,2.0)*(0.1+ZFACT/ZSOLAR)*XFACT*(1.0+XFACT)*pow(Tereal,-1.7)*pow(Trreal,-3.0);
+  // just add-in factor by which chianti adds-in (see nizisq.nb)
+  FTYPE factorchianti=2.50672E10*XFACT*(0.1+ZFACT/ZSOLAR)*pow(Tereal,-1.2)/(1.0-ZFACT);
+  FTYPE kappachiantireal = kappaffreal*factorchianti;
+  FTYPE kappanchiantireal = kappanffreal*factorchianti;
+  FTYPE kappaemitchiantireal = kappaemitffreal*factorchianti;
+  FTYPE kappanemitchiantireal = kappanemitffreal*factorchianti;
 
-    //////////////
-    //
-    // Add H^-
-    // below in [cm^{-1}]
-    //
-    //////////////
+  //////////////
+  //
+  // Add H^-
+  // below in [cm^{-1}]
+  //
+  //////////////
 
-    // FTYPE kappahminusbase = 33.0*1E-25*pow(ZFACT,0.5)*pow(rhoreal,1.5)*pow(Tereal,7.7);
-    // just add-in factor by which H^- adds-in (see nizisq.nb), but remove Rei
-    FTYPE factorhm=2.75739E-48*pow(Tereal,11.2)*pow(ZFACT,0.5)/(pow(rhoreal,0.5)*(1.0+XFACT)*(1.0-ZFACT)*Rei);
-    FTYPE kappahmreal = kappaffreal*factorhm;
-    FTYPE kappanhmreal = kappanffreal*factorhm;
-    FTYPE kappaemithmreal = kappaemitffreal*factorhm;
-    FTYPE kappanemithmreal = kappanemitffreal*factorhm;
+  // FTYPE kappahminusbase = 33.0*1E-25*pow(ZFACT,0.5)*pow(rhoreal,1.5)*pow(Tereal,7.7);
+  // just add-in factor by which H^- adds-in (see nizisq.nb), but remove Rei
+  FTYPE factorhm=2.75739E-48*pow(Tereal,11.2)*pow(ZFACT,0.5)/(pow(rhoreal,0.5)*(1.0+XFACT)*(1.0-ZFACT)*Rei);
+  FTYPE kappahmreal = kappaffreal*factorhm;
+  FTYPE kappanhmreal = kappanffreal*factorhm;
+  FTYPE kappaemithmreal = kappaemitffreal*factorhm;
+  FTYPE kappanemithmreal = kappanemitffreal*factorhm;
 
-    //////////////
-    //
-    // Add Chianti that fits Opal
-    // below in [cm^{-1}]
-    //
-    //////////////
+  //////////////
+  //
+  // Add Chianti that fits Opal
+  // below in [cm^{-1}]
+  //
+  //////////////
 
-    // just add-in factor by which chianti opal adds-in
-    FTYPE factorchiantiopal=3E-13*pow(Tereal,1.6)*pow(rhoreal,-0.4);
-    FTYPE kappachiantiopalreal = kappaffreal*factorchianti*factorchiantiopal;
-    FTYPE kappanchiantiopalreal = kappanffreal*factorchianti*factorchiantiopal;
-    FTYPE kappaemitchiantiopalreal = kappaemitffreal*factorchianti*factorchiantiopal;
-    FTYPE kappanemitchiantiopalreal = kappanemitffreal*factorchianti*factorchiantiopal;
+  // just add-in factor by which chianti opal adds-in
+  FTYPE factorchiantiopal=3E-13*pow(Tereal,1.6)*pow(rhoreal,-0.4);
+  FTYPE kappachiantiopalreal = kappaffreal*factorchianti*factorchiantiopal;
+  FTYPE kappanchiantiopalreal = kappanffreal*factorchianti*factorchiantiopal;
+  FTYPE kappaemitchiantiopalreal = kappaemitffreal*factorchianti*factorchiantiopal;
+  FTYPE kappanemitchiantiopalreal = kappanemitffreal*factorchianti*factorchiantiopal;
 
-    //////////////
-    //
-    // Add H^- that fits Opal
-    // below in [cm^{-1}]
-    //
-    //////////////
+  //////////////
+  //
+  // Add H^- that fits Opal
+  // below in [cm^{-1}]
+  //
+  //////////////
 
-    // just add-in factor by which H^- opal adds-in
-    FTYPE factorhmopal=1E4*pow(Tereal,-1.2);
-    FTYPE kappahmopalreal = kappaffreal*factorhm*factorhmopal;
-    FTYPE kappanhmopalreal = kappanffreal*factorhm*factorhmopal;
-    FTYPE kappaemithmopalreal = kappaemitffreal*factorhm*factorhmopal;
-    FTYPE kappanemithmopalreal = kappanemitffreal*factorhm*factorhmopal;
+  // just add-in factor by which H^- opal adds-in
+  FTYPE factorhmopal=1E4*pow(Tereal,-1.2);
+  FTYPE kappahmopalreal = kappaffreal*factorhm*factorhmopal;
+  FTYPE kappanhmopalreal = kappanffreal*factorhm*factorhmopal;
+  FTYPE kappaemithmopalreal = kappaemitffreal*factorhm*factorhmopal;
+  FTYPE kappanemithmopalreal = kappanemitffreal*factorhm*factorhmopal;
 
-    //////////////
-    //
-    // Add molecular (without T dependence)
-    // below in [cm^{-1}]
-    //
-    //////////////
+  //////////////
+  //
+  // Add molecular (without T dependence)
+  // below in [cm^{-1}]
+  //
+  //////////////
 
-    FTYPE kappamolreal = 3.0*ZFACT*rhoreal;
-    FTYPE kappanmolreal = kappamolreal;
-    FTYPE kappaemitmolreal = kappamolreal;
-    FTYPE kappanemitmolreal = kappamolreal;
+  FTYPE kappamolreal = 3.0*ZFACT*rhoreal;
+  FTYPE kappanmolreal = kappamolreal;
+  FTYPE kappaemitmolreal = kappamolreal;
+  FTYPE kappanemitmolreal = kappamolreal;
 
-    //////////////
-    //
-    // Low-density interpolation
-    // below in [cm^{-1}]
-    //
-    //////////////
-    FTYPE kappalowdensityreal  = 1.0/ ( 1.0/(kappamolreal + kappahmreal) + 1.0/(kappachiantireal + kappaffreal + kappaffeereal + kappabfreal) );
-    FTYPE kappanlowdensityreal  = 1.0/ ( 1.0/(kappanmolreal + kappanhmreal) + 1.0/(kappanchiantireal + kappanffreal + kappanffeereal + kappanbfreal) );
-    FTYPE kappaemitlowdensityreal  = 1.0/ ( 1.0/(kappaemitmolreal + kappaemithmreal) + 1.0/(kappaemitchiantireal + kappaemitffreal + kappaemitffeereal + kappaemitbfreal) );
-    FTYPE kappanemitlowdensityreal  = 1.0/ ( 1.0/(kappanemitmolreal + kappanemithmreal) + 1.0/(kappanemitchiantireal + kappanemitffreal + kappanemitffeereal + kappanemitbfreal) );
+  //////////////
+  //
+  // Low-density interpolation
+  // below in [cm^{-1}]
+  //
+  //////////////
+  FTYPE kappalowdensityreal  = 1.0/ ( 1.0/(kappamolreal + kappahmreal) + 1.0/(kappachiantireal + kappaffreal + kappaffeereal + kappabfreal) );
+  FTYPE kappanlowdensityreal  = 1.0/ ( 1.0/(kappanmolreal + kappanhmreal) + 1.0/(kappanchiantireal + kappanffreal + kappanffeereal + kappanbfreal) );
+  FTYPE kappaemitlowdensityreal  = 1.0/ ( 1.0/(kappaemitmolreal + kappaemithmreal) + 1.0/(kappaemitchiantireal + kappaemitffreal + kappaemitffeereal + kappaemitbfreal) );
+  FTYPE kappanemitlowdensityreal  = 1.0/ ( 1.0/(kappanemitmolreal + kappanemithmreal) + 1.0/(kappanemitchiantireal + kappanemitffreal + kappanemitffeereal + kappanemitbfreal) );
 
-    //////////////
-    //
-    // full range density interpolation
-    // below in [cm^{-1}]
-    //
-    //////////////
-    FTYPE kappadensityreal  = 1.0/ ( 1.0/(kappamolreal + kappahmopalreal) + 1.0/(kappachiantiopalreal) + 1.0/(kappachiantireal + kappaffreal + kappaffeereal + kappabfreal) );
-    FTYPE kappandensityreal  = 1.0/ ( 1.0/(kappanmolreal + kappanhmopalreal) + 1.0/(kappanchiantiopalreal) + 1.0/(kappanchiantireal + kappanffreal + kappanffeereal + kappanbfreal) );
-    FTYPE kappaemitdensityreal  = 1.0/ ( 1.0/(kappaemitmolreal + kappaemithmopalreal) + 1.0/(kappaemitchiantiopalreal) + 1.0/(kappaemitchiantireal + kappaemitffreal + kappaemitffeereal + kappaemitbfreal) );
-    FTYPE kappanemitdensityreal  = 1.0/ ( 1.0/(kappanemitmolreal + kappanemithmopalreal) + 1.0/(kappanemitchiantiopalreal) + 1.0/(kappanemitchiantireal + kappanemitffreal + kappanemitffeereal + kappanemitbfreal) );
+  //////////////
+  //
+  // full range density interpolation
+  // below in [cm^{-1}]
+  //
+  //////////////
+  FTYPE kappadensityreal  = 1.0/ ( 1.0/(kappamolreal + kappahmopalreal) + 1.0/(kappachiantiopalreal) + 1.0/(kappachiantireal + kappaffreal + kappaffeereal + kappabfreal) );
+  FTYPE kappandensityreal  = 1.0/ ( 1.0/(kappanmolreal + kappanhmopalreal) + 1.0/(kappanchiantiopalreal) + 1.0/(kappanchiantireal + kappanffreal + kappanffeereal + kappanbfreal) );
+  FTYPE kappaemitdensityreal  = 1.0/ ( 1.0/(kappaemitmolreal + kappaemithmopalreal) + 1.0/(kappaemitchiantiopalreal) + 1.0/(kappaemitchiantireal + kappaemitffreal + kappaemitffeereal + kappaemitbfreal) );
+  FTYPE kappanemitdensityreal  = 1.0/ ( 1.0/(kappanemitmolreal + kappanemithmopalreal) + 1.0/(kappanemitchiantiopalreal) + 1.0/(kappanemitchiantireal + kappanemitffreal + kappanemitffeereal + kappanemitbfreal) );
 
 
-    //////////////
-    //
-    // Cylco-Synchrotron
-    // below in [cm^{-1}]
-    //
-    //////////////
+  //////////////
+  //
+  // Cylco-Synchrotron
+  // below in [cm^{-1}]
+  //
+  //////////////
 
-    FTYPE nuM = 1.5*QCHARGE*Breal/(2.0*M_PI*MELE*CCCTRUE0)*thetaesq;
-    FTYPE phi = (K_BOLTZ*Trreal)/(HPLANCK*nuM);
+  FTYPE nuM = 1.5*QCHARGE*Breal/(2.0*M_PI*MELE*CCCTRUE0)*thetaesq;
+  FTYPE phi = (K_BOLTZ*Trreal)/(HPLANCK*nuM);
 
-    // synch prefactor
-    FTYPE kappasyreal=2.13E-11*nereal/Breal*pow(Tereal/1E10,-5.0);
+  // synch prefactor
+  FTYPE kappasyreal=2.13E-11*nereal/Breal*pow(Tereal/1E10,-5.0);
 
-    // low-temp factor
-    FTYPE q0 = 1.0/ (1.0+pow(3.3*thetae,-5.0));
-    FTYPE q1 = 1.0 + pow(3.3*thetae,-5.0);
-    FTYPE qsyn = exp(log(q0) + ( 0.5 + (1.0/M_PI)*atan(3.0+log(phi)) )*(log(q1) - log(q0)) );
-    kappasyreal *= qsyn;
+  // low-temp factor
+  FTYPE q0 = 1.0/ (1.0+pow(3.3*thetae,-5.0));
+  FTYPE q1 = 1.0 + pow(3.3*thetae,-5.0);
+  FTYPE qsyn = exp(log(q0) + ( 0.5 + (1.0/M_PI)*atan(3.0+log(phi)) )*(log(q1) - log(q0)) );
+  kappasyreal *= qsyn;
     
-    FTYPE kappansyreal=kappasyreal; // same prefactor
-    FTYPE kappaemitsyreal=kappasyreal; // same prefactor
-    FTYPE kappanemitsyreal=kappasyreal; // same prefactor
+  FTYPE kappansyreal=kappasyreal; // same prefactor
+  FTYPE kappaemitsyreal=kappasyreal; // same prefactor
+  FTYPE kappanemitsyreal=kappasyreal; // same prefactor
 
-    // absorption
+  // absorption
 
-    // XRB Ledd
-    FTYPE aas=0.001 - 0.00030000000000000003*Power(1. - 1.*varexpf,0.1) + 9.999*Power(varexpf,100);
-    FTYPE bbs=0.34915123451867575 + 0.6639854085243424*Power(1. - 1.*varexpf,0.21551972527431834) + 0.6969780620639547*Power(varexpf,109.95164261078826);
-    FTYPE ccs=3.5 - 0.5*Power(1. - 1.*varexpf,0.1) + 1.7999999999999998*Power(varexpf,10);
-    FTYPE dds=80.*Power(2.718281828459045,1.611809565095832*Power(varexpf,2) + 1.701470224678968*Power(varexpf,19.123258595041275));
-    FTYPE ees=2.9814806065542103 + 1.0252733145171038*Power(1. - 1.*varexpf,0.03215194092829952);
+  // XRB Ledd
+  FTYPE aas=0.001 - 0.00030000000000000003*Power(1. - 1.*varexpf,0.1) + 9.999*Power(varexpf,100);
+  FTYPE bbs=0.34915123451867575 + 0.6639854085243424*Power(1. - 1.*varexpf,0.21551972527431834) + 0.6969780620639547*Power(varexpf,109.95164261078826);
+  FTYPE ccs=3.5 - 0.5*Power(1. - 1.*varexpf,0.1) + 1.7999999999999998*Power(varexpf,10);
+  FTYPE dds=80.*Power(2.718281828459045,1.611809565095832*Power(varexpf,2) + 1.701470224678968*Power(varexpf,19.123258595041275));
+  FTYPE ees=2.9814806065542103 + 1.0252733145171038*Power(1. - 1.*varexpf,0.03215194092829952);
 
-    kappasyreal *= 1.0/( 1.0/(aas*pow(phi,-bbs)*log(1.0+ccs*phi)) + 1.0/(dds*pow(phi,-ees)) );
+  kappasyreal *= 1.0/( 1.0/(aas*pow(phi,-bbs)*log(1.0+ccs*phi)) + 1.0/(dds*pow(phi,-ees)) );
 
-    // XRB Ledd
-    FTYPE aans=0.0012 + 0.00005000000000000013*Power(1. - 1.*varexpf,0.05) - 0.0009099999999999999*Power(varexpf,7);
-    FTYPE bbns=2.65 + 0.040000000000000036*Power(1. - 1.*varexpf,0.02) - 0.5499999999999998*Power(varexpf,30);
-    FTYPE ccns=1.31 - 0.06000000000000005*Power(1. - 1.*varexpf,0.02) + 1.69*Power(varexpf,8);
-    FTYPE ddns=Power(2.718281828459045,1.5686159179138452 + 1.151292546497023*Power(varexpf,2) + 1.151292546497023*Power(varexpf,4) + 2.9834230661458117*Power(varexpf,195.52338999877892));
-    FTYPE eens=2.974042326402226 + 0.23373841071210855*Power(1. - 1.*varexpf,11.45996831663565) -  0.1009858740118661*Power(varexpf,201.41910724608374);
+#if(EVOLVENRAD)
+  // XRB Ledd
+  FTYPE aans=0.0012 + 0.00005000000000000013*Power(1. - 1.*varexpf,0.05) - 0.0009099999999999999*Power(varexpf,7);
+  FTYPE bbns=2.65 + 0.040000000000000036*Power(1. - 1.*varexpf,0.02) - 0.5499999999999998*Power(varexpf,30);
+  FTYPE ccns=1.31 - 0.06000000000000005*Power(1. - 1.*varexpf,0.02) + 1.69*Power(varexpf,8);
+  FTYPE ddns=Power(2.718281828459045,1.5686159179138452 + 1.151292546497023*Power(varexpf,2) + 1.151292546497023*Power(varexpf,4) + 2.9834230661458117*Power(varexpf,195.52338999877892));
+  FTYPE eens=2.974042326402226 + 0.23373841071210855*Power(1. - 1.*varexpf,11.45996831663565) -  0.1009858740118661*Power(varexpf,201.41910724608374);
 
-    kappansyreal *= 1.0/( 1.0/(aans*pow(phi,-bbns)*log(1.0+ccns*phi)) + 1.0/(ddns*pow(phi,-eens)) );
+  kappansyreal *= 1.0/( 1.0/(aans*pow(phi,-bbns)*log(1.0+ccns*phi)) + 1.0/(ddns*pow(phi,-eens)) );
+#endif
 
-    // emission (just Planck varexpf=1 but using actual direct fit instead of fit over many varexpf)
+  // emission (just Planck varexpf=1 but using actual direct fit instead of fit over many varexpf)
 
-    // XRB Ledd
-    FTYPE aaes=0.3188964065440192;
-    FTYPE bbes=1.0768900596611533;
-    FTYPE cces=0.0026066604097452917;
-    FTYPE ddes=1.2627623470514082;
-    FTYPE eees=2.987395175467846;
+  // XRB Ledd
+  FTYPE aaes=0.3188964065440192;
+  FTYPE bbes=1.0768900596611533;
+  FTYPE cces=0.0026066604097452917;
+  FTYPE ddes=1.2627623470514082;
+  FTYPE eees=2.987395175467846;
  
-    kappaemitsyreal *= 1.0/( 1.0/(aaes*pow(phi,-bbes)*log(1.0+cces*phi)) + 1.0/(ddes*pow(phi,-eees)) );
+  kappaemitsyreal *= 1.0/( 1.0/(aaes*pow(phi,-bbes)*log(1.0+cces*phi)) + 1.0/(ddes*pow(phi,-eees)) );
 
-    // XRB Ledd
-    FTYPE aanes=0.00029169186404094216;
-    FTYPE bbnes=1.3218673308302118;
-    FTYPE ccnes=1.1634612365295334;
-    FTYPE ddnes=120.01337286010565;
-    FTYPE eenes=2.3252442378326856;
+#if(EVOLVENRAD)
+  // XRB Ledd
+  FTYPE aanes=0.00029169186404094216;
+  FTYPE bbnes=1.3218673308302118;
+  FTYPE ccnes=1.1634612365295334;
+  FTYPE ddnes=120.01337286010565;
+  FTYPE eenes=2.3252442378326856;
 
-    kappanemitsyreal *= 1.0/( 1.0/(aanes*pow(phi,-bbnes)*log(1.0+ccnes*phi)) + 1.0/(ddnes*pow(phi,-eenes)) );
+  kappanemitsyreal *= 1.0/( 1.0/(aanes*pow(phi,-bbnes)*log(1.0+ccnes*phi)) + 1.0/(ddnes*pow(phi,-eenes)) );
+#endif
 
-    //////////////
-    //
-    // DC
-    // below in [cm^{-1}]
-    //
-    //////////////
+  //////////////
+  //
+  // DC
+  // below in [cm^{-1}]
+  //
+  //////////////
 
-    //    FTYPE thetar = K_BOLTZ*Trreal/(MELE*CCCTRUE0*CCCTRUE0);
-    FTYPE thetar = Trreal/TEMPELE;
+  //    FTYPE thetar = K_BOLTZ*Trreal/(MELE*CCCTRUE0*CCCTRUE0);
+  FTYPE thetar = Trreal/TEMPELE;
 
-    // dc prefactor
-    FTYPE kappadcreal=7.36E-46*nereal*Trreal*Trreal*varexpf;
+  // dc prefactor
+  FTYPE kappadcreal=7.36E-46*nereal*Trreal*Trreal*varexpf;
 
-    // high-thetae factor
-    FTYPE pdc = pow(1.0+thetae,-3.0);
-    kappadcreal *= pdc;
+  // high-thetae factor
+  FTYPE pdc = pow(1.0+thetae,-3.0);
+  kappadcreal *= pdc;
     
-    FTYPE kappandcreal=kappadcreal; // same prefactor
-    FTYPE kappaemitdcreal=kappadcreal; // same prefactor
-    FTYPE kappanemitdcreal=kappadcreal; // same prefactor
+  FTYPE kappandcreal=kappadcreal; // same prefactor
+  FTYPE kappaemitdcreal=kappadcreal; // same prefactor
+  FTYPE kappanemitdcreal=kappadcreal; // same prefactor
 
-    // absorption
+  // absorption
 
-    // XRB Ledd
-    FTYPE aadc=3.10482346702441e-8 + 4.162489998316388*Power(1. - 1.*varexpf,1.6896115787181434) + 6.702210386421933*Power(varexpf,0.941782674568028);
-    FTYPE bbdc=0.04202835820213653 - 0.03337036710130055*Power(1. - 1.*varexpf,0.4693413976733784) - 0.002097439704449637*Power(varexpf,0.021742118711173992);
-    FTYPE ccdc=3.8020287401719655 + 0.2009643395406986*Power(1. - 1.*varexpf,0.25767159028663056) - 0.18040020940821044*Power(varexpf,33.009903857413704);
-    FTYPE dddc=0.11793169411613985 - 0.06262831233321572*Power(1. - 1.*varexpf,0.34961114748511685) + 0.016889330731907487*Power(varexpf,35.3723390749425);
+  // XRB Ledd
+  FTYPE aadc=3.10482346702441e-8 + 4.162489998316388*Power(1. - 1.*varexpf,1.6896115787181434) + 6.702210386421933*Power(varexpf,0.941782674568028);
+  FTYPE bbdc=0.04202835820213653 - 0.03337036710130055*Power(1. - 1.*varexpf,0.4693413976733784) - 0.002097439704449637*Power(varexpf,0.021742118711173992);
+  FTYPE ccdc=3.8020287401719655 + 0.2009643395406986*Power(1. - 1.*varexpf,0.25767159028663056) - 0.18040020940821044*Power(varexpf,33.009903857413704);
+  FTYPE dddc=0.11793169411613985 - 0.06262831233321572*Power(1. - 1.*varexpf,0.34961114748511685) + 0.016889330731907487*Power(varexpf,35.3723390749425);
     
-    kappadcreal *= 1.0/( 1.0/aadc + 1.0/(bbdc*pow(thetar,-ccdc)) + 1.0/(dddc*pow(thetar,-ccdc/3.0)) );
+  kappadcreal *= 1.0/( 1.0/aadc + 1.0/(bbdc*pow(thetar,-ccdc)) + 1.0/(dddc*pow(thetar,-ccdc/3.0)) );
 
-    // XRB Ledd
-    FTYPE aandc=87.4586627372423 - 76.35909344479292*Power(1. - 1.*varexpf,0.13586634790456995) + 29.385274489218205*Power(varexpf,285.27285622653653);
-    FTYPE bbndc=1.1604225625247175 - 1.1192436863350592*Power(1. - 1.*varexpf,0.1339258484550137) + 0.1955857773358507*Power(varexpf,18.1030753003189);
-    FTYPE ccndc=3.9257505990037376 + 0.04266044504755229*Power(1. - 1.*varexpf,181.71820529516145) - 0.8002705331174753*Power(varexpf,21.623589714867247);
-    FTYPE ddndc=2.8625119194776856 - 2.716652341873481*Power(1. - 1.*varexpf,0.1055549863784506) + 1.8741117433895793*Power(varexpf,309.10043138151474);
+#if(EVOLVENRAD)
+  // XRB Ledd
+  FTYPE aandc=87.4586627372423 - 76.35909344479292*Power(1. - 1.*varexpf,0.13586634790456995) + 29.385274489218205*Power(varexpf,285.27285622653653);
+  FTYPE bbndc=1.1604225625247175 - 1.1192436863350592*Power(1. - 1.*varexpf,0.1339258484550137) + 0.1955857773358507*Power(varexpf,18.1030753003189);
+  FTYPE ccndc=3.9257505990037376 + 0.04266044504755229*Power(1. - 1.*varexpf,181.71820529516145) - 0.8002705331174753*Power(varexpf,21.623589714867247);
+  FTYPE ddndc=2.8625119194776856 - 2.716652341873481*Power(1. - 1.*varexpf,0.1055549863784506) + 1.8741117433895793*Power(varexpf,309.10043138151474);
 
-    kappandcreal *= 1.0/( 1.0/aandc + 1.0/(bbndc*pow(thetar,-ccndc)) + 1.0/(ddndc*pow(thetar,-ccndc/3.0)) );
+  kappandcreal *= 1.0/( 1.0/aandc + 1.0/(bbndc*pow(thetar,-ccndc)) + 1.0/(ddndc*pow(thetar,-ccndc/3.0)) );
+#endif
 
-    // emission
+  // emission
 
-    // XRB Ledd
-    FTYPE aaedc=6.335417556116487 - 0.058933985431348646*Power(1. - 1.*varexpf,10.71634135441363) + 0.48765467682596686*Power(varexpf,1.7536859250821957);
-    FTYPE bbedc=0.008747549563345837 + 0.014220493179111593*Power(1. - 1.*varexpf,0.36109285953630127) + 0.028227296616735897*Power(varexpf,1.556532326060757);
-    FTYPE ccedc=3.7824716575816524 + 0.18426457897750437*Power(1. - 1.*varexpf,0.3661610552743282) - 0.1602799611377681*Power(varexpf,15.388944611235807);
-    FTYPE ddedc=0.11936934944026895 - 0.025640260828114658*Power(1. - 1.*varexpf,0.39821885979760463) + 0.014988119208161788*Power(varexpf,26.289513268487767);
+  // XRB Ledd
+  FTYPE aaedc=6.335417556116487 - 0.058933985431348646*Power(1. - 1.*varexpf,10.71634135441363) + 0.48765467682596686*Power(varexpf,1.7536859250821957);
+  FTYPE bbedc=0.008747549563345837 + 0.014220493179111593*Power(1. - 1.*varexpf,0.36109285953630127) + 0.028227296616735897*Power(varexpf,1.556532326060757);
+  FTYPE ccedc=3.7824716575816524 + 0.18426457897750437*Power(1. - 1.*varexpf,0.3661610552743282) - 0.1602799611377681*Power(varexpf,15.388944611235807);
+  FTYPE ddedc=0.11936934944026895 - 0.025640260828114658*Power(1. - 1.*varexpf,0.39821885979760463) + 0.014988119208161788*Power(varexpf,26.289513268487767);
  
-    kappaemitdcreal *= 1.0/( 1.0/aaedc + 1.0/(bbedc*pow(thetar,-ccedc)) + 1.0/(ddedc*pow(thetar,-ccedc/3.0)) );
+  kappaemitdcreal *= 1.0/( 1.0/aaedc + 1.0/(bbedc*pow(thetar,-ccedc)) + 1.0/(ddedc*pow(thetar,-ccedc/3.0)) );
 
-    // XRB Ledd
-    FTYPE aanedc=197.97520843920014 - 94.77219201589888*Power(1. - 1.*varexpf,0.9245008022924389) - 81.66905945089535*Power(varexpf,1.010185534936844);
-    FTYPE bbnedc=4.798508367755025e-11 + 1.0490039263100823*Power(1. - 1.*varexpf,0.24861894212727034) + 1.3060425347854707*Power(varexpf,1.1248777879043648);
-    FTYPE ccnedc=3.4389272678970677 + 0.441710530722887*Power(1. - 1.*varexpf,0.3614676129393117) - 0.4179301735940477*Power(varexpf,14.840910987577235);
-    FTYPE ddnedc=3.375250751641187 - 1.3820659504372945*Power(1. - 1.*varexpf,0.31579132247596853) + 1.3742704814428137*Power(varexpf,31.28257475560334);
+#if(EVOLVENRAD)
+  // XRB Ledd
+  FTYPE aanedc=197.97520843920014 - 94.77219201589888*Power(1. - 1.*varexpf,0.9245008022924389) - 81.66905945089535*Power(varexpf,1.010185534936844);
+  FTYPE bbnedc=4.798508367755025e-11 + 1.0490039263100823*Power(1. - 1.*varexpf,0.24861894212727034) + 1.3060425347854707*Power(varexpf,1.1248777879043648);
+  FTYPE ccnedc=3.4389272678970677 + 0.441710530722887*Power(1. - 1.*varexpf,0.3614676129393117) - 0.4179301735940477*Power(varexpf,14.840910987577235);
+  FTYPE ddnedc=3.375250751641187 - 1.3820659504372945*Power(1. - 1.*varexpf,0.31579132247596853) + 1.3742704814428137*Power(varexpf,31.28257475560334);
 
-    kappanemitdcreal *= 1.0/( 1.0/aanedc + 1.0/(bbnedc*pow(thetar,-ccnedc)) + 1.0/(ddnedc*pow(thetar,-ccnedc/3.0)) );
+  kappanemitdcreal *= 1.0/( 1.0/aanedc + 1.0/(bbnedc*pow(thetar,-ccnedc)) + 1.0/(ddnedc*pow(thetar,-ccnedc/3.0)) );
+#endif
 
-    // Planck for interpolation to it when expf->1.  dcpl same as edcpl
-    FTYPE aadcpl=6.8308477566235427614037721740062696378080011960029;
-    FTYPE bbdcpl=0.03737660642072567319753249796331010429215268940195;
-    FTYPE ccdcpl=3.6263522982307391011876292625424350179419071859114;
-    FTYPE dddcpl=0.13396823846337876662165099344371722644585939843797;
+  // Planck for interpolation to it when expf->1.  dcpl same as edcpl
+  FTYPE aadcpl=6.8308477566235427614037721740062696378080011960029;
+  FTYPE bbdcpl=0.03737660642072567319753249796331010429215268940195;
+  FTYPE ccdcpl=3.6263522982307391011876292625424350179419071859114;
+  FTYPE dddcpl=0.13396823846337876662165099344371722644585939843797;
 
-    //   ndcpl same as nedcpl
-    FTYPE aandcpl=116.24082637910697352499285024420803245395311274652;
-    FTYPE bbndcpl=1.3436648321999717296470441601823998776061527255987;
-    FTYPE ccndcpl=3.0309933617509186060061141161349078396542823722783;
-    FTYPE ddndcpl=4.7183006844597535352187951503958715513547062753028;
+  //   ndcpl same as nedcpl
+  FTYPE aandcpl=116.24082637910697352499285024420803245395311274652;
+  FTYPE bbndcpl=1.3436648321999717296470441601823998776061527255987;
+  FTYPE ccndcpl=3.0309933617509186060061141161349078396542823722783;
+  FTYPE ddndcpl=4.7183006844597535352187951503958715513547062753028;
 
-    // But for DC varexp fits, varexp=1 matches to direct Planck fit very well, so no need to specially interpolate near expf=1.
+  // But for DC varexp fits, varexp=1 matches to direct Planck fit very well, so no need to specially interpolate near expf=1.
 
-    //////////////
-    //
-    // Get final absorption/emission opacities
-    //
-    //////////////
+  //////////////
+  //
+  // Get final absorption/emission opacities
+  //
+  //////////////
 
-    FTYPE kappareal = kappadensityreal + kappasyreal + kappadcreal;
-    FTYPE kappanreal = kappandensityreal + kappansyreal + kappandcreal;
-    FTYPE kappaemitreal = kappaemitdensityreal + kappaemitsyreal + kappaemitdcreal;
-    FTYPE kappanemitreal = kappanemitdensityreal + kappanemitsyreal + kappanemitdcreal;
+  FTYPE kappareal = kappadensityreal + kappasyreal + kappadcreal;
+  FTYPE kappanreal = kappandensityreal + kappansyreal + kappandcreal;
+  FTYPE kappaemitreal = kappaemitdensityreal + kappaemitsyreal + kappaemitdcreal;
+  FTYPE kappanemitreal = kappanemitdensityreal + kappanemitsyreal + kappanemitdcreal;
 
-    //////////////
-    //
-    // Electron Scattering
-    //
-    //////////////
-    //#define KAPPA_ES_KNCORRF(f) (0.75*((-1.*(1. + 3.*(f)))/Power(1. + 2.*(f),2) +  (0.5*Log(1. + 2.*(f)))/(f) + ((1. + (f))*((2. + 2.*(f))/(1. + 2.*(f)) - (1.*Log(1. + 2.*(f)))/(f)))/Power((f),2)))
-    //#define KAPPA_ES_KNCORR(rhocode,Tcode) (KAPPA_ES_KNCORREP(K_BOLTZ*(Tcode)*TEMPBAR/(MELE*CCCTRUE*CCCTRUE)))
+  //////////////
+  //
+  // Electron Scattering
+  //
+  //////////////
+  //#define KAPPA_ES_KNCORRF(f) (0.75*((-1.*(1. + 3.*(f)))/Power(1. + 2.*(f),2) +  (0.5*Log(1. + 2.*(f)))/(f) + ((1. + (f))*((2. + 2.*(f))/(1. + 2.*(f)) - (1.*Log(1. + 2.*(f)))/(f)))/Power((f),2)))
+  //#define KAPPA_ES_KNCORR(rhocode,Tcode) (KAPPA_ES_KNCORREP(K_BOLTZ*(Tcode)*TEMPBAR/(MELE*CCCTRUE*CCCTRUE)))
 
-    // Buchler and Yueh 1976 (just Fermi part). Fewer electrons when near Fermi fluid limit.
-    FTYPE kappa_es_fermicorr = (1.0/(1.0+2.7E11*prpow(rhoreal,2.0)/prpow(Tereal,2.0)));
+  // Buchler and Yueh 1976 (just Fermi part). Fewer electrons when near Fermi fluid limit.
+  FTYPE kappa_es_fermicorr = (1.0/(1.0+2.7E11*prpow(rhoreal,2.0)/prpow(Tereal,2.0)));
     
-    // Buchler and Yueh 1976 .  Klein-Nishina for thermal electrons.
-    FTYPE kappa_es_kncorr = (1.0/(1.0+prpow(Tereal/4.5E8,0.86)));
+  // Buchler and Yueh 1976 .  Klein-Nishina for thermal electrons.
+  FTYPE kappa_es_kncorr = (1.0/(1.0+prpow(Tereal/4.5E8,0.86)));
 
-    /// kappaes = sigma_T n_e = sigma_T n_b (n_e/n_b) = sigma_T rho/mb (ne/nb)
-    // below in [cm^{-1}]
-    FTYPE kappaesreal = 0.2*(1.0+XFACT)*(rhoreal)*kappa_es_fermicorr*kappa_es_kncorr;
+  /// kappaes = sigma_T n_e = sigma_T n_b (n_e/n_b) = sigma_T rho/mb (ne/nb)
+  // below in [cm^{-1}]
+  FTYPE kappaesreal = 0.2*(1.0+XFACT)*(rhoreal)*kappa_es_fermicorr*kappa_es_kncorr;
 
     
-    //////////////
-    //
-    // Return code value of opacity
-    //
-    //////////////
-    static FTYPE overopacitybaralt=1.0/(OPACITYBAR*RHOBAR); // for those opacities in cm^{-1}
+  //////////////
+  //
+  // Return code value of opacity
+  //
+  //////////////
+  static FTYPE overopacitybaralt=1.0/(OPACITYBAR*RHOBAR); // for those opacities in cm^{-1}
 
-    if(which==ISKAPPAEABS){
-      return(kappareal*overopacitybaralt);
-    }
-    else if(which==ISKAPPANABS){
-      return(kappanreal*overopacitybaralt);
-    }
-    else if(which==ISKAPPAEEMIT){
-      return(kappaemitreal*overopacitybaralt);
-    }
-    else if(which==ISKAPPANEMIT){
-      return(kappanemitreal*overopacitybaralt);
-    }
-    else if(which==ISKAPPAES){
-      return(kappaesreal*overopacitybaralt);
-    }
+  // return results
+  *kappa=kappareal*overopacitybaralt;
+  *kappan=kappanreal*overopacitybaralt;
+  *kappaemit=kappaemitreal*overopacitybaralt;
+  *kappanemit=kappanemitreal*overopacitybaralt;
+  *kappaes=kappaesreal*overopacitybaralt;
 
-  }// end fits section
 
   // TODO: check Ree and Rei with Te for small Te
   // check all expressions.  ensure rhoreal Tereal all right.
   // check Gcompt
   // run code
-
-  return(0.0);// should never get here
+  
+  return(0);
 }
 
 FTYPE Gcompt(FTYPE rho0, FTYPE Tgas, FTYPE Tradff, FTYPE Ruu)
@@ -10084,7 +10105,6 @@ FTYPE Gcompt(FTYPE rho0, FTYPE Tgas, FTYPE Tradff, FTYPE Ruu)
 
   return(preterm3);
 } 
-
 
 
 
