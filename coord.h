@@ -23,6 +23,7 @@
 #define JET5COORDS 1400 /// exp-exp grid, but not good idea in end
 #define JET6COORDS 1401 /// Warp between super-Shafee near BH to normal at large radii
 #define JET6COORDSTHIN 1402 /// Warp between super-Shafee near BH to normal at large radii
+#define BPTHIN1 1450 // Warp between super-Shafee near BH to normal at large radii
 #define UNI2LOG 1500
 #define UNIRSINTH2 1600
 #define SJETCOORDS 3000

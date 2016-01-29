@@ -80,6 +80,9 @@ static FTYPE torusrmax_loc;
 static FTYPE ntheta,htheta,rsjet2,r0jet2,rsjet3,r0jet3; // and rs,r0
 static FTYPE cpow3;
 
+// for defcoord=BPTHIN1
+static FTYPE bp_npow,bp_r1jet,bp_njet,bp_r0jet,bp_rsjet,bp_Qjet, bp_ntheta,bp_htheta,bp_rsjet2,bp_r0jet2,bp_rsjet3,bp_r0jet3, bp_rs, bp_r0,bp_npow2,bp_cpow2,bp_rbr,bp_x1br, bp_h0; 
+
 // for defcoord=PULSARCOORDS
 static FTYPE hinner,houter;
 
@@ -394,6 +397,78 @@ void set_coord_parms_nodeps(int defcoordlocal)
 #endif
 
   }
+  else if (defcoordlocal == BPTHIN1) {
+
+    // see jet3coords_checknew.nb
+    bp_npow=1.0;
+
+    /////////////////////
+    // RADIAL GRID SETUP
+    /////////////////////
+    bp_npow=1.0;  //don't change it, essentially equivalent to changing cpow2
+
+    //radial hyperexponential grid
+    //    npow2=4.0; //power exponent
+    bp_npow2=10.0; //power exponent
+    bp_cpow2=1.0; //exponent prefactor (the larger it is, the more hyperexponentiation is)
+    //    rbr = 1E3;  //radius at which hyperexponentiation kicks in
+    bp_rbr = 5E2;  //radius at which hyperexponentiation kicks in
+
+
+
+    // must be same as in dxdxp()
+    // GODMARK: Note njet here is overwritten by njet later, but could have been different values if setup variable names differently.
+    if(0){ // first attempt
+      bp_r1jet=2.8;
+      bp_njet=0.3;
+      bp_r0jet=7.0;
+      bp_rsjet=21.0;
+      bp_Qjet=1.7;
+    }
+    else if(0){ // chosen to resolve disk then resolve jet
+      bp_r1jet=2.8;
+      bp_njet=0.3;
+      bp_r0jet=20.0;
+      bp_rsjet=80.0;
+      bp_Qjet=1.8;
+    }
+    else if(1){
+      bp_r1jet=2.8;
+      bp_njet=0.3;
+      bp_r0jet=15.0;
+      bp_rsjet=40.0;
+      bp_Qjet=1.3; // chosen to help keep jet resolved even within disk region
+    }
+
+    // for switches from normal theta to ramesh theta
+    bp_rs=40.0; // shift
+    bp_r0=20.0; // divisor
+ 
+    // for theta1
+    //    hslope=0.3 ; // resolve inner-radial region near equator
+    bp_r0jet3=20.0; // divisor
+    bp_rsjet3=0.0; // subtractor
+
+    // for theta2
+    bp_h0=0.3; // inner-radial "hslope" for theta2
+    // GODMARK: Note that this overwrites above njet!
+    bp_njet=1.0; // power \theta_j \propto r^{-njet}
+
+
+    // see fix_3dpoledtissue.nb
+#if(0)
+    bp_ntheta=21.0;
+    bp_htheta=0.15;
+    bp_rsjet2=5.0;
+    bp_r0jet2=2.0;
+#else
+    bp_ntheta=5.0;
+    bp_htheta=0.15;
+    bp_rsjet2=5.0;
+    bp_r0jet2=2.0;
+#endif
+
+  }
   else if (defcoordlocal == JET5COORDS) {
     // exp grid merged with exp-exp grid
     // parameters solved using hyperexp_gridnew.nb
@@ -672,6 +747,9 @@ void set_coord_parms_deps(int defcoordlocal)
   else if (defcoordlocal == JET6COORDS) {
     x1br = log( rbr - R0 ) / npow;  //the corresponding X[1] value
   }
+  else if (defcoordlocal == BPTHIN1) {
+    bp_x1br = log( bp_rbr - R0 ) / bp_npow;  //the corresponding X[1] value
+  }
   else if (defcoordlocal == JET6COORDSTHIN) {
     th_x1br = log( th_rbr - R0 ) / th_npow;  //the corresponding X[1] value
   }
@@ -794,6 +872,9 @@ void write_coord_parms(int defcoordlocal)
       else if (defcoordlocal == JET6COORDSTHIN) {
         fprintf(out,"%26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g\n",th_npow,th_r1jet,th_njet,th_r0jet,th_rsjet,th_Qjet,th_ntheta,th_htheta,th_rsjet2,th_r0jet2,th_rsjet3,th_r0jet3,th_rs,th_r0,th_npow2,th_cpow2,th_rbr,th_x1br,th_rbr,th_h0,th_njet1);
       }
+      else if (defcoordlocal == BPTHIN1) {
+        fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",bp_npow,bp_r1jet,bp_njet,bp_r0jet,bp_rsjet,bp_Qjet,bp_ntheta,bp_htheta,bp_rsjet2,bp_r0jet2,bp_rsjet3,bp_r0jet3,bp_rs,bp_r0,bp_npow2,bp_cpow2,bp_rbr,bp_x1br);   // MARKTODO   add bp_h0?
+      }
       else if (defcoordlocal == JET5COORDS) {
         fprintf(out,"%26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g\n",AAAA,AAA,BBB,DDD,ii0,CCCC,Rj);
         fprintf(out,"%26.20g %26.20g %26.20g %26.20g %26.20g\n",r1jet,njet,r0jet,rsjet,Qjet);
@@ -903,6 +984,9 @@ void read_coord_parms(int defcoordlocal)
       }
       else if (defcoordlocal == JET6COORDSTHIN) {
         fscanf(in,HEADER21IN,&th_npow,&th_r1jet,&th_njet,&th_r0jet,&th_rsjet,&th_Qjet,&th_ntheta,&th_htheta,&th_rsjet2,&th_r0jet2,&th_rsjet3,&th_r0jet3,&th_rs,&th_r0,&th_npow2,&th_cpow2,&th_rbr,&th_x1br,&th_rbr,&th_h0,&th_njet1);
+      }
+      else if (defcoordlocal == BPTHIN1) {
+        fscanf(in,HEADER18IN,&bp_npow,&bp_r1jet,&bp_njet,&bp_r0jet,&bp_rsjet,&bp_Qjet,&bp_ntheta,&bp_htheta,&bp_rsjet2,&bp_r0jet2,&bp_rsjet3,&bp_r0jet3,&bp_rs,&bp_r0,&bp_npow2,&bp_cpow2,&bp_rbr,&bp_x1br);
       }
       else if (defcoordlocal == JET5COORDS) {
         fscanf(in,HEADER7IN,&AAAA,&AAA,&BBB,&DDD,&ii0,&CCCC,&Rj);
@@ -1071,6 +1155,26 @@ void read_coord_parms(int defcoordlocal)
     MPI_Bcast(&th_rbr, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
     MPI_Bcast(&th_h0, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
     MPI_Bcast(&th_njet1, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+  }
+  else if (defcoordlocal == BPTHIN1) {
+    MPI_Bcast(&bp_npow, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&bp_r1jet, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&bp_njet, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&bp_r0jet, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&bp_rsjet, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&bp_Qjet, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&bp_ntheta, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&bp_htheta, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&bp_rsjet2, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&bp_r0jet2, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&bp_rsjet3, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&bp_r0jet3, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&bp_rs, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&bp_r0, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&bp_npow2, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&bp_cpow2, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&bp_rbr, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&bp_x1br, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
   }
   else if (defcoordlocal == JET5COORDS) {
     MPI_Bcast(&AAAA, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
@@ -1428,6 +1532,81 @@ void bl_coord(FTYPE *X, FTYPE *V)
 
     // generate interpolation factor
     arctan2 = 0.5 + 1.0/M_PI*(atan( (V[1]-rsjet2)/r0jet2) );
+
+    // now interpolate between them
+    V[2] = theta2 + arctan2*(theta1-theta2);
+    
+
+
+    // default is uniform \phi grid
+    V[3]=2.0*M_PI*X[3];
+  }
+  else if (defcoord == BPTHIN1) {
+
+#if(0) // no change in exponentiation
+    // JET3COORDS-like radial grid
+    V[1] = R0+exp(pow(X[1],bp_npow)) ;
+#else
+
+    theexp = bp_npow*X[1];
+    if( X[1] > bp_x1br ) {
+      theexp += bp_cpow2 * pow(X[1]-bp_x1br,bp_npow2);
+    }
+    V[1] = R0+exp(theexp);
+
+
+    //    FTYPE npowtrue,npowlarger=10.0;
+    //    FTYPE npowrs=1E3;
+    //    FTYPE npowr0=2E2;
+    //    npowtrue = npow + (npowlarger-npow)*(0.5+1.0/M_PI*atan((V[1]-npowrs)/npowr0));
+    //    V[1] = R0+exp(pow(X[1],npowtrue)) ;
+#endif
+
+
+
+    FTYPE theta1,theta2,arctan2;
+
+
+#if(0)
+    // JET3COORDS-based:
+    myhslope=2.0-bp_Qjet*pow(V[1]/bp_r1jet,-bp_njet*(0.5+1.0/M_PI*atan(V[1]/bp_r0jet-bp_rsjet/bp_r0jet)));
+    theta1 = M_PI * X[2] + ((1. - myhslope) * 0.5) * mysin(2. * M_PI * X[2]);
+#else
+    // RAMESH BASED
+    // myhslope here is h2 in MCAF paper
+    // h0 here is h3 in MCAF paper
+    myhslope=bp_h0 + pow( (V[1]-bp_rsjet3)/bp_r0jet3 , bp_njet);
+
+    // determine theta2
+    if(X[2]>1.0) myx2=2.0-X[2];
+    else if(X[2]<0.0) myx2=-X[2];
+    else myx2=X[2];
+
+    th2 = 0.5*M_PI*(1.0 + atan(myhslope*(myx2-0.5))/atan(myhslope*0.5));
+
+    if(X[2]>1.0) th2=2.0*M_PI-th2;
+    else if(X[2]<0.0) th2=-th2;
+
+    // determine theta0
+    // JET3COORDS-based:
+    myhslope=2.0-bp_Qjet*pow(V[1]/bp_r1jet,-bp_njet*(0.5+1.0/M_PI*atan(V[1]/bp_r0jet-bp_rsjet/bp_r0jet)));
+    // myhslope here is h0 in MCAF paper
+    th0 = M_PI * X[2] + ((1. - myhslope) * 0.5) * mysin(2. * M_PI * X[2]);
+
+    // determine switches (only function of radius and not x2 or theta)
+    switch0 = 0.5+1.0/M_PI*atan((V[1]-bp_rs)/bp_r0); // switch in .nb file
+    switch2 = 0.5-1.0/M_PI*atan((V[1]-bp_rs)/bp_r0); // switchi in .nb file
+
+    // this works because all functions are monotonic, so final result is monotonic.  Also, th(x2=1)=Pi and th(x2=0)=0 as required
+    theta1 = th0*switch2 + th2*switch0; // th0 is activated for small V[1] and th2 is activated at large radii.  Notice that sum of switch2+switch0=1 so normalization correct.
+
+#endif
+    
+    // fix_3dpoledtissue.nb based:
+    theta2 = M_PI*0.5*(bp_htheta*(2.0*X[2]-1.0)+(1.0-bp_htheta)*pow(2.0*X[2]-1.0,bp_ntheta)+1.0);
+
+    // generate interpolation factor
+    arctan2 = 0.5 + 1.0/M_PI*(atan( (V[1]-bp_rsjet2)/bp_r0jet2) );
 
     // now interpolate between them
     V[2] = theta2 + arctan2*(theta1-theta2);
@@ -2198,6 +2377,11 @@ void dxdxp_analytic(FTYPE *X, FTYPE *V, FTYPE (*dxdxp)[NDIM])
     myexit(34698346);
     dxdxp[3][3] = 2.0*M_PI;    
   }
+  else if(defcoord == BPTHIN1){
+    dualfprintf(fail_file,"Should not be computing BPTHIN1 analytically\n");
+    myexit(34698346);
+    dxdxp[3][3] = 2.0*M_PI;    
+  }
   else if(defcoord == JET5COORDS){
     dualfprintf(fail_file,"Should not be computing JET5COORDS analytically\n");
     myexit(34698346);
@@ -2843,6 +3027,58 @@ void set_points()
 
 
   } 
+  else if (defcoord == BPTHIN1) { // same as JET3COORDS since radial grid same
+    startx[1] = pow(log(Rin-R0),1.0/bp_npow);
+    startx[2] = 0.;
+    startx[3] = 0.;
+    dx[1] = (pow(log(Rout-R0),1.0/bp_npow)-pow(log(Rin-R0),1.0/bp_npow)) / totalsize[1];
+    dx[2] = 1. / totalsize[2];
+    dx[3] = 1.0/totalsize[3];
+
+#if(1)
+    startx[1] = log(Rin-R0)/bp_npow;
+
+    trifprintf( "ITERATIVE dx1: Rout=%21.15g R0=%21.15g bp_npow=%21.15g bp_cpow2=%21.15g bp_npow2=%21.15g bp_x1br=%21.15g bp_rbr=%21.15g\n",Rout,R0,bp_npow,bp_cpow2,bp_npow2,bp_x1br,bp_rbr);
+
+    if( Rout < bp_rbr ) {
+      x1max = log(Rout-R0)/bp_npow;
+    }
+    else {
+      x1max0 = 1;
+      x1max = 2;
+
+      //find the root via iterations
+      for( iter = 0; iter < ITERMAX; iter++ ) {
+
+        //      trifprintf( "iter=%d x1max=%21.15g x2max0=%21.15g\n",iter,x1max0,x1max);
+
+        if( fabs((x1max - x1max0)/x1max) < RELACC ) {
+          break;
+        }
+        x1max0 = x1max;
+        dxmax= (pow( (log(Rout-R0) - bp_npow*x1max0)/bp_cpow2, 1./bp_npow2 ) + bp_x1br) - x1max0;
+
+        // need a slight damping factor
+        FTYPE dampingfactor=0.5;
+        x1max = x1max0 + dampingfactor*dxmax;
+
+      }
+
+      if( iter == ITERMAX ) {
+        trifprintf( "Error: iteration procedure for finding x1max has not converged: x1max = %g, dx1max/x1max = %g, iter = %d\n",
+                    x1max, (x1max-x1max0)/x1max, iter );
+        exit(1);
+      }
+      else {
+        trifprintf( "x1max = %g (dx1max/x1max = %g, itno = %d)\n", x1max, (x1max-x1max0)/x1max, iter );
+      }
+    }
+
+    dx[1] = ( x1max - startx[1] ) /totalsize[1];
+#endif
+
+
+  } 
   else if (defcoord == JET5COORDS) {
     startx[1] = 0.0;
     startx[2] = 0.0;
@@ -3073,6 +3309,20 @@ FTYPE setRin(int ihor)
     else{
       dualfprintf(fail_file,"ihoradjust=%26.20g totalsize[1]=%d Rhor=%26.20g R0=%26.20g npow=%26.20g Rout=%26.20g\n",ihoradjust,totalsize[1],Rhor,R0,th_npow,Rout);
       return(R0+exp( pow((totalsize[1]*pow(log(Rhor-R0),1.0/th_npow) - ihoradjust*pow(log(Rout-R0),1.0/th_npow))/(totalsize[1]-ihoradjust),th_npow)));
+    }
+  }
+  else if(defcoord == BPTHIN1){
+    // see jet3coords_checknew.nb (and fix_3dpolestissue.nb) to have chosen Rin and ihor and compute required R0
+    if(bp_npow==1.0){
+      ftemp=ihoradjust/(FTYPE)totalsize[1];
+      return(R0+pow((Rhor-R0)/pow(Rout-R0,ftemp),1.0/(1.0-ftemp)));
+    }
+    else if(bp_npow2>0){
+      return(1.2);
+    }
+    else{
+      dualfprintf(fail_file,"ihoradjust=%21.15g totalsize[1]=%d Rhor=%21.15g R0=%21.15g bp_npow=%21.15g Rout=%21.15g\n",ihoradjust,totalsize[1],Rhor,R0,bp_npow,Rout);
+      return(R0+exp( pow((totalsize[1]*pow(log(Rhor-R0),1.0/bp_npow) - ihoradjust*pow(log(Rout-R0),1.0/bp_npow))/(totalsize[1]-ihoradjust),bp_npow)));
     }
   }
   else if(defcoord == JET5COORDS){
