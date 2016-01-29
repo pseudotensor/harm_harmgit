@@ -81,7 +81,7 @@ static FTYPE ntheta,htheta,rsjet2,r0jet2,rsjet3,r0jet3; // and rs,r0
 static FTYPE cpow3;
 
 // for defcoord=BPTHIN1
-static FTYPE bp_npow,bp_r1jet,bp_njet,bp_r0jet,bp_rsjet,bp_Qjet, bp_ntheta,bp_htheta,bp_rsjet2,bp_r0jet2,bp_rsjet3,bp_r0jet3, bp_rs, bp_r0,bp_npow2,bp_cpow2,bp_rbr,bp_x1br, bp_h0; 
+static FTYPE bp_npow,bp_r1jet,bp_njet1,bp_njet,bp_r0jet,bp_rsjet,bp_Qjet, bp_ntheta,bp_htheta,bp_rsjet2,bp_r0jet2,bp_rsjet3,bp_r0jet3, bp_rs, bp_r0,bp_rsinner,bp_r0inner,bp_npow2,bp_cpow2,bp_rbr,bp_x1br, bp_h0; 
 
 // for defcoord=PULSARCOORDS
 static FTYPE hinner,houter;
@@ -409,10 +409,10 @@ void set_coord_parms_nodeps(int defcoordlocal)
 
     //radial hyperexponential grid
     //    npow2=4.0; //power exponent
-    bp_npow2=10.0; //power exponent
+    bp_npow2=5.0; //MAVARANOTE must be odd now unless I add a sign explicitly to power component this contributes to sum in exponent //10.0; //5.0; // 10.0;    // MARKNOTE set to 10.0 before using BP values //power exponent
     bp_cpow2=1.0; //exponent prefactor (the larger it is, the more hyperexponentiation is)
     //    rbr = 1E3;  //radius at which hyperexponentiation kicks in
-    bp_rbr = 5E2;  //radius at which hyperexponentiation kicks in
+    bp_rbr = 200.0;  //radius at which hyperexponentiation kicks in
 
 
 
@@ -420,53 +420,59 @@ void set_coord_parms_nodeps(int defcoordlocal)
     // GODMARK: Note njet here is overwritten by njet later, but could have been different values if setup variable names differently.
     if(0){ // first attempt
       bp_r1jet=2.8;
-      bp_njet=0.3;
+      bp_njet1=0.3;
       bp_r0jet=7.0;
       bp_rsjet=21.0;
       bp_Qjet=1.7;
     }
     else if(0){ // chosen to resolve disk then resolve jet
       bp_r1jet=2.8;
-      bp_njet=0.3;
+      bp_njet1=0.3;
       bp_r0jet=20.0;
       bp_rsjet=80.0;
       bp_Qjet=1.8;
     }
     else if(1){
       bp_r1jet=2.8;
-      bp_njet=0.3;
-      bp_r0jet=15.0;
-      bp_rsjet=40.0;
-      bp_Qjet=1.3; // chosen to help keep jet resolved even within disk region
+      bp_njet1=0.1; // MARKNOTE set to 0.3 before using BP values
+      bp_r0jet=35.0;
+      bp_rsjet=30.0;
+      bp_Qjet=1.9;//-hslope; // chosen to help keep jet resolved even within disk region
     }
 
     // for switches from normal theta to ramesh theta
-    bp_rs=40.0; // shift
-    bp_r0=20.0; // divisor
+    bp_rs=200.0; // shift
+    bp_r0=60.0; // divisor
  
+    // for switches from innermost region of disk (inside horizon) to regular disk to increase timestep set by smallest vertical cell size
+    bp_rsinner=2.0;//5.6;//4.0*Rin; //MAVARACHANGE changed from 4. and added the Rin so that the ratio bp_rsinner/r doesn't grow too large or too fast. maybe make that ratio **.5 to be even safer?
+    bp_r0inner=1.33; //maybe 1.0 is too quick? not really same problem as outer radii I suppose since it just flattens off;
+
     // for theta1
     //    hslope=0.3 ; // resolve inner-radial region near equator
-    bp_r0jet3=20.0; // divisor
-    bp_rsjet3=0.0; // subtractor
+    bp_r0jet3=200.0; // divisor
+    bp_rsjet3=0.0; //MAVARANOTE0.0; // subtractor
 
     // for theta2
-    bp_h0=0.3; // inner-radial "hslope" for theta2
+    bp_h0=0.1; // inner-radial "hslope" for theta2
     // GODMARK: Note that this overwrites above njet!
-    bp_njet=1.0; // power \theta_j \propto r^{-njet}
+    bp_njet=0.5;  // MARKNOTE set to 1.0 before using BP values // power \theta_j \propto r^{-njet}
 
 
     // see fix_3dpoledtissue.nb
-#if(0)
-    bp_ntheta=21.0;
-    bp_htheta=0.15;
+#if(0)//HIGHRES // MAVARACHANGE I choose this because bp_ntheta 5 is less than the 0 used for the thin regime for the bp study. so, 5 note extreme enough.
+    bp_ntheta=21.0; //13.0; // MAVARANOTE only use 21 for high res, use 15 for mid-res, non for low-res
+    bp_htheta=0.45; // changed from .15 to be in line with my own additions for theta-flaring
     bp_rsjet2=5.0;
     bp_r0jet2=2.0;
-#else
-    bp_ntheta=5.0;
+#endif
+#if(1) //MIDRES    note that lowres doesn't use polefix code
+    bp_ntheta=15.0;
     bp_htheta=0.15;
     bp_rsjet2=5.0;
     bp_r0jet2=2.0;
 #endif
+
 
   }
   else if (defcoordlocal == JET5COORDS) {
@@ -748,6 +754,16 @@ void set_coord_parms_deps(int defcoordlocal)
     x1br = log( rbr - R0 ) / npow;  //the corresponding X[1] value
   }
   else if (defcoordlocal == BPTHIN1) {
+
+    /////////////////////
+    //PHI GRID SETUP
+    /////////////////////
+    if( dofull2pi ) {
+      fracphi = 1;
+    }
+    else {
+      fracphi = global_fracphi;  //phi-extent measured in units of 2*PI, i.e. 0.25 means PI/2
+    }   
     bp_x1br = log( bp_rbr - R0 ) / bp_npow;  //the corresponding X[1] value
   }
   else if (defcoordlocal == JET6COORDSTHIN) {
@@ -873,7 +889,7 @@ void write_coord_parms(int defcoordlocal)
         fprintf(out,"%26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g\n",th_npow,th_r1jet,th_njet,th_r0jet,th_rsjet,th_Qjet,th_ntheta,th_htheta,th_rsjet2,th_r0jet2,th_rsjet3,th_r0jet3,th_rs,th_r0,th_npow2,th_cpow2,th_rbr,th_x1br,th_rbr,th_h0,th_njet1);
       }
       else if (defcoordlocal == BPTHIN1) {
-        fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",bp_npow,bp_r1jet,bp_njet,bp_r0jet,bp_rsjet,bp_Qjet,bp_ntheta,bp_htheta,bp_rsjet2,bp_r0jet2,bp_rsjet3,bp_r0jet3,bp_rs,bp_r0,bp_npow2,bp_cpow2,bp_rbr,bp_x1br);   // MARKTODO   add bp_h0?
+        fprintf(out,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n",bp_npow,bp_r1jet,bp_njet,bp_r0jet,bp_rsjet,bp_Qjet,bp_ntheta,bp_htheta,bp_rsjet2,bp_r0jet2,bp_rsjet3,bp_r0jet3,bp_rs,bp_r0,bp_rsinner,bp_r0inner,bp_npow2,bp_cpow2,bp_rbr,bp_x1br,fracphi);   // MARKTODO   add bp_h0? and add bp_njet1
       }
       else if (defcoordlocal == JET5COORDS) {
         fprintf(out,"%26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g\n",AAAA,AAA,BBB,DDD,ii0,CCCC,Rj);
@@ -986,7 +1002,7 @@ void read_coord_parms(int defcoordlocal)
         fscanf(in,HEADER21IN,&th_npow,&th_r1jet,&th_njet,&th_r0jet,&th_rsjet,&th_Qjet,&th_ntheta,&th_htheta,&th_rsjet2,&th_r0jet2,&th_rsjet3,&th_r0jet3,&th_rs,&th_r0,&th_npow2,&th_cpow2,&th_rbr,&th_x1br,&th_rbr,&th_h0,&th_njet1);
       }
       else if (defcoordlocal == BPTHIN1) {
-        fscanf(in,HEADER18IN,&bp_npow,&bp_r1jet,&bp_njet,&bp_r0jet,&bp_rsjet,&bp_Qjet,&bp_ntheta,&bp_htheta,&bp_rsjet2,&bp_r0jet2,&bp_rsjet3,&bp_r0jet3,&bp_rs,&bp_r0,&bp_npow2,&bp_cpow2,&bp_rbr,&bp_x1br);
+        fscanf(in,HEADER21IN,&bp_npow,&bp_r1jet,&bp_njet,&bp_r0jet,&bp_rsjet,&bp_Qjet,&bp_ntheta,&bp_htheta,&bp_rsjet2,&bp_r0jet2,&bp_rsjet3,&bp_r0jet3,&bp_rs,&bp_r0,&bp_rsinner,&bp_r0inner,&bp_npow2,&bp_cpow2,&bp_rbr,&bp_x1br,&fracphi);
       }
       else if (defcoordlocal == JET5COORDS) {
         fscanf(in,HEADER7IN,&AAAA,&AAA,&BBB,&DDD,&ii0,&CCCC,&Rj);
@@ -1171,10 +1187,13 @@ void read_coord_parms(int defcoordlocal)
     MPI_Bcast(&bp_r0jet3, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
     MPI_Bcast(&bp_rs, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
     MPI_Bcast(&bp_r0, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&bp_rsinner, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&bp_r0inner, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
     MPI_Bcast(&bp_npow2, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
     MPI_Bcast(&bp_cpow2, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
     MPI_Bcast(&bp_rbr, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
     MPI_Bcast(&bp_x1br, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
+    MPI_Bcast(&fracphi, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
   }
   else if (defcoordlocal == JET5COORDS) {
     MPI_Bcast(&AAAA, 1, MPI_FTYPE, MPIid[0], MPI_COMM_GRMHD);
@@ -1246,13 +1265,15 @@ void bl_coord(FTYPE *X, FTYPE *V)
   FTYPE BB,CC;
   FTYPE myhslope1,myhslope2,myhslope;
   FTYPE flip1,flip2;
-  FTYPE th0,th2,switch0,switch2;
+  FTYPE th0,th0toprint,th2,switch0,switch2,switchinner0,switchinner2,switchrad0,switchrad2,thetasign,x2temp;
   FTYPE r,dtheta2dx1,dtheta2dx2,dtheta0dx2,dtheta0dx1,dswitch0dr,dswitch2dr;
+  //  FTYPE th0,th2,switch0,switch2;
+  //  FTYPE r,dtheta2dx1,dtheta2dx2,dtheta0dx2,dtheta0dx1,dswitch0dr,dswitch2dr;
   FTYPE X0;
   // for defcoord=JET5COORDS
   FTYPE ii,logform,radialarctan,thetaarctan; // temp vars
   //for SJETCOORDS
-  FTYPE theexp;
+  FTYPE theexp,theexp1,theexp2;
 
 
   // AKMARK: coordinates defined, in particular, phi wedge (e.g., V[3]=2.0*M_PI*X[3])
@@ -1548,12 +1569,29 @@ void bl_coord(FTYPE *X, FTYPE *V)
     V[1] = R0+exp(pow(X[1],bp_npow)) ;
 #else
 
+#if(0)
     theexp = bp_npow*X[1];
     if( X[1] > bp_x1br ) {
       theexp += bp_cpow2 * pow(X[1]-bp_x1br,bp_npow2);
     }
     V[1] = R0+exp(theexp);
+#else
+    /*if(X[1]<bp_x1br){
+      switchrad0=0.0;
+      switchrad2=1.0;
+    }
+    else
+    {
+	switchrad0=1.0;
+	switchrad2=0.0;
+	}*/
+    switchrad0 = 0.5+1.0/M_PI*atan((X[1]-bp_x1br)*5.*10./dx[1]/totalsize[1]); //dx[1]/N1);//totalsize[1]); // switch in .nb file
+    switchrad2 = 0.5-1.0/M_PI*atan((X[1]-bp_x1br)*5.*10./dx[1]/totalsize[1]); //dx[1]~.03151/N1);//totalsize[1]); // switchi in .nb file
 
+    theexp1 = bp_npow*X[1];
+    theexp2 = theexp1+bp_cpow2 * pow(X[1]-bp_x1br,bp_npow2);
+    V[1] = (R0+exp(theexp1))*switchrad2 + (R0+exp(theexp2))*switchrad0; 
+#endif
 
     //    FTYPE npowtrue,npowlarger=10.0;
     //    FTYPE npowrs=1E3;
@@ -1575,24 +1613,51 @@ void bl_coord(FTYPE *X, FTYPE *V)
     // RAMESH BASED
     // myhslope here is h2 in MCAF paper
     // h0 here is h3 in MCAF paper
+    //if(V[1] > bp_rsjet3){
     myhslope=bp_h0 + pow( (V[1]-bp_rsjet3)/bp_r0jet3 , bp_njet);
-
+    //}
+    /*else {
+    myhslope=bp_h0;
+    }*/
     // determine theta2
     if(X[2]>1.0) myx2=2.0-X[2];
     else if(X[2]<0.0) myx2=-X[2];
     else myx2=X[2];
 
-    th2 = 0.5*M_PI*(1.0 + atan(myhslope*(myx2-0.5))/atan(myhslope*0.5));
+    th2 = M_PI*.5*(.2*(2.0*myx2-1.0) + (1.0-.2)*pow(2.0*myx2-1,3.0)+1.0);
 
     if(X[2]>1.0) th2=2.0*M_PI-th2;
     else if(X[2]<0.0) th2=-th2;
 
     // determine theta0
     // JET3COORDS-based:
-    myhslope=2.0-bp_Qjet*pow(V[1]/bp_r1jet,-bp_njet*(0.5+1.0/M_PI*atan(V[1]/bp_r0jet-bp_rsjet/bp_r0jet)));
+    //    myhslope=2.0-bp_Qjet*pow(V[1]/bp_r1jet,-bp_njet1*(0.5+1.0/M_PI*atan(V[1]/bp_r0jet-bp_rsjet/bp_r0jet)));
+    myhslope=hslope;
     // myhslope here is h0 in MCAF paper
-    th0 = M_PI * X[2] + ((1. - myhslope) * 0.5) * mysin(2. * M_PI * X[2]);
 
+
+    //    th0 = M_PI * .5 * (1. + (1.-((1. - myhslope) * 0.5))*(2.*X[2]-1.) + ((1. - myhslope) * 0.5)*pow(2.*X[2]-1.,9) ) ; // MARKTODODONE  switched to poly type from Noble+ 2010 on June 10, 2013
+    FTYPE xi=((1. - myhslope) * 0.5);
+    //  th0 = M_PI * .5 * (1. + (1.-xi)*(2.*X[2]-1.) + xi*pow(2.*X[2]-1.,9) ) ; // MARKTODODONE  switched to poly type from Noble+ 2010 on June 10, 2013
+    //switchinner0 = 0.5+1.0/M_PI*atan((V[1]-bp_rsinner)/bp_r0inner); // switch in .nb file
+    //switchinner2 = 0.5-1.0/M_PI*atan((V[1]-bp_rsinner)/bp_r0inner); // switchi in .nb file
+    
+    //th0 = M_PI * .5 * (.2*(2.0*X[2]-1.0) + (1.0-.2)*pow(2.0*X[2]-1.0,9.0)+1.) ;
+    /*
+    if(X[2]>=.5){
+      thetasign=+1.0;
+      x2temp=X[2];
+	}
+    else {
+      thetasign=-1.0;
+      x2temp=1.0-X[2];
+    }
+    */
+    th0 = M_PI * .5 * (.11875*(1.+(bp_rsinner/V[1]))*(2.0*X[2]-1.0) +(1.0-.11875*(1.+(bp_rsinner/V[1])))*pow(2.0*X[2]-1.0,9.0)+1.) ; // .1096=.1425/(1+6/20) -- .11875 is .1425/(1+4/20) --- .17 is .2/(1.+4/15.)
+    //    if(X[2]>=0.5 && (mycpupos[2]==ncpux2/2 && ncpux2>1 || ncpux2==1)) printf("at radius %21.15g and X[2] = %21.15g the diff is %21.15e\n",V[1],X[2],th0toprint);
+
+    // th0 = M_PI * .5 * (.2*(2.0*X[2]-1.0) + (1.0-.2)*pow(2.0*X[2]-1.0,9.0)+1.) ;
+    
     // determine switches (only function of radius and not x2 or theta)
     switch0 = 0.5+1.0/M_PI*atan((V[1]-bp_rs)/bp_r0); // switch in .nb file
     switch2 = 0.5-1.0/M_PI*atan((V[1]-bp_rs)/bp_r0); // switchi in .nb file
@@ -1601,16 +1666,19 @@ void bl_coord(FTYPE *X, FTYPE *V)
     theta1 = th0*switch2 + th2*switch0; // th0 is activated for small V[1] and th2 is activated at large radii.  Notice that sum of switch2+switch0=1 so normalization correct.
 
 #endif
-    
+
+#if(1)    
     // fix_3dpoledtissue.nb based:
-    theta2 = M_PI*0.5*(bp_htheta*(2.0*X[2]-1.0)+(1.0-bp_htheta)*pow(2.0*X[2]-1.0,bp_ntheta)+1.0);
+    theta2 = M_PI*0.5*(.11875*(1.+(bp_rsinner/V[1]))*(2.0*X[2]-1.0)+(1.0-.11875*(1.+(bp_rsinner/V[1])))*pow(2.0*X[2]-1.0,bp_ntheta)+1.0);
 
     // generate interpolation factor
-    arctan2 = 0.5 + 1.0/M_PI*(atan( (V[1]-bp_rsjet2)/bp_r0jet2) );
+    arctan2 = 0.5 + 1.0/M_PI*(atan( (V[1]-bp_rsjet2)/bp_r0jet2) ); // MAVARA: outside a certain radius this switches the v2 dependence from theta2 to theta1....known as interpolation. this interpolation fixes pole issue. previous involving switch0/2 involves more fundamental difference in vertical distribution.
 
     // now interpolate between them
     V[2] = theta2 + arctan2*(theta1-theta2);
-    
+#else
+    V[2] = theta1;
+#endif
 
 
     // default is uniform \phi grid
@@ -3033,7 +3101,7 @@ void set_points()
     startx[3] = 0.;
     dx[1] = (pow(log(Rout-R0),1.0/bp_npow)-pow(log(Rin-R0),1.0/bp_npow)) / totalsize[1];
     dx[2] = 1. / totalsize[2];
-    dx[3] = 1.0/totalsize[3];
+    dx[3] = fracphi/totalsize[3];
 
 #if(1)
     startx[1] = log(Rin-R0)/bp_npow;

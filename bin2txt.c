@@ -417,10 +417,12 @@ int main(
 
     NumTimes=TS;
     NumVars=numcolumns;
-    //    Nr=N3; // (whine) Avery said use N3 instead of N1
-    Nr=N2; // (whine) Avery said use N3 instead of N1 // trying
-    //    Nc=N2;  
-    Nc=N3; // trying
+    //    //    Nr=N3; // (whine) Avery said use N3 instead of N1
+    //    Nr=N2; // (whine) Avery said use N3 instead of N1 // trying
+    //    //    Nc=N2;  
+    //    Nc=N3; // trying
+    Nr=N3;
+    Nc=N2;
 
     fprintf(stderr,"NumTimes=%d  NumVars=%d Nr=%d Nc=%d\n",NumTimes,NumVars,Nr,Nc); fflush(stderr);
 
@@ -832,13 +834,16 @@ int main(
 
                   // Nl,Level, Nc,Column, then Nr,Row in speed increasingly.
                   //                  ijkvis5d=k + ((i) + (j) * N1) * N3; // so y,k,N3,Nl fastest, then x,i,N1,Nc then z,j,N2,Nr
-                  ijkvis5d=N1-1-i + ((k) + (j) * N3) * N1; // so x,i,N1,Nl fastest, then z,k,N3,Nc then y,j,N2,Nr
+                  //                  ijkvis5d=N1-1-i + ((k) + (j) * N3) * N1; // so x,i,N1,Nl fastest, then z,k,N3,Nc then y,j,N2,Nr
 
-                  ijkvis5d=N1-1-i + ((j) + (k) * N2) * N1;
+                  //                  ijkvis5d=N1-1-i + ((j) + (k) * N2) * N1;
 
 
                   //                  ijkvis5d=(N3-1-k) + ((i) + (j) * N1) * N3; // so k fastest, then i then j
                   //ijkvis5d=(i+(j+k*N2)*N1);
+
+                  ijkvis5d=(N3-1-k) + ((j) + (i) * N2) * N3;
+                  
                   
                   arrayvisf[ijkjon] = (arrayvisoutput[ijkvis5d]-a)*255.0/(b-a);
                   //              fprintf(stderr,"k=%d j=%d i=%d : var=%d : ijkjon=%d\n",k,j,i,var,ijkjon);
@@ -1213,11 +1218,17 @@ int main(
               //              ijkvis5d=k + ((i) + (j) * N1) * N3; // so y,k,N3,Nl fastest, then x,i,N1,Nc then z,j,N2,Nr
               //              ijkvis5d=N1-1-i + ((k) + (j) * N3) * N1; // so x,i,N1,Nl fastest, then z,k,N3,Nc then y,j,N2,Nr
               //              ijkvis5d=N1-1-i + ((N3-1-k) + (j) * N3) * N1; // so x,i,N1,Nl fastest, then z,k,N3,Nc then y,j,N2,Nr // so x cross y is z instead of -z
-              ijkvis5d=N1-1-i + ((j) + (k) * N2) * N1;
-
+              //              ijkvis5d=N1-1-i + ((j) + (k) * N2) * N1;
+              
 
               //              ijkvis5d=(N3-1-k) + ((i) + (j) * N1) * N3; // so k fastest, then i then j
               //ijkvis5d=(i+(j+k*N2)*N1);
+
+
+              //              ijkvis5d=N1-1-i + ((j) + (k) * N2) * N1;
+              
+              ijkvis5d=N1-1-i + ((k) + (j) * N3) * N1;
+
               arrayvisoutput[ijkvis5d]=(arrayvisf[ijkjon]/255.0)*(b-a)+a;
 
               // DEBUG:

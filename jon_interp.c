@@ -693,6 +693,9 @@ static void readdata_preprocessdata(void)
         defaultvalue[14]=0.0; // posr
         defaultvalue[15]=0.0; // posh
         defaultvalue[16]=0.0; // posph
+        defaultvalue[17]=0.0; // posx
+        defaultvalue[18]=0.0; // posy
+        defaultvalue[19]=0.0; // posz
       }
       else if(DATATYPE==19){ // then select per output variable
         for(coli=0;coli<numoutputcols;coli++) defaultvalue[coli]=0.0; // default
@@ -928,7 +931,7 @@ void apply_boundaryconditions_olddata_cleanpole(int numcols, int oN0local, int n
     // skip non-simulation data things so don't smooth (e.g.) spatial position information
     if(DATATYPE==16 && coli==7) continue;
     if(DATATYPE==17 && coli==7) continue;
-    if(DATATYPE==18 && (coli==7 || coli==14 || coli==15 || coli==16) ) continue;
+    if(DATATYPE==18 && (coli==7 || coli==14 || coli==15 || coli==16 || coli==17 || coli==18 || coli==19 ) ) continue;
     if(DATATYPE==19 && (coli==7 || coli==14 || coli==15 || coli==16) ) continue;
     
 
@@ -2635,7 +2638,7 @@ void interpret_commandlineresults_subpart1(void)
       outputvartype=18;
       immediateoutput=0;
       vectorcomponent=-1;
-      numoutputcols=17;
+      numoutputcols=17+3;
     }
     else if(DATATYPE==19){
       fprintf(stderr,"input field line file with radiation and output a few things\n");

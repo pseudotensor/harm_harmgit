@@ -1000,6 +1000,10 @@ static int compute_datatype15(int outputvartypelocal, FTYPE *val, FTYPE *fvar, i
     fvar[14]=V[1]; // spherical polar radius r
     fvar[15]=V[2]; // spherical polar angle \theta = 0..\pi
     fvar[16]=V[3]; // spherical polar angle \phi = 0..2\pi
+    fvar[17]=V[1]*sin(V[2])*cos(V[3]); // x
+    fvar[18]=V[1]*sin(V[2])*sin(V[3]); // y
+    fvar[19]=V[1]*cos(V[2]); // z
+
   }
   else if(outputvartypelocal==19){
     fvar[0]=rho; // rest-mass density
