@@ -716,7 +716,7 @@ int diag_fixup_allzones(FTYPE (*pf)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTOR
         //      if(plfl<SMALL) plfl=SMALL;
 
         FTYPE plflfinal = plfl + dpl;
-        if(1&&(mapvar==YFL2 || mapvar==YFL4)){ // just energy densities.  Can't apply to angular momenta that can be any sign.  Could apply to density, but doesn't seem to need it.
+        if(0&&(mapvar==YFL2 || mapvar==YFL4)){ // just energy densities.  Can't apply to angular momenta that can be any sign.  Could apply to density, but doesn't seem to need it.
           // at least for non-densities, especially energy densities, having near 0 or negative values leads to an instability and crazy run-away in the values due to fluxes.
           // So won't be able to track losses of energy, only gains, unless split gains and losses.
           // Or maybe need floor at t=0 at least so that not dealing with crazy small values?
@@ -1778,7 +1778,7 @@ int fixup_checksolution(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR],int finals
 // Also, during failure, can't assume mass can be so easily conserved and D might be bad
 // So disable for now
 // enable for finalstep for YFL, but for RHO causes high gamma fixed in regions, so disable for that
-#define DO_CONSERVE_D_INFAILFIXUPS (finalstep==1 && (SCALARPL(pl))) // not pl==RHO
+#define DO_CONSERVE_D_INFAILFIXUPS (0&&finalstep==1 && (SCALARPL(pl))) // not pl==RHO
 
 #define HANDLEUNEG 0
 // seems to keep failing with this, so probably treating u<zerouuperbaryon*prim[RHO] like failure is better idea
