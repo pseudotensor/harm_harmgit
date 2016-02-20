@@ -11645,7 +11645,7 @@ int prad_fftolab(int *whichvel, int *whichcoord, int i, int j, int k, int loc, s
         DLOOP(jj,kk) dualfprintf(fail_file,"jj=%d kk=%d gcov=%g gcon=%g\n",jj,kk,ptrgeomtouse->gcov[GIND(jj,kk)],ptrgeomtouse->gcon[GIND(jj,kk)]);
         PLOOP(pliter,pl) dualfprintf(fail_file,"pl=%d pout=%g\n",pl,pout[pl]);
       }
-      if(lpflag==UTOPRIMNOFAIL && lpflagrad==UTOPRIMRADFAILERFNEG){
+      if(lpflag==UTOPRIMNOFAIL && (lpflagrad==UTOPRIMRADFAILERFNEG || lpflagrad==UTOPRIMRADFAILGAMMAHIGH) ){
         // then probably not really failure, just have high ERADLIMIT for other reasons.
       }
       else{
