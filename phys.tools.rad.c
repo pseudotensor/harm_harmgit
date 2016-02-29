@@ -10475,7 +10475,9 @@ void calc_Tandopacityandemission(FTYPE *pr, struct of_geom *ptrgeom, struct of_s
   // get opacities
   //  calc_kappaall_user(rho,B,*Tgas,*Tradff,*expfactorradff,xx,yy,zz, kappa, kappaemit, kappan, kappanemit, kappaes);
 
+#if(EOMRADTYPE!=EOMRADNONE)
   kappa_func_fits_all(rho, B, *Tgas, *Tradff, *expfactorradff, kappa, kappaemit, kappan, kappanemit, kappaes);
+#endif
 
 
   // energy density loss rate integrated over frequency and solid angle, based upon those processes written as an opacity
