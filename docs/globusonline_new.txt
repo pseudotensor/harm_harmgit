@@ -400,22 +400,33 @@ done
 ssh pseudotensor@cli.globusonline.org transfer -s 1 < ~/globus1.txt
 
 
+
+
+
+
 ############## new ranch to nautilus/Stampede
 # BEGIN
 
 1) On ranch:
 
-extradir="/"
-tp="rads"
-dir="/home/01014/tg802609/"
-cd $dir
-list=`ls | grep rad | grep -v listrads`
+#extradir="/"
+#tp="rads"
+#dir="/home/01014/tg802609/"
+#cd $dir
+#list=`ls | grep rad | grep -v listrads`
+
+#extradir="/"
+#tp="radtma0.8"
+#dir="/home/01014/tg802609/"
+#cd $dir
+#list=`ls | grep $tp | grep -v list$tp`
 
 extradir="/"
-tp="radtma0.8"
+tp="tilt"
 dir="/home/01014/tg802609/"
 cd $dir
-list=`ls | grep $tp | grep -v list$tp`
+list=`ls | egrep 'sashaa99t|sasha9b100t|sasham9full2pit|sashalowa99t|sashalowlowa99t|thickdiskfull3d7' | grep -v out  | grep -v err | grep -v old | grep -v bad`
+
 
 #extradir="thickdisk7"
 #tp="td7"
@@ -430,7 +441,7 @@ list=`ls | grep $tp | grep -v list$tp`
 #extradir=""
 #tp="sasha99"
 #cd /home/01014/tg802609/${extradir}/ # location where happen to have all files..blah
-#list=`ls | egrep 'sasha99\.' | grep -v tar | grep -v '\.txt' | grep -v '\.avi' | grep -v '\.sh' | grep -v 'dirslists'`
+#list=`ls | egrep 'sasha99\.' | grep -v tar | grep -v '\.txt' | grep -v '\.avi' | grep -v '\.sh' | grep -v 'dirslists' | grep -v tgz`
 
 # on stampede
 extradir=""
@@ -463,10 +474,11 @@ for fil in `cat ~/list${tp}_all.txt` ; do stage $fil ; done
 2) On Nautilus or Stampede or bh06
 
 #tp="rads"
-tp="radtma0.8"
+#tp="radtma0.8"
 #tp="radt"
 #tp="sa0.99t0.6"
 #tp="sasha99"
+tp="tilt"
 
 scp tg802609@ranch.tacc.utexas.edu:list${tp}_all.txt ~/
 
@@ -498,6 +510,15 @@ do
 done
 
 #####
+# on bh05 for ranch->bh05
+rm -rf ~/globus1${tp}.bh05.txt
+for fil in `cat ~/list${tp}_all.txt`
+do
+    newname=`echo $fil | sed 's/\/home\/01014\/tg802609\//\/mnt\/data0\/user\//'`
+    echo "xsede#ranch$fil pseudotensor#bh05$newname " >> ~/globus1${tp}.bh05.txt
+done
+
+#####
 # on pfe for pfe->bh06
 rm -rf ~/globus1${tp}.txt
 for fil in `cat ~/list${tp}_all.txt`
@@ -511,6 +532,8 @@ done
 ssh pseudotensor@cli.globusonline.org transfer -s 1 < ~/globus1${tp}.txt
 
 ssh pseudotensor@cli.globusonline.org transfer -s 1 < ~/globus1${tp}.bh06.txt
+
+ssh pseudotensor@cli.globusonline.org transfer -s 1 < ~/globus1${tp}.bh05.txt
 
 
 3) When done copying, then need to make links
