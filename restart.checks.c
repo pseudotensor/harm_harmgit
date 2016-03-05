@@ -64,13 +64,13 @@ static int restart_init_point_check_pglobal(int which, int i, int j, int k)
       if(SCALARPL(pl)){
         dualfprintf(fail_file,"scalar went nan, reset to floor: pl=%d\n",pl);
         GLOBALMACP0A1(pglobal,i,j,k,pl)=NUMEPSILON;
-      }
-      else{
-        // myexit(24968346);
-        gotnan++;
-      }
-    }
-  }
+      } 
+     else {
+     // myexit(24968346);
+      gotnan++;
+   }
+   }
+   }
 
   return(gotnan);
 

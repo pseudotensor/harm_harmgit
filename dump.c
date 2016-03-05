@@ -1206,11 +1206,11 @@ extern void set_fieldline_content_dnumcolumns_dnumversion(int *numcolumnsvar, in
 /// CHANGES alot, make sure # is correct!
 /// Add 4 radiation terms if doing radiation
 #if( FIELDLINEGDETB == 1)
-#define NUMFIELDLINEQUANTITIES (14-2 + NUMYFL*(DOYFL!=0) + (DOYL!=0) + (DOYNU!=0) + (1+NDIM+11)*(EOMRADTYPE!=EOMRADNONE))
+#define NUMFIELDLINEQUANTITIES (14-2 + NUMYFL*(DOYFL!=0) + (DOYL!=0) + (DOYNU!=0) + (1+NDIM+10)*(EOMRADTYPE!=EOMRADNONE))
 /// rho, u, <yfl,yl,ynu>, u^t, v1,v2,v3,B1,B2,B3 <gdetB1,gdetB2,gdetB3>
 /// radiation adds: vrad1,vrad2,vrad3
 #else
-#define NUMFIELDLINEQUANTITIES (11-2 + NUMYFL*(DOYFL!=0) + (DOYL!=0) + (DOYNU!=0) + (1+NDIM+11)*(EOMRADTYPE!=EOMRADNONE))
+#define NUMFIELDLINEQUANTITIES (11-2 + NUMYFL*(DOYFL!=0) + (DOYL!=0) + (DOYNU!=0) + (1+NDIM+10)*(EOMRADTYPE!=EOMRADNONE))
 /// rho, u, <yfl,yl,ynu>, u^t, v1,v2,v3,B1,B2,B3
 /// radiation adds: vrad1,vrad2,vrad3
 #endif
@@ -1463,18 +1463,16 @@ int fieldline_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
     FTYPE B=sqrt(bsq);
 
     FTYPE nradff=0;
-    FTYPE expfactorradff=0;
     FTYPE kappa,kappan=0;
     FTYPE kappaemit,kappanemit=0;
     FTYPE kappaes;
     FTYPE lambda,nlambda=0;
     FTYPE Tgas=0,Tradff=0;
-    calc_Tandopacityandemission(pr,ptrgeom,&q,Ruu,gammaradgas,B,&Tgas,&Tradff,&nradff,&expfactorradff,&kappa,&kappan,&kappaemit,&kappanemit,&kappaes, &lambda, &nlambda);
+    calc_Tandopacityandemission(pr,ptrgeom,&q,Ruu,gammaradgas,B,&Tgas,&Tradff,&nradff,&kappa,&kappan,&kappaemit,&kappanemit,&kappaes, &lambda, &nlambda);
 
     myset(datatype,&Tgas,0,1,writebuf); // 1
     myset(datatype,&Tradff,0,1,writebuf); // 1
     myset(datatype,&nradff,0,1,writebuf); // 1
-    myset(datatype,&expfactorradff,0,1,writebuf); // 1
     myset(datatype,&kappa,0,1,writebuf); // 1
     myset(datatype,&kappan,0,1,writebuf); // 1
     myset(datatype,&kappaemit,0,1,writebuf); // 1
@@ -1821,7 +1819,7 @@ void set_raddump_content_dnumcolumns_dnumversion(int *numcolumnsvar, int *numver
 {
 
   if(EOMRADTYPE!=EOMRADNONE && DORADDIAG){
-    *numcolumnsvar=NDIM*5 + 6 + 9 + NDIM+1 + 4*3;
+    *numcolumnsvar=NDIM*2 + NDIM+1 + NDIM + NDIM*2 + 1*14 + 4*3;
   }
   else{
     *numcolumnsvar=0;
@@ -1932,15 +1930,13 @@ int raddump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
   // get absorption opacities
   //  FTYPE Tgas;
   FTYPE nradff=0;
-  FTYPE expfactorradff=0;
   FTYPE kappa,kappan=0;
   FTYPE kappaemit,kappanemit=0;
   FTYPE kappaes;
   FTYPE lambda,nlambda=0;
-  calc_Tandopacityandemission(pr,ptrgeom,&q,Ruu,gammaradgas,B,&Tgas,&Tradff,&nradff,&expfactorradff,&kappa,&kappan,&kappaemit,&kappanemit,&kappaes, &lambda, &nlambda);
+  calc_Tandopacityandemission(pr,ptrgeom,&q,Ruu,gammaradgas,B,&Tgas,&Tradff,&nradff,&kappa,&kappan,&kappaemit,&kappanemit,&kappaes, &lambda, &nlambda);
 
   myset(datatype,&nradff,0,1,writebuf); // 1
-  myset(datatype,&expfactorradff,0,1,writebuf); // 1
   myset(datatype,&kappa,0,1,writebuf); // 1
   myset(datatype,&kappan,0,1,writebuf); // 1
   myset(datatype,&kappaemit,0,1,writebuf); // 1

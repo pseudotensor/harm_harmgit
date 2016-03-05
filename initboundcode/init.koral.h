@@ -146,12 +146,6 @@
 #undef N3
 #endif
 
-
-
-
-
-
-
 //****************************************//
 //****************************************//
 //****************************************//
@@ -175,9 +169,6 @@
 //#define WENO_USE_LIM_PRIM_CORRECTION_FOR_FLUX_LIMITING 1
 #define WENO_USE_PRIM_REDUCTION 1
 #define LIMIT_FLUXC2A_PRIM_CHANGE 0
-
-
-
 
 #define ALLOWMETRICROT 0 // WALD->1
 #if(ALLOWMETRICROT==1)
@@ -215,7 +206,7 @@
 #define MAILWHENDONE 1
 #define MAILFROMREMOTE 0
 #define REMOTEHOST "relativity.cfa.harvard.edu"
-#define EMAILADDRESS "jmckinney@cfa.harvard.edu"
+#define EMAILADDRESS "moralesd@umd.edu"
 #define EMAILMESSAGE "Done with GRMHD run DEFAULT"
 #define PERFTEST 0
 #define DOAVG 0
@@ -543,6 +534,7 @@ struct Ccoordparams {
 #define DONUTOHSUGA 2
 #define DONUTTHINDISK 3
 #define DONUTTHINDISK2 4
+#define DONUTTHINDISK3 5
 
 
 ////////////////
@@ -638,7 +630,7 @@ struct Ccoordparams {
 
 #define N1 20
 #define N2 20
-#define N3 1
+#define N3 8 
 
 #define MCOORD CARTMINKMETRIC2
 
@@ -1055,7 +1047,7 @@ struct Ccoordparams {
 
 #define N1 30
 #define N2 30
-#define N3 1
+#define N3 1 
 
 // can choose any spherical polar coordinate system
 //#define MCOORD SPCMINKMETRIC

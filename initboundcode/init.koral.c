@@ -1,4 +1,4 @@
-// GODMARK: With WALD, symmetry and noise and high bsq/rho
+
 
 /*! \file init.koral.c
      \brief USER initial conditions for Koral/RAD simulations
@@ -50,15 +50,13 @@ FTYPE TILTWALD;
 
 //FTYPE thindiskrhopow=-3.0/2.0; // can make steeper like -0.7
 //FTYPE thindiskrhopow=-0.2; // closer to NT73
-FTYPE thindiskrhopow=-0.6; // closer to thick disk // SUPERMADNEW
+FTYPE thindiskrhopow=-0.5; // closer to thick disk // SUPERMADNEW # -1 so Qmri constant vs. radius.
 
 FTYPE normglobal;
 int inittypeglobal; // for bounds to communicate detail of what doing
 
 #define SLOWFAC 1.0  /* reduce u_phi by this amount */
 #define MAXPASSPARMS 10
-
-// GODMARK: Thetarot. see whats in init that overwrites restart input.  You might need to set THETAROT directly in
 
 //#define THETAROTMETRIC (0.5*0.7)
 //#define USER_THETAROTMETRIC (M_PI*0.25)
@@ -317,13 +315,13 @@ int pre_init_specific_init(void)
 {
   // defaults
   //  h_over_r=0.3;
-  h_over_r=0.2;
+  h_over_r=0.1;
   h_over_r_jet=2.0*h_over_r;
 
   if(WHICHPROBLEM==RADDONUT){
-    if(RADNT_DONUTTYPE==DONUTTHINDISK||RADNT_DONUTTYPE==DONUTTHINDISK2){
+    if(RADNT_DONUTTYPE==DONUTTHINDISK||RADNT_DONUTTYPE==DONUTTHINDISK2||RADNT_DONUTTYPE==DONUTTHINDISK3){
       //      h_over_r=0.02;
-      h_over_r=0.2; // SUPERMADNEW
+      h_over_r=0.1; // SUPERMADNEW
     }
     else{
       h_over_r=0.2;
@@ -416,7 +414,7 @@ int post_init_specific_init(void)
   // print out units and some constants
   trifprintf("Constants\n");
   trifprintf("LBAR=%g TBAR=%g VBAR=%g RHOBAR=%g MBAR=%g UBAR=%g TEMPBAR=%g\n",LBAR,TBAR,VBAR,RHOBAR,MBAR,UBAR,TEMPBAR); 
-  trifprintf("ARAD_CODE=%26.20g OPACITYBAR=%g\n",ARAD_CODE,OPACITYBAR);
+  trifprintf("ARAD_CODE=%26.20g OPACITYBAR=%g KAPPA_ES_CODE(1,1)=%g KAPPA_FF_CODE(1,1,1)=%g KAPPA_BF_CODE(1,1,1)=%g KAPPA_GENFF_CODE(1,1)=%g\n",ARAD_CODE,OPACITYBAR,KAPPA_ES_CODE(1,1),KAPPA_FF_CODE(1,1,1),KAPPA_BF_CODE(1,1,1),KAPPA_GENFF_CODE(1,1,1));
   trifprintf("ARAD_CODE_DEF=%g\n",ARAD_CODE_DEF);
   trifprintf("GAMMAMAXRAD=%g\n",GAMMAMAXRAD);
 
@@ -487,9 +485,7 @@ int init_global(void)
   funreturn=user1_init_global();
   if(funreturn!=0) return(funreturn);
 
-
   init_defcoord(); // just avoids splitting function call, here sets a
-
 
   // default
   ARAD_CODE=ARAD_CODE_DEF;
@@ -697,7 +693,7 @@ int init_global(void)
 
     // 1,2,3,31,4,41,5
     //#define NTUBE 1
-#define NTUBE 31 // harder near t=0 at discontinuity
+    #define NTUBE 31 // harder near t=0 at discontinuity
     //#define NTUBE 5
     //#define NTUBE 3
 
@@ -881,7 +877,7 @@ int init_global(void)
     //    cour=0.5;
     // cour=0.2; // doesn't seem to help avoid failures for this test
 
-    a=0.0; // no spin in case use MCOORD=KSCOORDS
+  //  a=0.0; // no spin in case use MCOORD=KSCOORDS
 
     if(!(ISSPCMCOORDNATIVE(MCOORD))){
       dualfprintf(fail_file,"Must choose MCOORD (currently %d) to be spherical polar grid type for RADBEAM2D\n",MCOORD);
@@ -951,7 +947,7 @@ int init_global(void)
     //    cour=0.5;
 
 
-    a=0.0; // no spin in case use MCOORD=KSCOORDS
+  //  a=0.0; // no spin in case use MCOORD=KSCOORDS
 
     if(!(ISSPCMCOORDNATIVE(MCOORD))){
       dualfprintf(fail_file,"Must choose MCOORD (currently %d) to be spherical polar grid type for RADBEAM2DKSVERT\n",MCOORD);
@@ -1017,7 +1013,7 @@ int init_global(void)
       myexit(3434628752);
     }
 
-    a=0.0; // no spin in case use MCOORD=KSCOORDS
+ //   a=0.0; // no spin in case use MCOORD=KSCOORDS
     gam=gamideal=1.4;
     cooling=KORAL;
     ARAD_CODE=0.0;
@@ -1068,7 +1064,7 @@ int init_global(void)
       myexit(3434628753);
     }
 
-    a=0.0; // no spin in case use MCOORD=KSCOORDS
+  //  a=0.0; // no spin in case use MCOORD=KSCOORDS
     gam=gamideal=1.4;
     cooling=KORAL;
     //    ARAD_CODE=0.0;
@@ -2021,7 +2017,7 @@ int init_global(void)
       myexit(3434628752);
     }
 
-    a=0.0; // no spin in case use MCOORD=KSCOORDS
+ //   a=0.0; // no spin in case use MCOORD=KSCOORDS
     cooling=KORAL;
     // ARAD_CODE=ARAD_CODE_DEF*1E5; // tuned so radiation energy flux puts in something much higher than ambient, while initial ambient radiation energy density lower than ambient gas internal energy.
 
@@ -2097,7 +2093,7 @@ int init_global(void)
     //    lim[1]=lim[2]=lim[3]=MINM; // NTUBE=1 has issues near cusp, so use MINM
     //    cour=0.5;
 
-    a=0.0; // no spin in case use MCOORD=KSCOORDS
+ //   a=0.0; // no spin in case use MCOORD=KSCOORDS
     gam=gamideal=4.0/3.0;
     cooling=KORAL;
     ARAD_CODE=ARAD_CODE_DEF*1E-20; // tuned so radiation energy flux puts in something much higher than ambient, while initial ambient radiation energy density lower than ambient gas internal energy.
@@ -2169,7 +2165,7 @@ int init_global(void)
 
     /////////////////////////////////
     // DONUT selections
-    RADNT_DONUTTYPE=DONUTTHINDISK2; // SUPERMADNEW
+    RADNT_DONUTTYPE=DONUTTHINDISK3; // SUPERMADNEW
     //RADNT_DONUTTYPE=DONUTOLEK;
     //RADNT_DONUTTYPE=DONUTOHSUGA;
     RADDONUT_OPTICALLYTHICKTORUS=1; // otherwise, pressure only from gas.
@@ -2181,7 +2177,7 @@ int init_global(void)
     FTYPE gamtorus;
 
   if(WHICHPROBLEM==RADDONUT){
-    if(RADNT_DONUTTYPE==DONUTTHINDISK||RADNT_DONUTTYPE==DONUTTHINDISK2){
+    if(RADNT_DONUTTYPE==DONUTTHINDISK||RADNT_DONUTTYPE==DONUTTHINDISK2||RADNT_DONUTTYPE==DONUTTHINDISK3){
       // NOTEMARK: SUPERNOTE: Should set njet=0.0 in coord.c for thin disk.
       // NOTEMARK: Also choose npow=4.0;
       // NOTEMARK: Choose rbr=1E2;
@@ -2190,7 +2186,7 @@ int init_global(void)
       // NOTEMARK: h0=0.1 instead of h0=0.3
       // NOTEMARK: Force only theta1=th0;
       //      h_over_r=0.1;
-      h_over_r=0.2;// SUPERMADNEW
+      h_over_r=0.1;// SUPERMADNEW
       h_over_r_jet=2.0*h_over_r;
     }
     if(RADNT_DONUTTYPE==DONUTOLEK || RADNT_DONUTTYPE==DONUTOHSUGA){
@@ -2209,7 +2205,7 @@ int init_global(void)
     // DONUT TYPE and PARAMETERS
     //////////////////////////////////
 
-    if(RADNT_DONUTTYPE==DONUTTHINDISK || RADNT_DONUTTYPE==DONUTTHINDISK2){
+    if(RADNT_DONUTTYPE==DONUTTHINDISK || RADNT_DONUTTYPE==DONUTTHINDISK2||RADNT_DONUTTYPE==DONUTTHINDISK3){
       RADDONUT_OPTICALLYTHICKTORUS=1; // otherwise, pressure only from gas.
       if(RADDONUT_OPTICALLYTHICKTORUS==1) gamtorus=4.0/3.0; // then should be as if gam=4/3 so radiation supports torus properly at t=0
       else gamtorus=gam;
@@ -2218,26 +2214,54 @@ int init_global(void)
         RADNT_RHODONUT=1E-2;
         RADNT_RHODONUT*=40.0;
  
+        int set_fieldtype(void);
+        int FIELDTYPE=set_fieldtype();
+
  
         if(a==0.8 && FIELDTYPE==FIELDJONMAD){
+          trifprintf("Condition=1%21.15g\n",1);
           RADNT_RHODONUT/=(2.0*138.0);
           RADNT_RHODONUT/=(2.8); // Mdot\sim 135Ledd/c^2
           RADNT_RHODONUT*=(4.4); // Mdot\sim 135Ledd/c^2
           RADNT_RHODONUT*=(3.75); // Mdot\sim 135Ledd/c^2
         }
+
+        trifprintf("spin=%g",a);
+        trifprintf("FIELD=%g",FIELDTYPE);
+        trifprintf("Jon=%g",FIELDJONMAD);
+        if(a==0.5 && FIELDTYPE==FIELDJONMAD){  //Danilo
+          trifprintf("Condition=2%21.15g\n",2);
+          RADNT_RHODONUT/=(2.0*138.0);
+          RADNT_RHODONUT/=(2.8); // Mdot\sim 135Ledd/c^2
+          RADNT_RHODONUT*=(4.4); // Mdot\sim 135Ledd/c^2
+          RADNT_RHODONUT*=(3.75); // Mdot\sim 135Ledd/c^2
+          RADNT_RHODONUT/=(143.0); // Mdot\sim 0.3Ledd/c^2
+          RADNT_RHODONUT/=(3.);
+          RADNT_RHODONUT*=(195.12195); //RIAF-beta60-2
+          RADNT_RHODONUT/=(2.82);
+          RADNT_RHODONUT/=(1.02);
+          //RADNT_RHODONUT/=(1.003);
+          trifprintf("After Conditionals: RADNT_RHODONUT=%21.15g\n",RADNT_RHODONUT);
+        }
+
         if(a==0.8 && FIELDTYPE!=FIELDJONMAD){
+          trifprintf("Condition=3%21.15g\n",3);
           RADNT_RHODONUT/=(33.0);
           RADNT_RHODONUT/=(2.7); // Mdot\sim 135Ledd/c^2
           RADNT_RHODONUT*=(2.6); // Mdot\sim 135Ledd/c^2
           RADNT_RHODONUT*=(1.4); // Mdot\sim 135Ledd/c^2
         }
+
         if(a==0.0 && FIELDTYPE==FIELDJONMAD){
+          trifprintf("Condition=4%21.15g\n",4);
           RADNT_RHODONUT/=(2.0*138.0);
           RADNT_RHODONUT/=(2.8); // Mdot\sim 135Ledd/c^2
           RADNT_RHODONUT*=(3.9); // Mdot\sim 135Ledd/c^2
           RADNT_RHODONUT*=(1.8); // Mdot\sim 135Ledd/c^2
         }
+
         if(a==0.0 && FIELDTYPE!=FIELDJONMAD){
+          trifprintf("Condition=5%21.15g\n",5);
           RADNT_RHODONUT/=(33.0);
           RADNT_RHODONUT/=(12.5); // Mdot\sim 135Ledd/c^2
           RADNT_RHODONUT*=(1.4); // Mdot\sim 135Ledd/c^2
@@ -2337,7 +2361,7 @@ int init_global(void)
     // need external radiation energy density to be lower than interior of torus, else drives photons into torus from overpressured atmosphere and is more difficult to evolve.
     //    RADNT_TRADATMMIN = 1.e9/TEMPBAR;
 
-    trifprintf("RADNT_RHODONUT=%g RADNT_RHOATMMIN=%g RADNT_RHOATMMIN=%g RADNT_UINTATMMIN=%g RADNT_ERADATMMIN=%g\n",RADNT_RHODONUT,RADNT_RHOATMMIN,RADNT_RHOATMMIN,RADNT_UINTATMMIN,RADNT_ERADATMMIN);
+    trifprintf("RADNT_RHOATMMIN=%g RADNT_RHOATMMIN=%g RADNT_UINTATMMIN=%g RADNT_ERADATMMIN=%g RADNT_RHODONUT=%g \n",RADNT_RHOATMMIN,RADNT_RHOATMMIN,RADNT_UINTATMMIN,RADNT_ERADATMMIN,RADNT_RHODONUT);
 
 
 
@@ -2469,9 +2493,9 @@ int init_global(void)
 
     // tf = 100*DTdumpgen[0]; // 100 dumps(?)
     //    tf = 2000*DTdumpgen[0]; // koral in default setup does 1000 dumps
-    tf = 1E5;
+    tf = 1e5; //Danilo-Time
 
-    if(DOWALDDEN) tf=400.0;
+    if(DOWALDDEN) tf=1e5;
 
     //    DODIAGEVERYSUBSTEP = 1;
 
@@ -2571,8 +2595,6 @@ int init_global(void)
       BCtype[X3UP]=PERIODIC;
       BCtype[X3DN]=PERIODIC;
     }
-
-
     
     ////////////
     // DUMP PERIODS
@@ -2584,8 +2606,8 @@ int init_global(void)
     for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=1.0;
     //for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=10.0;
     
-    tf = 200000;
-
+   // tf = 200000;
+      tf = 1e5; //Danilo-Time
     //    DODIAGEVERYSUBSTEP = 1;
 
     //    if(WHICHPROBLEM==RADDONUT) DODIAGEVERYSUBSTEP = 1;
@@ -2596,13 +2618,6 @@ int init_global(void)
   /*************************************************/
   /*************************************************/
   /*************************************************/
-
-
-
-
-
-
-
 
   return(0);
 
@@ -2632,7 +2647,7 @@ int init_defcoord(void)
   /*************************************************/
   /*************************************************/
   if(WHICHPROBLEM==FLATNESS){
-    a=0.0; // no spin in case use MCOORD=KSCOORDS
+    //a=0.0; // no spin in case use MCOORD=KSCOORDS
 
     defcoord = UNIFORMCOORDS;
     Rin_array[1]=0;
@@ -2650,7 +2665,7 @@ int init_defcoord(void)
   /*************************************************/
 
   if(WHICHPROBLEM==RADPULSE || WHICHPROBLEM==RADPULSEPLANAR){
-    a=0.0; // no spin in case use MCOORD=KSCOORDS
+   // a=0.0; // no spin in case use MCOORD=KSCOORDS
 
     defcoord = UNIFORMCOORDS;
     Rin_array[1]=-50.0; 
@@ -2668,7 +2683,7 @@ int init_defcoord(void)
   /*************************************************/
 
   if(WHICHPROBLEM==RADPULSE3D){
-    a=0.0; // no spin in case use MCOORD=KSCOORDS
+    //a=0.0; // no spin in case use MCOORD=KSCOORDS
 
     defcoord = UNIFORMCOORDS;
     Rin_array[1]=-50.0; 
@@ -2684,7 +2699,7 @@ int init_defcoord(void)
   /*************************************************/
   /*************************************************/
   if(WHICHPROBLEM==RADBEAMFLAT){
-    a=0.0; // no spin in case use MCOORD=KSCOORDS
+    //a=0.0; // no spin in case use MCOORD=KSCOORDS
 
     defcoord = UNIFORMCOORDS;
     Rin_array[1]=0;
@@ -2700,7 +2715,7 @@ int init_defcoord(void)
   /*************************************************/
   /*************************************************/
   if(WHICHPROBLEM==RADTUBE){
-    a=0.0; // no spin in case use MCOORD=KSCOORDS
+   // a=0.0; // no spin in case use MCOORD=KSCOORDS
 
     if(NTUBE==5){
       defcoord = UNIFORMCOORDS;
@@ -2727,7 +2742,7 @@ int init_defcoord(void)
   /*************************************************/
   /*************************************************/
   if(WHICHPROBLEM==RADSHADOW){
-    a=0.0; // no spin in case use MCOORD=KSCOORDS
+    //a=0.0; // no spin in case use MCOORD=KSCOORDS
 
     defcoord = UNIFORMCOORDS;
     Rin_array[1]=-1.0;
@@ -2743,7 +2758,7 @@ int init_defcoord(void)
   /*************************************************/
   /*************************************************/
   if(WHICHPROBLEM==RADDBLSHADOW){
-    a=0.0; // no spin in case use MCOORD=KSCOORDS
+    //a=0.0; // no spin in case use MCOORD=KSCOORDS
 
     defcoord = UNIFORMCOORDS;
     Rin_array[1]=-6.0;
@@ -2759,7 +2774,7 @@ int init_defcoord(void)
   /*************************************************/
   /*************************************************/
   if(WHICHPROBLEM==RADBEAM2D || WHICHPROBLEM==RADBEAM2DKS){
-    a=0.0; // no spin in case use MCOORD=KSCOORDS
+    //a=0.0; // no spin in case use MCOORD=KSCOORDS
 
     defcoord = UNIFORMCOORDS;
     Rin_array[1]=0;
@@ -2802,7 +2817,7 @@ int init_defcoord(void)
   /*************************************************/
   /*************************************************/
   if(WHICHPROBLEM==RADBEAM2DKSVERT){
-    a=0.0; // no spin in case use MCOORD=KSCOORDS
+    //a=0.0; // no spin in case use MCOORD=KSCOORDS
 
     defcoord = UNIFORMCOORDS;
     Rin_array[1]=0;
@@ -2853,7 +2868,7 @@ int init_defcoord(void)
   /*************************************************/
   /*************************************************/
   if(WHICHPROBLEM==ATMSTATIC){
-    a=0.0; // no spin in case use MCOORD=KSCOORDS
+    //a=0.0; // no spin in case use MCOORD=KSCOORDS
 
     defcoord = UNIFORMCOORDS;
  
@@ -2871,7 +2886,7 @@ int init_defcoord(void)
   /*************************************************/
   /*************************************************/
   if(WHICHPROBLEM==RADATM){
-    a=0.0; // no spin in case use MCOORD=KSCOORDS
+    //a=0.0; // no spin in case use MCOORD=KSCOORDS
 
     defcoord = UNIFORMCOORDS;
  
@@ -2890,7 +2905,7 @@ int init_defcoord(void)
   /*************************************************/
   /*************************************************/
   if(WHICHPROBLEM==RADWALL){
-    a=0.0; // no spin in case use MCOORD=KSCOORDS
+    //a=0.0; // no spin in case use MCOORD=KSCOORDS
 
     defcoord = UNIFORMCOORDS;
     Rin_array[1]=-6;
@@ -2906,7 +2921,7 @@ int init_defcoord(void)
   /*************************************************/
   /*************************************************/
   if(WHICHPROBLEM==RADWAVE){
-    a=0.0; // no spin in case use MCOORD=KSCOORDS
+    //a=0.0; // no spin in case use MCOORD=KSCOORDS
 
     defcoord = UNIFORMCOORDS;
     Rin_array[1]=0;
@@ -2922,9 +2937,9 @@ int init_defcoord(void)
   /*************************************************/
   /*************************************************/
   /*************************************************/
-#if(WHICHPROBLEM==KOMIPROBLEM)
+ #if(WHICHPROBLEM==KOMIPROBLEM)
     FTYPE xl, xc, xr;
-    a=0.0; // no spin in case use MCOORD=KSCOORDS
+   // a=0.0; // no spin in case use MCOORD=KSCOORDS
     
     defcoord = UNIFORMCOORDS;
     
@@ -3045,7 +3060,7 @@ int init_defcoord(void)
   /*************************************************/
   /*************************************************/
   if(WHICHPROBLEM==RADBONDI){
-    a=0.0; // no spin in case use MCOORD=KSCOORDS
+ //   a=0.0; // no spin in case use MCOORD=KSCOORDS
 
     // TOTRY: Change horizon interpolation to be like koral.
     // PURE HYDRO: entropy inversions don't lead to major problems.
@@ -3142,7 +3157,7 @@ int init_defcoord(void)
   /*************************************************/
   /*************************************************/
   if(WHICHPROBLEM==RADDOT){
-    a=0.0; // no spin in case use MCOORD=KSCOORDS
+  //  a=0.0; // no spin in case use MCOORD=KSCOORDS
 
     defcoord = UNIFORMCOORDS;
     Rin_array[1]=0;
@@ -3159,7 +3174,7 @@ int init_defcoord(void)
   /*************************************************/
   /*************************************************/
   if(WHICHPROBLEM==RADNT){
-    a=0.0; // no spin in case use MCOORD=KSCOORDS
+  //  a=0.0; // no spin in case use MCOORD=KSCOORDS
 
     if(1){
       //      RADNT_MINX=1.7; // allowed in KSCOORDS
@@ -3190,7 +3205,7 @@ int init_defcoord(void)
   /*************************************************/
   /*************************************************/
   if(WHICHPROBLEM==RADFLATDISK){
-    a=0.0; // no spin in case use MCOORD=KSCOORDS
+  //  a=0.0; // no spin in case use MCOORD=KSCOORDS
 
     RADNT_MINX=4.0;
     RADNT_MAXX=100.0;
@@ -3225,7 +3240,7 @@ int init_defcoord(void)
     //    a=0.0; // no spin in case use MCOORD=KSCOORDS
 
     // metric stuff first
-    a = 0.8 ;  // WALD
+    a = 0.5;  // WALD
     
 
     if(1){
@@ -3287,8 +3302,12 @@ int init_defcoord(void)
     if(Rout<1E3){
       Rin=1.05;
     }
-    else{
-      Rin=1.1;
+    if(a==0.5){
+      Rin=1.3; // a = 0.5 for totalsize[1]=128
+      //      setRin_withchecks(&Rin);
+    }
+    if(a==0.8){
+      Rin=1.2; // a = 0.8 for totalsize[1]=128
       //      setRin_withchecks(&Rin);
     }
 
@@ -3305,7 +3324,7 @@ int init_defcoord(void)
   /*************************************************/
   /*************************************************/
   if(WHICHPROBLEM==RADCYLBEAM){
-    a=0.0; // no spin in case use MCOORD=KSCOORDS
+ //   a=0.0; // no spin in case use MCOORD=KSCOORDS
 
     if(WHICHPROBLEM==RADCYLBEAM) MBH=0.0; // because CYLMINKMETRIC really has gravity if choose MBH!=0
 
@@ -3348,7 +3367,7 @@ int init_defcoord(void)
   /*************************************************/
   /*************************************************/
   if(WHICHPROBLEM==RADCYLBEAMCART){
-    a=0.0;
+  //  a=0.0;
 
     RADNT_MINX=-20.0;
     RADNT_MAXX=+20.0;
@@ -3371,7 +3390,7 @@ int init_defcoord(void)
   /*************************************************/
   /*************************************************/
   if(WHICHPROBLEM==RADCYLJET){
-    a=0.0; // no spin in case use MCOORD=KSCOORDS
+  //  a=0.0; // no spin in case use MCOORD=KSCOORDS
 
     MBH=0.0; // because CYLMINKMETRIC really has gravity if choose MBH!=0
 
@@ -3466,7 +3485,7 @@ int init_atmosphere(int *whichvel, int*whichcoord,int i, int j, int k, FTYPE *pr
   int funreturn;
 
   if(WHICHPROBLEM==RADDONUT){
-    if(0&&(RADNT_DONUTTYPE==DONUTTHINDISK || RADNT_DONUTTYPE==DONUTTHINDISK2)){ // keep as 0&& because not setting E properly in init_atmosphere()
+    if(0&&(RADNT_DONUTTYPE==DONUTTHINDISK || RADNT_DONUTTYPE==DONUTTHINDISK2||RADNT_DONUTTYPE==DONUTTHINDISK3)){ // keep as 0&& because not setting E properly in init_atmosphere()
       funreturn=user1_init_atmosphere(whichvel, whichcoord,i, j, k, pr);
       if(funreturn!=0) return(funreturn);
       return(0);
@@ -3541,7 +3560,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
       beta = ((gam-1.0)*RADNT_UINTATMMIN)/(RADNT_RHOATMMIN*BSQORHOWALD*0.5);
     }
 
-    if(RADNT_DONUTTYPE==DONUTTHINDISK || RADNT_DONUTTYPE==DONUTTHINDISK2){
+    if(RADNT_DONUTTYPE==DONUTTHINDISK || RADNT_DONUTTYPE==DONUTTHINDISK2||RADNT_DONUTTYPE==DONUTTHINDISK3){
       //      rinfield=1.1*Risco;
       rinfield=Risco;
       //      beta=1E30;
@@ -3552,7 +3571,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
     }
 
     // SUPERMADNEW
-    if(RADNT_DONUTTYPE==DONUTTHINDISK || RADNT_DONUTTYPE==DONUTTHINDISK2){
+    if(RADNT_DONUTTYPE==DONUTTHINDISK || RADNT_DONUTTYPE==DONUTTHINDISK2||RADNT_DONUTTYPE==DONUTTHINDISK3){
       rin=1.1*Risco;
       rinfield=1.1*Risco;
  
@@ -3564,7 +3583,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
       //rinfield=Risco;
       //      beta=1E30;
       if(FIELDTYPE==FIELDJONMAD){
-        beta=20.0; // so for MAD will have ~1 mri wavelength per half-height H.
+        beta=10.0; // so nearly MAD at t=0
       }
       else{
         beta=5.0; // so perturbations are at 2 but rest less and tends to be beta\sim 20
@@ -3629,6 +3648,310 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 
 
 
+//****************************************//
+//****************************************//
+//****************************************//
+// Problem setup constants that only modifies things in init.c (not init.h)
+//****************************************//
+//****************************************//
+
+#if(WHICHPROBLEM==FLATNESS)
+
+#define KAPPA 0.
+#define KAPPAES 0.
+
+// assume KAPPA defines fraction of FF opacity
+#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
+// assume KAPPAES defines fraction of ES opacity
+#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_BASIC_CODE(rho,T))
+
+
+#endif
+
+//****************************************//
+//****************************************//
+
+
+#if(WHICHPROBLEM==RADPULSE || WHICHPROBLEM==RADPULSEPLANAR || WHICHPROBLEM==RADPULSE3D)
+
+
+
+
+#if(WHICHPROBLEM==RADPULSEPLANAR)
+
+#define KAPPA 0.
+//#define KAPPAES (0.0)
+//#define KAPPAES (1E-7)
+//#define KAPPAES (1E-4*1.09713E-18*1E6)
+//#define KAPPAES (1E-4*1.09713E-18*1E3)
+//#define KAPPAES (1E-4*1.09713E-18*1E-0)
+//#define KAPPAES (1E-4*1.09713E-18*0.2)
+//#define KAPPAES (1E-4*1.09713E-18*1E-1)
+//#define KAPPAES (1E-4*1.09713E-18*1E-2)
+//#define KAPPAES (1E-4*1.09713E-18*1E-3)
+//#define KAPPAES (1E-4*1.09713E-18*1E-3*1E-10)
+
+// assume KAPPA defines fraction of FF opacity
+//#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
+// assume KAPPAES defines fraction of ES opacity
+//#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_BASIC_CODE(rho,T))
+
+#define KAPPAES (1E3) // takes VERY long time with sub-cycling, but works.
+//#define KAPPAES (1E2) // goes with sub-cycling at "ok" rate for this test.
+//#define KAPPAES (10.0)
+//#define KAPPAES (1E-1)
+//#define KAPPAES (1.0)
+//#define KAPPAES (1E-10)
+
+#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA)
+#define KAPPAESUSER(rho,T) (rho*KAPPAES)
+
+
+#else // PULSE and PULSE3D
+
+// KAPPAs are fraction of physical FF and ES opacities
+#define KAPPA 0.
+#define KAPPAES (SMALL)
+
+// assume KAPPA defines fraction of FF opacity
+#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
+// assume KAPPAES defines fraction of ES opacity
+#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_BASIC_CODE(rho,T))
+
+
+#endif
+
+
+#endif
+
+
+//****************************************//
+//****************************************//
+
+
+#if(WHICHPROBLEM==RADBEAMFLAT)
+
+
+#define KAPPA 0.
+#define KAPPAES 0.
+
+// assume KAPPA defines fraction of FF opacity
+#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
+// assume KAPPAES defines fraction of ES opacity
+#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_BASIC_CODE(rho,T))
+
+
+#endif
+
+//****************************************//
+//****************************************//
+
+
+#if(WHICHPROBLEM==RADTUBE)
+
+#define KAPPAESUSER(rho,T) (0.0)
+
+#if(NTUBE==1)
+#define KAPPAUSER(rho,B,Tg,Tr) (0.4*rho)
+#elif(NTUBE==2)
+#define KAPPAUSER(rho,B,Tg,Tr) (0.2*rho)
+#elif(NTUBE==3)
+#define KAPPAUSER(rho,B,Tg,Tr) (0.3*rho)
+#elif(NTUBE==31)
+#define KAPPAUSER(rho,B,Tg,Tr) (25*rho)
+#elif(NTUBE==4)
+#define KAPPAUSER(rho,B,Tg,Tr) (0.08*rho)
+#elif(NTUBE==41)
+#define KAPPAUSER(rho,B,Tg,Tr) (0.7*rho)
+#elif(NTUBE==5)
+#define KAPPAUSER(rho,B,Tg,Tr) (1000*rho)
+#endif
+
+
+#endif
+
+//****************************************//
+//****************************************//
+
+
+#if(WHICHPROBLEM==RADSHADOW || WHICHPROBLEM==RADDBLSHADOW)
+
+//#define KAPPAUSER(rho,B,Tg,Tr) (rho*1E2)
+#define KAPPAUSER(rho,B,Tg,Tr) (rho*1.0) // paper
+#define KAPPAESUSER(rho,T) (rho*0.0)
+
+
+#endif
+
+
+//****************************************//
+//****************************************//
+
+
+//****************************************//
+//****************************************//
+
+
+#if(WHICHPROBLEM==RADBEAM2D || WHICHPROBLEM==RADBEAM2DKS || WHICHPROBLEM==RADBEAM2DKSVERT)
+
+
+#define KAPPA 0.
+#define KAPPAES 0.
+
+// assume KAPPA defines fraction of FF opacity
+#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
+// assume KAPPAES defines fraction of ES opacity
+#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_BASIC_CODE(rho,T))
+
+
+#endif
+
+
+#if(WHICHPROBLEM==ATMSTATIC)
+
+
+#define KAPPA 0.
+#define KAPPAES 0.
+
+// assume KAPPA defines fraction of FF opacity
+#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
+// assume KAPPAES defines fraction of ES opacity
+#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_BASIC_CODE(rho,T))
+
+
+#endif
+
+
+#if(WHICHPROBLEM==RADATM)
+
+
+#define KAPPA 0.
+#define KAPPAES 1. // only scattering
+
+// assume KAPPA defines fraction of FF opacity
+#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
+// assume KAPPAES defines fraction of ES opacity
+#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_BASIC_CODE(rho,T))
+
+
+#endif
+
+
+#if(WHICHPROBLEM==RADWALL)
+
+
+#define KAPPA 0.
+#define KAPPAES 0.
+
+// assume KAPPA defines fraction of FF opacity
+#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
+// assume KAPPAES defines fraction of ES opacity
+#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_BASIC_CODE(rho,T))
+
+
+#endif
+
+
+
+
+#if(WHICHPROBLEM==RADWAVE)
+
+#define KAPPAUSER(rho,B,Tg,Tr) (rho*RADWAVE_KAPPA)
+#define KAPPAESUSER(rho,T) (rho*RADWAVE_KAPPAES)
+
+#endif
+
+
+
+#if(WHICHPROBLEM==KOMIPROBLEM)
+
+#define KAPPAUSER(rho,B,Tg,Tr) (0.)
+#define KAPPAESUSER(rho,T) (0.)
+
+#endif
+
+
+#if(WHICHPROBLEM==RADBONDI)
+
+
+#define KAPPA 1.0
+#define KAPPAES 1.0
+
+// assume KAPPA defines fraction of FF opacity
+#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
+// assume KAPPAES defines fraction of ES opacity
+#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_BASIC_CODE(rho,T))
+
+
+#endif
+
+
+#if(WHICHPROBLEM==RADDOT)
+
+
+#define KAPPA 0.
+#define KAPPAES 0.
+
+// assume KAPPA defines fraction of FF opacity
+#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
+// assume KAPPAES defines fraction of ES opacity
+#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_BASIC_CODE(rho,T))
+
+
+#endif
+
+#if(WHICHPROBLEM==RADNT || WHICHPROBLEM==RADFLATDISK)
+
+#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA_ES_CODE(rho,Tg)/1E14*0.1) // wierd use of kappa_{es} in koral
+//#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA_ES_CODE(rho,T)/1E14*0.0)
+#define KAPPAESUSER(rho,T) (0.0)
+
+#endif
+
+#if(WHICHPROBLEM==RADDONUT)
+// kappa can't be zero or else flux will be nan
+//#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA_ES_CODE(rho,T)/1E14*1.0) // wierd use of kappa_{es} in koral
+//#define KAPPAESUSER(rho,T) (0.0)
+
+// KORALNOTE: Different than koral code test, but as if full problem.
+#define KAPPA 1.0
+#define KAPPAES 1.0
+
+// KORALTODO: Put a lower limit on T~1E4K so not overly wrongly opaque in spots where u_g->0 anomologously?
+// assume KAPPA defines fraction of FF opacity
+//#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg+TEMPMIN))
+// accounts for low temperatures so non-divergent and more physical
+
+#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*(KAPPA_GENFF_CODE(SMALL+rho,Tg+TEMPMIN,Tr+TEMPMIN)+KAPPA_SYN_CODE(SMALL+B,Tg+TEMPMIN,Tr+TEMPMIN)))
+
+// TODOMARK: Compute FF number opacity
+#define KAPPANUSER(rho,B,Tg,Tr) (rho*KAPPA*(KAPPA_GENFF_CODE(SMALL+rho,Tg+TEMPMIN,Tr+TEMPMIN)+KAPPAN_SYN_CODE(SMALL+B,Tg+TEMPMIN,Tr+TEMPMIN)))
+
+// assume KAPPAES defines fraction of ES opacity
+#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_CODE(rho,T))
+
+
+#endif
+
+#if(WHICHPROBLEM==RADCYLBEAM || WHICHPROBLEM==RADCYLBEAMCART)
+
+#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA_ES_BASIC_CODE(rho,Tg)/1E14*0.0) // note 0.0
+#define KAPPAESUSER(rho,T) (0.0)
+
+#endif
+
+#if(WHICHPROBLEM==RADCYLJET)
+
+#define KAPPAUSER(rho,B,Tg,Tr) (rho*(KAPPA_FF_CODE(SMALL+rho,Tg+TEMPMIN,Tr+TEMPMIN))) // SMALL
+#define KAPPAESUSER(rho,Tg) (rho*KAPPA_ES_BASIC_CODE(rho,Tg)/100.0)
+
+#endif
+
+
+#ifndef KAPPANUSER
+// in case haven't defined KAPPANUSER, just use energy opacity
+#define KAPPANUSER(rho,B,Tg,Tr) KAPPAUSER(rho,B,Tg,Tr)
+#endif
 
 int init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR], FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhat)[NSTORE2][NSTORE3][NPR], FTYPE (*panalytic)[NSTORE2][NSTORE3][NPR], FTYPE (*pstaganalytic)[NSTORE2][NSTORE3][NPR], FTYPE (*vpotanalytic)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE (*Bhatanalytic)[NSTORE2][NSTORE3][NPR], FTYPE (*F1)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*F2)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*F3)[NSTORE2][NSTORE3][NPR+NSPECIAL], FTYPE (*Atemp)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
 {
@@ -3652,18 +3975,6 @@ int init_primitives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2
 
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
 
 // When setting primitives, put conditionals around PRAD? or URAD? variables to if want to be able to set EOMRADTYPE to EOMRADNONE and have work as non-radiation problem
 int init_dsandvels(int inittype, int pos, int *whichvel, int*whichcoord, SFTYPE time, int i, int j, int k, FTYPE *pr, FTYPE *pstag)
@@ -3750,10 +4061,6 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
     return(0);
   }
 
-
-
-
-
   /*************************************************/
   /*************************************************/
   if(WHICHPROBLEM==RADBEAMFLAT){
@@ -3808,9 +4115,6 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
 
     return(0);
   }
-
-
-
 
   /*************************************************/
   /*************************************************/
@@ -3947,8 +4251,6 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
       pr[PRAD1] = 0 ;
       pr[PRAD2] = 0 ;    
       pr[PRAD3] = 0 ;
-    
-
 
       //E, F^i in orthonormal fluid frame
       FTYPE pradffortho[NPR];
@@ -3957,18 +4259,14 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
       pradffortho[PRAD2] = Fy;
       pradffortho[PRAD3] = Fz;
 
-
       // Transform these fluid frame E,F^i to lab frame coordinate basis primitives
       prad_fforlab(whichvel, whichcoord, FF2LAB, i,j,k,CENT,NULL,pradffortho,pr, pr);
 
       //  PLOOPRADONLY(pl) dualfprintf(fail_file,"FOO1: i=%d pl=%d pr=%g\n",ptrgeomreal->i,pl,pr[pl]);
 
     }
-
-
   
     return(0);
-  
 
   }
 
@@ -4057,8 +4355,6 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
 
     return(0);
   }
-
-
 
   /*************************************************/
   /*************************************************/
@@ -4405,12 +4701,6 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
 
     }
 
-
-
-
-
-
-
     return(0);
   }
 
@@ -4453,9 +4743,6 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
     *whichcoord=CARTMINKMETRIC2;
     return(0);
   }
-
-
-
 
   /*************************************************/
   /*************************************************/
@@ -4583,10 +4870,6 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
   
 
   }
-
-
-
-
 
 
   /*************************************************/
@@ -5295,13 +5578,8 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
     pr[PRAD3] = 0 ;
     
     
-    
     return(0);
   }
-
-
-
-
 
   /*************************************************/
   /*************************************************/
@@ -5410,11 +5688,6 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
   }
 
 
-
-
-
-
-
   /*************************************************/
   /*************************************************/
   if(WHICHPROBLEM==RADDOT){
@@ -5476,9 +5749,6 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
     return(0);
   }
 
-
-
-
   if(WHICHPROBLEM==RADNT || WHICHPROBLEM==RADFLATDISK || WHICHPROBLEM==RADDONUT){
     FTYPE r,th,ph;
     coord(i, j, k, CENT, X);
@@ -5505,7 +5775,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
       int FIELDTYPE=set_fieldtype();
       if(FIELDTYPE==FIELDJONMAD){
         // so bsq/rho isn't super high at large radii with current choice for magnetic field
-        pr[RHO]=RADNT_RHOATMMIN*pow(r/RADNT_ROUT,-1.1);
+        pr[RHO]=RADNT_RHOATMMIN*pow(r/RADNT_ROUT,-1.5); // SUPERMADNEW
       }
     }
     else{
@@ -5566,6 +5836,11 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
         
         // ADD DONUT
         returndonut=get_full_rtsolution(whichvel,whichcoord,RADDONUT_OPTICALLYTHICKTORUS, pr,X,V,&ptrgeomrad);
+
+        //        if(i==0 && j==0 && myid==0){
+        //          dualfprintf(fail_file,"whichvel=%d whichcoord=%d return=%d\n",*whichvel,*whichcoord,returndonut);
+        //          dualfprintf(fail_file,"rho=%g u=%g u1=%g u3=%g\n",pr[RHO],pr[UU],pr[U1],pr[U3]);
+        //        }
 
         if(PRAD0>=0){
           // donut returns fluid frame orthonormal values for radiation in pp
@@ -5630,9 +5905,6 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
 
     return(0);
   }
-
-
-
 
   /*************************************************/
   /*************************************************/
@@ -5957,15 +6229,8 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
     return(0);
   }
 
-
-
-
   return(0);
 }
-
-
-
-
 
 // analytical solution for RADDONUT donut
 // get full radiative donut solution
@@ -6002,7 +6267,7 @@ static int get_full_rtsolution(int *whichvel, int *whichcoord, int opticallythic
     anret=1; // never inside donut for Wald
   }
 
-
+  //  dualfprintf(fail_file,"anret=%d pp[RHO]=%g\n",anret,pp[RHO]);
 
   // see if inside donut solution or outside
   if(anret==0){ // then inside donut
@@ -6030,7 +6295,7 @@ static int get_full_rtsolution(int *whichvel, int *whichcoord, int opticallythic
     bsq_calc(pp,*ptrptrgeom,&bsq);
     B=sqrt(bsq);
     chi=
-      calc_kappa_user(pp[RHO],B,Tg,Tg,1.0,V[1],V[2],V[3]) // Planck Tr=Tg at t=0
+      calc_kappa_user(pp[RHO],B,Tg,Tg,V[1],V[2],V[3])
       +
       calc_kappaes_user(pp[RHO],calc_PEQ_Tfromurho(pp[UU],pp[RHO]),V[1],V[2],V[3]);
 
@@ -6253,7 +6518,7 @@ static int make_nonrt2rt_solution(int *whichvel, int *whichcoord, int opticallyt
     FTYPE bsq,B;
     bsq_calc(pp,*ptrptrgeom,&bsq);
     B=sqrt(bsq);
-    kappaabs=calc_kappa_user(rho,B,Tgas,Tgas,1.0,V[1],V[2],V[3]); // Planck and Tr=Tgas at t=0
+    kappaabs=calc_kappa_user(rho,B,Tgas,Tgas,V[1],V[2],V[3]);
     kappaes=calc_kappaes_user(rho,Tgas,V[1],V[2],V[3]);
     kappatot=kappaabs+kappaes;
 
@@ -6386,6 +6651,193 @@ static int donut_analytical_solution(int *whichvel, int *whichcoord, int optical
 
 
   // get density and velocity for torus
+  if(RADNT_DONUTTYPE==DONUTTHINDISK3){
+
+    int mycoords=BLCOORDS;
+    if(*whichcoord!=mycoords){
+      // get metric grid geometry for these ICs
+      int getprim=0;
+      gset_X(getprim,mycoords,i,j,k,NOWHERE,X,*ptrptrgeom);
+    }
+    *whichcoord=mycoords;
+    *whichvel=VEL3;
+
+
+
+
+    /* region outside disk */
+    Rhor=rhor_calc(0);
+    Risco=rmso_calc(PROGRADERISCO);
+    R = MAX(Rhor,r*sin(th)) ;
+
+    // NT73
+    FTYPE rp;
+    FTYPE Rp=R;
+    if(r>=1.5*Risco){
+      rp=r;
+      Rp=R;
+    }
+    else{
+      rp=1.5*Risco;
+      Rp=MAX(Rhor,rp*sin(th)) ;
+    }
+
+    // alphavisc=0.1 leads to Mdot=0.16MdotEdd (subeddd)
+    // alphavisc=1.0 leads to Mdot=2.8MdotEdd (subeddc)
+
+    FTYPE alphavisc=0.3;
+    FTYPE m=10.0; // Mbh in Msun
+    FTYPE Mx=m;
+    FTYPE mdot=7.33; // Mdot per Ledd/c^2
+    FTYPE mdotperledd=mdot;
+    FTYPE y=pow(rp,0.5);
+    FTYPE AA=1.0+a*a*pow(y,-4.0)+2.0*a*a*pow(y,-6.0);
+    FTYPE BB=1.0+a*pow(y,-3.0);
+    FTYPE CC=1-3.0*pow(y,-2.0)+2.0*a*pow(y,-3.0);
+    FTYPE DD=1-2.0*pow(y,-2.0)+a*a*pow(y,-4.0);
+    FTYPE EE=1+4.0*a*a*pow(y,-4.0)-4.0*a*a*pow(y,-6.0)+3.0*a*a*a*a*pow(y,-8.0);
+
+
+    FTYPE QQ=(1.0000000000000002*(1 + 0.5/Power(rp,1.5))*
+     (-2.0574261905426465 + 1.*Sqrt(rp) - 
+       0.5160444431189778*
+        Log(1.9035389107262222*
+          (-1.5320888862379562 + 1.*Sqrt(rp))) + 
+       0.07635182233306995*
+        Log(0.5847509232408147*
+          (-0.34729635533386044 + 1.*Sqrt(rp))) + 
+       1.1896926207859089*
+        Log(0.25401267427810215*
+          (1.8793852415718166 + 1.*Sqrt(rp))) - 
+       0.75*Log(0.4860441675121526*Sqrt(rp))))/
+   (Sqrt(1 + 1./Power(rp,1.5) - 2.999999999999999/rp)*Sqrt(rp));
+
+    FTYPE Sigma1=(5.000000000000001*(1 + 0.1874999999999999/Power(rp,4) - 
+       0.9999999999999999/Power(rp,3) + 
+       0.9999999999999998/Power(rp,2))*
+     Power(1 + 0.5/Power(rp,1.5),2)*
+     (1 + 1./Power(rp,1.5) - 2.999999999999999/rp)*Power(rp,2))/
+   (alphavisc*mdotperledd*
+     Power(1 + 0.49999999999999994/Power(rp,3) + 
+       0.24999999999999994/Power(rp,2),2)*
+     (-2.0574261905426465 + 1.*Sqrt(rp) - 
+       0.5160444431189778*
+        Log(1.9035389107262222*
+          (-1.5320888862379562 + 1.*Sqrt(rp))) + 
+       0.07635182233306995*
+        Log(0.5847509232408147*
+          (-0.34729635533386044 + 1.*Sqrt(rp))) + 
+       1.1896926207859089*
+        Log(0.25401267427810215*
+          (1.8793852415718166 + 1.*Sqrt(rp))) - 
+       0.75*Log(0.4860441675121526*Sqrt(rp))));
+
+    FTYPE H1=(100000.00000000001*mdotperledd*Mx*
+     Power(1 + 0.49999999999999994/Power(rp,3) + 
+       0.24999999999999994/Power(rp,2),2)*
+     (-2.0574261905426465 + 1.*Sqrt(rp) - 
+       0.5160444431189778*
+        Log(1.9035389107262222*
+          (-1.5320888862379562 + 1.*Sqrt(rp))) + 
+       0.07635182233306995*
+        Log(0.5847509232408147*
+          (-0.34729635533386044 + 1.*Sqrt(rp))) + 
+       1.1896926207859089*
+        Log(0.25401267427810215*
+          (1.8793852415718166 + 1.*Sqrt(rp))) - 
+       0.75*Log(0.4860441675121526*Sqrt(rp))))/
+   ((1 + 0.1874999999999999/Power(rp,4) - 
+       0.9999999999999999/Power(rp,3) + 
+       0.9999999999999998/Power(rp,2))*
+     Power(1 + 0.5/Power(rp,1.5),2)*
+     (1 + 0.24999999999999994/Power(rp,2) - 
+       1.9999999999999993/rp)*Sqrt(rp));
+
+
+    // rescale
+    Sigma1=Sigma1/MBAR*LBAR*LBAR; // Sigma = g/cm^2
+    H1=H1/LBAR; // H=cm
+
+    
+
+
+    ////////////////////////////
+    // Set H : disk height
+    FTYPE H=H1;
+    FTYPE minhor=h_over_r*0.3;
+    if(H/rp<minhor && rp>50){
+      H=minhor*rp; // go to constant H/R so disk not unresolved
+    }
+    FTYPE z = rp*cos(th) ;
+
+
+    //////////////////////////
+    // SET DENSITY
+    // Sigma = rho*H
+    FTYPE rho01;
+    rho01=Sigma1/(2.0*H); // so Sigma unchanged.
+    
+    //
+    // simple power-law with some vertical distribution
+    //
+    //rho=RADNT_RHODONUT * exp(-z*z/(2.*H*H))*pow(r,thindiskrhopow);
+    rho=rho01*exp(-z*z/(2.*H*H));
+
+
+    //////////////////////////
+    // ensure c_s/v_k = (H/R) , which should be violated in the ISCO such that K=P/rho^Gamma=constant but H/R still thins towards the horizon.
+    // P = (gamma-1)*u and cs2 = \gamma P/(\rho+u+P)
+    FTYPE omegakep=1./(pow(rp,1.5) + a);
+
+    // set uint
+    FTYPE uintfact = (1.0 + randfact * (ranc(0,0) - 0.5));
+    uint = rho*pow(H/Rp,2.0)*pow(rp*omegakep,2.0)/(gamtorus*(gamtorus-1.0))*uintfact;
+
+    // Set pressure
+    // K = P/rho^Gamma 
+    FTYPE pint=(gamtorus-1.0)*uint;
+    FTYPE KK= pint*pow(rho,-gamtorus);
+    // get total pressure
+    pt = uint * (gamtorus-1.0); // torus pressure
+
+
+    //////////////////////////
+    // SET
+    // set radial velocity
+    if(r<1.5*Rhor){
+      Vr = 0.0;
+      Vh =0.0;
+      Vphi = 0.0;
+      *whichvel=VELREL4;
+      *whichcoord=KSCOORDS;
+      usingback=1;
+    }
+    else{
+      Vphi=omegakep; // now 3-vel
+      Vr=-fabs(alphavisc*(H/rp)*(H/rp)*Vphi);
+      Vh=0.0;
+      *whichvel=VEL3;
+      *whichcoord=BLCOORDS;
+    }
+
+
+    // see if should still use backup non-torus values
+    if(rho<ppback[RHO]){
+      usingback=1;
+    }
+
+    //    usingback=0;
+
+
+    //    dualfprintf(fail_file,"rhodonut1=%g uint=%g\n",rho,uint);
+
+    //    if(fabs(r-Risco)<0.1*Risco && fabs(th-0.5*M_PI)<0.2*h_over_r){
+    //      dualfprintf(fail_file,"rhodonut5=%g uint=%g : r,th=%g %g usingback=%d RADNT_RHODONUT=%g rhoisco=%g\n",rho,uint,r,th,usingback,RADNT_RHODONUT,rhoisco);
+    //    }
+
+
+  }
+  // get density and velocity for torus
   if(RADNT_DONUTTYPE==DONUTTHINDISK2){
 
     int mycoords=BLCOORDS;
@@ -6402,7 +6854,7 @@ static int donut_analytical_solution(int *whichvel, int *whichcoord, int optical
 
     /* region outside disk */
     Rhor=rhor_calc(0);
-    if(0){
+    if(1){
       Risco=rmso_calc(PROGRADERISCO);
     }
     else{ // SUPERMADNEW
@@ -6454,7 +6906,7 @@ static int donut_analytical_solution(int *whichvel, int *whichcoord, int optical
     // density shouldn't peak at ISCO, but further out even for H/R=0.05 (see Penna et al. 2010 figure 11).
     FTYPE Rtrans;
     //    Rtrans=2.0*Risco;
-    Rtrans=1.5*Risco; // SUPERMADNEW
+    Rtrans=1.0*Risco; // SUPERMADNEW
     if(r<Rtrans){
       //      FTYPE rhopowisco=10.0;
       FTYPE rhopowisco=7.0; // this gives similar result to HD case, although not MHD-turbulence case, but want kinda HD equilibrium as much as possible.
@@ -7045,7 +7497,7 @@ int set_fieldtype(void)
 
   if(WHICHPROBLEM==RADDONUT){
 
-    if(RADNT_DONUTTYPE==DONUTTHINDISK || RADNT_DONUTTYPE==DONUTTHINDISK2){
+    if(RADNT_DONUTTYPE==DONUTTHINDISK || RADNT_DONUTTYPE==DONUTTHINDISK2||RADNT_DONUTTYPE==DONUTTHINDISK3){
       //      FIELDTYPE=DISK2FIELD;
       FIELDTYPE=FIELDJONMAD; // SUPERMADNEW
 
@@ -7170,7 +7622,7 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
     //    FRACAPHICUT=0.001; // for disk-filling field that is more MAD like
 
 
-    if(WHICHPROBLEM==RADDONUT && (RADNT_DONUTTYPE==DONUTTHINDISK || RADNT_DONUTTYPE==DONUTTHINDISK2)){
+    if(WHICHPROBLEM==RADDONUT && (RADNT_DONUTTYPE==DONUTTHINDISK || RADNT_DONUTTYPE==DONUTTHINDISK2||RADNT_DONUTTYPE==DONUTTHINDISK3)){
       FRACAPHICUT=1E-6;
     }
 
@@ -7276,6 +7728,7 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
   FTYPE FIELDROT=0.0;
   FTYPE hpow=2.0;
   // FTYPE rpow=1.0; // previous SUPERMAD, now just use 3/4
+  rpow=5.0/4.0; // 1.0 so libetatot constant vs. radius
 
 
   if(l==2){// A_\theta
@@ -7321,21 +7774,54 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
     }
 
 #define JONMADHPOW (4.0)
-#define JONMADR0 (0.0)
+#define JONMADR0 (-5.0)
+#define JONMADRIN (2.0)
 #define JONMADROUT (300.0)
 
+    FTYPE jonmadhpow;
+    FTYPE interp;
+    interp = (r-Rhor)/(r+1E-10);
+    if(interp<0.0) interp=0.0;
+    if(interp>1.0) interp=1.0;
+
+    jonmadhpow = JONMADHPOW*interp + 0.0*( 1.0-interp );
+    
+    FTYPE thetafactout,thetafactin,thetafact1;
+    thetafactin=1.0-cos(th);
+    if(th>0.5*M_PI) thetafactin=1.0-cos(M_PI-th);
+    thetafactout=pow(sin(th),1.0+jonmadhpow);
+    thetafact1 = thetafactout*interp + thetafactin*( 1.0-interp );
+
+    FTYPE interp2;
+    interp2 = (r-JONMADROUT)/(r+1E-10);
+    if(interp2<0.0) interp2=0.0;
+    if(interp2>1.0) interp2=1.0;
+
+    FTYPE thetafactout2,thetafactin2,thetafact2;
+    thetafactin2=thetafact1;
+    thetafactout2=1.0-cos(th);
+    if(th>0.5*M_PI) thetafactout2=1.0-cos(M_PI-th);
+    thetafact2 = thetafactout2*interp2 + thetafactin2*( 1.0-interp2 );
+
+    FTYPE thetafact;
+    thetafact=thetafact2;
+
+    FTYPE rfact;
+    rfact=MAX(pow(r-JONMADR0,rpow)*1E40-0.02,0.0);
+    if(r>=JONMADROUT){
+      rfact=MAX(pow(JONMADROUT-JONMADR0,rpow)*1E40-0.02,0.0);
+    }
+    if(r<=JONMADRIN){
+      rfact=MAX(pow(JONMADRIN-JONMADR0,rpow)*1E40-0.02,0.0);
+    }
+
     if(FIELDTYPE==FIELDJONMAD){
-      if(r>=JONMADR0 && r<JONMADROUT){
-        vpot += MAX(pow(r-JONMADR0,rpow)*1E40-0.02,0.0)*(pow(sin(th),1+JONMADHPOW));
-      }
-      else if(r>=JONMADROUT){
-        // to go monopolar
-        vpot += MAX(pow(JONMADROUT-JONMADR0,rpow)*1E40-0.02,0.0)*(pow(sin(th),1+JONMADHPOW/(r/JONMADROUT)));
-      }
+      
+      vpot += rfact*thetafact;
+        
       if(V[2]<1E-5 || V[2]>M_PI-1E-5){
         vpot=0;
       }
-
 
 
     }
@@ -7367,7 +7853,7 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
 
       //      q = (rho_av / rhomax - FRACAPHICUT);
       //      q = (p_av / ptotmax - FRACAPHICUT); // was used for rada0.94, etc. models.
-      if(WHICHPROBLEM==RADDONUT && (RADNT_DONUTTYPE==DONUTTHINDISK || RADNT_DONUTTYPE==DONUTTHINDISK2)){
+      if(WHICHPROBLEM==RADDONUT && (RADNT_DONUTTYPE==DONUTTHINDISK || RADNT_DONUTTYPE==DONUTTHINDISK2||RADNT_DONUTTYPE==DONUTTHINDISK3)){
         q = (p_av);
         //        dualfprintf(fail_file,"qorig=%g\n",q);
         if(rho_av/(rhomax*pow(r,thindiskrhopow)) - FRACAPHICUT<0) q=0;
@@ -9200,993 +9686,36 @@ void adjust_fluxctstag_emfs(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR
 
 
 
-/// PURE ELASTIC SCATTERING
-//#define KAPPA_ES_KNCORRF(f) (0.75*((-1.*(1. + 3.*(f)))/Power(1. + 2.*(f),2) +  (0.5*Log(1. + 2.*(f)))/(f) + ((1. + (f))*((2. + 2.*(f))/(1. + 2.*(f)) - (1.*Log(1. + 2.*(f)))/(f)))/Power((f),2)))
-//#define KAPPA_ES_KNCORR(rhocode,Tcode) (KAPPA_ES_KNCORREP(K_BOLTZ*(Tcode)*TEMPBAR/(MELE*CCCTRUE*CCCTRUE)))
-#define KAPPA_ES_FERMICORR(rhocode,Tcode) (1.0/(1.0+2.7E11*((rhocode)*RHOBAR)/prpow((Tcode)*TEMPBAR,2.0))) // Buchler and Yueh 1976 (just Fermi part). Fewer electrons when near Fermi fluid limit.
-#define KAPPA_ES_KNCORR(rhocode,Tcode) (1.0/(1.0+prpow((Tcode)*TEMPBAR/4.5E8,0.86)))  // Buchler and Yueh 1976 .  Klein-Nishina for thermal electrons.
-/// kappaes = sigma_T n_e = sigma_T n_b (n_e/n_b) = sigma_T rho/mb (ne/nb)
-#define KAPPA_ES_CODE(rhocode,Tcode) (0.2*(1.0+XFACT)*KAPPA_ES_FERMICORR(rhocode,Tcode)*KAPPA_ES_KNCORR(rhocode,Tcode)/OPACITYBAR)
-#define KAPPA_ES_BASIC_CODE(rhocode,Tcode) (0.2*(1.0+XFACT)/OPACITYBAR)
-
-// INELASTIC COMPTON TERM
-// see DOCOMPTON in physics.tools.rad.c:
-// in term2, doesn't change photon energy, so that in scattering-dominated atmospheres, photons move through unchanged by temperature of gas.
-// Eq A7 in http://adsabs.harvard.edu/abs/2012ApJ...752...18K used first in http://adsabs.harvard.edu/cgi-bin/bib_query?arXiv:0904.4123 as based upon a calculation in http://adsabs.harvard.edu/abs/2000thas.book.....P .
-// Also interesting for next steps:
-//1) Conservative form of Kompaneet's equation and dealing with the diffusion term implicitly: http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.13.798 and related: http://www.osti.gov/scitech/biblio/891567 .  We should ensure the 4-force is consistent (numerically and analytically) with what's used in this equation for n.
-//2) Relativistic corrections:  http://adsabs.harvard.edu/cgi-bin/bib_query?arXiv:1201.5606 and http://adsabs.harvard.edu/abs/2002nmgm.meet.2329S .  It looks like nothing more difficult as far as actually using the expressions in place of non-relativistic version.
-//One semi-relevant application: http://www.aanda.org/articles/aa/full_html/2009/45/aa12061-09/aa12061-09.html
-#define KAPPA_FORCOMPT_RELCORREP(ep) ((1.0 + 3.683*(ep)+4.0*(ep)*(ep))/(1.0 + (ep))) // Sadowski et al. (2014) Eq 26 and 27.
-#define KAPPA_FORCOMPT_RELCORR(rhocode,Tcode) (KAPPA_FORCOMPT_RELCORREP(K_BOLTZ*(Tcode)*TEMPBAR/(MELE*CCCTRUE*CCCTRUE)))
-#define KAPPA_FORCOMPT_CODE(rhocode,Tcode) (0.2*(1.0+XFACT)*KAPPA_ES_FERMICORR(rhocode,Tcode)*KAPPA_FORCOMPT_RELCORR(rhocode,Tcode)/OPACITYBAR)
-
-
-// COMPTON ALTERNATIVES
-//1) 1201.5606v2.pdf eq. 4.8 with Teff=Te different.
-//2) 891567.pdf  eq. 10.
-//3) art%3A10.1007%2FBF03035735.pdf (what we are approximating when not using full Kompaneets).  How could solve.
-//4) compton.pdf
-
-
-
-/// EMISSION (Tr=Tg) or ABSORBPTION (Tr different from Tg)
-#define KAPPA_ZETA(Tgcode,Trcode) ((TEMPMIN+Trcode)/(TEMPMIN+Tgcode))
-//#define KAPPA_FF_CODE(rhocode,Tgcode,Trcode) (4.0E22*(1.0+XFACT)*(1.0-ZFACT)*((rhocode)*RHOBAR)*prpow((Tgcode)*TEMPBAR,-0.5)*prpow((Trcode)*TEMPBAR,-3.0)*prlog(1.0+1.6*KAPPA_ZETA(Tgcode,Trcode))*(1.0+4.4E-10*(Tgcode*TEMPBAR))/OPACITYBAR)  // ASSUMPTION: Thermal ele and no pairs.  See Rybicki & Lightman Eq~5.25 and McKinney & Uzdensky (2012) .  For Tr,Tg split, see Ramesh notes.
-#define KAPPA_FF_CODE(rhocode,Tgcode,Trcode) (4.0E22*(1.0+XFACT)*(1.0-ZFACT)*((rhocode)*RHOBAR)*prpow((Tgcode)*TEMPBAR,-0.5)*prpow((Trcode)*TEMPBAR,-3.0)*prlog(1.0+1.6*KAPPA_ZETA(Tgcode,Trcode))*(1.0+4.4E-10*(Tgcode*TEMPBAR))/OPACITYBAR)  // ASSUMPTION: Thermal ele and no pairs.  See Rybicki & Lightman Eq~5.25 and McKinney & Uzdensky (2012) .  For Tr,Tg split, see Ramesh notes.
-
-//////////////////////////////////////////
-// FREE-FREE STUFF
-// see freefree_opacity.nb, freefree_opacity_fitenergyopacity.nb, freefree_opacity_fitnumberopacity.nb
-// accounts for self-absorption and energy vs. number opacity behavior
-//#define KAPPA_FF_ZETAFF_LEN(xv,lenv) (1.0/((lenv) + (0.99366835740822140451*Power((xv),3.001486183352440767))/      Prlog(1. + (0.96029003648876359763*(xv))/(0.62006021009771899259 + 1.3708624629986290167*Power((lenv),0.3428937745657171798)))))
-
-//#define KAPPAN_FF_ZETAFF_LEN(xv,lenv) (1.0/((lenv) + ((0.44920722974573544008 + 3.1077547389879800477*Power((lenv),0.23000000000000001))*Power((xv),2.066660783319324679))/      Log(1. + (10. + 58.528227977634806223/Power((lenv),0.25))*(xv))))
-
-//#define KAPPA_FF_PREFACTOR_CODE(rhocode,Tecode) (1.2E24*RHOBAR*rhocode*prpow(Tecode*TEMPBAR,-3.5)/OPACITYBAR)
-//#define KAPPA_FF_ZETA(Tecode,Trcode) ((TEMPMIN+Trcode)/(TEMPMIN+Tecode))
-// pretau = Lengthcgs * (rhocgs * KAPPA_FF_PREFACTORcgs) = CODELENGTH * rhocode * KAPPA_FF_PREFACTOR_CODE
-//#define KAPPA_FF_PRETAU_CODE(length,rhocode,Tecode) (length*rhocode*KAPPA_FF_PREFACTOR_CODE)
-
-//#define KAPPA_FF_CODE(rhocode,Tgcode,Trcode,ffzeta,pretau) (KAPPA_FF_PREFACTOR_CODE(rhocode,Tecode)*(1.0+XFACT)*(1.0-ZFACT)*KAPPA_FF_ZETAFF_LEN(ffzeta,pretau))
-//#define KAPPAN_FF_CODE(rhocode,Tgcode,Trcode,ffzeta,pretau) (KAPPA_FF_PREFACTOR_CODE(rhocode,Tecode)*(1.0+XFACT)*(1.0-ZFACT)*KAPPAN_FF_ZETAFF_LEN(ffzeta,pretau))
-
-#define KAPPAN_FF_CODE(rhocode,Tgcode,Trcode) KAPPA_FF_CODE(rhocode,Tgcode,Trcode)
-
-///////////////////////////////////
-// BOUND-FREE and other low energy stuff
-#define KAPPA_BF_CODE(rhocode,Tgcode,Trcode) (3.0E25*(ZFACT)*(1.0+XFACT+0.75*YFACT)*((rhocode)*RHOBAR)*prpow((Tgcode)*TEMPBAR,-0.5)*prpow((Trcode)*TEMPBAR,-3.0)*prlog(1.0+1.6*KAPPA_ZETA(Tgcode,Trcode))/OPACITYBAR) // ASSUMPTION: Number of electrons similar to for solar abundances for 1+X+(3/4)Y term.  For Tr,Tg split, see Ramesh notes.
-#define KAPPA_CHIANTIBF_CODE(rhocode,Tgcode,Trcode) (4.0E34*((rhocode*RHOBAR))*(ZFACT/ZSOLAR)*YELE*prpow((Tgcode)*TEMPBAR,-1.7)*prpow((Trcode)*TEMPBAR,-3.0)/OPACITYBAR) // *XFACT literally from Fig 34.1 in Draine book, but for solar n_H\sim n_b\sim 1/cm^3 only
-#define KAPPA_HN_CODE(rhocode,Tgcode,Trcode) (1.1E-25*prpow(ZFACT,0.5)*prpow((rhocode)*RHOBAR,0.5)*prpow((Tgcode)*TEMPBAR,7.7)/OPACITYBAR) // other sources cite 2.5E-31 (Z/0.02)(rho)^(1/2)(T)^9
-#define KAPPA_MOL_CODE(rhocode,Tgcode,Trcode) (0.1*ZFACT/OPACITYBAR)
-// see opacities.nb
-#define KAPPA_GENFF_CODE(rhocode,Tgcode,Trcode) (1.0/(1.0/(KAPPA_MOL_CODE(rhocode,Tgcode,Trcode)+KAPPA_HN_CODE(rhocode,Tgcode,Trcode)) + 1.0/(KAPPA_CHIANTIBF_CODE(rhocode,Tgcode,Trcode)+KAPPA_BF_CODE(rhocode,Tgcode,Trcode)+KAPPA_FF_CODE(rhocode,Tgcode,Trcode)))) // for 1.3E3K \le T \le 1E9K or higher.  Numerically better to have kappa bottom out at low T so no diverent opacity as T->0
-
-//////////////////////////////////////////
-/// SYNCH STUFF
-//#define KAPPA_SYN_PREFACTOR_CODE(Bcode,Tecode) ((3.618472945417517e62*(YELE))/((Bcode)*(BFIELDBAR)*(MUMEAN)*Power((Tecode),5)*Power((TEMPBAR),5)*OPACITYBAR))
-
-//#define SYNZETA(Bcode,Tecode,Trcode) ((4.92270742942408e22*(Trcode))/((Bcode)*(BFIELDBAR)*Power((Tecode),2)*(TEMPBAR)))
-
-
-/// Synchrotron energy-opacity
-//#define KAPPA_SYN_ULTRAREL_ZETA_LEN(xv,len) (1.0/((lenv) + 1.7593661568669912098*Power((xv),1.6666666666666667) +      (1.4263215513887232471 + 0.3471650561326893869*Power((lenv),0.4523670248787104997))*Power((xv),2.111111111111111) +      0.23204675605082615204*Power((xv),2.5555555555555554) +      (0.24443559757524314548 + 0.0088705237575917670473*Power((lenv),0.4271869510615121102))*Power((xv),3)))
-//#define KAPPA_SYN_ULTRAREL_CODE(Bcode,Tecode,Trcode,Trcode,synzeta,pretau) (KAPPA_SYN_PREFACTOR_CODE(Bcode,Tecode)*KAPPA_SYN_ULTRAREL_ZETA_LEN(synzeta,pretau))
-
-//#define KAPPA_SYN_T5E8K_ZETA_LEN(xv,len) (1.0/((lenv) + 0.00052202316156059881506*Power((xv),1.6666666666666667) +      Power(0.14001850794282671986 + 0.11613125770482513044*Power((lenv),0.201800070232941442),3.3333333333333334814)*      Power((xv),2.111111111111111) + 0.00019353241505903052391*Power((xv),2.5555555555555554) +      (0.00027994589708735966894 + 0.000020878066604903371264*Power((lenv),0.1833333333333333481) +         0.00025453146537652838978*Power((lenv),0.3142857142857142794) + 0.000054874224183531537607*Power((lenv),0.5500000000000000444))*      Power((xv),3)))
-//#define KAPPA_SYN_T5E8K_CODE(Bcode,Tecode,Trcode,Trcode,synzeta,pretau) (KAPPA_SYN_PREFACTOR_CODE(Bcode,Tecode)*KAPPA_SYN_T5E8K_ZETA_LEN(synzeta,pretau))
-
-//#define KAPPA_SYN_T2E9K_ZETA_LEN(Bcode,Trcode) (1/((lenv) + (0.28275620637731327697 + 1.1378561908017619967e-11*Power((lenv),0.060928927736612376))*Power((xv),1.6666666666666667) +      (5.4268557992144783249 + 0.043977350144590657277*Power((lenv),0.5779288733465596239))*Power((xv),2.111111111111111) -      0.46233132906151664546*Power((xv),2.5555555555555554) +      (0.19718535926423731898 + 0.0031122781491543971728*Power((lenv),0.4612049073380375952))*Power((xv),3)))
-//#define KAPPA_SYN_T2E9K_CODE(Bcode,Tecode,Trcode,Trcode,synzeta,pretau) (KAPPA_SYN_PREFACTOR_CODE(Bcode,Tecode)*KAPPA_SYN_T2E9K_ZETA_LEN(synzeta,pretau))
-
-/// Synchrotron number-opacity
-//#define KAPPAN_SYN_ULTRAREL_ZETA_LEN(xv,len) (1.0/((lenv) + Power(0.86449798151937196078 + 0.24768973803440103021*Power((lenv),0.1626980491028581777),5.)*      Power((xv),1.6666666666666667) - 1.*(0.37887607591106965651 + 0.22518459751734409835*Power((lenv),0.4285631946482474364))*      Power((xv),1.8333333333333332593) + Power(0.73281421484706721348 + 0.21306057253116089667*Power((lenv),0.2099676374949942248),                                                    3.3333333333333334814)*Power((xv),2)))
-//#define KAPPAN_SYN_ULTRAREL_CODE(Bcode,Tecode,Trcode,Trcode,synzeta,pretau) (KAPPA_SYN_PREFACTOR_CODE(Bcode,Tecode)*KAPPAN_SYN_ULTRAREL_ZETA_LEN(synzeta,pretau))
-
-//#define KAPPAN_SYN_T5E8K_ZETA_LEN(xv,len) (1.0/((lenv) + Power(0.163252088813858387 + 0.18257330106897970423*Power((lenv),0.1627658778956655172),5.)*      Power((xv),1.6666666666666667) + Power(0.069760711506617445465 + 0.1433016264153323116*Power((lenv),0.2012366029583787241),       3.3333333333333334814)*Power((xv),2)))
-//#define KAPPAN_SYN_T5E8K_CODE(Bcode,Tecode,Trcode,Trcode,synzeta,pretau) (KAPPA_SYN_PREFACTOR_CODE(Bcode,Tecode)*KAPPAN_SYN_5E8K_ZETA_LEN(synzeta,pretau))
-
-//#define KAPPAN_SYN_T2E9K_ZETA_LEN(xv,len) (1.0/((lenv) + Power(0.59088832521110612461 + 0.4071501348167751444*Power((lenv),0.1132964803598243697),5.)*      Power((xv),1.6666666666666667) + (0.20483642960172801044 + 0.5219984832002366737*Power((lenv),0.1499999999999999944) +         0.02830076259937870306*Power((lenv),0.5999999999999999778))*Power((xv),2)))
-//#define KAPPAN_SYN_T2E9K_CODE(Bcode,Tecode,Trcode,Trcode,synzeta,pretau) (KAPPA_SYN_PREFACTOR_CODE(Bcode,Tecode)*KAPPAN_SYN_2E9K_ZETA_LEN(synzeta,pretau))
-
-
-//****************************************//
-//****************************************//
-//****************************************//
-// Problem setup constants that only modifies things in init.c (not init.h)
-//****************************************//
-//****************************************//
-
-#if(WHICHPROBLEM==FLATNESS)
-
-#define KAPPA 0.
-#define KAPPAES 0.
-
-// assume KAPPA defines fraction of FF opacity
-#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
-// assume KAPPAES defines fraction of ES opacity
-#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_BASIC_CODE(rho,T))
-
-
-#endif
-
-//****************************************//
-//****************************************//
-
-
-#if(WHICHPROBLEM==RADPULSE || WHICHPROBLEM==RADPULSEPLANAR || WHICHPROBLEM==RADPULSE3D)
-
-
-
-
-#if(WHICHPROBLEM==RADPULSEPLANAR)
-
-#define KAPPA 0.
-//#define KAPPAES (0.0)
-//#define KAPPAES (1E-7)
-//#define KAPPAES (1E-4*1.09713E-18*1E6)
-//#define KAPPAES (1E-4*1.09713E-18*1E3)
-//#define KAPPAES (1E-4*1.09713E-18*1E-0)
-//#define KAPPAES (1E-4*1.09713E-18*0.2)
-//#define KAPPAES (1E-4*1.09713E-18*1E-1)
-//#define KAPPAES (1E-4*1.09713E-18*1E-2)
-//#define KAPPAES (1E-4*1.09713E-18*1E-3)
-//#define KAPPAES (1E-4*1.09713E-18*1E-3*1E-10)
-
-// assume KAPPA defines fraction of FF opacity
-//#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
-// assume KAPPAES defines fraction of ES opacity
-//#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_BASIC_CODE(rho,T))
-
-#define KAPPAES (1E3) // takes VERY long time with sub-cycling, but works.
-//#define KAPPAES (1E2) // goes with sub-cycling at "ok" rate for this test.
-//#define KAPPAES (10.0)
-//#define KAPPAES (1E-1)
-//#define KAPPAES (1.0)
-//#define KAPPAES (1E-10)
-
-#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA)
-#define KAPPAESUSER(rho,T) (rho*KAPPAES)
-
-
-#else // PULSE and PULSE3D
-
-// KAPPAs are fraction of physical FF and ES opacities
-#define KAPPA 0.
-#define KAPPAES (SMALL)
-
-// assume KAPPA defines fraction of FF opacity
-#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
-// assume KAPPAES defines fraction of ES opacity
-#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_BASIC_CODE(rho,T))
-
-
-#endif
-
-
-#endif
-
-
-//****************************************//
-//****************************************//
-
-
-#if(WHICHPROBLEM==RADBEAMFLAT)
-
-
-#define KAPPA 0.
-#define KAPPAES 0.
-
-// assume KAPPA defines fraction of FF opacity
-#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
-// assume KAPPAES defines fraction of ES opacity
-#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_BASIC_CODE(rho,T))
-
-
-#endif
-
-//****************************************//
-//****************************************//
-
-
-#if(WHICHPROBLEM==RADTUBE)
-
-#define KAPPAESUSER(rho,T) (0.0)
-
-#if(NTUBE==1)
-#define KAPPAUSER(rho,B,Tg,Tr) (0.4*rho)
-#elif(NTUBE==2)
-#define KAPPAUSER(rho,B,Tg,Tr) (0.2*rho)
-#elif(NTUBE==3)
-#define KAPPAUSER(rho,B,Tg,Tr) (0.3*rho)
-#elif(NTUBE==31)
-#define KAPPAUSER(rho,B,Tg,Tr) (25*rho)
-#elif(NTUBE==4)
-#define KAPPAUSER(rho,B,Tg,Tr) (0.08*rho)
-#elif(NTUBE==41)
-#define KAPPAUSER(rho,B,Tg,Tr) (0.7*rho)
-#elif(NTUBE==5)
-#define KAPPAUSER(rho,B,Tg,Tr) (1000*rho)
-#endif
-
-
-#endif
-
-//****************************************//
-//****************************************//
-
-
-#if(WHICHPROBLEM==RADSHADOW || WHICHPROBLEM==RADDBLSHADOW)
-
-//#define KAPPAUSER(rho,B,Tg,Tr) (rho*1E2)
-#define KAPPAUSER(rho,B,Tg,Tr) (rho*1.0) // paper
-#define KAPPAESUSER(rho,T) (rho*0.0)
-
-
-#endif
-
-
-//****************************************//
-//****************************************//
-
-
-//****************************************//
-//****************************************//
-
-
-#if(WHICHPROBLEM==RADBEAM2D || WHICHPROBLEM==RADBEAM2DKS || WHICHPROBLEM==RADBEAM2DKSVERT)
-
-
-#define KAPPA 0.
-#define KAPPAES 0.
-
-// assume KAPPA defines fraction of FF opacity
-#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
-// assume KAPPAES defines fraction of ES opacity
-#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_BASIC_CODE(rho,T))
-
-
-#endif
-
-
-#if(WHICHPROBLEM==ATMSTATIC)
-
-
-#define KAPPA 0.
-#define KAPPAES 0.
-
-// assume KAPPA defines fraction of FF opacity
-#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
-// assume KAPPAES defines fraction of ES opacity
-#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_BASIC_CODE(rho,T))
-
-
-#endif
-
-
-#if(WHICHPROBLEM==RADATM)
-
-
-#define KAPPA 0.
-#define KAPPAES 1. // only scattering
-
-// assume KAPPA defines fraction of FF opacity
-#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
-// assume KAPPAES defines fraction of ES opacity
-#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_BASIC_CODE(rho,T))
-
-
-#endif
-
-
-#if(WHICHPROBLEM==RADWALL)
-
-
-#define KAPPA 0.
-#define KAPPAES 0.
-
-// assume KAPPA defines fraction of FF opacity
-#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
-// assume KAPPAES defines fraction of ES opacity
-#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_BASIC_CODE(rho,T))
-
-
-#endif
-
-
-
-
-#if(WHICHPROBLEM==RADWAVE)
-
-#define KAPPAUSER(rho,B,Tg,Tr) (rho*RADWAVE_KAPPA)
-#define KAPPAESUSER(rho,T) (rho*RADWAVE_KAPPAES)
-
-#endif
-
-
-
-#if(WHICHPROBLEM==KOMIPROBLEM)
-
-#define KAPPAUSER(rho,B,Tg,Tr) (0.)
-#define KAPPAESUSER(rho,T) (0.)
-
-#endif
-
-
-#if(WHICHPROBLEM==RADBONDI)
-
-
-#define KAPPA 1.0
-#define KAPPAES 1.0
-
-// assume KAPPA defines fraction of FF opacity
-#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
-// assume KAPPAES defines fraction of ES opacity
-#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_BASIC_CODE(rho,T))
-
-
-#endif
-
-
-#if(WHICHPROBLEM==RADDOT)
-
-
-#define KAPPA 0.
-#define KAPPAES 0.
-
-// assume KAPPA defines fraction of FF opacity
-#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
-// assume KAPPAES defines fraction of ES opacity
-#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_BASIC_CODE(rho,T))
-
-
-#endif
-
-#if(WHICHPROBLEM==RADNT || WHICHPROBLEM==RADFLATDISK)
-
-#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA_ES_CODE(rho,Tg)/1E14*0.1) // wierd use of kappa_{es} in koral
-//#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA_ES_CODE(rho,T)/1E14*0.0)
-#define KAPPAESUSER(rho,T) (0.0)
-
-#endif
-
-#if(WHICHPROBLEM==RADDONUT)
-// kappa can't be zero or else flux will be nan
-//#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA_ES_CODE(rho,T)/1E14*1.0) // wierd use of kappa_{es} in koral
-//#define KAPPAESUSER(rho,T) (0.0)
-
-// KORALNOTE: Different than koral code test, but as if full problem.
-#define KAPPA 1.0
-#define KAPPAES 1.0
-
-// KORALTODO: Put a lower limit on T~1E4K so not overly wrongly opaque in spots where u_g->0 anomologously?
-// assume KAPPA defines fraction of FF opacity
-//#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg+TEMPMIN))
-// accounts for low temperatures so non-divergent and more physical
-
-#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*(KAPPA_GENFF_CODE(SMALL+rho,Tg+TEMPMIN,Tr+TEMPMIN)))
-
-// TODOMARK: Compute FF number opacity
-#define KAPPANUSER(rho,B,Tg,Tr) (rho*KAPPA*(KAPPA_GENFF_CODE(SMALL+rho,Tg+TEMPMIN,Tr+TEMPMIN)))
-
-// assume KAPPAES defines fraction of ES opacity
-#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_CODE(rho,T))
-
-
-#endif
-
-#if(WHICHPROBLEM==RADCYLBEAM || WHICHPROBLEM==RADCYLBEAMCART)
-
-#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA_ES_BASIC_CODE(rho,Tg)/1E14*0.0) // note 0.0
-#define KAPPAESUSER(rho,T) (0.0)
-
-#endif
-
-#if(WHICHPROBLEM==RADCYLJET)
-
-#define KAPPAUSER(rho,B,Tg,Tr) (rho*(KAPPA_FF_CODE(SMALL+rho,Tg+TEMPMIN,Tr+TEMPMIN))) // SMALL
-#define KAPPAESUSER(rho,Tg) (rho*KAPPA_ES_BASIC_CODE(rho,Tg)/100.0)
-
-#endif
-
-
-#ifndef KAPPANUSER
-// in case haven't defined KAPPANUSER, just use energy opacity
-#define KAPPANUSER(rho,B,Tg,Tr) KAPPAUSER(rho,B,Tg,Tr)
-#endif
-
-
 
 // KAPPAUSER is optical depth per unit length per unit rest-mass energy density
 // calc_kappa_user and calc_kappan_user and calc_kappaes_user return optical depth per unit length.
 
-
-
-#define ISKAPPAEABS 0
-#define ISKAPPANABS 1
-#define ISKAPPAEEMIT 2
-#define ISKAPPANEMIT 3
-#define ISKAPPAES 4
-
-#define E 2.718281828459045
-
-// general fits from mean opacity paper
-static FTYPE kappa_func_fits(int which, FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, FTYPE varexpf)
-{
-
-// KORALTODO: Put a lower limit on T~1E4K so not overly wrongly opaque in spots where u_g->0 anomologously?
-// accounts for low temperatures so non-divergent and more physical
-
-
-
-  if(WHICHFIT==ISFITORIG){
-    if(which==ISKAPPAEABS || which==ISKAPPAEEMIT || which==ISKAPPANABS || which==ISKAPPANEMIT){
-      // energy/number and absorb/emit treated using the same opacity
-      return(rho*(KAPPA_GENFF_CODE(SMALL+rho,Tg+TEMPMIN,Tr+TEMPMIN)));
-    }
-    else if(which==ISKAPPAES){
-      return(rho*KAPPA_ES_CODE(rho,Tg+TEMPMIN));
-    }
-  }
-  else if(WHICHFIT==ISFITNEW){
-    FTYPE kappa,kappaemit,kappan,kappanemit,kappaes;
-    kappa_func_fits_all(SMALL+rho, B, Tg+TEMPMIN, Tr+TEMPMIN, varexpf, &kappa, &kappaemit, &kappan, &kappanemit, &kappaes);
-    if(which==ISKAPPAEABS) return(kappa);
-    else if(which==ISKAPPANABS) return(kappan);
-    else if(which==ISKAPPAEEMIT) return(kappaemit);
-    else if(which==ISKAPPANEMIT) return(kappanemit);
-    else if(which==ISKAPPAES) return(kappaes);
-  }
-
-  return(0.0); // should never reach here
-}
-
-
-// general fits from mean opacity paper, giving back all opacities
-int kappa_func_fits_all(FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, FTYPE varexpf, FTYPE *kappa, FTYPE *kappaemit, FTYPE *kappan, FTYPE *kappanemit, FTYPE *kappaes)
-{
-
-// KORALTODO: Put a lower limit on T~1E4K so not overly wrongly opaque in spots where u_g->0 anomologously?
-// accounts for low temperatures so non-divergent and more physical
-
-#if(WHICHFIT==ISFITORIG)
-  dualfprintf(fail_file,"Shouldn't be here\n");
-  myexit(759275529);
-#endif
-
-
-  FTYPE Te=Tg; // assume electrons and gas/ions/protons are same temperature
-
-  // "real" here means cgs and Gaussian for B and Kelvin for temperature
-  FTYPE rhoreal=rho*RHOBAR;
-  FTYPE nereal=3.0110683499999995e23*rhoreal*(1.0 + XFACT);
-  FTYPE Breal=B*BFIELDBAR;
-  FTYPE Tereal=Te*TEMPBAR;
-  FTYPE Tgreal=Tg*TEMPBAR;
-  FTYPE Trreal=Tr*TEMPBAR;
-  FTYPE xi = Trreal/Tereal;
-
-  FTYPE thetae = Tereal/TEMPELE;
-  FTYPE thetaesq=thetae*thetae;
-  FTYPE thetaecubed=thetaesq*thetae;
-
-  //////////////
-  //
-  // free-free for e-i
-  // below in [cm^{-1}]
-  //
-  //////////////
-
-  // ff prefactor
-  FTYPE kappaffreal=1.2E24*pow(Tereal,-7.0/2.0)*pow(rhoreal,2.0)*(1.0+XFACT)*(1.0-ZFACT);
-  // see nizisq.nb -- ensured continuous and differentiable at thetae=1
-  //    FTYPE Rei = (1.0+2.0*thetae+2.0*thetae*thetae)/(1.0+3.8*thetae+5.1*thetaesq+(8.0/M_PI)*thetaecubed)*log(1.0+3.42*thetae);
-  FTYPE Reilow = 1.0 + 1.7644624334086192*Power(thetae,1.34);
-  FTYPE Reihigh = 1.4019447514099515*Power(thetae,0.5)*(1.5 + Log(0.48 + 1.123*thetae));
-  FTYPE Rei = (thetae>=1.0 ? Reihigh : Reilow);
-
-  kappaffreal *= Rei;
-
-
-  FTYPE kappanffreal=kappaffreal; // same prefactor
-  FTYPE kappaemitffreal=kappaffreal; // same prefactor
-  FTYPE kappanemitffreal=kappaffreal; // same prefactor
-
-  // absorption
-
-  // XRB Ledd
-  FTYPE aa = 0.3564568198863157 - 0.19982886985727735*Power(1. - 1.*varexpf,0.5646962005387126) + 0.18848660385247928*Power(varexpf,13.940235230123522);
-  FTYPE bb = 3.0641759806549147 + 0.25543546368991477*Power(1. - 1.*varexpf,0.3128511829901932) + 0.07219025685305303*Power(varexpf,1.3638629108321003);
-  FTYPE cc = 5.99474041542733 - 1.4436038489430345*Power(1. - 1.*varexpf,0.12828451539717775) - 1.4051865724895833*Power(varexpf,3.0775239339815585);
-  //      FTYPE aa = 0.9315361341095171 - 0.6768085524145425*Power(1 - varexpf,0.7198306274197313) + 1.9002183262398797*Power(varexpf,37.829441097625605);
-  //    FTYPE bb = 3.1012402220434816 + 0.4612339875024576*Power(1 - varexpf,0.03596567451632021) - 0.02585416821144859*Power(varexpf,114.93181787377999);
-  //    FTYPE cc = 10.042113525722476 - 9.063716681172405*Power(1 - varexpf,2.4433708236615708e-9) - 0.6884461811691391*Power(varexpf,4.432030473409409);
-
-  kappaffreal *= aa*pow(xi,-bb)*log(1.0+cc*xi);
-
-  // List(4. - 2.06*Power(1. - 1.*varvarvar,1.) + 21.*Power(varvarvar,5.),3.1503757694129613 + 0.0008942404015805927*Power(1. - 1.*varvarvar,10.174621780103456) -     0.41243605382204196*Power(varvarvar,59.06672963853068),4.552732466653472e-7 + 2.3916452081662603*Power(1. - 1.*varvarvar,0.5522198226571239) + 5.27043093753271*Power(varvarvar,69.17066973904404))
-
-#if(EVOLVENRAD)
-  // XRB Ledd
-  FTYPE aan = 4. - 2.06*Power(1. - 1.*varexpf,1.) + 21.*Power(varexpf,5.);
-  FTYPE bbn = 3.1503757694129613 + 0.0008942404015805927*Power(1. - 1.*varexpf,10.174621780103456) -      0.41243605382204196*Power(varexpf,59.06672963853068);
-  FTYPE ccn = 4.552732466653472e-7 + 2.3916452081662603*Power(1. - 1.*varexpf,0.5522198226571239) + 5.27043093753271*Power(varexpf,69.17066973904404);
-  //    FTYPE aan=1.27*Power(E,1.842068074395237*Power(varexpf,2) + 1.151292546497023*Power(varexpf,4) + 2.8206667389177063*Power(varexpf,70.));
-  //    FTYPE bbn=3.0976213586221544 - 0.03091777713803534*Power(1 - varexpf,4.613930997481447) - 0.3099700393164486*Power(varexpf,162.16873912467364);
-  //    FTYPE ccn=0.00010386408308833163 + 5.934327626527228*Power(1 - varexpf,0.5880281963526498) + 62558.02370357485*Power(varexpf,1.3444132516555986e6);
-
-  kappanffreal *= aan*pow(xi,-bbn)*log(1.0+ccn*xi);
-#endif
-
-  // emission (just Planck varexpf=1 but using actual direct fit instead of fit over many varexpf)
-
-  // XRB Ledd
-  FTYPE aae = 0.5316463286647214;
-  FTYPE bbe = 3.140128803410833;
-  FTYPE cce = 4.522392868247536;
-  //    FTYPE aae=0.3759100641660466;
-  //    FTYPE bbe=3.0775444410210264;
-  //    FTYPE cce=9.354365388578165;
- 
-  kappaemitffreal *= aae*pow(xi,-bbe)*log(1.0+cce*xi);
-
-#if(EVOLVENRAD)
-  // XRB Ledd
-  FTYPE aane = 20.;
-  FTYPE bbne = 2.6669560547974855;
-  FTYPE ccne = 5.;
-  //    FTYPE aane=7.418554613651609;
-  //    FTYPE bbne=2.0551425132443293;
-  //    FTYPE ccne=62558.213216069445;
-
-  kappanemitffreal *= aane*pow(xi,-bbne)*log(1.0+ccne*xi);
-#endif
-
-  // TODO: Need to interpolate kappaffreal and kappanffreal towards
-  // Planck when varexpf->1.  Like when varexp=0.999 to 1.0, or
-  // whever fits seem to become off.
-
-  //////////////
-  //
-  // Add free-free for e-e
-  // below in [cm^{-1}]
-  //
-  //////////////
-  //FTYPE Ree = thetae*(0.851+2.0*thetae)/(1.0+3.8*thetae+5.1*thetaesq+(8.0/M_PI)*thetaecubed)*log(1.0+10.4*thetaesq);
-  FTYPE Reelow =1.706666666666667*thetae*(1 + 1.1*thetae + Power(thetae,2) - 1.063803438337589*Power(thetae,2.5));
-  FTYPE Reehigh = 2.489326395711546*Power(thetae,0.5)*(1.28 + Log(1.123*thetae));
-  FTYPE Ree = (thetae>=1.0 ? Reehigh : Reelow);
-
-  // just add-in factor by which free-free e-e adds-in (see nizisq.nb)
-  FTYPE factorffee=0.5*(1.0+XFACT)*Ree/((1.0-ZFACT)*Rei);
-  FTYPE kappaffeereal = kappaffreal*factorffee;
-  FTYPE kappanffeereal = kappanffreal*factorffee;
-  FTYPE kappaemitffeereal = kappaemitffreal*factorffee;
-  FTYPE kappanemitffeereal = kappanemitffreal*factorffee;
-    
-  //////////////
-  //
-  // Add bound-free
-  // below in [cm^{-1}]
-  //
-  //////////////
-
-  // just add-in factor by which bound-free adds-in
-  FTYPE factorbf=750.0*ZFACT*(1.0+XFACT+0.75*YFACT)/((1.0+XFACT)*(1.0-ZFACT));
-  FTYPE kappabfreal = kappaffreal*factorbf;
-  FTYPE kappanbfreal = kappanffreal*factorbf;
-  FTYPE kappaemitbfreal = kappaemitffreal*factorbf;
-  FTYPE kappanemitbfreal = kappanemitffreal*factorbf;
-
-  //////////////
-  //
-  // Add Chianti
-  // below in [cm^{-1}]
-  //  [TODO: Could use ff as prefactor to these as well for more uniform treatment as Trreal and Tereal become different.]
-  //  [TODO: Could use each ff prefactor for each kappa type (4 types) so opacities behave uniformly as Trreal and Tereal become different.  But not clear if all scale the same with temperature.  At least for Chianti it's reasonable.]
-  //  [TODO: integrate real low-temp opacities]
-  //
-  //////////////
-
-  // FTYPE kappachiantirealbase = 30.0*1E33*pow(rhoreal,2.0)*(0.1+ZFACT/ZSOLAR)*XFACT*(1.0+XFACT)*pow(Tereal,-1.7)*pow(Trreal,-3.0);
-  // just add-in factor by which chianti adds-in (see nizisq.nb)
-  FTYPE factorchianti=2.50672E10*XFACT*(0.1+ZFACT/ZSOLAR)*pow(Tereal,-1.2)/(1.0-ZFACT);
-  FTYPE kappachiantireal = kappaffreal*factorchianti;
-  FTYPE kappanchiantireal = kappanffreal*factorchianti;
-  FTYPE kappaemitchiantireal = kappaemitffreal*factorchianti;
-  FTYPE kappanemitchiantireal = kappanemitffreal*factorchianti;
-
-  //////////////
-  //
-  // Add H^-
-  // below in [cm^{-1}]
-  //
-  //////////////
-
-  // FTYPE kappahminusbase = 33.0*1E-25*pow(ZFACT,0.5)*pow(rhoreal,1.5)*pow(Tereal,7.7);
-  // just add-in factor by which H^- adds-in (see nizisq.nb), but remove Rei
-  FTYPE factorhm=2.75739E-48*pow(Tereal,11.2)*pow(ZFACT,0.5)/(pow(rhoreal,0.5)*(1.0+XFACT)*(1.0-ZFACT)*Rei);
-  FTYPE kappahmreal = kappaffreal*factorhm;
-  FTYPE kappanhmreal = kappanffreal*factorhm;
-  FTYPE kappaemithmreal = kappaemitffreal*factorhm;
-  FTYPE kappanemithmreal = kappanemitffreal*factorhm;
-
-  //////////////
-  //
-  // Add Chianti that fits Opal
-  // below in [cm^{-1}]
-  //
-  //////////////
-
-  // just add-in factor by which chianti opal adds-in
-  FTYPE factorchiantiopal=3E-13*pow(Tereal,1.6)*pow(rhoreal,-0.4);
-  FTYPE kappachiantiopalreal = kappaffreal*factorchianti*factorchiantiopal;
-  FTYPE kappanchiantiopalreal = kappanffreal*factorchianti*factorchiantiopal;
-  FTYPE kappaemitchiantiopalreal = kappaemitffreal*factorchianti*factorchiantiopal;
-  FTYPE kappanemitchiantiopalreal = kappanemitffreal*factorchianti*factorchiantiopal;
-
-  //////////////
-  //
-  // Add H^- that fits Opal
-  // below in [cm^{-1}]
-  //
-  //////////////
-
-  // just add-in factor by which H^- opal adds-in
-  FTYPE factorhmopal=1E4*pow(Tereal,-1.2);
-  FTYPE kappahmopalreal = kappaffreal*factorhm*factorhmopal;
-  FTYPE kappanhmopalreal = kappanffreal*factorhm*factorhmopal;
-  FTYPE kappaemithmopalreal = kappaemitffreal*factorhm*factorhmopal;
-  FTYPE kappanemithmopalreal = kappanemitffreal*factorhm*factorhmopal;
-
-  //////////////
-  //
-  // Add molecular (without T dependence)
-  // below in [cm^{-1}]
-  //
-  //////////////
-
-  FTYPE kappamolreal = 3.0*ZFACT*rhoreal;
-  FTYPE kappanmolreal = kappamolreal;
-  FTYPE kappaemitmolreal = kappamolreal;
-  FTYPE kappanemitmolreal = kappamolreal;
-
-  //////////////
-  //
-  // Low-density interpolation
-  // below in [cm^{-1}]
-  //
-  //////////////
-  FTYPE kappalowdensityreal  = 1.0/ ( 1.0/(kappamolreal + kappahmreal) + 1.0/(kappachiantireal + kappaffreal + kappaffeereal + kappabfreal) );
-  FTYPE kappanlowdensityreal  = 1.0/ ( 1.0/(kappanmolreal + kappanhmreal) + 1.0/(kappanchiantireal + kappanffreal + kappanffeereal + kappanbfreal) );
-  FTYPE kappaemitlowdensityreal  = 1.0/ ( 1.0/(kappaemitmolreal + kappaemithmreal) + 1.0/(kappaemitchiantireal + kappaemitffreal + kappaemitffeereal + kappaemitbfreal) );
-  FTYPE kappanemitlowdensityreal  = 1.0/ ( 1.0/(kappanemitmolreal + kappanemithmreal) + 1.0/(kappanemitchiantireal + kappanemitffreal + kappanemitffeereal + kappanemitbfreal) );
-
-  //////////////
-  //
-  // full range density interpolation
-  // below in [cm^{-1}]
-  //
-  //////////////
-  FTYPE kappadensityreal  = 1.0/ ( 1.0/(kappamolreal + kappahmopalreal) + 1.0/(kappachiantiopalreal) + 1.0/(kappachiantireal + kappaffreal + kappaffeereal + kappabfreal) );
-  FTYPE kappandensityreal  = 1.0/ ( 1.0/(kappanmolreal + kappanhmopalreal) + 1.0/(kappanchiantiopalreal) + 1.0/(kappanchiantireal + kappanffreal + kappanffeereal + kappanbfreal) );
-  FTYPE kappaemitdensityreal  = 1.0/ ( 1.0/(kappaemitmolreal + kappaemithmopalreal) + 1.0/(kappaemitchiantiopalreal) + 1.0/(kappaemitchiantireal + kappaemitffreal + kappaemitffeereal + kappaemitbfreal) );
-  FTYPE kappanemitdensityreal  = 1.0/ ( 1.0/(kappanemitmolreal + kappanemithmopalreal) + 1.0/(kappanemitchiantiopalreal) + 1.0/(kappanemitchiantireal + kappanemitffreal + kappanemitffeereal + kappanemitbfreal) );
-
-
-  //////////////
-  //
-  // Cylco-Synchrotron
-  // below in [cm^{-1}]
-  //
-  //////////////
-
-  FTYPE nuM = 1.5*QCHARGE*Breal/(2.0*M_PI*MELE*CCCTRUE0)*thetaesq;
-  FTYPE phi = (K_BOLTZ*Trreal)/(HPLANCK*nuM);
-
-  // synch prefactor
-  FTYPE kappasyreal=2.13E-11*nereal/Breal*pow(Tereal/1E10,-5.0);
-
-  // low-temp factor
-  FTYPE q0 = 1.0/ (1.0+pow(3.3*thetae,-5.0));
-  FTYPE q1 = 1.0 + pow(3.3*thetae,-5.0);
-  FTYPE qsyn = exp(log(q0) + ( 0.5 + (1.0/M_PI)*atan(3.0+log(phi)) )*(log(q1) - log(q0)) );
-  kappasyreal *= qsyn;
-    
-  FTYPE kappansyreal=kappasyreal; // same prefactor
-  FTYPE kappaemitsyreal=kappasyreal; // same prefactor
-  FTYPE kappanemitsyreal=kappasyreal; // same prefactor
-
-  // absorption
-
-  // XRB Ledd
-  FTYPE aas=0.001 - 0.00030000000000000003*Power(1. - 1.*varexpf,0.1) + 9.999*Power(varexpf,100);
-  FTYPE bbs=0.34915123451867575 + 0.6639854085243424*Power(1. - 1.*varexpf,0.21551972527431834) + 0.6969780620639547*Power(varexpf,109.95164261078826);
-  FTYPE ccs=3.5 - 0.5*Power(1. - 1.*varexpf,0.1) + 1.7999999999999998*Power(varexpf,10);
-  FTYPE dds=80.*Power(2.718281828459045,1.611809565095832*Power(varexpf,2) + 1.701470224678968*Power(varexpf,19.123258595041275));
-  FTYPE ees=2.9814806065542103 + 1.0252733145171038*Power(1. - 1.*varexpf,0.03215194092829952);
-
-  kappasyreal *= 1.0/( 1.0/(aas*pow(phi,-bbs)*log(1.0+ccs*phi)) + 1.0/(dds*pow(phi,-ees)) );
-
-#if(EVOLVENRAD)
-  // XRB Ledd
-  FTYPE aans=0.0012 + 0.00005000000000000013*Power(1. - 1.*varexpf,0.05) - 0.0009099999999999999*Power(varexpf,7);
-  FTYPE bbns=2.65 + 0.040000000000000036*Power(1. - 1.*varexpf,0.02) - 0.5499999999999998*Power(varexpf,30);
-  FTYPE ccns=1.31 - 0.06000000000000005*Power(1. - 1.*varexpf,0.02) + 1.69*Power(varexpf,8);
-  FTYPE ddns=Power(2.718281828459045,1.5686159179138452 + 1.151292546497023*Power(varexpf,2) + 1.151292546497023*Power(varexpf,4) + 2.9834230661458117*Power(varexpf,195.52338999877892));
-  FTYPE eens=2.974042326402226 + 0.23373841071210855*Power(1. - 1.*varexpf,11.45996831663565) -  0.1009858740118661*Power(varexpf,201.41910724608374);
-
-  kappansyreal *= 1.0/( 1.0/(aans*pow(phi,-bbns)*log(1.0+ccns*phi)) + 1.0/(ddns*pow(phi,-eens)) );
-#endif
-
-  // emission (just Planck varexpf=1 but using actual direct fit instead of fit over many varexpf)
-
-  // XRB Ledd
-  FTYPE aaes=0.3188964065440192;
-  FTYPE bbes=1.0768900596611533;
-  FTYPE cces=0.0026066604097452917;
-  FTYPE ddes=1.2627623470514082;
-  FTYPE eees=2.987395175467846;
- 
-  kappaemitsyreal *= 1.0/( 1.0/(aaes*pow(phi,-bbes)*log(1.0+cces*phi)) + 1.0/(ddes*pow(phi,-eees)) );
-
-#if(EVOLVENRAD)
-  // XRB Ledd
-  FTYPE aanes=0.00029169186404094216;
-  FTYPE bbnes=1.3218673308302118;
-  FTYPE ccnes=1.1634612365295334;
-  FTYPE ddnes=120.01337286010565;
-  FTYPE eenes=2.3252442378326856;
-
-  kappanemitsyreal *= 1.0/( 1.0/(aanes*pow(phi,-bbnes)*log(1.0+ccnes*phi)) + 1.0/(ddnes*pow(phi,-eenes)) );
-#endif
-
-  //////////////
-  //
-  // DC
-  // below in [cm^{-1}]
-  //
-  //////////////
-
-  //    FTYPE thetar = K_BOLTZ*Trreal/(MELE*CCCTRUE0*CCCTRUE0);
-  FTYPE thetar = Trreal/TEMPELE;
-
-  // dc prefactor
-  FTYPE kappadcreal=7.36E-46*nereal*Trreal*Trreal*varexpf;
-
-  // high-thetae factor
-  FTYPE pdc = pow(1.0+thetae,-3.0);
-  kappadcreal *= pdc;
-    
-  FTYPE kappandcreal=kappadcreal; // same prefactor
-  FTYPE kappaemitdcreal=kappadcreal; // same prefactor
-  FTYPE kappanemitdcreal=kappadcreal; // same prefactor
-
-  // absorption
-
-  // XRB Ledd
-  FTYPE aadc=3.10482346702441e-8 + 4.162489998316388*Power(1. - 1.*varexpf,1.6896115787181434) + 6.702210386421933*Power(varexpf,0.941782674568028);
-  FTYPE bbdc=0.04202835820213653 - 0.03337036710130055*Power(1. - 1.*varexpf,0.4693413976733784) - 0.002097439704449637*Power(varexpf,0.021742118711173992);
-  FTYPE ccdc=3.8020287401719655 + 0.2009643395406986*Power(1. - 1.*varexpf,0.25767159028663056) - 0.18040020940821044*Power(varexpf,33.009903857413704);
-  FTYPE dddc=0.11793169411613985 - 0.06262831233321572*Power(1. - 1.*varexpf,0.34961114748511685) + 0.016889330731907487*Power(varexpf,35.3723390749425);
-    
-  kappadcreal *= 1.0/( 1.0/aadc + 1.0/(bbdc*pow(thetar,-ccdc)) + 1.0/(dddc*pow(thetar,-ccdc/3.0)) );
-
-#if(EVOLVENRAD)
-  // XRB Ledd
-  FTYPE aandc=87.4586627372423 - 76.35909344479292*Power(1. - 1.*varexpf,0.13586634790456995) + 29.385274489218205*Power(varexpf,285.27285622653653);
-  FTYPE bbndc=1.1604225625247175 - 1.1192436863350592*Power(1. - 1.*varexpf,0.1339258484550137) + 0.1955857773358507*Power(varexpf,18.1030753003189);
-  FTYPE ccndc=3.9257505990037376 + 0.04266044504755229*Power(1. - 1.*varexpf,181.71820529516145) - 0.8002705331174753*Power(varexpf,21.623589714867247);
-  FTYPE ddndc=2.8625119194776856 - 2.716652341873481*Power(1. - 1.*varexpf,0.1055549863784506) + 1.8741117433895793*Power(varexpf,309.10043138151474);
-
-  kappandcreal *= 1.0/( 1.0/aandc + 1.0/(bbndc*pow(thetar,-ccndc)) + 1.0/(ddndc*pow(thetar,-ccndc/3.0)) );
-#endif
-
-  // emission
-
-  // XRB Ledd
-  FTYPE aaedc=6.335417556116487 - 0.058933985431348646*Power(1. - 1.*varexpf,10.71634135441363) + 0.48765467682596686*Power(varexpf,1.7536859250821957);
-  FTYPE bbedc=0.008747549563345837 + 0.014220493179111593*Power(1. - 1.*varexpf,0.36109285953630127) + 0.028227296616735897*Power(varexpf,1.556532326060757);
-  FTYPE ccedc=3.7824716575816524 + 0.18426457897750437*Power(1. - 1.*varexpf,0.3661610552743282) - 0.1602799611377681*Power(varexpf,15.388944611235807);
-  FTYPE ddedc=0.11936934944026895 - 0.025640260828114658*Power(1. - 1.*varexpf,0.39821885979760463) + 0.014988119208161788*Power(varexpf,26.289513268487767);
- 
-  kappaemitdcreal *= 1.0/( 1.0/aaedc + 1.0/(bbedc*pow(thetar,-ccedc)) + 1.0/(ddedc*pow(thetar,-ccedc/3.0)) );
-
-#if(EVOLVENRAD)
-  // XRB Ledd
-  FTYPE aanedc=197.97520843920014 - 94.77219201589888*Power(1. - 1.*varexpf,0.9245008022924389) - 81.66905945089535*Power(varexpf,1.010185534936844);
-  FTYPE bbnedc=4.798508367755025e-11 + 1.0490039263100823*Power(1. - 1.*varexpf,0.24861894212727034) + 1.3060425347854707*Power(varexpf,1.1248777879043648);
-  FTYPE ccnedc=3.4389272678970677 + 0.441710530722887*Power(1. - 1.*varexpf,0.3614676129393117) - 0.4179301735940477*Power(varexpf,14.840910987577235);
-  FTYPE ddnedc=3.375250751641187 - 1.3820659504372945*Power(1. - 1.*varexpf,0.31579132247596853) + 1.3742704814428137*Power(varexpf,31.28257475560334);
-
-  kappanemitdcreal *= 1.0/( 1.0/aanedc + 1.0/(bbnedc*pow(thetar,-ccnedc)) + 1.0/(ddnedc*pow(thetar,-ccnedc/3.0)) );
-#endif
-
-  // Planck for interpolation to it when expf->1.  dcpl same as edcpl
-  FTYPE aadcpl=6.8308477566235427614037721740062696378080011960029;
-  FTYPE bbdcpl=0.03737660642072567319753249796331010429215268940195;
-  FTYPE ccdcpl=3.6263522982307391011876292625424350179419071859114;
-  FTYPE dddcpl=0.13396823846337876662165099344371722644585939843797;
-
-  //   ndcpl same as nedcpl
-  FTYPE aandcpl=116.24082637910697352499285024420803245395311274652;
-  FTYPE bbndcpl=1.3436648321999717296470441601823998776061527255987;
-  FTYPE ccndcpl=3.0309933617509186060061141161349078396542823722783;
-  FTYPE ddndcpl=4.7183006844597535352187951503958715513547062753028;
-
-  // But for DC varexp fits, varexp=1 matches to direct Planck fit very well, so no need to specially interpolate near expf=1.
-
-  //////////////
-  //
-  // Get final absorption/emission opacities
-  //
-  //////////////
-
-  FTYPE kappareal = kappadensityreal + kappasyreal + kappadcreal;
-  FTYPE kappanreal = kappandensityreal + kappansyreal + kappandcreal;
-  FTYPE kappaemitreal = kappaemitdensityreal + kappaemitsyreal + kappaemitdcreal;
-  FTYPE kappanemitreal = kappanemitdensityreal + kappanemitsyreal + kappanemitdcreal;
-
-  //////////////
-  //
-  // Electron Scattering
-  //
-  //////////////
-  //#define KAPPA_ES_KNCORRF(f) (0.75*((-1.*(1. + 3.*(f)))/Power(1. + 2.*(f),2) +  (0.5*Log(1. + 2.*(f)))/(f) + ((1. + (f))*((2. + 2.*(f))/(1. + 2.*(f)) - (1.*Log(1. + 2.*(f)))/(f)))/Power((f),2)))
-  //#define KAPPA_ES_KNCORR(rhocode,Tcode) (KAPPA_ES_KNCORREP(K_BOLTZ*(Tcode)*TEMPBAR/(MELE*CCCTRUE*CCCTRUE)))
-
-  // Buchler and Yueh 1976 (just Fermi part). Fewer electrons when near Fermi fluid limit.
-  FTYPE kappa_es_fermicorr = (1.0/(1.0+2.7E11*prpow(rhoreal,2.0)/prpow(Tereal,2.0)));
-    
-  // Buchler and Yueh 1976 .  Klein-Nishina for thermal electrons.
-  FTYPE kappa_es_kncorr = (1.0/(1.0+prpow(Tereal/4.5E8,0.86)));
-
-  /// kappaes = sigma_T n_e = sigma_T n_b (n_e/n_b) = sigma_T rho/mb (ne/nb)
-  // below in [cm^{-1}]
-  FTYPE kappaesreal = 0.2*(1.0+XFACT)*(rhoreal)*kappa_es_fermicorr*kappa_es_kncorr;
-
-    
-  //////////////
-  //
-  // Return code value of opacity
-  //
-  //////////////
-  static FTYPE overopacitybaralt=1.0/(OPACITYBAR*RHOBAR); // for those opacities in cm^{-1}
-
-  // return results
-  *kappa=kappareal*overopacitybaralt;
-  *kappan=kappanreal*overopacitybaralt;
-  *kappaemit=kappaemitreal*overopacitybaralt;
-  *kappanemit=kappanemitreal*overopacitybaralt;
-  *kappaes=kappaesreal*overopacitybaralt;
-
-
-  // TODO: check Ree and Rei with Te for small Te
-  // check all expressions.  ensure rhoreal Tereal all right.
-  // check Gcompt
-  // run code
-  
-  return(0);
-}
-
-FTYPE Gcompt(FTYPE rho0, FTYPE Tgas, FTYPE Tradff, FTYPE Ruu)
-{
-
-// INELASTIC COMPTON TERM
-// see DOCOMPTON in physics.tools.rad.c:
-// in term2, doesn't change photon energy, so that in scattering-dominated atmospheres, photons move through unchanged by temperature of gas.
-// Eq A7 in http://adsabs.harvard.edu/abs/2012ApJ...752...18K used first in http://adsabs.harvard.edu/cgi-bin/bib_query?arXiv:0904.4123 as based upon a calculation in http://adsabs.harvard.edu/abs/2000thas.book.....P .
-// Also interesting for next steps:
-//1) Conservative form of Kompaneet's equation and dealing with the diffusion term implicitly: http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.13.798 and related: http://www.osti.gov/scitech/biblio/891567 .  We should ensure the 4-force is consistent (numerically and analytically) with what's used in this equation for n.
-//2) Relativistic corrections:  http://adsabs.harvard.edu/cgi-bin/bib_query?arXiv:1201.5606 and http://adsabs.harvard.edu/abs/2002nmgm.meet.2329S .  It looks like nothing more difficult as far as actually using the expressions in place of non-relativistic version.
-//One semi-relevant application: http://www.aanda.org/articles/aa/full_html/2009/45/aa12061-09/aa12061-09.html
-
-  FTYPE Te=Tgas; // assumes Te=Tgas
-  FTYPE Tereal = Te*TEMPBAR;
-  FTYPE rhoreal=rho0*RHOBAR;
-
-  FTYPE thetae = Tereal/TEMPELE;
-
-  // Sadowski et al. (2014) Eq 26 and 27.
-  FTYPE kappa_forcompt_relcorr = (1.0 + 3.683*thetae+4.0*thetae*thetae)/(1.0 + thetae);
-
-  // Buchler and Yueh 1976 (just Fermi part). Fewer electrons when near Fermi fluid limit.
-  FTYPE kappa_es_fermicorr = 1.0/(1.0+2.7E11*rhoreal/prpow(Tereal,2.0));
-
-  FTYPE kappa_forcompt_code = 0.2*(1.0+XFACT)*kappa_es_fermicorr*kappa_forcompt_relcorr/OPACITYBAR;
-
-  //  FTYPE neleobar=1.0/MUMEAN; // to have neleobar*kappaes=kappaesperele*mb*rho/(MUMEAN*mb)
-  // ASSUMPTION: Tion=Tele
-  FTYPE preterm3 = -4.0*rho0*kappa_forcompt_code*(Tgas - Tradff)*(TEMPBAR/TEMPELE)*Ruu; // kappaes with its internal *rho already accounts for being number density of electrons involved, so no need to use MUMEAN again here.
-
-  //  f[pl] = ((uu[pl] - uu0[pl]) + (sign[pl] * localdt * Gdpl[pl]))*extrafactor[pl]; -> T^t_t[new] = T^t_t[old] - Gdpl[UU] -> dT^t_t = -Gdpl[UU] = +Gd[TT]
-  // Ruu>0, so if Tgas>Trad, then preterm3<0.  Then egas should drop.
-  // We have dT^t_t = G_t = Gd_t = -Gdpl_t = preterm3 u_t > 0, so G_t>0 so T^t_t rises so -T^t_t drops so egas drops.
-
-  return(preterm3);
-} 
-
-
-
 // energy absorption
-FTYPE calc_kappa_user(FTYPE rho, FTYPE B, FTYPE Tg,FTYPE Tr,FTYPE varexpf, FTYPE x,FTYPE y,FTYPE z)
+FTYPE calc_kappa_user(FTYPE rho, FTYPE B, FTYPE Tg,FTYPE Tr,FTYPE x,FTYPE y,FTYPE z)
 {
-  //  if(WHICHPROBLEM==RADDONUT && nstep>100){ 
+  //  if(WHICHPROBLEM==RADDONUT && nstep>100){
   //    return(0.0);
   //  }
   //  else return(KAPPAUSER(rho,B,Tg,Tr));
-
-
-#if(WHICHPROBLEM==RADDONUT)
-  return(kappa_func_fits(ISKAPPAEABS,rho,B,Tg,Tr,varexpf));
-#else
   return(KAPPAUSER(rho,B,Tg,Tr));
-#endif
-
-}
-
-// energy emission
- FTYPE calc_kappaemit_user(FTYPE rho, FTYPE B, FTYPE Tg,FTYPE Tr,FTYPE varexpf, FTYPE x,FTYPE y,FTYPE z)
-{
-  //  if(WHICHPROBLEM==RADDONUT && nstep>100){ 
-  //    return(0.0);
-  //  }
-  //  else return(KAPPAUSER(rho,B,Tg,Tr));
-
-
-#if(WHICHPROBLEM==RADDONUT)
-  return(kappa_func_fits(ISKAPPAEEMIT,rho,B,Tg,Tr,varexpf));
-#else
-  return(KAPPAUSER(rho,B,Tg,Tr));
-#endif
-
 }
 
 // number absorption
- FTYPE calc_kappan_user(FTYPE rho, FTYPE B, FTYPE Tg,FTYPE Tr,FTYPE varexpf, FTYPE x,FTYPE y,FTYPE z)
+FTYPE calc_kappan_user(FTYPE rho, FTYPE B, FTYPE Tg,FTYPE Tr,FTYPE x,FTYPE y,FTYPE z)
 {
   //  if(WHICHPROBLEM==RADDONUT && nstep>100){
   //    return(0.0);
   //  }
   //  else return(KAPPANUSER(rho,B,Tg,Tr));
-#if(WHICHPROBLEM==RADDONUT)
-  return(kappa_func_fits(ISKAPPANABS,rho,B,Tg,Tr,varexpf));
-#else
   return(KAPPANUSER(rho,B,Tg,Tr));
-#endif
-
-}
-
-// number emission
- FTYPE calc_kappanemit_user(FTYPE rho, FTYPE B, FTYPE Tg,FTYPE Tr,FTYPE varexpf, FTYPE x,FTYPE y,FTYPE z)
-{
-  //  if(WHICHPROBLEM==RADDONUT && nstep>100){
-  //    return(0.0);
-  //  }
-  //  else return(KAPPANUSER(rho,B,Tg,Tr));
-#if(WHICHPROBLEM==RADDONUT)
-  return(kappa_func_fits(ISKAPPANEMIT,rho,B,Tg,Tr,varexpf));
-#else
-  return(KAPPANUSER(rho,B,Tg,Tr));
-#endif
-
 }
 
 //scattering
 FTYPE calc_kappaes_user(FTYPE rho, FTYPE T,FTYPE x,FTYPE y,FTYPE z)
 {  
-
-#if(WHICHPROBLEM==RADDONUT)
-  return(kappa_func_fits(ISKAPPAES,rho,0,T,T,1.0));
-#else
   return(KAPPAESUSER(rho,T));
-#endif
 
 }
-
-
-
-
 
 
 int coolfunc_user(FTYPE h_over_r, FTYPE *pr, struct of_geom *geom, struct of_state *q,FTYPE (*dUcomp)[NPR])

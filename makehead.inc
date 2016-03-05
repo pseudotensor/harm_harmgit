@@ -221,7 +221,7 @@ else
 
 # no choice for below
 # i.e. no MPI for iinterp, bin2txt, or smcalc
-USEMPI=0
+USEMPI=1
 
 endif
 

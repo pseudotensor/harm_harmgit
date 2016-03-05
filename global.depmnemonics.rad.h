@@ -108,13 +108,100 @@
 
 
 #define OPACITYBAR (LBAR*LBAR/MBAR) // cgs in cm^2/g
+
+
+/// PURE ELASTIC SCATTERING
+//#define KAPPA_ES_KNCORRF(f) (0.75*((-1.*(1. + 3.*(f)))/Power(1. + 2.*(f),2) +  (0.5*Log(1. + 2.*(f)))/(f) + ((1. + (f))*((2. + 2.*(f))/(1. + 2.*(f)) - (1.*Log(1. + 2.*(f)))/(f)))/Power((f),2)))
+//#define KAPPA_ES_KNCORR(rhocode,Tcode) (KAPPA_ES_KNCORREP(K_BOLTZ*(Tcode)*TEMPBAR/(MELE*CCCTRUE*CCCTRUE)))
+#define KAPPA_ES_FERMICORR(rhocode,Tcode) (1.0/(1.0+2.7E11*((rhocode)*RHOBAR)/prpow((Tcode)*TEMPBAR,2.0))) // Buchler and Yueh 1976 (just Fermi part). Fewer electrons when near Fermi fluid limit.
+#define KAPPA_ES_KNCORR(rhocode,Tcode) (1.0/(1.0+prpow((Tcode)*TEMPBAR/4.5E8,0.86)))  // Buchler and Yueh 1976 .  Klein-Nishina for thermal electrons.
+/// kappaes = sigma_T n_e = sigma_T n_b (n_e/n_b) = sigma_T rho/mb (ne/nb)
+#define KAPPA_ES_CODE(rhocode,Tcode) (0.2*(1.0+XFACT)*KAPPA_ES_FERMICORR(rhocode,Tcode)*KAPPA_ES_KNCORR(rhocode,Tcode)/OPACITYBAR)
+#define KAPPA_ES_BASIC_CODE(rhocode,Tcode) (0.2*(1.0+XFACT)/OPACITYBAR)
+
+// INELASTIC COMPTON TERM
+// see DOCOMPTON in physics.tools.rad.c:
+// in term2, doesn't change photon energy, so that in scattering-dominated atmospheres, photons move through unchanged by temperature of gas.
+// Eq A7 in http://adsabs.harvard.edu/abs/2012ApJ...752...18K used first in http://adsabs.harvard.edu/cgi-bin/bib_query?arXiv:0904.4123 as based upon a calculation in http://adsabs.harvard.edu/abs/2000thas.book.....P .
+// Also interesting for next steps:
+//1) Conservative form of Kompaneet's equation and dealing with the diffusion term implicitly: http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.13.798 and related: http://www.osti.gov/scitech/biblio/891567 .  We should ensure the 4-force is consistent (numerically and analytically) with what's used in this equation for n.
+//2) Relativistic corrections:  http://adsabs.harvard.edu/cgi-bin/bib_query?arXiv:1201.5606 and http://adsabs.harvard.edu/abs/2002nmgm.meet.2329S .  It looks like nothing more difficult as far as actually using the expressions in place of non-relativistic version.
+//One semi-relevant application: http://www.aanda.org/articles/aa/full_html/2009/45/aa12061-09/aa12061-09.html
+#define KAPPA_FORCOMPT_RELCORREP(ep) ((1.0 + 3.683*(ep)+4.0*(ep)*(ep))/(1.0 + (ep))) // Sadowski et al. (2014) Eq 26 and 27.
+#define KAPPA_FORCOMPT_RELCORR(rhocode,Tcode) (KAPPA_FORCOMPT_RELCORREP(K_BOLTZ*(Tcode)*TEMPBAR/(MELE*CCCTRUE*CCCTRUE)))
+#define KAPPA_FORCOMPT_CODE(rhocode,Tcode) (0.2*(1.0+XFACT)*KAPPA_ES_FERMICORR(rhocode,Tcode)*KAPPA_FORCOMPT_RELCORR(rhocode,Tcode)/OPACITYBAR)
+
 #define TEMPELE (MELE*CCCTRUE*CCCTRUE/K_BOLTZ)
 
+// COMPTON ALTERNATIVES
+//1) 1201.5606v2.pdf eq. 4.8 with Teff=Te different.
+//2) 891567.pdf  eq. 10.
+//3) art%3A10.1007%2FBF03035735.pdf (what we are approximating when not using full Kompaneets).  How could solve.
+//4) compton.pdf
 
-// choose which type of opacity calculation to use
-#define ISFITORIG 1
-#define ISFITNEW 1
-#define WHICHFIT ISFITORIG // choose
+
+
+/// EMISSION (Tr=Tg) or ABSORBPTION (Tr different from Tg)
+#define KAPPA_ZETA(Tgcode,Trcode) ((TEMPMIN+Trcode)/(TEMPMIN+Tgcode))
+//#define KAPPA_FF_CODE(rhocode,Tgcode,Trcode) (4.0E22*(1.0+XFACT)*(1.0-ZFACT)*((rhocode)*RHOBAR)*prpow((Tgcode)*TEMPBAR,-0.5)*prpow((Trcode)*TEMPBAR,-3.0)*prlog(1.0+1.6*KAPPA_ZETA(Tgcode,Trcode))*(1.0+4.4E-10*(Tgcode*TEMPBAR))/OPACITYBAR)  // ASSUMPTION: Thermal ele and no pairs.  See Rybicki & Lightman Eq~5.25 and McKinney & Uzdensky (2012) .  For Tr,Tg split, see Ramesh notes.
+#define KAPPA_FF_CODE(rhocode,Tgcode,Trcode) (4.0E22*(1.0+XFACT)*(1.0-ZFACT)*((rhocode)*RHOBAR)*prpow((Tgcode)*TEMPBAR,-0.5)*prpow((Trcode)*TEMPBAR,-3.0)*prlog(1.0+1.6*KAPPA_ZETA(Tgcode,Trcode))*(1.0+4.4E-10*(Tgcode*TEMPBAR))/OPACITYBAR)  // ASSUMPTION: Thermal ele and no pairs.  See Rybicki & Lightman Eq~5.25 and McKinney & Uzdensky (2012) .  For Tr,Tg split, see Ramesh notes.
+
+//////////////////////////////////////////
+// FREE-FREE STUFF
+// see freefree_opacity.nb, freefree_opacity_fitenergyopacity.nb, freefree_opacity_fitnumberopacity.nb
+// accounts for self-absorption and energy vs. number opacity behavior
+//#define KAPPA_FF_ZETAFF_LEN(xv,lenv) (1.0/((lenv) + (0.99366835740822140451*Power((xv),3.001486183352440767))/      Prlog(1. + (0.96029003648876359763*(xv))/(0.62006021009771899259 + 1.3708624629986290167*Power((lenv),0.3428937745657171798)))))
+
+//#define KAPPAN_FF_ZETAFF_LEN(xv,lenv) (1.0/((lenv) + ((0.44920722974573544008 + 3.1077547389879800477*Power((lenv),0.23000000000000001))*Power((xv),2.066660783319324679))/      Log(1. + (10. + 58.528227977634806223/Power((lenv),0.25))*(xv))))
+
+//#define KAPPA_FF_PREFACTOR_CODE(rhocode,Tecode) (1.2E24*RHOBAR*rhocode*prpow(Tecode*TEMPBAR,-3.5)/OPACITYBAR)
+//#define KAPPA_FF_ZETA(Tecode,Trcode) ((TEMPMIN+Trcode)/(TEMPMIN+Tecode))
+// pretau = Lengthcgs * (rhocgs * KAPPA_FF_PREFACTORcgs) = CODELENGTH * rhocode * KAPPA_FF_PREFACTOR_CODE
+//#define KAPPA_FF_PRETAU_CODE(length,rhocode,Tecode) (length*rhocode*KAPPA_FF_PREFACTOR_CODE)
+
+//#define KAPPA_FF_CODE(rhocode,Tgcode,Trcode,ffzeta,pretau) (KAPPA_FF_PREFACTOR_CODE(rhocode,Tecode)*(1.0+XFACT)*(1.0-ZFACT)*KAPPA_FF_ZETAFF_LEN(ffzeta,pretau))
+//#define KAPPAN_FF_CODE(rhocode,Tgcode,Trcode,ffzeta,pretau) (KAPPA_FF_PREFACTOR_CODE(rhocode,Tecode)*(1.0+XFACT)*(1.0-ZFACT)*KAPPAN_FF_ZETAFF_LEN(ffzeta,pretau))
+
+#define KAPPAN_FF_CODE(rhocode,Tgcode,Trcode) KAPPA_FF_CODE(rhocode,Tgcode,Trcode)
+
+///////////////////////////////////
+// BOUND-FREE and other low energy stuff
+#define KAPPA_BF_CODE(rhocode,Tgcode,Trcode) (3.0E25*(ZFACT)*(1.0+XFACT+0.75*YFACT)*((rhocode)*RHOBAR)*prpow((Tgcode)*TEMPBAR,-0.5)*prpow((Trcode)*TEMPBAR,-3.0)*prlog(1.0+1.6*KAPPA_ZETA(Tgcode,Trcode))/OPACITYBAR) // ASSUMPTION: Number of electrons similar to for solar abundances for 1+X+(3/4)Y term.  For Tr,Tg split, see Ramesh notes.
+#define KAPPA_CHIANTIBF_CODE(rhocode,Tgcode,Trcode) (4.0E34*((rhocode*RHOBAR))*(ZFACT/ZSOLAR)*YELE*prpow((Tgcode)*TEMPBAR,-1.7)*prpow((Trcode)*TEMPBAR,-3.0)/OPACITYBAR) // *XFACT literally from Fig 34.1 in Draine book, but for solar n_H\sim n_b\sim 1/cm^3 only
+#define KAPPA_HN_CODE(rhocode,Tgcode,Trcode) (1.1E-25*prpow(ZFACT,0.5)*prpow((rhocode)*RHOBAR,0.5)*prpow((Tgcode)*TEMPBAR,7.7)/OPACITYBAR) // other sources cite 2.5E-31 (Z/0.02)(rho)^(1/2)(T)^9
+#define KAPPA_MOL_CODE(rhocode,Tgcode,Trcode) (0.1*ZFACT/OPACITYBAR)
+// see opacities.nb
+#define KAPPA_GENFF_CODE(rhocode,Tgcode,Trcode) (1.0/(1.0/(KAPPA_MOL_CODE(rhocode,Tgcode,Trcode)+KAPPA_HN_CODE(rhocode,Tgcode,Trcode)) + 1.0/(KAPPA_CHIANTIBF_CODE(rhocode,Tgcode,Trcode)+KAPPA_BF_CODE(rhocode,Tgcode,Trcode)+KAPPA_FF_CODE(rhocode,Tgcode,Trcode)))) // for 1.3E3K \le T \le 1E9K or higher.  Numerically better to have kappa bottom out at low T so no diverent opacity as T->0
+
+//////////////////////////////////////////
+/// SYNCH STUFF
+//#define KAPPA_SYN_PREFACTOR_CODE(Bcode,Tecode) ((3.618472945417517e62*(YELE))/((Bcode)*(BFIELDBAR)*(MUMEAN)*Power((Tecode),5)*Power((TEMPBAR),5)*OPACITYBAR))
+
+//#define SYNZETA(Bcode,Tecode,Trcode) ((4.92270742942408e22*(Trcode))/((Bcode)*(BFIELDBAR)*Power((Tecode),2)*(TEMPBAR)))
+
+
+/// Synchrotron energy-opacity
+//#define KAPPA_SYN_ULTRAREL_ZETA_LEN(xv,len) (1.0/((lenv) + 1.7593661568669912098*Power((xv),1.6666666666666667) +      (1.4263215513887232471 + 0.3471650561326893869*Power((lenv),0.4523670248787104997))*Power((xv),2.111111111111111) +      0.23204675605082615204*Power((xv),2.5555555555555554) +      (0.24443559757524314548 + 0.0088705237575917670473*Power((lenv),0.4271869510615121102))*Power((xv),3)))
+//#define KAPPA_SYN_ULTRAREL_CODE(Bcode,Tecode,Trcode,Trcode,synzeta,pretau) (KAPPA_SYN_PREFACTOR_CODE(Bcode,Tecode)*KAPPA_SYN_ULTRAREL_ZETA_LEN(synzeta,pretau))
+
+//#define KAPPA_SYN_T5E8K_ZETA_LEN(xv,len) (1.0/((lenv) + 0.00052202316156059881506*Power((xv),1.6666666666666667) +      Power(0.14001850794282671986 + 0.11613125770482513044*Power((lenv),0.201800070232941442),3.3333333333333334814)*      Power((xv),2.111111111111111) + 0.00019353241505903052391*Power((xv),2.5555555555555554) +      (0.00027994589708735966894 + 0.000020878066604903371264*Power((lenv),0.1833333333333333481) +         0.00025453146537652838978*Power((lenv),0.3142857142857142794) + 0.000054874224183531537607*Power((lenv),0.5500000000000000444))*      Power((xv),3)))
+//#define KAPPA_SYN_T5E8K_CODE(Bcode,Tecode,Trcode,Trcode,synzeta,pretau) (KAPPA_SYN_PREFACTOR_CODE(Bcode,Tecode)*KAPPA_SYN_T5E8K_ZETA_LEN(synzeta,pretau))
+
+//#define KAPPA_SYN_T2E9K_ZETA_LEN(Bcode,Trcode) (1/((lenv) + (0.28275620637731327697 + 1.1378561908017619967e-11*Power((lenv),0.060928927736612376))*Power((xv),1.6666666666666667) +      (5.4268557992144783249 + 0.043977350144590657277*Power((lenv),0.5779288733465596239))*Power((xv),2.111111111111111) -      0.46233132906151664546*Power((xv),2.5555555555555554) +      (0.19718535926423731898 + 0.0031122781491543971728*Power((lenv),0.4612049073380375952))*Power((xv),3)))
+//#define KAPPA_SYN_T2E9K_CODE(Bcode,Tecode,Trcode,Trcode,synzeta,pretau) (KAPPA_SYN_PREFACTOR_CODE(Bcode,Tecode)*KAPPA_SYN_T2E9K_ZETA_LEN(synzeta,pretau))
+
+/// Synchrotron number-opacity
+//#define KAPPAN_SYN_ULTRAREL_ZETA_LEN(xv,len) (1.0/((lenv) + Power(0.86449798151937196078 + 0.24768973803440103021*Power((lenv),0.1626980491028581777),5.)*      Power((xv),1.6666666666666667) - 1.*(0.37887607591106965651 + 0.22518459751734409835*Power((lenv),0.4285631946482474364))*      Power((xv),1.8333333333333332593) + Power(0.73281421484706721348 + 0.21306057253116089667*Power((lenv),0.2099676374949942248),                                                    3.3333333333333334814)*Power((xv),2)))
+//#define KAPPAN_SYN_ULTRAREL_CODE(Bcode,Tecode,Trcode,Trcode,synzeta,pretau) (KAPPA_SYN_PREFACTOR_CODE(Bcode,Tecode)*KAPPAN_SYN_ULTRAREL_ZETA_LEN(synzeta,pretau))
+
+//#define KAPPAN_SYN_T5E8K_ZETA_LEN(xv,len) (1.0/((lenv) + Power(0.163252088813858387 + 0.18257330106897970423*Power((lenv),0.1627658778956655172),5.)*      Power((xv),1.6666666666666667) + Power(0.069760711506617445465 + 0.1433016264153323116*Power((lenv),0.2012366029583787241),       3.3333333333333334814)*Power((xv),2)))
+//#define KAPPAN_SYN_T5E8K_CODE(Bcode,Tecode,Trcode,Trcode,synzeta,pretau) (KAPPA_SYN_PREFACTOR_CODE(Bcode,Tecode)*KAPPAN_SYN_5E8K_ZETA_LEN(synzeta,pretau))
+
+//#define KAPPAN_SYN_T2E9K_ZETA_LEN(xv,len) (1.0/((lenv) + Power(0.59088832521110612461 + 0.4071501348167751444*Power((lenv),0.1132964803598243697),5.)*      Power((xv),1.6666666666666667) + (0.20483642960172801044 + 0.5219984832002366737*Power((lenv),0.1499999999999999944) +         0.02830076259937870306*Power((lenv),0.5999999999999999778))*Power((xv),2)))
+//#define KAPPAN_SYN_T2E9K_CODE(Bcode,Tecode,Trcode,Trcode,synzeta,pretau) (KAPPA_SYN_PREFACTOR_CODE(Bcode,Tecode)*KAPPAN_SYN_2E9K_ZETA_LEN(synzeta,pretau))
+
+#define KAPPA_SYN_CODE(Bcode,Tecode,Trcode) (SMALL)
+#define KAPPAN_SYN_CODE(Bcode,Tecode,Trcode) (SMALL)
 
 
 // whether to allow kappa to depend explicitly upon position, which would require getting position and can be expensive.

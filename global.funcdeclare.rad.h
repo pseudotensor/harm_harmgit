@@ -33,7 +33,7 @@ extern void koral_source_rad_calc(int computestate, int computeentropy, FTYPE *p
 extern int calc_rad_lambda(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q, FTYPE Tgas, FTYPE *lambda, FTYPE *nlambda, FTYPE *kappaemit, FTYPE *kappanemit);
 
 
-extern void calc_Tandopacityandemission(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE Ruu, FTYPE gammaradgas, FTYPE B, FTYPE *Tgas, FTYPE *Tradff, FTYPE *nradff, FTYPE *expfactorff, FTYPE *kappa, FTYPE *kappan, FTYPE *kappaemit, FTYPE *kappanemit, FTYPE *kappaes, FTYPE *lambda, FTYPE *nlambda);
+extern void calc_Tandopacityandemission(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE Ruu, FTYPE gammaradgas, FTYPE B, FTYPE *Tgas, FTYPE *Tradff, FTYPE *nradff, FTYPE *kappa, FTYPE *kappan, FTYPE *kappaemit, FTYPE *kappanemit, FTYPE *kappaes, FTYPE *lambda, FTYPE *nlambda);
 
 
 
@@ -60,22 +60,12 @@ extern int vchar_rad(FTYPE *pr, struct of_state *q, int dir,
                      struct of_geom *geom, FTYPE *cmax, FTYPE *cmin, FTYPE *cmax2, FTYPE *cmin2,int *ignorecourant);
 
 
-extern void calc_kappaes(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappaes);
-
 extern void calc_kappa(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE *kappa);
-//extern void calc_kappaemit(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappaemit);
-
+extern void calc_kappaemit(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappaemit);
+extern void calc_kappaes(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappaes);
+extern FTYPE calc_kappa_user(FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr,FTYPE x,FTYPE y,FTYPE z);
+extern FTYPE calc_kappan_user(FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr,FTYPE x,FTYPE y,FTYPE z);
 extern FTYPE calc_kappaes_user(FTYPE rho, FTYPE T,FTYPE x,FTYPE y,FTYPE z);
-
-
-extern FTYPE calc_kappa_user(FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, FTYPE varexpf, FTYPE x,FTYPE y,FTYPE z);
-extern FTYPE calc_kappan_user(FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, FTYPE varexpf, FTYPE x,FTYPE y,FTYPE z);
-extern FTYPE calc_kappaemit_user(FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, FTYPE varexpf, FTYPE x,FTYPE y,FTYPE z);
-extern FTYPE calc_kappanemit_user(FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, FTYPE varexpf, FTYPE x,FTYPE y,FTYPE z);
-
-extern int kappa_func_fits_all(FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, FTYPE varexpf, FTYPE *kappa, FTYPE *kappaemit, FTYPE *kappan, FTYPE *kappanemit, FTYPE *kappaes);
-
-
 extern int calcfull_tautot(FTYPE *pp, struct of_geom *ptrgeom, FTYPE *tautot, FTYPE *tautotmax);
 extern int calc_tautot(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q, FTYPE *tautot, FTYPE *tautotmax);
 
