@@ -6670,10 +6670,15 @@ static int donut_analytical_solution(int *whichvel, int *whichcoord, int optical
     Risco=rmso_calc(PROGRADERISCO);
     R = MAX(Rhor,r*sin(th)) ;
 
+#define NTROUT (70.0)
     // NT73
     FTYPE rp;
     FTYPE Rp=R;
-    if(r>=1.5*Risco){
+    if(r>NTROUT){
+      rp=NTROUT;
+      Rp=rp*sin(th);
+    }
+    else if(r>=1.5*Risco && r<NTROUT){
       rp=r;
       Rp=R;
     }
@@ -6685,7 +6690,7 @@ static int donut_analytical_solution(int *whichvel, int *whichcoord, int optical
     // alphavisc=0.1 leads to Mdot=0.16MdotEdd (subeddd)
     // alphavisc=1.0 leads to Mdot=2.8MdotEdd (subeddc)
 
-    FTYPE alphavisc=0.3;
+    FTYPE alphavisc=0.4;
     FTYPE m=10.0; // Mbh in Msun
     FTYPE Mx=m;
     FTYPE mdot=7.33; // Mdot per Ledd/c^2
@@ -6763,35 +6768,43 @@ static int donut_analytical_solution(int *whichvel, int *whichcoord, int optical
 
     ////////////////////////////
     // Set H : disk height
-    FTYPE H=H1;
+    FTYPE Hp=H1;
     FTYPE minhor=h_over_r*0.3;
-    if(H/rp<minhor && rp>50){
-      H=minhor*rp; // go to constant H/R so disk not unresolved
+    if(Hp/rp<minhor){
+      Hp=minhor*rp; // go to constant H/R so disk not unresolved
     }
-    FTYPE z = rp*cos(th) ;
+
+
+    FTYPE z = r*cos(th) ;
+    FTYPE zp = rp*cos(th) ;
 
 
     //////////////////////////
     // SET DENSITY
     // Sigma = rho*H
     FTYPE rho01;
-    rho01=Sigma1/(2.0*H); // so Sigma unchanged.
+    rho01=Sigma1/(2.0*Hp); // so Sigma unchanged.
     
     //
     // simple power-law with some vertical distribution
     //
     //rho=RADNT_RHODONUT * exp(-z*z/(2.*H*H))*pow(r,thindiskrhopow);
-    rho=rho01*exp(-z*z/(2.*H*H));
+    rho=rho01*exp(-zp*zp/(2.*Hp*Hp));
 
+    // truncate disk
+    if(r>NTROUT){
+      rho*=exp(-r/NTROUT)/exp(-1.0);
+    }
 
     //////////////////////////
     // ensure c_s/v_k = (H/R) , which should be violated in the ISCO such that K=P/rho^Gamma=constant but H/R still thins towards the horizon.
     // P = (gamma-1)*u and cs2 = \gamma P/(\rho+u+P)
-    FTYPE omegakep=1./(pow(rp,1.5) + a);
+    FTYPE omegakep=1./(pow(r,1.5) + a);
+    FTYPE omegakeprp=1./(pow(rp,1.5) + a);
 
     // set uint
     FTYPE uintfact = (1.0 + randfact * (ranc(0,0) - 0.5));
-    uint = rho*pow(H/Rp,2.0)*pow(rp*omegakep,2.0)/(gamtorus*(gamtorus-1.0))*uintfact;
+    uint = rho*pow(Hp/Rp,2.0)*pow(rp*omegakeprp,2.0)/(gamtorus*(gamtorus-1.0))*uintfact;
 
     // Set pressure
     // K = P/rho^Gamma 
@@ -6814,7 +6827,7 @@ static int donut_analytical_solution(int *whichvel, int *whichcoord, int optical
     }
     else{
       Vphi=omegakep; // now 3-vel
-      Vr=-fabs(alphavisc*(H/rp)*(H/rp)*Vphi);
+      Vr=-fabs(alphavisc*(Hp/rp)*(Hp/rp)*Vphi);
       Vh=0.0;
       *whichvel=VEL3;
       *whichcoord=BLCOORDS;
@@ -7776,7 +7789,7 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
 #define JONMADHPOW (4.0)
 #define JONMADR0 (-5.0)
 #define JONMADRIN (2.0)
-#define JONMADROUT (300.0)
+#define JONMADROUT (NTROUT)
 
     FTYPE jonmadhpow;
     FTYPE interp;
