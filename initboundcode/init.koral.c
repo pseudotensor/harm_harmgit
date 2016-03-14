@@ -50,7 +50,7 @@ FTYPE TILTWALD;
 
 //FTYPE thindiskrhopow=-3.0/2.0; // can make steeper like -0.7
 //FTYPE thindiskrhopow=-0.2; // closer to NT73
-FTYPE thindiskrhopow=-0.5; // closer to thick disk // SUPERMADNEW # -1 so Qmri constant vs. radius.
+FTYPE thindiskrhopow=-0.7; // closer to thick disk // SUPERMADNEW # -1 so Qmri constant vs. radius.
 
 FTYPE normglobal;
 int inittypeglobal; // for bounds to communicate detail of what doing
@@ -314,14 +314,13 @@ int prepre_init_specific_init(void)
 int pre_init_specific_init(void)
 {
   // defaults
-  //  h_over_r=0.3;
-  h_over_r=0.1;
+  h_over_r=0.2;
   h_over_r_jet=2.0*h_over_r;
 
   if(WHICHPROBLEM==RADDONUT){
     if(RADNT_DONUTTYPE==DONUTTHINDISK||RADNT_DONUTTYPE==DONUTTHINDISK2||RADNT_DONUTTYPE==DONUTTHINDISK3){
-      //      h_over_r=0.02;
-      h_over_r=0.1; // SUPERMADNEW
+      h_over_r=0.2; // SUPERMADNEW
+
     }
     else{
       h_over_r=0.2;
@@ -2165,7 +2164,7 @@ int init_global(void)
 
     /////////////////////////////////
     // DONUT selections
-    RADNT_DONUTTYPE=DONUTTHINDISK3; // SUPERMADNEW
+    RADNT_DONUTTYPE=DONUTTHINDISK2; // SUPERMADNEW
     //RADNT_DONUTTYPE=DONUTOLEK;
     //RADNT_DONUTTYPE=DONUTOHSUGA;
     RADDONUT_OPTICALLYTHICKTORUS=1; // otherwise, pressure only from gas.
@@ -2186,7 +2185,7 @@ int init_global(void)
       // NOTEMARK: h0=0.1 instead of h0=0.3
       // NOTEMARK: Force only theta1=th0;
       //      h_over_r=0.1;
-      h_over_r=0.1;// SUPERMADNEW
+      h_over_r=0.2;// SUPERMADNEW
       h_over_r_jet=2.0*h_over_r;
     }
     if(RADNT_DONUTTYPE==DONUTOLEK || RADNT_DONUTTYPE==DONUTOHSUGA){
@@ -2229,7 +2228,7 @@ int init_global(void)
         trifprintf("spin=%g",a);
         trifprintf("FIELD=%g",FIELDTYPE);
         trifprintf("Jon=%g",FIELDJONMAD);
-        if(a==0.5 && FIELDTYPE==FIELDJONMAD){  //Danilo
+        if(a==0.8 && FIELDTYPE==FIELDJONMAD){  //Jane: spin
           trifprintf("Condition=2%21.15g\n",2);
           RADNT_RHODONUT/=(2.0*138.0);
           RADNT_RHODONUT/=(2.8); // Mdot\sim 135Ledd/c^2
@@ -2237,10 +2236,13 @@ int init_global(void)
           RADNT_RHODONUT*=(3.75); // Mdot\sim 135Ledd/c^2
           RADNT_RHODONUT/=(143.0); // Mdot\sim 0.3Ledd/c^2
           RADNT_RHODONUT/=(3.);
-          RADNT_RHODONUT*=(195.12195); //RIAF-beta60-2
-          RADNT_RHODONUT/=(2.82);
+          RADNT_RHODONUT*=(195.12195); //RIAF-beta60-2: Mdot = 0.46
+          RADNT_RHODONUT/=(2.82); // The next three lines are for beta=20
           RADNT_RHODONUT/=(1.02);
-          //RADNT_RHODONUT/=(1.003);
+          RADNT_RHODONUT/=(3.0); //jane: devide by 3 to account for the h/r change
+          RADNT_RHODONUT*=(10.0);//jane: to boost to a supereddington rate. Mdot~ 23 L_edd/c^2.
+          RADNT_RHODONUT/=4.6;//jane:to achieve Mdot~5Mdot_edd.
+          
           trifprintf("After Conditionals: RADNT_RHODONUT=%21.15g\n",RADNT_RHODONUT);
         }
 
@@ -3240,7 +3242,7 @@ int init_defcoord(void)
     //    a=0.0; // no spin in case use MCOORD=KSCOORDS
 
     // metric stuff first
-    a = 0.5;  // WALD
+    a = 0.8;  // WALD
     
 
     if(1){
@@ -5775,7 +5777,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
       int FIELDTYPE=set_fieldtype();
       if(FIELDTYPE==FIELDJONMAD){
         // so bsq/rho isn't super high at large radii with current choice for magnetic field
-        pr[RHO]=RADNT_RHOATMMIN*pow(r/RADNT_ROUT,-1.5); // SUPERMADNEW
+        pr[RHO]=RADNT_RHOATMMIN*pow(r/RADNT_ROUT,-1.1); // SUPERMADNEW
       }
     }
     else{
@@ -6867,7 +6869,7 @@ static int donut_analytical_solution(int *whichvel, int *whichcoord, int optical
 
     /* region outside disk */
     Rhor=rhor_calc(0);
-    if(1){
+    if(0){
       Risco=rmso_calc(PROGRADERISCO);
     }
     else{ // SUPERMADNEW
@@ -7741,7 +7743,7 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
   FTYPE FIELDROT=0.0;
   FTYPE hpow=2.0;
   // FTYPE rpow=1.0; // previous SUPERMAD, now just use 3/4
-  rpow=5.0/4.0; // 1.0 so libetatot constant vs. radius
+  rpow=1.15; // 1.0 so libetatot constant vs. radius
 
 
   if(l==2){// A_\theta
