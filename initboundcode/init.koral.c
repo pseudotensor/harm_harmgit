@@ -2388,7 +2388,8 @@ int init_global(void)
     else cooling=KORAL;
 
     // Danilo tilted
-    cooling=COOLREBECCATHINDISK;
+    //    cooling=COOLREBECCATHINDISK;
+    cooling=COOLUSER;
 
 
     // ARAD_CODE=ARAD_CODE_DEF*1E5; // tuned so radiation energy flux puts in something much higher than ambient, while initial ambient radiation energy density lower than ambient gas internal energy.
@@ -9734,11 +9735,138 @@ FTYPE calc_kappaes_user(FTYPE rho, FTYPE T,FTYPE x,FTYPE y,FTYPE z)
 
 }
 
+// User's cooling function:
+
+#define USERTHETACOOL       (h_over_r)	/* should be same as h_over_r */
+#define USERTAUCOOL         (2.0*M_PI*0.1)	        /* cooling time in number of rotational times : really USERTAUCOOL=2*M_PI would be 1 rotational time */
+#define USERNOCOOLTHETAFACT     (1.0)           /* this times h_over_r and no more cooling there*/
+
+// This implementation of cooling is as in Noble et. al. 2009, to simulate a radiative cooling source term which keeps the disk thin to a target H/r
 
 int coolfunc_user(FTYPE h_over_r, FTYPE *pr, struct of_geom *geom, struct of_state *q,FTYPE (*dUcomp)[NPR])
 {
-  return(0); // nothing yet
+        FTYPE X[NDIM],V[NDIM],r,th,R,Wcirc,cs_circ,rho,u,e,P,w,wcirc,dUcool;
+	FTYPE taper0;
+	int ii,jj, kk, pp;
+	FTYPE pressure;
+	FTYPE enk, enk0;
+        FTYPE Tfix;
+	FTYPE Yscaling;
+
+        FTYPE rpho;      
+	FTYPE photoncapture;
+	FTYPE rincool;
+	FTYPE nocoolthetafactor,thetacool,taucool;
+	FTYPE bsq_ijcool;
+
+
+	// setup for macros
+	nocoolthetafactor=USERNOCOOLTHETAFACT;
+	thetacool=USERTHETACOOL;
+	taucool=USERTAUCOOL;
+
+	ii=geom->i;
+	jj=geom->j;
+	kk=geom->k;
+	pp=geom->p;
+
+        /* cooling function for maintaining fixed H/R */
+        rho = pr[RHO] ;
+        u = pr[UU] ;
+	e = u/rho ;   // specific internal energy density
+	P=pressure_rho0_u_simple(ii,jj,kk,pp,rho,u);
+        w = rho + u + P ; // enthalpy?
+
+	if (bsq_calc(pr, geom, &bsq_ijcool) >= 1) FAILSTATEMENT("init.c:init()", "bsq_calc()", 1);
+        bl_coord_ijk_2(ii,jj,kk,CENT,X, V) ;
+	r=V[1];
+	th=V[2];
+ 
+      	rpho=2.0*(1.0+cos(2.0/3.0*(acos(-a))));
+	/*
+	if(ii==0 && jj==0 && kk==0 && 1) printf("in cooling function: ");
+	if(bsq_ijcool/rho > BSQORHOLIMIT || bsq_ijcool/u > BSQOULIMIT || u/rho > UORHOLIMIT){
+	  printf("in cooling: bsq/rho=%21.15g, at ijk= %d,%d,%d \n",bsq_ijcool/rho,ii,jj,kk);
+	  printf("in cooling: bsq/u=%21.15g \n",bsq_ijcool/u);
+	  printf("in cooling: u/rho=%21.15g \n",u/rho);
+	}
+	*/
+
+	//	trifprintf("rphoton=%lf\n", rpho);
+	if(1 || r>rpho){ //SASMARK: cool always, including inside photon orbit
+	  photoncapture=1.0 ;
+	  //  trifprintf("r=%lf, photoncapture=%lf, rph=%lf \ n", r, photoncapture, rpho); 
+	}
+	else{
+	  photoncapture=0.0 ;
+	}
+
+
+	//if(r>=Rhor)
+	//  R = r*sin(th) ;     // r in Noble paper
+	//else
+	//  R = Rhor; // Don't want target temperature to be overly high in column above and below BH where R<<Rhor    
+        R = r*sin(th) ;     // r in Noble paper
+
+	rincool=10.;
+        /* crude approximation */
+        Wcirc = 1./(a + pow(r,1.5)) ;   // Omega in Noble paper
+        cs_circ = thetacool/sqrt(R) ;
+	//        wcirc = rho*(1. + cs_circ*cs_circ/(gam - 1.)) ;
+
+        wcirc =   rho*(1. + cs_circ*cs_circ/(gam - 1.)) ;
+
+	Tfix = (thetacool * R * Wcirc) * (thetacool * R * Wcirc);
+	Yscaling = (gam-1.)*e/(Tfix);
+
+
+	//R=r*sin(th); //revert to regular form for everything other than where Tfix/Wcirc has previous adjusted version internally
+
+	if(t > 0. && Yscaling > 1.0 ) { //&& bsq_ijcool*bsq_ijcool*.5/(gam-1)/u >= 0.005) { 
+	  if(R*R*h_over_r*h_over_r/1./(bsq_ijcool/rho) > taucool*taucool/Wcirc/Wcirc ) {    
+	    dUcool = - (Wcirc/taucool) * rho*Tfix/(gam-1.) * pow( Yscaling - 1.,1.) * photoncapture * q->ucon[TT]  ; 
+	  }
+	  else if( (h_over_r*R/1.)/sqrt(bsq_ijcool/rho) > 2.*dt){
+	    dUcool = - (sqrt(bsq_ijcool/rho)/(h_over_r*R/1.)) * rho*Tfix/(gam-1.) * pow( Yscaling - 1.,1.) * photoncapture * q->ucon[TT]  ;
+	  }
+	  else{
+	    dUcool = - (1./(2.*dt)) * rho*Tfix/(gam-1.) * pow( Yscaling - 1.,1.) * photoncapture * q->ucon[TT]  ;
+	  }
+	}
+	else if(0 && t > 0. && Yscaling > 1.0 && bsq_ijcool*bsq_ijcool*.5/(gam-1)/u < 0.005) { // MAVARANOTE This ceiling has been moved to fixup.c so more immediate 
+	  dUcool = - rho*(e - 1.*Tfix/(gam-1)) / dt * photoncapture * q->ucon[TT]  ;
+	} 
+	else{
+	  dUcool = 0. ;
+	}
+
+	
+
+	/*
+	if(t > 0. && Yscaling > 1.0 ) {
+
+	  dUcool = - (Wcirc/taucool) * u * sqrt( Yscaling - 1.) * photoncapture * q->ucon[TT]  ; // MAVARA temporarily added 0.1 factor to slow cooling to see if it makes a difference on 11/10/2013
+	  //	  dUcool=-u*(Wcirc/taucool)*log(enk/enk0)*photoncapture;
+	}
+        else{
+	    dUcool = 0. ;
+	}
+	*/
+
+	dUcomp[RADSOURCE][UU]=dUcool*(q->ucov[TT]);
+	dUcomp[RADSOURCE][U1]=dUcool*(q->ucov[RR]);
+	dUcomp[RADSOURCE][U2]=dUcool*(q->ucov[TH]);
+	dUcomp[RADSOURCE][U3]=dUcool*(q->ucov[PH]);
+
+	//			trifprintf("ducomps are %g %g %g %g \n", dUcomp[RADSOURCE][UU], dUcomp[RADSOURCE][U1], dUcomp[RADSOURCE][U2],	dUcomp[RADSOURCE][U3]); 
+        return(0) ;
 }
+
+
+
+
+
+
 
 
 
