@@ -199,7 +199,7 @@
 #define FIELDSTAGMEM 1 // testing
 #define HIGHERORDERMEM 0
 #define MAXBND 4 // 4 for PARAFLAT, 6 for WENO5BND wo/a2c stuff : 11 for full point-field FLUXRECON method
-#define PRODUCTION 2 // WALDPROD
+#define PRODUCTION 1 // WALDPROD
 //#define FULLOUTPUT MAXBND // TESTING BCs
 #define FULLOUTPUT 0
 
@@ -1082,13 +1082,10 @@ struct Ccoordparams {
 // N1=30 if using log coords from r=1.7 to r=50
 // N1=60 if using 1.5*hor - 40 (or 27.8)
 // N1=70 if using 1.5*hor - 30 (or 27.8)
-#define N1 8
-#define N2 8
-#define N3 8
+#define N1 128
+#define N2 64
+#define N3 1 //jane:test run
 
-   //#define N1 128
-//#define N2 64
-//#define N3 1
 
 // can choose any spherical polar coordinate system
 //#define MCOORD SPCMINKMETRIC

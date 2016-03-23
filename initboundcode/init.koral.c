@@ -50,7 +50,7 @@ FTYPE TILTWALD;
 
 //FTYPE thindiskrhopow=-3.0/2.0; // can make steeper like -0.7
 //FTYPE thindiskrhopow=-0.2; // closer to NT73
-FTYPE thindiskrhopow=-0.7; // closer to thick disk // SUPERMADNEW # -1 so Qmri constant vs. radius.
+FTYPE thindiskrhopow=-0.7; // closer to thick disk // jane:SUPERMADNEW # -1 so Qmri constant vs. radius.
 
 FTYPE normglobal;
 int inittypeglobal; // for bounds to communicate detail of what doing
@@ -319,7 +319,7 @@ int pre_init_specific_init(void)
 
   if(WHICHPROBLEM==RADDONUT){
     if(RADNT_DONUTTYPE==DONUTTHINDISK||RADNT_DONUTTYPE==DONUTTHINDISK2||RADNT_DONUTTYPE==DONUTTHINDISK3){
-      h_over_r=0.2; // SUPERMADNEW
+      h_over_r=0.3; // jane:SUPERMADNEW
 
     }
     else{
@@ -2164,7 +2164,7 @@ int init_global(void)
 
     /////////////////////////////////
     // DONUT selections
-    RADNT_DONUTTYPE=DONUTTHINDISK2; // SUPERMADNEW
+    RADNT_DONUTTYPE=DONUTTHINDISK2; // jane:SUPERMADNEW
     //RADNT_DONUTTYPE=DONUTOLEK;
     //RADNT_DONUTTYPE=DONUTOHSUGA;
     RADDONUT_OPTICALLYTHICKTORUS=1; // otherwise, pressure only from gas.
@@ -2185,7 +2185,7 @@ int init_global(void)
       // NOTEMARK: h0=0.1 instead of h0=0.3
       // NOTEMARK: Force only theta1=th0;
       //      h_over_r=0.1;
-      h_over_r=0.2;// SUPERMADNEW
+      h_over_r=0.3;// jane: SUPERMADNEW
       h_over_r_jet=2.0*h_over_r;
     }
     if(RADNT_DONUTTYPE==DONUTOLEK || RADNT_DONUTTYPE==DONUTOHSUGA){
@@ -2217,7 +2217,7 @@ int init_global(void)
         int FIELDTYPE=set_fieldtype();
 
  
-        if(a==0.8 && FIELDTYPE==FIELDJONMAD){
+        if(a==0.5 && FIELDTYPE==FIELDJONMAD){    //jane: not this spin
           trifprintf("Condition=1%21.15g\n",1);
           RADNT_RHODONUT/=(2.0*138.0);
           RADNT_RHODONUT/=(2.8); // Mdot\sim 135Ledd/c^2
@@ -2495,7 +2495,7 @@ int init_global(void)
 
     // tf = 100*DTdumpgen[0]; // 100 dumps(?)
     //    tf = 2000*DTdumpgen[0]; // koral in default setup does 1000 dumps
-    tf = 1e5; //Danilo-Time
+    tf = 1e5; //jane: Time
 
     if(DOWALDDEN) tf=1e5;
 
@@ -2609,7 +2609,7 @@ int init_global(void)
     //for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=10.0;
     
    // tf = 200000;
-      tf = 1e5; //Danilo-Time
+      tf = 1e5; //Jane: Time
     //    DODIAGEVERYSUBSTEP = 1;
 
     //    if(WHICHPROBLEM==RADDONUT) DODIAGEVERYSUBSTEP = 1;
@@ -3242,7 +3242,7 @@ int init_defcoord(void)
     //    a=0.0; // no spin in case use MCOORD=KSCOORDS
 
     // metric stuff first
-    a = 0.8;  // WALD
+    a = 0.8;  // jane: set spin
     
 
     if(1){
@@ -3309,7 +3309,7 @@ int init_defcoord(void)
       //      setRin_withchecks(&Rin);
     }
     if(a==0.8){
-      Rin=1.2; // a = 0.8 for totalsize[1]=128
+      Rin=1.2; // jane:a = 0.8 for totalsize[1]=128
       //      setRin_withchecks(&Rin);
     }
 
@@ -3552,7 +3552,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
     else if(FIELDTYPE==FIELDJONMAD){
       rin=9.0;
       rinfield=12;
-      beta = 10.0;
+      beta = 10.0; //jane: beta = 10
     }
     else if(FIELDTYPE==FIELDWALD || FIELDTYPE==MONOPOLE){
       rin=9.0;
@@ -7743,7 +7743,7 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
   FTYPE FIELDROT=0.0;
   FTYPE hpow=2.0;
   // FTYPE rpow=1.0; // previous SUPERMAD, now just use 3/4
-  rpow=1.15; // 1.0 so libetatot constant vs. radius
+  rpow=1.15; // jane:1.0 so libetatot constant vs. radius
 
 
   if(l==2){// A_\theta
