@@ -60,7 +60,7 @@ int inittypeglobal; // for bounds to communicate detail of what doing
 
 //#define THETAROTMETRIC (0.5*0.7)
 //#define USER_THETAROTMETRIC (M_PI*0.25)
-#define USER_THETAROTMETRIC (0.0) // WALD
+#define USER_THETAROTMETRIC (M_PI*0.25) // WALD
 #define USER_THETAROTPRIMITIVES (0.0) // probably want to choose 0, so initial conditions are as if no tilt // WALD -> make same as USER_THETAROTMETRIC
   
 
@@ -2386,6 +2386,10 @@ int init_global(void)
 
     if(DOWALDDEN) cooling=NOCOOLING;
     else cooling=KORAL;
+
+    // Danilo tilted
+    cooling=COOLREBECCATHINDISK;
+
 
     // ARAD_CODE=ARAD_CODE_DEF*1E5; // tuned so radiation energy flux puts in something much higher than ambient, while initial ambient radiation energy density lower than ambient gas internal energy.
     //    GAMMAMAXRAD=1000.0; // Koral limits for this problem.
