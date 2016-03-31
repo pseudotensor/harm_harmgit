@@ -447,7 +447,7 @@ int consfixup_allzones(int finaluu, FTYPE (*pf)[NSTORE2][NSTORE3][NPR], FTYPE (*
 
 int consfixup_1zone(int finaluu, int i, int j, int k, struct of_geom *ptrgeom, FTYPE *pf, FTYPE *ucons)
 {
-  if(ENSURECONS==0) return(0);
+  if(ENSURECONS==0 || (EOMRADTYPE==EOMRADNONE)) return(0);
 
   int pliter,pl;
   // now that have averaged values, try to enforce energy conservation by borrowing from radiation
@@ -669,7 +669,8 @@ int diag_fixup_allzones(FTYPE (*pf)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTOR
 
     FTYPE rhofloor=pr[RHO]*NUMEPSILON*10.0;
     FTYPE vfloor=NUMEPSILON*10.0;
-    FTYPE enfloor=ERADLIMIT + (pr[URAD0])*NUMEPSILON*10.0;
+    FTYPE enfloor=ERADLIMIT;
+    if(URAD0>=0) enfloor+= (pr[URAD0])*NUMEPSILON*10.0;
     PLOOP(pliter,pl) offset[pl]=SMALL;
     if(YFL1>=0) offset[YFL1] = SMALL + rhofloor; // rho floor
     if(YFL2>=0) offset[YFL2] = SMALL + rhofloor*vfloor*vfloor + UULIMIT; // -T^t_t-rho u^r floor
@@ -716,7 +717,7 @@ int diag_fixup_allzones(FTYPE (*pf)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTOR
         //      if(plfl<SMALL) plfl=SMALL;
 
         FTYPE plflfinal = plfl + dpl;
-        if(0&&(mapvar==YFL2 || mapvar==YFL4)){ // just energy densities.  Can't apply to angular momenta that can be any sign.  Could apply to density, but doesn't seem to need it.
+        if(1&&(mapvar==YFL2 || mapvar==YFL4)){ // just energy densities.  Can't apply to angular momenta that can be any sign.  Could apply to density, but doesn't seem to need it.
           // at least for non-densities, especially energy densities, having near 0 or negative values leads to an instability and crazy run-away in the values due to fluxes.
           // So won't be able to track losses of energy, only gains, unless split gains and losses.
           // Or maybe need floor at t=0 at least so that not dealing with crazy small values?
@@ -1376,10 +1377,10 @@ int fixup1zone(int docorrectucons, FTYPE *pr, FTYPE *uconsinput, struct of_geom 
       // generally trying to keep atmosphere non-relativistic
       //      pl=RHO;   prmhd[pl]=MIN(prmhd[pl],prmhdnew[pl]);
       // get larger of rho
-      pl=RHO;   prmhd[pl]=MAX(prmhd[pl],prmhdnew[pl]);
+      if(RHO>=0){ pl=RHO;   prmhd[pl]=MAX(prmhd[pl],prmhdnew[pl]);}
       // get smallest of two
-      pl=UU;    prmhd[pl]=MIN(prmhd[pl],prmhdnew[pl]);
-      pl=URAD0; prmhd[pl]=MIN(prmhd[pl],prmhdnew[pl]);
+      if(UU>=0){ pl=UU;    prmhd[pl]=MIN(prmhd[pl],prmhdnew[pl]);}
+      if(URAD0>=0){ pl=URAD0; prmhd[pl]=MIN(prmhd[pl],prmhdnew[pl]);}
 
 
     }// end if didchangeprim
