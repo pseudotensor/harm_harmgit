@@ -3555,7 +3555,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
     else if(FIELDTYPE==FIELDJONMAD){
       rin=9.0;
       rinfield=12;
-      beta = 10.0;
+      beta = 30.0;
     }
     else if(FIELDTYPE==FIELDWALD || FIELDTYPE==MONOPOLE){
       rin=9.0;
