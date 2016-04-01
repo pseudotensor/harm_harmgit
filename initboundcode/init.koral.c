@@ -7792,7 +7792,7 @@ int init_vpot_user(int *whichcoord, int l, SFTYPE time, int i, int j, int k, int
     }
 
 #define JONMADHPOW (4.0)
-#define JONMADR0 (-5.0)
+#define JONMADR0 (0.0)
 #define JONMADRIN (2.0)
 #define JONMADROUT (NTROUT)
 
@@ -9738,7 +9738,7 @@ FTYPE calc_kappaes_user(FTYPE rho, FTYPE T,FTYPE x,FTYPE y,FTYPE z)
 // User's cooling function:
 
 #define USERTHETACOOL       (h_over_r)	/* should be same as h_over_r */
-#define USERTAUCOOL         (2.0*M_PI*0.1)	        /* cooling time in number of rotational times : really USERTAUCOOL=2*M_PI would be 1 rotational time */
+#define USERTAUCOOL         (2.0*M_PI*h_over_r)	        /* cooling time in number of rotational times : really USERTAUCOOL=2*M_PI would be 1 rotational time */
 #define USERNOCOOLTHETAFACT     (1.0)           /* this times h_over_r and no more cooling there*/
 
 // This implementation of cooling is as in Noble et. al. 2009, to simulate a radiative cooling source term which keeps the disk thin to a target H/r
