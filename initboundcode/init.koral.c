@@ -6768,8 +6768,23 @@ static int donut_analytical_solution(int *whichvel, int *whichcoord, int optical
 
     ////////////////////////////
     // Set H : disk height
+
+    FTYPE dxdxp[NDIM][NDIM];
+    FTYPE myX[NDIM],myV[NDIM];
+    int jj;
+    DLOOPA(jj){
+      myX[jj]=X[jj];
+      myV[jj]=V[jj];
+    }
+    myX[2]=0.5;  // X[2] goes from 0 to 1
+    myV[2]=0.5*M_PI; // V[2] goes from 0 to M_PI
+    dxdxprim(myX,myV, dxdxp);
+    // dxdxp[spc][internal grid] = d{t,rm\thetam\phi}^\mu/d{x0,x1,x2,x3} = dxspc^\mu/dxint^\nu
+    FTYPE minhor = 6.0*dx[2]*dxdxp[2][2]; // set vertical height to be no less than 6 grid cells
+    //FTYPE minhor=h_over_r*0.3;
+
+
     FTYPE Hp=H1;
-    FTYPE minhor=h_over_r*0.3;
     if(Hp/rp<minhor){
       Hp=minhor*rp; // go to constant H/R so disk not unresolved
     }
@@ -6788,12 +6803,42 @@ static int donut_analytical_solution(int *whichvel, int *whichcoord, int optical
     //
     // simple power-law with some vertical distribution
     //
-    //rho=RADNT_RHODONUT * exp(-z*z/(2.*H*H))*pow(r,thindiskrhopow);
-    rho=rho01*exp(-zp*zp/(2.*Hp*Hp));
 
+
+    FTYPE H1OUT=(100000.00000000001*mdotperledd*Mx*
+     Power(1 + 0.49999999999999994/Power(NTROUT,3) + 
+       0.24999999999999994/Power(NTROUT,2),2)*
+     (-2.0574261905426465 + 1.*Sqrt(NTROUT) - 
+       0.5160444431189778*
+        Log(1.9035389107262222*
+          (-1.5320888862379562 + 1.*Sqrt(NTROUT))) + 
+       0.07635182233306995*
+        Log(0.5847509232408147*
+          (-0.34729635533386044 + 1.*Sqrt(NTROUT))) + 
+       1.1896926207859089*
+        Log(0.25401267427810215*
+          (1.8793852415718166 + 1.*Sqrt(NTROUT))) - 
+       0.75*Log(0.4860441675121526*Sqrt(NTROUT))))/
+   ((1 + 0.1874999999999999/Power(NTROUT,4) - 
+       0.9999999999999999/Power(NTROUT,3) + 
+       0.9999999999999998/Power(NTROUT,2))*
+     Power(1 + 0.5/Power(NTROUT,1.5),2)*
+     (1 + 0.24999999999999994/Power(NTROUT,2) - 
+       1.9999999999999993/NTROUT)*Sqrt(NTROUT));
+    // rescale
+    H1OUT=H1OUT/LBAR; // H=cm
+
+    FTYPE ZROUT=NTROUT*cos(th);
+
+    FTYPE NTSPREAD = 10.0; // transition radius
+    FTYPE interpfun = 0.5 + 1.0/M_PI*(atan( (V[1]-NTROUT)/NTSPREAD));
+
+    //rho=RADNT_RHODONUT * exp(-z*z/(2.*H*H))*pow(r,thindiskrhopow);
+    rho = rho01 * ( exp(-zp*zp/(2.*Hp*Hp))*(1.0-interpfun) + 1.16*exp(-zp*zp*zp*zp/(2.*Hp*Hp*Hp*Hp))*(interpfun) );
+      
     // truncate disk
-    if(r>NTROUT){
-      rho*=exp(-r/NTROUT)/exp(-1.0);
+    if(r<=NTROUT&&0){
+      rho*=exp(-r/NTROUT)/exp(-1.0); 
     }
 
     //////////////////////////
