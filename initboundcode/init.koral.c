@@ -3566,7 +3566,7 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
       //      rinfield=1.1*Risco;
       rinfield=Risco;
       //      beta=1E30;
-      beta=10.0;
+      beta=10.0; //jane: where to set the beta 
 
       if(FIELDTYPE==FIELDJONMAD) rin=0.0;
       else rin=rinfield;
