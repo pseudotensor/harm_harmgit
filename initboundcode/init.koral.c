@@ -9853,6 +9853,18 @@ int kappa_func_fits_all(FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, FTYPE varexpf, F
 
   //////////////
   //
+  // Add Fe line (see opal_findfit.nb)
+  // below in [cm^{-1}]
+  //
+  //////////////
+
+  FTYPE kappafereal = rhoreal*0.3*exp(-6.0*pow(-12.0+log(Tereal),2.0));
+  FTYPE kappanfereal = kappafereal;
+  FTYPE kappaemitfereal = kappafereal;
+  FTYPE kappanemitfereal = kappafereal;
+
+  //////////////
+  //
   // Low-density interpolation
   // below in [cm^{-1}]
   //
@@ -9868,10 +9880,10 @@ int kappa_func_fits_all(FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, FTYPE varexpf, F
   // below in [cm^{-1}]
   //
   //////////////
-  FTYPE kappadensityreal  = 1.0/ ( 1.0/(kappamolreal + kappahmopalreal) + 1.0/(kappachiantiopalreal) + 1.0/(kappachiantireal + kappaffreal + kappaffeereal + kappabfreal) );
-  FTYPE kappandensityreal  = 1.0/ ( 1.0/(kappanmolreal + kappanhmopalreal) + 1.0/(kappanchiantiopalreal) + 1.0/(kappanchiantireal + kappanffreal + kappanffeereal + kappanbfreal) );
-  FTYPE kappaemitdensityreal  = 1.0/ ( 1.0/(kappaemitmolreal + kappaemithmopalreal) + 1.0/(kappaemitchiantiopalreal) + 1.0/(kappaemitchiantireal + kappaemitffreal + kappaemitffeereal + kappaemitbfreal) );
-  FTYPE kappanemitdensityreal  = 1.0/ ( 1.0/(kappanemitmolreal + kappanemithmopalreal) + 1.0/(kappanemitchiantiopalreal) + 1.0/(kappanemitchiantireal + kappanemitffreal + kappanemitffeereal + kappanemitbfreal) );
+  FTYPE kappadensityreal  = kappafereal + 1.0/ ( 1.0/(kappamolreal + kappahmopalreal) + 1.0/(kappachiantiopalreal) + 1.0/(kappachiantireal + kappaffreal + kappaffeereal + kappabfreal) );
+  FTYPE kappandensityreal  = kappanfereal + 1.0/ ( 1.0/(kappanmolreal + kappanhmopalreal) + 1.0/(kappanchiantiopalreal) + 1.0/(kappanchiantireal + kappanffreal + kappanffeereal + kappanbfreal) );
+  FTYPE kappaemitdensityreal  = kappaemitfereal + 1.0/ ( 1.0/(kappaemitmolreal + kappaemithmopalreal) + 1.0/(kappaemitchiantiopalreal) + 1.0/(kappaemitchiantireal + kappaemitffreal + kappaemitffeereal + kappaemitbfreal) );
+  FTYPE kappanemitdensityreal  = kappanemitfereal + 1.0/ ( 1.0/(kappanemitmolreal + kappanemithmopalreal) + 1.0/(kappanemitchiantiopalreal) + 1.0/(kappanemitchiantireal + kappanemitffreal + kappanemitffeereal + kappanemitbfreal) );
 
 
   //////////////
