@@ -11012,7 +11012,9 @@ int vchar_rad(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYP
     //    dualfprintf(fail_file,"chi=%g dx=%g dir=%d tautot=%g\n",chi,dx[dir],dir,sqrt(tautotsq));
   
     vrad2tau=(4.0/3.0)*(4.0/3.0)/tautotsq; // KORALTODO: Why 4.0/3.0 ?  Seems like it should be 2.0/3.0 according to NR1992 S19.2.6L or NR2007 S20.2L with D=1/(3\chi), but twice higher speed is only more robust.
-    vrad2limited=MIN(vrad2,vrad2tau);
+    //    vrad2limited=MIN(vrad2,vrad2tau); // sharp transition
+    FTYPE berthonterm=(1.0+1.5*tautot[dir]);
+    vrad2limited=vrad2/(berthonterm*berthonterm); // Berthon et al. 2007 and Rosdahl & Teyssier 2015.  So smooth transition.  Notice this is also as if 2/3 as expected (see above).
 
     // NOTEMARK: For explicit method, this will lead to very large dt relative to step desired by explicit method, leading to ever more sub-cycles for WHICHRADSOURCEMETHOD==SOURCEMETHODEXPLICITSUBCYCLE method.
 
