@@ -112,7 +112,7 @@
 
 
 // choose which type of opacity calculation to use
-#define ISFITORIG 1
+#define ISFITORIG 0
 #define ISFITNEW 1
 #define WHICHFIT ISFITORIG // choose
 
