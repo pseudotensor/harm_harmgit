@@ -9661,10 +9661,10 @@ int kappa_func_fits_all(FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, FTYPE varexpf, F
   FTYPE rhoreal=rho*RHOBAR;
   FTYPE nereal=3.0110683499999995e23*rhoreal*(1.0 + XFACT);
   FTYPE Breal=B*BFIELDBAR;
-  FTYPE Tereal=Te*TEMPBAR;
-  FTYPE Tgreal=Tg*TEMPBAR;
+  FTYPE Tereal=Te*TEMPBAR+TEMPMINKELVIN; // Apply minimum electron temperature so ff and fb opacities don't diverge
+  FTYPE Tgreal=Tg*TEMPBAR+TEMPMINKELVIN; // Apply minimum electron temperature so ff and fb opacities don't diverge
   FTYPE Trreal=Tr*TEMPBAR;
-  FTYPE xi = Trreal/Tereal;
+  FTYPE xi = 1E-20+Trreal/Tereal; // Apply minimum \xi beyond which assume constant so as Trreal->0 expressions don't misbehave
 
   FTYPE thetae = Tereal/TEMPELE;
   FTYPE thetaesq=thetae*thetae;
@@ -9741,10 +9741,6 @@ int kappa_func_fits_all(FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, FTYPE varexpf, F
 
   kappanemitffreal *= aane*pow(xi,-bbne)*log(1.0+ccne*xi);
 #endif
-
-  // TODO: Need to interpolate kappaffreal and kappanffreal towards
-  // Planck when varexpf->1.  Like when varexp=0.999 to 1.0, or
-  // whever fits seem to become off.
 
   //////////////
   //
@@ -9894,15 +9890,19 @@ int kappa_func_fits_all(FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, FTYPE varexpf, F
   //////////////
 
   FTYPE nuM = 1.5*QCHARGE*Breal/(2.0*M_PI*MELE*CCCTRUE0)*thetaesq;
-  FTYPE phi = (K_BOLTZ*Trreal)/(HPLANCK*nuM);
+  FTYPE minnuM = (K_BOLTZ*Trreal)/(HPLANCK*1E20); // minimum nuM so that phi is no bigger than 1E20
+  FTYPE minTrreal = 1E-20*(HPLANCK*(minnuM+nuM))/(K_BOLTZ);
+  FTYPE phi = (K_BOLTZ*(minTrreal+Trreal))/(HPLANCK*(minnuM+nuM));
 
   // synch prefactor
-  FTYPE kappasyreal=2.13E-11*nereal/Breal*pow(Tereal/1E10,-5.0);
+#define BFIELDMIN (1E-30) // just for division purposes, as nuM multiplied above will zero-out near Breal=0
+  //  FTYPE kappasyreal=2.13E-11*nereal/(Breal+BFIELDMIN)*pow(Tereal/1E10,-5.0);
+  FTYPE kappasyreal=5.85374E-14*nereal*phi*pow(thetae,-3.0)/(minTrreal+Trreal);
 
   // low-temp factor
   FTYPE q0 = 1.0/ (1.0+pow(3.3*thetae,-5.0));
   FTYPE q1 = 1.0 + pow(3.3*thetae,-5.0);
-  FTYPE qsyn = exp(log(q0) + ( 0.5 + (1.0/M_PI)*atan(3.0+log(phi)) )*(log(q1) - log(q0)) );
+  FTYPE qsyn = pow(log10(q0) + ( 0.5 + (1.0/M_PI)*atan(3.0+log10(phi)) )*(log10(q1) - log10(q0)) ,10.0);
   kappasyreal *= qsyn;
     
   FTYPE kappansyreal=kappasyreal; // same prefactor
@@ -10072,6 +10072,16 @@ int kappa_func_fits_all(FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, FTYPE varexpf, F
   *kappanemit=kappanemitreal*overopacitybaralt;
   *kappaes=kappaesreal*overopacitybaralt;
 
+
+#if(0)
+  // debug new vs. old opacities
+  dualfprintf(fail_file,"DOG1: rho=%21.15g B=%2.15g Tg=%21.15g Tr=%21.15g varexpf=%21.15g\n",rho,B,Tg,Tr,varexpf);
+  dualfprintf(fail_file,"DOG2: kappa=%21.15g kappan=%21.15g kappaaemit=%21.15g kappanemit=%21.15g kappaes=%21.15g\n",*kappa,*kappan,*kappaemit,*kappanemit,*kappaes);
+  dualfprintf(fail_file,"DOG3: kappadensityreal=%21.15g kappasyreal=%21.15g kappadcreal=%21.15g\n",kappadensityreal*overopacitybaralt,kappasyreal*overopacitybaralt,kappadcreal*overopacitybaralt);
+  dualfprintf(fail_file,"DOGA: phi=%21.15g xi=%21.15g qsyn=%21.15g Trreal=%21.15g Tereal=%21.15g q0=%21.15g q1=%21.15g thetae=%21.15g\n",phi,xi,qsyn,Trreal,Tereal,q0,q1,thetae);
+  dualfprintf(fail_file,"DOG4: kappafereal=%21.15g kappamolreal=%21.15g kappahmopalreal=%21.15g kappachiantiopalreal=%21.15g kappachiantireal=%21.15g kappaffreal=%21.15g kappaffeereal=%21.15g kappabfreal=%21.15g\n",kappafereal*overopacitybaralt,kappamolreal*overopacitybaralt,kappahmopalreal*overopacitybaralt,kappachiantiopalreal*overopacitybaralt,kappachiantireal*overopacitybaralt,kappaffreal*overopacitybaralt,kappaffeereal*overopacitybaralt,kappabfreal*overopacitybaralt);
+  dualfprintf(fail_file,"DOG9: kappa=%21.15g kappaaemit=%21.15g kappaes=%21.15g\n",rho*(KAPPA_GENFF_CODE(SMALL+rho,Tg+TEMPMIN,Tr+TEMPMIN)),rho*(KAPPA_GENFF_CODE(SMALL+rho,Tg+TEMPMIN,Tg+TEMPMIN)),rho*KAPPA_ES_CODE(rho,Tg+TEMPMIN));
+#endif
 
   // TODO: check Ree and Rei with Te for small Te
   // check all expressions.  ensure rhoreal Tereal all right.
