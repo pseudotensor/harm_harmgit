@@ -8322,7 +8322,7 @@ int get_rameshsolution(int whichcallramesh, int radinvmod, int failtype, long lo
     na++; args[na]=IMPALLOWCONVCONSTABS;
     na++; args[na]=ARAD_CODE;
     // so as really code uses:
-    na++; args[na]=calc_kappaes_user(1.0,1.0,0,0,0);
+    na++; args[na]=calc_kappaes_user(1.0,1.0,1.0,1.0,1.0,0,0,0);
     na++; args[na]=calc_kappa_user(1.0,1.0,1.0,1.0,1.0,0,0,0);
     na++; args[na]=0.0;
     DLOOP(jj,kk){ na++; args[na]=ptrgeom->gcon[GIND(jj,kk)];}
@@ -8667,7 +8667,7 @@ int mathematica_report_check(int radinvmod, int failtype, long long int failnum,
     dualfprintf(fail_file,"%d %d %lld %d %d %d %21.15g %21.15g %d %d %21.15g %lld %d %21.15g ",failtype,myid,failnum,gotfirstnofail,eomtypelocal,itermode,errorabs[WHICHERROR],errorabsbestexternal[WHICHERROR],iters,totaliters,realdt,nstep,steppart,gam); // 14
     FTYPE trueimptryconv=IMPTRYCONV;
     dualfprintf(fail_file,"%21.15g %21.15g %21.15g %21.15g ",GAMMAMAXRAD,ERADLIMIT,IMPTRYCONVABS,IMPALLOWCONVCONSTABS); // 4
-    dualfprintf(fail_file,"%21.15g %21.15g %21.15g %21.15g ",ARAD_CODE,calc_kappaes_user(1.0,1.0,0,0,0),calc_kappa_user(1.0,1.0,1.0,1.0,1.0,0,0,0),0.0); // 4
+    dualfprintf(fail_file,"%21.15g %21.15g %21.15g %21.15g ",ARAD_CODE,calc_kappaes_user(1.0,1.0,1.0,1.0,1.0,0,0,0),calc_kappa_user(1.0,1.0,1.0,1.0,1.0,0,0,0),0.0); // 4
     DLOOP(jj,kk) dualfprintf(fail_file,"%21.15g ",ptrgeom->gcon[GIND(jj,kk)]); // 16
     DLOOP(jj,kk) dualfprintf(fail_file,"%21.15g ",ptrgeom->gcov[GIND(jj,kk)]); // 16
     PLOOP(pliter,pl) dualfprintf(fail_file,"%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g ",pp[pl],ppfirst[pl],pb[pl],piin[pl],prtestUiin[pl],prtestUU0[pl],uu0[pl],uu[pl],Uiin[pl]);  // 9*13
@@ -10338,10 +10338,12 @@ int koral_source_rad(int whichradsourcemethod, FTYPE *piin, FTYPE *pb, FTYPE *pf
 ///**********************************************************************
 ///absorption in 1/cm form
 // just for chi and tautot
-void calc_kappa(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE *kappa)
+// compute \chi TODOMARK: Should compute this and wavespeed (how this used) just after implicit stepping to avoid repeating opacity calculation.
+void calc_chi(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE *chi)
 {
   extern FTYPE calc_kappa_user(FTYPE rho, FTYPE B, FTYPE Tg,FTYPE Tr,FTYPE expfactorrad, FTYPE x,FTYPE y,FTYPE z);
-  //user_calc_kappa()
+  extern FTYPE calc_kappaes_user(FTYPE rho, FTYPE B, FTYPE Tg,FTYPE Tr,FTYPE expfactorrad, FTYPE x,FTYPE y,FTYPE z);
+
   FTYPE rho=pr[RHO];
   FTYPE u=pr[UU];
   int ii=ptrgeom->i;
@@ -10373,7 +10375,10 @@ void calc_kappa(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE *k
   yy=V[2];
   zz=V[3];
 #endif
-  *kappa = calc_kappa_user(rho,B,Tgas,Tradff,expfactorradff,xx,yy,zz);
+
+  // add up all source of opacity
+  *chi =  calc_kappa_user  (rho,B,Tgas,Tradff,expfactorradff,xx,yy,zz);
+  *chi += calc_kappaes_user(rho,B,Tgas,Tradff,expfactorradff,xx,yy,zz);
   //  dualfprintf(fail_file,"kappaabs=%g\n",*kappa);
 
   if(AVOIDTAUFORFLOOR==1){
@@ -10382,58 +10387,10 @@ void calc_kappa(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE *k
     FTYPE thebsqorho=bsq/rho;
     if(bsq/rho<0 || bsq/rho>BSQORHOLIMIT) thebsqorho=BSQORHOLIMIT;
     factor=exp(-thebsqorho/bsqorholimit);
-    *kappa *= factor;
+    *chi *= factor;
   }
 
 
-}
-
-
-///scattering in 1/cm form
-// just for chi and tautot
-void calc_kappaes(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappaes)
-{  
-  extern FTYPE calc_kappaes_user(FTYPE rho, FTYPE T,FTYPE x,FTYPE y,FTYPE z);
-  //user_calc_kappaes()
-  FTYPE rho=pr[RHO];
-  FTYPE u=pr[UU];
-  int ii=ptrgeom->i;
-  int jj=ptrgeom->j;
-  int kk=ptrgeom->k;
-  int loc=ptrgeom->p;
-  FTYPE T=compute_temp_simple(ii,jj,kk,loc,rho,u);
-  FTYPE V[NDIM]={0.0},xx=0.0,yy=0.0,zz=0.0;
-#if(ALLOWKAPPAEXPLICITPOSDEPENDENCE)
-  bl_coord_ijk(ii,jj,kk,loc,V);
-  xx=V[1];
-  yy=V[2];
-  zz=V[3];
-#endif
-  *kappaes = calc_kappaes_user(rho,T,xx,yy,zz);
-  //  dualfprintf(fail_file,"kappaes=%g\n",*kappa);
-
-  if(AVOIDTAUFORFLOOR==1){
-    FTYPE bsq;
-    bsq_calc(pr, ptrgeom, &bsq);
-    FTYPE bsqorholimit=10.0; //BSQORHOLIMIT/5.0;
-    FTYPE factor;
-    FTYPE thebsqorho=bsq/rho;
-    if(bsq/rho<0 || bsq/rho>BSQORHOLIMIT) thebsqorho=BSQORHOLIMIT;
-    factor=exp(-thebsqorho/bsqorholimit);
-    *kappaes *= factor;
-  }
-
-}
- 
-
-// compute \chi TODOMARK: Should compute this and wavespeed (how this used) just after implicit stepping to avoid repeating opacity calculation.
-void calc_chi(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE *chi)
-{
-  FTYPE kappa,kappaes;
-  calc_kappa(pr,ptrgeom,q,&kappa);
-  calc_kappaes(pr,ptrgeom,&kappaes);
-  
-  *chi=kappa+kappaes;
 }
 
 
@@ -10442,7 +10399,7 @@ void calc_chi(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE *chi
 void calc_Tandopacityandemission(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE Ruu, FTYPE gammaradgas, FTYPE B, FTYPE *Tgas, FTYPE *Tradff, FTYPE *nradff, FTYPE *expfactorradff, FTYPE *kappa, FTYPE *kappan, FTYPE *kappaemit, FTYPE *kappanemit, FTYPE *kappaes, FTYPE *lambda, FTYPE *nlambda)
 {
   extern FTYPE calc_kappa_user(FTYPE rho, FTYPE B, FTYPE Tg,FTYPE Tr,FTYPE expfactorrad, FTYPE x,FTYPE y,FTYPE z);
-  //user_calc_kappa()
+  extern FTYPE calc_kappaes_user(FTYPE rho, FTYPE B, FTYPE Tg,FTYPE Tr,FTYPE expfactorrad, FTYPE x,FTYPE y,FTYPE z);
 
   // get rho,u
   FTYPE rho=pr[RHO];
@@ -10490,7 +10447,7 @@ void calc_Tandopacityandemission(FTYPE *pr, struct of_geom *ptrgeom, struct of_s
 
 #else // WHICHFIT==ISFITORIG
   // get scattering opacity (elastic with no detailed energy or number weighting)
-  *kappaes = calc_kappaes_user(rho,*Tgas,xx,yy,zz);
+  *kappaes = calc_kappaes_user(rho,B,*Tgas,*Tradff,*expfactorradff,xx,yy,zz);
 
   // get energy-based absorption opacity
   *kappa = calc_kappa_user(rho,B,*Tgas,*Tradff,*expfactorradff,xx,yy,zz);
@@ -10981,9 +10938,6 @@ int vchar_rad(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYP
   // Assume \chi defined in fluid frame (i.e. not radiation frame).
   FTYPE kappa,chi;
   calc_chi(pr,geom,q,&chi);
-  // KORALTODO: in paper, suggests only kappaes should matter?
-  //  calc_kappa(pr,geom,q,&kappa);
-  //  chi=kappa;
 
 
   //characterisitic wavespeed in the radiation rest frame
@@ -11011,7 +10965,7 @@ int vchar_rad(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYP
 
     //    dualfprintf(fail_file,"chi=%g dx=%g dir=%d tautot=%g\n",chi,dx[dir],dir,sqrt(tautotsq));
   
-    vrad2tau=(4.0/3.0)*(4.0/3.0)/tautotsq; // KORALTODO: Why 4.0/3.0 ?  Seems like it should be 2.0/3.0 according to NR1992 S19.2.6L or NR2007 S20.2L with D=1/(3\chi), but twice higher speed is only more robust.
+    //    vrad2tau=(4.0/3.0)*(4.0/3.0)/tautotsq; // KORALTODO: Why 4.0/3.0 ?  Seems like it should be 2.0/3.0 according to NR1992 S19.2.6L or NR2007 S20.2L with D=1/(3\chi), but twice higher speed is only more robust.
     //    vrad2limited=MIN(vrad2,vrad2tau); // sharp transition
     FTYPE berthonterm=(1.0+1.5*tautot[dir]);
     vrad2limited=vrad2/(berthonterm*berthonterm); // Berthon et al. 2007 and Rosdahl & Teyssier 2015.  So smooth transition.  Notice this is also as if 2/3 as expected (see above).
@@ -14145,15 +14099,14 @@ int calcfull_tautot(FTYPE *pp, struct of_geom *ptrgeom, FTYPE *tautot, FTYPE *ta
   return 0;
 
 }
+
 /// calculates total opacity over dx[]
+// used by advance.c (if doing dissipation method), flux.c (for shock capturing), interppoint.para.c (shock capturing).
 int calc_tautot(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q, FTYPE *tautot, FTYPE *tautotmax)
 {
   //xx[0] holds time
-  FTYPE kappa,kappaes,chi;
-  calc_kappa(pp,ptrgeom,q,&kappa);
-  calc_kappaes(pp,ptrgeom,&kappaes);
-  chi=kappa+kappaes;
-
+  FTYPE chi;
+  calc_chi(pp,ptrgeom,q,&chi);
   calc_tautot_chieff(pp,chi,ptrgeom,q,tautot,tautotmax);
 
   return 0;

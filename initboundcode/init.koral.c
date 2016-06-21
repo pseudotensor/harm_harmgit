@@ -4298,7 +4298,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
 
 
     FTYPE MINX=Rin_array[1];
-    FTYPE kappaesperrho=calc_kappaes_user(1,0, 0,0,0);
+    FTYPE kappaesperrho=calc_kappaes_user(1,0,0,0,0,0,0,0);
     FTYPE FLUXLEFT=RADATM_FRATIO/kappaesperrho/pow(MINX,2.0);
 
 
@@ -6029,10 +6029,11 @@ static int get_full_rtsolution(int *whichvel, int *whichcoord, int opticallythic
     FTYPE bsq,B;
     bsq_calc(pp,*ptrptrgeom,&bsq);
     B=sqrt(bsq);
+    // Planck Tr=Tg at t=0
     chi=
-      calc_kappa_user(pp[RHO],B,Tg,Tg,1.0,V[1],V[2],V[3]) // Planck Tr=Tg at t=0
+      calc_kappa_user(pp[RHO],B,Tg,Tg,1.0,V[1],V[2],V[3])
       +
-      calc_kappaes_user(pp[RHO],calc_PEQ_Tfromurho(pp[UU],pp[RHO]),V[1],V[2],V[3]);
+      calc_kappaes_user(pp[RHO],B,Tg,Tg,1.0,V[1],V[2],V[3]);
 
     FTYPE Vtemp1[NDIM],Vtemp2[NDIM];
     FTYPE Xtemp1[NDIM],Xtemp2[NDIM];
@@ -6254,7 +6255,7 @@ static int make_nonrt2rt_solution(int *whichvel, int *whichcoord, int opticallyt
     bsq_calc(pp,*ptrptrgeom,&bsq);
     B=sqrt(bsq);
     kappaabs=calc_kappa_user(rho,B,Tgas,Tgas,1.0,V[1],V[2],V[3]); // Planck and Tr=Tgas at t=0
-    kappaes=calc_kappaes_user(rho,Tgas,V[1],V[2],V[3]);
+    kappaes=calc_kappaes_user(rho,B,Tgas,Tgas,1.0,V[1],V[2],V[3]); // Planck and Tr=Tgas at t=0
     kappatot=kappaabs+kappaes;
 
     // fake integral of opacity as if opacity roughly uniform and heading out away in angular distance at fixed angluar extent.  Could integrate to pole, but harder with MPI.
@@ -8839,7 +8840,7 @@ void adjust_flux(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*
           prflux[URAD0]=Ehatstar*(1.0-interptime) + interptime*Ehatstar*10.0;
 
           //          prflux[URAD1]=interptime*vr0/sqrt(fabs(ptrgeom->gcov[GIND(1,1)])); // assume vr0 is orthonormal, so get coordinate out of it.
-          FTYPE kappa=calc_kappaes_user(rhostar,1.0,0,0,0);
+          FTYPE kappa=calc_kappaes_user(rhostar,0.0,1.0,1.0,1.0,0,0,0);
           vr0=sqrt(1.0/(3.0*kappa*t0));
           static int firsttime=1;
           if(firsttime) dualfprintf(fail_file,"vr0=%21.15g\n",vr0);
@@ -9082,7 +9083,7 @@ int jetbound(int i, int j, int k, int loc, FTYPE *prin, FTYPE *prflux, FTYPE (*p
       dualfprintf(fail_file,"Tgasinj=%21.15g u/rho=%21.15g prad0/rho=%21.15g\n",Tgas,prflux[UU]/prflux[RHO],prflux[URAD0]/prflux[RHO]);
       dualfprintf(fail_file,"TEST: %21.15g\n",0.99*stepfunctionab(1E-2,1.0,0.0));
       dualfprintf(fail_file,"TESTUCON0: %21.15g %21.15g %21.15g %21.15g\n",ucon[TT],ucon[1]*sqrt(ptrgeom->gcov[GIND(1,1)]),ucon[2]*sqrt(ptrgeom->gcov[GIND(2,2)]),ucon[3]*sqrt(ptrgeom->gcov[GIND(3,3)]));
-      dualfprintf(fail_file,"Need: pradstar/rhojet=%21.15g > %21.15g and taujet=%21.15g >>1\n",pradstar/prflux[RHO],ucon[TT]*ucon[TT]*calc_kappaes_user(prflux[RHO],Temp,0,0,0)*width*width/(2.0*Rout_array[2]),calc_kappaes_user(prflux[RHO],Temp,0,0,0)*width);
+      dualfprintf(fail_file,"Need: pradstar/rhojet=%21.15g > %21.15g and taujet=%21.15g >>1\n",pradstar/prflux[RHO],ucon[TT]*ucon[TT]*calc_kappaes_user(prflux[RHO],0,Temp,Temp,1,0,0,0)*width*width/(2.0*Rout_array[2]),calc_kappaes_user(prflux[RHO],0,Temp,Temp,1,0,0,0)*width);
 
       FTYPE ljet,ljet1,ljet2,ljet3;
       ljet1 = prflux[RHO]*ucon[TT]*ucon[TT]*M_PI*width*width;
@@ -9092,8 +9093,8 @@ int jetbound(int i, int j, int k, int loc, FTYPE *prin, FTYPE *prflux, FTYPE (*p
       
 
       FTYPE lrad,lradalt1,lradalt2;
-      lrad =      (pradstar/calc_kappaes_user(prflux[RHO],Temp,0,0,0))*(2.0*M_PI*Rout_array[2]); // best estimate, except rho and T vary inside jet so only applies to core of jet evaluated first.  Assumes diffusion scale is width, and it could be smaller in which case flux closer to lradalt2.
-      lradalt1 =  (pradstar/calc_kappaes_user(rhostar,Tstar,0,0,0))*(2.0*M_PI*Rout_array[2]); // underestimate
+      lrad =      (pradstar/calc_kappaes_user(prflux[RHO],0,Temp,Temp,1,0,0,0))*(2.0*M_PI*Rout_array[2]); // best estimate, except rho and T vary inside jet so only applies to core of jet evaluated first.  Assumes diffusion scale is width, and it could be smaller in which case flux closer to lradalt2.
+      lradalt1 =  (pradstar/calc_kappaes_user(rhostar,0,Tstar,Tstar,1,0,0,0))*(2.0*M_PI*Rout_array[2]); // underestimate
       lradalt2 = (ARAD_CODE*pow(Tstar,4.0)/4.0)*(2.0*M_PI*width*Rout_array[2]); // overestimate
 
       dualfprintf(fail_file,"Need: ljet=%21.15g < lrad=%21.15g  lradalt1=%21.15g  lradalt2=%21.15g\n",ljet,lrad,lradalt1,lradalt2);
@@ -9706,7 +9707,7 @@ int kappa_func_fits_all(FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, FTYPE varexpf, F
 
   // List(4. - 2.06*Power(1. - 1.*varvarvar,1.) + 21.*Power(varvarvar,5.),3.1503757694129613 + 0.0008942404015805927*Power(1. - 1.*varvarvar,10.174621780103456) -     0.41243605382204196*Power(varvarvar,59.06672963853068),4.552732466653472e-7 + 2.3916452081662603*Power(1. - 1.*varvarvar,0.5522198226571239) + 5.27043093753271*Power(varvarvar,69.17066973904404))
 
-#if(EVOLVENRAD)
+#if(EVOLVENRAD||1)
   // XRB Ledd
   FTYPE aan = 4. - 2.06*Power(1. - 1.*varexpf,1.) + 21.*Power(varexpf,5.);
   FTYPE bbn = 3.1503757694129613 + 0.0008942404015805927*Power(1. - 1.*varexpf,10.174621780103456) -      0.41243605382204196*Power(varexpf,59.06672963853068);
@@ -9730,7 +9731,7 @@ int kappa_func_fits_all(FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, FTYPE varexpf, F
  
   kappaemitffreal *= aae*pow(xi,-bbe)*log(1.0+cce*xi);
 
-#if(EVOLVENRAD)
+#if(EVOLVENRAD||1)
   // XRB Ledd
   FTYPE aane = 20.;
   FTYPE bbne = 2.6669560547974855;
@@ -9900,9 +9901,10 @@ int kappa_func_fits_all(FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, FTYPE varexpf, F
   FTYPE kappasyreal=5.85374E-14*nereal*phi*pow(thetae,-3.0)/(minTrreal+Trreal);
 
   // low-temp factor
-  FTYPE q0 = 1.0/ (1.0+pow(3.3*thetae,-5.0));
-  FTYPE q1 = 1.0 + pow(3.3*thetae,-5.0);
-  FTYPE qsyn = pow(log10(q0) + ( 0.5 + (1.0/M_PI)*atan(3.0+log10(phi)) )*(log10(q1) - log10(q0)) ,10.0);
+  //  FTYPE q0 = 1.0/ (1.0+pow(3.3*thetae,-5.0));
+  //  FTYPE q1 = 1.0 + pow(3.3*thetae,-5.0);
+  //  FTYPE qsyn = pow(log10(q0) + ( 0.5 + (1.0/M_PI)*atan(3.0+log10(phi)) )*(log10(q1) - log10(q0)) ,10.0);
+  FTYPE qsyn=1.0; // issues TODO
   kappasyreal *= qsyn;
     
   FTYPE kappansyreal=kappasyreal; // same prefactor
@@ -9920,7 +9922,7 @@ int kappa_func_fits_all(FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, FTYPE varexpf, F
 
   kappasyreal *= 1.0/( 1.0/(aas*pow(phi,-bbs)*log(1.0+ccs*phi)) + 1.0/(dds*pow(phi,-ees)) );
 
-#if(EVOLVENRAD)
+#if(EVOLVENRAD||1)
   // XRB Ledd
   FTYPE aans=0.0020896556908760167 - 0.000552135392124191*Power(1. - 1.*varexpf,0.13484101986913094) - 0.00035919475351279596*Power(varexpf,1.3117367224699348);
   FTYPE bbns=0.947936882050393 + 0.04325767539629399*Power(1. - 1.*varexpf,0.15851143273201895) + 0.03500295073258275*Power(varexpf,5.426349783477622);
@@ -9942,7 +9944,7 @@ int kappa_func_fits_all(FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, FTYPE varexpf, F
  
   kappaemitsyreal *= 1.0/( 1.0/(aaes*pow(phi,-bbes)*log(1.0+cces*phi)) + 1.0/(ddes*pow(phi,-eees)) );
 
-#if(EVOLVENRAD)
+#if(EVOLVENRAD||1)
   // XRB Ledd
   FTYPE aanes=0.0017304609373632208;
   FTYPE bbnes=0.9829398327829757;
@@ -9984,7 +9986,7 @@ int kappa_func_fits_all(FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, FTYPE varexpf, F
     
   kappadcreal *= 1.0/( 1.0/aadc + 1.0/(bbdc*pow(thetar,-ccdc)) + 1.0/(dddc*pow(thetar,-ccdc/3.0)) );
 
-#if(EVOLVENRAD)
+#if(EVOLVENRAD||1)
   // XRB Ledd
   FTYPE aandc=87.4586627372423 - 76.35909344479292*Power(1. - 1.*varexpf,0.13586634790456995) + 29.385274489218205*Power(varexpf,285.27285622653653);
   FTYPE bbndc=1.1604225625247175 - 1.1192436863350592*Power(1. - 1.*varexpf,0.1339258484550137) + 0.1955857773358507*Power(varexpf,18.1030753003189);
@@ -10004,7 +10006,7 @@ int kappa_func_fits_all(FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, FTYPE varexpf, F
  
   kappaemitdcreal *= 1.0/( 1.0/aaedc + 1.0/(bbedc*pow(thetar,-ccedc)) + 1.0/(ddedc*pow(thetar,-ccedc/3.0)) );
 
-#if(EVOLVENRAD)
+#if(EVOLVENRAD||1)
   // XRB Ledd
   FTYPE aanedc=197.97520843920014 - 94.77219201589888*Power(1. - 1.*varexpf,0.9245008022924389) - 81.66905945089535*Power(varexpf,1.010185534936844);
   FTYPE bbnedc=4.798508367755025e-11 + 1.0490039263100823*Power(1. - 1.*varexpf,0.24861894212727034) + 1.3060425347854707*Power(varexpf,1.1248777879043648);
@@ -10078,7 +10080,8 @@ int kappa_func_fits_all(FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, FTYPE varexpf, F
   dualfprintf(fail_file,"DOG1: rho=%21.15g B=%2.15g Tg=%21.15g Tr=%21.15g varexpf=%21.15g\n",rho,B,Tg,Tr,varexpf);
   dualfprintf(fail_file,"DOG2: kappa=%21.15g kappan=%21.15g kappaaemit=%21.15g kappanemit=%21.15g kappaes=%21.15g\n",*kappa,*kappan,*kappaemit,*kappanemit,*kappaes);
   dualfprintf(fail_file,"DOG3: kappadensityreal=%21.15g kappasyreal=%21.15g kappadcreal=%21.15g\n",kappadensityreal*overopacitybaralt,kappasyreal*overopacitybaralt,kappadcreal*overopacitybaralt);
-  dualfprintf(fail_file,"DOGA: phi=%21.15g xi=%21.15g qsyn=%21.15g Trreal=%21.15g Tereal=%21.15g q0=%21.15g q1=%21.15g thetae=%21.15g\n",phi,xi,qsyn,Trreal,Tereal,q0,q1,thetae);
+  //  dualfprintf(fail_file,"DOGA: phi=%21.15g xi=%21.15g qsyn=%21.15g Trreal=%21.15g Tereal=%21.15g q0=%21.15g q1=%21.15g thetae=%21.15g\n",phi,xi,qsyn,Trreal,Tereal,q0,q1,thetae);
+  dualfprintf(fail_file,"DOGA: phi=%21.15g xi=%21.15g Trreal=%21.15g Tereal=%21.15g thetae=%21.15g\n",phi,xi,Trreal,Tereal,thetae);
   dualfprintf(fail_file,"DOG4: kappafereal=%21.15g kappamolreal=%21.15g kappahmopalreal=%21.15g kappachiantiopalreal=%21.15g kappachiantireal=%21.15g kappaffreal=%21.15g kappaffeereal=%21.15g kappabfreal=%21.15g\n",kappafereal*overopacitybaralt,kappamolreal*overopacitybaralt,kappahmopalreal*overopacitybaralt,kappachiantiopalreal*overopacitybaralt,kappachiantireal*overopacitybaralt,kappaffreal*overopacitybaralt,kappaffeereal*overopacitybaralt,kappabfreal*overopacitybaralt);
   dualfprintf(fail_file,"DOG9: kappa=%21.15g kappaaemit=%21.15g kappaes=%21.15g\n",rho*(KAPPA_GENFF_CODE(SMALL+rho,Tg+TEMPMIN,Tr+TEMPMIN)),rho*(KAPPA_GENFF_CODE(SMALL+rho,Tg+TEMPMIN,Tg+TEMPMIN)),rho*KAPPA_ES_CODE(rho,Tg+TEMPMIN));
 #endif
@@ -10195,11 +10198,11 @@ FTYPE calc_kappa_user(FTYPE rho, FTYPE B, FTYPE Tg,FTYPE Tr,FTYPE varexpf, FTYPE
 }
 
 //scattering
-FTYPE calc_kappaes_user(FTYPE rho, FTYPE T,FTYPE x,FTYPE y,FTYPE z)
+FTYPE calc_kappaes_user(FTYPE rho, FTYPE B, FTYPE Tg,FTYPE Tr,FTYPE varexpf, FTYPE x,FTYPE y,FTYPE z)
 {  
 
 #if(WHICHPROBLEM==RADDONUT)
-  return(kappa_func_fits(ISKAPPAES,rho,0,T,T,1.0));
+  return(kappa_func_fits(ISKAPPAES,rho,B,Tg,Tr,varexpf));
 #else
   return(KAPPAESUSER(rho,T));
 #endif

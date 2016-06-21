@@ -60,12 +60,12 @@ extern int vchar_rad(FTYPE *pr, struct of_state *q, int dir,
                      struct of_geom *geom, FTYPE *cmax, FTYPE *cmin, FTYPE *cmax2, FTYPE *cmin2,int *ignorecourant);
 
 
-extern void calc_kappaes(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappaes);
+extern void calc_kappaes(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE *kappaes);
 
 extern void calc_kappa(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE *kappa);
 //extern void calc_kappaemit(FTYPE *pr, struct of_geom *ptrgeom, FTYPE *kappaemit);
 
-extern FTYPE calc_kappaes_user(FTYPE rho, FTYPE T,FTYPE x,FTYPE y,FTYPE z);
+extern FTYPE calc_kappaes_user(FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, FTYPE varexpf, FTYPE x,FTYPE y,FTYPE z);
 
 
 extern FTYPE calc_kappa_user(FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, FTYPE varexpf, FTYPE x,FTYPE y,FTYPE z);

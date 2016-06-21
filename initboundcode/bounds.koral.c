@@ -212,8 +212,31 @@ int bound_waldmono(int dir,
                 int *localenerpos
                    );
 
+int bound_x1up_radcyljet(
+                          int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+                          int *inboundloop,
+                          int *outboundloop,
+                          int *innormalloop,
+                          int *outnormalloop,
+                          int (*inoutlohi)[NUMUPDOWN][NDIM],
+                          int riin, int riout, int rjin, int rjout, int rkin, int rkout,
+                          int *dosetbc,
+                          int enerregion,
+                          int *localenerpos
+                         );  
   
-  
+int bound_x2dn_radcyljet(
+                          int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+                          int *inboundloop,
+                          int *outboundloop,
+                          int *innormalloop,
+                          int *outnormalloop,
+                          int (*inoutlohi)[NUMUPDOWN][NDIM],
+                          int riin, int riout, int rjin, int rjout, int rkin, int rkout,
+                          int *dosetbc,
+                          int enerregion,
+                          int *localenerpos
+                         );
 
 
 
@@ -1809,7 +1832,7 @@ int bound_radatmbeaminflow(int dir,
 
 
     FTYPE MINX=Rin_array[1];
-    FTYPE kappaesperrho=calc_kappaes_user(1,0, 0,0,0);
+    FTYPE kappaesperrho=calc_kappaes_user(1,0,0,0,0,0,0,0);
     FTYPE FLUXLEFT=RADATM_FRATIO/kappaesperrho/pow(MINX,2.0);
 
     //at boundary
