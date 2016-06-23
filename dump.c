@@ -1471,17 +1471,28 @@ int fieldline_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
     FTYPE Tgas=0,Tradff=0;
     calc_Tandopacityandemission(pr,ptrgeom,&q,Ruu,gammaradgas,B,&Tgas,&Tradff,&nradff,&expfactorradff,&kappa,&kappan,&kappaemit,&kappanemit,&kappaes, &lambda, &nlambda);
 
-    myset(datatype,&Tgas,0,1,writebuf); // 1
-    myset(datatype,&Tradff,0,1,writebuf); // 1
-    myset(datatype,&nradff,0,1,writebuf); // 1
-    myset(datatype,&expfactorradff,0,1,writebuf); // 1
-    myset(datatype,&kappa,0,1,writebuf); // 1
-    myset(datatype,&kappan,0,1,writebuf); // 1
-    myset(datatype,&kappaemit,0,1,writebuf); // 1
-    myset(datatype,&kappanemit,0,1,writebuf); // 1
-    myset(datatype,&kappaes,0,1,writebuf); // 1
-    myset(datatype,&lambda,0,1,writebuf); // 1
-    myset(datatype,&nlambda,0,1,writebuf); // 1
+    ftemp=Tgas;
+    myset(datatype,&ftemp,0,1,writebuf); // 1
+    ftemp=Tradff;
+    myset(datatype,&ftemp,0,1,writebuf); // 1
+    ftemp=nradff;
+    myset(datatype,&ftemp,0,1,writebuf); // 1
+    ftemp=expfactorradff;
+    myset(datatype,&ftemp,0,1,writebuf); // 1
+    ftemp=kappa;
+    myset(datatype,&ftemp,0,1,writebuf); // 1
+    ftemp=kappan;
+    myset(datatype,&ftemp,0,1,writebuf); // 1
+    ftemp=kappaemit;
+    myset(datatype,&ftemp,0,1,writebuf); // 1
+    ftemp=kappanemit;
+    myset(datatype,&ftemp,0,1,writebuf); // 1
+    ftemp=kappaes;
+    myset(datatype,&ftemp,0,1,writebuf); // 1
+    ftemp=lambda;
+    myset(datatype,&ftemp,0,1,writebuf); // 1
+    ftemp=nlambda;
+    myset(datatype,&ftemp,0,1,writebuf); // 1
 
   }
 
