@@ -205,7 +205,7 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE *errorabs, stru
 //
 ///////////////////////////////
 
-#define AVOIDTAUFORFLOOR (1) // whether to apply optical depth calculation for floor (0) or not (1)
+#define AVOIDTAUFORFLOOR (0) // whether to apply optical depth calculation for floor (0) or not (1)
 
 
 #define COURRADEXPLICIT (0.1) // Effective Courant-like factor for stiff explicit radiation source term.  Required to not only avoid failure of explicit scheme, but also that explicit scheme is really accurate compared to implicit.  E.g., near \tau\sim 1, explicit won't fail with RADPULSEPLANAR but will not give same results as implicit.  So only use explicit if really in optically thin regime.
