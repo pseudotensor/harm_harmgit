@@ -1234,20 +1234,13 @@ static void define_method(int iter, int *eomtype, int itermode, int baseitermeth
 // Loop also to create sub-array
 #define JACLOOP2D(pl2iter,pl2,pliter,pl) JACLOOPGEN(JNORMALTYPE,pliter,pl) JACLOOPGEN(JNORMALTYPE,pl2iter,pl2) // goes over terms in jacobian
 
-
 // error over all f's whether used in jacobian or not.  Not over primitives.
-#define JACLOOPSUPERFULL(pliter,pl,eomtype,baseitermethod,radinvmod) PLOOPDYNAMICAL(pliter,pl) if(\
-pl!=ENTROPY && pl!=UU && pl!=URAD0 \
-|| (eomtype==EOMDEFAULT && EOMTYPE==EOMENTROPYGRMHD || eomtype==EOMENTROPYGRMHD || eomtype==EOMDIDENTROPYGRMHD) \
-      && (pl==ENTROPY || pl==URAD0 && IMPMHDTYPEBASE(baseitermethod)==0 || IMPMHDTYPEBASE(baseitermethod)==1 && (pl==URAD0 && AVOIDURAD0IFRADINVMODANDPMHDMETHOD==0 || pl==URAD0 && AVOIDURAD0IFRADINVMODANDPMHDMETHOD==1 && radinvmod==0)) \
-|| (eomtype==EOMDEFAULT && EOMTYPE==EOMGRMHD || eomtype==EOMGRMHD || eomtype==EOMDIDGRMHD) \
-      && (pl==UU || pl==URAD0 && IMPMHDTYPEBASE(baseitermethod)==0 || IMPMHDTYPEBASE(baseitermethod)==1 && (pl==URAD0 && AVOIDURAD0IFRADINVMODANDPMHDMETHOD==0 || pl==URAD0 && AVOIDURAD0IFRADINVMODANDPMHDMETHOD==1 && radinvmod==0) ) \
-)
+#define JACLOOPSUPERFULL(pliter,pl) JACLOOPGEN(JSUPERFULLTYPE,pliter,pl)
 
 // error over all f's that were used in jacobian calculation
-#define JACLOOPFULLERROR(itermode,jj,startjj,endjj) for(jj=(itermode==ITERMODECOLD ? startjj : 0);jj<=(itermode==ITERMODECOLD ? endjj : JACNPR-1);jj++)
+#define JACLOOPFULLERROR(pliter,pl) JACLOOPGEN(JFULLERRORTYPE,pliter,pl)
 // error over linear set of sub portion of f's that entered jacobian
-#define JACLOOPSUBERROR(jj,startjj,endjj) JACLOOP(jj,startjj,endjj)
+#define JACLOOPSUBERROR(pliter,pl) JACLOOP(pliter,pl)
 
 
 
@@ -1312,12 +1305,54 @@ static void get_refUs(struct of_method *mtd, struct of_refU *ru)
 #endif
 
 
-  // sign that goes into implicit differencer that's consistent with sign for *signgd of -1 when using the radiative uu to measure f.
-  ru->signgd7=(+1.0); // not used for PMHD // required to make URAD method work for (e.g.) RADSHADOW if using Gddt-based GS
-  ru->signgd2=(+1.0);
-  ru->signgd4=(+1.0); // for entropy alone for Gdpl in error function // Appears for QTYUMHD,QTYENTROPYUMHD this sign is the right one.  But both cases have lots of cold MHD inversions.
-  ru->signgd6=(-1.0); // for entropy as goes into GS from dUrad or dUmhd  //  // KORALTODO SUPERGODMARK:  -- unsure about sign!
 
+  ///////////////
+  //
+  // Fix jacobian lists to expand to everything for full error
+  //
+  ///////////////
+  type=JFULLERRORTYPE;
+  if(IMPMHDTYPE(mtd->implicititer)){
+    if(mtd->itermode==ITERMODECOLD){
+      // then keep same
+    }
+    else{ // full error is always over entire range
+      ru->jacstart[type]=0; ru->jacend[type]=NDIM-1; DLOOPA(jj) ru->jaclist[type][jj]=UU+jj;  // UU-U3
+    }      
+  }
+  else{
+    if(mtd->itermode==ITERMODECOLD){
+      // then keep same
+    }
+    else{ // full error is always over entire range
+      ru->jacstart[type]=0; ru->jacend[type]=NDIM-1; DLOOPA(jj) ru->jaclist[type][jj]=URAD0+jj;  // URAD0-URAD3
+    }      
+  }
+
+  ///////////////
+  //
+  // Fix jacobian lists to expand to everything for superfull error
+  //
+  ///////////////
+  type=JSUPERFULLTYPE;
+  // error over all f's whether used in jacobian or not.  Not over primitives.
+  ru->jacend[type]=  ru->jacstart[type]=0;
+  PLOOPDYNAMICAL(pliter,pl) if(                                         \
+                               pl!=ENTROPY && pl!=UU && pl!=URAD0       \
+                               || (eomtype==EOMDEFAULT && EOMTYPE==EOMENTROPYGRMHD || eomtype==EOMENTROPYGRMHD || eomtype==EOMDIDENTROPYGRMHD) \
+                               && (pl==ENTROPY || pl==URAD0 && IMPMHDTYPEBASE(baseitermethod)==0 || IMPMHDTYPEBASE(baseitermethod)==1 && (pl==URAD0 && AVOIDURAD0IFRADINVMODANDPMHDMETHOD==0 || pl==URAD0 && AVOIDURAD0IFRADINVMODANDPMHDMETHOD==1 && radinvmod==0)) \
+                               || (eomtype==EOMDEFAULT && EOMTYPE==EOMGRMHD || eomtype==EOMGRMHD || eomtype==EOMDIDGRMHD) \
+                               && (pl==UU || pl==URAD0 && IMPMHDTYPEBASE(baseitermethod)==0 || IMPMHDTYPEBASE(baseitermethod)==1 && (pl==URAD0 && AVOIDURAD0IFRADINVMODANDPMHDMETHOD==0 || pl==URAD0 && AVOIDURAD0IFRADINVMODANDPMHDMETHOD==1 && radinvmod==0) ) \
+                                   ){
+    if(mtd->itermode==ITERMODECOLD && (pl==UU || pl==URAD0 || pl==ENTROPY)){
+      // then don't add
+    }
+    else{ // add to list for superfull error
+      ru->jacend[type]++;
+      ru->jaclist[type][pliter]=pl;
+    }
+  }
+    
 
   ///////////////
   //
@@ -1332,6 +1367,13 @@ static void get_refUs(struct of_method *mtd, struct of_refU *ru)
       }
     }
   }
+
+
+  // sign that goes into implicit differencer that's consistent with sign for *signgd of -1 when using the radiative uu to measure f.
+  ru->signgd7=(+1.0); // not used for PMHD // required to make URAD method work for (e.g.) RADSHADOW if using Gddt-based GS
+  ru->signgd2=(+1.0);
+  ru->signgd4=(+1.0); // for entropy alone for Gdpl in error function // Appears for QTYUMHD,QTYENTROPYUMHD this sign is the right one.  But both cases have lots of cold MHD inversions.
+  ru->signgd6=(-1.0); // for entropy as goes into GS from dUrad or dUmhd  //  // KORALTODO SUPERGODMARK:  -- unsure about sign!
 
 
 }
@@ -6583,7 +6625,7 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
           // f1 based
           //
           //////////////
-          errorabsbest[0]=0.0; JACLOOPFULLERROR(itermode,jj,ru.startjac,ru.endjac) errorabsbest[0] += fabs(lowestf1report[ru.irefU[jj]]);
+          errorabsbest[0]=0.0; JACLOOPFULLERROR(jjiter,jj) errorabsbest[0] += fabs(lowestf1report[jj]);
           errorabsbest[1]=0.0; JACLOOPSUPERFULL(pliter,pl,*eomtype,*baseitermethod,*radinvmod) errorabsbest[1] += fabs(lowestf1report[pl]);
           if(errorabsbest[WHICHERROR]>errorabsf1[WHICHERROR] && isfinite(errorabsf1[WHICHERROR]) && (itermode==ITERMODECOLD || pp[RHO]>0.0 && pp[UU]>0.0 && pp[PRAD0]>0.0)){
             PLOOP(pliter,pl) bestuu[pl]=uu[pl];
@@ -7449,9 +7491,9 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
             if(gotbest){
               // f1-based
               // using old uu,uup, but probably ok since just helps normalize error
-              errorabsf1[0]=0.0;   JACLOOPFULLERROR(itermode,jj,ru.startjac,ru.endjac) errorabsf1[0]   += fabs(f1report[ru.irefU[jj]]);
+              errorabsf1[0]=0.0;   JACLOOPFULLERROR(jjiter,jj) errorabsf1[0]   += fabs(f1report[jj]);
               errorabsf1[1]=0.0;   JACLOOPSUPERFULL(pliter,pl,eomtypelocal,*baseitermethod,*radinvmod)  errorabsf1[1]   += fabs(f1report[pl]);
-              errorabsbest[0]=0.0; JACLOOPFULLERROR(itermode,jj,ru.startjac,ru.endjac) errorabsbest[0] += fabs(lowestf1report[ru.irefU[jj]]);
+              errorabsbest[0]=0.0; JACLOOPFULLERROR(jjiter,jj) errorabsbest[0] += fabs(lowestf1report[jj]);
               errorabsbest[1]=0.0; JACLOOPSUPERFULL(pliter,pl,eomtypelocal,*baseitermethod,*radinvmod)  errorabsbest[1] += fabs(lowestf1report[pl]);
 
               // see if should revert to prior best
@@ -8706,7 +8748,7 @@ static int f_error_check(int showmessages, int showmessagesheavy, int iter, FTYP
   // get absolute error over all (baseitermethod)-iterated terms
   // NOTE: the SUBJACJ methods directly use freport[] as needed, not errorabs or passedconv
   *errorabs=0.0;
-  JACLOOPFULLERROR(itermode,jj,ru->startjac,ru->endjac)      *errorabs     += fabs(finreport[ru->irefU[jj]]); // always full error.
+  JACLOOPFULLERROR(jjiter,jj)      *errorabs     += fabs(finreport[jj]); // always full error.
 
   // completely full relevant error
   *errorallabs=0.0; JACLOOPSUPERFULL(pliter,pl,eomtype,baseitermethod,radinvmod) *errorallabs += fabs(finreport[pl]);
