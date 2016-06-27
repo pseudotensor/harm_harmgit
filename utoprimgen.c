@@ -1808,8 +1808,8 @@ static int check_on_inversion(int checkoninversiongas, int checkoninversionrad, 
     //////////////////////////////
     PLOOP(pliter,pl){
 
-      if(checkoninversiongas==0 && (pl!=PRAD0 && pl!=PRAD1 && pl!=PRAD2 && pl!=PRAD3)) continue; // don't check MHD (non-radiation) inversion if didn't want to
-      if(checkoninversionrad==0 && (pl==PRAD0 && pl==PRAD1 && pl==PRAD2 && pl==PRAD3)) continue; // don't check radiation (non-MHD) inversion if didn't want to
+      if(checkoninversiongas==0 && (!RADPL(pl))) continue; // don't check MHD (non-radiation) inversion if didn't want to
+      if(checkoninversionrad==0 && RADPL(pl)) continue; // don't check radiation (non-MHD) inversion if didn't want to
   
 
       // default is to assume nothing wrong
@@ -1825,7 +1825,7 @@ static int check_on_inversion(int checkoninversiongas, int checkoninversionrad, 
       if(usedentropyinversion  && (pl==UU) ) continue; // entropy doesn't use energy equation, but does use conserved entropy
       if(usedhotinversion && (pl==ENTROPY) ) continue; // hot doesn't use entropy, but does use conserved energy
 
-      //(EOMRADTYPE==EOMRADNONE && (pl==URAD0 || pl==URAD1 || pl==URAD2 || pl==URAD3)) || // no need to check pl if no such pl's
+      //(EOMRADTYPE==EOMRADNONE && RADPL(pl)) || // no need to check pl if no such pl's
       // lpflagrad: Checks that if u2p placed limiter on p (e.g. velocity), then should skip this check since won't be accurate inversion
       if(EOMRADTYPE!=EOMRADNONE && (*lpflagrad!=0)) continue;
       // If doing Eddington approximation, actually ignore conserved flux evolution.
@@ -1908,13 +1908,6 @@ static int check_on_inversion(int checkoninversiongas, int checkoninversionrad, 
     int plcheck;
     PLOOP(pliter,pl){
 
-#if(0)
-      if((IFUTOPRIMFAIL(*lpflag) || checkoninversiongas==0) && (pl!=PRAD0 && pl!=PRAD1 && pl!=PRAD2 && pl!=PRAD3)) continue; // don't check MHD (non-radiation) inversion if didn't want to
-      if((IFUTOPRIMRADHARDFAIL(*lpflagrad) || checkoninversionrad==0) && (pl==PRAD0 && pl==PRAD1 && pl==PRAD2 && pl==PRAD3)) continue; // don't check radiation (non-MHD) inversion if didn't want to
-
-
-      plcheck=(pl>=RHO)&&(pl<=B3 || pl<=ENTROPY && usedentropyinversion || (*lpflagrad==0)&&(EOMRADTYPE!=EOMRADNONE && (pl==URAD0 || pl==URAD1&&(EOMRADTYPE!=EOMRADEDD) || pl==URAD2&&(EOMRADTYPE!=EOMRADEDD) || pl==URAD3&&(EOMRADTYPE!=EOMRADEDD) )));
-#endif
       // if fdiff=0.0, then didn't set or no problems
       plcheck=(fdiff[pl]!=0.0);
 
@@ -1923,7 +1916,7 @@ static int check_on_inversion(int checkoninversiongas, int checkoninversionrad, 
         if(
            ( (plcheck)&&((fabs(Unormalold[pl])>SMALL)&&(fabs(Unormalnew[pl])>SMALL)) )
            ){
-          if(pl<URAD0 && pl>URAD3) badinversion++;
+          if(!RADPL(pl)) badinversion++;
           else  badinversionrad++;
 
           if(debugfail>=2){
@@ -1935,7 +1928,7 @@ static int check_on_inversion(int checkoninversiongas, int checkoninversionrad, 
       }
       if(fdiff[pl]>CHECKONINVFRACFAIL){
         if( (plcheck)&&((fabs(Unormalold[pl])>SMALL)&&(fabs(Unormalnew[pl])>SMALL)) ){
-          if(pl<URAD0 && pl>URAD3) badinversionfail++;
+          if(!RADPL(pl)) badinversionfail++;
           else  badinversionfailrad++;
         }
       }

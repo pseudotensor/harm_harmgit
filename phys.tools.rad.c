@@ -209,7 +209,7 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE *errorabs, stru
 //////////////////////////////////////////////
 
 
-#define PLOOPDYNAMICAL(pliter,pl) PLOOP(pliter,pl) if(SCALARPL(pl)==0)
+#define PLOOPDYNAMICAL(pliter,pl) PLOOP(pliter,pl) if(NONRADDYNPL(pl)==0)
 
 
 ////////////////////////////////
@@ -1819,7 +1819,9 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
     if(USECAPTYPEFIX2FORF1 && whichcall==FIMPLICITCALLTYPEF1) whichcapnew=CAPTYPEFIX2;
     else if(USECAPTYPEFIX2FORFINALCHECK && whichcall==FIMPLICITCALLTYPEFINALCHECK) whichcapnew=CAPTYPEFIX2;
     else whichcapnew=whichcap; // for jacobian, likely to be CAPTYPEFIX2 anyways.
+    FTYPE ppnrad=pp[NRAD]; // save because overwritten with uu[NRAD]->pp[NRAD] and uu[NRAD] not updated yet.
     int doradonly=1; failreturn=Utoprimgen_failwrapper(doradonly,radinvmod,showmessages,checkoninversiongas,checkoninversionrad,allowlocalfailurefixandnoreport, finalstep, eomtype, whichcapnew, EVOLVEUTOPRIM, UNOTHING, uu, q, ptrgeom, dissmeasure, pp, &newtonstats);
+    pp[NRAD] = ppnrad; // revert since we are iterating pp[NRAD]
     radinvmodalt=*radinvmod; // default
     failreturnalt=failreturn; // default
     //  no need to concern with eomtype in RAD only case.  i.e. eomtype won't change.
@@ -1843,6 +1845,15 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
     // only changes radiation state, not fluid state, but keeps old q's for fluid state for next step.
     get_state_radonly(pp, ptrgeom, q);
     //
+
+    // 9.5) Get Unrad from primitive nrad and state (primitive determined) urad^t so that rad inversion below is consistent without having to modify rad inversion
+    // need this because iterating pp[NRAD]
+    // If iterated uu[NRAD], above ppnrad and this wouldn't be needed at all, but then would mix pp and uu as iterated in other parts of code making those parts more complicated
+    // Actually, below primtoflux_radonly handles this, but go ahead and do since cheap and step10 is for different purpose
+    //    uu[NRAD] = pp[NRAD]*(q->urad[TT]);
+    nradflux_calc(ptrgeom,pp,TT,q,&uu[NRAD],&uuabs[NRAD]);
+
+
     // fix-up primitives to avoid violent steps in temperature
     //
     // 10) Get new uu[RAD] since original uu[RAD]->pp[RAD] might have had fixups applied and then uu[RAD] no longer consistent.
@@ -4919,6 +4930,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     if((pb[RHO]>0.)&&(pb[UU]<0.))   *lpflag= UTOPRIMFAILUNEG;
     if((pb[RHO]<=0.)&&(pb[UU]<0.))  *lpflag= UTOPRIMFAILRHOUNEG;
     if(pb[PRAD0]<=0.) *lpflagrad = UTOPRIMRADFAILERFNEG;
+    if(NRAD>=0 && pb[NRAD]<=0.) *lpflagrad = UTOPRIMRADFAILERFNEG;
   }
 
 
@@ -6638,7 +6650,7 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
           //////////////
           errorabsbest[0]=0.0; JACLOOPFULLERROR(jjiter,jj) errorabsbest[0] += fabs(lowestf1report[jj]);
           errorabsbest[1]=0.0; JACLOOPSUPERFULL(pliter,pl,*eomtype,*baseitermethod,*radinvmod) errorabsbest[1] += fabs(lowestf1report[pl]);
-          if(errorabsbest[WHICHERROR]>errorabsf1[WHICHERROR] && isfinite(errorabsf1[WHICHERROR]) && (itermode==ITERMODECOLD || pp[RHO]>0.0 && pp[UU]>0.0 && pp[PRAD0]>0.0)){
+          if(errorabsbest[WHICHERROR]>errorabsf1[WHICHERROR] && isfinite(errorabsf1[WHICHERROR]) && (itermode==ITERMODECOLD || pp[RHO]>0.0 && pp[UU]>0.0 && pp[PRAD0]>0.0 && (NRAD>=0 && pp[NRAD]>0.0 || NRAD<0) )){
             PLOOP(pliter,pl) bestuu[pl]=uu[pl];
             PLOOP(pliter,pl) bestpp[pl]=pp[pl];
             PLOOP(pliter,pl) lowestf1[pl]=f1[pl];
@@ -11439,7 +11451,6 @@ int prad_fftolab(int *whichvel, int *whichcoord, int i, int j, int k, int loc, s
   // gets R^{ij} in fluid frame orthonormal basis from primitive quantities in fluid frame orthonormal basis
   calc_Rij_ff(pradffortho,Rijff);
   
-  //  PLOOPRADONLY(pl) dualfprintf(fail_file,"pl=%d pout=%g\n",pl,pout[pl]);
   //  DLOOP(jj,kk) dualfprintf(fail_file,"jj=%d kk=%d Rijff=%g\n",jj,kk,Rijff[jj][kk]);
   //  DLOOP(jj,kk) dualfprintf(fail_file,"gn%d%d=%21.15g\n",jj+1,kk+1,ptrgeomtouse->gcon[GIND(jj,kk)]);
   //  DLOOP(jj,kk) dualfprintf(fail_file,"gv%d%d=%21.15g\n",jj+1,kk+1,ptrgeomtouse->gcov[GIND(jj,kk)]);

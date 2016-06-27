@@ -234,18 +234,21 @@ int p2SFUevolveall(int dir, int isleftright, FTYPE *p, struct of_geom *ptrgeom, 
   ptemp[UU]=qtemp.pressure=qtemp.entropy=SMALL; //ug
   ptemp[B1]=ptemp[B2]=ptemp[B3]=0.0; DLOOPA(jj) qtemp.bcon[jj]=qtemp.bcov[jj]=0.0; qtemp.bsq=0.0; // b
   if(URAD0>=0) ptemp[URAD0]=SMALL; // urad
+  if(NRAD>=0) ptemp[NRAD]=SMALL; // urad
   MYFUN(primtoflux(UEVOLVE,ptemp, &qtemp, dir, ptrgeom, FPAKE,NULL),"flux.c:p2SFUevolve()","primtoflux_calc() dir=1/2 l", 1);
   MYFUN(primtoflux(UEVOLVE,ptemp, &qtemp, TT, ptrgeom, UPAKE,NULL),"flux.c:p2SFUevolve()", "primtoflux_calc() dir=l0", 1);
 
   ptemp[RHO]=SMALL; // rho
   ptemp[B1]=ptemp[B2]=ptemp[B3]=0.0; DLOOPA(jj) qtemp.bcon[jj]=qtemp.bcov[jj]=0.0; qtemp.bsq=0.0; // b
   if(URAD0>=0) ptemp[URAD0]=SMALL; // urad
+  if(NRAD>=0) ptemp[NRAD]=SMALL; // urad
   MYFUN(primtoflux(UEVOLVE,ptemp, &qtemp, dir, ptrgeom, FEN,NULL),"flux.c:p2SFUevolve()","primtoflux_calc() dir=1/2 l", 1);
   MYFUN(primtoflux(UEVOLVE,ptemp, &qtemp, TT, ptrgeom, UEN,NULL),"flux.c:p2SFUevolve()", "primtoflux_calc() dir=l0", 1);
 
   ptemp[RHO]=SMALL; // rho
   ptemp[UU]=qtemp.pressure=qtemp.entropy=SMALL; //ug
   if(URAD0>=0) ptemp[URAD0]=SMALL; // urad
+  if(NRAD>=0) ptemp[NRAD]=SMALL; // urad
   MYFUN(primtoflux(UEVOLVE,ptemp, &qtemp, dir, ptrgeom, FEM,NULL),"flux.c:p2SFUevolve()","primtoflux_calc() dir=1/2 l", 1);
   MYFUN(primtoflux(UEVOLVE,ptemp, &qtemp, TT, ptrgeom, UEM,NULL),"flux.c:p2SFUevolve()", "primtoflux_calc() dir=l0", 1);
 
@@ -1167,7 +1170,7 @@ int musta1flux_compute(int dir,struct of_geom *geom, FTYPE *cmin_l, FTYPE *cmin_
     cminmax_calc(cmineach_l[EOMSETRADFORDT],cmineach_r[EOMSETRADFORDT],cmaxeach_l[EOMSETRADFORDT],cmaxeach_r[EOMSETRADFORDT],&cminrad2,&cmaxrad2,&ctoprad2);
     // cmin, cmax, ctop for fluxes
     PLOOP(pliter,pl){
-      if(pl<URAD0 || pl>URAD3){
+      if(!RADPL(pl)){
         cmin[pl]=cminmhd;
         cmax[pl]=cmaxmhd;
         ctop[pl]=ctopmhd;

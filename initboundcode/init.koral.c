@@ -3740,6 +3740,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
       pr[URAD1] = 0 ;
       pr[URAD2] = 0 ;    
       pr[URAD3] = 0 ;
+      if(NRAD>=0) pr[NRAD] = calc_LTE_TfromE(pr[PRAD0]);
     }
 
     *whichvel=WHICHVEL;
@@ -3785,6 +3786,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
       pradffortho[PRAD1] = 0;
       pradffortho[PRAD2] = 0;
       pradffortho[PRAD3] = 0;
+      if(NRAD>=0) pradffortho[NRAD] = calc_LTE_NfromE(pradffortho[PRAD0]);
 
 
       // Transform these fluid frame E,F^i to lab frame coordinate basis primitives
@@ -3798,6 +3800,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
       pr[PRAD1] = 0 ;
       pr[PRAD2] = 0 ;    
       pr[PRAD3] = 0 ;
+      if(NRAD>=0) pr[NRAD] = calc_LTE_NfromE(pr[PRAD0]);
       *whichvel=WHICHVEL;
       *whichcoord=MCOORD;
     }
@@ -3879,6 +3882,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
       pr[URAD1] = Fx ;
       pr[URAD2] = Fy ;    
       pr[URAD3] = Fz ;
+      if(NRAD>=0) pr[NRAD] = calc_LTE_TfromE(pr[PRAD0]);
     }
 
     // KORALTODO: no transformation, but only because tuned units to be like koral and so ERAD gives same value and also because no Flux.   Also, would give same result as assuming in fluid frame because vfluid=0 here and F=0 here.
@@ -3947,6 +3951,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
       pr[PRAD1] = 0 ;
       pr[PRAD2] = 0 ;    
       pr[PRAD3] = 0 ;
+      if(NRAD>=0) pr[NRAD] = 0 ;
     
 
 
@@ -3956,12 +3961,12 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
       pradffortho[PRAD1] = Fx;
       pradffortho[PRAD2] = Fy;
       pradffortho[PRAD3] = Fz;
+      if(NRAD>=0) pradffortho[NRAD] = calc_LTE_NfromE(pradffortho[PRAD0]);
 
 
       // Transform these fluid frame E,F^i to lab frame coordinate basis primitives
       prad_fforlab(whichvel, whichcoord, FF2LAB, i,j,k,CENT,NULL,pradffortho,pr, pr);
 
-      //  PLOOPRADONLY(pl) dualfprintf(fail_file,"FOO1: i=%d pl=%d pr=%g\n",ptrgeomreal->i,pl,pr[pl]);
 
     }
 
@@ -4040,6 +4045,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
       pr[PRAD1] = 0 ;
       pr[PRAD2] = 0 ;    
       pr[PRAD3] = 0 ;
+      if(NRAD>=0) pr[NRAD] = 0 ;
 
       //E, F^i in orthonormal fluid frame
       FTYPE pradffortho[NPR];
@@ -4047,6 +4053,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
       pradffortho[PRAD1] = Fx;
       pradffortho[PRAD2] = Fy;
       pradffortho[PRAD3] = Fz;
+      if(NRAD>=0) pradffortho[NRAD] = calc_LTE_NfromE(pradffortho[PRAD0]);
 
       // Transform these fluid frame E,F^i to lab frame coordinate basis primitives
       prad_fforlab(whichvel, whichcoord, FF2LAB, i,j,k,CENT,NULL,pradffortho,pr, pr);
@@ -4180,6 +4187,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
       pr[PRAD1] = 0.0 ; // static in VEL4
       pr[PRAD2] = 0.0 ;    
       pr[PRAD3] = 0.0 ;
+      if(NRAD>=0) pr[NRAD] = 0 ;
 
       //E, F^i in orthonormal fluid frame
       FTYPE pradffortho[NPR];
@@ -4187,6 +4195,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
       pradffortho[PRAD1] = Fx;
       pradffortho[PRAD2] = Fy;
       pradffortho[PRAD3] = Fz;
+      if(NRAD>=0) pradffortho[NRAD] = calc_LTE_NfromE(pradffortho[PRAD0]);
 
       // Transform these fluid frame E,F^i to lab frame coordinate basis primitives
       prad_fforlab(whichvel, whichcoord, FF2LAB, i,j,k,CENT,NULL,pradffortho,pr, pr);
@@ -4250,6 +4259,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
       pr[PRAD2] = urady ;    
       pr[PRAD3] = uradz ;
     }
+    if(NRAD>=0) pr[NRAD] = calc_LTE_NfromE(pr[PRAD0]);
     // no transformations required since only setting fluid-frame E that is PRAD0 itself. (i.e. urad(xyz)=0 and ufluid=0)
 
     // *whichvel=WHICHVEL;
@@ -4376,6 +4386,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
       pr[PRAD1] = 0 ;
       pr[PRAD2] = 0 ;    
       pr[PRAD3] = 0 ;
+      if(NRAD>=0) pr[NRAD] = 0 ;
 
       //E, F^i in orthonormal fluid frame
       FTYPE pradffortho[NPR];
@@ -4383,6 +4394,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
       pradffortho[PRAD1] = Fx;
       pradffortho[PRAD2] = Fy;
       pradffortho[PRAD3] = Fz;
+      if(NRAD>=0) pradffortho[NRAD] = calc_LTE_NfromE(pradffortho[PRAD0]);
 
       // Transform these fluid frame E,F^i to lab frame coordinate basis primitives
       prad_fforlab(whichvel, whichcoord, FF2LAB, i,j,k,CENT,NULL,pradffortho, pr, pr);
@@ -4446,6 +4458,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
       pr[PRAD2] = 0 ;    
       pr[PRAD3] = 0 ;
     }
+    if(NRAD>=0) pr[NRAD] = calc_LTE_NfromE(pr[PRAD0]);
 
     // no transformations required since only setting fluid-frame E that is PRAD0 itself since ufluid=F=0
 
@@ -4564,6 +4577,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
       pr[PRAD1] = 0 ;
       pr[PRAD2] = 0 ;    
       pr[PRAD3] = 0 ;
+      if(NRAD>=0) pr[NRAD] = 0 ;
 
       //E, F^i in orthonormal fluid frame
       FTYPE pradffortho[NPR];
@@ -4571,11 +4585,11 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
       pradffortho[PRAD1] = Fx;
       pradffortho[PRAD2] = Fy;
       pradffortho[PRAD3] = Fz;
+      if(NRAD>=0) pradffortho[NRAD] = calc_LTE_NfromE(pradffortho[PRAD0]);
 
 
       // Transform these fluid frame E,F^i to lab frame coordinate basis primitives
       prad_fforlab(whichvel, whichcoord, FF2LAB, i,j,k,CENT,NULL, pradffortho, pr, pr);
-      //  PLOOPRADONLY(pl) dualfprintf(fail_file,"FOO1: i=%d pl=%d pr=%g\n",ptrgeomreal->i,pl,pr[pl]);
     }
 
  
@@ -5293,7 +5307,8 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
     pr[PRAD1] = 0 ;
     pr[PRAD2] = 0 ;
     pr[PRAD3] = 0 ;
-    
+    if(NRAD>=0) pr[NRAD] = calc_LTE_NfromE(pr[PRAD0]);
+
     
     
     return(0);
@@ -5382,6 +5397,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
       pr[PRAD1] = 0 ;
       pr[PRAD2] = 0 ;    
       pr[PRAD3] = 0 ;
+      if(NRAD>=0) pr[NRAD] = 0 ;
 
       //E, F^i in orthonormal fluid frame
       FTYPE pradffortho[NPR];
@@ -5389,6 +5405,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
       pradffortho[PRAD1] = Fx;
       pradffortho[PRAD2] = Fy;
       pradffortho[PRAD3] = Fz;
+      if(NRAD>=0) pradffortho[NRAD] = calc_LTE_NfromE(pradffortho[PRAD0]);
 
 
       if(0){//DEBUG:
@@ -5451,6 +5468,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
       pr[PRAD1] = 0 ;
       pr[PRAD2] = 0 ;    
       pr[PRAD3] = 0 ;
+      if(NRAD>=0) pr[NRAD] = 0 ;
 
       //E, F^i in orthonormal fluid frame
       FTYPE pradffortho[NPR];
@@ -5467,6 +5485,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
           pradffortho[PRAD2]=RADDOT_FYDOT*pradffortho[PRAD0];
         }
       }// end if DOT
+      if(NRAD>=0) pradffortho[NRAD] = calc_LTE_NfromE(pradffortho[PRAD0]);
 
       
       // Transform these fluid frame E,F^i to lab frame coordinate basis primitives
@@ -5550,6 +5569,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
         pradffortho[PRAD1]=pradfforthoatm[PRAD1];
         pradffortho[PRAD2]=pradfforthoatm[PRAD2];
         pradffortho[PRAD3]=pradfforthoatm[PRAD3];
+        if(NRAD>=0) pradffortho[NRAD] = calc_LTE_NfromE(pradffortho[PRAD0]);
       }
 
 
@@ -5563,6 +5583,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
           pr[PRAD2]=pradffortho[PRAD2];
           pr[PRAD3]=pradffortho[PRAD3];
         }
+        if(NRAD>=0) pr[NRAD] = pradffortho[NRAD];
         
         // ADD DONUT
         returndonut=get_full_rtsolution(whichvel,whichcoord,RADDONUT_OPTICALLYTHICKTORUS, pr,X,V,&ptrgeomrad);
@@ -5578,6 +5599,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
           //            dualfprintf(fail_file,"ZOOM: CHECK: ijk=%d %d %d : %g %g %g %g\n",i,j,k,pradffortho[PRAD0],pradffortho[PRAD1],pradffortho[PRAD2],pradffortho[PRAD3]);
           //          }
         }
+        if(NRAD>=0) pradffortho[NRAD] = pr[NRAD];
 
     
       }
@@ -5624,6 +5646,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
         pr[PRAD0] = RADNT_ERADATMMIN; // assumed as lab-frame ZAMO frame value
         set_zamo_velocity(*whichvel,ptrgeomrad,&pr[URAD1-U1]); // only sets URAD1-URAD3 to zamo
       }
+      if(NRAD>=0) pr[NRAD] = calc_LTE_NfromE(pr[PRAD0]);
     }
 
     //    dualfprintf(fail_file,"returning: whichvel=%d whichcoord=%d\n",*whichvel,*whichcoord);
@@ -5666,6 +5689,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
     pr[URAD1]=0.0;
     pr[URAD2]=0.0;
     pr[URAD3]=0.0;
+    if(NRAD>=0) pr[NRAD] = calc_LTE_TfromE(pr[PRAD0]);
 
 
     if(FLUXB==FLUXCTSTAG){
@@ -5750,6 +5774,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
     pr[URAD1]=pr[U1];
     pr[URAD2]=pr[U2];
     pr[URAD3]=pr[U3];
+    if(NRAD>=0) pr[NRAD] = calc_LTE_TfromE(pr[PRAD0]);
 
     // ensure total pressure is constant by varying gas temperature, but assume LTE at t=0
     // P = arad T^4 + rho*T  = arad T^4 + (gam-1)*u = Ehat0 + (gam-1)*u ->
@@ -5809,6 +5834,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
     pr[URAD1]=pr[U1];
     pr[URAD2]=pr[U2];
     pr[URAD3]=pr[U3];
+    if(NRAD>=0) pr[NRAD] = calc_LTE_TfromE(pr[PRAD0]);
 
     FTYPE ptot=1.5*(4.0/3.0-1.0)*Ehatjet;
     pr[UU]=( ptot - (4.0/3.0-1.0)*pr[URAD0])/(gam-1.0);
@@ -5857,6 +5883,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
     pr[URAD1]=pr[U1];
     pr[URAD2]=pr[U2];
     pr[URAD3]=pr[U3];
+    if(NRAD>=0) pr[NRAD] = calc_LTE_TfromE(pr[PRAD0]);
 
     pr[UU]=0.1*pr[RHO];
 
@@ -5911,6 +5938,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
     // P = (arad/3)T^4 + rho T
     pr[UU]=u_rho0_T_simple(i,j,k,CENT,pr[RHO],Tstar);
     pr[URAD0]=calc_LTE_EfromT(Tstar);
+    if(NRAD>=0) pr[NRAD] = calc_LTE_TfromE(pr[PRAD0]);
 
     if(1){
       static int firsttime=1;
@@ -5981,7 +6009,7 @@ static int get_full_rtsolution(int *whichvel, int *whichcoord, int opticallythic
   int k=(*ptrptrgeom)->k;
   int loc=(*ptrptrgeom)->p;
   FTYPE r=V[1];
-  FTYPE E,Fx,Fy,Fz;
+  FTYPE E,Fx,Fy,Fz,nrad;
   FTYPE ppback[NPR];
   PLOOP(pliter,pl) ppback[pl]=pp[pl]; // for initial backup, used to see if torus below atmosphere in donut
   // whichvelback and whichcoordback hold values before any make_nonrt2rt_solution call
@@ -6015,6 +6043,7 @@ static int get_full_rtsolution(int *whichvel, int *whichcoord, int opticallythic
       Fy=pp[PRAD2];
       Fz=pp[PRAD3];
     }
+    if(NRAD>=0) nrad=pp[NRAD];
 
 
 
@@ -6198,7 +6227,7 @@ static int get_full_rtsolution(int *whichvel, int *whichcoord, int opticallythic
 
 
 // convert non-radiative solution to radiative one by splitting total pressure up into gas + radiation pressure with optical depth corrections
-// expects pp[PRAD0-PRAD3] to be fluid frame orthonormal, while pp[U1-U3] is ptrgeom whichvel whichcoord lab frame value (doesn't change U1-U3)
+// expects pp[NRAD-PRAD3] to be fluid frame orthonormal, while pp[U1-U3] is ptrgeom whichvel whichcoord lab frame value (doesn't change U1-U3)
 // returns: pp and can change whichvel and whichcoord
 static int make_nonrt2rt_solution(int *whichvel, int *whichcoord, int opticallythick, FTYPE *pp,FTYPE *X, FTYPE *V, struct of_geom **ptrptrgeom)
 {
@@ -6227,6 +6256,7 @@ static int make_nonrt2rt_solution(int *whichvel, int *whichcoord, int opticallyt
   FTYPE Fx=pp[URAD1];
   FTYPE Fy=pp[URAD2];
   FTYPE Fz=pp[URAD3];
+  FTYPE nrad=pp[NRAD];
 
   //  dualfprintf(fail_file,"rho=%g usingback=%d\n",rho,usingback);
 
@@ -6318,6 +6348,7 @@ static int make_nonrt2rt_solution(int *whichvel, int *whichcoord, int opticallyt
       // overwrite uint only if actually optically thick, otherwise stick with original pressure that assumed pure gas-based pressure
 
       E=calc_LTE_EfromT(Tgas); // assume LTE, so thermal equilibrium between gas and radiation
+      nrad=calc_LTE_NfromT(Tgas);
       Fx=Fy=Fz=0.;
     }
     else{
@@ -6341,6 +6372,7 @@ static int make_nonrt2rt_solution(int *whichvel, int *whichcoord, int opticallyt
     pp[PRAD2]=Fy;
     pp[PRAD3]=Fz;
   }
+  if(NRAD>=0) pp[NRAD]=nrad;
 
   if(usingback){
     return(-1); // tells to not form radiative flux for atmosphere
@@ -6917,6 +6949,7 @@ static int donut_analytical_solution(int *whichvel, int *whichcoord, int optical
       Fx=ppback[URAD1];
       Fy=ppback[URAD2];
       Fz=ppback[URAD3];
+      if(NRAD>=0) nrad=ppback[NRAD];
     }
 
   }
@@ -6928,6 +6961,7 @@ static int donut_analytical_solution(int *whichvel, int *whichcoord, int optical
       Fx=pp[URAD1];
       Fy=pp[URAD2];
       Fz=pp[URAD3];
+      if(NRAD>=0) nrad=pp[NRAD];
     }
   }
 
@@ -6947,6 +6981,7 @@ static int donut_analytical_solution(int *whichvel, int *whichcoord, int optical
     pp[URAD1]=Fx;
     pp[URAD2]=Fy;
     pp[URAD3]=Fz;
+    if(pp[NRAD]>=0) pp[NRAD]=nrad;
   }
 
   return(usingback);
@@ -6997,6 +7032,8 @@ int process_restart_toget_radiation(void)
       pradffortho[PRAD2]=pr[PRAD2];
       pradffortho[PRAD3]=pr[PRAD3];
     }
+    if(NRAD>=0) pradffortho[NRAD]=pr[NRAD];
+
     prad_fforlab(&whichvel, &whichcoord, FF2LAB, i,j,k,loc,ptrgeomrad, pradffortho, pr, pr);
     // now all pr is PRIMECOORDS, WHICHVEL in lab-frame.
   }
@@ -8596,6 +8633,10 @@ int set_density_floors(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *prfloor, FTYPE
       prfloor[PRAD0]=ERADLIMIT;
       prceiling[PRAD0]=BIG;
     }
+    if(NAD>=0){ 
+      prfloor[NRAD]=ERADLIMIT;
+      prceiling[NRAD]=BIG;
+    }
   }
 
   // default is for spherical flow near BH
@@ -8634,6 +8675,10 @@ int set_density_floors_alt(struct of_geom *ptrgeom, struct of_state *q, FTYPE *p
     if(PRAD0>=0){ 
       prfloor[PRAD0]=ERADLIMIT;
       prceiling[PRAD0]=BIG;
+    }
+    if(NRAD>=0){ 
+      prfloor[NRAD]=ERADLIMIT;
+      prceiling[NRAD]=BIG;
     }
   }
 
@@ -8838,6 +8883,7 @@ void adjust_flux(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*
           prflux[U2]=0.0;
           prflux[U3]=0.0;
           prflux[URAD0]=Ehatstar*(1.0-interptime) + interptime*Ehatstar*10.0;
+          if(NRAD>=0) prflux[NRAD]=calc_LTE_NfromE(prflux[URAD0]);
 
           //          prflux[URAD1]=interptime*vr0/sqrt(fabs(ptrgeom->gcov[GIND(1,1)])); // assume vr0 is orthonormal, so get coordinate out of it.
           FTYPE kappa=calc_kappaes_user(rhostar,0.0,1.0,1.0,1.0,0,0,0);
@@ -8873,7 +8919,7 @@ void adjust_flux(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*
 
           MACP0A1(F1,i,j,k,URAD1)=fluxrad[URAD1];
           MACP0A1(F1,i,j,k,URAD0)=fluxrad[URAD0];
-
+          if(NRAD>=0) MACP0A1(F1,i,j,k,NRAD)=fluxrad[NRAD];
         }
         // IDEAS (for failures)
 
@@ -9063,6 +9109,7 @@ int jetbound(int i, int j, int k, int loc, FTYPE *prin, FTYPE *prflux, FTYPE (*p
     prflux[URAD1]=0.0; //MACP0A1(prim,i,jp1mac(j),k,URAD1);
     prflux[URAD2]=prflux[U2]; // optically thick
     prflux[URAD3]=0.0; //MACP0A1(prim,i,jp1mac(j),k,URAD3);
+    if(NRAD>=0) prflux[NRAD]=calc_LTE_NfromT(Tgas); // Thermal equilibrium
 
     FTYPE ucon[NDIM];
     FTYPE others[NUMOTHERSTATERESULTS];

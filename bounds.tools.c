@@ -2962,7 +2962,7 @@ int extrapfunc(int boundary, int j,int k,
 
       PBOUNDLOOP(pliter,pl){
         // MUST BE POSITIVE DEFINITE!!!
-        if(pl!=B1 && pl!=B2 && pl!=B3 && pl!=URAD1 && pl!=URAD2 && pl!=URAD3 && SCALARPL(pl)==0){
+        if(pl!=B1 && pl!=B2 && pl!=B3 && pl!=URAD1 && pl!=URAD2 && pl!=URAD3 && DENSITYPL(pl)==0){
 
           // only use linear if exponentiation causes growth of value, not decreasion
           ftemp = exp(-signdq*dqlogdensity[pl]) - POWERRATIO;
@@ -2993,11 +2993,13 @@ int extrapfunc(int boundary, int j,int k,
       PBOUNDLOOP(pliter,pl) if(pl==RHO) MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) + dq[pl]*(i-ri);
       PBOUNDLOOP(pliter,pl) if(pl==UU)  MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) + dq[pl]*(i-ri);
       PBOUNDLOOP(pliter,pl) if(pl==URAD0)  MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) + dq[pl]*(i-ri);
+      PBOUNDLOOP(pliter,pl) if(pl==NRAD)  MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl) + dq[pl]*(i-ri);
 #else
       // log extrap
       PBOUNDLOOP(pliter,pl) if(pl==RHO) MACP0A1(prim,i,j,k,pl) = exp(log(SMALL+fabs(MACP0A1(prim,ri,rj,rk,pl))) + dqlogdensity[pl]*(i-ri));
       PBOUNDLOOP(pliter,pl) if(pl==UU)  MACP0A1(prim,i,j,k,pl) = exp(log(SMALL+fabs(MACP0A1(prim,ri,rj,rk,pl))) + dqlogdensity[pl]*(i-ri));
       PBOUNDLOOP(pliter,pl) if(pl==URAD0)  MACP0A1(prim,i,j,k,pl) = exp(log(SMALL+fabs(MACP0A1(prim,ri,rj,rk,pl))) + dqlogdensity[pl]*(i-ri));
+      PBOUNDLOOP(pliter,pl) if(pl==NRAD)  MACP0A1(prim,i,j,k,pl) = exp(log(SMALL+fabs(MACP0A1(prim,ri,rj,rk,pl))) + dqlogdensity[pl]*(i-ri));
 #endif
 
 
@@ -3862,7 +3864,7 @@ int poledeath(int whichx2,
               // for densities
               // this helps remove drop-outs in density at high b^2/\rho_0 and high b^2/u
               PBOUNDLOOP(pliter,pl) {
-                if(!(pl==RHO || pl==UU || pl==ENTROPY || pl==URAD0)) continue;
+                if(!(pl==RHO || pl==UU || pl==ENTROPY || pl==URAD0 || pl==NRAD)) continue;
 
                 FTYPE myvalue;
                 myvalue=MACP0A1(prim,i,j,k,pl);
@@ -4016,7 +4018,7 @@ int poledeath(int whichx2,
           ///////////////////////////////////
           if(ispstag==0){
             PBOUNDLOOP(pliter,pl){
-              if((pl==RHO || pl==UU || pl==U1 || pl==U2 || pl==U3 || pl==ENTROPY || pl==B1 || pl==B2 || pl==B3 || pl==URAD0 || pl==URAD1 || pl==URAD2 || pl==URAD3)) continue;
+              if((pl==RHO || pl==UU || pl==U1 || pl==U2 || pl==U3 || pl==ENTROPY || pl==B1 || pl==B2 || pl==B3 || pl==URAD0 || pl==URAD1 || pl==URAD2 || pl==URAD3 || pl==NRAD)) continue;
 
               if(doavginradius[pl]) ftemp=THIRD*(MACP0A1(prim,rim1,rj,rk,pl) + MACP0A1(prim,ri,rj,rk,pl) + MACP0A1(prim,rip1,rj,rk,pl));
               else ftemp=MACP0A1(prim,ri,rj,rk,pl);
@@ -5916,6 +5918,9 @@ void debugfixupaltdeath_bc(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
                   ufix[URAD0]=MAX(-prfix[URAD0],ufix[URAD0]);
                 }
               }
+              if(NRAD>=0){
+                // TODO: can force nrad to be LTE to avoid issues.
+              }
 
               //      limit_gamma(0,1.5,GAMMAMAXRAD,prfix,NULL,ptrgeom,-1);
               limit_gamma(0,OUTERDEATHGAMMAMAX,OUTERDEATHGAMMAMAXRAD,prfix,NULL,ptrgeom,-1);
@@ -6072,7 +6077,10 @@ void debugfixupaltdeath_bc(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
             ufixtry[URAD0]=MAX(-prfixtry[URAD0],ufixtry[URAD0]);
           }
         }
-      
+        if(NRAD>=0){
+          // TODO: can force nrad to be LTE
+        }
+        
         //      limit_gamma(0,1.5,GAMMAMAXRAD,prfixtry,NULL,ptrgeom,-1);
         limit_gamma(0,OUTERDEATHGAMMAMAX,OUTERDEATHGAMMAMAXRAD,prfixtry,NULL,ptrgeom,-1);
       
@@ -6122,6 +6130,9 @@ void debugfixupaltdeath_bc(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
           if(DOENOFLUX != NOENOFLUX){
             ufixtryb[URAD0]=MAX(-prfixtryb[URAD0],ufixtryb[URAD0]);
           }
+        }
+        if(NRAD>=0){
+          // TODO: can force nrad to be LTE
         }
 #endif
 

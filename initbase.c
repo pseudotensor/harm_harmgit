@@ -727,6 +727,7 @@ int prepre_init(void)
   nogdetlist[B2] =NOGDETB2;
   nogdetlist[B3] =NOGDETB3;
   if(EOMRADTYPE!=EOMRADNONE){
+    nogdetlist[NRAD] =NOGDETUNRAD;
     nogdetlist[URAD0] =NOGDETURAD0;
     nogdetlist[URAD1] =NOGDETURAD1;
     nogdetlist[URAD2] =NOGDETURAD2;

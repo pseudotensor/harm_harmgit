@@ -1413,6 +1413,12 @@ int fieldline_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 
   if(EOMRADTYPE!=EOMRADNONE){
 
+    if(NRAD>=0){
+      // nrad (for various things)
+      ftemp=(float)GLOBALMACP0A1(pdump,i,j,k,NRAD);
+      myset(datatype,&ftemp,0,1,writebuf); // 1
+    }
+
     // Erf (for various things)
     ftemp=(float)GLOBALMACP0A1(pdump,i,j,k,PRAD0);
     myset(datatype,&ftemp,0,1,writebuf); // 1
@@ -1882,7 +1888,8 @@ int raddump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
   FTYPE pradffortho[NPR]={-1};
   FTYPE prff[NPR]; // not new compared to pr
   prad_fforlab(&whichvel, &whichcoord, LAB2FF, i,j,k,CENT,ptrgeom,pradffortho, pr, prff);
-  myset(datatype,pradffortho,PRAD0,NDIM,writebuf); // NDIM
+  if(NRAD>=0) myset(datatype,pradffortho,NRAD,1+NDIM,writebuf); // 1+NDIM
+  else myset(datatype,pradffortho,PRAD0,NDIM,writebuf); // NDIM
 
   // get 4-force in lab and fluid frame
   FTYPE Gdpl[NPR]={0},Gdabspl[NPR]={0},chi,Tgas,Trad;

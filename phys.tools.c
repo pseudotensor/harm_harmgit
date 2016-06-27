@@ -399,6 +399,9 @@ int primtoflux_rad(int *returntype, FTYPE *pr, struct of_state *q, int dir, stru
     yflflux_calc(geom,pr, dir, q, &flux[YFL5], &fluxabs[YFL5],YFL5); // fills YFL5 only
 #endif
 
+#if(NRAD>=0)
+  nradflux_calc(geom,pr, dir, q, &flux[NRAD], &fluxabs[NRAD],NRAD); // fills NRAD only
+#endif
 
 
   return (0);
@@ -484,6 +487,21 @@ int yflflux_calc(struct of_geom *ptrgeom, FTYPE *pr, int dir, struct of_state *q
   *advectedscalarflux = prforadvect * udir; // rho form
 #endif
 
+
+  *advectedscalarfluxabs = fabs(*advectedscalarflux);
+
+  return(0);
+}
+/// flux associated with Y_fl variable
+int nradflux_calc(struct of_geom *ptrgeom, FTYPE *pr, int dir, struct of_state *q, FTYPE *advectedscalarflux, FTYPE *advectedscalarfluxabs, int pnum)
+{
+
+  FTYPE udir=0.0;
+  udir=q->uradcon[dir];
+
+  // U[NRAD] = pp[NRAD] urad^\mu
+  // pp[NRAD] = radiation frame photon number density
+  *advectedscalarflux =  pr[pnum] * udir;
 
   *advectedscalarfluxabs = fabs(*advectedscalarflux);
 

@@ -1140,6 +1140,8 @@ int fixup1zone(int docorrectucons, FTYPE *pr, FTYPE *uconsinput, struct of_geom 
   // KORALTODO: Keep as mhd only for now.
   int DOEVOLVEURAD0=PRAD0>=0 && EOMRADTYPE!=EOMRADNONE;
   if(DOEVOLVEURAD0) checkfl[PRAD0]=1;
+  int DOEVOLVENRAD=NRAD>=0 && EOMRADTYPE!=EOMRADNONE;
+  if(DOEVOLVENRAD) checkfl[NRAD]=1;
 
 
   ////////////////////
@@ -1177,7 +1179,7 @@ int fixup1zone(int docorrectucons, FTYPE *pr, FTYPE *uconsinput, struct of_geom 
   // Only apply floor if cold or hot GRMHD
   //
   ////////////
-  if(DOEVOLVERHO||DOEVOLVEUU||DOEVOLVEURAD0){
+  if(DOEVOLVERHO||DOEVOLVEUU||DOEVOLVEURAD0 || DOEVOLVENRAD){
 
 
     //////////////
@@ -1189,6 +1191,7 @@ int fixup1zone(int docorrectucons, FTYPE *pr, FTYPE *uconsinput, struct of_geom 
     scalemin[RHO]=RHOMINLIMIT;
     scalemin[UU]=UUMINLIMIT;
     if(URAD0>=0) scalemin[URAD0]=ERADLIMIT;
+    if(NRAD>=0) scalemin[NRAD]=ERADLIMIT;
     
     
 
@@ -1271,7 +1274,7 @@ int fixup1zone(int docorrectucons, FTYPE *pr, FTYPE *uconsinput, struct of_geom 
       // get change in primitive quantities
       PALLLOOP(pl) dprmhd[pl]=0.0; // default
       // use ZAMO velocity as velocity of inserted fluid
-      PALLLOOP(pl) if(pl==RHO || pl==UU || pl==URAD0){ dprmhd[pl]=prmhdnew[pl]-prmhd[pl];}
+      PALLLOOP(pl) if(pl==RHO || pl==UU || pl==URAD0 || pl==NRAD){ dprmhd[pl]=prmhdnew[pl]-prmhd[pl];}
       set_zamo_velocity(WHICHVEL,ptrgeom,dprmhd);
 
       // get change in conserved quantities
@@ -1287,6 +1290,7 @@ int fixup1zone(int docorrectucons, FTYPE *pr, FTYPE *uconsinput, struct of_geom 
         // then don't allow momentum to change regardless of meaning for implied rho,u
         dU[U1]=dU[U2]=dU[U3]=0.0;
         if(URAD0>=0) dU[URAD0]=dU[URAD1]=dU[URAD2]=dU[URAD3]=0.0;
+        if(NRAD>=0) dU[NRAD]=0.0;
 
         pl=UU;
         if ( checkfl[pl]&&(prfloor[pl] > prmhd[pl] || prceiling[pl] < prmhd[pl]) ){
@@ -1381,6 +1385,7 @@ int fixup1zone(int docorrectucons, FTYPE *pr, FTYPE *uconsinput, struct of_geom 
       // get smallest of two
       if(UU>=0){ pl=UU;    prmhd[pl]=MIN(prmhd[pl],prmhdnew[pl]);}
       if(URAD0>=0){ pl=URAD0; prmhd[pl]=MIN(prmhd[pl],prmhdnew[pl]);}
+      if(NRAD>=0){ pl=NRAD; prmhd[pl]=MIN(prmhd[pl],prmhdnew[pl]);}
 
 
     }// end if didchangeprim
@@ -2208,7 +2213,8 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
             //////////////////
             // field is evolved fine, so only average non-field
             if(radlpflag==UTOPRIMFAILU2AVG1 || radlpflag==UTOPRIMFAILU2AVG2 || radlpflag==UTOPRIMFAILU2AVG1FROMCOLD || radlpflag==UTOPRIMFAILU2AVG2FROMCOLD || radlpflag==UTOPRIMFAILUPERC || radlpflag==UTOPRIMFAILUNEG && (HANDLEUNEG==1) || radlpflag==UTOPRIMRADFAILERFNEG){
-              startpl=PRAD0; // use as minimum for PRAD0 and average for PRAD1-PRAD3
+              int startplrad=(NRAD>=0 ? NRAD : URAD0);
+              startpl=startplrad; // use as minimum for PRAD0 and average for PRAD1-PRAD3
               endpl=PRAD3;
             }
             else if(radlpflag==UTOPRIMRADFAILGAMMAHIGH){ // fixing gammarad so no constant high value from hitting ceiling on gammaradmax
@@ -2261,11 +2267,12 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
                 //////////////////////////////
                 fixup_negdensities(EOMSETRAD,&fixedrad, startpl, endpl, i, j, k, radlpflag, pv,ptoavg, ptrgeom, pr0, ucons, finalstep);
 
-                if(fixedrad==1 && (startpl==URAD0 && endpl==URAD0)){
+                int startplrad=(NRAD>=0 ? NRAD : URAD0);
+                if(fixedrad==1 && (startpl==startplrad && endpl==URAD0)){
                   // assume success for densities, so no longer nogood.
                   nogood=0;
                 }
-                if(fixedrad==1 && (startpl<=URAD0 && endpl>=URAD1)){
+                if(fixedrad==1 && (startpl<=startplrad && endpl>=URAD1)){
                   // then fixup but only changed densities, so still need to process non-densities
                   startpl=URAD1; // start at U1 (first velocity) and finish at same ending if was ending on some velocity
                   fixedrad=0; // then reset fixedmhd->0 so can still modify these remaining quantities -- otherwise v^i would be unchanged even if wanted to average that out for (e.g.) negative density results for inversions.
@@ -3206,6 +3213,7 @@ static int general_average(int useonlynonfailed, int numbndtotry, int maxnumbndt
       if(pl==RHO) ref[pl]=MAX(1.001*RHOMINLIMIT,MACP0A1(ptoavg,i,j,k,pl)); // MHD
       else if(pl==UU) ref[pl]=MAX(1.001*UUMINLIMIT,MACP0A1(ptoavg,i,j,k,pl)); // MHD
       else if(pl==URAD0) ref[pl]=MAX(1.001*ERADLIMIT,MACP0A1(ptoavg,i,j,k,URAD0)); // RAD
+      else if(pl==NRAD) ref[pl]=MAX(1.001*ERADLIMIT,MACP0A1(ptoavg,i,j,k,NRAD)); // RAD
     }
 #elif(0)
     // bigger than 0
@@ -3301,7 +3309,7 @@ static int general_average(int useonlynonfailed, int numbndtotry, int maxnumbndt
 
 
     // override
-    if(doingmhd==0 && radlpflag==UTOPRIMRADFAILERFNEG && pl==URAD0 || doingmhd==1 && lpflag==UTOPRIMFAILRHONEG && pl==RHO || doingmhd==1 && lpflag==UTOPRIMFAILUNEG && pl==UU || doingmhd==1 && lpflag==UTOPRIMFAILRHOUNEG && (pl==RHO || pl==UU)){
+    if(doingmhd==0 && radlpflag==UTOPRIMRADFAILERFNEG && (pl==URAD0 || pl==NRAD) || doingmhd==1 && lpflag==UTOPRIMFAILRHONEG && pl==RHO || doingmhd==1 && lpflag==UTOPRIMFAILUNEG && pl==UU || doingmhd==1 && lpflag==UTOPRIMFAILRHOUNEG && (pl==RHO || pl==UU)){
       doingavgtype[pl]=0; // min type
     }
     else doingavgtype[pl]=1; // avg type
@@ -3783,6 +3791,7 @@ int set_density_floors_default_alt(struct of_geom *ptrgeom, struct of_state *q, 
 
 
   if(PRAD0>=0.0) prfloor[PRAD0]=ERADLIMIT;
+  if(NRAD>=0.0) prfloor[NRAD]=ERADLIMIT;
 
   ////////////////////
   // scaling functions

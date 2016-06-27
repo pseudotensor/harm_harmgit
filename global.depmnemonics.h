@@ -125,14 +125,20 @@
 // YFL for: rho,T10,T13,R10,R13
 #define NUMYFL (1 + 2 + 2*(EOMRADTYPE!=EOMRADNONE))
 #define YFLPL(pl) (pl==YFL1 || pl==YFL2 || pl==YFL3 || pl==YFL4 || pl==YFL5)
-#define POSPL(pl) (pl==RHO || pl==UU || pl==URAD0 || YFLPL(pl) || pl==YL || pl==YNU)
+// pl's that should be positive definite
+#define POSPL(pl) (pl==RHO || pl==UU || pl==URAD0 || YFLPL(pl) || pl==YL || pl==YNU || pl==NRAD)
 
+// passive or semi-active scalars part of invert_scalars1 or invert_scalars2
 #define SCALARPL(pl) (YFLPL(pl) || pl==YL || pl==YNU)
 
-#define DENSITYPL(pl) (pl==RHO || pl==UU || pl==URAD0 || SCALARPL(pl))
+// passive scalars that are not to be considered part of dynamical equations (for radiation)
+#define NONRADDYNPL(pl) (YFLPL(pl) || pl==YL || pl==YNU)
 
-#define RADPL(pl) (pl==PRAD0 || pl==PRAD1 || pl==PRAD2 || pl==PRAD3)
-#define RADFULLPL(pl) (pl==PRAD0 || pl==PRAD1 || pl==PRAD2 || pl==PRAD3 || pl==YFL4 || pl==YFL5)
+// pl's that are like simple density as primitive
+#define DENSITYPL(pl) (pl==RHO || pl==UU || pl==URAD0 || SCALARPL(pl) || pl==NRAD)
+
+#define RADPL(pl) (pl==PRAD0 || pl==PRAD1 || pl==PRAD2 || pl==PRAD3 || pl==NRAD)
+#define RADFULLPL(pl) (pl==PRAD0 || pl==PRAD1 || pl==PRAD2 || pl==PRAD3 || pl==YFL4 || pl==YFL5 || pl==NRAD)
 
 #define NONRADFULLPL(pl) (!RADFULLPL(pl))
 
@@ -488,7 +494,7 @@
 // total + pake + en + em + rad
 #define NUMPHYSICALFLUXTERMS (1  +  1+1+1 + (EOMRADTYPE!=EOMRADNONE))
 #define NUMFLUXESTOSAVE (1 + 2 + (EOMRADTYPE!=EOMRADNONE)*2 + NUMYFL*(DOYFL!=0) + (DOYL!=0) + (DOYNU!=0) )
-#define FLUXESTOSAVEPL(pl) (pl==RHO || pl==UU || pl==U3 || pl==URAD0 || pl==URAD3 || YFLPL(pl) || pl==YL || pl==YNU)
+#define FLUXESTOSAVEPL(pl) (pl==RHO || pl==UU || pl==U3 || pl==URAD0 || pl==URAD3 || pl==NRAD || YFLPL(pl) || pl==YL || pl==YNU)
 
 #if(FLUXDUMP==0)
 #define NUMFLUXDUMP (1)

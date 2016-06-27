@@ -951,6 +951,7 @@ int bound_x1dn_radbeamflatinflow(
                 pradffortho[PRAD1] = Fx;
                 pradffortho[PRAD2] = Fy;
                 pradffortho[PRAD3] = Fz;
+                if(NRAD>=0) pradffortho[NRAD] = calc_LTE_NfromE(pradffortho[PRAD0]);
               }
               else{ //no beam
                 Fx=Fy=Fz=0.0;
@@ -958,6 +959,7 @@ int bound_x1dn_radbeamflatinflow(
                 pradffortho[PRAD1] = Fx;
                 pradffortho[PRAD2] = Fy;
                 pradffortho[PRAD3] = Fz;
+                if(NRAD>=0) pradffortho[NRAD] = calc_LTE_NfromE(pradffortho[PRAD0]);
               }
             
               int whichvel=VEL4;
@@ -1193,6 +1195,7 @@ int bound_radshadowinflow(int dir,
                 pradffortho[PRAD1] = Fx;
                 pradffortho[PRAD2] = Fy;
                 pradffortho[PRAD3] = Fz;
+                if(NRAD>=0) pradffortho[NRAD] = calc_LTE_NfromE(pradffortho[PRAD0]);
 
 
                 int whichvel=VEL4; // in which vel U1-U3 set
@@ -1305,6 +1308,7 @@ int bound_radshadowinflow(int dir,
                 pradffortho[PRAD1] = Fx;
                 pradffortho[PRAD2] = Fy;
                 pradffortho[PRAD3] = Fz;
+                if(NRAD>=0) pradffortho[NRAD] = calc_LTE_NfromE(pradffortho[PRAD0]);
 
 
                 int whichvel=VEL4; // in which vel U1-U3 set
@@ -1525,6 +1529,7 @@ int bound_radbeam2dbeaminflow(int dir,
               pradffortho[PRAD1] = Fx*beamshape;
               pradffortho[PRAD2] = Fy*beamshape;
               pradffortho[PRAD3] = Fz*beamshape;
+              if(NRAD>=0) pradffortho[NRAD] = calc_LTE_NfromE(pradffortho[PRAD0]);
 
               int whichvel=WHICHVEL; // in which vel U1-U3 set
               int whichcoordfluid=PRIMECOORDS; // in which coordinates U1-U3 set
@@ -1542,6 +1547,8 @@ int bound_radbeam2dbeaminflow(int dir,
                 pr[PRAD2]=pr0[PRAD2];
                 pr[PRAD3]=pr0[PRAD3];
                 if(pr[PRAD3]>0.0) pr[PRAD3]=0.0; // but don't let radiative inflow
+                if(NRAD>=0) pr[NRAD] = calc_LTE_NfromE(pr[PRAD0]);
+
               }
 #endif
 
@@ -1738,6 +1745,7 @@ int bound_radbeam2dflowinflow(int dir,
               pradffortho[PRAD1] = Fx;
               pradffortho[PRAD2] = Fy;
               pradffortho[PRAD3] = Fz;
+              if(NRAD>=0) pradffortho[NRAD] = calc_LTE_NfromE(pradffortho[PRAD0]);
 
               int whichvel=VEL4;
               int whichcoordfluid=whichcoord; // in which coordinates U1-U3 set
@@ -1754,6 +1762,7 @@ int bound_radbeam2dflowinflow(int dir,
               pr[PRAD1] = uradx;
               pr[PRAD2] = urady;
               pr[PRAD3] = uradz;
+              if(NRAD>=0) pr[NRAD] = calc_LTE_NfromE(pr[PRAD0]);
 
               // get all primitives in WHICHVEL/PRIMECOORDS value
               int whichvel;
@@ -1918,6 +1927,7 @@ int bound_radatmbeaminflow(int dir,
             pradffortho[PRAD1] = Fx;
             pradffortho[PRAD2] = Fy;
             pradffortho[PRAD3] = Fz;
+            if(NRAD>=0) pradffortho[NRAD] = calc_LTE_NfromE(pradffortho[PRAD0]);
 
 
             int whichvel=VEL4; // in which vel U1-U3 set
@@ -2012,6 +2022,7 @@ int bound_radatmbeaminflow(int dir,
             pradffortho[PRAD1] = Fx;
             pradffortho[PRAD2] = Fy;
             pradffortho[PRAD3] = Fz;
+            if(NRAD>=0) pradffortho[NRAD] = calc_LTE_NfromE(pradffortho[PRAD0]);
 
             
             int whichvel=VEL4;
@@ -2393,6 +2404,7 @@ int bound_radbondiinflow(int dir,
             pradffortho[PRAD1] = Fx;
             pradffortho[PRAD2] = Fy;
             pradffortho[PRAD3] = Fz;
+            if(NRAD>=0) pradffortho[NRAD] = calc_LTE_NfromE(pradffortho[PRAD0]);
 
             //            dualfprintf(fail_file,"rho=%g uint=%g vx=%g ERAD=%g\n",rho,uint,vx,ERAD);
 
@@ -2504,6 +2516,7 @@ int bound_raddot(
             pradffortho[PRAD0]*=RADDOT_F2;
             pradffortho[PRAD2]=RADDOT_FYDOT*pradffortho[PRAD0];
           }
+          if(NRAD>=0) pradffortho[NRAD] = calc_LTE_NfromE(pradffortho[PRAD0]);
 
           int whichvel=VEL4; // in which vel U1-U3 set
           int whichcoordfluid=MCOORD; // in which coordinates U1-U3 set
@@ -2671,6 +2684,7 @@ int bound_radnt(int dir,
                 pradffortho[PRAD1] = 0;
                 pradffortho[PRAD2] = 0;
                 pradffortho[PRAD3] = 0;
+                if(NRAD>=0) pradffortho[NRAD] = calc_LTE_NfromE(pradffortho[PRAD0]);
             
                 int whichcoordfluid;
                 whichcoordfluid=whichcoord;
@@ -2685,6 +2699,8 @@ int bound_radnt(int dir,
 
                 FTYPE ut[NDIM]={0.,-gammamax*pow(r/rout,1.),0.,0.}; // assume in BLCOORDS 4-vel or SPCMINKMETRIC if no gravity
                 SLOOPA(jj) pr[URAD1+jj-1]=ut[jj]; 
+
+                if(NRAD>=0) pradffortho[NRAD] = calc_LTE_NfromE(pradffortho[PRAD0]);
 
                 // get all primitives in WHICHVEL/PRIMECOORDS value
                 if (bl2met2metp2v(whichvel, whichcoord,pr, i,j,k) >= 1){
@@ -2768,6 +2784,7 @@ int bound_radnt(int dir,
               else pradffortho[PRAD2] = -0.5*pradffortho[PRAD0];
               pradffortho[PRAD3] = 0;
 
+              if(NRAD>=0) pradffortho[NRAD] = calc_LTE_NfromE(pradffortho[PRAD0]);
 
               //pr[RHO] and pr[UU] remain same as from ASYMM condition as well as any field
               //Keplerian gas with no inflow or outflow
@@ -3044,6 +3061,7 @@ int bound_x1up_radcylbeam(
             pradffortho[PRAD1] = 0;
             pradffortho[PRAD2] = 0;
             pradffortho[PRAD3] = 0;
+            if(NRAD>=0) pradffortho[NRAD] = calc_LTE_NfromE(pradffortho[PRAD0]);
 
             int whichvel=VEL3;
             int whichcoordfluid=MCOORD;
@@ -3173,6 +3191,7 @@ int bound_x1up_radcyljet(
               pradffortho[PRAD1] = 0;
               pradffortho[PRAD2] = 0;
               pradffortho[PRAD3] = 0;
+              if(NRAD>=0) pradffortho[NRAD] = calc_LTE_NfromE(pradffortho[PRAD0]);
             }
             if(RADCYLJET_TYPE==3){
               pr[RHO] = 0.1; // made same as rhojet to keep density flatish
@@ -3188,6 +3207,7 @@ int bound_x1up_radcyljet(
               pradffortho[PRAD1] = -0.1*pradffortho[PRAD0];
               pradffortho[PRAD2] = 0;
               pradffortho[PRAD3] = 0;
+              if(NRAD>=0) pradffortho[NRAD] = calc_LTE_NfromE(pradffortho[PRAD0]);
             }
 
 
@@ -3510,6 +3530,7 @@ int bound_radbeam2dksvertbeaminflow(int dir,
               pradffortho[PRAD1] = Fx*beamshape;
               pradffortho[PRAD2] = Fy*beamshape;
               pradffortho[PRAD3] = Fz*beamshape;
+              if(NRAD>=0) pradffortho[NRAD] = calc_LTE_NfromE(pradffortho[PRAD0]);
 
               int whichvel=WHICHVEL; // in which vel U1-U3 set
               int whichcoordfluid=PRIMECOORDS; // in which coordinates U1-U3 set
@@ -3918,6 +3939,7 @@ int get_radcylbeamcart(int dir, int *dirprim, int ispstag, int ri, int rj, int r
     pradffortho[PRAD1] = 0;
     pradffortho[PRAD2] = 0;
     pradffortho[PRAD3] = 0;
+    if(NRAD>=0) pradffortho[NRAD] = calc_LTE_NfromE(pradffortho[PRAD0]);
 
     int whichvel=VEL3;
     int whichcoordfluid=MCOORD;
