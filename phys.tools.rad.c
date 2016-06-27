@@ -247,7 +247,8 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE *errorabs, stru
 
 #define IMPTRYCONVSUPERQUICK (1.e-3) // even less greedy so doesn't slow things down so much.
 /// error for comparing to sum over all absolute errors
-#define IMPTRYCONVABS ((FTYPE)(NDIM+2)*trueimptryconv)
+// +2 just pushes error tolerance up a bit
+#define IMPTRYCONVABS ((FTYPE)(JACNPR+2)*trueimptryconv)
 
 /// what tolerance to use for saying can switch to entropy when u_g is suggested to be bad for energy
 //#define IMPOKCONVCONST (1E-9)
@@ -267,16 +268,16 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE *errorabs, stru
 #endif
 
 
-#define IMPOKCONVCONSTABS ((FTYPE)(NDIM+2)*IMPOKCONVCONST)
+#define IMPOKCONVCONSTABS ((FTYPE)(JACNPR+2)*IMPOKCONVCONST)
 #define IMPOKCONV (MAX(trueimptryconv,IMPOKCONVCONST))
-#define IMPOKCONVABS ((FTYPE)(NDIM+2)*IMPOKCONV)
+#define IMPOKCONVABS ((FTYPE)(JACNPR+2)*IMPOKCONV)
 
 
-#define IMPALLOWCONVCONSTABS ((FTYPE)(NDIM+2)*IMPALLOWCONVCONST)
+#define IMPALLOWCONVCONSTABS ((FTYPE)(JACNPR+2)*IMPALLOWCONVCONST)
 //#define IMPALLOWCONV (MAX(trueimptryconv,IMPALLOWCONVCONST))
 #define IMPALLOWCONV (trueimpallowconv)
 #define IMPALLOWCONV2 (IMPALLOWCONV)
-#define IMPALLOWCONVABS ((FTYPE)(NDIM+2)*IMPALLOWCONV)
+#define IMPALLOWCONVABS ((FTYPE)(JACNPR+2)*IMPALLOWCONV)
 
 /// tolerance above which say energy solution is probably bad even if not very large error.  These have tended (or nearly 100%) to be cases where actual solution has u_g<0 but harm gets error u_g>0 and error not too large.
 //#define IMPBADENERGY (MIN(IMPALLOWCONV,1E-7))
@@ -477,7 +478,7 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE *errorabs, stru
 /// 0 : normal full 4D method
 /// 1 : Invert sub Jacobian method
 #define DOSUBJAC 1
-#define ENERGYSIMPLEFACTOR (NDIM) // NDIM=4 times simpler than full step
+#define ENERGYSIMPLEFACTOR (JACNPR) // JACNPR times simpler than full step
 
 
 #define ITERMODENORMAL 0
@@ -576,7 +577,7 @@ int get_rameshsolution_wrapper(int whichcall, int eomtype, FTYPE *errorabs, stru
 #define DIFFXLIMIT (10.0*NUMEPSILON)
 
 #define LOCALPREIMPCONVX (10.0*NUMEPSILON)
-#define LOCALPREIMPCONVXABS ((FTYPE)(NDIM+2)*LOCALPREIMPCONVX)
+#define LOCALPREIMPCONVXABS ((FTYPE)(JACNPR+2)*LOCALPREIMPCONVX)
 
 
 /// number of iterations by which to check (1st) whether after some number of times (2nd) error rose instead of reduced.
@@ -731,11 +732,9 @@ static int Utoprimgen_failwrapper(int doradonly, int *radinvmod, int showmessage
 static void define_method(int iter, int *eomtype, int itermode, int baseitermethod, FTYPE fracenergy, FTYPE dissmeasure, struct of_method *mtd);
 static void get_refUs(struct of_method *mtd, struct of_refU *ru);
 
-#define MAXJACDIM (NDIM)
-//#define MAXJACDIM (NDIM+1)
 
 // debug stuff
-static void showdebuglist(int debugiter, FTYPE (*pppreholdlist)[NPR],FTYPE (*ppposholdlist)[NPR],FTYPE (*f1reportlist)[NPR],FTYPE (*f1list)[NPR],FTYPE *errorabsf1list,FTYPE *errorallabsf1list, int *realiterlist, FTYPE (*jaclist)[MAXJACDIM][MAXJACDIM], FTYPE *fracdamplist, int *implicititerlist, int *implicitferrlist);
+static void showdebuglist(int debugiter, FTYPE (*pppreholdlist)[NPR],FTYPE (*ppposholdlist)[NPR],FTYPE (*f1reportlist)[NPR],FTYPE (*f1list)[NPR],FTYPE *errorabsf1list,FTYPE *errorallabsf1list, int *realiterlist, FTYPE (*jaclist)[JACNPR][JACNPR], FTYPE *fracdamplist, int *implicititerlist, int *implicitferrlist);
 int mathematica_report_check(int radinvmod, int failtype, long long int failnum, int gotfirstnofail, int eomtypelocal, int itermode, int baseitermethod, FTYPE *errorabs, FTYPE *errorabsbestexternal, int iters, int iterstotal, FTYPE realdt,struct of_geom *ptrgeom, FTYPE *ppfirst, FTYPE *pp, FTYPE *pb, FTYPE *piin, FTYPE *prtestUiin, FTYPE *prtestUU0, FTYPE *uu0, FTYPE *uu, FTYPE *Uiin, FTYPE *Ufin, FTYPE *CUf, FTYPE *CUimp, struct of_state *q, FTYPE *dUother);
 
 // explicit stuff (uses CUf instead of CUf since even with sub-cycling not implicit)
@@ -1261,7 +1260,7 @@ static void get_refUs(struct of_method *mtd, struct of_refU *ru)
   int type;
 
 
-  // set pl's over which 4-force is involved or uu[] or f[] or jac[] are involved
+  // set pl's over which 4-force is involved or accessing which pl is TT component
   if(IMPMHDTYPE(mtd->implicititer)){
     DLOOPA(jj) ru->irefU[jj]=UU+jj; // which U's (for the f's) to operate on -- NDIM of them usually
     DLOOPA(jj) ru->iotherU[jj]=URAD0+jj; // other U's (for the f's) to indirectly operate on (NDIM matching normal NDIM operate on)
@@ -1276,6 +1275,14 @@ static void get_refUs(struct of_method *mtd, struct of_refU *ru)
     ru->irefU[TT]=ENTROPY;
     // so no iotherU since not used for 4-force
   }
+
+
+  ////
+  //
+  // default zero list
+  //
+  ///
+  JACTYPELOOP(type){ ru->jacstart[type]=0; ru->jacend[type]=-1; } // nothing in list
 
 
   // set pl's over which jacobian or f-related loops are involved
@@ -1337,9 +1344,10 @@ static void get_refUs(struct of_method *mtd, struct of_refU *ru)
     }      
   }
 
+
   ///////////////
   //
-  // Fix jacobian lists for including NRAD, which must always be included when doing full steps.
+  // Append jacobian lists for including NRAD, which must always be included when doing full steps (of any kind)
   //
   ///////////////
   if(NRAD>=0){
@@ -1662,7 +1670,7 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
     // set alternative that doesn't keep any changes to iterated quantities
     PLOOP(pliter,pl) ppalt[pl] = pp[pl];
     PLOOP(pliter,pl) uualt[pl] = uu[pl];
-    DLOOPA(iv) uualt[ru->irefU[iv]] = uubackup[ru->irefU[iv]];
+    JACLOOP(pliter,pl) uualt[pl] = uubackup[pl];
     if(mtd->implicititer==QTYURAD || mtd->implicititer==QTYURADENERGYONLY || mtd->implicititer==QTYURADMOMONLY){
       radinvmodalt=0; // if iterating URAD, then ignore radinvmod==1 for alternative error but need to still use new primitives.
       if(failreturn==UTOPRIMGENWRAPPERRETURNFAILRAD) failreturnalt=UTOPRIMGENWRAPPERRETURNNOFAIL; // only change failure if only rad failure
@@ -1718,7 +1726,7 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
     // set alternative that doesn't keep any changes to iterated quantities
     PLOOP(pliter,pl) ppalt[pl] = pp[pl];
     PLOOP(pliter,pl) uualt[pl] = uu[pl];
-    DLOOPA(iv) uualt[ru->irefU[iv]] = uubackup[ru->irefU[iv]];
+    JACLOOP(pliter,pl) uualt[pl] = uubackup[pl];
   }
 
 
@@ -1885,7 +1893,7 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
     // 13)
     // set alternative that doesn't keep any changes to iterated quantities
     PLOOP(pliter,pl) ppalt[pl] = pp[pl];
-    DLOOPA(iv) ppalt[ru->irefU[iv]] = ppbackup[ru->irefU[iv]];
+    JACLOOP(pliter,pl) ppalt[pl] = ppbackup[pl];
     PLOOP(pliter,pl) uualt[pl] = uu[pl];
 
   }
@@ -1958,7 +1966,7 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
     // 9) 
     // set alternative that doesn't keep any changes to iterated quantities
     PLOOP(pliter,pl) ppalt[pl] = pp[pl];
-    DLOOPA(iv) ppalt[ru->irefU[iv]] = ppbackup[ru->irefU[iv]];
+    JACLOOP(pliter,pl) ppalt[pl] = ppbackup[pl];
     PLOOP(pliter,pl) uualt[pl] = uu[pl];
   }
 
@@ -5413,9 +5421,9 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
   int pliter,pl;
   int jjdim;
   FTYPE dimfactU[NPR];
-  PLOOP(pliter,pl) dimfactU[pl]=1.0; // default
-  DLOOPA(jjdim) dimfactU[UU+jjdim]=dimfactU[URAD0+jjdim]=sqrt(fabs(ptrgeom->gcon[GIND(jjdim,jjdim)]));
-  SLOOPA(jjdim) dimfactU[B1+jjdim-1] = 1.0/dimfactU[U1+jjdim-1];
+  PLOOP(pliter,pl) dimfactU[pl]=1.0; // default (applies to scalar-like quantities)
+  DLOOPA(jjdim) dimfactU[UU+jjdim]=dimfactU[URAD0+jjdim]=sqrt(fabs(ptrgeom->gcon[GIND(jjdim,jjdim)])); // applies to T^t_\mu like quantities so dimensions uniform
+  SLOOPA(jjdim) dimfactU[B1+jjdim-1] = 1.0/dimfactU[U1+jjdim-1]; // applies to B^i like quantities
 
 
   int i1,i2,i3,iv,ii,jj,kk,sc;
@@ -6259,7 +6267,7 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
           if(pp[PRAD0]<10.0*ERADLIMIT){
             // try smaller tolerance
             trueimptryconv=10.0*NUMEPSILON;
-            trueimptryconvabs=((FTYPE)(NDIM+2)*trueimptryconv);
+            trueimptryconvabs=((FTYPE)(JACNPR+2)*trueimptryconv);
             trueimptryconvalt=(MAX(1E-8,trueimptryconvabs));
           }
 #endif
@@ -6629,7 +6637,7 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
           //
           /////////////////
           FTYPE LOCALPREIMPCONV=MIN(10.0*NUMEPSILON,trueimptryconv); // more strict than later tolerance
-          FTYPE LOCALPREIMPCONVABS=(FTYPE)(NDIM+2)*LOCALPREIMPCONV; // more strict than later tolerance
+          FTYPE LOCALPREIMPCONVABS=(FTYPE)(JACNPR+2)*LOCALPREIMPCONV; // more strict than later tolerance
           if(STOPIFVERYLOWERROR && errorabsf1[WHICHERROR]<=LOCALPREIMPCONVABS){
             earlylowerror=1;
           }
@@ -7660,7 +7668,7 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
 
 
       // estimate effective work based on iterations done for each equation type
-      FTYPE fndim=(FTYPE)NDIM;
+      FTYPE fndim=(FTYPE)JACNPR;
       totaliters += (int)( (3.0/fndim)*(FTYPE)momiters + (1.0/fndim)*(FTYPE)energyiters + (fndim/fndim)*(FTYPE)fulliters);
 
     }// end loop over damping
@@ -7852,9 +7860,10 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
   // ensure if failed that no changes in quantities
   /////////////////////
   if(ACCEPTASNOFAILURE(failreturn)==0){
-    DLOOPA(jj) uu[UU+jj] = uu0[UU+jj];
-    DLOOPA(jj) uu[URAD0+jj] = uu0[URAD0+jj];
-    if(ENTROPY>=0) uu[ENTROPY] = uu0[ENTROPY];
+//    DLOOPA(jj) uu[UU+jj] = uu0[UU+jj];
+//    DLOOPA(jj) uu[URAD0+jj] = uu0[URAD0+jj];
+//    if(ENTROPY>=0) uu[ENTROPY] = uu0[ENTROPY];
+    PLOOP(pliter,pl) uu[pl] = uu0[pl];
   }
   /////////////////////
   // if cold method, then entropy change infinite.  Modify so no change in entropy.  Ok, because not using entropy conservation here.  Just need evolution of entropy to be reasonable in case revert to it, and also want ener diagnostics to be reasonable and show conservation properties of entropy.
@@ -8703,14 +8712,9 @@ static int f_error_check(int showmessages, int showmessagesheavy, int iter, FTYP
   // get error
   // NOTE: use of gcov[ii,ii] so comparable dimensionally to fin[ru->irefU[ii]] and finnorm[ru->irefU[ii]] that are like R^t_\nu and so need sqrt(gcon[nu,nu]) multiplied on them.  This ensures error is non-dimensional (or, really only ^t dimensional)
   FTYPE dimfactferr[NPR];
-  PLOOP(pliter,pl) dimfactferr[pl]=dimfactU[pl]; // default
-  if(dimtypef==DIMTYPEFCONS){
-    // assume fin and finnorm are conservative or source (R^t_\nu form)
-    DLOOPA(ii) dimfactferr[ru->irefU[ii]]=dimfactU[ru->irefU[ii]];
-    DLOOPA(ii) dimfactferr[ru->iotherU[ii]]=dimfactU[ru->iotherU[ii]];
-  }
-  else{
-    // assume fin and finnorm are primitve (u,vel^i form)
+  PLOOP(pliter,pl) dimfactferr[pl]=dimfactU[pl]; // default assumes f in same form as U
+  if(dimtypef!=DIMTYPEFCONS){
+    // assume vector-related fin and finnorm are primitve (u,vel^i form), which is 1/form used by U for T^t_\mu and R^t_\mu U to primitives
     DLOOPA(ii) dimfactferr[ru->irefU[ii]]=1.0/dimfactU[ru->irefU[ii]];
     DLOOPA(ii) dimfactferr[ru->iotherU[ii]]=1.0/dimfactU[ru->iotherU[ii]];
   }
@@ -8862,11 +8866,6 @@ static int get_implicit_iJ(int allowbaseitermethodswitch, int failreturnallowabl
   FTYPE upitoup0[NPR], upitoup0U[NPR], upitoup0P[NPR];
   FTYPE x[NPR],xp[NPR],xjac[2][NPR],xjacalt[NPR];
   FTYPE velmomscale;
-
-  //  FTYPE dimfactU[NPR];
-  //  PLOOP(pliter,pl) dimfactU[pl]=1.0; // default
-  //  DLOOPA(jjdim) dimfactU[UU+jjdim]=dimfactU[URAD0+jjdim]=sqrt(fabs(ptrgeom->gcon[GIND(jjdim,jjdim)]));
-  //  SLOOPA(jjdim) dimfactU[B1+jjdim-1] = 1.0/dimfactU[U1+jjdim-1];
 
   // U
   // \rho_0 u^t * sqrt(-1/g^{tt})  and most things will be scalars like S u^t as well
@@ -9250,22 +9249,20 @@ static int get_implicit_iJ(int allowbaseitermethodswitch, int failreturnallowabl
     int normalsize=endjac - beginjac  + 1;
 
     // Jsub we pass always starts at 0 index and goes through normalsize-1 index
-    if(normalize==NDIM+1){
-      // inverse *and* transpose index order, so J[irefU][irefU] ->  iJ[irefU][irefU]
-      //      failreturn=inverse_55matrix(Jsub,iJsub);
-      dualfprintf(fail_file,"NOT YET\n");
-      myexit(27352875);
+    if(normalize>=NDIM+1){ // probably number-energy-momentum
+      // inverse *and* transpose index order, so J[f][p] ->  iJ[p][f]
+      failreturn=matrix_inverse_gen(JACNPR,Jsub,iJsub); // Jon's use of numerical recipes -- TODOMARK: should check if faster than direct methods for 4x4 etc.
     }    
-    else if(normalize==NDIM){
-      // inverse *and* transpose index order, so J[irefU][irefU] ->  iJ[irefU][irefU]
+    else if(normalize==NDIM){ // probably energy-momentum
+      // inverse *and* transpose index order, so J[f][p] ->  iJ[p][f]
       failreturn=inverse_44matrix(Jsub,iJsub);
     }    
     else if(normalsize==NDIM-1){ // probably momentum only
-      // inverse *and* transpose index order, so J[irefU][irefU] ->  iJ[irefU][irefU]
+      // inverse *and* transpose index order, so J[f][p] ->  iJ[p][f]
       failreturn=inverse_33matrix(Jsub,iJsub);
     }    
     else if(normalsize==1){ // probably energy only
-      // inverse *and* transpose index order, so J[irefU][irefU] ->  iJ[irefU][irefU]
+      // inverse *and* transpose index order, so J[f][p] ->  iJ[p][f]
       failreturn=inverse_11matrix(Jsub,iJsub);
     }    
     
@@ -9282,7 +9279,7 @@ static int get_implicit_iJ(int allowbaseitermethodswitch, int failreturnallowabl
         dualfprintf(fail_file,"Tried to invert Jacobian with %d %d %d %d : %g %g %g : %g %g %g : %d %d : %g %g : %d : %g %g\n",*eomtypelocal, whichcap, itermode, *baseitermethod, fracenergy, dissmeasure, impepsjac, trueimptryconv, trueimptryconvabs, trueimpallowconvabs, trueimpmaxiter, iter, errorabs, errorallabs, whicherror,fracdtG,realdt);
         PLOOP(pliter,pl) dualfprintf(fail_file,"1Tried: pl=%d Uiin=%g uu=%g uup=%g uu0=%g piin=%g pp=%g ppp=%g f1=%g f1norm=%g\n", pl, Uiin[pl], uu[pl], uup[pl], uu0[pl], piin[pl], pp[pl], ppp[pl], f1[pl], f1norm[pl]);
         JACLOOP2D(iiiter,ii,jjiter,jj){
-          dualfprintf(fail_file,"2Tried: ii=%d jj=%d (%d %d) : j=%g iJ=%g\n",iiiter-beginjac,jjiter,Jsub[iiiter-beginjac][jjiter-beginjac],iJsub[iiiter-beginjac][jjiter-beginjac]);
+          dualfprintf(fail_file,"2Tried: ii=%d jj=%d (%d %d) : j=%g iJ=%g\n",iiiter-beginjac,jjiter-beginjac,Jsub[iiiter-beginjac][jjiter-beginjac],iJsub[iiiter-beginjac][jjiter-beginjac]);
         }
       }
 #endif
@@ -9310,8 +9307,10 @@ static int get_implicit_iJ(int allowbaseitermethodswitch, int failreturnallowabl
         if(debugfail>=2) dualfprintf(fail_file,"f_implicit for f2 failed to be different enough from f1 and gave singular Jacobian: IMPEPSSTART=%g (giving del=%g)\n",IMPEPSSTART,del);
         if(debugfail>=2 || showmessagesheavy){
           dualfprintf(fail_file,"POSTJAC1: x: %21.15g %21.15g %21.15g %21.15g : x=%21.15g %21.15g %21.15g %21.15g\n",x[ru->irefU[0]],x[ru->irefU[1]],x[ru->irefU[2]],x[ru->irefU[3]],x[ru->irefU[0]],x[ru->irefU[1]],x[ru->irefU[2]],x[ru->irefU[3]]);
-          int iii,jjj;
-          DLOOP(iii,jjj) dualfprintf(fail_file,"Jsub[%d][%d]=%21.15g\n",iii,jjj,Jsub[iii][jjj]);
+          int iiiter,iii,jjjiter,jjj;
+          JACLOOP2D(iiiter,iii,jjiter,jjj){
+            dualfprintf(fail_file,"2Tried: iii=%d jjj=%d (%d %d) : Jsub=%g\n",iiiter-beginjac,jjiter-beginjac,Jsub[iiiter-beginjac][jjiter-beginjac]);
+          }
         }
 #endif
 
@@ -9323,9 +9322,11 @@ static int get_implicit_iJ(int allowbaseitermethodswitch, int failreturnallowabl
         if(debugfail>=2) dualfprintf(fail_file,"inverse_44matrix(J,iJ) failed with eomtypelocallocal=%d, trying IMPEPSSTART=%g :: ijk=%d %d %d\n",eomtypelocallocal,IMPEPSSTART,ptrgeom->i,ptrgeom->j,ptrgeom->k);
         if(debugfail>=2 || showmessagesheavy){
           dualfprintf(fail_file,"POSTJAC2: x: %21.15g %21.15g %21.15g %21.15g : x=%21.15g %21.15g %21.15g %21.15g\n",x[ru->irefU[0]],x[ru->irefU[1]],x[ru->irefU[2]],x[ru->irefU[3]],x[ru->irefU[0]],x[ru->irefU[1]],x[ru->irefU[2]],x[ru->irefU[3]]);
-          int iii,jjj;
+          int iiiter,iii,jjjiter,jjj;
+          JACLOOP2D(iiiter,iii,jjiter,jjj){
+            dualfprintf(fail_file,"2Tried: iii=%d jjj=%d (%d %d) : Jsub=%g\n",iiiter-beginjac,jjiter-beginjac,Jsub[iiiter-beginjac][jjiter-beginjac]);
+          }
           DLOOPA(iii) dualfprintf(fail_file,"predel[%d]=%21.15g\n",iii,predel[iii]);
-          DLOOP(iii,jjj) dualfprintf(fail_file,"Jsub[%d][%d]=%21.15g\n",iii,jjj,Jsub[iii][jjj]);
         }
 #endif
 
@@ -9342,8 +9343,10 @@ static int get_implicit_iJ(int allowbaseitermethodswitch, int failreturnallowabl
       if(debugfail>=2) dualfprintf(fail_file,"Failed to get inverse Jacobian with fulljaciter=%d with IMPEPSSTART=%g (giving del=%g)\n",fulljaciter,IMPEPSSTART,del);
       if(debugfail>=2 || showmessagesheavy){
         dualfprintf(fail_file,"POSTJAC3: x: %g %g %g %g : x=%g %g %g %g\n",x[ru->irefU[0]],x[ru->irefU[1]],x[ru->irefU[2]],x[ru->irefU[3]],x[ru->irefU[0]],x[ru->irefU[1]],x[ru->irefU[2]],x[ru->irefU[3]]);
-        int iii,jjj;
-        DLOOP(iii,jjj) dualfprintf(fail_file,"Jsub[%d][%d]=%g\n",iii,jjj,Jsub[iii][jjj]);
+        int iiiter,iii,jjjiter,jjj;
+        JACLOOP2D(iiiter,iii,jjiter,jjj){
+          dualfprintf(fail_file,"2Tried: iii=%d jjj=%d (%d %d) : Jsub=%g\n",iiiter-beginjac,jjiter-beginjac,Jsub[iiiter-beginjac][jjiter-beginjac]);
+        }
       }
 #endif
 
@@ -11356,6 +11359,15 @@ int prad_labtoff(int *whichvel, int *whichcoord, int i, int j, int k, int loc, s
   struct of_state q;
   get_state(pin,ptrgeom,&q);
 
+  if(NRAD>0){
+    // get relative Lorentz factor between gas and radiation
+    FTYPE gammaradgas = 0.0;
+    DLOOPA(jj) gammaradgas += - (q->ucov[jj] * q->uradcon[jj]);
+    // pin[NRAD] is radiation frame number density (i.e. not U[NRAD])
+    // get radiation number density in fluid frame
+    pradffortho[NRAD] = pin[NRAD]*gammaradgas;
+  }
+
   //  DLOOPA(jj) dualfprintf(fail_file,"ijk=%d %d %d : jj=%d uradcon=%g uradcov=%g\n",i,j,k,jj,q.uradcon[jj],q.uradcov[jj]);
 
 
@@ -11499,15 +11511,13 @@ int prad_fftolab(int *whichvel, int *whichcoord, int i, int j, int k, int loc, s
 
   //  DLOOPA(jj) dualfprintf(fail_file,"jj=%d URAD=%g\n",jj,U[URAD0+jj]);
 
-
-
-
   PFTYPE lpflag=UTOPRIMNOFAIL,lpflagrad=UTOPRIMRADNOFAIL;
   int showmessages=1; // LEAVE on (not normal debugging)
   int allowlocalfailurefixandnoreport=1;
   // NOTEMARK: lpflag=UTOPRIMNOFAIL means accept input pout for velocity to maybe be used in local reductions to fluid frame.
   // u2p_rad() only uses U[URAD0-URAD3]
   // generally u2p_rad() could use all of pout[] except only assigns pout[PRAD0-PRAD3] and doesn't use that for anything except as "static" solution (i.e. uses pin effectively)
+  // Don't have U[NRAD] yet because need urad
   u2p_rad(showmessages, allowlocalfailurefixandnoreport, GAMMAMAXRAD, CAPTYPEBASIC, U, pout, ptrgeomtouse, &lpflag, &lpflagrad);
 
   //  DLOOPA(jj) dualfprintf(fail_file,"u2p_rad: jj=%d pout=%g\n",jj,pout[PRAD0+jj]);
@@ -11519,9 +11529,29 @@ int prad_fftolab(int *whichvel, int *whichcoord, int i, int j, int k, int loc, s
   // for fluid
   ucon_calc_whichvel(VELREL4,pout,ptrgeomtouse,uconback,othersback);
   ucon2pr(*whichvel,uconback,ptrgeomtouse,pout);
+  FTYPE uconnew[NDIM],othersnew[NUMOTHERSTATERESULTS];
+  ucon_calc(pout,ptrgeomtouse,uconew,othersnew);
+
+  FTYPE uradconback[NDIM],othersradback[NUMOTHERSTATERESULTS];
   // KORALTODO: for radiation (always returned as VELREL4 so far).
-  ucon_calc_whichvel(VELREL4,&pout[URAD1-U1],ptrgeomtouse,uconback,othersback);
-  ucon2pr(*whichvel,uconback,ptrgeomtouse,&pout[URAD1-U1]);
+  ucon_calc_whichvel(VELREL4,&pout[URAD1-U1],ptrgeomtouse,uradconback,othersradback);
+  ucon2pr(*whichvel,uradconback,ptrgeomtouse,&pout[URAD1-U1]);
+  FTYPE uradconnew[NDIM],othersradnew[NUMOTHERSTATERESULTS];
+  ucon_calc(&pout[URAD1-U1],ptrgeomtouse,uradconnew,othersradnew);
+
+  if(NRAD>0){
+    FTYPE ucovnew[NDIM];
+    lower_vec(uconnew,ptrgeomtouse,ucovnew);
+    // get relative Lorentz factor between gas and radiation
+    FTYPE gammaradgas = 0.0;
+    DLOOPA(jj) gammaradgas += - (ucovnew[jj] * uradconnew[jj]);
+    // get radiation number density in lab frame from fluid frame
+    U[NRAD] = (pradffortho[NRAD]/gammaradgas)*(uradconnew[TT]);
+    pout[NRAD] = U[NRAD]/(uradconnew[TT]); // pout is nrad : radiation frame number density (i.e. not U[NRAD])
+  }
+
+
+
 
 
 
