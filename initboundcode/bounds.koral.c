@@ -2700,7 +2700,7 @@ int bound_radnt(int dir,
                 FTYPE ut[NDIM]={0.,-gammamax*pow(r/rout,1.),0.,0.}; // assume in BLCOORDS 4-vel or SPCMINKMETRIC if no gravity
                 SLOOPA(jj) pr[URAD1+jj-1]=ut[jj]; 
 
-                if(NRAD>=0) pradffortho[NRAD] = calc_LTE_NfromE(pradffortho[PRAD0]);
+                if(NRAD>=0) pr[NRAD] = calc_LTE_NfromE(pr[PRAD0]);
 
                 // get all primitives in WHICHVEL/PRIMECOORDS value
                 if (bl2met2metp2v(whichvel, whichcoord,pr, i,j,k) >= 1){

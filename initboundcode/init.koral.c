@@ -6390,7 +6390,7 @@ static int donut_analytical_solution(int *whichvel, int *whichcoord, int optical
 {
   int usingback=0;
   FTYPE Vphi=0.0,Vr=0.0,Vh=0.0;
-  FTYPE D,W,uT=1.0,uphi,uPhi,rho,ucon[NDIM],uint,E,Fx,Fy,Fz;
+  FTYPE D,W,uT=1.0,uphi,uPhi,rho,ucon[NDIM],uint,E,Fx,Fy,Fz,nrad;
   //  FTYPE rho,uint,uT=1.0,E,Fx,Fy,Fz;
 
   // set backup atmosphere value for primitives
@@ -8633,7 +8633,7 @@ int set_density_floors(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *prfloor, FTYPE
       prfloor[PRAD0]=ERADLIMIT;
       prceiling[PRAD0]=BIG;
     }
-    if(NAD>=0){ 
+    if(NRAD>=0){ 
       prfloor[NRAD]=ERADLIMIT;
       prceiling[NRAD]=BIG;
     }
