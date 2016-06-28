@@ -7328,7 +7328,7 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
               if(debugfail>=DEBUGLEVELIMPSOLVERMORE){
                 if(convreturnf3limit && debugfail>=3){
                   dualfprintf(fail_file,"f3limit good\n");
-                  if(POSTNEWTONCONVCHECK==1) JACLOOPALT(iiter,ii) dualfprintf(fail_file,"ii=%d f3=%21.15g f3norm=%21.15g f3report=%21.15g\n",ii,f3[ii],f3norm[ii],f3report[ii]);          
+                  if(POSTNEWTONCONVCHECK==1) JACLOOP(iiter,ii) dualfprintf(fail_file,"ii=%d f3=%21.15g f3norm=%21.15g f3report=%21.15g\n",ii,f3[ii],f3norm[ii],f3report[ii]);          
                 }
                 if(convreturnf1) dualfprintf(fail_file,"f1 good: ijknstepsteppart=%d %d %d %ld %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart);
                 if(convreturnf3limit) dualfprintf(fail_file,"f3 good: ijknstepsteppart=%d %d %d %ld %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart);
@@ -8865,7 +8865,7 @@ static int get_implicit_iJ(int allowbaseitermethodswitch, int failreturnallowabl
   // for scaling del's norm.  Applies to time component to make as if like space component.
   FTYPE upitoup0[NPR], upitoup0U[NPR], upitoup0P[NPR];
   FTYPE x[NPR],xp[NPR],xjac[2][NPR],xjacalt[NPR];
-  FTYPE velmomscale;
+  FTYPE velmomscale[NPR];
 
   // U
   // \rho_0 u^t * sqrt(-1/g^{tt})  and most things will be scalars like S u^t as well
@@ -8915,14 +8915,17 @@ static int get_implicit_iJ(int allowbaseitermethodswitch, int failreturnallowabl
   ///////////
 
   // U
+  PLOOP(pliter,pl) velmomscale[pl]=0.0;
   if(IMPUTYPE(mtd->implicititer)){
     PLOOP(pliter,pl) x[pl]=uucopy[pl];
     PLOOP(pliter,pl) xp[pl]=uup[pl];
     PLOOP(pliter,pl) xjac[0][pl]=xjac[1][pl]=xjacalt[pl]=uucopy[pl];
     PLOOP(pliter,pl) upitoup0[pl] = upitoup0U[pl];
     // velmomscale is set such that when (e.g.) T^t_i is near zero, we use T^t_t as reference since we consider T^t_i/T^t_t to be velocity scale that is up to order unity.
-    //    velmomscale=prpow(fabs(x[ru->irefU[TT]]*upitoup0[ru->irefU[TT]]),1.5);
-    velmomscale=prpow(fabs(x[ru->irefU[TT]]*upitoup0[ru->irefU[TT]]),1.0); // __WORKINGONIT__
+    SLOOPA(jj){
+      //    velmomscale[ru->irefU[jj]]=velmomscale[ru->iotherU[jj]]=prpow(fabs(x[ru->irefU[TT]]*upitoup0[ru->irefU[TT]]),1.5);
+      velmomscale[ru->irefU[jj]]=velmomscale[ru->iotherU[jj]]=prpow(fabs(x[ru->irefU[TT]]*upitoup0[ru->irefU[TT]]),1.0); // __WORKINGONIT__
+    }
   }
   // P
   else if(IMPPTYPE(mtd->implicititer)){
@@ -8932,13 +8935,13 @@ static int get_implicit_iJ(int allowbaseitermethodswitch, int failreturnallowabl
     PLOOP(pliter,pl) upitoup0[pl] = upitoup0P[pl];
     // for velocity, assume ortho-scale is order unity (i.e. v=1.0*c)
     //    velmomscale=1.0; // reference scale considered to be order unity  KORALTODO: Not sure if should use something like T^t_i/T^t_t with denominator something more non-zero-ish.
-    if(IMPMHDTYPE(mtd->implicititer)) velmomscale=MAX(SMALL,sqrt(fabs(x[UU])/MAX(ppp[RHO],ppcopy[RHO]))); // u_g/\rho_0\propto (v/c)^2, so this gives \propto (v/c) .  Leads to more problems for RADTUBE
-    else velmomscale=1.0; // __WORKINGONIT__
-
-    // limit
-    velmomscale=MIN(1.0,velmomscale);
-
-    //    velmomscale=1.0; // __WORKINGONIT__
+    SLOOPA(jj){
+      if(IMPMHDTYPE(mtd->implicititer)) velmomscale[ru->irefU[jj]]=velmomscale[ru->iotherU[jj]]=MAX(SMALL,sqrt(fabs(x[UU])/MAX(ppp[RHO],ppcopy[RHO]))); // u_g/\rho_0\propto (v/c)^2, so this gives \propto (v/c) .  Leads to more problems for RADTUBE
+      else velmomscale[ru->irefU[jj]]=velmomscale[ru->iotherU[jj]]=1.0; // __WORKINGONIT__
+      
+      // limit
+      velmomscale[ru->irefU[jj]]=velmomscale[ru->iotherU[jj]]=MIN(1.0,velmomscale[ru->irefU[jj]]);
+    }
   }
 
   //////////////////////////
@@ -8950,7 +8953,7 @@ static int get_implicit_iJ(int allowbaseitermethodswitch, int failreturnallowabl
 
   // get everything in terms of quasi-orthonormal quantities
   FTYPE vsqnorm=0.0;
-  JACLOOPALT(jjiter,jj){
+  JACLOOP(jjiter,jj){
     predel[jj] = fabs(x[jj]*upitoup0[jj]);
     if(jj==UU || jj==URAD0 || IMPUTYPE(mtd->implicititer)){
       // below makes sense because U and ferr are linear in x and same dimensional units
@@ -8982,12 +8985,12 @@ static int get_implicit_iJ(int allowbaseitermethodswitch, int failreturnallowabl
 
   // Add all spatial terms in quasi-orthonormal way
   // Also add (u_g)^{1/2} \propto \rho_0(v/c)
-  delspace=0.0; JACLOOP(jjiter,jj) delspace = MAX(delspace,MAX(fabs(predel[jj]) , velmomscale )); // dimensionless-ortho
+  delspace=0.0; SLOOPA(jj) delspace = MAX(delspace,MAX(fabs(predel[ru->irefU[jj]]) , velmomscale[ru->irefU[jj]] )); // dimensionless-ortho
 
   //__WORKINGONIT__: Needs to improve and be more general
   if(IMPPMHDTYPE(mtd->implicititer)){
     // u_g goes like \rho_0 v^2
-    jj=TT; deltime = MAX(fabs(predel[irefU[jj]]),MAX(ppp[RHO],ppcopy[RHO])*vsqnorm); // __WORKINGONIT__ : Leads to more problems for RADTUBE
+    jj=TT; deltime = MAX(fabs(predel[ru->irefU[jj]]),MAX(ppp[RHO],ppcopy[RHO])*vsqnorm); // __WORKINGONIT__ : Leads to more problems for RADTUBE
     //jj=TT; deltime = fabs(predel[jj]);
   }
   else if(IMPPTYPE(mtd->implicititer)){
@@ -9059,47 +9062,47 @@ static int get_implicit_iJ(int allowbaseitermethodswitch, int failreturnallowabl
           if(JDIFFTYPE==JDIFFONESIDED && sided==1){
             if(*baseitermethod==QTYPMHD || *baseitermethod==QTYPRAD){
               // then choose direction so that decrease u_g and decreases magnitude of \gamma
-              if(x[ru->irefU[jj]]>0.0){
-                xjac[sided][ru->irefU[jj]]=x[ru->irefU[jj]] + signside*del;
-                xjacalt[ru->irefU[jj]]=x[ru->irefU[jj]] - signside*del;
+              if(x[jj]>0.0){
+                xjac[sided][jj]=x[jj] + signside*del;
+                xjacalt[jj]=x[jj] - signside*del;
               }
               else{
-                xjac[sided][ru->irefU[jj]]=x[ru->irefU[jj]] - signside*del;
-                xjacalt[ru->irefU[jj]]=x[ru->irefU[jj]] + signside*del;
+                xjac[sided][jj]=x[jj] - signside*del;
+                xjacalt[jj]=x[jj] + signside*del;
               }
             }
             else if(*baseitermethod==QTYURAD){
               // ensure R^t_t decreases so Erf doesn't drop out
-              if(x[ru->irefU[jj]]>0.0){
-                xjac[sided][ru->irefU[jj]]=x[ru->irefU[jj]] + signside*del*(jj==TT ? -1.0 : 1.0);
-                xjacalt[ru->irefU[jj]]=x[ru->irefU[jj]] - signside*del*(jj==TT ? -1.0 : 1.0);
+              if(x[jj]>0.0){
+                xjac[sided][jj]=x[jj] + signside*del*(jj==TT ? -1.0 : 1.0);
+                xjacalt[jj]=x[jj] - signside*del*(jj==TT ? -1.0 : 1.0);
               }
               else{
-                xjac[sided][ru->irefU[jj]]=x[ru->irefU[jj]] - signside*del*(jj==TT ? -1.0 : 1.0);
-                xjacalt[ru->irefU[jj]]=x[ru->irefU[jj]] + signside*del*(jj==TT ? -1.0 : 1.0);
+                xjac[sided][jj]=x[jj] - signside*del*(jj==TT ? -1.0 : 1.0);
+                xjacalt[jj]=x[jj] + signside*del*(jj==TT ? -1.0 : 1.0);
               }
             }
             else if(*baseitermethod==QTYUMHD){
               // STILL for this method, ensure R^t_t decreases so Erf doesn't drop out
-              if(x[ru->irefU[jj]]>0.0){
-                xjac[sided][ru->irefU[jj]]=x[ru->irefU[jj]] - signside*del*(jj==TT ? -1.0 : 1.0);
-                xjacalt[ru->irefU[jj]]=x[ru->irefU[jj]] + signside*del*(jj==TT ? -1.0 : 1.0);
+              if(x[jj]>0.0){
+                xjac[sided][jj]=x[jj] - signside*del*(jj==TT ? -1.0 : 1.0);
+                xjacalt[jj]=x[jj] + signside*del*(jj==TT ? -1.0 : 1.0);
               }
               else{
-                xjac[sided][ru->irefU[jj]]=x[ru->irefU[jj]] + signside*del*(jj==TT ? -1.0 : 1.0);
-                xjacalt[ru->irefU[jj]]=x[ru->irefU[jj]] - signside*del*(jj==TT ? -1.0 : 1.0);
+                xjac[sided][jj]=x[jj] + signside*del*(jj==TT ? -1.0 : 1.0);
+                xjacalt[jj]=x[jj] - signside*del*(jj==TT ? -1.0 : 1.0);
               }
             }
             else{
-              xjac[sided][ru->irefU[jj]]=x[ru->irefU[jj]] + signside*del;
-              xjacalt[ru->irefU[jj]]=x[ru->irefU[jj]] - signside*del;
+              xjac[sided][jj]=x[jj] + signside*del;
+              xjacalt[jj]=x[jj] - signside*del;
             }
           }
           else{
             // offset xjac (KORALTODO: How to ensure this doesn't have machine precision problems or is good enough difference?)
-            xjac[sided][ru->irefU[jj]]=x[ru->irefU[jj]] + signside*del; // KORALNOTE: Not sure why koral was using uup or xp here.  Should use x (or uu or pp) because as updated from f_implicit() and uup or ppp for xp hasn't been set yet, so not consistent with desired jacobian or ferr for Newton step.
-            xjacalt[ru->irefU[jj]]=x[ru->irefU[jj]] - signside*del;
-            //          dualfprintf(fail_file,"NEW: jj=%d del=%g xjac=%g x=%g\n",jj,del,xjac[sided][ru->irefU[jj]],x[ru->irefU[jj]]);
+            xjac[sided][jj]=x[jj] + signside*del; // KORALNOTE: Not sure why koral was using uup or xp here.  Should use x (or uu or pp) because as updated from f_implicit() and uup or ppp for xp hasn't been set yet, so not consistent with desired jacobian or ferr for Newton step.
+            xjacalt[jj]=x[jj] - signside*del;
+            //          dualfprintf(fail_file,"NEW: jj=%d del=%g xjac=%g x=%g\n",jj,del,xjac[sided][jj],x[jj]);
           }
 
           // set uujac and ppjac using xjac
@@ -9158,7 +9161,7 @@ static int get_implicit_iJ(int allowbaseitermethodswitch, int failreturnallowabl
             localIMPEPS*=FRACIMPEPSCHANGE;
             // try making smaller until no error, unless doesn't work out
             // see if will be able to resolve differences
-            int baddiff = fabs(xjac[sided][ru->irefU[jj]]-x[ru->irefU[jj]])/(fabs(xjac[sided][ru->irefU[jj]])+fabs(x[ru->irefU[jj]])) < 10.0*NUMEPSILON;
+            int baddiff = fabs(xjac[sided][jj]-x[jj])/(fabs(xjac[sided][jj])+fabs(x[jj])) < 10.0*NUMEPSILON;
             if(localIMPEPS<10.0*NUMEPSILON || baddiff){
               // then probably can't resolve difference due to too small 
               if(failreturnallowableuse>=UTOPRIMGENWRAPPERRETURNFAILRAD){
@@ -9181,38 +9184,39 @@ static int get_implicit_iJ(int allowbaseitermethodswitch, int failreturnallowabl
       
 
       // get Jacobian
-      JACLOOP(ii,ru->startjac,ru->endjac) J[ru->irefU[ii]][ru->irefU[jj]]=(f2[1][ru->irefU[ii]] - f2[0][ru->irefU[ii]])/(xjac[1][ru->irefU[jj]]-xjac[0][ru->irefU[jj]]);
+      JACLOOP(iiter,ii) J[ii][jj]=(f2[1][ii] - f2[0][ii])/(xjac[1][jj]-xjac[0][jj]);
 
-      //JACLOOP(ii,ru->startjac,ru->endjac) dualfprintf(fail_file,"NEW: ii=%d jj=%d J=%g : %g %g : %g %g\n",ii,jj,J[ru->irefU[ii]][ru->irefU[jj]], f2[1][ru->irefU[ii]],f2[0][ru->irefU[ii]],xjac[1][ru->irefU[jj]],xjac[0][ru->irefU[jj]]);
 
 
 #if(PRODUCTION==0)
+      //JACLOOP(iiiter,ii) dualfprintf(fail_file,"NEW: ii=%d jj=%d J=%g : %g %g : %g %g\n",ii,jj,J[ii][jj], f2[1][ii],f2[0][ii],xjac[1][jj],xjac[0][jj]);
+
       // debug info
       if(debugfail>=2){
         int badcond=0;
-        JACLOOP(ii,ru->startjac,ru->endjac){
-          if(showmessagesheavy || !isfinite(J[ru->irefU[ii]][ru->irefU[jj]])|| fabs(J[ru->irefU[jj]][ru->irefU[jj]])<SMALL  ) {
+        JACLOOP(iiiter,ii){
+          if(showmessagesheavy || !isfinite(J[ii][jj])|| fabs(J[jj][jj])<SMALL  ) {
             badcond++;
           }
         }
         if(badcond){
-          JACLOOP(ii,ru->startjac,ru->endjac){
+          JACLOOP(iiiter,ii){
             dualfprintf(fail_file,"JISNAN: iter=%d startjac=%d endjac=%d ii=%d jj=%d irefU[jj]=%d irefU[ii]=%d : xjac[0]: %21.15g :  xjac[1]: %21.15g : x=%21.15g (del=%21.15g localIMPEPS=%21.15g) : f2[0]=%21.15g f2[1]=%21.15g J=%21.15g : f2norm[0]=%21.15g f2norm[1]=%21.15g\n",
                         iter,ru->startjac,ru->endjac,
-                        ii,jj,ru->irefU[jj],ru->irefU[ii],
-                        xjac[0][ru->irefU[jj]],
-                        xjac[1][ru->irefU[jj]],
-                        x[ru->irefU[jj]],
+                        ii,jj,jj,ii,
+                        xjac[0][jj],
+                        xjac[1][jj],
+                        x[jj],
                         del,localIMPEPS,
-                        f2[0][ru->irefU[ii]],f2[1][ru->irefU[ii]],J[ru->irefU[ii]][ru->irefU[jj]],
-                        f2norm[0][ru->irefU[ii]],f2norm[1][ru->irefU[ii]]
+                        f2[0][ii],f2[1][ii],J[ii][jj],
+                        f2norm[0][ii],f2norm[1][ii]
                         );
           }
-          JACLOOP(ii,ru->startjac,ru->endjac){
-            dualfprintf(fail_file,"NEW: ii=%d jj=%d J=%21.15g : %21.15g %21.15g : %21.15g %21.15g\n",ii,jj,J[ru->irefU[ii]][ru->irefU[jj]], f2[1][ru->irefU[ii]],f2[0][ru->irefU[ii]],xjac[1][ru->irefU[jj]],xjac[0][ru->irefU[jj]]);
+          JACLOOP(iiiter,ii){
+            dualfprintf(fail_file,"NEW: ii=%d jj=%d J=%21.15g : %21.15g %21.15g : %21.15g %21.15g\n",ii,jj,J[ii][jj], f2[1][ii],f2[0][ii],xjac[1][jj],xjac[0][jj]);
           }
           PLOOP(pliter,pl) dualfprintf(fail_file,"JISNAN2: pl=%d ppjac=%21.15g uu0=%21.15g uujac=%21.15g\n",pl,ppjac[pl],uu0[pl],uujac[pl]);
-          JACLOOP(ii,ru->startjac,ru->endjac) dualfprintf(fail_file,"ii=%d uucopy=%21.15g uu=%21.15g\n",ii,uucopy[ru->irefU[ii]],uu[ru->irefU[ii]]);
+          JACLOOP(iiiter,ii) dualfprintf(fail_file,"ii=%d uucopy=%21.15g uu=%21.15g\n",ii,uucopy[ii],uu[ii]);
         }//end if badcond>0
       }//end debug
 #endif
@@ -9251,7 +9255,7 @@ static int get_implicit_iJ(int allowbaseitermethodswitch, int failreturnallowabl
     // Jsub we pass always starts at 0 index and goes through normalsize-1 index
     if(normalize>=NDIM+1){ // probably number-energy-momentum
       // inverse *and* transpose index order, so J[f][p] ->  iJ[p][f]
-      failreturn=matrix_inverse_gen(JACNPR,Jsub,iJsub); // Jon's use of numerical recipes -- TODOMARK: should check if faster than direct methods for 4x4 etc.
+      failreturn=matrix_inverse_gen(normalsize,Jsub,iJsub); // Jon's use of numerical recipes -- TODOMARK: should check if faster than direct methods for 4x4 etc.
     }    
     else if(normalize==NDIM){ // probably energy-momentum
       // inverse *and* transpose index order, so J[f][p] ->  iJ[p][f]
@@ -9270,6 +9274,9 @@ static int get_implicit_iJ(int allowbaseitermethodswitch, int failreturnallowabl
     JACLOOP2D(iiiter,ii,jjiter,jj) iJ[ii][jj] = iJsub[iiiter-beginjac][jjiter-beginjac];
 
 
+
+
+    // check if failed to invert
     if(failreturn){
 
       
@@ -9287,6 +9294,8 @@ static int get_implicit_iJ(int allowbaseitermethodswitch, int failreturnallowabl
       // act on failure?
 
     }// end if failreturn!=0
+
+
 
 
 
