@@ -453,9 +453,6 @@ int post_init_specific_init(void)
   debugfail=0;
 #endif
 
-  tf = 200000;
-
-
 
   return(0);
 }

@@ -14014,10 +14014,6 @@ static int get_m1closure_gammarel2_cold(int showmessages, struct of_geom *ptrgeo
 /// calculates squared opacity over dx[] for given chi or chieff
 static int calc_tautotsq_chieff_dir(int dir,FTYPE *pp, FTYPE chi, struct of_geom *ptrgeom, struct of_state *q, FTYPE *tautotsq)
 {
-  //xx[0] holds time
-  int NxNOT1[NDIM]={0,N1NOT1,N2NOT1,N3NOT1}; // want to ignore non-used dimensions
- 
-
   // see averyboost.nb
   // dtau^jj = chi dxff^jj = chi dxlab^jj (1+\gamma - \gamma vjj^2)/(1+\gamma+vjj+\gamma vjj)
   // = chi dxlab^jj (\gamma + \gamma^2 - ux^2)/( (1+\gamma)*(\gamma+ux) )
