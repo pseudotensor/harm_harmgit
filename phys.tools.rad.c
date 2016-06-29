@@ -710,6 +710,7 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
 static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int failreturnallowable, int whichcall, FTYPE impeps, int showmessages, int showmessagesheavy, int allowlocalfailurefixandnoreport, int *eomtype, int whichcap, int itermode, int *baseitermethod, FTYPE fracenergy, FTYPE dissmeasure, int *radinvmod, FTYPE conv, FTYPE convabs, FTYPE allowconvabs, int maxiter, FTYPE realdt, int dimtypef, FTYPE *dimfactU, FTYPE *ppprev, FTYPE *pp, FTYPE *piin, FTYPE *uuprev, FTYPE *Uiin, FTYPE *uu0,FTYPE *uu,FTYPE localdt, struct of_geom *ptrgeom, struct of_state *q,  FTYPE *f, FTYPE *fnorm, FTYPE *freport, int *goexplicit, FTYPE *errorabs, FTYPE *errorallabs, int whicherror, int *convreturn, int *nummhdinvsreturn, FTYPE *tautotmaxreturn, struct of_method *mtd, struct of_refU *ru);
 
 
+static int calc_tautotsq_chieff_dir(int dir,FTYPE *pp, FTYPE chi, struct of_geom *ptrgeom, struct of_state *q, FTYPE *tautotsq);
 static int calc_tautot_chieff(FTYPE *pp, FTYPE chi, struct of_geom *ptrgeom, struct of_state *q, FTYPE *tautot, FTYPE *tautotmax);
 
 static FTYPE calc_approx_ratchangeRtt(struct of_state *q, FTYPE chieff, FTYPE realdt);
@@ -10914,12 +10915,10 @@ int vchar_rad(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYP
     // DOING THIS:
     // KORALTODO: Approximation to any true path, but approximation is sufficient for approximate wave speeds.
     // \tau_{\rm tot}^2 \approx \chi^2 [dxff^{dir} \sqrt{g_{dirdir}}]^2  where dxff is dx in fluid-frame where chi is measured
-    FTYPE tautotsq,vrad2tau;
+    FTYPE tautotsq;//,vrad2tau;
     // Note that tautot is frame independent once multiple \chi by the cell length.  I.e. it's a Lorentz invariant.
-    FTYPE tautot[NDIM];
-    FTYPE tautotmax;
-    calc_tautot_chieff(pr, chi, geom, q, tautot, &tautotmax);
-    tautotsq = tautot[dir]*tautot[dir];
+    //    FTYPE tautotsq; // in dir direction
+    calc_tautotsq_chieff_dir(dir,pr, chi, geom, q, &tautotsq);
 
     // below previous version was not Lorentz invariant.
     //    tautotsq = chi*chi * dx[dir]*dx[dir]*fabs(geom->gcov[GIND(dir,dir)]);
@@ -10928,8 +10927,11 @@ int vchar_rad(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYP
   
     //    vrad2tau=(4.0/3.0)*(4.0/3.0)/tautotsq; // KORALTODO: Why 4.0/3.0 ?  Seems like it should be 2.0/3.0 according to NR1992 S19.2.6L or NR2007 S20.2L with D=1/(3\chi), but twice higher speed is only more robust.
     //    vrad2limited=MIN(vrad2,vrad2tau); // sharp transition
-    FTYPE berthonterm=(1.0+1.5*tautot[dir]);
-    vrad2limited=vrad2/(berthonterm*berthonterm); // Berthon et al. 2007 and Rosdahl & Teyssier 2015.  So smooth transition.  Notice this is also as if 2/3 as expected (see above).
+    //    FTYPE berthonterm=(1.0+1.5*tautot[dir]);
+    //    vrad2limited=vrad2/(berthonterm*berthonterm); // Berthon et al. 2007 and Rosdahl & Teyssier 2015.  So smooth transition.  Notice this is also as if 2/3 as expected (see above).
+    FTYPE berthontermsq=(1.0+1.5*1.5*tautotsq); // so don't have to take square root to get tautot.  Still has same asymptotic behavior.
+    vrad2limited=vrad2/(berthontermsq); // Berthon et al. 2007 and Rosdahl & Teyssier 2015.  So smooth transition.  Notice this is also as if 2/3 as expected (see above).
+    
 
     // NOTEMARK: For explicit method, this will lead to very large dt relative to step desired by explicit method, leading to ever more sub-cycles for WHICHRADSOURCEMETHOD==SOURCEMETHODEXPLICITSUBCYCLE method.
 
@@ -14004,19 +14006,13 @@ static int get_m1closure_gammarel2_cold(int showmessages, struct of_geom *ptrgeo
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-/// calculates total opacity over dx[] for given chi or chieff
-int calc_tautot_chieff(FTYPE *pp, FTYPE chi, struct of_geom *ptrgeom, struct of_state *q, FTYPE *tautot, FTYPE *tautotmax)
+ 
+ 
+ 
+ 
+ 
+/// calculates squared opacity over dx[] for given chi or chieff
+static int calc_tautotsq_chieff_dir(int dir,FTYPE *pp, FTYPE chi, struct of_geom *ptrgeom, struct of_state *q, FTYPE *tautotsq)
 {
   //xx[0] holds time
   int NxNOT1[NDIM]={0,N1NOT1,N2NOT1,N3NOT1}; // want to ignore non-used dimensions
@@ -14025,50 +14021,74 @@ int calc_tautot_chieff(FTYPE *pp, FTYPE chi, struct of_geom *ptrgeom, struct of_
   // see averyboost.nb
   // dtau^jj = chi dxff^jj = chi dxlab^jj (1+\gamma - \gamma vjj^2)/(1+\gamma+vjj+\gamma vjj)
   // = chi dxlab^jj (\gamma + \gamma^2 - ux^2)/( (1+\gamma)*(\gamma+ux) )
-  int jj;
-  FTYPE dxorthoff[NDIM];
-  FTYPE orthofactor[NDIM];
+  int jj=dir;
+  FTYPE dxorthoffsq;
+  FTYPE orthofactorsq;
   FTYPE ujj,gamma;
   FTYPE ujjsq,gammasq;
+  FTYPE top,bottom;
+
+    
+ 
+  // NOTEMARK: only approximate near a rotating BH
+  //    ujj = q->ucon[jj]*orthofactor[jj];
+  // NOTEMARK: only approximate near a rotating BH
+  //    gamma = q->ucon[TT]*orthofactor[jj]; // as if *ptrgeom->alphalapse
+  // need gamma>|ujj| always, but if mixing ZAMO and lab, won't be true necessarily.
+  // need ujj->0 to imply gamma->1 if other directions have u_{perp jj}=0, so should really use ujj as utilde^jj, but then not really correct ff->lab conversion if using gamma for relative to ZAMO
+
+  if(q!=NULL){
+    ujjsq = fabs(q->ucon[jj]*q->ucov[jj]); // because true -1 = u^t u_t + u^r u_r + u^h u_h + u^p u_p
+    ujj = sqrt(ujjsq); //sign(q->ucon[jj])*
+
+    gammasq = fabs(-q->ucon[TT]*q->ucov[TT]);
+    gammasq = MAX(1.0,gammasq); // for near the rotating BH since not doing true orthonormal fluid frame.
+    gamma = sqrt(gammasq);
+
+
+    top=gamma + MAX(1.0,gammasq - ujjsq);
+    top=MAX(top,2.0); // numerator can be no smaller than 2
+
+    FTYPE vjj = ujj/gamma;
+    vjj = MIN(1.0,vjj);
+    bottom = (1.0+gamma)*gamma*(1.0+vjj); // ranges from 2 through infinity.  vjj cannot be negative, as that would be a different Lorentz boost the wrong way.
+    bottom = MAX(2.0,bottom);
+
+  }
+  else{
+    // assume for cases when high accuracy not required, like shock detector
+    top=1.0;
+    bottom=top;
+  }
+
+  orthofactorsq = 1.0/fabs(ptrgeom->gcon[GIND(jj,jj)]);
+  dxorthoffsq = dx[jj]*dx[jj]*orthofactorsq * ((top*top)/(bottom*bottom));
+  *tautotsq = chi*chi*dxorthoffsq;
+
+
+
+  return 0;
+
+
+}
+
+
+
+
+
+
+/// calculates total opacity over dx[] for given chi or chieff
+static int calc_tautot_chieff(FTYPE *pp, FTYPE chi, struct of_geom *ptrgeom, struct of_state *q, FTYPE *tautot, FTYPE *tautotmax)
+{
+  //xx[0] holds time
+  int NxNOT1[NDIM]={0,N1NOT1,N2NOT1,N3NOT1}; // want to ignore non-used dimensions
+
+  int jj;
   *tautotmax=0.0;
   FTYPE top,bottom;
   SLOOPA(jj){
     
-    //    orthofactor[jj] = 1.0/sqrt(fabs(ptrgeom->gcon[GIND(jj,jj)]));
- 
-    // NOTEMARK: only approximate near a rotating BH
-    //    ujj = q->ucon[jj]*orthofactor[jj];
-    // NOTEMARK: only approximate near a rotating BH
-    //    gamma = q->ucon[TT]*orthofactor[jj]; // as if *ptrgeom->alphalapse
-    // need gamma>|ujj| always, but if mixing ZAMO and lab, won't be true necessarily.
-    // need ujj->0 to imply gamma->1 if other directions have u_{perp jj}=0, so should really use ujj as utilde^jj, but then not really correct ff->lab conversion if using gamma for relative to ZAMO
-
-    if(q!=NULL){
-      ujjsq = fabs(q->ucon[jj]*q->ucov[jj]); // because true -1 = u^t u_t + u^r u_r + u^h u_h + u^p u_p
-      ujj = sqrt(ujjsq); //sign(q->ucon[jj])*
-
-      gammasq = fabs(-q->ucon[TT]*q->ucov[TT]);
-      gammasq = MAX(1.0,gammasq); // for near the rotating BH since not doing true orthonormal fluid frame.
-      gamma = sqrt(gammasq);
-
-
-      top=gamma + MAX(1.0,gammasq - ujjsq);
-      top=MAX(top,2.0); // numerator can be no smaller than 2
-
-      FTYPE vjj = ujj/gamma;
-      vjj = MIN(1.0,vjj);
-      bottom = (1.0+gamma)*gamma*(1.0+vjj); // ranges from 2 through infinity.  vjj cannot be negative, as that would be a different Lorentz boost the wrong way.
-      bottom = MAX(2.0,bottom);
-
-    }
-    else{
-      // assume for cases when high accuracy not required, like shock detector
-      top=1.0;
-      bottom=top;
-    }
-
-    dxorthoff[jj] = (dx[jj]*orthofactor[jj]) * (top/bottom);
-    tautot[jj]=chi * dxorthoff[jj];
+    tautot[jj]=
 
     *tautotmax=MAX(*tautotmax,tautot[jj]*NxNOT1[jj]);
   }
