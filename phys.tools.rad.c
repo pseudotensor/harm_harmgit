@@ -14085,10 +14085,13 @@ static int calc_tautot_chieff(FTYPE *pp, FTYPE chi, struct of_geom *ptrgeom, str
 
   int jj;
   *tautotmax=0.0;
+  FTYPE tautotsq;
   FTYPE top,bottom;
   SLOOPA(jj){
+
+    calc_tautotsq_chieff_dir(jj,pp, chi, ptrgeom, q, &tautotsq);
     
-    tautot[jj]=
+    tautot[jj]=sqrt(tautotsq);
 
     *tautotmax=MAX(*tautotmax,tautot[jj]*NxNOT1[jj]);
   }
