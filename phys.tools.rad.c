@@ -10980,13 +10980,13 @@ int vchar_rad(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYP
     // \tau_{\rm tot}^2 \approx \chi^2 [dxff^{dir} \sqrt{g_{dirdir}}]^2  where dxff is dx in fluid-frame where chi is measured
     FTYPE tautotsq,vrad2tau;
     // Note that tautot is frame independent once multiple \chi by the cell length.  I.e. it's a Lorentz invariant.
-    FTYPE tautot[NDIM];
-    FTYPE tautotmax;
-    calc_tautot_chieff(pr, chi, geom, q, tautot, &tautotmax);
-    tautotsq = tautot[dir]*tautot[dir];
+    //    FTYPE tautot[NDIM];
+    //    FTYPE tautotmax;
+    //    calc_tautot_chieff(pr, chi, geom, q, tautot, &tautotmax);
+    //    tautotsq = tautot[dir]*tautot[dir];
 
     // below previous version was not Lorentz invariant.
-    //    tautotsq = chi*chi * dx[dir]*dx[dir]*fabs(geom->gcov[GIND(dir,dir)]);
+    tautotsq = chi*chi * dx[dir]*dx[dir]*fabs(geom->gcov[GIND(dir,dir)]);
 
     //    dualfprintf(fail_file,"chi=%g dx=%g dir=%d tautot=%g\n",chi,dx[dir],dir,sqrt(tautotsq));
   
