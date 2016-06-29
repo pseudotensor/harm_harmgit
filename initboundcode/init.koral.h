@@ -1084,11 +1084,8 @@ struct Ccoordparams {
 // N1=70 if using 1.5*hor - 30 (or 27.8)
 #define N1 8
 #define N2 8
-#define N3 8
+#define N3 8 //jane:test run
 
-   //#define N1 128
-//#define N2 64
-//#define N3 1
 
 // can choose any spherical polar coordinate system
 //#define MCOORD SPCMINKMETRIC
