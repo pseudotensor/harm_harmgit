@@ -2962,7 +2962,7 @@ int extrapfunc(int boundary, int j,int k,
 
       PBOUNDLOOP(pliter,pl){
         // MUST BE POSITIVE DEFINITE!!!
-        if(pl!=B1 && pl!=B2 && pl!=B3 && pl!=URAD1 && pl!=URAD2 && pl!=URAD3 && DENSITYPL(pl)==0){
+        if(pl!=B1 && pl!=B2 && pl!=B3 && pl!=URAD1 && pl!=URAD2 && pl!=URAD3 && SCALARPL(pl)==0){
 
           // only use linear if exponentiation causes growth of value, not decreasion
           ftemp = exp(-signdq*dqlogdensity[pl]) - POWERRATIO;

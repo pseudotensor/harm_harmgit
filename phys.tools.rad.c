@@ -64,14 +64,13 @@ struct of_method {
 #define JACNPR (NDIM + (NRAD>=0) ) // maximum number of terms in Jacobian
 #define JACALLLOOP(pl) for(pl=0;pl<JACNPR;pl++)
 
-#define JACNUMTYPES 5 // number of types of jacobian or f related loops
+#define JACNUMTYPES 2 // number of types of jacobian or f related loops
 #define JACTYPELOOP(type) for(type=0;type<JACNUMTYPES;type++)
 
 #define JNORMALTYPE 0 // normal pl's that appear in jacobian
-#define JALTTYPE 1
-#define JSUPERFULLTYPE 2
-#define JFULLERRORTYPE 3
-#define JSUBERRORTYPE 4
+//#define JSUPERFULLTYPE 2
+#define JFULLERRORTYPE 1
+//#define JSUBERRORTYPE 4
 
 
 struct of_refU {
@@ -1231,7 +1230,7 @@ static void define_method(int iter, int *eomtype, int itermode, int baseitermeth
 #define JACLOOP(pliter,pl) JACLOOPGEN(JNORMALTYPE,pliter,pl) // goes over terms in jacobian
 // Loop used for contraction of iJ[ii][jj] and f[jj] to get update[ii] to uu[ii] or for debug to print iJ
 // Loop also to create sub-array
-#define JACLOOP2D(pl2iter,pl2,pliter,pl) JACLOOPGEN(JNORMALTYPE,pliter,pl) JACLOOPGEN(JNORMALTYPE,pl2iter,pl2) // goes over terms in jacobian
+#define JACLOOP2D(pliter,pl,pl2iter,pl2) JACLOOPGEN(JNORMALTYPE,pliter,pl) JACLOOPGEN(JNORMALTYPE,pl2iter,pl2) // goes over terms in jacobian
 
 // error over all f's whether used in jacobian or not.  Not over primitives.
 //#define JACLOOPSUPERFULL(pliter,pl) JACLOOPGEN(JSUPERFULLTYPE,pliter,pl)
@@ -5022,7 +5021,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
 
 
-#if(PRODUCTION==0)
+#if(PRODUCTION==0&&0) // no longer accurate because of non-"CONST" versions.  Still useful potentially for debugging if hold varying errors as constant.
   if(errorabs[WHICHERROR]>IMPALLOWCONVCONSTABS && (usedenergy||usedentropy||usedcold)){
     dualfprintf(fail_file,"WTF2: %g : %d %d %d : %d %d\n",errorabs[WHICHERROR],usedenergy,usedentropy,usedcold,usedrameshenergy,usedrameshentropy);
     myexit(666);
@@ -5422,6 +5421,7 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
 
   // some geometry stuff to store pre-step instead of for each step.
   int pliter,pl;
+  int pl2iter,pl2;
   int jjdim;
   FTYPE dimfactU[NPR];
   PLOOP(pliter,pl) dimfactU[pl]=1.0; // default (applies to scalar-like quantities)
@@ -6603,7 +6603,7 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
                   }
                 }
                 int kkiter;
-                PLOOP(pliter,pl) PLOOP(pli2iter,pl2) jaclistd[debugiter][pl][pl2]=iJ[pl][pl2];
+                PLOOP(pliter,pl) PLOOP(pl2iter,pl2) jaclistd[debugiter][pl][pl2]=iJ[pl][pl2];
                 implicititerlist[debugiter]=mtd->implicititer;
                 implicitferrlist[debugiter]=mtd->implicitferr;
                 fracdamplist[0]=fracdtuu0;
@@ -7011,7 +7011,7 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
                   pppreholdlist[debugiter][URAD1+jj-1]=q->uradcon[jj];
                 }
               }
-              PLOOP(pliter,pl) PLOOP(pli2iter,pl2)  jaclistd[debugiter][pl][pl2]=iJ[pl][pl2];
+              PLOOP(pliter,pl) PLOOP(pl2iter,pl2)  jaclistd[debugiter][pl][pl2]=iJ[pl][pl2];
               implicititerlist[debugiter]=mtd->implicititer;
               implicitferrlist[debugiter]=mtd->implicitferr;
               fracdamplist[0]=fracdtuu0;
@@ -7333,7 +7333,7 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
               if(debugfail>=DEBUGLEVELIMPSOLVERMORE){
                 if(convreturnf3limit && debugfail>=3){
                   dualfprintf(fail_file,"f3limit good\n");
-                  if(POSTNEWTONCONVCHECK==1) JACLOOP(iiter,ii) dualfprintf(fail_file,"ii=%d f3=%21.15g f3norm=%21.15g f3report=%21.15g\n",ii,f3[ii],f3norm[ii],f3report[ii]);          
+                  if(POSTNEWTONCONVCHECK==1) JACLOOP(iiiter,ii) dualfprintf(fail_file,"ii=%d f3=%21.15g f3norm=%21.15g f3report=%21.15g\n",ii,f3[ii],f3norm[ii],f3report[ii]);          
                 }
                 if(convreturnf1) dualfprintf(fail_file,"f1 good: ijknstepsteppart=%d %d %d %ld %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart);
                 if(convreturnf3limit) dualfprintf(fail_file,"f3 good: ijknstepsteppart=%d %d %d %ld %d\n",ptrgeom->i,ptrgeom->j,ptrgeom->k,nstep,steppart);
@@ -8038,7 +8038,7 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
     failnum++; mathematica_report_check(*radinvmod, mathfailtype, failnum, gotfirstnofail, eomtypelocal, itermode, *baseitermethod, errorabsf1, errorabsbestexternal, iter, totaliters, realdt, ptrgeom, ppfirst,pp,pb,piin,prtestUiin,prtestUU0,uu0,uu,Uiin,Ufin, CUf, CUimp, q, dUother);
 #if(DEBUGMAXITER)
     int usedebugiter=debugiteratteempts[0];
-    showdebuglist(usedebugiter,pppreholdlist,ppposholdlist,f1reportlist,f1list,errorabsf1list,errorallabsf1list,realiterlist,jaclist,fracdamplist,implicititerlist, implicitferrlist);
+    showdebuglist(usedebugiter,pppreholdlist,ppposholdlist,f1reportlist,f1list,errorabsf1list,errorallabsf1list,realiterlist,jaclistd,fracdamplist,implicititerlist, implicitferrlist);
 #endif
 
     // report how much MHD inversion used when failed
@@ -8106,10 +8106,10 @@ static void showdebuglist(int debugiter, FTYPE (*pppreholdlist)[NPR],FTYPE (*ppp
                   ,errorabsf1list[listiter]
                   ,errorallabsf1list[listiter]
                   ,umin
-                  ,jaclist[listiter][0][0]
-                  ,jaclist[listiter][1][1]
-                  ,jaclist[listiter][2][2]
-                  ,jaclist[listiter][3][3]
+                  ,jaclist[listiter][1][1] // UU
+                  ,jaclist[listiter][2][2] // U1
+                  ,jaclist[listiter][3][3] // U2
+                  ,jaclist[listiter][4][4] // U3
                   ,fracdamplist[0] // fracdtuu0
                   ,fracdamplist[1] // fracdtG
                   ,fracdamplist[2] // DAMPFACTOR
@@ -9214,7 +9214,7 @@ static int get_implicit_iJ(int allowbaseitermethodswitch, int failreturnallowabl
         if(badcond){
           JACLOOP(iiiter,ii){
             dualfprintf(fail_file,"JISNAN: iter=%d startjac=%d endjac=%d ii=%d jj=%d irefU[jj]=%d irefU[ii]=%d : xjac[0]: %21.15g :  xjac[1]: %21.15g : x=%21.15g (del=%21.15g localIMPEPS=%21.15g) : f2[0]=%21.15g f2[1]=%21.15g J=%21.15g : f2norm[0]=%21.15g f2norm[1]=%21.15g\n",
-                        iter,ru->startjac,ru->endjac,
+                        iter,ru->jacstart[JNORMALTYPE],ru->jacend[JNORMALTYPE],
                         ii,jj,jj,ii,
                         xjac[0][jj],
                         xjac[1][jj],
@@ -9241,7 +9241,7 @@ static int get_implicit_iJ(int allowbaseitermethodswitch, int failreturnallowabl
 #if(PRODUCTION==0)
     if(showmessagesheavy){
       dualfprintf(fail_file,"POSTJAC: x: %21.15g %21.15g %21.15g %21.15g : x=%21.15g %21.15g %21.15g %21.15g\n",x[ru->irefU[0]],x[ru->irefU[1]],x[ru->irefU[2]],x[ru->irefU[3]],x[ru->irefU[0]],x[ru->irefU[1]],x[ru->irefU[2]],x[ru->irefU[3]]);
-      int iii,jjj;
+      int iiiiter,iii,jjjiter,jjj;
       JACLOOP2D(iiiiter,iii,jjjiter,jjj) dualfprintf(fail_file,"J[%d][%d]=%21.15g\n",iii,jjj,J[iii][jjj]);
     }
 #endif
@@ -9259,8 +9259,8 @@ static int get_implicit_iJ(int allowbaseitermethodswitch, int failreturnallowabl
     // copy over matrix to sub (up to) smaller only-needed version
     FTYPE Jsub[JACNPR][JACNPR];
     FTYPE iJsub[JACNPR][JACNPR];
-    int beginjac=ru->jacend[JNORMALTYPE];
-    int endjac=ru->jacstart[JNORMALTYPE];
+    int beginjac=ru->jacstart[JNORMALTYPE];
+    int endjac=ru->jacend[JNORMALTYPE];
     JACLOOP2D(iiiter,ii,jjiter,jj) Jsub[iiiter-beginjac][jjiter-beginjac]=J[ii][jj];
     int normalsize=endjac - beginjac  + 1;
 
@@ -9329,8 +9329,8 @@ static int get_implicit_iJ(int allowbaseitermethodswitch, int failreturnallowabl
         if(debugfail>=2) dualfprintf(fail_file,"f_implicit for f2 failed to be different enough from f1 and gave singular Jacobian: IMPEPSSTART=%g (giving del=%g)\n",IMPEPSSTART,del);
         if(debugfail>=2 || showmessagesheavy){
           dualfprintf(fail_file,"POSTJAC1: x: %21.15g %21.15g %21.15g %21.15g : x=%21.15g %21.15g %21.15g %21.15g\n",x[ru->irefU[0]],x[ru->irefU[1]],x[ru->irefU[2]],x[ru->irefU[3]],x[ru->irefU[0]],x[ru->irefU[1]],x[ru->irefU[2]],x[ru->irefU[3]]);
-          int iiiter,iii,jjjiter,jjj;
-          JACLOOP2D(iiiter,iii,jjiter,jjj){
+          int iiiiter,iii,jjjiter,jjj;
+          JACLOOP2D(iiiiter,iii,jjjiter,jjj){
             dualfprintf(fail_file,"2Tried: iii=%d jjj=%d (%d %d) : Jsub=%g\n",iiiter-beginjac,jjiter-beginjac,Jsub[iiiter-beginjac][jjiter-beginjac]);
           }
         }
@@ -9344,8 +9344,8 @@ static int get_implicit_iJ(int allowbaseitermethodswitch, int failreturnallowabl
         if(debugfail>=2) dualfprintf(fail_file,"inverse_44matrix(J,iJ) failed with eomtypelocallocal=%d, trying IMPEPSSTART=%g :: ijk=%d %d %d\n",eomtypelocallocal,IMPEPSSTART,ptrgeom->i,ptrgeom->j,ptrgeom->k);
         if(debugfail>=2 || showmessagesheavy){
           dualfprintf(fail_file,"POSTJAC2: x: %21.15g %21.15g %21.15g %21.15g : x=%21.15g %21.15g %21.15g %21.15g\n",x[ru->irefU[0]],x[ru->irefU[1]],x[ru->irefU[2]],x[ru->irefU[3]],x[ru->irefU[0]],x[ru->irefU[1]],x[ru->irefU[2]],x[ru->irefU[3]]);
-          int iiiter,iii,jjjiter,jjj;
-          JACLOOP2D(iiiter,iii,jjiter,jjj){
+          int iiiiter,iii,jjjiter,jjj;
+          JACLOOP2D(iiiiter,iii,jjjiter,jjj){
             dualfprintf(fail_file,"2Tried: iii=%d jjj=%d (%d %d) : Jsub=%g\n",iiiter-beginjac,jjiter-beginjac,Jsub[iiiter-beginjac][jjiter-beginjac]);
           }
           JACLOOP(iiiiter,iii) dualfprintf(fail_file,"predel[%d]=%21.15g\n",iii,predel[iii]);
@@ -9365,8 +9365,8 @@ static int get_implicit_iJ(int allowbaseitermethodswitch, int failreturnallowabl
       if(debugfail>=2) dualfprintf(fail_file,"Failed to get inverse Jacobian with fulljaciter=%d with IMPEPSSTART=%g (giving del=%g)\n",fulljaciter,IMPEPSSTART,del);
       if(debugfail>=2 || showmessagesheavy){
         dualfprintf(fail_file,"POSTJAC3: x: %g %g %g %g : x=%g %g %g %g\n",x[ru->irefU[0]],x[ru->irefU[1]],x[ru->irefU[2]],x[ru->irefU[3]],x[ru->irefU[0]],x[ru->irefU[1]],x[ru->irefU[2]],x[ru->irefU[3]]);
-        int iiiter,iii,jjjiter,jjj;
-        JACLOOP2D(iiiter,iii,jjiter,jjj){
+        int iiiiter,iii,jjjiter,jjj;
+        JACLOOP2D(iiiiter,iii,jjjiter,jjj){
           dualfprintf(fail_file,"2Tried: iii=%d jjj=%d (%d %d) : Jsub=%g\n",iiiter-beginjac,jjiter-beginjac,Jsub[iiiter-beginjac][jjiter-beginjac]);
         }
       }
