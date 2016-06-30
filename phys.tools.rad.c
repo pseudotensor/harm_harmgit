@@ -10831,8 +10831,8 @@ static void calc_Trad_fromRuuandgamma(FTYPE *pp, struct of_geom *ptrgeom, FTYPE 
   // 0 = assume 0 chemical potential.
   // 1 = account for finite chemical potential using Ramesh fit
   // 2 = like 1 but Jon fit without divergent issues.
-  // But 1,2 only change T_r by 10% at most for any Ruu,nradff, and would have to include chemical potential in opacity and use (say Jon's) chemical potential vs. Ruu,nradff fit and have \kappa(Tg,Tr,\mu).  So avoid.
-#define TRADTYPE 0
+  // But 1,2 only change T_r by 10% at most for any Ruu,nradff, and would have to include chemical potential in opacity and use (say Jon's) chemical potential vs. Ruu,nradff fit and have \kappa(Tg,Tr,\mu).
+#define TRADTYPE 2
   
 #if(TRADTYPE==0)
   Tradff = Ruu/(nradff*EBAR0); // EBAR0 kb T = Ruu/nradff = average energy per photon
@@ -10846,6 +10846,7 @@ static void calc_Trad_fromRuuandgamma(FTYPE *pp, struct of_geom *ptrgeom, FTYPE 
   //if(EBAR1<0.5*EBAR0) EBAR1=0.5*EBAR0; // hard cut but at lower value, allowing a bit lower than BB value that is rare but avoids Jacobian problems
   Tradff = Ruu/(SMALL+nradff*EBAR1); // Accounts for non-zero chemical potential of photons giving them higher average energy per photon than thermal case for a given temperature
 #elif(TRADTYPE==2)
+  FTYPE CRAD = CRAD0*ARAD_CODE;
   Tradff = (Ruu*(0.333333333327962 + 0.060724957534625555/(0.6467556546674441 + (0.12198190033984817*CRAD*Power(Ruu,3))/Power(SMALL+nradff,4))))/(SMALL+nradff);
   expfactorradff = 1.6467556546674442/(0.6467556546674441 + (0.12198190033984817*CRAD*Power(Ruu,3))/Power(SMALL+nradff,4));
   if(expfactorradff>1.0) expfactorradff=1.0; // account for BE condensation.
