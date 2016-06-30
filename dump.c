@@ -1204,17 +1204,13 @@ extern void set_fieldline_content_dnumcolumns_dnumversion(int *numcolumnsvar, in
 
 /// dump.c's fieldlinedump()
 /// CHANGES alot, make sure # is correct!
-/// Add 4 radiation terms if doing radiation
-#if( FIELDLINEGDETB == 1)
-#define NUMFIELDLINEQUANTITIES (14-2 + NUMYFL*(DOYFL!=0) + (DOYL!=0) + (DOYNU!=0) + (1+NDIM+11)*(EOMRADTYPE!=EOMRADNONE))
-/// rho, u, <yfl,yl,ynu>, u^t, v1,v2,v3,B1,B2,B3 <gdetB1,gdetB2,gdetB3>
-/// radiation adds: vrad1,vrad2,vrad3
-#else
-#define NUMFIELDLINEQUANTITIES (11-2 + NUMYFL*(DOYFL!=0) + (DOYL!=0) + (DOYNU!=0) + (1+NDIM+11)*(EOMRADTYPE!=EOMRADNONE))
-/// rho, u, <yfl,yl,ynu>, u^t, v1,v2,v3,B1,B2,B3
-/// radiation adds: vrad1,vrad2,vrad3
-#endif
 
+  int NUMFIELDLINEQUANTITIES= 2 +(YFL1>=0)+(YFL2>=0)+(YFL3>=0)+(YFL4>=0)+(YFL5>=0) + (DOYL!=0) + (DOYNU!=0) + NDIM + (NDIM-1) + (1*(NRAD>=0)+1+NDIM+11)*(EOMRADTYPE!=EOMRADNONE) ;
+
+  if( FIELDLINEGDETB == 1){
+    // adds <gdetB1,gdetB2,gdetB3>
+    NUMFIELDLINEQUANTITIES += (NDIM-1);
+  }
 
 
   if(DOFIELDLINE){
