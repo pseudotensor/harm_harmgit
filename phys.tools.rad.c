@@ -718,6 +718,7 @@ static FTYPE calc_approx_ratchangeRtt(struct of_state *q, FTYPE chieff, FTYPE re
 
 static int get_implicit_iJ(int allowbaseitermethodswitch, int failreturnallowableuse, int showmessages, int showmessagesheavy, int allowlocalfailurefixandnoreport, int *eomtypelocal, int whichcap, int itermode, int *baseitermethod, FTYPE fracenergy, FTYPE dissmeasure, FTYPE impepsjac, FTYPE trueimptryconv, FTYPE trueimptryconvabs, FTYPE trueimpallowconvabs, int trueimpmaxiter, int iter, FTYPE errorabs, FTYPE errorallabs, int whicherror, int dimtypef, FTYPE *dimfactU, FTYPE *Uiin, FTYPE *uu, FTYPE *uup, FTYPE *uu0, FTYPE *piin, FTYPE *pp, FTYPE *ppp, FTYPE fracdtG, FTYPE realdt, struct of_geom *ptrgeom, struct of_state *q, FTYPE *f1, FTYPE *f1norm, FTYPE (*iJ)[NPR], int *nummhdinvsreturn, struct of_method *mtd, struct of_refU *ru);
 
+static void matrix_inverse_55(FTYPE (*genmatrixlower)[5], FTYPE (*genmatrixupper)[5]);
 static int inverse_33matrix(int sj, int ej, FTYPE aa[][NDIM], FTYPE ia[][NDIM]);
 static int inverse_11matrix(int sj, int ej, FTYPE aa[][NDIM], FTYPE ia[][NDIM]);
 
@@ -9266,16 +9267,15 @@ static int get_implicit_iJ(int allowbaseitermethodswitch, int failreturnallowabl
     int normalsize=endjac - beginjac  + 1;
 
     // Jsub we pass always starts at 0 index and goes through normalsize-1 index
-    if(normalsize>=NDIM+1){ // probably number-energy-momentum
+    if(normalsize==5){ // probably number-energy-momentum
       // inverse *and* transpose index order, so J[f][p] ->  iJ[p][f]
-      extern void matrix_inverse_gen(int truedim, FTYPE (*genmatrixlower)[NDIM], FTYPE (*genmatrixupper)[NDIM]); // metric.tools.c
-      matrix_inverse_gen(normalsize,Jsub,iJsub); // Jon's use of numerical recipes -- TODOMARK: should check if faster than direct methods for 4x4 etc.
+      matrix_inverse_55(Jsub,iJsub); // Jon's use of numerical recipes -- TODOMARK: should check if faster than direct methods for 4x4 etc.
     }    
-    else if(normalsize==NDIM){ // probably energy-momentum
+    else if(normalsize==4){ // probably energy-momentum
       // inverse *and* transpose index order, so J[f][p] ->  iJ[p][f]
       failreturn=inverse_44matrix(Jsub,iJsub);
     }    
-    else if(normalsize==NDIM-1){ // probably momentum only
+    else if(normalsize==3){ // probably momentum only
       // inverse *and* transpose index order, so J[f][p] ->  iJ[p][f]
       failreturn=inverse_33matrix(beginjac,endjac,Jsub,iJsub);
     }    
@@ -11176,6 +11176,71 @@ FTYPE my_sign(FTYPE x)
 
 
 
+/* invert genmatrixlower to get genmatrixupper */
+// can be used to invert any 2nd rank tensor (symmetric or not)
+// actually returns the inverse transpose, so if
+// genmatrixlower=T^j_k then out pops (iT)^k_j such that T^j_k (iT)^k_l = \delta^j_l
+static void matrix_inverse_55(FTYPE (*genmatrixlower)[5], FTYPE (*genmatrixupper)[5])
+{
+  int pl,pliter;
+  int j, k;
+  int truedim=5;
+
+
+#if(USEOPENMP)
+  // maintain thread safety
+  FTYPE **tmp;
+  tmp = dmatrix(1, truedim, 1, truedim);
+#else
+  static int firstc = 1;
+  static FTYPE **tmp;
+  if (firstc) {
+    tmp = dmatrix(1, truedim, 1, truedim);
+    firstc = 0;
+  }
+#endif
+
+
+#define INVERSELOOP(j,k,truedim) for(j=0;j<truedim;j++) for(k=0;k<truedim;k++) 
+
+  INVERSELOOP(j,k,truedim) tmp[j + 1][k + 1] = genmatrixlower[j][k];
+  
+
+  // 0-out all genmatrixupper
+  INVERSELOOP(j,k,truedim) genmatrixupper[j][k]=0.0;
+
+
+  if(gaussj(tmp, truedim, NULL, 0)){
+    // then singular
+    dualfprintf(fail_file,"Singularity\n");
+     dualfprintf(fail_file,"inputmatrix[%d][%d]=%21.15g\n",j,k,genmatrixlower[j][k]);
+    myexit(2715);
+  }
+  else{
+    // assign but also transpose (shouldn't do in general, confusing)
+    //INVERSELOOP(j,k,truedim) genmatrixupper[j][k] = tmp[k + 1][j + 1];
+    INVERSELOOP(j,k,truedim) genmatrixupper[j][k] = tmp[j + 1][k + 1];
+  }
+
+
+#if(PRODUCTION==0) // check for nan's
+  INVERSELOOP(j,k,truedim) if(!finite(genmatrixupper[j][k])){
+    dualfprintf(fail_file,"Came out of matrix_inverse_gen with inf/nan for genmatrixupper at j=%d k=%d\n",j,k);
+    myexit(5);
+  }
+#endif
+
+
+
+
+#if(USEOPENMP)
+  // maintain thread safety
+  free_dmatrix(tmp, 1, truedim, 1, truedim);
+#endif
+
+
+
+}
 
 ///**********************************************************************
 ///**********************************************************************
