@@ -10206,7 +10206,8 @@ FTYPE calc_kappa_user(FTYPE rho, FTYPE B, FTYPE Tg,FTYPE Tr,FTYPE varexpf, FTYPE
 #if(WHICHPROBLEM==RADDONUT)
   return(kappa_func_fits(ISKAPPAEEMIT,rho,B,Tg,Tr,varexpf));
 #else
-  return(KAPPAUSER(rho,B,Tg,Tr));
+  // if not using explicit emission kappa, then Tr must be set to Tg
+  return(KAPPAUSER(rho,B,Tg,Tg));
 #endif
 
 }
@@ -10236,7 +10237,8 @@ FTYPE calc_kappa_user(FTYPE rho, FTYPE B, FTYPE Tg,FTYPE Tr,FTYPE varexpf, FTYPE
 #if(WHICHPROBLEM==RADDONUT)
   return(kappa_func_fits(ISKAPPANEMIT,rho,B,Tg,Tr,varexpf));
 #else
-  return(KAPPANUSER(rho,B,Tg,Tr));
+  // if not using explicit emission kappa, then Tr must be set to Tg
+  return(KAPPANUSER(rho,B,Tg,Tg));
 #endif
 
 }

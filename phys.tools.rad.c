@@ -10401,10 +10401,11 @@ void calc_Tandopacityandemission(FTYPE *pr, struct of_geom *ptrgeom, struct of_s
 
   // energy density loss rate integrated over frequency and solid angle, based upon those processes written as an opacity
   // below lambda and nlambda now generally true
-  *lambda = (*kappaemit)*calc_LTE_EfromT(*Tradff);
+  //calc_LTE_{EN}fromT() have Tgas inputted, because those are emission opacities.  Even though general fitting and integration may have been done with separate Tg and Trad (that appears in photon distribution), the emission opacities reduce the absorption opacities to Planck at Tg.  If Trad appears separately (like for DC), that appears in kappa term that depends upon Tradff.  But the denominator that was used to calculate kappa reduces to an integral over BE(Tgas,mu=0)=B(Tgas)
+  *lambda = (*kappaemit)*calc_LTE_EfromT(*Tgas);
 
 #if(EVOLVENRAD)
-  *nlambda = (*kappanemit)*calc_LTE_NfromT(*Tradff);
+  *nlambda = (*kappanemit)*calc_LTE_NfromT(*Tgas);
 #endif
 
 #else // WHICHFIT==ISFITORIG
@@ -10426,7 +10427,7 @@ void calc_Tandopacityandemission(FTYPE *pr, struct of_geom *ptrgeom, struct of_s
   //  FTYPE B=0.25*ARAD_CODE*pow(Tgas,4.)/Pi;
 
   // energy density loss rate integrated over frequency and solid angle, based upon those processes written as an opacity
-  *lambda = (*kappaemit)*calc_LTE_EfromT(*Tradff);  //(4.*Pi*B); / i.e. 4\pi B = arad Trad^4
+  *lambda = (*kappaemit)*calc_LTE_EfromT(*Tgas);  //(4.*Pi*B); / i.e. 4\pi B = arad Trad^4
 
 
 #if(EVOLVENRAD)
@@ -10440,7 +10441,7 @@ void calc_Tandopacityandemission(FTYPE *pr, struct of_geom *ptrgeom, struct of_s
   //  FTYPE ebar = EBAR0 * (TEMPMIN+*Tgas);
   //  // result based upon opacity-based calculation of lambda, so includes free-free, bound-free, bound-bound, etc.
   //  *nlambda = (*lambda)/ebar;
-  *nlambda = (*kappanemit)*calc_LTE_NfromT(*Tradff);
+  *nlambda = (*kappanemit)*calc_LTE_NfromT(*Tgas);
 #endif
 
 
