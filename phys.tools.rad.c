@@ -10930,7 +10930,11 @@ int vchar_rad(FTYPE *pr, struct of_state *q, int dir, struct of_geom *geom, FTYP
     //    vrad2limited=MIN(vrad2,vrad2tau); // sharp transition
     //    FTYPE berthonterm=(1.0+1.5*tautot[dir]);
     //    vrad2limited=vrad2/(berthonterm*berthonterm); // Berthon et al. 2007 and Rosdahl & Teyssier 2015.  So smooth transition.  Notice this is also as if 2/3 as expected (see above).
-    FTYPE berthontermsq=(1.0+1.5*1.5*tautotsq); // so don't have to take square root to get tautot.  Still has same asymptotic behavior.
+    //    FTYPE berthontermsq=(1.0+1.5*1.5*tautotsq); // so don't have to take square root to get tautot.  Still has same asymptotic behavior.
+    //    vrad2limited=vrad2/(berthontermsq); // Berthon et al. 2007 and Rosdahl & Teyssier 2015.  So smooth transition.  Notice this is also as if 2/3 as expected (see above).
+
+    // Noticed RADBONDI fails pretty badly with (2/3) type coefficient, so revert to (4/3)
+    FTYPE berthontermsq=(1.0+0.75*0.75*tautotsq); // so don't have to take square root to get tautot.  Still has same asymptotic behavior.
     vrad2limited=vrad2/(berthontermsq); // Berthon et al. 2007 and Rosdahl & Teyssier 2015.  So smooth transition.  Notice this is also as if 2/3 as expected (see above).
     
 
