@@ -493,7 +493,7 @@
 
 // total + pake + en + em + rad
 #define NUMPHYSICALFLUXTERMS (1  +  1+1+1 + (EOMRADTYPE!=EOMRADNONE))
-#define NUMFLUXESTOSAVE (1 + 2 + (EOMRADTYPE!=EOMRADNONE)*2 + NUMYFL*(DOYFL!=0) + (DOYL!=0) + (DOYNU!=0) )
+#define NUMFLUXESTOSAVE (1 + 2 + (EOMRADTYPE!=EOMRADNONE)*(2+(NRAD>0)) + NUMYFL*(DOYFL!=0) + (DOYL!=0) + (DOYNU!=0) )
 #define FLUXESTOSAVEPL(pl) (pl==RHO || pl==UU || pl==U3 || pl==URAD0 || pl==URAD3 || pl==NRAD || YFLPL(pl) || pl==YL || pl==YNU)
 
 #if(FLUXDUMP==0)

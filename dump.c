@@ -1834,7 +1834,7 @@ void set_raddump_content_dnumcolumns_dnumversion(int *numcolumnsvar, int *numver
 {
 
   if(EOMRADTYPE!=EOMRADNONE && DORADDIAG){
-    *numcolumnsvar=NDIM*5 + 6 + 9 + NDIM+1 + 4*3;
+    *numcolumnsvar=NDIM*2 +(NDIM+(NRAD>=0)) + NDIM*2 + 6 + 9 + NDIM+1 + 4*3;
   }
   else{
     *numcolumnsvar=0;
