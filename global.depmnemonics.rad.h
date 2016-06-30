@@ -92,7 +92,8 @@
 #define MUMEANNEUTRAL (1.0/(XFACT + 0.25*YFACT + AVG1OAJ*ZFACT))
 #define MUMEANIONIZED (1.0/(2.0*XFACT + 0.75*YFACT + 0.5*ZFACT))
 // n_b = \rho_0/(\mu_{mean} m_a)
-#define MUMEAN (MUMEANIONIZED) // ASSUMPTION: fully ionized // CHOICE
+//#define MUMEAN (MUMEANIONIZED) // ASSUMPTION: fully ionized // CHOICE
+//#define MUMEAN (1.0) // default
 
 /// while avoids singular behavior, can make inversion unable to reach solution and get locked in cycles due to bad Jacobian, etc.
 //#define TEMPMINKELVIN (1.0E+2) // Kelvin // Problem with consistency in error function and entropy estimate for URAD method.

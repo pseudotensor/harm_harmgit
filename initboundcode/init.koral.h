@@ -1064,6 +1064,12 @@ struct Ccoordparams {
 
 #elif(WHICHPROBLEM==RADDONUT)
 
+#undef MUMEAN
+#define MUMEAN (MUMEANIONIZED) // ASSUMPTION: fully ionized // CHOICE
+
+#undef WHICHFIT
+#define WHICHFIT ISFITNEW // use new fits for radiation donut (fits depend upon other things in global.depmnemonics.rad.h)
+
 #undef DOCOMPTON
 #define DOCOMPTON 1 // enable thermal Comptonization
 
