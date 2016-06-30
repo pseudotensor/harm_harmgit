@@ -2025,8 +2025,15 @@ int init_global(void)
     BCtype[X1UP]=RADBONDIINFLOW;
     //    BCtype[X1DN]=OUTFLOW;
     BCtype[X1DN]=HORIZONOUTFLOW; // although more specific extrapolation based upon solution might work better
+
+    // below for 1D Bondi
     BCtype[X2UP]=PERIODIC;
     BCtype[X2DN]=PERIODIC;
+
+    // below for 2D Bondi
+    //    BCtype[X2UP]=POLARAXIS;
+    //    BCtype[X2DN]=POLARAXIS;
+
     // BCtype[X3UP]=FREEOUTFLOW;
     BCtype[X3UP]=OUTFLOW;
     BCtype[X3DN]=OUTFLOW;
