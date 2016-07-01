@@ -718,9 +718,10 @@ static FTYPE calc_approx_ratchangeRtt(struct of_state *q, FTYPE chieff, FTYPE re
 
 static int get_implicit_iJ(int allowbaseitermethodswitch, int failreturnallowableuse, int showmessages, int showmessagesheavy, int allowlocalfailurefixandnoreport, int *eomtypelocal, int whichcap, int itermode, int *baseitermethod, FTYPE fracenergy, FTYPE dissmeasure, FTYPE impepsjac, FTYPE trueimptryconv, FTYPE trueimptryconvabs, FTYPE trueimpallowconvabs, int trueimpmaxiter, int iter, FTYPE errorabs, FTYPE errorallabs, int whicherror, int dimtypef, FTYPE *dimfactU, FTYPE *Uiin, FTYPE *uu, FTYPE *uup, FTYPE *uu0, FTYPE *piin, FTYPE *pp, FTYPE *ppp, FTYPE fracdtG, FTYPE realdt, struct of_geom *ptrgeom, struct of_state *q, FTYPE *f1, FTYPE *f1norm, FTYPE (*iJ)[NPR], int *nummhdinvsreturn, struct of_method *mtd, struct of_refU *ru);
 
-static void matrix_inverse_55(FTYPE (*genmatrixlower)[5], FTYPE (*genmatrixupper)[5]);
-static int inverse_33matrix(int sj, int ej, FTYPE aa[][NDIM], FTYPE ia[][NDIM]);
-static int inverse_11matrix(int sj, int ej, FTYPE aa[][NDIM], FTYPE ia[][NDIM]);
+static int matrix_inverse_55(FTYPE aa[][JACNPR], FTYPE ia[][JACNPR]);
+static int inverse_44matrix(int sj, int ej, FTYPE aa[][JACNPR], FTYPE ia[][JACNPR]);
+static int inverse_33matrix(int sj, int ej, FTYPE aa[][JACNPR], FTYPE ia[][JACNPR]);
+static int inverse_11matrix(int sj, int ej, FTYPE aa[][JACNPR], FTYPE ia[][JACNPR]);
 
 
 static int f_error_check(int showmessages, int showmessagesheavy, int iter, FTYPE conv, FTYPE convabs, FTYPE realdt, int dimtypef, int eomtype, int radinvmod, int itermode, int baseitermethod, FTYPE fracenergy, FTYPE dissmeasure, FTYPE *dimfactU, FTYPE *pp, FTYPE *piin, FTYPE *f1, FTYPE *f1norm, FTYPE *f1report, FTYPE *Uiin, FTYPE *uu0, FTYPE *uu, struct of_geom *ptrgeom, FTYPE *errorabs, FTYPE *errorallabs, int whicherror, struct of_method *mtd, struct of_refU *ru);
@@ -9281,11 +9282,11 @@ static int get_implicit_iJ(int allowbaseitermethodswitch, int failreturnallowabl
     // Jsub we pass always starts at 0 index and goes through normalsize-1 index
     if(normalsize==5){ // probably number-energy-momentum
       // inverse *and* transpose index order, so J[f][p] ->  iJ[p][f]
-      matrix_inverse_55(Jsub,iJsub); // Jon's use of numerical recipes -- TODOMARK: should check if faster than direct methods for 4x4 etc.
+      failreturn=matrix_inverse_55(Jsub,iJsub); // Jon's use of numerical recipes -- TODOMARK: should check if faster than direct methods for 4x4 etc.
     }    
     else if(normalsize==4){ // probably energy-momentum
       // inverse *and* transpose index order, so J[f][p] ->  iJ[p][f]
-      failreturn=inverse_44matrix(Jsub,iJsub);
+      failreturn=inverse_44matrix(beginjac,endjac,Jsub,iJsub);
     }    
     else if(normalsize==3){ // probably momentum only
       // inverse *and* transpose index order, so J[f][p] ->  iJ[p][f]
@@ -11213,11 +11214,19 @@ FTYPE my_sign(FTYPE x)
 // can be used to invert any 2nd rank tensor (symmetric or not)
 // actually returns the inverse transpose, so if
 // genmatrixlower=T^j_k then out pops (iT)^k_j such that T^j_k (iT)^k_l = \delta^j_l
-static void matrix_inverse_55(FTYPE (*genmatrixlower)[5], FTYPE (*genmatrixupper)[5])
+static int matrix_inverse_55(FTYPE (*genmatrixlower)[JACNPR], FTYPE (*genmatrixupper)[JACNPR])
 {
   int pl,pliter;
   int j, k;
   int truedim=5;
+
+#if(PRODUCTION==0)
+  if(truedim!=JACNPR){
+    dualfprintf(fail_file,"bad 55\n");
+    myexit(2252526);
+  }
+#endif
+
 
 
 #if(USEOPENMP)
@@ -11241,25 +11250,52 @@ static void matrix_inverse_55(FTYPE (*genmatrixlower)[5], FTYPE (*genmatrixupper
 
   // 0-out all genmatrixupper
   INVERSELOOP(j,k,truedim) genmatrixupper[j][k]=0.0;
+  
 
+  int failtype=gaussj(tmp, truedim, NULL, 0);
 
-  if(gaussj(tmp, truedim, NULL, 0)){
-    // then singular
-    dualfprintf(fail_file,"Singularity\n");
-     dualfprintf(fail_file,"inputmatrix[%d][%d]=%21.15g\n",j,k,genmatrixlower[j][k]);
-    myexit(2715);
-  }
-  else{
+  if(failtype==0){
     // assign but also transpose (shouldn't do in general, confusing)
     //INVERSELOOP(j,k,truedim) genmatrixupper[j][k] = tmp[k + 1][j + 1];
     INVERSELOOP(j,k,truedim) genmatrixupper[j][k] = tmp[j + 1][k + 1];
   }
+  else{
+#if(PRODUCTION==0)
+      INVERSELOOP(j,k,truedim) dualfprintf(fail_file,"inputmatrix[%d][%d]=%21.15g\n",j,k,genmatrixlower[j][k]);
+#endif
+
+    if(failtype==1){
+      // then singular
+#if(PRODUCTION==0)
+      dualfprintf(fail_file,"Singularity\n");
+#endif
+      //    myexit(2715);
+      //    return(1);
+    }
+    else if(failtype==2){
+      // bad failure of gaussj
+#if(PRODUCTION==0)
+      dualfprintf(fail_file,"Bad gaussj\n");
+#endif
+    }
+
+    // give something back even if failed
+    //    reduceddim=4;
+    //    int jj=0,kk=0;
+    //    INVERSELOOP(j,k,truedim){
+    //      if(j==4 || k==4) continue;
+    //      else tmp[jj + 1][kk + 1] = genmatrixlower[j][k];
+    //}
+    return(failtype);
+  }
+
+
 
 
 #if(PRODUCTION==0) // check for nan's
   INVERSELOOP(j,k,truedim) if(!finite(genmatrixupper[j][k])){
     dualfprintf(fail_file,"Came out of matrix_inverse_gen with inf/nan for genmatrixupper at j=%d k=%d\n",j,k);
-    myexit(5);
+    return(3);
   }
 #endif
 
@@ -11272,7 +11308,7 @@ static void matrix_inverse_55(FTYPE (*genmatrixlower)[5], FTYPE (*genmatrixupper
 #endif
 
 
-
+  return(0);
 }
 
 ///**********************************************************************
@@ -11280,13 +11316,13 @@ static void matrix_inverse_55(FTYPE (*genmatrixlower)[5], FTYPE (*genmatrixupper
 ///**********************************************************************
 ///inverse 4by4 matrix
 /// gives inverse transpose matrix
-int inverse_44matrix(FTYPE aa[][NDIM], FTYPE ia[][NDIM])
+static int inverse_44matrix(int sj, int ej, FTYPE aa[][JACNPR], FTYPE ia[][JACNPR])
 {
   FTYPE mat[16],dst[16];
   int i,j;
   for(i=0;i<4;i++)
     for(j=0;j<4;j++)
-      mat[i*4+j]=aa[i][j];
+      mat[i*4+j]=aa[sj+i][sj+j];
 
   FTYPE tmp[12]; FTYPE src[16]; FTYPE det, idet;
   /* transpose matrix */
@@ -11376,7 +11412,7 @@ int inverse_44matrix(FTYPE aa[][NDIM], FTYPE ia[][NDIM])
 
   for(i=0;i<4;i++)
     for(j=0;j<4;j++)
-      ia[i][j]= dst[i*4+j];
+      ia[i+sj][j+sj]= dst[i*4+j];
 
   return 0;
 }
@@ -11388,7 +11424,7 @@ int inverse_44matrix(FTYPE aa[][NDIM], FTYPE ia[][NDIM])
 ///**********************************************************************
 ///inverse 3by3 matrix
 /// gives inverse transpose matrix
-static int inverse_33matrix(int sj, int ej, FTYPE aa[][NDIM], FTYPE ia[][NDIM])
+static int inverse_33matrix(int sj, int ej, FTYPE aa[][JACNPR], FTYPE ia[][JACNPR])
 {
 
   FTYPE det = +aa[sj+0][sj+0]*(aa[sj+1][sj+1]*aa[sj+2][sj+2]-aa[sj+2][sj+1]*aa[sj+1][sj+2])
@@ -11406,7 +11442,9 @@ static int inverse_33matrix(int sj, int ej, FTYPE aa[][NDIM], FTYPE ia[][NDIM])
   ia[sj+2][sj+2] =  (aa[sj+0][sj+0]*aa[sj+1][sj+1]-aa[sj+1][sj+0]*aa[sj+0][sj+1])*idet;
 
   if(!isfinite(det) || !isfinite(idet)){
+#if(PRODUCTION==0)
     if(debugfail>=2) dualfprintf(fail_file,"inverse_33matrix got singular det=%g idet=%g\n",det,idet);
+#endif
     return(1); // indicates failure
     //    myexit(13235);
   }
@@ -11420,7 +11458,7 @@ static int inverse_33matrix(int sj, int ej, FTYPE aa[][NDIM], FTYPE ia[][NDIM])
 ///**********************************************************************
 ///inverse 1by1 matrix
 /// gives inverse transpose matrix (for 1by1, transpose does nothing)
-static int inverse_11matrix(int sj, int ej, FTYPE aa[][NDIM], FTYPE ia[][NDIM])
+static int inverse_11matrix(int sj, int ej, FTYPE aa[][JACNPR], FTYPE ia[][JACNPR])
 {
   // trivial inversion, and can't fail unless divide by zero
   // sj==ru->endjac
@@ -11428,7 +11466,9 @@ static int inverse_11matrix(int sj, int ej, FTYPE aa[][NDIM], FTYPE ia[][NDIM])
   ia[sj][sj]=1.0/aa[sj][sj];
 
   if(!isfinite(ia[sj][sj])){
+#if(PRODUCTION==0)
     if(debugfail>=2) dualfprintf(fail_file,"inverse 1x1 zero or nan\n",aa[sj][sj]);
+#endif
     return(1); // indicates failure
     //    myexit(13235);
   }

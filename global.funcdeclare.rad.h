@@ -7,7 +7,6 @@ extern void mhdfull_calc_rad(FTYPE *pr, struct of_geom *ptrgeom, struct of_state
 extern void mhd_calc_rad(FTYPE *pr, int dir, struct of_geom *geom, struct of_state *q, FTYPE *radstressdir, FTYPE *radstressdirabs);
 extern FTYPE my_min(FTYPE a, FTYPE b);
 extern FTYPE my_sign(FTYPE x);
-extern int inverse_44matrix(FTYPE a[][4], FTYPE ia[][4]);
 extern int boost22_fforzamo(int whichdir, FTYPE T1[][4],FTYPE T2[][4],FTYPE *pp,struct of_state *q, struct of_geom *ptrgeom, FTYPE eup[][4]);
 extern int boost22_zamo2ff(FTYPE T1[][4],FTYPE T2[][4],FTYPE *pp,struct of_state *q, struct of_geom *ptrgeom, FTYPE eup[][4]);
 extern int boost22_ff2zamo(FTYPE T1[][4],FTYPE T2[][4],FTYPE *pp,struct of_state *q, struct of_geom *ptrgeom, FTYPE eup[][4]);
