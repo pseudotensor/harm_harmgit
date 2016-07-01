@@ -417,14 +417,14 @@ int post_init_specific_init(void)
   trifprintf("Constants\n");
   trifprintf("LBAR=%g TBAR=%g VBAR=%g RHOBAR=%g MBAR=%g UBAR=%g TEMPBAR=%g\n",LBAR,TBAR,VBAR,RHOBAR,MBAR,UBAR,TEMPBAR); 
   trifprintf("ARAD_CODE=%26.20g OPACITYBAR=%g\n",ARAD_CODE,OPACITYBAR);
-  trifprintf("ARAD_CODE_DEF=%g\n",ARAD_CODE_DEF);
+  trifprintf("ARAD_CODE_DEF=%26.20g\n",ARAD_CODE_DEF);
   trifprintf("GAMMAMAXRAD=%g\n",GAMMAMAXRAD);
 
   trifprintf("MASSCM=%g 1 koral unit = %g harm units (g/cm^3)\n",MASSCM,KORAL2HARMRHO(1.0));
 
   if(myid==0){
     // 22 things
-#define DIMVARLIST GGG,CCCTRUE,MSUNCM,MPERSUN,LBAR,TBAR,VBAR,RHOBAR,MBAR,ENBAR,UBAR,TEMPBAR,ARAD_CODE_DEF,XFACT,YFACT,ZFACT,MUMEAN,MUMEAN,OPACITYBAR,MASSCM,KORAL2HARMRHO(1.0),TEMPMIN
+#define DIMVARLIST GGG,CCCTRUE,MSUNCM,MPERSUN,LBAR,TBAR,VBAR,RHOBAR,MBAR,ENBAR,UBAR,TEMPBAR,ARAD_CODE,XFACT,YFACT,ZFACT,MUMEAN,MUMEAN,OPACITYBAR,MASSCM,KORAL2HARMRHO(1.0),TEMPMIN
 #if(REALTYPE==FLOATYPE || REALTYPE==DOUBLETYPE)
 #define DIMTYPELIST "%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n"
 #elif(REALTYPE==LONGDOUBLETYPE)
@@ -3744,7 +3744,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
       pr[URAD1] = 0 ;
       pr[URAD2] = 0 ;    
       pr[URAD3] = 0 ;
-      if(NRAD>=0) pr[NRAD] = calc_LTE_TfromE(pr[PRAD0]);
+      if(NRAD>=0) pr[NRAD] = calc_LTE_NfromE(pr[PRAD0]);
     }
 
     *whichvel=WHICHVEL;
@@ -3886,7 +3886,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
       pr[URAD1] = Fx ;
       pr[URAD2] = Fy ;    
       pr[URAD3] = Fz ;
-      if(NRAD>=0) pr[NRAD] = calc_LTE_TfromE(pr[PRAD0]);
+      if(NRAD>=0) pr[NRAD] = calc_LTE_NfromE(pr[PRAD0]);
     }
 
     // KORALTODO: no transformation, but only because tuned units to be like koral and so ERAD gives same value and also because no Flux.   Also, would give same result as assuming in fluid frame because vfluid=0 here and F=0 here.
@@ -5693,7 +5693,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
     pr[URAD1]=0.0;
     pr[URAD2]=0.0;
     pr[URAD3]=0.0;
-    if(NRAD>=0) pr[NRAD] = calc_LTE_TfromE(pr[PRAD0]);
+    if(NRAD>=0) pr[NRAD] = calc_LTE_NfromE(pr[PRAD0]);
 
 
     if(FLUXB==FLUXCTSTAG){
@@ -5778,7 +5778,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
     pr[URAD1]=pr[U1];
     pr[URAD2]=pr[U2];
     pr[URAD3]=pr[U3];
-    if(NRAD>=0) pr[NRAD] = calc_LTE_TfromE(pr[PRAD0]);
+    if(NRAD>=0) pr[NRAD] = calc_LTE_NfromE(pr[PRAD0]);
 
     // ensure total pressure is constant by varying gas temperature, but assume LTE at t=0
     // P = arad T^4 + rho*T  = arad T^4 + (gam-1)*u = Ehat0 + (gam-1)*u ->
@@ -5838,7 +5838,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
     pr[URAD1]=pr[U1];
     pr[URAD2]=pr[U2];
     pr[URAD3]=pr[U3];
-    if(NRAD>=0) pr[NRAD] = calc_LTE_TfromE(pr[PRAD0]);
+    if(NRAD>=0) pr[NRAD] = calc_LTE_NfromE(pr[PRAD0]);
 
     FTYPE ptot=1.5*(4.0/3.0-1.0)*Ehatjet;
     pr[UU]=( ptot - (4.0/3.0-1.0)*pr[URAD0])/(gam-1.0);
@@ -5887,7 +5887,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
     pr[URAD1]=pr[U1];
     pr[URAD2]=pr[U2];
     pr[URAD3]=pr[U3];
-    if(NRAD>=0) pr[NRAD] = calc_LTE_TfromE(pr[PRAD0]);
+    if(NRAD>=0) pr[NRAD] = calc_LTE_NfromE(pr[PRAD0]);
 
     pr[UU]=0.1*pr[RHO];
 
@@ -5942,7 +5942,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
     // P = (arad/3)T^4 + rho T
     pr[UU]=u_rho0_T_simple(i,j,k,CENT,pr[RHO],Tstar);
     pr[URAD0]=calc_LTE_EfromT(Tstar);
-    if(NRAD>=0) pr[NRAD] = calc_LTE_TfromE(pr[PRAD0]);
+    if(NRAD>=0) pr[NRAD] = calc_LTE_NfromE(pr[PRAD0]);
 
     if(1){
       static int firsttime=1;

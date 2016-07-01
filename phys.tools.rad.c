@@ -1571,6 +1571,7 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
     // this preserves machine accurate conservation instead of applying 4-force on each fluid and radiation separately that can accumulate errors
     FTYPE Gddt[NDIM]; DLOOPA(iv) Gddt[iv]=(uu[ru->irefU[iv]]-uu0[ru->irefU[iv]]);
     DLOOPA(iv) uu[ru->iotherU[iv]] = uu0[ru->iotherU[iv]] - Gddt[iv];
+    // if QTYURAD, then uu[NRAD] iterated.  If QTYUMHD, then uu[NRAD] also iterate
     // reject what radiation says gas should be if forced into T^t_t<0 regime.
     int badchange=0;
     if(mtd->implicititer==QTYURAD || mtd->implicititer==QTYURADENERGYONLY || mtd->implicititer==QTYURADMOMONLY){
@@ -1610,6 +1611,7 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
       else{
         // Get GS completely consisent with primitives, in case using entropy error function, because then shouldn't use Gddt[TT] related to energy equation.
         // Below rad inv may not be completely necessary, but not too expensive, so ok.
+        // for NRAD>=0, rad inversion correctly inverts uu[NRAD]->pp[NRAD] assuming uu[NRAD] is being iterated based upon f[NRAD].  If using QTYURAD type method, then iterating uu[NRAD].  If using QTYUMHD method, also iterating uu[NRAD]
         int doradonly=1; failreturn=Utoprimgen_failwrapper(doradonly,radinvmod,showmessages,checkoninversiongas,checkoninversionrad,allowlocalfailurefixandnoreport, finalstep, eomtype, whichcap, EVOLVEUTOPRIM, UNOTHING, uu, q, ptrgeom, dissmeasure, pp, &newtonstats);
         int computestate=1;
         int computeentropy=1;
@@ -1713,7 +1715,7 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
     //    PLOOP(pliter,pl) if(pl==U1||pl==U2||pl==U3||pl==ENTROPY) pp[pl]=pporig[pl]; // get back U[ENTROPY,Ui] so no machine error introduced from u(p(u)) for actually known quantities that won't change due to fixups or anything. -- no, primitives from Utoprimgen might change things and act as Newton step fix.
     // 4) Get actual Urad [note uses UU not irefU that is ENTROPY for irefU[0]]
     DLOOPA(iv) uu[URAD0+iv] = uu0[URAD0+iv] - (uu[UU+iv]-uu0[UU+iv]);
-    // 5) Do RAD-ONLY inversion
+    // 5) Do RAD-ONLY inversion (handles uu[NRAD] because iterated directly even though doing QTYENTROPYUMHD)
     int failreturn2;  int doradonly2=1; failreturn2=Utoprimgen_failwrapper(doradonly2,radinvmod,showmessages,checkoninversiongas,checkoninversionrad,allowlocalfailurefixandnoreport, finalstep, eomtype, whichcap, EVOLVEUTOPRIM, UNOTHING, uu, q, ptrgeom, dissmeasure, pp, &newtonstats);
     //  no need to concern with eomtype in RAD only case.  i.e. eomtype won't change.
     if(failreturn2>failreturn) failreturn=failreturn2; // use worst case.
@@ -1913,6 +1915,7 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
 
 
   else if(mtd->implicititer==QTYPRAD || mtd->implicititer==QTYPRADENERGYONLY || mtd->implicititer==QTYPRADMOMONLY){
+    // if NRAD>=0, iterate pp[NRAD] along with other rad quantities
     // 0.5) trivially invert field
     PLOOPBONLY(pl) pp[pl] = uu0[pl];
     // Have prad={Erf,uradvel1,uradvel2,uradvel3}
@@ -1949,7 +1952,10 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
     uu[ENTROPY] = uu0[ENTROPY] + (ru->signgd6)*GS;
     // 5) Invert to get pmhd (also does rad inversion, but not expensive so ok)
     setgasinversionstuff(iter,whichcall,impeps,*errorabs,convabs,maxiter,&newtonstats,&checkoninversiongas,&checkoninversionrad);
+    FTYPE ppnrad;
+    if(NRAD>=0) ppnrad=pp[NRAD]; // save before inversion
     int doradonly=0; failreturn=Utoprimgen_failwrapper(doradonly,radinvmod,showmessages,checkoninversiongas,checkoninversionrad,allowlocalfailurefixandnoreport, finalstep, eomtype, whichcap, EVOLVEUTOPRIM, UNOTHING, uu, q, ptrgeom, dissmeasure, pp, &newtonstats);
+    if(NRAD>=0) pp[NRAD] = ppnrad; // restore because uu[NRAD] used above is not what is iterated and has no source information
     *nummhdinvsreturn++;
     radinvmodalt=*radinvmod; // default
     failreturnalt=failreturn; // default
@@ -1958,6 +1964,12 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
       if(ENTROPY>=0) pp[ENTROPY]=pp[UU];
     }
     // KORALTODO: now can check if actually did eomtype==EOMGRMHD or EOMENTROPYGRMHD or EOMCOLDGRMHD and apply correct error function
+    // 5.5) Get correct uu[NRAD] from iterated pp[NRAD].  primtoU below does this too but for different reasons
+    if(NRAD>=0){
+      //    uu[NRAD] = pp[NRAD]*(q->urad[TT]);
+      extern int nradflux_calc(struct of_geom *ptrgeom, FTYPE *pr, int dir, struct of_state *q, FTYPE *advectedscalarflux, FTYPE *advectedscalarfluxabs, int pnum);
+      nradflux_calc(ptrgeom,pp,TT,q,&uu[NRAD],&uuabs[NRAD],NRAD);
+    }
     // 6) Recover actual iterated prad to avoid machine related differences between original pp and pp(U(pp)) for prad quantities
     // This assumes that iterated prad is optimal and not modified except by iteration by Newton step
     PLOOP(pliter,pl) if(RADFULLPL(pl)) pp[pl]=ppbackup[pl];
@@ -10825,19 +10837,38 @@ static void calc_Trad_fromRuuandgamma(FTYPE *pp, struct of_geom *ptrgeom, FTYPE 
   nradff = calc_LTE_NfromE(fabs(Ruu));
   expfactorradff=1.0; // Planck
 #else
-  // Color-corrected/shifted Planck
-  nradff = pp[NRAD]*gammaradgas;
-  
-  // 0 = assume 0 chemical potential.
-  // 1 = account for finite chemical potential using Ramesh fit
-  // 2 = like 1 but Jon fit without divergent issues.
+
+  // -1 = Overwrite evolvd nradff as test
+  // 0 = assume Planck
+  // 1 = assume non-Planck chemical potential.
+  // 2 = account for finite chemical potential using Ramesh fit
+  // 3 = like 1 but Jon fit without divergent issues.
   // But 1,2 only change T_r by 10% at most for any Ruu,nradff, and would have to include chemical potential in opacity and use (say Jon's) chemical potential vs. Ruu,nradff fit and have \kappa(Tg,Tr,\mu).
-#define TRADTYPE 2
+#define TRADTYPE 3
+
+
+#if(TRADTYPE==-1)
+  // Planck (i.e. not LTE with gas, but locally Planck in radiation frame)
+  Tradff = calc_LTE_TfromE(fabs(Ruu));
+  nradff = calc_LTE_NfromE(fabs(Ruu));
+  expfactorradff=1.0;
+
+#elif(TRADTYPE==0)
+  // Planck (i.e. not LTE with gas, but locally Planck in radiation frame)
+  Tradff = calc_LTE_TfromE(fabs(Ruu));
+  nradff = pp[NRAD]*gammaradgas; // nrad evolved
+  expfactorradff=1.0;
+
+#else // any other types
+
+  // Color-corrected/shifted Planck
+  nradff = pp[NRAD]*gammaradgas; // nrad evolved
   
-#if(TRADTYPE==0)
+  
+#if(TRADTYPE==1)
   Tradff = Ruu/(nradff*EBAR0); // EBAR0 kb T = Ruu/nradff = average energy per photon
   expfactorradff = 1.0; // but really inconsistent since should be able to get Tradff directly from Ruu if \mu=0
-#elif(TRADTYPE==1)
+#elif(TRADTYPE==2)
   FTYPE CRAD = CRAD0*ARAD_CODE;
   FTYPE BB = CRAD0 * EBAR0*EBAR0*EBAR0*EBAR0 * (3.0-EBAR0); // FTYPE BB=2.449724;
   //       below avoids assuming that EBAR0 kb T is average energy per photon
@@ -10845,7 +10876,7 @@ static void calc_Trad_fromRuuandgamma(FTYPE *pp, struct of_geom *ptrgeom, FTYPE 
   if(EBAR1<EBAR0) EBAR1=EBAR0; // hard cut
   //if(EBAR1<0.5*EBAR0) EBAR1=0.5*EBAR0; // hard cut but at lower value, allowing a bit lower than BB value that is rare but avoids Jacobian problems
   Tradff = Ruu/(SMALL+nradff*EBAR1); // Accounts for non-zero chemical potential of photons giving them higher average energy per photon than thermal case for a given temperature
-#elif(TRADTYPE==2)
+#elif(TRADTYPE==3)
   FTYPE CRAD = CRAD0*ARAD_CODE;
   Tradff = (Ruu*(0.333333333327962 + 0.060724957534625555/(0.6467556546674441 + (0.12198190033984817*CRAD*Power(Ruu,3))/Power(SMALL+nradff,4))))/(SMALL+nradff);
   expfactorradff = 1.6467556546674442/(0.6467556546674441 + (0.12198190033984817*CRAD*Power(Ruu,3))/Power(SMALL+nradff,4));
@@ -10854,7 +10885,8 @@ static void calc_Trad_fromRuuandgamma(FTYPE *pp, struct of_geom *ptrgeom, FTYPE 
 #endif
   // Tradff/TradLTE = fco = color correction factor
   
-#endif    
+#endif// end if TRADTYPE=1-3
+#endif// end if EVOLVENRAD!=0
   
   *Trad=Tradff; // radiation temperature in fluid frame
   *nrad=nradff; // radiation number density in fluid frame

@@ -15,6 +15,7 @@
 
 static void diag_fluxdump_1(int dir, int i, int j, int k, FTYPE *p_l, FTYPE *p_r, FTYPE *F_l, FTYPE *F_r);
 
+static int hllflux_compute_pl(int pl, int dir,struct of_geom *geom, FTYPE *cmin, FTYPE *cmax, FTYPE *ctop, FTYPE *p_l, FTYPE *p_r, FTYPE *U_l, FTYPE *U_r,FTYPE *F_l,FTYPE *F_r, FTYPE *F);
 
 ///////////////////////////////////
 ///
@@ -446,7 +447,7 @@ int flux_compute(int i, int j, int k, int dir, struct of_geom *geom, FTYPE *cmin
   if(fluxmethodlocal[RHO]==LAXFFLUX || fluxmethodlocal[RHO]==HLLFLUX){
     PLOOP(pliter,pl){
       if(fluxmethodlocal[pl]==LAXFFLUX) F[pl] = LAXFCOMPUTE(ctop[pl],U_l[pl],U_r[pl],F_l[pl],F_r[pl]);
-      else hllflux_compute(dir,geom,cmin,cmax,ctop,p_l,p_r,U_l,U_r,F_l,F_r,F);
+      else hllflux_compute_pl(pl,dir,geom,cmin,cmax,ctop,p_l,p_r,U_l,U_r,F_l,F_r,F);
     }     
   }
   else if(fluxmethodlocal[RHO]==HLLFLUX){
@@ -550,10 +551,22 @@ int flux_compute(int i, int j, int k, int dir, struct of_geom *geom, FTYPE *cmin
 int hllflux_compute(int dir,struct of_geom *geom, FTYPE *cmin, FTYPE *cmax, FTYPE *ctop, FTYPE *p_l, FTYPE *p_r, FTYPE *U_l, FTYPE *U_r,FTYPE *F_l,FTYPE *F_r, FTYPE *F)
 {
   int pl,pliter;
-  FTYPE vmin[NPR],vmax[NPR];
-  FTYPE cminreal[NPR],cmaxreal[NPR];
 
   PLOOP(pliter,pl) {
+    
+    hllflux_compute_pl(pl, dir,geom, cmin, cmax, ctop, p_l, p_r, U_l, U_r,F_l,F_r, F);
+    
+  } // over pl's
+  
+  return(0);
+
+}
+
+/// compute HLL flux for one pl
+static int hllflux_compute_pl(int pl, int dir,struct of_geom *geom, FTYPE *cmin, FTYPE *cmax, FTYPE *ctop, FTYPE *p_l, FTYPE *p_r, FTYPE *U_l, FTYPE *U_r,FTYPE *F_l,FTYPE *F_r, FTYPE *F)
+{
+  FTYPE vmin[NPR],vmax[NPR];
+  FTYPE cminreal[NPR],cmaxreal[NPR];
 
 
 #if(USE_CORRECTED_STATES)
@@ -587,8 +600,7 @@ int hllflux_compute(int dir,struct of_geom *geom, FTYPE *cmin, FTYPE *cmax, FTYP
 
 #endif
   
-  } // over pl's
-  
+ 
   return(0);
 
 }

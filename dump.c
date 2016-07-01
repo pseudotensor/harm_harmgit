@@ -1834,7 +1834,7 @@ void set_raddump_content_dnumcolumns_dnumversion(int *numcolumnsvar, int *numver
 {
 
   if(EOMRADTYPE!=EOMRADNONE && DORADDIAG){
-    *numcolumnsvar=NDIM*2 +(NDIM+(NRAD>=0)) + NDIM*2 + 6 + 9 + NDIM+1 + 4*3;
+    *numcolumnsvar=NDIM*2 +(NDIM+(NRAD>=0)) + NDIM*2 + 6 + 10 + NDIM+1 + 4*3;
   }
   else{
     *numcolumnsvar=0;
@@ -1903,8 +1903,8 @@ int raddump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
   myset(datatype,&Tradlte,0,1,writebuf); // 1
 
   // get radiation's fluid frame T from actual Erf in fluid frame
-  FTYPE Tradff=calc_LTE_TfromE(pradffortho[PRAD0]);
-  myset(datatype,&Tradff,0,1,writebuf); // 1
+  FTYPE Tradlteff=calc_LTE_TfromE(pradffortho[PRAD0]);
+  myset(datatype,&Tradlteff,0,1,writebuf); // 1
 
   // get Trad -- full fluid frame T
   myset(datatype,&Trad,0,1,writebuf); // 1
@@ -1945,6 +1945,7 @@ int raddump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
   //  calc_rad_lambda(pr, ptrgeom, Tgas, &lambda, &nlambda, &kappaemit, &kappanemit);
   // get absorption opacities
   //  FTYPE Tgas;
+  FTYPE Tradff=0;
   FTYPE nradff=0;
   FTYPE expfactorradff=0;
   FTYPE kappa,kappan=0;
@@ -1953,6 +1954,7 @@ int raddump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
   FTYPE lambda,nlambda=0;
   calc_Tandopacityandemission(pr,ptrgeom,&q,Ruu,gammaradgas,B,&Tgas,&Tradff,&nradff,&expfactorradff,&kappa,&kappan,&kappaemit,&kappanemit,&kappaes, &lambda, &nlambda);
 
+  myset(datatype,&Tradff,0,1,writebuf); // 1
   myset(datatype,&nradff,0,1,writebuf); // 1
   myset(datatype,&expfactorradff,0,1,writebuf); // 1
   myset(datatype,&kappa,0,1,writebuf); // 1

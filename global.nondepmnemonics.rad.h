@@ -68,6 +68,13 @@
 
 #define RADSHOCKFLAT 1 // 0 or 1.  Whether to include radiation in shock flatener
 
+
+// choose which type of opacity calculation to use
+#define ISFITORIG 0
+#define ISFITNEW 1
+#define WHICHFIT ISFITORIG // choose
+
+
 /// whether to fixup inversion failures using harm fixups
 /// can lead to issues because diffuses, so across sharp boundary radiation can be given quite "wrong" values that don't match what solution "wants" 
 #define DORADFIXUPS 0 // for RADDONUT ok, since no sharp edges.
