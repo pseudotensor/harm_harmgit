@@ -64,6 +64,9 @@
 #define EBAR0 (2.7011780329190638961) // 2.70118 kb T = Ruu/nradff = average energy per photon
 #define CRAD0 (15.0/(M_PI*M_PI*M_PI*M_PI)) // 0.15399
 
+// Below is to be used in formula for Nrad_{code} = nrad_arad_code * Tcode^3/EBAR0
+// see kappan_constant.nb
+#define NRAD_ARAD_CODE_DEF (ARAD_CODE_DEF*LBAR*LBAR*LBAR*RHOBAR*VBAR*VBAR/(K_BOLTZ*TEMPBAR))
 
 //////////////
 //

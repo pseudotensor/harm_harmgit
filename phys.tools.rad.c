@@ -10332,7 +10332,7 @@ void calc_chi(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE *chi
   if(q==NULL){
     //    Trad=Tgas; // estimate for opacity (worse than below)
     FTYPE Ruufake=pr[PRAD0]; // estimate for opacity
-    Tradff = pow(fabs(Ruufake)/ARAD_CODE,0.25); // ASSUMPTION: PLANCK
+    Tradff = calc_LTE_TfromE(fabs(Ruufake)); // ASSUMPTION: PLANCK
     expfactorradff=1.0; // Planck
     //nradff not used here, so don't have to set
     bsq_calc(pr,ptrgeom,&bsq);
@@ -10864,23 +10864,39 @@ static void calc_Trad_fromRuuandgamma(FTYPE *pp, struct of_geom *ptrgeom, FTYPE 
 
   // Color-corrected/shifted Planck
   nradff = pp[NRAD]*gammaradgas; // nrad evolved
+
+  // see BE.nb
+  FTYPE Ruurat=Ruu/ARAD_CODE;
+  FTYPE nradffrat=nradff/NRAD_ARAD_CODE;
   
   
 #if(TRADTYPE==1)
-  Tradff = Ruu/(nradff*EBAR0); // EBAR0 kb T = Ruu/nradff = average energy per photon
+  // see kappan_constant.nb
+  Tradff = Ruurat/(SMALL+nradffrat*EBAR0);
   expfactorradff = 1.0; // but really inconsistent since should be able to get Tradff directly from Ruu if \mu=0
+
 #elif(TRADTYPE==2)
-  FTYPE CRAD = CRAD0*ARAD_CODE;
-  FTYPE BB = CRAD0 * EBAR0*EBAR0*EBAR0*EBAR0 * (3.0-EBAR0); // FTYPE BB=2.449724;
   //       below avoids assuming that EBAR0 kb T is average energy per photon
-  FTYPE EBAR1=3.0-BB*nradff*nradff*nradff*nradff/(CRAD*Ruu*Ruu*Ruu+SMALL); // physically reasonable to be limited to *larger* than EBAR0
+  FTYPE BB = CRAD0 * EBAR0*EBAR0*EBAR0*EBAR0 * (3.0-EBAR0); // FTYPE BB=2.449724;
+  FTYPE EBAR1 = 3. - (6.493939402266829*BB*Power(nradffrat,4))/
+    Power(Ruurat,3); // physically reasonable to be limited to *larger* than EBAR0
   if(EBAR1<EBAR0) EBAR1=EBAR0; // hard cut
   //if(EBAR1<0.5*EBAR0) EBAR1=0.5*EBAR0; // hard cut but at lower value, allowing a bit lower than BB value that is rare but avoids Jacobian problems
-  Tradff = Ruu/(SMALL+nradff*EBAR1); // Accounts for non-zero chemical potential of photons giving them higher average energy per photon than thermal case for a given temperature
+  Tradff = Ruurat/(SMALL+nradffrat*EBAR1); // Accounts for non-zero chemical potential of photons giving them higher average energy per photon than thermal case for a given temperature
+
 #elif(TRADTYPE==3)
-  FTYPE CRAD = CRAD0*ARAD_CODE;
-  Tradff = (Ruu*(0.333333333327962 + 0.060724957534625555/(0.6467556546674441 + (0.12198190033984817*CRAD*Power(Ruu,3))/Power(SMALL+nradff,4))))/(SMALL+nradff);
-  expfactorradff = 1.6467556546674442/(0.6467556546674441 + (0.12198190033984817*CRAD*Power(Ruu,3))/Power(SMALL+nradff,4));
+  // Below is Jon's fit that has no singularity issue.  See BE.nb
+  Tradff = (Ruurat*(0.333333333327962 + 
+       0.060724957534625555/
+        (0.6467556546674441 + 
+          (0.018783960364223317*Power(Ruurat,3))/
+         Power(nradffrat,4))))/(SMALL+nradffrat);
+
+  expffactorradff = 1.6467556546674442/
+   (0.6467556546674441 + 
+     (0.018783960364223317*Power(Ruurat,3))/
+    Power(nradffrat,4));
+
   if(expfactorradff>1.0) expfactorradff=1.0; // account for BE condensation.
   // expfactorradff = exp(-\xi) = exp(-\mu/(k_B Tradff))
 #endif
@@ -14291,7 +14307,8 @@ FTYPE calc_LTE_EfromT(FTYPE T)
 /// nrad(T) = nrad=arad T^3/2.70118 (this is LTE only if put in T was gas T)
 FTYPE calc_LTE_NfromT(FTYPE T)
 {
-  return (ARAD_CODE*T*T*T/EBAR0); // i.e. average energy per photon is 2.7k_b T
+  // see kappan_constant.nb
+  return (NRAD_ARAD_CODE*T*T*T/EBAR0); // i.e. average energy per photon is 2.7k_b T
 }
 
 /// nrad(E)
@@ -14354,4 +14371,3 @@ int set_ncon_velocity(int whichvel, FTYPE gammamax, FTYPE *ncon, struct of_geom 
 
 
 //#include "phys.tools.rad.notused.c"
-

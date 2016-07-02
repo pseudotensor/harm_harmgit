@@ -40,7 +40,7 @@ SFTYPE *dVvsr,*dVvsr_tot,*vrsqvsr,*vrsqvsr_tot,*dMvsr,*dMvsr_tot,*dTrrvsr, *dTrr
 /** GLOBAL PARAMETERS SECTION **/
 
 /* physics parameters */
-FTYPE gam,gamideal,ARAD_CODE;
+FTYPE gam,gamideal,ARAD_CODE,NRAD_ARAD_CODE;
 
 /* numerical parameters */
 int defcoord;

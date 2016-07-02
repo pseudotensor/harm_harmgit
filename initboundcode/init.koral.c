@@ -416,19 +416,19 @@ int post_init_specific_init(void)
   // print out units and some constants
   trifprintf("Constants\n");
   trifprintf("LBAR=%g TBAR=%g VBAR=%g RHOBAR=%g MBAR=%g UBAR=%g TEMPBAR=%g\n",LBAR,TBAR,VBAR,RHOBAR,MBAR,UBAR,TEMPBAR); 
-  trifprintf("ARAD_CODE=%26.20g OPACITYBAR=%g\n",ARAD_CODE,OPACITYBAR);
-  trifprintf("ARAD_CODE_DEF=%26.20g\n",ARAD_CODE_DEF);
+  trifprintf("ARAD_CODE=%26.20g NRAD_ARAD_CODE=%26.20g OPACITYBAR=%g\n",ARAD_CODE,NRAD_ARAD_CODE,OPACITYBAR);
+  trifprintf("ARAD_CODE_DEF=%26.20g NRAD_ARAD_CODE_DEF=%26.20g\n",ARAD_CODE_DEF,NRAD_ARAD_CODE_DEF);
   trifprintf("GAMMAMAXRAD=%g\n",GAMMAMAXRAD);
 
   trifprintf("MASSCM=%g 1 koral unit = %g harm units (g/cm^3)\n",MASSCM,KORAL2HARMRHO(1.0));
 
   if(myid==0){
-    // 22 things
-#define DIMVARLIST GGG,CCCTRUE,MSUNCM,MPERSUN,LBAR,TBAR,VBAR,RHOBAR,MBAR,ENBAR,UBAR,TEMPBAR,ARAD_CODE,XFACT,YFACT,ZFACT,MUMEAN,MUMEAN,OPACITYBAR,MASSCM,KORAL2HARMRHO(1.0),TEMPMIN
+    // 23 things
+#define DIMVARLIST GGG,CCCTRUE,MSUNCM,MPERSUN,LBAR,TBAR,VBAR,RHOBAR,MBAR,ENBAR,UBAR,TEMPBAR,ARAD_CODE,NRAD_ARAD_CODE,XFACT,YFACT,ZFACT,MUMEAN,MUMEAN,OPACITYBAR,MASSCM,KORAL2HARMRHO(1.0),TEMPMIN
 #if(REALTYPE==FLOATYPE || REALTYPE==DOUBLETYPE)
-#define DIMTYPELIST "%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n"
+#define DIMTYPELIST "%21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g %21.15g\n"
 #elif(REALTYPE==LONGDOUBLETYPE)
-#define DIMTYPELIST "%26.20Lg %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g\n"
+#define DIMTYPELIST "%26.20Lg %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g %26.20g\n"
 #else
 #error "no such type."
 #endif
@@ -490,6 +490,7 @@ int init_global(void)
 
   // default
   ARAD_CODE=ARAD_CODE_DEF;
+  NRAD_ARAD_CODE=NRAD_ARAD_CODE_DEF;
 
 
   //  ERADLIMIT=UUMIN; // set same for now
@@ -621,6 +622,7 @@ int init_global(void)
     // arad=4*sigmarad/c
     // NOTE: Koral code has different values than paper
     ARAD_CODE=4.0*1.56E-64*(TEMPBAR*TEMPBAR*TEMPBAR*TEMPBAR); // to match koral and avoiding real units
+    NRAD_ARAD_CODE=ARAD_CODE; // nothing to track
 
 
     int idt;
@@ -735,6 +737,7 @@ int init_global(void)
       ARAD_CODE=(2./pow(calc_PEQ_Tfromurho(60./(gam-1.),1.),4.));
     }
 
+    NRAD_ARAD_CODE=ARAD_CODE; // nothing to track
 
     trifprintf("RADTUBE NTUBE=%d ARAD_CODE=%g SIGMARAD_CODE=%g\n",NTUBE,ARAD_CODE,ARAD_CODE/4.0);
 
@@ -773,6 +776,7 @@ int init_global(void)
     gam=gamideal=1.4;
     cooling=KORAL;
     ARAD_CODE=1E7*1E-5*(2.5E-9/7.115025791e-10); // tuned so radiation energy flux puts in something much higher than ambient, while initial ambient radiation energy density lower than ambient gas internal energy.
+    NRAD_ARAD_CODE=ARAD_CODE; // nothing to track
 
     RADSHADOW_NLEFT=0.99999;
     RADSHADOW_ANGLE=0.0;
@@ -819,6 +823,7 @@ int init_global(void)
     // ARAD_CODE=1E-30;
     //    ARAD_CODE=1E7*1E-5*(2.5E-9/7.115025791e-10); // tuned so radiation energy flux puts in something much higher than ambient, while initial ambient radiation energy density lower than ambient gas internal energy.
     ARAD_CODE=1E7*1E-5*1E-10*(6E-9/1.7E-25); // tuned so radiation energy flux puts in something much higher than ambient, while initial ambient radiation energy density lower than ambient gas internal energy.  And also similar value as in Figure 11 koral paper plot.  As long as prad0<<u and prad0<<rho, solution is independent of ARAD because 4-force off radiation on the fluid is negligible.  Then kappa just sets what rho becomes \tau\sim 1 and nothing about the fluid is affected.
+    NRAD_ARAD_CODE=ARAD_CODE; // nothing to track
 
 
 
@@ -888,6 +893,7 @@ int init_global(void)
     gam=gamideal=1.4;
     cooling=KORAL;
     // ARAD_CODE=ARAD_CODE_DEF*1E5; // tuned so radiation energy flux puts in something much higher than ambient, while initial ambient radiation energy density lower than ambient gas internal energy.
+    //    NRAD_ARAD_CODE=ARAD_CODE; // nothing to track
 
     BCtype[X1UP]=RADBEAM2DFLOWINFLOW;
     if(MCOORD==KSCOORDS||BLCOORDS){
@@ -958,6 +964,7 @@ int init_global(void)
     gam=gamideal=1.4;
     cooling=KORAL;
     // ARAD_CODE=ARAD_CODE_DEF*1E5; // tuned so radiation energy flux puts in something much higher than ambient, while initial ambient radiation energy density lower than ambient gas internal energy.
+    //    NRAD_ARAD_CODE=ARAD_CODE; // nothing to track
 
     BCtype[X1UP]=RADBEAM2DFLOWINFLOW;
     //BCtype[X1DN]=OUTFLOW;
@@ -1018,6 +1025,7 @@ int init_global(void)
     gam=gamideal=1.4;
     cooling=KORAL;
     ARAD_CODE=0.0;
+    NRAD_ARAD_CODE=ARAD_CODE; // nothing to track
 
     // HORIZONOUTFLOW or HORIZONOUTFLOWSTATIC leads to little bit more static solution near inner radial boundary due to higher-order interpolation.  Could also fix values as in Koral, but odd to fix values for incoming flow.
     //    BCtype[X1UP]=HORIZONOUTFLOWSTATIC;
@@ -1069,6 +1077,7 @@ int init_global(void)
     gam=gamideal=1.4;
     cooling=KORAL;
     //    ARAD_CODE=0.0;
+    //    NRAD_ARAD_CODE=ARAD_CODE; // nothing to track
 
     //    BCtype[X1UP]=RADATMBEAMINFLOW;
     //    BCtype[X1DN]=RADATMBEAMINFLOW;
@@ -1732,6 +1741,7 @@ int init_global(void)
       RADWAVE_UINT=((1./RADWAVE_CC/RADWAVE_CC)*RADWAVE_RHOZERO/gam/(gam-1.-1./RADWAVE_CC/RADWAVE_CC)) ; // to get proper sound speed
       RADWAVE_TEMP=(calc_PEQ_Tfromurho(RADWAVE_UINT,RADWAVE_RHOZERO)) ; // temperature from rho and uint
       ARAD_CODE=((3.*RADWAVE_PP*(gam-1.)*RADWAVE_UINT/RADWAVE_TEMP/RADWAVE_TEMP/RADWAVE_TEMP/RADWAVE_TEMP)); //to get the proper radiation to gas pressure ratio, PP=4 sig T^4 / P
+      NRAD_ARAD_CODE=ARAD_CODE; // nothing to track
       RADWAVE_ERAD=(calc_LTE_EfromT(RADWAVE_TEMP)) ; // to get thermal equilibrium, E=4 sig T^4
       
       dualfprintf(fail_file,"RADWAVE_RHOZERO=%g, RADWAVE_KK=%g, RADWAVE_UINT=%g, RADWAVE_TEMP=%g, ARAD_CODE=%g, RADWAVE_ERAD=%21.15g\n",
@@ -1899,6 +1909,7 @@ int init_global(void)
 
     // end post-SASHA
 
+    NRAD_ARAD_CODE=ARAD_CODE; // nothing to track
 
     BCtype[X1UP]=PERIODIC;
     BCtype[X1DN]=PERIODIC;
@@ -2021,6 +2032,7 @@ int init_global(void)
     a=0.0; // no spin in case use MCOORD=KSCOORDS
     cooling=KORAL;
     // ARAD_CODE=ARAD_CODE_DEF*1E5; // tuned so radiation energy flux puts in something much higher than ambient, while initial ambient radiation energy density lower than ambient gas internal energy.
+    //    NRAD_ARAD_CODE=ARAD_CODE; // nothing to track
 
     BCtype[X1UP]=RADBONDIINFLOW;
     //    BCtype[X1DN]=OUTFLOW;
@@ -2105,6 +2117,7 @@ int init_global(void)
     gam=gamideal=4.0/3.0;
     cooling=KORAL;
     ARAD_CODE=ARAD_CODE_DEF*1E-20; // tuned so radiation energy flux puts in something much higher than ambient, while initial ambient radiation energy density lower than ambient gas internal energy.
+    //    NRAD_ARAD_CODE=ARAD_CODE; // nothing to track
 
     BCtype[X1UP]=OUTFLOW;
     BCtype[X1DN]=OUTFLOW;
@@ -2368,6 +2381,8 @@ int init_global(void)
     else cooling=KORAL;
 
     // ARAD_CODE=ARAD_CODE_DEF*1E5; // tuned so radiation energy flux puts in something much higher than ambient, while initial ambient radiation energy density lower than ambient gas internal energy.
+    //    NRAD_ARAD_CODE=ARAD_CODE; // nothing to track
+
     //    GAMMAMAXRAD=1000.0; // Koral limits for this problem.
     GAMMAMAXRAD=50.0L; // Koral limits for this problem.
     GAMMAMAXRADFAIL=50.0L;

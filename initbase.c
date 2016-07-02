@@ -1511,6 +1511,12 @@ int init_defconsts(void)
   dE=0.0;
   dJ=0.0;
 
+  // default
+  ARAD_CODE=ARAD_CODE_DEF;
+  NRAD_ARAD_CODE=NRAD_ARAD_CODE_DEF;
+
+
+
 
   return(0);
 }
