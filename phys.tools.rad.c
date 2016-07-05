@@ -10892,7 +10892,7 @@ static void calc_Trad_fromRuuandgamma(FTYPE *pp, struct of_geom *ptrgeom, FTYPE 
           (0.018783960364223317*Power(Ruurat,3))/
          Power(nradffrat,4))))/(SMALL+nradffrat);
 
-  expffactorradff = 1.6467556546674442/
+  expfactorradff = 1.6467556546674442/
    (0.6467556546674441 + 
      (0.018783960364223317*Power(Ruurat,3))/
     Power(nradffrat,4));

@@ -1064,6 +1064,9 @@ struct Ccoordparams {
 
 #elif(WHICHPROBLEM==RADDONUT)
 
+#undef EVOLVENRAD
+#define EVOLVENRAD 1
+
 #undef MUMEAN
 #define MUMEAN (MUMEANIONIZED) // ASSUMPTION: fully ionized // CHOICE
 
