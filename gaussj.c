@@ -39,6 +39,7 @@ int gaussj(FTYPE **a, int n, FTYPE **b, int m)
     }
     indxr[i] = irow;
     indxc[i] = icol;
+    //    dualfprintf(fail_file,"icol=%d\n",icol);
     if (a[icol][icol] == 0.0) {
 #if(PRODUCTION==0)
       if(debugfail>=2) dualfprintf(fail_file, "gaussj: Singular Matrix-2\n");

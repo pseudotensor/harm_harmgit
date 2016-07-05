@@ -718,7 +718,7 @@ static FTYPE calc_approx_ratchangeRtt(struct of_state *q, FTYPE chieff, FTYPE re
 
 static int get_implicit_iJ(int allowbaseitermethodswitch, int failreturnallowableuse, int showmessages, int showmessagesheavy, int allowlocalfailurefixandnoreport, int *eomtypelocal, int whichcap, int itermode, int *baseitermethod, FTYPE fracenergy, FTYPE dissmeasure, FTYPE impepsjac, FTYPE trueimptryconv, FTYPE trueimptryconvabs, FTYPE trueimpallowconvabs, int trueimpmaxiter, int iter, FTYPE errorabs, FTYPE errorallabs, int whicherror, int dimtypef, FTYPE *dimfactU, FTYPE *Uiin, FTYPE *uu, FTYPE *uup, FTYPE *uu0, FTYPE *piin, FTYPE *pp, FTYPE *ppp, FTYPE fracdtG, FTYPE realdt, struct of_geom *ptrgeom, struct of_state *q, FTYPE *f1, FTYPE *f1norm, FTYPE (*iJ)[NPR], int *nummhdinvsreturn, struct of_method *mtd, struct of_refU *ru);
 
-static int matrix_inverse_55(FTYPE aa[][JACNPR], FTYPE ia[][JACNPR]);
+static int matrix_inverse_jacnpr(FTYPE aa[][JACNPR], FTYPE ia[][JACNPR]);
 static int inverse_44matrix(int sj, int ej, FTYPE aa[][JACNPR], FTYPE ia[][JACNPR]);
 static int inverse_33matrix(int sj, int ej, FTYPE aa[][JACNPR], FTYPE ia[][JACNPR]);
 static int inverse_11matrix(int sj, int ej, FTYPE aa[][JACNPR], FTYPE ia[][JACNPR]);
@@ -2124,7 +2124,10 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
   FTYPE uuallabs[NPR]={0.0},Gallabs[NPR]={0.0};
   //
   PLOOP(pliter,pl){
+    
     f[pl] = ((uu[pl] - uu0[pl]) + (sign[pl] * localdt * Gdpl[pl]))*extrafactor[pl];
+
+    //    dualfprintf(fail_file,"f[%d]=%21.15g : uu=%21.15g uu0=%21.15g Gdpl=%21.15g ef=%21.15g\n",pl,f[pl],uu[pl],uu0[pl],Gdpl[pl],extrafactor[pl]);
 
     falt[pl] = ((uualt[pl] - uu0[pl]) + (sign[pl] * localdt * Gdpl[pl]))*extrafactor[pl];
 
@@ -9085,6 +9088,7 @@ static int get_implicit_iJ(int allowbaseitermethodswitch, int failreturnallowabl
           // origin point
           PLOOP(pliter,pl) xjac[sided][pl]=xjacalt[pl]=x[pl];
 
+          //          PLOOP(pliter,pl) dualfprintf(fail_file,"jj=%d pl=%d x=%21.15g\n",jj,pl,x[pl]);
          
           if(JDIFFTYPE==JDIFFONESIDED && sided==1){
             if(*baseitermethod==QTYPMHD || *baseitermethod==QTYPRAD){
@@ -9215,8 +9219,8 @@ static int get_implicit_iJ(int allowbaseitermethodswitch, int failreturnallowabl
 
 
 
+      //      JACLOOP(iiiter,ii) dualfprintf(fail_file,"NEW: ii=%d jj=%d J=%g : %g %g : %g %g\n",ii,jj,J[ii][jj], f2[1][ii],f2[0][ii],xjac[1][jj],xjac[0][jj]);
 #if(PRODUCTION==0)
-      //JACLOOP(iiiter,ii) dualfprintf(fail_file,"NEW: ii=%d jj=%d J=%g : %g %g : %g %g\n",ii,jj,J[ii][jj], f2[1][ii],f2[0][ii],xjac[1][jj],xjac[0][jj]);
 
       // debug info
       if(debugfail>=2){
@@ -9270,19 +9274,28 @@ static int get_implicit_iJ(int allowbaseitermethodswitch, int failreturnallowabl
     //
     /////////////////////
 
+    //    int iiiiter,iii,jjjiter,jjj;
+    //    JACLOOP2D(iiiiter,iii,jjjiter,jjj) {
+    //      dualfprintf(fail_file,"J[%d][%d]=%21.15g\n",iii,jjj,J[iii][jjj]);
+    //      if(!isfinite(J[iii][jjj])) exit(1);
+    //    }
 
     // copy over matrix to sub (up to) smaller only-needed version
     FTYPE Jsub[JACNPR][JACNPR];
     FTYPE iJsub[JACNPR][JACNPR];
     int beginjac=ru->jacstart[JNORMALTYPE];
     int endjac=ru->jacend[JNORMALTYPE];
-    JACLOOP2D(iiiter,ii,jjiter,jj) Jsub[iiiter-beginjac][jjiter-beginjac]=J[ii][jj];
+    JACLOOP2D(iiiter,ii,jjiter,jj){
+      Jsub[iiiter-beginjac][jjiter-beginjac]=J[ii][jj];
+      //      dualfprintf(fail_file,"Jsub[%d][%d]=%21.15g = J[%d][%d]=%21.15g\n",iiiter-beginjac,jjiter-beginjac,Jsub[iiiter-beginjac][jjiter-beginjac],ii,jj,J[ii][jj]);
+    }
     int normalsize=endjac - beginjac  + 1;
 
     // Jsub we pass always starts at 0 index and goes through normalsize-1 index
     if(normalsize==5){ // probably number-energy-momentum
       // inverse *and* transpose index order, so J[f][p] ->  iJ[p][f]
-      failreturn=matrix_inverse_55(Jsub,iJsub); // Jon's use of numerical recipes -- TODOMARK: should check if faster than direct methods for 4x4 etc.
+      //      dualfprintf(fail_file,"WTF here\n");
+      failreturn=matrix_inverse_jacnpr(Jsub,iJsub); // Jon's use of numerical recipes -- TODOMARK: should check if faster than direct methods for 4x4 etc.
     }    
     else if(normalsize==4){ // probably energy-momentum
       // inverse *and* transpose index order, so J[f][p] ->  iJ[p][f]
@@ -10341,7 +10354,7 @@ void calc_chi(FTYPE *pr, struct of_geom *ptrgeom, struct of_state *q, FTYPE *chi
     calc_Trad(pr,ptrgeom,q,&Tradff,&nradff,&expfactorradff); // kinda expensive, avoid if not really necessary (could set Trad=Tgas, just for opacity purposes)
     bsq = dot(q->bcon, q->bcov);
   }
-  B=sqrt(bsq);
+  B=sqrt(fabs(bsq));
  
   FTYPE V[NDIM]={0.0},xx=0.0,yy=0.0,zz=0.0;
 #if(ALLOWKAPPAEXPLICITPOSDEPENDENCE)
@@ -10628,8 +10641,10 @@ static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYP
   DLOOPA(jj) gammaradgas += - (q->ucov[jj] * q->uradcon[jj]);
 
   // get B
+  //  DLOOPA(jj) dualfprintf(fail_file,"bcon=%21.15g bcov=%21.15g ucon=%21.15g ucov=%21.15g uradcon=%21.15g uradcov=%21.15g\n",q->bcon[jj],q->bcov[jj],q->ucon[jj],q->ucov[jj],q->uradcon[jj],q->uradcov[jj]);
+
   FTYPE bsq = dot(q->bcon, q->bcov);
-  FTYPE B=sqrt(bsq);
+  FTYPE B=sqrt(fabs(bsq));
 
   FTYPE rho=pp[RHO];
 
@@ -10830,33 +10845,35 @@ static void calc_Trad_fromRuuandgamma(FTYPE *pp, struct of_geom *ptrgeom, FTYPE 
 
   // Get fluid-frame radiation temperature and number density
 
+  FTYPE TradLTE = calc_LTE_TfromE(fabs(Ruu));
+  FTYPE nradLTE = calc_LTE_NfromE(fabs(Ruu));
 
 
 #if(EVOLVENRAD==0)
   // ASSUMPTION: PLANCK
-  Tradff = calc_LTE_TfromE(fabs(Ruu));
-  nradff = calc_LTE_NfromE(fabs(Ruu));
+  Tradff = TradLTE;
+  nradff = nradLTE;
   expfactorradff=1.0; // Planck
 #else
 
   // -1 = Overwrite evolvd nradff as test
-  // 0 = assume Planck
-  // 1 = assume non-Planck chemical potential.
+  // 0 = assume Planck (even if NRAD>=0, overrides primitive nrad)
+  // 1 = assume non-Planck chemical potential (with evolved NRAD)
   // 2 = account for finite chemical potential using Ramesh fit
   // 3 = like 1 but Jon fit without divergent issues.
   // But 1,2 only change T_r by 10% at most for any Ruu,nradff, and would have to include chemical potential in opacity and use (say Jon's) chemical potential vs. Ruu,nradff fit and have \kappa(Tg,Tr,\mu).
-#define TRADTYPE 3
+#define TRADTYPE 0
 
 
 #if(TRADTYPE==-1)
   // Planck (i.e. not LTE with gas, but locally Planck in radiation frame)
-  Tradff = calc_LTE_TfromE(fabs(Ruu));
-  nradff = calc_LTE_NfromE(fabs(Ruu));
-  expfactorradff=1.0;
+  Tradff = TradLTE;
+  nradff = nradLTE;
+  expfactorradff=1.0; // LTE - Planck
 
 #elif(TRADTYPE==0)
   // Planck (i.e. not LTE with gas, but locally Planck in radiation frame)
-  Tradff = calc_LTE_TfromE(fabs(Ruu));
+  Tradff = TradLTE;
   nradff = pp[NRAD]*gammaradgas; // nrad evolved
   expfactorradff=1.0;
 
@@ -10904,7 +10921,14 @@ static void calc_Trad_fromRuuandgamma(FTYPE *pp, struct of_geom *ptrgeom, FTYPE 
   
 #endif// end if TRADTYPE=1-3
 #endif// end if EVOLVENRAD!=0
-  
+ 
+
+  // Apply min and max to radiation temperature
+  if(Tradff<TEMPMIN) Tradff=TEMPMIN;
+  if(Tradff>TEMPMAX) Tradff=TEMPMAX;
+
+  // TODOMARK: Apply floor to nradff?  (i.e. don't allow softening, only hardening?)
+ 
   *Trad=Tradff; // radiation temperature in fluid frame
   *nrad=nradff; // radiation number density in fluid frame
   *expfactorrad=expfactorradff;// expf = e^{-\mu/(k_b T_r)} for chemical potential mu of radiation
@@ -11150,7 +11174,7 @@ int calc_Rij_ff(FTYPE *pp, FTYPE Rij[][NDIM])
   else if(EOMRADTYPE==EOMRADM1CLOSURE){
 
     if(nlen>=1.) f=1.; // KORALTODO: limiter, but only used so far for IC
-    else  f=(3.+4.*(nx*nx+ny*ny+nz*nz))/(5.+2.*sqrt(4.-3.*(nx*nx+ny*ny+nz*nz)));  //M1
+    else  f=(3.+4.*(nx*nx+ny*ny+nz*nz))/(5.+2.*sqrt( fabs(4.-3.*(nx*nx+ny*ny+nz*nz)) ) );  //M1
   }
   else if(EOMRADTYPE==EOMRADNONE){
 
@@ -11226,23 +11250,28 @@ FTYPE my_sign(FTYPE x)
 
 
 
-/* invert genmatrixlower to get genmatrixupper */
+/// invert genmatrixlower to get genmatrixupper
+#define INVERSELOOP(j,k,truedim) for(j=0;j<truedim;j++) for(k=0;k<truedim;k++) 
 // can be used to invert any 2nd rank tensor (symmetric or not)
 // actually returns the inverse transpose, so if
 // genmatrixlower=T^j_k then out pops (iT)^k_j such that T^j_k (iT)^k_l = \delta^j_l
-static int matrix_inverse_55(FTYPE (*genmatrixlower)[JACNPR], FTYPE (*genmatrixupper)[JACNPR])
+static int matrix_inverse_jacnpr(FTYPE (*genmatrixlower)[JACNPR], FTYPE (*genmatrixupper)[JACNPR])
 {
   int pl,pliter;
   int j, k;
-  int truedim=5;
+  int truedim=JACNPR;
 
 #if(PRODUCTION==0)
   if(truedim!=JACNPR){
-    dualfprintf(fail_file,"bad 55\n");
+    dualfprintf(fail_file,"bad JACNPR\n");
     myexit(2252526);
   }
 #endif
 
+  // check for nan, else gaussj will barf
+  FTYPE total=0.0;
+  INVERSELOOP(j,k,truedim) total+=genmatrixlower[j][k];
+  if(!isfinite(total)) return(4);
 
 
 #if(USEOPENMP)
@@ -11259,15 +11288,14 @@ static int matrix_inverse_55(FTYPE (*genmatrixlower)[JACNPR], FTYPE (*genmatrixu
 #endif
 
 
-#define INVERSELOOP(j,k,truedim) for(j=0;j<truedim;j++) for(k=0;k<truedim;k++) 
 
   INVERSELOOP(j,k,truedim) tmp[j + 1][k + 1] = genmatrixlower[j][k];
   
 
   // 0-out all genmatrixupper
-  INVERSELOOP(j,k,truedim) genmatrixupper[j][k]=0.0;
+  //INVERSELOOP(j,k,truedim) genmatrixupper[j][k]=0.0;
   
-
+  //  dualfprintf(fail_file,"truedim=%d\n",truedim);
   int failtype=gaussj(tmp, truedim, NULL, 0);
 
   if(failtype==0){
@@ -12248,8 +12276,8 @@ int u2p_rad_new_pre(int showmessages, int allowlocalfailurefixandnoreport, FTYPE
     //    dualfprintf(fail_file,"yvar=%g>%g Ersq=%g gamma=%g\n",yvar,ylimit,Ersq,gamma);
   }
   else{ // normal solution
-    gammasq = (2.0 - yvar + sqrt(4.0-3.0*yvar))/ (4.0*(1.0-yvar));
-    gamma=sqrt(gammasq);
+    gammasq = (2.0 - yvar + sqrt( fabs(4.0-3.0*yvar)) )/ (4.0*(1.0-yvar));
+    gamma=sqrt(fabs(gammasq));
     //    dualfprintf(fail_file,"yvar=%g Ersq=%g gamma=%g\n",yvar,Ersq,gamma);
   }
 
@@ -12301,7 +12329,7 @@ int u2p_rad_new_pre(int showmessages, int allowlocalfailurefixandnoreport, FTYPE
     //    dualfprintf(fail_file,"gamma=%g gammanew=%g\n",gamma,gammanew);
 
     // rescale, assuming want to be gamma
-    FTYPE fvar=sqrt((gamma*gamma-1.0)/(gammanew*gammanew-1.0));
+    FTYPE fvar=sqrt(fabs((gamma*gamma-1.0)/(gammanew*gammanew-1.0)));
     if(gammanew>1.0){
       SLOOPA(jj) urfconrel[jj] *= fvar;
     }
@@ -12490,8 +12518,8 @@ int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gam
     //    dualfprintf(fail_file,"yvar=%g>%g Ersq=%g gamma=%g\n",yvar,ylimit,Ersq,gamma);
   }
   else{ // normal solution
-    gammasq = (2.0 - yvar + sqrt(4.0-3.0*yvar))/ (4.0*(1.0-yvar));
-    gamma=sqrt(gammasq);
+    gammasq = (2.0 - yvar + sqrt(fabs(4.0-3.0*yvar)))/ (4.0*(1.0-yvar));
+    gamma=sqrt(fabs(gammasq));
 
     pr = Er/(4.0*gammasq-1.0);
     // radiation frame energy density
@@ -12553,7 +12581,7 @@ int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gam
 
         // rescale, assuming want to be gammamax
         if(gammanew>1.0){
-          FTYPE fvar=sqrt((gammamax*gammamax-1.0)/(gammanew*gammanew-1.0));
+          FTYPE fvar=sqrt(fabs((gammamax*gammamax-1.0)/(gammanew*gammanew-1.0)));
           SLOOPA(jj) urfconrel[jj] *= fvar;
           // verify
           FTYPE gammaneworig=gammanew;
@@ -12612,7 +12640,7 @@ int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gam
         
         // rescale, assuming want to be gamma that chose in previous section
         if(gammanew>1.0){
-          FTYPE fvar=sqrt((gammasq-1.0)/(gammanew*gammanew-1.0));
+          FTYPE fvar=sqrt(fabs((gammasq-1.0)/(gammanew*gammanew-1.0)));
           SLOOPA(jj) urfconrel[jj] *= fvar;
         }
         else{
@@ -14322,7 +14350,7 @@ FTYPE calc_LTE_NfromE(FTYPE E)
 FTYPE calc_LTE_TfromE(FTYPE E )
 {
   //  return sqrt(sqrt((E/4./SIGMA_RAD)));
-  return (sqrt(sqrt((E/(SMALL+ARAD_CODE)))));
+  return (sqrt(sqrt((fabs(E/(SMALL+ARAD_CODE))))));
 }
 
 /// This will really give back only LTE E

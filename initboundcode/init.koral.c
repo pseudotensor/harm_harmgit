@@ -9728,10 +9728,20 @@ int kappa_func_fits_all(FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, FTYPE varexpf, F
   FTYPE rhoreal=rho*RHOBAR;
   FTYPE nereal=3.0110683499999995e23*rhoreal*(1.0 + XFACT);
   FTYPE Breal=B*BFIELDBAR;
+
   FTYPE Tereal=Te*TEMPBAR+TEMPMINKELVIN; // Apply minimum electron temperature so ff and fb opacities don't diverge
+  if(Tereal>TEMPMAXKELVIN) Tereal=TEMPMAXKELVIN; // Apply max for opacities
+
   FTYPE Tgreal=Tg*TEMPBAR+TEMPMINKELVIN; // Apply minimum electron temperature so ff and fb opacities don't diverge
+  if(Tgreal>TEMPMAXKELVIN) Tgreal=TEMPMAXKELVIN; // Apply max for opacities
+
   FTYPE Trreal=Tr*TEMPBAR;
-  FTYPE xi = 1E-20+Trreal/Tereal; // Apply minimum \xi beyond which assume constant so as Trreal->0 expressions don't misbehave
+  if(Trreal>TEMPMAXKELVIN) Trreal=TEMPMAXKELVIN; // Apply max for opacities
+
+#define XIMIN 1E-20
+#define XIMAX 1E20
+  FTYPE xi = XIMIN + Trreal/Tereal; // Apply minimum \xi beyond which assume constant so as Trreal->0 expressions don't misbehave
+  if(xi>XIMAX) xi=XIMAX; // Apply max for xi
 
   FTYPE thetae = Tereal/TEMPELE;
   FTYPE thetaesq=thetae*thetae;
@@ -9882,7 +9892,7 @@ int kappa_func_fits_all(FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, FTYPE varexpf, F
   //////////////
 
   // just add-in factor by which chianti opal adds-in
-  FTYPE factorchiantiopal=3E-13*pow(Tereal,1.6)*pow(rhoreal,-0.4);
+  FTYPE factorchiantiopal=3E-13*pow(Tereal,1.6)*pow(SMALL+rhoreal,-0.4);
   FTYPE kappachiantiopalreal = kappaffreal*factorchianti*factorchiantiopal;
   FTYPE kappanchiantiopalreal = kappanffreal*factorchianti*factorchiantiopal;
   FTYPE kappaemitchiantiopalreal = kappaemitffreal*factorchianti*factorchiantiopal;

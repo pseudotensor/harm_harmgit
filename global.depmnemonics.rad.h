@@ -102,6 +102,12 @@
 //#define TEMPMINKELVIN (1.0E+2) // Kelvin // Problem with consistency in error function and entropy estimate for URAD method.
 #define TEMPMINKELVIN (1.0E-10) // Kelvin
 #define TEMPMIN (TEMPMINKELVIN/TEMPBAR) // Code units
+// put max to avoid crazy temps entering temporarily in implicit solver that caues nan's.  Above this temp not reasonable that physics is even right.
+#define TEMPMAXKELVIN (1.0E14) // Kelvin
+#define TEMPMAX (TEMPMAXKELVIN/TEMPBAR) // Code units
+// no rhomin as all opacities go to zero (except use SMALL when factors in rho are added with negative power)
+// no rhomax, as no obvious scale to use.
+//#define EXPFMIN (SMALL) // no need for varexpf small as kappa's always were fit to be between 0 and 1 and 0 is never a problem otherwise as well.
 
 
 ////////////////////
