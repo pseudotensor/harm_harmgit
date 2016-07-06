@@ -10856,13 +10856,13 @@ static void calc_Trad_fromRuuandgamma(FTYPE *pp, struct of_geom *ptrgeom, FTYPE 
   expfactorradff=1.0; // Planck
 #else
 
-  // -1 = Overwrite evolvd nradff as test
-  // 0 = assume Planck (even if NRAD>=0, overrides primitive nrad)
-  // 1 = assume non-Planck chemical potential (with evolved NRAD)
-  // 2 = account for finite chemical potential using Ramesh fit
-  // 3 = like 1 but Jon fit without divergent issues.
-  // But 1,2 only change T_r by 10% at most for any Ruu,nradff, and would have to include chemical potential in opacity and use (say Jon's) chemical potential vs. Ruu,nradff fit and have \kappa(Tg,Tr,\mu).
-#define TRADTYPE 0
+  // -1 = assume Planck \mu and T and nrad
+  // 0 = assume Planck \mu and T but evolve nrad
+  // 1 = assume Planck \mu and evolve T and nrad
+  // 2 = Ramesh fit for T(\mu) but assume Planck \mu for opacities and evolve T and nrad
+  // 3 = Jon's fit for T(\mu) and evolve \mu for opacities and evolve T and nrad
+  // But 2,3 only change T_r by 10% at most for any Ruu,nradff, and would have to include chemical potential in opacity and use (say Jon's) chemical potential vs. Ruu,nradff fit and have \kappa(Tg,Tr,\mu).
+#define TRADTYPE 3
 
 
 #if(TRADTYPE==-1)
