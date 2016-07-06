@@ -9743,6 +9743,8 @@ int kappa_func_fits_all(FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, FTYPE varexpf, F
   FTYPE xi = XIMIN + Trreal/Tereal; // Apply minimum \xi beyond which assume constant so as Trreal->0 expressions don't misbehave
   if(xi>XIMAX) xi=XIMAX; // Apply max for xi
 
+  FTYPE xie=1.0; // xi for emission
+
   FTYPE thetae = Tereal/TEMPELE;
   FTYPE thetaesq=thetae*thetae;
   FTYPE thetaecubed=thetaesq*thetae;
@@ -9805,7 +9807,7 @@ int kappa_func_fits_all(FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, FTYPE varexpf, F
   //    FTYPE bbe=3.0775444410210264;
   //    FTYPE cce=9.354365388578165;
  
-  kappaemitffreal *= aae*pow(xi,-bbe)*log(1.0+cce*xi);
+  kappaemitffreal *= aae*pow(xie,-bbe)*log(1.0+cce*xie);
 
 #if(EVOLVENRAD||1)
   // XRB Ledd
@@ -9816,7 +9818,7 @@ int kappa_func_fits_all(FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, FTYPE varexpf, F
   //    FTYPE bbne=2.0551425132443293;
   //    FTYPE ccne=62558.213216069445;
 
-  kappanemitffreal *= aane*pow(xi,-bbne)*log(1.0+ccne*xi);
+  kappanemitffreal *= aane*pow(xie,-bbne)*log(1.0+ccne*xie);
 #endif
 
   //////////////
@@ -9971,10 +9973,17 @@ int kappa_func_fits_all(FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, FTYPE varexpf, F
   FTYPE minTrreal = 1E-20*(HPLANCK*(minnuM+nuM))/(K_BOLTZ);
   FTYPE phi = (K_BOLTZ*(minTrreal+Trreal))/(HPLANCK*(minnuM+nuM));
 
+  // emission phi must use Te
+  FTYPE minnuMe = (K_BOLTZ*Tereal)/(HPLANCK*1E20); // minimum nuM so that phi is no bigger than 1E20
+  FTYPE minTereale = 1E-20*(HPLANCK*(minnuMe+nuM))/(K_BOLTZ);
+  FTYPE phie = (K_BOLTZ*(minTereale+Tereal))/(HPLANCK*(minnuMe+nuM));
+
+
   // synch prefactor
 #define BFIELDMIN (1E-30) // just for division purposes, as nuM multiplied above will zero-out near Breal=0
   //  FTYPE kappasyreal=2.13E-11*nereal/(Breal+BFIELDMIN)*pow(Tereal/1E10,-5.0);
   FTYPE kappasyreal=5.85374E-14*nereal*phi*pow(thetae,-3.0)/(minTrreal+Trreal);
+  FTYPE kappaemitsyreal=5.85374E-14*nereal*phi*pow(thetae,-3.0)/(minTereale+Tereal);
 
   // low-temp factor
   //  FTYPE q0 = 1.0/ (1.0+pow(3.3*thetae,-5.0));
@@ -9984,8 +9993,8 @@ int kappa_func_fits_all(FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, FTYPE varexpf, F
   kappasyreal *= qsyn;
     
   FTYPE kappansyreal=kappasyreal; // same prefactor
-  FTYPE kappaemitsyreal=kappasyreal; // same prefactor
-  FTYPE kappanemitsyreal=kappasyreal; // same prefactor
+  //  FTYPE kappaemitsyreal=kappaemitsyreal; // same prefactor
+  FTYPE kappanemitsyreal=kappaemitsyreal; // same prefactor
 
   // absorption
 
@@ -10018,7 +10027,7 @@ int kappa_func_fits_all(FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, FTYPE varexpf, F
   FTYPE ddes=0.6156050795639245;
   FTYPE eees=2.911962289750286;
  
-  kappaemitsyreal *= 1.0/( 1.0/(aaes*pow(phi,-bbes)*log(1.0+cces*phi)) + 1.0/(ddes*pow(phi,-eees)) );
+  kappaemitsyreal *= 1.0/( 1.0/(aaes*pow(phie,-bbes)*log(1.0+cces*phie)) + 1.0/(ddes*pow(phie,-eees)) );
 
 #if(EVOLVENRAD||1)
   // XRB Ledd
@@ -10028,7 +10037,7 @@ int kappa_func_fits_all(FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, FTYPE varexpf, F
   FTYPE ddnes=0.12270009542236275;
   FTYPE eenes=2.0004679480333123;
 
-  kappanemitsyreal *= 1.0/( 1.0/(aanes*pow(phi,-bbnes)*log(1.0+ccnes*phi)) + 1.0/(ddnes*pow(phi,-eenes)) );
+  kappanemitsyreal *= 1.0/( 1.0/(aanes*pow(phie,-bbnes)*log(1.0+ccnes*phie)) + 1.0/(ddnes*pow(phie,-eenes)) );
 #endif
 
   //////////////
@@ -10157,7 +10166,7 @@ int kappa_func_fits_all(FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, FTYPE varexpf, F
   dualfprintf(fail_file,"DOG2: kappa=%21.15g kappan=%21.15g kappaaemit=%21.15g kappanemit=%21.15g kappaes=%21.15g\n",*kappa,*kappan,*kappaemit,*kappanemit,*kappaes);
   dualfprintf(fail_file,"DOG3: kappadensityreal=%21.15g kappasyreal=%21.15g kappadcreal=%21.15g\n",kappadensityreal*overopacitybaralt,kappasyreal*overopacitybaralt,kappadcreal*overopacitybaralt);
   //  dualfprintf(fail_file,"DOGA: phi=%21.15g xi=%21.15g qsyn=%21.15g Trreal=%21.15g Tereal=%21.15g q0=%21.15g q1=%21.15g thetae=%21.15g\n",phi,xi,qsyn,Trreal,Tereal,q0,q1,thetae);
-  dualfprintf(fail_file,"DOGA: phi=%21.15g xi=%21.15g Trreal=%21.15g Tereal=%21.15g thetae=%21.15g\n",phi,xi,Trreal,Tereal,thetae);
+  dualfprintf(fail_file,"DOGA: phi=%21.15g phie=%21.15g xi=%21.15g Trreal=%21.15g Tereal=%21.15g thetae=%21.15g\n",phi,phie,xi,Trreal,Tereal,thetae);
   dualfprintf(fail_file,"DOG4: kappafereal=%21.15g kappamolreal=%21.15g kappahmopalreal=%21.15g kappachiantiopalreal=%21.15g kappachiantireal=%21.15g kappaffreal=%21.15g kappaffeereal=%21.15g kappabfreal=%21.15g\n",kappafereal*overopacitybaralt,kappamolreal*overopacitybaralt,kappahmopalreal*overopacitybaralt,kappachiantiopalreal*overopacitybaralt,kappachiantireal*overopacitybaralt,kappaffreal*overopacitybaralt,kappaffeereal*overopacitybaralt,kappabfreal*overopacitybaralt);
   dualfprintf(fail_file,"DOG9: kappa=%21.15g kappaaemit=%21.15g kappaes=%21.15g\n",rho*(KAPPA_GENFF_CODE(SMALL+rho,Tg+TEMPMIN,Tr+TEMPMIN)),rho*(KAPPA_GENFF_CODE(SMALL+rho,Tg+TEMPMIN,Tg+TEMPMIN)),rho*KAPPA_ES_CODE(rho,Tg+TEMPMIN));
 #endif

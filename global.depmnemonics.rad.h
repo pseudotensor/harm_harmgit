@@ -36,10 +36,11 @@
 #define MBAR (RHOBAR*LBAR*LBAR*LBAR) // cgs in grams
 #define ENBAR (MBAR*VBAR*VBAR) // cgs energy in ergs
 #define UBAR (RHOBAR*VBAR*VBAR) // cgs energy density in ergs/cm^3
+#define NBAR (UBAR/MBAR) // number density in 1/cm^3
 #define NDENRATEBAR (1.0/(LBAR*LBAR*LBAR*TBAR))
 #define EDENRATEBAR (ENBAR/(LBAR*LBAR*LBAR*TBAR))
 #define BFIELDBAR (VBAR*sqrt(RHOBAR))  // speed ~ b/sqrt(rho)
-#define TEMPBAR (M_PROTON*CCCTRUE*CCCTRUE/K_BOLTZ) // cgs unit of temperature in Kelvin (used to make Kelvin dimensionless)
+#define TEMPBAR (M_PROTON*CCCTRUE*CCCTRUE/K_BOLTZ) // cgs unit of temperature in Kelvin (used to make Kelvin dimensionless).  This also makes ideal gas formulae simple, but notice different energy scale (i.e. not ENBAR but M_PROTON*CCCTRUE*CCCTRUE), so any other use of T gets more complicated factors.
 // so for (e.g.) ideal gas, ucode = rhocode * Tcode using u=\rho_0 k_b T / (m_b c^2)  gives both ucode and rhocode in g/cm^3
 
 // NOTEMARK: If IC has RHO~UU in terms of units, then need to use RHOBAR to make each dimensionless.  Else add explicit CCCTRUE^2 prefactor in IC value of UU (i.e. energy density) before normalizing with UBAR.

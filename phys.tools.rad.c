@@ -5292,7 +5292,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     numhisterr0[MAX(MIN((int)(-log10l(SMALL+errorabs[0])),NUMNUMHIST-1),0)]++;
     numhisterr1[MAX(MIN((int)(-log10l(SMALL+errorabs[1])),NUMNUMHIST-1),0)]++;
     numhistiter[MAX(MIN(iters,IMPMAXITERLONG),0)]++;
-#define HISTREPORTSTEP (DTr) //something infrequent but not too much so
+#define HISTREPORTSTEP (10) //something infrequent but not too much so
     if(debugfail>=2 && nstep%HISTREPORTSTEP==0 && ptrgeom->i==0 && ptrgeom->j==0 && ptrgeom->k==0){
       int histi;
       for(histi=0;histi<NUMNUMHIST;histi++){
@@ -10770,7 +10770,7 @@ static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYP
 #if(EVOLVENRAD&&NRAD>=0)
   FTYPE ndotff,ndotffabs;
   // in limit that Tgas=Trad, must have balance such that ndotff->0, so nlambda must come from kappan and nradff->LTE_N
-  ndotff = -(kappan*nradff - nlambda);
+  ndotff = +(kappan*nradff - nlambda);
   ndotffabs = fabs(kappan*nradff) + fabs(nlambda);
   // return \dot{nrad} : photon density in fluid frame per unit fluid frame time
   *ndotffreturn=ndotff;
