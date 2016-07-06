@@ -10862,37 +10862,43 @@ static void calc_Trad_fromRuuandgamma(FTYPE *pp, struct of_geom *ptrgeom, FTYPE 
   // 2 = Ramesh fit for T(\mu) but assume Planck \mu for opacities and evolve T and nrad
   // 3 = Jon's fit for T(\mu) and evolve \mu for opacities and evolve T and nrad
   // But 2,3 only change T_r by 10% at most for any Ruu,nradff, and would have to include chemical potential in opacity and use (say Jon's) chemical potential vs. Ruu,nradff fit and have \kappa(Tg,Tr,\mu).
-#define TRADTYPE 3
+#define TRADTYPE 1
 
 
 #if(TRADTYPE==-1)
-  // Planck (i.e. not LTE with gas, but locally Planck in radiation frame)
-  Tradff = TradLTE;
-  nradff = nradLTE;
-  expfactorradff=1.0; // LTE - Planck
 
-#elif(TRADTYPE==0)
-  // Planck (i.e. not LTE with gas, but locally Planck in radiation frame)
+  nradff = nradLTE;
   Tradff = TradLTE;
-  nradff = pp[NRAD]*gammaradgas; // nrad evolved
   expfactorradff=1.0;
 
-#else // any other types
+#elif(TRADTYPE==0)
 
-  // Color-corrected/shifted Planck
   nradff = pp[NRAD]*gammaradgas; // nrad evolved
+  Tradff = TradLTE;
+  expfactorradff=1.0;
+
+#elif(TRADTYPE==1)
+
+  nradff = pp[NRAD]*gammaradgas;
 
   // see BE.nb
   FTYPE Ruurat=Ruu/ARAD_CODE;
   FTYPE nradffrat=nradff/NRAD_ARAD_CODE;
-  
-  
-#if(TRADTYPE==1)
+
   // see kappan_constant.nb
   Tradff = Ruurat/(SMALL+nradffrat*EBAR0);
-  expfactorradff = 1.0; // but really inconsistent since should be able to get Tradff directly from Ruu if \mu=0
 
+  expfactorradff = 1.0; // but really inconsistent since should be able to get Tradff directly from Ruu if \mu=0
+  
+  
 #elif(TRADTYPE==2)
+
+  nradff = pp[NRAD]*gammaradgas;
+
+  // see BE.nb
+  FTYPE Ruurat=Ruu/ARAD_CODE;
+  FTYPE nradffrat=nradff/NRAD_ARAD_CODE;
+
   //       below avoids assuming that EBAR0 kb T is average energy per photon
   FTYPE BB = CRAD0 * EBAR0*EBAR0*EBAR0*EBAR0 * (3.0-EBAR0); // FTYPE BB=2.449724;
   FTYPE EBAR1 = 3. - (6.493939402266829*BB*Power(nradffrat,4))/
@@ -10901,7 +10907,16 @@ static void calc_Trad_fromRuuandgamma(FTYPE *pp, struct of_geom *ptrgeom, FTYPE 
   //if(EBAR1<0.5*EBAR0) EBAR1=0.5*EBAR0; // hard cut but at lower value, allowing a bit lower than BB value that is rare but avoids Jacobian problems
   Tradff = Ruurat/(SMALL+nradffrat*EBAR1); // Accounts for non-zero chemical potential of photons giving them higher average energy per photon than thermal case for a given temperature
 
+  expfactorradff = 1.0; // but really inconsistent since should be able to get Tradff directly from Ruu if \mu=0
+
 #elif(TRADTYPE==3)
+
+  nradff = pp[NRAD]*gammaradgas;
+
+  // see BE.nb
+  FTYPE Ruurat=Ruu/ARAD_CODE;
+  FTYPE nradffrat=nradff/NRAD_ARAD_CODE;
+
   // Below is Jon's fit that has no singularity issue.  See BE.nb
   Tradff = (Ruurat*(0.333333333327962 + 
        0.060724957534625555/
@@ -10916,10 +10931,10 @@ static void calc_Trad_fromRuuandgamma(FTYPE *pp, struct of_geom *ptrgeom, FTYPE 
 
   if(expfactorradff>1.0) expfactorradff=1.0; // account for BE condensation.
   // expfactorradff = exp(-\xi) = exp(-\mu/(k_B Tradff))
-#endif
   // Tradff/TradLTE = fco = color correction factor
   
-#endif// end if TRADTYPE=1-3
+#endif// end if TRADTYPE=3
+
 #endif// end if EVOLVENRAD!=0
  
 
