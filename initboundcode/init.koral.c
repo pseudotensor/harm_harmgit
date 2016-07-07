@@ -497,7 +497,7 @@ int init_global(void)
   ERADLIMIT=UUMINLIMIT; // seems fine.
 
   if(WHICHPROBLEM==RADDONUT){
-    ERADLIMIT=1E-20; // choose so smallest value PRAD0 likely to obtain, but no smaller else problems with YFL4 (well, still issues)
+    ERADLIMIT=1E-30; // choose so smallest value PRAD0 likely to obtain, but no smaller else problems with YFL4 (well, still issues)
   }
 
 
@@ -2485,6 +2485,7 @@ int init_global(void)
     }
 
 
+    //    for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=1.0;
 
     // tf = 100*DTdumpgen[0]; // 100 dumps(?)
     //    tf = 2000*DTdumpgen[0]; // koral in default setup does 1000 dumps
@@ -5588,7 +5589,7 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
         pradffortho[PRAD1]=pradfforthoatm[PRAD1];
         pradffortho[PRAD2]=pradfforthoatm[PRAD2];
         pradffortho[PRAD3]=pradfforthoatm[PRAD3];
-        if(NRAD>=0) pradffortho[NRAD] = calc_LTE_NfromE(pradffortho[PRAD0]);
+        if(NRAD>=0) pradffortho[NRAD] = calc_LTE_NfromE(pradfforthoatm[PRAD0]);
       }
 
 
@@ -9978,7 +9979,6 @@ int kappa_func_fits_all(FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, FTYPE varexpf, F
   FTYPE minTereale = 1E-20*(HPLANCK*(minnuMe+nuM))/(K_BOLTZ);
   FTYPE phie = (K_BOLTZ*(minTereale+Tereal))/(HPLANCK*(minnuMe+nuM));
 
-
   // synch prefactor
 #define BFIELDMIN (1E-30) // just for division purposes, as nuM multiplied above will zero-out near Breal=0
   //  FTYPE kappasyreal=2.13E-11*nereal/(Breal+BFIELDMIN)*pow(Tereal/1E10,-5.0);
@@ -9996,6 +9996,14 @@ int kappa_func_fits_all(FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, FTYPE varexpf, F
   //  FTYPE kappaemitsyreal=kappaemitsyreal; // same prefactor
   FTYPE kappanemitsyreal=kappaemitsyreal; // same prefactor
 
+  // Apply restriction to XRB Ledd synch that shows below \phi=1E-2, residual becomes constant for both energy and number opacities
+  // At very low phi, fit expressions become problematic, so this helps avoid that too.
+  FTYPE phiinfit=phi;
+  if(phiinfit<1E-2) phiinfit=1E-2;
+
+  FTYPE phieinfit=phie;
+  if(phieinfit<1E-2) phieinfit=1E-2;
+
   // absorption
 
   // XRB Ledd
@@ -10005,7 +10013,7 @@ int kappa_func_fits_all(FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, FTYPE varexpf, F
   FTYPE dds=18.267252224714966 - 3.333556659049229*Power(1. - 1.*varexpf,2.7594532239756604) - 17.651647145151042*Power(varexpf,49.40047066070007);
   FTYPE ees=2.4851294642136326 + 1.2316705357826585*Power(1. - 1.*varexpf,0.21357152750491384) + 0.42683282553665336*Power(varexpf,0.6543955138816183);
 
-  kappasyreal *= 1.0/( 1.0/(aas*pow(phi,-bbs)*log(1.0+ccs*phi)) + 1.0/(dds*pow(phi,-ees)) );
+  kappasyreal *= 1.0/( 1.0/(aas*pow(phiinfit,-bbs)*log(1.0+ccs*phiinfit)) + 1.0/(dds*pow(phiinfit,-ees)) );
 
 #if(EVOLVENRAD||1)
   // XRB Ledd
@@ -10015,7 +10023,7 @@ int kappa_func_fits_all(FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, FTYPE varexpf, F
   FTYPE ddns=8.710677885264703 - 6.470485714643377*Power(1. - 1.*varexpf,0.43622943950210663) - 8.58797778984234*Power(varexpf,155.08065851132326);
   FTYPE eens=2.447135378534403 + 0.5059941053985519*Power(1. - 1.*varexpf,0.1554411719728079) - 0.4466674305010909*Power(varexpf,393.57969904498856);
 
-  kappansyreal *= 1.0/( 1.0/(aans*pow(phi,-bbns)*log(1.0+ccns*phi)) + 1.0/(ddns*pow(phi,-eens)) );
+  kappansyreal *= 1.0/( 1.0/(aans*pow(phiinfit,-bbns)*log(1.0+ccns*phiinfit)) + 1.0/(ddns*pow(phiinfit,-eens)) );
 #endif
 
   // emission (just Planck varexpf=1 but using actual direct fit instead of fit over many varexpf)
@@ -10027,7 +10035,7 @@ int kappa_func_fits_all(FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, FTYPE varexpf, F
   FTYPE ddes=0.6156050795639245;
   FTYPE eees=2.911962289750286;
  
-  kappaemitsyreal *= 1.0/( 1.0/(aaes*pow(phie,-bbes)*log(1.0+cces*phie)) + 1.0/(ddes*pow(phie,-eees)) );
+  kappaemitsyreal *= 1.0/( 1.0/(aaes*pow(phieinfit,-bbes)*log(1.0+cces*phieinfit)) + 1.0/(ddes*pow(phieinfit,-eees)) );
 
 #if(EVOLVENRAD||1)
   // XRB Ledd
@@ -10037,7 +10045,7 @@ int kappa_func_fits_all(FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, FTYPE varexpf, F
   FTYPE ddnes=0.12270009542236275;
   FTYPE eenes=2.0004679480333123;
 
-  kappanemitsyreal *= 1.0/( 1.0/(aanes*pow(phie,-bbnes)*log(1.0+ccnes*phie)) + 1.0/(ddnes*pow(phie,-eenes)) );
+  kappanemitsyreal *= 1.0/( 1.0/(aanes*pow(phieinfit,-bbnes)*log(1.0+ccnes*phieinfit)) + 1.0/(ddnes*pow(phieinfit,-eenes)) );
 #endif
 
   //////////////
@@ -10061,7 +10069,11 @@ int kappa_func_fits_all(FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, FTYPE varexpf, F
   FTYPE kappaemitdcreal=kappadcreal; // same prefactor
   FTYPE kappanemitdcreal=kappadcreal; // same prefactor
 
-  // absorption
+  // Apply restriction residual for XRB Ledd DC that becomes quite constant once thetar<1E-4 for both emission and absorption as well as energy and number opacities.
+  FTYPE thetarinfit=thetar;
+  if(thetarinfit<1E-4) thetarinfit=1E-4;
+
+ // absorption
 
   // XRB Ledd
   FTYPE aadc=3.10482346702441e-8 + 4.162489998316388*Power(1. - 1.*varexpf,1.6896115787181434) + 6.702210386421933*Power(varexpf,0.941782674568028);
@@ -10069,7 +10081,7 @@ int kappa_func_fits_all(FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, FTYPE varexpf, F
   FTYPE ccdc=3.8020287401719655 + 0.2009643395406986*Power(1. - 1.*varexpf,0.25767159028663056) - 0.18040020940821044*Power(varexpf,33.009903857413704);
   FTYPE dddc=0.11793169411613985 - 0.06262831233321572*Power(1. - 1.*varexpf,0.34961114748511685) + 0.016889330731907487*Power(varexpf,35.3723390749425);
     
-  kappadcreal *= 1.0/( 1.0/aadc + 1.0/(bbdc*pow(thetar,-ccdc)) + 1.0/(dddc*pow(thetar,-ccdc/3.0)) );
+  kappadcreal *= 1.0/( 1.0/aadc + 1.0/(bbdc*pow(thetarinfit,-ccdc)) + 1.0/(dddc*pow(thetarinfit,-ccdc/3.0)) );
 
 #if(EVOLVENRAD||1)
   // XRB Ledd
@@ -10078,7 +10090,7 @@ int kappa_func_fits_all(FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, FTYPE varexpf, F
   FTYPE ccndc=3.9257505990037376 + 0.04266044504755229*Power(1. - 1.*varexpf,181.71820529516145) - 0.8002705331174753*Power(varexpf,21.623589714867247);
   FTYPE ddndc=2.8625119194776856 - 2.716652341873481*Power(1. - 1.*varexpf,0.1055549863784506) + 1.8741117433895793*Power(varexpf,309.10043138151474);
 
-  kappandcreal *= 1.0/( 1.0/aandc + 1.0/(bbndc*pow(thetar,-ccndc)) + 1.0/(ddndc*pow(thetar,-ccndc/3.0)) );
+  kappandcreal *= 1.0/( 1.0/aandc + 1.0/(bbndc*pow(thetarinfit,-ccndc)) + 1.0/(ddndc*pow(thetarinfit,-ccndc/3.0)) );
 #endif
 
   // emission
@@ -10089,7 +10101,7 @@ int kappa_func_fits_all(FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, FTYPE varexpf, F
   FTYPE ccedc=3.7824716575816524 + 0.18426457897750437*Power(1. - 1.*varexpf,0.3661610552743282) - 0.1602799611377681*Power(varexpf,15.388944611235807);
   FTYPE ddedc=0.11936934944026895 - 0.025640260828114658*Power(1. - 1.*varexpf,0.39821885979760463) + 0.014988119208161788*Power(varexpf,26.289513268487767);
  
-  kappaemitdcreal *= 1.0/( 1.0/aaedc + 1.0/(bbedc*pow(thetar,-ccedc)) + 1.0/(ddedc*pow(thetar,-ccedc/3.0)) );
+  kappaemitdcreal *= 1.0/( 1.0/aaedc + 1.0/(bbedc*pow(thetarinfit,-ccedc)) + 1.0/(ddedc*pow(thetarinfit,-ccedc/3.0)) );
 
 #if(EVOLVENRAD||1)
   // XRB Ledd
@@ -10098,7 +10110,7 @@ int kappa_func_fits_all(FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, FTYPE varexpf, F
   FTYPE ccnedc=3.4389272678970677 + 0.441710530722887*Power(1. - 1.*varexpf,0.3614676129393117) - 0.4179301735940477*Power(varexpf,14.840910987577235);
   FTYPE ddnedc=3.375250751641187 - 1.3820659504372945*Power(1. - 1.*varexpf,0.31579132247596853) + 1.3742704814428137*Power(varexpf,31.28257475560334);
 
-  kappanemitdcreal *= 1.0/( 1.0/aanedc + 1.0/(bbnedc*pow(thetar,-ccnedc)) + 1.0/(ddnedc*pow(thetar,-ccnedc/3.0)) );
+  kappanemitdcreal *= 1.0/( 1.0/aanedc + 1.0/(bbnedc*pow(thetarinfit,-ccnedc)) + 1.0/(ddnedc*pow(thetarinfit,-ccnedc/3.0)) );
 #endif
 
   // Planck for interpolation to it when expf->1.  dcpl same as edcpl

@@ -1410,8 +1410,8 @@ int fieldline_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
   if(EOMRADTYPE!=EOMRADNONE){
 
     if(NRAD>=0){
-      // nrad (for various things)
-      ftemp=(float)GLOBALMACP0A1(pdump,i,j,k,NRAD);
+      // nrad (for various things).  With NRAD_ARAD_CODE because otherwise too big for float
+      ftemp=(float)(GLOBALMACP0A1(pdump,i,j,k,NRAD)/NRAD_ARAD_CODE);
       myset(datatype,&ftemp,0,1,writebuf); // 1
     }
 
@@ -1473,27 +1473,28 @@ int fieldline_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
     FTYPE Tgas=0,Tradff=0;
     calc_Tandopacityandemission(pr,ptrgeom,&q,Ruu,gammaradgas,B,&Tgas,&Tradff,&nradff,&expfactorradff,&kappa,&kappan,&kappaemit,&kappanemit,&kappaes, &lambda, &nlambda);
 
-    ftemp=Tgas;
+    ftemp=(float)Tgas;
     myset(datatype,&ftemp,0,1,writebuf); // 1
-    ftemp=Tradff;
+    ftemp=(float)Tradff;
     myset(datatype,&ftemp,0,1,writebuf); // 1
-    ftemp=nradff;
+    FTYPE nradffrat = nradff/NRAD_ARAD_CODE; // because otherwise too big for float
+    ftemp=(float)nradffrat;
     myset(datatype,&ftemp,0,1,writebuf); // 1
-    ftemp=expfactorradff;
+    ftemp=(float)expfactorradff;
     myset(datatype,&ftemp,0,1,writebuf); // 1
-    ftemp=kappa;
+    ftemp=(float)kappa;
     myset(datatype,&ftemp,0,1,writebuf); // 1
-    ftemp=kappan;
+    ftemp=(float)kappan;
     myset(datatype,&ftemp,0,1,writebuf); // 1
-    ftemp=kappaemit;
+    ftemp=(float)kappaemit;
     myset(datatype,&ftemp,0,1,writebuf); // 1
-    ftemp=kappanemit;
+    ftemp=(float)kappanemit;
     myset(datatype,&ftemp,0,1,writebuf); // 1
-    ftemp=kappaes;
+    ftemp=(float)kappaes;
     myset(datatype,&ftemp,0,1,writebuf); // 1
-    ftemp=lambda;
+    ftemp=(float)lambda;
     myset(datatype,&ftemp,0,1,writebuf); // 1
-    ftemp=nlambda;
+    ftemp=(float)nlambda;
     myset(datatype,&ftemp,0,1,writebuf); // 1
 
   }
@@ -1884,7 +1885,10 @@ int raddump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
   FTYPE pradffortho[NPR]={-1};
   FTYPE prff[NPR]; // not new compared to pr
   prad_fforlab(&whichvel, &whichcoord, LAB2FF, i,j,k,CENT,ptrgeom,pradffortho, pr, prff);
-  if(NRAD>=0) myset(datatype,pradffortho,NRAD,1+NDIM,writebuf); // 1+NDIM
+  if(NRAD>=0){
+    pradffortho[NRAD]/=NRAD_ARAD_CODE;
+    myset(datatype,pradffortho,NRAD,1+NDIM,writebuf); // 1+NDIM
+  }
   else myset(datatype,pradffortho,PRAD0,NDIM,writebuf); // NDIM
 
   // get 4-force in lab and fluid frame
@@ -1955,7 +1959,8 @@ int raddump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
   calc_Tandopacityandemission(pr,ptrgeom,&q,Ruu,gammaradgas,B,&Tgas,&Tradff,&nradff,&expfactorradff,&kappa,&kappan,&kappaemit,&kappanemit,&kappaes, &lambda, &nlambda);
 
   myset(datatype,&Tradff,0,1,writebuf); // 1
-  myset(datatype,&nradff,0,1,writebuf); // 1
+  FTYPE nradffrat = nradff/NRAD_ARAD_CODE;
+  myset(datatype,&nradffrat,0,1,writebuf); // 1
   myset(datatype,&expfactorradff,0,1,writebuf); // 1
   myset(datatype,&kappa,0,1,writebuf); // 1
   myset(datatype,&kappan,0,1,writebuf); // 1

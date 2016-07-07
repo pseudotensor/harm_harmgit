@@ -6079,6 +6079,7 @@ void debugfixupaltdeath_bc(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
         }
         if(NRAD>=0){
           // TODO: can force nrad to be LTE
+          prfixtry[NRAD]=calc_LTE_NfromE(prfixtry[URAD0]);
         }
         
         //      limit_gamma(0,1.5,GAMMAMAXRAD,prfixtry,NULL,ptrgeom,-1);
@@ -6133,6 +6134,7 @@ void debugfixupaltdeath_bc(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
         }
         if(NRAD>=0){
           // TODO: can force nrad to be LTE
+          prfixtryb[NRAD]=calc_LTE_NfromE(prfixtryb[URAD0]);
         }
 #endif
 
@@ -6143,6 +6145,11 @@ void debugfixupaltdeath_bc(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
             ufix[pl] = ufixtryb[pl]*switch0b + ufixtry[pl]*switch0*switch2b + ufix[pl]*switch2*switch2b;
           }
         }
+        //if(NRAD>=0){
+        //  // override to be LTE
+        //  prfix[NRAD]=calc_LTE_NfromE(prfix[URAD0]);
+        // }
+
 
         //      dualfprintf(fail_file,"V[1]=%g ijk=%d %d %d switch0=%g switch2=%g\n",V[1],i,j,k,switch0,switch2);
 
