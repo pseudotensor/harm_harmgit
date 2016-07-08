@@ -12,7 +12,7 @@ mkdir git
 cd git
 git clone https://github.com/pseudotensor/harm_harmgit.git
 git checkout koralinsert
-cd harm_harmgit
+mv harm_harmgit harmgit
 cp batches/pfebatchtest .
 cd environmentfiles/pfe
 cp .* ~/
@@ -41,7 +41,7 @@ cp iinterp ~/bin/
 
 
 # now compile harmrad using normal steps
-cd ~/git/harm_harmgit/
+cd ~/git/harmgit/
 git checkout koralinsert # or superedd or subedd for Jane and Danilo
 ln -s initboundcode/init.koral.c init.c
 ln -s initboundcode/init.koral.h init.h
@@ -52,7 +52,7 @@ make superclean ; make prep ; make -j 16
 # setup problem however you want in harmrad
 # try to get batch job going:
 
-cd ~/git/harm_harmgit
+cd ~/git/harmgit
 # edit pfebatchtest
 #
 # read help about qsub and how to use it on google and http://www.nas.nasa.gov/hecc/support/kb/121/
