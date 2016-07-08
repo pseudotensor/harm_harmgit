@@ -10004,47 +10004,64 @@ int kappa_func_fits_all(FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, FTYPE varexpf, F
   FTYPE phieinfit=phie;
   if(phieinfit<1E-2) phieinfit=1E-2;
 
+  FTYPE varexpfsy=varexpf;
+  if(varexpfsy>0.99) varexpfsy=0.99;
+
   // absorption
 
   // XRB Ledd
-  FTYPE aas=1.2717090231066859 - 8.237581949899209e-9*Power(1. - 1.*varexpf,2.415933175034019) - 2.310668567595542e-8*Power(varexpf,33.99434202709177);
-  FTYPE bbs=1.060851343360245 - 0.004747123512839568*Power(1. - 1.*varexpf,1.5464083937328197) - 0.026075188907016322*Power(varexpf,738.0958924659135);
-  FTYPE ccs=0.0005843126554802812 + 0.0000410567490719383*Power(1. - 1.*varexpf,0.37174211933661433) + 0.0001789801048824479*Power(varexpf,432.208942737546);
-  FTYPE dds=18.267252224714966 - 3.333556659049229*Power(1. - 1.*varexpf,2.7594532239756604) - 17.651647145151042*Power(varexpf,49.40047066070007);
-  FTYPE ees=2.4851294642136326 + 1.2316705357826585*Power(1. - 1.*varexpf,0.21357152750491384) + 0.42683282553665336*Power(varexpf,0.6543955138816183);
+  FTYPE aas=1.2717090231066859 - 8.237581949899209e-9*Power(1. - 1.*varexpfsy,2.415933175034019) - 2.310668567595542e-8*Power(varexpfsy,33.99434202709177);
+  FTYPE bbs=1.060851343360245 - 0.004747123512839568*Power(1. - 1.*varexpfsy,1.5464083937328197) - 0.026075188907016322*Power(varexpfsy,738.0958924659135);
+  FTYPE ccs=0.0005843126554802812 + 0.0000410567490719383*Power(1. - 1.*varexpfsy,0.37174211933661433) + 0.0001789801048824479*Power(varexpfsy,432.208942737546);
+  FTYPE dds=18.267252224714966 - 3.333556659049229*Power(1. - 1.*varexpfsy,2.7594532239756604) - 17.651647145151042*Power(varexpfsy,49.40047066070007);
+  FTYPE ees=2.4851294642136326 + 1.2316705357826585*Power(1. - 1.*varexpfsy,0.21357152750491384) + 0.42683282553665336*Power(varexpfsy,0.6543955138816183);
 
   kappasyreal *= 1.0/( 1.0/(aas*pow(phiinfit,-bbs)*log(1.0+ccs*phiinfit)) + 1.0/(dds*pow(phiinfit,-ees)) );
 
 #if(EVOLVENRAD||1)
   // XRB Ledd
-  FTYPE aans=0.0020896556908760167 - 0.000552135392124191*Power(1. - 1.*varexpf,0.13484101986913094) - 0.00035919475351279596*Power(varexpf,1.3117367224699348);
-  FTYPE bbns=0.947936882050393 + 0.04325767539629399*Power(1. - 1.*varexpf,0.15851143273201895) + 0.03500295073258275*Power(varexpf,5.426349783477622);
-  FTYPE ccns=1.0428616563608024 - 0.06847935580879305*Power(1. - 1.*varexpf,2.804976762985117) - 0.12190075333271566*Power(varexpf,37.127481710076715);
-  FTYPE ddns=8.710677885264703 - 6.470485714643377*Power(1. - 1.*varexpf,0.43622943950210663) - 8.58797778984234*Power(varexpf,155.08065851132326);
-  FTYPE eens=2.447135378534403 + 0.5059941053985519*Power(1. - 1.*varexpf,0.1554411719728079) - 0.4466674305010909*Power(varexpf,393.57969904498856);
+  FTYPE aans=0.0020896556908760167 - 0.000552135392124191*Power(1. - 1.*varexpfsy,0.13484101986913094) - 0.00035919475351279596*Power(varexpfsy,1.3117367224699348);
+  FTYPE bbns=0.947936882050393 + 0.04325767539629399*Power(1. - 1.*varexpfsy,0.15851143273201895) + 0.03500295073258275*Power(varexpfsy,5.426349783477622);
+  FTYPE ccns=1.0428616563608024 - 0.06847935580879305*Power(1. - 1.*varexpfsy,2.804976762985117) - 0.12190075333271566*Power(varexpfsy,37.127481710076715);
+  FTYPE ddns=8.710677885264703 - 6.470485714643377*Power(1. - 1.*varexpfsy,0.43622943950210663) - 8.58797778984234*Power(varexpfsy,155.08065851132326);
+  FTYPE eens=2.447135378534403 + 0.5059941053985519*Power(1. - 1.*varexpfsy,0.1554411719728079) - 0.4466674305010909*Power(varexpfsy,393.57969904498856);
 
   kappansyreal *= 1.0/( 1.0/(aans*pow(phiinfit,-bbns)*log(1.0+ccns*phiinfit)) + 1.0/(ddns*pow(phiinfit,-eens)) );
 #endif
 
-  // emission (just Planck varexpf=1 but using actual direct fit instead of fit over many varexpf)
-
+  // emission (just Planck varexpfsy=1 but using actual direct fit instead of fit over many varexpfsy)
+#if(0)
   // XRB Ledd
   FTYPE aaes=1.2717090000000002;
   FTYPE bbes=1.0347761544532286;
   FTYPE cces=0.0007632927603627291;
   FTYPE ddes=0.6156050795639245;
   FTYPE eees=2.911962289750286;
- 
-  kappaemitsyreal *= 1.0/( 1.0/(aaes*pow(phieinfit,-bbes)*log(1.0+cces*phieinfit)) + 1.0/(ddes*pow(phieinfit,-eees)) );
 
-#if(EVOLVENRAD||1)
-  // XRB Ledd
   FTYPE aanes=0.0017304609373632208;
   FTYPE bbnes=0.9829398327829757;
   FTYPE ccnes=0.9209609030280868;
   FTYPE ddnes=0.12270009542236275;
   FTYPE eenes=2.0004679480333123;
+#else
+  // when limiting varexpf=0.99
+  // XRB Ledd
+  FTYPE aaes=1.27171;
+  FTYPE bbes=1.06083;
+  FTYPE cces=0.000594048;
+  FTYPE ddes=7.52335;
+  FTYPE eees=3.36979;
 
+  FTYPE aanes=0.00143843;
+  FTYPE bbnes=1.00193;
+  FTYPE ccnes=0.958925;
+  FTYPE ddnes=6.03561;
+  FTYPE eenes=2.68591;
+#endif 
+
+  kappaemitsyreal *= 1.0/( 1.0/(aaes*pow(phieinfit,-bbes)*log(1.0+cces*phieinfit)) + 1.0/(ddes*pow(phieinfit,-eees)) );
+
+#if(EVOLVENRAD||1)
   kappanemitsyreal *= 1.0/( 1.0/(aanes*pow(phieinfit,-bbnes)*log(1.0+ccnes*phieinfit)) + 1.0/(ddnes*pow(phieinfit,-eenes)) );
 #endif
 
