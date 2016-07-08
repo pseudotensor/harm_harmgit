@@ -1,0 +1,28 @@
+# e.g.
+ssh jmckinn2@sfe1.nas.nasa.gov
+#PASSCODE corresponds to your <pin>+<fobnumber> as one single string (i.e. no <'s >'s or +'s used symbolically just before).
+# password requested is your password
+ssh pfe
+#
+# password requested is same password
+
+# we'll assume this is your first time logging in, so you should set things up for harmrad
+cd ~
+git clone https://github.com/pseudotensor/harm_harmgit.git
+mv harm_harmgit harmgit
+cd harmgit
+git checkout koralinsert # or superedd or subedd
+# (or use your own tarball)
+cd environmentfiles/pfe
+cp .* ~/
+cd ~/
+# edit .profile and change "jmckinn2" to your username
+
+# logout of pfe
+exit
+
+# log back into pfe
+ssh pfe
+
+# now 
+cd 
