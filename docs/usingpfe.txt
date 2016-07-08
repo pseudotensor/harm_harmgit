@@ -11,18 +11,74 @@ cd ~
 git clone https://github.com/pseudotensor/harm_harmgit.git
 mv harm_harmgit harmgit
 cd harmgit
-git checkout koralinsert # or superedd or subedd
+git checkout koralinsert
 # (or use your own tarball)
 cd environmentfiles/pfe
 cp .* ~/
 cd ~/
 # edit .profile and change "jmckinn2" to your username
+mkdir bin
+mkdir include
+mkdir lib
+
 
 # logout of pfe
 exit
 
-# log back into pfe
+# log back into pfe with password
 ssh pfe
 
-# now 
-cd 
+
+# can make bin2txt by setting HDF and V5D to 0 in bin2txt.c .  Then remove -lmfhdf -ldf -ljpeg -lz -lv5d from makefile
+#module load hdf4/4.2r3 # should be able to use this for hdf, but doesn't find libs
+make superclean ; make prepbin2txt ; make bin2txt
+cp bin2txt ~/bin/
+
+# can make iinterp normally:
+make superclean ; make prepiinterp ; makeiinterp
+cp iinterp ~/bin/
+
+
+# now compile harmrad using normal steps
+cd ~/harmgit/
+git checkout koralinsert # or superedd or subedd for Jane and Danilo
+ln -s initboundcode/init.koral.c init.c
+ln -s initboundcode/init.koral.h init.h
+ln -s initboundcode/bounds.koral.c bounds.c
+make superclean ; make prep ; make -j 16
+# confirm created grmhd binary
+
+# setup problem however you want in harmrad
+# try to get batch job going:
+
+cd ~/harmgit
+cp batches/pfebatchtest .
+# read help about qsub and how to use it on google and http://www.nas.nasa.gov/hecc/support/kb/121/
+# try running simple 3D test for 1 hour, so edit batch file accordingly.
+# note that one #PBS is a command, while more than one # is a comment.
+# "select" stands for number of nodes, each "san" having 16 cores/node.  You need to ensure "select" times cores/node is just barely greater than the number of cores you tell harmrad to use with NTOT later.
+# ensure you change my email address to yours.
+# ensure you change all directories and usernames.
+
+qsub pfebatchtest
+
+# check on your job:
+qstat -u <username>  .  E.g., for me <username> is jmckinn2
+
+# you will get an email when the job starts.
+
+# see using batch system and general pfe usage at: http://www.nas.nasa.gov/hecc/support/kb/
+
+# The run will go into: /nobackup/<username>/<jobname>/  e.g., for this test for me: /nobackup/jmckinn2/jon1/
+
+
+
+
+
+
+
+
+
+
+
+
