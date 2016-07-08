@@ -8,11 +8,12 @@ ssh pfe
 
 # we'll assume this is your first time logging in, so you should set things up for harmrad
 cd ~
+mkdir git
+cd git
 git clone https://github.com/pseudotensor/harm_harmgit.git
-mv harm_harmgit harmgit
-cd harmgit
 git checkout koralinsert
-# (or use your own tarball)
+cd harm_harmgit
+cp batches/pfebatchtest .
 cd environmentfiles/pfe
 cp .* ~/
 cd ~/
@@ -40,19 +41,20 @@ cp iinterp ~/bin/
 
 
 # now compile harmrad using normal steps
-cd ~/harmgit/
+cd ~/git/harm_harmgit/
 git checkout koralinsert # or superedd or subedd for Jane and Danilo
 ln -s initboundcode/init.koral.c init.c
 ln -s initboundcode/init.koral.h init.h
 ln -s initboundcode/bounds.koral.c bounds.c
-make superclean ; make prep ; make -j 16
+make superclean ; make prep ; make -j 16 
 # confirm created grmhd binary
 
 # setup problem however you want in harmrad
 # try to get batch job going:
 
-cd ~/harmgit
-cp batches/pfebatchtest .
+cd ~/git/harm_harmgit
+# edit pfebatchtest
+#
 # read help about qsub and how to use it on google and http://www.nas.nasa.gov/hecc/support/kb/121/
 # try running simple 3D test for 1 hour, so edit batch file accordingly.
 # note that one #PBS is a command, while more than one # is a comment.
