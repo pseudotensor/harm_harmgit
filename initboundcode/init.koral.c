@@ -9722,6 +9722,8 @@ int kappa_func_fits_all(FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, FTYPE varexpf, F
   myexit(759275529);
 #endif
 
+  if(t<100) varexpf=varexpf*t/100.0; // ramp up.
+
 
   FTYPE Te=Tg; // assume electrons and gas/ions/protons are same temperature
 
