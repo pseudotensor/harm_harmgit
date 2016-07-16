@@ -10006,11 +10006,14 @@ int kappa_func_fits_all(FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, FTYPE varexpf, F
   myexit(759275529);
 #endif
 
+#if(WHICHPROBLEM==RADDONUT)
+  // only do this for donut problem
   FTYPE timeramp=100.0;
   if(t<timeramp){ // ramp-up from varexp=1 to desired varexp over some time
     FTYPE interp = t/timeramp;
     varexpf= varexpf*interp + 1.0*(1.0-interp);
   }
+#endif
 
 
   FTYPE Te=Tg; // assume electrons and gas/ions/protons are same temperature
