@@ -7826,7 +7826,8 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
       primtoU(UNOTHING,pp,q,ptrgeom, uu, NULL);
     }
 
-#define BORROWTOL (1E-1)
+//#define BORROWTOL (1E-1) // too aggressive
+#define BORROWTOL (IMPALLOWCONVCONSTABS)
 
     // only borrow if error is not order unity and if was and is plenty of energy in radiation to give
     // e.g., borrowing from radiation can leave radiation hitting floor, do not improving total energy conservation in such cases.

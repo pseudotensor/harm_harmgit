@@ -138,7 +138,7 @@ static int restart_init_point_check_pstagglobal(int which, int i, int j, int k)
 /// OPENMPOPTMARK: Don't optimize since many critical regions
 ///
 //////////////////////
-int restart_init_checks(int which, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR])
+int restart_init_checks(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR])
 {
   char ans[100];
   struct of_geom geomdontuse;

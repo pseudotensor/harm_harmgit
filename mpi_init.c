@@ -199,7 +199,7 @@ void myargs(int argc, char *argv[])
   // default unless user adds below
   numextraargs=2;
   RESTARTMODE=0;
-  WHICHFILE=0;
+  WHICHFILE=-1; // default is to auto choose
 
 
 
@@ -1694,6 +1694,46 @@ int error_check(int wherefrom)
     // if(failed==2) myexit(1);
     // if(failed==3) myexit(1);
     myexit(wherefrom);
+    return (1);
+  }
+  return (0);
+}
+
+/// note, this may be called in different locations of the code by
+/// different CPUs
+int error_check_nofail(int wherefrom)
+{
+  int i, j, k;
+  int errorsend = 0;
+  // check if error exists and exit if so
+
+  if (failed > 0) {
+    dualfprintf(fail_file,
+                "Detected failure on proc: %d failed: %d nstep: %ld realnstep: %ld steppart=%d :: t: %21.15g wherefrom = %d\n",
+                myid, failed, nstep, realnstep, steppart, t,wherefrom);
+  }
+
+  if (numprocs > 1) {
+    errorsend = failed;
+#if(USEMPI)
+    // dualfprintf(fail_file,"wtf: %d %d\n",errorsend,failed);
+    // fflush(fail_file);
+    MPI_Allreduce(&errorsend, &failed, 1, MPI_INT, MPI_MAX,
+                  MPI_COMM_GRMHD);
+    // dualfprintf(fail_file,"wtf: %d %d\n",errorsend,failed);
+    // fflush(fail_file);
+#endif
+  }
+  if (failed > 0) {
+    dualfprintf(fail_file,
+                "Result: Detected failure on proc: %d failed: %d nstep: %ld realnstep: %ld steppart=%d :: t: %21.15g\n",
+                myid, failed, nstep, realnstep, steppart, t);
+    // control behavior of failure here (i.e. could return(1) and
+    // continue or something)
+    // if(failed==1) myexit(1);
+    // if(failed==2) myexit(1);
+    // if(failed==3) myexit(1);
+    //    myexit(wherefrom);
     return (1);
   }
   return (0);

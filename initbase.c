@@ -478,7 +478,7 @@ int init(int *argc, char **argv[])
 
 
     trifprintf("before restart_init_checks() during restart: proc=%04d\n",myid);
-    if (restart_init_checks(WHICHFILE, GLOBALPOINT(pglobal), GLOBALPOINT(pstagglobal), GLOBALPOINT(unewglobal)) >= 1) {
+    if (restart_init_checks(GLOBALPOINT(pglobal), GLOBALPOINT(pstagglobal), GLOBALPOINT(unewglobal)) >= 1) {
       dualfprintf(fail_file, "main:restart_init_checks: failure\n");
       return(1);
     }

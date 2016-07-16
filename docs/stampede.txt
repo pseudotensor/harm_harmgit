@@ -237,7 +237,45 @@ This will submit a dependent list of jobs so when one job is done, the next star
 8) In general, you have be more knowledgeable to handle submitdeplist.sh .  You have to ensure the jobs don't overload the system, and you need to be able to kill jobs in case something goes wrong.  This means killing the entire set of queued jobs and knowing how to edit submitdeplist.sh to continue appropriately by deleting any older undesired lettered jobs and making the letter you want to start with have no dependency, and then having the latter letters have dependency.
 
 
-======
+=====
+Running many restarted jobs when running in same directory every time
+=====
+
+1) Create a batch file for your firstrun=1 case when you run the job for the first time.  Call it, e.g., b1
+
+2) Create a btach file for your firstrun=0 case (that should be only difference required in batch file) for any further jobs.  Call it, e.g., b2
+
+3) When you are ready to run job (assuming you setup all batch stuff right, grmhd stuff, etc. all ready to go), do:
+
+JOBID=`sbatch b1 | tail -1 | awk '{print $4}'`
+
+4) Assuming you are in the same shell so JOBID is still defined, now you are ready to create dependencies for (say) 4 more jobs:
+
+JOBID=`sbatch --dependency=afterany:$JOBID b2 | tail -1 | awk '{print $4}'`
+JOBID=`sbatch --dependency=afterany:$JOBID b2 | tail -1 | awk '{print $4}'`
+JOBID=`sbatch --dependency=afterany:$JOBID b2 | tail -1 | awk '{print $4}'`
+JOBID=`sbatch --dependency=afterany:$JOBID b2 | tail -1 | awk '{print $4}'`
+
+This will automatically run the additional jobs once the dependent original job is done and once priority is high enough for the job to start.
+
+To avoid manually checking if the restart file is correctly written (i.e. rdump-0.bin vs. rdump-1.bin), ensure you have inside restart.c:restart_read() the following code fragment:
+
+  // try to read file
+  int failreturn;
+  failreturn=dump_gen(READFILE,*dump_cnt,bintxt,whichdump,datatype,fileprefix,fileformat,filesuffix,read_restart_header,rdump_read_content);
+
+  if(failreturn>0){
+    // if failed, then see if other restart number exists
+    *dump_cnt = !(*dump_cnt);
+    failreturn=dump_gen(READFILE,*dump_cnt,bintxt,whichdump,datatype,fileprefix,fileformat,filesuffix,read_restart_header,rdump_read_content);
+  }
+
+
+that replaces the old code fragment:
+
+  int failreturn;
+  failreturn=dump_gen(READFILE,*dump_cnt,bintxt,whichdump,datatype,fileprefix,fileformat,filesuffix,read_restart_header,rdump_read_content);
+
 
 
 

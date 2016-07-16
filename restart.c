@@ -26,7 +26,7 @@ int extrarestartfunction_new(void)
 /// GODMARK: fills in *global* quantities
 /// It then outputs restart file for user to check consistency
 /// CHANGINGMARK: Note that for evolving metric should really store old metric in restart file
-int restart_init(int which)
+int restart_init(int whichfile)
 {
 
 
@@ -45,8 +45,9 @@ int restart_init(int which)
   // get restart header and grid data
   //
   ////////////////
-  restart_read(which);
-
+  long whichfilelong=(long)whichfile;
+  restart_read(&whichfilelong);
+  
 
   ////////////////
   //
@@ -63,8 +64,8 @@ int restart_init(int which)
   //
   ////////////////
   if(DOEVOLVEMETRIC){
-    trifprintf("before restartmetric_read(which)\n");
-    restartmetric_read(which);
+    trifprintf("before restartmetric_read(whichfile)\n");
+    restartmetric_read(whichfilelong);
   }
 
   ////////////////
@@ -178,10 +179,6 @@ int restart_write(long dump_cnt)
   long truedump_cnt;
 
 
-  // get special upperpole restart header and grid data (do inside restart_read() since always want this file with standard restart file)
-  if(FLUXB==FLUXCTSTAG && special3dspc==1 && N3>1) restartupperpole_write(dump_cnt);
-
-
 
   trifprintf("begin dumping rdump# %ld ... ",dump_cnt);
 
@@ -199,6 +196,11 @@ int restart_write(long dump_cnt)
   strcpy(filesuffix,"");
   
   if(dump_gen(WRITEFILE,truedump_cnt,binaryoutput,whichdump,datatype,fileprefix,fileformat,filesuffix,write_restart_header,rdump_content)>=1) return(1);
+
+
+  // get special upperpole restart header and grid data (do inside restart_read() since always want this file with standard restart file)
+  if(FLUXB==FLUXCTSTAG && special3dspc==1 && N3>1) restartupperpole_write(dump_cnt);
+
 
   trifprintf("end dumping rdump# %ld ... ",dump_cnt);
 
@@ -280,11 +282,81 @@ int rdump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 
 
 
+//#include <time.h>
+#include <sys/types.h>
+//#include <sys/stat.h>
+//#include <stdio.h>
+static int restart_whois_latest(char *fileprefix, char *fileformat, char *filesuffix, int bintxt)
+{
 
+  // setup filename
+  strcpy(fileprefix,"dumps/rdump");
+  strcpy(fileformat,"-%01ld");
+  strcpy(filesuffix,"");
+
+  char truemyidtxt[MAXFILENAME]={'\0'};
+  // sometimes all CPUs need to know filename (e.g. ROMIO)
+  // setup file suffix
+  int binextension=1;
+  int headerbintxt,dumpbintxt;
+  if(bintxt==BINARYOUTPUT) headerbintxt=dumpbintxt=BINARYOUTPUT;
+  else if(bintxt==TEXTOUTPUT) headerbintxt=dumpbintxt=TEXTOUTPUT;
+  else if(bintxt==MIXEDOUTPUT){
+    headerbintxt=TEXTOUTPUT;
+    dumpbintxt=BINARYOUTPUT;
+  }
+
+  if((dumpbintxt==BINARYOUTPUT)&&(binextension)){
+    if(USEMPI&&(mpicombine==0)&&(numprocs>1)) sprintf(truemyidtxt,".bin.%04d",myid);
+    else strcpy(truemyidtxt,".bin");
+  }
+  else{
+    if(USEMPI&&(mpicombine==0)&&(numprocs>1)) sprintf(truemyidtxt,".%04d",myid);
+    else strcpy(truemyidtxt,"");
+  }
+
+  char dfnam0[MAXFILENAME]={'\0'};
+  char dfnam1[MAXFILENAME]={'\0'};
+  char localfileformat[MAXFILENAME]={'\0'};
+  strcpy(localfileformat,"%s");
+  strcat(localfileformat,fileformat);
+  strcat(localfileformat,"%s");
+  strcat(localfileformat,"%s");
+  sprintf(dfnam0, localfileformat, fileprefix, 0, filesuffix, truemyidtxt);
+  sprintf(dfnam1, localfileformat, fileprefix, 1, filesuffix, truemyidtxt);
+
+  // now have file names, check stat
+  struct stat buf0;
+  if (!stat(dfnam0, &buf0))
+	{
+      // got it
+	}
+  else
+	{
+      printf("error getting time for 0: %s\n",dfnam0);
+      printf("dumpbintxt=%d binextension=%d\n",dumpbintxt,binextension);
+      return(1); // assume 1 exists
+	}
+
+  struct stat buf1;
+  if (!stat(dfnam1, &buf1))
+	{
+      // got it
+	}
+  else
+	{
+      printf("error getting time for 1: %s\n",dfnam1);
+      return(0); // assume 0 exists
+	}
+
+  // if both exist, see which one is latest
+  if(difftime(buf0.st_mtime ,buf1.st_mtime)>0) return(0);
+  else return(1);
+}
 
 
 /// read restart file
-int restart_read(long dump_cnt)
+int restart_read(long *dump_cnt)
 {
   MPI_Datatype datatype;
   int whichdump;
@@ -293,24 +365,40 @@ int restart_read(long dump_cnt)
   char fileformat[MAXFILENAME]={'\0'};
   int bintxt;
 
-
-  // get special upperpole restart header and grid data (do inside restart_read() since always want this file with standard restart file)
-  if(FLUXB==FLUXCTSTAG && special3dspc==1 && N3>1) restartupperpole_read(dump_cnt);
-  else restartupperpole_set();
-
-
-  trifprintf("begin reading rdump# %ld ... ",dump_cnt);
-
   whichdump=RESTARTDUMPTYPE;
   datatype=MPI_FTYPE;
-  bintxt=binaryoutput;
   strcpy(fileprefix,"dumps/rdump");
   strcpy(fileformat,"-%01ld");
   strcpy(filesuffix,"");
- 
+  bintxt=binaryoutput;
+
+  if(*dump_cnt==-1){
+    // if *dump_cnt==-1, then user wants us to figure out which is latest restart file.
+    if(docolsplit==0){
+      *dump_cnt=restart_whois_latest(fileprefix,fileformat,filesuffix,bintxt);
+      trifprintf("latest rdump chosen was: %d\n",*dump_cnt);
+    }
+    else{
+      // not setup, so just choose 0
+      *dump_cnt=0;
+    }
+  }
+
+
+  trifprintf("begin reading rdump# %ld ... ",*dump_cnt);
+
+
+  // try to read file
   int failreturn;
-  failreturn=dump_gen(READFILE,dump_cnt,bintxt,whichdump,datatype,fileprefix,fileformat,filesuffix,read_restart_header,rdump_read_content);
-  
+  failreturn=dump_gen(READFILE,*dump_cnt,bintxt,whichdump,datatype,fileprefix,fileformat,filesuffix,read_restart_header,rdump_read_content);
+
+  if(failreturn>0){
+    // if failed, then see if other restart number exists and is good
+    *dump_cnt = !(*dump_cnt);
+    failreturn=dump_gen(READFILE,*dump_cnt,bintxt,whichdump,datatype,fileprefix,fileformat,filesuffix,read_restart_header,rdump_read_content);
+  }
+
+  // see if still failed
   if(failreturn==FILENOTFOUND){
     dualfprintf(fail_file,"restart file not found\n");
     myexit(87343363);
@@ -321,10 +409,14 @@ int restart_read(long dump_cnt)
   }
 
 
+  // get special upperpole restart header and grid data (do inside restart_read() since always want this file with standard restart file)
+  if(FLUXB==FLUXCTSTAG && special3dspc==1 && N3>1) restartupperpole_read(*dump_cnt);
+  else restartupperpole_set();
+
 
   // NOTE: for FLUXB==FLUXCTSTAG, unewglobal and vpot are bounded in initbase.c for boundary edges and inter-MPI edges
 
-  trifprintf("end reading rdump# %ld ... ",dump_cnt);
+  trifprintf("end reading rdump# %ld ... ",*dump_cnt);
 
 
   return(0);

@@ -53,6 +53,7 @@
 #if(PRODUCTION>1)
 /// blank-out the function call since error_check() slows things down in MPI
 #define error_check(wherefrom) (0)
+#define error_check_nofail(wherefrom) (0)
 #endif
 
 

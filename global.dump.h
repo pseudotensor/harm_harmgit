@@ -77,14 +77,14 @@ extern int image_header(int whichdump, int whichdumpversion, int numcolumns, int
 extern int image_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf);
 extern void prminmaxsum(FTYPE (*p)[NSTORE2][NSTORE3][NPR], int start,int nmemb, FTYPE *max, FTYPE*min,FTYPE*sum);
 
-extern int restart_init(int which);
+extern int restart_init(int whichfile);
 extern int restart_init_simple_checks(int which);
-extern int restart_init_checks(int which, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR]);
+extern int restart_init_checks(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTORE2][NSTORE3][NPR]);
 
 
 
 // restart dump
-extern int restart_read(long which);
+extern int restart_read(long *whichfile);
 extern int check_fileformat(int readwrite, int bintxt, int whichdump, int numcolumns, int docolsplit, int mpicombine, int sizeofdatatype, FILE *stream);
 extern int read_restart_header(int whichdump, int whichdumpversion, int numcolumns, int bintxt, FILE* headerptr);
 extern int restart_read_defs(void);

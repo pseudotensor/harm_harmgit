@@ -58,6 +58,7 @@ extern int output_steptimedt_info(SFTYPE comptstart);
 
 #if(PRODUCTION<=1)
 extern int error_check(int wherefrom);
+extern int error_check_nofail(int wherefrom);
 #endif
 
 extern int find_horizon(int fromwhere);

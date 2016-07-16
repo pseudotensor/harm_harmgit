@@ -278,8 +278,14 @@ int dump_gen(int readwrite, long dump_cnt, int bintxt, int whichdump, MPI_Dataty
   //
   //
   ////////////////////////////////////////////////////////////
+  int failedlocal=0;
   if(failed==0) failed=checkstatus;
-  error_check(ERRORCODEBELOWCLEANFINISH+100); // number should be >ERRORCODEBELOWCLEANFINISH for myexit to avoid dumping
+  error_check_nofail(ERRORCODEBELOWCLEANFINISH+100); // number should be >ERRORCODEBELOWCLEANFINISH for myexit to avoid dumping
+  if(failed>0){
+    failedlocal=failed;
+    failed=0; // assume failure captured
+    return(failedlocal);
+  }
   
 
 
@@ -351,7 +357,7 @@ int dump_gen(int readwrite, long dump_cnt, int bintxt, int whichdump, MPI_Dataty
         // check
         if(nextbuf!=numcolumns){
           dualfprintf(fail_file,"Number of columns (numcolumns=%d) isn't equal to number of columns/buffers attempted (nextbuf=%lld)\n",numcolumns,nextbuf);
-          myexit(932736466);
+          return(932736466);
         }
  
         // get the content of 1 row
@@ -360,7 +366,7 @@ int dump_gen(int readwrite, long dump_cnt, int bintxt, int whichdump, MPI_Dataty
         // check
         if(nextcol!=numcolumns){
           dualfprintf(fail_file,"Number of columns (numcolumns=%d) isn't equal to number of columns attempted (nextcol=%d)\n",numcolumns,nextcol);
-          myexit(836745613);
+          return(836745613);
         }
       }// end DUMPGENLOOP
     }// end readwrite==READFILE
