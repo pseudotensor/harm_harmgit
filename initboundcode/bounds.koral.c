@@ -397,6 +397,10 @@ int bound_prim_user_general(int boundstage, int finalstep, SFTYPE boundtime, int
         bound_x1dn_radbeamflatinflow(boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos); 
         donebc[dir]=1;
       }
+      else if(BCtype[dir]==BULKCOMPT2INFLOW){
+        bound_x1dn_bulkcompt2inflow(boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos); 
+        donebc[dir]=1;
+      }
       else if(BCtype[dir]==RADSHADOWINFLOW){
         bound_radshadowinflow(dir,boundstage,finalstep,boundtime,whichdir,boundvartype,dirprim,ispstag,prim,inboundloop,outboundloop,innormalloop,outnormalloop,inoutlohi,riin,riout,rjin,rjout,rkin,rkout,dosetbc,enerregion,localenerpos); 
         donebc[dir]=1;
@@ -983,12 +987,14 @@ int bound_x1dn_radbeamflatinflow(
                 pr[URAD1] = uradx;
                 pr[URAD2] = 0.;
                 pr[URAD3] = 0.;
+                if(NRAD>=0) pr[NRAD] = calc_LTE_NfromE(pr[URAD0]);
               }
               else{ //no beam
                 pr[URAD0] = ERADAMB;
                 pr[URAD1] = 0.;
                 pr[URAD2] = 0.;
                 pr[URAD3] = 0.;
+                if(NRAD>=0) pr[NRAD] = calc_LTE_NfromE(pr[URAD0]);
               }
 
               // get all primitives in WHICHVEL/PRIMECOORDS value
@@ -1020,12 +1026,256 @@ int bound_x1dn_radbeamflatinflow(
                 pr[URAD1] = uradx/dxdxp[1][1];
                 pr[URAD2] = 0.;
                 pr[URAD3] = 0.;
+                if(NRAD>=0) pr[NRAD] = calc_LTE_NfromE(pr[URAD0]);
               }
               else{ //no beam and ERADAMB is assumed as radiation frame -- as in koral.
                 pr[URAD0] = ERADAMB;
                 pr[URAD1] = 0.;
                 pr[URAD2] = 0.;
                 pr[URAD3] = 0.;
+                if(NRAD>=0) pr[NRAD] = calc_LTE_NfromE(pr[URAD0]);
+              }
+
+            }
+
+
+          }// end if not staggered field
+
+
+        }// end loop over inner i's
+      }
+    }
+
+
+  }// end parallel region
+
+  return(0);
+} 
+
+
+
+/// X1 lower for radiation beam injection
+int bound_x1dn_bulkcompt2inflow(
+                                 int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+                                 int *inboundloop,
+                                 int *outboundloop,
+                                 int *innormalloop,
+                                 int *outnormalloop,
+                                 int (*inoutlohi)[NUMUPDOWN][NDIM],
+                                 int riin, int riout, int rjin, int rjout, int rkin, int rkout,
+                                 int *dosetbc,
+                                 int enerregion,
+                                 int *localenerpos
+                                 )
+
+{
+
+
+#pragma omp parallel  // assume don't require EOS
+  {
+
+    int i,j,k,pl,pliter;
+    FTYPE vcon[NDIM],X[NDIM],V[NDIM]; 
+#if(WHICHVEL==VEL3)
+    int failreturn;
+#endif
+    int ri, rj, rk; // reference i,j,k
+    FTYPE prescale[NPR];
+    int jj,kk;
+    struct of_geom geomdontuse[NPR];
+    struct of_geom *ptrgeom[NPR];
+    struct of_geom rgeomdontuse[NPR];
+    struct of_geom *ptrrgeom[NPR];
+
+    // assign memory
+    PALLLOOP(pl){
+      ptrgeom[pl]=&(geomdontuse[pl]);
+      ptrrgeom[pl]=&(rgeomdontuse[pl]);
+    }
+
+
+  
+    if(BCtype[X1DN]==BULKCOMPT2INFLOW && totalsize[1]>1 && mycpupos[1] == 0 ) {
+
+
+
+      OPENMPBCLOOPVARSDEFINELOOPX1DIR; OPENMPBCLOOPSETUPLOOPX1DIR;
+      //////// LOOPX1dir{
+#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+      OPENMPBCLOOPBLOCK{
+        OPENMPBCLOOPBLOCK2IJKLOOPX1DIR(j,k);
+
+
+
+        ri=riin;
+        rj=j;
+        rk=k;
+
+
+        // ptrrgeom : i.e. ref geom
+        PALLLOOP(pl) get_geometry(ri, rj, rk, dirprim[pl], ptrrgeom[pl]);
+
+   
+        
+        LOOPBOUND1IN{
+          FTYPE *pr = &MACP0A1(prim,i,j,k,0);
+    
+          //initially copying everything
+          PBOUNDLOOP(pliter,pl) MACP0A1(prim,i,j,k,pl) = MACP0A1(prim,ri,rj,rk,pl);
+
+
+          if(ispstag==0){ // only do something special with non-field primitives
+
+            // local geom
+            PALLLOOP(pl) get_geometry(i, j, k, dirprim[pl], ptrgeom[pl]);
+
+            //coordinates of the ghost cell
+            bl_coord_ijk_2(i,j,k,CENT,X, V);
+
+            // set radiation quantities as R^t_\nu in orthonormal fluid frame using whichvel velocity and whichcoord coordinates
+
+            extern FTYPE BULKCOMPT2_FRATIO,BULKCOMPT2_ERAD, BULKCOMPT2_RHO, BULKCOMPT2_UU;
+
+            //            FTYPE ERADAMB=BULKCOMPT2_ERAD;
+            //            FTYPE ERADINJ=1000.0*ERADAMB;
+
+            FTYPE ERADAMB=BULKCOMPT2_ERAD;
+            //            FTYPE ERADINJ=1000.0*ERADAMB; // old harm setup
+            FTYPE ERADINJ=100.0*ERADAMB; // koral's current setup
+
+
+
+            if(0){
+              // correct version in general
+
+              pr[RHO] = BULKCOMPT2_RHO ;
+              pr[UU] = BULKCOMPT2_UU;
+              SLOOPA(jj) pr[U1+jj-1] = 0.0;
+
+              //E, F^i in orthonormal fluid frame
+              FTYPE pradffortho[NPR];
+              FTYPE Fx=0,Fy=0,Fz=0;
+              //primitives in whichvel,whichcoord
+              if(V[2]>.4 && V[2]<.6){//beam to be imposed
+                Fx=BULKCOMPT2_FRATIO*ERADINJ;
+                Fy=Fz=0.0;
+                
+                pradffortho[PRAD0] = ERADINJ;
+                pradffortho[PRAD1] = Fx;
+                pradffortho[PRAD2] = Fy;
+                pradffortho[PRAD3] = Fz;
+                if(NRAD>=0) pradffortho[NRAD] = calc_LTE_NfromE(pradffortho[PRAD0]);
+              }
+              else{ //no beam
+                Fx=Fy=Fz=0.0;
+                pradffortho[PRAD0] = ERADAMB;
+                pradffortho[PRAD1] = Fx;
+                pradffortho[PRAD2] = Fy;
+                pradffortho[PRAD3] = Fz;
+                if(NRAD>=0) pradffortho[NRAD] = calc_LTE_NfromE(pradffortho[PRAD0]);
+              }
+            
+              int whichvel=VEL4;
+              int whichcoordfluid=MCOORD;
+              int whichcoordrad=whichcoordfluid;
+              whichfluid_ffrad_to_primeall(&whichvel, &whichcoordfluid, &whichcoordrad, ptrgeom[RHO], pradffortho, pr, pr);
+            }
+            else if(0){
+              // set vradx
+
+              pr[RHO] = BULKCOMPT2_RHO ;
+              pr[UU] = BULKCOMPT2_UU;
+              SLOOPA(jj) pr[U1+jj-1] = 0.0;
+
+              // assume BULKCOMPT2_FRATIO is just vradx
+              FTYPE uradx=1.0/sqrt(1.0 - BULKCOMPT2_FRATIO*BULKCOMPT2_FRATIO); // radiation 4-velocity
+
+              //primitives in whichvel,whichcoord
+              if(V[2]>.4 && V[2]<.6){//beam to be imposed
+                pr[URAD0] = ERADINJ;
+                pr[URAD1] = uradx;
+                pr[URAD2] = 0.;
+                pr[URAD3] = 0.;
+                if(NRAD>=0) pr[NRAD] = calc_LTE_NfromE(pr[URAD0]);
+              }
+              else{ //no beam
+                pr[URAD0] = ERADAMB;
+                pr[URAD1] = 0.;
+                pr[URAD2] = 0.;
+                pr[URAD3] = 0.;
+                if(NRAD>=0) pr[NRAD] = calc_LTE_NfromE(pr[URAD0]);
+              }
+
+              // get all primitives in WHICHVEL/PRIMECOORDS value
+              int whichvel=VEL4;
+              int whichcoord=MCOORD;
+              primefluid_EVrad_to_primeall(&whichvel, &whichcoord, ptrgeom[RHO],MAC(prim,i,j,k),MAC(prim,i,j,k)); // assumes ptrgeom[RHO] is same location as all other primitives (as is currently true).
+            }
+            else if(1){
+              // koral mixed way (must use ff ortho choice in init.koral.c (i.e. first if(1))
+
+              pr[RHO] = BULKCOMPT2_RHO ;
+              pr[UU] = BULKCOMPT2_UU;
+              //              SLOOPA(jj) pr[U1+jj-1] = 0.0;
+              if(0){
+                FTYPE xx=V[1];
+                FTYPE yy=V[2];
+                FTYPE zz=V[3];
+                FTYPE lambda=(Rout_array[1]-Rin_array[1])/5.0;
+                FTYPE kk = 2.0*M_PI/lambda;
+                FTYPE amp=0.5;
+                amp=0.2;
+                //amp=0.0; // case 1 and 3
+                FTYPE drift=0;
+                pr[U1] = 0 ;
+                pr[U2] = drift + amp*sin(kk*xx) ;     // k along x, amp in y
+                pr[U3] = 0 ;
+              }
+              else{
+                //  FTYPE drift=0.1;
+                pr[U1] = 0 ;
+                pr[U2] = 0 ;
+                // pr[U2] = drift/sqrt(ptrgeom[RHO]->gcov[GIND(2,2)]) ;
+#define sech(x) (1.0/cosh(x))
+                FTYPE xx=V[1];
+                FTYPE yy=V[2];
+                FTYPE zz=V[3];
+                FTYPE drift= 1E-1*sech((xx-0.5)/.06)*(xx-0.5);
+                pr[U2] = drift/sqrt(ptrgeom[RHO]->gcov[GIND(2,2)]) ;
+                pr[U3] = 0 ;
+              }
+
+
+              //primitives in whichvel,whichcoord
+              if(V[2]>.4 && V[2]<.6){//beam to be imposed
+                FTYPE dxdxp[NDIM][NDIM];
+                dxdxprim_ijk(i, j, k, CENT, dxdxp);
+
+                // like koral
+                //                FTYPE uradx=ERADINJ*BULKCOMPT2_FRATIO;
+
+                // fix: // gamma from 3-velocity
+                FTYPE gammax=1.0/sqrt(1.0 - BULKCOMPT2_FRATIO*BULKCOMPT2_FRATIO); // radiation 4-velocity
+                // 4-velocity from gamma
+                FTYPE uradx=sqrt(gammax*gammax-1.0);
+                //                dualfprintf(fail_file,"uradx=%21.15g\n",uradx);
+
+                pr[URAD0] = ERADINJ;
+                pr[URAD1] = uradx/dxdxp[1][1];
+
+                //pr[URAD0] = ERADAMB;
+                //pr[URAD1] = 0;
+
+                //                pr[URAD2] = 0.0; // use copy
+                //pr[URAD3] = 0.;
+                if(NRAD>=0) pr[NRAD] = calc_LTE_NfromE(pr[URAD0]);
+              }
+              else{ //no beam and ERADAMB is assumed as radiation frame -- as in koral.
+                pr[URAD0] = ERADAMB;
+                pr[URAD1] = 0.;
+                pr[URAD2] = 0.;
+                pr[URAD3] = 0.;
+                if(NRAD>=0) pr[NRAD] = calc_LTE_NfromE(pr[URAD0]);
               }
 
             }

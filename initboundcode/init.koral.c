@@ -119,6 +119,11 @@ FTYPE RADBEAMFLAT_ERAD;
 FTYPE RADBEAMFLAT_RHO;
 FTYPE RADBEAMFLAT_UU;
 
+FTYPE BULKCOMPT2_FRATIO;
+FTYPE BULKCOMPT2_ERAD;
+FTYPE BULKCOMPT2_RHO;
+FTYPE BULKCOMPT2_UU;
+
 FTYPE RADATM_MDOTEDD;
 FTYPE RADATM_LUMEDD;
 int RADATM_THINRADATM;
@@ -256,7 +261,7 @@ int prepre_init_specific_init(void)
     periodicx1=periodicx2=periodicx3=1;
   }
   // if ever only 1D problems
-  else if(WHICHPROBLEM==RADTUBE || WHICHPROBLEM==RADPULSE || WHICHPROBLEM==RADPULSEPLANAR){
+  else if(WHICHPROBLEM==RADTUBE || WHICHPROBLEM==RADPULSE || WHICHPROBLEM==RADPULSEPLANAR || WHICHPROBLEM==BULKCOMPT){
     periodicx1=0;
     periodicx2=periodicx3=1;
   }
@@ -265,7 +270,7 @@ int prepre_init_specific_init(void)
     periodicx1=1;
   }
   // problems with no necessary symmetry
-  else if(WHICHPROBLEM==RADBEAMFLAT || WHICHPROBLEM==RADPULSE3D || WHICHPROBLEM==RADDBLSHADOW || WHICHPROBLEM==RADWALL || WHICHPROBLEM==RADBEAM2D || WHICHPROBLEM==RADBEAM2DKS || WHICHPROBLEM==RADDOT || WHICHPROBLEM==RADBEAM2DKSVERT || WHICHPROBLEM==RADCYLBEAMCART){
+  else if(WHICHPROBLEM==RADBEAMFLAT || WHICHPROBLEM==BULKCOMPT2 || WHICHPROBLEM==RADPULSE3D || WHICHPROBLEM==RADDBLSHADOW || WHICHPROBLEM==RADWALL || WHICHPROBLEM==RADBEAM2D || WHICHPROBLEM==RADBEAM2DKS || WHICHPROBLEM==RADDOT || WHICHPROBLEM==RADBEAM2DKSVERT || WHICHPROBLEM==RADCYLBEAMCART){
     periodicx1=periodicx2=periodicx3=0;
   }
   // periodic in x3
@@ -599,7 +604,7 @@ int init_global(void)
   /*************************************************/
 
 
-  if(WHICHPROBLEM==RADPULSE || WHICHPROBLEM==RADPULSEPLANAR || WHICHPROBLEM==RADPULSE3D){
+  if(WHICHPROBLEM==RADPULSE || WHICHPROBLEM==RADPULSEPLANAR || WHICHPROBLEM==RADPULSE3D || WHICHPROBLEM==BULKCOMPT){
 
     //    TIMEORDER=3;
     //    lim[1]=lim[2]=lim[3]=PARALINE;
@@ -642,6 +647,10 @@ int init_global(void)
       tf = 70; //final time
       for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=0.1;
     }
+    else if(WHICHPROBLEM==BULKCOMPT){
+      tf = 70; //final time
+      for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=0.1;
+    }
 
     //    DODIAGEVERYSUBSTEP = 1;
 
@@ -675,6 +684,48 @@ int init_global(void)
 
     BCtype[X1UP]=OUTFLOW;
     BCtype[X1DN]=RADBEAMFLATINFLOW;
+    BCtype[X2UP]=OUTFLOW;
+    BCtype[X2DN]=OUTFLOW;
+    BCtype[X3UP]=PERIODIC; 
+    BCtype[X3DN]=PERIODIC;
+
+    int idt;
+    //  for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=0.05;   // default dumping period
+    for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=0.1;   // like problem24 in koral
+
+    DTr = 100; //number of time steps for restart dumps
+    tf = 10.0; //final time
+  }
+
+  /*************************************************/
+  /*************************************************/
+  /*************************************************/
+
+  // TOTRY: SEe if koral is going Erf<0
+  // TOTRY: matching F/E and seeing koral fails.
+
+  if(WHICHPROBLEM==BULKCOMPT2){
+    cour=0.1;
+    //    cour=0.5;
+    //    lim[1]=lim[2]=lim[3]=MINM;
+    //    lim[1]=lim[2]=lim[3]=PARALINE;
+    // gam=gamideal=5.0/3.0;
+    gam=gamideal=4.0/3.0; // koral now
+    cooling=KORAL;
+
+    //    BULKCOMPT2_FRATIO=0.995; // koral at some point.
+    //    BULKCOMPT2_FRATIO=0.95;
+    BULKCOMPT2_FRATIO=0.99;
+    BULKCOMPT2_ERAD=1E-16/RHOBAR;
+    BULKCOMPT2_RHO=1.0/RHOBAR;
+    BULKCOMPT2_UU=0.1*1E-6/RHOBAR;
+
+    // avoid hitting gamma ceiling
+    GAMMAMAXRAD=MAX(GAMMAMAXRAD,2.0*1.0/sqrt(1.0-BULKCOMPT2_FRATIO*BULKCOMPT2_FRATIO));
+
+
+    BCtype[X1UP]=FREEOUTFLOW;
+    BCtype[X1DN]=BULKCOMPT2INFLOW;
     BCtype[X2UP]=OUTFLOW;
     BCtype[X2DN]=OUTFLOW;
     BCtype[X3UP]=PERIODIC; 
@@ -2669,7 +2720,7 @@ int init_defcoord(void)
   /*************************************************/
   /*************************************************/
 
-  if(WHICHPROBLEM==RADPULSE || WHICHPROBLEM==RADPULSEPLANAR){
+  if(WHICHPROBLEM==RADPULSE || WHICHPROBLEM==RADPULSEPLANAR || WHICHPROBLEM==BULKCOMPT){
     a=0.0; // no spin in case use MCOORD=KSCOORDS
 
     defcoord = UNIFORMCOORDS;
@@ -2713,6 +2764,22 @@ int init_defcoord(void)
 
     Rout_array[1]=1.0;
     Rout_array[2]=1.0;
+    Rout_array[3]=1.0;
+  }
+
+  /*************************************************/
+  /*************************************************/
+  /*************************************************/
+  if(WHICHPROBLEM==BULKCOMPT2){
+    a=0.0; // no spin in case use MCOORD=KSCOORDS
+
+    defcoord = UNIFORMCOORDS;
+    Rin_array[1]=0;
+    Rin_array[2]=0.45;
+    Rin_array[3]=0;
+
+    Rout_array[1]=1.0;
+    Rout_array[2]=0.55; // so beam on grid
     Rout_array[3]=1.0;
   }
 
@@ -3834,6 +3901,108 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
 
 
 
+  /*************************************************/
+  /*************************************************/
+  if(WHICHPROBLEM==BULKCOMPT2){
+
+    
+    pr[RHO] = BULKCOMPT2_RHO ;
+    pr[UU] = BULKCOMPT2_UU;
+
+    FTYPE xx,yy,zz,rsq;
+    coord(i, j, k, CENT, X);
+    bl_coord(X, V);
+    xx=V[1];
+    yy=V[2];
+    zz=V[3];
+    if(0){
+      FTYPE lambda=(Rout_array[1]-Rin_array[1])/5.0;
+      FTYPE kk = 2.0*M_PI/lambda;
+      FTYPE amp=0.5;
+      //amp=0.2;
+      amp=0.0; // case 1 and 3
+      amp=0.5;
+      FTYPE drift=0;
+      pr[U1] = 0 ;
+      FTYPE mark1=1.3*M_PI;
+      FTYPE mark2=4.0*2.0*M_PI+(2.0*M_PI-mark1);
+      if(kk*xx>=mark1 && kk*xx<=mark2){
+        pr[U2] = drift + amp*sin(kk*xx) ;     // k along x, amp in y
+      }
+      else if(kk*xx<=mark1){
+        pr[U2] = drift + amp*sin(mark1)*exp((+kk*xx-mark1)/0.2) ;     // k along x, amp in y
+      }
+      else if(kk*xx>=mark2){
+        pr[U2] = drift + amp*sin(mark2)*exp((-kk*xx+mark2)/0.2) ;     // k along x, amp in y
+      }
+      else{
+        pr[U2] =0.0;
+      }
+      pr[U3] = 0 ;
+    }
+    else{
+      // try simpler case of constant drift
+      pr[U1]=pr[U3]=0;
+      //      FTYPE drift=0.0;
+      //pr[U2] = drift;
+#define sech(x) (1.0/cosh(x))
+      pr[U2] = 1E-1*sech((xx-0.5)/.06)*(xx-0.5);
+    }
+
+    // just define some field
+    pr[B1]=0.0;
+    pr[B2]=0.0;
+    pr[B3]=0.0;
+
+    if(FLUXB==FLUXCTSTAG){
+      // assume pstag later defined really using vector potential or directly assignment of B3 in axisymmetry
+      PLOOPBONLY(pl) pstag[pl]=pr[pl];
+    }
+
+
+
+    if(PRAD0>=0){
+      // new way: correctly transform -- also how koral currently setup
+      //E, F^i in orthonormal fluid frame
+      FTYPE pradffortho[NPR];
+      pradffortho[PRAD0] = BULKCOMPT2_ERAD;
+      pradffortho[PRAD1] = 0;
+      pradffortho[PRAD2] = 0;
+      pradffortho[PRAD3] = 0;
+      if(NRAD>=0) pradffortho[NRAD] = calc_LTE_NfromE(pradffortho[PRAD0]);
+
+
+      // Transform these fluid frame E,F^i to lab frame coordinate basis primitives
+      *whichvel=VEL4;
+      *whichcoord=MCOORD;
+      prad_fforlab(whichvel, whichcoord, FF2LAB, i,j,k,CENT,NULL,pradffortho,pr, pr);
+      // override because originals are not in fluid frame
+      pr[URAD0] = pradffortho[URAD0];
+      pr[URAD1] = pradffortho[URAD1];
+      pr[URAD2] = pradffortho[URAD2];
+      pr[URAD3] = pradffortho[URAD3];
+      if(NRAD>=0) pr[NRAD] = pradffortho[NRAD];
+    }
+    else if(PRAD0>=0){
+      // old way: don't transform, leave as radiation frame E.
+      pr[PRAD0] = BULKCOMPT2_ERAD;
+      pr[PRAD1] = 0 ;
+      pr[PRAD2] = 0 ;    
+      pr[PRAD3] = 0 ;
+      if(NRAD>=0) pr[NRAD] = calc_LTE_NfromE(pr[PRAD0]);
+      *whichvel=WHICHVEL;
+      *whichcoord=MCOORD;
+    }
+    else{
+      *whichvel=WHICHVEL;
+      *whichcoord=MCOORD;
+    }
+
+    return(0);
+  }
+
+
+
 
   /*************************************************/
   /*************************************************/
@@ -3881,6 +4050,83 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
     pr[RHO] = rho;
     pr[UU] = uint;
     pr[U1] = 0 ;
+    pr[U2] = 0 ;    
+    pr[U3] = 0 ;
+
+    // just define some field
+    pr[B1]=0.0;
+    pr[B2]=0.0;
+    pr[B3]=0.0;
+
+    if(FLUXB==FLUXCTSTAG){
+      // assume pstag later defined really using vector potential or directly assignment of B3 in axisymmetry
+      PLOOPBONLY(pl) pstag[pl]=pr[pl];
+    }
+
+    FTYPE Fx,Fy,Fz;
+    Fx=Fy=Fz=0.0;
+
+    if(PRAD0>=0){
+      pr[URAD0] = ERAD ;
+      pr[URAD1] = Fx ;
+      pr[URAD2] = Fy ;    
+      pr[URAD3] = Fz ;
+      if(NRAD>=0) pr[NRAD] = calc_LTE_NfromE(pr[PRAD0]);
+    }
+
+    // KORALTODO: no transformation, but only because tuned units to be like koral and so ERAD gives same value and also because no Flux.   Also, would give same result as assuming in fluid frame because vfluid=0 here and F=0 here.
+
+    *whichvel=WHICHVEL;
+    *whichcoord=CARTMINKMETRIC2;
+    return(0);
+  }
+
+  /*************************************************/
+  /*************************************************/
+  if(WHICHPROBLEM==BULKCOMPT){
+    // now avoids use of real units as in Koral paper (unlike Koral code)
+
+    FTYPE Trad,Tgas,ERAD,uint;
+    FTYPE xx,yy,zz,rsq;
+    coord(i, j, k, CENT, X);
+    bl_coord(X, V);
+    xx=V[1];
+    yy=V[2];
+    zz=V[3];
+
+
+    rsq=(xx)*(xx);
+
+    //FTYPE RHO_AMB (1.e0) // in grams per cm^3
+    // FTYPE RHO_AMB=(MPERSUN*MSUN/(LBAR*LBAR*LBAR)); // in grams per cm^3 to match koral's units with rho=1
+    FTYPE RHO_AMB=1.0;
+    FTYPE T_AMB=1.0E6/TEMPBAR;
+
+    FTYPE BLOBP=100.;
+    FTYPE BLOBW=5.;
+
+    // radiation temperature is distributed
+    Trad=T_AMB*(1.+BLOBP*exp(-rsq/(BLOBW*BLOBW)));
+    ERAD=calc_LTE_EfromT(Trad);
+
+    //flat gas profiles
+    Tgas=T_AMB;
+    FTYPE rho;
+    rho=RHO_AMB;
+    uint=calc_PEQ_ufromTrho(Tgas,rho);
+
+    // dualfprintf(fail_file,"IC i=%d Trad=%g ERAD=%g Tgas=%g rho=%g uint=%g\n",i,Trad,ERAD,Tgas,rho,uint);
+
+   
+    pr[RHO] = rho;
+    pr[UU] = uint;
+
+    FTYPE lambda=(Rout_array[1]-Rin_array[1])/5.0;
+    FTYPE kk = 2.0*M_PI/lambda;
+    FTYPE amp=0.01;
+    FTYPE drift=0.01;
+    pr[U1] = drift + amp*sin(kk*xx) ;
+
     pr[U2] = 0 ;    
     pr[U3] = 0 ;
 
@@ -9434,6 +9680,22 @@ void adjust_fluxctstag_emfs(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR
 
 #endif
 
+//****************************************//
+//****************************************//
+
+
+#if(WHICHPROBLEM==BULKCOMPT)
+
+#define KAPPA 0.
+
+#define KAPPAES (1E3) // takes VERY long time with sub-cycling, but works.
+
+#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA)
+#define KAPPAESUSER(rho,T) (rho*KAPPAES)
+
+
+#endif
+
 
 //****************************************//
 //****************************************//
@@ -9449,6 +9711,28 @@ void adjust_fluxctstag_emfs(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR
 #define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
 // assume KAPPAES defines fraction of ES opacity
 #define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_BASIC_CODE(rho,T))
+
+
+#endif
+
+//****************************************//
+//****************************************//
+//****************************************//
+//****************************************//
+
+
+#if(WHICHPROBLEM==BULKCOMPT2)
+
+
+#define KAPPA 0.
+//#define KAPPAES (1.0/3.401E4/10.0/2.94*1E5) // taubox=0.1
+#define KAPPAES (1.0/3.401E4/2.94*1E5*1E-4) // taubox=0.1
+//#define KAPPAES (0)
+
+// assume KAPPA defines fraction of FF opacity
+#define KAPPAUSER(rho,B,Tg,Tr) (rho*KAPPA*KAPPA_FF_CODE(rho,Tg,Tr))
+// assume KAPPAES defines fraction of ES opacity
+#define KAPPAESUSER(rho,T) (rho*KAPPAES)
 
 
 #endif

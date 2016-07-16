@@ -10862,7 +10862,7 @@ static void calc_Trad_fromRuuandgamma(FTYPE *pp, struct of_geom *ptrgeom, FTYPE 
   // 2 = Ramesh fit for T(\mu) but assume Planck \mu for opacities and evolve T and nrad
   // 3 = Jon's fit for T(\mu) and evolve \mu for opacities and evolve T and nrad
   // But 2,3 only change T_r by 10% at most for any Ruu,nradff, and would have to include chemical potential in opacity and use (say Jon's) chemical potential vs. Ruu,nradff fit and have \kappa(Tg,Tr,\mu).
-#define TRADTYPE 1
+#define TRADTYPE 3
 
 
 #if(TRADTYPE==-1)

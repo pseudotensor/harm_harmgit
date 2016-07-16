@@ -535,7 +535,8 @@ struct Ccoordparams {
 #define RADCYLJET (51)
 
 
-
+#define BULKCOMPT 60
+#define BULKCOMPT2 61
 
 // RADDONUT types
 #define NODONUT 0
@@ -567,6 +568,8 @@ struct Ccoordparams {
 
 #define WALDMONOBC 300
 
+#define BULKCOMPT2INFLOW 301
+
 
 ////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////
@@ -596,6 +599,7 @@ struct Ccoordparams {
 //#define WHICHPROBLEM RADBEAM2DKSVERT
 //#define WHICHPROBLEM RADCYLBEAMCART
 //#define WHICHPROBLEM RADCYLJET
+//#define WHICHPROBLEM BULKCOMPT2
 
 
 
@@ -1178,6 +1182,8 @@ struct Ccoordparams {
 
 #endif
 
+//****************************************//
+//****************************************//
 
 
 
@@ -1246,6 +1252,8 @@ struct Ccoordparams {
 
 
 
+//****************************************//
+//****************************************//
 
 
 #if(WHICHPROBLEM==RADCYLJET)
@@ -1306,6 +1314,75 @@ struct Ccoordparams {
 
 #endif
 
+
+//****************************************//
+//****************************************//
+
+#if(WHICHPROBLEM==BULKCOMPT)
+
+#undef EVOLVENRAD
+#define EVOLVENRAD 1
+
+#undef DOCOMPTON
+#define DOCOMPTON 0 // enable thermal Comptonization
+
+#undef RADSHOCKFLAT
+#define RADSHOCKFLAT 1
+
+#undef FORCESOLVEL
+#define FORCESOLVEL 0 // for testing against koral
+
+#define N1 100
+#define N2 1 
+#define N3 1
+
+#undef WHICHRADSOURCEMETHOD
+#define WHICHRADSOURCEMETHOD SOURCEMETHODIMPLICIT
+
+#define MCOORD CARTMINKMETRIC2
+
+
+#endif
+
+//****************************************//
+//****************************************//
+
+
+//****************************************//
+//****************************************//
+
+#if(WHICHPROBLEM==BULKCOMPT2)
+
+#undef EVOLVENRAD
+#define EVOLVENRAD 1
+
+#undef DOCOMPTON
+#define DOCOMPTON 0 // enable thermal Comptonization
+
+#undef FORCESOLVEL
+#define FORCESOLVEL 0 // to compare against koral
+
+#undef RADSHOCKFLAT
+#define RADSHOCKFLAT 1
+
+#undef WHICHRADSOURCEMETHOD
+//#define WHICHRADSOURCEMETHOD SOURCEMETHODNONE
+//#define WHICHRADSOURCEMETHOD SOURCEMETHODEXPLICIT
+#define WHICHRADSOURCEMETHOD SOURCEMETHODIMPLICIT
+//#define WHICHRADSOURCEMETHOD SOURCEMETHODIMPLICITEXPLICITCHECK // works!
+
+#define N1 40
+#define N2 1
+#define N3 1
+
+#define MCOORD CARTMINKMETRIC2
+
+#endif
+
+
+
+//****************************************//
+//****************************************//
 
 
 
