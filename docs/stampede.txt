@@ -260,5 +260,6 @@ This will automatically run the additional jobs once the dependent original job 
 
 To use this function without having to worry about rdump corruption/truncation, need to use latest koralinsert code (i.e. not superedd or subedd as they don't handle truncation or what file is latest automatically).  So if you have init.c, init.h, bounds.c changes in other branch, need to copy all koralinsert files into superedd, set NRADEVOLVE 0 in init.h and then use your backup copy of superedd's or subedd's init.c, init.h, bounds.c changes for initial conditions or boundary conditions and put into latest version you now have for rest of code.
 
+When using latest koralinsert branch, modify grmhd call to have for firstrun=0 mode: 1 -1 at end instead of 1 0 .  The -1 tells harm to auto-chose which rdump-0.bin or rdump-1.bin to use to restart based upon which is latest yet not truncated/corrupt.
 
 
