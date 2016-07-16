@@ -717,7 +717,7 @@ int diag_fixup_allzones(FTYPE (*pf)[NSTORE2][NSTORE3][NPR], FTYPE (*ucons)[NSTOR
         //      if(plfl<SMALL) plfl=SMALL;
 
         FTYPE plflfinal = plfl + dpl;
-        if(1&&(mapvar==YFL2 || mapvar==YFL4)){ // just energy densities.  Can't apply to angular momenta that can be any sign.  Could apply to density, but doesn't seem to need it.
+        if(1&&(mapvar==YFL1 || mapvar==YFL2 || mapvar==YFL4)){ // just energy densities.  Can't apply to angular momenta that can be any sign.  Could apply to density, but doesn't seem to need it.
           // at least for non-densities, especially energy densities, having near 0 or negative values leads to an instability and crazy run-away in the values due to fluxes.
           // So won't be able to track losses of energy, only gains, unless split gains and losses.
           // Or maybe need floor at t=0 at least so that not dealing with crazy small values?
