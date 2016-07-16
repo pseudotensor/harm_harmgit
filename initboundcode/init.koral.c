@@ -2535,7 +2535,6 @@ int init_global(void)
       }
     }
 
-    DTr=20;
 
     //    for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=1.0;
 
