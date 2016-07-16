@@ -258,25 +258,7 @@ JOBID=`sbatch --dependency=afterany:$JOBID b2 | tail -1 | awk '{print $4}'`
 
 This will automatically run the additional jobs once the dependent original job is done and once priority is high enough for the job to start.
 
-To avoid manually checking if the restart file is correctly written (i.e. rdump-0.bin vs. rdump-1.bin), ensure you have inside restart.c:restart_read() the following code fragment:
-
-  // try to read file
-  int failreturn;
-  failreturn=dump_gen(READFILE,*dump_cnt,bintxt,whichdump,datatype,fileprefix,fileformat,filesuffix,read_restart_header,rdump_read_content);
-
-  if(failreturn>0){
-    // if failed, then see if other restart number exists
-    *dump_cnt = !(*dump_cnt);
-    failreturn=dump_gen(READFILE,*dump_cnt,bintxt,whichdump,datatype,fileprefix,fileformat,filesuffix,read_restart_header,rdump_read_content);
-  }
-
-
-that replaces the old code fragment:
-
-  int failreturn;
-  failreturn=dump_gen(READFILE,*dump_cnt,bintxt,whichdump,datatype,fileprefix,fileformat,filesuffix,read_restart_header,rdump_read_content);
-
-
+To use this function without having to worry about rdump corruption/truncation, need to use latest koralinsert code (i.e. not superedd or subedd as they don't handle truncation or what file is latest automatically).  So if you have init.c, init.h, bounds.c changes in other branch, need to copy all koralinsert files into superedd, set NRADEVOLVE 0 in init.h and then use your backup copy of superedd's or subedd's init.c, init.h, bounds.c changes for initial conditions or boundary conditions and put into latest version you now have for rest of code.
 
 
 
