@@ -2204,6 +2204,11 @@ int init_global(void)
 
     TIMEORDER=2; // faster and sufficient
 
+    /////////////////////////////////
+    // DONUT selections (must be made here as global variable and set_fieldtype() needs it)
+    RADNT_DONUTTYPE=DONUTTHINDISK2; // SUPERMADNEW
+    //RADNT_DONUTTYPE=DONUTOLEK;
+    //RADNT_DONUTTYPE=DONUTOHSUGA;
 
     int set_fieldtype(void);
     int FIELDTYPE=set_fieldtype();
@@ -2235,11 +2240,6 @@ int init_global(void)
 
 
 
-    /////////////////////////////////
-    // DONUT selections
-    RADNT_DONUTTYPE=DONUTTHINDISK2; // SUPERMADNEW
-    //RADNT_DONUTTYPE=DONUTOLEK;
-    //RADNT_DONUTTYPE=DONUTOHSUGA;
     RADDONUT_OPTICALLYTHICKTORUS=1; // otherwise, pressure only from gas.
     RADNT_INFLOWING=0;
     RADNT_OMSCALE=1.0;

@@ -166,6 +166,8 @@ bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 # crea
 
 bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 # makeavgplot, submits job.
 
+bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 # collect .  Creates tbl*.tex that you can put into latex with \input{} for pdf.
+
 For each case, you need to check that the number of cores you chose is reasonable when looking at the job using: "showq -u $USERNAME".  You also need to, for each case, before moving onto the next step, need to ensure it did what it should have done after the job completed according to "showq" or you got the email saying it completed  The meaning of completion is stated in # comment at end of line.
 
 Once you get the hang of things, some things you can do simultaneously.  E.g., once avg2d.npy and qty2.npy are there, you can simultaneously do the "makeplot" "makemovie" and "makeavgplot" steps without waiting.  But wait for now to ensure you really follow things.
