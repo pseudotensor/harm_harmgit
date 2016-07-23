@@ -84,9 +84,12 @@ JOBID=`qsub ./jonharmrad15`
 JOBID=`qsub -W depend=afterany:$JOBID ./pfeharmrad15restart`
 JOBID=`qsub -W depend=afterany:$JOBID ./pfeharmrad15restart`
 #etc.
+
+My example batch files are in harmgit/batches/pfeharmrad15*
+
 # this only works when using latest harm that has auto-select restart -- else risk using truncated restart and failure of start.  Can risk it if want by always asking for the 0 restart file, for example.
 
-
+# if you want to risk it with old code that doesn't auto-select restart file to use, you can, but don't go crazy with dependency.  Maybe 48 hours total of dependencies is enough (i.e. 48/8 jobs dependent upon each other).  Then in my example above, inside the pfeharmrad15restart, one would replace the 1 -1 with 1 0 in the call to mpiexec at the end.
 
 
 
