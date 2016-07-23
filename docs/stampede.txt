@@ -172,6 +172,8 @@ For each case, you need to check that the number of cores you chose is reasonabl
 
 Once you get the hang of things, some things you can do simultaneously.  E.g., once avg2d.npy and qty2.npy are there, you can simultaneously do the "makeplot" "makemovie" and "makeavgplot" steps without waiting.  But wait for now to ensure you really follow things.
 
+NOTE: If you get a "fontList.cache error related to matplotlib and pickle_dump or other calls in the *err* files, like during makeing of frames, you just have to retry the job.  It's some python bug.
+
 12) Also, you might skip the "create mp4 movie" line and just do:
 
 cd $SCRATCH/rad0.3/test1/
