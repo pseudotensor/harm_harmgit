@@ -1,0 +1,36 @@
+========================
+Basic Instructions
+========================
+
+HARM as described in McKinney et al. (2012) in master. HARMRAD as described in McKinney et al. (2014) in koralinsert.
+
+See koralinsert branch /docs/quick_start_guide/* for tutorials on various aspects and utilities
+
+See koralinsert branch /docs/general_plotting_guide.txt for tutorial on data analysis
+
+See http://pseudotensor.github.io/ for code help and graphical/interactive search and call graph from doxygen
+
+Very basic instructions:
+
+1) git clone ...
+
+2) cd harmgit
+
+3) ln -s initboundcode/init.fishmon.c init.c ; ln -s initboundcode/init.fishmon.h init.h ; ln -s initboundcode/bounds.fishmon.c bounds.c
+
+4) make superclean ; make prep ; make -j 16
+
+5) mkdir run ; cd run ; cp ../grmhd . ; ./grmhd 1 1 1 1 # assuming mpi and openmp both on
+
+
+========================
+Latest Branch Details:
+========================
+
+koralinsert: Latest working (non-devel) for harmrad: b89a412aa9988dde020ebcba011d0b50af7548b2 .
+
+master: Latest working (non-devel) for harm3d: HEAD
+
+subedd: From harmrad, setup for sub-Eddington type simulation.
+
+superedd: From harmrad, setup for super-Eddington type simulation.
