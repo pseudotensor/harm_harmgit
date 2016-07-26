@@ -18,7 +18,11 @@ Very basic instructions:
 
 2) cd harmgit
 
-3) ln -s initboundcode/init.fishmon.c init.c ; ln -s initboundcode/init.fishmon.h init.h ; ln -s initboundcode/bounds.fishmon.c bounds.c
+3) (choose 3a or 3b, 3b being natural if using koralinsert branch):
+
+3a) ln -s initboundcode/init.fishmon.c init.c ; ln -s initboundcode/init.fishmon.h init.h ; ln -s initboundcode/bounds.fishmon.c bounds.c # for non-radiation problem
+
+3b) ln -s initboundcode/init.koralinsert.c init.c ; ln -s initboundcode/init.koralinsert.h init.h ; ln -s initboundcode/bounds.koralinsert.c bounds.c # for radiation problem
 
 4) make superclean ; make prep ; make -j 16
 
