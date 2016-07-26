@@ -1,18 +1,11 @@
 /*! \file license.txt
 ~~~~
 
-JCM: This code is under the GNU GPL v3 as copied below.
-
-JCM: The only exceptions to the GNU GPL is the code
-is not open and must follow the rules outlined in harm_authorship_policy.txt .
-The group of all arcthitects, or individually Jonathan McKinney,
-can choose to recind the rights of non-architects.
-Copyright is granted only to Jonathan McKinney and other developers
-as per the definition in harm_authorship_policy.txt .
-
+JCM: This code is under the GNU GPL v3 as copied below.  This means if you use the code is some way in your own code, that new code must remain open source and available online.  McKinney prefers github if you want a suggestion.
 
 http://www.gnu.org/licenses/gpl.html
 
+JCM: Previously this code was not open and followed the rules outlined in harm_authorship_policy.txt .
 
 
 GNU GENERAL PUBLIC LICENSE
