@@ -1,11 +1,11 @@
 /*! \file license.txt
 ~~~~
 
-JCM: This code is under the GNU GPL v3 as copied below.  This means if you use the code is some way in your own code, that new code must remain open source and available online.  McKinney prefers github if you want a suggestion.
+Code is under GPLv3.  In addition, private single-person use need not be made publicly available (as GPLv3), but any public use (e.g. publications) requires that any new code be publicly and freely available (e.g. at github) under the same license terms.  This is maximally open-source and copyleft.
+
+Previously this code was not open and followed the rules outlined in harm_authorship_policy.txt .
 
 http://www.gnu.org/licenses/gpl.html
-
-JCM: Previously this code was not open and followed the rules outlined in harm_authorship_policy.txt .
 
 
 GNU GENERAL PUBLIC LICENSE
