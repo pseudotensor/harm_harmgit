@@ -35,7 +35,7 @@ module load mathematica/7.0.1
 module load matlab/2010b
 module load ffmpeg/1.2
 module load gnuplot/4.6.3
-#module load python/2.7.3
+module load python/2.7.3
 module load tcl-tk/8.5.11
 module load hdf5/1.8.3/intel/mpt
 module load imagemagick/6.4.0-3
@@ -54,10 +54,13 @@ module load git/1.7.7.4
 
 SRCDIR=/nobackup/jmckinn2/tarballs/
 BASE=/nobackup/jmckinn2/
-export PYTHONPATH=$BASE/lib/python/:$BASE/py/:$HOME/py/
+#export PYTHONPATH=$BASE/lib/python/:$BASE/py/:$HOME/py/
 export PATH=$BASE/bin:$PATH
-export PYTHON_LIB=$BASE/lib/
-export PYTHON_INC=$BASE/include/python2.7/
+#export PYTHON_LIB=$BASE/lib/
+#export PYTHON_INC=$BASE/include/python2.7/
+declare -x PYTHONPATH=""
+declare -x PYTHON_INC=""
+declare -x PYTHON_LIB=""
 export LD_LIBRARY_PATH=$BASE/lib/:$LD_LIBRARY_PATH
 export LIBRARY_PATH=$BASE/lib/:$LIBRARY_PATH
 
