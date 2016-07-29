@@ -100,11 +100,13 @@ d) "timetotplot" that is 1 hour by default, which may be fine.  Check if it comp
 
 4) Optionsal for now: Edit ~/py/__init__.py so that your run name used (say rad0.3) is present as a model list in (at least) def isradmodel(modelname): as another or conditional like or modelname=="rad0.3"  .  You can scan through the file and see how this "isradmodel" is used.  For more careful control over what happens with specific models, you can scan through for examples where "isradmodel" is referred to in the python script.  It's good to also add your model to the place where "fieldtype" and "truemodelname" and "gridtype" are set by adding your model as another conditional.  You can look in the script for modelname=="rad1" to see an example of how a specific model chooses those and other things.
 
-5) Edit ~/py/__init__.py for stampede-specific things to optimize performance.  Uncomment the following lines:
+5a) Edit ~/py/__init__.py for stampede-specific things to optimize performance.  Uncomment the following lines:
 
 #time.sleep(10.0+100.0*n) # on supercomputer's need to wait so file system gets up to date
 
 #time.sleep(10.0*n) # on supercomputer's need to wait so file system gets up to date
+
+5b) Set ISSCRATCH=1 in main()
 
 6) By default, makeallmovie.sh will detect stampede and go into so-called "parallel=2" mode where it submits a batch job and runs an MPI wrapper that calls python for each core independently.  So it's an embarrassingly parallel job. To ensure the parallel==2 program will compile properly, go ahead and check by doing:
 
