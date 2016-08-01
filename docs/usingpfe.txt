@@ -94,6 +94,18 @@ My example batch files are in harmgit/batches/pfeharmrad15*
 
 
 
+#### Note on python
+# If python stuff doesn't run because of limited packages, then use my tarball and do on pfe
+
+cd /nobackup/$USER/
+scp <usernameonbh>@bh01:/mnt/data0/user/pfe.pythonstuff.tgz .
+tar xvzf pfe.pythonstuff.tgz
+rm -rf tarballs
+# this cleans-up stuff you don't need (i.e. sources for python).
+# with .profile setup to use this python stuff's lib and bin, things should work like for me (JCM).
+
+# for external users, things missing on pfe include scipy and other basic stuff, so I downloaded python2.7 and installed it with needed packages myself.
+
 
 
 
