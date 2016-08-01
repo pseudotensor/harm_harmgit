@@ -46,6 +46,7 @@ git checkout koralinsert # or superedd or subedd for Jane and Danilo (make sure 
 ln -s initboundcode/init.koral.c init.c
 ln -s initboundcode/init.koral.h init.h
 ln -s initboundcode/bounds.koral.c bounds.c
+# edit init.h and change resolution and set PRODUCTION 2
 make superclean ; make prep ; make -j 16 
 # confirm created grmhd binary
 
@@ -106,7 +107,6 @@ rm -rf tarballs
 
 # for external users, things missing on pfe include scipy and other basic stuff, so I downloaded python2.7 and installed it with needed packages myself.
 
-
-
+# please  see stampede.txt for other details for python.  E.g., changes to default __init__.py options, etc. needed for stampede and pfe.
 
 
