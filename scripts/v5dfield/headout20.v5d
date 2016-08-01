@@ -1,0 +1,21 @@
+density 1E-4 1
+ug 1E-4 1
+uu0 1E-4 1
+bsqorho 1E-4 1
+lrho 1E-4 1
+neglrho 1E-4 1
+lbsq 1E-4 1
+Rcyl 1E-4 1
+W 1E-4 1
+V 1E-4 1
+U 1E-4 1
+W2 1E-4 1
+V2 1E-4 1
+U2 1E-4 1
+posr 1E-4 1
+posh 1E-4 1
+posph 1E-4 1
+posx 1E-4 1
+posy 1E-4 1
+posz 1E-4 1
+0 1 0 1 0 1
