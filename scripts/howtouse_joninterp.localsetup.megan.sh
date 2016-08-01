@@ -83,25 +83,22 @@ fi
 
 if [ $system -eq 4 ]
 then
-    joninterpcodedir=/mnt/data0/mmarsha/thinmad/
-    basedir=`pwd`
-    iinterpprogname=$basedir/iinterp
-    bin2txtprogname=$basedir/bin2txt
+    joninterpcodedir="/data/jon/harmgit/"
+    basedir=./
+    iinterpprogname=~/bin/iinterp
+    bin2txtprogname=~/bin/bin2txt
 
     # get needed v5d files
     cd $basedir/
-
-    # THIS file:
-    # scp jon@ki-rh42.slac.stanford.edu:/data/jon/harmgit/docs/howtouse_joninterp.sh . ; scp jon@ki-rh42.slac.stanford.edu:/data/jon/harmgit/docs/loopjoninterp.sh . ; scp jon@ki-rh42.slac.stanford.edu:/data/jon/harmgit/batches/batch.loopjoninterp .
-
-    DOSCP=0
-    if [ $DOSCP -eq 1 ]
+    
+    DOCP=0
+    if [ $DOCP -eq 1 ]
     then
-	scp jon@ki-rh42.slac.stanford.edu:/data/jon/v5dfield/head*.v5d .
-	scp jon@ki-rh42.slac.stanford.edu:/data/jon/v5dfield/*.tcl  .  
-	scp jon@ki-rh42.slac.stanford.edu:/data/jon/v5dfield/*.set  .
-	scp jon@ki-rh42.slac.stanford.edu:/data/jon/v5dfield/*.save  .  
-	scp jon@ki-rh42.slac.stanford.edu:/data/jon/v5dfield/*.SAVE  .  
+	    cp $joninterpcodedir/scripts/v5dfield/head*.v5d .
+	    cp $joninterpcodedir/scripts/v5dfield/*.tcl  .  
+	    cp $joninterpcodedir/scripts/v5dfield/*.set  .
+        cp $joninterpcodedir/scripts/v5dfield/*.save  .  
+        cp $joninterpcodedir/scripts/v5dfield/*.SAVE  .  
     fi
 fi
 
@@ -416,18 +413,13 @@ then
 fi
 if [ $whichoutput -eq 18 ]
 then
-    iinterpprogname=iinterp
-    headv5d=headout18.v5d
+    headv5d=headout20.v5d # 20 things, outputnumber whichoutput=18
 fi
 
 # override if no change to iinterp file and (e.g.) latest
 if [ $system -eq 3 ]
 then
     iinterpprogname=~/bin/iinterp # default
-fi
-if [ $system -eq 4 ]
-then
-    iinterpprogname=$basedir/iinterp # default
 fi
 
 
@@ -689,7 +681,7 @@ fi
 #  North/South: W2 = Bx
 #  Vertical: V2    = By
 # This assumes order in head.v5d as:
-# W2,V2,U2 = Bx,By,Bz # i.e. current choice in headout18.v5d
+# W2,V2,U2 = Bx,By,Bz # i.e. current choice in headout18.v5d and headout20.v5d
 # 
 # Alternatively you can force order to be U2,V2,W2 like alphabetical in the vis5d+ control panel and script command that sets the variable names for trajectories and winds.  Then you should choose:
 #  East/West: U2   = Bz
