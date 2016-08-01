@@ -42,7 +42,7 @@ cp iinterp ~/bin/
 
 # now compile harmrad using normal steps
 cd ~/git/harmgit/
-git checkout koralinsert # or superedd or subedd for Jane and Danilo
+git checkout koralinsert # or superedd or subedd for Jane and Danilo (make sure your total resolution is at least 128x64x1 or for 3D 128x64x4)
 ln -s initboundcode/init.koral.c init.c
 ln -s initboundcode/init.koral.h init.h
 ln -s initboundcode/bounds.koral.c bounds.c
