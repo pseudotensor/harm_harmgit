@@ -799,10 +799,10 @@ void apply_boundaryconditions_olddata(int numcols, int oN0local, int numbc0local
 
   /////////////
   //
-  // set boundary conditions (as if scalars)
+  // set boundary conditions (as if scalars, and note operates *after* preprocess so if spc->cart then operates on cart)
   //
   ///////////// 
-  for(coli=0;coli<numcols;coli++){ // over all independent columsn of data
+  for(coli=0;coli<numcols;coli++){ // over all independent columns of data
       
     if(BOUNDARYEXTRAP==1){
       // lower and upper h
@@ -900,6 +900,8 @@ void apply_boundaryconditions_olddata(int numcols, int oN0local, int numbc0local
 //
 // smooth pole (as if scalars) to original HARM-grid data
 //
+// if spc->cart, compute_preprocess is applied already and so this operates on xyz not r\theta\phi
+//
 // assume boundary conditions already applied
 //
 ///////////// 
@@ -920,6 +922,11 @@ void apply_boundaryconditions_olddata_cleanpole(int numcols, int oN0local, int n
   FTYPE ftemp[2];
   int count[2];
 
+#define EXTERNALN3LOOP(k) for(k=0;k<oN3;k++) // if want to average per-k
+#define INTERNALN3LOOP(k) //for(k=0;k<oN3;k++) // if want to average over k as well, but not good if spc->cart for vectors
+
+#define FULLINTERNALN3LOOP(k) //for(k=-numbclocal[3];k<oN3+numbclocal[3];k++)
+#define FULLEXTERNALN3LOOP(k) for(k=-numbclocal[3];k<oN3+numbclocal[3];k++)
 
   /////////////
   //
@@ -931,7 +938,8 @@ void apply_boundaryconditions_olddata_cleanpole(int numcols, int oN0local, int n
     // skip non-simulation data things so don't smooth (e.g.) spatial position information
     if(DATATYPE==16 && coli==7) continue;
     if(DATATYPE==17 && coli==7) continue;
-    if(DATATYPE==18 && (coli==7 || coli==14 || coli==15 || coli==16 || coli==17 || coli==18 || coli==19 ) ) continue;
+    // also don't smooth field because don't in harm either (was leading to zero-ing out of toroidal field for some reason near pole)
+    if(DATATYPE==18 && (coli==7 || coli==11 || coli==12 || coli==13 || coli==14 || coli==15 || coli==16 || coli==17 || coli==18 || coli==19 ) ) continue;
     if(DATATYPE==19 && (coli==7 || coli==14 || coli==15 || coli==16) ) continue;
     
 
@@ -940,30 +948,31 @@ void apply_boundaryconditions_olddata_cleanpole(int numcols, int oN0local, int n
       // over all h and i
       for(h=0;h<oN0local;h++){
         for(i=0;i<oN1;i++){
+          FULLEXTERNALN3LOOP(k){
 
-          if(doubleworklocal){
-            // form average
-            // no need to include boundary cells and do extra work since just copies of active cells
-            ftemp[0]=ftemp[1]=0.0;
-            count[0]=count[1]=0;
-            for(k=0;k<oN3;k++) for(j=0;j<SMOOTHSIZE;j++){ ftemp[0]+=olddatalocal[coli][h][i][j][k]; count[0]++; }
-            for(k=0;k<oN3;k++) for(j=oN2-SMOOTHSIZE;j<oN2;j++){ ftemp[1]+=olddatalocal[coli][h][i][j][k]; count[1]++; }
-            // assign average to all members, including boundary cells!
-            if(count[0]!=0) for(k=-numbclocal[3];k<oN3+numbclocal[3];k++) for(j=-MIN(numbclocal[2],SMOOTHSIZE);j<SMOOTHSIZE;j++) olddatalocal[coli][h][i][j][k]=ftemp[0]/((FTYPE)count[0]);
-            if(count[1]!=0) for(k=-numbclocal[3];k<oN3+numbclocal[3];k++) for(j=oN2-SMOOTHSIZE;j<oN2+MIN(numbclocal[2],SMOOTHSIZE);j++) olddatalocal[coli][h][i][j][k]=ftemp[1]/((FTYPE)count[1]);
-          } // end if doubleworklocal==1
-          else{
-            // no need to include boundary cells and do extra work since just copies of active cells
-            // form average
-            ftemp[0]=ftemp[1]=0.0;
-            count[0]=count[1]=0;
-            for(k=0;k<oN3;k++) for(j=0;j<SMOOTHSIZE;j++){ ftemp[0]+=oldimage0[coli][h][i][j][k]; count[0]++; }
-            for(k=0;k<oN3;k++) for(j=oN2-SMOOTHSIZE;j<oN2;j++){ ftemp[1]+=oldimage0[coli][h][i][j][k]; count[1]++; }
-            // assign average to all members, including boundary cells!
-            if(count[0]!=0) for(k=-numbclocal[3];k<oN3+numbclocal[3];k++) for(j=-MIN(numbclocal[2],SMOOTHSIZE);j<SMOOTHSIZE;j++) oldimage0[coli][h][i][j][k]=ftemp[0]/((FTYPE)count[0]);
-            if(count[1]!=0) for(k=-numbclocal[3];k<oN3+numbclocal[3];k++) for(j=oN2-SMOOTHSIZE;j<oN2+MIN(numbclocal[2],SMOOTHSIZE);j++) oldimage0[coli][h][i][j][k]=ftemp[1]/((FTYPE)count[1]);
-          } // end if doubleworklocal==1
-   
+            if(doubleworklocal){
+              // form average
+              // no need to include boundary cells and do extra work since just copies of active cells
+              ftemp[0]=ftemp[1]=0.0;
+              count[0]=count[1]=0;
+              INTERNALN3LOOP(k) for(j=0;j<SMOOTHSIZE;j++){ ftemp[0]+=olddatalocal[coli][h][i][j][k]; count[0]++; }
+              INTERNALN3LOOP(k) for(j=oN2-SMOOTHSIZE;j<oN2;j++){ ftemp[1]+=olddatalocal[coli][h][i][j][k]; count[1]++; }
+              // assign average to all members, including boundary cells!
+              if(count[0]!=0) FULLINTERNALN3LOOP(k) for(j=-MIN(numbclocal[2],SMOOTHSIZE);j<SMOOTHSIZE;j++) olddatalocal[coli][h][i][j][k]=ftemp[0]/((FTYPE)count[0]);
+              if(count[1]!=0) FULLINTERNALN3LOOP(k) for(j=oN2-SMOOTHSIZE;j<oN2+MIN(numbclocal[2],SMOOTHSIZE);j++) olddatalocal[coli][h][i][j][k]=ftemp[1]/((FTYPE)count[1]);
+            } // end if doubleworklocal==1
+            else{
+              // no need to include boundary cells and do extra work since just copies of active cells
+              // form average
+              ftemp[0]=ftemp[1]=0.0;
+              count[0]=count[1]=0;
+              INTERNALN3LOOP(k) for(j=0;j<SMOOTHSIZE;j++){ ftemp[0]+=oldimage0[coli][h][i][j][k]; count[0]++; }
+              INTERNALN3LOOP(k) for(j=oN2-SMOOTHSIZE;j<oN2;j++){ ftemp[1]+=oldimage0[coli][h][i][j][k]; count[1]++; }
+              // assign average to all members, including boundary cells!
+              if(count[0]!=0) FULLINTERNALN3LOOP(k) for(j=-MIN(numbclocal[2],SMOOTHSIZE);j<SMOOTHSIZE;j++) oldimage0[coli][h][i][j][k]=ftemp[0]/((FTYPE)count[0]);
+              if(count[1]!=0) FULLINTERNALN3LOOP(k) for(j=oN2-SMOOTHSIZE;j<oN2+MIN(numbclocal[2],SMOOTHSIZE);j++) oldimage0[coli][h][i][j][k]=ftemp[1]/((FTYPE)count[1]);
+            } // end if doubleworklocal==1
+          }   
 
         }// over i
       } // over h
