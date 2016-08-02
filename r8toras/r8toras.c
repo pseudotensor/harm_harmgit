@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
   fpos_t beginposition;
   long beginpos,endpos;
 
-  // fuck me, why!  Is outname[256] a constant pointer?
+  // something's wrong!  Is outname[256] a constant pointer?
   outname=(char*)malloc(sizeof(char)*256);
   if(outname==NULL){
     printf("death\n");
