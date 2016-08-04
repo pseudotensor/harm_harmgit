@@ -139,6 +139,11 @@ c) Optional at first when testing: Edit the other things in makeallmovie.sh, suc
 
 Or something similar.  This allows you to, for just calculations and not commonly done for movies, to focus resources on the range of files you want to time average, for example.
 
+d) In makemovie.sh, choose dowait=0 or 1.  dowait=0 is good for doing many jobs manually simultaneously, while dowait=1 is good if want to sit back and have script figure out when to run the next job.  dowait=0 is preferred in general.'
+# make sure each stage done before moving on if dowait=0 in makemovie.sh
+# e.g., do ps -auxwf|grep $USER and make sure no *movie* scripts going still
+
+
 10) Run the first makeallmovie.sh line as in the tutorial (optional note: you can set numtasks to 20X less than the default you would use for make1d or makemovie, because the makeavg step is much faster and doesn't need so many cores, but then you need to change numtasks back to your default choice.  This can speed up getting through the queue).
 
 bash ./makeallmovie.sh ${moviename} 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 # setup links, copy files, and makeavg step that makes avg2d_*.npy by submitting job
@@ -152,18 +157,20 @@ For a simple harm simulation with only 50 files, it should only take a few minut
 # if not on stampede, e.g. bh, and want to put into background, do, e.g. for makeavgplot#5:
 # (nohup bash ./makeallmovie.sh ${moviename} 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 5 0 &> 5.txt &)
 
-bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 # makes merged avg2d.npy
+bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 # makeavgmerge: makes merged avg2d.npy
 
 This way you won't have to wait for small jobs to get done with the local merge step.  This should create after a few minutes the avg2d.npy file.
 
 
 11) Only after the first line (or the split version above for small jobs) batch job is done and avg2d.npy is created do you run the normal 2nd line.  But again, let's split this up so the makeallmovie.sh doesn't wait for jobs to get done by itself -- for larger jobs it's ok to let makeallmovie.sh handle things, but not yet.  One does each of the below, but checks the results before moving onto the next line.
 
-bash ./makeallmovie.sh ${moviename} 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 # makes qty2_*.npy files, submits job.
+bash ./makeallmovie.sh ${moviename} 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 # make1d: makes qty2_*.npy files, submits job.
 
-bash ./makeallmovie.sh ${moviename} 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 # merges to get qty2.npy file, local job.
+bash ./makeallmovie.sh ${moviename} 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 # make1dmerge: merges to get qty2.npy file, local job (must come after make1d done)
 
-bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 1 1 1 1 1 1 1 1 0 0 0 0 0 0 # makeplot step to make data*.txt and latex stuf in python.plot*, submits job.
+bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 1 0 1 1 1 1 1 1 0 0 0 0 0 0 # makeplot: to make data*.txt and latex stuf in python.plot*, submits job.
+
+bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 # makemontage: local job (must come after makeplot done)
 
 bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 # makemovie step, submits job.
 
@@ -176,7 +183,7 @@ bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 4 0 # make
 bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 5 0 # makeavgplot, submits job.
 
 
-bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 # collect .  Creates tbl*.tex that you can put into latex with \input{} for pdf.  This puts the .tex file into the ${moviename} directory under each run in dircollect.  So separate .tex files for each dircollect simulation listed.
+bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 # collect . (currently not working)  Creates tbl*.tex that you can put into latex with \input{} for pdf.  This puts the .tex file into the ${moviename} directory under each run in dircollect.  So separate .tex files for each dircollect simulation listed.
 
 bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 2 # collect all .  Creates ${moviename}/tbl*.tex that you can put into latex with \input{} for pdf.  This collects multiple runs together into single .tex file.
 
