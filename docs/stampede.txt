@@ -149,6 +149,9 @@ You can check if the job got started by doing "showq -u $USERNAME" and seeing if
 
 For a simple harm simulation with only 50 files, it should only take a few minutes on stampede to start (nominally) and a few minutes to finish creating the avg2d20_*.npy files.  After the job is done, the script makeallmovie.sh will continue and try to merge those _*.npy files into the single avg2d.npy file.  But this depends upon the script checking if the job got done, which is only done every 5 minutes.  This is why I removed the "1 1" in the above.  So now you should do the merge separately:
 
+# if not on stampede, e.g. bh, and want to put into background, do, e.g. for makeavgplot#5:
+# (nohup bash ./makeallmovie.sh ${moviename} 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 5 0 &> 5.txt &)
+
 bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 # makes merged avg2d.npy
 
 This way you won't have to wait for small jobs to get done with the local merge step.  This should create after a few minutes the avg2d.npy file.
@@ -167,6 +170,11 @@ bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 # make
 bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 # create mp4 movie, local job.
 
 bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 # makeavgplot, submits job.
+bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 2 0 # makeavgplot, submits job.
+bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 3 0 # makeavgplot, submits job.
+bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 4 0 # makeavgplot, submits job.
+bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 5 0 # makeavgplot, submits job.
+
 
 bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 # collect .  Creates tbl*.tex that you can put into latex with \input{} for pdf.  This puts the .tex file into the ${moviename} directory under each run in dircollect.  So separate .tex files for each dircollect simulation listed.
 
