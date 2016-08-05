@@ -856,6 +856,7 @@
 # define M_PI           3.1415926535897932384626433832795029L  /* pi */
 #endif
 
+#define M_SQRT4PI (3.544907701811032054596335) // sqrt(4pi)
 
 
 #define MAX(a,b) ( ((a) > (b)) ? (a) : (b) )

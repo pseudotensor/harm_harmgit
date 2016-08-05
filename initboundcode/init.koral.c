@@ -10022,7 +10022,7 @@ int kappa_func_fits_all(FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, FTYPE varexpf, F
   // "real" here means cgs and Gaussian for B and Kelvin for temperature
   FTYPE rhoreal=rho*RHOBAR;
   FTYPE nereal=3.0110683499999995e23*rhoreal*(1.0 + XFACT);
-  FTYPE Breal=B*BFIELDBAR;
+  FTYPE Breal=B*(BFIELDGAUSSBAR);
 
   FTYPE Tereal=Te*TEMPBAR+TEMPMINKELVIN; // Apply minimum electron temperature so ff and fb opacities don't diverge
   if(Tereal>TEMPMAXKELVIN) Tereal=TEMPMAXKELVIN; // Apply max for opacities
