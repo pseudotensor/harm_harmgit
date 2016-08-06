@@ -10928,7 +10928,7 @@ static void calc_Trad_fromRuuandgamma(FTYPE *pp, struct of_geom *ptrgeom, FTYPE 
   expfactorradff = 1.6467556546674442/
    (0.6467556546674441 + 
      (0.018783960364223317*Power(Ruurat,3))/
-    Power(nradffrat,4));
+    Power(SMALL+nradffrat,4));
 
   if(expfactorradff>1.0) expfactorradff=1.0; // account for BE condensation.
   // expfactorradff = exp(-\xi) = exp(-\mu/(k_B Tradff))
