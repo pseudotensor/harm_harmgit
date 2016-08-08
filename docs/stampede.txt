@@ -90,7 +90,7 @@ git pull
 
 3) Edit ~/py/scripts/makemovie.sh and search for "stampede" that will bring you to the stampede section where some changes are required.  Common things to change are:
 
-a) "timetot" that is how long is needed to run any of makeavg, make1d, or makemovie.  If you run all 250 files at once, this will use 250 cores and needs about 1 hours I think.  If you ever get an email from the batch system that says the job timed-out during the makeavg, make1d, or makemovie stages, then you probably have to increase this time.
+a) "timetot" that is how long is needed to run any of makeavg, make1d, or makemovie.  If you run all 250 files at once, this will use 250 cores and needs about 1 hours I think.  If you ever get an email from the batch system that says the job timed-out during the makeavg, make1d, or makemovie stages, then you probably have to increase this time.  This can be tuned per task for each system.
 
 b) "numtasks" that is currently set as the total number of fieldline files.  As you later make more fieldline files, you will not want to use this same option because it will keep asking for the number of cores as the number of fieldline files. An upper limit on the number of cores is probably 512 as a reasonable option.  Then set numtasks=512 if you know that the number of fieldline files is above 512.  In that case, "timetot" should be increased proportionally by (#fieldline files)/(512) once you go beyond 512 fieldline files and fix numtasks to 512.
 
@@ -100,25 +100,15 @@ d) "timetotplot" that is 1 hour by default, which may be fine.  Check if it comp
 
 4) Optionsal for now: Edit ~/py/__init__.py so that your run name used (say rad0.3) is present as a model list in (at least) def isradmodel(modelname): as another or conditional like or modelname=="rad0.3"  .  You can scan through the file and see how this "isradmodel" is used.  For more careful control over what happens with specific models, you can scan through for examples where "isradmodel" is referred to in the python script.  It's good to also add your model to the place where "fieldtype" and "truemodelname" and "gridtype" are set by adding your model as another conditional.  You can look in the script for modelname=="rad1" to see an example of how a specific model chooses those and other things.
 
-5a) Edit ~/py/__init__.py for stampede-specific things to optimize performance.  Uncomment the following lines:
-
-#time.sleep(10.0+100.0*n) # on supercomputer's need to wait so file system gets up to date
-
-#time.sleep(10.0*n) # on supercomputer's need to wait so file system gets up to date
-
-5b) Set ISSCRATCH=1 in main()
-
-6) By default, makeallmovie.sh will detect stampede and go into so-called "parallel=2" mode where it submits a batch job and runs an MPI wrapper that calls python for each core independently.  So it's an embarrassingly parallel job. To ensure the parallel==2 program will compile properly, go ahead and check by doing:
+5) By default, makeallmovie.sh will detect stampede and go into so-called "parallel=2" or "parallel=3" mode where it submits a batch job and runs an MPI wrapper that calls python for each core independently.  So it's an embarrassingly parallel job. To ensure the parallel==2 program will compile properly, go ahead and check by doing:
 
 cd ~/py/scripts/
 make clean ; make
 # you should get no warnings or errors and "makemoviec" should be newly created or overwrite old one.  This make happens during "makemovie.sh" but this is a check to ensure that will not have issues.  Sometimes TACC changes the MPI compiler or compilers get removed and so things have to be updated.
 
-7) By default the batches create model"a" and further restarts should be "b" "c", etc.  I have a script that makes the final directory needed for python.  One does:
-
-sh ~/py/scripts/createlinkssimple.sh rad0.3
-
-This will take all the rad0.3a rad0.3b etc. and make a single directory rad0.3.
+OLD: 6) By default the batches create model"a" and further restarts should be "b" "c", etc.  I have a script that makes the final directory needed for python.  One does:
+OLD: sh ~/py/scripts/createlinkssimple.sh rad0.3
+OLD: This will take all the rad0.3a rad0.3b etc. and make a single directory rad0.3.
 
 8) cp ~/py/scripts/makeallmovie.sh $SCRATCH ; cd $SCRATCH
 
@@ -143,6 +133,7 @@ d) In makemovie.sh, choose dowait=0 or 1.  dowait=0 is good for doing many jobs 
 # make sure each stage done before moving on if dowait=0 in makemovie.sh
 # e.g., do ps -auxwf|grep $USER | grep movie .  Make sure no *movie* scripts are still going
 
+e) In makeallmovie.sh, choose parallel=2 or parallel=3 for your system if on supercomputer with batch system.  2 uses MPI wrapper to parallelize jobs.  3 is same, but it avoids excessive file writing (speeds things up and avoids too many files that might go above your quota on allowed file number).
 
 10) Run the first makeallmovie.sh line as in the tutorial (optional note: you can set numtasks to 20X less than the default you would use for make1d or makemovie, because the makeavg step is much faster and doesn't need so many cores, but then you need to change numtasks back to your default choice.  This can speed up getting through the queue).
 
@@ -168,7 +159,17 @@ bash ./makeallmovie.sh ${moviename} 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 # make
 
 bash ./makeallmovie.sh ${moviename} 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 # make1dmerge: merges to get qty2.npy file, local job (must come after make1d done)
 
-bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 1 0 1 1 1 1 1 1 0 0 0 0 0 0 # makeplot: to make data*.txt and latex stuf in python.plot*, submits job.
+bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 1  0 1 1 1 1 1 1 0 0 0 0 0 0 # makeplot: to make data*.txt and latex stuf in python.plot*, submits job.
+#OR:
+bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 2  0 1 1 1 1 1 1 0 0 0 0 0 0 # makeplot: part1 only, submits 1core job
+bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 3  0 1 1 1 1 1 1 0 0 0 0 0 0 # makeplot: part2 only, submits 1core job
+bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 4  0 1 1 1 1 1 1 0 0 0 0 0 0 # makeplot: part3 only, submits 1core job
+bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 5  0 1 1 1 1 1 1 0 0 0 0 0 0 # makeplot: part4 only, submits 1core job
+bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 6  0 1 1 1 1 1 1 0 0 0 0 0 0 # makeplot: part5 only, submits 1core job
+bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 7  0 1 1 1 1 1 1 0 0 0 0 0 0 # makeplot: part6 only, submits 1core job
+bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 8  0 1 1 1 1 1 1 0 0 0 0 0 0 # makeplot: part7 only, submits 1core job
+#OR:
+bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 100 0 1 1 1 1 1 1 0 0 0 0 0 0 # makeplot, submits 16core job and does all makeplot stuff in parallel
 
 bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 # makemontage: local job (must come after makeplot done)
 
@@ -177,16 +178,27 @@ bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 # make
 bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 # makemovie: create mp4 movie, local job.
 
 #EITHER:
-bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 # makeavgplot, submits 1core job.
-bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 2 0 # makeavgplot, submits 1core job.
-bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 3 0 # makeavgplot, submits 1core job.
-bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 4 0 # makeavgplot, submits 1core job.
-bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 5 0 # makeavgplot, submits 1core job.
+bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 # makeavgplot, submits 1core job. Does all figs, but one at a time.
+#OR:
+bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 2 0 # makeavgplot: part1 only, submits 1core job.
+bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 3 0 # makeavgplot: part2 only, submits 1core job.
+bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 4 0 # makeavgplot: part3 only, submits 1core job.
+bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 5 0 # makeavgplot: part4 only, submits 1core job.
+bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 6 0 # makeavgplot: part5 only, submits 1core job.
+bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 7 0 # makeavgplot: part6 only, submits 1core job.
+bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 8 0 # makeavgplot: part7 only, submits 1core job.
+bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 9 0 # makeavgplot: part8 only, submits 1core job.
+bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 10 0 # makeavgplot: part9 only, submits 1core job.
+bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 11 0 # makeavgplot: part10 only, submits 1core job.
+bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 12 0 # makeavgplot: part11 only, submits 1core job.
+bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 13 0 # makeavgplot: part12 only, submits 1core job.
+bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 14 0 # makeavgplot: part13 only, submits 1core job.
+bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 15 0 # makeavgplot: part14 only, submits 1core job.
 # OR if on a parallel==2 type system
-bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 20 0 # makeavgplot, submits 16core job and does all makeavgplot stuff
+bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 100 0 # makeavgplot, submits 16core job and does all makeavgplot stuff in parallel
 
 
-bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 # collect . (currently not working)  Creates tbl*.tex that you can put into latex with \input{} for pdf.  This puts the .tex file into the ${moviename} directory under each run in dircollect.  So separate .tex files for each dircollect simulation listed.
+#bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 # collect . (currently not working)  Creates tbl*.tex that you can put into latex with \input{} for pdf.  This puts the .tex file into the ${moviename} directory under each run in dircollect.  So separate .tex files for each dircollect simulation listed.
 
 bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 2 # collect all .  Creates ${moviename}/tbl*.tex that you can put into latex with \input{} for pdf.  This collects multiple runs together into single .tex file.
 
@@ -198,7 +210,7 @@ Once you get the hang of things, some things you can do simultaneously.  E.g., o
 
 NOTE: If you get a "fontList.cache error related to matplotlib and pickle_dump or other calls in the *err* files, like during makeing of frames, you just have to retry the job.  It's some python bug.
 
-12) Also, you might skip the "create mp4 movie" line and just do:
+OLD (should modify makemovie.sh itself as done currently for pfe): 12) Also, you might skip the "create mp4 movie" line and just do:
 
 cd $SCRATCH/rad0.3/test1/
 cp ~/py/scripts/makelinkimagenew2.sh .
