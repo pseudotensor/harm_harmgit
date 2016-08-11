@@ -133,7 +133,7 @@ d) In makemovie.sh, choose dowait=0 or 1.  dowait=0 is good for doing many jobs 
 # make sure each stage done before moving on if dowait=0 in makemovie.sh
 # e.g., do ps -auxwf|grep $USER | grep movie .  Make sure no *movie* scripts are still going
 
-e) In makeallmovie.sh, choose parallel=2 or parallel=3 for your system if on supercomputer with batch system.  2 uses MPI wrapper to parallelize jobs.  3 is same, but it avoids excessive file writing (speeds things up and avoids too many files that might go above your quota on allowed file number).
+e) In makeallmovie.sh, choose parallel=2 or parallel=3 for your system if on supercomputer with batch system.  2 uses MPI wrapper to parallelize jobs.  3 is same, but it avoids excessive file writing (speeds things up and avoids too many files that might go above your quota on allowed file number).  Only use parallel==3 if you are not debugging, as it doesn't show what any core IDs>0 are doing.
 
 10) Run the first makeallmovie.sh line as in the tutorial (optional note: you can set numtasks to 20X less than the default you would use for make1d or makemovie, because the makeavg step is much faster and doesn't need so many cores, but then you need to change numtasks back to your default choice.  This can speed up getting through the queue).
 
