@@ -162,13 +162,13 @@ bash ./makeallmovie.sh ${moviename} 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 # make
 bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 1  0 1 1 1 1 1 1 0 0 0 0 0 0 # makeplot: to make data*.txt and latex stuf in python.plot*, submits job.
 #OR:
 bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 2  0 1 1 1 1 1 1 0 0 0 0 0 0 # makeplot: part1 only, submits 1core job (latex stuff and data files)
-bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 3  0 1 1 1 1 1 1 0 0 0 0 0 0 # makeplot: part2 only, submits 1core job
-bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 4  0 1 1 1 1 1 1 0 0 0 0 0 0 # makeplot: part3 only, submits 1core job
-bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 5  0 1 1 1 1 1 1 0 0 0 0 0 0 # makeplot: part4 only, submits 1core job
-bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 6  0 1 1 1 1 1 1 0 0 0 0 0 0 # makeplot: part5 only, submits 1core job
-bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 7  0 1 1 1 1 1 1 0 0 0 0 0 0 # makeplot: part6 only, submits 1core job
-bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 8  0 1 1 1 1 1 1 0 0 0 0 0 0 # makeplot: part7 only, submits 1core job
-#OR:
+bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 3  0 1 1 1 1 1 1 0 0 0 0 0 0 # makeplot: part2 only, submits 1core job (powervsm)
+bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 4  0 1 1 1 1 1 1 0 0 0 0 0 0 # makeplot: part3 only, submits 1core job (space-time)
+bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 5  0 1 1 1 1 1 1 0 0 0 0 0 0 # makeplot: part4 only, submits 1core job (fft)
+bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 6  0 1 1 1 1 1 1 0 0 0 0 0 0 # makeplot: part5 only, submits 1core job (spec)
+bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 7  0 1 1 1 1 1 1 0 0 0 0 0 0 # makeplot: part6 only, submits 1core job (initfinal)
+bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 8  0 1 1 1 1 1 1 0 0 0 0 0 0 # makeplot: part7 only, submits 1core job (thradfinal)
+#OR if on parallel>=2 type system
 bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 100 0 1 1 1 1 1 1 0 0 0 0 0 0 # makeplot, submits 16core job and does all makeplot stuff in parallel
 
 bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 # makemontage: local job (must come after makeplot done)
@@ -181,21 +181,21 @@ bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 # make
 bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 # makeavgplot, submits 1core job. Does all figs, but one at a time.
 #OR:
 bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 2 0 # makeavgplot: part1 only, submits 1core job. (latex67 and data files)
-bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 3 0 # makeavgplot: part2 only, submits 1core job.
-bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 4 0 # makeavgplot: part3 only, submits 1core job.
-bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 5 0 # makeavgplot: part4 only, submits 1core job.
-bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 6 0 # makeavgplot: part5 only, submits 1core job.
-bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 7 0 # makeavgplot: part6 only, submits 1core job.
-bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 8 0 # makeavgplot: part7 only, submits 1core job.
-bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 9 0 # makeavgplot: part8 only, submits 1core job.
-bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 10 0 # makeavgplot: part9 only, submits 1core job.
-bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 11 0 # makeavgplot: part10 only, submits 1core job.
-bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 12 0 # makeavgplot: part11 only, submits 1core job.
-bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 13 0 # makeavgplot: part12 only, submits 1core job.
-bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 14 0 # makeavgplot: part13 only, submits 1core job.
-bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 15 0 # makeavgplot: part14 only, submits 1core job.
-bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 16 0 # makeavgplot: part15 only, submits 1core job.
-# OR if on a parallel==2 type system
+bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 3 0 # makeavgplot: part2 only, submits 1core job. (fig2a)
+bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 4 0 # makeavgplot: part3 only, submits 1core job. (fig2b)
+bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 5 0 # makeavgplot: part4 only, submits 1core job. (fig2c)
+bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 6 0 # makeavgplot: part5 only, submits 1core job. (fig2d)
+bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 7 0 # makeavgplot: part6 only, submits 1core job. (datavsravg1.txt and fieldline plots)
+bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 8 0 # makeavgplot: part7 only, submits 1core job. (more data)
+bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 9 0 # makeavgplot: part8 only, submits 1core job. (fig4*)
+bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 10 0 # makeavgplot: part9 only, submits 1core job.  (fig3a)
+bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 11 0 # makeavgplot: part10 only, submits 1core job. (fig3b)
+bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 12 0 # makeavgplot: part11 only, submits 1core job. (fig3c)
+bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 13 0 # makeavgplot: part12 only, submits 1core job. (fig3d)
+bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 14 0 # makeavgplot: part13 only, submits 1core job. (fig3e)
+bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 15 0 # makeavgplot: part14 only, submits 1core job. (fig3f)
+bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 16 0 # makeavgplot: part15 only, submits 1core job. (fig3g)
+# OR if on a parallel>=2 type system
 bash ./makeallmovie.sh ${moviename} 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 100 0 # makeavgplot, submits 16core job and does all makeavgplot stuff in parallel
 
 
