@@ -14369,6 +14369,19 @@ FTYPE calc_LTE_TfromE(FTYPE E )
   return (sqrt(sqrt((fabs(E/(SMALL+ARAD_CODE))))));
 }
 
+FTYPE calc_LTE_TfromN(FTYPE N )
+{
+  return (pow(fabs(N*EBAR0/(SMALL+NRAD_ARAD_CODE)),1.0/3.0));
+}
+
+/// E(nrad)
+FTYPE calc_LTE_EfromN(FTYPE N)
+{
+  FTYPE T=calc_LTE_TfromN(N);
+  return(calc_LTE_EfromT(T));
+}
+
+
 /// This will really give back only LTE E
 FTYPE calc_LTE_Efromurho(FTYPE u,FTYPE rho)
 {

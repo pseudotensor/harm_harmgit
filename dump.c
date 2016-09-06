@@ -615,6 +615,7 @@ int dump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
   // primitives
   // must use PDUMPLOOP() since may be any order unlike NPR loop
   PDUMPLOOP(pliter,pl) myset(datatype,&(GLOBALMACP0A1(pdump,i,j,k,pl)),0,1,writebuf); // NPRDUMP  //rho u v1 v2 v3 B1 B2 B3 ??
+  // NOTEMARK: nrad not divided by NRAD_ARAD_CODE
 
   ////////////
   //

@@ -538,6 +538,8 @@ struct Ccoordparams {
 #define BULKCOMPT 60
 #define BULKCOMPT2 61
 
+#define COMPTONCOOL 70
+
 // RADDONUT types
 #define NODONUT 0
 #define DONUTOLEK 1
@@ -594,13 +596,13 @@ struct Ccoordparams {
 //#define WHICHPROBLEM RADDOT
 //#define WHICHPROBLEM RADNT
 //#define WHICHPROBLEM RADFLATDISK
-#define WHICHPROBLEM RADDONUT
+//#define WHICHPROBLEM RADDONUT
 //#define WHICHPROBLEM RADCYLBEAM
 //#define WHICHPROBLEM RADBEAM2DKSVERT
 //#define WHICHPROBLEM RADCYLBEAMCART
 //#define WHICHPROBLEM RADCYLJET
 //#define WHICHPROBLEM BULKCOMPT2
-
+#define WHICHPROBLEM COMPTONCOOL
 
 
 
@@ -1383,6 +1385,36 @@ struct Ccoordparams {
 
 //****************************************//
 //****************************************//
+#if(WHICHPROBLEM==COMPTONCOOL)
+
+#undef EVOLVENRAD
+#define EVOLVENRAD 1
+
+#undef MUMEAN
+#define MUMEAN (1)
+
+#undef WHICHFIT
+#define WHICHFIT ISFITORIG
+
+#undef DOCOMPTON
+#define DOCOMPTON 1 // enable thermal Comptonization
+
+#undef RADSHOCKFLAT
+#define RADSHOCKFLAT 1
+
+#undef FORCESOLVEL
+#define FORCESOLVEL 0 // for testing against koral
+
+#define N1 100
+#define N2 1 
+#define N3 1
+
+#define MCOORD CARTMINKMETRIC2
+
+#undef WHICHRADSOURCEMETHOD
+#define WHICHRADSOURCEMETHOD SOURCEMETHODIMPLICIT
+
+#endif
 
 
 

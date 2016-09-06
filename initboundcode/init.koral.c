@@ -257,7 +257,7 @@ int prepre_init_specific_init(void)
   // set periodicity in x1,x2,x3 directions
 
   // fully periodic problems
-  if(WHICHPROBLEM==FLATNESS){
+  if(WHICHPROBLEM==FLATNESS || WHICHPROBLEM==COMPTONCOOL){
     periodicx1=periodicx2=periodicx3=1;
   }
   // if ever only 1D problems
@@ -2671,6 +2671,27 @@ int init_global(void)
 
 
 
+  if(WHICHPROBLEM==COMPTONCOOL){
+ 
+    //  lim[1]=lim[2]=lim[3]=MINM;
+    //    cour=0.5;
+    gam=gamideal=5.0/3.0;
+    cooling=KORAL;
+
+    BCtype[X1UP]=PERIODIC; // OUTFLOW;
+    BCtype[X1DN]=PERIODIC;
+    BCtype[X2UP]=PERIODIC; // OUTFLOW;
+    BCtype[X2DN]=PERIODIC;
+    BCtype[X3UP]=PERIODIC; // OUTFLOW;
+    BCtype[X3DN]=PERIODIC;
+
+    tf = 20.0/TBAR; //final time // Ryan is 2.0, but not in full equilibrium
+
+    int idt;
+    for(idt=0;idt<NUMDUMPTYPES;idt++) DTdumpgen[idt]=tf/1000.0;   // default dumping period
+
+    DTr = 100; //number of time steps for restart dumps
+  }
 
 
 
@@ -3532,6 +3553,30 @@ int init_defcoord(void)
   /*************************************************/
   /*************************************************/
   /*************************************************/
+
+
+  /*************************************************/
+  /*************************************************/
+  /*************************************************/
+  if(WHICHPROBLEM==COMPTONCOOL){
+    a=0.0; // no spin in case use MCOORD=KSCOORDS
+
+    defcoord = UNIFORMCOORDS;
+    Rin_array[1]=0;
+    Rin_array[2]=0;
+    Rin_array[3]=0;
+
+    if(1){ // 1 step (showing off implicit solver)
+      Rout_array[1]=1E12/LBAR;
+      Rout_array[2]=1E12/LBAR;
+      Rout_array[3]=1E12/LBAR;
+    }
+    if(0){ // 5000 steps (showing of explicit stepping with implicit solver)
+      Rout_array[1]=1E9/LBAR;
+      Rout_array[2]=1E9/LBAR;
+      Rout_array[3]=1E9/LBAR;
+    }
+  }
 
 
   return(0);
@@ -6253,6 +6298,67 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
   }
 
 
+  /*************************************************/
+  /*************************************************/
+  if(WHICHPROBLEM==COMPTONCOOL){
+    // Ryan et al. 2015 S4.2 Compton Cooling problem
+
+    FTYPE Trad,Tgas,ERAD,uint;
+    FTYPE xx,yy,zz,rsq;
+    coord(i, j, k, CENT, X);
+    bl_coord(X, V);
+    xx=V[1];
+    yy=V[2];
+    zz=V[3];
+
+    FTYPE RHO_AMB=2.5E17*MB/RHOBAR; // nden=2.5E17
+    FTYPE T_AMB=5.0E7/TEMPBAR;
+
+    //flat gas profiles
+    Tgas=T_AMB;
+    FTYPE rho;
+    rho=RHO_AMB;
+    uint=calc_PEQ_ufromTrho(Tgas,rho);
+
+    pr[RHO] = rho;
+    pr[UU] = uint;
+    pr[U1] = 0 ;
+    pr[U2] = 0 ;    
+    pr[U3] = 0 ;
+
+    // just define some field
+    pr[B1]=0.0;
+    pr[B2]=0.0;
+    pr[B3]=0.0;
+
+    if(FLUXB==FLUXCTSTAG){
+      // assume pstag later defined really using vector potential or directly assignment of B3 in axisymmetry
+      PLOOPBONLY(pl) pstag[pl]=pr[pl];
+    }
+
+    FTYPE Fx,Fy,Fz;
+    Fx=Fy=Fz=0.0;
+
+    if(PRAD0>=0){
+      pr[URAD1] = Fx ;
+      pr[URAD2] = Fy ;    
+      pr[URAD3] = Fz ;
+      //if(NRAD>=0) pr[NRAD] = 2.38E18/NBAR;
+
+      //calc_LTE_NfromE(pr[PRAD0]); // start out as Planck
+      // radiation temperature (derived from NRAD, assuming Planck at t=0)
+      //Trad=calc_LTE_TfromN(pr[NRAD]);
+      Trad=500061.0/TEMPBAR; // 5E5K
+      ERAD=calc_LTE_EfromT(Trad);
+      pr[URAD0] = ERAD ;
+      if(NRAD>=0) pr[NRAD] = calc_LTE_NfromE(pr[PRAD0]); // start out as Planck
+    }
+
+
+    *whichvel=WHICHVEL;
+    *whichcoord=CARTMINKMETRIC2;
+    return(0);
+  }
 
 
   return(0);
@@ -9943,6 +10049,27 @@ void adjust_fluxctstag_emfs(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR
 #endif
 
 
+
+
+#if(WHICHPROBLEM==COMPTONCOOL)
+
+#define KAPPA 0.
+#define KAPPAES (1.0)
+
+// assume KAPPA defines fraction of FF opacity
+#define KAPPAUSER(rho,B,Tg,Tr) (0.0)
+// assume KAPPAES defines fraction of ES opacity
+#define KAPPAESUSER(rho,T) (rho*KAPPAES*KAPPA_ES_CODE(rho,T))
+
+#endif
+
+
+
+
+
+
+
+
 #ifndef KAPPANUSER
 // in case haven't defined KAPPANUSER, just use energy opacity
 #define KAPPANUSER(rho,B,Tg,Tr) KAPPAUSER(rho,B,Tg,Tr)
@@ -10614,7 +10741,7 @@ FTYPE calc_kappaes_user(FTYPE rho, FTYPE B, FTYPE Tg,FTYPE Tr,FTYPE varexpf, FTY
 #if(WHICHPROBLEM==RADDONUT)
   return(kappa_func_fits(ISKAPPAES,rho,B,Tg,Tr,varexpf));
 #else
-  return(KAPPAESUSER(rho,T));
+  return(KAPPAESUSER(rho,Tg));
 #endif
 
 }

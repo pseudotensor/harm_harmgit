@@ -81,6 +81,8 @@ extern int calc_tautot(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q, F
 
 extern FTYPE calc_LTE_NfromT(FTYPE T);
 extern FTYPE calc_LTE_NfromE(FTYPE E);
+extern FTYPE calc_LTE_TfromN(FTYPE N);
+extern FTYPE calc_LTE_EfromN(FTYPE N);
 
 
 extern FTYPE calc_LTE_EfromT(FTYPE);
