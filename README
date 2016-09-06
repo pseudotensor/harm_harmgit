@@ -71,6 +71,9 @@ don't have icc, then in makehead.inc, set USEICCINTEL=0 and USEGCC=1 .
 3) By default, I assume MKL is available and so used.  If it's not
 available, in makehead.inc, set USELAPACK=0 and USELAPACKNEW=0 .
 
+4) I've only tested OpenMP with icc, but I've added -fopenmp for
+USEGCC case.
+
 ========================
 Common problems for koralinsert branch:
 ========================
