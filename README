@@ -40,7 +40,6 @@ make superclean ; make prep ; make -j 16
 
 5b) mkdir run ; cd run ; cp ../grmhd . ; nohup mpirun -np 16 ./grmhd 4 4 1 & # mpi on but openmp off
 
-
 ========================
 Lately-used Branch Details:
 ========================
@@ -55,3 +54,28 @@ subedd: From non-devel harmrad, a setup for sub-Eddington type simulation.
 
 superedd: From non-devel harmrad, a setup for super-Eddington type simulation.
 
+========================
+Common problems for master branch:
+========================
+
+1) By default, I've assumed the "mpicc" installation handles the
+argument -cc, but some installations don't.  If your compiler doesn't
+take -cc arguments, then your mpicc compiler probably only compiles
+with "gcc" effectively.  Then in the file "makefile", you can set
+USEMCCSWITCH=0 and USEMCCSWITCHFORGCC=0 (first instances of those two
+variables just inside the USEMPI section).
+
+2) By default, I assume you have "icc" the Intel compiler.  If you
+don't have icc, then in makehead.inc, set USEICCINTEL=0 and USEGCC=1 .
+
+3) By default, I assume MKL is available and so used.  If it's not
+available, in makehead.inc, set USELAPACK=0 and USELAPACKNEW=0 .
+
+4) I've only tested OpenMP with icc, but I've added -fopenmp for
+USEGCC case.
+
+========================
+Common problems for koralinsert branch:
+========================
+
+1)  
