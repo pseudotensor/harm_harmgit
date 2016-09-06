@@ -976,9 +976,9 @@ int counttotal(int enerregion, CTYPE *vars, int num)
 
   // below for restarting with counters in case no spatial counters
   // see restart.c and restart_read_defs_new()
-  i=-1;
-  j=-1;
-  k=-1;
+  i=-N1NOT1;
+  j=-N2NOT1;
+  k=-N3NOT1;
   for(variter=0;variter<num;variter++) vars[variter] += GLOBALMACP0A3(failfloorcount,i,j,k,0,0,variter) ;
 
 
