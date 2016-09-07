@@ -5950,14 +5950,6 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
   int explicitattempt;
   for(explicitattempt=0;explicitattempt<=DONONEXPLICITIFFAILS;explicitattempt++){
 
-    gotbackup=0;
-    iter=0;
-    debugiter=0;
-    set_array(errorabsf1,NUMERRORTYPES,MPI_FTYPE,BIG);
-    suberrorabsf1=BIG;
-    errorabsf3=BIG;
-    suberrorabsf3=BIG;
-
     if(explicitattempt>0 && (lowitererror || earlylowerror || errorabsf1[WHICHERROR]<IMPTRYDAMPCONV && ACCEPTASNOFAILURE(failreturn) || failreturn==FAILRETURNMODESWITCH) ){ // try damping if any bad failure or not desired tolerance when damping
       break;
     }
@@ -5965,13 +5957,22 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
       f1iterstart=1;
     }
     else f1iterstart=0;
+
+    // setup damp variables
     PLOOP(pliter,pl){
       pp[pl]=ppdampbackup[pl];
       uu[pl]=uudampbackup[pl];
       uu0[pl]=uu0dampbackup[pl];
     }
 
-
+    // setup errors, damp loop, etc.
+    gotbackup=0;
+    iter=0;
+    debugiter=0;
+    set_array(errorabsf1,NUMERRORTYPES,MPI_FTYPE,BIG);
+    suberrorabsf1=BIG;
+    errorabsf3=BIG;
+    suberrorabsf3=BIG;
 
 
     ////////////////

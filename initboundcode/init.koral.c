@@ -3571,7 +3571,7 @@ int init_defcoord(void)
       Rout_array[2]=1E12/LBAR;
       Rout_array[3]=1E12/LBAR;
     }
-    if(0){ // 5000 steps (showing of explicit stepping with implicit solver)
+    if(0){ // 48000 steps (showing of explicit stepping with implicit solver)
       Rout_array[1]=1E9/LBAR;
       Rout_array[2]=1E9/LBAR;
       Rout_array[3]=1E9/LBAR;
@@ -6322,7 +6322,14 @@ int init_dsandvels_koral(int *whichvel, int*whichcoord, int i, int j, int k, FTY
 
     pr[RHO] = rho;
     pr[UU] = uint;
-    pr[U1] = 0 ;
+
+    if(0){ // with 1 step implicit solver, some issue with 0 velocity.  Difficul tto solve in general as heads wrong direction at first, but in case with too small velocity (e.g. 0) ends up sometimes failing to find solution, no matter the method.
+      FTYPE ranterm=(1.0 + 0.1 * (ranc(0,0) - 0.5));
+      pr[U1] = 1E-27*ranterm ;  
+    }
+    else{ // with many steps, don't need non-zero velocity
+      pr[U1] = 0 ;
+    }
     pr[U2] = 0 ;    
     pr[U3] = 0 ;
 
