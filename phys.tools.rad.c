@@ -10508,6 +10508,7 @@ static void calc_Gd(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYP
 {
   calc_Gu(pp, ptrgeom, q, GG, Tgas, Trad, chieffreturn,ndotffreturn,ndotffabsreturn,Gabs);
   indices_21(GG, GG, ptrgeom);
+  indices_21(Gabs, Gabs, ptrgeom); // so abs version also in proper form/units
 }
 
 
@@ -10701,8 +10702,9 @@ static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYP
 
 
 #if(DOCOMPTON)
-  extern FTYPE Gcompt(FTYPE rho, FTYPE Tgas, FTYPE Tradff, FTYPE Ruu);
-  FTYPE preterm3 = Gcompt(rho,Tgas,Tradff,Ruu);
+  extern int Gcompt(FTYPE rho, FTYPE Tgas, FTYPE Tradff, FTYPE Ruu, FTYPE *Gcompt, FTYPE *Gcomptabs);
+  FTYPE preterm3,preterm3abs;
+  Gcompt(rho,Tgas,Tradff,Ruu,&preterm3,&preterm3abs);
 #endif
 
 
@@ -10710,7 +10712,7 @@ static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYP
 
   //////////////
   // LOOP over i
-  FTYPE Ru,Ruuu,Ruuuabs,term1a,term1b,term2,term2abs,term3;
+  FTYPE Ru,Ruuu,Ruuuabs,term1a,term1b,term2,term2abs,term3,term3abs;
   DLOOPA(i){
     Ru=0.; DLOOPA(j) Ru+=Rij[i][j]*ucon[j];
 #if(1)
@@ -10734,8 +10736,10 @@ static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYP
 
 #if(DOCOMPTON)
     term3 = preterm3*ucon[i]; // ASSUMPTION: in fluid frame only energy exchange, no momentum exchange.
+    term3abs = preterm3abs*fabs(ucon[i]);
 #else
     term3 = 0.0;
+    term3abs=SMALL;
 #endif
 
     // actual source term
@@ -10743,7 +10747,7 @@ static void calc_Gu(FTYPE *pp, struct of_geom *ptrgeom, struct of_state *q ,FTYP
     Gu[i] = term1a + term1b + term2 + term3;
     
     // absolute magnitude of source term that can be used for estimating importance of 4-force relative to existing conserved quantities to get dtsub.  But don't split kappa terms because if those cancel then physically no contribution.
-    Gabs[i] = fabs(term1a) + fabs(term1b) + fabs(term2abs) + fabs(term3);
+    Gabs[i] = fabs(term1a) + fabs(term1b) + fabs(term2abs) + fabs(term3abs);
 
 #if(0)
     // DEBUG:
@@ -14383,7 +14387,7 @@ FTYPE calc_LTE_EfromN(FTYPE N)
 }
 
 
-/// This will really give back only LTE E
+/// This will give back only fully LTE E
 FTYPE calc_LTE_Efromurho(FTYPE u,FTYPE rho)
 {
   FTYPE T=compute_temp_simple(0, 0, 0, CENT, rho, u);

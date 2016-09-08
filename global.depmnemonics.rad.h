@@ -41,7 +41,7 @@
 #define EDENRATEBAR (ENBAR/(LBAR*LBAR*LBAR*TBAR))
 #define BFIELDBAR (VBAR*sqrt(RHOBAR))  // speed ~ b/sqrt(rho)
 #define BFIELDGAUSSBAR (BFIELDBAR*M_SQRT4PI) // Gaussian value of magnetic field
-#define TEMPBAR (M_PROTON*CCCTRUE*CCCTRUE/K_BOLTZ) // cgs unit of temperature in Kelvin (used to make Kelvin dimensionless).  This also makes ideal gas formulae simple, but notice different energy scale (i.e. not ENBAR but M_PROTON*CCCTRUE*CCCTRUE), so any other use of T gets more complicated factors.
+#define TEMPBAR (MB*CCCTRUE*CCCTRUE/K_BOLTZ) // cgs unit of temperature in Kelvin (used to make Kelvin dimensionless).  This also makes ideal gas formulae simple, but notice different energy scale (i.e. not ENBAR but M_PROTON*CCCTRUE*CCCTRUE), so any other use of T gets more complicated factors. // USE MB so Tgas is baryonic gas temperature when using MUMEAN in idealgaseos.c
 // so for (e.g.) ideal gas, ucode = rhocode * Tcode using u=\rho_0 k_b T / (m_b c^2)  gives both ucode and rhocode in g/cm^3
 
 // NOTEMARK: If IC has RHO~UU in terms of units, then need to use RHOBAR to make each dimensionless.  Else add explicit CCCTRUE^2 prefactor in IC value of UU (i.e. energy density) before normalizing with UBAR.

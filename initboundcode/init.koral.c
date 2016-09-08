@@ -9634,8 +9634,16 @@ void adjust_fluxctstag_emfs(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR
 #define KAPPA_ES_FERMICORR(rhocode,Tcode) (1.0/(1.0+2.7E11*((rhocode)*RHOBAR)/prpow((Tcode)*TEMPBAR,2.0))) // Buchler and Yueh 1976 (just Fermi part). Fewer electrons when near Fermi fluid limit.
 #define KAPPA_ES_KNCORR(rhocode,Tcode) (1.0/(1.0+prpow((Tcode)*TEMPBAR/4.5E8,0.86)))  // Buchler and Yueh 1976 .  Klein-Nishina for thermal electrons.
 /// kappaes = sigma_T n_e = sigma_T n_b (n_e/n_b) = sigma_T rho/mb (ne/nb)
-#define KAPPA_ES_CODE(rhocode,Tcode) (0.2*(1.0+XFACT)*KAPPA_ES_FERMICORR(rhocode,Tcode)*KAPPA_ES_KNCORR(rhocode,Tcode)/OPACITYBAR)
 #define KAPPA_ES_BASIC_CODE(rhocode,Tcode) (0.2*(1.0+XFACT)/OPACITYBAR)
+
+
+#if(COMPTONTYPE==2)
+#define KAPPA_ES_CODE(rhocode,Tcode) (0.2*(1.0+XFACT)*KAPPA_ES_FERMICORR(rhocode,Tcode)*KAPPA_ES_KNCORR(rhocode,Tcode)/OPACITYBAR)
+#elif(COMPTONTYPE==1)
+#define KAPPA_ES_CODE(rhocode,Tcode) (0.2*(1.0+XFACT)*KAPPA_ES_KNCORR(rhocode,Tcode)/OPACITYBAR)
+#elif(COMPTONTYPE==0)
+#define KAPPA_ES_CODE(rhocode,Tcode) (0.2*(1.0+XFACT)/OPACITYBAR)
+#endif
 
 // INELASTIC COMPTON TERM
 // see DOCOMPTON in physics.tools.rad.c:
@@ -10636,7 +10644,7 @@ int kappa_func_fits_all(FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, FTYPE varexpf, F
   return(0);
 }
 
-FTYPE Gcompt(FTYPE rho0, FTYPE Tgas, FTYPE Tradff, FTYPE Ruu)
+int Gcompt(FTYPE rho0, FTYPE Tgas, FTYPE Tradff, FTYPE Ruu, FTYPE *Gcompt, FTYPE *Gcomptabs)
 {
 
 // INELASTIC COMPTON TERM
@@ -10660,17 +10668,35 @@ FTYPE Gcompt(FTYPE rho0, FTYPE Tgas, FTYPE Tradff, FTYPE Ruu)
   // Buchler and Yueh 1976 (just Fermi part). Fewer electrons when near Fermi fluid limit.
   FTYPE kappa_es_fermicorr = 1.0/(1.0+2.7E11*rhoreal/prpow(Tereal,2.0));
 
+#if(COMPTONTYPE==2)
   FTYPE kappa_forcompt_code = 0.2*(1.0+XFACT)*kappa_es_fermicorr*kappa_forcompt_relcorr/OPACITYBAR;
+#elif(COMPTONTYPE==1)
+  FTYPE kappa_forcompt_code = 0.2*(1.0+XFACT)*kappa_forcompt_relcorr/OPACITYBAR;
+#elif(COMPTONTYPE==0)
+  FTYPE kappa_forcompt_code = 0.2*(1.0+XFACT)/OPACITYBAR;
+#endif
 
   //  FTYPE neleobar=1.0/MUMEAN; // to have neleobar*kappaes=kappaesperele*mb*rho/(MUMEAN*mb)
   // ASSUMPTION: Tion=Tele
-  FTYPE preterm3 = -4.0*rho0*kappa_forcompt_code*(Tgas - Tradff)*(TEMPBAR/TEMPELE)*Ruu; // kappaes with its internal *rho already accounts for being number density of electrons involved, so no need to use MUMEAN again here.
+ // kappaes with its internal *rho already accounts for being number density of electrons involved, so no need to use MUMEAN again here.
+
+  //  FTYPE preterm3 = -4.0*rho0*kappa_forcompt_code*(Tgas - Tradff)*(TEMPBAR/TEMPELE)*Ruu;
+
+  FTYPE preterm3a,preterm3b,prepreterm3;
+  
+  prepreterm3 = -4.0*rho0*kappa_forcompt_code*(TEMPBAR/TEMPELE)*Ruu;
+
+  preterm3a=(Tgas)*prepreterm3;
+  preterm3b=(-Tradff)*prepreterm3;
+
+  *Gcompt = preterm3a+preterm3b;
+  *Gcomptabs = fabs(preterm3a)+fabs(preterm3b);
 
   //  f[pl] = ((uu[pl] - uu0[pl]) + (sign[pl] * localdt * Gdpl[pl]))*extrafactor[pl]; -> T^t_t[new] = T^t_t[old] - Gdpl[UU] -> dT^t_t = -Gdpl[UU] = +Gd[TT]
   // Ruu>0, so if Tgas>Trad, then preterm3<0.  Then egas should drop.
   // We have dT^t_t = G_t = Gd_t = -Gdpl_t = preterm3 u_t > 0, so G_t>0 so T^t_t rises so -T^t_t drops so egas drops.
 
-  return(preterm3);
+  return(0);
 } 
 
 
