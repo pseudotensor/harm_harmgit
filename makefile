@@ -413,8 +413,15 @@ COMP=gcc $(DFLAGS) $(OPMPFLAGS) -Wno-unused-but-set-variable -Wno-unused-variabl
 #
 #
 
-CFLAGSPRE = -Wall -O0 $(DFLAGS)
-CFLAGSPRENONPRECISE=-O0 $(DFLAGS)
+
+ifeq ($(USEOPENMP),1)
+	OPMPFLAGS=-fopenmp
+else
+	OPMPFLAGS=
+endif
+
+CFLAGSPRE = -Wall -O2 $(DFLAGS) $(OPMPFLAGS)
+CFLAGSPRENONPRECISE=-O2 $(DFLAGS) $(OPMPFLAGS)
 
 #
 #CFLAGS = -Wall -mpentium -O3 -pipe  -malign-loops=2 -malign-jumps=2 -malign-functions=2 -DCPU=686 -DNEED_GETOPT -DLINUX -ffast-math -pg
@@ -444,7 +451,7 @@ LDFLAGS = -lm $(LAPACKLDFLAGS) ${GSLLIB}
 #AR	=	ar r
 #RANLIB	=	ranlib
 
-GCCCFLAGSPRE= -Wall -O2 $(DFLAGS)
+GCCCFLAGSPRE= -Wall -O2 $(DFLAGS) $(OPMPFLAGS)
 
 
 endif
