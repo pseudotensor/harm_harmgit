@@ -377,8 +377,8 @@ else
 endif
 
 
-CFLAGSPRE = -Wall -O3 $(DFLAGS) $OPMPFLAGS
-CFLAGSPRENONPRECISE=-O3 $(DFLAGS) $OPMPFLAGS
+CFLAGSPRE = -Wall -O3 $(DFLAGS) $(OPMPFLAGS)
+CFLAGSPRENONPRECISE=-O3 $(DFLAGS) $(OPMPFLAGS)
 
 #
 #CFLAGS = -Wall -mpentium -O3 -pipe  -malign-loops=2 -malign-jumps=2 -malign-functions=2 -DCPU=686 -DNEED_GETOPT -DLINUX -ffast-math -pg
@@ -408,7 +408,7 @@ LDFLAGS = -lm $(LAPACKLDFLAGS)
 #AR	=	ar r
 #RANLIB	=	ranlib
 
-GCCCFLAGSPRE= -Wall -O2 $(DFLAGS) $OPMPFLAGS
+GCCCFLAGSPRE= -Wall -O2 $(DFLAGS) $(OPMPFLAGS)
 
 
 endif
