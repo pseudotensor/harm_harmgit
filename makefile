@@ -171,7 +171,8 @@ USELAPACK=0
 endif
 
 ifeq ($(USEOSX),1)
-MCC=/usr/bin/mpicc
+# assume mpicc in path
+MCC=mpicc
 USEGCC=1
 ECHOSWITCH=
 USELAPACK=0
@@ -369,8 +370,15 @@ COMP=gcc $(DFLAGS)
 #
 #
 
-CFLAGSPRE = -Wall -O3 $(DFLAGS) -fopenmp
-CFLAGSPRENONPRECISE=-O3 $(DFLAGS) -fopenmp
+ifeq ($(USEOPENMP),1)
+	OPMPFLAGS=-fopenmp
+else
+	OPMPFLAGS=
+endif
+
+
+CFLAGSPRE = -Wall -O3 $(DFLAGS) $OPMPFLAGS
+CFLAGSPRENONPRECISE=-O3 $(DFLAGS) $OPMPFLAGS
 
 #
 #CFLAGS = -Wall -mpentium -O3 -pipe  -malign-loops=2 -malign-jumps=2 -malign-functions=2 -DCPU=686 -DNEED_GETOPT -DLINUX -ffast-math -pg
@@ -400,7 +408,7 @@ LDFLAGS = -lm $(LAPACKLDFLAGS)
 #AR	=	ar r
 #RANLIB	=	ranlib
 
-GCCCFLAGSPRE= -Wall -O2 $(DFLAGS) -fopenmp
+GCCCFLAGSPRE= -Wall -O2 $(DFLAGS) $OPMPFLAGS
 
 
 endif
