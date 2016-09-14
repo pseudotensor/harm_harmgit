@@ -239,6 +239,19 @@ int bound_x2dn_radcyljet(
                          );
 
 
+int bound_x1dn_bulkcompt2inflow(
+                                 int boundstage, int finalstep, SFTYPE boundtime, int whichdir, int boundvartype, int *dirprim, int ispstag, FTYPE (*prim)[NSTORE2][NSTORE3][NPR],
+                                 int *inboundloop,
+                                 int *outboundloop,
+                                 int *innormalloop,
+                                 int *outnormalloop,
+                                 int (*inoutlohi)[NUMUPDOWN][NDIM],
+                                 int riin, int riout, int rjin, int rjout, int rkin, int rkout,
+                                 int *dosetbc,
+                                 int enerregion,
+                                 int *localenerpos
+                                );
+
 
 /* bound array containing entire set of primitive variables */
 
@@ -1222,13 +1235,13 @@ int bound_x1dn_bulkcompt2inflow(
                 FTYPE yy=V[2];
                 FTYPE zz=V[3];
                 FTYPE lambda=(Rout_array[1]-Rin_array[1])/5.0;
-                FTYPE kk = 2.0*M_PI/lambda;
+                FTYPE kkk = 2.0*M_PI/lambda;
                 FTYPE amp=0.5;
                 amp=0.2;
                 //amp=0.0; // case 1 and 3
                 FTYPE drift=0;
                 pr[U1] = 0 ;
-                pr[U2] = drift + amp*sin(kk*xx) ;     // k along x, amp in y
+                pr[U2] = drift + amp*sin(kkk*xx) ;     // k along x, amp in y
                 pr[U3] = 0 ;
               }
               else{
