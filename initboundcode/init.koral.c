@@ -6997,7 +6997,7 @@ static int donut_analytical_solution(int *whichvel, int *whichcoord, int optical
 
 
     // set uint
-    FTYPE uintfact = 1.0; //(1.0 + randfact * (ranc(0,0) - 0.5));
+    FTYPE uintfact = (1.0 + randfact * (ranc(0,0) - 0.5));
     uint = rho*pow(H/Rcyl2,2.0)*pow(r*omega,2.0)/(gamtorus*(gamtorus-1.0))*uintfact;
     FTYPE uintisco = rhoisco*pow(Hisco/Riscolocal,2.0)*pow(Riscolocal*omegaisco,2.0)/(gamtorus*(gamtorus-1.0))*uintfact;
 
@@ -7022,9 +7022,9 @@ static int donut_analytical_solution(int *whichvel, int *whichcoord, int optical
 
 
     //    if(startpos[1]+i==totalsize[1]/2 && startpos[2]+j==totalsize[2]/2){
-    if(startpos[2]+j==totalsize[2]/2){
-      dualfprintf(fail_file,"%d rhodonut1=%g uint=%g : %g %g %g %g : %g %g %g\n",startpos[1]+i,rho,uint,H,Rcyl2,Rcyl,Rhorlocal,omega,gamtorus,uintfact);
-    }
+    //    if(startpos[2]+j==totalsize[2]/2){
+    //      dualfprintf(fail_file,"%d rhodonut1=%g uint=%g : %g %g %g %g : %g %g %g\n",startpos[1]+i,rho,uint,H,Rcyl2,Rcyl,Rhorlocal,omega,gamtorus,uintfact);
+    //    }
 
     //    if(fabs(r-Riscolocal)<0.1*Riscolocal && fabs(th-0.5*M_PI)<0.2*h_over_r){
     //      dualfprintf(fail_file,"rhodonut5=%g uint=%g : r,th=%g %g usingback=%d RADNT_RHODONUT=%g rhoisco=%g\n",rho,uint,r,th,usingback,RADNT_RHODONUT,rhoisco);
