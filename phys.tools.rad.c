@@ -2717,7 +2717,13 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
   int modemethodlocal=MODEMETHOD;
   int reducetoquick=0;
 
+  FTYPE Rhorref=-1;
   if(isspc){
+
+    if(isbhspc){
+      Rhorref=rhor_calc(0);
+    }
+
     // tj=-2,-1,0,1 work
     // tj=ts2+1,ts2,ts2-1,ts2-2 work
     // revert to simple mode if POLEDEATH is active because then anyways solution near pole is inaccurate and whatever generated here would be overwritten.
@@ -2746,8 +2752,6 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     if(fabs(tj+0.5 - (FTYPE)(0))<(FTYPE)POLEDEATH || fabs(tj+0.5-(FTYPE)totalsize[2])<(FTYPE)POLEDEATH){
       modemethodlocal=MODEPICKBESTSIMPLE;
       if(LIMITEDPOLEDEATHINRADIUS && isbhspc){
-        FTYPE Rhorref=rhor_calc(0);
-      
         if( (1||V[1]>0.9*Rhorref) && (V[1]<OUTERDEATHRADIUS && OUTERDEATH==1 || OUTERDEATH==0)) reducetoquick=2;
         else reducetoquick=1;
       }
@@ -3631,7 +3635,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
           trueimptryconvlist[tryphase1]=MAX(trueimptryconvlist[tryphase1],IMPTRYCONVMARGINAL);
         }
         // allow tolerance to be higher if...
-        if(V[1]<Rhor && isbhspc){
+        if(V[1]<Rhorref && isbhspc){
           //trueimptryconvlist[tryphase1]=MAX(trueimptryconvlist[tryphase1],IMPTRYCONV_RHORHIGHERTOL);
           trueimpallowconvconstlist[tryphase1]=MAX(trueimpallowconvconstlist[tryphase1],IMPALLOWCONV_RHORHIGHERTOL);
         }
@@ -4181,7 +4185,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
         if(funnelcond){ // then don't expect to treat density accurate anyways, just need ok accuracy and stability
           trueimptryconvlist[tryphase1]=MAX(trueimptryconvlist[tryphase1],IMPTRYCONVMARGINAL);
         }
-        if(V[1]<Rhor && isbhspc){
+        if(V[1]<Rhorref && isbhspc){
           //          trueimptryconvlist[tryphase1]=MAX(trueimptryconvlist[tryphase1],IMPTRYCONV_RHORHIGHERTOL);
           trueimpallowconvconstlist[tryphase1]=MAX(trueimpallowconvconstlist[tryphase1],IMPALLOWCONV_RHORHIGHERTOL);
         }
@@ -4678,7 +4682,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
         if(funnelcond){ // then don't expect to treat density accurate anyways, just need ok accuracy and stability
           trueimptryconvcold=MAX(trueimptryconvcold,IMPTRYCONVMARGINAL);
-          if(V[1]<Rhor && isbhspc){
+          if(V[1]<Rhorref && isbhspc){
             //          trueimptryconvlist[tryphase1]=MAX(trueimptryconvlist[tryphase1],IMPTRYCONV_RHORHIGHERTOL);
             trueimpallowconvcold=MAX(trueimpallowconvcold,IMPALLOWCONV_RHORHIGHERTOL);
           }
@@ -5252,10 +5256,11 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     //    static long long int methodindex[NUMPRIORITERMETHODINDEX]={0};
 
 
+#if(USEOPENMP==0)
     static long long int totaltryphaselistenergy[NUMPHASES];
     static long long int totaltryphaselistentropy[NUMPHASESENT];
     static long long int totaltryphaselistcold[NUMPHASESCOLD];
-
+#endif
 
     ////////////////////
     //
@@ -5298,6 +5303,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     // i=j=k=0 just to show infrequently
     if(debugfail>=2 && (ptrgeom->i==0 && ptrgeom->j==0  && ptrgeom->k==0)){
       dualfprintf(fail_file,"nstep=%ld numimplicits=%lld numexplicitsgood=%lld numexplicitskindabad=%lld numexplicitsbad=%lld : numenergy=%lld numentropy=%lld numboth=%lld numcold=%lld : numbad=%lld : numramesh=%lld numrameshenergy=%lld numrameshentropy=%lld : averagef1iter=%g averageiter=%g  : numqtypmhd=%lld numqtyumhd=%lld numqtyprad=%lld numqtyurad=%lld numqtyentropyumhd=%lld numqtyentropypmhd=%lld numitermodenormal=%lld numitermodestages=%lld numitermodecold=%lld\n",nstep,numimplicits,numexplicitsgood,numexplicitskindabad,numexplicitsbad,numenergy,numentropy,numboth,numcold,numbad,numramesh,numrameshenergy,numrameshentropy,(FTYPE)numoff1iter/(SMALL+(FTYPE)numimplicits),(FTYPE)numofiter/(SMALL+(FTYPE)numimplicits),numqtypmhd,numqtyumhd,numqtyprad,numqtyurad,numqtyentropyumhd,numqtyentropypmhd,numitermodenormal,numitermodestages,numitermodecold);
+
+#if(USEOPENMP==0)
       // counters for which method was *attempted* even if not used
       int oo;
       dualfprintf(fail_file,"tryenergy: ");
@@ -5309,6 +5316,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       dualfprintf(fail_file,"trycold: ");
       for(oo=0;oo<NUMPHASESCOLD;oo++) dualfprintf(fail_file,"%lld ",tryphaselistcold[oo]);
       dualfprintf(fail_file,"\n");
+#endif
     }
     
     numhisterr0[MAX(MIN((int)(-log10l(SMALL+errorabs[0])),NUMNUMHIST-1),0)]++;
@@ -5361,10 +5369,13 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
         MPI_Reduce(numhisterr1, totalnumhisterr1, NUMNUMHIST, MPI_LONG_LONG_INT, MPI_SUM, MPIid[0], MPI_COMM_GRMHD);
         MPI_Reduce(numhistiter, totalnumhistiter, IMPMAXITERLONG+1, MPI_LONG_LONG_INT, MPI_SUM, MPIid[0], MPI_COMM_GRMHD);
 
+#if(USEOPENMP==0)
         // attempt counters
         MPI_Reduce(tryphaselistenergy, totaltryphaselistenergy, NUMPHASES, MPI_LONG_LONG_INT, MPI_SUM, MPIid[0], MPI_COMM_GRMHD);
         MPI_Reduce(tryphaselistentropy, totaltryphaselistentropy, NUMPHASESENT, MPI_LONG_LONG_INT, MPI_SUM, MPIid[0], MPI_COMM_GRMHD);
         MPI_Reduce(tryphaselistcold, totaltryphaselistcold, NUMPHASESCOLD, MPI_LONG_LONG_INT, MPI_SUM, MPIid[0], MPI_COMM_GRMHD);
+#endif
+
 #endif
       }
       else{
@@ -5401,6 +5412,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
           totalnumhistiter[histi]=numhistiter[histi];
         }
 
+#if(USEOPENMP==0)
         int oo;
         for(oo=0;oo<NUMPHASES;oo++){
           totaltryphaselistenergy[oo]=tryphaselistenergy[oo];
@@ -5411,10 +5423,13 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
         for(oo=0;oo<NUMPHASESCOLD;oo++){
           totaltryphaselistcold[oo]=tryphaselistcold[oo];
         }
+#endif
       }
 
       if(myid==MPIid[0]){// only show result on one core that got the final result     
         dualfprintf(fail_file,"nstep=%ld totalnumimplicits=%lld totalnumexplicitsgood=%lld totalnumexplicitskindabad=%lld totalnumexplicitsbad=%lld : totalnumenergy=%lld totalnumentropy=%lld totalnumboth=%lld totalnumcold=%lld : totalnumbad=%lld : totalnumramesh=%lld totalnumrameshenergy=%lld totalnumrameshentropy=%lld : totalaveragef1iter=%g totalaverageiter=%g  : totalnumqtypmhd=%lld totalnumqtyumhd=%lld totalnumqtyprad=%lld totalnumqtyurad=%lld totalnumqtyentropyumhd=%lld totalnumqtyentropypmhd=%lld totalnumitermodenormal=%lld totalnumitermodestages=%lld totalnumitermodecold=%lld\n",nstep,totalnumimplicits,totalnumexplicitsgood,totalnumexplicitskindabad,totalnumexplicitsbad,totalnumenergy,totalnumentropy,totalnumboth,totalnumcold,totalnumbad,totalnumramesh,totalnumrameshenergy,totalnumrameshentropy,(FTYPE)totalnumoff1iter/(SMALL+(FTYPE)totalnumimplicits),(FTYPE)totalnumofiter/(SMALL+(FTYPE)totalnumimplicits),totalnumqtypmhd,totalnumqtyumhd,totalnumqtyprad,totalnumqtyurad,totalnumqtyentropyumhd,totalnumqtyentropypmhd,totalnumitermodenormal,totalnumitermodestages,totalnumitermodecold);
+
+#if(USEOPENMP==0)
         // counters for which method was *attempted* even if not used
         int oo;
         dualfprintf(fail_file,"totaltryenergy: ");
@@ -5426,6 +5441,7 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
         dualfprintf(fail_file,"totaltrycold: ");
         for(oo=0;oo<NUMPHASESCOLD;oo++) dualfprintf(fail_file,"%lld ",totaltryphaselistcold[oo]);
         dualfprintf(fail_file,"\n");
+#endif
       
         if(nstep%HISTREPORTSTEP==0){
           int histi;

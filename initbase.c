@@ -1144,7 +1144,8 @@ int init_defgrid(void)
   //  a=0.0;
   // sets parameters of coordinates, default changes
   R0 = 0.0;
-  Rin = 0.98 * Rhor;
+  FTYPE Rhorlocal=rhor_calc(0);
+  Rin = 0.98 * Rhorlocal;
   Rout = 40.;
   hslope = 0.3;
 
@@ -1593,7 +1594,9 @@ int set_box_grid_parameters(void)
   // need to recompute horizon-related quantities if horizon is growing due to accretion
   if(ISBLACKHOLEMCOORD(MCOORD)){
     find_horizon(0);
-    trifprintf("Rhor=%21.15g Risco=%21.15g MBH=%21.15g a=%21.15g QBH=%21.15g EP3=%21.15g THETAROT=%21.15g\n",Rhor,Risco,MBH,a,QBH,EP3,THETAROT);
+    FTYPE Rhorlocal=rhor_calc(0);
+    FTYPE Riscolocal=rmso_calc(PROGRADERISCO);
+    trifprintf("Rhorlocal=%21.15g Riscolocal=%21.15g MBH=%21.15g a=%21.15g QBH=%21.15g EP3=%21.15g THETAROT=%21.15g\n",Rhorlocal,Riscolocal,MBH,a,QBH,EP3,THETAROT);
   }
   else{
     horizoni=horizoncpupos1=0;

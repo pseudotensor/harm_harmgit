@@ -16,15 +16,15 @@ extern int init_dsandvels(int inittype, int pos, int *whichvel, int *whichcoord,
 
 int setRin_withchecks(FTYPE *rin)
 {
-  FTYPE Rhor,rminus;
+  FTYPE Rhorlocal,rminus;
  
-  Rhor=rhor_calc(0);
+  Rhorlocal=rhor_calc(0);
   *rin=setRin(setihor());
 
-  //  (*rin) = 0.98 * Rhor;
+  //  (*rin) = 0.98 * Rhorlocal;
   
 
-  trifprintf("R0=%21.15g Rhor=%21.15g Rin=%21.15g Rout=%21.15g ihor=%d MBH=%g\n",R0,Rhor,(*rin),Rout,setihor(),MBH);
+  trifprintf("R0=%21.15g Rhorlocal=%21.15g Rin=%21.15g Rout=%21.15g ihor=%d MBH=%g\n",R0,Rhorlocal,(*rin),Rout,setihor(),MBH);
 
   if((*rin)<R0){
     dualfprintf(fail_file,"Wrong Rin calculation\n");
@@ -39,8 +39,8 @@ int setRin_withchecks(FTYPE *rin)
     dualfprintf(fail_file,"Rin<r_- : Poor Rin calculation: %g %g\n",*rin,rminus);
     myexit(34968348);
   }
-  if((*rin)>Rhor){
-    dualfprintf(fail_file,"Rin>r_+ : Poor Rin calculation: %g %g\n",*rin,Rhor);
+  if((*rin)>Rhorlocal){
+    dualfprintf(fail_file,"Rin>r_+ : Poor Rin calculation: %g %g\n",*rin,Rhorlocal);
     myexit(34968349);
   }
 

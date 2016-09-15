@@ -120,14 +120,19 @@ int coolfunc_thindisk(FTYPE h_over_r, FTYPE *pr, struct of_geom *geom, struct of
   th=V[2];
   R = r*sin(th) ;
 
+  FTYPE Rhorlocal=rhor_calc(0);     
+  FTYPE Riscolocal=rmso_calc(PROGRADERISCO);
 
-  rincool = (1. + h_over_r)*Risco;
+
+  rincool = (1. + h_over_r)*Riscolocal;
 
   /* crude approximation */
   Wcirc = pow(R,-1.5) ;
   cs_circ = thetacool/sqrt(R) ;
   //        wcirc = rho*(1. + cs_circ*cs_circ/(gam - 1.)) ;
   wcirc = rho*(1. + cs_circ*cs_circ) ;
+
+
 
   DLOOPA(j){
     if(t > 0.){
@@ -139,8 +144,8 @@ int coolfunc_thindisk(FTYPE h_over_r, FTYPE *pr, struct of_geom *geom, struct of
       //dUcool*=COOLTAPER2(th);
       dUcool*=COOLTAPER3(th);
       // below maybe approximates photon capture effects near horizon
-      dUcool*=taper_func(R,Rhor); // don't cool inside horizon
-      //     dUcool = (R>Rhor) ? dUcool : 0.0; // hard cut to not cool inside horizon
+      dUcool*=taper_func(R,Rhorlocal); // don't cool inside horizon
+      //     dUcool = (R>Rhorlocal) ? dUcool : 0.0; // hard cut to not cool inside horizon
     }
     else{
       dUcool = 0. ;
@@ -251,14 +256,14 @@ int coolfunc_rebecca_thindisk(FTYPE h_over_r, FTYPE *pr, struct of_geom *geom, s
     dUcool=-u*(Wcirc/taucool)*log(enk/enk0)*photoncapture;
 
     //   dUcool*=COOLTAPER1(th);
-    //  dUcool*=taper_func(R,Rhor);
+    //  dUcool*=taper_func(R,Rhorlocal);
 
     // shape function to avoid problems near pole
     //taper0=COOLTAPER(0);
     //dUcool*=1./(1.-1./taper0)+1./(1.-taper0)*COOLTAPER(th);
     //dUcool*=COOLTAPER2(th);
     // dUcool*=COOLTAPER3(th);
-    // dUcool*=taper_func(R,Rhor); // don't cool inside horizon
+    // dUcool*=taper_func(R,Rhorlocal); // don't cool inside horizon
   }
   else{
     dUcool = 0. ;

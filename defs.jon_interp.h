@@ -23,7 +23,7 @@ int calledranc;
 FTYPE NUMEPSILONPOW23;
 FTYPE Xmax[NDIM];
 
-FTYPE Risco,drsing;
+FTYPE drsing;
 FTYPE *rcent,*rcent_tot;
 int horizoni,horizoncpupos1;
 int numprocs;
@@ -129,7 +129,7 @@ FTYPE jetalpha;
 // GODMARK3D -- should these be stored in coordparms.dat?
 FTYPE Rin_array[NDIM], Rout_array[NDIM];  //atch -- arrays for a more general way of handling the grid dimensions
 
-FTYPE Rhor,Rout,dx[NDIM],startx[NDIM],endx[NDIM],R0,Diffx[NDIM];
+FTYPE Rout,dx[NDIM],startx[NDIM],endx[NDIM],R0,Diffx[NDIM];
 FTYPE dxdxp[NDIM][NDIM];
 int myid;
 int debugfail;

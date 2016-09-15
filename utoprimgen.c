@@ -1607,7 +1607,8 @@ int tryffdeinversion(int showmessages, int allowlocalfailurefixandnoreport, int 
   if(ISBLACKHOLEMCOORD(MCOORD)){
     FTYPE V[NDIM];
     bl_coord_ijk(ptrgeom->i,ptrgeom->j,ptrgeom->k,CENT,V);
-    if(V[1]<Rhor) FFDEFACTOR=5.0; // more aggressive inside horizon to keep field evolving
+    FTYPE Rhorlocal=rhor_calc(0);     
+    if(V[1]<Rhorlocal) FFDEFACTOR=5.0; // more aggressive inside horizon to keep field evolving
   }
   int isffdeflow=isflowffde(FFDEFACTOR, pr0, qptr);
   if(isffdeflow==0) if(debugfail>=2) dualfprintf(fail_file,"in tryffdeinversion but isffdeflow=0\n");

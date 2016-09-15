@@ -304,7 +304,6 @@ static void setup_zones(void)
   
   // below 2 not really used (yet at least) -- needed for setRin() but that function isn't used
   a=spin;
-  Rhor=rhor_calc(0);
 
   fprintf(stderr,"defcoord=%d Rin=%g R0=%g dofull2pi=%d\n",defcoord,Rin,R0,dofull2pi);
 

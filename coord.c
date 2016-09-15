@@ -3275,6 +3275,7 @@ FTYPE setRin(int ihor)
   FTYPE ftemp;
   FTYPE ihoradjust;
 
+  FTYPE Rhorlocal=rhor_calc(0);
 
   ihoradjust=((FTYPE)ihor)+ADJUSTFRACT; // can't have grid edge exactly on horizon due to ucon_calc()
 
@@ -3286,40 +3287,40 @@ FTYPE setRin(int ihor)
   }
   else if(defcoord == LOGRSINTH){
     ftemp=ihoradjust/(FTYPE)totalsize[1];
-    return(R0+pow((Rhor-R0)/pow(Rout-R0,ftemp),1.0/(1.0-ftemp)));
+    return(R0+pow((Rhorlocal-R0)/pow(Rout-R0,ftemp),1.0/(1.0-ftemp)));
   }
   else if(defcoord == REBECCAGRID){
     ftemp=ihoradjust/(FTYPE)totalsize[1];
-    return(R0+pow((Rhor-R0)/pow(Rout-R0,ftemp),1.0/(1.0-ftemp)));
+    return(R0+pow((Rhorlocal-R0)/pow(Rout-R0,ftemp),1.0/(1.0-ftemp)));
   }
   else if(defcoord == COMPLEX0TH){ // even though form appears different in X1, same Rin results
     ftemp=ihoradjust/(FTYPE)totalsize[1];
-    return(R0+pow((Rhor-R0)/pow(Rout-R0,ftemp),1.0/(1.0-ftemp)));
+    return(R0+pow((Rhorlocal-R0)/pow(Rout-R0,ftemp),1.0/(1.0-ftemp)));
   }
   else if(defcoord == UNIRSINTH || defcoord == UNIRSINTH2){ // uniform
     ftemp=ihoradjust/(FTYPE)totalsize[1];
-    return((Rhor-ftemp*Rout)/(1.0-ftemp));
+    return((Rhorlocal-ftemp*Rout)/(1.0-ftemp));
   }
   else if(defcoord == EQMIRROR){ // as defcoord=0
     ftemp=ihoradjust/(FTYPE)totalsize[1];
-    return(R0+pow((Rhor-R0)/pow(Rout-R0,ftemp),1.0/(1.0-ftemp)));
+    return(R0+pow((Rhorlocal-R0)/pow(Rout-R0,ftemp),1.0/(1.0-ftemp)));
   }
   else if(defcoord == COMPLEX1TH){ // as above
     ftemp=ihoradjust/(FTYPE)totalsize[1];
-    return(R0+pow((Rhor-R0)/pow(Rout-R0,ftemp),1.0/(1.0-ftemp)));
+    return(R0+pow((Rhorlocal-R0)/pow(Rout-R0,ftemp),1.0/(1.0-ftemp)));
   }
   else if(defcoord == COMPLEX2TH){ // as above
     ftemp=ihoradjust/(FTYPE)totalsize[1];
-    return(R0+pow((Rhor-R0)/pow(Rout-R0,ftemp),1.0/(1.0-ftemp)));
+    return(R0+pow((Rhorlocal-R0)/pow(Rout-R0,ftemp),1.0/(1.0-ftemp)));
   }
   else if(defcoord == LOGRUNITH){ // as above
     ftemp=ihoradjust/(FTYPE)totalsize[1];
-    return(R0+pow((Rhor-R0)/pow(Rout-R0,ftemp),1.0/(1.0-ftemp)));
+    return(R0+pow((Rhorlocal-R0)/pow(Rout-R0,ftemp),1.0/(1.0-ftemp)));
   }
   else if(defcoord == JET1COORDS){
     if(npow==1.0){
       ftemp=ihoradjust/(FTYPE)totalsize[1];
-      return(R0+pow((Rhor-R0)/pow(Rout-R0,ftemp),1.0/(1.0-ftemp)));
+      return(R0+pow((Rhorlocal-R0)/pow(Rout-R0,ftemp),1.0/(1.0-ftemp)));
     }
     else{
       // SUPERGODMARK : need to change for npow>1.0
@@ -3329,7 +3330,7 @@ FTYPE setRin(int ihor)
   else if(defcoord == JET2COORDS){
     if(npow==1.0){
       ftemp=ihoradjust/(FTYPE)totalsize[1];
-      return(R0+pow((Rhor-R0)/pow(Rout-R0,ftemp),1.0/(1.0-ftemp)));
+      return(R0+pow((Rhorlocal-R0)/pow(Rout-R0,ftemp),1.0/(1.0-ftemp)));
     }
     else{
       // SUPERGODMARK : need to change for npow>1.0
@@ -3340,11 +3341,11 @@ FTYPE setRin(int ihor)
     // see jet3coords_checknew.nb to have chosen Rin and ihor and compute required R0
     if(npow==1.0){
       ftemp=ihoradjust/(FTYPE)totalsize[1];
-      return(R0+pow((Rhor-R0)/pow(Rout-R0,ftemp),1.0/(1.0-ftemp)));
+      return(R0+pow((Rhorlocal-R0)/pow(Rout-R0,ftemp),1.0/(1.0-ftemp)));
     }
     else{
-      dualfprintf(fail_file,"ihoradjust=%26.20g totalsize[1]=%d Rhor=%26.20g R0=%26.20g npow=%26.20g Rout=%26.20g\n",ihoradjust,totalsize[1],Rhor,R0,npow,Rout);
-      return(R0+exp( pow((totalsize[1]*pow(log(Rhor-R0),1.0/npow) - ihoradjust*pow(log(Rout-R0),1.0/npow))/(totalsize[1]-ihoradjust),npow)));
+      dualfprintf(fail_file,"ihoradjust=%26.20g totalsize[1]=%d Rhorlocal=%26.20g R0=%26.20g npow=%26.20g Rout=%26.20g\n",ihoradjust,totalsize[1],Rhorlocal,R0,npow,Rout);
+      return(R0+exp( pow((totalsize[1]*pow(log(Rhorlocal-R0),1.0/npow) - ihoradjust*pow(log(Rout-R0),1.0/npow))/(totalsize[1]-ihoradjust),npow)));
     }
   }
   else if(defcoord == SJETCOORDS){
@@ -3355,42 +3356,42 @@ FTYPE setRin(int ihor)
     // see jet3coords_checknew.nb (and fix_3dpolestissue.nb) to have chosen Rin and ihor and compute required R0
     if(npow==1.0){
       ftemp=ihoradjust/(FTYPE)totalsize[1];
-      return(R0+pow((Rhor-R0)/pow(Rout-R0,ftemp),1.0/(1.0-ftemp)));
+      return(R0+pow((Rhorlocal-R0)/pow(Rout-R0,ftemp),1.0/(1.0-ftemp)));
     }
     else if(npow2>0){
       return(1.2);
     }
     else{
-      dualfprintf(fail_file,"ihoradjust=%26.20g totalsize[1]=%d Rhor=%26.20g R0=%26.20g npow=%26.20g Rout=%26.20g\n",ihoradjust,totalsize[1],Rhor,R0,npow,Rout);
-      return(R0+exp( pow((totalsize[1]*pow(log(Rhor-R0),1.0/npow) - ihoradjust*pow(log(Rout-R0),1.0/npow))/(totalsize[1]-ihoradjust),npow)));
+      dualfprintf(fail_file,"ihoradjust=%26.20g totalsize[1]=%d Rhorlocal=%26.20g R0=%26.20g npow=%26.20g Rout=%26.20g\n",ihoradjust,totalsize[1],Rhorlocal,R0,npow,Rout);
+      return(R0+exp( pow((totalsize[1]*pow(log(Rhorlocal-R0),1.0/npow) - ihoradjust*pow(log(Rout-R0),1.0/npow))/(totalsize[1]-ihoradjust),npow)));
     }
   }
   else if(defcoord == JET6COORDSTHIN){
     // see jet3coords_checknew.nb (and fix_3dpolestissue.nb) to have chosen Rin and ihor and compute required R0
     if(th_npow==1.0){
       ftemp=ihoradjust/(FTYPE)totalsize[1];
-      return(R0+pow((Rhor-R0)/pow(Rout-R0,ftemp),1.0/(1.0-ftemp)));
+      return(R0+pow((Rhorlocal-R0)/pow(Rout-R0,ftemp),1.0/(1.0-ftemp)));
     }
     else if(th_npow2>0){
       return(1.2);
     }
     else{
-      dualfprintf(fail_file,"ihoradjust=%26.20g totalsize[1]=%d Rhor=%26.20g R0=%26.20g npow=%26.20g Rout=%26.20g\n",ihoradjust,totalsize[1],Rhor,R0,th_npow,Rout);
-      return(R0+exp( pow((totalsize[1]*pow(log(Rhor-R0),1.0/th_npow) - ihoradjust*pow(log(Rout-R0),1.0/th_npow))/(totalsize[1]-ihoradjust),th_npow)));
+      dualfprintf(fail_file,"ihoradjust=%26.20g totalsize[1]=%d Rhorlocal=%26.20g R0=%26.20g npow=%26.20g Rout=%26.20g\n",ihoradjust,totalsize[1],Rhorlocal,R0,th_npow,Rout);
+      return(R0+exp( pow((totalsize[1]*pow(log(Rhorlocal-R0),1.0/th_npow) - ihoradjust*pow(log(Rout-R0),1.0/th_npow))/(totalsize[1]-ihoradjust),th_npow)));
     }
   }
   else if(defcoord == BPTHIN1){
     // see jet3coords_checknew.nb (and fix_3dpolestissue.nb) to have chosen Rin and ihor and compute required R0
     if(bp_npow==1.0){
       ftemp=ihoradjust/(FTYPE)totalsize[1];
-      return(R0+pow((Rhor-R0)/pow(Rout-R0,ftemp),1.0/(1.0-ftemp)));
+      return(R0+pow((Rhorlocal-R0)/pow(Rout-R0,ftemp),1.0/(1.0-ftemp)));
     }
     else if(bp_npow2>0){
       return(1.2);
     }
     else{
-      dualfprintf(fail_file,"ihoradjust=%21.15g totalsize[1]=%d Rhor=%21.15g R0=%21.15g bp_npow=%21.15g Rout=%21.15g\n",ihoradjust,totalsize[1],Rhor,R0,bp_npow,Rout);
-      return(R0+exp( pow((totalsize[1]*pow(log(Rhor-R0),1.0/bp_npow) - ihoradjust*pow(log(Rout-R0),1.0/bp_npow))/(totalsize[1]-ihoradjust),bp_npow)));
+      dualfprintf(fail_file,"ihoradjust=%21.15g totalsize[1]=%d Rhorlocal=%21.15g R0=%21.15g bp_npow=%21.15g Rout=%21.15g\n",ihoradjust,totalsize[1],Rhorlocal,R0,bp_npow,Rout);
+      return(R0+exp( pow((totalsize[1]*pow(log(Rhorlocal-R0),1.0/bp_npow) - ihoradjust*pow(log(Rout-R0),1.0/bp_npow))/(totalsize[1]-ihoradjust),bp_npow)));
     }
   }
   else if(defcoord == JET5COORDS){
@@ -3399,7 +3400,7 @@ FTYPE setRin(int ihor)
   else if(defcoord == PULSARCOORDS){
     if(npow==1.0){
       ftemp=ihoradjust/(FTYPE)totalsize[1];
-      return(R0+pow((Rhor-R0)/pow(Rout-R0,ftemp),1.0/(1.0-ftemp)));
+      return(R0+pow((Rhorlocal-R0)/pow(Rout-R0,ftemp),1.0/(1.0-ftemp)));
     }
     else{
       // SUPERGODMARK : need to change for npow>1.0
@@ -3414,7 +3415,7 @@ FTYPE setRin(int ihor)
   else if(defcoord==RAMESHCOORDS || defcoord==RAMESHCOORDS_HALFDISK){
     if(npow==1.0){
       ftemp=ihoradjust/(FTYPE)totalsize[1];
-      return(R0+pow((Rhor-R0)/pow(Rout-R0,ftemp),1.0/(1.0-ftemp)));
+      return(R0+pow((Rhorlocal-R0)/pow(Rout-R0,ftemp),1.0/(1.0-ftemp)));
     }
     else{
       // SUPERGODMARK : need to change for npow>1.0
@@ -3424,7 +3425,7 @@ FTYPE setRin(int ihor)
   else if(defcoord == JET4COORDS){
     if(npow==1.0){
       ftemp=ihoradjust/(FTYPE)totalsize[1];
-      return(R0+pow((Rhor-R0)/pow(Rout-R0,ftemp),1.0/(1.0-ftemp)));
+      return(R0+pow((Rhorlocal-R0)/pow(Rout-R0,ftemp),1.0/(1.0-ftemp)));
     }
     else{
       // SUPERGODMARK : need to change for npow>1.0

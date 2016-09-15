@@ -21,7 +21,7 @@ int BEGINOPENMPSHAREDLIST;
 
 #include "kazfulleos.defsglobalprivate.h" // put here so OpenMP private globals are defined before global.nondepmnemonics.h sets up thread private pragma's
 
-
+// OPENMPMARK: Below globals are only thread-safe if not changed/assigned inside parallel region.
 
 
 #include "rancdefs.h"
@@ -46,7 +46,6 @@ FTYPE gam,gamideal,ARAD_CODE,NRAD_ARAD_CODE;
 int defcoord;
 FTYPE Rin, R0, Rout, hslope, Zin, Zout;
 FTYPE Rin_array[NDIM], Rout_array[NDIM];  //atch -- arrays for a more general way of handling the grid dimensions
-FTYPE Risco,Rhor;
 FTYPE cour;
 FTYPE dV, dVF, dx[NDIM], startx[NDIM], endx[NDIM], Diffx[NDIM];
 SFTYPE dt,t,tf,tstepparti,tsteppartf;

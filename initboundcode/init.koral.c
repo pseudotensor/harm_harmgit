@@ -311,7 +311,7 @@ int prepre_init_specific_init(void)
     // KRAKEN: comment out above.  And change mympi.definit.h's USEROMIO 0 to 1 for the "choice" version.
   }
 
-  //  binaryoutput=TEXTOUTPUT;
+  binaryoutput=TEXTOUTPUT;
 
 
 
@@ -3241,8 +3241,8 @@ int init_defcoord(void)
       myexit(243532469);
     }
 
-    Rhor=rhor_calc(0);
-    if(RADBONDI_MINX>Rhor && MCOORD==KSCOORDS){
+    FTYPE Rhorlocal=rhor_calc(0);
+    if(RADBONDI_MINX>Rhorlocal && MCOORD==KSCOORDS){
       dualfprintf(fail_file,"WARNING: Have boundary oustide horizon in KS coords\n");
     }
 
@@ -3278,7 +3278,8 @@ int init_defcoord(void)
       RADNT_MAXX=50.0;
     }
     else{
-      RADNT_MINX=1.5*Rhor;
+      FTYPE Rhorlocal=rhor_calc(0);
+      RADNT_MINX=1.5*Rhorlocal;
       RADNT_MAXX=40.0; // 27.8
     }
 
@@ -3347,7 +3348,8 @@ int init_defcoord(void)
       RADNT_MAXX=1E4;
     }
     else{
-      RADNT_MINX=1.8*Rhor;
+      FTYPE Rhorlocal=rhor_calc(0);
+      RADNT_MINX=1.8*Rhorlocal;
       RADNT_MAXX=40.0; // 27.8
     }
 
@@ -3377,7 +3379,7 @@ int init_defcoord(void)
     }
 
 
-    Rhor=rhor_calc(0);
+    FTYPE Rhorlocal=rhor_calc(0);
 
 
     //  hslope = 0.3;
@@ -3637,8 +3639,8 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 
 
   // some calculations, althogh perhaps calculated already, definitely need to make sure computed
-  Rhor=rhor_calc(0);
-  Risco=rmso_calc(PROGRADERISCO);
+  FTYPE Rhorlocal=rhor_calc(0);
+  FTYPE Riscolocal=rmso_calc(PROGRADERISCO);
 
 
 
@@ -3677,8 +3679,8 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
     }
 
     if(RADNT_DONUTTYPE==DONUTTHINDISK || RADNT_DONUTTYPE==DONUTTHINDISK2){
-      //      rinfield=1.1*Risco;
-      rinfield=Risco;
+      //      rinfield=1.1*Riscolocal;
+      rinfield=Riscolocal;
       //      beta=1E30;
       beta=10.0;
 
@@ -3688,15 +3690,15 @@ int init_grid_post_set_grid(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 
     // SUPERMADNEW
     if(RADNT_DONUTTYPE==DONUTTHINDISK || RADNT_DONUTTYPE==DONUTTHINDISK2){
-      rin=1.1*Risco;
-      rinfield=1.1*Risco;
+      rin=1.1*Riscolocal;
+      rinfield=1.1*Riscolocal;
  
       rin=0.0;
  
       rinfield=20.0; // works for any a for these models
       routfield=40.0;
 
-      //rinfield=Risco;
+      //rinfield=Riscolocal;
       //      beta=1E30;
       if(FIELDTYPE==FIELDJONMAD){
         beta=20.0; // so for MAD will have ~1 mri wavelength per half-height H.
@@ -6428,6 +6430,7 @@ static int get_full_rtsolution(int *whichvel, int *whichcoord, int opticallythic
     if(NRAD>=0) nrad=pp[NRAD];
 
 
+    return(0);
 
     ////////////////// STAGE2
 
@@ -6627,7 +6630,7 @@ static int make_nonrt2rt_solution(int *whichvel, int *whichcoord, int opticallyt
   //
   /////
   // total torus pressure
-  FTYPE pt;
+  FTYPE pt=-1;
   int usingback=donut_analytical_solution(whichvel, whichcoord, opticallythick, pp, X, V, ptrptrgeom, &pt);
   //int usingback=process_solution(whichvel, whichcoord, opticallythick, pp, X, V, ptrptrgeom, &pt);
   
@@ -6816,38 +6819,38 @@ static int donut_analytical_solution(int *whichvel, int *whichcoord, int optical
 
 
     /* region outside disk */
-    Rhor=rhor_calc(0);
+    FTYPE Rhorlocal=rhor_calc(0);
+    FTYPE Riscolocal=rmso_calc(PROGRADERISCO);
     if(0){
-      Risco=rmso_calc(PROGRADERISCO);
     }
     else{ // SUPERMADNEW
-      Risco=10.0;
+      Riscolocal=10.0;
     }
-    R = MAX(Rhor,r*sin(th)) ;
+    R = MAX(Rhorlocal,r*sin(th)) ;
 
     ////////////////////////////
     // Set H : disk height
     FTYPE H = h_over_r*R;
-    FTYPE Hisco = h_over_r*Risco;
+    FTYPE Hisco = h_over_r*Riscolocal;
 
     // or try:
     //    FTYPE xrpow=0.5;
     FTYPE xrpow=1.0;
     FTYPE xr=pow(r,xrpow);
-    FTYPE xr0=pow(Risco,xrpow);
+    FTYPE xr0=pow(Riscolocal,xrpow);
     FTYPE xr1=pow(1.0,xrpow);
     //    H = 0.1*h_over_r*R + h_over_r*R * (MAX(0.0,xr-xr0)/xr) ;
-    //    Hisco = 0.1*h_over_r*Risco + h_over_r*Risco * (MAX(0.0,xr0-xr0)/xr0) ;
-    if(r>=Risco){
+    //    Hisco = 0.1*h_over_r*Riscolocal + h_over_r*Riscolocal * (MAX(0.0,xr0-xr0)/xr0) ;
+    if(r>=Riscolocal){
       H = h_over_r*R ;
     }
     else{
-      //      H = h_over_r*R * pow(r/Risco,2.0);
-      H = h_over_r*R * pow(r/Risco,.5); // SUPERMADNEW
+      //      H = h_over_r*R * pow(r/Riscolocal,2.0);
+      H = h_over_r*R * pow(r/Riscolocal,.5); // SUPERMADNEW
     }
 
     FTYPE z = r*cos(th) ;
-    FTYPE zisco = Risco*cos(th) ;
+    FTYPE zisco = Riscolocal*cos(th) ;
 
     //////////////////////////
     // SET DENSITY
@@ -6857,19 +6860,19 @@ static int donut_analytical_solution(int *whichvel, int *whichcoord, int optical
     FTYPE rhoisco;
     if(1){
       // below Gaussian for isothermal gas, but works better for adiabatic EOS too.
-      rhoisco=RADNT_RHODONUT * exp(-zisco*zisco/(2.*Hisco*Hisco))*pow(Risco,thindiskrhopow);
+      rhoisco=RADNT_RHODONUT * exp(-zisco*zisco/(2.*Hisco*Hisco))*pow(Riscolocal,thindiskrhopow);
       rho=RADNT_RHODONUT * exp(-z*z/(2.*H*H))*pow(r,thindiskrhopow);
     }
     if(0){
       // for adiabatic EOS, need improved vertical distribution
       FTYPE NN=1.0/(gamtorus-1.0);
-      rhoisco=RADNT_RHODONUT * pow(1.0-zisco*zisco/(Hisco*Hisco),NN)*pow(Risco/Risco,thindiskrhopow); if(rhoisco<0.0||!isfinite(rhoisco)) rhoisco=0.0;
-      rho=RADNT_RHODONUT * pow(1.0-z*z/(H*H),NN)*pow(r/Risco,thindiskrhopow); if(rho<0.0||!isfinite(rho)) rho=0.0;
+      rhoisco=RADNT_RHODONUT * pow(1.0-zisco*zisco/(Hisco*Hisco),NN)*pow(Riscolocal/Riscolocal,thindiskrhopow); if(rhoisco<0.0||!isfinite(rhoisco)) rhoisco=0.0;
+      rho=RADNT_RHODONUT * pow(1.0-z*z/(H*H),NN)*pow(r/Riscolocal,thindiskrhopow); if(rho<0.0||!isfinite(rho)) rho=0.0;
     }
     // density shouldn't peak at ISCO, but further out even for H/R=0.05 (see Penna et al. 2010 figure 11).
     FTYPE Rtrans;
-    //    Rtrans=2.0*Risco;
-    Rtrans=1.5*Risco; // SUPERMADNEW
+    //    Rtrans=2.0*Riscolocal;
+    Rtrans=1.5*Riscolocal; // SUPERMADNEW
     if(r<Rtrans){
       //      FTYPE rhopowisco=10.0;
       FTYPE rhopowisco=7.0; // this gives similar result to HD case, although not MHD-turbulence case, but want kinda HD equilibrium as much as possible.
@@ -6890,14 +6893,14 @@ static int donut_analytical_solution(int *whichvel, int *whichcoord, int optical
     // ensure c_s/v_k = (H/R) , which should be violated in the ISCO such that K=P/rho^Gamma=constant but H/R still thins towards the horizon.
     // P = (gamma-1)*u and cs2 = \gamma P/(\rho+u+P)
     FTYPE omegakep=1./(pow(r,1.5) + a);
-    FTYPE omegakepisco=1./(pow(Risco,1.5) + a);
+    FTYPE omegakepisco=1./(pow(Riscolocal,1.5) + a);
     FTYPE omega,omegaisco=omegakepisco;
 
     FTYPE sigma=r*r+a*a*cos(th)*cos(th);
     FTYPE gppvsr=sigma + a*a*(1+2*r/sigma)*sin(th)*sin(th);
-    FTYPE sigmaisco=Risco*Risco+a*a*cos(th)*cos(th);
-    FTYPE gppvsrisco=sigmaisco + a*a*(1+2*Risco/sigmaisco)*sin(th)*sin(th);
-    if(1||r>=Risco){ // final HD solution is Keplerian over all radii!
+    FTYPE sigmaisco=Riscolocal*Riscolocal+a*a*cos(th)*cos(th);
+    FTYPE gppvsrisco=sigmaisco + a*a*(1+2*Riscolocal/sigmaisco)*sin(th)*sin(th);
+    if(1||r>=Riscolocal){ // final HD solution is Keplerian over all radii!
       omega=omegakep;
     }
     else{
@@ -6917,16 +6920,16 @@ static int donut_analytical_solution(int *whichvel, int *whichcoord, int optical
 
     //////////////////////////
     // SET
-    if(r>=Risco){
+    if(r>=Riscolocal){
       Vphi=uPhi; // now 3-vel
     }
     else{
-      //      Vphi=uPhi/pow(r/Risco,4.0)/0.6/0.80;
+      //      Vphi=uPhi/pow(r/Riscolocal,4.0)/0.6/0.80;
       Vphi=uPhi;
     }
     // set radial velocity
-    //    if(r<Risco){
-    if(r<1.1*Rhor){
+    //    if(r<Riscolocal){
+    if(r<1.1*Rhorlocal){
       Vr = ppback[U1]; // zamo vel
       Vh = ppback[U2]; // zamo vel
     }
@@ -6952,21 +6955,21 @@ static int donut_analytical_solution(int *whichvel, int *whichcoord, int optical
     // CHECK TEST
     if(usingback==0){
       // CATCH
-      //    if(r<Risco || badut){// uT>10.0 || !isfinite(uT) || uTbl>10.0 || !isfinite(uTbl) || uT<1.0-1E-7 || uTbl<1.0-1E-7){
+      //    if(r<Riscolocal || badut){// uT>10.0 || !isfinite(uT) || uTbl>10.0 || !isfinite(uTbl) || uT<1.0-1E-7 || uTbl<1.0-1E-7){
       if(badut==1){
         //      uT=10.0;
         //      uTbl=10.0;
-        Vphi=0.0;//uPhi*uT; ///pow(r/Risco,4.0); // Vphi is 4-vel = d\phi/d\tau = u^t \Omega
+        Vphi=0.0;//uPhi*uT; ///pow(r/Riscolocal,4.0); // Vphi is 4-vel = d\phi/d\tau = u^t \Omega
         // set radial velocity
         Vr = 0. ; // zero zamo vel
         Vh = 0. ; // zero zamo vel
         *whichvel=VELREL4;
         if(*whichcoord==BLCOORDS) *whichcoord=KSCOORDS;
       }
-      else if(r<1.1*Rhor){
+      else if(r<1.1*Rhorlocal){
         //      uT=10.0;
         //      uTbl=10.0;
-        Vphi=0.0;//uPhi*uT; ///pow(r/Risco,4.0); // Vphi is 4-vel = d\phi/d\tau = u^t \Omega
+        Vphi=0.0;//uPhi*uT; ///pow(r/Riscolocal,4.0); // Vphi is 4-vel = d\phi/d\tau = u^t \Omega
         // set radial velocity
         Vr = 0. ; // zero zamo vel
         Vh = 0. ; // zero zamo vel
@@ -6987,16 +6990,16 @@ static int donut_analytical_solution(int *whichvel, int *whichcoord, int optical
     }
 
     // OVERRIDE
-    if(r>1.2*Rhor){
+    if(r>1.2*Rhorlocal){
       *whichvel=VEL3;
       *whichcoord=BLCOORDS;
     }
 
 
     // set uint
-    FTYPE uintfact = (1.0 + randfact * (ranc(0,0) - 0.5));
+    FTYPE uintfact = 1.0; //(1.0 + randfact * (ranc(0,0) - 0.5));
     uint = rho*pow(H/R,2.0)*pow(r*omega,2.0)/(gamtorus*(gamtorus-1.0))*uintfact;
-    FTYPE uintisco = rhoisco*pow(Hisco/Risco,2.0)*pow(Risco*omegaisco,2.0)/(gamtorus*(gamtorus-1.0))*uintfact;
+    FTYPE uintisco = rhoisco*pow(Hisco/Riscolocal,2.0)*pow(Riscolocal*omegaisco,2.0)/(gamtorus*(gamtorus-1.0))*uintfact;
 
     // Set pressure
     // K = P/rho^Gamma 
@@ -7004,7 +7007,7 @@ static int donut_analytical_solution(int *whichvel, int *whichcoord, int optical
     FTYPE KK= pint*pow(rho,-gamtorus);
     FTYPE pintisco=(gamtorus-1.0)*uintisco;
     FTYPE KKisco= pintisco*pow(rhoisco,-gamtorus);
-    if(r>=Risco){
+    if(r>=Riscolocal){
       pint = pint;
     }
     else{
@@ -7018,11 +7021,12 @@ static int donut_analytical_solution(int *whichvel, int *whichcoord, int optical
     
 
 
-    if(startpos[1]+i==totalsize[1]/2 && startpos[2]+j==totalsize[2]/2){
-        dualfprintf(fail_file,"rhodonut1=%g uint=%g\n",rho,uint);
+    //    if(startpos[1]+i==totalsize[1]/2 && startpos[2]+j==totalsize[2]/2){
+    if(startpos[2]+j==totalsize[2]/2){
+      dualfprintf(fail_file,"%d rhodonut1=%g uint=%g : %g %g %g %g : %g %g %g\n",startpos[1]+i,rho,uint,H,R,Rcyl,Rhorlocal,omega,gamtorus,uintfact);
     }
 
-    //    if(fabs(r-Risco)<0.1*Risco && fabs(th-0.5*M_PI)<0.2*h_over_r){
+    //    if(fabs(r-Riscolocal)<0.1*Riscolocal && fabs(th-0.5*M_PI)<0.2*h_over_r){
     //      dualfprintf(fail_file,"rhodonut5=%g uint=%g : r,th=%g %g usingback=%d RADNT_RHODONUT=%g rhoisco=%g\n",rho,uint,r,th,usingback,RADNT_RHODONUT,rhoisco);
     //    }
 
@@ -7051,24 +7055,24 @@ static int donut_analytical_solution(int *whichvel, int *whichcoord, int optical
 
 
     /* region outside disk */
-    Rhor=rhor_calc(0);
-    Risco=rmso_calc(PROGRADERISCO);
-    R = MAX(Rhor,r*sin(th)) ;
+    FTYPE Rhorlocal=rhor_calc(0);
+    FTYPE Riscolocal=rmso_calc(PROGRADERISCO);
+    R = MAX(Rhorlocal,r*sin(th)) ;
     
     //if(R < rin) { // assume already have atmosphere as background solution
     FTYPE SMALLESTH=1E-15;
       
     //    H = SMALLESTH + h_over_r*R ; // NOTEMARK: Could choose H=constant
 
-    //    FTYPE Rtrans=1.5*Risco;
+    //    FTYPE Rtrans=1.5*Riscolocal;
     FTYPE xrpow=0.5;
     FTYPE xr=pow(r,xrpow);
-    FTYPE xr0=pow(Risco,xrpow);
+    FTYPE xr0=pow(Riscolocal,xrpow);
     FTYPE xr1=pow(1.0,xrpow);
 
     FTYPE HS = h_over_r*R;
     FTYPE HSisco;
-    HSisco = h_over_r*Risco;
+    HSisco = h_over_r*Riscolocal;
 
     FTYPE Hisco;
     if(0){
@@ -7083,31 +7087,31 @@ static int donut_analytical_solution(int *whichvel, int *whichcoord, int optical
     // fix nz
     nz = nz_func(R) ;
     nz = pow(R,-1.5);
-    FTYPE nzisco = nz_func(Risco) ;
+    FTYPE nzisco = nz_func(Riscolocal) ;
     if(nz>1.0) nz=1.0;
-    if(r<Risco) nz=nzisco;
+    if(r<Riscolocal) nz=nzisco;
     if(!isfinite(nz)) nz=1.0;
 
     z = r*cos(th) ;
-    FTYPE zisco = Risco*cos(th) ;
+    FTYPE zisco = Riscolocal*cos(th) ;
     S = 1./(HS*HS*nz) ;
     FTYPE Sisco=1./(HSisco*HSisco*nzisco) ;
     cs = H*nz ;
     FTYPE csisco = Hisco*nzisco ;
 
     FTYPE rho0=RADNT_RHODONUT*(S/sqrt(2.*M_PI*HS*HS)) * exp(-z*z/(2.*H*H))*pow(r,3.0/2.0+thindiskrhopow);
-    FTYPE rho0isco=RADNT_RHODONUT*(Sisco/sqrt(2.*M_PI*HSisco*HSisco)) * exp(-zisco*zisco/(2.*Hisco*Hisco))*pow(Risco,3.0/2.0+thindiskrhopow);
-    if(r>Risco){
+    FTYPE rho0isco=RADNT_RHODONUT*(Sisco/sqrt(2.*M_PI*HSisco*HSisco)) * exp(-zisco*zisco/(2.*Hisco*Hisco))*pow(Riscolocal,3.0/2.0+thindiskrhopow);
+    if(r>Riscolocal){
       rho = rho0 * (MAX(0.0,xr-xr1)/xr) ;
     }
     else{
       FTYPE rhopowisco=10.0;
-      rho = (rho0isco  * (MAX(0.0,xr-xr1)/xr)) * pow(r/Risco,rhopowisco);
+      rho = (rho0isco  * (MAX(0.0,xr-xr1)/xr)) * pow(r/Riscolocal,rhopowisco);
     }
     uint = rho*cs*cs/(gamtorus - 1.) ;
     Vr = 0. ;
     uPhi = 1./(pow(r,1.5) + a) ;
-    FTYPE uPhiisco = 1./(pow(Risco,1.5) + a) ;
+    FTYPE uPhiisco = 1./(pow(Riscolocal,1.5) + a) ;
     // solution for 3-vel
 
 
@@ -7132,15 +7136,15 @@ static int donut_analytical_solution(int *whichvel, int *whichcoord, int optical
 
 
 
-    if(r<Risco){
+    if(r<Riscolocal){
       FTYPE sigma=r*r+a*a*cos(th)*cos(th);
       FTYPE gpp=sigma + a*a*(1+2*r/sigma)*sin(th)*sin(th);
-      FTYPE sigmaisco=Risco*Risco+a*a*cos(th)*cos(th);
-      FTYPE gppisco=sigmaisco + a*a*(1+2*Risco/sigmaisco)*sin(th)*sin(th);
+      FTYPE sigmaisco=Riscolocal*Riscolocal+a*a*cos(th)*cos(th);
+      FTYPE gppisco=sigmaisco + a*a*(1+2*Riscolocal/sigmaisco)*sin(th)*sin(th);
       Vphi=Vphiisco*gppisco/gpp;
     }
 
-    if(1||(r<1.3*Rhor || r<Risco) && usingback==0){
+    if(1||(r<1.3*Rhorlocal || r<Riscolocal) && usingback==0){
       *whichvel=VELREL4;
       if(*whichcoord==BLCOORDS) *whichcoord==KSCOORDS;
     }
@@ -7149,7 +7153,7 @@ static int donut_analytical_solution(int *whichvel, int *whichcoord, int optical
       //      *whichcoord=BLCOORDS;
     }
 
-    //    if(r<Risco){ // TEMP
+    //    if(r<Riscolocal){ // TEMP
     //      return -1; //outside disk
     //    }
 
@@ -8096,8 +8100,9 @@ static int fieldprim(int whichmethod, int whichinversion, int *whichvel, int*whi
         FTYPE gv33=ptrgeom->gcov[GIND(3,3)];
         
         FTYPE denom=(-Power(gv03,2) + gv00*gv33);
-        //        if(fabs(denom)<0.2 || fabs(r-Rhor)/Rhor<0.3){
-        if(fabs(r-Rhor)/Rhor<0.3){
+        FTYPE Rhorlocal=rhor_calc(0);
+        //        if(fabs(denom)<0.2 || fabs(r-Rhorlocal)/Rhorlocal<0.3){
+        if(fabs(r-Rhorlocal)/Rhorlocal<0.3){
           Bcon[3] = Mcon[3][0] = 0.0;
         }
         else{
@@ -8290,8 +8295,9 @@ static int fieldprim(int whichmethod, int whichinversion, int *whichvel, int*whi
       //      dualfprintf(fail_file,"AFTER ucon2pr\n");
       //      PLOOP(pliter,pl) dualfprintf(fail_file,"from ucon2pr[%d]=%g\n",pl,pr[pl]);
 
-      if(0&&r<Rhor){
-        for(pl=RHO;pl<=U3;pl++) pr[pl]=prold[pl] + (pr[pl]-prold[pl])/(Rhor-0.0)*(r-0.0);
+      FTYPE Rhorlocal=rhor_calc(0);
+      if(0&&r<Rhorlocal){
+        for(pl=RHO;pl<=U3;pl++) pr[pl]=prold[pl] + (pr[pl]-prold[pl])/(Rhorlocal-0.0)*(r-0.0);
       }
       else{
         // keep
@@ -11392,20 +11398,23 @@ FTYPE setRin_user(int ihor, FTYPE ihoradjust)
      // see jet3coords_checknew.nb (and fix_3dpolestissue.nb) to have chosen Rin and ihor and compute required R0
     if(npow==1.0){
       ftemp=ihoradjust/(FTYPE)totalsize[1];
-      return(R0+pow((Rhor-R0)/pow(Rout-R0,ftemp),1.0/(1.0-ftemp)));
+      FTYPE Rhorlocal=rhor_calc(0);
+      return(R0+pow((Rhorlocal-R0)/pow(Rout-R0,ftemp),1.0/(1.0-ftemp)));
     }
     else if(npow2>0){
       return(1.2);
     }
     else{
-      dualfprintf(fail_file,"ihoradjust=%21.15g totalsize[1]=%d Rhor=%21.15g R0=%21.15g npow=%21.15g Rout=%21.15g\n",ihoradjust,totalsize[1],Rhor,R0,npow,Rout);
-      return(R0+exp( pow((totalsize[1]*pow(log(Rhor-R0),1.0/npow) - ihoradjust*pow(log(Rout-R0),1.0/npow))/(totalsize[1]-ihoradjust),npow)));
+      FTYPE Rhorlocal=rhor_calc(0);
+      dualfprintf(fail_file,"ihoradjust=%21.15g totalsize[1]=%d Rhorlocal=%21.15g R0=%21.15g npow=%21.15g Rout=%21.15g\n",ihoradjust,totalsize[1],Rhorlocal,R0,npow,Rout);
+      return(R0+exp( pow((totalsize[1]*pow(log(Rhorlocal-R0),1.0/npow) - ihoradjust*pow(log(Rout-R0),1.0/npow))/(totalsize[1]-ihoradjust),npow)));
     }
   }
 
   if(WHICHUSERCOORD==ORIGWALD){
     FTYPE ftemp=ihoradjust/(FTYPE)totalsize[1];
-    return(R0+pow((Rhor-R0)/pow(Rout-R0,ftemp),1.0/(1.0-ftemp)));
+    FTYPE Rhorlocal=rhor_calc(0);
+    return(R0+pow((Rhorlocal-R0)/pow(Rout-R0,ftemp),1.0/(1.0-ftemp)));
 
   }
 }

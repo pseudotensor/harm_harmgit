@@ -476,16 +476,17 @@ FTYPE setRin_user(int ihor, FTYPE ihoradjust)
     FTYPE ftemp;
 
      // see jet3coords_checknew.nb (and fix_3dpolestissue.nb) to have chosen Rin and ihor and compute required R0
+    FTYPE Rhorlocal=rhor_calc(0);
     if(npow==1.0){
       ftemp=ihoradjust/(FTYPE)totalsize[1];
-      return(R0+pow((Rhor-R0)/pow(Rout-R0,ftemp),1.0/(1.0-ftemp)));
+      return(R0+pow((Rhorlocal-R0)/pow(Rout-R0,ftemp),1.0/(1.0-ftemp)));
     }
     else if(npow2>0){
       return(1.2);
     }
     else{
-      dualfprintf(fail_file,"ihoradjust=%21.15g totalsize[1]=%d Rhor=%21.15g R0=%21.15g npow=%21.15g Rout=%21.15g\n",ihoradjust,totalsize[1],Rhor,R0,npow,Rout);
-      return(R0+exp( pow((totalsize[1]*pow(log(Rhor-R0),1.0/npow) - ihoradjust*pow(log(Rout-R0),1.0/npow))/(totalsize[1]-ihoradjust),npow)));
+      dualfprintf(fail_file,"ihoradjust=%21.15g totalsize[1]=%d Rhorlocal=%21.15g R0=%21.15g npow=%21.15g Rout=%21.15g\n",ihoradjust,totalsize[1],Rhorlocal,R0,npow,Rout);
+      return(R0+exp( pow((totalsize[1]*pow(log(Rhorlocal-R0),1.0/npow) - ihoradjust*pow(log(Rout-R0),1.0/npow))/(totalsize[1]-ihoradjust),npow)));
     }
   }
 }

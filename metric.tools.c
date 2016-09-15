@@ -539,8 +539,8 @@ int find_horizon(int fromwhere)
   // these 2 below are used prior, but not initialized otherwised on restart
   // some calculations
   // these 2 below are also used by find_horizon() below
-  Rhor=rhor_calc(0);
-  Risco=rmso_calc(PROGRADERISCO);
+  FTYPE Rhorlocal=rhor_calc(0);
+  FTYPE Riscolocal=rmso_calc(PROGRADERISCO);
 
 
   // need to find horizon and place horizoni on right-hand-side of location
@@ -555,7 +555,7 @@ int find_horizon(int fromwhere)
 
 
   // definition of horizoni must be consistent so fluxes are consistent and have conservation
-  fromwhere=2; // force to be on upside unless Rhor=0, which is caught first
+  fromwhere=2; // force to be on upside unless Rhorlocal=0, which is caught first
 
 
 
@@ -571,7 +571,7 @@ int find_horizon(int fromwhere)
   
 
 
-  horizonvalue = Rhor;
+  horizonvalue = Rhorlocal;
   horizoni = -100;
   horizoncpupos1=-1;
   gotit = 0;
@@ -625,7 +625,7 @@ int find_horizon(int fromwhere)
             //dualfprintf(fail_file,"horizon: %d %d\n",horizoni,horizoncpupos1);
             break;
           }
-          //   dualfprintf(fail_file,"horizonnot: %d %d :: %21.15g %21.15g %21.15g\n",horizoni,horizoncpupos1,r1,Rhor,r2);
+          //   dualfprintf(fail_file,"horizonnot: %d %d :: %21.15g %21.15g %21.15g\n",horizoni,horizoncpupos1,r1,Rhorlocal,r2);
         }
       }
     }
@@ -649,7 +649,7 @@ int find_horizon(int fromwhere)
 
 
   if(gotit==0){
-    dualfprintf(fail_file,"Never found horizon: fromwhere=%d :: MBH=%21.15g a=%21.15g :: Rhor=%21.15g Risco=%21.15g\n",fromwhere,MBH,a,Rhor,Risco);
+    dualfprintf(fail_file,"Never found horizon: fromwhere=%d :: MBH=%21.15g a=%21.15g :: Rhorlocal=%21.15g Riscolocal=%21.15g\n",fromwhere,MBH,a,Rhorlocal,Riscolocal);
     myexit(6246);
   }
 
@@ -2695,6 +2695,7 @@ void check_rmin(void)
   int i,j,k;
   FTYPE X[NDIM],V[NDIM],r;
 
+  FTYPE Rhorlocal=rhor_calc(0);
 
   // diagnostic
   // determine nature of inner radial edge (assumes myid==0 is always there)
@@ -2705,9 +2706,9 @@ void check_rmin(void)
     bl_coord(X, V);
     r=V[1];
     trifprintf("rmin(i=%d,X=%21.15g) = %21.15g\n", i,X[1],r);
-    trifprintf("r=%21.15g Rhor=%21.15g :: rmin/rh: %21.15g\n",r,Rhor, r / (fabs(Rhor)+SMALL) );
+    trifprintf("r=%21.15g Rhorlocal=%21.15g :: rmin/rh: %21.15g\n",r,Rhorlocal, r / (fabs(Rhorlocal)+SMALL) );
     //    trifprintf("rmin/rsing: %21.15g\n", r / (a+SMALL));
-    if(r/(fabs(Rhor)+SMALL)<=1.0){
+    if(r/(fabs(Rhorlocal)+SMALL)<=1.0){
       trifprintf("inner grid is inside horizon\n");
     }
     else{
@@ -2723,8 +2724,8 @@ void check_rmin(void)
       coord(i,j,k, FACE1, X);
       bl_coord(X, V);
       r=V[1];
-      if(r<Rhor){
-        logfprintf("INSIDE Horizon (r=%g): i=%d r=%21.15g\n",Rhor, i, r);
+      if(r<Rhorlocal){
+        logfprintf("INSIDE Horizon (r=%g): i=%d r=%21.15g\n",Rhorlocal, i, r);
       }
       
     }
