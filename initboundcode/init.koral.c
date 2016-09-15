@@ -6430,7 +6430,6 @@ static int get_full_rtsolution(int *whichvel, int *whichcoord, int opticallythic
     if(NRAD>=0) nrad=pp[NRAD];
 
 
-    return(0);
 
     ////////////////// STAGE2
 
