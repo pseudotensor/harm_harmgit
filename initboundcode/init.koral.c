@@ -311,7 +311,7 @@ int prepre_init_specific_init(void)
     // KRAKEN: comment out above.  And change mympi.definit.h's USEROMIO 0 to 1 for the "choice" version.
   }
 
-  binaryoutput=TEXTOUTPUT;
+//  binaryoutput=TEXTOUTPUT;
 
 
 
