@@ -1413,18 +1413,18 @@ int init_defconsts(void)
   msun=1.989E33;
   lsun=3.89E33;
   rsun=695500.0*1E3*1E2;
-  C=2.99792458E10;
-  G=6.672E-8;
+  CCC1=2.99792458E10;
+  GGG1=6.672E-8;
 
   // erg K^{-1} g^{-1}
   kb=1.3807E-16;
   // defs:
-  C=2.99792458E10;
+  CCC1=2.99792458E10;
   amu=1.660538782E-24;
   qe=4.8032068E-10;
   Na=1/amu;
   // http://physics.nist.gov/cgi-bin/cuu/Convert?exp=0&num=1&From=ev&To=kg&Action=Convert+value+and+show+factor
-  ergPmev = 1.782661758E-30*1.0E3*C*C;
+  ergPmev = 1.782661758E-30*1.0E3*CCC1*CCC1;
   //
   // http://en.wikipedia.org/wiki/Proton
   // http://physics.nist.gov/cgi-bin/cuu/Value?mp
@@ -1446,19 +1446,19 @@ int init_defconsts(void)
   //  mp=1.67262158E-24;
   //  me=9.10938188E-28;
   kb=1.380658E-16; // erg K^{-1} g^{-1}
-  Q=(mn-mp)*C*C;
-  R=kb/mp;
+  Qmp=(mn-mp)*CCC1*CCC1;
+  Rp=kb/mp;
   Re=kb/me;
   //  hpl=6.6260755E-27;
-  H=hpl;
+  Hpl=hpl;
   hbar=hpl/(2.0*M_PI);
   K=1.24E15;
   K2=9.9E12;
   //
   // compare below
-  arad=8.*pow(M_PI,5.0)*pow(kb,4.0)/(15*C*C*C*H*H*H);
+  arad=8.*pow(M_PI,5.0)*pow(kb,4.0)/(15*CCC1*CCC1*CCC1*Hpl*Hpl*Hpl);
   //  arad=5.6704E-5 * 4.0 / C;
-  sigmasb=arad*C/4.0;
+  sigmasb=arad*CCC1/4.0;
   sigmamat=6.652E-29*100*100;
   mevocsq=1.783E-27;
 
@@ -1474,10 +1474,10 @@ int init_defconsts(void)
   Mdotc=0.35; // approx code units mass accretion rate
   
   // units
-  Lunit=G*Mcgs/(C*C);
-  Tunit=G*Mcgs/(C*C*C);
+  Lunit=GGG1*Mcgs/(CCC1*CCC1);
+  Tunit=GGG1*Mcgs/(CCC1*CCC1*CCC1);
   Vunit=Lunit/Tunit;
-  Ccode=C/Vunit;
+  Ccode=CCC1/Vunit;
   rho0unittype=0; // mass is mass
   rhounit=Mdot/(Mdotc*Lunit*Lunit*Vunit);
   mbwithrhounit=mb;
@@ -1493,7 +1493,7 @@ int init_defconsts(void)
 
   
   // physics stuff
-  ledd=4.*M_PI*C*G*Mcgs*mb/sigmamat;
+  ledd=4.*M_PI*CCC1*GGG1*Mcgs*mb/sigmamat;
   leddcode=ledd/edotunit;
 
   // normalizations and settings for metric changes 

@@ -21,7 +21,7 @@ int BEGINOPENMPSHAREDLIST;
 
 #include "kazfulleos.defsglobalprivate.h" // put here so OpenMP private globals are defined before global.nondepmnemonics.h sets up thread private pragma's
 
-// OPENMPMARK: Below globals are only thread-safe if not changed/assigned inside parallel region.
+// OPENMPMARK: Below globals are only thread-safe if not changed/assigned inside parallel region.  Usually only things that would appear in a spatial loop will be an issue.
 
 
 #include "rancdefs.h"
@@ -52,7 +52,6 @@ SFTYPE dt,t,tf,tstepparti,tsteppartf;
 SFTYPE fluxdumpdt;
 long fluxdumprealnstep;
 FTYPE TDYNORYEglobal,Hglobal;
-FTYPE rcurr, hcurr;
 FTYPE drsing;
 
 /// float value prefactor for dissipation term in flux calculations (see fluxcompute.c)
@@ -247,7 +246,6 @@ FTYPE ERADLIMIT,GAMMAMAXRAD,GAMMAMAXRADFAIL;
 FTYPE UULIMIT;
 FTYPE SAFE;
 int debugfail;
-FTYPE uttdiscr;  // OPENMPNOTE: Ensure those are set as threadprivate [noted only for WHICHVEL==VEL3]
 int jonchecks;
 int dnumcolumns[NUMDUMPTYPES];
 int dnumversion[NUMDUMPTYPES];
@@ -262,7 +260,7 @@ int waveglobaldti[NDIM],waveglobaldtj[NDIM],waveglobaldtk[NDIM];
 int didstorepositiondata,didstoremetricdata;
 
 /* physical consts */
-FTYPE msun,lsun,rsun,G,H,C,qe,Na,malpha,mn,me,kb,arad,sigmasb,sigmamat,mevocsq,ergPmev,mp,Q,R,Re,hpl,hbar,K,K2;
+FTYPE msun,lsun,rsun,GGG1,Hpl,CCC1,qe,Na,malpha,mn,me,kb,arad,sigmasb,sigmamat,mevocsq,ergPmev,mp,Qmp,Rp,Re,hpl,hbar,K,K2;
 SFTYPE a,MBH,QBH,EP3,THETAROT,THETAROTMETRIC,THETAROTPRIMITIVES;
 FTYPE Mfactor,Jfactor,rhofactor;
 SFTYPE dabh,dE,dJ,dEold,dJold;

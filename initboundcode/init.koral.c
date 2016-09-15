@@ -6826,11 +6826,11 @@ static int donut_analytical_solution(int *whichvel, int *whichcoord, int optical
     else{ // SUPERMADNEW
       Riscolocal=10.0;
     }
-    R = MAX(Rhorlocal,r*sin(th)) ;
+    FTYPE Rcyl2 = MAX(Rhorlocal,r*sin(th)) ;
 
     ////////////////////////////
     // Set H : disk height
-    FTYPE H = h_over_r*R;
+    FTYPE H = h_over_r*Rcyl2;
     FTYPE Hisco = h_over_r*Riscolocal;
 
     // or try:
@@ -6839,14 +6839,14 @@ static int donut_analytical_solution(int *whichvel, int *whichcoord, int optical
     FTYPE xr=pow(r,xrpow);
     FTYPE xr0=pow(Riscolocal,xrpow);
     FTYPE xr1=pow(1.0,xrpow);
-    //    H = 0.1*h_over_r*R + h_over_r*R * (MAX(0.0,xr-xr0)/xr) ;
+    //    H = 0.1*h_over_r*R + h_over_r*Rcyl2 * (MAX(0.0,xr-xr0)/xr) ;
     //    Hisco = 0.1*h_over_r*Riscolocal + h_over_r*Riscolocal * (MAX(0.0,xr0-xr0)/xr0) ;
     if(r>=Riscolocal){
-      H = h_over_r*R ;
+      H = h_over_r*Rcyl2 ;
     }
     else{
-      //      H = h_over_r*R * pow(r/Riscolocal,2.0);
-      H = h_over_r*R * pow(r/Riscolocal,.5); // SUPERMADNEW
+      //      H = h_over_r*Rcyl2 * pow(r/Riscolocal,2.0);
+      H = h_over_r*Rcyl2 * pow(r/Riscolocal,.5); // SUPERMADNEW
     }
 
     FTYPE z = r*cos(th) ;
@@ -6998,7 +6998,7 @@ static int donut_analytical_solution(int *whichvel, int *whichcoord, int optical
 
     // set uint
     FTYPE uintfact = 1.0; //(1.0 + randfact * (ranc(0,0) - 0.5));
-    uint = rho*pow(H/R,2.0)*pow(r*omega,2.0)/(gamtorus*(gamtorus-1.0))*uintfact;
+    uint = rho*pow(H/Rcyl2,2.0)*pow(r*omega,2.0)/(gamtorus*(gamtorus-1.0))*uintfact;
     FTYPE uintisco = rhoisco*pow(Hisco/Riscolocal,2.0)*pow(Riscolocal*omegaisco,2.0)/(gamtorus*(gamtorus-1.0))*uintfact;
 
     // Set pressure
@@ -7023,7 +7023,7 @@ static int donut_analytical_solution(int *whichvel, int *whichcoord, int optical
 
     //    if(startpos[1]+i==totalsize[1]/2 && startpos[2]+j==totalsize[2]/2){
     if(startpos[2]+j==totalsize[2]/2){
-      dualfprintf(fail_file,"%d rhodonut1=%g uint=%g : %g %g %g %g : %g %g %g\n",startpos[1]+i,rho,uint,H,R,Rcyl,Rhorlocal,omega,gamtorus,uintfact);
+      dualfprintf(fail_file,"%d rhodonut1=%g uint=%g : %g %g %g %g : %g %g %g\n",startpos[1]+i,rho,uint,H,Rcyl2,Rcyl,Rhorlocal,omega,gamtorus,uintfact);
     }
 
     //    if(fabs(r-Riscolocal)<0.1*Riscolocal && fabs(th-0.5*M_PI)<0.2*h_over_r){
@@ -7049,7 +7049,7 @@ static int donut_analytical_solution(int *whichvel, int *whichcoord, int optical
     //    struct of_geom geomdontuse;
     //    struct of_geom *ptrgeom=&geomdontuse;
     /* for disk interior */
-    FTYPE R,H,nz,z,S,cs ;
+    FTYPE Rcyl2,H,nz,z,S,cs ;
     SFTYPE rh;
     //    int pl,pliter;
 
@@ -7057,12 +7057,12 @@ static int donut_analytical_solution(int *whichvel, int *whichcoord, int optical
     /* region outside disk */
     FTYPE Rhorlocal=rhor_calc(0);
     FTYPE Riscolocal=rmso_calc(PROGRADERISCO);
-    R = MAX(Rhorlocal,r*sin(th)) ;
+    Rcyl2 = MAX(Rhorlocal,r*sin(th)) ;
     
-    //if(R < rin) { // assume already have atmosphere as background solution
+    //if(Rcyl2 < rin) { // assume already have atmosphere as background solution
     FTYPE SMALLESTH=1E-15;
       
-    //    H = SMALLESTH + h_over_r*R ; // NOTEMARK: Could choose H=constant
+    //    H = SMALLESTH + h_over_r*Rcyl2 ; // NOTEMARK: Could choose H=constant
 
     //    FTYPE Rtrans=1.5*Riscolocal;
     FTYPE xrpow=0.5;
@@ -7070,14 +7070,14 @@ static int donut_analytical_solution(int *whichvel, int *whichcoord, int optical
     FTYPE xr0=pow(Riscolocal,xrpow);
     FTYPE xr1=pow(1.0,xrpow);
 
-    FTYPE HS = h_over_r*R;
+    FTYPE HS = h_over_r*Rcyl2;
     FTYPE HSisco;
     HSisco = h_over_r*Riscolocal;
 
     FTYPE Hisco;
     if(0){
-      H = 0.1*h_over_r*R + h_over_r*R * (MAX(0.0,xr-xr0)/xr) ; // NOTEMARK: Could choose H=constant
-      Hisco = 0.1*h_over_r*R;
+      H = 0.1*h_over_r*Rcyl2 + h_over_r*Rcyl2 * (MAX(0.0,xr-xr0)/xr) ; // NOTEMARK: Could choose H=constant
+      Hisco = 0.1*h_over_r*Rcyl2;
     }
     else{
       H = HS;
@@ -7085,8 +7085,8 @@ static int donut_analytical_solution(int *whichvel, int *whichcoord, int optical
     }
 
     // fix nz
-    nz = nz_func(R) ;
-    nz = pow(R,-1.5);
+    nz = nz_func(Rcyl2) ;
+    nz = pow(Rcyl2,-1.5);
     FTYPE nzisco = nz_func(Riscolocal) ;
     if(nz>1.0) nz=1.0;
     if(r<Riscolocal) nz=nzisco;
@@ -7115,7 +7115,7 @@ static int donut_analytical_solution(int *whichvel, int *whichcoord, int optical
     // solution for 3-vel
 
 
-    //    uint = uint * (1. + (1.+3.*(rin/R)*(rin/R))*randfact * (ranc(0,0) - 0.5));
+    //    uint = uint * (1. + (1.+3.*(rin/Rcyl2)*(rin/Rcyl2))*randfact * (ranc(0,0) - 0.5));
     uint *= (1.0 + randfact * (ranc(0,0) - 0.5));
     uPhi*=SLOWFAC;
     Vphi=uPhi; // approximate
@@ -8100,7 +8100,6 @@ static int fieldprim(int whichmethod, int whichinversion, int *whichvel, int*whi
         FTYPE gv33=ptrgeom->gcov[GIND(3,3)];
         
         FTYPE denom=(-Power(gv03,2) + gv00*gv33);
-        FTYPE Rhorlocal=rhor_calc(0);
         //        if(fabs(denom)<0.2 || fabs(r-Rhorlocal)/Rhorlocal<0.3){
         if(fabs(r-Rhorlocal)/Rhorlocal<0.3){
           Bcon[3] = Mcon[3][0] = 0.0;
@@ -8295,7 +8294,6 @@ static int fieldprim(int whichmethod, int whichinversion, int *whichvel, int*whi
       //      dualfprintf(fail_file,"AFTER ucon2pr\n");
       //      PLOOP(pliter,pl) dualfprintf(fail_file,"from ucon2pr[%d]=%g\n",pl,pr[pl]);
 
-      FTYPE Rhorlocal=rhor_calc(0);
       if(0&&r<Rhorlocal){
         for(pl=RHO;pl<=U3;pl++) pr[pl]=prold[pl] + (pr[pl]-prold[pl])/(Rhorlocal-0.0)*(r-0.0);
       }

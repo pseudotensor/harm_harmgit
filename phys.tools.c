@@ -2580,7 +2580,7 @@ int ucon_calc_3vel(FTYPE *pr, struct of_geom *geom, FTYPE *ucon, FTYPE *others)
 
 
 #if(JONCHECKS && WHICHVEL==VEL3)  
-  uttdiscr=-negdiscr;
+  //  uttdiscr=-negdiscr;
 #endif
 
   if (negdiscr > 0.) {

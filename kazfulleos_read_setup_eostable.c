@@ -939,7 +939,7 @@ void read_setup_eostable(void)
       // Exactly 9.14MeV/baryon as in helm/jon_lsbox.f
       // This offset was subtracted before tabulating in log-log.  After lookup, this energy/baryon needs to be added back in the correct units.
       // ergPmev=1.60218E-6
-      //  TRUENUCLEAROFFSET=(9.14*ergPmev/(mb*C*C));// cgs/cgs = dimensionless quantity
+      //  TRUENUCLEAROFFSET=(9.14*ergPmev/(mb*CCC1*CCC1));// cgs/cgs = dimensionless quantity
       // above gives 9.7346E-3
       //  TRUENUCLEAROFFSET /= (1.0); // need to get code version of energy/baryon however used to add to internal energy
       // assume degen offset accounts for offset, that cannot be put into EOS itself!
@@ -947,15 +947,15 @@ void read_setup_eostable(void)
       //      TRUENUCLEAROFFSET[tableiter]=fakelsoffset[tableiter]*ergPmev/energyunit;
      
       // i.e. (u/(\rho_0 c^2)) = (u/c^2)/(\rho_0) = (u/c^2)/(m_b n_b) = (u/n_b) 1/(mb c^2), so always divide by $m_b c^2$ in cgs units if original in cgs units
-      TRUENUCLEAROFFSET[tableiter]=(fakelsoffset[tableiter]*ergPmev)/(mb*C*C);
+      TRUENUCLEAROFFSET[tableiter]=(fakelsoffset[tableiter]*ergPmev)/(mb*CCC1*CCC1);
 
       // fakeentropylsoffset is in dimensionless entropy per baryon=Ss where Sden=1/cc
       // Ssjon = SJden/(rho0 c^2) = Ssdimenless nb/(rho0 c^2) = Ssdimenless/(mb c^2)
-      TRUEENTROPYNUCLEAROFFSET[tableiter]=fakeentropylsoffset[tableiter]/(mb*C*C);
+      TRUEENTROPYNUCLEAROFFSET[tableiter]=fakeentropylsoffset[tableiter]/(mb*CCC1*CCC1);
 
       // degeneracy global offset:
       // ergPmev=1.60218E-6
-      //  DEGENNUCLEAROFFSET=(50.0*ergPmev/(mb*C*C));// cgs/cgs = dimensionless quantity
+      //  DEGENNUCLEAROFFSET=(50.0*ergPmev/(mb*CCC1*CCC1));// cgs/cgs = dimensionless quantity
       DEGENNUCLEAROFFSET[tableiter]=0.0; // avoid this approach for now -- try putting in offset into original HELM table first
 
 

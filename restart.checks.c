@@ -209,9 +209,9 @@ int restart_init_checks(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NST
       get_geometry(i,j,k,CENT,ptrgeom);
       failreturn=check_pr(MAC(prim,i,j,k),MAC(prim,i,j,k),MAC(ucons,i,j,k), ptrgeom,-2,-1);
       if(failreturn){
-        dualfprintf(fail_file,"restart data has large or imaginary u^t=%21.15g at i=%d j=%d k=%d.  I will attempt to correct.\n",1.0/sqrt(uttdiscr),startpos[1]+i,startpos[2]+j,startpos[3]+k);
+        dualfprintf(fail_file,"restart data has large or imaginary u^t at i=%d j=%d k=%d.  I will attempt to correct.\n",startpos[1]+i,startpos[2]+j,startpos[3]+k);
       }
-      if(1.0/sqrt(uttdiscr)>utmax) utmax=1.0/sqrt(uttdiscr);
+      //      if(1.0/sqrt(uttdiscr)>utmax) utmax=1.0/sqrt(uttdiscr);
       // need to settle over limit u^t's
       failreturn=check_pr(MAC(prim,i,j,k),MAC(prim,i,j,k),MAC(ucons,i,j,k), ptrgeom,-1,-1);
       if(failreturn){
