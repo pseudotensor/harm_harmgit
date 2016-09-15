@@ -27,14 +27,16 @@
 #include "decs.h"
 
 static SFTYPE rhomax=0,umax=0,uradmax=0,utotmax=0,pmax=0,pradmax=0,ptotmax=0,bsq_max=0; // OPENMPMARK: These are ok file globals since set using critical construct
-static SFTYPE beta,randfact,rin,rinfield,routfield; // OPENMPMARK: Ok file global since set as constant before used
-static FTYPE rhodisk;
+static SFTYPE beta,randfact,rin,rinfield,routfield; // OPENMPMARK: Ok file global since set as constant outside parallel region and before used in parallel region
+
+
 static FTYPE nz_func(FTYPE R) ;
 static FTYPE taper_func2(FTYPE R,FTYPE rin, FTYPE rpow) ;
 static int fieldprim(int whichmethod, int whichinversion, int *whichvel, int*whichcoord, int ii, int jj, int kk, FTYPE *pr);
 
+
 ///////
-// WALD STUFF
+// WALD STUFF (OPENMPMARK: Ok, because all constants set outside parallel region)
 FTYPE B0WALD; // set later
 // DOWALDDEN=0 : Turn off doing WALD
 // DOWALDDEN=1 : among other things, set densities as floor-like with below b^2/rho at horizon.  Should also choose FIELDTYPE==FIELDWALD.
@@ -47,13 +49,10 @@ FTYPE aforwald;
 FTYPE TILTWALD;
 
 
-
+// OPENMPMARK: Ok, because all constants set outside parallel region
 //FTYPE thindiskrhopow=-3.0/2.0; // can make steeper like -0.7
 //FTYPE thindiskrhopow=-0.2; // closer to NT73
 FTYPE thindiskrhopow=-0.6; // closer to thick disk // SUPERMADNEW
-
-FTYPE normglobal;
-int inittypeglobal; // for bounds to communicate detail of what doing
 
 #define SLOWFAC 1.0  /* reduce u_phi by this amount */
 #define MAXPASSPARMS 10
@@ -92,7 +91,7 @@ int inittypeglobal; // for bounds to communicate detail of what doing
 // Rin, Rout, tf, DTdumpgen
 
 
-
+// OPENMPMARK: These constants are set outside parallel region, so when used inside parallel region are ok to use
 int RADBEAM2D_BEAMNO;
 int RADBEAM2D_FLATBACKGROUND;
 FTYPE RADBEAM2D_RHOAMB;
@@ -237,6 +236,10 @@ FTYPE RADCYLJET_UJET;
 
 int RADDONUT_OPTICALLYTHICKTORUS;
 
+
+
+
+
 static int get_full_rtsolution(int *whichvel, int *whichcoord, int opticallythick, FTYPE *pp,FTYPE *X, FTYPE *V,struct of_geom **ptrptrgeom);
 static int make_nonrt2rt_solution(int *whichvel, int *whichcoord, int opticallythick, FTYPE *pp,FTYPE *X, FTYPE *V,struct of_geom **ptrptrgeom);
 static int donut_analytical_solution(int *whichvel, int *whichcoord, int opticallythick, FTYPE *pp,FTYPE *X, FTYPE *V,struct of_geom **ptrptrgeom, FTYPE *ptptr);
@@ -245,7 +248,6 @@ static int process_solution(int *whichvel, int *whichcoord, int opticallythick, 
 
 
 
-FTYPE normglobal;
 
 int prepre_init_specific_init(void)
 {
@@ -6942,9 +6944,9 @@ static int donut_analytical_solution(int *whichvel, int *whichcoord, int optical
     prtest[U3]=Vphi;
     //    dualfprintf(fail_file,"BEFORE real ut\n");
     //    int badut=ucon_calc_3vel(prtest,*ptrptrgeom,ucon,others);
-    failed=-1; // GLOBAL: indicate not really failure, so don't print out debug info
+    (*ptrptrgeom)->f=-1; // indicate not really failure, so don't print out debug info
     int badut=ucon_calc_whichvel(*whichvel,prtest,*ptrptrgeom,ucon,others);
-    failed=0; // GLOBAL: reset failure flag since just test
+    (*ptrptrgeom)->f=0; // reset failure flag since just test
     //if(badut==0) dualfprintf(fail_file,"real ut=%g\n",ucon[TT]);
 
     // CHECK TEST
@@ -7013,10 +7015,12 @@ static int donut_analytical_solution(int *whichvel, int *whichcoord, int optical
     pt = uint * (gamtorus-1.0); // torus pressure
 
 
+    
 
 
-
-    //    dualfprintf(fail_file,"rhodonut1=%g uint=%g\n",rho,uint);
+    if(startpos[1]+i==totalsize[1]/2 && startpos[2]+j==totalsize[2]/2){
+        dualfprintf(fail_file,"rhodonut1=%g uint=%g\n",rho,uint);
+    }
 
     //    if(fabs(r-Risco)<0.1*Risco && fabs(th-0.5*M_PI)<0.2*h_over_r){
     //      dualfprintf(fail_file,"rhodonut5=%g uint=%g : r,th=%g %g usingback=%d RADNT_RHODONUT=%g rhoisco=%g\n",rho,uint,r,th,usingback,RADNT_RHODONUT,rhoisco);
@@ -8277,9 +8281,8 @@ static int fieldprim(int whichmethod, int whichinversion, int *whichvel, int*whi
     //    dualfprintf(fail_file,"BEFORE pr2ucon\n");
     int return1=pr2ucon(WHICHVEL,pr,ptrgeom,ucontemp);
     //    dualfprintf(fail_file,"AFTER pr2ucon\n");
-    if(failed || return1){
+    if(return1){
       for(pl=RHO;pl<=U3;pl++) pr[pl]=prold[pl];
-      failed=0;
     }
     else{
       //      dualfprintf(fail_file,"BEFORE ucon2pr: %d\n",*whichvel);
@@ -8892,7 +8895,7 @@ int normalize_densities(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 
     eqline=1;
     parms[0]=rin;
-    parms[1]=rhodisk;
+    parms[1]=1.0; //rhodisk;
 
     funreturn+=user1_normalize_densities(eqline, parms, prim, &rhomax, &umax);
   }
@@ -10615,24 +10618,23 @@ int kappa_func_fits_all(FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, FTYPE varexpf, F
   // Return code value of opacity
   //
   //////////////
-  static FTYPE overopacitybaralt=1.0/(OPACITYBAR*RHOBAR); // for those opacities in cm^{-1}
 
   // return results
-  *kappa=kappareal*overopacitybaralt;
-  *kappan=kappanreal*overopacitybaralt;
-  *kappaemit=kappaemitreal*overopacitybaralt;
-  *kappanemit=kappanemitreal*overopacitybaralt;
-  *kappaes=kappaesreal*overopacitybaralt;
+  *kappa=kappareal*OVEROPACITYBARALT;
+  *kappan=kappanreal*OVEROPACITYBARALT;
+  *kappaemit=kappaemitreal*OVEROPACITYBARALT;
+  *kappanemit=kappanemitreal*OVEROPACITYBARALT;
+  *kappaes=kappaesreal*OVEROPACITYBARALT;
 
 
 #if(0)
   // debug new vs. old opacities
   dualfprintf(fail_file,"DOG1: rho=%21.15g B=%2.15g Tg=%21.15g Tr=%21.15g varexpf=%21.15g\n",rho,B,Tg,Tr,varexpf);
   dualfprintf(fail_file,"DOG2: kappa=%21.15g kappan=%21.15g kappaaemit=%21.15g kappanemit=%21.15g kappaes=%21.15g\n",*kappa,*kappan,*kappaemit,*kappanemit,*kappaes);
-  dualfprintf(fail_file,"DOG3: kappadensityreal=%21.15g kappasyreal=%21.15g kappadcreal=%21.15g\n",kappadensityreal*overopacitybaralt,kappasyreal*overopacitybaralt,kappadcreal*overopacitybaralt);
+  dualfprintf(fail_file,"DOG3: kappadensityreal=%21.15g kappasyreal=%21.15g kappadcreal=%21.15g\n",kappadensityreal*OVEROPACITYBARALT,kappasyreal*OVEROPACITYBARALT,kappadcreal*OVEROPACITYBARALT);
   //  dualfprintf(fail_file,"DOGA: phi=%21.15g xi=%21.15g qsyn=%21.15g Trreal=%21.15g Tereal=%21.15g q0=%21.15g q1=%21.15g thetae=%21.15g\n",phi,xi,qsyn,Trreal,Tereal,q0,q1,thetae);
   dualfprintf(fail_file,"DOGA: phi=%21.15g phie=%21.15g xi=%21.15g Trreal=%21.15g Tereal=%21.15g thetae=%21.15g\n",phi,phie,xi,Trreal,Tereal,thetae);
-  dualfprintf(fail_file,"DOG4: kappafereal=%21.15g kappamolreal=%21.15g kappahmopalreal=%21.15g kappachiantiopalreal=%21.15g kappachiantireal=%21.15g kappaffreal=%21.15g kappaffeereal=%21.15g kappabfreal=%21.15g\n",kappafereal*overopacitybaralt,kappamolreal*overopacitybaralt,kappahmopalreal*overopacitybaralt,kappachiantiopalreal*overopacitybaralt,kappachiantireal*overopacitybaralt,kappaffreal*overopacitybaralt,kappaffeereal*overopacitybaralt,kappabfreal*overopacitybaralt);
+  dualfprintf(fail_file,"DOG4: kappafereal=%21.15g kappamolreal=%21.15g kappahmopalreal=%21.15g kappachiantiopalreal=%21.15g kappachiantireal=%21.15g kappaffreal=%21.15g kappaffeereal=%21.15g kappabfreal=%21.15g\n",kappafereal*OVEROPACITYBARALT,kappamolreal*OVEROPACITYBARALT,kappahmopalreal*OVEROPACITYBARALT,kappachiantiopalreal*OVEROPACITYBARALT,kappachiantireal*OVEROPACITYBARALT,kappaffreal*OVEROPACITYBARALT,kappaffeereal*OVEROPACITYBARALT,kappabfreal*OVEROPACITYBARALT);
   dualfprintf(fail_file,"DOG9: kappa=%21.15g kappaaemit=%21.15g kappaes=%21.15g\n",rho*(KAPPA_GENFF_CODE(SMALL+rho,Tg+TEMPMIN,Tr+TEMPMIN)),rho*(KAPPA_GENFF_CODE(SMALL+rho,Tg+TEMPMIN,Tg+TEMPMIN)),rho*KAPPA_ES_CODE(rho,Tg+TEMPMIN));
 #endif
 
@@ -10799,7 +10801,7 @@ int coolfunc_user(FTYPE h_over_r, FTYPE *pr, struct of_geom *geom, struct of_sta
 
 
 // for defcoord=JET6COORDS like USERCOORDS
-static FTYPE npow,r1jet,njet1,njet,r0jet,rsjet,Qjet, ntheta,htheta,rsjet2,r0jet2,rsjet3,r0jet3, rs, r0,npow2,cpow2,rbr,x1br, h0,cpow3; 
+static FTYPE npow,r1jet,njet1,njet,r0jet,rsjet,Qjet, ntheta,htheta,rsjet2,r0jet2,rsjet3,r0jet3, rs, r0,npow2,cpow2,rbr,x1br, h0,cpow3;  // OPENMPMARK: Ok since set as constant outside any parallel loops
 
 
 void set_coord_parms_nodeps_user(int defcoordlocal)

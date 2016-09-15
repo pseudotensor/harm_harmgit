@@ -51,7 +51,7 @@ int restart_init(int whichfile)
 
   ////////////////
   //
-  // set any extra things (only used with restart.rebeccaoldcode.c)
+  // set any extra things
   //
   ////////////////
   trifprintf("before extrarestartfunction()\n");
@@ -108,11 +108,9 @@ int restart_init(int whichfile)
   // check if failed inside rdump file
   //
   ////////////////
-  if(failed!=0){
-    dualfprintf(log_file,"WARNING: failed=%d in rdump file.  Must clense the way between us.\n",failed);
-    dualfprintf(log_file,"Setting failed=0\n");
-    failed=0;
-  }
+  //  if(0){
+    //    dualfprintf(log_file,"WARNING: failed=%d in rdump file.  Must clense the way between us.\n",failed);
+  //  }
 
   // certain global.h parameters may override restart parameters.  This happens, say, when the user decides not to DOAVG after restart, but DOAVGDIAG is still set.  Without this the code will segfault in diag.c
   // corresponds to "if" statements in initbase.c as well, where user has either choice or no choice.
@@ -130,7 +128,7 @@ int restart_init(int whichfile)
 
   // can't check (e.g.) images here if wanting to look at conserved quantities
 
-  trifprintf("proc: %d t=%21.15g failed=%d\n", myid, t, failed);
+  trifprintf("proc: %d t=%21.15g\n", myid, t);
 
 
   // very basic checks on primary grid-based quantities read from restart dump
@@ -1158,7 +1156,6 @@ int readwrite_restart_header(int readwrite, int bintxt, int bcasthead, FILE*head
   headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,fluxmethod, sizeof(int), "%d", NPR, MPI_INT, headerptr);
   headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&FLUXB, sizeof(int), "%d", 1, MPI_INT, headerptr);
   headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&UTOPRIMVERSION, sizeof(int), "%d", 1, MPI_INT, headerptr);
-  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&failed, sizeof(int), "%d", 1, MPI_INT, headerptr);
   
   headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&defcoord, sizeof(int), "%d", 1, MPI_INT, headerptr);
   headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&R0, sizeof(FTYPE), headerone, 1, MPI_FTYPE, headerptr);
@@ -1476,13 +1473,6 @@ int restart_read_defs_new(void)
 }
 
 
-
-///////////
-///
-/// old header functions:
-///
-///////////
-#include "restart.rebeccaoldcode.c"
 
 
 

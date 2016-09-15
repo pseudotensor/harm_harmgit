@@ -25,11 +25,6 @@
 //#define OPENMPGLOBALPRIVATEPLOOPINVERTFULL nprinvertstart,nprinvertend,nprinvertlist
 
 
-/// whocalleducon only used for diagnostics, depracated check_pr() code, or diag_flux_general() that is not called in parallel region
-/// Removed global use of icurr,jcurr,kcurr,pcurr
-//#define OPENMPGLOBALPRIVATEOTHER2 icurr,jcurr,kcurr,pcurr,whocalleducon
-//#define OPENMPGLOBALPRIVATEOTHER2 icurr,jcurr,kcurr,pcurr
-//#define OPENMPGLOBALPRIVATEOTHER3 ifail,jfail,kfail // these don't change in parallel regions
 
 #if(WHICHVEL==VEL3 && USEOPENMP==1)
 #define OPENMPGLOBALPRIVATEOTHER uttdiscr // ignored for now

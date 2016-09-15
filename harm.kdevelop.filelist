@@ -196,7 +196,6 @@ rescale_interp.c
 restart.c
 restart.checks.c
 restart.h
-restart.rebeccaoldcode.c
 rotate.c
 rsolv.c
 set_arrays.c

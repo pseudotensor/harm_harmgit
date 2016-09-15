@@ -5,7 +5,7 @@
 */
 
 
-extern int fail(int i, int j, int k, int loc, int fail_type);
+extern int fail(int i, int j, int k, int loc, int f, int fail_type);
 extern void setfailresponse(int restartonfail);
 extern void setrestart(int*appendold);
 

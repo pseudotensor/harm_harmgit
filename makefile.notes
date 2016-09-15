@@ -68,7 +68,7 @@ cat  isnanl.c.backup2 isnanl.end.c > isnanl.c
 # 1) kazfulleos_backup.c
 # 2) init.readdata.c
 # 3) bounds.* init.* that are other models
-# 4) restart.rebeccaoldcode.c (include in restart.c)
+# 4) 
 # 5) liaison.c (other package)
 # 6) generatenprs.c (generator of code)
 # 7) bin2txt.c (other package)

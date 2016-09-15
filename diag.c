@@ -654,7 +654,7 @@ static int get_dodumps(int call_code, int firsttime, SFTYPE localt, long localns
 
   // upperpole restart is (for now) always called inside normal restart dump call, so avoid extra call that this would create
   // RESTARTUPPERPOLEDUMPTYPE
-  //  if((FLUXB==FLUXCTSTAG&&special3dspc==1)&&((DORDUMPDIAG)&&( ((nlastrestart!=nrestart)&&(failed == 0) && (localrealnstep >= nrestart ))||(call_code==FINAL_OUT) ) ) ){
+  //  if((FLUXB==FLUXCTSTAG&&special3dspc==1)&&((DORDUMPDIAG)&&( ((nlastrestart!=nrestart) && (localrealnstep >= nrestart ))||(call_code==FINAL_OUT) ) ) ){
   //    dodumpgen[RESTARTUPPERPOLEDUMPTYPE]=1;
   //  }
   //  else dodumpgen[RESTARTUPPERPOLEDUMPTYPE]=0;
@@ -662,13 +662,13 @@ static int get_dodumps(int call_code, int firsttime, SFTYPE localt, long localns
 
 
   // RESTARTDUMPTYPE
-  if((DORDUMPDIAG)&&( ((nlastrestart!=nrestart)&&(failed == 0) && (localrealnstep >= nrestart ))||(call_code==FINAL_OUT) ) ){
+  if((DORDUMPDIAG)&&( ((nlastrestart!=nrestart) && (localrealnstep >= nrestart ))||(call_code==FINAL_OUT) ) ){
     dodumpgen[RESTARTDUMPTYPE]=1;
   }
   else dodumpgen[RESTARTDUMPTYPE]=0;
   
   // RESTARTMETRICDUMPTYPE
-  if(DOEVOLVEMETRIC&&((DORDUMPDIAG)&&( ((nlastrestart!=nrestart)&&(failed == 0) && (localrealnstep >= nrestart ))||(call_code==FINAL_OUT) ) ) ){
+  if(DOEVOLVEMETRIC&&((DORDUMPDIAG)&&( ((nlastrestart!=nrestart) && (localrealnstep >= nrestart ))||(call_code==FINAL_OUT) ) ) ){
     dodumpgen[RESTARTMETRICDUMPTYPE]=1;
   }
   else dodumpgen[RESTARTMETRICDUMPTYPE]=0;
@@ -797,7 +797,7 @@ static int get_dodumps(int call_code, int firsttime, SFTYPE localt, long localns
   
   
   // FAKEDUMPTYPE
-  if((USEMPI && USEROMIO==1 && MPIVERSION==2)&&( ((nlastfake!=nfake)&&(failed == 0) && (localrealnstep >= nfake ))||(call_code==FINAL_OUT) ) ){
+  if((USEMPI && USEROMIO==1 && MPIVERSION==2)&&( ((nlastfake!=nfake) && (localrealnstep >= nfake ))||(call_code==FINAL_OUT) ) ){
     dodumpgen[FAKEDUMPTYPE]=1;
   }
   else dodumpgen[FAKEDUMPTYPE]=0;
@@ -1060,7 +1060,7 @@ int area_map(int call_code, int type, int size, int i, int j, int k, FTYPE (*pri
  
         bl_coord_ijk_2(l, m, k, loc, X,V);
         get_geometry(l, m, k, loc, ptrgeom);
-        if (!failed) {
+        if (1) {
           if (get_state(MAC(prim,l,m,k), ptrgeom, &q) >= 1)
             FAILSTATEMENT("diag.c:areamap()", "get_state() dir=0", 1);
           if (vchar_all(MAC(prim,l,m,k), &q, 1, ptrgeom, &vmax1, &vmin1,&ignorecourant) >= 1)
@@ -1468,7 +1468,6 @@ int diag_flux_general(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], SFTYPE Dt)
         }
         // GENLOOP set by enerregion so set correctly for GRID SECTION
         GENLOOP(i,j,k,start1,stop1,start2,stop2,start3,stop3){ // OPENMPOPTMARK: Could parallelize this, but not too expensive since only surface values
-          // OPENMPSUPERMARK: If parallelize this, must make whocalleducon threadprivate again!
           // now add up all zones for each conserved quantity (PDIAGLOOP)
 
 
@@ -1488,13 +1487,13 @@ int diag_flux_general(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], SFTYPE Dt)
           //bl_coord_ijk_2(i, j, k, loc, X,V);
           // if failed, then data output for below invalid, but columns still must exist    
           // loc since p at center
-          if (!failed) {
+          if (1) {
             // OPTMARK: Should avoid non-fundamental flux cumulation except (e.g.) every full timestep since not important to be very accurate.
             // OPTMARK: Also, when doing get_state(), use existing STOREFLUXSTATE if created.
             if (get_state(pr, ptrgeom, &q) >= 1) FAILSTATEMENT("diag.c:diag_flux()", "get_state() dir=0", 1);
           }
           else {// do a per zone check, otherwise set to 0
-            whocalleducon=1; // force no failure mode, just return like failure, and don't return if failure, just set to 0 and continue
+            ptrgeom->f=-1; // force no failure mode, just return like failure, and don't return if failure, just set to 0 and continue
             if (get_state(pr, ptrgeom, &q) >= 1){
               for (l = 0; l < NDIM; l++)
                 q.ucon[l]=0;
@@ -1505,7 +1504,7 @@ int diag_flux_general(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], SFTYPE Dt)
               for (l = 0; l < NDIM; l++)
                 q.bcov[l]=0;
             }
-            whocalleducon=0; // return to normal state
+            ptrgeom->f=0; // reset
           }
    
           // somewhat like function which averages stress terms
@@ -1858,7 +1857,7 @@ int set_varstavg(FTYPE tfrac)
     bl_coord_ijk_2(i, j, k, loc, X,V);
     // if failed, then data output for below invalid, but columns still must exist    
     get_geometry(i, j, k, loc, ptrgeom);
-    if (!failed) {
+    if (1) {
       if (get_state(GLOBALMAC(pdump,i,j,k), ptrgeom, &q) >= 1)
         FAILSTATEMENT("diag.c:set_varstavg()", "get_state() dir=0", 1);
 
@@ -1870,7 +1869,7 @@ int set_varstavg(FTYPE tfrac)
         FAILSTATEMENT("diag.c:set_varstavg()", "vchar_all() dir=1or2or3", 3);
     }
     else {// do a per zone check, otherwise set to 0
-      whocalleducon=1; // force no failure mode, just return like failure, and don't return if failure, just set to 0 and continue
+      ptrgeom->f=-1; // force no failure mode, just return like failure, and don't return if failure, just set to 0 and continue
       if (get_state(GLOBALMAC(pdump,i,j,k), ptrgeom, &q) >= 1){
         for (iii = 0; iii < NDIM; iii++)
           q.ucon[iii]=0;
@@ -1893,8 +1892,7 @@ int set_varstavg(FTYPE tfrac)
         vmax[3]=vmin[3]=0;
       }
 
-
-      whocalleducon=0; // return to normal state
+      ptrgeom->f=0; // return to normal state
 
     }
 

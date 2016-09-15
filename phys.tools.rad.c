@@ -889,7 +889,11 @@ static int Utoprimgen_failwrapper(int doradonly, int *radinvmod, int showmessage
   }
   //DEBUG:
   if((showmessages || debugfail>=2)){
+#if(USEOPENMP)
+    int maxlntries=0,maxnstroke=0;
+#else
     static int maxlntries=0,maxnstroke=0;
+#endif
     int diff;
     diff=0;
     // For RADSHADOW, gets up to 5
@@ -2625,7 +2629,7 @@ static int f_implicit(int allowbaseitermethodswitch, int iter, int f1iter, int f
 
 
 
-#if(PRODUCTION==0)
+#if(PRODUCTION==0 && USEOPENMP==0)
   if(debugfail>=3){
     ///////////
     //
@@ -3244,10 +3248,12 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 #define NUMPHASESENT (8)
 #define NUMPHASESCOLD (1)
 
+#if(USEOPENMP==0)
   // counters for which method was *attempted* even if not used
   static long long int tryphaselistenergy[NUMPHASES]={0};
   static long long int tryphaselistentropy[NUMPHASESENT]={0};
   static long long int tryphaselistcold[NUMPHASESCOLD]={0};
+#endif
 
 
   int gotrameshsolution=0,usedrameshenergy=0,usedrameshentropy=0;
@@ -3429,6 +3435,14 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
     // assume at this stage that radiation primarily evolves if Erf sufficiently large compared to u_g or changes in URAD0 are sufficiently large
     //
     // check
+
+#if(USEOPENMP)
+    // maintain thread safety
+    FTYPE sqrtnumepsilon1;
+    FTYPE sqrtnumepsilon2;
+    sqrtnumepsilon1=MIN(1.0,10.0*NUMEPSILON/IMPTRYCONV);
+    sqrtnumepsilon2=pow(NUMEPSILON,1.0/3.0);
+#else
     static FTYPE sqrtnumepsilon1;
     static FTYPE sqrtnumepsilon2;
     static int firsttimeset=1;
@@ -3439,6 +3453,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       sqrtnumepsilon2=pow(NUMEPSILON,1.0/3.0);
       firsttimeset=0;
     }
+#endif
+
     int radprimaryevolves=0;
     if(fabs(rdUtot[UU])<sqrtnumepsilon1*fabs(rdUtot[URAD0]) || fabs(uu0[URAD0])<sqrtnumepsilon1*fabs(uu0[UU]) || fabs(pb[URAD0])<sqrtnumepsilon1*fabs(pb[UU])){
       radprimaryevolves=1;
@@ -3703,7 +3719,9 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
         if(needtotry){
           if(firsttryphase1used==-1) firsttryphase1used=tryphase1;
+#if(USEOPENMP==0)
           tryphaselistenergy[tryphase1]++;
+#endif
 
           //          dualfprintf(fail_file,"REALLYTRYING: tryphase1=%d\n",tryphase1);
      
@@ -4243,7 +4261,9 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
         if(needtotry){
           if(firsttryphase1used==-1) firsttryphase1used=tryphase1;
+#if(USEOPENMP==0)
           tryphaselistentropy[tryphase1]++;
+#endif
 
 
           itersentropyold=itersentropy;
@@ -4634,7 +4654,9 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
       if(iscoldflow==1){
 
         // count attempt to use cold
+#if(USEOPENMP==0)
         tryphaselistcold[0]++;
+#endif
 
         failreturncold=FAILRETURNGENERAL; // if doing cold, default is fail.
         int whichcapcold=CAPTYPEBASIC;
@@ -5155,8 +5177,8 @@ static int koral_source_rad_implicit(int *eomtype, FTYPE *pb, FTYPE *pf, FTYPE *
 
 
 
-
-  if(PRODUCTION==0 && debugfail>=2 || PRODUCTION<=1){
+  // probably inside OPENMP loop, so would need to have only 1 thread do this
+  if(USEOPENMP==0 && (PRODUCTION==0 && debugfail>=2 || PRODUCTION<=1)){
     // counters and more detailed statistics on how the implicit solver performed
     // Inlcudes histogram of iterations and errors
     // this debug MPI stuff is very expensive
@@ -5507,7 +5529,11 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
   // DEBUG VARS
   int showmessages=0; // by default 0, don't show any messages for inversion stuff during implicit solver, unless debugging.  Assume any moment of inversion failure is corrected for now unless failure of final inversion done outside implicit solver.
   int showmessagesheavy=0;  // very detailed for common debugging
+#if(USEOPENMP==0)
   static long long int failnum=0;
+#else
+  long long int failnum=0;
+#endif
   
   int doingitsomecpu=0;
   int doingit=0;
@@ -8055,7 +8081,8 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
   //  if(REPORTERFNEG && failreturn!=FAILRETURNMODESWITCH && (pp[PRAD0]<10.0*ERADLIMIT) || PRODUCTION==0 && NOTACTUALFAILURE(failreturn)==0 && errorabsf1[WHICHERROR]>=trueimptryconvalt || PRODUCTION>0 && NOTBADFAILURE(failreturn)==0 && havebackup==0){
     //    if(NOTBADFAILURE(failreturn)==0){
     struct of_state qcheck; get_state(pp, ptrgeom, &qcheck);  primtoU(UNOTHING,pp,&qcheck,ptrgeom, uu, NULL);
-    failnum++; mathematica_report_check(*radinvmod, mathfailtype, failnum, gotfirstnofail, eomtypelocal, itermode, *baseitermethod, errorabsf1, errorabsbestexternal, iter, totaliters, realdt, ptrgeom, ppfirst,pp,pb,piin,prtestUiin,prtestUU0,uu0,uu,Uiin,Ufin, CUf, CUimp, q, dUother);
+    failnum++;
+    mathematica_report_check(*radinvmod, mathfailtype, failnum, gotfirstnofail, eomtypelocal, itermode, *baseitermethod, errorabsf1, errorabsbestexternal, iter, totaliters, realdt, ptrgeom, ppfirst,pp,pb,piin,prtestUiin,prtestUU0,uu0,uu,Uiin,Ufin, CUf, CUimp, q, dUother);
 #if(DEBUGMAXITER)
     int usedebugiter=debugiteratteempts[0];
     showdebuglist(usedebugiter,pppreholdlist,ppposholdlist,f1reportlist,f1list,errorabsf1list,errorallabsf1list,realiterlist,jaclistd,fracdamplist,implicititerlist, implicitferrlist);
@@ -12228,7 +12255,9 @@ int u2p_rad(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gammama
 ///////////////
 int u2p_rad_new_pre(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gammamaxrad, FTYPE *uu, FTYPE *pin, struct of_geom *ptrgeom,PFTYPE *lpflag, PFTYPE *lpflagrad)
 {
+#if(USEOPENMP==0)
   static long long int numyvarneg,numyvarbig,numErneg,nummod;
+#endif
   int recomputegamma=0;
 
 #if(WHICHVEL!=VELREL4)
@@ -12270,7 +12299,9 @@ int u2p_rad_new_pre(int showmessages, int allowlocalfailurefixandnoreport, FTYPE
     Ersq=ERADLIMIT*ERADLIMIT;
     yvar = 0.0;
     didmod=1;
+#if(USEOPENMP==0)
     numErneg++;
+#endif
   }
 
   //  dualfprintf(fail_file,"Er=%g Utildesq=%g\n",Er,Utildesq);
@@ -12286,14 +12317,18 @@ int u2p_rad_new_pre(int showmessages, int allowlocalfailurefixandnoreport, FTYPE
     gammasq = 1.0;
     gamma = 1.0;
     didmod=1;
+#if(USEOPENMP==0)
     numyvarneg++;
+#endif
   }
   else if(yvar>ylimit){ // beyond gamma limit, then rescale gamma
     yvar=ylimit;
     gammasq = gammamaxsq;
     gamma = gammamax;
     didmod=1; *lpflagrad=UTOPRIMRADFAILCASE2A; // used to detec if modified primitives to not be consistent with inputted uu
+#if(USEOPENMP==0)
     numyvarbig++;
+#endif
     //    dualfprintf(fail_file,"yvar=%g>%g Ersq=%g gamma=%g\n",yvar,ylimit,Ersq,gamma);
   }
   else{ // normal solution
@@ -12341,7 +12376,9 @@ int u2p_rad_new_pre(int showmessages, int allowlocalfailurefixandnoreport, FTYPE
 
   // make sure E_r no larger than starting value
   if(didmod==1){
+#if(USEOPENMP==0)
     nummod++;
+#endif
     
 
     // First, ensure \gamma correct
@@ -12420,6 +12457,7 @@ int u2p_rad_new_pre(int showmessages, int allowlocalfailurefixandnoreport, FTYPE
 
 
 
+#if(USEOPENMP==0)
   if(debugfail>=2){
     static long int nstepold=-1;
     if(nstep!=nstepold && nstep%100==0 && ptrgeom->i==0 && ptrgeom->j==0 && ptrgeom->k==0 && steppart==0){
@@ -12427,6 +12465,7 @@ int u2p_rad_new_pre(int showmessages, int allowlocalfailurefixandnoreport, FTYPE
       dualfprintf(fail_file,"numyvarneg=%lld numyvarbig=%lld numErneg=%lld nummod=%lld : nstep=%ld\n",numyvarneg,numyvarbig,numErneg,nummod,nstep);
     }
   }
+#endif
 
 
   if(DORADFIXUPS==1 || allowlocalfailurefixandnoreport==0){
@@ -12452,7 +12491,9 @@ int u2p_rad_new_pre(int showmessages, int allowlocalfailurefixandnoreport, FTYPE
 ///////////////
 int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gammamaxrad, int whichcap, FTYPE *uu, FTYPE *pin, struct of_geom *ptrgeom,PFTYPE *lpflag, PFTYPE *lpflagrad)
 {
+#if(USEOPENMP==0)
   static long long int numyvarneg,numyvarbig,numErneg,nummod;
+#endif
   int recomputegamma=0;
 
 #if(WHICHVEL!=VELREL4)
@@ -12504,7 +12545,9 @@ int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gam
     yvar = ylimit; // used
     didmod=1;
     didmodEr=1;
+#if(USEOPENMP==0)
     numErneg++;
+#endif
   }
 
 
@@ -12520,7 +12563,9 @@ int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gam
     gamma = 1.0;
     if(didmodEr) didmod=didmody=1;
     //    didmod=1; // assume when y<0 that don't need to modify how Erf computed (i.e. Er is ok)
+#if(USEOPENMP==0)
     numyvarneg++;
+#endif
     pr = Er/(4.0*gammasq-1.0);
     // radiation frame energy density
     Erf = pr/(4.0/3.0-1.0);
@@ -12531,7 +12576,9 @@ int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gam
     didmod=1;
     didmody=1;
     gotbigy=1;
+#if(USEOPENMP==0)
     numyvarbig++;
+#endif
 
     pr = Er/(4.0*gammasq-1.0);
     // radiation frame energy density
@@ -12758,7 +12805,9 @@ int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gam
 
   // make sure E_r no larger than starting value
   if(didmod==1){
+#if(USEOPENMP==0)
     nummod++;
+#endif
     if(didmodEr){
       *lpflagrad=UTOPRIMRADFAILERFNEG;
     }
@@ -12770,6 +12819,7 @@ int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gam
 
 
 
+#if(USEOPENMP==0)
 #if(PRODUCTION==0)
   if(debugfail>=2){
     static long int nstepold=-1;
@@ -12778,6 +12828,7 @@ int u2p_rad_new(int showmessages, int allowlocalfailurefixandnoreport, FTYPE gam
       dualfprintf(fail_file,"numyvarneg=%lld numyvarbig=%lld numErneg=%lld nummod=%lld : nstep=%ld\n",numyvarneg,numyvarbig,numErneg,nummod,nstep);
     }
   }
+#endif
 #endif
 
   // interpret certain failure modes (below, these are treated as soft failures only processed by fixup_utoprim()
@@ -12845,9 +12896,11 @@ static int compute_ZAMORAD(FTYPE *uu, struct of_geom *ptrgeom, FTYPE *Er, FTYPE 
 // generally, should have TRYCOLD=1 as most general way to deal with failure
 #define TRYCOLD 1
 
+#if(USEOPENMP==0)
 // for debugging
 FTYPE globaluu[NPR];
 FTYPE globalpin[NPR];
+#endif
 
 ///
 ///
@@ -12885,8 +12938,10 @@ int u2p_rad_orig(int showmessages, int allowlocalfailurefixandnoreport, FTYPE ga
   FTYPE pp[NPR];
   int pliter,pl;
 
+#if(USEOPENMP==0)
   PLOOP(pliter,pl) globaluu[pl]=uu[pl];
   PLOOP(pliter,pl) globalpin[pl]=pin[pl];
+#endif
 
   if(WHICHVEL!=VELREL4){
     dualfprintf(fail_file,"u2p_rad() only setup for relative 4-velocity, currently.\n");
@@ -13666,21 +13721,21 @@ static int get_m1closure_urfconrel(int showmessages, int allowlocalfailurefixand
   SLOOPA(jj) pp[PRAD1+jj-1] = urfconrel[jj];
 
 
-#if(0)
+#if(0 && USEOPENMP==0)
   // normally don't ever do this unless really debugging inversion.
   //  if((ptrgeom->j==14 || ptrgeom->j==13 || ptrgeom->j==15) &&nstep>=195){// || *lpflagrad!=0 && debugfail>=2){
   if(nstep>=223){
   //  if(0&&nstep>=223){// || *lpflagrad!=0 && debugfail>=2){
     // first report info so can check on inversion
     static long long int failnum=0;
+    failnum++;
+    globalpin[ENTROPY]=0.0;
+    globaluu[ENTROPY]=0.0;
     FTYPE fakedt=0.0; // since no 4-force
     FTYPE fakeCUf[NUMDTCUFS]={0}; // fake
     FTYPE fakeCUimp[1]={0}; // fake
     FTYPE dUother[NPR]={0};// fake
     struct of_state *qptr=NULL; // fake
-    failnum++;
-    globalpin[ENTROPY]=0.0;
-    globaluu[ENTROPY]=0.0;
     pp[ENTROPY]=0.0;
 
     globalpin[PRAD0] = Erf;
@@ -13889,7 +13944,7 @@ static int get_m1closure_gammarel2_cold_old(int showmessages, struct of_geom *pt
   FTYPE alpha=ptrgeom->alphalapse;
   int jj;
 
-  static FTYPE gctt, gv11, gv12,  gv13,  gv14,  gv22,  gv23,  gv24,  gv33,  gv34,  gv44,  Rtt,  Rtx,  Rty,  Rtz;
+  FTYPE gctt, gv11, gv12,  gv13,  gv14,  gv22,  gv23,  gv24,  gv33,  gv34,  gv44,  Rtt,  Rtx,  Rty,  Rtz;
   gv11=ptrgeom->gcov[GIND(0,0)];
   gv12=ptrgeom->gcov[GIND(0,1)];
   gv13=ptrgeom->gcov[GIND(0,2)];
@@ -14096,7 +14151,7 @@ static int get_m1closure_gammarel2_cold(int showmessages, struct of_geom *ptrgeo
   FTYPE alpha=ptrgeom->alphalapse;
   int jj;
 
-  static FTYPE gctt, gn11, gn12,  gn13,  gn14,  gn22,  gn23,  gn24,  gn33,  gn34,  gn44,  Rtt,  Rtx,  Rty,  Rtz,  Rdtt,  Rdtx,  Rdty,  Rdtz;
+  FTYPE gctt, gn11, gn12,  gn13,  gn14,  gn22,  gn23,  gn24,  gn33,  gn34,  gn44,  Rtt,  Rtx,  Rty,  Rtz,  Rdtt,  Rdtx,  Rdty,  Rdtz;
   gn11=ptrgeom->gcon[GIND(0,0)];
   gn12=ptrgeom->gcon[GIND(0,1)];
   gn13=ptrgeom->gcon[GIND(0,2)];

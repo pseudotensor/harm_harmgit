@@ -16,7 +16,7 @@
 ///     OPENMPMARK: This is not thread safe!, so only set to 1 if not using more than one OpenMP thread.
 #define DEBUGINDEX 0
 
-#if(DEBUGINDEX)
+#if(DEBUGINDEX && USEOPENMP==0)
 // 
 static int ifileglobal,jfileglobal,kfileglobal,pfileglobal;
 #endif

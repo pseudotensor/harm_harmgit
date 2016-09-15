@@ -1667,6 +1667,15 @@ int error_check(int wherefrom)
   int errorsend = 0;
   // check if error exists and exit if so
 
+  // non-OPENMP loop
+  long long int failed=0;
+  struct of_geom geomdontuse; // shouldn't be used if checking failure
+  struct of_geom *ptrgeom=&geomdontuse;
+  LOOP{
+    get_geometry(i,j,k,CENT,ptrgeom);
+    if(ptrgeom->f!=0) failed++;
+  }
+
   if (failed > 0) {
     dualfprintf(fail_file,
                 "Detected failure on proc: %d failed: %d nstep: %ld realnstep: %ld steppart=%d :: t: %21.15g wherefrom = %d\n",
@@ -1706,6 +1715,15 @@ int error_check_nofail(int wherefrom)
   int i, j, k;
   int errorsend = 0;
   // check if error exists and exit if so
+
+  // non-OPENMP loop
+  long long int failed=0;
+  struct of_geom geomdontuse; // shouldn't be used if checking failure
+  struct of_geom *ptrgeom=&geomdontuse;
+  LOOP{
+    get_geometry(i,j,k,CENT,ptrgeom);
+    if(ptrgeom->f!=0) failed++;
+  }
 
   if (failed > 0) {
     dualfprintf(fail_file,

@@ -347,6 +347,8 @@ void get_geometry_old(int ii, int jj, int kk, int pp, struct of_geom *geom)
   geom->j = jj;
   geom->k = kk;
   geom->p = pp;
+  
+  geom->f=0; // no failure
 }
 
 // load local geometry into structure geom
@@ -382,7 +384,7 @@ void get_geometry_gdetonly_old(int ii, int jj, int kk, int pp, struct of_geom *g
   geom->k = kk;
   geom->p = pp;
 
-
+  geom->f = 0; // no failure
 }
 
 
@@ -431,6 +433,7 @@ void get_allgeometry(int ii, int jj, int kk, int pp, struct of_allgeom *allgeom,
   allgeom->j=ptrgeom->j;
   allgeom->k=ptrgeom->k;
   allgeom->p=ptrgeom->p;
+  allgeom->f=ptrgeom->f;
 
 #if(GETGEOMUSEPOINTER==0 || NEWMETRICSTORAGE==1)
   for(j=0;j<=NDIM*NDIM-1;j++){

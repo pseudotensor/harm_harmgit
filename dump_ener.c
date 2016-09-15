@@ -925,7 +925,7 @@ int constotal(int enerregion, SFTYPE *vars)
       }
       else{
         get_geometry(i,j,k,CENT,ptrgeom) ;
-        if(!failed){
+        if(1){
           if(get_state(GLOBALMAC(pdump,i,j,k),ptrgeom,&q)>=1) return(1);
           if(primtoU(UDIAG,GLOBALMAC(pdump,i,j,k),&q,ptrgeom,U, NULL)>=1) return(1);
         }

@@ -149,7 +149,6 @@ FTYPE tnrdegrees;
 
 
 FTYPE a;
-int failed;
 long nstroke;
 
 

@@ -81,7 +81,7 @@ int Utoprim(int whichcons, FTYPE *U, struct of_geom *ptrgeom, PFTYPE *lpflag, FT
   ////////////
   if(0&&( (EOMTYPE==EOMGRMHD||EOMTYPE==EOMENTROPYGRMHD)||(EOMTYPE==EOMCOLDGRMHD) )){ // don't check for now, just fail later
     if (U[RHO] < 0.) {
-      if (fail(i,j,k,loc,FAIL_UTOPRIM_NEG) >= 1)
+      if (fail(i,j,k,loc,0,FAIL_UTOPRIM_NEG) >= 1)
         return (1);
     }
   }
@@ -521,12 +521,12 @@ int Utoprim(int whichcons, FTYPE *U, struct of_geom *ptrgeom, PFTYPE *lpflag, FT
     //    faildebug1(numnormterms,whichcons,U_target,GLOBALMAC(EOSextraglobal,i,j,k),pr0,ptrgeom);
     faildebug2(numnormterms,whichcons,U_target,GLOBALMAC(EOSextraglobal,i,j,k),pr0,ptrgeom);
 
-    if (fail(i,j,k,loc,FAIL_UTOPRIM_TEST) >= 1)
+    if (fail(i,j,k,loc,0,FAIL_UTOPRIM_TEST) >= 1)
       return (1);
 
     
     if(!jonchecks){
-      if (fail(i,j,k,loc,FAIL_UTOPRIM_TEST) >= 1)
+      if (fail(i,j,k,loc,0,FAIL_UTOPRIM_TEST) >= 1)
         return (1);
     }
   }

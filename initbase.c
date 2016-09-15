@@ -485,7 +485,7 @@ int init(int *argc, char **argv[])
     trifprintf("after restart_init_checks() during restart: proc=%04d\n",myid);
 
 
-    trifprintf( "proc: %d restart completed: failed=%d\n", myid, failed);
+    trifprintf( "proc: %d restart completed\n", myid);
   
 
 
@@ -581,23 +581,23 @@ void set_grid_all(FTYPE thetarot, int restartmode)
   // doesn't use metric parameters, so doesn't need to be in SELFGRAV loop
   post_par_set();
 
-  if(restartmode==1) trifprintf("proc: %d post_par_set completed: failed=%d\n", myid,failed);
+  if(restartmode==1) trifprintf("proc: %d post_par_set completed\n", myid);
 
   // get grid
   // 0 tells set_grid that it's first call to set_grid() and so have to assume stationarity of the metric since have no time information yet
   set_grid(0,0,0);
 
-  if(restartmode==1) trifprintf("proc: %d grid restart completed: failed=%d\n", myid,failed);
+  if(restartmode==1) trifprintf("proc: %d grid restart completed\n", myid);
 
   // set grid boundary parameters that uses metric parameters to determine loop ranges using enerregions and enerpos
   set_box_grid_parameters();
 
-  if(restartmode==1) trifprintf("proc: %d set_box_grid_parameters completed: failed=%d\n", myid,failed);
+  if(restartmode==1) trifprintf("proc: %d set_box_grid_parameters completed\n", myid);
 
   // user post_set_grid function
   init_grid_post_set_grid(GLOBALPOINT(pglobal),GLOBALPOINT(pstagglobal),GLOBALPOINT(unewglobal),GLOBALPOINT(vpotarrayglobal),GLOBALPOINT(Bhatglobal),GLOBALPOINT(panalytic),GLOBALPOINT(pstaganalytic),GLOBALPOINT(vpotanalytic),GLOBALPOINT(Bhatanalytic),GLOBALPOINT(F1),GLOBALPOINT(F2),GLOBALPOINT(F3),GLOBALPOINT(emf));
 
-  if(restartmode==1) trifprintf("proc: %d init_grid_post_set_grid completed: failed=%d\n", myid,failed);
+  if(restartmode==1) trifprintf("proc: %d init_grid_post_set_grid completed\n", myid);
   
 
   trifprintf("MCOORD=%d\n",MCOORD);
@@ -761,8 +761,7 @@ int prepre_init(void)
   horizoncpupos1=-1;
 
   // other global flags
-  failed=0;
-  global_preinterpolate=0;
+  global_preinterpolate=0; // OPENMPMARK: Used outside parallel regions
 
   if(WHICHVEL==VEL3){
     jonchecks=1; // whether to include jon's checks to make sure u^t real and some rho/u limits throughout code
@@ -1191,7 +1190,6 @@ int init_defglobal(void)
   whichfake = whichrestart;
   fakesteps[0] = restartsteps[0];
   fakesteps[1] = restartsteps[1];
-  failed = 0;
   cour = 0.5; // see init.tools.c for why >0.5 should *not* be used.
   doevolvemetricsubsteps=0; // default is to evolve on long steps (only applicable if DOEVOLVEMETRIC==1 && EVOLVEMETRICSUBSTEP==2)
   gravityskipstep=0; // default is no skipping
@@ -1803,7 +1801,6 @@ void check_bnd_num(void)
     }
     else if(totalo>bndnum[dimen]){
       dualfprintf(fail_file,"Not enough: dimen=%d totalo=%d MAXBND=%d bndnum=%d for avgscheme interporder[%d]=%d or lim interporder[%d]=%d extrazones4emf=%d\n",dimen,totalo,MAXBND,bndnum[dimen],avgscheme[dimen],interporder[avgscheme[dimen]],lim[dimen],interporder[lim[dimen]],extrazones4emf);
-      failed=1; // so don't try to compute things in dump
       myexit(1);
     }
     else{

@@ -5,7 +5,9 @@
 
 #include "decs.h"
 
+#if(DEBUGLAPACK==2)
 int globalii,globaljj,globalkk;
+#endif
 
 // declarations
 static int compute_tetrcon_frommetric_mathematica(FTYPE (*generalmatrix)[NDIM], FTYPE (*tetrcon)[NDIM], FTYPE eigenvalues[]);
@@ -398,9 +400,11 @@ int calc_ORTHOes(int primcoord, struct of_geom *ptrgeom, FTYPE tmuup[][NDIM], FT
   FTYPE tetrconX[NDIM][NDIM];
   int jj,kk,ll;
 
+#if(DEBUGLAPACK==2)
   globalii=ptrgeom->i;
   globaljj=ptrgeom->j;
   globalkk=ptrgeom->k;
+#endif
 
   if(primcoord){
     // get dxdxp

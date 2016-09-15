@@ -120,6 +120,7 @@
 
 
 #define OPACITYBAR (LBAR*LBAR/MBAR) // cgs in cm^2/g
+#define OVEROPACITYBARALT (1.0/(OPACITYBAR*RHOBAR)) // for those opacities in cm^{-1}
 #define TEMPELE (MELE*CCCTRUE*CCCTRUE/K_BOLTZ)
 
 

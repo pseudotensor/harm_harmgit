@@ -4053,7 +4053,7 @@ int get_bsqflags(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR])
     // gamma
     if(gamma_calc(MAC(pv,i,j,k),ptrgeom,&gamma,&qsq)>=1){
       dualfprintf(fail_file,"gamma calc failed: get_bsqflags\n");
-      if (fail(i,j,k,loc,FAIL_UTCALC_DISCR) >= 1)
+      if (fail(i,j,k,loc,0,FAIL_UTCALC_DISCR) >= 1)
         return (1);
     }
     // \gamma relative to 4-velocity
@@ -4180,7 +4180,7 @@ int limit_gamma(int docorrectucons, FTYPE gammamax, FTYPE gammamaxrad, FTYPE*pr,
   if(gamma_calc(pr,ptrgeom,&gamma,&qsq)>=1){
     dualfprintf(fail_file,"limit_gamma: gamma calc failed\n");
     dualfprintf(fail_file,"i=%d j=%d k=%d oldgamma=%21.15g\n",startpos[1]+ptrgeom->i,startpos[2]+ptrgeom->j,startpos[3]+ptrgeom->k,gamma);
-    if (fail(i,j,k,loc,FAIL_UTCALC_DISCR) >= 1)
+    if (fail(i,j,k,loc,0,FAIL_UTCALC_DISCR) >= 1)
       return (1);
   }
 
@@ -4188,7 +4188,7 @@ int limit_gamma(int docorrectucons, FTYPE gammamax, FTYPE gammamaxrad, FTYPE*pr,
     if(gamma_calc(&pr[URAD1-U1],ptrgeom,&radgamma,&radqsq)>=1){
       dualfprintf(fail_file,"limit_gamma: gamma calc failed: rad\n");
       dualfprintf(fail_file,"i=%d j=%d k=%d : rad : oldgamma=%21.15g\n",startpos[1]+ptrgeom->i,startpos[2]+ptrgeom->j,startpos[3]+ptrgeom->k,gamma);
-      if (fail(i,j,k,loc,FAIL_UTCALC_DISCR) >= 1)
+      if (fail(i,j,k,loc,0,FAIL_UTCALC_DISCR) >= 1)
         return (1);
     }
   }
@@ -4221,7 +4221,7 @@ int limit_gamma(int docorrectucons, FTYPE gammamax, FTYPE gammamaxrad, FTYPE*pr,
     if(pref<0.0){
       dualfprintf(fail_file,"limit_gamma: pref calc failed pref=%21.15g\n",pref);
       dualfprintf(fail_file,"i=%d j=%d k=%d oldgamma=%21.15g\n",startpos[1]+ptrgeom->i,startpos[2]+ptrgeom->j,startpos[3]+ptrgeom->k,gamma);
-      if (fail(i,j,k,loc,FAIL_UTCALC_DISCR) >= 1)
+      if (fail(i,j,k,loc,0,FAIL_UTCALC_DISCR) >= 1)
         return (1);
     }
 
@@ -4259,7 +4259,7 @@ int limit_gamma(int docorrectucons, FTYPE gammamax, FTYPE gammamaxrad, FTYPE*pr,
       if(pref<0.0){
         dualfprintf(fail_file,"limit_gamma: pref calc failed pref=%21.15g\n",pref);
         dualfprintf(fail_file,"i=%d j=%d k=%d oldgamma=%21.15g\n",startpos[1]+ptrgeom->i,startpos[2]+ptrgeom->j,startpos[3]+ptrgeom->k,radgamma);
-        if (fail(i,j,k,loc,FAIL_UTCALC_DISCR) >= 1)
+        if (fail(i,j,k,loc,0,FAIL_UTCALC_DISCR) >= 1)
           return (1);
       }
 
@@ -4299,7 +4299,7 @@ int limit_gamma(int docorrectucons, FTYPE gammamax, FTYPE gammamaxrad, FTYPE*pr,
     if(pref<0.0){
       dualfprintf(fail_file,"limit_gamma: pref calc failed pref=%21.15g\n",pref);
       dualfprintf(fail_file,"i=%d j=%d k=%d oldgamma=%21.15g\n",startpos[1]+ptrgeom->i,startpos[2]+ptrgeom->j,startpos[3]+ptrgeom->k,gamma);
-      if (fail(i,j,k,loc,FAIL_UTCALC_DISCR) >= 1)
+      if (fail(i,j,k,loc,0,FAIL_UTCALC_DISCR) >= 1)
         return (1);
     }
 
@@ -4410,7 +4410,7 @@ int check_pr(FTYPE *pr,FTYPE *prmodel, FTYPE *ucons, struct of_geom *ptrgeom,int
     PALLLOOP(pl) probs[pl]=prold[pl]=pr[pl];
   }
 
-  whocalleducon=1; // turn off failures
+  ptrgeom->f=-1; // turn off failures
   if(ucon_calc(pr, ptrgeom, ucon,others) >= 1) ucon[TT]=1E30; // bad, so keep going
   uttdiscr0=lastuttdiscr=uttdiscr; // ucon_calc() set uttdiscr
   if(ucon[TT]<UTLIMIT) return(0); // good, so just continue calculations
@@ -4443,14 +4443,14 @@ int check_pr(FTYPE *pr,FTYPE *prmodel, FTYPE *ucons, struct of_geom *ptrgeom,int
     probs[U1+i-1] = ptrgeom->gcon[GIND(TT,i)]/ptrgeom->gcon[GIND(TT,TT)] ;
   }
   // ucon[TT] must be good for normal observer (?) hard to solve for u^t for normal observer in general
-  // change of whocalleducon forces kill level check on normal observer
-  whocalleducon=0;
+  // change of ptrgeom->f forces kill level check on normal observer
+  ptrgeom->f=0;
   if(ucon_calc(probs, ptrgeom, ucon, others) >= 1){
     dualfprintf(fail_file,"Thought normal observer had to have good u^t!\n");
     return(1);
   }
   else utobs=ucon[TT];
-  whocalleducon=1;
+  ptrgeom->f=-1;
 
 
   if(utinterp&&(modelpos>=0)){ // use modelpos==-1 for no use of model
@@ -4484,8 +4484,8 @@ int check_pr(FTYPE *pr,FTYPE *prmodel, FTYPE *ucons, struct of_geom *ptrgeom,int
       // model no good
       if(bctype==0){
         dualfprintf(fail_file,"serious failure.  On-grid values and fixed bc values used have u^t imaginary: modeli: %d modelj: %d uttdiscr: %21.15g\n",startpos[1]+modeli,startpos[2]+modelj,uttdiscr);
-        whocalleducon=0; // turn on failures
-        if (fail(i,j,k,loc,FAIL_UTCALC_DISCR) >= 1)
+        ptrgeom->f=0; // turn on failures
+        if (fail(i,j,k,loc,0,FAIL_UTCALC_DISCR) >= 1)
           return (1);
       }
       else uconmodel[TT]=realutlimit=1E30;
@@ -4580,7 +4580,7 @@ int check_pr(FTYPE *pr,FTYPE *prmodel, FTYPE *ucons, struct of_geom *ptrgeom,int
       }
     }
   }
-  whocalleducon=0; // turn back on failures
+  ptrgeom->f=0; // turn back on failures
 
   if(failedcheck){
     if(debugfail>=1) dualfprintf(fail_file,"couldn't fix ucon[TT]=%21.15g newerr=%21.15g uttdiscr=%21.15g\n",ucon[TT],newerr,uttdiscr);
@@ -4903,7 +4903,7 @@ int inflow_check_rel4vel(int dir, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrge
     /* find gamma and remove it from primitives */
     if(gamma_calc(pr,ptrgeom,&gamma,&qsq)>=1){
       dualfprintf(fail_file,"gamma calc failed: inflow_check_rel4vel\n");
-      if (fail(ii,jj,kk,loc,FAIL_UTCALC_DISCR) >= 1)
+      if (fail(ii,jj,kk,loc,0,FAIL_UTCALC_DISCR) >= 1)
         return (1);
     }
     pr[U1] /= gamma ;
@@ -4931,7 +4931,7 @@ int inflow_check_rel4vel(int dir, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrge
 
     if(vsq<0.0){
       if(vsq>-NUMEPSILON*100.0) vsq=0.0; // machine precision thing
-      else if (fail(ii,jj,kk,loc,FAIL_VSQ_NEG) >= 1){
+      else if (fail(ii,jj,kk,loc,0,FAIL_VSQ_NEG) >= 1){
         trifprintf("vsq=%21.15g\n",vsq);
         return (1);
       }
@@ -4971,7 +4971,7 @@ int inflow_check_rel4vel(int dir, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrge
     /* find gamma and remove it from primitives */
     if(gamma_calc(&pr[URAD1-U1],ptrgeom,&gamma,&qsq)>=1){
       dualfprintf(fail_file,"gamma calc failed: inflow_check_rel4vel\n");
-      if (fail(ii,jj,kk,loc,FAIL_UTCALC_DISCR) >= 1)
+      if (fail(ii,jj,kk,loc,0,FAIL_UTCALC_DISCR) >= 1)
         return (1);
     }
     pr[URAD1] /= gamma ;
@@ -4999,7 +4999,7 @@ int inflow_check_rel4vel(int dir, FTYPE *pr, FTYPE *ucons, struct of_geom *ptrge
 
     if(vsq<0.0){
       if(vsq>-NUMEPSILON*100.0) vsq=0.0; // machine precision thing
-      else if (fail(ii,jj,kk,loc,FAIL_VSQ_NEG) >= 1){
+      else if (fail(ii,jj,kk,loc,0,FAIL_VSQ_NEG) >= 1){
         trifprintf("vsq=%21.15g\n",vsq);
         return (1);
       }

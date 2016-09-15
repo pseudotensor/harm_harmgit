@@ -190,7 +190,6 @@ static void interp_init(void)
   myid=0;
   debugfail=0;
   nstroke=0;
-  failed=0;
   nstep=0;
   //  N1BND=N2BND=N3BND=0;
 

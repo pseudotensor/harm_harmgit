@@ -185,8 +185,10 @@ int Utoprimgen(int showmessages, int checkoninversiongas, int checkoninversionra
   //  if(nstep==4 && steppart==0){
   //    PLOOP(pliter,pl) dualfprintf(fail_file,"PRIMUTOPRIMGEN0(%d): pl=%d pp=%21.15g uu=%21.15g\n",*eomtype,pl,pr[pl],Ugeomfree[pl]);
   //  }
-
+#if(PRODUCTION==0 && USEOPENMP==0)
   static long long int didnothing=0,didsomething=0,didentropy=0,didenergy=0,didcold=0;
+#endif
+
   ///////////////
   if(EOMDONOTHING(*eomtype)){
 
@@ -209,8 +211,10 @@ int Utoprimgen(int showmessages, int checkoninversiongas, int checkoninversionra
     if(DOEVOLVERHO){
       negdensitycheck(finalstep, pr, &GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL));
     }
+#if(PRODUCTION==0 && USEOPENMP==0)
     didnothing++;
     if(debugfail>=2) if(didnothing%(totalzones*REPORTCYCLE)==0) dualfprintf(fail_file,"DIDNOTHING: %lld : %ld %d : %d\n",didnothing,nstep,steppart,*eomtype);
+#endif
     return(0);
   }
   else{
@@ -232,12 +236,14 @@ int Utoprimgen(int showmessages, int checkoninversiongas, int checkoninversionra
     if(fracenergy<=0.0 && eomtypelocal==EOMGRMHD) eomtypelocal=EOMENTROPYGRMHD; // start with entropy
     if(fracenergy>0.0 && eomtypelocal==EOMENTROPYGRMHD) eomtypelocal=EOMGRMHD; // start with hot
  
+#if(PRODUCTION==0 && USEOPENMP==0)
     if(eomtypelocal==EOMGRMHD) didenergy++;
     if(eomtypelocal==EOMENTROPYGRMHD) didentropy++;
     if(eomtypelocal==EOMCOLDGRMHD) didcold++;
 
     didsomething++;
     if(debugfail>=2) if(didsomething%(totalzones*REPORTCYCLE)==0) dualfprintf(fail_file,"DIDSOMETHING: %lld : %ld %d : eomtype=%d -> eomtypelocal=%d : dids: %lld %lld %lld\n",didsomething,nstep,steppart,*eomtype,eomtypelocal,didenergy,didentropy,didcold);
+#endif
   }
 
 
@@ -844,7 +850,10 @@ int Utoprimgen(int showmessages, int checkoninversiongas, int checkoninversionra
   // pick best or use default pr
   //
   ////
+#if(PRODUCTION==0 && USEOPENMP==0)
   static long long int numpicks=0,didpickenergy=0,didpickentropy=0,didpicknormal=0,didpicknotbest=0;
+#endif
+
   if((whichmethod==MODEPICKBEST) && hottried && hothardfailure==0 && entropytried && entropyhardfailure==0){
 
 
@@ -858,29 +867,41 @@ int Utoprimgen(int showmessages, int checkoninversiongas, int checkoninversionra
       GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)=entropypflag;
       GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL)=entropyradinvmod;
       *eomtype=EOMENTROPYGRMHD;
+#if(PRODUCTION==0 && USEOPENMP==0)
       didpickentropy++;
+#endif
     }
     else if(!hothardfailure){
       PLOOP(pliter,pl) pr[pl]=hotpr[pl];
       GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)=hotpflag;
       GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMRADFAIL)=hotradinvmod;
       *eomtype=EOMGRMHD;
+#if(PRODUCTION==0 && USEOPENMP==0)
       didpickenergy++;
+#endif
     }
     else{
       // then sequence of conditionals decides which pr to use (i.e. whether to use entropy, hot, or cold)
+#if(PRODUCTION==0 && USEOPENMP==0)
       didpicknormal++;
+#endif
     }
+
+#if(PRODUCTION==0 && USEOPENMP==0)
     numpicks++;
+#endif
 
   }
   else{
     // then sequence of conditionals leads to final pr[] having final desired inversion.
+#if(PRODUCTION==0 && USEOPENMP==0)
     didpicknotbest++;
+#endif
   }
 
+#if(PRODUCTION==0 && USEOPENMP==0)
   if((whichmethod==MODEPICKBEST) && debugfail>=2) if(numpicks>0 && numpicks%(totalzones*REPORTCYCLE)==0) dualfprintf(fail_file,"DIDPICKS: %lld : %lld %lld %lld : %lld : %d\n",numpicks,didpickenergy,didpickentropy,didpicknormal,didpicknotbest,*eomtype);
-
+#endif
 
 
 

@@ -533,7 +533,7 @@ int dump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 
   get_geometry(i, j, k, loc, ptrgeom);
 
-  if (!failed) {
+  if (1) {
     if (get_state(GLOBALMAC(pdump,i,j,k), ptrgeom, qptr) >= 1)
       FAILSTATEMENT("dump.c:dump()", "get_state() dir=0", 1);
     if(N1NOT1){
@@ -557,7 +557,7 @@ int dump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 
   }
   else {// do a per zone check, otherwise set to 0
-    whocalleducon=1; // force no failure mode, just return like failure, and don't return if failure, just set to 0 and continue
+    ptrgeom->f=-1; // force no failure mode, just return like failure, and don't return if failure, just set to 0 and continue
     if (get_state(GLOBALMAC(pdump,i,j,k), ptrgeom, qptr) >= 1){
       for (pl = 0; pl < NDIM; pl++)
         qptr->ucon[pl]=0;
@@ -580,7 +580,7 @@ int dump_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
       vmax[3]=vmin[3]=0;
     }
 
-    whocalleducon=0; // return to normal state
+    ptrgeom->f=0; // return to normal state
     
   }
 
@@ -1250,12 +1250,12 @@ int fieldline_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
 
   // if failed, then data output for below invalid, but columns still must exist    
   get_geometry(i, j, k, loc, ptrgeom);
-  if (!failed) {
+  if (1) {
     if (get_state(GLOBALMAC(pdump,i,j,k), ptrgeom, &q) >= 1)
       FAILSTATEMENT("dump.c:dump()", "get_state() dir=0", 1);
   }
   else {// do a per zone check, otherwise set to 0
-    whocalleducon=1; // force no failure mode, just return like failure, and don't return if failure, just set to 0 and continue
+    ptrgeom->f=-1; // force no failure mode, just return like failure, and don't return if failure, just set to 0 and continue
     if (get_state(GLOBALMAC(pdump,i,j,k), ptrgeom, &q) >= 1){
       for (pl = 0; pl < NDIM; pl++) q.ucon[pl]=0;
       for (pl = 0; pl < NDIM; pl++) q.ucov[pl]=0;
@@ -1267,7 +1267,7 @@ int fieldline_content(int i, int j, int k, MPI_Datatype datatype,void *writebuf)
         for (pl = 0; pl < NDIM; pl++) q.uradcov[pl]=0;
       }
     }
-    whocalleducon=0; // return to normal state
+    ptrgeom->f=0; // return to normal state
     
   }
 

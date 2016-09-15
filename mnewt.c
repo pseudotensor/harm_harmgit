@@ -187,7 +187,6 @@ PITERLOOP(i) xold[i]=x[i];
                  // fix up the damping if we get a psychotic solution
                  errf=1.E30;
                  errx=1.E30;
-                 failed=0; // force no failure condition
                }
                else{ // estimate error normally
                  errf = 0.0;
@@ -499,7 +498,6 @@ if(!shouldleave){
       fclose(out);
 #endif      
 #endif
-      //failed = 3;  // source of failure (nonconvergence)
     }
 #endif
 

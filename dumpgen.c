@@ -278,14 +278,13 @@ int dump_gen(int readwrite, long dump_cnt, int bintxt, int whichdump, MPI_Dataty
   //
   //
   ////////////////////////////////////////////////////////////
-  int failedlocal=0;
-  if(failed==0) failed=checkstatus;
-  error_check_nofail(ERRORCODEBELOWCLEANFINISH+100); // number should be >ERRORCODEBELOWCLEANFINISH for myexit to avoid dumping
-  if(failed>0){
-    failedlocal=failed;
-    failed=0; // assume failure captured
-    return(failedlocal);
+#if(USEMPI)
+  if (numprocs > 1) {
+    int errorsend = checkstatus;
+    MPI_Allreduce(&errorsend, &checkstatus, 1, MPI_INT, MPI_MAX,MPI_COMM_GRMHD);
   }
+#endif
+  if(checkstatus>0) return(checkstatus);
   
 
 

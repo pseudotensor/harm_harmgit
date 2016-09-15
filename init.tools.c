@@ -7,9 +7,9 @@
 
 #include "decs.h"
 
-
-extern FTYPE normglobal;
-extern int inittypeglobal; // for bounds to communicate detail of what doing
+// OPENMPMARK: these 2 global things only used for NS-BH problem, so don't yet try to make thread safe.  So comment-out for now.
+//extern FTYPE normglobal;
+//extern int inittypeglobal; // for bounds to communicate detail of what doing
 
 extern int init_dsandvels(int inittype, int pos, int *whichvel, int *whichcoord, SFTYPE time, int i, int j, int k, FTYPE *p, FTYPE *pstag);
 
@@ -1103,7 +1103,7 @@ int user1_normalize_field_sigma(FTYPE sigma0, FTYPE bpole, FTYPE (*prim)[NSTORE2
 
   // for use when calling init_vpot_user later
   // if called this twice, need both renormalizations as multiplied by each other
-  normglobal*=norm;
+  //  normglobal*=norm;
 
 
   return(0);

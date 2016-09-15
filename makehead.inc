@@ -72,8 +72,8 @@ else
 ####################
 
 ifeq ($(HOSTNAME),physics-179.umd.edu)
-USEICCINTEL=1
-#USEGCC=1
+#USEICCINTEL=1
+USEGCC=1
 $(warning USEICCINTEL is $(USEICCINTEL))
 else ifeq ($(hoststriped),krakenpf)
 USEKRAKENICC=1

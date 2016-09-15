@@ -120,7 +120,6 @@ int mnewt(int ntrial, int mintrial, FTYPE x[], int n, FTYPE tolx, FTYPE tolf, FT
       // fix up the damping if we get a psychotic solution
       errf=1.E30;
       errx=1.E30;
-      failed=0; // force no failure condition
     }
     else{ // estimate error normally
       errf = 0.0;

@@ -157,7 +157,7 @@ int Utoprim_ldz(FTYPE *U, struct of_geom *ptrgeom, PFTYPE *lpflag, FTYPE *pr, FT
   if(wvsq_solv_ldz(&vsq, &W)>=1){
     if(debugfail>=1) dualfprintf(fail_file,"t=%21.15g : i=%d j=%d : failed to solve in ldz\n",t,startpos[1]+ptrgeom->i,startpos[2]+ptrgeom->j);
     /*
-      if (fail(i,j,k,FAIL_LDZ) >= 1)
+      if (fail(i,j,k,0,0,FAIL_LDZ) >= 1)
       return(1);
     */
     // Flag bad solution to be treated later by fixup()
@@ -172,7 +172,7 @@ int Utoprim_ldz(FTYPE *U, struct of_geom *ptrgeom, PFTYPE *lpflag, FTYPE *pr, FT
     if(fabs(vsq)<1E-10) vsq=1E-10; // machine precision thing
     else{
       dualfprintf(fail_file,"t=%21.15g : unexpected result from utoprim_ldz: vsq=%21.15g passed\n",t,vsq);
-      if (fail(i,j,k,FAIL_LDZ) >= 1)
+      if (fail(i,j,k,0,0,FAIL_LDZ) >= 1)
         return(1);
     }
   }
@@ -227,7 +227,7 @@ int Utoprim_ldz(FTYPE *U, struct of_geom *ptrgeom, PFTYPE *lpflag, FTYPE *pr, FT
         //PALLLOOP(pl)  dualfprintf(fail_file,"ldz nan: pr[%d]=%21.15g U=%21.15g\n",pl,pr[pl],U[pl]);
         //dualfprintf(fail_file,"vsq=%21.15g gamma=%21.15g\n",vsq,gamma);
       }
-      if (fail(i,j,k,FAIL_LDZ) >= 1)
+      if (fail(i,j,k,0,0,FAIL_LDZ) >= 1)
         return(1);
     }
   }
@@ -266,7 +266,7 @@ int Utoprim_ldz(FTYPE *U, struct of_geom *ptrgeom, PFTYPE *lpflag, FTYPE *pr, FT
         PALLLOOP(pl)  dualfprintf(fail_file,"%21.15g\n",pr[pl]);
         PALLLOOP(pl)  dualfprintf(fail_file,"vsq=%21.15g gamma=%21.15g\n",vsq,gamma);
       
-        if (fail(i,j,k,FAIL_LDZ) >= 1)
+        if (fail(i,j,k,0,0,FAIL_LDZ) >= 1)
         return(1);
       */
       gotwack=1;

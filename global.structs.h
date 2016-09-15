@@ -23,7 +23,7 @@ struct blink {
 /// gcon put below gcov,gcovpert,alphalapse since gcon not as often needed
 /// store betasqoalphasq to avoid need of gcon in most calculations
 #define interiorofgeompart1a                    \
-  int i,j,k,p;
+  int i,j,k,p,f; // f is fail flag related to things that used geometry, as opposed to global "failed" flag
 
 
 #if(WHICHEOM==WITHGDET)
@@ -135,7 +135,7 @@ struct of_geom {
 #if(WHICHEOM!=WITHGDET)
   FTYPE eomfunc[NPR],ieomfuncnosing[NPR];
 #endif
-  int i,j,k,p;
+  int i,j,k,p,f;
 };
 
 
@@ -170,7 +170,7 @@ struct of_allgeom {
 #if(WHICHEOM!=WITHGDET)
   FTYPE eomfunc[NPR],ieomfuncnosing[NPR];
 #endif
-  int i,j,k,p;
+  int i,j,k,p,f;
 
   // extra in "allgeom"
   FTYPE X[NDIM];

@@ -402,7 +402,7 @@ int bound_x1dn_outflow_simple(
                   failreturn=check_pr(MAC(prim,i,j,k),MAC(prim,i,j,k),ptrgeom[U1],-3);
                   if(failreturn){
                     dualfprintf(fail_file,"Bad boundary zone, couldn't fix: i=%d j=%d k=%d\n",startpos[1]+i,startpos[2]+j,startpos[3]+k);
-                    if (fail(i,j,k,FAIL_BCFIX) >= 1) return (1);
+                    if (fail(i,j,k,ptrgeom[U1]->p,ptrgeom[U1]->f,FAIL_BCFIX) >= 1) return (1);
                   }
                 }
 #endif
@@ -527,7 +527,7 @@ int bound_x1up_outflow_simple(
                   failreturn=check_pr(MAC(prim,i,j,k),MAC(prim,i,j,k),ptrgeom[U1],-3);
                   if(failreturn){
                     dualfprintf(fail_file,"Bad boundary zone, couldn't fix: i=%d j=%d k=%d\n",startpos[1]+i,startpos[2]+j,startpos[3]+k);
-                    if (fail(i,j,k,FAIL_BCFIX) >= 1) return (1);
+                    if (fail(i,j,k,ptrgeom[U1]->p,ptrgeom[U1]->f,FAIL_BCFIX) >= 1) return (1);
                   }
                 }
 #endif
@@ -709,7 +709,7 @@ int bound_x1dn_outflow(
                   failreturn=check_pr(MAC(prim,i,j,k),MAC(prim,i,j,k),ptrgeom[U1],-3);
                   if(failreturn){
                     dualfprintf(fail_file,"Bad boundary zone, couldn't fix: i=%d j=%d k=%d\n",startpos[1]+i,startpos[2]+j,startpos[3]+k);
-                    if (fail(i,j,k,FAIL_BCFIX) >= 1) return (1);
+                    if (fail(i,j,k,ptrgeom[U1]->p,ptrgeom[U1]->f,FAIL_BCFIX) >= 1) return (1);
                   }
                 }
 #endif
@@ -886,7 +886,7 @@ int bound_x1up_outflow(
                   failreturn=check_pr(MAC(prim,i,j,k),MAC(prim,i,j,k),ptrgeom[U1],-3);
                   if(failreturn){
                     dualfprintf(fail_file,"Bad boundary zone, couldn't fix: i=%d j=%d k=%d\n",startpos[1]+i,startpos[2]+j,startpos[3]+k);
-                    if (fail(i,j,k,FAIL_BCFIX) >= 1) return (1);
+                    if (fail(i,j,k,ptrgeom[U1]->p,ptrgeom[U1]->f,FAIL_BCFIX) >= 1) return (1);
                   }
                 }
 #endif
@@ -1128,7 +1128,7 @@ int bound_x2dn_outflow_simple(
                   failreturn=check_pr(MAC(prim,i,j,k),MAC(prim,i,j,k),ptrgeom[U2],-3);
                   if(failreturn){
                     dualfprintf(fail_file,"Bad boundary zone, couldn't fix: i=%d j=%d k=%d\n",startpos[1]+i,startpos[2]+j,startpos[3]+k);
-                    if (fail(i,j,k,FAIL_BCFIX) >= 1) return (1);
+                    if (fail(i,j,k,ptrgeom[U1]->p,ptrgeom[U1]->f,FAIL_BCFIX) >= 1) return (1);
                   }
                 }
 #endif
@@ -1250,7 +1250,7 @@ int bound_x2up_outflow_simple(
                   failreturn=check_pr(MAC(prim,i,j,k),MAC(prim,i,j,k),ptrgeom[U2],-3);
                   if(failreturn){
                     dualfprintf(fail_file,"Bad boundary zone, couldn't fix: i=%d j=%d k=%d\n",startpos[1]+i,startpos[2]+j,startpos[3]+k);
-                    if (fail(i,j,k,FAIL_BCFIX) >= 1) return (1);
+                    if (fail(i,j,k,ptrgeom[U1]->p,ptrgeom[U1]->f,FAIL_BCFIX) >= 1) return (1);
                   }
                 }
 #endif
@@ -2128,7 +2128,7 @@ int bound_x3dn_outflow_simple(
                   failreturn=check_pr(MAC(prim,i,j,k),MAC(prim,i,j,k),ptrgeom[U3],-3);
                   if(failreturn){
                     dualfprintf(fail_file,"Bad boundary zone, couldn't fix: i=%d j=%d k=%d\n",startpos[1]+i,startpos[2]+j,startpos[3]+k);
-                    if (fail(i,j,k,FAIL_BCFIX) >= 1) return (1);
+                    if (fail(i,j,k,ptrgeom[U1]->p,ptrgeom[U1]->f,FAIL_BCFIX) >= 1) return (1);
                   }
                 }
 #endif
@@ -2250,7 +2250,7 @@ int bound_x3up_outflow_simple(
                   failreturn=check_pr(MAC(prim,i,j,k),MAC(prim,i,j,k),ptrgeom[U3],-3);
                   if(failreturn){
                     dualfprintf(fail_file,"Bad boundary zone, couldn't fix: i=%d j=%d k=%d\n",startpos[1]+i,startpos[2]+j,startpos[3]+k);
-                    if (fail(i,j,k,FAIL_BCFIX) >= 1) return (1);
+                    if (fail(i,j,k,ptrgeom[U1]->p,ptrgeom[U1]->f,FAIL_BCFIX) >= 1) return (1);
                   }
                 }
 #endif

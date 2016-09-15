@@ -246,7 +246,7 @@ int restart_init_checks(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NST
   if(fixup(STAGEM1,prim,ucons,-1)>=1)
     FAILSTATEMENT("restart.c:restart_init()", "fixup()", 1);
 
-  trifprintf( "proc: %d fixup restart completed: failed=%d\n", myid,failed);
+  trifprintf( "proc: %d fixup restart completed\n", myid);
 #endif
 
 
@@ -283,7 +283,7 @@ int restart_init_checks(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NST
     return (1);
   }
 
-  trifprintf( "proc: %d bound restart completed: failed=%d\n", myid,failed);
+  trifprintf( "proc: %d bound restart completed\n", myid);
 
 
   //////////////
