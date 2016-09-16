@@ -7368,7 +7368,7 @@ static int donut_analytical_solution(int *whichvel, int *whichcoord, int optical
     pp[URAD1]=Fx;
     pp[URAD2]=Fy;
     pp[URAD3]=Fz;
-    if(pp[NRAD]>=0) pp[NRAD]=nrad;
+    if(NRAD>=0) pp[NRAD]=nrad;
   }
 
   return(usingback);
@@ -8889,6 +8889,7 @@ int normalize_densities(FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 {
 
   int getmax_densities_full(FTYPE (*prim)[NSTORE2][NSTORE3][NPR],SFTYPE *rhomax, SFTYPE *umax, SFTYPE *uradmax, SFTYPE *utotmax, SFTYPE *pmax, SFTYPE *pradmax, SFTYPE *ptotmax);
+
   int funreturn=getmax_densities_full(prim,&rhomax,&umax,&uradmax,&utotmax,&pmax,&pradmax,&ptotmax);
 
 

@@ -179,34 +179,51 @@ static int advance_standard(
                             FTYPE *ndt)
 {
   FTYPE ndt1, ndt2, ndt3;
-  FTYPE dUtot;
-  FTYPE idx1,idx2;
   SFTYPE dt4diag;
   static SFTYPE dt4diag_willbe=0;
   int finalstep,initialstep;
+
+  int enerregion;
+  int *localenerpos;
+  int is,ie,js,je,ks,ke;
+
+  FTYPE (*ucumformetric)[NSTORE2][NSTORE3][NPR];
+  FTYPE (*utoinvert)[NSTORE2][NSTORE3][NPR];
+  FTYPE (*tempucum)[NSTORE2][NSTORE3][NPR];
+  FTYPE (*useducum)[NSTORE2][NSTORE3][NPR];
+  FTYPE (*preupoint)[NSTORE2][NSTORE3][NPR];
+  FTYPE (*myupoint)[NSTORE2][NSTORE3][NPR];
+  FTYPE (*myupointuf)[NSTORE2][NSTORE3][NPR];
+  FTYPE (*olduf)[NSTORE2][NSTORE3][NPR];
+
+  // OPENMPNOTE: These are in critical
   FTYPE accdt, accdt_ij;
   int accdti,accdtj,accdtk;
   FTYPE gravitydt, gravitydt_ij;
   int gravitydti,gravitydtj,gravitydtk;
-  //  FTYPE (*dUriemannarray)[NSTORE2][NSTORE3][NPR];
-  FTYPE (*ucumformetric)[NSTORE2][NSTORE3][NPR];
-  int enerregion;
-  int *localenerpos;
-  int jj;
-  FTYPE (*utoinvert)[NSTORE2][NSTORE3][NPR];
-  FTYPE *utoinvert1;
-  FTYPE (*tempucum)[NSTORE2][NSTORE3][NPR];
-  FTYPE (*useducum)[NSTORE2][NSTORE3][NPR];
-  FTYPE *useducum1;
-  FTYPE (*preupoint)[NSTORE2][NSTORE3][NPR];
-  FTYPE (*myupoint)[NSTORE2][NSTORE3][NPR];
-  FTYPE *myupoint1;
-  FTYPE (*myupointuf)[NSTORE2][NSTORE3][NPR];
-  FTYPE (*olduf)[NSTORE2][NSTORE3][NPR];
-  int whichpltoavg[NPR];
-  int ifnotavgthencopy[NPR];
-  int is,ie,js,je,ks,ke;
-  int doingextrashiftforstag;
+
+
+
+
+  /////////
+  //
+  // set initialstep and finalstep to tell some procedures and diagnostic functions if should be accounting or not
+  //
+  /////////
+  if(timeorder==0){
+    initialstep=1;
+  }
+  else{
+    initialstep=0;
+  }
+
+  if(timeorder==numtimeorders-1){
+    finalstep=1;
+  }
+  else{
+    finalstep=0;
+  }
+
 
 
 
@@ -237,6 +254,25 @@ static int advance_standard(
 
 
 
+
+  ////////////////////////////
+  // Choose what to invert
+  ////////////////////////////
+  if(finalstep){
+    // invert ucum on final step
+    utoinvert = tempucum;
+    useducum=tempucum;
+
+  }
+  else{
+    // invert uf on substeps
+    utoinvert = uf; // should always be uf, not olduf.
+    // tempucum just cumulates for now
+    useducum=tempucum;
+  }
+
+
+
   /////////////////////////////////////////////
   //
   // Setup function tasks
@@ -258,26 +294,6 @@ static int advance_standard(
 
 
 
-
-
-  /////////
-  //
-  // set initialstep and finalstep to tell some procedures and diagnostic functions if should be accounting or not
-  //
-  /////////
-  if(timeorder==0){
-    initialstep=1;
-  }
-  else{
-    initialstep=0;
-  }
-
-  if(timeorder==numtimeorders-1){
-    finalstep=1;
-  }
-  else{
-    finalstep=0;
-  }
 
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -378,7 +394,6 @@ static int advance_standard(
   /////////////////////////////////////////////////////
 
 
-  int didreturnpf;
   if(truestep){
 
 
@@ -462,6 +477,7 @@ static int advance_standard(
 
       // if using staggered grid for magnetic field, then need to convert ucum to pstag to new pb/pf
       // GODMARK: Use of globals
+      // OPENMPNOTE: But outside parallel
       myupoint=GLOBALPOINT(upointglobal);
       
       if(1){ // normal switching case
@@ -484,6 +500,8 @@ static int advance_standard(
       if(finalstep==1 && CUnew[2]!=1.0){
 
         // still have to do uf calculation
+        // GODMARK: Use of globals
+        // OPENMPNOTE: But outside parallel
         myupointuf=GLOBALPOINT(upointglobaluf);
         // get other non-field things in case used
         // NO, not used, so can avoid.
@@ -531,8 +549,12 @@ static int advance_standard(
     // DO FIXUP1ZONE
     //
     ////////////////////////
-#pragma omp parallel OPENMPGLOBALPRIVATEFORSTATEANDGEOM  // <-- only includes more than OPENMPGLOBALPRIVATEFORINVERSION needed for inversion
+#pragma omp parallel OPENMPGLOBALPRIVATEFORSTATEANDGEOM // <-- only includes more than OPENMPGLOBALPRIVATEFORINVERSION needed for inversion
     {
+      FTYPE *utoinvert1;
+      FTYPE *useducum1;
+      FTYPE *myupoint1;
+
       int pl,pliter,i,j,k;
       struct of_geom geomdontuse;
       struct of_geom *ptrgeom=&geomdontuse;
@@ -555,12 +577,13 @@ static int advance_standard(
       // initialize counters
       newtonstats.nstroke=newtonstats.lntries=0;
       int eomtype;
+      int didreturnpf;
 
 
 
       OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
       
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) reduction(+: nstroke)
       OPENMP3DLOOPBLOCK{
         OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -702,19 +725,10 @@ static int advance_standard(
         ////////////////////////////
         if(finalstep){
           // invert ucum on final step
-          utoinvert = tempucum;
-          useducum=tempucum;
-
           utoinvert1 = tempucumconsider;
           useducum1 = tempucumconsider;
-
         }
         else{
-          // invert uf on substeps
-          utoinvert = uf; // should always be uf, not olduf.
-          // tempucum just cumulates for now
-          useducum=tempucum;
-
           utoinvert1 = ufconsider;
           useducum1 = tempucumconsider;
         }
@@ -725,20 +739,6 @@ static int advance_standard(
         
         
 
-#if(0)
-        ////////////////////////////
-        // setup myupoint to invert
-        ////////////////////////////
-        if(FLUXB==FLUXCTSTAG){
-          // already have field in myupoint, just copy the others over
-          PLOOP(pliter,pl) if(doother==DOALLPL || doother==DONONBPL && BPL(pl)==0 || doother==DOBPL && BPL(pl)==1) MACP0A1(myupoint,i,j,k,pl)=MACP0A1(utoinvert,i,j,k,pl);
-        }
-        else{
-          // utoinvert never reassigned from global a_utoinvert assignment since if here not doing FLUXCTSTAG
-          myupoint=utoinvert;
-        }
-        myupoint1=utoinvert1;
-#endif
 
         ////////////////////////////
         // INVERT [loop only over "centered" cells]
@@ -789,7 +789,8 @@ static int advance_standard(
         int checkoninversiongas=CHECKONINVERSION;
         int checkoninversionrad=CHECKONINVERSIONRAD;
         MYFUN(Utoprimgen(showmessages,checkoninversiongas,checkoninversionrad,allowlocalfailurefixandnoreport, finalstep,&eomtypelocal,whichcap,whichmethod,modprim,EVOLVEUTOPRIM,UEVOLVE,utoinvert1, qptr2, ptrgeom, dissmeasure, piorig, MAC(pf,i,j,k),&newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
-        nstroke+=newtonstats.nstroke; newtonstats.nstroke=newtonstats.lntries=0;
+        nstroke+=newtonstats.nstroke; // cumulative global statistic
+        newtonstats.nstroke=newtonstats.lntries=0;
           
           
 #if(DODISS||DODISSVSR)
@@ -1254,8 +1255,6 @@ static int advance_standard_orig(
                             FTYPE *ndt)
 {
   FTYPE ndt1, ndt2, ndt3;
-  FTYPE dUtot;
-  FTYPE idx1,idx2;
   SFTYPE dt4diag;
   static SFTYPE dt4diag_willbe=0;
   int finalstep,initialstep;
@@ -1267,15 +1266,11 @@ static int advance_standard_orig(
   FTYPE (*ucumformetric)[NSTORE2][NSTORE3][NPR];
   int enerregion;
   int *localenerpos;
-  int jj;
   FTYPE (*utoinvert)[NSTORE2][NSTORE3][NPR];
   FTYPE (*tempucum)[NSTORE2][NSTORE3][NPR];
   FTYPE (*useducum)[NSTORE2][NSTORE3][NPR];
   FTYPE (*myupoint)[NSTORE2][NSTORE3][NPR];
-  int whichpltoavg[NPR];
-  int ifnotavgthencopy[NPR];
   int is,ie,js,je,ks,ke;
-  int doingextrashiftforstag;
 
 
 
@@ -1516,7 +1511,6 @@ static int advance_standard_orig(
   /////////////////////////////////////////////////////
 
 
-  int didreturnpf;
   if(truestep){
 
 
@@ -1548,6 +1542,7 @@ static int advance_standard_orig(
       struct of_state *qptr2=&qdontuse2; // different qptr since call normal and special get_state()
       // setup default eomtype
       int eomtype;
+      int didreturnpf;
 
 
       OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
@@ -1918,7 +1913,8 @@ static int advance_standard_orig(
         int checkoninversiongas=CHECKONINVERSION;
         int checkoninversionrad=CHECKONINVERSIONRAD;
         MYFUN(Utoprimgen(showmessages,checkoninversiongas,checkoninversionrad,allowlocalfailurefixandnoreport, finalstep,&eomtype,whichcap,whichmethod,modprim,EVOLVEUTOPRIM,UEVOLVE,MAC(myupoint,i,j,k), NULL, ptrgeom, dissmeasure, MAC(pi,i,j,k), MAC(pf,i,j,k),&newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
-        nstroke+=newtonstats.nstroke; newtonstats.nstroke=newtonstats.lntries=0;
+        nstroke+=newtonstats.nstroke;  // cumulative global statistic
+        newtonstats.nstroke=newtonstats.lntries=0;
 
 
 #if(DODISS||DODISSVSR)
@@ -1935,7 +1931,8 @@ static int advance_standard_orig(
         int checkoninversiongas=CHECKONINVERSION;
         int checkoninversionrad=CHECKONINVERSIONRAD;
         MYFUN(Utoprimgen(showmessages,checkoninversiongas,checkoninversionrad,allowlocalfailurefixandnoreport, finalstep,&eomtype,whichcap,whichmethod,modprim,EVOLVEUTOPRIM,UEVOLVE,MAC(myupoint,i,j,k), NULL, ptrgeom, dissmeasure, MAC(pi,i,j,k), MAC(pf,i,j,k),&newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
-        nstroke+=newtonstats.nstroke; newtonstats.nstroke=newtonstats.lntries=0;
+        nstroke+=newtonstats.nstroke;  // cumulative global statistic
+        newtonstats.nstroke=newtonstats.lntries=0;
       }
 
 
@@ -2055,8 +2052,6 @@ static int advance_finitevolume(
 {
   int sc;
   FTYPE ndt1, ndt2, ndt3;
-  FTYPE dUtot;
-  FTYPE idx1,idx2;
   SFTYPE dt4diag;
   static SFTYPE dt4diag_willbe=0;
   int finalstep,initialstep;
@@ -2066,7 +2061,6 @@ static int advance_finitevolume(
   int gravitydti,gravitydtj,gravitydtk;
   int enerregion;
   int *localenerpos;
-  int jj;
   FTYPE (*utoinvert)[NSTORE2][NSTORE3][NPR];
   FTYPE (*tempucum)[NSTORE2][NSTORE3][NPR];
   FTYPE (*useducum)[NSTORE2][NSTORE3][NPR];
@@ -2079,7 +2073,6 @@ static int advance_finitevolume(
   int docons,dosource;
   int locpl[NPR];
   int is,ie,js,je,ks,ke;
-  int doingextrashiftforstag;
 
 
   if(FLUXB==FLUXCTSTAG){
@@ -2268,7 +2261,6 @@ static int advance_finitevolume(
   // SOURCE TERM
   //
   ////////////////////////
-  int didreturnpf; // used to have source() pass back better guess for Utoprimgen() than pb.
 
   if(truestep){
     // GODMARK: other/more special cases?
@@ -2296,6 +2288,7 @@ static int advance_finitevolume(
       struct of_state *qptr=&qdontuse;
       // setup default eomtype
       int eomtype;
+      int didreturnpf; // used to have source() pass back better guess for Utoprimgen() than pb.
 
       OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
 
@@ -2705,7 +2698,8 @@ static int advance_finitevolume(
       int checkoninversiongas=CHECKONINVERSION;
       int checkoninversionrad=CHECKONINVERSIONRAD;
       MYFUN(Utoprimgen(showmessages,checkoninversiongas,checkoninversionrad,allowlocalfailurefixandnoreport, finalstep,&eomtype,whichcap,whichmethod,modprim,EVOLVEUTOPRIM, UEVOLVE, MAC(myupoint,i,j,k), NULL, ptrgeom, dissmeasure, MAC(pi,i,j,k), MAC(pf,i,j,k),&newtonstats),"step_ch.c:advance()", "Utoprimgen", 1);
-      nstroke+=newtonstats.nstroke; newtonstats.nstroke=newtonstats.lntries=0;
+      nstroke+=newtonstats.nstroke;  // cumulative global statistic
+      newtonstats.nstroke=newtonstats.lntries=0;
 
       //If using a high order scheme, need to choose whether to trust the point value
       if(docons){
@@ -3494,7 +3488,6 @@ int set_dt(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], SFTYPE *dt)
   enerregion=OUTSIDEHORIZONENERREGION; // consistent with flux update (except when doing WHAM)
   sourceenerpos=enerposreg[enerregion];
 
-  int didreturnpf=0; // used to have source() pass back better guess for Utoprimgen() than pb.
 
   //  COMPFULLLOOP{ // want to use boundary cells as well to limit dt (otherwise boundary-induced changes not treated)
   LOOPWITHINACTIVESECTIONEXPAND1(i,j,k){ // only 1 grid cell within boundary.  Don't need to use extrapolated cells deep inside boundary because those cells are not evolved.  More consistent with how flux.c sets dt.
@@ -3582,6 +3575,7 @@ int set_dt(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], SFTYPE *dt)
       // modifies prim() to be closer to final, which is ok here.
       // setup default eomtype
       int eomtype=EOMDEFAULT;
+      int didreturnpf=0; // used to have source() pass back better guess for Utoprimgen() than pb.
       MYFUN(source(MAC(prim,i,j,k), MAC(prim,i,j,k), MAC(prim,i,j,k), &didreturnpf, &eomtype, ptrgeom, &state, U, U, CUf, CUimp, 0.0, dUriemann, dUcomp, dUgeom),"advance.c:set_dt()", "source", 1);
 
       // get dt limit

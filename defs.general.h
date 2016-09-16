@@ -114,8 +114,8 @@ long DTfake;
 long rdump_cnt;
 //long fieldline_cnt; // assumed to keep track with images (as in diag.c), so no need to include in restart()
 
-int nstroke; // OPENMPMARK: Bad in some inversion codes
 
+long nstroke; // ensure in critical for OPENMPMARK if adding to cumulative, or don't use if needing per-point statistic
 
 ///for holding absolute values of indices of regions -- for restarting
 FTYPE t_transition_in,t_transition_out;

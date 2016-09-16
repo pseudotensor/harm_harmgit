@@ -1350,8 +1350,9 @@ int fixup1zone(int docorrectucons, FTYPE *pr, FTYPE *uconsinput, struct of_geom 
       //      dualfprintf(fail_file,"BEFORE FIXUPUTOPRIMGEN\n");
       failreturn=Utoprimgen(showmessages,checkoninversiongas,checkoninversionrad,allowlocalfailurefixandnoreport, finalstep,&eomtype,whichcap,whichmethod,modprim,OTHERUTOPRIM,UNOTHING,U,&q, ptrgeom,dissmeasure,prmhd,prmhd,&newtonstats);
       //      dualfprintf(fail_file,"AFTER FIXUPUTOPRIMGEN\n");
-      // have to add since takes effort.s
-      nstroke+=newtonstats.nstroke; newtonstats.nstroke=newtonstats.lntries=0;
+      // have to add since takes effort.
+      nstroke+=newtonstats.nstroke; // cumulative global statistic (assume overall function called inside parallel with reduction on nstroke)
+      newtonstats.nstroke=newtonstats.lntries=0;
 
       // KORALNOTEMARK: Only changing floor related to MHD fluid so far, so no check on failure of radiation inversion.
       badinversion = (failreturn>=1 || IFUTOPRIMFAIL(GLOBALMACP0A1(pflag,ptrgeom->i,ptrgeom->j,ptrgeom->k,FLAGUTOPRIMFAIL)));

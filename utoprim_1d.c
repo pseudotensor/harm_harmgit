@@ -566,7 +566,7 @@ static int general_newton_raphson( FTYPE x[], int n, int do_line_search,
   /* Start the Newton-Raphson iterations : */
   keep_iterating = 1;
   while( keep_iterating ) { 
-    nstroke++;
+    nstroke++;// global cumulative, assumes if OPENMP then overall function eventually under reduction on nstroke
 
     (*funcd) (x, dx, resid, jac, &f, &df, n);  /* returns with new dx, f, df */
 
