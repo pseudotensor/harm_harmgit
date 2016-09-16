@@ -1910,6 +1910,17 @@ void init_MPIgroup(void)
 
 // Environment variables (in bash, set like: export <variable>=<value> )
 //
+// MKL RELATED:
+// http://www.diracprogram.org/doc/release-12/installation/mkl.html
+//
+// export MKL_NUM_THREADS=4
+// export MKL_DOMAIN_NUM_THREADS="MKL_BLAS=4"
+// export OMP_NUM_THREADS=1
+// export MKL_DYNAMIC="FALSE"
+// export OMP_DYNAMIC="FALSE"
+//
+// http://www.ibm.com/support/knowledgecenter/SSLTBW_2.2.0/com.ibm.zos.v2r2.cbcux01/ruomprun.htm
+//
 // OMP_SCHEDULE : Which schedule method is set (e.g. export OMP_SCHEDULE="guided, 4")
 //
 // OMP_NUM_THREADS : Sets the maximum number of threads to use during execution (e.g. export OMP_NUM_THREADS=8)
