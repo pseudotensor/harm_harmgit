@@ -1316,7 +1316,6 @@ void adjust_vpot(SFTYPE fluxtime, int whichmethod, FTYPE (*pr)[NSTORE2][NSTORE3]
 /// update A_i
 int update_vpot(int whichmethod, int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL],FTYPE (*emf)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3], FTYPE *CUf, FTYPE *CUnew, SFTYPE fluxdt,FTYPE (*vpot)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],FTYPE (*vpot0)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],FTYPE (*vpotlast)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3],FTYPE (*vpotcum)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+SHIFTSTORE3])
 {
-  extern int bound_flux_fluxrecon(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL]);
   int dir;
   int fluxdirlist[NDIM],pldirlist[NDIM],plforfluxlist[NDIM];
   FTYPE signforfluxlist[NDIM];
@@ -1333,6 +1332,7 @@ int update_vpot(int whichmethod, int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], 
 
 #if(0)
   // DEBUG ONLY:  Bound before vpot updated so EMF is bounded so vpot looks normal
+  extern int bound_flux_fluxrecon(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL]);
   bound_flux_fluxrecon(stage,pr,Nvec,fluxvec);
 #endif
 
@@ -1408,9 +1408,9 @@ int update_vpot(int whichmethod, int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], 
         ///#else
         //#endif
         ///////      COMPZSLOOP( is, ie, js, je, ks, ke ){ // slightly expanded compared to normal flux calculation due to needing emf that is for 2 different fluxes
-      
+
         OPENMP3DLOOPSETUP( is, ie, js, je, ks, ke );
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) nowait // Can use "nowait" since each vpot[dir] setting is independent from prior loops
+#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) //nowait // Can use "nowait" since each vpot[dir] setting is independent from prior loops // SUPERGODMARK: NO, for some reason openmp stalls if keep this nowait
         OPENMP3DLOOPBLOCK{
           OPENMP3DLOOPBLOCK2IJK(i,j,k);
 

@@ -874,6 +874,7 @@ int bound_x1dn_radbeamflatinflow(
 
 {
 
+  extern FTYPE RADBEAMFLAT_FRATIO,RADBEAMFLAT_ERAD, RADBEAMFLAT_RHO, RADBEAMFLAT_UU;
 
 #pragma omp parallel  // assume don't require EOS
   {
@@ -938,7 +939,6 @@ int bound_x1dn_radbeamflatinflow(
 
             // set radiation quantities as R^t_\nu in orthonormal fluid frame using whichvel velocity and whichcoord coordinates
 
-            extern FTYPE RADBEAMFLAT_FRATIO,RADBEAMFLAT_ERAD, RADBEAMFLAT_RHO, RADBEAMFLAT_UU;
 
             //            FTYPE ERADAMB=RADBEAMFLAT_ERAD;
             //            FTYPE ERADINJ=1000.0*ERADAMB;
@@ -1083,6 +1083,7 @@ int bound_x1dn_bulkcompt2inflow(
 
 {
 
+  extern FTYPE BULKCOMPT2_FRATIO,BULKCOMPT2_ERAD, BULKCOMPT2_RHO, BULKCOMPT2_UU;
 
 #pragma omp parallel  // assume don't require EOS
   {
@@ -1147,7 +1148,6 @@ int bound_x1dn_bulkcompt2inflow(
 
             // set radiation quantities as R^t_\nu in orthonormal fluid frame using whichvel velocity and whichcoord coordinates
 
-            extern FTYPE BULKCOMPT2_FRATIO,BULKCOMPT2_ERAD, BULKCOMPT2_RHO, BULKCOMPT2_UU;
 
             //            FTYPE ERADAMB=BULKCOMPT2_ERAD;
             //            FTYPE ERADINJ=1000.0*ERADAMB;
@@ -1640,6 +1640,23 @@ int bound_radbeam2dbeaminflow(int dir,
 
 {
 
+    extern int RADBEAM2D_BEAMNO;
+    extern int RADBEAM2D_FLATBACKGROUND;
+    extern FTYPE RADBEAM2D_RHOAMB;
+    extern FTYPE RADBEAM2D_TAMB;
+    extern int RADBEAM2D_BLOB;
+    extern FTYPE RADBEAM2D_BLOBW;
+    extern FTYPE RADBEAM2D_BLOBP;
+    extern FTYPE RADBEAM2D_BLOBX;
+    extern FTYPE RADBEAM2D_BLOBZ;
+    extern FTYPE RADBEAM2D_PAR_D;
+    extern FTYPE RADBEAM2D_PAR_E;
+    extern int RADBEAM2D_IFBEAM;
+    extern FTYPE RADBEAM2D_TLEFT;
+    extern FTYPE RADBEAM2D_NLEFT;
+    extern FTYPE RADBEAM2D_BEAML;
+    extern FTYPE RADBEAM2D_BEAMR;
+
 
 #pragma omp parallel  // assume don't require EOS
   {
@@ -1659,22 +1676,6 @@ int bound_radbeam2dbeaminflow(int dir,
       ptrrgeom[pl]=&(rgeomdontuse[pl]);
     }
 
-    extern int RADBEAM2D_BEAMNO;
-    extern int RADBEAM2D_FLATBACKGROUND;
-    extern FTYPE RADBEAM2D_RHOAMB;
-    extern FTYPE RADBEAM2D_TAMB;
-    extern int RADBEAM2D_BLOB;
-    extern FTYPE RADBEAM2D_BLOBW;
-    extern FTYPE RADBEAM2D_BLOBP;
-    extern FTYPE RADBEAM2D_BLOBX;
-    extern FTYPE RADBEAM2D_BLOBZ;
-    extern FTYPE RADBEAM2D_PAR_D;
-    extern FTYPE RADBEAM2D_PAR_E;
-    extern int RADBEAM2D_IFBEAM;
-    extern FTYPE RADBEAM2D_TLEFT;
-    extern FTYPE RADBEAM2D_NLEFT;
-    extern FTYPE RADBEAM2D_BEAML;
-    extern FTYPE RADBEAM2D_BEAMR;
 
   
     if(dir==X3DN && BCtype[X3DN]==RADBEAM2DBEAMINFLOW && totalsize[3]>1 && mycpupos[3] == 0 ){
@@ -1878,6 +1879,23 @@ int bound_radbeam2dflowinflow(int dir,
 
 {
 
+    extern int RADBEAM2D_BEAMNO;
+    extern int RADBEAM2D_FLATBACKGROUND;
+    extern FTYPE RADBEAM2D_RHOAMB;
+    extern FTYPE RADBEAM2D_TAMB;
+    extern int RADBEAM2D_BLOB;
+    extern FTYPE RADBEAM2D_BLOBW;
+    extern FTYPE RADBEAM2D_BLOBP;
+    extern FTYPE RADBEAM2D_BLOBX;
+    extern FTYPE RADBEAM2D_BLOBZ;
+    extern FTYPE RADBEAM2D_PAR_D;
+    extern FTYPE RADBEAM2D_PAR_E;
+    extern int RADBEAM2D_IFBEAM;
+    extern FTYPE RADBEAM2D_TLEFT;
+    extern FTYPE RADBEAM2D_NLEFT;
+    extern FTYPE RADBEAM2D_BEAML;
+    extern FTYPE RADBEAM2D_BEAMR;
+
 
 #pragma omp parallel  // assume don't require EOS
   {
@@ -1902,22 +1920,6 @@ int bound_radbeam2dflowinflow(int dir,
     }
 
 
-    extern int RADBEAM2D_BEAMNO;
-    extern int RADBEAM2D_FLATBACKGROUND;
-    extern FTYPE RADBEAM2D_RHOAMB;
-    extern FTYPE RADBEAM2D_TAMB;
-    extern int RADBEAM2D_BLOB;
-    extern FTYPE RADBEAM2D_BLOBW;
-    extern FTYPE RADBEAM2D_BLOBP;
-    extern FTYPE RADBEAM2D_BLOBX;
-    extern FTYPE RADBEAM2D_BLOBZ;
-    extern FTYPE RADBEAM2D_PAR_D;
-    extern FTYPE RADBEAM2D_PAR_E;
-    extern int RADBEAM2D_IFBEAM;
-    extern FTYPE RADBEAM2D_TLEFT;
-    extern FTYPE RADBEAM2D_NLEFT;
-    extern FTYPE RADBEAM2D_BEAML;
-    extern FTYPE RADBEAM2D_BEAMR;
   
     if(dir==X1UP && BCtype[X1UP]==RADBEAM2DFLOWINFLOW && totalsize[1]>1 && mycpupos[1] == ncpux1-1 ){
 
@@ -2068,6 +2070,13 @@ int bound_radatmbeaminflow(int dir,
 {
 
 
+    extern FTYPE RADATM_MDOTEDD;
+    extern FTYPE RADATM_LUMEDD;
+    extern int RADATM_THINRADATM;
+    extern FTYPE RADATM_FERATIO;
+    extern FTYPE RADATM_FRATIO;
+    extern FTYPE RADATM_RHOAMB;
+    extern FTYPE RADATM_TAMB;
 
 
 
@@ -2094,13 +2103,6 @@ int bound_radatmbeaminflow(int dir,
     }
 
 
-    extern FTYPE RADATM_MDOTEDD;
-    extern FTYPE RADATM_LUMEDD;
-    extern int RADATM_THINRADATM;
-    extern FTYPE RADATM_FERATIO;
-    extern FTYPE RADATM_FRATIO;
-    extern FTYPE RADATM_RHOAMB;
-    extern FTYPE RADATM_TAMB;
 
 
     FTYPE MINX=Rin_array[1];
@@ -2540,6 +2542,13 @@ int bound_radbondiinflow(int dir,
 
 {
 
+  extern FTYPE RADBONDI_TESTNO;
+  extern FTYPE RADBONDI_PRADGAS;
+  extern FTYPE RADBONDI_TGAS0;
+  extern FTYPE RADBONDI_MDOTPEREDD;
+  extern FTYPE RADBONDI_MDOTEDD;
+  extern FTYPE RADBONDI_MINX;
+  extern FTYPE RADBONDI_MAXX;
 
 #pragma omp parallel  // assume don't require EOS
   {
@@ -2568,13 +2577,6 @@ int bound_radbondiinflow(int dir,
     if(dir==X1UP && BCtype[X1UP]==RADBONDIINFLOW && totalsize[1]>1 && mycpupos[1] == ncpux1-1 ){
 
 
-      extern FTYPE RADBONDI_TESTNO;
-      extern FTYPE RADBONDI_PRADGAS;
-      extern FTYPE RADBONDI_TGAS0;
-      extern FTYPE RADBONDI_MDOTPEREDD;
-      extern FTYPE RADBONDI_MDOTEDD;
-      extern FTYPE RADBONDI_MINX;
-      extern FTYPE RADBONDI_MAXX;
 
 
       OPENMPBCLOOPVARSDEFINELOOPX1DIR; OPENMPBCLOOPSETUPLOOPX1DIR;
@@ -2708,10 +2710,6 @@ int bound_raddot(
 
 {
 
-
-#pragma omp parallel  // assume don't require EOS
-  {
-
     extern FTYPE RADDOT_XDOT;
     extern FTYPE RADDOT_YDOT;
     extern FTYPE RADDOT_ZDOT;
@@ -2723,6 +2721,10 @@ int bound_raddot(
     extern FTYPE RADDOT_URFX;
     extern FTYPE RADDOT_F1;
     extern FTYPE RADDOT_F2;
+
+#pragma omp parallel  // assume don't require EOS
+  {
+
 
 
     int i,j,k,pl,pliter;
@@ -2818,10 +2820,6 @@ int bound_radnt(int dir,
 
 {
 
-
-#pragma omp parallel  // assume don't require EOS
-  {
-
     extern FTYPE RADNT_MINX;
     extern FTYPE RADNT_MAXX;
     extern FTYPE RADNT_KKK;
@@ -2841,6 +2839,11 @@ int bound_radnt(int dir,
     extern FTYPE RADNT_DONUTRADPMAX;
     extern FTYPE RADNT_HOVERR;
     extern FTYPE RADNT_LPOW;
+
+
+#pragma omp parallel  // assume don't require EOS
+  {
+
 
 
     int i,j,k,pl,pliter;
@@ -3113,6 +3116,8 @@ int bound_x1dn_cylaxis(
                        )
 {
 
+    extern FTYPE RADNT_OMSCALE;
+    extern FTYPE RADNT_FULLPHI;
 
 #pragma omp parallel  // assume don't require EOS
   {
@@ -3125,8 +3130,6 @@ int bound_x1dn_cylaxis(
     FTYPE prescale[NPR];
     int jj,kk;
 
-    extern FTYPE RADNT_OMSCALE;
-    extern FTYPE RADNT_FULLPHI;
 
   
     if( (BCtype[X1DN]==CYLAXIS) ){
@@ -3233,6 +3236,8 @@ int bound_x1up_radcylbeam(
 {
 
 
+    extern FTYPE RADNT_OMSCALE;
+    extern FTYPE RADNT_FULLPHI;
 
 
 
@@ -3259,8 +3264,6 @@ int bound_x1up_radcylbeam(
     }
 
 
-    extern FTYPE RADNT_OMSCALE;
-    extern FTYPE RADNT_FULLPHI;
 
 
     if(BCtype[X1UP]==RADCYLBEAMBC && (totalsize[1]>1) && (mycpupos[1] == ncpux1-1) ){
@@ -3625,6 +3628,7 @@ int bound_radbeam2dksvertbeaminflow(int dir,
                                     )
 
 {
+  extern int RADBEAM2DKSVERT_BEAMNO,RADBEAM2D_FLATBACKGROUND;
 
 
 #pragma omp parallel  // assume don't require EOS
@@ -3652,7 +3656,6 @@ int bound_radbeam2dksvertbeaminflow(int dir,
     if(dir==X2UP && BCtype[X2UP]==RADBEAM2DKSVERTBEAMINFLOW && totalsize[2]>1 && mycpupos[2] == ncpux2-1 ){
 
 
-      extern int RADBEAM2DKSVERT_BEAMNO,RADBEAM2D_FLATBACKGROUND;
       FTYPE RHOAMB=1.e0/RHOBAR;
       FTYPE TAMB=1e7/TEMPBAR;
       FTYPE PAR_D=1./RHOBAR;
