@@ -112,13 +112,11 @@ int pre_stepch(int *dumpingnext, FTYPE (*prim)[NSTORE2][NSTORE3][NPR])
 #endif
 
 
-
   // if not doing diagnostics, then dumpingnext will be 0
   // first check if dumping next step
   // note dt is already set to correct value here
   dumpingnext[0]=(diag(FUTURE_OUT,t+dt,nstep+1,realnstep+1)==DOINGFUTUREOUT);
   dumpingnext[1]=(diag(FUTURE_OUT,t+dt+dt/2,nstep+2,realnstep+2)==DOINGFUTUREOUT); // estimate of t+dt+dt/2 good with 1<SAFEFACTOR<2
-
 
 
     
@@ -170,18 +168,19 @@ int post_stepch(int *dumpingnext, FTYPE fullndt, FTYPE (*prim)[NSTORE2][NSTORE3]
   }
 
 
+#if(DOENERDIAG)
+
 #if(ACCURATEDIAG==0)
   // compute flux diagnostics
   // this doesn't exactly make conservation work -- should have in middle step point using full step.  But if PARA, no middle point that's exact.
   // think about where to put this
   // GODMARK : use of globals
-  diag_flux(prim,F1, F2, F3, dt); // should use REAL dt, not within a timeorderd RK integration step
+  diag_flux_pureflux(prim,GLOBALPOINT(F1), GLOBALPOINT(F2), GLOBALPOINT(F3), dt); // should use REAL dt, not within a timeorderd RK integration step
   //    horizon_flux(F1,dt); // subsumed
 #endif
 
   // general flux only done on full steps since no requirement for accuracy and code can be expensive computationally
   diag_flux_general(prim,dt);// Should be full dt, not substep dt.
-
 
 
 
@@ -191,6 +190,7 @@ int post_stepch(int *dumpingnext, FTYPE fullndt, FTYPE (*prim)[NSTORE2][NSTORE3]
     diag_fixup_allzones(prim, ucons);
   }
 
+#endif
 
 
 #if(PRODUCTION==0)

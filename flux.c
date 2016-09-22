@@ -721,6 +721,7 @@ int fluxcalc_flux(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[
   ///////////////////
   if(PERCELLDT){
     FTYPE ndtveclocal[NDIM];
+    FTYPE ndtvecstore;
 
     {  
       int dimen;
@@ -728,6 +729,7 @@ int fluxcalc_flux(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[
       DIMENLOOP(dimen){
         *(ndtvec[dimen])=BIG;
         ndtveclocal[dimen]=BIG;
+        ndtvecstore=BIG;
       }
     }
 
@@ -748,7 +750,7 @@ int fluxcalc_flux(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[
       OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUP(WITHINACTIVESECTIONEXPAND1IS,WITHINACTIVESECTIONEXPAND1IE,WITHINACTIVESECTIONEXPAND1JS,WITHINACTIVESECTIONEXPAND1JE,WITHINACTIVESECTIONEXPAND1KS,WITHINACTIVESECTIONEXPAND1KE);
     
 
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) reduction(min:ndtvecstore)
       OPENMP3DLOOPBLOCK{
         OPENMP3DLOOPBLOCK2IJK(i,j,k);
  
@@ -761,30 +763,37 @@ int fluxcalc_flux(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[
         // sum of inverses is proper for unsplit scheme based upon split interpolations/fluxes.
         wavedt = MINDTSET(ndtveclocal[1],ndtveclocal[2],ndtveclocal[3]);
  
-        // use dimen=1 to store result
-        dimen=dimenorig;
+        if (wavedt < ndtvecstore){ // dimen=1 stores result
+          ndtvecstore = wavedt;
+#if(PRODUCTION<=1)
 #pragma omp critical
-        {
-          if (wavedt < *(ndtvec[dimen]) ){
-            *ndtvec[dimen] = wavedt;
+          {
+            // use dimen=1 to store result
+            dimen=dimenorig;
             // below are global so can report when other dt's are reported in advance.c
             waveglobaldti[dimen]=i;
             waveglobaldtj[dimen]=j;
             waveglobaldtk[dimen]=k;
           }
-        }// end critical region
+#endif
+        }
       }//end over 3dloopblock
     }// end over parallel region
+
+
+
 
     // store result in all of ndt1,ndt2,ndt3 so have result no matter how many dimensions working on, and just use correctly later.
     {
       int dimen;
       DIMENLOOP(dimen){
         if(doingdimen[dimen]){
-          *ndtvec[dimen]=*ndtvec[dimenorig];
+          *ndtvec[dimen]=ndtvecstore;
+#if(PRODUCTION<=1)
           waveglobaldti[dimen]=waveglobaldti[dimenorig];
           waveglobaldtj[dimen]=waveglobaldtj[dimenorig];
           waveglobaldtk[dimen]=waveglobaldtk[dimenorig];
+#endif
         }
       }
     }
@@ -1067,6 +1076,7 @@ int fluxcalc_standard(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pst
   //  COMPFZLOOP(is,js,ks){
   //#else
   //  COMPZSLOOP( is, ie, js, je, ks, ke ) {{
+  FTYPE ndtstore=*ndt;
 #pragma omp parallel OPENMPGLOBALPRIVATEFORSTATEANDGEOM // requires full information
   {
     int i,j,k,pl,pliter;
@@ -1091,7 +1101,7 @@ int fluxcalc_standard(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pst
 #endif
 
 
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) reduction(min:ndtstore)
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
   
@@ -1203,16 +1213,18 @@ int fluxcalc_standard(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pst
           // only set timestep if in computational domain or just +-1 cell beyond.  Don't go further since end up not really using that flux or rely on the stability of fluxes beyond that point.
           // Need +-1 in case flow is driven by injection boundary conditions rather than what's on grid
           if(WITHINACTIVESECTIONEXPAND1(i,j,k)){
+            if (dtij < ndtstore){
+              ndtstore = dtij;
+#if(PRODUCTION<=1)
 #pragma omp critical
-            {// *ndt and waveglobaldt's have to have blocked write access for OpenMP
-              if (dtij < *ndt){
-                *ndt = dtij;
+              {// ndtstore and waveglobaldt's have to have blocked write access for OpenMP
                 // below are global so can report when other dt's are reported in advance.c
                 waveglobaldti[dir]=i;
                 waveglobaldtj[dir]=j;
                 waveglobaldtk[dir]=k;
-              }
-            }// end critical region
+              }// end critical region
+#endif
+            }
           }// end if within dt-setting section
         }
         else{
@@ -1228,7 +1240,8 @@ int fluxcalc_standard(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pst
     }// end 3D loop
   }// end parallel region
 
-  
+  // recover *ndt (OPENMPMARK: openmp reduction can't handle arrays/pointers, so have to do it this way)
+  *ndt = ndtstore;
 
 
   return (0);
@@ -1386,6 +1399,8 @@ int fluxcalc_standard_4fluxctstag(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR],
   //
   ////////////////////////////////////////
 
+  FTYPE ndtstore=*ndt;
+
   //#if((SIMULBCCALC==2)&&(TYPE2==1))
   //  COMPFZLOOP(is,js,ks)
   //#else
@@ -1473,16 +1488,18 @@ int fluxcalc_standard_4fluxctstag(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR],
           // only set timestep if in computational domain or just +-1 cell beyond.  Don't go further since end up not really using that flux or rely on the stability of fluxes beyond that point.
           // Need +-1 in case flow is driven by injection boundary conditions rather than what's on grid
           if(WITHINACTIVESECTIONEXPAND1(i,j,k)){
+            if (dtij < ndtstore){
+              ndtstore = dtij;
+#if(PRODUCTION<=1)
 #pragma omp critical
-            {// *ndt and waveglobaldt's have to have blocked write access for OpenMP
-              if (dtij < *ndt){
-                *ndt = dtij;
+              {// ndtstore and waveglobaldt's have to have blocked write access for OpenMP
                 // below are global so can report when other dt's are reported in advance.c
                 waveglobaldti[dir]=i;
                 waveglobaldtj[dir]=j;
                 waveglobaldtk[dir]=k;
-              }
-            }// end critical region
+              }// end critical region
+#endif
+            }
           }// end if within dt-setting section
         }
         else{
@@ -1498,6 +1515,8 @@ int fluxcalc_standard_4fluxctstag(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR],
   }// end parallel region
 
 
+  // recover *ndt (OPENMPMARK: openmp reduction can't handle arrays/pointers, so have to do it this way)
+  *ndt = ndtstore;
 
 
 

@@ -16,6 +16,8 @@
 /// whether to check symmetry along diagonal (for test==151 in Sasha's tests)
 #define ASYMDIAGCHECK 0
 
+#define DOENERDIAG 1 // normally do ENERDIAGS unless not needed
+
 /// whether to use accurate (bit more expensive) diagnostics.  Only necessary for timeorder>2
 #define ACCURATEDIAG 1
 #define FLUXDIAGPARTS 0 // whether to compute parts of fluxes

@@ -583,7 +583,7 @@ static int advance_standard(
 
       OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
       
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) reduction(+: nstroke)
+#pragma omp for schedule(OPENMPVARYENDTIMESCHEDULE(),OPENMPCHUNKSIZE(blocksize)) reduction(+: nstroke) // varyendtime (guided) for implicit solver that has non-uniform work for each cell
       OPENMP3DLOOPBLOCK{
         OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -2324,6 +2324,7 @@ static int advance_finitevolume(
       }// end COMPZLOOP
 
 
+#if(DOENERDIAG) // avoid critical and calls if not needing ENERDIAGS
       // Store diagnostics related to component form of sources. Done here since don't integrate-up compnents of source.  So only point accurate
 #if(SPLITNPR)
       // don't update metric if only doing B1-B3
@@ -2341,6 +2342,7 @@ static int advance_finitevolume(
             }
           }
         }
+#endif
       
 
       // volume integrate dUgeom
@@ -2425,6 +2427,7 @@ static int advance_finitevolume(
         PLOOP(pliter,pl) dUgeom[pl]=MACP0A1(dUgeomarray,i,j,k,pl);
 
 
+#if(DOENERDIAG) // avoid critical and calls if not needing ENERDIAGS
         // store diagnostics related to source.  Totals, so use volume-integrated source.
 #if(SPLITNPR)
         // don't update metric if only doing B1-B3
@@ -2442,7 +2445,7 @@ static int advance_finitevolume(
             }
           }   
         }
-    
+#endif
 
         // dUriemann is volume averaged quantity
         if(doflux){

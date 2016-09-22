@@ -483,6 +483,15 @@ endif
 # Intel machine specific
 ifeq ($(USEICCINTEL),1)
 
+ifeq ($(USEOPENMP),1)
+#	OPMPFLAGS=-openmp
+	OPMPFLAGS=-fopenmp
+# -par-affinity=scatter # for new icc.  Scatter is optimal for cache to avoid false sharing, although currently tests show no pinning is actually fastest.
+else
+	OPMPFLAGS=
+endif
+
+
 DFLAGS=-DUSINGICC=1  -DUSINGORANGE=0 $(EXTRA)
 LONGDOUBLECOMMAND=-long_double
 
@@ -516,7 +525,9 @@ COMP=icc $(DFLAGS) $(OPMPFLAGS)
 #CFLAGSPRENONPRECISE=-O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -parallel -par-report=2 -par-threshold=10 -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 $(DFLAGS)
 
 # NORMAL:
-CFLAGSPRENONPRECISE=-O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll $(PTHREADFLAGS) -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 $(DFLAGS)
+CFLAGSPRENONPRECISE=-xHOST -O3 -ip -no-prec-div -fp-model fast=2 -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll $(PTHREADFLAGS) -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 $(DFLAGS)
+# -prof-use
+# -prof-gen=threadsafe,globdata
 
 
 #FOR CHECKING OPTIMIZATIONS:
@@ -536,6 +547,8 @@ CFLAGSPRENONPRECISE=-O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -fin
 CFLAGSPRE=$(PRECISE) $(CFLAGSPRENONPRECISE)
 
 GCCCFLAGSPRE= -Wall -O2 $(DFLAGS)
+# -prof-use
+# -prof-gen=threadsafe,globdata
 
 #CFLAGSPRE=-O0 -g
 #CFLAGSPRE=-O0 -g
@@ -617,9 +630,9 @@ ifeq ($(USEICCINTELNEW),1)
 DFLAGS=-DUSINGICC=1  -DUSINGORANGE=0 $(EXTRA)
 LONGDOUBLECOMMAND=-long_double
 COMP=icc $(DFLAGS) $(OPMPFLAGS)
-CFLAGSPRENONPRECISE=-O2 -xP -no-prec-div -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 $(DFLAGS)
+CFLAGSPRENONPRECISE=-xHOST -O3 -no-prec-div -fp-model fast=2 -no-prec-sqrt -fp-speculation=fast -finline -finline-functions -ip -fno-alias -unroll -prof-use -Wall -Wcheck -Wshadow -w2 -wd=1419,869,177,310,593,810,981,1418 $(DFLAGS)
 CFLAGSPRE=$(PRECISE) $(CFLAGSPRENONPRECISE)
-GCCCFLAGSPRE= -Wall -O2 $(DFLAGS)
+GCCCFLAGSPRE= -Wall -O3 $(DFLAGS)
 
 
 LDFLAGS=-lm  $(LAPACKLDFLAGS) ${GSLLIB}
@@ -779,7 +792,10 @@ DFLAGS=-DUSINGICC=1  -DUSINGORANGE=0  -Wno-unknown-pragmas -no-ipo $(EXTRA)
 COMP=icc $(DFLAGS)
 # -fast forces static linkage with Intel compiler and Intel MPI library, which doesn't work on Pleaides
 #CFLAGSPRE=-fast -funroll-loops $(DFLAGS)
-CFLAGSPRE=-O3 -funroll-loops $(DFLAGS)
+# on west: xSSE4.2
+# on san: -xAVX
+# on bro: -xCORE-AVX2
+CFLAGSPRE=-O3 -funroll-loops $(DFLAGS) -prof-use
 CFLAGSPRENONPRECISE= $(CFLAGSPRE)
 GCCCFLAGSPRE= -O3 $(DFLAGS)
 # uses MVAPICH

@@ -23,7 +23,10 @@ int init_MPI_general(int *argc, char **argv[])
 #if(USEMPI)
   int ierr;
 #if(USEOPENMP)
-  int provided,required=MPI_THREAD_MULTIPLE;
+  //  http://www.mpich.org/static/docs/v3.1/www3/MPI_Init_thread.html
+  int provided,required=MPI_THREAD_FUNNELED; // master calls MPI
+  //MPI_THREAD_SERIALIZED : 
+  //MPI_THREAD_MULTIPLE; // any calls MPI, but overhead
   // lonestar4 locked-up here for some reason.   Had to set USEOPENMP->0 in makehead.inc.  Ranger was fine with openmp, but wasn't using openmp with lonestar3 with production runs, so unsure what situation is.
   ierr=MPI_Init_thread(argc, argv,required,&provided);
   stderrfprintf("Using MPI_Init_thread with required=%d and provided=%d\n",required,provided);

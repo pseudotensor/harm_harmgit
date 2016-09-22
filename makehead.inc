@@ -72,8 +72,8 @@ else
 ####################
 
 ifeq ($(HOSTNAME),physics-179.umd.edu)
-#USEICCINTEL=1
-USEGCC=1
+USEICCINTEL=1
+#USEGCC=1
 $(warning USEICCINTEL is $(USEICCINTEL))
 else ifeq ($(hoststriped),krakenpf)
 USEKRAKENICC=1
@@ -234,8 +234,10 @@ endif
 #
 # With icc and koralinsert and bounds.koral.c, issue with compile with OpenMP.  Can turn off OpenMP for just that one file by trying compile and copying compile like for bounds.c and remove USINGOPENMP and -fopenmp
 #
+# Note: Typical Intel CPUs have hyperthreading, and currently for harmrad using all hyperthreading cores helps reach maximum efficiency.
+#
 ########################
-USEOPENMP=0
+USEOPENMP=1
 
 
 ########################

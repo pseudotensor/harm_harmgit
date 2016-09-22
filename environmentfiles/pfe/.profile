@@ -13,15 +13,21 @@ PATH=$HOME/bin/$PATH			# Add private commands to PATH
 
 source ~/.bashrc.jon
 
+### OLD:
 # PFE modules
-module load comp-intel/2012.0.032
-#module load comp-intel/2011.2
-#module load mpi-sgi/mpt.2.04.10789
-#module load mpi-sgi/mpt.2.06r6
-#module load mpi-sgi/mpt.2.12r26
-module load test/mpt-2.13-25Jun15
-#module load mpi-sgi/mpt.2.06a67
-#module load mpi-intel/4.0.2.003
+#module load comp-intel/2012.0.032
+##module load comp-intel/2011.2
+##module load mpi-sgi/mpt.2.04.10789
+##module load mpi-sgi/mpt.2.06r6
+##module load mpi-sgi/mpt.2.12r26
+#module load test/mpt-2.13-25Jun15
+##module load mpi-sgi/mpt.2.06a67
+##module load mpi-intel/4.0.2.003
+
+### NEW:
+module load comp-intel/2016.2.181
+module load mpi-sgi/mpt
+
 export MPICC_CC=icc
 export MPIF90_F90=ifort
 export MPICXX_CXX=icpc

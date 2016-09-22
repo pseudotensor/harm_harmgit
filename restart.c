@@ -1181,7 +1181,8 @@ int readwrite_restart_header(int readwrite, int bintxt, int bcasthead, FILE*head
   headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&GAMMIEIMAGE,sizeof(int), "%d", 1, MPI_INT, headerptr);
   headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&GAMMIEENER,sizeof(int), "%d", 1, MPI_INT, headerptr);
   headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&DODIAGS,sizeof(int), "%d", 1, MPI_INT, headerptr);
-  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&DOENERDIAG,sizeof(int), "%d", 1, MPI_INT, headerptr);
+  int itemp=DOENERDIAG;
+  headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&itemp,sizeof(int), "%d", 1, MPI_INT, headerptr);
   headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&DOGDUMPDIAG,sizeof(int), "%d", 1, MPI_INT, headerptr);
   headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&DORDUMPDIAG,sizeof(int), "%d", 1, MPI_INT, headerptr);
   headercount+=header1_gen(!DONOTACCESSMEMORY,readwrite,bintxt,bcasthead,&DODUMPDIAG,sizeof(int), "%d", 1, MPI_INT, headerptr);

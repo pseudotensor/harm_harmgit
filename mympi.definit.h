@@ -10,7 +10,7 @@
 #define MPIVERSION 2 // choice
 
 // OpenMP spec version
-#define OPENMPVERSION 2 // 2 or 3 (3.0 not often implemented) 
+#define OPENMPVERSION 3 // 2 or 3 or 4 (4.0 not often implemented) 
 
 // whether to use ROMIO and whether to avoid fork()
 #if(USEMPI==1)

@@ -438,6 +438,17 @@ struct Ccoordparams {
 #if(PRODUCTION>=3)
 #undef DOFLOORDUMP // for accounting for energy from floor and controls if radial fluxes are dumped
 #define DOFLOORDUMP 0
+
+// assume no longer needs these as they are mostly for testing/debugging
+#undef DOENERDIAG
+#define DOENERDIAG 0
+
+#undef ACCURATESOURCEDIAG
+#undef ACCURATEDIAG
+#define ACCURATESOURCEDIAG 0
+#define ACCURATEDIAG 0
+
+
 #endif
 
 #if(PRODUCTION>=4)

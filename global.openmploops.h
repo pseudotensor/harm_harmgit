@@ -45,11 +45,12 @@
 
 
 /// below seems best on average
-#if(N1*N2*N3<200) // overhead becomes a problem for too few iterations in loops
+#if(1||N1*N2*N3<200) // overhead becomes a problem for too few iterations in loops
 #define OPENMPSCHEDULE(arg) static
-#define OPENMPCHUNKSIZE(blocksize) (MAX(blocksize/numopenmpthreads,MINCHUNKSIZE))
+// suprisingly, chunksize=1 is fastest with hyperthreading and full node use
+#define OPENMPCHUNKSIZE(blocksize) 1 //(MAX(blocksize/numopenmpthreads,MINCHUNKSIZE))
 #else
-#define OPENMPSCHEDULE(arg) guided
+#define OPENMPSCHEDULE(arg) guided // having hang (and sometimes segfault) problems with either gcc (seg with icc) with guided.
 #define OPENMPCHUNKSIZE(blocksize) (MAX(blocksize/OPENMPNUMCHUNKS,MINCHUNKSIZE))
 #endif
 
