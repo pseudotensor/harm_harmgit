@@ -61,8 +61,8 @@ static int restart_init_point_check_pglobal(int which, int i, int j, int k)
   PDUMPLOOP(pliter,pl){
     if(!finite(GLOBALMACP0A1(pglobal,i,j,k,pl)) ){
       dualfprintf(fail_file,"restart_init(%d): restart data has NaN at i=%d j=%d k=%d ti=%d tj=%d tk=%d :: pl=%d : pglobal=%21.15g\n",which,i,j,k,startpos[1]+i,startpos[2]+j,startpos[3]+k,pl,GLOBALMACP0A1(pglobal,i,j,k,pl));
-      if(SCALARPL(pl)){
-        dualfprintf(fail_file,"scalar went nan, reset to floor: pl=%d\n",pl);
+      if(PASSIVESCALARPL(pl)){
+        dualfprintf(fail_file,"passive scalar went nan, reset to floor: pl=%d\n",pl);
         GLOBALMACP0A1(pglobal,i,j,k,pl)=NUMEPSILON;
       }
       else{

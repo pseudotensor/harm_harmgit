@@ -4492,7 +4492,7 @@ int poledeath(int whichx2,
           //
           ///////////
           PBOUNDLOOP(pliter,pl2){
-            if( !isfinite( MACP0A1(prim,i,j,k,pl2))){
+            if(PASSIVESCALARPL(pl2)==0 && !isfinite( MACP0A1(prim,i,j,k,pl2))){
               dualfprintf(fail_file,"BNDNAN: ispstag=%d t=%21.15g nstep=%ld steppart=%d :: i=%d j=%d k=%d pl2=%d prim=%21.15g\n",ispstag,t,nstep,steppart,i,j,k,pl2,MACP0A1(prim,i,j,k,pl2));
             }
           }

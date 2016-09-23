@@ -131,6 +131,8 @@
 // passive or semi-active scalars part of invert_scalars1 or invert_scalars2
 #define SCALARPL(pl) (YFLPL(pl) || pl==YL || pl==YNU)
 
+#define PASSIVESCALARPL(pl) (YFLPL(pl))
+
 // passive scalars that are not to be considered part of dynamical equations (for radiation)
 #define NONRADDYNPL(pl) (YFLPL(pl) || pl==YL || pl==YNU)
 
