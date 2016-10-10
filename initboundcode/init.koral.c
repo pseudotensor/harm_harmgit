@@ -311,7 +311,7 @@ int prepre_init_specific_init(void)
     // KRAKEN: comment out above.  And change mympi.definit.h's USEROMIO 0 to 1 for the "choice" version.
   }
 
-//  binaryoutput=TEXTOUTPUT;
+  //  binaryoutput=TEXTOUTPUT;
 
 
 
@@ -9680,20 +9680,6 @@ void adjust_fluxctstag_emfs(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR
 
 //////////////////////////////////////////
 // FREE-FREE STUFF
-// see freefree_opacity.nb, freefree_opacity_fitenergyopacity.nb, freefree_opacity_fitnumberopacity.nb
-// accounts for self-absorption and energy vs. number opacity behavior
-//#define KAPPA_FF_ZETAFF_LEN(xv,lenv) (1.0/((lenv) + (0.99366835740822140451*Power((xv),3.001486183352440767))/      Prlog(1. + (0.96029003648876359763*(xv))/(0.62006021009771899259 + 1.3708624629986290167*Power((lenv),0.3428937745657171798)))))
-
-//#define KAPPAN_FF_ZETAFF_LEN(xv,lenv) (1.0/((lenv) + ((0.44920722974573544008 + 3.1077547389879800477*Power((lenv),0.23000000000000001))*Power((xv),2.066660783319324679))/      Log(1. + (10. + 58.528227977634806223/Power((lenv),0.25))*(xv))))
-
-//#define KAPPA_FF_PREFACTOR_CODE(rhocode,Tecode) (1.2E24*RHOBAR*rhocode*prpow(Tecode*TEMPBAR,-3.5)/OPACITYBAR)
-//#define KAPPA_FF_ZETA(Tecode,Trcode) ((TEMPMIN+Trcode)/(TEMPMIN+Tecode))
-// pretau = Lengthcgs * (rhocgs * KAPPA_FF_PREFACTORcgs) = CODELENGTH * rhocode * KAPPA_FF_PREFACTOR_CODE
-//#define KAPPA_FF_PRETAU_CODE(length,rhocode,Tecode) (length*rhocode*KAPPA_FF_PREFACTOR_CODE)
-
-//#define KAPPA_FF_CODE(rhocode,Tgcode,Trcode,ffzeta,pretau) (KAPPA_FF_PREFACTOR_CODE(rhocode,Tecode)*(1.0+XFACT)*(1.0-ZFACT)*KAPPA_FF_ZETAFF_LEN(ffzeta,pretau))
-//#define KAPPAN_FF_CODE(rhocode,Tgcode,Trcode,ffzeta,pretau) (KAPPA_FF_PREFACTOR_CODE(rhocode,Tecode)*(1.0+XFACT)*(1.0-ZFACT)*KAPPAN_FF_ZETAFF_LEN(ffzeta,pretau))
-
 #define KAPPAN_FF_CODE(rhocode,Tgcode,Trcode) KAPPA_FF_CODE(rhocode,Tgcode,Trcode)
 
 ///////////////////////////////////
@@ -9704,33 +9690,6 @@ void adjust_fluxctstag_emfs(SFTYPE fluxtime, FTYPE (*prim)[NSTORE2][NSTORE3][NPR
 #define KAPPA_MOL_CODE(rhocode,Tgcode,Trcode) (0.1*ZFACT/OPACITYBAR)
 // see opacities.nb
 #define KAPPA_GENFF_CODE(rhocode,Tgcode,Trcode) (1.0/(1.0/(KAPPA_MOL_CODE(rhocode,Tgcode,Trcode)+KAPPA_HN_CODE(rhocode,Tgcode,Trcode)) + 1.0/(KAPPA_CHIANTIBF_CODE(rhocode,Tgcode,Trcode)+KAPPA_BF_CODE(rhocode,Tgcode,Trcode)+KAPPA_FF_CODE(rhocode,Tgcode,Trcode)))) // for 1.3E3K \le T \le 1E9K or higher.  Numerically better to have kappa bottom out at low T so no diverent opacity as T->0
-
-//////////////////////////////////////////
-/// SYNCH STUFF
-//#define KAPPA_SYN_PREFACTOR_CODE(Bcode,Tecode) ((3.618472945417517e62*(YELE))/((Bcode)*(BFIELDBAR)*(MUMEAN)*Power((Tecode),5)*Power((TEMPBAR),5)*OPACITYBAR))
-
-//#define SYNZETA(Bcode,Tecode,Trcode) ((4.92270742942408e22*(Trcode))/((Bcode)*(BFIELDBAR)*Power((Tecode),2)*(TEMPBAR)))
-
-
-/// Synchrotron energy-opacity
-//#define KAPPA_SYN_ULTRAREL_ZETA_LEN(xv,len) (1.0/((lenv) + 1.7593661568669912098*Power((xv),1.6666666666666667) +      (1.4263215513887232471 + 0.3471650561326893869*Power((lenv),0.4523670248787104997))*Power((xv),2.111111111111111) +      0.23204675605082615204*Power((xv),2.5555555555555554) +      (0.24443559757524314548 + 0.0088705237575917670473*Power((lenv),0.4271869510615121102))*Power((xv),3)))
-//#define KAPPA_SYN_ULTRAREL_CODE(Bcode,Tecode,Trcode,Trcode,synzeta,pretau) (KAPPA_SYN_PREFACTOR_CODE(Bcode,Tecode)*KAPPA_SYN_ULTRAREL_ZETA_LEN(synzeta,pretau))
-
-//#define KAPPA_SYN_T5E8K_ZETA_LEN(xv,len) (1.0/((lenv) + 0.00052202316156059881506*Power((xv),1.6666666666666667) +      Power(0.14001850794282671986 + 0.11613125770482513044*Power((lenv),0.201800070232941442),3.3333333333333334814)*      Power((xv),2.111111111111111) + 0.00019353241505903052391*Power((xv),2.5555555555555554) +      (0.00027994589708735966894 + 0.000020878066604903371264*Power((lenv),0.1833333333333333481) +         0.00025453146537652838978*Power((lenv),0.3142857142857142794) + 0.000054874224183531537607*Power((lenv),0.5500000000000000444))*      Power((xv),3)))
-//#define KAPPA_SYN_T5E8K_CODE(Bcode,Tecode,Trcode,Trcode,synzeta,pretau) (KAPPA_SYN_PREFACTOR_CODE(Bcode,Tecode)*KAPPA_SYN_T5E8K_ZETA_LEN(synzeta,pretau))
-
-//#define KAPPA_SYN_T2E9K_ZETA_LEN(Bcode,Trcode) (1/((lenv) + (0.28275620637731327697 + 1.1378561908017619967e-11*Power((lenv),0.060928927736612376))*Power((xv),1.6666666666666667) +      (5.4268557992144783249 + 0.043977350144590657277*Power((lenv),0.5779288733465596239))*Power((xv),2.111111111111111) -      0.46233132906151664546*Power((xv),2.5555555555555554) +      (0.19718535926423731898 + 0.0031122781491543971728*Power((lenv),0.4612049073380375952))*Power((xv),3)))
-//#define KAPPA_SYN_T2E9K_CODE(Bcode,Tecode,Trcode,Trcode,synzeta,pretau) (KAPPA_SYN_PREFACTOR_CODE(Bcode,Tecode)*KAPPA_SYN_T2E9K_ZETA_LEN(synzeta,pretau))
-
-/// Synchrotron number-opacity
-//#define KAPPAN_SYN_ULTRAREL_ZETA_LEN(xv,len) (1.0/((lenv) + Power(0.86449798151937196078 + 0.24768973803440103021*Power((lenv),0.1626980491028581777),5.)*      Power((xv),1.6666666666666667) - 1.*(0.37887607591106965651 + 0.22518459751734409835*Power((lenv),0.4285631946482474364))*      Power((xv),1.8333333333333332593) + Power(0.73281421484706721348 + 0.21306057253116089667*Power((lenv),0.2099676374949942248),                                                    3.3333333333333334814)*Power((xv),2)))
-//#define KAPPAN_SYN_ULTRAREL_CODE(Bcode,Tecode,Trcode,Trcode,synzeta,pretau) (KAPPA_SYN_PREFACTOR_CODE(Bcode,Tecode)*KAPPAN_SYN_ULTRAREL_ZETA_LEN(synzeta,pretau))
-
-//#define KAPPAN_SYN_T5E8K_ZETA_LEN(xv,len) (1.0/((lenv) + Power(0.163252088813858387 + 0.18257330106897970423*Power((lenv),0.1627658778956655172),5.)*      Power((xv),1.6666666666666667) + Power(0.069760711506617445465 + 0.1433016264153323116*Power((lenv),0.2012366029583787241),       3.3333333333333334814)*Power((xv),2)))
-//#define KAPPAN_SYN_T5E8K_CODE(Bcode,Tecode,Trcode,Trcode,synzeta,pretau) (KAPPA_SYN_PREFACTOR_CODE(Bcode,Tecode)*KAPPAN_SYN_5E8K_ZETA_LEN(synzeta,pretau))
-
-//#define KAPPAN_SYN_T2E9K_ZETA_LEN(xv,len) (1.0/((lenv) + Power(0.59088832521110612461 + 0.4071501348167751444*Power((lenv),0.1132964803598243697),5.)*      Power((xv),1.6666666666666667) + (0.20483642960172801044 + 0.5219984832002366737*Power((lenv),0.1499999999999999944) +         0.02830076259937870306*Power((lenv),0.5999999999999999778))*Power((xv),2)))
-//#define KAPPAN_SYN_T2E9K_CODE(Bcode,Tecode,Trcode,Trcode,synzeta,pretau) (KAPPA_SYN_PREFACTOR_CODE(Bcode,Tecode)*KAPPAN_SYN_2E9K_ZETA_LEN(synzeta,pretau))
 
 
 //****************************************//
@@ -10524,10 +10483,15 @@ int kappa_func_fits_all(FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, FTYPE varexpf, F
   // high-thetae factor
   FTYPE pdc = pow(1.0+thetae,-3.0);
   kappadcreal *= pdc;
+
     
   FTYPE kappandcreal=kappadcreal; // same prefactor
-  FTYPE kappaemitdcreal=kappadcreal; // same prefactor
-  FTYPE kappanemitdcreal=kappadcreal; // same prefactor
+
+  // convert from 4\pi T_\gamma^4 multiplier to 4\pi T_e^4 multiplier used in phys.tools.c so as if adding a prepared \lambda
+  // TODOMARK: better to just sum-up lambda's and pass those back.
+  FTYPE ratiofordc=calc_LTE_EfromT(Tr)/calc_LTE_EfromT(Tg);
+  FTYPE kappaemitdcreal=kappadcreal*ratiofordc;
+  FTYPE kappanemitdcreal=kappadcreal*ratiofordc;
 
   // Apply restriction residual for XRB Ledd DC that becomes quite constant once thetar<1E-4 for both emission and absorption as well as energy and number opacities.
   FTYPE thetarinfit=thetar;
@@ -10589,7 +10553,7 @@ int kappa_func_fits_all(FTYPE rho, FTYPE B, FTYPE Tg, FTYPE Tr, FTYPE varexpf, F
 
   //////////////
   //
-  // Get final absorption/emission opacities
+  // Get final absorption/emission opacities (emissions converted to form to that when multipliied by a LTE-factor 4\pi B(T=T_e) that gives back \lambda)
   //
   //////////////
 
