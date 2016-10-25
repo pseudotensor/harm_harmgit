@@ -59,5 +59,14 @@ make install
 2) cd images
 
 3) dr8 im0p0s0l0000.r8
+
+# on some machines (e.g. mac), the "dr8" script's use of ~ will fail to reference the correct path.  So edit the dr8 or dr82 script and replace ~ with the full correct path.
+
+# In order to just convert the file to a good format, do (e.g.):
+
+4) <fullpathtoprogramfile>/r8torasjon 0 <fullpathtopalfile>/genimages.pal im0p0s0l0000.r8 ; convert im0p0s0l0000.ras im0p0s0l0000.png
+
+where you should replace <> stuff with actual full paths.
+
 ~~~~
 */
