@@ -8,6 +8,10 @@
 	ccc -lm -O3 -Wall -o r8toras r8toras.c
         scp r8toras root@metric:/usr/local/bin   
 
+	# if problem with gcc and -lm, use g++
+	g++ -lm -O3 -Wall -o r8toras r8toras.c
+
+
 	jcm 07/26/2000
 	jcm 08/21/2001
 	jcm 09/15/2001

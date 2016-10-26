@@ -55,6 +55,16 @@ subedd: From non-devel harmrad, a setup for sub-Eddington type simulation.
 superedd: From non-devel harmrad, a setup for super-Eddington type simulation.
 
 ========================
+Common problems:
+========================
+
+1) Might need to change defaults for ECHOSWTICH, USEMCCSWITCH, USEMCCSWITCHFORGCC.  E.g, latest Ubuntu16.10LTS needs ECHOSWITCH= in makefile .
+
+2) For various scripts, might need to enforce use of "bash" and not "dash" that is sometimes installed and doesn't give full bash compatibility/capability.
+
+3) Might need to add "export HOSTNAME" to .bashrc for makehead.inc to recognize hostname to automatically select compiler (if added your own host there)
+
+========================
 Common problems for master branch:
 ========================
 
