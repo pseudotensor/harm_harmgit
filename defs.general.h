@@ -281,11 +281,11 @@ int nprlist[MAXNPR]; // maximum is NPR elements
 
 /// for choosing range of PLOOPINTERP type arrays
 int npr2interpstart,npr2interpend; // normally 0 and NPR2INTERP-1
-int npr2interplist[MAXNPR]; // maximum is NPR2INTERP elements
+int *npr2interplist; // maximum is NPR2INTERP elements
 
 /// for choosing range of PLOOPNOTINTERP type arrays
 int npr2notinterpstart,npr2notinterpend; // normally 0 and -1
-int npr2notinterplist[MAXNPR]; // maximum is NPR2INTERP elements
+int *npr2notinterplist; // maximum is NPR2INTERP elements
 
 /// for choosing range of PBOUNDLOOP and PLOOPMPI type arrays
 int nprboundstart,nprboundend; // normally 0 and NPRBOUND-1
@@ -401,3 +401,4 @@ int ENDOPENMPSHAREDLIST;
 
 
 #pragma omp threadprivate(OPENMPGLOBALPRIVATELIST)
+//#pragma omp threadprivate(npr2interpstart,npr2interpend,npr2interplist,npr2notinterpstart,npr2notinterpend,npr2notinterplist)

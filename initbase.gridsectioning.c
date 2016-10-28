@@ -221,8 +221,7 @@ int bound_gridsectioning(int primtype, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTY
             get_geometry(i, j, k, CENT, ptrgeom);
             MYFUN(get_state(MAC(primsource,i,j,k), ptrgeom, &q),"step_ch.c:advance()", "get_state()", 1);
             MYFUN(primtoU(UEVOLVE,MAC(primsource,i,j,k), &q, ptrgeom, Unew, NULL),"initbase.gridsectioning.c:bound_gridsectioning()", "primtoU()", 1);
-            PLOOPNOB1(pl) MACP0A1(ucons,i,j,k,pl)=Unew[pl];
-            PLOOPNOB2(pl) MACP0A1(ucons,i,j,k,pl)=Unew[pl];
+            PLOOPNOB(pliter,pl) MACP0A1(ucons,i,j,k,pl)=Unew[pl];
           }
         }
       }// end if prim was centered

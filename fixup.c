@@ -1630,7 +1630,7 @@ int fixup_checksolution(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR],int finals
     OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
 
 
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -1673,7 +1673,7 @@ int fixup_checksolution(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR],int finals
     OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUPZLOOP;
 
 
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -1889,7 +1889,7 @@ int fixup_utoprim(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (*pbackup
 
 
     OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUPZLOOP;
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
       
@@ -2476,7 +2476,7 @@ int fixup_utoprim_nofixup(int stage, FTYPE (*pv)[NSTORE2][NSTORE3][NPR], FTYPE (
 
 
     OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUPZLOOP;
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
 

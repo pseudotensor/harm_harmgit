@@ -199,7 +199,7 @@ int bound_prim_user_dir_nsbh_old1(int boundstage, SFTYPE boundtime, int whichdir
       OPENMP3DLOOPVARSDEFINE;
       ////////  COMPFULLLOOP{
       OPENMP3DLOOPSETUPFULL;
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
       OPENMP3DLOOPBLOCK{
         OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -415,7 +415,7 @@ int bound_prim_user_dir_nsbh_old2(int boundstage, SFTYPE boundtime, int whichdir
       OPENMP3DLOOPVARSDEFINE;
       ////////  COMPFULLLOOP{
       OPENMP3DLOOPSETUPFULL;
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
       OPENMP3DLOOPBLOCK{
         OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -903,7 +903,7 @@ void adjust_fluxctstag_vpot_dosetextrapdirect_deep(SFTYPE fluxtime, FTYPE (*prim
     OPENMP3DLOOPVARSDEFINE;
     ////////  COMPFULLLOOP{
     OPENMP3DLOOPSETUPFULL;
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
 

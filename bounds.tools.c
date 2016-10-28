@@ -363,7 +363,7 @@ int bound_x1dn_outflow_simple(
 
         OPENMPBCLOOPVARSDEFINELOOPX1DIR; OPENMPBCLOOPSETUPLOOPX1DIR;
         //////// LOOPX1dir{
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
         OPENMPBCLOOPBLOCK{
           OPENMPBCLOOPBLOCK2IJKLOOPX1DIR(j,k);
 
@@ -490,7 +490,7 @@ int bound_x1up_outflow_simple(
 
         OPENMPBCLOOPVARSDEFINELOOPX1DIR; OPENMPBCLOOPSETUPLOOPX1DIR;
         //////// LOOPX1dir{
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
         OPENMPBCLOOPBLOCK{
           OPENMPBCLOOPBLOCK2IJKLOOPX1DIR(j,k);
 
@@ -624,7 +624,7 @@ int bound_x1dn_outflow(
 
         OPENMPBCLOOPVARSDEFINELOOPX1DIR; OPENMPBCLOOPSETUPLOOPX1DIR;
         //////// LOOPX1dir{
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
         OPENMPBCLOOPBLOCK{
           OPENMPBCLOOPBLOCK2IJKLOOPX1DIR(j,k);
 
@@ -804,7 +804,7 @@ int bound_x1up_outflow(
 
         OPENMPBCLOOPVARSDEFINELOOPX1DIR; OPENMPBCLOOPSETUPLOOPX1DIR;
         //////// LOOPX1dir{
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
         OPENMPBCLOOPBLOCK{
           OPENMPBCLOOPBLOCK2IJKLOOPX1DIR(j,k);
 
@@ -963,7 +963,7 @@ int bound_x1dn_sym(
         { // start block
           OPENMPBCLOOPVARSDEFINELOOPX1DIR; OPENMPBCLOOPSETUPLOOPX1DIR;
           //////// LOOPX1dir{
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
           OPENMPBCLOOPBLOCK{
             OPENMPBCLOOPBLOCK2IJKLOOPX1DIR(j,k);
 
@@ -989,7 +989,7 @@ int bound_x1dn_sym(
 
           OPENMPBCLOOPVARSDEFINELOOPX1DIR; OPENMPBCLOOPSETUPLOOPX1DIR;
           //////// LOOPX1dir{
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
           OPENMPBCLOOPBLOCK{
             OPENMPBCLOOPBLOCK2IJKLOOPX1DIR(j,k);
 
@@ -1087,7 +1087,7 @@ int bound_x2dn_outflow_simple(
 
         OPENMPBCLOOPVARSDEFINELOOPX2DIR; OPENMPBCLOOPSETUPLOOPX2DIR;
         //////// LOOPX2dir{
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
         OPENMPBCLOOPBLOCK{
           OPENMPBCLOOPBLOCK2IJKLOOPX2DIR(i,k);
 
@@ -1215,7 +1215,7 @@ int bound_x2up_outflow_simple(
 
         OPENMPBCLOOPVARSDEFINELOOPX2DIR; OPENMPBCLOOPSETUPLOOPX2DIR;
         //////// LOOPX2dir{
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
         OPENMPBCLOOPBLOCK{
           OPENMPBCLOOPBLOCK2IJKLOOPX2DIR(i,k);
 
@@ -1342,7 +1342,7 @@ int bound_x2dn_polaraxis_full3d(
           ////////   LOOPX2dir{
 
           OPENMPBCLOOPVARSDEFINELOOPX2DIR; OPENMPBCLOOPSETUPLOOPX2DIR;
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
           OPENMPBCLOOPBLOCK{
             OPENMPBCLOOPBLOCK2IJKLOOPX2DIR(i,k);
 
@@ -1484,7 +1484,7 @@ int bound_x2dn_polaraxis(
 
         {// block region
           OPENMPBCLOOPVARSDEFINELOOPX2DIR; OPENMPBCLOOPSETUPLOOPX2DIR;
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
           OPENMPBCLOOPBLOCK{
             OPENMPBCLOOPBLOCK2IJKLOOPX2DIR(i,k);
  
@@ -1508,7 +1508,7 @@ int bound_x2dn_polaraxis(
           //// LOOPX2dir{
 
           OPENMPBCLOOPVARSDEFINELOOPX2DIR; OPENMPBCLOOPSETUPLOOPX2DIR;
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
           OPENMPBCLOOPBLOCK{
             OPENMPBCLOOPBLOCK2IJKLOOPX2DIR(i,k);
 
@@ -1621,7 +1621,7 @@ int bound_x2up_polaraxis_full3d(
 
           //////   LOOPX2dir{
           OPENMPBCLOOPVARSDEFINELOOPX2DIR; OPENMPBCLOOPSETUPLOOPX2DIR;
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
           OPENMPBCLOOPBLOCK{
             OPENMPBCLOOPBLOCK2IJKLOOPX2DIR(i,k);
 
@@ -1756,7 +1756,7 @@ int bound_x2up_polaraxis(
         //////      LOOPX2dir{
         {// block region
           OPENMPBCLOOPVARSDEFINELOOPX2DIR; OPENMPBCLOOPSETUPLOOPX2DIR;
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
           OPENMPBCLOOPBLOCK{
             OPENMPBCLOOPBLOCK2IJKLOOPX2DIR(i,k);
 
@@ -1779,7 +1779,7 @@ int bound_x2up_polaraxis(
           /* make sure b and u are antisymmetric at the poles   (preserves u^t rho and u) */
           ////// LOOPX2dir{
           OPENMPBCLOOPVARSDEFINELOOPX2DIR; OPENMPBCLOOPSETUPLOOPX2DIR;
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
           OPENMPBCLOOPBLOCK{
             OPENMPBCLOOPBLOCK2IJKLOOPX2DIR(i,k);
 
@@ -1884,7 +1884,7 @@ int bound_x1_periodic(
         //// LOOPX1dir{
 
         OPENMPBCLOOPVARSDEFINELOOPX1DIR; OPENMPBCLOOPSETUPLOOPX1DIR;
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
         OPENMPBCLOOPBLOCK{
           OPENMPBCLOOPBLOCK2IJKLOOPX1DIR(j,k);
 
@@ -1976,7 +1976,7 @@ int bound_x2_periodic(
         //// LOOPX2dir{
 
         OPENMPBCLOOPVARSDEFINELOOPX2DIR; OPENMPBCLOOPSETUPLOOPX2DIR;
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
         OPENMPBCLOOPBLOCK{
           OPENMPBCLOOPBLOCK2IJKLOOPX2DIR(i,k);
 
@@ -2090,7 +2090,7 @@ int bound_x3dn_outflow_simple(
 
         OPENMPBCLOOPVARSDEFINELOOPX3DIR; OPENMPBCLOOPSETUPLOOPX3DIR;
         //////// LOOPX3dir{
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
         OPENMPBCLOOPBLOCK{
           OPENMPBCLOOPBLOCK2IJKLOOPX3DIR(i,j);
 
@@ -2215,7 +2215,7 @@ int bound_x3up_outflow_simple(
 
         OPENMPBCLOOPVARSDEFINELOOPX3DIR; OPENMPBCLOOPSETUPLOOPX3DIR;
         //////// LOOPX3dir{
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
         OPENMPBCLOOPBLOCK{
           OPENMPBCLOOPBLOCK2IJKLOOPX3DIR(i,j);
 
@@ -2340,7 +2340,7 @@ int bound_x3_periodic(
         //// LOOPX3dir{
 
         OPENMPBCLOOPVARSDEFINELOOPX3DIR; OPENMPBCLOOPSETUPLOOPX3DIR;
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
         OPENMPBCLOOPBLOCK{
           OPENMPBCLOOPBLOCK2IJKLOOPX3DIR(i,j);
 
@@ -3443,7 +3443,7 @@ int poledeath(int whichx2,
 
     ///////    LOOPX2dir{
     OPENMPBCLOOPVARSDEFINELOOPX2DIR; OPENMPBCLOOPSETUPLOOPX2DIR;
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
     OPENMPBCLOOPBLOCK{
       OPENMPBCLOOPBLOCK2IJKLOOPX2DIR(i,k);
 
@@ -4330,7 +4330,7 @@ int poledeath(int whichx2,
 
       ///////    LOOPX2dir{
       OPENMPBCLOOPVARSDEFINELOOPX2DIR; OPENMPBCLOOPSETUPLOOPX2DIR;
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
       OPENMPBCLOOPBLOCK{
         OPENMPBCLOOPBLOCK2IJKLOOPX2DIR(i,k);
 

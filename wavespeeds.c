@@ -341,7 +341,7 @@ int get_global_wavespeeds_full(int dir, int is, int ie, int js, int je, int ks, 
     // generally ptr's are different inside parallel block
     ptrgeom=&geomdontuse;
 
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -413,7 +413,7 @@ int global_vchar(FTYPE (*pointspeed)[NSTORE1][NSTORE2][NSTORE3][NUMCS], int dir,
 
 
     // COMPZSLOOP( is-idel, ie+idel, js-jdel, je+jdel, ks-kdel, ke+kdel ) { // due to averaging of this face quantity to get centered i/j/k=0 back
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
 

@@ -7596,6 +7596,8 @@ static int koral_source_rad_implicit_mode(int modemethodlocal, int allowbaseiter
               // using old uu,uup, but probably ok since just helps normalize error
               errorabsf1[0]=0.0;   JACLOOPFULLERROR(jjiter,jj) errorabsf1[0]   += fabs(f1report[jj]);
               errorabsf1[1]=0.0;   JACLOOPSUPERFULL(pliter,pl,eomtypelocal,*baseitermethod,*radinvmod)  errorabsf1[1]   += fabs(f1report[pl]);
+              // force best using "lowest" to use latest *radinvmod so apples-apples comparison in case best had radinvmod>0 but last iteration had radinvmod=0.
+              // This is instead of using radinvmodbest, which can give low error just because didn't include (say) radiation energy error.
               errorabsbest[0]=0.0; JACLOOPFULLERROR(jjiter,jj) errorabsbest[0] += fabs(lowestf1report[jj]);
               errorabsbest[1]=0.0; JACLOOPSUPERFULL(pliter,pl,eomtypelocal,*baseitermethod,*radinvmod)  errorabsbest[1] += fabs(lowestf1report[pl]);
 
@@ -11391,6 +11393,10 @@ static int matrix_inverse_jacnpr(FTYPE (*genmatrixlower)[JACNPR], FTYPE (*genmat
     //      if(j==4 || k==4) continue;
     //      else tmp[jj + 1][kk + 1] = genmatrixlower[j][k];
     //}
+#if(USEOPENMP)
+    // maintain thread safety
+    free_dmatrix(tmp, 1, truedim, 1, truedim);
+#endif
     return(failtype);
   }
 

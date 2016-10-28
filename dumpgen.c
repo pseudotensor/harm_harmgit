@@ -424,6 +424,7 @@ int dump_gen(int readwrite, long dump_cnt, int bintxt, int whichdump, MPI_Dataty
     //////////////////
 
 
+    if(fpp !=NULL) free(fpp);
     if (mpicombine == 0){
       COLLOOP(coliter) if (fpp[coliter] != NULL) fclose(fpp[coliter]);
     }

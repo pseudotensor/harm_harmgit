@@ -439,7 +439,7 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
 
       if(dodumpgen[ENERDUMPTYPE]){
         // cleanse the ener time scale for the failure diag
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) nowait
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize) nowait
         OPENMP3DLOOPBLOCK{
           OPENMP3DLOOPBLOCK2IJK(i,j,k);
           ////      ZLOOP{
@@ -451,7 +451,7 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
       if(dodumpgen[DEBUGDUMPTYPE]){
         // clense failure diag
         ////ZLOOP
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) nowait
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize) nowait
         OPENMP3DLOOPBLOCK{
           OPENMP3DLOOPBLOCK2IJK(i,j,k);
           FINALSTEPLOOP(indexfinalstep) FLOORLOOP(floor) GLOBALMACP0A3(failfloorcount,i,j,k,indexfinalstep,DEBUGTS,floor) =0;
@@ -461,7 +461,7 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
       if(dodumpgen[IMAGEDUMPTYPE]){
         // clense the failure counts for this time scale
         /////ZLOOP
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) nowait
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize) nowait
         OPENMP3DLOOPBLOCK{
           OPENMP3DLOOPBLOCK2IJK(i,j,k);
           FINALSTEPLOOP(indexfinalstep) FLOORLOOP(floor) GLOBALMACP0A3(failfloorcount,i,j,k,indexfinalstep,IMAGETS,floor) =0;

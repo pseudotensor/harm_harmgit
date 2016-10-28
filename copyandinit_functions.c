@@ -185,8 +185,7 @@ void copy_tempucum_finalucum(int whichpl, int *loop, FTYPE (*tempucum)[NSTORE2][
 #if(PRODUCTION==0)
 #pragma omp barrier // force barrier since otherwise nowait will leak into here with undefined values in general
         COMPZSLOOP(is,ie,js,je,ks,ke){
-          PLOOPNOB1(pl) ucum_check(i,j,k,CENT,pl, MAC(ucum,i,j,k));
-          PLOOPNOB2(pl) ucum_check(i,j,k,CENT,pl, MAC(ucum,i,j,k));
+          PLOOPNOB(pliter,pl) ucum_check(i,j,k,CENT,pl, MAC(ucum,i,j,k));
         }
 #endif
       }
@@ -375,7 +374,7 @@ void copy_3dnpr(int is, int ie, int js, int je, int ks, int ke,FTYPE (*source)[N
     int i,j,k,pl,pliter;
     OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
 
-#pragma omp for schedule(OPENMPFULLNOVARYSCHEDULE())
+#pragma omp for OPENMPNOVARYSCHEDULECHUNK()
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -417,13 +416,12 @@ void copy_3d_nofield(int is, int ie, int js, int je, int ks, int ke,FTYPE (*sour
     int i,j,k,pl,pliter;
     OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
 
-#pragma omp for schedule(OPENMPFULLNOVARYSCHEDULE())
+#pragma omp for OPENMPNOVARYSCHEDULECHUNK()
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
       //      COMPZSLOOP(is,ie,js,je,ks,ke){
-      PLOOPNOB1(pl) MACP0A1(dest,i,j,k,pl)=MACP0A1(source,i,j,k,pl);
-      PLOOPNOB2(pl) MACP0A1(dest,i,j,k,pl)=MACP0A1(source,i,j,k,pl);
+      PLOOPNOB(pliter,pl) MACP0A1(dest,i,j,k,pl)=MACP0A1(source,i,j,k,pl);
 
     }// end 3D loop
 
@@ -444,7 +442,7 @@ void copy_3d_fieldonly(int is, int ie, int js, int je, int ks, int ke,FTYPE (*so
     int i,j,k,pl,pliter;
     OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
 
-#pragma omp for schedule(OPENMPFULLNOVARYSCHEDULE())
+#pragma omp for OPENMPNOVARYSCHEDULECHUNK()
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -486,13 +484,12 @@ void copy_3d_nofield_nowait(int is, int ie, int js, int je, int ks, int ke,FTYPE
   // already inside parallel region
   OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
 
-#pragma omp for schedule(OPENMPFULLNOVARYSCHEDULE()) nowait
+#pragma omp for OPENMPNOVARYSCHEDULECHUNK() nowait
   OPENMP3DLOOPBLOCK{
     OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
     //      COMPZSLOOP(is,ie,js,je,ks,ke){
-    PLOOPNOB1(pl) MACP0A1(dest,i,j,k,pl)=MACP0A1(source,i,j,k,pl);
-    PLOOPNOB2(pl) MACP0A1(dest,i,j,k,pl)=MACP0A1(source,i,j,k,pl);
+    PLOOPNOB(pliter,pl) MACP0A1(dest,i,j,k,pl)=MACP0A1(source,i,j,k,pl);
 
   }// end 3D loop
 
@@ -509,7 +506,7 @@ void copy_3d_fieldonly_nowait(int is, int ie, int js, int je, int ks, int ke,FTY
   // already inside parallel region
   OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
 
-#pragma omp for schedule(OPENMPFULLNOVARYSCHEDULE()) nowait
+#pragma omp for OPENMPNOVARYSCHEDULECHUNK() nowait
   OPENMP3DLOOPBLOCK{
     OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -532,7 +529,7 @@ void copy_3d_onepl(int is, int ie, int js, int je, int ks, int ke, int pl, FTYPE
     int i,j,k;
     OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
 
-#pragma omp for schedule(OPENMPFULLNOVARYSCHEDULE())
+#pragma omp for OPENMPNOVARYSCHEDULECHUNK()
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -556,7 +553,7 @@ void copy_3d_onepl_nowait(int is, int ie, int js, int je, int ks, int ke, int pl
 
   // already inside parallel region
   OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
-#pragma omp for schedule(OPENMPFULLNOVARYSCHEDULE())
+#pragma omp for OPENMPNOVARYSCHEDULECHUNK()
   OPENMP3DLOOPBLOCK{
     OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -613,7 +610,7 @@ void init_3dnpr_flux(int is, int ie, int js, int je, int ks, int ke,FTYPE initva
     OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
 
 
-#pragma omp for schedule(OPENMPFULLNOVARYSCHEDULE())
+#pragma omp for OPENMPNOVARYSCHEDULECHUNK()
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -639,7 +636,7 @@ void init_3dnpr(int is, int ie, int js, int je, int ks, int ke,FTYPE initvalue, 
     OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
 
 
-#pragma omp for schedule(OPENMPFULLNOVARYSCHEDULE())
+#pragma omp for OPENMPNOVARYSCHEDULECHUNK()
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -692,7 +689,7 @@ void init_3dvpot(int is, int ie, int js, int je, int ks, int ke,FTYPE initvalue,
   {
     int i,j,k;
     OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
-#pragma omp for schedule(OPENMPFULLNOVARYSCHEDULE())
+#pragma omp for OPENMPNOVARYSCHEDULECHUNK()
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
       
@@ -728,7 +725,7 @@ void copy_3dvpot(int is, int ie, int js, int je, int ks, int ke, FTYPE (*source)
   {
     int i,j,k;
     OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
-#pragma omp for schedule(OPENMPFULLNOVARYSCHEDULE())
+#pragma omp for OPENMPNOVARYSCHEDULECHUNK()
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
       
@@ -763,7 +760,7 @@ void init_3dnpr_2ptrs(int is, int ie, int js, int je, int ks, int ke,FTYPE initv
     int i,j,k,pl,pliter;
     OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
 
-#pragma omp for schedule(OPENMPFULLNOVARYSCHEDULE())
+#pragma omp for OPENMPNOVARYSCHEDULECHUNK()
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -788,7 +785,7 @@ void init_3dnpr_3ptrs(int is, int ie, int js, int je, int ks, int ke,FTYPE initv
     int i,j,k,pl,pliter;
     OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
 
-#pragma omp for schedule(OPENMPFULLNOVARYSCHEDULE())
+#pragma omp for OPENMPNOVARYSCHEDULECHUNK()
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -816,7 +813,7 @@ void copy_3dnpr_2ptrs(int is, int ie, int js, int je, int ks, int ke,FTYPE (*sou
     int i,j,k,pl,pliter;
     OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
 
-#pragma omp for schedule(OPENMPFULLNOVARYSCHEDULE())
+#pragma omp for OPENMPNOVARYSCHEDULECHUNK()
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -849,7 +846,7 @@ void copy_3dpftype_special(int is, int ie, int js, int je, int ks, int ke,PFTYPE
     int i,j,k;
     OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
 
-#pragma omp for schedule(OPENMPFULLNOVARYSCHEDULE())
+#pragma omp for OPENMPNOVARYSCHEDULECHUNK()
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -901,7 +898,7 @@ void copy_3dnpr2interp_2ptrs(int is, int ie, int js, int je, int ks, int ke,FTYP
     int i,j,k,pl,pliter;
     OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
 
-#pragma omp for schedule(OPENMPFULLNOVARYSCHEDULE())
+#pragma omp for OPENMPNOVARYSCHEDULECHUNK()
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
 

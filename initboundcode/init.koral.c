@@ -9010,21 +9010,24 @@ int set_density_floors(struct of_geom *ptrgeom, FTYPE *pr, FTYPE *prfloor, FTYPE
 
   int pliter,pl;
   PLOOP(pliter,pl){
-    prfloor[RHO]=RHOMINLIMIT;
-    prfloor[UU]=UUMINLIMIT;
-
-    prceiling[RHO]=BIG;
-    prceiling[UU]=BIG;
-
-    if(PRAD0>=0){ 
-      prfloor[PRAD0]=ERADLIMIT;
-      prceiling[PRAD0]=BIG;
-    }
-    if(NRAD>=0){ 
-      prfloor[NRAD]=ERADLIMIT;
-      prceiling[NRAD]=BIG;
-    }
+    prfloor[pl]=0.0;
   }
+    
+  prfloor[RHO]=RHOMINLIMIT;
+  prfloor[UU]=UUMINLIMIT;
+  
+  prceiling[RHO]=BIG;
+  prceiling[UU]=BIG;
+  
+  if(PRAD0>=0){ 
+    prfloor[PRAD0]=ERADLIMIT;
+    prceiling[PRAD0]=BIG;
+  }
+  if(NRAD>=0){ 
+    prfloor[NRAD]=ERADLIMIT;
+    prceiling[NRAD]=BIG;
+  }
+
 
   // default is for spherical flow near BH
   if(WHICHPROBLEM==RADDONUT){
@@ -9053,21 +9056,24 @@ int set_density_floors_alt(struct of_geom *ptrgeom, struct of_state *q, FTYPE *p
 
   int pliter,pl;
   PLOOP(pliter,pl){
-    prfloor[RHO]=RHOMINLIMIT;
-    prfloor[UU]=UUMINLIMIT;
-
-    prceiling[RHO]=BIG;
-    prceiling[UU]=BIG;
-
-    if(PRAD0>=0){ 
-      prfloor[PRAD0]=ERADLIMIT;
-      prceiling[PRAD0]=BIG;
-    }
-    if(NRAD>=0){ 
-      prfloor[NRAD]=ERADLIMIT;
-      prceiling[NRAD]=BIG;
-    }
+    prfloor[pl]=0.0;
   }
+  
+  prfloor[RHO]=RHOMINLIMIT;
+  prfloor[UU]=UUMINLIMIT;
+  
+  prceiling[RHO]=BIG;
+  prceiling[UU]=BIG;
+  
+  if(PRAD0>=0){ 
+    prfloor[PRAD0]=ERADLIMIT;
+    prceiling[PRAD0]=BIG;
+  }
+  if(NRAD>=0){ 
+    prfloor[NRAD]=ERADLIMIT;
+    prceiling[NRAD]=BIG;
+  }
+
 
   // default is for spherical flow near BH
   if(WHICHPROBLEM==RADDONUT){

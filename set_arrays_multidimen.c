@@ -291,7 +291,7 @@ void set_arrays_multidimen()
   GLOBALPOINT(gp_l) = (FTYPE PTRMACP1A1(gp_l,FILL,N1M,N2M,N3M,NPR2INTERP)) (&(BASEMACP1A1(gp_l,-1,N1BND,N2BND,N3BND,0)));
   GLOBALPOINT(gp_r) = (FTYPE PTRMACP1A1(gp_r,FILL,N1M,N2M,N3M,NPR2INTERP)) (&(BASEMACP1A1(gp_r,-1,N1BND,N2BND,N3BND,0)));
 
-  FULLLOOP PINTERPLOOP(pliter,pl){
+  FULLLOOP PLOOPALLINTERP(pl){
     for(l=1;l<=3;l++){
       GLOBALMACP1A1(gp_l,l,i,j,k,pl) = valueinit;
       GLOBALMACP1A1(gp_r,l,i,j,k,pl) = valueinit;
@@ -305,7 +305,7 @@ void set_arrays_multidimen()
   GLOBALPOINT(pright) = (FTYPE PTRMACP0A1(pright,N1M,N2M,N3M,NPR2INTERP)) (&(BASEMACP0A1(pright,N1BND,N2BND,N3BND,0)));
   GLOBALPOINT(prc) = (FTYPE PTRMACP0A1(prc,N1M,N2M,N3M,NPR2INTERP)) (&(BASEMACP0A1(prc,N1BND,N2BND,N3BND,0)));
   
-  FULLLOOP PINTERPLOOP(pliter,pl){
+  FULLLOOP PLOOPALLINTERP(pl){
     GLOBALMACP0A1(pleft,i,j,k,pl) = valueinit;
     GLOBALMACP0A1(pright,i,j,k,pl) = valueinit;
     GLOBALMACP0A1(prc,i,j,k,pl) = valueinit;
@@ -365,15 +365,15 @@ void set_arrays_multidimen()
 #if(DODQMEMORY||STORESHOCKINDICATOR)
 #if(N1>1)
   GLOBALPOINT(dq1) = (FTYPE PTRMACP0A1(dq1,N1M,N2M,N3M,NPR2INTERP)) (&(BASEMACP0A1(dq1,N1BND,N2BND,N3BND,0)));
-  FULLLOOP PINTERPLOOP(pliter,pl) GLOBALMACP0A1(dq1,i,j,k,pl) = valueinit;
+  FULLLOOP PLOOPALLINTERP(pl) GLOBALMACP0A1(dq1,i,j,k,pl) = valueinit;
 #endif
 #if(N2>1)
   GLOBALPOINT(dq2) = (FTYPE PTRMACP0A1(dq2,N1M,N2M,N3M,NPR2INTERP)) (&(BASEMACP0A1(dq2,N1BND,N2BND,N3BND,0)));
-  FULLLOOP PINTERPLOOP(pliter,pl) GLOBALMACP0A1(dq2,i,j,k,pl) = valueinit;
+  FULLLOOP PLOOPALLINTERP(pl) GLOBALMACP0A1(dq2,i,j,k,pl) = valueinit;
 #endif
 #if(N3>1)
   GLOBALPOINT(dq3) = (FTYPE PTRMACP0A1(dq3,N1M,N2M,N3M,NPR2INTERP)) (&(BASEMACP0A1(dq3,N1BND,N2BND,N3BND,0)));
-  FULLLOOP PINTERPLOOP(pliter,pl) GLOBALMACP0A1(dq3,i,j,k,pl) = valueinit;
+  FULLLOOP PLOOPALLINTERP(pl) GLOBALMACP0A1(dq3,i,j,k,pl) = valueinit;
 #endif
 #endif
 

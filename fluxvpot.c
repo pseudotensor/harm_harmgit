@@ -535,7 +535,7 @@ int init_vpot_justAcov(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE 
     //  FTYPE signforflux;
 
     OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUPFULLP1;
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -668,7 +668,7 @@ int init_vpot_toF(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+S
     //  FTYPE signforflux;
 
     OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUPFULLP1;
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -790,7 +790,7 @@ int copy_vpot2flux(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2][NSTORE3+
       int i,j,k;
       OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUPFULL;
 
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
       OPENMP3DLOOPBLOCK{
         OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -991,7 +991,7 @@ int vpot2field_useflux(int *fieldloc,FTYPE (*pfield)[NSTORE2][NSTORE3][NPR],FTYP
     get_odirs(dir,&odir1,&odir2);
     if(!(Nvec[odir1]==1 && Nvec[odir2]==1)){
       ////////      COMPFULLLOOP{ // COMPFULLLOOP allows since A_i exists atCOMPFULLLOOPP1 and so always accessing valid A_i
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) nowait // no wait allowed as in fluxct.c
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize) nowait // no wait allowed as in fluxct.c
       OPENMP3DLOOPBLOCK{
         OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -1023,7 +1023,7 @@ int vpot2field_useflux(int *fieldloc,FTYPE (*pfield)[NSTORE2][NSTORE3][NPR],FTYP
     get_odirs(dir,&odir1,&odir2);
     if(!(Nvec[odir1]==1 && Nvec[odir2]==1)){
       ///////COMPFULLLOOP{
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) nowait // no wait allowed as in fluxct.c
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize) nowait // no wait allowed as in fluxct.c
       OPENMP3DLOOPBLOCK{
         OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -1054,7 +1054,7 @@ int vpot2field_useflux(int *fieldloc,FTYPE (*pfield)[NSTORE2][NSTORE3][NPR],FTYP
     get_odirs(dir,&odir1,&odir2);
     if(!(Nvec[odir1]==1 && Nvec[odir2]==1)){
       ////////COMPFULLLOOP{
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) nowait // no wait allowed as in fluxct.c
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize) nowait // no wait allowed as in fluxct.c
       OPENMP3DLOOPBLOCK{
         OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -1410,7 +1410,7 @@ int update_vpot(int whichmethod, int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], 
         ///////      COMPZSLOOP( is, ie, js, je, ks, ke ){ // slightly expanded compared to normal flux calculation due to needing emf that is for 2 different fluxes
 
         OPENMP3DLOOPSETUP( is, ie, js, je, ks, ke );
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) //nowait // Can use "nowait" since each vpot[dir] setting is independent from prior loops // SUPERGODMARK: NO, for some reason openmp stalls if keep this nowait
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize) //nowait // Can use "nowait" since each vpot[dir] setting is independent from prior loops // SUPERGODMARK: NO, for some reason openmp stalls if keep this nowait
         OPENMP3DLOOPBLOCK{
           OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -1547,7 +1547,7 @@ int set_emfflux(int whichmethod, int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], 
  
       
         OPENMP3DLOOPSETUP( is, ie, js, je, ks, ke );
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) nowait // Can use "nowait" since each vpot[dir] setting is independent from prior loops
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize) nowait // Can use "nowait" since each vpot[dir] setting is independent from prior loops
         OPENMP3DLOOPBLOCK{
           OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -1607,7 +1607,7 @@ int normalize_field_withnorm(FTYPE norm, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], F
 
     ///////  COMPZLOOP {
     OPENMP3DLOOPSETUPZLOOP;
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) nowait // next vpot assignment is independent
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize) nowait // next vpot assignment is independent
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -1644,7 +1644,7 @@ int normalize_field_withnorm(FTYPE norm, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], F
 
       /////////      COMPFULLLOOPP1{
       OPENMP3DLOOPSETUPFULLP1;
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) nowait // next vpot assignment is independent
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize) nowait // next vpot assignment is independent
       OPENMP3DLOOPBLOCK{
         OPENMP3DLOOPBLOCK2IJK(i,j,k);
  
@@ -1683,7 +1683,7 @@ int assign_fieldconservatives_pointvalues(FTYPE (*prim)[NSTORE2][NSTORE3][NPR],F
     struct of_geom *ptrgeomf=&geomfdontuse;
     
     OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUPFULL;
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -1778,7 +1778,7 @@ int init_zero_field(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2
     int i,j,k;
     int jj;
     OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUPFULL;
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -1802,7 +1802,7 @@ int init_zero_field(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2
       int i,j,k;
       int jj;
       OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUPFULLP1;
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
       OPENMP3DLOOPBLOCK{
         OPENMP3DLOOPBLOCK2IJK(i,j,k);
 

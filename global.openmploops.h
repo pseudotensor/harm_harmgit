@@ -67,6 +67,16 @@
 /// below is for loops with very different times for each iteration (e.g. inversion loop)
 #define OPENMPVARYENDTIMESCHEDULE(arg) guided
 
+#if(0) // chunk
+#define OPENMPSCHEDULECHUNK(blocksize) schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#define OPENMPVARYSCHEDULECHUNK(blocksize) schedule(OPENMPVARYENDTIMESCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#define OPENMPNOVARYSCHEDULECHUNK(blocksize) schedule(OPENMPFULLNOVARYSCHEDULE())
+#else // full auto
+#define OPENMPSCHEDULECHUNK(blocksize) schedule(auto)
+#define OPENMPVARYSCHEDULECHUNK(blocksize) schedule(auto)
+#define OPENMPNOVARYSCHEDULECHUNK() schedule(auto)
+#endif
+
 /// Oddly, performance changes by 10% when changing how start and stop blockijk (and fixing how used too of course)
 //#define OPENMP3DLOOPBLOCK     for(blockijk=0;blockijk<blocksize;blockijk++)
 #define OPENMP3DLOOPBLOCK     for(blockijk=1;blockijk<=blocksize;blockijk++)

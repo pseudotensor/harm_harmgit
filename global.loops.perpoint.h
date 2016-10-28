@@ -117,6 +117,7 @@
 
 /// always goes over all interpolatable primitives
 #define PLOOPALLINTERP(pl) for(pl=0;pl<NPR2INTERP;pl++)
+#define PLOOPALLNOTINTERP(pliter,pl) for(pl=0;pl<0;pl++) // do nothing
 
 
 /// always goes over all primitives
@@ -125,11 +126,8 @@
 
 
 
-
-#define PLOOPNOB1(pl) for(pl=0;pl<B1;pl++)
+#define PLOOPNOB(pliter,pl) PLOOP(pliter,pl)  if(!BPL(pl))
 #define PLOOPBONLY(pl) for(pl=B1;pl<=B3;pl++)
-#define PLOOPNOB2(pl) for(pl=B3+1;pl<NPR;pl++)
-#define PLOOPNOB2SPECIAL(pl,special) for(pl=B3+1;pl<NPR+special;pl++)
 
 
 

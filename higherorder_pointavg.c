@@ -369,8 +369,7 @@ int flux_deaverage_fluxrecon(int stage, int whichmaem, FTYPE (*pr)[NSTORE2][NSTO
 
 
               COMPFULLLOOP{
-                PLOOPNOB1(pl)  GLOBALMACP0A1(stencilvartemp,i,j,k,pl) = MACP1A1(fluxvec,dir,i,j,k,pl) + MACP1A1(fluxvecother,dir,i,j,k,pl);
-                PLOOPNOB2(pl)  GLOBALMACP0A1(stencilvartemp,i,j,k,pl) = MACP1A1(fluxvec,dir,i,j,k,pl) + MACP1A1(fluxvecother,dir,i,j,k,pl);
+                PLOOPNOB(pliter,pl)  GLOBALMACP0A1(stencilvartemp,i,j,k,pl) = MACP1A1(fluxvec,dir,i,j,k,pl) + MACP1A1(fluxvecother,dir,i,j,k,pl);
 
                 // GODMARK: In stiff flows need to couple pressure and velocity, but otherwise pressure can be independent
                 // By "couple" I mean when minimizing weights need to include pressure in stiff regimes
@@ -708,8 +707,7 @@ int initial_averageu_fluxrecon(int *fieldfrompotential, FTYPE (*prim)[NSTORE2][N
   // non-field U stays as point, but field Upoint needs to be quasi-deaveraged if field didn't come from potential in order to obtain correct "Uavg"
   // don't overwrite Uavg for field since may be from vector potential and so correct divb=0 form
   COMPFULLLOOP{
-    PLOOPNOB1(pl) MACP0A1(Uavg,i,j,k,pl)=MACP0A1(Upoint,i,j,k,pl);
-    PLOOPNOB2(pl) MACP0A1(Uavg,i,j,k,pl)=MACP0A1(Upoint,i,j,k,pl);
+    PLOOPNOB(pliter,pl) MACP0A1(Uavg,i,j,k,pl)=MACP0A1(Upoint,i,j,k,pl);
   }
 
   // now deal with conserved (divb=0) fields
@@ -2173,8 +2171,7 @@ int initial_averageu_fv(int *fieldfrompotential, FTYPE (*prim)[NSTORE2][NSTORE3]
     if(1 || FLUXB==FLUXCTSTAG || FLUXB==FLUXCTTOTH){ //(1 || because currently all FLUXB methods set Uavg before pi2Uavg either through vpot or in init.c's  init_conservatives() before the pi2Uavg call)
       // can't overwrite staggered conserved field that MUST be set
       COMPFULLLOOP{
-        PLOOPNOB1(pl) MACP0A1(Uavg,i,j,k,pl) = MACP0A1(Upoint,i,j,k,pl);
-        PLOOPNOB2(pl) MACP0A1(Uavg,i,j,k,pl) = MACP0A1(Upoint,i,j,k,pl);
+        PLOOPNOB(pliter,pl) MACP0A1(Uavg,i,j,k,pl) = MACP0A1(Upoint,i,j,k,pl);
       }
     }
     else{

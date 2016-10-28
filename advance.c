@@ -446,7 +446,7 @@ static int advance_standard(
         /////////////////////////////////////////////////////
         OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
 
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK()
         OPENMP3DLOOPBLOCK{
           OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -560,9 +560,10 @@ static int advance_standard(
       struct of_geom *ptrgeom=&geomdontuse;
 
       // for source()
-      FTYPE Uitemp[NPR];
+      FTYPE Uitemp[NPR]={0};
       // set all to zero in case doother=DONONBPL in which case need rest of calculations to know no change to field
-      FTYPE dUgeom[NPR]={0},dUriemann[NPR]={0},dUriemann1[NPR+NSPECIAL]={0},dUriemann2[NPR+NSPECIAL]={0},dUriemann3[NPR+NSPECIAL]={0},dUcomp[NUMSOURCES][NPR]={{0}};
+      FTYPE dUgeom[NPR]={0},dUriemann[NPR]={0},dUriemann1[NPR+NSPECIAL]={0},dUriemann2[NPR+NSPECIAL]={0},dUriemann3[NPR+NSPECIAL]={0},dUcomp[NUMSOURCES][NPR];
+      int sc; PLOOP(pliter,pl) SCLOOP(sc) dUcomp[sc][pl]=0.0;
       struct of_state qdontuse;
       struct of_state *qptr=&qdontuse;
       struct of_state qdontuse2;
@@ -583,7 +584,7 @@ static int advance_standard(
 
       OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
       
-#pragma omp for schedule(OPENMPVARYENDTIMESCHEDULE(),OPENMPCHUNKSIZE(blocksize)) reduction(+: nstroke) // varyendtime (guided) for implicit solver that has non-uniform work for each cell
+#pragma omp for OPENMPVARYSCHEDULECHUNK(blocksize) reduction(+: nstroke) // varyendtime (guided) for implicit solver that has non-uniform work for each cell
       OPENMP3DLOOPBLOCK{
         OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -602,9 +603,9 @@ static int advance_standard(
 
         if(FLUXB==FLUXCTSTAG || DOENOFLUX != NOENOFLUX ){
           // then field version of ui[] is stored as "conserved" value at FACE, not CENT
-          PLOOPNOB1(pl) MACP0A1(ui,i,j,k,pl)=Uitemp[pl]; // CENT
+          PLOOP(pliter,pl) if(!BPL(pl)) MACP0A1(ui,i,j,k,pl)=Uitemp[pl]; // CENT
           //PLOOPBONLY(pl) MACP0A1(ui,i,j,k,pl) is itself // FACE (see step_ch.c's setup_rktimestep and know that ui=unew for before first substep)
-          PLOOPNOB2(pl) MACP0A1(ui,i,j,k,pl)=Uitemp[pl]; // CENT
+          //PLOOPNOB2(pl) MACP0A1(ui,i,j,k,pl)=Uitemp[pl]; // CENT
         }
         else{
           PLOOP(pliter,pl) MACP0A1(ui,i,j,k,pl)=Uitemp[pl]; // all at CENT
@@ -1548,7 +1549,7 @@ static int advance_standard_orig(
       OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
 
       
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
       OPENMP3DLOOPBLOCK{
         OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -1567,9 +1568,9 @@ static int advance_standard_orig(
 
         if(FLUXB==FLUXCTSTAG || DOENOFLUX != NOENOFLUX ){
           // then field version of ui[] is stored as "conserved" value at FACE, not CENT
-          PLOOPNOB1(pl) MACP0A1(ui,i,j,k,pl)=Uitemp[pl]; // CENT
+          PLOOP(pliter,pl) if(!BPL(pl)) MACP0A1(ui,i,j,k,pl)=Uitemp[pl]; // CENT
           //PLOOPBONLY(pl) MACP0A1(ui,i,j,k,pl) is itself // FACE (see step_ch.c's setup_rktimestep and know that ui=unew for before first substep)
-          PLOOPNOB2(pl) MACP0A1(ui,i,j,k,pl)=Uitemp[pl]; // CENT
+          //          PLOOPNOB2(pl) MACP0A1(ui,i,j,k,pl)=Uitemp[pl]; // CENT
         }
         else{
           PLOOP(pliter,pl) MACP0A1(ui,i,j,k,pl)=Uitemp[pl]; // all at CENT
@@ -1889,7 +1890,7 @@ static int advance_standard_orig(
     newtonstats.nstroke=newtonstats.lntries=0;
 
 
-#pragma omp for schedule(OPENMPVARYENDTIMESCHEDULE(),OPENMPCHUNKSIZE(blocksize)) reduction(+: nstroke)
+#pragma omp for OPENMPVARYSCHEDULECHUNK(blocksize) reduction(+: nstroke)
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
  
@@ -2293,7 +2294,7 @@ static int advance_finitevolume(
       OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
 
       
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
       OPENMP3DLOOPBLOCK{
         OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -2393,7 +2394,7 @@ static int advance_finitevolume(
     OPENMP3DLOOPVARSDEFINE;  OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
 
       
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -2678,7 +2679,7 @@ static int advance_finitevolume(
     // ptr different when in parallel region
     ptrgeom=&geomdontuse;
 
-#pragma omp for schedule(OPENMPVARYENDTIMESCHEDULE(),OPENMPCHUNKSIZE(blocksize)) reduction(+: nstroke)
+#pragma omp for OPENMPVARYSCHEDULECHUNK(blocksize) reduction(+: nstroke)
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -3162,7 +3163,7 @@ static void flux2dUavg(int whichpl, int i, int j, int k, FTYPE (*F1)[NSTORE2][NS
     
     if(whichpl==DOALLPL || whichpl==DONONBPL){
 
-      PLOOPNOB1(pl){
+      PLOOPNOB(pliter,pl){
 #if(N1>1)
         dU1avg[pl]=(
                     - (MACP0A1(F1,ip1mac(i),j,k,pl) - MACP0A1(F1,i,j,k,pl)) *idx1
@@ -3183,7 +3184,7 @@ static void flux2dUavg(int whichpl, int i, int j, int k, FTYPE (*F1)[NSTORE2][NS
       }
     
       // rest of variables (if any) are normal
-      PLOOPNOB2SPECIAL(pl,special){
+      PLOOPSPECIALONLY(pl,special){
 #if(N1>1)
         dU1avg[pl]=(
                     - (MACP0A1(F1,ip1mac(i),j,k,pl) - MACP0A1(F1,i,j,k,pl)) *idx1
@@ -3304,11 +3305,11 @@ static void dUtoU(int timeorder, int whichpl, int i, int j, int k, int loc, FTYP
   // get physics non-geometry source terms
   FTYPE dUrad[NPR+NSPECIAL],dUnonrad[NPR+NSPECIAL]; // NSPECIAL part only used if whichpl==DOSPECIALPL
   int sc;
+  PLOOP(pliter,pl) dUrad[pl]=0.0; //initialize
   PALLLOOPSPECIAL(pl,special){
-    dUrad[pl]=0.0; // init as zero
     // only sc=RADSOURCE is in implicit part, so only separate that out
     sc=RADSOURCE;
-    if(pl<NPR) dUrad[pl] = dUcomp[sc][pl]; // dUcomp always NPR, but dUrad over full range possible
+    if(pl>=0 || pl<NPR) dUrad[pl] = dUcomp[sc][pl]; // dUcomp always NPR, but dUrad over full range possible
 
     // all terms except RADSOURCE
     dUnonrad[pl] = dUgeom[pl] - dUrad[pl];

@@ -148,7 +148,7 @@ void slope_lim_pointtype(int interporflux, int realisinterp, int pl, int dir, in
       }
 
 
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
       OPENMP3DLOOPBLOCK{
         OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -210,7 +210,7 @@ void slope_lim_pointtype(int interporflux, int realisinterp, int pl, int dir, in
       y = interplist - startorderi;
       yreal = realinterplist - startorderi;
 
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
       OPENMP3DLOOPBLOCK{
         OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
