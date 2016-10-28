@@ -302,7 +302,7 @@ static void set_position_stores(void)
 
 
       OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUPFULLP2;
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) nowait
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize) nowait
       OPENMP3DLOOPBLOCK{
         OPENMP3DLOOPBLOCK2IJK(i,j,k);
  
@@ -330,7 +330,7 @@ static void set_position_stores(void)
     for (loc = NPG - 1; loc >= 0; loc--) {
 
       OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUPFULLP2;
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) nowait
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize) nowait
       OPENMP3DLOOPBLOCK{
         OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -365,7 +365,7 @@ static void set_position_stores(void)
     for (loc = NPG - 1; loc >= 0; loc--) {
 
       OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUPFULLP1;
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) nowait
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize) nowait
       OPENMP3DLOOPBLOCK{
         OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -423,7 +423,7 @@ static void symmetrize_X_V_dxdxp_idxdxp(void)
         if(loc==FACE2 || loc==CORN1 || loc==CORN3 || loc==CORNT){
 
           OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUPFULLP2;
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
           OPENMP3DLOOPBLOCK{
             OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -446,7 +446,7 @@ static void symmetrize_X_V_dxdxp_idxdxp(void)
         else{
 
           OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUPFULLP1EXCEPTX2;
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
           OPENMP3DLOOPBLOCK{
             OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -489,7 +489,7 @@ static void symmetrize_X_V_dxdxp_idxdxp(void)
 
           //////////    COMPFULLLOOPP1
           OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUPFULLP1;
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
           OPENMP3DLOOPBLOCK{
             OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -520,7 +520,7 @@ static void symmetrize_X_V_dxdxp_idxdxp(void)
         else{
 
           OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUPFULLP1EXCEPTX2;
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
           OPENMP3DLOOPBLOCK{
             OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -608,7 +608,7 @@ static void set_grid_metrics(void)
 
     //////////    COMPFULLLOOPP1
     OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUPFULLP1;
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -756,7 +756,7 @@ static void set_grid_metrics_gcov(void)
 
     //////////    COMPFULLLOOPP1
     OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUPFULLP1;
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -830,7 +830,7 @@ static void set_grid_metrics_others(void)
 
     //////////    COMPFULLLOOPP1
     OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUPFULLP1;
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -974,7 +974,7 @@ static void symmetrize_gcov(void)
 
           //////////    COMPFULLLOOPP1
           OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUPFULLP1;
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
           OPENMP3DLOOPBLOCK{
             OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -1005,7 +1005,7 @@ static void symmetrize_gcov(void)
         else{
 
           OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUPFULLP1EXCEPTX2;
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
           OPENMP3DLOOPBLOCK{
             OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -1067,7 +1067,7 @@ static void set_connection(void)
 
     //////////    COMPFULLLOOP
     OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUPFULL;
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -1158,7 +1158,7 @@ static void set_connection(void)
 
     //////////    COMPFULLLOOP
     OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUPFULL;
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
       if( k == 0 ) continue; //already computed connection for k = 0
@@ -1198,7 +1198,7 @@ static void symmetrize_connection(void)
 
       //////////    COMPFULLLOOP
       OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUPFULL;
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
       OPENMP3DLOOPBLOCK{
         OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -1244,7 +1244,7 @@ static void set_idxvol(void)
 
     //////////    COMPZLOOP
     OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUPZLOOP;
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -1289,7 +1289,7 @@ static void set_tlab2ortho(void)
 
     //////////    COMPZLOOP
     OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUPFULLP1;
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
 

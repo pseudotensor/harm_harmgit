@@ -108,7 +108,7 @@ int vpot2field_centeredfield(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2
     if(!(Nvec[odir1]==1 && Nvec[odir2]==1)){
       ////    COMPFULLLOOP{ // COMPFULLLOOP allows since A_i exists at COMPFULLLOOPP1 and so always accessing valid A_i
 
-#pragma omp for schedule(OPENMPFULLNOVARYSCHEDULE()) nowait // nowait valid because each next loop writes to independent memory regions (or to local temporary variables like igdetgnosing that is overwritten for each iteration and so doesn't matter).  And also don't require result of one loop for next loop (this is often not true!)
+#pragma omp for OPENMPNOVARYSCHEDULECHUNK() nowait // nowait valid because each next loop writes to independent memory regions (or to local temporary variables like igdetgnosing that is overwritten for each iteration and so doesn't matter).  And also don't require result of one loop for next loop (this is often not true!)
       OPENMP3DLOOPBLOCK{
         OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -134,7 +134,7 @@ int vpot2field_centeredfield(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2
     if(!(Nvec[odir1]==1 && Nvec[odir2]==1)){
       ////    COMPFULLLOOP{
 
-#pragma omp for schedule(OPENMPFULLNOVARYSCHEDULE()) nowait
+#pragma omp for OPENMPNOVARYSCHEDULECHUNK() nowait
       OPENMP3DLOOPBLOCK{
         OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -159,7 +159,7 @@ int vpot2field_centeredfield(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE2
     if(!(Nvec[odir1]==1 && Nvec[odir2]==1)){
       ////    COMPFULLLOOP{
 
-#pragma omp for schedule(OPENMPFULLNOVARYSCHEDULE()) nowait
+#pragma omp for OPENMPNOVARYSCHEDULECHUNK() nowait
       OPENMP3DLOOPBLOCK{
         OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -286,7 +286,7 @@ int flux_ct_computeemf(int stage, FTYPE (*pb)[NSTORE2][NSTORE3][NPR], FTYPE (*em
       OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUPFULL;
     
 
-#pragma omp for schedule(OPENMPFULLNOVARYSCHEDULE())
+#pragma omp for OPENMPNOVARYSCHEDULECHUNK()
       OPENMP3DLOOPBLOCK{
         OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -335,7 +335,7 @@ int flux_ct_computeemf(int stage, FTYPE (*pb)[NSTORE2][NSTORE3][NPR], FTYPE (*em
       OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUPFULL;
     
 
-#pragma omp for schedule(OPENMPFULLNOVARYSCHEDULE())
+#pragma omp for OPENMPNOVARYSCHEDULECHUNK()
       OPENMP3DLOOPBLOCK{
         OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -427,7 +427,7 @@ int flux_ct_computeemf(int stage, FTYPE (*pb)[NSTORE2][NSTORE3][NPR], FTYPE (*em
       //      OPENMP3DLOOPSETUP(INFULLP11,OUTFULL1,INFULLP12,OUTFULL2,-N3BND,N3-1+N3BND);
       
       OPENMP3DLOOPSETUPFULL;
-#pragma omp for schedule(OPENMPFULLNOVARYSCHEDULE()) ///nowait // Can use "nowait" because each emf[{1,2,3}] set independently in each successive loop
+#pragma omp for OPENMPNOVARYSCHEDULECHUNK() ///nowait // Can use "nowait" because each emf[{1,2,3}] set independently in each successive loop
       OPENMP3DLOOPBLOCK{
         OPENMP3DLOOPBLOCK2IJK(i,j,k);
  
@@ -554,7 +554,7 @@ int flux_ct_computeemf(int stage, FTYPE (*pb)[NSTORE2][NSTORE3][NPR], FTYPE (*em
       ////OPENMP3DLOOPSETUP(INFULL1,OUTFULLM11,INFULL2,OUTFULLM12,-N3BND,N3-1+N3BND);
 
       OPENMP3DLOOPSETUPFULL;
-#pragma omp for schedule(OPENMPFULLNOVARYSCHEDULE()) /////nowait // Can use "nowait" since each emf[{1,2,3}] set independently in each successive loop
+#pragma omp for OPENMPNOVARYSCHEDULECHUNK() /////nowait // Can use "nowait" since each emf[{1,2,3}] set independently in each successive loop
       OPENMP3DLOOPBLOCK{
         OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -702,7 +702,7 @@ int flux_ct_diffusivecorrections(int stage, FTYPE (*pb)[NSTORE2][NSTORE3][NPR], 
       ptrgeomf3=&geomf3dontuse;
 
 
-#pragma omp for schedule(OPENMPFULLNOVARYSCHEDULE())
+#pragma omp for OPENMPNOVARYSCHEDULECHUNK()
       OPENMP3DLOOPBLOCK{
         OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -865,7 +865,7 @@ int flux_ct_diffusivecorrections(int stage, FTYPE (*pb)[NSTORE2][NSTORE3][NPR], 
       ptrgeomco2=&geomco2dontuse;
       ptrgeomco3=&geomco3dontuse;
 
-#pragma omp for schedule(OPENMPFULLNOVARYSCHEDULE())
+#pragma omp for OPENMPNOVARYSCHEDULECHUNK()
       OPENMP3DLOOPBLOCK{
         OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -1205,7 +1205,7 @@ int flux_ct_emf2flux(int stage, FTYPE (*pb)[NSTORE2][NSTORE3][NPR], FTYPE (*emf)
 
       
       OPENMP3DLOOPSETUPFULL;
-#pragma omp for schedule(OPENMPFULLNOVARYSCHEDULE()) // not needed with just 1 loop: nowait // Can "nowait" since each F1,F2,F3 set independently on successive loops
+#pragma omp for OPENMPNOVARYSCHEDULECHUNK() // not needed with just 1 loop: nowait // Can "nowait" since each F1,F2,F3 set independently on successive loops
       OPENMP3DLOOPBLOCK{
         OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -1269,7 +1269,7 @@ int flux_ct_emf2flux(int stage, FTYPE (*pb)[NSTORE2][NSTORE3][NPR], FTYPE (*emf)
 
 
       OPENMP3DLOOPSETUPFULL;
-#pragma omp for schedule(OPENMPFULLNOVARYSCHEDULE()) // nowait // Can "nowait" since each successive loop sets F1,F2,F3 independently
+#pragma omp for OPENMPNOVARYSCHEDULECHUNK() // nowait // Can "nowait" since each successive loop sets F1,F2,F3 independently
       OPENMP3DLOOPBLOCK{
         OPENMP3DLOOPBLOCK2IJK(i,j,k);
 

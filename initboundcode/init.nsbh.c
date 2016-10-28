@@ -2721,7 +2721,7 @@ void bound_gen_deeppara(SFTYPE time, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], int *
     OPENMP3DLOOPVARSDEFINE;
     ////////  COMPFULLLOOP{
     OPENMP3DLOOPSETUPFULL;
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
 

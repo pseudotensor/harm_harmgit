@@ -27,6 +27,9 @@ int gaussj(FTYPE **a, int n, FTYPE **b, int m)
 #if(PRODUCTION==0)
             dualfprintf(fail_file, "choke in gaussj: k=%d ipivk=%d cond=%d\n",k,ipiv[k],(ipiv[k] > 1));
 #endif
+            free_ivector(ipiv, 1, n);
+            free_ivector(indxr, 1, n);
+            free_ivector(indxc, 1, n);
             return(2);
           }
         }
@@ -44,6 +47,9 @@ int gaussj(FTYPE **a, int n, FTYPE **b, int m)
 #if(PRODUCTION==0)
       if(debugfail>=2) dualfprintf(fail_file, "gaussj: Singular Matrix-2\n");
 #endif
+      free_ivector(ipiv, 1, n);
+      free_ivector(indxr, 1, n);
+      free_ivector(indxc, 1, n);
       return(1);
     }
     pivinv = 1.0 / a[icol][icol];

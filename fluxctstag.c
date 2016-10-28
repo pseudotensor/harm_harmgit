@@ -122,7 +122,7 @@ int vpot2field_staggeredfield(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE
     get_odirs(dir,&odir1,&odir2);
     if(!(Nvec[odir1]==1 && Nvec[odir2]==1)){
       //////////      COMPFULLLOOP{ // COMPFULLLOOP allows since A_i exists at COMPFULLLOOPP1 and so always accessing valid A_i
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) nowait
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize) nowait
       OPENMP3DLOOPBLOCK{
         OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -142,7 +142,7 @@ int vpot2field_staggeredfield(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE
     get_odirs(dir,&odir1,&odir2);
     if(!(Nvec[odir1]==1 && Nvec[odir2]==1)){
       ///////COMPFULLLOOP{
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) nowait
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize) nowait
       OPENMP3DLOOPBLOCK{
         OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -161,7 +161,7 @@ int vpot2field_staggeredfield(FTYPE (*A)[NSTORE1+SHIFTSTORE1][NSTORE2+SHIFTSTORE
     get_odirs(dir,&odir1,&odir2);
     if(!(Nvec[odir1]==1 && Nvec[odir2]==1)){
       //////////      COMPFULLLOOP{
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) nowait
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize) nowait
       OPENMP3DLOOPBLOCK{
         OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -454,7 +454,7 @@ int fluxcalc_fluxctstag_emf_1d(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], in
     FTYPE cminfactorodir1;
     FTYPE cminfactorodir2;
 
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -957,7 +957,7 @@ int ustagpoint2pstag(FTYPE (*ustag)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTOR
 
       OPENMP3DLOOPSETUPFULL;
       /////////    COMPFULLLOOP{
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) nowait // "nowait" ok because each pstag[B1,B2,B3] set independently
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize) nowait // "nowait" ok because each pstag[B1,B2,B3] set independently
       OPENMP3DLOOPBLOCK{
         OPENMP3DLOOPBLOCK2IJK(i,j,k);
       
@@ -984,7 +984,7 @@ int ustagpoint2pstag(FTYPE (*ustag)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTOR
     //  dualfprintf(fail_file,"dir=%d is=%d ie=%d js=%d je=%d ks=%d ke=%d\n",dir,is,ie,js,je,ks,ke);
     //////  COMPZSLOOP(is,ie,js,je,ks,ke){
     OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) nowait // "nowait" ok because each pstag[B1,B2,B3] set independently
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize) nowait // "nowait" ok because each pstag[B1,B2,B3] set independently
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
     
@@ -1000,7 +1000,7 @@ int ustagpoint2pstag(FTYPE (*ustag)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTOR
     //  dualfprintf(fail_file,"dir=%d is=%d ie=%d js=%d je=%d ks=%d ke=%d\n",dir,is,ie,js,je,ks,ke);
     //////  COMPZSLOOP(is,ie,js,je,ks,ke){
     OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) nowait
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize) nowait
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -1016,7 +1016,7 @@ int ustagpoint2pstag(FTYPE (*ustag)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTOR
     //  dualfprintf(fail_file,"dir=%d is=%d ie=%d js=%d je=%d ks=%d ke=%d\n",dir,is,ie,js,je,ks,ke);
     //////  COMPZSLOOP(is,ie,js,je,ks,ke){
     OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) nowait
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize) nowait
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -1145,7 +1145,7 @@ static void rescale_calc_stagfield_full(int *Nvec, FTYPE (*pstag)[NSTORE2][NSTOR
       npr2interpstart=npr2interpend=0; npr2interplist[0]=pl; // B1,B2,B3 each
 
 
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) // NO, rescale() may set arbitrary p2interp's //nowait // p2interp[B1,B2,B3] set independently
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize) // NO, rescale() may set arbitrary p2interp's //nowait // p2interp[B1,B2,B3] set independently
       OPENMP3DLOOPBLOCK{
         OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -1360,7 +1360,7 @@ int interpolate_pfield_face2cent(FTYPE (*preal)[NSTORE2][NSTORE3][NPR], FTYPE (*
         // what's constant is \detg B^i, not B^i, so need geometry if field along 1D dir with no other dimensions
         // no idel,jdel,kdel for simplicity
         OPENMP3DLOOPSETUPFULL;
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) nowait // don't wait for each dir since independent and all memory written to (and used in later loops) is independent for each dir.
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize) nowait // don't wait for each dir since independent and all memory written to (and used in later loops) is independent for each dir.
         OPENMP3DLOOPBLOCK{
           OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -1418,7 +1418,7 @@ int interpolate_pfield_face2cent(FTYPE (*preal)[NSTORE2][NSTORE3][NPR], FTYPE (*
         get_inversion_startendindices(Uconsevolveloop,&is,&ie,&js,&je,&ks,&ke);
         ////////      COMPZSLOOP(is,ie,js,je,ks,ke){
         OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) ///nowait // don't wait since each dir is independent (NO: pleft,pright not functions of dir, so each dir not independent)
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize) ///nowait // don't wait since each dir is independent (NO: pleft,pright not functions of dir, so each dir not independent)
         OPENMP3DLOOPBLOCK{
           OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -1957,7 +1957,7 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
 
       /////////COMPZSLOOP( is, ie, js, je, ks, ke ){
       OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) ///nowait // can't use "nowait" when using p2interp for each dir in next loop
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize) ///nowait // can't use "nowait" when using p2interp for each dir in next loop
       OPENMP3DLOOPBLOCK{
         OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -2241,7 +2241,7 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
         /////// COMPZSLOOP( -N1BND+idel, N1-1+N1BND, -N2BND+jdel, N2-1+N2BND, -N3BND+kdel, N3-1+N3BND ){
         // OPENMP3DLOOPSETUP( -N1BND+idel, N1-1+N1BND, -N2BND+jdel, N2-1+N2BND, -N3BND+kdel, N3-1+N3BND );
         OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) //nowait // Don't wait since each direction is independent // NO: use of pleft, pright, and some use of p2interp (that depend on each dir) from loop above makes not possible to use "nowait"
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize) //nowait // Don't wait since each direction is independent // NO: use of pleft, pright, and some use of p2interp (that depend on each dir) from loop above makes not possible to use "nowait"
         OPENMP3DLOOPBLOCK{
           OPENMP3DLOOPBLOCK2IJK(i,j,k);
 

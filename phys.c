@@ -567,7 +567,7 @@ int current_doprecalc(int which, FTYPE (*p)[NSTORE2][NSTORE3][NPR])
 
     //  COMPFULLLOOP{
     OPENMP3DLOOPSETUPFULL;
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -741,7 +741,7 @@ void current_calc_0(FTYPE (*cfaraday)[NSTORE2][NSTORE3][NUMCURRENTSLOTS][3])
 
     /////////COMPLOOPP1{ // largest possible loop for this differencing (could isolate directions)
     OPENMP3DLOOPSETUP(INP11,OUTP11,INP12,OUTP12,INP13,OUTP13);
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -878,7 +878,7 @@ void current_calc_1(int which, FTYPE (*cfaraday)[NSTORE2][NSTORE3][NUMCURRENTSLO
   
     /////////COMPLOOPP1{ // largest possible loop for this differencing (could isolate directions)
     OPENMP3DLOOPSETUP(INP11,OUTP11,INP12,OUTP12,INP13,OUTP13);
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -1022,7 +1022,7 @@ int compute_vorticity(FTYPE (*p)[NSTORE2][NSTORE3][NPR],FTYPE (*pvort)[NSTORE2][
   
     //  COMPLOOPVORT{
     OPENMP3DLOOPSETUP(INP11,OUTP11,INP12,OUTP12,INP13,OUTP13);
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
 

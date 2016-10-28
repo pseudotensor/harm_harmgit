@@ -1539,6 +1539,13 @@ int myexit(int call_code)
 
   trifprintf("proc: %s : Exiting cc: %d nstep: %ld\n", myidtxt, call_code, nstep);
 
+  // free up global memory malloc'ed
+#pragma omp parallel
+  {
+    if(npr2interplist!=NULL) free(npr2interplist);
+    if(npr2notinterplist!=NULL) free(npr2notinterplist);
+  }
+
 
 #if(USEOPENMP)
   if(omp_in_parallel()){

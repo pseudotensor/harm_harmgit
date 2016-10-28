@@ -420,7 +420,7 @@ void slope_lim_linetype_c2e(int realisinterp, int whichprimtype, int interporflu
 
 
     OPENMP3DLOOPSETUPSUPERGEN(is,ie,js,je,ks,ke,di,dj,dk);
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -1014,7 +1014,7 @@ void slope_lim_linetype(int whichquantity, int interporflux, int dir, int idel, 
 
 
     OPENMP3DLOOPSETUPSUPERGEN(is,ie,js,je,ks,ke,di,dj,dk);
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
 

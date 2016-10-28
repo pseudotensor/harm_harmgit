@@ -459,14 +459,13 @@ int cleanup_fluxes(int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPEC
 
 
         ////      COMPFULLLOOP{
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) nowait // can nowait since each fluxvec[dir] is set separately
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize) nowait // can nowait since each fluxvec[dir] is set separately
         OPENMP3DLOOPBLOCK{
           OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
           // below means we are not within the computational block
           if(! (i>=is && i<=ie && j>=js  && j<=je && k>=ks && k<=ke) ){
-            PLOOPNOB1(pl) MACP1A1(fluxvec,dir,i,j,k,pl)=0.0;
-            PLOOPNOB2(pl) MACP1A1(fluxvec,dir,i,j,k,pl)=0.0;
+            PLOOPNOB(pliter,pl) MACP1A1(fluxvec,dir,i,j,k,pl)=0.0;
           }
           if(! (i>=B1is && i<=B1ie && j>=B1js && j<=B1je && k>=B1ks && k<=B1ke) ){
             pl=B1; MACP1A1(fluxvec,dir,i,j,k,pl)=0.0;
@@ -504,7 +503,7 @@ int zero_out_fluxes(int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPE
 
     DIMENLOOP(dir){
       if(Nvec[dir]>1){
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) nowait // can nowait since each fluxvec[dir] is set separately
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize) nowait // can nowait since each fluxvec[dir] is set separately
         OPENMP3DLOOPBLOCK{
           OPENMP3DLOOPBLOCK2IJK(i,j,k);
           ////COMPFULLLOOP
@@ -533,7 +532,7 @@ int zero_out_emf_fluxes(int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+
 
     DIMENLOOP(dir){
       if(Nvec[dir]>1){
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) nowait // can nowait since each fluxvec[dir] is set separately
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize) nowait // can nowait since each fluxvec[dir] is set separately
         OPENMP3DLOOPBLOCK{
           OPENMP3DLOOPBLOCK2IJK(i,j,k);
           ////COMPFULLLOOP
@@ -564,7 +563,7 @@ int fluxEM2flux4EMF(int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPE
       OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUPFULL;
       DIMENLOOP(dir){
         if(Nvec[dir]>1){
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) nowait // can nowait since each fluxvec[dir] is set separately
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize) nowait // can nowait since each fluxvec[dir] is set separately
           OPENMP3DLOOPBLOCK{
             OPENMP3DLOOPBLOCK2IJK(i,j,k);
             //// COMPFULLLOOP
@@ -593,7 +592,7 @@ int fluxsum_old(int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL
       OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUPFULL;
       DIMENLOOP(dir){
         if(Nvec[dir]>1){
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) nowait // can nowait since each fluxvec[dir] is set separately
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize) nowait // can nowait since each fluxvec[dir] is set separately
           OPENMP3DLOOPBLOCK{
             OPENMP3DLOOPBLOCK2IJK(i,j,k);
             ////COMPFULLLOOP
@@ -625,7 +624,7 @@ int fluxsum(int *Nvec, FTYPE (*fluxvec[NDIM])[NSTORE2][NSTORE3][NPR+NSPECIAL], F
 
       DIMENLOOP(dir){
         if(Nvec[dir]>1){
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) nowait // can nowait since each fluxvec[dir] is set separately
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize) nowait // can nowait since each fluxvec[dir] is set separately
           OPENMP3DLOOPBLOCK{
             OPENMP3DLOOPBLOCK2IJK(i,j,k);
             //// COMPFULLLOOP{
@@ -750,7 +749,7 @@ int fluxcalc_flux(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[
       OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUP(WITHINACTIVESECTIONEXPAND1IS,WITHINACTIVESECTIONEXPAND1IE,WITHINACTIVESECTIONEXPAND1JS,WITHINACTIVESECTIONEXPAND1JE,WITHINACTIVESECTIONEXPAND1KS,WITHINACTIVESECTIONEXPAND1KE);
     
 
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) reduction(min:ndtvecstore)
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize) reduction(min:ndtvecstore)
       OPENMP3DLOOPBLOCK{
         OPENMP3DLOOPBLOCK2IJK(i,j,k);
  
@@ -927,7 +926,7 @@ void rescale_calc_full(int dir,FTYPE (*pr)[NSTORE2][NSTORE3][NPR],FTYPE (*p2inte
     // generally ptr's are different inside parallel block
     ptrgeom=&geomdontuse;
 
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
       
@@ -1101,7 +1100,7 @@ int fluxcalc_standard(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*pst
 #endif
 
 
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) reduction(min:ndtstore)
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize) reduction(min:ndtstore)
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
   
@@ -1424,7 +1423,7 @@ int fluxcalc_standard_4fluxctstag(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR],
     // generally ptr's are different inside parallel block
     ptrgeom=&geomdontuse;
 
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -1671,7 +1670,7 @@ int interpolate_prim_cent2face(int stage, int realisinterp, FTYPE (*pr)[NSTORE2]
 #endif
 
 
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -1831,7 +1830,7 @@ void compute_and_store_fluxstatecent(FTYPE (*pr)[NSTORE2][NSTORE3][NPR])
     OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUPFULL;
     
 
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -1974,7 +1973,7 @@ void compute_and_store_fluxstatecent(FTYPE (*pr)[NSTORE2][NSTORE3][NPR])
       //            if(dir==2) OPENMP3DLOOPSETUPFULLINOUT2DIR2;
       //            if(dir==3) OPENMP3DLOOPSETUPFULLINOUT2DIR3;
       OPENMP3DLOOPSETUPFULL;
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
       OPENMP3DLOOPBLOCK{
         OPENMP3DLOOPBLOCK2IJK(i,j,k);
 

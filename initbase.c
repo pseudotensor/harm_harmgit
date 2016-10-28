@@ -628,7 +628,7 @@ int copy_prim2panalytic(FTYPE (*prim)[NSTORE2][NSTORE3][NPR],FTYPE (*panalytic)[
     OPENMP3DLOOPVARSDEFINE;
 
     OPENMP3DLOOPSETUPFULL;
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) nowait // next vpot assignment does not depend upon this loop completing
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize) nowait // next vpot assignment does not depend upon this loop completing
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
       ////////////  COMPFULLLOOP{
@@ -646,7 +646,7 @@ int copy_prim2panalytic(FTYPE (*prim)[NSTORE2][NSTORE3][NPR],FTYPE (*panalytic)[
     if(TRACKVPOT){
       /////////      COMPFULLLOOPP1{
       OPENMP3DLOOPSETUPFULLP1;
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize)) nowait // next vpot assignment is independent
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize) nowait // next vpot assignment is independent
       OPENMP3DLOOPBLOCK{
         OPENMP3DLOOPBLOCK2IJK(i,j,k);
  
@@ -2788,7 +2788,7 @@ int pi2Uavg(int *fieldfrompotential, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE
 
     //////  COMPFULLLOOP{
     OPENMP3DLOOPSETUPFULL;
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -2801,8 +2801,7 @@ int pi2Uavg(int *fieldfrompotential, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE
       MYFUN(get_state(MAC(prim,i,j,k), ptrgeom, &q),"initbasec:pi2Uavg()", "get_state()", 1);
       MYFUN(primtoU(UEVOLVE,MAC(prim,i,j,k), &q, ptrgeom, Utemp, NULL),"initbase.c:pi2Uavg()", "primtoU()", 1);
 
-      PLOOPNOB1(pl) MACP0A1(Upoint,i,j,k,pl)=Utemp[pl];
-      PLOOPNOB2(pl) MACP0A1(Upoint,i,j,k,pl)=Utemp[pl];
+      PLOOPNOB(pliter,pl) MACP0A1(Upoint,i,j,k,pl)=Utemp[pl];
 
       if(FLUXB==FLUXCTSTAG){
         PLOOPBONLY(pl) if(fieldfrompotential[pl-B1+1]==0){
@@ -2844,13 +2843,12 @@ int pi2Uavg(int *fieldfrompotential, FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE
 
       //////  COMPFULLLOOP{
       OPENMP3DLOOPSETUPFULL;
-#pragma omp for schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
       OPENMP3DLOOPBLOCK{
         OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
 
-        PLOOPNOB1(pl) MACP0A1(Uavg,i,j,k,pl)=MACP0A1(Upoint,i,j,k,pl);
-        PLOOPNOB2(pl) MACP0A1(Uavg,i,j,k,pl)=MACP0A1(Upoint,i,j,k,pl);
+        PLOOPNOB(pliter,pl) MACP0A1(Uavg,i,j,k,pl)=MACP0A1(Upoint,i,j,k,pl);
         PLOOPBONLY(pl) if(fieldfrompotential[pl-B1+1]==0) MACP0A1(Uavg,i,j,k,pl)=MACP0A1(Upoint,i,j,k,pl);
       }// end 3D LOOP
     }// end parallel region

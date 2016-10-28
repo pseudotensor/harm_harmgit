@@ -124,13 +124,14 @@ void output_nprlist_info(void)
     }
     if(pliter==0) myfprintf(out,"-1"); // nothing in this list
     myfprintf(out,"\n");
-
+    
     // NPR2NOTINTERP:
     PNOTINTERPLOOP(pliter,pl){
       myfprintf(out,"%d ",pl);
     }
     if(pliter==0) myfprintf(out,"-1"); // nothing in this list
     myfprintf(out,"\n");
+  
 
     // NPRBOUND:
     PBOUNDLOOP(pliter,pl){
