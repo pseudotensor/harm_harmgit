@@ -28,12 +28,12 @@ static int P[NRANC] = {
 // ranc made thread safe by using global rancaa, rancS, and rancvaln that are shared
 FTYPE ranc(int initialize, int iseed)
 {
-  int i;
-  
+  FTYPE finalrand;
   
   // thread shared random table
 #pragma omp critical
   {
+    int i;
     
     // seed the random number generator if first time called or if iseed > 0
     if (initialize || iseed != 0) {
@@ -51,10 +51,12 @@ FTYPE ranc(int initialize, int iseed)
   
     rancvaln = rancS[rancvaln] & (NRANC - 1);
     rancS[rancvaln] = (rancS[rancvaln] * rancaa[rancvaln]) % P[rancvaln];
-  }
 
+    finalrand=(FTYPE) rancS[rancvaln] / (FTYPE) P[rancvaln];
+  }
   // return final random number
-  return (FTYPE) rancS[rancvaln] / (FTYPE) P[rancvaln];
+  return finalrand;
+
 
 }
 

@@ -812,8 +812,7 @@ void slope_lim_continuous_e2z(int realisinterp, int dir, int idel, int jdel, int
 int interpolate_ustag2fieldcent(int stage, SFTYPE boundtime, int timeorder, int numtimeorders, FTYPE (*preal)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],FTYPE (*upoint)[NSTORE2][NSTORE3][NPR],FTYPE (*pcent)[NSTORE2][NSTORE3][NPR])
 {
   int ustagpoint2pstag(FTYPE (*upoint)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR]);
-  int interpolate_pfield_face2cent(FTYPE (*preal)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],FTYPE (*ucent)[NSTORE2][NSTORE3][NPR],FTYPE (*pcent)[NSTORE2][NSTORE3][NPR], struct of_loop *face2centloop, FTYPE (*dqvec[NDIM])[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*prc)[NSTORE2][NSTORE3][NPR], FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP], int *Nvec);
-  struct of_loop face2cent[NDIM];
+  int interpolate_pfield_face2cent(FTYPE (*preal)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],FTYPE (*ucent)[NSTORE2][NSTORE3][NPR],FTYPE (*pcent)[NSTORE2][NSTORE3][NPR], FTYPE (*dqvec[NDIM])[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*prc)[NSTORE2][NSTORE3][NPR], FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP], int *Nvec);
   int finalstep;
   FTYPE (*dqvec[NDIM])[NSTORE2][NSTORE3][NPR2INTERP];
   int Nvec[NDIM];
@@ -868,7 +867,7 @@ int interpolate_ustag2fieldcent(int stage, SFTYPE boundtime, int timeorder, int 
 
   // pstagescratch should contain result of deaverage_ustag2pstag() -- gets utoinvert ready for inversion using guess pb
   // other quantities in utoinvert are unchanged by this function (and if needed de-averaging this didn't do it!)
-  interpolate_pfield_face2cent(preal,pstag,upoint,pcent,face2cent,dqvec,GLOBALPOINT(prc),GLOBALPOINT(pleft),GLOBALPOINT(pright),Nvec);
+  interpolate_pfield_face2cent(preal,pstag,upoint,pcent,dqvec,GLOBALPOINT(prc),GLOBALPOINT(pleft),GLOBALPOINT(pright),Nvec);
 
 
 #if(0)
@@ -1097,6 +1096,9 @@ void ustag2pstag(int dir, int i, int j, int k, FTYPE (*ustag)[NSTORE2][NSTORE3][
 /// wrapper for rescale() used for staggered field
 static void rescale_calc_stagfield_full(int *Nvec, FTYPE (*pstag)[NSTORE2][NSTORE3][NPR2INTERP],FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP])
 {
+
+
+  
   int nprlocalstart,nprlocalend;
   int nprlocallist[MAXNPR];
 
@@ -1145,7 +1147,7 @@ static void rescale_calc_stagfield_full(int *Nvec, FTYPE (*pstag)[NSTORE2][NSTOR
       npr2interpstart=npr2interpend=0; npr2interplist[0]=pl; // B1,B2,B3 each
 
 
-#pragma omp for OPENMPSCHEDULECHUNK(blocksize) // NO, rescale() may set arbitrary p2interp's //nowait // p2interp[B1,B2,B3] set independently
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize) nowait // p2interp[B1,B2,B3] set independently even inside rescale()
       OPENMP3DLOOPBLOCK{
         OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -1168,6 +1170,8 @@ static void rescale_calc_stagfield_full(int *Nvec, FTYPE (*pstag)[NSTORE2][NSTOR
     }// end over dirs
   }// end parallel region (with implicit barrier)
 
+
+  //  debugnpr2interp();
 
 
   ////////////////////////////////////////////
@@ -1220,11 +1224,11 @@ static void rescale_calc_stagfield_full(int *Nvec, FTYPE (*pstag)[NSTORE2][NSTOR
 /// INPUTS: Nvec, preal, pstag[B1,B2,B3]
 /// OUTPUTS: ucent[B1,B2,B3] (if not NULL), pcent[B1,B2,B3], face2centloop
 /// TEMPVARS: dqvec(dir,{B1,B2,B3}), prc[B1,B2,B3], pleft[B1,B2,B3], pright[B1,B2,B3]
-/// OPENMPOPTMARK: pleft,pright only exist per dir but used for all dirs, so can't use  nowait when involving pleft/pright
+/// OPENMPOPTMARK: pleft,pright only exist per dir but used for all dirs, but pleft,pright[pl] distinct per dir.  No overlap between chosen dir and how maps to pl, so all writes independent/distinct.
 /// We don't use wavespeeds here, so don't worry about wspeedtemp being only for one dir
 /// 
 ///
-int interpolate_pfield_face2cent(FTYPE (*preal)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],FTYPE (*ucent)[NSTORE2][NSTORE3][NPR],FTYPE (*pcent)[NSTORE2][NSTORE3][NPR], struct of_loop *face2centloop, FTYPE (*dqvec[NDIM])[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*prc)[NSTORE2][NSTORE3][NPR], FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP], int *Nvec)
+int interpolate_pfield_face2cent(FTYPE (*preal)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)[NSTORE2][NSTORE3][NPR],FTYPE (*ucent)[NSTORE2][NSTORE3][NPR],FTYPE (*pcent)[NSTORE2][NSTORE3][NPR], FTYPE (*dqvec[NDIM])[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*prc)[NSTORE2][NSTORE3][NPR], FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP], int *Nvec)
 {
   FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP];
   int nprlocalstart,nprlocalend;
@@ -1282,6 +1286,7 @@ int interpolate_pfield_face2cent(FTYPE (*preal)[NSTORE2][NSTORE3][NPR], FTYPE (*
 
 #pragma omp parallel OPENMPGLOBALPRIVATEFORGEOMNPR2INTERP
   {
+    struct of_loop face2centloop[NDIM];
     extern int choose_limiter(int dir, int i, int j, int k, int pl);
     void slope_lim_continuous_e2z(int realisinterp, int dir, int idel, int jdel, int kdel, FTYPE (*primreal)[NSTORE2][NSTORE3][NPR], FTYPE (*p2interp)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*dq)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pleft)[NSTORE2][NSTORE3][NPR2INTERP], FTYPE (*pright)[NSTORE2][NSTORE3][NPR2INTERP], struct of_loop *face2centloop);
     int pl,pliter;
@@ -1344,7 +1349,7 @@ int interpolate_pfield_face2cent(FTYPE (*preal)[NSTORE2][NSTORE3][NPR], FTYPE (*
 
       // setup which quantity to interpolate
       pl = B1-1+dir;
-      npr2interpstart=npr2interpend=0; npr2interplist[0]=pl; // B1,B2,B3 each for each dir=1,2,3
+      npr2interpstart=npr2interpend=0; npr2interplist[0]=pl; // B1,B2,B3 each for each dir=1,2,3. Only 1 interpolation per dir (same as per pl)
 
 
 
@@ -1418,7 +1423,7 @@ int interpolate_pfield_face2cent(FTYPE (*preal)[NSTORE2][NSTORE3][NPR], FTYPE (*
         get_inversion_startendindices(Uconsevolveloop,&is,&ie,&js,&je,&ks,&ke);
         ////////      COMPZSLOOP(is,ie,js,je,ks,ke){
         OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
-#pragma omp for OPENMPSCHEDULECHUNK(blocksize) ///nowait // don't wait since each dir is independent (NO: pleft,pright not functions of dir, so each dir not independent)
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize) nowait // don't wait since each dir is independent (and pleft,pright are dependent upon pl that is basically dir as large loop)
         OPENMP3DLOOPBLOCK{
           OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -1957,7 +1962,7 @@ int interpolate_prim_face2corn(FTYPE (*pr)[NSTORE2][NSTORE3][NPR], FTYPE (*primf
 
       /////////COMPZSLOOP( is, ie, js, je, ks, ke ){
       OPENMP3DLOOPSETUP(is,ie,js,je,ks,ke);
-#pragma omp for OPENMPSCHEDULECHUNK(blocksize) ///nowait // can't use "nowait" when using p2interp for each dir in next loop
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize) ///nowait // can't use "nowait" when using p2interp for each dir in next loop. That is, p2interp has compressed versions of things stored, so that p2interp's pl's overlap for different dir's.  So no distinct dir per pl, so can't nowait when crossing dir's would cross information written to p2interp across different dir's.
       OPENMP3DLOOPBLOCK{
         OPENMP3DLOOPBLOCK2IJK(i,j,k);
 

@@ -137,7 +137,9 @@ int rescale(int which, int dir, FTYPE *pr, struct of_geom *ptrgeom,FTYPE *p2inte
 
   if(which==DORESCALE){ // rescale before interpolation
     MYFUN(get_state(pr, ptrgeom, &q),"interp.c:rescale()", "get_state()", 1);
-    MYFUN(primtoU(UDIAG,pr, &q, ptrgeom, p2interp, NULL),"interp.c:rescale()", "primtoU()", 1);
+    FTYPE p2interptemp[NPR];
+    MYFUN(primtoU(UDIAG,pr, &q, ptrgeom, p2interptemp, NULL),"interp.c:rescale()", "primtoU()", 1);
+    PINTERPLOOP(pliter,pl) p2interp[pl]=p2interptemp[pl];
   }
   else if(which==UNRESCALE){ // unrescale after interpolation
     struct of_newtonstats newtonstats;   setnewtonstatsdefault(&newtonstats);
@@ -150,7 +152,9 @@ int rescale(int which, int dir, FTYPE *pr, struct of_geom *ptrgeom,FTYPE *p2inte
     int modprim=0;
     int checkoninversiongas=CHECKONINVERSION;
     int checkoninversionrad=CHECKONINVERSIONRAD;
-    MYFUN(Utoprimgen(showmessages,checkoninversiongas,checkoninversionrad,allowlocalfailurefixandnoreport, 0, &eomtype,whichcap,whichmethod,modprim,OTHERUTOPRIM,UDIAG,p2interp, NULL, ptrgeom, dissmeasure, pr, pr,&newtonstats),"interp.c:rescale()", "Utoprimgen", 1);
+    FTYPE prtemp[NPR];
+    MYFUN(Utoprimgen(showmessages,checkoninversiongas,checkoninversionrad,allowlocalfailurefixandnoreport, 0, &eomtype,whichcap,whichmethod,modprim,OTHERUTOPRIM,UDIAG,p2interp, NULL, ptrgeom, dissmeasure, prtemp, prtemp,&newtonstats),"interp.c:rescale()", "Utoprimgen", 1);
+    PINTERPLOOP(pliter,pl) pr[pl]=prtemp[pl];
   }
   else{
     dualfprintf(fail_file,"rescale(): no such rescale type! which=%d\n",which);

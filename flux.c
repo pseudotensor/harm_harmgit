@@ -1423,7 +1423,7 @@ int fluxcalc_standard_4fluxctstag(int stage, FTYPE (*pr)[NSTORE2][NSTORE3][NPR],
     // generally ptr's are different inside parallel block
     ptrgeom=&geomdontuse;
 
-#pragma omp for OPENMPSCHEDULECHUNK(blocksize)
+#pragma omp for OPENMPSCHEDULECHUNK(blocksize) reduction(min:ndtstore)
     OPENMP3DLOOPBLOCK{
       OPENMP3DLOOPBLOCK2IJK(i,j,k);
 
@@ -1560,17 +1560,18 @@ int interpolate_prim_cent2face(int stage, int realisinterp, FTYPE (*pr)[NSTORE2]
   //
   /////////////////////////////////////
   if(FLUXB==FLUXCTSTAG){
-    int pl,pl2;
     ////////////////////////////////////////////
     //
     // save choice for interpolations
     nprlocalstart=npr2interpstart;
     nprlocalend=npr2interpend;
-    PMAXNPRLOOP(pl) nprlocallist[pl]=npr2interplist[pl];
+    int plpl;
+    PMAXNPRLOOP(plpl) nprlocallist[plpl]=npr2interplist[plpl];
 
 
-#pragma omp parallel private(pl,pl2)
+#pragma omp parallel
     { // must set npr2interp stuff inside parallel region since threadprivate
+      int pl,pl2;
       // choice for range of PLOOPINTERP
       // check if wanted to interpolate B along dir, and if so remove
       for(pl=npr2interpstart;pl<=npr2interpend;pl++){
@@ -1743,12 +1744,12 @@ int interpolate_prim_cent2face(int stage, int realisinterp, FTYPE (*pr)[NSTORE2]
 
 
   if(FLUXB==FLUXCTSTAG){
-    int pl,pliter;
     ////////////////////////////////////////////
     //
     // restore choice for interpolations
-#pragma omp parallel private(pl)
+#pragma omp parallel
     { // must set npr2interp stuff inside parallel region since threadprivate
+      int pl;
       npr2interpstart=nprlocalstart;
       npr2interpend=nprlocalend;
       PMAXNPRLOOP(pl) npr2interplist[pl]=nprlocallist[pl];

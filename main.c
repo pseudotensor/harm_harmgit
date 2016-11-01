@@ -351,7 +351,7 @@ int main(int argc, char *argv[])
     
     /* restart dump */
     // if(nstep == 130) restart_write(1) ;
-    //    if(fakenstep==2) break;
+    if(fakenstep>=0) break;
 
 
     nstep++;

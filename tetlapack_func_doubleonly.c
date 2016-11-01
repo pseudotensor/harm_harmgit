@@ -20,6 +20,10 @@ extern int dsyevr_(char *jobz, char *range, char *uplo, int *n, double *a, int *
                    int *liwork, int *info);
 //extern double dlamch_(char *);
 
+/* DSYEV prototype */
+extern void dsyev( char* jobz, char* uplo, int* n, double* a, int* lda,
+                double* w, double* work, int* lwork, int* info );
+
 
 #define LWORKSIZE MAX(NDIM*NDIM*NDIM,26*NDIM)
 #define LIWORKSIZE MAX(NDIM*NDIM*NDIM,10*NDIM)
@@ -29,21 +33,43 @@ int tetlapack_func(double (*metr)[NDIM], double (*tetr)[NDIM], double eigenvalue
 {
   char jobz,uplo ;
   int n,lda,lwork,info=0 ;
-  double a[NDIM][NDIM],w[NDIM]={0},work[LWORKSIZE]={0};
+  double w[NDIM]={0};
   int chk;
   int j,k ;
 
 
-  jobz = 'V' ;
-  uplo = 'U' ;
   n = NDIM ;
   lda = NDIM ;
   lwork = LWORKSIZE ;
 
 
 #if(USINGLAPACK)
-  DLOOP(j,k) a[j][k] = (double)metr[j][k] ;
 
+
+#if(0)
+  double b[NDIM*NDIM];
+  DLOOP(j,k) b[j+NDIM*k] = (double)metr[j][k] ; // symmetric, so order doesn't matter as long as metric is metr.
+  
+  // Query and allocate the optimal workspace
+  double wkopt;
+  lwork = -1;
+  dsyev("Vectors", "Upper", &n, b, &lda, w, &wkopt, &lwork, &info );
+  lwork = (int)wkopt;
+  double *work;
+  work = (double*)malloc( lwork*sizeof(double) );
+  // Solve eigenproblem
+  dsyev( "Vectors", "Upper", &n, b, &lda, w, work, &lwork, &info );
+  free( (void*)work);
+  
+  double a[NDIM][NDIM];
+  DLOOP(j,k) a[j][k] = b[j+NDIM*k];
+
+#else
+  double a[NDIM][NDIM];
+  DLOOP(j,k) a[j][k] = (double)metr[j][k] ;
+  double work[LWORKSIZE]={0};
+  jobz = 'V' ;
+  uplo = 'U' ;
   chk = dsyev_(
                &jobz,   /* job: 'V' -> compute eigenvectors too */
                &uplo,  /* which part of a is stored, 'U' -> upper */
@@ -56,7 +82,7 @@ int tetlapack_func(double (*metr)[NDIM], double (*tetr)[NDIM], double eigenvalue
                &info  /* successful? */
                ) ;
 
-
+  // Check for convergence
   if(info>0 && 0){
 
     dualfprintf(fail_file,"issue with dsyev: info=%d\n",info);
@@ -104,8 +130,9 @@ int tetlapack_func(double (*metr)[NDIM], double (*tetr)[NDIM], double eigenvalue
                   ) ;
 
     if(info!=0) dualfprintf(fail_file,"issue with dsyevr: info=%d\n",info);
-   
   }
+#endif
+   
 
 
 

@@ -55,7 +55,6 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
 
   int dir,interpi,enodebugi;
   int dissloop;
-  int indexfinalstep;
   int enodebugdump(long dump_cnt);
   int asym_compute_1(FTYPE (*prim)[NSTORE2][NSTORE3][NPR]);
   int whichDT;
@@ -435,6 +434,7 @@ int diag(int call_code, FTYPE localt, long localnstep, long localrealnstep)
 #pragma omp parallel // need no global non-arrays
     {
       int i,j,k,floor;
+      int indexfinalstep;
       OPENMP3DLOOPVARSDEFINE; OPENMP3DLOOPSETUPZLOOP;  // constant loop parameters for entire region, so can be shared
 
       if(dodumpgen[ENERDUMPTYPE]){

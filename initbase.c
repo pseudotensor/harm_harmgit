@@ -680,6 +680,57 @@ void init_all_conservatives(FTYPE (*prim)[NSTORE2][NSTORE3][NPR], FTYPE (*pstag)
 
 #include "initbase.defaultnprlists.c"
 
+
+
+void debugnpr2interp(void)
+{
+
+  // OPENMP: debug check of default npr lists
+#pragma omp parallel
+  {
+    
+
+    int inparallel,tid;
+    int numopenmpthreadslocal;
+#if(USEOPENMP)
+  if(omp_in_parallel()){
+    inparallel=1;
+    tid=omp_get_thread_num();
+  }
+  else{
+    tid=0;
+    inparallel=0;    
+  }
+  numopenmpthreadslocal = omp_get_num_threads();
+#else
+  tid=0;
+  inparallel=0;
+  numopenmpthreadslocal=1;
+#endif
+
+  int ii;
+  for(ii=0;ii<numopenmpthreadslocal;ii++){
+    if(ii==tid){
+      fprintf(stderr,"tid=%d npr2interpstart=%d npr2interpend=%d : addr=%ld %ld : %ld\n",tid,npr2interpstart,npr2interpend,&npr2interpstart,&npr2interpend,npr2interplist);
+      int plpl;
+      PMAXNPRLOOP(plpl) fprintf(stderr,"tid=%d pl=%d npr2interplist=%d\n",tid,plpl,npr2interplist[plpl]);
+    }
+  }
+
+  // test write
+  npr2interpstart=0;
+  npr2interpend=0;
+  npr2interplist[0]=B1;
+  
+
+  }// end parallel
+
+  // DEBUG:
+  exit(0);
+
+
+}
+
 /// Called before pre_init() : i.e. before MPI init
 int prepre_init(void)
 {
@@ -713,6 +764,10 @@ int prepre_init(void)
 
   set_default_nprlists();
 
+
+
+  
+  
   
   // setup NOGDET list
   // defaults
