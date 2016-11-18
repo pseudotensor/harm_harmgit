@@ -61,7 +61,9 @@ then
 
 # use below if already logged in and ssh'ed into computer
 # fast again with below.
-    nohup x11vnc -noxdamage -deferupdate none -wait none -defer none -rfbauth ~/.vnc/passwd  -forever -bg -rfbport 5904 -o logfilenew.x11vnc.txt &
+nohup x11vnc -noxdamage -deferupdate none -wait none -defer none -rfbauth ~/.vnc/passwd  -forever -bg -rfbport 5904 -display :0 -auth /var/run/lightdm/root/:0 -o logfilenew.x11vnc.txt &
+
+# /var/run/lightdm/root/:0
 
 # use below *in user-logged-in session* if already logged in.
 #nohup x11vnc -noxdamage -deferupdate none -wait none -defer none -rfbauth ~/.vnc/passwd -auth /var/lib/gdm/:0.Xauth -display :0  -forever -nevershared -bg -rfbport 5904 -o logfilenew.x11vnc.txt &
