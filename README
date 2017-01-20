@@ -76,14 +76,3 @@ mkdir run ; cd run ; cp ../grmhd . ; ./grmhd 16 &
 4) If you have issues with MPI and OpenMP, then set USEOPENMP=0 and USEMPI=0 in makehead.inc .  Then to run do:
 
 mkdir run ; cd run ; cp ../grmhd . ; ./grmhd &
-
-========================
-Common problems for koralinsert branch:
-========================
-
-1) OpenMP not tested, so by default turned off.  Probably some minor
-issues like static variables (e.g. in phys.tools.rad.c) need fixing
-before would work properly.
-
-
-
