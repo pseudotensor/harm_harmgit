@@ -555,8 +555,8 @@ int init_global(void)
     PALLLOOP(pl) if(RADFULLPL(pl)) fluxmethod[pl]=LAXFFLUX;
   }
 
-  //FLUXB=FLUXCTTOTH;
-  FLUXB=FLUXCTSTAG;
+  FLUXB=FLUXCTTOTH;
+  //FLUXB=FLUXCTSTAG;
   
 
   //  rescaletype=1;

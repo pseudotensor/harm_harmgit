@@ -46,11 +46,11 @@
 
 /// below seems best on average
 #if(1||N1*N2*N3<200) // overhead becomes a problem for too few iterations in loops
-#define OPENMPSCHEDULE(arg) static
+#define OPENMPSCHEDULE(arg) auto
 // suprisingly, chunksize=1 is fastest with hyperthreading and full node use
 #define OPENMPCHUNKSIZE(blocksize) 1 //(MAX(blocksize/numopenmpthreads,MINCHUNKSIZE))
 #else
-#define OPENMPSCHEDULE(arg) guided // having hang (and sometimes segfault) problems with either gcc (seg with icc) with guided.
+#define OPENMPSCHEDULE(arg) auto // having hang (and sometimes segfault) problems with either gcc (seg with icc) with guided.
 #define OPENMPCHUNKSIZE(blocksize) (MAX(blocksize/OPENMPNUMCHUNKS,MINCHUNKSIZE))
 #endif
 
@@ -59,13 +59,13 @@
 
 /// below is for loops ensured not to vary in how long each iteration takes
 /// Used to avoid overhead from guided that is not needed for simple loops (e.g. simple = just setting to 0 or just taking simple difference of variables)
-#define OPENMPNOVARYSCHEDULE(arg) static
+#define OPENMPNOVARYSCHEDULE(arg) auto
 
 /// below used when don't want to provide CHUNK argument 
-#define OPENMPFULLNOVARYSCHEDULE(arg) static
+#define OPENMPFULLNOVARYSCHEDULE(arg) auto
 
 /// below is for loops with very different times for each iteration (e.g. inversion loop)
-#define OPENMPVARYENDTIMESCHEDULE(arg) guided
+#define OPENMPVARYENDTIMESCHEDULE(arg) auto
 
 #if(0) // chunk
 #define OPENMPSCHEDULECHUNK(blocksize) schedule(OPENMPSCHEDULE(),OPENMPCHUNKSIZE(blocksize))
