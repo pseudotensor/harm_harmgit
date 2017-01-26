@@ -10,8 +10,8 @@ Basic Instructions
 
 git clone git@github.com:pseudotensor/harm_harmgit.git
 cd harm_harmgit
-git branch koralinsert
-# for single node 32-task test from setting up run through analysis
+git branch master
+# for single node 16-task MPI test from setting up run through analysis
 sh scripts/fulltest.sh
 
 ========
