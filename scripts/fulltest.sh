@@ -17,10 +17,9 @@ make superclean ; make prep ; make -j 16
 # default for master branch:
 # mkdir run ; cd run ; cp ../grmhd . ; ./grmhd 1 1 1 1 # mpi and openmp both on
 
-# default for koralinsert or auto branches
-# run with 32 openmp threads (efficient use of all 16 cores on 1 node)
-mkdir run ; cd run ; cp ../grmhd . ; nohup ./grmhd 32 1 1 1 &
-#mkdir run ; cd run ; cp ../grmhd . ; nohup mpirun -np 1 ./grmhd 1 1 1 1 &
+# default for koralinsert branch
+mkdir run ; cd run ; cp ../grmhd . ; nohup mpirun -np 16 ./grmhd 1 4 4 1 &
+#mkdir run ; cd run ; cp ../grmhd . ; nohup mpirun -np 16 ./grmhd 2 4 4 1 &
 
 # run for about an hour to get at least a few files.
 # this doesn't end the job, just pauses for 1 hour to get to analysis
