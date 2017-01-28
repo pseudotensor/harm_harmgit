@@ -1,6 +1,18 @@
+#!/bin/bash
+
+########
+### Code to run through complete end-to-end test of harm or harmrad
+########
+
+
+
+########
+# assume already done this outside this script:
 # git clone git@github.com:pseudotensor/harm_harmgit.git
 # cd harm_harmgit/
 
+########
+# now can script actions
 # get version setup for auto for openmp
 git branch auto
 
@@ -84,22 +96,30 @@ sleep 1h
 mv run rad1
 
 # ensure you have python utilities
-# cd ~ ; git clone git@github.com:pseudotensor/harm_pythontools.git ; mv harm_pythontools py ; cd py ; git branch jon
+mypath=`pwd`
+DIRECTORY=~/py/
+if [ -d "$DIRECTORY" ]; then
+    echo "directory $DIRECTORY already exists, not overwritting"
+else
+    echo "directory $DIRECTORY does not exist, creating"
+    cd ~ ; git clone git@github.com:pseudotensor/harm_pythontools.git ; mv harm_pythontools py ; cd py ; git branch jon
+    cd $mypath
+fi
 
-# cp ~/py/scripts/makeallmovie.sh .
+cp ~/py/scripts/makeallmovie.sh .
 # edit makeallmovie.sh and change line with dircollect="..." and dirruns="..." so that "..." is "rad1"
 # edit makeallmovie.sh and set numkeep to 50 for test
-
+cat makeallmovie.sh | sed 's/^dirruns=.*/dirruns=\"rad1\"/g' | sed 's/^numkeep=.*/numkeep=50/g' > makeallmovielocal.sh
 
 # assuming on single node type job (default if system not detected), then do:
 # setup links, copy files, and makeavg step that makes avg2d_*.npy.
 # then merges to avg2d.npy (average used for rest of analysis)
 export moviename="movie1"
-bash ./makeallmovie.sh ${moviename} 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 1 1 0 0
+bash ./makeallmovielocal.sh ${moviename} 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 1 1 0 0
 # check if rad1/$moviename/avg2d.npy created
 
 # do rest of analysis
-bash ./makeallmovie.sh ${moviename} 0 0 0 1 1 1 1 1 1 1 1 1 1 1 1 0 0 1 1
+bash ./makeallmovielocal.sh ${moviename} 0 0 0 1 1 1 1 1 1 1 1 1 1 1 1 0 0 1 1
 # should generate analysis results in rad1/$moviename/*.png *.txt etc.
 
 # can make movie by doing (new2 for avconv and new3 for ffmpeg)
@@ -110,7 +130,7 @@ bash ./makelinkimagenew2.sh
 # can use smplayer or other things to view mp4's
 
 
-# see "system" in makeallmovie.sh and how used in ~/py/scripts/makemovie.sh to see what kinds of systems already setup and how you can setup your own system by example.
+# see "system" in makeallmovielocal.sh and how used in ~/py/scripts/makemovie.sh to see what kinds of systems already setup and how you can setup your own system by example.
 
 # common issues on single node systems:
 # 1) dash incomplete, need to use bash to run scripts.  Best to remove dash in favor of bash
