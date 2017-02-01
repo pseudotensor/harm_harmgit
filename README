@@ -45,10 +45,28 @@ git branch koralinsert
 # for single node 32-task test from setting up run through analysis
 sh scripts/fulltest.sh
 
-========
+========================
+Code Design
+========================
+
+See
+
+http://pseudotensor.github.io/
+
+for code help and graphical/interactive search and call graph from doxygen
+
+========================
+Example Resulting python analysis movies and vis5d+ movies
+========================
+
+https://www.youtube.com/user/pseudotensor2/videos
+
+========================
+Articles to read about the work
+========================
 
 HARM as described in McKinney et al. (2012) in master. HARMRAD as described in McKinney et al. (2014) in koralinsert.
 
-See http://pseudotensor.github.io/ for code help and graphical/interactive search and call graph from doxygen
+https://scholar.google.com/citations?user=5L3LfOYAAAAJ&hl=en
 
 
