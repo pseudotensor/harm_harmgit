@@ -8,7 +8,9 @@ maximally open-source and copyleft.
 Requirements
 ========================
 
-1) MPI (for mpicc and mpirun)
+1) Linux (e.g. like Ubuntu, what's on NASA Pleides, TACC Stampede, etc.)
+
+2) MPI (for mpicc and mpirun)
 
 If have no MPI, then change USEMPI to 0 in makehead.inc.
 If have no OpenMP, then change USEOPENMP to 0 in makehead.inc
@@ -19,9 +21,19 @@ mkdir run ; cd run ; cp ../grmhd . ; ./grmhd 1 1 1
 For no MPI, then change scripts/fulltest.sh command to
 mkdir run ; cd run ; cp ../grmhd . ; ./grmhd 1 1 1 1
 
-2) Intel MKL (for lapack related library)
+3) Intel MKL (for lapack related library)
 
 Needs Intel MKL for setting up initial conditions in general.
+
+4) For the analysis stage, many python 2.7 related packages (see
+docs/general_plotting_guide.txt for details, but all standard packages
+one can easily install on Ubuntu).  Python packages used include:
+python, python2.7-setuptools, python-dateutil, yasm, ipython,
+python-nose, python2.7-scipy, python2.7-numpy, python-matplotlib,
+python-matplotlib-data, dvipng .  Try installing these, then if below
+"fulltest.sh" doesn't work, then send me your output and we can figure
+out what packages you are missing.
+
 
 ========================
 Basic Instructions

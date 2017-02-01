@@ -14,7 +14,7 @@
 ########
 # now can script actions
 # get version setup for koralinsert
-git branch koralinsert
+git checkout koralinsert
 
 # default for master branch:
 # for non-radiation problem
