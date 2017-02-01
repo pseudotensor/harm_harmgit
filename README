@@ -5,7 +5,26 @@ available (e.g. at github) under the same license terms.  This is
 maximally open-source and copyleft.
 
 ========================
-Basic Instructions
+Requirements
+========================
+
+1) MPI (for mpicc and mpirun)
+
+If have no MPI, then change USEMPI to 0 in makehead.inc.
+If have no OpenMP, then change USEOPENMP to 0 in makehead.inc
+
+For no MPI or OpenMP, then change scripts/fulltest.sh command to
+mkdir run ; cd run ; cp ../grmhd . ; ./grmhd 1 1 1
+
+For no MPI, then change scripts/fulltest.sh command to
+mkdir run ; cd run ; cp ../grmhd . ; ./grmhd 1 1 1 1
+
+2) Intel MKL (for lapack related library)
+
+If have no Intel MKL, then change USELAPACK and USELAPACKNEW to 0 in makehead.inc.
+
+========================
+Basic Instructions (assuming MPI, OpenMP, and MKL taken care of as above):
 ========================
 
 git clone git@github.com:pseudotensor/harm_harmgit.git
