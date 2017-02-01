@@ -14,7 +14,7 @@
 ########
 # now can script actions
 # get version setup for master
-git branch master
+git checkout master
 
 # default for master branch:
 # for non-radiation problem
