@@ -23,6 +23,8 @@ mkdir run ; cd run ; cp ../grmhd . ; ./grmhd 1 1 1 1
 
 If have no Intel MKL, then change USELAPACK and USELAPACKNEW to 0 in makehead.inc.
 
+3) For the analysis stage, many python 2.7 related packages (see docs/general_plotting_guide.txt for details, but all standard packages one can easily install on Ubuntu).
+
 ========================
 Basic Instructions (assuming MPI, OpenMP, and MKL taken care of as above):
 ========================
