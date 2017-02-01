@@ -14,7 +14,7 @@
 ########
 # now can script actions
 # get version setup for auto for openmp
-git branch auto
+git checkout auto
 
 # default for master branch:
 # for non-radiation problem
